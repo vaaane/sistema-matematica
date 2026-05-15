@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ranking — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Ranking</div>
+        <div class="topbar-sub">Desempenho dos alunos</div>
+      </div>
+      <div class="topbar-right">
+        <div class="select-wrap" style="width:180px">
+          <select class="input" id="sel-turma" onchange="filtrar()" style="padding:8px 12px;font-size:13px">
+            <option value="Todas">Todas as turmas</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+    </div>
+  </div>
+</div>
+<script type="module">
+import { ALUNOS_POR_TURMA } from "/js/constants.js";
+import { getResultados } from "/js/db.js";
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+
+requireProfessor();
+renderSidebarProfessor("sidebar", "ranking");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const sel = document.getElementById("sel-turma");
+Object.keys(ALUNOS_POR_TURMA).forEach(t => { sel.innerHTML += `<option value="${t}">Turma ${t}</option>`; });
+
+const todos = await getResultados();
+
+window.filtrar = function() {
+  const turmaSel = document.getElementById("sel-turma").value;
+  const base = todos.filter(r => r.concluido);
+  const dados = turmaSel === "Todas" ? base : base.filter(r => r.turma === turmaSel);
+
+  const melhor = {}, turmaA = {}, acA = {}, errA = {}, atA = {};
+  dados.forEach(r => {
+    const {aluno:a, turma:t, atividade:ativ, pontuacao:pts, acertos:ac, erros:er} = r;
+    turmaA[a]=t; acA[a]=(acA[a]||0)+(ac||0); errA[a]=(errA[a]||0)+(er||0);
+    atA[a]=atA[a]||new Set(); atA[a].add(ativ);
+    melhor[a]=melhor[a]||{}; melhor[a][ativ]=Math.max(melhor[a][ativ]||0,pts||0);
+  });
+  const ptsA = Object.fromEntries(Object.entries(melhor).map(([a,m])=>[a,Object.values(m).reduce((x,y)=>x+y,0)]));
+  const rank = Object.entries(ptsA).sort((a,b)=>b[1]-a[1]).map(([nome,pts],i)=>({
+    pos:i+1,nome,turma:turmaA[nome]||'—',pts,
+    acertos:acA[nome]||0,erros:errA[nome]||0,ativs:atA[nome]?.size||0,
+    aproveit:((acA[nome]||0)+(errA[nome]||0))>0?Math.round((acA[nome]||0)/((acA[nome]||0)+(errA[nome]||0))*100):0
+  }));
+
+  document.getElementById("content").innerHTML = `
+    <div class="card" style="padding:0">
+      <table class="table">
+        <thead><tr>
+          <th>#</th><th>Aluno</th><th>Turma</th><th>Pontuação</th>
+          <th>Acertos</th><th>Erros</th><th>Atividades</th><th>Aproveit.</th>
+        </tr></thead>
+        <tbody>
+          ${rank.map(r=>`<tr>
+            <td><strong style="font-size:16px" class="${r.pos<=3?'medal-'+(r.pos):''}">${r.pos===1?'🥇':r.pos===2?'🥈':r.pos===3?'🥉':r.pos}</strong></td>
+            <td><strong>${r.nome}</strong></td>
+            <td><span class="badge badge-blue">Turma ${r.turma}</span></td>
+            <td><strong style="color:var(--gold)">${r.pts}</strong></td>
+            <td style="color:var(--green)">${r.acertos}</td>
+            <td style="color:var(--red)">${r.erros}</td>
+            <td>${r.ativs}</td>
+            <td>${r.aproveit}%</td>
+          </tr>`).join('')}
+          ${!rank.length?'<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-muted)">Nenhum resultado.</td></tr>':''}
+        </tbody>
+      </table>
+    </div>`;
+};
+
+filtrar();
+</script>
+</body>
+</html>

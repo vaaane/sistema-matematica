@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Testar Atividade — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .game-progress{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:14px 18px;background:var(--card);border-radius:var(--radius);border:1px solid var(--border);}
+    .gp-label{font-size:12px;color:var(--text-muted);flex-shrink:0;}
+    .gp-bar{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden;}
+    .gp-fill{height:100%;border-radius:4px;background:var(--blue);transition:width .4s;}
+    .gp-pts{font-size:14px;font-weight:800;color:var(--gold);flex-shrink:0;}
+    .game-layout{display:grid;grid-template-columns:220px 1fr;gap:18px;}
+    .game-side{display:flex;flex-direction:column;gap:12px;}
+    .side-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+    .side-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:6px;}
+    .side-value{font-size:22px;font-weight:800;}
+    .side-sub{font-size:11px;color:var(--text-muted);margin-top:2px;}
+    .question-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px 28px 20px;}
+    .q-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;margin-bottom:16px;}
+    .q-badge.facil{background:#DCFCE7;color:#15803D;}
+    .q-badge.media{background:#FEF9C3;color:#854D0E;}
+    .q-badge.dificil{background:#FEE2E2;color:#B91C1C;}
+    .q-text{font-size:20px;font-weight:700;line-height:1.4;margin-bottom:22px;}
+    .answer-area{display:flex;gap:10px;margin-bottom:14px;}
+    .answer-area .input{flex:1;font-size:16px;}
+    .alts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px;}
+    .alt-btn{padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);font-size:14px;font-weight:600;cursor:pointer;text-align:center;transition:background .12s,border-color .12s;font-family:'Inter',sans-serif;}
+    .alt-btn:hover{background:var(--blue-pale);border-color:var(--blue);}
+    #feedback{min-height:42px;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;font-size:14px;font-weight:600;transition:all .2s;}
+    #feedback.ok{background:#F0FDF4;color:#15803D;border:1px solid #BBF7D0;}
+    #feedback.err{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;}
+    #feedback.hidden{opacity:0;}
+    .placar-row{display:flex;gap:12px;align-items:center;}
+    .placar-sep{color:var(--border);font-size:20px;}
+    .tent-dots{display:flex;gap:5px;margin-top:8px;}
+    .tent-dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--border);background:transparent;}
+    .tent-dot.used{background:var(--red);border-color:var(--red);}
+    .tent-dot.avail{background:var(--green);border-color:var(--green);}
+    .teste-banner{background:#FEF9C3;border:1.5px solid #FDE047;border-radius:10px;padding:10px 16px;font-size:13px;color:#854D0E;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+    .resultado-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;max-width:560px;margin:0 auto;}
+    .resultado-stat{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;}
+    .resultado-stat:last-child{border-bottom:none;}
+    .resultado-stat-label{color:var(--text-muted);}
+    .resultado-stat-val{font-weight:700;}
+    @media(max-width:700px){
+      .game-layout{grid-template-columns:1fr}
+      .game-side{flex-direction:row;flex-wrap:wrap}
+      .side-card{flex:1;min-width:100px}
+      .q-text{font-size:16px;margin-bottom:16px}
+      .question-card{padding:16px 16px 14px}
+      .answer-area{flex-wrap:wrap}
+      .answer-area .input{min-width:0}
+      .answer-area .btn{width:100%;justify-content:center}
+      .game-progress{padding:10px 12px;gap:8px}
+      .gp-label{font-size:11px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:130px}
+      .side-card{overflow:hidden}
+      .placar-row{gap:6px}
+      .placar-sep{display:none}
+      .resultado-card{padding:18px}
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title" id="topbar-title">Testar Atividade</div>
+        <div class="topbar-sub" id="topbar-sub">Modo professor — resultados não são salvos</div>
+      </div>
+      <div class="topbar-right" style="gap:10px;display:flex">
+        <div class="select-wrap" id="sel-wrap" style="width:220px">
+          <select class="input" id="sel-ativ" style="padding:8px 12px;font-size:13px">
+            <option value="">Selecionar atividade…</option>
+          </select>
+        </div>
+        <button class="btn btn-blue" id="btn-iniciar" onclick="iniciarTeste()">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Iniciar
+        </button>
+        <a href="/professor/atividades.html" class="btn btn-ghost">← Voltar</a>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div class="empty-state" style="margin-top:40px">
+        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        <p>Selecione uma atividade e clique em <strong>Iniciar</strong> para testar.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import {
+  LISTA_ATIVIDADES, BASES, FATORES_TENTATIVA,
+  carregarPerguntas, intercalarPorDificuldade,
+  respostasEquivalentes
+} from "/js/constants.js";
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+
+requireProfessor();
+renderSidebarProfessor("sidebar", "atividades");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const selAtiv = document.getElementById("sel-ativ");
+LISTA_ATIVIDADES.forEach(a => { selAtiv.innerHTML += `<option value="${a.nome}">${a.nome}</option>`; });
+
+// Pre-select from query string
+const params = new URLSearchParams(location.search);
+const presel = params.get("atividade");
+if (presel) { selAtiv.value = presel; }
+
+let jogo = null;
+let processando = false;
+
+window.iniciarTeste = async function() {
+  const nome = selAtiv.value;
+  if (!nome) { alert("Selecione uma atividade."); return; }
+
+  document.getElementById("btn-iniciar").disabled = true;
+  document.getElementById("btn-iniciar").textContent = "Carregando…";
+
+  const perguntas = await carregarPerguntas(nome);
+
+  jogo = {
+    nome, perguntas: [...perguntas], indice: 0,
+    pontuacao: 0, acertos: 0, erros: 0, respondidas: 0,
+    tentativas: 0, ajudaUsada: false, historico: [],
+    finalizado: false, questaoNum: 1,
+  };
+  processando = false;
+
+  document.getElementById("sel-wrap").style.display = "none";
+  document.getElementById("btn-iniciar").style.display = "none";
+  document.getElementById("topbar-title").textContent = nome;
+  document.getElementById("topbar-sub").textContent = "Modo teste — resultados não são salvos";
+
+  renderJogo();
+};
+
+function pergAtual() { return jogo.perguntas[jogo.indice]; }
+function valeAtual() {
+  const perg = pergAtual();
+  const base = BASES[perg.dificuldade] || 10;
+  const fat  = FATORES_TENTATIVA[Math.min(jogo.tentativas, 3)];
+  const fa   = jogo.ajudaUsada ? 0.5 : 1.0;
+  return Math.max(1, Math.floor(base * fat * fa));
+}
+
+function renderJogo() {
+  const perg = pergAtual();
+  const base = BASES[perg.dificuldade] || 10;
+  const nivelMap = {1:["Fácil","facil"], 2:["Média","media"], 3:["Difícil","dificil"]};
+  const [nivel, nivelCls] = nivelMap[perg.dificuldade] || ["Fácil","facil"];
+
+  document.getElementById("content").innerHTML = `
+    <div class="teste-banner">⚠️ Modo teste — respostas não são salvas no Firebase</div>
+    <div class="game-progress">
+      <span class="gp-label">Questão #${jogo.questaoNum} · <span id="resp-count">${jogo.respondidas}</span> respondidas</span>
+      <div class="gp-bar"><div class="gp-fill" id="gp-fill" style="width:${Math.min(100,jogo.respondidas*10)}%"></div></div>
+      <span class="gp-pts" id="pts-display">${jogo.pontuacao} pts</span>
+    </div>
+    <div class="game-layout">
+      <div class="game-side">
+        <div class="side-card">
+          <div class="side-label">Pontuação</div>
+          <div class="side-value" style="color:var(--gold)" id="pts-side">${jogo.pontuacao}</div>
+          <div class="side-sub">pontos acumulados</div>
+        </div>
+        <div class="side-card">
+          <div class="side-label">Nível</div>
+          <div class="side-value" id="nivel-display">${nivel}</div>
+          <div class="side-sub">Vale <span id="vale-display">${valeAtual()}</span> pts agora</div>
+          <div class="tent-dots" id="tent-dots">${[0,1,2,3].map(i=>`<div class="tent-dot ${i<jogo.tentativas?'used':'avail'}" id="dot-${i}"></div>`).join('')}</div>
+        </div>
+        <div class="side-card">
+          <div class="side-label">Placar</div>
+          <div class="placar-row">
+            <div><div class="side-value" style="color:var(--green);font-size:18px" id="acertos-side">${jogo.acertos}</div><div class="side-sub">acertos</div></div>
+            <div class="placar-sep">·</div>
+            <div><div class="side-value" style="color:var(--red);font-size:18px" id="erros-side">${jogo.erros}</div><div class="side-sub">erros</div></div>
+          </div>
+        </div>
+        ${!jogo.ajudaUsada ? `<button class="btn btn-ghost" id="btn-ajuda" onclick="pedirAjuda()" style="width:100%">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+          Pedir ajuda (-50%)
+        </button>` : `<div class="side-card" style="text-align:center;color:var(--text-muted);font-size:12px">💡 Ajuda utilizada</div>`}
+        <button class="btn btn-ghost" onclick="encerrarTeste()" style="width:100%;color:var(--red);border-color:#FECACA">
+          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          Encerrar teste
+        </button>
+      </div>
+      <div>
+        <div class="question-card">
+          <span class="q-badge ${nivelCls}">
+            ${perg.dificuldade===1?'● Fácil':perg.dificuldade===2?'◆ Média':'■ Difícil'} · base ${base} pts
+          </span>
+          <div class="q-text" id="q-text">${perg.pergunta}</div>
+          <div id="input-area">
+            <div class="answer-area">
+              <input type="text" id="resposta-input" class="input" placeholder="Digite sua resposta…" autocomplete="off" autofocus onkeydown="if(event.key==='Enter')responder()"/>
+              <button class="btn btn-blue" id="btn-responder" onclick="responder()">
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                Responder
+              </button>
+            </div>
+          </div>
+          <div id="alts-area" style="display:none">
+            <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">💡 Escolha a alternativa correta:</p>
+            <div class="alts-grid" id="alts-grid"></div>
+          </div>
+          <div id="feedback" class="hidden"></div>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById("resposta-input")?.focus();
+}
+
+function atualizarDots(n) {
+  for (let i=0;i<4;i++) {
+    const d = document.getElementById("dot-"+i);
+    if (d) d.className = "tent-dot "+(i<n?"used":"avail");
+  }
+}
+
+function mostrarFeedback(tipo, msg) {
+  const el = document.getElementById("feedback");
+  if (el) { el.className=tipo; el.textContent=msg; }
+}
+
+function beep(freq, dur) {
+  try {
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const osc = ctx.createOscillator(); const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+dur/1000);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime+dur/1000);
+  } catch(e) {}
+}
+
+function avancarQuestao() {
+  jogo.questaoNum++;
+  if (jogo.indice >= jogo.perguntas.length - 1) {
+    jogo.perguntas = intercalarPorDificuldade(jogo.perguntas);
+    jogo.indice = 0;
+  } else {
+    jogo.indice++;
+  }
+  jogo.tentativas = 0; jogo.ajudaUsada = false;
+}
+
+window.responder = function(respSelecionada) {
+  if (processando) return;
+  const input = document.getElementById("resposta-input");
+  const resposta = respSelecionada !== undefined ? respSelecionada : (input ? input.value.trim() : "");
+  if (!resposta) { mostrarFeedback("err", "⚠️ Digite uma resposta."); return; }
+
+  processando = true;
+  const btn = document.getElementById("btn-responder");
+  if (btn) btn.disabled = true;
+
+  const perg = pergAtual();
+  const base = BASES[perg.dificuldade] || 10;
+  const fat  = FATORES_TENTATIVA[Math.min(jogo.tentativas, 3)];
+  const fa   = jogo.ajudaUsada ? 0.5 : 1.0;
+
+  if (respostasEquivalentes(resposta, String(perg.resposta))) {
+    const pts = Math.max(1, Math.floor(base * fat * fa));
+    jogo.pontuacao   += pts;
+    jogo.acertos     += 1;
+    jogo.respondidas += 1;
+    jogo.tentativas  += 1;
+    jogo.historico.push({ pergunta: perg.pergunta, resposta_aluno: resposta, resposta_correta: String(perg.resposta), tentativas: jogo.tentativas, acertou: true });
+    beep(1000, 150);
+    mostrarFeedback("ok", `✅ Correto! +${pts} pontos`);
+    document.getElementById("pts-display").textContent = jogo.pontuacao+" pts";
+    document.getElementById("pts-side").textContent = jogo.pontuacao;
+    avancarQuestao();
+    setTimeout(() => { processando=false; renderJogo(); }, 1500);
+
+  } else {
+    jogo.tentativas++;
+    if (jogo.tentativas >= 4) {
+      jogo.erros       += 1;
+      jogo.respondidas += 1;
+      jogo.historico.push({ pergunta: perg.pergunta, resposta_aluno: resposta, resposta_correta: String(perg.resposta), tentativas: jogo.tentativas, acertou: false });
+      beep(400, 300);
+      mostrarFeedback("err", `❌ Errou 4× — Resposta: ${perg.resposta}`);
+      document.getElementById("erros-side").textContent = jogo.erros;
+      avancarQuestao();
+      setTimeout(() => { processando=false; renderJogo(); }, 2000);
+    } else {
+      beep(400, 150);
+      atualizarDots(jogo.tentativas);
+      const novoVale = Math.max(1, Math.floor(base * FATORES_TENTATIVA[Math.min(jogo.tentativas,3)] * fa));
+      document.getElementById("vale-display").textContent = novoVale;
+      mostrarFeedback("err", `❌ Errado (${jogo.tentativas}/4) — tente novamente`);
+      if (btn) btn.disabled = false;
+      if (input) { input.value=""; input.focus(); }
+      processando = false;
+    }
+  }
+};
+
+window.pedirAjuda = function() {
+  jogo.ajudaUsada = true;
+  jogo.tentativas = 0;
+  const perg = pergAtual();
+  const alts = perg.alternativas || [];
+  const grid = document.getElementById("alts-grid");
+  grid.innerHTML = "";
+  alts.forEach(alt => {
+    const btn = document.createElement("button");
+    btn.className = "alt-btn"; btn.textContent = alt;
+    btn.onclick = () => { document.getElementById("resposta-input").value=alt; window.responder(alt); };
+    grid.appendChild(btn);
+  });
+  document.getElementById("alts-area").style.display = "block";
+  document.getElementById("input-area").style.display = "none";
+  document.getElementById("btn-ajuda")?.remove();
+  mostrarFeedback("ok", "💡 Alternativas exibidas — pontuação reduzida 50%");
+};
+
+window.encerrarTeste = function() {
+  if (!confirm("Encerrar o teste agora?")) return;
+  mostrarResultado();
+};
+
+function mostrarResultado() {
+  jogo.finalizado = true;
+  const aprov = (jogo.acertos + jogo.erros) > 0
+    ? Math.round(jogo.acertos / (jogo.acertos + jogo.erros) * 100) : 0;
+
+  document.getElementById("sel-wrap").style.display = "";
+  document.getElementById("btn-iniciar").style.display = "";
+  document.getElementById("btn-iniciar").disabled = false;
+  document.getElementById("btn-iniciar").innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Iniciar`;
+  document.getElementById("topbar-title").textContent = "Testar Atividade";
+  document.getElementById("topbar-sub").textContent = "Modo professor — resultados não são salvos";
+
+  document.getElementById("content").innerHTML = `
+    <div class="resultado-card">
+      <div style="text-align:center;margin-bottom:24px">
+        <div style="font-size:32px;font-weight:800;color:var(--gold)">${jogo.pontuacao} pts</div>
+        <div style="font-size:14px;color:var(--text-muted);margin-top:4px">${jogo.nome}</div>
+        <div style="display:inline-block;margin-top:8px;padding:4px 12px;background:#FEF9C3;border-radius:20px;font-size:12px;font-weight:700;color:#854D0E">⚠️ Modo teste — não salvo</div>
+      </div>
+      <div class="resultado-stat"><span class="resultado-stat-label">Questões respondidas</span><span class="resultado-stat-val">${jogo.respondidas}</span></div>
+      <div class="resultado-stat"><span class="resultado-stat-label">Acertos</span><span class="resultado-stat-val" style="color:var(--green)">${jogo.acertos}</span></div>
+      <div class="resultado-stat"><span class="resultado-stat-label">Erros</span><span class="resultado-stat-val" style="color:var(--red)">${jogo.erros}</span></div>
+      <div class="resultado-stat"><span class="resultado-stat-label">Aproveitamento</span><span class="resultado-stat-val">${aprov}%</span></div>
+      <div style="margin-top:20px;display:flex;gap:10px">
+        <button class="btn btn-blue" style="flex:1;justify-content:center" onclick="iniciarTeste()">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Testar de novo
+        </button>
+        <a href="/professor/atividades.html" class="btn btn-ghost">← Voltar</a>
+      </div>
+    </div>`;
+}
+</script>
+</body>
+</html>

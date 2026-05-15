@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Acompanhamento — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .hist-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;}
+    .hist-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background .15s;}
+    .hist-header:hover{background:#FAFAFA;}
+    .hist-nome{flex:1;font-size:14px;font-weight:700;}
+    .hist-data{font-size:11px;color:var(--text-muted);white-space:nowrap;}
+    .hist-body{padding:0 16px 14px;border-top:1px solid var(--border);}
+    .q-rev{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);margin-top:6px;font-size:12px;}
+    .q-rev.ok{background:#F0FDF4;border-color:#BBF7D0;}
+    .q-rev.err{background:#FEF2F2;border-color:#FECACA;}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Acompanhamento</div>
+        <div class="topbar-sub">Acompanhe o progresso individual dos alunos</div>
+      </div>
+      <div class="topbar-right" style="gap:10px;display:flex">
+        <div class="select-wrap" style="width:160px">
+          <select class="input" id="sel-turma" onchange="mudarTurma()" style="padding:8px 12px;font-size:13px">
+            <option value="">Selecionar turma…</option>
+          </select>
+        </div>
+        <div class="select-wrap" style="width:200px">
+          <select class="input" id="sel-aluno" onchange="mudarAluno()" disabled style="padding:8px 12px;font-size:13px">
+            <option value="">Selecionar aluno…</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div class="empty-state" style="margin-top:40px">
+        <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        <p>Selecione uma turma e um aluno para começar.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module">
+import { ALUNOS_POR_TURMA } from "/js/constants.js";
+import { getResultados, getDetalhes } from "/js/db.js";
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+
+requireProfessor();
+renderSidebarProfessor("sidebar", "acompanhamento");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const selT = document.getElementById("sel-turma");
+const selA = document.getElementById("sel-aluno");
+Object.keys(ALUNOS_POR_TURMA).forEach(t => { selT.innerHTML += `<option value="${t}">Turma ${t}</option>`; });
+
+let todos = await getResultados();
+
+window.toggleDetalhes = async function(id, bodyEl) {
+  const visivel = bodyEl.style.display !== 'none';
+  if (visivel) { bodyEl.style.display = 'none'; return; }
+  bodyEl.style.display = 'block';
+  if (bodyEl.dataset.loaded === 'true') return;
+  bodyEl.dataset.loaded = 'true';
+  const questoes = await getDetalhes(id);
+  if (!questoes || !questoes.length) {
+    bodyEl.innerHTML = '<p style="font-size:12px;color:var(--text-muted);padding-top:8px">Detalhes não disponíveis.</p>';
+    return;
+  }
+  bodyEl.innerHTML = questoes.map((q, i) => `
+    <div class="q-rev ${q.acertou ? 'ok' : 'err'}">
+      <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:24px">Q${i+1}</span>
+      <span style="flex:1">${q.pergunta}</span>
+      <span style="${q.acertou ? 'color:var(--green)' : 'color:var(--red)'};font-weight:700">${q.resposta_aluno}</span>
+      ${!q.acertou ? `<span style="font-size:10px;color:var(--text-muted)">✓ ${q.resposta_correta}</span>` : ''}
+      <span>${q.acertou ? '✅' : '❌'}</span>
+    </div>`).join('');
+};
+
+window.mudarTurma = function() {
+  const turma = selT.value;
+  selA.innerHTML = '<option value="">Selecionar aluno…</option>';
+  if (turma) {
+    (ALUNOS_POR_TURMA[turma]||[]).sort().forEach(a => { selA.innerHTML += `<option value="${a}">${a}</option>`; });
+    selA.disabled = false;
+  } else { selA.disabled = true; }
+  document.getElementById("content").innerHTML = '<div class="empty-state" style="margin-top:40px"><p>Selecione um aluno.</p></div>';
+};
+
+window.mudarAluno = async function() {
+  const turma = selT.value;
+  const aluno = selA.value;
+  if (!aluno) return;
+
+  const histAluno = todos.filter(r => r.aluno === aluno && r.turma === turma && r.concluido).reverse();
+
+  let html = `<div class="card">
+    <div class="card-title" style="margin-bottom:16px">
+      <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+      ${aluno} — Histórico
+    </div>`;
+
+  if (!histAluno.length) {
+    html += '<div class="empty-state"><p>Nenhuma atividade realizada.</p></div>';
+  } else {
+    for (const r of histAluno) {
+      const total = (r.acertos||0) + (r.erros||0);
+      const aproveit = total > 0 ? Math.round((r.acertos||0)/total*100) : 0;
+      html += `<div class="hist-item">
+        <div class="hist-header" onclick="toggleDetalhes('${r.id}', this.nextElementSibling)">
+          <div style="flex:1">
+            <div class="hist-nome">${r.atividade}</div>
+            <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
+              <span class="badge badge-gold">${r.pontuacao||0} pts</span>
+              <span class="badge badge-green">${r.acertos||0} acertos</span>
+              <span class="badge badge-red">${r.erros||0} erros</span>
+              <span class="badge badge-blue">${aproveit}%</span>
+            </div>
+          </div>
+          <div class="hist-data">${r.data||''}</div>
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--text-muted)"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+        </div>
+        <div class="hist-body" style="display:none" data-loaded="false">
+          <p style="font-size:12px;color:var(--text-muted);padding-top:8px">Carregando…</p>
+        </div>
+      </div>`;
+    }
+  }
+
+  html += `</div>`;
+  document.getElementById("content").innerHTML = html;
+};
+</script>
+</body>
+</html>

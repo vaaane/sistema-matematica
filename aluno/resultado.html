@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Resultado — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .banner-conquistas{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 20px;border-radius:var(--radius);background:linear-gradient(135deg,#FFFBEB,#fff);border:1.5px solid var(--gold);margin-bottom:20px;animation:fadeIn .5s ease;}
+    .banner-titulo{font-size:15px;font-weight:800;color:var(--gold);}
+    .conquista-chip{padding:4px 12px;border-radius:20px;background:#FEF9C3;color:#854D0E;font-size:12px;font-weight:700;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+    .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+    .stat-res{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 12px;text-align:center;}
+    .stat-val{font-size:26px;font-weight:800;line-height:1;}
+    .stat-lbl{font-size:10px;color:var(--text-muted);margin-top:5px;text-transform:uppercase;letter-spacing:.4px;}
+    .atraso-banner{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;background:#FFF7ED;border:1px solid #FED7AA;font-size:13px;color:var(--orange-dark);font-weight:600;margin-bottom:20px;}
+    .q-rev{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:8px;border:1px solid var(--border);margin-bottom:8px;font-size:13px;}
+    .q-rev.ok{background:#F0FDF4;border-color:#BBF7D0;}
+    .q-rev.err{background:#FEF2F2;border-color:#FECACA;}
+    .q-num{font-size:11px;font-weight:700;color:var(--text-muted);width:28px;flex-shrink:0;}
+    .q-perg{flex:1;font-weight:500;}
+    .q-resp-ok{color:var(--green);font-weight:700;font-size:12px;}
+    .q-resp-err{color:var(--red);font-weight:700;font-size:12px;}
+    .q-correta{font-size:11px;color:var(--text-muted);}
+    .resultado-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;}
+    @media(max-width:600px){
+      .stats-grid{grid-template-columns:repeat(3,1fr)}
+      .q-rev{flex-wrap:wrap;gap:6px 8px;padding:8px 10px}
+      .q-perg{flex-basis:100%;order:0}
+      .q-num{order:-1;align-self:flex-start}
+      .q-resp-ok,.q-resp-err{font-size:11px}
+      .q-correta{font-size:10px}
+      .resultado-actions{flex-direction:column}
+      .resultado-actions .btn{justify-content:center}
+    }
+    @media(max-width:360px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Resultado Final</div>
+        <div class="topbar-sub" id="topbar-sub"></div>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando resultado…</div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { formatarTempo } from "/js/constants.js";
+import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+
+const sess = requireAluno();
+if (!sess) throw new Error();
+renderSidebarAluno("sidebar", "atividades");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const jogo = JSON.parse(sessionStorage.getItem("sm_jogo_resultado") || "null");
+if (!jogo) { window.location.href = "/aluno/atividades.html"; throw new Error(); }
+
+document.getElementById("topbar-sub").textContent = `${jogo.nome} · Turma ${jogo.turma}`;
+
+const pf  = jogo.pontuacaoFinal || 0;
+const pb  = jogo.pontuacaoBruta || 0;
+const tt  = jogo.tempoSegundos  || 0;
+
+document.getElementById("content").innerHTML = `
+  ${!jogo.salvoFirebase ? `
+  <div class="alert" style="background:#FEF2F2;border:1.5px solid #FECACA;color:#B91C1C;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px">
+    <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;flex-shrink:0;margin-top:1px"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+    <div><strong>Erro ao salvar no servidor.</strong> Resultado exibido localmente, mas pode não aparecer no histórico.${jogo.erroSalvar ? `<br><span style="font-size:11px;opacity:.7">${jogo.erroSalvar}</span>` : ''}</div>
+  </div>` : ''}
+  ${jogo.novasConquistas?.length ? `
+  <div class="banner-conquistas">
+    <span class="banner-titulo">🏆 Conquistas desbloqueadas!</span>
+    ${jogo.novasConquistas.map(c=>`<span class="conquista-chip">${c}</span>`).join('')}
+  </div>` : ''}
+
+  <div class="stats-grid">
+    <div class="stat-res"><div class="stat-val" style="color:var(--gold)">${pf}</div><div class="stat-lbl">Pontuação</div></div>
+    <div class="stat-res"><div class="stat-val" style="color:var(--green)">${jogo.acertos||0}</div><div class="stat-lbl">Acertos</div></div>
+    <div class="stat-res"><div class="stat-val" style="color:var(--red)">${jogo.erros||0}</div><div class="stat-lbl">Erros</div></div>
+    <div class="stat-res"><div class="stat-val" style="color:var(--blue);font-size:20px">${formatarTempo(tt)}</div><div class="stat-lbl">Tempo</div></div>
+    <div class="stat-res"><div class="stat-val">${jogo.respondidas||0}</div><div class="stat-lbl">Respondidas</div></div>
+  </div>
+
+  ${(jogo.percentual != null ? jogo.percentual : Math.round((jogo.fatorAtraso||1)*100)) < 100 ? `
+  <div class="atraso-banner">
+    <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;flex-shrink:0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+    Atividade com ${jogo.percentual != null ? jogo.percentual : Math.round((jogo.fatorAtraso||1)*100)}% da nota
+    &nbsp;·&nbsp; Pontuação bruta: ${pb} → Final: ${pf} pts
+  </div>` : ''}
+
+  <div class="card">
+    <div class="card-title" style="margin-bottom:16px">
+      <svg viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
+      Revisão das questões
+    </div>
+    ${(jogo.historico||[]).map((h,i) => `
+    <div class="q-rev ${h.acertou?'ok':'err'}">
+      <div class="q-num">Q${i+1}</div>
+      <div class="q-perg">${h.pergunta}</div>
+      <div class="${h.acertou?'q-resp-ok':'q-resp-err'}">${h.resposta_aluno}</div>
+      ${!h.acertou ? `<div class="q-correta">✓ ${h.resposta_correta}</div>` : ''}
+      <div style="font-size:11px;color:var(--text-muted);width:26px;text-align:right">${h.tentativas}×</div>
+      <div>${h.acertou?'✅':'❌'}</div>
+    </div>`).join('')}
+    ${!(jogo.historico?.length) ? '<p style="color:var(--text-muted);font-size:13px">Nenhuma questão respondida.</p>' : ''}
+  </div>
+
+  <div class="resultado-actions">
+    <a href="/aluno/menu.html" class="btn btn-blue">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      Voltar ao menu
+    </a>
+    <a href="/aluno/historico.html" class="btn btn-ghost">
+      <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21L13 13.04V8h-1z"/></svg>
+      Ver histórico
+    </a>
+    <a href="/aluno/ranking.html" class="btn btn-ghost">
+      <svg viewBox="0 0 24 24"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg>
+      Ver ranking
+    </a>
+  </div>`;
+</script>
+</body>
+</html>

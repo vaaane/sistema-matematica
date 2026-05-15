@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Configurações — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Configurações</div>
+        <div class="topbar-sub">Alterar senha de acesso</div>
+      </div>
+    </div>
+    <div class="content">
+      <div id="flash-wrap"></div>
+      <div style="max-width:480px">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:20px">
+            <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+            Alterar Senha
+          </div>
+          <div class="field">
+            <label class="field-label">Senha atual</label>
+            <input type="password" class="input" id="inp-atual" placeholder="Digite a senha atual"/>
+          </div>
+          <div class="field">
+            <label class="field-label">Nova senha</label>
+            <input type="password" class="input" id="inp-nova" placeholder="Nova senha"/>
+          </div>
+          <div class="field">
+            <label class="field-label">Confirmar nova senha</label>
+            <input type="password" class="input" id="inp-confirma" placeholder="Repita a nova senha"/>
+          </div>
+          <button class="btn btn-blue" style="width:100%;justify-content:center;margin-top:8px" onclick="salvar()">
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            Salvar alterações
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module">
+import { getConfig, setConfig } from "/js/db.js";
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+
+requireProfessor();
+renderSidebarProfessor("sidebar", "config");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+function flash(msg, tipo="success") {
+  const w = document.getElementById("flash-wrap");
+  w.innerHTML = `<div class="alert alert-${tipo}">${msg}</div>`;
+  setTimeout(() => w.innerHTML="", 4000);
+}
+
+window.salvar = async function() {
+  const atual    = document.getElementById("inp-atual").value;
+  const nova     = document.getElementById("inp-nova").value.trim();
+  const confirma = document.getElementById("inp-confirma").value.trim();
+
+  if (!atual || !nova) { flash("Preencha todos os campos.", "error"); return; }
+  if (nova !== confirma) { flash("As senhas não coincidem.", "error"); return; }
+
+  const cfg = await getConfig();
+  if (atual !== cfg.senha) { flash("Senha atual incorreta.", "error"); return; }
+
+  await setConfig({ ...cfg, senha: nova });
+  flash("✅ Senha alterada com sucesso!");
+  document.getElementById("inp-atual").value = "";
+  document.getElementById("inp-nova").value  = "";
+  document.getElementById("inp-confirma").value = "";
+};
+</script>
+</body>
+</html>

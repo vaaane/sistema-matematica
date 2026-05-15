@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Atividades — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .ativ-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:14px;display:flex;align-items:center;gap:18px;transition:border-color .2s,box-shadow .2s;}
+    .ativ-card.liberada{border-color:#BAE6FD;background:linear-gradient(135deg,#EBF6FD,#fff);}
+    .ativ-card.bloqueada{opacity:.6;}
+    .ativ-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
+    .ativ-dot.blue{background:var(--blue);}
+    .ativ-dot.green{background:var(--green);}
+    .ativ-dot.orange{background:var(--orange);}
+    .ativ-nome{font-size:15px;font-weight:700;flex:1;}
+    .ativ-info-row{display:flex;align-items:center;gap:8px;margin-top:5px;flex-wrap:wrap;}
+    .tent-info{font-size:11px;color:var(--text-muted);}
+    .tent-info.warn{color:var(--red);}
+    @media(max-width:560px){
+      .ativ-card{flex-wrap:wrap;gap:12px}
+      .ativ-card>div[style*="flex:1"]{width:100%}
+      .ativ-card>.btn,.ativ-card>.badge{margin-left:auto}
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Atividades</div>
+        <div class="topbar-sub" id="topbar-sub"></div>
+      </div>
+      <div class="topbar-right"><div class="avatar avatar-orange" id="avatar-initials">?</div></div>
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+    </div>
+  </div>
+</div>
+<script type="module">
+import { LISTA_ATIVIDADES, MAX_TENTATIVAS_ATIVIDADE } from "/js/constants.js";
+import { contarTentativas, getLiberadasParaTurma } from "/js/db.js";
+import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+
+const sess = requireAluno();
+if (!sess) throw new Error();
+renderSidebarAluno("sidebar", "atividades");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const { alunos, turma } = sess;
+document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
+document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
+
+const liberadas = await getLiberadasParaTurma(turma);
+const liberadasMap = {};
+for (const lib of liberadas) liberadasMap[lib.atividade] = lib;
+
+// Conta tentativas de cada aluno para cada atividade
+const bloqueios = {};
+for (const ativ of LISTA_ATIVIDADES) {
+  const tent = {};
+  for (const al of alunos) { tent[al] = await contarTentativas(al, ativ.nome); }
+  const bloqueadoPor = alunos.filter(al => tent[al] >= MAX_TENTATIVAS_ATIVIDADE);
+  // minRest = quanto a dupla ainda pode jogar (limitado pelo aluno com mais tentativas)
+  const minRest = Math.max(0, MAX_TENTATIVAS_ATIVIDADE - Math.max(...alunos.map(al => tent[al])));
+  bloqueios[ativ.nome] = { bloqueado: bloqueadoPor.length > 0, bloqueadoPor, minRest, tentativas: {...tent} };
+}
+
+
+const content = document.getElementById("content");
+content.innerHTML = `
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/></svg>
+      Atividades Disponíveis
+    </div>
+    ${liberadas.length ? `<span class="badge badge-blue">${liberadas.length} liberada(s)</span>` : ''}
+  </div>
+
+  ${liberadas.length ? `
+  <div class="alert alert-info" style="margin-bottom:16px">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+    ${liberadas.map(l=>`<strong>${l.atividade}</strong> (${l.percentual??100}% · ${l.tempo_maximo/60}min)`).join(' &nbsp;·&nbsp; ')} disponíve${liberadas.length>1?'is':'l'} agora.
+  </div>` : `
+  <div class="alert alert-warn" style="margin-bottom:16px">
+    <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+    Nenhuma atividade liberada no momento. Aguarde o professor.
+  </div>`}
+
+  ${LISTA_ATIVIDADES.map(ativ => {
+    const isLib   = !!liberadasMap[ativ.nome];
+    const lib     = liberadasMap[ativ.nome];
+    const bloq    = bloqueios[ativ.nome];
+    const classes = `ativ-card${isLib?' liberada':''}${bloq.bloqueado?' bloqueada':''}`;
+
+    let botao = '';
+    if (!isLib) {
+      botao = `<span class="badge badge-orange">Não liberada</span>`;
+    } else if (bloq.bloqueado) {
+      botao = `<span class="badge badge-red">Bloqueada</span>`;
+    } else {
+      botao = `<a href="/aluno/jogar.html?ativ=${encodeURIComponent(ativ.nome)}" class="btn btn-blue">
+        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Iniciar
+      </a>`;
+    }
+
+    const tentInfos = alunos.map(al => {
+      const usado = bloq.tentativas[al] || 0;
+      const rest  = Math.max(0, MAX_TENTATIVAS_ATIVIDADE - usado);
+      return rest === 0
+        ? `<span class="tent-info warn">${al}: bloqueado</span>`
+        : `<span class="tent-info">${al}: ${rest} tent. restante(s)</span>`;
+    }).join('<span style="color:var(--border);margin:0 4px">·</span>');
+
+    return `<div class="${classes}">
+      <div class="ativ-dot ${ativ.cor}"></div>
+      <div style="flex:1">
+        <div class="ativ-nome">${ativ.nome}</div>
+        <div class="ativ-info-row" style="margin-top:5px">
+          ${tentInfos}
+          ${isLib ? `<span class="badge badge-blue">Liberada · ${lib.percentual??100}%</span>` : ''}
+        </div>
+      </div>
+      ${botao}
+    </div>`;
+  }).join('')}
+</div>`;
+</script>
+</body>
+</html>

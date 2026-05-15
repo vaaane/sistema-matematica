@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Histórico — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .hist-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;}
+    .hist-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background .15s;}
+    .hist-header:hover{background:#FAFAFA;}
+    .hist-nome{flex:1;font-size:14px;font-weight:700;}
+    .hist-data{font-size:11px;color:var(--text-muted);}
+    .hist-body{padding:0 16px 14px;border-top:1px solid var(--border);}
+    .q-rev{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);margin-top:6px;font-size:12px;}
+    .q-rev.ok{background:#F0FDF4;border-color:#BBF7D0;}
+    .q-rev.err{background:#FEF2F2;border-color:#FECACA;}
+    .aluno-section{margin-bottom:24px;}
+    .aluno-title{font-size:13px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Histórico</div>
+        <div class="topbar-sub" id="topbar-sub"></div>
+      </div>
+      <div class="topbar-right"><div class="avatar avatar-orange" id="avatar-initials">?</div></div>
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+    </div>
+  </div>
+</div>
+<script type="module">
+import { getResultados, getDetalhes } from "/js/db.js";
+import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+
+const sess = requireAluno();
+if (!sess) throw new Error();
+renderSidebarAluno("sidebar", "historico");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const { alunos, turma } = sess;
+document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
+document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
+
+const todos = await getResultados();
+
+const content = document.getElementById("content");
+let html = '';
+
+for (const aluno of alunos) {
+  const regs = todos.filter(r => r.aluno === aluno && r.concluido).reverse();
+  html += `<div class="aluno-section">
+    <div class="aluno-title">
+      <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+      ${aluno}
+    </div>`;
+
+  if (!regs.length) {
+    html += `<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21L13 13.04V8h-1z"/></svg><p>Nenhuma atividade realizada ainda.</p></div>`;
+  } else {
+    for (const r of regs) {
+      const detalhes = await getDetalhes(r.id);
+      const total = (r.acertos||0) + (r.erros||0);
+      const aproveit = total > 0 ? Math.round((r.acertos||0)/total*100) : 0;
+      html += `<div class="hist-item">
+        <div class="hist-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+          <div style="flex:1">
+            <div class="hist-nome">${r.atividade}</div>
+            <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
+              <span class="badge badge-gold">${r.pontuacao||0} pts</span>
+              <span class="badge badge-green">${r.acertos||0} acertos</span>
+              <span class="badge badge-red">${r.erros||0} erros</span>
+              <span class="badge badge-blue">${aproveit}%</span>
+            </div>
+          </div>
+          <div class="hist-data">${r.data||''}</div>
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--text-muted)"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+        </div>
+        <div class="hist-body" style="display:none">
+          ${detalhes.length ? detalhes.map((h,i)=>`
+          <div class="q-rev ${h.acertou?'ok':'err'}">
+            <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:24px">Q${i+1}</span>
+            <span style="flex:1">${h.pergunta}</span>
+            <span style="${h.acertou?'color:var(--green)':'color:var(--red)'};font-weight:700">${h.resposta_aluno}</span>
+            ${!h.acertou?`<span style="font-size:10px;color:var(--text-muted)">✓ ${h.resposta_correta}</span>`:''}
+            <span>${h.acertou?'✅':'❌'}</span>
+          </div>`).join('') : '<p style="font-size:12px;color:var(--text-muted);padding-top:8px">Detalhes não disponíveis.</p>'}
+        </div>
+      </div>`;
+    }
+  }
+  html += '</div>';
+}
+
+content.innerHTML = html;
+</script>
+</body>
+</html>

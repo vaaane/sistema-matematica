@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ranking — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .tab-nav{display:flex;gap:4px;background:var(--bg);border-radius:12px;padding:4px;margin-bottom:20px;}
+    .tab-nav button{flex:1;padding:9px;border:none;border-radius:9px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);background:transparent;transition:all .2s;}
+    .tab-nav button.active{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(47,158,220,.3);}
+    .rank-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);}
+    .rank-row:last-child{border-bottom:none;}
+    .rank-row.destaque{background:linear-gradient(135deg,var(--blue-pale),#fff);border-left:3px solid var(--blue);}
+    .rank-pos{font-size:16px;font-weight:800;width:32px;text-align:center;flex-shrink:0;}
+    .rank-nome{flex:1;font-size:13px;font-weight:600;}
+    .rank-turma{font-size:11px;color:var(--text-muted);}
+    .rank-pts{font-size:14px;font-weight:800;color:var(--gold);}
+    .rank-extra{font-size:11px;color:var(--text-muted);text-align:right;}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Ranking</div>
+        <div class="topbar-sub" id="topbar-sub"></div>
+      </div>
+      <div class="topbar-right"><div class="avatar avatar-orange" id="avatar-initials">?</div></div>
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+    </div>
+  </div>
+</div>
+<script type="module">
+import { getResultados } from "/js/db.js";
+import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+
+const sess = requireAluno();
+if (!sess) throw new Error();
+renderSidebarAluno("sidebar", "ranking");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const { alunos, turma } = sess;
+document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
+document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
+
+const todos = await getResultados();
+
+// Calcula rankings
+const melhorA = {}, turmaA = {}, acA = {}, atA = {}, alunosTurma = {};
+todos.filter(r => r.concluido).forEach(r => {
+  const {aluno: a, turma: t, atividade: ativ, pontuacao: pts, acertos: ac} = r;
+  turmaA[a] = t;
+  acA[a] = (acA[a]||0) + (ac||0);
+  atA[a] = atA[a] || new Set(); atA[a].add(ativ);
+  alunosTurma[t] = alunosTurma[t] || new Set(); alunosTurma[t].add(a);
+  melhorA[a] = melhorA[a] || {}; melhorA[a][ativ] = Math.max(melhorA[a][ativ]||0, pts||0);
+});
+const ptsA = Object.fromEntries(Object.entries(melhorA).map(([a,m])=>[a,Object.values(m).reduce((x,y)=>x+y,0)]));
+const ptsT = {};
+Object.entries(ptsA).forEach(([a,p]) => { const t=turmaA[a]; if(t) ptsT[t]=(ptsT[t]||0)+p; });
+
+const rankGeral = Object.entries(ptsA).sort((a,b)=>b[1]-a[1]).map(([nome,pts],i)=>({
+  pos:i+1, nome, turma:turmaA[nome]||'—', pts,
+  acertos:acA[nome]||0, ativs:(atA[nome]?.size||0),
+  destaque: alunos.includes(nome)
+}));
+const rankTurma = rankGeral.filter(r=>r.turma===turma).map((r,i)=>({...r,pos:i+1}));
+const rankTurmas = Object.entries(ptsT).sort((a,b)=>b[1]-a[1]).map(([t,pts],i)=>({
+  pos:i+1, turma:t, pts, alunos:alunosTurma[t]?.size||0,
+  media:Math.round(pts/(alunosTurma[t]?.size||1)), destaque:t===turma
+}));
+
+let tabAtual = "geral";
+
+function renderTablas() {
+  const tbody = document.getElementById("tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  if (tabAtual === "geral") {
+    rankGeral.forEach(r => {
+      tbody.innerHTML += `<tr class="${r.destaque?'destaque':''}">
+        <td><span class="rank-pos ${r.pos===1?'medal-1':r.pos===2?'medal-2':r.pos===3?'medal-3':''}">${r.pos===1?'🥇':r.pos===2?'🥈':r.pos===3?'🥉':r.pos}</span></td>
+        <td><div style="font-weight:600">${r.nome}</div></td>
+        <td class="rank-hide-mobile"><span class="badge badge-blue">Turma ${r.turma}</span></td>
+        <td><strong style="color:var(--gold)">${r.pts}</strong></td>
+        <td class="rank-hide-mobile">${r.acertos}</td>
+        <td class="rank-hide-mobile">${r.ativs}</td>
+      </tr>`;
+    });
+  } else if (tabAtual === "turma") {
+    rankTurma.forEach(r => {
+      tbody.innerHTML += `<tr class="${r.destaque?'destaque':''}">
+        <td><span class="rank-pos ${r.pos===1?'medal-1':r.pos===2?'medal-2':r.pos===3?'medal-3':''}">${r.pos===1?'🥇':r.pos===2?'🥈':r.pos===3?'🥉':r.pos}</span></td>
+        <td><div style="font-weight:600">${r.nome}</div></td>
+        <td><strong style="color:var(--gold)">${r.pts}</strong></td>
+        <td class="rank-hide-mobile">${r.acertos}</td>
+        <td class="rank-hide-mobile">${r.ativs}</td>
+      </tr>`;
+    });
+  } else {
+    rankTurmas.forEach(r => {
+      tbody.innerHTML += `<tr class="${r.destaque?'destaque':''}">
+        <td><span class="rank-pos ${r.pos===1?'medal-1':r.pos===2?'medal-2':r.pos===3?'medal-3':''}">${r.pos===1?'🥇':r.pos===2?'🥈':r.pos===3?'🥉':r.pos}</span></td>
+        <td><strong>Turma ${r.turma}</strong></td>
+        <td><strong style="color:var(--gold)">${r.pts}</strong></td>
+        <td class="rank-hide-mobile">${r.alunos} alunos</td>
+        <td class="rank-hide-mobile">${r.media} pts/aluno</td>
+      </tr>`;
+    });
+  }
+}
+
+const myPos = rankGeral.find(r=>alunos.includes(r.nome));
+const myPosTurma = rankTurma.find(r=>alunos.includes(r.nome));
+
+document.getElementById("content").innerHTML = `
+  ${myPos ? `<div class="alert alert-info" style="margin-bottom:16px">
+    📊 ${alunos[0]} está em <strong>#${myPos.pos}º lugar geral</strong> com ${myPos.pts} pontos
+    ${myPosTurma ? `· <strong>#${myPosTurma.pos}º na Turma ${turma}</strong>` : ''}
+  </div>` : ''}
+
+  <div class="tab-nav">
+    <button id="tab-geral"  class="active" onclick="mudarTab('geral')">🌐 Geral (${rankGeral.length})</button>
+    <button id="tab-turma"         onclick="mudarTab('turma')">🏫 Minha Turma (${rankTurma.length})</button>
+    <button id="tab-turmas"        onclick="mudarTab('turmas')">📊 Turmas (${rankTurmas.length})</button>
+  </div>
+
+  <div class="card" style="padding:0">
+    <table class="table" id="ranking-table">
+      <thead id="thead"></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>`;
+
+window.mudarTab = function(tab) {
+  tabAtual = tab;
+  ["geral","turma","turmas"].forEach(t => {
+    document.getElementById("tab-"+t)?.classList.toggle("active", t===tab);
+  });
+  const thead = document.getElementById("thead");
+  if (tab === "turmas") {
+    thead.innerHTML = '<tr><th>#</th><th>Turma</th><th>Pontuação</th><th class="rank-hide-mobile">Alunos</th><th class="rank-hide-mobile">Média</th></tr>';
+  } else if (tab === "turma") {
+    thead.innerHTML = '<tr><th>#</th><th>Aluno</th><th>Pontuação</th><th class="rank-hide-mobile">Acertos</th><th class="rank-hide-mobile">Atividades</th></tr>';
+  } else {
+    thead.innerHTML = '<tr><th>#</th><th>Aluno</th><th class="rank-hide-mobile">Turma</th><th>Pontuação</th><th class="rank-hide-mobile">Acertos</th><th class="rank-hide-mobile">Atividades</th></tr>';
+  }
+  renderTablas();
+};
+
+mudarTab("geral");
+</script>
+<style>.destaque td{background:linear-gradient(135deg,var(--blue-pale),#fff)!important}</style>
+</body>
+</html>

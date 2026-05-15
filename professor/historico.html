@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Histórico Geral — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .hist-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
+    .hist-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background .15s;}
+    .hist-header:hover{background:#FAFAFA;}
+    .hist-body{padding:0 16px 14px;border-top:1px solid var(--border);}
+    .hist-data{font-size:11px;color:var(--text-muted);white-space:nowrap;}
+    .q-rev{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);margin-top:6px;font-size:12px;}
+    .q-rev.ok{background:#F0FDF4;border-color:#BBF7D0;}
+    .q-rev.err{background:#FEF2F2;border-color:#FECACA;}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Histórico Geral</div>
+        <div class="topbar-sub" id="topbar-sub">Todos os resultados</div>
+      </div>
+      <div class="topbar-right" style="display:flex;gap:10px">
+        <div class="select-wrap" style="width:150px">
+          <select class="input" id="sel-turma" onchange="filtrar()" style="padding:8px 12px;font-size:13px">
+            <option value="Todas">Todas as turmas</option>
+          </select>
+        </div>
+        <div class="select-wrap" style="width:200px">
+          <select class="input" id="sel-ativ" onchange="filtrar()" style="padding:8px 12px;font-size:13px">
+            <option value="Todas">Todas as atividades</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+    </div>
+  </div>
+</div>
+<script type="module">
+import { ALUNOS_POR_TURMA } from "/js/constants.js";
+import { getResultados, getDetalhes, getConquistas, marcarAlertaVisto, getAlertas } from "/js/db.js";
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+
+requireProfessor();
+renderSidebarProfessor("sidebar", "historico");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const [todos, conquistas, alertas] = await Promise.all([getResultados(), getConquistas(), getAlertas()]);
+
+const selT = document.getElementById("sel-turma");
+const selA = document.getElementById("sel-ativ");
+Object.keys(ALUNOS_POR_TURMA).forEach(t => { selT.innerHTML += `<option value="${t}">Turma ${t}</option>`; });
+const ativNomes = [...new Set(todos.map(r=>r.atividade))].sort();
+ativNomes.forEach(a => { selA.innerHTML += `<option value="${a}">${a}</option>`; });
+
+window.toggleDetalhes = async function(id, bodyEl) {
+  const visivel = bodyEl.style.display !== 'none';
+  if (visivel) { bodyEl.style.display = 'none'; return; }
+  bodyEl.style.display = 'block';
+  if (bodyEl.dataset.loaded === 'true') return;
+  bodyEl.dataset.loaded = 'true';
+  const questoes = await getDetalhes(id);
+  if (!questoes || !questoes.length) {
+    bodyEl.innerHTML = '<p style="font-size:12px;color:var(--text-muted);padding-top:8px">Detalhes não disponíveis.</p>';
+    return;
+  }
+  bodyEl.innerHTML = questoes.map((q, i) => `
+    <div class="q-rev ${q.acertou ? 'ok' : 'err'}">
+      <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:24px">Q${i+1}</span>
+      <span style="flex:1">${q.pergunta}</span>
+      <span style="${q.acertou ? 'color:var(--green)' : 'color:var(--red)'};font-weight:700">${q.resposta_aluno}</span>
+      ${!q.acertou ? `<span style="font-size:10px;color:var(--text-muted)">✓ ${q.resposta_correta}</span>` : ''}
+      <span>${q.acertou ? '✅' : '❌'}</span>
+    </div>`).join('');
+};
+
+window.filtrar = function() {
+  const turma = selT.value;
+  const ativ  = selA.value;
+  let dados = [...todos].reverse().filter(r => r.concluido);
+  if (turma !== "Todas") dados = dados.filter(r => r.turma === turma);
+  if (ativ  !== "Todas") dados = dados.filter(r => r.atividade === ativ);
+
+  const conquFilt = turma === "Todas" ? conquistas : conquistas.filter(c => c.turma === turma);
+
+  const listaHtml = dados.slice(0, 50).map(r => {
+    const total = (r.acertos||0) + (r.erros||0);
+    const aproveit = total > 0 ? Math.round((r.acertos||0)/total*100) : 0;
+    return `<div class="hist-item">
+      <div class="hist-header" onclick="toggleDetalhes('${r.id}', this.nextElementSibling)">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-size:14px;font-weight:700">${r.atividade}</span>
+            <span class="badge badge-blue">T${r.turma}</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">${r.aluno}</div>
+          <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
+            <span class="badge badge-gold">${r.pontuacao||0} pts</span>
+            <span class="badge badge-green">${r.acertos||0} acertos</span>
+            <span class="badge badge-red">${r.erros||0} erros</span>
+            <span class="badge badge-blue">${aproveit}%</span>
+          </div>
+        </div>
+        <div class="hist-data">${r.data||''}</div>
+        <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--text-muted)"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+      </div>
+      <div class="hist-body" style="display:none" data-loaded="false">
+        <p style="font-size:12px;color:var(--text-muted);padding-top:8px">Carregando…</p>
+      </div>
+    </div>`;
+  }).join('') || '<div class="empty-state"><p>Nenhum resultado.</p></div>';
+
+  document.getElementById("content").innerHTML = `
+    <div class="grid-2">
+      <div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">Resultados (${dados.length})</div>
+          ${listaHtml}
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">🏆 Conquistas Recentes</div>
+          ${conquFilt.slice(0,20).map(c=>`
+          <div class="list-row">
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:600">${c.aluno}</div>
+              <div style="font-size:11px;color:var(--text-muted)">${c.descricao} · ${c.atividade}</div>
+            </div>
+            <span class="badge badge-gold">${c.data||''}</span>
+          </div>`).join('')}
+          ${!conquFilt.length ? '<div class="empty-state"><p>Nenhuma conquista.</p></div>' : ''}
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">⚠️ Alertas</div>
+          ${alertas.slice(0,10).map(a=>`
+          <div class="list-row">
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:600">${a.aluno} — ${a.atividade}</div>
+              <div style="font-size:11px;color:var(--text-muted)">${a.motivo}</div>
+            </div>
+            ${!a.visto ? `<button class="btn btn-sm btn-ghost" onclick="verAlerta('${a.id}',this)">Marcar visto</button>` : '<span class="badge badge-green">Visto</span>'}
+          </div>`).join('')}
+          ${!alertas.length ? '<div class="empty-state"><p>Nenhum alerta.</p></div>' : ''}
+        </div>
+      </div>
+    </div>`;
+};
+
+window.verAlerta = async function(id, btn) {
+  await marcarAlertaVisto(id);
+  btn.outerHTML = '<span class="badge badge-green">Visto</span>';
+};
+
+filtrar();
+</script>
+</body>
+</html>

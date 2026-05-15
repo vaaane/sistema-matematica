@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Relatório — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .table th, .table td { font-size: 11px; padding: 8px 10px; }
+    .table th { font-size: 10px; }
+    @media(max-width:640px){.topbar{flex-wrap:wrap;gap:8px}.topbar-left{flex:1;min-width:0}.topbar-right{width:100%;display:flex;gap:8px}.topbar-right .select-wrap{flex:1}.topbar-right .btn{white-space:nowrap}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Relatório por Turma</div>
+        <div class="topbar-sub" id="topbar-sub"></div>
+      </div>
+      <div class="topbar-right" style="gap:10px;display:flex">
+        <div class="select-wrap" style="width:160px">
+          <select class="input" id="sel-turma" onchange="gerarRelatorio()" style="padding:8px 12px;font-size:13px">
+          </select>
+        </div>
+        <button class="btn btn-green" onclick="exportarCSV()">
+          <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          Exportar CSV
+        </button>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+    </div>
+  </div>
+</div>
+<script type="module">
+import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES } from "/js/constants.js";
+import { getResultados } from "/js/db.js";
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+
+requireProfessor();
+renderSidebarProfessor("sidebar", "relatorio");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const sel = document.getElementById("sel-turma");
+Object.keys(ALUNOS_POR_TURMA).forEach(t => { sel.innerHTML += `<option value="${t}">Turma ${t}</option>`; });
+
+let todos = await getResultados();
+let tabelaAtual = [];
+
+window.gerarRelatorio = function() {
+  const turma = sel.value;
+  document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
+  const dados = todos.filter(r => r.turma === turma && r.concluido);
+
+  const melhor = {}, acA = {}, errA = {}, ativsFei = {};
+  dados.forEach(r => {
+    const {aluno:a, atividade:ativ, pontuacao:pts, acertos:ac, erros:er} = r;
+    melhor[a]=melhor[a]||{}; melhor[a][ativ]=Math.max(melhor[a][ativ]||0,pts||0);
+    acA[a]=(acA[a]||0)+(ac||0); errA[a]=(errA[a]||0)+(er||0);
+    ativsFei[a]=ativsFei[a]||new Set(); ativsFei[a].add(ativ);
+  });
+
+  tabelaAtual = (ALUNOS_POR_TURMA[turma]||[]).sort().map(aluno => {
+    if (melhor[aluno]) {
+      const pts = Object.values(melhor[aluno]).reduce((a,b)=>a+b,0);
+      const n   = ativsFei[aluno]?.size||0;
+      const ac  = acA[aluno]||0; const er = errA[aluno]||0;
+      return { aluno, pts, ativs:n, media:n?Math.round(pts/n):0, acertos:ac, erros:er, aproveit:(ac+er)>0?Math.round(ac/(ac+er)*100):0 };
+    }
+    return { aluno, pts:0, ativs:0, media:0, acertos:0, erros:0, aproveit:0 };
+  }).sort((a,b) => b.pts - a.pts);
+
+  const alunosTurma = new Set(ALUNOS_POR_TURMA[turma]||[]);
+  const pendentes = {};
+  for (const ativ of LISTA_ATIVIDADES) {
+    const fizeram = new Set(todos.filter(r=>r.atividade===ativ.nome&&r.turma===turma).map(r=>r.aluno));
+    pendentes[ativ.nome] = [...alunosTurma].filter(a=>!fizeram.has(a)).sort();
+  }
+
+  document.getElementById("content").innerHTML = `
+    <div class="grid-2">
+      <div class="card" style="padding:0">
+        <table class="table">
+          <thead><tr>
+            <th>#</th><th>Aluno</th><th>Pontuação</th><th>Atividades</th>
+            <th>Média</th><th>Acertos</th><th>Erros</th><th>Aproveit.</th>
+          </tr></thead>
+          <tbody>
+            ${tabelaAtual.map((r,i)=>`<tr>
+              <td style="color:var(--text-muted)">${i+1}</td>
+              <td><strong>${r.aluno}</strong></td>
+              <td><strong style="color:var(--gold)">${r.pts}</strong></td>
+              <td>${r.ativs}</td>
+              <td>${r.media}</td>
+              <td style="color:var(--green)">${r.acertos}</td>
+              <td style="color:var(--red)">${r.erros}</td>
+              <td>${r.aproveit}%</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px">
+          <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          Pendentes — Turma ${turma}
+        </div>
+        ${LISTA_ATIVIDADES.map(a=>`
+        <div style="margin-bottom:14px">
+          <div style="font-size:13px;font-weight:700;margin-bottom:6px">${a.nome}</div>
+          ${pendentes[a.nome].length ? pendentes[a.nome].map(n=>`<span class="badge badge-red" style="margin:2px">${n}</span>`).join('') : '<span class="badge badge-green">Todos fizeram ✅</span>'}
+        </div>`).join('')}
+      </div>
+    </div>`;
+};
+
+window.exportarCSV = function() {
+  const turma = sel.value;
+  if (!tabelaAtual.length) return;
+  const linhas = [
+    ["aluno","pontuacao","atividades","media","acertos","erros","aproveitamento"],
+    ...tabelaAtual.map(r=>[r.aluno,r.pts,r.ativs,r.media,r.acertos,r.erros,r.aproveit+"%"])
+  ];
+  const csv = "\uFEFF" + linhas.map(l=>l.join(",")).join("\n");
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `relatorio_turma${turma}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+};
+
+gerarRelatorio();
+</script>
+</body>
+</html>

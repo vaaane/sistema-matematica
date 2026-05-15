@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Dashboard</div>
+        <div class="topbar-sub">Visão geral do sistema</div>
+      </div>
+      <div class="topbar-right"><div class="avatar avatar-blue">P</div></div>
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+    </div>
+  </div>
+</div>
+<script type="module">
+import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES } from "/js/constants.js";
+import { getResultados, getLiberadas, getAlertas } from "/js/db.js";
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+
+const sess = requireProfessor();
+if (!sess) throw new Error();
+renderSidebarProfessor("sidebar", "dashboard");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const [todos, liberadas, alertas] = await Promise.all([getResultados(), getLiberadas(), getAlertas(true)]);
+
+const totalAlunos = Object.values(ALUNOS_POR_TURMA).reduce((a,b)=>a+b.length,0);
+const totalTurmas = Object.keys(ALUNOS_POR_TURMA).length;
+
+const melhorDash = {};
+todos.filter(r => r.concluido).forEach(r => {
+  if (!melhorDash[r.aluno]) melhorDash[r.aluno] = {};
+  melhorDash[r.aluno][r.atividade] = Math.max(melhorDash[r.aluno][r.atividade]||0, r.pontuacao||0);
+});
+const ptsPorAluno = Object.fromEntries(Object.entries(melhorDash).map(([a,m])=>[a,Object.values(m).reduce((x,y)=>x+y,0)]));
+const top5 = Object.entries(ptsPorAluno).sort((a,b)=>b[1]-a[1]).slice(0,5);
+const ultimos = [...todos].reverse().filter(r => r.concluido).slice(0,6);
+
+const LABEL_TIPO = { dia:"do dia", anterior:"anterior", antiga:"antiga" };
+
+document.getElementById("content").innerHTML = `
+  <div class="grid-4" style="margin-bottom:22px">
+    <div class="stat-card"><div class="stat-icon blue"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div><div><div class="stat-value blue">${totalAlunos}</div><div class="stat-meta">Total de Alunos</div></div></div>
+    <div class="stat-card"><div class="stat-icon orange"><svg viewBox="0 0 24 24"><path d="M12 3L1 9l4 2.18V17h2v-4.82L9 13.36V17c0 1.1 1.35 2 3 2s3-.9 3-2v-3.64l2-1.09V17h2v-5.82L23 9 12 3z"/></svg></div><div><div class="stat-value orange">${totalTurmas}</div><div class="stat-meta">Turmas</div></div></div>
+    <div class="stat-card"><div class="stat-icon green"><svg viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg></div><div><div class="stat-value green">${todos.length}</div><div class="stat-meta">Resultados</div></div></div>
+    <div class="stat-card"><div class="stat-icon red"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div><div><div class="stat-value red">${alertas.length}</div><div class="stat-meta">Alertas</div></div></div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>Atividades Liberadas</div>
+          <a href="/professor/atividades.html" class="btn btn-sm btn-blue">Liberar atividade</a>
+        </div>
+        ${liberadas.length ? liberadas.map(lib=>`
+        <div class="list-row">
+          <div style="flex:1"><div style="font-size:13px;font-weight:700">${lib.atividade}</div>
+          <div style="font-size:11px;color:var(--text-muted)">Turma ${lib.turma} · ${lib.percentual != null ? lib.percentual : (lib.tipo==='anterior'?75:lib.tipo==='antiga'?50:100)}% da nota · ${lib.tempo_maximo/60}min</div></div>
+          <span class="badge badge-green">Ativa</span>
+        </div>`).join('') : '<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg><p>Nenhuma atividade liberada.</p></div>'}
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21L13 13.04V8h-1z"/></svg>Últimos Resultados</div></div>
+        ${ultimos.map(r=>`
+        <div class="list-row">
+          <div style="flex:1"><div style="font-size:13px;font-weight:600">${r.aluno}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${r.atividade} · Turma ${r.turma}</div></div>
+          <span class="badge badge-gold">${r.pontuacao} pts</span>
+          <span style="font-size:11px;color:var(--text-muted)">${r.data||''}</span>
+        </div>`).join('')}
+        ${!ultimos.length?'<div class="empty-state"><p>Nenhum resultado ainda.</p></div>':''}
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>Alertas Recentes</div></div>
+        ${alertas.length ? alertas.slice(0,5).map(a=>`
+        <div class="list-row">
+          <div style="flex:1"><div style="font-size:13px;font-weight:600">${a.aluno} — ${a.atividade}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${a.motivo}</div></div>
+          <span class="badge badge-red">⚠️</span>
+        </div>`).join('') : '<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg><p>Nenhum alerta.</p></div>'}
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg>Top 5 Alunos</div></div>
+        ${top5.map(([nome,pts],i)=>`
+        <div class="list-row">
+          <div class="rank-pos" style="font-weight:800;width:28px;text-align:center">${['🥇','🥈','🥉','4º','5º'][i]}</div>
+          <div style="flex:1;font-size:13px;font-weight:600">${nome}</div>
+          <span class="badge badge-gold">${pts} pts</span>
+        </div>`).join('')}
+        ${!top5.length?'<div class="empty-state"><p>Nenhum resultado ainda.</p></div>':''}
+      </div>
+    </div>
+  </div>`;
+</script>
+<style>.rank-pos{font-size:16px}</style>
+</body>
+</html>

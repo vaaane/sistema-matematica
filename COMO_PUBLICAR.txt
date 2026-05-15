@@ -1,0 +1,125 @@
+════════════════════════════════════════════════════════
+  COMO PUBLICAR O SISTEMA (Cloudflare Pages + Firebase)
+════════════════════════════════════════════════════════
+
+PASSO 1 — CRIAR PROJETO NO FIREBASE
+────────────────────────────────────
+1. Acesse: https://console.firebase.google.com
+2. Clique em "Criar projeto" → dê um nome → Continuar
+3. Desative o Google Analytics (opcional) → Criar projeto
+
+PASSO 2 — ATIVAR O REALTIME DATABASE
+────────────────────────────────────
+⚠️  O sistema usa o Firebase Realtime Database (NÃO o Firestore).
+    Certifique-se de ativar o produto correto.
+
+1. No menu lateral: "Realtime Database"
+2. Clique em "Criar banco de dados"
+3. Escolha a região (us-central1 ou southamerica-east1) → Próximo
+4. Escolha "Iniciar no modo de teste" → Concluído
+5. Clique na aba "Regras" e substitua o conteúdo por:
+
+    {
+      "rules": {
+        ".read": true,
+        ".write": true
+      }
+    }
+
+6. Clique em "Publicar"
+
+PASSO 3 — PEGAR AS CREDENCIAIS
+────────────────────────────────────
+1. No Firebase Console: ícone de engrenagem → "Configurações do projeto"
+2. Role até "Seus apps" → clique no ícone </> (Web)
+3. Registre o app com um nome qualquer
+4. Copie o objeto firebaseConfig que aparecer
+
+PASSO 4 — CONFIGURAR O PROJETO
+────────────────────────────────────
+Abra o arquivo:  js/firebase-config.js
+
+Substitua os valores dentro de firebaseConfig:
+  apiKey:            "COLE_AQUI"
+  authDomain:        "COLE_AQUI"
+  projectId:         "COLE_AQUI"
+  storageBucket:     "COLE_AQUI"
+  messagingSenderId: "COLE_AQUI"
+  appId:             "COLE_AQUI"
+  databaseURL:       "COLE_AQUI"   ← obrigatório! Ex: https://SEU-PROJETO-default-rtdb.firebaseio.com
+
+  ⚠️  O campo databaseURL é obrigatório. Você encontra ele em:
+      Firebase Console → Realtime Database → copie a URL que aparece no topo do banco.
+
+PASSO 5 — PUBLICAR NO CLOUDFLARE PAGES
+────────────────────────────────────────
+Opção A — via ZIP (mais simples, sem GitHub):
+1. Compacte a pasta "site_firebase" em um arquivo .zip
+2. Acesse: https://dash.cloudflare.com
+3. Crie uma conta gratuita
+4. Vá em "Workers & Pages" → "Pages" → "Fazer upload de ativos"
+5. Dê um nome ao projeto (ex: sistema-matematica)
+6. Faça upload do .zip
+7. Clique em "Implantar site"
+8. Pronto! URL: https://sistema-matematica.pages.dev
+
+Opção B — via GitHub:
+1. Crie conta no GitHub e suba esta pasta
+2. No Cloudflare Pages → "Conectar ao Git"
+3. Selecione o repositório → Build não precisa de configuração
+4. A cada push, o site atualiza automaticamente
+
+PASSO 6 — SENHA INICIAL
+────────────────────────────────────
+A senha inicial do professor é: 123
+Você pode alterar em: Professor → Configurações
+
+════════════════════════════════════════════════════════
+  ESTRUTURA DO PROJETO
+════════════════════════════════════════════════════════
+
+site_firebase/
+├── index.html              ← Login
+├── aluno/
+│   ├── menu.html           ← Menu do aluno
+│   ├── atividades.html     ← Lista de atividades
+│   ├── jogar.html          ← Jogo
+│   ├── resultado.html      ← Resultado
+│   ├── historico.html      ← Histórico
+│   └── ranking.html        ← Ranking
+├── professor/
+│   ├── dashboard.html      ← Painel do professor
+│   ├── atividades.html     ← Liberar atividades
+│   ├── ranking.html        ← Ranking completo
+│   ├── acompanhamento.html ← Acompanhar alunos
+│   ├── relatorio.html      ← Relatório + CSV
+│   ├── historico.html      ← Histórico geral + alertas
+│   └── config.html         ← Alterar senha
+├── js/
+│   ├── firebase-config.js  ← ⚠️ PREENCHER COM SUAS CREDENCIAIS
+│   ├── constants.js        ← Turmas, atividades, etc.
+│   ├── db.js               ← Funções do Realtime Database
+│   └── auth.js             ← Sessão e navegação
+├── css/main.css            ← Estilos globais
+└── dados/
+    ├── questoes_atividade1.json
+    ├── questoes_atividade2.json
+    └── questoes_atividade3.json
+
+════════════════════════════════════════════════════════
+  VERIFICAÇÃO DE PROBLEMAS
+════════════════════════════════════════════════════════
+
+Se as atividades não estão sendo salvas, verifique:
+
+1. O campo databaseURL em firebase-config.js está preenchido?
+   → Sem ele, o banco de dados não funciona.
+
+2. As regras do Realtime Database estão configuradas como ".write": true?
+   → Firebase Console → Realtime Database → Regras
+
+3. Abra o console do navegador (F12 → Console) e veja se há erros
+   de "Permission denied" ou "PERMISSION_DENIED".
+   → Se houver, o problema são as regras do banco de dados.
+
+════════════════════════════════════════════════════════
