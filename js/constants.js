@@ -17,11 +17,44 @@ export const ARQUIVO_QUESTOES = {
 };
 
 export const ALUNOS_POR_TURMA = {
-  "A": ["Bianca","Camila","Daniela","Diego","Edvaldo","Elisa","Emanuel","Giovana","Karen","Nathalia","Omar","Otávio","Sabrina","Sérgio","Talita","Vera","Zeila"],
-  "B": ["Alice","Aline","Camila","Diego","Débora","Emanuel","Hana","Henrique","Karen","Laura","Marcos","Nathalia","Nathan","Paloma","Sofia","Talita","Ursula","Victor","Yuri","Zeila"],
-  "C": ["Bianca","Dara","Eric","Fernanda","Igor","Isabela","Ivo","Kevin","Marcos","Mariana","Nathalia","Olga","Paula","Renata","Samuel","Tiago","Ulisses","William","Ximena","Yuri","Zeca"],
-  "D": ["Bernardo","Elisa","Fabio","Fernanda","Graça","Ingrid","Ivo","Joaquim","João","Karen","Kevin","Lucas","Nathan","Valentina","Victor","William","Ximena","Yuri"],
-  "F": ["Bianca","Diego","Eduardo","Fabio","Giovana","Helena","Joana","João","Julia","Lucas","Milena","Pedro","Quésia","Renata","Samuel","Vera","Victor","Wendy","Yuri"],
+  "8D": [
+    "Alice Tavares", "Alice Paz", "Ana Julia", "Arthur", "Dandara",
+    "Francisco", "Isaac", "João Pedro", "Karolinny", "Ketelly",
+    "Letícia", "Lucas Marinho", "Lucas Oliveira", "Luís Oliveira", "Luís Freitas",
+    "Miguel Ferreira", "Miguel Pereira", "Thayna", "Wanderson",
+  ],
+  "8E": [
+    "Ana Beatriz", "Arthur", "Caio", "Davi Costa", "Davi Almeida", "Davi Araújo",
+    "Gabriel", "Gustavo", "Isaque", "Jonathan", "Kauã", "Lívia",
+    "Luiz", "Manuella", "Maria Clara", "Maria Eduarda", "Maria Luísa",
+    "Mateus", "Matheus", "Natanael", "Natielle", "Nicollas",
+    "Paulo", "Rafaela", "Rafael", "Raissa", "Rebeca",
+    "Sofia", "Sophie", "Talysson", "Vicktor", "Victor Conrado", "Victor Teixeira",
+    "William", "Yago", "Yasmin", "João Gabriel",
+  ],
+  "8F": [
+    "Ana Beatriz", "Ana Clara", "Anna Beatriz", "Arthur Candido", "Arthur Silva",
+    "Carlos", "Evellyn", "Fábio", "Fellype", "Guilherme",
+    "Heitor", "João Pedro", "Joaquim", "Kayla", "Luana",
+    "Maria Elisangela", "Maria Santa", "Marlon", "Miguel", "Mycaela",
+    "Nathalia", "Pedro", "Rafael", "Renato", "Ryan",
+    "Sara", "Sofia", "Victor Hugo", "Vitor Hugo", "Wesley", "Ycaro",
+  ],
+  "8G": [
+    "Ana Clara", "Ana Gabryella", "Ana Maria", "Davi Emanoel", "Davi Francisco", "Davi Lukas",
+    "Helena", "Isabela", "Karlos", "Ketelen", "Laiza", "Lorran",
+    "Maria Clara", "Maria Eduarda", "Maria Laura", "Maria Sophia",
+    "Natalya", "Pablo", "Paulo", "Pedro Gabriel", "Pedro Henrique", "Pedro Henryque",
+    "Pietro", "Pyetro", "Renan", "Sandra", "Santiago", "Sophia", "Thays", "Victor",
+  ],
+  "8H": [
+    "Ana Beatriz", "Ana Clara", "Ana Gabrieli", "Anderson", "Bruno",
+    "Emanuelle", "Esllinder", "Honny", "Laryssa", "Leonardo",
+    "Levi", "Marcus", "Maria Fernanda", "Matheus", "Murillo",
+    "Nicolas", "Nicolle", "Nicolly", "Pedro Jorge", "Pedro Riquelme", "Pedro Willian",
+    "Rana", "Riquelme", "Samuel", "Sophia", "Thayanne",
+    "Victor Gabriel", "Victor Hugo", "Victória", "Vinícius", "Yann", "Yasmin", "Yoxiris",
+  ],
 };
 
 export function intercalarPorDificuldade(perguntas) {
