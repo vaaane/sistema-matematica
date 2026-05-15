@@ -1,6 +1,6 @@
 import { db } from "./firebase-config.js";
 import {
-  ref, push, set, update, get, remove,
+  ref, push, set, update, get, remove, onValue,
   query, orderByChild, limitToLast, equalTo, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -163,6 +163,24 @@ export async function getLiberacoesHistorico() {
 
 export async function updateLiberacaoHistorico(id, data) {
   await update(ref(db, `liberacoes_historico/${id}`), data);
+}
+
+// ── Ranking ao vivo (competition) ───────────────────────────
+export function listenRankingAtividade(atividade, callback) {
+  const q = query(ref(db, "resultados"), orderByChild("atividade"), equalTo(atividade));
+  return onValue(q, snap => {
+    const all = [];
+    snap.forEach(child => {
+      const v = child.val();
+      if (v.pontuacao > 0) all.push({ id: child.key, ...v });
+    });
+    const best = {};
+    for (const r of all) {
+      const k = r.aluno;
+      if (!best[k] || (r.pontuacao || 0) > (best[k].pontuacao || 0)) best[k] = r;
+    }
+    callback(Object.values(best).sort((a, b) => (b.pontuacao || 0) - (a.pontuacao || 0)).slice(0, 15));
+  });
 }
 
 // ── Configuração ────────────────────────────────────────────

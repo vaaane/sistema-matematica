@@ -62,10 +62,13 @@ for (const lib of liberadas) liberadasMap[lib.atividade] = lib;
 // Conta tentativas de cada aluno para cada atividade
 const bloqueios = {};
 for (const ativ of LISTA_ATIVIDADES) {
+  if (ativ.modo === "competicao") {
+    bloqueios[ativ.nome] = { bloqueado: false, bloqueadoPor: [], minRest: 999, tentativas: {}, competicao: true };
+    continue;
+  }
   const tent = {};
   for (const al of alunos) { tent[al] = await contarTentativas(al, ativ.nome); }
   const bloqueadoPor = alunos.filter(al => tent[al] >= MAX_TENTATIVAS_ATIVIDADE);
-  // minRest = quanto a dupla ainda pode jogar (limitado pelo aluno com mais tentativas)
   const minRest = Math.max(0, MAX_TENTATIVAS_ATIVIDADE - Math.max(...alunos.map(al => tent[al])));
   bloqueios[ativ.nome] = { bloqueado: bloqueadoPor.length > 0, bloqueadoPor, minRest, tentativas: {...tent} };
 }
@@ -98,24 +101,30 @@ content.innerHTML = `
     const bloq    = bloqueios[ativ.nome];
     const classes = `ativ-card${isLib?' liberada':''}${bloq.bloqueado?' bloqueada':''}`;
 
+    const url = ativ.modo === "competicao"
+      ? `/aluno/competicao.html?ativ=${encodeURIComponent(ativ.nome)}`
+      : `/aluno/jogar.html?ativ=${encodeURIComponent(ativ.nome)}`;
+
     let botao = '';
     if (!isLib) {
       botao = `<span class="badge badge-orange">Não liberada</span>`;
-    } else if (bloq.bloqueado) {
+    } else if (!bloq.competicao && bloq.bloqueado) {
       botao = `<span class="badge badge-red">Bloqueada</span>`;
     } else {
-      botao = `<a href="/aluno/jogar.html?ativ=${encodeURIComponent(ativ.nome)}" class="btn btn-blue">
+      botao = `<a href="${url}" class="btn btn-blue">
         <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Iniciar
       </a>`;
     }
 
-    const tentInfos = alunos.map(al => {
-      const usado = bloq.tentativas[al] || 0;
-      const rest  = Math.max(0, MAX_TENTATIVAS_ATIVIDADE - usado);
-      return rest === 0
-        ? `<span class="tent-info warn">${al}: bloqueado</span>`
-        : `<span class="tent-info">${al}: ${rest} tent. restante(s)</span>`;
-    }).join('<span style="color:var(--border);margin:0 4px">·</span>');
+    const tentInfos = bloq.competicao
+      ? `<span class="tent-info" style="color:var(--blue)">Jogue quantas vezes quiser · ao vivo</span>`
+      : alunos.map(al => {
+          const usado = bloq.tentativas[al] || 0;
+          const rest  = Math.max(0, MAX_TENTATIVAS_ATIVIDADE - usado);
+          return rest === 0
+            ? `<span class="tent-info warn">${al}: bloqueado</span>`
+            : `<span class="tent-info">${al}: ${rest} tent. restante(s)</span>`;
+        }).join('<span style="color:var(--border);margin:0 4px">·</span>');
 
     return `<div class="${classes}">
       <div class="ativ-dot ${ativ.cor}"></div>

@@ -112,12 +112,18 @@ conteudo.innerHTML = `
             <h3>${lib.atividade}</h3>
             <p>${lib.percentual??100}% da nota · ${lib.tempo_maximo/60} min</p>
           </div>
-          ${esgotado
-            ? `<span style="font-size:12px;font-weight:600;color:var(--text-muted);white-space:nowrap">Tentativas<br>esgotadas</span>`
-            : `<a href="/aluno/jogar.html?ativ=${encodeURIComponent(lib.atividade)}" class="btn btn-blue">
-                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Iniciar
-              </a>`
-          }
+          ${(() => {
+            const ativDef = LISTA_ATIVIDADES.find(a => a.nome === lib.atividade);
+            const ehComp = ativDef?.modo === 'competicao';
+            const url = ehComp
+              ? `/aluno/competicao.html?ativ=${encodeURIComponent(lib.atividade)}`
+              : `/aluno/jogar.html?ativ=${encodeURIComponent(lib.atividade)}`;
+            if (!ehComp && esgotado)
+              return `<span style="font-size:12px;font-weight:600;color:var(--text-muted);white-space:nowrap">Tentativas<br>esgotadas</span>`;
+            return `<a href="${url}" class="btn btn-blue">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Iniciar
+            </a>`;
+          })()}
         </div>`;
       }).join('') : `
       <div class="ativ-vazia">

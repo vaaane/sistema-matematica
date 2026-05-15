@@ -5,15 +5,11 @@ export const FATORES_TENTATIVA = [1.0, 0.75, 0.5, 0.25];
 export const MAX_TENTATIVAS_ATIVIDADE = 2;
 
 export const LISTA_ATIVIDADES = [
-  { nome: "Atividade 1 - Frações",   cor: "blue"   },
-  { nome: "Atividade 2 - Equações",  cor: "green"  },
-  { nome: "Atividade 3 - Geometria", cor: "orange" },
+  { nome: "Atividade 4 - Geometria", cor: "purple", modo: "competicao" },
 ];
 
 export const ARQUIVO_QUESTOES = {
-  "Atividade 1 - Frações":   "/dados/questoes_atividade1.json",
-  "Atividade 2 - Equações":  "/dados/questoes_atividade2.json",
-  "Atividade 3 - Geometria": "/dados/questoes_atividade3.json",
+  "Atividade 4 - Geometria": "/dados/questoes_competicao.json",
 };
 
 export const ALUNOS_POR_TURMA = {
