@@ -183,6 +183,63 @@ export function listenRankingAtividade(atividade, callback) {
   });
 }
 
+// ── Melhor resultado por aluno/atividade ────────────────────
+export async function getBestResultado(aluno, turma, atividade) {
+  const snap = await get(query(ref(db, "resultados"), orderByChild("aluno"), equalTo(aluno)));
+  if (!snap.exists()) return null;
+  let best = null;
+  snap.forEach(child => {
+    const v = child.val();
+    if (v.atividade === atividade && v.turma === turma && v.concluido && (v.pontuacao || 0) > 0) {
+      if (!best || (v.pontuacao || 0) > (best.pontuacao || 0)) best = { id: child.key, ...v };
+    }
+  });
+  return best;
+}
+
+// ── Limpeza ─────────────────────────────────────────────────
+export async function deletarRegistro(colecao, id) {
+  await remove(ref(db, `${colecao}/${id}`));
+}
+
+export async function getLiberacoesHistoricoTodas() {
+  const snap = await get(ref(db, "liberacoes_historico"));
+  if (!snap.exists()) return [];
+  const result = [];
+  snap.forEach(child => { result.push({ id: child.key, ...child.val() }); });
+  return result;
+}
+
+// ── Ranking professor (dados completos para projeção) ──────────
+// Para otimizar, adicione no Firebase Console > Realtime Database > Rules:
+//   "resultados": { ".indexOn": ["atividade"] }
+// Para Competição+, índice composto recomendado:
+//   "resultados": { ".indexOn": ["atividade", "turma"] }
+export function listenRankingProfessor(atividade, callback) {
+  const q = query(ref(db, "resultados"), orderByChild("atividade"), equalTo(atividade));
+  return onValue(q, snap => {
+    const all = [];
+    snap.forEach(child => { all.push({ id: child.key, ...child.val() }); });
+    const players = {};
+    for (const r of all) {
+      const k = r.aluno;
+      if (!players[k]) {
+        players[k] = { aluno: r.aluno, turma: r.turma, tentativas: 0, ativo: false,
+          melhorPts: 0, comboMax: 0, acertosDificeis: 0, acertosRapidos: 0 };
+      }
+      players[k].tentativas++;
+      if (!r.concluido) players[k].ativo = true;
+      if ((r.pontuacao || 0) > players[k].melhorPts) {
+        players[k].melhorPts = r.pontuacao || 0;
+        players[k].acertosRapidos = r.acertos_rapidos || 0;
+      }
+      if ((r.combo_max || 0) > players[k].comboMax) players[k].comboMax = r.combo_max || 0;
+      if ((r.acertos_dificeis || 0) > players[k].acertosDificeis) players[k].acertosDificeis = r.acertos_dificeis || 0;
+    }
+    callback(Object.values(players).sort((a, b) => b.melhorPts - a.melhorPts));
+  });
+}
+
 // ── Configuração ────────────────────────────────────────────
 export async function getConfig() {
   const snap = await get(ref(db, "config/professor"));

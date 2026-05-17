@@ -39,7 +39,7 @@
 </div>
 <script type="module">
 import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES } from "/js/constants.js";
-import { getResultados } from "/js/db.js";
+import { getResultados, getLiberacoesHistorico } from "/js/db.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 
 requireProfessor();
@@ -50,6 +50,7 @@ const sel = document.getElementById("sel-turma");
 Object.keys(ALUNOS_POR_TURMA).forEach(t => { sel.innerHTML += `<option value="${t}">Turma ${t}</option>`; });
 
 let todos = await getResultados();
+let histLib = await getLiberacoesHistorico();
 let tabelaAtual = [];
 
 window.gerarRelatorio = function() {
@@ -76,10 +77,13 @@ window.gerarRelatorio = function() {
   }).sort((a,b) => b.pts - a.pts);
 
   const alunosTurma = new Set(ALUNOS_POR_TURMA[turma]||[]);
-  const pendentes = {};
+  const pendentes = {}, datas100 = {};
   for (const ativ of LISTA_ATIVIDADES) {
-    const fizeram = new Set(todos.filter(r=>r.atividade===ativ.nome&&r.turma===turma).map(r=>r.aluno));
+    const fizeram = new Set(todos.filter(r=>r.atividade===ativ.nome&&r.turma===turma&&r.concluido).map(r=>r.aluno));
     pendentes[ativ.nome] = [...alunosTurma].filter(a=>!fizeram.has(a)).sort();
+    datas100[ativ.nome] = histLib
+      .filter(h=>h.atividade===ativ.nome&&h.turma===turma&&(h.percentual===100||h.percentual==null))
+      .map(h=>h.liberado_em).filter(Boolean);
   }
 
   document.getElementById("content").innerHTML = `
@@ -113,6 +117,7 @@ window.gerarRelatorio = function() {
         <div style="margin-bottom:14px">
           <div style="font-size:13px;font-weight:700;margin-bottom:6px">${a.nome}</div>
           ${pendentes[a.nome].length ? pendentes[a.nome].map(n=>`<span class="badge badge-red" style="margin:2px">${n}</span>`).join('') : '<span class="badge badge-green">Todos fizeram ✅</span>'}
+          ${datas100[a.nome].length ? `<div style="margin-top:8px;font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:currentColor;flex-shrink:0"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>Liberada a 100%: ${datas100[a.nome].join(' · ')}</div>` : ''}
         </div>`).join('')}
       </div>
     </div>`;

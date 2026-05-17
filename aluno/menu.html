@@ -114,10 +114,13 @@ conteudo.innerHTML = `
           </div>
           ${(() => {
             const ativDef = LISTA_ATIVIDADES.find(a => a.nome === lib.atividade);
-            const ehComp = ativDef?.modo === 'competicao';
-            const url = ehComp
+            const modoEfetivo = lib.modo || ativDef?.modo || 'classico';
+            const url = modoEfetivo === 'competicao_plus'
+              ? `/aluno/competicao_plus.html?ativ=${encodeURIComponent(lib.atividade)}`
+              : modoEfetivo === 'competicao'
               ? `/aluno/competicao.html?ativ=${encodeURIComponent(lib.atividade)}`
               : `/aluno/jogar.html?ativ=${encodeURIComponent(lib.atividade)}`;
+            const ehComp = modoEfetivo === 'competicao' || modoEfetivo === 'competicao_plus';
             if (!ehComp && esgotado)
               return `<span style="font-size:12px;font-weight:600;color:var(--text-muted);white-space:nowrap">Tentativas<br>esgotadas</span>`;
             return `<a href="${url}" class="btn btn-blue">

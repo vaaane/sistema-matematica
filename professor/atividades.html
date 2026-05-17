@@ -22,6 +22,16 @@
     .modal-btn-bar{display:flex;gap:10px;margin-top:8px;}
     .modal-close-btn{position:absolute;top:20px;right:20px;background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:22px;line-height:1;padding:4px 8px;border-radius:8px;}
     .modal-close-btn:hover{background:var(--bg);}
+    .modo-picker{display:flex;flex-direction:column;gap:8px;}
+    .modo-card{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s;background:#FAFAFA;}
+    .modo-card:hover{border-color:#93C5FD;background:#F0F9FF;}
+    .modo-card.selected{border-color:var(--blue);background:#EFF6FF;}
+    .modo-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:border-color .15s;}
+    .modo-card.selected .modo-radio{border-color:var(--blue);}
+    .modo-radio::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--blue);opacity:0;transition:opacity .15s;}
+    .modo-card.selected .modo-radio::after{opacity:1;}
+    .modo-nome{font-size:14px;font-weight:700;margin-bottom:2px;}
+    .modo-desc{font-size:12px;color:var(--text-muted);line-height:1.4;}
     @media(max-width:480px){.modal-field-row{grid-template-columns:1fr}.modal-box-body{padding:0 16px 20px}.modal-box-header{padding:18px 16px 0}}
     @media(max-width:640px){.topbar{flex-wrap:wrap;gap:8px}.topbar-left{flex:1;min-width:0}.topbar-right{width:100%;display:flex;gap:8px}.topbar-right .btn{flex:1;justify-content:center}}
   </style>
@@ -44,7 +54,7 @@
           <label class="modal-field-label">Turma</label>
           <div class="select-wrap"><select class="input" id="sel-turma"><option value="">Selecionar…</option></select></div>
         </div>
-        <div class="modal-field">
+        <div class="modal-field" id="tempo-field">
           <label class="modal-field-label">Tempo máximo (min)</label>
           <input type="number" class="input" id="inp-tempo" value="10" min="1" max="60"/>
         </div>
@@ -52,6 +62,41 @@
       <div class="modal-field">
         <label class="modal-field-label">% da nota</label>
         <input type="number" class="input" id="inp-percentual" value="100" min="0" max="100" placeholder="0 – 100"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-field-label">Modo de jogo</label>
+        <div class="modo-picker" id="modo-picker">
+          <div class="modo-card selected" data-modo="classico" onclick="selecionarModo('classico')">
+            <div class="modo-radio"></div>
+            <div><div class="modo-nome">📚 Clássico</div><div class="modo-desc">Sem timer, sem vidas — aluno responde no próprio ritmo</div></div>
+          </div>
+          <div class="modo-card" data-modo="competicao" onclick="selecionarModo('competicao')">
+            <div class="modo-radio"></div>
+            <div><div class="modo-nome">⚔️ Competição</div><div class="modo-desc">Vidas limitadas, timer por questão, ranking ao vivo em tempo real</div></div>
+          </div>
+          <div class="modo-card" data-modo="competicao_plus" onclick="selecionarModo('competicao_plus')">
+            <div class="modo-radio"></div>
+            <div><div class="modo-nome">🚀 Competição+</div><div class="modo-desc">Saldo de pontos, 3 tentativas por questão, bônus de velocidade ⚡, 7 min globais</div></div>
+          </div>
+        </div>
+        <input type="hidden" id="sel-modo" value="classico"/>
+      </div>
+      <!-- Janela da aula: visível apenas no modo Competição+ -->
+      <div class="modal-field" id="janela-aula-wrap" style="display:none;margin-bottom:20px">
+        <label class="modal-field-label">🕐 Janela da aula (para nota 100%)</label>
+        <div class="modal-field-row" style="margin-bottom:6px">
+          <div class="modal-field" style="margin-bottom:0">
+            <label class="modal-field-label" style="font-size:10px">Início</label>
+            <input type="datetime-local" class="input" id="inp-janela-inicio"/>
+          </div>
+          <div class="modal-field" style="margin-bottom:0">
+            <label class="modal-field-label" style="font-size:10px">Fim</label>
+            <input type="datetime-local" class="input" id="inp-janela-fim"/>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);line-height:1.5">
+          Dentro da janela → nota 100% · Mesmo dia, fora → 50% · Outro dia → 25%
+        </div>
       </div>
       <!-- Aviso de substituição -->
       <div id="aviso-substituir" style="display:none;background:#FEF9C3;border:1.5px solid #FDE047;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#854D0E">
@@ -133,6 +178,16 @@ LISTA_ATIVIDADES.forEach(a => { selAtiv.innerHTML += `<option value="${a.nome}">
 const selTurma = document.getElementById("sel-turma");
 Object.keys(ALUNOS_POR_TURMA).forEach(t => { selTurma.innerHTML += `<option value="${t}">Turma ${t}</option>`; });
 
+window.selecionarModo = function(modo) {
+  document.getElementById("sel-modo").value = modo;
+  document.querySelectorAll(".modo-card").forEach(c => c.classList.toggle("selected", c.dataset.modo === modo));
+  const isPlus = modo === "competicao_plus";
+  const tempoField  = document.getElementById("tempo-field");
+  const janelaWrap  = document.getElementById("janela-aula-wrap");
+  if (tempoField) tempoField.style.display  = isPlus ? "none" : "";
+  if (janelaWrap) janelaWrap.style.display  = isPlus ? "block" : "none";
+  if (isPlus) document.getElementById("inp-tempo").value = 7;
+};
 window.abrirForm = () => {
   fecharAviso();
   document.getElementById("modal-overlay").classList.add("open");
@@ -166,7 +221,7 @@ async function carregarAeH() {
     <div class="list-row">
       <div style="flex:1">
         <div style="font-size:14px;font-weight:700">${lib.atividade}</div>
-        <div style="font-size:12px;color:var(--text-muted)">Turma ${lib.turma} · ${lib.percentual ?? 100}% da nota · ${lib.tempo_maximo/60} min</div>
+        <div style="font-size:12px;color:var(--text-muted)">Turma ${lib.turma} · ${lib.percentual ?? 100}% da nota · ${lib.modo === 'competicao_plus' ? '7' : lib.tempo_maximo/60} min · ${MODO_LABEL[lib.modo] || 'Clássico'}${lib.janela_aula ? ` · 🕐 ${lib.janela_aula.inicio.replace('T',' ')} – ${lib.janela_aula.fim.replace('T',' ')}` : ''}</div>
       </div>
       <span class="badge badge-green">Ativa</span>
       <button class="btn btn-sm btn-red" onclick="cancelar('${lib.id}','${lib.historico_id||''}')">Cancelar</button>
@@ -181,14 +236,14 @@ async function carregarAeH() {
     <div class="list-row">
       <div style="flex:1">
         <div style="font-size:13px;font-weight:600">${h.atividade} — Turma ${h.turma}</div>
-        <div style="font-size:11px;color:var(--text-muted)">${h.percentual != null ? h.percentual : (h.tipo==='anterior'?75:h.tipo==='antiga'?50:100)}% · ${h.tempo_maximo/60}min · ${h.liberado_em||''}</div>
+        <div style="font-size:11px;color:var(--text-muted)">${h.percentual != null ? h.percentual : (h.tipo==='anterior'?75:h.tipo==='antiga'?50:100)}% · ${h.modo==='competicao_plus'?'7':h.tempo_maximo/60}min · ${h.liberado_em||''}${h.janela_aula ? ` · 🕐 ${h.janela_aula.inicio.replace('T',' ')} – ${h.janela_aula.fim.replace('T',' ')}` : ''}</div>
       </div>
       <span class="badge ${h.cancelado_em?'badge-orange':'badge-green'}">${h.cancelado_em?'Cancelada':'Encerrada'}</span>
     </div>`).join('');
   }
 }
 
-async function executarLiberacao(atividade, turma, percentual, tempo) {
+async function executarLiberacao(atividade, turma, percentual, tempo, modo, janela_aula) {
   const agora = dataAgora();
   const ativas = await getLiberadas();
   for (const item of ativas) {
@@ -197,19 +252,30 @@ async function executarLiberacao(atividade, turma, percentual, tempo) {
       if (item.historico_id) await updateLiberacaoHistorico(item.historico_id, { cancelado_em: agora });
     }
   }
-  const histId = await addLiberacaoHistorico({ atividade, turma, percentual, tempo_maximo: tempo*60, liberado_em: agora });
-  await addLiberada({ atividade, turma, percentual, tempo_maximo: tempo*60, liberado_em: agora, historico_id: histId });
+  const extra = janela_aula ? { janela_aula } : {};
+  const histId = await addLiberacaoHistorico({ atividade, turma, percentual, tempo_maximo: tempo*60, modo, liberado_em: agora, ...extra });
+  await addLiberada({ atividade, turma, percentual, tempo_maximo: tempo*60, modo, liberado_em: agora, historico_id: histId, ...extra });
   fecharForm();
   flash(`✅ ${atividade} — Turma ${turma} liberada!`);
   await carregarAeH();
 }
+
+const MODO_LABEL = { classico: "Clássico", competicao: "Competição", competicao_plus: "Competição+" };
 
 window.liberar = async function() {
   const atividade  = document.getElementById("sel-ativ").value;
   const turma      = document.getElementById("sel-turma").value;
   const percentual = Math.min(100, Math.max(0, parseInt(document.getElementById("inp-percentual").value) || 100));
   const tempo      = parseInt(document.getElementById("inp-tempo").value) || 10;
+  const modo       = document.getElementById("sel-modo").value || "classico";
   if (!atividade || !turma) { flash("Selecione a atividade e a turma.", "error"); return; }
+
+  let janela_aula = null;
+  if (modo === "competicao_plus") {
+    const ini = document.getElementById("inp-janela-inicio").value;
+    const fim = document.getElementById("inp-janela-fim").value;
+    if (ini && fim) janela_aula = { inicio: ini, fim };
+  }
 
   const ativas = await getLiberadas();
   const existente = ativas.find(a => a.atividade === atividade && a.turma === turma);
@@ -218,11 +284,11 @@ window.liberar = async function() {
       `"${atividade}" já está liberada para a Turma ${turma} (${existente.percentual ?? 100}% da nota). Confirmar irá atualizar a configuração.`;
     document.getElementById("aviso-substituir").style.display = "block";
     document.getElementById("modal-btn-bar").style.display = "none";
-    window._pendente = { atividade, turma, percentual, tempo };
+    window._pendente = { atividade, turma, percentual, tempo, modo, janela_aula };
     return;
   }
 
-  await executarLiberacao(atividade, turma, percentual, tempo);
+  await executarLiberacao(atividade, turma, percentual, tempo, modo, janela_aula);
 };
 
 window.confirmarSubstituir = async function() {
@@ -230,7 +296,7 @@ window.confirmarSubstituir = async function() {
   if (!p) return;
   window._pendente = null;
   fecharAviso();
-  await executarLiberacao(p.atividade, p.turma, p.percentual, p.tempo);
+  await executarLiberacao(p.atividade, p.turma, p.percentual, p.tempo, p.modo, p.janela_aula);
 };
 
 window.cancelar = async function(id, histId) {

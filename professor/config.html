@@ -42,12 +42,27 @@
             Salvar alterações
           </button>
         </div>
+        <div class="card" style="margin-top:16px;border-color:#FECACA">
+          <div class="card-title" style="margin-bottom:12px;color:var(--red)">
+            <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+            Limpar Banco de Dados
+          </div>
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.5">
+            Remove resultados, conquistas e alertas de alunos não cadastrados e de atividades antigas. Mantém apenas os alunos do arquivo e a Atividade 4 — Geometria.<br>
+            <strong style="color:var(--red)">Todo o histórico e liberações ativas são apagados</strong> — a atividade precisará ser liberada novamente.
+          </p>
+          <button class="btn btn-red" style="width:100%;justify-content:center" onclick="limpar()">
+            <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+            Limpar dados de teste
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </div>
 <script type="module">
-import { getConfig, setConfig } from "/js/db.js";
+import { getConfig, setConfig, getResultados, getConquistas, getAlertas, getLiberacoesHistoricoTodas, getLiberadas, deletarRegistro } from "/js/db.js";
+import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES } from "/js/constants.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 
 requireProfessor();
@@ -57,8 +72,56 @@ window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 function flash(msg, tipo="success") {
   const w = document.getElementById("flash-wrap");
   w.innerHTML = `<div class="alert alert-${tipo}">${msg}</div>`;
-  setTimeout(() => w.innerHTML="", 4000);
+  setTimeout(() => w.innerHTML="", 6000);
 }
+
+window.limpar = async function() {
+  if (!confirm("Tem certeza? Esta ação é irreversível e removerá todos os dados de teste.")) return;
+  const btn = document.querySelector("[onclick='limpar()']");
+  if (btn) { btn.disabled = true; btn.textContent = "Limpando…"; }
+
+  const alunosValidos = new Set(Object.values(ALUNOS_POR_TURMA).flat());
+  const atividadesValidas = new Set(LISTA_ATIVIDADES.map(a => a.nome));
+
+  try {
+    const [todos, conquistas, alertas, histLib, ativas] = await Promise.all([
+      getResultados(), getConquistas(), getAlertas(), getLiberacoesHistoricoTodas(), getLiberadas()
+    ]);
+
+    let contRes = 0, contConq = 0, contAlert = 0, contHist = 0, contAtiv = 0;
+    for (const r of todos) {
+      if (!alunosValidos.has(r.aluno) || !atividadesValidas.has(r.atividade)) {
+        await deletarRegistro("resultados", r.id);
+        await deletarRegistro("detalhes", r.id).catch(() => {});
+        contRes++;
+      }
+    }
+    for (const c of conquistas) {
+      if (!alunosValidos.has(c.aluno) || !atividadesValidas.has(c.atividade)) {
+        await deletarRegistro("conquistas", c.id); contConq++;
+      }
+    }
+    for (const alerta of alertas) {
+      if (!alunosValidos.has(alerta.aluno) || !atividadesValidas.has(alerta.atividade)) {
+        await deletarRegistro("alertas", alerta.id); contAlert++;
+      }
+    }
+    for (const h of histLib) {
+      await deletarRegistro("liberacoes_historico", h.id); contHist++;
+    }
+    for (const lib of ativas) {
+      await deletarRegistro("liberacoes_ativas", lib.id); contAtiv++;
+    }
+    flash(`✅ Limpeza concluída — ${contRes} resultado(s), ${contConq} conquista(s), ${contAlert} alerta(s), ${contHist} histórico(s) e ${contAtiv} liberação(ões) ativa(s) removidos.`);
+  } catch(e) {
+    flash("❌ Erro durante a limpeza: " + e.message, "error");
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Limpar dados de teste`;
+    }
+  }
+};
 
 window.salvar = async function() {
   const atual    = document.getElementById("inp-atual").value;

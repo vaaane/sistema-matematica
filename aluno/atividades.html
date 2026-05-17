@@ -62,7 +62,9 @@ for (const lib of liberadas) liberadasMap[lib.atividade] = lib;
 // Conta tentativas de cada aluno para cada atividade
 const bloqueios = {};
 for (const ativ of LISTA_ATIVIDADES) {
-  if (ativ.modo === "competicao") {
+  const _lib = liberadasMap[ativ.nome];
+  const _modo = _lib?.modo || ativ.modo || 'classico';
+  if (_modo === "competicao" || _modo === "competicao_plus") {
     bloqueios[ativ.nome] = { bloqueado: false, bloqueadoPor: [], minRest: 999, tentativas: {}, competicao: true };
     continue;
   }
@@ -101,7 +103,10 @@ content.innerHTML = `
     const bloq    = bloqueios[ativ.nome];
     const classes = `ativ-card${isLib?' liberada':''}${bloq.bloqueado?' bloqueada':''}`;
 
-    const url = ativ.modo === "competicao"
+    const modoEfetivo = lib?.modo || ativ.modo || 'classico';
+    const url = modoEfetivo === 'competicao_plus'
+      ? `/aluno/competicao_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
+      : modoEfetivo === 'competicao'
       ? `/aluno/competicao.html?ativ=${encodeURIComponent(ativ.nome)}`
       : `/aluno/jogar.html?ativ=${encodeURIComponent(ativ.nome)}`;
 

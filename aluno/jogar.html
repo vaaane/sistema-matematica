@@ -128,12 +128,12 @@ for (const al of alunos) {
   }
 }
 
+const percentual = typeof liberada.percentual === "number" ? liberada.percentual : 100;
+const tempoMax   = liberada.tempo_maximo;
 document.getElementById("topbar-title").textContent = nomeAtiv;
-document.getElementById("topbar-sub").textContent = `Turma ${turma} · ${percentual}% da nota · ${liberada.tempo_maximo/60} min`;
+document.getElementById("topbar-sub").textContent = `Turma ${turma} · ${percentual}% da nota · ${tempoMax/60} min`;
 
 const perguntas  = await carregarPerguntas(nomeAtiv);
-const tempoMax   = liberada.tempo_maximo;
-const percentual = typeof liberada.percentual === "number" ? liberada.percentual : 100;
 const fatorAtr   = percentual / 100;
 const agora      = dataAgora();
 
@@ -334,7 +334,7 @@ window.pedirAjuda = function() {
   jogo.ajudaUsada = true;
   jogo.tentativas = 0;
   const perg = pergAtual();
-  const alts = perg.alternativas || [];
+  const alts = perg.alternativas || perg.opcoes || [];
   const grid = document.getElementById("alts-grid");
   grid.innerHTML = "";
   alts.forEach(alt => {
