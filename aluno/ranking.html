@@ -175,8 +175,8 @@ const resumoHTML = alunos.map(nome => {
     </div>
     <div class="mini-stats">
       <div class="mini-stat"><div class="mini-stat-value" style="color:var(--gold)">${r.melhorPts}</div><div class="mini-stat-label">Melhor</div></div>
-      <div class="mini-stat"><div class="mini-stat-value" style="color:var(--orange)">#${r.posTurma}</div><div class="mini-stat-label">Na Turma</div></div>
-      <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue)">#${r.posGeral}</div><div class="mini-stat-label">Geral</div></div>
+      <div class="mini-stat"><div class="mini-stat-value" style="color:var(--orange)">${r.posTurma === '—' ? '—' : '#'+r.posTurma}</div><div class="mini-stat-label">Na Turma</div></div>
+      <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue)">${r.posGeral === '—' ? '—' : '#'+r.posGeral}</div><div class="mini-stat-label">Geral</div></div>
       <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green)">${r.sessoes}</div><div class="mini-stat-label">Sessões</div></div>
       <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue)">${r.acertos}</div><div class="mini-stat-label">Acertos</div></div>
       <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green)">${r.taxa}%</div><div class="mini-stat-label">Taxa</div></div>
