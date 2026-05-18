@@ -55,6 +55,9 @@
     .card-footer strong{color:var(--text);}
     #loading-overlay{display:none;position:fixed;inset:0;background:rgba(255,255,255,.8);z-index:999;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:var(--text-muted);}
     #loading-overlay.show{display:flex;}
+    .field-row-pin{display:grid;grid-template-columns:1fr 88px;gap:12px;}
+    input.pin-input{text-align:center;letter-spacing:5px;font-size:18px;font-weight:700;padding:11px 4px;}
+    input.pin-input:disabled{background:var(--bg);color:var(--text-muted);cursor:not-allowed;}
     @media(max-width:480px){
       body{padding:12px;}
       .card-header{padding:28px 24px 22px;}
@@ -62,6 +65,7 @@
       .card-body{padding:18px 16px 24px;}
       .card-footer{padding:12px 16px;}
       .field-row{grid-template-columns:1fr;}
+      .field-row-pin{grid-template-columns:1fr;}
     }
   </style>
 </head>
@@ -93,7 +97,7 @@
     <div class="tab-panel active" id="tab-aluno">
       <span class="badge-tip">
         <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-        Selecione sua turma e até dois alunos
+        Selecione turma, aluno e digite sua senha
       </span>
       <div id="erro-aluno" class="alert-error" style="display:none">
         <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
@@ -107,7 +111,7 @@
           </select>
         </div>
       </div>
-      <div class="field-row">
+      <div class="field-row-pin">
         <div class="field">
           <label>Aluno 1</label>
           <div class="select-wrap">
@@ -117,15 +121,29 @@
           </div>
         </div>
         <div class="field">
+          <label>Senha</label>
+          <input type="password" id="pin-aluno1" class="pin-input" inputmode="numeric"
+                 maxlength="4" placeholder="••••" disabled autocomplete="off"
+                 onkeydown="if(event.key==='Enter')entrarAluno()"/>
+        </div>
+      </div>
+      <div class="field-row-pin" id="row-aluno2">
+        <div class="field">
           <label>Aluno 2 <span style="font-weight:400;text-transform:none;font-size:10px">(opcional)</span></label>
           <div class="select-wrap">
-            <select id="sel-aluno2" disabled>
+            <select id="sel-aluno2" disabled onchange="onAluno2Change()">
               <option value="Nenhum">Nenhum</option>
             </select>
           </div>
         </div>
+        <div class="field" id="pin2-wrap" style="visibility:hidden">
+          <label>Senha</label>
+          <input type="password" id="pin-aluno2" class="pin-input" inputmode="numeric"
+                 maxlength="4" placeholder="••••" autocomplete="off"
+                 onkeydown="if(event.key==='Enter')entrarAluno()"/>
+        </div>
       </div>
-      <button class="btn-primary btn-orange" onclick="entrarAluno()">
+      <button class="btn-primary btn-orange" id="btn-entrar-aluno" onclick="entrarAluno()">
         <svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5v10z"/></svg>
         Entrar
       </button>
@@ -163,8 +181,8 @@
 
 <script type="module">
 import { ALUNOS_POR_TURMA } from "/js/constants.js";
-import { getConfig }        from "/js/db.js";
-import { getSession, setSession, clearSession } from "/js/auth.js";
+import { getConfig, getSenhaAluno } from "/js/db.js";
+import { getSession, setSession, clearSession, hashSenha } from "/js/auth.js";
 
 // Redireciona se já logado
 const sess = getSession();
@@ -192,11 +210,14 @@ window.switchTab = function(tab) {
   document.getElementById("btn-tab-professor").className = "tab-btn" + (tab==="professor"?" active-prof":"");
 };
 
+let tentativasRestantes = 5;
+
 window.carregarAlunos = function() {
   const turma  = selTurma.value;
   const alunos = ALUNOS_POR_TURMA[turma] || [];
   const sel1   = document.getElementById("sel-aluno1");
   const sel2   = document.getElementById("sel-aluno2");
+  const pin1   = document.getElementById("pin-aluno1");
   sel1.innerHTML = '<option value="" disabled selected>Selecionar…</option>';
   sel2.innerHTML = '<option value="Nenhum">Nenhum</option>';
   alunos.forEach(n => {
@@ -204,25 +225,96 @@ window.carregarAlunos = function() {
     sel2.innerHTML += `<option value="${n}">${n}</option>`;
   });
   sel1.disabled = sel2.disabled = false;
+  pin1.disabled = false;
+  pin1.value = "";
   sel1.value = "";
+  document.getElementById("pin2-wrap").style.visibility = "hidden";
+  document.getElementById("pin-aluno2").value = "";
 };
 
-window.entrarAluno = function() {
+window.onAluno2Change = function() {
+  const val   = document.getElementById("sel-aluno2").value;
+  const wrap  = document.getElementById("pin2-wrap");
+  const pin2  = document.getElementById("pin-aluno2");
+  if (val !== "Nenhum") {
+    wrap.style.visibility = "visible";
+    pin2.value = "";
+    pin2.focus();
+  } else {
+    wrap.style.visibility = "hidden";
+    pin2.value = "";
+  }
+};
+
+window.entrarAluno = async function() {
   const turma  = document.getElementById("sel-turma").value;
   const aluno1 = document.getElementById("sel-aluno1").value;
   const aluno2 = document.getElementById("sel-aluno2").value;
+  const pin1   = document.getElementById("pin-aluno1").value;
+  const pin2   = document.getElementById("pin-aluno2").value;
   const errDiv = document.getElementById("erro-aluno");
   const errMsg = document.getElementById("erro-aluno-msg");
+  const btn    = document.getElementById("btn-entrar-aluno");
 
   const showErr = msg => { errMsg.textContent = msg; errDiv.style.display = "flex"; };
   errDiv.style.display = "none";
 
   if (!turma || !aluno1) return showErr("Selecione a turma e pelo menos um aluno.");
   if (aluno2 !== "Nenhum" && aluno1 === aluno2) return showErr("Os dois alunos não podem ser iguais.");
+  if (!pin1 || !/^\d{4}$/.test(pin1)) return showErr("Digite a senha de 4 dígitos do Aluno 1.");
+  if (aluno2 !== "Nenhum" && (!pin2 || !/^\d{4}$/.test(pin2)))
+    return showErr(`Digite a senha de 4 dígitos de ${aluno2}.`);
 
-  const alunos = [aluno1, ...(aluno2 !== "Nenhum" ? [aluno2] : [])];
-  setSession({ modo: "aluno", turma, alunos });
-  window.location.href = "/aluno/menu.html";
+  if (tentativasRestantes <= 0) return showErr("Acesso bloqueado após 5 tentativas incorretas. Recarregue a página.");
+
+  btn.disabled = true;
+  btn.innerHTML = "Verificando…";
+
+  try {
+    const [hash1, rec1] = await Promise.all([
+      hashSenha(turma, aluno1, pin1),
+      getSenhaAluno(turma, aluno1),
+    ]);
+
+    if (!rec1) {
+      return showErr(`Senha não cadastrada para ${aluno1}. Peça ao professor para configurar antes do primeiro acesso.`);
+    }
+    if (rec1.hash !== hash1) {
+      tentativasRestantes--;
+      const suf = tentativasRestantes <= 0
+        ? " Acesso bloqueado. Recarregue a página."
+        : ` (${tentativasRestantes} tentativa${tentativasRestantes > 1 ? 's' : ''} restante${tentativasRestantes > 1 ? 's' : ''})`;
+      return showErr(`Senha incorreta para ${aluno1}.${suf}`);
+    }
+
+    if (aluno2 !== "Nenhum") {
+      const [hash2, rec2] = await Promise.all([
+        hashSenha(turma, aluno2, pin2),
+        getSenhaAluno(turma, aluno2),
+      ]);
+      if (!rec2) {
+        return showErr(`Senha não cadastrada para ${aluno2}. Peça ao professor para configurar.`);
+      }
+      if (rec2.hash !== hash2) {
+        tentativasRestantes--;
+        const suf = tentativasRestantes <= 0
+          ? " Acesso bloqueado. Recarregue a página."
+          : ` (${tentativasRestantes} tentativa${tentativasRestantes > 1 ? 's' : ''} restante${tentativasRestantes > 1 ? 's' : ''})`;
+        return showErr(`Senha incorreta para ${aluno2}.${suf}`);
+      }
+    }
+
+    const alunos = [aluno1, ...(aluno2 !== "Nenhum" ? [aluno2] : [])];
+    setSession({ modo: "aluno", turma, alunos });
+    window.location.href = "/aluno/menu.html";
+  } catch(e) {
+    showErr("Erro ao verificar senha. Tente novamente.");
+  } finally {
+    if (tentativasRestantes > 0) {
+      btn.disabled = false;
+      btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5v10z"/></svg> Entrar`;
+    }
+  }
 };
 
 window.entrarProfessor = async function() {

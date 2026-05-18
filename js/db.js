@@ -249,3 +249,29 @@ export async function getConfig() {
 export async function setConfig(data) {
   await set(ref(db, "config/professor"), data);
 }
+
+// ── Senhas de alunos ─────────────────────────────────────────
+function senhaKey(turma, nome) {
+  return btoa(unescape(encodeURIComponent(turma + '|' + nome)))
+    .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+}
+
+export async function getSenhaAluno(turma, nome) {
+  const snap = await get(ref(db, `aluno_senhas/${senhaKey(turma, nome)}`));
+  return snap.exists() ? snap.val() : null;
+}
+
+export async function setSenhaAluno(turma, nome, hash, enc) {
+  await set(ref(db, `aluno_senhas/${senhaKey(turma, nome)}`), { turma, nome, hash, enc });
+}
+
+export async function getAllSenhasAlunos() {
+  const snap = await get(ref(db, 'aluno_senhas'));
+  if (!snap.exists()) return {};
+  const result = {};
+  snap.forEach(child => {
+    const v = child.val();
+    result[v.turma + '|' + v.nome] = v;
+  });
+  return result;
+}

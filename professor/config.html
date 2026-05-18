@@ -6,6 +6,37 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .senhas-table{width:100%;border-collapse:collapse;font-size:13px;}
+    .senhas-table th{text-align:left;padding:8px 10px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted);border-bottom:2px solid var(--border);background:#FAFAFA;}
+    .senhas-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+    .senhas-table tr:last-child td{border-bottom:none;}
+    .senhas-table tr:hover td{background:var(--bg);}
+    .senha-dots{letter-spacing:3px;font-size:15px;font-weight:700;color:var(--text-muted);}
+    .senha-reveal{font-size:15px;font-weight:800;color:var(--orange);letter-spacing:3px;}
+    .senha-sem-cadastro{font-size:12px;color:var(--text-muted);font-style:italic;}
+    .btns-acao{display:flex;gap:6px;flex-wrap:wrap;}
+    .btn-sm{padding:4px 10px;font-size:12px;font-weight:600;border:none;border-radius:7px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:opacity .15s;}
+    .btn-sm:hover{opacity:.8;}
+    .btn-sm-ver{background:#EBF6FD;color:var(--blue-dark);}
+    .btn-sm-edit{background:#F0FDF4;color:#166534;}
+    .btn-sm-reset{background:#FFF7ED;color:#92400E;}
+    .btn-sm-save{background:var(--green);color:#fff;}
+    .btn-sm-cancel{background:var(--border);color:var(--text-muted);}
+    .edit-inline{display:flex;align-items:center;gap:6px;}
+    .edit-inline input{width:72px;padding:4px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:16px;font-weight:700;text-align:center;letter-spacing:4px;font-family:inherit;}
+    .edit-inline input:focus{outline:none;border-color:var(--orange);}
+    .migr-row{display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px;}
+    .migr-row:last-child{border-bottom:none;}
+    .migr-pin{font-size:16px;font-weight:800;color:var(--orange);min-width:48px;letter-spacing:2px;}
+    .migr-nome{flex:1;font-weight:600;}
+    .migr-turma{font-size:11px;color:var(--text-muted);min-width:28px;}
+    .print-btn{display:none;}
+    @media print{
+      .sidebar,.topbar,.btn,.btn-sm,.print-btn{display:none!important;}
+      .main{margin:0!important;padding:0!important;}
+    }
+  </style>
 </head>
 <body>
 <div class="layout">
@@ -20,6 +51,26 @@
     <div class="content">
       <div id="flash-wrap"></div>
       <div style="max-width:480px">
+        <div class="card" id="card-migracao" style="display:none;border-color:#FDE68A;background:#FFFBEB;margin-bottom:16px">
+          <div class="card-title" style="margin-bottom:12px;color:#92400E">
+            <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+            Migração de Senhas
+          </div>
+          <p style="font-size:13px;color:#78350F;margin-bottom:14px;line-height:1.5" id="migr-descricao">
+            Carregando…
+          </p>
+          <button class="btn btn-orange" id="btn-gerar-todas" onclick="gerarTodasSenhas()" style="display:none">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+            Gerar senhas para todos os alunos sem cadastro
+          </button>
+          <div id="migr-resultado" style="display:none;margin-top:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <span style="font-size:13px;font-weight:700;color:#92400E">Senhas geradas — anote e repasse aos alunos:</span>
+              <button class="btn-sm btn-sm-ver" onclick="window.print()">🖨 Imprimir</button>
+            </div>
+            <div id="migr-lista"></div>
+          </div>
+        </div>
         <div class="card">
           <div class="card-title" style="margin-bottom:20px">
             <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
@@ -57,17 +108,213 @@
           </button>
         </div>
       </div>
+
+      <!-- Gerenciamento de senhas (fora do max-width pois é tabela) -->
+      <div class="card" style="margin-top:16px">
+        <div class="card-title" style="margin-bottom:16px">
+          <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+          Senhas dos Alunos
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+          <div class="field" style="margin:0;min-width:180px">
+            <label class="field-label" style="margin-bottom:4px">Filtrar por turma</label>
+            <select id="sel-filtro" class="input" style="padding:8px 12px" onchange="renderTabelaSenhas()">
+              <option value="">Todas as turmas</option>
+            </select>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:18px" id="tabela-info"></div>
+        </div>
+        <div id="tabela-senhas-wrap" style="overflow-x:auto">
+          <div style="text-align:center;padding:30px;color:var(--text-muted)">Carregando…</div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
 <script type="module">
-import { getConfig, setConfig, getResultados, getConquistas, getAlertas, getLiberacoesHistoricoTodas, getLiberadas, deletarRegistro } from "/js/db.js";
+import { getConfig, setConfig, getResultados, getConquistas, getAlertas, getLiberacoesHistoricoTodas, getLiberadas, deletarRegistro, getAllSenhasAlunos, setSenhaAluno } from "/js/db.js";
 import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES } from "/js/constants.js";
-import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { requireProfessor, renderSidebarProfessor, clearSession, hashSenha, gerarSenhaAleatoria } from "/js/auth.js";
 
 requireProfessor();
 renderSidebarProfessor("sidebar", "config");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+// ── Estado de senhas ─────────────────────────────────────────
+const TODAS_TURMAS = Object.keys(ALUNOS_POR_TURMA);
+let senhasMap = {}; // "turma|nome" → { turma, nome, hash, enc }
+
+// Popula filtro de turmas
+const selFiltro = document.getElementById("sel-filtro");
+TODAS_TURMAS.forEach(t => { selFiltro.innerHTML += `<option value="${t}">${t}</option>`; });
+
+// Carrega senhas e checa migração
+async function iniciarSenhas() {
+  senhasMap = await getAllSenhasAlunos();
+
+  // Checa alunos sem senha
+  const semSenha = [];
+  for (const [turma, nomes] of Object.entries(ALUNOS_POR_TURMA)) {
+    for (const nome of nomes) {
+      if (!senhasMap[turma + '|' + nome]) semSenha.push({ turma, nome });
+    }
+  }
+
+  const cardMigr = document.getElementById("card-migracao");
+  const descr    = document.getElementById("migr-descricao");
+  const btnGerar = document.getElementById("btn-gerar-todas");
+  cardMigr.style.display = "";
+  if (semSenha.length === 0) {
+    descr.textContent = "✅ Todos os alunos já têm senhas cadastradas.";
+  } else {
+    descr.innerHTML = `<strong>${semSenha.length} aluno${semSenha.length > 1 ? 's' : ''}</strong> ainda ${semSenha.length > 1 ? 'não têm' : 'não tem'} senha cadastrada. Gere as senhas para repassar aos alunos.`;
+    btnGerar.style.display = "";
+    btnGerar.dataset.semSenha = JSON.stringify(semSenha);
+  }
+
+  renderTabelaSenhas();
+}
+
+window.gerarTodasSenhas = async function() {
+  const btn = document.getElementById("btn-gerar-todas");
+  const semSenha = JSON.parse(btn.dataset.semSenha || "[]");
+  if (!semSenha.length) return;
+  btn.disabled = true; btn.textContent = `Gerando ${semSenha.length} senhas…`;
+
+  const geradas = [];
+  for (const { turma, nome } of semSenha) {
+    const pin  = gerarSenhaAleatoria();
+    const hash = await hashSenha(turma, nome, pin);
+    await setSenhaAluno(turma, nome, hash, btoa(pin));
+    senhasMap[turma + '|' + nome] = { turma, nome, hash, enc: btoa(pin) };
+    geradas.push({ turma, nome, pin });
+  }
+
+  document.getElementById("migr-descricao").innerHTML = `✅ <strong>${geradas.length} senhas geradas</strong> e salvas no Firebase.`;
+  btn.style.display = "none";
+  const lista = document.getElementById("migr-lista");
+  lista.innerHTML = geradas.map(g =>
+    `<div class="migr-row">
+      <div class="migr-turma">${g.turma}</div>
+      <div class="migr-nome">${g.nome}</div>
+      <div class="migr-pin">${g.pin}</div>
+    </div>`
+  ).join('');
+  document.getElementById("migr-resultado").style.display = "";
+  renderTabelaSenhas();
+};
+
+window.renderTabelaSenhas = function() {
+  const filtro = document.getElementById("sel-filtro").value;
+  const turmas = filtro ? [filtro] : TODAS_TURMAS;
+
+  const rows = [];
+  for (const turma of turmas) {
+    for (const nome of (ALUNOS_POR_TURMA[turma] || [])) {
+      rows.push({ turma, nome, rec: senhasMap[turma + '|' + nome] || null });
+    }
+  }
+
+  document.getElementById("tabela-info").textContent = `${rows.length} aluno${rows.length !== 1 ? 's' : ''}`;
+
+  const wrap = document.getElementById("tabela-senhas-wrap");
+  wrap.innerHTML = `
+    <table class="senhas-table">
+      <thead><tr>
+        <th>Nome</th><th>Turma</th><th>Senha</th><th>Ações</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(({ turma, nome, rec }) => {
+          const key = (turma + '|' + nome).replace(/[^a-zA-Z0-9]/g, '_');
+          return `<tr id="row-${key}">
+            <td style="font-weight:600">${nome}</td>
+            <td>${turma}</td>
+            <td id="senha-cell-${key}">
+              ${rec
+                ? `<span class="senha-dots" id="dots-${key}">••••</span>`
+                : `<span class="senha-sem-cadastro">sem cadastro</span>`}
+            </td>
+            <td>
+              <div class="btns-acao">
+                ${rec
+                  ? `<button class="btn-sm btn-sm-ver"
+                      onmousedown="verSenha('${turma}','${nome.replace(/'/g,"\\'")}','${key}',true)"
+                      ontouchstart="verSenha('${turma}','${nome.replace(/'/g,"\\'")}','${key}',true)"
+                      onmouseup="verSenha('${turma}','${nome.replace(/'/g,"\\'")}','${key}',false)"
+                      ontouchend="verSenha('${turma}','${nome.replace(/'/g,"\\'")}','${key}',false)"
+                      onmouseleave="verSenha('${turma}','${nome.replace(/'/g,"\\'")}','${key}',false)">👁 Ver</button>`
+                  : ''}
+                <button class="btn-sm btn-sm-edit" onclick="editarSenha('${turma}','${nome.replace(/'/g,"\\'")}','${key}')">✏️ Editar</button>
+                <button class="btn-sm btn-sm-reset" onclick="resetarSenha('${turma}','${nome.replace(/'/g,"\\'")}','${key}')">🔄 Resetar</button>
+              </div>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+};
+
+window.verSenha = function(turma, nome, key, mostrar) {
+  const rec = senhasMap[turma + '|' + nome];
+  if (!rec || !rec.enc) return;
+  const el = document.getElementById(`dots-${key}`);
+  if (!el) return;
+  if (mostrar) {
+    el.textContent = atob(rec.enc);
+    el.className = "senha-reveal";
+  } else {
+    el.textContent = "••••";
+    el.className = "senha-dots";
+  }
+};
+
+window.editarSenha = function(turma, nome, key) {
+  const cell = document.getElementById(`senha-cell-${key}`);
+  if (!cell) return;
+  cell.innerHTML = `
+    <div class="edit-inline">
+      <input type="text" inputmode="numeric" maxlength="4" placeholder="0000"
+             id="edit-inp-${key}" autocomplete="off"
+             onkeydown="if(event.key==='Enter')salvarSenha('${turma}','${nome.replace(/'/g,"\\'")}','${key}')"/>
+      <button class="btn-sm btn-sm-save" onclick="salvarSenha('${turma}','${nome.replace(/'/g,"\\'")}','${key}')">Salvar</button>
+      <button class="btn-sm btn-sm-cancel" onclick="renderTabelaSenhas()">✕</button>
+    </div>`;
+  document.getElementById(`edit-inp-${key}`)?.focus();
+};
+
+window.salvarSenha = async function(turma, nome, key) {
+  const inp = document.getElementById(`edit-inp-${key}`);
+  if (!inp) return;
+  const pin = inp.value.trim();
+  if (!/^\d{4}$/.test(pin)) { inp.style.borderColor = "var(--red)"; inp.focus(); return; }
+  inp.disabled = true;
+  const hash = await hashSenha(turma, nome, pin);
+  await setSenhaAluno(turma, nome, hash, btoa(pin));
+  senhasMap[turma + '|' + nome] = { turma, nome, hash, enc: btoa(pin) };
+  flash(`✅ Senha de ${nome} atualizada.`);
+  renderTabelaSenhas();
+};
+
+window.resetarSenha = async function(turma, nome, key) {
+  const pin  = gerarSenhaAleatoria();
+  const hash = await hashSenha(turma, nome, pin);
+  await setSenhaAluno(turma, nome, hash, btoa(pin));
+  senhasMap[turma + '|' + nome] = { turma, nome, hash, enc: btoa(pin) };
+  renderTabelaSenhas();
+  // Mostra a nova senha por 6s na célula
+  const cell = document.getElementById(`senha-cell-${key}`);
+  if (cell) {
+    cell.innerHTML = `<span class="senha-reveal" id="dots-${key}">${pin}</span>`;
+    flash(`🔑 Nova senha de ${nome}: <strong>${pin}</strong>`);
+    setTimeout(() => {
+      const el = document.getElementById(`dots-${key}`);
+      if (el) { el.textContent = "••••"; el.className = "senha-dots"; }
+    }, 6000);
+  }
+};
+
+iniciarSenhas();
 
 function flash(msg, tipo="success") {
   const w = document.getElementById("flash-wrap");

@@ -120,6 +120,11 @@
     .hud-help-icon{font-size:17px;transition:opacity .25s,filter .25s;}
     .hud-help-icon.empty{opacity:.2;filter:grayscale(1);}
     .hud-melhor{font-size:10px;color:#252550;white-space:nowrap;}
+    .hud-records{
+      display:flex;flex-wrap:wrap;gap:2px 16px;
+      padding:3px 18px 8px;font-size:10px;font-weight:600;color:#383868;
+    }
+    .hud-records span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
     .hud-global{
       margin-left:auto;font-family:'Orbitron',monospace;font-size:17px;font-weight:700;
       color:#4a4a90;background:rgba(0,0,0,.35);padding:7px 13px;border-radius:9px;
@@ -135,8 +140,13 @@
     }
     .timer-fill{
       height:100%;border-radius:6px;background:#22C55E;
-      transition:width .95s linear,background .4s,box-shadow .4s;
+      transition:width .95s linear,background .4s;
     }
+    @keyframes gold-shimmer{
+      0%,100%{box-shadow:0 0 8px rgba(250,184,0,.5);}
+      50%{box-shadow:0 0 22px rgba(250,184,0,.95),0 0 40px rgba(250,184,0,.35);}
+    }
+    .timer-fill.dourado{animation:gold-shimmer 1.2s ease infinite;}
     .timer-mark50{
       position:absolute;left:50%;top:0;width:2px;height:100%;
       background:rgba(250,184,0,.55);pointer-events:none;z-index:2;
@@ -397,6 +407,18 @@
       font-weight:700;z-index:700;white-space:nowrap;pointer-events:none;
       box-shadow:0 0 24px rgba(124,58,237,.4);animation:notif-in .35s ease;
     }
+
+    /* ── ENCERRAR MODAL ──────────────────────────────────────── */
+    .encerrar-modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:10000;}
+    .encerrar-modal-card{background:#0d0d28;border:1px solid #3a3a6a;border-radius:16px;padding:28px 32px;text-align:center;max-width:320px;width:90%;color:#e0e0ff;}
+
+    /* ── RESPOSTA ANTERIOR BANNER ────────────────────────────── */
+    .banner-resp-ant{
+      position:fixed;bottom:80px;right:24px;
+      background:#1a1a3a;border:1px solid #4444aa;border-radius:10px;
+      padding:8px 16px;font-size:12px;font-weight:700;color:#a0c4ff;
+      z-index:900;pointer-events:none;animation:banner-in .25s ease;
+    }
   </style>
 </head>
 <body oncontextmenu="return false">
@@ -420,7 +442,7 @@
 
 <script type="module">
 import { respostasEquivalentes, dataAgora } from "/js/constants.js";
-import { addResultado, updateResultado, getLiberadasParaTurma, listenRankingAtividade, getBestResultado, getResultadosByAluno } from "/js/db.js";
+import { addResultado, updateResultado, saveDetalhes, getLiberadasParaTurma, listenRankingAtividade, getBestResultado, getResultadosByAluno, deletarRegistro } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 
 document.addEventListener('keydown', e => {
@@ -460,12 +482,9 @@ const TIMERS = { 1: 10, 2: 40, 3: 90 };
 
 let melhorPts = (await getBestResultado(alunos[0], turma, liberada.atividade))?.pontuacao || 0;
 
-const todosResultados = await getResultadosByAluno(alunos[0]);
-let sessoesCount = todosResultados.filter(r => r.atividade === liberada.atividade && r.concluido && r.modo === 'competicao_plus').length;
-const MAX_SESSOES = 3;
-
 let latestRanking = [];
 let prevMeuPos = -1;
+let rankModo = 0; // 0 = turma, 1 = geral
 let popupDifTimer = null;
 
 const unsub = listenRankingAtividade(liberada.atividade, r => {
@@ -502,26 +521,33 @@ function getMedal(i) { return ['🥇','🥈','🥉'][i] || String(i+1); }
 
 // ── Gerar questão ─────────────────────────────────────────────
 function gerarQuestao(forceDif) {
-  const dif = forceDif ?? (Math.random() < 0.65 ? 1 : 2);
-  const pool = st.pools[dif];
-  if (st.poolIdx[dif] >= pool.length) { st.pools[dif] = shuffle(pool); st.poolIdx[dif] = 0; }
-  const t = pool[st.poolIdx[dif]++];
+  for (let attempt = 0; attempt <= 30; attempt++) {
+    const dif = forceDif ?? (Math.random() < 0.65 ? 1 : 2);
+    const pool = st.pools[dif];
+    if (st.poolIdx[dif] >= pool.length) { st.pools[dif] = shuffle(pool); st.poolIdx[dif] = 0; }
+    const t = pool[st.poolIdx[dif]++];
 
-  let vars = {}, resposta = '', unidade = t.unidade || '';
-  if (t.conjuntos) {
-    const c = t.conjuntos[Math.floor(Math.random()*t.conjuntos.length)];
-    vars = {...c}; resposta = String(c.resposta);
-    if (c.unidade) unidade = c.unidade;
-  } else {
-    for (const [k,v] of Object.entries(t.variaveis||{})) {
-      vars[k] = Array.isArray(v) ? v[Math.floor(Math.random()*v.length)]
-                                 : v.min + Math.floor(Math.random()*(v.max-v.min+1));
+    let vars = {}, resposta = '', unidade = t.unidade || '';
+    if (t.conjuntos) {
+      const c = t.conjuntos[Math.floor(Math.random()*t.conjuntos.length)];
+      vars = {...c}; resposta = String(c.resposta);
+      if (c.unidade) unidade = c.unidade;
+    } else {
+      for (const [k,v] of Object.entries(t.variaveis||{})) {
+        vars[k] = Array.isArray(v) ? v[Math.floor(Math.random()*v.length)]
+                                   : v.min + Math.floor(Math.random()*(v.max-v.min+1));
+      }
+      resposta = String(avaliar(t.resposta_expr, vars) ?? '?');
     }
-    resposta = String(avaliar(t.resposta_expr, vars) ?? '?');
+    let enunciado = t.enunciado;
+    for (const [k,v] of Object.entries(vars)) enunciado = enunciado.replaceAll(`{${k}}`, v);
+
+    const comboKey = enunciado + ':' + resposta;
+    if (attempt === 30 || !st.seenCombos.has(comboKey)) {
+      st.seenCombos.add(comboKey);
+      return { enunciado, resposta, unidade, dif, pontos: PONTOS[dif], timer: t.timer ?? TIMERS[dif], bonus: false };
+    }
   }
-  let enunciado = t.enunciado;
-  for (const [k,v] of Object.entries(vars)) enunciado = enunciado.replaceAll(`{${k}}`, v);
-  return { enunciado, resposta, unidade, dif, pontos: PONTOS[dif], timer: t.timer ?? TIMERS[dif], bonus: false };
 }
 
 function gerarDistratores(resp, n=3) {
@@ -554,8 +580,10 @@ function novoEstado() {
     globalInterval: null, globalRestante: 7*60,
     finalizado: false, processando: false,
     resultadoId: null, inicioTs: Date.now()/1000,
+    questoesDetalhes: [], questaoHist: [],
     pools: { 1: shuffle([...faceis]), 2: shuffle([...medias]), 3: shuffle([...dificeis]) },
     poolIdx: { 1:0, 2:0, 3:0 },
+    seenCombos: new Set(),
   };
 }
 
@@ -591,6 +619,9 @@ function renderHUD() {
   // Valor atual da questão
   const valEl = document.querySelector('.q-valor');
   if (valEl) { const v=valorAtual(); valEl.textContent = `+${v} pt${v>1?'s':''}`; }
+  // Records
+  const recEl = document.getElementById("hud-records");
+  if (recEl) recEl.innerHTML = getRecordsHTML();
 }
 
 function flashSaldo(tipo) {
@@ -610,8 +641,7 @@ function areaRespostaHTML() {
       ${all.map((op,i) => `<button class="mc-btn" id="mc-${i}" onclick="responderMC('${op.replace(/'/g,"\\'")}',${i})">${op}</button>`).join('')}
     </div>`;
   }
-  return `${q.unidade ? `<div class="q-unidade">Resposta em ${q.unidade}</div>` : ''}
-    <div class="answer-area">
+  return `<div class="answer-area">
       <input type="text" id="resp-input" class="input" inputmode="decimal"
         placeholder="Digite a resposta…" autocomplete="off"
         onkeydown="if(event.key==='Enter')responderNum()"/>
@@ -654,6 +684,7 @@ function renderQuestao() {
       <div class="hud-melhor" id="hud-melhor">${melhorPts>0?`Melhor: ${melhorPts}`:''}</div>
       <div class="hud-global${st.globalRestante<=60?' urgente':''}" id="hud-global">⏳ ${formatGlobal(st.globalRestante)}</div>
     </div>
+    <div class="hud-records" id="hud-records">${getRecordsHTML()}</div>
     <div class="timer-wrap">
       <div class="timer-track"><div class="timer-fill" id="timer-fill" style="width:100%"></div><div class="timer-mark50"></div></div>
       <span class="timer-txt" id="timer-txt">${q.timer}s</span>
@@ -696,6 +727,25 @@ function mostrarFeedback(tipo, msg) {
 }
 
 // ── Ranking ───────────────────────────────────────────────────
+function switchRankMode() {
+  rankModo = 1 - rankModo;
+  const el = document.getElementById("ranking-list");
+  if (!el) return;
+  el.style.transition = 'opacity .3s ease';
+  el.style.opacity = '0';
+  setTimeout(() => { renderRanking(latestRanking); el.style.opacity = '1'; }, 320);
+}
+
+function getRecordsHTML() {
+  const recTurma = latestRanking.find(r => r.turma === turma);
+  const recGeral = latestRanking[0];
+  return [
+    melhorPts > 0 ? `<span>⭐ Seu recorde: ${melhorPts} pts</span>` : '',
+    recTurma ? `<span>🏫 Turma: ${recTurma.pontuacao} pts — ${recTurma.aluno}</span>` : '',
+    recGeral ? `<span>🌎 Geral: ${recGeral.pontuacao} pts — ${recGeral.aluno} (${recGeral.turma})</span>` : '',
+  ].filter(Boolean).join('');
+}
+
 function mostrarBannerRank(tipo, texto) {
   document.querySelector('.banner-rank')?.remove();
   const d = document.createElement("div");
@@ -710,42 +760,63 @@ function renderRanking(ranking) {
   if (!ranking.length) return;
   const meu = ranking.findIndex(r => alunos.includes(r.aluno));
 
-  // Detectar mudança de posição durante o jogo
   if (st && !st.finalizado && st.resultadoId && meu >= 0 && prevMeuPos >= 0 && meu !== prevMeuPos) {
-    if (meu < prevMeuPos) {
-      mostrarBannerRank('up', `↑ Você subiu para o ${meu+1}º lugar!`);
-    } else {
-      const quemPassou = ranking[meu-1]?.aluno || 'Alguém';
-      mostrarBannerRank('dn', `⚠️ ${quemPassou} acabou de te passar!`);
-    }
+    if (meu < prevMeuPos) mostrarBannerRank('up', `↑ Você subiu para o ${meu+1}º lugar!`);
+    else mostrarBannerRank('dn', `⚠️ ${ranking[meu-1]?.aluno || 'Alguém'} acabou de te passar!`);
   }
   if (meu >= 0) prevMeuPos = meu;
-
   if (!el) return;
-  const SHOW = 7;
-  const top  = ranking.slice(0, SHOW);
-  const euTop = top.some(r => alunos.includes(r.aluno));
 
-  let html = top.map((r,i) => {
+  const titleEl = document.querySelector('.rank-title');
+  let lista, euIdx;
+  if (rankModo === 0) {
+    lista = ranking.filter(r => r.turma === turma).slice(0, 3);
+    euIdx = lista.findIndex(r => alunos.includes(r.aluno));
+    if (titleEl) titleEl.textContent = `🏫 Turma ${turma}`;
+  } else {
+    lista = ranking.slice(0, 3);
+    euIdx = lista.findIndex(r => alunos.includes(r.aluno));
+    if (titleEl) titleEl.textContent = '🌎 Ranking Geral';
+  }
+
+  let html = lista.map((r, i) => {
     const eu = alunos.includes(r.aluno);
     return `<div class="rank-row${eu?' eu':''}">
       <div class="rank-pos">${getMedal(i)}</div>
       <div style="flex:1;overflow:hidden">
         <div class="rank-nome">${r.aluno}${eu?' ★':''}</div>
+        ${rankModo === 1 && r.turma ? `<div style="font-size:9px;color:#303060;margin-top:1px">${r.turma}</div>` : ''}
         ${!r.concluido?`<div class="rank-ativo">⚡ jogando</div>`:''}
       </div>
       <div class="rank-pts">${r.pontuacao}</div>
     </div>`;
   }).join('');
 
-  if (!euTop && meu >= 0) {
-    const r = ranking[meu];
-    html += `<div class="rank-sep"></div>
-    <div class="rank-row eu">
-      <div class="rank-pos">${meu+1}</div>
-      <div style="flex:1;overflow:hidden"><div class="rank-nome">${r.aluno} ★</div></div>
-      <div class="rank-pts">${r.pontuacao}</div>
-    </div>`;
+  if (euIdx < 0) {
+    if (rankModo === 0) {
+      const rankTurma = ranking.filter(r => r.turma === turma);
+      const meuT = rankTurma.findIndex(r => alunos.includes(r.aluno));
+      if (meuT >= 0) {
+        const r = rankTurma[meuT];
+        html += `<div class="rank-sep"></div>
+        <div class="rank-row eu">
+          <div class="rank-pos">${meuT+1}</div>
+          <div style="flex:1;overflow:hidden"><div class="rank-nome">${r.aluno} ★</div></div>
+          <div class="rank-pts">${r.pontuacao}</div>
+        </div>`;
+      }
+    } else if (meu >= 0) {
+      const r = ranking[meu];
+      html += `<div class="rank-sep"></div>
+      <div class="rank-row eu">
+        <div class="rank-pos">${meu+1}</div>
+        <div style="flex:1;overflow:hidden">
+          <div class="rank-nome">${r.aluno} ★</div>
+          ${r.turma?`<div style="font-size:9px;color:#303060;margin-top:1px">${r.turma}</div>`:''}
+        </div>
+        <div class="rank-pts">${r.pontuacao}</div>
+      </div>`;
+    }
   }
   el.innerHTML = html;
 }
@@ -767,34 +838,56 @@ function atualizarTimerUI() {
   const pct = q ? (st.timerRestante / q.timer) * 100 : 100;
   const fill = document.getElementById("timer-fill");
   const txt  = document.getElementById("timer-txt");
+  const mark = document.querySelector(".timer-mark50");
   if (fill) {
     fill.style.width = pct + "%";
-    if (pct > 50) {
-      fill.style.background = '#FAB800';
-      fill.style.boxShadow  = '0 0 10px rgba(250,184,0,.7)';
-    } else if (pct > 25) {
+    const t = st.tentativaAtual;
+    if (t === 0) {
+      // 1ª tentativa: dourado nos primeiros 50%, azul depois
+      if (pct > 50) {
+        fill.style.background = '#FAB800';
+        fill.style.boxShadow  = '';
+        fill.classList.add('dourado');
+      } else {
+        fill.classList.remove('dourado');
+        fill.style.background = '#3B82F6';
+        fill.style.boxShadow  = '0 0 8px rgba(59,130,246,.5)';
+      }
+    } else if (t === 1) {
+      // 2ª tentativa: toda âmbar
+      fill.classList.remove('dourado');
       fill.style.background = '#F59E0B';
       fill.style.boxShadow  = 'none';
     } else {
+      // 3ª tentativa: toda vermelha
+      fill.classList.remove('dourado');
       fill.style.background = '#EF4444';
       fill.style.boxShadow  = 'none';
     }
   }
-  if (txt) { txt.textContent = st.timerRestante+"s"; txt.className = "timer-txt"+(pct<=25?" urgente":""); }
+  if (mark) mark.style.opacity = st.tentativaAtual === 0 ? '1' : '0';
+  if (txt) { txt.textContent = st.timerRestante+"s"; txt.className = "timer-txt"+(st.tentativaAtual>=2||pct<=25?" urgente":""); }
 }
 
 function timerExpirou() {
   if (st.processando || st.finalizado) return;
   st.processando = true;
   st.tentativaAtual++;
+  const q = st.questaoAtual;
+  st.questaoHist.push({ resposta: '(tempo)', correto: false, tempoUsado: q.timer });
   document.querySelectorAll(".mc-btn").forEach(b => b.disabled = true);
   const btn = document.getElementById("btn-resp"); if (btn) btn.disabled = true;
   const inp = document.getElementById("resp-input"); if (inp) inp.disabled = true;
 
   if (st.tentativaAtual >= 3) {
     st.erros++; st.respondidas++;
-    mostrarFeedback("warn", `⏱ Tempo! Resposta: ${st.questaoAtual.resposta}${st.questaoAtual.unidade?' '+st.questaoAtual.unidade:''}`);
-    aplicarPenalidade(st.questaoAtual, true);
+    if (st.respondidas % 3 === 0) { checkpoint(); switchRankMode(); }
+    document.querySelectorAll('.mc-btn').forEach(b => {
+      if (respostasEquivalentes(b.textContent, q.resposta)) b.classList.add('correto');
+    });
+    registrarQuestao(false, -Math.floor(q.pontos * 0.5), false, 0);
+    mostrarFeedback("warn", `⏱ Tempo! Resposta: ${q.resposta}${q.unidade?' '+q.unidade:''}`);
+    aplicarPenalidade(q, true);
   } else {
     mostrarFeedback("err", `⏱ Tempo esgotado! ${3-st.tentativaAtual} tentativa${(3-st.tentativaAtual)>1?'s':''} restante${(3-st.tentativaAtual)>1?'s':''}.`);
     beep(350, 300);
@@ -845,6 +938,7 @@ function processar(resposta, mcIdx) {
   const q       = st.questaoAtual;
   const correto = respostasEquivalentes(resposta, q.resposta);
   const tempoUsado = q.timer - st.timerRestante;
+  st.questaoHist.push({ resposta, correto, tempoUsado });
 
   if (correto) {
     st.respondidas++; st.acertos++;
@@ -886,9 +980,10 @@ function processar(resposta, mcIdx) {
     }
 
     renderHUD();
+    registrarQuestao(true, pts, rapido, speedPts);
+    if (st.respondidas % 3 === 0) { checkpoint(); switchRankMode(); }
 
     const oferta = rapido && st.acertosRapidos > 0 && st.acertosRapidos % 5 === 0;
-    if (st.acertos % 4 === 0) checkpoint();
 
     setTimeout(() => {
       if (st.finalizado) return;
@@ -906,18 +1001,21 @@ function processar(resposta, mcIdx) {
 
     if (mcIdx !== null) {
       document.getElementById(`mc-${mcIdx}`)?.classList.add('errado');
-      document.querySelectorAll('.mc-btn').forEach(b => {
-        if (respostasEquivalentes(b.textContent, q.resposta)) b.classList.add('correto');
-      });
     }
 
     if (st.tentativaAtual >= 3) {
+      document.querySelectorAll('.mc-btn').forEach(b => {
+        if (respostasEquivalentes(b.textContent, q.resposta)) b.classList.add('correto');
+      });
       st.erros++; st.respondidas++;
+      if (st.respondidas % 3 === 0) { checkpoint(); switchRankMode(); }
       if (st.ehBonus) {
+        registrarQuestao(false, 0, false, 0);
         mostrarFeedback("info", `Não foi! Resposta: ${q.resposta}${q.unidade?' '+q.unidade:''} · Sem penalidade.`);
         beep(400, 250);
         setTimeout(() => { if (!st.finalizado) { st.processando = false; proxima(); } }, 2000);
       } else {
+        registrarQuestao(false, -Math.floor(q.pontos * 0.5), false, 0);
         aplicarPenalidade(q, false);
       }
     } else {
@@ -953,6 +1051,33 @@ function aplicarPenalidade(q, deTempo) {
   }
 }
 
+// ── Registrar questão concluída ───────────────────────────────
+function registrarQuestao(acertou, pontosGanhos, velocidade, speedPts) {
+  const q = st.questaoAtual;
+  st.questoesDetalhes.push({
+    enunciado: q.enunciado,
+    resposta_correta: q.resposta + (q.unidade ? ' ' + q.unidade : ''),
+    dificuldade: q.dif,
+    ehBonus: !!st.ehBonus,
+    tentativas: [...st.questaoHist],
+    acertou,
+    pontosGanhos,
+    usouAjuda: !!st.ajudaUsada,
+    velocidade,
+    speedPts,
+  });
+  st.questaoHist = [];
+}
+
+function mostrarRespostaAnterior(q) {
+  document.querySelector('.banner-resp-ant')?.remove();
+  const d = document.createElement("div");
+  d.className = "banner-resp-ant";
+  d.textContent = `✓ Resposta: ${q.resposta}${q.unidade ? ' ' + q.unidade : ''}`;
+  document.body.appendChild(d);
+  setTimeout(() => d.remove(), 1500);
+}
+
 // ── Ajuda ─────────────────────────────────────────────────────
 window.usarAjuda = function() {
   if (!st || st.ajudas <= 0 || st.modoAjuda || st.processando || st.finalizado) return;
@@ -968,19 +1093,25 @@ window.usarAjuda = function() {
 window.pularQuestao = function() {
   if (!st || st.processando || st.finalizado) return;
   clearInterval(st.timerInterval);
+  const q = st.questaoAtual;
+  st.questaoHist.push({ resposta: '(pulou)', correto: false, tempoUsado: q.timer - st.timerRestante });
   if (st.ehBonus) {
+    registrarQuestao(false, 0, false, 0);
     st.processando = true;
     mostrarFeedback("info", "Questão bônus recusada.");
     setTimeout(() => { if (!st.finalizado) { st.processando = false; proxima(); } }, 900);
     return;
   }
   st.erros++; st.respondidas++;
-  aplicarPenalidade(st.questaoAtual, false);
+  if (st.respondidas % 3 === 0) { checkpoint(); switchRankMode(); }
+  registrarQuestao(false, -Math.floor(q.pontos * 0.5), false, 0);
+  aplicarPenalidade(q, false);
 };
 
 // ── Próxima questão ───────────────────────────────────────────
 function proxima() {
   if (st.finalizado) return;
+  if (st.questaoAtual) mostrarRespostaAnterior(st.questaoAtual);
   st.tentativaAtual = 0;
   st.modoAjuda = false;
   st.ajudaUsada = false;
@@ -1088,6 +1219,19 @@ function lancarConfete(n = 70) {
   setTimeout(() => wrap.remove(), 7000);
 }
 
+// ── Poda de sessões antigas (mantém últimas 3) ────────────────
+async function pruneOldSessions() {
+  const todos = await getResultadosByAluno(alunos[0]);
+  const minhas = todos
+    .filter(r => r.atividade === liberada.atividade && r.concluido && r.modo === 'competicao_plus')
+    .sort((a, b) => (b.pontuacao || 0) - (a.pontuacao || 0));
+  // Manter apenas as 3 com maior pontuação, deletar o restante
+  const aExcluir = minhas.slice(3);
+  for (const r of aExcluir) {
+    await deletarRegistro('resultados', r.id);
+  }
+}
+
 // ── Checkpoint Firebase ───────────────────────────────────────
 async function checkpoint() {
   if (!st.resultadoId) return;
@@ -1123,11 +1267,14 @@ async function encerrarSessao(motivo) {
   if (st.resultadoId) {
     try { await updateResultado(st.resultadoId, { ...dados, aluno: alunos[0], turma, atividade: liberada.atividade }); }
     catch(e) { console.error("encerrar:", e); }
+    if (st.questoesDetalhes.length > 0) {
+      saveDetalhes(st.resultadoId, st.questoesDetalhes).catch(() => {});
+    }
   }
 
   const novoMelhor = st.saldo > melhorPts;
   if (novoMelhor) melhorPts = st.saldo;
-  sessoesCount++;
+  pruneOldSessions().catch(() => {});
   mostrarFim(motivo, novoMelhor, bonusFim);
 }
 
@@ -1169,14 +1316,12 @@ function mostrarFim(motivo, novoMelhor, bonusFim) {
         <div class="fim-s"><div class="fim-sv" style="color:#5050a0">${st.respondidas}</div><div class="fim-sl">Questões</div></div>
       </div>
       ${badges.length ? `<div class="fim-badges">${badges.join('')}</div>` : ''}
-      ${motivo==='saldo'&&st.globalRestante>0&&sessoesCount<MAX_SESSOES
+      ${motivo==='saldo'&&st.globalRestante>0
         ? `<button class="btn-restart" onclick="reiniciar()">▶ JOGAR NOVAMENTE (${formatGlobal(st.globalRestante)})</button>` : ''}
-      ${motivo==='tempo'&&sessoesCount<MAX_SESSOES
+      ${motivo==='tempo'
         ? `<button class="btn-restart" onclick="reiniciar()">▶ NOVA SESSÃO</button>` : ''}
-      ${motivo==='manual'&&sessoesCount<MAX_SESSOES
+      ${motivo==='manual'
         ? `<button class="btn-restart" onclick="reiniciar()">▶ JOGAR NOVAMENTE</button>` : ''}
-      ${sessoesCount>=MAX_SESSOES
-        ? `<div style="font-size:11px;color:#4a4a70;text-align:center;margin-bottom:8px">🔒 Limite de ${MAX_SESSOES} sessões atingido</div>` : ''}
       <button class="btn-voltar" onclick="window.location.href='/aluno/atividades.html'">← Voltar</button>
     </div>`;
   document.body.appendChild(ov);
@@ -1206,36 +1351,36 @@ window.reiniciar = async function() {
 
 window.pedirEncerrar = function() {
   if (!st || st.finalizado) return;
-  if (!confirm(`Encerrar agora? Pontuação atual: ${st.saldo} pts.`)) return;
+  document.getElementById("encerrar-modal")?.remove();
+  const ov = document.createElement("div");
+  ov.id = "encerrar-modal";
+  ov.className = "encerrar-modal-ov";
+  ov.innerHTML = `
+    <div class="encerrar-modal-card">
+      <div style="font-size:20px;margin-bottom:8px">🏁 Encerrar sessão?</div>
+      <div style="font-size:13px;color:#9999dd;margin-bottom:16px">Pontuação atual: <strong style="color:#FAB800">${st.saldo} pts</strong></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-red" style="flex:1;justify-content:center" onclick="confirmarEncerrar()">Encerrar</button>
+        <button class="btn" style="flex:1;justify-content:center;background:#1a1a3a;color:#9999dd;border-color:#3a3a6a" onclick="cancelarEncerrar()">Cancelar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+};
+
+window.confirmarEncerrar = function() {
+  document.getElementById("encerrar-modal")?.remove();
+  if (!st || st.finalizado) return;
   clearInterval(st.timerInterval);
   encerrarSessao('manual');
+};
+
+window.cancelarEncerrar = function() {
+  document.getElementById("encerrar-modal")?.remove();
 };
 
 // ── Pré-jogo com pódio ────────────────────────────────────────
 function mostrarPreJogo() {
   document.body.classList.add('arcade-mode');
-
-  if (sessoesCount >= MAX_SESSOES) {
-    document.getElementById("content").innerHTML = `
-      <div class="pre-wrap">
-        <div class="pre-title">COMPETIÇÃO+</div>
-        <div class="pre-sub">${liberada.atividade.toUpperCase()} · TURMA ${turma}</div>
-        <div style="font-size:48px;margin:20px 0">🔒</div>
-        <div style="font-family:'Orbitron',monospace;font-size:16px;color:#5a5a90;margin-bottom:12px">
-          Você já jogou ${MAX_SESSOES} vezes
-        </div>
-        ${melhorPts > 0
-          ? `<div class="pre-melhor">🏆 ${melhorPts} pts</div>
-             <div class="pre-melhor-lbl">Sua melhor pontuação</div>`
-          : ''}
-        <div style="font-size:12px;color:#3a3a60;margin-top:20px;max-width:300px;line-height:1.8">
-          O limite de sessões desta atividade foi atingido.<br>
-          Fale com a professora para mais informações.
-        </div>
-        <a class="btn-voltar" href="/aluno/atividades.html" style="margin-top:24px;display:block;max-width:280px">← Voltar</a>
-      </div>`;
-    return;
-  }
 
   const top3 = latestRanking.slice(0, 3);
   let podioHTML = '';
@@ -1247,6 +1392,7 @@ function mostrarPreJogo() {
       <div class="podio-item">
         <div class="podio-medal">${getMedal(i===0?1:i===1?0:2)}</div>
         <div class="podio-nome">${r.aluno}</div>
+        <div style="font-size:9px;color:#4a4a80;margin:-2px 0 3px">${r.turma||''}</div>
         <div class="podio-pts">${r.pontuacao}</div>
         <div class="podio-plinth ${plinths[i]}"></div>
       </div>`).join('')}
@@ -1256,6 +1402,7 @@ function mostrarPreJogo() {
       <div class="podio-item">
         <div class="podio-medal">🥇</div>
         <div class="podio-nome">${top3[0].aluno}</div>
+        <div style="font-size:9px;color:#4a4a80;margin:-2px 0 3px">${top3[0].turma||''}</div>
         <div class="podio-pts">${top3[0].pontuacao}</div>
         <div class="podio-plinth p1"></div>
       </div>
@@ -1282,7 +1429,7 @@ function mostrarPreJogo() {
         • A cada <strong>5 rápidos</strong> → questão bônus de 24 pts 🏆<br>
         • A cada <strong>3 rápidos</strong> → +1 🎯 ajuda (máx. 3, pontuação completa!)<br>
         • 7 min no total · Sem penalidades → +20 pt ao fim<br>
-        • <strong>${MAX_SESSOES - sessoesCount}</strong> sessão(ões) restante(s) de ${MAX_SESSOES}
+        • Jogue quantas vezes quiser · últimas 3 tentativas salvas
       </div>
       <button class="btn-iniciar" onclick="iniciarJogo()">▶ JOGAR!</button>
     </div>`;

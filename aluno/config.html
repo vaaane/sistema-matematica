@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Configurações — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .pin-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    .pin-field input{text-align:center;letter-spacing:6px;font-size:22px;font-weight:700;}
+    @media(max-width:480px){.pin-row{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Configurações</div>
+        <div class="topbar-sub">Trocar senha de acesso</div>
+      </div>
+    </div>
+    <div class="content">
+      <div id="flash-wrap"></div>
+      <div style="max-width:520px">
+
+        <div class="card" id="card-senha">
+          <div class="card-title" style="margin-bottom:20px">
+            <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+            Trocar Senha
+          </div>
+
+          <div class="field" id="sel-aluno-wrap" style="display:none">
+            <label class="field-label">Aluno</label>
+            <select id="sel-aluno" class="input"></select>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Senha atual (4 dígitos)</label>
+            <input type="password" class="input pin-field" id="inp-atual"
+                   inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off"/>
+          </div>
+          <div class="pin-row">
+            <div class="field">
+              <label class="field-label">Nova senha</label>
+              <input type="password" class="input pin-field" id="inp-nova"
+                     inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off"/>
+            </div>
+            <div class="field">
+              <label class="field-label">Confirmar nova senha</label>
+              <input type="password" class="input pin-field" id="inp-confirma"
+                     inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off"/>
+            </div>
+          </div>
+          <button class="btn btn-orange" style="width:100%;justify-content:center;margin-top:8px"
+                  onclick="trocarSenha()">
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            Salvar nova senha
+          </button>
+        </div>
+
+        <div class="card" style="margin-top:16px;border-color:#BAE6FD;background:#EBF6FD">
+          <div style="display:flex;align-items:flex-start;gap:12px">
+            <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--blue);flex-shrink:0;margin-top:2px">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+            </svg>
+            <div style="font-size:13px;color:var(--blue-dark);line-height:1.5">
+              A senha tem exatamente <strong>4 dígitos numéricos</strong>.
+              Se esquecer a senha, peça ao professor para resetar.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireAluno, renderSidebarAluno, clearSession, hashSenha } from "/js/auth.js";
+import { getSenhaAluno, setSenhaAluno } from "/js/db.js";
+
+const sess = requireAluno("/index.html");
+if (!sess) throw new Error("não autenticado");
+renderSidebarAluno("sidebar", "config");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const { alunos, turma } = sess;
+
+// Seletor de aluno (quando 2 estão logados)
+const selWrap = document.getElementById("sel-aluno-wrap");
+const sel     = document.getElementById("sel-aluno");
+if (alunos.length > 1) {
+  selWrap.style.display = "";
+  alunos.forEach(n => { sel.innerHTML += `<option value="${n}">${n}</option>`; });
+}
+
+function nomeAtivo() { return alunos.length > 1 ? sel.value : alunos[0]; }
+
+function flash(msg, tipo = "success") {
+  const w = document.getElementById("flash-wrap");
+  w.innerHTML = `<div class="alert alert-${tipo}">${msg}</div>`;
+  setTimeout(() => { w.innerHTML = ""; }, 5000);
+}
+
+window.trocarSenha = async function() {
+  const nome     = nomeAtivo();
+  const atual    = document.getElementById("inp-atual").value;
+  const nova     = document.getElementById("inp-nova").value;
+  const confirma = document.getElementById("inp-confirma").value;
+
+  if (!atual || !nova || !confirma) return flash("Preencha todos os campos.", "error");
+  if (!/^\d{4}$/.test(nova))        return flash("A nova senha deve ter exatamente 4 dígitos numéricos.", "error");
+  if (nova !== confirma)             return flash("As senhas não coincidem.", "error");
+
+  const btn = document.querySelector("[onclick='trocarSenha()']");
+  btn.disabled = true; btn.textContent = "Verificando…";
+
+  try {
+    const [hashAtual, rec] = await Promise.all([
+      hashSenha(turma, nome, atual),
+      getSenhaAluno(turma, nome),
+    ]);
+
+    if (!rec)               return flash("Senha não cadastrada. Peça ao professor.", "error");
+    if (rec.hash !== hashAtual) return flash("Senha atual incorreta, tente novamente.", "error");
+
+    const hashNova = await hashSenha(turma, nome, nova);
+    await setSenhaAluno(turma, nome, hashNova, btoa(nova));
+
+    flash(`✅ Senha de ${nome} alterada com sucesso!`);
+    document.getElementById("inp-atual").value   = "";
+    document.getElementById("inp-nova").value    = "";
+    document.getElementById("inp-confirma").value = "";
+  } catch(e) {
+    flash("Erro ao salvar senha. Tente novamente.", "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Salvar nova senha`;
+  }
+};
+</script>
+</body>
+</html>
