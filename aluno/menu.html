@@ -76,7 +76,7 @@ document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCas
 
 const [todos, liberadas] = await Promise.all([getResultados(), getLiberadasParaTurma(turma)]);
 
-function buildRankingGeral(todos) {
+function buildRankingMedia(todos) {
   const melhor = {};
   for (const r of todos) {
     if (!r.concluido || !r.aluno) continue;
@@ -84,12 +84,14 @@ function buildRankingGeral(todos) {
     const prev = melhor[r.aluno].porAtiv[r.atividade] || 0;
     if ((r.pontuacao || 0) > prev) melhor[r.aluno].porAtiv[r.atividade] = r.pontuacao || 0;
   }
-  return Object.values(melhor)
-    .map(a => ({ aluno: a.aluno, turma: a.turma, total: Object.values(a.porAtiv).reduce((s, v) => s + v, 0) }))
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 3);
+  return Object.values(melhor).map(a => {
+    const vals = Object.values(a.porAtiv);
+    const media = vals.length ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : 0;
+    return { aluno: a.aluno, turma: a.turma, media };
+  }).sort((a, b) => b.media - a.media);
 }
-const top3Geral = buildRankingGeral(todos);
+const rankAll   = buildRankingMedia(todos);
+const top3Geral = rankAll.slice(0, 3);
 
 function tentativasEsgotadas(atividadeNome) {
   return alunos.some(nome =>
@@ -102,14 +104,15 @@ function resumoAluno(nome) {
   const regs = todos.filter(r => r.aluno === nome && r.concluido);
   const melhor = {};
   regs.forEach(r => { melhor[r.atividade] = Math.max(melhor[r.atividade]||0, r.pontuacao||0); });
-  const pts = Object.values(melhor).reduce((a,b)=>a+b,0);
-  const n   = Object.keys(melhor).length;
-  return {
-    total_pts: pts, total_ativ: n,
-    media_pts: n ? Math.round(pts/n) : 0,
-    total_acertos: regs.reduce((a,r)=>a+(r.acertos||0),0),
-    total_erros:   regs.reduce((a,r)=>a+(r.erros||0),0),
-  };
+  const vals      = Object.values(melhor);
+  const melhorPts = vals.length ? Math.max(...vals) : 0;
+  const acertos   = regs.reduce((a, r) => a + (r.acertos || 0), 0);
+  const erros     = regs.reduce((a, r) => a + (r.erros   || 0), 0);
+  const taxa      = (acertos + erros) > 0 ? Math.round(acertos / (acertos + erros) * 100) : 0;
+  const posGeral  = (rankAll.findIndex(r => r.aluno === nome) + 1) || '—';
+  const rankTurma = rankAll.filter(r => r.turma === turma);
+  const posTurma  = (rankTurma.findIndex(r => r.aluno === nome) + 1) || '—';
+  return { melhorPts, sessoes: regs.length, acertos, taxa, posGeral, posTurma, total_ativ: vals.length };
 }
 
 function ultimasAtividades(nome) {
@@ -179,9 +182,33 @@ conteudo.innerHTML = `
 
   <div>
     <div class="card" style="margin-bottom:14px">
+      <div class="section-label" style="color:var(--blue)">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+        Resumo de Desempenho
+      </div>
+      ${alunos.map(a => {
+        const r = resumoAluno(a);
+        return `<div class="resumo-wrap">
+          <div class="resumo-header">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+            <span>${a}</span>
+          </div>
+          <div class="mini-stats">
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--gold)">${r.melhorPts}</div><div class="mini-stat-label">Melhor</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--orange)">#${r.posTurma}</div><div class="mini-stat-label">Na Turma</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue)">#${r.posGeral}</div><div class="mini-stat-label">Geral</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green)">${r.sessoes}</div><div class="mini-stat-label">Sessões</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue)">${r.acertos}</div><div class="mini-stat-label">Acertos</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green)">${r.taxa}%</div><div class="mini-stat-label">Taxa</div></div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div class="card" style="margin-bottom:14px">
       <div class="section-label" style="color:#F59E0B">
         <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12V11c0 4.52-3.05 8.75-7 9.93-3.95-1.18-7-5.41-7-9.93V6.3l7-3.12z"/></svg>
-        Ranking Geral
+        Top 3 Geral
       </div>
       ${top3Geral.length ? top3Geral.map((p, i) => `
         <div class="rank-geral-item">
@@ -190,34 +217,9 @@ conteudo.innerHTML = `
             <div class="rank-geral-nome">${p.aluno}</div>
             <div class="rank-geral-turma">Turma ${p.turma}</div>
           </div>
-          <div class="rank-geral-pts">${p.total}</div>
+          <div class="rank-geral-pts">${p.media} <span style="font-size:10px;font-weight:500;color:var(--text-muted)">média</span></div>
         </div>`).join('')
       : '<p style="font-size:13px;color:var(--text-muted);padding:6px 0">Nenhum resultado ainda.</p>'}
-    </div>
-
-    <div class="card">
-      <div class="section-label" style="color:var(--blue)">
-        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
-        Resumo de Desempenho
-      </div>
-      ${alunos.map(a => {
-        const r = resumoAluno(a);
-        const aproveit = (r.total_acertos + r.total_erros) > 0 ? Math.round(r.total_acertos/(r.total_acertos+r.total_erros)*100) : 0;
-        return `<div class="resumo-wrap">
-          <div class="resumo-header">
-            <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
-            <span>${a}</span>
-          </div>
-          <div class="mini-stats">
-            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--gold)">${r.total_pts}</div><div class="mini-stat-label">Pontos</div></div>
-            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue)">${r.total_ativ}</div><div class="mini-stat-label">Atividades</div></div>
-            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--orange)">${r.media_pts}</div><div class="mini-stat-label">Média</div></div>
-            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green)">${r.total_acertos}</div><div class="mini-stat-label">Acertos</div></div>
-            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--red)">${r.total_erros}</div><div class="mini-stat-label">Erros</div></div>
-            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue)">${aproveit}%</div><div class="mini-stat-label">Aproveit.</div></div>
-          </div>
-        </div>`;
-      }).join('')}
     </div>
 
     <div class="card">

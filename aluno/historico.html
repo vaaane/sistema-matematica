@@ -18,6 +18,25 @@
     .q-rev.err{background:#FEF2F2;border-color:#FECACA;}
     .aluno-section{margin-bottom:24px;}
     .aluno-title{font-size:13px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+
+    /* Competição+ styles */
+    .hist-mode-badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;margin-left:6px;vertical-align:middle;}
+    .hist-mode-badge.plus{background:#EDE9FE;color:#7C3AED;}
+    .plus-q-wrap{margin-top:6px;}
+    .plus-q-row{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);margin-top:6px;font-size:12px;cursor:pointer;transition:background .12s;}
+    .plus-q-row:hover{filter:brightness(.97);}
+    .plus-q-row.ok{background:#F0FDF4;border-color:#BBF7D0;}
+    .plus-q-row.err{background:#FEF2F2;border-color:#FECACA;}
+    .plus-q-row.bonus{border-color:#FDE68A;background:#FFFBEB;}
+    .plus-q-num{font-size:10px;font-weight:700;color:var(--text-muted);width:24px;flex-shrink:0;padding-top:1px;}
+    .plus-q-enun{flex:1;line-height:1.4;}
+    .plus-q-pts{font-weight:700;font-size:11px;white-space:nowrap;}
+    .plus-q-detail{display:none;padding:6px 0 2px;font-size:11px;border-top:1px solid rgba(0,0,0,.07);margin-top:5px;color:var(--text-muted);}
+    .plus-tent-row{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:4px;}
+    .plus-tent-ans{padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;}
+    .plus-tent-ans.ok{background:#DCFCE7;color:#166534;}
+    .plus-tent-ans.err{background:#FEE2E2;color:#991B1B;}
+    .plus-tent-ans.time{background:#F3F4F6;color:#6B7280;}
   </style>
 </head>
 <body>
@@ -49,8 +68,108 @@ const { alunos, turma } = sess;
 document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
 document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
 
-const todos = await getResultados();
+window.toggle = function(header) {
+  const body = header.nextElementSibling;
+  body.style.display = body.style.display === 'none' ? 'block' : 'none';
+};
 
+function renderPlusQuestao(q, i) {
+  const dif = {1:'Fácil',2:'Média',3:'Difícil'}[q.dificuldade] || '';
+  const ptsClass = q.pontosGanhos > 0 ? 'color:var(--green)' : q.pontosGanhos < 0 ? 'color:var(--red)' : 'color:var(--text-muted)';
+  const ptsTxt = q.pontosGanhos > 0 ? `+${q.pontosGanhos}` : String(q.pontosGanhos || 0);
+
+  const badges = [];
+  if (q.velocidade) badges.push('<span style="color:#3B82F6;font-size:10px">⚡ rápido</span>');
+  if (q.usouAjuda)  badges.push('<span style="color:#A855F7;font-size:10px">🎯 ajuda</span>');
+  if (q.ehBonus)    badges.push('<span style="color:#F59E0B;font-size:10px">🏆 bônus</span>');
+
+  const tentativas = (q.tentativas || []).map(t => {
+    const isTime = t.resposta === '(tempo)' || t.resposta === '(pulou)';
+    const cls = t.correto ? 'ok' : isTime ? 'time' : 'err';
+    const resp = t.resposta || '—';
+    const label = t.correto ? `✓ ${resp}` : resp;
+    const tempo = !isTime && t.tempoUsado != null ? ` · ${t.tempoUsado}s` : '';
+    return `<span class="plus-tent-ans ${cls}">${label}${tempo}</span>`;
+  }).join('');
+
+  const enun = q.enunciado || q.pergunta || '—';
+  return `<div class="plus-q-row ${q.acertou ? 'ok' : 'err'}${q.ehBonus ? ' bonus' : ''}"
+    onclick="const d=this.querySelector('.plus-q-detail');d.style.display=d.style.display==='block'?'none':'block'">
+    <span class="plus-q-num">Q${i+1}</span>
+    <div class="plus-q-enun">
+      <div>${enun}</div>
+      ${badges.length ? `<div style="margin-top:3px;display:flex;gap:6px;flex-wrap:wrap">${badges.join('')}</div>` : ''}
+      <div class="plus-q-detail">
+        <div><strong>Resposta correta:</strong> ${q.resposta_correta || '—'}</div>
+        <div class="plus-tent-row">${tentativas || '<span style="color:var(--text-muted)">—</span>'}</div>
+      </div>
+    </div>
+    <span class="plus-q-pts" style="${ptsClass}">${ptsTxt} pt</span>
+    <span>${q.acertou ? '✅' : '❌'}</span>
+  </div>`;
+}
+
+function renderPlusItem(r, detalhes) {
+  const taxa = r.respondidas > 0 ? Math.round((r.acertos || 0) / r.respondidas * 100) : 0;
+  return `<div class="hist-item">
+    <div class="hist-header" onclick="toggle(this)">
+      <div style="flex:1">
+        <div class="hist-nome">${r.atividade} <span class="hist-mode-badge plus">Competição+</span></div>
+        <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
+          <span class="badge badge-gold">${r.pontuacao || 0} pts</span>
+          <span class="badge badge-green">${r.acertos || 0} acertos</span>
+          <span class="badge badge-red">${r.erros || 0} erros</span>
+          <span class="badge badge-blue">${taxa}%</span>
+          ${(r.acertos_rapidos || 0) > 0 ? `<span class="badge badge-blue">⚡ ${r.acertos_rapidos} rápidos</span>` : ''}
+        </div>
+      </div>
+      <div class="hist-data">${r.data || ''}</div>
+      <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--text-muted)"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+    </div>
+    <div class="hist-body" style="display:none">
+      ${detalhes.length
+        ? `<div class="plus-q-wrap">${detalhes.map((q, i) => renderPlusQuestao(q, i)).join('')}</div>`
+        : '<p style="font-size:12px;color:var(--text-muted);padding-top:8px">Detalhes não disponíveis.</p>'}
+    </div>
+  </div>`;
+}
+
+function renderClassicoItem(r, detalhes) {
+  const total = (r.acertos || 0) + (r.erros || 0);
+  const aproveit = total > 0 ? Math.round((r.acertos || 0) / total * 100) : 0;
+  return `<div class="hist-item">
+    <div class="hist-header" onclick="toggle(this)">
+      <div style="flex:1">
+        <div class="hist-nome">${r.atividade}</div>
+        <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
+          <span class="badge badge-gold">${r.pontuacao || 0} pts</span>
+          <span class="badge badge-green">${r.acertos || 0} acertos</span>
+          <span class="badge badge-red">${r.erros || 0} erros</span>
+          <span class="badge badge-blue">${aproveit}%</span>
+        </div>
+      </div>
+      <div class="hist-data">${r.data || ''}</div>
+      <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--text-muted)"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+    </div>
+    <div class="hist-body" style="display:none">
+      ${detalhes.length ? detalhes.map((h, i) => {
+        const enun = h.enunciado || h.pergunta || '—';
+        const rAluno = h.resposta_aluno || '—';
+        const rCorreta = (h.resposta_correta && h.resposta_correta !== 'undefined') ? h.resposta_correta : '—';
+        return `
+      <div class="q-rev ${h.acertou ? 'ok' : 'err'}">
+        <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:24px">Q${i+1}</span>
+        <span style="flex:1">${enun}</span>
+        <span style="${h.acertou ? 'color:var(--green)' : 'color:var(--red)'};font-weight:700">${rAluno}</span>
+        ${!h.acertou ? `<span style="font-size:10px;color:var(--text-muted)">✓ ${rCorreta}</span>` : ''}
+        <span>${h.acertou ? '✅' : '❌'}</span>
+      </div>`;
+      }).join('') : '<p style="font-size:12px;color:var(--text-muted);padding-top:8px">Detalhes não disponíveis.</p>'}
+    </div>
+  </div>`;
+}
+
+const todos = await getResultados();
 const content = document.getElementById("content");
 let html = '';
 
@@ -67,33 +186,12 @@ for (const aluno of alunos) {
   } else {
     for (const r of regs) {
       const detalhes = await getDetalhes(r.id);
-      const total = (r.acertos||0) + (r.erros||0);
-      const aproveit = total > 0 ? Math.round((r.acertos||0)/total*100) : 0;
-      html += `<div class="hist-item">
-        <div class="hist-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
-          <div style="flex:1">
-            <div class="hist-nome">${r.atividade}</div>
-            <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
-              <span class="badge badge-gold">${r.pontuacao||0} pts</span>
-              <span class="badge badge-green">${r.acertos||0} acertos</span>
-              <span class="badge badge-red">${r.erros||0} erros</span>
-              <span class="badge badge-blue">${aproveit}%</span>
-            </div>
-          </div>
-          <div class="hist-data">${r.data||''}</div>
-          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--text-muted)"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
-        </div>
-        <div class="hist-body" style="display:none">
-          ${detalhes.length ? detalhes.map((h,i)=>`
-          <div class="q-rev ${h.acertou?'ok':'err'}">
-            <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:24px">Q${i+1}</span>
-            <span style="flex:1">${h.pergunta}</span>
-            <span style="${h.acertou?'color:var(--green)':'color:var(--red)'};font-weight:700">${h.resposta_aluno}</span>
-            ${!h.acertou?`<span style="font-size:10px;color:var(--text-muted)">✓ ${h.resposta_correta}</span>`:''}
-            <span>${h.acertou?'✅':'❌'}</span>
-          </div>`).join('') : '<p style="font-size:12px;color:var(--text-muted);padding-top:8px">Detalhes não disponíveis.</p>'}
-        </div>
-      </div>`;
+      console.log('[histórico]', r.aluno, '|', r.atividade, '| modo:', r.modo, '| detalhes[0]:', detalhes[0]);
+      if (r.modo === 'competicao_plus') {
+        html += renderPlusItem(r, detalhes);
+      } else {
+        html += renderClassicoItem(r, detalhes);
+      }
     }
   }
   html += '</div>';

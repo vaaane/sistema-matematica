@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
-    /* ── MODO PROJEÇÃO ───────────────────────────────────────── */
+    /* ── MODO PROJEÇÃO / TV ──────────────────────────────────── */
     body.proj { background:#07071a; }
     body.proj .sidebar { display:none; }
     body.proj .main { background:#07071a; }
@@ -58,12 +58,25 @@
     .rk-footer { text-align:center; padding:14px 0 0; font-size:10px; color:#2a2a50; font-family:'Orbitron',monospace; letter-spacing:.8px; }
     .rk-vazio { text-align:center; padding:60px; color:#2a2a50; font-family:'Orbitron',monospace; font-size:13px; }
 
-    /* ── MODO SELETOR ────────────────────────────────────────── */
-    .sel-card { display:flex; align-items:center; gap:14px; padding:14px 18px; background:var(--card); border:1.5px solid var(--border); border-radius:var(--radius); margin-bottom:10px; transition:border-color .2s; }
-    .sel-card:hover { border-color:var(--blue); }
-    .sel-info { flex:1; }
-    .sel-nome { font-size:15px; font-weight:700; }
-    .sel-sub { font-size:12px; color:var(--text-muted); margin-top:3px; }
+    /* ── MODO PAINEL (default) ───────────────────────────────── */
+    .tab-nav{display:flex;gap:4px;background:var(--bg);border-radius:12px;padding:4px;margin-bottom:20px;}
+    .tab-nav button{flex:1;padding:9px;border:none;border-radius:9px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);background:transparent;transition:all .2s;}
+    .tab-nav button.active{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(47,158,220,.3);}
+    th.sortable{cursor:pointer;user-select:none;}
+    th.sortable:hover{color:var(--blue);}
+    th.sort-asc::after{content:" ▲";font-size:9px;}
+    th.sort-desc::after{content:" ▼";font-size:9px;}
+    .tr-top1 td{background:rgba(250,184,0,.10)!important}
+    .tr-top2 td{background:rgba(200,200,220,.08)!important}
+    .tr-top3 td{background:rgba(180,110,20,.08)!important}
+    .ativ-sel-wrap{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+    .ativ-btn-prof{padding:7px 14px;border:1.5px solid var(--border);border-radius:20px;background:#fff;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .2s;}
+    .ativ-btn-prof.active{border-color:var(--blue);background:var(--blue);color:#fff;}
+    .live-tag{font-size:10px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.4);color:#16A34A;border-radius:10px;padding:1px 7px;font-weight:700;display:inline-flex;align-items:center;}
+
+    /* ── TV progress bar ─────────────────────────────────────── */
+    .tv-bar-wrap{height:3px;background:#1a1a38;border-radius:2px;margin-bottom:14px;overflow:hidden;}
+    .tv-bar{height:3px;background:#FAB800;border-radius:2px;width:0%;}
 
     @media(max-width:640px) {
       .pod-step { min-width:90px; }
@@ -79,7 +92,7 @@
     <div class="topbar">
       <div class="topbar-left">
         <div class="topbar-title" id="topbar-title">Ranking</div>
-        <div class="topbar-sub" id="topbar-sub">Ranking ao vivo por atividade</div>
+        <div class="topbar-sub" id="topbar-sub">Visão geral de desempenho</div>
       </div>
       <div class="topbar-right" id="topbar-right" style="gap:8px"></div>
     </div>
@@ -90,8 +103,9 @@
 </div>
 
 <script type="module">
-import { getLiberadas, listenRankingProfessor } from "/js/db.js";
+import { getLiberadas, listenRankingProfessor, getResultados } from "/js/db.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { LISTA_ATIVIDADES } from "/js/constants.js";
 
 requireProfessor();
 renderSidebarProfessor("sidebar", "ranking");
@@ -99,18 +113,185 @@ window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
 const params    = new URLSearchParams(window.location.search);
 const ativParam = params.get("ativ");
-const modoParam = params.get("modo") || "competicao";
+const tvMode    = params.get("tv") === "true";
 
-// Modo ativo é acessível por todas as funções de render
-let modoAtivo = modoParam;
+let modoAtivo = params.get("modo") || "competicao";
 
 if (ativParam) {
-  iniciarModoProjecao(ativParam, modoParam);
+  iniciarModoProjecao(ativParam, modoAtivo);
+} else if (tvMode) {
+  await iniciarTVMode();
 } else {
-  await renderSeletor();
+  await renderPainelPrincipal();
 }
 
-// ── MODO PROJEÇÃO ──────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// PAINEL PRINCIPAL (default — duas abas)
+// ══════════════════════════════════════════════════════════════
+async function renderPainelPrincipal() {
+  const todos = await getResultados();
+
+  function buildRankingMedia(lista) {
+    const melhor = {};
+    for (const r of lista) {
+      if (!r.concluido || !r.aluno) continue;
+      if (!melhor[r.aluno]) melhor[r.aluno] = { aluno: r.aluno, turma: r.turma || '?', porAtiv: {}, sessoes: 0 };
+      const prev = melhor[r.aluno].porAtiv[r.atividade] || 0;
+      if ((r.pontuacao || 0) > prev) melhor[r.aluno].porAtiv[r.atividade] = r.pontuacao || 0;
+      melhor[r.aluno].sessoes++;
+    }
+    return Object.values(melhor).map(a => {
+      const vals = Object.values(a.porAtiv);
+      const media = vals.length ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : 0;
+      return { aluno: a.aluno, turma: a.turma, media, atividades: vals.length, sessoes: a.sessoes };
+    }).sort((a, b) => b.media - a.media);
+  }
+
+  const rankAll = buildRankingMedia(todos);
+
+  // Sortable table state
+  let sortCol = 'media';
+  let sortAsc = false;
+
+  function renderTabelaGeral() {
+    const sorted = [...rankAll].sort((a, b) => {
+      const v = sortAsc ? 1 : -1;
+      if (sortCol === 'aluno') return v * a.aluno.localeCompare(b.aluno);
+      if (sortCol === 'turma') return v * a.turma.localeCompare(b.turma);
+      return v * ((a[sortCol] || 0) - (b[sortCol] || 0));
+    });
+    const tbody = document.getElementById('geral-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = sorted.map((r, i) => {
+      const pos = i + 1;
+      const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
+      const cls = pos === 1 ? 'tr-top1' : pos === 2 ? 'tr-top2' : pos === 3 ? 'tr-top3' : '';
+      return `<tr class="${cls}">
+        <td style="text-align:center;font-weight:700">${medal}</td>
+        <td style="font-weight:600">${r.aluno}</td>
+        <td><span class="badge badge-blue">Turma ${r.turma}</span></td>
+        <td style="font-weight:800;color:var(--gold)">${r.media}</td>
+        <td>${r.atividades}</td>
+        <td>${r.sessoes}</td>
+      </tr>`;
+    }).join('');
+    // Update header sort indicators
+    ['aluno','turma','media','atividades','sessoes'].forEach(col => {
+      const th = document.getElementById('th-' + col);
+      if (!th) return;
+      th.className = 'sortable' + (sortCol === col ? (sortAsc ? ' sort-asc' : ' sort-desc') : '');
+    });
+  }
+
+  window.sortGeral = function(col) {
+    if (sortCol === col) sortAsc = !sortAsc; else { sortCol = col; sortAsc = false; }
+    renderTabelaGeral();
+  };
+
+  // Activity tab state
+  let ativSel     = LISTA_ATIVIDADES[0]?.nome || '';
+  let unsubAtiv   = null;
+
+  function abrirAtivProf(nome) {
+    ativSel = nome;
+    document.querySelectorAll('.ativ-btn-prof').forEach(b =>
+      b.classList.toggle('active', b.dataset.ativ === nome));
+    if (unsubAtiv) { unsubAtiv(); unsubAtiv = null; }
+    const el = document.getElementById('rank-ativ-prof');
+    if (!el) return;
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted)">Aguardando…</div>';
+    unsubAtiv = listenRankingProfessor(nome, ranking => {
+      if (!el) return;
+      if (!ranking.length) {
+        el.innerHTML = '<p style="padding:16px;color:var(--text-muted);font-size:13px">Sem resultados para esta atividade.</p>';
+        return;
+      }
+      el.innerHTML = `<table class="table">
+        <thead><tr>
+          <th style="width:40px">#</th>
+          <th>Aluno</th>
+          <th>Turma</th>
+          <th>Melhor</th>
+          <th class="rank-hide-mobile">Sessões</th>
+          <th class="rank-hide-mobile">Combo</th>
+          <th class="rank-hide-mobile">Status</th>
+        </tr></thead>
+        <tbody>${ranking.map((r, i) => {
+          const pos = i + 1;
+          const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
+          const cls = pos === 1 ? 'tr-top1' : pos === 2 ? 'tr-top2' : pos === 3 ? 'tr-top3' : '';
+          return `<tr class="${cls}">
+            <td style="text-align:center;font-weight:700">${medal}</td>
+            <td style="font-weight:600">${r.aluno}</td>
+            <td><span class="badge badge-blue">Turma ${r.turma}</span></td>
+            <td style="font-weight:800;color:var(--gold)">${r.melhorPts}</td>
+            <td class="rank-hide-mobile">${r.tentativas}</td>
+            <td class="rank-hide-mobile">${r.comboMax > 1 ? `🔥×${r.comboMax}` : '—'}</td>
+            <td class="rank-hide-mobile">${r.ativo ? '<span style="color:var(--green);font-weight:700">⚡ jogando</span>' : '—'}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>`;
+    });
+  }
+
+  window.mudarTabPainel = function(tab) {
+    ['geral','ativ'].forEach(t => {
+      document.getElementById('ptab-' + t)?.classList.toggle('active', t === tab);
+      document.getElementById('ppanel-' + t).style.display = t === tab ? '' : 'none';
+    });
+    if (tab === 'ativ') abrirAtivProf(ativSel);
+    if (tab === 'geral' && unsubAtiv) { unsubAtiv(); unsubAtiv = null; }
+  };
+
+  const ativBtns = LISTA_ATIVIDADES.map(a =>
+    `<button class="ativ-btn-prof${a.nome === ativSel ? ' active' : ''}" data-ativ="${a.nome}">${a.nome}</button>`
+  ).join('');
+
+  const tvUrl = '/professor/ranking.html?tv=true';
+  document.getElementById('topbar-right').innerHTML =
+    `<a href="${tvUrl}" target="_blank" class="btn btn-ghost" style="font-size:12px">📺 Modo TV</a>`;
+
+  document.getElementById('content').innerHTML = `
+    <div class="tab-nav">
+      <button id="ptab-geral" class="active" onclick="mudarTabPainel('geral')">🏆 Geral</button>
+      <button id="ptab-ativ"                 onclick="mudarTabPainel('ativ')">📚 Por Atividade <span class="live-tag" style="margin-left:4px">ao vivo</span></button>
+    </div>
+
+    <div id="ppanel-geral">
+      <div class="card" style="padding:0">
+        ${rankAll.length
+          ? `<table class="table">
+              <thead><tr>
+                <th style="width:40px">#</th>
+                <th id="th-aluno" class="sortable sort-desc" onclick="sortGeral('aluno')">Aluno</th>
+                <th id="th-turma" class="sortable" onclick="sortGeral('turma')">Turma</th>
+                <th id="th-media" class="sortable sort-desc" onclick="sortGeral('media')">Média</th>
+                <th id="th-atividades" class="sortable rank-hide-mobile" onclick="sortGeral('atividades')">Ativ.</th>
+                <th id="th-sessoes" class="sortable rank-hide-mobile" onclick="sortGeral('sessoes')">Sessões</th>
+              </tr></thead>
+              <tbody id="geral-tbody"></tbody>
+            </table>`
+          : '<p style="padding:16px;color:var(--text-muted);font-size:13px">Nenhum resultado registrado ainda.</p>'}
+      </div>
+    </div>
+
+    <div id="ppanel-ativ" style="display:none">
+      <div class="ativ-sel-wrap" id="ativ-sel-prof">${ativBtns}</div>
+      <div class="card" style="padding:0" id="rank-ativ-prof"></div>
+    </div>`;
+
+  if (rankAll.length) renderTabelaGeral();
+
+  document.querySelectorAll('.ativ-btn-prof').forEach(b => {
+    b.addEventListener('click', () => abrirAtivProf(b.dataset.ativ));
+  });
+
+  window.addEventListener('beforeunload', () => { if (unsubAtiv) unsubAtiv(); });
+}
+
+// ══════════════════════════════════════════════════════════════
+// MODO PROJEÇÃO (?ativ=X) — mantido igual ao original
+// ══════════════════════════════════════════════════════════════
 function iniciarModoProjecao(atividade, modo) {
   modoAtivo = modo;
   const isPlus = modo === 'competicao_plus';
@@ -145,7 +326,7 @@ function iniciarModoProjecao(atividade, modo) {
     <div class="rank-list" id="rank-list"></div>
     <div class="rk-footer" id="rk-footer">Aguardando resultados…</div>`;
 
-  let unsub = listenRankingProfessor(atividade, ranking => {
+  const unsub = listenRankingProfessor(atividade, ranking => {
     atualizarPodio(ranking.slice(0, 3));
     atualizarLista(ranking.slice(3));
     const ativos = ranking.filter(r => r.ativo).length;
@@ -157,7 +338,136 @@ function iniciarModoProjecao(atividade, modo) {
   window.addEventListener("beforeunload", () => unsub());
 }
 
-// ── RENDER PÓDIO (init HTML) ───────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// MODO TV (?tv=true)
+// ══════════════════════════════════════════════════════════════
+async function iniciarTVMode() {
+  const [todos, liberadas] = await Promise.all([getResultados(), getLiberadas()]);
+
+  document.body.classList.add('proj');
+  document.getElementById("topbar-right").innerHTML = `
+    <span class="proj-clock" id="proj-clock"></span>
+    <button class="btn btn-ghost" onclick="document.documentElement.requestFullscreen().catch(()=>{})" style="font-size:12px">⛶ Tela cheia</button>
+    <a href="/professor/ranking.html" class="btn btn-ghost" style="font-size:12px">← Sair</a>`;
+
+  function tickClock() {
+    const el = document.getElementById("proj-clock");
+    if (el) el.textContent = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }
+  tickClock();
+  setInterval(tickClock, 15000);
+
+  // Build avg ranking from todos
+  function buildRankingMedia(lista) {
+    const melhor = {};
+    for (const r of lista) {
+      if (!r.concluido || !r.aluno) continue;
+      if (!melhor[r.aluno]) melhor[r.aluno] = { aluno: r.aluno, turma: r.turma || '?', porAtiv: {}, sessoes: 0 };
+      const prev = melhor[r.aluno].porAtiv[r.atividade] || 0;
+      if ((r.pontuacao || 0) > prev) melhor[r.aluno].porAtiv[r.atividade] = r.pontuacao || 0;
+      melhor[r.aluno].sessoes++;
+    }
+    return Object.values(melhor).map(a => {
+      const vals = Object.values(a.porAtiv);
+      const media = vals.length ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : 0;
+      return { aluno: a.aluno, turma: a.turma, media, atividades: vals.length, sessoes: a.sessoes };
+    }).sort((a, b) => b.media - a.media);
+  }
+
+  // Slides: geral first, then one per liberated activity
+  const slides = [
+    { tipo: 'geral' },
+    ...liberadas.map(lib => ({ tipo: 'ativ', atividade: lib.atividade, modo: lib.modo || 'competicao' })),
+  ];
+  if (slides.length === 1) slides.push(...LISTA_ATIVIDADES.map(a => ({ tipo: 'ativ', atividade: a.nome, modo: a.modo || 'competicao' })));
+
+  let slideIdx    = 0;
+  let currentUnsub = null;
+
+  document.getElementById("content").innerHTML = `
+    <div class="tv-bar-wrap"><div class="tv-bar" id="tv-bar"></div></div>
+    <div id="tv-slide"></div>`;
+
+  function animateBar() {
+    const bar = document.getElementById('tv-bar');
+    if (!bar) return;
+    bar.style.transition = 'none';
+    bar.style.width = '0%';
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      bar.style.transition = 'width 30s linear';
+      bar.style.width = '100%';
+    }));
+  }
+
+  function showSlide(idx) {
+    if (currentUnsub) { currentUnsub(); currentUnsub = null; }
+    const slide = slides[idx % slides.length];
+    animateBar();
+
+    if (slide.tipo === 'geral') {
+      const rankAll = buildRankingMedia(todos);
+      modoAtivo = 'classico';
+      document.getElementById("topbar-title").textContent = '🏆 RANKING GERAL';
+      document.getElementById("topbar-sub").textContent = `Classificação por média · ${rankAll.length} participantes`;
+      const top3 = rankAll.slice(0, 3).map(r => ({
+        aluno: r.aluno, turma: r.turma, melhorPts: r.media,
+        ativo: false, tentativas: r.sessoes, comboMax: 0, acertosRapidos: 0, acertosDificeis: 0,
+      }));
+      document.getElementById('tv-slide').innerHTML = `
+        <div class="proj-sec">CLASSIFICAÇÃO GERAL · MÉDIA DE PONTUAÇÃO</div>
+        <div class="podium-stage" id="podium-stage">${renderPodiumHTML(top3)}</div>
+        ${rankAll.length > 3 ? `
+          <div class="proj-sec">DEMAIS PARTICIPANTES</div>
+          <div class="rank-list">${rankAll.slice(3).map((r, i) => `
+            <div class="rk-row">
+              <div class="rk-num">${i + 4}</div>
+              <div>
+                <div class="rk-nome">${r.aluno} — T${r.turma}</div>
+                <div class="rk-meta"><span>${r.atividades} ativ.</span><span>${r.sessoes} sess.</span></div>
+              </div>
+              <div class="rk-pts">${r.media}</div>
+            </div>`).join('')}
+          </div>` : ''}
+        <div class="rk-footer">Média de pontuação por atividade realizada</div>`;
+    } else {
+      modoAtivo = slide.modo;
+      const isPlus = slide.modo === 'competicao_plus';
+      document.getElementById("topbar-title").textContent = slide.atividade;
+      document.getElementById("topbar-sub").textContent = isPlus ? 'Ranking ao vivo · Competição+' : 'Ranking ao vivo';
+      document.getElementById('tv-slide').innerHTML = `
+        <div class="proj-sec">${isPlus ? '🏆 COMPETIÇÃO+ · TOP 3' : '🏆 PÓDIO'}</div>
+        <div class="podium-stage" id="podium-stage">${renderPodiumHTML([])}</div>
+        <div class="proj-sec" id="demais-label" style="display:none">DEMAIS PARTICIPANTES</div>
+        <div class="rank-list" id="rank-list"></div>
+        <div class="rk-footer" id="rk-footer">Aguardando resultados…</div>`;
+      currentUnsub = listenRankingProfessor(slide.atividade, ranking => {
+        atualizarPodio(ranking.slice(0, 3));
+        atualizarLista(ranking.slice(3));
+        const ativos = ranking.filter(r => r.ativo).length;
+        const footer = document.getElementById('rk-footer');
+        if (footer) footer.textContent =
+          `⏱ ${new Date().toLocaleTimeString('pt-BR')} · ${ranking.length} participante${ranking.length !== 1 ? 's' : ''}${ativos ? ` · ⚡ ${ativos} jogando` : ''}`;
+        const demais = document.getElementById('demais-label');
+        if (demais) demais.style.display = ranking.length > 3 ? '' : 'none';
+      });
+    }
+  }
+
+  showSlide(slideIdx);
+  const interval = setInterval(() => {
+    slideIdx = (slideIdx + 1) % slides.length;
+    showSlide(slideIdx);
+  }, 30000);
+
+  window.addEventListener("beforeunload", () => {
+    clearInterval(interval);
+    if (currentUnsub) currentUnsub();
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// FUNÇÕES COMPARTILHADAS (pódio / lista)
+// ══════════════════════════════════════════════════════════════
 function renderPodiumHTML(top3) {
   const order   = [1, 0, 2];
   const classes = ['p2', 'p1', 'p3'];
@@ -187,11 +497,10 @@ function renderPodiumHTML(top3) {
   }).join('');
 }
 
-// ── ATUALIZAR PÓDIO (in-place para transições CSS) ─────────────
 function atualizarPodio(top3) {
-  const order   = [1, 0, 2];
-  const medals  = ['🥇', '🥈', '🥉'];
-  const isPlus  = modoAtivo === 'competicao_plus';
+  const order  = [1, 0, 2];
+  const medals = ['🥇', '🥈', '🥉'];
+  const isPlus = modoAtivo === 'competicao_plus';
   order.forEach((ri, vi) => {
     const col = document.getElementById(`pod-col-${ri}`);
     if (!col) return;
@@ -217,7 +526,6 @@ function atualizarPodio(top3) {
   });
 }
 
-// ── LISTA (4º em diante) ───────────────────────────────────────
 function atualizarLista(resto) {
   const list = document.getElementById("rank-list");
   if (!list) return;
@@ -244,54 +552,6 @@ function atualizarLista(resto) {
       <div class="rk-pts">${r.melhorPts}</div>
     </div>`;
   }).join('');
-}
-
-// ── MODO SELETOR ───────────────────────────────────────────────
-async function renderSeletor() {
-  const MODO_LABEL = { classico: 'Clássico', competicao: 'Competição', competicao_plus: 'Competição+' };
-  const liberadas  = await getLiberadas();
-  const content    = document.getElementById("content");
-
-  if (!liberadas.length) {
-    content.innerHTML = `<div class="card" style="max-width:560px">
-      <div class="empty-state">
-        <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
-        <p>Nenhuma atividade liberada. Libere uma atividade para projetar o ranking.</p>
-      </div>
-    </div>`;
-    return;
-  }
-
-  content.innerHTML = `
-    <div class="card" style="max-width:600px">
-      <div class="card-header">
-        <div class="card-title">
-          <svg viewBox="0 0 24 24" style="fill:var(--gold)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          Atividades com ranking ativo
-        </div>
-      </div>
-      <div class="alert alert-info" style="margin-bottom:16px">
-        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-        Clique em <strong>Projetar</strong> para abrir o ranking em tela cheia no datashow.
-      </div>
-      ${liberadas.map(lib => {
-        const modoUrl = lib.modo && lib.modo !== 'classico' ? `&modo=${lib.modo}` : '';
-        const url = `/professor/ranking.html?ativ=${encodeURIComponent(lib.atividade)}${modoUrl}`;
-        const janelaTxt = lib.janela_aula
-          ? `<span style="color:var(--blue)"> · 🕐 ${lib.janela_aula.inicio.replace('T',' ')} – ${lib.janela_aula.fim.replace('T',' ')}</span>`
-          : '';
-        return `<div class="sel-card">
-          <div class="sel-info">
-            <div class="sel-nome">${lib.atividade}</div>
-            <div class="sel-sub">Turma ${lib.turma} · ${MODO_LABEL[lib.modo] || 'Clássico'} · ${lib.percentual ?? 100}% da nota${janelaTxt}</div>
-          </div>
-          <a href="${url}" target="_blank" class="btn btn-blue">
-            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-            Projetar
-          </a>
-        </div>`;
-      }).join('')}
-    </div>`;
 }
 </script>
 </body>

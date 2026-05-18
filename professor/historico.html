@@ -72,14 +72,19 @@ window.toggleDetalhes = async function(id, bodyEl) {
     bodyEl.innerHTML = '<p style="font-size:12px;color:var(--text-muted);padding-top:8px">Detalhes não disponíveis.</p>';
     return;
   }
-  bodyEl.innerHTML = questoes.map((q, i) => `
+  bodyEl.innerHTML = questoes.map((q, i) => {
+    const enun = q.enunciado || q.pergunta || '—';
+    const rAluno = q.resposta_aluno || '—';
+    const rCorreta = (q.resposta_correta && q.resposta_correta !== 'undefined') ? q.resposta_correta : '—';
+    return `
     <div class="q-rev ${q.acertou ? 'ok' : 'err'}">
       <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:24px">Q${i+1}</span>
-      <span style="flex:1">${q.pergunta}</span>
-      <span style="${q.acertou ? 'color:var(--green)' : 'color:var(--red)'};font-weight:700">${q.resposta_aluno}</span>
-      ${!q.acertou ? `<span style="font-size:10px;color:var(--text-muted)">✓ ${q.resposta_correta}</span>` : ''}
+      <span style="flex:1">${enun}</span>
+      <span style="${q.acertou ? 'color:var(--green)' : 'color:var(--red)'};font-weight:700">${rAluno}</span>
+      ${!q.acertou ? `<span style="font-size:10px;color:var(--text-muted)">✓ ${rCorreta}</span>` : ''}
       <span>${q.acertou ? '✅' : '❌'}</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 };
 
 window.filtrar = function() {

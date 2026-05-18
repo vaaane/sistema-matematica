@@ -216,7 +216,7 @@ function renderJogo() {
           <span class="q-badge ${nivelCls}">
             ${perg.dificuldade===1?'● Fácil':perg.dificuldade===2?'◆ Média':'■ Difícil'} · base ${base} pts
           </span>
-          <div class="q-text" id="q-text">${perg.pergunta}</div>
+          <div class="q-text" id="q-text">${perg.enunciado || perg.pergunta || ''}</div>
           <div id="input-area">
             <div class="answer-area">
               <input type="text" id="resposta-input" class="input" placeholder="Digite sua resposta…" autocomplete="off" autofocus onkeydown="if(event.key==='Enter')responder()"/>
@@ -298,7 +298,7 @@ window.responder = function(respSelecionada) {
     jogo.acertos     += 1;
     jogo.respondidas += 1;
     jogo.tentativas  += 1;
-    jogo.historico.push({ pergunta: perg.pergunta, resposta_aluno: resposta, resposta_correta: String(perg.resposta), tentativas: jogo.tentativas, acertou: true });
+    jogo.historico.push({ enunciado: perg.enunciado || perg.pergunta || '—', resposta_aluno: resposta, resposta_correta: perg.resposta != null ? String(perg.resposta) : '—', pontos: pts, tentativas: jogo.tentativas, acertou: true });
     beep(1000, 150);
     mostrarFeedback("ok", `✅ Correto! +${pts} pontos`);
     document.getElementById("pts-display").textContent = jogo.pontuacao+" pts";
@@ -311,7 +311,7 @@ window.responder = function(respSelecionada) {
     if (jogo.tentativas >= 4) {
       jogo.erros       += 1;
       jogo.respondidas += 1;
-      jogo.historico.push({ pergunta: perg.pergunta, resposta_aluno: resposta, resposta_correta: String(perg.resposta), tentativas: jogo.tentativas, acertou: false });
+      jogo.historico.push({ enunciado: perg.enunciado || perg.pergunta || '—', resposta_aluno: resposta, resposta_correta: perg.resposta != null ? String(perg.resposta) : '—', pontos: 0, tentativas: jogo.tentativas, acertou: false });
       beep(400, 300);
       mostrarFeedback("err", `❌ Errou 4× — Resposta: ${perg.resposta}`);
       document.getElementById("erros-side").textContent = jogo.erros;

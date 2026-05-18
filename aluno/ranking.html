@@ -10,14 +10,25 @@
     .tab-nav{display:flex;gap:4px;background:var(--bg);border-radius:12px;padding:4px;margin-bottom:20px;}
     .tab-nav button{flex:1;padding:9px;border:none;border-radius:9px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);background:transparent;transition:all .2s;}
     .tab-nav button.active{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(47,158,220,.3);}
-    .rank-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);}
+    .rank-row{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);}
     .rank-row:last-child{border-bottom:none;}
     .rank-row.destaque{background:linear-gradient(135deg,var(--blue-pale),#fff);border-left:3px solid var(--blue);}
-    .rank-pos{font-size:16px;font-weight:800;width:32px;text-align:center;flex-shrink:0;}
-    .rank-nome{flex:1;font-size:13px;font-weight:600;}
-    .rank-turma{font-size:11px;color:var(--text-muted);}
-    .rank-pts{font-size:14px;font-weight:800;color:var(--gold);}
-    .rank-extra{font-size:11px;color:var(--text-muted);text-align:right;}
+    .rank-pos{font-size:14px;font-weight:800;width:28px;text-align:center;flex-shrink:0;}
+    .rank-nome{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .rank-sub{font-size:11px;color:var(--text-muted);margin-top:1px;}
+    .rank-pts{font-size:14px;font-weight:800;color:var(--gold);flex-shrink:0;text-align:right;}
+    .rank-pts-label{font-size:10px;font-weight:400;color:var(--text-muted);}
+    .ativ-sel{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+    .ativ-btn{padding:6px 14px;border:1.5px solid var(--border);border-radius:20px;background:#fff;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .2s;}
+    .ativ-btn.active{border-color:var(--blue);background:var(--blue);color:#fff;}
+    .rank-section-title{font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:.4px;text-transform:uppercase;margin:0 0 6px;display:flex;align-items:center;gap:8px;}
+    .live-tag{font-size:10px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.4);color:#16A34A;border-radius:10px;padding:1px 7px;font-weight:700;}
+    .resumo-wrap{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:10px;}
+    .resumo-wrap:last-child{margin-bottom:0;}
+    .resumo-header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(135deg,var(--orange-pale),#fff);border-bottom:1px solid var(--border);}
+    .resumo-header svg{width:14px;height:14px;fill:var(--orange);}
+    .resumo-header span{font-size:13px;font-weight:700;}
+    @media(max-width:640px){.grid-2{grid-template-columns:1fr!important}}
   </style>
 </head>
 <body>
@@ -37,10 +48,11 @@
   </div>
 </div>
 <script type="module">
-import { getResultados } from "/js/db.js";
+import { LISTA_ATIVIDADES } from "/js/constants.js";
+import { getResultados, listenRankingAtividade } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 
-const sess = requireAluno();
+const sess = requireAluno("/index.html");
 if (!sess) throw new Error();
 renderSidebarAluno("sidebar", "ranking");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
@@ -51,112 +63,178 @@ document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCas
 
 const todos = await getResultados();
 
-// Calcula rankings
-const melhorA = {}, turmaA = {}, acA = {}, atA = {}, alunosTurma = {};
-todos.filter(r => r.concluido).forEach(r => {
-  const {aluno: a, turma: t, atividade: ativ, pontuacao: pts, acertos: ac} = r;
-  turmaA[a] = t;
-  acA[a] = (acA[a]||0) + (ac||0);
-  atA[a] = atA[a] || new Set(); atA[a].add(ativ);
-  alunosTurma[t] = alunosTurma[t] || new Set(); alunosTurma[t].add(a);
-  melhorA[a] = melhorA[a] || {}; melhorA[a][ativ] = Math.max(melhorA[a][ativ]||0, pts||0);
-});
-const ptsA = Object.fromEntries(Object.entries(melhorA).map(([a,m])=>[a,Object.values(m).reduce((x,y)=>x+y,0)]));
-const ptsT = {};
-Object.entries(ptsA).forEach(([a,p]) => { const t=turmaA[a]; if(t) ptsT[t]=(ptsT[t]||0)+p; });
-
-const rankGeral = Object.entries(ptsA).sort((a,b)=>b[1]-a[1]).map(([nome,pts],i)=>({
-  pos:i+1, nome, turma:turmaA[nome]||'—', pts,
-  acertos:acA[nome]||0, ativs:(atA[nome]?.size||0),
-  destaque: alunos.includes(nome)
-}));
-const rankTurma = rankGeral.filter(r=>r.turma===turma).map((r,i)=>({...r,pos:i+1}));
-const rankTurmas = Object.entries(ptsT).sort((a,b)=>b[1]-a[1]).map(([t,pts],i)=>({
-  pos:i+1, turma:t, pts, alunos:alunosTurma[t]?.size||0,
-  media:Math.round(pts/(alunosTurma[t]?.size||1)), destaque:t===turma
-}));
-
-let tabAtual = "geral";
-
-function renderTablas() {
-  const tbody = document.getElementById("tbody");
-  if (!tbody) return;
-  tbody.innerHTML = "";
-
-  if (tabAtual === "geral") {
-    rankGeral.forEach(r => {
-      tbody.innerHTML += `<tr class="${r.destaque?'destaque':''}">
-        <td><span class="rank-pos ${r.pos===1?'medal-1':r.pos===2?'medal-2':r.pos===3?'medal-3':''}">${r.pos===1?'🥇':r.pos===2?'🥈':r.pos===3?'🥉':r.pos}</span></td>
-        <td><div style="font-weight:600">${r.nome}</div></td>
-        <td class="rank-hide-mobile"><span class="badge badge-blue">Turma ${r.turma}</span></td>
-        <td><strong style="color:var(--gold)">${r.pts}</strong></td>
-        <td class="rank-hide-mobile">${r.acertos}</td>
-        <td class="rank-hide-mobile">${r.ativs}</td>
-      </tr>`;
-    });
-  } else if (tabAtual === "turma") {
-    rankTurma.forEach(r => {
-      tbody.innerHTML += `<tr class="${r.destaque?'destaque':''}">
-        <td><span class="rank-pos ${r.pos===1?'medal-1':r.pos===2?'medal-2':r.pos===3?'medal-3':''}">${r.pos===1?'🥇':r.pos===2?'🥈':r.pos===3?'🥉':r.pos}</span></td>
-        <td><div style="font-weight:600">${r.nome}</div></td>
-        <td><strong style="color:var(--gold)">${r.pts}</strong></td>
-        <td class="rank-hide-mobile">${r.acertos}</td>
-        <td class="rank-hide-mobile">${r.ativs}</td>
-      </tr>`;
-    });
-  } else {
-    rankTurmas.forEach(r => {
-      tbody.innerHTML += `<tr class="${r.destaque?'destaque':''}">
-        <td><span class="rank-pos ${r.pos===1?'medal-1':r.pos===2?'medal-2':r.pos===3?'medal-3':''}">${r.pos===1?'🥇':r.pos===2?'🥈':r.pos===3?'🥉':r.pos}</span></td>
-        <td><strong>Turma ${r.turma}</strong></td>
-        <td><strong style="color:var(--gold)">${r.pts}</strong></td>
-        <td class="rank-hide-mobile">${r.alunos} alunos</td>
-        <td class="rank-hide-mobile">${r.media} pts/aluno</td>
-      </tr>`;
-    });
+// ── Avg-based ranking ────────────────────────────────────────
+function buildRankingMedia(lista) {
+  const melhor = {};
+  for (const r of lista) {
+    if (!r.concluido || !r.aluno) continue;
+    if (!melhor[r.aluno]) melhor[r.aluno] = { aluno: r.aluno, turma: r.turma || '?', porAtiv: {}, sessoes: 0 };
+    const prev = melhor[r.aluno].porAtiv[r.atividade] || 0;
+    if ((r.pontuacao || 0) > prev) melhor[r.aluno].porAtiv[r.atividade] = r.pontuacao || 0;
+    melhor[r.aluno].sessoes++;
   }
+  return Object.values(melhor).map(a => {
+    const vals = Object.values(a.porAtiv);
+    const media = vals.length ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : 0;
+    return { aluno: a.aluno, turma: a.turma, media, atividades: vals.length, sessoes: a.sessoes };
+  }).sort((a, b) => b.media - a.media);
 }
 
-const myPos = rankGeral.find(r=>alunos.includes(r.nome));
-const myPosTurma = rankTurma.find(r=>alunos.includes(r.nome));
+const rankAll   = buildRankingMedia(todos);
+const rankTurma = rankAll.filter(r => r.turma === turma);
 
-document.getElementById("content").innerHTML = `
-  ${myPos ? `<div class="alert alert-info" style="margin-bottom:16px">
-    📊 ${alunos[0]} está em <strong>#${myPos.pos}º lugar geral</strong> com ${myPos.pts} pontos
-    ${myPosTurma ? `· <strong>#${myPosTurma.pos}º na Turma ${turma}</strong>` : ''}
-  </div>` : ''}
+// ── Resumo do aluno ──────────────────────────────────────────
+function resumoAluno(nome) {
+  const regs = todos.filter(r => r.aluno === nome && r.concluido);
+  const melhor = {};
+  regs.forEach(r => { melhor[r.atividade] = Math.max(melhor[r.atividade] || 0, r.pontuacao || 0); });
+  const vals      = Object.values(melhor);
+  const melhorPts = vals.length ? Math.max(...vals) : 0;
+  const acertos   = regs.reduce((a, r) => a + (r.acertos || 0), 0);
+  const erros     = regs.reduce((a, r) => a + (r.erros   || 0), 0);
+  const taxa      = (acertos + erros) > 0 ? Math.round(acertos / (acertos + erros) * 100) : 0;
+  const posGeral  = (rankAll.findIndex(r => r.aluno === nome) + 1) || '—';
+  const posTurma  = (rankTurma.findIndex(r => r.aluno === nome) + 1) || '—';
+  return { melhorPts, sessoes: regs.length, acertos, taxa, posGeral, posTurma };
+}
 
-  <div class="tab-nav">
-    <button id="tab-geral"  class="active" onclick="mudarTab('geral')">🌐 Geral (${rankGeral.length})</button>
-    <button id="tab-turma"         onclick="mudarTab('turma')">🏫 Minha Turma (${rankTurma.length})</button>
-    <button id="tab-turmas"        onclick="mudarTab('turmas')">📊 Turmas (${rankTurmas.length})</button>
-  </div>
+// ── Activity listener management ─────────────────────────────
+let tabAtual  = 'geral';
+let ativSel   = LISTA_ATIVIDADES[0]?.nome || '';
+let unsubAtiv = null;
 
-  <div class="card" style="padding:0">
-    <table class="table" id="ranking-table">
-      <thead id="thead"></thead>
-      <tbody id="tbody"></tbody>
-    </table>
-  </div>`;
+function abrirAtividade(nome) {
+  ativSel = nome;
+  document.querySelectorAll('.ativ-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.ativ === nome));
+  if (unsubAtiv) { unsubAtiv(); unsubAtiv = null; }
+  const elTurma = document.getElementById('rank-ativ-turma');
+  const elGeral = document.getElementById('rank-ativ-geral');
+  if (!elTurma || !elGeral) return;
+  elTurma.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px">Aguardando…</div>';
+  elGeral.innerHTML = '';
+  unsubAtiv = listenRankingAtividade(nome, ranking => {
+    renderAtivTurma(ranking, elTurma);
+    renderAtivGeral(ranking, elGeral);
+  });
+}
+
+function renderAtivTurma(ranking, el) {
+  const lista = ranking.filter(r => r.turma === turma);
+  if (!lista.length) {
+    el.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:10px 16px">Nenhum resultado da sua turma ainda.</p>';
+    return;
+  }
+  el.innerHTML = lista.map((r, i) => {
+    const pos = i + 1;
+    const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
+    const dest = alunos.includes(r.aluno);
+    return `<div class="rank-row${dest ? ' destaque' : ''}">
+      <div class="rank-pos">${medal}</div>
+      <div style="flex:1;min-width:0"><div class="rank-nome">${r.aluno}${dest ? ' ★' : ''}</div></div>
+      <div class="rank-pts">${r.pontuacao}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderAtivGeral(ranking, el) {
+  const top5 = ranking.slice(0, 5);
+  if (!top5.length) { el.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:10px 16px">Sem resultados ainda.</p>'; return; }
+  el.innerHTML = top5.map((r, i) => {
+    const pos = i + 1;
+    const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
+    const dest = alunos.includes(r.aluno);
+    return `<div class="rank-row${dest ? ' destaque' : ''}">
+      <div class="rank-pos">${medal}</div>
+      <div style="flex:1;min-width:0">
+        <div class="rank-nome">${r.aluno}${dest ? ' ★' : ''}</div>
+        <div class="rank-sub">Turma ${r.turma}</div>
+      </div>
+      <div class="rank-pts">${r.pontuacao}</div>
+    </div>`;
+  }).join('');
+}
 
 window.mudarTab = function(tab) {
   tabAtual = tab;
-  ["geral","turma","turmas"].forEach(t => {
-    document.getElementById("tab-"+t)?.classList.toggle("active", t===tab);
-  });
-  const thead = document.getElementById("thead");
-  if (tab === "turmas") {
-    thead.innerHTML = '<tr><th>#</th><th>Turma</th><th>Pontuação</th><th class="rank-hide-mobile">Alunos</th><th class="rank-hide-mobile">Média</th></tr>';
-  } else if (tab === "turma") {
-    thead.innerHTML = '<tr><th>#</th><th>Aluno</th><th>Pontuação</th><th class="rank-hide-mobile">Acertos</th><th class="rank-hide-mobile">Atividades</th></tr>';
-  } else {
-    thead.innerHTML = '<tr><th>#</th><th>Aluno</th><th class="rank-hide-mobile">Turma</th><th>Pontuação</th><th class="rank-hide-mobile">Acertos</th><th class="rank-hide-mobile">Atividades</th></tr>';
-  }
-  renderTablas();
+  document.getElementById('tab-geral')?.classList.toggle('active', tab === 'geral');
+  document.getElementById('tab-ativ')?.classList.toggle('active', tab === 'ativ');
+  document.getElementById('panel-geral').style.display = tab === 'geral' ? '' : 'none';
+  document.getElementById('panel-ativ').style.display  = tab === 'ativ'  ? '' : 'none';
+  if (tab === 'ativ') { abrirAtividade(ativSel); }
+  if (tab === 'geral' && unsubAtiv) { unsubAtiv(); unsubAtiv = null; }
 };
 
-mudarTab("geral");
+// ── Build page ───────────────────────────────────────────────
+const resumoHTML = alunos.map(nome => {
+  const r = resumoAluno(nome);
+  return `<div class="resumo-wrap">
+    <div class="resumo-header">
+      <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+      <span>${nome}</span>
+    </div>
+    <div class="mini-stats">
+      <div class="mini-stat"><div class="mini-stat-value" style="color:var(--gold)">${r.melhorPts}</div><div class="mini-stat-label">Melhor</div></div>
+      <div class="mini-stat"><div class="mini-stat-value" style="color:var(--orange)">#${r.posTurma}</div><div class="mini-stat-label">Na Turma</div></div>
+      <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue)">#${r.posGeral}</div><div class="mini-stat-label">Geral</div></div>
+      <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green)">${r.sessoes}</div><div class="mini-stat-label">Sessões</div></div>
+      <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue)">${r.acertos}</div><div class="mini-stat-label">Acertos</div></div>
+      <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green)">${r.taxa}%</div><div class="mini-stat-label">Taxa</div></div>
+    </div>
+  </div>`;
+}).join('');
+
+const geralRows = rankAll.length
+  ? rankAll.map((r, i) => {
+      const pos = i + 1;
+      const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
+      const dest = alunos.includes(r.aluno);
+      return `<div class="rank-row${dest ? ' destaque' : ''}">
+        <div class="rank-pos">${medal}</div>
+        <div style="flex:1;min-width:0">
+          <div class="rank-nome">${r.aluno}${dest ? ' ★' : ''}</div>
+          <div class="rank-sub">Turma ${r.turma} · ${r.atividades} ativ. · ${r.sessoes} sess.</div>
+        </div>
+        <div class="rank-pts">${r.media}<div class="rank-pts-label">média</div></div>
+      </div>`;
+    }).join('')
+  : '<p style="font-size:13px;color:var(--text-muted);padding:16px">Nenhum resultado registrado ainda.</p>';
+
+const ativBtns = LISTA_ATIVIDADES.map(a =>
+  `<button class="ativ-btn${a.nome === ativSel ? ' active' : ''}" data-ativ="${a.nome}">${a.nome}</button>`
+).join('');
+
+document.getElementById('content').innerHTML = `
+  <div class="card" style="margin-bottom:16px">${resumoHTML}</div>
+
+  <div class="tab-nav">
+    <button id="tab-geral" class="active" onclick="mudarTab('geral')">🏆 Geral</button>
+    <button id="tab-ativ"                 onclick="mudarTab('ativ')">📚 Por Atividade</button>
+  </div>
+
+  <div id="panel-geral">
+    <div class="card" style="padding:0">${geralRows}</div>
+  </div>
+
+  <div id="panel-ativ" style="display:none">
+    <div class="ativ-sel" id="ativ-sel">${ativBtns}</div>
+    <div class="grid-2" style="align-items:start">
+      <div>
+        <div class="rank-section-title">Sua Turma <span class="live-tag">ao vivo</span></div>
+        <div class="card" style="padding:0" id="rank-ativ-turma"></div>
+      </div>
+      <div>
+        <div class="rank-section-title">Top 5 Geral</div>
+        <div class="card" style="padding:0" id="rank-ativ-geral"></div>
+      </div>
+    </div>
+  </div>`;
+
+document.querySelectorAll('.ativ-btn').forEach(b => {
+  b.addEventListener('click', () => abrirAtividade(b.dataset.ativ));
+});
+
+window.addEventListener('beforeunload', () => { if (unsubAtiv) unsubAtiv(); });
 </script>
-<style>.destaque td{background:linear-gradient(135deg,var(--blue-pale),#fff)!important}</style>
 </body>
 </html>
