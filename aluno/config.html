@@ -10,6 +10,12 @@
     .pin-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
     .pin-field input{text-align:center;letter-spacing:6px;font-size:22px;font-weight:700;}
     @media(max-width:480px){.pin-row{grid-template-columns:1fr;}}
+    .toggle-switch{position:relative;width:48px;height:26px;flex-shrink:0;}
+    .toggle-switch input{opacity:0;width:0;height:0;position:absolute;}
+    .toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:13px;cursor:pointer;transition:background .25s;}
+    .toggle-slider::before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .25s;}
+    input:checked + .toggle-slider{background:var(--blue);}
+    input:checked + .toggle-slider::before{transform:translateX(22px);}
   </style>
 </head>
 <body>
@@ -25,6 +31,23 @@
     <div class="content">
       <div id="flash-wrap"></div>
       <div style="max-width:520px">
+
+        <div class="card" id="card-tema" style="margin-bottom:16px">
+          <div class="card-title" style="margin-bottom:16px">
+            <svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
+            Aparência
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div>
+              <div style="font-size:14px;font-weight:600">Modo escuro</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Reduz o brilho da tela</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="chk-tema" onchange="alternarTema(this.checked)"/>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
 
         <div class="card" id="card-senha">
           <div class="card-title" style="margin-bottom:20px">
@@ -78,6 +101,7 @@
   </div>
 </div>
 
+<script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
 import { requireAluno, renderSidebarAluno, clearSession, hashSenha } from "/js/auth.js";
 import { getSenhaAluno, setSenhaAluno } from "/js/db.js";
@@ -86,6 +110,15 @@ const sess = requireAluno("/index.html");
 if (!sess) throw new Error("não autenticado");
 renderSidebarAluno("sidebar", "config");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+// ── Tema ──────────────────────────────────────────
+const chkTema = document.getElementById('chk-tema');
+chkTema.checked = localStorage.getItem('tema') === 'escuro';
+window.alternarTema = function(ativo) {
+  const tema = ativo ? 'escuro' : 'claro';
+  localStorage.setItem('tema', tema);
+  document.documentElement.setAttribute('data-theme', ativo ? 'dark' : '');
+};
 
 const { alunos, turma } = sess;
 

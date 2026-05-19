@@ -7,13 +7,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
-    .ativ-liberada{display:flex;align-items:center;gap:16px;padding:18px 20px;background:linear-gradient(135deg,#EBF6FD,#F0F9FF);border:1.5px solid #BAE6FD;border-radius:var(--radius);}
+    .ativ-liberada{display:flex;align-items:center;gap:16px;padding:18px 20px;background:linear-gradient(135deg,#EBF6FD,#F0F9FF);border:1.5px solid #BAE6FD;border-radius:var(--radius);margin-bottom:8px;}
     .ativ-icon{width:48px;height:48px;border-radius:12px;background:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
     .ativ-icon svg{width:26px;height:26px;fill:#fff;}
     .ativ-info{flex:1;}.ativ-info h3{font-size:15px;font-weight:700;}.ativ-info p{font-size:12px;color:var(--text-muted);margin-top:3px;}
     .ativ-vazia{display:flex;align-items:center;gap:12px;padding:18px 20px;background:var(--bg);border:1.5px dashed var(--border);border-radius:var(--radius);color:var(--text-muted);font-size:13px;}
     .ativ-vazia svg{width:22px;height:22px;fill:var(--border);flex-shrink:0;}
-    .resumo-header{display:flex;align-items:center;gap:10px;padding:12px 16px;background:linear-gradient(135deg,var(--orange-pale),#fff);border-bottom:1px solid var(--border);border-radius:var(--radius) var(--radius) 0 0;}
+    .resumo-header{display:flex;align-items:center;gap:10px;padding:12px 16px;background:linear-gradient(135deg,var(--orange-pale),transparent);border-bottom:1px solid var(--border);border-radius:var(--radius) var(--radius) 0 0;}
     .resumo-header svg{width:15px;height:15px;fill:var(--orange);}
     .resumo-header span{font-size:13px;font-weight:700;}
     .resumo-wrap{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:14px;}
@@ -22,15 +22,18 @@
     .hist-aluno-label svg{width:13px;height:13px;fill:currentColor;}
     .hist-check{width:26px;height:26px;border-radius:50%;background:var(--green-pale);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
     .hist-check svg{width:13px;height:13px;fill:var(--green);}
-    .ativ-chip{display:flex;align-items:center;gap:7px;padding:9px 12px;border-radius:9px;border:1.5px solid var(--border);background:#fff;font-size:12px;font-weight:500;color:var(--text-muted);}
+    .ativ-chip{display:flex;align-items:center;gap:7px;padding:9px 12px;border-radius:9px;border:1.5px solid var(--border);background:var(--card);font-size:12px;font-weight:500;color:var(--text-muted);}
     .ativ-chip svg{width:16px;height:16px;fill:currentColor;flex-shrink:0;}
     .ativ-chip.liberada{border-color:#BAE6FD;background:var(--blue-pale);color:var(--blue-dark);}
-    .rank-geral-item{display:flex;align-items:center;gap:12px;padding:9px 4px;margin-bottom:2px;}
-    .rank-geral-medal{font-size:22px;flex-shrink:0;}
-    .rank-geral-info{flex:1;min-width:0;}
-    .rank-geral-nome{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .rank-geral-turma{font-size:11px;color:var(--text-muted);}
-    .rank-geral-pts{font-size:16px;font-weight:800;color:var(--gold);flex-shrink:0;}
+    /* Top 3 cards */
+    .top3-card{border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden;}
+    .top3-card:last-child{margin-bottom:0;}
+    .top3-nome{font-size:15px;font-weight:800;color:#fff;line-height:1.2;}
+    .top3-turma{font-size:11px;color:rgba(255,255,255,.75);margin-top:2px;}
+    .top3-pts{font-size:20px;font-weight:800;color:#fff;flex-shrink:0;text-align:right;line-height:1;}
+    .top3-pts-label{font-size:10px;color:rgba(255,255,255,.7);}
+    /* Banner */
+    .banner-top3{border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px;color:#fff;}
     @media(max-width:480px){
       .ativ-liberada{flex-wrap:wrap;gap:12px}
       .ativ-liberada .ativ-info{width:100%}
@@ -58,6 +61,7 @@
   </div>
 </div>
 
+<script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
 import { LISTA_ATIVIDADES } from "/js/constants.js";
 import { getResultados, getLiberadasParaTurma } from "/js/db.js";
@@ -76,13 +80,15 @@ document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCas
 
 const [todos, liberadas] = await Promise.all([getResultados(), getLiberadasParaTurma(turma)]);
 
-function buildRankingMedia(todos) {
+// ── Ranking (média por atividade) ─────────────────────────────
+function buildRankingMedia(lista) {
   const melhor = {};
-  for (const r of todos) {
+  for (const r of lista) {
     if (!r.concluido || !r.aluno) continue;
     if (!melhor[r.aluno]) melhor[r.aluno] = { aluno: r.aluno, turma: r.turma || '?', porAtiv: {} };
+    const bruta = r.pontuacao_bruta || r.pontuacao || 0;
     const prev = melhor[r.aluno].porAtiv[r.atividade] || 0;
-    if ((r.pontuacao || 0) > prev) melhor[r.aluno].porAtiv[r.atividade] = r.pontuacao || 0;
+    if (bruta > prev) melhor[r.aluno].porAtiv[r.atividade] = bruta;
   }
   return Object.values(melhor).map(a => {
     const vals = Object.values(a.porAtiv);
@@ -91,47 +97,114 @@ function buildRankingMedia(todos) {
   }).sort((a, b) => b.media - a.media);
 }
 const rankAll   = buildRankingMedia(todos);
+const rankTurma = rankAll.filter(r => r.turma === turma);
 const top3Geral = rankAll.slice(0, 3);
 
+// ── Mini sparkline SVG ────────────────────────────────────────
+function miniSparkline(nome, atividade) {
+  const allSess = todos
+    .filter(r => r.aluno === nome && r.concluido && r.atividade === atividade)
+    .sort((a, b) => (a.criadoEm||0) - (b.criadoEm||0));
+  if (allSess.length < 2) return '';
+  const pts = allSess.map(r => r.pontuacao_bruta || r.pontuacao || 0);
+  const maxV = Math.max(...pts, 1);
+  const W = 56, H = 22, m = 2;
+  const n = pts.length;
+  const xP = i => m + (n > 1 ? (i / (n - 1)) * (W - 2*m) : (W - 2*m) / 2);
+  const yP = v => m + (H - 2*m) - Math.min((v / maxV) * (H - 2*m), H - 2*m);
+  const last = pts[pts.length - 1], first = pts[0];
+  const color = last > first ? '#16A34A' : last < first ? '#DC2626' : '#6B7280';
+  let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:56px;height:22px;flex-shrink:0;overflow:visible">`;
+  if (n > 1) svg += `<polyline points="${pts.map((v,i) => `${xP(i)},${yP(v)}`).join(' ')}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+  pts.forEach((v, i) => { svg += `<circle cx="${xP(i)}" cy="${yP(v)}" r="2.5" fill="${color}"/>`; });
+  svg += '</svg>';
+  return svg;
+}
+
+// ── Tentativas esgotadas ──────────────────────────────────────
 function tentativasEsgotadas(atividadeNome) {
   return alunos.some(nome =>
     todos.filter(r => r.aluno === nome && r.atividade === atividadeNome).length >= 2
   );
 }
 
-// Resumo por aluno
+// ── Resumo por aluno ──────────────────────────────────────────
 function resumoAluno(nome) {
   const regs = todos.filter(r => r.aluno === nome && r.concluido);
   const melhor = {};
   regs.forEach(r => { melhor[r.atividade] = Math.max(melhor[r.atividade]||0, r.pontuacao||0); });
-  const vals      = Object.values(melhor);
-  const melhorPts = vals.length ? Math.max(...vals) : 0;
-  const melhorAtiv = melhorPts > 0 ? (Object.entries(melhor).find(([,v]) => v === melhorPts)?.[0] || '') : '';
-  const acertos   = regs.reduce((a, r) => a + (r.acertos || 0), 0);
-  const erros     = regs.reduce((a, r) => a + (r.erros   || 0), 0);
-  const taxa      = (acertos + erros) > 0 ? Math.round(acertos / (acertos + erros) * 100) : 0;
-  const posGeral  = (rankAll.findIndex(r => r.aluno === nome) + 1) || '—';
-  const rankTurma = rankAll.filter(r => r.turma === turma);
-  const posTurma  = (rankTurma.findIndex(r => r.aluno === nome) + 1) || '—';
-  return { melhorPts, melhorAtiv, sessoes: regs.length, acertos, taxa, posGeral, posTurma, total_ativ: vals.length };
+  const vals     = Object.values(melhor);
+  const totalPts = vals.reduce((s, v) => s + v, 0); // soma das melhores por atividade
+  const acertos  = regs.reduce((a, r) => a + (r.acertos || 0), 0);
+  const erros    = regs.reduce((a, r) => a + (r.erros   || 0), 0);
+  const taxa     = (acertos + erros) > 0 ? Math.round(acertos / (acertos + erros) * 100) : 0;
+  const posGeral = (rankAll.findIndex(r => r.aluno === nome) + 1) || '—';
+  const posTurma = (rankTurma.findIndex(r => r.aluno === nome) + 1) || '—';
+  return { totalPts, sessoes: regs.length, acertos, taxa, posGeral, posTurma, total_ativ: vals.length };
 }
 
 function ultimasAtividades(nome) {
   return todos.filter(r => r.aluno === nome && r.concluido).slice(-4).reverse();
 }
 
+// ── Banner (top 3 geral ou líder de turma) ───────────────────
+const posGerais  = alunos.map(n => rankAll.findIndex(r => r.aluno === n) + 1).filter(p => p > 0);
+const posTurmas  = alunos.map(n => rankTurma.findIndex(r => r.aluno === n) + 1).filter(p => p > 0);
+const posGeralMin  = posGerais.length ? Math.min(...posGerais) : 99;
+const posTurmaMin  = posTurmas.length ? Math.min(...posTurmas) : 99;
+let bannerHtml = '';
+if (posGeralMin <= 3) {
+  const icone = ['🥇','🥈','🥉'][posGeralMin - 1];
+  bannerHtml = `<div class="banner-top3" style="background:linear-gradient(135deg,#F59E0B,#D97706)">
+    <span style="font-size:24px">${icone}</span>
+    Você está em ${posGeralMin}º lugar geral! Continue assim!
+  </div>`;
+} else if (posTurmaMin === 1) {
+  bannerHtml = `<div class="banner-top3" style="background:linear-gradient(135deg,#3B82F6,#1D4ED8)">
+    <span style="font-size:24px">🏫</span>
+    Você lidera sua turma!
+  </div>`;
+}
+
+// ── Top 3 cards ───────────────────────────────────────────────
+const TOP3_BG = [
+  'linear-gradient(135deg,#F59E0B,#D97706)',
+  'linear-gradient(135deg,#9CA3AF,#6B7280)',
+  'linear-gradient(135deg,#CD853F,#92400E)',
+];
+const top3Html = top3Geral.length ? top3Geral.map((p, i) => {
+  const isMe = alunos.includes(p.aluno);
+  const glowClass = ['glow-gold','glow-silver','glow-bronze'][i];
+  const crown = i === 0 ? `<span class="crown-anim" style="font-size:22px;position:absolute;top:-8px;right:12px">👑</span>` : '';
+  return `<div class="top3-card ${glowClass}" style="background:${TOP3_BG[i]}">
+    ${crown}
+    <div style="font-size:28px;flex-shrink:0">${['🥇','🥈','🥉'][i]}</div>
+    <div style="flex:1;min-width:0">
+      <div class="top3-nome">${p.aluno}${isMe ? ' ★' : ''}</div>
+      <div class="top3-turma">Turma ${p.turma}</div>
+    </div>
+    <div>
+      <div class="top3-pts">${p.media}</div>
+      <div class="top3-pts-label">média</div>
+    </div>
+  </div>`;
+}).join('')
+: '<p style="font-size:13px;color:var(--text-muted);padding:6px 0">Nenhum resultado ainda.</p>';
+
+// ── Render ────────────────────────────────────────────────────
 const conteudo = document.getElementById("content");
 conteudo.innerHTML = `
+${bannerHtml}
 <div class="grid-2">
   <div>
-    <div class="card">
+    <div class="card${liberadas.length ? ' card-pulse' : ''}">
       <div class="section-label" style="color:#F59E0B">
         <svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
         Atividade Liberada
       </div>
       ${liberadas.length ? liberadas.map(lib => {
         const esgotado = tentativasEsgotadas(lib.atividade);
-        return `<div class="ativ-liberada" style="margin-bottom:8px">
+        return `<div class="ativ-liberada">
           <div class="ativ-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
           <div class="ativ-info">
             <h3>${lib.atividade}</h3>
@@ -171,11 +244,11 @@ conteudo.innerHTML = `
           <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>${a}
         </div>
         ${hist.length ? hist.map(r => `
-          <div class="list-row">
+          <div class="list-row" style="align-items:center">
             <div class="hist-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
-            <div style="flex:1;font-size:13px;font-weight:600">${r.atividade}</div>
-            <div style="font-size:13px;font-weight:700;color:var(--gold)">${r.pontuacao} pts</div>
-            <div style="font-size:11px;color:var(--text-muted)">${r.data||''}</div>
+            <div style="flex:1;min-width:0;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.atividade}</div>
+            ${miniSparkline(a, r.atividade)}
+            <div style="font-size:13px;font-weight:700;color:var(--gold);flex-shrink:0">${r.pontuacao} pts</div>
           </div>`).join('') : '<p style="font-size:13px;color:var(--text-muted);padding:6px 0 10px">Nenhuma atividade realizada ainda.</p>'}`;
       }).join('')}
     </div>
@@ -195,12 +268,12 @@ conteudo.innerHTML = `
             <span>${a}</span>
           </div>
           <div class="mini-stats">
-            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--gold)">${r.melhorPts}</div><div class="mini-stat-label" title="${r.melhorAtiv || ''}">Maior pts${r.melhorAtiv ? '<br><span style="font-size:9px;opacity:.8">' + r.melhorAtiv + '</span>' : ''}</div></div>
-            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--orange)">${r.posTurma === '—' ? '—' : '#'+r.posTurma}</div><div class="mini-stat-label">Na Turma</div></div>
-            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue)">${r.posGeral === '—' ? '—' : '#'+r.posGeral}</div><div class="mini-stat-label">Geral</div></div>
-            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green)">${r.sessoes}</div><div class="mini-stat-label">Sessões</div></div>
-            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue)">${r.acertos}</div><div class="mini-stat-label">Acertos</div></div>
-            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green)">${r.taxa}%</div><div class="mini-stat-label">Taxa</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--gold);font-size:22px">${r.totalPts}</div><div class="mini-stat-label">Total pts</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--orange);font-size:22px">${r.posTurma === '—' ? '—' : '#'+r.posTurma}</div><div class="mini-stat-label">Na Turma</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue);font-size:22px">${r.posGeral === '—' ? '—' : '#'+r.posGeral}</div><div class="mini-stat-label">Geral</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green);font-size:22px">${r.sessoes}</div><div class="mini-stat-label">Sessões</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue);font-size:22px">${r.acertos}</div><div class="mini-stat-label">✅ Acertos</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green);font-size:22px">${r.taxa}%</div><div class="mini-stat-label">📊 Taxa</div></div>
           </div>
         </div>`;
       }).join('')}
@@ -211,16 +284,7 @@ conteudo.innerHTML = `
         <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12V11c0 4.52-3.05 8.75-7 9.93-3.95-1.18-7-5.41-7-9.93V6.3l7-3.12z"/></svg>
         Top 3 Geral
       </div>
-      ${top3Geral.length ? top3Geral.map((p, i) => `
-        <div class="rank-geral-item">
-          <div class="rank-geral-medal">${['🥇','🥈','🥉'][i]}</div>
-          <div class="rank-geral-info">
-            <div class="rank-geral-nome">${p.aluno}</div>
-            <div class="rank-geral-turma">Turma ${p.turma}</div>
-          </div>
-          <div class="rank-geral-pts">${p.media} <span style="font-size:10px;font-weight:500;color:var(--text-muted)">média</span></div>
-        </div>`).join('')
-      : '<p style="font-size:13px;color:var(--text-muted);padding:6px 0">Nenhum resultado ainda.</p>'}
+      ${top3Html}
     </div>
 
     <div class="card">

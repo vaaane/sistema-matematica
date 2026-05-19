@@ -64,6 +64,7 @@
     </div>
   </div>
 </div>
+<script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
 import { getResultados, getDetalhes } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
@@ -82,7 +83,24 @@ window.toggle = function(header) {
   body.style.display = body.style.display === 'none' ? 'block' : 'none';
 };
 
-// ── Evolução SVG ──────────────────────────────────────────────
+// Tooltip para pontos clicáveis no gráfico
+window.showSessTooltip = function(e, info) {
+  let tip = document.getElementById('sess-tip');
+  if (!tip) {
+    tip = document.createElement('div');
+    tip.id = 'sess-tip';
+    tip.style.cssText = 'position:fixed;background:#1E293B;color:#F1F5F9;padding:7px 12px;border-radius:9px;font-size:11px;font-weight:600;pointer-events:none;z-index:9999;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.35);transition:opacity .15s';
+    document.body.appendChild(tip);
+    document.addEventListener('click', ev => { if (ev.target.tagName !== 'circle') tip.style.opacity='0'; });
+  }
+  tip.textContent = info;
+  tip.style.opacity = '1';
+  tip.style.left = `${Math.min(e.clientX + 12, window.innerWidth - 220)}px`;
+  tip.style.top  = `${Math.max(e.clientY - 46, 8)}px`;
+  e.stopPropagation();
+};
+
+// ── Evolução SVG (pontos clicáveis) ──────────────────────────
 function renderEvolucaoSVG(regs) {
   const pts = regs.map(r => r.pontuacao_bruta || r.pontuacao || 0);
   if (pts.length < 2) return '';
@@ -98,13 +116,19 @@ function renderEvolucaoSVG(regs) {
   const xP = i => mL + (n > 1 ? (i / (n - 1)) * iW : iW / 2);
   const yP = v => mT + iH - Math.min((v / maxV) * iH, iH);
 
-  let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:240px;height:56px;flex-shrink:0">`;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:240px;height:56px;flex-shrink:0;cursor:pointer">`;
   if (n > 1) {
     svg += `<polyline points="${pts.map((v, i) => `${xP(i)},${yP(v)}`).join(' ')}" fill="none" stroke="${trendColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
   }
   pts.forEach((v, i) => {
-    svg += `<circle cx="${xP(i)}" cy="${yP(v)}" r="3" fill="${trendColor}"/>`;
-    svg += `<text x="${xP(i)}" y="${yP(v) - 5}" text-anchor="middle" font-size="8" fill="${trendColor}" font-weight="700">${v}</text>`;
+    const r = regs[i];
+    const ac = r.acertos || 0, er = r.erros || 0;
+    const taxa = (ac + er) > 0 ? Math.round(ac / (ac + er) * 100) : 0;
+    const info = `${r.data || 'Sessão '+(i+1)} — ${v}pts | ✅${ac} ❌${er} | ${taxa}%`;
+    svg += `<circle cx="${xP(i)}" cy="${yP(v)}" r="5" fill="${trendColor}" stroke="white" stroke-width="1.5"
+      style="cursor:pointer" onclick="showSessTooltip(event,'${info.replace(/'/g, '&#39;')}')"
+      onmouseover="this.setAttribute('r','7')" onmouseout="this.setAttribute('r','5')"/>`;
+    svg += `<text x="${xP(i)}" y="${yP(v) - 8}" text-anchor="middle" font-size="8" fill="${trendColor}" font-weight="700" pointer-events="none">${v}</text>`;
   });
   svg += `</svg>`;
 
@@ -165,12 +189,12 @@ function renderPlusItem(r, detalhes) {
       <div style="flex:1">
         <div class="hist-nome">${r.atividade} <span class="hist-mode-badge plus">Competição+</span></div>
         <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center">
-          <span class="badge badge-gold">${bruta} pts${r.com_abatimento ? ' (bruta)' : ''}</span>
+          <span class="badge badge-gold">⭐ ${bruta} pts${r.com_abatimento ? ' (bruta)' : ''}</span>
           ${abatBadge}
-          <span class="badge badge-green">${r.acertos || 0} acertos</span>
-          <span class="badge badge-red">${r.erros || 0} erros</span>
-          <span class="badge badge-blue">${taxa}%</span>
-          ${(r.acertos_rapidos || 0) > 0 ? `<span class="badge badge-blue">⚡ ${r.acertos_rapidos} rápidos</span>` : ''}
+          <span class="badge badge-green">✅ ${r.acertos || 0}</span>
+          <span class="badge badge-red">❌ ${r.erros || 0}</span>
+          <span class="badge badge-blue">📊 ${taxa}%</span>
+          ${(r.acertos_rapidos || 0) > 0 ? `<span class="badge badge-blue">⚡ ${r.acertos_rapidos}</span>` : ''}
         </div>
       </div>
       <div class="hist-data">${r.data || ''}</div>
@@ -194,11 +218,11 @@ function renderClassicoItem(r, detalhes) {
       <div style="flex:1">
         <div class="hist-nome">${r.atividade}</div>
         <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center">
-          <span class="badge badge-gold">${bruta} pts${r.com_abatimento ? ' (bruta)' : ''}</span>
+          <span class="badge badge-gold">⭐ ${bruta} pts${r.com_abatimento ? ' (bruta)' : ''}</span>
           ${abatBadge}
-          <span class="badge badge-green">${r.acertos || 0} acertos</span>
-          <span class="badge badge-red">${r.erros || 0} erros</span>
-          <span class="badge badge-blue">${aproveit}%</span>
+          <span class="badge badge-green">✅ ${r.acertos || 0}</span>
+          <span class="badge badge-red">❌ ${r.erros || 0}</span>
+          <span class="badge badge-blue">📊 ${aproveit}%</span>
         </div>
       </div>
       <div class="hist-data">${r.data || ''}</div>

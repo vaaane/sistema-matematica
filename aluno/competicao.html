@@ -92,9 +92,10 @@
   </div>
 </div>
 
+<script>(()=>{const t=localStorage.getItem("tema");if(t==="escuro")document.documentElement.setAttribute("data-theme","dark");})()</script>
 <script type="module">
 import { respostasEquivalentes, dataAgora } from "/js/constants.js";
-import { addResultado, updateResultado, getLiberadasParaTurma, listenRankingAtividade } from "/js/db.js";
+import { addResultado, updateResultado, getLiberadasParaTurma, listenRankingAtividade, getAtividadeStatus } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 
 // ── Bloquear cópia de texto ──────────────────────────────────
@@ -121,8 +122,21 @@ if (!liberada) {
   window.location.href = "/aluno/atividades.html"; throw new Error();
 }
 
+// Verificar status manual da atividade
+const statusInfoComp = await getAtividadeStatus(turma, liberada.atividade);
+if (statusInfoComp.status === 'encerrada') {
+  alert("Atividade encerrada pela professora.");
+  window.location.href = "/aluno/atividades.html"; throw new Error();
+}
+if (statusInfoComp.status !== 'ativa') {
+  if (!confirm(`Atenção: esta atividade vale ${statusInfoComp.percentual}% da nota agora. Deseja continuar?`)) {
+    window.location.href = "/aluno/atividades.html"; throw new Error();
+  }
+}
+
 document.getElementById("topbar-title").textContent = liberada.atividade;
-document.getElementById("topbar-sub").textContent = `Turma ${turma} · Competição ao vivo`;
+const pctLabelComp = statusInfoComp.percentual < 100 ? ` · ⏰ ${statusInfoComp.percentual}%` : '';
+document.getElementById("topbar-sub").textContent = `Turma ${turma} · Competição ao vivo${pctLabelComp}`;
 
 // ── Carregar templates ────────────────────────────────────────
 const resp = await fetch("/dados/questoes_competicao.json");
@@ -472,8 +486,17 @@ async function encerrarJogo(voluntario) {
   unsubRanking();
 
   const tempo = Math.round(Date.now() / 1000 - st.inicioTs);
+  let percentualNota = 100;
+  try {
+    const stFim = await getAtividadeStatus(turma, liberada.atividade);
+    percentualNota = stFim.percentual ?? 100;
+  } catch(e) {}
+  const pontuacaoAplicada = st.pontuacao > 0 ? Math.max(1, Math.floor(st.pontuacao * percentualNota / 100)) : 0;
+
   const dados = {
-    pontuacao: st.pontuacao, acertos: st.acertos, erros: st.erros,
+    pontuacao_bruta: st.pontuacao, pontuacao: pontuacaoAplicada,
+    percentual_nota: percentualNota, com_abatimento: percentualNota < 100,
+    acertos: st.acertos, erros: st.erros,
     respondidas: st.respondidas, vidas_restantes: st.vidas,
     tempo: `${tempo}s`, concluido: true, modo: "competicao",
     encerrado_voluntariamente: voluntario, data: dataAgora(),

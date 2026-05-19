@@ -79,6 +79,7 @@
   </div>
 </div>
 
+<script>(()=>{const t=localStorage.getItem("tema");if(t==="escuro")document.documentElement.setAttribute("data-theme","dark");})()</script>
 <script type="module">
 import {
   BASES, FATORES_TENTATIVA,
@@ -89,7 +90,7 @@ import {
   addResultado, updateResultado, saveDetalhes,
   getLiberadasParaTurma, contarTentativas,
   addConquista, hasConquista, addAlerta, verificarTentativasSuspeitas,
-  getResultadosByAluno
+  getResultadosByAluno, getAtividadeStatus
 } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession, setJogo } from "/js/auth.js";
 
@@ -128,10 +129,25 @@ for (const al of alunos) {
   }
 }
 
+// Verificar status manual da atividade
+const statusInfo = await getAtividadeStatus(turma, nomeAtiv);
+if (statusInfo.status === 'encerrada') {
+  alert("Atividade encerrada pela professora.");
+  window.location.href = "/aluno/atividades.html";
+  throw new Error();
+}
+if (statusInfo.status !== 'ativa') {
+  if (!confirm(`Atenção: esta atividade vale ${statusInfo.percentual}% da nota agora. Deseja continuar?`)) {
+    window.location.href = "/aluno/atividades.html";
+    throw new Error();
+  }
+}
+
 const percentual = typeof liberada.percentual === "number" ? liberada.percentual : 100;
 const tempoMax   = liberada.tempo_maximo;
 document.getElementById("topbar-title").textContent = nomeAtiv;
-document.getElementById("topbar-sub").textContent = `Turma ${turma} · ${percentual}% da nota · ${tempoMax/60} min`;
+const pctLabel = statusInfo.percentual < 100 ? ` · ⏰ ${statusInfo.percentual}% da nota` : '';
+document.getElementById("topbar-sub").textContent = `Turma ${turma}${pctLabel} · ${tempoMax/60} min`;
 
 const perguntas  = await carregarPerguntas(nomeAtiv);
 const fatorAtr   = percentual / 100;
@@ -360,11 +376,17 @@ window.encerrar = async function() {
 async function finalizarJogo() {
   if (jogo.finalizado) return;
   jogo.finalizado = true;
-  const tt   = Math.round(Date.now()/1000 - jogo.inicioTs);
-  const pb   = jogo.pontuacao;
-  const fator = (typeof jogo.fatorAtraso === "number" && !isNaN(jogo.fatorAtraso)) ? jogo.fatorAtraso : 1;
-  const pfSafe = pb > 0 ? Math.max(1, Math.floor(pb * fator)) : 0;
-  const agr  = dataAgora();
+  const tt  = Math.round(Date.now()/1000 - jogo.inicioTs);
+  const pb  = jogo.pontuacao;
+  const agr = dataAgora();
+
+  // Lê status atual para registrar percentual no momento do encerramento
+  let percentualNota = 100;
+  try {
+    const statusFim = await getAtividadeStatus(jogo.turma, jogo.nome);
+    percentualNota = statusFim.percentual ?? 100;
+  } catch(e) {}
+  const pfSafe = pb > 0 ? Math.max(1, Math.floor(pb * percentualNota / 100)) : 0;
 
   jogo.tempoSegundos  = tt;
   jogo.pontuacaoFinal = pfSafe;
@@ -373,13 +395,13 @@ async function finalizarJogo() {
   const dadosFinais = {
     pontuacao_bruta: pb,
     pontuacao: pfSafe,
-    tipo_atividade: jogo.tipo || "dia",
-    fator_atraso: fator,
+    percentual_nota: percentualNota,
+    com_abatimento: percentualNota < 100,
     acertos: jogo.acertos,
     erros: jogo.erros,
+    respondidas: jogo.respondidas,
     tempo: `${tt}s`,
     data: agr,
-    atraso: jogo.tipo !== "dia",
     concluido: true,
   };
 
