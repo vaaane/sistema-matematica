@@ -233,7 +233,7 @@
 
     /* ── LAYOUT ──────────────────────────────────────────────── */
     .game-layout{display:grid;grid-template-columns:1fr 210px;gap:16px;align-items:start;}
-    @media(max-width:680px){.game-layout{grid-template-columns:1fr}.rank-card{display:none!important}}
+    @media(max-width:768px){.game-layout{grid-template-columns:1fr}.rank-card{display:none!important}}
 
     /* ── RANKING LATERAL ─────────────────────────────────────── */
     .rank-card{
@@ -242,6 +242,30 @@
       padding:14px;position:sticky;top:80px;
       box-shadow:0 0 22px rgba(20,20,80,.3);
     }
+    .rank-fab{
+      display:none;position:fixed;bottom:20px;right:20px;
+      width:50px;height:50px;border-radius:50%;
+      background:linear-gradient(135deg,#3B82F6,#1D4ED8);
+      border:2px solid #60A5FA;font-size:22px;cursor:pointer;
+      box-shadow:0 4px 18px rgba(59,130,246,.55);z-index:100;
+      align-items:center;justify-content:center;transition:transform .15s;
+    }
+    .rank-fab:active{transform:scale(.88);}
+    @media(max-width:768px){body.arcade-mode .rank-fab{display:flex;}}
+    .rank-modal-ov{
+      display:none;position:fixed;inset:0;z-index:200;
+      background:rgba(0,0,20,.65);align-items:flex-end;
+    }
+    .rank-modal-ov.open{display:flex;}
+    .rank-modal-sheet{
+      width:100%;background:linear-gradient(180deg,#0d0d28,#080818);
+      border-radius:18px 18px 0 0;border-top:1px solid #303060;
+      padding:20px 16px 32px;max-height:70vh;overflow-y:auto;
+      animation:slide-up .25s ease;
+    }
+    @keyframes slide-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+    .rank-modal-hdr{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#4040a0;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;}
+    .rank-modal-close{font-size:20px;cursor:pointer;color:#4040a0;padding:0 4px;background:none;border:none;line-height:1;}
     .rank-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#2a2a58;margin-bottom:10px;}
     .rank-row{
       display:flex;align-items:center;gap:7px;padding:5px 7px;border-radius:8px;
@@ -757,7 +781,13 @@ function mostrarBannerRank(tipo, texto) {
 
 function renderRanking(ranking) {
   const el = document.getElementById("ranking-list");
-  if (!ranking.length) return;
+  const elModal = document.getElementById("ranking-list-modal");
+  if (!ranking.length) {
+    const emptyHTML = '<div style="font-size:11px;color:#2a2a50;padding:4px 0">Aguardando resultados…</div>';
+    if (el) el.innerHTML = emptyHTML;
+    if (elModal) elModal.innerHTML = emptyHTML;
+    return;
+  }
   const meu = ranking.findIndex(r => alunos.includes(r.aluno));
 
   if (st && !st.finalizado && st.resultadoId && meu >= 0 && prevMeuPos >= 0 && meu !== prevMeuPos) {
@@ -818,8 +848,24 @@ function renderRanking(ranking) {
       </div>`;
     }
   }
-  el.innerHTML = html;
+  if (el) el.innerHTML = html;
+  if (elModal) {
+    const titleModal = document.getElementById("rank-modal-title");
+    if (titleModal) titleModal.textContent = rankModo === 0 ? `🏫 Turma ${turma}` : '🌎 Ranking Geral';
+    elModal.innerHTML = html;
+  }
 }
+
+window.abrirRankModal = function() {
+  document.getElementById("rank-modal-ov")?.classList.add("open");
+  renderRanking(latestRanking);
+};
+
+window.fecharRankModal = function(e) {
+  if (!e || e.target === document.getElementById("rank-modal-ov")) {
+    document.getElementById("rank-modal-ov")?.classList.remove("open");
+  }
+};
 
 // ── Timer por questão ─────────────────────────────────────────
 function iniciarTimer(seg) {
@@ -1454,5 +1500,15 @@ window.iniciarJogo = async function() {
 
 mostrarPreJogo();
 </script>
+<button class="rank-fab" onclick="abrirRankModal()" aria-label="Ver ranking">🏆</button>
+<div class="rank-modal-ov" id="rank-modal-ov" onclick="fecharRankModal(event)">
+  <div class="rank-modal-sheet" id="rank-modal-sheet">
+    <div class="rank-modal-hdr">
+      <span id="rank-modal-title">⭐ Ranking ao vivo</span>
+      <button class="rank-modal-close" onclick="fecharRankModal()">✕</button>
+    </div>
+    <div id="ranking-list-modal"><div style="font-size:11px;color:#2a2a50">Aguardando…</div></div>
+  </div>
+</div>
 </body>
 </html>
