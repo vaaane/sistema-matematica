@@ -2,56 +2,85 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Relatório Diário — Sistema de Matemática</title>
+  <title>Relatório — Sistema de Matemática</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
-    .stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
-    .stat-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;}
-    .stat-val{font-size:22px;font-weight:800;line-height:1.1;}
-    .stat-lbl{font-size:10px;color:var(--text-muted);margin-top:4px;text-transform:uppercase;letter-spacing:.4px;}
+    /* ── Filter bar ──────────────────────────────── */
+    .filter-bar{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:20px;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);}
+    .f-group{display:flex;flex-direction:column;gap:5px;}
+    .f-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);}
+    .pill-row{display:flex;gap:5px;flex-wrap:wrap;}
+    .pill{padding:5px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .15s;}
+    .pill.on{border-color:var(--blue);background:var(--blue);color:#fff;}
 
-    .turma-badge{display:inline-flex;align-items:center;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:800;}
-    .turma-badge.f{background:#EDE9FE;color:#6D28D9;}
-    .turma-badge.h{background:#DBEAFE;color:#1D4ED8;}
+    /* ── Section headers ─────────────────────── */
+    .sec{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;margin:24px 0 12px;display:flex;align-items:center;gap:8px;}
+    .sec::before{content:"";width:3px;height:16px;border-radius:2px;background:currentColor;display:block;flex-shrink:0;}
 
-    .comp-row{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
-    .comp-card{flex:1;min-width:155px;padding:14px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);}
-    .comp-metric{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:6px;}
-    .comp-winner{font-size:18px;font-weight:800;}
-    .comp-detail{font-size:11px;color:var(--text-muted);margin-top:3px;}
-    .comp-card.f-win{border-color:#A78BFA;background:#F5F3FF;}
-    .comp-card.h-win{border-color:#93C5FD;background:#EFF6FF;}
-    .comp-card.tie{border-color:var(--border);}
+    /* ── Questões erradas / acertadas ────────── */
+    .qcard{padding:13px 15px;border-radius:10px;border:1px solid var(--border);margin-bottom:8px;}
+    .qcard.err{background:#FEF2F2;border-color:#FECACA;}
+    .qcard.ok{background:#F0FDF4;border-color:#BBF7D0;}
+    .qcard.sm{padding:8px 12px;margin-bottom:5px;}
+    .q-enun{font-size:13px;font-weight:600;line-height:1.5;margin-bottom:8px;}
+    .qcard.sm .q-enun{font-size:11px;margin-bottom:4px;}
+    .q-meta{font-size:11px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+    .rate-wrap{flex:1;min-width:120px;}
+    .rate-bar{height:7px;border-radius:4px;background:var(--border);overflow:hidden;}
+    .rate-fill{height:100%;border-radius:4px;}
+    .ok-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px;}
 
-    .q-item{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:8px;margin-bottom:5px;font-size:12px;}
-    .q-item.err{background:#FEF2F2;border:1px solid #FECACA;}
-    .q-item.ok{background:#F0FDF4;border:1px solid #BBF7D0;}
-    .q-cnt{font-size:11px;font-weight:800;min-width:30px;text-align:center;padding:2px 6px;border-radius:6px;flex-shrink:0;margin-top:1px;}
-    .q-cnt.err{background:#FEE2E2;color:#B91C1C;}
-    .q-cnt.ok{background:#DCFCE7;color:#15803D;}
-    .q-txt{flex:1;color:var(--text);line-height:1.4;}
+    /* ── Performance badge ───────────────────── */
+    .pf{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;display:inline-block;}
+    .pf.hi{background:#DCFCE7;color:#15803D;}
+    .pf.md{background:#FEF9C3;color:#854D0E;}
+    .pf.lo{background:#FEE2E2;color:#B91C1C;}
 
-    .section-sep{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin:24px 0 10px;display:flex;align-items:center;gap:8px;}
-    .section-sep::before{content:"";display:block;width:3px;height:16px;border-radius:2px;background:currentColor;}
-
-    .no-data{text-align:center;padding:28px;color:var(--text-muted);font-size:13px;}
-    .dest-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
-    .dest-box{flex:1;min-width:120px;background:var(--bg);border-radius:8px;padding:10px 12px;}
-    .dest-lbl{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
-    .dest-nome{font-size:13px;font-weight:700;}
-    .dest-pts{font-size:18px;font-weight:800;}
-
+    /* ── Sortable table ──────────────────────── */
+    .sth{cursor:pointer;user-select:none;white-space:nowrap;}
+    .sth:hover{background:#F9FAFB;}
+    .sth::after{content:" ⇅";font-size:9px;color:var(--border);}
+    .sth.asc::after{content:" ↑";color:var(--blue);}
+    .sth.desc::after{content:" ↓";color:var(--blue);}
     .table th,.table td{font-size:11px;padding:8px 10px;}
     .table th{font-size:10px;}
-    .q-erros-cell{max-width:200px;font-size:11px;line-height:1.4;color:var(--text-muted);}
+    .enun-col{max-width:260px;font-size:11px;line-height:1.4;}
+
+    /* ── Visão geral turma row ───────────────── */
+    .tr-turma{cursor:pointer;}
+    .tr-turma:hover td{background:#F9FAFB;}
+    .tr-turma td:first-child{font-size:14px;font-weight:800;}
+    .expand-row>td{padding:0;}
+    .expand-inner{padding:16px 18px;background:#F8FAFC;border-top:2px solid var(--border);}
+    .exp-icon{font-size:11px;color:var(--text-muted);display:inline-block;transition:transform .2s;}
+    .exp-icon.open{transform:rotate(180deg);}
+    .best-cell{background:rgba(253,224,71,.22)!important;}
+    .best-taxa{background:rgba(34,197,94,.14)!important;}
+    .best-jog{background:rgba(59,130,246,.11)!important;}
+
+    /* ── Expand sub-sections ─────────────────── */
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;}
+    .sub-sec-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;}
+    .sub-table th,.sub-table td{font-size:11px;padding:6px 9px;}
+    .sub-table th{font-size:10px;}
     .nao-jogou{color:var(--text-muted);font-style:italic;}
 
+    /* ── Misc ────────────────────────────────── */
+    .no-data{text-align:center;padding:32px;color:var(--text-muted);font-size:13px;}
+    .loading{text-align:center;padding:20px;color:var(--text-muted);font-size:12px;}
+
+    @media print{
+      .sidebar,.topbar-right,.filter-bar{display:none!important;}
+      .layout{grid-template-columns:1fr;}
+      .expand-row{display:table-row!important;}
+      .expand-inner{background:white;}
+    }
     @media(max-width:700px){
-      .stat-grid{grid-template-columns:repeat(2,1fr);}
-      .comp-row{flex-direction:column;}
-      .topbar-right{flex-wrap:wrap;gap:6px!important;}
+      .two-col{grid-template-columns:1fr;}
+      .enun-col{max-width:140px;}
+      .filter-bar{gap:10px;}
     }
   </style>
 </head>
@@ -61,29 +90,44 @@
   <div class="main">
     <div class="topbar">
       <div class="topbar-left">
-        <div class="topbar-title">Relatório Diário</div>
-        <div class="topbar-sub" id="topbar-sub">8F e 8H</div>
+        <div class="topbar-title">Relatório por Atividade</div>
+        <div class="topbar-sub" id="topbar-sub"></div>
       </div>
-      <div class="topbar-right" style="gap:8px;display:flex;align-items:center;flex-wrap:wrap">
-        <input type="date" id="data-picker" class="input" style="padding:8px 12px;font-size:13px;width:152px"/>
-        <button class="btn btn-blue" onclick="gerar()">
-          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
-          Gerar
-        </button>
-        <button class="btn btn-green" id="btn-csv" onclick="exportarCSV()" style="display:none">
-          <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-          CSV
+      <div class="topbar-right" style="gap:8px;display:flex">
+        <button class="btn btn-green" id="btn-pdf" onclick="exportarPDF()" style="display:none">
+          <svg viewBox="0 0 24 24"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
+          Imprimir / PDF
         </button>
       </div>
     </div>
+
+    <div class="content" style="padding-bottom:0">
+      <div class="filter-bar">
+        <div class="f-group">
+          <span class="f-label">Atividade</span>
+          <div class="select-wrap" style="min-width:220px">
+            <select id="sel-ativ" class="input" style="padding:8px 30px 8px 12px;font-size:13px"
+              onchange="onFC()"></select>
+          </div>
+        </div>
+        <div class="f-group">
+          <span class="f-label">Turmas</span>
+          <div class="pill-row" id="pill-row"></div>
+        </div>
+        <div class="f-group" style="margin-left:auto">
+          <button class="btn btn-ghost" style="font-size:12px" onclick="selecionarTodasTurmas()">Todas</button>
+        </div>
+      </div>
+    </div>
+
     <div class="content" id="content">
-      <div class="no-data">Selecione uma data e clique em Gerar.</div>
+      <div class="loading">Carregando…</div>
     </div>
   </div>
 </div>
 
 <script type="module">
-import { ALUNOS_POR_TURMA } from "/js/constants.js";
+import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES } from "/js/constants.js";
 import { getResultados, getDetalhes } from "/js/db.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 
@@ -91,385 +135,490 @@ requireProfessor();
 renderSidebarProfessor("sidebar", "relatorio");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
-const TURMAS = ["8F", "8H"];
-const picker = document.getElementById("data-picker");
-picker.value = new Date().toISOString().slice(0, 10);
+// ── State ─────────────────────────────────────────
+const TURMAS = Object.keys(ALUNOS_POR_TURMA);
+let allResults = null;
+const detCache = {}; // resultId → questoes[]
+let selectedTurmas = new Set(TURMAS);
+let expandedTurma  = null;
+let vgSort = { col: 'jogadores', dir: 'desc' };
+let aqSort = { col: 'taxaErro',  dir: 'desc' };
 
-// Cache de resultados (todos, não filtrado por data)
-let cacheTodos = null;
-// Cache de detalhes por resultadoId
-const cacheDetalhes = {};
+// ── Build selectors ───────────────────────────────
+const selAtiv  = document.getElementById("sel-ativ");
+const pillRow  = document.getElementById("pill-row");
 
-let reportData = null;
+// Activities: from LISTA_ATIVIDADES + any extra found in results (added after load)
+LISTA_ATIVIDADES.forEach(a => {
+  const o = document.createElement("option");
+  o.value = o.textContent = a.nome;
+  selAtiv.appendChild(o);
+});
 
-function isoParaBR(iso) {
-  const [y, m, d] = iso.split('-');
-  return `${d}/${m}/${y}`;
-}
+// Turma pills
+TURMAS.forEach(t => {
+  const btn = document.createElement("button");
+  btn.className = "pill on";
+  btn.id = `pill-${t}`;
+  btn.textContent = t;
+  btn.onclick = () => {
+    if (selectedTurmas.has(t)) {
+      if (selectedTurmas.size <= 1) return;
+      selectedTurmas.delete(t);
+      btn.classList.remove("on");
+    } else {
+      selectedTurmas.add(t);
+      btn.classList.add("on");
+    }
+    onFC();
+  };
+  pillRow.appendChild(btn);
+});
 
-function trunc(txt, n = 75) {
-  if (!txt || txt === '?') return '—';
-  return txt.length > n ? txt.slice(0, n) + '…' : txt;
-}
-
-async function carregarDetalhes(id) {
-  if (!(id in cacheDetalhes)) {
-    cacheDetalhes[id] = await getDetalhes(id);
-  }
-  return cacheDetalhes[id];
-}
-
-window.gerar = async function() {
-  const iso = picker.value;
-  if (!iso) return;
-  const dataBR = isoParaBR(iso);
-
-  document.getElementById("content").innerHTML = `<div class="no-data">Buscando dados de ${dataBR}…</div>`;
-  document.getElementById("btn-csv").style.display = "none";
-
-  try {
-    if (!cacheTodos) cacheTodos = await getResultados();
-
-    const filtrados = cacheTodos.filter(r => r.concluido && r.data?.startsWith(dataBR));
-
-    // Carrega detalhes de todas as sessões do dia em paralelo
-    await Promise.all(filtrados.map(r => carregarDetalhes(r.id)));
-
-    const stats = {};
-    for (const t of TURMAS) stats[t] = computarStats(filtrados, t);
-
-    reportData = { dataBR, stats };
-    document.getElementById("topbar-sub").textContent = `8F e 8H · ${dataBR}`;
-    renderRelatorio(stats, dataBR);
-    document.getElementById("btn-csv").style.display = "";
-  } catch(e) {
-    console.error(e);
-    document.getElementById("content").innerHTML =
-      `<div class="no-data">Erro ao carregar dados: ${e.message}</div>`;
-  }
+window.selecionarTodasTurmas = () => {
+  TURMAS.forEach(t => { selectedTurmas.add(t); document.getElementById(`pill-${t}`)?.classList.add("on"); });
+  onFC();
 };
 
-// ── Cálculo de estatísticas ──────────────────────────────────────
-function computarStats(resultados, turma) {
-  const cadastrados = ALUNOS_POR_TURMA[turma] || [];
-  const dasTurma = resultados.filter(r => r.turma === turma);
+// ── Load + init ───────────────────────────────────
+allResults = await getResultados();
 
-  // Inicializa mapa para cada aluno cadastrado
-  const alunoMap = {};
-  for (const al of cadastrados) {
-    alunoMap[al] = { sessoes: 0, melhorPts: 0, acertos: 0, erros: 0, respondidas: 0, questoesErros: {} };
+// Add to selector any activity present in results but not in LISTA_ATIVIDADES
+const ativNomes = new Set(LISTA_ATIVIDADES.map(a => a.nome));
+allResults.forEach(r => {
+  if (r.atividade && !ativNomes.has(r.atividade)) {
+    ativNomes.add(r.atividade);
+    const o = document.createElement("option");
+    o.value = o.textContent = r.atividade;
+    selAtiv.appendChild(o);
   }
+});
 
-  // Agrega dados por aluno
-  for (const r of dasTurma) {
-    const al = r.aluno;
-    if (!alunoMap[al]) alunoMap[al] = { sessoes: 0, melhorPts: 0, acertos: 0, erros: 0, respondidas: 0, questoesErros: {} };
-    const d = alunoMap[al];
+if (selAtiv.options.length) onFC();
+else document.getElementById("content").innerHTML = `<div class="no-data">Nenhuma atividade cadastrada.</div>`;
+
+// ── Helpers ───────────────────────────────────────
+function pfCls(v, hi = 70, lo = 50) { return v >= hi ? 'hi' : v >= lo ? 'md' : 'lo'; }
+function pct(a, b) { return b > 0 ? Math.round(a / b * 100) : 0; }
+function trunc(s, n = 80) { return s && s.length > n ? s.slice(0, n) + '…' : (s || '—'); }
+function numTent(q) {
+  if (Array.isArray(q.tentativas)) return q.tentativas.length;
+  return typeof q.tentativas === 'number' ? q.tentativas : 1;
+}
+
+// ── Compute per-turma stats ───────────────────────
+function computeStats(ativ, turma) {
+  const cadastrados = ALUNOS_POR_TURMA[turma] || [];
+  const sessoes = allResults.filter(r => r.concluido && r.atividade === ativ && r.turma === turma);
+
+  const am = {};
+  for (const al of cadastrados)
+    am[al] = { sessoes: 0, melhorPts: 0, acertos: 0, erros: 0, respondidas: 0, qErros: {} };
+
+  for (const r of sessoes) {
+    if (!am[r.aluno]) am[r.aluno] = { sessoes: 0, melhorPts: 0, acertos: 0, erros: 0, respondidas: 0, qErros: {} };
+    const d = am[r.aluno];
     d.sessoes++;
-    d.melhorPts = Math.max(d.melhorPts, r.pontuacao || 0);
-    d.acertos    += r.acertos    || 0;
-    d.erros      += r.erros      || 0;
+    d.melhorPts   = Math.max(d.melhorPts,   r.pontuacao  || 0);
+    d.acertos     += r.acertos     || 0;
+    d.erros       += r.erros       || 0;
     d.respondidas += r.respondidas || 0;
-
-    for (const q of (cacheDetalhes[r.id] || [])) {
+    for (const q of (detCache[r.id] || [])) {
       if (!q.acertou) {
-        const enun = q.enunciado || q.pergunta || '?';
-        d.questoesErros[enun] = (d.questoesErros[enun] || 0) + 1;
+        const k = q.enunciado || q.pergunta || '?';
+        d.qErros[k] = (d.qErros[k] || 0) + 1;
       }
     }
   }
 
-  const jogadores = cadastrados.filter(al => alunoMap[al].sessoes > 0);
-  const melhorPorJogador = jogadores
-    .map(al => ({ aluno: al, pts: alunoMap[al].melhorPts }))
-    .sort((a, b) => b.pts - a.pts);
-
-  const totalSessoes   = dasTurma.length;
-  const totalAcertos   = dasTurma.reduce((s, r) => s + (r.acertos || 0), 0);
-  const totalRespondidas = dasTurma.reduce((s, r) => s + (r.respondidas || 0), 0);
-  const somaMediaPts   = melhorPorJogador.reduce((s, a) => s + a.pts, 0);
-
-  // Agrega questões de todas as sessões da turma
-  const questoesMap = {};
-  for (const r of dasTurma) {
-    for (const q of (cacheDetalhes[r.id] || [])) {
-      const enun = q.enunciado || q.pergunta || '?';
-      if (!questoesMap[enun]) questoesMap[enun] = { acertos: 0, erros: 0 };
-      if (q.acertou) questoesMap[enun].acertos++;
-      else           questoesMap[enun].erros++;
-    }
-  }
-
-  const questoesArr = Object.entries(questoesMap).map(([enun, v]) => ({ enun, ...v }));
-  const maisErradas   = [...questoesArr].sort((a, b) => b.erros   - a.erros  ).slice(0, 5);
-  const maisAcertadas = [...questoesArr].sort((a, b) => b.acertos - a.acertos).slice(0, 5);
+  const jogadores = cadastrados.filter(al => am[al].sessoes > 0);
+  const naoJogaram = cadastrados.filter(al => !am[al] || am[al].sessoes === 0);
+  const byPts = jogadores.map(al => ({ aluno: al, pts: am[al].melhorPts })).sort((a, b) => b.pts - a.pts);
+  const somaM = byPts.reduce((s, x) => s + x.pts, 0);
+  const totAc = sessoes.reduce((s, r) => s + (r.acertos    || 0), 0);
+  const totRe = sessoes.reduce((s, r) => s + (r.respondidas || 0), 0);
 
   return {
+    turma,
     cadastrados: cadastrados.length,
-    cadastradosList: cadastrados,
     jogadores: jogadores.length,
-    jogadoresList: jogadores,
-    sessoes: totalSessoes,
-    mediaSessoes: jogadores.length ? (totalSessoes / jogadores.length).toFixed(1) : '0',
-    mediaPts: jogadores.length ? Math.round(somaMediaPts / jogadores.length) : 0,
-    maior: melhorPorJogador[0] || null,
-    menor: melhorPorJogador.length > 0 ? melhorPorJogador[melhorPorJogador.length - 1] : null,
-    taxaAcerto: totalRespondidas > 0 ? Math.round(totalAcertos / totalRespondidas * 100) : 0,
-    totalAcertos,
-    totalErros: totalRespondidas - totalAcertos,
-    totalRespondidas,
-    maisErradas,
-    maisAcertadas,
-    alunoMap,
+    naoJogaram,
+    sessoes: sessoes.length,
+    mediaPts: jogadores.length ? Math.round(somaM / jogadores.length) : 0,
+    mediaSessoes: jogadores.length ? Math.round(sessoes.length / jogadores.length * 10) / 10 : 0,
+    maior: byPts[0] || null,
+    maiorPts: byPts[0]?.pts || 0,
+    menor: byPts.length ? byPts[byPts.length - 1] : null,
+    taxaAcerto: pct(totAc, totRe),
+    totAcertos: totAc, totRespondidas: totRe,
+    am, jogadores,
   };
 }
 
-// ── Renderização ─────────────────────────────────────────────────
-function renderRelatorio(stats, dataBR) {
-  const sf = stats["8F"], sh = stats["8H"];
-  const temDados = sf.jogadores > 0 || sh.jogadores > 0;
-
-  document.getElementById("content").innerHTML = `
-    ${renderComparacao(sf, sh)}
-    <div class="grid-2">
-      ${renderCardTurma(sf, "8F", "f")}
-      ${renderCardTurma(sh, "8H", "h")}
-    </div>
-    <div class="grid-2">
-      ${renderCardQuestoes(sf, "8F", "f")}
-      ${renderCardQuestoes(sh, "8H", "h")}
-    </div>
-    ${renderTabelaAlunos(sf, "8F", "f")}
-    ${renderTabelaAlunos(sh, "8H", "h")}
-    ${!temDados ? `<div class="no-data" style="margin-top:0">Nenhuma atividade registrada em ${dataBR} para as turmas 8F e 8H.</div>` : ''}
-  `;
+// ── Compute question aggregation ──────────────────
+function computeQuestoes(ativ, turmas) {
+  const sessoes = allResults.filter(r => r.concluido && r.atividade === ativ && turmas.has(r.turma));
+  const map = {};
+  for (const r of sessoes) {
+    for (const q of (detCache[r.id] || [])) {
+      const k = q.enunciado || q.pergunta || '?';
+      if (!map[k]) map[k] = { enun: k, acertos: 0, erros: 0, t1: 0, t2: 0, t3: 0, t4: 0 };
+      const nt = numTent(q);
+      if (q.acertou) {
+        map[k].acertos++;
+        if      (nt <= 1) map[k].t1++;
+        else if (nt === 2) map[k].t2++;
+        else if (nt === 3) map[k].t3++;
+        else               map[k].t4++;
+      } else {
+        map[k].erros++;
+      }
+    }
+  }
+  return Object.values(map).map(q => ({
+    ...q,
+    total: q.acertos + q.erros,
+    taxaErro: pct(q.erros, q.acertos + q.erros),
+  }));
 }
 
-function calcWinner(vF, vH, labelF, labelH) {
-  if (vF > vH) return { cls: 'f-win', vencedor: '8F', cor: '#6D28D9', sub: `${labelF} vs ${labelH}` };
-  if (vH > vF) return { cls: 'h-win', vencedor: '8H', cor: '#1D4ED8', sub: `${labelH} vs ${labelF}` };
-  return { cls: 'tie', vencedor: 'Empate', cor: '#6B7280', sub: `${labelF} ambas` };
+// ── Main filter handler ───────────────────────────
+async function onFC() {
+  const ativ = selAtiv.value;
+  if (!ativ) return;
+  document.getElementById("topbar-sub").textContent = ativ;
+  document.getElementById("btn-pdf").style.display = "";
+
+  const allStats = buildAllStats(ativ);
+
+  const toLoad = allResults.filter(r =>
+    r.concluido && r.atividade === ativ && !(r.id in detCache));
+
+  if (toLoad.length > 0) {
+    renderPage(allStats, [], false);
+    await Promise.all(toLoad.map(async r => { detCache[r.id] = await getDetalhes(r.id); }));
+    // Re-compute with details now available
+    for (const t of selectedTurmas) allStats[t] = computeStats(ativ, t);
+  }
+
+  const questoes = computeQuestoes(ativ, selectedTurmas);
+  renderPage(allStats, questoes, true);
+}
+window.onFC = onFC;
+
+function buildAllStats(ativ) {
+  const m = {};
+  for (const t of selectedTurmas) m[t] = computeStats(ativ, t);
+  return m;
 }
 
-function renderComparacao(sf, sh) {
-  const mediaW = calcWinner(sf.mediaPts, sh.mediaPts,
-    `${sf.mediaPts} pts`, `${sh.mediaPts} pts`);
-  const sessW = calcWinner(sf.sessoes, sh.sessoes,
-    `${sf.sessoes} sessões`, `${sh.sessoes} sessões`);
-  const taxaW = calcWinner(sf.taxaAcerto, sh.taxaAcerto,
-    `${sf.taxaAcerto}%`, `${sh.taxaAcerto}%`);
-  const partW = calcWinner(sf.jogadores, sh.jogadores,
-    `${sf.jogadores}/${sf.cadastrados}`, `${sh.jogadores}/${sh.cadastrados}`);
+// ── Master render ─────────────────────────────────
+function renderPage(allStats, questoes, loaded) {
+  const statsArr = [...selectedTurmas].map(t => allStats[t]);
 
-  const card = (w, icon, label) => `
-    <div class="comp-card ${w.cls}">
-      <div class="comp-metric">${icon} ${label}</div>
-      <div class="comp-winner" style="color:${w.cor}">${w.vencedor}</div>
-      <div class="comp-detail">${w.sub}</div>
-    </div>`;
+  document.getElementById("content").innerHTML =
+    renderQdestak(questoes, loaded) +
+    renderVG(statsArr) +
+    renderAQ(questoes, loaded);
+
+  // Restore expanded turma
+  if (expandedTurma && allStats[expandedTurma]) {
+    const row = document.getElementById(`xrow-${expandedTurma}`);
+    if (row) {
+      row.style.display = '';
+      const tQ = computeQuestoes(selAtiv.value, new Set([expandedTurma]));
+      fillExpand(expandedTurma, allStats[expandedTurma], tQ);
+      document.getElementById(`xi-${expandedTurma}`)?.classList.add("open");
+    }
+  }
+}
+
+// ── Section: Questões destaque ────────────────────
+function renderQdestak(questoes, loaded) {
+  const erradas   = [...questoes].sort((a, b) => b.taxaErro - a.taxaErro).slice(0, 5);
+  const acertadas = [...questoes].sort((a, b) => b.acertos  - a.acertos ).slice(0, 5);
+
+  const noQ = !loaded
+    ? `<div class="loading">⏳ Carregando detalhes de questões…</div>`
+    : `<div class="no-data" style="padding:16px;font-size:12px">Sem detalhes disponíveis.<br><span style="font-size:11px;color:var(--text-muted)">(Modos Clássico e Competição+ salvam detalhes por questão; Competição ao vivo não.)</span></div>`;
+
+  const fillColor = v => v >= 70 ? 'var(--red)' : v >= 50 ? 'var(--orange)' : '#3B82F6';
 
   return `
-    <div class="section-sep" style="color:var(--text-muted)">Comparação 8F × 8H</div>
-    <div class="comp-row">
-      ${card(mediaW, '🏆', 'Maior Média de Pontuação')}
-      ${card(sessW,  '🎮', 'Maior Engajamento (sessões)')}
-      ${card(taxaW,  '🎯', 'Melhor Taxa de Acerto')}
-      ${card(partW,  '👥', 'Maior Participação')}
-    </div>`;
+    <div class="sec" style="color:#B91C1C">❌ Questões mais difíceis — todas as turmas selecionadas</div>
+    ${!loaded || !erradas.length ? noQ : erradas.map(q => `
+      <div class="qcard err">
+        <div class="q-enun">${q.enun}</div>
+        <div class="q-meta">
+          <div class="rate-wrap">
+            <div class="rate-bar"><div class="rate-fill" style="width:${q.taxaErro}%;background:${fillColor(q.taxaErro)}"></div></div>
+          </div>
+          <span style="font-size:20px;font-weight:800;color:var(--red);min-width:46px;text-align:right">${q.taxaErro}%</span>
+          <span style="color:var(--text-muted)">${q.erros} erro${q.erros!==1?'s':''} de ${q.total} resposta${q.total!==1?'s':''}</span>
+        </div>
+      </div>`).join('')}
+
+    ${loaded && acertadas.length ? `
+    <div class="sec" style="color:#15803D;margin-top:20px">✅ Questões mais fáceis</div>
+    <div class="ok-grid">
+      ${acertadas.map(q => `
+        <div class="qcard ok sm">
+          <div class="q-enun">${trunc(q.enun)}</div>
+          <div style="display:flex;gap:10px;font-size:11px">
+            <span style="color:var(--green);font-weight:700">${pct(q.acertos,q.total)}% acerto</span>
+            <span style="color:var(--text-muted)">${q.acertos}/${q.total}</span>
+          </div>
+        </div>`).join('')}
+    </div>` : ''}`;
 }
 
-function renderCardTurma(s, turma, cls) {
-  const pct = s.cadastrados > 0 ? Math.round(s.jogadores / s.cadastrados * 100) : 0;
-  const pctColor = pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--orange)' : 'var(--red)';
+// ── Section: Visão geral ──────────────────────────
+function renderVG(statsArr) {
+  if (!statsArr.length) return '';
 
-  return `<div class="card">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-      <span class="turma-badge ${cls}">Turma ${turma}</span>
-      <span style="font-size:12px;color:var(--text-muted)">
-        <strong style="color:${pctColor}">${s.jogadores}</strong>/${s.cadastrados} alunos
-        <span style="color:${pctColor};font-weight:700">(${pct}%)</span>
-      </span>
-    </div>
-    <div class="stat-grid">
-      <div class="stat-box">
-        <div class="stat-val" style="color:var(--gold)">${s.mediaPts}</div>
-        <div class="stat-lbl">Média pts</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val" style="color:${s.taxaAcerto>=70?'var(--green)':s.taxaAcerto>=50?'var(--orange)':'var(--red)'}">${s.taxaAcerto}%</div>
-        <div class="stat-lbl">Taxa acerto</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val" style="color:var(--blue)">${s.mediaSessoes}</div>
-        <div class="stat-lbl">Sessões/aluno</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val">${s.sessoes}</div>
-        <div class="stat-lbl">Total sessões</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val" style="color:var(--green)">${s.totalAcertos}</div>
-        <div class="stat-lbl">Acertos</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-val" style="color:var(--red)">${s.totalErros}</div>
-        <div class="stat-lbl">Erros</div>
-      </div>
-    </div>
-    ${s.maior ? `
-    <div class="dest-row">
-      <div class="dest-box">
-        <div class="dest-lbl">🥇 Maior pontuação</div>
-        <div class="dest-nome">${s.maior.aluno}</div>
-        <div class="dest-pts" style="color:var(--gold)">${s.maior.pts} pts</div>
-      </div>
-      <div class="dest-box">
-        <div class="dest-lbl">Menor (entre quem jogou)</div>
-        <div class="dest-nome">${s.menor.aluno}</div>
-        <div class="dest-pts" style="color:var(--text-muted)">${s.menor.pts} pts</div>
-      </div>
-    </div>` : `<div class="no-data" style="padding:16px">Nenhuma sessão registrada nesta data.</div>`}
-  </div>`;
-}
-
-function renderCardQuestoes(s, turma, cls) {
-  const semDados = !s.maisErradas.length && !s.maisAcertadas.length;
-  return `<div class="card">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-      <span class="turma-badge ${cls}">Turma ${turma}</span>
-      <span style="font-size:12px;color:var(--text-muted)">Análise de questões</span>
-    </div>
-    ${semDados
-      ? `<div class="no-data" style="padding:16px">Sem detalhes de questões<br><span style="font-size:11px">(somente modos Clássico e Competição+ salvam detalhes)</span></div>`
-      : `
-    ${s.maisErradas.length ? `
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--red);margin-bottom:8px">❌ Mais erradas</div>
-      ${s.maisErradas.map(q => `
-        <div class="q-item err">
-          <span class="q-cnt err">${q.erros}×</span>
-          <span class="q-txt">${trunc(q.enun)}</span>
-        </div>`).join('')}` : ''}
-    ${s.maisAcertadas.length ? `
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--green);margin:14px 0 8px">✅ Mais acertadas</div>
-      ${s.maisAcertadas.map(q => `
-        <div class="q-item ok">
-          <span class="q-cnt ok">${q.acertos}×</span>
-          <span class="q-txt">${trunc(q.enun)}</span>
-        </div>`).join('')}` : ''}`}
-  </div>`;
-}
-
-function renderTabelaAlunos(s, turma, cls) {
-  // Jogadores primeiro (por melhor pts desc), depois não-jogadores (alfabético)
-  const jogadores = [...s.jogadoresList].sort((a, b) => {
-    const pa = s.alunoMap[a]?.melhorPts || 0;
-    const pb = s.alunoMap[b]?.melhorPts || 0;
-    return pb - pa || a.localeCompare(b, 'pt-BR');
+  const sorted = [...statsArr].sort((a, b) => {
+    const va = a[vgSort.col] ?? 0, vb = b[vgSort.col] ?? 0;
+    if (typeof va === 'string') return vgSort.dir === 'asc' ? va.localeCompare(vb,'pt-BR') : vb.localeCompare(va,'pt-BR');
+    return vgSort.dir === 'asc' ? va - vb : vb - va;
   });
-  const naoJogaram = s.cadastradosList.filter(al => !s.alunoMap[al] || s.alunoMap[al].sessoes === 0)
-    .sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
-  const renderLinha = (aluno, idx) => {
-    const d = s.alunoMap[aluno];
-    if (!d || d.sessoes === 0) {
-      return `<tr>
-        <td style="color:var(--text-muted)">${idx + 1}</td>
-        <td><span class="nao-jogou">${aluno}</span></td>
-        <td colspan="4" style="color:var(--text-muted);font-size:11px">Não jogou nesta data</td>
+  const maxMedia = Math.max(...statsArr.map(s => s.mediaPts));
+  const maxTaxa  = Math.max(...statsArr.map(s => s.taxaAcerto));
+  const maxJog   = Math.max(...statsArr.map(s => s.jogadores));
+
+  const th = (col, label) => {
+    const cls = vgSort.col === col ? (vgSort.dir === 'asc' ? 'asc' : 'desc') : '';
+    return `<th class="sth ${cls}" onclick="sortVG('${col}')">${label}</th>`;
+  };
+
+  const rows = sorted.map(s => {
+    const pctJog = pct(s.jogadores, s.cadastrados);
+    const cMedia = s.mediaPts    === maxMedia && maxMedia > 0 ? 'class="best-cell"' : '';
+    const cTaxa  = s.taxaAcerto  === maxTaxa  && maxTaxa  > 0 ? 'class="best-taxa"' : '';
+    const cJog   = s.jogadores   === maxJog   && maxJog   > 0 ? 'class="best-jog"'  : '';
+    return `
+      <tr class="tr-turma" onclick="toggleExpand('${s.turma}')">
+        <td>${s.turma}</td>
+        <td ${cJog}>
+          <strong>${s.jogadores}</strong><span style="color:var(--text-muted)">/${s.cadastrados}</span>
+          <span class="pf ${pfCls(pctJog)}" style="margin-left:4px">${pctJog}%</span>
+        </td>
+        <td ${cMedia}><strong style="color:var(--gold)">${s.mediaPts}</strong></td>
+        <td>${s.maior ? `<span style="font-size:12px">${s.maior.aluno}</span><span style="font-size:11px;color:var(--gold);font-weight:700;display:block">${s.maior.pts} pts</span>` : '—'}</td>
+        <td ${cTaxa}><span class="pf ${pfCls(s.taxaAcerto)}">${s.taxaAcerto}%</span></td>
+        <td>${s.mediaSessoes.toFixed(1)}</td>
+        <td style="text-align:center"><span class="exp-icon" id="xi-${s.turma}">▼</span></td>
+      </tr>
+      <tr class="expand-row" id="xrow-${s.turma}" style="display:none">
+        <td colspan="7"><div class="expand-inner" id="xinner-${s.turma}">
+          <div class="loading">Carregando…</div>
+        </div></td>
       </tr>`;
-    }
-    const taxa = d.respondidas > 0 ? Math.round(d.acertos / d.respondidas * 100) : 0;
-    const taxaColor = taxa >= 70 ? 'var(--green)' : taxa >= 50 ? 'var(--orange)' : 'var(--red)';
-    const topErros = Object.entries(d.questoesErros)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 2)
-      .map(([enun, n]) => `${trunc(enun, 45)} <span style="color:var(--red);font-weight:700">(${n}×)</span>`)
-      .join('<br>');
+  }).join('');
+
+  return `
+    <div class="sec" style="color:var(--blue);margin-top:28px">📊 Visão Geral por Turma</div>
+    <div class="card" style="padding:0;overflow:auto;margin-bottom:8px">
+      <table class="table" style="min-width:560px">
+        <thead><tr>
+          ${th('turma','Turma')}
+          ${th('jogadores','Alunos')}
+          ${th('mediaPts','Média pts')}
+          <th>Maior pts</th>
+          ${th('taxaAcerto','Taxa acerto')}
+          ${th('mediaSessoes','Sessões/aluno')}
+          <th style="width:28px"></th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);margin-bottom:0">Clique em uma turma para expandir o detalhamento por aluno.</p>`;
+}
+
+// ── Expand turma ──────────────────────────────────
+window.toggleExpand = function(turma) {
+  const row  = document.getElementById(`xrow-${turma}`);
+  const icon = document.getElementById(`xi-${turma}`);
+  if (!row) return;
+
+  const isOpen = row.style.display !== 'none';
+
+  // Close current
+  if (expandedTurma) {
+    document.getElementById(`xrow-${expandedTurma}`)?.style && (document.getElementById(`xrow-${expandedTurma}`).style.display = 'none');
+    document.getElementById(`xi-${expandedTurma}`)?.classList.remove('open');
+    const prev = expandedTurma;
+    expandedTurma = null;
+    if (prev === turma) return; // was already open → just close
+  }
+
+  row.style.display = '';
+  icon?.classList.add('open');
+  expandedTurma = turma;
+
+  const ativ   = selAtiv.value;
+  const stats  = computeStats(ativ, turma);
+  const questoes = computeQuestoes(ativ, new Set([turma]));
+  fillExpand(turma, stats, questoes);
+};
+
+function fillExpand(turma, stats, questoes) {
+  const inner = document.getElementById(`xinner-${turma}`);
+  if (!inner) return;
+
+  const orderJog = [...stats.jogadores].sort((a, b) => {
+    const pa = stats.am[a]?.melhorPts || 0;
+    const pb = stats.am[b]?.melhorPts || 0;
+    return pb - pa;
+  });
+
+  const mkRow = (al, idx) => {
+    const d = stats.am[al];
+    if (!d || d.sessoes === 0) return `<tr>
+      <td style="color:var(--text-muted)">${idx+1}</td>
+      <td><span class="nao-jogou">${al}</span></td>
+      <td colspan="4" style="color:var(--text-muted);font-style:italic;font-size:11px">Não jogou</td>
+    </tr>`;
+    const taxa = pct(d.acertos, d.respondidas);
+    const topE = Object.entries(d.qErros).sort((a,b) => b[1]-a[1]).slice(0,2)
+      .map(([k,n]) => `${trunc(k,42)} <strong style="color:var(--red)">(${n}×)</strong>`).join('<br>');
     return `<tr>
-      <td style="color:var(--text-muted)">${idx + 1}</td>
-      <td><strong>${aluno}</strong></td>
+      <td style="color:var(--text-muted)">${idx+1}</td>
+      <td><strong>${al}</strong></td>
       <td><strong style="color:var(--gold)">${d.melhorPts}</strong></td>
       <td style="text-align:center">${d.sessoes}</td>
-      <td><span style="font-weight:700;color:${taxaColor}">${taxa}%</span>
+      <td><span class="pf ${pfCls(taxa)}">${taxa}%</span>
           <span style="font-size:10px;color:var(--text-muted);display:block">${d.acertos}✓ ${d.erros}✗</span></td>
-      <td class="q-erros-cell">${topErros || '<span style="color:var(--green)">Sem erros ✨</span>'}</td>
+      <td style="font-size:11px;line-height:1.5;max-width:200px">${topE||'<span style="color:var(--green)">Sem erros ✨</span>'}</td>
     </tr>`;
   };
 
-  const todasLinhas = [
-    ...jogadores.map((al, i) => renderLinha(al, i)),
-    ...naoJogaram.map((al, i) => renderLinha(al, jogadores.length + i)),
-  ];
+  const allRows = [
+    ...orderJog.map((al,i) => mkRow(al, i)),
+    ...stats.naoJogaram.map((al,i) => mkRow(al, orderJog.length+i)),
+  ].join('');
 
-  const corSep = cls === 'f' ? '#6D28D9' : '#1D4ED8';
-  return `
-    <div class="section-sep" style="color:${corSep}">Alunos — Turma ${turma}</div>
-    <div class="card" style="padding:0;overflow:auto;margin-bottom:24px">
-      <table class="table" style="min-width:600px">
+  const erradas   = [...questoes].sort((a,b) => b.taxaErro - a.taxaErro).slice(0,5);
+  const acertadas = [...questoes].sort((a,b) => b.acertos  - a.acertos ).slice(0,5);
+  const mkQ = (q, cls) => `
+    <div class="qcard ${cls} sm">
+      <div class="q-enun">${trunc(q.enun)}</div>
+      <div style="font-size:11px;display:flex;gap:10px">
+        ${cls==='err'
+          ? `<span style="color:var(--red);font-weight:700">${q.taxaErro}% erro</span>`
+          : `<span style="color:var(--green);font-weight:700">${pct(q.acertos,q.total)}% acerto</span>`}
+        <span style="color:var(--text-muted)">${cls==='err'?q.erros:q.acertos}/${q.total}</span>
+      </div>
+    </div>`;
+
+  const qSec = questoes.length ? `
+    <div class="two-col">
+      <div>
+        <div class="sub-sec-title" style="color:var(--red)">❌ Mais erradas desta turma</div>
+        ${erradas.map(q => mkQ(q,'err')).join('')}
+      </div>
+      <div>
+        <div class="sub-sec-title" style="color:var(--green)">✅ Mais acertadas desta turma</div>
+        ${acertadas.map(q => mkQ(q,'ok')).join('')}
+      </div>
+    </div>` : `<p style="font-size:12px;color:var(--text-muted);margin-top:12px">Sem detalhes de questões para esta turma.</p>`;
+
+  inner.innerHTML = `
+    <div style="overflow:auto">
+      <table class="table sub-table" style="min-width:520px;background:white;border-radius:8px">
         <thead><tr>
-          <th>#</th>
-          <th>Aluno</th>
-          <th>Melhor pontuação</th>
-          <th style="text-align:center">Sessões</th>
-          <th>Taxa de acerto</th>
+          <th>#</th><th>Aluno</th><th>Melhor pts</th>
+          <th style="text-align:center">Sessões</th><th>Taxa acerto</th>
           <th>Questões mais erradas</th>
         </tr></thead>
-        <tbody>${todasLinhas.join('')}</tbody>
+        <tbody>${allRows}</tbody>
+      </table>
+    </div>
+    ${qSec}`;
+}
+
+// ── Section: Análise de questões ──────────────────
+function renderAQ(questoes, loaded) {
+  if (!loaded) return `
+    <div class="sec" style="color:var(--text-muted);margin-top:28px">🔍 Análise Detalhada de Questões</div>
+    <div class="card"><div class="loading">⏳ Carregando detalhes…</div></div>`;
+
+  if (!questoes.length) return `
+    <div class="sec" style="color:var(--text-muted);margin-top:28px">🔍 Análise Detalhada de Questões</div>
+    <div class="card"><div class="no-data" style="font-size:12px">Sem dados de questões disponíveis para esta atividade.</div></div>`;
+
+  const sorted = [...questoes].sort((a, b) => {
+    const va = a[aqSort.col] ?? 0, vb = b[aqSort.col] ?? 0;
+    return aqSort.dir === 'asc' ? va - vb : vb - va;
+  });
+
+  const th = (col, label) => {
+    const cls = aqSort.col === col ? (aqSort.dir === 'asc' ? 'asc' : 'desc') : '';
+    return `<th class="sth ${cls}" onclick="sortAQ('${col}')">${label}</th>`;
+  };
+
+  const fillColor = v => v >= 70 ? 'var(--red)' : v >= 50 ? 'var(--orange)' : 'var(--green)';
+
+  const rows = sorted.map(q => {
+    const pct1 = q.acertos > 0 ? pct(q.t1, q.acertos) : 0;
+    return `<tr>
+      <td class="enun-col">${q.enun}</td>
+      <td style="color:var(--red);font-weight:700">${q.erros}</td>
+      <td style="color:var(--green);font-weight:700">${q.acertos}</td>
+      <td style="color:var(--text-muted)">${q.total}</td>
+      <td><span class="pf" style="background:${q.taxaErro>=70?'#FEE2E2':q.taxaErro>=50?'#FEF9C3':'#DCFCE7'};color:${fillColor(q.taxaErro)}">${q.taxaErro}%</span></td>
+      <td style="font-size:11px;color:var(--text-muted)">${q.acertos>0?`${pct1}% na 1ª tent.<span style="display:block;font-size:10px">${q.t1}×1ª ${q.t2}×2ª ${q.t3}×3ª ${q.t4>0?q.t4+'×4ª':''}</span>`:'—'}</td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <div class="sec" style="color:var(--text-muted);margin-top:28px">🔍 Análise Detalhada de Questões</div>
+    <div class="card" style="padding:0;overflow:auto;margin-bottom:28px">
+      <table class="table" style="min-width:580px">
+        <thead><tr>
+          <th style="min-width:220px">Questão</th>
+          ${th('erros','Erros')}
+          ${th('acertos','Acertos')}
+          ${th('total','Total')}
+          ${th('taxaErro','Taxa erro')}
+          <th>Por tentativa</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
       </table>
     </div>`;
 }
 
-// ── Exportar CSV ─────────────────────────────────────────────────
-window.exportarCSV = function() {
-  if (!reportData) return;
-  const { dataBR, stats } = reportData;
-  const escape = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const row = arr => arr.map(escape).join(',');
-
-  const linhas = [
-    row(['Relatório Diário', dataBR]),
-    row([]),
-  ];
-
-  // Resumo comparativo
-  linhas.push(row(['COMPARAÇÃO', '8F', '8H']));
-  linhas.push(row(['Alunos que jogaram', stats['8F'].jogadores + '/' + stats['8F'].cadastrados, stats['8H'].jogadores + '/' + stats['8H'].cadastrados]));
-  linhas.push(row(['Média de pontuação', stats['8F'].mediaPts, stats['8H'].mediaPts]));
-  linhas.push(row(['Taxa de acerto', stats['8F'].taxaAcerto + '%', stats['8H'].taxaAcerto + '%']));
-  linhas.push(row(['Total de sessões', stats['8F'].sessoes, stats['8H'].sessoes]));
-  linhas.push(row(['Sessões por aluno', stats['8F'].mediaSessoes, stats['8H'].mediaSessoes]));
-  linhas.push(row([]));
-
-  for (const turma of TURMAS) {
-    const s = stats[turma];
-    linhas.push(row([`TURMA ${turma}`]));
-    linhas.push(row(['Aluno', 'Melhor pts', 'Sessões', 'Acertos', 'Erros', 'Taxa acerto', 'Questão mais errada']));
-    for (const al of [...s.cadastradosList].sort((a, b) => a.localeCompare(b, 'pt-BR'))) {
-      const d = s.alunoMap[al];
-      if (!d || d.sessoes === 0) {
-        linhas.push(row([al, '-', 0, '-', '-', '-', 'Não jogou']));
-      } else {
-        const taxa = d.respondidas > 0 ? Math.round(d.acertos / d.respondidas * 100) + '%' : '-';
-        const topErro = Object.entries(d.questoesErros).sort((a, b) => b[1] - a[1])[0];
-        linhas.push(row([
-          al, d.melhorPts, d.sessoes, d.acertos, d.erros, taxa,
-          topErro ? `${topErro[0].slice(0, 80)} (${topErro[1]}x)` : 'Sem erros',
-        ]));
-      }
-    }
-    linhas.push(row([]));
-  }
-
-  const csv = "﻿" + linhas.join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `relatorio_8F_8H_${dataBR.replace(/\//g, '-')}.csv`;
-  a.click();
+// ── Sort handlers ─────────────────────────────────
+window.sortVG = col => {
+  vgSort = { col, dir: vgSort.col === col && vgSort.dir === 'desc' ? 'asc' : 'desc' };
+  const ativ = selAtiv.value;
+  const allStats = buildAllStats(ativ);
+  const questoes = computeQuestoes(ativ, selectedTurmas);
+  renderPage(allStats, questoes, true);
+};
+window.sortAQ = col => {
+  aqSort = { col, dir: aqSort.col === col && aqSort.dir === 'desc' ? 'asc' : 'desc' };
+  const ativ = selAtiv.value;
+  const allStats = buildAllStats(ativ);
+  const questoes = computeQuestoes(ativ, selectedTurmas);
+  renderPage(allStats, questoes, true);
 };
 
-// Gera automaticamente com a data de hoje
-gerar();
+// ── PDF ───────────────────────────────────────────
+window.exportarPDF = function() {
+  const ativ = selAtiv.value;
+  for (const t of selectedTurmas) {
+    const row = document.getElementById(`xrow-${t}`);
+    if (row && row.style.display === 'none') {
+      row.style.display = '';
+      const stats    = computeStats(ativ, t);
+      const questoes = computeQuestoes(ativ, new Set([t]));
+      fillExpand(t, stats, questoes);
+      document.getElementById(`xi-${t}`)?.classList.add('open');
+    }
+  }
+  setTimeout(() => window.print(), 250);
+};
 </script>
 </body>
 </html>
