@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
-    .hist-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;}
+    .hist-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
     .hist-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background .15s;}
     .hist-header:hover{background:#FAFAFA;}
     .hist-nome{flex:1;font-size:14px;font-weight:700;}
@@ -18,8 +18,17 @@
     .q-rev.err{background:#FEF2F2;border-color:#FECACA;}
     .aluno-section{margin-bottom:24px;}
     .aluno-title{font-size:13px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+    .ativ-group{margin-bottom:18px;}
+    .ativ-group-header{font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
 
-    /* Competição+ styles */
+    /* evolução */
+    .evolucao-bar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#F8FAFC;border-radius:8px;margin-bottom:6px;border:1px solid var(--border);}
+    .evolucao-label{font-size:10px;font-weight:700;color:var(--text-muted);flex-shrink:0;}
+
+    /* abatimento */
+    .badge-atraso{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:#FFEDD5;color:#9A3412;border:1px solid #FED7AA;}
+
+    /* Competição+ */
     .hist-mode-badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;margin-left:6px;vertical-align:middle;}
     .hist-mode-badge.plus{background:#EDE9FE;color:#7C3AED;}
     .plus-q-wrap{margin-top:6px;}
@@ -73,25 +82,56 @@ window.toggle = function(header) {
   body.style.display = body.style.display === 'none' ? 'block' : 'none';
 };
 
+// ── Evolução SVG ──────────────────────────────────────────────
+function renderEvolucaoSVG(regs) {
+  const pts = regs.map(r => r.pontuacao_bruta || r.pontuacao || 0);
+  if (pts.length < 2) return '';
+  const first = pts[0], last = pts[pts.length - 1];
+  const trendColor = last > first ? '#16A34A' : last < first ? '#DC2626' : '#6B7280';
+  const trendIcon  = last > first ? '↑' : last < first ? '↓' : '→';
+  const trendDesc  = last > first ? 'Melhorou' : last < first ? 'Piorou' : 'Estável';
+
+  const W = 240, H = 56, mL = 8, mR = 8, mT = 14, mB = 8;
+  const iW = W - mL - mR, iH = H - mT - mB;
+  const maxV = Math.max(...pts, 1);
+  const n = pts.length;
+  const xP = i => mL + (n > 1 ? (i / (n - 1)) * iW : iW / 2);
+  const yP = v => mT + iH - Math.min((v / maxV) * iH, iH);
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:240px;height:56px;flex-shrink:0">`;
+  if (n > 1) {
+    svg += `<polyline points="${pts.map((v, i) => `${xP(i)},${yP(v)}`).join(' ')}" fill="none" stroke="${trendColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+  }
+  pts.forEach((v, i) => {
+    svg += `<circle cx="${xP(i)}" cy="${yP(v)}" r="3" fill="${trendColor}"/>`;
+    svg += `<text x="${xP(i)}" y="${yP(v) - 5}" text-anchor="middle" font-size="8" fill="${trendColor}" font-weight="700">${v}</text>`;
+  });
+  svg += `</svg>`;
+
+  return `<div class="evolucao-bar">
+    <span class="evolucao-label">${regs.length} sessões</span>
+    ${svg}
+    <div style="text-align:center;flex-shrink:0;min-width:36px">
+      <div style="font-size:22px;font-weight:800;color:${trendColor};line-height:1">${trendIcon}</div>
+      <div style="font-size:9px;color:var(--text-muted)">${trendDesc}</div>
+    </div>
+  </div>`;
+}
+
+// ── Competição+ ───────────────────────────────────────────────
 function renderPlusQuestao(q, i) {
-  const dif = {1:'Fácil',2:'Média',3:'Difícil'}[q.dificuldade] || '';
   const ptsClass = q.pontosGanhos > 0 ? 'color:var(--green)' : q.pontosGanhos < 0 ? 'color:var(--red)' : 'color:var(--text-muted)';
   const ptsTxt = q.pontosGanhos > 0 ? `+${q.pontosGanhos}` : String(q.pontosGanhos || 0);
-
   const badges = [];
   if (q.velocidade) badges.push('<span style="color:#3B82F6;font-size:10px">⚡ rápido</span>');
   if (q.usouAjuda)  badges.push('<span style="color:#A855F7;font-size:10px">🎯 ajuda</span>');
   if (q.ehBonus)    badges.push('<span style="color:#F59E0B;font-size:10px">🏆 bônus</span>');
-
   const tentativas = (q.tentativas || []).map(t => {
     const isTime = t.resposta === '(tempo)' || t.resposta === '(pulou)';
     const cls = t.correto ? 'ok' : isTime ? 'time' : 'err';
-    const resp = t.resposta || '—';
-    const label = t.correto ? `✓ ${resp}` : resp;
     const tempo = !isTime && t.tempoUsado != null ? ` · ${t.tempoUsado}s` : '';
-    return `<span class="plus-tent-ans ${cls}">${label}${tempo}</span>`;
+    return `<span class="plus-tent-ans ${cls}">${t.correto ? '✓ ' : ''}${t.resposta || '—'}${tempo}</span>`;
   }).join('');
-
   const enun = q.enunciado || q.pergunta || '—';
   return `<div class="plus-q-row ${q.acertou ? 'ok' : 'err'}${q.ehBonus ? ' bonus' : ''}"
     onclick="const d=this.querySelector('.plus-q-detail');d.style.display=d.style.display==='block'?'none':'block'">
@@ -109,14 +149,24 @@ function renderPlusQuestao(q, i) {
   </div>`;
 }
 
+function renderAbatimento(r) {
+  if (!r.com_abatimento || !r.percentual_nota || r.percentual_nota >= 100) return '';
+  const bruta = r.pontuacao_bruta || r.pontuacao || 0;
+  const aplic = r.pontuacao || 0;
+  return `<span class="badge-atraso">⏰ ${bruta} pts bruta → ${aplic} pts (${r.percentual_nota}% da nota)</span>`;
+}
+
 function renderPlusItem(r, detalhes) {
   const taxa = r.respondidas > 0 ? Math.round((r.acertos || 0) / r.respondidas * 100) : 0;
+  const bruta = r.pontuacao_bruta || r.pontuacao || 0;
+  const abatBadge = renderAbatimento(r);
   return `<div class="hist-item">
     <div class="hist-header" onclick="toggle(this)">
       <div style="flex:1">
         <div class="hist-nome">${r.atividade} <span class="hist-mode-badge plus">Competição+</span></div>
-        <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
-          <span class="badge badge-gold">${r.pontuacao || 0} pts</span>
+        <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center">
+          <span class="badge badge-gold">${bruta} pts${r.com_abatimento ? ' (bruta)' : ''}</span>
+          ${abatBadge}
           <span class="badge badge-green">${r.acertos || 0} acertos</span>
           <span class="badge badge-red">${r.erros || 0} erros</span>
           <span class="badge badge-blue">${taxa}%</span>
@@ -137,12 +187,15 @@ function renderPlusItem(r, detalhes) {
 function renderClassicoItem(r, detalhes) {
   const total = (r.acertos || 0) + (r.erros || 0);
   const aproveit = total > 0 ? Math.round((r.acertos || 0) / total * 100) : 0;
+  const bruta = r.pontuacao_bruta || r.pontuacao || 0;
+  const abatBadge = renderAbatimento(r);
   return `<div class="hist-item">
     <div class="hist-header" onclick="toggle(this)">
       <div style="flex:1">
         <div class="hist-nome">${r.atividade}</div>
-        <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
-          <span class="badge badge-gold">${r.pontuacao || 0} pts</span>
+        <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center">
+          <span class="badge badge-gold">${bruta} pts${r.com_abatimento ? ' (bruta)' : ''}</span>
+          ${abatBadge}
           <span class="badge badge-green">${r.acertos || 0} acertos</span>
           <span class="badge badge-red">${r.erros || 0} erros</span>
           <span class="badge badge-blue">${aproveit}%</span>
@@ -156,14 +209,13 @@ function renderClassicoItem(r, detalhes) {
         const enun = h.enunciado || h.pergunta || '—';
         const rAluno = h.resposta_aluno || '—';
         const rCorreta = (h.resposta_correta && h.resposta_correta !== 'undefined') ? h.resposta_correta : '—';
-        return `
-      <div class="q-rev ${h.acertou ? 'ok' : 'err'}">
-        <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:24px">Q${i+1}</span>
-        <span style="flex:1">${enun}</span>
-        <span style="${h.acertou ? 'color:var(--green)' : 'color:var(--red)'};font-weight:700">${rAluno}</span>
-        ${!h.acertou ? `<span style="font-size:10px;color:var(--text-muted)">✓ ${rCorreta}</span>` : ''}
-        <span>${h.acertou ? '✅' : '❌'}</span>
-      </div>`;
+        return `<div class="q-rev ${h.acertou ? 'ok' : 'err'}">
+          <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:24px">Q${i+1}</span>
+          <span style="flex:1">${enun}</span>
+          <span style="${h.acertou ? 'color:var(--green)' : 'color:var(--red)'};font-weight:700">${rAluno}</span>
+          ${!h.acertou ? `<span style="font-size:10px;color:var(--text-muted)">✓ ${rCorreta}</span>` : ''}
+          <span>${h.acertou ? '✅' : '❌'}</span>
+        </div>`;
       }).join('') : '<p style="font-size:12px;color:var(--text-muted);padding-top:8px">Detalhes não disponíveis.</p>'}
     </div>
   </div>`;
@@ -174,7 +226,10 @@ const content = document.getElementById("content");
 let html = '';
 
 for (const aluno of alunos) {
-  const regs = todos.filter(r => r.aluno === aluno && r.concluido).reverse();
+  // Sort oldest first for evolution
+  const regs = todos.filter(r => r.aluno === aluno && r.concluido)
+    .sort((a, b) => (a.criadoEm || 0) - (b.criadoEm || 0));
+
   html += `<div class="aluno-section">
     <div class="aluno-title">
       <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
@@ -184,14 +239,28 @@ for (const aluno of alunos) {
   if (!regs.length) {
     html += `<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21L13 13.04V8h-1z"/></svg><p>Nenhuma atividade realizada ainda.</p></div>`;
   } else {
+    // Group by atividade
+    const byAtiv = {};
     for (const r of regs) {
-      const detalhes = await getDetalhes(r.id);
-      console.log('[histórico]', r.aluno, '|', r.atividade, '| modo:', r.modo, '| detalhes[0]:', detalhes[0]);
-      if (r.modo === 'competicao_plus') {
-        html += renderPlusItem(r, detalhes);
-      } else {
-        html += renderClassicoItem(r, detalhes);
+      if (!byAtiv[r.atividade]) byAtiv[r.atividade] = [];
+      byAtiv[r.atividade].push(r);
+    }
+
+    for (const [atividade, ativRegs] of Object.entries(byAtiv)) {
+      html += `<div class="ativ-group">`;
+      html += `<div class="ativ-group-header"><span style="font-weight:700;font-size:12px">${atividade}</span><span style="font-size:11px;color:var(--text-muted)">${ativRegs.length} ${ativRegs.length !== 1 ? 'sessões' : 'sessão'}</span></div>`;
+
+      // Evolution chart (oldest → newest)
+      if (ativRegs.length >= 2) html += renderEvolucaoSVG(ativRegs);
+
+      // Items most recent first
+      const reversed = [...ativRegs].reverse();
+      for (const r of reversed) {
+        const detalhes = await getDetalhes(r.id);
+        if (r.modo === 'competicao_plus') html += renderPlusItem(r, detalhes);
+        else html += renderClassicoItem(r, detalhes);
       }
+      html += `</div>`;
     }
   }
   html += '</div>';

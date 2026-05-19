@@ -106,13 +106,14 @@ function resumoAluno(nome) {
   regs.forEach(r => { melhor[r.atividade] = Math.max(melhor[r.atividade]||0, r.pontuacao||0); });
   const vals      = Object.values(melhor);
   const melhorPts = vals.length ? Math.max(...vals) : 0;
+  const melhorAtiv = melhorPts > 0 ? (Object.entries(melhor).find(([,v]) => v === melhorPts)?.[0] || '') : '';
   const acertos   = regs.reduce((a, r) => a + (r.acertos || 0), 0);
   const erros     = regs.reduce((a, r) => a + (r.erros   || 0), 0);
   const taxa      = (acertos + erros) > 0 ? Math.round(acertos / (acertos + erros) * 100) : 0;
   const posGeral  = (rankAll.findIndex(r => r.aluno === nome) + 1) || '—';
   const rankTurma = rankAll.filter(r => r.turma === turma);
   const posTurma  = (rankTurma.findIndex(r => r.aluno === nome) + 1) || '—';
-  return { melhorPts, sessoes: regs.length, acertos, taxa, posGeral, posTurma, total_ativ: vals.length };
+  return { melhorPts, melhorAtiv, sessoes: regs.length, acertos, taxa, posGeral, posTurma, total_ativ: vals.length };
 }
 
 function ultimasAtividades(nome) {
@@ -194,7 +195,7 @@ conteudo.innerHTML = `
             <span>${a}</span>
           </div>
           <div class="mini-stats">
-            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--gold)">${r.melhorPts}</div><div class="mini-stat-label">Melhor</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--gold)">${r.melhorPts}</div><div class="mini-stat-label" title="${r.melhorAtiv || ''}">Maior pts${r.melhorAtiv ? '<br><span style="font-size:9px;opacity:.8">' + r.melhorAtiv + '</span>' : ''}</div></div>
             <div class="mini-stat"><div class="mini-stat-value" style="color:var(--orange)">${r.posTurma === '—' ? '—' : '#'+r.posTurma}</div><div class="mini-stat-label">Na Turma</div></div>
             <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue)">${r.posGeral === '—' ? '—' : '#'+r.posGeral}</div><div class="mini-stat-label">Geral</div></div>
             <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green)">${r.sessoes}</div><div class="mini-stat-label">Sessões</div></div>

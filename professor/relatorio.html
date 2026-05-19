@@ -7,19 +7,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
-    /* ── Filter bar ──────────────────────────────── */
     .filter-bar{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:20px;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);}
     .f-group{display:flex;flex-direction:column;gap:5px;}
     .f-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);}
     .pill-row{display:flex;gap:5px;flex-wrap:wrap;}
     .pill{padding:5px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .15s;}
     .pill.on{border-color:var(--blue);background:var(--blue);color:#fff;}
-
-    /* ── Section headers ─────────────────────── */
     .sec{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;margin:24px 0 12px;display:flex;align-items:center;gap:8px;}
     .sec::before{content:"";width:3px;height:16px;border-radius:2px;background:currentColor;display:block;flex-shrink:0;}
-
-    /* ── Questões erradas / acertadas ────────── */
     .qcard{padding:13px 15px;border-radius:10px;border:1px solid var(--border);margin-bottom:8px;}
     .qcard.err{background:#FEF2F2;border-color:#FECACA;}
     .qcard.ok{background:#F0FDF4;border-color:#BBF7D0;}
@@ -28,14 +23,10 @@
     .rate-wrap{flex:1;min-width:120px;}
     .rate-bar{height:7px;border-radius:4px;background:var(--border);overflow:hidden;}
     .rate-fill{height:100%;border-radius:4px;}
-
-    /* ── Performance badge ───────────────────── */
     .pf{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;display:inline-block;}
     .pf.hi{background:#DCFCE7;color:#15803D;}
     .pf.md{background:#FEF9C3;color:#854D0E;}
     .pf.lo{background:#FEE2E2;color:#B91C1C;}
-
-    /* ── Sortable table ──────────────────────── */
     .sth{cursor:pointer;user-select:none;white-space:nowrap;}
     .sth:hover{background:#F9FAFB;}
     .sth::after{content:" ⇅";font-size:9px;color:var(--border);}
@@ -44,8 +35,6 @@
     .table th,.table td{font-size:11px;padding:8px 10px;}
     .table th{font-size:10px;}
     .enun-col{max-width:260px;font-size:11px;line-height:1.4;}
-
-    /* ── Visão geral turma row ───────────────── */
     .tr-turma{cursor:pointer;}
     .tr-turma:hover td{background:#F9FAFB;}
     .tr-turma td:first-child{font-size:14px;font-weight:800;}
@@ -56,18 +45,13 @@
     .best-cell{background:rgba(253,224,71,.22)!important;}
     .best-taxa{background:rgba(34,197,94,.14)!important;}
     .best-jog{background:rgba(59,130,246,.11)!important;}
-
-    /* ── Expand sub-sections ─────────────────── */
     .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;}
     .sub-sec-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;}
     .sub-table th,.sub-table td{font-size:11px;padding:6px 9px;}
     .sub-table th{font-size:10px;}
     .nao-jogou{color:var(--text-muted);font-style:italic;}
-
-    /* ── Misc ────────────────────────────────── */
     .no-data{text-align:center;padding:32px;color:var(--text-muted);font-size:13px;}
     .loading{text-align:center;padding:20px;color:var(--text-muted);font-size:12px;}
-
     @media print{
       .sidebar,.topbar-right,.filter-bar{display:none!important;}
       .layout{grid-template-columns:1fr;}
@@ -79,6 +63,7 @@
       .enun-col{max-width:140px;}
       .filter-bar{gap:10px;}
     }
+    .main{overflow-x:hidden;}
   </style>
 </head>
 <body>
@@ -133,26 +118,26 @@ renderSidebarProfessor("sidebar", "relatorio");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
 // ── State ─────────────────────────────────────────
+const TIMERS = {1:10, 2:40, 3:90};
+const TURMA_COLORS = {'8D':'#3B82F6','8E':'#10B981','8F':'#F59E0B','8G':'#EF4444','8H':'#8B5CF6'};
 const TURMAS = Object.keys(ALUNOS_POR_TURMA);
 let allResults = null;
-const detCache = {}; // resultId → questoes[]
+const detCache = {};
 let selectedTurmas = new Set(TURMAS);
 let expandedTurma  = null;
 let vgSort = { col: 'jogadores', dir: 'desc' };
 let aqSort = { col: 'taxaErro',  dir: 'desc' };
 
 // ── Build selectors ───────────────────────────────
-const selAtiv  = document.getElementById("sel-ativ");
-const pillRow  = document.getElementById("pill-row");
+const selAtiv = document.getElementById("sel-ativ");
+const pillRow = document.getElementById("pill-row");
 
-// Activities: from LISTA_ATIVIDADES + any extra found in results (added after load)
 LISTA_ATIVIDADES.forEach(a => {
   const o = document.createElement("option");
   o.value = o.textContent = a.nome;
   selAtiv.appendChild(o);
 });
 
-// Turma pills
 TURMAS.forEach(t => {
   const btn = document.createElement("button");
   btn.className = "pill on";
@@ -180,7 +165,6 @@ window.selecionarTodasTurmas = () => {
 // ── Load + init ───────────────────────────────────
 allResults = await getResultados();
 
-// Add to selector any activity present in results but not in LISTA_ATIVIDADES
 const ativNomes = new Set(LISTA_ATIVIDADES.map(a => a.nome));
 allResults.forEach(r => {
   if (r.atividade && !ativNomes.has(r.atividade)) {
@@ -210,16 +194,22 @@ function computeStats(ativ, turma) {
 
   const am = {};
   for (const al of cadastrados)
-    am[al] = { sessoes: 0, melhorPts: 0, acertos: 0, erros: 0, respondidas: 0, qErros: {} };
+    am[al] = { sessoes: 0, melhorPts: 0, melhorPtsBruta: 0, acertos: 0, erros: 0, respondidas: 0, qErros: {} };
+
+  const alunoSessList = {};
+  for (const al of cadastrados) alunoSessList[al] = [];
 
   for (const r of sessoes) {
-    if (!am[r.aluno]) am[r.aluno] = { sessoes: 0, melhorPts: 0, acertos: 0, erros: 0, respondidas: 0, qErros: {} };
+    if (!am[r.aluno]) am[r.aluno] = { sessoes: 0, melhorPts: 0, melhorPtsBruta: 0, acertos: 0, erros: 0, respondidas: 0, qErros: {} };
+    if (!alunoSessList[r.aluno]) alunoSessList[r.aluno] = [];
     const d = am[r.aluno];
     d.sessoes++;
-    d.melhorPts   = Math.max(d.melhorPts,   r.pontuacao  || 0);
+    d.melhorPts      = Math.max(d.melhorPts,      r.pontuacao                        || 0);
+    d.melhorPtsBruta = Math.max(d.melhorPtsBruta, r.pontuacao_bruta || r.pontuacao || 0);
     d.acertos     += r.acertos     || 0;
     d.erros       += r.erros       || 0;
     d.respondidas += r.respondidas || 0;
+    alunoSessList[r.aluno].push({ pts: r.pontuacao || 0, criadoEm: r.criadoEm || 0 });
     for (const q of (detCache[r.id] || [])) {
       if (!q.acertou) {
         const k = q.enunciado || q.pergunta || '?';
@@ -228,10 +218,15 @@ function computeStats(ativ, turma) {
     }
   }
 
+  for (const al of Object.keys(alunoSessList)) {
+    alunoSessList[al].sort((a, b) => a.criadoEm - b.criadoEm);
+  }
+
   const jogadores = cadastrados.filter(al => am[al].sessoes > 0);
   const naoJogaram = cadastrados.filter(al => !am[al] || am[al].sessoes === 0);
   const byPts = jogadores.map(al => ({ aluno: al, pts: am[al].melhorPts })).sort((a, b) => b.pts - a.pts);
-  const somaM = byPts.reduce((s, x) => s + x.pts, 0);
+  const somaM     = byPts.reduce((s, x) => s + x.pts, 0);
+  const somaBruta = jogadores.reduce((s, al) => s + (am[al]?.melhorPtsBruta || 0), 0);
   const totAc = sessoes.reduce((s, r) => s + (r.acertos    || 0), 0);
   const totRe = sessoes.reduce((s, r) => s + (r.respondidas || 0), 0);
 
@@ -242,13 +237,14 @@ function computeStats(ativ, turma) {
     naoJogaram,
     sessoes: sessoes.length,
     mediaPts: jogadores.length ? Math.round(somaM / jogadores.length) : 0,
+    mediaPtsBruta: jogadores.length ? Math.round(somaBruta / jogadores.length) : 0,
     mediaSessoes: jogadores.length ? Math.round(sessoes.length / jogadores.length * 10) / 10 : 0,
     maior: byPts[0] || null,
     maiorPts: byPts[0]?.pts || 0,
     menor: byPts.length ? byPts[byPts.length - 1] : null,
     taxaAcerto: pct(totAc, totRe),
     totAcertos: totAc, totRespondidas: totRe,
-    am, jogadores,
+    am, jogadores, alunoSessList,
   };
 }
 
@@ -259,7 +255,8 @@ function computeQuestoes(ativ, turmas) {
   for (const r of sessoes) {
     for (const q of (detCache[r.id] || [])) {
       const k = q.enunciado || q.pergunta || '?';
-      if (!map[k]) map[k] = { enun: k, acertos: 0, erros: 0, t1: 0, t2: 0, t3: 0, t4: 0 };
+      if (!map[k]) map[k] = { enun: k, acertos: 0, erros: 0, t1: 0, t2: 0, t3: 0, t4: 0,
+        tempoTotal: 0, tempoCount: 0, dificuldade: null, ajudaCount: 0 };
       const nt = numTent(q);
       if (q.acertou) {
         map[k].acertos++;
@@ -270,13 +267,58 @@ function computeQuestoes(ativ, turmas) {
       } else {
         map[k].erros++;
       }
+      if (q.dificuldade != null && map[k].dificuldade == null) map[k].dificuldade = q.dificuldade;
+      if (Array.isArray(q.tentativas)) {
+        map[k].tempoTotal += q.tentativas.reduce((s, t) => s + (t.tempoUsado || 0), 0);
+        map[k].tempoCount++;
+      }
+      if (q.usouAjuda) map[k].ajudaCount++;
     }
   }
-  return Object.values(map).map(q => ({
-    ...q,
-    total: q.acertos + q.erros,
-    taxaErro: pct(q.erros, q.acertos + q.erros),
-  }));
+  return Object.values(map).map(q => {
+    const total = q.acertos + q.erros;
+    const tempoMedio = q.tempoCount > 0 ? Math.round(q.tempoTotal / q.tempoCount) : null;
+    const timerMax = q.dificuldade != null ? (TIMERS[q.dificuldade] || null) : null;
+    return {
+      ...q, total,
+      taxaErro: pct(q.erros, total),
+      tempoMedio,
+      timerMax,
+      tempoAlto: tempoMedio != null && timerMax != null && tempoMedio > timerMax * 0.8,
+      taxaAjuda: total > 0 ? pct(q.ajudaCount, total) : 0,
+    };
+  });
+}
+
+// ── Compute evolução data for SVG chart ───────────
+function computeEvolucaoData(ativ, turmas) {
+  const result = {};
+  for (const turma of turmas) {
+    const sessMap = {};
+    for (const r of allResults.filter(r => r.concluido && r.atividade === ativ && r.turma === turma)) {
+      if (!sessMap[r.aluno]) sessMap[r.aluno] = [];
+      sessMap[r.aluno].push({ pts: r.pontuacao || 0, ts: r.criadoEm || 0 });
+    }
+    for (const al of Object.keys(sessMap)) sessMap[al].sort((a, b) => a.ts - b.ts);
+    const maxS = Math.max(0, ...Object.values(sessMap).map(s => s.length));
+    const avgs = [];
+    for (let i = 0; i < maxS; i++) {
+      const vals = Object.values(sessMap).filter(s => s[i]).map(s => s[i].pts);
+      avgs.push(vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0);
+    }
+    result[turma] = avgs;
+  }
+  return result;
+}
+
+// ── Compute horário de pico ───────────────────────
+function computePicoData(ativ, turmas) {
+  const cnt = {};
+  for (const r of allResults.filter(r => r.concluido && r.atividade === ativ && turmas.has(r.turma))) {
+    const hm = r.data?.slice(11, 16);
+    if (hm && /^\d{2}:\d{2}$/.test(hm)) cnt[hm] = (cnt[hm] || 0) + 1;
+  }
+  return cnt;
 }
 
 // ── Main filter handler ───────────────────────────
@@ -287,14 +329,11 @@ async function onFC() {
   document.getElementById("btn-pdf").style.display = "";
 
   const allStats = buildAllStats(ativ);
-
-  const toLoad = allResults.filter(r =>
-    r.concluido && r.atividade === ativ && !(r.id in detCache));
+  const toLoad = allResults.filter(r => r.concluido && r.atividade === ativ && !(r.id in detCache));
 
   if (toLoad.length > 0) {
     renderPage(allStats, [], false);
     await Promise.all(toLoad.map(async r => { detCache[r.id] = await getDetalhes(r.id); }));
-    // Re-compute with details now available
     for (const t of selectedTurmas) allStats[t] = computeStats(ativ, t);
   }
 
@@ -312,27 +351,53 @@ function buildAllStats(ativ) {
 // ── Master render ─────────────────────────────────
 function renderPage(allStats, questoes, loaded) {
   const statsArr = [...selectedTurmas].map(t => allStats[t]);
+  const ativ = selAtiv.value;
+  const evolData = loaded ? computeEvolucaoData(ativ, selectedTurmas) : {};
+  const picoData = loaded ? computePicoData(ativ, selectedTurmas) : {};
 
   document.getElementById("content").innerHTML =
+    renderNaoJogaram(statsArr) +
     renderQdestak(questoes, loaded) +
+    renderAjuda(questoes, loaded) +
     renderVG(statsArr) +
+    renderGraficos(evolData, picoData, loaded) +
     renderAQ(questoes, loaded);
 
-  // Restore expanded turma
   if (expandedTurma && allStats[expandedTurma]) {
     const row = document.getElementById(`xrow-${expandedTurma}`);
     if (row) {
       row.style.display = '';
-      const tQ = computeQuestoes(selAtiv.value, new Set([expandedTurma]));
+      const tQ = computeQuestoes(ativ, new Set([expandedTurma]));
       fillExpand(expandedTurma, allStats[expandedTurma], tQ);
       document.getElementById(`xi-${expandedTurma}`)?.classList.add("open");
     }
   }
 }
 
+// ── Section: Alunos que não jogaram ──────────────
+function renderNaoJogaram(statsArr) {
+  const lista = [];
+  for (const s of statsArr) {
+    for (const al of s.naoJogaram) lista.push({ aluno: al, turma: s.turma });
+  }
+  if (!lista.length) return '';
+  return `
+    <div style="background:#FEF2F2;border:2px solid #FECACA;border-radius:10px;padding:14px 16px;margin-bottom:18px">
+      <div id="btn-naojog" onclick="toggleNaoJog()"
+        style="font-size:13px;font-weight:800;color:#B91C1C;cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px">
+        ⚠️ ${lista.length} aluno${lista.length !== 1 ? 's' : ''} não participaram desta atividade
+      </div>
+      <div id="naojog-names" style="display:none;flex-wrap:wrap;gap:6px;margin-top:8px">
+        ${lista.map(({ aluno, turma }) =>
+          `<span style="background:#FEE2E2;border:1px solid #FECACA;border-radius:16px;padding:3px 10px;font-size:11px;font-weight:600;color:#991B1B">${aluno} <span style="opacity:.7">(${turma})</span></span>`
+        ).join('')}
+      </div>
+    </div>`;
+}
+
 // ── Section: Questões destaque ────────────────────
 function renderQdestak(questoes, loaded) {
-  const erradas   = [...questoes].sort((a, b) => b.taxaErro - a.taxaErro).slice(0, 5);
+  const erradas   = [...questoes].sort((a, b) => b.taxaErro - a.taxaErro).slice(0, 3);
   const acertadas = [...questoes].sort((a, b) => b.acertos  - a.acertos ).slice(0, 5);
 
   const noQ = !loaded
@@ -344,8 +409,11 @@ function renderQdestak(questoes, loaded) {
     const rate   = isErr ? q.taxaErro : pct(q.acertos, q.total);
     const color  = isErr ? 'var(--red)' : 'var(--green)';
     const label  = isErr
-      ? `${q.erros} erro${q.erros!==1?'s':''} de ${q.total} resposta${q.total!==1?'s':''}`
-      : `${q.acertos} acerto${q.acertos!==1?'s':''} de ${q.total} resposta${q.total!==1?'s':''}`;
+      ? `${q.erros} erro${q.erros !== 1 ? 's' : ''} de ${q.total} resposta${q.total !== 1 ? 's' : ''}`
+      : `${q.acertos} acerto${q.acertos !== 1 ? 's' : ''} de ${q.total} resposta${q.total !== 1 ? 's' : ''}`;
+    const tempoStr = (isErr && q.tempoMedio != null)
+      ? `<span style="font-size:11px;color:${q.tempoAlto ? '#B91C1C' : 'var(--text-muted)'};font-weight:${q.tempoAlto ? '700' : '400'};white-space:nowrap">⏱ ${q.tempoMedio}s${q.timerMax ? ` / ${q.timerMax}s` : ''}${q.tempoAlto ? ' ⚠️' : ''}</span>`
+      : '';
     return `
       <div class="qcard ${cls}">
         <div class="q-enun">${q.enun}</div>
@@ -355,17 +423,63 @@ function renderQdestak(questoes, loaded) {
           </div>
           <span style="font-size:20px;font-weight:800;color:${color};min-width:46px;text-align:right">${rate}%</span>
           <span style="color:var(--text-muted)">${label}</span>
+          ${tempoStr}
+        </div>
+      </div>`;
+  };
+
+  const mkSmall = (q, cls) => {
+    const isErr = cls === 'err';
+    const tempoStr = (isErr && q.tempoMedio != null)
+      ? `<span style="color:${q.tempoAlto ? '#B91C1C' : 'var(--text-muted)'};font-weight:${q.tempoAlto ? '700' : '400'}">⏱ ${q.tempoMedio}s${q.timerMax ? `/${q.timerMax}s` : ''}${q.tempoAlto ? ' ⚠️' : ''}</span>`
+      : '';
+    return `
+      <div class="qcard ${cls}" style="margin-bottom:0">
+        <div class="q-enun" style="margin-bottom:4px">${q.enun}</div>
+        <div style="font-size:11px;display:flex;gap:10px;flex-wrap:wrap">
+          ${isErr
+            ? `<span style="color:var(--red);font-weight:700">${q.taxaErro}% erro</span>`
+            : `<span style="color:var(--green);font-weight:700">${pct(q.acertos, q.total)}% acerto</span>`}
+          <span style="color:var(--text-muted)">${isErr ? q.erros : q.acertos}/${q.total}</span>
+          ${tempoStr}
         </div>
       </div>`;
   };
 
   return `
     <div class="sec" style="color:#B91C1C">❌ Questões mais difíceis — todas as turmas selecionadas</div>
-    ${!loaded || !erradas.length ? noQ : erradas.map(q => mkCard(q,'err')).join('')}
-
+    ${!loaded || !erradas.length ? noQ : `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      ${erradas.map(q => mkSmall(q, 'err')).join('')}
+    </div>`}
     ${loaded && acertadas.length ? `
-    <div class="sec" style="color:#15803D;margin-top:20px">✅ Questões mais fáceis — todas as turmas selecionadas</div>
-    ${acertadas.map(q => mkCard(q,'ok')).join('')}` : ''}`;
+    <div class="sec" style="color:#15803D;margin-top:16px">✅ Questões mais fáceis — todas as turmas selecionadas</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      ${acertadas.map(q => mkSmall(q, 'ok')).join('')}
+    </div>` : ''}`;
+}
+
+// ── Section: Uso de ajuda ─────────────────────────
+function renderAjuda(questoes, loaded) {
+  if (!loaded) return '';
+  const comAjuda = [...questoes]
+    .filter(q => q.ajudaCount > 0)
+    .sort((a, b) => b.taxaAjuda - a.taxaAjuda)
+    .slice(0, 6);
+  if (!comAjuda.length) return '';
+  const mkSmallHelp = q => `
+    <div class="qcard" style="background:#FAF5FF;border-color:#DDD6FE;margin-bottom:0">
+      <div class="q-enun" style="margin-bottom:4px">${q.enun}</div>
+      <div style="font-size:11px;display:flex;gap:10px;flex-wrap:wrap">
+        <span style="color:#7C3AED;font-weight:700">${q.taxaAjuda}% ajuda</span>
+        <span style="color:var(--text-muted)">${q.ajudaCount}/${q.total}</span>
+      </div>
+    </div>`;
+  return `
+    <div class="sec" style="color:#7C3AED;margin-top:20px">🆘 Questões que mais precisaram de ajuda</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      ${comAjuda.map(q => mkSmallHelp(q)).join('')}
+    </div>`;
 }
 
 // ── Section: Visão geral ──────────────────────────
@@ -374,11 +488,12 @@ function renderVG(statsArr) {
 
   const sorted = [...statsArr].sort((a, b) => {
     const va = a[vgSort.col] ?? 0, vb = b[vgSort.col] ?? 0;
-    if (typeof va === 'string') return vgSort.dir === 'asc' ? va.localeCompare(vb,'pt-BR') : vb.localeCompare(va,'pt-BR');
+    if (typeof va === 'string') return vgSort.dir === 'asc' ? va.localeCompare(vb, 'pt-BR') : vb.localeCompare(va, 'pt-BR');
     return vgSort.dir === 'asc' ? va - vb : vb - va;
   });
 
   const maxMedia = Math.max(...statsArr.map(s => s.mediaPts));
+  const maxBruta = Math.max(...statsArr.map(s => s.mediaPtsBruta || 0));
   const maxTaxa  = Math.max(...statsArr.map(s => s.taxaAcerto));
   const maxJog   = Math.max(...statsArr.map(s => s.jogadores));
 
@@ -389,9 +504,10 @@ function renderVG(statsArr) {
 
   const rows = sorted.map(s => {
     const pctJog = pct(s.jogadores, s.cadastrados);
-    const cMedia = s.mediaPts    === maxMedia && maxMedia > 0 ? 'class="best-cell"' : '';
-    const cTaxa  = s.taxaAcerto  === maxTaxa  && maxTaxa  > 0 ? 'class="best-taxa"' : '';
-    const cJog   = s.jogadores   === maxJog   && maxJog   > 0 ? 'class="best-jog"'  : '';
+    const cBruta = s.mediaPtsBruta === maxBruta && maxBruta > 0 ? 'class="best-cell"' : '';
+    const cMedia = s.mediaPts      === maxMedia && maxMedia > 0 ? 'class="best-cell"' : '';
+    const cTaxa  = s.taxaAcerto    === maxTaxa  && maxTaxa  > 0 ? 'class="best-taxa"' : '';
+    const cJog   = s.jogadores     === maxJog   && maxJog   > 0 ? 'class="best-jog"'  : '';
     return `
       <tr class="tr-turma" onclick="toggleExpand('${s.turma}')">
         <td>${s.turma}</td>
@@ -399,6 +515,7 @@ function renderVG(statsArr) {
           <strong>${s.jogadores}</strong><span style="color:var(--text-muted)">/${s.cadastrados}</span>
           <span class="pf ${pfCls(pctJog)}" style="margin-left:4px">${pctJog}%</span>
         </td>
+        <td ${cBruta}><strong style="color:var(--blue)">${s.mediaPtsBruta || 0}</strong></td>
         <td ${cMedia}><strong style="color:var(--gold)">${s.mediaPts}</strong></td>
         <td>${s.maior ? `<span style="font-size:12px">${s.maior.aluno}</span><span style="font-size:11px;color:var(--gold);font-weight:700;display:block">${s.maior.pts} pts</span>` : '—'}</td>
         <td ${cTaxa}><span class="pf ${pfCls(s.taxaAcerto)}">${s.taxaAcerto}%</span></td>
@@ -406,7 +523,7 @@ function renderVG(statsArr) {
         <td style="text-align:center"><span class="exp-icon" id="xi-${s.turma}">▼</span></td>
       </tr>
       <tr class="expand-row" id="xrow-${s.turma}" style="display:none">
-        <td colspan="7"><div class="expand-inner" id="xinner-${s.turma}">
+        <td colspan="8"><div class="expand-inner" id="xinner-${s.turma}">
           <div class="loading">Carregando…</div>
         </div></td>
       </tr>`;
@@ -415,11 +532,12 @@ function renderVG(statsArr) {
   return `
     <div class="sec" style="color:var(--blue);margin-top:28px">📊 Visão Geral por Turma</div>
     <div class="card" style="padding:0;overflow:auto;margin-bottom:8px">
-      <table class="table" style="min-width:560px">
+      <table class="table" style="min-width:620px">
         <thead><tr>
           ${th('turma','Turma')}
           ${th('jogadores','Alunos')}
-          ${th('mediaPts','Média pts')}
+          ${th('mediaPtsBruta','Média bruta')}
+          ${th('mediaPts','Média aplic.')}
           <th>Maior pts</th>
           ${th('taxaAcerto','Taxa acerto')}
           ${th('mediaSessoes','Sessões/aluno')}
@@ -431,29 +549,123 @@ function renderVG(statsArr) {
     <p style="font-size:11px;color:var(--text-muted);margin-bottom:0">Clique em uma turma para expandir o detalhamento por aluno.</p>`;
 }
 
+// ── Section: Gráficos ─────────────────────────────
+function renderGraficos(evolData, picoData, loaded) {
+  if (!loaded) return '';
+  const hasEvolucao = Object.values(evolData).some(a => a.length >= 2);
+  const hasPico = Object.keys(picoData).length > 0;
+  if (!hasEvolucao && !hasPico) return '';
+
+  let html = `<div class="sec" style="color:var(--blue);margin-top:28px">📈 Gráficos</div>`;
+
+  if (hasEvolucao) {
+    const legend = Object.entries(evolData)
+      .filter(([, a]) => a.length >= 1)
+      .map(([t]) => `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600"><span style="width:14px;height:3px;background:${TURMA_COLORS[t] || '#6B7280'};display:inline-block;border-radius:2px"></span>${t}</span>`)
+      .join('');
+    html += `
+      <div class="card" style="margin-bottom:14px">
+        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">Evolução média por sessão</div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px">${legend}</div>
+        ${renderEvolucaoSVG(evolData)}
+      </div>`;
+  }
+
+  if (hasPico) {
+    html += `
+      <div class="card" style="margin-bottom:28px">
+        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px">Horário de pico — sessões por minuto</div>
+        ${renderPicoSVG(picoData)}
+      </div>`;
+  }
+  return html;
+}
+
+function renderEvolucaoSVG(evolData) {
+  const W = 520, H = 170, mL = 46, mR = 24, mT = 24, mB = 34;
+  const iW = W - mL - mR, iH = H - mT - mB;
+  const allAvgs = Object.values(evolData).flat().filter(v => v > 0);
+  if (!allAvgs.length) return '';
+  const maxSess = Math.max(...Object.values(evolData).map(a => a.length));
+  if (maxSess < 1) return '';
+  const yMax = Math.max(Math.ceil(Math.max(...allAvgs, 1) / 100) * 100, 100);
+  const xPos = i => mL + (maxSess > 1 ? (i / (maxSess - 1)) * iW : iW / 2);
+  const yPos = v => mT + iH - Math.min((v / yMax) * iH, iH);
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;font-family:'Inter',sans-serif">`;
+  for (let yi = 0; yi <= 4; yi++) {
+    const yv = Math.round(yi * yMax / 4), yp = yPos(yv);
+    svg += `<line x1="${mL}" y1="${yp}" x2="${W - mR}" y2="${yp}" stroke="#E5E7EB" stroke-width="1"/>`;
+    svg += `<text x="${mL - 6}" y="${yp + 4}" text-anchor="end" font-size="10" fill="#9CA3AF">${yv}</text>`;
+  }
+  for (let i = 0; i < maxSess; i++) {
+    svg += `<text x="${xPos(i)}" y="${H - 6}" text-anchor="middle" font-size="10" fill="#6B7280">${i + 1}ª</text>`;
+  }
+  for (const [turma, avgs] of Object.entries(evolData)) {
+    if (!avgs.length) continue;
+    const color = TURMA_COLORS[turma] || '#6B7280';
+    if (avgs.length > 1) {
+      svg += `<polyline points="${avgs.map((v, i) => `${xPos(i)},${yPos(v)}`).join(' ')}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+    }
+    avgs.forEach((v, i) => {
+      svg += `<circle cx="${xPos(i)}" cy="${yPos(v)}" r="4" fill="${color}" stroke="white" stroke-width="1.5"/>`;
+      svg += `<text x="${xPos(i)}" y="${yPos(v) - 9}" text-anchor="middle" font-size="10" font-weight="700" fill="${color}">${v}</text>`;
+    });
+  }
+  svg += `</svg>`;
+  return svg;
+}
+
+function renderPicoSVG(picoData) {
+  const entries = Object.entries(picoData).sort(([a], [b]) => a.localeCompare(b));
+  if (!entries.length) return '';
+  const W = 520, H = 140, mL = 32, mR = 12, mT = 16, mB = 36;
+  const iW = W - mL - mR, iH = H - mT - mB;
+  const maxCnt = Math.max(...entries.map(([, v]) => v), 1);
+  const n = entries.length;
+  const barW = Math.max(3, Math.floor(iW / n) - 2);
+  const xPos = i => mL + i * (iW / n) + (iW / n - barW) / 2;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;font-family:'Inter',sans-serif">`;
+  const yTicks = Math.min(maxCnt, 4);
+  for (let yi = 0; yi <= yTicks; yi++) {
+    const yv = Math.round(yi * maxCnt / yTicks), yp = mT + iH - (yv / maxCnt) * iH;
+    svg += `<line x1="${mL}" y1="${yp}" x2="${W - mR}" y2="${yp}" stroke="#E5E7EB" stroke-width="1"/>`;
+    svg += `<text x="${mL - 4}" y="${yp + 4}" text-anchor="end" font-size="9" fill="#9CA3AF">${yv}</text>`;
+  }
+  const stride = Math.max(1, Math.ceil(n / 20));
+  entries.forEach(([hm, cnt], i) => {
+    const x = xPos(i);
+    const barH = Math.max(2, Math.round((cnt / maxCnt) * iH));
+    const y = mT + iH - barH;
+    svg += `<rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="2" fill="#3B82F6" opacity=".85"/>`;
+    if (cnt > 0) svg += `<text x="${x + barW / 2}" y="${y - 3}" text-anchor="middle" font-size="9" font-weight="700" fill="#1D4ED8">${cnt}</text>`;
+    if (i % stride === 0) svg += `<text x="${x + barW / 2}" y="${H - 4}" text-anchor="middle" font-size="9" fill="#6B7280">${hm}</text>`;
+  });
+  svg += `</svg>`;
+  return svg;
+}
+
 // ── Expand turma ──────────────────────────────────
 window.toggleExpand = function(turma) {
   const row  = document.getElementById(`xrow-${turma}`);
   const icon = document.getElementById(`xi-${turma}`);
   if (!row) return;
 
-  const isOpen = row.style.display !== 'none';
-
-  // Close current
   if (expandedTurma) {
     document.getElementById(`xrow-${expandedTurma}`)?.style && (document.getElementById(`xrow-${expandedTurma}`).style.display = 'none');
     document.getElementById(`xi-${expandedTurma}`)?.classList.remove('open');
     const prev = expandedTurma;
     expandedTurma = null;
-    if (prev === turma) return; // was already open → just close
+    if (prev === turma) return;
   }
 
   row.style.display = '';
   icon?.classList.add('open');
   expandedTurma = turma;
 
-  const ativ   = selAtiv.value;
-  const stats  = computeStats(ativ, turma);
+  const ativ = selAtiv.value;
+  const stats = computeStats(ativ, turma);
   const questoes = computeQuestoes(ativ, new Set([turma]));
   fillExpand(turma, stats, questoes);
 };
@@ -462,48 +674,61 @@ function fillExpand(turma, stats, questoes) {
   const inner = document.getElementById(`xinner-${turma}`);
   if (!inner) return;
 
-  const orderJog = [...stats.jogadores].sort((a, b) => {
-    const pa = stats.am[a]?.melhorPts || 0;
-    const pb = stats.am[b]?.melhorPts || 0;
-    return pb - pa;
-  });
+  const orderJog = [...stats.jogadores].sort((a, b) => (stats.am[b]?.melhorPts || 0) - (stats.am[a]?.melhorPts || 0));
+  const sessList = stats.alunoSessList || {};
 
   const mkRow = (al, idx) => {
     const d = stats.am[al];
+    const sessions = sessList[al] || [];
     if (!d || d.sessoes === 0) return `<tr>
-      <td style="color:var(--text-muted)">${idx+1}</td>
+      <td style="color:var(--text-muted)">${idx + 1}</td>
       <td><span class="nao-jogou">${al}</span></td>
-      <td colspan="4" style="color:var(--text-muted);font-style:italic;font-size:11px">Não jogou</td>
+      <td colspan="9" style="color:var(--text-muted);font-style:italic;font-size:11px">Não jogou</td>
     </tr>`;
     const taxa = pct(d.acertos, d.respondidas);
-    const topE = Object.entries(d.qErros).sort((a,b) => b[1]-a[1]).slice(0,2)
-      .map(([k,n]) => `${trunc(k,42)} <strong style="color:var(--red)">(${n}×)</strong>`).join('<br>');
+    const topE = Object.entries(d.qErros).sort((a, b) => b[1] - a[1]).slice(0, 1)
+      .map(([k, n]) => `${k} <strong style="color:var(--red)">(${n}×)</strong>`).join('<br>');
+    const s1 = sessions[0] != null ? sessions[0].pts : '—';
+    const s2 = sessions[1] != null ? sessions[1].pts : '—';
+    const s3 = sessions[2] != null ? sessions[2].pts : '—';
+    let trend = '';
+    if (sessions.length >= 2) {
+      const first = sessions[0].pts, last = sessions[sessions.length - 1].pts;
+      if      (last > first) trend = '<span style="color:#16A34A;font-weight:800;font-size:14px">↑</span>';
+      else if (last < first) trend = '<span style="color:#DC2626;font-weight:800;font-size:14px">↓</span>';
+      else                    trend = '<span style="color:#6B7280;font-size:14px">→</span>';
+    }
     return `<tr>
-      <td style="color:var(--text-muted)">${idx+1}</td>
+      <td style="color:var(--text-muted)">${idx + 1}</td>
       <td><strong>${al}</strong></td>
-      <td><strong style="color:var(--gold)">${d.melhorPts}</strong></td>
+      <td><strong style="color:var(--blue)">${d.melhorPtsBruta || d.melhorPts}</strong></td>
+      <td>${d.melhorPtsBruta && d.melhorPtsBruta !== d.melhorPts ? `<strong style="color:var(--gold)">${d.melhorPts}</strong>` : '<span style="color:var(--text-muted)">—</span>'}</td>
+      <td style="text-align:center;color:var(--text-muted);font-size:11px">${s1}</td>
+      <td style="text-align:center;color:var(--text-muted);font-size:11px">${s2}</td>
+      <td style="text-align:center;color:var(--text-muted);font-size:11px">${s3}</td>
+      <td style="text-align:center">${trend}</td>
       <td style="text-align:center">${d.sessoes}</td>
       <td><span class="pf ${pfCls(taxa)}">${taxa}%</span>
           <span style="font-size:10px;color:var(--text-muted);display:block">${d.acertos}✓ ${d.erros}✗</span></td>
-      <td style="font-size:11px;line-height:1.5;max-width:200px">${topE||'<span style="color:var(--green)">Sem erros ✨</span>'}</td>
+      <td style="font-size:11px;line-height:1.5;max-width:200px">${topE || '<span style="color:var(--green)">Sem erros ✨</span>'}</td>
     </tr>`;
   };
 
   const allRows = [
-    ...orderJog.map((al,i) => mkRow(al, i)),
-    ...stats.naoJogaram.map((al,i) => mkRow(al, orderJog.length+i)),
+    ...orderJog.map((al, i) => mkRow(al, i)),
+    ...stats.naoJogaram.map((al, i) => mkRow(al, orderJog.length + i)),
   ].join('');
 
-  const erradas   = [...questoes].sort((a,b) => b.taxaErro - a.taxaErro).slice(0,5);
-  const acertadas = [...questoes].sort((a,b) => b.acertos  - a.acertos ).slice(0,5);
+  const erradas   = [...questoes].sort((a, b) => b.taxaErro - a.taxaErro).slice(0, 5);
+  const acertadas = [...questoes].sort((a, b) => b.acertos  - a.acertos ).slice(0, 5);
   const mkQ = (q, cls) => `
     <div class="qcard ${cls} sm">
-      <div class="q-enun">${trunc(q.enun)}</div>
+      <div class="q-enun">${q.enun}</div>
       <div style="font-size:11px;display:flex;gap:10px">
-        ${cls==='err'
+        ${cls === 'err'
           ? `<span style="color:var(--red);font-weight:700">${q.taxaErro}% erro</span>`
-          : `<span style="color:var(--green);font-weight:700">${pct(q.acertos,q.total)}% acerto</span>`}
-        <span style="color:var(--text-muted)">${cls==='err'?q.erros:q.acertos}/${q.total}</span>
+          : `<span style="color:var(--green);font-weight:700">${pct(q.acertos, q.total)}% acerto</span>`}
+        <span style="color:var(--text-muted)">${cls === 'err' ? q.erros : q.acertos}/${q.total}</span>
       </div>
     </div>`;
 
@@ -511,20 +736,25 @@ function fillExpand(turma, stats, questoes) {
     <div class="two-col">
       <div>
         <div class="sub-sec-title" style="color:var(--red)">❌ Mais erradas desta turma</div>
-        ${erradas.map(q => mkQ(q,'err')).join('')}
+        ${erradas.map(q => mkQ(q, 'err')).join('')}
       </div>
       <div>
         <div class="sub-sec-title" style="color:var(--green)">✅ Mais acertadas desta turma</div>
-        ${acertadas.map(q => mkQ(q,'ok')).join('')}
+        ${acertadas.map(q => mkQ(q, 'ok')).join('')}
       </div>
     </div>` : `<p style="font-size:12px;color:var(--text-muted);margin-top:12px">Sem detalhes de questões para esta turma.</p>`;
 
   inner.innerHTML = `
     <div style="overflow:auto">
-      <table class="table sub-table" style="min-width:520px;background:white;border-radius:8px">
+      <table class="table sub-table" style="min-width:760px;background:white;border-radius:8px">
         <thead><tr>
-          <th>#</th><th>Aluno</th><th>Melhor pts</th>
-          <th style="text-align:center">Sessões</th><th>Taxa acerto</th>
+          <th>#</th><th>Aluno</th><th>Melhor bruta</th><th>Aplic.</th>
+          <th style="text-align:center;font-size:9px">1ª</th>
+          <th style="text-align:center;font-size:9px">2ª</th>
+          <th style="text-align:center;font-size:9px">3ª</th>
+          <th style="text-align:center;font-size:9px">Trend</th>
+          <th style="text-align:center">Sessões</th>
+          <th>Taxa acerto</th>
           <th>Questões mais erradas</th>
         </tr></thead>
         <tbody>${allRows}</tbody>
@@ -555,49 +785,65 @@ function renderAQ(questoes, loaded) {
 
   const fillColor = v => v >= 70 ? 'var(--red)' : v >= 50 ? 'var(--orange)' : 'var(--green)';
 
+  const DIFIC_LABEL = { 1: 'Fácil', 2: 'Médio', 3: 'Difícil' };
+  const DIFIC_CLS   = { 1: 'hi', 2: 'md', 3: 'lo' };
+
   const rows = sorted.map(q => {
     const pct1 = q.acertos > 0 ? pct(q.t1, q.acertos) : 0;
+    const tempoCell = q.tempoMedio != null
+      ? `<span style="color:${q.tempoAlto ? '#B91C1C' : 'var(--text-muted)'};font-weight:${q.tempoAlto ? '700' : '400'}">${q.tempoMedio}s${q.timerMax ? `/${q.timerMax}s` : ''}${q.tempoAlto ? ' ⚠️' : ''}</span>`
+      : '—';
+    const difCell = q.dificuldade != null
+      ? `<span class="pf ${DIFIC_CLS[q.dificuldade] || ''}">${DIFIC_LABEL[q.dificuldade] || '—'}</span>`
+      : '—';
     return `<tr>
       <td class="enun-col">${q.enun}</td>
+      <td>${difCell}</td>
       <td style="color:var(--red);font-weight:700">${q.erros}</td>
       <td style="color:var(--green);font-weight:700">${q.acertos}</td>
       <td style="color:var(--text-muted)">${q.total}</td>
-      <td><span class="pf" style="background:${q.taxaErro>=70?'#FEE2E2':q.taxaErro>=50?'#FEF9C3':'#DCFCE7'};color:${fillColor(q.taxaErro)}">${q.taxaErro}%</span></td>
-      <td style="font-size:11px;color:var(--text-muted)">${q.acertos>0?`${pct1}% na 1ª tent.<span style="display:block;font-size:10px">${q.t1}×1ª ${q.t2}×2ª ${q.t3}×3ª ${q.t4>0?q.t4+'×4ª':''}</span>`:'—'}</td>
+      <td><span class="pf" style="background:${q.taxaErro >= 70 ? '#FEE2E2' : q.taxaErro >= 50 ? '#FEF9C3' : '#DCFCE7'};color:${fillColor(q.taxaErro)}">${q.taxaErro}%</span></td>
+      <td style="font-size:11px;color:var(--text-muted)">${q.acertos > 0 ? `${pct1}% na 1ª tent.<span style="display:block;font-size:10px">${q.t1}×1ª ${q.t2}×2ª ${q.t3}×3ª ${q.t4 > 0 ? q.t4 + '×4ª' : ''}</span>` : '—'}</td>
+      <td style="font-size:11px">${tempoCell}</td>
     </tr>`;
   }).join('');
 
   return `
     <div class="sec" style="color:var(--text-muted);margin-top:28px">🔍 Análise Detalhada de Questões</div>
     <div class="card" style="padding:0;overflow:auto;margin-bottom:28px">
-      <table class="table" style="min-width:580px">
+      <table class="table" style="min-width:680px">
         <thead><tr>
           <th style="min-width:220px">Questão</th>
-          ${th('erros','Erros')}
-          ${th('acertos','Acertos')}
-          ${th('total','Total')}
-          ${th('taxaErro','Taxa erro')}
+          <th>Dificuldade</th>
+          ${th('erros', 'Erros')}
+          ${th('acertos', 'Acertos')}
+          ${th('total', 'Total')}
+          ${th('taxaErro', 'Taxa erro')}
           <th>Por tentativa</th>
+          ${th('tempoMedio', 'Tempo médio')}
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>`;
 }
 
+// ── Toggle não-jogaram ────────────────────────────
+window.toggleNaoJog = function() {
+  const el = document.getElementById('naojog-names');
+  if (!el) return;
+  el.style.display = el.style.display !== 'none' ? 'none' : 'flex';
+};
+
 // ── Sort handlers ─────────────────────────────────
 window.sortVG = col => {
   vgSort = { col, dir: vgSort.col === col && vgSort.dir === 'desc' ? 'asc' : 'desc' };
   const ativ = selAtiv.value;
-  const allStats = buildAllStats(ativ);
-  const questoes = computeQuestoes(ativ, selectedTurmas);
-  renderPage(allStats, questoes, true);
+  renderPage(buildAllStats(ativ), computeQuestoes(ativ, selectedTurmas), true);
 };
 window.sortAQ = col => {
   aqSort = { col, dir: aqSort.col === col && aqSort.dir === 'desc' ? 'asc' : 'desc' };
   const ativ = selAtiv.value;
-  const allStats = buildAllStats(ativ);
-  const questoes = computeQuestoes(ativ, selectedTurmas);
-  renderPage(allStats, questoes, true);
+  renderPage(buildAllStats(ativ), computeQuestoes(ativ, selectedTurmas), true);
 };
 
 // ── PDF ───────────────────────────────────────────
@@ -607,9 +853,7 @@ window.exportarPDF = function() {
     const row = document.getElementById(`xrow-${t}`);
     if (row && row.style.display === 'none') {
       row.style.display = '';
-      const stats    = computeStats(ativ, t);
-      const questoes = computeQuestoes(ativ, new Set([t]));
-      fillExpand(t, stats, questoes);
+      fillExpand(t, computeStats(ativ, t), computeQuestoes(ativ, new Set([t])));
       document.getElementById(`xi-${t}`)?.classList.add('open');
     }
   }

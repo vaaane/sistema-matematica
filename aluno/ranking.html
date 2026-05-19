@@ -23,11 +23,13 @@
     .ativ-btn.active{border-color:var(--blue);background:var(--blue);color:#fff;}
     .rank-section-title{font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:.4px;text-transform:uppercase;margin:0 0 6px;display:flex;align-items:center;gap:8px;}
     .live-tag{font-size:10px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.4);color:#16A34A;border-radius:10px;padding:1px 7px;font-weight:700;}
-    .resumo-wrap{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:10px;}
-    .resumo-wrap:last-child{margin-bottom:0;}
-    .resumo-header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(135deg,var(--orange-pale),#fff);border-bottom:1px solid var(--border);}
-    .resumo-header svg{width:14px;height:14px;fill:var(--orange);}
-    .resumo-header span{font-size:13px;font-weight:700;}
+    .podium-wrap{display:flex;align-items:flex-end;justify-content:center;gap:6px;padding:12px 8px 0;margin-bottom:16px;}
+    .podium-spot{display:flex;flex-direction:column;align-items:center;flex:1;max-width:120px;}
+    .podium-trophy{font-size:28px;margin-bottom:2px;}
+    .podium-name{font-size:11px;font-weight:700;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 4px;margin-bottom:2px;}
+    .podium-pts{font-size:11px;color:var(--gold);font-weight:800;margin-bottom:5px;}
+    .podium-stand{display:flex;align-items:center;justify-content:center;width:100%;border-radius:6px 6px 0 0;font-size:15px;font-weight:800;color:white;}
+    .podium-me-ring{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px;}
     @media(max-width:640px){.grid-2{grid-template-columns:1fr!important}}
   </style>
 </head>
@@ -69,8 +71,9 @@ function buildRankingMedia(lista) {
   for (const r of lista) {
     if (!r.concluido || !r.aluno) continue;
     if (!melhor[r.aluno]) melhor[r.aluno] = { aluno: r.aluno, turma: r.turma || '?', porAtiv: {}, sessoes: 0 };
+    const bruta = r.pontuacao_bruta || r.pontuacao || 0;
     const prev = melhor[r.aluno].porAtiv[r.atividade] || 0;
-    if ((r.pontuacao || 0) > prev) melhor[r.aluno].porAtiv[r.atividade] = r.pontuacao || 0;
+    if (bruta > prev) melhor[r.aluno].porAtiv[r.atividade] = bruta;
     melhor[r.aluno].sessoes++;
   }
   return Object.values(melhor).map(a => {
@@ -83,19 +86,33 @@ function buildRankingMedia(lista) {
 const rankAll   = buildRankingMedia(todos);
 const rankTurma = rankAll.filter(r => r.turma === turma);
 
-// ── Resumo do aluno ──────────────────────────────────────────
-function resumoAluno(nome) {
-  const regs = todos.filter(r => r.aluno === nome && r.concluido);
-  const melhor = {};
-  regs.forEach(r => { melhor[r.atividade] = Math.max(melhor[r.atividade] || 0, r.pontuacao || 0); });
-  const vals      = Object.values(melhor);
-  const melhorPts = vals.length ? Math.max(...vals) : 0;
-  const acertos   = regs.reduce((a, r) => a + (r.acertos || 0), 0);
-  const erros     = regs.reduce((a, r) => a + (r.erros   || 0), 0);
-  const taxa      = (acertos + erros) > 0 ? Math.round(acertos / (acertos + erros) * 100) : 0;
-  const posGeral  = (rankAll.findIndex(r => r.aluno === nome) + 1) || '—';
-  const posTurma  = (rankTurma.findIndex(r => r.aluno === nome) + 1) || '—';
-  return { melhorPts, sessoes: regs.length, acertos, taxa, posGeral, posTurma };
+// ── Posição do aluno ─────────────────────────────────────────
+function posicaoAluno(nome) {
+  const posGeral = (rankAll.findIndex(r => r.aluno === nome) + 1) || '—';
+  const posTurma = (rankTurma.findIndex(r => r.aluno === nome) + 1) || '—';
+  return { posGeral, posTurma };
+}
+
+// ── Podium (top 3) ───────────────────────────────────────────
+function renderPodium(top3) {
+  if (!top3.length) return '';
+  const [p1, p2, p3] = [top3[0], top3[1], top3[2]];
+  const spot = (p, pos, standH, standBg) => {
+    if (!p) return `<div class="podium-spot" style="max-width:110px"></div>`;
+    const trophy = ['🥇','🥈','🥉'][pos - 1];
+    const isMe = alunos.includes(p.aluno);
+    return `<div class="podium-spot${isMe ? ' podium-me-ring' : ''}" style="max-width:110px">
+      <div class="podium-trophy">${trophy}</div>
+      <div class="podium-name">${p.aluno}</div>
+      <div class="podium-pts">${p.pts}</div>
+      <div class="podium-stand" style="height:${standH}px;background:${standBg}">${pos}</div>
+    </div>`;
+  };
+  return `<div class="podium-wrap">
+    ${spot(p2, 2, 54, 'linear-gradient(135deg,#9CA3AF,#6B7280)')}
+    ${spot(p1, 1, 76, 'linear-gradient(135deg,#F59E0B,#D97706)')}
+    ${spot(p3, 3, 38, 'linear-gradient(135deg,#CD7C54,#92400E)')}
+  </div>`;
 }
 
 // ── Activity listener management ─────────────────────────────
@@ -108,49 +125,68 @@ function abrirAtividade(nome) {
   document.querySelectorAll('.ativ-btn').forEach(b =>
     b.classList.toggle('active', b.dataset.ativ === nome));
   if (unsubAtiv) { unsubAtiv(); unsubAtiv = null; }
-  const elTurma = document.getElementById('rank-ativ-turma');
-  const elGeral = document.getElementById('rank-ativ-geral');
+  const elTurma  = document.getElementById('rank-ativ-turma');
+  const elGeral  = document.getElementById('rank-ativ-geral');
+  const elPodium = document.getElementById('ativ-podium');
   if (!elTurma || !elGeral) return;
   elTurma.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px">Aguardando…</div>';
   elGeral.innerHTML = '';
+  if (elPodium) elPodium.innerHTML = '';
   unsubAtiv = listenRankingAtividade(nome, ranking => {
-    renderAtivTurma(ranking, elTurma);
-    renderAtivGeral(ranking, elGeral);
+    const listaTurma = ranking.filter(r => r.turma === turma).slice(0, 10);
+    const listaGeral = ranking.slice(0, 10);
+    renderAtivTurma(listaTurma, elTurma);
+    renderAtivGeral(listaGeral, elGeral);
+    if (elPodium) {
+      const top3 = ranking.slice(0, 3).map(r => ({
+        aluno: r.aluno,
+        pts: r.pontuacao_bruta || r.pontuacao || 0,
+      }));
+      elPodium.innerHTML = renderPodium(top3);
+    }
   });
 }
 
-function renderAtivTurma(ranking, el) {
-  const lista = ranking.filter(r => r.turma === turma);
+function renderAtivTurma(lista, el) {
   if (!lista.length) {
     el.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:10px 16px">Nenhum resultado da sua turma ainda.</p>';
     return;
   }
+  let lastPos = 1;
   el.innerHTML = lista.map((r, i) => {
-    const pos = i + 1;
+    const pts = r.pontuacao_bruta || r.pontuacao || 0;
+    if (i === 0) lastPos = 1;
+    else if (pts !== (lista[i-1].pontuacao_bruta || lista[i-1].pontuacao || 0)) lastPos = i + 1;
+    const pos = lastPos;
     const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
     const dest = alunos.includes(r.aluno);
+    const atrasoTag = r.com_abatimento ? ' <span style="font-size:10px;color:#D97706" title="Entregue com atraso">⏰</span>' : '';
     return `<div class="rank-row${dest ? ' destaque' : ''}">
       <div class="rank-pos">${medal}</div>
-      <div style="flex:1;min-width:0"><div class="rank-nome">${r.aluno}${dest ? ' ★' : ''}</div></div>
-      <div class="rank-pts">${r.pontuacao}</div>
+      <div style="flex:1;min-width:0"><div class="rank-nome">${r.aluno}${dest ? ' ★' : ''}${atrasoTag}</div></div>
+      <div class="rank-pts">${pts}</div>
     </div>`;
   }).join('');
 }
 
-function renderAtivGeral(ranking, el) {
-  const top5 = ranking.slice(0, 5);
-  if (!top5.length) { el.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:10px 16px">Sem resultados ainda.</p>'; return; }
-  el.innerHTML = top5.map((r, i) => {
-    const pos = i + 1;
+function renderAtivGeral(lista, el) {
+  if (!lista.length) { el.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:10px 16px">Sem resultados ainda.</p>'; return; }
+  let lastPos = 1;
+  el.innerHTML = lista.map((r, i) => {
+    const pts = r.pontuacao_bruta || r.pontuacao || 0;
+    if (i === 0) lastPos = 1;
+    else if (pts !== (lista[i-1].pontuacao_bruta || lista[i-1].pontuacao || 0)) lastPos = i + 1;
+    const pos = lastPos;
     const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
     const dest = alunos.includes(r.aluno);
+    const atrasoTag = r.com_abatimento ? ' <span style="font-size:10px;color:#D97706" title="Entregue com atraso">⏰</span>' : '';
     return `<div class="rank-row${dest ? ' destaque' : ''}">
       <div class="rank-pos">${medal}</div>
       <div style="flex:1;min-width:0">
-        <div class="rank-nome">${r.aluno}${dest ? ' ★' : ''}</div>
+        <div class="rank-nome">${r.aluno}${dest ? ' ★' : ''}${atrasoTag}</div>
         <div class="rank-sub">Turma ${r.turma}</div>
       </div>
-      <div class="rank-pts">${r.pontuacao}</div>
+      <div class="rank-pts">${pts}</div>
     </div>`;
   }).join('');
 }
@@ -158,35 +194,22 @@ function renderAtivGeral(ranking, el) {
 window.mudarTab = function(tab) {
   tabAtual = tab;
   document.getElementById('tab-geral')?.classList.toggle('active', tab === 'geral');
+  document.getElementById('tab-turma')?.classList.toggle('active', tab === 'turma');
   document.getElementById('tab-ativ')?.classList.toggle('active', tab === 'ativ');
-  document.getElementById('panel-geral').style.display = tab === 'geral' ? '' : 'none';
-  document.getElementById('panel-ativ').style.display  = tab === 'ativ'  ? '' : 'none';
+  document.getElementById('panel-geral').style.display  = tab === 'geral'  ? '' : 'none';
+  document.getElementById('panel-turma').style.display  = tab === 'turma'  ? '' : 'none';
+  document.getElementById('panel-ativ').style.display   = tab === 'ativ'   ? '' : 'none';
   if (tab === 'ativ') { abrirAtividade(ativSel); }
-  if (tab === 'geral' && unsubAtiv) { unsubAtiv(); unsubAtiv = null; }
+  if (tab !== 'ativ' && unsubAtiv) { unsubAtiv(); unsubAtiv = null; }
 };
 
-// ── Build page ───────────────────────────────────────────────
-const resumoHTML = alunos.map(nome => {
-  const r = resumoAluno(nome);
-  return `<div class="resumo-wrap">
-    <div class="resumo-header">
-      <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
-      <span>${nome}</span>
-    </div>
-    <div class="mini-stats">
-      <div class="mini-stat"><div class="mini-stat-value" style="color:var(--gold)">${r.melhorPts}</div><div class="mini-stat-label">Melhor</div></div>
-      <div class="mini-stat"><div class="mini-stat-value" style="color:var(--orange)">${r.posTurma === '—' ? '—' : '#'+r.posTurma}</div><div class="mini-stat-label">Na Turma</div></div>
-      <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue)">${r.posGeral === '—' ? '—' : '#'+r.posGeral}</div><div class="mini-stat-label">Geral</div></div>
-      <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green)">${r.sessoes}</div><div class="mini-stat-label">Sessões</div></div>
-      <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue)">${r.acertos}</div><div class="mini-stat-label">Acertos</div></div>
-      <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green)">${r.taxa}%</div><div class="mini-stat-label">Taxa</div></div>
-    </div>
-  </div>`;
-}).join('');
-
+// ── Build rows ───────────────────────────────────────────────
+let _gPos = 1;
 const geralRows = rankAll.length
   ? rankAll.map((r, i) => {
-      const pos = i + 1;
+      if (i === 0) _gPos = 1;
+      else if (r.media !== rankAll[i-1].media) _gPos = i + 1;
+      const pos = _gPos;
       const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
       const dest = alunos.includes(r.aluno);
       return `<div class="rank-row${dest ? ' destaque' : ''}">
@@ -200,31 +223,81 @@ const geralRows = rankAll.length
     }).join('')
   : '<p style="font-size:13px;color:var(--text-muted);padding:16px">Nenhum resultado registrado ainda.</p>';
 
+let _tPos = 1;
+const turmaRows = rankTurma.length
+  ? rankTurma.slice(0, 10).map((r, i) => {
+      if (i === 0) _tPos = 1;
+      else if (r.media !== rankTurma[i-1].media) _tPos = i + 1;
+      const pos = _tPos;
+      const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
+      const dest = alunos.includes(r.aluno);
+      return `<div class="rank-row${dest ? ' destaque' : ''}">
+        <div class="rank-pos">${medal}</div>
+        <div style="flex:1;min-width:0">
+          <div class="rank-nome">${r.aluno}${dest ? ' ★' : ''}</div>
+          <div class="rank-sub">${r.atividades} ativ. · ${r.sessoes} sess.</div>
+        </div>
+        <div class="rank-pts">${r.media}<div class="rank-pts-label">média</div></div>
+      </div>`;
+    }).join('')
+  : '<p style="font-size:13px;color:var(--text-muted);padding:16px">Nenhum resultado da sua turma ainda.</p>';
+
+const geralTop3  = rankAll.slice(0,3).map(r => ({ aluno: r.aluno, pts: r.media }));
+const turmaTop3  = rankTurma.slice(0,3).map(r => ({ aluno: r.aluno, pts: r.media }));
+
 const ativBtns = LISTA_ATIVIDADES.map(a =>
   `<button class="ativ-btn${a.nome === ativSel ? ' active' : ''}" data-ativ="${a.nome}">${a.nome}</button>`
 ).join('');
 
+// ── Position strip ───────────────────────────────────────────
+const posStrip = alunos.map(nome => {
+  const p = posicaoAluno(nome);
+  return `<div style="display:flex;align-items:center;gap:12px;padding:8px 0">
+    <div style="font-size:13px;font-weight:700">${nome}</div>
+    <div style="display:flex;gap:16px">
+      <div style="text-align:center">
+        <div style="font-size:18px;font-weight:800;color:var(--blue)">${p.posGeral === '—' ? '—' : '#'+p.posGeral}</div>
+        <div style="font-size:10px;color:var(--text-muted)">Geral</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:18px;font-weight:800;color:var(--orange)">${p.posTurma === '—' ? '—' : '#'+p.posTurma}</div>
+        <div style="font-size:10px;color:var(--text-muted)">Turma</div>
+      </div>
+    </div>
+  </div>`;
+}).join('<div style="width:1px;background:var(--border);margin:0 8px"></div>');
+
 document.getElementById('content').innerHTML = `
-  <div class="card" style="margin-bottom:16px">${resumoHTML}</div>
+  <div class="card" style="margin-bottom:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 16px">
+    ${posStrip}
+  </div>
 
   <div class="tab-nav">
     <button id="tab-geral" class="active" onclick="mudarTab('geral')">🏆 Geral</button>
+    <button id="tab-turma"                onclick="mudarTab('turma')">🏫 Turma</button>
     <button id="tab-ativ"                 onclick="mudarTab('ativ')">📚 Por Atividade</button>
   </div>
 
   <div id="panel-geral">
+    ${renderPodium(geralTop3)}
     <div class="card" style="padding:0">${geralRows}</div>
+  </div>
+
+  <div id="panel-turma" style="display:none">
+    ${renderPodium(turmaTop3)}
+    <div class="card" style="padding:0">${turmaRows}</div>
   </div>
 
   <div id="panel-ativ" style="display:none">
     <div class="ativ-sel" id="ativ-sel">${ativBtns}</div>
+    <div id="ativ-podium"></div>
     <div class="grid-2" style="align-items:start">
       <div>
-        <div class="rank-section-title">Sua Turma <span class="live-tag">ao vivo</span></div>
+        <div class="rank-section-title">Sua Turma (Top 10) <span class="live-tag">ao vivo</span></div>
         <div class="card" style="padding:0" id="rank-ativ-turma"></div>
       </div>
       <div>
-        <div class="rank-section-title">Top 5 Geral</div>
+        <div class="rank-section-title">Top 10 Geral</div>
         <div class="card" style="padding:0" id="rank-ativ-geral"></div>
       </div>
     </div>
