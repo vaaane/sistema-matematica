@@ -504,7 +504,8 @@ const dificeis = templates.filter(t => t.dificuldade === 3);
 const PONTOS = { 1: 4, 2: 8, 3: 24 };
 const TIMERS = { 1: 10, 2: 40, 3: 90 };
 
-let melhorPts = (await getBestResultado(alunos[0], turma, liberada.atividade))?.pontuacao || 0;
+const _melhores = await Promise.all(alunos.map(al => getBestResultado(al, turma, liberada.atividade)));
+let melhorPts = Math.max(0, ..._melhores.map(r => r?.pontuacao || 0));
 
 let latestRanking = [];
 let prevMeuPos = -1;
@@ -603,7 +604,7 @@ function novoEstado() {
     timerInterval: null, timerRestante: 0,
     globalInterval: null, globalRestante: 7*60,
     finalizado: false, processando: false,
-    resultadoId: null, inicioTs: Date.now()/1000,
+    resultadoIds: {}, inicioTs: Date.now()/1000,
     questoesDetalhes: [], questaoHist: [],
     pools: { 1: shuffle([...faceis]), 2: shuffle([...medias]), 3: shuffle([...dificeis]) },
     poolIdx: { 1:0, 2:0, 3:0 },
@@ -790,7 +791,7 @@ function renderRanking(ranking) {
   }
   const meu = ranking.findIndex(r => alunos.includes(r.aluno));
 
-  if (st && !st.finalizado && st.resultadoId && meu >= 0 && prevMeuPos >= 0 && meu !== prevMeuPos) {
+  if (st && !st.finalizado && Object.keys(st.resultadoIds).length && meu >= 0 && prevMeuPos >= 0 && meu !== prevMeuPos) {
     if (meu < prevMeuPos) mostrarBannerRank('up', `↑ Você subiu para o ${meu+1}º lugar!`);
     else mostrarBannerRank('dn', `⚠️ ${ranking[meu-1]?.aluno || 'Alguém'} acabou de te passar!`);
   }
@@ -1267,25 +1268,30 @@ function lancarConfete(n = 70) {
 
 // ── Poda de sessões antigas (mantém últimas 3) ────────────────
 async function pruneOldSessions() {
-  const todos = await getResultadosByAluno(alunos[0]);
-  const minhas = todos
-    .filter(r => r.atividade === liberada.atividade && r.concluido && r.modo === 'competicao_plus')
-    .sort((a, b) => (b.pontuacao || 0) - (a.pontuacao || 0));
-  // Manter apenas as 3 com maior pontuação, deletar o restante
-  const aExcluir = minhas.slice(3);
-  for (const r of aExcluir) {
-    await deletarRegistro('resultados', r.id);
+  for (const al of alunos) {
+    const todos = await getResultadosByAluno(al);
+    const minhas = todos
+      .filter(r => r.atividade === liberada.atividade && r.concluido && r.modo === 'competicao_plus')
+      .sort((a, b) => (b.pontuacao || 0) - (a.pontuacao || 0));
+    const aExcluir = minhas.slice(3);
+    for (const r of aExcluir) {
+      await deletarRegistro('resultados', r.id);
+    }
   }
 }
 
 // ── Checkpoint Firebase ───────────────────────────────────────
 async function checkpoint() {
-  if (!st.resultadoId) return;
+  if (!Object.keys(st.resultadoIds).length) return;
   const t = Math.round(Date.now()/1000 - st.inicioTs);
-  updateResultado(st.resultadoId, {
-    pontuacao: st.saldo, acertos: st.acertos, erros: st.erros,
-    respondidas: st.respondidas, tempo: `${t}s`,
-  }).catch(()=>{});
+  for (const al of alunos) {
+    if (st.resultadoIds[al]) {
+      updateResultado(st.resultadoIds[al], {
+        pontuacao: st.saldo, acertos: st.acertos, erros: st.erros,
+        respondidas: st.respondidas, tempo: `${t}s`,
+      }).catch(()=>{});
+    }
+  }
 }
 
 // ── Encerrar sessão ───────────────────────────────────────────
@@ -1310,11 +1316,14 @@ async function encerrarSessao(motivo) {
     bonus_fim: bonusFim, modo: "competicao_plus",
     tempo: `${t}s`, ts_inicio: st.inicioTs, data: dataAgora(), concluido: true,
   };
-  if (st.resultadoId) {
-    try { await updateResultado(st.resultadoId, { ...dados, aluno: alunos[0], turma, atividade: liberada.atividade }); }
-    catch(e) { console.error("encerrar:", e); }
-    if (st.questoesDetalhes.length > 0) {
-      saveDetalhes(st.resultadoId, st.questoesDetalhes).catch(() => {});
+  for (const al of alunos) {
+    const rid = st.resultadoIds[al];
+    if (rid) {
+      try { await updateResultado(rid, { ...dados, aluno: al, turma, atividade: liberada.atividade }); }
+      catch(e) { console.error("encerrar:", e); }
+      if (st.questoesDetalhes.length > 0) {
+        saveDetalhes(rid, st.questoesDetalhes).catch(() => {});
+      }
     }
   }
 
@@ -1384,12 +1393,14 @@ window.reiniciar = async function() {
   document.body.classList.add('arcade-mode');
 
   const agora = dataAgora();
-  st.resultadoId = await addResultado({
-    aluno: alunos[0], turma, atividade: liberada.atividade,
-    modo: "competicao_plus", concluido: false,
-    pontuacao: 10, acertos: 0, erros: 0, respondidas: 0,
-    ts_inicio: st.inicioTs, data: agora,
-  });
+  for (const al of alunos) {
+    st.resultadoIds[al] = await addResultado({
+      aluno: al, turma, atividade: liberada.atividade,
+      modo: "competicao_plus", concluido: false,
+      pontuacao: 10, acertos: 0, erros: 0, respondidas: 0,
+      ts_inicio: st.inicioTs, data: agora,
+    });
+  }
 
   iniciarGlobalTimer();
   proxima();
@@ -1487,12 +1498,14 @@ window.iniciarJogo = async function() {
   document.getElementById("content").innerHTML =
     `<div style="text-align:center;padding:50px;color:#2a2a50;font-family:'Orbitron',monospace;font-size:12px;letter-spacing:3px">CARREGANDO…</div>`;
 
-  st.resultadoId = await addResultado({
-    aluno: alunos[0], turma, atividade: liberada.atividade,
-    modo: "competicao_plus", concluido: false,
-    pontuacao: 10, acertos: 0, erros: 0, respondidas: 0,
-    ts_inicio: st.inicioTs, data: dataAgora(),
-  });
+  for (const al of alunos) {
+    st.resultadoIds[al] = await addResultado({
+      aluno: al, turma, atividade: liberada.atividade,
+      modo: "competicao_plus", concluido: false,
+      pontuacao: 10, acertos: 0, erros: 0, respondidas: 0,
+      ts_inicio: st.inicioTs, data: dataAgora(),
+    });
+  }
 
   iniciarGlobalTimer();
   proxima();
