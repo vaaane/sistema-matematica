@@ -2,14 +2,57 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Relatório — Sistema de Matemática</title>
+  <title>Relatório Diário — Sistema de Matemática</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
-    .table th, .table td { font-size: 11px; padding: 8px 10px; }
-    .table th { font-size: 10px; }
-    @media(max-width:640px){.topbar{flex-wrap:wrap;gap:8px}.topbar-left{flex:1;min-width:0}.topbar-right{width:100%;display:flex;gap:8px}.topbar-right .select-wrap{flex:1}.topbar-right .btn{white-space:nowrap}}
+    .stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+    .stat-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;}
+    .stat-val{font-size:22px;font-weight:800;line-height:1.1;}
+    .stat-lbl{font-size:10px;color:var(--text-muted);margin-top:4px;text-transform:uppercase;letter-spacing:.4px;}
+
+    .turma-badge{display:inline-flex;align-items:center;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:800;}
+    .turma-badge.f{background:#EDE9FE;color:#6D28D9;}
+    .turma-badge.h{background:#DBEAFE;color:#1D4ED8;}
+
+    .comp-row{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+    .comp-card{flex:1;min-width:155px;padding:14px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);}
+    .comp-metric{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:6px;}
+    .comp-winner{font-size:18px;font-weight:800;}
+    .comp-detail{font-size:11px;color:var(--text-muted);margin-top:3px;}
+    .comp-card.f-win{border-color:#A78BFA;background:#F5F3FF;}
+    .comp-card.h-win{border-color:#93C5FD;background:#EFF6FF;}
+    .comp-card.tie{border-color:var(--border);}
+
+    .q-item{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:8px;margin-bottom:5px;font-size:12px;}
+    .q-item.err{background:#FEF2F2;border:1px solid #FECACA;}
+    .q-item.ok{background:#F0FDF4;border:1px solid #BBF7D0;}
+    .q-cnt{font-size:11px;font-weight:800;min-width:30px;text-align:center;padding:2px 6px;border-radius:6px;flex-shrink:0;margin-top:1px;}
+    .q-cnt.err{background:#FEE2E2;color:#B91C1C;}
+    .q-cnt.ok{background:#DCFCE7;color:#15803D;}
+    .q-txt{flex:1;color:var(--text);line-height:1.4;}
+
+    .section-sep{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin:24px 0 10px;display:flex;align-items:center;gap:8px;}
+    .section-sep::before{content:"";display:block;width:3px;height:16px;border-radius:2px;background:currentColor;}
+
+    .no-data{text-align:center;padding:28px;color:var(--text-muted);font-size:13px;}
+    .dest-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+    .dest-box{flex:1;min-width:120px;background:var(--bg);border-radius:8px;padding:10px 12px;}
+    .dest-lbl{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
+    .dest-nome{font-size:13px;font-weight:700;}
+    .dest-pts{font-size:18px;font-weight:800;}
+
+    .table th,.table td{font-size:11px;padding:8px 10px;}
+    .table th{font-size:10px;}
+    .q-erros-cell{max-width:200px;font-size:11px;line-height:1.4;color:var(--text-muted);}
+    .nao-jogou{color:var(--text-muted);font-style:italic;}
+
+    @media(max-width:700px){
+      .stat-grid{grid-template-columns:repeat(2,1fr);}
+      .comp-row{flex-direction:column;}
+      .topbar-right{flex-wrap:wrap;gap:6px!important;}
+    }
   </style>
 </head>
 <body>
@@ -18,127 +61,415 @@
   <div class="main">
     <div class="topbar">
       <div class="topbar-left">
-        <div class="topbar-title">Relatório por Turma</div>
-        <div class="topbar-sub" id="topbar-sub"></div>
+        <div class="topbar-title">Relatório Diário</div>
+        <div class="topbar-sub" id="topbar-sub">8F e 8H</div>
       </div>
-      <div class="topbar-right" style="gap:10px;display:flex">
-        <div class="select-wrap" style="width:160px">
-          <select class="input" id="sel-turma" onchange="gerarRelatorio()" style="padding:8px 12px;font-size:13px">
-          </select>
-        </div>
-        <button class="btn btn-green" onclick="exportarCSV()">
+      <div class="topbar-right" style="gap:8px;display:flex;align-items:center;flex-wrap:wrap">
+        <input type="date" id="data-picker" class="input" style="padding:8px 12px;font-size:13px;width:152px"/>
+        <button class="btn btn-blue" onclick="gerar()">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+          Gerar
+        </button>
+        <button class="btn btn-green" id="btn-csv" onclick="exportarCSV()" style="display:none">
           <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-          Exportar CSV
+          CSV
         </button>
       </div>
     </div>
     <div class="content" id="content">
-      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+      <div class="no-data">Selecione uma data e clique em Gerar.</div>
     </div>
   </div>
 </div>
+
 <script type="module">
-import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES } from "/js/constants.js";
-import { getResultados, getLiberacoesHistorico } from "/js/db.js";
+import { ALUNOS_POR_TURMA } from "/js/constants.js";
+import { getResultados, getDetalhes } from "/js/db.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 
 requireProfessor();
 renderSidebarProfessor("sidebar", "relatorio");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
-const sel = document.getElementById("sel-turma");
-Object.keys(ALUNOS_POR_TURMA).forEach(t => { sel.innerHTML += `<option value="${t}">Turma ${t}</option>`; });
+const TURMAS = ["8F", "8H"];
+const picker = document.getElementById("data-picker");
+picker.value = new Date().toISOString().slice(0, 10);
 
-let todos = await getResultados();
-let histLib = await getLiberacoesHistorico();
-let tabelaAtual = [];
+// Cache de resultados (todos, não filtrado por data)
+let cacheTodos = null;
+// Cache de detalhes por resultadoId
+const cacheDetalhes = {};
 
-window.gerarRelatorio = function() {
-  const turma = sel.value;
-  document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
-  const dados = todos.filter(r => r.turma === turma && r.concluido);
+let reportData = null;
 
-  const melhor = {}, acA = {}, errA = {}, ativsFei = {};
-  dados.forEach(r => {
-    const {aluno:a, atividade:ativ, pontuacao:pts, acertos:ac, erros:er} = r;
-    melhor[a]=melhor[a]||{}; melhor[a][ativ]=Math.max(melhor[a][ativ]||0,pts||0);
-    acA[a]=(acA[a]||0)+(ac||0); errA[a]=(errA[a]||0)+(er||0);
-    ativsFei[a]=ativsFei[a]||new Set(); ativsFei[a].add(ativ);
-  });
+function isoParaBR(iso) {
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
 
-  tabelaAtual = (ALUNOS_POR_TURMA[turma]||[]).sort().map(aluno => {
-    if (melhor[aluno]) {
-      const pts = Object.values(melhor[aluno]).reduce((a,b)=>a+b,0);
-      const n   = ativsFei[aluno]?.size||0;
-      const ac  = acA[aluno]||0; const er = errA[aluno]||0;
-      return { aluno, pts, ativs:n, media:n?Math.round(pts/n):0, acertos:ac, erros:er, aproveit:(ac+er)>0?Math.round(ac/(ac+er)*100):0 };
-    }
-    return { aluno, pts:0, ativs:0, media:0, acertos:0, erros:0, aproveit:0 };
-  }).sort((a,b) => b.pts - a.pts);
+function trunc(txt, n = 75) {
+  if (!txt || txt === '?') return '—';
+  return txt.length > n ? txt.slice(0, n) + '…' : txt;
+}
 
-  const alunosTurma = new Set(ALUNOS_POR_TURMA[turma]||[]);
-  const pendentes = {}, datas100 = {};
-  for (const ativ of LISTA_ATIVIDADES) {
-    const fizeram = new Set(todos.filter(r=>r.atividade===ativ.nome&&r.turma===turma&&r.concluido).map(r=>r.aluno));
-    pendentes[ativ.nome] = [...alunosTurma].filter(a=>!fizeram.has(a)).sort();
-    datas100[ativ.nome] = histLib
-      .filter(h=>h.atividade===ativ.nome&&h.turma===turma&&(h.percentual===100||h.percentual==null))
-      .map(h=>h.liberado_em).filter(Boolean);
+async function carregarDetalhes(id) {
+  if (!(id in cacheDetalhes)) {
+    cacheDetalhes[id] = await getDetalhes(id);
   }
+  return cacheDetalhes[id];
+}
 
-  document.getElementById("content").innerHTML = `
-    <div class="grid-2">
-      <div class="card" style="padding:0">
-        <table class="table">
-          <thead><tr>
-            <th>#</th><th>Aluno</th><th>Pontuação</th><th>Atividades</th>
-            <th>Média</th><th>Acertos</th><th>Erros</th><th>Aproveit.</th>
-          </tr></thead>
-          <tbody>
-            ${tabelaAtual.map((r,i)=>`<tr>
-              <td style="color:var(--text-muted)">${i+1}</td>
-              <td><strong>${r.aluno}</strong></td>
-              <td><strong style="color:var(--gold)">${r.pts}</strong></td>
-              <td>${r.ativs}</td>
-              <td>${r.media}</td>
-              <td style="color:var(--green)">${r.acertos}</td>
-              <td style="color:var(--red)">${r.erros}</td>
-              <td>${r.aproveit}%</td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>
-      <div class="card">
-        <div class="card-title" style="margin-bottom:16px">
-          <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-          Pendentes — Turma ${turma}
-        </div>
-        ${LISTA_ATIVIDADES.map(a=>`
-        <div style="margin-bottom:14px">
-          <div style="font-size:13px;font-weight:700;margin-bottom:6px">${a.nome}</div>
-          ${pendentes[a.nome].length ? pendentes[a.nome].map(n=>`<span class="badge badge-red" style="margin:2px">${n}</span>`).join('') : '<span class="badge badge-green">Todos fizeram ✅</span>'}
-          ${datas100[a.nome].length ? `<div style="margin-top:8px;font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:currentColor;flex-shrink:0"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>Liberada a 100%: ${datas100[a.nome].join(' · ')}</div>` : ''}
-        </div>`).join('')}
-      </div>
-    </div>`;
+window.gerar = async function() {
+  const iso = picker.value;
+  if (!iso) return;
+  const dataBR = isoParaBR(iso);
+
+  document.getElementById("content").innerHTML = `<div class="no-data">Buscando dados de ${dataBR}…</div>`;
+  document.getElementById("btn-csv").style.display = "none";
+
+  try {
+    if (!cacheTodos) cacheTodos = await getResultados();
+
+    const filtrados = cacheTodos.filter(r => r.concluido && r.data?.startsWith(dataBR));
+
+    // Carrega detalhes de todas as sessões do dia em paralelo
+    await Promise.all(filtrados.map(r => carregarDetalhes(r.id)));
+
+    const stats = {};
+    for (const t of TURMAS) stats[t] = computarStats(filtrados, t);
+
+    reportData = { dataBR, stats };
+    document.getElementById("topbar-sub").textContent = `8F e 8H · ${dataBR}`;
+    renderRelatorio(stats, dataBR);
+    document.getElementById("btn-csv").style.display = "";
+  } catch(e) {
+    console.error(e);
+    document.getElementById("content").innerHTML =
+      `<div class="no-data">Erro ao carregar dados: ${e.message}</div>`;
+  }
 };
 
-window.exportarCSV = function() {
-  const turma = sel.value;
-  if (!tabelaAtual.length) return;
-  const linhas = [
-    ["aluno","pontuacao","atividades","media","acertos","erros","aproveitamento"],
-    ...tabelaAtual.map(r=>[r.aluno,r.pts,r.ativs,r.media,r.acertos,r.erros,r.aproveit+"%"])
+// ── Cálculo de estatísticas ──────────────────────────────────────
+function computarStats(resultados, turma) {
+  const cadastrados = ALUNOS_POR_TURMA[turma] || [];
+  const dasTurma = resultados.filter(r => r.turma === turma);
+
+  // Inicializa mapa para cada aluno cadastrado
+  const alunoMap = {};
+  for (const al of cadastrados) {
+    alunoMap[al] = { sessoes: 0, melhorPts: 0, acertos: 0, erros: 0, respondidas: 0, questoesErros: {} };
+  }
+
+  // Agrega dados por aluno
+  for (const r of dasTurma) {
+    const al = r.aluno;
+    if (!alunoMap[al]) alunoMap[al] = { sessoes: 0, melhorPts: 0, acertos: 0, erros: 0, respondidas: 0, questoesErros: {} };
+    const d = alunoMap[al];
+    d.sessoes++;
+    d.melhorPts = Math.max(d.melhorPts, r.pontuacao || 0);
+    d.acertos    += r.acertos    || 0;
+    d.erros      += r.erros      || 0;
+    d.respondidas += r.respondidas || 0;
+
+    for (const q of (cacheDetalhes[r.id] || [])) {
+      if (!q.acertou) {
+        const enun = q.enunciado || q.pergunta || '?';
+        d.questoesErros[enun] = (d.questoesErros[enun] || 0) + 1;
+      }
+    }
+  }
+
+  const jogadores = cadastrados.filter(al => alunoMap[al].sessoes > 0);
+  const melhorPorJogador = jogadores
+    .map(al => ({ aluno: al, pts: alunoMap[al].melhorPts }))
+    .sort((a, b) => b.pts - a.pts);
+
+  const totalSessoes   = dasTurma.length;
+  const totalAcertos   = dasTurma.reduce((s, r) => s + (r.acertos || 0), 0);
+  const totalRespondidas = dasTurma.reduce((s, r) => s + (r.respondidas || 0), 0);
+  const somaMediaPts   = melhorPorJogador.reduce((s, a) => s + a.pts, 0);
+
+  // Agrega questões de todas as sessões da turma
+  const questoesMap = {};
+  for (const r of dasTurma) {
+    for (const q of (cacheDetalhes[r.id] || [])) {
+      const enun = q.enunciado || q.pergunta || '?';
+      if (!questoesMap[enun]) questoesMap[enun] = { acertos: 0, erros: 0 };
+      if (q.acertou) questoesMap[enun].acertos++;
+      else           questoesMap[enun].erros++;
+    }
+  }
+
+  const questoesArr = Object.entries(questoesMap).map(([enun, v]) => ({ enun, ...v }));
+  const maisErradas   = [...questoesArr].sort((a, b) => b.erros   - a.erros  ).slice(0, 5);
+  const maisAcertadas = [...questoesArr].sort((a, b) => b.acertos - a.acertos).slice(0, 5);
+
+  return {
+    cadastrados: cadastrados.length,
+    cadastradosList: cadastrados,
+    jogadores: jogadores.length,
+    jogadoresList: jogadores,
+    sessoes: totalSessoes,
+    mediaSessoes: jogadores.length ? (totalSessoes / jogadores.length).toFixed(1) : '0',
+    mediaPts: jogadores.length ? Math.round(somaMediaPts / jogadores.length) : 0,
+    maior: melhorPorJogador[0] || null,
+    menor: melhorPorJogador.length > 0 ? melhorPorJogador[melhorPorJogador.length - 1] : null,
+    taxaAcerto: totalRespondidas > 0 ? Math.round(totalAcertos / totalRespondidas * 100) : 0,
+    totalAcertos,
+    totalErros: totalRespondidas - totalAcertos,
+    totalRespondidas,
+    maisErradas,
+    maisAcertadas,
+    alunoMap,
+  };
+}
+
+// ── Renderização ─────────────────────────────────────────────────
+function renderRelatorio(stats, dataBR) {
+  const sf = stats["8F"], sh = stats["8H"];
+  const temDados = sf.jogadores > 0 || sh.jogadores > 0;
+
+  document.getElementById("content").innerHTML = `
+    ${renderComparacao(sf, sh)}
+    <div class="grid-2">
+      ${renderCardTurma(sf, "8F", "f")}
+      ${renderCardTurma(sh, "8H", "h")}
+    </div>
+    <div class="grid-2">
+      ${renderCardQuestoes(sf, "8F", "f")}
+      ${renderCardQuestoes(sh, "8H", "h")}
+    </div>
+    ${renderTabelaAlunos(sf, "8F", "f")}
+    ${renderTabelaAlunos(sh, "8H", "h")}
+    ${!temDados ? `<div class="no-data" style="margin-top:0">Nenhuma atividade registrada em ${dataBR} para as turmas 8F e 8H.</div>` : ''}
+  `;
+}
+
+function calcWinner(vF, vH, labelF, labelH) {
+  if (vF > vH) return { cls: 'f-win', vencedor: '8F', cor: '#6D28D9', sub: `${labelF} vs ${labelH}` };
+  if (vH > vF) return { cls: 'h-win', vencedor: '8H', cor: '#1D4ED8', sub: `${labelH} vs ${labelF}` };
+  return { cls: 'tie', vencedor: 'Empate', cor: '#6B7280', sub: `${labelF} ambas` };
+}
+
+function renderComparacao(sf, sh) {
+  const mediaW = calcWinner(sf.mediaPts, sh.mediaPts,
+    `${sf.mediaPts} pts`, `${sh.mediaPts} pts`);
+  const sessW = calcWinner(sf.sessoes, sh.sessoes,
+    `${sf.sessoes} sessões`, `${sh.sessoes} sessões`);
+  const taxaW = calcWinner(sf.taxaAcerto, sh.taxaAcerto,
+    `${sf.taxaAcerto}%`, `${sh.taxaAcerto}%`);
+  const partW = calcWinner(sf.jogadores, sh.jogadores,
+    `${sf.jogadores}/${sf.cadastrados}`, `${sh.jogadores}/${sh.cadastrados}`);
+
+  const card = (w, icon, label) => `
+    <div class="comp-card ${w.cls}">
+      <div class="comp-metric">${icon} ${label}</div>
+      <div class="comp-winner" style="color:${w.cor}">${w.vencedor}</div>
+      <div class="comp-detail">${w.sub}</div>
+    </div>`;
+
+  return `
+    <div class="section-sep" style="color:var(--text-muted)">Comparação 8F × 8H</div>
+    <div class="comp-row">
+      ${card(mediaW, '🏆', 'Maior Média de Pontuação')}
+      ${card(sessW,  '🎮', 'Maior Engajamento (sessões)')}
+      ${card(taxaW,  '🎯', 'Melhor Taxa de Acerto')}
+      ${card(partW,  '👥', 'Maior Participação')}
+    </div>`;
+}
+
+function renderCardTurma(s, turma, cls) {
+  const pct = s.cadastrados > 0 ? Math.round(s.jogadores / s.cadastrados * 100) : 0;
+  const pctColor = pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--orange)' : 'var(--red)';
+
+  return `<div class="card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <span class="turma-badge ${cls}">Turma ${turma}</span>
+      <span style="font-size:12px;color:var(--text-muted)">
+        <strong style="color:${pctColor}">${s.jogadores}</strong>/${s.cadastrados} alunos
+        <span style="color:${pctColor};font-weight:700">(${pct}%)</span>
+      </span>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-box">
+        <div class="stat-val" style="color:var(--gold)">${s.mediaPts}</div>
+        <div class="stat-lbl">Média pts</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" style="color:${s.taxaAcerto>=70?'var(--green)':s.taxaAcerto>=50?'var(--orange)':'var(--red)'}">${s.taxaAcerto}%</div>
+        <div class="stat-lbl">Taxa acerto</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" style="color:var(--blue)">${s.mediaSessoes}</div>
+        <div class="stat-lbl">Sessões/aluno</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val">${s.sessoes}</div>
+        <div class="stat-lbl">Total sessões</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" style="color:var(--green)">${s.totalAcertos}</div>
+        <div class="stat-lbl">Acertos</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" style="color:var(--red)">${s.totalErros}</div>
+        <div class="stat-lbl">Erros</div>
+      </div>
+    </div>
+    ${s.maior ? `
+    <div class="dest-row">
+      <div class="dest-box">
+        <div class="dest-lbl">🥇 Maior pontuação</div>
+        <div class="dest-nome">${s.maior.aluno}</div>
+        <div class="dest-pts" style="color:var(--gold)">${s.maior.pts} pts</div>
+      </div>
+      <div class="dest-box">
+        <div class="dest-lbl">Menor (entre quem jogou)</div>
+        <div class="dest-nome">${s.menor.aluno}</div>
+        <div class="dest-pts" style="color:var(--text-muted)">${s.menor.pts} pts</div>
+      </div>
+    </div>` : `<div class="no-data" style="padding:16px">Nenhuma sessão registrada nesta data.</div>`}
+  </div>`;
+}
+
+function renderCardQuestoes(s, turma, cls) {
+  const semDados = !s.maisErradas.length && !s.maisAcertadas.length;
+  return `<div class="card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <span class="turma-badge ${cls}">Turma ${turma}</span>
+      <span style="font-size:12px;color:var(--text-muted)">Análise de questões</span>
+    </div>
+    ${semDados
+      ? `<div class="no-data" style="padding:16px">Sem detalhes de questões<br><span style="font-size:11px">(somente modos Clássico e Competição+ salvam detalhes)</span></div>`
+      : `
+    ${s.maisErradas.length ? `
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--red);margin-bottom:8px">❌ Mais erradas</div>
+      ${s.maisErradas.map(q => `
+        <div class="q-item err">
+          <span class="q-cnt err">${q.erros}×</span>
+          <span class="q-txt">${trunc(q.enun)}</span>
+        </div>`).join('')}` : ''}
+    ${s.maisAcertadas.length ? `
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--green);margin:14px 0 8px">✅ Mais acertadas</div>
+      ${s.maisAcertadas.map(q => `
+        <div class="q-item ok">
+          <span class="q-cnt ok">${q.acertos}×</span>
+          <span class="q-txt">${trunc(q.enun)}</span>
+        </div>`).join('')}` : ''}`}
+  </div>`;
+}
+
+function renderTabelaAlunos(s, turma, cls) {
+  // Jogadores primeiro (por melhor pts desc), depois não-jogadores (alfabético)
+  const jogadores = [...s.jogadoresList].sort((a, b) => {
+    const pa = s.alunoMap[a]?.melhorPts || 0;
+    const pb = s.alunoMap[b]?.melhorPts || 0;
+    return pb - pa || a.localeCompare(b, 'pt-BR');
+  });
+  const naoJogaram = s.cadastradosList.filter(al => !s.alunoMap[al] || s.alunoMap[al].sessoes === 0)
+    .sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+  const renderLinha = (aluno, idx) => {
+    const d = s.alunoMap[aluno];
+    if (!d || d.sessoes === 0) {
+      return `<tr>
+        <td style="color:var(--text-muted)">${idx + 1}</td>
+        <td><span class="nao-jogou">${aluno}</span></td>
+        <td colspan="4" style="color:var(--text-muted);font-size:11px">Não jogou nesta data</td>
+      </tr>`;
+    }
+    const taxa = d.respondidas > 0 ? Math.round(d.acertos / d.respondidas * 100) : 0;
+    const taxaColor = taxa >= 70 ? 'var(--green)' : taxa >= 50 ? 'var(--orange)' : 'var(--red)';
+    const topErros = Object.entries(d.questoesErros)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 2)
+      .map(([enun, n]) => `${trunc(enun, 45)} <span style="color:var(--red);font-weight:700">(${n}×)</span>`)
+      .join('<br>');
+    return `<tr>
+      <td style="color:var(--text-muted)">${idx + 1}</td>
+      <td><strong>${aluno}</strong></td>
+      <td><strong style="color:var(--gold)">${d.melhorPts}</strong></td>
+      <td style="text-align:center">${d.sessoes}</td>
+      <td><span style="font-weight:700;color:${taxaColor}">${taxa}%</span>
+          <span style="font-size:10px;color:var(--text-muted);display:block">${d.acertos}✓ ${d.erros}✗</span></td>
+      <td class="q-erros-cell">${topErros || '<span style="color:var(--green)">Sem erros ✨</span>'}</td>
+    </tr>`;
+  };
+
+  const todasLinhas = [
+    ...jogadores.map((al, i) => renderLinha(al, i)),
+    ...naoJogaram.map((al, i) => renderLinha(al, jogadores.length + i)),
   ];
-  const csv = "\uFEFF" + linhas.map(l=>l.join(",")).join("\n");
-  const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+
+  const corSep = cls === 'f' ? '#6D28D9' : '#1D4ED8';
+  return `
+    <div class="section-sep" style="color:${corSep}">Alunos — Turma ${turma}</div>
+    <div class="card" style="padding:0;overflow:auto;margin-bottom:24px">
+      <table class="table" style="min-width:600px">
+        <thead><tr>
+          <th>#</th>
+          <th>Aluno</th>
+          <th>Melhor pontuação</th>
+          <th style="text-align:center">Sessões</th>
+          <th>Taxa de acerto</th>
+          <th>Questões mais erradas</th>
+        </tr></thead>
+        <tbody>${todasLinhas.join('')}</tbody>
+      </table>
+    </div>`;
+}
+
+// ── Exportar CSV ─────────────────────────────────────────────────
+window.exportarCSV = function() {
+  if (!reportData) return;
+  const { dataBR, stats } = reportData;
+  const escape = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const row = arr => arr.map(escape).join(',');
+
+  const linhas = [
+    row(['Relatório Diário', dataBR]),
+    row([]),
+  ];
+
+  // Resumo comparativo
+  linhas.push(row(['COMPARAÇÃO', '8F', '8H']));
+  linhas.push(row(['Alunos que jogaram', stats['8F'].jogadores + '/' + stats['8F'].cadastrados, stats['8H'].jogadores + '/' + stats['8H'].cadastrados]));
+  linhas.push(row(['Média de pontuação', stats['8F'].mediaPts, stats['8H'].mediaPts]));
+  linhas.push(row(['Taxa de acerto', stats['8F'].taxaAcerto + '%', stats['8H'].taxaAcerto + '%']));
+  linhas.push(row(['Total de sessões', stats['8F'].sessoes, stats['8H'].sessoes]));
+  linhas.push(row(['Sessões por aluno', stats['8F'].mediaSessoes, stats['8H'].mediaSessoes]));
+  linhas.push(row([]));
+
+  for (const turma of TURMAS) {
+    const s = stats[turma];
+    linhas.push(row([`TURMA ${turma}`]));
+    linhas.push(row(['Aluno', 'Melhor pts', 'Sessões', 'Acertos', 'Erros', 'Taxa acerto', 'Questão mais errada']));
+    for (const al of [...s.cadastradosList].sort((a, b) => a.localeCompare(b, 'pt-BR'))) {
+      const d = s.alunoMap[al];
+      if (!d || d.sessoes === 0) {
+        linhas.push(row([al, '-', 0, '-', '-', '-', 'Não jogou']));
+      } else {
+        const taxa = d.respondidas > 0 ? Math.round(d.acertos / d.respondidas * 100) + '%' : '-';
+        const topErro = Object.entries(d.questoesErros).sort((a, b) => b[1] - a[1])[0];
+        linhas.push(row([
+          al, d.melhorPts, d.sessoes, d.acertos, d.erros, taxa,
+          topErro ? `${topErro[0].slice(0, 80)} (${topErro[1]}x)` : 'Sem erros',
+        ]));
+      }
+    }
+    linhas.push(row([]));
+  }
+
+  const csv = "﻿" + linhas.join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `relatorio_turma${turma}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = `relatorio_8F_8H_${dataBR.replace(/\//g, '-')}.csv`;
   a.click();
 };
 
-gerarRelatorio();
+// Gera automaticamente com a data de hoje
+gerar();
 </script>
 </body>
 </html>
