@@ -7,64 +7,85 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
-    .game-progress{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:14px 18px;background:var(--card);border-radius:var(--radius);border:1px solid var(--border);}
-    .gp-label{font-size:12px;color:var(--text-muted);flex-shrink:0;}
-    .gp-bar{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden;}
-    .gp-fill{height:100%;border-radius:4px;background:var(--blue);transition:width .4s;}
-    .gp-pts{font-size:14px;font-weight:800;color:var(--gold);flex-shrink:0;}
-    .game-layout{display:grid;grid-template-columns:220px 1fr;gap:18px;}
-    .game-side{display:flex;flex-direction:column;gap:12px;}
-    .side-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
-    .side-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:6px;}
-    .side-value{font-size:22px;font-weight:800;}
-    .side-sub{font-size:11px;color:var(--text-muted);margin-top:2px;}
-    .question-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px 28px 20px;}
-    .q-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;margin-bottom:16px;}
+    @keyframes shake{0%,100%{transform:translateX(0)}10%{transform:translateX(-6px)}30%{transform:translateX(6px)}50%{transform:translateX(-3px)}70%{transform:translateX(3px)}90%{transform:translateX(-1px)}}
+
+    /* HUD */
+    .game-hud{display:flex;align-items:center;gap:14px;padding:12px 18px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;flex-wrap:wrap;}
+    .hud-saldo-wrap{display:flex;flex-direction:column;align-items:center;min-width:52px;}
+    .hud-saldo{font-size:34px;font-weight:800;color:var(--gold);line-height:1;}
+    .hud-lbl{font-size:9px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+    .hud-sep{color:var(--border);font-size:20px;}
+    .hud-stats{display:flex;gap:14px;align-items:center;}
+    .hud-stat{display:flex;flex-direction:column;align-items:center;gap:1px;}
+    .hud-stat-v{font-size:17px;font-weight:800;}
+    .hud-stat-l{font-size:10px;color:var(--text-muted);font-weight:600;}
+    .hud-ajudas{font-size:12px;color:#7C3AED;font-weight:700;}
+    .hud-global{margin-left:auto;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;background:var(--bg);border:1px solid var(--border);padding:6px 12px;border-radius:8px;white-space:nowrap;}
+    .hud-global.urgente{color:var(--red);border-color:#FECACA;background:#FEF2F2;}
+
+    /* Timer questão */
+    .timer-wrap{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+    .timer-track{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden;}
+    .timer-fill{height:100%;border-radius:4px;background:#FAB800;transition:width .95s linear,background .4s;}
+    .timer-txt{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text-muted);min-width:32px;text-align:right;}
+    .timer-txt.urgente{color:var(--red);}
+
+    /* Tentativas */
+    .tent-row{display:flex;align-items:center;gap:7px;margin-bottom:12px;}
+    .tent-dot{width:11px;height:11px;border-radius:50%;border:2px solid var(--border);background:transparent;transition:background .2s,border-color .2s;}
+    .tent-dot.ativa{background:var(--blue);border-color:var(--blue);}
+    .tent-dot.usada{background:var(--border);border-color:var(--border);}
+    .tent-lbl{font-size:11px;color:var(--text-muted);font-weight:600;}
+
+    /* Question card */
+    .question-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px 24px 18px;max-width:700px;}
+    .q-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+    .q-badge{display:inline-flex;align-items:center;padding:4px 12px;border-radius:16px;font-size:11px;font-weight:700;}
     .q-badge.facil{background:#DCFCE7;color:#15803D;}
     .q-badge.media{background:#FEF9C3;color:#854D0E;}
     .q-badge.dificil{background:#FEE2E2;color:#B91C1C;}
-    .q-text{font-size:20px;font-weight:700;line-height:1.4;margin-bottom:22px;}
-    .answer-area{display:flex;gap:10px;margin-bottom:14px;}
-    .answer-area .input{flex:1;font-size:16px;}
-    .alts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px;}
-    .alt-btn{padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);font-size:14px;font-weight:600;cursor:pointer;text-align:center;transition:background .12s,border-color .12s;font-family:'Inter',sans-serif;}
-    .alt-btn:hover{background:var(--blue-pale);border-color:var(--blue);}
-    #feedback{min-height:42px;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;font-size:14px;font-weight:600;transition:all .2s;}
-    #feedback.ok{background:#F0FDF4;color:#15803D;border:1px solid #BBF7D0;}
-    #feedback.err{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;}
-    #feedback.hidden{opacity:0;}
-    .placar-row{display:flex;gap:12px;align-items:center;}
-    .placar-sep{color:var(--border);font-size:20px;}
-    .tent-dots{display:flex;gap:5px;margin-top:8px;}
-    .tent-dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--border);background:transparent;}
-    .tent-dot.used{background:var(--red);border-color:var(--red);}
-    .tent-dot.avail{background:var(--green);border-color:var(--green);}
-    .teste-banner{background:#FEF9C3;border:1.5px solid #FDE047;border-radius:10px;padding:10px 16px;font-size:13px;color:#854D0E;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
-    .mc-btn{padding:12px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);font-size:14px;font-weight:600;cursor:pointer;transition:background .12s,border-color .12s;font-family:'Inter',sans-serif;text-align:left;}
+    .q-valor{font-size:13px;font-weight:700;color:var(--blue);}
+    .q-text{font-size:18px;font-weight:700;line-height:1.5;margin-bottom:16px;}
+    .q-unidade{font-size:12px;color:var(--text-muted);margin-bottom:8px;}
+    .answer-area{display:flex;gap:10px;margin-bottom:10px;}
+    .answer-area .input{flex:1;font-size:15px;}
+    .mc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+    .mc-btn{padding:11px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);font-size:14px;font-weight:600;cursor:pointer;text-align:left;transition:background .12s,border-color .12s;font-family:'Inter',sans-serif;}
     .mc-btn:hover:not(:disabled){background:var(--blue-pale);border-color:var(--blue);}
     .mc-btn.correto{background:#F0FDF4!important;border-color:#22C55E!important;color:#15803D!important;}
     .mc-btn.errado{background:#FEF2F2!important;border-color:#EF4444!important;color:#B91C1C!important;}
     .mc-btn:disabled{cursor:default;}
+    #feedback{min-height:38px;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;font-size:14px;font-weight:600;transition:all .2s;}
+    #feedback.ok{background:#F0FDF4;color:#15803D;border:1px solid #BBF7D0;}
+    #feedback.err{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;}
+    #feedback.warn{background:#FFFBEB;color:#854D0E;border:1px solid #FDE68A;}
+    #feedback.info{background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;}
+    #feedback.hidden{opacity:0;min-height:0;padding:0;border:none;}
+
+    /* Ajuda / pular */
+    .btn-ajuda{background:rgba(168,85,247,.08);border:1.5px solid rgba(168,85,247,.3);color:#7C3AED;border-radius:9px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px;margin-top:10px;font-family:'Inter',sans-serif;transition:background .15s;}
+    .btn-ajuda:hover:not(:disabled){background:rgba(168,85,247,.15);}
+    .btn-ajuda:disabled{opacity:.3;cursor:not-allowed;}
+    .ajuda-badge{background:#7C3AED;color:#fff;border-radius:6px;font-size:10px;font-weight:800;padding:2px 6px;}
+    .btn-pular{background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:7px;padding:7px 12px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:border-color .15s;margin-top:8px;margin-left:8px;}
+    .btn-pular:hover{border-color:var(--text-muted);}
+
+    /* Banners */
+    .teste-banner{background:#FEF9C3;border:1.5px solid #FDE047;border-radius:10px;padding:10px 16px;font-size:13px;color:#854D0E;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+
+    /* Resultado */
     .resultado-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;max-width:560px;margin:0 auto;}
     .resultado-stat{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;}
     .resultado-stat:last-child{border-bottom:none;}
     .resultado-stat-label{color:var(--text-muted);}
     .resultado-stat-val{font-weight:700;}
-    @media(max-width:700px){
-      .game-layout{grid-template-columns:1fr}
-      .game-side{flex-direction:row;flex-wrap:wrap}
-      .side-card{flex:1;min-width:100px}
-      .q-text{font-size:16px;margin-bottom:16px}
-      .question-card{padding:16px 16px 14px}
-      .answer-area{flex-wrap:wrap}
-      .answer-area .input{min-width:0}
-      .answer-area .btn{width:100%;justify-content:center}
-      .game-progress{padding:10px 12px;gap:8px}
-      .gp-label{font-size:11px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:130px}
-      .side-card{overflow:hidden}
-      .placar-row{gap:6px}
-      .placar-sep{display:none}
-      .resultado-card{padding:18px}
+
+    @media(max-width:640px){
+      .q-text{font-size:15px;}
+      .question-card{padding:16px 14px 12px;}
+      .game-hud{gap:8px;padding:10px 12px;}
+      .hud-saldo{font-size:26px;}
+      .mc-grid{grid-template-columns:1fr;}
     }
   </style>
 </head>
@@ -93,31 +114,15 @@
     <div class="content" id="content">
       <div class="empty-state" style="margin-top:40px">
         <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-        <p>Selecione uma atividade e clique em <strong>Iniciar</strong> para testar.</p>
+        <p>Selecione uma atividade e clique em <strong>Iniciar</strong> para testar no modo Competição+.</p>
       </div>
     </div>
   </div>
 </div>
 
 <script type="module">
-import {
-  LISTA_ATIVIDADES, BASES, FATORES_TENTATIVA,
-  carregarPerguntas, intercalarPorDificuldade,
-  respostasEquivalentes
-} from "/js/constants.js";
-
+import { LISTA_ATIVIDADES, carregarPerguntas, respostasEquivalentes } from "/js/constants.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
-
-// ── Avaliação de expressões (competição) ──────────────────────
-function avaliarExpr(expr, vars) {
-  try { return new Function(...Object.keys(vars), `"use strict";return(${expr})`)(...Object.values(vars)); }
-  catch(e) { return null; }
-}
-function shuffleArr(arr) {
-  const a = [...arr];
-  for (let i = a.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
-  return a;
-}
 
 requireProfessor();
 renderSidebarProfessor("sidebar", "atividades");
@@ -126,391 +131,425 @@ window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 const selAtiv = document.getElementById("sel-ativ");
 LISTA_ATIVIDADES.forEach(a => { selAtiv.innerHTML += `<option value="${a.nome}">${a.nome}</option>`; });
 
-// Pre-select from query string
-const params = new URLSearchParams(location.search);
-const presel = params.get("atividade");
-if (presel) { selAtiv.value = presel; }
+const presel = new URLSearchParams(location.search).get("atividade");
+if (presel) selAtiv.value = presel;
 
-let jogo = null;
-let processando = false;
+// ── Constantes Competição+ ────────────────────────────────────
+const PONTOS = { 1: 4, 2: 8, 3: 24 };
+const TIMERS = { 1: 10, 2: 40, 3: 90 };
 
-window.iniciarTeste = async function() {
-  const nome = selAtiv.value;
-  if (!nome) { alert("Selecione uma atividade."); return; }
+// ── Utilitários ───────────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function avaliar(expr, vars) {
+  try { return new Function(...Object.keys(vars), `"use strict";return(${expr})`)(...Object.values(vars)); }
+  catch(e) { return null; }
+}
+function beep(freq, dur) {
+  try {
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.connect(g); g.connect(ctx.destination);
+    osc.frequency.value = freq;
+    g.gain.setValueAtTime(.2, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime+dur/1000);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime+dur/1000);
+  } catch(e) {}
+}
+function formatGlobal(s) { return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; }
 
-  const ativDef = LISTA_ATIVIDADES.find(a => a.nome === nome);
-  const ehComp  = ativDef?.modo === "competicao" || ativDef?.modo === "competicao_plus";
+// ── Estado ────────────────────────────────────────────────────
+let st = null;
 
-  document.getElementById("btn-iniciar").disabled = true;
-  document.getElementById("btn-iniciar").textContent = "Carregando…";
-
-  const templates = await carregarPerguntas(nome);
-
-  document.getElementById("sel-wrap").style.display = "none";
-  document.getElementById("btn-iniciar").style.display = "none";
-  document.getElementById("topbar-title").textContent = nome;
-  document.getElementById("topbar-sub").textContent = "Modo teste — resultados não são salvos";
-
-  if (ehComp) {
-    iniciarTesteComp(nome, templates);
-    return;
-  }
-
-  jogo = {
-    nome, perguntas: [...templates], indice: 0,
-    pontuacao: 0, acertos: 0, erros: 0, respondidas: 0,
-    tentativas: 0, ajudaUsada: false, historico: [],
-    finalizado: false, questaoNum: 1,
-  };
-  processando = false;
-  renderJogo();
-};
-
-// ── Modo competição no testar ─────────────────────────────────
-function iniciarTesteComp(nome, templates) {
-  const CICLO = [1,1,2,1,2,1,3,1,2];
-  const comp = {
-    cicloIdx: 0,
+function novoEstado(templates) {
+  return {
+    saldo: 10, acertos: 0, erros: 0, respondidas: 0,
+    tentativaAtual: 0, ajudas: 0, acertosRapidos: 0,
+    modoAjuda: false, ajudaUsada: false,
+    questaoAtual: null,
+    timerInterval: null, timerRestante: 0,
+    globalInterval: null, globalRestante: 7*60,
+    finalizado: false, processando: false,
     pools: {
-      1: shuffleArr(templates.filter(t=>t.dificuldade===1)),
-      2: shuffleArr(templates.filter(t=>t.dificuldade===2)),
-      3: shuffleArr(templates.filter(t=>t.dificuldade===3)),
+      1: shuffle(templates.filter(t => t.dificuldade === 1)),
+      2: shuffle(templates.filter(t => t.dificuldade === 2)),
+      3: shuffle(templates.filter(t => t.dificuldade === 3)),
     },
-    poolIdx: {1:0,2:0,3:0},
-    pontuacao: 0, acertos: 0, erros: 0, respondidas: 0,
-    processando: false, questaoAtual: null,
+    poolIdx: { 1:0, 2:0, 3:0 },
+    seenCombos: new Set(),
   };
+}
 
-  function gerarQ() {
-    const dif = CICLO[comp.cicloIdx % CICLO.length]; comp.cicloIdx++;
-    if (comp.poolIdx[dif] >= comp.pools[dif].length) {
-      comp.pools[dif] = shuffleArr(templates.filter(t=>t.dificuldade===dif));
-      comp.poolIdx[dif] = 0;
+// ── Gerar questão ─────────────────────────────────────────────
+function gerarQuestao(forceDif) {
+  for (let attempt = 0; attempt <= 30; attempt++) {
+    const d = forceDif ?? (Math.random() < 0.65 ? 1 : 2);
+    if (st.poolIdx[d] >= st.pools[d].length) {
+      st.pools[d] = shuffle([...st.pools[d]]);
+      st.poolIdx[d] = 0;
     }
-    const t = comp.pools[dif][comp.poolIdx[dif]++];
-    let vars = {}, resposta, opcoes = t.opcoes ? [...t.opcoes] : null;
+    const t = st.pools[d][st.poolIdx[d]++];
+    if (!t) continue;
+
+    let vars = {}, resposta = '', unidade = t.unidade || '';
     if (t.conjuntos) {
       const c = t.conjuntos[Math.floor(Math.random()*t.conjuntos.length)];
       vars = {...c}; resposta = String(c.resposta);
-      if (c.opcoes) opcoes = [...c.opcoes];
+      if (c.unidade) unidade = c.unidade;
     } else {
-      for (const [k,v] of Object.entries(t.variaveis)) {
+      for (const [k,v] of Object.entries(t.variaveis||{})) {
         vars[k] = Array.isArray(v) ? v[Math.floor(Math.random()*v.length)]
                                    : v.min + Math.floor(Math.random()*(v.max-v.min+1));
       }
-      resposta = String(avaliarExpr(t.resposta_expr, vars) ?? "?");
+      resposta = String(avaliar(t.resposta_expr, vars) ?? '?');
     }
     let enunciado = t.enunciado;
-    for (const [k,v] of Object.entries(vars)) enunciado = enunciado.replaceAll(`{${k}}`,v);
-    return {enunciado, resposta, opcoes, tipo:t.tipo, pontos:t.pontos, timer:t.timer,
-            dificuldade:t.dificuldade, unidade:t.unidade||'', tag:t.tag||''};
-  }
+    for (const [k,v] of Object.entries(vars)) enunciado = enunciado.replaceAll(`{${k}}`, v);
 
-  function renderComp() {
-    const q = comp.questaoAtual;
-    const nivelMap = {1:["Fácil","facil","●"],2:["Média","media","◆"],3:["Difícil","dificil","■"]};
-    const [nivel,cls,dot] = nivelMap[q.dificuldade]||nivelMap[1];
-    const tagMap = {"figuras planas":["figuras","Figuras Planas"],"perímetro":["perimetro","Perímetro"]};
-    const [tagCls,tagTxt] = tagMap[q.tag]||["area","Área"];
-
-    const inputArea = q.tipo === "multipla_escolha"
-      ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px" id="mc-grid">
-          ${(q.opcoes||[]).map((op,i)=>`<button class="mc-btn" id="mc-${i}" onclick="compResponder('${op.replace(/'/g,"\\'")}',${i})">${op}</button>`).join('')}
-         </div>`
-      : `${q.unidade?`<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Resposta em ${q.unidade} — apenas o número.</div>`:''}
-         <div class="answer-area">
-           <input type="text" id="resposta-input" class="input" inputmode="decimal" placeholder="Digite sua resposta…" autocomplete="off" autofocus onkeydown="if(event.key==='Enter')compResponder()"/>
-           <button class="btn btn-blue" id="btn-responder" onclick="compResponder()">
-             <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>OK
-           </button>
-         </div>`;
-
-    document.getElementById("content").innerHTML = `
-      <div class="teste-banner">⚠️ Modo teste professor — resultados não são salvos</div>
-      <div class="game-progress">
-        <span class="gp-label">Q${comp.respondidas+1} · Pts: <strong>${comp.pontuacao}</strong> · ✅ ${comp.acertos} · ❌ ${comp.erros}</span>
-        <div class="gp-bar"><div class="gp-fill" id="gp-fill" style="width:${Math.min(100,comp.respondidas*5)}%"></div></div>
-        <span class="gp-pts">${comp.pontuacao} pts</span>
-      </div>
-      <div class="question-card" style="max-width:700px">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-          <span class="q-badge ${cls}" style="margin-bottom:0">${dot} ${nivel} · +${q.pontos} pt${q.pontos>1?'s':''}</span>
-          <span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;background:${tagCls==='figuras'?'#EDE9FE':tagCls==='perimetro'?'#DBEAFE':'#DCFCE7'};color:${tagCls==='figuras'?'#6D28D9':tagCls==='perimetro'?'#1D4ED8':'#15803D'}">${tagTxt}</span>
-          <span style="font-size:11px;color:var(--text-muted);margin-left:auto">⏱ ${q.timer}s</span>
-        </div>
-        <div class="q-text" style="-webkit-user-select:text;user-select:text">${q.enunciado}</div>
-        ${inputArea}
-        <div id="feedback" class="hidden"></div>
-      </div>
-      <div style="display:flex;gap:10px;max-width:700px;margin-top:12px">
-        <button class="btn btn-ghost" onclick="encerrarTeste()" style="color:var(--red);border-color:#FECACA">Encerrar teste</button>
-      </div>`;
-    document.getElementById("resposta-input")?.focus();
-  }
-
-  window.compResponder = function(opcao, mcIdx) {
-    if (comp.processando) return;
-    comp.processando = true;
-    const q = comp.questaoAtual;
-    let resposta = opcao;
-    if (resposta === undefined) {
-      const inp = document.getElementById("resposta-input");
-      resposta = inp ? inp.value.trim() : "";
-      if (!resposta) { comp.processando=false; return; }
-      if (inp) inp.disabled = true;
-      const btn = document.getElementById("btn-responder");
-      if (btn) btn.disabled = true;
-    } else {
-      document.querySelectorAll(".mc-btn").forEach(b=>b.disabled=true);
+    const combo = enunciado + ':' + resposta;
+    if (attempt === 30 || !st.seenCombos.has(combo)) {
+      st.seenCombos.add(combo);
+      const dif = t.dificuldade || d;
+      return { enunciado, resposta, unidade, dif, pontos: PONTOS[dif], timer: t.timer ?? TIMERS[dif] };
     }
-    const correto = respostasEquivalentes(resposta, q.resposta);
-    comp.respondidas++;
-    const fb = document.getElementById("feedback");
-    if (correto) {
-      comp.pontuacao += q.pontos; comp.acertos++;
-      if (fb) { fb.className="ok"; fb.textContent=`✅ Correto! +${q.pontos} pt${q.pontos>1?'s':''}`; }
-      if (mcIdx!=null) { const b=document.getElementById(`mc-${mcIdx}`); if(b) b.classList.add("correto"); }
-    } else {
-      comp.erros++;
-      const rs = q.resposta+(q.unidade?" "+q.unidade:"");
-      if (fb) { fb.className="err"; fb.textContent=`❌ Resposta: ${rs}`; }
-      if (mcIdx!=null) {
-        const b=document.getElementById(`mc-${mcIdx}`); if(b) b.classList.add("errado");
-        (q.opcoes||[]).forEach((op,i)=>{if(respostasEquivalentes(op,q.resposta)){const b2=document.getElementById(`mc-${i}`);if(b2)b2.classList.add("correto");}});
-      }
-    }
-    setTimeout(()=>{ comp.processando=false; comp.questaoAtual=gerarQ(); renderComp(); }, correto?1200:2000);
-  };
-
-  window.encerrarTeste = function() {
-    if (!confirm("Encerrar o teste agora?")) return;
-    const aprov = (comp.acertos + comp.erros) > 0
-      ? Math.round(comp.acertos/(comp.acertos+comp.erros)*100) : 0;
-    document.getElementById("sel-wrap").style.display = "";
-    document.getElementById("btn-iniciar").style.display = "";
-    document.getElementById("btn-iniciar").disabled = false;
-    document.getElementById("btn-iniciar").innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Iniciar`;
-    document.getElementById("topbar-title").textContent = "Testar Atividade";
-    document.getElementById("topbar-sub").textContent = "Modo professor — resultados não são salvos";
-    document.getElementById("content").innerHTML = `
-      <div class="resultado-card">
-        <div style="text-align:center;margin-bottom:24px">
-          <div style="font-size:32px;font-weight:800;color:var(--gold)">${comp.pontuacao} pts</div>
-          <div style="font-size:14px;color:var(--text-muted);margin-top:4px">${nome}</div>
-          <div style="display:inline-block;margin-top:8px;padding:4px 12px;background:#FEF9C3;border-radius:20px;font-size:12px;font-weight:700;color:#854D0E">⚠️ Modo teste — não salvo</div>
-        </div>
-        <div class="resultado-stat"><span class="resultado-stat-label">Questões respondidas</span><span class="resultado-stat-val">${comp.respondidas}</span></div>
-        <div class="resultado-stat"><span class="resultado-stat-label">Acertos</span><span class="resultado-stat-val" style="color:var(--green)">${comp.acertos}</span></div>
-        <div class="resultado-stat"><span class="resultado-stat-label">Erros</span><span class="resultado-stat-val" style="color:var(--red)">${comp.erros}</span></div>
-        <div class="resultado-stat"><span class="resultado-stat-label">Aproveitamento</span><span class="resultado-stat-val">${aprov}%</span></div>
-        <div style="margin-top:20px;display:flex;gap:10px">
-          <button class="btn btn-blue" style="flex:1;justify-content:center" onclick="iniciarTeste()">
-            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Testar de novo
-          </button>
-          <a href="/professor/atividades.html" class="btn btn-ghost">← Voltar</a>
-        </div>
-      </div>`;
-  };
-
-  comp.questaoAtual = gerarQ();
-  renderComp();
+  }
 }
 
-function pergAtual() { return jogo.perguntas[jogo.indice]; }
-function valeAtual() {
-  const perg = pergAtual();
-  const base = BASES[perg.dificuldade] || 10;
-  const fat  = FATORES_TENTATIVA[Math.min(jogo.tentativas, 3)];
-  const fa   = jogo.ajudaUsada ? 0.5 : 1.0;
-  return Math.max(1, Math.floor(base * fat * fa));
+function gerarDistratores(resp) {
+  const num = parseFloat(resp);
+  if (isNaN(num)) return ['1','2','3'];
+  const cands = new Set();
+  [num+1, num-1, num+2, num-2, num+3, num-3, Math.round(num*2), Math.round(num/2), num+5, num-5]
+    .forEach(v => { if (v !== num && v > 0 && Number.isFinite(v)) cands.add(Math.round(v)); });
+  return shuffle([...cands]).slice(0, 3).map(String);
 }
 
-function renderJogo() {
-  const perg = pergAtual();
-  const base = BASES[perg.dificuldade] || 10;
-  const nivelMap = {1:["Fácil","facil"], 2:["Média","media"], 3:["Difícil","dificil"]};
-  const [nivel, nivelCls] = nivelMap[perg.dificuldade] || ["Fácil","facil"];
+function valorAtual() {
+  return Math.max(1, Math.floor(st.questaoAtual.pontos * [1.0, 0.75, 0.5][st.tentativaAtual]));
+}
+
+// ── Render questão ────────────────────────────────────────────
+function renderQuestao() {
+  const q = st.questaoAtual;
+  const difMap = { 1:['Fácil','facil'], 2:['Média','media'], 3:['Difícil','dificil'] };
+  const [difLbl, difCls] = difMap[q.dif] || difMap[1];
+  const v = valorAtual();
+  const rem = 3 - st.tentativaAtual;
 
   document.getElementById("content").innerHTML = `
-    <div class="teste-banner">⚠️ Modo teste — respostas não são salvas no Firebase</div>
-    <div class="game-progress">
-      <span class="gp-label">Questão #${jogo.questaoNum} · <span id="resp-count">${jogo.respondidas}</span> respondidas</span>
-      <div class="gp-bar"><div class="gp-fill" id="gp-fill" style="width:${Math.min(100,jogo.respondidas*10)}%"></div></div>
-      <span class="gp-pts" id="pts-display">${jogo.pontuacao} pts</span>
+    <div class="teste-banner">⚠️ Modo teste professor — resultados não são salvos</div>
+    <div class="game-hud">
+      <div class="hud-saldo-wrap">
+        <div class="hud-saldo" id="hud-saldo">${st.saldo}</div>
+        <div class="hud-lbl">pontos</div>
+      </div>
+      <div class="hud-sep">·</div>
+      <div class="hud-stats">
+        <div class="hud-stat"><div class="hud-stat-v" style="color:var(--green)">${st.acertos}</div><div class="hud-stat-l">acertos</div></div>
+        <div class="hud-stat"><div class="hud-stat-v" style="color:var(--red)">${st.erros}</div><div class="hud-stat-l">erros</div></div>
+        <div class="hud-stat"><div class="hud-stat-v" style="color:var(--blue)">${st.respondidas}</div><div class="hud-stat-l">total</div></div>
+      </div>
+      ${st.ajudas > 0 ? `<div class="hud-ajudas">${'🎯'.repeat(Math.min(st.ajudas,3))} ${st.ajudas} ajuda${st.ajudas>1?'s':''}</div>` : ''}
+      <div class="hud-global${st.globalRestante<=60?' urgente':''}" id="hud-global">⏳ ${formatGlobal(st.globalRestante)}</div>
     </div>
-    <div class="game-layout">
-      <div class="game-side">
-        <div class="side-card">
-          <div class="side-label">Pontuação</div>
-          <div class="side-value" style="color:var(--gold)" id="pts-side">${jogo.pontuacao}</div>
-          <div class="side-sub">pontos acumulados</div>
-        </div>
-        <div class="side-card">
-          <div class="side-label">Nível</div>
-          <div class="side-value" id="nivel-display">${nivel}</div>
-          <div class="side-sub">Vale <span id="vale-display">${valeAtual()}</span> pts agora</div>
-          <div class="tent-dots" id="tent-dots">${[0,1,2,3].map(i=>`<div class="tent-dot ${i<jogo.tentativas?'used':'avail'}" id="dot-${i}"></div>`).join('')}</div>
-        </div>
-        <div class="side-card">
-          <div class="side-label">Placar</div>
-          <div class="placar-row">
-            <div><div class="side-value" style="color:var(--green);font-size:18px" id="acertos-side">${jogo.acertos}</div><div class="side-sub">acertos</div></div>
-            <div class="placar-sep">·</div>
-            <div><div class="side-value" style="color:var(--red);font-size:18px" id="erros-side">${jogo.erros}</div><div class="side-sub">erros</div></div>
-          </div>
-        </div>
-        ${!jogo.ajudaUsada ? `<button class="btn btn-ghost" id="btn-ajuda" onclick="pedirAjuda()" style="width:100%">
-          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
-          Pedir ajuda (-50%)
-        </button>` : `<div class="side-card" style="text-align:center;color:var(--text-muted);font-size:12px">💡 Ajuda utilizada</div>`}
-        <button class="btn btn-ghost" onclick="encerrarTeste()" style="width:100%;color:var(--red);border-color:#FECACA">
-          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-          Encerrar teste
-        </button>
+    <div class="timer-wrap">
+      <div class="timer-track"><div class="timer-fill" id="timer-fill" style="width:100%"></div></div>
+      <span class="timer-txt" id="timer-txt">${q.timer}s</span>
+    </div>
+    <div class="tent-row" id="tent-row">
+      ${[0,1,2].map(i=>`<div class="tent-dot ${i<rem?'ativa':'usada'}"></div>`).join('')}
+      <span class="tent-lbl">${rem} tentativa${rem!==1?'s':''} restante${rem!==1?'s':''}</span>
+    </div>
+    <div class="question-card">
+      <div class="q-meta">
+        <span class="q-badge ${difCls}">● ${difLbl}</span>
+        <span class="q-valor" id="q-valor">+${v} pt${v>1?'s':''}</span>
       </div>
-      <div>
-        <div class="question-card">
-          <span class="q-badge ${nivelCls}">
-            ${perg.dificuldade===1?'● Fácil':perg.dificuldade===2?'◆ Média':'■ Difícil'} · base ${base} pts
-          </span>
-          <div class="q-text" id="q-text">${perg.pergunta ?? perg.enunciado ?? ''}</div>
-          <div id="input-area">
-            <div class="answer-area">
-              <input type="text" id="resposta-input" class="input" placeholder="Digite sua resposta…" autocomplete="off" autofocus onkeydown="if(event.key==='Enter')responder()"/>
-              <button class="btn btn-blue" id="btn-responder" onclick="responder()">
-                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-                Responder
-              </button>
-            </div>
-          </div>
-          <div id="alts-area" style="display:none">
-            <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">💡 Escolha a alternativa correta:</p>
-            <div class="alts-grid" id="alts-grid"></div>
-          </div>
-          <div id="feedback" class="hidden"></div>
-        </div>
-      </div>
+      <div class="q-text">${q.enunciado}</div>
+      <div id="area-resposta">${inputAreaHTML()}</div>
+      <div id="feedback" class="hidden"></div>
+      ${!st.modoAjuda && st.ajudas > 0 ? `
+        <button class="btn-ajuda" id="btn-ajuda" onclick="usarAjuda()">
+          🎯 Usar ajuda <span class="ajuda-badge">${st.ajudas}</span>
+        </button>` : ''}
+      <button class="btn-pular" onclick="pularQuestao()">Pular (−${Math.floor(q.pontos/2)}pt)</button>
+    </div>
+    <div style="margin-top:12px">
+      <button class="btn btn-ghost" onclick="encerrarTeste()" style="color:var(--red);border-color:#FECACA">Encerrar teste</button>
     </div>`;
 
-  document.getElementById("resposta-input")?.focus();
+  if (!st.modoAjuda) document.getElementById("resp-input")?.focus();
 }
 
-function atualizarDots(n) {
-  for (let i=0;i<4;i++) {
-    const d = document.getElementById("dot-"+i);
-    if (d) d.className = "tent-dot "+(i<n?"used":"avail");
+function inputAreaHTML() {
+  const q = st.questaoAtual;
+  if (st.modoAjuda) {
+    const all = shuffle([q.resposta, ...gerarDistratores(q.resposta)]);
+    return `<div class="mc-grid">${all.map((op,i) =>
+      `<button class="mc-btn" id="mc-${i}" onclick="responderMC('${op.replace(/'/g,"\\'")}',${i})">${op}</button>`
+    ).join('')}</div>`;
   }
+  return `${q.unidade ? `<div class="q-unidade">Resposta em ${q.unidade} — apenas o número.</div>` : ''}
+    <div class="answer-area">
+      <input type="text" id="resp-input" class="input" inputmode="decimal" placeholder="Digite a resposta…" autocomplete="off" onkeydown="if(event.key==='Enter')responderNum()"/>
+      <button class="btn btn-blue" id="btn-resp" onclick="responderNum()">
+        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>OK
+      </button>
+    </div>`;
+}
+
+function atualizarAreaResposta() {
+  const el = document.getElementById("area-resposta");
+  if (el) el.innerHTML = inputAreaHTML();
+  if (st.modoAjuda) {
+    document.getElementById("btn-ajuda")?.remove();
+    const v = valorAtual();
+    const vEl = document.getElementById("q-valor");
+    if (vEl) vEl.textContent = `+${v} pt${v>1?'s':''}`;
+  }
+}
+
+function atualizarDots() {
+  const rem = 3 - st.tentativaAtual;
+  document.querySelectorAll('.tent-dot').forEach((d,i) =>
+    d.className = `tent-dot ${i < rem ? 'ativa' : 'usada'}`
+  );
+  const lbl = document.querySelector('.tent-lbl');
+  if (lbl) lbl.textContent = `${rem} tentativa${rem!==1?'s':''} restante${rem!==1?'s':''}`;
+  const vEl = document.getElementById("q-valor");
+  if (vEl) { const v=valorAtual(); vEl.textContent = `+${v} pt${v>1?'s':''}`; }
+}
+
+function atualizarHUD() {
+  const sdEl = document.getElementById("hud-saldo");
+  if (sdEl) sdEl.textContent = st.saldo;
+  const gEl = document.getElementById("hud-global");
+  if (gEl) { gEl.textContent = `⏳ ${formatGlobal(st.globalRestante)}`; gEl.className = "hud-global"+(st.globalRestante<=60?" urgente":""); }
 }
 
 function mostrarFeedback(tipo, msg) {
   const el = document.getElementById("feedback");
-  if (el) { el.className=tipo; el.textContent=msg; }
+  if (el) { el.className = tipo; el.innerHTML = msg; }
 }
 
-function beep(freq, dur) {
-  try {
-    const ctx = new (window.AudioContext||window.webkitAudioContext)();
-    const osc = ctx.createOscillator(); const gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0.25, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+dur/1000);
-    osc.start(ctx.currentTime); osc.stop(ctx.currentTime+dur/1000);
-  } catch(e) {}
+// ── Timer questão ─────────────────────────────────────────────
+function iniciarTimer(seg) {
+  clearInterval(st.timerInterval);
+  st.timerRestante = seg;
+  atualizarTimerUI();
+  st.timerInterval = setInterval(() => {
+    st.timerRestante = Math.max(0, st.timerRestante - 1);
+    atualizarTimerUI();
+    if (st.timerRestante <= 0) { clearInterval(st.timerInterval); timerExpirou(); }
+  }, 1000);
 }
 
-function avancarQuestao() {
-  jogo.questaoNum++;
-  if (jogo.indice >= jogo.perguntas.length - 1) {
-    jogo.perguntas = intercalarPorDificuldade(jogo.perguntas);
-    jogo.indice = 0;
-  } else {
-    jogo.indice++;
+function atualizarTimerUI() {
+  const q = st.questaoAtual;
+  const pct = q ? (st.timerRestante / q.timer) * 100 : 100;
+  const fill = document.getElementById("timer-fill");
+  const txt  = document.getElementById("timer-txt");
+  if (fill) {
+    fill.style.width = pct + "%";
+    const t = st.tentativaAtual;
+    fill.style.background = t === 0 ? (pct > 50 ? '#FAB800' : '#3B82F6') : t === 1 ? '#F59E0B' : '#EF4444';
   }
-  jogo.tentativas = 0; jogo.ajudaUsada = false;
+  if (txt) { txt.textContent = st.timerRestante+"s"; txt.className = "timer-txt"+(pct<=25?" urgente":""); }
 }
 
-window.responder = function(respSelecionada) {
-  if (processando) return;
-  const input = document.getElementById("resposta-input");
-  const resposta = respSelecionada !== undefined ? respSelecionada : (input ? input.value.trim() : "");
-  if (!resposta) { mostrarFeedback("err", "⚠️ Digite uma resposta."); return; }
+function timerExpirou() {
+  if (st.processando || st.finalizado) return;
+  st.processando = true;
+  st.tentativaAtual++;
+  const q = st.questaoAtual;
+  document.querySelectorAll(".mc-btn").forEach(b => b.disabled = true);
+  const btn = document.getElementById("btn-resp"); if (btn) btn.disabled = true;
+  const inp = document.getElementById("resp-input"); if (inp) inp.disabled = true;
 
-  processando = true;
-  const btn = document.getElementById("btn-responder");
-  if (btn) btn.disabled = true;
+  if (st.tentativaAtual >= 3) {
+    st.erros++; st.respondidas++;
+    document.querySelectorAll('.mc-btn').forEach(b => {
+      if (respostasEquivalentes(b.textContent, q.resposta)) b.classList.add('correto');
+    });
+    aplicarPenalidade(q, true);
+  } else {
+    atualizarDots();
+    mostrarFeedback("err", `⏱ Tempo! ${3-st.tentativaAtual} tentativa${(3-st.tentativaAtual)>1?'s':''} restante${(3-st.tentativaAtual)>1?'s':''}.`);
+    beep(350, 280);
+    setTimeout(() => {
+      if (st.finalizado) return;
+      mostrarFeedback("hidden", "");
+      st.processando = false;
+      atualizarAreaResposta();
+      iniciarTimer(q.timer);
+      if (!st.modoAjuda) document.getElementById("resp-input")?.focus();
+    }, 1400);
+  }
+}
 
-  const perg = pergAtual();
-  const base = BASES[perg.dificuldade] || 10;
-  const fat  = FATORES_TENTATIVA[Math.min(jogo.tentativas, 3)];
-  const fa   = jogo.ajudaUsada ? 0.5 : 1.0;
+// ── Timer global (7 min) ──────────────────────────────────────
+function iniciarGlobalTimer() {
+  clearInterval(st.globalInterval);
+  st.globalInterval = setInterval(() => {
+    st.globalRestante = Math.max(0, st.globalRestante - 1);
+    const el = document.getElementById("hud-global");
+    if (el) { el.textContent = `⏳ ${formatGlobal(st.globalRestante)}`; el.className = "hud-global"+(st.globalRestante<=60?" urgente":""); }
+    if (st.globalRestante <= 0) { clearInterval(st.globalInterval); encerrarSessao('tempo'); }
+  }, 1000);
+}
 
-  if (respostasEquivalentes(resposta, String(perg.resposta))) {
-    const pts = Math.max(1, Math.floor(base * fat * fa));
-    jogo.pontuacao   += pts;
-    jogo.acertos     += 1;
-    jogo.respondidas += 1;
-    jogo.tentativas  += 1;
-    jogo.historico.push({ pergunta: perg.pergunta, resposta_aluno: resposta, resposta_correta: String(perg.resposta), tentativas: jogo.tentativas, acertou: true });
+// ── Responder ─────────────────────────────────────────────────
+window.responderNum = function() {
+  if (st.processando || st.finalizado) return;
+  const inp = document.getElementById("resp-input");
+  const val = inp ? inp.value.trim() : "";
+  if (!val) { mostrarFeedback("info", "⚠️ Digite a resposta."); return; }
+  const btn = document.getElementById("btn-resp"); if (btn) btn.disabled = true;
+  if (inp) inp.disabled = true;
+  processar(val, null);
+};
+
+window.responderMC = function(op, idx) {
+  if (st.processando || st.finalizado) return;
+  document.querySelectorAll(".mc-btn").forEach(b => b.disabled = true);
+  processar(op, idx);
+};
+
+function processar(resposta, mcIdx) {
+  st.processando = true;
+  clearInterval(st.timerInterval);
+  const q = st.questaoAtual;
+  const correto = respostasEquivalentes(resposta, q.resposta);
+  const tempoUsado = q.timer - st.timerRestante;
+
+  if (correto) {
+    st.respondidas++; st.acertos++;
+    let pts = valorAtual();
+    const rapido = !st.ajudaUsada && tempoUsado < q.timer * 0.5;
+    const speedPts = rapido ? (q.dif === 1 ? 1 : 2) : 0;
+    pts += speedPts;
+    st.saldo += pts;
+
+    if (rapido) {
+      st.acertosRapidos++;
+      if (st.acertosRapidos % 3 === 0) st.ajudas = Math.min(3, st.ajudas + 1);
+    }
+    if (q.dif === 3 && !st.ajudaUsada) st.ajudas = Math.min(3, st.ajudas + 1);
+
+    if (mcIdx !== null) document.getElementById(`mc-${mcIdx}`)?.classList.add('correto');
+    let msg = `✅ Correto! +${pts} pt${pts>1?'s':''}`;
+    if (speedPts > 0) msg += ` <span style="color:var(--blue)">⚡ +${speedPts} veloz!</span>`;
+    mostrarFeedback("ok", msg);
     beep(1000, 150);
-    mostrarFeedback("ok", `✅ Correto! +${pts} pontos`);
-    document.getElementById("pts-display").textContent = jogo.pontuacao+" pts";
-    document.getElementById("pts-side").textContent = jogo.pontuacao;
-    avancarQuestao();
-    setTimeout(() => { processando=false; renderJogo(); }, 1500);
+    atualizarHUD();
+
+    setTimeout(() => {
+      if (st.finalizado) return;
+      st.processando = false;
+      proxima();
+    }, 1400);
 
   } else {
-    jogo.tentativas++;
-    if (jogo.tentativas >= 4) {
-      jogo.erros       += 1;
-      jogo.respondidas += 1;
-      jogo.historico.push({ pergunta: perg.pergunta, resposta_aluno: resposta, resposta_correta: String(perg.resposta), tentativas: jogo.tentativas, acertou: false });
-      beep(400, 300);
-      mostrarFeedback("err", `❌ Errou 4× — Resposta: ${perg.resposta}`);
-      document.getElementById("erros-side").textContent = jogo.erros;
-      avancarQuestao();
-      setTimeout(() => { processando=false; renderJogo(); }, 2000);
+    st.tentativaAtual++;
+    const card = document.querySelector('.question-card');
+    if (card) { card.style.animation='none'; void card.offsetWidth; card.style.animation='shake .4s ease'; setTimeout(()=>card.style.animation='', 450); }
+    if (mcIdx !== null) document.getElementById(`mc-${mcIdx}`)?.classList.add('errado');
+
+    if (st.tentativaAtual >= 3) {
+      document.querySelectorAll('.mc-btn').forEach(b => {
+        if (respostasEquivalentes(b.textContent, q.resposta)) b.classList.add('correto');
+      });
+      st.erros++; st.respondidas++;
+      aplicarPenalidade(q, false);
     } else {
-      beep(400, 150);
-      atualizarDots(jogo.tentativas);
-      const novoVale = Math.max(1, Math.floor(base * FATORES_TENTATIVA[Math.min(jogo.tentativas,3)] * fa));
-      document.getElementById("vale-display").textContent = novoVale;
-      mostrarFeedback("err", `❌ Errado (${jogo.tentativas}/4) — tente novamente`);
-      if (btn) btn.disabled = false;
-      if (input) { input.value=""; input.focus(); }
-      processando = false;
+      atualizarDots();
+      mostrarFeedback("err", `❌ Errado! ${3-st.tentativaAtual} tentativa${(3-st.tentativaAtual)>1?'s':''} restante${(3-st.tentativaAtual)>1?'s':''}.`);
+      beep(400, 200);
+      setTimeout(() => {
+        if (st.finalizado) return;
+        mostrarFeedback("hidden", "");
+        st.processando = false;
+        atualizarAreaResposta();
+        iniciarTimer(q.timer);
+        if (!st.modoAjuda) document.getElementById("resp-input")?.focus();
+      }, 1400);
     }
   }
+}
+
+function aplicarPenalidade(q, deTempo) {
+  const pen = Math.floor(q.pontos * 0.5);
+  st.saldo = Math.max(0, st.saldo - pen);
+  beep(250, 300);
+  const resp = q.resposta + (q.unidade ? ' '+q.unidade : '');
+  mostrarFeedback("warn", `⚠️ ${deTempo?'Tempo! ':''}Resposta: ${resp} · −${pen} pt${pen>1?'s':''}`);
+  atualizarHUD();
+  if (st.saldo <= 0) {
+    setTimeout(() => encerrarSessao('saldo'), 2000);
+  } else {
+    setTimeout(() => { if (!st.finalizado) { st.processando = false; proxima(); } }, 2200);
+  }
+}
+
+function proxima() {
+  if (st.finalizado) return;
+  st.tentativaAtual = 0;
+  st.modoAjuda = false;
+  st.ajudaUsada = false;
+  st.questaoAtual = gerarQuestao();
+  renderQuestao();
+  iniciarTimer(st.questaoAtual.timer);
+}
+
+window.usarAjuda = function() {
+  if (!st || st.ajudas <= 0 || st.modoAjuda || st.processando || st.finalizado) return;
+  st.ajudas--;
+  st.ajudaUsada = true;
+  st.modoAjuda = true;
+  atualizarAreaResposta();
+  atualizarHUD();
+  mostrarFeedback("info", "🎯 Ajuda ativada! Escolha a alternativa correta.");
 };
 
-window.pedirAjuda = function() {
-  jogo.ajudaUsada = true;
-  jogo.tentativas = 0;
-  const perg = pergAtual();
-  const alts = perg.alternativas || perg.opcoes || [];
-  const grid = document.getElementById("alts-grid");
-  grid.innerHTML = "";
-  alts.forEach(alt => {
-    const btn = document.createElement("button");
-    btn.className = "alt-btn"; btn.textContent = alt;
-    btn.onclick = () => { document.getElementById("resposta-input").value=alt; window.responder(alt); };
-    grid.appendChild(btn);
-  });
-  document.getElementById("alts-area").style.display = "block";
-  document.getElementById("input-area").style.display = "none";
-  document.getElementById("btn-ajuda")?.remove();
-  mostrarFeedback("ok", "💡 Alternativas exibidas — pontuação reduzida 50%");
+window.pularQuestao = function() {
+  if (!st || st.processando || st.finalizado) return;
+  clearInterval(st.timerInterval);
+  st.processando = true;
+  const q = st.questaoAtual;
+  st.erros++; st.respondidas++;
+  aplicarPenalidade(q, false);
 };
+
+function encerrarSessao(motivo) {
+  if (!st || st.finalizado) return;
+  st.finalizado = true;
+  clearInterval(st.timerInterval);
+  clearInterval(st.globalInterval);
+  mostrarResultado(motivo);
+}
 
 window.encerrarTeste = function() {
   if (!confirm("Encerrar o teste agora?")) return;
-  mostrarResultado();
+  encerrarSessao('manual');
 };
 
-function mostrarResultado() {
-  jogo.finalizado = true;
-  const aprov = (jogo.acertos + jogo.erros) > 0
-    ? Math.round(jogo.acertos / (jogo.acertos + jogo.erros) * 100) : 0;
+function mostrarResultado(motivo) {
+  const nome = document.getElementById("topbar-title").textContent;
+  const saldo = st.saldo;
+  const acertos = st.acertos;
+  const erros = st.erros;
+  const respondidas = st.respondidas;
+  const acertosRapidos = st.acertosRapidos;
+  const aprov = (acertos + erros) > 0 ? Math.round(acertos / (acertos + erros) * 100) : 0;
+  const motivoTag = motivo === 'tempo'
+    ? '<div style="text-align:center;font-size:14px;font-weight:700;color:var(--red);margin-bottom:10px">⏱ Tempo esgotado!</div>'
+    : motivo === 'saldo'
+    ? '<div style="text-align:center;font-size:14px;font-weight:700;color:var(--red);margin-bottom:10px">💸 Saldo zerado!</div>'
+    : '';
+  st = null;
 
   document.getElementById("sel-wrap").style.display = "";
   document.getElementById("btn-iniciar").style.display = "";
@@ -521,24 +560,58 @@ function mostrarResultado() {
 
   document.getElementById("content").innerHTML = `
     <div class="resultado-card">
+      ${motivoTag}
       <div style="text-align:center;margin-bottom:24px">
-        <div style="font-size:32px;font-weight:800;color:var(--gold)">${jogo.pontuacao} pts</div>
-        <div style="font-size:14px;color:var(--text-muted);margin-top:4px">${jogo.nome}</div>
+        <div style="font-size:40px;font-weight:800;color:var(--gold)">${saldo} pts</div>
+        <div style="font-size:14px;color:var(--text-muted);margin-top:4px">${nome}</div>
         <div style="display:inline-block;margin-top:8px;padding:4px 12px;background:#FEF9C3;border-radius:20px;font-size:12px;font-weight:700;color:#854D0E">⚠️ Modo teste — não salvo</div>
       </div>
-      <div class="resultado-stat"><span class="resultado-stat-label">Questões respondidas</span><span class="resultado-stat-val">${jogo.respondidas}</span></div>
-      <div class="resultado-stat"><span class="resultado-stat-label">Acertos</span><span class="resultado-stat-val" style="color:var(--green)">${jogo.acertos}</span></div>
-      <div class="resultado-stat"><span class="resultado-stat-label">Erros</span><span class="resultado-stat-val" style="color:var(--red)">${jogo.erros}</span></div>
+      <div class="resultado-stat"><span class="resultado-stat-label">Questões respondidas</span><span class="resultado-stat-val">${respondidas}</span></div>
+      <div class="resultado-stat"><span class="resultado-stat-label">Acertos</span><span class="resultado-stat-val" style="color:var(--green)">${acertos}</span></div>
+      <div class="resultado-stat"><span class="resultado-stat-label">Erros</span><span class="resultado-stat-val" style="color:var(--red)">${erros}</span></div>
       <div class="resultado-stat"><span class="resultado-stat-label">Aproveitamento</span><span class="resultado-stat-val">${aprov}%</span></div>
+      <div class="resultado-stat"><span class="resultado-stat-label">Acertos rápidos ⚡</span><span class="resultado-stat-val" style="color:var(--blue)">${acertosRapidos}</span></div>
       <div style="margin-top:20px;display:flex;gap:10px">
         <button class="btn btn-blue" style="flex:1;justify-content:center" onclick="iniciarTeste()">
-          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          Testar de novo
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Testar de novo
         </button>
         <a href="/professor/atividades.html" class="btn btn-ghost">← Voltar</a>
       </div>
     </div>`;
 }
+
+// ── Iniciar ───────────────────────────────────────────────────
+window.iniciarTeste = async function() {
+  const nome = selAtiv.value;
+  if (!nome) { alert("Selecione uma atividade."); return; }
+
+  const btnIni = document.getElementById("btn-iniciar");
+  btnIni.disabled = true;
+  btnIni.textContent = "Carregando…";
+
+  const templates = await carregarPerguntas(nome);
+  if (!templates?.length) {
+    alert("Nenhuma questão encontrada para esta atividade.");
+    btnIni.disabled = false;
+    btnIni.innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Iniciar`;
+    return;
+  }
+
+  document.getElementById("sel-wrap").style.display = "none";
+  btnIni.style.display = "none";
+  document.getElementById("topbar-title").textContent = nome;
+  document.getElementById("topbar-sub").textContent = "Modo teste — resultados não são salvos";
+
+  st = novoEstado(templates);
+  st.questaoAtual = gerarQuestao();
+  renderQuestao();
+  iniciarTimer(st.questaoAtual.timer);
+  iniciarGlobalTimer();
+};
+
+window.addEventListener("beforeunload", () => {
+  if (st) { clearInterval(st.timerInterval); clearInterval(st.globalInterval); }
+});
 </script>
 </body>
 </html>

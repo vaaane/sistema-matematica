@@ -38,6 +38,13 @@
     /* diff de pontos */
     .podium-diff{font-size:10px;color:var(--text-muted);text-align:center;margin-bottom:10px;}
     @media(max-width:640px){.grid-2{grid-template-columns:1fr!important}}
+    @media(max-width:480px){
+      .pos-strip-wrap{flex-direction:column;gap:6px}
+      .pos-strip-sep{display:none}
+      .pos-strip-item{padding:6px 0}
+      .pos-rank-num{font-size:26px!important}
+      .rank-section-title{font-size:11px}
+    }
   </style>
 </head>
 <body>
@@ -59,8 +66,10 @@
 <script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
 import { LISTA_ATIVIDADES } from "/js/constants.js";
-import { getResultados, listenRankingAtividade } from "/js/db.js";
+import { getResultados, listenRankingAtividade, getAlunoPreferencia } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+import { saveRankPos, applyTopRankVisuals } from "/js/toprank.js";
+import { initTopNotif } from "/js/topnotif.js";
 
 const sess = requireAluno("/index.html");
 if (!sess) throw new Error();
@@ -68,31 +77,88 @@ renderSidebarAluno("sidebar", "ranking");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
 const { alunos, turma } = sess;
+
+// Sync tema do Firebase (não-bloqueante)
+getAlunoPreferencia(turma, alunos[0], 'tema').then(t => {
+  if (t && t !== localStorage.getItem('tema')) {
+    localStorage.setItem('tema', t);
+    document.documentElement.setAttribute('data-theme', t === 'escuro' ? 'dark' : '');
+  }
+});
 document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
 document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
 
 const todos = await getResultados();
 
-// ── Ranking por média ─────────────────────────────────────────
+// ── Ranking por total ─────────────────────────────────────────
 function buildRankingMedia(lista) {
   const melhor = {};
   for (const r of lista) {
     if (!r.concluido || !r.aluno) continue;
-    if (!melhor[r.aluno]) melhor[r.aluno] = { aluno: r.aluno, turma: r.turma || '?', porAtiv: {}, sessoes: 0 };
+    if (!melhor[r.aluno]) melhor[r.aluno] = {
+      aluno: r.aluno, turma: r.turma || '?', porAtiv: {}, sessoes: 0,
+      melhorSessao: 0, primeiroTs: Infinity
+    };
     const bruta = r.pontuacao_bruta || r.pontuacao || 0;
     const prev = melhor[r.aluno].porAtiv[r.atividade] || 0;
     if (bruta > prev) melhor[r.aluno].porAtiv[r.atividade] = bruta;
+    if (bruta > melhor[r.aluno].melhorSessao) melhor[r.aluno].melhorSessao = bruta;
+    const ts = r.criadoEm || 0;
+    if (ts && ts < melhor[r.aluno].primeiroTs) melhor[r.aluno].primeiroTs = ts;
     melhor[r.aluno].sessoes++;
   }
-  return Object.values(melhor).map(a => {
+  const result = Object.values(melhor).map(a => {
     const vals = Object.values(a.porAtiv);
-    const media = vals.length ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : 0;
-    return { aluno: a.aluno, turma: a.turma, media, atividades: vals.length, sessoes: a.sessoes };
-  }).sort((a, b) => b.media - a.media);
+    const total = vals.reduce((s, v) => s + v, 0);
+    const media = vals.length ? Math.round(total / vals.length) : 0;
+    return {
+      aluno: a.aluno, turma: a.turma, total, media, atividades: vals.length, sessoes: a.sessoes,
+      melhorSessao: a.melhorSessao, primeiroTs: a.primeiroTs === Infinity ? 0 : a.primeiroTs
+    };
+  }).sort((a, b) => {
+    if (b.total !== a.total) return b.total - a.total;
+    if (b.melhorSessao !== a.melhorSessao) return b.melhorSessao - a.melhorSessao;
+    return (a.primeiroTs || 0) - (b.primeiroTs || 0);
+  });
+  // Anotação de grupos em empate
+  let gi = 0;
+  while (gi < result.length) {
+    let gj = gi + 1;
+    while (gj < result.length && result[gj].total === result[gi].total) gj++;
+    if (gj - gi > 1) {
+      const g = result.slice(gi, gj);
+      const criterion = g.some(x => x.melhorSessao !== g[0].melhorSessao) ? 'melhor sessão' : 'data de jogo';
+      for (let k = gi; k < gj; k++) result[k].tieInfo = criterion;
+    }
+    gi = gj;
+  }
+  return result;
+}
+
+// ── Tiebreak para ranking por atividade ───────────────────────
+function applyAtivTiebreak(ranking) {
+  const sorted = [...ranking].sort((a, b) => {
+    const ap = a.pontuacao_bruta || a.pontuacao || 0;
+    const bp = b.pontuacao_bruta || b.pontuacao || 0;
+    if (bp !== ap) return bp - ap;
+    return (a.criadoEm || 0) - (b.criadoEm || 0);
+  });
+  let i = 0;
+  while (i < sorted.length) {
+    let j = i + 1;
+    const iP = sorted[i].pontuacao_bruta || sorted[i].pontuacao || 0;
+    while (j < sorted.length && (sorted[j].pontuacao_bruta || sorted[j].pontuacao || 0) === iP) j++;
+    if (j - i > 1) for (let k = i; k < j; k++) sorted[k].tieInfo = 'data de jogo';
+    i = j;
+  }
+  return sorted;
 }
 
 const rankAll   = buildRankingMedia(todos);
 const rankTurma = rankAll.filter(r => r.turma === turma);
+saveRankPos(alunos, rankAll);
+applyTopRankVisuals();
+initTopNotif({ mode: 'aluno' });
 
 // ── Posição ───────────────────────────────────────────────────
 function posicaoAluno(nome) {
@@ -124,35 +190,46 @@ function sparklesHTML() {
 }
 
 // ── Pódio ─────────────────────────────────────────────────────
-function renderPodium(top3, showTurma = true) {
+function renderPodium(top3, { showTurma = true, size = 'medium' } = {}) {
   if (!top3.length) return '';
   const [p1, p2, p3] = [top3[0], top3[1], top3[2]];
+  const STAND_HEIGHTS = { large: [130,88,60], medium: [90,62,44], small: [50,34,22] };
+  const hs = STAND_HEIGHTS[size] || STAND_HEIGHTS.medium;
   const STANDS = [
-    { h: 90,  bg: 'linear-gradient(135deg,#F59E0B,#D97706)', glow: 'glow-gold' },
-    { h: 62,  bg: 'linear-gradient(135deg,#9CA3AF,#6B7280)', glow: 'glow-silver' },
-    { h: 44,  bg: 'linear-gradient(135deg,#CD853F,#92400E)', glow: 'glow-bronze' },
+    { h: hs[0], bg: 'linear-gradient(135deg,#F59E0B,#D97706)', glow: 'glow-gold' },
+    { h: hs[1], bg: 'linear-gradient(135deg,#9CA3AF,#6B7280)', glow: 'glow-silver' },
+    { h: hs[2], bg: 'linear-gradient(135deg,#CD853F,#92400E)', glow: 'glow-bronze' },
   ];
-  const ptsArr = top3.map(p => p.pts || p.media || 0);
+  const ptsArr   = top3.map(p => p.pts !== undefined ? p.pts : (p.total || p.media || 0));
+  const maxW     = size === 'large' ? '140px' : size === 'small' ? '88px' : '120px';
+  const nameFs   = size === 'large' ? '13px'  : size === 'small' ? '10px' : '11px';
+  const trophyFs = size === 'large' ? '38px'  : size === 'small' ? '22px' : '30px';
+  const ptsFs    = size === 'large' ? '15px'  : size === 'small' ? '10px' : '12px';
+  const standFs  = size === 'large' ? '20px'  : size === 'small' ? '11px' : '16px';
+  const crownSz  = size === 'large' ? '24px'  : '15px';
+  const crownTp  = size === 'large' ? '-28px' : '-18px';
+  const wrapGap  = size === 'large' ? '12px'  : size === 'small' ? '5px' : '8px';
+  const wrapPad  = size === 'large' ? '28px 8px 0' : size === 'small' ? '6px 4px 0' : '16px 8px 0';
 
   const spot = (p, pos) => {
-    if (!p) return `<div class="podium-spot" style="max-width:120px"></div>`;
+    if (!p) return `<div class="podium-spot" style="max-width:${maxW}"></div>`;
     const st = STANDS[pos - 1];
     const trophy = ['🥇','🥈','🥉'][pos - 1];
     const isMe = alunos.includes(p.aluno);
-    const posMe = isMe ? alunos.indexOf(p.aluno) : -1;
     const youTag = isMe ? ' ★' : '';
     let decoration = '';
     if (isMe && pos === 1) decoration = confettiHTML();
     if (isMe && pos === 2) decoration = sparklesHTML();
-    const nameGlow = isMe && pos <= 2 ? `style="color:${pos===1?'#F59E0B':'#9CA3AF'};text-shadow:0 0 8px currentColor"` : '';
-    const ptsDisplay = p.pts !== undefined ? p.pts : p.media;
-    return `<div class="podium-spot ${st.glow}${isMe ? ' podium-you' : ''}" style="max-width:120px">
+    const glowStyle = isMe && pos <= 2 ? `color:${pos===1?'#F59E0B':'#9CA3AF'};text-shadow:0 0 8px currentColor;` : '';
+    const mainPts = p.pts !== undefined ? p.pts : (p.total || 0);
+    const subPts  = p.pts !== undefined ? null : (p.media != null ? `méd. ${p.media}pts` : null);
+    return `<div class="podium-spot ${st.glow}${isMe ? ' podium-you' : ''}" style="max-width:${maxW}">
       ${decoration}
-      <div class="podium-trophy">${pos === 1 ? '<span class="crown-anim" style="font-size:18px;position:absolute;top:-18px">👑</span>' : ''}${trophy}</div>
-      <div class="podium-name" ${nameGlow}>${p.aluno}${youTag}</div>
+      <div class="podium-trophy" style="font-size:${trophyFs}">${pos === 1 ? `<span class="crown-anim" style="font-size:${crownSz};position:absolute;top:${crownTp}">👑</span>` : ''}${trophy}</div>
+      <div class="podium-name" style="${glowStyle}font-size:${nameFs}">${p.aluno}${youTag}</div>
       ${showTurma && p.turma ? `<div class="podium-turma">Turma ${p.turma}</div>` : ''}
-      <div class="podium-pts" style="color:${['#F59E0B','#9CA3AF','#CD853F'][pos-1]}">${ptsDisplay}</div>
-      <div class="podium-stand" style="height:${st.h}px;background:${st.bg}">${pos}</div>
+      <div class="podium-pts" style="font-size:${ptsFs};color:${['#F59E0B','#9CA3AF','#CD853F'][pos-1]};text-align:center">${mainPts}${subPts ? `<div style="font-size:9px;font-weight:500;opacity:.75;margin-top:1px">${subPts}</div>` : ''}</div>
+      <div class="podium-stand" style="height:${st.h}px;background:${st.bg};font-size:${standFs}">${pos}</div>
     </div>`;
   };
 
@@ -166,7 +243,7 @@ function renderPodium(top3, showTurma = true) {
     return `<div style="display:flex;justify-content:center;gap:8px;margin-bottom:4px">${[rows[1]||'',rows[0],rows[2]||''].join('')}</div>`;
   };
 
-  return `<div class="podium-wrap">
+  return `<div class="podium-wrap" style="gap:${wrapGap};padding:${wrapPad}">
     ${spot(p2, 2)}
     ${spot(p1, 1)}
     ${spot(p3, 3)}
@@ -184,24 +261,17 @@ function abrirAtividade(nome) {
   document.querySelectorAll('.ativ-btn').forEach(b =>
     b.classList.toggle('active', b.dataset.ativ === nome));
   if (unsubAtiv) { unsubAtiv(); unsubAtiv = null; }
-  const elTurma  = document.getElementById('rank-ativ-turma');
-  const elGeral  = document.getElementById('rank-ativ-geral');
-  const elPodium = document.getElementById('ativ-podium');
+  const elTurma = document.getElementById('rank-ativ-turma');
+  const elGeral = document.getElementById('rank-ativ-geral');
   if (!elTurma || !elGeral) return;
   elTurma.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px">Aguardando…</div>';
   elGeral.innerHTML = '';
-  if (elPodium) elPodium.innerHTML = '';
   unsubAtiv = listenRankingAtividade(nome, ranking => {
-    const listaTurma = ranking.filter(r => r.turma === turma).slice(0, 10);
-    const listaGeral = ranking.slice(0, 10);
+    const sorted = applyAtivTiebreak(ranking);
+    const listaTurma = sorted.filter(r => r.turma === turma).slice(0, 10);
+    const listaGeral = sorted.slice(0, 10);
     renderAtivTurma(listaTurma, elTurma);
     renderAtivGeral(listaGeral, elGeral);
-    if (elPodium) {
-      const top3 = listaGeral.slice(0, 3).map(r => ({
-        aluno: r.aluno, pts: r.pontuacao_bruta || r.pontuacao || 0, turma: r.turma,
-      }));
-      elPodium.innerHTML = renderPodium(top3);
-    }
   });
 }
 
@@ -211,10 +281,12 @@ function rowAtiv(r, pos, dest, showTurma) {
   const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
   const colorClass = pos === 1 ? 'rank-gold' : pos === 2 ? 'rank-silver' : pos === 3 ? 'rank-bronze' : '';
   const atrasoTag = r.com_abatimento ? ' <span style="font-size:10px;color:#D97706">⏰</span>' : '';
+  const tieSub = r.tieInfo ? `<div class="rank-sub" style="color:#D97706;font-size:10px">${pos}º · desempate por ${r.tieInfo}</div>` : '';
   return `<div class="rank-row ${colorClass}${dest ? ' destaque' : ''}">
     <div class="rank-pos">${medal}</div>
     <div style="flex:1;min-width:0">
       <div class="rank-nome">${r.aluno}${dest ? ' ★' : ''}${atrasoTag}</div>
+      ${tieSub}
       ${showTurma ? `<div class="rank-sub">Turma ${r.turma}</div>` : ''}
     </div>
     <div class="rank-pts">${pts}</div>
@@ -226,24 +298,12 @@ function renderAtivTurma(lista, el) {
     el.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:10px 16px">Nenhum resultado da sua turma ainda.</p>';
     return;
   }
-  let lastPos = 1;
-  el.innerHTML = lista.map((r, i) => {
-    const pts = r.pontuacao_bruta || r.pontuacao || 0;
-    if (i === 0) lastPos = 1;
-    else if (pts !== (lista[i-1].pontuacao_bruta || lista[i-1].pontuacao || 0)) lastPos = i + 1;
-    return rowAtiv(r, lastPos, alunos.includes(r.aluno), false);
-  }).join('');
+  el.innerHTML = lista.map((r, i) => rowAtiv(r, i + 1, alunos.includes(r.aluno), false)).join('');
 }
 
 function renderAtivGeral(lista, el) {
   if (!lista.length) { el.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:10px 16px">Sem resultados ainda.</p>'; return; }
-  let lastPos = 1;
-  el.innerHTML = lista.map((r, i) => {
-    const pts = r.pontuacao_bruta || r.pontuacao || 0;
-    if (i === 0) lastPos = 1;
-    else if (pts !== (lista[i-1].pontuacao_bruta || lista[i-1].pontuacao || 0)) lastPos = i + 1;
-    return rowAtiv(r, lastPos, alunos.includes(r.aluno), true);
-  }).join('');
+  el.innerHTML = lista.map((r, i) => rowAtiv(r, i + 1, alunos.includes(r.aluno), true)).join('');
 }
 
 window.mudarTab = function(tab) {
@@ -259,21 +319,20 @@ window.mudarTab = function(tab) {
 // ── Construir linhas ──────────────────────────────────────────
 function buildRows(lista, showTurma) {
   if (!lista.length) return '<p style="font-size:13px;color:var(--text-muted);padding:16px">Nenhum resultado ainda.</p>';
-  let lastPos = 1;
   return lista.map((r, i) => {
-    if (i === 0) lastPos = 1;
-    else if (r.media !== lista[i-1].media) lastPos = i + 1;
-    const pos = lastPos;
+    const pos = i + 1;
     const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
     const dest = alunos.includes(r.aluno);
     const colorClass = pos === 1 ? 'rank-gold' : pos === 2 ? 'rank-silver' : pos === 3 ? 'rank-bronze' : '';
+    const tieSub = r.tieInfo ? `<div class="rank-sub" style="color:#D97706;font-size:10px">${pos}º · desempate por ${r.tieInfo}</div>` : '';
     return `<div class="rank-row ${colorClass}${dest ? ' destaque' : ''}">
       <div class="rank-pos">${medal}</div>
       <div style="flex:1;min-width:0">
         <div class="rank-nome">${r.aluno}${dest ? ' ★' : ''}</div>
+        ${tieSub}
         <div class="rank-sub">${showTurma ? `Turma ${r.turma} · ` : ''}${r.atividades} ativ. · ${r.sessoes} sess.</div>
       </div>
-      <div class="rank-pts">${r.media}<div class="rank-pts-label">média</div></div>
+      <div class="rank-pts">${r.total}<div class="rank-pts-label">total</div><div class="rank-pts-label">méd. ${r.media}</div></div>
     </div>`;
   }).join('');
 }
@@ -281,8 +340,8 @@ function buildRows(lista, showTurma) {
 const geralRows = buildRows(rankAll, true);
 const turmaRows = buildRows(rankTurma.slice(0, 10), false);
 
-const geralTop3 = rankAll.slice(0, 3).map(r => ({ aluno: r.aluno, media: r.media, turma: r.turma }));
-const turmaTop3 = rankTurma.slice(0, 3).map(r => ({ aluno: r.aluno, media: r.media, turma: r.turma }));
+const geralTop3 = rankAll.slice(0, 3).map(r => ({ aluno: r.aluno, total: r.total, media: r.media, turma: r.turma }));
+const turmaTop3 = rankTurma.slice(0, 3).map(r => ({ aluno: r.aluno, total: r.total, media: r.media, turma: r.turma }));
 
 const ativBtns = LISTA_ATIVIDADES.map(a =>
   `<button class="ativ-btn${a.nome === ativSel ? ' active' : ''}" data-ativ="${a.nome}">${a.nome}</button>`
@@ -290,24 +349,32 @@ const ativBtns = LISTA_ATIVIDADES.map(a =>
 
 // ── Faixa de posição ──────────────────────────────────────────
 const posStrip = alunos.map(nome => {
-  const p = posicaoAluno(nome);
-  return `<div style="display:flex;align-items:center;gap:12px;padding:8px 0">
-    <div style="font-size:13px;font-weight:700">${nome}</div>
-    <div style="display:flex;gap:16px">
+  const p  = posicaoAluno(nome);
+  const pg = p.posGeral, pt = p.posTurma;
+  const pgColor  = pg !== '—' && pg <= 3 ? ['#F59E0B','#9CA3AF','#CD853F'][pg-1] : 'var(--blue)';
+  const pgBadge  = pg !== '—' && pg <= 3 ? `<div style="font-size:13px;line-height:1;margin-bottom:3px">${['🥇','🥈','🥉'][pg-1]}</div>` : '';
+  const ptBadge  = pt === 1 ? `<div style="font-size:13px;line-height:1;margin-bottom:3px">👑</div>` : '';
+  return `<div class="pos-strip-item" style="display:flex;align-items:center;gap:16px;padding:8px 0">
+    <div style="font-size:13px;font-weight:700;min-width:0;flex:1">${nome}</div>
+    <div style="display:flex;gap:22px;flex-shrink:0">
       <div style="text-align:center">
-        <div style="font-size:20px;font-weight:800;color:var(--blue)">${p.posGeral === '—' ? '—' : '#'+p.posGeral}</div>
-        <div style="font-size:10px;color:var(--text-muted)">Geral</div>
+        ${pgBadge}
+        <div class="pos-rank-num" style="font-size:38px;font-weight:900;color:${pgColor};line-height:1">${pg === '—' ? '—' : '#'+pg}</div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-top:3px">Geral</div>
       </div>
       <div style="text-align:center">
-        <div style="font-size:20px;font-weight:800;color:var(--orange)">${p.posTurma === '—' ? '—' : '#'+p.posTurma}</div>
-        <div style="font-size:10px;color:var(--text-muted)">Turma</div>
+        ${ptBadge}
+        <div class="pos-rank-num" style="font-size:38px;font-weight:900;color:var(--orange);line-height:1">${pt === '—' ? '—' : '#'+pt}</div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-top:3px">Turma</div>
       </div>
     </div>
   </div>`;
-}).join('<div style="width:1px;background:var(--border);margin:0 8px"></div>');
+}).join('<div style="width:1px;background:var(--border);margin:0 12px;align-self:stretch" class="pos-strip-sep"></div>');
+
+const isMobile = window.innerWidth <= 480;
 
 document.getElementById('content').innerHTML = `
-  <div class="card" style="margin-bottom:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 16px">
+  <div class="card pos-strip-wrap" style="margin-bottom:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 16px">
     ${posStrip}
   </div>
 
@@ -318,18 +385,17 @@ document.getElementById('content').innerHTML = `
   </div>
 
   <div id="panel-geral">
-    ${renderPodium(geralTop3)}
+    ${renderPodium(geralTop3, { showTurma: true, size: isMobile ? 'medium' : 'large' })}
     <div class="card" style="padding:0">${geralRows}</div>
   </div>
 
   <div id="panel-turma" style="display:none">
-    ${renderPodium(turmaTop3, false)}
+    ${renderPodium(turmaTop3, { showTurma: false, size: 'small' })}
     <div class="card" style="padding:0">${turmaRows}</div>
   </div>
 
   <div id="panel-ativ" style="display:none">
     <div class="ativ-sel" id="ativ-sel">${ativBtns}</div>
-    <div id="ativ-podium"></div>
     <div class="grid-2" style="align-items:start">
       <div>
         <div class="rank-section-title">Sua Turma (Top 10) <span class="live-tag">ao vivo</span></div>

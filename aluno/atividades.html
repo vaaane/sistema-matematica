@@ -19,9 +19,10 @@
     .tent-info{font-size:11px;color:var(--text-muted);}
     .tent-info.warn{color:var(--red);}
     @media(max-width:560px){
-      .ativ-card{flex-wrap:wrap;gap:12px}
+      .ativ-card{flex-wrap:wrap;gap:10px;padding:14px}
       .ativ-card>div[style*="flex:1"]{width:100%}
-      .ativ-card>.btn,.ativ-card>.badge{margin-left:auto}
+      .ativ-card>.btn{width:100%;min-height:50px;font-size:15px;justify-content:center}
+      .ativ-card>.badge{margin-left:auto}
     }
   </style>
 </head>
@@ -44,15 +45,25 @@
 <script>(()=>{const t=localStorage.getItem("tema");if(t==="escuro")document.documentElement.setAttribute("data-theme","dark");})()</script>
 <script type="module">
 import { LISTA_ATIVIDADES, MAX_TENTATIVAS_ATIVIDADE } from "/js/constants.js";
-import { contarTentativas, getLiberadasParaTurma } from "/js/db.js";
+import { contarTentativas, getLiberadasParaTurma, getAlunoPreferencia } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+import { applyTopRankVisuals } from "/js/toprank.js";
 
 const sess = requireAluno();
 if (!sess) throw new Error();
 renderSidebarAluno("sidebar", "atividades");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+applyTopRankVisuals();
 
 const { alunos, turma } = sess;
+
+// Sync tema do Firebase (não-bloqueante)
+getAlunoPreferencia(turma, alunos[0], 'tema').then(t => {
+  if (t && t !== localStorage.getItem('tema')) {
+    localStorage.setItem('tema', t);
+    document.documentElement.setAttribute('data-theme', t === 'escuro' ? 'dark' : '');
+  }
+});
 document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
 document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
 
@@ -91,7 +102,7 @@ content.innerHTML = `
   ${liberadas.length ? `
   <div class="alert alert-info" style="margin-bottom:16px">
     <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-    ${liberadas.map(l=>`<strong>${l.atividade}</strong> (${l.percentual??100}% · ${l.tempo_maximo/60}min)`).join(' &nbsp;·&nbsp; ')} disponíve${liberadas.length>1?'is':'l'} agora.
+    ${liberadas.map(l=>`<strong>${l.atividade}</strong> (${Math.round(l.percentual??100)}% · ${l.tempo_maximo/60}min)`).join(' &nbsp;·&nbsp; ')} disponíve${liberadas.length>1?'is':'l'} agora.
   </div>` : `
   <div class="alert alert-warn" style="margin-bottom:16px">
     <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
@@ -102,7 +113,7 @@ content.innerHTML = `
     const isLib   = !!liberadasMap[ativ.nome];
     const lib     = liberadasMap[ativ.nome];
     const bloq    = bloqueios[ativ.nome];
-    const classes = `ativ-card${isLib?' liberada':''}${bloq.bloqueado?' bloqueada':''}`;
+    const classes = `ativ-card${isLib&&!isEncerrada?' liberada':''}${(bloq.bloqueado||isEncerrada)?' bloqueada':''}`;
 
     const modoEfetivo = lib?.modo || ativ.modo || 'classico';
     const url = modoEfetivo === 'competicao_plus'
@@ -111,9 +122,12 @@ content.innerHTML = `
       ? `/aluno/competicao.html?ativ=${encodeURIComponent(ativ.nome)}`
       : `/aluno/jogar.html?ativ=${encodeURIComponent(ativ.nome)}`;
 
+    const isEncerrada = lib?.status === 'encerrada';
     let botao = '';
     if (!isLib) {
       botao = `<span class="badge badge-orange">Não liberada</span>`;
+    } else if (isEncerrada) {
+      botao = `<span class="badge badge-red">⛔ Encerrada</span>`;
     } else if (!bloq.competicao && bloq.bloqueado) {
       botao = `<span class="badge badge-red">Bloqueada</span>`;
     } else {
@@ -122,7 +136,9 @@ content.innerHTML = `
       </a>`;
     }
 
-    const tentInfos = bloq.competicao
+    const tentInfos = isEncerrada
+      ? `<span class="tent-info warn">Atividade encerrada pela professora</span>`
+      : bloq.competicao
       ? `<span class="tent-info" style="color:var(--blue)">Jogue quantas vezes quiser · ao vivo</span>`
       : alunos.map(al => {
           const usado = bloq.tentativas[al] || 0;
@@ -138,7 +154,7 @@ content.innerHTML = `
         <div class="ativ-nome">${ativ.nome}</div>
         <div class="ativ-info-row" style="margin-top:5px">
           ${tentInfos}
-          ${isLib ? `<span class="badge badge-blue">Liberada · ${lib.percentual??100}%</span>` : ''}
+          ${isLib ? `<span class="badge badge-blue">Liberada · ${Math.round(lib.percentual??100)}%</span>` : ''}
         </div>
       </div>
       ${botao}

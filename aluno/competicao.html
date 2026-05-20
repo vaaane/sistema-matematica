@@ -95,7 +95,7 @@
 <script>(()=>{const t=localStorage.getItem("tema");if(t==="escuro")document.documentElement.setAttribute("data-theme","dark");})()</script>
 <script type="module">
 import { respostasEquivalentes, dataAgora } from "/js/constants.js";
-import { addResultado, updateResultado, getLiberadasParaTurma, listenRankingAtividade, getAtividadeStatus } from "/js/db.js";
+import { addResultado, updateResultado, getLiberadasParaTurma, listenRankingAtividade, getAtividadeStatus, addConquista, hasConquista } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 
 // ── Bloquear cópia de texto ──────────────────────────────────
@@ -214,6 +214,7 @@ const st = {
   },
   poolIdx: { 1: 0, 2: 0, 3: 0 },
   pontuacao: 0, acertos: 0, erros: 0, respondidas: 0,
+  comboAtual: 0, comboMax: 0,
   vidas: 3, finalizado: false, processando: false,
   inicioTs: Date.now() / 1000,
   resultadoIds: {},
@@ -408,6 +409,8 @@ function processar(resposta, mcIdx) {
   if (correto) {
     st.pontuacao += q.pontos;
     st.acertos++;
+    st.comboAtual++;
+    if (st.comboAtual > st.comboMax) st.comboMax = st.comboAtual;
     beep(1000, 150);
     mostrarFeedback("ok", `✅ Correto! +${q.pontos} pt${q.pontos > 1 ? 's' : ''}`);
     if (mcIdx !== null) {
@@ -418,6 +421,7 @@ function processar(resposta, mcIdx) {
   } else {
     st.vidas--;
     st.erros++;
+    st.comboAtual = 0;
     beep(400, 300);
     const respostaStr = q.resposta + (q.unidade ? " " + q.unidade : "");
     mostrarFeedback("err", `❌ Resposta: ${respostaStr} · −1 vida`);
@@ -449,6 +453,7 @@ function tempoEsgotado() {
   const q = st.questaoAtual;
   st.vidas--;
   st.erros++;
+  st.comboAtual = 0;
   st.respondidas++;
   beep(300, 400);
   const respostaStr = q.resposta + (q.unidade ? " " + q.unidade : "");
@@ -496,7 +501,7 @@ async function encerrarJogo(voluntario) {
   const dados = {
     pontuacao_bruta: st.pontuacao, pontuacao: pontuacaoAplicada,
     percentual_nota: percentualNota, com_abatimento: percentualNota < 100,
-    acertos: st.acertos, erros: st.erros,
+    acertos: st.acertos, erros: st.erros, combo_max: st.comboMax,
     respondidas: st.respondidas, vidas_restantes: st.vidas,
     tempo: `${tempo}s`, concluido: true, modo: "competicao",
     encerrado_voluntariamente: voluntario, data: dataAgora(),
@@ -505,6 +510,13 @@ async function encerrarJogo(voluntario) {
   try {
     for (const al of alunos) {
       await updateResultado(st.resultadoIds[al], { ...dados, aluno: al, turma, atividade: liberada.atividade });
+    }
+    // Conquistas
+    for (const al of alunos) {
+      if (st.erros === 0 && st.acertos > 0 && !await hasConquista(al, 'sem_penalidades', liberada.atividade))
+        await addConquista({ aluno: al, turma, atividade: liberada.atividade, tipo: 'sem_penalidades', data: dataAgora() });
+      if (st.comboMax >= 5 && !await hasConquista(al, 'combo_maximo', liberada.atividade))
+        await addConquista({ aluno: al, turma, atividade: liberada.atividade, tipo: 'combo_maximo', combo: st.comboMax, data: dataAgora() });
     }
   } catch(e) { console.error("encerrarJogo:", e); }
 

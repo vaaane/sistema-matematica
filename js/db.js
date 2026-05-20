@@ -138,11 +138,27 @@ export async function deleteLiberada(id) {
 }
 
 export async function getLiberadasParaTurma(turma) {
-  const snap = await get(ref(db, "liberacoes_ativas"));
-  if (!snap.exists()) return [];
+  const [snapLib, snapStatus] = await Promise.all([
+    get(ref(db, "liberacoes_ativas")),
+    get(ref(db, "config/atividade_status")),
+  ]);
+  if (!snapLib.exists()) return [];
+  const statusMap = {};
+  if (snapStatus.exists()) {
+    snapStatus.forEach(child => {
+      const v = child.val();
+      if (v.turma && v.atividade) statusMap[`${v.turma}|${v.atividade}`] = v;
+    });
+  }
   const result = [];
-  snap.forEach(child => {
-    if (child.val().turma === turma) result.push({ id: child.key, ...child.val() });
+  snapLib.forEach(child => {
+    const v = child.val();
+    if (v.turma === turma) {
+      const st = statusMap[`${turma}|${v.atividade}`];
+      const percentual = st?.percentual ?? v.percentual ?? 100;
+      const status = st?.status ?? 'ativa';
+      result.push({ id: child.key, ...v, percentual, status });
+    }
   });
   return result;
 }
@@ -165,6 +181,10 @@ export async function updateLiberacaoHistorico(id, data) {
   await update(ref(db, `liberacoes_historico/${id}`), data);
 }
 
+export async function addStatusAlteracao(histId, data) {
+  await push(ref(db, `liberacoes_historico/${histId}/status_alteracoes`), data);
+}
+
 // ── Ranking ao vivo (competition) ───────────────────────────
 export function listenRankingAtividade(atividade, callback) {
   const q = query(ref(db, "resultados"), orderByChild("atividade"), equalTo(atividade));
@@ -172,14 +192,22 @@ export function listenRankingAtividade(atividade, callback) {
     const all = [];
     snap.forEach(child => {
       const v = child.val();
-      if (v.pontuacao > 0) all.push({ id: child.key, ...v });
+      const pts = v.pontuacao_bruta || v.pontuacao || 0;
+      if (pts > 0) all.push({ id: child.key, ...v });
     });
     const best = {};
     for (const r of all) {
       const k = r.aluno;
-      if (!best[k] || (r.pontuacao || 0) > (best[k].pontuacao || 0)) best[k] = r;
+      const rPts = r.pontuacao_bruta || r.pontuacao || 0;
+      const bPts = best[k] ? (best[k].pontuacao_bruta || best[k].pontuacao || 0) : 0;
+      if (rPts > bPts) best[k] = r;
     }
-    callback(Object.values(best).sort((a, b) => (b.pontuacao || 0) - (a.pontuacao || 0)).slice(0, 15));
+    callback(Object.values(best).sort((a, b) => {
+      const ap = a.pontuacao_bruta || a.pontuacao || 0;
+      const bp = b.pontuacao_bruta || b.pontuacao || 0;
+      if (bp !== ap) return bp - ap;
+      return (a.criadoEm || 0) - (b.criadoEm || 0);
+    }).slice(0, 15));
   });
 }
 
@@ -195,6 +223,19 @@ export async function getBestResultado(aluno, turma, atividade) {
     }
   });
   return best;
+}
+
+// ── Preferências de aluno ────────────────────────────────────
+function alunoPrefsKey(turma, nome) {
+  return btoa(unescape(encodeURIComponent(turma + '|' + nome)))
+    .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+}
+export async function saveAlunoPreferencia(turma, nome, chave, valor) {
+  await set(ref(db, `aluno_prefs/${alunoPrefsKey(turma, nome)}/${chave}`), valor);
+}
+export async function getAlunoPreferencia(turma, nome, chave) {
+  const snap = await get(ref(db, `aluno_prefs/${alunoPrefsKey(turma, nome)}/${chave}`));
+  return snap.exists() ? snap.val() : null;
 }
 
 // ── Limpeza ─────────────────────────────────────────────────
@@ -225,7 +266,7 @@ export function listenRankingProfessor(atividade, callback) {
       const k = r.aluno;
       if (!players[k]) {
         players[k] = { aluno: r.aluno, turma: r.turma, tentativas: 0, ativo: false,
-          melhorPts: 0, comboMax: 0, acertosDificeis: 0, acertosRapidos: 0 };
+          melhorPts: 0, comboMax: 0, acertosDificeis: 0, acertosRapidos: 0, primeiroTs: Infinity };
       }
       players[k].tentativas++;
       if (!r.concluido) players[k].ativo = true;
@@ -235,9 +276,73 @@ export function listenRankingProfessor(atividade, callback) {
       }
       if ((r.combo_max || 0) > players[k].comboMax) players[k].comboMax = r.combo_max || 0;
       if ((r.acertos_dificeis || 0) > players[k].acertosDificeis) players[k].acertosDificeis = r.acertos_dificeis || 0;
+      const ts = r.criadoEm || 0;
+      if (ts && ts < players[k].primeiroTs) players[k].primeiroTs = ts;
     }
-    callback(Object.values(players).sort((a, b) => b.melhorPts - a.melhorPts));
+    const sorted = Object.values(players).map(p => ({ ...p, primeiroTs: p.primeiroTs === Infinity ? 0 : p.primeiroTs }));
+    // Tiebreak: mesmo melhorPts → quem jogou primeiro
+    sorted.sort((a, b) => {
+      if (b.melhorPts !== a.melhorPts) return b.melhorPts - a.melhorPts;
+      return (a.primeiroTs || 0) - (b.primeiroTs || 0);
+    });
+    let ti = 0;
+    while (ti < sorted.length) {
+      let tj = ti + 1;
+      while (tj < sorted.length && sorted[tj].melhorPts === sorted[ti].melhorPts) tj++;
+      if (tj - ti > 1) for (let k = ti; k < tj; k++) sorted[k].tieInfo = 'data de jogo';
+      ti = tj;
+    }
+    callback(sorted);
   });
+}
+
+// ── Status de atividade (por turma) ─────────────────────────
+function atividadeStatusKey(turma, atividade) {
+  return `${turma}___${atividade.replace(/[^a-zA-Z0-9]/g, '_')}`;
+}
+
+export async function getAtividadeStatus(turma, atividade) {
+  const snap = await get(ref(db, `config/atividade_status/${atividadeStatusKey(turma, atividade)}`));
+  return snap.exists() ? snap.val() : { status: 'ativa', percentual: 100 };
+}
+
+export async function setAtividadeStatus(turma, atividade, status, percentualOverride) {
+  const percentual = percentualOverride ?? { ativa: 100, '75': 75, '50': 50, encerrada: 0 }[status] ?? 100;
+  await set(ref(db, `config/atividade_status/${atividadeStatusKey(turma, atividade)}`),
+    { turma, atividade, status, percentual, updatedAt: serverTimestamp() });
+}
+
+export async function updateLiberada(id, data) {
+  await update(ref(db, `liberacoes_ativas/${id}`), data);
+}
+
+export async function updateLiberadasPercentual(turma, atividade, percentual) {
+  const snap = await get(ref(db, "liberacoes_ativas"));
+  if (!snap.exists()) return;
+  const tasks = [];
+  snap.forEach(child => {
+    const v = child.val();
+    if (v.turma === turma && v.atividade === atividade)
+      tasks.push(update(ref(db, `liberacoes_ativas/${child.key}`), { percentual }));
+  });
+  await Promise.all(tasks);
+}
+
+export async function marcarPrecisaRevisao(atividade, enunciado) {
+  const k = btoa(unescape(encodeURIComponent(atividade + '|' + enunciado)))
+    .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_').slice(0, 80);
+  await set(ref(db, `questoes_revisao/${k}`), { atividade, enunciado, marcadoEm: serverTimestamp() });
+}
+
+export async function getAllAtividadeStatus() {
+  const snap = await get(ref(db, 'config/atividade_status'));
+  if (!snap.exists()) return {};
+  const result = {};
+  snap.forEach(child => {
+    const v = child.val();
+    if (v.turma && v.atividade) result[`${v.turma}|${v.atividade}`] = v;
+  });
+  return result;
 }
 
 // ── Configuração ────────────────────────────────────────────

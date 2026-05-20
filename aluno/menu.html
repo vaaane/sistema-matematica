@@ -25,6 +25,7 @@
     .ativ-chip{display:flex;align-items:center;gap:7px;padding:9px 12px;border-radius:9px;border:1.5px solid var(--border);background:var(--card);font-size:12px;font-weight:500;color:var(--text-muted);}
     .ativ-chip svg{width:16px;height:16px;fill:currentColor;flex-shrink:0;}
     .ativ-chip.liberada{border-color:#BAE6FD;background:var(--blue-pale);color:var(--blue-dark);}
+    .ativ-chip.encerrada{border-color:var(--border);background:var(--bg);color:var(--text-muted);opacity:.6;text-decoration:line-through;}
     /* Top 3 cards */
     .top3-card{border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden;}
     .top3-card:last-child{margin-bottom:0;}
@@ -35,10 +36,14 @@
     /* Banner */
     .banner-top3{border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px;color:#fff;}
     @media(max-width:480px){
-      .ativ-liberada{flex-wrap:wrap;gap:12px}
+      .ativ-liberada{flex-wrap:wrap;gap:10px;padding:14px 14px}
       .ativ-liberada .ativ-info{width:100%}
-      .ativ-liberada>.btn,.ativ-liberada>span{margin-left:auto}
+      .ativ-liberada .btn{width:100%;min-height:52px;font-size:15px;justify-content:center}
+      .ativ-liberada>span{margin-left:auto;font-size:12px}
       .mini-stats{grid-template-columns:repeat(3,1fr)}
+      .mini-stat{padding:10px 4px}
+      .mini-stat-value{font-size:17px}
+      .top3-card{padding:11px 13px;gap:8px}
     }
   </style>
 </head>
@@ -64,8 +69,10 @@
 <script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
 import { LISTA_ATIVIDADES } from "/js/constants.js";
-import { getResultados, getLiberadasParaTurma } from "/js/db.js";
+import { getResultados, getLiberadasParaTurma, getAlunoPreferencia } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+import { saveRankPos, applyTopRankVisuals } from "/js/toprank.js";
+import { initTopNotif } from "/js/topnotif.js";
 
 const sess = requireAluno("/index.html");
 if (!sess) throw new Error("não autenticado");
@@ -74,6 +81,14 @@ renderSidebarAluno("sidebar", "inicio");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
 const { alunos, turma } = sess;
+
+// Sync tema do Firebase (não-bloqueante)
+getAlunoPreferencia(turma, alunos[0], 'tema').then(t => {
+  if (t && t !== localStorage.getItem('tema')) {
+    localStorage.setItem('tema', t);
+    document.documentElement.setAttribute('data-theme', t === 'escuro' ? 'dark' : '');
+  }
+});
 document.getElementById("topbar-title").textContent = `Olá, ${alunos[0]}${alunos.length>1?' e '+alunos[1]:''}! 👋`;
 document.getElementById("topbar-sub").textContent   = `Turma ${turma} · Bom trabalho hoje!`;
 document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
@@ -92,13 +107,17 @@ function buildRankingMedia(lista) {
   }
   return Object.values(melhor).map(a => {
     const vals = Object.values(a.porAtiv);
-    const media = vals.length ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : 0;
-    return { aluno: a.aluno, turma: a.turma, media };
-  }).sort((a, b) => b.media - a.media);
+    const total = vals.reduce((s, v) => s + v, 0);
+    const media = vals.length ? Math.round(total / vals.length) : 0;
+    return { aluno: a.aluno, turma: a.turma, total, media };
+  }).sort((a, b) => b.total - a.total);
 }
 const rankAll   = buildRankingMedia(todos);
 const rankTurma = rankAll.filter(r => r.turma === turma);
 const top3Geral = rankAll.slice(0, 3);
+saveRankPos(alunos, rankAll);
+applyTopRankVisuals();
+initTopNotif({ mode: 'aluno' });
 
 // ── Mini sparkline SVG ────────────────────────────────────────
 function miniSparkline(nome, atividade) {
@@ -144,7 +163,17 @@ function resumoAluno(nome) {
 }
 
 function ultimasAtividades(nome) {
-  return todos.filter(r => r.aluno === nome && r.concluido).slice(-4).reverse();
+  const all = todos.filter(r => r.aluno === nome && r.concluido);
+  const bestByAtiv = {};
+  for (const r of all) {
+    const pts = r.pontuacao_bruta || r.pontuacao || 0;
+    const prev = bestByAtiv[r.atividade];
+    if (!prev || pts > (prev.pontuacao_bruta || prev.pontuacao || 0))
+      bestByAtiv[r.atividade] = r;
+  }
+  return Object.values(bestByAtiv)
+    .sort((a, b) => (b.pontuacao_bruta || b.pontuacao || 0) - (a.pontuacao_bruta || a.pontuacao || 0))
+    .slice(0, 4);
 }
 
 // ── Banner (top 3 geral ou líder de turma) ───────────────────
@@ -152,17 +181,33 @@ const posGerais  = alunos.map(n => rankAll.findIndex(r => r.aluno === n) + 1).fi
 const posTurmas  = alunos.map(n => rankTurma.findIndex(r => r.aluno === n) + 1).filter(p => p > 0);
 const posGeralMin  = posGerais.length ? Math.min(...posGerais) : 99;
 const posTurmaMin  = posTurmas.length ? Math.min(...posTurmas) : 99;
+
+function bannerParticles() {
+  return ['rgba(255,255,255,.55)','rgba(255,220,70,.55)','rgba(255,255,255,.38)','rgba(255,195,30,.48)','rgba(255,255,255,.45)'].map((c,i) => {
+    const l=7+i*17, t=8+i*13, s=3+(i%3), d=(2.2+i*.55).toFixed(1), dl=(i*.62).toFixed(1);
+    return `<div class="banner-particle" style="background:${c};left:${l}%;top:${t}%;width:${s}px;height:${s}px;--bp-dur:${d}s;--bp-delay:${dl}s"></div>`;
+  }).join('');
+}
+
+const BANNER_BG = ['linear-gradient(135deg,#F59E0B,#D97706)','linear-gradient(135deg,#9CA3AF,#6B7280)','linear-gradient(135deg,#CD853F,#92400E)'];
 let bannerHtml = '';
 if (posGeralMin <= 3) {
   const icone = ['🥇','🥈','🥉'][posGeralMin - 1];
-  bannerHtml = `<div class="banner-top3" style="background:linear-gradient(135deg,#F59E0B,#D97706)">
-    <span style="font-size:24px">${icone}</span>
-    Você está em ${posGeralMin}º lugar geral! Continue assim!
+  bannerHtml = `<div class="banner-top3" style="background:${BANNER_BG[posGeralMin-1]};position:relative;overflow:hidden">
+    ${bannerParticles()}
+    <span class="crown-anim" style="font-size:30px;flex-shrink:0">${icone}</span>
+    <div>
+      <div style="font-size:15px;font-weight:800">Você está em ${posGeralMin}º lugar geral!</div>
+      <div style="font-size:12px;opacity:.85;margin-top:2px;font-weight:400">Continue assim! 🔥</div>
+    </div>
   </div>`;
 } else if (posTurmaMin === 1) {
   bannerHtml = `<div class="banner-top3" style="background:linear-gradient(135deg,#3B82F6,#1D4ED8)">
-    <span style="font-size:24px">🏫</span>
-    Você lidera sua turma!
+    <span style="font-size:28px;flex-shrink:0">🏫</span>
+    <div>
+      <div style="font-size:15px;font-weight:800">Você lidera sua turma!</div>
+      <div style="font-size:12px;opacity:.85;margin-top:2px;font-weight:400">Ótimo trabalho! 💪</div>
+    </div>
   </div>`;
 }
 
@@ -176,39 +221,43 @@ const top3Html = top3Geral.length ? top3Geral.map((p, i) => {
   const isMe = alunos.includes(p.aluno);
   const glowClass = ['glow-gold','glow-silver','glow-bronze'][i];
   const crown = i === 0 ? `<span class="crown-anim" style="font-size:22px;position:absolute;top:-8px;right:12px">👑</span>` : '';
-  return `<div class="top3-card ${glowClass}" style="background:${TOP3_BG[i]}">
-    ${crown}
+  const sparkles = i === 0 ? `<div style="position:absolute;top:5px;right:40px;display:flex;gap:3px;pointer-events:none">
+    ${['✨','⭐','✨'].map((s,j)=>`<span class="sparkle-p" style="position:static;font-size:9px;--sd:${1.4+j*.4}s;--delay:${j*.3}s">${s}</span>`).join('')}
+  </div>` : '';
+  return `<div class="top3-card ${glowClass}" style="background:${TOP3_BG[i]};position:relative">
+    ${crown}${sparkles}
     <div style="font-size:28px;flex-shrink:0">${['🥇','🥈','🥉'][i]}</div>
     <div style="flex:1;min-width:0">
       <div class="top3-nome">${p.aluno}${isMe ? ' ★' : ''}</div>
       <div class="top3-turma">Turma ${p.turma}</div>
     </div>
-    <div>
-      <div class="top3-pts">${p.media}</div>
-      <div class="top3-pts-label">média</div>
+    <div style="text-align:right;flex-shrink:0;white-space:nowrap">
+      <div class="top3-pts">${p.total}<span style="font-size:12px;font-weight:600;margin-left:2px">pts</span></div>
+      <div class="top3-pts-label" style="margin-top:4px">méd. ${p.media}pts</div>
     </div>
   </div>`;
 }).join('')
 : '<p style="font-size:13px;color:var(--text-muted);padding:6px 0">Nenhum resultado ainda.</p>';
 
 // ── Render ────────────────────────────────────────────────────
+const liberadasAtivas = liberadas.filter(l => l.status !== 'encerrada');
 const conteudo = document.getElementById("content");
 conteudo.innerHTML = `
 ${bannerHtml}
 <div class="grid-2">
   <div>
-    <div class="card${liberadas.length ? ' card-pulse' : ''}">
+    <div class="card${liberadasAtivas.length ? ' card-pulse' : ''}">
       <div class="section-label" style="color:#F59E0B">
         <svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
         Atividade Liberada
       </div>
-      ${liberadas.length ? liberadas.map(lib => {
+      ${liberadasAtivas.length ? liberadasAtivas.map(lib => {
         const esgotado = tentativasEsgotadas(lib.atividade);
         return `<div class="ativ-liberada">
           <div class="ativ-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
           <div class="ativ-info">
             <h3>${lib.atividade}</h3>
-            <p>${lib.percentual??100}% da nota · ${lib.tempo_maximo/60} min</p>
+            <p>${Math.round(lib.percentual??100)}% da nota · ${lib.tempo_maximo ? Math.round(lib.tempo_maximo/60) : 7} min</p>
           </div>
           ${(() => {
             const ativDef = LISTA_ATIVIDADES.find(a => a.nome === lib.atividade);
@@ -248,7 +297,7 @@ ${bannerHtml}
             <div class="hist-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
             <div style="flex:1;min-width:0;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.atividade}</div>
             ${miniSparkline(a, r.atividade)}
-            <div style="font-size:13px;font-weight:700;color:var(--gold);flex-shrink:0">${r.pontuacao} pts</div>
+            <div style="font-size:13px;font-weight:700;color:var(--gold);flex-shrink:0">${r.pontuacao_bruta||r.pontuacao||0} pts</div>
           </div>`).join('') : '<p style="font-size:13px;color:var(--text-muted);padding:6px 0 10px">Nenhuma atividade realizada ainda.</p>'}`;
       }).join('')}
     </div>
@@ -262,15 +311,20 @@ ${bannerHtml}
       </div>
       ${alunos.map(a => {
         const r = resumoAluno(a);
-        return `<div class="resumo-wrap">
+        const geralColor = r.posGeral === 1 ? '#F59E0B' : r.posGeral === 2 ? '#9CA3AF' : r.posGeral === 3 ? '#CD853F' : 'var(--blue)';
+        const turmaColor = r.posTurma === 1 ? '#F59E0B' : 'var(--orange)';
+        const wrapStyle  = r.posGeral === 1 ? 'border-color:rgba(245,158,11,.4);background:linear-gradient(135deg,rgba(245,158,11,.07),transparent)' : '';
+        const geralCrown = r.posGeral === 1 ? '<div style="font-size:10px;line-height:1;margin-bottom:1px">👑</div>' : '';
+        const turmaCrown = r.posTurma === 1 ? '<div style="font-size:10px;line-height:1;margin-bottom:1px">👑</div>' : '';
+        return `<div class="resumo-wrap" style="${wrapStyle}">
           <div class="resumo-header">
             <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
             <span>${a}</span>
           </div>
           <div class="mini-stats">
             <div class="mini-stat"><div class="mini-stat-value" style="color:var(--gold);font-size:22px">${r.totalPts}</div><div class="mini-stat-label">Total pts</div></div>
-            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--orange);font-size:22px">${r.posTurma === '—' ? '—' : '#'+r.posTurma}</div><div class="mini-stat-label">Na Turma</div></div>
-            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue);font-size:22px">${r.posGeral === '—' ? '—' : '#'+r.posGeral}</div><div class="mini-stat-label">Geral</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:${turmaColor};font-size:22px">${turmaCrown}${r.posTurma === '—' ? '—' : '#'+r.posTurma}</div><div class="mini-stat-label">Na Turma</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:${geralColor};font-size:22px">${geralCrown}${r.posGeral === '—' ? '—' : '#'+r.posGeral}</div><div class="mini-stat-label">Geral</div></div>
             <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green);font-size:22px">${r.sessoes}</div><div class="mini-stat-label">Sessões</div></div>
             <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue);font-size:22px">${r.acertos}</div><div class="mini-stat-label">✅ Acertos</div></div>
             <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green);font-size:22px">${r.taxa}%</div><div class="mini-stat-label">📊 Taxa</div></div>
@@ -295,10 +349,13 @@ ${bannerHtml}
       <div style="display:flex;flex-direction:column;gap:8px">
         ${LISTA_ATIVIDADES.map(a => {
           const lib = liberadas.find(l => l.atividade === a.nome);
-          return `<div class="ativ-chip${lib?' liberada':''}">
+          const encerrada = lib?.status === 'encerrada';
+          const chipClass = encerrada ? ' encerrada' : lib ? ' liberada' : '';
+          return `<div class="ativ-chip${chipClass}">
             <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/></svg>
             ${a.nome}
-            ${lib?`<span class="badge badge-blue" style="margin-left:auto">${lib.percentual??100}%</span>`:''}
+            ${encerrada ? `<span class="badge badge-red" style="margin-left:auto">Encerrada</span>`
+              : lib ? `<span class="badge badge-blue" style="margin-left:auto">${Math.round(lib.percentual??100)}%</span>` : ''}
           </div>`;
         }).join('')}
       </div>

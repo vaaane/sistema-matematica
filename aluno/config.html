@@ -38,9 +38,12 @@
             Aparência
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-            <div>
-              <div style="font-size:14px;font-weight:600">Modo escuro</div>
-              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Reduz o brilho da tela</div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span id="tema-icon" style="font-size:24px;line-height:1;flex-shrink:0">☀️</span>
+              <div>
+                <div style="font-size:14px;font-weight:600">Modo escuro</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Reduz o brilho da tela</div>
+              </div>
             </div>
             <label class="toggle-switch">
               <input type="checkbox" id="chk-tema" onchange="alternarTema(this.checked)"/>
@@ -104,23 +107,47 @@
 <script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
 import { requireAluno, renderSidebarAluno, clearSession, hashSenha } from "/js/auth.js";
-import { getSenhaAluno, setSenhaAluno } from "/js/db.js";
+import { getSenhaAluno, setSenhaAluno, saveAlunoPreferencia, getAlunoPreferencia } from "/js/db.js";
+import { applyTopRankVisuals } from "/js/toprank.js";
 
 const sess = requireAluno("/index.html");
 if (!sess) throw new Error("não autenticado");
 renderSidebarAluno("sidebar", "config");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+applyTopRankVisuals();
+
+const { alunos, turma } = sess;
 
 // ── Tema ──────────────────────────────────────────
 const chkTema = document.getElementById('chk-tema');
-chkTema.checked = localStorage.getItem('tema') === 'escuro';
+const temaIcon = document.getElementById('tema-icon');
+
+function atualizarIconeTema(escuro) {
+  if (temaIcon) temaIcon.textContent = escuro ? '🌙' : '☀️';
+}
+
+const temaLocal = localStorage.getItem('tema') === 'escuro';
+chkTema.checked = temaLocal;
+atualizarIconeTema(temaLocal);
+
+// Sincroniza com Firebase (não-bloqueante)
+getAlunoPreferencia(turma, alunos[0], 'tema').then(temaSalvo => {
+  if (temaSalvo && temaSalvo !== localStorage.getItem('tema')) {
+    const escuro = temaSalvo === 'escuro';
+    localStorage.setItem('tema', temaSalvo);
+    document.documentElement.setAttribute('data-theme', escuro ? 'dark' : '');
+    chkTema.checked = escuro;
+    atualizarIconeTema(escuro);
+  }
+});
+
 window.alternarTema = function(ativo) {
   const tema = ativo ? 'escuro' : 'claro';
   localStorage.setItem('tema', tema);
   document.documentElement.setAttribute('data-theme', ativo ? 'dark' : '');
+  atualizarIconeTema(ativo);
+  for (const nome of alunos) saveAlunoPreferencia(turma, nome, 'tema', tema).catch(() => {});
 };
-
-const { alunos, turma } = sess;
 
 // Seletor de aluno (quando 2 estão logados)
 const selWrap = document.getElementById("sel-aluno-wrap");

@@ -15,6 +15,8 @@
     .q-rev{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);margin-top:6px;font-size:12px;}
     .q-rev.ok{background:#F0FDF4;border-color:#BBF7D0;}
     .q-rev.err{background:#FEF2F2;border-color:#FECACA;}
+    .pill{padding:5px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .15s;}
+    .pill.on{border-color:var(--blue);background:var(--blue);color:#fff;}
   </style>
 </head>
 <body>
@@ -27,17 +29,18 @@
         <div class="topbar-sub" id="topbar-sub">Todos os resultados</div>
       </div>
       <div class="topbar-right" style="display:flex;gap:10px">
-        <div class="select-wrap" style="width:150px">
-          <select class="input" id="sel-turma" onchange="filtrar()" style="padding:8px 12px;font-size:13px">
-            <option value="Todas">Todas as turmas</option>
-          </select>
-        </div>
+        <select id="sel-turma" style="display:none">
+          <option value="Todas">Todas as turmas</option>
+        </select>
         <div class="select-wrap" style="width:200px">
           <select class="input" id="sel-ativ" onchange="filtrar()" style="padding:8px 12px;font-size:13px">
             <option value="Todas">Todas as atividades</option>
           </select>
         </div>
       </div>
+    </div>
+    <div style="padding:12px 24px 0">
+      <div id="turma-pills" style="display:flex;gap:6px;flex-wrap:wrap"></div>
     </div>
     <div class="content" id="content">
       <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
@@ -57,9 +60,22 @@ const [todos, conquistas, alertas] = await Promise.all([getResultados(), getConq
 
 const selT = document.getElementById("sel-turma");
 const selA = document.getElementById("sel-ativ");
-Object.keys(ALUNOS_POR_TURMA).forEach(t => { selT.innerHTML += `<option value="${t}">Turma ${t}</option>`; });
+const turmas = Object.keys(ALUNOS_POR_TURMA);
+turmas.forEach(t => { selT.innerHTML += `<option value="${t}">Turma ${t}</option>`; });
 const ativNomes = [...new Set(todos.map(r=>r.atividade))].sort();
 ativNomes.forEach(a => { selA.innerHTML += `<option value="${a}">${a}</option>`; });
+
+window.setFiltroTurma = function(turma) {
+  selT.value = turma;
+  document.querySelectorAll('#turma-pills .pill').forEach(p =>
+    p.classList.toggle('on', p.dataset.t === turma));
+  filtrar();
+};
+
+const pillsEl = document.getElementById('turma-pills');
+pillsEl.innerHTML =
+  `<button class="pill on" data-t="Todas" onclick="setFiltroTurma('Todas')">Todas</button>` +
+  turmas.map(t => `<button class="pill" data-t="${t}" onclick="setFiltroTurma('${t}')">Turma ${t}</button>`).join('');
 
 window.toggleDetalhes = async function(id, bodyEl) {
   const visivel = bodyEl.style.display !== 'none';

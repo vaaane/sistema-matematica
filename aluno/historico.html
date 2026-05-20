@@ -46,6 +46,16 @@
     .plus-tent-ans.ok{background:#DCFCE7;color:#166534;}
     .plus-tent-ans.err{background:#FEE2E2;color:#991B1B;}
     .plus-tent-ans.time{background:#F3F4F6;color:#6B7280;}
+    @media(max-width:480px){
+      .hist-header{padding:11px 12px;gap:8px}
+      .hist-body{padding:0 12px 12px}
+      .hist-nome{font-size:13px}
+      .hist-data{font-size:10px}
+      .q-rev{font-size:11px;padding:6px 8px;gap:6px}
+      .plus-q-row{font-size:11px;padding:6px 8px;gap:6px}
+      .evolucao-bar{padding:6px 8px;gap:6px}
+      .ativ-group-header{font-size:11px}
+    }
   </style>
 </head>
 <body>
@@ -66,8 +76,9 @@
 </div>
 <script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
-import { getResultados, getDetalhes } from "/js/db.js";
+import { getResultados, getDetalhes, getAlunoPreferencia } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+import { applyTopRankVisuals } from "/js/toprank.js";
 
 const sess = requireAluno();
 if (!sess) throw new Error();
@@ -77,6 +88,15 @@ window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 const { alunos, turma } = sess;
 document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
 document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
+applyTopRankVisuals();
+
+// Sync tema do Firebase (não-bloqueante)
+getAlunoPreferencia(turma, alunos[0], 'tema').then(t => {
+  if (t && t !== localStorage.getItem('tema')) {
+    localStorage.setItem('tema', t);
+    document.documentElement.setAttribute('data-theme', t === 'escuro' ? 'dark' : '');
+  }
+});
 
 window.toggle = function(header) {
   const body = header.nextElementSibling;
@@ -109,14 +129,14 @@ function renderEvolucaoSVG(regs) {
   const trendIcon  = last > first ? '↑' : last < first ? '↓' : '→';
   const trendDesc  = last > first ? 'Melhorou' : last < first ? 'Piorou' : 'Estável';
 
-  const W = 240, H = 56, mL = 8, mR = 8, mT = 14, mB = 8;
+  const W = 240, H = window.innerWidth <= 480 ? 38 : 56, mL = 8, mR = 8, mT = window.innerWidth <= 480 ? 8 : 14, mB = 6;
   const iW = W - mL - mR, iH = H - mT - mB;
   const maxV = Math.max(...pts, 1);
   const n = pts.length;
   const xP = i => mL + (n > 1 ? (i / (n - 1)) * iW : iW / 2);
   const yP = v => mT + iH - Math.min((v / maxV) * iH, iH);
 
-  let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:240px;height:56px;flex-shrink:0;cursor:pointer">`;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:240px;height:${H}px;flex-shrink:0;cursor:pointer">`;
   if (n > 1) {
     svg += `<polyline points="${pts.map((v, i) => `${xP(i)},${yP(v)}`).join(' ')}" fill="none" stroke="${trendColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
   }
@@ -157,6 +177,12 @@ function renderPlusQuestao(q, i) {
     return `<span class="plus-tent-ans ${cls}">${t.correto ? '✓ ' : ''}${t.resposta || '—'}${tempo}</span>`;
   }).join('');
   const enun = q.enunciado || q.pergunta || '—';
+  const suaResp = (() => {
+    const ts = q.tentativas || [];
+    const certa = ts.find(t => t.correto);
+    const ultima = ts[ts.length - 1];
+    return (certa || ultima)?.resposta || '—';
+  })();
   return `<div class="plus-q-row ${q.acertou ? 'ok' : 'err'}${q.ehBonus ? ' bonus' : ''}"
     onclick="const d=this.querySelector('.plus-q-detail');d.style.display=d.style.display==='block'?'none':'block'">
     <span class="plus-q-num">Q${i+1}</span>
@@ -164,8 +190,10 @@ function renderPlusQuestao(q, i) {
       <div>${enun}</div>
       ${badges.length ? `<div style="margin-top:3px;display:flex;gap:6px;flex-wrap:wrap">${badges.join('')}</div>` : ''}
       <div class="plus-q-detail">
-        <div><strong>Resposta correta:</strong> ${q.resposta_correta || '—'}</div>
-        <div class="plus-tent-row">${tentativas || '<span style="color:var(--text-muted)">—</span>'}</div>
+        <div><strong>Sua resposta:</strong> <span style="${q.acertou?'color:var(--green)':'color:var(--red)'};font-weight:700">${suaResp}</span></div>
+        <div style="margin-top:3px"><strong>Resposta correta:</strong> ${q.resposta_correta || '—'}</div>
+        <div style="margin-top:3px"><strong>Pontos:</strong> <span style="${ptsClass};font-weight:700">${ptsTxt}</span></div>
+        ${tentativas ? `<div class="plus-tent-row" style="margin-top:4px">${tentativas}</div>` : ''}
       </div>
     </div>
     <span class="plus-q-pts" style="${ptsClass}">${ptsTxt} pt</span>
@@ -233,11 +261,22 @@ function renderClassicoItem(r, detalhes) {
         const enun = h.enunciado || h.pergunta || '—';
         const rAluno = h.resposta_aluno || '—';
         const rCorreta = (h.resposta_correta && h.resposta_correta !== 'undefined') ? h.resposta_correta : '—';
+        const pts = h.pontos != null ? (h.pontos > 0 ? `+${h.pontos}` : String(h.pontos)) : null;
+        const extras = [
+          h.velocidade ? '⚡' : '',
+          h.usouAjuda  ? '🎯' : '',
+        ].filter(Boolean).join(' ');
         return `<div class="q-rev ${h.acertou ? 'ok' : 'err'}">
           <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:24px">Q${i+1}</span>
-          <span style="flex:1">${enun}</span>
-          <span style="${h.acertou ? 'color:var(--green)' : 'color:var(--red)'};font-weight:700">${rAluno}</span>
-          ${!h.acertou ? `<span style="font-size:10px;color:var(--text-muted)">✓ ${rCorreta}</span>` : ''}
+          <div style="flex:1">
+            <div>${enun}</div>
+            <div style="margin-top:3px;font-size:11px">
+              <span style="${h.acertou ? 'color:var(--green)' : 'color:var(--red)'};font-weight:700">${rAluno}</span>
+              ${!h.acertou ? `<span style="color:var(--text-muted);margin-left:6px">✓ ${rCorreta}</span>` : ''}
+              ${pts ? `<span style="${h.acertou?'color:var(--green)':'color:var(--red)'};font-weight:700;margin-left:6px">${pts}pt</span>` : ''}
+              ${extras ? `<span style="margin-left:6px">${extras}</span>` : ''}
+            </div>
+          </div>
           <span>${h.acertou ? '✅' : '❌'}</span>
         </div>`;
       }).join('') : '<p style="font-size:12px;color:var(--text-muted);padding-top:8px">Detalhes não disponíveis.</p>'}
@@ -250,9 +289,8 @@ const content = document.getElementById("content");
 let html = '';
 
 for (const aluno of alunos) {
-  // Sort oldest first for evolution
   const regs = todos.filter(r => r.aluno === aluno && r.concluido)
-    .sort((a, b) => (a.criadoEm || 0) - (b.criadoEm || 0));
+    .sort((a, b) => (b.pontuacao_bruta || b.pontuacao || 0) - (a.pontuacao_bruta || a.pontuacao || 0));
 
   html += `<div class="aluno-section">
     <div class="aluno-title">
@@ -274,13 +312,15 @@ for (const aluno of alunos) {
       html += `<div class="ativ-group">`;
       html += `<div class="ativ-group-header"><span style="font-weight:700;font-size:12px">${atividade}</span><span style="font-size:11px;color:var(--text-muted)">${ativRegs.length} ${ativRegs.length !== 1 ? 'sessões' : 'sessão'}</span></div>`;
 
-      // Evolution chart (oldest → newest)
-      if (ativRegs.length >= 2) html += renderEvolucaoSVG(ativRegs);
+      // Evolution chart (chronological order)
+      if (ativRegs.length >= 2) {
+        const chronoRegs = [...ativRegs].sort((a, b) => (a.criadoEm || 0) - (b.criadoEm || 0));
+        html += renderEvolucaoSVG(chronoRegs);
+      }
 
-      // Items most recent first
-      const reversed = [...ativRegs].reverse();
-      for (const r of reversed) {
-        const detalhes = await getDetalhes(r.id);
+      // Items by score descending (highest first)
+      for (const r of ativRegs) {
+        const detalhes = (await getDetalhes(r.id)) || [];
         if (r.modo === 'competicao_plus') html += renderPlusItem(r, detalhes);
         else html += renderClassicoItem(r, detalhes);
       }

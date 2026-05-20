@@ -29,6 +29,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 html, body { height: 100%; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
 a { text-decoration: none; color: inherit; }
 
@@ -121,7 +122,7 @@ a { text-decoration: none; color: inherit; }
 .mini-stat-label { font-size: 10px; color: var(--text-muted); margin-top: 3px; font-weight: 500; }
 
 /* ── Buttons ── */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 18px; border: none; border-radius: 9px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: transform .12s, background .15s, box-shadow .15s; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 18px; border: none; border-radius: 9px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: transform .12s, background .15s, box-shadow .15s; touch-action: manipulation; }
 .btn:hover  { transform: translateY(-1px); }
 .btn:active { transform: scale(.98); }
 .btn svg { width: 14px; height: 14px; fill: currentColor; }
@@ -390,4 +391,113 @@ body, .card, .topbar, .main, .mini-stat, .list-row, .input, .table td, .table th
 .sparkle-p {
   position:absolute; font-size:11px; line-height:1;
   animation: sparkle-float var(--sd,2s) ease-in-out var(--delay,0s) infinite;
+}
+
+/* ── Reconhecimento Top 3 (cross-page) ──────────────────── */
+@keyframes top-border-pulse {
+  0%,100% { opacity:.4; }
+  50%      { opacity:.8; }
+}
+.top-rank-glow::before {
+  content:''; position:fixed; inset:0; z-index:9980; pointer-events:none;
+  border: 3px solid var(--top-color, #F59E0B);
+  animation: top-border-pulse 2.4s ease-in-out infinite;
+}
+.top-rank-badge {
+  position:fixed; bottom:20px; right:20px; z-index:9981;
+  background: var(--top-color, #F59E0B); color:#fff;
+  padding:5px 13px; border-radius:20px; font-size:12px; font-weight:700;
+  display:flex; align-items:center; gap:5px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.3); pointer-events:none;
+}
+@keyframes ring-pulse-gold   { 0%,100%{box-shadow:0 0 5px 2px rgba(245,158,11,.3);}  50%{box-shadow:0 0 16px 4px rgba(245,158,11,.7);} }
+@keyframes ring-pulse-silver { 0%,100%{box-shadow:0 0 4px 1px rgba(156,163,175,.25);} 50%{box-shadow:0 0 12px 3px rgba(156,163,175,.6);} }
+@keyframes ring-pulse-bronze { 0%,100%{box-shadow:0 0 4px 1px rgba(180,83,9,.25);}   50%{box-shadow:0 0 10px 3px rgba(180,83,9,.55);} }
+.avatar-ring-1 { outline:3px solid #F59E0B; outline-offset:2px; animation:ring-pulse-gold 1.8s ease-in-out infinite; }
+.avatar-ring-2 { outline:2px solid #9CA3AF; outline-offset:2px; animation:ring-pulse-silver 2.3s ease-in-out infinite; }
+.avatar-ring-3 { outline:2px solid #CD853F; outline-offset:2px; animation:ring-pulse-bronze 2.8s ease-in-out infinite; }
+
+@keyframes banner-drift {
+  0%   { transform:translateX(0) translateY(0) rotate(0deg); opacity:0; }
+  12%  { opacity:.75; }
+  88%  { opacity:.5; }
+  100% { transform:translateX(70px) translateY(-22px) rotate(200deg); opacity:0; }
+}
+.banner-particle {
+  position:absolute; border-radius:50%; pointer-events:none;
+  animation: banner-drift var(--bp-dur,3s) ease-in-out var(--bp-delay,0s) infinite;
+}
+
+/* ════════════════════════════════════════
+   Modo Escuro — Histórico / Questões
+════════════════════════════════════════ */
+[data-theme="dark"] .hist-header:hover  { background: rgba(255,255,255,.04); }
+[data-theme="dark"] .hist-body          { border-color: var(--border); }
+[data-theme="dark"] .q-rev              { background: var(--card); border-color: var(--border); }
+[data-theme="dark"] .q-rev.ok           { background: rgba(34,197,94,.1);  border-color: rgba(34,197,94,.35); }
+[data-theme="dark"] .q-rev.err          { background: rgba(239,68,68,.1);  border-color: rgba(239,68,68,.35); }
+[data-theme="dark"] .plus-q-row         { background: var(--card); border-color: var(--border); color: var(--text); }
+[data-theme="dark"] .plus-q-row.ok      { background: rgba(34,197,94,.1);  border-color: rgba(34,197,94,.35); }
+[data-theme="dark"] .plus-q-row.err     { background: rgba(239,68,68,.1);  border-color: rgba(239,68,68,.35); }
+[data-theme="dark"] .plus-q-row.bonus   { background: rgba(245,158,11,.1); border-color: rgba(245,158,11,.35); }
+[data-theme="dark"] .evolucao-bar       { background: rgba(255,255,255,.04); border-color: var(--border); }
+[data-theme="dark"] .plus-tent-ans.ok   { background: rgba(34,197,94,.2);  color: #86EFAC; }
+[data-theme="dark"] .plus-tent-ans.err  { background: rgba(239,68,68,.2);  color: #FCA5A5; }
+[data-theme="dark"] .plus-tent-ans.time { background: rgba(107,114,128,.2); color: var(--text-muted); }
+[data-theme="dark"] .badge-atraso       { background: rgba(154,52,18,.25); color: #FDBA74; border-color: rgba(154,52,18,.4); }
+[data-theme="dark"] .ativ-liberada      { background: rgba(47,158,220,.08); border-color: rgba(47,158,220,.25); }
+[data-theme="dark"] .ativ-vazia         { border-color: var(--border); }
+[data-theme="dark"] .resumo-wrap        { border-color: var(--border); }
+[data-theme="dark"] .resumo-header      { background: rgba(255,122,47,.06); border-color: var(--border); }
+
+/* ════════════════════════════════════════
+   Mobile — melhorias adicionais (≤768px)
+════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Touch targets mínimos */
+  .btn:not(.btn-sm) { min-height: 44px; }
+  .nav-item { min-height: 44px; }
+
+  /* Tab-nav e pill-selectors: scroll horizontal sem quebra */
+  .tab-nav {
+    overflow-x: auto; flex-wrap: nowrap;
+    scrollbar-width: none; -ms-overflow-style: none;
+  }
+  .tab-nav::-webkit-scrollbar { display: none; }
+  .tab-nav button { flex-shrink: 0; white-space: nowrap; }
+
+  .ativ-sel {
+    overflow-x: auto; flex-wrap: nowrap;
+    scrollbar-width: none; padding-bottom: 4px;
+  }
+  .ativ-sel::-webkit-scrollbar { display: none; }
+  .ativ-btn { flex-shrink: 0; }
+
+  /* Ocultar diferença de pontos do pódio */
+  .podium-diff { display: none; }
+
+  /* Rank rows mais compactas */
+  .rank-row { padding: 8px 10px; gap: 8px; }
+  .rank-pts { font-size: 13px; }
+  .rank-nome { font-size: 12px; }
+
+  /* Gráfico evolução menor */
+  .evolucao-bar { padding: 6px 8px; gap: 6px; }
+}
+
+@media (max-width: 480px) {
+  /* Posição do aluno no ranking: números menores */
+  .pos-rank-num { font-size: 26px !important; }
+
+  /* Banner top3 mais compacto */
+  .banner-top3 { padding: 10px 14px; gap: 8px; font-size: 13px; }
+  .banner-top3 > div > div:first-child { font-size: 13px; }
+  .banner-top3 > div > div:last-child  { font-size: 11px; }
+
+  /* Top3 cards compactos */
+  .top3-card { padding: 11px 13px; gap: 9px; }
+  .top3-pts  { font-size: 17px; }
+
+  /* Atividade-chip: tamanho de toque adequado */
+  .ativ-chip { padding: 10px 12px; font-size: 13px; min-height: 44px; }
 }

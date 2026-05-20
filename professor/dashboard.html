@@ -25,27 +25,56 @@
 </div>
 <script type="module">
 import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES } from "/js/constants.js";
-import { getResultados, getLiberadas, getAlertas } from "/js/db.js";
+import { getResultados, getLiberadas, getAlertas, getAllAtividadeStatus } from "/js/db.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { initTopNotif } from "/js/topnotif.js";
 
 const sess = requireProfessor();
 if (!sess) throw new Error();
 renderSidebarProfessor("sidebar", "dashboard");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
-const [todos, liberadas, alertas] = await Promise.all([getResultados(), getLiberadas(), getAlertas(true)]);
+const [todos, liberadasRaw, alertas, statusMap] = await Promise.all([getResultados(), getLiberadas(), getAlertas(true), getAllAtividadeStatus()]);
+
+// Mescla status atual com as liberações — filtra encerradas
+const liberadas = liberadasRaw.map(lib => {
+  const st = statusMap[`${lib.turma}|${lib.atividade}`] || { status: 'ativa', percentual: lib.percentual ?? 100 };
+  return { ...lib, percentual: st.percentual, status: st.status };
+}).filter(lib => lib.status !== 'encerrada');
 
 const totalAlunos = Object.values(ALUNOS_POR_TURMA).reduce((a,b)=>a+b.length,0);
 const totalTurmas = Object.keys(ALUNOS_POR_TURMA).length;
 
 const melhorDash = {};
+const turmaDash = {};
+const regsPorAluno = {};
 todos.filter(r => r.concluido).forEach(r => {
   if (!melhorDash[r.aluno]) melhorDash[r.aluno] = {};
   melhorDash[r.aluno][r.atividade] = Math.max(melhorDash[r.aluno][r.atividade]||0, r.pontuacao||0);
+  if (!turmaDash[r.aluno]) turmaDash[r.aluno] = r.turma;
+  if (!regsPorAluno[r.aluno]) regsPorAluno[r.aluno] = [];
+  regsPorAluno[r.aluno].push(r);
 });
 const ptsPorAluno = Object.fromEntries(Object.entries(melhorDash).map(([a,m])=>[a,Object.values(m).reduce((x,y)=>x+y,0)]));
 const top5 = Object.entries(ptsPorAluno).sort((a,b)=>b[1]-a[1]).slice(0,5);
 const ultimos = [...todos].reverse().filter(r => r.concluido).slice(0,6);
+
+// ── Alertas automáticos (calculados sobre os resultados) ──────
+const todosAlunosFlat = Object.values(ALUNOS_POR_TURMA).flat();
+const semAtividade = todosAlunosFlat.filter(a => !regsPorAluno[a]);
+const baixaTaxa = Object.entries(regsPorAluno).filter(([_, regs]) => {
+  const ac = regs.reduce((s, r) => s + (r.acertos||0), 0);
+  const tot = regs.reduce((s, r) => s + (r.acertos||0) + (r.erros||0), 0);
+  return tot > 0 && ac / tot < 0.3;
+});
+const zeroAcertoUlt = liberadas.length ? (() => {
+  const ativ = liberadas[0].atividade;
+  return todos.filter(r => r.concluido && r.atividade === ativ && (r.acertos||0) === 0 && (r.erros||0) > 0);
+})() : [];
+const autoAlertas = [];
+if (semAtividade.length) autoAlertas.push({ icon:'📭', cor:'blue',  msg:`${semAtividade.length} aluno${semAtividade.length>1?'s':''} sem nenhuma atividade` });
+if (baixaTaxa.length)    autoAlertas.push({ icon:'⚠️', cor:'orange', msg:`${baixaTaxa.length} aluno${baixaTaxa.length>1?'s':''} com taxa de acerto abaixo de 30%` });
+if (zeroAcertoUlt.length) autoAlertas.push({ icon:'🚨', cor:'red',   msg:`${zeroAcertoUlt.length} aluno${zeroAcertoUlt.length>1?'s':''} com 0% de acerto em "${liberadas[0]?.atividade}"` });
 
 const LABEL_TIPO = { dia:"do dia", anterior:"anterior", antiga:"antiga" };
 
@@ -67,7 +96,7 @@ document.getElementById("content").innerHTML = `
         ${liberadas.length ? liberadas.map(lib=>`
         <div class="list-row">
           <div style="flex:1"><div style="font-size:13px;font-weight:700">${lib.atividade}</div>
-          <div style="font-size:11px;color:var(--text-muted)">Turma ${lib.turma} · ${lib.percentual != null ? lib.percentual : (lib.tipo==='anterior'?75:lib.tipo==='antiga'?50:100)}% da nota · ${lib.tempo_maximo/60}min</div></div>
+          <div style="font-size:11px;color:var(--text-muted)">Turma ${lib.turma} · ${lib.percentual}% da nota</div></div>
           <span class="badge badge-green">Ativa</span>
         </div>`).join('') : '<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg><p>Nenhuma atividade liberada.</p></div>'}
       </div>
@@ -87,13 +116,19 @@ document.getElementById("content").innerHTML = `
 
     <div>
       <div class="card">
-        <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>Alertas Recentes</div></div>
-        ${alertas.length ? alertas.slice(0,5).map(a=>`
+        <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>Alertas</div></div>
+        ${autoAlertas.map(a=>`
+        <div class="list-row">
+          <div style="flex:1"><div style="font-size:13px;font-weight:600">${a.icon} ${a.msg}</div></div>
+          <a href="/professor/acompanhamento.html" class="btn btn-sm btn-ghost" style="font-size:11px">Ver →</a>
+        </div>`).join('')}
+        ${alertas.length ? alertas.slice(0,4).map(a=>`
         <div class="list-row">
           <div style="flex:1"><div style="font-size:13px;font-weight:600">${a.aluno} — ${a.atividade}</div>
           <div style="font-size:11px;color:var(--text-muted)">${a.motivo}</div></div>
           <span class="badge badge-red">⚠️</span>
-        </div>`).join('') : '<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg><p>Nenhum alerta.</p></div>'}
+        </div>`).join('') : ''}
+        ${!autoAlertas.length && !alertas.length ? '<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg><p>Nenhum alerta.</p></div>' : ''}
       </div>
 
       <div class="card">
@@ -101,13 +136,25 @@ document.getElementById("content").innerHTML = `
         ${top5.map(([nome,pts],i)=>`
         <div class="list-row">
           <div class="rank-pos" style="font-weight:800;width:28px;text-align:center">${['🥇','🥈','🥉','4º','5º'][i]}</div>
-          <div style="flex:1;font-size:13px;font-weight:600">${nome}</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600">${nome}</div>
+            <div style="font-size:11px;color:var(--text-muted)">Turma ${turmaDash[nome]||'?'}</div>
+          </div>
           <span class="badge badge-gold">${pts} pts</span>
         </div>`).join('')}
         ${!top5.length?'<div class="empty-state"><p>Nenhum resultado ainda.</p></div>':''}
       </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>Notificações ao Vivo</div>
+          <span style="font-size:10px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.4);color:#16A34A;border-radius:10px;padding:2px 8px;font-weight:700">● ao vivo</span>
+        </div>
+        <div id="notif-hist"></div>
+      </div>
     </div>
   </div>`;
+initTopNotif({ mode: 'professor', historyEl: document.getElementById('notif-hist') });
 </script>
 <style>.rank-pos{font-size:16px}</style>
 </body>

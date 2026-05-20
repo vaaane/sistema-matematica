@@ -78,10 +78,94 @@
     .tv-bar-wrap{height:3px;background:#1a1a38;border-radius:2px;margin-bottom:14px;overflow:hidden;}
     .tv-bar{height:3px;background:#FAB800;border-radius:2px;width:0%;}
 
+    .pill{padding:5px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .15s;}
+    .pill.on{border-color:var(--blue);background:var(--blue);color:#fff;}
+
     @media(max-width:640px) {
       .pod-step { min-width:90px; }
       .rk-meta { display:none; }
       .rk-row { grid-template-columns:36px 1fr auto; }
+    }
+
+    /* ════════════════════════════════════════
+       MODO TV DATASHOW (?tv=true)
+    ════════════════════════════════════════ */
+    body.tv-mode .sidebar  { display:none!important; }
+    body.tv-mode .topbar   { display:none!important; }
+    body.tv-mode .main     { margin-left:0!important; }
+    body.tv-mode .content  { padding:0!important; height:100vh; overflow:hidden; }
+
+    .tv-wrap { height:100vh; background:radial-gradient(ellipse at 50% 0%,#0e0e2e 0%,#05051a 65%); display:flex; flex-direction:column; overflow:hidden; }
+    .tv-prog-wrap { height:2px; background:#0a0a1e; flex-shrink:0; }
+    .tv-prog-bar  { height:2px; background:linear-gradient(90deg,rgba(250,184,0,.25),rgba(250,184,0,.65)); width:0%; }
+
+    .tv-hdr { display:flex; align-items:center; justify-content:space-between; padding:10px 24px; flex-shrink:0; border-bottom:1px solid rgba(255,255,255,.035); }
+    .tv-hdr-l { display:flex; align-items:center; gap:12px; }
+    .tv-logo { font-family:'Orbitron',monospace; font-size:11px; font-weight:700; color:rgba(250,184,0,.45); letter-spacing:2px; }
+    .tv-badge { font-family:'Orbitron'; font-size:9px; font-weight:700; letter-spacing:1px; padding:3px 10px; border-radius:20px; }
+    .tv-badge.geral { background:rgba(250,184,0,.1); color:rgba(250,184,0,.8); border:1px solid rgba(250,184,0,.2); }
+    .tv-badge.ativ  { background:rgba(47,158,220,.1); color:rgba(120,190,255,.8); border:1px solid rgba(47,158,220,.25); }
+    .tv-hdr-r { display:flex; align-items:center; gap:14px; }
+    .tv-clk  { font-family:'Orbitron'; font-size:11px; color:#252545; }
+    .tv-exit { font-size:10px; color:#252545; background:none; border:1px solid #181832; border-radius:7px; padding:4px 11px; cursor:pointer; font-family:'Inter'; transition:all .2s; }
+    .tv-exit:hover { color:#6666aa; border-color:#4444a0; }
+
+    .tv-body { flex:1; overflow-y:auto; padding:6px 28px 10px; scrollbar-width:none; }
+    .tv-body::-webkit-scrollbar { display:none; }
+    .tv-slide { transition:opacity .42s ease,transform .42s ease; }
+    .tv-slide.fading { opacity:0; transform:scale(.98) translateY(6px); }
+
+    .tv-sec { font-family:'Orbitron'; font-size:9px; font-weight:700; color:#1e1e42; letter-spacing:3px; text-align:center; margin:8px 0 5px; }
+    .tv-ativ-nm { font-family:'Orbitron'; font-size:14px; font-weight:700; color:rgba(120,190,255,.7); text-align:center; letter-spacing:2px; margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+    /* ── Pódio TV ── */
+    .tv-podium { display:flex; align-items:flex-end; justify-content:center; gap:14px; padding:6px 0 0; }
+    .tv-pod-col { display:flex; flex-direction:column; align-items:center; }
+    /* Entrada escalonada: 3º primeiro, 2º segundo, 1º por último mais dramático */
+    .tv-pod-col.anim-3 { animation:tpod-in  .9s cubic-bezier(.34,1.4,.64,1) 0s   both; }
+    .tv-pod-col.anim-2 { animation:tpod-in  .9s cubic-bezier(.34,1.4,.64,1) .65s both; }
+    .tv-pod-col.anim-1 { animation:tpod-big 1.1s cubic-bezier(.34,1.4,.64,1) 1.3s both; }
+    .tv-pod-col.new-entry { animation:tpod-big 1.1s cubic-bezier(.34,1.4,.64,1) 0s both!important; }
+    @keyframes tpod-in  { from{opacity:0;transform:translateY(50px) scale(.7)} to{opacity:1;transform:none} }
+    @keyframes tpod-big { from{opacity:0;transform:translateY(60px) scale(.6)} 70%{transform:translateY(-12px) scale(1.06)} to{opacity:1;transform:none} }
+
+    .tv-trophy { font-size:28px; margin-bottom:3px; text-align:center; }
+    .tv-crown  { font-size:16px; display:block; text-align:center; margin-bottom:-4px; }
+    .tv-stand  { min-width:158px; border-radius:14px 14px 0 0; display:flex; flex-direction:column; align-items:center; padding:12px 14px 0; }
+    .tv-stand.p1 { height:204px; background:linear-gradient(180deg,rgba(250,184,0,.26),rgba(250,184,0,.04)); border:2px solid rgba(250,184,0,.52); box-shadow:0 0 40px rgba(250,184,0,.07),inset 0 1px 0 rgba(250,184,0,.2); }
+    .tv-stand.p2 { height:154px; background:linear-gradient(180deg,rgba(200,200,230,.14),rgba(200,200,230,.03)); border:2px solid rgba(200,200,230,.28); }
+    .tv-stand.p3 { height:112px; background:linear-gradient(180deg,rgba(180,110,20,.14),rgba(180,110,20,.03)); border:2px solid rgba(180,110,20,.28); }
+    .tv-stand.empty { border-style:dashed; opacity:.3; }
+    .tv-pname  { font-size:18px; font-weight:900; color:#e8e8ff; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; }
+    .tv-pturma { font-size:10px; color:#4a4a80; margin-top:3px; }
+    .tv-ppts   { font-family:'Orbitron'; font-size:28px; font-weight:900; color:#FAB800; margin-top:6px; line-height:1; text-align:center; transition:color .3s; }
+    .tv-ppts.pts-rec { animation:tv-pts-rec 3s ease; }
+    @keyframes tv-pts-rec { 0%{color:#FAB800} 15%{color:#fff;text-shadow:0 0 24px #FAB800,0 0 48px rgba(250,184,0,.4)} 80%{color:#FAB800;text-shadow:0 0 8px rgba(250,184,0,.3)} 100%{color:#FAB800;text-shadow:none} }
+    .tv-pativo  { font-size:11px; font-weight:700; color:#22C55E; animation:blink-g 1.4s ease infinite; margin-top:5px; }
+    .tv-pextras { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-top:4px; font-size:10px; }
+    .tv-pempty  { color:#1a1a38; font-size:12px; margin-top:14px; }
+
+    /* ── Lista TV (4º+) ── */
+    .tv-list { display:flex; flex-direction:column; gap:4px; margin-top:6px; }
+    .tv-list-row { display:grid; grid-template-columns:44px 1fr 80px; align-items:center; gap:12px; padding:9px 16px; border-radius:10px; background:#0c0c20; border:1px solid #161628; transition:background .5s,border-color .5s,box-shadow .5s; }
+    .tv-list-row.ativo-now { border-color:rgba(34,197,94,.25); background:rgba(34,197,94,.04); }
+    .tv-list-row.rising { animation:tv-row-rise 1.5s ease; }
+    @keyframes tv-row-rise { 0%,100%{} 25%{background:rgba(34,197,94,.2);border-color:rgba(34,197,94,.6);box-shadow:0 0 18px rgba(34,197,94,.15)} }
+    .tv-list-row.record { animation:tv-row-rec 3s ease; }
+    @keyframes tv-row-rec { 0%,100%{} 15%{background:rgba(250,184,0,.18);border-color:rgba(250,184,0,.55);box-shadow:0 0 22px rgba(250,184,0,.2)} 80%{background:rgba(250,184,0,.08);border-color:rgba(250,184,0,.25)} }
+    .tv-lnum  { font-family:'Orbitron'; font-size:15px; font-weight:700; color:#222244; text-align:center; }
+    .tv-lname { font-size:14px; font-weight:700; color:#b0b0d8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .tv-lmeta { font-size:10px; color:#30305a; margin-top:2px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .tv-lativo { color:#22C55E; animation:blink-g 1.4s ease infinite; font-weight:700; }
+    .tv-lpts-wrap { text-align:right; }
+    .tv-lpts  { font-family:'Orbitron'; font-size:16px; font-weight:900; color:#FAB800; }
+    .tv-ldiff { font-size:9px; color:#333360; margin-top:2px; }
+    .tv-foot  { text-align:center; padding:9px 0 2px; font-size:9px; color:#1e1e3a; font-family:'Orbitron'; letter-spacing:1px; }
+    .tv-empty { text-align:center; padding:50px; color:#1a1a30; font-family:'Orbitron'; font-size:12px; }
+
+    @media(max-width:640px) {
+      .tv-stand { min-width:90px; } .tv-ppts { font-size:20px; } .tv-pname { font-size:14px; }
+      .tv-list-row { grid-template-columns:36px 1fr 64px; padding:7px 10px; gap:8px; }
     }
   </style>
 </head>
@@ -105,7 +189,7 @@
 <script type="module">
 import { getLiberadas, listenRankingProfessor, getResultados } from "/js/db.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
-import { LISTA_ATIVIDADES } from "/js/constants.js";
+import { LISTA_ATIVIDADES, ALUNOS_POR_TURMA } from "/js/constants.js";
 
 requireProfessor();
 renderSidebarProfessor("sidebar", "ranking");
@@ -129,28 +213,58 @@ if (ativParam) {
 // PAINEL PRINCIPAL (default — duas abas)
 // ══════════════════════════════════════════════════════════════
 async function renderPainelPrincipal() {
+  document.getElementById('topbar-right').innerHTML =
+    `<button class="btn btn-ghost" style="font-size:12px" onclick="window.open(window.location.href.split('?')[0]+'?tv=true','_blank')">📺 Modo TV</button>`;
   const todos = await getResultados();
+  let filtroTurma = '';
 
   function buildRankingMedia(lista) {
     const melhor = {};
     for (const r of lista) {
       if (!r.concluido || !r.aluno) continue;
-      if (!melhor[r.aluno]) melhor[r.aluno] = { aluno: r.aluno, turma: r.turma || '?', porAtiv: {}, sessoes: 0 };
+      if (!melhor[r.aluno]) melhor[r.aluno] = {
+        aluno: r.aluno, turma: r.turma || '?', porAtiv: {}, sessoes: 0,
+        melhorSessao: 0, primeiroTs: Infinity
+      };
+      const bruta = r.pontuacao_bruta || r.pontuacao || 0;
       const prev = melhor[r.aluno].porAtiv[r.atividade] || 0;
-      if ((r.pontuacao || 0) > prev) melhor[r.aluno].porAtiv[r.atividade] = r.pontuacao || 0;
+      if (bruta > prev) melhor[r.aluno].porAtiv[r.atividade] = bruta;
+      if (bruta > melhor[r.aluno].melhorSessao) melhor[r.aluno].melhorSessao = bruta;
+      const ts = r.criadoEm || 0;
+      if (ts && ts < melhor[r.aluno].primeiroTs) melhor[r.aluno].primeiroTs = ts;
       melhor[r.aluno].sessoes++;
     }
-    return Object.values(melhor).map(a => {
+    const result = Object.values(melhor).map(a => {
       const vals = Object.values(a.porAtiv);
-      const media = vals.length ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : 0;
-      return { aluno: a.aluno, turma: a.turma, media, atividades: vals.length, sessoes: a.sessoes };
-    }).sort((a, b) => b.media - a.media);
+      const total = vals.reduce((s, v) => s + v, 0);
+      const media = vals.length ? Math.round(total / vals.length) : 0;
+      return {
+        aluno: a.aluno, turma: a.turma, media, total, atividades: vals.length, sessoes: a.sessoes,
+        melhorSessao: a.melhorSessao, primeiroTs: a.primeiroTs === Infinity ? 0 : a.primeiroTs
+      };
+    }).sort((a, b) => {
+      if (b.total !== a.total) return b.total - a.total;
+      if (b.melhorSessao !== a.melhorSessao) return b.melhorSessao - a.melhorSessao;
+      return (a.primeiroTs || 0) - (b.primeiroTs || 0);
+    });
+    let gi = 0;
+    while (gi < result.length) {
+      let gj = gi + 1;
+      while (gj < result.length && result[gj].total === result[gi].total) gj++;
+      if (gj - gi > 1) {
+        const g = result.slice(gi, gj);
+        const criterion = g.some(x => x.melhorSessao !== g[0].melhorSessao) ? 'melhor sessão' : 'data de jogo';
+        for (let k = gi; k < gj; k++) result[k].tieInfo = criterion;
+      }
+      gi = gj;
+    }
+    return result;
   }
 
   const rankAll = buildRankingMedia(todos);
 
   // Sortable table state
-  let sortCol = 'media';
+  let sortCol = 'total';
   let sortAsc = false;
 
   function renderTabelaGeral() {
@@ -162,21 +276,31 @@ async function renderPainelPrincipal() {
     });
     const tbody = document.getElementById('geral-tbody');
     if (!tbody) return;
-    tbody.innerHTML = sorted.map((r, i) => {
-      const pos = i + 1;
+    const display = filtroTurma ? sorted.filter(r => r.turma === filtroTurma) : sorted;
+    const isStrCol = sortCol === 'aluno' || sortCol === 'turma';
+    let lastTiePos = 1;
+    tbody.innerHTML = display.map((r, i) => {
+      if (i === 0) { lastTiePos = 1; }
+      else if (isStrCol) { lastTiePos = i + 1; }
+      else if ((r[sortCol] || 0) !== (display[i-1][sortCol] || 0)) { lastTiePos = i + 1; }
+      const pos = lastTiePos;
       const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
       const cls = pos === 1 ? 'tr-top1' : pos === 2 ? 'tr-top2' : pos === 3 ? 'tr-top3' : '';
+      const tieCell = (r.tieInfo && sortCol === 'total') ? `<div style="font-size:9px;color:#D97706;margin-top:1px">${pos}º · desempate por ${r.tieInfo}</div>` : '';
       return `<tr class="${cls}">
         <td style="text-align:center;font-weight:700">${medal}</td>
-        <td style="font-weight:600">${r.aluno}</td>
+        <td style="font-weight:600">${r.aluno}${tieCell}</td>
         <td><span class="badge badge-blue">Turma ${r.turma}</span></td>
-        <td style="font-weight:800;color:var(--gold)">${r.media}</td>
+        <td>
+            <div style="font-weight:800;color:var(--gold)">${r.total}</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:1px">méd. ${r.media}</div>
+          </td>
         <td>${r.atividades}</td>
         <td>${r.sessoes}</td>
       </tr>`;
     }).join('');
     // Update header sort indicators
-    ['aluno','turma','media','atividades','sessoes'].forEach(col => {
+    ['aluno','turma','total','atividades','sessoes'].forEach(col => {
       const th = document.getElementById('th-' + col);
       if (!th) return;
       th.className = 'sortable' + (sortCol === col ? (sortAsc ? ' sort-asc' : ' sort-desc') : '');
@@ -202,10 +326,26 @@ async function renderPainelPrincipal() {
     el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted)">Aguardando…</div>';
     unsubAtiv = listenRankingProfessor(nome, ranking => {
       if (!el) return;
-      if (!ranking.length) {
+      const filtrado = filtroTurma ? ranking.filter(r => r.turma === filtroTurma) : ranking;
+      if (!filtrado.length) {
         el.innerHTML = '<p style="padding:16px;color:var(--text-muted);font-size:13px">Sem resultados para esta atividade.</p>';
         return;
       }
+      const rkRows = filtrado.map((r, i) => {
+        const pos = i + 1;
+        const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
+        const cls = pos === 1 ? 'tr-top1' : pos === 2 ? 'tr-top2' : pos === 3 ? 'tr-top3' : '';
+        const tieCell = r.tieInfo ? `<div style="font-size:9px;color:#D97706;margin-top:1px">${pos}º · desempate por ${r.tieInfo}</div>` : '';
+        return `<tr class="${cls}">
+          <td style="text-align:center;font-weight:700">${medal}</td>
+          <td style="font-weight:600">${r.aluno}${tieCell}</td>
+          <td><span class="badge badge-blue">Turma ${r.turma}</span></td>
+          <td style="font-weight:800;color:var(--gold)">${r.melhorPts}</td>
+          <td class="rank-hide-mobile">${r.tentativas}</td>
+          <td class="rank-hide-mobile">${r.comboMax > 1 ? `🔥×${r.comboMax}` : '—'}</td>
+          <td class="rank-hide-mobile">${r.ativo ? '<span style="color:var(--green);font-weight:700">⚡ jogando</span>' : '—'}</td>
+        </tr>`;
+      }).join('');
       el.innerHTML = `<table class="table">
         <thead><tr>
           <th style="width:40px">#</th>
@@ -216,20 +356,7 @@ async function renderPainelPrincipal() {
           <th class="rank-hide-mobile">Combo</th>
           <th class="rank-hide-mobile">Status</th>
         </tr></thead>
-        <tbody>${ranking.map((r, i) => {
-          const pos = i + 1;
-          const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
-          const cls = pos === 1 ? 'tr-top1' : pos === 2 ? 'tr-top2' : pos === 3 ? 'tr-top3' : '';
-          return `<tr class="${cls}">
-            <td style="text-align:center;font-weight:700">${medal}</td>
-            <td style="font-weight:600">${r.aluno}</td>
-            <td><span class="badge badge-blue">Turma ${r.turma}</span></td>
-            <td style="font-weight:800;color:var(--gold)">${r.melhorPts}</td>
-            <td class="rank-hide-mobile">${r.tentativas}</td>
-            <td class="rank-hide-mobile">${r.comboMax > 1 ? `🔥×${r.comboMax}` : '—'}</td>
-            <td class="rank-hide-mobile">${r.ativo ? '<span style="color:var(--green);font-weight:700">⚡ jogando</span>' : '—'}</td>
-          </tr>`;
-        }).join('')}</tbody>
+        <tbody>${rkRows}</tbody>
       </table>`;
     });
   }
@@ -243,15 +370,30 @@ async function renderPainelPrincipal() {
     if (tab === 'geral' && unsubAtiv) { unsubAtiv(); unsubAtiv = null; }
   };
 
+  window.setFiltroTurmaRank = function(turma) {
+    filtroTurma = turma;
+    document.querySelectorAll('#rank-turma-pills .pill').forEach(p =>
+      p.classList.toggle('on', p.dataset.t === turma));
+    if (document.getElementById('ppanel-geral')?.style.display !== 'none') {
+      renderTabelaGeral();
+    } else {
+      if (unsubAtiv) { unsubAtiv(); unsubAtiv = null; }
+      abrirAtivProf(ativSel);
+    }
+  };
+
   const ativBtns = LISTA_ATIVIDADES.map(a =>
     `<button class="ativ-btn-prof${a.nome === ativSel ? ' active' : ''}" data-ativ="${a.nome}">${a.nome}</button>`
   ).join('');
 
-  const tvUrl = '/professor/ranking.html?tv=true';
-  document.getElementById('topbar-right').innerHTML =
-    `<a href="${tvUrl}" target="_blank" class="btn btn-ghost" style="font-size:12px">📺 Modo TV</a>`;
-
   document.getElementById('content').innerHTML = `
+    <div id="rank-turma-pills" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+      <span style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-right:4px">Turma</span>
+      <button class="pill on" data-t="" onclick="setFiltroTurmaRank('')">Todas</button>
+      ${Object.keys(ALUNOS_POR_TURMA).map(t =>
+        `<button class="pill" data-t="${t}" onclick="setFiltroTurmaRank('${t}')">${t}</button>`
+      ).join('')}
+    </div>
     <div class="tab-nav">
       <button id="ptab-geral" class="active" onclick="mudarTabPainel('geral')">🏆 Geral</button>
       <button id="ptab-ativ"                 onclick="mudarTabPainel('ativ')">📚 Por Atividade <span class="live-tag" style="margin-left:4px">ao vivo</span></button>
@@ -265,7 +407,7 @@ async function renderPainelPrincipal() {
                 <th style="width:40px">#</th>
                 <th id="th-aluno" class="sortable sort-desc" onclick="sortGeral('aluno')">Aluno</th>
                 <th id="th-turma" class="sortable" onclick="sortGeral('turma')">Turma</th>
-                <th id="th-media" class="sortable sort-desc" onclick="sortGeral('media')">Média</th>
+                <th id="th-total" class="sortable sort-desc" onclick="sortGeral('total')">Total</th>
                 <th id="th-atividades" class="sortable rank-hide-mobile" onclick="sortGeral('atividades')">Ativ.</th>
                 <th id="th-sessoes" class="sortable rank-hide-mobile" onclick="sortGeral('sessoes')">Sessões</th>
               </tr></thead>
@@ -342,54 +484,195 @@ function iniciarModoProjecao(atividade, modo) {
 // MODO TV (?tv=true)
 // ══════════════════════════════════════════════════════════════
 async function iniciarTVMode() {
+  // NOTE: requires Firebase index: "resultados": { ".indexOn": ["atividade"] }
   const [todos, liberadas] = await Promise.all([getResultados(), getLiberadas()]);
 
-  document.body.classList.add('proj');
-  document.getElementById("topbar-right").innerHTML = `
-    <span class="proj-clock" id="proj-clock"></span>
-    <button class="btn btn-ghost" onclick="document.documentElement.requestFullscreen().catch(()=>{})" style="font-size:12px">⛶ Tela cheia</button>
-    <a href="/professor/ranking.html" class="btn btn-ghost" style="font-size:12px">← Sair</a>`;
+  document.body.classList.add('tv-mode');
+  setTimeout(() => { document.documentElement.requestFullscreen().catch(() => {}); }, 800);
+
+  document.getElementById('content').innerHTML = `
+    <div class="tv-wrap" id="tv-wrap">
+      <div class="tv-prog-wrap"><div class="tv-prog-bar" id="tv-prog-bar"></div></div>
+      <div class="tv-hdr">
+        <div class="tv-hdr-l">
+          <span class="tv-logo">SISTEMA DE MATEMÁTICA</span>
+          <span class="tv-badge geral" id="tv-badge">GERAL</span>
+        </div>
+        <div class="tv-hdr-r">
+          <span class="tv-clk" id="tv-clk"></span>
+          <button class="tv-exit" onclick="tvSair()">Sair</button>
+        </div>
+      </div>
+      <div class="tv-body"><div class="tv-slide" id="tv-slide"></div></div>
+    </div>`;
+
+  window.tvSair = function() {
+    if (document.fullscreenElement) document.exitFullscreen();
+    window.location.href = window.location.href.split('?')[0];
+  };
 
   function tickClock() {
-    const el = document.getElementById("proj-clock");
+    const el = document.getElementById('tv-clk');
     if (el) el.textContent = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   }
   tickClock();
   setInterval(tickClock, 15000);
 
-  // Build avg ranking from todos
   function buildRankingMedia(lista) {
     const melhor = {};
     for (const r of lista) {
       if (!r.concluido || !r.aluno) continue;
-      if (!melhor[r.aluno]) melhor[r.aluno] = { aluno: r.aluno, turma: r.turma || '?', porAtiv: {}, sessoes: 0 };
+      if (!melhor[r.aluno]) melhor[r.aluno] = {
+        aluno: r.aluno, turma: r.turma || '?', porAtiv: {}, sessoes: 0,
+        melhorSessao: 0, primeiroTs: Infinity
+      };
+      const bruta = r.pontuacao_bruta || r.pontuacao || 0;
       const prev = melhor[r.aluno].porAtiv[r.atividade] || 0;
-      if ((r.pontuacao || 0) > prev) melhor[r.aluno].porAtiv[r.atividade] = r.pontuacao || 0;
+      if (bruta > prev) melhor[r.aluno].porAtiv[r.atividade] = bruta;
+      if (bruta > melhor[r.aluno].melhorSessao) melhor[r.aluno].melhorSessao = bruta;
+      const ts = r.criadoEm || 0;
+      if (ts && ts < melhor[r.aluno].primeiroTs) melhor[r.aluno].primeiroTs = ts;
       melhor[r.aluno].sessoes++;
     }
-    return Object.values(melhor).map(a => {
+    const result = Object.values(melhor).map(a => {
       const vals = Object.values(a.porAtiv);
       const media = vals.length ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : 0;
-      return { aluno: a.aluno, turma: a.turma, media, atividades: vals.length, sessoes: a.sessoes };
-    }).sort((a, b) => b.media - a.media);
+      return {
+        aluno: a.aluno, turma: a.turma, melhorPts: media, atividades: vals.length,
+        tentativas: a.sessoes, comboMax: 0, acertosRapidos: 0, acertosDificeis: 0, ativo: false,
+        melhorSessao: a.melhorSessao, primeiroTs: a.primeiroTs === Infinity ? 0 : a.primeiroTs
+      };
+    }).sort((a, b) => {
+      if (b.melhorPts !== a.melhorPts) return b.melhorPts - a.melhorPts;
+      if (b.melhorSessao !== a.melhorSessao) return b.melhorSessao - a.melhorSessao;
+      return (a.primeiroTs || 0) - (b.primeiroTs || 0);
+    });
+    let gi = 0;
+    while (gi < result.length) {
+      let gj = gi + 1;
+      while (gj < result.length && result[gj].melhorPts === result[gi].melhorPts) gj++;
+      if (gj - gi > 1) {
+        const g = result.slice(gi, gj);
+        const criterion = g.some(x => x.melhorSessao !== g[0].melhorSessao) ? 'melhor sessão' : 'data de jogo';
+        for (let k = gi; k < gj; k++) result[k].tieInfo = criterion;
+      }
+      gi = gj;
+    }
+    return result;
   }
 
-  // Slides: geral first, then one per liberated activity
-  const slides = [
-    { tipo: 'geral' },
-    ...liberadas.map(lib => ({ tipo: 'ativ', atividade: lib.atividade, modo: lib.modo || 'competicao' })),
-  ];
-  if (slides.length === 1) slides.push(...LISTA_ATIVIDADES.map(a => ({ tipo: 'ativ', atividade: a.nome, modo: a.modo || 'competicao' })));
+  const slides = [{ tipo: 'geral' }];
+  if (liberadas.length) {
+    slides.push(...liberadas.map(lib => ({ tipo: 'ativ', atividade: lib.atividade, modo: lib.modo || 'competicao' })));
+  } else {
+    slides.push(...LISTA_ATIVIDADES.map(a => ({ tipo: 'ativ', atividade: a.nome, modo: a.modo || 'competicao' })));
+  }
+
+  // Change detection state — reset on each slide change
+  let prevRankMap = {};
+  let prevTop3 = new Set();
+
+  function detectChanges(ranking) {
+    const changes = {};
+    const top3Set = new Set(ranking.slice(0, 3).map(r => r.aluno));
+    ranking.forEach((r, i) => {
+      const pts = r.melhorPts ?? 0;
+      const prev = prevRankMap[r.aluno];
+      if (!prev) return;
+      if (top3Set.has(r.aluno) && !prevTop3.has(r.aluno)) {
+        changes[r.aluno] = 'new-top3';
+      } else if (pts > prev.pts) {
+        changes[r.aluno] = 'record';
+      } else if (i + 1 < prev.pos) {
+        changes[r.aluno] = 'rising';
+      }
+    });
+    ranking.forEach((r, i) => { prevRankMap[r.aluno] = { pos: i + 1, pts: r.melhorPts ?? 0 }; });
+    prevTop3 = top3Set;
+    return changes;
+  }
+
+  // layout order: 2nd left, 1st centre, 3rd right; 3rd animates first (delay 0), 2nd second, 1st last
+  function tvPodium(top3, changes, withAnim) {
+    const medals     = ['🥇', '🥈', '🥉'];
+    const visualOrder = [1, 0, 2];
+    const standCls    = ['p2', 'p1', 'p3'];
+    const animCls     = ['anim-2', 'anim-1', 'anim-3'];
+    return `<div class="tv-podium">` +
+      visualOrder.map((ri, vi) => {
+        const r = top3[ri];
+        let cls = 'tv-pod-col';
+        if (withAnim) cls += ' ' + animCls[vi];
+        if (r && changes[r.aluno] === 'new-top3') cls += ' new-entry';
+        return `<div class="${cls}" id="tv-pod-col-${ri}">
+          ${ri === 0 ? `<span class="tv-crown">👑</span>` : `<div class="tv-trophy">${medals[ri]}</div>`}
+          <div class="tv-stand ${standCls[vi]}${r ? '' : ' empty'}">
+            ${r ? `
+              <div class="tv-pname">${r.aluno}</div>
+              <div class="tv-pturma">Turma ${r.turma}</div>
+              <div class="tv-ppts" id="tv-ppts-${ri}">${r.melhorPts ?? 0} pts</div>
+              ${r.ativo ? `<div class="tv-pativo">⚡ jogando agora</div>` : ''}
+              <div class="tv-pextras">
+                ${r.comboMax > 1 ? `<span style="color:#FF8800;font-weight:700">🔥×${r.comboMax}</span>` : ''}
+                ${r.acertosRapidos > 0 ? `<span style="color:#60A5FA;font-weight:700">⚡${r.acertosRapidos}</span>` : ''}
+                ${r.acertosDificeis > 0 ? `<span style="color:#FDE047;font-weight:700">🏆${r.acertosDificeis}</span>` : ''}
+              </div>
+            ` : `<div class="tv-pempty">—</div>`}
+          </div>
+        </div>`;
+      }).join('') + `</div>`;
+  }
+
+  function tvListRow(r, pos, leaderPts, changes) {
+    const pts  = r.melhorPts ?? 0;
+    const diff = leaderPts - pts;
+    const ch   = changes[r.aluno];
+    const extraCls = ch === 'rising' ? ' rising' : ch === 'record' ? ' record' : '';
+    return `<div class="tv-list-row${r.ativo ? ' ativo-now' : ''}${extraCls}" id="tv-lrow-${pos}">
+      <div class="tv-lnum">${pos}</div>
+      <div>
+        <div class="tv-lname">${r.aluno}</div>
+        <div class="tv-lmeta">
+          <span>T${r.turma}</span>
+          ${r.ativo ? `<span class="tv-lativo">⚡ jogando</span>` : ''}
+          ${r.comboMax > 1 ? `<span style="color:#FF8800;font-weight:700">🔥×${r.comboMax}</span>` : ''}
+          ${r.tieInfo ? `<span style="color:#FAB800">${pos}º desempate: ${r.tieInfo}</span>` : ''}
+        </div>
+      </div>
+      <div class="tv-lpts-wrap">
+        <div class="tv-lpts">${pts}</div>
+        ${diff > 0 ? `<div class="tv-ldiff">-${diff} pts</div>` : ''}
+      </div>
+    </div>`;
+  }
+
+  function updatePodiumInPlace(top3, changes) {
+    top3.forEach((r, ri) => {
+      if (!r) return;
+      const ptsEl = document.getElementById(`tv-ppts-${ri}`);
+      if (ptsEl) {
+        const newVal = (r.melhorPts ?? 0) + ' pts';
+        if (ptsEl.textContent !== newVal) {
+          ptsEl.textContent = newVal;
+          if (changes[r.aluno] === 'record') {
+            ptsEl.classList.remove('pts-rec');
+            void ptsEl.offsetWidth;
+            ptsEl.classList.add('pts-rec');
+          }
+        }
+      }
+      if (changes[r.aluno] === 'new-top3') {
+        const col = document.getElementById(`tv-pod-col-${ri}`);
+        if (col) { col.classList.remove('new-entry'); void col.offsetWidth; col.classList.add('new-entry'); }
+      }
+    });
+  }
 
   let slideIdx    = 0;
   let currentUnsub = null;
 
-  document.getElementById("content").innerHTML = `
-    <div class="tv-bar-wrap"><div class="tv-bar" id="tv-bar"></div></div>
-    <div id="tv-slide"></div>`;
-
   function animateBar() {
-    const bar = document.getElementById('tv-bar');
+    const bar = document.getElementById('tv-prog-bar');
     if (!bar) return;
     bar.style.transition = 'none';
     bar.style.width = '0%';
@@ -399,67 +682,95 @@ async function iniciarTVMode() {
     }));
   }
 
-  function showSlide(idx) {
+  async function showSlide(idx) {
+    const slideEl = document.getElementById('tv-slide');
+    const badge   = document.getElementById('tv-badge');
+    if (!slideEl) return;
+
+    slideEl.classList.add('fading');
+    await new Promise(res => setTimeout(res, 420));
+
     if (currentUnsub) { currentUnsub(); currentUnsub = null; }
+    prevRankMap = {};
+    prevTop3    = new Set();
+
     const slide = slides[idx % slides.length];
-    animateBar();
 
     if (slide.tipo === 'geral') {
-      const rankAll = buildRankingMedia(todos);
       modoAtivo = 'classico';
-      document.getElementById("topbar-title").textContent = '🏆 RANKING GERAL';
-      document.getElementById("topbar-sub").textContent = `Classificação por média · ${rankAll.length} participantes`;
-      const top3 = rankAll.slice(0, 3).map(r => ({
-        aluno: r.aluno, turma: r.turma, melhorPts: r.media,
-        ativo: false, tentativas: r.sessoes, comboMax: 0, acertosRapidos: 0, acertosDificeis: 0,
-      }));
-      document.getElementById('tv-slide').innerHTML = `
-        <div class="proj-sec">CLASSIFICAÇÃO GERAL · MÉDIA DE PONTUAÇÃO</div>
-        <div class="podium-stage" id="podium-stage">${renderPodiumHTML(top3)}</div>
-        ${rankAll.length > 3 ? `
-          <div class="proj-sec">DEMAIS PARTICIPANTES</div>
-          <div class="rank-list">${rankAll.slice(3).map((r, i) => `
-            <div class="rk-row">
-              <div class="rk-num">${i + 4}</div>
-              <div>
-                <div class="rk-nome">${r.aluno} — T${r.turma}</div>
-                <div class="rk-meta"><span>${r.atividades} ativ.</span><span>${r.sessoes} sess.</span></div>
-              </div>
-              <div class="rk-pts">${r.media}</div>
-            </div>`).join('')}
-          </div>` : ''}
-        <div class="rk-footer">Média de pontuação por atividade realizada</div>`;
+      if (badge) { badge.className = 'tv-badge geral'; badge.textContent = 'GERAL'; }
+      const rankAll   = buildRankingMedia(todos);
+      const top3      = rankAll.slice(0, 3);
+      const resto     = rankAll.slice(3);
+      const leaderPts = top3[0]?.melhorPts ?? 0;
+
+      rankAll.forEach((r, i) => { prevRankMap[r.aluno] = { pos: i + 1, pts: r.melhorPts }; });
+      prevTop3 = new Set(top3.map(r => r.aluno));
+
+      slideEl.innerHTML = `
+        <div class="tv-sec">CLASSIFICAÇÃO GERAL · MÉDIA DE PONTUAÇÃO</div>
+        ${tvPodium(top3, {}, true)}
+        ${resto.length ? `
+          <div class="tv-sec">DEMAIS PARTICIPANTES</div>
+          <div class="tv-list">${resto.map((r, i) => tvListRow(r, i + 4, leaderPts, {})).join('')}</div>
+        ` : ''}
+        <div class="tv-foot">${rankAll.length} participante${rankAll.length !== 1 ? 's' : ''} · classificação por média de pontuação</div>`;
+
     } else {
       modoAtivo = slide.modo;
       const isPlus = slide.modo === 'competicao_plus';
-      document.getElementById("topbar-title").textContent = slide.atividade;
-      document.getElementById("topbar-sub").textContent = isPlus ? 'Ranking ao vivo · Competição+' : 'Ranking ao vivo';
-      document.getElementById('tv-slide').innerHTML = `
-        <div class="proj-sec">${isPlus ? '🏆 COMPETIÇÃO+ · TOP 3' : '🏆 PÓDIO'}</div>
-        <div class="podium-stage" id="podium-stage">${renderPodiumHTML([])}</div>
-        <div class="proj-sec" id="demais-label" style="display:none">DEMAIS PARTICIPANTES</div>
-        <div class="rank-list" id="rank-list"></div>
-        <div class="rk-footer" id="rk-footer">Aguardando resultados…</div>`;
+      if (badge) { badge.className = 'tv-badge ativ'; badge.textContent = slide.atividade; }
+
+      slideEl.innerHTML = `
+        <div class="tv-ativ-nm">${slide.atividade}</div>
+        <div class="tv-sec">${isPlus ? '🏆 COMPETIÇÃO+ · TOP 3' : '🏆 PÓDIO'}</div>
+        <div id="tv-podium-wrap">${tvPodium([], {}, false)}</div>
+        <div class="tv-sec" id="tv-demais-sec" style="display:none">DEMAIS PARTICIPANTES</div>
+        <div class="tv-list" id="tv-list"></div>
+        <div class="tv-foot" id="tv-foot">Aguardando resultados…</div>`;
+
+      let firstUpdate = true;
       currentUnsub = listenRankingProfessor(slide.atividade, ranking => {
-        atualizarPodio(ranking.slice(0, 3));
-        atualizarLista(ranking.slice(3));
-        const ativos = ranking.filter(r => r.ativo).length;
-        const footer = document.getElementById('rk-footer');
-        if (footer) footer.textContent =
-          `⏱ ${new Date().toLocaleTimeString('pt-BR')} · ${ranking.length} participante${ranking.length !== 1 ? 's' : ''}${ativos ? ` · ⚡ ${ativos} jogando` : ''}`;
-        const demais = document.getElementById('demais-label');
-        if (demais) demais.style.display = ranking.length > 3 ? '' : 'none';
+        const changes   = detectChanges(ranking);
+        const top3      = ranking.slice(0, 3);
+        const resto     = ranking.slice(3);
+        const leaderPts = top3[0]?.melhorPts ?? 0;
+
+        const podWrap = document.getElementById('tv-podium-wrap');
+        if (podWrap) {
+          if (firstUpdate) {
+            podWrap.innerHTML = tvPodium(top3, changes, true);
+            firstUpdate = false;
+          } else {
+            updatePodiumInPlace(top3, changes);
+          }
+        }
+
+        const listEl = document.getElementById('tv-list');
+        if (listEl) listEl.innerHTML = resto.map((r, i) => tvListRow(r, i + 4, leaderPts, changes)).join('');
+
+        const demSec = document.getElementById('tv-demais-sec');
+        if (demSec) demSec.style.display = resto.length ? '' : 'none';
+
+        const footEl = document.getElementById('tv-foot');
+        if (footEl) {
+          const ativos = ranking.filter(r => r.ativo).length;
+          footEl.textContent = `⏱ ${new Date().toLocaleTimeString('pt-BR')} · ${ranking.length} participante${ranking.length !== 1 ? 's' : ''}${ativos ? ` · ⚡ ${ativos} jogando` : ''}`;
+        }
       });
     }
+
+    slideEl.classList.remove('fading');
+    animateBar();
   }
 
-  showSlide(slideIdx);
+  await showSlide(slideIdx);
   const interval = setInterval(() => {
     slideIdx = (slideIdx + 1) % slides.length;
     showSlide(slideIdx);
   }, 30000);
 
-  window.addEventListener("beforeunload", () => {
+  window.addEventListener('beforeunload', () => {
     clearInterval(interval);
     if (currentUnsub) currentUnsub();
   });
@@ -534,15 +845,18 @@ function atualizarLista(resto) {
   list.innerHTML = resto.map((r, i) => {
     const pos = i + 4;
     const metaPlus = `
+      <span>Turma ${r.turma}</span>
       ${r.ativo ? `<span class="rk-tag-ativo">⚡ jogando</span>` : ''}
       ${r.acertosRapidos > 0 ? `<span class="rk-rapid">⚡${r.acertosRapidos} veloz</span>` : ''}
       ${r.acertosDificeis > 0 ? `<span class="rk-dif">🏆${r.acertosDificeis} bônus</span>` : ''}
-      <span>${r.tentativas} sess.</span>`;
+      <span>${r.tentativas} sess.</span>
+      ${r.tieInfo ? `<span style="color:#FAB800;font-size:9px">${pos}º · desempate por ${r.tieInfo}</span>` : ''}`;
     const metaComp = `
       <span>Turma ${r.turma}</span>
       ${r.ativo ? `<span class="rk-tag-ativo">⚡ ao vivo</span>` : ''}
       ${r.comboMax > 1 ? `<span class="rk-combo">🔥×${r.comboMax}</span>` : ''}
-      <span>${r.tentativas} tentativa${r.tentativas !== 1 ? 's' : ''}</span>`;
+      <span>${r.tentativas} tentativa${r.tentativas !== 1 ? 's' : ''}</span>
+      ${r.tieInfo ? `<span style="color:#FAB800;font-size:9px">${pos}º · desempate por ${r.tieInfo}</span>` : ''}`;
     return `<div class="rk-row${r.ativo ? ' ativo-now' : ''}">
       <div class="rk-num">${pos}</div>
       <div>

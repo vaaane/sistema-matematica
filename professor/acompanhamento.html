@@ -140,22 +140,8 @@ function findLibJanela(atividade, turma, tsInicio) {
 function calcNota(atividade, turma, tsInicio) {
   const lib = findLibJanela(atividade, turma, tsInicio);
   if (!lib) return null;
-  const janela = lib.janela_aula;
   const percentual = lib.percentual ?? 100;
-  const ts = (tsInicio || 0) * 1000;
-  const ini = new Date(janela.inicio).getTime();
-  const fim = new Date(janela.fim).getTime();
-  let mod, label, cls;
-  if (ts >= ini && ts <= fim) {
-    mod = 100; label = 'Dentro da janela de aula'; cls = 'inside';
-  } else {
-    const dS = new Date(ts).toDateString();
-    const dI = new Date(ini).toDateString();
-    if (dS === dI) { mod = 50; label = 'Mesmo dia, fora da janela'; cls = 'same-day'; }
-    else           { mod = 25; label = 'Outro dia'; cls = 'late'; }
-  }
-  const nota = Math.round(percentual * mod / 100);
-  return { percentual, mod, nota, label, cls };
+  return { percentual, mod: 100, nota: percentual, label: 'Nota da liberação', cls: 'inside' };
 }
 
 // ── Estatísticas ──────────────────────────────────────────────
@@ -249,7 +235,7 @@ function renderAluno(aluno, turma, hist) {
             <div class="nota-desc">
               <div style="font-weight:700;margin-bottom:2px">Nota final estimada</div>
               <span class="nota-badge ${ni.cls}">${ni.label}</span>
-              <div style="margin-top:4px;font-size:10px">${ni.percentual}% da nota × ${ni.mod}% do momento = ${ni.nota}%</div>
+              <div style="margin-top:4px;font-size:10px">${ni.percentual}% da nota</div>
             </div>
           </div>`;
         }
@@ -382,9 +368,9 @@ window.toggleTent = async function(uid, resultadoId) {
   body.innerHTML = questoes.map((q, i) => `
     <div class="q-rev ${q.acertou ? 'ok' : 'err'}">
       <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:24px;flex-shrink:0">Q${i+1}</span>
-      <span style="flex:1">${q.pergunta}</span>
-      <span style="${q.acertou ? 'color:var(--green)' : 'color:var(--red)'};font-weight:700">${q.resposta_aluno}</span>
-      ${!q.acertou ? `<span style="font-size:10px;color:var(--text-muted)">✓ ${q.resposta_correta}</span>` : ''}
+      <span style="flex:1">${q.enunciado || q.pergunta || '—'}</span>
+      <span style="${q.acertou ? 'color:var(--green)' : 'color:var(--red)'};font-weight:700">${q.resposta_aluno || '—'}</span>
+      ${!q.acertou ? `<span style="font-size:10px;color:var(--text-muted)">✓ ${q.resposta_correta || '—'}</span>` : ''}
       <span>${q.acertou ? '✅' : '❌'}</span>
     </div>`).join('');
 };
@@ -399,10 +385,11 @@ window.analisarErros = async function(uid, tentIds) {
     const questoes = await getDetalhes(id);
     for (const q of (questoes || [])) {
       if (!q.acertou) {
-        if (!erros[q.pergunta]) erros[q.pergunta] = { count: 0, resposta_correta: q.resposta_correta, erradas: [] };
-        erros[q.pergunta].count++;
-        if (q.resposta_aluno && !erros[q.pergunta].erradas.includes(q.resposta_aluno))
-          erros[q.pergunta].erradas.push(q.resposta_aluno);
+        const k = q.enunciado || q.pergunta || '?';
+        if (!erros[k]) erros[k] = { count: 0, resposta_correta: q.resposta_correta, erradas: [] };
+        erros[k].count++;
+        if (q.resposta_aluno && !erros[k].erradas.includes(q.resposta_aluno))
+          erros[k].erradas.push(q.resposta_aluno);
       }
     }
   }
