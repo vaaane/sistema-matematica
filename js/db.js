@@ -72,6 +72,20 @@ export async function getConquistas() {
   return result.reverse();
 }
 
+export async function salvarConquistas(list) {
+  await Promise.all(list.map(item =>
+    push(ref(db, "conquistas"), { ...item, criadoEm: serverTimestamp() })
+  ));
+}
+
+export async function getConquistasByAluno(aluno) {
+  const snap = await get(query(ref(db, "conquistas"), orderByChild("aluno"), equalTo(aluno)));
+  if (!snap.exists()) return [];
+  const result = [];
+  snap.forEach(child => { result.push({ id: child.key, ...child.val() }); });
+  return result.sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
+}
+
 // ── Alertas ─────────────────────────────────────────────────
 export async function addAlerta(data) {
   await push(ref(db, "alertas"), { ...data, visto: false, criadoEm: serverTimestamp() });
@@ -238,6 +252,29 @@ export async function getAlunoPreferencia(turma, nome, chave) {
   return snap.exists() ? snap.val() : null;
 }
 
+// ── Robótica ─────────────────────────────────────────────────
+export async function saveRoboticaTentativa(turma, aluno, atividade, dados) {
+  await push(ref(db, 'robotica_tentativas'), {
+    turma, aluno, atividade, ...dados, completadoEm: serverTimestamp()
+  });
+}
+
+export async function getRoboticaTentativasAluno(turma, aluno) {
+  const snap = await get(query(ref(db, 'robotica_tentativas'), orderByChild('aluno'), equalTo(aluno)));
+  if (!snap.exists()) return [];
+  const result = [];
+  snap.forEach(child => result.push({ id: child.key, ...child.val() }));
+  return result.filter(r => r.turma === turma).sort((a, b) => (a.completadoEm || 0) - (b.completadoEm || 0));
+}
+
+export function listenRoboticaTentativas(callback) {
+  return onValue(ref(db, 'robotica_tentativas'), snap => {
+    const result = [];
+    if (snap.exists()) snap.forEach(child => result.push({ id: child.key, ...child.val() }));
+    callback(result);
+  });
+}
+
 // ── Limpeza ─────────────────────────────────────────────────
 export async function deletarRegistro(colecao, id) {
   await remove(ref(db, `${colecao}/${id}`));
@@ -280,18 +317,7 @@ export function listenRankingProfessor(atividade, callback) {
       if (ts && ts < players[k].primeiroTs) players[k].primeiroTs = ts;
     }
     const sorted = Object.values(players).map(p => ({ ...p, primeiroTs: p.primeiroTs === Infinity ? 0 : p.primeiroTs }));
-    // Tiebreak: mesmo melhorPts → quem jogou primeiro
-    sorted.sort((a, b) => {
-      if (b.melhorPts !== a.melhorPts) return b.melhorPts - a.melhorPts;
-      return (a.primeiroTs || 0) - (b.primeiroTs || 0);
-    });
-    let ti = 0;
-    while (ti < sorted.length) {
-      let tj = ti + 1;
-      while (tj < sorted.length && sorted[tj].melhorPts === sorted[ti].melhorPts) tj++;
-      if (tj - ti > 1) for (let k = ti; k < tj; k++) sorted[k].tieInfo = 'data de jogo';
-      ti = tj;
-    }
+    sorted.sort((a, b) => b.melhorPts - a.melhorPts);
     callback(sorted);
   });
 }

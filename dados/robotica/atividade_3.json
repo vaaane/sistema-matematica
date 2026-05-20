@@ -1,0 +1,431 @@
+{
+  "atividade": 3,
+  "descricao": "Operadores avançados, se/então e se aninhado — foco em lógica",
+  "total": 28,
+  "niveis": {
+    "medio": 14,
+    "dificil": 14
+  },
+  "questoes": [
+    {
+      "id": "OP12",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "distancia = 5. O bloco 🟢 (distancia > 5) e (distancia < 30) é:",
+      "opcoes": [
+        "A) Verdadeiro — 5 está no intervalo",
+        "B) Falso — 5 > 5 é falso",
+        "C) Verdadeiro — qualquer número funciona",
+        "D) Erro"
+      ],
+      "resposta": "B",
+      "categoria": "Operadores de Comparação",
+      "numero": 1
+    },
+    {
+      "id": "OP13",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "distancia = 15. O bloco 🟢 (distancia > 5) e (distancia < 30) é:",
+      "opcoes": [
+        "A) Falso",
+        "B) Verdadeiro",
+        "C) 15",
+        "D) BAIXO"
+      ],
+      "resposta": "B",
+      "categoria": "Operadores de Comparação",
+      "numero": 2
+    },
+    {
+      "id": "OP14",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "distancia = 40. O bloco 🟢 (distancia > 5) e (distancia < 30) é:",
+      "opcoes": [
+        "A) Verdadeiro",
+        "B) Falso — 40 < 30 é falso",
+        "C) Verdadeiro — 40 > 5",
+        "D) Erro"
+      ],
+      "resposta": "B",
+      "categoria": "Operadores de Comparação",
+      "numero": 3
+    },
+    {
+      "id": "OP15",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Um aluno monta: 🟢 (distancia > 50) e (distancia < 10). Esse bloco alguma vez é Verdadeiro?",
+      "opcoes": [
+        "A) Sim, quando distancia = 30",
+        "B) Sim, quando distancia = 5",
+        "C) Nunca — nenhum número é maior que 50 e menor que 10 ao mesmo tempo",
+        "D) Sempre"
+      ],
+      "resposta": "C",
+      "categoria": "Operadores de Comparação",
+      "numero": 4
+    },
+    {
+      "id": "CO07",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "A luz acende quando a leitura do sensor for MAIOR QUE 100 E MENOR QUE 200.\nse < (sensor) ___ (100) > ___ < (sensor) ___ (200) > então: acender luz",
+      "opcoes": [
+        "A) < / e / >",
+        "B) > / ou / <",
+        "C) > / e / <",
+        "D) = / e / ="
+      ],
+      "resposta": "C",
+      "categoria": "Completar com >, < e e",
+      "numero": 5
+    },
+    {
+      "id": "CO08",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "O carrinho deve PARAR se a distância for menor que 10 OU maior que 200 (obstáculo perto ou sensor com defeito).",
+      "opcoes": [
+        "A) (distancia) < (10) e (distancia) > (200)",
+        "B) (distancia) > (10) ou (distancia) < (200)",
+        "C) (distancia) < (10) ou (distancia) > (200)",
+        "D) (distancia) = (10) ou (distancia) = (200)"
+      ],
+      "resposta": "C",
+      "categoria": "Completar com >, < e e",
+      "numero": 6
+    },
+    {
+      "id": "CO09",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Você quer acender o LED quando a distância estiver FORA do intervalo seguro (abaixo de 20 ou acima de 80). Qual opção correta?",
+      "opcoes": [
+        "A) (distancia) > (20) e (distancia) < (80)",
+        "B) (distancia) < (20) ou (distancia) > (80)",
+        "C) (distancia) < (20) e (distancia) > (80)",
+        "D) (distancia) > (20) ou (distancia) < (80)"
+      ],
+      "resposta": "B",
+      "categoria": "Completar com >, < e e",
+      "numero": 7
+    },
+    {
+      "id": "CO10",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Qual a diferença entre essas duas condições?\nA: (distancia) < (10) ou (distancia) > (50)\nB: (distancia) > (10) e (distancia) < (50)",
+      "opcoes": [
+        "A) São iguais",
+        "B) A acende fora do intervalo; B acende dentro do intervalo",
+        "C) A nunca funciona por usar 'ou'",
+        "D) B acende fora; A acende dentro"
+      ],
+      "resposta": "B",
+      "categoria": "Completar com >, < e e",
+      "numero": 8
+    },
+    {
+      "id": "SE06",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Programa:\n🟡 se < (ler pino digital 2) = (ALTO) > então\n   acender LED verde\n🟡 senão\n   acender LED vermelho\n\nBotão SOLTO (ALTO) → qual LED acende?",
+      "opcoes": [
+        "A) LED vermelho",
+        "B) Nenhum",
+        "C) Os dois",
+        "D) LED verde"
+      ],
+      "resposta": "D",
+      "categoria": "Se/Então — Lógica Básica",
+      "numero": 9
+    },
+    {
+      "id": "SE07",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Mesmo programa anterior. Botão PRESSIONADO (BAIXO) → qual LED acende?",
+      "opcoes": [
+        "A) LED verde",
+        "B) LED vermelho",
+        "C) Nenhum",
+        "D) Os dois"
+      ],
+      "resposta": "B",
+      "categoria": "Se/Então — Lógica Básica",
+      "numero": 10
+    },
+    {
+      "id": "SE08",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Programa:\n🟡 se < (joystick X) > (800) > então\n   virar direita\n🟡 senão se < (joystick X) < (200) > então\n   virar esquerda\n🟡 senão\n   seguir em frente\n\njoystick X = 512. O carrinho faz o quê?",
+      "opcoes": [
+        "A) Vira à direita",
+        "B) Para completamente",
+        "C) Vira à esquerda",
+        "D) Segue em frente"
+      ],
+      "resposta": "D",
+      "categoria": "Se/Então — Lógica Básica",
+      "numero": 11
+    },
+    {
+      "id": "SE09",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Mesmo programa. joystick X = 950. O carrinho:",
+      "opcoes": [
+        "A) Segue em frente",
+        "B) Vira à esquerda",
+        "C) Para",
+        "D) Vira à direita"
+      ],
+      "resposta": "D",
+      "categoria": "Se/Então — Lógica Básica",
+      "numero": 12
+    },
+    {
+      "id": "SE10",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Mesmo programa. joystick X = 200 exatamente. O carrinho:",
+      "opcoes": [
+        "A) Vira à esquerda — 200 < 200",
+        "B) Segue em frente — 200 não é menor que 200",
+        "C) Vira à direita",
+        "D) Para"
+      ],
+      "resposta": "B",
+      "categoria": "Se/Então — Lógica Básica",
+      "numero": 13
+    },
+    {
+      "id": "SAN01",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Programa com SE ANINHADO:\n🟡 se < (distancia) < (10) > então\n   🟡 se < (distancia) < (10) > então\n      acender LED\n\nO segundo 'se' é necessário?",
+      "opcoes": [
+        "A) Sim — verifica duas vezes para ter certeza",
+        "B) Não — a condição já foi verificada pelo primeiro se",
+        "C) Sim — sempre precisa de dois se",
+        "D) Não — o segundo deveria ser um senão"
+      ],
+      "resposta": "B",
+      "categoria": "Se Aninhado — Erros e Análise",
+      "numero": 14
+    },
+    {
+      "id": "SAN02",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Programa:\n🟡 se < (distancia) < (30) > então\n   🟡 se < (distancia) < (10) > então\n      acender LED vermelho\n   🟡 senão\n      acender LED amarelo\n🟡 senão\n   acender LED verde\n\ndistancia = 5. Qual LED acende?",
+      "opcoes": [
+        "A) Verde",
+        "B) Amarelo",
+        "C) Nenhum",
+        "D) Vermelho"
+      ],
+      "resposta": "D",
+      "categoria": "Se Aninhado — Erros e Análise",
+      "numero": 15
+    },
+    {
+      "id": "SAN03",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Mesmo programa anterior. distancia = 20. Qual LED acende?",
+      "opcoes": [
+        "A) Vermelho",
+        "B) Verde",
+        "C) Amarelo",
+        "D) Nenhum"
+      ],
+      "resposta": "C",
+      "categoria": "Se Aninhado — Erros e Análise",
+      "numero": 16
+    },
+    {
+      "id": "SAN04",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Mesmo programa anterior. distancia = 40. Qual LED acende?",
+      "opcoes": [
+        "A) Vermelho",
+        "B) Amarelo",
+        "C) Nenhum",
+        "D) Verde"
+      ],
+      "resposta": "D",
+      "categoria": "Se Aninhado — Erros e Análise",
+      "numero": 17
+    },
+    {
+      "id": "SAN05",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Programa com erro:\n🟡 se < (distancia) < (10) > então\n   acender LED vermelho\n🟡 se < (distancia) < (10) > então\n   acender LED amarelo\n\nO que acontece quando distancia = 5?",
+      "opcoes": [
+        "A) Só o vermelho acende",
+        "B) Só o amarelo acende",
+        "C) Os dois acendem — há dois 'se' separados, ambos verdadeiros",
+        "D) Nenhum acende"
+      ],
+      "resposta": "C",
+      "categoria": "Se Aninhado — Erros e Análise",
+      "numero": 18
+    },
+    {
+      "id": "SAN06",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Mesmo programa anterior. O correto seria usar:",
+      "opcoes": [
+        "A) Dois 'se' separados está certo",
+        "B) 🟡 se ◆ então / senão — o segundo bloco seria o 'senão'",
+        "C) Três 'se' aninhados",
+        "D) Remover os dois 'se'"
+      ],
+      "resposta": "B",
+      "categoria": "Se Aninhado — Erros e Análise",
+      "numero": 19
+    },
+    {
+      "id": "SAN07",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Programa:\n🟡 se < (distancia) < (30) > então\n   🟡 se < (distancia) > (30) > então\n      acender LED\n\nEsse LED alguma vez acende?",
+      "opcoes": [
+        "A) Sim, quando distancia = 30",
+        "B) Nunca — para entrar no segundo se, distancia já é menor que 30; o segundo exige maior que 30",
+        "C) Sempre",
+        "D) Só quando distancia = 0"
+      ],
+      "resposta": "B",
+      "categoria": "Se Aninhado — Erros e Análise",
+      "numero": 20
+    },
+    {
+      "id": "SAN08",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Programa:\n🟡 se < (distancia) < (10) > então\n   acender LED vermelho\n   🟡 se < (distancia) < (5) > então\n      ligar buzzer\n\ndistancia = 3. O que acontece?",
+      "opcoes": [
+        "A) Só o LED acende",
+        "B) Só o buzzer toca",
+        "C) LED acende E buzzer toca",
+        "D) Nada acontece"
+      ],
+      "resposta": "C",
+      "categoria": "Se Aninhado — Erros e Análise",
+      "numero": 21
+    },
+    {
+      "id": "SAN09",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Mesmo programa anterior. distancia = 7. O que acontece?",
+      "opcoes": [
+        "A) LED acende E buzzer toca",
+        "B) Só o LED acende — 7 < 10 é verdadeiro, mas 7 < 5 é falso",
+        "C) Só o buzzer toca",
+        "D) Nada"
+      ],
+      "resposta": "B",
+      "categoria": "Se Aninhado — Erros e Análise",
+      "numero": 22
+    },
+    {
+      "id": "SAN10",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Programa:\n🟡 se < (distancia) < (10) > então\n   acender LED vermelho\n🟡 senão se < (distancia) < (20) > então\n   acender LED amarelo\n🟡 senão se < (distancia) < (30) > então\n   acender LED azul\n🟡 senão\n   acender LED verde\n\ndistancia = 10 exatamente. Qual LED acende?",
+      "opcoes": [
+        "A) Vermelho — 10 está perto",
+        "B) Amarelo — 10 < 20 é verdadeiro e não entrou no primeiro",
+        "C) Azul",
+        "D) Verde"
+      ],
+      "resposta": "B",
+      "categoria": "Se Aninhado — Erros e Análise",
+      "numero": 23
+    },
+    {
+      "id": "SAN11",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Mesmo programa. distancia = 25. Qual LED acende?",
+      "opcoes": [
+        "A) Vermelho",
+        "B) Amarelo",
+        "C) Azul",
+        "D) Verde"
+      ],
+      "resposta": "C",
+      "categoria": "Se Aninhado — Erros e Análise",
+      "numero": 24
+    },
+    {
+      "id": "SAN12",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Mesmo programa. distancia = 50. Qual LED acende?",
+      "opcoes": [
+        "A) Vermelho",
+        "B) Amarelo",
+        "C) Azul",
+        "D) Verde"
+      ],
+      "resposta": "D",
+      "categoria": "Se Aninhado — Erros e Análise",
+      "numero": 25
+    },
+    {
+      "id": "SAN13",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Um aluno quer três níveis de alerta com o sensor ultrassônico:\n- Menos de 10 cm: LED vermelho\n- Entre 10 e 30 cm: LED amarelo\n- Mais de 30 cm: LED verde\n\nQual estrutura está CORRETA?",
+      "opcoes": [
+        "A) Três blocos 'se' separados sem senão",
+        "B) 🟡 se < dist < 10 > então vermelho / senão se < dist < 30 > então amarelo / senão verde",
+        "C) Um único 'se' com três condições no campo ◆",
+        "D) Três 'se' aninhados um dentro do outro sem senão"
+      ],
+      "resposta": "B",
+      "categoria": "Se Aninhado — Erros e Análise",
+      "numero": 26
+    },
+    {
+      "id": "SAN14",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Por que usar 'senão se' é melhor do que vários 'se' separados quando as condições são exclusivas?",
+      "opcoes": [
+        "A) Não faz diferença nenhuma",
+        "B) Com senão se, quando uma condição for verdadeira as outras não são testadas — evita acender dois LEDs ao mesmo tempo",
+        "C) Vários 'se' separados são mais rápidos",
+        "D) O mBlock só aceita 'senão se'"
+      ],
+      "resposta": "B",
+      "categoria": "Se Aninhado — Erros e Análise",
+      "numero": 27
+    },
+    {
+      "id": "SAN15",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Programa com SE ANINHADO desnecessário:\n🟡 se < (ler pino digital 2) = (BAIXO) > então\n   🟡 se < (ler pino digital 2) = (BAIXO) > então\n      acender LED\n\nQual o problema?",
+      "opcoes": [
+        "A) Não tem problema — funciona corretamente",
+        "B) O segundo 'se' é desnecessário: já estamos dentro do bloco onde pino 2 = BAIXO",
+        "C) Falta um 'senão'",
+        "D) Deveria usar 'ou' em vez de dois 'se'"
+      ],
+      "resposta": "B",
+      "categoria": "Se Aninhado — Erros e Análise",
+      "numero": 28
+    }
+  ]
+}

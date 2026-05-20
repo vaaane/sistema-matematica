@@ -99,10 +99,10 @@ function buildRankingMedia(lista) {
       aluno: r.aluno, turma: r.turma || '?', porAtiv: {}, sessoes: 0,
       melhorSessao: 0, primeiroTs: Infinity
     };
-    const bruta = r.pontuacao_bruta || r.pontuacao || 0;
+    const pts = r.pontuacao || 0;
     const prev = melhor[r.aluno].porAtiv[r.atividade] || 0;
-    if (bruta > prev) melhor[r.aluno].porAtiv[r.atividade] = bruta;
-    if (bruta > melhor[r.aluno].melhorSessao) melhor[r.aluno].melhorSessao = bruta;
+    if (pts > prev) melhor[r.aluno].porAtiv[r.atividade] = pts;
+    if (pts > melhor[r.aluno].melhorSessao) melhor[r.aluno].melhorSessao = pts;
     const ts = r.criadoEm || 0;
     if (ts && ts < melhor[r.aluno].primeiroTs) melhor[r.aluno].primeiroTs = ts;
     melhor[r.aluno].sessoes++;
@@ -115,50 +115,16 @@ function buildRankingMedia(lista) {
       aluno: a.aluno, turma: a.turma, total, media, atividades: vals.length, sessoes: a.sessoes,
       melhorSessao: a.melhorSessao, primeiroTs: a.primeiroTs === Infinity ? 0 : a.primeiroTs
     };
-  }).sort((a, b) => {
-    if (b.total !== a.total) return b.total - a.total;
-    if (b.melhorSessao !== a.melhorSessao) return b.melhorSessao - a.melhorSessao;
-    return (a.primeiroTs || 0) - (b.primeiroTs || 0);
-  });
-  // Anotação de grupos em empate
-  let gi = 0;
-  while (gi < result.length) {
-    let gj = gi + 1;
-    while (gj < result.length && result[gj].total === result[gi].total) gj++;
-    if (gj - gi > 1) {
-      const g = result.slice(gi, gj);
-      const criterion = g.some(x => x.melhorSessao !== g[0].melhorSessao) ? 'melhor sessão' : 'data de jogo';
-      for (let k = gi; k < gj; k++) result[k].tieInfo = criterion;
-    }
-    gi = gj;
-  }
+  }).sort((a, b) => b.total - a.total);
   return result;
 }
 
-// ── Tiebreak para ranking por atividade ───────────────────────
-function applyAtivTiebreak(ranking) {
-  const sorted = [...ranking].sort((a, b) => {
-    const ap = a.pontuacao_bruta || a.pontuacao || 0;
-    const bp = b.pontuacao_bruta || b.pontuacao || 0;
-    if (bp !== ap) return bp - ap;
-    return (a.criadoEm || 0) - (b.criadoEm || 0);
-  });
-  let i = 0;
-  while (i < sorted.length) {
-    let j = i + 1;
-    const iP = sorted[i].pontuacao_bruta || sorted[i].pontuacao || 0;
-    while (j < sorted.length && (sorted[j].pontuacao_bruta || sorted[j].pontuacao || 0) === iP) j++;
-    if (j - i > 1) for (let k = i; k < j; k++) sorted[k].tieInfo = 'data de jogo';
-    i = j;
-  }
-  return sorted;
-}
 
 const rankAll   = buildRankingMedia(todos);
 const rankTurma = rankAll.filter(r => r.turma === turma);
 saveRankPos(alunos, rankAll);
 applyTopRankVisuals();
-initTopNotif({ mode: 'aluno' });
+initTopNotif({ mode: 'aluno', alunoNome: alunos[0] });
 
 // ── Posição ───────────────────────────────────────────────────
 function posicaoAluno(nome) {
@@ -190,9 +156,22 @@ function sparklesHTML() {
 }
 
 // ── Pódio ─────────────────────────────────────────────────────
-function renderPodium(top3, { showTurma = true, size = 'medium' } = {}) {
-  if (!top3.length) return '';
-  const [p1, p2, p3] = [top3[0], top3[1], top3[2]];
+function renderPodium(lista, { showTurma = true, size = 'medium' } = {}) {
+  if (!lista.length) return '';
+  const getScore = p => p.pts !== undefined ? p.pts : (p.total || 0);
+
+  // Group consecutive equal-score students into up to 3 podium spots
+  const groups = [];
+  let runPos = 1;
+  for (let gi = 0; gi < lista.length && groups.length < 3; ) {
+    const score = getScore(lista[gi]);
+    let gj = gi + 1;
+    while (gj < lista.length && getScore(lista[gj]) === score) gj++;
+    groups.push({ pos: runPos, students: lista.slice(gi, gj), score });
+    runPos += (gj - gi);
+    gi = gj;
+  }
+
   const STAND_HEIGHTS = { large: [130,88,60], medium: [90,62,44], small: [50,34,22] };
   const hs = STAND_HEIGHTS[size] || STAND_HEIGHTS.medium;
   const STANDS = [
@@ -200,10 +179,10 @@ function renderPodium(top3, { showTurma = true, size = 'medium' } = {}) {
     { h: hs[1], bg: 'linear-gradient(135deg,#9CA3AF,#6B7280)', glow: 'glow-silver' },
     { h: hs[2], bg: 'linear-gradient(135deg,#CD853F,#92400E)', glow: 'glow-bronze' },
   ];
-  const ptsArr   = top3.map(p => p.pts !== undefined ? p.pts : (p.total || p.media || 0));
-  const maxW     = size === 'large' ? '140px' : size === 'small' ? '88px' : '120px';
+  const maxWNum  = size === 'large' ? 140 : size === 'small' ? 88 : 120;
+  const maxW     = maxWNum + 'px';
   const nameFs   = size === 'large' ? '13px'  : size === 'small' ? '10px' : '11px';
-  const trophyFs = size === 'large' ? '38px'  : size === 'small' ? '22px' : '30px';
+  const trophyFs = size === 'large' ? '64px'  : size === 'small' ? '36px' : '48px';
   const ptsFs    = size === 'large' ? '15px'  : size === 'small' ? '10px' : '12px';
   const standFs  = size === 'large' ? '20px'  : size === 'small' ? '11px' : '16px';
   const crownSz  = size === 'large' ? '24px'  : '15px';
@@ -211,44 +190,70 @@ function renderPodium(top3, { showTurma = true, size = 'medium' } = {}) {
   const wrapGap  = size === 'large' ? '12px'  : size === 'small' ? '5px' : '8px';
   const wrapPad  = size === 'large' ? '28px 8px 0' : size === 'small' ? '6px 4px 0' : '16px 8px 0';
 
-  const spot = (p, pos) => {
-    if (!p) return `<div class="podium-spot" style="max-width:${maxW}"></div>`;
-    const st = STANDS[pos - 1];
-    const trophy = ['🥇','🥈','🥉'][pos - 1];
-    const isMe = alunos.includes(p.aluno);
-    const youTag = isMe ? ' ★' : '';
+  // slotIdx: 0=1st, 1=2nd, 2=3rd (styling colors)
+  const spot = (g, slotIdx) => {
+    if (!g) return `<div class="podium-spot" style="max-width:${maxW}"></div>`;
+    const st = STANDS[slotIdx];
+    const trophy = ['🥇','🥈','🥉'][slotIdx];
+    const anyMe = g.students.some(p => alunos.includes(p.aluno));
     let decoration = '';
-    if (isMe && pos === 1) decoration = confettiHTML();
-    if (isMe && pos === 2) decoration = sparklesHTML();
-    const glowStyle = isMe && pos <= 2 ? `color:${pos===1?'#F59E0B':'#9CA3AF'};text-shadow:0 0 8px currentColor;` : '';
-    const mainPts = p.pts !== undefined ? p.pts : (p.total || 0);
-    const subPts  = p.pts !== undefined ? null : (p.media != null ? `méd. ${p.media}pts` : null);
-    return `<div class="podium-spot ${st.glow}${isMe ? ' podium-you' : ''}" style="max-width:${maxW}">
+    if (anyMe && slotIdx === 0) decoration = confettiHTML();
+    if (anyMe && slotIdx === 1) decoration = sparklesHTML();
+    const subPts = g.students[0].pts === undefined && g.students[0].media != null
+      ? `méd. ${g.students[0].media}pts` : null;
+    let namesHtml;
+    if (g.students.length <= 1) {
+      const p = g.students[0];
+      const isMe = alunos.includes(p.aluno);
+      const youTag = isMe ? ' ★' : '';
+      const glowStyle = isMe && slotIdx <= 1
+        ? `color:${slotIdx===0?'#F59E0B':'#9CA3AF'};text-shadow:0 0 8px currentColor;` : '';
+      namesHtml = `<div class="podium-name" style="${glowStyle}font-size:${nameFs}">${p.aluno}${youTag}</div>
+        ${showTurma && p.turma ? `<div class="podium-turma">Turma ${p.turma}</div>` : ''}`;
+    } else {
+      namesHtml = `<div style="display:flex;align-items:flex-start;width:100%">${
+        g.students.map((p, ni) => {
+          const isMe = alunos.includes(p.aluno);
+          const youTag = isMe ? ' ★' : '';
+          const glowStyle = isMe && slotIdx <= 1
+            ? `color:${slotIdx===0?'#F59E0B':'#9CA3AF'};text-shadow:0 0 8px currentColor;` : '';
+          const vsep = ni < g.students.length - 1
+            ? `<div style="width:1px;background:var(--border);opacity:.5;align-self:stretch;margin:0 3px;flex-shrink:0"></div>` : '';
+          return `<div style="flex:1;min-width:0;text-align:center">
+            <div class="podium-name" style="${glowStyle}font-size:${nameFs};white-space:normal;overflow:visible">${p.aluno}${youTag}</div>
+            ${showTurma && p.turma ? `<div class="podium-turma">T ${p.turma}</div>` : ''}
+          </div>${vsep}`;
+        }).join('')
+      }</div>`;
+    }
+    const spotMaxW = g.students.length > 1 ? `${Math.min(g.students.length * maxWNum, 280)}px` : maxW;
+    return `<div class="podium-spot ${st.glow}${anyMe ? ' podium-you' : ''}" style="max-width:${spotMaxW}">
       ${decoration}
-      <div class="podium-trophy" style="font-size:${trophyFs}">${pos === 1 ? `<span class="crown-anim" style="font-size:${crownSz};position:absolute;top:${crownTp}">👑</span>` : ''}${trophy}</div>
-      <div class="podium-name" style="${glowStyle}font-size:${nameFs}">${p.aluno}${youTag}</div>
-      ${showTurma && p.turma ? `<div class="podium-turma">Turma ${p.turma}</div>` : ''}
-      <div class="podium-pts" style="font-size:${ptsFs};color:${['#F59E0B','#9CA3AF','#CD853F'][pos-1]};text-align:center">${mainPts}${subPts ? `<div style="font-size:9px;font-weight:500;opacity:.75;margin-top:1px">${subPts}</div>` : ''}</div>
-      <div class="podium-stand" style="height:${st.h}px;background:${st.bg};font-size:${standFs}">${pos}</div>
+      <div class="podium-trophy" style="font-size:${trophyFs}">${slotIdx === 0 ? `<span class="crown-anim" style="font-size:${crownSz};position:absolute;top:${crownTp};left:50%;transform:translateX(-50%)">👑</span>` : ''}${trophy}</div>
+      ${namesHtml}
+      <div class="podium-pts" style="font-size:${ptsFs};color:${['#F59E0B','#9CA3AF','#CD853F'][slotIdx]};text-align:center">${g.score}${subPts ? `<div style="font-size:9px;font-weight:500;opacity:.75;margin-top:1px">${subPts}</div>` : ''}</div>
+      <div class="podium-stand" style="height:${st.h}px;background:${st.bg};font-size:${standFs}">${g.pos}</div>
     </div>`;
   };
 
-  // Diferença de pontos
   const diffsHtml = () => {
-    const rows = top3.map((p, i) => {
-      if (i === 0) return `<div style="flex:1;max-width:120px;text-align:center"><span style="font-size:10px;color:var(--gold);font-weight:700">🏆 líder</span></div>`;
-      const diff = ptsArr[0] - ptsArr[i];
-      return `<div style="flex:1;max-width:120px;text-align:center"><span class="podium-diff">${diff > 0 ? `${diff} pts atrás` : 'empate'}</span></div>`;
-    });
-    return `<div style="display:flex;justify-content:center;gap:8px;margin-bottom:4px">${[rows[1]||'',rows[0],rows[2]||''].join('')}</div>`;
+    const makeSlot = g => g
+      ? `<div style="flex:1;max-width:${maxW};text-align:center"><span class="podium-diff">${groups[0].score - g.score} pts atrás</span></div>`
+      : `<div style="flex:1;max-width:${maxW}"></div>`;
+    return `<div style="display:flex;justify-content:center;gap:${wrapGap};margin-bottom:4px">
+      ${makeSlot(groups[1])}
+      <div style="flex:1;max-width:${maxW};text-align:center"><span style="font-size:10px;color:var(--gold);font-weight:700">🏆 líder</span></div>
+      ${makeSlot(groups[2])}
+    </div>`;
   };
 
+  // Visual order: 2nd(left), 1st(center), 3rd(right)
   return `<div class="podium-wrap" style="gap:${wrapGap};padding:${wrapPad}">
-    ${spot(p2, 2)}
-    ${spot(p1, 1)}
-    ${spot(p3, 3)}
+    ${spot(groups[1], 1)}
+    ${spot(groups[0], 0)}
+    ${spot(groups[2], 2)}
   </div>
-  ${top3.length >= 2 ? diffsHtml() : ''}`;
+  ${groups.length >= 2 ? diffsHtml() : ''}`;
 }
 
 // ── Listener de atividade ─────────────────────────────────────
@@ -267,9 +272,8 @@ function abrirAtividade(nome) {
   elTurma.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px">Aguardando…</div>';
   elGeral.innerHTML = '';
   unsubAtiv = listenRankingAtividade(nome, ranking => {
-    const sorted = applyAtivTiebreak(ranking);
-    const listaTurma = sorted.filter(r => r.turma === turma).slice(0, 10);
-    const listaGeral = sorted.slice(0, 10);
+    const listaTurma = ranking.filter(r => r.turma === turma).slice(0, 10);
+    const listaGeral = ranking.slice(0, 10);
     renderAtivTurma(listaTurma, elTurma);
     renderAtivGeral(listaGeral, elGeral);
   });
@@ -281,12 +285,10 @@ function rowAtiv(r, pos, dest, showTurma) {
   const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
   const colorClass = pos === 1 ? 'rank-gold' : pos === 2 ? 'rank-silver' : pos === 3 ? 'rank-bronze' : '';
   const atrasoTag = r.com_abatimento ? ' <span style="font-size:10px;color:#D97706">⏰</span>' : '';
-  const tieSub = r.tieInfo ? `<div class="rank-sub" style="color:#D97706;font-size:10px">${pos}º · desempate por ${r.tieInfo}</div>` : '';
   return `<div class="rank-row ${colorClass}${dest ? ' destaque' : ''}">
     <div class="rank-pos">${medal}</div>
     <div style="flex:1;min-width:0">
       <div class="rank-nome">${r.aluno}${dest ? ' ★' : ''}${atrasoTag}</div>
-      ${tieSub}
       ${showTurma ? `<div class="rank-sub">Turma ${r.turma}</div>` : ''}
     </div>
     <div class="rank-pts">${pts}</div>
@@ -298,12 +300,20 @@ function renderAtivTurma(lista, el) {
     el.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:10px 16px">Nenhum resultado da sua turma ainda.</p>';
     return;
   }
-  el.innerHTML = lista.map((r, i) => rowAtiv(r, i + 1, alunos.includes(r.aluno), false)).join('');
+  let pos = 1;
+  el.innerHTML = lista.map((r, i) => {
+    if (i > 0 && (r.pontuacao || 0) !== (lista[i-1].pontuacao || 0)) pos = i + 1;
+    return rowAtiv(r, pos, alunos.includes(r.aluno), false);
+  }).join('');
 }
 
 function renderAtivGeral(lista, el) {
   if (!lista.length) { el.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:10px 16px">Sem resultados ainda.</p>'; return; }
-  el.innerHTML = lista.map((r, i) => rowAtiv(r, i + 1, alunos.includes(r.aluno), true)).join('');
+  let pos = 1;
+  el.innerHTML = lista.map((r, i) => {
+    if (i > 0 && (r.pontuacao || 0) !== (lista[i-1].pontuacao || 0)) pos = i + 1;
+    return rowAtiv(r, pos, alunos.includes(r.aluno), true);
+  }).join('');
 }
 
 window.mudarTab = function(tab) {
@@ -319,17 +329,17 @@ window.mudarTab = function(tab) {
 // ── Construir linhas ──────────────────────────────────────────
 function buildRows(lista, showTurma) {
   if (!lista.length) return '<p style="font-size:13px;color:var(--text-muted);padding:16px">Nenhum resultado ainda.</p>';
+  let lastPos = 1;
   return lista.map((r, i) => {
-    const pos = i + 1;
+    if (i === 0 || r.total !== lista[i-1].total) lastPos = i + 1;
+    const pos = lastPos;
     const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
     const dest = alunos.includes(r.aluno);
     const colorClass = pos === 1 ? 'rank-gold' : pos === 2 ? 'rank-silver' : pos === 3 ? 'rank-bronze' : '';
-    const tieSub = r.tieInfo ? `<div class="rank-sub" style="color:#D97706;font-size:10px">${pos}º · desempate por ${r.tieInfo}</div>` : '';
     return `<div class="rank-row ${colorClass}${dest ? ' destaque' : ''}">
       <div class="rank-pos">${medal}</div>
       <div style="flex:1;min-width:0">
         <div class="rank-nome">${r.aluno}${dest ? ' ★' : ''}</div>
-        ${tieSub}
         <div class="rank-sub">${showTurma ? `Turma ${r.turma} · ` : ''}${r.atividades} ativ. · ${r.sessoes} sess.</div>
       </div>
       <div class="rank-pts">${r.total}<div class="rank-pts-label">total</div><div class="rank-pts-label">méd. ${r.media}</div></div>
@@ -340,8 +350,8 @@ function buildRows(lista, showTurma) {
 const geralRows = buildRows(rankAll, true);
 const turmaRows = buildRows(rankTurma.slice(0, 10), false);
 
-const geralTop3 = rankAll.slice(0, 3).map(r => ({ aluno: r.aluno, total: r.total, media: r.media, turma: r.turma }));
-const turmaTop3 = rankTurma.slice(0, 3).map(r => ({ aluno: r.aluno, total: r.total, media: r.media, turma: r.turma }));
+const geralTop3 = rankAll.slice(0, 9).map(r => ({ aluno: r.aluno, total: r.total, media: r.media, turma: r.turma }));
+const turmaTop3 = rankTurma.slice(0, 9).map(r => ({ aluno: r.aluno, total: r.total, media: r.media, turma: r.turma }));
 
 const ativBtns = LISTA_ATIVIDADES.map(a =>
   `<button class="ativ-btn${a.nome === ativSel ? ' active' : ''}" data-ativ="${a.nome}">${a.nome}</button>`

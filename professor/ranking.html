@@ -226,10 +226,10 @@ async function renderPainelPrincipal() {
         aluno: r.aluno, turma: r.turma || '?', porAtiv: {}, sessoes: 0,
         melhorSessao: 0, primeiroTs: Infinity
       };
-      const bruta = r.pontuacao_bruta || r.pontuacao || 0;
+      const pts = r.pontuacao || 0;
       const prev = melhor[r.aluno].porAtiv[r.atividade] || 0;
-      if (bruta > prev) melhor[r.aluno].porAtiv[r.atividade] = bruta;
-      if (bruta > melhor[r.aluno].melhorSessao) melhor[r.aluno].melhorSessao = bruta;
+      if (pts > prev) melhor[r.aluno].porAtiv[r.atividade] = pts;
+      if (pts > melhor[r.aluno].melhorSessao) melhor[r.aluno].melhorSessao = pts;
       const ts = r.criadoEm || 0;
       if (ts && ts < melhor[r.aluno].primeiroTs) melhor[r.aluno].primeiroTs = ts;
       melhor[r.aluno].sessoes++;
@@ -242,22 +242,7 @@ async function renderPainelPrincipal() {
         aluno: a.aluno, turma: a.turma, media, total, atividades: vals.length, sessoes: a.sessoes,
         melhorSessao: a.melhorSessao, primeiroTs: a.primeiroTs === Infinity ? 0 : a.primeiroTs
       };
-    }).sort((a, b) => {
-      if (b.total !== a.total) return b.total - a.total;
-      if (b.melhorSessao !== a.melhorSessao) return b.melhorSessao - a.melhorSessao;
-      return (a.primeiroTs || 0) - (b.primeiroTs || 0);
-    });
-    let gi = 0;
-    while (gi < result.length) {
-      let gj = gi + 1;
-      while (gj < result.length && result[gj].total === result[gi].total) gj++;
-      if (gj - gi > 1) {
-        const g = result.slice(gi, gj);
-        const criterion = g.some(x => x.melhorSessao !== g[0].melhorSessao) ? 'melhor sessão' : 'data de jogo';
-        for (let k = gi; k < gj; k++) result[k].tieInfo = criterion;
-      }
-      gi = gj;
-    }
+    }).sort((a, b) => b.total - a.total);
     return result;
   }
 
@@ -286,10 +271,9 @@ async function renderPainelPrincipal() {
       const pos = lastTiePos;
       const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
       const cls = pos === 1 ? 'tr-top1' : pos === 2 ? 'tr-top2' : pos === 3 ? 'tr-top3' : '';
-      const tieCell = (r.tieInfo && sortCol === 'total') ? `<div style="font-size:9px;color:#D97706;margin-top:1px">${pos}º · desempate por ${r.tieInfo}</div>` : '';
       return `<tr class="${cls}">
-        <td style="text-align:center;font-weight:700">${medal}</td>
-        <td style="font-weight:600">${r.aluno}${tieCell}</td>
+        <td style="text-align:center;font-weight:700;font-size:20px">${medal}</td>
+        <td style="font-weight:600">${r.aluno}</td>
         <td><span class="badge badge-blue">Turma ${r.turma}</span></td>
         <td>
             <div style="font-weight:800;color:var(--gold)">${r.total}</div>
@@ -331,14 +315,15 @@ async function renderPainelPrincipal() {
         el.innerHTML = '<p style="padding:16px;color:var(--text-muted);font-size:13px">Sem resultados para esta atividade.</p>';
         return;
       }
+      let lastPos = 1;
       const rkRows = filtrado.map((r, i) => {
-        const pos = i + 1;
+        if (i === 0 || r.melhorPts !== filtrado[i-1].melhorPts) lastPos = i + 1;
+        const pos = lastPos;
         const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
         const cls = pos === 1 ? 'tr-top1' : pos === 2 ? 'tr-top2' : pos === 3 ? 'tr-top3' : '';
-        const tieCell = r.tieInfo ? `<div style="font-size:9px;color:#D97706;margin-top:1px">${pos}º · desempate por ${r.tieInfo}</div>` : '';
         return `<tr class="${cls}">
-          <td style="text-align:center;font-weight:700">${medal}</td>
-          <td style="font-weight:600">${r.aluno}${tieCell}</td>
+          <td style="text-align:center;font-weight:700;font-size:20px">${medal}</td>
+          <td style="font-weight:600">${r.aluno}</td>
           <td><span class="badge badge-blue">Turma ${r.turma}</span></td>
           <td style="font-weight:800;color:var(--gold)">${r.melhorPts}</td>
           <td class="rank-hide-mobile">${r.tentativas}</td>
@@ -469,8 +454,10 @@ function iniciarModoProjecao(atividade, modo) {
     <div class="rk-footer" id="rk-footer">Aguardando resultados…</div>`;
 
   const unsub = listenRankingProfessor(atividade, ranking => {
-    atualizarPodio(ranking.slice(0, 3));
-    atualizarLista(ranking.slice(3));
+    const podGroups = getRankGroupsProf(ranking);
+    const podCount  = podGroups.reduce((s, g) => s + g.students.length, 0);
+    atualizarPodio(ranking);
+    atualizarLista(ranking.slice(podCount));
     const ativos = ranking.filter(r => r.ativo).length;
     document.getElementById("rk-footer").textContent =
       `⏱ atualizado às ${new Date().toLocaleTimeString('pt-BR')} · ${ranking.length} participante${ranking.length !== 1 ? 's' : ''}${ativos > 0 ? ` · ⚡ ${ativos} jogando` : ''}`;
@@ -526,10 +513,10 @@ async function iniciarTVMode() {
         aluno: r.aluno, turma: r.turma || '?', porAtiv: {}, sessoes: 0,
         melhorSessao: 0, primeiroTs: Infinity
       };
-      const bruta = r.pontuacao_bruta || r.pontuacao || 0;
+      const pts = r.pontuacao || 0;
       const prev = melhor[r.aluno].porAtiv[r.atividade] || 0;
-      if (bruta > prev) melhor[r.aluno].porAtiv[r.atividade] = bruta;
-      if (bruta > melhor[r.aluno].melhorSessao) melhor[r.aluno].melhorSessao = bruta;
+      if (pts > prev) melhor[r.aluno].porAtiv[r.atividade] = pts;
+      if (pts > melhor[r.aluno].melhorSessao) melhor[r.aluno].melhorSessao = pts;
       const ts = r.criadoEm || 0;
       if (ts && ts < melhor[r.aluno].primeiroTs) melhor[r.aluno].primeiroTs = ts;
       melhor[r.aluno].sessoes++;
@@ -542,22 +529,7 @@ async function iniciarTVMode() {
         tentativas: a.sessoes, comboMax: 0, acertosRapidos: 0, acertosDificeis: 0, ativo: false,
         melhorSessao: a.melhorSessao, primeiroTs: a.primeiroTs === Infinity ? 0 : a.primeiroTs
       };
-    }).sort((a, b) => {
-      if (b.melhorPts !== a.melhorPts) return b.melhorPts - a.melhorPts;
-      if (b.melhorSessao !== a.melhorSessao) return b.melhorSessao - a.melhorSessao;
-      return (a.primeiroTs || 0) - (b.primeiroTs || 0);
-    });
-    let gi = 0;
-    while (gi < result.length) {
-      let gj = gi + 1;
-      while (gj < result.length && result[gj].melhorPts === result[gi].melhorPts) gj++;
-      if (gj - gi > 1) {
-        const g = result.slice(gi, gj);
-        const criterion = g.some(x => x.melhorSessao !== g[0].melhorSessao) ? 'melhor sessão' : 'data de jogo';
-        for (let k = gi; k < gj; k++) result[k].tieInfo = criterion;
-      }
-      gi = gj;
-    }
+    }).sort((a, b) => b.melhorPts - a.melhorPts);
     return result;
   }
 
@@ -593,29 +565,51 @@ async function iniciarTVMode() {
   }
 
   // layout order: 2nd left, 1st centre, 3rd right; 3rd animates first (delay 0), 2nd second, 1st last
-  function tvPodium(top3, changes, withAnim) {
-    const medals     = ['🥇', '🥈', '🥉'];
+  function tvPodium(ranking, changes, withAnim) {
+    const grps = (() => {
+      const gs = []; let rp = 1;
+      for (let gi = 0; gi < ranking.length && gs.length < 3; ) {
+        const score = ranking[gi].melhorPts ?? 0; let gj = gi + 1;
+        while (gj < ranking.length && (ranking[gj].melhorPts ?? 0) === score) gj++;
+        gs.push({ pos: rp, students: ranking.slice(gi, gj), score }); rp += (gj - gi); gi = gj;
+      }
+      return gs;
+    })();
+    const medals      = ['🥇', '🥈', '🥉'];
     const visualOrder = [1, 0, 2];
     const standCls    = ['p2', 'p1', 'p3'];
     const animCls     = ['anim-2', 'anim-1', 'anim-3'];
     return `<div class="tv-podium">` +
-      visualOrder.map((ri, vi) => {
-        const r = top3[ri];
+      visualOrder.map((gi, vi) => {
+        const g = grps[gi];
         let cls = 'tv-pod-col';
         if (withAnim) cls += ' ' + animCls[vi];
-        if (r && changes[r.aluno] === 'new-top3') cls += ' new-entry';
-        return `<div class="${cls}" id="tv-pod-col-${ri}">
-          ${ri === 0 ? `<span class="tv-crown">👑</span>` : `<div class="tv-trophy">${medals[ri]}</div>`}
-          <div class="tv-stand ${standCls[vi]}${r ? '' : ' empty'}">
-            ${r ? `
-              <div class="tv-pname">${r.aluno}</div>
-              <div class="tv-pturma">Turma ${r.turma}</div>
-              <div class="tv-ppts" id="tv-ppts-${ri}">${r.melhorPts ?? 0} pts</div>
-              ${r.ativo ? `<div class="tv-pativo">⚡ jogando agora</div>` : ''}
+        if (g && g.students.some(r => changes[r.aluno] === 'new-top3')) cls += ' new-entry';
+        const tiedW = g && g.students.length > 1 ? ` style="min-width:${Math.min(g.students.length * 158, 360)}px"` : '';
+        const r0 = g?.students[0];
+        const namesC = !g ? '' : g.students.length === 1
+          ? `<div class="tv-pname">${r0.aluno}</div><div class="tv-pturma">Turma ${r0.turma}</div>`
+          : `<div style="display:flex;width:100%;gap:0">${
+              g.students.map((r, ni) => {
+                const vsep = ni < g.students.length - 1
+                  ? `<div style="width:1px;background:rgba(255,255,255,.2);opacity:.6;align-self:stretch;margin:0 6px;flex-shrink:0"></div>` : '';
+                return `<div style="flex:1;min-width:0;text-align:center">
+                  <div class="tv-pname" style="max-width:none;font-size:${g.students.length > 2 ? '12px' : '15px'}">${r.aluno}</div>
+                  <div class="tv-pturma">T ${r.turma}</div>
+                </div>${vsep}`;
+              }).join('')
+            }</div>`;
+        return `<div class="${cls}" id="tv-pod-col-${gi}">
+          ${gi === 0 ? `<span class="tv-crown">👑</span>` : `<div class="tv-trophy">${medals[gi]}</div>`}
+          <div class="tv-stand ${standCls[vi]}${g ? '' : ' empty'}"${tiedW}>
+            ${g ? `
+              ${namesC}
+              <div class="tv-ppts" id="tv-ppts-${gi}">${g.score} pts</div>
+              ${r0.ativo ? `<div class="tv-pativo">⚡ jogando agora</div>` : ''}
               <div class="tv-pextras">
-                ${r.comboMax > 1 ? `<span style="color:#FF8800;font-weight:700">🔥×${r.comboMax}</span>` : ''}
-                ${r.acertosRapidos > 0 ? `<span style="color:#60A5FA;font-weight:700">⚡${r.acertosRapidos}</span>` : ''}
-                ${r.acertosDificeis > 0 ? `<span style="color:#FDE047;font-weight:700">🏆${r.acertosDificeis}</span>` : ''}
+                ${r0.comboMax > 1 ? `<span style="color:#FF8800;font-weight:700">🔥×${r0.comboMax}</span>` : ''}
+                ${r0.acertosRapidos > 0 ? `<span style="color:#60A5FA;font-weight:700">⚡${r0.acertosRapidos}</span>` : ''}
+                ${r0.acertosDificeis > 0 ? `<span style="color:#FDE047;font-weight:700">🏆${r0.acertosDificeis}</span>` : ''}
               </div>
             ` : `<div class="tv-pempty">—</div>`}
           </div>
@@ -636,7 +630,6 @@ async function iniciarTVMode() {
           <span>T${r.turma}</span>
           ${r.ativo ? `<span class="tv-lativo">⚡ jogando</span>` : ''}
           ${r.comboMax > 1 ? `<span style="color:#FF8800;font-weight:700">🔥×${r.comboMax}</span>` : ''}
-          ${r.tieInfo ? `<span style="color:#FAB800">${pos}º desempate: ${r.tieInfo}</span>` : ''}
         </div>
       </div>
       <div class="tv-lpts-wrap">
@@ -646,23 +639,31 @@ async function iniciarTVMode() {
     </div>`;
   }
 
-  function updatePodiumInPlace(top3, changes) {
-    top3.forEach((r, ri) => {
-      if (!r) return;
-      const ptsEl = document.getElementById(`tv-ppts-${ri}`);
+  function updatePodiumInPlace(ranking, changes) {
+    const grps = (() => {
+      const gs = []; let rp = 1;
+      for (let gi = 0; gi < ranking.length && gs.length < 3; ) {
+        const score = ranking[gi].melhorPts ?? 0; let gj = gi + 1;
+        while (gj < ranking.length && (ranking[gj].melhorPts ?? 0) === score) gj++;
+        gs.push({ pos: rp, students: ranking.slice(gi, gj), score }); rp += (gj - gi); gi = gj;
+      }
+      return gs;
+    })();
+    grps.forEach((g, gi) => {
+      const ptsEl = document.getElementById(`tv-ppts-${gi}`);
       if (ptsEl) {
-        const newVal = (r.melhorPts ?? 0) + ' pts';
+        const newVal = g.score + ' pts';
         if (ptsEl.textContent !== newVal) {
           ptsEl.textContent = newVal;
-          if (changes[r.aluno] === 'record') {
+          if (g.students.some(r => changes[r.aluno] === 'record')) {
             ptsEl.classList.remove('pts-rec');
             void ptsEl.offsetWidth;
             ptsEl.classList.add('pts-rec');
           }
         }
       }
-      if (changes[r.aluno] === 'new-top3') {
-        const col = document.getElementById(`tv-pod-col-${ri}`);
+      if (g.students.some(r => changes[r.aluno] === 'new-top3')) {
+        const col = document.getElementById(`tv-pod-col-${gi}`);
         if (col) { col.classList.remove('new-entry'); void col.offsetWidth; col.classList.add('new-entry'); }
       }
     });
@@ -700,16 +701,17 @@ async function iniciarTVMode() {
       modoAtivo = 'classico';
       if (badge) { badge.className = 'tv-badge geral'; badge.textContent = 'GERAL'; }
       const rankAll   = buildRankingMedia(todos);
-      const top3      = rankAll.slice(0, 3);
-      const resto     = rankAll.slice(3);
-      const leaderPts = top3[0]?.melhorPts ?? 0;
+      const geralGrps = (() => { const gs=[]; let rp=1; for(let gi=0;gi<rankAll.length&&gs.length<3;){const s=rankAll[gi].melhorPts??0;let gj=gi+1;while(gj<rankAll.length&&(rankAll[gj].melhorPts??0)===s)gj++;gs.push({pos:rp,students:rankAll.slice(gi,gj),score:s});rp+=(gj-gi);gi=gj;}return gs; })();
+      const podCount  = geralGrps.reduce((s, g) => s + g.students.length, 0);
+      const resto     = rankAll.slice(podCount);
+      const leaderPts = rankAll[0]?.melhorPts ?? 0;
 
       rankAll.forEach((r, i) => { prevRankMap[r.aluno] = { pos: i + 1, pts: r.melhorPts }; });
-      prevTop3 = new Set(top3.map(r => r.aluno));
+      prevTop3 = new Set(rankAll.slice(0, podCount).map(r => r.aluno));
 
       slideEl.innerHTML = `
         <div class="tv-sec">CLASSIFICAÇÃO GERAL · MÉDIA DE PONTUAÇÃO</div>
-        ${tvPodium(top3, {}, true)}
+        ${tvPodium(rankAll, {}, true)}
         ${resto.length ? `
           <div class="tv-sec">DEMAIS PARTICIPANTES</div>
           <div class="tv-list">${resto.map((r, i) => tvListRow(r, i + 4, leaderPts, {})).join('')}</div>
@@ -732,22 +734,23 @@ async function iniciarTVMode() {
       let firstUpdate = true;
       currentUnsub = listenRankingProfessor(slide.atividade, ranking => {
         const changes   = detectChanges(ranking);
-        const top3      = ranking.slice(0, 3);
-        const resto     = ranking.slice(3);
-        const leaderPts = top3[0]?.melhorPts ?? 0;
+        const ativGrps  = (() => { const gs=[]; let rp=1; for(let gi=0;gi<ranking.length&&gs.length<3;){const s=ranking[gi].melhorPts??0;let gj=gi+1;while(gj<ranking.length&&(ranking[gj].melhorPts??0)===s)gj++;gs.push({pos:rp,students:ranking.slice(gi,gj),score:s});rp+=(gj-gi);gi=gj;}return gs; })();
+        const podCnt    = ativGrps.reduce((s, g) => s + g.students.length, 0);
+        const resto     = ranking.slice(podCnt);
+        const leaderPts = ranking[0]?.melhorPts ?? 0;
 
         const podWrap = document.getElementById('tv-podium-wrap');
         if (podWrap) {
           if (firstUpdate) {
-            podWrap.innerHTML = tvPodium(top3, changes, true);
+            podWrap.innerHTML = tvPodium(ranking, changes, true);
             firstUpdate = false;
           } else {
-            updatePodiumInPlace(top3, changes);
+            updatePodiumInPlace(ranking, changes);
           }
         }
 
         const listEl = document.getElementById('tv-list');
-        if (listEl) listEl.innerHTML = resto.map((r, i) => tvListRow(r, i + 4, leaderPts, changes)).join('');
+        if (listEl) listEl.innerHTML = resto.map((r, i) => tvListRow(r, i + podCnt + 1, leaderPts, changes)).join('');
 
         const demSec = document.getElementById('tv-demais-sec');
         if (demSec) demSec.style.display = resto.length ? '' : 'none';
@@ -779,60 +782,93 @@ async function iniciarTVMode() {
 // ══════════════════════════════════════════════════════════════
 // FUNÇÕES COMPARTILHADAS (pódio / lista)
 // ══════════════════════════════════════════════════════════════
-function renderPodiumHTML(top3) {
+function getRankGroupsProf(ranking) {
+  const groups = [];
+  let runPos = 1;
+  for (let gi = 0; gi < ranking.length && groups.length < 3; ) {
+    const score = ranking[gi].melhorPts ?? 0;
+    let gj = gi + 1;
+    while (gj < ranking.length && (ranking[gj].melhorPts ?? 0) === score) gj++;
+    groups.push({ pos: runPos, students: ranking.slice(gi, gj), score });
+    runPos += (gj - gi); gi = gj;
+  }
+  return groups;
+}
+
+function podNamesHTML(g, isPlus) {
+  if (g.students.length === 1) {
+    const r = g.students[0];
+    return `<div class="pod-nome">${r.aluno}</div><div class="pod-turma">Turma ${r.turma}</div>`;
+  }
+  return `<div style="display:flex;width:100%;gap:0">${
+    g.students.map((r, ni) => {
+      const vsep = ni < g.students.length - 1
+        ? `<div style="width:1px;background:rgba(255,255,255,.3);opacity:.5;align-self:stretch;margin:0 4px;flex-shrink:0"></div>` : '';
+      return `<div style="flex:1;min-width:0;text-align:center">
+        <div class="pod-nome" style="white-space:normal;overflow:visible;font-size:12px">${r.aluno}</div>
+        <div class="pod-turma">T ${r.turma}</div>
+      </div>${vsep}`;
+    }).join('')
+  }</div>`;
+}
+
+function renderPodiumHTML(ranking) {
+  const groups  = getRankGroupsProf(ranking);
   const order   = [1, 0, 2];
   const classes = ['p2', 'p1', 'p3'];
   const medals  = ['🥇', '🥈', '🥉'];
   const isPlus  = modoAtivo === 'competicao_plus';
-  return order.map((ri, vi) => {
-    const r   = top3[ri];
+  return order.map((gi, vi) => {
+    const g   = groups[gi];
     const cls = classes[vi];
-    return `<div class="pod-col" id="pod-col-${ri}">
-      <div class="pod-medal">${r ? medals[ri] : ''}</div>
-      <div class="pod-step ${cls}">
-        ${r ? `
-          <div class="pod-nome">${r.aluno}</div>
-          <div class="pod-turma">Turma ${r.turma}</div>
-          <div class="pod-pts">${r.melhorPts} pts</div>
+    const stepW = g && g.students.length > 1 ? `min-width:${Math.min(g.students.length * 150, 320)}px;` : '';
+    const r0 = g?.students[0];
+    return `<div class="pod-col" id="pod-col-${gi}">
+      <div class="pod-medal">${g ? medals[gi] : ''}</div>
+      <div class="pod-step ${cls}" style="${stepW}">
+        ${g ? `
+          ${podNamesHTML(g, isPlus)}
+          <div class="pod-pts">${g.score} pts</div>
           <div class="pod-extras">
-            ${r.ativo ? `<span class="pod-ativo">⚡ jogando</span>` : ''}
+            ${r0.ativo ? `<span class="pod-ativo">⚡ jogando</span>` : ''}
             ${isPlus
-              ? `${r.acertosRapidos > 0 ? `<span class="pod-rapid">⚡${r.acertosRapidos}</span>` : ''}
-                 ${r.acertosDificeis > 0 ? `<span class="pod-dif">🏆${r.acertosDificeis}</span>` : ''}
-                 <span class="pod-tent">${r.tentativas} sess.</span>`
-              : `${r.comboMax > 1 ? `<span class="pod-combo">🔥×${r.comboMax}</span>` : ''}
-                 <span class="pod-tent">${r.tentativas} tent.</span>`}
+              ? `${r0.acertosRapidos > 0 ? `<span class="pod-rapid">⚡${r0.acertosRapidos}</span>` : ''}
+                 ${r0.acertosDificeis > 0 ? `<span class="pod-dif">🏆${r0.acertosDificeis}</span>` : ''}
+                 <span class="pod-tent">${r0.tentativas} sess.</span>`
+              : `${r0.comboMax > 1 ? `<span class="pod-combo">🔥×${r0.comboMax}</span>` : ''}
+                 <span class="pod-tent">${r0.tentativas} tent.</span>`}
           </div>` : `<div class="pod-empty">—</div>`}
       </div>
     </div>`;
   }).join('');
 }
 
-function atualizarPodio(top3) {
+function atualizarPodio(ranking) {
+  const groups = getRankGroupsProf(ranking);
   const order  = [1, 0, 2];
   const medals = ['🥇', '🥈', '🥉'];
   const isPlus = modoAtivo === 'competicao_plus';
-  order.forEach((ri, vi) => {
-    const col = document.getElementById(`pod-col-${ri}`);
+  order.forEach((gi, vi) => {
+    const col = document.getElementById(`pod-col-${gi}`);
     if (!col) return;
-    const r        = top3[ri];
+    const g        = groups[gi];
     const medalDiv = col.querySelector('.pod-medal');
     const stepDiv  = col.querySelector('.pod-step');
-    if (medalDiv) medalDiv.textContent = r ? medals[ri] : '';
+    if (medalDiv) medalDiv.textContent = g ? medals[gi] : '';
     if (!stepDiv) return;
-    if (!r) { stepDiv.innerHTML = '<div class="pod-empty">—</div>'; return; }
-    stepDiv.innerHTML = `
-      <div class="pod-nome">${r.aluno}</div>
-      <div class="pod-turma">Turma ${r.turma}</div>
-      <div class="pod-pts">${r.melhorPts} pts</div>
+    if (!g) { stepDiv.innerHTML = '<div class="pod-empty">—</div>'; return; }
+    if (g.students.length > 1) stepDiv.style.minWidth = `${Math.min(g.students.length * 150, 320)}px`;
+    const r0 = g.students[0];
+    stepDiv.innerHTML = podNamesHTML(g, isPlus) + `
+      <div class="pod-pts">${g.score} pts</div>
       <div class="pod-extras">
-        ${r.ativo ? `<span class="pod-ativo">⚡ jogando</span>` : ''}
+        ${r0.ativo ? `<span class="pod-ativo">⚡ jogando</span>` : ''}
         ${isPlus
-          ? `${r.acertosRapidos > 0 ? `<span class="pod-rapid">⚡${r.acertosRapidos}</span>` : ''}
-             ${r.acertosDificeis > 0 ? `<span class="pod-dif">🏆${r.acertosDificeis}</span>` : ''}
-             <span class="pod-tent">${r.tentativas} sess.</span>`
-          : `${r.comboMax > 1 ? `<span class="pod-combo">🔥×${r.comboMax}</span>` : ''}
-             <span class="pod-tent">${r.tentativas} tent.</span>`}
+          ? `${r0.acertosRapidos > 0 ? `<span class="pod-rapid">⚡${r0.acertosRapidos}</span>` : ''}
+             ${r0.acertosDificeis > 0 ? `<span class="pod-dif">🏆${r0.acertosDificeis}</span>` : ''}
+             <span class="pod-tent">${r0.tentativas} sess.</span>`
+          : `${r0.comboMax > 1 ? `<span class="pod-combo">🔥×${r0.comboMax}</span>` : ''}
+             <span class="pod-tent">${r0.tentativas} tent.</span>`}
       </div>`;
   });
 }
@@ -849,14 +885,12 @@ function atualizarLista(resto) {
       ${r.ativo ? `<span class="rk-tag-ativo">⚡ jogando</span>` : ''}
       ${r.acertosRapidos > 0 ? `<span class="rk-rapid">⚡${r.acertosRapidos} veloz</span>` : ''}
       ${r.acertosDificeis > 0 ? `<span class="rk-dif">🏆${r.acertosDificeis} bônus</span>` : ''}
-      <span>${r.tentativas} sess.</span>
-      ${r.tieInfo ? `<span style="color:#FAB800;font-size:9px">${pos}º · desempate por ${r.tieInfo}</span>` : ''}`;
+      <span>${r.tentativas} sess.</span>`;
     const metaComp = `
       <span>Turma ${r.turma}</span>
       ${r.ativo ? `<span class="rk-tag-ativo">⚡ ao vivo</span>` : ''}
       ${r.comboMax > 1 ? `<span class="rk-combo">🔥×${r.comboMax}</span>` : ''}
-      <span>${r.tentativas} tentativa${r.tentativas !== 1 ? 's' : ''}</span>
-      ${r.tieInfo ? `<span style="color:#FAB800;font-size:9px">${pos}º · desempate por ${r.tieInfo}</span>` : ''}`;
+      <span>${r.tentativas} tentativa${r.tentativas !== 1 ? 's' : ''}</span>`;
     return `<div class="rk-row${r.ativo ? ' ativo-now' : ''}">
       <div class="rk-num">${pos}</div>
       <div>

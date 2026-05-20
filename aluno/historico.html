@@ -76,7 +76,7 @@
 </div>
 <script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
-import { getResultados, getDetalhes, getAlunoPreferencia } from "/js/db.js";
+import { getResultados, getDetalhes, getAlunoPreferencia, getConquistasByAluno, getRoboticaTentativasAluno } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
 
@@ -86,6 +86,7 @@ renderSidebarAluno("sidebar", "historico");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
 const { alunos, turma } = sess;
+let conquistasBySessao = {};
 document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
 document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
 applyTopRankVisuals();
@@ -223,6 +224,7 @@ function renderPlusItem(r, detalhes) {
           <span class="badge badge-red">❌ ${r.erros || 0}</span>
           <span class="badge badge-blue">📊 ${taxa}%</span>
           ${(r.acertos_rapidos || 0) > 0 ? `<span class="badge badge-blue">⚡ ${r.acertos_rapidos}</span>` : ''}
+          ${(conquistasBySessao[r.id] || []).map(c => `<span class="badge" style="background:rgba(168,85,247,.1);border-color:rgba(168,85,247,.4);color:#7C3AED" title="${c.nome}">${c.icon || '🏆'} ${c.nome || c.tipo}</span>`).join('')}
         </div>
       </div>
       <div class="hist-data">${r.data || ''}</div>
@@ -251,6 +253,7 @@ function renderClassicoItem(r, detalhes) {
           <span class="badge badge-green">✅ ${r.acertos || 0}</span>
           <span class="badge badge-red">❌ ${r.erros || 0}</span>
           <span class="badge badge-blue">📊 ${aproveit}%</span>
+          ${(conquistasBySessao[r.id] || []).map(c => `<span class="badge" style="background:rgba(168,85,247,.1);border-color:rgba(168,85,247,.4);color:#7C3AED" title="${c.nome}">${c.icon || '🏆'} ${c.nome || c.tipo}</span>`).join('')}
         </div>
       </div>
       <div class="hist-data">${r.data || ''}</div>
@@ -285,6 +288,13 @@ function renderClassicoItem(r, detalhes) {
 }
 
 const todos = await getResultados();
+const allConquistas = (await Promise.all(alunos.map(a => getConquistasByAluno(a)))).flat();
+for (const c of allConquistas) {
+  if (c.sessaoId) {
+    if (!conquistasBySessao[c.sessaoId]) conquistasBySessao[c.sessaoId] = [];
+    conquistasBySessao[c.sessaoId].push(c);
+  }
+}
 const content = document.getElementById("content");
 let html = '';
 
@@ -331,6 +341,104 @@ for (const aluno of alunos) {
 }
 
 content.innerHTML = html;
+
+// ── Seção Robótica ─────────────────────────────────────────
+const isRob = await getAlunoPreferencia(turma, alunos[0], 'robotica');
+if (isRob) {
+  const tentativas = await getRoboticaTentativasAluno(turma, alunos[0]);
+  if (tentativas.length) {
+    const LABEL_ATIV = { 1:"Atividade 1", 2:"Atividade 2", 3:"Atividade 3" };
+    const EMOJIS = { 1:"🔌", 2:"⚡", 3:"🧠" };
+    const porAtiv = {};
+    for (const t of tentativas) {
+      if (!porAtiv[t.atividade]) porAtiv[t.atividade] = [];
+      porAtiv[t.atividade].push(t);
+    }
+
+    let robHtml = `<div style="margin-top:28px;margin-bottom:6px;">
+      <div style="font-size:13px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        🤖 Robótica
+      </div>`;
+
+    for (const [n, tents] of Object.entries(porAtiv)) {
+      const best = Math.max(...tents.map(t => t.acertos || 0));
+      const total = tents[0].total || 0;
+      robHtml += `<div class="ativ-group">
+        <div class="ativ-group-header">
+          <span>${EMOJIS[n] || ''} ${LABEL_ATIV[n] || 'Atividade ' + n}</span>
+          <span style="font-size:11px;color:var(--text-muted);">${tents.length} tentativa${tents.length > 1 ? 's' : ''} • melhor: ${best}/${total}</span>
+        </div>`;
+
+      // Gráfico de evolução se > 1 tentativa
+      if (tents.length >= 2) {
+        const pts = tents.map(t => t.acertos || 0);
+        const maxV = Math.max(...pts, 1);
+        const W = 240, H = 48, mL = 8, mR = 8, mT = 10, mB = 6;
+        const iW = W - mL - mR, iH = H - mT - mB;
+        const nc = pts.length;
+        const xP = i => mL + (nc > 1 ? (i / (nc-1)) * iW : iW/2);
+        const yP = v => mT + iH - Math.min((v / maxV) * iH, iH);
+        const first = pts[0], last = pts[pts.length-1];
+        const tc = last > first ? '#16A34A' : last < first ? '#DC2626' : '#6B7280';
+        const ti = last > first ? '↑' : last < first ? '↓' : '→';
+        let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:240px;height:${H}px;flex-shrink:0">`;
+        svg += `<polyline points="${pts.map((v,i)=>`${xP(i)},${yP(v)}`).join(' ')}" fill="none" stroke="${tc}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+        pts.forEach((v,i)=>{
+          svg += `<circle cx="${xP(i)}" cy="${yP(v)}" r="4" fill="${tc}" stroke="white" stroke-width="1.5"/>`;
+          svg += `<text x="${xP(i)}" y="${yP(v)-7}" text-anchor="middle" font-size="8" fill="${tc}" font-weight="700">${v}</text>`;
+        });
+        svg += '</svg>';
+        robHtml += `<div class="evolucao-bar"><span class="evolucao-label">${tents.length} tentativas</span>${svg}<div style="text-align:center;flex-shrink:0;min-width:32px"><div style="font-size:20px;font-weight:800;color:${tc};line-height:1">${ti}</div><div style="font-size:9px;color:var(--text-muted)">${last>first?'Melhora':last<first?'Regrediu':'Estável'}</div></div></div>`;
+      }
+
+      // Cada tentativa
+      for (let i = 0; i < tents.length; i++) {
+        const t = tents[i];
+        const pct = t.total > 0 ? Math.round(t.acertos / t.total * 100) : 0;
+        const prev = i > 0 ? tents[i-1] : null;
+        const diff = prev ? t.acertos - prev.acertos : null;
+        const diffBadge = diff !== null
+          ? `<span style="font-size:11px;font-weight:700;color:${diff>0?'var(--green)':diff<0?'var(--red)':'var(--text-muted)'};margin-left:4px">${diff>0?'+'+diff:diff}</span>`
+          : '';
+        const dataStr = t.completadoEm ? new Date(t.completadoEm).toLocaleDateString('pt-BR') : '';
+
+        robHtml += `<div class="hist-item">
+          <div class="hist-header" onclick="toggle(this)">
+            <div style="flex:1">
+              <div class="hist-nome">${EMOJIS[n]||''} Tentativa ${i+1}${diffBadge}</div>
+              <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center">
+                <span class="badge badge-green">✅ ${t.acertos}</span>
+                <span class="badge badge-red">❌ ${t.erros}</span>
+                <span class="badge badge-blue">📊 ${pct}%</span>
+              </div>
+            </div>
+            <div class="hist-data">${dataStr}</div>
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--text-muted)"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+          </div>
+          <div class="hist-body" style="display:none">
+            ${t.respostas ? Object.entries(t.respostas).map(([qid, resp], qi) => {
+              const prevResp = prev?.respostas?.[qid];
+              const melhorou = prevResp && !prevResp.acertou && resp.acertou;
+              const piorou   = prevResp && prevResp.acertou && !resp.acertou;
+              const deltaIcon = melhorou ? ' <span style="color:var(--green);font-size:10px">↑ melhorou</span>' : piorou ? ' <span style="color:var(--red);font-size:10px">↓ piorou</span>' : '';
+              return `<div class="q-rev ${resp.acertou ? 'ok' : 'err'}">
+                <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:32px;flex-shrink:0">${qid}</span>
+                <div style="flex:1">
+                  <span style="${resp.acertou?'color:var(--green)':'color:var(--red)'};font-weight:700">${resp.resposta_dada || '—'}</span>
+                  ${deltaIcon}
+                </div>
+                <span>${resp.acertou ? '✅' : '❌'}</span>
+              </div>`;
+            }).join('') : '<p style="font-size:12px;color:var(--text-muted);padding-top:6px">Detalhes não disponíveis.</p>'}
+          </div>
+        </div>`;
+      }
+      robHtml += '</div>';
+    }
+    robHtml += '</div>';
+    content.innerHTML += robHtml;
+  }
+}
 </script>
 </body>
 </html>

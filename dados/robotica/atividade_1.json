@@ -1,0 +1,481 @@
+{
+  "atividade": 1,
+  "descricao": "Conceitos de hardware e lógica introdutória — todos os temas",
+  "total": 33,
+  "niveis": {
+    "facil": 33
+  },
+  "questoes": [
+    {
+      "id": "P01",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "A linha VERMELHA da protoboard deve ser conectada a qual terminal?",
+      "opcoes": [
+        "A) Negativo (GND)",
+        "B) Positivo (5V ou VCC)",
+        "C) Qualquer terminal",
+        "D) Não precisa conectar"
+      ],
+      "resposta": "B",
+      "categoria": "Protoboard",
+      "numero": 1
+    },
+    {
+      "id": "P02",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "A linha AZUL da protoboard deve ser conectada a qual terminal?",
+      "opcoes": [
+        "A) Positivo (5V)",
+        "B) Sinal do sensor",
+        "C) Negativo (GND)",
+        "D) Pino PWM"
+      ],
+      "resposta": "C",
+      "categoria": "Protoboard",
+      "numero": 2
+    },
+    {
+      "id": "P03",
+      "nivel": "facil",
+      "tipo": "verdadeiro_falso",
+      "enunciado": "Dois componentes ligados na mesma COLUNA da protoboard estão conectados entre si.",
+      "resposta": "Verdadeiro",
+      "categoria": "Protoboard",
+      "numero": 3
+    },
+    {
+      "id": "PA01",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Qual a tensão fornecida pelo pino 5V do Arduino?",
+      "opcoes": [
+        "A) 3,3 Volts",
+        "B) 12 Volts",
+        "C) 5 Volts",
+        "D) 9 Volts"
+      ],
+      "resposta": "C",
+      "categoria": "Pinos do Arduino",
+      "numero": 4
+    },
+    {
+      "id": "PA02",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O pino GND do Arduino representa:",
+      "opcoes": [
+        "A) Saída de 5V",
+        "B) Terra / referência 0V / negativo",
+        "C) Pino de sinal analógico",
+        "D) Entrada de tensão externa"
+      ],
+      "resposta": "B",
+      "categoria": "Pinos do Arduino",
+      "numero": 5
+    },
+    {
+      "id": "PA04",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Um pino digital em ALTO (HIGH) no Arduino Uno tem tensão de:",
+      "opcoes": [
+        "A) 0V",
+        "B) 3,3V",
+        "C) 12V",
+        "D) 5V"
+      ],
+      "resposta": "D",
+      "categoria": "Pinos do Arduino",
+      "numero": 6
+    },
+    {
+      "id": "PA05",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Um pino digital em BAIXO (LOW) tem tensão de:",
+      "opcoes": [
+        "A) 5V",
+        "B) 0V",
+        "C) 3,3V",
+        "D) 1V"
+      ],
+      "resposta": "B",
+      "categoria": "Pinos do Arduino",
+      "numero": 7
+    },
+    {
+      "id": "L01",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O lado POSITIVO do LED se chama:",
+      "opcoes": [
+        "A) Cátodo",
+        "B) Resistor",
+        "C) Ânodo",
+        "D) Terminal GND"
+      ],
+      "resposta": "C",
+      "categoria": "LED — Polarização e Ligação",
+      "numero": 8
+    },
+    {
+      "id": "L02",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O lado NEGATIVO do LED se chama:",
+      "opcoes": [
+        "A) Ânodo",
+        "B) Cátodo",
+        "C) PWM",
+        "D) VCC"
+      ],
+      "resposta": "B",
+      "categoria": "LED — Polarização e Ligação",
+      "numero": 9
+    },
+    {
+      "id": "L03",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Como identificar o lado POSITIVO de um LED novo?",
+      "opcoes": [
+        "A) É o terminal mais curto",
+        "B) Tem cor vermelha",
+        "C) É o terminal mais longo (ânodo)",
+        "D) Fica do lado esquerdo sempre"
+      ],
+      "resposta": "C",
+      "categoria": "LED — Polarização e Ligação",
+      "numero": 10
+    },
+    {
+      "id": "SU01",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O bloco 🔵 ler pin trigonométrico do sensor de ultrassom ◯ pin de ◯ retorna:",
+      "opcoes": [
+        "A) ALTO ou BAIXO",
+        "B) Um valor de distância em cm",
+        "C) Um valor entre 0 e 1023",
+        "D) A temperatura do ambiente"
+      ],
+      "resposta": "B",
+      "categoria": "Sensor Ultrassônico",
+      "numero": 11
+    },
+    {
+      "id": "SU02",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O sensor ultrassônico HC-SR04 mede distância usando:",
+      "opcoes": [
+        "A) Luz infravermelha",
+        "B) Ondas de rádio",
+        "C) Pulso de som (ultrassom)",
+        "D) Variação de temperatura"
+      ],
+      "resposta": "C",
+      "categoria": "Sensor Ultrassônico",
+      "numero": 12
+    },
+    {
+      "id": "BJ01",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Quando um botão está pressionado e ligado ao GND, o bloco 🔵 ler pino digital ◯ retorna:",
+      "opcoes": [
+        "A) ALTO",
+        "B) 512",
+        "C) BAIXO",
+        "D) 1023"
+      ],
+      "resposta": "C",
+      "categoria": "Botão e Joystick",
+      "numero": 13
+    },
+    {
+      "id": "BJ02",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Quando o botão NÃO está pressionado (com pull-up ativo), o pino digital retorna:",
+      "opcoes": [
+        "A) BAIXO",
+        "B) ALTO",
+        "C) 0",
+        "D) 512"
+      ],
+      "resposta": "B",
+      "categoria": "Botão e Joystick",
+      "numero": 14
+    },
+    {
+      "id": "BJ03",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Com o joystick centralizado (sem mexer), o bloco 🔵 ler pino analógico (A) ◯ retorna aproximadamente:",
+      "opcoes": [
+        "A) 0",
+        "B) 1023",
+        "C) 255",
+        "D) 512"
+      ],
+      "resposta": "D",
+      "categoria": "Botão e Joystick",
+      "numero": 15
+    },
+    {
+      "id": "FI01",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O fio VERMELHO geralmente representa:",
+      "opcoes": [
+        "A) GND",
+        "B) Sinal de dados",
+        "C) Positivo / alimentação",
+        "D) Pino PWM"
+      ],
+      "resposta": "C",
+      "categoria": "Fios e Conexões",
+      "numero": 16
+    },
+    {
+      "id": "FI02",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O fio PRETO geralmente representa:",
+      "opcoes": [
+        "A) Positivo",
+        "B) Negativo / GND",
+        "C) Sinal analógico",
+        "D) 5V"
+      ],
+      "resposta": "B",
+      "categoria": "Fios e Conexões",
+      "numero": 17
+    },
+    {
+      "id": "FI03",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Se dois fios de alimentação (positivo e negativo) se tocam diretamente, isso causa:",
+      "opcoes": [
+        "A) O LED pisca",
+        "B) O Arduino reinicia",
+        "C) Curtocircuito",
+        "D) Nada"
+      ],
+      "resposta": "C",
+      "categoria": "Fios e Conexões",
+      "numero": 18
+    },
+    {
+      "id": "PW01",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O bloco 🔵 definir a saída PWM ◯ como ◯ serve para:",
+      "opcoes": [
+        "A) Ler a tensão de um pino",
+        "B) Controlar o brilho de um LED ou velocidade de motor",
+        "C) Definir se o pino é entrada ou saída",
+        "D) Ligar o sensor ultrassônico"
+      ],
+      "resposta": "B",
+      "categoria": "PWM",
+      "numero": 19
+    },
+    {
+      "id": "PW02",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O valor MÁXIMO no bloco 🔵 definir a saída PWM ◯ como ◯ é:",
+      "opcoes": [
+        "A) 1023",
+        "B) 100",
+        "C) 5",
+        "D) 255"
+      ],
+      "resposta": "D",
+      "categoria": "PWM",
+      "numero": 20
+    },
+    {
+      "id": "PW03",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O valor MÍNIMO no bloco 🔵 definir a saída PWM ◯ como ◯ é:",
+      "opcoes": [
+        "A) 1",
+        "B) 0",
+        "C) -255",
+        "D) 10"
+      ],
+      "resposta": "B",
+      "categoria": "PWM",
+      "numero": 21
+    },
+    {
+      "id": "OP01",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O bloco verde 🟢 ◯ > ◯ é verdadeiro quando:",
+      "opcoes": [
+        "A) Os dois valores são iguais",
+        "B) O primeiro é maior que o segundo",
+        "C) O primeiro é menor que o segundo",
+        "D) Qualquer um for zero"
+      ],
+      "resposta": "B",
+      "categoria": "Operadores de Comparação",
+      "numero": 22
+    },
+    {
+      "id": "OP02",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O bloco 🟢 ◯ < ◯ é verdadeiro quando:",
+      "opcoes": [
+        "A) Os dois valores são iguais",
+        "B) O primeiro é maior",
+        "C) O primeiro é menor que o segundo",
+        "D) O resultado é zero"
+      ],
+      "resposta": "C",
+      "categoria": "Operadores de Comparação",
+      "numero": 23
+    },
+    {
+      "id": "OP03",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O bloco 🟢 ◯ = ◯ é verdadeiro quando:",
+      "opcoes": [
+        "A) Os dois lados têm o mesmo valor",
+        "B) O primeiro é maior",
+        "C) O primeiro é menor",
+        "D) Um deles é zero"
+      ],
+      "resposta": "A",
+      "categoria": "Operadores de Comparação",
+      "numero": 24
+    },
+    {
+      "id": "OP04",
+      "nivel": "facil",
+      "tipo": "verdadeiro_falso",
+      "enunciado": "🟢 10 > 5 é Verdadeiro.",
+      "resposta": "Verdadeiro",
+      "categoria": "Operadores de Comparação",
+      "numero": 25
+    },
+    {
+      "id": "OP05",
+      "nivel": "facil",
+      "tipo": "verdadeiro_falso",
+      "enunciado": "🟢 3 > 7 é Verdadeiro.",
+      "resposta": "Falso",
+      "categoria": "Operadores de Comparação",
+      "numero": 26
+    },
+    {
+      "id": "OP06",
+      "nivel": "facil",
+      "tipo": "verdadeiro_falso",
+      "enunciado": "🟢 5 = 5 é Verdadeiro.",
+      "resposta": "Verdadeiro",
+      "categoria": "Operadores de Comparação",
+      "numero": 27
+    },
+    {
+      "id": "CO01",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O buzzer deve apitar quando o objeto estiver PERTO (menos de 15 cm).\nse < (distancia) ___ (15) > então: ligar buzzer\nQual operador completa?",
+      "opcoes": [
+        "A) >",
+        "B) =",
+        "C) <",
+        "D) e"
+      ],
+      "resposta": "C",
+      "categoria": "Completar com >, < e e",
+      "numero": 28
+    },
+    {
+      "id": "CO02",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O LED deve acender quando o objeto estiver LONGE (mais de 30 cm).\nse < (distancia) ___ (30) > então: acender LED\nQual operador completa?",
+      "opcoes": [
+        "A) <",
+        "B) =",
+        "C) e",
+        "D) >"
+      ],
+      "resposta": "D",
+      "categoria": "Completar com >, < e e",
+      "numero": 29
+    },
+    {
+      "id": "CO03",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O ventilador liga quando a temperatura for MAIOR QUE 35.\nse < (temperatura) ___ (35) > então: ligar ventilador",
+      "opcoes": [
+        "A) <",
+        "B) =",
+        "C) >",
+        "D) ou"
+      ],
+      "resposta": "C",
+      "categoria": "Completar com >, < e e",
+      "numero": 30
+    },
+    {
+      "id": "SE01",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O bloco 🟡 se ◆ então executa o que está dentro quando:",
+      "opcoes": [
+        "A) Sempre",
+        "B) A condição for falsa",
+        "C) A condição for verdadeira",
+        "D) O Arduino reinicia"
+      ],
+      "resposta": "C",
+      "categoria": "Se/Então — Lógica Básica",
+      "numero": 31
+    },
+    {
+      "id": "SE02",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O bloco 🟡 se ◆ então / senão — o 'senão' executa quando:",
+      "opcoes": [
+        "A) A condição for verdadeira",
+        "B) A condição for falsa",
+        "C) O botão for pressionado",
+        "D) O sensor ler zero"
+      ],
+      "resposta": "B",
+      "categoria": "Se/Então — Lógica Básica",
+      "numero": 32
+    },
+    {
+      "id": "SE03",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Programa:\n🟡 se < (distancia) < (10) > então\n   acender LED verde\n🟡 senão\n   acender LED vermelho\n\ndistancia = 7. Qual LED acende?",
+      "opcoes": [
+        "A) LED vermelho",
+        "B) Os dois",
+        "C) Nenhum",
+        "D) LED verde"
+      ],
+      "resposta": "D",
+      "categoria": "Se/Então — Lógica Básica",
+      "numero": 33
+    }
+  ]
+}

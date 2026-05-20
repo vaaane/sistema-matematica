@@ -27,7 +27,7 @@
     .ativ-chip.liberada{border-color:#BAE6FD;background:var(--blue-pale);color:var(--blue-dark);}
     .ativ-chip.encerrada{border-color:var(--border);background:var(--bg);color:var(--text-muted);opacity:.6;text-decoration:line-through;}
     /* Top 3 cards */
-    .top3-card{border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden;}
+    .top3-card{border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;position:relative;overflow:visible;}
     .top3-card:last-child{margin-bottom:0;}
     .top3-nome{font-size:15px;font-weight:800;color:#fff;line-height:1.2;}
     .top3-turma{font-size:11px;color:rgba(255,255,255,.75);margin-top:2px;}
@@ -69,7 +69,7 @@
 <script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
 import { LISTA_ATIVIDADES } from "/js/constants.js";
-import { getResultados, getLiberadasParaTurma, getAlunoPreferencia } from "/js/db.js";
+import { getResultados, getLiberadasParaTurma, getAlunoPreferencia, getConquistasByAluno } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 import { saveRankPos, applyTopRankVisuals } from "/js/toprank.js";
 import { initTopNotif } from "/js/topnotif.js";
@@ -82,6 +82,18 @@ window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
 const { alunos, turma } = sess;
 
+// Robótica sidebar item (condicional)
+getAlunoPreferencia(turma, alunos[0], 'robotica').then(isRob => {
+  if (!isRob) return;
+  const nav = document.querySelector('#sidebar .sidebar-nav');
+  if (!nav) return;
+  const div = document.createElement('div'); div.className = 'nav-divider'; nav.appendChild(div);
+  const a = document.createElement('a');
+  a.className = 'nav-item'; a.href = '/aluno/robotica.html';
+  a.innerHTML = `<svg viewBox="0 0 24 24"><path d="M20 9V7c0-1.1-.9-2-2-2h-3c0-1.66-1.34-3-3-3S9 3.34 9 5H6c-1.1 0-2 .9-2 2v2c-1.66 0-3 1.34-3 3s1.34 3 3 3v4c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4c1.66 0 3-1.34 3-3s-1.34-3-3-3zm-2 10H6V7h12v12zm-9-6c-.83 0-1.5-.67-1.5-1.5S8.17 10 9 10s1.5.67 1.5 1.5S9.83 13 9 13zm6 0c-.83 0-1.5-.67-1.5-1.5S14.17 10 15 10s1.5.67 1.5 1.5S15.83 13 15 13z"/></svg>🤖 Robótica`;
+  nav.appendChild(a);
+}).catch(() => {});
+
 // Sync tema do Firebase (não-bloqueante)
 getAlunoPreferencia(turma, alunos[0], 'tema').then(t => {
   if (t && t !== localStorage.getItem('tema')) {
@@ -93,7 +105,7 @@ document.getElementById("topbar-title").textContent = `Olá, ${alunos[0]}${aluno
 document.getElementById("topbar-sub").textContent   = `Turma ${turma} · Bom trabalho hoje!`;
 document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
 
-const [todos, liberadas] = await Promise.all([getResultados(), getLiberadasParaTurma(turma)]);
+const [todos, liberadas, conquistasAluno] = await Promise.all([getResultados(), getLiberadasParaTurma(turma), getConquistasByAluno(alunos[0])]);
 
 // ── Ranking (média por atividade) ─────────────────────────────
 function buildRankingMedia(lista) {
@@ -101,9 +113,9 @@ function buildRankingMedia(lista) {
   for (const r of lista) {
     if (!r.concluido || !r.aluno) continue;
     if (!melhor[r.aluno]) melhor[r.aluno] = { aluno: r.aluno, turma: r.turma || '?', porAtiv: {} };
-    const bruta = r.pontuacao_bruta || r.pontuacao || 0;
+    const pts = r.pontuacao || 0;
     const prev = melhor[r.aluno].porAtiv[r.atividade] || 0;
-    if (bruta > prev) melhor[r.aluno].porAtiv[r.atividade] = bruta;
+    if (pts > prev) melhor[r.aluno].porAtiv[r.atividade] = pts;
   }
   return Object.values(melhor).map(a => {
     const vals = Object.values(a.porAtiv);
@@ -114,10 +126,10 @@ function buildRankingMedia(lista) {
 }
 const rankAll   = buildRankingMedia(todos);
 const rankTurma = rankAll.filter(r => r.turma === turma);
-const top3Geral = rankAll.slice(0, 3);
+const top3Geral = rankAll.slice(0, 9);
 saveRankPos(alunos, rankAll);
 applyTopRankVisuals();
-initTopNotif({ mode: 'aluno' });
+initTopNotif({ mode: 'aluno', alunoNome: alunos[0] });
 
 // ── Mini sparkline SVG ────────────────────────────────────────
 function miniSparkline(nome, atividade) {
@@ -217,23 +229,45 @@ const TOP3_BG = [
   'linear-gradient(135deg,#9CA3AF,#6B7280)',
   'linear-gradient(135deg,#CD853F,#92400E)',
 ];
-const top3Html = top3Geral.length ? top3Geral.map((p, i) => {
-  const isMe = alunos.includes(p.aluno);
+// Group top3Geral into up to 3 distinct score positions
+const top3Groups = [];
+{ let gPos = 1, gi = 0;
+  while (gi < top3Geral.length && top3Groups.length < 3) {
+    const score = top3Geral[gi].total;
+    let gj = gi + 1;
+    while (gj < top3Geral.length && top3Geral[gj].total === score) gj++;
+    top3Groups.push({ pos: gPos, students: top3Geral.slice(gi, gj), score });
+    gPos += (gj - gi); gi = gj;
+  }
+}
+const top3Html = top3Groups.length ? top3Groups.map((g, i) => {
   const glowClass = ['glow-gold','glow-silver','glow-bronze'][i];
-  const crown = i === 0 ? `<span class="crown-anim" style="font-size:22px;position:absolute;top:-8px;right:12px">👑</span>` : '';
+  const trophy = ['🥇','🥈','🥉'][i];
+  const crown = i === 0 ? `<span class="crown-anim" style="font-size:30px;position:absolute;top:-22px;left:50%;transform:translateX(-50%);filter:drop-shadow(0 2px 8px rgba(250,184,0,.6))">👑</span>` : '';
   const sparkles = i === 0 ? `<div style="position:absolute;top:5px;right:40px;display:flex;gap:3px;pointer-events:none">
     ${['✨','⭐','✨'].map((s,j)=>`<span class="sparkle-p" style="position:static;font-size:9px;--sd:${1.4+j*.4}s;--delay:${j*.3}s">${s}</span>`).join('')}
   </div>` : '';
-  return `<div class="top3-card ${glowClass}" style="background:${TOP3_BG[i]};position:relative">
+  let namesHtml;
+  if (g.students.length <= 1) {
+    const p = g.students[0];
+    const isMe = alunos.includes(p.aluno);
+    namesHtml = `<div><div class="top3-nome">${p.aluno}${isMe ? ' ★' : ''}</div><div class="top3-turma">Turma ${p.turma}</div></div>`;
+  } else {
+    namesHtml = `<div style="display:flex;align-items:flex-start;gap:0;flex:1;min-width:0">${
+      g.students.map((p, ni) => {
+        const isMe = alunos.includes(p.aluno);
+        const vsep = ni < g.students.length - 1
+          ? `<div style="width:1px;background:rgba(255,255,255,.35);align-self:stretch;margin:0 8px;flex-shrink:0"></div>` : '';
+        return `<div style="flex:1;min-width:0"><div class="top3-nome" style="font-size:13px">${p.aluno}${isMe ? ' ★' : ''}</div><div class="top3-turma">Turma ${p.turma}</div></div>${vsep}`;
+      }).join('')
+    }</div>`;
+  }
+  return `<div class="top3-card ${glowClass}" style="background:${TOP3_BG[i]};position:relative${i === 0 ? ';margin-top:22px' : ''}">
     ${crown}${sparkles}
-    <div style="font-size:28px;flex-shrink:0">${['🥇','🥈','🥉'][i]}</div>
-    <div style="flex:1;min-width:0">
-      <div class="top3-nome">${p.aluno}${isMe ? ' ★' : ''}</div>
-      <div class="top3-turma">Turma ${p.turma}</div>
-    </div>
+    <div style="font-size:48px;flex-shrink:0">${trophy}</div>
+    <div style="flex:1;min-width:0">${namesHtml}</div>
     <div style="text-align:right;flex-shrink:0;white-space:nowrap">
-      <div class="top3-pts">${p.total}<span style="font-size:12px;font-weight:600;margin-left:2px">pts</span></div>
-      <div class="top3-pts-label" style="margin-top:4px">méd. ${p.media}pts</div>
+      <div class="top3-pts">${g.score}<span style="font-size:12px;font-weight:600;margin-left:2px">pts</span></div>
     </div>
   </div>`;
 }).join('')
@@ -339,6 +373,29 @@ ${bannerHtml}
         Top 3 Geral
       </div>
       ${top3Html}
+    </div>
+
+    <div class="card" style="margin-bottom:14px">
+      <div class="section-label" style="color:#A855F7">
+        <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L12 15.45 7.77 18l1.12-4.81-3.73-3.23 4.92-.42L12 5l1.92 4.53 4.92.42-3.73 3.23L16.23 18z"/></svg>
+        Conquistas Recentes
+      </div>
+      ${(() => {
+        const recentConquistas = conquistasAluno.slice(0, 3);
+        return recentConquistas.length
+          ? recentConquistas.map(c => `<div class="list-row">
+              <div style="font-size:22px;flex-shrink:0">${c.icon || '🏆'}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:700">${c.nome || c.tipo}</div>
+                <div style="font-size:11px;color:var(--text-muted)">${c.descricao || c.desc || ''} · ${c.atividade}</div>
+              </div>
+              <span style="font-size:11px;color:var(--text-muted);flex-shrink:0">${c.data || ''}</span>
+            </div>`).join('')
+            + (conquistasAluno.length > 3
+              ? `<a href="/aluno/historico.html" class="btn btn-sm btn-ghost" style="width:100%;justify-content:center;margin-top:8px">Ver todas (${conquistasAluno.length})</a>`
+              : '')
+          : '<p style="font-size:13px;color:var(--text-muted);padding:4px 0 6px">Nenhuma conquista ainda.</p>';
+      })()}
     </div>
 
     <div class="card">

@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Robótica — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .rob-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:border-color .15s,box-shadow .15s;margin-bottom:10px;}
+    .rob-card:hover{border-color:var(--blue);box-shadow:var(--shadow);}
+    .rob-card.done{border-color:#BBF7D0;}
+    .rob-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:26px;}
+    .rob-info{flex:1;min-width:0;}
+    .rob-info h3{font-size:15px;font-weight:700;margin-bottom:2px;}
+    .rob-info p{font-size:12px;color:var(--text-muted);}
+    .rob-badge{font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;flex-shrink:0;}
+    .rob-badge.done{background:#DCFCE7;color:#16A34A;}
+    .rob-badge.todo{background:var(--blue-pale);color:var(--blue-dark);}
+    /* Tentativas mini-lista */
+    .tent-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px dashed var(--border);font-size:12px;}
+    .tent-row:last-child{border-bottom:none;}
+    .tent-num{font-weight:700;color:var(--text-muted);width:22px;flex-shrink:0;}
+    .tent-score{font-weight:700;min-width:48px;}
+    .tent-pct{min-width:36px;color:var(--text-muted);}
+    .tent-diff{font-size:11px;font-weight:700;min-width:30px;}
+    /* Progress bar */
+    .quiz-pbar{height:4px;background:var(--border);border-radius:4px;margin-bottom:20px;overflow:hidden;}
+    .quiz-pbar-fill{height:100%;background:var(--blue);border-radius:4px;transition:width .3s;}
+    /* Question */
+    .quiz-q{font-size:15px;font-weight:600;line-height:1.6;margin-bottom:18px;white-space:pre-wrap;}
+    .quiz-opcao{display:block;width:100%;text-align:left;padding:12px 16px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;margin-bottom:8px;font-family:'Inter',sans-serif;}
+    .quiz-opcao:hover:not([disabled]){border-color:var(--blue);background:var(--blue-pale);}
+    .quiz-opcao.correta{border-color:var(--green)!important;background:#F0FDF4!important;color:#15803D!important;font-weight:700;}
+    .quiz-opcao.errada{border-color:var(--red)!important;background:#FEF2F2!important;color:#B91C1C!important;}
+    .quiz-opcao.neutra{opacity:.45;}
+    .vf-wrap{display:flex;gap:12px;margin-bottom:16px;}
+    .vf-btn{flex:1;padding:14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:all .15s;background:var(--card);font-family:'Inter',sans-serif;}
+    .vf-btn:hover:not([disabled]){border-color:var(--blue);background:var(--blue-pale);}
+    .vf-btn.correta{border-color:var(--green)!important;background:#F0FDF4!important;color:#15803D!important;}
+    .vf-btn.errada{border-color:var(--red)!important;background:#FEF2F2!important;color:#B91C1C!important;}
+    .num-wrap{display:flex;gap:10px;margin-bottom:16px;align-items:center;}
+    .num-input{flex:1;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;background:var(--card);color:var(--text);}
+    .num-input:focus{outline:none;border-color:var(--blue);}
+    .quiz-fb{padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:14px;display:none;}
+    .quiz-fb.ok{background:#DCFCE7;color:#15803D;border:1px solid #BBF7D0;}
+    .quiz-fb.err{background:#FEE2E2;color:#B91C1C;border:1px solid #FECACA;}
+    /* Summary */
+    .summ-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+    .summ-stat{display:flex;align-items:center;gap:12px;padding:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);}
+    .summ-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+    /* Comparação */
+    .comp-q{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:8px;font-size:12px;margin-bottom:4px;}
+    .comp-q.melhora{background:#DCFCE7;border:1px solid #BBF7D0;}
+    .comp-q.piora{background:#FEE2E2;border:1px solid #FECACA;}
+    .comp-q.manteve-err{background:#FFF7ED;border:1px solid #FED7AA;}
+    .comp-q.manteve-ok{background:#F0FDF4;border:1px solid #BBF7D0;opacity:.6;}
+    #quiz-wrap,#summary-wrap{display:none;}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">🤖 Robótica</div>
+        <div class="topbar-sub" id="topbar-sub">Carregando…</div>
+      </div>
+    </div>
+    <div class="content">
+
+      <div id="list-wrap">
+        <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+      </div>
+
+      <div id="quiz-wrap">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+          <button class="btn btn-outline" id="btn-voltar" style="padding:8px 16px;font-size:13px;">← Voltar</button>
+          <div>
+            <div style="font-size:14px;font-weight:700;" id="quiz-titulo"></div>
+            <div style="font-size:12px;color:var(--text-muted);" id="quiz-prog-text"></div>
+          </div>
+        </div>
+        <div class="quiz-pbar"><div class="quiz-pbar-fill" id="quiz-bar"></div></div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;">
+          <div class="quiz-q" id="quiz-enunciado"></div>
+          <div id="quiz-opcoes"></div>
+          <div class="quiz-fb" id="quiz-fb"></div>
+          <button class="btn" id="btn-proxima" style="display:none;width:100%;">Próxima →</button>
+        </div>
+      </div>
+
+      <div id="summary-wrap">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="font-size:52px;margin-bottom:8px;" id="summ-emoji"></div>
+          <div style="font-size:22px;font-weight:800;" id="summ-titulo"></div>
+          <div style="font-size:14px;color:var(--text-muted);margin-top:4px;" id="summ-sub"></div>
+        </div>
+        <div class="summ-grid">
+          <div class="summ-stat">
+            <div class="summ-icon" style="background:#DCFCE7;">✅</div>
+            <div><div style="font-size:26px;font-weight:800;color:var(--green);" id="summ-acertos"></div><div style="font-size:12px;color:var(--text-muted);">acertos</div></div>
+          </div>
+          <div class="summ-stat">
+            <div class="summ-icon" style="background:#FEE2E2;">❌</div>
+            <div><div style="font-size:26px;font-weight:800;color:var(--red);" id="summ-erros"></div><div style="font-size:12px;color:var(--text-muted);">erros</div></div>
+          </div>
+        </div>
+        <div id="summ-comparacao" style="margin-bottom:16px;"></div>
+        <div id="summ-revisao" style="margin-bottom:16px;"></div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-outline" id="btn-refazer" style="flex:1;">↺ Refazer</button>
+          <button class="btn" id="btn-voltar-lista" style="flex:1;">← Lista</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
+<script type="module">
+import { getAlunoPreferencia, saveRoboticaTentativa, getRoboticaTentativasAluno } from "/js/db.js";
+import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+
+const sess = requireAluno("/index.html");
+if (!sess) throw new Error("não autenticado");
+const { alunos, turma } = sess;
+const aluno = alunos[0];
+
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+renderSidebarAluno("sidebar", "robotica");
+
+const isRob = await getAlunoPreferencia(turma, aluno, 'robotica');
+if (!isRob) { window.location.href = '/aluno/menu.html'; throw new Error("sem acesso"); }
+
+(function() {
+  const nav = document.querySelector('#sidebar .sidebar-nav');
+  if (!nav) return;
+  const div = document.createElement('div'); div.className = 'nav-divider'; nav.appendChild(div);
+  const a = document.createElement('a');
+  a.className = 'nav-item active-orange'; a.href = '/aluno/robotica.html';
+  a.innerHTML = `<svg viewBox="0 0 24 24"><path d="M20 9V7c0-1.1-.9-2-2-2h-3c0-1.66-1.34-3-3-3S9 3.34 9 5H6c-1.1 0-2 .9-2 2v2c-1.66 0-3 1.34-3 3s1.34 3 3 3v4c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4c1.66 0 3-1.34 3-3s-1.34-3-3-3zm-2 10H6V7h12v12zm-9-6c-.83 0-1.5-.67-1.5-1.5S8.17 10 9 10s1.5.67 1.5 1.5S9.83 13 9 13zm6 0c-.83 0-1.5-.67-1.5-1.5S14.17 10 15 10s1.5.67 1.5 1.5S15.83 13 15 13z"/></svg>🤖 Robótica`;
+  nav.appendChild(a);
+})();
+
+document.getElementById('topbar-sub').textContent = `Olá, ${aluno}!`;
+
+const ATIVIDADES = [
+  { n:1, label:"Atividade 1", desc:"Hardware básico e blocos fundamentais",  emoji:"🔌", bg:"#EBF6FD" },
+  { n:2, label:"Atividade 2", desc:"Aprofundamento de hardware e operadores", emoji:"⚡", bg:"#F5F3FF" },
+  { n:3, label:"Atividade 3", desc:"Operadores avançados, se/então e lógica", emoji:"🧠", bg:"#DCFCE7" },
+];
+
+let questoes = [];
+let atividadeAtual = null;
+let qIdx = 0;
+let respostas = {};
+let tentativasDB = []; // todas as tentativas do aluno
+
+const listWrap = document.getElementById('list-wrap');
+const quizWrap = document.getElementById('quiz-wrap');
+const summWrap = document.getElementById('summary-wrap');
+
+async function carregarLista() {
+  try {
+    tentativasDB = await getRoboticaTentativasAluno(turma, aluno);
+  } catch(e) {
+    console.error('[Robótica] carregarLista:', e);
+    tentativasDB = [];
+  }
+  renderLista();
+}
+
+function getTentativasPorAtiv(n) {
+  return tentativasDB.filter(t => t.atividade === n);
+}
+
+function renderLista() {
+  listWrap.innerHTML = ATIVIDADES.map(a => {
+    const tents = getTentativasPorAtiv(a.n);
+    const done = tents.length > 0;
+    const melhor = done ? Math.max(...tents.map(t => t.acertos || 0)) : 0;
+    const total  = done ? (tents[0].total || 0) : 0;
+    const melhorPct = total > 0 ? Math.round(melhor / total * 100) : 0;
+    const lastTent = done ? tents[tents.length - 1] : null;
+
+    const tentHtml = done ? `
+      <div style="margin-top:8px;">
+        ${tents.slice(-3).map((t, i) => {
+          const idx = tents.length <= 3 ? i : tents.length - 3 + i;
+          const pct = t.total > 0 ? Math.round(t.acertos / t.total * 100) : 0;
+          const prev = tents[idx - 1];
+          const diff = prev ? (t.acertos - prev.acertos) : null;
+          const diffHtml = diff !== null
+            ? `<span class="tent-diff" style="color:${diff > 0 ? 'var(--green)' : diff < 0 ? 'var(--red)' : 'var(--text-muted)'}">${diff > 0 ? '+' + diff : diff}</span>`
+            : '';
+          return `<div class="tent-row">
+            <span class="tent-num">${idx + 1}ª</span>
+            <span class="tent-score" style="color:${pct >= 80 ? 'var(--green)' : pct >= 60 ? '#F59E0B' : 'var(--red)'}">${t.acertos}/${t.total}</span>
+            <span class="tent-pct">${pct}%</span>
+            ${diffHtml}
+          </div>`;
+        }).join('')}
+        ${tents.length > 3 ? `<div style="font-size:11px;color:var(--text-muted);padding-top:2px;">${tents.length - 3} tentativa(s) anteriores não exibidas</div>` : ''}
+      </div>` : '';
+
+    return `<div class="rob-card${done ? ' done' : ''}" onclick="iniciarAtividade(${a.n})">
+      <div class="rob-icon" style="background:${a.bg};">${a.emoji}</div>
+      <div class="rob-info" style="min-width:0;">
+        <h3>${a.label}</h3>
+        <p>${a.desc}</p>
+        ${done ? `<p style="margin-top:4px;font-size:12px;color:var(--text-muted);">${tents.length} tentativa${tents.length > 1 ? 's' : ''} • melhor: <strong style="color:var(--green)">${melhor}/${total} (${melhorPct}%)</strong></p>` : ''}
+        ${tentHtml}
+      </div>
+      <span class="rob-badge ${done ? 'done' : 'todo'}" style="align-self:flex-start;">${done ? 'Refazer' : 'Iniciar'}</span>
+    </div>`;
+  }).join('');
+}
+
+window.iniciarAtividade = async (n) => {
+  atividadeAtual = n;
+  qIdx = 0;
+  respostas = {};
+  const data = await fetch(`/dados/robotica/atividade_${n}.json`).then(r => r.json());
+  questoes = data.questoes;
+  listWrap.style.display = 'none';
+  summWrap.style.display = 'none';
+  quizWrap.style.display = 'block';
+  document.getElementById('quiz-titulo').textContent = `Atividade ${n}`;
+  renderQuestao();
+};
+
+function renderQuestao() {
+  const q = questoes[qIdx];
+  document.getElementById('quiz-prog-text').textContent = `Questão ${qIdx + 1} de ${questoes.length}`;
+  document.getElementById('quiz-bar').style.width = `${(qIdx / questoes.length) * 100}%`;
+  document.getElementById('quiz-enunciado').textContent = q.enunciado;
+  document.getElementById('quiz-fb').style.display = 'none';
+  document.getElementById('btn-proxima').style.display = 'none';
+
+  const div = document.getElementById('quiz-opcoes');
+  if (q.tipo === 'multipla_escolha') {
+    div.innerHTML = q.opcoes.map(o =>
+      `<button class="quiz-opcao" data-letra="${o[0]}" onclick="responder('${o[0]}')">${o}</button>`
+    ).join('');
+  } else if (q.tipo === 'verdadeiro_falso') {
+    div.innerHTML = `<div class="vf-wrap">
+      <button class="vf-btn" onclick="responderVF('Verdadeiro')">✓ Verdadeiro</button>
+      <button class="vf-btn" onclick="responderVF('Falso')">✗ Falso</button>
+    </div>`;
+  } else if (q.tipo === 'numerica') {
+    div.innerHTML = `<div class="num-wrap">
+      <input class="num-input" id="num-resp" type="text" placeholder="Sua resposta…" onkeydown="if(event.key==='Enter')responderNum()"/>
+      <button class="btn" onclick="responderNum()">OK</button>
+    </div>`;
+    setTimeout(() => document.getElementById('num-resp')?.focus(), 80);
+  }
+}
+
+function travar() {
+  document.querySelectorAll('.quiz-opcao,.vf-btn').forEach(b => b.setAttribute('disabled','1'));
+  const ni = document.getElementById('num-resp');
+  if (ni) ni.disabled = true;
+}
+
+function mostrarFeedback(acertou, q) {
+  travar();
+  const fb = document.getElementById('quiz-fb');
+  fb.style.display = 'block';
+  if (q.tipo === 'multipla_escolha') {
+    document.querySelectorAll('.quiz-opcao').forEach(b => {
+      if (b.dataset.letra === q.resposta) b.classList.add('correta');
+      else if (!acertou && b.classList.contains('selecionada')) b.classList.add('errada');
+      else b.classList.add('neutra');
+    });
+  } else if (q.tipo === 'verdadeiro_falso') {
+    const cor = q.resposta.startsWith('Verdadeiro') ? 'Verdadeiro' : 'Falso';
+    document.querySelectorAll('.vf-btn').forEach(b => {
+      const val = b.textContent.includes('Verdadeiro') ? 'Verdadeiro' : 'Falso';
+      if (val === cor) b.classList.add('correta');
+      else if (!acertou) b.classList.add('errada');
+    });
+  }
+  if (acertou) {
+    fb.className = 'quiz-fb ok';
+    fb.textContent = '✓ Correto!';
+  } else {
+    const resp = q.resposta.length > 60 ? q.resposta.substring(0, 60) + '…' : q.resposta;
+    fb.className = 'quiz-fb err';
+    fb.textContent = `✗ Errado. Resposta correta: ${resp}`;
+  }
+  document.getElementById('btn-proxima').style.display = 'block';
+}
+
+window.responder = (letra) => {
+  const q = questoes[qIdx];
+  const acertou = letra === q.resposta;
+  respostas[q.id] = { acertou, resposta_dada: letra };
+  document.querySelectorAll('.quiz-opcao').forEach(b => { if (b.dataset.letra === letra) b.classList.add('selecionada'); });
+  mostrarFeedback(acertou, q);
+};
+window.responderVF = (val) => {
+  const q = questoes[qIdx];
+  const cor = q.resposta.startsWith('Verdadeiro') ? 'Verdadeiro' : 'Falso';
+  const acertou = val === cor;
+  respostas[q.id] = { acertou, resposta_dada: val };
+  mostrarFeedback(acertou, q);
+};
+window.responderNum = () => {
+  const q = questoes[qIdx];
+  const inp = document.getElementById('num-resp');
+  if (!inp || !inp.value.trim()) return;
+  const dado = inp.value.trim();
+  const acertou = dado === q.resposta ||
+    (!isNaN(parseFloat(dado)) && !isNaN(parseFloat(q.resposta)) && Math.abs(parseFloat(dado) - parseFloat(q.resposta)) < 1e-9);
+  respostas[q.id] = { acertou, resposta_dada: dado };
+  inp.style.borderColor = acertou ? 'var(--green)' : 'var(--red)';
+  inp.style.background   = acertou ? '#F0FDF4'       : '#FEF2F2';
+  mostrarFeedback(acertou, q);
+};
+
+document.getElementById('btn-proxima').addEventListener('click', () => {
+  qIdx++;
+  if (qIdx >= questoes.length) finalizarAtividade();
+  else renderQuestao();
+});
+document.getElementById('btn-voltar').addEventListener('click', () => {
+  quizWrap.style.display = 'none';
+  listWrap.style.display = 'block';
+});
+
+async function finalizarAtividade() {
+  const acertos = Object.values(respostas).filter(r => r.acertou).length;
+  const erros   = Object.values(respostas).filter(r => !r.acertou).length;
+
+  // Guarda tentativa anterior antes de salvar
+  const tentAntes = getTentativasPorAtiv(atividadeAtual);
+  const ultimaAnt = tentAntes.length > 0 ? tentAntes[tentAntes.length - 1] : null;
+
+  await saveRoboticaTentativa(turma, aluno, atividadeAtual, {
+    acertos, erros, total: questoes.length, respostas
+  });
+  tentativasDB = await getRoboticaTentativasAluno(turma, aluno);
+
+  quizWrap.style.display = 'none';
+  summWrap.style.display = 'block';
+  document.getElementById('quiz-bar').style.width = '100%';
+
+  const pct = Math.round((acertos / questoes.length) * 100);
+  document.getElementById('summ-emoji').textContent  = pct >= 80 ? '🎉' : pct >= 60 ? '👍' : '📚';
+  document.getElementById('summ-titulo').textContent = pct >= 80 ? 'Ótimo trabalho!' : pct >= 60 ? 'Bom esforço!' : 'Continue praticando!';
+  document.getElementById('summ-sub').textContent    = `Atividade ${atividadeAtual} — ${pct}% de aproveitamento`;
+  document.getElementById('summ-acertos').textContent = acertos;
+  document.getElementById('summ-erros').textContent   = erros;
+
+  // Comparação com tentativa anterior
+  if (ultimaAnt && ultimaAnt.respostas) {
+    const melhorou = [], piorou = [], aindarErrado = [];
+    for (const q of questoes) {
+      const antes  = ultimaAnt.respostas[q.id];
+      const agora  = respostas[q.id];
+      if (!antes || !agora) continue;
+      if (!antes.acertou && agora.acertou)   melhorou.push(q);
+      else if (antes.acertou && !agora.acertou) piorou.push(q);
+      else if (!antes.acertou && !agora.acertou) aindarErrado.push(q);
+    }
+    const diff = acertos - (ultimaAnt.acertos || 0);
+    const diffHtml = diff > 0
+      ? `<span style="color:var(--green);font-weight:800;">+${diff} ↑ melhora</span>`
+      : diff < 0
+      ? `<span style="color:var(--red);font-weight:800;">${diff} ↓ regrediu</span>`
+      : `<span style="color:var(--text-muted);font-weight:700;">= sem mudança</span>`;
+
+    let compHtml = `<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Comparação com tentativa anterior: ${diffHtml}</div>`;
+
+    if (melhorou.length) {
+      compHtml += `<div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:4px;">✓ Agora acertou (${melhorou.length}):</div>`;
+      compHtml += melhorou.map(q => `<div class="comp-q melhora">✗→✓ <span style="font-weight:600;">[${q.id}]</span> <span>${q.enunciado.replace(/\n/g,' ').substring(0, 60)}${q.enunciado.length > 60 ? '…' : ''}</span></div>`).join('');
+    }
+    if (piorou.length) {
+      compHtml += `<div style="font-size:12px;font-weight:700;color:var(--red);margin-top:8px;margin-bottom:4px;">✗ Passou a errar (${piorou.length}):</div>`;
+      compHtml += piorou.map(q => `<div class="comp-q piora">✓→✗ <span style="font-weight:600;">[${q.id}]</span> <span>${q.enunciado.replace(/\n/g,' ').substring(0, 60)}${q.enunciado.length > 60 ? '…' : ''}</span></div>`).join('');
+    }
+    if (aindarErrado.length) {
+      compHtml += `<div style="font-size:12px;font-weight:700;color:#F59E0B;margin-top:8px;margin-bottom:4px;">Ainda errado (${aindarErrado.length}):</div>`;
+      compHtml += aindarErrado.slice(0, 5).map(q => `<div class="comp-q manteve-err">✗✗ <span style="font-weight:600;">[${q.id}]</span> <span>${q.enunciado.replace(/\n/g,' ').substring(0, 60)}${q.enunciado.length > 60 ? '…' : ''}</span></div>`).join('');
+      if (aindarErrado.length > 5) compHtml += `<div style="font-size:11px;color:var(--text-muted);padding:4px 12px;">+ ${aindarErrado.length - 5} outras</div>`;
+    }
+    compHtml += '</div>';
+    document.getElementById('summ-comparacao').innerHTML = compHtml;
+  } else {
+    document.getElementById('summ-comparacao').innerHTML = '';
+  }
+
+  // Questões para revisar (desta tentativa)
+  const erradas = questoes.filter(q => respostas[q.id] && !respostas[q.id].acertou);
+  document.getElementById('summ-revisao').innerHTML = erradas.length
+    ? `<div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text-muted);">Para revisar (${erradas.length}):</div>
+       ${erradas.slice(0, 5).map(q => `
+         <div style="padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;">
+           <div style="font-size:11px;color:var(--red);font-weight:700;margin-bottom:3px;">[${q.id}] ${q.categoria}</div>
+           <div style="font-size:13px;white-space:pre-wrap;">${q.enunciado}</div>
+           <div style="font-size:12px;color:var(--green);font-weight:600;margin-top:6px;">✓ ${q.resposta}</div>
+         </div>`).join('')}` : '';
+}
+
+document.getElementById('btn-refazer').addEventListener('click', () => { summWrap.style.display = 'none'; iniciarAtividade(atividadeAtual); });
+document.getElementById('btn-voltar-lista').addEventListener('click', () => { summWrap.style.display = 'none'; listWrap.style.display = 'block'; renderLista(); });
+
+await carregarLista();
+</script>
+</body>
+</html>

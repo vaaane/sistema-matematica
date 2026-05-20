@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Robótica — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .rob-section{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:18px;overflow:hidden;}
+    .rob-section-hdr{padding:14px 18px;font-size:13px;font-weight:700;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+    /* Student rows */
+    .st-row{border-bottom:1px solid var(--border);}
+    .st-row:last-child{border-bottom:none;}
+    .st-header{display:flex;align-items:center;gap:12px;padding:12px 18px;cursor:pointer;transition:background .12s;}
+    .st-header:hover{background:#FAFAFA;}
+    .st-name{font-size:13px;font-weight:700;flex:1;}
+    .st-turma{font-size:11px;color:var(--text-muted);margin-left:4px;font-weight:400;}
+    .st-body{display:none;border-top:1px solid var(--border);background:#FAFAFA;}
+    .st-body.open{display:block;}
+    /* Activity block inside row */
+    .ativ-block{padding:12px 18px;border-bottom:1px dashed var(--border);}
+    .ativ-block:last-child{border-bottom:none;}
+    .ativ-block-hdr{font-size:12px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+    /* Tentativa item */
+    .tent-item{padding:8px 12px;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;background:var(--card);}
+    .tent-hdr{display:flex;align-items:center;gap:8px;cursor:pointer;}
+    .tent-num{font-size:11px;font-weight:700;color:var(--text-muted);width:22px;}
+    .tent-score{font-size:13px;font-weight:800;}
+    .tent-pct{font-size:12px;color:var(--text-muted);}
+    .tent-diff{font-size:11px;font-weight:800;}
+    .tent-date{font-size:11px;color:var(--text-muted);margin-left:auto;}
+    .tent-detail{display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
+    .tent-detail.open{display:block;}
+    /* Comparison chips */
+    .comp-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;margin:2px;}
+    .comp-chip.melhora{background:#DCFCE7;color:#15803D;}
+    .comp-chip.piora{background:#FEE2E2;color:#B91C1C;}
+    .comp-chip.manteve-err{background:#FFF7ED;color:#92400E;}
+    /* Activity chips in header */
+    .ativ-chip-sm{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+    .ativ-chip-sm.done{background:#DCFCE7;color:#16A34A;}
+    .ativ-chip-sm.none{background:var(--border);color:var(--text-muted);}
+    /* Top-5 */
+    .top5-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+    .top5-item:last-child{border-bottom:none;}
+    .top5-rank{width:24px;height:24px;border-radius:50%;background:var(--red);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+    .top5-info{flex:1;min-width:0;}
+    .top5-enunciado{font-size:12px;font-weight:600;line-height:1.4;}
+    .top5-meta{font-size:11px;color:var(--text-muted);margin-top:2px;}
+    .top5-count{font-size:13px;font-weight:800;color:var(--red);flex-shrink:0;}
+    .live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;animation:blink 1.4s infinite;}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+    /* pct bar */
+    .pct-bar{flex:1;height:5px;background:var(--border);border-radius:5px;overflow:hidden;min-width:50px;}
+    .pct-fill{height:100%;border-radius:5px;transition:width .3s;}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">🤖 Robótica</div>
+        <div class="topbar-sub">Acompanhamento em tempo real <span class="live-dot"></span></div>
+      </div>
+      <div class="topbar-right">
+        <div id="status-geral" style="font-size:12px;color:var(--text-muted);"></div>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- Top-5 questões mais erradas -->
+      <div class="rob-section">
+        <div class="rob-section-hdr">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--red)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          Top 5 Questões Mais Erradas (todas as tentativas)
+        </div>
+        <div style="padding:8px 18px 14px;" id="top5">
+          <div style="color:var(--text-muted);font-size:13px;padding:12px 0;">Aguardando dados…</div>
+        </div>
+      </div>
+
+      <!-- Tabela de alunos -->
+      <div class="rob-section">
+        <div class="rob-section-hdr">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--blue)"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          Alunos — Histórico de Tentativas
+        </div>
+        <div id="students-list">
+          <div style="text-align:center;padding:40px;color:var(--text-muted);">Carregando…</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script type="module">
+import { listenRoboticaTentativas } from "/js/db.js";
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+
+requireProfessor();
+renderSidebarProfessor("sidebar", "robotica");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const ALUNOS_ROB = [
+  { aluno:"Murillo",          turma:"8H" },
+  { aluno:"Pedro Jorge",      turma:"8H" },
+  { aluno:"Emanuelle",        turma:"8H" },
+  { aluno:"Arthur",           turma:"8D" },
+  { aluno:"Sophie",           turma:"8E" },
+  { aluno:"Rafaela",          turma:"8E" },
+  { aluno:"Maria Elisangela", turma:"8F" },
+  { aluno:"Marlon",           turma:"8F" },
+];
+
+let questoesMap = {};
+async function carregarQuestoes() {
+  const results = await Promise.allSettled([1,2,3].map(n => fetch(`/dados/robotica/atividade_${n}.json`).then(r => r.json())));
+  for (const r of results) {
+    if (r.status === 'fulfilled') for (const q of r.value.questoes) questoesMap[q.id] = q;
+  }
+}
+await carregarQuestoes();
+
+function formatData(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+}
+
+function calcTop5(tentativas) {
+  const erros = {};
+  for (const t of tentativas) {
+    if (!t.respostas) continue;
+    for (const [qid, resp] of Object.entries(t.respostas)) {
+      if (!resp.acertou) erros[qid] = (erros[qid] || 0) + 1;
+    }
+  }
+  return Object.entries(erros).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id, count]) => ({ id, count, q: questoesMap[id] }));
+}
+
+function renderTop5(top5) {
+  const el = document.getElementById('top5');
+  if (!top5.length) {
+    el.innerHTML = `<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">Nenhum erro registrado ainda.</div>`;
+    return;
+  }
+  el.innerHTML = top5.map((item, i) => {
+    const q = item.q;
+    const enunciado = q ? q.enunciado.replace(/\n/g,' ') : item.id;
+    const cat = q ? q.categoria : '—';
+    return `<div class="top5-item">
+      <div class="top5-rank">${i + 1}</div>
+      <div class="top5-info">
+        <div class="top5-enunciado">${enunciado}</div>
+        <div class="top5-meta">[${item.id}] ${cat}</div>
+      </div>
+      <div class="top5-count">${item.count}✗</div>
+    </div>`;
+  }).join('');
+}
+
+function compararTentativas(ant, nova, questoes) {
+  const melhorou = [], piorou = [], aindarErrado = [];
+  for (const q of questoes) {
+    const a = ant.respostas?.[q.id];
+    const n = nova.respostas?.[q.id];
+    if (!a || !n) continue;
+    if (!a.acertou && n.acertou)    melhorou.push(q);
+    else if (a.acertou && !n.acertou) piorou.push(q);
+    else if (!a.acertou && !n.acertou) aindarErrado.push(q);
+  }
+  return { melhorou, piorou, aindarErrado };
+}
+
+function renderTentativas(tents, atividadeN) {
+  // Carrega questões da atividade a partir do mapa
+  const qs = Object.values(questoesMap).filter(q => {
+    // Identificar quais questões pertencem à atividade N via prefixo do ID ou pelo número da atividade nos dados
+    // Usamos uma heurística: a primeira tentativa tem um campo atividade
+    return true; // usaremos tents[0].respostas keys para filtrar
+  });
+  const qids = tents.length > 0 && tents[0].respostas ? Object.keys(tents[0].respostas) : [];
+  const qList = qids.map(id => questoesMap[id]).filter(Boolean);
+
+  return tents.map((t, i) => {
+    const pct = t.total > 0 ? Math.round(t.acertos / t.total * 100) : 0;
+    const pctColor = pct >= 80 ? 'var(--green)' : pct >= 60 ? '#F59E0B' : 'var(--red)';
+    const prev = i > 0 ? tents[i - 1] : null;
+    const diff = prev ? t.acertos - prev.acertos : null;
+    const diffHtml = diff !== null
+      ? `<span class="tent-diff" style="color:${diff > 0 ? 'var(--green)' : diff < 0 ? 'var(--red)' : 'var(--text-muted)'}">${diff > 0 ? '+' + diff : diff}</span>`
+      : '';
+
+    let detailHtml = '';
+    if (prev && prev.respostas) {
+      const { melhorou, piorou, aindarErrado } = compararTentativas(prev, t, qList);
+      if (melhorou.length || piorou.length || aindarErrado.length) {
+        detailHtml += `<div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px;">Comparação com tentativa ${i}ª:</div>`;
+        if (melhorou.length) {
+          detailHtml += `<div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:3px;">✓ Agora acerta (${melhorou.length}):</div>`;
+          detailHtml += melhorou.map(q => `<span class="comp-chip melhora">✗→✓ ${q.id}</span>`).join('');
+        }
+        if (piorou.length) {
+          detailHtml += `<div style="font-size:11px;font-weight:700;color:var(--red);margin-top:5px;margin-bottom:3px;">✗ Passou a errar (${piorou.length}):</div>`;
+          detailHtml += piorou.map(q => `<span class="comp-chip piora">✓→✗ ${q.id}</span>`).join('');
+        }
+        if (aindarErrado.length) {
+          detailHtml += `<div style="font-size:11px;font-weight:700;color:#F59E0B;margin-top:5px;margin-bottom:3px;">Ainda errado (${aindarErrado.length}):</div>`;
+          detailHtml += aindarErrado.map(q => `<span class="comp-chip manteve-err">✗ ${q.id}</span>`).join('');
+        }
+      }
+    } else if (!prev) {
+      // Primeira tentativa: mostra erros
+      const errs = t.respostas ? Object.entries(t.respostas).filter(([,v]) => !v.acertou).map(([id]) => id) : [];
+      if (errs.length) {
+        detailHtml += `<div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:3px;">Errou (${errs.length}):</div>`;
+        detailHtml += errs.map(id => `<span class="comp-chip manteve-err">✗ ${id}</span>`).join('');
+      }
+    }
+
+    const uid = `${t.turma}_${t.aluno}_${atividadeN}_${i}`.replace(/[^a-zA-Z0-9]/g,'_');
+    return `<div class="tent-item">
+      <div class="tent-hdr" onclick="toggleDetail('${uid}')">
+        <span class="tent-num">${i + 1}ª</span>
+        <span class="tent-score" style="color:${pctColor}">${t.acertos}/${t.total}</span>
+        <span class="tent-pct">${pct}%</span>
+        ${diffHtml}
+        <div class="pct-bar"><div class="pct-fill" style="width:${pct}%;background:${pctColor};"></div></div>
+        <span class="tent-date">${formatData(t.completadoEm)}</span>
+        <svg viewBox="0 0 24 24" id="arr-${uid}" style="width:14px;height:14px;fill:var(--text-muted);flex-shrink:0;transition:transform .2s;"><path d="M7 10l5 5 5-5z"/></svg>
+      </div>
+      <div class="tent-detail" id="det-${uid}">
+        ${detailHtml || '<span style="font-size:11px;color:var(--text-muted);">Sem comparação disponível.</span>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.toggleDetail = (uid) => {
+  const det = document.getElementById(`det-${uid}`);
+  const arr = document.getElementById(`arr-${uid}`);
+  const open = det.classList.toggle('open');
+  if (arr) arr.style.transform = open ? 'rotate(180deg)' : '';
+};
+
+function renderAlunos(tentativas) {
+  // Agrupa tentativas por (turma|aluno) e atividade
+  const porAluno = {};
+  for (const t of tentativas) {
+    const k = `${t.turma}|${t.aluno}`;
+    if (!porAluno[k]) porAluno[k] = {};
+    const an = t.atividade;
+    if (!porAluno[k][an]) porAluno[k][an] = [];
+    porAluno[k][an].push(t);
+  }
+  // Ordena cada lista por data
+  for (const k of Object.keys(porAluno)) {
+    for (const an of Object.keys(porAluno[k])) {
+      porAluno[k][an].sort((a, b) => (a.completadoEm || 0) - (b.completadoEm || 0));
+    }
+  }
+
+  const comResposta = ALUNOS_ROB.filter(a => porAluno[`${a.turma}|${a.aluno}`]).length;
+  document.getElementById('status-geral').textContent = `${comResposta}/${ALUNOS_ROB.length} com tentativas`;
+
+  document.getElementById('students-list').innerHTML = ALUNOS_ROB.map((a, si) => {
+    const k = `${a.turma}|${a.aluno}`;
+    const dados = porAluno[k] || {};
+
+    const chips = [1,2,3].map(n => {
+      const tents = dados[n] || [];
+      if (!tents.length) return `<span class="ativ-chip-sm none">A${n}: —</span>`;
+      const best = Math.max(...tents.map(t => t.acertos || 0));
+      const total = tents[0].total || 0;
+      return `<span class="ativ-chip-sm done">A${n}: ${best}/${total} (${tents.length}✗)</span>`;
+    }).join(' ');
+
+    const bodies = [1,2,3].map(n => {
+      const tents = dados[n] || [];
+      return `<div class="ativ-block">
+        <div class="ativ-block-hdr">
+          <span>Atividade ${n}</span>
+          ${tents.length ? `<span style="font-size:11px;color:var(--text-muted);">${tents.length} tentativa${tents.length > 1 ? 's' : ''}</span>` : `<span style="font-size:11px;color:var(--text-muted);">Não feita</span>`}
+        </div>
+        ${tents.length ? renderTentativas(tents, n) : `<div style="font-size:12px;color:var(--text-muted);padding:4px 0;">Nenhuma tentativa.</div>`}
+      </div>`;
+    }).join('');
+
+    return `<div class="st-row">
+      <div class="st-header" onclick="toggleAluno(${si})">
+        <div class="st-name">${a.aluno}<span class="st-turma">Turma ${a.turma}</span></div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;">${chips}</div>
+        <svg viewBox="0 0 24 24" id="arrow-${si}" style="width:18px;height:18px;fill:var(--text-muted);flex-shrink:0;transition:transform .2s;"><path d="M7 10l5 5 5-5z"/></svg>
+      </div>
+      <div class="st-body" id="body-${si}">${bodies}</div>
+    </div>`;
+  }).join('');
+}
+
+window.toggleAluno = (i) => {
+  const body  = document.getElementById(`body-${i}`);
+  const arrow = document.getElementById(`arrow-${i}`);
+  const open  = body.classList.toggle('open');
+  if (arrow) arrow.style.transform = open ? 'rotate(180deg)' : '';
+};
+
+function atualizar(tentativas) {
+  renderTop5(calcTop5(tentativas));
+  renderAlunos(tentativas);
+}
+
+listenRoboticaTentativas(atualizar);
+</script>
+</body>
+</html>

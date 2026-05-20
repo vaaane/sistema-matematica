@@ -84,6 +84,9 @@
     @keyframes slide-in-up{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
     @keyframes rank-hl-up{0%,100%{background:transparent}50%{background:rgba(34,197,94,.18)}}
     @keyframes rank-hl-dn{0%,100%{background:transparent}50%{background:rgba(239,68,68,.14)}}
+    .conquista-card{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;background:linear-gradient(135deg,rgba(168,85,247,.18),rgba(99,102,241,.12));border:1px solid rgba(168,85,247,.45);margin:6px 0;animation:conquistaIn .4s ease both;}
+    @keyframes conquistaIn{from{opacity:0;transform:translateY(10px) scale(.94)}to{opacity:1;transform:none}}
+
     @keyframes confete-fall{
       0%{transform:translateY(0) rotate(0deg);opacity:1}
       100%{transform:translateY(115vh) rotate(740deg);opacity:0}
@@ -467,8 +470,10 @@
 <script>(()=>{const t=localStorage.getItem("tema");if(t==="escuro")document.documentElement.setAttribute("data-theme","dark");})()</script>
 <script type="module">
 import { respostasEquivalentes, dataAgora } from "/js/constants.js";
-import { addResultado, updateResultado, saveDetalhes, getLiberadasParaTurma, listenRankingAtividade, getBestResultado, getResultadosByAluno, getAtividadeStatus } from "/js/db.js";
+import { addResultado, updateResultado, saveDetalhes, getLiberadasParaTurma, listenRankingAtividade, getBestResultado, getResultadosByAluno, getAtividadeStatus, salvarConquistas } from "/js/db.js";
+import { calcularConquistas, CONQUISTAS } from "/js/conquistas.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+import { initTopNotif } from "/js/topnotif.js";
 
 document.addEventListener('keydown', e => {
   const tag = e.target.tagName.toLowerCase();
@@ -481,6 +486,7 @@ if (!sess) throw new Error();
 renderSidebarAluno("sidebar", "atividades");
 window.sair = () => { document.body.classList.remove('arcade-mode'); clearSession(); window.location.href = "/index.html"; };
 const { alunos, turma } = sess;
+initTopNotif({ mode: 'aluno', alunoNome: alunos[0] });
 
 const nomeAtiv = new URLSearchParams(window.location.search).get("ativ");
 if (!nomeAtiv) { window.location.href = "/aluno/atividades.html"; throw new Error(); }
@@ -613,6 +619,7 @@ function novoEstado() {
     tentativaAtual: 0,
     ajudas: 0, acertosRapidos: 0, acertosDificeis: 0,
     ajudasUsadasTotal: 0, semPenalidade: true,
+    comboAtual: 0, comboMax: 0,
     modoAjuda: false, ajudaUsada: false, ehBonus: false,
     questaoAtual: null,
     timerInterval: null, timerRestante: 0,
@@ -942,6 +949,7 @@ function timerExpirou() {
 
   if (st.tentativaAtual >= 3) {
     st.erros++; st.respondidas++;
+    st.comboAtual = 0;
     if (st.respondidas % 3 === 0) { checkpoint(); switchRankMode(); }
     document.querySelectorAll('.mc-btn').forEach(b => {
       if (respostasEquivalentes(b.textContent, q.resposta)) b.classList.add('correto');
@@ -1003,6 +1011,8 @@ function processar(resposta, mcIdx) {
 
   if (correto) {
     st.respondidas++; st.acertos++;
+    st.comboAtual++;
+    if (st.comboAtual > st.comboMax) st.comboMax = st.comboAtual;
     let pts = valorAtual();
     const rapido   = !st.ajudaUsada && tempoUsado < q.timer * 0.5;
     const speedPts = rapido ? (q.dif === 1 ? 1 : 2) : 0;
@@ -1069,6 +1079,7 @@ function processar(resposta, mcIdx) {
         if (respostasEquivalentes(b.textContent, q.resposta)) b.classList.add('correto');
       });
       st.erros++; st.respondidas++;
+      st.comboAtual = 0;
       if (st.respondidas % 3 === 0) { checkpoint(); switchRankMode(); }
       if (st.ehBonus) {
         registrarQuestao(false, 0, false, 0);
@@ -1164,6 +1175,7 @@ window.pularQuestao = function() {
     return;
   }
   st.erros++; st.respondidas++;
+  st.comboAtual = 0;
   if (st.respondidas % 3 === 0) { checkpoint(); switchRankMode(); }
   registrarQuestao(false, -Math.floor(q.pontos * 0.5), false, 0);
   aplicarPenalidade(q, false);
@@ -1322,7 +1334,7 @@ async function encerrarSessao(motivo) {
     acertos: st.acertos, erros: st.erros,
     respondidas: st.respondidas, ajudas_usadas: st.ajudasUsadasTotal||0,
     acertos_rapidos: st.acertosRapidos, acertos_dificeis: st.acertosDificeis||0,
-    sem_penalidade: st.semPenalidade,
+    combo_max: st.comboMax, sem_penalidade: st.semPenalidade,
     bonus_fim: bonusFim, modo: "competicao_plus",
     tempo: `${t}s`, ts_inicio: st.inicioTs, data: dataAgora(), concluido: true,
   };
@@ -1338,11 +1350,39 @@ async function encerrarSessao(motivo) {
   }
 
   const novoMelhor = st.saldo > melhorPts;
+  const prevMelhor = melhorPts;
   if (novoMelhor) melhorPts = st.saldo;
-  mostrarFim(motivo, novoMelhor, bonusFim);
+
+  let minhasConquistas = [];
+  try {
+    const prevRegs = await Promise.all(alunos.map(al => getResultadosByAluno(al)));
+    const toSaveAll = [];
+    for (let ai = 0; ai < alunos.length; ai++) {
+      const al = alunos[ai];
+      const rid = st.resultadoIds[al];
+      const prevAtiv = prevRegs[ai].filter(r => r.concluido && r.atividade === liberada.atividade && r.id !== rid);
+      const rankTurma = latestRanking.filter(r => r.turma === turma);
+      const sessaoData = {
+        aluno: al, pontuacao_bruta: st.saldo,
+        acertos: st.acertos, erros: st.erros, respondidas: st.respondidas,
+        acertos_rapidos: st.acertosRapidos, combo_max: st.comboMax,
+        novoMelhor: st.saldo > prevMelhor, prevMelhor,
+      };
+      const earned = calcularConquistas(sessaoData, prevAtiv, rankTurma, latestRanking);
+      earned.forEach(tipo => {
+        const c = CONQUISTAS[tipo];
+        toSaveAll.push({ aluno: al, tipo, atividade: liberada.atividade, turma,
+          sessaoId: rid || '', icon: c.icon, nome: c.nome, descricao: c.desc, data: dataAgora() });
+      });
+      if (ai === 0) minhasConquistas = earned.map(id => CONQUISTAS[id]);
+    }
+    if (toSaveAll.length) salvarConquistas(toSaveAll).catch(e => console.error('[CONQUISTAS] Erro ao salvar:', e));
+  } catch(e) { console.error('conquistas:', e); }
+
+  mostrarFim(motivo, novoMelhor, bonusFim, minhasConquistas);
 }
 
-function mostrarFim(motivo, novoMelhor, bonusFim) {
+function mostrarFim(motivo, novoMelhor, bonusFim, earnedConquistas = []) {
   const icone = motivo==='saldo' ? '💀' : motivo==='manual' ? '🏁' : '⏰';
   const taxa  = st.respondidas>0 ? Math.round(st.acertos/st.respondidas*100) : 0;
 
@@ -1380,6 +1420,7 @@ function mostrarFim(motivo, novoMelhor, bonusFim) {
         <div class="fim-s"><div class="fim-sv" style="color:#5050a0">${st.respondidas}</div><div class="fim-sl">Questões</div></div>
       </div>
       ${badges.length ? `<div class="fim-badges">${badges.join('')}</div>` : ''}
+      <div id="conquistas-section" style="margin-top:4px"></div>
       ${motivo==='saldo'&&st.globalRestante>0
         ? `<button class="btn-restart" onclick="reiniciar()">▶ JOGAR NOVAMENTE (${formatGlobal(st.globalRestante)})</button>` : ''}
       ${motivo==='tempo'
@@ -1389,6 +1430,18 @@ function mostrarFim(motivo, novoMelhor, bonusFim) {
       <button class="btn-voltar" onclick="window.location.href='/aluno/atividades.html'">← Voltar</button>
     </div>`;
   document.body.appendChild(ov);
+  if (earnedConquistas.length) {
+    const sec = document.getElementById("conquistas-section");
+    earnedConquistas.forEach((c, i) => {
+      setTimeout(() => {
+        const d = document.createElement("div");
+        d.className = "conquista-card";
+        d.innerHTML = `<div style="font-size:28px;flex-shrink:0">${c.icon}</div><div style="flex:1;text-align:left"><div style="font-size:13px;font-weight:700;color:#fff">${c.nome}</div><div style="font-size:11px;opacity:.8;color:#d0b0ff">${c.desc}</div></div>`;
+        sec.appendChild(d);
+        if (c.id === 'sessao_perfeita' || c.id === 'dominio_total') lancarConfete(30);
+      }, 600 + i * 600);
+    });
+  }
 }
 
 // ── Reiniciar ─────────────────────────────────────────────────

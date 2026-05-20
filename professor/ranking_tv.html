@@ -193,8 +193,10 @@ import { requireProfessor } from "/js/auth.js";
 import { LISTA_ATIVIDADES } from "/js/constants.js";
 import { db } from "/js/firebase-config.js";
 import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { initTopNotif } from "/js/topnotif.js";
 
 requireProfessor();
+initTopNotif({ mode: 'tv' });
 
 setTimeout(() => { document.documentElement.requestFullscreen().catch(() => {}); }, 800);
 
@@ -216,7 +218,7 @@ function buildGeralRanking(lista) {
       aluno: r.aluno, turma: r.turma || '?', porAtiv: {},
       melhorSessao: 0, primeiroTs: Infinity
     };
-    const pts  = r.pontuacao_bruta || r.pontuacao || 0;
+    const pts = r.pontuacao || 0;
     const prev = melhor[r.aluno].porAtiv[r.atividade] || 0;
     if (pts > prev) melhor[r.aluno].porAtiv[r.atividade] = pts;
     if (pts > melhor[r.aluno].melhorSessao) melhor[r.aluno].melhorSessao = pts;
@@ -231,11 +233,21 @@ function buildGeralRanking(lista) {
       melhorSessao: a.melhorSessao,
       primeiroTs: a.primeiroTs === Infinity ? 0 : a.primeiroTs
     };
-  }).sort((a, b) => {
-    if (b.melhorPts !== a.melhorPts) return b.melhorPts - a.melhorPts;
-    if (b.melhorSessao !== a.melhorSessao) return b.melhorSessao - a.melhorSessao;
-    return (a.primeiroTs || 0) - (b.primeiroTs || 0);
-  });
+  }).sort((a, b) => b.melhorPts - a.melhorPts);
+}
+
+// ── Agrupa empates em até 3 posições do pódio ─────────────────
+function getGroups(ranking) {
+  const groups = [];
+  let runPos = 1;
+  for (let gi = 0; gi < ranking.length && groups.length < 3; ) {
+    const score = ranking[gi].melhorPts ?? 0;
+    let gj = gi + 1;
+    while (gj < ranking.length && (ranking[gj].melhorPts ?? 0) === score) gj++;
+    groups.push({ pos: runPos, students: ranking.slice(gi, gj), score });
+    runPos += (gj - gi); gi = gj;
+  }
+  return groups;
 }
 
 // ── Detecção de mudanças ──────────────────────────────────────
@@ -244,12 +256,13 @@ let prevTop3Set = new Set();
 
 function detectChanges(ranking) {
   const changes = {};
-  const top3Set = new Set(ranking.slice(0, 3).map(r => r.aluno));
+  const groups = getGroups(ranking);
+  const top3Students = new Set(groups.flatMap(g => g.students.map(r => r.aluno)));
   ranking.forEach((r, i) => {
     const prev = prevRankMap[r.aluno];
     if (!prev) return;
     const pts = r.melhorPts ?? 0;
-    if (top3Set.has(r.aluno) && !prevTop3Set.has(r.aluno)) {
+    if (top3Students.has(r.aluno) && !prevTop3Set.has(r.aluno)) {
       changes[r.aluno] = 'new-top3';
     } else if (pts > prev.pts) {
       changes[r.aluno] = 'record';
@@ -258,7 +271,7 @@ function detectChanges(ranking) {
     }
   });
   ranking.forEach((r, i) => { prevRankMap[r.aluno] = { pos: i+1, pts: r.melhorPts ?? 0 }; });
-  prevTop3Set = top3Set;
+  prevTop3Set = top3Students;
   return changes;
 }
 
@@ -268,43 +281,53 @@ const standCls    = ['p2', 'p1', 'p3'];
 const animCls     = ['anim-2', 'anim-1', 'anim-3'];
 const medals      = ['🥇', '🥈', '🥉'];
 
-function podiumHTML(top3, changes, withAnim) {
+function podiumHTML(groups, changes, withAnim) {
   return `<div class="tv-podium">` +
-    visualOrder.map((ri, vi) => {
-      const r = top3[ri];
+    visualOrder.map((gi, vi) => {
+      const g = groups[gi];
       let cls = 'tv-pod-col';
       if (withAnim) cls += ' ' + animCls[vi];
-      if (r && changes[r.aluno] === 'new-top3') cls += ' new-entry';
-      return `<div class="${cls}" id="tv-pod-col-${ri}">
-        ${ri === 0 ? `<span class="tv-crown">👑</span>` : `<div class="tv-trophy">${medals[ri]}</div>`}
-        <div class="tv-stand ${standCls[vi]}${r ? '' : ' empty'}">
-          ${r ? `
-            <div class="tv-pname">${r.aluno}</div>
-            <div class="tv-pturma">Turma ${r.turma}</div>
-            <div class="tv-ppts" id="tv-ppts-${ri}">${r.melhorPts ?? 0}</div>
-          ` : `<div class="tv-pempty">—</div>`}
+      if (g && g.students.some(r => changes[r.aluno] === 'new-top3')) cls += ' new-entry';
+      const tiedW = g && g.students.length > 1 ? `width:${Math.min(g.students.length * 200, 460)}px` : '';
+      const namesContent = !g ? '' : g.students.length === 1
+        ? `<div class="tv-pname">${g.students[0].aluno}</div><div class="tv-pturma">Turma ${g.students[0].turma}</div>`
+        : `<div style="display:flex;width:100%;gap:0">${
+            g.students.map((r, ni) => {
+              const vsep = ni < g.students.length - 1
+                ? `<div style="width:1px;background:rgba(255,255,255,.2);opacity:.6;align-self:stretch;margin:0 8px;flex-shrink:0"></div>` : '';
+              return `<div style="flex:1;min-width:0;text-align:center">
+                <div class="tv-pname" style="max-width:none;font-size:${g.students.length > 2 ? '14px' : '17px'}">${r.aluno}</div>
+                <div class="tv-pturma">Turma ${r.turma}</div>
+              </div>${vsep}`;
+            }).join('')
+          }</div>`;
+      return `<div class="${cls}" id="tv-pod-col-${gi}">
+        ${gi === 0 ? `<span class="tv-crown">👑</span>` : `<div class="tv-trophy">${medals[gi]}</div>`}
+        <div class="tv-stand ${standCls[vi]}${g ? '' : ' empty'}"${tiedW ? ` style="${tiedW}"` : ''}>
+          ${g ? namesContent + `<div class="tv-ppts" id="tv-ppts-${gi}">${g.score}</div>`
+          : `<div class="tv-pempty">—</div>`}
         </div>
       </div>`;
     }).join('') + `</div>`;
 }
 
-function updatePodiumInPlace(top3, changes) {
-  top3.forEach((r, ri) => {
-    if (!r) return;
-    const ptsEl = document.getElementById(`tv-ppts-${ri}`);
+function updatePodiumInPlace(groups, changes) {
+  groups.forEach((g, gi) => {
+    if (!g) return;
+    const ptsEl = document.getElementById(`tv-ppts-${gi}`);
     if (ptsEl) {
-      const newVal = String(r.melhorPts ?? 0);
+      const newVal = String(g.score);
       if (ptsEl.textContent !== newVal) {
         ptsEl.textContent = newVal;
-        if (changes[r.aluno] === 'record') {
+        if (g.students.some(r => changes[r.aluno] === 'record')) {
           ptsEl.classList.remove('pts-rec');
           void ptsEl.offsetWidth;
           ptsEl.classList.add('pts-rec');
         }
       }
     }
-    if (changes[r.aluno] === 'new-top3') {
-      const col = document.getElementById(`tv-pod-col-${ri}`);
+    if (g.students.some(r => changes[r.aluno] === 'new-top3')) {
+      const col = document.getElementById(`tv-pod-col-${gi}`);
       if (col) { col.classList.remove('new-entry'); void col.offsetWidth; col.classList.add('new-entry'); }
     }
   });
@@ -394,16 +417,17 @@ updateSelectorLabel();
 
 // ── Helper: atualiza DOM do ranking ──────────────────────────
 function renderRankingToDOM(ranking, firstUpdate, changes) {
-  const top3      = ranking.slice(0, 3);
-  const resto     = ranking.slice(3);
-  const leaderPts = top3[0]?.melhorPts ?? 0;
+  const groups    = getGroups(ranking);
+  const podCount  = groups.reduce((s, g) => s + g.students.length, 0);
+  const resto     = ranking.slice(podCount);
+  const leaderPts = groups[0]?.score ?? 0;
   const podWrap = document.getElementById('tv-podium-wrap');
   if (podWrap) {
-    if (firstUpdate) { podWrap.innerHTML = podiumHTML(top3, changes, true); }
-    else { updatePodiumInPlace(top3, changes); }
+    if (firstUpdate) { podWrap.innerHTML = podiumHTML(groups, changes, true); }
+    else { updatePodiumInPlace(groups, changes); }
   }
   const listEl = document.getElementById('tv-list');
-  if (listEl) listEl.innerHTML = resto.map((r, i) => listRowHTML(r, i+4, leaderPts, changes)).join('');
+  if (listEl) listEl.innerHTML = resto.map((r, i) => listRowHTML(r, podCount+i+1, leaderPts, changes)).join('');
   const demSec = document.getElementById('tv-demais-sec');
   if (demSec) demSec.style.display = resto.length ? '' : 'none';
   const footEl = document.getElementById('tv-foot');
@@ -439,7 +463,7 @@ async function showView(nome) {
       const lista = [];
       snap.forEach(c => lista.push(c.val()));
       const ranking = buildGeralRanking(lista);
-      geralTop3Key = ranking.slice(0, 3).map(r => r.aluno).join('|'); // mantém em sincronia
+      geralTop3Key = getGroups(ranking).map(g => g.students.map(r => r.aluno).sort().join(',')).join('|');
       const changes = detectChanges(ranking);
       renderRankingToDOM(ranking, firstUpdate, changes);
       firstUpdate = false;
@@ -462,18 +486,19 @@ async function showGeralFlash(ranking) {
   slideEl.classList.add('fading');
   await new Promise(res => setTimeout(res, 420));
 
-  const top3      = ranking.slice(0, 3);
-  const resto     = ranking.slice(3);
-  const leaderPts = top3[0]?.melhorPts ?? 0;
+  const groups    = getGroups(ranking);
+  const podCount  = groups.reduce((s, g) => s + g.students.length, 0);
+  const resto     = ranking.slice(podCount);
+  const leaderPts = groups[0]?.score ?? 0;
 
   slideEl.innerHTML = `
     <div class="tv-geral-banner">🏆 MUDANÇA NO RANKING GERAL!</div>
     <div class="tv-geral-countdown" id="tv-geral-cd">voltando em 10s…</div>
     <div class="tv-sec">CLASSIFICAÇÃO GERAL · TOTAL DE PONTOS</div>
-    ${podiumHTML(top3, {}, true)}
+    ${podiumHTML(groups, {}, true)}
     ${resto.length ? `
       <div class="tv-sec" style="margin-top:18px">DEMAIS PARTICIPANTES</div>
-      <div class="tv-list">${resto.map((r, i) => listRowHTML(r, i+4, leaderPts, {})).join('')}</div>
+      <div class="tv-list">${resto.map((r, i) => listRowHTML(r, podCount+i+1, leaderPts, {})).join('')}</div>
     ` : ''}
     <div class="tv-foot">${ranking.length} participante${ranking.length !== 1 ? 's' : ''} · soma das melhores pontuações</div>`;
 
@@ -503,7 +528,7 @@ onValue(ref(db, 'resultados'), snap => {
   const lista = [];
   snap.forEach(c => lista.push(c.val()));
   const ranking = buildGeralRanking(lista);
-  const top3Key = ranking.slice(0, 3).map(r => r.aluno).join('|');
+  const top3Key = getGroups(ranking).map(g => g.students.map(r => r.aluno).sort().join(',')).join('|');
 
   const shouldFlash = geralTop3Key !== null
     && top3Key !== geralTop3Key

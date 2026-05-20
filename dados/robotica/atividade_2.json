@@ -1,0 +1,395 @@
+{
+  "atividade": 2,
+  "descricao": "Aprofundamento de hardware e operadores — todos os temas",
+  "total": 28,
+  "niveis": {
+    "facil": 10,
+    "medio": 18
+  },
+  "questoes": [
+    {
+      "id": "P04",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Para alimentar a protoboard a partir do Arduino, você liga o pino 5V do Arduino na linha:",
+      "opcoes": [
+        "A) Azul",
+        "B) Amarela",
+        "C) Vermelha",
+        "D) Qualquer uma"
+      ],
+      "resposta": "C",
+      "categoria": "Protoboard",
+      "numero": 1
+    },
+    {
+      "id": "P05",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Um aluno ligou o GND do Arduino na linha VERMELHA da protoboard. O que acontece?",
+      "opcoes": [
+        "A) Funciona normalmente",
+        "B) Erro de polarização — pode danificar componentes",
+        "C) O Arduino desliga automaticamente",
+        "D) Nada muda"
+      ],
+      "resposta": "B",
+      "categoria": "Protoboard",
+      "numero": 2
+    },
+    {
+      "id": "P06",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "As linhas coloridas nas laterais da protoboard (vermelho e azul) são chamadas de:",
+      "opcoes": [
+        "A) Colunas de sinal",
+        "B) Trilhas de alimentação (barramento)",
+        "C) Linhas de dados",
+        "D) Eixos de conexão"
+      ],
+      "resposta": "B",
+      "categoria": "Protoboard",
+      "numero": 3
+    },
+    {
+      "id": "PA03",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O pino Vin serve para:",
+      "opcoes": [
+        "A) Saída regulada de 3,3V",
+        "B) Entrada de tensão externa (sem regulação)",
+        "C) Ground do circuito",
+        "D) Leitura analógica"
+      ],
+      "resposta": "B",
+      "categoria": "Pinos do Arduino",
+      "numero": 4
+    },
+    {
+      "id": "PA06",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Os pinos analógicos do Arduino (A0, A1...) retornam valores entre:",
+      "opcoes": [
+        "A) 0 e 255",
+        "B) 0 e 100",
+        "C) 0 e 1023",
+        "D) 0 e 512"
+      ],
+      "resposta": "C",
+      "categoria": "Pinos do Arduino",
+      "numero": 5
+    },
+    {
+      "id": "PA07",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Qual a diferença entre o pino 5V e o pino Vin?",
+      "opcoes": [
+        "A) São iguais",
+        "B) 5V é saída regulada; Vin é entrada direta da fonte externa",
+        "C) Vin fornece mais corrente",
+        "D) 5V é apenas para LEDs"
+      ],
+      "resposta": "B",
+      "categoria": "Pinos do Arduino",
+      "numero": 6
+    },
+    {
+      "id": "PA08",
+      "nivel": "facil",
+      "tipo": "verdadeiro_falso",
+      "enunciado": "O bloco 🔵 ler pino digital ◯ retorna apenas ALTO ou BAIXO.",
+      "resposta": "Verdadeiro",
+      "categoria": "Pinos do Arduino",
+      "numero": 7
+    },
+    {
+      "id": "PA09",
+      "nivel": "facil",
+      "tipo": "verdadeiro_falso",
+      "enunciado": "O bloco 🔵 ler pino analógico (A) ◯ pode retornar o valor 750.",
+      "resposta": "Verdadeiro",
+      "categoria": "Pinos do Arduino",
+      "numero": 8
+    },
+    {
+      "id": "PA10",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Qual bloco você usa para ler se um botão foi pressionado?",
+      "opcoes": [
+        "A) 🔵 ler pino analógico (A) ◯",
+        "B) 🔵 ler pino digital ◯",
+        "C) 🔵 definir a saída PWM ◯ como ◯",
+        "D) 🔵 ler pin trigonométrico do sensor de ultrassom"
+      ],
+      "resposta": "B",
+      "categoria": "Pinos do Arduino",
+      "numero": 9
+    },
+    {
+      "id": "L06",
+      "nivel": "medio",
+      "tipo": "verdadeiro_falso",
+      "enunciado": "O ânodo do LED deve ser conectado em direção ao positivo (5V).",
+      "resposta": "Verdadeiro",
+      "categoria": "LED — Polarização e Ligação",
+      "numero": 10
+    },
+    {
+      "id": "SU03",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Qual pino de alimentação o HC-SR04 usa?",
+      "opcoes": [
+        "A) 3,3V",
+        "B) 9V",
+        "C) 12V",
+        "D) 5V (VCC)"
+      ],
+      "resposta": "D",
+      "categoria": "Sensor Ultrassônico",
+      "numero": 11
+    },
+    {
+      "id": "SU04",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "No bloco do sensor de ultrassom, o primeiro campo ◯ é o pino TRIG e o segundo é o ECHO. O pino TRIG serve para:",
+      "opcoes": [
+        "A) Receber o retorno do pulso",
+        "B) Alimentar o sensor",
+        "C) Enviar o pulso de ultrassom",
+        "D) Ligar o GND"
+      ],
+      "resposta": "C",
+      "categoria": "Sensor Ultrassônico",
+      "numero": 12
+    },
+    {
+      "id": "SU05",
+      "nivel": "medio",
+      "tipo": "verdadeiro_falso",
+      "enunciado": "O bloco do sensor de ultrassom pode ser colocado diretamente dentro do campo ◆ do bloco 🟢 ◯ < ◯.",
+      "resposta": "Verdadeiro",
+      "categoria": "Sensor Ultrassônico",
+      "numero": 13
+    },
+    {
+      "id": "BJ04",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O joystick analógico possui quantos eixos de leitura?",
+      "opcoes": [
+        "A) 1 (só X)",
+        "B) 3 (X, Y e Z)",
+        "C) 2 (X e Y)",
+        "D) 4"
+      ],
+      "resposta": "C",
+      "categoria": "Botão e Joystick",
+      "numero": 14
+    },
+    {
+      "id": "BJ05",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Para ler o eixo X do joystick, qual bloco usar?",
+      "opcoes": [
+        "A) 🔵 ler pino digital ◯",
+        "B) 🔵 ler pino analógico (A) ◯",
+        "C) 🔵 definir a saída PWM ◯ como ◯",
+        "D) 🔵 ler pin trigonométrico do sensor de ultrassom"
+      ],
+      "resposta": "B",
+      "categoria": "Botão e Joystick",
+      "numero": 15
+    },
+    {
+      "id": "FI04",
+      "nivel": "medio",
+      "tipo": "verdadeiro_falso",
+      "enunciado": "Para ligar um componente à protoboard, você insere o terminal em qualquer buraco da mesma COLUNA.",
+      "resposta": "Verdadeiro",
+      "categoria": "Fios e Conexões",
+      "numero": 16
+    },
+    {
+      "id": "FI05",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Um componente com 3 pinos (VCC, GND, SINAL) deve ter o pino VCC conectado:",
+      "opcoes": [
+        "A) Na linha azul (GND)",
+        "B) No pino de sinal do Arduino",
+        "C) Na linha vermelha (5V)",
+        "D) Em qualquer linha"
+      ],
+      "resposta": "C",
+      "categoria": "Fios e Conexões",
+      "numero": 17
+    },
+    {
+      "id": "PW04",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "🔵 definir a saída PWM 9 como 127 — o LED no pino 9 fica:",
+      "opcoes": [
+        "A) Apagado",
+        "B) No brilho máximo",
+        "C) Na metade do brilho",
+        "D) Piscando rápido"
+      ],
+      "resposta": "C",
+      "categoria": "PWM",
+      "numero": 18
+    },
+    {
+      "id": "PW05",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "🔵 definir a saída PWM 9 como 255 é equivalente a ligar o pino em:",
+      "opcoes": [
+        "A) BAIXO (LOW)",
+        "B) 3,3V",
+        "C) ALTO (HIGH) — potência máxima",
+        "D) 512"
+      ],
+      "resposta": "C",
+      "categoria": "PWM",
+      "numero": 19
+    },
+    {
+      "id": "PW06",
+      "nivel": "medio",
+      "tipo": "verdadeiro_falso",
+      "enunciado": "Você pode usar o bloco 🔵 definir a saída PWM ◯ como ◯ em qualquer pino do Arduino.",
+      "resposta": "Falso — só nos pinos marcados com ~ (3, 5, 6, 9, 10, 11)",
+      "categoria": "PWM",
+      "numero": 20
+    },
+    {
+      "id": "PW07",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Você quer diminuir o brilho de um LED gradualmente. Qual bloco usar?",
+      "opcoes": [
+        "A) 🔵 ler pino digital ◯",
+        "B) 🔵 definir a saída PWM ◯ como ◯ com valor decrescente",
+        "C) 🔵 ler pino analógico (A) ◯",
+        "D) 🟡 se ◆ então"
+      ],
+      "resposta": "B",
+      "categoria": "PWM",
+      "numero": 21
+    },
+    {
+      "id": "OP09",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "O bloco 🟢 ◆ e ◆ só é verdadeiro quando:",
+      "opcoes": [
+        "A) Pelo menos uma condição for verdadeira",
+        "B) As duas condições forem verdadeiras ao mesmo tempo",
+        "C) As duas forem falsas",
+        "D) O resultado for maior que zero"
+      ],
+      "resposta": "B",
+      "categoria": "Operadores de Comparação",
+      "numero": 22
+    },
+    {
+      "id": "OP10",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "O bloco 🟢 ◆ ou ◆ é verdadeiro quando:",
+      "opcoes": [
+        "A) As duas condições forem verdadeiras ao mesmo tempo",
+        "B) As duas forem falsas",
+        "C) Pelo menos uma condição for verdadeira",
+        "D) O resultado for 1023"
+      ],
+      "resposta": "C",
+      "categoria": "Operadores de Comparação",
+      "numero": 23
+    },
+    {
+      "id": "OP11",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "O bloco 🟢 não ◆ inverte o resultado. 🟢 não (Verdadeiro) vira:",
+      "opcoes": [
+        "A) Verdadeiro",
+        "B) 0",
+        "C) Falso",
+        "D) ALTO"
+      ],
+      "resposta": "C",
+      "categoria": "Operadores de Comparação",
+      "numero": 24
+    },
+    {
+      "id": "CO04",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O LED acende quando o joystick X for MAIOR QUE 800 (empurrado à direita).\nse < (joystick X) ___ (800) > então: acender LED direita",
+      "opcoes": [
+        "A) <",
+        "B) >",
+        "C) =",
+        "D) e"
+      ],
+      "resposta": "B",
+      "categoria": "Completar com >, < e e",
+      "numero": 25
+    },
+    {
+      "id": "CO05",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "O LED acende quando a distância for MAIOR QUE 10 E MENOR QUE 50.\nse < (distancia) ___ (10) > ___ < (distancia) ___ (50) > então: acender LED",
+      "opcoes": [
+        "A) > / e / <",
+        "B) < / e / >",
+        "C) > / ou / <",
+        "D) = / e / ="
+      ],
+      "resposta": "A",
+      "categoria": "Completar com >, < e e",
+      "numero": 26
+    },
+    {
+      "id": "CO06",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "O motor liga quando a distância for MAIOR QUE 20 E MENOR QUE 100.\nse < (distancia) ___ (20) > ___ < (distancia) ___ (100) > então: ligar motor",
+      "opcoes": [
+        "A) < / e / >",
+        "B) > / ou / <",
+        "C) > / e / <",
+        "D) = / e / <"
+      ],
+      "resposta": "C",
+      "categoria": "Completar com >, < e e",
+      "numero": 27
+    },
+    {
+      "id": "SE05",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Programa:\n🟡 se < (ler pino digital 2) = (BAIXO) > então\n   acender LED\n\nO LED acende quando:",
+      "opcoes": [
+        "A) O botão está solto",
+        "B) O sensor lê 1023",
+        "C) O botão está pressionado",
+        "D) O pino é analógico"
+      ],
+      "resposta": "C",
+      "categoria": "Se/Então — Lógica Básica",
+      "numero": 28
+    }
+  ]
+}
