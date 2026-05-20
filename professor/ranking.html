@@ -214,7 +214,7 @@ if (ativParam) {
 // ══════════════════════════════════════════════════════════════
 async function renderPainelPrincipal() {
   document.getElementById('topbar-right').innerHTML =
-    `<button class="btn btn-ghost" style="font-size:12px" onclick="window.open(window.location.href.split('?')[0]+'?tv=true','_blank')">📺 Modo TV</button>`;
+    `<button class="btn btn-ghost" style="font-size:12px" onclick="window.open('/professor/ranking_tv.html','_blank')">📺 Modo TV</button>`;
   const todos = await getResultados();
   let filtroTurma = '';
 

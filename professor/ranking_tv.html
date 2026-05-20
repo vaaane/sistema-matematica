@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ranking TV — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    html,body { height:100%; overflow:hidden; background:#05051a; color:#e0e0ff; font-family:'Inter',sans-serif; }
+    body { display:flex; flex-direction:column; background:radial-gradient(ellipse 140% 55% at 50% -5%,#0d0d2e 0%,#03030f 65%); }
+
+    /* ── Cabeçalho ─────────────────────────────────────────── */
+    .tv-hdr { display:flex; align-items:center; justify-content:space-between; padding:12px 36px; border-bottom:1px solid rgba(255,255,255,.04); flex-shrink:0; }
+    .tv-hdr-l { display:flex; align-items:center; gap:16px; }
+    .tv-logo  { font-family:'Orbitron',monospace; font-size:11px; font-weight:700; color:rgba(250,184,0,.4); letter-spacing:3px; white-space:nowrap; }
+
+    /* ── Seletor de atividade ───────────────────────────────── */
+    .tv-sel-wrap { position:relative; }
+    .tv-sel-btn  {
+      display:flex; align-items:center; gap:7px;
+      background:rgba(47,158,220,.1); border:1px solid rgba(47,158,220,.28);
+      border-radius:20px; padding:5px 14px; cursor:pointer;
+      font-family:'Orbitron'; font-size:10px; font-weight:700;
+      color:rgba(120,190,255,.9); letter-spacing:.5px;
+      transition:background .2s,border-color .2s;
+    }
+    .tv-sel-btn:hover { background:rgba(47,158,220,.18); border-color:rgba(47,158,220,.5); }
+    .tv-sel-arrow { font-size:9px; opacity:.6; transition:transform .2s; }
+    .tv-sel-btn.open .tv-sel-arrow { transform:rotate(180deg); }
+    .tv-sel-dd {
+      position:absolute; top:calc(100% + 8px); left:0;
+      background:#0e0e26; border:1px solid #2a2a50;
+      border-radius:12px; min-width:260px; z-index:200;
+      box-shadow:0 12px 40px rgba(0,0,0,.6);
+      overflow:hidden;
+    }
+    .tv-sel-item {
+      padding:11px 18px; cursor:pointer;
+      font-size:13px; font-weight:600; color:#8888cc;
+      transition:background .15s,color .15s;
+      white-space:nowrap;
+    }
+    .tv-sel-item:hover  { background:#1a1a3a; color:#c0c0ff; }
+    .tv-sel-item.active { color:#FFD700; background:rgba(255,215,0,.06); }
+
+    /* ── Lado direito do header ─────────────────────────────── */
+    .tv-hdr-r { display:flex; align-items:center; gap:16px; }
+    .tv-clk  { font-family:'Orbitron'; font-size:13px; color:#222248; }
+    .tv-exit {
+      font-size:11px; color:#222248; background:none;
+      border:1px solid #14143a; border-radius:7px; padding:5px 14px;
+      cursor:pointer; font-family:'Inter'; transition:all .2s;
+    }
+    .tv-exit:hover { color:#8888cc; border-color:#4444a0; }
+
+    /* ── Área de conteúdo ──────────────────────────────────── */
+    .tv-body { flex:1; overflow-y:auto; padding:14px 44px 16px; scrollbar-width:none; }
+    .tv-body::-webkit-scrollbar { display:none; }
+    .tv-slide { transition:opacity .42s ease,transform .42s ease; }
+    .tv-slide.fading { opacity:0; transform:scale(.985) translateY(8px); }
+
+    /* ── Banner flash ranking geral ─────────────────────────── */
+    .tv-geral-banner {
+      text-align:center; padding:14px 20px; margin-bottom:12px;
+      font-family:'Orbitron'; font-size:16px; font-weight:900;
+      color:#FFD700; letter-spacing:2px;
+      background:rgba(255,215,0,.07); border:1px solid rgba(255,215,0,.2);
+      border-radius:12px;
+      animation:banner-pulse 2s ease infinite;
+    }
+    @keyframes banner-pulse {
+      0%,100% { box-shadow:0 0 0 rgba(255,215,0,0); }
+      50%      { box-shadow:0 0 28px rgba(255,215,0,.18); }
+    }
+    .tv-geral-countdown {
+      font-family:'Orbitron'; font-size:10px; color:#444470;
+      text-align:center; margin-top:-6px; margin-bottom:14px;
+      letter-spacing:2px;
+    }
+
+    /* ── Labels de seção ───────────────────────────────────── */
+    .tv-sec { font-family:'Orbitron'; font-size:9px; font-weight:700; color:#1a1a44; letter-spacing:3px; text-align:center; margin:10px 0 6px; }
+    .tv-ativ-title { font-family:'Orbitron'; font-size:18px; font-weight:700; color:rgba(120,190,255,.7); text-align:center; letter-spacing:2px; margin-bottom:6px; }
+
+    /* ── PÓDIO ──────────────────────────────────────────────── */
+    .tv-podium { display:flex; align-items:flex-end; justify-content:center; gap:18px; padding:8px 0 0; }
+    .tv-pod-col { display:flex; flex-direction:column; align-items:center; }
+
+    .tv-pod-col.anim-3 { animation:tpod-in  1.0s cubic-bezier(.34,1.4,.64,1) 0.0s both; }
+    .tv-pod-col.anim-2 { animation:tpod-in  1.0s cubic-bezier(.34,1.4,.64,1) 0.7s both; }
+    .tv-pod-col.anim-1 { animation:tpod-big 1.2s cubic-bezier(.34,1.4,.64,1) 1.4s both; }
+    .tv-pod-col.new-entry { animation:tpod-big 1.2s cubic-bezier(.34,1.4,.64,1) 0s both!important; }
+    @keyframes tpod-in  { from{opacity:0;transform:translateY(70px) scale(.6)}  to{opacity:1;transform:none} }
+    @keyframes tpod-big { from{opacity:0;transform:translateY(80px) scale(.55)} 70%{transform:translateY(-18px) scale(1.07)} to{opacity:1;transform:none} }
+
+    .tv-trophy { font-size:36px; margin-bottom:4px; text-align:center; }
+    .tv-crown  { font-size:22px; display:block; text-align:center; margin-bottom:-4px; }
+
+    .tv-stand {
+      width:200px; border-radius:18px 18px 0 0;
+      display:flex; flex-direction:column; align-items:center;
+      padding:18px 16px 0;
+    }
+    .tv-stand.p1 { min-height:250px; background:linear-gradient(180deg,rgba(250,184,0,.28),rgba(250,184,0,.04)); border:2px solid rgba(250,184,0,.55); box-shadow:0 0 70px rgba(250,184,0,.08),inset 0 1px 0 rgba(250,184,0,.25); }
+    .tv-stand.p2 { min-height:190px; background:linear-gradient(180deg,rgba(200,200,235,.15),rgba(200,200,235,.03)); border:2px solid rgba(200,200,235,.3); }
+    .tv-stand.p3 { min-height:145px; background:linear-gradient(180deg,rgba(180,110,20,.15),rgba(180,110,20,.03)); border:2px solid rgba(180,110,20,.3); }
+    .tv-stand.empty { border-style:dashed; opacity:.2; }
+
+    /* nome: sem corte — quebra linha se necessário */
+    .tv-pname  { font-size:20px; font-weight:900; color:#FFFFFF; max-width:176px; text-align:center; word-break:break-word; overflow-wrap:anywhere; line-height:1.25; }
+    .tv-pturma { font-size:13px; color:#CCCCCC; margin-top:5px; }
+    .tv-ppts   { font-family:'Orbitron'; font-size:40px; font-weight:900; color:#FFD700; margin-top:8px; line-height:1; text-align:center; transition:color .3s; }
+    .tv-ppts.pts-rec { animation:tv-pts-rec 3s ease; }
+    @keyframes tv-pts-rec {
+      0%   { color:#FFD700; text-shadow:none; }
+      15%  { color:#fff; text-shadow:0 0 36px #FFD700,0 0 70px rgba(255,215,0,.5); }
+      80%  { color:#FFD700; text-shadow:0 0 14px rgba(255,215,0,.4); }
+      100% { color:#FFD700; text-shadow:none; }
+    }
+    .tv-pempty { color:#151530; font-size:18px; margin-top:22px; }
+    @keyframes blink-g { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    /* ── Lista (4º em diante) ───────────────────────────────── */
+    .tv-list { display:flex; flex-direction:column; gap:6px; margin-top:12px; }
+    .tv-list-row {
+      display:grid; grid-template-columns:60px 1fr 96px;
+      align-items:center; gap:16px; padding:13px 22px;
+      border-radius:12px; background:#0b0b1e; border:1px solid #13132a;
+      transition:background .5s,border-color .5s,box-shadow .5s;
+    }
+    .tv-list-row.rising { animation:tv-row-rise 1.8s ease; }
+    @keyframes tv-row-rise { 0%,100%{} 25%{background:rgba(34,197,94,.2);border-color:rgba(34,197,94,.6);box-shadow:0 0 28px rgba(34,197,94,.18)} }
+    .tv-list-row.record { animation:tv-row-rec 3s ease; }
+    @keyframes tv-row-rec { 0%,100%{} 15%{background:rgba(255,215,0,.18);border-color:rgba(255,215,0,.6);box-shadow:0 0 32px rgba(255,215,0,.2)} 80%{background:rgba(255,215,0,.06);border-color:rgba(255,215,0,.22)} }
+
+    .tv-lnum  { font-family:'Orbitron'; font-size:22px; font-weight:700; color:#1e1e46; text-align:center; }
+    .tv-lname { font-size:19px; font-weight:700; color:#FFFFFF; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .tv-lturma { font-size:12px; color:#CCCCCC; margin-top:3px; }
+    .tv-lpts-wrap { text-align:right; }
+    .tv-lpts  { font-family:'Orbitron'; font-size:22px; font-weight:900; color:#FFD700; }
+    .tv-ldiff { font-size:10px; color:#2a2a55; margin-top:3px; }
+
+    .tv-foot  { text-align:center; padding:14px 0 4px; font-size:9px; color:#1c1c38; font-family:'Orbitron'; letter-spacing:1px; }
+    .tv-empty { text-align:center; padding:70px; color:#151530; font-family:'Orbitron'; font-size:16px; }
+
+    @media(max-width:640px) {
+      .tv-hdr { padding:10px 16px; }
+      .tv-logo { display:none; }
+      .tv-body { padding:10px 16px 12px; }
+      .tv-stand { width:100px; }
+      .tv-pname { font-size:14px; max-width:88px; }
+      .tv-ppts  { font-size:26px; }
+      .tv-stand.p1 { min-height:190px; }
+      .tv-stand.p2 { min-height:150px; }
+      .tv-stand.p3 { min-height:115px; }
+      .tv-list-row { grid-template-columns:44px 1fr 76px; padding:10px 14px; gap:10px; }
+      .tv-lname { font-size:15px; }
+      .tv-lpts  { font-size:17px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="tv-hdr">
+  <div class="tv-hdr-l">
+    <span class="tv-logo">SISTEMA DE MATEMÁTICA</span>
+    <div class="tv-sel-wrap" id="tv-sel-wrap">
+      <button class="tv-sel-btn" id="tv-sel-btn" onclick="toggleSel(event)">
+        <span id="tv-sel-label">Carregando…</span>
+        <span class="tv-sel-arrow">▾</span>
+      </button>
+      <div class="tv-sel-dd" id="tv-sel-dd" style="display:none"></div>
+    </div>
+  </div>
+  <div class="tv-hdr-r">
+    <span class="tv-clk" id="tv-clk"></span>
+    <button class="tv-exit" onclick="tvSair()">✕ Sair</button>
+  </div>
+</div>
+
+<div class="tv-body">
+  <div class="tv-slide" id="tv-slide">
+    <div class="tv-empty">Carregando…</div>
+  </div>
+</div>
+
+<script type="module">
+import { getLiberadas, listenRankingProfessor } from "/js/db.js";
+import { requireProfessor } from "/js/auth.js";
+import { LISTA_ATIVIDADES } from "/js/constants.js";
+import { db } from "/js/firebase-config.js";
+import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+requireProfessor();
+
+setTimeout(() => { document.documentElement.requestFullscreen().catch(() => {}); }, 800);
+
+window.tvSair = () => { if (document.fullscreenElement) document.exitFullscreen(); window.close(); };
+
+function tickClock() {
+  const el = document.getElementById('tv-clk');
+  if (el) el.textContent = new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+}
+tickClock();
+setInterval(tickClock, 15000);
+
+// ── Ranking geral ─────────────────────────────────────────────
+function buildGeralRanking(lista) {
+  const melhor = {};
+  for (const r of lista) {
+    if (!r.concluido || !r.aluno) continue;
+    if (!melhor[r.aluno]) melhor[r.aluno] = {
+      aluno: r.aluno, turma: r.turma || '?', porAtiv: {},
+      melhorSessao: 0, primeiroTs: Infinity
+    };
+    const pts  = r.pontuacao_bruta || r.pontuacao || 0;
+    const prev = melhor[r.aluno].porAtiv[r.atividade] || 0;
+    if (pts > prev) melhor[r.aluno].porAtiv[r.atividade] = pts;
+    if (pts > melhor[r.aluno].melhorSessao) melhor[r.aluno].melhorSessao = pts;
+    const ts = r.criadoEm || 0;
+    if (ts && ts < melhor[r.aluno].primeiroTs) melhor[r.aluno].primeiroTs = ts;
+  }
+  return Object.values(melhor).map(a => {
+    const vals = Object.values(a.porAtiv);
+    return {
+      aluno: a.aluno, turma: a.turma,
+      melhorPts: vals.reduce((s, v) => s + v, 0),
+      melhorSessao: a.melhorSessao,
+      primeiroTs: a.primeiroTs === Infinity ? 0 : a.primeiroTs
+    };
+  }).sort((a, b) => {
+    if (b.melhorPts !== a.melhorPts) return b.melhorPts - a.melhorPts;
+    if (b.melhorSessao !== a.melhorSessao) return b.melhorSessao - a.melhorSessao;
+    return (a.primeiroTs || 0) - (b.primeiroTs || 0);
+  });
+}
+
+// ── Detecção de mudanças ──────────────────────────────────────
+let prevRankMap = {};
+let prevTop3Set = new Set();
+
+function detectChanges(ranking) {
+  const changes = {};
+  const top3Set = new Set(ranking.slice(0, 3).map(r => r.aluno));
+  ranking.forEach((r, i) => {
+    const prev = prevRankMap[r.aluno];
+    if (!prev) return;
+    const pts = r.melhorPts ?? 0;
+    if (top3Set.has(r.aluno) && !prevTop3Set.has(r.aluno)) {
+      changes[r.aluno] = 'new-top3';
+    } else if (pts > prev.pts) {
+      changes[r.aluno] = 'record';
+    } else if (i + 1 < prev.pos) {
+      changes[r.aluno] = 'rising';
+    }
+  });
+  ranking.forEach((r, i) => { prevRankMap[r.aluno] = { pos: i+1, pts: r.melhorPts ?? 0 }; });
+  prevTop3Set = top3Set;
+  return changes;
+}
+
+// ── Pódio HTML ────────────────────────────────────────────────
+const visualOrder = [1, 0, 2];
+const standCls    = ['p2', 'p1', 'p3'];
+const animCls     = ['anim-2', 'anim-1', 'anim-3'];
+const medals      = ['🥇', '🥈', '🥉'];
+
+function podiumHTML(top3, changes, withAnim) {
+  return `<div class="tv-podium">` +
+    visualOrder.map((ri, vi) => {
+      const r = top3[ri];
+      let cls = 'tv-pod-col';
+      if (withAnim) cls += ' ' + animCls[vi];
+      if (r && changes[r.aluno] === 'new-top3') cls += ' new-entry';
+      return `<div class="${cls}" id="tv-pod-col-${ri}">
+        ${ri === 0 ? `<span class="tv-crown">👑</span>` : `<div class="tv-trophy">${medals[ri]}</div>`}
+        <div class="tv-stand ${standCls[vi]}${r ? '' : ' empty'}">
+          ${r ? `
+            <div class="tv-pname">${r.aluno}</div>
+            <div class="tv-pturma">Turma ${r.turma}</div>
+            <div class="tv-ppts" id="tv-ppts-${ri}">${r.melhorPts ?? 0}</div>
+          ` : `<div class="tv-pempty">—</div>`}
+        </div>
+      </div>`;
+    }).join('') + `</div>`;
+}
+
+function updatePodiumInPlace(top3, changes) {
+  top3.forEach((r, ri) => {
+    if (!r) return;
+    const ptsEl = document.getElementById(`tv-ppts-${ri}`);
+    if (ptsEl) {
+      const newVal = String(r.melhorPts ?? 0);
+      if (ptsEl.textContent !== newVal) {
+        ptsEl.textContent = newVal;
+        if (changes[r.aluno] === 'record') {
+          ptsEl.classList.remove('pts-rec');
+          void ptsEl.offsetWidth;
+          ptsEl.classList.add('pts-rec');
+        }
+      }
+    }
+    if (changes[r.aluno] === 'new-top3') {
+      const col = document.getElementById(`tv-pod-col-${ri}`);
+      if (col) { col.classList.remove('new-entry'); void col.offsetWidth; col.classList.add('new-entry'); }
+    }
+  });
+}
+
+// ── Linha da lista ────────────────────────────────────────────
+function listRowHTML(r, pos, leaderPts, changes) {
+  const pts  = r.melhorPts ?? 0;
+  const diff = leaderPts - pts;
+  const ch   = changes[r.aluno];
+  const extraCls = ch === 'rising' ? ' rising' : ch === 'record' ? ' record' : '';
+  return `<div class="tv-list-row${extraCls}">
+    <div class="tv-lnum">${pos}</div>
+    <div>
+      <div class="tv-lname">${r.aluno}</div>
+      <div class="tv-lturma">Turma ${r.turma}</div>
+    </div>
+    <div class="tv-lpts-wrap">
+      <div class="tv-lpts">${pts}</div>
+      ${diff > 0 ? `<div class="tv-ldiff">−${diff} do 1º</div>` : ''}
+    </div>
+  </div>`;
+}
+
+// ── Estado ────────────────────────────────────────────────────
+const liberadas = await getLiberadas();
+const ativList  = liberadas.length
+  ? [...new Set(liberadas.map(l => l.atividade))]
+  : LISTA_ATIVIDADES.map(a => a.nome);
+
+let currentAtiv    = ativList[0];
+let currentUnsub   = null;
+let isGeralFlash   = false;
+let geralReturnTimer  = null;
+let countdownInterval = null;
+
+// ── Seletor de atividade ──────────────────────────────────────
+function buildSelectorItems() {
+  const dd = document.getElementById('tv-sel-dd');
+  dd.innerHTML = ativList.map((nome, i) =>
+    `<div class="tv-sel-item${nome === currentAtiv ? ' active' : ''}" onclick="selAtiv(${i})">${nome}</div>`
+  ).join('');
+}
+
+function updateSelectorLabel() {
+  document.getElementById('tv-sel-label').textContent = currentAtiv;
+  document.querySelectorAll('.tv-sel-item').forEach((el, i) => {
+    el.classList.toggle('active', ativList[i] === currentAtiv);
+  });
+}
+
+window.toggleSel = function(e) {
+  e.stopPropagation();
+  const dd  = document.getElementById('tv-sel-dd');
+  const btn = document.getElementById('tv-sel-btn');
+  const open = dd.style.display !== 'none';
+  dd.style.display  = open ? 'none' : '';
+  btn.classList.toggle('open', !open);
+};
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#tv-sel-wrap')) {
+    document.getElementById('tv-sel-dd').style.display = 'none';
+    document.getElementById('tv-sel-btn').classList.remove('open');
+  }
+});
+
+window.selAtiv = function(idx) {
+  document.getElementById('tv-sel-dd').style.display = 'none';
+  document.getElementById('tv-sel-btn').classList.remove('open');
+  if (ativList[idx] === currentAtiv && !isGeralFlash) return;
+
+  // Cancela flash geral se estiver ativo
+  if (geralReturnTimer) { clearTimeout(geralReturnTimer); geralReturnTimer = null; }
+  if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+  isGeralFlash = false;
+
+  currentAtiv = ativList[idx];
+  updateSelectorLabel();
+  showAtividade(currentAtiv);
+};
+
+buildSelectorItems();
+updateSelectorLabel();
+
+// ── Renderiza atividade ───────────────────────────────────────
+async function showAtividade(nome) {
+  const slideEl = document.getElementById('tv-slide');
+  slideEl.classList.add('fading');
+  await new Promise(res => setTimeout(res, 420));
+
+  if (currentUnsub) { currentUnsub(); currentUnsub = null; }
+  prevRankMap = {};
+  prevTop3Set = new Set();
+
+  slideEl.innerHTML = `
+    <div class="tv-sec">🏆 PÓDIO — ${nome}</div>
+    <div id="tv-podium-wrap">${podiumHTML([], {}, false)}</div>
+    <div class="tv-sec" id="tv-demais-sec" style="display:none;margin-top:18px">DEMAIS PARTICIPANTES</div>
+    <div class="tv-list" id="tv-list"></div>
+    <div class="tv-foot" id="tv-foot">Aguardando resultados…</div>`;
+
+  slideEl.classList.remove('fading');
+
+  let firstUpdate = true;
+  currentUnsub = listenRankingProfessor(nome, ranking => {
+    if (isGeralFlash) return;
+    const changes   = detectChanges(ranking);
+    const top3      = ranking.slice(0, 3);
+    const resto     = ranking.slice(3);
+    const leaderPts = top3[0]?.melhorPts ?? 0;
+
+    const podWrap = document.getElementById('tv-podium-wrap');
+    if (podWrap) {
+      if (firstUpdate) { podWrap.innerHTML = podiumHTML(top3, changes, true); firstUpdate = false; }
+      else { updatePodiumInPlace(top3, changes); }
+    }
+
+    const listEl = document.getElementById('tv-list');
+    if (listEl) listEl.innerHTML = resto.map((r, i) => listRowHTML(r, i+4, leaderPts, changes)).join('');
+
+    const demSec = document.getElementById('tv-demais-sec');
+    if (demSec) demSec.style.display = resto.length ? '' : 'none';
+
+    const footEl = document.getElementById('tv-foot');
+    if (footEl) footEl.textContent = `⏱ ${new Date().toLocaleTimeString('pt-BR')} · ${ranking.length} participante${ranking.length !== 1 ? 's' : ''}`;
+  });
+}
+
+// ── Flash ranking geral (10s) ─────────────────────────────────
+async function showGeralFlash(ranking) {
+  isGeralFlash = true;
+  const slideEl = document.getElementById('tv-slide');
+
+  slideEl.classList.add('fading');
+  await new Promise(res => setTimeout(res, 420));
+
+  const top3      = ranking.slice(0, 3);
+  const resto     = ranking.slice(3);
+  const leaderPts = top3[0]?.melhorPts ?? 0;
+
+  slideEl.innerHTML = `
+    <div class="tv-geral-banner">🏆 MUDANÇA NO RANKING GERAL!</div>
+    <div class="tv-geral-countdown" id="tv-geral-cd">voltando em 10s…</div>
+    <div class="tv-sec">CLASSIFICAÇÃO GERAL · TOTAL DE PONTOS</div>
+    ${podiumHTML(top3, {}, true)}
+    ${resto.length ? `
+      <div class="tv-sec" style="margin-top:18px">DEMAIS PARTICIPANTES</div>
+      <div class="tv-list">${resto.map((r, i) => listRowHTML(r, i+4, leaderPts, {})).join('')}</div>
+    ` : ''}
+    <div class="tv-foot">${ranking.length} participante${ranking.length !== 1 ? 's' : ''} · soma das melhores pontuações</div>`;
+
+  slideEl.classList.remove('fading');
+
+  let secsLeft = 10;
+  countdownInterval = setInterval(() => {
+    secsLeft--;
+    const el = document.getElementById('tv-geral-cd');
+    if (el) el.textContent = `voltando em ${secsLeft}s…`;
+    if (secsLeft <= 0) { clearInterval(countdownInterval); countdownInterval = null; }
+  }, 1000);
+
+  geralReturnTimer = setTimeout(() => {
+    geralReturnTimer = null;
+    isGeralFlash = false;
+    showAtividade(currentAtiv);
+  }, 10000);
+}
+
+// ── Listener do ranking geral (detecção de mudança no top 3) ──
+let geralTop3Key = null;
+
+onValue(ref(db, 'resultados'), snap => {
+  const lista = [];
+  snap.forEach(c => lista.push(c.val()));
+  const ranking = buildGeralRanking(lista);
+  const top3Key = ranking.slice(0, 3).map(r => r.aluno).join('|');
+
+  const changed = geralTop3Key !== null
+    && top3Key !== geralTop3Key
+    && !isGeralFlash
+    && !geralReturnTimer;
+
+  geralTop3Key = top3Key;
+  if (changed) showGeralFlash(ranking);
+});
+
+// ── Render inicial ────────────────────────────────────────────
+await showAtividade(currentAtiv);
+
+window.addEventListener('beforeunload', () => {
+  if (currentUnsub) currentUnsub();
+  if (geralReturnTimer) clearTimeout(geralReturnTimer);
+  if (countdownInterval) clearInterval(countdownInterval);
+});
+</script>
+</body>
+</html>
