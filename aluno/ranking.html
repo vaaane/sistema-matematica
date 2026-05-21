@@ -206,7 +206,7 @@ function renderPodium(lista, { showTurma = true, size = 'medium' } = {}) {
       const p = g.students[0];
       const isMe = alunos.includes(p.aluno);
       const youTag = isMe ? ' ★' : '';
-      const glowStyle = isMe && slotIdx <= 1
+      const glowStyle = slotIdx <= 1
         ? `color:${slotIdx===0?'#F59E0B':'#9CA3AF'};text-shadow:0 0 8px currentColor;` : '';
       namesHtml = `<div class="podium-name" style="${glowStyle}font-size:${nameFs}">${p.aluno}${youTag}</div>
         ${showTurma && p.turma ? `<div class="podium-turma">Turma ${p.turma}</div>` : ''}`;
@@ -215,7 +215,7 @@ function renderPodium(lista, { showTurma = true, size = 'medium' } = {}) {
         g.students.map((p, ni) => {
           const isMe = alunos.includes(p.aluno);
           const youTag = isMe ? ' ★' : '';
-          const glowStyle = isMe && slotIdx <= 1
+          const glowStyle = slotIdx <= 1
             ? `color:${slotIdx===0?'#F59E0B':'#9CA3AF'};text-shadow:0 0 8px currentColor;` : '';
           const vsep = ni < g.students.length - 1
             ? `<div style="width:1px;background:var(--border);opacity:.5;align-self:stretch;margin:0 3px;flex-shrink:0"></div>` : '';
@@ -229,7 +229,7 @@ function renderPodium(lista, { showTurma = true, size = 'medium' } = {}) {
     const spotMaxW = g.students.length > 1 ? `${Math.min(g.students.length * maxWNum, 280)}px` : maxW;
     return `<div class="podium-spot ${st.glow}${anyMe ? ' podium-you' : ''}" style="max-width:${spotMaxW}">
       ${decoration}
-      <div class="podium-trophy" style="font-size:${trophyFs}">${slotIdx === 0 ? `<span class="crown-anim" style="font-size:${crownSz};position:absolute;top:${crownTp};left:50%;transform:translateX(-50%)">👑</span>` : ''}${trophy}</div>
+      <div class="podium-trophy" style="font-size:${trophyFs}">${trophy}</div>
       ${namesHtml}
       <div class="podium-pts" style="font-size:${ptsFs};color:${['#F59E0B','#9CA3AF','#CD853F'][slotIdx]};text-align:center">${g.score}${subPts ? `<div style="font-size:9px;font-weight:500;opacity:.75;margin-top:1px">${subPts}</div>` : ''}</div>
       <div class="podium-stand" style="height:${st.h}px;background:${st.bg};font-size:${standFs}">${g.pos}</div>
@@ -300,18 +300,20 @@ function renderAtivTurma(lista, el) {
     el.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:10px 16px">Nenhum resultado da sua turma ainda.</p>';
     return;
   }
-  let pos = 1;
-  el.innerHTML = lista.map((r, i) => {
-    if (i > 0 && (r.pontuacao || 0) !== (lista[i-1].pontuacao || 0)) pos = i + 1;
+  let pos = 0, lastPts = null;
+  el.innerHTML = lista.map(r => {
+    const pts = r.pontuacao || 0;
+    if (pts !== lastPts) { pos++; lastPts = pts; }
     return rowAtiv(r, pos, alunos.includes(r.aluno), false);
   }).join('');
 }
 
 function renderAtivGeral(lista, el) {
   if (!lista.length) { el.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:10px 16px">Sem resultados ainda.</p>'; return; }
-  let pos = 1;
-  el.innerHTML = lista.map((r, i) => {
-    if (i > 0 && (r.pontuacao || 0) !== (lista[i-1].pontuacao || 0)) pos = i + 1;
+  let pos = 0, lastPts = null;
+  el.innerHTML = lista.map(r => {
+    const pts = r.pontuacao || 0;
+    if (pts !== lastPts) { pos++; lastPts = pts; }
     return rowAtiv(r, pos, alunos.includes(r.aluno), true);
   }).join('');
 }
@@ -329,10 +331,10 @@ window.mudarTab = function(tab) {
 // ── Construir linhas ──────────────────────────────────────────
 function buildRows(lista, showTurma) {
   if (!lista.length) return '<p style="font-size:13px;color:var(--text-muted);padding:16px">Nenhum resultado ainda.</p>';
-  let lastPos = 1;
-  return lista.map((r, i) => {
-    if (i === 0 || r.total !== lista[i-1].total) lastPos = i + 1;
-    const pos = lastPos;
+  let dPos = 0, lastTotal = null;
+  return lista.map(r => {
+    if (r.total !== lastTotal) { dPos++; lastTotal = r.total; }
+    const pos = dPos;
     const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
     const dest = alunos.includes(r.aluno);
     const colorClass = pos === 1 ? 'rank-gold' : pos === 2 ? 'rank-silver' : pos === 3 ? 'rank-bronze' : '';
@@ -381,12 +383,40 @@ const posStrip = alunos.map(nome => {
   </div>`;
 }).join('<div style="width:1px;background:var(--border);margin:0 12px;align-self:stretch" class="pos-strip-sep"></div>');
 
+// ── Próxima Meta ──────────────────────────────────────────────
+const proximaMeta = alunos.map(nome => {
+  const idx = rankAll.findIndex(r => r.aluno === nome);
+  if (idx < 0) return '';
+  const userTotal = rankAll[idx].total;
+  let dPos = 0, lastT = null, userRank = 0;
+  rankAll.forEach(r => {
+    if (r.total !== lastT) { dPos++; lastT = r.total; }
+    if (r.aluno === nome) userRank = dPos;
+  });
+  if (userRank === 1) {
+    const below = rankAll.find(r => r.total < userTotal);
+    if (!below) return `<span style="font-size:13px;font-weight:700;color:var(--gold)">🏆 Você lidera sem concorrentes!</span>`;
+    const lead = userTotal - below.total;
+    return `<span style="font-size:13px;font-weight:700;color:var(--gold)">🏆 Você lidera com ${lead}pts de vantagem!</span>`;
+  } else {
+    let aboveTotal = null;
+    for (let i = idx - 1; i >= 0; i--) {
+      if (rankAll[i].total > userTotal) { aboveTotal = rankAll[i].total; break; }
+    }
+    if (aboveTotal === null) return '';
+    const gap = aboveTotal - userTotal;
+    const targetRank = userRank - 1;
+    return `<span style="font-size:13px;color:var(--text-muted)">Você está a <b style="color:var(--text)">${gap}pts</b> do ${targetRank}º lugar!</span>`;
+  }
+}).filter(Boolean).join('<span style="margin:0 8px;color:var(--border)">|</span>');
+
 const isMobile = window.innerWidth <= 480;
 
 document.getElementById('content').innerHTML = `
-  <div class="card pos-strip-wrap" style="margin-bottom:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 16px">
+  <div class="card pos-strip-wrap" style="margin-bottom:${proximaMeta ? '6px' : '16px'};display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 16px">
     ${posStrip}
   </div>
+  ${proximaMeta ? `<div style="text-align:center;padding:4px 0 12px;font-size:13px">${proximaMeta}</div>` : ''}
 
   <div class="tab-nav">
     <button id="tab-geral" class="active" onclick="mudarTab('geral')">🏆 Geral</button>

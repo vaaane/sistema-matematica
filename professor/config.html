@@ -61,12 +61,12 @@
             <input type="password" class="input" id="inp-atual" placeholder="Digite a senha atual"/>
           </div>
           <div class="field">
-            <label class="field-label">Nova senha</label>
-            <input type="password" class="input" id="inp-nova" placeholder="Nova senha"/>
+            <label class="field-label">Nova senha <span style="font-size:10px;font-weight:400;color:var(--text-muted)">(mín. 8 caracteres, letras e números)</span></label>
+            <input type="password" class="input" id="inp-nova" placeholder="Mínimo 8 caracteres" minlength="8"/>
           </div>
           <div class="field">
             <label class="field-label">Confirmar nova senha</label>
-            <input type="password" class="input" id="inp-confirma" placeholder="Repita a nova senha"/>
+            <input type="password" class="input" id="inp-confirma" placeholder="Repita a nova senha" minlength="8"/>
           </div>
           <button class="btn btn-blue" style="width:100%;justify-content:center;margin-top:8px" onclick="salvar()">
             <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
@@ -83,15 +83,15 @@
         </div>
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
           <div class="field" style="margin:0;min-width:180px">
-            <label class="field-label" style="margin-bottom:4px">Filtrar por turma</label>
+            <label class="field-label" style="margin-bottom:4px">Selecionar turma</label>
             <select id="sel-filtro" class="input" style="padding:8px 12px" onchange="renderTabelaSenhas()">
-              <option value="">Todas as turmas</option>
+              <option value="">Selecionar turma…</option>
             </select>
           </div>
           <div style="font-size:12px;color:var(--text-muted);margin-top:18px" id="tabela-info"></div>
         </div>
         <div id="tabela-senhas-wrap" style="overflow-x:auto">
-          <div style="text-align:center;padding:30px;color:var(--text-muted)">Carregando…</div>
+          <div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px">Selecione uma turma para ver as senhas.</div>
         </div>
       </div>
 
@@ -117,12 +117,18 @@ TODAS_TURMAS.forEach(t => { selFiltro.innerHTML += `<option value="${t}">${t}</o
 
 async function iniciarSenhas() {
   senhasMap = await getAllSenhasAlunos();
-  renderTabelaSenhas();
+  // Não renderiza automaticamente — aguarda seleção de turma
 }
 
 window.renderTabelaSenhas = function() {
   const filtro = document.getElementById("sel-filtro").value;
-  const turmas = filtro ? [filtro] : TODAS_TURMAS;
+  const wrap = document.getElementById("tabela-senhas-wrap");
+  if (!filtro) {
+    document.getElementById("tabela-info").textContent = '';
+    wrap.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px">Selecione uma turma para ver as senhas.</div>';
+    return;
+  }
+  const turmas = [filtro];
 
   const rows = [];
   for (const turma of turmas) {
@@ -243,6 +249,8 @@ window.salvar = async function() {
   const confirma = document.getElementById("inp-confirma").value.trim();
 
   if (!atual || !nova) { flash("Preencha todos os campos.", "error"); return; }
+  if (nova.length < 8) { flash("A nova senha deve ter pelo menos 8 caracteres.", "error"); return; }
+  if (!/^[a-zA-Z0-9]+$/.test(nova)) { flash("Use apenas letras e números na senha.", "error"); return; }
   if (nova !== confirma) { flash("As senhas não coincidem.", "error"); return; }
 
   const cfg = await getConfig();

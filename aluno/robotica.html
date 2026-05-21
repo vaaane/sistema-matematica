@@ -25,11 +25,18 @@
     .tent-pct{min-width:36px;color:var(--text-muted);}
     .tent-diff{font-size:11px;font-weight:700;min-width:30px;}
     /* Progress bar */
-    .quiz-pbar{height:4px;background:var(--border);border-radius:4px;margin-bottom:20px;overflow:hidden;}
-    .quiz-pbar-fill{height:100%;background:var(--blue);border-radius:4px;transition:width .3s;}
+    .quiz-pbar{height:8px;background:var(--border);border-radius:4px;margin-bottom:20px;overflow:hidden;}
+    .quiz-pbar-fill{height:100%;background:var(--blue);border-radius:4px;transition:width .4s;}
+    /* Category badge */
+    .q-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;margin-bottom:14px;}
+    .q-badge.facil{background:#DCFCE7;color:#15803D;}
+    .q-badge.medio{background:#FEF9C3;color:#854D0E;}
+    .q-badge.dificil{background:#FEE2E2;color:#B91C1C;}
     /* Question */
-    .quiz-q{font-size:15px;font-weight:600;line-height:1.6;margin-bottom:18px;white-space:pre-wrap;}
-    .quiz-opcao{display:block;width:100%;text-align:left;padding:12px 16px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;margin-bottom:8px;font-family:'Inter',sans-serif;}
+    .quiz-q{font-size:20px;font-weight:700;line-height:1.4;margin-bottom:22px;}
+    /* MC options — 2-col grid like math activities */
+    .quiz-opcoes-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px;}
+    .quiz-opcao{padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);font-size:14px;font-weight:600;cursor:pointer;text-align:left;transition:background .12s,border-color .12s;width:100%;display:block;font-family:'Inter',sans-serif;}
     .quiz-opcao:hover:not([disabled]){border-color:var(--blue);background:var(--blue-pale);}
     .quiz-opcao.correta{border-color:var(--green)!important;background:#F0FDF4!important;color:#15803D!important;font-weight:700;}
     .quiz-opcao.errada{border-color:var(--red)!important;background:#FEF2F2!important;color:#B91C1C!important;}
@@ -42,9 +49,9 @@
     .num-wrap{display:flex;gap:10px;margin-bottom:16px;align-items:center;}
     .num-input{flex:1;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;background:var(--card);color:var(--text);}
     .num-input:focus{outline:none;border-color:var(--blue);}
-    .quiz-fb{padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:14px;display:none;}
-    .quiz-fb.ok{background:#DCFCE7;color:#15803D;border:1px solid #BBF7D0;}
-    .quiz-fb.err{background:#FEE2E2;color:#B91C1C;border:1px solid #FECACA;}
+    .quiz-fb{padding:12px 16px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:14px;display:none;}
+    .quiz-fb.ok{background:#F0FDF4;color:#15803D;border:1px solid #BBF7D0;}
+    .quiz-fb.err{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;}
     /* Summary */
     .summ-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
     .summ-stat{display:flex;align-items:center;gap:12px;padding:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);}
@@ -83,8 +90,8 @@
           </div>
         </div>
         <div class="quiz-pbar"><div class="quiz-pbar-fill" id="quiz-bar"></div></div>
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;">
-          <div class="quiz-q" id="quiz-enunciado"></div>
+        <div style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px 28px 20px;">
+          <div id="quiz-enunciado"></div>
           <div id="quiz-opcoes"></div>
           <div class="quiz-fb" id="quiz-fb"></div>
           <button class="btn" id="btn-proxima" style="display:none;width:100%;">Próxima →</button>
@@ -235,15 +242,21 @@ function renderQuestao() {
   const q = questoes[qIdx];
   document.getElementById('quiz-prog-text').textContent = `Questão ${qIdx + 1} de ${questoes.length}`;
   document.getElementById('quiz-bar').style.width = `${(qIdx / questoes.length) * 100}%`;
-  document.getElementById('quiz-enunciado').textContent = q.enunciado;
+
+  const dif = q.dificuldade || '';
+  const badgeCls = dif === 'facil' ? 'facil' : dif === 'medio' ? 'medio' : dif === 'dificil' ? 'dificil' : '';
+  const badgeLabel = q.categoria || (dif ? dif.charAt(0).toUpperCase() + dif.slice(1) : '');
+  const badge = badgeCls ? `<div class="q-badge ${badgeCls}">${badgeLabel}</div>` : (badgeLabel ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">${badgeLabel}</div>` : '');
+  document.getElementById('quiz-enunciado').innerHTML = badge + `<div class="quiz-q" style="white-space:pre-wrap">${q.enunciado}</div>`;
+
   document.getElementById('quiz-fb').style.display = 'none';
   document.getElementById('btn-proxima').style.display = 'none';
 
   const div = document.getElementById('quiz-opcoes');
   if (q.tipo === 'multipla_escolha') {
-    div.innerHTML = q.opcoes.map(o =>
+    div.innerHTML = `<div class="quiz-opcoes-grid">${q.opcoes.map(o =>
       `<button class="quiz-opcao" data-letra="${o[0]}" onclick="responder('${o[0]}')">${o}</button>`
-    ).join('');
+    ).join('')}</div>`;
   } else if (q.tipo === 'verdadeiro_falso') {
     div.innerHTML = `<div class="vf-wrap">
       <button class="vf-btn" onclick="responderVF('Verdadeiro')">✓ Verdadeiro</button>

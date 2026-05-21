@@ -6,6 +6,26 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .podium-wrap{display:flex;align-items:flex-end;justify-content:center;gap:8px;padding:16px 8px 0;margin-bottom:8px;}
+    .podium-spot{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;}
+    .podium-trophy{font-size:48px;margin-bottom:4px;}
+    .podium-name{font-size:11px;font-weight:800;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 4px;margin-bottom:2px;}
+    .podium-turma{font-size:10px;color:var(--text-muted);margin-bottom:3px;text-align:center;}
+    .podium-pts{font-size:12px;font-weight:800;margin-bottom:6px;}
+    .podium-stand{display:flex;align-items:center;justify-content:center;width:100%;border-radius:6px 6px 0 0;font-size:18px;font-weight:800;color:#fff;}
+    .glow-gold{box-shadow:0 0 14px rgba(245,158,11,.3);border-radius:8px;}
+    .glow-silver{box-shadow:0 0 10px rgba(156,163,175,.3);border-radius:8px;}
+    /* Online */
+    .online-dot{width:7px;height:7px;border-radius:50%;background:#22C55E;display:inline-block;vertical-align:middle;margin-left:4px;box-shadow:0 0 5px #22C55E;animation:pulse-dot 1.5s ease-in-out infinite;}
+    @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.55;transform:scale(1.35)}}
+    .online-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:center;justify-content:center;}
+    .online-modal{background:var(--card);border-radius:16px;padding:24px;min-width:280px;max-width:420px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,.22);max-height:80vh;overflow-y:auto;}
+    .online-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+    .online-row:last-child{border-bottom:none;}
+    .stat-card-clickable{cursor:pointer;transition:transform .15s,box-shadow .15s;}
+    .stat-card-clickable:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(34,197,94,.18);}
+  </style>
 </head>
 <body>
 <div class="layout">
@@ -23,67 +43,170 @@
     </div>
   </div>
 </div>
+
+<!-- Modal: Alunos Online -->
+<div id="online-modal-bg" class="online-modal-bg" style="display:none" onclick="fecharOnlineModal(event)">
+  <div class="online-modal" onclick="event.stopPropagation()">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:15px;font-weight:700">Alunos Online Agora <span class="online-dot"></span></div>
+      <button onclick="fecharOnlineModal()" style="border:none;background:none;cursor:pointer;font-size:18px;color:var(--text-muted);line-height:1;padding:2px 6px">✕</button>
+    </div>
+    <div id="online-modal-list"><p style="color:var(--text-muted);font-size:13px">Verificando…</p></div>
+  </div>
+</div>
+
 <script type="module">
 import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES } from "/js/constants.js";
 import { getResultados, getLiberadas, getAlertas, getAllAtividadeStatus } from "/js/db.js";
+import { db } from "/js/firebase-config.js";
+import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
-import { initTopNotif } from "/js/topnotif.js";
 
 const sess = requireProfessor();
 if (!sess) throw new Error();
 renderSidebarProfessor("sidebar", "dashboard");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
-const [todos, liberadasRaw, alertas, statusMap] = await Promise.all([getResultados(), getLiberadas(), getAlertas(true), getAllAtividadeStatus()]);
+const [todos, liberadasRaw, alertas, statusMap] = await Promise.all([
+  getResultados(), getLiberadas(), getAlertas(true), getAllAtividadeStatus()
+]);
 
-// Mescla status atual com as liberações — filtra encerradas
 const liberadas = liberadasRaw.map(lib => {
   const st = statusMap[`${lib.turma}|${lib.atividade}`] || { status: 'ativa', percentual: lib.percentual ?? 100 };
   return { ...lib, percentual: st.percentual, status: st.status };
 }).filter(lib => lib.status !== 'encerrada');
 
-const totalAlunos = Object.values(ALUNOS_POR_TURMA).reduce((a,b)=>a+b.length,0);
+const totalAlunos = Object.values(ALUNOS_POR_TURMA).reduce((a, b) => a + b.length, 0);
 const totalTurmas = Object.keys(ALUNOS_POR_TURMA).length;
 
 const melhorDash = {};
-const turmaDash = {};
+const turmaDash  = {};
 const regsPorAluno = {};
 todos.filter(r => r.concluido).forEach(r => {
   if (!melhorDash[r.aluno]) melhorDash[r.aluno] = {};
-  melhorDash[r.aluno][r.atividade] = Math.max(melhorDash[r.aluno][r.atividade]||0, r.pontuacao||0);
+  melhorDash[r.aluno][r.atividade] = Math.max(melhorDash[r.aluno][r.atividade] || 0, r.pontuacao || 0);
   if (!turmaDash[r.aluno]) turmaDash[r.aluno] = r.turma;
   if (!regsPorAluno[r.aluno]) regsPorAluno[r.aluno] = [];
   regsPorAluno[r.aluno].push(r);
 });
-const ptsPorAluno = Object.fromEntries(Object.entries(melhorDash).map(([a,m])=>[a,Object.values(m).reduce((x,y)=>x+y,0)]));
-const top5 = Object.entries(ptsPorAluno).sort((a,b)=>b[1]-a[1]).slice(0,5);
-const ultimos = [...todos].reverse().filter(r => r.concluido).slice(0,6);
+const ptsPorAluno = Object.fromEntries(
+  Object.entries(melhorDash).map(([a, m]) => [a, Object.values(m).reduce((x, y) => x + y, 0)])
+);
+const ultimos = [...todos].reverse().filter(r => r.concluido).slice(0, 6);
 
-// ── Alertas automáticos (calculados sobre os resultados) ──────
+// ── Alertas automáticos ───────────────────────────────────────
 const todosAlunosFlat = Object.values(ALUNOS_POR_TURMA).flat();
 const semAtividade = todosAlunosFlat.filter(a => !regsPorAluno[a]);
 const baixaTaxa = Object.entries(regsPorAluno).filter(([_, regs]) => {
-  const ac = regs.reduce((s, r) => s + (r.acertos||0), 0);
-  const tot = regs.reduce((s, r) => s + (r.acertos||0) + (r.erros||0), 0);
+  const ac  = regs.reduce((s, r) => s + (r.acertos || 0), 0);
+  const tot = regs.reduce((s, r) => s + (r.acertos || 0) + (r.erros || 0), 0);
   return tot > 0 && ac / tot < 0.3;
 });
 const zeroAcertoUlt = liberadas.length ? (() => {
   const ativ = liberadas[0].atividade;
-  return todos.filter(r => r.concluido && r.atividade === ativ && (r.acertos||0) === 0 && (r.erros||0) > 0);
+  return todos.filter(r => r.concluido && r.atividade === ativ && (r.acertos || 0) === 0 && (r.erros || 0) > 0);
 })() : [];
 const autoAlertas = [];
-if (semAtividade.length) autoAlertas.push({ icon:'📭', cor:'blue',  msg:`${semAtividade.length} aluno${semAtividade.length>1?'s':''} sem nenhuma atividade` });
-if (baixaTaxa.length)    autoAlertas.push({ icon:'⚠️', cor:'orange', msg:`${baixaTaxa.length} aluno${baixaTaxa.length>1?'s':''} com taxa de acerto abaixo de 30%` });
-if (zeroAcertoUlt.length) autoAlertas.push({ icon:'🚨', cor:'red',   msg:`${zeroAcertoUlt.length} aluno${zeroAcertoUlt.length>1?'s':''} com 0% de acerto em "${liberadas[0]?.atividade}"` });
+if (semAtividade.length) autoAlertas.push({ icon: '📭', msg: `${semAtividade.length} aluno${semAtividade.length > 1 ? 's' : ''} sem nenhuma atividade` });
+if (baixaTaxa.length)    autoAlertas.push({ icon: '⚠️', msg: `${baixaTaxa.length} aluno${baixaTaxa.length > 1 ? 's' : ''} com taxa de acerto abaixo de 30%` });
+if (zeroAcertoUlt.length) autoAlertas.push({ icon: '🚨', msg: `${zeroAcertoUlt.length} aluno${zeroAcertoUlt.length > 1 ? 's' : ''} com 0% de acerto em "${liberadas[0]?.atividade}"` });
 
-const LABEL_TIPO = { dia:"do dia", anterior:"anterior", antiga:"antiga" };
+// ── Pódio: Top Alunos ─────────────────────────────────────────
+function renderPodiumDash() {
+  const lista = Object.entries(ptsPorAluno)
+    .sort((a, b) => b[1] - a[1])
+    .map(([nome, pts]) => ({ nome, pts, turma: turmaDash[nome] || '?' }));
 
+  if (!lista.length) return '<div class="empty-state"><p>Nenhum resultado ainda.</p></div>';
+
+  // Agrupar por pontuação (até 3 posições)
+  const groups = [];
+  let gi = 0;
+  while (gi < lista.length && groups.length < 3) {
+    const pts = lista[gi].pts;
+    let gj = gi + 1;
+    while (gj < lista.length && lista[gj].pts === pts) gj++;
+    groups.push({ pos: groups.length + 1, students: lista.slice(gi, gj), score: pts });
+    gi = gj;
+  }
+
+  const STAND_H   = [90, 62, 44];
+  const STAND_BG  = [
+    'linear-gradient(135deg,#F59E0B,#D97706)',
+    'linear-gradient(135deg,#9CA3AF,#6B7280)',
+    'linear-gradient(135deg,#CD853F,#92400E)',
+  ];
+  const GLOWS  = ['glow-gold', 'glow-silver', ''];
+  const MEDALS = ['🥇', '🥈', '🥉'];
+  const COLORS = ['#F59E0B', '#9CA3AF', '#CD853F'];
+  const GLOW_NAME = [
+    `color:#F59E0B;text-shadow:0 0 8px rgba(245,158,11,.7);`,
+    `color:#9CA3AF;text-shadow:0 0 8px rgba(156,163,175,.7);`,
+    '',
+  ];
+
+  const spot = (g, slotIdx) => {
+    if (!g) return `<div class="podium-spot" style="max-width:120px"></div>`;
+    const nameFs  = g.students.length > 2 ? '10px' : '11px';
+    const maxW    = `${Math.min(g.students.length * 120, 280)}px`;
+    const glowName = GLOW_NAME[slotIdx];
+
+    const namesHtml = g.students.length === 1
+      ? `<div class="podium-name" style="${glowName}">${g.students[0].nome}</div>
+         <div class="podium-turma">Turma ${g.students[0].turma}</div>`
+      : `<div style="display:flex;align-items:flex-start;width:100%">${
+          g.students.map((s, ni) => {
+            const vsep = ni < g.students.length - 1
+              ? `<div style="width:1px;background:var(--border);opacity:.5;align-self:stretch;margin:0 3px;flex-shrink:0"></div>` : '';
+            return `<div style="flex:1;min-width:0;text-align:center">
+              <div class="podium-name" style="${glowName}font-size:${nameFs};white-space:normal;overflow:visible">${s.nome}</div>
+              <div class="podium-turma">T${s.turma}</div>
+            </div>${vsep}`;
+          }).join('')
+        }</div>`;
+
+    return `<div class="podium-spot ${GLOWS[slotIdx]}" style="max-width:${maxW}">
+      <div class="podium-trophy">${MEDALS[slotIdx]}</div>
+      ${namesHtml}
+      <div class="podium-pts" style="color:${COLORS[slotIdx]}">${g.score} pts</div>
+      <div class="podium-stand" style="height:${STAND_H[slotIdx]}px;background:${STAND_BG[slotIdx]}">${g.pos}</div>
+    </div>`;
+  };
+
+  // Ordem visual: 2º (esq), 1º (centro), 3º (dir)
+  return `<div class="podium-wrap">
+    ${spot(groups[1] || null, 1)}
+    ${spot(groups[0], 0)}
+    ${spot(groups[2] || null, 2)}
+  </div>`;
+}
+
+// ── Renderizar página ─────────────────────────────────────────
 document.getElementById("content").innerHTML = `
-  <div class="grid-4" style="margin-bottom:22px">
-    <div class="stat-card"><div class="stat-icon blue"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div><div><div class="stat-value blue">${totalAlunos}</div><div class="stat-meta">Total de Alunos</div></div></div>
-    <div class="stat-card"><div class="stat-icon orange"><svg viewBox="0 0 24 24"><path d="M12 3L1 9l4 2.18V17h2v-4.82L9 13.36V17c0 1.1 1.35 2 3 2s3-.9 3-2v-3.64l2-1.09V17h2v-5.82L23 9 12 3z"/></svg></div><div><div class="stat-value orange">${totalTurmas}</div><div class="stat-meta">Turmas</div></div></div>
-    <div class="stat-card"><div class="stat-icon green"><svg viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg></div><div><div class="stat-value green">${todos.length}</div><div class="stat-meta">Resultados</div></div></div>
-    <div class="stat-card"><div class="stat-icon red"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div><div><div class="stat-value red">${alertas.length}</div><div class="stat-meta">Alertas</div></div></div>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:22px">
+    <div class="stat-card" style="flex:1;min-width:140px">
+      <div class="stat-icon blue"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div>
+      <div><div class="stat-value blue">${totalAlunos}</div><div class="stat-meta">Total de Alunos</div></div>
+    </div>
+    <div class="stat-card" style="flex:1;min-width:140px">
+      <div class="stat-icon orange"><svg viewBox="0 0 24 24"><path d="M12 3L1 9l4 2.18V17h2v-4.82L9 13.36V17c0 1.1 1.35 2 3 2s3-.9 3-2v-3.64l2-1.09V17h2v-5.82L23 9 12 3z"/></svg></div>
+      <div><div class="stat-value orange">${totalTurmas}</div><div class="stat-meta">Turmas</div></div>
+    </div>
+    <div class="stat-card" style="flex:1;min-width:140px">
+      <div class="stat-icon green"><svg viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg></div>
+      <div><div class="stat-value green">${todos.length}</div><div class="stat-meta">Resultados</div></div>
+    </div>
+    <div class="stat-card" style="flex:1;min-width:140px">
+      <div class="stat-icon red"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
+      <div><div class="stat-value red">${alertas.length}</div><div class="stat-meta">Alertas</div></div>
+    </div>
+    <div class="stat-card stat-card-clickable" style="flex:1;min-width:140px" id="online-card" onclick="window.abrirOnlineModal()">
+      <div class="stat-icon green"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg></div>
+      <div>
+        <div class="stat-value green" id="online-count">—</div>
+        <div class="stat-meta">Online Agora <span class="online-dot"></span></div>
+      </div>
+    </div>
   </div>
 
   <div class="grid-2">
@@ -93,7 +216,7 @@ document.getElementById("content").innerHTML = `
           <div class="card-title"><svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>Atividades Liberadas</div>
           <a href="/professor/atividades.html" class="btn btn-sm btn-blue">Liberar atividade</a>
         </div>
-        ${liberadas.length ? liberadas.map(lib=>`
+        ${liberadas.length ? liberadas.map(lib => `
         <div class="list-row">
           <div style="flex:1"><div style="font-size:13px;font-weight:700">${lib.atividade}</div>
           <div style="font-size:11px;color:var(--text-muted)">Turma ${lib.turma} · ${lib.percentual}% da nota</div></div>
@@ -103,26 +226,26 @@ document.getElementById("content").innerHTML = `
 
       <div class="card">
         <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21L13 13.04V8h-1z"/></svg>Últimos Resultados</div></div>
-        ${ultimos.map(r=>`
+        ${ultimos.map(r => `
         <div class="list-row">
           <div style="flex:1"><div style="font-size:13px;font-weight:600">${r.aluno}</div>
           <div style="font-size:11px;color:var(--text-muted)">${r.atividade} · Turma ${r.turma}</div></div>
           <span class="badge badge-gold">${r.pontuacao} pts</span>
-          <span style="font-size:11px;color:var(--text-muted)">${r.data||''}</span>
+          <span style="font-size:11px;color:var(--text-muted)">${r.data || ''}</span>
         </div>`).join('')}
-        ${!ultimos.length?'<div class="empty-state"><p>Nenhum resultado ainda.</p></div>':''}
+        ${!ultimos.length ? '<div class="empty-state"><p>Nenhum resultado ainda.</p></div>' : ''}
       </div>
     </div>
 
     <div>
       <div class="card">
         <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>Alertas</div></div>
-        ${autoAlertas.map(a=>`
+        ${autoAlertas.map(a => `
         <div class="list-row">
           <div style="flex:1"><div style="font-size:13px;font-weight:600">${a.icon} ${a.msg}</div></div>
           <a href="/professor/acompanhamento.html" class="btn btn-sm btn-ghost" style="font-size:11px">Ver →</a>
         </div>`).join('')}
-        ${alertas.length ? alertas.slice(0,4).map(a=>`
+        ${alertas.length ? alertas.slice(0, 4).map(a => `
         <div class="list-row">
           <div style="flex:1"><div style="font-size:13px;font-weight:600">${a.aluno} — ${a.atividade}</div>
           <div style="font-size:11px;color:var(--text-muted)">${a.motivo}</div></div>
@@ -132,30 +255,60 @@ document.getElementById("content").innerHTML = `
       </div>
 
       <div class="card">
-        <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg>Top 5 Alunos</div></div>
-        ${top5.map(([nome,pts],i)=>`
-        <div class="list-row">
-          <div class="rank-pos" style="font-weight:800;width:28px;text-align:center">${['🥇','🥈','🥉','4º','5º'][i]}</div>
-          <div style="flex:1">
-            <div style="font-size:13px;font-weight:600">${nome}</div>
-            <div style="font-size:11px;color:var(--text-muted)">Turma ${turmaDash[nome]||'?'}</div>
-          </div>
-          <span class="badge badge-gold">${pts} pts</span>
-        </div>`).join('')}
-        ${!top5.length?'<div class="empty-state"><p>Nenhum resultado ainda.</p></div>':''}
-      </div>
-
-      <div class="card">
         <div class="card-header">
-          <div class="card-title"><svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>Notificações ao Vivo</div>
-          <span style="font-size:10px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.4);color:#16A34A;border-radius:10px;padding:2px 8px;font-weight:700">● ao vivo</span>
+          <div class="card-title"><svg viewBox="0 0 24 24"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg>Top Alunos</div>
+          <a href="/professor/ranking.html" class="btn btn-sm btn-ghost" style="font-size:11px">Ver ranking →</a>
         </div>
-        <div id="notif-hist"></div>
+        ${renderPodiumDash()}
       </div>
     </div>
   </div>`;
-initTopNotif({ mode: 'professor', historyEl: document.getElementById('notif-hist') });
+
+// ── Online Agora (listener em tempo real) ─────────────────────
+const ONLINE_WINDOW_MS = 5 * 60 * 1000;
+let onlineAlunos = [];
+
+onValue(ref(db, 'resultados'), snap => {
+  const now = Date.now();
+  const seen = {};
+  snap.forEach(child => {
+    const v = child.val();
+    if (!v.concluido && v.aluno && v.criadoEm && (now - v.criadoEm) < ONLINE_WINDOW_MS) {
+      seen[v.aluno] = { nome: v.aluno, turma: v.turma || '?', atividade: v.atividade || '' };
+    }
+  });
+  onlineAlunos = Object.values(seen);
+  const countEl = document.getElementById('online-count');
+  if (countEl) countEl.textContent = onlineAlunos.length;
+  atualizarListaOnline();
+});
+
+function atualizarListaOnline() {
+  const el = document.getElementById('online-modal-list');
+  if (!el) return;
+  if (!onlineAlunos.length) {
+    el.innerHTML = '<p style="color:var(--text-muted);font-size:13px;text-align:center;padding:12px 0">Nenhum aluno jogando agora.</p>';
+    return;
+  }
+  el.innerHTML = onlineAlunos.map(a => `
+    <div class="online-row">
+      <span class="online-dot"></span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600">${a.nome}</div>
+        <div style="font-size:11px;color:var(--text-muted)">Turma ${a.turma}${a.atividade ? ' · ' + a.atividade : ''}</div>
+      </div>
+    </div>`).join('');
+}
+
+window.abrirOnlineModal = function() {
+  document.getElementById('online-modal-bg').style.display = 'flex';
+  atualizarListaOnline();
+};
+window.fecharOnlineModal = function(e) {
+  if (!e || e.target === document.getElementById('online-modal-bg')) {
+    document.getElementById('online-modal-bg').style.display = 'none';
+  }
+};
 </script>
-<style>.rank-pos{font-size:16px}</style>
 </body>
 </html>

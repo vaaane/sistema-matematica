@@ -49,14 +49,15 @@
 </div>
 <script type="module">
 import { ALUNOS_POR_TURMA } from "/js/constants.js";
-import { getResultados, getDetalhes, getConquistas, marcarAlertaVisto, getAlertas } from "/js/db.js";
+import { getResultados, getDetalhes, getConquistas, salvarConquistas } from "/js/db.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { calcularConquistas, CONQUISTAS } from "/js/conquistas.js";
 
 requireProfessor();
 renderSidebarProfessor("sidebar", "historico");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
-const [todos, conquistas, alertas] = await Promise.all([getResultados(), getConquistas(), getAlertas()]);
+const [todos, conquistas] = await Promise.all([getResultados(), getConquistas()]);
 
 const selT = document.getElementById("sel-turma");
 const selA = document.getElementById("sel-ativ");
@@ -149,37 +150,96 @@ window.filtrar = function() {
       </div>
       <div>
         <div class="card">
-          <div class="card-title" style="margin-bottom:16px">🏆 Conquistas Recentes</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div class="card-title">🏆 Conquistas Recentes</div>
+            <button id="btn-retro" class="btn btn-sm btn-ghost" onclick="recalcularConquistas(this)">↺ Recalcular</button>
+          </div>
           ${conquFilt.slice(0,20).map(c=>`
           <div class="list-row">
+            ${c.icon ? `<div style="font-size:18px;flex-shrink:0">${c.icon}</div>` : ''}
             <div style="flex:1">
               <div style="font-size:13px;font-weight:600">${c.aluno}</div>
-              <div style="font-size:11px;color:var(--text-muted)">${c.descricao} · ${c.atividade}</div>
+              <div style="font-size:11px;color:var(--text-muted)">${c.nome || c.descricao} · ${c.atividade}</div>
             </div>
             <span class="badge badge-gold">${c.data||''}</span>
           </div>`).join('')}
           ${!conquFilt.length ? '<div class="empty-state"><p>Nenhuma conquista.</p></div>' : ''}
         </div>
-
-        <div class="card">
-          <div class="card-title" style="margin-bottom:16px">⚠️ Alertas</div>
-          ${alertas.slice(0,10).map(a=>`
-          <div class="list-row">
-            <div style="flex:1">
-              <div style="font-size:13px;font-weight:600">${a.aluno} — ${a.atividade}</div>
-              <div style="font-size:11px;color:var(--text-muted)">${a.motivo}</div>
-            </div>
-            ${!a.visto ? `<button class="btn btn-sm btn-ghost" onclick="verAlerta('${a.id}',this)">Marcar visto</button>` : '<span class="badge badge-green">Visto</span>'}
-          </div>`).join('')}
-          ${!alertas.length ? '<div class="empty-state"><p>Nenhum alerta.</p></div>' : ''}
-        </div>
       </div>
     </div>`;
 };
 
-window.verAlerta = async function(id, btn) {
-  await marcarAlertaVisto(id);
-  btn.outerHTML = '<span class="badge badge-green">Visto</span>';
+
+function buildRankingStatico(resultados) {
+  const melhor = {};
+  for (const r of resultados) {
+    if (!r.concluido || !r.aluno) continue;
+    if (!melhor[r.aluno]) melhor[r.aluno] = { aluno: r.aluno, turma: r.turma || '?', porAtiv: {} };
+    const pts = r.pontuacao || 0;
+    if ((melhor[r.aluno].porAtiv[r.atividade] || 0) < pts) melhor[r.aluno].porAtiv[r.atividade] = pts;
+  }
+  return Object.values(melhor).map(a => {
+    const total = Object.values(a.porAtiv).reduce((s, v) => s + v, 0);
+    return { aluno: a.aluno, turma: a.turma, total };
+  }).sort((a, b) => b.total - a.total);
+}
+
+window.recalcularConquistas = async function(btn) {
+  btn.disabled = true;
+  btn.textContent = 'Calculando…';
+  try {
+    const existingConqs = await getConquistas();
+    const existingKeys = new Set(existingConqs.filter(c => c.sessaoId).map(c => `${c.sessaoId}:${c.tipo}`));
+
+    const rankGeral = buildRankingStatico(todos);
+    const sessionsByAluno = {};
+    for (const r of todos.filter(r => r.concluido)) {
+      if (!sessionsByAluno[r.aluno]) sessionsByAluno[r.aluno] = [];
+      sessionsByAluno[r.aluno].push(r);
+    }
+
+    const toSave = [];
+    for (const [aluno, sessions] of Object.entries(sessionsByAluno)) {
+      const byAtiv = {};
+      for (const r of sessions) {
+        if (!byAtiv[r.atividade]) byAtiv[r.atividade] = [];
+        byAtiv[r.atividade].push(r);
+      }
+      for (const [atividade, ativSessions] of Object.entries(byAtiv)) {
+        const sorted = [...ativSessions].sort((a, b) => (a.criadoEm || 0) - (b.criadoEm || 0));
+        for (let i = 0; i < sorted.length; i++) {
+          const r = sorted[i];
+          const prevAtiv = sorted.slice(0, i);
+          const prevMelhor = prevAtiv.length > 0 ? Math.max(...prevAtiv.map(x => x.pontuacao_bruta || x.pontuacao || 0)) : 0;
+          const rankTurma = rankGeral.filter(x => x.turma === r.turma);
+          const sessaoData = {
+            aluno, pontuacao_bruta: r.pontuacao_bruta || r.pontuacao || 0,
+            acertos: r.acertos || 0, erros: r.erros || 0,
+            respondidas: r.respondidas || ((r.acertos || 0) + (r.erros || 0)),
+            acertos_rapidos: r.acertos_rapidos || 0, combo_max: r.combo_max || 0,
+            novoMelhor: (r.pontuacao_bruta || r.pontuacao || 0) > prevMelhor, prevMelhor,
+          };
+          const earned = calcularConquistas(sessaoData, prevAtiv, rankTurma, rankGeral);
+          for (const tipo of earned) {
+            const key = `${r.id}:${tipo}`;
+            if (!existingKeys.has(key)) {
+              const c = CONQUISTAS[tipo];
+              toSave.push({ aluno, tipo, atividade, turma: r.turma || '',
+                sessaoId: r.id, icon: c.icon, nome: c.nome, descricao: c.desc, data: r.data || '' });
+              existingKeys.add(key);
+            }
+          }
+        }
+      }
+    }
+    if (toSave.length) await salvarConquistas(toSave);
+    btn.textContent = `✓ ${toSave.length} novas`;
+    setTimeout(() => location.reload(), 1500);
+  } catch(e) {
+    console.error(e);
+    btn.textContent = 'Erro';
+    btn.disabled = false;
+  }
 };
 
 filtrar();

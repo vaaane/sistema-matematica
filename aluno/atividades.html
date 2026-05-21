@@ -38,7 +38,7 @@
       <div class="topbar-right"><div class="avatar avatar-orange" id="avatar-initials">?</div></div>
     </div>
     <div class="content" id="content">
-      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+      <div data-loading style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
     </div>
   </div>
 </div>
@@ -57,7 +57,6 @@ applyTopRankVisuals();
 
 const { alunos, turma } = sess;
 
-// Sync tema do Firebase (não-bloqueante)
 getAlunoPreferencia(turma, alunos[0], 'tema').then(t => {
   if (t && t !== localStorage.getItem('tema')) {
     localStorage.setItem('tema', t);
@@ -67,28 +66,58 @@ getAlunoPreferencia(turma, alunos[0], 'tema').then(t => {
 document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
 document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
 
+const content = document.getElementById("content");
+
+// Timeout: after 6s show retry if still loading
+const loadTimeout = setTimeout(() => {
+  if (content.querySelector('[data-loading]')) {
+    content.innerHTML = `<div class="card" style="text-align:center;padding:40px">
+      <p style="color:var(--text-muted);margin-bottom:16px;font-size:14px">Não foi possível carregar as atividades.</p>
+      <button onclick="location.reload()" class="btn btn-blue">Tentar novamente</button>
+    </div>`;
+  }
+}, 6000);
+
 const liberadas = await getLiberadasParaTurma(turma);
 const liberadasMap = {};
 for (const lib of liberadas) liberadasMap[lib.atividade] = lib;
 
-// Conta tentativas de cada aluno para cada atividade
-const bloqueios = {};
-for (const ativ of LISTA_ATIVIDADES) {
+// Identify classic (attempt-limited) activities
+const classicAtivs = LISTA_ATIVIDADES.filter(ativ => {
   const _lib = liberadasMap[ativ.nome];
   const _modo = _lib?.modo || ativ.modo || 'classico';
-  if (_modo === "competicao" || _modo === "competicao_plus") {
+  return _modo !== "competicao" && _modo !== "competicao_plus";
+});
+
+const bloqueios = {};
+
+// Mark competition activities immediately (no limits)
+for (const ativ of LISTA_ATIVIDADES) {
+  if (!classicAtivs.includes(ativ)) {
     bloqueios[ativ.nome] = { bloqueado: false, bloqueadoPor: [], minRest: 999, tentativas: {}, competicao: true };
-    continue;
   }
-  const tent = {};
-  for (const al of alunos) { tent[al] = await contarTentativas(al, ativ.nome); }
-  const bloqueadoPor = alunos.filter(al => tent[al] >= MAX_TENTATIVAS_ATIVIDADE);
-  const minRest = Math.max(0, MAX_TENTATIVAS_ATIVIDADE - Math.max(...alunos.map(al => tent[al])));
-  bloqueios[ativ.nome] = { bloqueado: bloqueadoPor.length > 0, bloqueadoPor, minRest, tentativas: {...tent} };
 }
 
+// Fetch all attempt counts in parallel
+if (classicAtivs.length && alunos.length) {
+  const pairs = classicAtivs.flatMap(ativ => alunos.map(al => ({ ativ: ativ.nome, al })));
+  const counts = await Promise.all(pairs.map(p => contarTentativas(p.al, p.ativ)));
+  pairs.forEach(({ ativ, al }, idx) => {
+    if (!bloqueios[ativ]) bloqueios[ativ] = { bloqueado: false, bloqueadoPor: [], minRest: 999, tentativas: {}, competicao: false };
+    bloqueios[ativ].tentativas[al] = counts[idx];
+  });
+  for (const ativ of classicAtivs) {
+    const tent = bloqueios[ativ.nome].tentativas;
+    const bloqueadoPor = alunos.filter(al => (tent[al] || 0) >= MAX_TENTATIVAS_ATIVIDADE);
+    const minRest = Math.max(0, MAX_TENTATIVAS_ATIVIDADE - Math.max(...alunos.map(al => tent[al] || 0)));
+    bloqueios[ativ.nome].bloqueado    = bloqueadoPor.length > 0;
+    bloqueios[ativ.nome].bloqueadoPor = bloqueadoPor;
+    bloqueios[ativ.nome].minRest      = minRest;
+  }
+}
 
-const content = document.getElementById("content");
+clearTimeout(loadTimeout);
+
 content.innerHTML = `
 <div class="card">
   <div class="card-header">
@@ -110,10 +139,11 @@ content.innerHTML = `
   </div>`}
 
   ${LISTA_ATIVIDADES.map(ativ => {
-    const isLib   = !!liberadasMap[ativ.nome];
-    const lib     = liberadasMap[ativ.nome];
-    const bloq    = bloqueios[ativ.nome];
-    const classes = `ativ-card${isLib&&!isEncerrada?' liberada':''}${(bloq.bloqueado||isEncerrada)?' bloqueada':''}`;
+    const isLib       = !!liberadasMap[ativ.nome];
+    const lib         = liberadasMap[ativ.nome];
+    const bloq        = bloqueios[ativ.nome];
+    const isEncerrada = lib?.status === 'encerrada';
+    const classes     = `ativ-card${isLib&&!isEncerrada?' liberada':''}${(bloq.bloqueado||isEncerrada)?' bloqueada':''}`;
 
     const modoEfetivo = lib?.modo || ativ.modo || 'classico';
     const url = modoEfetivo === 'competicao_plus'
@@ -122,7 +152,6 @@ content.innerHTML = `
       ? `/aluno/competicao.html?ativ=${encodeURIComponent(ativ.nome)}`
       : `/aluno/jogar.html?ativ=${encodeURIComponent(ativ.nome)}`;
 
-    const isEncerrada = lib?.status === 'encerrada';
     let botao = '';
     if (!isLib) {
       botao = `<span class="badge badge-orange">Não liberada</span>`;

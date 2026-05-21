@@ -111,6 +111,8 @@
 <script type="module">
 import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES } from "/js/constants.js";
 import { getResultados, getDetalhes, marcarPrecisaRevisao } from "/js/db.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 
 requireProfessor();
@@ -127,6 +129,24 @@ let selectedTurmas = new Set(TURMAS);
 let expandedTurma  = null;
 let vgSort = { col: 'jogadores', dir: 'desc' };
 let aqSort = { col: 'taxaErro',  dir: 'desc' };
+
+// ── Estado de revisão ─────────────────────────────
+const revisoes = new Set();
+function revisaoKey(ativ, enun) {
+  return btoa(unescape(encodeURIComponent(ativ + '|' + enun)))
+    .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_').slice(0, 80);
+}
+async function loadRevisoes() {
+  const snap = await get(ref(db, 'questoes_revisao'));
+  revisoes.clear();
+  if (snap.exists()) snap.forEach(child => revisoes.add(child.key));
+}
+function mkRevisaoBtn(enun, extraStyle = '') {
+  const isMk = revisoes.has(revisaoKey(selAtiv.value, enun));
+  const enunEsc = enun.replace(/"/g, '&quot;');
+  const mkStyle = isMk ? 'background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.5);color:#B45309;' : '';
+  return `<button class="btn btn-sm btn-ghost" style="${mkStyle}${extraStyle}" onclick="marcarRevisao(this)" data-enun="${enunEsc}">${isMk ? '✅ Desmarcar revisão' : '🔖 Marcar para revisar'}</button>`;
+}
 
 // ── Build selectors ───────────────────────────────
 const selAtiv = document.getElementById("sel-ativ");
@@ -175,12 +195,17 @@ allResults.forEach(r => {
   }
 });
 
+await loadRevisoes();
 if (selAtiv.options.length) onFC();
 else document.getElementById("content").innerHTML = `<div class="no-data">Nenhuma atividade cadastrada.</div>`;
 
 // ── Helpers ───────────────────────────────────────
 function pfCls(v, hi = 70, lo = 50) { return v >= hi ? 'hi' : v >= lo ? 'md' : 'lo'; }
-function pct(a, b) { return b > 0 ? Math.round(a / b * 100) : 0; }
+function pct(a, b) {
+  const nb = Number(b);
+  if (!nb || !isFinite(nb)) return 0;
+  return Math.round(Number(a) / nb * 100) || 0;
+}
 function trunc(s, n = 80) { return s && s.length > n ? s.slice(0, n) + '…' : (s || '—'); }
 function numTent(q) {
   if (Array.isArray(q.tentativas)) return q.tentativas.length;
@@ -206,9 +231,9 @@ function computeStats(ativ, turma) {
     d.sessoes++;
     d.melhorPts      = Math.max(d.melhorPts,      r.pontuacao                        || 0);
     d.melhorPtsBruta = Math.max(d.melhorPtsBruta, r.pontuacao_bruta || r.pontuacao || 0);
-    d.acertos     += r.acertos     || 0;
-    d.erros       += r.erros       || 0;
-    d.respondidas += r.respondidas || 0;
+    d.acertos     += Number(r.acertos)     || 0;
+    d.erros       += Number(r.erros)       || 0;
+    d.respondidas += Number(r.respondidas) || 0;
     alunoSessList[r.aluno].push({ pts: r.pontuacao || 0, criadoEm: r.criadoEm || 0 });
     for (const q of (detCache[r.id] || [])) {
       if (!q.acertou) {
@@ -443,8 +468,7 @@ function renderQdestak(questoes, loaded) {
             : `<span style="color:var(--green);font-weight:700">${pct(q.acertos, q.total)}% acerto</span>`}
           <span style="color:var(--text-muted)">${isErr ? q.erros : q.acertos}/${q.total}</span>
           ${tempoStr}
-          <button class="btn btn-sm btn-ghost" style="margin-left:auto;font-size:10px;padding:2px 8px;flex-shrink:0"
-            onclick="marcarRevisao(this)" data-enun="${enunEsc}">🔖 Revisar</button>
+          ${mkRevisaoBtn(q.enun, 'margin-left:auto;font-size:10px;padding:2px 8px;flex-shrink:0;')}
         </div>
       </div>`;
   };
@@ -604,6 +628,13 @@ function renderEvolucaoSVG(evolData) {
   for (let i = 0; i < maxSess; i++) {
     svg += `<text x="${xPos(i)}" y="${H - 6}" text-anchor="middle" font-size="10" fill="#6B7280">${i + 1}ª</text>`;
   }
+  // Linha de referência (meta mínima 50pts)
+  const yRef = yPos(50);
+  if (yRef >= mT && yRef <= mT + iH) {
+    svg += `<line x1="${mL}" y1="${yRef}" x2="${W - mR}" y2="${yRef}" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="6,3" opacity=".75"/>`;
+    svg += `<text x="${W - mR - 2}" y="${yRef - 4}" text-anchor="end" font-size="9" fill="#B45309" font-weight="700">meta mín. 50</text>`;
+  }
+
   for (const [turma, avgs] of Object.entries(evolData)) {
     if (!avgs.length) continue;
     const color = TURMA_COLORS[turma] || '#6B7280';
@@ -686,14 +717,17 @@ function fillExpand(turma, stats, questoes) {
     if (!d || d.sessoes === 0) return `<tr>
       <td style="color:var(--text-muted)">${idx + 1}</td>
       <td><span class="nao-jogou">${al}</span></td>
-      <td colspan="9" style="color:var(--text-muted);font-style:italic;font-size:11px">Não jogou</td>
+      <td colspan="9" style="color:var(--text-muted);font-style:italic;font-size:11px;text-align:center">—</td>
     </tr>`;
     const taxa = pct(d.acertos, d.respondidas);
-    const topE = Object.entries(d.qErros).sort((a, b) => b[1] - a[1]).slice(0, 1)
-      .map(([k, n]) => `${k} <strong style="color:var(--red)">(${n}×)</strong>`).join('<br>');
-    const s1 = sessions[0] != null ? sessions[0].pts : '—';
-    const s2 = sessions[1] != null ? sessions[1].pts : '—';
-    const s3 = sessions[2] != null ? sessions[2].pts : '—';
+    const sCell = (i) => {
+      const s = sessions[i];
+      if (s == null) return '—';
+      const isBest = d.melhorPts > 0 && s.pts === d.melhorPts;
+      return isBest
+        ? `<strong style="color:var(--gold)">${s.pts}</strong>`
+        : `<span style="color:var(--text-muted)">${s.pts}</span>`;
+    };
     let trend = '';
     if (sessions.length >= 2) {
       const first = sessions[0].pts, last = sessions[sessions.length - 1].pts;
@@ -705,15 +739,15 @@ function fillExpand(turma, stats, questoes) {
       <td style="color:var(--text-muted)">${idx + 1}</td>
       <td><strong>${al}</strong></td>
       <td><strong style="color:var(--blue)">${d.melhorPtsBruta || d.melhorPts}</strong></td>
-      <td>${d.melhorPtsBruta && d.melhorPtsBruta !== d.melhorPts ? `<strong style="color:var(--gold)">${d.melhorPts}</strong>` : '<span style="color:var(--text-muted)">—</span>'}</td>
-      <td style="text-align:center;color:var(--text-muted);font-size:11px">${s1}</td>
-      <td style="text-align:center;color:var(--text-muted);font-size:11px">${s2}</td>
-      <td style="text-align:center;color:var(--text-muted);font-size:11px">${s3}</td>
+      <td style="text-align:center;font-size:11px">${sCell(0)}</td>
+      <td style="text-align:center;font-size:11px">${sCell(1)}</td>
+      <td style="text-align:center;font-size:11px">${sCell(2)}</td>
+      <td style="text-align:center;font-size:11px">${sCell(3)}</td>
+      <td style="text-align:center;font-size:11px">${sCell(4)}</td>
       <td style="text-align:center">${trend}</td>
       <td style="text-align:center">${d.sessoes}</td>
       <td><span class="pf ${pfCls(taxa)}">${taxa}%</span>
           <span style="font-size:10px;color:var(--text-muted);display:block">${d.acertos}✓ ${d.erros}✗</span></td>
-      <td style="font-size:11px;line-height:1.5;max-width:200px">${topE || '<span style="color:var(--green)">Sem erros ✨</span>'}</td>
     </tr>`;
   };
 
@@ -751,14 +785,15 @@ function fillExpand(turma, stats, questoes) {
     <div style="overflow:auto">
       <table class="table sub-table" style="min-width:760px;background:white;border-radius:8px">
         <thead><tr>
-          <th>#</th><th>Aluno</th><th>Melhor bruta</th><th>Aplic.</th>
+          <th>#</th><th>Aluno</th><th>Melhor</th>
           <th style="text-align:center;font-size:9px">1ª</th>
           <th style="text-align:center;font-size:9px">2ª</th>
           <th style="text-align:center;font-size:9px">3ª</th>
-          <th style="text-align:center;font-size:9px">Trend</th>
-          <th style="text-align:center">Sessões</th>
+          <th style="text-align:center;font-size:9px">4ª</th>
+          <th style="text-align:center;font-size:9px">5ª</th>
+          <th style="text-align:center;font-size:9px">Tend.</th>
+          <th style="text-align:center">Sess.</th>
           <th>Taxa acerto</th>
-          <th>Questões mais erradas</th>
         </tr></thead>
         <tbody>${allRows}</tbody>
       </table>
@@ -802,8 +837,7 @@ function renderAQ(questoes, loaded) {
     const enunEsc = q.enun.replace(/"/g, '&quot;');
     return `<tr>
       <td class="enun-col">${q.enun}
-        <button class="btn btn-sm btn-ghost" style="font-size:10px;padding:1px 6px;margin-top:4px;display:block"
-          onclick="marcarRevisao(this)" data-enun="${enunEsc}">🔖 Revisar</button>
+        ${mkRevisaoBtn(q.enun, 'font-size:10px;padding:1px 6px;margin-top:4px;display:block;')}
       </td>
       <td>${difCell}</td>
       <td style="color:var(--red);font-weight:700">${q.erros}</td>
@@ -834,16 +868,35 @@ function renderAQ(questoes, loaded) {
     </div>`;
 }
 
-// ── Marcar questão para revisão ───────────────────
-// TODO: reclassificar questões após todas as turmas completarem a atividade
+// ── Marcar / desmarcar questão para revisão ───────
 window.marcarRevisao = async function(btn) {
   const enun = btn.dataset.enun;
   const ativ = selAtiv.value;
+  const key = revisaoKey(ativ, enun);
+  const isMarcada = revisoes.has(key);
   btn.disabled = true;
-  btn.textContent = '✓ Marcado';
-  try { await marcarPrecisaRevisao(ativ, enun); } catch(e) {
-    btn.disabled = false; btn.textContent = '🔖 Revisar';
+  const prev = btn.textContent;
+  btn.textContent = '⏳';
+  try {
+    if (isMarcada) {
+      await remove(ref(db, `questoes_revisao/${key}`));
+      revisoes.delete(key);
+      btn.style.background = '';
+      btn.style.borderColor = '';
+      btn.style.color = '';
+      btn.textContent = '🔖 Marcar para revisar';
+    } else {
+      await marcarPrecisaRevisao(ativ, enun);
+      revisoes.add(key);
+      btn.style.background = 'rgba(245,158,11,.12)';
+      btn.style.borderColor = 'rgba(245,158,11,.5)';
+      btn.style.color = '#B45309';
+      btn.textContent = '✅ Desmarcar revisão';
+    }
+  } catch(e) {
+    btn.textContent = prev;
   }
+  btn.disabled = false;
 };
 
 // ── Toggle não-jogaram ────────────────────────────

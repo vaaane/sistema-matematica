@@ -46,6 +46,10 @@
     .plus-tent-ans.ok{background:#DCFCE7;color:#166534;}
     .plus-tent-ans.err{background:#FEE2E2;color:#991B1B;}
     .plus-tent-ans.time{background:#F3F4F6;color:#6B7280;}
+    .conq-tip{position:fixed;background:#1E293B;color:#F1F5F9;padding:8px 12px;border-radius:10px;font-size:12px;pointer-events:none;z-index:9999;max-width:220px;box-shadow:0 4px 16px rgba(0,0,0,.35);opacity:0;transition:opacity .15s;}
+    .conq-tip.show{opacity:1;}
+    .conq-tip-nome{font-weight:700;font-size:13px;margin-bottom:2px;}
+    .conq-tip-desc{font-size:11px;opacity:.8;}
     @media(max-width:480px){
       .hist-header{padding:11px 12px;gap:8px}
       .hist-body{padding:0 12px 12px}
@@ -224,8 +228,8 @@ function renderPlusItem(r, detalhes) {
           <span class="badge badge-red">❌ ${r.erros || 0}</span>
           <span class="badge badge-blue">📊 ${taxa}%</span>
           ${(r.acertos_rapidos || 0) > 0 ? `<span class="badge badge-blue">⚡ ${r.acertos_rapidos}</span>` : ''}
-          ${(conquistasBySessao[r.id] || []).map(c => `<span class="badge" style="background:rgba(168,85,247,.1);border-color:rgba(168,85,247,.4);color:#7C3AED" title="${c.nome}">${c.icon || '🏆'} ${c.nome || c.tipo}</span>`).join('')}
         </div>
+        ${renderConquistasBadges(r.id, r)}
       </div>
       <div class="hist-data">${r.data || ''}</div>
       <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--text-muted)"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
@@ -235,6 +239,48 @@ function renderPlusItem(r, detalhes) {
         ? `<div class="plus-q-wrap">${detalhes.map((q, i) => renderPlusQuestao(q, i)).join('')}</div>`
         : '<p style="font-size:12px;color:var(--text-muted);padding-top:8px">Detalhes não disponíveis.</p>'}
     </div>
+  </div>`;
+}
+
+const CONQUISTAS_POSICIONAIS = new Set(['lider_turma','elite']);
+
+let _conqTip = null;
+function getConqTip() {
+  if (!_conqTip) {
+    _conqTip = document.createElement('div');
+    _conqTip.className = 'conq-tip';
+    _conqTip.innerHTML = '<div class="conq-tip-nome"></div><div class="conq-tip-desc"></div>';
+    document.body.appendChild(_conqTip);
+  }
+  return _conqTip;
+}
+function showConqTip(x, y, nome, desc) {
+  const tip = getConqTip();
+  tip.querySelector('.conq-tip-nome').textContent = nome;
+  tip.querySelector('.conq-tip-desc').textContent = desc;
+  tip.style.left = `${Math.min(x + 12, window.innerWidth - 230)}px`;
+  tip.style.top  = `${Math.max(y - 60, 8)}px`;
+  tip.classList.add('show');
+}
+function hideConqTip() { if (_conqTip) _conqTip.classList.remove('show'); }
+
+function renderConquistasBadges(sessaoId, r) {
+  const pctSessao = r?.percentual ?? 100;
+  const cs = (conquistasBySessao[sessaoId] || []).filter(c => {
+    const t = c.tipo || c.id;
+    if (t === 'recorde_pessoal') return false;
+    if ((t === 'lider_turma' || t === 'elite') && pctSessao > 75) return false;
+    return true;
+  });
+  if (!cs.length) return '';
+  return `<div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--border);padding-top:6px">
+    <span style="font-size:10px;color:var(--text-muted);font-weight:600;flex-shrink:0">Conquistas:</span>
+    ${cs.map(c => {
+      const nome = c.nome || c.tipo;
+      const desc = c.descricao || c.desc || '';
+      return `<span class="badge" style="background:rgba(168,85,247,.1);border-color:rgba(168,85,247,.4);color:#7C3AED;cursor:default"
+        data-nome="${nome.replace(/"/g,'&quot;')}" data-desc="${desc.replace(/"/g,'&quot;')}">${c.icon || '🏆'} ${nome}</span>`;
+    }).join('')}
   </div>`;
 }
 
@@ -253,8 +299,8 @@ function renderClassicoItem(r, detalhes) {
           <span class="badge badge-green">✅ ${r.acertos || 0}</span>
           <span class="badge badge-red">❌ ${r.erros || 0}</span>
           <span class="badge badge-blue">📊 ${aproveit}%</span>
-          ${(conquistasBySessao[r.id] || []).map(c => `<span class="badge" style="background:rgba(168,85,247,.1);border-color:rgba(168,85,247,.4);color:#7C3AED" title="${c.nome}">${c.icon || '🏆'} ${c.nome || c.tipo}</span>`).join('')}
         </div>
+        ${renderConquistasBadges(r.id, r)}
       </div>
       <div class="hist-data">${r.data || ''}</div>
       <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--text-muted)"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
@@ -341,6 +387,32 @@ for (const aluno of alunos) {
 }
 
 content.innerHTML = html;
+
+// Tooltip event delegation for conquista badges
+let _touchConqTip;
+content.addEventListener('mouseover', e => {
+  const el = e.target.closest('[data-nome]');
+  if (el) showConqTip(e.clientX, e.clientY, el.dataset.nome, el.dataset.desc || '');
+});
+content.addEventListener('mousemove', e => {
+  if (!_conqTip?.classList.contains('show')) return;
+  const el = e.target.closest('[data-nome]');
+  if (el) {
+    _conqTip.style.left = `${Math.min(e.clientX + 12, window.innerWidth - 230)}px`;
+    _conqTip.style.top  = `${Math.max(e.clientY - 60, 8)}px`;
+  }
+});
+content.addEventListener('mouseout', e => {
+  if (e.target.closest('[data-nome]') && !e.relatedTarget?.closest('[data-nome]')) hideConqTip();
+});
+content.addEventListener('touchstart', e => {
+  const el = e.target.closest('[data-nome]');
+  if (!el) return;
+  const t = e.touches[0];
+  _touchConqTip = setTimeout(() => showConqTip(t.clientX, t.clientY, el.dataset.nome, el.dataset.desc || ''), 400);
+}, {passive: true});
+content.addEventListener('touchend', () => { clearTimeout(_touchConqTip); setTimeout(hideConqTip, 2500); }, {passive: true});
+content.addEventListener('touchcancel', () => clearTimeout(_touchConqTip), {passive: true});
 
 // ── Seção Robótica ─────────────────────────────────────────
 const isRob = await getAlunoPreferencia(turma, alunos[0], 'robotica');

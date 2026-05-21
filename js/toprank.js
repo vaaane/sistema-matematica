@@ -1,3 +1,20 @@
+function injectRankCSS() {
+  if (document.getElementById('toprank-css')) return;
+  const s = document.createElement('style');
+  s.id = 'toprank-css';
+  s.textContent = `
+.avatar{position:relative;overflow:visible!important;}
+.avatar-ring-1::after,.avatar-ring-2::after,.avatar-ring-3::after{
+  content:'';position:absolute;top:-14px;left:50%;transform:translateX(-50%);
+  font-size:17px;line-height:1;
+}
+.avatar-ring-1::after{content:'👑';}
+.avatar-ring-2::after{content:'🥈';}
+.avatar-ring-3::after{content:'🥉';}
+  `;
+  document.head.appendChild(s);
+}
+
 export function saveRankPos(alunos, rankAll) {
   const posArr = alunos.map(n => rankAll.findIndex(r => r.aluno === n) + 1).filter(p => p > 0);
   const melhor = posArr.length ? Math.min(...posArr) : null;
@@ -6,6 +23,7 @@ export function saveRankPos(alunos, rankAll) {
 
 export function applyTopRankVisuals() {
   try {
+    injectRankCSS();
     const raw = localStorage.getItem('rankPos');
     if (!raw) return;
     const { melhor } = JSON.parse(raw);

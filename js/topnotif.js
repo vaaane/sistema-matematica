@@ -13,7 +13,7 @@ function buildTop3(snap) {
     const v = child.val();
     if (!v.concluido || !v.aluno) return;
     if (!best[v.aluno]) best[v.aluno] = { aluno: v.aluno, turma: v.turma || '?', porAtiv: {} };
-    const pts = v.pontuacao_bruta || v.pontuacao || 0;
+    const pts = v.pontuacao || 0;
     if (pts > (best[v.aluno].porAtiv[v.atividade] || 0))
       best[v.aluno].porAtiv[v.atividade] = pts;
   });
@@ -26,28 +26,20 @@ function buildTop3(snap) {
     .slice(0, 3);
 }
 
-// Returns change events between two top-3 snapshots.
-// Skips on first call (prev===null) to avoid flooding on page load.
 function getEvents(prev, cur) {
   if (!prev) return [];
-  const pm = Object.fromEntries(prev.map((p, i) => [p.aluno, i])); // 0-indexed
+  const pm = Object.fromEntries(prev.map((p, i) => [p.aluno, i]));
   const cm = Object.fromEntries(cur.map((p, i) => [p.aluno, i]));
   const events = [];
   for (const p of cur) {
     const cp = cm[p.aluno];
     if (pm[p.aluno] === undefined) {
-      // Entered top 3 fresh — either took 1st or entered at 2nd/3rd
       events.push(cp === 0
         ? { tipo: 'lider',  aluno: p.aluno, pos: 1, turma: p.turma }
         : { tipo: 'entrou', aluno: p.aluno, pos: cp + 1, turma: p.turma });
     } else if (cp === 0 && pm[p.aluno] !== 0) {
-      // Was already in top 3, climbed to 1st
       events.push({ tipo: 'lider', aluno: p.aluno, pos: 1, turma: p.turma });
     }
-  }
-  for (const p of prev) {
-    if (cm[p.aluno] === undefined)
-      events.push({ tipo: 'saiu', aluno: p.aluno });
   }
   return events;
 }
@@ -58,8 +50,6 @@ function fmtEv(ev) {
     return { icon: '🥇', bg: POS_BG[0], msg: `${ev.aluno} assumiu o 1º lugar! (Turma ${ev.turma})` };
   if (ev.tipo === 'entrou')
     return { icon: medals[ev.pos - 1] || '🏅', bg: POS_BG[ev.pos - 1] || POS_BG[2], msg: `${ev.aluno} entrou no top 3! (Turma ${ev.turma})` };
-  if (ev.tipo === 'saiu')
-    return { icon: '⚠️', bg: 'linear-gradient(135deg,#6B7280,#4B5563)', msg: `${ev.aluno} saiu do top 3` };
   return null;
 }
 
@@ -83,18 +73,41 @@ function ensureCSS() {
 .tn-hi{font-size:15px;flex-shrink:0;}
 .tn-hm{flex:1;font-weight:600;line-height:1.3;}
 .tn-ht{font-size:10px;color:var(--text-muted);flex-shrink:0;white-space:nowrap;}
+.tn-tv-banner{position:fixed;top:64px;left:50%;transform:translateX(-50%) translateY(-20px);z-index:9999;background:linear-gradient(135deg,rgba(250,184,0,.18),rgba(250,184,0,.06));border:2px solid rgba(250,184,0,.5);border-radius:14px;padding:12px 40px;font-family:'Orbitron',monospace;font-size:17px;font-weight:900;color:#FFD700;letter-spacing:2px;text-align:center;box-shadow:0 0 60px rgba(250,184,0,.12);opacity:0;transition:opacity .4s,transform .4s;pointer-events:none;white-space:nowrap;}
+.tn-tv-banner.tn-in{opacity:1;transform:translateX(-50%) translateY(0);}
+.tn-confetti-wrap{position:fixed;top:0;left:50%;pointer-events:none;z-index:9998;width:0;height:0;}
+.tn-cp{position:absolute;width:10px;height:10px;border-radius:2px;animation:tn-fall var(--dur,2s) var(--delay,0s) ease-in both;}
+@keyframes tn-fall{0%{transform:translateX(var(--cx,0px)) translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateX(var(--cx,0px)) translateY(100vh) rotate(720deg);opacity:0}}
 @media(max-width:560px){.tn-wrap{right:8px;left:8px;max-width:unset;}.tn-toast{max-width:100%;}}
   `;
   document.head.appendChild(s);
 }
 
-export function initTopNotif({ mode = 'aluno', historyEl = null } = {}) {
+function showConfetti() {
+  ensureCSS();
+  const wrap = document.createElement('div');
+  wrap.className = 'tn-confetti-wrap';
+  const colors = ['#F59E0B','#3B82F6','#EF4444','#22C55E','#8B5CF6','#EC4899','#FFD700','#FF6B6B'];
+  for (let i = 0; i < 28; i++) {
+    const p = document.createElement('div');
+    p.className = 'tn-cp';
+    const cx = (Math.random() - 0.5) * 360;
+    const dur = (1.8 + Math.random() * 1.4).toFixed(2);
+    const delay = (Math.random() * 0.7).toFixed(2);
+    p.style.cssText = `background:${colors[i % colors.length]};--cx:${cx}px;--dur:${dur}s;--delay:${delay}s`;
+    wrap.appendChild(p);
+  }
+  document.body.appendChild(wrap);
+  setTimeout(() => wrap.remove(), 4500);
+}
+
+export function initTopNotif({ mode = 'aluno', historyEl = null, alunoNome = null } = {}) {
   ensureCSS();
 
   let prevTop3 = null;
-  const hist = []; // last 10 events
+  const hist = [];
 
-  // ── Professor: floating toast container ───────────────────────
+  // ── Professor: floating toast ──────────────────────────────
   let toastWrap = null;
   if (mode === 'professor') {
     toastWrap = document.createElement('div');
@@ -102,12 +115,20 @@ export function initTopNotif({ mode = 'aluno', historyEl = null } = {}) {
     document.body.appendChild(toastWrap);
   }
 
-  // ── Aluno: full-width banner ──────────────────────────────────
+  // ── Aluno: full-width banner ───────────────────────────────
   let bannerEl = null, bannerTimer = null;
   if (mode === 'aluno') {
     bannerEl = document.createElement('div');
     bannerEl.className = 'tn-banner';
     document.body.appendChild(bannerEl);
+  }
+
+  // ── TV: compact overlay banner ─────────────────────────────
+  let tvBannerEl = null, tvBannerTimer = null;
+  if (mode === 'tv') {
+    tvBannerEl = document.createElement('div');
+    tvBannerEl.className = 'tn-tv-banner';
+    document.body.appendChild(tvBannerEl);
   }
 
   function renderHist() {
@@ -139,7 +160,6 @@ export function initTopNotif({ mode = 'aluno', historyEl = null } = {}) {
       window.location.href = `/professor/acompanhamento.html?aluno=${encodeURIComponent(aluno || '')}`;
     });
     toastWrap.appendChild(t);
-    // Double rAF ensures the initial translateX(380px) is painted before transition fires
     requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('tn-in')));
     setTimeout(() => {
       t.classList.remove('tn-in'); t.classList.add('tn-out');
@@ -152,7 +172,7 @@ export function initTopNotif({ mode = 'aluno', historyEl = null } = {}) {
     bannerEl.style.background = fmt.bg;
     bannerEl.innerHTML = `<span style="font-size:26px">${fmt.icon}</span><span>${fmt.msg}</span>`;
     bannerEl.classList.remove('tn-in');
-    void bannerEl.offsetWidth; // force reflow to restart transition
+    void bannerEl.offsetWidth;
     bannerEl.classList.add('tn-in');
     bannerTimer = setTimeout(() => {
       bannerEl.classList.remove('tn-in');
@@ -160,7 +180,19 @@ export function initTopNotif({ mode = 'aluno', historyEl = null } = {}) {
     }, 4000);
   }
 
-  renderHist(); // Initialize history panel with empty state
+  function showTvBanner() {
+    if (tvBannerTimer) { clearTimeout(tvBannerTimer); tvBannerTimer = null; }
+    tvBannerEl.textContent = '🏆 MUDANÇA NO PÓDIO!';
+    tvBannerEl.classList.remove('tn-in');
+    void tvBannerEl.offsetWidth;
+    tvBannerEl.classList.add('tn-in');
+    tvBannerTimer = setTimeout(() => {
+      tvBannerEl.classList.remove('tn-in');
+      tvBannerTimer = null;
+    }, 8000);
+  }
+
+  renderHist();
 
   const unsub = onValue(ref(db, 'resultados'), snap => {
     const cur = buildTop3(snap);
@@ -172,7 +204,11 @@ export function initTopNotif({ mode = 'aluno', historyEl = null } = {}) {
       hist.unshift({ ...fmt, aluno: ev.aluno, ts: Date.now() });
       if (hist.length > 10) hist.pop();
       if (mode === 'professor') { showToast(fmt, ev.aluno); renderHist(); }
-      else showBanner(fmt);
+      else if (mode === 'aluno') {
+        showBanner(fmt);
+        if (alunoNome && ev.aluno === alunoNome) showConfetti();
+      }
+      else if (mode === 'tv') showTvBanner();
     }
   });
 

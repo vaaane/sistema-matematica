@@ -327,8 +327,6 @@ async function renderPainelPrincipal() {
           <td><span class="badge badge-blue">Turma ${r.turma}</span></td>
           <td style="font-weight:800;color:var(--gold)">${r.melhorPts}</td>
           <td class="rank-hide-mobile">${r.tentativas}</td>
-          <td class="rank-hide-mobile">${r.comboMax > 1 ? `🔥×${r.comboMax}` : '—'}</td>
-          <td class="rank-hide-mobile">${r.ativo ? '<span style="color:var(--green);font-weight:700">⚡ jogando</span>' : '—'}</td>
         </tr>`;
       }).join('');
       el.innerHTML = `<table class="table">
@@ -338,8 +336,6 @@ async function renderPainelPrincipal() {
           <th>Turma</th>
           <th>Melhor</th>
           <th class="rank-hide-mobile">Sessões</th>
-          <th class="rank-hide-mobile">Combo</th>
-          <th class="rank-hide-mobile">Status</th>
         </tr></thead>
         <tbody>${rkRows}</tbody>
       </table>`;
@@ -381,7 +377,7 @@ async function renderPainelPrincipal() {
     </div>
     <div class="tab-nav">
       <button id="ptab-geral" class="active" onclick="mudarTabPainel('geral')">🏆 Geral</button>
-      <button id="ptab-ativ"                 onclick="mudarTabPainel('ativ')">📚 Por Atividade <span class="live-tag" style="margin-left:4px">ao vivo</span></button>
+      <button id="ptab-ativ"                 onclick="mudarTabPainel('ativ')">📚 Por Atividade</button>
     </div>
 
     <div id="ppanel-geral">
@@ -600,7 +596,7 @@ async function iniciarTVMode() {
               }).join('')
             }</div>`;
         return `<div class="${cls}" id="tv-pod-col-${gi}">
-          ${gi === 0 ? `<span class="tv-crown">👑</span>` : `<div class="tv-trophy">${medals[gi]}</div>`}
+          <div class="tv-trophy">${medals[gi]}</div>
           <div class="tv-stand ${standCls[vi]}${g ? '' : ' empty'}"${tiedW}>
             ${g ? `
               ${namesC}

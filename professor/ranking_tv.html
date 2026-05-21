@@ -216,7 +216,7 @@ function buildGeralRanking(lista) {
     if (!r.concluido || !r.aluno) continue;
     if (!melhor[r.aluno]) melhor[r.aluno] = {
       aluno: r.aluno, turma: r.turma || '?', porAtiv: {},
-      melhorSessao: 0, primeiroTs: Infinity
+      melhorSessao: 0, primeiroTs: Infinity, sessoes: 0
     };
     const pts = r.pontuacao || 0;
     const prev = melhor[r.aluno].porAtiv[r.atividade] || 0;
@@ -224,12 +224,15 @@ function buildGeralRanking(lista) {
     if (pts > melhor[r.aluno].melhorSessao) melhor[r.aluno].melhorSessao = pts;
     const ts = r.criadoEm || 0;
     if (ts && ts < melhor[r.aluno].primeiroTs) melhor[r.aluno].primeiroTs = ts;
+    melhor[r.aluno].sessoes++;
   }
   return Object.values(melhor).map(a => {
     const vals = Object.values(a.porAtiv);
+    const total = vals.reduce((s, v) => s + v, 0);
+    const media = vals.length ? Math.round(total / vals.length) : 0;
     return {
       aluno: a.aluno, turma: a.turma,
-      melhorPts: vals.reduce((s, v) => s + v, 0),
+      melhorPts: total, media, atividades: vals.length, sessoes: a.sessoes,
       melhorSessao: a.melhorSessao,
       primeiroTs: a.primeiroTs === Infinity ? 0 : a.primeiroTs
     };
@@ -302,7 +305,7 @@ function podiumHTML(groups, changes, withAnim) {
             }).join('')
           }</div>`;
       return `<div class="${cls}" id="tv-pod-col-${gi}">
-        ${gi === 0 ? `<span class="tv-crown">👑</span>` : `<div class="tv-trophy">${medals[gi]}</div>`}
+        <div class="tv-trophy">${medals[gi]}</div>
         <div class="tv-stand ${standCls[vi]}${g ? '' : ' empty'}"${tiedW ? ` style="${tiedW}"` : ''}>
           ${g ? namesContent + `<div class="tv-ppts" id="tv-ppts-${gi}">${g.score}</div>`
           : `<div class="tv-pempty">—</div>`}
@@ -339,11 +342,16 @@ function listRowHTML(r, pos, leaderPts, changes) {
   const diff = leaderPts - pts;
   const ch   = changes[r.aluno];
   const extraCls = ch === 'rising' ? ' rising' : ch === 'record' ? ' record' : '';
+  const sub = r.atividades != null
+    ? `Turma ${r.turma} · ${r.atividades} ativ. · méd. ${r.media}`
+    : r.tentativas != null
+    ? `Turma ${r.turma} · ${r.tentativas} tent.`
+    : `Turma ${r.turma}`;
   return `<div class="tv-list-row${extraCls}">
     <div class="tv-lnum">${pos}</div>
     <div>
       <div class="tv-lname">${r.aluno}</div>
-      <div class="tv-lturma">Turma ${r.turma}</div>
+      <div class="tv-lturma">${sub}</div>
     </div>
     <div class="tv-lpts-wrap">
       <div class="tv-lpts">${pts}</div>
@@ -417,9 +425,10 @@ updateSelectorLabel();
 
 // ── Helper: atualiza DOM do ranking ──────────────────────────
 function renderRankingToDOM(ranking, firstUpdate, changes) {
-  const groups    = getGroups(ranking);
+  const top30    = ranking.slice(0, 30);
+  const groups    = getGroups(top30);
   const podCount  = groups.reduce((s, g) => s + g.students.length, 0);
-  const resto     = ranking.slice(podCount);
+  const resto     = top30.slice(podCount);
   const leaderPts = groups[0]?.score ?? 0;
   const podWrap = document.getElementById('tv-podium-wrap');
   if (podWrap) {
@@ -427,7 +436,14 @@ function renderRankingToDOM(ranking, firstUpdate, changes) {
     else { updatePodiumInPlace(groups, changes); }
   }
   const listEl = document.getElementById('tv-list');
-  if (listEl) listEl.innerHTML = resto.map((r, i) => listRowHTML(r, podCount+i+1, leaderPts, changes)).join('');
+  if (listEl) {
+    let dPos = groups.length, lastPts = null;
+    listEl.innerHTML = resto.map(r => {
+      const pts = r.melhorPts ?? 0;
+      if (pts !== lastPts) { dPos++; lastPts = pts; }
+      return listRowHTML(r, dPos, leaderPts, changes);
+    }).join('');
+  }
   const demSec = document.getElementById('tv-demais-sec');
   if (demSec) demSec.style.display = resto.length ? '' : 'none';
   const footEl = document.getElementById('tv-foot');
@@ -486,10 +502,12 @@ async function showGeralFlash(ranking) {
   slideEl.classList.add('fading');
   await new Promise(res => setTimeout(res, 420));
 
-  const groups    = getGroups(ranking);
+  const top30    = ranking.slice(0, 30);
+  const groups    = getGroups(top30);
   const podCount  = groups.reduce((s, g) => s + g.students.length, 0);
-  const resto     = ranking.slice(podCount);
+  const resto     = top30.slice(podCount);
   const leaderPts = groups[0]?.score ?? 0;
+  let dPos = groups.length, lastFlashPts = null;
 
   slideEl.innerHTML = `
     <div class="tv-geral-banner">🏆 MUDANÇA NO RANKING GERAL!</div>
@@ -498,7 +516,11 @@ async function showGeralFlash(ranking) {
     ${podiumHTML(groups, {}, true)}
     ${resto.length ? `
       <div class="tv-sec" style="margin-top:18px">DEMAIS PARTICIPANTES</div>
-      <div class="tv-list">${resto.map((r, i) => listRowHTML(r, podCount+i+1, leaderPts, {})).join('')}</div>
+      <div class="tv-list">${resto.map(r => {
+        const pts = r.melhorPts ?? 0;
+        if (pts !== lastFlashPts) { dPos++; lastFlashPts = pts; }
+        return listRowHTML(r, dPos, leaderPts, {});
+      }).join('')}</div>
     ` : ''}
     <div class="tv-foot">${ranking.length} participante${ranking.length !== 1 ? 's' : ''} · soma das melhores pontuações</div>`;
 
