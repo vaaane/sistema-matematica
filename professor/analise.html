@@ -134,8 +134,9 @@ for (const s of plusSessoes) {
 const resultados = Object.values(grupos).map(g => {
   const { score, criterios, validas } = calcularScore(g.sessoes, detalhesPorId);
   // calcular média turma (pontuação total / sessões válidas)
-  const mediaAluno = validas.length ? Math.round(validas.reduce((s, r) => s + (r.pontuacao||0), 0) / validas.length) : 0;
-  return { ...g, score, criterios, validas, mediaAluno };
+  const mediaAluno  = validas.length ? Math.round(validas.reduce((s, r) => s + (r.pontuacao||0), 0) / validas.length) : 0;
+  const melhorNota  = validas.length ? Math.max(...validas.map(s => s.pontuacao||0)) : 0;
+  return { ...g, score, criterios, validas, mediaAluno, melhorNota };
 }).sort((a, b) => b.score - a.score || b.mediaAluno - a.mediaAluno);
 
 // média por turma+atividade para comparação
@@ -155,6 +156,7 @@ const atividades = [...new Set(resultados.map(r => r.atividade))].sort();
 
 let filtroTurma    = 'todas';
 let filtroAtividade = 'todas';
+let filtroNotaMin  = 0;
 let expandido       = null;
 
 // ── Helpers de score ─────────────────────────────────────────
@@ -256,6 +258,7 @@ function render() {
   const filtrados = resultados.filter(r => {
     if (filtroTurma    !== 'todas' && r.turma     !== filtroTurma)    return false;
     if (filtroAtividade !== 'todas' && r.atividade !== filtroAtividade) return false;
+    if (filtroNotaMin > 0 && r.melhorNota < filtroNotaMin) return false;
     return true;
   });
 
@@ -314,14 +317,24 @@ function render() {
     <div class="filter-bar">
       <select onchange="setFiltroTurma(this.value)">${turmaOpts}</select>
       <select onchange="setFiltroAtividade(this.value)">${atividadeOpts}</select>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);white-space:nowrap">
+        Nota mínima
+        <input type="number" id="input-nota-min" min="0" step="50" value="${filtroNotaMin||''}" placeholder="0"
+          style="width:70px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px"
+          onkeydown="if(event.key==='Enter')setFiltroNotaMin(this.value)"/>
+        <span>pts</span>
+        <button onclick="setFiltroNotaMin(document.getElementById('input-nota-min').value)"
+          style="padding:5px 12px;border-radius:8px;border:none;background:var(--blue,#2F9EDC);color:#fff;font-size:12px;font-weight:600;cursor:pointer">Aplicar</button>
+      </label>
       <span style="font-size:12px;color:var(--text-muted)">${filtrados.length} aluno${filtrados.length !== 1 ? 's' : ''}</span>
     </div>
     ${tableHtml}`;
 }
 
-window.toggleDetalhe    = (idx) => { expandido = expandido === idx ? null : idx; render(); };
-window.setFiltroTurma    = (v)  => { filtroTurma = v;     expandido = null; render(); };
-window.setFiltroAtividade = (v) => { filtroAtividade = v; expandido = null; render(); };
+window.toggleDetalhe     = (idx) => { expandido = expandido === idx ? null : idx; render(); };
+window.setFiltroTurma    = (v)  => { filtroTurma = v;                  expandido = null; render(); };
+window.setFiltroAtividade = (v) => { filtroAtividade = v;              expandido = null; render(); };
+window.setFiltroNotaMin  = (v)  => { filtroNotaMin = parseInt(v)||0;  expandido = null; render(); };
 
 render();
 </script>
