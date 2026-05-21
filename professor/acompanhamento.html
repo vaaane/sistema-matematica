@@ -23,13 +23,6 @@
     .ativ-metrics-plus { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:6px; }
     @media(max-width:640px){ .ativ-metrics-plus { grid-template-columns:repeat(2,1fr); } }
     .metric-box-plus { background:var(--bg); border-radius:8px; padding:10px 6px; text-align:center; border:1px solid var(--border); }
-    .nota-box { background:#EFF6FF; border:1.5px solid #BFDBFE; border-radius:10px; padding:10px 14px; margin-bottom:10px; display:flex; align-items:center; gap:12px; }
-    .nota-val { font-size:22px; font-weight:800; color:var(--blue); }
-    .nota-desc { font-size:11px; color:var(--text-muted); line-height:1.5; }
-    .nota-badge { font-size:11px; font-weight:700; border-radius:6px; padding:2px 8px; }
-    .nota-badge.inside { background:#DCFCE7; color:#16A34A; }
-    .nota-badge.same-day { background:#FEF9C3; color:#CA8A04; }
-    .nota-badge.late { background:#FEE2E2; color:#DC2626; }
 
     /* ── Histórico de tentativas ─────────────────────────────── */
     .tent-row { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:8px; border:1px solid var(--border); margin-bottom:6px; background:var(--card); cursor:pointer; transition:background .15s; }
@@ -90,7 +83,7 @@
 </div>
 <script type="module">
 import { ALUNOS_POR_TURMA } from "/js/constants.js";
-import { getResultados, getDetalhes, getLiberacoesHistoricoTodas } from "/js/db.js";
+import { getResultados, getDetalhes } from "/js/db.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 
 requireProfessor();
@@ -101,8 +94,7 @@ const selT = document.getElementById("sel-turma");
 const selA = document.getElementById("sel-aluno");
 Object.keys(ALUNOS_POR_TURMA).forEach(t => { selT.innerHTML += `<option value="${t}">Turma ${t}</option>`; });
 
-// Carrega resultados e histórico de liberações em paralelo
-let [todos, liberacoesHist] = await Promise.all([getResultados(), getLiberacoesHistoricoTodas()]);
+const todos = await getResultados();
 
 window.mudarTurma = function() {
   const turma = selT.value;
@@ -123,26 +115,6 @@ window.mudarAluno = async function() {
   const hist = todos.filter(r => r.aluno === aluno && r.turma === turma && r.concluido);
   renderAluno(aluno, turma, hist);
 };
-
-// ── Nota Competição+ ──────────────────────────────────────────
-// Encontra a liberação (com janela_aula) ativa quando a sessão foi jogada
-function findLibJanela(atividade, turma, tsInicio) {
-  const tsMs = (tsInicio || 0) * 1000;
-  // Filtra liberações de Competição+ com janela_aula, criadas ANTES do início da sessão
-  const candidates = liberacoesHist.filter(h =>
-    h.atividade === atividade && h.turma === turma &&
-    h.modo === 'competicao_plus' && h.janela_aula &&
-    (h.criadoEm || 0) <= tsMs
-  ).sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
-  return candidates[0] || null;
-}
-
-function calcNota(atividade, turma, tsInicio) {
-  const lib = findLibJanela(atividade, turma, tsInicio);
-  if (!lib) return null;
-  const percentual = lib.percentual ?? 100;
-  return { percentual, mod: 100, nota: percentual, label: 'Nota da liberação', cls: 'inside' };
-}
 
 // ── Estatísticas ──────────────────────────────────────────────
 function calcSumario(hist) {
@@ -223,29 +195,10 @@ function renderAluno(aluno, turma, hist) {
       const tentIds = tentativas.map(r => r.id);
       const uid = ativNome.replace(/\W/g, '_');
 
-      // Nota para Competição+: usa a sessão com melhor pontuação
-      let notaHTML = '';
-      if (st.isPlus) {
-        const plusSessions = tentativas.filter(r => r.modo === 'competicao_plus' && r.ts_inicio);
-        const bestPlus = plusSessions.reduce((b, r) => (!b || (r.pontuacao||0) > (b.pontuacao||0)) ? r : b, null);
-        const ni = bestPlus ? calcNota(ativNome, turma, bestPlus.ts_inicio) : null;
-        if (ni) {
-          notaHTML = `<div class="nota-box">
-            <div class="nota-val">${ni.nota}%</div>
-            <div class="nota-desc">
-              <div style="font-weight:700;margin-bottom:2px">Nota final estimada</div>
-              <span class="nota-badge ${ni.cls}">${ni.label}</span>
-              <div style="margin-top:4px;font-size:10px">${ni.percentual}% da nota</div>
-            </div>
-          </div>`;
-        }
-      }
-
       // Métricas: grid diferente para Competição+
       let metricsHTML;
       if (st.isPlus) {
         metricsHTML = `
-          ${notaHTML}
           <div class="ativ-metrics-plus">
             <div class="metric-box-plus"><div class="metric-val" style="color:var(--gold)">${st.melhorPts}</div><div class="metric-lbl">Melhor saldo</div></div>
             <div class="metric-box-plus"><div class="metric-val" style="color:var(--blue)">${tentativas.length}</div><div class="metric-lbl">Sessões jogadas</div></div>
@@ -275,7 +228,6 @@ function renderAluno(aluno, turma, hist) {
           <span class="badge badge-gold">${st.melhorPts} pts</span>
           <span class="badge badge-blue">${tentativas.length} ${st.isPlus ? 'sess.' : 'tent.'}</span>
           <span class="badge badge-green">${st.taxa}%</span>
-          ${st.isPlus ? `<span class="badge badge-gold" style="background:#FEF9C3;color:#92400E">🚀 C+</span>` : ''}
           <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:var(--text-muted)" id="chev-${uid}"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
         </div>
         <div class="ativ-summary-body" id="body-${uid}" style="display:none">
@@ -303,13 +255,6 @@ function renderTentativas(tentativas, isPlus, ativNome, turma) {
     const taxa  = total > 0 ? Math.round((r.acertos || 0) / total * 100) : 0;
     const uid2  = `tent-${r.id}`;
 
-    // Nota para esta sessão específica (Competição+)
-    let notaBadge = '';
-    if (isPlus && r.ts_inicio) {
-      const ni = calcNota(ativNome, turma, r.ts_inicio);
-      if (ni) notaBadge = `<span class="badge nota-badge ${ni.cls}" style="font-size:10px;border-radius:8px;padding:2px 8px">📝 ${ni.nota}%</span>`;
-    }
-
     return `<div>
       <div class="tent-row" onclick="toggleTent('${uid2}','${r.id}')">
         <div class="tent-info-wrap">
@@ -325,7 +270,6 @@ function renderTentativas(tentativas, isPlus, ativNome, turma) {
               ${(r.acertos_dificeis || 0) > 0 ? `<span class="badge badge-gold">🏆${r.acertos_dificeis}</span>` : ''}
               ${(r.ajudas_usadas || 0) > 0 ? `<span class="badge" style="background:#F5F3FF;color:#6D28D9">🎯${r.ajudas_usadas}</span>` : ''}
               ${r.sem_penalidade ? `<span class="badge" style="background:#F0FDF4;color:#16A34A">🔥 Limpo</span>` : ''}
-              ${notaBadge}
             ` : `
               ${(r.combo_max || 0) > 1 ? `<span class="badge badge-orange">🔥×${r.combo_max}</span>` : ''}
               ${(r.acertos_dificeis || 0) > 0 ? `<span class="badge" style="background:#EDE9FE;color:#6D28D9">💀${r.acertos_dificeis}</span>` : ''}

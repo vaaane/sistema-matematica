@@ -2,16 +2,7 @@ function injectRankCSS() {
   if (document.getElementById('toprank-css')) return;
   const s = document.createElement('style');
   s.id = 'toprank-css';
-  s.textContent = `
-.avatar{position:relative;overflow:visible!important;}
-.avatar-ring-1::after,.avatar-ring-2::after,.avatar-ring-3::after{
-  content:'';position:absolute;top:-14px;left:50%;transform:translateX(-50%);
-  font-size:17px;line-height:1;
-}
-.avatar-ring-1::after{content:'👑';}
-.avatar-ring-2::after{content:'🥈';}
-.avatar-ring-3::after{content:'🥉';}
-  `;
+  s.textContent = `.avatar{position:relative;overflow:visible!important;}`;
   document.head.appendChild(s);
 }
 

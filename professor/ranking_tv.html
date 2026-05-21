@@ -248,7 +248,7 @@ function getGroups(ranking) {
     let gj = gi + 1;
     while (gj < ranking.length && (ranking[gj].melhorPts ?? 0) === score) gj++;
     groups.push({ pos: runPos, students: ranking.slice(gi, gj), score });
-    runPos += (gj - gi); gi = gj;
+    runPos++; gi = gj;
   }
   return groups;
 }

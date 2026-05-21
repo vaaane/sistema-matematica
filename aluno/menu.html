@@ -200,23 +200,6 @@ const posTurmas  = alunos.map(n => rankTurma.findIndex(r => r.aluno === n) + 1).
 const posGeralMin  = posGerais.length ? Math.min(...posGerais) : 99;
 const posTurmaMin  = posTurmas.length ? Math.min(...posTurmas) : 99;
 
-// Coroa no avatar para 1º lugar
-if (posGeralMin === 1) {
-  const av = document.getElementById('avatar-initials');
-  if (av && !av.parentNode.dataset.crownWrap) {
-    const wrap = document.createElement('div');
-    wrap.style.cssText = 'position:relative;display:inline-flex;align-items:center;justify-content:center';
-    wrap.dataset.crownWrap = '1';
-    av.parentNode.insertBefore(wrap, av);
-    wrap.appendChild(av);
-    const cr = document.createElement('span');
-    cr.className = 'crown-anim';
-    cr.textContent = '👑';
-    cr.style.cssText = 'position:absolute;font-size:20px;top:-15px;left:50%;transform:translateX(-50%);pointer-events:none;filter:drop-shadow(0 2px 6px rgba(250,184,0,.8))';
-    wrap.appendChild(cr);
-  }
-}
-
 function bannerParticles() {
   return ['rgba(255,255,255,.55)','rgba(255,220,70,.55)','rgba(255,255,255,.38)','rgba(255,195,30,.48)','rgba(255,255,255,.45)'].map((c,i) => {
     const l=7+i*17, t=8+i*13, s=3+(i%3), d=(2.2+i*.55).toFixed(1), dl=(i*.62).toFixed(1);

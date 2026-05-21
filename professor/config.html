@@ -103,7 +103,8 @@ import { getConfig, setConfig, getAllSenhasAlunos, setSenhaAluno } from "/js/db.
 import { ALUNOS_POR_TURMA } from "/js/constants.js";
 import { requireProfessor, renderSidebarProfessor, clearSession, hashSenha, gerarSenhaAleatoria } from "/js/auth.js";
 
-requireProfessor();
+const sess = requireProfessor();
+if (!sess) throw new Error();
 renderSidebarProfessor("sidebar", "config");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 

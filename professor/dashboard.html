@@ -7,15 +7,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
-    .podium-wrap{display:flex;align-items:flex-end;justify-content:center;gap:8px;padding:16px 8px 0;margin-bottom:8px;}
-    .podium-spot{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;}
-    .podium-trophy{font-size:48px;margin-bottom:4px;}
-    .podium-name{font-size:11px;font-weight:800;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 4px;margin-bottom:2px;}
-    .podium-turma{font-size:10px;color:var(--text-muted);margin-bottom:3px;text-align:center;}
-    .podium-pts{font-size:12px;font-weight:800;margin-bottom:6px;}
-    .podium-stand{display:flex;align-items:center;justify-content:center;width:100%;border-radius:6px 6px 0 0;font-size:18px;font-weight:800;color:#fff;}
-    .glow-gold{box-shadow:0 0 14px rgba(245,158,11,.3);border-radius:8px;}
-    .glow-silver{box-shadow:0 0 10px rgba(156,163,175,.3);border-radius:8px;}
+    .top3-card{border-radius:12px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+    .top3-card:last-child{margin-bottom:0;}
+    .top3-nome{font-size:12px;font-weight:800;color:#fff;line-height:1.2;}
+    .top3-turma{font-size:10px;color:rgba(255,255,255,.75);margin-top:2px;}
+    .top3-pts{font-size:16px;font-weight:800;color:#fff;}
     /* Online */
     .online-dot{width:7px;height:7px;border-radius:50%;background:#22C55E;display:inline-block;vertical-align:middle;margin-left:4px;box-shadow:0 0 5px #22C55E;animation:pulse-dot 1.5s ease-in-out infinite;}
     @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.55;transform:scale(1.35)}}
@@ -111,7 +107,7 @@ if (semAtividade.length) autoAlertas.push({ icon: '📭', msg: `${semAtividade.l
 if (baixaTaxa.length)    autoAlertas.push({ icon: '⚠️', msg: `${baixaTaxa.length} aluno${baixaTaxa.length > 1 ? 's' : ''} com taxa de acerto abaixo de 30%` });
 if (zeroAcertoUlt.length) autoAlertas.push({ icon: '🚨', msg: `${zeroAcertoUlt.length} aluno${zeroAcertoUlt.length > 1 ? 's' : ''} com 0% de acerto em "${liberadas[0]?.atividade}"` });
 
-// ── Pódio: Top Alunos ─────────────────────────────────────────
+// ── Top Alunos: cards horizontais ─────────────────────────────
 function renderPodiumDash() {
   const lista = Object.entries(ptsPorAluno)
     .sort((a, b) => b[1] - a[1])
@@ -119,7 +115,6 @@ function renderPodiumDash() {
 
   if (!lista.length) return '<div class="empty-state"><p>Nenhum resultado ainda.</p></div>';
 
-  // Agrupar por pontuação (até 3 posições)
   const groups = [];
   let gi = 0;
   while (gi < lista.length && groups.length < 3) {
@@ -130,55 +125,32 @@ function renderPodiumDash() {
     gi = gj;
   }
 
-  const STAND_H   = [90, 62, 44];
-  const STAND_BG  = [
+  const TOP3_BG = [
     'linear-gradient(135deg,#F59E0B,#D97706)',
     'linear-gradient(135deg,#9CA3AF,#6B7280)',
     'linear-gradient(135deg,#CD853F,#92400E)',
   ];
-  const GLOWS  = ['glow-gold', 'glow-silver', ''];
-  const MEDALS = ['🥇', '🥈', '🥉'];
-  const COLORS = ['#F59E0B', '#9CA3AF', '#CD853F'];
-  const GLOW_NAME = [
-    `color:#F59E0B;text-shadow:0 0 8px rgba(245,158,11,.7);`,
-    `color:#9CA3AF;text-shadow:0 0 8px rgba(156,163,175,.7);`,
-    '',
-  ];
+  const TROPHIES = ['🥇', '🥈', '🥉'];
+  const GLOWS    = ['glow-gold', 'glow-silver', 'glow-bronze'];
 
-  const spot = (g, slotIdx) => {
-    if (!g) return `<div class="podium-spot" style="max-width:120px"></div>`;
-    const nameFs  = g.students.length > 2 ? '10px' : '11px';
-    const maxW    = `${Math.min(g.students.length * 120, 280)}px`;
-    const glowName = GLOW_NAME[slotIdx];
-
+  return groups.map((g, i) => {
     const namesHtml = g.students.length === 1
-      ? `<div class="podium-name" style="${glowName}">${g.students[0].nome}</div>
-         <div class="podium-turma">Turma ${g.students[0].turma}</div>`
-      : `<div style="display:flex;align-items:flex-start;width:100%">${
+      ? `<div><div class="top3-nome">${g.students[0].nome}</div><div class="top3-turma">Turma ${g.students[0].turma}</div></div>`
+      : `<div style="display:flex;align-items:flex-start;gap:0;flex:1;min-width:0">${
           g.students.map((s, ni) => {
             const vsep = ni < g.students.length - 1
-              ? `<div style="width:1px;background:var(--border);opacity:.5;align-self:stretch;margin:0 3px;flex-shrink:0"></div>` : '';
-            return `<div style="flex:1;min-width:0;text-align:center">
-              <div class="podium-name" style="${glowName}font-size:${nameFs};white-space:normal;overflow:visible">${s.nome}</div>
-              <div class="podium-turma">T${s.turma}</div>
-            </div>${vsep}`;
+              ? `<div style="width:1px;background:rgba(255,255,255,.35);align-self:stretch;margin:0 8px;flex-shrink:0"></div>` : '';
+            return `<div style="flex:1;min-width:0"><div class="top3-nome">${s.nome}</div><div class="top3-turma">T${s.turma}</div></div>${vsep}`;
           }).join('')
         }</div>`;
-
-    return `<div class="podium-spot ${GLOWS[slotIdx]}" style="max-width:${maxW}">
-      <div class="podium-trophy">${MEDALS[slotIdx]}</div>
-      ${namesHtml}
-      <div class="podium-pts" style="color:${COLORS[slotIdx]}">${g.score} pts</div>
-      <div class="podium-stand" style="height:${STAND_H[slotIdx]}px;background:${STAND_BG[slotIdx]}">${g.pos}</div>
+    return `<div class="top3-card ${GLOWS[i]}" style="background:${TOP3_BG[i]}">
+      <div style="font-size:28px;flex-shrink:0">${TROPHIES[i]}</div>
+      <div style="flex:1;min-width:0">${namesHtml}</div>
+      <div style="text-align:right;flex-shrink:0;white-space:nowrap">
+        <div class="top3-pts">${g.score}<span style="font-size:10px;font-weight:600;margin-left:2px">pts</span></div>
+      </div>
     </div>`;
-  };
-
-  // Ordem visual: 2º (esq), 1º (centro), 3º (dir)
-  return `<div class="podium-wrap">
-    ${spot(groups[1] || null, 1)}
-    ${spot(groups[0], 0)}
-    ${spot(groups[2] || null, 2)}
-  </div>`;
+  }).join('');
 }
 
 // ── Renderizar página ─────────────────────────────────────────
