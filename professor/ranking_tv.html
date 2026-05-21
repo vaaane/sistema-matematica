@@ -424,15 +424,19 @@ buildSelectorItems();
 updateSelectorLabel();
 
 // ── Helper: atualiza DOM do ranking ──────────────────────────
+let prevGroupsKey = '';
 function renderRankingToDOM(ranking, firstUpdate, changes) {
   const top30    = ranking.slice(0, 30);
   const groups    = getGroups(top30);
   const podCount  = groups.reduce((s, g) => s + g.students.length, 0);
   const resto     = top30.slice(podCount);
   const leaderPts = groups[0]?.score ?? 0;
+  const curKey = groups.map(g => g.students.map(r => r.aluno).join(',') + ':' + g.score).join('|');
+  const structChanged = curKey !== prevGroupsKey;
+  prevGroupsKey = curKey;
   const podWrap = document.getElementById('tv-podium-wrap');
   if (podWrap) {
-    if (firstUpdate) { podWrap.innerHTML = podiumHTML(groups, changes, true); }
+    if (firstUpdate || structChanged) { podWrap.innerHTML = podiumHTML(groups, changes, firstUpdate); }
     else { updatePodiumInPlace(groups, changes); }
   }
   const listEl = document.getElementById('tv-list');
@@ -459,6 +463,7 @@ async function showView(nome) {
   if (currentUnsub) { currentUnsub(); currentUnsub = null; }
   prevRankMap = {};
   prevTop3Set = new Set();
+  prevGroupsKey = '';
 
   const title = nome === null ? '🏆 CLASSIFICAÇÃO GERAL' : `🏆 ${nome}`;
   slideEl.innerHTML = `
