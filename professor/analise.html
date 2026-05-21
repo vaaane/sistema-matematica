@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Análise — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .info-banner{background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:12px 16px;font-size:12px;color:#92400E;margin-bottom:18px;line-height:1.7;}
+    .info-banner strong{color:#C2410C;}
+    .filter-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px;}
+    .filter-bar select{padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;min-width:120px;}
+    .analise-table{width:100%;border-collapse:collapse;}
+    .analise-table th{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;padding:8px 12px;border-bottom:2px solid var(--border);text-align:left;white-space:nowrap;}
+    .analise-table td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
+    .analise-table tr.row-exp:hover{background:var(--bg,#f9fafb);cursor:pointer;}
+    .score-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+    .s-ok {background:#D1FAE5;color:#065F46;}
+    .s-low{background:#FEF3C7;color:#92400E;}
+    .s-mid{background:#FFEDD5;color:#9A3412;}
+    .s-hi {background:#FEE2E2;color:#991B1B;}
+    .score-track{height:8px;background:var(--border);border-radius:4px;overflow:hidden;width:70px;display:inline-block;vertical-align:middle;}
+    .score-fill {height:100%;border-radius:4px;transition:width .4s;}
+    .criteria-chip{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:12px;font-size:10px;font-weight:600;margin:2px;}
+    .chip-hit {background:#FEE2E2;color:#991B1B;}
+    .chip-miss{background:#F3F4F6;color:#6B7280;}
+    .detail-cell{background:var(--bg,#f9fafb);}
+    .detail-inner{padding:16px 16px 16px 20px;}
+    .criteria-box{border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:8px;}
+    .criteria-box.hit{border-color:#FCA5A5;background:#FFF5F5;}
+    .criteria-title{font-size:12px;font-weight:700;margin-bottom:3px;}
+    .criteria-desc{font-size:11px;color:var(--text-muted);line-height:1.5;}
+    .session-header{font-size:12px;font-weight:700;color:var(--text-muted);margin:10px 0 6px;}
+    .time-chart{display:flex;align-items:flex-end;gap:3px;height:64px;}
+    .tbar-col{display:flex;flex-direction:column;align-items:center;gap:1px;}
+    .tbar{min-width:12px;border-radius:3px 3px 0 0;}
+    .tbar.d1{background:#22C55E;} .tbar.d2{background:#F59E0B;} .tbar.d3{background:#EF4444;} .tbar.nr{background:#D1D5DB;}
+    .tbar-lbl{font-size:8px;color:var(--text-muted);white-space:nowrap;}
+    .chart-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:5px;font-size:10px;color:var(--text-muted);}
+    .legend-dot{display:inline-block;width:8px;height:8px;border-radius:2px;vertical-align:middle;margin-right:2px;}
+    .turma-comp{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;}
+    .turma-comp-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+    .warn-banner{background:#FEF2F2;border:1px solid #FCA5A5;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;color:#991B1B;margin-bottom:16px;}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Análise</div>
+        <div class="topbar-sub">Indicadores de uso de IA — somente professor</div>
+      </div>
+      <div class="topbar-right"><div class="avatar avatar-blue">P</div></div>
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { getResultados, getDetalhes } from "/js/db.js";
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+
+const sess = requireProfessor();
+if (!sess) throw new Error();
+renderSidebarProfessor("sidebar", "analise");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const TIMERS_MS = { 1: 10000, 2: 40000, 3: 90000 };
+
+function calcularScore(sessoes, detalhesPorId) {
+  const validas = sessoes.filter(s => ((s.acertos||0)+(s.erros||0)+(s.nao_respondidas||0)) >= 10);
+  if (!validas.length) return { score: 0, criterios: { tempo_uniforme: false, tempo_limite: false, melhora_subita: false, dificil_facil: false }, validas: [] };
+
+  const todasQ = validas.flatMap(s => detalhesPorId[s.id] || []);
+  const criterios = { tempo_uniforme: false, tempo_limite: false, melhora_subita: false, dificil_facil: false };
+
+  // ACERTA DIFÍCEIS MAS ERRA FÁCEIS
+  const faceis = todasQ.filter(q => q.dificuldade === 1);
+  const difs   = todasQ.filter(q => q.dificuldade === 2 || q.dificuldade === 3);
+  if (faceis.length >= 3 && difs.length >= 3) {
+    const acF = faceis.filter(q => { const r = q.resultado ?? null; return r === 'acerto' || (r === null && !!q.acertou); }).length;
+    const acD = difs.filter(q => { const r = q.resultado ?? null; return r === 'acerto' || (r === null && !!q.acertou); }).length;
+    if (acD / difs.length > acF / faceis.length + 0.20) criterios.dificil_facil = true;
+  }
+
+  // MELHORA SÚBITA
+  if (validas.length >= 2) {
+    const sorted = [...validas].sort((a, b) => (a.ts_inicio||0) - (b.ts_inicio||0));
+    if ((sorted[0].pontuacao||0) > 0 && (sorted[1].pontuacao||0) > sorted[0].pontuacao * 3) criterios.melhora_subita = true;
+  }
+
+  // TEMPO-BASED (requer tempo_resposta_ms)
+  const comTempo = todasQ.filter(q => q.tempo_resposta_ms != null);
+  if (comTempo.length >= 5) {
+    const tempos = comTempo.map(q => q.tempo_resposta_ms);
+    const avg = tempos.reduce((a, b) => a + b, 0) / tempos.length;
+    const std = Math.sqrt(tempos.reduce((s, t) => s + (t - avg) ** 2, 0) / tempos.length);
+    if (std < 3000) criterios.tempo_uniforme = true;
+    const fT = comTempo.filter(q => q.dificuldade === 1);
+    if (fT.length >= 3 && fT.reduce((s, q) => s + q.tempo_resposta_ms, 0) / fT.length > TIMERS_MS[1] * 0.70) criterios.tempo_limite = true;
+  }
+
+  const score = Object.values(criterios).filter(Boolean).length * 25;
+  return { score, criterios, validas };
+}
+
+// ── Carregar dados ────────────────────────────────────────────
+const todos = await getResultados();
+const plusSessoes = todos.filter(r => r.concluido && r.modo === 'competicao_plus');
+
+if (!plusSessoes.length) {
+  document.getElementById('content').innerHTML = `
+    <div class="info-banner">ℹ️ Nenhuma sessão de <strong>Competição+</strong> encontrada. Esta análise só está disponível para o modo Competição+.</div>`;
+  // fall through to render empty state
+}
+
+const detalhesList = await Promise.all(plusSessoes.map(s => getDetalhes(s.id).then(d => [s.id, d || []])));
+const detalhesPorId = Object.fromEntries(detalhesList);
+
+// ── Agrupar por aluno+atividade ───────────────────────────────
+const grupos = {};
+for (const s of plusSessoes) {
+  const key = s.aluno + '|||' + s.atividade;
+  if (!grupos[key]) grupos[key] = { aluno: s.aluno, turma: s.turma || '?', atividade: s.atividade, sessoes: [] };
+  grupos[key].sessoes.push(s);
+}
+
+// ── Calcular scores ───────────────────────────────────────────
+const resultados = Object.values(grupos).map(g => {
+  const { score, criterios, validas } = calcularScore(g.sessoes, detalhesPorId);
+  // calcular média turma (pontuação total / sessões válidas)
+  const mediaAluno = validas.length ? Math.round(validas.reduce((s, r) => s + (r.pontuacao||0), 0) / validas.length) : 0;
+  return { ...g, score, criterios, validas, mediaAluno };
+}).sort((a, b) => b.score - a.score || b.mediaAluno - a.mediaAluno);
+
+// média por turma+atividade para comparação
+const mediaTurmaMap = {};
+for (const r of resultados) {
+  const k = r.turma + '|' + r.atividade;
+  if (!mediaTurmaMap[k]) mediaTurmaMap[k] = [];
+  mediaTurmaMap[k].push(r.mediaAluno);
+}
+const mediaTurma = Object.fromEntries(
+  Object.entries(mediaTurmaMap).map(([k, vals]) => [k, Math.round(vals.reduce((a, b) => a + b, 0) / vals.length)])
+);
+
+// ── Filtros ───────────────────────────────────────────────────
+const turmas     = [...new Set(resultados.map(r => r.turma))].sort();
+const atividades = [...new Set(resultados.map(r => r.atividade))].sort();
+
+let filtroTurma    = 'todas';
+let filtroAtividade = 'todas';
+let expandido       = null;
+
+// ── Helpers de score ─────────────────────────────────────────
+function scoreCls(s) { return s === 0 ? 's-ok' : s < 50 ? 's-low' : s < 75 ? 's-mid' : 's-hi'; }
+function scoreLabel(s) { return s === 0 ? 'OK' : s < 50 ? 'Atenção' : s < 75 ? 'Suspeito' : 'Alto risco'; }
+function scoreColor(s) { return s === 0 ? '#22C55E' : s < 50 ? '#F59E0B' : s < 75 ? '#F97316' : '#EF4444'; }
+
+function renderChips(c) {
+  const defs = [
+    { key: 'tempo_uniforme', label: '⏱ Tempo Uniforme' },
+    { key: 'tempo_limite',   label: '🐢 Tempo no Limite' },
+    { key: 'melhora_subita', label: '🚀 Melhora Súbita'  },
+    { key: 'dificil_facil',  label: '🔀 Difícil > Fácil' },
+  ];
+  return defs.map(d => `<span class="criteria-chip ${c[d.key] ? 'chip-hit' : 'chip-miss'}">${d.label}</span>`).join('');
+}
+
+function renderTimeChart(questoes) {
+  if (!questoes.length) return '<em style="font-size:11px;color:var(--text-muted)">Sem questões registradas.</em>';
+  const maxT = Math.max(...questoes.map(q => q.tempo_resposta_ms || 0), 3000);
+  const H = 56;
+  const bars = questoes.map(q => {
+    const t  = q.tempo_resposta_ms;
+    const dif = q.dificuldade || 1;
+    const h  = t != null ? Math.max(4, Math.round((t / maxT) * H)) : 4;
+    const cls = t != null ? `d${dif}` : 'nr';
+    const lbl = t != null ? (t / 1000).toFixed(1) + 's' : 'NR';
+    return `<div class="tbar-col">
+      <div class="tbar ${cls}" style="height:${h}px;width:13px" title="${(q.enunciado||'').substring(0,50)} (${lbl})"></div>
+      <div class="tbar-lbl">${lbl}</div>
+    </div>`;
+  }).join('');
+  return `<div style="overflow-x:auto">
+    <div class="time-chart">${bars}</div>
+    <div class="chart-legend">
+      <span><span class="legend-dot" style="background:#22C55E"></span>Fácil</span>
+      <span><span class="legend-dot" style="background:#F59E0B"></span>Médio</span>
+      <span><span class="legend-dot" style="background:#EF4444"></span>Difícil</span>
+      <span><span class="legend-dot" style="background:#D1D5DB"></span>NR</span>
+    </div>
+  </div>`;
+}
+
+function renderDetalhe(r) {
+  const CRITERIOS_INFO = {
+    tempo_uniforme: { label: 'Tempo Uniforme',      desc: 'Desvio padrão dos tempos de resposta < 3 s — respostas suspeita­mente regulares.' },
+    tempo_limite:   { label: 'Tempo no Limite',     desc: 'Tempo médio nas questões fáceis > 70 % do timer (> 7 s de 10 s) — possível espera deliberada.' },
+    melhora_subita: { label: 'Melhora Súbita',      desc: 'Pontuação na 2ª sessão > 3× a 1ª — evolução improvável sem auxílio externo.' },
+    dificil_facil:  { label: 'Difícil Acima de Fácil', desc: 'Taxa de acerto em médio + difícil supera fácil em mais de 20 % — padrão incomum.' },
+  };
+
+  const criteriosHtml = Object.entries(CRITERIOS_INFO).map(([key, { label, desc }]) => {
+    const hit = r.criterios[key];
+    return `<div class="criteria-box ${hit ? 'hit' : ''}">
+      <div class="criteria-title" style="color:${hit ? '#DC2626' : 'var(--text-muted)'}">
+        ${hit ? '🔴' : '⚪'} ${label}
+        ${hit ? '<span style="font-size:10px;background:#FEE2E2;color:#991B1B;padding:1px 6px;border-radius:10px;margin-left:4px">+25</span>' : ''}
+      </div>
+      <div class="criteria-desc">${desc}</div>
+    </div>`;
+  }).join('');
+
+  const mediaTurmaVal = mediaTurma[r.turma + '|' + r.atividade] ?? '—';
+  const turmaComp = `<div class="turma-comp">
+    <div style="font-size:11px;font-weight:700;margin-bottom:6px;color:var(--text-muted)">COMPARAÇÃO COM TURMA</div>
+    <div class="turma-comp-row"><span>Média do aluno (pts)</span><strong>${r.mediaAluno}</strong></div>
+    <div class="turma-comp-row"><span>Média da turma (pts)</span><strong>${mediaTurmaVal}</strong></div>
+    <div class="turma-comp-row"><span>Sessões válidas</span><strong>${r.validas.length}</strong></div>
+  </div>`;
+
+  const sessoesHtml = r.validas
+    .sort((a, b) => (a.ts_inicio||0) - (b.ts_inicio||0))
+    .map((s, i) => {
+      const q = detalhesPorId[s.id] || [];
+      const dataStr = s.data || (s.ts_inicio ? new Date(s.ts_inicio).toLocaleDateString('pt-BR') : '?');
+      return `<div style="margin-bottom:14px">
+        <div class="session-header">Sessão ${i+1} — ${dataStr} — ${s.pontuacao||0} pts — ${q.length} questões</div>
+        ${renderTimeChart(q)}
+      </div>`;
+    }).join('');
+
+  return `<div class="detail-inner">
+    <div style="display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start">
+      <div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:8px">Critérios</div>
+        ${criteriosHtml}
+        <div style="margin-top:12px">${turmaComp}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:8px">Tempos de Resposta por Sessão</div>
+        ${sessoesHtml || '<em style="font-size:11px;color:var(--text-muted)">Nenhuma sessão válida (mínimo 10 questões).</em>'}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Render principal ──────────────────────────────────────────
+function render() {
+  const filtrados = resultados.filter(r => {
+    if (filtroTurma    !== 'todas' && r.turma     !== filtroTurma)    return false;
+    if (filtroAtividade !== 'todas' && r.atividade !== filtroAtividade) return false;
+    return true;
+  });
+
+  const turmaOpts = ['<option value="todas">Todas as turmas</option>',
+    ...turmas.map(t => `<option value="${t}" ${filtroTurma === t ? 'selected' : ''}>Turma ${t}</option>`)].join('');
+  const atividadeOpts = ['<option value="todas">Todas as atividades</option>',
+    ...atividades.map(a => `<option value="${a}" ${filtroAtividade === a ? 'selected' : ''}>${a}</option>`)].join('');
+
+  const suspeitos = filtrados.filter(r => r.score >= 50).length;
+  const warnHtml  = suspeitos > 0
+    ? `<div class="warn-banner">⚠️ ${suspeitos} aluno${suspeitos > 1 ? 's' : ''} com score ≥ 50 nesta seleção</div>`
+    : '';
+
+  const tableRows = filtrados.map((r, idx) => {
+    const exp = expandido === idx;
+    const rowHtml = `<tr class="row-exp" onclick="toggleDetalhe(${idx})">
+      <td style="font-weight:600">${r.aluno}</td>
+      <td>Turma ${r.turma}</td>
+      <td style="color:var(--text-muted);font-size:12px">${r.atividade}</td>
+      <td style="color:var(--text-muted)">${r.validas.length}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="score-track"><div class="score-fill" style="width:${r.score}%;background:${scoreColor(r.score)}"></div></div>
+          <span style="font-weight:700">${r.score}</span>
+        </div>
+      </td>
+      <td><span class="score-badge ${scoreCls(r.score)}">${scoreLabel(r.score)}</span></td>
+      <td>${renderChips(r.criterios)}</td>
+      <td style="color:var(--text-muted);font-size:16px;text-align:center">${exp ? '▲' : '▼'}</td>
+    </tr>`;
+    const detailHtml = exp
+      ? `<tr><td colspan="8" class="detail-cell" style="padding:0">${renderDetalhe(r)}</td></tr>`
+      : '';
+    return rowHtml + detailHtml;
+  }).join('');
+
+  const tableHtml = filtrados.length
+    ? `<div class="card" style="padding:0;overflow:auto">
+        <table class="analise-table">
+          <thead><tr>
+            <th>Aluno</th><th>Turma</th><th>Atividade</th>
+            <th title="Sessões com ≥10 questões">Sessões</th>
+            <th>Score <span style="font-weight:400;font-size:10px">/100</span></th>
+            <th>Classificação</th><th>Critérios</th><th></th>
+          </tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>`
+    : `<div class="card"><div class="empty-state"><p>Nenhum resultado com os filtros selecionados.</p></div></div>`;
+
+  document.getElementById('content').innerHTML = `
+    <div class="info-banner">
+      ℹ️ <strong>Score alto não é prova de uso de IA.</strong> É apenas um indicador para investigação pedagógica. Avalie junto ao histórico e contexto do aluno. Análise disponível apenas para sessões de <strong>Competição+</strong> com pelo menos 10 questões.
+    </div>
+    ${warnHtml}
+    <div class="filter-bar">
+      <select onchange="setFiltroTurma(this.value)">${turmaOpts}</select>
+      <select onchange="setFiltroAtividade(this.value)">${atividadeOpts}</select>
+      <span style="font-size:12px;color:var(--text-muted)">${filtrados.length} aluno${filtrados.length !== 1 ? 's' : ''}</span>
+    </div>
+    ${tableHtml}`;
+}
+
+window.toggleDetalhe    = (idx) => { expandido = expandido === idx ? null : idx; render(); };
+window.setFiltroTurma    = (v)  => { filtroTurma = v;     expandido = null; render(); };
+window.setFiltroAtividade = (v) => { filtroAtividade = v; expandido = null; render(); };
+
+render();
+</script>
+</body>
+</html>

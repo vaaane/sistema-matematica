@@ -249,14 +249,32 @@ function renderAluno(aluno, turma, hist) {
 
 function renderTentativas(tentativas, isPlus, ativNome, turma) {
   const sorted = [...tentativas].reverse();
-  return `<div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;text-transform:uppercase;margin:10px 0 6px">${isPlus ? 'Sessões' : 'Tentativas'}</div>
+
+  let evolucaoTempoHTML = '';
+  if (isPlus) {
+    const withTempo = [...tentativas].filter(r => r.tempo_medio_ms > 0);
+    if (withTempo.length >= 2) {
+      const firstS = Math.round(withTempo[0].tempo_medio_ms / 1000);
+      const lastS  = Math.round(withTempo[withTempo.length - 1].tempo_medio_ms / 1000);
+      if (firstS !== lastS) {
+        const better = lastS < firstS;
+        const color  = better ? 'var(--green)' : 'var(--red)';
+        evolucaoTempoHTML = `<div style="font-size:11px;color:${color};font-weight:600;padding:4px 0 8px">
+          ⏱ ${better ? '↓' : '↑'} 1ª sessão: ${firstS}s/questão → ${withTempo.length}ª sessão: ${lastS}s/questão
+        </div>`;
+      }
+    }
+  }
+
+  return `${evolucaoTempoHTML}<div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;text-transform:uppercase;margin:10px 0 6px">${isPlus ? 'Sessões' : 'Tentativas'}</div>
   ${sorted.map((r, i) => {
     const total = (r.acertos || 0) + (r.erros || 0);
     const taxa  = total > 0 ? Math.round((r.acertos || 0) / total * 100) : 0;
     const uid2  = `tent-${r.id}`;
+    const tempoS = r.tempo_medio_ms > 0 ? Math.round(r.tempo_medio_ms / 1000) : 0;
 
     return `<div>
-      <div class="tent-row" onclick="toggleTent('${uid2}','${r.id}')">
+      <div class="tent-row" onclick="toggleTent('${uid2}','${r.id}',${isPlus})">
         <div class="tent-info-wrap">
           <div style="font-size:13px;font-weight:600">${i === 0 ? '→ Mais recente' : `${isPlus ? 'Sessão' : 'Tentativa'} ${sorted.length - i}`}</div>
           <div class="tent-date">${r.data || ''}</div>
@@ -264,12 +282,14 @@ function renderTentativas(tentativas, isPlus, ativNome, turma) {
             <span class="badge badge-gold">${r.pontuacao || 0} pts</span>
             <span class="badge badge-green">${r.acertos || 0} ✓</span>
             <span class="badge badge-red">${r.erros || 0} ✗</span>
+            ${(r.nao_respondidas || 0) > 0 ? `<span class="badge" style="background:#F3F4F6;color:#6B7280">⏸ ${r.nao_respondidas}</span>` : ''}
             <span class="badge badge-blue">${taxa}%</span>
             ${isPlus ? `
               ${(r.acertos_rapidos || 0) > 0 ? `<span class="badge" style="background:#EFF6FF;color:#1D4ED8">⚡${r.acertos_rapidos}</span>` : ''}
               ${(r.acertos_dificeis || 0) > 0 ? `<span class="badge badge-gold">🏆${r.acertos_dificeis}</span>` : ''}
               ${(r.ajudas_usadas || 0) > 0 ? `<span class="badge" style="background:#F5F3FF;color:#6D28D9">🎯${r.ajudas_usadas}</span>` : ''}
               ${r.sem_penalidade ? `<span class="badge" style="background:#F0FDF4;color:#16A34A">🔥 Limpo</span>` : ''}
+              ${tempoS > 0 ? `<span class="badge" style="background:#F0F9FF;color:#0369A1">⏱ ${tempoS}s/q</span>` : ''}
             ` : `
               ${(r.combo_max || 0) > 1 ? `<span class="badge badge-orange">🔥×${r.combo_max}</span>` : ''}
               ${(r.acertos_dificeis || 0) > 0 ? `<span class="badge" style="background:#EDE9FE;color:#6D28D9">💀${r.acertos_dificeis}</span>` : ''}
@@ -295,7 +315,42 @@ window.toggleAtiv = function(uid) {
   if (chev) chev.style.transform = open ? '' : 'rotate(180deg)';
 };
 
-window.toggleTent = async function(uid, resultadoId) {
+function renderQuestaoPlus(q, i) {
+  const resultado = q.resultado ?? null;
+  const isNR = resultado === 'nao_respondida';
+  const isOk = resultado === 'acerto' || (resultado === null && !!q.acertou);
+  const icon = isNR ? '⏸' : isOk ? '✅' : '❌';
+  const cls  = isNR ? '' : isOk ? ' ok' : ' err';
+  const tempoMs = q.tempo_resposta_ms ?? null;
+  const tempoS  = tempoMs != null ? `${Math.round(tempoMs / 1000)}s` : null;
+  const extras = [
+    (q.bonus_velocidade ?? q.velocidade) ? '⚡' : '',
+    (q.usou_ajuda ?? q.usouAjuda)        ? '🎯' : '',
+  ].filter(Boolean).join(' ');
+  const respostaAluno = q.resposta_aluno ?? (() => {
+    const ts = q.tentativas ?? [];
+    const certa = ts.find(t => t.correto);
+    const ultima = ts[ts.length - 1];
+    return (certa ?? ultima)?.resposta ?? '—';
+  })();
+  return `<div class="q-rev${cls}">
+    <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:24px;flex-shrink:0">Q${i+1}</span>
+    <div style="flex:1">
+      <div style="font-size:12px">${q.enunciado || q.pergunta || '—'}</div>
+      ${isNR
+        ? `<div style="margin-top:2px;font-size:11px;color:var(--text-muted)">não respondida</div>`
+        : `<div style="margin-top:2px;font-size:11px">
+            <span style="${isOk?'color:var(--green)':'color:var(--red)'};font-weight:700">${respostaAluno}</span>
+            ${!isOk ? `<span style="color:var(--text-muted);margin-left:6px">✓ ${q.resposta_correta || '—'}</span>` : ''}
+            ${extras ? `<span style="margin-left:6px">${extras}</span>` : ''}
+            ${tempoS ? `<span style="color:var(--text-muted);margin-left:6px">⏱ ${tempoS}</span>` : ''}
+           </div>`}
+    </div>
+    <span>${icon}</span>
+  </div>`;
+}
+
+window.toggleTent = async function(uid, resultadoId, isPlus) {
   const body  = document.getElementById(uid);
   const chev  = document.getElementById(`chev2-${uid}`);
   if (!body) return;
@@ -309,14 +364,27 @@ window.toggleTent = async function(uid, resultadoId) {
     body.innerHTML = '<p style="font-size:12px;color:var(--text-muted)">Detalhes não disponíveis.</p>';
     return;
   }
-  body.innerHTML = questoes.map((q, i) => `
-    <div class="q-rev ${q.acertou ? 'ok' : 'err'}">
-      <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:24px;flex-shrink:0">Q${i+1}</span>
-      <span style="flex:1">${q.enunciado || q.pergunta || '—'}</span>
-      <span style="${q.acertou ? 'color:var(--green)' : 'color:var(--red)'};font-weight:700">${q.resposta_aluno || '—'}</span>
-      ${!q.acertou ? `<span style="font-size:10px;color:var(--text-muted)">✓ ${q.resposta_correta || '—'}</span>` : ''}
-      <span>${q.acertou ? '✅' : '❌'}</span>
-    </div>`).join('');
+  if (isPlus) {
+    const nrCount  = questoes.filter(q => (q.resultado ?? null) === 'nao_respondida').length;
+    const acertos  = questoes.filter(q => { const r = q.resultado ?? null; return r === 'acerto' || (r === null && !!q.acertou); }).length;
+    const erros    = questoes.filter(q => { const r = q.resultado ?? null; return r === 'erro'   || (r === null && !q.acertou); }).length;
+    const comTempo = questoes.filter(q => (q.resultado ?? null) !== 'nao_respondida' && q.tempo_resposta_ms != null);
+    const avgS     = comTempo.length > 0 ? Math.round(comTempo.reduce((s, q) => s + q.tempo_resposta_ms, 0) / comTempo.length / 1000) : null;
+    body.innerHTML = `
+      <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px">
+        ✅ ${acertos} | ❌ ${erros}${nrCount > 0 ? ` | ⏸ ${nrCount}` : ''} ${avgS != null ? `· ⏱ ${avgS}s/questão` : ''}
+      </div>
+      ${questoes.map((q, i) => renderQuestaoPlus(q, i)).join('')}`;
+  } else {
+    body.innerHTML = questoes.map((q, i) => `
+      <div class="q-rev ${q.acertou ? 'ok' : 'err'}">
+        <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:24px;flex-shrink:0">Q${i+1}</span>
+        <span style="flex:1">${q.enunciado || q.pergunta || '—'}</span>
+        <span style="${q.acertou ? 'color:var(--green)' : 'color:var(--red)'};font-weight:700">${q.resposta_aluno || '—'}</span>
+        ${!q.acertou ? `<span style="font-size:10px;color:var(--text-muted)">✓ ${q.resposta_correta || '—'}</span>` : ''}
+        <span>${q.acertou ? '✅' : '❌'}</span>
+      </div>`).join('');
+  }
 };
 
 window.analisarErros = async function(uid, tentIds) {

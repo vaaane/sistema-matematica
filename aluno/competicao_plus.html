@@ -627,6 +627,7 @@ function novoEstado() {
     finalizado: false, processando: false,
     resultadoIds: {}, inicioTs: Date.now()/1000,
     questoesDetalhes: [], questaoHist: [],
+    questaoRegistrada: true, questaoInicioTs: 0,
     pools: { 1: shuffle([...faceis]), 2: shuffle([...medias]), 3: shuffle([...dificeis]) },
     poolIdx: { 1:0, 2:0, 3:0 },
     seenCombos: new Set(),
@@ -1126,19 +1127,29 @@ function aplicarPenalidade(q, deTempo) {
 // ── Registrar questão concluída ───────────────────────────────
 function registrarQuestao(acertou, pontosGanhos, velocidade, speedPts) {
   const q = st.questaoAtual;
+  const tentHistCopy = [...st.questaoHist];
+  const correctResp = tentHistCopy.find(t => t.correto);
+  const lastResp = tentHistCopy[tentHistCopy.length - 1];
   st.questoesDetalhes.push({
     enunciado: q.enunciado,
     resposta_correta: q.resposta + (q.unidade ? ' ' + q.unidade : ''),
+    resposta_aluno: (correctResp || lastResp)?.resposta || '',
+    resultado: acertou ? 'acerto' : 'erro',
+    tentativas_count: tentHistCopy.length,
+    tempo_resposta_ms: Math.round(Date.now() - st.questaoInicioTs),
+    bonus_velocidade: !!velocidade,
+    usou_ajuda: !!st.ajudaUsada,
     dificuldade: q.dif,
     ehBonus: !!st.ehBonus,
-    tentativas: [...st.questaoHist],
+    tentativas: tentHistCopy,
     acertou,
     pontosGanhos,
     usouAjuda: !!st.ajudaUsada,
-    velocidade,
+    velocidade: !!velocidade,
     speedPts,
   });
   st.questaoHist = [];
+  st.questaoRegistrada = true;
 }
 
 function mostrarRespostaAnterior(q) {
@@ -1190,6 +1201,8 @@ function proxima() {
   st.ajudaUsada = false;
   st.ehBonus = false;
   st.questaoAtual = gerarQuestao();
+  st.questaoInicioTs = Date.now();
+  st.questaoRegistrada = false;
   renderQuestao();
   iniciarTimer(st.questaoAtual.timer);
 }
@@ -1233,6 +1246,8 @@ window.aceitarDificil = function() {
   document.getElementById("popup-dificil")?.remove();
   if (st.finalizado) return;
   st.questaoAtual = gerarQuestao(3);
+  st.questaoInicioTs = Date.now();
+  st.questaoRegistrada = false;
   st.questaoAtual.bonus = true;
   st.tentativaAtual = 0;
   st.modoAjuda = false;
@@ -1314,6 +1329,29 @@ async function encerrarSessao(motivo) {
   clearInterval(st.timerInterval);
   clearInterval(st.globalInterval);
 
+  if (st.questaoAtual && !st.questaoRegistrada) {
+    const q = st.questaoAtual;
+    st.questoesDetalhes.push({
+      enunciado: q.enunciado,
+      resposta_correta: q.resposta + (q.unidade ? ' ' + q.unidade : ''),
+      resposta_aluno: '',
+      resultado: 'nao_respondida',
+      tentativas_count: st.questaoHist.length,
+      tempo_resposta_ms: null,
+      bonus_velocidade: false,
+      usou_ajuda: !!st.ajudaUsada,
+      dificuldade: q.dif,
+      ehBonus: !!st.ehBonus,
+      tentativas: [...st.questaoHist],
+      acertou: false,
+      pontosGanhos: 0,
+      usouAjuda: !!st.ajudaUsada,
+      velocidade: false,
+      speedPts: 0,
+    });
+    st.questaoRegistrada = true;
+  }
+
   let bonusFim = 0;
   if (motivo === 'tempo' && st.semPenalidade && st.respondidas > 0) {
     bonusFim = 20;
@@ -1328,6 +1366,12 @@ async function encerrarSessao(motivo) {
   } catch(e) {}
   const saldoAplicado = st.saldo > 0 ? Math.max(1, Math.floor(st.saldo * percentualNotaPlus / 100)) : 0;
 
+  const naoRespondidas = st.questoesDetalhes.filter(q => q.resultado === 'nao_respondida').length;
+  const questoesComTempo = st.questoesDetalhes.filter(q => q.resultado !== 'nao_respondida' && q.tempo_resposta_ms != null);
+  const tempoMedioMs = questoesComTempo.length > 0
+    ? Math.round(questoesComTempo.reduce((s, q) => s + q.tempo_resposta_ms, 0) / questoesComTempo.length)
+    : 0;
+
   const dados = {
     pontuacao_bruta: st.saldo, pontuacao: saldoAplicado,
     percentual_nota: percentualNotaPlus, com_abatimento: percentualNotaPlus < 100,
@@ -1336,6 +1380,7 @@ async function encerrarSessao(motivo) {
     acertos_rapidos: st.acertosRapidos, acertos_dificeis: st.acertosDificeis||0,
     combo_max: st.comboMax, sem_penalidade: st.semPenalidade,
     bonus_fim: bonusFim, modo: "competicao_plus",
+    nao_respondidas: naoRespondidas, tempo_medio_ms: tempoMedioMs,
     tempo: `${t}s`, ts_inicio: st.inicioTs, data: dataAgora(), concluido: true,
   };
   for (const al of alunos) {

@@ -53,7 +53,7 @@
 
 <script type="module">
 import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES } from "/js/constants.js";
-import { getResultados, getLiberadas, getAlertas, getAllAtividadeStatus } from "/js/db.js";
+import { getResultados, getLiberadas, getAlertas, getAllAtividadeStatus, getDetalhes } from "/js/db.js";
 import { db } from "/js/firebase-config.js";
 import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
@@ -172,6 +172,10 @@ document.getElementById("content").innerHTML = `
       <div class="stat-icon red"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
       <div><div class="stat-value red">${alertas.length}</div><div class="stat-meta">Alertas</div></div>
     </div>
+    <div class="stat-card stat-card-clickable" style="flex:1;min-width:140px;display:none" id="analise-card" onclick="window.location.href='/professor/analise.html'">
+      <div class="stat-icon orange"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></div>
+      <div><div class="stat-value orange" id="analise-count">0</div><div class="stat-meta">⚠️ Para verificar</div></div>
+    </div>
     <div class="stat-card stat-card-clickable" style="flex:1;min-width:140px" id="online-card" onclick="window.abrirOnlineModal()">
       <div class="stat-icon green"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg></div>
       <div>
@@ -281,6 +285,52 @@ window.fecharOnlineModal = function(e) {
     document.getElementById('online-modal-bg').style.display = 'none';
   }
 };
+
+// ── Análise anti-IA: conta suspeitos em background ────────────
+(async () => {
+  const plusSessoes = todos.filter(r => r.concluido && r.modo === 'competicao_plus');
+  if (!plusSessoes.length) return;
+  const detalhesList = await Promise.all(plusSessoes.map(s => getDetalhes(s.id).then(d => [s.id, d || []])));
+  const detalhesPorId = Object.fromEntries(detalhesList);
+  const grupos = {};
+  for (const s of plusSessoes) {
+    const key = s.aluno + '|||' + s.atividade;
+    if (!grupos[key]) grupos[key] = [];
+    grupos[key].push(s);
+  }
+  let suspeitos = 0;
+  for (const sessoes of Object.values(grupos)) {
+    const validas = sessoes.filter(s => ((s.acertos||0)+(s.erros||0)+(s.nao_respondidas||0)) >= 10);
+    if (!validas.length) continue;
+    const todasQ = validas.flatMap(s => detalhesPorId[s.id] || []);
+    let score = 0;
+    const faceis = todasQ.filter(q => q.dificuldade === 1);
+    const difs   = todasQ.filter(q => q.dificuldade === 2 || q.dificuldade === 3);
+    if (faceis.length >= 3 && difs.length >= 3) {
+      const acF = faceis.filter(q => { const r = q.resultado ?? null; return r === 'acerto' || (r === null && !!q.acertou); }).length;
+      const acD = difs.filter(q => { const r = q.resultado ?? null; return r === 'acerto' || (r === null && !!q.acertou); }).length;
+      if (acD / difs.length > acF / faceis.length + 0.20) score += 25;
+    }
+    if (validas.length >= 2) {
+      const sorted = [...validas].sort((a, b) => (a.ts_inicio||0) - (b.ts_inicio||0));
+      if ((sorted[0].pontuacao||0) > 0 && (sorted[1].pontuacao||0) > sorted[0].pontuacao * 3) score += 25;
+    }
+    const comTempo = todasQ.filter(q => q.tempo_resposta_ms != null);
+    if (comTempo.length >= 5) {
+      const tempos = comTempo.map(q => q.tempo_resposta_ms);
+      const avg = tempos.reduce((a, b) => a + b, 0) / tempos.length;
+      const std = Math.sqrt(tempos.reduce((s, t) => s + (t - avg) ** 2, 0) / tempos.length);
+      if (std < 3000) score += 25;
+      const fT = comTempo.filter(q => q.dificuldade === 1);
+      if (fT.length >= 3 && fT.reduce((s, q) => s + q.tempo_resposta_ms, 0) / fT.length > 7000) score += 25;
+    }
+    if (score > 50) suspeitos++;
+  }
+  if (suspeitos > 0) {
+    const card = document.getElementById('analise-card');
+    if (card) { card.querySelector('#analise-count').textContent = suspeitos; card.style.display = 'flex'; }
+  }
+})();
 </script>
 </body>
 </html>

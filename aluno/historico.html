@@ -36,6 +36,7 @@
     .plus-q-row:hover{filter:brightness(.97);}
     .plus-q-row.ok{background:#F0FDF4;border-color:#BBF7D0;}
     .plus-q-row.err{background:#FEF2F2;border-color:#FECACA;}
+    .plus-q-row.nr{background:#F9FAFB;border-color:#E5E7EB;}
     .plus-q-row.bonus{border-color:#FDE68A;background:#FFFBEB;}
     .plus-q-num{font-size:10px;font-weight:700;color:var(--text-muted);width:24px;flex-shrink:0;padding-top:1px;}
     .plus-q-enun{flex:1;line-height:1.4;}
@@ -80,7 +81,7 @@
 </div>
 <script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
-import { getResultados, getDetalhes, getAlunoPreferencia, getConquistasByAluno, getRoboticaTentativasAluno } from "/js/db.js";
+import { getResultados, getDetalhes, getAlunoPreferencia, getConquistasByAluno, getRoboticaTentativasAluno, getAllAtividadeStatus } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
 
@@ -168,41 +169,63 @@ function renderEvolucaoSVG(regs) {
 }
 
 // ── Competição+ ───────────────────────────────────────────────
-function renderPlusQuestao(q, i) {
-  const ptsClass = q.pontosGanhos > 0 ? 'color:var(--green)' : q.pontosGanhos < 0 ? 'color:var(--red)' : 'color:var(--text-muted)';
-  const ptsTxt = q.pontosGanhos > 0 ? `+${q.pontosGanhos}` : String(q.pontosGanhos || 0);
+function renderPlusQuestao(q, i, mostrarRespostas) {
+  const resultado = q.resultado ?? null;
+  const isNR = resultado === 'nao_respondida';
+  const isOk = resultado === 'acerto' || (resultado === null && !!q.acertou);
+  const rowCls = isNR ? 'nr' : isOk ? 'ok' : 'err';
+  const icon   = isNR ? '⏸' : isOk ? '✅' : '❌';
+
+  const ptsVal = q.pontosGanhos ?? 0;
+  const ptsClass = ptsVal > 0 ? 'color:var(--green)' : ptsVal < 0 ? 'color:var(--red)' : 'color:var(--text-muted)';
+  const ptsTxt   = ptsVal > 0 ? `+${ptsVal}` : String(ptsVal);
+
   const badges = [];
-  if (q.velocidade) badges.push('<span style="color:#3B82F6;font-size:10px">⚡ rápido</span>');
-  if (q.usouAjuda)  badges.push('<span style="color:#A855F7;font-size:10px">🎯 ajuda</span>');
-  if (q.ehBonus)    badges.push('<span style="color:#F59E0B;font-size:10px">🏆 bônus</span>');
-  const tentativas = (q.tentativas || []).map(t => {
+  if (q.bonus_velocidade ?? q.velocidade) badges.push('<span style="color:#3B82F6;font-size:10px">⚡ rápido</span>');
+  if (q.usou_ajuda ?? q.usouAjuda)        badges.push('<span style="color:#A855F7;font-size:10px">🎯 ajuda</span>');
+  if (q.ehBonus)                           badges.push('<span style="color:#F59E0B;font-size:10px">🏆 bônus</span>');
+
+  const tempoMs  = q.tempo_resposta_ms ?? null;
+  const tempoTxt = isNR ? 'não respondida'
+    : tempoMs != null ? `${Math.round(tempoMs / 1000)}s`
+    : null;
+
+  const tentativas = (q.tentativas ?? []).map(t => {
     const isTime = t.resposta === '(tempo)' || t.resposta === '(pulou)';
     const cls = t.correto ? 'ok' : isTime ? 'time' : 'err';
     const tempo = !isTime && t.tempoUsado != null ? ` · ${t.tempoUsado}s` : '';
     return `<span class="plus-tent-ans ${cls}">${t.correto ? '✓ ' : ''}${t.resposta || '—'}${tempo}</span>`;
   }).join('');
-  const enun = q.enunciado || q.pergunta || '—';
-  const suaResp = (() => {
-    const ts = q.tentativas || [];
+
+  const enun = q.enunciado ?? q.pergunta ?? '—';
+  const suaResp = q.resposta_aluno ?? (() => {
+    const ts = q.tentativas ?? [];
     const certa = ts.find(t => t.correto);
     const ultima = ts[ts.length - 1];
-    return (certa || ultima)?.resposta || '—';
+    return (certa ?? ultima)?.resposta ?? '—';
   })();
-  return `<div class="plus-q-row ${q.acertou ? 'ok' : 'err'}${q.ehBonus ? ' bonus' : ''}"
+
+  let detailHTML = '';
+  if (!isNR && mostrarRespostas) {
+    detailHTML += `<div><strong>Sua resposta:</strong> <span style="${isOk?'color:var(--green)':'color:var(--red)'};font-weight:700">${suaResp}</span></div>`;
+    detailHTML += `<div style="margin-top:3px"><strong>Resposta correta:</strong> ${q.resposta_correta ?? '—'}</div>`;
+    detailHTML += `<div style="margin-top:3px"><strong>Pontos:</strong> <span style="${ptsClass};font-weight:700">${ptsTxt}</span></div>`;
+  }
+  if (tempoTxt) detailHTML += `<div style="margin-top:3px"><strong>Tempo:</strong> ${tempoTxt}</div>`;
+  if (tentativas) detailHTML += `<div class="plus-tent-row" style="margin-top:4px">${tentativas}</div>`;
+
+  return `<div class="plus-q-row ${rowCls}${q.ehBonus ? ' bonus' : ''}"
     onclick="const d=this.querySelector('.plus-q-detail');d.style.display=d.style.display==='block'?'none':'block'">
     <span class="plus-q-num">Q${i+1}</span>
     <div class="plus-q-enun">
       <div>${enun}</div>
       ${badges.length ? `<div style="margin-top:3px;display:flex;gap:6px;flex-wrap:wrap">${badges.join('')}</div>` : ''}
-      <div class="plus-q-detail">
-        <div><strong>Sua resposta:</strong> <span style="${q.acertou?'color:var(--green)':'color:var(--red)'};font-weight:700">${suaResp}</span></div>
-        <div style="margin-top:3px"><strong>Resposta correta:</strong> ${q.resposta_correta || '—'}</div>
-        <div style="margin-top:3px"><strong>Pontos:</strong> <span style="${ptsClass};font-weight:700">${ptsTxt}</span></div>
-        ${tentativas ? `<div class="plus-tent-row" style="margin-top:4px">${tentativas}</div>` : ''}
-      </div>
+      <div class="plus-q-detail">${detailHTML || '<span style="color:var(--text-muted);font-size:11px">Clique para ver detalhes.</span>'}</div>
     </div>
-    <span class="plus-q-pts" style="${ptsClass}">${ptsTxt} pt</span>
-    <span>${q.acertou ? '✅' : '❌'}</span>
+    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+      ${tempoTxt && !isNR ? `<span style="font-size:10px;color:var(--text-muted)">${tempoTxt}</span>` : ''}
+      <span>${icon}</span>
+    </div>
   </div>`;
 }
 
@@ -213,10 +236,17 @@ function renderAbatimento(r) {
   return `<span class="badge-atraso">⏰ ${bruta} pts bruta → ${aplic} pts (${r.percentual_nota}% da nota)</span>`;
 }
 
-function renderPlusItem(r, detalhes) {
-  const taxa = r.respondidas > 0 ? Math.round((r.acertos || 0) / r.respondidas * 100) : 0;
+function renderPlusItem(r, detalhes, statusMap) {
+  const acertos = r.acertos || 0;
+  const erros   = r.erros   || 0;
+  const taxa = (acertos + erros) > 0 ? Math.round(acertos / (acertos + erros) * 100) : 0;
   const bruta = r.pontuacao_bruta || r.pontuacao || 0;
   const abatBadge = renderAbatimento(r);
+  const naoResp = r.nao_respondidas || 0;
+
+  const statusInfo = statusMap?.[`${r.turma}|${r.atividade}`];
+  const mostrarRespostas = !statusInfo || statusInfo.status !== 'ativa' || (statusInfo.percentual ?? 100) < 100;
+
   return `<div class="hist-item">
     <div class="hist-header" onclick="toggle(this)">
       <div style="flex:1">
@@ -224,8 +254,9 @@ function renderPlusItem(r, detalhes) {
         <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center">
           <span class="badge badge-gold">⭐ ${bruta} pts${r.com_abatimento ? ' (bruta)' : ''}</span>
           ${abatBadge}
-          <span class="badge badge-green">✅ ${r.acertos || 0}</span>
-          <span class="badge badge-red">❌ ${r.erros || 0}</span>
+          <span class="badge badge-green">✅ ${acertos}</span>
+          <span class="badge badge-red">❌ ${erros}</span>
+          ${naoResp > 0 ? `<span class="badge" style="background:#F3F4F6;color:#6B7280;border-color:#D1D5DB">⏸ ${naoResp}</span>` : ''}
           <span class="badge badge-blue">📊 ${taxa}%</span>
           ${(r.acertos_rapidos || 0) > 0 ? `<span class="badge badge-blue">⚡ ${r.acertos_rapidos}</span>` : ''}
         </div>
@@ -236,7 +267,7 @@ function renderPlusItem(r, detalhes) {
     </div>
     <div class="hist-body" style="display:none">
       ${detalhes.length
-        ? `<div class="plus-q-wrap">${detalhes.map((q, i) => renderPlusQuestao(q, i)).join('')}</div>`
+        ? `<div class="plus-q-wrap">${detalhes.map((q, i) => renderPlusQuestao(q, i, mostrarRespostas)).join('')}</div>`
         : '<p style="font-size:12px;color:var(--text-muted);padding-top:8px">Detalhes não disponíveis.</p>'}
     </div>
   </div>`;
@@ -333,8 +364,12 @@ function renderClassicoItem(r, detalhes) {
   </div>`;
 }
 
-const todos = await getResultados();
-const allConquistas = (await Promise.all(alunos.map(a => getConquistasByAluno(a)))).flat();
+const [todos, statusMap, allConquisTaskRaw] = await Promise.all([
+  getResultados(),
+  getAllAtividadeStatus(),
+  Promise.all(alunos.map(a => getConquistasByAluno(a))),
+]);
+const allConquistas = allConquisTaskRaw.flat();
 for (const c of allConquistas) {
   if (c.sessaoId) {
     if (!conquistasBySessao[c.sessaoId]) conquistasBySessao[c.sessaoId] = [];
@@ -377,7 +412,7 @@ for (const aluno of alunos) {
       // Items by score descending (highest first)
       for (const r of ativRegs) {
         const detalhes = (await getDetalhes(r.id)) || [];
-        if (r.modo === 'competicao_plus') html += renderPlusItem(r, detalhes);
+        if (r.modo === 'competicao_plus') html += renderPlusItem(r, detalhes, statusMap);
         else html += renderClassicoItem(r, detalhes);
       }
       html += `</div>`;
