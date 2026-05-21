@@ -328,18 +328,17 @@ if (window.location.hash === '#professor') setRole('professor');
 
 // ── Dados Firebase async ──────────────────────────────────────
 let tentativas = 5;
+let liberadasCache = [];
 
 (async () => {
   try {
     const [resultados, liberadas] = await Promise.all([getResultados(), getLiberadas()]);
+    liberadasCache = liberadas;
 
-    // Sessões hoje
+    // Sessões hoje — r.data é "DD/MM/YYYY HH:MM", comparar pelo prefixo da data
     const hoje = new Date().toLocaleDateString('pt-BR');
-    const sessHoje = resultados.filter(r => r.concluido && r.data === hoje).length;
+    const sessHoje = resultados.filter(r => r.concluido && r.data && r.data.startsWith(hoje)).length;
     document.getElementById('statSessoes').textContent = sessHoje;
-
-    // Alert de atividade liberada
-    if (liberadas.length > 0) document.getElementById('activityAlert').style.display = 'flex';
 
     // Ticker com dados reais
     const concluidos = resultados.filter(r => r.concluido);
@@ -400,6 +399,10 @@ window.carregarAlunos = function() {
   document.getElementById('senhaAluno2').value = '';
   document.getElementById('senhaAluno2').disabled = true;
   if (turma) setTimeout(() => sel1.focus(), 50);
+
+  // Alert: só mostra se a turma selecionada tem atividade liberada
+  const temAtividade = turma && liberadasCache.some(l => l.turma === turma);
+  document.getElementById('activityAlert').style.display = temAtividade ? 'flex' : 'none';
 };
 
 window.focusSenha = function() {
