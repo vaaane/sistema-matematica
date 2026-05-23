@@ -1015,7 +1015,7 @@ function processar(resposta, mcIdx) {
     st.comboAtual++;
     if (st.comboAtual > st.comboMax) st.comboMax = st.comboAtual;
     let pts = valorAtual();
-    const rapido   = !st.ajudaUsada && tempoUsado < q.timer * 0.5;
+    const rapido   = st.tentativaAtual === 0 && !st.ajudaUsada && tempoUsado < q.timer * 0.5;
     const speedPts = rapido ? (q.dif === 1 ? 1 : 2) : 0;
     pts += speedPts;
 

@@ -297,49 +297,124 @@ async function renderPainelPrincipal() {
   };
 
   // Activity tab state
-  let ativSel     = LISTA_ATIVIDADES[0]?.nome || '';
-  let unsubAtiv   = null;
+  let ativSel    = LISTA_ATIVIDADES[0]?.nome || '';
+  let modoAtivSel = '';
 
   function abrirAtivProf(nome) {
+    const modoShouldReset = nome !== ativSel;
     ativSel = nome;
     document.querySelectorAll('.ativ-btn-prof').forEach(b =>
       b.classList.toggle('active', b.dataset.ativ === nome));
-    if (unsubAtiv) { unsubAtiv(); unsubAtiv = null; }
     const el = document.getElementById('rank-ativ-prof');
     if (!el) return;
-    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted)">Aguardando…</div>';
-    unsubAtiv = listenRankingProfessor(nome, ranking => {
-      if (!el) return;
+
+    const resultadosAtiv = todos.filter(r => r.atividade === nome && r.concluido && r.aluno);
+    const modosPresentes = new Set(resultadosAtiv.map(r => r.modo || 'competicao'));
+    const temComp   = [...modosPresentes].some(m => m === 'competicao' || m === 'competicao_plus');
+    const temAvPlus = modosPresentes.has('avaliacao_plus');
+
+    if (modoShouldReset || !modoAtivSel) {
+      modoAtivSel = (temAvPlus && !temComp) ? 'avaliacao_plus' : 'competicao_plus';
+    }
+
+    const submenuHtml = (temComp && temAvPlus) ? `
+      <div style="padding:10px 12px 0">
+        <div class="tab-nav" style="margin-bottom:10px">
+          <button id="ratab-comp" onclick="mudarModoAtivRank('competicao_plus')" class="${modoAtivSel !== 'avaliacao_plus' ? 'active' : ''}">⚔️ Competição+</button>
+          <button id="ratab-avplus" onclick="mudarModoAtivRank('avaliacao_plus')" class="${modoAtivSel === 'avaliacao_plus' ? 'active' : ''}">📝 Avaliação+</button>
+        </div>
+      </div>` : '';
+
+    el.innerHTML = submenuHtml + '<div id="rank-ativ-content"></div>';
+    renderAtivRanking();
+  }
+
+  window.mudarModoAtivRank = function(modo) {
+    modoAtivSel = modo;
+    document.getElementById('ratab-comp')?.classList.toggle('active', modo !== 'avaliacao_plus');
+    document.getElementById('ratab-avplus')?.classList.toggle('active', modo === 'avaliacao_plus');
+    renderAtivRanking();
+  };
+
+  function renderAtivRanking() {
+    const el = document.getElementById('rank-ativ-content');
+    if (!el) return;
+    const resultadosAtiv = todos.filter(r => r.atividade === ativSel && r.concluido && r.aluno);
+
+    if (modoAtivSel === 'avaliacao_plus') {
+      const avResults = resultadosAtiv.filter(r => r.modo === 'avaliacao_plus');
+      const melhor = {};
+      for (const r of avResults) {
+        const nq = r.nota_quiz ?? 0, pts = r.pontuacao ?? 0;
+        const prev = melhor[r.aluno];
+        if (!prev || nq > prev.nota_quiz || (nq === prev.nota_quiz && pts > prev.pts)) {
+          melhor[r.aluno] = { aluno: r.aluno, turma: r.turma || '?', nota_quiz: nq, pts, tent: 0 };
+        }
+      }
+      for (const r of avResults) { if (melhor[r.aluno]) melhor[r.aluno].tent++; }
+      const ranking = Object.values(melhor).sort((a, b) => b.nota_quiz - a.nota_quiz || b.pts - a.pts);
       const filtrado = filtroTurma ? ranking.filter(r => r.turma === filtroTurma) : ranking;
       if (!filtrado.length) {
-        el.innerHTML = '<p style="padding:16px;color:var(--text-muted);font-size:13px">Sem resultados para esta atividade.</p>';
+        el.innerHTML = '<p style="padding:16px;color:var(--text-muted);font-size:13px">Sem resultados de Avaliação+ para esta atividade.</p>';
         return;
       }
-      let lastPos = 1; let densePos = 0;
-      const rkRows = filtrado.map((r, i) => {
-        if (i === 0 || r.melhorPts !== filtrado[i-1].melhorPts) { densePos++; lastPos = densePos; }
-        const pos = lastPos;
-        const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
-        const cls = pos === 1 ? 'tr-top1' : pos === 2 ? 'tr-top2' : pos === 3 ? 'tr-top3' : '';
-        return `<tr class="${cls}">
-          <td style="text-align:center;font-weight:700;font-size:20px">${medal}</td>
-          <td style="font-weight:600">${r.aluno}</td>
-          <td><span class="badge badge-blue">Turma ${r.turma}</span></td>
-          <td style="font-weight:800;color:var(--gold)">${r.melhorPts}</td>
-          <td class="rank-hide-mobile">${r.tentativas}</td>
-        </tr>`;
-      }).join('');
+      let dp = 0, lastNQ = null, lastPts = null;
       el.innerHTML = `<table class="table">
         <thead><tr>
-          <th style="width:40px">#</th>
-          <th>Aluno</th>
-          <th>Turma</th>
-          <th>Melhor</th>
-          <th class="rank-hide-mobile">Sessões</th>
+          <th style="width:40px">#</th><th>Aluno</th><th>Turma</th>
+          <th>Nota Quiz</th><th>Pts Total</th>
+          <th class="rank-hide-mobile">Tentativas</th>
         </tr></thead>
-        <tbody>${rkRows}</tbody>
+        <tbody>${filtrado.map(r => {
+          if (r.nota_quiz !== lastNQ || r.pts !== lastPts) { dp++; lastNQ = r.nota_quiz; lastPts = r.pts; }
+          const pos = dp, medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
+          const cls = pos === 1 ? 'tr-top1' : pos === 2 ? 'tr-top2' : pos === 3 ? 'tr-top3' : '';
+          return `<tr class="${cls}">
+            <td style="text-align:center;font-weight:700;font-size:20px">${medal}</td>
+            <td style="font-weight:600">${r.aluno}</td>
+            <td><span class="badge badge-blue">Turma ${r.turma}</span></td>
+            <td style="font-weight:800;color:#7C3AED">${r.nota_quiz.toFixed(1)}</td>
+            <td style="font-weight:700;color:var(--gold)">${r.pts}</td>
+            <td class="rank-hide-mobile">${r.tent}</td>
+          </tr>`;
+        }).join('')}</tbody>
       </table>`;
-    });
+    } else {
+      const compResults = resultadosAtiv.filter(r => r.modo !== 'avaliacao_plus');
+      const melhor = {};
+      for (const r of compResults) {
+        const pts = r.pontuacao || 0;
+        if (!melhor[r.aluno] || pts > melhor[r.aluno].melhorPts) {
+          melhor[r.aluno] = { aluno: r.aluno, turma: r.turma || '?', melhorPts: pts, tent: 0 };
+        }
+      }
+      for (const r of compResults) { if (melhor[r.aluno]) melhor[r.aluno].tent++; }
+      const ranking = Object.values(melhor).sort((a, b) => b.melhorPts - a.melhorPts);
+      const filtrado = filtroTurma ? ranking.filter(r => r.turma === filtroTurma) : ranking;
+      if (!filtrado.length) {
+        el.innerHTML = '<p style="padding:16px;color:var(--text-muted);font-size:13px">Sem resultados de Competição+ para esta atividade.</p>';
+        return;
+      }
+      let dp = 0, lastPts = null;
+      el.innerHTML = `<table class="table">
+        <thead><tr>
+          <th style="width:40px">#</th><th>Aluno</th><th>Turma</th>
+          <th>Melhor</th><th class="rank-hide-mobile">Sessões</th>
+        </tr></thead>
+        <tbody>${filtrado.map(r => {
+          if (r.melhorPts !== lastPts) { dp++; lastPts = r.melhorPts; }
+          const pos = dp, medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
+          const cls = pos === 1 ? 'tr-top1' : pos === 2 ? 'tr-top2' : pos === 3 ? 'tr-top3' : '';
+          return `<tr class="${cls}">
+            <td style="text-align:center;font-weight:700;font-size:20px">${medal}</td>
+            <td style="font-weight:600">${r.aluno}</td>
+            <td><span class="badge badge-blue">Turma ${r.turma}</span></td>
+            <td style="font-weight:800;color:var(--gold)">${r.melhorPts}</td>
+            <td class="rank-hide-mobile">${r.tent}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>`;
+    }
   }
 
   window.mudarTabPainel = function(tab) {
@@ -348,7 +423,6 @@ async function renderPainelPrincipal() {
       document.getElementById('ppanel-' + t).style.display = t === tab ? '' : 'none';
     });
     if (tab === 'ativ') abrirAtivProf(ativSel);
-    if (tab === 'geral' && unsubAtiv) { unsubAtiv(); unsubAtiv = null; }
   };
 
   window.setFiltroTurmaRank = function(turma) {
@@ -358,8 +432,7 @@ async function renderPainelPrincipal() {
     if (document.getElementById('ppanel-geral')?.style.display !== 'none') {
       renderTabelaGeral();
     } else {
-      if (unsubAtiv) { unsubAtiv(); unsubAtiv = null; }
-      abrirAtivProf(ativSel);
+      renderAtivRanking();
     }
   };
 
@@ -409,7 +482,6 @@ async function renderPainelPrincipal() {
     b.addEventListener('click', () => abrirAtivProf(b.dataset.ativ));
   });
 
-  window.addEventListener('beforeunload', () => { if (unsubAtiv) unsubAtiv(); });
 }
 
 // ══════════════════════════════════════════════════════════════

@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Acompanhamento Avaliação+ — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    /* ── Seletores ─────────────────────────────────────────── */
+    .topbar-selectors { display:flex; gap:10px; align-items:center; }
+    .topbar-selectors select { padding:7px 12px; font-size:13px; min-width:150px; }
+
+    /* ── Stats bar ─────────────────────────────────────────── */
+    .stats-bar { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:18px; }
+    @media(max-width:640px){ .stats-bar { grid-template-columns:repeat(3,1fr); } }
+    .stat-box { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:12px 10px; text-align:center; }
+    .stat-val { font-size:26px; font-weight:800; line-height:1; }
+    .stat-lbl { font-size:10px; color:var(--text-muted); margin-top:3px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+    .stat-val.verde { color:#16A34A; }
+    .stat-val.vermelho { color:#DC2626; }
+    .stat-val.amarelo { color:#D97706; }
+    .stat-val.azul { color:#2563EB; }
+    .stat-val.cinza { color:var(--text-muted); }
+
+    /* ── Refresh indicator ─────────────────────────────────── */
+    .refresh-info { font-size:11px; color:var(--text-muted); margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+    .refresh-dot { width:8px; height:8px; border-radius:50%; background:#22C55E; animation:pulse-dot 2s ease infinite; flex-shrink:0; }
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    /* ── Section ───────────────────────────────────────────── */
+    .section-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin:16px 0 8px; display:flex; align-items:center; gap:8px; }
+    .section-count { background:var(--border); border-radius:20px; padding:2px 8px; font-size:10px; font-weight:700; color:var(--text-muted); }
+
+    /* ── Student card ──────────────────────────────────────── */
+    .aluno-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:10px; margin-bottom:8px; }
+    .aluno-card { background:var(--card); border:1.5px solid var(--border); border-radius:var(--radius); padding:14px 16px; cursor:pointer; transition:border-color .15s, box-shadow .15s; user-select:none; }
+    .aluno-card:hover { border-color:#3B82F6; box-shadow:0 2px 12px rgba(59,130,246,.12); }
+    .aluno-card.ativo    { border-left:4px solid #DC2626; background:#FFF5F5; }
+    .aluno-card.pausado  { border-left:4px solid #D97706; background:#FFFBF0; }
+    .aluno-card.concluido{ border-left:4px solid #16A34A; background:#F0FDF4; }
+    .aluno-card.pendente { border-left:4px solid #93C5FD; }
+
+    .card-header { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+    .card-nome { flex:1; font-weight:700; font-size:14px; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .status-badge { font-size:11px; font-weight:700; padding:3px 9px; border-radius:12px; white-space:nowrap; flex-shrink:0; }
+    .badge-ativo    { background:#FEE2E2; color:#DC2626; }
+    .badge-pausado  { background:#FEF3C7; color:#D97706; }
+    .badge-concluido{ background:#DCFCE7; color:#16A34A; }
+    .badge-pendente { background:#EFF6FF; color:#2563EB; }
+    .badge-esgotado { background:#F3F4F6; color:#6B7280; }
+
+    .card-metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+    .cm-box { text-align:center; }
+    .cm-val { font-size:15px; font-weight:800; color:var(--text); }
+    .cm-lbl { font-size:10px; color:var(--text-muted); margin-top:1px; }
+    .cm-val.destaque { color:#2563EB; }
+
+    .card-timer { font-size:11px; color:var(--text-muted); margin-top:8px; padding-top:8px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+    .timer-bar-wrap { flex:1; height:4px; background:var(--border); border-radius:2px; margin:0 8px; overflow:hidden; }
+    .timer-bar-fill { height:100%; border-radius:2px; transition:width .5s; }
+
+    /* ── Modal ─────────────────────────────────────────────── */
+    .modal-ov { position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:500; padding:16px; }
+    .modal-card { background:var(--bg); border-radius:var(--radius); border:1px solid var(--border); max-width:540px; width:100%; max-height:88vh; overflow-y:auto; box-shadow:0 8px 40px rgba(0,0,0,.18); }
+    .modal-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--bg); z-index:1; }
+    .modal-title { font-size:16px; font-weight:800; }
+    .modal-close { background:none; border:none; font-size:22px; cursor:pointer; color:var(--text-muted); padding:0 4px; line-height:1; }
+    .modal-body { padding:20px; }
+    .modal-section { margin-bottom:18px; }
+    .modal-section-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:10px; }
+
+    /* tentativa row */
+    .tent-row { display:grid; grid-template-columns:auto 1fr 1fr 1fr auto; gap:10px; align-items:center; padding:10px 12px; border:1px solid var(--border); border-radius:8px; margin-bottom:6px; background:var(--card); font-size:13px; }
+    .tent-num { font-weight:800; color:var(--text-muted); font-size:12px; }
+    .tent-metric { text-align:center; }
+    .tent-metric-val { font-weight:700; font-size:14px; }
+    .tent-metric-lbl { font-size:10px; color:var(--text-muted); }
+
+    /* mini gráfico */
+    .mini-chart { display:flex; align-items:flex-end; gap:6px; height:52px; padding:0 4px; }
+    .mini-bar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; height:100%; justify-content:flex-end; }
+    .mini-bar { width:100%; border-radius:3px 3px 0 0; min-height:4px; transition:height .4s; }
+    .mini-bar-lbl { font-size:9px; color:var(--text-muted); }
+
+    /* ações do professor */
+    .acoes-prof { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
+    .btn-acao { padding:8px 14px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; border:1.5px solid; transition:background .15s; display:flex; align-items:center; gap:5px; }
+    .btn-acao.iniciar { border-color:#2563EB; color:#2563EB; background:transparent; }
+    .btn-acao.iniciar:hover { background:#EFF6FF; }
+    .btn-acao.resetar { border-color:#D97706; color:#D97706; background:transparent; }
+    .btn-acao.resetar:hover { background:#FFFBF0; }
+    .btn-acao.encerrar-tudo { border-color:#DC2626; color:#DC2626; background:transparent; margin-left:auto; }
+    .btn-acao.encerrar-tudo:hover { background:#FEF2F2; }
+    .btn-acao.encerrar-sessao { border-color:#7C3AED; color:#7C3AED; background:transparent; }
+    .btn-acao.encerrar-sessao:hover { background:#F5F3FF; }
+    .btn-acao:disabled { opacity:.4; cursor:not-allowed; }
+
+    /* footer da página */
+    .page-footer-actions { display:flex; justify-content:flex-end; margin-top:24px; padding-top:16px; border-top:1px solid var(--border); }
+
+    /* placeholder */
+    .placeholder-msg { padding:60px 20px; text-align:center; color:var(--text-muted); }
+    .placeholder-msg svg { width:48px; height:48px; fill:var(--text-muted); opacity:.3; margin-bottom:12px; }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Acompanhamento Avaliação+</div>
+        <div class="topbar-sub" id="topbar-sub">Selecione atividade e turma</div>
+      </div>
+      <div class="topbar-right topbar-selectors">
+        <select class="input" id="sel-ativ" onchange="mudarSelecao()" style="padding:7px 12px;font-size:13px;min-width:180px">
+          <option value="">Selecionar atividade…</option>
+        </select>
+        <select class="input" id="sel-turma" onchange="mudarSelecao()" style="padding:7px 12px;font-size:13px;min-width:110px">
+          <option value="">Turma…</option>
+        </select>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div class="placeholder-msg">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        <p>Selecione uma atividade e uma turma para acompanhar.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal detalhes aluno -->
+<div class="modal-ov" id="modal-ov" style="display:none" onclick="fecharModal(event)">
+  <div class="modal-card" id="modal-card">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Aluno</div>
+      <button class="modal-close" onclick="fecharModal()">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script type="module">
+import { ALUNOS_POR_TURMA } from "/js/constants.js";
+import { getLiberadas, setAtividadeStatus } from "/js/db.js";
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get, set, update, remove, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+requireProfessor();
+renderSidebarProfessor("sidebar", "acomp_avaliacao");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+// ── Constantes ──────────────────────────────────────────────
+const DURACAO_GLOBAL_MS    = 30 * 60 * 1000;
+const MIN_PARA_TENTATIVA_MS = 8 * 60 * 1000;
+const MAX_TENTATIVAS       = 3;
+
+// ── avKey ────────────────────────────────────────────────────
+function avKey(s) {
+  return btoa(unescape(encodeURIComponent(s))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+}
+
+// ── Popula seletores ─────────────────────────────────────────
+const selAtiv  = document.getElementById("sel-ativ");
+const selTurma = document.getElementById("sel-turma");
+
+Object.keys(ALUNOS_POR_TURMA).sort().forEach(t => {
+  selTurma.innerHTML += `<option value="${t}">Turma ${t}</option>`;
+});
+
+const liberadas = await getLiberadas();
+const atividadesModo = [...new Set(liberadas.filter(l => l.modo === 'avaliacao_plus').map(l => l.atividade))].sort();
+atividadesModo.forEach(a => { selAtiv.innerHTML += `<option value="${a}">${a}</option>`; });
+
+// ── Estado global ────────────────────────────────────────────
+let unsubControle = null;
+let unsubResultados = null;
+let tickInterval = null;
+let dadosControle = {};   // { avKey(nome): {...} }
+let dadosResultados = []; // array de resultados
+let alunoSelecionado = null;
+let turmaAtual = '', atividadeAtual = '';
+
+// ── Mudar seleção ─────────────────────────────────────────────
+window.mudarSelecao = function() {
+  const at  = selAtiv.value;
+  const tur = selTurma.value;
+  if (!at || !tur) {
+    limparListeners();
+    document.getElementById("topbar-sub").textContent = "Selecione atividade e turma";
+    document.getElementById("content").innerHTML = `<div class="placeholder-msg"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg><p>Selecione uma atividade e uma turma.</p></div>`;
+    sessionStorage.removeItem("acomp_av_ativ"); sessionStorage.removeItem("acomp_av_turma");
+    return;
+  }
+  turmaAtual = tur; atividadeAtual = at;
+  sessionStorage.setItem("acomp_av_ativ", at); sessionStorage.setItem("acomp_av_turma", tur);
+  document.getElementById("topbar-sub").textContent = `${at} · Turma ${tur}`;
+  inscreverListeners(tur, at);
+};
+
+// Restaurar seleção anterior
+const _savedAtiv  = sessionStorage.getItem("acomp_av_ativ");
+const _savedTurma = sessionStorage.getItem("acomp_av_turma");
+if (_savedAtiv && _savedTurma) {
+  if ([...selAtiv.options].some(o => o.value === _savedAtiv)) selAtiv.value = _savedAtiv;
+  if ([...selTurma.options].some(o => o.value === _savedTurma)) selTurma.value = _savedTurma;
+  if (selAtiv.value && selTurma.value) mudarSelecao();
+}
+
+function limparListeners() {
+  if (unsubControle)   { unsubControle(); unsubControle = null; }
+  if (unsubResultados) { unsubResultados(); unsubResultados = null; }
+  if (tickInterval)    { clearInterval(tickInterval); tickInterval = null; }
+  dadosControle = {}; dadosResultados = [];
+}
+
+function inscreverListeners(turma, atividade) {
+  limparListeners();
+  document.getElementById("content").innerHTML = `<div class="placeholder-msg" style="padding:30px"><p>Carregando dados…</p></div>`;
+
+  // Listener 1: controle (todos os alunos desta turma+atividade)
+  const controleRef = ref(db, `avaliacao_controle/${avKey(turma+'|'+atividade)}`);
+  unsubControle = onValue(controleRef, snap => {
+    dadosControle = snap.exists() ? snap.val() : {};
+    renderPage();
+  });
+
+  // Listener 2: resultados da atividade
+  const resQuery = query(ref(db, "resultados"), orderByChild("atividade"), equalTo(atividade));
+  unsubResultados = onValue(resQuery, snap => {
+    dadosResultados = [];
+    if (snap.exists()) snap.forEach(child => dadosResultados.push({ id: child.key, ...child.val() }));
+    renderPage();
+  });
+
+  // Tick para atualizar cronômetros
+  tickInterval = setInterval(() => {
+    atualizarTimers();
+    if (alunoSelecionado) atualizarModalTimer(alunoSelecionado);
+  }, 1000);
+}
+
+// ── Calcular status de um aluno ──────────────────────────────
+function calcStatus(controleAluno, resultadosAluno) {
+  const now = Date.now();
+  if (!controleAluno) return 'nao_iniciou';
+
+  const gRestMs  = DURACAO_GLOBAL_MS - (now - controleAluno.inicio_global);
+  const tentUsadas = controleAluno.tentativas_realizadas || 0;
+
+  if (gRestMs <= 0 && tentUsadas === 0) return 'tempo_esgotado';
+  if (tentUsadas >= MAX_TENTATIVAS) return 'concluido';
+  if (gRestMs <= 0) return 'tempo_esgotado';
+
+  const ativa = resultadosAluno.find(r => !r.concluido);
+  if (ativa) return 'em_andamento';
+
+  if (gRestMs < MIN_PARA_TENTATIVA_MS) return 'tempo_insuficiente';
+  if (tentUsadas > 0) return 'pausado';
+  return 'nao_iniciou';
+}
+
+function statusMeta(tipo) {
+  return {
+    nao_iniciou:       { label: '⏳ Não iniciou',       cls: 'pendente',  badgeCls: 'badge-pendente',  order: 3 },
+    em_andamento:      { label: '🔴 Em andamento',       cls: 'ativo',     badgeCls: 'badge-ativo',     order: 0 },
+    pausado:           { label: '🟡 Pausado',            cls: 'pausado',   badgeCls: 'badge-pausado',   order: 1 },
+    concluido:         { label: '✅ Concluído',          cls: 'concluido', badgeCls: 'badge-concluido', order: 4 },
+    tempo_esgotado:    { label: '⏰ Tempo esgotado',     cls: 'concluido', badgeCls: 'badge-esgotado',  order: 5 },
+    tempo_insuficiente:{ label: '⏰ Tempo insuficiente', cls: 'concluido', badgeCls: 'badge-esgotado',  order: 4 },
+  }[tipo] || { label: tipo, cls: 'pendente', badgeCls: 'badge-pendente', order: 9 };
+}
+
+function isConcluido(tipo) {
+  return ['concluido','tempo_esgotado','tempo_insuficiente'].includes(tipo);
+}
+
+function formatTempo(ms) {
+  if (ms <= 0) return '0:00';
+  const s = Math.floor(ms / 1000);
+  return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+}
+
+function formatTempoS(s) {
+  if (!s || s <= 0) return '—';
+  return `${Math.floor(s/60)}m${String(Math.floor(s%60)).padStart(2,'0')}s`;
+}
+
+// ── Render principal ─────────────────────────────────────────
+function buildAlunoData() {
+  const alunos = ALUNOS_POR_TURMA[turmaAtual] || [];
+  return alunos.map(nome => {
+    const controleKey = avKey(nome);
+    const controleAluno = dadosControle[controleKey] || null;
+    const resultadosAluno = dadosResultados.filter(r => r.aluno === nome && r.turma === turmaAtual);
+    const tipo = calcStatus(controleAluno, resultadosAluno);
+    const meta = statusMeta(tipo);
+    const gRestMs = controleAluno ? Math.max(0, DURACAO_GLOBAL_MS - (Date.now() - controleAluno.inicio_global)) : DURACAO_GLOBAL_MS;
+    const melhorNq  = controleAluno?.melhor_nota_quiz || 0;
+    const melhorPts = controleAluno?.melhor_pontuacao || 0;
+    const tentUsadas = controleAluno?.tentativas_realizadas || 0;
+    return { nome, tipo, meta, controleAluno, resultadosAluno, gRestMs, melhorNq, melhorPts, tentUsadas };
+  });
+}
+
+function renderPage() {
+  if (!turmaAtual || !atividadeAtual) return;
+  const dados = buildAlunoData();
+
+  const total        = dados.length;
+  const concluidos   = dados.filter(d => isConcluido(d.tipo)).length;
+  const emAndamento  = dados.filter(d => d.tipo === 'em_andamento').length;
+  const pausados     = dados.filter(d => d.tipo === 'pausado').length;
+  const naoIniciou   = dados.filter(d => d.tipo === 'nao_iniciou').length;
+
+  const pendentes  = dados.filter(d => !isConcluido(d.tipo)).sort((a,b) => a.meta.order - b.meta.order);
+  const concluidos2 = dados.filter(d => isConcluido(d.tipo)).sort((a,b) => b.melhorPts - a.melhorPts);
+
+  let html = `
+    <div class="stats-bar">
+      <div class="stat-box"><div class="stat-val">${total}</div><div class="stat-lbl">Total</div></div>
+      <div class="stat-box"><div class="stat-val vermelho">${emAndamento}</div><div class="stat-lbl">Jogando</div></div>
+      <div class="stat-box"><div class="stat-val amarelo">${pausados}</div><div class="stat-lbl">Pausados</div></div>
+      <div class="stat-box"><div class="stat-val cinza">${naoIniciou}</div><div class="stat-lbl">Pendentes</div></div>
+      <div class="stat-box"><div class="stat-val verde">${concluidos}</div><div class="stat-lbl">Concluídos</div></div>
+    </div>
+    <div class="refresh-info"><div class="refresh-dot"></div>Atualização em tempo real</div>`;
+
+  if (pendentes.length) {
+    html += `<div class="section-label">Pendentes <span class="section-count">${pendentes.length}</span></div>
+    <div class="aluno-grid" id="grid-pendentes">${pendentes.map(d => cardHTML(d)).join('')}</div>`;
+  }
+
+  if (concluidos2.length) {
+    html += `<div class="section-label">Concluídos <span class="section-count">${concluidos2.length}</span></div>
+    <div class="aluno-grid" id="grid-concluidos">${concluidos2.map(d => cardHTML(d)).join('')}</div>`;
+  }
+
+  html += `<div class="page-footer-actions">
+    <button class="btn-acao" style="border-color:#16A34A;color:#16A34A;background:transparent" onclick="exportarCSV()">📥 Exportar CSV</button>
+    <button class="btn-acao encerrar-tudo" onclick="pedirEncerrarAtividade()">⛔ Encerrar atividade para todos</button>
+  </div>`;
+
+  document.getElementById("content").innerHTML = html;
+}
+
+function cardHTML(d) {
+  const gRest = Math.max(0, DURACAO_GLOBAL_MS - (Date.now() - (d.controleAluno?.inicio_global || Date.now())));
+  const pct   = d.controleAluno ? (gRest / DURACAO_GLOBAL_MS * 100) : 100;
+  const barColor = pct > 40 ? '#22C55E' : pct > 15 ? '#F59E0B' : '#EF4444';
+  const timerStr = d.controleAluno ? formatTempo(gRest) : '—';
+  const nqStr  = d.melhorNq  > 0 ? d.melhorNq.toFixed(1)  : '—';
+  const ptsStr = d.melhorPts > 0 ? String(d.melhorPts)     : '—';
+
+  return `<div class="aluno-card ${d.meta.cls}" onclick="abrirModal('${d.nome.replace(/'/g,"\\'")}')">
+    <div class="card-header">
+      <div class="card-nome">${d.nome}</div>
+      <span class="status-badge ${d.meta.badgeCls}">${d.meta.label}</span>
+    </div>
+    <div class="card-metrics">
+      <div class="cm-box"><div class="cm-val destaque">${d.tentUsadas}/${MAX_TENTATIVAS}</div><div class="cm-lbl">Tentativas</div></div>
+      <div class="cm-box"><div class="cm-val">${nqStr}</div><div class="cm-lbl">Melhor quiz</div></div>
+      <div class="cm-box"><div class="cm-val">${ptsStr}</div><div class="cm-lbl">Melhor F2</div></div>
+    </div>
+    <div class="card-timer" data-aluno="${d.nome.replace(/"/g,'&quot;')}">
+      <span style="font-size:10px">⏱ ${timerStr}</span>
+      <div class="timer-bar-wrap"><div class="timer-bar-fill" style="width:${pct.toFixed(1)}%;background:${barColor}"></div></div>
+      <span style="font-size:10px;color:var(--text-muted)">${pct < 100 ? pct.toFixed(0)+'%' : ''}</span>
+    </div>
+  </div>`;
+}
+
+function atualizarTimers() {
+  document.querySelectorAll('.card-timer[data-aluno]').forEach(el => {
+    const nome = el.dataset.aluno;
+    const controleKey = avKey(nome);
+    const ctrl = dadosControle[controleKey];
+    if (!ctrl) return;
+    const gRest = Math.max(0, DURACAO_GLOBAL_MS - (Date.now() - ctrl.inicio_global));
+    const pct   = gRest / DURACAO_GLOBAL_MS * 100;
+    const barColor = pct > 40 ? '#22C55E' : pct > 15 ? '#F59E0B' : '#EF4444';
+    const timerSpan = el.querySelector('span');
+    if (timerSpan) timerSpan.textContent = `⏱ ${formatTempo(gRest)}`;
+    const bar = el.querySelector('.timer-bar-fill');
+    if (bar) { bar.style.width = pct.toFixed(1)+'%'; bar.style.background = barColor; }
+    const pctSpan = el.querySelector('span:last-child');
+    if (pctSpan) pctSpan.textContent = pct < 100 ? pct.toFixed(0)+'%' : '';
+  });
+}
+
+// ── Modal detalhes ───────────────────────────────────────────
+window.abrirModal = function(nome) {
+  alunoSelecionado = nome;
+  renderModal(nome);
+  document.getElementById("modal-ov").style.display = "flex";
+};
+
+window.fecharModal = function(e) {
+  if (e && e.target !== document.getElementById("modal-ov")) return;
+  document.getElementById("modal-ov").style.display = "none";
+  alunoSelecionado = null;
+};
+
+function renderModal(nome) {
+  const controleKey = avKey(nome);
+  const ctrl = dadosControle[controleKey] || null;
+
+  // Diagnóstico: logar todos os resultados encontrados para este aluno
+  const allForAluno = dadosResultados.filter(r => r.aluno === nome);
+  console.log('[acomp] renderModal:', nome, '| turma:', turmaAtual, '| atividade:', atividadeAtual);
+  console.log('[acomp] dadosResultados total:', dadosResultados.length, '| para este aluno:', allForAluno.length);
+  if (allForAluno.length) console.log('[acomp] resultados do aluno:', allForAluno.map(r => ({ aluno:r.aluno, turma:r.turma, atividade:r.atividade, modo:r.modo, concluido:r.concluido, id:r.id })));
+
+  // Filtra por aluno+turma+concluido; não filtra por modo para compatibilidade com dados antigos
+  const resultados = dadosResultados.filter(r => r.aluno === nome && r.turma === turmaAtual && r.concluido)
+    .sort((a,b) => (a.ts_inicio||0) - (b.ts_inicio||0));
+  console.log('[acomp] resultados filtrados (concluidos):', resultados.length);
+
+  const tipo = calcStatus(ctrl, dadosResultados.filter(r => r.aluno === nome && r.turma === turmaAtual));
+  const meta = statusMeta(tipo);
+
+  const gRestMs = ctrl ? Math.max(0, DURACAO_GLOBAL_MS - (Date.now() - ctrl.inicio_global)) : DURACAO_GLOBAL_MS;
+  const gRestPct = ctrl ? (gRestMs / DURACAO_GLOBAL_MS * 100) : 100;
+  const tentUsadas = ctrl?.tentativas_realizadas || 0;
+
+  document.getElementById("modal-title").textContent = nome;
+
+  let body = `
+    <div class="modal-section">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+        <span class="status-badge ${meta.badgeCls}" style="font-size:12px;padding:5px 12px">${meta.label}</span>
+        <span style="font-size:12px;color:var(--text-muted)">${tentUsadas} / ${MAX_TENTATIVAS} tentativas usadas</span>
+        <span style="font-size:12px;color:var(--text-muted);margin-left:auto" id="modal-timer-disp">⏱ Global: ${formatTempo(gRestMs)}</span>
+      </div>
+      <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:4px">
+        <div style="height:100%;width:${gRestPct.toFixed(1)}%;background:${gRestPct>40?'#22C55E':gRestPct>15?'#F59E0B':'#EF4444'};border-radius:3px;transition:width .5s" id="modal-timer-bar"></div>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);text-align:right">${formatTempo(gRestMs)} restantes</div>
+    </div>`;
+
+  if (resultados.length > 0) {
+    body += `<div class="modal-section">
+      <div class="modal-section-title">Tentativas realizadas</div>`;
+
+    // Mini chart
+    const maxPts = Math.max(1, ...resultados.map(r => r.pontuacao || 0));
+    const maxNq  = Math.max(1, ...resultados.map(r => r.nota_quiz  || 0));
+    body += `<div style="margin-bottom:14px">
+      <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">Evolução · pontos ranking</div>
+      <div class="mini-chart">`;
+    resultados.forEach((r, i) => {
+      const hPts = ((r.pontuacao||0) / maxPts * 44).toFixed(0);
+      const col  = i === resultados.length - 1 ? '#2563EB' : '#93C5FD';
+      body += `<div class="mini-bar-wrap"><div class="mini-bar" style="height:${hPts}px;background:${col}"></div><div class="mini-bar-lbl">T${i+1}<br>${r.pontuacao||0}</div></div>`;
+    });
+    body += `</div></div>`;
+
+    resultados.forEach((r, i) => {
+      const tGastoStr  = r.tempo ? r.tempo : '—';
+      const nqStr  = r.nota_quiz  != null ? r.nota_quiz.toFixed(1)  : '—';
+      const ptsStr = r.pontuacao  != null ? r.pontuacao  : '—';
+      const f1str  = r.pontos_fase1 != null ? `${r.pontos_fase1}/12` : '—';
+      const dataStr = r.data ? r.data.split(' ')[0] : '—';
+      const horaStr = r.data ? r.data.split(' ')[1] : '';
+      body += `<div class="tent-row">
+        <div class="tent-num">T${i+1}</div>
+        <div class="tent-metric"><div class="tent-metric-val" style="color:#2563EB">${nqStr}/10</div><div class="tent-metric-lbl">Nota quiz</div></div>
+        <div class="tent-metric"><div class="tent-metric-val">${f1str}</div><div class="tent-metric-lbl">Pontos F1</div></div>
+        <div class="tent-metric"><div class="tent-metric-val" style="color:#16A34A">${ptsStr}</div><div class="tent-metric-lbl">Rank pts</div></div>
+        <div style="font-size:10px;color:var(--text-muted);text-align:right">${dataStr}<br>${horaStr}<br>${tGastoStr}</div>
+      </div>`;
+    });
+
+    body += `</div>`;
+  } else {
+    body += `<div style="padding:12px 0;font-size:13px;color:var(--text-muted)">Nenhuma tentativa concluída ainda.</div>`;
+  }
+
+  // Ações do professor
+  const tipoAtual = calcStatus(ctrl, dadosResultados.filter(r => r.aluno === nome && r.turma === turmaAtual));
+  const nomeEsc = nome.replace(/'/g,"\\'");
+
+  const urlResultados = `/professor/acompanhamento.html?atividade=${encodeURIComponent(atividadeAtual)}&aluno=${encodeURIComponent(nome)}&modo=avaliacao_plus`;
+  body += `<div class="acoes-prof">
+    <button class="btn-acao iniciar" onclick="iniciarCronometro('${nomeEsc}')">⏱ Iniciar cronômetro</button>
+    <button class="btn-acao resetar" onclick="resetarTentativas('${nomeEsc}')">🔄 Resetar tentativas</button>
+    ${tipoAtual === 'em_andamento' ? `<button class="btn-acao encerrar-sessao" onclick="forcarConclusao('${nomeEsc}')">⏩ Forçar conclusão</button>` : ''}
+    <a href="${urlResultados}" class="btn-acao" style="border-color:#16A34A;color:#16A34A;background:transparent;text-decoration:none">📊 Ver resultados</a>
+  </div>`;
+
+  document.getElementById("modal-body").innerHTML = body;
+}
+
+function atualizarModalTimer(nome) {
+  const ctrl = dadosControle[avKey(nome)];
+  if (!ctrl) return;
+  const gRestMs = Math.max(0, DURACAO_GLOBAL_MS - (Date.now() - ctrl.inicio_global));
+  const pct = gRestMs / DURACAO_GLOBAL_MS * 100;
+  const el = document.getElementById("modal-timer-disp");
+  if (el) el.textContent = `⏱ Global: ${formatTempo(gRestMs)}`;
+  const bar = document.getElementById("modal-timer-bar");
+  if (bar) { bar.style.width = pct.toFixed(1)+'%'; bar.style.background = pct>40?'#22C55E':pct>15?'#F59E0B':'#EF4444'; }
+}
+
+// ── Ações do professor ───────────────────────────────────────
+window.iniciarCronometro = async function(nome) {
+  if (!confirm(`Iniciar cronômetro de 30 minutos para ${nome}?\n\nIsso dará acesso à Avaliação+ agora.`)) return;
+  const controleRef = ref(db, `avaliacao_controle/${avKey(turmaAtual+'|'+atividadeAtual)}/${avKey(nome)}`);
+  await set(controleRef, {
+    inicio_global: Date.now(),
+    tentativas_realizadas: 0,
+    melhor_pontuacao: 0, melhor_bruta: 0, melhor_nota_quiz: 0,
+  });
+  renderModal(nome);
+};
+
+window.resetarTentativas = async function(nome) {
+  if (!confirm(`Zerar as tentativas de ${nome}?\n\nO cronômetro global continuará rodando, mas o aluno poderá fazer novas tentativas.`)) return;
+  const controleRef = ref(db, `avaliacao_controle/${avKey(turmaAtual+'|'+atividadeAtual)}/${avKey(nome)}`);
+  await update(controleRef, { tentativas_realizadas: 0 });
+  renderModal(nome);
+};
+
+window.forcarConclusao = async function(nome) {
+  if (!confirm(`Forçar conclusão de ${nome}?\n\nIsso esgota todas as tentativas. A sessão atual terminará sem pontuação adicional.`)) return;
+  const controleRef = ref(db, `avaliacao_controle/${avKey(turmaAtual+'|'+atividadeAtual)}/${avKey(nome)}`);
+  await update(controleRef, { tentativas_realizadas: MAX_TENTATIVAS });
+  renderModal(nome);
+};
+
+window.pedirEncerrarAtividade = function() {
+  if (!confirm(`Encerrar a atividade "${atividadeAtual}" para a turma ${turmaAtual}?\n\nOs alunos com sessões abertas serão bloqueados imediatamente.`)) return;
+  encerrarAtividade();
+};
+
+async function encerrarAtividade() {
+  try {
+    await setAtividadeStatus(turmaAtual, atividadeAtual, 'encerrada', 0);
+    alert(`Atividade encerrada para a turma ${turmaAtual}.`);
+  } catch(e) {
+    alert('Erro ao encerrar: ' + e.message);
+  }
+}
+
+// ── Export CSV ───────────────────────────────────────────────
+window.exportarCSV = function() {
+  if (!turmaAtual || !atividadeAtual) return;
+  const dados = buildAlunoData();
+  const linhas = [['Aluno','Status','Tentativas','Melhor Quiz','Melhor F2','Tempo restante']];
+  dados.forEach(d => {
+    const gRest = d.controleAluno ? Math.max(0, DURACAO_GLOBAL_MS - (Date.now() - d.controleAluno.inicio_global)) : DURACAO_GLOBAL_MS;
+    linhas.push([
+      d.nome,
+      d.meta.label.replace(/[^\w\s]/g,'').trim(),
+      `${d.tentUsadas}/${MAX_TENTATIVAS}`,
+      d.melhorNq > 0 ? d.melhorNq.toFixed(1) : '—',
+      d.melhorPts > 0 ? d.melhorPts : '—',
+      d.controleAluno ? formatTempo(gRest) : '—',
+    ]);
+  });
+  const csv = linhas.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['﻿'+csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = `acomp_${atividadeAtual}_${turmaAtual}.csv`; a.click();
+  URL.revokeObjectURL(url);
+};
+
+// ── Esc fecha modal ──────────────────────────────────────────
+document.addEventListener('keydown', e => { if (e.key === 'Escape') window.fecharModal(); });
+
+// ── Limpeza ao sair ──────────────────────────────────────────
+window.addEventListener("beforeunload", () => { limparListeners(); });
+</script>
+</body>
+</html>

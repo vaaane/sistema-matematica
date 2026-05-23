@@ -66,7 +66,7 @@
 <script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
 import { LISTA_ATIVIDADES } from "/js/constants.js";
-import { getResultados, listenRankingAtividade, getAlunoPreferencia } from "/js/db.js";
+import { getResultados, getAlunoPreferencia } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 import { saveRankPos, applyTopRankVisuals } from "/js/toprank.js";
 import { initTopNotif } from "/js/topnotif.js";
@@ -256,66 +256,126 @@ function renderPodium(lista, { showTurma = true, size = 'medium' } = {}) {
   ${groups.length >= 2 ? diffsHtml() : ''}`;
 }
 
-// ── Listener de atividade ─────────────────────────────────────
-let tabAtual  = 'geral';
-let ativSel   = LISTA_ATIVIDADES[0]?.nome || '';
-let unsubAtiv = null;
+// ── Por Atividade ─────────────────────────────────────────────
+let tabAtual   = 'geral';
+let ativSel    = LISTA_ATIVIDADES[0]?.nome || '';
+let modoAtivSel = '';
 
 function abrirAtividade(nome) {
+  const modoShouldReset = nome !== ativSel;
   ativSel = nome;
   document.querySelectorAll('.ativ-btn').forEach(b =>
     b.classList.toggle('active', b.dataset.ativ === nome));
-  if (unsubAtiv) { unsubAtiv(); unsubAtiv = null; }
-  const elTurma = document.getElementById('rank-ativ-turma');
-  const elGeral = document.getElementById('rank-ativ-geral');
-  if (!elTurma || !elGeral) return;
-  elTurma.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px">Aguardando…</div>';
-  elGeral.innerHTML = '';
-  unsubAtiv = listenRankingAtividade(nome, ranking => {
-    const listaTurma = ranking.filter(r => r.turma === turma).slice(0, 10);
-    const listaGeral = ranking.slice(0, 10);
-    renderAtivTurma(listaTurma, elTurma);
-    renderAtivGeral(listaGeral, elGeral);
-  });
-}
 
-// Atividade: rows com cores top 3
-function rowAtiv(r, pos, dest, showTurma) {
-  const pts = r.pontuacao_bruta || r.pontuacao || 0;
-  const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
-  const colorClass = pos === 1 ? 'rank-gold' : pos === 2 ? 'rank-silver' : pos === 3 ? 'rank-bronze' : '';
-  const atrasoTag = r.com_abatimento ? ' <span style="font-size:10px;color:#D97706">⏰</span>' : '';
-  return `<div class="rank-row ${colorClass}${dest ? ' destaque' : ''}">
-    <div class="rank-pos">${medal}</div>
-    <div style="flex:1;min-width:0">
-      <div class="rank-nome">${r.aluno}${dest ? ' ★' : ''}${atrasoTag}</div>
-      ${showTurma ? `<div class="rank-sub">Turma ${r.turma}</div>` : ''}
-    </div>
-    <div class="rank-pts">${pts}</div>
-  </div>`;
-}
+  const resultadosAtiv = todos.filter(r => r.atividade === nome && r.concluido && r.aluno);
+  const modosPresentes  = new Set(resultadosAtiv.map(r => r.modo || 'competicao_plus'));
+  const temComp   = [...modosPresentes].some(m => m !== 'avaliacao_plus');
+  const temAvPlus = modosPresentes.has('avaliacao_plus');
 
-function renderAtivTurma(lista, el) {
-  if (!lista.length) {
-    el.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:10px 16px">Nenhum resultado da sua turma ainda.</p>';
-    return;
+  if (modoShouldReset || !modoAtivSel ||
+      (!temComp && modoAtivSel !== 'avaliacao_plus') ||
+      (!temAvPlus && modoAtivSel === 'avaliacao_plus')) {
+    modoAtivSel = (temAvPlus && !temComp) ? 'avaliacao_plus' : 'competicao_plus';
   }
-  let pos = 0, lastPts = null;
-  el.innerHTML = lista.map(r => {
-    const pts = r.pontuacao || 0;
-    if (pts !== lastPts) { pos++; lastPts = pts; }
-    return rowAtiv(r, pos, alunos.includes(r.aluno), false);
-  }).join('');
+
+  const navEl = document.getElementById('ativ-mode-nav');
+  if (!navEl) return;
+
+  if (temComp && temAvPlus) {
+    navEl.innerHTML = `<div class="tab-nav" style="margin-bottom:12px">
+      <button id="atab-comp"   onclick="mudarModoAtiv('competicao_plus')" class="${modoAtivSel !== 'avaliacao_plus' ? 'active' : ''}">⚔️ Competição+</button>
+      <button id="atab-avplus" onclick="mudarModoAtiv('avaliacao_plus')"  class="${modoAtivSel === 'avaliacao_plus'  ? 'active' : ''}">📝 Avaliação+</button>
+    </div>`;
+  } else {
+    navEl.innerHTML = '';
+  }
+  renderAtivMode();
 }
 
-function renderAtivGeral(lista, el) {
-  if (!lista.length) { el.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:10px 16px">Sem resultados ainda.</p>'; return; }
-  let pos = 0, lastPts = null;
-  el.innerHTML = lista.map(r => {
-    const pts = r.pontuacao || 0;
-    if (pts !== lastPts) { pos++; lastPts = pts; }
-    return rowAtiv(r, pos, alunos.includes(r.aluno), true);
-  }).join('');
+window.mudarModoAtiv = function(modo) {
+  modoAtivSel = modo;
+  document.getElementById('atab-comp')?.classList.toggle('active', modo !== 'avaliacao_plus');
+  document.getElementById('atab-avplus')?.classList.toggle('active', modo === 'avaliacao_plus');
+  renderAtivMode();
+};
+
+function renderAtivMode() {
+  const el = document.getElementById('ativ-mode-content');
+  if (!el) return;
+  const resultadosAtiv = todos.filter(r => r.atividade === ativSel && r.concluido && r.aluno);
+
+  if (modoAtivSel === 'avaliacao_plus') {
+    const avResults = resultadosAtiv.filter(r => r.modo === 'avaliacao_plus');
+    const melhor = {};
+    for (const r of avResults) {
+      const nq = r.nota_quiz ?? 0, pts = r.pontuacao ?? 0;
+      const prev = melhor[r.aluno];
+      if (!prev || nq > prev.nota_quiz || (nq === prev.nota_quiz && pts > prev.pts))
+        melhor[r.aluno] = { aluno: r.aluno, turma: r.turma || '?', nota_quiz: nq, pts };
+    }
+    const ranking = Object.values(melhor).sort((a, b) => b.nota_quiz - a.nota_quiz || b.pts - a.pts);
+    if (!ranking.length) {
+      el.innerHTML = '<div class="card" style="padding:16px;font-size:13px;color:var(--text-muted)">Sem resultados de Avaliação+ para esta atividade.</div>';
+      return;
+    }
+    let dp = 0, lastNQ = null, lastPts = null;
+    const rows = ranking.slice(0, 20).map(r => {
+      if (r.nota_quiz !== lastNQ || r.pts !== lastPts) { dp++; lastNQ = r.nota_quiz; lastPts = r.pts; }
+      const pos = dp, medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
+      const isMe = alunos.includes(r.aluno);
+      const cc = pos === 1 ? 'rank-gold' : pos === 2 ? 'rank-silver' : pos === 3 ? 'rank-bronze' : '';
+      return `<div class="rank-row ${cc}${isMe ? ' destaque' : ''}">
+        <div class="rank-pos">${medal}</div>
+        <div style="flex:1;min-width:0">
+          <div class="rank-nome">${r.aluno}${isMe ? ' ★' : ''}</div>
+          <div class="rank-sub">Turma ${r.turma} · ${r.pts} pts total</div>
+        </div>
+        <div class="rank-pts" style="color:#7C3AED">${r.nota_quiz.toFixed(1)}<div class="rank-pts-label">nota</div></div>
+      </div>`;
+    }).join('');
+    el.innerHTML = `<div class="card" style="padding:0">${rows}</div>`;
+  } else {
+    const compResults = resultadosAtiv.filter(r => r.modo !== 'avaliacao_plus');
+    const melhor = {};
+    for (const r of compResults) {
+      const pts = r.pontuacao || 0;
+      if (!melhor[r.aluno] || pts > melhor[r.aluno].pts)
+        melhor[r.aluno] = { aluno: r.aluno, turma: r.turma || '?', pts };
+    }
+    const ranking = Object.values(melhor).sort((a, b) => b.pts - a.pts);
+    if (!ranking.length) {
+      el.innerHTML = '<div class="card" style="padding:16px;font-size:13px;color:var(--text-muted)">Sem resultados de Competição+ para esta atividade.</div>';
+      return;
+    }
+    const buildAtivRows = (lista, showTurmaCol) => {
+      if (!lista.length) return `<p style="font-size:13px;color:var(--text-muted);padding:10px 16px">${showTurmaCol ? 'Sem resultados ainda.' : 'Nenhum resultado da sua turma ainda.'}</p>`;
+      let pos = 0, lastP = null;
+      return lista.map(r => {
+        if (r.pts !== lastP) { pos++; lastP = r.pts; }
+        const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
+        const isMe = alunos.includes(r.aluno);
+        const cc = pos === 1 ? 'rank-gold' : pos === 2 ? 'rank-silver' : pos === 3 ? 'rank-bronze' : '';
+        return `<div class="rank-row ${cc}${isMe ? ' destaque' : ''}">
+          <div class="rank-pos">${medal}</div>
+          <div style="flex:1;min-width:0">
+            <div class="rank-nome">${r.aluno}${isMe ? ' ★' : ''}</div>
+            ${showTurmaCol ? `<div class="rank-sub">Turma ${r.turma}</div>` : ''}
+          </div>
+          <div class="rank-pts">${r.pts}</div>
+        </div>`;
+      }).join('');
+    };
+    el.innerHTML = `<div class="grid-2" style="align-items:start">
+      <div>
+        <div class="rank-section-title">Sua Turma (Top 10)</div>
+        <div class="card" style="padding:0">${buildAtivRows(ranking.filter(r => r.turma === turma).slice(0, 10), false)}</div>
+      </div>
+      <div>
+        <div class="rank-section-title">Top 10 Geral</div>
+        <div class="card" style="padding:0">${buildAtivRows(ranking.slice(0, 10), true)}</div>
+      </div>
+    </div>`;
+  }
 }
 
 window.mudarTab = function(tab) {
@@ -324,8 +384,7 @@ window.mudarTab = function(tab) {
     document.getElementById(`tab-${t}`)?.classList.toggle('active', tab === t);
     document.getElementById(`panel-${t}`).style.display = tab === t ? '' : 'none';
   });
-  if (tab === 'ativ') { abrirAtividade(ativSel); }
-  if (tab !== 'ativ' && unsubAtiv) { unsubAtiv(); unsubAtiv = null; }
+  if (tab === 'ativ') abrirAtividade(ativSel);
 };
 
 // ── Construir linhas ──────────────────────────────────────────
@@ -436,23 +495,13 @@ document.getElementById('content').innerHTML = `
 
   <div id="panel-ativ" style="display:none">
     <div class="ativ-sel" id="ativ-sel">${ativBtns}</div>
-    <div class="grid-2" style="align-items:start">
-      <div>
-        <div class="rank-section-title">Sua Turma (Top 10) <span class="live-tag">ao vivo</span></div>
-        <div class="card" style="padding:0" id="rank-ativ-turma"></div>
-      </div>
-      <div>
-        <div class="rank-section-title">Top 10 Geral</div>
-        <div class="card" style="padding:0" id="rank-ativ-geral"></div>
-      </div>
-    </div>
+    <div id="ativ-mode-nav"></div>
+    <div id="ativ-mode-content"></div>
   </div>`;
 
 document.querySelectorAll('.ativ-btn').forEach(b => {
   b.addEventListener('click', () => abrirAtividade(b.dataset.ativ));
 });
-
-window.addEventListener('beforeunload', () => { if (unsubAtiv) unsubAtiv(); });
 </script>
 </body>
 </html>

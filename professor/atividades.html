@@ -59,6 +59,19 @@
         <label class="modal-field-label">% da nota</label>
         <input type="number" class="input" id="inp-percentual" value="100" min="0" max="100" placeholder="0 – 100"/>
       </div>
+      <div class="modal-field">
+        <label class="modal-field-label">Modo</label>
+        <div class="modo-picker">
+          <div class="modo-card selected" id="modo-competicao" onclick="selecionarModo('competicao_plus')">
+            <div class="modo-radio"></div>
+            <div><div class="modo-nome">⚔️ Competição+</div><div class="modo-desc">Ranking ao vivo · sem limite de tentativas</div></div>
+          </div>
+          <div class="modo-card" id="modo-avaliacao" onclick="selecionarModo('avaliacao_plus')">
+            <div class="modo-radio"></div>
+            <div><div class="modo-nome">📝 Avaliação+</div><div class="modo-desc">Quiz + ranking · 3 tentativas · 30 min por aluno</div></div>
+          </div>
+        </div>
+      </div>
       <div class="modal-btn-bar" id="modal-btn-bar">
         <button class="btn btn-blue" style="flex:1;justify-content:center" onclick="liberar()">
           <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -130,7 +143,6 @@ LISTA_ATIVIDADES.forEach(a => { selAtiv.innerHTML += `<option value="${a.nome}">
 const selTurma = document.getElementById("sel-turma");
 Object.keys(ALUNOS_POR_TURMA).forEach(t => { selTurma.innerHTML += `<option value="${t}">Turma ${t}</option>`; });
 
-window.abrirForm = () => document.getElementById("modal-overlay").classList.add("open");
 window.fecharForm = () => document.getElementById("modal-overlay").classList.remove("open");
 
 function flash(msg, tipo="success") {
@@ -186,6 +198,7 @@ window.reativar = async function(turma, atividade, histId) {
 
 let _histCache = [];
 let _histFiltroTurma = null;
+let _statusMapCache = {};
 
 function renderHistLib() {
   const histLib = document.getElementById("hist-lib");
@@ -215,7 +228,13 @@ function renderHistLib() {
           <span style="white-space:nowrap">✅ Liberada ${h.liberado_em || ''} (${pctInicial}%)</span>${timeline}
         </div>
       </div>
-      <span class="badge ${h.cancelado_em?'badge-orange':'badge-green'}">${h.cancelado_em?'Cancelada':'Encerrada'}</span>
+      ${(() => {
+        if (h.cancelado_em) return `<span class="badge badge-orange">Cancelada</span>`;
+        const st = (_statusMapCache[`${h.turma}|${h.atividade}`]?.status) || 'ativa';
+        return st === 'encerrada'
+          ? `<span class="badge badge-red">Encerrada</span>`
+          : `<span class="badge badge-green">Ativa</span>`;
+      })()}
     </div>`;
   }).join('');
 }
@@ -232,6 +251,7 @@ async function carregarAeH() {
   const gen = ++_loadGen;
   const [ativas, hist, statusMap] = await Promise.all([getLiberadas(), getLiberacoesHistorico(), getAllAtividadeStatus()]);
   if (gen !== _loadGen) return;
+  _statusMapCache = statusMap;
 
   const getStatus = (turma, atividade) => statusMap[`${turma}|${atividade}`] || { status: 'ativa', percentual: 100 };
 
@@ -253,7 +273,7 @@ async function carregarAeH() {
       <div style="flex:1;min-width:180px">
         <div style="font-size:14px;font-weight:700">${lib.atividade}</div>
         <div style="font-size:12px;color:var(--text-muted)">
-          Turma ${lib.turma} · ${isEncerrada ? '<span style="color:#B91C1C;font-weight:700">⛔ Encerrada</span>' : `${st.percentual ?? 100}% da nota · Competição+`}
+          Turma ${lib.turma} · ${isEncerrada ? '<span style="color:#B91C1C;font-weight:700">⛔ Encerrada</span>' : `${st.percentual ?? 100}% da nota · ${MODO_LABEL[lib.modo] || 'Competição+'}`}
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
@@ -292,22 +312,25 @@ async function carregarAeH() {
 }
 
 async function executarLiberacao(atividade, turma, percentual) {
-  const modo = 'competicao_plus';
+  const modo = _modoSelecionado;
   const agora = dataAgora();
-  const ativas = await getLiberadas();
-  for (const item of ativas) {
-    if (item.atividade === atividade && item.turma === turma) await deleteLiberada(item.id);
-  }
-  // Passa o percentual real para o status map (não hardcoda 100%)
   await setAtividadeStatus(turma, atividade, 'ativa', percentual);
   const histId = await addLiberacaoHistorico({ atividade, turma, percentual, modo, liberado_em: agora });
-  await addLiberada({ atividade, turma, percentual, modo, liberado_em: agora, historico_id: histId });
+  await addLiberada({ atividade, turma, percentual, modo, liberado_em: agora, historico_id: histId, criadoEm: Date.now() });
   fecharForm();
   flash(`✅ ${atividade} — Turma ${turma} liberada (${percentual}% da nota)!`);
   await carregarAeH();
 }
 
-const MODO_LABEL = { classico: "Clássico", competicao: "Competição", competicao_plus: "Competição+" };
+const MODO_LABEL = { classico: "Clássico", competicao: "Competição", competicao_plus: "Competição+", avaliacao_plus: "Avaliação+" };
+
+let _modoSelecionado = 'competicao_plus';
+window.selecionarModo = function(modo) {
+  _modoSelecionado = modo;
+  document.getElementById("modo-competicao").classList.toggle("selected", modo === 'competicao_plus');
+  document.getElementById("modo-avaliacao").classList.toggle("selected",  modo === 'avaliacao_plus');
+};
+window.abrirForm = () => { _modoSelecionado = 'competicao_plus'; selecionarModo('competicao_plus'); document.getElementById("modal-overlay").classList.add("open"); };
 
 window.liberar = async function() {
   const atividade  = document.getElementById("sel-ativ").value;

@@ -51,6 +51,17 @@
     .conq-tip.show{opacity:1;}
     .conq-tip-nome{font-weight:700;font-size:13px;margin-bottom:2px;}
     .conq-tip-desc{font-size:11px;opacity:.8;}
+    .pill{padding:5px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .15s;}
+    .pill.on{border-color:var(--blue);background:var(--blue);color:#fff;}
+    .hist-mode-badge.avplus{background:#F5F3FF;color:#7C3AED;}
+    .fase-sep-bar{display:flex;align-items:center;gap:6px;margin:12px 0 8px}
+    .fase-sep-bar::before,.fase-sep-bar::after{content:'';flex:1;height:1px;background:var(--border)}
+    .fase-sep-label{font-size:10px;font-weight:700;color:var(--text-muted);white-space:nowrap;padding:2px 8px;border:1px solid var(--border);border-radius:10px;letter-spacing:.5px;background:var(--card)}
+    .fase-bloco{margin-bottom:2px}
+    .fase-bloco .fase-header{font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;margin-bottom:6px;display:inline-block}
+    .f1-bloco .fase-header{background:#F5F3FF;color:#7C3AED}
+    .f2-bloco .fase-header{background:#EFF6FF;color:#1D4ED8}
+    .fase-resumo{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
     @media(max-width:480px){
       .hist-header{padding:11px 12px;gap:8px}
       .hist-body{padding:0 12px 12px}
@@ -236,6 +247,12 @@ function renderAbatimento(r) {
   return `<span class="badge-atraso">⏰ ${bruta} pts bruta → ${aplic} pts (${r.percentual_nota}% da nota)</span>`;
 }
 
+function formatMs(ms) {
+  if (!ms || ms <= 0) return '—';
+  const s = Math.round(ms / 1000);
+  return `${Math.floor(s/60)}m${String(s%60).padStart(2,'0')}s`;
+}
+
 function renderPlusItem(r, detalhes, statusMap) {
   const acertos = r.acertos || 0;
   const erros   = r.erros   || 0;
@@ -315,6 +332,91 @@ function renderConquistasBadges(sessaoId, r) {
   </div>`;
 }
 
+window.filtrarHistorico = function(uid, ativNome) {
+  document.querySelectorAll(`[data-ativ-sec="${uid}"]`).forEach(el => {
+    el.style.display = (!ativNome || el.dataset.ativ === ativNome) ? '' : 'none';
+  });
+  document.querySelectorAll(`#hist-pills-${uid} .pill`).forEach(p =>
+    p.classList.toggle('on', p.dataset.ativ === ativNome));
+};
+
+window.filtrarHistModo = function(aUID, modo) {
+  document.querySelectorAll(`[data-modo-sec="${aUID}"]`).forEach(el => {
+    el.style.display = (!modo || el.dataset.modo === modo) ? '' : 'none';
+  });
+  document.querySelectorAll(`#hist-mode-tabs-${aUID} .pill`).forEach(p =>
+    p.classList.toggle('on', p.dataset.modo === modo));
+};
+
+function renderAvPlusItem(r, detalhes, statusMap) {
+  const acertos = r.acertos || 0;
+  const erros   = r.erros   || 0;
+  const taxa = (acertos + erros) > 0 ? Math.round(acertos / (acertos + erros) * 100) : 0;
+  const nq   = typeof r.nota_quiz === 'number' ? r.nota_quiz.toFixed(1) : '—';
+  const pts  = r.pontuacao || 0;
+  const statusInfo = statusMap?.[`${r.turma}|${r.atividade}`];
+  const mostrarRespostas = !statusInfo || statusInfo.status !== 'ativa' || (statusInfo.percentual ?? 100) < 100;
+
+  const f1Qs = detalhes.filter(q => q.fase === 1);
+  const f2Qs = detalhes.filter(q => q.fase === 2);
+
+  const f1pts  = r.pontos_fase1 != null ? r.pontos_fase1 : '—';
+  const f1tempo = r.tempo_fase1_ms ? formatMs(r.tempo_fase1_ms) : null;
+  const f1cred = r.credito_final != null
+    ? (Number.isInteger(r.credito_final) ? r.credito_final : r.credito_final.toFixed(2))
+    : null;
+  const f2bruta = r.pontuacao_bruta || r.pontuacao || 0;
+  const f2rap   = r.acertos_rapidos || 0;
+  const f2combo = r.combo_max || 0;
+  const f2aj    = r.ajudas_usadas || 0;
+
+  return `<div class="hist-item">
+    <div class="hist-header" onclick="toggle(this)">
+      <div style="flex:1">
+        <div class="hist-nome">${r.atividade} <span class="hist-mode-badge avplus">📝 Avaliação+</span></div>
+        <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center">
+          <span class="badge" style="background:#F5F3FF;color:#7C3AED;font-weight:800">📝 ${nq}/10</span>
+          <span class="badge badge-gold">⭐ ${pts} pts</span>
+          <span class="badge badge-green">✅ ${acertos}</span>
+          <span class="badge badge-red">❌ ${erros}</span>
+          <span class="badge badge-blue">📊 ${taxa}%</span>
+          ${r.tentativa_num ? `<span class="badge badge-blue">Tentativa ${r.tentativa_num}</span>` : ''}
+        </div>
+        ${renderConquistasBadges(r.id, r)}
+      </div>
+      <div class="hist-data">${r.data || ''}</div>
+      <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--text-muted)"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+    </div>
+    <div class="hist-body" style="display:none">
+      <div class="fase-bloco f1-bloco">
+        <div class="fase-header">📖 Fase 1 — Quiz</div>
+        <div class="fase-resumo">
+          <span class="badge" style="background:#F5F3FF;color:#7C3AED;font-weight:800">📝 ${nq}/10</span>
+          <span class="badge badge-gold">${f1pts}/12 pts</span>
+          ${f1tempo ? `<span class="badge badge-blue">⏱ ${f1tempo}</span>` : ''}
+          ${f1cred != null ? `<span class="badge badge-green">Crédito final: ${f1cred}</span>` : ''}
+        </div>
+        ${f1Qs.length
+          ? `<div class="plus-q-wrap">${f1Qs.map((q, i) => renderPlusQuestao(q, i, mostrarRespostas)).join('')}</div>`
+          : (detalhes.length === 0 ? '<p style="font-size:12px;color:var(--text-muted);padding-top:4px">Detalhes não disponíveis.</p>' : '')}
+      </div>
+      <div class="fase-sep-bar"><span class="fase-sep-label">FASE 2</span></div>
+      <div class="fase-bloco f2-bloco">
+        <div class="fase-header">⚔️ Fase 2 — Ranking</div>
+        <div class="fase-resumo">
+          <span class="badge badge-gold">⭐ ${f2bruta} pts</span>
+          ${f2rap > 0 ? `<span class="badge" style="background:#EFF6FF;color:#1D4ED8">⚡ ${f2rap} rápidos</span>` : ''}
+          ${f2combo > 1 ? `<span class="badge badge-orange">🔥 combo ×${f2combo}</span>` : ''}
+          ${f2aj > 0 ? `<span class="badge" style="background:#F5F3FF;color:#6D28D9">🎯 ${f2aj} ajudas</span>` : ''}
+        </div>
+        ${f2Qs.length
+          ? `<div class="plus-q-wrap">${f2Qs.map((q, i) => renderPlusQuestao(q, i, mostrarRespostas)).join('')}</div>`
+          : (detalhes.length === 0 ? '<p style="font-size:12px;color:var(--text-muted);padding-top:4px">Detalhes não disponíveis.</p>' : '')}
+      </div>
+    </div>
+  </div>`;
+}
+
 function renderClassicoItem(r, detalhes) {
   const total = (r.acertos || 0) + (r.erros || 0);
   const aproveit = total > 0 ? Math.round((r.acertos || 0) / total * 100) : 0;
@@ -383,6 +485,7 @@ for (const aluno of alunos) {
   const regs = todos.filter(r => r.aluno === aluno && r.concluido)
     .sort((a, b) => (b.pontuacao_bruta || b.pontuacao || 0) - (a.pontuacao_bruta || a.pontuacao || 0));
 
+  const uid = aluno.replace(/\s+/g, '_');
   html += `<div class="aluno-section">
     <div class="aluno-title">
       <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
@@ -399,21 +502,63 @@ for (const aluno of alunos) {
       byAtiv[r.atividade].push(r);
     }
 
+    // Filter pills (only when multiple atividades)
+    const atividades = Object.keys(byAtiv);
+    if (atividades.length > 1) {
+      html += `<div id="hist-pills-${uid}" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px">
+        <button class="pill on" data-ativ="" onclick="filtrarHistorico('${uid}','')">Todas</button>
+        ${atividades.map(n => `<button class="pill" data-ativ="${n.replace(/"/g,'&quot;')}" onclick="filtrarHistorico('${uid}','${n.replace(/'/g,"\\'")}')">${n}</button>`).join('')}
+      </div>`;
+    }
+
+    async function renderSessoes(sessoes) {
+      let s = '';
+      for (const r of sessoes) {
+        const detalhes = (await getDetalhes(r.id)) || [];
+        if (r.modo === 'competicao_plus') s += renderPlusItem(r, detalhes, statusMap);
+        else if (r.modo === 'avaliacao_plus') s += renderAvPlusItem(r, detalhes, statusMap);
+        else s += renderClassicoItem(r, detalhes);
+      }
+      return s;
+    }
+
     for (const [atividade, ativRegs] of Object.entries(byAtiv)) {
-      html += `<div class="ativ-group">`;
+      const modoSet = new Set(ativRegs.map(r => r.modo || 'classico'));
+      const hasComp = modoSet.has('competicao_plus');
+      const hasAv   = modoSet.has('avaliacao_plus');
+      const multiModo = hasComp && hasAv;
+      const aUID = uid + '__' + atividade.replace(/\W/g,'_');
+
+      html += `<div class="ativ-group" data-ativ-sec="${uid}" data-ativ="${atividade.replace(/"/g,'&quot;')}">`;
       html += `<div class="ativ-group-header"><span style="font-weight:700;font-size:12px">${atividade}</span><span style="font-size:11px;color:var(--text-muted)">${ativRegs.length} ${ativRegs.length !== 1 ? 'sessões' : 'sessão'}</span></div>`;
 
-      // Evolution chart (chronological order)
-      if (ativRegs.length >= 2) {
-        const chronoRegs = [...ativRegs].sort((a, b) => (a.criadoEm || 0) - (b.criadoEm || 0));
-        html += renderEvolucaoSVG(chronoRegs);
-      }
-
-      // Items by score descending (highest first)
-      for (const r of ativRegs) {
-        const detalhes = (await getDetalhes(r.id)) || [];
-        if (r.modo === 'competicao_plus') html += renderPlusItem(r, detalhes, statusMap);
-        else html += renderClassicoItem(r, detalhes);
+      if (multiModo) {
+        html += `<div id="hist-mode-tabs-${aUID}" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">
+          <button class="pill on" data-modo="" onclick="filtrarHistModo('${aUID}','')">Todos</button>
+          ${hasComp ? `<button class="pill" data-modo="competicao_plus" onclick="filtrarHistModo('${aUID}','competicao_plus')">⚔️ Competição+</button>` : ''}
+          ${hasAv   ? `<button class="pill" data-modo="avaliacao_plus" onclick="filtrarHistModo('${aUID}','avaliacao_plus')">📝 Avaliação+</button>` : ''}
+        </div>`;
+        const byModo = {};
+        for (const r of ativRegs) {
+          const m = r.modo || 'classico';
+          if (!byModo[m]) byModo[m] = [];
+          byModo[m].push(r);
+        }
+        for (const [modo, modoRegs] of Object.entries(byModo)) {
+          html += `<div data-modo-sec="${aUID}" data-modo="${modo}">`;
+          if (modoRegs.length >= 2) {
+            const cr = [...modoRegs].sort((a,b) => (a.criadoEm||0)-(b.criadoEm||0));
+            html += renderEvolucaoSVG(cr);
+          }
+          html += await renderSessoes(modoRegs);
+          html += `</div>`;
+        }
+      } else {
+        if (ativRegs.length >= 2) {
+          const chronoRegs = [...ativRegs].sort((a, b) => (a.criadoEm || 0) - (b.criadoEm || 0));
+          html += renderEvolucaoSVG(chronoRegs);
+        }
+        html += await renderSessoes(ativRegs);
       }
       html += `</div>`;
     }

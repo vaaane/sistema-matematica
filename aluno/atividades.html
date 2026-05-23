@@ -48,6 +48,8 @@ import { LISTA_ATIVIDADES, MAX_TENTATIVAS_ATIVIDADE } from "/js/constants.js";
 import { contarTentativas, getLiberadasParaTurma, getAlunoPreferencia } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const sess = requireAluno();
 if (!sess) throw new Error();
@@ -86,7 +88,7 @@ for (const lib of liberadas) liberadasMap[lib.atividade] = lib;
 const classicAtivs = LISTA_ATIVIDADES.filter(ativ => {
   const _lib = liberadasMap[ativ.nome];
   const _modo = _lib?.modo || ativ.modo || 'classico';
-  return _modo !== "competicao" && _modo !== "competicao_plus";
+  return _modo !== "competicao" && _modo !== "competicao_plus" && _modo !== "avaliacao_plus";
 });
 
 const bloqueios = {};
@@ -94,7 +96,8 @@ const bloqueios = {};
 // Mark competition activities immediately (no limits)
 for (const ativ of LISTA_ATIVIDADES) {
   if (!classicAtivs.includes(ativ)) {
-    bloqueios[ativ.nome] = { bloqueado: false, bloqueadoPor: [], minRest: 999, tentativas: {}, competicao: true };
+    const _m = liberadasMap[ativ.nome]?.modo || ativ.modo || 'classico';
+    bloqueios[ativ.nome] = { bloqueado: false, bloqueadoPor: [], minRest: 999, tentativas: {}, competicao: true, avaliacao: _m === 'avaliacao_plus' };
   }
 }
 
@@ -116,6 +119,35 @@ if (classicAtivs.length && alunos.length) {
   }
 }
 
+// Load avaliacao_plus controle data to know actual tentativas used
+const MAX_TENT_AV = 3;
+const MIN_TENT_AV_MS = 8 * 60 * 1000;
+function avKey(s) {
+  return btoa(unescape(encodeURIComponent(s))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+}
+const controleAv = {};
+const avPlusAtivs = LISTA_ATIVIDADES.filter(a => {
+  const _m = liberadasMap[a.nome]?.modo || a.modo || 'classico';
+  return _m === 'avaliacao_plus' && !!liberadasMap[a.nome];
+});
+if (avPlusAtivs.length && alunos.length) {
+  await Promise.all(avPlusAtivs.map(async ativ => {
+    try {
+      const k = avKey(turma + '|' + ativ.nome);
+      const snap = await get(ref(db, `avaliacao_controle/${k}/${avKey(alunos[0])}`));
+      controleAv[ativ.nome] = snap.exists() ? snap.val() : null;
+    } catch(e) {}
+  }));
+}
+for (const ativ of avPlusAtivs) {
+  const ctrl = controleAv[ativ.nome];
+  const tentUsadas = ctrl?.tentativas_realizadas || 0;
+  const gRestMs = ctrl ? Math.max(0, 30*60*1000 - (Date.now() - ctrl.inicio_global)) : 30*60*1000;
+  bloqueios[ativ.nome].esgotada = tentUsadas >= MAX_TENT_AV || (!!ctrl && gRestMs < MIN_TENT_AV_MS);
+  bloqueios[ativ.nome].tentUsadas = tentUsadas;
+  bloqueios[ativ.nome].ctrl = ctrl;
+}
+
 clearTimeout(loadTimeout);
 
 content.innerHTML = `
@@ -131,7 +163,7 @@ content.innerHTML = `
   ${liberadas.length ? `
   <div class="alert alert-info" style="margin-bottom:16px">
     <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-    ${liberadas.map(l=>`<strong>${l.atividade}</strong> (${Math.round(l.percentual??100)}% · ${l.tempo_maximo/60}min)`).join(' &nbsp;·&nbsp; ')} disponíve${liberadas.length>1?'is':'l'} agora.
+    ${liberadas.map(l=>`<strong>${l.atividade}</strong> (${Math.round(l.percentual??100)}%${l.tempo_maximo ? ' · '+Math.round(l.tempo_maximo/60)+'min' : ''})`).join(' &nbsp;·&nbsp; ')} disponíve${liberadas.length>1?'is':'l'} agora.
   </div>` : `
   <div class="alert alert-warn" style="margin-bottom:16px">
     <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
@@ -146,7 +178,9 @@ content.innerHTML = `
     const classes     = `ativ-card${isLib&&!isEncerrada?' liberada':''}${(bloq.bloqueado||isEncerrada)?' bloqueada':''}`;
 
     const modoEfetivo = lib?.modo || ativ.modo || 'classico';
-    const url = modoEfetivo === 'competicao_plus'
+    const url = modoEfetivo === 'avaliacao_plus'
+      ? `/aluno/avaliacao_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
+      : modoEfetivo === 'competicao_plus'
       ? `/aluno/competicao_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
       : modoEfetivo === 'competicao'
       ? `/aluno/competicao.html?ativ=${encodeURIComponent(ativ.nome)}`
@@ -157,6 +191,8 @@ content.innerHTML = `
       botao = `<span class="badge badge-orange">Não liberada</span>`;
     } else if (isEncerrada) {
       botao = `<span class="badge badge-red">⛔ Encerrada</span>`;
+    } else if (bloq.avaliacao && bloq.esgotada) {
+      botao = `<span class="badge badge-green">Concluída ✓</span>`;
     } else if (!bloq.competicao && bloq.bloqueado) {
       botao = `<span class="badge badge-red">Bloqueada</span>`;
     } else {
@@ -167,6 +203,19 @@ content.innerHTML = `
 
     const tentInfos = isEncerrada
       ? `<span class="tent-info warn">Atividade encerrada pela professora</span>`
+      : bloq.avaliacao
+      ? (() => {
+          const ctrl = bloq.ctrl;
+          const tentUsadas = bloq.tentUsadas || 0;
+          let timerInfo = '';
+          if (ctrl?.inicio_global) {
+            const ini = new Date(ctrl.inicio_global);
+            const fim = new Date(ctrl.inicio_global + 30*60*1000);
+            const fH = d => d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0');
+            timerInfo = ` · ⏱ ${fH(ini)}–${fH(fim)}`;
+          }
+          return `<span class="tent-info" style="color:#7C3AED">📝 Avaliação+ · ${tentUsadas}/${MAX_TENT_AV} tentativas${timerInfo}</span>`;
+        })()
       : bloq.competicao
       ? `<span class="tent-info" style="color:var(--blue)">Jogue quantas vezes quiser · ao vivo</span>`
       : alunos.map(al => {

@@ -40,6 +40,8 @@
     .conq-tip-nome{font-weight:700;font-size:13px;margin-bottom:2px;}
     .conq-tip-desc{font-size:11px;opacity:.8;}
     @keyframes fadeSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .pill{padding:5px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .15s;}
+    .pill.on{border-color:var(--blue);background:var(--blue);color:#fff;}
     @media(max-width:480px){
       .ativ-liberada{flex-wrap:wrap;gap:10px;padding:14px 14px}
       .ativ-liberada .ativ-info{width:100%}
@@ -79,6 +81,8 @@ import { CONQUISTAS } from "/js/conquistas.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 import { saveRankPos, applyTopRankVisuals } from "/js/toprank.js";
 import { initTopNotif } from "/js/topnotif.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const sess = requireAluno("/index.html");
 if (!sess) throw new Error("não autenticado");
@@ -112,6 +116,25 @@ document.getElementById("topbar-sub").textContent   = `Turma ${turma} · Bom tra
 document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
 
 const [todos, liberadas, conquistasAluno] = await Promise.all([getResultados(), getLiberadasParaTurma(turma), getConquistasByAluno(alunos[0])]);
+
+// ── Avaliação+ controle ───────────────────────────────────────
+const DURACAO_GLOBAL_AV  = 30 * 60 * 1000;
+const MIN_TENT_AV_MS     = 8 * 60 * 1000;
+const MAX_TENT_AV        = 3;
+function avKey(s) {
+  return btoa(unescape(encodeURIComponent(s))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+}
+const controleAv = {};
+const avPlusLibs = liberadas.filter(l => l.modo === 'avaliacao_plus' && l.status !== 'encerrada');
+if (avPlusLibs.length && alunos.length) {
+  await Promise.all(avPlusLibs.map(async l => {
+    try {
+      const k = avKey(turma + '|' + l.atividade);
+      const snap = await get(ref(db, `avaliacao_controle/${k}/${avKey(alunos[0])}`));
+      controleAv[l.atividade] = snap.exists() ? snap.val() : null;
+    } catch(e) {}
+  }));
+}
 
 // ── Ranking (média por atividade) ─────────────────────────────
 function buildRankingMedia(lista) {
@@ -287,7 +310,10 @@ const top3Html = top3Groups.length ? top3Groups.map((g, i) => {
 // ── Helpers ───────────────────────────────────────────────────
 function formatHa(ts) {
   if (!ts) return '';
-  const min = Math.floor((Date.now() - ts) / 60000);
+  const t = +ts;
+  if (!t || isNaN(t) || t < 946684800000) return '';
+  const min = Math.floor((Date.now() - t) / 60000);
+  if (isNaN(min) || min < 0) return 'agora mesmo';
   if (min < 1) return 'agora mesmo';
   if (min < 60) return `há ${min}min`;
   const h = Math.floor(min / 60), m = min % 60;
@@ -381,6 +407,70 @@ if (posGeralMin <= 3) {
   }
 }
 
+// ── Histórico helpers ─────────────────────────────────────────
+function getModoEfetivo(r) {
+  return r.modo || (r.nota_quiz != null ? 'avaliacao_plus' : 'competicao_plus');
+}
+
+function renderHistSessoes(nome, filtroAtiv) {
+  const all = todos.filter(r => r.aluno === nome && r.concluido);
+  const makeRow = (r, labelOverride, showNomeAtiv) => {
+    const mE = getModoEfetivo(r);
+    const isAv = mE === 'avaliacao_plus';
+    const isComp = mE === 'competicao_plus' || mE === 'competicao';
+    const modeTag = isAv
+      ? `<span class="badge" style="background:#F5F3FF;color:#7C3AED;font-size:10px">📝 Avaliação+</span>`
+      : isComp
+      ? `<span class="badge badge-gold" style="font-size:10px">⚔️ Competição+</span>`
+      : '';
+    const scoreHtml = isAv
+      ? `<div style="text-align:right;flex-shrink:0">
+          <div style="font-size:13px;font-weight:700;color:var(--gold)">${r.pontuacao || 0} pts</div>
+          <div style="font-size:11px;font-weight:700;color:#7C3AED">${typeof r.nota_quiz === 'number' ? r.nota_quiz.toFixed(1) : '—'}</div>
+        </div>`
+      : `<span style="font-size:13px;font-weight:700;color:var(--gold);flex-shrink:0">${r.pontuacao_bruta || r.pontuacao || 0} pts</span>`;
+    const label = labelOverride || (showNomeAtiv ? r.atividade : r.atividade);
+    return `<div class="list-row" style="align-items:center">
+      <div class="hist-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</div>
+        ${modeTag ? `<div style="margin-top:3px">${modeTag}</div>` : ''}
+      </div>
+      ${filtroAtiv ? miniSparkline(nome, r.atividade) : ''}
+      ${scoreHtml}
+    </div>`;
+  };
+
+  if (filtroAtiv) {
+    const sessoes = all
+      .filter(r => r.atividade === filtroAtiv)
+      .sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0))
+      .slice(0, 10);
+    if (!sessoes.length) return '<p style="font-size:13px;color:var(--text-muted);padding:6px 0 10px">Nenhuma sessão encontrada.</p>';
+    return sessoes.map((r, i) => makeRow(r, i === 0 ? '→ Mais recente' : `Sessão ${sessoes.length - i}`, false)).join('');
+  } else {
+    const bestByAtiv = {};
+    for (const r of all) {
+      const pts = r.pontuacao_bruta || r.pontuacao || 0;
+      const prev = bestByAtiv[r.atividade];
+      if (!prev || pts > (prev.pontuacao_bruta || prev.pontuacao || 0)) bestByAtiv[r.atividade] = r;
+    }
+    const rows = Object.values(bestByAtiv)
+      .sort((a, b) => (b.pontuacao_bruta || b.pontuacao || 0) - (a.pontuacao_bruta || a.pontuacao || 0));
+    if (!rows.length) return '<p style="font-size:13px;color:var(--text-muted);padding:6px 0 10px">Nenhuma atividade realizada ainda.</p>';
+    return rows.map(r => makeRow(r, r.atividade, true)).join('');
+  }
+}
+
+window.filtrarHistAtiv = function(nome, ativNome) {
+  const uid = nome.replace(/\s+/g, '_');
+  const rowsEl = document.getElementById(`hist-rows-${uid}`);
+  const pillsEl = document.getElementById(`hist-pills-${uid}`);
+  if (rowsEl) rowsEl.innerHTML = renderHistSessoes(nome, ativNome);
+  if (pillsEl) pillsEl.querySelectorAll('.pill').forEach(p =>
+    p.classList.toggle('on', p.dataset.ativ === ativNome));
+};
+
 // ── Render ────────────────────────────────────────────────────
 const liberadasAtivas = liberadas.filter(l => l.status !== 'encerrada');
 const conteudo = document.getElementById("content");
@@ -395,28 +485,54 @@ ${tempoPodioHtml}
         Atividade Liberada
       </div>
       ${liberadasAtivas.length ? liberadasAtivas.map(lib => {
-        const esgotado = tentativasEsgotadas(lib.atividade);
+        const ativDef = LISTA_ATIVIDADES.find(a => a.nome === lib.atividade);
+        const modoEfetivo = lib.modo || ativDef?.modo || 'classico';
+        const url = modoEfetivo === 'avaliacao_plus'
+          ? `/aluno/avaliacao_plus.html?ativ=${encodeURIComponent(lib.atividade)}`
+          : modoEfetivo === 'competicao_plus'
+          ? `/aluno/competicao_plus.html?ativ=${encodeURIComponent(lib.atividade)}`
+          : modoEfetivo === 'competicao'
+          ? `/aluno/competicao.html?ativ=${encodeURIComponent(lib.atividade)}`
+          : `/aluno/jogar.html?ativ=${encodeURIComponent(lib.atividade)}`;
+
+        let infoParagraph = '';
+        let botaoHtml = '';
+
+        if (modoEfetivo === 'avaliacao_plus') {
+          const ctrl = controleAv[lib.atividade];
+          const tentUsadas    = ctrl?.tentativas_realizadas || 0;
+          const tentRestantes = MAX_TENT_AV - tentUsadas;
+          const gRestMs       = ctrl ? DURACAO_GLOBAL_AV - (Date.now() - ctrl.inicio_global) : DURACAO_GLOBAL_AV;
+          const esgotada      = tentRestantes <= 0 || (ctrl && gRestMs < MIN_TENT_AV_MS);
+          let timerInfo = '';
+          if (ctrl?.inicio_global) {
+            const ini = new Date(ctrl.inicio_global);
+            const fim = new Date(ctrl.inicio_global + DURACAO_GLOBAL_AV);
+            const fH  = d => d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0');
+            timerInfo = ` · ⏱ ${fH(ini)}–${fH(fim)}`;
+          }
+          infoParagraph = `${Math.round(lib.percentual??100)}% da nota · 📝 Avaliação+ · ${tentUsadas}/${MAX_TENT_AV} tentativas${timerInfo}`;
+          botaoHtml = esgotada
+            ? `<span style="font-size:12px;font-weight:700;color:var(--green);white-space:nowrap">Concluída ✓</span>`
+            : `<a href="${url}" class="btn btn-blue"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Iniciar</a>`;
+        } else if (modoEfetivo === 'competicao' || modoEfetivo === 'competicao_plus') {
+          infoParagraph = `${Math.round(lib.percentual??100)}% da nota · ⚔️ Competição+${lib.criadoEm ? ` · liberada ${formatHa(lib.criadoEm)}` : ''}`;
+          botaoHtml = `<a href="${url}" class="btn btn-blue"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Iniciar</a>`;
+        } else {
+          const esgotado = tentativasEsgotadas(lib.atividade);
+          infoParagraph = `${Math.round(lib.percentual??100)}% da nota · ${lib.tempo_maximo ? Math.round(lib.tempo_maximo/60) : 7} min${lib.criadoEm ? ` · liberada ${formatHa(lib.criadoEm)}` : ''}`;
+          botaoHtml = esgotado
+            ? `<span style="font-size:12px;font-weight:600;color:var(--text-muted);white-space:nowrap">Tentativas<br>esgotadas</span>`
+            : `<a href="${url}" class="btn btn-blue"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Iniciar</a>`;
+        }
+
         return `<div class="ativ-liberada">
           <div class="ativ-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
           <div class="ativ-info">
             <h3>${lib.atividade}</h3>
-            <p>${Math.round(lib.percentual??100)}% da nota · ${lib.tempo_maximo ? Math.round(lib.tempo_maximo/60) : 7} min${lib.liberado_em ? ` · liberada ${formatHa(lib.liberado_em)}` : ''}</p>
+            <p>${infoParagraph}</p>
           </div>
-          ${(() => {
-            const ativDef = LISTA_ATIVIDADES.find(a => a.nome === lib.atividade);
-            const modoEfetivo = lib.modo || ativDef?.modo || 'classico';
-            const url = modoEfetivo === 'competicao_plus'
-              ? `/aluno/competicao_plus.html?ativ=${encodeURIComponent(lib.atividade)}`
-              : modoEfetivo === 'competicao'
-              ? `/aluno/competicao.html?ativ=${encodeURIComponent(lib.atividade)}`
-              : `/aluno/jogar.html?ativ=${encodeURIComponent(lib.atividade)}`;
-            const ehComp = modoEfetivo === 'competicao' || modoEfetivo === 'competicao_plus';
-            if (!ehComp && esgotado)
-              return `<span style="font-size:12px;font-weight:600;color:var(--text-muted);white-space:nowrap">Tentativas<br>esgotadas</span>`;
-            return `<a href="${url}" class="btn btn-blue">
-              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Iniciar
-            </a>`;
-          })()}
+          ${botaoHtml}
         </div>`;
       }).join('') : `
       <div class="ativ-vazia">
@@ -428,20 +544,22 @@ ${tempoPodioHtml}
     <div class="card">
       <div class="section-label" style="color:var(--orange)">
         <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21L13 13.04V8h-1z"/></svg>
-        Últimas Atividades Realizadas
+        Histórico de Atividades
       </div>
       ${alunos.map(a => {
-        const hist = ultimasAtividades(a);
+        const uid = a.replace(/\s+/g,'_');
+        const all = todos.filter(r => r.aluno === a && r.concluido);
+        const atividades = [...new Set(all.map(r => r.atividade))];
+        const pillsHtml = atividades.length > 1 ? `
+          <div id="hist-pills-${uid}" style="display:flex;gap:5px;flex-wrap:wrap;margin:6px 0 10px">
+            <button class="pill on" data-ativ="" onclick="filtrarHistAtiv('${a.replace(/'/g,"\\'")}','')">Todas</button>
+            ${atividades.map(n => `<button class="pill" data-ativ="${n.replace(/"/g,'&quot;')}" onclick="filtrarHistAtiv('${a.replace(/'/g,"\\'")}','${n.replace(/'/g,"\\'")}')">${n}</button>`).join('')}
+          </div>` : '';
         return `<div class="hist-aluno-label">
           <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>${a}
         </div>
-        ${hist.length ? hist.map(r => `
-          <div class="list-row" style="align-items:center">
-            <div class="hist-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
-            <div style="flex:1;min-width:0;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.atividade}</div>
-            ${miniSparkline(a, r.atividade)}
-            <div style="font-size:13px;font-weight:700;color:var(--gold);flex-shrink:0">${r.pontuacao_bruta||r.pontuacao||0} pts</div>
-          </div>`).join('') : '<p style="font-size:13px;color:var(--text-muted);padding:6px 0 10px">Nenhuma atividade realizada ainda.</p>'}`;
+        ${pillsHtml}
+        <div id="hist-rows-${uid}">${renderHistSessoes(a, '')}</div>`;
       }).join('')}
     </div>
   </div>

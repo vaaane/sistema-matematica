@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Avaliação+ — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    body{-webkit-user-select:none;user-select:none;}
+    input,button{-webkit-user-select:auto;user-select:auto;}
+
+    body.arcade-mode{background:#07071a;}
+    body.arcade-mode::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);}
+    body.arcade-mode .sidebar{background:#0c0c22;border-right:1px solid #1e1e3a;}
+    body.arcade-mode .sidebar .nav-item{color:#4a4a80;}
+    body.arcade-mode .sidebar .nav-item.active,body.arcade-mode .sidebar .nav-item:hover{background:#1a1a3a;color:#9999dd;}
+    body.arcade-mode .sidebar-logo,body.arcade-mode .sidebar .sidebar-section-label{color:#3a3a7a!important;}
+    body.arcade-mode .main{background:#09091f;}
+    body.arcade-mode .topbar{background:#0c0c22;border-bottom:1px solid #1e1e3a;}
+    body.arcade-mode .topbar-title{font-family:'Orbitron',monospace;font-size:13px;letter-spacing:2px;color:#b0b0ff;text-shadow:0 0 10px rgba(150,150,255,.3);}
+    body.arcade-mode .topbar-sub{color:#3a3a60;}
+
+    @keyframes shake{0%,100%{transform:translateX(0)}10%{transform:translateX(-7px)}30%{transform:translateX(7px)}50%{transform:translateX(-4px)}70%{transform:translateX(4px)}90%{transform:translateX(-2px)}}
+    @keyframes glow-record{0%,100%{text-shadow:0 0 14px rgba(250,184,0,.5)}50%{text-shadow:0 0 55px rgba(250,184,0,1),0 0 90px rgba(255,200,0,.6)}}
+    @keyframes saldo-up{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+    @keyframes saldo-dn{0%,100%{transform:scale(1)}50%{transform:scale(.86)}}
+    @keyframes urgente-blink{0%,100%{color:#EF4444;border-color:#EF4444;background:rgba(239,68,68,.12)}50%{color:#ff9999;border-color:#ff7777;background:rgba(239,68,68,.06)}}
+    @keyframes float-up{0%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}20%{transform:translateX(-50%) translateY(-14px) scale(1.22)}70%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-90px) scale(.55)}}
+    @keyframes float-dn{0%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}100%{opacity:0;transform:translateX(-50%) translateY(48px) scale(.65)}}
+    @keyframes title-glow{0%,100%{text-shadow:0 0 20px rgba(160,160,255,.3)}50%{text-shadow:0 0 50px rgba(160,160,255,.75),0 0 95px rgba(100,100,255,.3)}}
+    @keyframes btn-pulse{0%,100%{box-shadow:0 0 28px rgba(80,80,255,.5),inset 0 1px 0 rgba(255,255,255,.18)}50%{box-shadow:0 0 58px rgba(80,80,255,.85),0 0 95px rgba(60,60,200,.3),inset 0 1px 0 rgba(255,255,255,.18)}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes confete-fall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(115vh) rotate(740deg);opacity:0}}
+    @keyframes transicao-count{from{width:100%}to{width:0%}}
+
+    /* ── HUD ── */
+    .hud{display:flex;align-items:center;gap:14px;padding:12px 18px;background:linear-gradient(135deg,#0d0d28,#13133a);border:1px solid #262650;border-radius:var(--radius);margin-bottom:10px;flex-wrap:wrap;position:relative;box-shadow:0 0 32px rgba(60,60,200,.14),inset 0 1px 0 rgba(255,255,255,.05);}
+    .hud-pts-wrap{display:flex;flex-direction:column;align-items:center;min-width:70px;}
+    .hud-pts{font-family:'Orbitron',monospace;font-size:32px;font-weight:900;color:#FAB800;line-height:1;text-shadow:0 0 14px rgba(250,184,0,.4);}
+    .hud-pts.up{animation:saldo-up .3s ease;}
+    .hud-pts-lbl{font-size:9px;color:#333365;letter-spacing:1px;font-weight:700;text-transform:uppercase;margin-top:2px;}
+    .hud-sep{color:#1a1a40;font-size:24px;}
+    .hud-credito-wrap{display:flex;flex-direction:column;gap:4px;min-width:90px;}
+    .hud-credito-lbl{font-size:9px;color:#333365;letter-spacing:1px;font-weight:700;text-transform:uppercase;}
+    .hud-credito-val{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:#22C55E;transition:color .3s;}
+    .hud-credito-val.baixo{color:#F59E0B;}
+    .hud-credito-val.critico{color:#EF4444;animation:urgente-blink .8s infinite;}
+    .credito-bar{height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;margin-top:2px;}
+    .credito-fill{height:100%;border-radius:3px;background:#22C55E;transition:width .4s,background .4s;}
+    .credito-fill.baixo{background:#F59E0B;}
+    .credito-fill.critico{background:#EF4444;}
+    .hud-sessao{font-family:'Orbitron',monospace;font-size:17px;font-weight:700;color:#4a4a90;background:rgba(0,0,0,.35);padding:7px 13px;border-radius:9px;border:1px solid #252550;transition:all .3s;margin-left:auto;}
+    .hud-sessao.urgente{animation:urgente-blink .8s infinite;}
+    .hud-global-disp{font-size:10px;color:#2a2a55;margin-top:2px;text-align:center;}
+
+    /* ── F1 PROGRESSO ── */
+    .f1-progress{background:linear-gradient(135deg,#0a0a20,#10103a);border:1px solid #1e1e42;border-radius:var(--radius);padding:10px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;}
+    .f1-prog-label{font-size:11px;color:#4a4a80;font-weight:700;white-space:nowrap;}
+    .f1-prog-track{flex:1;height:6px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;}
+    .f1-prog-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#4a4acc,#8080ff);transition:width .5s ease;}
+    .f1-prog-idx{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:#6060b0;white-space:nowrap;}
+    .f1-fase-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;border:1px solid;white-space:nowrap;}
+    .f1-fase-tag.facil{color:#4ADE80;border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.08);}
+    .f1-fase-tag.media{color:#FDE047;border-color:rgba(234,179,8,.3);background:rgba(234,179,8,.08);}
+    .f1-fase-tag.dificil{color:#F87171;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08);}
+
+    /* ── TIMER QUESTÃO (F2) ── */
+    .timer-wrap{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+    .timer-track{flex:1;height:9px;background:rgba(255,255,255,.06);border-radius:6px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.5);position:relative;}
+    .timer-fill{height:100%;border-radius:6px;background:#22C55E;transition:width .95s linear,background .4s;}
+    .timer-mark50{position:absolute;left:50%;top:0;width:2px;height:100%;background:rgba(250,184,0,.55);pointer-events:none;z-index:2;}
+    .timer-txt{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:#44447a;min-width:34px;text-align:right;}
+    .timer-txt.urgente{color:#EF4444!important;}
+
+    /* ── TENTATIVAS QUESTÃO ── */
+    .tent-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+    .tent-dot{width:12px;height:12px;border-radius:50%;transition:background .3s,box-shadow .3s;}
+    .tent-dot.ativa{background:#A855F7;box-shadow:0 0 8px rgba(168,85,247,.7);}
+    .tent-dot.usada{background:#1c1c35;}
+    .tent-lbl{font-size:11px;color:#363660;font-weight:600;}
+
+    /* ── QUESTÃO CARD ── */
+    .question-card{background:linear-gradient(135deg,#0d0d28,#131335);border:1.5px solid #262653;border-radius:var(--radius);box-shadow:0 0 30px rgba(50,50,180,.14),inset 0 1px 0 rgba(255,255,255,.04);padding:22px 22px 16px;}
+    .question-card.shake{animation:shake .5s ease;}
+    .q-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+    .q-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:16px;font-size:11px;font-weight:700;}
+    .q-badge.facil{background:rgba(34,197,94,.15);color:#4ADE80;border:1px solid rgba(34,197,94,.25);}
+    .q-badge.media{background:rgba(234,179,8,.15);color:#FDE047;border:1px solid rgba(234,179,8,.25);}
+    .q-badge.dificil{background:rgba(239,68,68,.15);color:#F87171;border:1px solid rgba(239,68,68,.25);}
+    .q-valor{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:#A855F7;}
+    .q-text{font-size:18px;font-weight:700;line-height:1.6;color:#dddeff;margin-bottom:16px;pointer-events:none;}
+    .answer-area{display:flex;gap:10px;margin-bottom:8px;}
+    .answer-area .input{flex:1;font-size:15px;background:#0b0b22;border-color:#2e2e55;color:#dddeff;}
+    .answer-area .input:focus{border-color:#6060cc;background:#0f0f2c;}
+    .mc-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:8px;}
+    .mc-btn{padding:12px 14px;border-radius:10px;border:1.5px solid #24244a;background:rgba(255,255,255,.04);font-size:14px;font-weight:600;cursor:pointer;color:#b0b0e0;font-family:'Inter',sans-serif;text-align:left;transition:background .12s,border-color .12s,transform .1s;}
+    .mc-btn:hover:not(:disabled){background:rgba(100,100,255,.14);border-color:#5050aa;transform:scale(1.02);}
+    .mc-btn.correto{background:rgba(34,197,94,.2)!important;border-color:#22C55E!important;color:#4ADE80!important;}
+    .mc-btn.errado{background:rgba(239,68,68,.2)!important;border-color:#EF4444!important;color:#F87171!important;}
+    .mc-btn:disabled{cursor:default;}
+    #feedback{min-height:34px;display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;transition:all .2s;margin-top:5px;}
+    #feedback.ok{background:rgba(34,197,94,.12);border:1px solid #16803D;color:#4ADE80;}
+    #feedback.err{background:rgba(239,68,68,.12);border:1px solid #DC2626;color:#F87171;}
+    #feedback.warn{background:rgba(234,179,8,.12);border:1px solid #B45309;color:#FDE047;}
+    #feedback.info{background:rgba(96,165,250,.12);border:1px solid #2563EB;color:#93C5FD;}
+    #feedback.hidden{opacity:0;min-height:0;padding:0;border:none;}
+
+    /* ── FLOAT PONTOS ── */
+    .float-pts{position:fixed;font-family:'Orbitron',monospace;font-weight:900;font-size:26px;pointer-events:none;z-index:900;}
+    .float-pts.g{color:#FAB800;text-shadow:0 0 14px rgba(250,184,0,.7);animation:float-up 1.4s ease forwards;}
+    .float-pts.p{color:#EF4444;text-shadow:0 0 14px rgba(239,68,68,.7);font-size:18px;animation:float-dn 1s ease forwards;}
+    .float-pts.cr{color:#EF4444;font-size:14px;animation:float-dn 1s ease forwards;}
+
+    /* ── TRANSIÇÃO F1→F2 ── */
+    .transicao-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;z-index:1100;padding:16px;}
+    .transicao-card{background:linear-gradient(135deg,#0e2e18,#0a1e10);border:2px solid #22C55E;border-radius:22px;padding:32px 28px;text-align:center;max-width:400px;width:100%;box-shadow:0 0 60px rgba(34,197,94,.3);animation:fadeUp .35s ease;}
+    .transicao-title{font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:#4ADE80;letter-spacing:2px;margin-bottom:4px;}
+    .transicao-sub{font-size:12px;color:#2a6a3a;margin-bottom:22px;letter-spacing:1px;}
+    .transicao-nota{font-family:'Orbitron',monospace;font-size:48px;font-weight:900;color:#FAB800;text-shadow:0 0 18px rgba(250,184,0,.5);line-height:1;margin-bottom:4px;}
+    .transicao-nota-lbl{font-size:11px;color:#2a5a30;margin-bottom:18px;}
+    .transicao-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px;}
+    .transicao-s{background:rgba(255,255,255,.04);border-radius:10px;padding:10px 4px;border:1px solid rgba(34,197,94,.12);}
+    .transicao-sv{font-family:'Orbitron',monospace;font-size:15px;font-weight:800;}
+    .transicao-sl{font-size:10px;color:#1a4a24;margin-top:2px;}
+    .transicao-bar-wrap{height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-bottom:12px;}
+    .transicao-bar{height:100%;border-radius:2px;background:#22C55E;animation:transicao-count 3s linear forwards;}
+    .transicao-next{font-size:12px;color:#2a5a30;letter-spacing:.5px;}
+
+    /* ── PRÉ-JOGO ── */
+    .pre-wrap{display:flex;flex-direction:column;align-items:center;padding:30px 16px 28px;text-align:center;}
+    .pre-title{font-family:'Orbitron',monospace;font-size:28px;font-weight:900;color:#c0c0ff;letter-spacing:3px;animation:title-glow 2.5s ease infinite;margin-bottom:4px;}
+    .pre-sub{font-size:12px;color:#3a3a78;margin-bottom:20px;letter-spacing:1.5px;font-weight:700;}
+    .pre-info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:380px;width:100%;margin-bottom:22px;}
+    .pre-info-box{background:#0a0a22;border:1px solid #1c1c3c;border-radius:12px;padding:12px 8px;text-align:center;}
+    .pre-info-val{font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:#FAB800;}
+    .pre-info-lbl{font-size:10px;color:#333365;margin-top:3px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+    .pre-melhor{font-family:'Orbitron',monospace;font-size:22px;color:#FAB800;margin-bottom:2px;}
+    .pre-melhor-lbl{font-size:11px;color:#3a3a70;margin-bottom:22px;}
+    .pre-regras{background:#0a0a22;border:1px solid #1c1c3c;border-radius:14px;padding:16px 20px;max-width:440px;width:100%;text-align:left;margin-bottom:26px;font-size:12px;color:#4a4a80;line-height:1.8;}
+    .pre-regras strong{color:#7a7ac0;}
+    .pre-regras .phase-block{margin-top:10px;padding-top:10px;border-top:1px solid #1a1a3a;}
+    .btn-iniciar{font-family:'Orbitron',monospace;font-size:17px;font-weight:700;letter-spacing:2px;padding:16px 58px;border-radius:14px;border:none;background:linear-gradient(135deg,#3a3acc,#6060ff);color:#fff;cursor:pointer;animation:btn-pulse 2s ease infinite;transition:transform .14s;}
+    .btn-iniciar:hover{transform:scale(1.06);}
+    .btn-iniciar:disabled{opacity:.4;cursor:not-allowed;animation:none;}
+
+    /* ── RESULTADO / ENTRE TENTATIVAS ── */
+    .resultado-overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px;overflow-y:auto;}
+    .resultado-card{background:linear-gradient(135deg,#0e0e2e,#18184a);border:2px solid #3a3a72;border-radius:22px;padding:28px 24px;text-align:center;max-width:440px;width:100%;box-shadow:0 0 70px rgba(60,60,200,.35);animation:fadeUp .35s ease;}
+    .res-icon{font-size:50px;margin-bottom:8px;}
+    .res-saldo{font-family:'Orbitron',monospace;font-size:56px;font-weight:900;color:#FAB800;line-height:1;text-shadow:0 0 22px rgba(250,184,0,.5);margin-bottom:4px;}
+    .res-saldo.record{animation:glow-record 1s ease infinite;}
+    .res-lbl{color:#3a3a68;font-size:12px;margin-bottom:8px;}
+    .res-melhor{font-size:14px;font-weight:800;color:#22C55E;margin-bottom:14px;}
+    .res-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+    .res-s{background:rgba(255,255,255,.05);border-radius:11px;padding:11px 4px;border:1px solid rgba(255,255,255,.06);}
+    .res-sv{font-family:'Orbitron',monospace;font-size:16px;font-weight:800;}
+    .res-sl{font-size:10px;color:#303055;margin-top:3px;}
+    .res-f1-block{background:#0a0a22;border:1px solid #1a3a2a;border-radius:12px;padding:12px 16px;margin-bottom:12px;text-align:left;font-size:12px;color:#3a5a4a;line-height:1.9;}
+    .res-f1-block strong{color:#5a9a6a;}
+    .res-prox-info{background:#0a0a22;border:1px solid #1a1a3a;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:#5a5a90;line-height:1.7;}
+    .res-prox-info strong{color:#8080cc;}
+    .btn-nova-tent{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;letter-spacing:1px;padding:14px 0;border-radius:13px;border:none;background:linear-gradient(135deg,#3a3acc,#6060ff);color:#fff;cursor:pointer;width:100%;margin-bottom:10px;box-shadow:0 0 22px rgba(80,80,255,.4);transition:transform .14s;}
+    .btn-nova-tent:hover{transform:scale(1.02);}
+    .btn-voltar-res{background:transparent;color:#3a3a68;border:1.5px solid #232345;border-radius:11px;padding:11px;font-size:13px;cursor:pointer;width:100%;font-family:'Inter',sans-serif;transition:border-color .15s;display:block;text-decoration:none;text-align:center;box-sizing:border-box;}
+    .btn-voltar-res:hover{border-color:#434370;color:#6060a0;}
+
+    /* ── BLOQUEADA ── */
+    .bloqueada-wrap{display:flex;flex-direction:column;align-items:center;padding:40px 16px;text-align:center;}
+    .bloqueada-icon{font-size:64px;margin-bottom:16px;}
+    .bloqueada-title{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:#F87171;margin-bottom:8px;letter-spacing:2px;}
+    .bloqueada-sub{font-size:14px;color:#5a5a90;margin-bottom:24px;line-height:1.7;}
+    .bloqueada-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:320px;width:100%;margin-bottom:28px;}
+    .bloqueada-stat{background:#0a0a22;border:1px solid #1c1c3c;border-radius:12px;padding:14px 8px;text-align:center;}
+    .bloqueada-stat-val{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:#FAB800;}
+    .bloqueada-stat-lbl{font-size:10px;color:#333365;margin-top:3px;font-weight:700;text-transform:uppercase;}
+
+    /* ── CONFETE ── */
+    .confete-wrap{position:fixed;inset:0;pointer-events:none;z-index:999;overflow:hidden;}
+    .confete-particle{position:absolute;top:-12px;border-radius:3px;animation:confete-fall linear forwards;}
+
+    /* ── ENCERRAR MODAL ── */
+    .encerrar-modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:10000;}
+    .encerrar-modal-card{background:#0d0d28;border:1px solid #3a3a6a;border-radius:16px;padding:28px 32px;text-align:center;max-width:320px;width:90%;color:#e0e0ff;}
+
+    /* ── F2: SPEED / HELP HUD ── */
+    .hud-mid{display:flex;flex-direction:column;gap:5px;}
+    .hud-speed{font-size:12px;font-weight:700;color:#60A5FA;}
+    .hud-speed span{font-family:'Orbitron',monospace;font-size:15px;}
+    .hud-helps{display:flex;gap:5px;align-items:center;}
+    .hud-help-icon{font-size:17px;transition:opacity .25s,filter .25s;}
+    .hud-help-icon.empty{opacity:.2;filter:grayscale(1);}
+    .hud-pts.dn{animation:saldo-dn .3s ease;color:#EF4444!important;}
+    .hud-pts.record-flash{animation:glow-record .9s ease 3;}
+
+    /* ── F2: FLOAT VELOZ ── */
+    .float-pts.s{color:#60A5FA;font-size:13px;text-shadow:0 0 8px rgba(96,165,250,.6);animation:float-up 1.4s ease .18s forwards;}
+
+    /* ── F2: BOTÃO AJUDA ── */
+    @keyframes ajuda-glow{0%,100%{box-shadow:0 0 5px rgba(168,85,247,.2)}50%{box-shadow:0 0 20px rgba(168,85,247,.65)}}
+    .btn-ajuda{background:rgba(168,85,247,.12);border:1.5px solid rgba(168,85,247,.45);color:#C084FC;border-radius:10px;padding:9px 16px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .15s,border-color .15s;margin-top:10px;animation:ajuda-glow 2.2s ease infinite;}
+    .btn-ajuda:hover{background:rgba(168,85,247,.22);border-color:rgba(168,85,247,.8);}
+    .ajuda-badge{background:#A855F7;color:#fff;border-radius:8px;font-size:10px;font-weight:800;padding:2px 7px;font-family:'Orbitron',monospace;}
+
+    /* ── F2: TIMER DOURADO ── */
+    @keyframes gold-shimmer{0%,100%{box-shadow:0 0 8px rgba(250,184,0,.5)}50%{box-shadow:0 0 22px rgba(250,184,0,.95),0 0 40px rgba(250,184,0,.35)}}
+    .timer-fill.dourado{animation:gold-shimmer 1.2s ease infinite;}
+
+    /* ── F2: POPUP QUESTÃO DIFÍCIL ── */
+    @keyframes popup-dramatic{0%{opacity:0;transform:scale(.3) rotate(-12deg)}60%{transform:scale(1.08) rotate(2deg)}100%{opacity:1;transform:scale(1) rotate(0deg)}}
+    .popup-ov{position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:800;}
+    .popup-card{background:linear-gradient(135deg,#2a1c00,#1a1000);border:2px solid #b8860b;border-radius:20px;padding:28px 24px;max-width:340px;width:92%;text-align:center;box-shadow:0 0 70px rgba(184,134,11,.45);animation:popup-dramatic .45s cubic-bezier(.34,1.56,.64,1) forwards;}
+    .popup-icon{font-size:52px;margin-bottom:8px;}
+    .popup-titulo{font-family:'Orbitron',monospace;font-size:15px;font-weight:700;color:#FAD850;margin-bottom:6px;letter-spacing:1px;text-shadow:0 0 14px rgba(250,216,80,.5);}
+    .popup-desc{font-size:13px;color:#906020;margin-bottom:10px;line-height:1.7;}
+    .popup-desc strong{color:#FAB800;}
+    .popup-timer-track{height:5px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;margin-bottom:16px;}
+    .popup-timer-fill{height:100%;background:#FAB800;border-radius:3px;transition:width 1s linear;}
+    .popup-btn-a{background:linear-gradient(135deg,#c09010,#e0b030);color:#000;border:none;border-radius:13px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;width:100%;font-family:'Orbitron',monospace;margin-bottom:9px;transition:transform .12s;letter-spacing:.5px;box-shadow:0 0 22px rgba(184,134,11,.55);}
+    .popup-btn-a:hover{transform:scale(1.03);}
+    .popup-btn-r{background:transparent;color:#5a4010;border:1.5px solid #3a2a08;border-radius:10px;padding:9px;font-size:12px;cursor:pointer;width:100%;font-family:'Inter',sans-serif;}
+    .popup-btn-r:hover{border-color:#6a4020;color:#8a6030;}
+
+    /* ── F2: NOTIF / BANNERS ── */
+    @keyframes notif-in{from{opacity:0;transform:translateX(-50%) scale(.7)}to{opacity:1;transform:translateX(-50%) scale(1)}}
+    @keyframes banner-in{from{opacity:0;transform:translateX(55px)}to{opacity:1;transform:translateX(0)}}
+    .notif{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:#180a3a;border:2px solid #7C3AED;color:#C084FC;border-radius:16px;padding:9px 22px;font-family:'Orbitron',monospace;font-size:11px;font-weight:700;z-index:700;white-space:nowrap;pointer-events:none;box-shadow:0 0 24px rgba(124,58,237,.4);animation:notif-in .35s ease;}
+    .banner-resp-ant{position:fixed;bottom:80px;right:24px;background:#1a1a3a;border:1px solid #4444aa;border-radius:10px;padding:8px 16px;font-size:12px;font-weight:700;color:#a0c4ff;z-index:900;pointer-events:none;animation:banner-in .25s ease;}
+
+    /* ── F2: BADGES RESULTADO ── */
+    .fim-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0;}
+    .fim-badge{border-radius:20px;padding:6px 16px;font-size:12px;font-weight:700;}
+    .fim-badge.veloz{color:#60A5FA;border:1px solid rgba(96,165,250,.35);background:rgba(96,165,250,.1);}
+    .fim-badge.limpo{color:#4ADE80;border:1px solid rgba(74,222,128,.35);background:rgba(74,222,128,.1);}
+    .fim-badge.bonus-rei{color:#FAB800;border:1px solid rgba(250,184,0,.35);background:rgba(250,184,0,.1);}
+    @keyframes bonus-fim-pulse{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,.5)}50%{box-shadow:0 0 0 8px rgba(52,211,153,0)}}
+    .fim-badge.bonus-fim{color:#34D399;border:2px solid rgba(52,211,153,.6);background:rgba(52,211,153,.15);animation:bonus-fim-pulse 1.4s ease infinite;font-size:13px;}
+  </style>
+</head>
+<body oncontextmenu="return false">
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title" id="topbar-title">Avaliação+</div>
+        <div class="topbar-sub" id="topbar-sub"></div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-ghost" style="color:var(--red);border-color:#FECACA;font-size:13px" onclick="pedirEncerrar()">Encerrar</button>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:#1e1e40;font-family:'Orbitron',monospace;font-size:12px;letter-spacing:3px">CARREGANDO…</div>
+    </div>
+  </div>
+</div>
+
+<script>(()=>{const t=localStorage.getItem("tema");if(t==="escuro")document.documentElement.setAttribute("data-theme","dark");})()</script>
+<script type="module">
+import { respostasEquivalentes, dataAgora, ARQUIVO_QUESTOES } from "/js/constants.js";
+import { addResultado, updateResultado, saveDetalhes, getLiberadasParaTurma, getAtividadeStatus } from "/js/db.js";
+import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+document.addEventListener('keydown', e => {
+  const tag = e.target.tagName.toLowerCase();
+  if (tag === 'input' || tag === 'textarea') return;
+  if ((e.ctrlKey||e.metaKey) && ['c','a','x','u','s'].includes(e.key.toLowerCase())) e.preventDefault();
+});
+
+const sess = requireAluno();
+if (!sess) throw new Error();
+renderSidebarAluno("sidebar", "atividades");
+window.sair = () => { document.body.classList.remove('arcade-mode'); clearSession(); window.location.href = "/index.html"; };
+const { alunos, turma } = sess;
+
+const nomeAtiv = new URLSearchParams(window.location.search).get("ativ");
+if (!nomeAtiv) { window.location.href = "/aluno/atividades.html"; throw new Error(); }
+
+const liberadas = await getLiberadasParaTurma(turma);
+const liberada  = liberadas.find(l => l.atividade === nomeAtiv);
+if (!liberada) { alert("Atividade não está mais liberada."); window.location.href = "/aluno/atividades.html"; throw new Error(); }
+
+const statusInfo = await getAtividadeStatus(turma, liberada.atividade);
+if (statusInfo.status === 'encerrada') {
+  alert("Atividade encerrada pela professora.");
+  window.location.href = "/aluno/atividades.html"; throw new Error();
+}
+if (statusInfo.status !== 'ativa') {
+  if (!confirm(`Atenção: esta atividade vale ${statusInfo.percentual}% da nota agora. Deseja continuar?`)) {
+    window.location.href = "/aluno/atividades.html"; throw new Error();
+  }
+}
+
+document.getElementById("topbar-title").textContent = liberada.atividade;
+const pctLabel = statusInfo.percentual < 100 ? ` · ⏰ ${statusInfo.percentual}%` : '';
+document.getElementById("topbar-sub").textContent = `Turma ${turma} · Avaliação+${pctLabel}`;
+
+// ── Constantes gerais ──────────────────────────────────────────
+const DURACAO_GLOBAL_MS     = 30 * 60 * 1000;
+const DURACAO_SESSAO_S      = 8 * 60;
+const MIN_PARA_TENTATIVA_MS = 8 * 60 * 1000;
+const MAX_TENTATIVAS        = 3;
+
+// ── Constantes Fase 1 ──────────────────────────────────────────
+const F1_STRUCT     = [1,1,1,1,1, 2,2, 3]; // 5 fáceis, 2 médias, 1 difícil
+const F1_TOTAL      = F1_STRUCT.length;      // 8
+const BASE_F1       = { 1: 1, 2: 2, 3: 3 };
+const CREDIT_INICIO = 10;
+const CREDIT_PEN    = { 1: 0.25, 2: 0.50, 3: 0.75 };
+const FATORES_F1    = [1.0, 0.75, 0.50];
+const F1_MAX_PTS    = 12; // 5×1 + 2×2 + 1×3
+
+// ── Constantes Fase 2 ──────────────────────────────────────────
+const PONTOS_F2   = { 1: 4, 2: 8, 3: 24 };
+const TIMERS_F2   = { 1: 10, 2: 40, 3: 90 };
+const FATORES_F2  = [1.0, 0.75, 0.5];
+
+// ── Firebase controle ──────────────────────────────────────────
+function avKey(s) {
+  return btoa(unescape(encodeURIComponent(s))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+}
+const controleRef = ref(db, `avaliacao_controle/${avKey(turma+'|'+liberada.atividade)}/${avKey(alunos[0])}`);
+
+// ── Carregar questões ──────────────────────────────────────────
+const _arquivoQ = ARQUIVO_QUESTOES[liberada.atividade] ?? "/dados/questoes_competicao.json";
+const raw = await fetch(_arquivoQ).then(r => r.json());
+function temRespostaNum(t) {
+  if (t.tipo === 'numerica') return true;
+  if (t.conjuntos) return !isNaN(parseFloat(String(t.conjuntos[0]?.resposta ?? '')));
+  return false;
+}
+const templates = raw.filter(temRespostaNum);
+const faceis   = templates.filter(t => t.dificuldade === 1);
+const medias   = templates.filter(t => t.dificuldade === 2);
+const dificeis = templates.filter(t => t.dificuldade === 3);
+
+// ── Utilitários ────────────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function avaliar(expr, vars) {
+  try { return new Function(...Object.keys(vars), `"use strict";return(${expr})`)(...Object.values(vars)); }
+  catch(e) { return null; }
+}
+function beep(freq, dur) {
+  try {
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.connect(g); g.connect(ctx.destination);
+    osc.frequency.value = freq;
+    g.gain.setValueAtTime(.22, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + dur/1000);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + dur/1000);
+  } catch(e) {}
+}
+function formatTempo(s) { return `${Math.floor(Math.max(0,s)/60)}:${String(Math.floor(Math.max(0,s)%60)).padStart(2,'0')}`; }
+function formatTempoLongo(ms) {
+  const s = Math.max(0, Math.ceil(ms/1000));
+  const m = Math.floor(s/60), sec = s%60;
+  return `${m}min${sec>0?' '+sec+'s':''}`;
+}
+function fmtPts(v) { return Number.isInteger(v) ? String(v) : v.toFixed(2).replace(/\.?0+$/, ''); }
+function globalRestanteMs(ctrl) { return DURACAO_GLOBAL_MS - (Date.now() - ctrl.inicio_global); }
+
+// ── Instanciar questão de um template ─────────────────────────
+function instanciarQuestao(t) {
+  let vars = {}, resposta = '', unidade = t.unidade || '';
+  if (t.conjuntos) {
+    const c = t.conjuntos[Math.floor(Math.random()*t.conjuntos.length)];
+    vars = {...c}; resposta = String(c.resposta);
+    if (c.unidade) unidade = c.unidade;
+  } else {
+    for (const [k,v] of Object.entries(t.variaveis||{})) {
+      vars[k] = Array.isArray(v) ? v[Math.floor(Math.random()*v.length)]
+                                 : v.min + Math.floor(Math.random()*(v.max-v.min+1));
+    }
+    resposta = String(avaliar(t.resposta_expr, vars) ?? '?');
+  }
+  let enunciado = t.enunciado;
+  for (const [k,v] of Object.entries(vars)) enunciado = enunciado.replaceAll(`{${k}}`, v);
+  return { enunciado, resposta, unidade, dif: t.dificuldade };
+}
+
+// ── Gerar sequência fixa de Fase 1 ────────────────────────────
+function gerarQuestoesF1() {
+  const poolF = shuffle([...faceis]);
+  const poolM = shuffle([...medias]);
+  const poolD = shuffle([...dificeis]);
+  const seenCombos = new Set();
+  const questoes = [];
+  const pick = (pool) => {
+    for (let i = 0; i < pool.length; i++) {
+      const q = instanciarQuestao(pool[i]);
+      const key = q.enunciado + ':' + q.resposta;
+      if (!seenCombos.has(key)) { seenCombos.add(key); return { ...q, pontos: BASE_F1[q.dif] }; }
+    }
+    // fallback: just take first
+    const q = instanciarQuestao(pool[0]);
+    return { ...q, pontos: BASE_F1[q.dif] };
+  };
+  // 5 fáceis
+  for (let i = 0; i < 5; i++) questoes.push(pick(poolF));
+  // 2 médias
+  for (let i = 0; i < 2; i++) questoes.push(pick(poolM));
+  // 1 difícil
+  questoes.push(pick(poolD));
+  return questoes;
+}
+
+// ── Gerar questão aleatória F2 ─────────────────────────────────
+function gerarQuestaoF2(forceDif) {
+  for (let attempt = 0; attempt <= 30; attempt++) {
+    const dif = forceDif ?? (Math.random() < 0.65 ? 1 : 2);
+    const pool = st.f2pools[dif];
+    if (!pool || pool.length === 0) { if (forceDif) return gerarQuestaoF2(2); continue; }
+    if (st.f2poolIdx[dif] >= pool.length) { st.f2pools[dif] = shuffle(pool); st.f2poolIdx[dif] = 0; }
+    const t = pool[st.f2poolIdx[dif]++];
+    const q = instanciarQuestao(t);
+    const key = q.enunciado + ':' + q.resposta;
+    if (attempt === 30 || !st.seenCombos.has(key)) {
+      st.seenCombos.add(key);
+      return { ...q, pontos: PONTOS_F2[q.dif], timer: t.timer ?? TIMERS_F2[q.dif] };
+    }
+  }
+}
+
+function gerarDistratores(resp, n=3) {
+  const num = parseFloat(resp);
+  if (isNaN(num)) return ['1','2','3'].slice(0,n);
+  const cands = new Set();
+  [num+1,num-1,num+2,num-2,num+3,num-3,Math.round(num*2),Math.round(num/2),
+   Math.round(num*1.5),Math.round(num*.75),num+5,num-5]
+    .forEach(v => { if (v!==num && v>0 && Number.isFinite(v)) cands.add(Math.round(v)); });
+  return shuffle([...cands]).slice(0,n).map(String);
+}
+
+// ── Estado ─────────────────────────────────────────────────────
+let st = null;
+let controle = null;
+
+function novoEstado(duracaoSessao) {
+  return {
+    // Fase atual (1 ou 2)
+    fase: 1,
+    // Fase 1
+    f1: {
+      questoes: gerarQuestoesF1(),
+      idx: 0,
+      credito: CREDIT_INICIO,
+      pontos: 0,
+      acertos: 0, erros: 0,
+      inicioMs: 0,      // set when F1 actually begins
+      tempo_ms: 0,      // filled on encerrarFase1
+      nota_quiz: 0,
+    },
+    // Fase 2
+    saldo: 0, acertos: 0, erros: 0, respondidas: 0,
+    ajudas: 0, acertosRapidos: 0, acertosDificeis: 0,
+    ajudasUsadasTotal: 0, semPenalidade: true,
+    comboAtual: 0, comboMax: 0,
+    modoAjuda: false, ajudaUsada: false, ehBonus: false,
+    // Compartilhado
+    tentativaQ: 0,        // tentativas para a questão atual
+    questaoAtual: null,
+    questaoHist: [],
+    questaoRegistrada: true,
+    questaoInicioTs: 0,
+    // Timers
+    timerInterval: null, timerRestante: 0,
+    sessaoFim: Date.now() + duracaoSessao * 1000,
+    sessaoInterval: null, sessaoRestante: duracaoSessao,
+    // Flags
+    finalizado: false,
+    transicao: false,
+    processando: false,
+    // Firebase
+    resultadoIds: {},
+    inicioTs: Date.now() / 1000,
+    // Detalhes para análise
+    questoesDetalhes: [],
+    // F2 pools
+    f2pools: { 1: shuffle([...faceis]), 2: shuffle([...medias]), 3: shuffle([...dificeis]) },
+    f2poolIdx: { 1: 0, 2: 0, 3: 0 },
+    seenCombos: new Set(),
+  };
+}
+
+// ── HUD Fase 1 ─────────────────────────────────────────────────
+function renderHUDF1() {
+  // pontos
+  const ptEl = document.getElementById("hud-pts");
+  if (ptEl) ptEl.textContent = fmtPts(st.f1.pontos);
+  // crédito
+  const crEl = document.getElementById("hud-credito-val");
+  const crBar = document.getElementById("credito-fill");
+  if (crEl) {
+    const cr = st.f1.credito;
+    crEl.textContent = fmtPts(cr);
+    crEl.className = "hud-credito-val" + (cr <= 2 ? " critico" : cr <= 4 ? " baixo" : "");
+  }
+  if (crBar) {
+    const pct = (st.f1.credito / CREDIT_INICIO) * 100;
+    crBar.style.width = pct + "%";
+    crBar.className = "credito-fill" + (pct <= 20 ? " critico" : pct <= 40 ? " baixo" : "");
+  }
+  // sessão
+  const sEl = document.getElementById("hud-sessao");
+  if (sEl) {
+    sEl.textContent = `⏳ ${formatTempo(st.sessaoRestante)}`;
+    sEl.className = "hud-sessao" + (st.sessaoRestante <= 60 ? " urgente" : "");
+  }
+  // tentativas questão
+  const dots = document.querySelectorAll('.tent-dot');
+  const lbl  = document.querySelector('.tent-lbl');
+  const rem  = 3 - st.tentativaQ;
+  dots.forEach((d,i) => d.className = `tent-dot ${i < rem ? 'ativa' : 'usada'}`);
+  if (lbl) lbl.textContent = `${rem} tentativa${rem!==1?'s':''} restante${rem!==1?'s':''}`;
+  // valor questão atual
+  const vEl = document.querySelector('.q-valor');
+  if (vEl && st.questaoAtual) {
+    const v = valorAtualF1();
+    vEl.textContent = `+${fmtPts(v)} pt${v!==1?'s':''}`;
+  }
+}
+
+// ── HUD Fase 2 ─────────────────────────────────────────────────
+function renderHUDF2() {
+  const sdEl = document.getElementById("hud-saldo");
+  if (sdEl) sdEl.textContent = st.saldo;
+  const sEl = document.getElementById("hud-sessao");
+  if (sEl) {
+    sEl.textContent = `⏳ ${formatTempo(st.sessaoRestante)}`;
+    sEl.className = "hud-sessao" + (st.sessaoRestante <= 60 ? " urgente" : "");
+  }
+  const gEl = document.getElementById("hud-global-disp");
+  if (gEl && controle) gEl.textContent = `Global: ${formatTempo(Math.ceil(globalRestanteMs(controle)/1000))}`;
+  const spEl = document.getElementById("hud-speed-f2");
+  if (spEl) spEl.textContent = `${st.acertosRapidos % 3}/3`;
+  const bonusEl = document.getElementById("hud-bonus-f2");
+  if (bonusEl) bonusEl.textContent = `${st.acertosRapidos % 10}/10`;
+  const ajEl = document.getElementById("hud-ajuda-f2");
+  if (ajEl) { ajEl.innerHTML = [0,1,2].map(i => `<span class="hud-help-icon${i < st.ajudas ? '' : ' empty'}">🎯</span>`).join(''); ajEl.title = `${st.ajudas} ajuda${st.ajudas!==1?'s':''} disponíve${st.ajudas!==1?'is':'l'}`; }
+  const dots = document.querySelectorAll('.tent-dot');
+  const lbl  = document.querySelector('.tent-lbl');
+  const rem  = 3 - st.tentativaQ;
+  dots.forEach((d,i) => d.className = `tent-dot ${i < rem ? 'ativa' : 'usada'}`);
+  if (lbl) lbl.textContent = `${rem} tentativa${rem!==1?'s':''} restante${rem!==1?'s':''}`;
+  const vEl = document.querySelector('.q-valor');
+  if (vEl && st.questaoAtual) { const v = valorAtualF2(); vEl.textContent = `+${v} pt${v>1?'s':''}`; }
+  // Atualizar botão ajuda
+  const btnAj = document.getElementById("btn-ajuda");
+  if (btnAj) { const ab = btnAj.querySelector('.ajuda-badge'); if (ab) ab.textContent = st.ajudas; }
+}
+
+function flashPts(tipo) {
+  const id = st.fase === 1 ? "hud-pts" : "hud-saldo";
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('up','dn'); void el.offsetWidth;
+  el.classList.add(tipo === 'g' ? 'up' : 'dn');
+  setTimeout(() => el.classList.remove('up','dn'), 380);
+}
+
+// ── Render Fase 1 ──────────────────────────────────────────────
+function renderQuestaoF1() {
+  const q   = st.questaoAtual;
+  const idx = st.f1.idx;
+  const difMap = { 1:['Fácil','facil'], 2:['Média','media'], 3:['Difícil','dificil'] };
+  const [difLbl, difCls] = difMap[q.dif] || difMap[1];
+  const v = valorAtualF1();
+  const cr = st.f1.credito;
+  const crPct = (cr / CREDIT_INICIO) * 100;
+  const crCls = cr <= 2 ? ' critico' : cr <= 4 ? ' baixo' : '';
+  const progPct = (idx / F1_TOTAL) * 100;
+
+  // Determine block label
+  const blockLbl = idx < 5 ? 'Fáceis (1–5)' : idx < 7 ? 'Médias (6–7)' : 'Difícil (8)';
+  const faseCls  = idx < 5 ? 'facil' : idx < 7 ? 'media' : 'dificil';
+
+  document.getElementById("content").innerHTML = `
+    <div class="hud">
+      <div class="hud-pts-wrap">
+        <div class="hud-pts" id="hud-pts">${fmtPts(st.f1.pontos)}</div>
+        <div class="hud-pts-lbl">pts fase 1</div>
+      </div>
+      <div class="hud-sep">·</div>
+      <div class="hud-credito-wrap">
+        <div class="hud-credito-lbl">Crédito</div>
+        <div class="hud-credito-val${crCls}" id="hud-credito-val">${fmtPts(cr)}</div>
+        <div class="credito-bar" style="width:90px">
+          <div class="credito-fill${crCls}" id="credito-fill" style="width:${crPct}%"></div>
+        </div>
+      </div>
+      <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+        <div class="hud-sessao${st.sessaoRestante<=60?' urgente':''}" id="hud-sessao">⏳ ${formatTempo(st.sessaoRestante)}</div>
+        <div class="hud-global-disp" id="hud-global-disp">Global: ${controle ? formatTempo(Math.ceil(globalRestanteMs(controle)/1000)) : '30:00'}</div>
+      </div>
+    </div>
+    <div class="f1-progress">
+      <span class="f1-prog-label">Fase 1</span>
+      <div class="f1-prog-track"><div class="f1-prog-fill" style="width:${progPct}%"></div></div>
+      <span class="f1-prog-idx">${idx+1} / ${F1_TOTAL}</span>
+      <span class="f1-fase-tag ${faseCls}">${blockLbl}</span>
+    </div>
+    <div class="tent-row">
+      ${[0,1,2].map(i=>`<div class="tent-dot ${i<(3-st.tentativaQ)?'ativa':'usada'}"></div>`).join('')}
+      <span class="tent-lbl">${3-st.tentativaQ} tentativa${(3-st.tentativaQ)!==1?'s':''} restante${(3-st.tentativaQ)!==1?'s':''}</span>
+    </div>
+    <div class="question-card">
+      <div class="q-meta">
+        <span class="q-badge ${difCls}">● ${difLbl}</span>
+        <span class="q-valor">+${fmtPts(v)} pt${v!==1?'s':''}</span>
+        <span style="font-size:10px;color:#2a2a50;margin-left:auto">máx ${F1_MAX_PTS} pts</span>
+      </div>
+      <div class="q-text">${q.enunciado}</div>
+      <div id="area-resposta">
+        <div class="answer-area">
+          <input type="text" id="resp-input" class="input" inputmode="decimal"
+            placeholder="Digite a resposta…" autocomplete="off"
+            onkeydown="if(event.key==='Enter')responderNum()"/>
+          <button class="btn btn-blue" id="btn-resp" onclick="responderNum()">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>OK
+          </button>
+        </div>
+      </div>
+      <div id="feedback" class="hidden"></div>
+      <button onclick="pularQuestao()" style="background:transparent;border:1px solid #1c1c38;color:#363660;border-radius:8px;padding:7px 13px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;margin-top:8px;" onmouseover="this.style.borderColor='#363660'" onmouseout="this.style.borderColor='#1c1c38'">Pular (−${CREDIT_PEN[q.dif]}cr)</button>
+    </div>`;
+
+  document.getElementById("resp-input")?.focus();
+}
+
+// ── Processar resposta Fase 1 ──────────────────────────────────
+function processarF1(resposta) {
+  st.processando = true;
+  const q = st.questaoAtual;
+  const correto = respostasEquivalentes(resposta, q.resposta);
+  const tempoMs = Math.round(Date.now() - st.questaoInicioTs);
+  st.questaoHist.push({ resposta, correto, tempoMs });
+
+  if (correto) {
+    const pts = valorAtualF1();
+    st.f1.pontos += pts;
+    st.f1.acertos++;
+    st.tentativaQ = 0;
+    registrarQuestao(true, pts);
+    mostrarFeedback("ok", `✅ Correto! +${fmtPts(pts)} pt${pts!==1?'s':''}`);
+    floatPts(fmtPts(pts), 'g');
+    beep(1000, 150);
+    flashPts('g');
+    renderHUDF1();
+    setTimeout(() => {
+      if (st.finalizado || st.transicao) return;
+      st.processando = false;
+      proximaF1();
+    }, 1400);
+  } else {
+    st.tentativaQ++;
+    const card = document.querySelector('.question-card');
+    if (card) { card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); setTimeout(() => card.classList.remove('shake'), 550); }
+
+    if (st.tentativaQ >= 3) {
+      // Questão falhou — aplica penalidade no crédito
+      st.f1.credito = Math.max(0, st.f1.credito - CREDIT_PEN[q.dif]);
+      st.f1.erros++;
+      st.tentativaQ = 0;
+      registrarQuestao(false, 0);
+      const penStr = CREDIT_PEN[q.dif].toString();
+      mostrarFeedback("warn", `⚠️ Resposta: <strong>${q.resposta}${q.unidade?' '+q.unidade:''}</strong> · −${penStr}cr`);
+      floatPts('−'+penStr, 'cr');
+      flashPts('p');
+      beep(250, 350);
+      renderHUDF1();
+      const creditoZerado = st.f1.credito <= 0;
+      setTimeout(() => {
+        if (st.finalizado || st.transicao) return;
+        st.processando = false;
+        if (creditoZerado) { encerrarFase1('credito'); }
+        else { proximaF1(); }
+      }, 2000);
+    } else {
+      mostrarFeedback("err", `❌ Errado! ${3-st.tentativaQ} tentativa${(3-st.tentativaQ)>1?'s':''} restante${(3-st.tentativaQ)>1?'s':''}.`);
+      beep(400, 280);
+      renderHUDF1();
+      setTimeout(() => {
+        if (st.finalizado || st.transicao) return;
+        mostrarFeedback("hidden", "");
+        st.processando = false;
+        const inp = document.getElementById("resp-input");
+        if (inp) { inp.value = ''; inp.disabled = false; inp.focus(); }
+        const btn = document.getElementById("btn-resp");
+        if (btn) btn.disabled = false;
+      }, 1400);
+    }
+  }
+}
+
+// ── Pular Fase 1 ───────────────────────────────────────────────
+function pularF1() {
+  if (!st || st.processando || st.finalizado || st.transicao) return;
+  const q = st.questaoAtual;
+  st.questaoHist.push({ resposta: '(pulou)', correto: false, tempoMs: Date.now() - st.questaoInicioTs });
+  st.f1.credito = Math.max(0, st.f1.credito - CREDIT_PEN[q.dif]);
+  st.f1.erros++;
+  st.tentativaQ = 0;
+  registrarQuestao(false, 0);
+  const penStr = CREDIT_PEN[q.dif].toString();
+  mostrarFeedback("warn", `Pulou — Resposta: <strong>${q.resposta}${q.unidade?' '+q.unidade:''}</strong> · −${penStr}cr`);
+  floatPts('−'+penStr, 'cr');
+  flashPts('p');
+  beep(250, 300);
+  renderHUDF1();
+  const creditoZerado = st.f1.credito <= 0;
+  st.processando = true;
+  setTimeout(() => {
+    if (st.finalizado || st.transicao) return;
+    st.processando = false;
+    if (creditoZerado) { encerrarFase1('credito'); }
+    else { proximaF1(); }
+  }, 1800);
+}
+
+// ── Próxima questão Fase 1 ─────────────────────────────────────
+function proximaF1() {
+  st.f1.idx++;
+  if (st.f1.idx >= F1_TOTAL) { encerrarFase1('completa'); return; }
+  if (st.f1.credito <= 0)    { encerrarFase1('credito');  return; }
+  st.tentativaQ = 0;
+  st.questaoHist = [];
+  st.questaoAtual = st.f1.questoes[st.f1.idx];
+  st.questaoInicioTs = Date.now();
+  st.questaoRegistrada = false;
+  renderQuestaoF1();
+}
+
+function valorAtualF1() {
+  if (!st?.questaoAtual) return 0;
+  const raw = st.questaoAtual.pontos * FATORES_F1[st.tentativaQ];
+  return Math.round(raw * 100) / 100;
+}
+
+// ── Encerrar Fase 1 ────────────────────────────────────────────
+function encerrarFase1(motivo) {
+  if (st.transicao || st.finalizado) return;
+
+  st.f1.tempo_ms = Date.now() - st.f1.inicioMs;
+  st.f1.nota_quiz = parseFloat(((st.f1.pontos / F1_MAX_PTS) * 10).toFixed(2));
+
+  if (motivo === 'tempo' || motivo === 'manual') {
+    encerrarSessao(motivo);
+    return;
+  }
+
+  // Transição automática para Fase 2
+  st.transicao = true;
+  const sessaoRestante = Math.max(0, Math.ceil((st.sessaoFim - Date.now()) / 1000));
+  mostrarTransicaoF1(sessaoRestante);
+}
+
+// ── Tela de transição F1 → F2 ─────────────────────────────────
+function mostrarTransicaoF1(sessaoRestante) {
+  clearInterval(st.timerInterval);
+  const taxa = (st.f1.acertos + st.f1.erros) > 0
+    ? Math.round(st.f1.acertos / (st.f1.acertos + st.f1.erros) * 100) : 0;
+  const nota = st.f1.nota_quiz;
+
+  const ov = document.createElement("div");
+  ov.id = "transicao-f1";
+  ov.className = "transicao-overlay";
+  ov.innerHTML = `
+    <div class="transicao-card">
+      <div class="transicao-title">✅ FASE 1 CONCLUÍDA</div>
+      <div class="transicao-sub">QUIZ · ${F1_TOTAL} QUESTÕES</div>
+      <div class="transicao-nota">${nota.toFixed(1)}</div>
+      <div class="transicao-nota-lbl">nota quiz estimada (base 10)</div>
+      <div class="transicao-stats">
+        <div class="transicao-s">
+          <div class="transicao-sv" style="color:#FAB800">${fmtPts(st.f1.pontos)}<span style="font-size:10px;color:#2a3a2a"> /12</span></div>
+          <div class="transicao-sl">Pontos F1</div>
+        </div>
+        <div class="transicao-s">
+          <div class="transicao-sv" style="color:#4ADE80">${st.f1.acertos}</div>
+          <div class="transicao-sl">Acertos</div>
+        </div>
+        <div class="transicao-s">
+          <div class="transicao-sv" style="color:#60A5FA">${formatTempo(sessaoRestante)}</div>
+          <div class="transicao-sl">Restam na sessão</div>
+        </div>
+      </div>
+      <div class="transicao-bar-wrap"><div class="transicao-bar"></div></div>
+      <div class="transicao-next">Iniciando Fase 2…</div>
+    </div>`;
+  document.body.appendChild(ov);
+
+  const duracao = Math.min(3000, sessaoRestante * 1000);
+  if (duracao <= 0) {
+    ov.remove();
+    encerrarSessao('tempo');
+    return;
+  }
+  setTimeout(() => {
+    ov.remove();
+    iniciarFase2();
+  }, duracao);
+}
+
+// ── Iniciar Fase 2 ─────────────────────────────────────────────
+function iniciarFase2() {
+  st.transicao = false;
+  st.fase = 2;
+  st.saldo = 0;
+  st.acertos = 0;
+  st.erros = 0;
+  st.respondidas = 0;
+  st.tentativaQ = 0;
+  st.modoAjuda = false;
+  st.ajudaUsada = false;
+  st.ehBonus = false;
+  st.comboAtual = 0;
+  // session timer is still running
+  proximaF2();
+}
+
+// ── HUD Fase 2: render questão ─────────────────────────────────
+function renderQuestaoF2() {
+  const q = st.questaoAtual;
+  const difMap = { 1:['Fácil','facil'], 2:['Média','media'], 3:['Difícil','dificil'] };
+  const [difLbl, difCls] = difMap[q.dif] || difMap[1];
+  const v = valorAtualF2();
+  const pen = !st.ehBonus ? `−${Math.floor(q.pontos/2)}pt` : 'sem pena';
+  const gRest = controle ? Math.ceil(globalRestanteMs(controle)/1000) : 0;
+  const helpsHTML = [0,1,2].map(i => `<span class="hud-help-icon${i < st.ajudas ? '' : ' empty'}">🎯</span>`).join('');
+
+  document.getElementById("content").innerHTML = `
+    <div class="hud">
+      <div class="hud-pts-wrap">
+        <div class="hud-pts" id="hud-saldo">${st.saldo}</div>
+        <div class="hud-pts-lbl">pontos</div>
+      </div>
+      <div class="hud-sep">·</div>
+      <div class="hud-mid">
+        <div class="hud-speed">⚡ <span id="hud-speed-f2">${st.acertosRapidos%3}/3</span> ajuda · <span id="hud-bonus-f2" style="color:#FDE047">${st.acertosRapidos%10}/10</span> bônus</div>
+        <div class="hud-helps" id="hud-ajuda-f2" title="${st.ajudas} ajuda${st.ajudas!==1?'s':''} disponíve${st.ajudas!==1?'is':'l'}">${helpsHTML}</div>
+      </div>
+      <div style="font-size:10px;color:#2a2a55;margin:0 4px;align-self:center">F1: ${fmtPts(st.f1.pontos)}pt · ${st.f1.nota_quiz?.toFixed(1)??0}</div>
+      <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+        <div class="hud-sessao${st.sessaoRestante<=60?' urgente':''}" id="hud-sessao">⏳ ${formatTempo(st.sessaoRestante)}</div>
+        <div class="hud-global-disp" id="hud-global-disp">Global: ${formatTempo(gRest)}</div>
+      </div>
+    </div>
+    <div class="timer-wrap">
+      <div class="timer-track"><div class="timer-fill" id="timer-fill" style="width:100%"></div><div class="timer-mark50"></div></div>
+      <span class="timer-txt" id="timer-txt">${q.timer}s</span>
+    </div>
+    <div class="tent-row">
+      ${[0,1,2].map(i=>`<div class="tent-dot ${i<(3-st.tentativaQ)?'ativa':'usada'}"></div>`).join('')}
+      <span class="tent-lbl">${3-st.tentativaQ} tentativa${(3-st.tentativaQ)!==1?'s':''} restante${(3-st.tentativaQ)!==1?'s':''}</span>
+    </div>
+    <div class="question-card">
+      <div class="q-meta">
+        <span class="q-badge ${difCls}">● ${difLbl}</span>
+        <span class="q-valor">+${v} pt${v>1?'s':''}</span>
+        ${st.ehBonus?`<span style="font-size:11px;font-weight:700;color:#FDE047">🏆 BÔNUS · sem penalidade</span>`:''}
+      </div>
+      <div class="q-text">${q.enunciado}</div>
+      <div id="area-resposta">${areaRespostaF2HTML()}</div>
+      <div id="feedback" class="hidden"></div>
+      ${!st.modoAjuda && st.ajudas > 0 ? `<button class="btn-ajuda" id="btn-ajuda" onclick="usarAjuda()">🎯 Usar ajuda <span class="ajuda-badge">${st.ajudas}</span></button>` : ''}
+      <button onclick="pularQuestao()" style="background:transparent;border:1px solid #1c1c38;color:#363660;border-radius:8px;padding:7px 13px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;margin-top:8px;" onmouseover="this.style.borderColor='#363660'" onmouseout="this.style.borderColor='#1c1c38'">${st.ehBonus?'Recusar bônus':`Pular (${pen})`}</button>
+    </div>`;
+
+  if (!st.modoAjuda) document.getElementById("resp-input")?.focus();
+}
+
+function areaRespostaF2HTML() {
+  const q = st.questaoAtual;
+  if (st.modoAjuda) {
+    const all = shuffle([q.resposta, ...gerarDistratores(q.resposta)]);
+    return `<div class="mc-grid">
+      ${all.map((op,i) => `<button class="mc-btn" id="mc-${i}" onclick="responderMC('${op.replace(/'/g,"\\'")}',${i})">${op}</button>`).join('')}
+    </div>`;
+  }
+  return `<div class="answer-area">
+    <input type="text" id="resp-input" class="input" inputmode="decimal"
+      placeholder="Digite a resposta…" autocomplete="off"
+      onkeydown="if(event.key==='Enter')responderNum()"/>
+    <button class="btn btn-blue" id="btn-resp" onclick="responderNum()">
+      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>OK
+    </button>
+  </div>`;
+}
+
+function valorAtualF2() {
+  if (!st?.questaoAtual) return 0;
+  return Math.max(1, Math.floor(st.questaoAtual.pontos * FATORES_F2[st.tentativaQ]));
+}
+
+// ── Timer questão F2 ───────────────────────────────────────────
+function iniciarTimerF2(seg) {
+  clearInterval(st.timerInterval);
+  st.timerRestante = seg;
+  atualizarTimerUI();
+  st.timerInterval = setInterval(() => {
+    st.timerRestante = Math.max(0, st.timerRestante - 1);
+    atualizarTimerUI();
+    if (st.timerRestante <= 0) { clearInterval(st.timerInterval); timerExpirouF2(); }
+  }, 1000);
+}
+
+function atualizarTimerUI() {
+  const q   = st.questaoAtual;
+  const pct = q ? (st.timerRestante / q.timer) * 100 : 100;
+  const fill = document.getElementById("timer-fill");
+  const txt  = document.getElementById("timer-txt");
+  const mark = document.querySelector(".timer-mark50");
+  if (fill) {
+    fill.style.width = pct + "%";
+    const t = st.tentativaQ;
+    if (t === 0) {
+      if (pct > 50) {
+        fill.style.background = '#FAB800'; fill.style.boxShadow = '';
+        fill.classList.add('dourado');
+      } else {
+        fill.classList.remove('dourado');
+        fill.style.background = '#3B82F6'; fill.style.boxShadow = '0 0 8px rgba(59,130,246,.5)';
+      }
+    } else if (t === 1) {
+      fill.classList.remove('dourado'); fill.style.background = '#F59E0B'; fill.style.boxShadow = 'none';
+    } else {
+      fill.classList.remove('dourado'); fill.style.background = '#EF4444'; fill.style.boxShadow = 'none';
+    }
+  }
+  if (mark) mark.style.opacity = st.tentativaQ === 0 ? '1' : '0';
+  if (txt) { txt.textContent = st.timerRestante+"s"; txt.className = "timer-txt"+(st.tentativaQ>=2||pct<=25?" urgente":""); }
+}
+
+function timerExpirouF2() {
+  if (st.processando || st.finalizado) return;
+  st.processando = true;
+  st.tentativaQ++;
+  const q = st.questaoAtual;
+  st.questaoHist.push({ resposta: '(tempo)', correto: false, tempoUsado: q.timer });
+  document.querySelectorAll(".mc-btn").forEach(b => b.disabled = true);
+  const btn = document.getElementById("btn-resp"); if (btn) btn.disabled = true;
+  const inp = document.getElementById("resp-input"); if (inp) inp.disabled = true;
+
+  if (st.tentativaQ >= 3) {
+    st.erros++; st.respondidas++;
+    st.comboAtual = 0;
+    document.querySelectorAll('.mc-btn').forEach(b => {
+      if (respostasEquivalentes(b.textContent, q.resposta)) b.classList.add('correto');
+    });
+    if (st.ehBonus) {
+      registrarQuestao(false, 0, false, 0);
+      mostrarFeedback("info", `⏱ Tempo! Resposta: ${q.resposta}${q.unidade?' '+q.unidade:''} · Sem penalidade.`);
+      beep(250, 300); renderHUDF2();
+      setTimeout(() => { if (!st.finalizado) { st.processando = false; proximaF2(); } }, 2000);
+    } else {
+      registrarQuestao(false, -Math.floor(q.pontos * 0.5), false, 0);
+      aplicarPenalidadeF2(q, true);
+    }
+  } else {
+    mostrarFeedback("err", `⏱ Tempo esgotado! ${3-st.tentativaQ} tentativa${(3-st.tentativaQ)>1?'s':''} restante${(3-st.tentativaQ)>1?'s':''}.`);
+    beep(350, 300);
+    renderHUDF2();
+    setTimeout(() => {
+      if (st.finalizado) return;
+      mostrarFeedback("hidden", "");
+      st.processando = false;
+      document.getElementById("area-resposta").innerHTML = areaRespostaF2HTML();
+      iniciarTimerF2(st.questaoAtual.timer);
+      if (!st.modoAjuda) document.getElementById("resp-input")?.focus();
+    }, 1400);
+  }
+}
+
+// ── Processar resposta F2 ──────────────────────────────────────
+function processarF2(resposta, mcIdx) {
+  st.processando = true;
+  clearInterval(st.timerInterval);
+  const q       = st.questaoAtual;
+  const correto = respostasEquivalentes(resposta, q.resposta);
+  const tempoUsado = q.timer - st.timerRestante;
+  st.questaoHist.push({ resposta, correto, tempoUsado });
+
+  if (correto) {
+    st.respondidas++; st.acertos++;
+    st.comboAtual++;
+    if (st.comboAtual > st.comboMax) st.comboMax = st.comboAtual;
+
+    let pts = valorAtualF2();
+    const rapido = st.tentativaQ === 0 && !st.ajudaUsada && tempoUsado < q.timer * 0.5;
+    const speedPts = rapido ? (q.dif === 1 ? 1 : 2) : 0;
+    pts += speedPts;
+    st.saldo += pts;
+
+    if (rapido) {
+      st.acertosRapidos++;
+      if (st.acertosRapidos > 0 && st.acertosRapidos % 3 === 0) {
+        st.ajudas = Math.min(3, st.ajudas + 1);
+        setTimeout(() => mostrarNotif(`🎯 +1 ajuda! ${st.acertosRapidos} rápidos!`), 200);
+      }
+    }
+    if (q.dif === 3) {
+      st.acertosDificeis++;
+      if (!st.ajudaUsada) {
+        st.ajudas = Math.min(3, st.ajudas + 1);
+        setTimeout(() => mostrarNotif('🎯 +1 ajuda por questão difícil!'), 250);
+      }
+    }
+
+    if (mcIdx !== null) document.getElementById(`mc-${mcIdx}`)?.classList.add('correto');
+    let feedMsg = `✅ Correto! +${pts} pt${pts>1?'s':''}`;
+    if (speedPts > 0) feedMsg += ` <span style="color:#60A5FA">⚡ +${speedPts} veloz!</span>`;
+    mostrarFeedback("ok", feedMsg);
+    floatPts(pts - speedPts, 'g');
+    if (speedPts > 0) setTimeout(() => floatPts2(`⚡ +${speedPts}pt veloz!`), 200);
+    beep(1000, 150); flashPts('g');
+
+    if (st.saldo > (controle?.melhor_pontuacao || 0)) {
+      const sdEl = document.getElementById("hud-saldo");
+      if (sdEl) { sdEl.classList.add('record-flash'); setTimeout(() => sdEl.classList.remove('record-flash'), 3000); }
+    }
+
+    renderHUDF2();
+    registrarQuestao(true, pts, rapido, speedPts);
+
+    const ofertaBonus = rapido && st.acertosRapidos > 0 && st.acertosRapidos % 10 === 0;
+    setTimeout(() => {
+      if (st.finalizado) return;
+      st.processando = false;
+      if (ofertaBonus) mostrarOfertaDificilF2();
+      else proximaF2();
+    }, 1400);
+
+  } else {
+    st.tentativaQ++;
+    const card = document.querySelector('.question-card');
+    if (card) { card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); setTimeout(() => card.classList.remove('shake'), 550); }
+    if (mcIdx !== null) document.getElementById(`mc-${mcIdx}`)?.classList.add('errado');
+
+    if (st.tentativaQ >= 3) {
+      document.querySelectorAll('.mc-btn').forEach(b => {
+        if (respostasEquivalentes(b.textContent, q.resposta)) b.classList.add('correto');
+      });
+      st.erros++; st.respondidas++;
+      st.comboAtual = 0;
+      if (st.ehBonus) {
+        registrarQuestao(false, 0, false, 0);
+        mostrarFeedback("info", `Não foi! Resposta: ${q.resposta}${q.unidade?' '+q.unidade:''} · Sem penalidade.`);
+        beep(400, 250);
+        setTimeout(() => { if (!st.finalizado) { st.processando = false; proximaF2(); } }, 2000);
+      } else {
+        registrarQuestao(false, -Math.floor(q.pontos * 0.5), false, 0);
+        aplicarPenalidadeF2(q, false);
+      }
+    } else {
+      mostrarFeedback("err", `❌ Errado! ${3-st.tentativaQ} tentativa${(3-st.tentativaQ)>1?'s':''} restante${(3-st.tentativaQ)>1?'s':''}.`);
+      beep(400, 280);
+      renderHUDF2();
+      setTimeout(() => {
+        if (st.finalizado) return;
+        mostrarFeedback("hidden", "");
+        st.processando = false;
+        document.getElementById("area-resposta").innerHTML = areaRespostaF2HTML();
+        iniciarTimerF2(q.timer);
+        if (!st.modoAjuda) document.getElementById("resp-input")?.focus();
+      }, 1400);
+    }
+  }
+}
+
+function pularF2() {
+  if (!st || st.processando || st.finalizado) return;
+  clearInterval(st.timerInterval);
+  const q = st.questaoAtual;
+  st.questaoHist.push({ resposta: '(pulou)', correto: false, tempoUsado: q.timer - st.timerRestante });
+  if (st.ehBonus) {
+    registrarQuestao(false, 0, false, 0);
+    st.processando = true;
+    mostrarFeedback("info", "Questão bônus recusada.");
+    setTimeout(() => { if (!st.finalizado) { st.processando = false; proximaF2(); } }, 900);
+    return;
+  }
+  st.erros++; st.respondidas++;
+  st.comboAtual = 0;
+  registrarQuestao(false, -Math.floor(q.pontos * 0.5), false, 0);
+  aplicarPenalidadeF2(q, false);
+}
+
+// ── Aplicar penalidade F2 ──────────────────────────────────────
+function aplicarPenalidadeF2(q, deTempo) {
+  const pen = Math.floor(q.pontos * 0.5);
+  st.saldo = Math.max(0, st.saldo - pen);
+  st.semPenalidade = false;
+  floatPts(pen, 'p'); flashPts('p'); beep(250, 350);
+  const resp = q.resposta + (q.unidade ? ' '+q.unidade : '');
+  mostrarFeedback("warn", `⚠️ ${deTempo?'Tempo! ':''}Resposta: ${resp} · −${pen} pt${pen>1?'s':''}`);
+  renderHUDF2();
+  setTimeout(() => { if (!st.finalizado) { st.processando = false; proximaF2(); } }, 2200);
+}
+
+// ── Próxima questão F2 ─────────────────────────────────────────
+function proximaF2() {
+  if (st.finalizado) return;
+  if (st.questaoAtual) mostrarRespostaAnteriorF2(st.questaoAtual);
+  st.tentativaQ = 0;
+  st.modoAjuda = false;
+  st.ajudaUsada = false;
+  st.ehBonus = false;
+  st.questaoHist = [];
+  st.questaoAtual = gerarQuestaoF2();
+  st.questaoInicioTs = Date.now();
+  st.questaoRegistrada = false;
+  renderQuestaoF2();
+  iniciarTimerF2(st.questaoAtual.timer);
+}
+
+// ── Dispatch por fase ──────────────────────────────────────────
+window.responderNum = function() {
+  if (!st || st.processando || st.finalizado || st.transicao) return;
+  const inp = document.getElementById("resp-input");
+  const val = inp ? inp.value.trim() : "";
+  if (!val) { mostrarFeedback("info", "⚠️ Digite a resposta."); return; }
+  const btn = document.getElementById("btn-resp"); if (btn) btn.disabled = true;
+  if (inp) inp.disabled = true;
+  if (st.fase === 1) processarF1(val);
+  else processarF2(val, null);
+};
+
+window.responderMC = function(op, idx) {
+  if (!st || st.processando || st.finalizado) return;
+  document.querySelectorAll(".mc-btn").forEach(b => b.disabled = true);
+  processarF2(op, idx);
+};
+
+window.pularQuestao = function() {
+  if (st.fase === 1) pularF1();
+  else pularF2();
+};
+
+// ── Registrar questão (compartilhado) ──────────────────────────
+function registrarQuestao(acertou, pontosGanhos, velocidade = false, speedPts = 0) {
+  const q = st.questaoAtual;
+  const hist = [...st.questaoHist];
+  const correctResp = hist.find(t => t.correto);
+  const lastResp    = hist[hist.length - 1];
+  st.questoesDetalhes.push({
+    fase: st.fase,
+    enunciado: q.enunciado,
+    resposta_correta: q.resposta + (q.unidade ? ' ' + q.unidade : ''),
+    resposta_aluno: (correctResp || lastResp)?.resposta || '',
+    resultado: acertou ? 'acerto' : 'erro',
+    tentativas_count: hist.length,
+    tempo_resposta_ms: Math.round(Date.now() - st.questaoInicioTs),
+    dificuldade: q.dif,
+    ehBonus: !!st.ehBonus,
+    tentativas: hist,
+    acertou, pontosGanhos,
+    velocidade, speedPts,
+    usouAjuda: !!st.ajudaUsada,
+  });
+  st.questaoHist = [];
+  st.questaoRegistrada = true;
+}
+
+function mostrarFeedback(tipo, msg) {
+  const el = document.getElementById("feedback");
+  if (el) { el.className = tipo; el.innerHTML = msg; }
+}
+
+// ── Float pontos ───────────────────────────────────────────────
+function floatPts(val, tipo) {
+  const d = document.createElement("div");
+  d.className = `float-pts ${tipo}`;
+  d.textContent = tipo === 'g' ? `+${val}` : tipo === 'p' ? `−${val}` : `${val}`;
+  d.style.cssText = `left:50%;top:42%;`;
+  document.body.appendChild(d);
+  setTimeout(() => d.remove(), 1450);
+}
+
+function floatPts2(texto) {
+  const d = document.createElement("div");
+  d.className = 'float-pts s';
+  d.textContent = texto;
+  d.style.cssText = `left:50%;top:50%;`;
+  document.body.appendChild(d);
+  setTimeout(() => d.remove(), 1600);
+}
+
+function lancarConfete(n = 60) {
+  const wrap = document.createElement("div");
+  wrap.className = "confete-wrap";
+  document.body.appendChild(wrap);
+  const colors = ['#FAB800','#22C55E','#60A5FA','#A855F7','#F87171','#FDE047','#4ADE80'];
+  for (let i = 0; i < n; i++) {
+    const p = document.createElement("div");
+    p.className = "confete-particle";
+    const w = 6 + Math.random() * 8;
+    p.style.cssText = `left:${Math.random()*100}%;width:${w}px;height:${w*1.6}px;`
+      + `background:${colors[Math.floor(Math.random()*colors.length)]};`
+      + `animation-duration:${2.5+Math.random()*3}s;animation-delay:${Math.random()*1.8}s;`;
+    wrap.appendChild(p);
+  }
+  setTimeout(() => wrap.remove(), 7000);
+}
+
+// ── F2: Notificação ───────────────────────────────────────────
+function mostrarNotif(msg) {
+  const old = document.querySelector('.notif'); if (old) old.remove();
+  const d = document.createElement("div");
+  d.className = "notif"; d.textContent = msg;
+  document.body.appendChild(d);
+  setTimeout(() => d.remove(), 2800);
+}
+
+// ── F2: Banner resposta anterior ──────────────────────────────
+function mostrarRespostaAnteriorF2(q) {
+  document.querySelector('.banner-resp-ant')?.remove();
+  const d = document.createElement("div");
+  d.className = "banner-resp-ant";
+  d.textContent = `✓ ${q.resposta}${q.unidade ? ' '+q.unidade : ''}`;
+  document.body.appendChild(d);
+  setTimeout(() => d.remove(), 1500);
+}
+
+// ── F2: Popup questão difícil (bônus a cada 10 rápidos) ───────
+let popupDifTimer = null;
+function mostrarOfertaDificilF2() {
+  const ov = document.createElement("div");
+  ov.className = "popup-ov"; ov.id = "popup-dificil";
+  ov.innerHTML = `
+    <div class="popup-card">
+      <div class="popup-icon">🏆</div>
+      <div class="popup-titulo">QUESTÃO BÔNUS!</div>
+      <div class="popup-desc">Você está em chamas! ⚡<br>Vale <strong>24 pts</strong> + 1 ajuda.<br>Sem penalidade se errar. Aceita?</div>
+      <div class="popup-timer-track"><div class="popup-timer-fill" id="popup-tfill" style="width:100%"></div></div>
+      <button class="popup-btn-a" onclick="aceitarDificilF2()">✅ Aceitar o desafio!</button>
+      <button class="popup-btn-r" onclick="recusarDificilF2()">Não, próxima questão</button>
+    </div>`;
+  document.body.appendChild(ov);
+  let tLeft = 5;
+  popupDifTimer = setInterval(() => {
+    tLeft--;
+    const fill = document.getElementById("popup-tfill");
+    if (fill) fill.style.width = (tLeft/5*100)+"%";
+    if (tLeft <= 0) { clearInterval(popupDifTimer); popupDifTimer = null; recusarDificilF2(); }
+  }, 1000);
+}
+
+window.aceitarDificilF2 = function() {
+  if (popupDifTimer) { clearInterval(popupDifTimer); popupDifTimer = null; }
+  document.getElementById("popup-dificil")?.remove();
+  if (st.finalizado) return;
+  const q = gerarQuestaoF2(3);
+  st.questaoAtual = q; st.questaoInicioTs = Date.now();
+  st.questaoRegistrada = false; st.tentativaQ = 0;
+  st.modoAjuda = false; st.ajudaUsada = false; st.ehBonus = true;
+  renderQuestaoF2(); iniciarTimerF2(q.timer);
+};
+
+window.recusarDificilF2 = function() {
+  if (popupDifTimer) { clearInterval(popupDifTimer); popupDifTimer = null; }
+  document.getElementById("popup-dificil")?.remove();
+  if (!st.finalizado) { st.questaoHist = []; proximaF2(); }
+};
+
+// ── F2: Usar ajuda ────────────────────────────────────────────
+window.usarAjuda = function() {
+  if (!st || st.ajudas <= 0 || st.modoAjuda || st.processando || st.finalizado) return;
+  st.ajudas--;
+  st.ajudaUsada = true;
+  st.modoAjuda  = true;
+  st.ajudasUsadasTotal = (st.ajudasUsadasTotal || 0) + 1;
+  const el = document.getElementById("area-resposta");
+  if (el) el.innerHTML = areaRespostaF2HTML();
+  document.getElementById("btn-ajuda")?.remove();
+  renderHUDF2();
+  mostrarFeedback("info", "🎯 Ajuda ativada! Pontuação completa — escolha a correta!");
+};
+
+// ── Timer sessão (wall-clock) ──────────────────────────────────
+function iniciarSessaoTimer() {
+  clearInterval(st.sessaoInterval);
+  st.sessaoInterval = setInterval(() => {
+    st.sessaoRestante = Math.max(0, Math.ceil((st.sessaoFim - Date.now()) / 1000));
+    const sEl = document.getElementById("hud-sessao");
+    if (sEl) { sEl.textContent = `⏳ ${formatTempo(st.sessaoRestante)}`; sEl.className = "hud-sessao"+(st.sessaoRestante<=60?" urgente":""); }
+    const gEl = document.getElementById("hud-global-disp");
+    if (gEl && controle) gEl.textContent = `Global: ${formatTempo(Math.ceil(globalRestanteMs(controle)/1000))}`;
+    // Alarme gradual nos últimos 60s (só na Fase 2 para não atrapalhar F1)
+    if (st.fase === 2) {
+      if (st.sessaoRestante === 60) { beep(600, 80); setTimeout(() => beep(600, 80), 200); }
+      else if (st.sessaoRestante === 30) { beep(700, 80); setTimeout(() => beep(700, 80), 150); setTimeout(() => beep(700, 80), 300); }
+      else if (st.sessaoRestante <= 10 && st.sessaoRestante > 0) beep(800 + (10-st.sessaoRestante)*20, 60);
+    }
+    if (st.sessaoRestante <= 0) {
+      clearInterval(st.sessaoInterval);
+      if (st.transicao) return;
+      if (st.fase === 1) encerrarFase1('tempo');
+      else encerrarSessao('tempo');
+    }
+  }, 1000);
+}
+
+// ── Encerrar sessão (F2 ou sessão encerrada em F1) ─────────────
+async function encerrarSessao(motivo) {
+  if (!st || st.finalizado) return;
+  st.finalizado = true;
+  clearInterval(st.timerInterval);
+  clearInterval(st.sessaoInterval);
+  document.getElementById("transicao-f1")?.remove();
+
+  if (st.questaoAtual && !st.questaoRegistrada) {
+    st.questoesDetalhes.push({
+      fase: st.fase,
+      enunciado: st.questaoAtual.enunciado,
+      resposta_correta: st.questaoAtual.resposta + (st.questaoAtual.unidade ? ' '+st.questaoAtual.unidade : ''),
+      resposta_aluno: '',
+      resultado: 'nao_respondida',
+      tentativas_count: st.questaoHist.length,
+      dificuldade: st.questaoAtual.dif,
+      tentativas: [...st.questaoHist],
+      acertou: false, pontosGanhos: 0,
+    });
+  }
+
+  // F1: fill tempo_ms if not already
+  if (!st.f1.tempo_ms) st.f1.tempo_ms = Date.now() - st.f1.inicioMs;
+  if (!st.f1.nota_quiz) st.f1.nota_quiz = parseFloat(((st.f1.pontos / F1_MAX_PTS) * 10).toFixed(2));
+
+  // Bônus fim de sessão: +20pts se tempo, sem penalidade e ≥3 respondidas F2
+  let bonusFim = 0;
+  if (motivo === 'tempo' && st.semPenalidade && st.respondidas >= 3) {
+    bonusFim = 20;
+    st.saldo += bonusFim;
+  }
+
+  const t = Math.round(Date.now()/1000 - st.inicioTs);
+  let percentualFim = statusInfo.percentual ?? 100;
+  try { const s = await getAtividadeStatus(turma, liberada.atividade); percentualFim = s.percentual ?? 100; } catch(e) {}
+
+  const f2bruta   = st.saldo; // já inclui bonusFim
+  const f2aplicado = f2bruta > 0 ? Math.max(1, Math.floor(f2bruta * percentualFim / 100)) : 0;
+  const naoRespondidas = st.questoesDetalhes.filter(q => q.resultado === 'nao_respondida').length;
+
+  const dados = {
+    pontuacao_bruta: f2bruta, pontuacao: f2aplicado,
+    percentual_nota: percentualFim, com_abatimento: percentualFim < 100,
+    acertos: st.acertos, erros: st.erros, respondidas: st.respondidas,
+    modo: "avaliacao_plus",
+    pontos_fase1: st.f1.pontos, nota_quiz: st.f1.nota_quiz,
+    credito_final: st.f1.credito, tempo_fase1_ms: st.f1.tempo_ms,
+    fase1_concluida: st.f1.idx >= F1_TOTAL || st.f1.credito <= 0,
+    bonus_fim: bonusFim, sem_penalidade: st.semPenalidade,
+    acertos_rapidos: st.acertosRapidos, combo_max: st.comboMax,
+    acertos_dificeis: st.acertosDificeis, ajudas_usadas: st.ajudasUsadasTotal || 0,
+    nao_respondidas: naoRespondidas,
+    tempo: `${t}s`, ts_inicio: st.inicioTs, data: dataAgora(), concluido: true,
+  };
+
+  for (const al of alunos) {
+    const rid = st.resultadoIds[al];
+    if (rid) {
+      try { await updateResultado(rid, { ...dados, aluno: al, turma, atividade: liberada.atividade }); } catch(e) {}
+      if (st.questoesDetalhes.length) saveDetalhes(rid, st.questoesDetalhes).catch(()=>{});
+    }
+  }
+
+  // Atualizar controle: melhor pontuação
+  const melhorAtual = controle.melhor_pontuacao || 0;
+  const melhorNqAtual = controle.melhor_nota_quiz || 0;
+  const upd = {};
+  if (f2aplicado > melhorAtual) upd.melhor_pontuacao = f2aplicado;
+  if (f2bruta > (controle.melhor_bruta||0)) upd.melhor_bruta = f2bruta;
+  if (st.f1.nota_quiz > melhorNqAtual) upd.melhor_nota_quiz = st.f1.nota_quiz;
+  if (Object.keys(upd).length) { try { await update(controleRef, upd); controle = {...controle,...upd}; } catch(e) {} }
+
+  const novoMelhorF2 = f2aplicado > melhorAtual;
+  if (novoMelhorF2 && f2aplicado > 0) lancarConfete();
+
+  mostrarResultado(motivo, f2aplicado, f2bruta, novoMelhorF2, bonusFim);
+}
+
+// ── Tela de resultado / entre tentativas ───────────────────────
+function mostrarResultado(motivo, f2aplicado, f2bruta, novoMelhor, bonusFim = 0) {
+  const tentUsadas    = controle.tentativas_realizadas || 1;
+  const tentRestantes = MAX_TENTATIVAS - tentUsadas;
+  const gRestMs       = globalRestanteMs(controle);
+  const podeNovar     = tentRestantes > 0 && gRestMs >= MIN_PARA_TENTATIVA_MS;
+  const melhorExibida = controle.melhor_pontuacao || f2aplicado;
+  const taxa = st.respondidas > 0 ? Math.round(st.acertos / st.respondidas * 100) : 0;
+
+  const badges = [];
+  if (st.acertosRapidos > 0) badges.push(`<span class="fim-badge veloz">⚡ ${st.acertosRapidos} rápidos</span>`);
+  if (st.semPenalidade && st.respondidas > 0) badges.push(`<span class="fim-badge limpo">🔥 Sem penalidades</span>`);
+  if ((st.acertosDificeis || 0) > 0) badges.push(`<span class="fim-badge bonus-rei">🏆 ${st.acertosDificeis} bônus</span>`);
+  if (bonusFim > 0) badges.push(`<span class="fim-badge bonus-fim">⭐ +${bonusFim} bônus fim!</span>`);
+
+  const bonusLabel = bonusFim > 0 ? ` · <span style="color:#4ADE80">+${bonusFim} bônus!</span>` : '';
+
+  const ov = document.createElement("div");
+  ov.className = "resultado-overlay";
+  ov.innerHTML = `
+    <div class="resultado-card">
+      <div class="res-icon">${motivo==='tempo'?'⏰':motivo==='manual'?'🏁':'⏰'}</div>
+      <div class="res-saldo${novoMelhor?' record':''}">${f2aplicado}</div>
+      <div class="res-lbl">pontos Fase 2${statusInfo.percentual<100?' · '+statusInfo.percentual+'%':''}${bonusLabel}</div>
+      ${novoMelhor?`<div class="res-melhor">🎉 Novo recorde pessoal!</div>`
+        : melhorExibida>0?`<div style="font-size:12px;color:#3a3a68;margin-bottom:12px">Melhor F2: ${melhorExibida} pts</div>`:''}
+      <div class="res-f1-block">
+        <strong>📊 Fase 1</strong><br>
+        Pontos: <strong style="color:#FAB800">${fmtPts(st.f1.pontos)} / ${F1_MAX_PTS}</strong> &nbsp;·&nbsp;
+        Nota quiz: <strong style="color:#FAB800">${st.f1.nota_quiz?.toFixed(1)??0} / 10</strong><br>
+        Crédito restante: ${fmtPts(st.f1.credito)} &nbsp;·&nbsp; Acertos: ${st.f1.acertos}/${F1_TOTAL}
+      </div>
+      <div class="res-stats">
+        <div class="res-s"><div class="res-sv" style="color:#4ADE80">${st.acertos}</div><div class="res-sl">Acertos F2</div></div>
+        <div class="res-s"><div class="res-sv" style="color:#F87171">${st.erros}</div><div class="res-sl">Erros F2</div></div>
+        <div class="res-s"><div class="res-sv" style="color:#60A5FA">${taxa}%</div><div class="res-sl">Taxa F2</div></div>
+      </div>
+      ${badges.length ? `<div class="fim-badges">${badges.join('')}</div>` : ''}
+      <div class="res-stats" style="margin-top:8px">
+        <div class="res-s"><div class="res-sv" style="color:#60A5FA">${st.acertosRapidos}</div><div class="res-sl">Rápidos ⚡</div></div>
+        <div class="res-s"><div class="res-sv" style="color:#A855F7">${st.ajudasUsadasTotal||0}</div><div class="res-sl">Ajudas 🎯</div></div>
+        <div class="res-s"><div class="res-sv" style="color:#5050a0">${st.comboMax}</div><div class="res-sl">Combo máx</div></div>
+      </div>
+      <div class="res-prox-info">
+        <strong>Tentativas usadas:</strong> ${tentUsadas} / ${MAX_TENTATIVAS}<br>
+        <strong>Tempo global restante:</strong> ${gRestMs>0?formatTempoLongo(gRestMs):'Esgotado'}
+        ${!podeNovar&&tentRestantes>0?`<br><span style="color:#F87171">Tempo insuficiente para nova tentativa.</span>`:''}
+      </div>
+      ${podeNovar?`<button class="btn-nova-tent" onclick="iniciarNovaTentativa()">▶ NOVA TENTATIVA (${tentRestantes} restante${tentRestantes!==1?'s':''})</button>`:''}
+      <a class="btn-voltar-res" href="/aluno/atividades.html">← Voltar para atividades</a>
+    </div>`;
+  document.body.appendChild(ov);
+}
+
+// ── Iniciar nova tentativa ─────────────────────────────────────
+window.iniciarNovaTentativa = async function() {
+  document.querySelector(".resultado-overlay")?.remove();
+  const snap = await get(controleRef);
+  controle = snap.exists() ? snap.val() : controle;
+
+  const gRestMs = globalRestanteMs(controle);
+  if (gRestMs < MIN_PARA_TENTATIVA_MS) { mostrarBloqueada('tempo', controle); return; }
+  if ((controle.tentativas_realizadas||0) >= MAX_TENTATIVAS) { mostrarBloqueada('tentativas', controle); return; }
+
+  const novaTent = (controle.tentativas_realizadas||0) + 1;
+  await update(controleRef, { tentativas_realizadas: novaTent });
+  controle.tentativas_realizadas = novaTent;
+
+  const duracaoSessao = Math.min(DURACAO_SESSAO_S, Math.floor(gRestMs/1000));
+  st = novoEstado(duracaoSessao);
+
+  const agora = dataAgora();
+  for (const al of alunos) {
+    st.resultadoIds[al] = await addResultado({
+      aluno: al, turma, atividade: liberada.atividade,
+      modo: "avaliacao_plus", concluido: false,
+      pontuacao: 0, data: agora, ts_inicio: st.inicioTs, tentativa_num: novaTent,
+    });
+  }
+
+  iniciarSessaoTimer();
+  // Iniciar Fase 1
+  st.f1.inicioMs = Date.now();
+  st.questaoAtual = st.f1.questoes[0];
+  st.questaoInicioTs = Date.now();
+  st.questaoRegistrada = false;
+  renderQuestaoF1();
+};
+
+// ── Tela bloqueada ─────────────────────────────────────────────
+function mostrarBloqueada(motivo, ctrl) {
+  document.body.classList.add('arcade-mode');
+  const titulo = motivo==='tentativas' ? 'Avaliação Encerrada' : 'Tempo Esgotado';
+  const sub    = motivo==='tentativas'
+    ? 'Você já utilizou todas as tentativas disponíveis.'
+    : 'O tempo global de 30 minutos foi esgotado.';
+  const melhor = ctrl?.melhor_pontuacao || 0;
+  const tentUsadas = ctrl?.tentativas_realizadas || 0;
+
+  document.getElementById("content").innerHTML = `
+    <div class="bloqueada-wrap">
+      <div class="bloqueada-icon">${motivo==='tentativas'?'🔒':'⏰'}</div>
+      <div class="bloqueada-title">${titulo}</div>
+      <div class="bloqueada-sub">${sub}</div>
+      <div class="bloqueada-stats">
+        <div class="bloqueada-stat">
+          <div class="bloqueada-stat-val">${melhor}</div>
+          <div class="bloqueada-stat-lbl">Melhor resultado</div>
+        </div>
+        <div class="bloqueada-stat">
+          <div class="bloqueada-stat-val">${tentUsadas} / ${MAX_TENTATIVAS}</div>
+          <div class="bloqueada-stat-lbl">Tentativas usadas</div>
+        </div>
+      </div>
+      <a href="/aluno/atividades.html" class="btn btn-blue" style="text-decoration:none;padding:14px 36px;font-size:14px">← Voltar para atividades</a>
+    </div>`;
+}
+
+// ── Tela pré-jogo ──────────────────────────────────────────────
+function mostrarPreJogo(ctrl) {
+  document.body.classList.add('arcade-mode');
+  const tentUsadas   = ctrl?.tentativas_realizadas || 0;
+  const tentRestantes = MAX_TENTATIVAS - tentUsadas;
+  const gRestMs      = ctrl ? globalRestanteMs(ctrl) : DURACAO_GLOBAL_MS;
+  const melhor       = ctrl?.melhor_pontuacao || 0;
+  const melhorNq     = ctrl?.melhor_nota_quiz || 0;
+
+  document.getElementById("content").innerHTML = `
+    <div class="pre-wrap">
+      <div class="pre-title">AVALIAÇÃO+</div>
+      <div class="pre-sub">${liberada.atividade.toUpperCase()} · TURMA ${turma}</div>
+      <div class="pre-info-grid">
+        <div class="pre-info-box">
+          <div class="pre-info-val">${tentRestantes}</div>
+          <div class="pre-info-lbl">Tentativas</div>
+        </div>
+        <div class="pre-info-box">
+          <div class="pre-info-val" style="font-size:15px">${formatTempo(Math.max(0,Math.ceil(gRestMs/1000)))}</div>
+          <div class="pre-info-lbl">Tempo global</div>
+        </div>
+        <div class="pre-info-box">
+          <div class="pre-info-val">${DURACAO_SESSAO_S/60}min</div>
+          <div class="pre-info-lbl">Por sessão</div>
+        </div>
+      </div>
+      ${melhorNq>0||melhor>0
+        ? `<div class="pre-melhor">🏆 quiz ${melhorNq.toFixed(1)}/10 · F2 ${melhor}pts</div><div class="pre-melhor-lbl">Suas melhores marcas</div>`
+        : `<div class="pre-melhor-lbl" style="margin-bottom:22px">Primeira tentativa — boa sorte!</div>`}
+      <div class="pre-regras">
+        <strong>Fase 1 — Quiz (8 questões)</strong><br>
+        • 5 fáceis → 2 médias → 1 difícil, sem timer por questão<br>
+        • Valores base: Fácil <strong>1pt</strong> · Média <strong>2pt</strong> · Difícil <strong>3pt</strong> · Máx <strong>12pt</strong><br>
+        • 3 tentativas: ×1,0 → ×0,75 → ×0,50 do valor<br>
+        • Falhou as 3 ou pulou → 0pt + desconto no crédito (Fácil −0,25 · Média −0,50 · Difícil −0,75)<br>
+        • Crédito inicia em <strong>10</strong> · zerou → encerra Fase 1<br>
+        • <em>nota_quiz = (pts_f1 / 12) × 10</em>
+        <div class="phase-block">
+          <strong>Fase 2 — Livre (tempo restante)</strong><br>
+          • Questões aleatórias com timer por questão<br>
+          • Fácil: <strong>4pt · 10s</strong> &nbsp; Médio: <strong>8pt · 40s</strong><br>
+          • Errou/pulou → penalidade −50% base
+        </div>
+        <div class="phase-block">
+          <strong>Sessão: 8 min compartilhados entre as duas fases</strong><br>
+          • Máximo de <strong>3 tentativas</strong> em 30 min globais<br>
+          • Vale a <strong>melhor</strong> das tentativas
+        </div>
+      </div>
+      <button class="btn-iniciar" onclick="iniciarJogo()">▶ INICIAR!</button>
+    </div>`;
+}
+
+// ── Iniciar jogo ───────────────────────────────────────────────
+window.iniciarJogo = async function() {
+  const btn = document.querySelector('.btn-iniciar');
+  if (btn) btn.disabled = true;
+  document.getElementById("content").innerHTML =
+    `<div style="text-align:center;padding:50px;color:#2a2a50;font-family:'Orbitron',monospace;font-size:12px;letter-spacing:3px">CARREGANDO…</div>`;
+
+  if (!controle) {
+    controle = { inicio_global: Date.now(), tentativas_realizadas: 1, melhor_pontuacao: 0, melhor_bruta: 0, melhor_nota_quiz: 0 };
+    await set(controleRef, { ...controle });
+  } else {
+    const novaTent = (controle.tentativas_realizadas||0) + 1;
+    await update(controleRef, { tentativas_realizadas: novaTent });
+    controle.tentativas_realizadas = novaTent;
+  }
+
+  const gRestMs = globalRestanteMs(controle);
+  const duracaoSessao = Math.min(DURACAO_SESSAO_S, Math.floor(gRestMs/1000));
+  if (duracaoSessao <= 0) { mostrarBloqueada('tempo', controle); return; }
+
+  st = novoEstado(duracaoSessao);
+
+  const agora = dataAgora();
+  for (const al of alunos) {
+    st.resultadoIds[al] = await addResultado({
+      aluno: al, turma, atividade: liberada.atividade,
+      modo: "avaliacao_plus", concluido: false,
+      pontuacao: 0, data: agora, ts_inicio: st.inicioTs, tentativa_num: controle.tentativas_realizadas,
+    });
+  }
+
+  iniciarSessaoTimer();
+  // Iniciar Fase 1
+  st.f1.inicioMs = Date.now();
+  st.questaoAtual = st.f1.questoes[0];
+  st.questaoInicioTs = Date.now();
+  st.questaoRegistrada = false;
+  renderQuestaoF1();
+};
+
+// ── Encerrar manual ────────────────────────────────────────────
+window.pedirEncerrar = function() {
+  if (!st || st.finalizado || st.transicao) return;
+  document.getElementById("encerrar-modal")?.remove();
+  const info = st.fase === 1
+    ? `Fase 1 em andamento · Pontos: <strong style="color:#FAB800">${fmtPts(st.f1.pontos)}</strong> · Crédito: ${fmtPts(st.f1.credito)}`
+    : `Fase 2 · Pontuação: <strong style="color:#FAB800">${st.saldo} pts</strong>`;
+  const ov = document.createElement("div");
+  ov.id = "encerrar-modal";
+  ov.className = "encerrar-modal-ov";
+  ov.innerHTML = `
+    <div class="encerrar-modal-card">
+      <div style="font-size:20px;margin-bottom:8px">🏁 Encerrar sessão?</div>
+      <div style="font-size:13px;color:#9999dd;margin-bottom:16px">${info}</div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-red" style="flex:1;justify-content:center" onclick="confirmarEncerrar()">Encerrar</button>
+        <button class="btn" style="flex:1;justify-content:center;background:#1a1a3a;color:#9999dd;border-color:#3a3a6a" onclick="cancelarEncerrar()">Cancelar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+};
+
+window.confirmarEncerrar = function() {
+  document.getElementById("encerrar-modal")?.remove();
+  if (!st || st.finalizado) return;
+  clearInterval(st.timerInterval);
+  if (st.fase === 1) encerrarFase1('manual');
+  else encerrarSessao('manual');
+};
+
+window.cancelarEncerrar = function() {
+  document.getElementById("encerrar-modal")?.remove();
+};
+
+window.addEventListener("beforeunload", () => {
+  if (st) { clearInterval(st.timerInterval); clearInterval(st.sessaoInterval); }
+});
+
+// ── Init ───────────────────────────────────────────────────────
+const controleSnap = await get(controleRef);
+controle = controleSnap.exists() ? controleSnap.val() : null;
+
+if (controle) {
+  const gRestMs = globalRestanteMs(controle);
+  if ((controle.tentativas_realizadas||0) >= MAX_TENTATIVAS) mostrarBloqueada('tentativas', controle);
+  else if (gRestMs < MIN_PARA_TENTATIVA_MS) mostrarBloqueada('tempo', controle);
+  else mostrarPreJogo(controle);
+} else {
+  mostrarPreJogo(null);
+}
+</script>
+</body>
+</html>

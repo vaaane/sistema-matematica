@@ -49,6 +49,11 @@
     .sum-box { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:14px 10px; text-align:center; }
     .sum-val { font-size:24px; font-weight:800; line-height:1; }
     .sum-lbl { font-size:11px; color:var(--text-muted); margin-top:4px; }
+
+    /* ── Abas de modo (Competição+ / Avaliação+) ─────────────── */
+    .mode-tabs{display:flex;gap:4px;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:14px;}
+    .mode-tab{padding:7px 12px;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);background:transparent;transition:all .2s;}
+    .mode-tab.on{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(47,158,220,.3);}
   </style>
 </head>
 <body>
@@ -149,8 +154,29 @@ function calcAtivStats(tentativas) {
   return { melhorPts, comboMax, difMax, taxa, totalAc, totalErr, modos, isPlus, rapMax, rapTotal, ajudasTotal, semPenCount };
 }
 
-const MODO_LABEL = { classico: 'Clássico', competicao: 'Competição', competicao_plus: 'Competição+' };
-const MODO_BADGE = { classico: 'badge-blue', competicao: 'badge-orange', competicao_plus: 'badge-gold' };
+const MODO_LABEL = { classico: 'Clássico', competicao: 'Competição', competicao_plus: 'Competição+', avaliacao_plus: 'Avaliação+' };
+const MODO_BADGE = { classico: 'badge-blue', competicao: 'badge-orange', competicao_plus: 'badge-gold', avaliacao_plus: '' };
+
+const modoAtivoAcomp = {};
+
+window.mostrarModoAcomp = function(uid, modo) {
+  modoAtivoAcomp[uid] = modo;
+  const compEl = document.getElementById(`modo-comp-${uid}`);
+  const avEl   = document.getElementById(`modo-avplus-${uid}`);
+  if (compEl) compEl.style.display = modo === 'comp' ? '' : 'none';
+  if (avEl)   avEl.style.display   = modo === 'avaliacao_plus' ? '' : 'none';
+  document.querySelectorAll(`.mtab-${uid}`).forEach(b =>
+    b.classList.toggle('on', b.dataset.modo === modo));
+};
+
+function calcAtivStatsAvPlus(tentativas) {
+  const melhorNQ  = Math.max(0, ...tentativas.map(r => r.nota_quiz ?? 0));
+  const melhorPts = Math.max(0, ...tentativas.map(r => r.pontuacao  ?? 0));
+  const totalAc   = tentativas.reduce((a, r) => a + (r.acertos || 0), 0);
+  const totalErr  = tentativas.reduce((a, r) => a + (r.erros   || 0), 0);
+  const taxa      = (totalAc + totalErr) > 0 ? Math.round(totalAc / (totalAc + totalErr) * 100) : 0;
+  return { melhorNQ, melhorPts, totalAc, totalErr, taxa };
+}
 
 function renderAluno(aluno, turma, hist) {
   if (!hist.length) {
@@ -164,10 +190,13 @@ function renderAluno(aluno, turma, hist) {
     return;
   }
 
-  const porAtiv = {};
+  // Group by atividade then by modo
+  const porAtivModo = {};
   for (const r of hist) {
-    if (!porAtiv[r.atividade]) porAtiv[r.atividade] = [];
-    porAtiv[r.atividade].push(r);
+    if (!porAtivModo[r.atividade]) porAtivModo[r.atividade] = {};
+    const m = r.modo || 'classico';
+    if (!porAtivModo[r.atividade][m]) porAtivModo[r.atividade][m] = [];
+    porAtivModo[r.atividade][m].push(r);
   }
 
   const sum = calcSumario(hist);
@@ -190,55 +219,94 @@ function renderAluno(aluno, turma, hist) {
       Resumo por Atividade
     </div>
 
-    ${Object.entries(porAtiv).map(([ativNome, tentativas]) => {
-      const st = calcAtivStats(tentativas);
-      const tentIds = tentativas.map(r => r.id);
+    ${Object.entries(porAtivModo).map(([ativNome, modoMap]) => {
       const uid = ativNome.replace(/\W/g, '_');
+      const allTentativas  = Object.values(modoMap).flat();
+      const avTentativas   = modoMap['avaliacao_plus'] || [];
+      const compModos      = Object.keys(modoMap).filter(m => m !== 'avaliacao_plus');
+      const compTentativas = compModos.flatMap(m => modoMap[m]);
+      const hasAvPlus = avTentativas.length > 0;
+      const hasComp   = compTentativas.length > 0;
+      const showTabs  = hasAvPlus && hasComp;
+      modoAtivoAcomp[uid] = hasComp ? 'comp' : 'avaliacao_plus';
 
-      // Métricas: grid diferente para Competição+
-      let metricsHTML;
-      if (st.isPlus) {
-        metricsHTML = `
-          <div class="ativ-metrics-plus">
-            <div class="metric-box-plus"><div class="metric-val" style="color:var(--gold)">${st.melhorPts}</div><div class="metric-lbl">Melhor saldo</div></div>
-            <div class="metric-box-plus"><div class="metric-val" style="color:var(--blue)">${tentativas.length}</div><div class="metric-lbl">Sessões jogadas</div></div>
-            <div class="metric-box-plus"><div class="metric-val" style="color:#60A5FA">${st.rapMax > 0 ? st.rapMax : '—'}</div><div class="metric-lbl">⚡ Veloz (max)</div></div>
-            <div class="metric-box-plus"><div class="metric-val" style="color:var(--gold)">${st.difMax > 0 ? st.difMax : '—'}</div><div class="metric-lbl">🏆 Bônus (max)</div></div>
-          </div>
-          <div class="ativ-metrics-plus" style="margin-top:0">
-            <div class="metric-box-plus"><div class="metric-val" style="color:#A855F7">${st.ajudasTotal}</div><div class="metric-lbl">🎯 Ajudas usadas</div></div>
-            <div class="metric-box-plus"><div class="metric-val" style="color:var(--green)">${st.semPenCount}</div><div class="metric-lbl">🔥 Sessão limpa</div></div>
-            <div class="metric-box-plus"><div class="metric-val" style="color:var(--green)">${st.taxa}%</div><div class="metric-lbl">Taxa de acerto</div></div>
-            <div class="metric-box-plus"><div class="metric-val" style="color:var(--text-muted)">${st.totalAc} / ${st.totalAc+st.totalErr}</div><div class="metric-lbl">Ac / Total</div></div>
+      const melhorPts = Math.max(0, ...allTentativas.map(r => r.pontuacao || 0));
+      const totalAc   = allTentativas.reduce((a, r) => a + (r.acertos || 0), 0);
+      const totalErr  = allTentativas.reduce((a, r) => a + (r.erros   || 0), 0);
+      const taxa      = (totalAc + totalErr) > 0 ? Math.round(totalAc / (totalAc + totalErr) * 100) : 0;
+
+      const tabsHtml = showTabs ? `
+        <div class="mode-tabs">
+          <button class="mode-tab on mtab-${uid}" data-modo="comp" onclick="mostrarModoAcomp('${uid}','comp')">⚔️ Competição+</button>
+          <button class="mode-tab mtab-${uid}" data-modo="avaliacao_plus" onclick="mostrarModoAcomp('${uid}','avaliacao_plus')">📝 Avaliação+</button>
+        </div>` : '';
+
+      let compBlockHtml = '';
+      if (hasComp) {
+        const stComp = calcAtivStats(compTentativas);
+        let compMetrics;
+        if (stComp.isPlus) {
+          compMetrics = `
+            <div class="ativ-metrics-plus">
+              <div class="metric-box-plus"><div class="metric-val" style="color:var(--gold)">${stComp.melhorPts}</div><div class="metric-lbl">Melhor saldo</div></div>
+              <div class="metric-box-plus"><div class="metric-val" style="color:var(--blue)">${compTentativas.length}</div><div class="metric-lbl">Sessões jogadas</div></div>
+              <div class="metric-box-plus"><div class="metric-val" style="color:#60A5FA">${stComp.rapMax > 0 ? stComp.rapMax : '—'}</div><div class="metric-lbl">⚡ Veloz (max)</div></div>
+              <div class="metric-box-plus"><div class="metric-val" style="color:var(--gold)">${stComp.difMax > 0 ? stComp.difMax : '—'}</div><div class="metric-lbl">🏆 Bônus (max)</div></div>
+            </div>
+            <div class="ativ-metrics-plus" style="margin-top:0">
+              <div class="metric-box-plus"><div class="metric-val" style="color:#A855F7">${stComp.ajudasTotal}</div><div class="metric-lbl">🎯 Ajudas usadas</div></div>
+              <div class="metric-box-plus"><div class="metric-val" style="color:var(--green)">${stComp.semPenCount}</div><div class="metric-lbl">🔥 Sessão limpa</div></div>
+              <div class="metric-box-plus"><div class="metric-val" style="color:var(--green)">${stComp.taxa}%</div><div class="metric-lbl">Taxa de acerto</div></div>
+              <div class="metric-box-plus"><div class="metric-val" style="color:var(--text-muted)">${stComp.totalAc} / ${stComp.totalAc+stComp.totalErr}</div><div class="metric-lbl">Ac / Total</div></div>
+            </div>`;
+        } else {
+          compMetrics = `<div class="ativ-metrics">
+            <div class="metric-box"><div class="metric-val" style="color:var(--gold)">${stComp.melhorPts}</div><div class="metric-lbl">Melhor pontuação</div></div>
+            <div class="metric-box"><div class="metric-val" style="color:var(--blue)">${compTentativas.length}</div><div class="metric-lbl">Tentativas</div></div>
+            <div class="metric-box"><div class="metric-val" style="color:var(--orange)">${stComp.comboMax > 0 ? '×'+stComp.comboMax : '—'}</div><div class="metric-lbl">Combo máx</div></div>
+            <div class="metric-box"><div class="metric-val" style="color:var(--red)">${stComp.difMax > 0 ? stComp.difMax : '—'}</div><div class="metric-lbl">Difíceis ✓</div></div>
+            <div class="metric-box"><div class="metric-val" style="color:var(--green)">${stComp.taxa}%</div><div class="metric-lbl">Acertos</div></div>
+            <div class="metric-box"><div class="metric-val" style="color:var(--text-muted)">${stComp.totalAc} / ${stComp.totalAc+stComp.totalErr}</div><div class="metric-lbl">Ac / Total</div></div>
           </div>`;
-      } else {
-        metricsHTML = `<div class="ativ-metrics">
-          <div class="metric-box"><div class="metric-val" style="color:var(--gold)">${st.melhorPts}</div><div class="metric-lbl">Melhor pontuação</div></div>
-          <div class="metric-box"><div class="metric-val" style="color:var(--blue)">${tentativas.length}</div><div class="metric-lbl">Tentativas</div></div>
-          <div class="metric-box"><div class="metric-val" style="color:var(--orange)">${st.comboMax > 0 ? '×'+st.comboMax : '—'}</div><div class="metric-lbl">Combo máx</div></div>
-          <div class="metric-box"><div class="metric-val" style="color:var(--red)">${st.difMax > 0 ? st.difMax : '—'}</div><div class="metric-lbl">Difíceis ✓</div></div>
-          <div class="metric-box"><div class="metric-val" style="color:var(--green)">${st.taxa}%</div><div class="metric-lbl">Acertos</div></div>
-          <div class="metric-box"><div class="metric-val" style="color:var(--text-muted)">${st.totalAc} / ${st.totalAc+st.totalErr}</div><div class="metric-lbl">Ac / Total</div></div>
-        </div>`;
-      }
-
-      return `<div class="ativ-summary" id="ativ-${uid}">
-        <div class="ativ-summary-head" onclick="toggleAtiv('${uid}')">
-          <div class="ativ-nome">${ativNome}</div>
-          <span class="badge badge-gold">${st.melhorPts} pts</span>
-          <span class="badge badge-blue">${tentativas.length} ${st.isPlus ? 'sess.' : 'tent.'}</span>
-          <span class="badge badge-green">${st.taxa}%</span>
-          <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:var(--text-muted)" id="chev-${uid}"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
-        </div>
-        <div class="ativ-summary-body" id="body-${uid}" style="display:none">
-          ${metricsHTML}
-          <div id="tentativas-${uid}">${renderTentativas(tentativas, st.isPlus, ativNome, turma)}</div>
+        }
+        const tentIds = compTentativas.map(r => r.id);
+        compBlockHtml = `<div id="modo-comp-${uid}">
+          ${compMetrics}
+          <div id="tentativas-${uid}">${renderTentativas(compTentativas, stComp.isPlus, ativNome, turma, false)}</div>
           <div id="analise-${uid}">
             <button class="btn btn-ghost" style="font-size:12px;margin-top:6px" onclick="analisarErros('${uid}', ${JSON.stringify(tentIds).replace(/"/g,'&quot;')})">
               <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
               Analisar questões erradas
             </button>
           </div>
+        </div>`;
+      }
+
+      let avBlockHtml = '';
+      if (hasAvPlus) {
+        const stAv = calcAtivStatsAvPlus(avTentativas);
+        const avMetrics = `<div class="ativ-metrics-plus">
+          <div class="metric-box-plus"><div class="metric-val" style="color:#7C3AED">${stAv.melhorNQ.toFixed(1)}</div><div class="metric-lbl">Melhor nota quiz</div></div>
+          <div class="metric-box-plus"><div class="metric-val" style="color:var(--gold)">${stAv.melhorPts}</div><div class="metric-lbl">Melhor pts total</div></div>
+          <div class="metric-box-plus"><div class="metric-val" style="color:var(--blue)">${avTentativas.length}/3</div><div class="metric-lbl">Tentativas usadas</div></div>
+          <div class="metric-box-plus"><div class="metric-val" style="color:var(--green)">${stAv.taxa}%</div><div class="metric-lbl">Taxa de acerto</div></div>
+        </div>`;
+        avBlockHtml = `<div id="modo-avplus-${uid}"${showTabs ? ' style="display:none"' : ''}>
+          ${avMetrics}
+          <div id="tentativas-avplus-${uid}">${renderTentativas(avTentativas, false, ativNome, turma, true)}</div>
+        </div>`;
+      }
+
+      return `<div class="ativ-summary" id="ativ-${uid}">
+        <div class="ativ-summary-head" onclick="toggleAtiv('${uid}')">
+          <div class="ativ-nome">${ativNome}</div>
+          <span class="badge badge-gold">${melhorPts} pts</span>
+          <span class="badge badge-blue">${allTentativas.length} sess.</span>
+          <span class="badge badge-green">${taxa}%</span>
+          <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:var(--text-muted)" id="chev-${uid}"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+        </div>
+        <div class="ativ-summary-body" id="body-${uid}" style="display:none">
+          ${tabsHtml}${compBlockHtml}${avBlockHtml}
         </div>
       </div>`;
     }).join('')}
@@ -247,7 +315,7 @@ function renderAluno(aluno, turma, hist) {
   document.getElementById("content").innerHTML = html;
 }
 
-function renderTentativas(tentativas, isPlus, ativNome, turma) {
+function renderTentativas(tentativas, isPlus, ativNome, turma, isAvPlus = false) {
   const sorted = [...tentativas].reverse();
 
   let evolucaoTempoHTML = '';
@@ -266,34 +334,45 @@ function renderTentativas(tentativas, isPlus, ativNome, turma) {
     }
   }
 
-  return `${evolucaoTempoHTML}<div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;text-transform:uppercase;margin:10px 0 6px">${isPlus ? 'Sessões' : 'Tentativas'}</div>
+  const labelSessao = isAvPlus ? 'Tentativas de Avaliação+' : isPlus ? 'Sessões' : 'Tentativas';
+  return `${evolucaoTempoHTML}<div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;text-transform:uppercase;margin:10px 0 6px">${labelSessao}</div>
   ${sorted.map((r, i) => {
     const total = (r.acertos || 0) + (r.erros || 0);
     const taxa  = total > 0 ? Math.round((r.acertos || 0) / total * 100) : 0;
     const uid2  = `tent-${r.id}`;
     const tempoS = r.tempo_medio_ms > 0 ? Math.round(r.tempo_medio_ms / 1000) : 0;
+    const labelRow = i === 0 ? '→ Mais recente' : `${isAvPlus ? 'Tentativa' : isPlus ? 'Sessão' : 'Tentativa'} ${sorted.length - i}`;
 
     return `<div>
-      <div class="tent-row" onclick="toggleTent('${uid2}','${r.id}',${isPlus})">
+      <div class="tent-row" onclick="toggleTent('${uid2}','${r.id}',${isPlus || isAvPlus},${!!isAvPlus})">
         <div class="tent-info-wrap">
-          <div style="font-size:13px;font-weight:600">${i === 0 ? '→ Mais recente' : `${isPlus ? 'Sessão' : 'Tentativa'} ${sorted.length - i}`}</div>
+          <div style="font-size:13px;font-weight:600">${labelRow}</div>
           <div class="tent-date">${r.data || ''}</div>
           <div class="tent-badges">
-            <span class="badge badge-gold">${r.pontuacao || 0} pts</span>
-            <span class="badge badge-green">${r.acertos || 0} ✓</span>
-            <span class="badge badge-red">${r.erros || 0} ✗</span>
-            ${(r.nao_respondidas || 0) > 0 ? `<span class="badge" style="background:#F3F4F6;color:#6B7280">⏸ ${r.nao_respondidas}</span>` : ''}
-            <span class="badge badge-blue">${taxa}%</span>
-            ${isPlus ? `
-              ${(r.acertos_rapidos || 0) > 0 ? `<span class="badge" style="background:#EFF6FF;color:#1D4ED8">⚡${r.acertos_rapidos}</span>` : ''}
-              ${(r.acertos_dificeis || 0) > 0 ? `<span class="badge badge-gold">🏆${r.acertos_dificeis}</span>` : ''}
-              ${(r.ajudas_usadas || 0) > 0 ? `<span class="badge" style="background:#F5F3FF;color:#6D28D9">🎯${r.ajudas_usadas}</span>` : ''}
-              ${r.sem_penalidade ? `<span class="badge" style="background:#F0FDF4;color:#16A34A">🔥 Limpo</span>` : ''}
-              ${tempoS > 0 ? `<span class="badge" style="background:#F0F9FF;color:#0369A1">⏱ ${tempoS}s/q</span>` : ''}
+            ${isAvPlus ? `
+              <span class="badge" style="background:#F5F3FF;color:#7C3AED;font-weight:700">📝 ${typeof r.nota_quiz === 'number' ? r.nota_quiz.toFixed(1) : '—'}</span>
+              <span class="badge badge-gold">${r.pontuacao || 0} pts</span>
+              ${r.tentativa_num ? `<span class="badge badge-blue">Tentativa ${r.tentativa_num}</span>` : ''}
+              <span class="badge badge-green">${taxa}%</span>
+              <span class="badge badge-green">${r.acertos || 0} ✓</span>
+              <span class="badge badge-red">${r.erros || 0} ✗</span>
             ` : `
-              ${(r.combo_max || 0) > 1 ? `<span class="badge badge-orange">🔥×${r.combo_max}</span>` : ''}
-              ${(r.acertos_dificeis || 0) > 0 ? `<span class="badge" style="background:#EDE9FE;color:#6D28D9">💀${r.acertos_dificeis}</span>` : ''}
-              ${r.modo && r.modo !== 'classico' ? `<span class="badge ${MODO_BADGE[r.modo] || 'badge-blue'}" style="font-size:10px">${MODO_LABEL[r.modo]}</span>` : ''}
+              <span class="badge badge-gold">${r.pontuacao || 0} pts</span>
+              <span class="badge badge-green">${r.acertos || 0} ✓</span>
+              <span class="badge badge-red">${r.erros || 0} ✗</span>
+              ${(r.nao_respondidas || 0) > 0 ? `<span class="badge" style="background:#F3F4F6;color:#6B7280">⏸ ${r.nao_respondidas}</span>` : ''}
+              <span class="badge badge-blue">${taxa}%</span>
+              ${isPlus ? `
+                ${(r.acertos_rapidos || 0) > 0 ? `<span class="badge" style="background:#EFF6FF;color:#1D4ED8">⚡${r.acertos_rapidos}</span>` : ''}
+                ${(r.acertos_dificeis || 0) > 0 ? `<span class="badge badge-gold">🏆${r.acertos_dificeis}</span>` : ''}
+                ${(r.ajudas_usadas || 0) > 0 ? `<span class="badge" style="background:#F5F3FF;color:#6D28D9">🎯${r.ajudas_usadas}</span>` : ''}
+                ${r.sem_penalidade ? `<span class="badge" style="background:#F0FDF4;color:#16A34A">🔥 Limpo</span>` : ''}
+                ${tempoS > 0 ? `<span class="badge" style="background:#F0F9FF;color:#0369A1">⏱ ${tempoS}s/q</span>` : ''}
+              ` : `
+                ${(r.combo_max || 0) > 1 ? `<span class="badge badge-orange">🔥×${r.combo_max}</span>` : ''}
+                ${(r.acertos_dificeis || 0) > 0 ? `<span class="badge" style="background:#EDE9FE;color:#6D28D9">💀${r.acertos_dificeis}</span>` : ''}
+                ${(() => { const mE = r.modo || (r.nota_quiz != null ? 'avaliacao_plus' : 'competicao_plus'); return mE !== 'classico' ? `<span class="badge ${MODO_BADGE[mE] || 'badge-blue'}" style="font-size:10px">${MODO_LABEL[mE]}</span>` : ''; })()}
+              `}
             `}
           </div>
         </div>
@@ -350,7 +429,7 @@ function renderQuestaoPlus(q, i) {
   </div>`;
 }
 
-window.toggleTent = async function(uid, resultadoId, isPlus) {
+window.toggleTent = async function(uid, resultadoId, isPlus, isAvPlus = false) {
   const body  = document.getElementById(uid);
   const chev  = document.getElementById(`chev2-${uid}`);
   if (!body) return;
@@ -364,7 +443,50 @@ window.toggleTent = async function(uid, resultadoId, isPlus) {
     body.innerHTML = '<p style="font-size:12px;color:var(--text-muted)">Detalhes não disponíveis.</p>';
     return;
   }
-  if (isPlus) {
+  if (isAvPlus) {
+    const result = todos.find(r => r.id === resultadoId);
+    const f1Qs = questoes.filter(q => q.fase === 1);
+    const f2Qs = questoes.filter(q => q.fase === 2);
+    const fmtMs = ms => { if (!ms||ms<=0) return null; const s=Math.round(ms/1000); return `${Math.floor(s/60)}m${String(s%60).padStart(2,'0')}s`; };
+    const f1nq   = result?.nota_quiz != null ? result.nota_quiz.toFixed(1) : '—';
+    const f1pts  = result?.pontos_fase1 != null ? result.pontos_fase1 : '—';
+    const f1cred = result?.credito_final != null ? (Number.isInteger(result.credito_final) ? result.credito_final : result.credito_final.toFixed(2)) : null;
+    const f1t    = fmtMs(result?.tempo_fase1_ms);
+    const f2rap  = result?.acertos_rapidos || 0;
+    const f2combo= result?.combo_max || 0;
+    const f2aj   = result?.ajudas_usadas || 0;
+    const f2nr   = f2Qs.filter(q => q.resultado === 'nao_respondida').length;
+    const f2ac   = f2Qs.filter(q => q.resultado === 'acerto' || (q.resultado == null && q.acertou)).length;
+    const f2err  = f2Qs.filter(q => q.resultado === 'erro'   || (q.resultado == null && !q.acertou)).length;
+    body.innerHTML = `
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:#7C3AED;background:#F5F3FF;padding:5px 10px;border-radius:7px;margin-bottom:6px;display:inline-block">📖 Fase 1 — Quiz</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px">
+          <span class="badge" style="background:#F5F3FF;color:#7C3AED;font-weight:700">📝 ${f1nq}/10</span>
+          <span class="badge badge-gold">${f1pts}/12 pts</span>
+          ${f1t ? `<span class="badge badge-blue">⏱ ${f1t}</span>` : ''}
+          ${f1cred != null ? `<span class="badge badge-green">Crédito final: ${f1cred}</span>` : ''}
+        </div>
+        ${f1Qs.length ? f1Qs.map((q,i) => renderQuestaoPlus(q,i)).join('') : '<p style="font-size:11px;color:var(--text-muted)">Detalhes F1 não disponíveis.</p>'}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin:8px 0">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:10px;color:var(--text-muted);font-weight:700;padding:2px 8px;border:1px solid var(--border);border-radius:10px">FASE 2</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#1D4ED8;background:#EFF6FF;padding:5px 10px;border-radius:7px;margin-bottom:6px;display:inline-block">⚔️ Fase 2 — Ranking</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px">
+          <span class="badge badge-green">✅ ${f2ac}</span>
+          <span class="badge badge-red">❌ ${f2err}</span>
+          ${f2nr > 0 ? `<span class="badge" style="background:#F3F4F6;color:#6B7280">⏸ ${f2nr}</span>` : ''}
+          ${f2rap > 0 ? `<span class="badge" style="background:#EFF6FF;color:#1D4ED8">⚡ ${f2rap} rápidos</span>` : ''}
+          ${f2combo > 1 ? `<span class="badge badge-orange">🔥 combo ×${f2combo}</span>` : ''}
+          ${f2aj > 0 ? `<span class="badge" style="background:#F5F3FF;color:#6D28D9">🎯 ${f2aj} ajudas</span>` : ''}
+        </div>
+        ${f2Qs.length ? f2Qs.map((q,i) => renderQuestaoPlus(q,i)).join('') : '<p style="font-size:11px;color:var(--text-muted)">Detalhes F2 não disponíveis.</p>'}
+      </div>`;
+  } else if (isPlus) {
     const nrCount  = questoes.filter(q => (q.resultado ?? null) === 'nao_respondida').length;
     const acertos  = questoes.filter(q => { const r = q.resultado ?? null; return r === 'acerto' || (r === null && !!q.acertou); }).length;
     const erros    = questoes.filter(q => { const r = q.resultado ?? null; return r === 'erro'   || (r === null && !q.acertou); }).length;
@@ -423,6 +545,29 @@ window.analisarErros = async function(uid, tentIds) {
         </div>
       </div>`).join('')}`;
 };
+
+// ── URL param auto-selection ──────────────────────────────────
+const _urlP = new URLSearchParams(window.location.search);
+const _pAluno = _urlP.get('aluno');
+const _pAtiv  = _urlP.get('atividade');
+const _pModo  = _urlP.get('modo');
+if (_pAluno) {
+  const _turmaAluno = Object.entries(ALUNOS_POR_TURMA).find(([, als]) => als.includes(_pAluno))?.[0];
+  if (_turmaAluno) {
+    selT.value = _turmaAluno;
+    mudarTurma();
+    selA.value = _pAluno;
+    await mudarAluno();
+    if (_pAtiv) {
+      const _uid = _pAtiv.replace(/\W/g, '_');
+      const _bodyEl = document.getElementById(`body-${_uid}`);
+      if (_bodyEl) {
+        toggleAtiv(_uid);
+        if (_pModo === 'avaliacao_plus') mostrarModoAcomp(_uid, 'avaliacao_plus');
+      }
+    }
+  }
+}
 </script>
 </body>
 </html>
