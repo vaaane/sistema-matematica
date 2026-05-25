@@ -368,6 +368,9 @@ const templates = raw.filter(temRespostaNum);
 const faceis   = templates.filter(t => t.dificuldade === 1);
 const medias   = templates.filter(t => t.dificuldade === 2);
 const dificeis = templates.filter(t => t.dificuldade === 3);
+console.log('[Questões] Fáceis:', faceis.length, faceis.map(q => q.id));
+console.log('[Questões] Médias:', medias.length, medias.map(q => q.id));
+console.log('[Questões] Difíceis:', dificeis.length, dificeis.map(q => q.id));
 
 // ── Utilitários ────────────────────────────────────────────────
 function shuffle(arr) {
@@ -423,23 +426,28 @@ function gerarQuestoesF1() {
   const poolF = shuffle([...faceis]);
   const poolM = shuffle([...medias]);
   const poolD = shuffle([...dificeis]);
-  const seenCombos = new Set();
+  console.log('[F1] Pool fáceis:', poolF.map(q => q.id));
+  console.log('[F1] Pool médias:', poolM.map(q => q.id));
+  console.log('[F1] Pool difíceis:', poolD.map(q => q.id));
+
+  const usedIds  = new Set();
+  const usedCats = new Set();
+
+  function pick(pool) {
+    // 1ª prioridade: template não usado + categoria não usada
+    let t = pool.find(q => !usedIds.has(q.id) && !usedCats.has(q.tag));
+    // 2ª prioridade: template não usado (qualquer categoria)
+    if (!t) t = pool.find(q => !usedIds.has(q.id));
+    // Fallback: primeiro do pool embaralhado
+    if (!t) t = pool[0];
+    usedIds.add(t.id);
+    usedCats.add(t.tag);
+    return { ...instanciarQuestao(t), pontos: BASE_F1[t.dificuldade] };
+  }
+
   const questoes = [];
-  const pick = (pool) => {
-    for (let i = 0; i < pool.length; i++) {
-      const q = instanciarQuestao(pool[i]);
-      const key = q.enunciado + ':' + q.resposta;
-      if (!seenCombos.has(key)) { seenCombos.add(key); return { ...q, pontos: BASE_F1[q.dif] }; }
-    }
-    // fallback: just take first
-    const q = instanciarQuestao(pool[0]);
-    return { ...q, pontos: BASE_F1[q.dif] };
-  };
-  // 5 fáceis
   for (let i = 0; i < 5; i++) questoes.push(pick(poolF));
-  // 2 médias
   for (let i = 0; i < 2; i++) questoes.push(pick(poolM));
-  // 1 difícil
   questoes.push(pick(poolD));
   return questoes;
 }

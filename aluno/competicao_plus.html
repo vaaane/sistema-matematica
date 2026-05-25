@@ -543,6 +543,9 @@ const templates = raw.filter(temRespostaNum);
 const faceis   = templates.filter(t => t.dificuldade === 1);
 const medias   = templates.filter(t => t.dificuldade === 2);
 const dificeis = templates.filter(t => t.dificuldade === 3);
+console.log('[Questões] Fáceis:', faceis.length, faceis.map(q => q.id));
+console.log('[Questões] Médias:', medias.length, medias.map(q => q.id));
+console.log('[Questões] Difíceis:', dificeis.length, dificeis.map(q => q.id));
 
 const PONTOS = { 1: 4, 2: 8, 3: 24 };
 const TIMERS = { 1: 10, 2: 40, 3: 90 };
