@@ -1571,22 +1571,21 @@ function mostrarPreJogo(ctrl) {
         : `<div class="pre-melhor-lbl" style="margin-bottom:22px">Primeira tentativa — boa sorte!</div>`}
       <div class="pre-regras">
         <strong>Fase 1 — Quiz (8 questões)</strong><br>
-        • 5 fáceis → 2 médias → 1 difícil, sem timer por questão<br>
+        • 5 fáceis → 2 médias → 1 difícil · sem timer por questão<br>
         • Valores base: Fácil <strong>1pt</strong> · Média <strong>2pt</strong> · Difícil <strong>3pt</strong> · Máx <strong>12pt</strong><br>
-        • 3 tentativas: ×1,0 → ×0,75 → ×0,50 do valor<br>
-        • Falhou as 3 tentativas → 0pt + desconto no crédito (Fácil −0,25 · Média −0,50 · Difícil −0,75)<br>
-        • Crédito inicia em <strong>10</strong> · zerou → encerra Fase 1<br>
-        • <em>nota_quiz = (pts_f1 / 12) × 10</em>
+        • 3 tentativas por questão: 1ª ×1,0 · 2ª ×0,75 · 3ª ×0,50<br>
+        • Errou as 3 → <strong>0pt</strong> nessa questão · avança para a próxima<br>
+        • Você sempre responde todas as 8 questões
         <div class="phase-block">
-          <strong>Fase 2 — Livre (tempo restante)</strong><br>
+          <strong>Fase 2 — Livre (tempo restante da sessão)</strong><br>
           • Questões aleatórias com timer por questão<br>
           • Fácil: <strong>4pt · 10s</strong> &nbsp; Médio: <strong>8pt · 40s</strong><br>
           • Errou/pulou → penalidade −50% base
         </div>
         <div class="phase-block">
-          <strong>Sessão: 8 min compartilhados entre as duas fases</strong><br>
-          • Máximo de <strong>3 tentativas</strong> em 30 min globais<br>
-          • Vale a <strong>melhor</strong> das tentativas
+          <strong>Cronômetro global de 30 min — não para entre tentativas</strong><br>
+          • Sessão de <strong>8 min</strong> compartilhados entre as duas fases<br>
+          • Máximo de <strong>3 tentativas</strong> · vale a <strong>melhor</strong> delas
         </div>
       </div>
       <button class="btn-iniciar" onclick="iniciarJogo()">▶ INICIAR!</button>
