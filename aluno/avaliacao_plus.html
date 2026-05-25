@@ -1578,9 +1578,14 @@ function mostrarPreJogo(ctrl) {
         • Você sempre responde todas as 8 questões
         <div class="phase-block">
           <strong>Fase 2 — Livre (tempo restante da sessão)</strong><br>
-          • Questões aleatórias com timer por questão<br>
           • Fácil: <strong>4pt · 10s</strong> &nbsp; Médio: <strong>8pt · 40s</strong><br>
-          • Errou/pulou → penalidade −50% base
+          • 3 tentativas por questão · 1ª ×1,0 · 2ª ×0,75 · 3ª ×0,50<br>
+          • Errou as 3 ou timer esgotou → penalidade <strong>−50%</strong> da base<br>
+          • Acerto rápido (1ª tent., sem ajuda, tempo &lt; 50% do timer) → <strong>+1–2pt bônus ⚡</strong><br>
+          • A cada 3 acertos rápidos → <strong>+1 ajuda 🎯</strong> (máx 3)<br>
+          • Ajuda: converte para múltipla escolha sem desconto de pontos<br>
+          • A cada 10 acertos rápidos → <strong>🏆 questão bônus</strong> (Difícil · 24pt · 90s · sem penalidade)<br>
+          • Terminou sem penalidade e ≥3 respondidas → <strong>+20pt bônus fim</strong>
         </div>
         <div class="phase-block">
           <strong>Cronômetro global de 30 min — não para entre tentativas</strong><br>
