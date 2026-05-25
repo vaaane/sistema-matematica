@@ -7,20 +7,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
-    /* ── Robótica / legacy item ──────────────────────────────── */
-    .hist-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
-    .hist-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background .15s;}
-    .hist-header:hover{background:#FAFAFA;}
-    .hist-nome{flex:1;font-size:14px;font-weight:700;}
-    .hist-data{font-size:11px;color:var(--text-muted);}
-    .hist-body{padding:0 16px 14px;border-top:1px solid var(--border);}
     .q-rev{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);margin-top:6px;font-size:12px;}
     .q-rev.ok{background:#F0FDF4;border-color:#BBF7D0;}
     .q-rev.err{background:#FEF2F2;border-color:#FECACA;}
     .aluno-section{margin-bottom:24px;}
     .aluno-title{font-size:13px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
-    .ativ-group{margin-bottom:18px;}
-    .ativ-group-header{font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
 
     /* ── Evolução ─────────────────────────────────────────────── */
     .evolucao-bar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#F8FAFC;border-radius:8px;margin-bottom:8px;border:1px solid var(--border);}
@@ -86,10 +77,6 @@
     .mode-tab.on{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(47,158,220,.3);}
 
     @media(max-width:480px){
-      .hist-header{padding:11px 12px;gap:8px}
-      .hist-body{padding:0 12px 12px}
-      .hist-nome{font-size:13px}
-      .hist-data{font-size:10px}
       .q-rev{font-size:11px;padding:6px 8px;gap:6px}
       .plus-q-row{font-size:11px;padding:6px 8px;gap:6px}
       .evolucao-bar{padding:6px 8px;gap:6px}
@@ -106,7 +93,6 @@
     [data-theme="dark"] .plus-q-row.bonus{background:rgba(245,158,11,.15);border-color:rgba(252,211,77,.35);}
     [data-theme="dark"] .tent-detail-body{background:#1e293b;}
     [data-theme="dark"] .evolucao-bar   {background:#1e293b;}
-    [data-theme="dark"] .hist-header:hover{background:#1e293b;}
     [data-theme="dark"] .ativ-summary-head:hover{background:#1e293b;}
     [data-theme="dark"] .tent-row:hover {background:#1e293b;}
     [data-theme="dark"] .plus-tent-ans.ok  {background:rgba(22,163,74,.25);color:#86efac;}
@@ -132,7 +118,7 @@
 </div>
 <script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
-import { getResultadosByAluno, getDetalhes, getAlunoPreferencia, getConquistasByAluno, getRoboticaTentativasAluno, getAllAtividadeStatus } from "/js/db.js";
+import { getResultadosByAluno, getDetalhes, getAlunoPreferencia, getConquistasByAluno, getAllAtividadeStatus } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
@@ -166,11 +152,6 @@ getAlunoPreferencia(turma, alunos[0], 'robotica').then(isRob => {
   a.innerHTML = `<svg viewBox="0 0 24 24"><path d="M20 9V7c0-1.1-.9-2-2-2h-3c0-1.66-1.34-3-3-3S9 3.34 9 5H6c-1.1 0-2 .9-2 2v2c-1.66 0-3 1.34-3 3s1.34 3 3 3v4c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4c1.66 0 3-1.34 3-3s-1.34-3-3-3zm-2 10H6V7h12v12zm-9-6c-.83 0-1.5-.67-1.5-1.5S8.17 10 9 10s1.5.67 1.5 1.5S9.83 13 9 13zm6 0c-.83 0-1.5-.67-1.5-1.5S14.17 10 15 10s1.5.67 1.5 1.5S15.83 13 15 13z"/></svg>🤖 Robótica`;
   nav.appendChild(a);
 });
-
-window.toggle = function(header) {
-  const body = header.nextElementSibling;
-  body.style.display = body.style.display === 'none' ? 'block' : 'none';
-};
 
 window.showSessTooltip = function(e, info) {
   let tip = document.getElementById('sess-tip');
@@ -682,101 +663,6 @@ content.addEventListener('touchstart', e => {
 content.addEventListener('touchend', () => { clearTimeout(_touchConqTip); setTimeout(hideConqTip, 2500); }, {passive: true});
 content.addEventListener('touchcancel', () => clearTimeout(_touchConqTip), {passive: true});
 
-// ── Seção Robótica ─────────────────────────────────────────────
-const isRob = await getAlunoPreferencia(turma, alunos[0], 'robotica');
-if (isRob) {
-  const tentativas = await getRoboticaTentativasAluno(turma, alunos[0]);
-  if (tentativas.length) {
-    const LABEL_ATIV = { 1:"Atividade 1", 2:"Atividade 2", 3:"Atividade 3" };
-    const EMOJIS = { 1:"🔌", 2:"⚡", 3:"🧠" };
-    const porAtiv = {};
-    for (const t of tentativas) {
-      if (!porAtiv[t.atividade]) porAtiv[t.atividade] = [];
-      porAtiv[t.atividade].push(t);
-    }
-
-    let robHtml = `<div style="margin-top:28px;margin-bottom:6px;">
-      <div style="font-size:13px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-        🤖 Robótica
-      </div>`;
-
-    for (const [n, tents] of Object.entries(porAtiv)) {
-      const best  = Math.max(...tents.map(t => t.acertos || 0));
-      const total = tents[0].total || 0;
-      robHtml += `<div class="ativ-group">
-        <div class="ativ-group-header">
-          <span>${EMOJIS[n] || ''} ${LABEL_ATIV[n] || 'Atividade ' + n}</span>
-          <span style="font-size:11px;color:var(--text-muted);">${tents.length} tentativa${tents.length > 1 ? 's' : ''} • melhor: ${best}/${total}</span>
-        </div>`;
-
-      if (tents.length >= 2) {
-        const pts = tents.map(t => t.acertos || 0);
-        const maxV = Math.max(...pts, 1);
-        const W = 240, H = 48, mL = 8, mR = 8, mT = 10, mB = 6;
-        const iW = W - mL - mR, iH = H - mT - mB;
-        const nc = pts.length;
-        const xP = i => mL + (nc > 1 ? (i / (nc-1)) * iW : iW/2);
-        const yP = v => mT + iH - Math.min((v / maxV) * iH, iH);
-        const first = pts[0], last = pts[pts.length-1];
-        const tc = last > first ? '#16A34A' : last < first ? '#DC2626' : '#6B7280';
-        const ti = last > first ? '↑' : last < first ? '↓' : '→';
-        let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:240px;height:${H}px;flex-shrink:0">`;
-        svg += `<polyline points="${pts.map((v,i)=>`${xP(i)},${yP(v)}`).join(' ')}" fill="none" stroke="${tc}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
-        pts.forEach((v,i)=>{
-          svg += `<circle cx="${xP(i)}" cy="${yP(v)}" r="4" fill="${tc}" stroke="white" stroke-width="1.5"/>`;
-          svg += `<text x="${xP(i)}" y="${yP(v)-7}" text-anchor="middle" font-size="8" fill="${tc}" font-weight="700">${v}</text>`;
-        });
-        svg += '</svg>';
-        robHtml += `<div class="evolucao-bar"><span class="evolucao-label">${tents.length} tentativas</span>${svg}<div style="text-align:center;flex-shrink:0;min-width:32px"><div style="font-size:20px;font-weight:800;color:${tc};line-height:1">${ti}</div><div style="font-size:9px;color:var(--text-muted)">${last>first?'Melhora':last<first?'Regrediu':'Estável'}</div></div></div>`;
-      }
-
-      for (let i = 0; i < tents.length; i++) {
-        const t = tents[i];
-        const pct  = t.total > 0 ? Math.round(t.acertos / t.total * 100) : 0;
-        const prev = i > 0 ? tents[i-1] : null;
-        const diff = prev ? t.acertos - prev.acertos : null;
-        const diffBadge = diff !== null
-          ? `<span style="font-size:11px;font-weight:700;color:${diff>0?'var(--green)':diff<0?'var(--red)':'var(--text-muted)'};margin-left:4px">${diff>0?'+'+diff:diff}</span>`
-          : '';
-        const dataStr = t.completadoEm ? new Date(t.completadoEm).toLocaleDateString('pt-BR') : '';
-
-        robHtml += `<div class="hist-item">
-          <div class="hist-header" onclick="toggle(this)">
-            <div style="flex:1">
-              <div class="hist-nome">${EMOJIS[n]||''} Tentativa ${i+1}${diffBadge}</div>
-              <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center">
-                <span class="badge badge-green">✅ ${t.acertos}</span>
-                <span class="badge badge-red">❌ ${t.erros}</span>
-                <span class="badge badge-blue">📊 ${pct}%</span>
-              </div>
-            </div>
-            <div class="hist-data">${dataStr}</div>
-            <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--text-muted)"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
-          </div>
-          <div class="hist-body" style="display:none">
-            ${t.respostas ? Object.entries(t.respostas).map(([qid, resp], qi) => {
-              const prevResp = prev?.respostas?.[qid];
-              const melhorou = prevResp && !prevResp.acertou && resp.acertou;
-              const piorou   = prevResp && prevResp.acertou && !resp.acertou;
-              const deltaIcon = melhorou ? ' <span style="color:var(--green);font-size:10px">↑ melhorou</span>' : piorou ? ' <span style="color:var(--red);font-size:10px">↓ piorou</span>' : '';
-              return `<div class="q-rev ${resp.acertou ? 'ok' : 'err'}">
-                <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:32px;flex-shrink:0">${qid}</span>
-                <div style="flex:1">
-                  <span style="${resp.acertou?'color:var(--green)':'color:var(--red)'};font-weight:700">${resp.resposta_dada || '—'}</span>
-                  ${deltaIcon}
-                </div>
-                <span>${resp.acertou ? '✅' : '❌'}</span>
-              </div>`;
-            }).join('') : '<p style="font-size:12px;color:var(--text-muted);padding-top:6px">Detalhes não disponíveis.</p>'}
-          </div>
-        </div>`;
-      }
-      robHtml += '</div>';
-    }
-    robHtml += '</div>';
-    content.innerHTML += robHtml;
-  }
-}
 </script>
 </body>
 </html>
