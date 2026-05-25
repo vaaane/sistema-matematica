@@ -210,10 +210,16 @@ async function carregarQuestoesMap() {
 async function carregarLista() {
   try {
     tentativasDB = await getRoboticaTentativasAluno(turma, aluno);
+    console.log(`[Robótica] carregarLista: ${tentativasDB.length} tentativas carregadas para ${aluno} (${turma})`);
+    for (const a of [1,2,3]) {
+      const n = getTentativasPorAtiv(a).length;
+      if (n > 0) console.log(`  Atividade ${a}: ${n} tentativa(s)`);
+    }
   } catch(e) {
-    console.error('[Robótica] carregarLista:', e);
+    console.error('[Robótica] ERRO ao carregar histórico:', e);
     tentativasDB = [];
   }
+  console.log('[Robótica] renderLista() chamado, tentativasDB.length =', tentativasDB.length);
   renderLista();
 }
 

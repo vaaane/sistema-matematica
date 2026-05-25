@@ -261,11 +261,17 @@ export async function saveRoboticaTentativa(turma, aluno, atividade, dados) {
 }
 
 export async function getRoboticaTentativasAluno(turma, aluno) {
-  const snap = await get(query(ref(db, 'robotica_tentativas'), orderByChild('aluno'), equalTo(aluno)));
+  // Lê o nó inteiro e filtra client-side (igual ao listenRoboticaTentativas do professor).
+  // Evita dependência de índice Firebase que pode causar retorno vazio sem erro visível.
+  const snap = await get(ref(db, 'robotica_tentativas'));
   if (!snap.exists()) return [];
   const result = [];
-  snap.forEach(child => result.push({ id: child.key, ...child.val() }));
-  return result.filter(r => r.turma === turma).sort((a, b) => (a.completadoEm || 0) - (b.completadoEm || 0));
+  snap.forEach(child => {
+    const v = child.val();
+    if (v.aluno === aluno && v.turma === turma) result.push({ id: child.key, ...v });
+  });
+  console.log(`[Robótica] getRoboticaTentativasAluno(${turma}, ${aluno}): ${result.length} tentativas encontradas`);
+  return result.sort((a, b) => (a.completadoEm || 0) - (b.completadoEm || 0));
 }
 
 export function listenRoboticaTentativas(callback) {
