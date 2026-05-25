@@ -360,10 +360,15 @@ async function finalizarAtividade() {
     await saveRoboticaTentativa(turma, aluno, atividadeAtual, {
       acertos, erros, total: questoes.length, respostas
     });
+  } catch(e) {
+    saveError = (e?.message || String(e) || 'erro desconhecido');
+    console.error('[Robótica] SAVE FALHOU:', e);
+    alert('⚠️ Robótica: erro ao salvar!\n\n' + saveError + '\n\nTurma: ' + turma + '\nAluno: ' + aluno);
+  }
+  try {
     tentativasDB = await getRoboticaTentativasAluno(turma, aluno);
   } catch(e) {
-    console.error('[Robótica] finalizarAtividade:', e);
-    saveError = e?.message || String(e);
+    console.error('[Robótica] LEITURA FALHOU:', e);
   }
 
   quizWrap.style.display = 'none';
