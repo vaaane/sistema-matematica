@@ -13,11 +13,11 @@ function avKey(s) {
   return btoa(unescape(encodeURIComponent(s))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
 }
 
-export async function initAvBanner(turma, aluno) {
+export async function initAvBanner(turma, aluno, liberadasJaObtidas) {
   // Skip if already on the avaliacao page
   if (window.location.pathname.includes('avaliacao_plus')) return;
 
-  const liberadas = await getLiberadasParaTurma(turma);
+  const liberadas = liberadasJaObtidas ?? await getLiberadasParaTurma(turma);
   const avLibs = liberadas.filter(l => l.modo === 'avaliacao_plus' && l.status !== 'encerrada');
   if (!avLibs.length) return;
 

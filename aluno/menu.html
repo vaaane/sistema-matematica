@@ -92,7 +92,6 @@ renderSidebarAluno("sidebar", "inicio");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
 const { alunos, turma } = sess;
-initAvBanner(turma, alunos[0]);
 
 // Robótica sidebar item (condicional)
 getAlunoPreferencia(turma, alunos[0], 'robotica').then(isRob => {
@@ -119,6 +118,7 @@ document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCas
 
 const [todosRaw, liberadas, conquistasAluno] = await Promise.all([getResultados(), getLiberadasParaTurma(turma), getConquistasByAluno(alunos[0])]);
 const todos = todosRaw.filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
+initAvBanner(turma, alunos[0], liberadas);
 
 // ── Avaliação+ controle ───────────────────────────────────────
 const DURACAO_GLOBAL_AV  = 30 * 60 * 1000;

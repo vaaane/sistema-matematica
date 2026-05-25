@@ -116,7 +116,7 @@
 </div>
 <script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
-import { getResultados, getDetalhes, getAlunoPreferencia, getConquistasByAluno, getRoboticaTentativasAluno, getAllAtividadeStatus } from "/js/db.js";
+import { getResultadosByAluno, getDetalhes, getAlunoPreferencia, getConquistasByAluno, getRoboticaTentativasAluno, getAllAtividadeStatus } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
@@ -542,11 +542,12 @@ window.toggleHistTent = async function(uid, resultadoId, modo) {
 };
 
 // ── Dados ──────────────────────────────────────────────────────
-const [todos, statusMap, allConquisTaskRaw] = await Promise.all([
-  getResultados(),
+const [todosRaw, statusMap, allConquisTaskRaw] = await Promise.all([
+  Promise.all(alunos.map(a => getResultadosByAluno(a))).then(r => r.flat()),
   getAllAtividadeStatus(),
   Promise.all(alunos.map(a => getConquistasByAluno(a))),
 ]);
+const todos = todosRaw.filter(r => !r.modo_teste);
 const allConquistas = allConquisTaskRaw.flat();
 for (const c of allConquistas) {
   if (c.sessaoId) {
