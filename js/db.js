@@ -254,9 +254,10 @@ export async function getAlunoPreferencia(turma, nome, chave) {
 
 // ── Robótica ─────────────────────────────────────────────────
 export async function saveRoboticaTentativa(turma, aluno, atividade, dados) {
-  await push(ref(db, 'robotica_tentativas'), {
-    turma, aluno, atividade, ...dados, completadoEm: serverTimestamp()
-  });
+  // Usa push() só para gerar a chave, depois set() que aguarda ACK real do servidor
+  // (push(ref, data) resolve localmente e pode mascarar PERMISSION_DENIED)
+  const newRef = push(ref(db, 'robotica_tentativas'));
+  await set(newRef, { turma, aluno, atividade, ...dados, completadoEm: serverTimestamp() });
 }
 
 export async function getRoboticaTentativasAluno(turma, aluno) {

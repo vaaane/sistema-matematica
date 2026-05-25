@@ -124,6 +124,16 @@
         </div>
       </div>
 
+      <!-- Registros no Firebase fora da lista ALUNOS_ROB (diagnóstico) -->
+      <div id="nao-listados-section" style="display:none;margin-top:16px;">
+        <div class="rob-section" style="border-color:#FCD34D;">
+          <div class="rob-section-hdr" style="background:#FEF9C3;color:#854D0E;">
+            ⚠️ Registros no Firebase fora da lista de alunos
+          </div>
+          <div id="nao-listados" style="padding:10px 18px;font-size:12px;color:#92400E;"></div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -166,7 +176,8 @@ window.setFiltroAtiv = function(n) {
 };
 
 function filtrarTentativas(tentativas) {
-  return filtroAtiv ? tentativas.filter(t => t.atividade === filtroAtiv) : tentativas;
+  // == intencional: Firebase pode retornar number ou string
+  return filtroAtiv ? tentativas.filter(t => t.atividade == filtroAtiv) : tentativas;
 }
 
 function formatData(ts) {
@@ -424,7 +435,29 @@ function renderAlunos(tentativas) {
   }
 
   const comResposta = ALUNOS_ROB.filter(a => porAluno[`${a.turma}|${a.aluno}`]).length;
+  const totalFirebase = Object.keys(porAluno).length;
   document.getElementById('status-geral').textContent = `${comResposta}/${ALUNOS_ROB.length} com tentativas`;
+
+  // Mostra registros Firebase que não casam com nenhum aluno da lista
+  const keysListados = new Set(ALUNOS_ROB.map(a => `${a.turma}|${a.aluno}`));
+  const naoListados = Object.keys(porAluno).filter(k => !keysListados.has(k));
+  const secNL = document.getElementById('nao-listados-section');
+  if (naoListados.length) {
+    secNL.style.display = 'block';
+    document.getElementById('nao-listados').innerHTML =
+      `<p style="margin:0 0 8px;font-weight:700;">⚠️ ${naoListados.length} aluno(s) salvaram dados mas não constam em ALUNOS_ROB:</p>` +
+      naoListados.map(k => {
+        const [turmaK, alunoK] = k.split('|');
+        const total = Object.values(porAluno[k]).flat().length;
+        return `<div style="padding:4px 0;border-bottom:1px dashed #FCD34D;">
+          <strong>${alunoK}</strong> — Turma: <strong>${turmaK}</strong>
+          — ${total} tentativa(s)
+          <span style="font-size:11px;color:#B45309;margin-left:6px;">(nome/turma não bate com a lista)</span>
+        </div>`;
+      }).join('');
+  } else {
+    secNL.style.display = 'none';
+  }
 
   const ativsMostrar = filtroAtiv ? [filtroAtiv] : [1, 2, 3];
 

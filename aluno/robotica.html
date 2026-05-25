@@ -513,14 +513,18 @@ async function finalizarAtividade(parcial = false) {
   const ultimaAnt = tentAntes.length > 0 ? tentAntes[tentAntes.length - 1] : null;
 
   let saveError = null;
+  let saveOk = false;
+  console.log('[Robótica] Salvando tentativa…', { turma, aluno, atividade: atividadeAtual, acertos, total: questoes.length });
   try {
     await saveRoboticaTentativa(turma, aluno, atividadeAtual, {
       acertos, erros, total: questoes.length, respondidas, parcial: parcial || false, respostas
     });
+    saveOk = true;
+    console.log('[Robótica] Tentativa salva com sucesso no Firebase.');
   } catch(e) {
     saveError = (e?.message || String(e) || 'erro desconhecido');
     console.error('[Robótica] SAVE FALHOU:', e);
-    alert('⚠️ Robótica: erro ao salvar!\n\n' + saveError + '\n\nTurma: ' + turma + '\nAluno: ' + aluno);
+    alert('⚠️ Robótica: erro ao salvar!\n\n' + saveError + '\n\nTurma: ' + turma + '\nAluno: ' + aluno + '\n\nVerifique as regras do Firebase Realtime Database.');
   }
   try {
     tentativasDB = await getRoboticaTentativasAluno(turma, aluno);
@@ -621,10 +625,18 @@ async function finalizarAtividade(parcial = false) {
     }).join('')}
   </div>`;
 
-  if (saveError) {
-    document.getElementById('summ-analise').insertAdjacentHTML('afterend',
-      `<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:12px;margin:10px 0;font-size:13px;color:#B91C1C;font-weight:600;">⚠️ Erro ao salvar: ${saveError}</div>`
-    );
+  const saveStatusHtml = saveError
+    ? `<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:12px;margin:10px 0;font-size:13px;color:#B91C1C;font-weight:600;">
+        ⚠️ Erro ao salvar resultado! O professor não verá esta tentativa.<br>
+        <span style="font-weight:400;font-size:12px;">${saveError}</span>
+       </div>`
+    : saveOk
+    ? `<div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:10px 12px;margin:10px 0;font-size:12px;color:#15803D;font-weight:600;">
+        ✅ Resultado salvo com sucesso!
+       </div>`
+    : '';
+  if (saveStatusHtml) {
+    document.getElementById('summ-analise').insertAdjacentHTML('afterend', saveStatusHtml);
   }
 }
 
