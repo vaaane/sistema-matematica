@@ -310,7 +310,9 @@ function compararTentativas(ant, nova, questoes) {
 }
 
 function renderEvolucaoSVG(tents) {
-  const pts = tents.map(t => t.acertos || 0);
+  const MAX = 10;
+  const slice = tents.length > MAX ? tents.slice(-MAX) : tents;
+  const pts = slice.map(t => t.acertos || 0);
   if (pts.length < 2) return '';
   const first = pts[0], last = pts[pts.length - 1];
   const tc = last > first ? '#16A34A' : last < first ? '#DC2626' : '#6B7280';
@@ -322,6 +324,7 @@ function renderEvolucaoSVG(tents) {
   const n = pts.length;
   const xP = i => mL + (n > 1 ? (i / (n - 1)) * iW : iW / 2);
   const yP = v => mT + iH - Math.min((v / maxV) * iH, iH);
+  const label = tents.length > MAX ? `Últ. ${MAX} de ${tents.length}` : `${tents.length} tentativas`;
   let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:240px;height:${H}px;flex-shrink:0">`;
   svg += `<polyline points="${pts.map((v, i) => `${xP(i)},${yP(v)}`).join(' ')}" fill="none" stroke="${tc}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
   pts.forEach((v, i) => {
@@ -330,7 +333,7 @@ function renderEvolucaoSVG(tents) {
   });
   svg += '</svg>';
   return `<div class="evolucao-bar">
-    <span class="evolucao-label">${n} tentativas</span>
+    <span class="evolucao-label">${label}</span>
     ${svg}
     <div style="text-align:center;flex-shrink:0;min-width:32px">
       <div style="font-size:20px;font-weight:800;color:${tc};line-height:1">${ti}</div>

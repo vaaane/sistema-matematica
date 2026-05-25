@@ -45,16 +45,25 @@
     /* Question */
     .quiz-q{font-size:20px;font-weight:700;line-height:1.4;margin-bottom:22px;}
     .quiz-opcoes-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px;}
-    .quiz-opcao{padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);font-size:14px;font-weight:600;cursor:pointer;text-align:left;transition:background .12s,border-color .12s;width:100%;display:block;font-family:'Inter',sans-serif;}
+    .quiz-opcao{padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);font-size:14px;font-weight:600;color:var(--text);cursor:pointer;text-align:left;transition:background .12s,border-color .12s;width:100%;display:block;font-family:'Inter',sans-serif;}
     .quiz-opcao:hover:not([disabled]){border-color:var(--blue);background:var(--blue-pale);}
     .quiz-opcao.correta{border-color:var(--green)!important;background:#F0FDF4!important;color:#15803D!important;font-weight:700;}
     .quiz-opcao.errada{border-color:var(--red)!important;background:#FEF2F2!important;color:#B91C1C!important;}
     .quiz-opcao.neutra{opacity:.45;}
     .vf-wrap{display:flex;gap:12px;margin-bottom:16px;}
-    .vf-btn{flex:1;padding:14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:all .15s;background:var(--card);font-family:'Inter',sans-serif;}
+    .vf-btn{flex:1;padding:14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-weight:700;color:var(--text);cursor:pointer;transition:all .15s;background:var(--card);font-family:'Inter',sans-serif;}
     .vf-btn:hover:not([disabled]){border-color:var(--blue);background:var(--blue-pale);}
     .vf-btn.correta{border-color:var(--green)!important;background:#F0FDF4!important;color:#15803D!important;}
     .vf-btn.errada{border-color:var(--red)!important;background:#FEF2F2!important;color:#B91C1C!important;}
+    /* ── Tema escuro ─────────────────────────────────────── */
+    [data-theme="dark"] .quiz-opcao.correta{background:rgba(34,197,94,.15)!important;color:#86efac!important;border-color:rgba(34,197,94,.6)!important;}
+    [data-theme="dark"] .quiz-opcao.errada{background:rgba(239,68,68,.15)!important;color:#fca5a5!important;border-color:rgba(239,68,68,.6)!important;}
+    [data-theme="dark"] .vf-btn.correta{background:rgba(34,197,94,.15)!important;color:#86efac!important;border-color:rgba(34,197,94,.6)!important;}
+    [data-theme="dark"] .vf-btn.errada{background:rgba(239,68,68,.15)!important;color:#fca5a5!important;border-color:rgba(239,68,68,.6)!important;}
+    [data-theme="dark"] .quiz-fb.ok{background:rgba(34,197,94,.12)!important;color:#86efac!important;border-color:rgba(34,197,94,.4)!important;}
+    [data-theme="dark"] .quiz-fb.err{background:rgba(239,68,68,.12)!important;color:#fca5a5!important;border-color:rgba(239,68,68,.4)!important;}
+    [data-theme="dark"] .tent-q.ok{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.35);}
+    [data-theme="dark"] .tent-q.err{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.35);}
     .num-wrap{display:flex;gap:10px;margin-bottom:16px;align-items:center;}
     .num-input{flex:1;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;background:var(--card);color:var(--text);}
     .num-input:focus{outline:none;border-color:var(--blue);}
@@ -93,20 +102,20 @@
       </div>
 
       <div id="quiz-wrap">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-          <button class="btn btn-outline" id="btn-voltar" style="padding:8px 16px;font-size:13px;">← Voltar</button>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:14px;font-weight:700;" id="quiz-titulo"></div>
-            <div style="font-size:12px;color:var(--text-muted);" id="quiz-prog-text"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:12px 16px;background:var(--card);border-radius:var(--radius);border:1px solid var(--border);">
+          <button class="btn btn-ghost btn-sm" id="btn-voltar">← Voltar</button>
+          <span style="font-size:13px;font-weight:700;flex-shrink:0;" id="quiz-titulo"></span>
+          <span style="font-size:12px;color:var(--text-muted);flex-shrink:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;" id="quiz-prog-text"></span>
+          <div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;min-width:40px;">
+            <div id="quiz-bar" style="height:100%;border-radius:3px;background:var(--blue);transition:width .4s;width:0%"></div>
           </div>
-          <button class="btn btn-outline" id="btn-encerrar" onclick="pedirEncerrar()" style="padding:8px 14px;font-size:13px;color:var(--red);border-color:var(--red);flex-shrink:0;">⛔ Encerrar</button>
+          <button class="btn btn-ghost btn-sm" id="btn-encerrar" onclick="pedirEncerrar()" style="color:var(--red);border-color:#FECACA;flex-shrink:0;">Encerrar</button>
         </div>
-        <div class="quiz-pbar"><div class="quiz-pbar-fill" id="quiz-bar"></div></div>
-        <div style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px 28px 20px;">
+        <div style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px 24px 20px;">
           <div id="quiz-enunciado"></div>
           <div id="quiz-opcoes"></div>
           <div class="quiz-fb" id="quiz-fb"></div>
-          <button class="btn" id="btn-proxima" style="display:none;width:100%;">Próxima →</button>
+          <button class="btn btn-blue" id="btn-proxima" style="display:none;width:100%;margin-top:4px;">Próxima →</button>
         </div>
       </div>
 
@@ -483,7 +492,7 @@ window.responderNum = () => {
     (!isNaN(parseFloat(dado)) && !isNaN(parseFloat(q.resposta)) && Math.abs(parseFloat(dado) - parseFloat(q.resposta)) < 1e-9);
   respostas[q.id] = { acertou, resposta_dada: dado };
   inp.style.borderColor = acertou ? 'var(--green)' : 'var(--red)';
-  inp.style.background  = acertou ? '#F0FDF4' : '#FEF2F2';
+  inp.style.background  = acertou ? 'var(--green-pale)' : 'var(--red-pale)';
   mostrarFeedback(acertou, q);
 };
 
@@ -520,17 +529,21 @@ async function finalizarAtividade(parcial = false) {
 
   let saveError = null;
   let saveOk = false;
-  console.log('[Robótica] Salvando tentativa…', { turma, aluno, atividade: atividadeAtual, acertos, total: questoes.length });
-  try {
-    await saveRoboticaTentativa(turma, aluno, atividadeAtual, {
-      acertos, erros, total: questoes.length, respondidas, parcial: parcial || false, respostas
-    });
-    saveOk = true;
-    console.log('[Robótica] Tentativa salva com sucesso no Firebase.');
-  } catch(e) {
-    saveError = (e?.message || String(e) || 'erro desconhecido');
-    console.error('[Robótica] SAVE FALHOU:', e);
-    alert('⚠️ Robótica: erro ao salvar!\n\n' + saveError + '\n\nTurma: ' + turma + '\nAluno: ' + aluno + '\n\nVerifique as regras do Firebase Realtime Database.');
+  if (respondidas < 3) {
+    console.log(`[Robótica] Tentativa não salva: apenas ${respondidas} questão(ões) respondida(s) (mínimo: 3).`);
+  } else {
+    console.log('[Robótica] Salvando tentativa…', { turma, aluno, atividade: atividadeAtual, acertos, total: questoes.length });
+    try {
+      await saveRoboticaTentativa(turma, aluno, atividadeAtual, {
+        acertos, erros, total: questoes.length, respondidas, parcial: parcial || false, respostas
+      });
+      saveOk = true;
+      console.log('[Robótica] Tentativa salva com sucesso no Firebase.');
+    } catch(e) {
+      saveError = (e?.message || String(e) || 'erro desconhecido');
+      console.error('[Robótica] SAVE FALHOU:', e);
+      alert('⚠️ Robótica: erro ao salvar!\n\n' + saveError + '\n\nTurma: ' + turma + '\nAluno: ' + aluno + '\n\nVerifique as regras do Firebase Realtime Database.');
+    }
   }
   try {
     tentativasDB = await getRoboticaTentativasAluno(turma, aluno);

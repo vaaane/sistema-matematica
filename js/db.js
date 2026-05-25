@@ -253,7 +253,16 @@ export async function getAlunoPreferencia(turma, nome, chave) {
 }
 
 // ── Robótica ─────────────────────────────────────────────────
+const _robSaveLocks = {};
+
 export async function saveRoboticaTentativa(turma, aluno, atividade, dados) {
+  const key = `${turma}|${aluno}|${atividade}`;
+  const now = Date.now();
+  if (_robSaveLocks[key] && now - _robSaveLocks[key] < 5000) {
+    console.warn(`[Robótica] save ignorado — duplicata em ${now - _robSaveLocks[key]}ms: ${key}`);
+    return;
+  }
+  _robSaveLocks[key] = now;
   // Usa push() só para gerar a chave, depois set() que aguarda ACK real do servidor
   // (push(ref, data) resolve localmente e pode mascarar PERMISSION_DENIED)
   const newRef = push(ref(db, 'robotica_tentativas'));
