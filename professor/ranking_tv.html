@@ -283,6 +283,18 @@ const standCls    = ['p2', 'p1', 'p3'];
 const animCls     = ['anim-2', 'anim-1', 'anim-3'];
 const medals      = ['🥇', '🥈', '🥉'];
 
+// Escala fonte do nome baseado no comprimento para caber no card sem cortar
+function podFontSize(name, numTied) {
+  const len = name.length;
+  if (numTied >= 3) return len > 8  ? '12px' : '14px';
+  if (numTied === 2) return len > 14 ? '13px' : len > 10 ? '15px' : '17px';
+  // posição individual
+  if (len > 18) return '13px';
+  if (len > 14) return '15px';
+  if (len > 10) return '17px';
+  return '20px';
+}
+
 function podiumHTML(groups, changes, withAnim) {
   return `<div class="tv-podium">` +
     visualOrder.map((gi, vi) => {
@@ -292,13 +304,14 @@ function podiumHTML(groups, changes, withAnim) {
       if (g && g.students.some(r => changes[r.aluno] === 'new-top3')) cls += ' new-entry';
       const tiedW = g && g.students.length > 1 ? `width:${Math.min(g.students.length * 200, 460)}px` : '';
       const namesContent = !g ? '' : g.students.length === 1
-        ? `<div class="tv-pname">${g.students[0].aluno}</div><div class="tv-pturma">Turma ${g.students[0].turma}</div>`
+        ? `<div class="tv-pname" style="font-size:${podFontSize(g.students[0].aluno, 1)}">${g.students[0].aluno}</div>
+           <div class="tv-pturma">Turma ${g.students[0].turma}</div>`
         : `<div style="display:flex;width:100%;gap:0">${
             g.students.map((r, ni) => {
               const vsep = ni < g.students.length - 1
                 ? `<div style="width:1px;background:rgba(255,255,255,.2);opacity:.6;align-self:stretch;margin:0 8px;flex-shrink:0"></div>` : '';
               return `<div style="flex:1;min-width:0;text-align:center">
-                <div class="tv-pname" style="max-width:none;font-size:${g.students.length > 2 ? '14px' : '17px'}">${r.aluno}</div>
+                <div class="tv-pname" style="max-width:none;font-size:${podFontSize(r.aluno, g.students.length)}">${r.aluno}</div>
                 <div class="tv-pturma">Turma ${r.turma}</div>
               </div>${vsep}`;
             }).join('')
@@ -341,16 +354,11 @@ function listRowHTML(r, pos, leaderPts, changes) {
   const diff = leaderPts - pts;
   const ch   = changes[r.aluno];
   const extraCls = ch === 'rising' ? ' rising' : ch === 'record' ? ' record' : '';
-  const sub = r.atividades != null
-    ? `Turma ${r.turma} · ${r.atividades} ativ. · méd. ${r.media}`
-    : r.tentativas != null
-    ? `Turma ${r.turma} · ${r.tentativas} tent.`
-    : `Turma ${r.turma}`;
   return `<div class="tv-list-row${extraCls}">
     <div class="tv-lnum">${pos}</div>
     <div>
       <div class="tv-lname">${r.aluno}</div>
-      <div class="tv-lturma">${sub}</div>
+      <div class="tv-lturma">Turma ${r.turma}</div>
     </div>
     <div class="tv-lpts-wrap">
       <div class="tv-lpts">${pts}</div>
@@ -543,15 +551,20 @@ async function showGeralFlash(ranking) {
 }
 
 // ── Watcher geral: detecção de mudança no top 3 ───────────────
-// Só dispara flash quando se está vendo uma atividade (currentAtiv !== null)
+// Flash só quando vendo uma atividade; mas atualiza geralTop3Key sempre
 let geralTop3Key = null;
 
 onValue(ref(db, 'resultados'), snap => {
-  if (currentAtiv === null) return; // visão geral usa getResultados()
   const lista = [];
   snap.forEach(c => lista.push({ id: c.key, ...c.val() }));
   const ranking = buildRankingMedia(lista);
   const top3Key = getGroups(ranking).map(g => g.students.map(r => r.aluno).sort().join(',')).join('|');
+
+  if (currentAtiv === null) {
+    // Vendo geral: só mantém a chave atualizada (sem disparar flash)
+    geralTop3Key = top3Key;
+    return;
+  }
 
   const shouldFlash = geralTop3Key !== null
     && top3Key !== geralTop3Key
