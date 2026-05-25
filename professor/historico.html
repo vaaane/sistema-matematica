@@ -121,9 +121,9 @@ window.filtrar = function() {
         <div style="flex:1">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <span style="font-size:14px;font-weight:700">${r.atividade}</span>
-            <span class="badge badge-blue">T${r.turma}</span>
+            ${r.turma === 'TESTE' ? '<span class="badge" style="background:#FEF9C3;color:#854D0E;border:1px solid #FDE68A">👩‍🏫 TESTE</span>' : `<span class="badge badge-blue">T${r.turma}</span>`}
           </div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">${r.aluno}</div>
+          <div style="font-size:12px;color:${r.modo_teste || r.aluno === 'PROFESSOR_TESTE' ? '#d97706' : 'var(--text-muted)'};margin-top:2px;font-weight:${r.modo_teste || r.aluno === 'PROFESSOR_TESTE' ? '600' : 'normal'}">${r.modo_teste || r.aluno === 'PROFESSOR_TESTE' ? '👩‍🏫 Teste da professora' : r.aluno}</div>
           <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
             <span class="badge badge-gold">${r.pontuacao||0} pts</span>
             <span class="badge badge-green">${r.acertos||0} acertos</span>

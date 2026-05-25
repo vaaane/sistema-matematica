@@ -235,6 +235,18 @@
     .fim-badge.bonus-rei{color:#FAB800;border:1px solid rgba(250,184,0,.35);background:rgba(250,184,0,.1);}
     @keyframes bonus-fim-pulse{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,.5)}50%{box-shadow:0 0 0 8px rgba(52,211,153,0)}}
     .fim-badge.bonus-fim{color:#34D399;border:2px solid rgba(52,211,153,.6);background:rgba(52,211,153,.15);animation:bonus-fim-pulse 1.4s ease infinite;font-size:13px;}
+
+    /* ── MAPA DE QUESTÕES F1 ── */
+    @keyframes q-pulse{0%,100%{box-shadow:0 0 0 0 rgba(250,184,0,.5)}50%{box-shadow:0 0 0 6px rgba(250,184,0,0)}}
+    .mapa-f1{display:flex;align-items:flex-start;justify-content:center;padding:7px 14px;background:rgba(255,255,255,.03);border:1px solid #1a1a35;border-radius:var(--radius);margin-bottom:8px;}
+    .mapa-q{width:30px;height:30px;border-radius:7px;border:1.5px solid;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-family:'Orbitron',monospace;transition:background .3s,border-color .3s,color .3s;}
+    .mapa-q.pending{background:#090918;border-color:#181830;color:#252550;}
+    .mapa-q.current{background:rgba(250,184,0,.18);border-color:#FAB800;color:#FAB800;animation:q-pulse 1.2s ease infinite;}
+    .mapa-q.correct{background:rgba(34,197,94,.2);border-color:#22C55E;font-size:14px;}
+    .mapa-q.failed{background:rgba(239,68,68,.2);border-color:#EF4444;font-size:14px;}
+    .mapa-sep{color:#252545;font-size:20px;line-height:30px;margin:0 6px;align-self:flex-start;}
+    .mapa-grp{display:flex;flex-direction:column;align-items:center;gap:3px;}
+    .mapa-lbl{font-size:8px;color:#252545;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
   </style>
 </head>
 <body oncontextmenu="return false">
@@ -258,9 +270,9 @@
 
 <script>(()=>{const t=localStorage.getItem("tema");if(t==="escuro")document.documentElement.setAttribute("data-theme","dark");})()</script>
 <script type="module">
-import { respostasEquivalentes, dataAgora, ARQUIVO_QUESTOES } from "/js/constants.js";
+import { respostasEquivalentes, dataAgora, ARQUIVO_QUESTOES, LISTA_ATIVIDADES } from "/js/constants.js";
 import { addResultado, updateResultado, saveDetalhes, getLiberadasParaTurma, getAtividadeStatus } from "/js/db.js";
-import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+import { requireAluno, renderSidebarAluno, clearSession, requireProfessor, renderSidebarProfessor } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -270,33 +282,55 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey||e.metaKey) && ['c','a','x','u','s'].includes(e.key.toLowerCase())) e.preventDefault();
 });
 
-const sess = requireAluno();
-if (!sess) throw new Error();
-renderSidebarAluno("sidebar", "atividades");
-window.sair = () => { document.body.classList.remove('arcade-mode'); clearSession(); window.location.href = "/index.html"; };
-const { alunos, turma } = sess;
+const _urlP   = new URLSearchParams(window.location.search);
+const isTeste = _urlP.get('modo') === 'teste';
 
-const nomeAtiv = new URLSearchParams(window.location.search).get("ativ");
-if (!nomeAtiv) { window.location.href = "/aluno/atividades.html"; throw new Error(); }
+let alunos, turma, liberada, statusInfo;
 
-const liberadas = await getLiberadasParaTurma(turma);
-const liberada  = liberadas.find(l => l.atividade === nomeAtiv);
-if (!liberada) { alert("Atividade não está mais liberada."); window.location.href = "/aluno/atividades.html"; throw new Error(); }
+if (isTeste) {
+  requireProfessor();
+  renderSidebarProfessor("sidebar", "atividades");
+  window.sair = () => { window.close(); };
+  alunos     = ['PROFESSOR_TESTE'];
+  turma      = 'TESTE';
+  liberada   = { atividade: _urlP.get('ativ') || LISTA_ATIVIDADES[0]?.nome || '', percentual: 100, modo: 'avaliacao_plus' };
+  statusInfo = { status: 'ativa', percentual: 100 };
+  const _tb = document.createElement('div');
+  _tb.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10000;background:#d97706;color:#fff;text-align:center;padding:5px 8px;font-size:11px;font-weight:700;letter-spacing:2px;pointer-events:none';
+  _tb.textContent = '👩‍🏫 MODO TESTE · dados salvos como PROFESSOR_TESTE / Turma TESTE';
+  document.body.prepend(_tb);
+} else {
+  const sess = requireAluno();
+  if (!sess) throw new Error();
+  renderSidebarAluno("sidebar", "atividades");
+  window.sair = () => { document.body.classList.remove('arcade-mode'); clearSession(); window.location.href = "/index.html"; };
+  alunos = sess.alunos;
+  turma  = sess.turma;
 
-const statusInfo = await getAtividadeStatus(turma, liberada.atividade);
-if (statusInfo.status === 'encerrada') {
-  alert("Atividade encerrada pela professora.");
-  window.location.href = "/aluno/atividades.html"; throw new Error();
-}
-if (statusInfo.status !== 'ativa') {
-  if (!confirm(`Atenção: esta atividade vale ${statusInfo.percentual}% da nota agora. Deseja continuar?`)) {
+  const nomeAtiv = _urlP.get("ativ");
+  if (!nomeAtiv) { window.location.href = "/aluno/atividades.html"; throw new Error(); }
+
+  const liberadas = await getLiberadasParaTurma(turma);
+  liberada = liberadas.find(l => l.atividade === nomeAtiv);
+  if (!liberada) { alert("Atividade não está mais liberada."); window.location.href = "/aluno/atividades.html"; throw new Error(); }
+
+  statusInfo = await getAtividadeStatus(turma, liberada.atividade);
+  if (statusInfo.status === 'encerrada') {
+    alert("Atividade encerrada pela professora.");
     window.location.href = "/aluno/atividades.html"; throw new Error();
+  }
+  if (statusInfo.status !== 'ativa') {
+    if (!confirm(`Atenção: esta atividade vale ${statusInfo.percentual}% da nota agora. Deseja continuar?`)) {
+      window.location.href = "/aluno/atividades.html"; throw new Error();
+    }
   }
 }
 
 document.getElementById("topbar-title").textContent = liberada.atividade;
-const pctLabel = statusInfo.percentual < 100 ? ` · ⏰ ${statusInfo.percentual}%` : '';
-document.getElementById("topbar-sub").textContent = `Turma ${turma} · Avaliação+${pctLabel}`;
+const pctLabel = !isTeste && statusInfo.percentual < 100 ? ` · ⏰ ${statusInfo.percentual}%` : '';
+document.getElementById("topbar-sub").textContent = isTeste
+  ? `👩‍🏫 Modo Teste · Avaliação+`
+  : `Turma ${turma} · Avaliação+${pctLabel}`;
 
 // ── Constantes gerais ──────────────────────────────────────────
 const DURACAO_GLOBAL_MS     = 30 * 60 * 1000;
@@ -308,8 +342,6 @@ const MAX_TENTATIVAS        = 3;
 const F1_STRUCT     = [1,1,1,1,1, 2,2, 3]; // 5 fáceis, 2 médias, 1 difícil
 const F1_TOTAL      = F1_STRUCT.length;      // 8
 const BASE_F1       = { 1: 1, 2: 2, 3: 3 };
-const CREDIT_INICIO = 10;
-const CREDIT_PEN    = { 1: 0.25, 2: 0.50, 3: 0.75 };
 const FATORES_F1    = [1.0, 0.75, 0.50];
 const F1_MAX_PTS    = 12; // 5×1 + 2×2 + 1×3
 
@@ -451,12 +483,12 @@ function novoEstado(duracaoSessao) {
     f1: {
       questoes: gerarQuestoesF1(),
       idx: 0,
-      credito: CREDIT_INICIO,
       pontos: 0,
       acertos: 0, erros: 0,
-      inicioMs: 0,      // set when F1 actually begins
-      tempo_ms: 0,      // filled on encerrarFase1
+      inicioMs: 0,
+      tempo_ms: 0,
       nota_quiz: 0,
+      mapaEstados: Array(F1_TOTAL).fill('pending'),
     },
     // Fase 2
     saldo: 0, acertos: 0, erros: 0, respondidas: 0,
@@ -495,19 +527,6 @@ function renderHUDF1() {
   // pontos
   const ptEl = document.getElementById("hud-pts");
   if (ptEl) ptEl.textContent = fmtPts(st.f1.pontos);
-  // crédito
-  const crEl = document.getElementById("hud-credito-val");
-  const crBar = document.getElementById("credito-fill");
-  if (crEl) {
-    const cr = st.f1.credito;
-    crEl.textContent = fmtPts(cr);
-    crEl.className = "hud-credito-val" + (cr <= 2 ? " critico" : cr <= 4 ? " baixo" : "");
-  }
-  if (crBar) {
-    const pct = (st.f1.credito / CREDIT_INICIO) * 100;
-    crBar.style.width = pct + "%";
-    crBar.className = "credito-fill" + (pct <= 20 ? " critico" : pct <= 40 ? " baixo" : "");
-  }
   // sessão
   const sEl = document.getElementById("hud-sessao");
   if (sEl) {
@@ -526,6 +545,7 @@ function renderHUDF1() {
     const v = valorAtualF1();
     vEl.textContent = `+${fmtPts(v)} pt${v!==1?'s':''}`;
   }
+  renderMapaF1();
 }
 
 // ── HUD Fase 2 ─────────────────────────────────────────────────
@@ -566,6 +586,39 @@ function flashPts(tipo) {
   setTimeout(() => el.classList.remove('up','dn'), 380);
 }
 
+// ── Mapa de questões F1 ────────────────────────────────────────
+function getEstadoMapa(i) {
+  const mapa = st.f1.mapaEstados;
+  if (mapa[i] !== 'pending') return mapa[i];
+  if (i === st.f1.idx) return 'current';
+  return 'pending';
+}
+
+function buildMapaHTML() {
+  const grupos = [[0,1,2,3,4],[5,6],[7]];
+  const labels = ['Fáceis','Médias','Difícil'];
+  const grupoDivs = grupos.map((g, gi) => {
+    const sep = gi > 0 ? '<span class="mapa-sep">│</span>' : '';
+    const icons = g.map(i => {
+      const estado = getEstadoMapa(i);
+      const txt = estado === 'correct' ? '✅' : estado === 'failed' ? '❌' : String(i + 1);
+      return `<div class="mapa-q ${estado}" id="mapa-q-${i}">${txt}</div>`;
+    }).join('');
+    return `${sep}<div class="mapa-grp"><div style="display:flex;gap:3px;">${icons}</div><span class="mapa-lbl">${labels[gi]}</span></div>`;
+  }).join('');
+  return `<div class="mapa-f1">${grupoDivs}</div>`;
+}
+
+function renderMapaF1() {
+  for (let i = 0; i < F1_TOTAL; i++) {
+    const el = document.getElementById(`mapa-q-${i}`);
+    if (!el) return;
+    const estado = getEstadoMapa(i);
+    el.className = `mapa-q ${estado}`;
+    el.textContent = estado === 'correct' ? '✅' : estado === 'failed' ? '❌' : String(i + 1);
+  }
+}
+
 // ── Render Fase 1 ──────────────────────────────────────────────
 function renderQuestaoF1() {
   const q   = st.questaoAtual;
@@ -573,9 +626,6 @@ function renderQuestaoF1() {
   const difMap = { 1:['Fácil','facil'], 2:['Média','media'], 3:['Difícil','dificil'] };
   const [difLbl, difCls] = difMap[q.dif] || difMap[1];
   const v = valorAtualF1();
-  const cr = st.f1.credito;
-  const crPct = (cr / CREDIT_INICIO) * 100;
-  const crCls = cr <= 2 ? ' critico' : cr <= 4 ? ' baixo' : '';
   const progPct = (idx / F1_TOTAL) * 100;
 
   // Determine block label
@@ -588,14 +638,6 @@ function renderQuestaoF1() {
         <div class="hud-pts" id="hud-pts">${fmtPts(st.f1.pontos)}</div>
         <div class="hud-pts-lbl">pts fase 1</div>
       </div>
-      <div class="hud-sep">·</div>
-      <div class="hud-credito-wrap">
-        <div class="hud-credito-lbl">Crédito</div>
-        <div class="hud-credito-val${crCls}" id="hud-credito-val">${fmtPts(cr)}</div>
-        <div class="credito-bar" style="width:90px">
-          <div class="credito-fill${crCls}" id="credito-fill" style="width:${crPct}%"></div>
-        </div>
-      </div>
       <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px">
         <div class="hud-sessao${st.sessaoRestante<=60?' urgente':''}" id="hud-sessao">⏳ ${formatTempo(st.sessaoRestante)}</div>
         <div class="hud-global-disp" id="hud-global-disp">Global: ${controle ? formatTempo(Math.ceil(globalRestanteMs(controle)/1000)) : '30:00'}</div>
@@ -607,6 +649,7 @@ function renderQuestaoF1() {
       <span class="f1-prog-idx">${idx+1} / ${F1_TOTAL}</span>
       <span class="f1-fase-tag ${faseCls}">${blockLbl}</span>
     </div>
+    ${buildMapaHTML()}
     <div class="tent-row">
       ${[0,1,2].map(i=>`<div class="tent-dot ${i<(3-st.tentativaQ)?'ativa':'usada'}"></div>`).join('')}
       <span class="tent-lbl">${3-st.tentativaQ} tentativa${(3-st.tentativaQ)!==1?'s':''} restante${(3-st.tentativaQ)!==1?'s':''}</span>
@@ -629,7 +672,7 @@ function renderQuestaoF1() {
         </div>
       </div>
       <div id="feedback" class="hidden"></div>
-      <button onclick="pularQuestao()" style="background:transparent;border:1px solid #1c1c38;color:#363660;border-radius:8px;padding:7px 13px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;margin-top:8px;" onmouseover="this.style.borderColor='#363660'" onmouseout="this.style.borderColor='#1c1c38'">Pular (−${CREDIT_PEN[q.dif]}cr)</button>
+      <button onclick="pularQuestao()" style="background:transparent;border:1px solid #1c1c38;color:#363660;border-radius:8px;padding:7px 13px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;margin-top:8px;" onmouseover="this.style.borderColor='#363660'" onmouseout="this.style.borderColor='#1c1c38'">Pular questão</button>
     </div>`;
 
   document.getElementById("resp-input")?.focus();
@@ -648,6 +691,7 @@ function processarF1(resposta) {
     st.f1.pontos += pts;
     st.f1.acertos++;
     st.tentativaQ = 0;
+    st.f1.mapaEstados[st.f1.idx] = 'correct';
     registrarQuestao(true, pts);
     mostrarFeedback("ok", `✅ Correto! +${fmtPts(pts)} pt${pts!==1?'s':''}`);
     floatPts(fmtPts(pts), 'g');
@@ -665,23 +709,17 @@ function processarF1(resposta) {
     if (card) { card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); setTimeout(() => card.classList.remove('shake'), 550); }
 
     if (st.tentativaQ >= 3) {
-      // Questão falhou — aplica penalidade no crédito
-      st.f1.credito = Math.max(0, st.f1.credito - CREDIT_PEN[q.dif]);
       st.f1.erros++;
       st.tentativaQ = 0;
+      st.f1.mapaEstados[st.f1.idx] = 'failed';
       registrarQuestao(false, 0);
-      const penStr = CREDIT_PEN[q.dif].toString();
-      mostrarFeedback("warn", `⚠️ Resposta: <strong>${q.resposta}${q.unidade?' '+q.unidade:''}</strong> · −${penStr}cr`);
-      floatPts('−'+penStr, 'cr');
-      flashPts('p');
+      mostrarFeedback("warn", `⚠️ Resposta: <strong>${q.resposta}${q.unidade?' '+q.unidade:''}</strong>`);
       beep(250, 350);
       renderHUDF1();
-      const creditoZerado = st.f1.credito <= 0;
       setTimeout(() => {
         if (st.finalizado || st.transicao) return;
         st.processando = false;
-        if (creditoZerado) { encerrarFase1('credito'); }
-        else { proximaF1(); }
+        proximaF1();
       }, 2000);
     } else {
       mostrarFeedback("err", `❌ Errado! ${3-st.tentativaQ} tentativa${(3-st.tentativaQ)>1?'s':''} restante${(3-st.tentativaQ)>1?'s':''}.`);
@@ -705,23 +743,17 @@ function pularF1() {
   if (!st || st.processando || st.finalizado || st.transicao) return;
   const q = st.questaoAtual;
   st.questaoHist.push({ resposta: '(pulou)', correto: false, tempoMs: Date.now() - st.questaoInicioTs });
-  st.f1.credito = Math.max(0, st.f1.credito - CREDIT_PEN[q.dif]);
   st.f1.erros++;
   st.tentativaQ = 0;
   registrarQuestao(false, 0);
-  const penStr = CREDIT_PEN[q.dif].toString();
-  mostrarFeedback("warn", `Pulou — Resposta: <strong>${q.resposta}${q.unidade?' '+q.unidade:''}</strong> · −${penStr}cr`);
-  floatPts('−'+penStr, 'cr');
-  flashPts('p');
+  mostrarFeedback("warn", `Pulou — Resposta: <strong>${q.resposta}${q.unidade?' '+q.unidade:''}</strong>`);
   beep(250, 300);
   renderHUDF1();
-  const creditoZerado = st.f1.credito <= 0;
   st.processando = true;
   setTimeout(() => {
     if (st.finalizado || st.transicao) return;
     st.processando = false;
-    if (creditoZerado) { encerrarFase1('credito'); }
-    else { proximaF1(); }
+    proximaF1();
   }, 1800);
 }
 
@@ -729,7 +761,6 @@ function pularF1() {
 function proximaF1() {
   st.f1.idx++;
   if (st.f1.idx >= F1_TOTAL) { encerrarFase1('completa'); return; }
-  if (st.f1.credito <= 0)    { encerrarFase1('credito');  return; }
   st.tentativaQ = 0;
   st.questaoHist = [];
   st.questaoAtual = st.f1.questoes[st.f1.idx];
@@ -1355,8 +1386,8 @@ async function encerrarSessao(motivo) {
     acertos: st.acertos, erros: st.erros, respondidas: st.respondidas,
     modo: "avaliacao_plus",
     pontos_fase1: st.f1.pontos, nota_quiz: st.f1.nota_quiz,
-    credito_final: st.f1.credito, tempo_fase1_ms: st.f1.tempo_ms,
-    fase1_concluida: st.f1.idx >= F1_TOTAL || st.f1.credito <= 0,
+    tempo_fase1_ms: st.f1.tempo_ms,
+    fase1_concluida: st.f1.idx >= F1_TOTAL,
     bonus_fim: bonusFim, sem_penalidade: st.semPenalidade,
     acertos_rapidos: st.acertosRapidos, combo_max: st.comboMax,
     acertos_dificeis: st.acertosDificeis, ajudas_usadas: st.ajudasUsadasTotal || 0,
@@ -1367,7 +1398,7 @@ async function encerrarSessao(motivo) {
   for (const al of alunos) {
     const rid = st.resultadoIds[al];
     if (rid) {
-      try { await updateResultado(rid, { ...dados, aluno: al, turma, atividade: liberada.atividade }); } catch(e) {}
+      try { await updateResultado(rid, { ...dados, aluno: al, turma, atividade: liberada.atividade, ...(isTeste ? { modo_teste: true } : {}) }); } catch(e) {}
       if (st.questoesDetalhes.length) saveDetalhes(rid, st.questoesDetalhes).catch(()=>{});
     }
   }
@@ -1379,7 +1410,7 @@ async function encerrarSessao(motivo) {
   if (f2aplicado > melhorAtual) upd.melhor_pontuacao = f2aplicado;
   if (f2bruta > (controle.melhor_bruta||0)) upd.melhor_bruta = f2bruta;
   if (st.f1.nota_quiz > melhorNqAtual) upd.melhor_nota_quiz = st.f1.nota_quiz;
-  if (Object.keys(upd).length) { try { await update(controleRef, upd); controle = {...controle,...upd}; } catch(e) {} }
+  if (!isTeste && Object.keys(upd).length) { try { await update(controleRef, upd); controle = {...controle,...upd}; } catch(e) {} }
 
   const novoMelhorF2 = f2aplicado > melhorAtual;
   if (novoMelhorF2 && f2aplicado > 0) lancarConfete();
@@ -1392,7 +1423,7 @@ function mostrarResultado(motivo, f2aplicado, f2bruta, novoMelhor, bonusFim = 0)
   const tentUsadas    = controle.tentativas_realizadas || 1;
   const tentRestantes = MAX_TENTATIVAS - tentUsadas;
   const gRestMs       = globalRestanteMs(controle);
-  const podeNovar     = tentRestantes > 0 && gRestMs >= MIN_PARA_TENTATIVA_MS;
+  const podeNovar     = isTeste || (tentRestantes > 0 && gRestMs >= MIN_PARA_TENTATIVA_MS);
   const melhorExibida = controle.melhor_pontuacao || f2aplicado;
   const taxa = st.respondidas > 0 ? Math.round(st.acertos / st.respondidas * 100) : 0;
 
@@ -1417,7 +1448,7 @@ function mostrarResultado(motivo, f2aplicado, f2bruta, novoMelhor, bonusFim = 0)
         <strong>📊 Fase 1</strong><br>
         Pontos: <strong style="color:#FAB800">${fmtPts(st.f1.pontos)} / ${F1_MAX_PTS}</strong> &nbsp;·&nbsp;
         Nota quiz: <strong style="color:#FAB800">${st.f1.nota_quiz?.toFixed(1)??0} / 10</strong><br>
-        Crédito restante: ${fmtPts(st.f1.credito)} &nbsp;·&nbsp; Acertos: ${st.f1.acertos}/${F1_TOTAL}
+        Acertos: ${st.f1.acertos}/${F1_TOTAL}
       </div>
       <div class="res-stats">
         <div class="res-s"><div class="res-sv" style="color:#4ADE80">${st.acertos}</div><div class="res-sl">Acertos F2</div></div>
@@ -1444,15 +1475,17 @@ function mostrarResultado(motivo, f2aplicado, f2bruta, novoMelhor, bonusFim = 0)
 // ── Iniciar nova tentativa ─────────────────────────────────────
 window.iniciarNovaTentativa = async function() {
   document.querySelector(".resultado-overlay")?.remove();
-  const snap = await get(controleRef);
-  controle = snap.exists() ? snap.val() : controle;
+  if (!isTeste) {
+    const snap = await get(controleRef);
+    controle = snap.exists() ? snap.val() : controle;
+  }
 
-  const gRestMs = globalRestanteMs(controle);
-  if (gRestMs < MIN_PARA_TENTATIVA_MS) { mostrarBloqueada('tempo', controle); return; }
-  if ((controle.tentativas_realizadas||0) >= MAX_TENTATIVAS) { mostrarBloqueada('tentativas', controle); return; }
+  const gRestMs = isTeste ? DURACAO_GLOBAL_MS : globalRestanteMs(controle);
+  if (!isTeste && gRestMs < MIN_PARA_TENTATIVA_MS) { mostrarBloqueada('tempo', controle); return; }
+  if (!isTeste && (controle.tentativas_realizadas||0) >= MAX_TENTATIVAS) { mostrarBloqueada('tentativas', controle); return; }
 
-  const novaTent = (controle.tentativas_realizadas||0) + 1;
-  await update(controleRef, { tentativas_realizadas: novaTent });
+  const novaTent = isTeste ? 1 : (controle.tentativas_realizadas||0) + 1;
+  if (!isTeste) await update(controleRef, { tentativas_realizadas: novaTent });
   controle.tentativas_realizadas = novaTent;
 
   const duracaoSessao = Math.min(DURACAO_SESSAO_S, Math.floor(gRestMs/1000));
@@ -1464,6 +1497,7 @@ window.iniciarNovaTentativa = async function() {
       aluno: al, turma, atividade: liberada.atividade,
       modo: "avaliacao_plus", concluido: false,
       pontuacao: 0, data: agora, ts_inicio: st.inicioTs, tentativa_num: novaTent,
+      ...(isTeste ? { modo_teste: true } : {}),
     });
   }
 
@@ -1540,7 +1574,7 @@ function mostrarPreJogo(ctrl) {
         • 5 fáceis → 2 médias → 1 difícil, sem timer por questão<br>
         • Valores base: Fácil <strong>1pt</strong> · Média <strong>2pt</strong> · Difícil <strong>3pt</strong> · Máx <strong>12pt</strong><br>
         • 3 tentativas: ×1,0 → ×0,75 → ×0,50 do valor<br>
-        • Falhou as 3 ou pulou → 0pt + desconto no crédito (Fácil −0,25 · Média −0,50 · Difícil −0,75)<br>
+        • Falhou as 3 tentativas → 0pt + desconto no crédito (Fácil −0,25 · Média −0,50 · Difícil −0,75)<br>
         • Crédito inicia em <strong>10</strong> · zerou → encerra Fase 1<br>
         • <em>nota_quiz = (pts_f1 / 12) × 10</em>
         <div class="phase-block">
@@ -1568,10 +1602,10 @@ window.iniciarJogo = async function() {
 
   if (!controle) {
     controle = { inicio_global: Date.now(), tentativas_realizadas: 1, melhor_pontuacao: 0, melhor_bruta: 0, melhor_nota_quiz: 0 };
-    await set(controleRef, { ...controle });
+    if (!isTeste) await set(controleRef, { ...controle });
   } else {
     const novaTent = (controle.tentativas_realizadas||0) + 1;
-    await update(controleRef, { tentativas_realizadas: novaTent });
+    if (!isTeste) await update(controleRef, { tentativas_realizadas: novaTent });
     controle.tentativas_realizadas = novaTent;
   }
 
@@ -1587,6 +1621,7 @@ window.iniciarJogo = async function() {
       aluno: al, turma, atividade: liberada.atividade,
       modo: "avaliacao_plus", concluido: false,
       pontuacao: 0, data: agora, ts_inicio: st.inicioTs, tentativa_num: controle.tentativas_realizadas,
+      ...(isTeste ? { modo_teste: true } : {}),
     });
   }
 
@@ -1604,7 +1639,7 @@ window.pedirEncerrar = function() {
   if (!st || st.finalizado || st.transicao) return;
   document.getElementById("encerrar-modal")?.remove();
   const info = st.fase === 1
-    ? `Fase 1 em andamento · Pontos: <strong style="color:#FAB800">${fmtPts(st.f1.pontos)}</strong> · Crédito: ${fmtPts(st.f1.credito)}`
+    ? `Fase 1 em andamento · Pontos: <strong style="color:#FAB800">${fmtPts(st.f1.pontos)}</strong>`
     : `Fase 2 · Pontuação: <strong style="color:#FAB800">${st.saldo} pts</strong>`;
   const ov = document.createElement("div");
   ov.id = "encerrar-modal";
@@ -1638,8 +1673,8 @@ window.addEventListener("beforeunload", () => {
 });
 
 // ── Init ───────────────────────────────────────────────────────
-const controleSnap = await get(controleRef);
-controle = controleSnap.exists() ? controleSnap.val() : null;
+const controleSnap = isTeste ? null : await get(controleRef);
+controle = controleSnap?.exists() ? controleSnap.val() : null;
 
 if (controle) {
   const gRestMs = globalRestanteMs(controle);

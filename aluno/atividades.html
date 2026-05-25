@@ -48,6 +48,7 @@ import { LISTA_ATIVIDADES, MAX_TENTATIVAS_ATIVIDADE } from "/js/constants.js";
 import { contarTentativas, getLiberadasParaTurma, getAlunoPreferencia } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
+import { initAvBanner } from "/js/avaliacao_banner.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -58,6 +59,7 @@ window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 applyTopRankVisuals();
 
 const { alunos, turma } = sess;
+initAvBanner(turma, alunos[0]);
 
 getAlunoPreferencia(turma, alunos[0], 'tema').then(t => {
   if (t && t !== localStorage.getItem('tema')) {

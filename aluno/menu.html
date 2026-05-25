@@ -80,6 +80,7 @@ import { getResultados, getLiberadasParaTurma, getAlunoPreferencia, getConquista
 import { CONQUISTAS } from "/js/conquistas.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 import { saveRankPos, applyTopRankVisuals } from "/js/toprank.js";
+import { initAvBanner } from "/js/avaliacao_banner.js";
 import { initTopNotif } from "/js/topnotif.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -91,6 +92,7 @@ renderSidebarAluno("sidebar", "inicio");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
 const { alunos, turma } = sess;
+initAvBanner(turma, alunos[0]);
 
 // Robótica sidebar item (condicional)
 getAlunoPreferencia(turma, alunos[0], 'robotica').then(isRob => {

@@ -5,11 +5,13 @@ export const FATORES_TENTATIVA = [1.0, 0.75, 0.5, 0.25];
 export const MAX_TENTATIVAS_ATIVIDADE = 2;
 
 export const LISTA_ATIVIDADES = [
-  { nome: "Atividade 4 - Geometria", cor: "purple", modo: "competicao" },
+  { nome: "Atividade 4 - Geometria",              cor: "purple", modo: "competicao_plus" },
+  { nome: "Atividade 5 - Geometria: Triângulos",  cor: "blue",   modo: "competicao_plus" },
 ];
 
 export const ARQUIVO_QUESTOES = {
-  "Atividade 4 - Geometria": "/dados/questoes_competicao.json",
+  "Atividade 4 - Geometria":             "/dados/questoes_competicao.json",
+  "Atividade 5 - Geometria: Triângulos": "/dados/questoes_atividade5.json",
 };
 
 export const ALUNOS_POR_TURMA = {

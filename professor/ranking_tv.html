@@ -188,7 +188,7 @@
 </div>
 
 <script type="module">
-import { getLiberadas, listenRankingProfessor } from "/js/db.js";
+import { getLiberadas, listenRankingProfessor, getResultados } from "/js/db.js";
 import { requireProfessor } from "/js/auth.js";
 import { LISTA_ATIVIDADES } from "/js/constants.js";
 import { db } from "/js/firebase-config.js";
@@ -209,14 +209,14 @@ function tickClock() {
 tickClock();
 setInterval(tickClock, 15000);
 
-// ── Ranking geral ─────────────────────────────────────────────
-function buildGeralRanking(lista) {
+// ── Ranking geral — mesma lógica do ranking.html ─────────────
+function buildRankingMedia(lista) {
   const melhor = {};
   for (const r of lista) {
     if (!r.concluido || !r.aluno) continue;
     if (!melhor[r.aluno]) melhor[r.aluno] = {
-      aluno: r.aluno, turma: r.turma || '?', porAtiv: {},
-      melhorSessao: 0, primeiroTs: Infinity, sessoes: 0
+      aluno: r.aluno, turma: r.turma || '?', porAtiv: {}, sessoes: 0,
+      melhorSessao: 0, primeiroTs: Infinity
     };
     const pts = r.pontuacao || 0;
     const prev = melhor[r.aluno].porAtiv[r.atividade] || 0;
@@ -233,8 +233,7 @@ function buildGeralRanking(lista) {
     return {
       aluno: a.aluno, turma: a.turma,
       melhorPts: total, media, atividades: vals.length, sessoes: a.sessoes,
-      melhorSessao: a.melhorSessao,
-      primeiroTs: a.primeiroTs === Infinity ? 0 : a.primeiroTs
+      melhorSessao: a.melhorSessao, primeiroTs: a.primeiroTs === Infinity ? 0 : a.primeiroTs
     };
   }).sort((a, b) => b.melhorPts - a.melhorPts);
 }
@@ -478,17 +477,14 @@ async function showView(nome) {
   let firstUpdate = true;
 
   if (nome === null) {
-    // Geral: listener em tempo real no resultados
-    currentUnsub = onValue(ref(db, 'resultados'), snap => {
-      if (isGeralFlash) return;
-      const lista = [];
-      snap.forEach(c => lista.push(c.val()));
-      const ranking = buildGeralRanking(lista);
-      geralTop3Key = getGroups(ranking).map(g => g.students.map(r => r.aluno).sort().join(',')).join('|');
-      const changes = detectChanges(ranking);
-      renderRankingToDOM(ranking, firstUpdate, changes);
-      firstUpdate = false;
-    });
+    // Geral: usa getResultados() — mesma query e lógica do ranking.html
+    const todos = await getResultados();
+    const ranking = buildRankingMedia(todos);
+    geralTop3Key = getGroups(ranking).map(g => g.students.map(r => r.aluno).sort().join(',')).join('|');
+    const changes = detectChanges(ranking);
+    renderRankingToDOM(ranking, firstUpdate, changes);
+    firstUpdate = false;
+    // sem listener em tempo real para geral (consistente com ranking.html)
   } else {
     currentUnsub = listenRankingProfessor(nome, ranking => {
       if (isGeralFlash) return;
@@ -551,10 +547,10 @@ async function showGeralFlash(ranking) {
 let geralTop3Key = null;
 
 onValue(ref(db, 'resultados'), snap => {
-  if (currentAtiv === null) return; // visão geral tem listener próprio
+  if (currentAtiv === null) return; // visão geral usa getResultados()
   const lista = [];
-  snap.forEach(c => lista.push(c.val()));
-  const ranking = buildGeralRanking(lista);
+  snap.forEach(c => lista.push({ id: c.key, ...c.val() }));
+  const ranking = buildRankingMedia(lista);
   const top3Key = getGroups(ranking).map(g => g.students.map(r => r.aluno).sort().join(',')).join('|');
 
   const shouldFlash = geralTop3Key !== null

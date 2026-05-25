@@ -469,11 +469,12 @@
 
 <script>(()=>{const t=localStorage.getItem("tema");if(t==="escuro")document.documentElement.setAttribute("data-theme","dark");})()</script>
 <script type="module">
-import { respostasEquivalentes, dataAgora } from "/js/constants.js";
+import { respostasEquivalentes, dataAgora, ARQUIVO_QUESTOES, LISTA_ATIVIDADES } from "/js/constants.js";
 import { addResultado, updateResultado, saveDetalhes, getLiberadasParaTurma, listenRankingAtividade, getBestResultado, getResultadosByAluno, getAtividadeStatus, salvarConquistas } from "/js/db.js";
 import { calcularConquistas, CONQUISTAS } from "/js/conquistas.js";
-import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+import { requireAluno, renderSidebarAluno, requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 import { initTopNotif } from "/js/topnotif.js";
+import { initAvBanner } from "/js/avaliacao_banner.js";
 
 document.addEventListener('keydown', e => {
   const tag = e.target.tagName.toLowerCase();
@@ -481,36 +482,58 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey||e.metaKey) && ['c','a','x','u','s'].includes(e.key.toLowerCase())) e.preventDefault();
 });
 
-const sess = requireAluno();
-if (!sess) throw new Error();
-renderSidebarAluno("sidebar", "atividades");
-window.sair = () => { document.body.classList.remove('arcade-mode'); clearSession(); window.location.href = "/index.html"; };
-const { alunos, turma } = sess;
-initTopNotif({ mode: 'aluno', alunoNome: alunos[0] });
+const _urlP   = new URLSearchParams(window.location.search);
+const isTeste = _urlP.get('modo') === 'teste';
 
-const nomeAtiv = new URLSearchParams(window.location.search).get("ativ");
-if (!nomeAtiv) { window.location.href = "/aluno/atividades.html"; throw new Error(); }
-const liberadas = await getLiberadasParaTurma(turma);
-const liberada  = liberadas.find(l => l.atividade === nomeAtiv);
-if (!liberada) { alert("Atividade não está mais liberada."); window.location.href = "/aluno/atividades.html"; throw new Error(); }
+let alunos, turma, liberada;
 
-// Verificar status manual da atividade
-const statusInfoPlus = await getAtividadeStatus(turma, liberada.atividade);
-if (statusInfoPlus.status === 'encerrada') {
-  alert("Atividade encerrada pela professora.");
-  window.location.href = "/aluno/atividades.html"; throw new Error();
-}
-if (statusInfoPlus.status !== 'ativa') {
-  if (!confirm(`Atenção: esta atividade vale ${statusInfoPlus.percentual}% da nota agora. Deseja continuar?`)) {
+if (isTeste) {
+  requireProfessor();
+  renderSidebarProfessor("sidebar", "atividades");
+  window.sair = () => { window.close(); };
+  alunos  = ['PROFESSOR_TESTE'];
+  turma   = 'TESTE';
+  liberada = { atividade: _urlP.get('ativ') || LISTA_ATIVIDADES[0]?.nome || '', percentual: 100, modo: 'competicao_plus' };
+  const _tb = document.createElement('div');
+  _tb.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10000;background:#d97706;color:#fff;text-align:center;padding:5px 8px;font-size:11px;font-weight:700;letter-spacing:2px;pointer-events:none';
+  _tb.textContent = '👩‍🏫 MODO TESTE · dados salvos como PROFESSOR_TESTE / Turma TESTE';
+  document.body.prepend(_tb);
+} else {
+  const sess = requireAluno();
+  if (!sess) throw new Error();
+  renderSidebarAluno("sidebar", "atividades");
+  window.sair = () => { document.body.classList.remove('arcade-mode'); clearSession(); window.location.href = "/index.html"; };
+  alunos = sess.alunos;
+  turma  = sess.turma;
+  initTopNotif({ mode: 'aluno', alunoNome: alunos[0] });
+  initAvBanner(turma, alunos[0]);
+
+  const nomeAtiv = _urlP.get("ativ");
+  if (!nomeAtiv) { window.location.href = "/aluno/atividades.html"; throw new Error(); }
+  const liberadas = await getLiberadasParaTurma(turma);
+  liberada = liberadas.find(l => l.atividade === nomeAtiv);
+  if (!liberada) { alert("Atividade não está mais liberada."); window.location.href = "/aluno/atividades.html"; throw new Error(); }
+
+  const statusInfoPlus = await getAtividadeStatus(turma, liberada.atividade);
+  if (statusInfoPlus.status === 'encerrada') {
+    alert("Atividade encerrada pela professora.");
     window.location.href = "/aluno/atividades.html"; throw new Error();
   }
+  if (statusInfoPlus.status !== 'ativa') {
+    if (!confirm(`Atenção: esta atividade vale ${statusInfoPlus.percentual}% da nota agora. Deseja continuar?`)) {
+      window.location.href = "/aluno/atividades.html"; throw new Error();
+    }
+  }
+  liberada.percentual = statusInfoPlus.percentual;
 }
 
 document.getElementById("topbar-title").textContent = liberada.atividade;
-const pctLabelPlus = statusInfoPlus.percentual < 100 ? ` · ⏰ ${statusInfoPlus.percentual}%` : '';
-document.getElementById("topbar-sub").textContent   = `Turma ${turma} · Competição+${pctLabelPlus}`;
+const pctLabelPlus = !isTeste && liberada.percentual < 100 ? ` · ⏰ ${liberada.percentual}%` : '';
+document.getElementById("topbar-sub").textContent = isTeste
+  ? `👩‍🏫 Modo Teste · Competição+`
+  : `Turma ${turma} · Competição+${pctLabelPlus}`;
 
-const raw = await fetch("/dados/questoes_competicao.json").then(r => r.json());
+const raw = await fetch(ARQUIVO_QUESTOES[liberada.atividade] ?? "/dados/questoes_competicao.json").then(r => r.json());
 function temRespostaNum(t) {
   if (t.tipo === 'numerica') return true;
   if (t.conjuntos) return !isNaN(parseFloat(String(t.conjuntos[0]?.resposta ?? '')));
@@ -524,7 +547,7 @@ const dificeis = templates.filter(t => t.dificuldade === 3);
 const PONTOS = { 1: 4, 2: 8, 3: 24 };
 const TIMERS = { 1: 10, 2: 40, 3: 90 };
 
-const _melhores = await Promise.all(alunos.map(al => getBestResultado(al, turma, liberada.atividade)));
+const _melhores = isTeste ? [] : await Promise.all(alunos.map(al => getBestResultado(al, turma, liberada.atividade)));
 let melhorPts = Math.max(0, ..._melhores.map(r => r?.pontuacao_bruta || r?.pontuacao || 0));
 
 let latestRanking = [];
@@ -1386,7 +1409,7 @@ async function encerrarSessao(motivo) {
   for (const al of alunos) {
     const rid = st.resultadoIds[al];
     if (rid) {
-      try { await updateResultado(rid, { ...dados, aluno: al, turma, atividade: liberada.atividade }); }
+      try { await updateResultado(rid, { ...dados, aluno: al, turma, atividade: liberada.atividade, ...(isTeste ? { modo_teste: true } : {}) }); }
       catch(e) { console.error("encerrar:", e); }
       if (st.questoesDetalhes.length > 0) {
         saveDetalhes(rid, st.questoesDetalhes).catch(() => {});
@@ -1399,7 +1422,7 @@ async function encerrarSessao(motivo) {
   if (novoMelhor) melhorPts = st.saldo;
 
   let minhasConquistas = [];
-  try {
+  if (!isTeste) try {
     const prevRegs = await Promise.all(alunos.map(al => getResultadosByAluno(al)));
     const toSaveAll = [];
     for (let ai = 0; ai < alunos.length; ai++) {
@@ -1506,6 +1529,7 @@ window.reiniciar = async function() {
       modo: "competicao_plus", concluido: false,
       pontuacao: 10, acertos: 0, erros: 0, respondidas: 0,
       ts_inicio: st.inicioTs, data: agora,
+      ...(isTeste ? { modo_teste: true } : {}),
     });
   }
 
@@ -1611,6 +1635,7 @@ window.iniciarJogo = async function() {
       modo: "competicao_plus", concluido: false,
       pontuacao: 10, acertos: 0, erros: 0, respondidas: 0,
       ts_inicio: st.inicioTs, data: dataAgora(),
+      ...(isTeste ? { modo_teste: true } : {}),
     });
   }
 

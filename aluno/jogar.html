@@ -93,6 +93,7 @@ import {
   getResultadosByAluno, getAtividadeStatus
 } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession, setJogo } from "/js/auth.js";
+import { initAvBanner } from "/js/avaliacao_banner.js";
 
 const sess = requireAluno();
 if (!sess) throw new Error();
@@ -107,6 +108,7 @@ window.sair = () => {
 };
 
 const { alunos, turma } = sess;
+initAvBanner(turma, alunos[0]);
 
 const nomeAtivParam = new URLSearchParams(window.location.search).get("ativ");
 if (!nomeAtivParam) { window.location.href = "/aluno/atividades.html"; throw new Error(); }

@@ -116,6 +116,7 @@
         </div>
         <div id="summ-comparacao" style="margin-bottom:16px;"></div>
         <div id="summ-revisao" style="margin-bottom:16px;"></div>
+        <div id="summ-analise" style="margin-bottom:16px;"></div>
         <div style="display:flex;gap:10px;">
           <button class="btn btn-outline" id="btn-refazer" style="flex:1;">↺ Refazer</button>
           <button class="btn" id="btn-voltar-lista" style="flex:1;">← Lista</button>
@@ -129,11 +130,13 @@
 <script type="module">
 import { getAlunoPreferencia, saveRoboticaTentativa, getRoboticaTentativasAluno } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+import { initAvBanner } from "/js/avaliacao_banner.js";
 
 const sess = requireAluno("/index.html");
 if (!sess) throw new Error("não autenticado");
 const { alunos, turma } = sess;
 const aluno = alunos[0];
+initAvBanner(turma, aluno);
 
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 renderSidebarAluno("sidebar", "robotica");
@@ -303,6 +306,7 @@ function mostrarFeedback(acertou, q) {
     fb.className = 'quiz-fb err';
     fb.textContent = `✗ Errado. Resposta correta: ${resp}`;
   }
+  document.getElementById('btn-proxima').textContent = qIdx === questoes.length - 1 ? 'Concluir ✓' : 'Próxima →';
   document.getElementById('btn-proxima').style.display = 'block';
 }
 
@@ -333,9 +337,9 @@ window.responderNum = () => {
   mostrarFeedback(acertou, q);
 };
 
-document.getElementById('btn-proxima').addEventListener('click', () => {
+document.getElementById('btn-proxima').addEventListener('click', async () => {
   qIdx++;
-  if (qIdx >= questoes.length) finalizarAtividade();
+  if (qIdx >= questoes.length) await finalizarAtividade();
   else renderQuestao();
 });
 document.getElementById('btn-voltar').addEventListener('click', () => {
@@ -351,10 +355,14 @@ async function finalizarAtividade() {
   const tentAntes = getTentativasPorAtiv(atividadeAtual);
   const ultimaAnt = tentAntes.length > 0 ? tentAntes[tentAntes.length - 1] : null;
 
-  await saveRoboticaTentativa(turma, aluno, atividadeAtual, {
-    acertos, erros, total: questoes.length, respostas
-  });
-  tentativasDB = await getRoboticaTentativasAluno(turma, aluno);
+  try {
+    await saveRoboticaTentativa(turma, aluno, atividadeAtual, {
+      acertos, erros, total: questoes.length, respostas
+    });
+    tentativasDB = await getRoboticaTentativasAluno(turma, aluno);
+  } catch(e) {
+    console.error('[Robótica] finalizarAtividade:', e);
+  }
 
   quizWrap.style.display = 'none';
   summWrap.style.display = 'block';
@@ -407,16 +415,26 @@ async function finalizarAtividade() {
     document.getElementById('summ-comparacao').innerHTML = '';
   }
 
-  // Questões para revisar (desta tentativa)
-  const erradas = questoes.filter(q => respostas[q.id] && !respostas[q.id].acertou);
-  document.getElementById('summ-revisao').innerHTML = erradas.length
-    ? `<div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text-muted);">Para revisar (${erradas.length}):</div>
-       ${erradas.slice(0, 5).map(q => `
-         <div style="padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;">
-           <div style="font-size:11px;color:var(--red);font-weight:700;margin-bottom:3px;">[${q.id}] ${q.categoria}</div>
-           <div style="font-size:13px;white-space:pre-wrap;">${q.enunciado}</div>
-           <div style="font-size:12px;color:var(--green);font-weight:600;margin-top:6px;">✓ ${q.resposta}</div>
-         </div>`).join('')}` : '';
+  document.getElementById('summ-revisao').innerHTML = '';
+
+  // Análise completa por questão
+  document.getElementById('summ-analise').innerHTML = `<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;">
+    <div style="font-size:13px;font-weight:700;margin-bottom:10px;">📋 Análise por questão</div>
+    ${questoes.map((q, i) => {
+      const resp = respostas[q.id];
+      const ac = resp?.acertou;
+      const rdada = resp?.resposta_dada ?? '—';
+      return `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:8px;border:1px solid ${ac ? '#BBF7D0' : '#FECACA'};background:${ac ? '#F0FDF4' : '#FEF2F2'};margin-bottom:6px;">
+        <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:24px;flex-shrink:0;padding-top:2px;">Q${i+1}</span>
+        <div style="flex:1;min-width:0;">
+          ${q.categoria ? `<div style="font-size:10px;font-weight:700;color:var(--text-muted);margin-bottom:2px;">${q.categoria}</div>` : ''}
+          <div style="font-size:12px;white-space:pre-wrap;margin-bottom:4px;">${q.enunciado}</div>
+          <div style="font-size:11px;"><span style="font-weight:600;color:${ac ? 'var(--green)' : 'var(--red)'};">Sua resposta: ${rdada}</span>${!ac ? `<span style="color:var(--text-muted);margin-left:10px;">✓ Correta: ${q.resposta}</span>` : ''}</div>
+        </div>
+        <span style="font-size:16px;flex-shrink:0;">${ac ? '✅' : '❌'}</span>
+      </div>`;
+    }).join('')}
+  </div>`;
 }
 
 document.getElementById('btn-refazer').addEventListener('click', () => { summWrap.style.display = 'none'; iniciarAtividade(atividadeAtual); });

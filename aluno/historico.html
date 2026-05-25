@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
+    /* ── Robótica / legacy item ──────────────────────────────── */
     .hist-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
     .hist-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background .15s;}
     .hist-header:hover{background:#FAFAFA;}
@@ -21,16 +22,14 @@
     .ativ-group{margin-bottom:18px;}
     .ativ-group-header{font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
 
-    /* evolução */
-    .evolucao-bar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#F8FAFC;border-radius:8px;margin-bottom:6px;border:1px solid var(--border);}
+    /* ── Evolução ─────────────────────────────────────────────── */
+    .evolucao-bar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#F8FAFC;border-radius:8px;margin-bottom:8px;border:1px solid var(--border);}
     .evolucao-label{font-size:10px;font-weight:700;color:var(--text-muted);flex-shrink:0;}
 
-    /* abatimento */
+    /* ── Abatimento ───────────────────────────────────────────── */
     .badge-atraso{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:#FFEDD5;color:#9A3412;border:1px solid #FED7AA;}
 
-    /* Competição+ */
-    .hist-mode-badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;margin-left:6px;vertical-align:middle;}
-    .hist-mode-badge.plus{background:#EDE9FE;color:#7C3AED;}
+    /* ── Competição+ questões ─────────────────────────────────── */
     .plus-q-wrap{margin-top:6px;}
     .plus-q-row{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);margin-top:6px;font-size:12px;cursor:pointer;transition:background .12s;}
     .plus-q-row:hover{filter:brightness(.97);}
@@ -47,21 +46,45 @@
     .plus-tent-ans.ok{background:#DCFCE7;color:#166534;}
     .plus-tent-ans.err{background:#FEE2E2;color:#991B1B;}
     .plus-tent-ans.time{background:#F3F4F6;color:#6B7280;}
+
+    /* ── Tooltip conquistas ───────────────────────────────────── */
     .conq-tip{position:fixed;background:#1E293B;color:#F1F5F9;padding:8px 12px;border-radius:10px;font-size:12px;pointer-events:none;z-index:9999;max-width:220px;box-shadow:0 4px 16px rgba(0,0,0,.35);opacity:0;transition:opacity .15s;}
     .conq-tip.show{opacity:1;}
     .conq-tip-nome{font-weight:700;font-size:13px;margin-bottom:2px;}
     .conq-tip-desc{font-size:11px;opacity:.8;}
+
+    /* ── Pills ────────────────────────────────────────────────── */
     .pill{padding:5px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .15s;}
     .pill.on{border-color:var(--blue);background:var(--blue);color:#fff;}
+
+    /* ── Avaliação+ fases ─────────────────────────────────────── */
+    .hist-mode-badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;margin-left:6px;vertical-align:middle;}
     .hist-mode-badge.avplus{background:#F5F3FF;color:#7C3AED;}
     .fase-sep-bar{display:flex;align-items:center;gap:6px;margin:12px 0 8px}
     .fase-sep-bar::before,.fase-sep-bar::after{content:'';flex:1;height:1px;background:var(--border)}
     .fase-sep-label{font-size:10px;font-weight:700;color:var(--text-muted);white-space:nowrap;padding:2px 8px;border:1px solid var(--border);border-radius:10px;letter-spacing:.5px;background:var(--card)}
-    .fase-bloco{margin-bottom:2px}
-    .fase-bloco .fase-header{font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;margin-bottom:6px;display:inline-block}
-    .f1-bloco .fase-header{background:#F5F3FF;color:#7C3AED}
-    .f2-bloco .fase-header{background:#EFF6FF;color:#1D4ED8}
-    .fase-resumo{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+
+    /* ── Formato acompanhamento ───────────────────────────────── */
+    .ativ-summary{border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
+    .ativ-summary-head{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--bg);cursor:pointer;transition:background .15s;}
+    .ativ-summary-head:hover{background:#f0f0f0;}
+    .ativ-summary-body{padding:12px 16px 14px;border-top:1px solid var(--border);}
+    .ativ-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;}
+    @media(max-width:640px){.ativ-metrics{grid-template-columns:repeat(2,1fr);}}
+    .metric-box{background:var(--bg);border-radius:8px;padding:10px 6px;text-align:center;border:1px solid var(--border);}
+    .metric-val{font-size:18px;font-weight:800;line-height:1;}
+    .metric-lbl{font-size:10px;color:var(--text-muted);margin-top:3px;}
+    .tent-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;background:var(--card);cursor:pointer;transition:background .15s;}
+    .tent-row:hover{background:#fafafa;}
+    .tent-info-wrap{flex:1;}
+    .tent-date{font-size:11px;color:var(--text-muted);}
+    .tent-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+    .tent-detail-body{padding:8px 12px 12px;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;background:#FAFAFA;margin-top:-6px;margin-bottom:6px;}
+    .tent-row.melhor{border-color:#F59E0B;border-width:1.5px;background:linear-gradient(to right,#FFFDE7,var(--card));}
+    .mode-tabs{display:flex;gap:4px;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:14px;}
+    .mode-tab{padding:7px 12px;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);background:transparent;transition:all .2s;}
+    .mode-tab.on{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(47,158,220,.3);}
+
     @media(max-width:480px){
       .hist-header{padding:11px 12px;gap:8px}
       .hist-body{padding:0 12px 12px}
@@ -70,7 +93,8 @@
       .q-rev{font-size:11px;padding:6px 8px;gap:6px}
       .plus-q-row{font-size:11px;padding:6px 8px;gap:6px}
       .evolucao-bar{padding:6px 8px;gap:6px}
-      .ativ-group-header{font-size:11px}
+      .ativ-summary-head{padding:10px 12px;gap:8px}
+      .ativ-summary-body{padding:10px 12px 12px}
     }
   </style>
 </head>
@@ -95,6 +119,7 @@
 import { getResultados, getDetalhes, getAlunoPreferencia, getConquistasByAluno, getRoboticaTentativasAluno, getAllAtividadeStatus } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
+import { initAvBanner } from "/js/avaliacao_banner.js";
 
 const sess = requireAluno();
 if (!sess) throw new Error();
@@ -102,12 +127,12 @@ renderSidebarAluno("sidebar", "historico");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
 const { alunos, turma } = sess;
+initAvBanner(turma, alunos[0]);
 let conquistasBySessao = {};
 document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
 document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
 applyTopRankVisuals();
 
-// Sync tema do Firebase (não-bloqueante)
 getAlunoPreferencia(turma, alunos[0], 'tema').then(t => {
   if (t && t !== localStorage.getItem('tema')) {
     localStorage.setItem('tema', t);
@@ -120,7 +145,6 @@ window.toggle = function(header) {
   body.style.display = body.style.display === 'none' ? 'block' : 'none';
 };
 
-// Tooltip para pontos clicáveis no gráfico
 window.showSessTooltip = function(e, info) {
   let tip = document.getElementById('sess-tip');
   if (!tip) {
@@ -137,7 +161,6 @@ window.showSessTooltip = function(e, info) {
   e.stopPropagation();
 };
 
-// ── Evolução SVG (pontos clicáveis) ──────────────────────────
 function renderEvolucaoSVG(regs) {
   const pts = regs.map(r => r.pontuacao_bruta || r.pontuacao || 0);
   if (pts.length < 2) return '';
@@ -145,18 +168,14 @@ function renderEvolucaoSVG(regs) {
   const trendColor = last > first ? '#16A34A' : last < first ? '#DC2626' : '#6B7280';
   const trendIcon  = last > first ? '↑' : last < first ? '↓' : '→';
   const trendDesc  = last > first ? 'Melhorou' : last < first ? 'Piorou' : 'Estável';
-
   const W = 240, H = window.innerWidth <= 480 ? 38 : 56, mL = 8, mR = 8, mT = window.innerWidth <= 480 ? 8 : 14, mB = 6;
   const iW = W - mL - mR, iH = H - mT - mB;
   const maxV = Math.max(...pts, 1);
   const n = pts.length;
   const xP = i => mL + (n > 1 ? (i / (n - 1)) * iW : iW / 2);
   const yP = v => mT + iH - Math.min((v / maxV) * iH, iH);
-
   let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:240px;height:${H}px;flex-shrink:0;cursor:pointer">`;
-  if (n > 1) {
-    svg += `<polyline points="${pts.map((v, i) => `${xP(i)},${yP(v)}`).join(' ')}" fill="none" stroke="${trendColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
-  }
+  if (n > 1) svg += `<polyline points="${pts.map((v, i) => `${xP(i)},${yP(v)}`).join(' ')}" fill="none" stroke="${trendColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
   pts.forEach((v, i) => {
     const r = regs[i];
     const ac = r.acertos || 0, er = r.erros || 0;
@@ -168,7 +187,6 @@ function renderEvolucaoSVG(regs) {
     svg += `<text x="${xP(i)}" y="${yP(v) - 8}" text-anchor="middle" font-size="8" fill="${trendColor}" font-weight="700" pointer-events="none">${v}</text>`;
   });
   svg += `</svg>`;
-
   return `<div class="evolucao-bar">
     <span class="evolucao-label">${regs.length} sessões</span>
     ${svg}
@@ -179,35 +197,27 @@ function renderEvolucaoSVG(regs) {
   </div>`;
 }
 
-// ── Competição+ ───────────────────────────────────────────────
 function renderPlusQuestao(q, i, mostrarRespostas) {
   const resultado = q.resultado ?? null;
   const isNR = resultado === 'nao_respondida';
   const isOk = resultado === 'acerto' || (resultado === null && !!q.acertou);
   const rowCls = isNR ? 'nr' : isOk ? 'ok' : 'err';
   const icon   = isNR ? '⏸' : isOk ? '✅' : '❌';
-
   const ptsVal = q.pontosGanhos ?? 0;
   const ptsClass = ptsVal > 0 ? 'color:var(--green)' : ptsVal < 0 ? 'color:var(--red)' : 'color:var(--text-muted)';
   const ptsTxt   = ptsVal > 0 ? `+${ptsVal}` : String(ptsVal);
-
   const badges = [];
   if (q.bonus_velocidade ?? q.velocidade) badges.push('<span style="color:#3B82F6;font-size:10px">⚡ rápido</span>');
   if (q.usou_ajuda ?? q.usouAjuda)        badges.push('<span style="color:#A855F7;font-size:10px">🎯 ajuda</span>');
   if (q.ehBonus)                           badges.push('<span style="color:#F59E0B;font-size:10px">🏆 bônus</span>');
-
   const tempoMs  = q.tempo_resposta_ms ?? null;
-  const tempoTxt = isNR ? 'não respondida'
-    : tempoMs != null ? `${Math.round(tempoMs / 1000)}s`
-    : null;
-
+  const tempoTxt = isNR ? 'não respondida' : tempoMs != null ? `${Math.round(tempoMs / 1000)}s` : null;
   const tentativas = (q.tentativas ?? []).map(t => {
     const isTime = t.resposta === '(tempo)' || t.resposta === '(pulou)';
     const cls = t.correto ? 'ok' : isTime ? 'time' : 'err';
     const tempo = !isTime && t.tempoUsado != null ? ` · ${t.tempoUsado}s` : '';
     return `<span class="plus-tent-ans ${cls}">${t.correto ? '✓ ' : ''}${t.resposta || '—'}${tempo}</span>`;
   }).join('');
-
   const enun = q.enunciado ?? q.pergunta ?? '—';
   const suaResp = q.resposta_aluno ?? (() => {
     const ts = q.tentativas ?? [];
@@ -215,7 +225,6 @@ function renderPlusQuestao(q, i, mostrarRespostas) {
     const ultima = ts[ts.length - 1];
     return (certa ?? ultima)?.resposta ?? '—';
   })();
-
   let detailHTML = '';
   if (!isNR && mostrarRespostas) {
     detailHTML += `<div><strong>Sua resposta:</strong> <span style="${isOk?'color:var(--green)':'color:var(--red)'};font-weight:700">${suaResp}</span></div>`;
@@ -224,7 +233,6 @@ function renderPlusQuestao(q, i, mostrarRespostas) {
   }
   if (tempoTxt) detailHTML += `<div style="margin-top:3px"><strong>Tempo:</strong> ${tempoTxt}</div>`;
   if (tentativas) detailHTML += `<div class="plus-tent-row" style="margin-top:4px">${tentativas}</div>`;
-
   return `<div class="plus-q-row ${rowCls}${q.ehBonus ? ' bonus' : ''}"
     onclick="const d=this.querySelector('.plus-q-detail');d.style.display=d.style.display==='block'?'none':'block'">
     <span class="plus-q-num">Q${i+1}</span>
@@ -244,50 +252,13 @@ function renderAbatimento(r) {
   if (!r.com_abatimento || !r.percentual_nota || r.percentual_nota >= 100) return '';
   const bruta = r.pontuacao_bruta || r.pontuacao || 0;
   const aplic = r.pontuacao || 0;
-  return `<span class="badge-atraso">⏰ ${bruta} pts bruta → ${aplic} pts (${r.percentual_nota}% da nota)</span>`;
+  return `<span class="badge-atraso">⏰ ${bruta} pts bruta → ${aplic} pts (${r.percentual_nota}%)</span>`;
 }
 
 function formatMs(ms) {
   if (!ms || ms <= 0) return '—';
   const s = Math.round(ms / 1000);
   return `${Math.floor(s/60)}m${String(s%60).padStart(2,'0')}s`;
-}
-
-function renderPlusItem(r, detalhes, statusMap) {
-  const acertos = r.acertos || 0;
-  const erros   = r.erros   || 0;
-  const taxa = (acertos + erros) > 0 ? Math.round(acertos / (acertos + erros) * 100) : 0;
-  const bruta = r.pontuacao_bruta || r.pontuacao || 0;
-  const abatBadge = renderAbatimento(r);
-  const naoResp = r.nao_respondidas || 0;
-
-  const statusInfo = statusMap?.[`${r.turma}|${r.atividade}`];
-  const mostrarRespostas = !statusInfo || statusInfo.status !== 'ativa' || (statusInfo.percentual ?? 100) < 100;
-
-  return `<div class="hist-item">
-    <div class="hist-header" onclick="toggle(this)">
-      <div style="flex:1">
-        <div class="hist-nome">${r.atividade} <span class="hist-mode-badge plus">Competição+</span></div>
-        <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center">
-          <span class="badge badge-gold">⭐ ${bruta} pts${r.com_abatimento ? ' (bruta)' : ''}</span>
-          ${abatBadge}
-          <span class="badge badge-green">✅ ${acertos}</span>
-          <span class="badge badge-red">❌ ${erros}</span>
-          ${naoResp > 0 ? `<span class="badge" style="background:#F3F4F6;color:#6B7280;border-color:#D1D5DB">⏸ ${naoResp}</span>` : ''}
-          <span class="badge badge-blue">📊 ${taxa}%</span>
-          ${(r.acertos_rapidos || 0) > 0 ? `<span class="badge badge-blue">⚡ ${r.acertos_rapidos}</span>` : ''}
-        </div>
-        ${renderConquistasBadges(r.id, r)}
-      </div>
-      <div class="hist-data">${r.data || ''}</div>
-      <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--text-muted)"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
-    </div>
-    <div class="hist-body" style="display:none">
-      ${detalhes.length
-        ? `<div class="plus-q-wrap">${detalhes.map((q, i) => renderPlusQuestao(q, i, mostrarRespostas)).join('')}</div>`
-        : '<p style="font-size:12px;color:var(--text-muted);padding-top:8px">Detalhes não disponíveis.</p>'}
-    </div>
-  </div>`;
 }
 
 const CONQUISTAS_POSICIONAIS = new Set(['lider_turma','elite']);
@@ -321,7 +292,7 @@ function renderConquistasBadges(sessaoId, r) {
     return true;
   });
   if (!cs.length) return '';
-  return `<div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--border);padding-top:6px">
+  return `<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">
     <span style="font-size:10px;color:var(--text-muted);font-weight:600;flex-shrink:0">Conquistas:</span>
     ${cs.map(c => {
       const nome = c.nome || c.tipo;
@@ -340,132 +311,237 @@ window.filtrarHistorico = function(uid, ativNome) {
     p.classList.toggle('on', p.dataset.ativ === ativNome));
 };
 
-window.filtrarHistModo = function(aUID, modo) {
-  document.querySelectorAll(`[data-modo-sec="${aUID}"]`).forEach(el => {
-    el.style.display = (!modo || el.dataset.modo === modo) ? '' : 'none';
-  });
-  document.querySelectorAll(`#hist-mode-tabs-${aUID} .pill`).forEach(p =>
-    p.classList.toggle('on', p.dataset.modo === modo));
+// ── Formato acompanhamento ─────────────────────────────────────
+
+function renderHistMetrics(regs) {
+  const modoSet  = new Set(regs.map(r => r.modo || 'classico'));
+  const isAvOnly = modoSet.size === 1 && modoSet.has('avaliacao_plus');
+  const isComp   = modoSet.has('competicao_plus');
+  const totalAc  = regs.reduce((a, r) => a + (r.acertos || 0), 0);
+  const totalErr = regs.reduce((a, r) => a + (r.erros   || 0), 0);
+  const taxa     = (totalAc + totalErr) > 0 ? Math.round(totalAc / (totalAc + totalErr) * 100) : 0;
+
+  if (isAvOnly) {
+    const melhorNQ  = Math.max(0, ...regs.map(r => r.nota_quiz ?? 0));
+    const melhorPts = Math.max(0, ...regs.map(r => r.pontuacao  ?? 0));
+    return `<div class="ativ-metrics">
+      <div class="metric-box"><div class="metric-val" style="color:#7C3AED">${melhorNQ.toFixed(1)}</div><div class="metric-lbl">Melhor nota</div></div>
+      <div class="metric-box"><div class="metric-val" style="color:var(--gold)">⭐ ${melhorPts}</div><div class="metric-lbl">Melhor pts</div></div>
+      <div class="metric-box"><div class="metric-val" style="color:var(--blue)">${regs.length}/3</div><div class="metric-lbl">Tentativas</div></div>
+      <div class="metric-box"><div class="metric-val" style="color:var(--green)">${taxa}%</div><div class="metric-lbl">Taxa acerto</div></div>
+    </div>`;
+  }
+  if (isComp) {
+    const melhorPts = Math.max(0, ...regs.map(r => r.pontuacao || 0));
+    const rapMax    = Math.max(0, ...regs.map(r => r.acertos_rapidos || 0));
+    const difMax    = Math.max(0, ...regs.map(r => r.acertos_dificeis || 0));
+    return `<div class="ativ-metrics">
+      <div class="metric-box"><div class="metric-val" style="color:var(--gold)">⭐ ${melhorPts}</div><div class="metric-lbl">Melhor saldo</div></div>
+      <div class="metric-box"><div class="metric-val" style="color:var(--blue)">${regs.length}</div><div class="metric-lbl">Sessões</div></div>
+      <div class="metric-box"><div class="metric-val" style="color:#60A5FA">${rapMax > 0 ? rapMax : '—'}</div><div class="metric-lbl">⚡ Veloz (max)</div></div>
+      <div class="metric-box"><div class="metric-val" style="color:var(--green)">${taxa}%</div><div class="metric-lbl">Taxa acerto</div></div>
+    </div>`;
+  }
+  // classico
+  const melhorPts = Math.max(0, ...regs.map(r => r.pontuacao_bruta || r.pontuacao || 0));
+  const comboMax  = Math.max(0, ...regs.map(r => r.combo_max || 0));
+  return `<div class="ativ-metrics">
+    <div class="metric-box"><div class="metric-val" style="color:var(--gold)">⭐ ${melhorPts}</div><div class="metric-lbl">Melhor pts</div></div>
+    <div class="metric-box"><div class="metric-val" style="color:var(--blue)">${regs.length}</div><div class="metric-lbl">Tentativas</div></div>
+    <div class="metric-box"><div class="metric-val" style="color:var(--orange)">${comboMax > 0 ? '×'+comboMax : '—'}</div><div class="metric-lbl">Combo máx</div></div>
+    <div class="metric-box"><div class="metric-val" style="color:var(--green)">${taxa}%</div><div class="metric-lbl">Taxa acerto</div></div>
+  </div>`;
+}
+
+function renderSessaoRow(r, isBest, idx, total) {
+  const modo   = r.modo || 'classico';
+  const isPlus = modo === 'competicao_plus';
+  const isAvP  = modo === 'avaliacao_plus';
+  const uid2   = `htent-${r.id}`;
+  const tot2   = (r.acertos || 0) + (r.erros || 0);
+  const taxa   = tot2 > 0 ? Math.round((r.acertos || 0) / tot2 * 100) : 0;
+  const bruta  = r.pontuacao_bruta || r.pontuacao || 0;
+  const tempoS = r.tempo_medio_ms > 0 ? Math.round(r.tempo_medio_ms / 1000) : 0;
+  const label  = idx === 0 ? '→ Mais recente' : `${isAvP ? 'Tentativa' : isPlus ? 'Sessão' : 'Tentativa'} ${total - idx}`;
+
+  let badges = '';
+  if (isAvP) {
+    badges = `
+      <span class="badge" style="background:#F5F3FF;color:#7C3AED;font-weight:700">📝 ${typeof r.nota_quiz === 'number' ? r.nota_quiz.toFixed(1) : '—'}/10</span>
+      <span class="badge badge-gold">⭐ ${r.pontuacao || 0} pts</span>
+      ${r.tentativa_num ? `<span class="badge badge-blue">Tentativa ${r.tentativa_num}</span>` : ''}
+      <span class="badge badge-green">✅ ${r.acertos || 0}</span>
+      <span class="badge badge-red">❌ ${r.erros || 0}</span>
+      <span class="badge badge-blue">📊 ${taxa}%</span>`;
+  } else if (isPlus) {
+    badges = `
+      <span class="badge badge-gold">⭐ ${bruta} pts</span>
+      <span class="badge badge-green">✅ ${r.acertos || 0}</span>
+      <span class="badge badge-red">❌ ${r.erros || 0}</span>
+      ${(r.nao_respondidas || 0) > 0 ? `<span class="badge" style="background:#F3F4F6;color:#6B7280">⏸ ${r.nao_respondidas}</span>` : ''}
+      <span class="badge badge-blue">📊 ${taxa}%</span>
+      ${(r.acertos_rapidos || 0) > 0 ? `<span class="badge" style="background:#EFF6FF;color:#1D4ED8">⚡${r.acertos_rapidos}</span>` : ''}
+      ${(r.acertos_dificeis || 0) > 0 ? `<span class="badge badge-gold">🏆${r.acertos_dificeis}</span>` : ''}
+      ${(r.ajudas_usadas || 0) > 0 ? `<span class="badge" style="background:#F5F3FF;color:#6D28D9">🎯${r.ajudas_usadas}</span>` : ''}
+      ${r.sem_penalidade ? `<span class="badge" style="background:#F0FDF4;color:#16A34A">🔥 Limpo</span>` : ''}
+      ${tempoS > 0 ? `<span class="badge" style="background:#F0F9FF;color:#0369A1">⏱ ${tempoS}s/q</span>` : ''}`;
+  } else {
+    badges = `
+      <span class="badge badge-gold">⭐ ${bruta} pts${r.com_abatimento ? ' (bruta)' : ''}</span>
+      ${renderAbatimento(r)}
+      <span class="badge badge-green">✅ ${r.acertos || 0}</span>
+      <span class="badge badge-red">❌ ${r.erros || 0}</span>
+      <span class="badge badge-blue">📊 ${taxa}%</span>
+      ${(r.combo_max || 0) > 1 ? `<span class="badge badge-orange">🔥×${r.combo_max}</span>` : ''}`;
+  }
+
+  const bestBadge = isBest
+    ? `<span class="badge" style="background:#FEF9C3;color:#854D0E;border-color:#FDE047;font-weight:700">🏆 Conta para nota</span>`
+    : '';
+  const cq = renderConquistasBadges(r.id, r);
+
+  return `<div>
+    <div class="tent-row${isBest ? ' melhor' : ''}" onclick="toggleHistTent('${uid2}','${r.id}','${modo}')">
+      <div class="tent-info-wrap">
+        <div style="font-size:13px;font-weight:600">${label}</div>
+        <div class="tent-date">${r.data || ''}</div>
+        <div class="tent-badges">${badges}${bestBadge}</div>
+        ${cq ? `<div style="margin-top:6px">${cq}</div>` : ''}
+      </div>
+      <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:var(--text-muted);flex-shrink:0" id="hchev2-${uid2}"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+    </div>
+    <div class="tent-detail-body" id="${uid2}" style="display:none" data-loaded="false">
+      <p style="font-size:12px;color:var(--text-muted)">Carregando…</p>
+    </div>
+  </div>`;
+}
+
+function renderModoBlock(modoRegs, modoLabel) {
+  const sortedChron = [...modoRegs].sort((a, b) => (a.criadoEm || 0) - (b.criadoEm || 0));
+  const sortedDesc  = [...modoRegs].sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
+  const bestId = modoRegs.reduce((best, r) => (r.pontuacao || 0) > (best.pontuacao || 0) ? r : best, modoRegs[0])?.id;
+  const labelSess = modoLabel === 'avaliacao_plus' ? 'Tentativas de Avaliação+' : modoLabel === 'competicao_plus' ? 'Sessões' : 'Tentativas';
+  let s = renderHistMetrics(modoRegs);
+  if (sortedChron.length >= 2) s += renderEvolucaoSVG(sortedChron);
+  s += `<div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;text-transform:uppercase;margin:10px 0 6px">${labelSess}</div>`;
+  sortedDesc.forEach((r, i) => { s += renderSessaoRow(r, r.id === bestId, i, sortedDesc.length); });
+  return s;
+}
+
+window.toggleHistAtiv = function(uid) {
+  const body = document.getElementById(`hbody-${uid}`);
+  const chev = document.getElementById(`hchev-${uid}`);
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (chev) chev.style.transform = open ? '' : 'rotate(180deg)';
 };
 
-function renderAvPlusItem(r, detalhes, statusMap) {
-  const acertos = r.acertos || 0;
-  const erros   = r.erros   || 0;
-  const taxa = (acertos + erros) > 0 ? Math.round(acertos / (acertos + erros) * 100) : 0;
-  const nq   = typeof r.nota_quiz === 'number' ? r.nota_quiz.toFixed(1) : '—';
-  const pts  = r.pontuacao || 0;
-  const statusInfo = statusMap?.[`${r.turma}|${r.atividade}`];
-  const mostrarRespostas = !statusInfo || statusInfo.status !== 'ativa' || (statusInfo.percentual ?? 100) < 100;
+window.mostrarHistModo = function(aUID, modo) {
+  const compEl = document.getElementById(`hmc-${aUID}`);
+  const avEl   = document.getElementById(`hma-${aUID}`);
+  if (compEl) compEl.style.display = modo === 'comp' ? '' : 'none';
+  if (avEl)   avEl.style.display   = modo === 'avaliacao_plus' ? '' : 'none';
+  document.querySelectorAll(`.mhtab-${aUID}`).forEach(b =>
+    b.classList.toggle('on', b.dataset.modo === modo));
+};
 
-  const f1Qs = detalhes.filter(q => q.fase === 1);
-  const f2Qs = detalhes.filter(q => q.fase === 2);
+window.toggleHistTent = async function(uid, resultadoId, modo) {
+  const body = document.getElementById(uid);
+  const chev = document.getElementById(`hchev2-${uid}`);
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (chev) chev.style.transform = open ? '' : 'rotate(180deg)';
+  if (open || body.dataset.loaded === 'true') return;
+  body.dataset.loaded = 'true';
 
-  const f1pts  = r.pontos_fase1 != null ? r.pontos_fase1 : '—';
-  const f1tempo = r.tempo_fase1_ms ? formatMs(r.tempo_fase1_ms) : null;
-  const f1cred = r.credito_final != null
-    ? (Number.isInteger(r.credito_final) ? r.credito_final : r.credito_final.toFixed(2))
-    : null;
-  const f2bruta = r.pontuacao_bruta || r.pontuacao || 0;
-  const f2rap   = r.acertos_rapidos || 0;
-  const f2combo = r.combo_max || 0;
-  const f2aj    = r.ajudas_usadas || 0;
+  const questoes = await getDetalhes(resultadoId);
+  if (!questoes || !questoes.length) {
+    body.innerHTML = '<p style="font-size:12px;color:var(--text-muted)">Detalhes não disponíveis.</p>';
+    return;
+  }
+  const r = todos.find(x => x.id === resultadoId);
+  const statusInfo = statusMap?.[`${r?.turma}|${r?.atividade}`];
+  const mostrarR = !statusInfo || statusInfo.status !== 'ativa' || (statusInfo.percentual ?? 100) < 100;
 
-  return `<div class="hist-item">
-    <div class="hist-header" onclick="toggle(this)">
-      <div style="flex:1">
-        <div class="hist-nome">${r.atividade} <span class="hist-mode-badge avplus">📝 Avaliação+</span></div>
-        <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center">
-          <span class="badge" style="background:#F5F3FF;color:#7C3AED;font-weight:800">📝 ${nq}/10</span>
-          <span class="badge badge-gold">⭐ ${pts} pts</span>
-          <span class="badge badge-green">✅ ${acertos}</span>
-          <span class="badge badge-red">❌ ${erros}</span>
-          <span class="badge badge-blue">📊 ${taxa}%</span>
-          ${r.tentativa_num ? `<span class="badge badge-blue">Tentativa ${r.tentativa_num}</span>` : ''}
-        </div>
-        ${renderConquistasBadges(r.id, r)}
-      </div>
-      <div class="hist-data">${r.data || ''}</div>
-      <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--text-muted)"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
-    </div>
-    <div class="hist-body" style="display:none">
-      <div class="fase-bloco f1-bloco">
-        <div class="fase-header">📖 Fase 1 — Quiz</div>
-        <div class="fase-resumo">
-          <span class="badge" style="background:#F5F3FF;color:#7C3AED;font-weight:800">📝 ${nq}/10</span>
+  if (modo === 'avaliacao_plus') {
+    const f1Qs  = questoes.filter(q => q.fase === 1);
+    const f2Qs  = questoes.filter(q => q.fase === 2);
+    const f1nq  = r?.nota_quiz != null ? r.nota_quiz.toFixed(1) : '—';
+    const f1pts = r?.pontos_fase1 != null ? r.pontos_fase1 : '—';
+    const f1cred = r?.credito_final != null ? (Number.isInteger(r.credito_final) ? r.credito_final : r.credito_final.toFixed(2)) : null;
+    const f1t   = r?.tempo_fase1_ms ? formatMs(r.tempo_fase1_ms) : null;
+    const f2rap  = r?.acertos_rapidos || 0;
+    const f2combo= r?.combo_max || 0;
+    const f2aj   = r?.ajudas_usadas || 0;
+    const f2nr   = f2Qs.filter(q => q.resultado === 'nao_respondida').length;
+    const f2ac   = f2Qs.filter(q => q.resultado === 'acerto' || (q.resultado == null && q.acertou)).length;
+    const f2err  = f2Qs.filter(q => q.resultado === 'erro'   || (q.resultado == null && !q.acertou)).length;
+    body.innerHTML = `
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:#7C3AED;background:#F5F3FF;padding:5px 10px;border-radius:7px;margin-bottom:6px;display:inline-block">📖 Fase 1 — Quiz</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px">
+          <span class="badge" style="background:#F5F3FF;color:#7C3AED;font-weight:700">📝 ${f1nq}/10</span>
           <span class="badge badge-gold">${f1pts}/12 pts</span>
-          ${f1tempo ? `<span class="badge badge-blue">⏱ ${f1tempo}</span>` : ''}
+          ${f1t ? `<span class="badge badge-blue">⏱ ${f1t}</span>` : ''}
           ${f1cred != null ? `<span class="badge badge-green">Crédito final: ${f1cred}</span>` : ''}
         </div>
-        ${f1Qs.length
-          ? `<div class="plus-q-wrap">${f1Qs.map((q, i) => renderPlusQuestao(q, i, mostrarRespostas)).join('')}</div>`
-          : (detalhes.length === 0 ? '<p style="font-size:12px;color:var(--text-muted);padding-top:4px">Detalhes não disponíveis.</p>' : '')}
+        ${f1Qs.length ? `<div class="plus-q-wrap">${f1Qs.map((q,i) => renderPlusQuestao(q, i, mostrarR)).join('')}</div>` : '<p style="font-size:11px;color:var(--text-muted)">Detalhes F1 não disponíveis.</p>'}
       </div>
-      <div class="fase-sep-bar"><span class="fase-sep-label">FASE 2</span></div>
-      <div class="fase-bloco f2-bloco">
-        <div class="fase-header">⚔️ Fase 2 — Ranking</div>
-        <div class="fase-resumo">
-          <span class="badge badge-gold">⭐ ${f2bruta} pts</span>
+      <div style="display:flex;align-items:center;gap:8px;margin:8px 0">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:10px;color:var(--text-muted);font-weight:700;padding:2px 8px;border:1px solid var(--border);border-radius:10px">FASE 2</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#1D4ED8;background:#EFF6FF;padding:5px 10px;border-radius:7px;margin-bottom:6px;display:inline-block">⚔️ Fase 2 — Ranking</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px">
+          <span class="badge badge-green">✅ ${f2ac}</span>
+          <span class="badge badge-red">❌ ${f2err}</span>
+          ${f2nr > 0 ? `<span class="badge" style="background:#F3F4F6;color:#6B7280">⏸ ${f2nr}</span>` : ''}
           ${f2rap > 0 ? `<span class="badge" style="background:#EFF6FF;color:#1D4ED8">⚡ ${f2rap} rápidos</span>` : ''}
           ${f2combo > 1 ? `<span class="badge badge-orange">🔥 combo ×${f2combo}</span>` : ''}
           ${f2aj > 0 ? `<span class="badge" style="background:#F5F3FF;color:#6D28D9">🎯 ${f2aj} ajudas</span>` : ''}
         </div>
-        ${f2Qs.length
-          ? `<div class="plus-q-wrap">${f2Qs.map((q, i) => renderPlusQuestao(q, i, mostrarRespostas)).join('')}</div>`
-          : (detalhes.length === 0 ? '<p style="font-size:12px;color:var(--text-muted);padding-top:4px">Detalhes não disponíveis.</p>' : '')}
+        ${f2Qs.length ? `<div class="plus-q-wrap">${f2Qs.map((q,i) => renderPlusQuestao(q, i, mostrarR)).join('')}</div>` : '<p style="font-size:11px;color:var(--text-muted)">Detalhes F2 não disponíveis.</p>'}
+      </div>`;
+  } else if (modo === 'competicao_plus') {
+    const nrCount = questoes.filter(q => q.resultado === 'nao_respondida').length;
+    const acertos = questoes.filter(q => q.resultado === 'acerto' || (q.resultado == null && q.acertou)).length;
+    const erros   = questoes.filter(q => q.resultado === 'erro'   || (q.resultado == null && !q.acertou)).length;
+    const comTempo = questoes.filter(q => q.resultado !== 'nao_respondida' && q.tempo_resposta_ms != null);
+    const avgS    = comTempo.length ? Math.round(comTempo.reduce((s, q) => s + q.tempo_resposta_ms, 0) / comTempo.length / 1000) : null;
+    body.innerHTML = `
+      <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px">
+        ✅ ${acertos} | ❌ ${erros}${nrCount > 0 ? ` | ⏸ ${nrCount}` : ''} ${avgS != null ? `· ⏱ ${avgS}s/questão` : ''}
       </div>
-    </div>
-  </div>`;
-}
-
-function renderClassicoItem(r, detalhes) {
-  const total = (r.acertos || 0) + (r.erros || 0);
-  const aproveit = total > 0 ? Math.round((r.acertos || 0) / total * 100) : 0;
-  const bruta = r.pontuacao_bruta || r.pontuacao || 0;
-  const abatBadge = renderAbatimento(r);
-  return `<div class="hist-item">
-    <div class="hist-header" onclick="toggle(this)">
-      <div style="flex:1">
-        <div class="hist-nome">${r.atividade}</div>
-        <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center">
-          <span class="badge badge-gold">⭐ ${bruta} pts${r.com_abatimento ? ' (bruta)' : ''}</span>
-          ${abatBadge}
-          <span class="badge badge-green">✅ ${r.acertos || 0}</span>
-          <span class="badge badge-red">❌ ${r.erros || 0}</span>
-          <span class="badge badge-blue">📊 ${aproveit}%</span>
-        </div>
-        ${renderConquistasBadges(r.id, r)}
-      </div>
-      <div class="hist-data">${r.data || ''}</div>
-      <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--text-muted)"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
-    </div>
-    <div class="hist-body" style="display:none">
-      ${detalhes.length ? detalhes.map((h, i) => {
-        const enun = h.enunciado || h.pergunta || '—';
-        const rAluno = h.resposta_aluno || '—';
-        const rCorreta = (h.resposta_correta && h.resposta_correta !== 'undefined') ? h.resposta_correta : '—';
-        const pts = h.pontos != null ? (h.pontos > 0 ? `+${h.pontos}` : String(h.pontos)) : null;
-        const extras = [
-          h.velocidade ? '⚡' : '',
-          h.usouAjuda  ? '🎯' : '',
-        ].filter(Boolean).join(' ');
-        return `<div class="q-rev ${h.acertou ? 'ok' : 'err'}">
-          <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:24px">Q${i+1}</span>
-          <div style="flex:1">
-            <div>${enun}</div>
-            <div style="margin-top:3px;font-size:11px">
-              <span style="${h.acertou ? 'color:var(--green)' : 'color:var(--red)'};font-weight:700">${rAluno}</span>
-              ${!h.acertou ? `<span style="color:var(--text-muted);margin-left:6px">✓ ${rCorreta}</span>` : ''}
-              ${pts ? `<span style="${h.acertou?'color:var(--green)':'color:var(--red)'};font-weight:700;margin-left:6px">${pts}pt</span>` : ''}
-              ${extras ? `<span style="margin-left:6px">${extras}</span>` : ''}
-            </div>
+      <div class="plus-q-wrap">${questoes.map((q, i) => renderPlusQuestao(q, i, mostrarR)).join('')}</div>`;
+  } else {
+    body.innerHTML = questoes.map((q, i) => {
+      const enun = q.enunciado || q.pergunta || '—';
+      const rA   = q.resposta_aluno || '—';
+      const rC   = (q.resposta_correta && q.resposta_correta !== 'undefined') ? q.resposta_correta : '—';
+      const pts  = q.pontos != null ? (q.pontos > 0 ? `+${q.pontos}` : String(q.pontos)) : null;
+      const extras = [q.velocidade ? '⚡' : '', q.usouAjuda ? '🎯' : ''].filter(Boolean).join(' ');
+      return `<div class="q-rev ${q.acertou ? 'ok' : 'err'}">
+        <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:24px">Q${i+1}</span>
+        <div style="flex:1">
+          <div>${enun}</div>
+          <div style="margin-top:3px;font-size:11px">
+            <span style="${q.acertou?'color:var(--green)':'color:var(--red)'};font-weight:700">${rA}</span>
+            ${!q.acertou ? `<span style="color:var(--text-muted);margin-left:6px">✓ ${rC}</span>` : ''}
+            ${pts ? `<span style="${q.acertou?'color:var(--green)':'color:var(--red)'};font-weight:700;margin-left:6px">${pts}pt</span>` : ''}
+            ${extras ? `<span style="margin-left:6px">${extras}</span>` : ''}
           </div>
-          <span>${h.acertou ? '✅' : '❌'}</span>
-        </div>`;
-      }).join('') : '<p style="font-size:12px;color:var(--text-muted);padding-top:8px">Detalhes não disponíveis.</p>'}
-    </div>
-  </div>`;
-}
+        </div>
+        <span>${q.acertou ? '✅' : '❌'}</span>
+      </div>`;
+    }).join('');
+  }
+};
 
+// ── Dados ──────────────────────────────────────────────────────
 const [todos, statusMap, allConquisTaskRaw] = await Promise.all([
   getResultados(),
   getAllAtividadeStatus(),
@@ -478,12 +554,13 @@ for (const c of allConquistas) {
     conquistasBySessao[c.sessaoId].push(c);
   }
 }
+
 const content = document.getElementById("content");
 let html = '';
 
 for (const aluno of alunos) {
   const regs = todos.filter(r => r.aluno === aluno && r.concluido)
-    .sort((a, b) => (b.pontuacao_bruta || b.pontuacao || 0) - (a.pontuacao_bruta || a.pontuacao || 0));
+    .sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
 
   const uid = aluno.replace(/\s+/g, '_');
   html += `<div class="aluno-section">
@@ -495,14 +572,12 @@ for (const aluno of alunos) {
   if (!regs.length) {
     html += `<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21L13 13.04V8h-1z"/></svg><p>Nenhuma atividade realizada ainda.</p></div>`;
   } else {
-    // Group by atividade
     const byAtiv = {};
     for (const r of regs) {
       if (!byAtiv[r.atividade]) byAtiv[r.atividade] = [];
       byAtiv[r.atividade].push(r);
     }
 
-    // Filter pills (only when multiple atividades)
     const atividades = Object.keys(byAtiv);
     if (atividades.length > 1) {
       html += `<div id="hist-pills-${uid}" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px">
@@ -511,56 +586,43 @@ for (const aluno of alunos) {
       </div>`;
     }
 
-    async function renderSessoes(sessoes) {
-      let s = '';
-      for (const r of sessoes) {
-        const detalhes = (await getDetalhes(r.id)) || [];
-        if (r.modo === 'competicao_plus') s += renderPlusItem(r, detalhes, statusMap);
-        else if (r.modo === 'avaliacao_plus') s += renderAvPlusItem(r, detalhes, statusMap);
-        else s += renderClassicoItem(r, detalhes);
-      }
-      return s;
-    }
-
     for (const [atividade, ativRegs] of Object.entries(byAtiv)) {
-      const modoSet = new Set(ativRegs.map(r => r.modo || 'classico'));
-      const hasComp = modoSet.has('competicao_plus');
-      const hasAv   = modoSet.has('avaliacao_plus');
+      const modoSet  = new Set(ativRegs.map(r => r.modo || 'classico'));
+      const hasComp  = modoSet.has('competicao_plus');
+      const hasAv    = modoSet.has('avaliacao_plus');
       const multiModo = hasComp && hasAv;
-      const aUID = uid + '__' + atividade.replace(/\W/g,'_');
+      const aUID    = uid + '__' + atividade.replace(/\W/g, '_');
+      const ativUID = uid + '_' + atividade.replace(/\W/g, '_');
 
-      html += `<div class="ativ-group" data-ativ-sec="${uid}" data-ativ="${atividade.replace(/"/g,'&quot;')}">`;
-      html += `<div class="ativ-group-header"><span style="font-weight:700;font-size:12px">${atividade}</span><span style="font-size:11px;color:var(--text-muted)">${ativRegs.length} ${ativRegs.length !== 1 ? 'sessões' : 'sessão'}</span></div>`;
+      const allPts = Math.max(0, ...ativRegs.map(r => r.pontuacao || 0));
+      const totAc  = ativRegs.reduce((a, r) => a + (r.acertos || 0), 0);
+      const totErr = ativRegs.reduce((a, r) => a + (r.erros   || 0), 0);
+      const taxa   = (totAc + totErr) > 0 ? Math.round(totAc / (totAc + totErr) * 100) : 0;
+
+      html += `<div class="ativ-summary" data-ativ-sec="${uid}" data-ativ="${atividade.replace(/"/g,'&quot;')}">
+        <div class="ativ-summary-head" onclick="toggleHistAtiv('${ativUID}')">
+          <div style="flex:1;font-size:14px;font-weight:700">${atividade}</div>
+          <span class="badge badge-gold">⭐ ${allPts} pts</span>
+          <span class="badge badge-blue">${ativRegs.length} sess.</span>
+          <span class="badge badge-green">${taxa}%</span>
+          <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:var(--text-muted);flex-shrink:0" id="hchev-${ativUID}"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+        </div>
+        <div class="ativ-summary-body" id="hbody-${ativUID}" style="display:none">`;
 
       if (multiModo) {
-        html += `<div id="hist-mode-tabs-${aUID}" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">
-          <button class="pill on" data-modo="" onclick="filtrarHistModo('${aUID}','')">Todos</button>
-          ${hasComp ? `<button class="pill" data-modo="competicao_plus" onclick="filtrarHistModo('${aUID}','competicao_plus')">⚔️ Competição+</button>` : ''}
-          ${hasAv   ? `<button class="pill" data-modo="avaliacao_plus" onclick="filtrarHistModo('${aUID}','avaliacao_plus')">📝 Avaliação+</button>` : ''}
-        </div>`;
-        const byModo = {};
-        for (const r of ativRegs) {
-          const m = r.modo || 'classico';
-          if (!byModo[m]) byModo[m] = [];
-          byModo[m].push(r);
-        }
-        for (const [modo, modoRegs] of Object.entries(byModo)) {
-          html += `<div data-modo-sec="${aUID}" data-modo="${modo}">`;
-          if (modoRegs.length >= 2) {
-            const cr = [...modoRegs].sort((a,b) => (a.criadoEm||0)-(b.criadoEm||0));
-            html += renderEvolucaoSVG(cr);
-          }
-          html += await renderSessoes(modoRegs);
-          html += `</div>`;
-        }
+        const compRegs = ativRegs.filter(r => (r.modo || 'classico') !== 'avaliacao_plus');
+        const avRegs   = ativRegs.filter(r => (r.modo || 'classico') === 'avaliacao_plus');
+        html += `<div class="mode-tabs">
+          <button class="mode-tab on mhtab-${aUID}" data-modo="comp" onclick="mostrarHistModo('${aUID}','comp')">⚔️ Competição+</button>
+          <button class="mode-tab mhtab-${aUID}" data-modo="avaliacao_plus" onclick="mostrarHistModo('${aUID}','avaliacao_plus')">📝 Avaliação+</button>
+        </div>
+        <div id="hmc-${aUID}">${renderModoBlock(compRegs, 'competicao_plus')}</div>
+        <div id="hma-${aUID}" style="display:none">${renderModoBlock(avRegs, 'avaliacao_plus')}</div>`;
       } else {
-        if (ativRegs.length >= 2) {
-          const chronoRegs = [...ativRegs].sort((a, b) => (a.criadoEm || 0) - (b.criadoEm || 0));
-          html += renderEvolucaoSVG(chronoRegs);
-        }
-        html += await renderSessoes(ativRegs);
+        html += renderModoBlock(ativRegs, [...modoSet][0] || 'classico');
       }
-      html += `</div>`;
+
+      html += `</div></div>`;
     }
   }
   html += '</div>';
@@ -568,7 +630,7 @@ for (const aluno of alunos) {
 
 content.innerHTML = html;
 
-// Tooltip event delegation for conquista badges
+// Tooltip event delegation para conquista badges
 let _touchConqTip;
 content.addEventListener('mouseover', e => {
   const el = e.target.closest('[data-nome]');
@@ -594,7 +656,7 @@ content.addEventListener('touchstart', e => {
 content.addEventListener('touchend', () => { clearTimeout(_touchConqTip); setTimeout(hideConqTip, 2500); }, {passive: true});
 content.addEventListener('touchcancel', () => clearTimeout(_touchConqTip), {passive: true});
 
-// ── Seção Robótica ─────────────────────────────────────────
+// ── Seção Robótica ─────────────────────────────────────────────
 const isRob = await getAlunoPreferencia(turma, alunos[0], 'robotica');
 if (isRob) {
   const tentativas = await getRoboticaTentativasAluno(turma, alunos[0]);
@@ -613,7 +675,7 @@ if (isRob) {
       </div>`;
 
     for (const [n, tents] of Object.entries(porAtiv)) {
-      const best = Math.max(...tents.map(t => t.acertos || 0));
+      const best  = Math.max(...tents.map(t => t.acertos || 0));
       const total = tents[0].total || 0;
       robHtml += `<div class="ativ-group">
         <div class="ativ-group-header">
@@ -621,7 +683,6 @@ if (isRob) {
           <span style="font-size:11px;color:var(--text-muted);">${tents.length} tentativa${tents.length > 1 ? 's' : ''} • melhor: ${best}/${total}</span>
         </div>`;
 
-      // Gráfico de evolução se > 1 tentativa
       if (tents.length >= 2) {
         const pts = tents.map(t => t.acertos || 0);
         const maxV = Math.max(...pts, 1);
@@ -643,10 +704,9 @@ if (isRob) {
         robHtml += `<div class="evolucao-bar"><span class="evolucao-label">${tents.length} tentativas</span>${svg}<div style="text-align:center;flex-shrink:0;min-width:32px"><div style="font-size:20px;font-weight:800;color:${tc};line-height:1">${ti}</div><div style="font-size:9px;color:var(--text-muted)">${last>first?'Melhora':last<first?'Regrediu':'Estável'}</div></div></div>`;
       }
 
-      // Cada tentativa
       for (let i = 0; i < tents.length; i++) {
         const t = tents[i];
-        const pct = t.total > 0 ? Math.round(t.acertos / t.total * 100) : 0;
+        const pct  = t.total > 0 ? Math.round(t.acertos / t.total * 100) : 0;
         const prev = i > 0 ? tents[i-1] : null;
         const diff = prev ? t.acertos - prev.acertos : null;
         const diffBadge = diff !== null

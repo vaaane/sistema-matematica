@@ -109,6 +109,7 @@
 import { requireAluno, renderSidebarAluno, clearSession, hashSenha } from "/js/auth.js";
 import { getSenhaAluno, setSenhaAluno, saveAlunoPreferencia, getAlunoPreferencia } from "/js/db.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
+import { initAvBanner } from "/js/avaliacao_banner.js";
 
 const sess = requireAluno("/index.html");
 if (!sess) throw new Error("não autenticado");
@@ -117,6 +118,7 @@ window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 applyTopRankVisuals();
 
 const { alunos, turma } = sess;
+initAvBanner(turma, alunos[0]);
 
 // ── Tema ──────────────────────────────────────────
 const chkTema = document.getElementById('chk-tema');

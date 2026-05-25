@@ -83,6 +83,38 @@
   </div>
 </div>
 
+<!-- Modal modo teste -->
+<div class="modal-overlay" id="testar-modal-ov" onclick="if(event.target===this)fecharTestarModal()">
+  <div class="modal-box" style="position:relative;max-width:420px">
+    <button class="modal-close-btn" onclick="fecharTestarModal()">✕</button>
+    <div class="modal-box-header">
+      <div class="modal-box-title">🧪 Modo Teste</div>
+    </div>
+    <div class="modal-box-body">
+      <div class="modal-field">
+        <label class="modal-field-label">Atividade</label>
+        <div class="select-wrap"><select class="input" id="testar-sel-ativ"><option value="">Selecionar…</option></select></div>
+      </div>
+      <div class="modal-field">
+        <label class="modal-field-label">Escolha o modo para testar</label>
+        <div class="modo-picker">
+          <div class="modo-card" onclick="abrirTeste('competicao_plus')" style="cursor:pointer">
+            <div class="modo-radio"></div>
+            <div><div class="modo-nome">⚔️ Competição+</div><div class="modo-desc">Ranking ao vivo · sem limite de tentativas</div></div>
+          </div>
+          <div class="modo-card" onclick="abrirTeste('avaliacao_plus')" style="cursor:pointer">
+            <div class="modo-radio"></div>
+            <div><div class="modo-nome">📝 Avaliação+</div><div class="modo-desc">Quiz + ranking · 3 tentativas · 30 min</div></div>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:4px">
+        Dados salvos como <strong>👩‍🏫 PROFESSOR_TESTE / Turma TESTE</strong> — visíveis no acompanhamento
+      </p>
+    </div>
+  </div>
+</div>
+
 <div class="layout">
   <aside class="sidebar" id="sidebar"></aside>
   <div class="main">
@@ -96,10 +128,10 @@
           <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
           Liberar atividade
         </button>
-        <a href="/professor/testar.html" class="btn btn-ghost">
+        <button class="btn btn-ghost" onclick="abrirTestarModal()">
           <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
           Testar
-        </a>
+        </button>
       </div>
     </div>
     <div class="content">
@@ -108,10 +140,23 @@
         <div>
           <div class="card">
             <div class="card-header">
-              <div class="card-title"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>Ativa agora</div>
+              <div class="card-title"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>✅ Ativas agora</div>
               <button class="btn btn-sm btn-ghost" onclick="carregarAeH()">↻ Atualizar</button>
             </div>
             <div id="lista-ativas"><p style="font-size:13px;color:var(--text-muted)">Carregando…</p></div>
+          </div>
+
+          <div class="card" style="margin-top:16px">
+            <div class="card-header" onclick="toggleEncerradas()" style="cursor:pointer;user-select:none">
+              <div class="card-title">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
+                📋 Encerradas<span id="count-encerradas" style="font-weight:500;font-size:12px;color:var(--text-muted);margin-left:4px"></span>
+              </div>
+              <svg id="chev-encerradas" viewBox="0 0 24 24" style="width:18px;height:18px;fill:var(--text-muted);flex-shrink:0;transition:transform .25s"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+            </div>
+            <div id="lista-encerradas-wrap" style="display:none;padding-top:4px">
+              <div id="lista-encerradas"></div>
+            </div>
           </div>
         </div>
         <div>
@@ -199,6 +244,7 @@ window.reativar = async function(turma, atividade, histId) {
 let _histCache = [];
 let _histFiltroTurma = null;
 let _statusMapCache = {};
+let _ativasKeysCache = new Set(); // turma|atividade presentes em liberacoes_ativas
 
 function renderHistLib() {
   const histLib = document.getElementById("hist-lib");
@@ -230,7 +276,8 @@ function renderHistLib() {
       </div>
       ${(() => {
         if (h.cancelado_em) return `<span class="badge badge-orange">Cancelada</span>`;
-        const st = (_statusMapCache[`${h.turma}|${h.atividade}`]?.status) || 'ativa';
+        const st = (_statusMapCache[`${h.turma}|${h.atividade}`]?.status)
+          || (_ativasKeysCache.has(`${h.turma}|${h.atividade}`) ? 'ativa' : 'encerrada');
         return st === 'encerrada'
           ? `<span class="badge badge-red">Encerrada</span>`
           : `<span class="badge badge-green">Ativa</span>`;
@@ -253,46 +300,95 @@ async function carregarAeH() {
   if (gen !== _loadGen) return;
   _statusMapCache = statusMap;
 
+  // ── Diagnóstico 8F / 8H ─────────────────────────────────────
+  const _debug8FH = (turma) => ({
+    config_status: statusMap[`${turma}|Atividade 4 - Geometria`] || statusMap[`${turma}|Atividade 5 - Geometria: Triângulos`] || null,
+    liberacoes_ativas: ativas.filter(a => a.turma === turma),
+    historico: hist.filter(h => h.turma === turma),
+  });
+  console.log('[atividades] 8F:', _debug8FH('8F'));
+  console.log('[atividades] 8H:', _debug8FH('8H'));
+
+  // ── Auto-fix: orphaned entries ───────────────────────────────
+  // Entradas no historico sem liberacao ativa e sem status → escrita encerrada no Firebase
+  const ativasKeys = new Set(ativas.map(a => `${a.turma}|${a.atividade}`));
+  _ativasKeysCache  = ativasKeys;
+  const orphaned = hist.filter(h => !ativasKeys.has(`${h.turma}|${h.atividade}`) && !statusMap[`${h.turma}|${h.atividade}`]);
+  if (orphaned.length) {
+    console.log('[atividades] Orphaned (sem status, sem liberacao ativa):', orphaned.map(h => `${h.turma}|${h.atividade}`));
+    await Promise.all(orphaned.map(h => setAtividadeStatus(h.turma, h.atividade, 'encerrada')));
+    orphaned.forEach(h => { _statusMapCache[`${h.turma}|${h.atividade}`] = { status: 'encerrada', percentual: 0 }; });
+  }
+
   const getStatus = (turma, atividade) => statusMap[`${turma}|${atividade}`] || { status: 'ativa', percentual: 100 };
 
   const listaAtivas = document.getElementById("lista-ativas");
-  if (!ativas.length) {
-    listaAtivas.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg><p>Nenhuma atividade liberada.</p></div>';
+  const ativasVivas      = ativas.filter(lib => getStatus(lib.turma, lib.atividade).status !== 'encerrada');
+  const ativasEncerradas = ativas.filter(lib => getStatus(lib.turma, lib.atividade).status === 'encerrada');
+
+  // ── Bloco 1: Ativas agora ──────────────────────────────────
+  if (!ativasVivas.length) {
+    listaAtivas.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg><p>Nenhuma atividade ativa no momento.</p></div>';
   } else {
-    listaAtivas.innerHTML = ativas.map(lib => {
-      const st = getStatus(lib.turma, lib.atividade);
-      const isEncerrada = st.status === 'encerrada';
-      const stOpt = STATUS_OPTS.find(o => o.val === st.status) || STATUS_OPTS[0];
+    listaAtivas.innerHTML = ativasVivas.map(lib => {
+      const st      = getStatus(lib.turma, lib.atividade);
+      const stOpt   = STATUS_OPTS.find(o => o.val === st.status) || STATUS_OPTS[0];
       const selOpts = STATUS_OPTS.filter(o => o.val !== 'encerrada').map(o =>
         `<option value="${o.val}"${o.val === st.status ? ' selected' : ''}>${o.label}</option>`
       ).join('');
       const ativEsc = lib.atividade.replace(/'/g, "\\'");
-      const rowStyle = isEncerrada ? 'opacity:.7;background:#FEF2F2;border-color:#FECACA;' : '';
       return `
-    <div class="list-row" style="flex-wrap:wrap;gap:8px;${rowStyle}">
+    <div class="list-row" style="flex-wrap:wrap;gap:8px">
       <div style="flex:1;min-width:180px">
         <div style="font-size:14px;font-weight:700">${lib.atividade}</div>
         <div style="font-size:12px;color:var(--text-muted)">
-          Turma ${lib.turma} · ${isEncerrada ? '<span style="color:#B91C1C;font-weight:700">⛔ Encerrada</span>' : `${st.percentual ?? 100}% da nota · ${MODO_LABEL[lib.modo] || 'Competição+'}`}
+          Turma ${lib.turma} · ${st.percentual ?? 100}% da nota · ${MODO_LABEL[lib.modo] || 'Competição+'}
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-        ${isEncerrada ? `
-          <button class="btn btn-sm btn-ghost" style="color:var(--green);border-color:#BBF7D0"
-            onclick="reativar('${lib.turma}','${ativEsc}','${lib.historico_id||''}')">↺ Reativar</button>
-        ` : `
-          <div class="select-wrap" style="min-width:0">
-            <select class="input" style="font-size:11px;padding:5px 24px 5px 8px;background:${stOpt.bg};color:${stOpt.color};font-weight:700;border-color:${stOpt.bg}"
-              onchange="mudarStatus('${lib.turma}','${ativEsc}',this.value,'${lib.historico_id||''}')">
-              ${selOpts}
-            </select>
-          </div>
-          <button class="btn btn-sm btn-red"
-            onclick="encerrarAtividade('${lib.turma}','${ativEsc}','${lib.historico_id||''}')">⛔ Encerrar</button>
-        `}
+        <div class="select-wrap" style="min-width:0">
+          <select class="input" style="font-size:11px;padding:5px 24px 5px 8px;background:${stOpt.bg};color:${stOpt.color};font-weight:700;border-color:${stOpt.bg}"
+            onchange="mudarStatus('${lib.turma}','${ativEsc}',this.value,'${lib.historico_id||''}')">
+            ${selOpts}
+          </select>
+        </div>
+        <button class="btn btn-sm btn-red"
+          onclick="encerrarAtividade('${lib.turma}','${ativEsc}','${lib.historico_id||''}')">⛔ Encerrar</button>
       </div>
     </div>`;
     }).join('');
+  }
+
+  // ── Bloco 2: Encerradas ───────────────────────────────────
+  const listaEncEl = document.getElementById("lista-encerradas");
+  const countEncEl = document.getElementById("count-encerradas");
+  if (countEncEl) countEncEl.textContent = ativasEncerradas.length ? ` (${ativasEncerradas.length})` : '';
+  if (listaEncEl) {
+    if (!ativasEncerradas.length) {
+      listaEncEl.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:4px 0">Nenhuma atividade encerrada.</p>';
+    } else {
+      listaEncEl.innerHTML = ativasEncerradas.map(lib => {
+        const ativEsc    = lib.atividade.replace(/'/g, "\\'");
+        const histEntry  = hist.find(h => h.id === lib.historico_id);
+        const alteracoes = histEntry?.status_alteracoes
+          ? Object.values(histEntry.status_alteracoes).sort((a, b) => (a.em || '').localeCompare(b.em || ''))
+          : [];
+        const encAlter   = [...alteracoes].reverse().find(a => a.status === 'encerrada');
+        const dataEnc    = encAlter?.em || '';
+        const pctOriginal = histEntry?.percentual ?? 100;
+        return `
+    <div class="list-row" style="flex-wrap:wrap;gap:8px;opacity:.85">
+      <div style="flex:1;min-width:180px">
+        <div style="font-size:14px;font-weight:700">${lib.atividade}</div>
+        <div style="font-size:12px;color:var(--text-muted)">
+          Turma ${lib.turma} · ${MODO_LABEL[lib.modo] || 'Competição+'} · ${pctOriginal}% da nota${dataEnc ? ' · <span style="color:#B91C1C">encerrada ' + dataEnc + '</span>' : ''}
+        </div>
+      </div>
+      <button class="btn btn-sm btn-ghost" style="color:var(--green);border-color:#BBF7D0;flex-shrink:0"
+        onclick="reativar('${lib.turma}','${ativEsc}','${lib.historico_id||''}')">↺ Reativar</button>
+    </div>`;
+      }).join('');
+    }
   }
 
   // Atualiza cache e pills
@@ -337,9 +433,42 @@ window.liberar = async function() {
   const turma      = document.getElementById("sel-turma").value;
   const percentual = Math.min(100, Math.max(0, parseInt(document.getElementById("inp-percentual").value) || 100));
   if (!atividade || !turma) { flash("Selecione a atividade e a turma.", "error"); return; }
+
+  const stAtual = _statusMapCache[`${turma}|${atividade}`];
+  if (stAtual && stAtual.status !== 'encerrada') {
+    fecharForm();
+    flash(`⚠️ "${atividade}" já está ativa para a Turma ${turma}. Encerre-a primeiro (botão ⛔ Encerrar) antes de liberar novamente.`, "error");
+    return;
+  }
+
   await executarLiberacao(atividade, turma, percentual);
 };
 
+
+window.abrirTestarModal = function() {
+  const sel = document.getElementById('testar-sel-ativ');
+  sel.innerHTML = '<option value="">Selecionar…</option>';
+  LISTA_ATIVIDADES.forEach(a => { sel.innerHTML += `<option value="${a.nome}">${a.nome}</option>`; });
+  document.getElementById('testar-modal-ov').classList.add('open');
+};
+window.fecharTestarModal = function() {
+  document.getElementById('testar-modal-ov').classList.remove('open');
+};
+window.abrirTeste = function(modo) {
+  const ativ = document.getElementById('testar-sel-ativ').value;
+  if (!ativ) { flash('Selecione uma atividade antes de escolher o modo.', 'error'); return; }
+  const page = modo === 'competicao_plus' ? '/aluno/competicao_plus.html' : '/aluno/avaliacao_plus.html';
+  window.open(`${page}?modo=teste&ativ=${encodeURIComponent(ativ)}`, '_blank');
+  fecharTestarModal();
+};
+
+window.toggleEncerradas = function() {
+  const wrap = document.getElementById('lista-encerradas-wrap');
+  const chev = document.getElementById('chev-encerradas');
+  const isOpen = wrap.style.display !== 'none';
+  wrap.style.display = isOpen ? 'none' : 'block';
+  chev.style.transform = isOpen ? '' : 'rotate(180deg)';
+};
 
 await carregarAeH();
 </script>
