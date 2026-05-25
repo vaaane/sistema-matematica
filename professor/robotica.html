@@ -7,41 +7,45 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
+    /* ── Shared section card ──────────────────────────────────────── */
     .rob-section{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:18px;overflow:hidden;}
     .rob-section-hdr{padding:14px 18px;font-size:13px;font-weight:700;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
-    /* Student rows */
-    .st-row{border-bottom:1px solid var(--border);}
-    .st-row:last-child{border-bottom:none;}
-    .st-header{display:flex;align-items:center;gap:12px;padding:12px 18px;cursor:pointer;transition:background .12s;}
-    .st-header:hover{background:#FAFAFA;}
-    .st-name{font-size:13px;font-weight:700;flex:1;}
-    .st-turma{font-size:11px;color:var(--text-muted);margin-left:4px;font-weight:400;}
-    .st-body{display:none;border-top:1px solid var(--border);background:#FAFAFA;}
-    .st-body.open{display:block;}
-    /* Activity block inside row */
-    .ativ-block{padding:12px 18px;border-bottom:1px dashed var(--border);}
-    .ativ-block:last-child{border-bottom:none;}
-    .ativ-block-hdr{font-size:12px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
-    /* Tentativa item */
-    .tent-item{padding:8px 12px;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;background:var(--card);}
-    .tent-hdr{display:flex;align-items:center;gap:8px;cursor:pointer;}
-    .tent-num{font-size:11px;font-weight:700;color:var(--text-muted);width:22px;}
-    .tent-score{font-size:13px;font-weight:800;}
-    .tent-pct{font-size:12px;color:var(--text-muted);}
-    .tent-diff{font-size:11px;font-weight:800;}
-    .tent-date{font-size:11px;color:var(--text-muted);margin-left:auto;}
-    .tent-detail{display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
-    .tent-detail.open{display:block;}
-    /* Comparison chips */
-    .comp-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;margin:2px;}
-    .comp-chip.melhora{background:#DCFCE7;color:#15803D;}
-    .comp-chip.piora{background:#FEE2E2;color:#B91C1C;}
-    .comp-chip.manteve-err{background:#FFF7ED;color:#92400E;}
-    /* Activity chips in header */
-    .ativ-chip-sm{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;}
-    .ativ-chip-sm.done{background:#DCFCE7;}
-    .ativ-chip-sm.none{background:var(--border);color:var(--text-muted);}
-    /* Top-5 */
+
+    /* ── Student cards ────────────────────────────────────────────── */
+    .st-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;}
+    .st-card-hdr{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;transition:background .12s;}
+    .st-card-hdr:hover{background:#FAFAFA;}
+    .st-name{font-size:14px;font-weight:700;}
+    .st-turma{font-size:11px;color:var(--text-muted);font-weight:400;margin-left:6px;}
+    .st-card-body{display:none;border-top:1px solid var(--border);}
+    .st-card-body.open{display:block;}
+
+    /* ── Activity section ─────────────────────────────────────────── */
+    .ativ-section{padding:14px 18px;border-bottom:1px dashed var(--border);}
+    .ativ-section:last-child{border-bottom:none;}
+    .ativ-section-hdr{font-size:12px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+
+    /* ── Metrics grid ─────────────────────────────────────────────── */
+    .ativ-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
+    @media(max-width:600px){.ativ-metrics{grid-template-columns:repeat(2,1fr);}}
+    .metric-box{background:var(--bg);border-radius:8px;padding:10px 6px;text-align:center;border:1px solid var(--border);}
+    .metric-val{font-size:18px;font-weight:800;line-height:1;}
+    .metric-lbl{font-size:10px;color:var(--text-muted);margin-top:3px;}
+
+    /* ── Evolution chart ──────────────────────────────────────────── */
+    .evolucao-bar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#F8FAFC;border-radius:8px;margin-bottom:10px;border:1px solid var(--border);}
+    .evolucao-label{font-size:10px;font-weight:700;color:var(--text-muted);flex-shrink:0;}
+
+    /* ── Attempt rows ─────────────────────────────────────────────── */
+    .tent-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;background:var(--card);cursor:pointer;transition:background .15s;}
+    .tent-row:hover{background:#fafafa;}
+    .tent-row.melhor{border-color:#F59E0B;border-width:1.5px;background:linear-gradient(to right,#FFFDE7,var(--card));}
+    .tent-info-wrap{flex:1;}
+    .tent-date{font-size:11px;color:var(--text-muted);}
+    .tent-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+    .tent-detail-body{padding:8px 12px 12px;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;background:#FAFAFA;margin-top:-6px;margin-bottom:6px;}
+
+    /* ── Top 5 ────────────────────────────────────────────────────── */
     .top5-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
     .top5-item:last-child{border-bottom:none;}
     .top5-rank{width:24px;height:24px;border-radius:50%;background:var(--red);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
@@ -49,12 +53,12 @@
     .top5-enunciado{font-size:12px;font-weight:600;line-height:1.4;}
     .top5-meta{font-size:11px;color:var(--text-muted);margin-top:2px;}
     .top5-count{font-size:13px;font-weight:800;color:var(--red);flex-shrink:0;text-align:right;}
+
+    /* ── Misc ─────────────────────────────────────────────────────── */
     .live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;animation:blink 1.4s infinite;}
     @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-    /* pct bar */
     .pct-bar{flex:1;height:5px;background:var(--border);border-radius:5px;overflow:hidden;min-width:50px;}
     .pct-fill{height:100%;border-radius:5px;transition:width .3s;}
-    /* pills */
     .pill{padding:5px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .15s;}
     .pill.on{border-color:var(--blue);background:var(--blue);color:#fff;}
     @media(max-width:700px){.top5-grid{grid-template-columns:1fr!important;}}
@@ -113,13 +117,13 @@
         </div>
       </div>
 
-      <!-- Tabela de alunos -->
+      <!-- Alunos -->
       <div class="rob-section">
         <div class="rob-section-hdr">
           <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--blue)"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-          Alunos — Histórico de Tentativas
+          Histórico por Aluno
         </div>
-        <div id="students-list">
+        <div id="students-list" style="padding:14px 18px;">
           <div style="text-align:center;padding:40px;color:var(--text-muted);">Carregando…</div>
         </div>
       </div>
@@ -305,108 +309,146 @@ function compararTentativas(ant, nova, questoes) {
   return { melhorou, piorou, aindarErrado };
 }
 
+function renderEvolucaoSVG(tents) {
+  const pts = tents.map(t => t.acertos || 0);
+  if (pts.length < 2) return '';
+  const first = pts[0], last = pts[pts.length - 1];
+  const tc = last > first ? '#16A34A' : last < first ? '#DC2626' : '#6B7280';
+  const ti = last > first ? '↑' : last < first ? '↓' : '→';
+  const td = last > first ? 'Melhora' : last < first ? 'Regrediu' : 'Estável';
+  const W = 240, H = 48, mL = 8, mR = 8, mT = 10, mB = 6;
+  const iW = W - mL - mR, iH = H - mT - mB;
+  const maxV = Math.max(...pts, 1);
+  const n = pts.length;
+  const xP = i => mL + (n > 1 ? (i / (n - 1)) * iW : iW / 2);
+  const yP = v => mT + iH - Math.min((v / maxV) * iH, iH);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:240px;height:${H}px;flex-shrink:0">`;
+  svg += `<polyline points="${pts.map((v, i) => `${xP(i)},${yP(v)}`).join(' ')}" fill="none" stroke="${tc}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+  pts.forEach((v, i) => {
+    svg += `<circle cx="${xP(i)}" cy="${yP(v)}" r="4" fill="${tc}" stroke="white" stroke-width="1.5"/>`;
+    svg += `<text x="${xP(i)}" y="${yP(v)-7}" text-anchor="middle" font-size="8" fill="${tc}" font-weight="700">${v}</text>`;
+  });
+  svg += '</svg>';
+  return `<div class="evolucao-bar">
+    <span class="evolucao-label">${n} tentativas</span>
+    ${svg}
+    <div style="text-align:center;flex-shrink:0;min-width:32px">
+      <div style="font-size:20px;font-weight:800;color:${tc};line-height:1">${ti}</div>
+      <div style="font-size:9px;color:var(--text-muted)">${td}</div>
+    </div>
+  </div>`;
+}
+
 function renderTentativas(tents, atividadeN) {
   const qids = tents.length > 0 && tents[0].respostas ? Object.keys(tents[0].respostas) : [];
   const qList = qids.map(id => questoesMap[id]).filter(Boolean);
+  const bestAcertos = Math.max(...tents.map(t => t.acertos || 0));
 
   return tents.map((t, i) => {
     const pct = t.total > 0 ? Math.round(t.acertos / t.total * 100) : 0;
     const pctColor = pct >= 80 ? 'var(--green)' : pct >= 60 ? '#F59E0B' : 'var(--red)';
+    const isBest = t.acertos === bestAcertos;
     const prev = i > 0 ? tents[i - 1] : null;
-    const diff = prev ? t.acertos - prev.acertos : null;
-    const diffHtml = diff !== null
-      ? `<span class="tent-diff" style="color:${diff > 0 ? 'var(--green)' : diff < 0 ? 'var(--red)' : 'var(--text-muted)'}">${diff > 0 ? '+' + diff : diff}</span>`
+    const diff = prev !== null ? t.acertos - prev.acertos : null;
+
+    const diffBadge = diff !== null
+      ? `<span class="badge" style="background:${diff > 0 ? '#DCFCE7' : diff < 0 ? '#FEE2E2' : '#F3F4F6'};color:${diff > 0 ? '#15803D' : diff < 0 ? '#B91C1C' : '#6B7280'};border-color:${diff > 0 ? '#BBF7D0' : diff < 0 ? '#FECACA' : '#E5E7EB'}">${diff > 0 ? '+' + diff : diff === 0 ? '=' : diff}</span>`
       : '';
 
     let detailHtml = '';
     if (prev && prev.respostas) {
       const { melhorou, piorou, aindarErrado } = compararTentativas(prev, t, qList);
       if (melhorou.length || piorou.length || aindarErrado.length) {
-        detailHtml += `<div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px;">Comparação com tentativa ${i}ª:</div>`;
+        detailHtml += `<div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px">Comparação com tentativa ${i}ª:</div>`;
         if (melhorou.length) {
-          detailHtml += `<div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:4px;">✓ Agora acerta (${melhorou.length}):</div>`;
+          detailHtml += `<div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:4px">✓ Agora acerta (${melhorou.length}):</div>`;
           detailHtml += melhorou.map(q => {
             const rdada = t.respostas?.[q.id]?.resposta_dada ?? '—';
             return `<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:7px;border:1px solid #BBF7D0;background:#DCFCE7;margin-bottom:4px;">
-              <span style="flex-shrink:0;font-size:13px;">✅</span>
+              <span style="flex-shrink:0">✅</span>
               <div style="flex:1;min-width:0;">
-                <div style="font-size:11px;font-weight:600;color:#166534;">${q.enunciado.replace(/\n/g,' ')}</div>
-                <div style="font-size:10px;color:#374151;margin-top:2px;">Respondeu: <strong style="color:#15803D">${rdada}</strong> · Correta: ${q.resposta}</div>
+                <div style="font-size:11px;font-weight:600;color:#166534">${q.enunciado.replace(/\n/g,' ')}</div>
+                <div style="font-size:10px;color:#374151;margin-top:2px">Respondeu: <strong style="color:#15803D">${rdada}</strong> · Correta: ${q.resposta}</div>
               </div>
             </div>`;
           }).join('');
         }
         if (piorou.length) {
-          detailHtml += `<div style="font-size:11px;font-weight:700;color:var(--red);margin-top:6px;margin-bottom:4px;">✗ Passou a errar (${piorou.length}):</div>`;
+          detailHtml += `<div style="font-size:11px;font-weight:700;color:var(--red);margin-top:6px;margin-bottom:4px">✗ Passou a errar (${piorou.length}):</div>`;
           detailHtml += piorou.map(q => {
             const rdada = t.respostas?.[q.id]?.resposta_dada ?? '—';
             return `<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:7px;border:1px solid #FECACA;background:#FEE2E2;margin-bottom:4px;">
-              <span style="flex-shrink:0;font-size:13px;">❌</span>
+              <span style="flex-shrink:0">❌</span>
               <div style="flex:1;min-width:0;">
-                <div style="font-size:11px;font-weight:600;color:#991B1B;">${q.enunciado.replace(/\n/g,' ')}</div>
-                <div style="font-size:10px;color:#374151;margin-top:2px;">Respondeu: <strong style="color:#DC2626">${rdada}</strong> · Correta: ${q.resposta}</div>
+                <div style="font-size:11px;font-weight:600;color:#991B1B">${q.enunciado.replace(/\n/g,' ')}</div>
+                <div style="font-size:10px;color:#374151;margin-top:2px">Respondeu: <strong style="color:#DC2626">${rdada}</strong> · Correta: ${q.resposta}</div>
               </div>
             </div>`;
           }).join('');
         }
         if (aindarErrado.length) {
-          detailHtml += `<div style="font-size:11px;font-weight:700;color:#D97706;margin-top:6px;margin-bottom:4px;">Ainda erra (${aindarErrado.length}):</div>`;
+          detailHtml += `<div style="font-size:11px;font-weight:700;color:#D97706;margin-top:6px;margin-bottom:4px">Ainda erra (${aindarErrado.length}):</div>`;
           detailHtml += aindarErrado.map(q => {
             const rdada = t.respostas?.[q.id]?.resposta_dada ?? '—';
             return `<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:7px;border:1px solid #FED7AA;background:#FFF7ED;margin-bottom:4px;">
-              <span style="flex-shrink:0;font-size:13px;">❌</span>
+              <span style="flex-shrink:0">❌</span>
               <div style="flex:1;min-width:0;">
-                <div style="font-size:11px;color:#92400E;">${q.enunciado.replace(/\n/g,' ')}</div>
-                <div style="font-size:10px;color:#374151;margin-top:2px;">Respondeu: <strong style="color:#D97706">${rdada}</strong> · Correta: ${q.resposta}</div>
+                <div style="font-size:11px;color:#92400E">${q.enunciado.replace(/\n/g,' ')}</div>
+                <div style="font-size:10px;color:#374151;margin-top:2px">Respondeu: <strong style="color:#D97706">${rdada}</strong> · Correta: ${q.resposta ?? '—'}</div>
               </div>
             </div>`;
           }).join('');
         }
+      } else {
+        detailHtml = '<span style="font-size:11px;color:var(--text-muted)">Sem diferenças em relação à tentativa anterior.</span>';
       }
-    } else if (!prev) {
-      if (t.respostas) {
-        const allEntries = Object.entries(t.respostas);
-        const oks  = allEntries.filter(([,v]) => v.acertou);
-        const errs = allEntries.filter(([,v]) => !v.acertou);
-        if (oks.length) {
-          detailHtml += `<div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:4px;">Acertou (${oks.length}):</div>`;
-          detailHtml += oks.map(([id]) => {
-            const q = questoesMap[id];
-            return `<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:7px;border:1px solid #BBF7D0;background:#DCFCE7;margin-bottom:4px;">
-              <span style="flex-shrink:0;font-size:13px;">✅</span>
-              <div style="flex:1;min-width:0;font-size:11px;color:#166534;">${q ? q.enunciado.replace(/\n/g,' ') : id}</div>
-            </div>`;
-          }).join('');
-        }
-        if (errs.length) {
-          detailHtml += `<div style="font-size:11px;font-weight:700;color:var(--red);margin-top:${oks.length?'6px':'0'};margin-bottom:4px;">Errou (${errs.length}):</div>`;
-          detailHtml += errs.map(([id, resp]) => {
-            const q = questoesMap[id];
-            return `<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:7px;border:1px solid #FECACA;background:#FEF2F2;margin-bottom:4px;">
-              <span style="flex-shrink:0;font-size:13px;">❌</span>
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:11px;color:#991B1B;">${q ? q.enunciado.replace(/\n/g,' ') : id}</div>
-                <div style="font-size:10px;color:#374151;margin-top:2px;">Respondeu: <strong style="color:#DC2626">${resp.resposta_dada ?? '—'}</strong> · Correta: ${q?.resposta ?? '—'}</div>
-              </div>
-            </div>`;
-          }).join('');
-        }
+    } else if (!prev && t.respostas) {
+      const allEntries = Object.entries(t.respostas);
+      const oks  = allEntries.filter(([,v]) => v.acertou);
+      const errs = allEntries.filter(([,v]) => !v.acertou);
+      if (oks.length) {
+        detailHtml += `<div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:4px">Acertou (${oks.length}):</div>`;
+        detailHtml += oks.map(([id]) => {
+          const q = questoesMap[id];
+          return `<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:7px;border:1px solid #BBF7D0;background:#DCFCE7;margin-bottom:4px;">
+            <span style="flex-shrink:0">✅</span>
+            <div style="flex:1;min-width:0;font-size:11px;color:#166534">${q ? q.enunciado.replace(/\n/g,' ') : id}</div>
+          </div>`;
+        }).join('');
       }
+      if (errs.length) {
+        detailHtml += `<div style="font-size:11px;font-weight:700;color:var(--red);margin-top:${oks.length?'6px':'0'};margin-bottom:4px">Errou (${errs.length}):</div>`;
+        detailHtml += errs.map(([id, resp]) => {
+          const q = questoesMap[id];
+          return `<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:7px;border:1px solid #FECACA;background:#FEF2F2;margin-bottom:4px;">
+            <span style="flex-shrink:0">❌</span>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:11px;color:#991B1B">${q ? q.enunciado.replace(/\n/g,' ') : id}</div>
+              <div style="font-size:10px;color:#374151;margin-top:2px">Respondeu: <strong style="color:#DC2626">${resp.resposta_dada ?? '—'}</strong> · Correta: ${q?.resposta ?? '—'}</div>
+            </div>
+          </div>`;
+        }).join('');
+      }
+    } else {
+      detailHtml = '<span style="font-size:11px;color:var(--text-muted)">Detalhes não disponíveis.</span>';
     }
 
     const uid = `${t.turma}_${t.aluno}_${atividadeN}_${i}`.replace(/[^a-zA-Z0-9]/g,'_');
-    return `<div class="tent-item">
-      <div class="tent-hdr" onclick="toggleDetail('${uid}')">
-        <span class="tent-num">${i + 1}ª</span>
-        <span class="tent-score" style="color:${pctColor}">${t.acertos}/${t.total}</span>
-        <span class="tent-pct">${pct}%</span>
-        ${diffHtml}
-        <div class="pct-bar"><div class="pct-fill" style="width:${pct}%;background:${pctColor};"></div></div>
-        <span class="tent-date">${formatData(t.completadoEm)}</span>
-        <svg viewBox="0 0 24 24" id="arr-${uid}" style="width:14px;height:14px;fill:var(--text-muted);flex-shrink:0;transition:transform .2s;"><path d="M7 10l5 5 5-5z"/></svg>
+    return `<div>
+      <div class="tent-row${isBest ? ' melhor' : ''}" onclick="toggleDetail('${uid}')">
+        <div class="tent-info-wrap">
+          <div class="tent-date">${i + 1}ª tentativa${formatData(t.completadoEm) ? ' · ' + formatData(t.completadoEm) : ''}</div>
+          <div class="tent-badges">
+            <span class="badge badge-gold">⭐ ${t.acertos}/${t.total}</span>
+            <span class="badge" style="background:${pct >= 80 ? '#DCFCE7' : pct >= 60 ? '#FFF7ED' : '#FEF2F2'};color:${pctColor};border-color:${pct >= 80 ? '#BBF7D0' : pct >= 60 ? '#FED7AA' : '#FECACA'}">📊 ${pct}%</span>
+            ${diffBadge}
+            ${isBest ? `<span class="badge badge-gold">🏆 Melhor</span>` : ''}
+          </div>
+        </div>
+        <svg viewBox="0 0 24 24" id="arr-${uid}" style="width:14px;height:14px;fill:var(--text-muted);flex-shrink:0;transition:transform .2s"><path d="M7 10l5 5 5-5z"/></svg>
       </div>
-      <div class="tent-detail" id="det-${uid}">
-        ${detailHtml || '<span style="font-size:11px;color:var(--text-muted);">Sem comparação disponível.</span>'}
+      <div class="tent-detail-body" id="det-${uid}" style="display:none">
+        ${detailHtml}
       </div>
     </div>`;
   }).join('');
@@ -415,8 +457,10 @@ function renderTentativas(tents, atividadeN) {
 window.toggleDetail = (uid) => {
   const det = document.getElementById(`det-${uid}`);
   const arr = document.getElementById(`arr-${uid}`);
-  const open = det.classList.toggle('open');
-  if (arr) arr.style.transform = open ? 'rotate(180deg)' : '';
+  if (!det) return;
+  const open = det.style.display !== 'none';
+  det.style.display = open ? 'none' : 'block';
+  if (arr) arr.style.transform = open ? '' : 'rotate(180deg)';
 };
 
 function renderAlunos(tentativas) {
@@ -435,10 +479,8 @@ function renderAlunos(tentativas) {
   }
 
   const comResposta = ALUNOS_ROB.filter(a => porAluno[`${a.turma}|${a.aluno}`]).length;
-  const totalFirebase = Object.keys(porAluno).length;
   document.getElementById('status-geral').textContent = `${comResposta}/${ALUNOS_ROB.length} com tentativas`;
 
-  // Mostra registros Firebase que não casam com nenhum aluno da lista
   const keysListados = new Set(ALUNOS_ROB.map(a => `${a.turma}|${a.aluno}`));
   const naoListados = Object.keys(porAluno).filter(k => !keysListados.has(k));
   const secNL = document.getElementById('nao-listados-section');
@@ -461,64 +503,85 @@ function renderAlunos(tentativas) {
 
   const ativsMostrar = filtroAtiv ? [filtroAtiv] : [1, 2, 3];
 
-  document.getElementById('students-list').innerHTML = ALUNOS_ROB.map((a, si) => {
+  const cards = ALUNOS_ROB.map((a, si) => {
     const k = `${a.turma}|${a.aluno}`;
     const dados = porAluno[k] || {};
 
-    const chips = ativsMostrar.map(n => {
-      const tents = dados[n] || [];
-      if (!tents.length) return `<span class="ativ-chip-sm none">A${n}: —</span>`;
-      const best = Math.max(...tents.map(t => t.acertos || 0));
-      const total = tents[0].total || 0;
-      const pct = total > 0 ? Math.round(best / total * 100) : 0;
-      const pctColor = pct >= 80 ? '#16A34A' : pct >= 60 ? '#D97706' : '#DC2626';
-      return `<span class="ativ-chip-sm done" style="color:${pctColor}">A${n}: ${best}/${total} (${pct}%)</span>`;
-    }).join(' ');
-
-    // Taxa geral: melhor tentativa por atividade
-    let totalAcertos = 0, totalTotal = 0;
+    // Overall taxa across activities shown
+    let totalAc = 0, totalTot = 0;
     for (const n of ativsMostrar) {
       const tents = dados[n] || [];
       if (tents.length) {
         const best = tents.reduce((m, t) => (t.acertos || 0) > (m.acertos || 0) ? t : m, tents[0]);
-        totalAcertos += best.acertos || 0;
-        totalTotal += best.total || 0;
+        totalAc  += best.acertos || 0;
+        totalTot += best.total  || 0;
       }
     }
-    const taxaGeral = totalTotal > 0 ? Math.round(totalAcertos / totalTotal * 100) : null;
+    const taxaGeral = totalTot > 0 ? Math.round(totalAc / totalTot * 100) : null;
     const taxaColor = taxaGeral !== null ? (taxaGeral >= 80 ? 'var(--green)' : taxaGeral >= 60 ? '#D97706' : 'var(--red)') : 'var(--text-muted)';
-    const taxaHtml = taxaGeral !== null
-      ? `<span style="font-size:11px;font-weight:700;color:${taxaColor};margin-left:8px;background:var(--bg);padding:2px 8px;border-radius:20px;border:1px solid var(--border);">${taxaGeral}%</span>`
-      : '';
 
-    const bodies = ativsMostrar.map(n => {
+    // Activity sections
+    const ativSections = ativsMostrar.map(n => {
       const tents = dados[n] || [];
-      return `<div class="ativ-block">
-        <div class="ativ-block-hdr">
-          <span>Atividade ${n}</span>
-          ${tents.length
-            ? `<span style="font-size:11px;color:var(--text-muted);">${tents.length} tentativa${tents.length > 1 ? 's' : ''}</span>`
-            : `<span style="font-size:11px;color:var(--text-muted);">Não feita</span>`}
+      if (!tents.length) {
+        return `<div class="ativ-section">
+          <div class="ativ-section-hdr">Atividade ${n}</div>
+          <div style="font-size:12px;color:var(--text-muted)">Nenhuma tentativa registrada.</div>
+        </div>`;
+      }
+      const bestAc  = Math.max(...tents.map(t => t.acertos || 0));
+      const tot     = tents[0].total || 0;
+      const pctBest = tot > 0 ? Math.round(bestAc / tot * 100) : 0;
+      const pctColor = pctBest >= 80 ? 'var(--green)' : pctBest >= 60 ? '#D97706' : 'var(--red)';
+
+      return `<div class="ativ-section">
+        <div class="ativ-section-hdr">
+          Atividade ${n}
+          <span class="badge badge-blue">${tents.length} tentativa${tents.length > 1 ? 's' : ''}</span>
         </div>
-        ${tents.length ? renderTentativas(tents, n) : `<div style="font-size:12px;color:var(--text-muted);padding:4px 0;">Nenhuma tentativa.</div>`}
+        <div class="ativ-metrics">
+          <div class="metric-box">
+            <div class="metric-val" style="color:var(--gold)">⭐ ${bestAc}/${tot}</div>
+            <div class="metric-lbl">Melhor resultado</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-val" style="color:var(--blue)">${tents.length}</div>
+            <div class="metric-lbl">Tentativas</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-val" style="color:${pctColor}">${pctBest}%</div>
+            <div class="metric-lbl">% Melhor</div>
+          </div>
+        </div>
+        ${renderEvolucaoSVG(tents)}
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin:8px 0 6px">Tentativas</div>
+        ${renderTentativas(tents, n)}
       </div>`;
     }).join('');
 
-    return `<div class="st-row">
-      <div class="st-header" onclick="toggleAluno(${si})">
-        <div class="st-name">${a.aluno}${taxaHtml}<span class="st-turma">Turma ${a.turma}</span></div>
-        <div style="display:flex;gap:5px;flex-wrap:wrap;">${chips}</div>
-        <svg viewBox="0 0 24 24" id="arrow-${si}" style="width:18px;height:18px;fill:var(--text-muted);flex-shrink:0;transition:transform .2s;"><path d="M7 10l5 5 5-5z"/></svg>
+    return `<div class="st-card">
+      <div class="st-card-hdr" onclick="toggleAluno(${si})">
+        <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:var(--text-muted);flex-shrink:0"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+        <div style="flex:1">
+          <div class="st-name">${a.aluno}<span class="st-turma">Turma ${a.turma}</span></div>
+          ${taxaGeral !== null ? `<div style="margin-top:4px"><span class="badge" style="background:${taxaGeral>=80?'#DCFCE7':taxaGeral>=60?'#FFF7ED':'#FEF2F2'};color:${taxaColor};border-color:${taxaGeral>=80?'#BBF7D0':taxaGeral>=60?'#FED7AA':'#FECACA'}">📊 ${taxaGeral}% geral</span></div>` : ''}
+        </div>
+        <svg viewBox="0 0 24 24" id="arrow-${si}" style="width:18px;height:18px;fill:var(--text-muted);flex-shrink:0;transition:transform .2s"><path d="M7 10l5 5 5-5z"/></svg>
       </div>
-      <div class="st-body" id="body-${si}">${bodies}</div>
+      <div class="st-card-body" id="body-${si}">
+        ${ativSections}
+      </div>
     </div>`;
   }).join('');
+
+  document.getElementById('students-list').innerHTML = cards;
 }
 
 window.toggleAluno = (i) => {
   const body  = document.getElementById(`body-${i}`);
   const arrow = document.getElementById(`arrow-${i}`);
-  const open  = body.classList.toggle('open');
+  if (!body) return;
+  const open = body.classList.toggle('open');
   if (arrow) arrow.style.transform = open ? 'rotate(180deg)' : '';
 };
 
