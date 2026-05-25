@@ -183,7 +183,7 @@ window.selecionarTodasTurmas = () => {
 };
 
 // ── Load + init ───────────────────────────────────
-allResults = await getResultados();
+allResults = (await getResultados()).filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
 
 const ativNomes = new Set(LISTA_ATIVIDADES.map(a => a.nome));
 allResults.forEach(r => {

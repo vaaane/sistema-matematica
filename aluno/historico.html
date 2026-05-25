@@ -559,7 +559,7 @@ const content = document.getElementById("content");
 let html = '';
 
 for (const aluno of alunos) {
-  const regs = todos.filter(r => r.aluno === aluno && r.concluido)
+  const regs = todos.filter(r => r.aluno === aluno && r.concluido && !r.modo_teste)
     .sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
 
   const uid = aluno.replace(/\s+/g, '_');

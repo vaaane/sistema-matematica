@@ -57,7 +57,8 @@ requireProfessor();
 renderSidebarProfessor("sidebar", "historico");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
-const [todos, conquistas] = await Promise.all([getResultados(), getConquistas()]);
+const [todosRaw, conquistas] = await Promise.all([getResultados(), getConquistas()]);
+const todos = todosRaw.filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
 
 const selT = document.getElementById("sel-turma");
 const selA = document.getElementById("sel-ativ");

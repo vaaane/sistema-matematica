@@ -213,7 +213,7 @@ setInterval(tickClock, 15000);
 function buildRankingMedia(lista) {
   const melhor = {};
   for (const r of lista) {
-    if (!r.concluido || !r.aluno) continue;
+    if (!r.concluido || !r.aluno || r.modo_teste) continue;
     if (!melhor[r.aluno]) melhor[r.aluno] = {
       aluno: r.aluno, turma: r.turma || '?', porAtiv: {}, sessoes: 0,
       melhorSessao: 0, primeiroTs: Infinity
@@ -478,7 +478,7 @@ async function showView(nome) {
 
   if (nome === null) {
     // Geral: usa getResultados() — mesma query e lógica do ranking.html
-    const todos = await getResultados();
+    const todos = (await getResultados()).filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
     const ranking = buildRankingMedia(todos);
     geralTop3Key = getGroups(ranking).map(g => g.students.map(r => r.aluno).sort().join(',')).join('|');
     const changes = detectChanges(ranking);

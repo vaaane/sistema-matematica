@@ -117,7 +117,8 @@ document.getElementById("topbar-title").textContent = `Olá, ${alunos[0]}${aluno
 document.getElementById("topbar-sub").textContent   = `Turma ${turma} · Bom trabalho hoje!`;
 document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
 
-const [todos, liberadas, conquistasAluno] = await Promise.all([getResultados(), getLiberadasParaTurma(turma), getConquistasByAluno(alunos[0])]);
+const [todosRaw, liberadas, conquistasAluno] = await Promise.all([getResultados(), getLiberadasParaTurma(turma), getConquistasByAluno(alunos[0])]);
+const todos = todosRaw.filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
 
 // ── Avaliação+ controle ───────────────────────────────────────
 const DURACAO_GLOBAL_AV  = 30 * 60 * 1000;

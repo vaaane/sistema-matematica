@@ -90,7 +90,7 @@ getAlunoPreferencia(turma, alunos[0], 'tema').then(t => {
 document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
 document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
 
-const todos = await getResultados();
+const todos = (await getResultados()).filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
 
 // ── Ranking por total ─────────────────────────────────────────
 function buildRankingMedia(lista) {
