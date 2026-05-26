@@ -86,6 +86,12 @@
     .enc-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;}
     .enc-box{background:var(--card);border-radius:var(--radius);padding:28px 24px;max-width:380px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.2);}
     #quiz-wrap,#summary-wrap{display:none;}
+    /* ── Celebração 100% nas 3 atividades ─────────────────── */
+    .rob-celebracao{position:relative;overflow:hidden;background:linear-gradient(135deg,#FFFBEB,#FEF3C7 40%,#FDE68A 60%,#FEF3C7);border:2px solid #F59E0B;border-radius:var(--radius);padding:24px 20px;margin-bottom:20px;text-align:center;box-shadow:0 4px 24px rgba(245,158,11,.25);}
+    .rob-celebracao-shine{position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.6) 50%,transparent 70%);animation:shine-slide 2.2s ease-in-out infinite;pointer-events:none;}
+    @keyframes shine-slide{0%{transform:translateX(-160%)}100%{transform:translateX(160%)}}
+    .confete{position:absolute;top:0;width:7px;height:9px;border-radius:2px;opacity:0;pointer-events:none;animation:confete-cair var(--dur,2s) var(--delay,0s) ease-in infinite;}
+    @keyframes confete-cair{0%{opacity:1;transform:translateY(-8px) rotate(0deg)}75%{opacity:.9}100%{opacity:0;transform:translateY(115px) rotate(560deg) scale(.4)}}
   </style>
 </head>
 <body>
@@ -321,7 +327,34 @@ function renderQuestoesDetalhe(tent) {
 
 // ── Renderiza lista de atividades ─────────────────────────────────────────
 function renderLista() {
-  listWrap.innerHTML = ATIVIDADES.map(a => {
+  // Celebração: 100% na melhor tentativa das atividades 1, 2 e 3
+  const zerou = [1, 2, 3].every(n =>
+    getTentativasPorAtiv(n).some(t => t.acertos > 0 && t.acertos === t.total)
+  );
+
+  let celebracaoHtml = '';
+  if (zerou) {
+    const CORES = ['#F59E0B','#EF4444','#22C55E','#3B82F6','#A855F7','#EC4899','#F97316','#14B8A6'];
+    const pecas = Array.from({ length: 20 }, (_, i) => {
+      const cor  = CORES[i % CORES.length];
+      const left = ((i / 20) * 98 + 1).toFixed(1);
+      const dur  = (1.5 + (i % 7) * 0.25).toFixed(2);
+      const del  = ((i * 0.17) % 2.4).toFixed(2);
+      return `<span class="confete" style="left:${left}%;background:${cor};--dur:${dur}s;--delay:${del}s"></span>`;
+    }).join('');
+    celebracaoHtml = `
+      <div class="rob-celebracao">
+        <div class="rob-celebracao-shine"></div>
+        ${pecas}
+        <div style="position:relative;z-index:1;">
+          <div style="font-size:52px;line-height:1;margin-bottom:8px;">🏆</div>
+          <div style="font-size:19px;font-weight:800;color:#92400E;margin-bottom:6px;">Parabéns, ${aluno}!</div>
+          <div style="font-size:14px;color:#B45309;line-height:1.6;">Você zerou todas as atividades de Robótica<br>com <strong>⭐ 100%</strong> de aproveitamento! Incrível!</div>
+        </div>
+      </div>`;
+  }
+
+  listWrap.innerHTML = celebracaoHtml + ATIVIDADES.map(a => {
     const tents = getTentativasPorAtiv(a.n).slice().reverse(); // mais recente primeiro
     const done = tents.length > 0;
     const melhor = done ? Math.max(...tents.map(t => t.acertos || 0)) : 0;
