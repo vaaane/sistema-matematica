@@ -519,7 +519,9 @@ document.querySelectorAll('.ativ-btn').forEach(b => {
 });
 
 // Confetti quando o aluno logado é 1º no ranking geral
-if (rankAll.length > 0 && rankAll[0].aluno === alunos[0]) {
+const meuIdxRank = rankAll.findIndex(r => r.aluno === alunos[0]);
+const euSouPrimeiro = meuIdxRank >= 0 && rankAll[meuIdxRank].total >= rankAll[0].total;
+if (euSouPrimeiro) {
   const colors = ['#F59E0B','#3B82F6','#EF4444','#22C55E','#8B5CF6','#EC4899','#F97316','#06B6D4'];
   const wrap = document.createElement('div');
   wrap.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden';
@@ -529,7 +531,10 @@ if (rankAll.length > 0 && rankAll[0].aluno === alunos[0]) {
     const left = Math.round(5 + (i / 19) * 90);
     const el = document.createElement('div');
     el.className = 'confete-rank';
-    el.style.cssText = `background:${colors[i % 8]};left:${left}%;--dur:${dur}s;--delay:${del}s`;
+    el.style.background = colors[i % 8];
+    el.style.left = left + '%';
+    el.style.setProperty('--dur', dur + 's');
+    el.style.setProperty('--delay', del + 's');
     wrap.appendChild(el);
   }
   document.body.appendChild(wrap);
