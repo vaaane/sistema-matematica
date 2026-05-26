@@ -117,6 +117,17 @@
         </div>
       </div>
 
+      <!-- Controle de acesso à Robótica -->
+      <div class="rob-section">
+        <div class="rob-section-hdr">
+          🔑 Acesso à Robótica
+          <button id="btn-liberar-todos" class="btn btn-blue" style="margin-left:auto;font-size:11px;padding:4px 14px;height:auto;">Liberar todos</button>
+        </div>
+        <div id="acesso-grid" style="padding:10px 18px 16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;">
+          <div style="color:var(--text-muted);font-size:13px;padding:8px 0;">Verificando…</div>
+        </div>
+      </div>
+
       <!-- Alunos -->
       <div class="rob-section">
         <div class="rob-section-hdr">
@@ -142,7 +153,7 @@
   </div>
 </div>
 <script type="module">
-import { listenRoboticaTentativas } from "/js/db.js";
+import { listenRoboticaTentativas, saveAlunoPreferencia, getAlunoPreferencia } from "/js/db.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 
 requireProfessor();
@@ -597,6 +608,43 @@ function atualizar(tentativas) {
   renderAlunos(tentativas);
 }
 
+// ── Controle de acesso ─────────────────────────────────────
+async function checkAcessos() {
+  const el = document.getElementById('acesso-grid');
+  const results = await Promise.allSettled(
+    ALUNOS_ROB.map(a => getAlunoPreferencia(a.turma, a.aluno, 'robotica').then(v => ({ ...a, acesso: !!v })))
+  );
+  const acessos = results.map((r, i) => r.status === 'fulfilled' ? r.value : { ...ALUNOS_ROB[i], acesso: false });
+  const comAcesso = acessos.filter(a => a.acesso).length;
+  el.innerHTML = acessos.map(a =>
+    `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;
+      background:${a.acesso ? '#DCFCE7' : '#FEF2F2'};border:1px solid ${a.acesso ? '#BBF7D0' : '#FECACA'};">
+      <span style="font-size:16px;">${a.acesso ? '✅' : '❌'}</span>
+      <div>
+        <div style="font-size:12px;font-weight:700;">${a.aluno}</div>
+        <div style="font-size:10px;color:var(--text-muted)">Turma ${a.turma}</div>
+      </div>
+    </div>`
+  ).join('') + `<div style="grid-column:1/-1;font-size:11px;color:var(--text-muted);margin-top:4px;">${comAcesso}/${acessos.length} alunos com acesso</div>`;
+}
+
+document.getElementById('btn-liberar-todos').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-liberar-todos');
+  btn.disabled = true;
+  btn.textContent = 'Liberando…';
+  try {
+    await Promise.all(ALUNOS_ROB.map(a => saveAlunoPreferencia(a.turma, a.aluno, 'robotica', true)));
+    btn.textContent = '✅ Liberado!';
+    await checkAcessos();
+  } catch(e) {
+    btn.textContent = 'Erro — tente novamente';
+    console.error(e);
+  } finally {
+    setTimeout(() => { btn.disabled = false; btn.textContent = 'Liberar todos'; }, 3000);
+  }
+});
+
+checkAcessos();
 listenRoboticaTentativas(atualizar);
 </script>
 </body>

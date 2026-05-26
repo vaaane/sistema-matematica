@@ -253,20 +253,35 @@ export async function getAlunoPreferencia(turma, nome, chave) {
 }
 
 // ── Robótica ─────────────────────────────────────────────────
-const _robSaveLocks = {};
+// _robSaves: boolean "em andamento" + timestamp do último save concluído por chave.
+// andamento impede reentrância real (await ativo); ultimoTs impede salvamentos
+// idênticos em menos de 10 segundos mesmo após o await resolver.
+const _robSaves = {};
 
 export async function saveRoboticaTentativa(turma, aluno, atividade, dados) {
   const key = `${turma}|${aluno}|${atividade}`;
-  const now = Date.now();
-  if (_robSaveLocks[key] && now - _robSaveLocks[key] < 5000) {
-    console.warn(`[Robótica] save ignorado — duplicata em ${now - _robSaveLocks[key]}ms: ${key}`);
+  const agora = Date.now();
+  const st = _robSaves[key] ?? { andamento: false, ultimoTs: 0 };
+
+  if (st.andamento) {
+    console.warn(`[Robótica] save bloqueado — await ainda em andamento: ${key}`);
     return;
   }
-  _robSaveLocks[key] = now;
-  // Usa push() só para gerar a chave, depois set() que aguarda ACK real do servidor
-  // (push(ref, data) resolve localmente e pode mascarar PERMISSION_DENIED)
-  const newRef = push(ref(db, 'robotica_tentativas'));
-  await set(newRef, { turma, aluno, atividade, ...dados, completadoEm: serverTimestamp() });
+  if (agora - st.ultimoTs < 10000) {
+    console.warn(`[Robótica] save bloqueado — cooldown ${agora - st.ultimoTs}ms (< 10s): ${key}`);
+    return;
+  }
+
+  _robSaves[key] = { andamento: true, ultimoTs: agora };
+  try {
+    // Usa push() para gerar chave, depois set() que aguarda ACK real do servidor
+    const newRef = push(ref(db, 'robotica_tentativas'));
+    await set(newRef, { turma, aluno, atividade, ...dados, completadoEm: serverTimestamp() });
+    _robSaves[key] = { andamento: false, ultimoTs: Date.now() };
+  } catch (e) {
+    _robSaves[key] = { andamento: false, ultimoTs: 0 }; // libera para nova tentativa
+    throw e;
+  }
 }
 
 export async function getRoboticaTentativasAluno(turma, aluno) {

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Limpeza de Duplicatas — Robótica</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">🧹 Limpeza — Robótica</div>
+        <div class="topbar-sub">Remove tentativas duplicadas do Firebase</div>
+      </div>
+    </div>
+    <div class="content">
+
+      <div class="card" style="max-width:700px">
+        <div class="card-title" style="margin-bottom:14px">O que esta ferramenta faz</div>
+        <p style="font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:16px">
+          Lê todas as tentativas em <code>robotica_tentativas</code> e remove duplicatas —
+          entradas com mesmo <strong>turma / aluno / atividade / acertos / total</strong>
+          e <strong>completadoEm</strong> no mesmo intervalo de 60&nbsp;segundos.<br>
+          Mantém a <em>primeira</em> ocorrência de cada grupo duplicado.
+        </p>
+
+        <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+          <button class="btn btn-blue" id="btn-analisar">🔍 Analisar duplicatas</button>
+          <button class="btn btn-ghost" id="btn-limpar" style="color:var(--red);border-color:#FECACA" disabled>🗑 Confirmar limpeza</button>
+        </div>
+
+        <div id="log" style="font-family:monospace;font-size:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;min-height:80px;max-height:500px;overflow-y:auto;white-space:pre-wrap;color:var(--text-muted)">
+Aguardando análise…
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>(()=>{const t=localStorage.getItem("tema");if(t==="escuro")document.documentElement.setAttribute("data-theme","dark");})()</script>
+<script type="module">
+import { requireProfessor, renderSidebarProfessor } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+requireProfessor("/index.html");
+renderSidebarProfessor("sidebar", "atividades");
+
+const logEl   = document.getElementById('log');
+const btnAn   = document.getElementById('btn-analisar');
+const btnLimp = document.getElementById('btn-limpar');
+
+function log(msg, cor) {
+  const linha = document.createElement('div');
+  if (cor) linha.style.color = cor;
+  linha.textContent = msg;
+  logEl.appendChild(linha);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function logClear() { logEl.innerHTML = ''; }
+
+// ── duplicatas a remover (preenchido na análise, usado na limpeza) ──
+let paraRemover = [];
+
+btnAn.addEventListener('click', async () => {
+  logClear();
+  btnAn.disabled = true;
+  btnLimp.disabled = true;
+  paraRemover = [];
+
+  log('Lendo robotica_tentativas…');
+  const snap = await get(ref(db, 'robotica_tentativas'));
+  if (!snap.exists()) { log('Nenhuma tentativa encontrada.'); btnAn.disabled = false; return; }
+
+  const todas = [];
+  snap.forEach(c => todas.push({ key: c.key, ...c.val() }));
+  log(`Total de registros: ${todas.length}`);
+
+  // Agrupa por turma|aluno|atividade, ordenado por completadoEm asc
+  const grupos = {};
+  for (const t of todas) {
+    const k = `${t.turma}|${t.aluno}|${t.atividade}`;
+    (grupos[k] ??= []).push(t);
+  }
+  for (const arr of Object.values(grupos)) {
+    arr.sort((a, b) => (a.completadoEm || 0) - (b.completadoEm || 0));
+  }
+
+  // Dentro de cada grupo, identifica duplicatas
+  let totalDup = 0;
+  for (const [k, tents] of Object.entries(grupos)) {
+    const vistas = new Map(); // dedupKey → key da entrada mantida
+    for (const t of tents) {
+      const minuto  = Math.floor((t.completadoEm || 0) / 60000);
+      const dk = `${t.acertos}|${t.total}|${minuto}`;
+      if (vistas.has(dk)) {
+        // duplicata — marcar para remoção
+        paraRemover.push(t);
+        log(`  DUP [${k}] key=${t.key}  acertos=${t.acertos}/${t.total}  ts=${t.completadoEm}  (mantendo ${vistas.get(dk)})`, '#DC2626');
+        totalDup++;
+      } else {
+        vistas.set(dk, t.key);
+      }
+    }
+  }
+
+  if (totalDup === 0) {
+    log('\n✅ Nenhuma duplicata encontrada. Base de dados está limpa.', '#15803D');
+  } else {
+    log(`\n⚠️ ${totalDup} duplicata(s) encontrada(s). Clique em "Confirmar limpeza" para remover.`, '#B45309');
+    btnLimp.disabled = false;
+  }
+  btnAn.disabled = false;
+});
+
+btnLimp.addEventListener('click', async () => {
+  if (!paraRemover.length) return;
+  btnLimp.disabled = true;
+  btnAn.disabled   = true;
+  log(`\nIniciando remoção de ${paraRemover.length} registro(s)…`);
+
+  let ok = 0, erros = 0;
+  for (const t of paraRemover) {
+    try {
+      await remove(ref(db, `robotica_tentativas/${t.key}`));
+      log(`  ✓ Removido: ${t.key}`, '#15803D');
+      ok++;
+    } catch (e) {
+      log(`  ✗ Erro ao remover ${t.key}: ${e.message}`, '#DC2626');
+      erros++;
+    }
+  }
+
+  log(`\n✅ Limpeza concluída: ${ok} removido(s), ${erros} erro(s).`, ok > 0 ? '#15803D' : '#DC2626');
+  paraRemover = [];
+  btnAn.disabled = false;
+});
+</script>
+</body>
+</html>

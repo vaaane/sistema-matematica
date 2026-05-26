@@ -201,6 +201,7 @@ let qIdx = 0;
 let respostas = {};
 let tentativasDB = [];
 let questoesMap = {}; // id → questão completa (todas as atividades)
+let _finalizando = false; // guard: impede chamadas concorrentes a finalizarAtividade
 
 const listWrap  = document.getElementById('list-wrap');
 const quizWrap  = document.getElementById('quiz-wrap');
@@ -386,6 +387,7 @@ window.toggleTentDetalhe = function(id, ativN, e) {
 
 // ── Iniciar atividade ─────────────────────────────────────────────────────
 window.iniciarAtividade = async (n) => {
+  _finalizando = false;
   atividadeAtual = n;
   qIdx = 0;
   respostas = {};
@@ -412,7 +414,9 @@ function renderQuestao() {
   document.getElementById('quiz-enunciado').innerHTML = badge + `<div class="quiz-q" style="white-space:pre-wrap">${q.enunciado}</div>`;
 
   document.getElementById('quiz-fb').style.display = 'none';
-  document.getElementById('btn-proxima').style.display = 'none';
+  const _btnP = document.getElementById('btn-proxima');
+  _btnP.style.display = 'none';
+  _btnP.disabled = false; // re-habilita para a próxima questão
 
   const div = document.getElementById('quiz-opcoes');
   if (q.tipo === 'multipla_escolha') {
@@ -497,9 +501,10 @@ window.responderNum = () => {
 };
 
 document.getElementById('btn-proxima').addEventListener('click', async () => {
+  document.getElementById('btn-proxima').disabled = true; // bloqueia duplo-clique imediatamente
   qIdx++;
   if (qIdx >= questoes.length) await finalizarAtividade(false);
-  else renderQuestao();
+  else renderQuestao(); // esconde e re-habilita o botão para a próxima questão
 });
 document.getElementById('btn-voltar').addEventListener('click', () => {
   quizWrap.style.display = 'none';
@@ -520,6 +525,11 @@ window.confirmarEncerrar = async function() {
 
 // ── Finalizar (normal ou parcial) ─────────────────────────────────────────
 async function finalizarAtividade(parcial = false) {
+  if (_finalizando) {
+    console.warn('[Robótica] finalizarAtividade ignorado — já em andamento ou concluído');
+    return;
+  }
+  _finalizando = true;
   const acertos = Object.values(respostas).filter(r => r.acertou).length;
   const erros   = Object.values(respostas).filter(r => !r.acertou).length;
   const respondidas = Object.keys(respostas).length;
