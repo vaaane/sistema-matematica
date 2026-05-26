@@ -15,8 +15,11 @@
     .rob-info h3{font-size:15px;font-weight:700;margin-bottom:2px;}
     .rob-info p{font-size:12px;color:var(--text-muted);}
     .rob-badge{font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;flex-shrink:0;}
-    .rob-badge.done{background:#DCFCE7;color:#16A34A;}
     .rob-badge.todo{background:var(--blue-pale);color:var(--blue-dark);}
+    .rob-badge.aprovado{background:#DCFCE7;color:#16A34A;}
+    .rob-badge.reprovado{background:#FEF2F2;color:#B91C1C;}
+    .rob-card.aprovado{border-color:#86EFAC;}
+    .rob-card.reprovado{border-color:#FECACA;}
     /* História de tentativas */
     .hist-wrap{border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);overflow:hidden;margin-bottom:14px;}
     .hist-toggle{display:flex;align-items:center;gap:8px;padding:10px 18px;font-size:12px;font-weight:600;color:var(--text-muted);cursor:pointer;background:var(--bg);transition:background .12s;user-select:none;}
@@ -125,6 +128,7 @@
           <div style="font-size:22px;font-weight:800;" id="summ-titulo"></div>
           <div style="font-size:14px;color:var(--text-muted);margin-top:4px;" id="summ-sub"></div>
         </div>
+        <div id="summ-veredicto" style="margin-bottom:18px;"></div>
         <div class="summ-grid">
           <div class="summ-stat">
             <div class="summ-icon" style="background:#DCFCE7;">✅</div>
@@ -193,7 +197,16 @@ const ATIVIDADES = [
   { n:1, label:"Atividade 1", desc:"Hardware básico e blocos fundamentais",  emoji:"🔌", bg:"#EBF6FD" },
   { n:2, label:"Atividade 2", desc:"Aprofundamento de hardware e operadores", emoji:"⚡", bg:"#F5F3FF" },
   { n:3, label:"Atividade 3", desc:"Operadores avançados, se/então e lógica", emoji:"🧠", bg:"#DCFCE7" },
+  { n:4, label:"Atividade 4", desc:"Revisão — 20 questões mais erradas",      emoji:"🎯", bg:"#FEF3C7" },
 ];
+
+const MINIMO_APROVACAO = 85;
+
+function statusPct(pct) {
+  if (pct === 100) return { cor: '#F59E0B', bg: '#FEF3C7', border: '#FDE68A', aprovado: true };
+  if (pct >= MINIMO_APROVACAO) return { cor: 'var(--green)', bg: '#DCFCE7', border: '#BBF7D0', aprovado: true };
+  return { cor: 'var(--red)', bg: '#FEF2F2', border: '#FECACA', aprovado: false };
+}
 
 let questoes = [];
 let atividadeAtual = null;
@@ -210,7 +223,7 @@ const summWrap  = document.getElementById('summary-wrap');
 // ── Carrega todas as questões para exibir histórico ───────────────────────
 async function carregarQuestoesMap() {
   const results = await Promise.allSettled(
-    [1,2,3].map(n => fetch(`/dados/robotica/atividade_${n}.json`).then(r => r.json()))
+    [1,2,3,4].map(n => fetch(`/dados/robotica/atividade_${n}.json`).then(r => r.json()))
   );
   for (const r of results) {
     if (r.status === 'fulfilled') for (const q of r.value.questoes) questoesMap[q.id] = q;
@@ -221,7 +234,7 @@ async function carregarLista() {
   try {
     tentativasDB = await getRoboticaTentativasAluno(turma, aluno);
     console.log(`[Robótica] carregarLista: ${tentativasDB.length} tentativas carregadas para ${aluno} (${turma})`);
-    for (const a of [1,2,3]) {
+    for (const a of [1,2,3,4]) {
       const n = getTentativasPorAtiv(a).length;
       if (n > 0) console.log(`  Atividade ${a}: ${n} tentativa(s)`);
     }
@@ -257,7 +270,7 @@ function renderQuestoesDetalhe(tent) {
   });
 
   // questoes da atividade específica
-  const qsAtiv = [1,2,3].reduce((acc, n) => {
+  const qsAtiv = [1,2,3,4].reduce((acc, n) => {
     if (n == ativN) {
       // Filtramos questoesMap pelas questões que têm ID no respostas OU pela atividade
       // Usamos uma abordagem: pegar todas as IDs respondidas e buscar no map
@@ -314,26 +327,30 @@ function renderLista() {
     const melhor = done ? Math.max(...tents.map(t => t.acertos || 0)) : 0;
     const total  = done ? (tents[0].total || 0) : 0;
     const melhorPct = total > 0 ? Math.round(melhor / total * 100) : 0;
+    const stMelhor = done ? statusPct(melhorPct) : null;
+    const aprovado = stMelhor?.aprovado ?? false;
 
     const histHtml = done ? `
       <div class="hist-wrap">
         <div class="hist-toggle" id="hist-toggle-${a.n}" onclick="toggleHistAtiv(${a.n}, event)">
           <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21L13 13.04V8h-1z"/></svg>
-          <span>${tents.length} tentativa${tents.length > 1 ? 's' : ''} · melhor: <strong style="color:var(--green)">${melhor}/${total} (${melhorPct}%)</strong></span>
+          <span>${tents.length} tentativa${tents.length > 1 ? 's' : ''} · melhor: <strong style="color:${stMelhor.cor}">${melhor}/${total} (${melhorPct === 100 ? '⭐ 100%' : melhorPct + '%'})</strong></span>
           <svg viewBox="0 0 24 24" style="margin-left:auto;"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
         </div>
         <div class="hist-body" id="hist-body-${a.n}">
           ${tents.map((t, i) => {
             const pct = t.total > 0 ? Math.round((t.acertos || 0) / t.total * 100) : 0;
-            const pctColor = pct >= 80 ? 'var(--green)' : pct >= 60 ? '#F59E0B' : 'var(--red)';
+            const st = statusPct(pct);
             const data = formatData(t.completadoEm);
-            const tentIdx = tents.length - i; // 1ª, 2ª, etc (mais recente = última)
+            const tentIdx = tents.length - i;
             const parcialBadge = t.parcial ? '<span style="font-size:10px;background:#FEF9C3;color:#854D0E;padding:1px 6px;border-radius:10px;margin-left:6px;">parcial</span>' : '';
+            const aprovBadge = `<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;background:${st.bg};color:${st.aprovado ? '#15803D' : '#B91C1C'};border:1px solid ${st.border}">${st.aprovado ? 'Aprovado' : 'Reprovado'}</span>`;
             return `<div class="tent-item">
               <div class="tent-hdr" id="tent-hdr-${t.id}" onclick="toggleTentDetalhe('${t.id}', ${a.n}, event)">
                 <span style="font-weight:700;color:var(--text-muted);font-size:11px;width:22px;flex-shrink:0;">${tentIdx}ª</span>
-                <span style="font-weight:800;font-size:13px;color:${pctColor}">${t.acertos || 0}/${t.total || 0}</span>
-                <span style="font-size:12px;color:var(--text-muted);">${pct}%</span>
+                <span style="font-weight:800;font-size:13px;color:${st.cor}">${t.acertos || 0}/${t.total || 0}</span>
+                <span style="font-size:12px;font-weight:700;color:${st.cor}">${pct === 100 ? '⭐ 100%' : pct + '%'}</span>
+                ${aprovBadge}
                 ${parcialBadge}
                 <span style="font-size:11px;color:var(--text-muted);margin-left:auto;">${data}</span>
                 <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
@@ -345,13 +362,13 @@ function renderLista() {
       </div>` : '';
 
     return `<div>
-      <div class="rob-card${done ? ' done' : ''}" onclick="iniciarAtividade(${a.n})" style="border-radius:${done ? 'var(--radius) var(--radius) 0 0' : 'var(--radius)'};">
+      <div class="rob-card${done ? (aprovado ? ' aprovado' : ' reprovado') : ''}" onclick="iniciarAtividade(${a.n})" style="border-radius:${done ? 'var(--radius) var(--radius) 0 0' : 'var(--radius)'};">
         <div class="rob-icon" style="background:${a.bg};">${a.emoji}</div>
         <div class="rob-info" style="min-width:0;">
           <h3>${a.label}</h3>
           <p>${a.desc}</p>
         </div>
-        <span class="rob-badge ${done ? 'done' : 'todo'}" style="align-self:flex-start;">${done ? 'Refazer' : 'Iniciar'}</span>
+        <span class="rob-badge ${!done ? 'todo' : aprovado ? 'aprovado' : 'reprovado'}" style="align-self:flex-start;">${!done ? 'Iniciar' : aprovado ? '✅ Aprovado' : '❌ Reprovado'}</span>
       </div>
       ${histHtml}
       ${!done ? '<div style="margin-bottom:14px;"></div>' : ''}
@@ -567,8 +584,9 @@ async function finalizarAtividade(parcial = false) {
 
   const totalQ = questoes.length;
   const pct = respondidas > 0 ? Math.round(acertos / totalQ * 100) : 0;
-  document.getElementById('summ-emoji').textContent = pct >= 80 ? '🎉' : pct >= 60 ? '👍' : '📚';
-  document.getElementById('summ-titulo').textContent = pct >= 80 ? 'Ótimo trabalho!' : pct >= 60 ? 'Bom esforço!' : 'Continue praticando!';
+  const stSumm = statusPct(pct);
+  document.getElementById('summ-emoji').textContent = pct === 100 ? '🏆' : stSumm.aprovado ? '🎉' : '📚';
+  document.getElementById('summ-titulo').textContent = pct === 100 ? 'Perfeito!' : stSumm.aprovado ? 'Aprovado!' : 'Continue praticando!';
   document.getElementById('summ-acertos').textContent = acertos;
   document.getElementById('summ-erros').textContent = erros;
 
@@ -578,8 +596,14 @@ async function finalizarAtividade(parcial = false) {
       `Atividade ${atividadeAtual} — Encerrado · ${respondidas}/${totalQ} respondidas · ${naoresp} pulada(s)`;
   } else {
     document.getElementById('summ-sub').textContent =
-      `Atividade ${atividadeAtual} — ${pct}% de aproveitamento`;
+      `Atividade ${atividadeAtual} — ${pct === 100 ? '⭐ 100%' : pct + '%'} de aproveitamento`;
   }
+
+  document.getElementById('summ-veredicto').innerHTML = `
+    <div style="text-align:center;padding:18px 20px;border-radius:var(--radius);background:${stSumm.bg};border:2px solid ${stSumm.border};">
+      <div style="font-size:28px;font-weight:800;color:${stSumm.aprovado ? '#15803D' : '#B91C1C'};line-height:1.2">${stSumm.aprovado ? '✅ Aprovado' : '❌ Reprovado'}</div>
+      <div style="font-size:13px;color:${stSumm.aprovado ? '#166534' : '#991B1B'};margin-top:6px;">${pct === 100 ? '⭐ 100%' : pct + '%'} obtido · mínimo ${MINIMO_APROVACAO}%</div>
+    </div>`;
 
   // Comparação com tentativa anterior
   if (ultimaAnt && ultimaAnt.respostas) {

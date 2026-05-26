@@ -1,0 +1,304 @@
+{
+  "atividade": 4,
+  "descricao": "Compilado das 20 questões mais erradas — Revisão geral",
+  "total": 20,
+  "niveis": {
+    "facil": 20
+  },
+  "questoes": [
+    {
+      "id": "SE02",
+      "numero": 1,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O bloco 🟡 se ◆ então / senão — o 'senão' executa quando:",
+      "resposta": "B",
+      "categoria": "Se/Então — Lógica Básica",
+      "opcoes": [
+        "A) A condição for verdadeira",
+        "B) A condição for falsa",
+        "C) O botão for pressionado",
+        "D) O sensor ler zero"
+      ]
+    },
+    {
+      "id": "CO01",
+      "numero": 2,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O buzzer deve apitar quando o objeto estiver PERTO (menos de 15 cm).\nse < (distancia) ___ (15) > então: ligar buzzer\nQual operador completa?",
+      "resposta": "C",
+      "categoria": "Completar com >, < e e",
+      "opcoes": [
+        "A) >",
+        "B) =",
+        "C) <",
+        "D) e"
+      ]
+    },
+    {
+      "id": "PW02",
+      "numero": 3,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O valor MÁXIMO no bloco 🔵 definir a saída PWM ◯ como ◯ é:",
+      "resposta": "D",
+      "categoria": "PWM",
+      "opcoes": [
+        "A) 1023",
+        "B) 100",
+        "C) 5",
+        "D) 255"
+      ]
+    },
+    {
+      "id": "SU01",
+      "numero": 4,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O bloco 🔵 ler pin trigonométrico do sensor de ultrassom ◯ pin de ◯ retorna:",
+      "resposta": "B",
+      "categoria": "Sensor Ultrassônico",
+      "opcoes": [
+        "A) ALTO ou BAIXO",
+        "B) Um valor de distância em cm",
+        "C) Um valor entre 0 e 1023",
+        "D) A temperatura do ambiente"
+      ]
+    },
+    {
+      "id": "OP01",
+      "numero": 5,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O bloco verde 🟢 ◯ > ◯ é verdadeiro quando:",
+      "resposta": "B",
+      "categoria": "Operadores de Comparação",
+      "opcoes": [
+        "A) Os dois valores são iguais",
+        "B) O primeiro é maior que o segundo",
+        "C) O primeiro é menor que o segundo",
+        "D) Qualquer um for zero"
+      ]
+    },
+    {
+      "id": "CO03",
+      "numero": 6,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O ventilador liga quando a temperatura for MAIOR QUE 35.\nse < (temperatura) ___ (35) > então: ligar ventilador",
+      "resposta": "C",
+      "categoria": "Completar com >, < e e",
+      "opcoes": [
+        "A) <",
+        "B) =",
+        "C) >",
+        "D) ou"
+      ]
+    },
+    {
+      "id": "FI02",
+      "numero": 7,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O fio PRETO geralmente representa:",
+      "resposta": "B",
+      "categoria": "Fios e Conexões",
+      "opcoes": [
+        "A) Positivo",
+        "B) Negativo / GND",
+        "C) Sinal analógico",
+        "D) 5V"
+      ]
+    },
+    {
+      "id": "BJ03",
+      "numero": 8,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Com o joystick centralizado (sem mexer), o bloco 🔵 ler pino analógico (A) ◯ retorna aproximadamente:",
+      "resposta": "D",
+      "categoria": "Botão e Joystick",
+      "opcoes": [
+        "A) 0",
+        "B) 1023",
+        "C) 255",
+        "D) 512"
+      ]
+    },
+    {
+      "id": "CO02",
+      "numero": 9,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O LED deve acender quando o objeto estiver LONGE (mais de 30 cm).\nse < (distancia) ___ (30) > então: acender LED\nQual operador completa?",
+      "resposta": "D",
+      "categoria": "Completar com >, < e e",
+      "opcoes": [
+        "A) <",
+        "B) =",
+        "C) e",
+        "D) >"
+      ]
+    },
+    {
+      "id": "SE01",
+      "numero": 10,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O bloco 🟡 se ◆ então executa o que está dentro quando:",
+      "resposta": "C",
+      "categoria": "Se/Então — Lógica Básica",
+      "opcoes": [
+        "A) Sempre",
+        "B) A condição for falsa",
+        "C) A condição for verdadeira",
+        "D) O Arduino reinicia"
+      ]
+    },
+    {
+      "id": "BJ01",
+      "numero": 11,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Quando um botão está pressionado e ligado ao GND, o bloco 🔵 ler pino digital ◯ retorna:",
+      "resposta": "C",
+      "categoria": "Botão e Joystick",
+      "opcoes": [
+        "A) ALTO",
+        "B) 512",
+        "C) BAIXO",
+        "D) 1023"
+      ]
+    },
+    {
+      "id": "SE03",
+      "numero": 12,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Programa:\n🟡 se < (distancia) < (10) > então\n   acender LED verde\n🟡 senão\n   acender LED vermelho\n\ndistancia = 7. Qual LED acende?",
+      "resposta": "D",
+      "categoria": "Se/Então — Lógica Básica",
+      "opcoes": [
+        "A) LED vermelho",
+        "B) Os dois",
+        "C) Nenhum",
+        "D) LED verde"
+      ]
+    },
+    {
+      "id": "SAN11",
+      "numero": 13,
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Mesmo programa. distancia = 25. Qual LED acende?",
+      "resposta": "C",
+      "categoria": "Se Aninhado — Erros e Análise",
+      "opcoes": [
+        "A) Vermelho",
+        "B) Amarelo",
+        "C) Azul",
+        "D) Verde"
+      ]
+    },
+    {
+      "id": "CO04",
+      "numero": 14,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O LED acende quando o joystick X for MAIOR QUE 800 (empurrado à direita).\nse < (joystick X) ___ (800) > então: acender LED direita",
+      "resposta": "B",
+      "categoria": "Completar com >, < e e",
+      "opcoes": [
+        "A) <",
+        "B) >",
+        "C) =",
+        "D) e"
+      ]
+    },
+    {
+      "id": "OP02",
+      "numero": 15,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O bloco 🟢 ◯ < ◯ é verdadeiro quando:",
+      "resposta": "C",
+      "categoria": "Operadores de Comparação",
+      "opcoes": [
+        "A) Os dois valores são iguais",
+        "B) O primeiro é maior",
+        "C) O primeiro é menor que o segundo",
+        "D) O resultado é zero"
+      ]
+    },
+    {
+      "id": "OP03",
+      "numero": 16,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O bloco 🟢 ◯ = ◯ é verdadeiro quando:",
+      "resposta": "A",
+      "categoria": "Operadores de Comparação",
+      "opcoes": [
+        "A) Os dois lados têm o mesmo valor",
+        "B) O primeiro é maior",
+        "C) O primeiro é menor",
+        "D) Um deles é zero"
+      ]
+    },
+    {
+      "id": "OP05",
+      "numero": 17,
+      "nivel": "facil",
+      "tipo": "verdadeiro_falso",
+      "enunciado": "🟢 3 > 7 é Verdadeiro.",
+      "resposta": "Falso",
+      "categoria": "Operadores de Comparação"
+    },
+    {
+      "id": "PW01",
+      "numero": 18,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O bloco 🔵 definir a saída PWM ◯ como ◯ serve para:",
+      "resposta": "B",
+      "categoria": "PWM",
+      "opcoes": [
+        "A) Ler a tensão de um pino",
+        "B) Controlar o brilho de um LED ou velocidade de motor",
+        "C) Definir se o pino é entrada ou saída",
+        "D) Ligar o sensor ultrassônico"
+      ]
+    },
+    {
+      "id": "SAN12",
+      "numero": 19,
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Mesmo programa. distancia = 50. Qual LED acende?",
+      "resposta": "D",
+      "categoria": "Se Aninhado — Erros e Análise",
+      "opcoes": [
+        "A) Vermelho",
+        "B) Amarelo",
+        "C) Azul",
+        "D) Verde"
+      ]
+    },
+    {
+      "id": "BJ02",
+      "numero": 20,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Quando o botão NÃO está pressionado (com pull-up ativo), o pino digital retorna:",
+      "resposta": "B",
+      "categoria": "Botão e Joystick",
+      "opcoes": [
+        "A) BAIXO",
+        "B) ALTO",
+        "C) 0",
+        "D) 512"
+      ]
+    }
+  ]
+}

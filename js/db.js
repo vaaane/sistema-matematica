@@ -253,40 +253,33 @@ export async function getAlunoPreferencia(turma, nome, chave) {
 }
 
 // ── Robótica ─────────────────────────────────────────────────
-// _robSaves: boolean "em andamento" + timestamp do último save concluído por chave.
-// andamento impede reentrância real (await ativo); ultimoTs impede salvamentos
-// idênticos em menos de 10 segundos mesmo após o await resolver.
-const _robSaves = {};
+let _salvando = false;               // bloqueia reentrância (await ativo)
+const _ultimoSaveTs = {};            // cooldown de 10s por turma|aluno|atividade
 
 export async function saveRoboticaTentativa(turma, aluno, atividade, dados) {
   const key = `${turma}|${aluno}|${atividade}`;
   const agora = Date.now();
-  const st = _robSaves[key] ?? { andamento: false, ultimoTs: 0 };
 
-  if (st.andamento) {
-    console.warn(`[Robótica] save bloqueado — await ainda em andamento: ${key}`);
+  if (_salvando) {
+    console.warn(`[Robótica] save bloqueado — outro save em andamento`);
     return;
   }
-  if (agora - st.ultimoTs < 10000) {
-    console.warn(`[Robótica] save bloqueado — cooldown ${agora - st.ultimoTs}ms (< 10s): ${key}`);
+  if (_ultimoSaveTs[key] && agora - _ultimoSaveTs[key] < 10000) {
+    console.warn(`[Robótica] save bloqueado — cooldown ${agora - _ultimoSaveTs[key]}ms (< 10s): ${key}`);
     return;
   }
 
-  _robSaves[key] = { andamento: true, ultimoTs: agora };
+  _salvando = true;
   try {
-    // Usa push() para gerar chave, depois set() que aguarda ACK real do servidor
     const newRef = push(ref(db, 'robotica_tentativas'));
     await set(newRef, { turma, aluno, atividade, ...dados, completadoEm: serverTimestamp() });
-    _robSaves[key] = { andamento: false, ultimoTs: Date.now() };
-  } catch (e) {
-    _robSaves[key] = { andamento: false, ultimoTs: 0 }; // libera para nova tentativa
-    throw e;
+    _ultimoSaveTs[key] = Date.now();
+  } finally {
+    _salvando = false;
   }
 }
 
 export async function getRoboticaTentativasAluno(turma, aluno) {
-  // Lê o nó inteiro e filtra client-side (igual ao listenRoboticaTentativas do professor).
-  // Evita dependência de índice Firebase que pode causar retorno vazio sem erro visível.
   const snap = await get(ref(db, 'robotica_tentativas'));
   if (!snap.exists()) return [];
   const result = [];
@@ -294,7 +287,6 @@ export async function getRoboticaTentativasAluno(turma, aluno) {
     const v = child.val();
     if (v.aluno === aluno && v.turma === turma) result.push({ id: child.key, ...v });
   });
-  console.log(`[Robótica] getRoboticaTentativasAluno(${turma}, ${aluno}): ${result.length} tentativas encontradas`);
   return result.sort((a, b) => (a.completadoEm || 0) - (b.completadoEm || 0));
 }
 
@@ -305,6 +297,40 @@ export function listenRoboticaTentativas(callback) {
     callback(result);
   });
 }
+
+// Utilitário chamável pelo console do browser: limparDuplicatasRobotica()
+window.limparDuplicatasRobotica = async function() {
+  console.log('[Limpeza] Lendo robotica_tentativas…');
+  const snap = await get(ref(db, 'robotica_tentativas'));
+  if (!snap.exists()) { console.log('[Limpeza] Nenhuma tentativa encontrada.'); return; }
+  const todas = [];
+  snap.forEach(c => todas.push({ key: c.key, ...c.val() }));
+  console.log(`[Limpeza] ${todas.length} registros lidos.`);
+  const grupos = {};
+  for (const t of todas) {
+    const k = `${t.turma}|${t.aluno}|${t.atividade}`;
+    (grupos[k] ??= []).push(t);
+  }
+  for (const arr of Object.values(grupos)) arr.sort((a, b) => (a.completadoEm || 0) - (b.completadoEm || 0));
+  const paraRemover = [];
+  for (const [k, tents] of Object.entries(grupos)) {
+    const vistas = new Map();
+    for (const t of tents) {
+      const dia = Math.floor((t.completadoEm || 0) / 86400000);
+      const dk = `${t.acertos}|${t.total}|${dia}`;
+      if (vistas.has(dk)) { paraRemover.push(t); console.log(`  DUP [${k}] ${t.key} ${t.acertos}/${t.total}`); }
+      else vistas.set(dk, t.key);
+    }
+  }
+  if (!paraRemover.length) { console.log('[Limpeza] Nenhuma duplicata.'); return; }
+  console.log(`[Limpeza] ${paraRemover.length} duplicatas. Removendo…`);
+  let ok = 0, erros = 0;
+  for (const t of paraRemover) {
+    try { await remove(ref(db, `robotica_tentativas/${t.key}`)); ok++; }
+    catch(e) { erros++; console.error(`  Erro ${t.key}:`, e); }
+  }
+  console.log(`[Limpeza] Concluído: ${ok} removidos, ${erros} erros.`);
+};
 
 // ── Limpeza ─────────────────────────────────────────────────
 export async function deletarRegistro(colecao, id) {

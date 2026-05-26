@@ -24,7 +24,7 @@
         <p style="font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:16px">
           Lê todas as tentativas em <code>robotica_tentativas</code> e remove duplicatas —
           entradas com mesmo <strong>turma / aluno / atividade / acertos / total</strong>
-          e <strong>completadoEm</strong> no mesmo intervalo de 60&nbsp;segundos.<br>
+          e <strong>completadoEm</strong> no mesmo dia (janela de 24&nbsp;h).<br>
           Mantém a <em>primeira</em> ocorrência de cada grupo duplicado.
         </p>
 
@@ -97,8 +97,8 @@ btnAn.addEventListener('click', async () => {
   for (const [k, tents] of Object.entries(grupos)) {
     const vistas = new Map(); // dedupKey → key da entrada mantida
     for (const t of tents) {
-      const minuto  = Math.floor((t.completadoEm || 0) / 60000);
-      const dk = `${t.acertos}|${t.total}|${minuto}`;
+      const dia = Math.floor((t.completadoEm || 0) / 86400000); // janela de 1 dia
+      const dk = `${t.acertos}|${t.total}|${dia}`;
       if (vistas.has(dk)) {
         // duplicata — marcar para remoção
         paraRemover.push(t);

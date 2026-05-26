@@ -1,67 +1,72 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Robótica — Sistema de Matemática</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Robótica — Professor</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
-    /* ── Shared section card ──────────────────────────────────────── */
-    .rob-section{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:18px;overflow:hidden;}
-    .rob-section-hdr{padding:14px 18px;font-size:13px;font-weight:700;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+    .live-dot{width:7px;height:7px;border-radius:50%;background:#22C55E;display:inline-block;animation:pulse 1.4s infinite;}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
-    /* ── Student cards ────────────────────────────────────────────── */
-    .st-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;}
-    .st-card-hdr{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;transition:background .12s;}
-    .st-card-hdr:hover{background:#FAFAFA;}
-    .st-name{font-size:14px;font-weight:700;}
-    .st-turma{font-size:11px;color:var(--text-muted);font-weight:400;margin-left:6px;}
-    .st-card-body{display:none;border-top:1px solid var(--border);}
-    .st-card-body.open{display:block;}
+    .pill{padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .15s;}
+    .pill.ativo{border-color:var(--blue);background:var(--blue);color:#fff;}
+    .pill.turma.ativo{border-color:#7C3AED;background:#7C3AED;color:#fff;}
 
-    /* ── Activity section ─────────────────────────────────────────── */
-    .ativ-section{padding:14px 18px;border-bottom:1px dashed var(--border);}
-    .ativ-section:last-child{border-bottom:none;}
-    .ativ-section-hdr{font-size:12px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+    .resumo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;}
+    @media(max-width:600px){.resumo-grid{grid-template-columns:1fr 1fr;}}
+    .resumo-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center;}
+    .resumo-val{font-size:28px;font-weight:800;line-height:1;margin-bottom:4px;}
+    .resumo-lbl{font-size:11px;color:var(--text-muted);font-weight:500;}
 
-    /* ── Metrics grid ─────────────────────────────────────────────── */
-    .ativ-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
-    @media(max-width:600px){.ativ-metrics{grid-template-columns:repeat(2,1fr);}}
-    .metric-box{background:var(--bg);border-radius:8px;padding:10px 6px;text-align:center;border:1px solid var(--border);}
-    .metric-val{font-size:18px;font-weight:800;line-height:1;}
-    .metric-lbl{font-size:10px;color:var(--text-muted);margin-top:3px;}
+    .analise-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
+    @media(max-width:700px){.analise-grid{grid-template-columns:1fr;}}
+    .analise-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+    .analise-hdr{padding:12px 16px;font-size:12px;font-weight:700;border-bottom:1px solid var(--border);}
+    .analise-body{padding:8px 16px 12px;}
+    .q-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+    .q-row:last-child{border-bottom:none;}
+    .q-rank{width:20px;height:20px;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+    .q-txt{flex:1;min-width:0;font-size:11px;font-weight:600;line-height:1.4;}
+    .q-sub{font-size:10px;color:var(--text-muted);font-weight:400;margin-top:1px;}
+    .q-cnt{font-size:13px;font-weight:800;flex-shrink:0;text-align:right;line-height:1.3;}
 
-    /* ── Evolution chart ──────────────────────────────────────────── */
-    .evolucao-bar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#F8FAFC;border-radius:8px;margin-bottom:10px;border:1px solid var(--border);}
-    .evolucao-label{font-size:10px;font-weight:700;color:var(--text-muted);flex-shrink:0;}
+    .cat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:18px;overflow:hidden;}
+    .pct-bar{flex:1;height:6px;background:var(--border);border-radius:6px;overflow:hidden;min-width:60px;}
+    .pct-fill{height:100%;border-radius:6px;}
 
-    /* ── Attempt rows ─────────────────────────────────────────────── */
-    .tent-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;background:var(--card);cursor:pointer;transition:background .15s;}
-    .tent-row:hover{background:#fafafa;}
-    .tent-row.melhor{border-color:#F59E0B;border-width:1.5px;background:linear-gradient(to right,#FFFDE7,var(--card));}
-    .tent-info-wrap{flex:1;}
-    .tent-date{font-size:11px;color:var(--text-muted);}
-    .tent-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
-    .tent-detail-body{padding:8px 12px 12px;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;background:#FAFAFA;margin-top:-6px;margin-bottom:6px;}
+    .aluno-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
+    .aluno-hdr{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background .12s;user-select:none;}
+    .aluno-hdr:hover{background:rgba(0,0,0,.025);}
+    [data-theme=dark] .aluno-hdr:hover{background:rgba(255,255,255,.04);}
+    .aluno-av{width:36px;height:36px;border-radius:50%;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;}
+    .aluno-nome{font-size:14px;font-weight:700;}
+    .aluno-turma{font-size:11px;color:var(--text-muted);margin-top:1px;}
+    .aluno-body{display:none;border-top:1px solid var(--border);}
+    .aluno-body.open{display:block;}
 
-    /* ── Top 5 ────────────────────────────────────────────────────── */
-    .top5-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
-    .top5-item:last-child{border-bottom:none;}
-    .top5-rank{width:24px;height:24px;border-radius:50%;background:var(--red);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
-    .top5-info{flex:1;min-width:0;}
-    .top5-enunciado{font-size:12px;font-weight:600;line-height:1.4;}
-    .top5-meta{font-size:11px;color:var(--text-muted);margin-top:2px;}
-    .top5-count{font-size:13px;font-weight:800;color:var(--red);flex-shrink:0;text-align:right;}
+    .ativ-bloco{padding:14px 16px;border-bottom:1px dashed var(--border);}
+    .ativ-bloco:last-child{border-bottom:none;}
+    .ativ-bloco-hdr{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+    .ativ-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
+    .ativ-stat{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 6px;text-align:center;}
+    .ativ-stat-val{font-size:16px;font-weight:800;line-height:1;}
+    .ativ-stat-lbl{font-size:10px;color:var(--text-muted);margin-top:2px;}
 
-    /* ── Misc ─────────────────────────────────────────────────────── */
-    .live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;animation:blink 1.4s infinite;}
-    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-    .pct-bar{flex:1;height:5px;background:var(--border);border-radius:5px;overflow:hidden;min-width:50px;}
-    .pct-fill{height:100%;border-radius:5px;transition:width .3s;}
-    .pill{padding:5px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .15s;}
-    .pill.on{border-color:var(--blue);background:var(--blue);color:#fff;}
-    @media(max-width:700px){.top5-grid{grid-template-columns:1fr!important;}}
+    .spark-wrap{display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:10px;}
+    .spark-lbl{font-size:10px;font-weight:700;color:var(--text-muted);flex-shrink:0;}
+
+    .tent-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:5px;cursor:pointer;transition:background .12s;}
+    .tent-item:hover{background:var(--bg);}
+    .tent-item.best{border-color:#F59E0B;background:linear-gradient(to right,rgba(245,158,11,.06),transparent);}
+    .tent-info{flex:1;min-width:0;}
+    .tent-data{font-size:11px;color:var(--text-muted);}
+    .tent-detail{padding:8px 10px 10px;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;background:var(--bg);margin-top:-5px;margin-bottom:5px;font-size:11px;}
+
+    .diff-blk{padding:5px 8px;border-radius:6px;border:1px solid;margin-bottom:3px;line-height:1.4;}
+    .diff-nota{font-size:10px;margin-top:2px;}
   </style>
 </head>
 <body>
@@ -71,524 +76,464 @@
     <div class="topbar">
       <div class="topbar-left">
         <div class="topbar-title">🤖 Robótica</div>
-        <div class="topbar-sub">Acompanhamento em tempo real <span class="live-dot"></span></div>
+        <div class="topbar-sub" id="sub-status">Carregando… <span class="live-dot" style="margin-left:4px"></span></div>
       </div>
-      <div class="topbar-right">
-        <div id="status-geral" style="font-size:12px;color:var(--text-muted);"></div>
+      <div class="topbar-right" style="display:flex;gap:6px;flex-wrap:wrap;" id="pills-ativ">
+        <button class="pill ativo" data-v="0">Todas</button>
+        <button class="pill" data-v="1">Atividade 1</button>
+        <button class="pill" data-v="2">Atividade 2</button>
+        <button class="pill" data-v="3">Atividade 3</button>
+        <button class="pill" data-v="4">Atividade 4 🎯</button>
       </div>
     </div>
     <div class="content">
 
-      <!-- Filter pills -->
-      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;" id="filter-pills">
-        <button class="pill on" data-ativ="0" onclick="setFiltroAtiv(0)">Todas</button>
-        <button class="pill" data-ativ="1" onclick="setFiltroAtiv(1)">Atividade 1</button>
-        <button class="pill" data-ativ="2" onclick="setFiltroAtiv(2)">Atividade 2</button>
-        <button class="pill" data-ativ="3" onclick="setFiltroAtiv(3)">Atividade 3</button>
+      <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;" id="pills-turma">
+        <button class="pill turma ativo" data-v="">Todas as turmas</button>
+        <button class="pill turma" data-v="8D">8D</button>
+        <button class="pill turma" data-v="8E">8E</button>
+        <button class="pill turma" data-v="8F">8F</button>
+        <button class="pill turma" data-v="8H">8H</button>
       </div>
 
-      <!-- Top 5 erradas + acertadas -->
-      <div class="top5-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;">
-        <div class="rob-section" style="margin-bottom:0">
-          <div class="rob-section-hdr">
-            <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--red)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-            Top 5 Mais Erradas
-          </div>
-          <div style="padding:8px 18px 14px;" id="top5-erradas">
-            <div style="color:var(--text-muted);font-size:13px;padding:12px 0;">Aguardando dados…</div>
-          </div>
+      <div class="resumo-grid" id="resumo">
+        <div class="resumo-box"><div class="resumo-val" id="rv-alunos">—</div><div class="resumo-lbl">Alunos com dados</div></div>
+        <div class="resumo-box"><div class="resumo-val" id="rv-tent">—</div><div class="resumo-lbl">Total de tentativas</div></div>
+        <div class="resumo-box"><div class="resumo-val" id="rv-media">—</div><div class="resumo-lbl">Média de acerto</div></div>
+      </div>
+
+      <div class="analise-grid">
+        <div class="analise-card">
+          <div class="analise-hdr" style="color:var(--red)">❌ Top 5 — Mais Erradas</div>
+          <div class="analise-body" id="top5-err"><div style="color:var(--text-muted);font-size:12px;padding:8px 0;">Aguardando…</div></div>
         </div>
-        <div class="rob-section" style="margin-bottom:0">
-          <div class="rob-section-hdr">
-            <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--green)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
-            Top 5 Mais Acertadas
-          </div>
-          <div style="padding:8px 18px 14px;" id="top5-acertadas">
-            <div style="color:var(--text-muted);font-size:13px;padding:12px 0;">Aguardando dados…</div>
-          </div>
+        <div class="analise-card">
+          <div class="analise-hdr" style="color:var(--green)">✅ Top 5 — Mais Acertadas</div>
+          <div class="analise-body" id="top5-ok"><div style="color:var(--text-muted);font-size:12px;padding:8px 0;">Aguardando…</div></div>
         </div>
       </div>
 
-      <!-- Taxa por categoria -->
-      <div class="rob-section">
-        <div class="rob-section-hdr">📊 Taxa de acerto por categoria</div>
-        <div id="categorias" style="padding:8px 18px 14px;">
-          <div style="color:var(--text-muted);font-size:13px;padding:12px 0;">Aguardando dados…</div>
-        </div>
+      <div class="cat-card">
+        <div class="analise-hdr">📊 Taxa de acerto por categoria</div>
+        <div style="padding:8px 16px 14px;" id="cat-body"><div style="color:var(--text-muted);font-size:12px;padding:8px 0;">Aguardando…</div></div>
       </div>
 
-      <!-- Controle de acesso à Robótica -->
-      <div class="rob-section">
-        <div class="rob-section-hdr">
-          🔑 Acesso à Robótica
-          <button id="btn-liberar-todos" class="btn btn-blue" style="margin-left:auto;font-size:11px;padding:4px 14px;height:auto;">Liberar todos</button>
-        </div>
-        <div id="acesso-grid" style="padding:10px 18px 16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;">
-          <div style="color:var(--text-muted);font-size:13px;padding:8px 0;">Verificando…</div>
-        </div>
-      </div>
-
-      <!-- Alunos -->
-      <div class="rob-section">
-        <div class="rob-section-hdr">
-          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--blue)"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-          Histórico por Aluno
-        </div>
-        <div id="students-list" style="padding:14px 18px;">
-          <div style="text-align:center;padding:40px;color:var(--text-muted);">Carregando…</div>
-        </div>
-      </div>
-
-      <!-- Registros no Firebase fora da lista ALUNOS_ROB (diagnóstico) -->
-      <div id="nao-listados-section" style="display:none;margin-top:16px;">
-        <div class="rob-section" style="border-color:#FCD34D;">
-          <div class="rob-section-hdr" style="background:#FEF9C3;color:#854D0E;">
-            ⚠️ Registros no Firebase fora da lista de alunos
-          </div>
-          <div id="nao-listados" style="padding:10px 18px;font-size:12px;color:#92400E;"></div>
-        </div>
+      <div id="alunos-wrap">
+        <div style="text-align:center;padding:48px;color:var(--text-muted);">Carregando…</div>
       </div>
 
     </div>
   </div>
 </div>
+<script>(()=>{const t=localStorage.getItem("tema");if(t==="escuro")document.documentElement.setAttribute("data-theme","dark");})()</script>
 <script type="module">
-import { listenRoboticaTentativas, saveAlunoPreferencia, getAlunoPreferencia } from "/js/db.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 
 requireProfessor();
 renderSidebarProfessor("sidebar", "robotica");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
-const ALUNOS_ROB = [
-  { aluno:"Murillo",          turma:"8H" },
-  { aluno:"Pedro Jorge",      turma:"8H" },
-  { aluno:"Emanuelle",        turma:"8H" },
-  { aluno:"Arthur",           turma:"8D" },
-  { aluno:"Sophie",           turma:"8E" },
-  { aluno:"Rafaela",          turma:"8E" },
-  { aluno:"Maria Elisangela", turma:"8F" },
-  { aluno:"Marlon",           turma:"8F" },
-];
-
-let questoesMap = {};
+// ── Questões ────────────────────────────────────────────────
+const questoesMap = {};
 async function carregarQuestoes() {
-  const results = await Promise.allSettled([1,2,3].map(n => fetch(`/dados/robotica/atividade_${n}.json`).then(r => r.json())));
-  for (const r of results) {
-    if (r.status === 'fulfilled') for (const q of r.value.questoes) questoesMap[q.id] = q;
+  const res = await Promise.allSettled(
+    [1, 2, 3, 4].map(n => fetch(`/dados/robotica/atividade_${n}.json`).then(r => r.json()))
+  );
+  for (const r of res) {
+    if (r.status === 'fulfilled' && r.value?.questoes) {
+      for (const q of r.value.questoes) questoesMap[q.id] = q;
+    }
   }
 }
 await carregarQuestoes();
 
-let filtroAtiv = 0;
+// ── Estado ──────────────────────────────────────────────────
 let todasTentativas = [];
+let filtroAtiv  = 0;
+let filtroTurma = '';
 
-window.setFiltroAtiv = function(n) {
-  filtroAtiv = n;
-  document.querySelectorAll('#filter-pills .pill').forEach(p =>
-    p.classList.toggle('on', parseInt(p.dataset.ativ) === n));
-  atualizar(todasTentativas);
-};
+// ── Filtros ─────────────────────────────────────────────────
+document.getElementById('pills-ativ').addEventListener('click', e => {
+  const btn = e.target.closest('[data-v]');
+  if (!btn) return;
+  filtroAtiv = +btn.dataset.v;
+  document.querySelectorAll('#pills-ativ .pill').forEach(p =>
+    p.classList.toggle('ativo', p.dataset.v === btn.dataset.v));
+  renderizar();
+});
 
-function filtrarTentativas(tentativas) {
-  // == intencional: Firebase pode retornar number ou string
-  return filtroAtiv ? tentativas.filter(t => t.atividade == filtroAtiv) : tentativas;
-}
+document.getElementById('pills-turma').addEventListener('click', e => {
+  const btn = e.target.closest('[data-v]');
+  if (!btn) return;
+  filtroTurma = btn.dataset.v;
+  document.querySelectorAll('#pills-turma .pill').forEach(p =>
+    p.classList.toggle('ativo', p.dataset.v === btn.dataset.v));
+  renderizar();
+});
 
-function formatData(ts) {
+// ── Helpers ─────────────────────────────────────────────────
+function fmtData(ts) {
   if (!ts) return '';
   const d = new Date(ts);
-  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+  return d.toLocaleDateString('pt-BR') + ' ' +
+         d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }
 
-function calcTop5Erradas(tentativas) {
-  const erros = {}, totais = {};
-  for (const t of tentativas) {
-    if (!t.respostas) continue;
-    for (const [qid, resp] of Object.entries(t.respostas)) {
-      totais[qid] = (totais[qid] || 0) + 1;
-      if (!resp.acertou) erros[qid] = (erros[qid] || 0) + 1;
-    }
-  }
-  return Object.entries(erros).sort((a, b) => b[1] - a[1]).slice(0, 5)
-    .map(([id, count]) => ({ id, count, total: totais[id] || count, q: questoesMap[id] }));
+const MINIMO_APROVACAO = 85;
+
+function pctCor(p) {
+  return p === 100 ? '#F59E0B' : p >= MINIMO_APROVACAO ? 'var(--green)' : 'var(--red)';
+}
+function pctBg(p) {
+  return p === 100 ? '#FEF3C7' : p >= MINIMO_APROVACAO ? '#DCFCE7' : '#FEF2F2';
+}
+function pctBorder(p) {
+  return p === 100 ? '#FDE68A' : p >= MINIMO_APROVACAO ? '#BBF7D0' : '#FECACA';
+}
+function pctLabel(p) {
+  return p === 100 ? '⭐ 100%' : p + '%';
+}
+function iniciais(nome) {
+  return nome.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
 }
 
-function calcTop5Acertadas(tentativas) {
-  const acertos = {}, totais = {};
+// ── Resumo ───────────────────────────────────────────────────
+function renderResumo(tentativas) {
+  const alunos = new Set(tentativas.map(t => `${t.turma}|${t.aluno}`));
+  const n = alunos.size;
+  const tot = tentativas.length;
+  const media = tot > 0
+    ? Math.round(tentativas.reduce((s, t) => s + (t.total > 0 ? t.acertos / t.total * 100 : 0), 0) / tot)
+    : null;
+
+  document.getElementById('rv-alunos').textContent = n;
+  document.getElementById('rv-alunos').style.color = 'var(--blue)';
+  document.getElementById('rv-tent').textContent = tot;
+  document.getElementById('rv-tent').style.color = 'var(--text)';
+  document.getElementById('rv-media').textContent = media !== null ? media + '%' : '—';
+  document.getElementById('rv-media').style.color = media !== null ? pctCor(media) : 'var(--text-muted)';
+
+  document.getElementById('sub-status').innerHTML =
+    `${n} aluno${n !== 1 ? 's' : ''} · ${tot} tentativa${tot !== 1 ? 's' : ''} <span class="live-dot" style="margin-left:4px"></span>`;
+}
+
+// ── Análise de questões ──────────────────────────────────────
+function calcQuestoes(tentativas) {
+  const erros = {}, acertos = {}, totais = {};
   for (const t of tentativas) {
     if (!t.respostas) continue;
-    for (const [qid, resp] of Object.entries(t.respostas)) {
+    for (const [qid, r] of Object.entries(t.respostas)) {
       totais[qid] = (totais[qid] || 0) + 1;
-      if (resp.acertou) acertos[qid] = (acertos[qid] || 0) + 1;
+      if (r.acertou) acertos[qid] = (acertos[qid] || 0) + 1;
+      else erros[qid] = (erros[qid] || 0) + 1;
     }
   }
-  return Object.keys(totais)
-    .map(id => ({ id, count: acertos[id] || 0, total: totais[id], q: questoesMap[id] }))
-    .sort((a, b) => (b.count / b.total) - (a.count / a.total) || b.count - a.count)
+  return { erros, acertos, totais };
+}
+
+function renderTop5Err(tentativas) {
+  const { erros, totais } = calcQuestoes(tentativas);
+  const el = document.getElementById('top5-err');
+  const top = Object.entries(erros).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  if (!top.length) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px 0;">Sem dados.</div>';
+    return;
+  }
+  el.innerHTML = top.map(([id, n], i) => {
+    const q = questoesMap[id];
+    const pct = totais[id] ? Math.round(n / totais[id] * 100) : 0;
+    return `<div class="q-row">
+      <div class="q-rank" style="background:#FEE2E2;color:var(--red)">${i + 1}</div>
+      <div style="flex:1;min-width:0">
+        <div class="q-txt">${q ? q.enunciado.replace(/\n/g, ' ') : id}</div>
+        <div class="q-sub">[${id}] ${q?.categoria || '—'}</div>
+      </div>
+      <div class="q-cnt" style="color:var(--red)">${n}✗<br>
+        <span style="font-size:10px;color:var(--text-muted);font-weight:400">${pct}%</span></div>
+    </div>`;
+  }).join('');
+}
+
+function renderTop5Ok(tentativas) {
+  const { acertos, totais } = calcQuestoes(tentativas);
+  const el = document.getElementById('top5-ok');
+  const top = Object.keys(totais)
+    .map(id => ({ id, ac: acertos[id] || 0, tot: totais[id] }))
+    .sort((a, b) => b.ac / b.tot - a.ac / a.tot || b.ac - a.ac)
     .slice(0, 5);
+  if (!top.length) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px 0;">Sem dados.</div>';
+    return;
+  }
+  el.innerHTML = top.map(({ id, ac, tot }, i) => {
+    const q = questoesMap[id];
+    const pct = Math.round(ac / tot * 100);
+    return `<div class="q-row">
+      <div class="q-rank" style="background:#DCFCE7;color:var(--green)">${i + 1}</div>
+      <div style="flex:1;min-width:0">
+        <div class="q-txt">${q ? q.enunciado.replace(/\n/g, ' ') : id}</div>
+        <div class="q-sub">[${id}] ${q?.categoria || '—'}</div>
+      </div>
+      <div class="q-cnt" style="color:var(--green)">${ac}✓<br>
+        <span style="font-size:10px;color:var(--text-muted);font-weight:400">${pct}%</span></div>
+    </div>`;
+  }).join('');
 }
 
-function calcCategoria(tentativas) {
+function renderCategorias(tentativas) {
   const cats = {};
   for (const t of tentativas) {
     if (!t.respostas) continue;
-    for (const [qid, resp] of Object.entries(t.respostas)) {
-      const q = questoesMap[qid];
-      const cat = q?.categoria || 'Outros';
-      if (!cats[cat]) cats[cat] = { acertos: 0, total: 0 };
-      cats[cat].total++;
-      if (resp.acertou) cats[cat].acertos++;
+    for (const [qid, r] of Object.entries(t.respostas)) {
+      const cat = questoesMap[qid]?.categoria || 'Outros';
+      if (!cats[cat]) cats[cat] = { ac: 0, tot: 0 };
+      cats[cat].tot++;
+      if (r.acertou) cats[cat].ac++;
     }
   }
-  return Object.entries(cats)
-    .map(([cat, s]) => ({ cat, ...s, pct: Math.round(s.acertos / s.total * 100) }))
-    .sort((a, b) => b.pct - a.pct);
-}
-
-function renderTop5Erradas(top5) {
-  const el = document.getElementById('top5-erradas');
-  if (!top5.length) {
-    el.innerHTML = `<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">Nenhum erro registrado.</div>`;
+  const el = document.getElementById('cat-body');
+  const sorted = Object.entries(cats).sort((a, b) => b[1].ac / b[1].tot - a[1].ac / a[1].tot);
+  if (!sorted.length) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px 0;">Sem dados.</div>';
     return;
   }
-  el.innerHTML = top5.map((item, i) => {
-    const q = item.q;
-    const enunciado = q ? q.enunciado.replace(/\n/g,' ') : item.id;
-    const cat = q ? q.categoria : '—';
-    const pct = item.total > 0 ? Math.round(item.count / item.total * 100) : 0;
-    return `<div class="top5-item">
-      <div class="top5-rank">${i + 1}</div>
-      <div class="top5-info">
-        <div class="top5-enunciado">${enunciado}</div>
-        <div class="top5-meta">[${item.id}] ${cat}</div>
-      </div>
-      <div class="top5-count">${item.count}✗<br><span style="font-size:11px;color:var(--text-muted);font-weight:400;">${pct}% errou</span></div>
-    </div>`;
-  }).join('');
-}
-
-function renderTop5Acertadas(top5) {
-  const el = document.getElementById('top5-acertadas');
-  if (!top5.length) {
-    el.innerHTML = `<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">Sem dados suficientes.</div>`;
-    return;
-  }
-  el.innerHTML = top5.map((item, i) => {
-    const q = item.q;
-    const enunciado = q ? q.enunciado.replace(/\n/g,' ') : item.id;
-    const cat = q ? q.categoria : '—';
-    const pct = item.total > 0 ? Math.round(item.count / item.total * 100) : 0;
-    return `<div class="top5-item">
-      <div class="top5-rank" style="background:var(--green);">${i + 1}</div>
-      <div class="top5-info">
-        <div class="top5-enunciado">${enunciado}</div>
-        <div class="top5-meta">[${item.id}] ${cat}</div>
-      </div>
-      <div class="top5-count" style="color:var(--green);">${item.count}✓<br><span style="font-size:11px;color:var(--text-muted);font-weight:400;">${pct}% acertou</span></div>
-    </div>`;
-  }).join('');
-}
-
-function renderCategoria(cats) {
-  const el = document.getElementById('categorias');
-  if (!cats.length) {
-    el.innerHTML = `<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">Sem dados suficientes.</div>`;
-    return;
-  }
-  el.innerHTML = cats.map(c => {
-    const pctColor = c.pct >= 80 ? 'var(--green)' : c.pct >= 60 ? '#F59E0B' : 'var(--red)';
+  el.innerHTML = sorted.map(([cat, s]) => {
+    const pct = Math.round(s.ac / s.tot * 100);
+    const col = pctCor(pct);
     return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);">
-      <div style="width:130px;font-size:12px;font-weight:600;flex-shrink:0;">${c.cat}</div>
-      <div class="pct-bar"><div class="pct-fill" style="width:${c.pct}%;background:${pctColor};"></div></div>
-      <div style="font-size:12px;font-weight:700;color:${pctColor};min-width:38px;text-align:right;">${c.pct}%</div>
-      <div style="font-size:11px;color:var(--text-muted);min-width:55px;">${c.acertos}/${c.total}</div>
+      <div style="width:140px;font-size:12px;font-weight:600;flex-shrink:0;">${cat}</div>
+      <div class="pct-bar"><div class="pct-fill" style="width:${pct}%;background:${col}"></div></div>
+      <div style="font-size:12px;font-weight:700;color:${col};min-width:38px;text-align:right;">${pct}%</div>
+      <div style="font-size:11px;color:var(--text-muted);min-width:60px;">${s.ac}/${s.tot}</div>
     </div>`;
   }).join('');
 }
 
-function compararTentativas(ant, nova, questoes) {
-  const melhorou = [], piorou = [], aindarErrado = [];
-  for (const q of questoes) {
-    const a = ant.respostas?.[q.id];
-    const n = nova.respostas?.[q.id];
-    if (!a || !n) continue;
-    if (!a.acertou && n.acertou)    melhorou.push(q);
-    else if (a.acertou && !n.acertou) piorou.push(q);
-    else if (!a.acertou && !n.acertou) aindarErrado.push(q);
-  }
-  return { melhorou, piorou, aindarErrado };
-}
-
-function renderEvolucaoSVG(tents) {
-  const MAX = 10;
-  const slice = tents.length > MAX ? tents.slice(-MAX) : tents;
-  const pts = slice.map(t => t.acertos || 0);
+// ── Sparkline ─────────────────────────────────────────────────
+function sparkline(tents) {
+  const pts = tents.map(t => t.total > 0 ? Math.round(t.acertos / t.total * 100) : 0);
   if (pts.length < 2) return '';
   const first = pts[0], last = pts[pts.length - 1];
-  const tc = last > first ? '#16A34A' : last < first ? '#DC2626' : '#6B7280';
-  const ti = last > first ? '↑' : last < first ? '↓' : '→';
-  const td = last > first ? 'Melhora' : last < first ? 'Regrediu' : 'Estável';
-  const W = 240, H = 48, mL = 8, mR = 8, mT = 10, mB = 6;
-  const iW = W - mL - mR, iH = H - mT - mB;
+  const cor = last > first ? '#16A34A' : last < first ? '#DC2626' : '#6B7280';
+  const seta = last > first ? '↑' : last < first ? '↓' : '→';
+  const W = 200, H = 44, pad = 6;
+  const iW = W - pad * 2, iH = H - pad * 2;
   const maxV = Math.max(...pts, 1);
   const n = pts.length;
-  const xP = i => mL + (n > 1 ? (i / (n - 1)) * iW : iW / 2);
-  const yP = v => mT + iH - Math.min((v / maxV) * iH, iH);
-  const label = tents.length > MAX ? `Últ. ${MAX} de ${tents.length}` : `${tents.length} tentativas`;
-  let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:240px;height:${H}px;flex-shrink:0">`;
-  svg += `<polyline points="${pts.map((v, i) => `${xP(i)},${yP(v)}`).join(' ')}" fill="none" stroke="${tc}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const xP = i => pad + (n > 1 ? i / (n - 1) * iW : iW / 2);
+  const yP = v => pad + iH - Math.min(v / maxV * iH, iH);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:200px;height:${H}px;flex-shrink:0">`;
+  svg += `<polyline points="${pts.map((v, i) => `${xP(i)},${yP(v)}`).join(' ')}" fill="none" stroke="${cor}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`;
   pts.forEach((v, i) => {
-    svg += `<circle cx="${xP(i)}" cy="${yP(v)}" r="4" fill="${tc}" stroke="white" stroke-width="1.5"/>`;
-    svg += `<text x="${xP(i)}" y="${yP(v)-7}" text-anchor="middle" font-size="8" fill="${tc}" font-weight="700">${v}</text>`;
+    svg += `<circle cx="${xP(i)}" cy="${yP(v)}" r="3.5" fill="${cor}" stroke="white" stroke-width="1.5"/>`;
+    svg += `<text x="${xP(i)}" y="${yP(v) - 6}" text-anchor="middle" font-size="8" fill="${cor}" font-weight="700">${v}%</text>`;
   });
   svg += '</svg>';
-  return `<div class="evolucao-bar">
-    <span class="evolucao-label">${label}</span>
+  return `<div class="spark-wrap">
+    <span class="spark-lbl">${tents.length} tent.</span>
     ${svg}
-    <div style="text-align:center;flex-shrink:0;min-width:32px">
-      <div style="font-size:20px;font-weight:800;color:${tc};line-height:1">${ti}</div>
-      <div style="font-size:9px;color:var(--text-muted)">${td}</div>
+    <div style="flex-shrink:0;text-align:center;min-width:28px">
+      <div style="font-size:20px;font-weight:800;color:${cor};line-height:1">${seta}</div>
+      <div style="font-size:9px;color:var(--text-muted)">${last}%</div>
     </div>
   </div>`;
 }
 
-function renderTentativas(tents, atividadeN) {
-  const qids = tents.length > 0 && tents[0].respostas ? Object.keys(tents[0].respostas) : [];
-  const qList = qids.map(id => questoesMap[id]).filter(Boolean);
-  const bestAcertos = Math.max(...tents.map(t => t.acertos || 0));
+// ── Detalhe da tentativa ─────────────────────────────────────
+function detalheHTML(t, prev) {
+  if (!t.respostas) return '<div style="color:var(--text-muted)">Detalhes não disponíveis.</div>';
+  const entries = Object.entries(t.respostas);
 
-  return tents.map((t, i) => {
-    const pct = t.total > 0 ? Math.round(t.acertos / t.total * 100) : 0;
-    const pctColor = pct >= 80 ? 'var(--green)' : pct >= 60 ? '#F59E0B' : 'var(--red)';
-    const isBest = t.acertos === bestAcertos;
-    const prev = i > 0 ? tents[i - 1] : null;
-    const diff = prev !== null ? t.acertos - prev.acertos : null;
-
-    const diffBadge = diff !== null
-      ? `<span class="badge" style="background:${diff > 0 ? '#DCFCE7' : diff < 0 ? '#FEE2E2' : '#F3F4F6'};color:${diff > 0 ? '#15803D' : diff < 0 ? '#B91C1C' : '#6B7280'};border-color:${diff > 0 ? '#BBF7D0' : diff < 0 ? '#FECACA' : '#E5E7EB'}">${diff > 0 ? '+' + diff : diff === 0 ? '=' : diff}</span>`
-      : '';
-
-    let detailHtml = '';
-    if (prev && prev.respostas) {
-      const { melhorou, piorou, aindarErrado } = compararTentativas(prev, t, qList);
-      if (melhorou.length || piorou.length || aindarErrado.length) {
-        detailHtml += `<div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px">Comparação com tentativa ${i}ª:</div>`;
-        if (melhorou.length) {
-          detailHtml += `<div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:4px">✓ Agora acerta (${melhorou.length}):</div>`;
-          detailHtml += melhorou.map(q => {
-            const rdada = t.respostas?.[q.id]?.resposta_dada ?? '—';
-            return `<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:7px;border:1px solid #BBF7D0;background:#DCFCE7;margin-bottom:4px;">
-              <span style="flex-shrink:0">✅</span>
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:11px;font-weight:600;color:#166534">${q.enunciado.replace(/\n/g,' ')}</div>
-                <div style="font-size:10px;color:#374151;margin-top:2px">Respondeu: <strong style="color:#15803D">${rdada}</strong> · Correta: ${q.resposta}</div>
-              </div>
-            </div>`;
-          }).join('');
-        }
-        if (piorou.length) {
-          detailHtml += `<div style="font-size:11px;font-weight:700;color:var(--red);margin-top:6px;margin-bottom:4px">✗ Passou a errar (${piorou.length}):</div>`;
-          detailHtml += piorou.map(q => {
-            const rdada = t.respostas?.[q.id]?.resposta_dada ?? '—';
-            return `<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:7px;border:1px solid #FECACA;background:#FEE2E2;margin-bottom:4px;">
-              <span style="flex-shrink:0">❌</span>
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:11px;font-weight:600;color:#991B1B">${q.enunciado.replace(/\n/g,' ')}</div>
-                <div style="font-size:10px;color:#374151;margin-top:2px">Respondeu: <strong style="color:#DC2626">${rdada}</strong> · Correta: ${q.resposta}</div>
-              </div>
-            </div>`;
-          }).join('');
-        }
-        if (aindarErrado.length) {
-          detailHtml += `<div style="font-size:11px;font-weight:700;color:#D97706;margin-top:6px;margin-bottom:4px">Ainda erra (${aindarErrado.length}):</div>`;
-          detailHtml += aindarErrado.map(q => {
-            const rdada = t.respostas?.[q.id]?.resposta_dada ?? '—';
-            return `<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:7px;border:1px solid #FED7AA;background:#FFF7ED;margin-bottom:4px;">
-              <span style="flex-shrink:0">❌</span>
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:11px;color:#92400E">${q.enunciado.replace(/\n/g,' ')}</div>
-                <div style="font-size:10px;color:#374151;margin-top:2px">Respondeu: <strong style="color:#D97706">${rdada}</strong> · Correta: ${q.resposta ?? '—'}</div>
-              </div>
-            </div>`;
-          }).join('');
-        }
-      } else {
-        detailHtml = '<span style="font-size:11px;color:var(--text-muted)">Sem diferenças em relação à tentativa anterior.</span>';
-      }
-    } else if (!prev && t.respostas) {
-      const allEntries = Object.entries(t.respostas);
-      const oks  = allEntries.filter(([,v]) => v.acertou);
-      const errs = allEntries.filter(([,v]) => !v.acertou);
-      if (oks.length) {
-        detailHtml += `<div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:4px">Acertou (${oks.length}):</div>`;
-        detailHtml += oks.map(([id]) => {
-          const q = questoesMap[id];
-          return `<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:7px;border:1px solid #BBF7D0;background:#DCFCE7;margin-bottom:4px;">
-            <span style="flex-shrink:0">✅</span>
-            <div style="flex:1;min-width:0;font-size:11px;color:#166534">${q ? q.enunciado.replace(/\n/g,' ') : id}</div>
-          </div>`;
-        }).join('');
-      }
-      if (errs.length) {
-        detailHtml += `<div style="font-size:11px;font-weight:700;color:var(--red);margin-top:${oks.length?'6px':'0'};margin-bottom:4px">Errou (${errs.length}):</div>`;
-        detailHtml += errs.map(([id, resp]) => {
-          const q = questoesMap[id];
-          return `<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:7px;border:1px solid #FECACA;background:#FEF2F2;margin-bottom:4px;">
-            <span style="flex-shrink:0">❌</span>
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:11px;color:#991B1B">${q ? q.enunciado.replace(/\n/g,' ') : id}</div>
-              <div style="font-size:10px;color:#374151;margin-top:2px">Respondeu: <strong style="color:#DC2626">${resp.resposta_dada ?? '—'}</strong> · Correta: ${q?.resposta ?? '—'}</div>
-            </div>
-          </div>`;
-        }).join('');
-      }
-    } else {
-      detailHtml = '<span style="font-size:11px;color:var(--text-muted)">Detalhes não disponíveis.</span>';
+  if (!prev?.respostas) {
+    const oks  = entries.filter(([, r]) => r.acertou);
+    const errs = entries.filter(([, r]) => !r.acertou);
+    let html = '';
+    if (errs.length) {
+      html += `<div style="font-size:10px;font-weight:700;color:var(--red);margin-bottom:3px">Errou (${errs.length})</div>`;
+      html += errs.map(([id, r]) => {
+        const q = questoesMap[id];
+        return `<div class="diff-blk" style="border-color:#FECACA;background:#FEF2F2;color:#991B1B">
+          ${q ? q.enunciado.replace(/\n/g, ' ') : id}
+          <div class="diff-nota" style="color:#B91C1C">Respondeu: <b>${r.resposta_dada ?? '—'}</b> · Certa: ${q?.resposta ?? '—'}</div>
+        </div>`;
+      }).join('');
     }
+    if (oks.length) {
+      html += `<div style="font-size:10px;font-weight:700;color:var(--green);margin:${errs.length ? '8px' : '0'} 0 3px">Acertou (${oks.length})</div>`;
+      html += oks.map(([id]) => {
+        const q = questoesMap[id];
+        return `<div class="diff-blk" style="border-color:#BBF7D0;background:#DCFCE7;color:#166534">
+          ${q ? q.enunciado.replace(/\n/g, ' ') : id}
+        </div>`;
+      }).join('');
+    }
+    return html || '<div style="color:var(--text-muted)">Sem detalhes.</div>';
+  }
 
-    const uid = `${t.turma}_${t.aluno}_${atividadeN}_${i}`.replace(/[^a-zA-Z0-9]/g,'_');
-    return `<div>
-      <div class="tent-row${isBest ? ' melhor' : ''}" onclick="toggleDetail('${uid}')">
-        <div class="tent-info-wrap">
-          <div class="tent-date">${i + 1}ª tentativa${formatData(t.completadoEm) ? ' · ' + formatData(t.completadoEm) : ''}</div>
-          <div class="tent-badges">
-            <span class="badge badge-gold">⭐ ${t.acertos}/${t.total}</span>
-            <span class="badge" style="background:${pct >= 80 ? '#DCFCE7' : pct >= 60 ? '#FFF7ED' : '#FEF2F2'};color:${pctColor};border-color:${pct >= 80 ? '#BBF7D0' : pct >= 60 ? '#FED7AA' : '#FECACA'}">📊 ${pct}%</span>
-            ${diffBadge}
-            ${isBest ? `<span class="badge badge-gold">🏆 Melhor</span>` : ''}
-          </div>
-        </div>
-        <svg viewBox="0 0 24 24" id="arr-${uid}" style="width:14px;height:14px;fill:var(--text-muted);flex-shrink:0;transition:transform .2s"><path d="M7 10l5 5 5-5z"/></svg>
-      </div>
-      <div class="tent-detail-body" id="det-${uid}" style="display:none">
-        ${detailHtml}
-      </div>
-    </div>`;
-  }).join('');
+  // Comparação com tentativa anterior
+  const melhorou = [], piorou = [], aindaErrado = [];
+  for (const [id, r] of entries) {
+    const p = prev.respostas[id];
+    if (!p) continue;
+    if (!p.acertou && r.acertou) melhorou.push({ id, r });
+    else if (p.acertou && !r.acertou) piorou.push({ id, r });
+    else if (!p.acertou && !r.acertou) aindaErrado.push({ id, r });
+  }
+
+  let html = '';
+  if (melhorou.length) {
+    html += `<div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:3px">✓ Passou a acertar (${melhorou.length})</div>`;
+    html += melhorou.map(({ id }) => {
+      const q = questoesMap[id];
+      return `<div class="diff-blk" style="border-color:#BBF7D0;background:#DCFCE7;color:#166534">✅ ${q ? q.enunciado.replace(/\n/g, ' ') : id}</div>`;
+    }).join('');
+  }
+  if (piorou.length) {
+    html += `<div style="font-size:10px;font-weight:700;color:var(--red);margin:${melhorou.length ? '8px' : '0'} 0 3px">✗ Passou a errar (${piorou.length})</div>`;
+    html += piorou.map(({ id, r }) => {
+      const q = questoesMap[id];
+      return `<div class="diff-blk" style="border-color:#FECACA;background:#FEF2F2;color:#991B1B">
+        ❌ ${q ? q.enunciado.replace(/\n/g, ' ') : id}
+        <div class="diff-nota" style="color:#B91C1C">Respondeu: <b>${r.resposta_dada ?? '—'}</b> · Certa: ${q?.resposta ?? '—'}</div>
+      </div>`;
+    }).join('');
+  }
+  if (aindaErrado.length) {
+    html += `<div style="font-size:10px;font-weight:700;color:#D97706;margin:${(melhorou.length || piorou.length) ? '8px' : '0'} 0 3px">Ainda erra (${aindaErrado.length})</div>`;
+    html += aindaErrado.map(({ id, r }) => {
+      const q = questoesMap[id];
+      return `<div class="diff-blk" style="border-color:#FED7AA;background:#FFF7ED;color:#92400E">
+        ⚠ ${q ? q.enunciado.replace(/\n/g, ' ') : id}
+        <div class="diff-nota" style="color:#D97706">Respondeu: <b>${r.resposta_dada ?? '—'}</b> · Certa: ${q?.resposta ?? '—'}</div>
+      </div>`;
+    }).join('');
+  }
+  if (!html) return '<div style="color:var(--text-muted);font-size:11px">Sem diferenças em relação à tentativa anterior.</div>';
+  return html;
 }
 
-window.toggleDetail = (uid) => {
-  const det = document.getElementById(`det-${uid}`);
-  const arr = document.getElementById(`arr-${uid}`);
-  if (!det) return;
-  const open = det.style.display !== 'none';
-  det.style.display = open ? 'none' : 'block';
-  if (arr) arr.style.transform = open ? '' : 'rotate(180deg)';
-};
+// ── Alunos ───────────────────────────────────────────────────
+const COR_TURMA = { '8D': '#7C3AED', '8E': '#0EA5E9', '8F': '#0D9488', '8H': '#D97706' };
 
 function renderAlunos(tentativas) {
+  const wrap = document.getElementById('alunos-wrap');
+
   const porAluno = {};
   for (const t of tentativas) {
     const k = `${t.turma}|${t.aluno}`;
-    if (!porAluno[k]) porAluno[k] = {};
-    const an = t.atividade;
-    if (!porAluno[k][an]) porAluno[k][an] = [];
-    porAluno[k][an].push(t);
+    if (!porAluno[k]) porAluno[k] = { turma: t.turma, aluno: t.aluno, ativs: {} };
+    const an = +t.atividade;
+    if (!porAluno[k].ativs[an]) porAluno[k].ativs[an] = [];
+    porAluno[k].ativs[an].push(t);
   }
-  for (const k of Object.keys(porAluno)) {
-    for (const an of Object.keys(porAluno[k])) {
-      porAluno[k][an].sort((a, b) => (a.completadoEm || 0) - (b.completadoEm || 0));
+
+  for (const al of Object.values(porAluno)) {
+    for (const arr of Object.values(al.ativs)) {
+      arr.sort((a, b) => (a.completadoEm || 0) - (b.completadoEm || 0));
     }
   }
 
-  const comResposta = ALUNOS_ROB.filter(a => porAluno[`${a.turma}|${a.aluno}`]).length;
-  document.getElementById('status-geral').textContent = `${comResposta}/${ALUNOS_ROB.length} com tentativas`;
+  const alunos = Object.values(porAluno)
+    .sort((a, b) => a.turma.localeCompare(b.turma) || a.aluno.localeCompare(b.aluno));
 
-  const keysListados = new Set(ALUNOS_ROB.map(a => `${a.turma}|${a.aluno}`));
-  const naoListados = Object.keys(porAluno).filter(k => !keysListados.has(k));
-  const secNL = document.getElementById('nao-listados-section');
-  if (naoListados.length) {
-    secNL.style.display = 'block';
-    document.getElementById('nao-listados').innerHTML =
-      `<p style="margin:0 0 8px;font-weight:700;">⚠️ ${naoListados.length} aluno(s) salvaram dados mas não constam em ALUNOS_ROB:</p>` +
-      naoListados.map(k => {
-        const [turmaK, alunoK] = k.split('|');
-        const total = Object.values(porAluno[k]).flat().length;
-        return `<div style="padding:4px 0;border-bottom:1px dashed #FCD34D;">
-          <strong>${alunoK}</strong> — Turma: <strong>${turmaK}</strong>
-          — ${total} tentativa(s)
-          <span style="font-size:11px;color:#B45309;margin-left:6px;">(nome/turma não bate com a lista)</span>
-        </div>`;
-      }).join('');
-  } else {
-    secNL.style.display = 'none';
+  if (!alunos.length) {
+    wrap.innerHTML = '<div style="text-align:center;padding:48px;color:var(--text-muted);">Nenhum dado para este filtro.</div>';
+    return;
   }
 
   const ativsMostrar = filtroAtiv ? [filtroAtiv] : [1, 2, 3];
 
-  const cards = ALUNOS_ROB.map((a, si) => {
-    const k = `${a.turma}|${a.aluno}`;
-    const dados = porAluno[k] || {};
+  wrap.innerHTML = alunos.map((al, si) => {
+    const cor = COR_TURMA[al.turma] || 'var(--blue)';
 
-    // Overall taxa across activities shown
-    let totalAc = 0, totalTot = 0;
-    for (const n of ativsMostrar) {
-      const tents = dados[n] || [];
-      if (tents.length) {
-        const best = tents.reduce((m, t) => (t.acertos || 0) > (m.acertos || 0) ? t : m, tents[0]);
-        totalAc  += best.acertos || 0;
-        totalTot += best.total  || 0;
-      }
-    }
-    const taxaGeral = totalTot > 0 ? Math.round(totalAc / totalTot * 100) : null;
-    const taxaColor = taxaGeral !== null ? (taxaGeral >= 80 ? 'var(--green)' : taxaGeral >= 60 ? '#D97706' : 'var(--red)') : 'var(--text-muted)';
+    const miniBadges = ativsMostrar.map(n => {
+      const tents = al.ativs[n];
+      if (!tents?.length)
+        return `<span style="font-size:10px;color:var(--text-muted);border:1px dashed var(--border);padding:2px 7px;border-radius:12px;">At.${n} —</span>`;
+      const best = Math.max(...tents.map(t => t.total > 0 ? Math.round(t.acertos / t.total * 100) : 0));
+      return `<span style="font-size:10px;font-weight:600;color:${pctCor(best)};border:1px solid ${pctBorder(best)};background:${pctBg(best)};padding:2px 7px;border-radius:12px;">At.${n} ${pctLabel(best)}</span>`;
+    }).join('');
 
-    // Activity sections
     const ativSections = ativsMostrar.map(n => {
-      const tents = dados[n] || [];
+      const tents = al.ativs[n] || [];
       if (!tents.length) {
-        return `<div class="ativ-section">
-          <div class="ativ-section-hdr">Atividade ${n}</div>
-          <div style="font-size:12px;color:var(--text-muted)">Nenhuma tentativa registrada.</div>
+        return `<div class="ativ-bloco">
+          <div class="ativ-bloco-hdr">Atividade ${n}</div>
+          <div style="font-size:12px;color:var(--text-muted)">Não realizou esta atividade.</div>
         </div>`;
       }
-      const bestAc  = Math.max(...tents.map(t => t.acertos || 0));
-      const tot     = tents[0].total || 0;
-      const pctBest = tot > 0 ? Math.round(bestAc / tot * 100) : 0;
-      const pctColor = pctBest >= 80 ? 'var(--green)' : pctBest >= 60 ? '#D97706' : 'var(--red)';
 
-      return `<div class="ativ-section">
-        <div class="ativ-section-hdr">
+      const bestAc  = Math.max(...tents.map(t => t.acertos || 0));
+      const tot     = tents[0].total || 33;
+      const pctBest = Math.round(bestAc / tot * 100);
+      const medAc   = Math.round(tents.reduce((s, t) => s + (t.acertos || 0), 0) / tents.length);
+      const medPct  = Math.round(medAc / tot * 100);
+
+      const tentRows = tents.map((t, i) => {
+        const pct   = t.total > 0 ? Math.round(t.acertos / t.total * 100) : 0;
+        const col   = pctCor(pct);
+        const isBest = t.acertos === bestAc;
+        const prev  = i > 0 ? tents[i - 1] : null;
+        const diff  = prev !== null ? t.acertos - prev.acertos : null;
+        const diffBadge = diff !== null
+          ? `<span style="font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px;background:${diff > 0 ? '#DCFCE7' : diff < 0 ? '#FEF2F2' : '#F3F4F6'};color:${diff > 0 ? '#15803D' : diff < 0 ? '#B91C1C' : '#6B7280'};border:1px solid ${diff > 0 ? '#BBF7D0' : diff < 0 ? '#FECACA' : '#E5E7EB'}">${diff > 0 ? '+' + diff : diff === 0 ? '=' : diff}</span>`
+          : '';
+        const uid = `${al.turma}_${al.aluno}_${n}_${i}`.replace(/[^a-zA-Z0-9]/g, '_');
+        return `<div>
+          <div class="tent-item${isBest ? ' best' : ''}" onclick="toggleTent('${uid}')">
+            <div class="tent-info">
+              <div class="tent-data">${i + 1}ª tentativa${t.completadoEm ? ' · ' + fmtData(t.completadoEm) : ''}</div>
+              <div style="display:flex;align-items:center;gap:5px;margin-top:4px;flex-wrap:wrap">
+                <span style="font-size:12px;font-weight:700;color:var(--gold)">⭐ ${t.acertos}/${tot}</span>
+                <span style="font-size:11px;font-weight:700;color:${col};padding:1px 6px;border-radius:8px;background:${pctBg(pct)};border:1px solid ${pctBorder(pct)}">${pctLabel(pct)}</span>
+                <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;background:${pctBg(pct)};color:${pct >= MINIMO_APROVACAO ? '#15803D' : '#B91C1C'};border:1px solid ${pctBorder(pct)}">${pct >= MINIMO_APROVACAO ? 'Aprovado' : 'Reprovado'}</span>
+                ${diffBadge}
+                ${isBest ? '<span style="font-size:10px;font-weight:700;color:#B45309;background:#FEF3C7;border:1px solid #FDE68A;padding:1px 6px;border-radius:8px;">🏆 Melhor</span>' : ''}
+              </div>
+            </div>
+            <svg viewBox="0 0 24 24" id="arr-${uid}" style="width:14px;height:14px;fill:var(--text-muted);flex-shrink:0;transition:transform .2s"><path d="M7 10l5 5 5-5z"/></svg>
+          </div>
+          <div id="det-${uid}" style="display:none" class="tent-detail">${detalheHTML(t, prev)}</div>
+        </div>`;
+      }).join('');
+
+      return `<div class="ativ-bloco">
+        <div class="ativ-bloco-hdr">
           Atividade ${n}
           <span class="badge badge-blue">${tents.length} tentativa${tents.length > 1 ? 's' : ''}</span>
         </div>
-        <div class="ativ-metrics">
-          <div class="metric-box">
-            <div class="metric-val" style="color:var(--gold)">⭐ ${bestAc}/${tot}</div>
-            <div class="metric-lbl">Melhor resultado</div>
+        <div class="ativ-stats">
+          <div class="ativ-stat">
+            <div class="ativ-stat-val" style="color:${pctCor(pctBest)}">${pctLabel(pctBest)}</div>
+            <div class="ativ-stat-lbl">Melhor resultado</div>
           </div>
-          <div class="metric-box">
-            <div class="metric-val" style="color:var(--blue)">${tents.length}</div>
-            <div class="metric-lbl">Tentativas</div>
+          <div class="ativ-stat">
+            <div class="ativ-stat-val" style="color:${pctCor(medPct)}">${pctLabel(medPct)}</div>
+            <div class="ativ-stat-lbl">% Média</div>
           </div>
-          <div class="metric-box">
-            <div class="metric-val" style="color:${pctColor}">${pctBest}%</div>
-            <div class="metric-lbl">% Melhor</div>
+          <div class="ativ-stat">
+            <div class="ativ-stat-val" style="color:${pctBest >= MINIMO_APROVACAO ? '#15803D' : '#B91C1C'}">${pctBest >= MINIMO_APROVACAO ? '✅' : '❌'}</div>
+            <div class="ativ-stat-lbl" style="color:${pctBest >= MINIMO_APROVACAO ? '#15803D' : '#B91C1C'};font-weight:700">${pctBest >= MINIMO_APROVACAO ? 'Aprovado' : 'Reprovado'}</div>
           </div>
         </div>
-        ${renderEvolucaoSVG(tents)}
-        <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin:8px 0 6px">Tentativas</div>
-        ${renderTentativas(tents, n)}
+        ${sparkline(tents)}
+        ${tentRows}
       </div>`;
     }).join('');
 
-    return `<div class="st-card">
-      <div class="st-card-hdr" onclick="toggleAluno(${si})">
-        <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:var(--text-muted);flex-shrink:0"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
-        <div style="flex:1">
-          <div class="st-name">${a.aluno}<span class="st-turma">Turma ${a.turma}</span></div>
-          ${taxaGeral !== null ? `<div style="margin-top:4px"><span class="badge" style="background:${taxaGeral>=80?'#DCFCE7':taxaGeral>=60?'#FFF7ED':'#FEF2F2'};color:${taxaColor};border-color:${taxaGeral>=80?'#BBF7D0':taxaGeral>=60?'#FED7AA':'#FECACA'}">📊 ${taxaGeral}% geral</span></div>` : ''}
+    return `<div class="aluno-card">
+      <div class="aluno-hdr" onclick="toggleAluno(${si})">
+        <div class="aluno-av" style="background:${cor}">${iniciais(al.aluno)}</div>
+        <div style="flex:1;min-width:0">
+          <div class="aluno-nome">${al.aluno}</div>
+          <div class="aluno-turma">Turma ${al.turma}</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">${miniBadges}</div>
         </div>
         <svg viewBox="0 0 24 24" id="arrow-${si}" style="width:18px;height:18px;fill:var(--text-muted);flex-shrink:0;transition:transform .2s"><path d="M7 10l5 5 5-5z"/></svg>
       </div>
-      <div class="st-card-body" id="body-${si}">
-        ${ativSections}
-      </div>
+      <div class="aluno-body" id="body-${si}">${ativSections}</div>
     </div>`;
   }).join('');
-
-  document.getElementById('students-list').innerHTML = cards;
 }
 
 window.toggleAluno = (i) => {
@@ -599,53 +544,50 @@ window.toggleAluno = (i) => {
   if (arrow) arrow.style.transform = open ? 'rotate(180deg)' : '';
 };
 
-function atualizar(tentativas) {
-  todasTentativas = tentativas;
-  const filtradas = filtrarTentativas(tentativas);
-  renderTop5Erradas(calcTop5Erradas(filtradas));
-  renderTop5Acertadas(calcTop5Acertadas(filtradas));
-  renderCategoria(calcCategoria(filtradas));
-  renderAlunos(tentativas);
-}
+window.toggleTent = (uid) => {
+  const det = document.getElementById(`det-${uid}`);
+  const arr = document.getElementById(`arr-${uid}`);
+  if (!det) return;
+  const vis = det.style.display !== 'none';
+  det.style.display = vis ? 'none' : 'block';
+  if (arr) arr.style.transform = vis ? '' : 'rotate(180deg)';
+};
 
-// ── Controle de acesso ─────────────────────────────────────
-async function checkAcessos() {
-  const el = document.getElementById('acesso-grid');
-  const results = await Promise.allSettled(
-    ALUNOS_ROB.map(a => getAlunoPreferencia(a.turma, a.aluno, 'robotica').then(v => ({ ...a, acesso: !!v })))
+// ── Render principal ─────────────────────────────────────────
+function renderizar() {
+  const filtradas = todasTentativas.filter(t =>
+    (!filtroAtiv  || +t.atividade === filtroAtiv) &&
+    (!filtroTurma || t.turma === filtroTurma)
   );
-  const acessos = results.map((r, i) => r.status === 'fulfilled' ? r.value : { ...ALUNOS_ROB[i], acesso: false });
-  const comAcesso = acessos.filter(a => a.acesso).length;
-  el.innerHTML = acessos.map(a =>
-    `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;
-      background:${a.acesso ? '#DCFCE7' : '#FEF2F2'};border:1px solid ${a.acesso ? '#BBF7D0' : '#FECACA'};">
-      <span style="font-size:16px;">${a.acesso ? '✅' : '❌'}</span>
-      <div>
-        <div style="font-size:12px;font-weight:700;">${a.aluno}</div>
-        <div style="font-size:10px;color:var(--text-muted)">Turma ${a.turma}</div>
-      </div>
-    </div>`
-  ).join('') + `<div style="grid-column:1/-1;font-size:11px;color:var(--text-muted);margin-top:4px;">${comAcesso}/${acessos.length} alunos com acesso</div>`;
+  renderResumo(filtradas);
+  renderTop5Err(filtradas);
+  renderTop5Ok(filtradas);
+  renderCategorias(filtradas);
+  renderAlunos(filtradas);
 }
 
-document.getElementById('btn-liberar-todos').addEventListener('click', async () => {
-  const btn = document.getElementById('btn-liberar-todos');
-  btn.disabled = true;
-  btn.textContent = 'Liberando…';
-  try {
-    await Promise.all(ALUNOS_ROB.map(a => saveAlunoPreferencia(a.turma, a.aluno, 'robotica', true)));
-    btn.textContent = '✅ Liberado!';
-    await checkAcessos();
-  } catch(e) {
-    btn.textContent = 'Erro — tente novamente';
-    console.error(e);
-  } finally {
-    setTimeout(() => { btn.disabled = false; btn.textContent = 'Liberar todos'; }, 3000);
-  }
-});
+// ── Carrega via REST API (SDK retorna dados incompletos) ──────
+const DB_URL = 'https://sistemamatematica-50eff-default-rtdb.firebaseio.com';
 
-checkAcessos();
-listenRoboticaTentativas(atualizar);
+async function carregarTentativas() {
+  const resp = await fetch(`${DB_URL}/robotica_tentativas.json`);
+  const data = await resp.json();
+  if (!data) return [];
+  return Object.entries(data).map(([id, v]) => ({ id, ...v }));
+}
+
+async function atualizar() {
+  try {
+    todasTentativas = await carregarTentativas();
+    renderizar();
+  } catch (e) {
+    console.error('[Robótica] Erro ao carregar tentativas:', e);
+  }
+}
+
+// Carrega agora e recarrega a cada 30 s
+await atualizar();
+setInterval(atualizar, 30_000);
 </script>
 </body>
 </html>
