@@ -45,6 +45,8 @@
       .pos-rank-num{font-size:26px!important}
       .rank-section-title{font-size:11px}
     }
+    .confete-rank{position:fixed;top:-10px;width:7px;height:9px;border-radius:2px;opacity:0;pointer-events:none;z-index:9999;animation:confete-rank-cair var(--dur,2s) var(--delay,0s) ease-in 1 forwards;}
+    @keyframes confete-rank-cair{0%{opacity:1;transform:translateY(0) rotate(0deg)}75%{opacity:.9}100%{opacity:0;transform:translateY(110vh) rotate(560deg) scale(.4)}}
   </style>
 </head>
 <body>
@@ -515,6 +517,24 @@ document.getElementById('content').innerHTML = `
 document.querySelectorAll('.ativ-btn').forEach(b => {
   b.addEventListener('click', () => abrirAtividade(b.dataset.ativ));
 });
+
+// Confetti quando o aluno logado é 1º no ranking geral
+if (rankAll.length > 0 && rankAll[0].aluno === alunos[0]) {
+  const colors = ['#F59E0B','#3B82F6','#EF4444','#22C55E','#8B5CF6','#EC4899','#F97316','#06B6D4'];
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden';
+  for (let i = 0; i < 20; i++) {
+    const dur = (1.5 + (i % 7) * 0.25).toFixed(2);
+    const del = ((i * 0.17) % 2.4).toFixed(2);
+    const left = Math.round(5 + (i / 19) * 90);
+    const el = document.createElement('div');
+    el.className = 'confete-rank';
+    el.style.cssText = `background:${colors[i % 8]};left:${left}%;--dur:${dur}s;--delay:${del}s`;
+    wrap.appendChild(el);
+  }
+  document.body.appendChild(wrap);
+  setTimeout(() => wrap.remove(), 5500);
+}
 </script>
 </body>
 </html>
