@@ -97,9 +97,12 @@ window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
 const { alunos, turma } = sess;
 
-// Robótica sidebar item (condicional)
+// Robótica sidebar item (condicional) — atualiza cache localStorage para todas as páginas
 getAlunoPreferencia(turma, alunos[0], 'robotica').then(isRob => {
+  localStorage.setItem('sm_pref_robotica', isRob ? '1' : '0');
   if (!isRob) return;
+  // Se já foi renderizado pelo auth.js via cache localStorage, não duplica
+  if (document.querySelector('#sidebar a[href="/aluno/robotica.html"]')) return;
   const nav = document.querySelector('#sidebar .sidebar-nav');
   if (!nav) return;
   const div = document.createElement('div'); div.className = 'nav-divider'; nav.appendChild(div);
@@ -127,7 +130,7 @@ const [todosRaw, liberadas, conquistasAluno, tabuadaSnap] = await Promise.all([
   getConquistasByAluno(alunos[0]),
   get(ref(db, `tabuada_niveis/${tabuadaUid}`)).catch(() => null),
 ]);
-const nivelTabuada = tabuadaSnap?.exists() ? (tabuadaSnap.val().nivel_atual || 1) : 1;
+const nivelTabuada = tabuadaSnap?.exists() ? (tabuadaSnap.val().melhor_nivel || tabuadaSnap.val().nivel_atual || 1) : 1;
 const todos = todosRaw.filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
 initAvBanner(turma, alunos[0], liberadas);
 
@@ -585,7 +588,7 @@ ${tempoPodioHtml}
         <i class="ti ti-devices-gamepad-2" style="font-size:15px;line-height:1"></i>
         Mini-jogos
       </div>
-      <a href="/aluno/jogos.html" class="game-card-link" style="text-decoration:none;display:flex;align-items:center;gap:14px;padding:14px 16px;background:rgba(127,119,221,.04);border:0.5px solid rgba(127,119,221,.22);border-left:4px solid #7F77DD;border-radius:12px;">
+      <div class="game-card-link" style="cursor:pointer;display:flex;align-items:center;gap:14px;padding:14px 16px;background:rgba(127,119,221,.04);border:0.5px solid rgba(127,119,221,.22);border-left:4px solid #7F77DD;border-radius:12px;" onclick="location.href='/aluno/jogos.html'">
         <div style="width:44px;height:44px;border-radius:10px;background:var(--purple-pale);display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <i class="ti ti-math-function" style="font-size:22px;color:#7F77DD"></i>
         </div>
@@ -599,11 +602,16 @@ ${tempoPodioHtml}
             </span>
           </div>
         </div>
-        <span class="btn" style="background:#7F77DD;color:#fff;flex-shrink:0;align-self:center;gap:6px;box-shadow:none">
-          <i class="ti ti-player-play" style="font-size:14px"></i>
-          Jogar
-        </span>
-      </a>
+        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;align-self:center" onclick="event.stopPropagation()">
+          <a href="/aluno/tabuada.html" class="btn" style="background:#7F77DD;color:#fff;gap:6px;box-shadow:none;padding:7px 14px;font-size:12px">
+            <i class="ti ti-player-play" style="font-size:13px"></i>
+            Jogar
+          </a>
+          <a href="/aluno/tabuada.html?modo=sprint" class="btn" style="background:rgba(127,119,221,.15);color:#7F77DD;border:1px solid rgba(127,119,221,.3);gap:6px;box-shadow:none;padding:7px 14px;font-size:12px">
+            ⚡ Sprint
+          </a>
+        </div>
+      </div>
     </div>
 
     <div class="card">

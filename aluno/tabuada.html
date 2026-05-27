@@ -175,7 +175,7 @@ import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.
 // ── Auth ──────────────────────────────────────────────────────
 const sess = requireAluno("/index.html");
 if (!sess) throw new Error("não autenticado");
-renderSidebarAluno("sidebar", "");
+renderSidebarAluno("sidebar", "jogos");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
 const { alunos, turma } = sess;
@@ -220,12 +220,15 @@ async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo
       });
     }
     if (resultado) {
-      await set(ref(db, `tabuada_niveis/${uid}/historico/${ts}`), {
+      const entry = {
         nivel:     nivelJogado,
         resultado: resultado,
         acertos:   acertosJogo || 0,
         erros:     errosJogo   || 0,
-      });
+      };
+      const t = { ...tipoAcertos };
+      if (t.add || t.sub || t.mul || t.div) entry.tipos_acertos = t;
+      await set(ref(db, `tabuada_niveis/${uid}/historico/${ts}`), entry);
     }
   } catch(e) { console.warn('[Tabuada] Erro ao salvar:', e); }
 }
@@ -242,13 +245,13 @@ function getLevelConfig(lvl) {
     const cols      = pairs <= 2 ? 2 : pairs <= 3 ? 3 : 4;
     return { type:'mix_as', pairs, cols, secs, maxResult };
   }
-  // Níveis 51-65: adição + subtração + multiplicação, grid menor no início
+  // Níveis 51-65: add+sub+mul; mul aparece com peso menor no início (51-57)
   if (lvl <= 65) {
     const t     = (lvl - 51) / 14;
     const pairs = Math.round(3 + t * 5); // 3 → 8
     const secs  = Math.round(65 - t * 10); // 65 → 55s
     const cols  = pairs <= 3 ? 3 : 4;
-    return { type:'mix_asm', pairs, cols, secs };
+    return { type: t < 0.5 ? 'mix_asm_lite' : 'mix_asm', pairs, cols, secs };
   }
   // Níveis 66+: todas as operações; grid reseta menor e cresce até 6×6 fixo
   const t     = Math.min(1, (lvl - 66) / 24); // 0→1 ao longo de 24 níveis
@@ -291,8 +294,8 @@ function tryGenOp(type, usedR, maxResult = 999) {
       sym = '+';
     } else if (type === 'sub') {
       if (maxResult < 50) {
-        // a ≤ 20, b ≤ 9 (dígito único) para evitar contas complexas
-        a = rnd(2, Math.min(20, maxResult + 5));
+        // minuendo próximo ao resultado para evitar contas complexas nos primeiros níveis
+        a = rnd(2, Math.min(maxResult + 1, 10));
         b = rnd(1, Math.min(a - 1, 9));
         result = a - b;
         if (result < 1 || result > maxResult || usedR.has(result)) continue;
@@ -314,19 +317,17 @@ function tryGenOp(type, usedR, maxResult = 999) {
       sym = '÷';
     } else if (type === 'mix_as') {
       return tryGenOp(rnd(0, 1) === 0 ? 'add' : 'sub', usedR, maxResult);
+    } else if (type === 'mix_asm_lite') {
+      // mul com peso menor (20%) para introdução gradual
+      const r = rnd(0, 4);
+      return tryGenOp(r <= 1 ? 'add' : r <= 3 ? 'sub' : 'mul', usedR, maxResult);
     } else if (type === 'mix_asm') {
       return tryGenOp(['add','sub','mul'][rnd(0, 2)], usedR, maxResult);
     } else if (type === 'mix') {
       const types = ['add','sub','mul','div'];
       return tryGenOp(types[rnd(0, 3)], usedR, maxResult);
-    } else { // compound: a×b+c ou a×b−c
-      a = rnd(2, 4); b = rnd(2, 4); const c = rnd(1, 8);
-      const base = a * b;
-      const add  = rnd(0, 1);
-      result = add ? base + c : base - c;
-      if (result <= 0 || usedR.has(result)) continue;
-      sym   = null;
-      label = `${a}×${b}${add?'+':'−'}${c}`;
+    } else {
+      return null;
     }
     usedR.add(result);
     return { op: { sym, a, b, label }, result };
@@ -421,6 +422,7 @@ if (_isReplay) nivelAtual = Math.max(1, parseInt(_replayNivel) || 1);
 
 // Sprint: ?modo=sprint — sessão contínua de 3 min sem timer por nível
 const _isSprint     = new URLSearchParams(location.search).get('modo') === 'sprint';
+if (_isSprint) nivelAtual = 1; // sprint sempre começa do nível 1
 let _sprintTotal    = 180;
 let _sprintLeft     = 180;
 let _sprintInt      = null;
@@ -428,8 +430,9 @@ let _sprintLevels   = 0;
 let _sprintPairsOk  = 0;
 let _sprintErrTotal = 0;
 let _sprintNivelIni = 0;
-let _sprintStarted  = false;
-let _sprintEnded    = false;
+let _sprintStarted   = false;
+let _sprintEnded     = false;
+let _sprintWinTimeout = null;
 
 // Ranking
 let rankingAll   = [];
@@ -562,10 +565,19 @@ let selectedCard = null;  // { el, pairId, kind, op, result }
 let removedCount = 0, totalPairs = 0;
 let gameOver = false;
 let acertos = 0, erros = 0, comboCount = 0;
+let tipoAcertos = { add:0, sub:0, mul:0, div:0 };
+
+function symToTipo(sym) {
+  if (sym === '+') return 'add';
+  if (sym === '−') return 'sub';
+  if (sym === '×') return 'mul';
+  if (sym === '÷') return 'div';
+  return null;
+}
 
 function updateNivelDisplay() {
   document.getElementById("nivel-display").textContent = _isSprint
-    ? `⚡ Sprint · Nível ${nivelAtual}`
+    ? `⚡ Sprint · ${_sprintPairsOk} acerto${_sprintPairsOk !== 1 ? 's' : ''}`
     : `Nível ${nivelAtual} · Melhor: ${melhorNivel}`;
 }
 updateNivelDisplay();
@@ -622,7 +634,7 @@ async function endSprint(manual = false) {
   document.getElementById("lov-sub").textContent   =
     `${_sprintLevels} nível${_sprintLevels !== 1 ? 'is' : ''} concluído${_sprintLevels !== 1 ? 's' : ''} · ${_sprintPairsOk} acertos · ${acc}% precisão`;
   document.getElementById("lov-new").textContent   =
-    _sprintLevels > 0 ? `Progresso: Nível ${_sprintNivelIni} → ${nivelAtual}` : 'Nenhum nível concluído';
+    _sprintPairsOk > 0 ? `${_sprintPairsOk} acerto${_sprintPairsOk !== 1 ? 's' : ''} em ${_sprintLevels} rodada${_sprintLevels !== 1 ? 's' : ''}` : 'Nenhum acerto';
   document.getElementById("lov-new").style.color   = 'var(--blue)';
   document.getElementById("lov-btn").textContent   = 'Voltar →';
   document.querySelector('.level-card').style.animation = manual ? 'levelUpPop .35s' : 'levelDownPop .35s ease';
@@ -640,12 +652,16 @@ function buildGame() {
   removedCount = 0;
   gameOver    = false;
   acertos = 0; erros = 0; comboCount = 0;
+  tipoAcertos = { add:0, sub:0, mul:0, div:0 };
 
-  const pairs  = generatePairs(cfg.type, cfg.pairs, cfg.maxResult);
-  // Fallback: fill with add if not enough pairs generated
-  while (pairs.length < cfg.pairs) {
-    const extra = generatePairs('add', 1, cfg.maxResult);
-    if (extra.length) pairs.push(extra[0]); else break;
+  const pairs = generatePairs(cfg.type, cfg.pairs, cfg.maxResult);
+  // Fallback: completa com add usando o mesmo usedR para evitar resultados duplicados
+  if (pairs.length < cfg.pairs) {
+    const usedResults = new Set(pairs.map(p => p.result));
+    for (let i = pairs.length; i < cfg.pairs; i++) {
+      const extra = tryGenOp('add', usedResults, cfg.maxResult);
+      if (extra) pairs.push(extra); else break;
+    }
   }
 
   // Build cards array: op card + result card per pair
@@ -677,13 +693,12 @@ function buildGame() {
         <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
         Jogos
       </a>
-      <div class="nivel-badge">
-        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        Nível ${nivelAtual}
-      </div>
+      ${_isSprint
+        ? `<div class="nivel-badge">⚡ Sprint</div>`
+        : `<div class="nivel-badge"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Nível ${nivelAtual}</div>`}
     </div>
     ${_isSprint
-      ? `<div style="font-size:12px;color:var(--text-muted)">⚡ <strong style="color:var(--blue)">${_sprintLevels}</strong> concluído${_sprintLevels !== 1 ? 's' : ''}</div>`
+      ? `<div style="font-size:12px;color:var(--text-muted)">⚡ <strong style="color:var(--blue)">${_sprintPairsOk}</strong> acerto${_sprintPairsOk !== 1 ? 's' : ''}</div>`
       : `<div style="font-size:12px;color:var(--text-muted)">Melhor: <strong style="color:var(--blue)">${melhorNivel}</strong></div>`}
   </div>
 
@@ -703,7 +718,7 @@ function buildGame() {
   </div>` : `
   <div class="timer-wrap" id="timer-display">
     <svg viewBox="0 0 24 24"><path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61 1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
-    <span id="timer-text">00:${String(timerTotal).padStart(2,'0')}</span>
+    <span id="timer-text">${String(Math.floor(timerTotal/60)).padStart(2,'0')}:${String(timerTotal%60).padStart(2,'0')}</span>
   </div>
   <div class="timer-bar-bg">
     <div class="timer-bar" id="timer-bar" style="width:100%"></div>
@@ -882,22 +897,24 @@ function onCardClick(el, card) {
     somAcerto();
     showComboPopup(el);
     if (_isSprint) { _sprintPairsOk++; updateSprintDisplay(); }
+    const tipo = symToTipo((first.kind === 'op' ? first.op : card.op)?.sym);
+    if (tipo) tipoAcertos[tipo]++;
     selectedCard = null;
     removedCount++;
     setTimeout(() => { clearSlots(); setStatus(""); }, 650);
     if (removedCount >= totalPairs) setTimeout(onGameWin, 500);
 
   } else {
-    // ❌ Errado
+    // ❌ Errado — zera selectedCard imediatamente para evitar race condition
     erros++;
     comboCount = 0;
     somErro();
     if (_isSprint) { _sprintErrTotal++; updateSprintDisplay(); }
     setStatus("Errou! Tente outra combinação. ❌", 'var(--red)');
+    selectedCard = null;
     flyBack(first.flyInfo, first.el);
     flyBack(flyInfo2, el);
     setTimeout(() => {
-      selectedCard = null;
       clearSlots();
       setTimeout(() => setStatus(""), 800);
     }, 600);
@@ -914,23 +931,20 @@ async function onGameWin() {
 
   if (_isSprint) {
     _sprintLevels++;
-    const novoNivelS  = nivelAtual + 1;
-    const novoMelhorS = Math.max(melhorNivel, novoNivelS);
-    progresso.nivel_atual    = novoNivelS;
-    progresso.melhor_nivel   = novoMelhorS;
+    nivelAtual++;  // avança dificuldade local apenas — não salva no Firebase
     progresso.total_partidas = (progresso.total_partidas || 0) + 1;
-    nivelAtual  = novoNivelS;
-    melhorNivel = novoMelhorS;
-    await salvarProgresso(progresso, 'completou', nivelJogado, acertos, erros);
+    await salvarProgresso(progresso, 'completou', nivelJogado, acertos, erros, true);
     document.getElementById("lov-emoji").textContent = erros === 0 ? '⭐' : '✅';
-    document.getElementById("lov-title").textContent = `Nível ${nivelJogado} completo!`;
-    document.getElementById("lov-sub").textContent   = `+${acertos} par${acertos !== 1 ? 'es' : ''} · próximo em 1s…`;
-    document.getElementById("lov-new").textContent   = `→ Nível ${nivelAtual}`;
+    document.getElementById("lov-title").textContent = `+${acertos} acerto${acertos !== 1 ? 's' : ''}!`;
+    document.getElementById("lov-sub").textContent   = `Total: ${_sprintPairsOk} · próxima rodada em 1s…`;
+    document.getElementById("lov-new").textContent   = '';
     document.getElementById("lov-new").style.color   = 'var(--blue)';
     document.getElementById("lov-btn").textContent   = 'Avançar →';
     document.querySelector('.level-card').style.animation = 'levelUpPop .35s';
     document.getElementById("level-overlay").style.display = 'flex';
-    setTimeout(() => {
+    _sprintWinTimeout = setTimeout(() => {
+      _sprintWinTimeout = null;
+      if (_sprintEnded) return;
       document.getElementById("level-overlay").style.display = 'none';
       buildGame();
     }, 1500);
@@ -965,22 +979,31 @@ async function onGameWin() {
   melhorNivel = novoMelhor;
 
   await salvarProgresso(progresso, 'completou', nivelJogado, acertos, erros);
-  await reloadRanking();
 
-  const eLider      = rankingAll[0]?.nome === nomeAluno && rankingAll[0]?.turma === turma;
   const isNewRecord = novoNivel > melhorAnterior;
 
-  if (eLider && !eraLider) lancarConfete(80);
-
-  document.getElementById("lov-emoji").textContent = novoNivel > 10 ? '🏆' : '🎉';
-  document.getElementById("lov-title").textContent = eLider && !eraLider ? '🥇 Você é o novo líder!' : 'Avançou de nível!';
+  // Mostra overlay imediatamente com informações já conhecidas
+  document.getElementById("lov-emoji").textContent = '🎉';
+  document.getElementById("lov-title").textContent = 'Avançou de nível!';
   document.getElementById("lov-sub").textContent   =
-    `Tempo restante: ${timerLeft}s · ${eLider && !eraLider ? 'Primeiro lugar no ranking geral!' : isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue avançando!'}`;
+    `Tempo restante: ${timerLeft}s · ${isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue avançando!'}`;
   document.getElementById("lov-new").textContent   = `→ Nível ${novoNivel}`;
   document.getElementById("lov-new").style.color   = 'var(--blue)';
   document.getElementById("lov-btn").textContent   = 'Continuar →';
   document.querySelector('.level-card').style.animation = 'levelUpPop .45s';
   document.getElementById("level-overlay").style.display = 'flex';
+
+  // Atualiza ranking em background — se virou líder, atualiza overlay
+  reloadRanking().then(() => {
+    const eLider = rankingAll[0]?.nome === nomeAluno && rankingAll[0]?.turma === turma;
+    if (eLider && !eraLider) {
+      lancarConfete(80);
+      document.getElementById("lov-emoji").textContent = '🏆';
+      document.getElementById("lov-title").textContent = '🥇 Você é o novo líder!';
+      document.getElementById("lov-sub").textContent   =
+        `Tempo restante: ${timerLeft}s · Primeiro lugar no ranking geral!`;
+    }
+  });
 }
 
 // ── Timer end ─────────────────────────────────────────────────
@@ -993,7 +1016,7 @@ async function onTimerEnd() {
   progresso.total_partidas = (progresso.total_partidas || 0) + 1;
   const isReplayDerrota = _isReplay;
   await salvarProgresso(progresso, 'tempo_esgotado', nivelJogado, acertos, erros, isReplayDerrota || false);
-  if (!isReplayDerrota) await reloadRanking();
+  if (!isReplayDerrota) reloadRanking();
 
   const frases = [
     `Você acertou ${acertos} par${acertos !== 1 ? 'es' : ''}. Tente de novo! 💪`,
@@ -1016,11 +1039,14 @@ async function onTimerEnd() {
 }
 
 // ── Public functions ──────────────────────────────────────────
+window.endSprint = (manual) => endSprint(manual);
+
 window.fecharOverlay = function() {
   if (_isSprint && _sprintEnded) {
     window.location.href = '/aluno/jogos.html';
     return;
   }
+  if (_sprintWinTimeout) { clearTimeout(_sprintWinTimeout); _sprintWinTimeout = null; }
   document.getElementById("level-overlay").style.display = 'none';
   buildGame();
 };

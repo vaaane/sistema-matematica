@@ -7,21 +7,20 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
-    /* ── Dark palette ── */
+    /* ── Paleta: usa variáveis do site ── */
     :root {
-      --j-bg:      #0d1117;
-      --j-card:    #12172a;
-      --j-hero:    #161d35;
       --j-pri:     #7F77DD;
       --j-pri-h:   #534AB7;
-      --j-txt:     #e2e8f0;
-      --j-muted:   #475569;
-      --j-green:   #1D9E75;
-      --j-red:     #E24B4A;
-      --j-orange:  #f97316;
-      --j-gold:    #eab308;
-      --j-border:  rgba(255,255,255,0.07);
-      --j-tab-act: #1e2640;
+      --j-card:    var(--card);
+      --j-hero:    var(--bg);
+      --j-txt:     var(--text);
+      --j-muted:   var(--text-muted);
+      --j-border:  var(--border);
+      --j-tab-act: var(--bg);
+      --j-green:   var(--green);
+      --j-red:     var(--red);
+      --j-orange:  var(--orange);
+      --j-gold:    var(--gold);
     }
 
     /* ── Keyframes ── */
@@ -263,35 +262,25 @@
     /* ── Rank rows ── */
     .j-rank-row {
       display: flex; align-items: center; gap: 10px;
-      padding: 8px 10px; border-radius: 9px;
-      border: 0.5px solid var(--j-border);
-      background: rgba(255,255,255,.02);
+      padding: 10px 12px; border-radius: 9px;
+      border: 1px solid var(--j-border);
+      border-left: 3px solid transparent;
+      background: var(--card);
       margin-bottom: 6px;
+      transition: background .15s;
     }
     .j-rank-row:last-child { margin-bottom: 0; }
-    .j-rank-row.me {
-      background: rgba(127,119,221,.06);
-      border-color: rgba(127,119,221,.2);
-    }
-    .j-medal {
-      width: 28px; height: 28px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 800;
-      flex-shrink: 0;
-    }
-    .j-medal.gold   { background: rgba(234,179,8,.15);  color: #f5c542; border: 1px solid rgba(234,179,8,.3); }
-    .j-medal.silver { background: rgba(148,163,184,.12); color: #94A3B8; border: 1px solid rgba(148,163,184,.25); }
-    .j-medal.bronze { background: rgba(180,110,70,.12);  color: #CD7F32; border: 1px solid rgba(180,110,70,.25); }
-    .j-medal.plain  { background: rgba(255,255,255,.04); color: var(--j-muted); font-size:11px; border: 0.5px solid var(--j-border); }
+    .j-rank-row.rank-gold   { background: linear-gradient(135deg,rgba(245,158,11,.1),var(--card)); border-left-color:#F59E0B; border-color:rgba(245,158,11,.2); }
+    .j-rank-row.rank-silver { background: linear-gradient(135deg,rgba(148,163,184,.08),var(--card)); border-left-color:#9CA3AF; }
+    .j-rank-row.rank-bronze { background: linear-gradient(135deg,rgba(180,83,9,.08),var(--card)); border-left-color:#CD853F; }
+    .j-rank-row.me { background: var(--blue-pale,rgba(47,158,220,.06)); border-left-color:var(--blue); border-color:rgba(47,158,220,.2); }
     .j-rank-name { font-size: 13px; font-weight: 700; color: var(--j-txt); }
     .j-rank-sub  { font-size: 11px; color: var(--j-muted); margin-top: 1px; }
-    .j-rank-val  {
-      font-size: 18px; font-weight: 800;
-      color: var(--j-pri); text-align: right;
-    }
+    .j-rank-val  { font-size: 18px; font-weight: 800; text-align: right; }
     .j-rank-lbl  { font-size: 10px; color: var(--j-muted); text-align: right; }
-    .j-you       { font-size: 10px; color: var(--j-pri); margin-left: 4px; font-weight: 600; }
+    .j-you       { font-size: 10px; color: var(--blue); margin-left: 4px; font-weight: 600; }
+    .j-pos-wrap  { display:flex; flex-direction:column; align-items:center; width:32px; flex-shrink:0; }
+    .j-crown     { font-size: 11px; line-height:1; margin-bottom:2px; }
 
     /* ── Level grid ── */
     .j-levels-card {
@@ -323,7 +312,7 @@
     }
     .j-leg-dot.gold   { background: var(--j-gold); }
     .j-leg-dot.purple { background: var(--j-pri); }
-    .j-leg-dot.grey   { background: rgba(255,255,255,.12); }
+    .j-leg-dot.grey   { background: var(--border); }
 
     .j-level-grid {
       display: grid;
@@ -379,7 +368,7 @@
 
     /* atual */
     .j-lv.current {
-      background: #1e1e40;
+      background: rgba(127,119,221,.1);
       border: 1.5px solid var(--j-pri);
       cursor: pointer;
     }
@@ -388,9 +377,9 @@
 
     /* bloqueado */
     .j-lv.locked {
-      background: #0f1420;
-      border: 0.5px solid rgba(255,255,255,.05);
-      opacity: .45;
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      opacity: .4;
     }
     .j-lv.locked .j-lv-num { color: var(--j-muted); }
 
@@ -419,11 +408,12 @@
       font-family: 'Inter', sans-serif;
     }
     .j-main-tab.active {
-      background: var(--j-hero);
-      color: var(--j-txt);
-      border: 0.5px solid rgba(127,119,221,.25);
+      background: rgba(127,119,221,.12);
+      color: var(--j-pri);
+      border: 0.5px solid rgba(127,119,221,.3);
+      box-shadow: inset 0 -2.5px 0 var(--j-pri);
     }
-    .j-main-tab.active.sprint { color: #a78bfa; }
+    .j-main-tab.active.sprint { color: #a78bfa; background: rgba(167,139,250,.1); box-shadow: inset 0 -2.5px 0 #a78bfa; }
     .j-tab-panel { display: block; animation: j-fadein .25s ease; }
     .j-tab-panel.hidden { display: none; }
 
@@ -560,6 +550,20 @@ const sprintTurma   = sprintAll.filter(r => r.turma === turma);
 const sprintRecGeral = sprintAll[0]   || null;
 const sprintRecTurma = sprintTurma[0] || null;
 
+// Estatísticas por tipo de operação (agregado de todo o histórico)
+const tipoTotais = { add:0, sub:0, mul:0, div:0 };
+if (niveis.historico) {
+  Object.values(niveis.historico).forEach(e => {
+    if (e.tipos_acertos) {
+      for (const [t, n] of Object.entries(e.tipos_acertos)) {
+        if (tipoTotais.hasOwnProperty(t)) tipoTotais[t] += (n || 0);
+      }
+    }
+  });
+}
+const temTipos = Object.values(tipoTotais).some(v => v > 0);
+const totalTipos = Object.values(tipoTotais).reduce((s, v) => s + v, 0);
+
 // Per-level stats from history
 const levelStats = {}; // { [nivel]: { perfect, done } }
 if (niveis.historico) {
@@ -576,21 +580,38 @@ if (niveis.historico) {
 }
 
 // HTML helpers
+const TOP3_BG  = ['linear-gradient(135deg,#F59E0B,#D97706)','linear-gradient(135deg,#9CA3AF,#6B7280)','linear-gradient(135deg,#CD853F,#92400E)'];
+const TOP3_TRO = ['🥇','🥈','🥉'];
+
 function makeRankRow(r, pos) {
   const isMe = r.nome === nomeAluno && r.turma === turma;
-  let medalCls, medalTxt;
-  if (pos === 1)      { medalCls = 'gold';   medalTxt = '🥇'; }
-  else if (pos === 2) { medalCls = 'silver'; medalTxt = '🥈'; }
-  else if (pos === 3) { medalCls = 'bronze'; medalTxt = '🥉'; }
-  else                { medalCls = 'plain';  medalTxt = `#${pos}`; }
+  if (pos <= 3) {
+    const bg  = TOP3_BG[pos - 1];
+    const tro = TOP3_TRO[pos - 1];
+    const crown = pos === 1
+      ? `<div style="position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:22px;filter:drop-shadow(0 2px 8px rgba(250,184,0,.9))">👑</div>` : '';
+    const topMt = pos === 1 ? 'margin-top:22px;' : '';
+    return `<div class="j-rank-row" style="background:${bg};border-color:transparent;border-left:none;${topMt}position:relative;overflow:visible">
+      ${crown}
+      <div style="font-size:28px;flex-shrink:0">${tro}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:800;color:#fff">${escH(r.nome)}${isMe ? ' <span style="font-size:11px;color:rgba(255,255,255,.8)">★</span>' : ''}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.75);margin-top:2px">Turma ${escH(r.turma)}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:20px;font-weight:800;color:#fff">${r.melhor_nivel || 1}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.7)">melhor nível</div>
+      </div>
+    </div>`;
+  }
   return `<div class="j-rank-row${isMe ? ' me' : ''}">
-    <div class="j-medal ${medalCls}">${medalTxt}</div>
+    <div class="j-pos-wrap"><div style="font-size:11px;font-weight:800;color:var(--j-muted)">#${pos}</div></div>
     <div style="flex:1;min-width:0">
       <div class="j-rank-name">${escH(r.nome)}${isMe ? '<span class="j-you">· você</span>' : ''}</div>
       <div class="j-rank-sub">Turma ${escH(r.turma)}</div>
     </div>
-    <div>
-      <div class="j-rank-val">${r.melhor_nivel || 1}</div>
+    <div style="text-align:right">
+      <div class="j-rank-val" style="color:var(--j-muted)">${r.melhor_nivel || 1}</div>
       <div class="j-rank-lbl">melhor nível</div>
     </div>
   </div>`;
@@ -598,20 +619,34 @@ function makeRankRow(r, pos) {
 
 function makeSprintRow(r, pos) {
   const isMe = r.nome === nomeAluno && r.turma === turma;
-  let medalCls, medalTxt;
-  if (pos === 1)      { medalCls = 'gold';   medalTxt = '🥇'; }
-  else if (pos === 2) { medalCls = 'silver'; medalTxt = '🥈'; }
-  else if (pos === 3) { medalCls = 'bronze'; medalTxt = '🥉'; }
-  else                { medalCls = 'plain';  medalTxt = `#${pos}`; }
+  if (pos <= 3) {
+    const bg  = TOP3_BG[pos - 1];
+    const tro = TOP3_TRO[pos - 1];
+    const crown = pos === 1
+      ? `<div style="position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:22px;filter:drop-shadow(0 2px 8px rgba(250,184,0,.9))">👑</div>` : '';
+    const topMt = pos === 1 ? 'margin-top:22px;' : '';
+    return `<div class="j-rank-row" style="background:${bg};border-color:transparent;border-left:none;${topMt}position:relative;overflow:visible">
+      ${crown}
+      <div style="font-size:28px;flex-shrink:0">${tro}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:800;color:#fff">${escH(r.nome)}${isMe ? ' <span style="font-size:11px;color:rgba(255,255,255,.8)">★</span>' : ''}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.75);margin-top:2px">Turma ${escH(r.turma)}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:20px;font-weight:800;color:#fff">${r.melhor_acertos || 0}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.7)">op / 3 min</div>
+      </div>
+    </div>`;
+  }
   return `<div class="j-rank-row${isMe ? ' me' : ''}">
-    <div class="j-medal ${medalCls}">${medalTxt}</div>
+    <div class="j-pos-wrap"><div style="font-size:11px;font-weight:800;color:var(--j-muted)">#${pos}</div></div>
     <div style="flex:1;min-width:0">
       <div class="j-rank-name">${escH(r.nome)}${isMe ? '<span class="j-you">· você</span>' : ''}</div>
       <div class="j-rank-sub">Turma ${escH(r.turma)}</div>
     </div>
-    <div>
-      <div class="j-rank-val">${r.melhor_acertos || 0}</div>
-      <div class="j-rank-lbl">operações / 3 min</div>
+    <div style="text-align:right">
+      <div class="j-rank-val" style="color:var(--j-muted)">${r.melhor_acertos || 0}</div>
+      <div class="j-rank-lbl">op / 3 min</div>
     </div>
   </div>`;
 }
@@ -679,7 +714,7 @@ const levelGridHtml = Array.from({ length: gridCount }, (_, i) => {
     inner = `<span class="j-lv-tag">atual</span><div class="j-lv-num">${lv}</div>`;
   } else if (lv > maxLv) {
     cls = 'locked';
-    inner = `<div class="j-lv-num">🔒</div><div class="j-lv-sub">${lv}</div>`;
+    inner = `<div class="j-lv-num">${lv}</div>`;
   } else if (stats.perfeito) {
     cls = 'perfect';
     inner = `<div class="j-lv-num">${lv}</div><div class="j-lv-sub">perfeito</div><div class="j-lv-star">★</div>`;
@@ -691,7 +726,7 @@ const levelGridHtml = Array.from({ length: gridCount }, (_, i) => {
     inner = `<div class="j-lv-num">${lv}</div><div class="j-lv-sub">feito</div>`;
   } else {
     cls = 'locked';
-    inner = `<div class="j-lv-num">🔒</div><div class="j-lv-sub">${lv}</div>`;
+    inner = `<div class="j-lv-num">${lv}</div>`;
   }
 
   const clickable = cls !== 'locked';
@@ -707,24 +742,6 @@ const mySprintRankT = mySprintEntry ? sprintTurma.indexOf(mySprintEntry) + 1 : n
 document.getElementById("content").innerHTML = `
 <div class="j-wrap">
 
-  <!-- Hero -->
-  <div class="j-hero">
-    <div class="j-hero-top">
-      <div class="j-hero-icon-wrap">
-        <div class="j-pulse-ring"></div>
-        <div class="j-pulse-ring"></div>
-        <div class="j-hero-icon">
-          <svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5S14.67 12 15.5 12s1.5.67 1.5 1.5S16.33 15 15.5 15zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 9 18.5 9s1.5.67 1.5 1.5S19.33 12 18.5 12z"/></svg>
-        </div>
-      </div>
-      <div class="j-hero-body">
-        <div class="j-tag">Mini-jogo</div>
-        <div class="j-hero-title">Tabuada</div>
-        <div class="j-hero-desc">Combine operações com seus resultados. Escolha o modo abaixo.</div>
-      </div>
-    </div>
-  </div>
-
   <!-- Abas principais -->
   <div class="j-main-tabs">
     <button class="j-main-tab active" id="main-tab-normal" onclick="switchMainTab('normal')">
@@ -739,26 +756,38 @@ document.getElementById("content").innerHTML = `
   <div class="j-tab-panel" id="panel-normal">
 
     <!-- Stats + botão jogar -->
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
-      <div class="j-stats-row" style="flex:1;min-width:240px;border-top:none;margin-top:0;border:0.5px solid var(--j-border);border-radius:12px;background:var(--j-card)">
-        <div class="j-stat">
-          <div class="j-stat-val">${nivelAtual}</div>
-          <div class="j-stat-lbl">Nível atual</div>
-        </div>
-        <div class="j-stat">
-          <div class="j-stat-val">${totalPartidas}</div>
-          <div class="j-stat-lbl">Partidas</div>
-        </div>
-        <div class="j-stat">
-          <div class="j-stat-val orange">${sequencia}</div>
-          <div class="j-stat-lbl">Sequência 🔥</div>
-        </div>
+    <div class="j-card" style="margin-bottom:16px;padding:0;overflow:hidden">
+      <div class="j-stats-row" style="border-top:none;margin-top:0">
+        <div class="j-stat"><div class="j-stat-val">${nivelAtual}</div><div class="j-stat-lbl">Nível atual</div></div>
+        <div class="j-stat"><div class="j-stat-val">${totalPartidas}</div><div class="j-stat-lbl">Partidas</div></div>
+        <div class="j-stat"><div class="j-stat-val orange">${sequencia}</div><div class="j-stat-lbl">Sequência 🔥</div></div>
       </div>
-      <a href="/aluno/tabuada.html" class="j-play-btn" style="flex-shrink:0">▶ Jogar agora</a>
+      <div style="padding:12px 16px;border-top:0.5px solid var(--j-border)">
+        <a href="/aluno/tabuada.html" class="j-play-btn" style="width:100%;justify-content:center">▶ Jogar agora</a>
+      </div>
     </div>
 
-    ${recGeral && (recGeral.melhor_nivel || 0) > 1 ? `<div class="j-record-pill" style="margin-bottom:8px">🌍 Recorde geral: Nível ${recGeral.melhor_nivel} · ${escH(recGeral.nome)} - ${escH(recGeral.turma)}</div>` : ''}
-    ${recTurma && (recTurma.melhor_nivel || 0) > 1 ? `<div class="j-record-pill" style="background:rgba(127,119,221,.08);border-color:rgba(127,119,221,.2);color:#c4b5fd;margin-bottom:16px">🔥 Recorde da turma: Nível ${recTurma.melhor_nivel} · ${escH(recTurma.nome)} - ${escH(recTurma.turma)}</div>` : ''}
+    ${temTipos ? `
+    <!-- Stats por tipo de operação -->
+    <div class="j-card" style="margin-bottom:16px">
+      <div class="j-card-hdr" style="color:var(--j-pri)">
+        <svg viewBox="0 0 24 24" style="fill:var(--j-pri)"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+        Operações praticadas
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+        ${[['add','+','Soma'],['sub','−','Subtração'],['mul','×','Multiplicação'],['div','÷','Divisão']].map(([k,sym,nome]) => {
+          const pct = totalTipos > 0 ? Math.round(tipoTotais[k] / totalTipos * 100) : 0;
+          return `
+        <div style="text-align:center;padding:12px 6px;background:rgba(255,255,255,.02);border:0.5px solid var(--j-border);border-radius:10px">
+          <div style="font-size:20px;font-weight:900;color:var(--j-pri);line-height:1">${tipoTotais[k]}</div>
+          <div style="font-size:13px;font-weight:700;color:var(--j-muted);margin-top:2px">${sym}</div>
+          <div style="font-size:10px;color:var(--j-muted);margin-top:2px">${nome}</div>
+          <div style="height:3px;background:var(--border);border-radius:2px;margin:6px 4px 0"><div style="height:3px;background:var(--j-pri);border-radius:2px;width:${pct}%"></div></div>
+          <div style="font-size:9px;color:var(--j-muted);margin-top:3px">${pct}%</div>
+        </div>`;
+        }).join('')}
+      </div>
+    </div>` : ''}
 
     <!-- Grid 2 colunas -->
     <div class="j-grid2">
@@ -769,7 +798,7 @@ document.getElementById("content").innerHTML = `
         </div>
         ${histHtml}
       </div>
-      <div class="j-card">
+      <div class="j-card" style="overflow:visible">
         <div class="j-card-hdr" style="color:var(--j-gold)">
           <svg viewBox="0 0 24 24" style="fill:var(--j-gold)"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg>
           Ranking · Nível
@@ -806,7 +835,9 @@ document.getElementById("content").innerHTML = `
 
     <!-- Personal best + botão -->
     <div class="j-sprint-hero">
-      <div class="j-sprint-hero-val">${mySprintBest || '—'}</div>
+      ${mySprintBest
+        ? `<div class="j-sprint-hero-val">${mySprintBest}</div>`
+        : `<div style="font-size:40px;line-height:1;flex-shrink:0">🏃</div>`}
       <div class="j-sprint-hero-info">
         <div class="j-sprint-hero-label">Seu recorde · 3 minutos</div>
         <div class="j-sprint-hero-title">${mySprintBest ? `${mySprintBest} operações` : 'Ainda sem recorde'}</div>
@@ -820,14 +851,11 @@ document.getElementById("content").innerHTML = `
       <a href="/aluno/tabuada.html?modo=sprint" class="j-sprint-play-btn">⚡ Iniciar Sprint</a>
     </div>
 
-    ${sprintRecGeral ? `<div class="j-record-pill" style="background:rgba(127,119,221,.08);border-color:rgba(127,119,221,.25);color:#a78bfa;margin-bottom:8px">🏆 Recorde geral: ${sprintRecGeral.melhor_acertos} op · ${escH(sprintRecGeral.nome)} - ${escH(sprintRecGeral.turma)}</div>` : ''}
-    ${sprintRecTurma && sprintRecTurma.nome !== sprintRecGeral?.nome ? `<div class="j-record-pill" style="background:rgba(127,119,221,.06);border-color:rgba(127,119,221,.2);color:#c4b5fd;margin-bottom:16px">🔥 Recorde da turma: ${sprintRecTurma.melhor_acertos} op · ${escH(sprintRecTurma.nome)}</div>` : '<div style="margin-bottom:16px"></div>'}
-
     <!-- Ranking sprint -->
-    <div class="j-card">
+    <div class="j-card" style="overflow:visible">
       <div class="j-card-hdr" style="color:#a78bfa">
         <svg viewBox="0 0 24 24" style="fill:#a78bfa"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg>
-        Ranking · Sprint (operações / 3 min)
+        Ranking · Sprint · 3 min
       </div>
       <div class="j-tabs" id="sprint-tabs">
         <button class="j-tab" onclick="switchSprintTab(this,'turma')">Turma ${escH(turma)}</button>
