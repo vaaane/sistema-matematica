@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🎮 Tabuada — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    /* ── Timer ── */
+    .timer-wrap{display:flex;align-items:center;justify-content:center;gap:8px;font-size:32px;font-weight:800;margin-bottom:10px;color:var(--text);transition:color .3s;}
+    .timer-wrap svg{width:30px;height:30px;fill:currentColor;}
+    .timer-wrap.warn{color:var(--red);}
+    .timer-bar-bg{height:7px;background:var(--border);border-radius:4px;margin-bottom:18px;overflow:hidden;}
+    .timer-bar{height:100%;border-radius:4px;background:var(--blue);transition:width 1s linear,background .4s;}
+    .timer-bar.warn{background:var(--orange);}
+    .timer-bar.danger{background:var(--red);}
+
+    /* ── Level badge ── */
+    .nivel-badge{display:inline-flex;align-items:center;gap:6px;background:var(--blue-pale);border:1.5px solid #BAE6FD;border-radius:20px;padding:5px 14px;font-size:13px;font-weight:700;color:var(--blue-dark);}
+    .nivel-badge svg{width:13px;height:13px;fill:currentColor;}
+
+    /* ── Game grid ── */
+    .game-grid{display:grid;gap:7px;margin-bottom:18px;}
+
+    /* ── Game card ── */
+    .game-card{
+      background:var(--card);border:1.5px solid var(--border);border-radius:11px;
+      padding:10px 6px;cursor:pointer;
+      transition:border-color .14s,background .14s,transform .1s,box-shadow .14s;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      min-height:70px;user-select:none;-webkit-tap-highlight-color:transparent;
+    }
+    .game-card:hover{border-color:var(--blue);background:var(--blue-pale);transform:translateY(-1px);box-shadow:0 3px 12px rgba(47,158,220,.18);}
+    .game-card.selected{border:2.5px solid var(--blue);background:var(--blue-pale);box-shadow:0 0 0 3px rgba(47,158,220,.18);}
+    .game-card.error{border-color:var(--red)!important;background:var(--red-pale)!important;animation:shake .4s;}
+    .game-card.matched-flash{border-color:var(--green)!important;background:var(--green-pale)!important;pointer-events:none;}
+    .game-card.removed{pointer-events:none;animation:cardOut .35s forwards;}
+    .game-card.type-op{}
+    .game-card.type-result{}
+
+    /* ── Fraction-style operation ── */
+    .op-fraction{display:flex;align-items:center;gap:4px;}
+    .op-sym{font-size:12px;font-weight:900;color:var(--blue-dark);align-self:flex-start;margin-top:2px;flex-shrink:0;line-height:1;}
+    .op-frac-nums{display:flex;flex-direction:column;align-items:center;gap:0;}
+    .op-frac-a,.op-frac-b{font-size:21px;font-weight:800;line-height:1.15;color:var(--text);}
+    .op-frac-line{width:24px;height:1.5px;background:var(--text-muted);border-radius:1px;margin:2px 0;}
+    .op-compound{font-size:14px;font-weight:800;color:var(--text);text-align:center;line-height:1.4;letter-spacing:-.3px;}
+    .res-number{font-size:28px;font-weight:800;color:var(--text);line-height:1;}
+
+    /* ── Slots ── */
+    .slots-wrap{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+    .slot{width:128px;height:60px;border:2px dashed var(--border);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--text-muted);background:var(--bg);transition:all .2s;text-align:center;padding:4px;}
+    .slot.filled{border-style:solid;border-color:var(--blue);background:var(--blue-pale);color:var(--text);}
+    .slot-eq{font-size:24px;font-weight:800;color:var(--text-muted);}
+
+    /* ── Controls ── */
+    .game-controls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+
+    /* ── Status msg ── */
+    .status-msg{text-align:center;font-size:13px;color:var(--text-muted);margin-bottom:12px;min-height:18px;transition:all .2s;}
+
+    /* ── Animations ── */
+    @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+    @keyframes cardOut{0%{opacity:1;transform:scale(1)}40%{opacity:.6;transform:scale(1.08)}100%{opacity:0;transform:scale(.55);visibility:hidden}}
+    @keyframes levelUpPop{0%{opacity:0;transform:scale(.45) rotate(-8deg)}70%{transform:scale(1.12) rotate(1.5deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+    @keyframes fadeInUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes slideUp{from{transform:translateY(28px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+    /* ── Level overlay ── */
+    .level-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
+    .level-card{background:var(--card);border-radius:22px;padding:40px 44px;text-align:center;animation:levelUpPop .45s;box-shadow:0 24px 64px rgba(0,0,0,.35);max-width:320px;width:92vw;}
+    .level-emoji{font-size:68px;line-height:1;margin-bottom:14px;}
+    .level-title{font-size:24px;font-weight:800;margin-bottom:6px;}
+    .level-sub{font-size:13px;color:var(--text-muted);margin-bottom:20px;line-height:1.5;}
+    .level-new{font-size:19px;font-weight:700;color:var(--blue);margin-bottom:24px;}
+
+    /* ── Ranking modal ── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(1px);}
+    @media(min-width:600px){.modal-overlay{align-items:center;}}
+    .modal-sheet{background:var(--card);border-radius:22px 22px 0 0;padding:24px 20px 36px;width:100%;max-width:500px;max-height:82vh;overflow-y:auto;animation:slideUp .28s;}
+    @media(min-width:600px){.modal-sheet{border-radius:22px;}}
+    .modal-handle{width:42px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;}
+    .rank-row-tb{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;border:1px solid var(--border);background:var(--card);margin-bottom:6px;}
+    .rank-pos-tb{font-size:16px;font-weight:800;width:30px;flex-shrink:0;text-align:center;}
+    .rank-name-tb{flex:1;font-size:13px;font-weight:600;}
+    .rank-sub-tb{font-size:11px;color:var(--text-muted);margin-top:2px;}
+    .rank-lvl-tb{font-size:14px;font-weight:800;color:var(--blue);}
+    .rank-lvl-lbl{font-size:10px;color:var(--text-muted);}
+
+    /* ── Back btn ── */
+    .btn-back{display:inline-flex;align-items:center;gap:5px;background:none;border:none;cursor:pointer;color:var(--text-muted);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;padding:6px 4px;border-radius:8px;transition:color .14s;}
+    .btn-back:hover{color:var(--text);}
+    .btn-back svg{width:16px;height:16px;fill:currentColor;}
+
+    /* ── Progress bar (pairs left) ── */
+    .pairs-bar-bg{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap;justify-content:center;}
+    .pair-dot{width:12px;height:12px;border-radius:50%;background:var(--border);transition:background .3s;}
+    .pair-dot.done{background:var(--green);}
+
+    /* ── Responsive ── */
+    @media(max-width:480px){
+      .game-card{min-height:60px;padding:8px 4px;}
+      .op-frac-a,.op-frac-b{font-size:18px;}
+      .res-number{font-size:24px;}
+      .op-compound{font-size:12px;}
+      .timer-wrap{font-size:26px;}
+      .slot{width:110px;height:54px;}
+    }
+    @media(max-width:360px){
+      .op-frac-a,.op-frac-b{font-size:16px;}
+      .res-number{font-size:20px;}
+      .op-sym{font-size:10px;}
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left" style="display:flex;align-items:center;gap:8px">
+        <button class="btn-back" onclick="window.location.href='/aluno/menu.html'">
+          <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+          Voltar
+        </button>
+        <div>
+          <div class="topbar-title">🎮 Tabuada</div>
+          <div class="topbar-sub" id="nivel-display">Carregando…</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="avatar avatar-orange" id="avatar-initials">?</div>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+    </div>
+  </div>
+</div>
+
+<!-- Level up/down overlay -->
+<div id="level-overlay" class="level-overlay" style="display:none">
+  <div class="level-card">
+    <div class="level-emoji" id="lov-emoji">🎉</div>
+    <div class="level-title" id="lov-title">Avançou de nível!</div>
+    <div class="level-sub" id="lov-sub">Excelente trabalho!</div>
+    <div class="level-new" id="lov-new">Nível 2</div>
+    <button class="btn btn-blue btn-lg" onclick="fecharOverlay()">Continuar →</button>
+  </div>
+</div>
+
+<!-- Ranking modal -->
+<div id="ranking-modal" class="modal-overlay" style="display:none" onclick="fecharRankingModal(event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="card-title" style="font-size:16px">🏆 Ranking · Tabuada</div>
+      <button class="btn btn-ghost btn-sm" onclick="fecharRankingModal()">✕ Fechar</button>
+    </div>
+    <div id="ranking-list"><div style="text-align:center;padding:20px;color:var(--text-muted)">Carregando…</div></div>
+  </div>
+</div>
+
+<script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
+<script type="module">
+import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+// ── Auth ──────────────────────────────────────────────────────
+const sess = requireAluno("/index.html");
+if (!sess) throw new Error("não autenticado");
+renderSidebarAluno("sidebar", "");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const { alunos, turma } = sess;
+const nomeAluno = alunos[0];
+// Sanitize Firebase key (no ., #, $, [, ], /)
+const uid = (turma + '_' + nomeAluno).replace(/[.#$\[\]/\s]/g, '_');
+
+document.getElementById("avatar-initials").textContent = nomeAluno[0].toUpperCase();
+
+// ── Firebase ──────────────────────────────────────────────────
+const niveisRef  = ref(db, `tabuada_niveis/${uid}`);
+const rankingRef = ref(db, `tabuada_ranking/${uid}`);
+
+async function carregarProgresso() {
+  try {
+    const snap = await get(niveisRef);
+    if (snap.exists()) return snap.val();
+  } catch(e) {}
+  return { nivel_atual: 1, melhor_nivel: 1, ultima_partida: 0, total_partidas: 0 };
+}
+
+async function salvarProgresso(p) {
+  try {
+    await update(niveisRef, {
+      nivel_atual:    p.nivel_atual,
+      melhor_nivel:   p.melhor_nivel,
+      ultima_partida: Date.now(),
+      total_partidas: p.total_partidas
+    });
+    await set(rankingRef, {
+      nome:          nomeAluno,
+      turma:         turma,
+      nivel_atual:   p.nivel_atual,
+      melhor_nivel:  p.melhor_nivel,
+      ultima_partida: Date.now()
+    });
+  } catch(e) { console.warn('[Tabuada] Erro ao salvar:', e); }
+}
+
+async function carregarRankingGlobal() {
+  try {
+    const snap = await get(ref(db, 'tabuada_ranking'));
+    if (!snap.exists()) return [];
+    const arr = [];
+    snap.forEach(c => { const v = c.val(); if (v && v.nome) arr.push(v); });
+    return arr.sort((a, b) => (b.melhor_nivel || 0) - (a.melhor_nivel || 0));
+  } catch(e) { return []; }
+}
+
+// ── Level config ──────────────────────────────────────────────
+function getLevelConfig(lvl) {
+  // pairs: half the total cards; cols: grid columns; secs: timer
+  if (lvl === 1) return { type:'add',      pairs:2,  cols:2, secs:60 };
+  if (lvl === 2) return { type:'add',      pairs:3,  cols:3, secs:60 };
+  if (lvl === 3) return { type:'add',      pairs:4,  cols:4, secs:60 };
+  if (lvl === 4) return { type:'sub',      pairs:4,  cols:4, secs:60 };
+  if (lvl === 5) return { type:'sub',      pairs:6,  cols:4, secs:60 };
+  if (lvl === 6) return { type:'sub',      pairs:6,  cols:4, secs:50 };
+  if (lvl === 7) return { type:'mul',      pairs:6,  cols:4, secs:50 };
+  if (lvl === 8) return { type:'mul',      pairs:8,  cols:4, secs:50 };
+  if (lvl === 9) return { type:'mul',      pairs:8,  cols:4, secs:50 };
+  if (lvl === 10) return { type:'div',     pairs:8,  cols:4, secs:50 };
+  if (lvl === 11) return { type:'div',     pairs:10, cols:5, secs:45 };
+  if (lvl === 12) return { type:'div',     pairs:10, cols:5, secs:45 };
+  if (lvl === 13) return { type:'mix',     pairs:10, cols:5, secs:45 };
+  if (lvl === 14) return { type:'mix',     pairs:12, cols:6, secs:45 };
+  if (lvl === 15) return { type:'mix',     pairs:12, cols:6, secs:45 };
+  // Level 16+: compound, 40s
+  return { type:'compound', pairs:12, cols:6, secs:40 };
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+function escH(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Op generator ──────────────────────────────────────────────
+function tryGenOp(type, usedR) {
+  let a, b, result, sym, label = null;
+  for (let t = 0; t < 60; t++) {
+    label = null;
+    if (type === 'add') {
+      a = rnd(1, 9); b = rnd(1, 10 - a);
+      result = a + b;
+      if (result > 20 || usedR.has(result)) continue;
+      sym = '+';
+    } else if (type === 'sub') {
+      a = rnd(4, 18); b = rnd(1, a - 1);
+      result = a - b;
+      if (result < 1 || usedR.has(result)) continue;
+      sym = '−';
+    } else if (type === 'mul') {
+      a = rnd(2, 9); b = rnd(2, 9);
+      result = a * b;
+      if (result > 81 || usedR.has(result)) continue;
+      sym = '×';
+    } else if (type === 'div') {
+      b = rnd(2, 9); result = rnd(2, 9);
+      if (usedR.has(result)) continue;
+      a = b * result;
+      sym = '÷';
+    } else if (type === 'mix') {
+      const types = ['add','sub','mul','div'];
+      return tryGenOp(types[rnd(0, 3)], usedR);
+    } else { // compound: a×b+c or a×b−c
+      a = rnd(2, 4); b = rnd(2, 4); const c = rnd(1, 8);
+      const base = a * b;
+      const add  = rnd(0, 1);
+      result = add ? base + c : base - c;
+      if (result <= 0 || usedR.has(result)) continue;
+      sym   = null;
+      label = `${a}×${b}${add?'+':'−'}${c}`;
+    }
+    usedR.add(result);
+    return { op: { sym, a, b, label }, result };
+  }
+  return null;
+}
+
+function generatePairs(type, count) {
+  const pairs = [];
+  const usedR = new Set();
+  // Avoid result collisions; fallback to 'add' if type can't fill
+  for (let attempt = 0; attempt < 600 && pairs.length < count; attempt++) {
+    const p = tryGenOp(type, usedR) || tryGenOp('add', usedR);
+    if (p) pairs.push(p);
+  }
+  return pairs;
+}
+
+// ── Render op HTML ────────────────────────────────────────────
+function opCardHtml(op) {
+  if (op.label) {
+    return `<div class="op-compound">${escH(op.label)}</div>`;
+  }
+  return `<div class="op-fraction">
+    <span class="op-sym">${op.sym}</span>
+    <div class="op-frac-nums">
+      <span class="op-frac-a">${op.a}</span>
+      <div class="op-frac-line"></div>
+      <span class="op-frac-b">${op.b}</span>
+    </div>
+  </div>`;
+}
+
+// ── Game state ────────────────────────────────────────────────
+let progresso = await carregarProgresso();
+let nivelAtual  = Math.max(1, progresso.nivel_atual  || 1);
+let melhorNivel = Math.max(1, progresso.melhor_nivel || 1);
+
+let timerTotal = 60, timerLeft = 60;
+let timerInterval = null;
+let selectedOp = null;  // { el, pairId, op }
+let removedCount = 0, totalPairs = 0;
+let gameOver = false;
+
+function updateNivelDisplay() {
+  document.getElementById("nivel-display").textContent =
+    `Nível ${nivelAtual} · Melhor: ${melhorNivel}`;
+}
+updateNivelDisplay();
+
+// ── Build game ────────────────────────────────────────────────
+function buildGame() {
+  stopTimer();
+  const cfg = getLevelConfig(nivelAtual);
+  timerTotal = cfg.secs;
+  timerLeft  = cfg.secs;
+  totalPairs = cfg.pairs;
+  selectedOp  = null;
+  removedCount = 0;
+  gameOver    = false;
+
+  const pairs  = generatePairs(cfg.type, cfg.pairs);
+  // Fallback: fill with add if not enough pairs generated
+  while (pairs.length < cfg.pairs) {
+    const extra = generatePairs('add', 1);
+    if (extra.length) pairs.push(extra[0]); else break;
+  }
+
+  // Build cards array: op card + result card per pair
+  const cards = [];
+  pairs.forEach((pair, i) => {
+    cards.push({ kind:'op',     pairId:i, op:pair.op, result:pair.result });
+    cards.push({ kind:'result', pairId:i, op:pair.op, result:pair.result });
+  });
+  shuffle(cards);
+
+  updateNivelDisplay();
+
+  // Responsive: limit columns on narrow screens
+  const vw = window.innerWidth;
+  let cols = cfg.cols;
+  if (vw < 380 && cols > 4) cols = 4;
+  else if (vw < 480 && cols > 5) cols = 5;
+
+  // Pairs dots
+  const dotsHtml = Array.from({length:cfg.pairs}, (_,i) =>
+    `<div class="pair-dot" id="dot-${i}"></div>`).join('');
+
+  const content = document.getElementById("content");
+  content.innerHTML = `
+<div style="max-width:700px;margin:0 auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <div class="nivel-badge">
+      <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      Nível ${nivelAtual}
+    </div>
+    <div style="font-size:12px;color:var(--text-muted)">Melhor: <strong style="color:var(--blue)">${melhorNivel}</strong></div>
+  </div>
+
+  <div class="timer-wrap" id="timer-display">
+    <svg viewBox="0 0 24 24"><path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61 1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+    <span id="timer-text">00:${String(timerTotal).padStart(2,'0')}</span>
+  </div>
+  <div class="timer-bar-bg">
+    <div class="timer-bar" id="timer-bar" style="width:100%"></div>
+  </div>
+
+  <div class="pairs-bar-bg" id="pairs-dots">${dotsHtml}</div>
+
+  <div class="status-msg" id="status-msg"></div>
+
+  <div class="game-grid" id="game-grid"
+       style="grid-template-columns:repeat(${cols},1fr)"></div>
+
+  <div class="slots-wrap">
+    <div class="slot" id="slot-op">escolha uma<br>operação</div>
+    <span class="slot-eq">=</span>
+    <div class="slot" id="slot-res">escolha o<br>resultado</div>
+  </div>
+
+  <div class="game-controls">
+    <button class="btn btn-ghost" onclick="reiniciarNivel()">
+      <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+      Reiniciar
+    </button>
+    <button class="btn btn-ghost" onclick="abrirRanking()">
+      <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg>
+      Ranking
+    </button>
+  </div>
+</div>`;
+
+  // Populate grid
+  const grid = document.getElementById("game-grid");
+  cards.forEach((card, idx) => {
+    const el = document.createElement("div");
+    el.className = `game-card type-${card.kind}`;
+    el.dataset.pairId = card.pairId;
+    el.dataset.kind   = card.kind;
+    el.style.cssText  = `animation:fadeInUp .28s ease both;animation-delay:${(idx * 0.025).toFixed(2)}s`;
+    el.innerHTML      = card.kind === 'op'
+      ? opCardHtml(card.op)
+      : `<div class="res-number">${card.result}</div>`;
+    el.addEventListener("click", () => onCardClick(el, card));
+    grid.appendChild(el);
+  });
+
+  startTimer();
+}
+
+// ── Timer ─────────────────────────────────────────────────────
+function startTimer() {
+  updateTimerUI();
+  timerInterval = setInterval(() => {
+    if (gameOver) return;
+    timerLeft = Math.max(0, timerLeft - 1);
+    updateTimerUI();
+    if (timerLeft === 0) { clearInterval(timerInterval); timerInterval = null; onTimerEnd(); }
+  }, 1000);
+}
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+function updateTimerUI() {
+  const pct  = timerTotal > 0 ? timerLeft / timerTotal : 0;
+  const min  = Math.floor(timerLeft / 60);
+  const sec  = timerLeft % 60;
+  const txt  = document.getElementById("timer-text");
+  const wrap = document.getElementById("timer-display");
+  const bar  = document.getElementById("timer-bar");
+  if (!txt) return;
+  txt.textContent = `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  if (wrap) wrap.className = `timer-wrap${timerLeft <= 10 ? ' warn' : ''}`;
+  if (bar) {
+    bar.style.width = `${pct * 100}%`;
+    bar.className   = `timer-bar${pct < .2 ? ' danger' : pct < .4 ? ' warn' : ''}`;
+  }
+}
+
+// ── Card click ────────────────────────────────────────────────
+function setStatus(msg, color) {
+  const el = document.getElementById("status-msg");
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = color || 'var(--text-muted)';
+}
+
+function onCardClick(el, card) {
+  if (gameOver) return;
+  if (el.classList.contains('removed') || el.classList.contains('matched-flash')) return;
+
+  if (card.kind === 'op') {
+    // Deselect any previously selected op card
+    document.querySelectorAll('.game-card.selected').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedOp = { el, pairId: card.pairId, op: card.op };
+
+    const slotOp = document.getElementById("slot-op");
+    if (slotOp) {
+      slotOp.innerHTML = opCardHtml(card.op);
+      slotOp.classList.add("filled");
+    }
+    const slotRes = document.getElementById("slot-res");
+    if (slotRes) { slotRes.innerHTML = "escolha o<br>resultado"; slotRes.classList.remove("filled"); }
+    setStatus("Agora selecione o resultado correto! →", 'var(--blue-dark)');
+
+  } else { // result
+    if (!selectedOp) {
+      setStatus("Primeiro selecione uma operação!", 'var(--orange)');
+      el.classList.add('error');
+      setTimeout(() => el.classList.remove('error'), 500);
+      return;
+    }
+
+    if (card.pairId === selectedOp.pairId) {
+      // ✅ Correct pair
+      const opEl  = selectedOp.el;
+      const resEl = el;
+      opEl.classList.remove('selected');
+      opEl.classList.add('matched-flash');
+      resEl.classList.add('matched-flash');
+
+      const slotRes = document.getElementById("slot-res");
+      if (slotRes) {
+        slotRes.innerHTML = `<div class="res-number">${card.result}</div>`;
+        slotRes.classList.add("filled");
+      }
+
+      setTimeout(() => {
+        opEl.classList.add('removed');
+        resEl.classList.add('removed');
+      }, 200);
+
+      // Mark dot
+      const dot = document.getElementById(`dot-${card.pairId}`);
+      if (dot) dot.classList.add('done');
+
+      selectedOp = null;
+      removedCount++;
+
+      setTimeout(() => {
+        const slotOp2  = document.getElementById("slot-op");
+        const slotRes2 = document.getElementById("slot-res");
+        if (slotOp2)  { slotOp2.innerHTML  = "escolha uma<br>operação"; slotOp2.classList.remove("filled"); }
+        if (slotRes2) { slotRes2.innerHTML = "escolha o<br>resultado"; slotRes2.classList.remove("filled"); }
+        setStatus("");
+      }, 600);
+
+      if (removedCount >= totalPairs) {
+        setTimeout(onGameWin, 500);
+      }
+
+    } else {
+      // ❌ Wrong
+      const opEl = selectedOp.el;
+      opEl.classList.add('error');
+      el.classList.add('error');
+      setStatus("Combinação errada! Tente de novo. ❌", 'var(--red)');
+      setTimeout(() => {
+        opEl.classList.remove('error', 'selected');
+        el.classList.remove('error');
+        selectedOp = null;
+        const slotOp = document.getElementById("slot-op");
+        if (slotOp) { slotOp.innerHTML = "escolha uma<br>operação"; slotOp.classList.remove("filled"); }
+        setTimeout(() => setStatus(""), 1200);
+      }, 500);
+    }
+  }
+}
+
+// ── Win ───────────────────────────────────────────────────────
+async function onGameWin() {
+  gameOver = true;
+  stopTimer();
+
+  const novoNivel  = nivelAtual + 1;
+  const novoMelhor = Math.max(melhorNivel, novoNivel);
+
+  progresso.nivel_atual    = novoNivel;
+  progresso.melhor_nivel   = novoMelhor;
+  progresso.total_partidas = (progresso.total_partidas || 0) + 1;
+
+  nivelAtual  = novoNivel;
+  melhorNivel = novoMelhor;
+
+  await salvarProgresso(progresso);
+
+  const isNewRecord = novoNivel > (novoMelhor - 1);
+  document.getElementById("lov-emoji").textContent = novoNivel > 10 ? '🏆' : '🎉';
+  document.getElementById("lov-title").textContent = "Avançou de nível!";
+  document.getElementById("lov-sub").textContent   =
+    `Tempo restante: ${timerLeft}s · ${isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue avançando!'}`;
+  document.getElementById("lov-new").textContent   = `→ Nível ${novoNivel}`;
+  document.getElementById("level-overlay").style.display = 'flex';
+}
+
+// ── Timer end ─────────────────────────────────────────────────
+async function onTimerEnd() {
+  gameOver = true;
+
+  const novoNivel = Math.max(1, nivelAtual - 1);
+  const caiu = novoNivel < nivelAtual;
+
+  progresso.nivel_atual    = novoNivel;
+  progresso.total_partidas = (progresso.total_partidas || 0) + 1;
+
+  nivelAtual = novoNivel;
+  await salvarProgresso(progresso);
+
+  document.getElementById("lov-emoji").textContent = '⏰';
+  document.getElementById("lov-title").textContent = "Tempo esgotado!";
+  document.getElementById("lov-sub").textContent   = caiu
+    ? `Você desceu para o nível ${novoNivel}. Não desista!`
+    : `Você está no nível mínimo. Continue praticando! 💪`;
+  document.getElementById("lov-new").textContent   = `Nível ${novoNivel}`;
+  document.getElementById("level-overlay").style.display = 'flex';
+}
+
+// ── Public functions ──────────────────────────────────────────
+window.fecharOverlay = function() {
+  document.getElementById("level-overlay").style.display = 'none';
+  buildGame();
+};
+
+window.reiniciarNivel = function() {
+  stopTimer();
+  buildGame();
+};
+
+window.abrirRanking = async function() {
+  document.getElementById("ranking-modal").style.display = 'flex';
+  const list = document.getElementById("ranking-list");
+  list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted)">Carregando…</div>';
+
+  const data  = await carregarRankingGlobal();
+  const top10 = data.slice(0, 10);
+
+  if (!top10.length) {
+    list.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg><p>Nenhum jogador ainda. Seja o primeiro!</p></div>`;
+    return;
+  }
+
+  list.innerHTML = top10.map((r, i) => {
+    const isMe  = r.nome === nomeAluno && r.turma === turma;
+    const pos   = i + 1;
+    const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : `#${pos}`;
+    const ts    = r.ultima_partida ? new Date(r.ultima_partida) : null;
+    const tsStr = ts ? `${String(ts.getDate()).padStart(2,'0')}/${String(ts.getMonth()+1).padStart(2,'0')} ${ts.getHours()}:${String(ts.getMinutes()).padStart(2,'0')}` : '—';
+    return `<div class="rank-row-tb"${isMe ? ' style="border-color:var(--blue);background:var(--blue-pale)"' : ''}>
+      <div class="rank-pos-tb">${medal}</div>
+      <div style="flex:1;min-width:0">
+        <div class="rank-name-tb">${escH(r.nome)}${isMe ? ' ★' : ''}</div>
+        <div class="rank-sub-tb">Turma ${escH(r.turma)} · última partida: ${tsStr}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div class="rank-lvl-tb">Nível ${r.melhor_nivel}</div>
+        <div class="rank-lvl-lbl">melhor</div>
+        <div style="font-size:10px;color:var(--text-muted)">Atual: ${r.nivel_atual}</div>
+      </div>
+    </div>`;
+  }).join('');
+};
+
+window.fecharRankingModal = function(e) {
+  if (!e || e.target === document.getElementById("ranking-modal")) {
+    document.getElementById("ranking-modal").style.display = 'none';
+  }
+};
+
+// ── Start ─────────────────────────────────────────────────────
+buildGame();
+</script>
+</body>
+</html>

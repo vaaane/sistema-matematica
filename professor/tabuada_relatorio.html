@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🎮 Tabuada · Relatório — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .lvl-badge{display:inline-flex;align-items:center;justify-content:center;width:38px;height:24px;border-radius:12px;font-size:12px;font-weight:800;}
+    .lvl-1-5{background:#DCFCE7;color:#15803D;}
+    .lvl-6-10{background:#DBEAFE;color:#1D4ED8;}
+    .lvl-11-15{background:#F5F3FF;color:#5B21B6;}
+    .lvl-16p{background:linear-gradient(135deg,#FEF3C7,#FDE68A);color:#92400E;}
+    .turma-pill{display:inline-flex;align-items:center;padding:4px 11px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .14s;margin-right:6px;margin-bottom:6px;}
+    .turma-pill.on{border-color:var(--blue);background:var(--blue);color:#fff;}
+    .rank-hero{display:flex;align-items:center;gap:10px;padding:14px 16px;background:linear-gradient(135deg,var(--blue-pale),#F0F9FF);border:1.5px solid #BAE6FD;border-radius:var(--radius);margin-bottom:14px;}
+    .rank-hero-pos{font-size:36px;font-weight:900;color:var(--blue);line-height:1;flex-shrink:0;}
+    .spark{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 2px;}
+    .spark.done{background:var(--green);}
+    .spark.todo{background:var(--border);}
+    .no-data{display:flex;flex-direction:column;align-items:center;padding:48px 20px;text-align:center;color:var(--text-muted);gap:10px;}
+    .no-data svg{width:40px;height:40px;fill:var(--border);}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">🎮 Tabuada · Relatório</div>
+        <div class="topbar-sub">Progresso dos alunos no mini-jogo</div>
+      </div>
+      <div class="topbar-right" style="gap:8px;display:flex">
+        <button class="btn btn-ghost btn-sm" onclick="exportarCSV()" id="btn-csv" disabled>
+          <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+          Exportar CSV
+        </button>
+        <button class="btn btn-blue btn-sm" onclick="recarregar()">
+          <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          Atualizar
+        </button>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando dados…</div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { ALUNOS_POR_TURMA } from "/js/constants.js";
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+requireProfessor();
+renderSidebarProfessor("sidebar", "tabuada_relatorio");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+// ── Load data ─────────────────────────────────────────────────
+let allData = [];   // array of { nome, turma, nivel_atual, melhor_nivel, ultima_partida, total_partidas }
+let filtroTurma = "";
+
+async function loadData() {
+  const content = document.getElementById("content");
+  content.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>';
+
+  try {
+    const snap = await get(ref(db, 'tabuada_ranking'));
+    allData = [];
+    if (snap.exists()) {
+      // Ranking has: nome, turma, nivel_atual, melhor_nivel, ultima_partida
+      snap.forEach(child => {
+        const v = child.val();
+        if (v && v.nome) allData.push({ ...v });
+      });
+    }
+
+    // Also load total_partidas from niveis
+    const niveisSnap = await get(ref(db, 'tabuada_niveis'));
+    const niveisMap  = {};
+    if (niveisSnap.exists()) {
+      niveisSnap.forEach(child => {
+        const v = child.val();
+        if (v) niveisMap[child.key] = v;
+      });
+    }
+
+    // Merge total_partidas
+    allData.forEach(d => {
+      const key = (d.turma + '_' + d.nome).replace(/[.#$\[\]/\s]/g, '_');
+      const nd  = niveisMap[key];
+      if (nd) d.total_partidas = nd.total_partidas || 0;
+      else    d.total_partidas = 0;
+    });
+
+    // Sort by melhor_nivel desc
+    allData.sort((a, b) => (b.melhor_nivel || 0) - (a.melhor_nivel || 0));
+    document.getElementById("btn-csv").disabled = allData.length === 0;
+
+  } catch(e) {
+    content.innerHTML = `<div class="alert alert-error"><svg viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>Erro ao carregar dados. Verifique a conexão.</div>`;
+    return;
+  }
+
+  renderPage();
+}
+
+function renderPage() {
+  const turmas = Object.keys(ALUNOS_POR_TURMA).sort();
+  const data   = filtroTurma ? allData.filter(d => d.turma === filtroTurma) : allData;
+
+  // Stats
+  const totalJogadores = allData.length;
+  const maxNivel       = allData.length ? Math.max(...allData.map(d => d.melhor_nivel || 0)) : 0;
+  const mediaAtual     = allData.length ? (allData.reduce((s, d) => s + (d.nivel_atual || 0), 0) / allData.length).toFixed(1) : '—';
+  const totalPartidas  = allData.reduce((s, d) => s + (d.total_partidas || 0), 0);
+
+  // Top 3
+  const top3 = allData.slice(0, 3);
+
+  const turmasPillsHtml = [
+    `<span class="turma-pill${!filtroTurma ? ' on' : ''}" onclick="mudarFiltro('')">Todas</span>`,
+    ...turmas.map(t => `<span class="turma-pill${filtroTurma === t ? ' on' : ''}" onclick="mudarFiltro('${t}')">Turma ${t}</span>`)
+  ].join('');
+
+  function lvlClass(n) {
+    if (n >= 16) return 'lvl-16p';
+    if (n >= 11) return 'lvl-11-15';
+    if (n >= 6)  return 'lvl-6-10';
+    return 'lvl-1-5';
+  }
+  function fmtDate(ts) {
+    if (!ts) return '—';
+    const d = new Date(ts);
+    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }
+  function progDots(nivel, max = 16) {
+    return Array.from({length: Math.min(max, 16)}, (_,i) =>
+      `<span class="spark ${i < nivel ? 'done' : 'todo'}"></span>`
+    ).join('');
+  }
+
+  // By-turma summary
+  const turmaSummary = turmas.map(t => {
+    const td  = allData.filter(d => d.turma === t);
+    const cadastrados = ALUNOS_POR_TURMA[t] || [];
+    const jogaram     = td.length;
+    const mediaLvl    = jogaram ? (td.reduce((s,d) => s + (d.nivel_atual||0), 0) / jogaram).toFixed(1) : '—';
+    const maxLvl      = jogaram ? Math.max(...td.map(d => d.melhor_nivel||0)) : '—';
+    return { t, cadastrados: cadastrados.length, jogaram, mediaLvl, maxLvl };
+  });
+
+  document.getElementById("content").innerHTML = `
+<div class="grid-4" style="margin-bottom:20px">
+  <div class="stat-card">
+    <div class="stat-icon blue"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div>
+    <div><div class="stat-value blue">${totalJogadores}</div><div class="stat-meta">Alunos jogaram</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon gold"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+    <div><div class="stat-value gold">${maxNivel}</div><div class="stat-meta">Maior nível atingido</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon orange"><svg viewBox="0 0 24 24"><path d="M13 2.05v2.02c3.95.49 7 3.85 7 7.93 0 3.21-1.81 6-4.72 7.28L13 17v5l5-3-1.22-1.22C19.91 15.69 22 12.58 22 12c0-5.18-3.94-9.45-9-9.95zM11 2.05C5.95 2.55 2 6.82 2 12c0 3.58 2.09 6.69 5.22 8.28L9 22v-5l-2.28-2.28C4.81 13 3 10.21 3 7.93c0-4.08 3.05-7.44 7-7.93v2.05z"/></svg></div>
+    <div><div class="stat-value orange">${mediaAtual}</div><div class="stat-meta">Nível médio atual</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon green"><svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21L13 13.04V8h-1z"/></svg></div>
+    <div><div class="stat-value green">${totalPartidas}</div><div class="stat-meta">Partidas totais</div></div>
+  </div>
+</div>
+
+${top3.length ? `
+<div class="card" style="margin-bottom:20px">
+  <div class="section-label" style="color:#F59E0B">
+    <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18 7 3.12V11c0 4.52-3.05 8.75-7 9.93-3.95-1.18-7-5.41-7-9.93V6.3l7-3.12z"/></svg>
+    Top 3 Geral
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    ${top3.map((d, i) => {
+      const bg  = ['linear-gradient(135deg,#F59E0B,#D97706)','linear-gradient(135deg,#9CA3AF,#6B7280)','linear-gradient(135deg,#CD853F,#92400E)'][i];
+      const ico = ['🥇','🥈','🥉'][i];
+      return `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:11px;background:${bg}">
+        <span style="font-size:28px">${ico}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:800;color:#fff">${d.nome}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.75)">Turma ${d.turma} · ${d.total_partidas} partida(s)</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:20px;font-weight:800;color:#fff">Nível ${d.melhor_nivel}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.7)">melhor</div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+</div>` : ''}
+
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header">
+    <div class="card-title">
+      <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+      Resumo por Turma
+    </div>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="table">
+      <thead><tr>
+        <th>Turma</th><th>Cadastrados</th><th>Jogaram</th><th>Participação</th><th>Nível Médio</th><th>Maior Nível</th>
+      </tr></thead>
+      <tbody>
+        ${turmaSummary.map(ts => `<tr>
+          <td><strong>Turma ${ts.t}</strong></td>
+          <td>${ts.cadastrados}</td>
+          <td><strong>${ts.jogaram}</strong></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div style="width:80px;height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+                <div style="width:${ts.cadastrados ? Math.round(ts.jogaram/ts.cadastrados*100) : 0}%;height:100%;background:var(--blue);border-radius:3px"></div>
+              </div>
+              <span style="font-size:12px;color:var(--text-muted)">${ts.cadastrados ? Math.round(ts.jogaram/ts.cadastrados*100) : 0}%</span>
+            </div>
+          </td>
+          <td><span style="font-weight:700;color:var(--blue)">${ts.mediaLvl}</span></td>
+          <td><span style="font-weight:800;color:var(--gold)">${ts.maxLvl}</span></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+      Todos os Alunos
+    </div>
+    <div>
+      <span style="font-size:11px;color:var(--text-muted);margin-right:8px">Filtrar:</span>
+      ${turmasPillsHtml}
+    </div>
+  </div>
+  ${data.length === 0 ? `<div class="no-data"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg><p>${filtroTurma ? `Nenhum aluno da Turma ${filtroTurma} jogou ainda.` : 'Nenhum aluno jogou ainda.'}</p></div>`
+  : `<div style="overflow-x:auto">
+    <table class="table">
+      <thead><tr>
+        <th>#</th><th>Aluno</th><th>Turma</th><th>Nível Atual</th><th>Melhor Nível</th><th>Progresso</th><th>Partidas</th><th>Última Partida</th>
+      </tr></thead>
+      <tbody>
+        ${data.map((d, i) => `<tr>
+          <td style="color:var(--text-muted);font-weight:600">${i+1}</td>
+          <td><strong>${d.nome}</strong></td>
+          <td><span class="badge badge-blue">Turma ${d.turma}</span></td>
+          <td><span class="lvl-badge ${lvlClass(d.nivel_atual||1)}">${d.nivel_atual||1}</span></td>
+          <td><span class="lvl-badge ${lvlClass(d.melhor_nivel||1)}">${d.melhor_nivel||1}</span></td>
+          <td style="min-width:100px">${progDots(Math.min(d.melhor_nivel||0, 16))}</td>
+          <td style="color:var(--text-muted);font-size:13px">${d.total_partidas||0}</td>
+          <td style="color:var(--text-muted);font-size:12px">${fmtDate(d.ultima_partida)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`}
+</div>`;
+}
+
+window.mudarFiltro = function(t) {
+  filtroTurma = t;
+  renderPage();
+};
+
+window.recarregar = function() { loadData(); };
+
+window.exportarCSV = function() {
+  const data = filtroTurma ? allData.filter(d => d.turma === filtroTurma) : allData;
+  const header = ['Nome','Turma','Nível Atual','Melhor Nível','Total Partidas','Última Partida'];
+  const rows = data.map(d => [
+    d.nome, d.turma, d.nivel_atual||1, d.melhor_nivel||1, d.total_partidas||0,
+    d.ultima_partida ? new Date(d.ultima_partida).toLocaleString('pt-BR') : '—'
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `tabuada_relatorio_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+};
+
+loadData();
+</script>
+</body>
+</html>
