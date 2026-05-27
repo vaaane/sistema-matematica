@@ -64,11 +64,12 @@
 
     /* Game card */
     .game-card{
+      position:relative;
       background:var(--card);border:1.5px solid var(--border);border-radius:11px;
       padding:10px 6px;cursor:pointer;
       transition:border-color .14s,background .14s,transform .1s,box-shadow .14s;
       display:flex;flex-direction:column;align-items:center;justify-content:center;
-      min-height:70px;user-select:none;-webkit-tap-highlight-color:transparent;
+      min-height:72px;user-select:none;-webkit-tap-highlight-color:transparent;
     }
     .game-card:hover{border-color:var(--blue);background:var(--blue-pale);transform:translateY(-1px);}
     .game-card.selected{border:2.5px solid var(--blue);background:var(--blue-pale);box-shadow:0 0 0 3px rgba(47,158,220,.18);}
@@ -77,12 +78,12 @@
     .game-card.removed{pointer-events:none;animation:cardOut .35s forwards;}
 
     /* Fraction op */
-    .op-fraction{display:flex;align-items:center;gap:4px;}
-    .op-sym{font-size:12px;font-weight:900;color:var(--blue-dark);align-self:flex-start;margin-top:2px;flex-shrink:0;}
-    .op-frac-nums{display:flex;flex-direction:column;align-items:center;}
-    .op-frac-a,.op-frac-b{font-size:21px;font-weight:800;line-height:1.15;color:var(--text);}
-    .op-frac-line{width:24px;height:1.5px;background:var(--text-muted);border-radius:1px;margin:2px 0;}
-    .op-compound{font-size:14px;font-weight:800;color:var(--text);text-align:center;line-height:1.4;}
+    /* Operador no canto + fração centralizada */
+    .operador{position:absolute;top:5px;left:7px;font-size:13px;font-weight:900;color:var(--text);line-height:1;}
+    .fracao{display:flex;flex-direction:column;align-items:center;}
+    .num-cima{font-size:22px;font-weight:800;line-height:1.15;color:var(--text);border-bottom:2px solid var(--text);padding-bottom:1px;min-width:22px;text-align:center;}
+    .num-baixo{font-size:22px;font-weight:800;line-height:1.15;color:var(--text);padding-top:1px;min-width:22px;text-align:center;}
+    .op-compound{font-size:13px;font-weight:800;color:var(--text);text-align:center;line-height:1.4;padding:0 4px;}
     .res-number{font-size:28px;font-weight:800;color:var(--text);}
 
     /* Slots */
@@ -116,11 +117,11 @@
 
     /* Animations */
     @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
-    @keyframes cardOut{0%{opacity:1;transform:scale(1)}40%{opacity:.5;transform:scale(1.07)}100%{opacity:0;transform:scale(.5);visibility:hidden}}
+    @keyframes cardOut{0%{opacity:1;transform:scale(1)}30%{opacity:.7;transform:scale(1.05)}100%{opacity:0;transform:scale(0);visibility:hidden}}
     @keyframes levelUpPop{0%{opacity:0;transform:scale(.4)}70%{transform:scale(1.1)}100%{opacity:1;transform:scale(1)}}
     @keyframes fadeInUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
-    @media(max-width:480px){.game-card{min-height:60px;}.op-frac-a,.op-frac-b{font-size:18px;}.res-number{font-size:24px;}.op-compound{font-size:12px;}}
+    @media(max-width:480px){.game-card{min-height:60px;}.num-cima,.num-baixo{font-size:18px;}.res-number{font-size:22px;}.op-compound{font-size:11px;}.operador{font-size:11px;}}
   </style>
 </head>
 <body>
@@ -274,19 +275,12 @@ function generatePairs(type,count){
 
 function opCardHtml(op){
   if(op.label) return `<div class="op-compound">${escH(op.label)}</div>`;
-  return `<div class="op-fraction">
-    <span class="op-sym">${op.sym}</span>
-    <div class="op-frac-nums">
-      <span class="op-frac-a">${op.a}</span>
-      <div class="op-frac-line"></div>
-      <span class="op-frac-b">${op.b}</span>
-    </div>
-  </div>`;
+  return `<span class="operador">${op.sym}</span><div class="fracao"><span class="num-cima">${op.a}</span><span class="num-baixo">${op.b}</span></div>`;
 }
 
 // ── Game state ────────────────────────────────────────────────
 let timerInterval=null,timerLeft=60,timerTotal=60;
-let selectedOp=null,removedCount=0,totalPairs=0,gameOver=false;
+let selectedCard=null,removedCount=0,totalPairs=0,gameOver=false;
 let currentLevel=1;
 
 function stopTimer(){ if(timerInterval){clearInterval(timerInterval);timerInterval=null;} }
@@ -339,7 +333,7 @@ function iniciarJogo(){
   if(tipoForcado)cfg.type=tipoForcado;
 
   timerTotal=cfg.secs; timerLeft=cfg.secs;
-  totalPairs=cfg.pairs; selectedOp=null; removedCount=0; gameOver=false;
+  totalPairs=cfg.pairs; selectedCard=null; removedCount=0; gameOver=false;
 
   document.getElementById("config-info").textContent =
     `Nível ${lvl} · tipo: ${cfg.type} · ${cfg.pairs} pares · ${cfg.cols} colunas · ${cfg.secs}s`;
@@ -378,9 +372,9 @@ function iniciarJogo(){
   <div class="status-msg" id="status-msg"></div>
   <div class="game-grid" id="game-grid" style="grid-template-columns:repeat(${cols},1fr)"></div>
   <div class="slots-wrap">
-    <div class="slot" id="slot-op">escolha uma<br>operação</div>
+    <div class="slot" id="slot-op">operação</div>
     <span class="slot-eq">=</span>
-    <div class="slot" id="slot-res">escolha o<br>resultado</div>
+    <div class="slot" id="slot-res">resultado</div>
   </div>
 </div>`;
 
@@ -398,59 +392,70 @@ function iniciarJogo(){
   startTimer();
 }
 
+function clearSlots(){
+  const slotOp=document.getElementById("slot-op");
+  const slotRes=document.getElementById("slot-res");
+  if(slotOp){slotOp.innerHTML="operação";slotOp.classList.remove("filled");}
+  if(slotRes){slotRes.innerHTML="resultado";slotRes.classList.remove("filled");}
+}
+function fillSlot(card){
+  if(card.kind==='op'){
+    const s=document.getElementById("slot-op");
+    if(s){s.innerHTML=opCardHtml(card.op);s.classList.add("filled");}
+  }else{
+    const s=document.getElementById("slot-res");
+    if(s){s.innerHTML=`<div class="res-number">${card.result}</div>`;s.classList.add("filled");}
+  }
+}
+
 function onCardClick(el,card){
   if(gameOver)return;
   if(el.classList.contains('removed')||el.classList.contains('matched-flash'))return;
-  if(card.kind==='op'){
-    document.querySelectorAll('.game-card.selected').forEach(c=>c.classList.remove('selected'));
+
+  // Toggle: clicar no mesmo card deseleciona
+  if(selectedCard&&selectedCard.el===el){
+    el.classList.remove('selected');
+    selectedCard=null; clearSlots(); setStatus(""); return;
+  }
+
+  // Primeiro clique
+  if(!selectedCard){
     el.classList.add('selected');
-    selectedOp={el,pairId:card.pairId,op:card.op};
-    const slotOp=document.getElementById("slot-op");
-    if(slotOp){slotOp.innerHTML=opCardHtml(card.op);slotOp.classList.add("filled");}
-    const slotRes=document.getElementById("slot-res");
-    if(slotRes){slotRes.innerHTML="escolha o<br>resultado";slotRes.classList.remove("filled");}
-    setStatus("Selecione o resultado →",'#1A7FB8');
-    log(`Operação selecionada: pairId=${card.pairId}`);
+    selectedCard={el,pairId:card.pairId,kind:card.kind,op:card.op,result:card.result};
+    fillSlot(card);
+    setStatus("Selecione o par →",'#1A7FB8');
+    log(`1º selecionado: kind=${card.kind} pairId=${card.pairId}`);
+    return;
+  }
+
+  // Segundo clique
+  const first=selectedCard;
+  el.classList.add('selected');
+  fillSlot(card);
+
+  if(first.pairId===card.pairId && first.kind!==card.kind){
+    // ✅ Correto
+    log(`✅ Correto! pairId=${card.pairId} resultado=${card.kind==='result'?card.result:first.result}`,'#15803D');
+    first.el.classList.remove('selected'); el.classList.remove('selected');
+    first.el.classList.add('matched-flash'); el.classList.add('matched-flash');
+    const dot=document.getElementById(`dot-${card.pairId}`);
+    if(dot)dot.classList.add('done');
+    setTimeout(()=>{first.el.classList.add('removed');el.classList.add('removed');},220);
+    selectedCard=null; removedCount++;
+    setTimeout(()=>{clearSlots();setStatus("");},650);
+    updateStatsBox();
+    if(removedCount>=totalPairs)setTimeout(onGameWin,500);
   }else{
-    if(!selectedOp){
-      setStatus("Selecione primeiro uma operação!");
-      el.classList.add('error');setTimeout(()=>el.classList.remove('error'),500);
-      return;
-    }
-    if(card.pairId===selectedOp.pairId){
-      log(`✅ Combinação correta! pairId=${card.pairId} resultado=${card.result}`,'#15803D');
-      selectedOp.el.classList.remove('selected');
-      selectedOp.el.classList.add('matched-flash');
-      el.classList.add('matched-flash');
-      const slotRes=document.getElementById("slot-res");
-      if(slotRes){slotRes.innerHTML=`<div class="res-number">${card.result}</div>`;slotRes.classList.add("filled");}
-      const dot=document.getElementById(`dot-${card.pairId}`);
-      if(dot)dot.classList.add('done');
-      setTimeout(()=>{selectedOp.el.classList.add('removed');el.classList.add('removed');},200);
-      selectedOp=null; removedCount++;
-      setTimeout(()=>{
-        const slotOp2=document.getElementById("slot-op");
-        const slotRes2=document.getElementById("slot-res");
-        if(slotOp2){slotOp2.innerHTML="escolha uma<br>operação";slotOp2.classList.remove("filled");}
-        if(slotRes2){slotRes2.innerHTML="escolha o<br>resultado";slotRes2.classList.remove("filled");}
-        setStatus("");
-      },600);
-      updateStatsBox();
-      if(removedCount>=totalPairs)setTimeout(onGameWin,500);
-    }else{
-      log(`❌ Errou! op.pairId=${selectedOp.pairId} clicado.pairId=${card.pairId}`,'#B91C1C');
-      selectedOp.el.classList.add('error');
-      el.classList.add('error');
-      setStatus("Errou! Tente novamente. ❌",'#B91C1C');
-      setTimeout(()=>{
-        selectedOp.el.classList.remove('error','selected');
-        el.classList.remove('error');
-        const slotOp=document.getElementById("slot-op");
-        if(slotOp){slotOp.innerHTML="escolha uma<br>operação";slotOp.classList.remove("filled");}
-        selectedOp=null;
-        setTimeout(()=>setStatus(""),1200);
-      },500);
-    }
+    // ❌ Errado
+    log(`❌ Errou! first.pairId=${first.pairId} second.pairId=${card.pairId} first.kind=${first.kind} second.kind=${card.kind}`,'#B91C1C');
+    first.el.classList.add('error'); el.classList.add('error');
+    setStatus("Errou! Tente outra combinação. ❌",'#B91C1C');
+    setTimeout(()=>{
+      first.el.classList.remove('error','selected');
+      el.classList.remove('error','selected');
+      selectedCard=null; clearSlots();
+      setTimeout(()=>setStatus(""),800);
+    },600);
   }
 }
 
