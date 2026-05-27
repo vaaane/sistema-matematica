@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🎮 Jogos — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    /* ── Dark palette ── */
+    :root {
+      --j-bg:      #0d1117;
+      --j-card:    #12172a;
+      --j-hero:    #161d35;
+      --j-pri:     #7F77DD;
+      --j-pri-h:   #534AB7;
+      --j-txt:     #e2e8f0;
+      --j-muted:   #475569;
+      --j-green:   #1D9E75;
+      --j-red:     #E24B4A;
+      --j-orange:  #f97316;
+      --j-gold:    #eab308;
+      --j-border:  rgba(255,255,255,0.07);
+      --j-tab-act: #1e2640;
+    }
+
+    /* ── Keyframes ── */
+    @keyframes j-pulse {
+      0%   { transform: scale(1);   opacity: 0.6; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+    @keyframes j-shine {
+      0%   { left: -80%; }
+      100% { left: 120%; }
+    }
+    @keyframes j-fadein {
+      from { opacity:0; transform:translateY(10px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* ── Page shell ── */
+    .j-wrap {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 0 32px;
+      animation: j-fadein .4s ease;
+    }
+
+    /* ── Hero card ── */
+    .j-hero {
+      background: var(--j-hero);
+      border: 0.5px solid rgba(127,119,221,0.35);
+      border-radius: 16px;
+      padding: 28px 28px 24px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .j-hero-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 22px;
+    }
+    .j-hero-icon-wrap {
+      position: relative;
+      flex-shrink: 0;
+      width: 58px; height: 58px;
+    }
+    .j-pulse-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid rgba(127,119,221,0.5);
+      animation: j-pulse 2s ease-out infinite;
+    }
+    .j-pulse-ring:nth-child(2) { animation-delay: 0.7s; }
+    .j-hero-icon {
+      position: relative;
+      z-index: 1;
+      width: 58px; height: 58px;
+      background: var(--j-pri);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .j-hero-icon svg { width: 28px; height: 28px; fill: #fff; }
+    .j-hero-body { flex: 1; min-width: 0; }
+    .j-tag {
+      display: inline-block;
+      font-size: 10px; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: var(--j-pri);
+      background: rgba(127,119,221,.12);
+      border: 0.5px solid rgba(127,119,221,.25);
+      border-radius: 5px; padding: 2px 8px;
+      margin-bottom: 6px;
+    }
+    .j-hero-title {
+      font-size: 22px; font-weight: 800;
+      color: var(--j-txt); line-height: 1.1;
+    }
+    .j-hero-desc {
+      font-size: 13px; color: var(--j-muted);
+      margin-top: 5px; line-height: 1.4;
+    }
+    .j-record-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      margin-top: 10px;
+      font-size: 12px; font-weight: 600;
+      color: var(--j-gold);
+      background: rgba(234,179,8,.08);
+      border: 0.5px solid rgba(234,179,8,.2);
+      border-radius: 20px; padding: 4px 12px;
+    }
+    .j-hero-actions {
+      display: flex; align-items: center; gap: 14px;
+      margin-top: 20px;
+    }
+    .j-play-btn {
+      position: relative; overflow: hidden;
+      background: var(--j-pri);
+      color: #fff;
+      border: none; border-radius: 12px;
+      padding: 14px 28px;
+      font-size: 15px; font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex; align-items: center; gap: 8px;
+      transition: background .2s;
+    }
+    .j-play-btn:hover { background: var(--j-pri-h); color: #fff; }
+    .j-play-btn::after {
+      content: '';
+      position: absolute; top: 0; bottom: 0;
+      width: 40%; background: rgba(255,255,255,.22);
+      transform: skewX(-20deg);
+      animation: j-shine 3s ease-in-out infinite;
+      pointer-events: none;
+    }
+    .j-sprint-btn {
+      background: rgba(127,119,221,.12);
+      color: var(--j-pri);
+      border: 1px solid rgba(127,119,221,.3);
+      border-radius: 12px;
+      padding: 14px 20px;
+      font-size: 14px; font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: background .2s, border-color .2s;
+    }
+    .j-sprint-btn:hover { background: rgba(127,119,221,.2); border-color: rgba(127,119,221,.5); color: var(--j-pri); }
+    .j-stats-row {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      border-top: 0.5px solid var(--j-border);
+      margin-top: 22px;
+    }
+    .j-stat {
+      padding: 16px 8px; text-align: center;
+      border-right: 0.5px solid var(--j-border);
+      animation: j-fadein .5s ease both;
+    }
+    .j-stat:last-child { border-right: none; }
+    .j-stat:nth-child(1) { animation-delay: .1s; }
+    .j-stat:nth-child(2) { animation-delay: .2s; }
+    .j-stat:nth-child(3) { animation-delay: .3s; }
+    .j-stat-val {
+      font-size: 26px; font-weight: 800;
+      color: var(--j-pri); line-height: 1;
+    }
+    .j-stat-val.orange { color: var(--j-orange); }
+    .j-stat-lbl {
+      font-size: 11px; color: var(--j-muted); margin-top: 4px;
+    }
+
+    /* ── Two-column grid ── */
+    .j-grid2 {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 16px; margin-bottom: 20px;
+    }
+    @media(max-width:640px) { .j-grid2 { grid-template-columns: 1fr; } }
+
+    /* ── Card shell ── */
+    .j-card {
+      background: var(--j-card);
+      border: 0.5px solid var(--j-border);
+      border-radius: 14px;
+      padding: 18px;
+    }
+    .j-card-hdr {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 700;
+      letter-spacing: .07em; text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .j-card-hdr svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* ── History rows ── */
+    .j-hist-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 10px; border-radius: 9px;
+      border: 0.5px solid var(--j-border);
+      background: rgba(255,255,255,.02);
+      margin-bottom: 6px;
+    }
+    .j-hist-row:last-child { margin-bottom: 0; }
+    .j-level-badge {
+      font-size: 11px; font-weight: 800;
+      padding: 3px 7px; border-radius: 6px;
+      flex-shrink: 0;
+    }
+    .j-level-badge.ok   { background: rgba(29,158,117,.15); color: var(--j-green); border: 0.5px solid rgba(29,158,117,.3); }
+    .j-level-badge.fail { background: rgba(226,75,74,.12);  color: var(--j-red);   border: 0.5px solid rgba(226,75,74,.25); }
+    .j-hist-info { flex: 1; min-width: 0; }
+    .j-hist-date { font-size: 11px; color: var(--j-muted); }
+    .j-hist-scores {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 3px;
+    }
+    .j-score {
+      font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; gap: 3px;
+    }
+    .j-score.ok   { color: var(--j-green); }
+    .j-score.fail { color: var(--j-red); }
+    .j-badge-mini {
+      font-size: 10px; font-weight: 700;
+      padding: 1px 6px; border-radius: 4px;
+    }
+    .j-badge-perf {
+      background: rgba(234,179,8,.1);
+      color: var(--j-gold);
+      border: 0.5px solid rgba(234,179,8,.2);
+    }
+    .j-badge-fail {
+      background: rgba(226,75,74,.1);
+      color: var(--j-red);
+      border: 0.5px solid rgba(226,75,74,.2);
+    }
+
+    /* ── Ranking tabs ── */
+    .j-tabs {
+      display: flex; gap: 4px;
+      background: rgba(255,255,255,.03);
+      border: 0.5px solid var(--j-border);
+      border-radius: 8px; padding: 3px;
+      margin-bottom: 14px;
+    }
+    .j-tab {
+      flex: 1; padding: 6px 10px;
+      font-size: 12px; font-weight: 600;
+      text-align: center; border-radius: 6px;
+      cursor: pointer; border: none;
+      background: transparent; color: var(--j-muted);
+      transition: all .15s;
+    }
+    .j-tab.active {
+      background: var(--j-tab-act);
+      color: var(--j-pri);
+    }
+    .j-rank-list { display: block; }
+    .j-rank-list.hidden { display: none; }
+
+    /* ── Rank rows ── */
+    .j-rank-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px; border-radius: 9px;
+      border: 0.5px solid var(--j-border);
+      background: rgba(255,255,255,.02);
+      margin-bottom: 6px;
+    }
+    .j-rank-row:last-child { margin-bottom: 0; }
+    .j-rank-row.me {
+      background: rgba(127,119,221,.06);
+      border-color: rgba(127,119,221,.2);
+    }
+    .j-medal {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800;
+      flex-shrink: 0;
+    }
+    .j-medal.gold   { background: rgba(234,179,8,.15);  color: #f5c542; border: 1px solid rgba(234,179,8,.3); }
+    .j-medal.silver { background: rgba(148,163,184,.12); color: #94A3B8; border: 1px solid rgba(148,163,184,.25); }
+    .j-medal.bronze { background: rgba(180,110,70,.12);  color: #CD7F32; border: 1px solid rgba(180,110,70,.25); }
+    .j-medal.plain  { background: rgba(255,255,255,.04); color: var(--j-muted); font-size:11px; border: 0.5px solid var(--j-border); }
+    .j-rank-name { font-size: 13px; font-weight: 700; color: var(--j-txt); }
+    .j-rank-sub  { font-size: 11px; color: var(--j-muted); margin-top: 1px; }
+    .j-rank-val  {
+      font-size: 18px; font-weight: 800;
+      color: var(--j-pri); text-align: right;
+    }
+    .j-rank-lbl  { font-size: 10px; color: var(--j-muted); text-align: right; }
+    .j-you       { font-size: 10px; color: var(--j-pri); margin-left: 4px; font-weight: 600; }
+
+    /* ── Level grid ── */
+    .j-levels-card {
+      background: var(--j-card);
+      border: 0.5px solid var(--j-border);
+      border-radius: 14px;
+      padding: 18px;
+    }
+    .j-levels-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px; flex-wrap: wrap; gap: 8px;
+    }
+    .j-levels-hdr-left {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 700;
+      letter-spacing: .07em; text-transform: uppercase;
+      color: var(--j-pri);
+    }
+    .j-levels-hdr-left svg { width: 16px; height: 16px; fill: var(--j-pri); }
+    .j-legend {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .j-leg-item {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 10px; color: var(--j-muted);
+    }
+    .j-leg-dot {
+      width: 8px; height: 8px; border-radius: 3px;
+    }
+    .j-leg-dot.gold   { background: var(--j-gold); }
+    .j-leg-dot.purple { background: var(--j-pri); }
+    .j-leg-dot.grey   { background: rgba(255,255,255,.12); }
+
+    .j-level-grid {
+      display: grid;
+      grid-template-columns: repeat(6,1fr);
+      gap: 8px;
+    }
+    @media(max-width:480px) { .j-level-grid { grid-template-columns: repeat(4,1fr); } }
+    @media(max-width:360px) { .j-level-grid { grid-template-columns: repeat(3,1fr); } }
+
+    .j-lv {
+      border-radius: 10px;
+      padding: 10px 6px 8px;
+      text-align: center;
+      position: relative;
+      transition: transform .15s;
+      cursor: default;
+    }
+    .j-lv:not(.locked):hover { transform: scale(1.05); }
+    .j-lv-num {
+      font-size: 16px; font-weight: 800; line-height: 1;
+    }
+    .j-lv-sub {
+      font-size: 9px; margin-top: 4px; line-height: 1.2;
+    }
+    .j-lv-star {
+      position: absolute; top: 4px; right: 5px;
+      font-size: 10px; line-height: 1;
+    }
+    .j-lv-tag {
+      font-size: 8px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .06em;
+      display: block; margin-bottom: 2px;
+    }
+
+    /* perfeito — dourado */
+    .j-lv.perfect {
+      background: rgba(234,179,8,.07);
+      border: 0.5px solid rgba(234,179,8,.35);
+      cursor: pointer;
+    }
+    .j-lv.perfect .j-lv-num { color: var(--j-gold); }
+    .j-lv.perfect .j-lv-sub { color: rgba(234,179,8,.7); }
+    .j-lv.perfect .j-lv-star { color: var(--j-gold); }
+
+    /* concluído */
+    .j-lv.done {
+      background: var(--j-hero);
+      border: 0.5px solid rgba(127,119,221,.3);
+      cursor: pointer;
+    }
+    .j-lv.done .j-lv-num { color: var(--j-pri); }
+    .j-lv.done .j-lv-sub { color: var(--j-muted); }
+
+    /* atual */
+    .j-lv.current {
+      background: #1e1e40;
+      border: 1.5px solid var(--j-pri);
+      cursor: pointer;
+    }
+    .j-lv.current .j-lv-num { color: var(--j-txt); }
+    .j-lv.current .j-lv-tag { color: var(--j-pri); }
+
+    /* bloqueado */
+    .j-lv.locked {
+      background: #0f1420;
+      border: 0.5px solid rgba(255,255,255,.05);
+      opacity: .45;
+    }
+    .j-lv.locked .j-lv-num { color: var(--j-muted); }
+
+    /* ── Misc ── */
+    .j-empty {
+      text-align: center; padding: 24px 12px;
+      color: var(--j-muted); font-size: 13px; line-height: 1.6;
+    }
+
+    /* ── Main tabs ── */
+    .j-main-tabs {
+      display: flex; gap: 0;
+      background: var(--j-card);
+      border: 0.5px solid var(--j-border);
+      border-radius: 12px; padding: 4px;
+      margin-bottom: 20px;
+    }
+    .j-main-tab {
+      flex: 1; padding: 11px 16px;
+      font-size: 14px; font-weight: 700;
+      text-align: center; border-radius: 9px;
+      cursor: pointer; border: none;
+      background: transparent; color: var(--j-muted);
+      transition: all .18s;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      font-family: 'Inter', sans-serif;
+    }
+    .j-main-tab.active {
+      background: var(--j-hero);
+      color: var(--j-txt);
+      border: 0.5px solid rgba(127,119,221,.25);
+    }
+    .j-main-tab.active.sprint { color: #a78bfa; }
+    .j-tab-panel { display: block; animation: j-fadein .25s ease; }
+    .j-tab-panel.hidden { display: none; }
+
+    /* ── Sprint personal best ── */
+    .j-sprint-hero {
+      background: rgba(127,119,221,.06);
+      border: 0.5px solid rgba(127,119,221,.2);
+      border-radius: 14px;
+      padding: 22px 24px;
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+    }
+    .j-sprint-hero-val {
+      font-size: 52px; font-weight: 800;
+      color: #a78bfa; line-height: 1; flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+    }
+    .j-sprint-hero-info { flex: 1; min-width: 0; }
+    .j-sprint-hero-label {
+      font-size: 11px; color: #a78bfa; text-transform: uppercase;
+      letter-spacing: .07em; font-weight: 700; margin-bottom: 4px;
+    }
+    .j-sprint-hero-title {
+      font-size: 20px; font-weight: 800; color: var(--j-txt); margin-bottom: 4px;
+    }
+    .j-sprint-hero-sub { font-size: 13px; color: var(--j-muted); line-height: 1.4; }
+    .j-sprint-play-btn {
+      position: relative; overflow: hidden;
+      background: rgba(167,139,250,.15);
+      color: #a78bfa;
+      border: 1px solid rgba(167,139,250,.35); border-radius: 12px;
+      padding: 13px 28px;
+      font-size: 15px; font-weight: 700;
+      cursor: pointer; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 8px;
+      transition: background .2s, border-color .2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .j-sprint-play-btn:hover { background: rgba(167,139,250,.25); border-color: rgba(167,139,250,.5); color: #a78bfa; }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">🎮 Jogos</div>
+        <div class="topbar-sub">Mini-jogos educativos</div>
+      </div>
+      <div class="topbar-right">
+        <div class="avatar avatar-orange" id="avatar-initials">?</div>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+    </div>
+  </div>
+</div>
+
+<script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
+<script type="module">
+import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const sess = requireAluno("/index.html");
+if (!sess) throw new Error("não autenticado");
+renderSidebarAluno("sidebar", "jogos");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const { alunos, turma } = sess;
+const nomeAluno = alunos[0];
+const uid = (turma + '_' + nomeAluno).replace(/[.#$\[\]/\s]/g, '_');
+
+document.getElementById("avatar-initials").textContent = nomeAluno[0].toUpperCase();
+
+function escH(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function fmtDate(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+const [niveisSnap, rankingSnap, sprintRankSnap] = await Promise.all([
+  get(ref(db, `tabuada_niveis/${uid}`)),
+  get(ref(db, 'tabuada_ranking')),
+  get(ref(db, 'tabuada_sprint_ranking')).catch(() => null),
+]);
+
+const niveis        = niveisSnap.exists() ? niveisSnap.val() : {};
+const melhorNivel   = niveis.melhor_nivel   || 1;
+const nivelAtual    = Math.max(niveis.nivel_atual || 1, melhorNivel);
+const totalPartidas = niveis.total_partidas || 0;
+const ultimaPartida = niveis.ultima_partida || 0;
+
+const historico = niveis.historico
+  ? Object.entries(niveis.historico)
+      .sort((a, b) => Number(b[0]) - Number(a[0]))
+      .slice(0, 5)
+  : [];
+
+// Sequência: partidas completadas consecutivas mais recentes
+let sequencia = 0;
+for (const [, e] of historico) {
+  if (e.resultado === 'completou') sequencia++;
+  else break;
+}
+
+// Ranking
+const rankingAll = [];
+if (rankingSnap.exists()) {
+  rankingSnap.forEach(c => {
+    const v = c.val();
+    if (v && v.nome) rankingAll.push(v);
+  });
+  rankingAll.sort((a, b) => (b.melhor_nivel || 0) - (a.melhor_nivel || 0));
+}
+const rankingTurma = rankingAll.filter(r => r.turma === turma);
+
+// Recordes
+const recTurma  = rankingTurma.length > 0 ? rankingTurma[0] : null;
+const recGeral  = rankingAll.length   > 0 ? rankingAll[0]   : null;
+
+// Sprint ranking
+const sprintAll = [];
+if (sprintRankSnap && sprintRankSnap.exists()) {
+  sprintRankSnap.forEach(c => { const v = c.val(); if (v && v.nome) sprintAll.push(v); });
+  sprintAll.sort((a, b) => (b.melhor_acertos || 0) - (a.melhor_acertos || 0));
+}
+const sprintTurma   = sprintAll.filter(r => r.turma === turma);
+const sprintRecGeral = sprintAll[0]   || null;
+const sprintRecTurma = sprintTurma[0] || null;
+
+// Per-level stats from history
+const levelStats = {}; // { [nivel]: { perfect, done } }
+if (niveis.historico) {
+  // Ordenar por timestamp crescente: a completada mais recente determina o estado perfeito
+  const sorted = Object.entries(niveis.historico).sort((a, b) => Number(a[0]) - Number(b[0]));
+  sorted.forEach(([, e]) => {
+    const lv = e.nivel;
+    if (!levelStats[lv]) levelStats[lv] = { perfeito: false, feito: false };
+    if (e.resultado === 'completou') {
+      levelStats[lv].feito = true;
+      levelStats[lv].perfeito = e.erros === 0;
+    }
+  });
+}
+
+// HTML helpers
+function makeRankRow(r, pos) {
+  const isMe = r.nome === nomeAluno && r.turma === turma;
+  let medalCls, medalTxt;
+  if (pos === 1)      { medalCls = 'gold';   medalTxt = '🥇'; }
+  else if (pos === 2) { medalCls = 'silver'; medalTxt = '🥈'; }
+  else if (pos === 3) { medalCls = 'bronze'; medalTxt = '🥉'; }
+  else                { medalCls = 'plain';  medalTxt = `#${pos}`; }
+  return `<div class="j-rank-row${isMe ? ' me' : ''}">
+    <div class="j-medal ${medalCls}">${medalTxt}</div>
+    <div style="flex:1;min-width:0">
+      <div class="j-rank-name">${escH(r.nome)}${isMe ? '<span class="j-you">· você</span>' : ''}</div>
+      <div class="j-rank-sub">Turma ${escH(r.turma)}</div>
+    </div>
+    <div>
+      <div class="j-rank-val">${r.melhor_nivel || 1}</div>
+      <div class="j-rank-lbl">melhor nível</div>
+    </div>
+  </div>`;
+}
+
+function makeSprintRow(r, pos) {
+  const isMe = r.nome === nomeAluno && r.turma === turma;
+  let medalCls, medalTxt;
+  if (pos === 1)      { medalCls = 'gold';   medalTxt = '🥇'; }
+  else if (pos === 2) { medalCls = 'silver'; medalTxt = '🥈'; }
+  else if (pos === 3) { medalCls = 'bronze'; medalTxt = '🥉'; }
+  else                { medalCls = 'plain';  medalTxt = `#${pos}`; }
+  return `<div class="j-rank-row${isMe ? ' me' : ''}">
+    <div class="j-medal ${medalCls}">${medalTxt}</div>
+    <div style="flex:1;min-width:0">
+      <div class="j-rank-name">${escH(r.nome)}${isMe ? '<span class="j-you">· você</span>' : ''}</div>
+      <div class="j-rank-sub">Turma ${escH(r.turma)}</div>
+    </div>
+    <div>
+      <div class="j-rank-val">${r.melhor_acertos || 0}</div>
+      <div class="j-rank-lbl">operações / 3 min</div>
+    </div>
+  </div>`;
+}
+
+function makeSprintRows(arr) {
+  if (!arr.length) return `<div class="j-empty">Nenhum sprint ainda. Seja o primeiro!</div>`;
+  const top5 = arr.slice(0, 5);
+  let html = top5.map((r, i) => makeSprintRow(r, i + 1)).join('');
+  const myIdx = arr.findIndex(r => r.nome === nomeAluno && r.turma === turma);
+  if (myIdx >= 5) {
+    html += `<div style="text-align:center;font-size:11px;color:var(--j-muted);padding:4px 0">···</div>`;
+    html += makeSprintRow(arr[myIdx], myIdx + 1);
+  }
+  return html;
+}
+
+function makeRankRows(arr) {
+  if (!arr.length) return `<div class="j-empty">Nenhum jogador ainda.</div>`;
+  const top5 = arr.slice(0, 5);
+  let html = top5.map((r, i) => makeRankRow(r, i + 1)).join('');
+
+  // Se o aluno não está no top 5, adicionar separador + linha dele
+  const myIdx = arr.findIndex(r => r.nome === nomeAluno && r.turma === turma);
+  if (myIdx >= 5) {
+    html += `<div style="text-align:center;font-size:11px;color:var(--j-muted);padding:4px 0">···</div>`;
+    html += makeRankRow(arr[myIdx], myIdx + 1);
+  }
+  return html;
+}
+
+const histHtml = historico.length === 0
+  ? `<div class="j-empty">Nenhuma partida ainda.<br>Jogue e volte aqui!</div>`
+  : historico.map(([ts, e]) => {
+      const ok      = e.resultado === 'completou';
+      const badgeCls = ok ? 'ok' : 'fail';
+      const acertos  = e.acertos ?? '—';
+      const erros    = e.erros    ?? '—';
+      const badgePerf = ok && (e.erros || 0) === 0 && e.acertos > 0
+        ? `<span class="j-badge-mini j-badge-perf">★ Perfeito</span>` : '';
+      const badgeFail = !ok
+        ? `<span class="j-badge-mini j-badge-fail">⏰ Tempo</span>` : '';
+      return `<div class="j-hist-row">
+        <div class="j-level-badge ${badgeCls}">N${e.nivel}</div>
+        <div class="j-hist-info">
+          <div class="j-hist-date">${fmtDate(Number(ts))}</div>
+          <div class="j-hist-scores">
+            ${typeof e.acertos === 'number' ? `<span class="j-score ok">✓ ${acertos}</span><span class="j-score fail">✗ ${erros}</span>` : `<span class="j-score ok">${ok ? 'Completou' : ''}</span>`}
+            ${badgePerf}${badgeFail}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+// Nível grid: show from 1 to max(melhorNivel, nivelAtual) + 5 (round to 6)
+const maxLv = Math.max(melhorNivel, nivelAtual);
+const gridCount = Math.max(12, Math.ceil((maxLv + 2) / 6) * 6);
+
+const levelGridHtml = Array.from({ length: gridCount }, (_, i) => {
+  const lv = i + 1;
+  const stats = levelStats[lv] || {};
+  let cls, inner;
+
+  if (lv === nivelAtual) {
+    cls = 'current';
+    inner = `<span class="j-lv-tag">atual</span><div class="j-lv-num">${lv}</div>`;
+  } else if (lv > maxLv) {
+    cls = 'locked';
+    inner = `<div class="j-lv-num">🔒</div><div class="j-lv-sub">${lv}</div>`;
+  } else if (stats.perfeito) {
+    cls = 'perfect';
+    inner = `<div class="j-lv-num">${lv}</div><div class="j-lv-sub">perfeito</div><div class="j-lv-star">★</div>`;
+  } else if (stats.feito) {
+    cls = 'done';
+    inner = `<div class="j-lv-num">${lv}</div><div class="j-lv-sub">feito</div>`;
+  } else if (lv < nivelAtual) {
+    cls = 'done';
+    inner = `<div class="j-lv-num">${lv}</div><div class="j-lv-sub">feito</div>`;
+  } else {
+    cls = 'locked';
+    inner = `<div class="j-lv-num">🔒</div><div class="j-lv-sub">${lv}</div>`;
+  }
+
+  const clickable = cls !== 'locked';
+  return `<div class="j-lv ${cls}"${clickable ? ` onclick="jogarNivel(${lv})" title="Jogar nível ${lv}"` : ''}>${inner}</div>`;
+}).join('');
+
+// Sprint personal best do aluno
+const mySprintEntry = sprintAll.find(r => r.nome === nomeAluno && r.turma === turma);
+const mySprintBest  = mySprintEntry ? (mySprintEntry.melhor_acertos || 0) : 0;
+const mySprintRank  = mySprintEntry ? sprintAll.indexOf(mySprintEntry) + 1 : null;
+const mySprintRankT = mySprintEntry ? sprintTurma.indexOf(mySprintEntry) + 1 : null;
+
+document.getElementById("content").innerHTML = `
+<div class="j-wrap">
+
+  <!-- Hero -->
+  <div class="j-hero">
+    <div class="j-hero-top">
+      <div class="j-hero-icon-wrap">
+        <div class="j-pulse-ring"></div>
+        <div class="j-pulse-ring"></div>
+        <div class="j-hero-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5S14.67 12 15.5 12s1.5.67 1.5 1.5S16.33 15 15.5 15zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 9 18.5 9s1.5.67 1.5 1.5S19.33 12 18.5 12z"/></svg>
+        </div>
+      </div>
+      <div class="j-hero-body">
+        <div class="j-tag">Mini-jogo</div>
+        <div class="j-hero-title">Tabuada</div>
+        <div class="j-hero-desc">Combine operações com seus resultados. Escolha o modo abaixo.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Abas principais -->
+  <div class="j-main-tabs">
+    <button class="j-main-tab active" id="main-tab-normal" onclick="switchMainTab('normal')">
+      ▶ Normal
+    </button>
+    <button class="j-main-tab sprint" id="main-tab-sprint" onclick="switchMainTab('sprint')">
+      ⚡ Sprint
+    </button>
+  </div>
+
+  <!-- ── Aba Normal ── -->
+  <div class="j-tab-panel" id="panel-normal">
+
+    <!-- Stats + botão jogar -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+      <div class="j-stats-row" style="flex:1;min-width:240px;border-top:none;margin-top:0;border:0.5px solid var(--j-border);border-radius:12px;background:var(--j-card)">
+        <div class="j-stat">
+          <div class="j-stat-val">${nivelAtual}</div>
+          <div class="j-stat-lbl">Nível atual</div>
+        </div>
+        <div class="j-stat">
+          <div class="j-stat-val">${totalPartidas}</div>
+          <div class="j-stat-lbl">Partidas</div>
+        </div>
+        <div class="j-stat">
+          <div class="j-stat-val orange">${sequencia}</div>
+          <div class="j-stat-lbl">Sequência 🔥</div>
+        </div>
+      </div>
+      <a href="/aluno/tabuada.html" class="j-play-btn" style="flex-shrink:0">▶ Jogar agora</a>
+    </div>
+
+    ${recGeral && (recGeral.melhor_nivel || 0) > 1 ? `<div class="j-record-pill" style="margin-bottom:8px">🌍 Recorde geral: Nível ${recGeral.melhor_nivel} · ${escH(recGeral.nome)} - ${escH(recGeral.turma)}</div>` : ''}
+    ${recTurma && (recTurma.melhor_nivel || 0) > 1 ? `<div class="j-record-pill" style="background:rgba(127,119,221,.08);border-color:rgba(127,119,221,.2);color:#c4b5fd;margin-bottom:16px">🔥 Recorde da turma: Nível ${recTurma.melhor_nivel} · ${escH(recTurma.nome)} - ${escH(recTurma.turma)}</div>` : ''}
+
+    <!-- Grid 2 colunas -->
+    <div class="j-grid2">
+      <div class="j-card">
+        <div class="j-card-hdr" style="color:var(--j-orange)">
+          <svg viewBox="0 0 24 24" style="fill:var(--j-orange)"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21L13 13.04V8h-1z"/></svg>
+          Últimas partidas
+        </div>
+        ${histHtml}
+      </div>
+      <div class="j-card">
+        <div class="j-card-hdr" style="color:var(--j-gold)">
+          <svg viewBox="0 0 24 24" style="fill:var(--j-gold)"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg>
+          Ranking · Nível
+        </div>
+        <div class="j-tabs" id="ranking-tabs">
+          <button class="j-tab" onclick="switchRankTab(this,'turma')">Turma ${escH(turma)}</button>
+          <button class="j-tab active" onclick="switchRankTab(this,'geral')">Geral</button>
+        </div>
+        <div class="j-rank-list hidden" id="tab-turma">${makeRankRows(rankingTurma)}</div>
+        <div class="j-rank-list" id="tab-geral">${makeRankRows(rankingAll)}</div>
+      </div>
+    </div>
+
+    <!-- Grid de níveis -->
+    <div class="j-levels-card">
+      <div class="j-levels-hdr">
+        <div class="j-levels-hdr-left">
+          <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Níveis
+        </div>
+        <div class="j-legend">
+          <div class="j-leg-item"><div class="j-leg-dot gold"></div>Perfeito</div>
+          <div class="j-leg-item"><div class="j-leg-dot purple"></div>Concluído</div>
+          <div class="j-leg-item"><div class="j-leg-dot grey"></div>Bloqueado</div>
+        </div>
+      </div>
+      <div class="j-level-grid">${levelGridHtml}</div>
+    </div>
+
+  </div>
+
+  <!-- ── Aba Sprint ── -->
+  <div class="j-tab-panel hidden" id="panel-sprint">
+
+    <!-- Personal best + botão -->
+    <div class="j-sprint-hero">
+      <div class="j-sprint-hero-val">${mySprintBest || '—'}</div>
+      <div class="j-sprint-hero-info">
+        <div class="j-sprint-hero-label">Seu recorde · 3 minutos</div>
+        <div class="j-sprint-hero-title">${mySprintBest ? `${mySprintBest} operações` : 'Ainda sem recorde'}</div>
+        <div class="j-sprint-hero-sub">
+          ${mySprintRank  ? `#${mySprintRank} geral` : ''}
+          ${mySprintRank && mySprintRankT ? ' · ' : ''}
+          ${mySprintRankT ? `#${mySprintRankT} na turma` : ''}
+          ${!mySprintRank ? 'Faça seu primeiro sprint e apareça no ranking!' : ''}
+        </div>
+      </div>
+      <a href="/aluno/tabuada.html?modo=sprint" class="j-sprint-play-btn">⚡ Iniciar Sprint</a>
+    </div>
+
+    ${sprintRecGeral ? `<div class="j-record-pill" style="background:rgba(127,119,221,.08);border-color:rgba(127,119,221,.25);color:#a78bfa;margin-bottom:8px">🏆 Recorde geral: ${sprintRecGeral.melhor_acertos} op · ${escH(sprintRecGeral.nome)} - ${escH(sprintRecGeral.turma)}</div>` : ''}
+    ${sprintRecTurma && sprintRecTurma.nome !== sprintRecGeral?.nome ? `<div class="j-record-pill" style="background:rgba(127,119,221,.06);border-color:rgba(127,119,221,.2);color:#c4b5fd;margin-bottom:16px">🔥 Recorde da turma: ${sprintRecTurma.melhor_acertos} op · ${escH(sprintRecTurma.nome)}</div>` : '<div style="margin-bottom:16px"></div>'}
+
+    <!-- Ranking sprint -->
+    <div class="j-card">
+      <div class="j-card-hdr" style="color:#a78bfa">
+        <svg viewBox="0 0 24 24" style="fill:#a78bfa"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg>
+        Ranking · Sprint (operações / 3 min)
+      </div>
+      <div class="j-tabs" id="sprint-tabs">
+        <button class="j-tab" onclick="switchSprintTab(this,'turma')">Turma ${escH(turma)}</button>
+        <button class="j-tab active" onclick="switchSprintTab(this,'geral')">Geral</button>
+      </div>
+      <div class="j-rank-list hidden" id="sprint-tab-turma">${makeSprintRows(sprintTurma)}</div>
+      <div class="j-rank-list" id="sprint-tab-geral">${makeSprintRows(sprintAll)}</div>
+    </div>
+
+  </div>
+
+</div>`;
+
+window.switchMainTab = function(tab) {
+  ['normal','sprint'].forEach(t => {
+    document.getElementById('panel-' + t).classList.toggle('hidden', t !== tab);
+    document.getElementById('main-tab-' + t).classList.toggle('active', t === tab);
+  });
+};
+
+window.switchRankTab = function(btn, tab) {
+  document.querySelectorAll('#ranking-tabs .j-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-turma').classList.add('hidden');
+  document.getElementById('tab-geral').classList.add('hidden');
+  document.getElementById('tab-' + tab).classList.remove('hidden');
+};
+
+window.switchSprintTab = function(btn, tab) {
+  document.querySelectorAll('#sprint-tabs .j-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('sprint-tab-turma').classList.add('hidden');
+  document.getElementById('sprint-tab-geral').classList.add('hidden');
+  document.getElementById('sprint-tab-' + tab).classList.remove('hidden');
+};
+
+window.jogarNivel = function(lv) {
+  if (lv === nivelAtual) {
+    window.location.href = '/aluno/tabuada.html'; // nível atual: modo normal (salva progresso)
+  } else {
+    window.location.href = `/aluno/tabuada.html?nivel=${lv}`; // nível anterior: replay
+  }
+};
+</script>
+</body>
+</html>

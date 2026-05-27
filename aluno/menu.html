@@ -6,6 +6,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
   <style>
     .ativ-liberada{display:flex;align-items:center;gap:16px;padding:18px 20px;background:linear-gradient(135deg,#EBF6FD,#F0F9FF);border:1.5px solid #BAE6FD;border-radius:var(--radius);margin-bottom:8px;}
     .ativ-icon{width:48px;height:48px;border-radius:12px;background:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -42,6 +43,9 @@
     @keyframes fadeSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
     .pill{padding:5px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .15s;}
     .pill.on{border-color:var(--blue);background:var(--blue);color:#fff;}
+    .game-card-link{transition:background .15s;}
+    .game-card-link:hover{background:rgba(127,119,221,.07)!important;}
+    [data-theme="dark"] .game-card-link:hover{background:rgba(127,119,221,.12)!important;}
     @media(max-width:480px){
       .ativ-liberada{flex-wrap:wrap;gap:10px;padding:14px 14px}
       .ativ-liberada .ativ-info{width:100%}
@@ -116,7 +120,14 @@ document.getElementById("topbar-title").textContent = `Olá, ${alunos[0]}${aluno
 document.getElementById("topbar-sub").textContent   = `Turma ${turma} · Bom trabalho hoje!`;
 document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
 
-const [todosRaw, liberadas, conquistasAluno] = await Promise.all([getResultados(), getLiberadasParaTurma(turma), getConquistasByAluno(alunos[0])]);
+const tabuadaUid = (turma + '_' + alunos[0]).replace(/[.#$\[\]/\s]/g, '_');
+const [todosRaw, liberadas, conquistasAluno, tabuadaSnap] = await Promise.all([
+  getResultados(),
+  getLiberadasParaTurma(turma),
+  getConquistasByAluno(alunos[0]),
+  get(ref(db, `tabuada_niveis/${tabuadaUid}`)).catch(() => null),
+]);
+const nivelTabuada = tabuadaSnap?.exists() ? (tabuadaSnap.val().nivel_atual || 1) : 1;
 const todos = todosRaw.filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
 initAvBanner(turma, alunos[0], liberadas);
 
@@ -570,19 +581,28 @@ ${tempoPodioHtml}
     </div>
 
     <div class="card" style="margin-bottom:14px">
-      <div class="section-label" style="color:var(--purple)">
-        <svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5S14.67 12 15.5 12s1.5.67 1.5 1.5S16.33 15 15.5 15zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 9 18.5 9s1.5.67 1.5 1.5S19.33 12 18.5 12z"/></svg>
-        Mini-jogo
+      <div class="section-label" style="color:#7F77DD">
+        <i class="ti ti-devices-gamepad-2" style="font-size:15px;line-height:1"></i>
+        Mini-jogos
       </div>
-      <a href="/aluno/tabuada.html" class="ativ-liberada" style="text-decoration:none;display:flex;background:linear-gradient(135deg,var(--purple-pale),#FAF5FF);border-color:#DDD6FE">
-        <div class="ativ-icon" style="background:var(--purple)">
-          <svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5S14.67 12 15.5 12s1.5.67 1.5 1.5S16.33 15 15.5 15zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 9 18.5 9s1.5.67 1.5 1.5S19.33 12 18.5 12z"/></svg>
+      <a href="/aluno/jogos.html" class="game-card-link" style="text-decoration:none;display:flex;align-items:center;gap:14px;padding:14px 16px;background:rgba(127,119,221,.04);border:0.5px solid rgba(127,119,221,.22);border-left:4px solid #7F77DD;border-radius:12px;">
+        <div style="width:44px;height:44px;border-radius:10px;background:var(--purple-pale);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="ti ti-math-function" style="font-size:22px;color:#7F77DD"></i>
         </div>
-        <div class="ativ-info">
-          <h3 style="color:var(--purple)">🎮 Tabuada</h3>
-          <p>Combine operações com seus resultados · Sobe de nível!</p>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:15px;font-weight:700;color:var(--text);line-height:1.2">Tabuada</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:3px;line-height:1.4;white-space:normal">Combine operações com seus resultados. Sobe de nível!</div>
+          <div style="margin-top:8px">
+            <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(127,119,221,.15);color:#7F77DD;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">
+              <i class="ti ti-trophy" style="font-size:12px"></i>
+              Nível ${nivelTabuada}
+            </span>
+          </div>
         </div>
-        <span class="btn" style="background:var(--purple);color:#fff;box-shadow:0 3px 10px rgba(139,92,246,.28);flex-shrink:0;align-self:center">Jogar</span>
+        <span class="btn" style="background:#7F77DD;color:#fff;flex-shrink:0;align-self:center;gap:6px;box-shadow:none">
+          <i class="ti ti-player-play" style="font-size:14px"></i>
+          Jogar
+        </span>
       </a>
     </div>
 

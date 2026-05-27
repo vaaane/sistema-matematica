@@ -17,7 +17,7 @@
     .timer-bar.danger{background:var(--red);}
 
     /* ── Level badge ── */
-    .nivel-badge{display:inline-flex;align-items:center;gap:6px;background:var(--blue-pale);border:1.5px solid #BAE6FD;border-radius:20px;padding:5px 14px;font-size:13px;font-weight:700;color:var(--blue-dark);}
+    .nivel-badge{display:inline-flex;align-items:center;gap:6px;background:var(--blue-pale);border:1.5px solid rgba(127,119,221,0.3);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:700;color:var(--blue-dark);}
     .nivel-badge svg{width:13px;height:13px;fill:currentColor;}
 
     /* ── Game grid ── */
@@ -38,24 +38,12 @@
     .game-card.matched-flash{border-color:var(--green)!important;background:var(--green-pale)!important;pointer-events:none;}
     .game-card.removed{pointer-events:none;animation:cardOut .4s forwards;}
 
-    /* ── Operação: operador no canto superior esquerdo + fração centralizada ── */
-    .operador{
-      position:absolute;top:5px;left:7px;
-      font-size:13px;font-weight:900;
-      color:var(--text);line-height:1;
-    }
-    .fracao{
-      display:flex;flex-direction:column;align-items:center;
-    }
-    .num-cima{
-      font-size:22px;font-weight:800;line-height:1.15;color:var(--text);
-      border-bottom:2px solid var(--text);
-      padding-bottom:1px;min-width:22px;text-align:center;
-    }
-    .num-baixo{
-      font-size:22px;font-weight:800;line-height:1.15;color:var(--text);
-      padding-top:1px;min-width:22px;text-align:center;
-    }
+    /* ── Operação: operador + fração como unidade centralizada no card ── */
+    .op-wrap{ display:flex;align-items:center;gap:4px; }
+    .operador{ font-size:14px;font-weight:900;color:var(--text);line-height:1;flex-shrink:0; }
+    .fracao{ display:flex;flex-direction:column;align-items:center; }
+    .num-cima,.num-baixo{ font-size:22px;font-weight:800;line-height:1.1;color:var(--text);min-width:20px;text-align:center; }
+    .traco{ width:100%;height:2.5px;background:var(--text);border-radius:1px;margin:2px 0; }
     /* Expressão composta (nível 16+) */
     .op-compound{font-size:13px;font-weight:800;color:var(--text);text-align:center;line-height:1.4;letter-spacing:-.3px;padding:0 4px;}
     /* Número resultado */
@@ -64,7 +52,8 @@
     /* ── Slots ── */
     .slots-wrap{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
     .slot{width:128px;height:60px;border:2px dashed var(--border);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--text-muted);background:var(--bg);transition:all .2s;text-align:center;padding:4px;}
-    .slot.filled{border-style:solid;border-color:var(--blue);background:var(--blue-pale);color:var(--text);}
+    .slot.filled{border-style:solid;border-color:var(--blue);background:var(--blue-pale);color:var(--text);cursor:pointer;}
+    .slot.filled:hover{border-color:var(--orange);}
     .slot-eq{font-size:24px;font-weight:800;color:var(--text-muted);}
 
     /* ── Controls ── */
@@ -77,8 +66,11 @@
     @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
     @keyframes cardOut{0%{opacity:1;transform:scale(1)}30%{opacity:.7;transform:scale(1.05)}100%{opacity:0;transform:scale(0);visibility:hidden}}
     @keyframes levelUpPop{0%{opacity:0;transform:scale(.45) rotate(-8deg)}70%{transform:scale(1.12) rotate(1.5deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+    @keyframes levelDownPop{0%{opacity:0;transform:scale(.88) translateY(8px)}65%{transform:scale(1.02) translateY(-2px)}100%{opacity:1;transform:scale(1) translateY(0)}}
     @keyframes fadeInUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
     @keyframes slideUp{from{transform:translateY(28px);opacity:0}to{transform:translateY(0);opacity:1}}
+    @keyframes combo-float{0%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}60%{opacity:1;transform:translateX(-50%) translateY(-30px) scale(1.15)}100%{opacity:0;transform:translateX(-50%) translateY(-52px) scale(.9)}}
+    .combo-pop{position:fixed;pointer-events:none;z-index:150;font-weight:800;font-size:15px;font-family:'Inter',sans-serif;animation:combo-float .85s ease forwards;white-space:nowrap;text-shadow:0 1px 6px rgba(0,0,0,.35);}
 
     /* ── Level overlay ── */
     .level-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
@@ -88,28 +80,43 @@
     .level-sub{font-size:13px;color:var(--text-muted);margin-bottom:20px;line-height:1.5;}
     .level-new{font-size:19px;font-weight:700;color:var(--blue);margin-bottom:24px;}
 
-    /* ── Ranking modal ── */
-    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(1px);}
-    @media(min-width:600px){.modal-overlay{align-items:center;}}
-    .modal-sheet{background:var(--card);border-radius:22px 22px 0 0;padding:24px 20px 36px;width:100%;max-width:500px;max-height:82vh;overflow-y:auto;animation:slideUp .28s;}
-    @media(min-width:600px){.modal-sheet{border-radius:22px;}}
-    .modal-handle{width:42px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;}
-    .rank-row-tb{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;border:1px solid var(--border);background:var(--card);margin-bottom:6px;}
-    .rank-pos-tb{font-size:16px;font-weight:800;width:30px;flex-shrink:0;text-align:center;}
-    .rank-name-tb{flex:1;font-size:13px;font-weight:600;}
-    .rank-sub-tb{font-size:11px;color:var(--text-muted);margin-top:2px;}
-    .rank-lvl-tb{font-size:14px;font-weight:800;color:var(--blue);}
-    .rank-lvl-lbl{font-size:10px;color:var(--text-muted);}
-
-    /* ── Back btn ── */
-    .btn-back{display:inline-flex;align-items:center;gap:5px;background:none;border:none;cursor:pointer;color:var(--text-muted);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;padding:6px 4px;border-radius:8px;transition:color .14s;}
-    .btn-back:hover{color:var(--text);}
-    .btn-back svg{width:16px;height:16px;fill:currentColor;}
+    /* ── Back link (inside content) ── */
+    .link-back{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--text-muted);text-decoration:none;transition:color .14s;padding:2px 0;}
+    .link-back:hover{color:var(--text);}
+    .link-back svg{width:13px;height:13px;fill:currentColor;flex-shrink:0;}
 
     /* ── Progress bar (pairs left) ── */
     .pairs-bar-bg{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap;justify-content:center;}
     .pair-dot{width:12px;height:12px;border-radius:50%;background:var(--border);transition:background .3s;}
     .pair-dot.done{background:var(--green);}
+
+    /* ── Confete ── */
+    @keyframes confete-fall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(115vh) rotate(740deg);opacity:0}}
+    .confete-wrap{position:fixed;inset:0;pointer-events:none;z-index:999;overflow:hidden;}
+    .confete-particle{position:absolute;top:-12px;border-radius:3px;animation:confete-fall linear forwards;}
+
+    /* ── Mini ranking ── */
+    .mini-rank-wrap{margin-bottom:14px;}
+    .mini-rank-leader{display:flex;align-items:center;gap:8px;background:rgba(234,179,8,.07);border:1px solid rgba(234,179,8,.25);border-radius:11px;padding:10px 14px;margin-bottom:6px;}
+    .mini-rank-leader-icon{font-size:22px;line-height:1;flex-shrink:0;}
+    .mini-rank-leader-text{flex:1;min-width:0;}
+    .mini-rank-leader-title{font-size:13px;font-weight:700;color:#eab308;line-height:1.2;}
+    .mini-rank-leader-sub{font-size:11px;color:rgba(234,179,8,.65);margin-top:2px;}
+    .mini-rank-bar{display:flex;gap:6px;flex-wrap:wrap;}
+    .mini-rank-pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 11px;border-radius:20px;}
+    .mini-rank-pill.geral{background:rgba(234,179,8,.08);border:0.5px solid rgba(234,179,8,.2);color:#eab308;}
+    .mini-rank-pill.turma{background:rgba(127,119,221,.08);border:0.5px solid rgba(127,119,221,.2);color:#c4b5fd;}
+
+    /* ── Sprint ── */
+    .sprint-bar{display:flex;align-items:center;gap:14px;background:rgba(127,119,221,.06);border:0.5px solid rgba(127,119,221,.2);border-radius:11px;padding:12px 16px;margin-bottom:14px;}
+    .sprint-timer{font-size:30px;font-weight:800;color:var(--blue);font-variant-numeric:tabular-nums;min-width:62px;line-height:1;}
+    .sprint-timer.warn{color:var(--orange);}
+    .sprint-timer.danger{color:var(--red);}
+    .sprint-label{font-size:9px;color:var(--text-muted);text-align:center;letter-spacing:.06em;text-transform:uppercase;margin-top:2px;}
+    .sprint-stats{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+    .sprint-stat{text-align:center;padding:6px 4px;background:rgba(255,255,255,.03);border-radius:8px;}
+    .sprint-stat-val{font-size:18px;font-weight:800;color:var(--text);line-height:1;}
+    .sprint-stat-lbl{font-size:9px;color:var(--text-muted);margin-top:3px;text-transform:uppercase;letter-spacing:.04em;}
 
     /* ── Responsive ── */
     @media(max-width:480px){
@@ -117,7 +124,7 @@
       .num-cima,.num-baixo{font-size:18px;}
       .res-number{font-size:22px;}
       .op-compound{font-size:11px;}
-      .operador{font-size:11px;top:4px;left:5px;}
+      .operador{font-size:11px;}
       .timer-wrap{font-size:26px;}
       .slot{width:110px;height:54px;}
     }
@@ -133,15 +140,9 @@
   <aside class="sidebar" id="sidebar"></aside>
   <div class="main">
     <div class="topbar">
-      <div class="topbar-left" style="display:flex;align-items:center;gap:8px">
-        <button class="btn-back" onclick="window.location.href='/aluno/menu.html'">
-          <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-          Voltar
-        </button>
-        <div>
-          <div class="topbar-title">🎮 Tabuada</div>
-          <div class="topbar-sub" id="nivel-display">Carregando…</div>
-        </div>
+      <div class="topbar-left">
+        <div class="topbar-title">🎮 Tabuada</div>
+        <div class="topbar-sub" id="nivel-display">Carregando…</div>
       </div>
       <div class="topbar-right">
         <div class="avatar avatar-orange" id="avatar-initials">?</div>
@@ -160,21 +161,10 @@
     <div class="level-title" id="lov-title">Avançou de nível!</div>
     <div class="level-sub" id="lov-sub">Excelente trabalho!</div>
     <div class="level-new" id="lov-new">Nível 2</div>
-    <button class="btn btn-blue btn-lg" onclick="fecharOverlay()">Continuar →</button>
+    <button class="btn btn-blue btn-lg" id="lov-btn" onclick="fecharOverlay()">Continuar →</button>
   </div>
 </div>
 
-<!-- Ranking modal -->
-<div id="ranking-modal" class="modal-overlay" style="display:none" onclick="fecharRankingModal(event)">
-  <div class="modal-sheet" onclick="event.stopPropagation()">
-    <div class="modal-handle"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div class="card-title" style="font-size:16px">🏆 Ranking · Tabuada</div>
-      <button class="btn btn-ghost btn-sm" onclick="fecharRankingModal()">✕ Fechar</button>
-    </div>
-    <div id="ranking-list"><div style="text-align:center;padding:20px;color:var(--text-muted)">Carregando…</div></div>
-  </div>
-</div>
 
 <script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
@@ -196,8 +186,9 @@ const uid = (turma + '_' + nomeAluno).replace(/[.#$\[\]/\s]/g, '_');
 document.getElementById("avatar-initials").textContent = nomeAluno[0].toUpperCase();
 
 // ── Firebase ──────────────────────────────────────────────────
-const niveisRef  = ref(db, `tabuada_niveis/${uid}`);
-const rankingRef = ref(db, `tabuada_ranking/${uid}`);
+const niveisRef       = ref(db, `tabuada_niveis/${uid}`);
+const rankingRef      = ref(db, `tabuada_ranking/${uid}`);
+const sprintRankRef   = ref(db, `tabuada_sprint_ranking/${uid}`);
 
 async function carregarProgresso() {
   try {
@@ -207,54 +198,64 @@ async function carregarProgresso() {
   return { nivel_atual: 1, melhor_nivel: 1, ultima_partida: 0, total_partidas: 0 };
 }
 
-async function salvarProgresso(p) {
+async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo, isReplay = false) {
   try {
-    await update(niveisRef, {
-      nivel_atual:    p.nivel_atual,
-      melhor_nivel:   p.melhor_nivel,
-      ultima_partida: Date.now(),
-      total_partidas: p.total_partidas
-    });
-    await set(rankingRef, {
-      nome:          nomeAluno,
-      turma:         turma,
-      nivel_atual:   p.nivel_atual,
-      melhor_nivel:  p.melhor_nivel,
-      ultima_partida: Date.now()
-    });
+    const ts = Date.now();
+    if (isReplay) {
+      // Não altera nivel_atual nem melhor_nivel — só contabiliza partida e histórico
+      await update(niveisRef, { ultima_partida: ts, total_partidas: p.total_partidas });
+    } else {
+      await update(niveisRef, {
+        nivel_atual:    p.nivel_atual,
+        melhor_nivel:   p.melhor_nivel,
+        ultima_partida: ts,
+        total_partidas: p.total_partidas
+      });
+      await set(rankingRef, {
+        nome:           nomeAluno,
+        turma:          turma,
+        nivel_atual:    p.nivel_atual,
+        melhor_nivel:   p.melhor_nivel,
+        ultima_partida: ts
+      });
+    }
+    if (resultado) {
+      await set(ref(db, `tabuada_niveis/${uid}/historico/${ts}`), {
+        nivel:     nivelJogado,
+        resultado: resultado,
+        acertos:   acertosJogo || 0,
+        erros:     errosJogo   || 0,
+      });
+    }
   } catch(e) { console.warn('[Tabuada] Erro ao salvar:', e); }
 }
 
-async function carregarRankingGlobal() {
-  try {
-    const snap = await get(ref(db, 'tabuada_ranking'));
-    if (!snap.exists()) return [];
-    const arr = [];
-    snap.forEach(c => { const v = c.val(); if (v && v.nome) arr.push(v); });
-    return arr.sort((a, b) => (b.melhor_nivel || 0) - (a.melhor_nivel || 0));
-  } catch(e) { return []; }
-}
 
 // ── Level config ──────────────────────────────────────────────
 function getLevelConfig(lvl) {
-  // pairs: half the total cards; cols: grid columns; secs: timer
-  if (lvl === 1) return { type:'add',      pairs:2,  cols:2, secs:60 };
-  if (lvl === 2) return { type:'add',      pairs:3,  cols:3, secs:60 };
-  if (lvl === 3) return { type:'add',      pairs:4,  cols:4, secs:60 };
-  if (lvl === 4) return { type:'sub',      pairs:4,  cols:4, secs:60 };
-  if (lvl === 5) return { type:'sub',      pairs:6,  cols:4, secs:60 };
-  if (lvl === 6) return { type:'sub',      pairs:6,  cols:4, secs:50 };
-  if (lvl === 7) return { type:'mul',      pairs:6,  cols:4, secs:50 };
-  if (lvl === 8) return { type:'mul',      pairs:8,  cols:4, secs:50 };
-  if (lvl === 9) return { type:'mul',      pairs:8,  cols:4, secs:50 };
-  if (lvl === 10) return { type:'div',     pairs:8,  cols:4, secs:50 };
-  if (lvl === 11) return { type:'div',     pairs:10, cols:5, secs:45 };
-  if (lvl === 12) return { type:'div',     pairs:10, cols:5, secs:45 };
-  if (lvl === 13) return { type:'mix',     pairs:10, cols:5, secs:45 };
-  if (lvl === 14) return { type:'mix',     pairs:12, cols:6, secs:45 };
-  if (lvl === 15) return { type:'mix',     pairs:12, cols:6, secs:45 };
-  // Level 16+: compound, 40s
-  return { type:'compound', pairs:12, cols:6, secs:40 };
+  // Níveis 1-50: adição + subtração juntas, resultados crescem de 8 a 25
+  if (lvl <= 50) {
+    const t         = (lvl - 1) / 49;
+    const pairs     = Math.round(2 + t * 6);   // 2 → 8
+    const secs      = Math.round(70 - t * 15); // 70 → 55s
+    const maxResult = Math.round(8 + t * 17);  // 8 → 25
+    const cols      = pairs <= 2 ? 2 : pairs <= 3 ? 3 : 4;
+    return { type:'mix_as', pairs, cols, secs, maxResult };
+  }
+  // Níveis 51-65: adição + subtração + multiplicação, grid menor no início
+  if (lvl <= 65) {
+    const t     = (lvl - 51) / 14;
+    const pairs = Math.round(3 + t * 5); // 3 → 8
+    const secs  = Math.round(65 - t * 10); // 65 → 55s
+    const cols  = pairs <= 3 ? 3 : 4;
+    return { type:'mix_asm', pairs, cols, secs };
+  }
+  // Níveis 66+: todas as operações; grid reseta menor e cresce até 6×6 fixo
+  const t     = Math.min(1, (lvl - 66) / 24); // 0→1 ao longo de 24 níveis
+  const pairs = Math.round(4 + t * 14);        // 4 → 18
+  const secs  = Math.round(60 - t * 15);       // 60 → 45s
+  const cols  = pairs <= 6 ? 4 : 6;
+  return { type:'mix', pairs, cols, secs };
 }
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -271,19 +272,35 @@ function escH(s) {
 }
 
 // ── Op generator ──────────────────────────────────────────────
-function tryGenOp(type, usedR) {
+function tryGenOp(type, usedR, maxResult = 999) {
   let a, b, result, sym, label = null;
   for (let t = 0; t < 60; t++) {
     label = null;
     if (type === 'add') {
-      a = rnd(1, 9); b = rnd(1, 10 - a);
-      result = a + b;
-      if (result > 20 || usedR.has(result)) continue;
+      if (maxResult < 50) {
+        // Resultados limitados por maxResult (níveis 1-50)
+        a = rnd(1, Math.min(maxResult - 1, 12));
+        b = rnd(1, Math.min(12, maxResult - a));
+        result = a + b;
+        if (result > maxResult || usedR.has(result)) continue;
+      } else {
+        a = rnd(1, 9); b = rnd(1, 10 - a);
+        result = a + b;
+        if (result > 20 || usedR.has(result)) continue;
+      }
       sym = '+';
     } else if (type === 'sub') {
-      a = rnd(4, 18); b = rnd(1, a - 1);
-      result = a - b;
-      if (result < 1 || usedR.has(result)) continue;
+      if (maxResult < 50) {
+        // a ≤ 20, b ≤ 9 (dígito único) para evitar contas complexas
+        a = rnd(2, Math.min(20, maxResult + 5));
+        b = rnd(1, Math.min(a - 1, 9));
+        result = a - b;
+        if (result < 1 || result > maxResult || usedR.has(result)) continue;
+      } else {
+        a = rnd(4, 18); b = rnd(1, a - 1);
+        result = a - b;
+        if (result < 1 || usedR.has(result)) continue;
+      }
       sym = '−';
     } else if (type === 'mul') {
       a = rnd(2, 9); b = rnd(2, 9);
@@ -291,14 +308,18 @@ function tryGenOp(type, usedR) {
       if (result > 81 || usedR.has(result)) continue;
       sym = '×';
     } else if (type === 'div') {
-      b = rnd(2, 9); result = rnd(2, 9);
+      b = rnd(2, 9); result = rnd(2, 11);
       if (usedR.has(result)) continue;
       a = b * result;
       sym = '÷';
+    } else if (type === 'mix_as') {
+      return tryGenOp(rnd(0, 1) === 0 ? 'add' : 'sub', usedR, maxResult);
+    } else if (type === 'mix_asm') {
+      return tryGenOp(['add','sub','mul'][rnd(0, 2)], usedR, maxResult);
     } else if (type === 'mix') {
       const types = ['add','sub','mul','div'];
-      return tryGenOp(types[rnd(0, 3)], usedR);
-    } else { // compound: a×b+c or a×b−c
+      return tryGenOp(types[rnd(0, 3)], usedR, maxResult);
+    } else { // compound: a×b+c ou a×b−c
       a = rnd(2, 4); b = rnd(2, 4); const c = rnd(1, 8);
       const base = a * b;
       const add  = rnd(0, 1);
@@ -313,12 +334,11 @@ function tryGenOp(type, usedR) {
   return null;
 }
 
-function generatePairs(type, count) {
+function generatePairs(type, count, maxResult = 999) {
   const pairs = [];
   const usedR = new Set();
-  // Avoid result collisions; fallback to 'add' if type can't fill
   for (let attempt = 0; attempt < 600 && pairs.length < count; attempt++) {
-    const p = tryGenOp(type, usedR) || tryGenOp('add', usedR);
+    const p = tryGenOp(type, usedR, maxResult) || tryGenOp('add', usedR, maxResult);
     if (p) pairs.push(p);
   }
   return pairs;
@@ -329,31 +349,285 @@ function opCardHtml(op) {
   if (op.label) {
     return `<div class="op-compound">${escH(op.label)}</div>`;
   }
-  // Operador no canto superior esquerdo (via CSS position:absolute no card)
-  // Fração centralizada com num-cima / num-baixo
-  return `<span class="operador">${op.sym}</span>
-<div class="fracao">
-  <span class="num-cima">${op.a}</span>
-  <span class="num-baixo">${op.b}</span>
-</div>`;
+  const traco = op.sym === '÷' ? '<div class="traco"></div>' : '';
+  return `<div class="op-wrap"><span class="operador">${op.sym}</span><div class="fracao"><span class="num-cima">${op.a}</span>${traco}<span class="num-baixo">${op.b}</span></div></div>`;
+}
+
+// ── Card flight animation ─────────────────────────────────────
+function launchCard(el, card) {
+  const gridRect = el.getBoundingClientRect();
+  const slot = document.getElementById(card.kind === 'op' ? 'slot-op' : 'slot-res');
+  const slotRect = slot.getBoundingClientRect();
+
+  el.style.visibility = 'hidden';
+  el.style.pointerEvents = 'none';
+
+  const clone = document.createElement('div');
+  clone.className = 'game-card selected';
+  clone.innerHTML = el.innerHTML;
+  Object.assign(clone.style, {
+    position: 'fixed',
+    left: gridRect.left + 'px',
+    top: gridRect.top + 'px',
+    width: gridRect.width + 'px',
+    height: gridRect.height + 'px',
+    minHeight: '0',
+    zIndex: '100',
+    pointerEvents: 'none',
+    margin: '0',
+    boxSizing: 'border-box',
+  });
+  document.body.appendChild(clone);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    clone.style.transition = 'left .28s ease, top .28s ease, width .28s ease, height .28s ease';
+    clone.style.left   = slotRect.left   + 'px';
+    clone.style.top    = slotRect.top    + 'px';
+    clone.style.width  = slotRect.width  + 'px';
+    clone.style.height = slotRect.height + 'px';
+  }));
+  return { clone, origRect: { left: gridRect.left, top: gridRect.top, width: gridRect.width, height: gridRect.height } };
+}
+
+function flyBack(info, el) {
+  const { clone, origRect } = info;
+  clone.style.transition = 'left .28s ease, top .28s ease, width .28s ease, height .28s ease';
+  clone.style.left   = origRect.left   + 'px';
+  clone.style.top    = origRect.top    + 'px';
+  clone.style.width  = origRect.width  + 'px';
+  clone.style.height = origRect.height + 'px';
+  setTimeout(() => {
+    clone.remove();
+    el.style.visibility = '';
+    el.style.pointerEvents = '';
+    el.classList.add('error');
+    setTimeout(() => el.classList.remove('error'), 400);
+  }, 280);
 }
 
 // ── Game state ────────────────────────────────────────────────
-let progresso = await carregarProgresso();
-let nivelAtual  = Math.max(1, progresso.nivel_atual  || 1);
+const [progresso, _rankingSnap] = await Promise.all([
+  carregarProgresso(),
+  get(ref(db, 'tabuada_ranking')).catch(() => null),
+]);
+
 let melhorNivel = Math.max(1, progresso.melhor_nivel || 1);
+let nivelAtual  = Math.max(1, progresso.nivel_atual  || 1, melhorNivel);
+const _nivelReal = nivelAtual;
+
+// Replay: ?nivel=X — jogar nível específico sem regredir o progresso real
+const _replayNivel = new URLSearchParams(location.search).get('nivel');
+const _isReplay    = !!_replayNivel;
+if (_isReplay) nivelAtual = Math.max(1, parseInt(_replayNivel) || 1);
+
+// Sprint: ?modo=sprint — sessão contínua de 3 min sem timer por nível
+const _isSprint     = new URLSearchParams(location.search).get('modo') === 'sprint';
+let _sprintTotal    = 180;
+let _sprintLeft     = 180;
+let _sprintInt      = null;
+let _sprintLevels   = 0;
+let _sprintPairsOk  = 0;
+let _sprintErrTotal = 0;
+let _sprintNivelIni = 0;
+let _sprintStarted  = false;
+let _sprintEnded    = false;
+
+// Ranking
+let rankingAll   = [];
+let rankingTurma = [];
+function _parseRanking(snap) {
+  rankingAll = [];
+  if (snap && snap.exists()) {
+    snap.forEach(c => { const v = c.val(); if (v && v.nome) rankingAll.push(v); });
+    rankingAll.sort((a, b) => (b.melhor_nivel || 0) - (a.melhor_nivel || 0));
+  }
+  rankingTurma = rankingAll.filter(r => r.turma === turma);
+}
+_parseRanking(_rankingSnap);
+
+async function reloadRanking() {
+  _parseRanking(await get(ref(db, 'tabuada_ranking')).catch(() => null));
+}
+
+function miniRankingHtml() {
+  const g  = rankingAll[0];
+  const g2 = rankingAll[1];
+  const t  = rankingTurma[0];
+  if (!g && !t) return '';
+  const isMe = (r) => r && r.nome === nomeAluno && r.turma === turma;
+  const iAmLeader = isMe(g);
+
+  let html = '<div class="mini-rank-wrap">';
+
+  if (iAmLeader) {
+    // Bloco destacado de liderança
+    let sub = '';
+    if (g2) {
+      const dist = (g.melhor_nivel || 0) - (g2.melhor_nivel || 0);
+      sub = dist > 0
+        ? `2º lugar: ${escH(g2.nome)} - ${escH(g2.turma)} · Nível ${g2.melhor_nivel} (vantagem de ${dist} nível${dist > 1 ? 'is' : ''})`
+        : `2º lugar: ${escH(g2.nome)} - ${escH(g2.turma)} · Nível ${g2.melhor_nivel} — empatados!`;
+    }
+    html += `<div class="mini-rank-leader">
+      <div class="mini-rank-leader-icon">🥇</div>
+      <div class="mini-rank-leader-text">
+        <div class="mini-rank-leader-title">Você lidera o ranking geral!</div>
+        ${sub ? `<div class="mini-rank-leader-sub">${sub}</div>` : ''}
+      </div>
+    </div>`;
+  } else if (g) {
+    const dist = (g.melhor_nivel || 0) - melhorNivel;
+    const distText = dist > 0 ? ` · você está ${dist} nível${dist > 1 ? 'is' : ''} atrás` : '';
+    html += '<div class="mini-rank-bar">';
+    html += `<span class="mini-rank-pill geral">🥇 ${escH(g.nome)} - ${escH(g.turma)} · Nível ${g.melhor_nivel}${distText}</span>`;
+    html += '</div>';
+  }
+
+  const tDiff = t && (!g || t.nome !== g.nome || t.turma !== g.turma);
+  if (tDiff) {
+    const label = isMe(t)
+      ? '🏅 Você lidera na turma!'
+      : `🏅 ${escH(t.nome)} - ${escH(t.turma)} · Nível ${t.melhor_nivel}`;
+    if (!iAmLeader) html += '<div class="mini-rank-bar" style="margin-top:6px">';
+    else            html += '<div class="mini-rank-bar">';
+    html += `<span class="mini-rank-pill turma">${label}</span></div>`;
+  }
+
+  return html + '</div>';
+}
+
+// ── Audio (Web Audio API) ─────────────────────────────────────
+let _audioCtx = null;
+function _getCtx() {
+  if (!_audioCtx) {
+    try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  }
+  return _audioCtx;
+}
+function _beep(freq, dur, type = 'sine', vol = 0.22, delay = 0) {
+  const ctx = _getCtx(); if (!ctx) return;
+  try {
+    const t = ctx.currentTime + delay;
+    const osc = ctx.createOscillator(), gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(vol, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    osc.start(t); osc.stop(t + dur + .01);
+  } catch(e) {}
+}
+function resumeAudio() { const ctx = _getCtx(); if (ctx?.state === 'suspended') ctx.resume(); }
+function somAcerto()   { _beep(660, .1,'sine',.2); _beep(880,.13,'sine',.2,.1); }
+function somErro()     { _beep(180,.2,'sawtooth',.12); }
+function somVitoria()  { [523,659,784,1047].forEach((f,i) => _beep(f,.18,'sine',.28,i*.11)); }
+function somDerrota()  { _beep(370,.12,'sine',.18); _beep(270,.12,'sine',.18,.14); _beep(190,.3,'sine',.18,.28); }
+
+// ── Combo popup ───────────────────────────────────────────────
+function showComboPopup(el) {
+  const rect = el.getBoundingClientRect();
+  const pop = document.createElement('div');
+  pop.className = 'combo-pop';
+  let text, color;
+  if      (comboCount >= 6) { text = `🔥 INCRÍVEL! x${comboCount}`; color = '#FAB800'; }
+  else if (comboCount === 5) { text = '🔥 x5 COMBO!';               color = '#FAB800'; }
+  else if (comboCount === 4) { text = '🔥 Combo x4';                color = '#f97316'; }
+  else if (comboCount === 3) { text = '🔥 Combo x3';                color = '#f97316'; }
+  else if (comboCount === 2) { text = '✓ x2';                       color = '#22C55E'; }
+  else                       { text = '+1';                          color = '#1D9E75'; }
+  pop.style.cssText = `left:${rect.left + rect.width/2}px;top:${rect.top + 8}px;color:${color};`;
+  document.body.appendChild(pop);
+  setTimeout(() => pop.remove(), 900);
+}
+
+function lancarConfete(n = 80) {
+  const wrap = document.createElement("div");
+  wrap.className = "confete-wrap";
+  document.body.appendChild(wrap);
+  const colors = ['#FAB800','#22C55E','#60A5FA','#A855F7','#F87171','#FDE047','#4ADE80','#FF6B9D'];
+  for (let i = 0; i < n; i++) {
+    const p = document.createElement("div");
+    p.className = "confete-particle";
+    const w = 6 + Math.random() * 8;
+    p.style.cssText = `left:${Math.random()*100}%;width:${w}px;height:${w*1.6}px;`
+      + `background:${colors[Math.floor(Math.random()*colors.length)]};`
+      + `animation-duration:${2.5+Math.random()*3}s;animation-delay:${Math.random()*1.5}s;`;
+    wrap.appendChild(p);
+  }
+  setTimeout(() => wrap.remove(), 7000);
+}
 
 let timerTotal = 60, timerLeft = 60;
 let timerInterval = null;
 let selectedCard = null;  // { el, pairId, kind, op, result }
 let removedCount = 0, totalPairs = 0;
 let gameOver = false;
+let acertos = 0, erros = 0, comboCount = 0;
 
 function updateNivelDisplay() {
-  document.getElementById("nivel-display").textContent =
-    `Nível ${nivelAtual} · Melhor: ${melhorNivel}`;
+  document.getElementById("nivel-display").textContent = _isSprint
+    ? `⚡ Sprint · Nível ${nivelAtual}`
+    : `Nível ${nivelAtual} · Melhor: ${melhorNivel}`;
 }
 updateNivelDisplay();
+
+// ── Sprint functions ──────────────────────────────────────────
+function startSprintTimer() {
+  _sprintLeft = _sprintTotal;
+  updateSprintDisplay();
+  _sprintInt = setInterval(() => {
+    if (_sprintEnded) return;
+    _sprintLeft = Math.max(0, _sprintLeft - 1);
+    updateSprintDisplay();
+    if (_sprintLeft === 0) { clearInterval(_sprintInt); _sprintInt = null; endSprint(false); }
+  }, 1000);
+}
+
+function updateSprintDisplay() {
+  const el = document.getElementById('sprint-timer');
+  if (!el) return;
+  const min = Math.floor(_sprintLeft / 60);
+  const sec = _sprintLeft % 60;
+  el.textContent = `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  el.className   = `sprint-timer${_sprintLeft <= 30 ? ' danger' : _sprintLeft <= 60 ? ' warn' : ''}`;
+  const lvs = document.getElementById('sprint-lvs');
+  const ok  = document.getElementById('sprint-ok');
+  const err = document.getElementById('sprint-err');
+  if (lvs) lvs.textContent = _sprintLevels;
+  if (ok)  ok.textContent  = _sprintPairsOk;
+  if (err) err.textContent = _sprintErrTotal;
+}
+
+async function salvarSprintRanking(acertos) {
+  try {
+    const snap = await get(sprintRankRef);
+    const atual = snap.exists() ? (snap.val().melhor_acertos || 0) : 0;
+    if (acertos > atual) {
+      await set(sprintRankRef, { nome: nomeAluno, turma, melhor_acertos: acertos, ultima_sprint: Date.now() });
+    }
+  } catch(e) { console.warn('[Sprint] Erro ao salvar ranking:', e); }
+}
+
+async function endSprint(manual = false) {
+  if (_sprintEnded) return;
+  _sprintEnded = true;
+  gameOver = true;
+  stopTimer();
+  if (_sprintInt) { clearInterval(_sprintInt); _sprintInt = null; }
+  if (!manual) somDerrota(); else somVitoria();
+  if (_sprintPairsOk > 0) salvarSprintRanking(_sprintPairsOk);
+  const total = _sprintPairsOk + _sprintErrTotal;
+  const acc   = total > 0 ? Math.round(_sprintPairsOk / total * 100) : 100;
+  document.getElementById("lov-emoji").textContent = _sprintLevels >= 5 ? '🏆' : _sprintLevels >= 2 ? '⭐' : '🎮';
+  document.getElementById("lov-title").textContent = manual ? 'Sprint encerrado!' : '⏰ Tempo esgotado!';
+  document.getElementById("lov-sub").textContent   =
+    `${_sprintLevels} nível${_sprintLevels !== 1 ? 'is' : ''} concluído${_sprintLevels !== 1 ? 's' : ''} · ${_sprintPairsOk} acertos · ${acc}% precisão`;
+  document.getElementById("lov-new").textContent   =
+    _sprintLevels > 0 ? `Progresso: Nível ${_sprintNivelIni} → ${nivelAtual}` : 'Nenhum nível concluído';
+  document.getElementById("lov-new").style.color   = 'var(--blue)';
+  document.getElementById("lov-btn").textContent   = 'Voltar →';
+  document.querySelector('.level-card').style.animation = manual ? 'levelUpPop .35s' : 'levelDownPop .35s ease';
+  document.getElementById("level-overlay").style.display = 'flex';
+}
 
 // ── Build game ────────────────────────────────────────────────
 function buildGame() {
@@ -365,11 +639,12 @@ function buildGame() {
   selectedCard = null;
   removedCount = 0;
   gameOver    = false;
+  acertos = 0; erros = 0; comboCount = 0;
 
-  const pairs  = generatePairs(cfg.type, cfg.pairs);
+  const pairs  = generatePairs(cfg.type, cfg.pairs, cfg.maxResult);
   // Fallback: fill with add if not enough pairs generated
   while (pairs.length < cfg.pairs) {
-    const extra = generatePairs('add', 1);
+    const extra = generatePairs('add', 1, cfg.maxResult);
     if (extra.length) pairs.push(extra[0]); else break;
   }
 
@@ -397,20 +672,42 @@ function buildGame() {
   content.innerHTML = `
 <div style="max-width:700px;margin:0 auto">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-    <div class="nivel-badge">
-      <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-      Nível ${nivelAtual}
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="/aluno/jogos.html" class="link-back" title="Voltar para Jogos">
+        <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        Jogos
+      </a>
+      <div class="nivel-badge">
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        Nível ${nivelAtual}
+      </div>
     </div>
-    <div style="font-size:12px;color:var(--text-muted)">Melhor: <strong style="color:var(--blue)">${melhorNivel}</strong></div>
+    ${_isSprint
+      ? `<div style="font-size:12px;color:var(--text-muted)">⚡ <strong style="color:var(--blue)">${_sprintLevels}</strong> concluído${_sprintLevels !== 1 ? 's' : ''}</div>`
+      : `<div style="font-size:12px;color:var(--text-muted)">Melhor: <strong style="color:var(--blue)">${melhorNivel}</strong></div>`}
   </div>
 
+  ${_isSprint ? '' : miniRankingHtml()}
+
+  ${_isSprint ? `
+  <div class="sprint-bar">
+    <div>
+      <div class="sprint-timer" id="sprint-timer">03:00</div>
+      <div class="sprint-label">Sprint</div>
+    </div>
+    <div class="sprint-stats">
+      <div class="sprint-stat"><div class="sprint-stat-val" id="sprint-lvs">${_sprintLevels}</div><div class="sprint-stat-lbl">Concluídos</div></div>
+      <div class="sprint-stat"><div class="sprint-stat-val" id="sprint-ok">${_sprintPairsOk}</div><div class="sprint-stat-lbl">Acertos</div></div>
+      <div class="sprint-stat"><div class="sprint-stat-val" id="sprint-err">${_sprintErrTotal}</div><div class="sprint-stat-lbl">Erros</div></div>
+    </div>
+  </div>` : `
   <div class="timer-wrap" id="timer-display">
     <svg viewBox="0 0 24 24"><path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61 1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
     <span id="timer-text">00:${String(timerTotal).padStart(2,'0')}</span>
   </div>
   <div class="timer-bar-bg">
     <div class="timer-bar" id="timer-bar" style="width:100%"></div>
-  </div>
+  </div>`}
 
   <div class="pairs-bar-bg" id="pairs-dots">${dotsHtml}</div>
 
@@ -430,10 +727,7 @@ function buildGame() {
       <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
       Reiniciar
     </button>
-    <button class="btn btn-ghost" onclick="abrirRanking()">
-      <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg>
-      Ranking
-    </button>
+    ${_isSprint ? `<button class="btn btn-ghost" onclick="endSprint(true)" style="color:var(--red);border-color:rgba(226,75,74,.3)">⚡ Encerrar Sprint</button>` : ''}
   </div>
 </div>`;
 
@@ -452,7 +746,21 @@ function buildGame() {
     grid.appendChild(el);
   });
 
-  startTimer();
+  // Clicar no slot devolve a carta ao lugar de origem
+  document.getElementById('slot-op')?.addEventListener('click',  deselectCard);
+  document.getElementById('slot-res')?.addEventListener('click', deselectCard);
+
+  if (_isSprint) {
+    if (!_sprintStarted) {
+      _sprintNivelIni = nivelAtual;
+      _sprintStarted = true;
+      startSprintTimer();
+    } else {
+      updateSprintDisplay();
+    }
+  } else {
+    startTimer();
+  }
 }
 
 // ── Timer ─────────────────────────────────────────────────────
@@ -500,81 +808,95 @@ function clearSlots() {
 }
 
 function fillSlot(card) {
-  // Preenche o slot do tipo correto (op→esquerdo, result→direito)
   if (card.kind === 'op') {
     const slotOp = document.getElementById("slot-op");
-    if (slotOp) { slotOp.innerHTML = opCardHtml(card.op); slotOp.classList.add("filled"); }
+    if (slotOp) { slotOp.innerHTML = ''; slotOp.classList.add("filled"); }
   } else {
     const slotRes = document.getElementById("slot-res");
-    if (slotRes) {
-      slotRes.innerHTML = `<div class="res-number">${card.result}</div>`;
-      slotRes.classList.add("filled");
-    }
+    if (slotRes) { slotRes.innerHTML = ''; slotRes.classList.add("filled"); }
   }
+}
+
+function deselectCard() {
+  if (!selectedCard) return;
+  const { clone, origRect } = selectedCard.flyInfo;
+  const el = selectedCard.el;
+  clone.style.transition = 'left .28s ease, top .28s ease, width .28s ease, height .28s ease';
+  clone.style.left   = origRect.left   + 'px';
+  clone.style.top    = origRect.top    + 'px';
+  clone.style.width  = origRect.width  + 'px';
+  clone.style.height = origRect.height + 'px';
+  setTimeout(() => {
+    clone.remove();
+    el.style.visibility = '';
+    el.style.pointerEvents = '';
+  }, 280);
+  selectedCard = null;
+  clearSlots();
+  setStatus("");
 }
 
 function onCardClick(el, card) {
   if (gameOver) return;
-  if (el.classList.contains('removed') || el.classList.contains('matched-flash')) return;
+  if (el.style.visibility === 'hidden') return;
+  resumeAudio();
 
-  // ── Toggle: clicar no mesmo card deseleciona ──────────────────
+  // Toggle: clicar no mesmo card deseleciona
   if (selectedCard && selectedCard.el === el) {
-    el.classList.remove('selected');
-    selectedCard = null;
-    clearSlots();
-    setStatus("");
+    deselectCard();
     return;
   }
 
-  // ── Primeiro clique ───────────────────────────────────────────
+  // Primeiro clique
   if (!selectedCard) {
-    el.classList.add('selected');
-    selectedCard = { el, pairId: card.pairId, kind: card.kind, op: card.op, result: card.result };
+    const flyInfo = launchCard(el, card);
+    selectedCard = { el, pairId: card.pairId, kind: card.kind, op: card.op, result: card.result, flyInfo };
     fillSlot(card);
     setStatus("Selecione o par →", 'var(--blue-dark)');
     return;
   }
 
-  // ── Segundo clique: verificar par ─────────────────────────────
-  const first  = selectedCard;
-  const firstEl = first.el;
-
-  // Preenche slot do segundo card
-  el.classList.add('selected');
+  // Segundo clique: verificar par
+  const first = selectedCard;
+  const flyInfo2 = launchCard(el, card);
   fillSlot(card);
 
-  // Par válido = mesmo pairId (garante op + result correspondentes)
   if (first.pairId === card.pairId && first.kind !== card.kind) {
     // ✅ Correto
-    firstEl.classList.remove('selected');
-    el.classList.remove('selected');
-    firstEl.classList.add('matched-flash');
-    el.classList.add('matched-flash');
-
-    setTimeout(() => {
-      firstEl.classList.add('removed');
-      el.classList.add('removed');
-    }, 220);
+    [first.flyInfo.clone, flyInfo2.clone].forEach(c => c.classList.add('matched-flash'));
 
     const dot = document.getElementById(`dot-${card.pairId}`);
     if (dot) dot.classList.add('done');
 
+    setTimeout(() => {
+      [first.flyInfo.clone, flyInfo2.clone].forEach(c => {
+        c.style.transition = 'opacity .28s, transform .28s';
+        c.style.opacity = '0';
+        c.style.transform = 'scale(0.5)';
+        setTimeout(() => c.remove(), 300);
+      });
+    }, 200);
+
+    acertos++;
+    comboCount++;
+    somAcerto();
+    showComboPopup(el);
+    if (_isSprint) { _sprintPairsOk++; updateSprintDisplay(); }
     selectedCard = null;
     removedCount++;
-
     setTimeout(() => { clearSlots(); setStatus(""); }, 650);
-
     if (removedCount >= totalPairs) setTimeout(onGameWin, 500);
 
   } else {
-    // ❌ Errado — shake em ambos, deseleciona após 600 ms
-    firstEl.classList.add('error');
-    el.classList.add('error');
+    // ❌ Errado
+    erros++;
+    comboCount = 0;
+    somErro();
+    if (_isSprint) { _sprintErrTotal++; updateSprintDisplay(); }
     setStatus("Errou! Tente outra combinação. ❌", 'var(--red)');
-
+    flyBack(first.flyInfo, first.el);
+    flyBack(flyInfo2, el);
     setTimeout(() => {
-      firstEl.classList.remove('error', 'selected');
-      el.classList.remove('error', 'selected');
       selectedCard = null;
       clearSlots();
       setTimeout(() => setStatus(""), 800);
@@ -587,6 +909,51 @@ async function onGameWin() {
   gameOver = true;
   stopTimer();
 
+  const nivelJogado = nivelAtual;
+  somVitoria();
+
+  if (_isSprint) {
+    _sprintLevels++;
+    const novoNivelS  = nivelAtual + 1;
+    const novoMelhorS = Math.max(melhorNivel, novoNivelS);
+    progresso.nivel_atual    = novoNivelS;
+    progresso.melhor_nivel   = novoMelhorS;
+    progresso.total_partidas = (progresso.total_partidas || 0) + 1;
+    nivelAtual  = novoNivelS;
+    melhorNivel = novoMelhorS;
+    await salvarProgresso(progresso, 'completou', nivelJogado, acertos, erros);
+    document.getElementById("lov-emoji").textContent = erros === 0 ? '⭐' : '✅';
+    document.getElementById("lov-title").textContent = `Nível ${nivelJogado} completo!`;
+    document.getElementById("lov-sub").textContent   = `+${acertos} par${acertos !== 1 ? 'es' : ''} · próximo em 1s…`;
+    document.getElementById("lov-new").textContent   = `→ Nível ${nivelAtual}`;
+    document.getElementById("lov-new").style.color   = 'var(--blue)';
+    document.getElementById("lov-btn").textContent   = 'Avançar →';
+    document.querySelector('.level-card').style.animation = 'levelUpPop .35s';
+    document.getElementById("level-overlay").style.display = 'flex';
+    setTimeout(() => {
+      document.getElementById("level-overlay").style.display = 'none';
+      buildGame();
+    }, 1500);
+    return;
+  }
+
+  if (_isReplay) {
+    progresso.total_partidas = (progresso.total_partidas || 0) + 1;
+    await salvarProgresso(progresso, 'completou', nivelJogado, acertos, erros, true);
+    nivelAtual = nivelJogado + 1; // avança nível local da sessão de prática
+    document.getElementById("lov-emoji").textContent = erros === 0 ? '⭐' : '✅';
+    document.getElementById("lov-title").textContent = erros === 0 ? 'Perfeito!' : 'Nível concluído!';
+    document.getElementById("lov-sub").textContent   = `Nível ${nivelJogado} · ${acertos} acerto${acertos !== 1 ? 's' : ''}${erros > 0 ? ` · ${erros} erro${erros > 1 ? 's' : ''}` : ''}`;
+    document.getElementById("lov-new").textContent   = `→ Nível ${nivelAtual} (prática)`;
+    document.getElementById("lov-new").style.color   = 'var(--blue)';
+    document.getElementById("lov-btn").textContent   = 'Continuar →';
+    document.querySelector('.level-card').style.animation = 'levelUpPop .45s';
+    document.getElementById("level-overlay").style.display = 'flex';
+    return;
+  }
+
+  const eraLider    = rankingAll[0]?.nome === nomeAluno && rankingAll[0]?.turma === turma;
+  const melhorAnterior = melhorNivel;
   const novoNivel  = nivelAtual + 1;
   const novoMelhor = Math.max(melhorNivel, novoNivel);
 
@@ -597,89 +964,73 @@ async function onGameWin() {
   nivelAtual  = novoNivel;
   melhorNivel = novoMelhor;
 
-  await salvarProgresso(progresso);
+  await salvarProgresso(progresso, 'completou', nivelJogado, acertos, erros);
+  await reloadRanking();
 
-  const isNewRecord = novoNivel > (novoMelhor - 1);
+  const eLider      = rankingAll[0]?.nome === nomeAluno && rankingAll[0]?.turma === turma;
+  const isNewRecord = novoNivel > melhorAnterior;
+
+  if (eLider && !eraLider) lancarConfete(80);
+
   document.getElementById("lov-emoji").textContent = novoNivel > 10 ? '🏆' : '🎉';
-  document.getElementById("lov-title").textContent = "Avançou de nível!";
+  document.getElementById("lov-title").textContent = eLider && !eraLider ? '🥇 Você é o novo líder!' : 'Avançou de nível!';
   document.getElementById("lov-sub").textContent   =
-    `Tempo restante: ${timerLeft}s · ${isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue avançando!'}`;
+    `Tempo restante: ${timerLeft}s · ${eLider && !eraLider ? 'Primeiro lugar no ranking geral!' : isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue avançando!'}`;
   document.getElementById("lov-new").textContent   = `→ Nível ${novoNivel}`;
+  document.getElementById("lov-new").style.color   = 'var(--blue)';
+  document.getElementById("lov-btn").textContent   = 'Continuar →';
+  document.querySelector('.level-card').style.animation = 'levelUpPop .45s';
   document.getElementById("level-overlay").style.display = 'flex';
 }
 
 // ── Timer end ─────────────────────────────────────────────────
 async function onTimerEnd() {
   gameOver = true;
+  somDerrota();
 
-  const novoNivel = Math.max(1, nivelAtual - 1);
-  const caiu = novoNivel < nivelAtual;
+  const nivelJogado = nivelAtual;
 
-  progresso.nivel_atual    = novoNivel;
   progresso.total_partidas = (progresso.total_partidas || 0) + 1;
+  const isReplayDerrota = _isReplay;
+  await salvarProgresso(progresso, 'tempo_esgotado', nivelJogado, acertos, erros, isReplayDerrota || false);
+  if (!isReplayDerrota) await reloadRanking();
 
-  nivelAtual = novoNivel;
-  await salvarProgresso(progresso);
+  const frases = [
+    `Você acertou ${acertos} par${acertos !== 1 ? 'es' : ''}. Tente de novo! 💪`,
+    'Quase lá! Mais uma tentativa 🚀',
+    'Na próxima você passa! 🎯',
+    'Continue tentando, você consegue! ⭐',
+    'Não desista — o tempo vai sobrar! ⏱️',
+  ];
+  const frase = frases[Math.floor(Math.random() * frases.length)];
+  const nivelExibir = isReplayDerrota ? _nivelReal : nivelAtual;
 
   document.getElementById("lov-emoji").textContent = '⏰';
-  document.getElementById("lov-title").textContent = "Tempo esgotado!";
-  document.getElementById("lov-sub").textContent   = caiu
-    ? `Você desceu para o nível ${novoNivel}. Não desista!`
-    : `Você está no nível mínimo. Continue praticando! 💪`;
-  document.getElementById("lov-new").textContent   = `Nível ${novoNivel}`;
+  document.getElementById("lov-title").textContent = 'Tempo esgotado!';
+  document.getElementById("lov-sub").textContent   = frase;
+  document.getElementById("lov-new").textContent   = `Nível ${nivelExibir} — tente de novo`;
+  document.getElementById("lov-new").style.color   = 'var(--orange)';
+  document.getElementById("lov-btn").textContent   = 'Tentar de novo →';
+  document.querySelector('.level-card').style.animation = 'levelDownPop .35s ease';
   document.getElementById("level-overlay").style.display = 'flex';
 }
 
 // ── Public functions ──────────────────────────────────────────
 window.fecharOverlay = function() {
+  if (_isSprint && _sprintEnded) {
+    window.location.href = '/aluno/jogos.html';
+    return;
+  }
   document.getElementById("level-overlay").style.display = 'none';
   buildGame();
 };
 
 window.reiniciarNivel = function() {
+  if (_sprintEnded) return;
   stopTimer();
   buildGame();
 };
 
-window.abrirRanking = async function() {
-  document.getElementById("ranking-modal").style.display = 'flex';
-  const list = document.getElementById("ranking-list");
-  list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted)">Carregando…</div>';
-
-  const data  = await carregarRankingGlobal();
-  const top10 = data.slice(0, 10);
-
-  if (!top10.length) {
-    list.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg><p>Nenhum jogador ainda. Seja o primeiro!</p></div>`;
-    return;
-  }
-
-  list.innerHTML = top10.map((r, i) => {
-    const isMe  = r.nome === nomeAluno && r.turma === turma;
-    const pos   = i + 1;
-    const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : `#${pos}`;
-    const ts    = r.ultima_partida ? new Date(r.ultima_partida) : null;
-    const tsStr = ts ? `${String(ts.getDate()).padStart(2,'0')}/${String(ts.getMonth()+1).padStart(2,'0')} ${ts.getHours()}:${String(ts.getMinutes()).padStart(2,'0')}` : '—';
-    return `<div class="rank-row-tb"${isMe ? ' style="border-color:var(--blue);background:var(--blue-pale)"' : ''}>
-      <div class="rank-pos-tb">${medal}</div>
-      <div style="flex:1;min-width:0">
-        <div class="rank-name-tb">${escH(r.nome)}${isMe ? ' ★' : ''}</div>
-        <div class="rank-sub-tb">Turma ${escH(r.turma)} · última partida: ${tsStr}</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div class="rank-lvl-tb">Nível ${r.melhor_nivel}</div>
-        <div class="rank-lvl-lbl">melhor</div>
-        <div style="font-size:10px;color:var(--text-muted)">Atual: ${r.nivel_atual}</div>
-      </div>
-    </div>`;
-  }).join('');
-};
-
-window.fecharRankingModal = function(e) {
-  if (!e || e.target === document.getElementById("ranking-modal")) {
-    document.getElementById("ranking-modal").style.display = 'none';
-  }
-};
 
 // ── Start ─────────────────────────────────────────────────────
 buildGame();
