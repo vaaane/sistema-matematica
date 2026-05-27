@@ -45,7 +45,7 @@
 <script>(()=>{const t=localStorage.getItem("tema");if(t==="escuro")document.documentElement.setAttribute("data-theme","dark");})()</script>
 <script type="module">
 import { LISTA_ATIVIDADES, MAX_TENTATIVAS_ATIVIDADE } from "/js/constants.js";
-import { contarTentativas, getLiberadasParaTurma, getAlunoPreferencia } from "/js/db.js";
+import { contarTentativas, getLiberadasParaTurma, getAlunoPreferencia, getResultados } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
@@ -163,6 +163,20 @@ for (const ativ of avPlusAtivs) {
 
 clearTimeout(loadTimeout);
 
+const todosResultados = await getResultados();
+const realizadaMap = {};
+for (const r of todosResultados) {
+  if (!alunos.includes(r.aluno) || !r.concluido || r.modo_teste) continue;
+  const prev = realizadaMap[r.atividade];
+  if (!prev || (r.criadoEm || 0) > (prev.ts || 0)) realizadaMap[r.atividade] = { ts: r.criadoEm || 0 };
+}
+function formatTs(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0')
+    + ' às ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+
 content.innerHTML = `
 <div class="card">
   <div class="card-header">
@@ -188,7 +202,9 @@ content.innerHTML = `
     const lib         = liberadasMap[ativ.nome];
     const bloq        = bloqueios[ativ.nome];
     const isEncerrada = lib?.status === 'encerrada';
-    const classes     = `ativ-card${isLib&&!isEncerrada?' liberada':''}${(bloq.bloqueado||isEncerrada)?' bloqueada':''}`;
+    const foiRealizada = !!realizadaMap[ativ.nome];
+    const lastTs       = realizadaMap[ativ.nome]?.ts;
+    const classes      = `ativ-card${isLib&&!isEncerrada?' liberada':''}${(bloq.bloqueado||(isEncerrada&&!foiRealizada))?' bloqueada':''}`;
 
     const modoEfetivo = lib?.modo || ativ.modo || 'classico';
     const url = modoEfetivo === 'avaliacao_plus'
@@ -202,8 +218,10 @@ content.innerHTML = `
     let botao = '';
     if (!isLib) {
       botao = `<span class="badge badge-orange">Não liberada</span>`;
+    } else if (isEncerrada && !foiRealizada) {
+      botao = `<span class="badge" style="color:#B45309;background:#FEF3C7;border-color:#FDE68A">⏰ Perdeu o prazo</span>`;
     } else if (isEncerrada) {
-      botao = `<span class="badge badge-red">⛔ Encerrada</span>`;
+      botao = `<span class="badge badge-green">✅ Realizada</span>`;
     } else if (bloq.avaliacao && bloq.esgotada) {
       botao = `<span class="badge badge-green">Concluída ✓</span>`;
     } else if (!bloq.competicao && bloq.bloqueado) {
@@ -214,8 +232,15 @@ content.innerHTML = `
       </a>`;
     }
 
-    const tentInfos = isEncerrada
-      ? `<span class="tent-info warn">Atividade encerrada pela professora</span>`
+    const tsSpan = foiRealizada && lastTs
+      ? `<span class="tent-info" style="color:var(--green)">✅ Realizada em ${formatTs(lastTs)}</span>`
+      : '';
+    const tentInfos = !isLib
+      ? `<span class="tent-info">Aguarde a liberação pela professora</span>`
+      : (isEncerrada && !foiRealizada)
+      ? `<span class="tent-info" style="color:#B45309">Prazo encerrado · atividade não realizada</span>`
+      : isEncerrada
+      ? ''
       : bloq.avaliacao
       ? (() => {
           const ctrl = bloq.ctrl;
@@ -230,7 +255,7 @@ content.innerHTML = `
           return `<span class="tent-info" style="color:#7C3AED">📝 Avaliação+ · ${tentUsadas}/${MAX_TENT_AV} tentativas${timerInfo}</span>`;
         })()
       : bloq.competicao
-      ? `<span class="tent-info" style="color:var(--blue)">Jogue quantas vezes quiser · ao vivo</span>`
+      ? `<span class="tent-info" style="color:var(--blue)">Modo competição · ao vivo</span>`
       : alunos.map(al => {
           const usado = bloq.tentativas[al] || 0;
           const rest  = Math.max(0, MAX_TENTATIVAS_ATIVIDADE - usado);
@@ -245,7 +270,8 @@ content.innerHTML = `
         <div class="ativ-nome">${ativ.nome}</div>
         <div class="ativ-info-row" style="margin-top:5px">
           ${tentInfos}
-          ${isLib ? `<span class="badge badge-blue">Liberada · ${Math.round(lib.percentual??100)}%</span>` : ''}
+          ${tsSpan}
+          ${isLib && !isEncerrada ? `<span class="badge badge-blue">Liberada</span>` : ''}
         </div>
       </div>
       ${botao}

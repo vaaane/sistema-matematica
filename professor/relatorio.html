@@ -214,8 +214,15 @@ function numTent(q) {
 
 // ── Compute per-turma stats ───────────────────────
 function computeStats(ativ, turma) {
+  if (!allResults) return { turma, cadastrados: 0, jogadores: 0, naoJogaram: [], sessoes: 0, mediaPts: 0, mediaPtsBruta: 0, mediaSessoes: 0, maior: null, maiorPts: 0, menor: null, taxaAcerto: 0, totAcertos: 0, totRespondidas: 0, am: {}, jogadores: [], alunoSessList: {} };
   const cadastrados = ALUNOS_POR_TURMA[turma] || [];
-  const sessoes = allResults.filter(r => r.concluido && r.atividade === ativ && r.turma === turma);
+
+  // norm e normMap declarados antes de qualquer uso
+  const norm = s => (s || '').trim().toLowerCase();
+  const normMap = {};
+  for (const al of cadastrados) normMap[norm(al)] = al;
+
+  const sessoes = allResults.filter(r => r.concluido && r.atividade === ativ && norm(r.turma) === norm(turma));
 
   const am = {};
   for (const al of cadastrados)
@@ -224,17 +231,30 @@ function computeStats(ativ, turma) {
   const alunoSessList = {};
   for (const al of cadastrados) alunoSessList[al] = [];
 
+  // Log de diagnóstico — mostra o que existe em allResults para esta turma/atividade
+  const diagAll = allResults.filter(r => norm(r.turma) === norm(turma) && r.atividade === ativ);
+  const diagSemConc = diagAll.filter(r => !r.concluido);
+  if (diagAll.length > 0) {
+    console.log(`[Relatório ${turma}/${ativ}] ${diagAll.length} registro(s) total, ${diagSemConc.length} sem concluido=true`);
+    diagAll.forEach(r => console.log(`  aluno="${r.aluno}"  turma="${r.turma}"  concluido=${r.concluido}  pts=${r.pontuacao}  normMatch=${normMap[norm(r.aluno)] || '❌SEM MATCH'}`));
+  } else {
+    const diagTurma = allResults.filter(r => norm(r.turma) === norm(turma));
+    const diagAtiv  = allResults.filter(r => r.atividade === ativ);
+    console.warn(`[Relatório ${turma}/${ativ}] NENHUM registro encontrado. Turma "${turma}" aparece em ${diagTurma.length} resultados. Atividade "${ativ}" em ${diagAtiv.length} resultados.`);
+  }
+
   for (const r of sessoes) {
-    if (!am[r.aluno]) am[r.aluno] = { sessoes: 0, melhorPts: 0, melhorPtsBruta: 0, acertos: 0, erros: 0, respondidas: 0, qErros: {} };
-    if (!alunoSessList[r.aluno]) alunoSessList[r.aluno] = [];
-    const d = am[r.aluno];
+    const canonical = normMap[norm(r.aluno)] ?? r.aluno;
+    if (!am[canonical]) am[canonical] = { sessoes: 0, melhorPts: 0, melhorPtsBruta: 0, acertos: 0, erros: 0, respondidas: 0, qErros: {} };
+    if (!alunoSessList[canonical]) alunoSessList[canonical] = [];
+    const d = am[canonical];
     d.sessoes++;
     d.melhorPts      = Math.max(d.melhorPts,      r.pontuacao                        || 0);
     d.melhorPtsBruta = Math.max(d.melhorPtsBruta, r.pontuacao_bruta || r.pontuacao || 0);
     d.acertos     += Number(r.acertos)     || 0;
     d.erros       += Number(r.erros)       || 0;
     d.respondidas += Number(r.respondidas) || 0;
-    alunoSessList[r.aluno].push({ pts: r.pontuacao || 0, criadoEm: r.criadoEm || 0 });
+    alunoSessList[canonical].push({ pts: r.pontuacao || 0, criadoEm: r.criadoEm || 0 });
     for (const q of (detCache[r.id] || [])) {
       if (!q.acertou) {
         const k = q.enunciado || q.pergunta || '?';

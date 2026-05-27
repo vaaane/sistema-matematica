@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Encerrar Todas as Atividades</title>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    body { padding: 32px; max-width: 720px; margin: 0 auto; font-family: 'Inter', sans-serif; }
+    h2 { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    .sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+    .item { background: #F9FAFB; border: 1.5px solid var(--border); border-radius: 10px;
+            padding: 12px 16px; margin-bottom: 10px; font-size: 13px; }
+    .item .label { font-weight: 700; font-size: 14px; }
+    .item .detail { color: var(--text-muted); margin-top: 2px; }
+    .badge-ativa { background: #DCFCE7; color: #15803D; padding: 2px 10px; border-radius: 20px;
+                   font-size: 11px; font-weight: 700; margin-left: 8px; }
+    .badge-enc   { background: #FEE2E2; color: #B91C1C; padding: 2px 10px; border-radius: 20px;
+                   font-size: 11px; font-weight: 700; margin-left: 8px; }
+    #log { font-size: 12px; color: var(--text-muted); margin-top: 16px; line-height: 1.8;
+           background: #F1F5F9; border-radius: 8px; padding: 12px 14px; display: none; }
+    #btn { margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <h2>⛔ Encerrar Todas as Atividades</h2>
+  <div class="sub">Esta página encerra TODAS as atividades que estão ativas no Firebase. Nenhum dado é apagado.</div>
+
+  <div id="preview"><p style="color:var(--text-muted);font-size:13px">Carregando…</p></div>
+  <button id="btn" class="btn btn-red" style="margin-top:8px;display:none" onclick="encerrarTudo()">
+    ⛔ Encerrar tudo agora
+  </button>
+  <div id="log"></div>
+
+<script type="module">
+import { db } from "/js/firebase-config.js";
+import { ref, get, set, update, push, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { requireProfessor } from "/js/auth.js";
+import { dataAgora } from "/js/constants.js";
+
+requireProfessor();
+
+// ── Helpers ──────────────────────────────────────────────────
+function statusKey(turma, atividade) {
+  return `${turma}___${atividade.replace(/[^a-zA-Z0-9]/g, '_')}`;
+}
+
+async function setEncerrada(turma, atividade) {
+  await set(ref(db, `config/atividade_status/${statusKey(turma, atividade)}`),
+    { turma, atividade, status: 'encerrada', percentual: 0, updatedAt: serverTimestamp() });
+}
+
+async function zeroLiberadasPercentual(turma, atividade) {
+  const snap = await get(ref(db, 'liberacoes_ativas'));
+  if (!snap.exists()) return;
+  const tasks = [];
+  snap.forEach(child => {
+    const v = child.val();
+    if (v.turma === turma && v.atividade === atividade)
+      tasks.push(update(ref(db, `liberacoes_ativas/${child.key}`), { percentual: 0 }));
+  });
+  await Promise.all(tasks);
+}
+
+async function registrarAlteracao(histId, em) {
+  if (!histId) return;
+  await push(ref(db, `liberacoes_historico/${histId}/status_alteracoes`),
+    { status: 'encerrada', percentual: 0, em });
+}
+
+// ── Carregar preview ─────────────────────────────────────────
+const [snapLib, snapStatus, snapHist] = await Promise.all([
+  get(ref(db, 'liberacoes_ativas')),
+  get(ref(db, 'config/atividade_status')),
+  get(ref(db, 'liberacoes_historico')),
+]);
+
+// Mapa (turma|atividade) → { turma, atividade, status, histId }
+const itens = {};
+
+if (snapLib.exists()) {
+  snapLib.forEach(child => {
+    const v = child.val();
+    const k = `${v.turma}|${v.atividade}`;
+    if (!itens[k]) itens[k] = { turma: v.turma, atividade: v.atividade, histId: v.historico_id || null, status: 'ativa' };
+    else if (!itens[k].histId && v.historico_id) itens[k].histId = v.historico_id;
+  });
+}
+
+if (snapStatus.exists()) {
+  snapStatus.forEach(child => {
+    const v = child.val();
+    if (!v.turma || !v.atividade) return;
+    const k = `${v.turma}|${v.atividade}`;
+    if (v.status === 'encerrada') {
+      // já encerrada — ainda mostra para transparência
+      if (!itens[k]) itens[k] = { turma: v.turma, atividade: v.atividade, histId: null, status: 'encerrada' };
+      else itens[k].status = 'encerrada';
+    } else {
+      // ativa por qualquer valor (ativa, 75, 50, true, ...)
+      if (!itens[k]) itens[k] = { turma: v.turma, atividade: v.atividade, histId: null, status: v.status };
+      else itens[k].status = v.status;
+    }
+  });
+}
+
+// Para entradas sem histId, tentar achar no historico
+if (snapHist.exists()) {
+  snapHist.forEach(child => {
+    const v = child.val();
+    if (!v.turma || !v.atividade) return;
+    const k = `${v.turma}|${v.atividade}`;
+    if (itens[k] && !itens[k].histId) itens[k].histId = child.key;
+  });
+}
+
+const lista = Object.values(itens).sort((a, b) =>
+  (a.turma + a.atividade).localeCompare(b.turma + b.atividade));
+const ativas = lista.filter(i => i.status !== 'encerrada');
+
+const previewEl = document.getElementById('preview');
+const btnEl     = document.getElementById('btn');
+
+if (!lista.length) {
+  previewEl.innerHTML = '<p style="color:var(--text-muted);font-size:13px">Nenhuma atividade encontrada no Firebase.</p>';
+} else {
+  previewEl.innerHTML = lista.map(i => `
+    <div class="item">
+      <div class="label">${i.atividade}
+        ${i.status === 'encerrada'
+          ? '<span class="badge-enc">Já encerrada</span>'
+          : `<span class="badge-ativa">Ativa · ${i.status}</span>`}
+      </div>
+      <div class="detail">Turma ${i.turma}${i.histId ? ' · histId: ' + i.histId : ' · sem histId'}</div>
+    </div>`).join('');
+  if (ativas.length) {
+    btnEl.textContent = `⛔ Encerrar ${ativas.length} atividade${ativas.length > 1 ? 's' : ''} agora`;
+    btnEl.style.display = 'inline-flex';
+  } else {
+    previewEl.innerHTML += '<p style="color:#15803D;font-weight:600;font-size:13px;margin-top:12px">✅ Todas as atividades já estão encerradas.</p>';
+  }
+}
+
+// ── Executar encerramento ─────────────────────────────────────
+window.encerrarTudo = async function() {
+  if (!ativas.length) return;
+  if (!confirm(`Encerrar ${ativas.length} atividade(s) agora? Esta ação NÃO apaga dados.`)) return;
+
+  btnEl.disabled = true;
+  btnEl.textContent = 'Encerrando…';
+  const logEl = document.getElementById('log');
+  logEl.style.display = 'block';
+  logEl.innerHTML = '';
+
+  const agora = dataAgora();
+  let ok = 0, erros = 0;
+
+  for (const item of ativas) {
+    try {
+      await Promise.all([
+        setEncerrada(item.turma, item.atividade),
+        zeroLiberadasPercentual(item.turma, item.atividade),
+        registrarAlteracao(item.histId, agora),
+      ]);
+      logEl.innerHTML += `✅ ${item.atividade} — Turma ${item.turma}<br>`;
+      ok++;
+    } catch(e) {
+      logEl.innerHTML += `❌ ${item.atividade} — Turma ${item.turma}: ${e.message}<br>`;
+      erros++;
+    }
+  }
+
+  logEl.innerHTML += `<br><strong>${ok} encerrada(s)${erros ? ', ' + erros + ' erro(s)' : ''}. Pronto.</strong>`;
+  btnEl.textContent = '✓ Concluído';
+  btnEl.style.background = '#15803D';
+};
+</script>
+</body>
+</html>
