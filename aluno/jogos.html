@@ -524,13 +524,25 @@ function fmtDate(ts) {
   return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
-const [niveisSnap, rankingSnap, sprintRankSnap] = await Promise.all([
-  get(ref(db, `tabuada_niveis/${uid}`)),
-  get(ref(db, 'tabuada_ranking')),
-  get(ref(db, 'tabuada_sprint_ranking')).catch(() => null),
-]);
+let niveisSnap, rankingSnap, sprintRankSnap;
+try {
+  [niveisSnap, rankingSnap, sprintRankSnap] = await Promise.all([
+    get(ref(db, `tabuada_niveis/${uid}`)).catch(() => null),
+    get(ref(db, 'tabuada_ranking')).catch(() => null),
+    get(ref(db, 'tabuada_sprint_ranking')).catch(() => null),
+  ]);
+} catch(e) {
+  document.getElementById("content").innerHTML =
+    `<div style="text-align:center;padding:60px">
+      <div style="font-size:36px;margin-bottom:12px">⚠️</div>
+      <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">Erro ao carregar dados</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px">Verifique sua conexão e tente novamente.</div>
+      <button onclick="location.reload()" class="btn btn-blue">Tentar novamente</button>
+    </div>`;
+  throw e;
+}
 
-const niveis        = niveisSnap.exists() ? niveisSnap.val() : {};
+const niveis        = niveisSnap?.exists() ? niveisSnap.val() : {};
 const melhorNivel   = niveis.melhor_nivel   || 1;
 const nivelAtual    = Math.max(niveis.nivel_atual || 1, melhorNivel);
 const totalPartidas = niveis.total_partidas || 0;
@@ -551,7 +563,7 @@ for (const [, e] of historico) {
 
 // Ranking
 const rankingAll = [];
-if (rankingSnap.exists()) {
+if (rankingSnap?.exists()) {
   rankingSnap.forEach(c => {
     const v = c.val();
     if (v && v.nome) rankingAll.push(v);
