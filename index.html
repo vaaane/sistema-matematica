@@ -167,7 +167,9 @@
   <div class="stat-divider"></div>
   <div class="stat-item"><div class="stat-num" id="statTurmas">—</div><div class="stat-label">Turmas</div></div>
   <div class="stat-divider"></div>
-  <div class="stat-item"><div class="stat-num" id="statSessoes">—</div><div class="stat-label">Sessões hoje</div></div>
+  <div class="stat-item"><div class="stat-num" id="statSessoesQuiz">—</div><div class="stat-label">Quiz hoje</div></div>
+  <div class="stat-divider"></div>
+  <div class="stat-item"><div class="stat-num" id="statSessoesTabuada">—</div><div class="stat-label">Tabuada hoje</div></div>
 </div>
 
 <div class="container">
@@ -286,7 +288,7 @@
 
 <script type="module">
 import { ALUNOS_POR_TURMA } from "/js/constants.js";
-import { getConfig, getSenhaAluno, getResultados, getLiberadas } from "/js/db.js";
+import { getConfig, getSenhaAluno, getResultados, getLiberadas, contarSessoesTabuadaHoje } from "/js/db.js";
 import { getSession, setSession, hashSenha } from "/js/auth.js";
 
 // Redireciona se já logado
@@ -332,13 +334,15 @@ let liberadasCache = [];
 
 (async () => {
   try {
-    const [resultados, liberadas] = await Promise.all([getResultados(), getLiberadas()]);
+    const [resultados, liberadas, sessTabuada] = await Promise.all([
+      getResultados(), getLiberadas(), contarSessoesTabuadaHoje()
+    ]);
     liberadasCache = liberadas;
 
-    // Sessões hoje — r.data é "DD/MM/YYYY HH:MM", comparar pelo prefixo da data
     const hoje = new Date().toLocaleDateString('pt-BR');
-    const sessHoje = resultados.filter(r => r.concluido && r.data && r.data.startsWith(hoje)).length;
-    document.getElementById('statSessoes').textContent = sessHoje;
+    const sessQuiz = resultados.filter(r => r.concluido && r.data && r.data.startsWith(hoje)).length;
+    document.getElementById('statSessoesQuiz').textContent = sessQuiz;
+    document.getElementById('statSessoesTabuada').textContent = sessTabuada;
 
     // Ticker com dados reais
     const concluidos = resultados.filter(r => r.concluido);
@@ -367,7 +371,8 @@ let liberadasCache = [];
         .map(i => `<div class="ticker-item">${i} &nbsp;·&nbsp;</div>`).join('');
     }
   } catch(e) {
-    document.getElementById('statSessoes').textContent = '—';
+    document.getElementById('statSessoesQuiz').textContent = '—';
+    document.getElementById('statSessoesTabuada').textContent = '—';
   }
 })();
 

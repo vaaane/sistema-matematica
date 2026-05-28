@@ -196,11 +196,18 @@ document.getElementById("content").innerHTML = `
       <div class="stat-icon orange"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></div>
       <div><div class="stat-value orange" id="analise-count">0</div><div class="stat-meta">⚠️ Para verificar</div></div>
     </div>
-    <div class="stat-card stat-card-clickable" style="flex:1;min-width:140px" id="online-card" onclick="window.abrirOnlineModal()">
-      <div class="stat-icon green"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg></div>
+    <div class="stat-card stat-card-clickable" style="flex:1;min-width:120px" id="online-quiz-card" onclick="window.abrirOnlineModal()">
+      <div class="stat-icon green"><svg viewBox="0 0 24 24"><path d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z"/></svg></div>
       <div>
-        <div class="stat-value green" id="online-count">—</div>
-        <div class="stat-meta">Online Agora <span class="online-dot"></span></div>
+        <div class="stat-value green" id="online-quiz-count">—</div>
+        <div class="stat-meta">Quiz online <span class="online-dot"></span></div>
+      </div>
+    </div>
+    <div class="stat-card stat-card-clickable" style="flex:1;min-width:120px" id="online-tabuada-card" onclick="window.abrirOnlineModal()">
+      <div class="stat-icon blue"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg></div>
+      <div>
+        <div class="stat-value blue" id="online-tabuada-count">—</div>
+        <div class="stat-meta">Tabuada online <span class="online-dot" style="background:var(--blue)"></span></div>
       </div>
     </div>
   </div>
@@ -260,9 +267,10 @@ document.getElementById("content").innerHTML = `
     </div>
   </div>`;
 
-// ── Online Agora (listener em tempo real) ─────────────────────
+// ── Online Agora (listeners em tempo real) ────────────────────
 const ONLINE_WINDOW_MS = 5 * 60 * 1000;
-let onlineAlunos = [];
+let onlineQuiz    = [];
+let onlineTabuada = [];
 
 onValue(ref(db, 'resultados'), snap => {
   const now = Date.now();
@@ -273,27 +281,56 @@ onValue(ref(db, 'resultados'), snap => {
       seen[v.aluno] = { nome: v.aluno, turma: v.turma || '?', atividade: v.atividade || '' };
     }
   });
-  onlineAlunos = Object.values(seen);
-  const countEl = document.getElementById('online-count');
-  if (countEl) countEl.textContent = onlineAlunos.length;
+  onlineQuiz = Object.values(seen);
+  const el = document.getElementById('online-quiz-count');
+  if (el) el.textContent = onlineQuiz.length;
+  atualizarListaOnline();
+});
+
+onValue(ref(db, 'tabuada_presenca'), snap => {
+  const now = Date.now();
+  const found = [];
+  snap.forEach(child => {
+    const v = child.val();
+    if (v?.nome && v.ts && (now - v.ts) < ONLINE_WINDOW_MS) {
+      found.push({ nome: v.nome, turma: v.turma || '?' });
+    }
+  });
+  onlineTabuada = found;
+  const el = document.getElementById('online-tabuada-count');
+  if (el) el.textContent = onlineTabuada.length;
   atualizarListaOnline();
 });
 
 function atualizarListaOnline() {
   const el = document.getElementById('online-modal-list');
   if (!el) return;
-  if (!onlineAlunos.length) {
-    el.innerHTML = '<p style="color:var(--text-muted);font-size:13px;text-align:center;padding:12px 0">Nenhum aluno jogando agora.</p>';
-    return;
+  let html = '';
+  if (onlineQuiz.length) {
+    html += `<div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">🎮 Quiz</div>`;
+    html += onlineQuiz.map(a => `
+      <div class="online-row">
+        <span class="online-dot"></span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600">${a.nome}</div>
+          <div style="font-size:11px;color:var(--text-muted)">Turma ${a.turma}${a.atividade ? ' · ' + a.atividade : ''}</div>
+        </div>
+      </div>`).join('');
   }
-  el.innerHTML = onlineAlunos.map(a => `
-    <div class="online-row">
-      <span class="online-dot"></span>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600">${a.nome}</div>
-        <div style="font-size:11px;color:var(--text-muted)">Turma ${a.turma}${a.atividade ? ' · ' + a.atividade : ''}</div>
-      </div>
-    </div>`).join('');
+  if (onlineTabuada.length) {
+    if (html) html += `<div style="height:1px;background:var(--border);margin:10px 0"></div>`;
+    html += `<div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">🔢 Tabuada</div>`;
+    html += onlineTabuada.map(a => `
+      <div class="online-row">
+        <span class="online-dot" style="background:var(--blue)"></span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600">${a.nome}</div>
+          <div style="font-size:11px;color:var(--text-muted)">Turma ${a.turma}</div>
+        </div>
+      </div>`).join('');
+  }
+  if (!html) html = '<p style="color:var(--text-muted);font-size:13px;text-align:center;padding:12px 0">Nenhum aluno jogando agora.</p>';
+  el.innerHTML = html;
 }
 
 window.abrirOnlineModal = function() {

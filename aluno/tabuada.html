@@ -438,6 +438,16 @@ function flyBack(info, el) {
   }, 280);
 }
 
+// ── Presença / sessões Firebase ──────────────────────────────
+function _atualizarPresenca() {
+  set(ref(db, `tabuada_presenca/${uid}`), { nome: nomeAluno, turma, ts: Date.now() }).catch(() => {});
+}
+function _registrarSessao() {
+  const d = new Date();
+  const data = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  set(ref(db, `tabuada_sessoes/${Date.now()}`), { nome: nomeAluno, turma, data }).catch(() => {});
+}
+
 // ── Game state ────────────────────────────────────────────────
 const [progresso, _rankingSnap] = await Promise.all([
   carregarProgresso(),
@@ -669,6 +679,7 @@ async function endSprint(manual = false) {
   if (_sprintInt) { clearInterval(_sprintInt); _sprintInt = null; }
   if (!manual) somDerrota(); else somVitoria();
   if (_sprintPairsOk > 0) salvarSprintRanking(_sprintPairsOk);
+  _registrarSessao();
   const total = _sprintPairsOk + _sprintErrTotal;
   const acc   = total > 0 ? Math.round(_sprintPairsOk / total * 100) : 100;
   document.getElementById("lov-emoji").textContent = _sprintLevels >= 5 ? '🏆' : _sprintLevels >= 2 ? '⭐' : '🎮';
@@ -686,6 +697,7 @@ async function endSprint(manual = false) {
 // ── Build game ────────────────────────────────────────────────
 function buildGame() {
   stopTimer();
+  _atualizarPresenca();
   const cfg = getLevelConfig(nivelAtual);
   timerTotal = cfg.secs;
   timerLeft  = cfg.secs;
@@ -999,6 +1011,7 @@ async function onGameWin() {
   if (_isReplay) {
     progresso.total_partidas = (progresso.total_partidas || 0) + 1;
     await salvarProgresso(progresso, 'completou', nivelJogado, acertos, erros, true);
+    _registrarSessao();
     nivelAtual = nivelJogado + 1; // avança nível local da sessão de prática
     document.getElementById("lov-emoji").textContent = erros === 0 ? '⭐' : '✅';
     document.getElementById("lov-title").textContent = erros === 0 ? 'Perfeito!' : 'Nível concluído!';
@@ -1024,6 +1037,7 @@ async function onGameWin() {
   melhorNivel = novoMelhor;
 
   await salvarProgresso(progresso, 'completou', nivelJogado, acertos, erros);
+  _registrarSessao();
 
   const isNewRecord = novoNivel > melhorAnterior;
 
@@ -1064,6 +1078,7 @@ async function onTimerEnd() {
   progresso.total_partidas = (progresso.total_partidas || 0) + 1;
   const isReplayDerrota = _isReplay;
   await salvarProgresso(progresso, 'tempo_esgotado', nivelJogado, acertos, erros, isReplayDerrota || false);
+  _registrarSessao();
   if (!isReplayDerrota) reloadRanking();
 
   const frases = [

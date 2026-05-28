@@ -48,6 +48,19 @@ export async function getDetalhes(resultadoId) {
   return snap.exists() ? snap.val().questoes : [];
 }
 
+// ── Tabuada sessões ─────────────────────────────────────────
+export async function contarSessoesTabuadaHoje() {
+  const hoje = new Date().toLocaleDateString('pt-BR');
+  const snap = await get(ref(db, 'tabuada_sessoes')).catch(() => null);
+  if (!snap?.exists()) return 0;
+  let count = 0;
+  snap.forEach(child => {
+    const v = child.val();
+    if (v?.data && v.data.startsWith(hoje)) count++;
+  });
+  return count;
+}
+
 // ── Conquistas ──────────────────────────────────────────────
 export async function addConquista(data) {
   await push(ref(db, "conquistas"), { ...data, criadoEm: serverTimestamp() });
