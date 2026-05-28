@@ -246,19 +246,19 @@ ${top3.length ? `
   : `<div style="overflow-x:auto">
     <table class="table">
       <thead><tr>
-        <th>#</th><th>Aluno</th><th>Turma</th><th>Nível Atual</th><th>Melhor Nível</th><th>Progresso</th><th>Partidas</th><th>Última Partida</th>
+        <th>#</th><th>ALUNO</th><th>TURMA</th><th>NÍVEL ATUAL</th><th>PARTIDAS</th><th>ÚLTIMA PARTIDA</th>
       </tr></thead>
       <tbody>
-        ${data.map((d, i) => `<tr>
+        ${data.map((d, i) => {
+          const nivelMax = Math.max(d.nivel_atual||1, d.melhor_nivel||1);
+          return `<tr>
           <td style="color:var(--text-muted);font-weight:600">${i+1}</td>
           <td><strong>${d.nome}</strong></td>
-          <td><span class="badge badge-blue">Turma ${d.turma}</span></td>
-          <td><span class="lvl-badge ${lvlClass(d.nivel_atual||1)}">${d.nivel_atual||1}</span></td>
-          <td><span class="lvl-badge ${lvlClass(d.melhor_nivel||1)}">${d.melhor_nivel||1}</span></td>
-          <td style="min-width:100px">${progDots(Math.min(d.melhor_nivel||0, 16))}</td>
+          <td>${d.turma}</td>
+          <td><span class="lvl-badge ${lvlClass(nivelMax)}">${nivelMax}</span></td>
           <td style="color:var(--text-muted);font-size:13px">${d.total_partidas||0}</td>
           <td style="color:var(--text-muted);font-size:12px">${fmtDate(d.ultima_partida)}</td>
-        </tr>`).join('')}
+        </tr>`;}).join('')}
       </tbody>
     </table>
   </div>`}

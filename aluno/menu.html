@@ -580,16 +580,16 @@ ${tempoPodioHtml}
           const lib = liberadas.find(l => l.atividade === a.nome);
           const encerrada = lib?.status === 'encerrada';
           const realizadaNoAluno = todos.some(r => alunos.includes(r.aluno) && r.atividade === a.nome && r.concluido);
-          const chipClass = (encerrada && !realizadaNoAluno) ? ' encerrada' : lib ? ' liberada' : '';
+          const chipClass = realizadaNoAluno ? '' : (encerrada && !realizadaNoAluno) ? ' encerrada' : lib ? ' liberada' : '';
           return `<div class="ativ-chip${chipClass}">
             <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/></svg>
             ${a.nome}
-            ${encerrada && realizadaNoAluno
-              ? `<span class="badge badge-green" style="margin-left:auto">✅ Realizada</span>`
+            ${realizadaNoAluno
+              ? `<span class="badge badge-green" style="margin-left:auto">✅ Concluída</span>`
               : encerrada
               ? `<span class="badge" style="margin-left:auto;color:#B45309;background:#FEF3C7;border-color:#FDE68A">⏰ Perdeu o prazo</span>`
-              : lib ? `<span class="badge badge-blue" style="margin-left:auto">${Math.round(lib.percentual??100)}%</span>`
-              : `<span class="badge" style="margin-left:auto;color:var(--text-muted);background:var(--bg);border-color:var(--border)">A ser liberada</span>`}
+              : lib ? `<span class="badge badge-blue" style="margin-left:auto">▶ Disponível</span>`
+              : `<span class="badge" style="margin-left:auto;color:var(--text-muted);background:var(--bg);border-color:var(--border)">🔒 Não liberada</span>`}
           </div>`;
         }).join('')}
       </div>
