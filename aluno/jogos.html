@@ -23,6 +23,18 @@
       --j-gold:    var(--gold);
     }
 
+    /* ── Parabéns card ── */
+    .j-parabens {
+      display: flex; align-items: center; gap: 16px;
+      background: linear-gradient(135deg, rgba(234,179,8,.1), rgba(16,185,129,.06));
+      border: 1.5px solid rgba(234,179,8,.4);
+      border-radius: 16px; padding: 18px 20px; margin-bottom: 16px;
+      animation: j-fadein .5s;
+    }
+    .j-parabens-emoji { font-size: 38px; flex-shrink: 0; line-height: 1; }
+    .j-parabens-title { font-size: 17px; font-weight: 800; color: var(--j-gold); margin-bottom: 4px; }
+    .j-parabens-sub   { font-size: 13px; color: var(--j-muted); line-height: 1.4; }
+
     /* ── Keyframes ── */
     @keyframes j-pulse {
       0%   { transform: scale(1);   opacity: 0.6; }
@@ -465,7 +477,19 @@
         <div class="topbar-sub">Mini-jogos educativos</div>
       </div>
       <div class="topbar-right">
-        <div class="avatar avatar-orange" id="avatar-initials">?</div>
+        <div class="avatar-wrap">
+          <div class="avatar avatar-orange" id="avatar-initials" onclick="toggleAvatarMenu()">?</div>
+          <div class="avatar-menu" id="avatar-menu">
+            <a href="/aluno/config.html" class="avatar-menu-item">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+              Configurações
+            </a>
+            <button class="avatar-menu-item avatar-menu-danger" onclick="sair()">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+              Sair
+            </button>
+          </div>
+        </div>
       </div>
     </div>
     <div class="content" id="content">
@@ -578,6 +602,9 @@ if (niveis.historico) {
     }
   });
 }
+
+// Verifica se todos os níveis até o melhor foram concluídos com estrela (sem erros)
+const allPerfect = maxLv >= 1 && Array.from({ length: maxLv }, (_, i) => i + 1).every(lv => levelStats[lv]?.perfeito === true);
 
 // HTML helpers
 const TOP3_BG  = ['linear-gradient(135deg,#F59E0B,#D97706)','linear-gradient(135deg,#9CA3AF,#6B7280)','linear-gradient(135deg,#CD853F,#92400E)'];
@@ -755,6 +782,15 @@ document.getElementById("content").innerHTML = `
   <!-- ── Aba Normal ── -->
   <div class="j-tab-panel" id="panel-normal">
 
+    ${allPerfect ? `
+    <div class="j-parabens">
+      <div class="j-parabens-emoji">🏆</div>
+      <div>
+        <div class="j-parabens-title">Parabéns, ${escH(nomeAluno)}!</div>
+        <div class="j-parabens-sub">Você completou todos os ${maxLv} níveis com ★ estrela! Desempenho perfeito, sem nenhum erro!</div>
+      </div>
+    </div>` : ''}
+
     <!-- Stats + botão jogar -->
     <div class="j-card" style="margin-bottom:16px;padding:0;overflow:hidden">
       <div class="j-stats-row" style="border-top:none;margin-top:0">
@@ -833,6 +869,15 @@ document.getElementById("content").innerHTML = `
   <!-- ── Aba Sprint ── -->
   <div class="j-tab-panel hidden" id="panel-sprint">
 
+    ${mySprintBest > 0 ? `
+    <div class="j-parabens">
+      <div class="j-parabens-emoji">⚡</div>
+      <div>
+        <div class="j-parabens-title">Parabéns, ${escH(nomeAluno)}!</div>
+        <div class="j-parabens-sub">Seu recorde de sprint é de <strong style="color:var(--j-gold)">${mySprintBest} operações</strong> em 3 minutos!${mySprintRank ? ` · #${mySprintRank} no ranking geral` : ''}</div>
+      </div>
+    </div>` : ''}
+
     <!-- Personal best + botão -->
     <div class="j-sprint-hero">
       ${mySprintBest
@@ -899,6 +944,15 @@ window.jogarNivel = function(lv) {
     window.location.href = `/aluno/tabuada.html?nivel=${lv}`; // nível anterior: replay
   }
 };
+
+window.toggleAvatarMenu = function() {
+  document.getElementById('avatar-menu').classList.toggle('open');
+};
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.avatar-wrap')) {
+    document.getElementById('avatar-menu')?.classList.remove('open');
+  }
+});
 </script>
 </body>
 </html>

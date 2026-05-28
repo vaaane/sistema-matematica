@@ -71,6 +71,14 @@
     @keyframes slideUp{from{transform:translateY(28px);opacity:0}to{transform:translateY(0);opacity:1}}
     @keyframes combo-float{0%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}60%{opacity:1;transform:translateX(-50%) translateY(-30px) scale(1.15)}100%{opacity:0;transform:translateX(-50%) translateY(-52px) scale(.9)}}
     .combo-pop{position:fixed;pointer-events:none;z-index:150;font-weight:800;font-size:15px;font-family:'Inter',sans-serif;animation:combo-float .85s ease forwards;white-space:nowrap;text-shadow:0 1px 6px rgba(0,0,0,.35);}
+    .combo-pop.combo-big{font-size:21px;animation-duration:1.05s;}
+    .combo-pop.combo-huge{font-size:28px;animation-duration:1.3s;}
+    @keyframes combo-badge-pop{0%{transform:scale(1.3);opacity:.6}100%{transform:scale(1);opacity:1}}
+    .combo-badge-inner{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:800;padding:3px 12px;border-radius:20px;animation:combo-badge-pop .2s;}
+    .combo-c2{background:rgba(34,197,94,.1);color:#22C55E;border:1px solid rgba(34,197,94,.25);}
+    .combo-c3{background:rgba(249,115,22,.1);color:#f97316;border:1px solid rgba(249,115,22,.25);}
+    .combo-c4{background:rgba(250,184,0,.1);color:#FAB800;border:1px solid rgba(250,184,0,.28);}
+    .combo-c5{background:rgba(250,184,0,.18);color:#FAB800;border:1px solid rgba(250,184,0,.45);font-size:15px;}
 
     /* ── Level overlay ── */
     .level-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
@@ -145,7 +153,19 @@
         <div class="topbar-sub" id="nivel-display">Carregando…</div>
       </div>
       <div class="topbar-right">
-        <div class="avatar avatar-orange" id="avatar-initials">?</div>
+        <div class="avatar-wrap">
+          <div class="avatar avatar-orange" id="avatar-initials" onclick="toggleAvatarMenu()">?</div>
+          <div class="avatar-menu" id="avatar-menu">
+            <a href="/aluno/config.html" class="avatar-menu-item">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+              Configurações
+            </a>
+            <button class="avatar-menu-item avatar-menu-danger" onclick="sair()">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+              Sair
+            </button>
+          </div>
+        </div>
       </div>
     </div>
     <div class="content" id="content">
@@ -236,29 +256,34 @@ async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo
 
 // ── Level config ──────────────────────────────────────────────
 function getLevelConfig(lvl) {
-  // Níveis 1-50: adição + subtração juntas, resultados crescem de 8 a 25
-  if (lvl <= 50) {
-    const t         = (lvl - 1) / 49;
+  // Níveis 1-54: adição + subtração juntas, resultados crescem de 8 a 25
+  if (lvl <= 54) {
+    const t         = (lvl - 1) / 53;
     const pairs     = Math.round(2 + t * 6);   // 2 → 8
-    const secs      = Math.round(70 - t * 15); // 70 → 55s
+    let   secs      = Math.round(70 - t * 15); // 70 → 55s
     const maxResult = Math.round(8 + t * 17);  // 8 → 25
     const cols      = pairs <= 2 ? 2 : pairs <= 3 ? 3 : 4;
+    if (lvl <= 30) secs = Math.round(secs / 2); // primeiras 30 fases com metade do tempo
     return { type:'mix_as', pairs, cols, secs, maxResult };
   }
-  // Níveis 51-65: add+sub+mul; mul aparece com peso menor no início (51-57)
+  // Níveis 55-65: add+sub+mul; mínimo garantido de mul cresce de 1 até ~1/3 das questões
   if (lvl <= 65) {
-    const t     = (lvl - 51) / 14;
-    const pairs = Math.round(3 + t * 5); // 3 → 8
-    const secs  = Math.round(65 - t * 10); // 65 → 55s
-    const cols  = pairs <= 3 ? 3 : 4;
-    return { type: t < 0.5 ? 'mix_asm_lite' : 'mix_asm', pairs, cols, secs };
+    const t      = (lvl - 55) / 10; // 0 → 1
+    const pairs  = Math.round(4 + t * 4);    // 4 → 8
+    const secs   = Math.round(65 - t * 10);  // 65 → 55s
+    const cols   = pairs <= 4 ? 3 : 4;
+    const minMul = Math.max(1, Math.round(1 + t * (Math.floor(pairs / 3) - 1)));
+    return { type:'mix_as', pairs, cols, secs, minMul, minDiv: 0 };
   }
-  // Níveis 66+: todas as operações; grid reseta menor e cresce até 6×6 fixo
-  const t     = Math.min(1, (lvl - 66) / 24); // 0→1 ao longo de 24 níveis
-  const pairs = Math.round(4 + t * 14);        // 4 → 18
-  const secs  = Math.round(60 - t * 15);       // 60 → 45s
-  const cols  = pairs <= 6 ? 4 : 6;
-  return { type:'mix', pairs, cols, secs };
+  // Níveis 66+: todas as operações; div começa em 1 garantido e cresce junto com mul até ~1/4 cada
+  const t      = Math.min(1, (lvl - 66) / 24); // 0→1 ao longo de 24 níveis
+  const pairs  = Math.round(4 + t * 14);        // 4 → 18
+  const secs   = Math.round(60 - t * 15);       // 60 → 45s
+  const cols   = pairs <= 6 ? 4 : 6;
+  const perOp  = Math.floor(pairs / 4);
+  const minMul = Math.max(1, Math.round(1 + t * (perOp - 1)));
+  const minDiv = Math.max(1, Math.round(1 + t * (perOp - 1)));
+  return { type:'mix_as', pairs, cols, secs, minMul, minDiv };
 }
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -335,9 +360,17 @@ function tryGenOp(type, usedR, maxResult = 999) {
   return null;
 }
 
-function generatePairs(type, count, maxResult = 999) {
+function generatePairs(type, count, maxResult = 999, minMul = 0, minDiv = 0) {
   const pairs = [];
   const usedR = new Set();
+  for (let i = 0; i < minMul && pairs.length < count; i++) {
+    const p = tryGenOp('mul', usedR);
+    if (p) pairs.push(p);
+  }
+  for (let i = 0; i < minDiv && pairs.length < count; i++) {
+    const p = tryGenOp('div', usedR);
+    if (p) pairs.push(p);
+  }
   for (let attempt = 0; attempt < 600 && pairs.length < count; attempt++) {
     const p = tryGenOp(type, usedR, maxResult) || tryGenOp('add', usedR, maxResult);
     if (p) pairs.push(p);
@@ -530,16 +563,25 @@ function showComboPopup(el) {
   const rect = el.getBoundingClientRect();
   const pop = document.createElement('div');
   pop.className = 'combo-pop';
-  let text, color;
-  if      (comboCount >= 6) { text = `🔥 INCRÍVEL! x${comboCount}`; color = '#FAB800'; }
-  else if (comboCount === 5) { text = '🔥 x5 COMBO!';               color = '#FAB800'; }
-  else if (comboCount === 4) { text = '🔥 Combo x4';                color = '#f97316'; }
-  else if (comboCount === 3) { text = '🔥 Combo x3';                color = '#f97316'; }
-  else if (comboCount === 2) { text = '✓ x2';                       color = '#22C55E'; }
-  else                       { text = '+1';                          color = '#1D9E75'; }
+  let text, color, badgeCls;
+  if      (comboCount >= 6) { text = `🔥 INCRÍVEL! x${comboCount}`; color = '#FAB800'; badgeCls = 'combo-c5'; pop.classList.add('combo-huge'); }
+  else if (comboCount === 5) { text = '🔥 x5 COMBO!';               color = '#FAB800'; badgeCls = 'combo-c5'; pop.classList.add('combo-huge'); }
+  else if (comboCount === 4) { text = '🔥 Combo x4';                color = '#f97316'; badgeCls = 'combo-c4'; pop.classList.add('combo-big'); }
+  else if (comboCount === 3) { text = '🔥 Combo x3';                color = '#f97316'; badgeCls = 'combo-c3'; pop.classList.add('combo-big'); }
+  else if (comboCount === 2) { text = '✓ x2';                       color = '#22C55E'; badgeCls = 'combo-c2'; }
+  else                       { text = '+1';                          color = '#1D9E75'; badgeCls = null; }
   pop.style.cssText = `left:${rect.left + rect.width/2}px;top:${rect.top + 8}px;color:${color};`;
   document.body.appendChild(pop);
-  setTimeout(() => pop.remove(), 900);
+  setTimeout(() => pop.remove(), comboCount >= 5 ? 1300 : comboCount >= 3 ? 1100 : 900);
+  // Badge persistente de streak
+  const badge = document.getElementById('combo-badge');
+  if (badge) {
+    if (badgeCls) {
+      badge.innerHTML = `<span class="combo-badge-inner ${badgeCls}">${text}</span>`;
+    } else {
+      badge.innerHTML = '';
+    }
+  }
 }
 
 function lancarConfete(n = 80) {
@@ -654,7 +696,7 @@ function buildGame() {
   acertos = 0; erros = 0; comboCount = 0;
   tipoAcertos = { add:0, sub:0, mul:0, div:0 };
 
-  const pairs = generatePairs(cfg.type, cfg.pairs, cfg.maxResult);
+  const pairs = generatePairs(cfg.type, cfg.pairs, cfg.maxResult, cfg.minMul || 0, cfg.minDiv || 0);
   // Fallback: completa com add usando o mesmo usedR para evitar resultados duplicados
   if (pairs.length < cfg.pairs) {
     const usedResults = new Set(pairs.map(p => p.result));
@@ -727,6 +769,7 @@ function buildGame() {
   <div class="pairs-bar-bg" id="pairs-dots">${dotsHtml}</div>
 
   <div class="status-msg" id="status-msg"></div>
+  <div id="combo-badge" style="text-align:center;min-height:22px;margin-bottom:6px;margin-top:-6px"></div>
 
   <div class="game-grid" id="game-grid"
        style="grid-template-columns:repeat(${cols},1fr)"></div>
@@ -909,6 +952,8 @@ function onCardClick(el, card) {
     erros++;
     comboCount = 0;
     somErro();
+    const _badge = document.getElementById('combo-badge');
+    if (_badge) _badge.innerHTML = '';
     if (_isSprint) { _sprintErrTotal++; updateSprintDisplay(); }
     setStatus("Errou! Tente outra combinação. ❌", 'var(--red)');
     selectedCard = null;
@@ -983,12 +1028,15 @@ async function onGameWin() {
   const isNewRecord = novoNivel > melhorAnterior;
 
   // Mostra overlay imediatamente com informações já conhecidas
-  document.getElementById("lov-emoji").textContent = '🎉';
-  document.getElementById("lov-title").textContent = 'Avançou de nível!';
-  document.getElementById("lov-sub").textContent   =
-    `Tempo restante: ${timerLeft}s · ${isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue avançando!'}`;
+  const isEstrela = erros === 0;
+  if (isEstrela) lancarConfete(50);
+  document.getElementById("lov-emoji").textContent = isEstrela ? '⭐' : '🎉';
+  document.getElementById("lov-title").textContent = isEstrela ? '⭐ Nível com estrela!' : 'Avançou de nível!';
+  document.getElementById("lov-sub").textContent   = isEstrela
+    ? `Perfeito! Sem erros! ${isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue assim!'}`
+    : `${erros} erro${erros !== 1 ? 's' : ''} — sem estrela desta vez. ${isNewRecord ? '🌟 Novo recorde!' : 'Continue avançando!'}`;
   document.getElementById("lov-new").textContent   = `→ Nível ${novoNivel}`;
-  document.getElementById("lov-new").style.color   = 'var(--blue)';
+  document.getElementById("lov-new").style.color   = isEstrela ? 'var(--gold)' : 'var(--blue)';
   document.getElementById("lov-btn").textContent   = 'Continuar →';
   document.querySelector('.level-card').style.animation = 'levelUpPop .45s';
   document.getElementById("level-overlay").style.display = 'flex';
@@ -997,11 +1045,11 @@ async function onGameWin() {
   reloadRanking().then(() => {
     const eLider = rankingAll[0]?.nome === nomeAluno && rankingAll[0]?.turma === turma;
     if (eLider && !eraLider) {
-      lancarConfete(80);
+      if (!isEstrela) lancarConfete(80);
       document.getElementById("lov-emoji").textContent = '🏆';
       document.getElementById("lov-title").textContent = '🥇 Você é o novo líder!';
       document.getElementById("lov-sub").textContent   =
-        `Tempo restante: ${timerLeft}s · Primeiro lugar no ranking geral!`;
+        `${isEstrela ? '⭐ Com estrela! ' : ''}Primeiro lugar no ranking geral!`;
     }
   });
 }
@@ -1040,6 +1088,15 @@ async function onTimerEnd() {
 
 // ── Public functions ──────────────────────────────────────────
 window.endSprint = (manual) => endSprint(manual);
+
+window.toggleAvatarMenu = function() {
+  document.getElementById('avatar-menu').classList.toggle('open');
+};
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.avatar-wrap')) {
+    document.getElementById('avatar-menu')?.classList.remove('open');
+  }
+});
 
 window.fecharOverlay = function() {
   if (_isSprint && _sprintEnded) {

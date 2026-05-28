@@ -78,9 +78,28 @@ a { text-decoration: none; color: inherit; }
 .topbar-title { font-size: 19px; font-weight: 800; letter-spacing: -.3px; }
 .topbar-sub   { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
 .topbar-right { display: flex; align-items: center; gap: 10px; }
-.avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; cursor: pointer; user-select: none; }
 .avatar-orange { background: linear-gradient(135deg, var(--orange), #FF9A5C); }
 .avatar-blue   { background: linear-gradient(135deg, var(--blue),   #4BB5E8); }
+.avatar-wrap { position: relative; display: inline-flex; }
+.avatar-menu {
+  display: none; position: absolute; right: 0; top: calc(100% + 8px);
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 5px; min-width: 168px; z-index: 400;
+  box-shadow: 0 8px 28px rgba(0,0,0,.18);
+}
+.avatar-menu.open { display: block; animation: avatarMenuIn .15s; }
+@keyframes avatarMenuIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+.avatar-menu-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 8px;
+  font-size: 13px; font-weight: 600; color: var(--text);
+  text-decoration: none; border: none; background: none; width: 100%;
+  cursor: pointer; transition: background .12s; text-align: left;
+}
+.avatar-menu-item:hover { background: var(--bg); }
+.avatar-menu-item svg { flex-shrink: 0; }
+.avatar-menu-danger { color: var(--red) !important; }
 .content { padding: 26px 30px; flex: 1; }
 
 /* ── Cards ── */
