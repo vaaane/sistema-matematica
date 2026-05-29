@@ -177,7 +177,7 @@
         <div class="avatar-wrap">
           <div class="avatar avatar-orange" id="avatar-initials" onclick="toggleAvatarMenu()">?</div>
           <div class="avatar-menu" id="avatar-menu">
-            <a href="/aluno/config.html" class="avatar-menu-item">
+            <a href="/aluno/config.html" class="avatar-menu-item" id="menu-config">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
               Configurações
             </a>
@@ -188,6 +188,9 @@
           </div>
         </div>
       </div>
+    </div>
+    <div id="prof-banner" style="display:none;align-items:center;gap:8px;padding:6px 20px;font-size:12px;font-weight:600;color:#7F77DD;background:rgba(127,119,221,.08);border-bottom:1px solid rgba(127,119,221,.2)">
+      👩‍🏫 Modo professor — progresso salvo separadamente
     </div>
     <div class="content" id="content">
       <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
@@ -219,30 +222,38 @@
 
 <script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
-import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+import { getSession, renderSidebarAluno, renderSidebarProfessor, clearSession } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 // ── Auth ──────────────────────────────────────────────────────
-const sess = requireAluno("/index.html");
-if (!sess) throw new Error("não autenticado");
-renderSidebarAluno("sidebar", "jogos");
+const sess = getSession();
+const _isProfMode = sess?.modo === 'professor';
+if (!_isProfMode && (!sess || sess.modo !== 'aluno')) { window.location.href = '/index.html'; throw new Error(); }
+
+if (_isProfMode) {
+  renderSidebarProfessor("sidebar", "jogos");
+} else {
+  renderSidebarAluno("sidebar", "jogos");
+}
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
-const { alunos, turma } = sess;
-let nomeAluno = alunos[0];
-const isDupla  = alunos.length === 2;
+const _profUid = 'professora';
+const alunos   = _isProfMode ? ['Professora'] : sess.alunos;
+const turma    = _isProfMode ? '' : sess.turma;
+let nomeAluno  = alunos[0];
+const isDupla  = !_isProfMode && alunos.length === 2;
 let parceiroDupla = isDupla ? alunos[1] : null;
 
 function _makeUid(nome) { return (turma + '_' + nome).replace(/[.#$\[\]/\s]/g, '_'); }
-let uid = _makeUid(nomeAluno);
+let uid = _isProfMode ? _profUid : _makeUid(nomeAluno);
 
-document.getElementById("avatar-initials").textContent = nomeAluno[0].toUpperCase();
+document.getElementById("avatar-initials").textContent = _isProfMode ? 'P' : nomeAluno[0].toUpperCase();
 
 // ── Firebase ──────────────────────────────────────────────────
-let niveisRef     = ref(db, `tabuada_niveis/${uid}`);
-let rankingRef    = ref(db, `tabuada_ranking/${uid}`);
-let sprintRankRef = ref(db, `tabuada_sprint_ranking/${uid}`);
+let niveisRef     = ref(db, _isProfMode ? `professor_tabuada_niveis/${uid}` : `tabuada_niveis/${uid}`);
+let rankingRef    = _isProfMode ? null : ref(db, `tabuada_ranking/${uid}`);
+let sprintRankRef = _isProfMode ? null : ref(db, `tabuada_sprint_ranking/${uid}`);
 
 async function carregarProgresso() {
   try {
@@ -266,7 +277,7 @@ async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo
         total_partidas: p.total_partidas,
         maior_combo:    novoMaiorCombo,
       });
-      await set(rankingRef, {
+      if (rankingRef) await set(rankingRef, {
         nome:           nomeAluno,
         turma:          turma,
         nivel_atual:    p.nivel_atual,
@@ -285,7 +296,8 @@ async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo
       };
       const t = { ...tipoAcertos };
       if (t.add || t.sub || t.mul || t.div) entry.tipos_acertos = t;
-      await set(ref(db, `tabuada_niveis/${uid}/historico/${ts}`), entry);
+      const _niveisBase = _isProfMode ? `professor_tabuada_niveis/${uid}` : `tabuada_niveis/${uid}`;
+      await set(ref(db, `${_niveisBase}/historico/${ts}`), entry);
     }
   } catch(e) { console.warn('[Tabuada] Erro ao salvar:', e); }
 }
@@ -477,9 +489,11 @@ function flyBack(info, el) {
 
 // ── Presença / sessões Firebase ──────────────────────────────
 function _atualizarPresenca() {
+  if (_isProfMode) return;
   set(ref(db, `tabuada_presenca/${uid}`), { nome: nomeAluno, turma, ts: Date.now() }).catch(() => {});
 }
 function _registrarSessao(nivel, resultado, acertosOverride, errosOverride) {
+  if (_isProfMode) return;
   const ts = Date.now();
   const d  = new Date(ts);
   set(ref(db, `tabuada_sessoes/${ts}`), {
@@ -539,7 +553,7 @@ if (isDupla) {
 // ── Game state ────────────────────────────────────────────────
 const [progresso, _rankingSnap] = await Promise.all([
   carregarProgresso(),
-  get(ref(db, 'tabuada_ranking')).catch(() => null),
+  _isProfMode ? Promise.resolve(null) : get(ref(db, 'tabuada_ranking')).catch(() => null),
 ]);
 
 let melhorNivel = Math.max(1, progresso.melhor_nivel || 1);
@@ -580,6 +594,7 @@ function _parseRanking(snap) {
 _parseRanking(_rankingSnap);
 
 async function reloadRanking() {
+  if (_isProfMode) return;
   _parseRanking(await get(ref(db, 'tabuada_ranking')).catch(() => null));
 }
 
@@ -773,6 +788,7 @@ function updateSprintDisplay() {
 }
 
 async function salvarSprintRanking(acertos) {
+  if (!sprintRankRef) return;
   try {
     const snap = await get(sprintRankRef);
     const atual = snap.exists() ? (snap.val().melhor_acertos || 0) : 0;
@@ -1237,7 +1253,7 @@ document.addEventListener('click', function(e) {
 
 window.fecharOverlay = function() {
   if (_isSprint && _sprintEnded) {
-    window.location.href = '/aluno/jogos.html';
+    window.location.href = _isProfMode ? '/professor/jogos.html' : '/aluno/jogos.html';
     return;
   }
   if (_sprintWinTimeout) { clearTimeout(_sprintWinTimeout); _sprintWinTimeout = null; }
@@ -1252,6 +1268,24 @@ window.reiniciarNivel = function() {
   buildGame();
 };
 
+
+// ── Modo professor ────────────────────────────────────────────
+if (_isProfMode) {
+  document.getElementById('prof-banner').style.display = 'flex';
+  document.getElementById('menu-config')?.style.setProperty('display', 'none');
+  document.getElementById('avatar-initials')?.classList.replace('avatar-orange', 'avatar-blue');
+  const topR = document.querySelector('.topbar-right');
+  if (topR) {
+    const sel = document.createElement('div');
+    sel.style.cssText = 'display:flex;align-items:center;gap:5px;margin-right:6px';
+    sel.innerHTML = `<input type="number" id="prof-nivel-inp" min="1" max="50" value="${nivelAtual}" style="width:52px;padding:4px 6px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;background:var(--bg);color:var(--text);text-align:center"><button onclick="profIr()" style="padding:4px 10px;background:var(--blue-pale);border:1.5px solid rgba(127,119,221,.3);border-radius:8px;font-size:12px;font-weight:700;color:var(--blue-dark);cursor:pointer">Ir</button>`;
+    topR.prepend(sel);
+  }
+}
+window.profIr = function() {
+  const v = Math.max(1, Math.min(50, parseInt(document.getElementById('prof-nivel-inp')?.value) || 1));
+  window.location.href = `/aluno/tabuada.html?nivel=${v}`;
+};
 
 // ── Start ─────────────────────────────────────────────────────
 buildGame();

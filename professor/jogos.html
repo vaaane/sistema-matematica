@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🎮 Jogar · Tabuada — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .nota-row{padding:10px 0;border-bottom:0.5px solid var(--border);}
+    .nota-row:last-child{border-bottom:none;}
+    .nota-nivel{font-size:12px;font-weight:700;color:var(--blue-dark);}
+    .nota-texto{font-size:13px;color:var(--text);line-height:1.5;margin-top:3px;white-space:pre-wrap;}
+    .nota-ts{font-size:11px;color:var(--text-muted);margin-top:3px;}
+    @media(max-width:560px){.stat-grid{grid-template-columns:repeat(2,1fr)!important;}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">🎮 Jogar · Tabuada</div>
+        <div class="topbar-sub">Modo professor — progresso salvo separado dos alunos</div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-ghost btn-sm" onclick="loadData()">
+          <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          Atualizar
+        </button>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get, set, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+requireProfessor();
+renderSidebarProfessor("sidebar", "jogos");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const PROF_UID  = 'professora';
+const niveisRef = ref(db, `professor_tabuada_niveis/${PROF_UID}`);
+const notasRef  = ref(db, `professor_jogos_notas/${PROF_UID}`);
+
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtDate(ts) {
+  if (!ts) return '—';
+  return new Date(Number(ts)).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+async function loadData() {
+  const content = document.getElementById('content');
+
+  const [niveisSnap, notasSnap] = await Promise.all([
+    get(niveisRef).catch(() => null),
+    get(notasRef).catch(() => null),
+  ]);
+
+  const niveis        = niveisSnap?.exists() ? niveisSnap.val() : {};
+  const nivelAtual    = Math.max(1, niveis.nivel_atual  || 1);
+  const melhorNivel   = Math.max(1, niveis.melhor_nivel || 1);
+  const totalPartidas = niveis.total_partidas || 0;
+  const maiorCombo    = niveis.maior_combo    || 0;
+
+  // Últimas 10 partidas (mais recentes primeiro, depois inverter para gráfico)
+  const hist = [];
+  if (niveis.historico) {
+    Object.entries(niveis.historico)
+      .sort(([a], [b]) => Number(b) - Number(a))
+      .slice(0, 10)
+      .forEach(([ts, v]) => hist.push({ ts: Number(ts), ...v }));
+    hist.reverse();
+  }
+
+  // Notas salvas
+  const notas = [];
+  if (notasSnap?.exists()) {
+    notasSnap.forEach(child => notas.push({ nivel: child.key, ...child.val() }));
+    notas.sort((a, b) => Number(a.nivel) - Number(b.nivel));
+  }
+
+  // ── Gráfico das últimas partidas ──────────────────────────────
+  const maxLv = hist.length ? Math.max(...hist.map(x => x.nivel || 1)) : 1;
+  const chartBars = hist.map(h => {
+    const ok   = h.resultado === 'completou';
+    const barH = Math.max(8, Math.round(((h.nivel || 1) / maxLv) * 64));
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px" title="${ok ? 'Completou' : 'Tempo esgotado'} · Nível ${h.nivel || 1}">
+      <div style="font-size:9px;color:var(--text-muted);font-weight:600">${h.nivel || 1}</div>
+      <div style="width:100%;background:${ok ? '#22C55E' : '#f97316'};border-radius:4px 4px 0 0;height:${barH}px"></div>
+    </div>`;
+  }).join('');
+
+  content.innerHTML = `
+  <div style="max-width:680px">
+
+  <!-- Stats + botões -->
+  <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px">
+    <div class="stat-grid" style="display:grid;grid-template-columns:repeat(4,1fr)">
+      ${[
+        [nivelAtual,       'Nível atual',    'var(--blue)'],
+        [melhorNivel,      'Melhor nível',   '#22C55E'],
+        [totalPartidas,    'Partidas',       'var(--text)'],
+        [maiorCombo||'—',  'Maior combo 🔥', '#FAB800'],
+      ].map(([v, l, c], i) => `
+        <div style="padding:16px 12px;text-align:center;${i < 3 ? 'border-right:1px solid var(--border)' : ''}">
+          <div style="font-size:24px;font-weight:800;color:${c};line-height:1">${v}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${l}</div>
+        </div>`).join('')}
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px">
+      <a href="/aluno/tabuada.html" class="btn btn-blue" style="flex:1;justify-content:center;text-decoration:none">▶ Jogar nível ${nivelAtual}</a>
+      <a href="/aluno/tabuada.html?modo=sprint" class="btn" style="background:#7F77DD;color:#fff;border:none;flex:1;justify-content:center;text-decoration:none">⚡ Sprint</a>
+    </div>
+  </div>
+
+  <!-- Testar nível específico -->
+  <div class="card" style="margin-bottom:16px">
+    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px">Testar nível específico</div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <input type="number" id="inp-nivel" min="1" max="50" value="${nivelAtual}"
+        style="width:76px;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;font-weight:700;text-align:center;background:var(--bg);color:var(--text)">
+      <button onclick="testarNivel()" class="btn btn-blue">▶ Testar este nível</button>
+      <span style="font-size:12px;color:var(--text-muted)">Não altera o nível atual</span>
+    </div>
+  </div>
+
+  ${hist.length > 0 ? `
+  <!-- Gráfico últimas partidas -->
+  <div class="card" style="margin-bottom:16px">
+    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px">Últimas ${hist.length} partidas</div>
+    <div style="display:flex;align-items:flex-end;gap:4px;height:80px">
+      ${chartBars}
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;margin-top:10px;font-size:11px;color:var(--text-muted)">
+      <span><span style="display:inline-block;width:10px;height:10px;background:#22C55E;border-radius:2px;margin-right:4px;vertical-align:middle"></span>Completou</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#f97316;border-radius:2px;margin-right:4px;vertical-align:middle"></span>Tempo esgotado</span>
+      <span style="margin-left:auto;font-size:11px">mais antigo → mais recente</span>
+    </div>
+  </div>` : ''}
+
+  <!-- Anotações por nível -->
+  <div class="card" style="margin-bottom:16px">
+    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px">Anotações por nível</div>
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
+        <label style="font-size:11px;color:var(--text-muted)">Nível</label>
+        <input type="number" id="nota-nivel" min="1" max="50" value="${nivelAtual}"
+          style="width:66px;padding:7px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-weight:700;text-align:center;background:var(--bg);color:var(--text)">
+      </div>
+      <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:5px">
+        <label style="font-size:11px;color:var(--text-muted)">Observação</label>
+        <textarea id="nota-texto" rows="2" placeholder="Ex: nível 8 muito difícil para 8D…"
+          style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--bg);color:var(--text);resize:vertical;box-sizing:border-box"></textarea>
+      </div>
+      <div style="display:flex;align-items:flex-end;padding-bottom:0">
+        <button onclick="salvarNota()" class="btn btn-blue">Salvar</button>
+      </div>
+    </div>
+    <div id="notas-list">
+      ${notas.length === 0
+        ? `<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:16px">Nenhuma anotação ainda</div>`
+        : notas.map(n => `
+          <div class="nota-row">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="nota-nivel">Nível ${escH(n.nivel)}</span>
+              <span style="font-size:11px;color:var(--text-muted);margin-left:auto">${n.atualizado_em ? fmtDate(n.atualizado_em) : ''}</span>
+              <button onclick="deletarNota('${escH(n.nivel)}')" style="font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:2px 4px" title="Remover">✕</button>
+            </div>
+            <div class="nota-texto">${escH(n.texto || '')}</div>
+          </div>`).join('')}
+    </div>
+  </div>
+
+  </div>`;
+
+  document.getElementById('inp-nivel')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.testarNivel(); });
+}
+
+window.testarNivel = function() {
+  const v = Math.max(1, Math.min(50, parseInt(document.getElementById('inp-nivel')?.value) || 1));
+  window.location.href = `/aluno/tabuada.html?nivel=${v}`;
+};
+
+window.salvarNota = async function() {
+  const nivel = Math.max(1, Math.min(50, parseInt(document.getElementById('nota-nivel')?.value) || 1));
+  const texto = document.getElementById('nota-texto')?.value?.trim() || '';
+  if (!texto) return;
+  await set(ref(db, `professor_jogos_notas/${PROF_UID}/${nivel}`), { texto, atualizado_em: Date.now() });
+  await loadData();
+};
+
+window.deletarNota = async function(nivel) {
+  if (!confirm(`Remover anotação do nível ${nivel}?`)) return;
+  await remove(ref(db, `professor_jogos_notas/${PROF_UID}/${nivel}`));
+  await loadData();
+};
+
+loadData();
+</script>
+</body>
+</html>
