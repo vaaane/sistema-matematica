@@ -41,6 +41,7 @@
     .conq-tip-nome{font-weight:700;font-size:13px;margin-bottom:2px;}
     .conq-tip-desc{font-size:11px;opacity:.8;}
     @keyframes fadeSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes skPulse{0%,100%{opacity:.55}50%{opacity:.18}}
     .pill{padding:5px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .15s;}
     .pill.on{border-color:var(--blue);background:var(--blue);color:#fff;}
     .game-card-link{transition:background .15s;}
@@ -579,35 +580,35 @@ ${tempoPodioHtml}
       </div>
     </div>
 
-    <div class="card" style="margin-bottom:14px">
-      <div class="section-label" style="color:#7F77DD">
-        <i class="ti ti-devices-gamepad-2" style="font-size:15px;line-height:1"></i>
-        Mini-jogos
+    <div class="card" style="margin-bottom:14px;border:1.5px solid rgba(127,119,221,.35);box-shadow:0 4px 20px rgba(127,119,221,.13),var(--shadow-sm)">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:19px;line-height:1">🎯</span>
+          <span style="font-size:16px;font-weight:800;color:var(--text)">Tabuada</span>
+        </div>
+        <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(127,119,221,.15);color:#7F77DD;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">
+          <i class="ti ti-trophy" style="font-size:11px"></i>Nível ${nivelTabuada}
+        </span>
       </div>
-      <div class="game-card-link" style="cursor:pointer;display:flex;align-items:center;gap:14px;padding:14px 16px;background:rgba(127,119,221,.04);border:0.5px solid rgba(127,119,221,.22);border-left:4px solid #7F77DD;border-radius:12px;" onclick="location.href='/aluno/jogos.html'">
-        <div style="width:44px;height:44px;border-radius:10px;background:var(--purple-pale);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <i class="ti ti-math-function" style="font-size:22px;color:#7F77DD"></i>
-        </div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:15px;font-weight:700;color:var(--text);line-height:1.2">Tabuada</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:3px;line-height:1.4;white-space:normal">Combine operações com seus resultados. Sobe de nível!</div>
-          <div style="margin-top:8px">
-            <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(127,119,221,.15);color:#7F77DD;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">
-              <i class="ti ti-trophy" style="font-size:12px"></i>
-              Nível ${nivelTabuada}
-            </span>
-          </div>
-          <div id="tab-incentivo" style="margin-top:7px;font-size:12px;color:var(--text-muted);line-height:1.5">…</div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;align-self:center" onclick="event.stopPropagation()">
-          <a href="/aluno/tabuada.html" class="btn" style="background:#7F77DD;color:#fff;gap:6px;box-shadow:none;padding:7px 14px;font-size:12px">
-            <i class="ti ti-player-play" style="font-size:13px"></i>
-            Jogar
-          </a>
-          <a href="/aluno/tabuada.html?modo=sprint" class="btn" style="background:rgba(127,119,221,.15);color:#7F77DD;border:1px solid rgba(127,119,221,.3);gap:6px;box-shadow:none;padding:7px 14px;font-size:12px">
-            ⚡ Sprint
-          </a>
-        </div>
+      <!-- Divider -->
+      <div style="height:1px;background:var(--border);margin:11px 0 10px"></div>
+      <!-- Dynamic body: skeleton → dados reais -->
+      <div id="tab-card-body">
+        <div style="height:10px;background:var(--border);border-radius:6px;width:55%;margin-bottom:9px;animation:skPulse 1.4s ease-in-out infinite"></div>
+        <div style="height:10px;background:var(--border);border-radius:6px;width:78%;margin-bottom:9px;animation:skPulse 1.4s ease-in-out infinite;animation-delay:.15s"></div>
+        <div style="height:10px;background:var(--border);border-radius:6px;width:64%;animation:skPulse 1.4s ease-in-out infinite;animation-delay:.30s"></div>
+      </div>
+      <!-- Divider -->
+      <div style="height:1px;background:var(--border);margin:10px 0 11px"></div>
+      <!-- Botões -->
+      <div style="display:flex;gap:8px" onclick="event.stopPropagation()">
+        <a href="/aluno/tabuada.html" class="btn" style="flex:1;justify-content:center;background:#7F77DD;color:#fff;gap:5px;box-shadow:none;padding:9px 14px;font-size:13px">
+          <i class="ti ti-player-play" style="font-size:13px"></i>▶ Jogar
+        </a>
+        <a href="/aluno/tabuada.html?modo=sprint" class="btn" style="flex:1;justify-content:center;background:rgba(127,119,221,.15);color:#7F77DD;border:1px solid rgba(127,119,221,.3);gap:5px;box-shadow:none;padding:9px 14px;font-size:13px">
+          ⚡ Sprint
+        </a>
       </div>
     </div>
 
@@ -685,10 +686,26 @@ ${tempoPodioHtml}
   </div>
 </div>`;
 
-// ── Ranking Tabuada + mensagem incentivo (assíncrono) ─────────
+// ── Tabuada: card social + ranking (assíncrono) ───────────────
 (async () => {
-  const rankSnap = await get(ref(db, 'tabuada_ranking')).catch(() => null);
+  const hojeISO = new Date().toISOString().slice(0, 10);
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
+  const [rankSnap, sessoesSnap] = await Promise.all([
+    get(ref(db, 'tabuada_ranking')).catch(() => null),
+    get(ref(db, 'tabuada_sessoes')).catch(() => null),
+  ]);
+
+  // Contar sessões hoje (sem deduplicar — cada jogada conta)
+  let jogadoresHoje = 0;
+  if (sessoesSnap?.exists()) {
+    sessoesSnap.forEach(child => {
+      const v = child.val();
+      if (v?.data === hojeISO) jogadoresHoje++;
+    });
+  }
+
+  // Ranking
   const rankAll = [];
   if (rankSnap?.exists()) {
     rankSnap.forEach(child => {
@@ -697,31 +714,71 @@ ${tempoPodioHtml}
     });
     rankAll.sort((a, b) => (b.melhor_nivel||0) - (a.melhor_nivel||0) || (b.total_partidas||0) - (a.total_partidas||0));
   }
-  const rankTurma = rankAll.filter(r => r.turma === turma);
-  const top3      = rankAll.slice(0, 3);
+  const rankTurma  = rankAll.filter(r => r.turma === turma);
+  const liderGeral = rankAll[0] || null;
+  const liderTurma = rankTurma[0] || null;
 
   const myGeralIdx = rankAll.findIndex(r => r.nome === alunos[0] && r.turma === turma);
   const myTurmaIdx = rankTurma.findIndex(r => r.nome === alunos[0] && r.turma === turma);
   const myGeral    = myGeralIdx >= 0 ? myGeralIdx + 1 : null;
   const myTurma    = myTurmaIdx >= 0 ? myTurmaIdx + 1 : null;
   const meuNivel   = myGeralIdx >= 0 ? (rankAll[myGeralIdx].melhor_nivel || 1) : 0;
-  const liderGeral = rankAll[0];
-  const liderTurma = rankTurma[0];
 
-  // ── Ranking card ──────────────────────────────────────────
+  // ── Preencher o body do card Tabuada ──────────────────────
+  const bodyEl = document.getElementById('tab-card-body');
+  if (bodyEl) {
+    // Linha condicional de posição do aluno
+    let posHtml = '';
+    if (myGeral === 1) {
+      posHtml = `<div style="padding:7px 11px;background:linear-gradient(135deg,rgba(245,158,11,.13),rgba(245,158,11,.05));border:1px solid rgba(245,158,11,.35);border-radius:8px;font-size:12px;font-weight:700;color:var(--gold)">🏆 Você é o #1 geral!</div>`;
+    } else if (myTurma !== null && myTurma <= 5) {
+      posHtml = `<div style="padding:7px 11px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:8px;font-size:12px;font-weight:700;color:var(--green)">🎉 Você está em #${myTurma} na turma!</div>`;
+    } else if (myGeral !== null && myGeral <= 20) {
+      posHtml = `<div style="padding:7px 11px;background:rgba(47,158,220,.08);border:1px solid rgba(47,158,220,.25);border-radius:8px;font-size:12px;font-weight:700;color:var(--blue)">⭐ Você está em #${myGeral} geral!</div>`;
+    }
+
+    // Líder turma só aparece se for diferente do líder geral
+    const mostrarLiderTurma = liderTurma && (!liderGeral || liderTurma.nome !== liderGeral.nome || liderTurma.turma !== liderGeral.turma);
+
+    bodyEl.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px">
+          🔥
+          <span><strong style="color:var(--orange);font-size:16px;font-weight:800">${jogadoresHoje}</strong>
+          <span style="color:var(--text-muted)"> jogaram hoje</span></span>
+        </div>
+        ${liderGeral ? `<div style="display:flex;align-items:center;gap:8px;font-size:13px">
+          👑
+          <span><strong style="color:var(--text)">${esc(liderGeral.nome)}</strong>
+          <span style="color:var(--text-muted)"> · ${esc(liderGeral.turma)}</span>
+          <span style="color:var(--text-muted)"> lidera · </span>
+          <span style="color:#7F77DD;font-weight:700">Nível ${liderGeral.melhor_nivel||1}</span></span>
+        </div>` : ''}
+        ${mostrarLiderTurma ? `<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted)">
+          🏫
+          <span><span style="color:var(--text)">${esc(liderTurma.nome)}</span>
+          lidera sua turma ·
+          <span style="color:rgba(127,119,221,.85);font-weight:600">Nível ${liderTurma.melhor_nivel||1}</span></span>
+        </div>` : ''}
+      </div>
+      ${posHtml ? `<div style="margin-top:9px">${posHtml}</div>` : ''}`;
+  }
+
+  // ── Ranking card (coluna direita) ─────────────────────────
   const cardEl = document.getElementById('tab-ranking-card');
   if (cardEl) {
-    const medals = ['🥇','🥈','🥉'];
+    const medals  = ['🥇','🥈','🥉'];
+    const top3    = rankAll.slice(0, 3);
     const top3Html = top3.length ? top3.map((d, i) => `
       <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:${i < 2 ? '0.5px solid var(--border)' : 'none'}">
         <span style="font-size:18px;min-width:24px">${medals[i]}</span>
-        <div style="flex:1;min-width:0;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.nome}</div>
-        <span style="font-size:11px;color:var(--text-muted);margin-right:6px">${d.turma}</span>
+        <div style="flex:1;min-width:0;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(d.nome)}</div>
+        <span style="font-size:11px;color:var(--text-muted);margin-right:6px">${esc(d.turma)}</span>
         <span style="font-size:12px;font-weight:700;color:#7F77DD">Nv ${d.melhor_nivel||1}</span>
       </div>`).join('')
       : '<p style="font-size:13px;color:var(--text-muted);padding:4px 0">Nenhum aluno jogou ainda.</p>';
 
-    const posHtml = (myGeral || myTurma) ? `
+    const posRankHtml = (myGeral || myTurma) ? `
       <div style="margin-top:8px;padding:7px 10px;background:rgba(127,119,221,.08);border-radius:8px;font-size:12px;font-weight:600;color:#7F77DD;text-align:center">
         Você: ${myGeral ? `#${myGeral} geral` : '—'} · ${myTurma ? `#${myTurma} na turma ${turma}` : '—'}
       </div>` : '';
@@ -732,38 +789,7 @@ ${tempoPodioHtml}
         Ranking Tabuada
         <a href="/aluno/ranking.html" style="margin-left:auto;font-size:12px;font-weight:600;color:var(--blue-dark);text-decoration:none">Ver tudo →</a>
       </div>
-      ${top3Html}${posHtml}`;
-  }
-
-  // ── Mensagem incentivo ────────────────────────────────────
-  const incentEl = document.getElementById('tab-incentivo');
-  if (!incentEl) return;
-
-  let msg = '';
-  if (!meuNivel || myGeral === null) {
-    const lvTurma = liderTurma?.melhor_nivel || 1;
-    msg = `🎮 Comece agora! O líder da sua turma já está no Nível ${lvTurma}!`;
-  } else if (myGeral === 1) {
-    msg = `🔥 Você é o #1 geral! Quanto tempo vai aguentar no topo?`;
-  } else if (myTurma === 1) {
-    const lvGeral = liderGeral?.melhor_nivel || 1;
-    msg = `👑 Você lidera sua turma! O top geral está no Nível ${lvGeral}. Consegue chegar lá?`;
-  } else {
-    const hoje = new Date().toDateString();
-    const meTs = myGeralIdx >= 0 ? rankAll[myGeralIdx].ultima_partida : null;
-    const jogueiHoje = meTs && new Date(meTs).toDateString() === hoje;
-    if (jogueiHoje) {
-      const n = rankAll.filter(r => r.ultima_partida && new Date(r.ultima_partida).toDateString() === hoje).length;
-      msg = `⚡ ${n} aluno${n !== 1 ? 's' : ''} jogaram hoje · Você está em #${myTurma} na turma`;
-    } else if (liderTurma) {
-      msg = `🏆 ${liderTurma.nome} lidera sua turma no Nível ${liderTurma.melhor_nivel||1} — você está no Nível ${meuNivel}!`;
-    }
-  }
-
-  if (msg) {
-    incentEl.textContent = msg;
-  } else {
-    incentEl.style.display = 'none';
+      ${top3Html}${posRankHtml}`;
   }
 })();
 
