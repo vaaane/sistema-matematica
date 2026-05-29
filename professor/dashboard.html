@@ -32,6 +32,8 @@
     .alerta-list-row:hover{background:var(--hover,rgba(0,0,0,.04));border-radius:6px;}
     @media(max-width:900px){.dash-stats-grid{grid-template-columns:repeat(3,1fr)!important;}}
     @media(max-width:560px){.dash-stats-grid{grid-template-columns:repeat(2,1fr)!important;}}
+    .tab-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px;}
+    @media(max-width:768px){.tab-grid{grid-template-columns:1fr;}}
   </style>
 </head>
 <body>
@@ -77,7 +79,8 @@
 import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES } from "/js/constants.js";
 import { getResultados, getLiberadas, getAlertas, getAllAtividadeStatus, getDetalhes, contarSessoesTabuadaHoje, somarPartidasTabuadaTotal } from "/js/db.js";
 import { db } from "/js/firebase-config.js";
-import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { escH, agruparPorTurma, compilarAlertasTabuada } from "/js/tabuada-alerts.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 
 const sess = requireProfessor();
@@ -85,8 +88,11 @@ if (!sess) throw new Error();
 renderSidebarProfessor("sidebar", "dashboard");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
-const [todos, liberadasRaw, alertas, statusMap, tabuadaHoje, tabuadaTotal] = await Promise.all([
-  getResultados(), getLiberadas(), getAlertas(true), getAllAtividadeStatus(), contarSessoesTabuadaHoje(), somarPartidasTabuadaTotal()
+const [todos, liberadasRaw, alertas, statusMap, tabuadaHoje, tabuadaTotal, rankTabSnap, niveisTabSnap] = await Promise.all([
+  getResultados(), getLiberadas(), getAlertas(true), getAllAtividadeStatus(),
+  contarSessoesTabuadaHoje(), somarPartidasTabuadaTotal(),
+  get(ref(db, 'tabuada_ranking')).catch(() => null),
+  get(ref(db, 'tabuada_niveis')).catch(() => null),
 ]);
 
 const hoje = new Date().toLocaleDateString('pt-BR');
@@ -115,6 +121,31 @@ const ptsPorAluno = Object.fromEntries(
   Object.entries(melhorDash).map(([a, m]) => [a, Object.values(m).reduce((x, y) => x + y, 0)])
 );
 const ultimos = [...todos].reverse().filter(r => r.concluido).slice(0, 6);
+
+// ── Tabuada: alertas + ranking top 5 ─────────────────────────
+const { individuais: tabAlertasInd, coletivos: tabColetivos } = compilarAlertasTabuada(niveisTabSnap, rankTabSnap);
+
+const tabAlertaItems = [];
+for (const a of tabColetivos.esgotados) {
+  if (tabAlertaItems.length >= 3) break;
+  tabAlertaItems.push({ tipo: 'esgotado', nivel: a.nivel, count: a.count });
+}
+for (const a of tabColetivos.quasePerda) {
+  if (tabAlertaItems.length >= 3) break;
+  tabAlertaItems.push({ tipo: 'quasePerda', nivel: a.nivel, count: a.count });
+}
+for (const a of tabAlertasInd) {
+  if (tabAlertaItems.length >= 3) break;
+  tabAlertaItems.push({ tipo: 'individual', nome: a.nome, turma: a.turma, nivel: a.nivel, falhas: a.falhas });
+}
+const hasTabAlertas = tabAlertaItems.length > 0;
+
+const tabTop5 = [];
+if (rankTabSnap?.exists()) {
+  rankTabSnap.forEach(child => { const v = child.val(); if (v?.nome) tabTop5.push(v); });
+  tabTop5.sort((a, b) => (b.melhor_nivel||0) - (a.melhor_nivel||0) || (b.total_partidas||0) - (a.total_partidas||0));
+  tabTop5.splice(5);
+}
 
 // ── Alertas automáticos ───────────────────────────────────────
 const todosAlunosFlat = Object.values(ALUNOS_POR_TURMA).flat();
@@ -213,6 +244,42 @@ document.getElementById("content").innerHTML = `
         <div style="height:1px;background:var(--border);margin:5px 0"></div>
         <div style="display:flex;align-items:center;gap:5px"><span class="stat-value blue" id="online-tabuada-count" style="font-size:20px;line-height:1">—</span><span class="stat-meta">Tabuada <span class="online-dot" style="background:var(--blue)"></span></span></div>
       </div>
+    </div>
+  </div>
+
+  <div class="tab-grid" style="grid-template-columns:${hasTabAlertas ? '1fr 1fr' : '1fr'}">
+    ${hasTabAlertas ? `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">⚠️ Atenção · Tabuada</div>
+        <a href="/professor/tabuada_relatorio.html" class="btn btn-sm btn-ghost" style="font-size:11px">Ver tudo →</a>
+      </div>
+      ${tabAlertaItems.map(item => {
+        if (item.tipo === 'esgotado')
+          return `<div class="list-row" style="gap:8px;font-size:13px">🔴 <span>Nível <strong>${item.nivel}</strong> — ${item.count} alunos perderam por tempo</span></div>`;
+        if (item.tipo === 'quasePerda')
+          return `<div class="list-row" style="gap:8px;font-size:13px">🟡 <span>Nível <strong>${item.nivel}</strong> — ${item.count} alunos quase não completaram</span></div>`;
+        return `<div class="list-row" style="gap:8px;font-size:13px">⚠️ <span>${escH(item.nome)} · ${escH(item.turma)} · Nível <strong>${item.nivel}</strong> · ${item.falhas} falhas</span></div>`;
+      }).join('')}
+    </div>` : ''}
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>Ranking Tabuada</div>
+        <a href="/professor/tabuada_relatorio.html" class="btn btn-sm btn-ghost" style="font-size:11px">Ver completo →</a>
+      </div>
+      ${tabTop5.length === 0
+        ? '<div class="empty-state"><p>Nenhum aluno jogou ainda.</p></div>'
+        : tabTop5.map((d, i) => {
+            const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `<span style="font-size:13px;font-weight:700;color:var(--text-muted)">${i+1}</span>`;
+            return `<div class="list-row">
+              <span style="font-size:${i < 3 ? '20' : '14'}px;min-width:26px;text-align:center;line-height:1">${medal}</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:700">${escH(d.nome)}</div>
+                <div style="font-size:11px;color:var(--text-muted)">Turma ${escH(d.turma || '?')}</div>
+              </div>
+              <span class="badge badge-gold">Nível ${d.melhor_nivel||1}</span>
+            </div>`;
+          }).join('')}
     </div>
   </div>
 

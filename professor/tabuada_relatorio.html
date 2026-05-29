@@ -54,67 +54,11 @@ import { ALUNOS_POR_TURMA } from "/js/constants.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { escH, agruparPorTurma, compilarAlertasTabuada } from "/js/tabuada-alerts.js";
 
 requireProfessor();
 renderSidebarProfessor("sidebar", "tabuada_relatorio");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
-
-// ── Helpers de alerta ─────────────────────────────────────────
-function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-function agruparPorTurma(alunos) {
-  const m = {};
-  alunos.forEach(a => { (m[a.turma] = m[a.turma] || []).push(a.nome); });
-  return Object.entries(m).map(([t, ns]) => `${escH(t)}: ${ns.map(escH).join(', ')}`).join(' · ');
-}
-
-function detectarDificuldadeIndividual(historico) {
-  const entries = Object.entries(historico)
-    .map(([ts, v]) => ({ ts: Number(ts), ...v }))
-    .filter(e => e.nivel && e.resultado)
-    .sort((a, b) => a.ts - b.ts);
-  if (!entries.length) return null;
-  const last = entries[entries.length - 1];
-  if (last.resultado !== 'tempo_esgotado') return null;
-  const nivelTravado = last.nivel;
-  let count = 0;
-  for (let i = entries.length - 1; i >= 0; i--) {
-    const e = entries[i];
-    if (e.nivel === nivelTravado && e.resultado === 'tempo_esgotado') count++;
-    else break;
-  }
-  return count >= 3 ? { nivel: nivelTravado, falhas: count } : null;
-}
-
-function detectarDificuldadeColetiva(niveisSnap, rankMap) {
-  const corte = Date.now() - 48 * 60 * 60 * 1000;
-  const porNivel = {};
-  if (!niveisSnap?.exists()) return { esgotados: [], quasePerda: [] };
-  niveisSnap.forEach(child => {
-    const nd = child.val();
-    if (!nd?.historico) return;
-    const info = rankMap[child.key] || { nome: child.key, turma: '?' };
-    Object.entries(nd.historico).forEach(([ts, v]) => {
-      if (!v?.nivel || !v?.resultado || Number(ts) < corte) return;
-      const n = v.nivel;
-      if (!porNivel[n]) porNivel[n] = { esgUids: new Set(), esgAlunos: [], qpUids: new Set(), qpAlunos: [] };
-      const b = porNivel[n];
-      if (v.resultado === 'tempo_esgotado') {
-        if (!b.esgUids.has(child.key)) { b.esgUids.add(child.key); b.esgAlunos.push(info); }
-      } else if (v.resultado === 'completou' && v.segundos_restantes != null && v.segundos_restantes < 10) {
-        if (!b.qpUids.has(child.key)) { b.qpUids.add(child.key); b.qpAlunos.push(info); }
-      }
-    });
-  });
-  const esgotados = [], quasePerda = [];
-  Object.entries(porNivel).forEach(([nivel, b]) => {
-    if (b.esgUids.size >= 3) esgotados.push({ nivel: Number(nivel), count: b.esgUids.size, alunos: b.esgAlunos });
-    if (b.qpUids.size  >= 3) quasePerda.push({ nivel: Number(nivel), count: b.qpUids.size,  alunos: b.qpAlunos });
-  });
-  esgotados.sort((a, b) => b.count - a.count);
-  quasePerda.sort((a, b) => b.count - a.count);
-  return { esgotados, quasePerda };
-}
 
 // ── Load data ─────────────────────────────────────────────────
 let allData = [];
@@ -160,25 +104,8 @@ async function loadData() {
     document.getElementById("btn-csv").disabled = allData.length === 0;
 
     // ── Alertas ───────────────────────────────────────────────
-    const rankMap = {};
-    snap.forEach(child => {
-      const v = child.val();
-      if (v?.nome) rankMap[child.key] = { nome: v.nome, turma: v.turma || '?' };
-    });
-
-    alertasIndividuais = [];
-    if (niveisSnap.exists()) {
-      niveisSnap.forEach(child => {
-        const nd = child.val();
-        if (!nd?.historico) return;
-        const result = detectarDificuldadeIndividual(nd.historico);
-        if (!result) return;
-        alertasIndividuais.push({ ...(rankMap[child.key] || { nome: child.key, turma: '?' }), ...result });
-      });
-      alertasIndividuais.sort((a, b) => b.falhas - a.falhas);
-    }
-
-    alertasColetivos = detectarDificuldadeColetiva(niveisSnap, rankMap);
+    ({ individuais: alertasIndividuais, coletivos: alertasColetivos } =
+      compilarAlertasTabuada(niveisSnap, snap));
 
   } catch(e) {
     content.innerHTML = `<div class="alert alert-error"><svg viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>Erro ao carregar dados. Verifique a conexão.</div>`;
