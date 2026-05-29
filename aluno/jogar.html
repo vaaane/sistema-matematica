@@ -463,7 +463,7 @@ async function finalizarJogo() {
     const dQ = new Date();
     for (const al of jogo.alunos) {
       const uidQ = (jogo.turma + '_' + al).replace(/[.#$[\]/\s]/g, '_');
-      addQuizSessao(uidQ, {
+      await addQuizSessao(uidQ, {
         uid: uidQ, nome: al, turma: jogo.turma,
         total_questoes: jogo.respondidas,
         acertos: jogo.acertos, erros: jogo.erros,
