@@ -446,7 +446,7 @@ function launchCard(el, card) {
   el.style.pointerEvents = 'none';
 
   const clone = document.createElement('div');
-  clone.className = 'game-card selected';
+  clone.className = 'game-card selected fly-clone';
   clone.innerHTML = el.innerHTML;
   Object.assign(clone.style, {
     position: 'fixed',
@@ -825,10 +825,11 @@ async function endSprint(manual = false) {
 function buildGame() {
   stopTimer();
   _atualizarPresenca();
+  // Limpa clones de voo e confetes de partidas anteriores
+  document.querySelectorAll('.fly-clone, .confete-wrap').forEach(c => c.remove());
   const cfg = getLevelConfig(nivelAtual);
   timerTotal = cfg.secs;
   timerLeft  = cfg.secs;
-  totalPairs = cfg.pairs;
   selectedCard = null;
   removedCount = 0;
   gameOver    = false;
@@ -856,14 +857,18 @@ function buildGame() {
 
   updateNivelDisplay();
 
+  totalPairs = pairs.length;
+
   // Responsive: limit columns on narrow screens
   const vw = window.innerWidth;
   let cols = cfg.cols;
   if (vw < 380 && cols > 4) cols = 4;
   else if (vw < 480 && cols > 5) cols = 5;
+  // Garante que não há linha incompleta no grid
+  while (cols > 2 && cards.length % cols !== 0) cols--;
 
   // Pairs dots
-  const dotsHtml = Array.from({length:cfg.pairs}, (_,i) =>
+  const dotsHtml = Array.from({length: pairs.length}, (_,i) =>
     `<div class="pair-dot" id="dot-${i}"></div>`).join('');
 
   const content = document.getElementById("content");
