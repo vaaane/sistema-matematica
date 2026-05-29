@@ -232,36 +232,61 @@ function buildS2(qF, tF) {
 }
 
 // ── Seção 3: tabela de operações ──────────────────────────────
+const OP_ICONS = { soma:'➕', subtracao:'➖', multiplicacao:'✖️', divisao:'➗' };
+
+// Recebe apenas sessões que JÁ têm tipos_operacoes
 function buildOpsTable(sessoes) {
   const ops = { soma:{a:0,e:0}, subtracao:{a:0,e:0}, multiplicacao:{a:0,e:0}, divisao:{a:0,e:0} };
   sessoes.forEach(s => {
-    if (s.tipos_operacoes) for (const [k, v] of Object.entries(s.tipos_operacoes)) if (ops[k]) ops[k].a += v || 0;
-    if (s.tipos_erros)     for (const [k, v] of Object.entries(s.tipos_erros))     if (ops[k]) ops[k].e += v || 0;
+    for (const [k, v] of Object.entries(s.tipos_operacoes || {})) if (ops[k]) ops[k].a += v || 0;
+    for (const [k, v] of Object.entries(s.tipos_erros     || {})) if (ops[k]) ops[k].e += v || 0;
   });
-  if (!Object.values(ops).some(o => o.a + o.e > 0))
-    return '<p style="font-size:12px;color:var(--text-muted)">Dados de operações disponíveis após novas partidas.</p>';
+  if (!Object.values(ops).some(o => o.a + o.e > 0)) return '';
 
   const rows = Object.entries(ops).map(([k, {a, e}]) => {
     const t = a + e;
-    return `<tr><td>${OP_LABELS[k] || k}</td><td>${t}</td>
-      <td style="color:var(--green)">${t > 0 ? (a/t*100).toFixed(1)+'%' : '—'}</td>
-      <td style="color:var(--red)">${t > 0 ? (e/t*100).toFixed(1)+'%' : '—'}</td></tr>`;
+    return `<tr>
+      <td>${OP_ICONS[k] || ''} ${OP_LABELS[k] || k}</td>
+      <td style="color:var(--green);text-align:right">${a}</td>
+      <td style="color:var(--red);text-align:right">${e}</td>
+      <td style="text-align:right">${t > 0 ? (a/t*100).toFixed(0)+'%' : '—'}</td>
+    </tr>`;
   }).join('');
-  return `<table class="a-table"><thead><tr><th>Operação</th><th>Total contas</th><th>% Acerto</th><th>% Erro</th></tr></thead><tbody>${rows}</tbody></table>`;
+  return `<table class="a-table" style="margin-top:10px">
+    <thead><tr><th>Operação</th><th style="text-align:right">Acertos</th><th style="text-align:right">Erros</th><th style="text-align:right">% Acerto</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
 }
 
 function buildTabGeralHtml(sessoes) {
-  const totAc = sessoes.reduce((s, x) => s + (x.acertos || 0), 0);
-  const totEr = sessoes.reduce((s, x) => s + (x.erros   || 0), 0);
+  if (!sessoes.length) return '<p style="font-size:12px;color:var(--text-muted)">Sem dados.</p>';
+
+  // Separa sessões com/sem dados de acertos (formato novo vs legado)
+  const comDados = sessoes.filter(s => typeof s.acertos === 'number');
+  const semDados = sessoes.filter(s => typeof s.acertos !== 'number');
+  const comOps   = sessoes.filter(s => s.tipos_operacoes);
+
+  const totAc = comDados.reduce((s, x) => s + x.acertos, 0);
+  const totEr = comDados.reduce((s, x) => s + (x.erros || 0), 0);
   const tot   = totAc + totEr;
-  const pAc   = tot > 0 ? Math.round(totAc / tot * 100) : 0;
-  return `
+  const pAc   = tot > 0 ? Math.round(totAc / tot * 100) : null;
+
+  const statsHtml = `
     <div class="stat-row">
       <div class="stat-mini"><div class="stat-mini-val">${sessoes.length}</div><div class="stat-mini-lbl">Partidas</div></div>
-      <div class="stat-mini"><div class="stat-mini-val" style="color:var(--green)">${pAc}%</div><div class="stat-mini-lbl">Média acertos</div></div>
-      <div class="stat-mini"><div class="stat-mini-val" style="color:var(--red)">${tot > 0 ? 100 - pAc : 0}%</div><div class="stat-mini-lbl">Média erros</div></div>
-    </div>
-    ${buildOpsTable(sessoes)}`;
+      ${comDados.length > 0 ? `
+      <div class="stat-mini"><div class="stat-mini-val">${totAc}</div><div class="stat-mini-lbl">Acertos</div></div>
+      <div class="stat-mini"><div class="stat-mini-val">${totEr}</div><div class="stat-mini-lbl">Erros</div></div>
+      <div class="stat-mini"><div class="stat-mini-val" style="color:var(--green)">${pAc !== null ? pAc+'%' : '—'}</div><div class="stat-mini-lbl">% Acerto</div></div>
+      ` : ''}
+    </div>`;
+
+  const opsHtml  = comOps.length > 0 ? buildOpsTable(comOps) : '';
+  const avisoHtml = semDados.length > 0
+    ? `<p style="font-size:11px;color:var(--text-muted);margin-top:8px">⚠️ Dados por operação disponíveis apenas para partidas recentes (${semDados.length} antiga${semDados.length !== 1 ? 's' : ''} sem detalhes)</p>`
+    : '';
+
+  return statsHtml + opsHtml + avisoHtml;
 }
 
 function buildTabTurmaHtml(sessoes) {
