@@ -63,13 +63,13 @@ export async function contarSessoesTabuadaHoje() {
   return count;
 }
 
-// ── Tabuada sessões: total ──────────────────────────────────
-export async function contarSessoesTabuadaTotal() {
-  const snap = await get(ref(db, 'tabuada_sessoes')).catch(() => null);
+// ── Tabuada: total de partidas (soma total_partidas de tabuada_niveis) ──
+export async function somarPartidasTabuadaTotal() {
+  const snap = await get(ref(db, 'tabuada_niveis')).catch(() => null);
   if (!snap?.exists()) return 0;
-  let count = 0;
-  snap.forEach(() => count++);
-  return count;
+  let total = 0;
+  snap.forEach(child => { total += child.val()?.total_partidas || 0; });
+  return total;
 }
 
 // ── Analytics: quiz sessões ─────────────────────────────────

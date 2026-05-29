@@ -75,7 +75,7 @@
 
 <script type="module">
 import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES } from "/js/constants.js";
-import { getResultados, getLiberadas, getAlertas, getAllAtividadeStatus, getDetalhes, contarSessoesTabuadaHoje, contarSessoesTabuadaTotal } from "/js/db.js";
+import { getResultados, getLiberadas, getAlertas, getAllAtividadeStatus, getDetalhes, contarSessoesTabuadaHoje, somarPartidasTabuadaTotal } from "/js/db.js";
 import { db } from "/js/firebase-config.js";
 import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
@@ -86,7 +86,7 @@ renderSidebarProfessor("sidebar", "dashboard");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
 const [todos, liberadasRaw, alertas, statusMap, tabuadaHoje, tabuadaTotal] = await Promise.all([
-  getResultados(), getLiberadas(), getAlertas(true), getAllAtividadeStatus(), contarSessoesTabuadaHoje(), contarSessoesTabuadaTotal()
+  getResultados(), getLiberadas(), getAlertas(true), getAllAtividadeStatus(), contarSessoesTabuadaHoje(), somarPartidasTabuadaTotal()
 ]);
 
 const hoje = new Date().toLocaleDateString('pt-BR');
