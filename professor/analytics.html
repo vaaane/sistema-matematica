@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Analytics — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    .filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;align-items:center;}
+    .filter-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-right:4px;flex-shrink:0;}
+    .filter-btn{padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);font-size:12px;font-weight:600;cursor:pointer;color:var(--text);font-family:'Inter',sans-serif;transition:background .12s,border-color .12s;}
+    .filter-btn:hover{border-color:var(--blue);}
+    .filter-btn.active{background:var(--blue);border-color:var(--blue);color:#fff;}
+    .section-title{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+    .chart-wrap{position:relative;height:200px;}
+    .stat-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+    .stat-mini{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 16px;flex:1;min-width:90px;text-align:center;}
+    .stat-mini-val{font-size:22px;font-weight:800;line-height:1;}
+    .stat-mini-lbl{font-size:10px;color:var(--text-muted);margin-top:3px;text-transform:uppercase;letter-spacing:.4px;}
+    .tab-bar{display:flex;gap:0;margin-bottom:14px;border-bottom:1.5px solid var(--border);}
+    .tab-btn{padding:7px 18px;border:none;background:none;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);border-bottom:2.5px solid transparent;margin-bottom:-1.5px;font-family:'Inter',sans-serif;transition:color .12s;}
+    .tab-btn:hover{color:var(--text);}
+    .tab-btn.active{color:var(--blue);border-bottom-color:var(--blue);}
+    .a-table{width:100%;border-collapse:collapse;font-size:12px;}
+    .a-table th{text-align:left;padding:7px 10px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border);}
+    .a-table td{padding:8px 10px;border-bottom:1px solid var(--border);}
+    .a-table tr:last-child td{border-bottom:none;}
+    .a-table tbody tr:hover td{background:rgba(127,119,221,.04);}
+    .turma-sec-title{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;}
+    .turma-sec-title:first-child{margin-top:0;}
+    .pico-info{font-size:11px;color:var(--text-muted);margin-top:8px;text-align:center;}
+    @media(max-width:600px){
+      .stat-mini{min-width:70px;padding:8px 10px;}
+      .chart-wrap{height:150px;}
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">📊 Analytics</div>
+        <div class="topbar-sub" id="topbar-sub">Carregando dados…</div>
+      </div>
+      <div class="topbar-right"><div class="avatar avatar-blue">P</div></div>
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+    </div>
+  </div>
+</div>
+
+<script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
+<script type="module">
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const sess = requireProfessor("/index.html");
+if (!sess) throw new Error("não autenticado");
+renderSidebarProfessor("sidebar", "analytics");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+// ── Carregar dados ────────────────────────────────────────────
+const [quizSnap, tabSnap] = await Promise.all([
+  get(ref(db, 'quiz_sessoes')).catch(() => null),
+  get(ref(db, 'tabuada_sessoes')).catch(() => null),
+]);
+
+const quizSessoes = [];
+if (quizSnap?.exists()) quizSnap.forEach(c => { const v = c.val(); if (v) quizSessoes.push(v); });
+
+const tabSessoes = [];
+if (tabSnap?.exists()) tabSnap.forEach(c => { const v = c.val(); if (v) tabSessoes.push(v); });
+
+document.getElementById('topbar-sub').textContent =
+  `${quizSessoes.length} sessões de quiz · ${tabSessoes.length} de tabuada`;
+
+// ── Helpers ───────────────────────────────────────────────────
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function getDataISO(s) {
+  if (!s?.data) return '';
+  if (/^\d{4}-/.test(s.data)) return s.data.slice(0, 10);
+  const m = s.data.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : '';
+}
+
+function getHora(s) {
+  if (typeof s.hora === 'number') return s.hora;
+  const m = s.data?.match(/\s(\d{2}):/);
+  return m ? parseInt(m[1]) : null;
+}
+
+function getLast14Days() {
+  const days = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    days.push(d.toISOString().slice(0, 10));
+  }
+  return days;
+}
+
+function fmtDay(iso) { const [,m,d] = iso.split('-'); return `${d}/${m}`; }
+
+const TURMAS    = ['8D','8E','8F','8G','8H'];
+const OP_LABELS = { soma:'Soma', subtracao:'Subtração', multiplicacao:'Multiplicação', divisao:'Divisão' };
+
+// ── Tema Chart.js ─────────────────────────────────────────────
+const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+const CT = {
+  text:   isDark ? 'rgba(226,232,240,.82)' : 'rgba(15,23,42,.72)',
+  grid:   isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)',
+  blue:   '#2F9EDC',
+  orange: '#F97316',
+  green:  '#22C55E',
+};
+Chart.defaults.color       = CT.text;
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size   = 11;
+
+// ── Estado ────────────────────────────────────────────────────
+let currentTurma = 'todas';
+let activeTab3   = 'geral';
+const charts     = {};
+
+function filterBy(arr, turma) {
+  return turma === 'todas' ? arr : arr.filter(s => s.turma === turma);
+}
+
+// ── Shell (renderizado só uma vez) ────────────────────────────
+function renderShell() {
+  const btns = ['todas', ...TURMAS].map(t =>
+    `<button class="filter-btn${t === currentTurma ? ' active' : ''}" onclick="setTurma('${t}')">${t === 'todas' ? 'Todas as turmas' : t}</button>`
+  ).join('');
+
+  document.getElementById('content').innerHTML = `
+    <div class="filter-bar">
+      <span class="filter-label">Turma:</span>${btns}
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="section-title">📈 Acessos por dia — últimos 14 dias</div>
+      <div class="chart-wrap"><canvas id="chart-s1"></canvas></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="section-title">🕐 Horários de pico</div>
+      <div class="chart-wrap" style="height:170px"><canvas id="chart-s2"></canvas></div>
+      <div class="pico-info" id="pico-info"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="section-title">🎮 Estatísticas da Tabuada</div>
+      <div class="tab-bar">
+        <button class="tab-btn${activeTab3 === 'geral'  ? ' active' : ''}" onclick="setTab3('geral')">Geral</button>
+        <button class="tab-btn${activeTab3 === 'turma'  ? ' active' : ''}" onclick="setTab3('turma')">Por Turma</button>
+        <button class="tab-btn${activeTab3 === 'aluno'  ? ' active' : ''}" onclick="setTab3('aluno')">Por Aluno</button>
+      </div>
+      <div id="tab3-content"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="section-title">📝 Estatísticas do Quiz</div>
+      <div id="s4-content"></div>
+    </div>`;
+}
+
+// ── Seção 1: gráfico de linha ─────────────────────────────────
+function buildS1(qF, tF) {
+  const days   = getLast14Days();
+  const qByDay = Object.fromEntries(days.map(d => [d, 0]));
+  const tByDay = Object.fromEntries(days.map(d => [d, 0]));
+  qF.forEach(s => { const d = getDataISO(s); if (d in qByDay) qByDay[d]++; });
+  tF.forEach(s => { const d = getDataISO(s); if (d in tByDay) tByDay[d]++; });
+
+  if (charts.s1) charts.s1.destroy();
+  charts.s1 = new Chart(document.getElementById('chart-s1'), {
+    type: 'line',
+    data: {
+      labels: days.map(fmtDay),
+      datasets: [
+        { label:'Quiz',    data: days.map(d => qByDay[d]), borderColor: CT.blue,   backgroundColor: CT.blue   + '28', tension:.35, fill:true, pointRadius:3, pointHoverRadius:5 },
+        { label:'Tabuada', data: days.map(d => tByDay[d]), borderColor: CT.orange, backgroundColor: CT.orange + '28', tension:.35, fill:true, pointRadius:3, pointHoverRadius:5 },
+      ],
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins: { legend:{ labels:{ color:CT.text, boxWidth:12, padding:16 } } },
+      scales: {
+        x: { grid:{ color:CT.grid }, ticks:{ color:CT.text } },
+        y: { grid:{ color:CT.grid }, ticks:{ color:CT.text, stepSize:1 }, beginAtZero:true },
+      },
+    },
+  });
+}
+
+// ── Seção 2: barras por hora ──────────────────────────────────
+function buildS2(qF, tF) {
+  const combined = [...qF, ...tF];
+  const byHour   = Array(24).fill(0);
+  combined.forEach(s => { const h = getHora(s); if (h !== null && h >= 0 && h < 24) byHour[h]++; });
+
+  const maxVal  = Math.max(...byHour);
+  const bgColors = byHour.map(v => v > 0 && v === maxVal ? CT.orange : CT.blue + 'BB');
+  const picoH    = byHour.indexOf(maxVal);
+  const picoEl   = document.getElementById('pico-info');
+  if (picoEl) picoEl.textContent = maxVal > 0
+    ? `Horário de pico: ${picoH}h — ${maxVal} sessão${maxVal !== 1 ? 'ões' : ''}`
+    : 'Nenhuma sessão registrada neste período';
+
+  if (charts.s2) charts.s2.destroy();
+  charts.s2 = new Chart(document.getElementById('chart-s2'), {
+    type: 'bar',
+    data: {
+      labels: Array.from({length:24}, (_, i) => `${i}h`),
+      datasets: [{ label:'Sessões', data: byHour, backgroundColor: bgColors, borderRadius: 3, borderSkipped: false }],
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins: { legend:{ display:false } },
+      scales: {
+        x: { grid:{ display:false }, ticks:{ color:CT.text } },
+        y: { grid:{ color:CT.grid }, ticks:{ color:CT.text, stepSize:1 }, beginAtZero:true },
+      },
+    },
+  });
+}
+
+// ── Seção 3: tabela de operações ──────────────────────────────
+function buildOpsTable(sessoes) {
+  const ops = { soma:{a:0,e:0}, subtracao:{a:0,e:0}, multiplicacao:{a:0,e:0}, divisao:{a:0,e:0} };
+  sessoes.forEach(s => {
+    if (s.tipos_operacoes) for (const [k, v] of Object.entries(s.tipos_operacoes)) if (ops[k]) ops[k].a += v || 0;
+    if (s.tipos_erros)     for (const [k, v] of Object.entries(s.tipos_erros))     if (ops[k]) ops[k].e += v || 0;
+  });
+  if (!Object.values(ops).some(o => o.a + o.e > 0))
+    return '<p style="font-size:12px;color:var(--text-muted)">Dados de operações disponíveis após novas partidas.</p>';
+
+  const rows = Object.entries(ops).map(([k, {a, e}]) => {
+    const t = a + e;
+    return `<tr><td>${OP_LABELS[k] || k}</td><td>${t}</td>
+      <td style="color:var(--green)">${t > 0 ? (a/t*100).toFixed(1)+'%' : '—'}</td>
+      <td style="color:var(--red)">${t > 0 ? (e/t*100).toFixed(1)+'%' : '—'}</td></tr>`;
+  }).join('');
+  return `<table class="a-table"><thead><tr><th>Operação</th><th>Total contas</th><th>% Acerto</th><th>% Erro</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function buildTabGeralHtml(sessoes) {
+  const totAc = sessoes.reduce((s, x) => s + (x.acertos || 0), 0);
+  const totEr = sessoes.reduce((s, x) => s + (x.erros   || 0), 0);
+  const tot   = totAc + totEr;
+  const pAc   = tot > 0 ? Math.round(totAc / tot * 100) : 0;
+  return `
+    <div class="stat-row">
+      <div class="stat-mini"><div class="stat-mini-val">${sessoes.length}</div><div class="stat-mini-lbl">Partidas</div></div>
+      <div class="stat-mini"><div class="stat-mini-val" style="color:var(--green)">${pAc}%</div><div class="stat-mini-lbl">Média acertos</div></div>
+      <div class="stat-mini"><div class="stat-mini-val" style="color:var(--red)">${tot > 0 ? 100 - pAc : 0}%</div><div class="stat-mini-lbl">Média erros</div></div>
+    </div>
+    ${buildOpsTable(sessoes)}`;
+}
+
+function buildTabTurmaHtml(sessoes) {
+  const turmasP = [...new Set(sessoes.map(s => s.turma).filter(Boolean))].sort();
+  if (!turmasP.length) return '<p style="font-size:12px;color:var(--text-muted)">Sem dados.</p>';
+  return turmasP.map(t => {
+    const tf = sessoes.filter(s => s.turma === t);
+    return `<div class="turma-sec-title">Turma ${escH(t)} — ${tf.length} partida${tf.length !== 1 ? 's' : ''}</div>${buildTabGeralHtml(tf)}`;
+  }).join('<div style="height:8px"></div>');
+}
+
+function buildTabAlunoHtml(sessoes) {
+  const byAluno = {};
+  sessoes.forEach(s => {
+    const k = (s.nome || '?') + '|' + (s.turma || '?');
+    if (!byAluno[k]) byAluno[k] = { nome: s.nome || '?', turma: s.turma || '?', partidas: 0, acertos: 0, erros: 0, tipos_erros: {} };
+    const a = byAluno[k];
+    a.partidas++;
+    a.acertos += s.acertos || 0;
+    a.erros   += s.erros   || 0;
+    if (s.tipos_erros) for (const [op, v] of Object.entries(s.tipos_erros))
+      a.tipos_erros[op] = (a.tipos_erros[op] || 0) + (v || 0);
+  });
+  const alunos = Object.values(byAluno).sort((a, b) => a.turma.localeCompare(b.turma) || a.nome.localeCompare(b.nome));
+  if (!alunos.length) return '<p style="font-size:12px;color:var(--text-muted)">Sem dados.</p>';
+  const rows = alunos.map(a => {
+    const tot = a.acertos + a.erros;
+    const pAc = tot > 0 ? (a.acertos / tot * 100).toFixed(0) + '%' : '—';
+    const pEr = tot > 0 ? (a.erros   / tot * 100).toFixed(0) + '%' : '—';
+    const maisErrada = Object.entries(a.tipos_erros).filter(([, v]) => v > 0).sort((x, y) => y[1] - x[1])[0];
+    const maisLabel  = maisErrada ? (OP_LABELS[maisErrada[0]] || maisErrada[0]) : '—';
+    return `<tr><td>${escH(a.nome)}</td><td>${escH(a.turma)}</td><td>${a.partidas}</td><td style="color:var(--green)">${pAc}</td><td style="color:var(--red)">${pEr}</td><td>${maisLabel}</td></tr>`;
+  }).join('');
+  return `<table class="a-table"><thead><tr><th>Nome</th><th>Turma</th><th>Partidas</th><th>% Acerto</th><th>% Erro</th><th>Op. mais errada</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function buildS3(tF) {
+  const el = document.getElementById('tab3-content');
+  if (!el) return;
+  if      (activeTab3 === 'geral') el.innerHTML = buildTabGeralHtml(tF);
+  else if (activeTab3 === 'turma') el.innerHTML = buildTabTurmaHtml(tF);
+  else                             el.innerHTML = buildTabAlunoHtml(tF);
+}
+
+// ── Seção 4: quiz ─────────────────────────────────────────────
+function buildS4(qF) {
+  const totAc = qF.reduce((s, x) => s + (x.acertos || 0), 0);
+  const totQ  = qF.reduce((s, x) => s + (x.total_questoes || (x.acertos || 0) + (x.erros || 0)), 0);
+  const pAc   = totQ > 0 ? Math.round(totAc / totQ * 100) : 0;
+
+  const byTurma = {};
+  qF.forEach(s => {
+    const t = s.turma || '?';
+    if (!byTurma[t]) byTurma[t] = { sessoes: 0, acertos: 0, total: 0 };
+    byTurma[t].sessoes++;
+    byTurma[t].acertos += s.acertos || 0;
+    byTurma[t].total   += s.total_questoes || (s.acertos || 0) + (s.erros || 0);
+  });
+
+  const rows = Object.entries(byTurma).sort((a, b) => a[0].localeCompare(b[0])).map(([t, d]) => {
+    const pA = d.total > 0 ? (d.acertos / d.total * 100).toFixed(0) + '%' : '—';
+    const pE = d.total > 0 ? (100 - d.acertos / d.total * 100).toFixed(0) + '%' : '—';
+    return `<tr><td>Turma ${escH(t)}</td><td>${d.sessoes}</td><td style="color:var(--green)">${pA}</td><td style="color:var(--red)">${pE}</td></tr>`;
+  }).join('');
+
+  document.getElementById('s4-content').innerHTML = `
+    <div class="stat-row">
+      <div class="stat-mini"><div class="stat-mini-val">${qF.length}</div><div class="stat-mini-lbl">Sessões</div></div>
+      <div class="stat-mini"><div class="stat-mini-val" style="color:var(--green)">${pAc}%</div><div class="stat-mini-lbl">Média acertos</div></div>
+    </div>
+    <table class="a-table">
+      <thead><tr><th>Turma</th><th>Sessões</th><th>Média acerto %</th><th>Média erro %</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text-muted)">Sem dados de quiz registrados ainda.</td></tr>'}</tbody>
+    </table>`;
+}
+
+// ── Render completo ───────────────────────────────────────────
+function render() {
+  const qF = filterBy(quizSessoes, currentTurma);
+  const tF = filterBy(tabSessoes,  currentTurma);
+  buildS1(qF, tF);
+  buildS2(qF, tF);
+  buildS3(tF);
+  buildS4(qF);
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    const label = currentTurma === 'todas' ? 'Todas as turmas' : currentTurma;
+    b.classList.toggle('active', b.textContent.trim() === label);
+  });
+}
+
+// ── Handlers públicos ─────────────────────────────────────────
+window.setTurma = function(t) { currentTurma = t; render(); };
+window.setTab3  = function(t) {
+  activeTab3 = t;
+  const labels = { geral:'Geral', turma:'Por Turma', aluno:'Por Aluno' };
+  document.querySelectorAll('.tab-btn').forEach(b =>
+    b.classList.toggle('active', b.textContent.trim() === labels[t])
+  );
+  buildS3(filterBy(tabSessoes, currentTurma));
+};
+
+// ── Init ──────────────────────────────────────────────────────
+renderShell();
+render();
+</script>
+</body>
+</html>

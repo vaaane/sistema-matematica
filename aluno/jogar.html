@@ -90,7 +90,7 @@ import {
   addResultado, updateResultado, saveDetalhes,
   getLiberadasParaTurma, contarTentativas,
   addConquista, hasConquista, addAlerta, verificarTentativasSuspeitas,
-  getResultadosByAluno, getAtividadeStatus
+  getResultadosByAluno, getAtividadeStatus, addQuizSessao
 } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession, setJogo } from "/js/auth.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
@@ -457,6 +457,22 @@ async function finalizarJogo() {
   }
 
   jogo.novasConquistas = novas;
+
+  // Analytics: salvar sessão de quiz
+  if (jogo.respondidas > 0) {
+    const dQ = new Date();
+    for (const al of jogo.alunos) {
+      const uidQ = (jogo.turma + '_' + al).replace(/[.#$[\]/\s]/g, '_');
+      addQuizSessao(uidQ, {
+        uid: uidQ, nome: al, turma: jogo.turma,
+        total_questoes: jogo.respondidas,
+        acertos: jogo.acertos, erros: jogo.erros,
+        hora: dQ.getHours(),
+        data: dQ.toISOString().slice(0, 10),
+      });
+    }
+  }
+
   // Sempre salva no sessionStorage — resultado.html mostra aviso se salvoFirebase=false
   sessionStorage.setItem("sm_jogo_resultado", JSON.stringify(jogo));
 }

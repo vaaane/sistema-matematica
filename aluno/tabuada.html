@@ -442,10 +442,22 @@ function flyBack(info, el) {
 function _atualizarPresenca() {
   set(ref(db, `tabuada_presenca/${uid}`), { nome: nomeAluno, turma, ts: Date.now() }).catch(() => {});
 }
-function _registrarSessao() {
-  const d = new Date();
-  const data = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-  set(ref(db, `tabuada_sessoes/${Date.now()}`), { nome: nomeAluno, turma, data }).catch(() => {});
+function _registrarSessao(nivel, resultado, acertosOverride, errosOverride) {
+  const ts = Date.now();
+  const d  = new Date(ts);
+  set(ref(db, `tabuada_sessoes/${ts}`), {
+    uid,
+    nome:      nomeAluno,
+    turma,
+    data:      d.toISOString().slice(0, 10),
+    hora:      d.getHours(),
+    nivel:     nivel     ?? nivelAtual,
+    resultado: resultado ?? 'desconhecido',
+    acertos:   acertosOverride ?? acertos,
+    erros:     errosOverride   ?? erros,
+    tipos_operacoes: { soma: tipoAcertos.add, subtracao: tipoAcertos.sub, multiplicacao: tipoAcertos.mul, divisao: tipoAcertos.div },
+    tipos_erros:     { soma: tipoErros.add,   subtracao: tipoErros.sub,   multiplicacao: tipoErros.mul,   divisao: tipoErros.div   },
+  }).catch(() => {});
 }
 
 // ── Game state ────────────────────────────────────────────────
@@ -618,6 +630,7 @@ let removedCount = 0, totalPairs = 0;
 let gameOver = false;
 let acertos = 0, erros = 0, comboCount = 0;
 let tipoAcertos = { add:0, sub:0, mul:0, div:0 };
+let tipoErros   = { add:0, sub:0, mul:0, div:0 };
 
 function symToTipo(sym) {
   if (sym === '+') return 'add';
@@ -679,7 +692,7 @@ async function endSprint(manual = false) {
   if (_sprintInt) { clearInterval(_sprintInt); _sprintInt = null; }
   if (!manual) somDerrota(); else somVitoria();
   if (_sprintPairsOk > 0) salvarSprintRanking(_sprintPairsOk);
-  _registrarSessao();
+  _registrarSessao(nivelAtual, manual ? 'completou' : 'tempo_esgotado', _sprintPairsOk, _sprintErrTotal);
   const total = _sprintPairsOk + _sprintErrTotal;
   const acc   = total > 0 ? Math.round(_sprintPairsOk / total * 100) : 100;
   document.getElementById("lov-emoji").textContent = _sprintLevels >= 5 ? '🏆' : _sprintLevels >= 2 ? '⭐' : '🎮';
@@ -707,6 +720,7 @@ function buildGame() {
   gameOver    = false;
   acertos = 0; erros = 0; comboCount = 0;
   tipoAcertos = { add:0, sub:0, mul:0, div:0 };
+  tipoErros   = { add:0, sub:0, mul:0, div:0 };
 
   const pairs = generatePairs(cfg.type, cfg.pairs, cfg.maxResult, cfg.minMul || 0, cfg.minDiv || 0);
   // Fallback: completa com add usando o mesmo usedR para evitar resultados duplicados
@@ -962,6 +976,8 @@ function onCardClick(el, card) {
   } else {
     // ❌ Errado — zera selectedCard imediatamente para evitar race condition
     erros++;
+    const _tipoErr = symToTipo((first.kind === 'op' ? first.op : card.op)?.sym);
+    if (_tipoErr) tipoErros[_tipoErr]++;
     comboCount = 0;
     somErro();
     const _badge = document.getElementById('combo-badge');
@@ -1011,7 +1027,7 @@ async function onGameWin() {
   if (_isReplay) {
     progresso.total_partidas = (progresso.total_partidas || 0) + 1;
     await salvarProgresso(progresso, 'completou', nivelJogado, acertos, erros, true);
-    _registrarSessao();
+    _registrarSessao(nivelJogado, 'completou');
     nivelAtual = nivelJogado + 1; // avança nível local da sessão de prática
     document.getElementById("lov-emoji").textContent = erros === 0 ? '⭐' : '✅';
     document.getElementById("lov-title").textContent = erros === 0 ? 'Perfeito!' : 'Nível concluído!';
@@ -1037,7 +1053,7 @@ async function onGameWin() {
   melhorNivel = novoMelhor;
 
   await salvarProgresso(progresso, 'completou', nivelJogado, acertos, erros);
-  _registrarSessao();
+  _registrarSessao(nivelJogado, 'completou');
 
   const isNewRecord = novoNivel > melhorAnterior;
 
@@ -1078,7 +1094,7 @@ async function onTimerEnd() {
   progresso.total_partidas = (progresso.total_partidas || 0) + 1;
   const isReplayDerrota = _isReplay;
   await salvarProgresso(progresso, 'tempo_esgotado', nivelJogado, acertos, erros, isReplayDerrota || false);
-  _registrarSessao();
+  _registrarSessao(nivelJogado, 'tempo_esgotado');
   if (!isReplayDerrota) reloadRanking();
 
   const frases = [

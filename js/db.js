@@ -50,15 +50,22 @@ export async function getDetalhes(resultadoId) {
 
 // ── Tabuada sessões ─────────────────────────────────────────
 export async function contarSessoesTabuadaHoje() {
-  const hoje = new Date().toLocaleDateString('pt-BR');
+  const hoje   = new Date().toISOString().slice(0, 10);          // "2026-05-28" (novo formato)
+  const hojeBR = new Date().toLocaleDateString('pt-BR');          // "28/05/2026" (legado)
   const snap = await get(ref(db, 'tabuada_sessoes')).catch(() => null);
   if (!snap?.exists()) return 0;
   let count = 0;
   snap.forEach(child => {
     const v = child.val();
-    if (v?.data && v.data.startsWith(hoje)) count++;
+    if (!v?.data) return;
+    if (v.data === hoje || v.data.startsWith(hojeBR)) count++;
   });
   return count;
+}
+
+// ── Analytics: quiz sessões ─────────────────────────────────
+export function addQuizSessao(uid, dados) {
+  return set(ref(db, `quiz_sessoes/${Date.now()}_${uid}`), dados).catch(() => {});
 }
 
 // ── Conquistas ──────────────────────────────────────────────
