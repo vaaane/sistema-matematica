@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Migração Duplas — Tabuada</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .mig-section{max-width:760px;}
+    .mig-pair-card{border:1.5px solid var(--border);border-radius:14px;margin-bottom:16px;overflow:hidden;}
+    .mig-pair-header{padding:14px 18px;background:var(--bg);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+    .mig-pair-title{font-size:14px;font-weight:800;}
+    .mig-pair-body{padding:14px 18px;display:flex;flex-direction:column;gap:10px;}
+    .mig-player{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;background:var(--card);border:1px solid var(--border);}
+    .mig-player-name{font-size:14px;font-weight:700;flex:1;}
+    .mig-player-info{font-size:12px;color:var(--text-muted);margin-top:2px;}
+    .badge-fonte{background:#D1FAE5;color:#065F46;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;flex-shrink:0;}
+    .badge-destino{background:#FEF3C7;color:#92400E;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;flex-shrink:0;}
+    .badge-aviso{background:#FEF3C7;border:1px solid #F59E0B;color:#92400E;font-size:12px;font-weight:600;padding:8px 14px;border-radius:8px;display:flex;align-items:center;gap:7px;}
+    .badge-skip{background:var(--bg);color:var(--text-muted);font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;border:1px solid var(--border);}
+    .mig-arrow{font-size:18px;text-align:center;color:var(--text-muted);}
+    .mig-pair-footer{padding:10px 18px 14px;display:flex;align-items:center;justify-content:flex-end;gap:10px;}
+    .log-area{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:12px;font-family:'Courier New',monospace;max-height:280px;overflow-y:auto;color:var(--text-muted);line-height:1.7;}
+    .log-ok{color:#16A34A;}
+    .log-warn{color:#D97706;}
+    .log-err{color:#DC2626;}
+    .log-info{color:var(--blue);}
+    .status-loading{color:var(--text-muted);font-size:13px;padding:32px;text-align:center;}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Migração de Dados — Duplas</div>
+        <div class="topbar-sub">Replicar progresso da Tabuada entre alunos que jogaram juntos</div>
+      </div>
+      <div class="topbar-right">
+        <a href="/professor/tabuada_relatorio.html" class="btn btn-ghost">← Relatório</a>
+      </div>
+    </div>
+    <div class="content">
+      <div class="mig-section">
+
+        <!-- Ações globais -->
+        <div class="card" style="margin-bottom:20px">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <button class="btn btn-blue" id="btn-analisar" onclick="analisarTodos()">
+              🔍 Analisar duplas
+            </button>
+            <button class="btn" id="btn-migrar-todos" style="display:none;background:#16A34A;color:#fff" onclick="migrarTodos()">
+              ✅ Migrar todos
+            </button>
+            <button class="btn btn-ghost" id="btn-desfazer" style="display:none" onclick="desfazerUltima()">
+              ↩️ Desfazer última migração
+            </button>
+          </div>
+          <div style="margin-top:12px;font-size:12px;color:var(--text-muted);line-height:1.6">
+            <strong>Como funciona:</strong> o aluno com mais partidas é a fonte. Os dados são <em>copiados</em> para o destino — nunca apagados da fonte.
+            Um backup é salvo no Firebase antes de cada migração.
+          </div>
+        </div>
+
+        <!-- Cards dos pares -->
+        <div id="pares-wrap">
+          <div class="status-loading">Clique em "🔍 Analisar duplas" para começar.</div>
+        </div>
+
+        <!-- Log -->
+        <div class="card" style="margin-top:20px">
+          <div class="card-title" style="margin-bottom:12px">
+            <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+            Log
+          </div>
+          <div class="log-area" id="log-area">Aguardando ação…</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const sess = requireProfessor();
+if (!sess) throw new Error();
+renderSidebarProfessor("sidebar", "");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+// ── Duplas da Turma 8D ────────────────────────────────────────
+const TURMA = "8D";
+const DUPLAS = [
+  { a: "João Pedro",    b: "Lucas Gabriel"  },
+  { a: "Ana Julia",     b: "Ketelly"        },
+  { a: "Alice Tavares", b: "Alice Paz"      },
+];
+
+function makeUid(turma, nome) {
+  return (turma + '_' + nome).replace(/[.#$\[\]/\s]/g, '_');
+}
+
+// ── Log ───────────────────────────────────────────────────────
+function log(msg, tipo = 'info') {
+  const el = document.getElementById('log-area');
+  const ts = new Date().toLocaleTimeString('pt-BR');
+  el.innerHTML += `<div class="log-${tipo}">[${ts}] ${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+// ── Carregar dados de um aluno ────────────────────────────────
+async function carregarAluno(turma, nome) {
+  const uid = makeUid(turma, nome);
+  const [niveisSnap, rankSnap] = await Promise.all([
+    get(ref(db, `tabuada_niveis/${uid}`)).catch(() => null),
+    get(ref(db, `tabuada_ranking/${uid}`)).catch(() => null),
+  ]);
+  const niveis  = niveisSnap?.exists()  ? niveisSnap.val()  : null;
+  const ranking = rankSnap?.exists()    ? rankSnap.val()    : null;
+  return { uid, nome, turma, niveis, ranking };
+}
+
+// ── Determinar fonte/destino ──────────────────────────────────
+function determinarFonteDestino(a, b) {
+  const pA = a.niveis?.total_partidas || 0;
+  const pB = b.niveis?.total_partidas || 0;
+  const nA = a.niveis?.nivel_atual    || 0;
+  const nB = b.niveis?.nivel_atual    || 0;
+  // Sem dados em nenhum
+  if (!a.niveis && !b.niveis) return { fonte: null, destino: null, tipo: 'vazio' };
+  // Um sem dados
+  if (!a.niveis || pA === 0) return { fonte: b, destino: a, tipo: 'claro' };
+  if (!b.niveis || pB === 0) return { fonte: a, destino: b, tipo: 'claro' };
+  // Ambos com dados — usa quem tem mais partidas, desempate por nível
+  const scoreA = pA * 1000 + nA;
+  const scoreB = pB * 1000 + nB;
+  const ambosSignificativos = pA > 5 && pB > 5;
+  if (scoreA >= scoreB) return { fonte: a, destino: b, tipo: ambosSignificativos ? 'aviso' : 'claro' };
+  return { fonte: b, destino: a, tipo: ambosSignificativos ? 'aviso' : 'claro' };
+}
+
+// ── Renderizar card de par ────────────────────────────────────
+function renderPar(dupla, a, b, analysis, idx) {
+  const { fonte, destino, tipo } = analysis;
+  const pA = a.niveis?.total_partidas || 0;
+  const pB = b.niveis?.total_partidas || 0;
+  const nA = a.niveis?.nivel_atual    || 1;
+  const nB = b.niveis?.nivel_atual    || 1;
+
+  const playerHtml = (p, partidas, nivel, isFonte, isDestino) => {
+    const badge = isFonte  ? `<span class="badge-fonte">FONTE</span>`
+                : isDestino ? `<span class="badge-destino">DESTINO</span>`
+                : `<span class="badge-skip">—</span>`;
+    return `<div class="mig-player">
+      <div style="flex:1">
+        <div class="mig-player-name">${p.nome}</div>
+        <div class="mig-player-info">Nível ${nivel} · ${partidas} partida${partidas !== 1 ? 's' : ''}${p.niveis?.historico ? ` · ${Object.keys(p.niveis.historico).length} sessões no histórico` : ''}</div>
+      </div>
+      ${badge}
+    </div>`;
+  };
+
+  const aFonte = fonte?.nome === a.nome;
+  const bFonte = fonte?.nome === b.nome;
+
+  let footerHtml = '';
+  if (tipo === 'vazio') {
+    footerHtml = `<span style="font-size:12px;color:var(--text-muted)">⬜ Nenhum dos dois tem dados — nada a migrar.</span>`;
+  } else {
+    if (tipo === 'aviso') {
+      footerHtml += `<div class="badge-aviso" style="flex:1">⚠️ Ambos têm dados significativos — confirme antes de sobrescrever ${destino.nome}.</div>`;
+    }
+    footerHtml += `<button class="btn btn-blue" style="white-space:nowrap" onclick="migrarPar(${idx})">Migrar este par →</button>`;
+  }
+
+  return `<div class="mig-pair-card" id="pair-card-${idx}">
+    <div class="mig-pair-header">
+      <div class="mig-pair-title">👥 ${dupla.a} ↔ ${dupla.b}</div>
+      <span style="font-size:11px;color:var(--text-muted)">Turma ${TURMA}</span>
+    </div>
+    <div class="mig-pair-body">
+      ${playerHtml(a, pA, nA, aFonte, !aFonte && tipo !== 'vazio')}
+      <div class="mig-arrow">↓</div>
+      ${playerHtml(b, pB, nB, bFonte, !bFonte && tipo !== 'vazio')}
+    </div>
+    <div class="mig-pair-footer">${footerHtml}</div>
+  </div>`;
+}
+
+// ── Estado global ─────────────────────────────────────────────
+let _analises = [];   // [{ dupla, a, b, analysis }]
+let _ultimoBackupTs = null;
+
+// ── Analisar todos ────────────────────────────────────────────
+window.analisarTodos = async function() {
+  const btn = document.getElementById('btn-analisar');
+  btn.disabled = true; btn.textContent = '⏳ Analisando…';
+  document.getElementById('log-area').innerHTML = '';
+  log('Iniciando análise…', 'info');
+
+  _analises = [];
+  const htmlParts = [];
+
+  for (let i = 0; i < DUPLAS.length; i++) {
+    const dupla = DUPLAS[i];
+    log(`Lendo dados: ${dupla.a} e ${dupla.b}…`, 'info');
+    const [a, b] = await Promise.all([
+      carregarAluno(TURMA, dupla.a),
+      carregarAluno(TURMA, dupla.b),
+    ]);
+    const analysis = determinarFonteDestino(a, b);
+    _analises.push({ dupla, a, b, analysis });
+    log(`${dupla.a}: ${a.niveis?.total_partidas||0} partidas · Nível ${a.niveis?.nivel_atual||1}`, 'info');
+    log(`${dupla.b}: ${b.niveis?.total_partidas||0} partidas · Nível ${b.niveis?.nivel_atual||1}`, 'info');
+    if (analysis.tipo === 'vazio') log(`→ Nenhum dos dois tem dados.`, 'warn');
+    else if (analysis.tipo === 'aviso') log(`→ ⚠️ Ambos têm dados significativos.`, 'warn');
+    else log(`→ Fonte: ${analysis.fonte.nome} → Destino: ${analysis.destino.nome}`, 'ok');
+    htmlParts.push(renderPar(dupla, a, b, analysis, i));
+  }
+
+  document.getElementById('pares-wrap').innerHTML = htmlParts.join('');
+  document.getElementById('btn-migrar-todos').style.display = '';
+  btn.disabled = false; btn.textContent = '🔍 Analisar duplas';
+  log('Análise concluída.', 'ok');
+};
+
+// ── Salvar backup ─────────────────────────────────────────────
+async function salvarBackup(ts, destino, tipo) {
+  await set(ref(db, `migracoes_backup/${ts}`), {
+    dupla_key:      tipo,
+    turma:          TURMA,
+    destino_uid:    destino.uid,
+    destino_nome:   destino.nome,
+    niveis_backup:  destino.niveis  || null,
+    ranking_backup: destino.ranking || null,
+    feito_em:       ts,
+  }).catch(e => log(`⚠️ Backup falhou: ${e.message}`, 'warn'));
+}
+
+// ── Executar migração de um par ───────────────────────────────
+async function executarMigracao(idx, exigirConfirmacao = false) {
+  const { dupla, a, b, analysis } = _analises[idx];
+  const { fonte, destino, tipo } = analysis;
+
+  if (tipo === 'vazio') { log(`${dupla.a} ↔ ${dupla.b}: sem dados, pulando.`, 'warn'); return false; }
+
+  if (exigirConfirmacao && tipo === 'aviso') {
+    const ok = confirm(`⚠️ ATENÇÃO\n\n"${destino.nome}" já tem ${destino.niveis?.total_partidas||0} partidas.\n\nDeseja sobrescrever com os dados de "${fonte.nome}"?\n\nEsta ação será registrada no backup antes de ser executada.`);
+    if (!ok) { log(`${dupla.a} ↔ ${dupla.b}: cancelado pelo usuário.`, 'warn'); return false; }
+  }
+
+  const ts = Date.now();
+  log(`Salvando backup de ${destino.nome}…`, 'info');
+  await salvarBackup(ts, destino, `${dupla.a}|${dupla.b}`);
+  _ultimoBackupTs = ts;
+  document.getElementById('btn-desfazer').style.display = '';
+
+  log(`Copiando dados de ${fonte.nome} → ${destino.nome}…`, 'info');
+  const dadosFonte = fonte.niveis;
+
+  // Copia niveis (exceto historico que será setado separado)
+  const { historico, ...niveisBase } = dadosFonte;
+  await update(ref(db, `tabuada_niveis/${destino.uid}`), niveisBase);
+
+  // Copia histórico completo
+  if (historico && Object.keys(historico).length > 0) {
+    await set(ref(db, `tabuada_niveis/${destino.uid}/historico`), historico);
+    log(`→ ${Object.keys(historico).length} entradas de histórico copiadas.`, 'ok');
+  }
+
+  // Atualiza ranking
+  if (fonte.ranking) {
+    await set(ref(db, `tabuada_ranking/${destino.uid}`), {
+      ...fonte.ranking,
+      nome:  destino.nome,
+      turma: TURMA,
+    });
+    log(`→ Ranking atualizado.`, 'ok');
+  }
+
+  log(`✅ ${destino.nome} atualizado com dados de ${fonte.nome}.`, 'ok');
+
+  // Marca card como concluído
+  const card = document.getElementById(`pair-card-${idx}`);
+  if (card) {
+    card.querySelector('.mig-pair-footer').innerHTML =
+      `<span style="font-size:12px;color:#16A34A;font-weight:700">✅ Migrado com sucesso</span>`;
+    card.style.opacity = '0.65';
+  }
+  return true;
+}
+
+// ── Migrar par individual ─────────────────────────────────────
+window.migrarPar = async function(idx) {
+  const btn = document.querySelectorAll(`#pair-card-${idx} button`)[0];
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Migrando…'; }
+  await executarMigracao(idx, true);
+  if (btn) { btn.disabled = false; }
+};
+
+// ── Migrar todos ──────────────────────────────────────────────
+window.migrarTodos = async function() {
+  if (!_analises.length) { alert('Clique em "Analisar duplas" primeiro.'); return; }
+  const ok = confirm('Migrar TODOS os pares?\n\nPares com aviso amarelo pedirão confirmação individual.\nBackup será salvo antes de cada alteração.');
+  if (!ok) return;
+  const btn = document.getElementById('btn-migrar-todos');
+  btn.disabled = true; btn.textContent = '⏳ Migrando…';
+  let ok2 = 0, skip = 0;
+  for (let i = 0; i < _analises.length; i++) {
+    const resultado = await executarMigracao(i, true);
+    if (resultado) ok2++; else skip++;
+  }
+  log(`─── Concluído: ${ok2} migrado${ok2 !== 1 ? 's' : ''}, ${skip} pulado${skip !== 1 ? 's' : ''}.`, 'ok');
+  btn.disabled = false; btn.textContent = '✅ Migrar todos';
+};
+
+// ── Desfazer última ───────────────────────────────────────────
+window.desfazerUltima = async function() {
+  if (!_ultimoBackupTs) { alert('Nenhuma migração recente nesta sessão para desfazer.'); return; }
+  const snap = await get(ref(db, `migracoes_backup/${_ultimoBackupTs}`)).catch(() => null);
+  if (!snap?.exists()) { log('Backup não encontrado.', 'err'); return; }
+  const bk = snap.val();
+  const ok = confirm(`Desfazer migração de "${bk.destino_nome}"?\nIsso restaura os dados que existiam antes da migração.`);
+  if (!ok) return;
+  log(`Restaurando dados de ${bk.destino_nome}…`, 'info');
+  if (bk.niveis_backup) {
+    await set(ref(db, `tabuada_niveis/${bk.destino_uid}`), bk.niveis_backup);
+    log('→ Níveis restaurados.', 'ok');
+  } else {
+    await set(ref(db, `tabuada_niveis/${bk.destino_uid}`), null);
+    log('→ Nó de níveis removido (estava vazio antes).', 'ok');
+  }
+  if (bk.ranking_backup) {
+    await set(ref(db, `tabuada_ranking/${bk.destino_uid}`), bk.ranking_backup);
+    log('→ Ranking restaurado.', 'ok');
+  } else {
+    await set(ref(db, `tabuada_ranking/${bk.destino_uid}`), null);
+    log('→ Nó de ranking removido.', 'ok');
+  }
+  log(`✅ ${bk.destino_nome} restaurado ao estado anterior.`, 'ok');
+  _ultimoBackupTs = null;
+  document.getElementById('btn-desfazer').style.display = 'none';
+  analisarTodos();
+};
+</script>
+</body>
+</html>

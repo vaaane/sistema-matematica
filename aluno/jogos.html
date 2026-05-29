@@ -547,6 +547,7 @@ const melhorNivel   = niveis.melhor_nivel   || 1;
 const nivelAtual    = Math.max(niveis.nivel_atual || 1, melhorNivel);
 const maxLv         = Math.max(melhorNivel, nivelAtual);
 const totalPartidas = niveis.total_partidas || 0;
+const maiorCombo    = niveis.maior_combo    || 0;
 const ultimaPartida = niveis.ultima_partida || 0;
 
 const historico = niveis.historico
@@ -809,10 +810,16 @@ document.getElementById("content").innerHTML = `
         <div class="j-stat"><div class="j-stat-val">${nivelAtual}</div><div class="j-stat-lbl">Nível atual</div></div>
         <div class="j-stat"><div class="j-stat-val">${totalPartidas}</div><div class="j-stat-lbl">Partidas</div></div>
         <div class="j-stat"><div class="j-stat-val orange">${sequencia}</div><div class="j-stat-lbl">Sequência 🔥</div></div>
+        <div class="j-stat"><div class="j-stat-val" style="color:#FAB800">${maiorCombo || '—'}</div><div class="j-stat-lbl">Maior combo 🔥</div></div>
       </div>
       <div style="padding:12px 16px;border-top:0.5px solid var(--j-border)">
         <a href="/aluno/tabuada.html" class="j-play-btn" style="width:100%;justify-content:center">▶ Jogar agora</a>
       </div>
+    </div>
+
+    <!-- Social stats -->
+    <div class="j-card" id="tab-social-card" style="margin-bottom:16px;padding:12px 16px;display:none">
+      <div id="tab-social-info" style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--j-muted);line-height:1.5"></div>
     </div>
 
     ${temTipos ? `
@@ -965,6 +972,44 @@ document.addEventListener('click', function(e) {
     document.getElementById('avatar-menu')?.classList.remove('open');
   }
 });
+
+// ── Estatísticas sociais da Tabuada (assíncrono) ──────────────
+(async () => {
+  const hojeISO = new Date().toISOString().slice(0, 10);
+  const hojeBR  = new Date().toLocaleDateString('pt-BR');
+
+  const sessoesSnap = await get(ref(db, 'tabuada_sessoes')).catch(() => null);
+
+  const jogadoresHoje = new Set();
+  if (sessoesSnap?.exists()) {
+    sessoesSnap.forEach(child => {
+      const v = child.val();
+      if (v?.data && (v.data === hojeISO || v.data.startsWith(hojeBR)))
+        jogadoresHoje.add(v.uid || v.nome);
+    });
+  }
+
+  // Usa rankingTurma já carregado
+  const topTurma = rankingTurma[0] || null;
+  const pos = rankingTurma.findIndex(r => r.nome === nomeAluno);
+
+  const linhas = [];
+  if (jogadoresHoje.size > 0)
+    linhas.push(`🔥 <strong>${jogadoresHoje.size}</strong> jogaram hoje`);
+  if (topTurma)
+    linhas.push(`🏆 Top da turma: <strong>${topTurma.nome}</strong> · Nível ${topTurma.melhor_nivel || topTurma.nivel_atual || 1}`);
+  if (pos >= 0)
+    linhas.push(`📍 Sua posição na turma: <strong>#${pos + 1}</strong>`);
+  if (maiorCombo > 0)
+    linhas.push(`🔥 Maior sequência: <strong>${maiorCombo}</strong> acertos seguidos`);
+
+  if (!linhas.length) return;
+  const card = document.getElementById('tab-social-card');
+  const info = document.getElementById('tab-social-info');
+  if (!card || !info) return;
+  info.innerHTML = linhas.map(l => `<div>${l}</div>`).join('');
+  card.style.display = '';
+})();
 </script>
 </body>
 </html>

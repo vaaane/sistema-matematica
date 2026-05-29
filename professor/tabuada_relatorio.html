@@ -88,12 +88,12 @@ async function loadData() {
       });
     }
 
-    // Merge total_partidas
+    // Merge total_partidas e maior_combo
     allData.forEach(d => {
       const key = (d.turma + '_' + d.nome).replace(/[.#$\[\]/\s]/g, '_');
       const nd  = niveisMap[key];
-      if (nd) d.total_partidas = nd.total_partidas || 0;
-      else    d.total_partidas = 0;
+      if (nd) { d.total_partidas = nd.total_partidas || 0; d.maior_combo = nd.maior_combo || 0; }
+      else    { d.total_partidas = 0; d.maior_combo = 0; }
     });
 
     // Sort by melhor_nivel desc
@@ -246,7 +246,7 @@ ${top3.length ? `
   : `<div style="overflow-x:auto">
     <table class="table">
       <thead><tr>
-        <th>#</th><th>ALUNO</th><th>TURMA</th><th>NÍVEL ATUAL</th><th>PARTIDAS</th><th>ÚLTIMA PARTIDA</th>
+        <th>#</th><th>ALUNO</th><th>TURMA</th><th>NÍVEL ATUAL</th><th>PARTIDAS</th><th>MAIOR COMBO</th><th>ÚLTIMA PARTIDA</th>
       </tr></thead>
       <tbody>
         ${data.map((d, i) => {
@@ -257,6 +257,7 @@ ${top3.length ? `
           <td>${d.turma}</td>
           <td><span class="lvl-badge ${lvlClass(nivelMax)}">${nivelMax}</span></td>
           <td style="color:var(--text-muted);font-size:13px">${d.total_partidas||0}</td>
+          <td style="font-size:13px;color:${d.maior_combo>=5?'#FAB800':d.maior_combo>=3?'#f97316':'var(--text-muted)'};font-weight:${d.maior_combo>=3?'700':'400'}">${d.maior_combo||'—'}</td>
           <td style="color:var(--text-muted);font-size:12px">${fmtDate(d.ultima_partida)}</td>
         </tr>`;}).join('')}
       </tbody>
@@ -274,9 +275,9 @@ window.recarregar = function() { loadData(); };
 
 window.exportarCSV = function() {
   const data = filtroTurma ? allData.filter(d => d.turma === filtroTurma) : allData;
-  const header = ['Nome','Turma','Nível Atual','Melhor Nível','Total Partidas','Última Partida'];
+  const header = ['Nome','Turma','Nível Atual','Melhor Nível','Total Partidas','Maior Combo','Última Partida'];
   const rows = data.map(d => [
-    d.nome, d.turma, d.nivel_atual||1, d.melhor_nivel||1, d.total_partidas||0,
+    d.nome, d.turma, d.nivel_atual||1, d.melhor_nivel||1, d.total_partidas||0, d.maior_combo||0,
     d.ultima_partida ? new Date(d.ultima_partida).toLocaleString('pt-BR') : '—'
   ]);
   const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');

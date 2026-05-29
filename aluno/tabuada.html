@@ -115,6 +115,14 @@
     .mini-rank-pill.geral{background:rgba(234,179,8,.08);border:0.5px solid rgba(234,179,8,.2);color:#eab308;}
     .mini-rank-pill.turma{background:rgba(127,119,221,.08);border:0.5px solid rgba(127,119,221,.2);color:#c4b5fd;}
 
+    /* ── Combo seguidos ── */
+    .combo-seguidos{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:2px 9px;border-radius:20px;transition:all .2s;}
+    .combo-seguidos.baixo{color:var(--text-muted);background:transparent;}
+    .combo-seguidos.alto{color:#f97316;background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25);}
+    .combo-seguidos.maximo{color:#FAB800;background:rgba(250,184,0,.12);border:1px solid rgba(250,184,0,.35);}
+    .combo-record-flash{position:fixed;top:72px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#FAB800,#f97316);color:#fff;font-size:13px;font-weight:800;padding:7px 18px;border-radius:30px;z-index:400;pointer-events:none;box-shadow:0 4px 20px rgba(250,184,0,.45);animation:recordFlash .8s ease forwards;}
+    @keyframes recordFlash{0%{opacity:0;transform:translateX(-50%) translateY(-8px) scale(.9)}20%{opacity:1;transform:translateX(-50%) translateY(0) scale(1.05)}80%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}100%{opacity:0;transform:translateX(-50%) translateY(-6px) scale(.95)}}
+
     /* ── Sprint ── */
     .sprint-bar{display:flex;align-items:center;gap:14px;background:rgba(127,119,221,.06);border:0.5px solid rgba(127,119,221,.2);border-radius:11px;padding:12px 16px;margin-bottom:14px;}
     .sprint-timer{font-size:30px;font-weight:800;color:var(--blue);font-variant-numeric:tabular-nums;min-width:62px;line-height:1;}
@@ -247,30 +255,33 @@ async function carregarProgresso() {
 async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo, isReplay = false) {
   try {
     const ts = Date.now();
+    const novoMaiorCombo = Math.max(p.maior_combo || 0, comboSessao);
     if (isReplay) {
-      // Não altera nivel_atual nem melhor_nivel — só contabiliza partida e histórico
       await update(niveisRef, { ultima_partida: ts, total_partidas: p.total_partidas });
     } else {
       await update(niveisRef, {
         nivel_atual:    p.nivel_atual,
         melhor_nivel:   p.melhor_nivel,
         ultima_partida: ts,
-        total_partidas: p.total_partidas
+        total_partidas: p.total_partidas,
+        maior_combo:    novoMaiorCombo,
       });
       await set(rankingRef, {
         nome:           nomeAluno,
         turma:          turma,
         nivel_atual:    p.nivel_atual,
         melhor_nivel:   p.melhor_nivel,
-        ultima_partida: ts
+        ultima_partida: ts,
+        maior_combo:    novoMaiorCombo,
       });
     }
     if (resultado) {
       const entry = {
-        nivel:     nivelJogado,
-        resultado: resultado,
-        acertos:   acertosJogo || 0,
-        erros:     errosJogo   || 0,
+        nivel:               nivelJogado,
+        resultado:           resultado,
+        acertos:             acertosJogo || 0,
+        erros:               errosJogo   || 0,
+        maior_combo_sessao:  comboSessao,
       };
       const t = { ...tipoAcertos };
       if (t.add || t.sub || t.mul || t.div) entry.tipos_acertos = t;
@@ -534,6 +545,7 @@ const [progresso, _rankingSnap] = await Promise.all([
 let melhorNivel = Math.max(1, progresso.melhor_nivel || 1);
 let nivelAtual  = Math.max(1, progresso.nivel_atual  || 1, melhorNivel);
 const _nivelReal = nivelAtual;
+let _maiorComboSalvo = progresso.maior_combo || 0;
 
 // Replay: ?nivel=X — jogar nível específico sem regredir o progresso real
 const _replayNivel = new URLSearchParams(location.search).get('nivel');
@@ -671,6 +683,23 @@ function showComboPopup(el) {
   }
 }
 
+function updateComboDisplay() {
+  const el = document.getElementById('combo-seguidos');
+  if (!el) return;
+  if (comboCount <= 0) { el.textContent = ''; el.className = 'combo-seguidos baixo'; el.style.display = 'none'; return; }
+  el.style.display = 'inline-flex';
+  el.textContent = `🔥 ${comboCount} seguido${comboCount !== 1 ? 's' : ''}`;
+  el.className = `combo-seguidos ${comboCount >= 5 ? 'maximo' : comboCount >= 3 ? 'alto' : 'baixo'}`;
+}
+
+function flashRecorde() {
+  const f = document.createElement('div');
+  f.className = 'combo-record-flash';
+  f.textContent = '🏆 Novo recorde de combo!';
+  document.body.appendChild(f);
+  setTimeout(() => f.remove(), 2000);
+}
+
 function lancarConfete(n = 80) {
   const wrap = document.createElement("div");
   wrap.className = "confete-wrap";
@@ -693,7 +722,7 @@ let timerInterval = null;
 let selectedCard = null;  // { el, pairId, kind, op, result }
 let removedCount = 0, totalPairs = 0;
 let gameOver = false;
-let acertos = 0, erros = 0, comboCount = 0;
+let acertos = 0, erros = 0, comboCount = 0, comboSessao = 0;
 let tipoAcertos = { add:0, sub:0, mul:0, div:0 };
 let tipoErros   = { add:0, sub:0, mul:0, div:0 };
 
@@ -787,7 +816,7 @@ function buildGame() {
   selectedCard = null;
   removedCount = 0;
   gameOver    = false;
-  acertos = 0; erros = 0; comboCount = 0;
+  acertos = 0; erros = 0;
   tipoAcertos = { add:0, sub:0, mul:0, div:0 };
   tipoErros   = { add:0, sub:0, mul:0, div:0 };
 
@@ -836,7 +865,7 @@ function buildGame() {
     </div>
     ${_isSprint
       ? `<div style="font-size:12px;color:var(--text-muted)">⚡ <strong style="color:var(--blue)">${_sprintPairsOk}</strong> acerto${_sprintPairsOk !== 1 ? 's' : ''}</div>`
-      : `<div style="font-size:12px;color:var(--text-muted)">Melhor: <strong style="color:var(--blue)">${melhorNivel}</strong></div>`}
+      : `<div style="display:flex;align-items:center;gap:10px"><span style="font-size:12px;color:var(--text-muted)">Melhor: <strong style="color:var(--blue)">${melhorNivel}</strong></span><span id="combo-seguidos" class="combo-seguidos baixo" style="display:none"></span></div>`}
   </div>
 
   ${_isSprint ? '' : miniRankingHtml()}
@@ -1032,8 +1061,14 @@ function onCardClick(el, card) {
 
     acertos++;
     comboCount++;
+    comboSessao = Math.max(comboSessao, comboCount);
+    if (comboCount > _maiorComboSalvo && comboCount >= 3) {
+      _maiorComboSalvo = comboCount;
+      flashRecorde();
+    }
     somAcerto();
     showComboPopup(el);
+    updateComboDisplay();
     if (_isSprint) { _sprintPairsOk++; updateSprintDisplay(); }
     const tipo = symToTipo((first.kind === 'op' ? first.op : card.op)?.sym);
     if (tipo) tipoAcertos[tipo]++;
@@ -1047,12 +1082,14 @@ function onCardClick(el, card) {
     erros++;
     const _tipoErr = symToTipo((first.kind === 'op' ? first.op : card.op)?.sym);
     if (_tipoErr) tipoErros[_tipoErr]++;
+    if (comboCount >= 5) setStatus(`💔 Sequência de ${comboCount} quebrada! ❌`, 'var(--orange)');
+    else setStatus("Errou! Tente outra combinação. ❌", 'var(--red)');
     comboCount = 0;
+    updateComboDisplay();
     somErro();
     const _badge = document.getElementById('combo-badge');
     if (_badge) _badge.innerHTML = '';
     if (_isSprint) { _sprintErrTotal++; updateSprintDisplay(); }
-    setStatus("Errou! Tente outra combinação. ❌", 'var(--red)');
     selectedCard = null;
     flyBack(first.flyInfo, first.el);
     flyBack(flyInfo2, el);
@@ -1211,6 +1248,7 @@ window.fecharOverlay = function() {
 window.reiniciarNivel = function() {
   if (_sprintEnded) return;
   stopTimer();
+  comboCount = 0;
   buildGame();
 };
 
