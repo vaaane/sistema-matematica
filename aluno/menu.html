@@ -92,8 +92,7 @@
 <script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
 import { LISTA_ATIVIDADES } from "/js/constants.js";
-import { getResultados, getLiberadasParaTurma, getAlunoPreferencia, getConquistasByAluno } from "/js/db.js";
-import { CONQUISTAS } from "/js/conquistas.js";
+import { getResultados, getLiberadasParaTurma, getAlunoPreferencia } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 import { saveRankPos, applyTopRankVisuals } from "/js/toprank.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
@@ -136,10 +135,9 @@ document.getElementById("topbar-sub").textContent   = `Turma ${turma} · Bom tra
 document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
 
 const tabuadaUid = (turma + '_' + alunos[0]).replace(/[.#$\[\]/\s]/g, '_');
-const [todosRaw, liberadas, conquistasAluno, tabuadaSnap] = await Promise.all([
+const [todosRaw, liberadas, tabuadaSnap] = await Promise.all([
   getResultados(),
   getLiberadasParaTurma(turma),
-  getConquistasByAluno(alunos[0]),
   get(ref(db, `tabuada_niveis/${tabuadaUid}`)).catch(() => null),
 ]);
 const nivelTabuada = tabuadaSnap?.exists() ? (tabuadaSnap.val().melhor_nivel || tabuadaSnap.val().nivel_atual || 1) : 1;
@@ -407,20 +405,6 @@ function computeProximaMeta(aluno) {
 const sessMap = {};
 for (const r of todos) sessMap[r.id] = r;
 
-// ── Conquistas filtradas ──────────────────────────────────────
-const conquFiltradas = conquistasAluno.filter(c => {
-  const t = c.tipo;
-  if (t === 'recorde_pessoal') return false;
-  if (t === 'lider_turma' || t === 'elite') {
-    const sess = sessMap[c.sessaoId];
-    return (sess?.percentual ?? 100) <= 75;
-  }
-  return true;
-});
-const CONQUISTAS_POSSIVEIS = Object.keys(CONQUISTAS).filter(k => k !== 'recorde_pessoal').length;
-const tiposGanhos = new Set(conquFiltradas.map(c => c.tipo));
-const contX = tiposGanhos.size;
-
 // ── Próxima Meta por aluno ────────────────────────────────────
 const proximaMetaHtml = alunos.map(a => computeProximaMeta(a)).filter(Boolean).join('<br>');
 
@@ -613,6 +597,7 @@ ${tempoPodioHtml}
               Nível ${nivelTabuada}
             </span>
           </div>
+          <div id="tab-incentivo" style="margin-top:7px;font-size:12px;color:var(--text-muted);line-height:1.5">…</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;align-self:center" onclick="event.stopPropagation()">
           <a href="/aluno/tabuada.html" class="btn" style="background:#7F77DD;color:#fff;gap:6px;box-shadow:none;padding:7px 14px;font-size:12px">
@@ -688,78 +673,99 @@ ${tempoPodioHtml}
       ${top3Html}
     </div>
 
-    <div class="card" style="margin-bottom:14px">
-      <div class="section-label" style="color:#A855F7">
-        <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L12 15.45 7.77 18l1.12-4.81-3.73-3.23 4.92-.42L12 5l1.92 4.53 4.92.42-3.73 3.23L16.23 18z"/></svg>
-        Conquistas Recentes
+    <div id="tab-ranking-card" class="card" style="margin-bottom:14px">
+      <div class="section-label" style="color:#F59E0B">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+        Ranking Tabuada
+        <a href="/aluno/ranking.html" style="margin-left:auto;font-size:12px;font-weight:600;color:var(--blue-dark);text-decoration:none">Ver tudo →</a>
       </div>
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Você tem <strong style="color:var(--text)">${contX}</strong> de <strong style="color:var(--text)">${CONQUISTAS_POSSIVEIS}</strong> conquistas possíveis</div>
-      ${(() => {
-        const recentConquistas = conquFiltradas.slice(0, 3);
-        return recentConquistas.length
-          ? recentConquistas.map((c, i) => `<div class="list-row" style="animation:fadeSlideIn .3s ease both;animation-delay:${(i * 0.1).toFixed(1)}s"
-              data-nome="${(c.nome || c.tipo).replace(/"/g,'&quot;')}" data-desc="${(c.descricao || c.desc || '').replace(/"/g,'&quot;')}">
-              <div style="font-size:22px;flex-shrink:0">${c.icon || '🏆'}</div>
-              <div style="flex:1;min-width:0">
-                <div style="font-size:13px;font-weight:700">${c.nome || c.tipo}</div>
-                <div style="font-size:11px;color:var(--text-muted)">${c.descricao || c.desc || ''} · ${c.atividade}</div>
-              </div>
-              <span style="font-size:11px;color:var(--text-muted);flex-shrink:0">${c.data || ''}</span>
-            </div>`).join('')
-            + (conquFiltradas.length > 3
-              ? `<a href="/aluno/historico.html" class="btn btn-sm btn-ghost" style="width:100%;justify-content:center;margin-top:8px">Ver todas (${conquFiltradas.length})</a>`
-              : '')
-          : '<p style="font-size:13px;color:var(--text-muted);padding:4px 0 6px">Nenhuma conquista ainda. Continue jogando! 🚀</p>';
-      })()}
+      <div style="font-size:12px;color:var(--text-muted);padding:8px 0">Carregando…</div>
     </div>
 
   </div>
 </div>`;
 
-// Tooltip event delegation for conquista badges
-let _conqTip = null;
-function getConqTip() {
-  if (!_conqTip) {
-    _conqTip = document.createElement('div');
-    _conqTip.className = 'conq-tip';
-    _conqTip.innerHTML = '<div class="conq-tip-nome"></div><div class="conq-tip-desc"></div>';
-    document.body.appendChild(_conqTip);
+// ── Ranking Tabuada + mensagem incentivo (assíncrono) ─────────
+(async () => {
+  const rankSnap = await get(ref(db, 'tabuada_ranking')).catch(() => null);
+
+  const rankAll = [];
+  if (rankSnap?.exists()) {
+    rankSnap.forEach(child => {
+      const v = child.val();
+      if (v?.nome) rankAll.push(v);
+    });
+    rankAll.sort((a, b) => (b.melhor_nivel||0) - (a.melhor_nivel||0) || (b.total_partidas||0) - (a.total_partidas||0));
   }
-  return _conqTip;
-}
-function showConqTip(x, y, nome, desc) {
-  const tip = getConqTip();
-  tip.querySelector('.conq-tip-nome').textContent = nome;
-  tip.querySelector('.conq-tip-desc').textContent = desc;
-  tip.style.left = `${Math.min(x + 12, window.innerWidth - 230)}px`;
-  tip.style.top  = `${Math.max(y - 60, 8)}px`;
-  tip.classList.add('show');
-}
-function hideConqTip() { if (_conqTip) _conqTip.classList.remove('show'); }
-let _touchConqTip;
-conteudo.addEventListener('mouseover', e => {
-  const el = e.target.closest('[data-nome]');
-  if (el) showConqTip(e.clientX, e.clientY, el.dataset.nome, el.dataset.desc || '');
-});
-conteudo.addEventListener('mousemove', e => {
-  if (!_conqTip?.classList.contains('show')) return;
-  const el = e.target.closest('[data-nome]');
-  if (el) {
-    _conqTip.style.left = `${Math.min(e.clientX + 12, window.innerWidth - 230)}px`;
-    _conqTip.style.top  = `${Math.max(e.clientY - 60, 8)}px`;
+  const rankTurma = rankAll.filter(r => r.turma === turma);
+  const top3      = rankAll.slice(0, 3);
+
+  const myGeralIdx = rankAll.findIndex(r => r.nome === alunos[0] && r.turma === turma);
+  const myTurmaIdx = rankTurma.findIndex(r => r.nome === alunos[0] && r.turma === turma);
+  const myGeral    = myGeralIdx >= 0 ? myGeralIdx + 1 : null;
+  const myTurma    = myTurmaIdx >= 0 ? myTurmaIdx + 1 : null;
+  const meuNivel   = myGeralIdx >= 0 ? (rankAll[myGeralIdx].melhor_nivel || 1) : 0;
+  const liderGeral = rankAll[0];
+  const liderTurma = rankTurma[0];
+
+  // ── Ranking card ──────────────────────────────────────────
+  const cardEl = document.getElementById('tab-ranking-card');
+  if (cardEl) {
+    const medals = ['🥇','🥈','🥉'];
+    const top3Html = top3.length ? top3.map((d, i) => `
+      <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:${i < 2 ? '0.5px solid var(--border)' : 'none'}">
+        <span style="font-size:18px;min-width:24px">${medals[i]}</span>
+        <div style="flex:1;min-width:0;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.nome}</div>
+        <span style="font-size:11px;color:var(--text-muted);margin-right:6px">${d.turma}</span>
+        <span style="font-size:12px;font-weight:700;color:#7F77DD">Nv ${d.melhor_nivel||1}</span>
+      </div>`).join('')
+      : '<p style="font-size:13px;color:var(--text-muted);padding:4px 0">Nenhum aluno jogou ainda.</p>';
+
+    const posHtml = (myGeral || myTurma) ? `
+      <div style="margin-top:8px;padding:7px 10px;background:rgba(127,119,221,.08);border-radius:8px;font-size:12px;font-weight:600;color:#7F77DD;text-align:center">
+        Você: ${myGeral ? `#${myGeral} geral` : '—'} · ${myTurma ? `#${myTurma} na turma ${turma}` : '—'}
+      </div>` : '';
+
+    cardEl.innerHTML = `
+      <div class="section-label" style="color:#F59E0B">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+        Ranking Tabuada
+        <a href="/aluno/ranking.html" style="margin-left:auto;font-size:12px;font-weight:600;color:var(--blue-dark);text-decoration:none">Ver tudo →</a>
+      </div>
+      ${top3Html}${posHtml}`;
   }
-});
-conteudo.addEventListener('mouseout', e => {
-  if (e.target.closest('[data-nome]') && !e.relatedTarget?.closest('[data-nome]')) hideConqTip();
-});
-conteudo.addEventListener('touchstart', e => {
-  const el = e.target.closest('[data-nome]');
-  if (!el) return;
-  const t = e.touches[0];
-  _touchConqTip = setTimeout(() => showConqTip(t.clientX, t.clientY, el.dataset.nome, el.dataset.desc || ''), 400);
-}, {passive: true});
-conteudo.addEventListener('touchend', () => { clearTimeout(_touchConqTip); setTimeout(hideConqTip, 2500); }, {passive: true});
-conteudo.addEventListener('touchcancel', () => clearTimeout(_touchConqTip), {passive: true});
+
+  // ── Mensagem incentivo ────────────────────────────────────
+  const incentEl = document.getElementById('tab-incentivo');
+  if (!incentEl) return;
+
+  let msg = '';
+  if (!meuNivel || myGeral === null) {
+    const lvTurma = liderTurma?.melhor_nivel || 1;
+    msg = `🎮 Comece agora! O líder da sua turma já está no Nível ${lvTurma}!`;
+  } else if (myGeral === 1) {
+    msg = `🔥 Você é o #1 geral! Quanto tempo vai aguentar no topo?`;
+  } else if (myTurma === 1) {
+    const lvGeral = liderGeral?.melhor_nivel || 1;
+    msg = `👑 Você lidera sua turma! O top geral está no Nível ${lvGeral}. Consegue chegar lá?`;
+  } else {
+    const hoje = new Date().toDateString();
+    const meTs = myGeralIdx >= 0 ? rankAll[myGeralIdx].ultima_partida : null;
+    const jogueiHoje = meTs && new Date(meTs).toDateString() === hoje;
+    if (jogueiHoje) {
+      const n = rankAll.filter(r => r.ultima_partida && new Date(r.ultima_partida).toDateString() === hoje).length;
+      msg = `⚡ ${n} aluno${n !== 1 ? 's' : ''} jogaram hoje · Você está em #${myTurma} na turma`;
+    } else if (liderTurma) {
+      msg = `🏆 ${liderTurma.nome} lidera sua turma no Nível ${liderTurma.melhor_nivel||1} — você está no Nível ${meuNivel}!`;
+    }
+  }
+
+  if (msg) {
+    incentEl.textContent = msg;
+  } else {
+    incentEl.style.display = 'none';
+  }
+})();
 
 window.toggleAvatarMenu = function() {
   document.getElementById('avatar-menu').classList.toggle('open');
