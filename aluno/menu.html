@@ -613,6 +613,7 @@ ${tempoPodioHtml}
               Nível ${nivelTabuada}
             </span>
           </div>
+          <div id="tabuada-social" style="margin-top:7px;font-size:12px;color:var(--text-muted);line-height:1.5">...</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;align-self:center" onclick="event.stopPropagation()">
           <a href="/aluno/tabuada.html" class="btn" style="background:#7F77DD;color:#fff;gap:6px;box-shadow:none;padding:7px 14px;font-size:12px">
@@ -769,6 +770,52 @@ document.addEventListener('click', function(e) {
     document.getElementById('avatar-menu')?.classList.remove('open');
   }
 });
+
+// ── Gamificação social da Tabuada (assíncrono) ────────────────
+(async () => {
+  const hojeISO = new Date().toISOString().slice(0, 10);
+  const hojeBR  = new Date().toLocaleDateString('pt-BR');
+
+  const [sessoesSnap, rankSnap] = await Promise.all([
+    get(ref(db, 'tabuada_sessoes')).catch(() => null),
+    get(ref(db, 'tabuada_ranking')).catch(() => null),
+  ]);
+
+  const jogadoresHoje = new Set();
+  if (sessoesSnap?.exists()) {
+    sessoesSnap.forEach(child => {
+      const v = child.val();
+      if (v?.data && (v.data === hojeISO || v.data.startsWith(hojeBR)))
+        jogadoresHoje.add(v.uid || v.nome);
+    });
+  }
+
+  let topNome = null, topNivel = 0;
+  const turmaPlayers = [];
+  if (rankSnap?.exists()) {
+    rankSnap.forEach(child => {
+      const v = child.val();
+      if (v?.turma === turma) {
+        const nv = v.nivel_atual || 1;
+        turmaPlayers.push({ nome: v.nome, nivel: nv });
+        if (nv > topNivel) { topNivel = nv; topNome = v.nome; }
+      }
+    });
+  }
+
+  turmaPlayers.sort((a, b) => b.nivel - a.nivel);
+  const pos = turmaPlayers.findIndex(p => p.nome === alunos[0]);
+
+  const partes = [];
+  if (jogadoresHoje.size > 0) partes.push(`🔥 ${jogadoresHoje.size} jogaram hoje`);
+  if (topNome)  partes.push(`🏆 ${topNome} · Nv ${topNivel}`);
+  if (pos >= 0) partes.push(`#${pos + 1} na turma`);
+
+  const el = document.getElementById('tabuada-social');
+  if (!el) return;
+  if (partes.length) el.textContent = partes.join(' · ');
+  else el.style.display = 'none';
+})();
 </script>
 </body>
 </html>
