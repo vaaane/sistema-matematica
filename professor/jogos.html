@@ -56,12 +56,32 @@ function fmtDate(ts) {
   return new Date(Number(ts)).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
 }
 
+function detectarDificuldade(historico) {
+  const entries = Object.entries(historico)
+    .map(([ts, v]) => ({ ts: Number(ts), ...v }))
+    .filter(e => e.nivel && e.resultado)
+    .sort((a, b) => a.ts - b.ts);
+  if (!entries.length) return null;
+  const last = entries[entries.length - 1];
+  if (last.resultado !== 'tempo_esgotado') return null;
+  const nivelTravado = last.nivel;
+  let count = 0;
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const e = entries[i];
+    if (e.nivel === nivelTravado && e.resultado === 'tempo_esgotado') count++;
+    else break;
+  }
+  return count >= 3 ? { nivel: nivelTravado, falhas: count } : null;
+}
+
 async function loadData() {
   const content = document.getElementById('content');
 
-  const [niveisSnap, notasSnap] = await Promise.all([
+  const [niveisSnap, notasSnap, allNiveisSnap, rankSnap] = await Promise.all([
     get(niveisRef).catch(() => null),
     get(notasRef).catch(() => null),
+    get(ref(db, 'tabuada_niveis')).catch(() => null),
+    get(ref(db, 'tabuada_ranking')).catch(() => null),
   ]);
 
   const niveis        = niveisSnap?.exists() ? niveisSnap.val() : {};
@@ -87,6 +107,27 @@ async function loadData() {
     notas.sort((a, b) => Number(a.nivel) - Number(b.nivel));
   }
 
+  // ── Alertas: alunos com dificuldade recorrente por tempo ──────
+  const rankMap = {};
+  if (rankSnap?.exists()) {
+    rankSnap.forEach(child => {
+      const v = child.val();
+      if (v?.nome) rankMap[child.key] = { nome: v.nome, turma: v.turma || '?' };
+    });
+  }
+  const alertas = [];
+  if (allNiveisSnap?.exists()) {
+    allNiveisSnap.forEach(child => {
+      const nivelData = child.val();
+      if (!nivelData?.historico) return;
+      const result = detectarDificuldade(nivelData.historico);
+      if (!result) return;
+      const info = rankMap[child.key] || { nome: child.key, turma: '?' };
+      alertas.push({ ...info, ...result });
+    });
+    alertas.sort((a, b) => b.falhas - a.falhas);
+  }
+
   // ── Gráfico das últimas partidas ──────────────────────────────
   const maxLv = hist.length ? Math.max(...hist.map(x => x.nivel || 1)) : 1;
   const chartBars = hist.map(h => {
@@ -100,6 +141,26 @@ async function loadData() {
 
   content.innerHTML = `
   <div style="max-width:680px">
+
+  ${alertas.length > 0 ? `
+  <!-- Alertas de dificuldade recorrente -->
+  <div class="card" style="margin-bottom:16px;border:1.5px solid rgba(234,179,8,.35);background:rgba(234,179,8,.04)">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span style="font-size:15px">⚠️</span>
+      <span style="font-size:13px;font-weight:700;color:#D97706">Alunos com dificuldade recorrente por tempo</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      ${alertas.map(a => `
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(234,179,8,.07);border-radius:8px;font-size:13px;flex-wrap:wrap">
+        <span style="font-weight:700;color:var(--text);flex:1;min-width:80px">${escH(a.nome)}</span>
+        <span style="color:var(--text-muted);font-size:12px">${escH(a.turma)}</span>
+        <span style="color:var(--text-muted)">·</span>
+        <span style="color:var(--text)">Nível <strong>${a.nivel}</strong></span>
+        <span style="color:var(--text-muted)">·</span>
+        <span style="color:#D97706;font-weight:700">${a.falhas} falhas consecutivas</span>
+      </div>`).join('')}
+    </div>
+  </div>` : ''}
 
   <!-- Stats + botões -->
   <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px">
