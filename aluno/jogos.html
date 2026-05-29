@@ -545,6 +545,7 @@ try {
 const niveis        = niveisSnap?.exists() ? niveisSnap.val() : {};
 const melhorNivel   = niveis.melhor_nivel   || 1;
 const nivelAtual    = Math.max(niveis.nivel_atual || 1, melhorNivel);
+const maxLv         = Math.max(melhorNivel, nivelAtual);
 const totalPartidas = niveis.total_partidas || 0;
 const ultimaPartida = niveis.ultima_partida || 0;
 
@@ -740,7 +741,6 @@ const histHtml = historico.length === 0
     }).join('');
 
 // Nível grid: show from 1 to max(melhorNivel, nivelAtual) + 5 (round to 6)
-const maxLv = Math.max(melhorNivel, nivelAtual);
 const gridCount = Math.max(12, Math.ceil((maxLv + 2) / 6) * 6);
 
 const levelGridHtml = Array.from({ length: gridCount }, (_, i) => {
