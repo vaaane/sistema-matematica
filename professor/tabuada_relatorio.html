@@ -59,9 +59,68 @@ requireProfessor();
 renderSidebarProfessor("sidebar", "tabuada_relatorio");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
+// ── Helpers de alerta ─────────────────────────────────────────
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function agruparPorTurma(alunos) {
+  const m = {};
+  alunos.forEach(a => { (m[a.turma] = m[a.turma] || []).push(a.nome); });
+  return Object.entries(m).map(([t, ns]) => `${escH(t)}: ${ns.map(escH).join(', ')}`).join(' · ');
+}
+
+function detectarDificuldadeIndividual(historico) {
+  const entries = Object.entries(historico)
+    .map(([ts, v]) => ({ ts: Number(ts), ...v }))
+    .filter(e => e.nivel && e.resultado)
+    .sort((a, b) => a.ts - b.ts);
+  if (!entries.length) return null;
+  const last = entries[entries.length - 1];
+  if (last.resultado !== 'tempo_esgotado') return null;
+  const nivelTravado = last.nivel;
+  let count = 0;
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const e = entries[i];
+    if (e.nivel === nivelTravado && e.resultado === 'tempo_esgotado') count++;
+    else break;
+  }
+  return count >= 3 ? { nivel: nivelTravado, falhas: count } : null;
+}
+
+function detectarDificuldadeColetiva(niveisSnap, rankMap) {
+  const corte = Date.now() - 48 * 60 * 60 * 1000;
+  const porNivel = {};
+  if (!niveisSnap?.exists()) return { esgotados: [], quasePerda: [] };
+  niveisSnap.forEach(child => {
+    const nd = child.val();
+    if (!nd?.historico) return;
+    const info = rankMap[child.key] || { nome: child.key, turma: '?' };
+    Object.entries(nd.historico).forEach(([ts, v]) => {
+      if (!v?.nivel || !v?.resultado || Number(ts) < corte) return;
+      const n = v.nivel;
+      if (!porNivel[n]) porNivel[n] = { esgUids: new Set(), esgAlunos: [], qpUids: new Set(), qpAlunos: [] };
+      const b = porNivel[n];
+      if (v.resultado === 'tempo_esgotado') {
+        if (!b.esgUids.has(child.key)) { b.esgUids.add(child.key); b.esgAlunos.push(info); }
+      } else if (v.resultado === 'completou' && v.segundos_restantes != null && v.segundos_restantes < 10) {
+        if (!b.qpUids.has(child.key)) { b.qpUids.add(child.key); b.qpAlunos.push(info); }
+      }
+    });
+  });
+  const esgotados = [], quasePerda = [];
+  Object.entries(porNivel).forEach(([nivel, b]) => {
+    if (b.esgUids.size >= 3) esgotados.push({ nivel: Number(nivel), count: b.esgUids.size, alunos: b.esgAlunos });
+    if (b.qpUids.size  >= 3) quasePerda.push({ nivel: Number(nivel), count: b.qpUids.size,  alunos: b.qpAlunos });
+  });
+  esgotados.sort((a, b) => b.count - a.count);
+  quasePerda.sort((a, b) => b.count - a.count);
+  return { esgotados, quasePerda };
+}
+
 // ── Load data ─────────────────────────────────────────────────
-let allData = [];   // array of { nome, turma, nivel_atual, melhor_nivel, ultima_partida, total_partidas }
+let allData = [];
 let filtroTurma = "";
+let alertasIndividuais = [];
+let alertasColetivos   = { esgotados: [], quasePerda: [] };
 
 async function loadData() {
   const content = document.getElementById("content");
@@ -99,6 +158,27 @@ async function loadData() {
     // Sort by melhor_nivel desc
     allData.sort((a, b) => (b.melhor_nivel || 0) - (a.melhor_nivel || 0));
     document.getElementById("btn-csv").disabled = allData.length === 0;
+
+    // ── Alertas ───────────────────────────────────────────────
+    const rankMap = {};
+    snap.forEach(child => {
+      const v = child.val();
+      if (v?.nome) rankMap[child.key] = { nome: v.nome, turma: v.turma || '?' };
+    });
+
+    alertasIndividuais = [];
+    if (niveisSnap.exists()) {
+      niveisSnap.forEach(child => {
+        const nd = child.val();
+        if (!nd?.historico) return;
+        const result = detectarDificuldadeIndividual(nd.historico);
+        if (!result) return;
+        alertasIndividuais.push({ ...(rankMap[child.key] || { nome: child.key, turma: '?' }), ...result });
+      });
+      alertasIndividuais.sort((a, b) => b.falhas - a.falhas);
+    }
+
+    alertasColetivos = detectarDificuldadeColetiva(niveisSnap, rankMap);
 
   } catch(e) {
     content.innerHTML = `<div class="alert alert-error"><svg viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>Erro ao carregar dados. Verifique a conexão.</div>`;
@@ -154,6 +234,54 @@ function renderPage() {
   });
 
   document.getElementById("content").innerHTML = `
+${alertasIndividuais.length > 0 ? `
+<div class="card" style="margin-bottom:16px;border:1.5px solid rgba(234,179,8,.35);background:rgba(234,179,8,.04)">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+    <span style="font-size:15px">⚠️</span>
+    <span style="font-size:13px;font-weight:700;color:#D97706">Alunos com dificuldade recorrente por tempo</span>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:6px">
+    ${alertasIndividuais.map(a => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(234,179,8,.07);border-radius:8px;font-size:13px;flex-wrap:wrap">
+      <span style="font-weight:700;color:var(--text);flex:1;min-width:80px">${escH(a.nome)}</span>
+      <span style="color:var(--text-muted);font-size:12px">${escH(a.turma)}</span>
+      <span style="color:var(--text-muted)">·</span>
+      <span style="color:var(--text)">Nível <strong>${a.nivel}</strong></span>
+      <span style="color:var(--text-muted)">·</span>
+      <span style="color:#D97706;font-weight:700">${a.falhas} falhas consecutivas</span>
+    </div>`).join('')}
+  </div>
+</div>` : ''}
+
+${(alertasColetivos.esgotados.length > 0 || alertasColetivos.quasePerda.length > 0) ? `
+<div class="card" style="margin-bottom:16px;border:1.5px solid rgba(220,38,38,.25);background:rgba(220,38,38,.03)">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+    <span style="font-size:15px">🚨</span>
+    <span style="font-size:13px;font-weight:700;color:#DC2626">Dificuldade coletiva detectada</span>
+    <span style="font-size:11px;color:var(--text-muted);margin-left:auto">últimas 48h</span>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    ${alertasColetivos.esgotados.map(a => `
+    <div style="padding:10px 12px;background:rgba(220,38,38,.06);border-radius:8px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:13px">
+        <span>🔴</span>
+        <span style="font-weight:700;color:var(--text)">Nível ${a.nivel}</span>
+        <span style="color:#DC2626;font-weight:600">— ${a.count} alunos perderam por tempo</span>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);padding-left:22px">${agruparPorTurma(a.alunos)}</div>
+    </div>`).join('')}
+    ${alertasColetivos.quasePerda.map(a => `
+    <div style="padding:10px 12px;background:rgba(234,179,8,.06);border-radius:8px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:13px">
+        <span>🟡</span>
+        <span style="font-weight:700;color:var(--text)">Nível ${a.nivel}</span>
+        <span style="color:#D97706;font-weight:600">— ${a.count} alunos quase não completaram</span>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);padding-left:22px">menos de 10s restantes · ${agruparPorTurma(a.alunos)}</div>
+    </div>`).join('')}
+  </div>
+</div>` : ''}
+
 <div class="grid-4" style="margin-bottom:20px">
   <div class="stat-card">
     <div class="stat-icon blue"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div>
