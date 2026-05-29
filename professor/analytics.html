@@ -290,37 +290,113 @@ function buildTabGeralHtml(sessoes) {
 }
 
 function buildTabTurmaHtml(sessoes) {
-  const turmasP = [...new Set(sessoes.map(s => s.turma).filter(Boolean))].sort();
-  if (!turmasP.length) return '<p style="font-size:12px;color:var(--text-muted)">Sem dados.</p>';
-  return turmasP.map(t => {
-    const tf = sessoes.filter(s => s.turma === t);
-    return `<div class="turma-sec-title">Turma ${escH(t)} — ${tf.length} partida${tf.length !== 1 ? 's' : ''}</div>${buildTabGeralHtml(tf)}`;
-  }).join('<div style="height:8px"></div>');
+  if (!sessoes.length) return '<p style="font-size:12px;color:var(--text-muted)">Sem dados.</p>';
+
+  // Agrega por turma
+  const byTurma = {};
+  sessoes.forEach(s => {
+    const t = s.turma || '?';
+    if (!byTurma[t]) byTurma[t] = { partidas:0, comDados:0, acertos:0, erros:0,
+      ops:{ soma:{a:0,e:0}, subtracao:{a:0,e:0}, multiplicacao:{a:0,e:0}, divisao:{a:0,e:0} } };
+    const d = byTurma[t];
+    d.partidas++;
+    if (typeof s.acertos === 'number') { d.comDados++; d.acertos += s.acertos; d.erros += s.erros || 0; }
+    for (const [k,v] of Object.entries(s.tipos_operacoes||{})) if (d.ops[k]) d.ops[k].a += v||0;
+    for (const [k,v] of Object.entries(s.tipos_erros    ||{})) if (d.ops[k]) d.ops[k].e += v||0;
+  });
+
+  const TURMAS_ORD = ['8D','8E','8F','8G','8H'];
+  const turmas = [...TURMAS_ORD.filter(t => byTurma[t]),
+                  ...Object.keys(byTurma).filter(t => !TURMAS_ORD.includes(t)).sort()];
+
+  const opKeys = ['soma','subtracao','multiplicacao','divisao'];
+  const opHead = opKeys.map(k => `<th style="text-align:right;font-size:13px">${OP_ICONS[k]||''}</th>`).join('');
+
+  const rows = turmas.map(t => {
+    const d  = byTurma[t];
+    const tot = d.acertos + d.erros;
+    const pAc = tot > 0 ? (d.acertos/tot*100).toFixed(0)+'%' : '—';
+    const acD = d.comDados > 0 ? d.acertos : '—';
+    const erD = d.comDados > 0 ? d.erros   : '—';
+    const aviso = d.comDados < d.partidas
+      ? `<span style="font-size:10px;margin-left:3px" title="${d.partidas-d.comDados} partida(s) antiga(s) sem detalhes">⚠️</span>` : '';
+    const opCells = opKeys.map(k => {
+      const op = d.ops[k]; const ot = op.a+op.e;
+      return `<td style="text-align:right;color:var(--text-muted)">${ot>0?(op.a/ot*100).toFixed(0)+'%':'—'}</td>`;
+    }).join('');
+    return `<tr>
+      <td><strong>Turma ${escH(t)}</strong></td>
+      <td style="text-align:right">${d.partidas}</td>
+      <td style="text-align:right;color:var(--green)">${acD}</td>
+      <td style="text-align:right;color:var(--red)">${erD}</td>
+      <td style="text-align:right">${pAc}${aviso}</td>
+      ${opCells}
+    </tr>`;
+  }).join('');
+
+  return `<div style="overflow-x:auto">
+    <table class="a-table"><thead><tr>
+      <th>Turma</th>
+      <th style="text-align:right">Partidas</th>
+      <th style="text-align:right">Acertos</th>
+      <th style="text-align:right">Erros</th>
+      <th style="text-align:right">% Acerto</th>
+      ${opHead}
+    </tr></thead><tbody>${rows}</tbody></table>
+  </div>`;
 }
 
 function buildTabAlunoHtml(sessoes) {
+  if (!sessoes.length) return '<p style="font-size:12px;color:var(--text-muted)">Sem dados.</p>';
+
   const byAluno = {};
   sessoes.forEach(s => {
-    const k = (s.nome || '?') + '|' + (s.turma || '?');
-    if (!byAluno[k]) byAluno[k] = { nome: s.nome || '?', turma: s.turma || '?', partidas: 0, acertos: 0, erros: 0, tipos_erros: {} };
+    const k = (s.nome||'?')+'|'+(s.turma||'?');
+    if (!byAluno[k]) byAluno[k] = { nome:s.nome||'?', turma:s.turma||'?', partidas:0, comDados:0, acertos:0, erros:0,
+      ops:{ soma:{a:0,e:0}, subtracao:{a:0,e:0}, multiplicacao:{a:0,e:0}, divisao:{a:0,e:0} } };
     const a = byAluno[k];
     a.partidas++;
-    a.acertos += s.acertos || 0;
-    a.erros   += s.erros   || 0;
-    if (s.tipos_erros) for (const [op, v] of Object.entries(s.tipos_erros))
-      a.tipos_erros[op] = (a.tipos_erros[op] || 0) + (v || 0);
+    if (typeof s.acertos === 'number') { a.comDados++; a.acertos += s.acertos; a.erros += s.erros||0; }
+    for (const [k2,v] of Object.entries(s.tipos_operacoes||{})) if (a.ops[k2]) a.ops[k2].a += v||0;
+    for (const [k2,v] of Object.entries(s.tipos_erros    ||{})) if (a.ops[k2]) a.ops[k2].e += v||0;
   });
-  const alunos = Object.values(byAluno).sort((a, b) => a.turma.localeCompare(b.turma) || a.nome.localeCompare(b.nome));
-  if (!alunos.length) return '<p style="font-size:12px;color:var(--text-muted)">Sem dados.</p>';
+
+  const alunos = Object.values(byAluno).sort((a,b) => a.turma.localeCompare(b.turma)||a.nome.localeCompare(b.nome));
+  const opKeys = ['soma','subtracao','multiplicacao','divisao'];
+  const opHead = opKeys.map(k => `<th style="text-align:right;font-size:13px">${OP_ICONS[k]||''}</th>`).join('');
+
   const rows = alunos.map(a => {
     const tot = a.acertos + a.erros;
-    const pAc = tot > 0 ? (a.acertos / tot * 100).toFixed(0) + '%' : '—';
-    const pEr = tot > 0 ? (a.erros   / tot * 100).toFixed(0) + '%' : '—';
-    const maisErrada = Object.entries(a.tipos_erros).filter(([, v]) => v > 0).sort((x, y) => y[1] - x[1])[0];
-    const maisLabel  = maisErrada ? (OP_LABELS[maisErrada[0]] || maisErrada[0]) : '—';
-    return `<tr><td>${escH(a.nome)}</td><td>${escH(a.turma)}</td><td>${a.partidas}</td><td style="color:var(--green)">${pAc}</td><td style="color:var(--red)">${pEr}</td><td>${maisLabel}</td></tr>`;
+    const pAc = tot > 0 ? (a.acertos/tot*100).toFixed(0)+'%' : '—';
+    const acD = a.comDados > 0 ? a.acertos : '—';
+    const erD = a.comDados > 0 ? a.erros   : '—';
+    const aviso = a.comDados < a.partidas
+      ? `<span style="font-size:10px;margin-left:3px" title="${a.partidas-a.comDados} partida(s) antiga(s) sem detalhes">⚠️</span>` : '';
+    const opCells = opKeys.map(k => {
+      const op = a.ops[k]; const ot = op.a+op.e;
+      return `<td style="text-align:right;color:var(--text-muted)">${ot>0?(op.a/ot*100).toFixed(0)+'%':'—'}</td>`;
+    }).join('');
+    return `<tr>
+      <td>${escH(a.nome)}</td>
+      <td>${escH(a.turma)}</td>
+      <td style="text-align:right">${a.partidas}</td>
+      <td style="text-align:right;color:var(--green)">${acD}</td>
+      <td style="text-align:right;color:var(--red)">${erD}</td>
+      <td style="text-align:right">${pAc}${aviso}</td>
+      ${opCells}
+    </tr>`;
   }).join('');
-  return `<table class="a-table"><thead><tr><th>Nome</th><th>Turma</th><th>Partidas</th><th>% Acerto</th><th>% Erro</th><th>Op. mais errada</th></tr></thead><tbody>${rows}</tbody></table>`;
+
+  return `<div style="overflow-x:auto">
+    <table class="a-table"><thead><tr>
+      <th>Nome</th><th>Turma</th>
+      <th style="text-align:right">Partidas</th>
+      <th style="text-align:right">Acertos</th>
+      <th style="text-align:right">Erros</th>
+      <th style="text-align:right">% Acerto</th>
+      ${opHead}
+    </tr></thead><tbody>${rows}</tbody></table>
+  </div>`;
 }
 
 function buildS3(tF) {
