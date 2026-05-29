@@ -126,6 +126,19 @@
     .sprint-stat-val{font-size:18px;font-weight:800;color:var(--text);line-height:1;}
     .sprint-stat-lbl{font-size:9px;color:var(--text-muted);margin-top:3px;text-transform:uppercase;letter-spacing:.04em;}
 
+    /* ── Modal dupla ── */
+    .dupla-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+    .dupla-modal{background:var(--card);border-radius:22px;padding:32px 28px;max-width:360px;width:92vw;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.35);}
+    .dupla-title{font-size:20px;font-weight:800;margin-bottom:4px;}
+    .dupla-sub{font-size:13px;color:var(--text-muted);margin-bottom:22px;}
+    .dupla-btn{width:100%;padding:14px 16px;border:2px solid var(--border);border-radius:13px;background:var(--bg);cursor:pointer;margin-bottom:10px;text-align:left;display:flex;align-items:center;gap:12px;transition:border-color .15s,background .15s;font-family:inherit;}
+    .dupla-btn:last-child{margin-bottom:0;}
+    .dupla-btn:hover{border-color:#7F77DD;background:rgba(127,119,221,.07);}
+    .dupla-btn-avatar{width:40px;height:40px;border-radius:50%;background:#7F77DD;color:#fff;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .dupla-btn-name{font-size:15px;font-weight:700;color:var(--text);line-height:1.2;}
+    .dupla-btn-nivel{font-size:12px;color:var(--text-muted);margin-top:2px;}
+    .dupla-footer{font-size:11px;color:var(--text-muted);margin-top:18px;line-height:1.5;}
+
     /* ── Responsive ── */
     @media(max-width:480px){
       .game-card{min-height:60px;padding:8px 4px;}
@@ -174,6 +187,16 @@
   </div>
 </div>
 
+<!-- Modal: seleção de jogador (dupla) -->
+<div id="dupla-modal-bg" class="dupla-modal-bg" style="display:none">
+  <div class="dupla-modal">
+    <div class="dupla-title">👥 Dois jogadores detectados!</div>
+    <div class="dupla-sub">Quem vai jogar agora?</div>
+    <div id="dupla-opcoes"></div>
+    <div class="dupla-footer">O tabuleiro será gerado no nível do aluno selecionado.<br>O progresso será salvo somente para ele.</div>
+  </div>
+</div>
+
 <!-- Level up/down overlay -->
 <div id="level-overlay" class="level-overlay" style="display:none">
   <div class="level-card">
@@ -199,16 +222,19 @@ renderSidebarAluno("sidebar", "jogos");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
 const { alunos, turma } = sess;
-const nomeAluno = alunos[0];
-// Sanitize Firebase key (no ., #, $, [, ], /)
-const uid = (turma + '_' + nomeAluno).replace(/[.#$\[\]/\s]/g, '_');
+let nomeAluno = alunos[0];
+const isDupla  = alunos.length === 2;
+let parceiroDupla = isDupla ? alunos[1] : null;
+
+function _makeUid(nome) { return (turma + '_' + nome).replace(/[.#$\[\]/\s]/g, '_'); }
+let uid = _makeUid(nomeAluno);
 
 document.getElementById("avatar-initials").textContent = nomeAluno[0].toUpperCase();
 
 // ── Firebase ──────────────────────────────────────────────────
-const niveisRef       = ref(db, `tabuada_niveis/${uid}`);
-const rankingRef      = ref(db, `tabuada_ranking/${uid}`);
-const sprintRankRef   = ref(db, `tabuada_sprint_ranking/${uid}`);
+let niveisRef     = ref(db, `tabuada_niveis/${uid}`);
+let rankingRef    = ref(db, `tabuada_ranking/${uid}`);
+let sprintRankRef = ref(db, `tabuada_sprint_ranking/${uid}`);
 
 async function carregarProgresso() {
   try {
@@ -457,7 +483,46 @@ function _registrarSessao(nivel, resultado, acertosOverride, errosOverride) {
     erros:     errosOverride   ?? erros,
     tipos_operacoes: { soma: tipoAcertos.add, subtracao: tipoAcertos.sub, multiplicacao: tipoAcertos.mul, divisao: tipoAcertos.div },
     tipos_erros:     { soma: tipoErros.add,   subtracao: tipoErros.sub,   multiplicacao: tipoErros.mul,   divisao: tipoErros.div   },
+    ...(isDupla ? { dupla: true, parceiro_nome: parceiroDupla } : {}),
   }).catch(() => {});
+}
+
+// ── Seleção de jogador em dupla ───────────────────────────────
+if (isDupla) {
+  const uid2 = _makeUid(alunos[1]);
+  const [snap1, snap2] = await Promise.all([
+    get(ref(db, `tabuada_niveis/${uid}`)).catch(() => null),
+    get(ref(db, `tabuada_niveis/${uid2}`)).catch(() => null),
+  ]);
+  const nivel1 = snap1?.exists() ? (snap1.val().nivel_atual || 1) : 1;
+  const nivel2 = snap2?.exists() ? (snap2.val().nivel_atual || 1) : 1;
+
+  nomeAluno = await new Promise(resolve => {
+    const wrap = document.getElementById('dupla-opcoes');
+    [{ nome: alunos[0], nivel: nivel1 }, { nome: alunos[1], nivel: nivel2 }].forEach(p => {
+      const btn = document.createElement('button');
+      btn.className = 'dupla-btn';
+      btn.innerHTML = `
+        <div class="dupla-btn-avatar">${p.nome[0].toUpperCase()}</div>
+        <div>
+          <div class="dupla-btn-name">👤 ${p.nome}</div>
+          <div class="dupla-btn-nivel">Nível ${p.nivel}</div>
+        </div>`;
+      btn.onclick = () => {
+        document.getElementById('dupla-modal-bg').style.display = 'none';
+        resolve(p.nome);
+      };
+      wrap.appendChild(btn);
+    });
+    document.getElementById('dupla-modal-bg').style.display = 'flex';
+  });
+
+  parceiroDupla = alunos.find(a => a !== nomeAluno);
+  uid           = _makeUid(nomeAluno);
+  niveisRef     = ref(db, `tabuada_niveis/${uid}`);
+  rankingRef    = ref(db, `tabuada_ranking/${uid}`);
+  sprintRankRef = ref(db, `tabuada_sprint_ranking/${uid}`);
+  document.getElementById("avatar-initials").textContent = nomeAluno[0].toUpperCase();
 }
 
 // ── Game state ────────────────────────────────────────────────
@@ -641,9 +706,13 @@ function symToTipo(sym) {
 }
 
 function updateNivelDisplay() {
-  document.getElementById("nivel-display").textContent = _isSprint
-    ? `⚡ Sprint · ${_sprintPairsOk} acerto${_sprintPairsOk !== 1 ? 's' : ''}`
-    : `Nível ${nivelAtual} · Melhor: ${melhorNivel}`;
+  if (_isSprint) {
+    document.getElementById("nivel-display").textContent = `⚡ Sprint · ${_sprintPairsOk} acerto${_sprintPairsOk !== 1 ? 's' : ''}`;
+  } else if (isDupla) {
+    document.getElementById("nivel-display").textContent = `👥 ${nomeAluno} · Nível ${nivelAtual}`;
+  } else {
+    document.getElementById("nivel-display").textContent = `Nível ${nivelAtual} · Melhor: ${melhorNivel}`;
+  }
 }
 updateNivelDisplay();
 
