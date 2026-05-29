@@ -75,7 +75,7 @@
 
 <script type="module">
 import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES } from "/js/constants.js";
-import { getResultados, getLiberadas, getAlertas, getAllAtividadeStatus, getDetalhes, contarSessoesTabuadaHoje } from "/js/db.js";
+import { getResultados, getLiberadas, getAlertas, getAllAtividadeStatus, getDetalhes, contarSessoesTabuadaHoje, contarSessoesTabuadaTotal } from "/js/db.js";
 import { db } from "/js/firebase-config.js";
 import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
@@ -85,12 +85,13 @@ if (!sess) throw new Error();
 renderSidebarProfessor("sidebar", "dashboard");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
-const [todos, liberadasRaw, alertas, statusMap, tabuadaHoje] = await Promise.all([
-  getResultados(), getLiberadas(), getAlertas(true), getAllAtividadeStatus(), contarSessoesTabuadaHoje()
+const [todos, liberadasRaw, alertas, statusMap, tabuadaHoje, tabuadaTotal] = await Promise.all([
+  getResultados(), getLiberadas(), getAlertas(true), getAllAtividadeStatus(), contarSessoesTabuadaHoje(), contarSessoesTabuadaTotal()
 ]);
 
 const hoje = new Date().toLocaleDateString('pt-BR');
-const quizHoje = todos.filter(r => r.concluido && r.data && r.data.startsWith(hoje)).length;
+const quizHoje  = todos.filter(r => r.concluido && r.data && r.data.startsWith(hoje)).length;
+const quizTotal = todos.filter(r => r.concluido).length;
 
 const liberadas = liberadasRaw.map(lib => {
   const st = statusMap[`${lib.turma}|${lib.atividade}`] || { status: 'ativa', percentual: lib.percentual ?? 100 };
@@ -191,7 +192,11 @@ document.getElementById("content").innerHTML = `
     </div>
     <div class="stat-card">
       <div class="stat-icon green"><svg viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg></div>
-      <div><div class="stat-value green">${todos.length}</div><div class="stat-meta">Resultados</div></div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:baseline;gap:5px"><span class="stat-value green" style="font-size:20px;line-height:1">${quizTotal}</span><span class="stat-meta">Quiz total</span></div>
+        <div style="height:1px;background:var(--border);margin:5px 0"></div>
+        <div style="display:flex;align-items:baseline;gap:5px"><span class="stat-value blue" style="font-size:20px;line-height:1">${tabuadaTotal}</span><span class="stat-meta">Tabuada total</span></div>
+      </div>
     </div>
     <div class="stat-card">
       <div class="stat-icon orange"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 11H6v-2h12v2zm0-4H6V8h12v2z"/></svg></div>

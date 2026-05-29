@@ -63,6 +63,15 @@ export async function contarSessoesTabuadaHoje() {
   return count;
 }
 
+// ── Tabuada sessões: total ──────────────────────────────────
+export async function contarSessoesTabuadaTotal() {
+  const snap = await get(ref(db, 'tabuada_sessoes')).catch(() => null);
+  if (!snap?.exists()) return 0;
+  let count = 0;
+  snap.forEach(() => count++);
+  return count;
+}
+
 // ── Analytics: quiz sessões ─────────────────────────────────
 export function addQuizSessao(uid, dados) {
   return set(ref(db, `quiz_sessoes/${Date.now()}_${uid}`), dados).catch(() => {});
