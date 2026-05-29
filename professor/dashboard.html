@@ -30,6 +30,8 @@
     .alerta-taxa-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:#FEF2F2;color:#DC2626;flex-shrink:0;}
     .alerta-list-row{cursor:pointer;}
     .alerta-list-row:hover{background:var(--hover,rgba(0,0,0,.04));border-radius:6px;}
+    @media(max-width:900px){.dash-stats-grid{grid-template-columns:repeat(3,1fr)!important;}}
+    @media(max-width:560px){.dash-stats-grid{grid-template-columns:repeat(2,1fr)!important;}}
   </style>
 </head>
 <body>
@@ -73,7 +75,7 @@
 
 <script type="module">
 import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES } from "/js/constants.js";
-import { getResultados, getLiberadas, getAlertas, getAllAtividadeStatus, getDetalhes } from "/js/db.js";
+import { getResultados, getLiberadas, getAlertas, getAllAtividadeStatus, getDetalhes, contarSessoesTabuadaHoje } from "/js/db.js";
 import { db } from "/js/firebase-config.js";
 import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
@@ -83,9 +85,12 @@ if (!sess) throw new Error();
 renderSidebarProfessor("sidebar", "dashboard");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
-const [todos, liberadasRaw, alertas, statusMap] = await Promise.all([
-  getResultados(), getLiberadas(), getAlertas(true), getAllAtividadeStatus()
+const [todos, liberadasRaw, alertas, statusMap, tabuadaHoje] = await Promise.all([
+  getResultados(), getLiberadas(), getAlertas(true), getAllAtividadeStatus(), contarSessoesTabuadaHoje()
 ]);
+
+const hoje = new Date().toLocaleDateString('pt-BR');
+const quizHoje = todos.filter(r => r.concluido && r.data && r.data.startsWith(hoje)).length;
 
 const liberadas = liberadasRaw.map(lib => {
   const st = statusMap[`${lib.turma}|${lib.atividade}`] || { status: 'ativa', percentual: lib.percentual ?? 100 };
@@ -175,31 +180,33 @@ function renderPodiumDash() {
 
 // ── Renderizar página ─────────────────────────────────────────
 document.getElementById("content").innerHTML = `
-  <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:22px">
-    <div class="stat-card" style="flex:1;min-width:140px">
+  <div class="dash-stats-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px">
+    <div class="stat-card">
       <div class="stat-icon blue"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div>
       <div><div class="stat-value blue">${totalAlunos}</div><div class="stat-meta">Total de Alunos</div></div>
     </div>
-    <div class="stat-card" style="flex:1;min-width:140px">
+    <div class="stat-card">
       <div class="stat-icon orange"><svg viewBox="0 0 24 24"><path d="M12 3L1 9l4 2.18V17h2v-4.82L9 13.36V17c0 1.1 1.35 2 3 2s3-.9 3-2v-3.64l2-1.09V17h2v-5.82L23 9 12 3z"/></svg></div>
       <div><div class="stat-value orange">${totalTurmas}</div><div class="stat-meta">Turmas</div></div>
     </div>
-    <div class="stat-card" style="flex:1;min-width:140px">
+    <div class="stat-card">
       <div class="stat-icon green"><svg viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg></div>
       <div><div class="stat-value green">${todos.length}</div><div class="stat-meta">Resultados</div></div>
     </div>
-    <div class="stat-card stat-card-clickable" style="flex:1;min-width:120px" id="online-quiz-card" onclick="window.abrirOnlineModal()">
-      <div class="stat-icon green"><svg viewBox="0 0 24 24"><path d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z"/></svg></div>
-      <div>
-        <div class="stat-value green" id="online-quiz-count">—</div>
-        <div class="stat-meta">Quiz online <span class="online-dot"></span></div>
+    <div class="stat-card">
+      <div class="stat-icon orange"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 11H6v-2h12v2zm0-4H6V8h12v2z"/></svg></div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:baseline;gap:5px"><span class="stat-value green" style="font-size:20px;line-height:1">${quizHoje}</span><span class="stat-meta">Quiz hoje</span></div>
+        <div style="height:1px;background:var(--border);margin:5px 0"></div>
+        <div style="display:flex;align-items:baseline;gap:5px"><span class="stat-value blue" style="font-size:20px;line-height:1">${tabuadaHoje}</span><span class="stat-meta">Tabuada hoje</span></div>
       </div>
     </div>
-    <div class="stat-card stat-card-clickable" style="flex:1;min-width:120px" id="online-tabuada-card" onclick="window.abrirOnlineModal()">
-      <div class="stat-icon blue"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg></div>
-      <div>
-        <div class="stat-value blue" id="online-tabuada-count">—</div>
-        <div class="stat-meta">Tabuada online <span class="online-dot" style="background:var(--blue)"></span></div>
+    <div class="stat-card stat-card-clickable" onclick="window.abrirOnlineModal()">
+      <div class="stat-icon green"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg></div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:5px"><span class="stat-value green" id="online-quiz-count" style="font-size:20px;line-height:1">—</span><span class="stat-meta">Quiz <span class="online-dot"></span></span></div>
+        <div style="height:1px;background:var(--border);margin:5px 0"></div>
+        <div style="display:flex;align-items:center;gap:5px"><span class="stat-value blue" id="online-tabuada-count" style="font-size:20px;line-height:1">—</span><span class="stat-meta">Tabuada <span class="online-dot" style="background:var(--blue)"></span></span></div>
       </div>
     </div>
   </div>
