@@ -263,7 +263,7 @@ async function carregarProgresso() {
   return { nivel_atual: 1, melhor_nivel: 1, ultima_partida: 0, total_partidas: 0 };
 }
 
-async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo, isReplay = false) {
+async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo, isReplay = false, segsRestantes = null) {
   try {
     const ts = Date.now();
     const novoMaiorCombo = Math.max(p.maior_combo || 0, comboSessao);
@@ -294,6 +294,7 @@ async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo
         erros:               errosJogo   || 0,
         maior_combo_sessao:  comboSessao,
       };
+      if (segsRestantes !== null) entry.segundos_restantes = segsRestantes;
       const t = { ...tipoAcertos };
       if (t.add || t.sub || t.mul || t.div) entry.tipos_acertos = t;
       const _niveisBase = _isProfMode ? `professor_tabuada_niveis/${uid}` : `tabuada_niveis/${uid}`;
@@ -1129,6 +1130,7 @@ async function onGameWin() {
   stopTimer();
 
   const nivelJogado = nivelAtual;
+  const _segsWin = _isSprint ? null : timerLeft;  // segundos restantes ao completar
   somVitoria();
 
   if (_isSprint) {
@@ -1155,7 +1157,7 @@ async function onGameWin() {
 
   if (_isReplay) {
     progresso.total_partidas = (progresso.total_partidas || 0) + 1;
-    await salvarProgresso(progresso, 'completou', nivelJogado, acertos, erros, true);
+    await salvarProgresso(progresso, 'completou', nivelJogado, acertos, erros, true, _segsWin);
     _registrarSessao(nivelJogado, 'completou');
     nivelAtual = nivelJogado + 1; // avança nível local da sessão de prática
     document.getElementById("lov-emoji").textContent = erros === 0 ? '⭐' : '✅';
@@ -1181,7 +1183,7 @@ async function onGameWin() {
   nivelAtual  = novoNivel;
   melhorNivel = novoMelhor;
 
-  await salvarProgresso(progresso, 'completou', nivelJogado, acertos, erros);
+  await salvarProgresso(progresso, 'completou', nivelJogado, acertos, erros, false, _segsWin);
   _registrarSessao(nivelJogado, 'completou');
 
   const isNewRecord = novoNivel > melhorAnterior;
