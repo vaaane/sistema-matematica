@@ -4,467 +4,214 @@
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>🎮 Jogos — Sistema de Matemática</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
-    /* ── Paleta: usa variáveis do site ── */
+    /* ── Gaming theme vars ── */
     :root {
-      --j-pri:     #7F77DD;
-      --j-pri-h:   #534AB7;
-      --j-card:    var(--card);
-      --j-hero:    var(--bg);
-      --j-txt:     var(--text);
-      --j-muted:   var(--text-muted);
-      --j-border:  var(--border);
-      --j-tab-act: var(--bg);
-      --j-green:   var(--green);
-      --j-red:     var(--red);
-      --j-orange:  var(--orange);
-      --j-gold:    var(--gold);
+      --g-purple:#7c5cfc; --g-pl:#9b7ffe;
+      --g-cyan:#00d4ff;   --g-orange:#ff7b2e;
+      --g-gold:#ffd700;   --g-green:#00e676;
+      --g-red:#ff4444;    --g-diamond:#a8f0ff;
+      --g-bg:#0d0f1a;     --g-bg2:#131627; --g-bg3:#1a1f35;
+      --g-text:#e8eaf6;   --g-muted:#8892b0;
+      --g-bdr:rgba(124,92,252,0.2);
     }
 
-    /* ── Parabéns card ── */
-    .j-parabens {
-      display: flex; align-items: center; gap: 16px;
-      background: linear-gradient(135deg, rgba(234,179,8,.1), rgba(16,185,129,.06));
-      border: 1.5px solid rgba(234,179,8,.4);
-      border-radius: 16px; padding: 18px 20px; margin-bottom: 16px;
-      animation: j-fadein .5s;
-    }
-    .j-parabens-emoji { font-size: 38px; flex-shrink: 0; line-height: 1; }
-    .j-parabens-title { font-size: 17px; font-weight: 800; color: var(--j-gold); margin-bottom: 4px; }
-    .j-parabens-sub   { font-size: 13px; color: var(--j-muted); line-height: 1.4; }
-
-    /* ── Keyframes ── */
-    @keyframes j-pulse {
-      0%   { transform: scale(1);   opacity: 0.6; }
-      100% { transform: scale(2.2); opacity: 0; }
-    }
-    @keyframes j-shine {
-      0%   { left: -80%; }
-      100% { left: 120%; }
-    }
-    @keyframes j-fadein {
-      from { opacity:0; transform:translateY(10px); }
-      to   { opacity:1; transform:translateY(0); }
-    }
-
-    /* ── Page shell ── */
-    .j-wrap {
-      max-width: 820px;
-      margin: 0 auto;
-      padding: 0 0 32px;
-      animation: j-fadein .4s ease;
-    }
-
-    /* ── Hero card ── */
-    .j-hero {
-      background: var(--j-hero);
-      border: 0.5px solid rgba(127,119,221,0.35);
-      border-radius: 16px;
-      padding: 28px 28px 24px;
-      margin-bottom: 20px;
+    /* ── Force dark on whole page ── */
+    .content {
+      background: var(--g-bg);
+      min-height: calc(100vh - 60px);
       position: relative;
-      overflow: hidden;
     }
-    .j-hero-top {
-      display: flex;
-      align-items: flex-start;
-      gap: 22px;
-    }
-    .j-hero-icon-wrap {
-      position: relative;
-      flex-shrink: 0;
-      width: 58px; height: 58px;
-    }
-    .j-pulse-ring {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border: 2px solid rgba(127,119,221,0.5);
-      animation: j-pulse 2s ease-out infinite;
-    }
-    .j-pulse-ring:nth-child(2) { animation-delay: 0.7s; }
-    .j-hero-icon {
-      position: relative;
-      z-index: 1;
-      width: 58px; height: 58px;
-      background: var(--j-pri);
-      border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .j-hero-icon svg { width: 28px; height: 28px; fill: #fff; }
-    .j-hero-body { flex: 1; min-width: 0; }
-    .j-tag {
-      display: inline-block;
-      font-size: 10px; font-weight: 700;
-      letter-spacing: .08em; text-transform: uppercase;
-      color: var(--j-pri);
-      background: rgba(127,119,221,.12);
-      border: 0.5px solid rgba(127,119,221,.25);
-      border-radius: 5px; padding: 2px 8px;
-      margin-bottom: 6px;
-    }
-    .j-hero-title {
-      font-size: 22px; font-weight: 800;
-      color: var(--j-txt); line-height: 1.1;
-    }
-    .j-hero-desc {
-      font-size: 13px; color: var(--j-muted);
-      margin-top: 5px; line-height: 1.4;
-    }
-    .j-record-pill {
-      display: inline-flex; align-items: center; gap: 5px;
-      margin-top: 10px;
-      font-size: 12px; font-weight: 600;
-      color: var(--j-gold);
-      background: rgba(234,179,8,.08);
-      border: 0.5px solid rgba(234,179,8,.2);
-      border-radius: 20px; padding: 4px 12px;
-    }
-    .j-hero-actions {
-      display: flex; align-items: center; gap: 14px;
-      margin-top: 20px;
-    }
-    .j-play-btn {
-      position: relative; overflow: hidden;
-      background: var(--j-pri);
-      color: #fff;
-      border: none; border-radius: 12px;
-      padding: 14px 28px;
-      font-size: 15px; font-weight: 700;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-flex; align-items: center; gap: 8px;
-      transition: background .2s;
-    }
-    .j-play-btn:hover { background: var(--j-pri-h); color: #fff; }
-    .j-play-btn::after {
+    .content::before {
       content: '';
-      position: absolute; top: 0; bottom: 0;
-      width: 40%; background: rgba(255,255,255,.22);
-      transform: skewX(-20deg);
-      animation: j-shine 3s ease-in-out infinite;
-      pointer-events: none;
-    }
-    .j-sprint-btn {
-      background: rgba(127,119,221,.12);
-      color: var(--j-pri);
-      border: 1px solid rgba(127,119,221,.3);
-      border-radius: 12px;
-      padding: 14px 20px;
-      font-size: 14px; font-weight: 700;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-flex; align-items: center; gap: 6px;
-      transition: background .2s, border-color .2s;
-    }
-    .j-sprint-btn:hover { background: rgba(127,119,221,.2); border-color: rgba(127,119,221,.5); color: var(--j-pri); }
-    .j-stats-row {
-      display: grid; grid-template-columns: repeat(3,1fr);
-      border-top: 0.5px solid var(--j-border);
-      margin-top: 22px;
-    }
-    .j-stat {
-      padding: 16px 8px; text-align: center;
-      border-right: 0.5px solid var(--j-border);
-      animation: j-fadein .5s ease both;
-    }
-    .j-stat:last-child { border-right: none; }
-    .j-stat:nth-child(1) { animation-delay: .1s; }
-    .j-stat:nth-child(2) { animation-delay: .2s; }
-    .j-stat:nth-child(3) { animation-delay: .3s; }
-    .j-stat-val {
-      font-size: 26px; font-weight: 800;
-      color: var(--j-pri); line-height: 1;
-    }
-    .j-stat-val.orange { color: var(--j-orange); }
-    .j-stat-lbl {
-      font-size: 11px; color: var(--j-muted); margin-top: 4px;
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(124,92,252,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,92,252,.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none; z-index: 0;
     }
 
-    /* ── Two-column grid ── */
-    .j-grid2 {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 16px; margin-bottom: 20px;
-    }
-    @media(max-width:640px) { .j-grid2 { grid-template-columns: 1fr; } }
+    /* ── Animations ── */
+    @keyframes g-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes g-shimmer{0%,100%{opacity:.45}50%{opacity:1}}
+    @keyframes g-blink{0%,100%{opacity:1}50%{opacity:.25}}
+    @keyframes g-pulse-lv{0%,100%{text-shadow:0 0 20px rgba(155,127,254,.5)}50%{text-shadow:0 0 30px rgba(155,127,254,.9),0 0 60px rgba(155,127,254,.3)}}
+    @keyframes g-pulse-cur{0%,100%{box-shadow:0 0 10px rgba(124,92,252,.4)}50%{box-shadow:0 0 18px rgba(124,92,252,.7)}}
+    @keyframes g-glow-g{0%,100%{box-shadow:0 0 8px rgba(0,230,118,.2)}50%{box-shadow:0 0 16px rgba(0,230,118,.4)}}
+    @keyframes g-shine{0%{left:-100%}100%{left:200%}}
+    @keyframes g-bounce{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}
+    @keyframes g-sk{0%,100%{opacity:.5}50%{opacity:.15}}
 
-    /* ── Card shell ── */
-    .j-card {
-      background: var(--j-card);
-      border: 0.5px solid var(--j-border);
-      border-radius: 14px;
-      padding: 18px;
+    /* ── Page ── */
+    .g-page {
+      position: relative; z-index: 1;
+      max-width: 900px; margin: 0 auto;
+      padding: 20px 20px 40px;
+      color: var(--g-text); font-family: 'Inter', sans-serif;
     }
-    .j-card-hdr {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 12px; font-weight: 700;
-      letter-spacing: .07em; text-transform: uppercase;
-      margin-bottom: 14px;
-    }
-    .j-card-hdr svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .g-page-hdr { display:flex;align-items:center;gap:12px;margin-bottom:22px; }
+    .g-page-hdr h1 { font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;letter-spacing:1px;background:linear-gradient(135deg,#fff,var(--g-pl));-webkit-background-clip:text;-webkit-text-fill-color:transparent; }
+    .g-page-hdr span { font-size:12px;color:var(--g-muted); }
 
-    /* ── History rows ── */
-    .j-hist-row {
-      display: flex; align-items: center; gap: 10px;
-      padding: 9px 10px; border-radius: 9px;
-      border: 0.5px solid var(--j-border);
-      background: rgba(255,255,255,.02);
-      margin-bottom: 6px;
-    }
-    .j-hist-row:last-child { margin-bottom: 0; }
-    .j-level-badge {
-      font-size: 11px; font-weight: 800;
-      padding: 3px 7px; border-radius: 6px;
-      flex-shrink: 0;
-    }
-    .j-level-badge.ok   { background: rgba(29,158,117,.15); color: var(--j-green); border: 0.5px solid rgba(29,158,117,.3); }
-    .j-level-badge.fail { background: rgba(226,75,74,.12);  color: var(--j-red);   border: 0.5px solid rgba(226,75,74,.25); }
-    .j-hist-info { flex: 1; min-width: 0; }
-    .j-hist-date { font-size: 11px; color: var(--j-muted); }
-    .j-hist-scores {
-      display: flex; align-items: center; gap: 8px;
-      margin-top: 3px;
-    }
-    .j-score {
-      font-size: 11px; font-weight: 700;
-      display: flex; align-items: center; gap: 3px;
-    }
-    .j-score.ok   { color: var(--j-green); }
-    .j-score.fail { color: var(--j-red); }
-    .j-badge-mini {
-      font-size: 10px; font-weight: 700;
-      padding: 1px 6px; border-radius: 4px;
-    }
-    .j-badge-perf {
-      background: rgba(234,179,8,.1);
-      color: var(--j-gold);
-      border: 0.5px solid rgba(234,179,8,.2);
-    }
-    .j-badge-fail {
-      background: rgba(226,75,74,.1);
-      color: var(--j-red);
-      border: 0.5px solid rgba(226,75,74,.2);
-    }
+    /* ── Skeleton ── */
+    .g-sk { background:var(--g-bg3);border-radius:6px;animation:g-sk 1.4s ease-in-out infinite; }
 
-    /* ── Ranking tabs ── */
-    .j-tabs {
-      display: flex; gap: 4px;
-      background: rgba(255,255,255,.03);
-      border: 0.5px solid var(--j-border);
-      border-radius: 8px; padding: 3px;
-      margin-bottom: 14px;
+    /* ── Game card ── */
+    .g-card {
+      background:linear-gradient(135deg,#1a1f35,#151929);
+      border:1px solid var(--g-bdr); border-radius:20px;
+      overflow:hidden; margin-bottom:18px;
+      position:relative; animation:g-up .4s ease both;
     }
-    .j-tab {
-      flex: 1; padding: 6px 10px;
-      font-size: 12px; font-weight: 600;
-      text-align: center; border-radius: 6px;
-      cursor: pointer; border: none;
-      background: transparent; color: var(--j-muted);
-      transition: all .15s;
-    }
-    .j-tab.active {
-      background: var(--j-tab-act);
-      color: var(--j-pri);
-    }
-    .j-rank-list { display: block; }
-    .j-rank-list.hidden { display: none; }
+    .g-card::before { content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--g-purple),var(--g-cyan),transparent);animation:g-shimmer 3s infinite; }
+    .g-card::after { content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(124,92,252,.15),transparent 70%);pointer-events:none; }
 
-    /* ── Rank rows ── */
-    .j-rank-row {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 12px; border-radius: 9px;
-      border: 1px solid var(--j-border);
-      border-left: 3px solid transparent;
-      background: var(--card);
-      margin-bottom: 6px;
-      transition: background .15s;
-    }
-    .j-rank-row:last-child { margin-bottom: 0; }
-    .j-rank-row.rank-gold   { background: linear-gradient(135deg,rgba(245,158,11,.1),var(--card)); border-left-color:#F59E0B; border-color:rgba(245,158,11,.2); }
-    .j-rank-row.rank-silver { background: linear-gradient(135deg,rgba(148,163,184,.08),var(--card)); border-left-color:#9CA3AF; }
-    .j-rank-row.rank-bronze { background: linear-gradient(135deg,rgba(180,83,9,.08),var(--card)); border-left-color:#CD853F; }
-    .j-rank-row.me { background: var(--blue-pale,rgba(47,158,220,.06)); border-left-color:var(--blue); border-color:rgba(47,158,220,.2); }
-    .j-rank-name { font-size: 13px; font-weight: 700; color: var(--j-txt); }
-    .j-rank-sub  { font-size: 11px; color: var(--j-muted); margin-top: 1px; }
-    .j-rank-val  { font-size: 18px; font-weight: 800; text-align: right; }
-    .j-rank-lbl  { font-size: 10px; color: var(--j-muted); text-align: right; }
-    .j-you       { font-size: 10px; color: var(--blue); margin-left: 4px; font-weight: 600; }
-    .j-pos-wrap  { display:flex; flex-direction:column; align-items:center; width:32px; flex-shrink:0; }
-    .j-crown     { font-size: 11px; line-height:1; margin-bottom:2px; }
+    .g-card-top { padding:20px 24px 16px;display:flex;align-items:center;justify-content:space-between; }
+    .g-title { display:flex;align-items:center;gap:10px; }
+    .g-icon { width:42px;height:42px;background:linear-gradient(135deg,var(--g-purple),#5a3fcf);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 15px rgba(124,92,252,.4);flex-shrink:0; }
+    .g-title h2 { font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:var(--g-text); }
+    .g-title p { font-size:12px;color:var(--g-muted);margin-top:2px; }
+    .g-lv-badge { display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0; }
+    .g-lv-badge .lbl { font-size:10px;color:var(--g-muted);text-transform:uppercase;letter-spacing:1px; }
+    .g-lv-badge .val { font-family:'Orbitron',monospace;font-size:26px;font-weight:900;color:var(--g-pl);line-height:1;animation:g-pulse-lv 2s infinite; }
 
-    /* ── Level grid ── */
-    .j-levels-card {
-      background: var(--j-card);
-      border: 0.5px solid var(--j-border);
-      border-radius: 14px;
-      padding: 18px;
-    }
-    .j-levels-hdr {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 14px; flex-wrap: wrap; gap: 8px;
-    }
-    .j-levels-hdr-left {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 12px; font-weight: 700;
-      letter-spacing: .07em; text-transform: uppercase;
-      color: var(--j-pri);
-    }
-    .j-levels-hdr-left svg { width: 16px; height: 16px; fill: var(--j-pri); }
-    .j-legend {
-      display: flex; align-items: center; gap: 12px;
-    }
-    .j-leg-item {
-      display: flex; align-items: center; gap: 5px;
-      font-size: 10px; color: var(--j-muted);
-    }
-    .j-leg-dot {
-      width: 8px; height: 8px; border-radius: 3px;
-    }
-    .j-leg-dot.gold   { background: var(--j-gold); }
-    .j-leg-dot.purple { background: var(--j-pri); }
-    .j-leg-dot.grey   { background: var(--border); }
+    .g-stats { display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.04);border-top:1px solid var(--g-bdr);border-bottom:1px solid var(--g-bdr); }
+    .g-stat { padding:12px 14px;text-align:center;background:var(--g-bg2); }
+    .g-stat .v { font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;line-height:1; }
+    .g-stat .l { font-size:10px;color:var(--g-muted);text-transform:uppercase;letter-spacing:.8px;margin-top:3px; }
 
-    .j-level-grid {
-      display: grid;
-      grid-template-columns: repeat(6,1fr);
-      gap: 8px;
-    }
-    @media(max-width:480px) { .j-level-grid { grid-template-columns: repeat(4,1fr); } }
-    @media(max-width:360px) { .j-level-grid { grid-template-columns: repeat(3,1fr); } }
+    .g-dist { padding:13px 24px 0;border-top:1px solid var(--g-bdr); }
+    .g-dist-lbl { font-size:10px;color:var(--g-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px; }
+    .g-dist-row { display:flex;align-items:center;gap:10px;margin-bottom:5px; }
+    .g-dist-you { font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--g-pl);white-space:nowrap; }
+    .g-dist-bw { flex:1;height:6px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden; }
+    .g-dist-bf { height:100%;border-radius:4px;background:linear-gradient(90deg,var(--g-purple),var(--g-cyan));transition:width .6s ease; }
+    .g-dist-top { font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--g-gold);white-space:nowrap; }
+    .g-dist-cap { font-size:11px;color:var(--g-muted);text-align:center;padding-bottom:12px; }
+    .g-dist-cap strong { color:var(--g-orange); }
 
-    .j-lv {
-      border-radius: 10px;
-      padding: 10px 6px 8px;
-      text-align: center;
-      position: relative;
-      transition: transform .15s;
-      cursor: default;
-    }
-    .j-lv:not(.locked):hover { transform: scale(1.05); }
-    .j-lv-num {
-      font-size: 16px; font-weight: 800; line-height: 1;
-    }
-    .j-lv-sub {
-      font-size: 9px; margin-top: 4px; line-height: 1.2;
-    }
-    .j-lv-star {
-      position: absolute; top: 4px; right: 5px;
-      font-size: 10px; line-height: 1;
-    }
-    .j-lv-tag {
-      font-size: 8px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: .06em;
-      display: block; margin-bottom: 2px;
-    }
+    .g-live { padding:11px 24px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;border-top:1px solid var(--g-bdr);border-bottom:1px solid var(--g-bdr); }
+    .g-live-dot { display:flex;align-items:center;gap:6px;font-size:12px;color:var(--g-muted); }
+    .g-live-dot .dot { width:7px;height:7px;border-radius:50%;background:var(--g-orange);box-shadow:0 0 6px var(--g-orange);animation:g-blink 1.5s infinite;flex-shrink:0; }
+    .g-live-dot strong { color:var(--g-orange);font-size:14px; }
+    .g-ldr-info { display:flex;align-items:center;gap:6px;font-size:12px;color:var(--g-muted); }
+    .g-ldr-info strong { color:var(--g-gold); }
+    .g-ldr-lv { background:rgba(0,212,255,.1);color:var(--g-cyan);padding:1px 7px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid rgba(0,212,255,.3); }
+    .g-pos-badge { margin-left:auto;background:linear-gradient(135deg,rgba(0,230,118,.15),rgba(0,230,118,.05));border:1px solid rgba(0,230,118,.3);color:var(--g-green);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;animation:g-glow-g 2s infinite; }
 
-    /* perfeito — dourado */
-    .j-lv.perfect {
-      background: rgba(234,179,8,.07);
-      border: 0.5px solid rgba(234,179,8,.35);
-      cursor: pointer;
-    }
-    .j-lv.perfect .j-lv-num { color: var(--j-gold); }
-    .j-lv.perfect .j-lv-sub { color: rgba(234,179,8,.7); }
-    .j-lv.perfect .j-lv-star { color: var(--j-gold); }
+    .g-modes { display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:13px 24px; }
+    .g-mode { position:relative;padding:12px 16px;border-radius:13px;border:1.5px solid transparent;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:10px;overflow:hidden;font-family:'Rajdhani',sans-serif;text-align:left;background:none;color:inherit; }
+    .g-mode .ico { font-size:20px;flex-shrink:0; }
+    .g-mode .nm { font-size:15px;font-weight:700;display:block; }
+    .g-mode .ds { font-size:10px;font-weight:400;opacity:.7;font-family:'Inter',sans-serif;display:block; }
+    .g-mode.normal { background:linear-gradient(135deg,rgba(124,92,252,.18),rgba(124,92,252,.07));border-color:rgba(124,92,252,.4);color:var(--g-pl); }
+    .g-mode.normal.active,.g-mode.normal:hover { background:linear-gradient(135deg,rgba(124,92,252,.32),rgba(124,92,252,.14));border-color:var(--g-purple);box-shadow:0 4px 18px rgba(124,92,252,.28);transform:translateY(-1px); }
+    .g-mode.sprint { background:linear-gradient(135deg,rgba(255,123,46,.18),rgba(255,123,46,.07));border-color:rgba(255,123,46,.35);color:var(--g-orange); }
+    .g-mode.sprint.active,.g-mode.sprint:hover { background:linear-gradient(135deg,rgba(255,123,46,.32),rgba(255,123,46,.14));border-color:var(--g-orange);box-shadow:0 4px 18px rgba(255,123,46,.28);transform:translateY(-1px); }
 
-    /* concluído */
-    .j-lv.done {
-      background: var(--j-hero);
-      border: 0.5px solid rgba(127,119,221,.3);
-      cursor: pointer;
-    }
-    .j-lv.done .j-lv-num { color: var(--j-pri); }
-    .j-lv.done .j-lv-sub { color: var(--j-muted); }
+    .g-play-area { padding:0 24px 20px; }
+    .g-play-btn { width:100%;padding:13px;border-radius:13px;border:none;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;position:relative;overflow:hidden;color:#fff; }
+    .g-play-btn.nm { background:linear-gradient(135deg,var(--g-purple),#5a3fcf);box-shadow:0 4px 18px rgba(124,92,252,.4); }
+    .g-play-btn.nm:hover { transform:translateY(-2px);box-shadow:0 8px 28px rgba(124,92,252,.6); }
+    .g-play-btn.sp { background:linear-gradient(135deg,var(--g-orange),#e05a1a);box-shadow:0 4px 18px rgba(255,123,46,.4); }
+    .g-play-btn.sp:hover { transform:translateY(-2px);box-shadow:0 8px 28px rgba(255,123,46,.6); }
+    .g-play-btn::after { content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);animation:g-shine 3s infinite; }
+    .g-play-btn .arr { font-size:18px;animation:g-bounce 1s infinite; }
 
-    /* atual */
-    .j-lv.current {
-      background: rgba(127,119,221,.1);
-      border: 1.5px solid var(--j-pri);
-      cursor: pointer;
-    }
-    .j-lv.current .j-lv-num { color: var(--j-txt); }
-    .j-lv.current .j-lv-tag { color: var(--j-pri); }
+    /* ── Bottom grid ── */
+    .g-bottom { display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;animation:g-up .4s .1s ease both; }
+    .g-mini { background:var(--g-bg2);border:1px solid var(--g-bdr);border-radius:14px;padding:16px;position:relative;overflow:hidden; }
+    .g-mini::before { content:'';position:absolute;top:0;left:0;right:0;height:2px; }
+    .g-mini.ops::before { background:linear-gradient(90deg,var(--g-cyan),transparent); }
+    .g-mini.hist::before { background:linear-gradient(90deg,var(--g-purple),transparent); }
+    .g-mini h3 { font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--g-muted);margin-bottom:12px; }
+    .g-ops { display:grid;grid-template-columns:1fr 1fr;gap:7px; }
+    .g-op { background:var(--g-bg3);border-radius:9px;padding:9px;text-align:center; }
+    .g-op .v { font-family:'Orbitron',monospace;font-size:17px;font-weight:700;line-height:1; }
+    .g-op .n { font-size:10px;color:var(--g-muted);margin-top:3px; }
+    .g-op .p { font-size:9px;margin-top:2px; }
+    .g-hist { display:flex;flex-direction:column;gap:5px; }
+    .g-hi { display:flex;align-items:center;gap:7px;padding:6px 9px;background:var(--g-bg3);border-radius:7px;font-size:11px; }
+    .g-hi-b { font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;min-width:30px;text-align:center; }
+    .g-hi-b.ok { background:rgba(0,230,118,.15);color:var(--g-green);border:1px solid rgba(0,230,118,.3); }
+    .g-hi-b.fail { background:rgba(255,68,68,.15);color:var(--g-red);border:1px solid rgba(255,68,68,.3); }
+    .g-hi-c { font-size:9px;color:var(--g-orange);font-weight:600; }
+    .g-hi-t { color:var(--g-muted);margin-left:auto;font-size:9px; }
+    .g-hi-s { font-family:'Rajdhani',sans-serif;font-weight:600;color:var(--g-muted);font-size:10px; }
 
-    /* bloqueado */
-    .j-lv.locked {
-      background: var(--bg);
-      border: 0.5px solid var(--border);
-      opacity: .4;
-    }
-    .j-lv.locked .j-lv-num { color: var(--j-muted); }
+    /* ── Ranking ── */
+    .g-rank-wrap { display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;animation:g-up .4s .2s ease both; }
+    .g-rb { background:var(--g-bg2);border:1px solid var(--g-bdr);border-radius:14px;overflow:hidden; }
+    .g-rb.geral::before { content:'';display:block;height:2px;background:linear-gradient(90deg,var(--g-gold),var(--g-orange),transparent); }
+    .g-rb.turma::before { content:'';display:block;height:2px;background:linear-gradient(90deg,var(--g-cyan),var(--g-purple),transparent); }
+    .g-rb-hdr { padding:11px 14px 7px; }
+    .g-rb-hdr h3 { font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--g-muted); }
+    .g-rb-list { padding:0 8px 10px; }
+    .g-ri { display:flex;align-items:center;gap:7px;padding:6px 5px;border-radius:7px;transition:background .2s; }
+    .g-ri:hover { background:var(--g-bg3); }
+    .g-ri.me { background:rgba(124,92,252,.1);border:1px solid rgba(124,92,252,.2);margin:2px 0; }
+    .g-ri-medal { font-size:15px;min-width:20px;text-align:center;line-height:1; }
+    .g-ri-pos { font-family:'Orbitron',monospace;font-size:10px;font-weight:700;min-width:20px;text-align:center;color:var(--g-muted); }
+    .g-ri-av { width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;flex-shrink:0; }
+    .g-ri-info { flex:1;min-width:0; }
+    .g-ri-name { font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--g-text); }
+    .g-ri-meta { font-size:10px;color:var(--g-muted);margin-top:1px; }
+    .g-ri-right { display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0; }
+    .g-ri-lv { font-family:'Orbitron',monospace;font-size:13px;font-weight:700; }
+    .g-ri-delta { font-size:9px;font-weight:600; }
+    .g-ri-delta.up { color:var(--g-green); }
+    .g-ri-delta.down { color:var(--g-red); }
+    .g-ri-delta.same { color:var(--g-muted); }
 
-    /* ── Misc ── */
-    .j-empty {
-      text-align: center; padding: 24px 12px;
-      color: var(--j-muted); font-size: 13px; line-height: 1.6;
-    }
+    /* ── Level map ── */
+    .g-lvmap { background:var(--g-bg2);border:1px solid var(--g-bdr);border-radius:14px;overflow:hidden;margin-bottom:20px;animation:g-up .4s .3s ease both; }
+    .g-lvmap::before { content:'';display:block;height:2px;background:linear-gradient(90deg,var(--g-gold),var(--g-purple),transparent); }
+    .g-lvmap-hdr { padding:11px 14px 8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px; }
+    .g-lvmap-hdr h3 { font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--g-muted); }
+    .g-legend { display:flex;gap:10px;flex-wrap:wrap; }
+    .g-leg { display:flex;align-items:center;gap:4px;font-size:9px;color:var(--g-muted); }
+    .g-leg-d { width:6px;height:6px;border-radius:50%; }
+    .g-leg-d.dm { background:var(--g-diamond);box-shadow:0 0 3px var(--g-diamond); }
+    .g-leg-d.pf { background:var(--g-gold);box-shadow:0 0 3px var(--g-gold); }
+    .g-leg-d.dn { background:var(--g-pl); }
+    .g-leg-d.lk { background:#3a3f5c; }
+    .g-grid { display:grid;grid-template-columns:repeat(10,1fr);gap:4px;padding:0 10px 12px; }
+    .g-lc { aspect-ratio:1;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:all .15s;border:1px solid transparent; }
+    .g-lc:hover { transform:scale(1.12);z-index:2; }
+    .g-lc.dm { background:rgba(168,240,255,.1);border-color:rgba(168,240,255,.5); }
+    .g-lc.dm:hover { background:rgba(168,240,255,.2);box-shadow:0 3px 10px rgba(168,240,255,.35); }
+    .g-lc.pf { background:rgba(255,215,0,.1);border-color:rgba(255,215,0,.3); }
+    .g-lc.pf:hover { background:rgba(255,215,0,.2);box-shadow:0 3px 10px rgba(255,215,0,.25); }
+    .g-lc.dn { background:rgba(124,92,252,.12);border-color:rgba(124,92,252,.28); }
+    .g-lc.dn:hover { background:rgba(124,92,252,.22); }
+    .g-lc.cur { background:rgba(124,92,252,.3);border-color:var(--g-purple);animation:g-pulse-cur 2s infinite; }
+    .g-lc.lk { background:rgba(255,255,255,.02);border-color:rgba(255,255,255,.04);cursor:default;opacity:.28; }
+    .g-lc.lk:hover { transform:none; }
+    .g-lc-n { font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;line-height:1; }
+    .g-lc.dm .g-lc-n { color:var(--g-diamond); }
+    .g-lc.pf .g-lc-n { color:var(--g-gold); }
+    .g-lc.dn .g-lc-n { color:var(--g-pl); }
+    .g-lc.cur .g-lc-n { color:#fff; }
+    .g-lc.lk .g-lc-n { color:var(--g-muted); }
+    .g-lc-op { position:absolute;bottom:2px;left:2px;font-size:7px;opacity:.6;line-height:1; }
+    .g-lc.dm .g-lc-op { color:var(--g-diamond); }
+    .g-lc.pf .g-lc-op { color:rgba(255,215,0,.8); }
+    .g-lc.dn .g-lc-op { color:rgba(155,127,254,.8); }
+    .g-lc.cur .g-lc-op { color:rgba(255,255,255,.8); }
+    .g-lc-bdi { position:absolute;top:2px;right:2px;font-size:7px;line-height:1; }
+    .g-lc:not(.lk):hover::after { content:attr(data-tip);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#1a1f35;border:1px solid var(--g-bdr);color:var(--g-text);font-size:10px;padding:4px 8px;border-radius:6px;white-space:nowrap;z-index:10;pointer-events:none;font-family:'Inter',sans-serif; }
 
-    /* ── Main tabs ── */
-    .j-main-tabs {
-      display: flex; gap: 0;
-      background: var(--j-card);
-      border: 0.5px solid var(--j-border);
-      border-radius: 12px; padding: 4px;
-      margin-bottom: 20px;
+    /* ── Responsive ── */
+    @media(max-width:600px) {
+      .g-bottom,.g-rank-wrap { grid-template-columns:1fr; }
+      .g-grid { grid-template-columns:repeat(8,1fr); }
+      .g-modes { grid-template-columns:1fr; }
+      .g-card-top { flex-direction:column;align-items:flex-start;gap:10px; }
     }
-    .j-main-tab {
-      flex: 1; padding: 11px 16px;
-      font-size: 14px; font-weight: 700;
-      text-align: center; border-radius: 9px;
-      cursor: pointer; border: none;
-      background: transparent; color: var(--j-muted);
-      transition: all .18s;
-      display: flex; align-items: center; justify-content: center; gap: 7px;
-      font-family: 'Inter', sans-serif;
-    }
-    .j-main-tab.active {
-      background: rgba(127,119,221,.12);
-      color: var(--j-pri);
-      border: 0.5px solid rgba(127,119,221,.3);
-      box-shadow: inset 0 -2.5px 0 var(--j-pri);
-    }
-    .j-main-tab.active.sprint { color: #a78bfa; background: rgba(167,139,250,.1); box-shadow: inset 0 -2.5px 0 #a78bfa; }
-    .j-tab-panel { display: block; animation: j-fadein .25s ease; }
-    .j-tab-panel.hidden { display: none; }
-
-    /* ── Sprint personal best ── */
-    .j-sprint-hero {
-      background: rgba(127,119,221,.06);
-      border: 0.5px solid rgba(127,119,221,.2);
-      border-radius: 14px;
-      padding: 22px 24px;
-      margin-bottom: 16px;
-      display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
-    }
-    .j-sprint-hero-val {
-      font-size: 52px; font-weight: 800;
-      color: #a78bfa; line-height: 1; flex-shrink: 0;
-      font-variant-numeric: tabular-nums;
-    }
-    .j-sprint-hero-info { flex: 1; min-width: 0; }
-    .j-sprint-hero-label {
-      font-size: 11px; color: #a78bfa; text-transform: uppercase;
-      letter-spacing: .07em; font-weight: 700; margin-bottom: 4px;
-    }
-    .j-sprint-hero-title {
-      font-size: 20px; font-weight: 800; color: var(--j-txt); margin-bottom: 4px;
-    }
-    .j-sprint-hero-sub { font-size: 13px; color: var(--j-muted); line-height: 1.4; }
-    .j-sprint-play-btn {
-      position: relative; overflow: hidden;
-      background: rgba(167,139,250,.15);
-      color: #a78bfa;
-      border: 1px solid rgba(167,139,250,.35); border-radius: 12px;
-      padding: 13px 28px;
-      font-size: 15px; font-weight: 700;
-      cursor: pointer; text-decoration: none;
-      display: inline-flex; align-items: center; gap: 8px;
-      transition: background .2s, border-color .2s;
-      font-family: 'Inter', sans-serif;
-    }
-    .j-sprint-play-btn:hover { background: rgba(167,139,250,.25); border-color: rgba(167,139,250,.5); color: #a78bfa; }
+    @media(max-width:400px) { .g-grid { grid-template-columns:repeat(6,1fr); } }
   </style>
 </head>
 <body>
@@ -493,12 +240,12 @@
       </div>
     </div>
     <div class="content" id="content">
-      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+      <div style="text-align:center;padding:80px;color:var(--g-muted);font-family:'Inter',sans-serif">Carregando…</div>
     </div>
   </div>
 </div>
 
-<script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
+<script>(()=>{ document.documentElement.setAttribute('data-theme','dark'); })()</script>
 <script type="module">
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
@@ -511,505 +258,443 @@ window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
 const { alunos, turma } = sess;
 const nomeAluno = alunos[0];
+const isDupla   = alunos.length > 1;
 const uid = (turma + '_' + nomeAluno).replace(/[.#$\[\]/\s]/g, '_');
 
 document.getElementById("avatar-initials").textContent = nomeAluno[0].toUpperCase();
 
-function escH(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-function fmtDate(ts) {
-  if (!ts) return '—';
-  const d = new Date(ts);
-  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
-}
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-let niveisSnap, rankingSnap, sprintRankSnap;
+// ── Skeleton ──────────────────────────────────────────────────
+document.getElementById("content").innerHTML = `
+<div class="g-page">
+  <div class="g-page-hdr">
+    <div><h1>🎮 Jogos</h1><span>Mini-jogos educativos</span></div>
+  </div>
+  <div class="g-card">
+    <div class="g-card-top">
+      <div class="g-title">
+        <div class="g-icon">🎯</div>
+        <div><h2>Tabuada</h2><p>Combine operações com seus resultados</p></div>
+      </div>
+      <div class="g-sk" style="width:60px;height:36px;border-radius:8px"></div>
+    </div>
+    <div class="g-stats" id="sk-stats">
+      ${[1,2,3].map(()=>`<div class="g-stat"><div class="g-sk" style="height:22px;width:50%;margin:0 auto 6px"></div><div class="g-sk" style="height:9px;width:70%;margin:0 auto"></div></div>`).join('')}
+    </div>
+    <div style="padding:16px 24px"><div class="g-sk" style="height:6px;border-radius:4px"></div></div>
+    <div class="g-live" id="sk-live">
+      ${[1,2].map(()=>`<div class="g-sk" style="height:10px;width:120px;border-radius:5px"></div>`).join('')}
+    </div>
+    <div class="g-modes">
+      <div class="g-mode normal active"><span class="ico">▶</span><div><span class="nm">Normal</span><span class="ds">Suba de nível no seu ritmo</span></div></div>
+      <div class="g-mode sprint"><span class="ico">⚡</span><div><span class="nm">Sprint</span><span class="ds">Máximo de pares em 3 min</span></div></div>
+    </div>
+    <div class="g-play-area">
+      <button class="g-play-btn nm"><span class="arr">▶</span> JOGAR AGORA</button>
+    </div>
+  </div>
+  <div class="g-bottom">
+    <div class="g-mini ops"><h3>📊 Operações praticadas</h3><div class="g-sk" style="height:80px;border-radius:8px"></div></div>
+    <div class="g-mini hist"><h3>🕐 Últimas partidas</h3><div class="g-sk" style="height:80px;border-radius:8px"></div></div>
+  </div>
+  <div class="g-rank-wrap">
+    <div class="g-rb geral"><div class="g-rb-hdr"><h3>🏆 Ranking Geral</h3></div><div class="g-rb-list"><div class="g-sk" style="height:120px;border-radius:8px"></div></div></div>
+    <div class="g-rb turma"><div class="g-rb-hdr"><h3>🏫 Turma ${escH(turma)}</h3></div><div class="g-rb-list"><div class="g-sk" style="height:120px;border-radius:8px"></div></div></div>
+  </div>
+  <div class="g-lvmap">
+    <div class="g-lvmap-hdr"><h3>⭐ Mapa de Níveis</h3></div>
+    <div style="padding:8px 10px 12px"><div class="g-sk" style="height:80px;border-radius:8px"></div></div>
+  </div>
+</div>`;
+
+// ── Load Firebase data ─────────────────────────────────────────
+const hojeISO = new Date().toISOString().slice(0, 10);
+const ontemISO = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+
+let niveisSnap, rankSnap, sessoesSnap;
 try {
-  [niveisSnap, rankingSnap, sprintRankSnap] = await Promise.all([
+  [niveisSnap, rankSnap, sessoesSnap] = await Promise.all([
     get(ref(db, `tabuada_niveis/${uid}`)).catch(() => null),
     get(ref(db, 'tabuada_ranking')).catch(() => null),
-    get(ref(db, 'tabuada_sprint_ranking')).catch(() => null),
+    get(ref(db, 'tabuada_sessoes')).catch(() => null),
   ]);
 } catch(e) {
   document.getElementById("content").innerHTML =
-    `<div style="text-align:center;padding:60px">
+    `<div style="text-align:center;padding:60px;color:var(--g-muted);font-family:'Inter',sans-serif">
       <div style="font-size:36px;margin-bottom:12px">⚠️</div>
-      <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">Erro ao carregar dados</div>
-      <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px">Verifique sua conexão e tente novamente.</div>
-      <button onclick="location.reload()" class="btn btn-blue">Tentar novamente</button>
+      <div style="font-size:15px;font-weight:700;color:var(--g-text);margin-bottom:6px">Erro ao carregar dados</div>
+      <button onclick="location.reload()" style="margin-top:12px;padding:8px 20px;background:var(--g-purple);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:'Inter',sans-serif">Tentar novamente</button>
     </div>`;
   throw e;
 }
 
-const niveis        = niveisSnap?.exists() ? niveisSnap.val() : {};
-const melhorNivel   = niveis.melhor_nivel   || 1;
-const nivelAtual    = Math.max(niveis.nivel_atual || 1, melhorNivel);
-const maxLv         = Math.max(melhorNivel, nivelAtual);
-const totalPartidas = niveis.total_partidas || 0;
-const maiorCombo    = niveis.maior_combo    || 0;
-const ultimaPartida = niveis.ultima_partida || 0;
-
-const historico = niveis.historico
-  ? Object.entries(niveis.historico)
-      .sort((a, b) => Number(b[0]) - Number(a[0]))
-      .slice(0, 5)
-  : [];
-
-// Sequência: partidas completadas consecutivas mais recentes
-let sequencia = 0;
-for (const [, e] of historico) {
-  if (e.resultado === 'completou') sequencia++;
-  else break;
-}
+// ── Parse data ─────────────────────────────────────────────────
+const niveis      = niveisSnap?.exists() ? niveisSnap.val() : {};
+const nivelAtual  = Math.max(niveis.nivel_atual || 1, niveis.melhor_nivel || 1);
+const melhorNivel = niveis.melhor_nivel || nivelAtual;
+const totalPart   = niveis.total_partidas || 0;
+const maiorCombo  = niveis.maior_combo || 0;
 
 // Ranking
-const rankingAll = [];
-if (rankingSnap?.exists()) {
-  rankingSnap.forEach(c => {
-    const v = c.val();
-    if (v && v.nome) rankingAll.push(v);
-  });
-  rankingAll.sort((a, b) => (b.melhor_nivel || 0) - (a.melhor_nivel || 0));
+const rankAll = [];
+if (rankSnap?.exists()) {
+  rankSnap.forEach(c => { const v = c.val(); if (v?.nome) rankAll.push(v); });
+  rankAll.sort((a, b) => (b.melhor_nivel||0) - (a.melhor_nivel||0) || (b.total_partidas||0) - (a.total_partidas||0));
 }
-const rankingTurma = rankingAll.filter(r => r.turma === turma);
+const rankTurma = rankAll.filter(r => r.turma === turma);
 
-// Recordes
-const recTurma  = rankingTurma.length > 0 ? rankingTurma[0] : null;
-const recGeral  = rankingAll.length   > 0 ? rankingAll[0]   : null;
+const liderGeral = rankAll[0] || null;
+const liderTurma = rankTurma[0] || null;
+const myGeralIdx = rankAll.findIndex(r => r.nome === nomeAluno && r.turma === turma);
+const myTurmaIdx = rankTurma.findIndex(r => r.nome === nomeAluno && r.turma === turma);
+const myGeral    = myGeralIdx >= 0 ? myGeralIdx + 1 : null;
+const myTurma    = myTurmaIdx >= 0 ? myTurmaIdx + 1 : null;
 
-// Sprint ranking
-const sprintAll = [];
-if (sprintRankSnap && sprintRankSnap.exists()) {
-  sprintRankSnap.forEach(c => { const v = c.val(); if (v && v.nome) sprintAll.push(v); });
-  sprintAll.sort((a, b) => (b.melhor_acertos || 0) - (a.melhor_acertos || 0));
+// Sessions today (no dedup)
+let sessoesHoje = 0;
+if (sessoesSnap?.exists()) {
+  sessoesSnap.forEach(c => { const v = c.val(); if (v?.data === hojeISO) sessoesHoje++; });
 }
-const sprintTurma   = sprintAll.filter(r => r.turma === turma);
-const sprintRecGeral = sprintAll[0]   || null;
-const sprintRecTurma = sprintTurma[0] || null;
 
-// Estatísticas por tipo de operação (agregado de todo o histórico)
-const tipoTotais = { add:0, sub:0, mul:0, div:0 };
-if (niveis.historico) {
-  Object.values(niveis.historico).forEach(e => {
-    if (e.tipos_acertos) {
-      for (const [t, n] of Object.entries(e.tipos_acertos)) {
-        if (tipoTotais.hasOwnProperty(t)) tipoTotais[t] += (n || 0);
-      }
-    }
-  });
+// ── Helper functions ───────────────────────────────────────────
+function getLvOp(lv) {
+  if (lv <= 27) return '+';
+  if (lv <= 54) return '±';
+  if (lv <= 65) return '×';
+  return '÷';
 }
-const temTipos = Object.values(tipoTotais).some(v => v > 0);
-const totalTipos = Object.values(tipoTotais).reduce((s, v) => s + v, 0);
 
-// Per-level stats from history
-const levelStats = {}; // { [nivel]: { perfect, done } }
-if (niveis.historico) {
-  // Ordenar por timestamp crescente: a completada mais recente determina o estado perfeito
-  const sorted = Object.entries(niveis.historico).sort((a, b) => Number(a[0]) - Number(b[0]));
-  sorted.forEach(([, e]) => {
-    const lv = e.nivel;
-    if (!levelStats[lv]) levelStats[lv] = { perfeito: false, feito: false };
+function computeMyDelta() {
+  if (!niveis.historico) return 0;
+  const entries = Object.entries(niveis.historico)
+    .map(([ts, v]) => ({ ts: Number(ts), ...v }))
+    .sort((a, b) => b.ts - a.ts);
+  for (const e of entries) {
+    const d = new Date(e.ts).toISOString().slice(0, 10);
+    if (d <= ontemISO && e.nivel) return nivelAtual - e.nivel;
+  }
+  return 0;
+}
+const myDelta = computeMyDelta();
+
+function buildRankRow(p, posIdx, isMe) {
+  const medals  = ['🥇','🥈','🥉'];
+  const lvCols  = ['var(--g-gold)','#c0c0c0','#cd7f32'];
+  const avSt    = [
+    'background:rgba(255,215,0,.18);color:var(--g-gold);border:1.5px solid rgba(255,215,0,.35)',
+    'background:rgba(192,192,192,.15);color:#c0c0c0;border:1.5px solid rgba(192,192,192,.3)',
+    'background:rgba(205,127,50,.15);color:#cd7f32;border:1.5px solid rgba(205,127,50,.28)',
+  ];
+  const pos = posIdx < 3
+    ? `<span class="g-ri-medal">${medals[posIdx]}</span>`
+    : `<span class="g-ri-pos">${posIdx+1}</span>`;
+  const avStyle = isMe
+    ? 'background:rgba(124,92,252,.2);color:var(--g-pl);border:1.5px solid rgba(124,92,252,.5)'
+    : posIdx < 3 ? avSt[posIdx]
+    : 'background:var(--g-bg3);color:var(--g-muted);border:1.5px solid var(--g-bdr)';
+  const lvColor = isMe ? 'var(--g-pl)' : posIdx < 3 ? lvCols[posIdx] : 'var(--g-muted)';
+  const delta = isMe ? myDelta : 0;
+  const dc = delta > 0 ? 'up' : delta < 0 ? 'down' : 'same';
+  const dt = delta > 0 ? `↑${delta}` : delta < 0 ? `↓${Math.abs(delta)}` : '–';
+  return `<div class="g-ri${isMe?' me':''}">
+    ${pos}
+    <div class="g-ri-av" style="${avStyle}">${(p.nome||'?')[0].toUpperCase()}</div>
+    <div class="g-ri-info">
+      <div class="g-ri-name" style="${isMe?'color:var(--g-pl)':''}">${escH(p.nome)}${isMe?' ★':''}</div>
+      <div class="g-ri-meta">${escH(p.turma||'?')} · ${p.total_partidas||0} part.</div>
+    </div>
+    <div class="g-ri-right">
+      <span class="g-ri-lv" style="color:${lvColor}">${p.melhor_nivel||1}</span>
+      <span class="g-ri-delta ${dc}">${dt}</span>
+    </div>
+  </div>`;
+}
+
+function buildLevelMap() {
+  const hist = niveis.historico || {};
+  const entries = Object.entries(hist)
+    .map(([ts, v]) => ({ ts: Number(ts), ...v }))
+    .sort((a, b) => a.ts - b.ts);
+
+  const li = {}; // level -> { done, perfect, maestria, consec }
+  for (const e of entries) {
+    const lv = e.nivel; if (!lv) continue;
+    if (!li[lv]) li[lv] = { done: false, perfect: false, maestria: false, consec: 0 };
     if (e.resultado === 'completou') {
-      levelStats[lv].feito = true;
-      levelStats[lv].perfeito = e.erros === 0;
+      li[lv].done = true;
+      const isP = (e.erros || 0) === 0;
+      if (isP) { li[lv].perfect = true; li[lv].consec++; if (li[lv].consec >= 3) li[lv].maestria = true; }
+      else li[lv].consec = 0;
+    } else {
+      if (li[lv]) li[lv].consec = 0;
     }
-  });
-}
-
-// Verifica se todos os níveis até o melhor foram concluídos com estrela (sem erros)
-const allPerfect = maxLv >= 1 && Array.from({ length: maxLv }, (_, i) => i + 1).every(lv => levelStats[lv]?.perfeito === true);
-
-// HTML helpers
-const TOP3_BG  = ['linear-gradient(135deg,#F59E0B,#D97706)','linear-gradient(135deg,#9CA3AF,#6B7280)','linear-gradient(135deg,#CD853F,#92400E)'];
-const TOP3_TRO = ['🥇','🥈','🥉'];
-
-function makeRankRow(r, pos) {
-  const isMe = r.nome === nomeAluno && r.turma === turma;
-  if (pos <= 3) {
-    const bg  = TOP3_BG[pos - 1];
-    const tro = TOP3_TRO[pos - 1];
-    const crown = pos === 1
-      ? `<div style="position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:22px;filter:drop-shadow(0 2px 8px rgba(250,184,0,.9))">👑</div>` : '';
-    const topMt = pos === 1 ? 'margin-top:22px;' : '';
-    return `<div class="j-rank-row" style="background:${bg};border-color:transparent;border-left:none;${topMt}position:relative;overflow:visible">
-      ${crown}
-      <div style="font-size:28px;flex-shrink:0">${tro}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:14px;font-weight:800;color:#fff">${escH(r.nome)}${isMe ? ' <span style="font-size:11px;color:rgba(255,255,255,.8)">★</span>' : ''}</div>
-        <div style="font-size:10px;color:rgba(255,255,255,.75);margin-top:2px">Turma ${escH(r.turma)}</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-size:20px;font-weight:800;color:#fff">${r.melhor_nivel || 1}</div>
-        <div style="font-size:10px;color:rgba(255,255,255,.7)">melhor nível</div>
-      </div>
-    </div>`;
   }
-  return `<div class="j-rank-row${isMe ? ' me' : ''}">
-    <div class="j-pos-wrap"><div style="font-size:11px;font-weight:800;color:var(--j-muted)">#${pos}</div></div>
-    <div style="flex:1;min-width:0">
-      <div class="j-rank-name">${escH(r.nome)}${isMe ? '<span class="j-you">· você</span>' : ''}</div>
-      <div class="j-rank-sub">Turma ${escH(r.turma)}</div>
-    </div>
-    <div style="text-align:right">
-      <div class="j-rank-val" style="color:var(--j-muted)">${r.melhor_nivel || 1}</div>
-      <div class="j-rank-lbl">melhor nível</div>
-    </div>
-  </div>`;
-}
 
-function makeSprintRow(r, pos) {
-  const isMe = r.nome === nomeAluno && r.turma === turma;
-  if (pos <= 3) {
-    const bg  = TOP3_BG[pos - 1];
-    const tro = TOP3_TRO[pos - 1];
-    const crown = pos === 1
-      ? `<div style="position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:22px;filter:drop-shadow(0 2px 8px rgba(250,184,0,.9))">👑</div>` : '';
-    const topMt = pos === 1 ? 'margin-top:22px;' : '';
-    return `<div class="j-rank-row" style="background:${bg};border-color:transparent;border-left:none;${topMt}position:relative;overflow:visible">
-      ${crown}
-      <div style="font-size:28px;flex-shrink:0">${tro}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:14px;font-weight:800;color:#fff">${escH(r.nome)}${isMe ? ' <span style="font-size:11px;color:rgba(255,255,255,.8)">★</span>' : ''}</div>
-        <div style="font-size:10px;color:rgba(255,255,255,.75);margin-top:2px">Turma ${escH(r.turma)}</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-size:20px;font-weight:800;color:#fff">${r.melhor_acertos || 0}</div>
-        <div style="font-size:10px;color:rgba(255,255,255,.7)">op / 3 min</div>
-      </div>
-    </div>`;
-  }
-  return `<div class="j-rank-row${isMe ? ' me' : ''}">
-    <div class="j-pos-wrap"><div style="font-size:11px;font-weight:800;color:var(--j-muted)">#${pos}</div></div>
-    <div style="flex:1;min-width:0">
-      <div class="j-rank-name">${escH(r.nome)}${isMe ? '<span class="j-you">· você</span>' : ''}</div>
-      <div class="j-rank-sub">Turma ${escH(r.turma)}</div>
-    </div>
-    <div style="text-align:right">
-      <div class="j-rank-val" style="color:var(--j-muted)">${r.melhor_acertos || 0}</div>
-      <div class="j-rank-lbl">op / 3 min</div>
-    </div>
-  </div>`;
-}
+  const maxLv = Math.max(nivelAtual, melhorNivel, 10);
+  const displayCount = Math.ceil(Math.max(maxLv + 9, 20) / 10) * 10;
 
-function makeSprintRows(arr) {
-  if (!arr.length) return `<div class="j-empty">Nenhum sprint ainda. Seja o primeiro!</div>`;
-  const top5 = arr.slice(0, 5);
-  let html = top5.map((r, i) => makeSprintRow(r, i + 1)).join('');
-  const myIdx = arr.findIndex(r => r.nome === nomeAluno && r.turma === turma);
-  if (myIdx >= 5) {
-    html += `<div style="text-align:center;font-size:11px;color:var(--j-muted);padding:4px 0">···</div>`;
-    html += makeSprintRow(arr[myIdx], myIdx + 1);
+  let html = '';
+  for (let lv = 1; lv <= displayCount; lv++) {
+    const info = li[lv] || {};
+    let cls, tip, badge = '';
+    if (lv === nivelAtual) {
+      cls = 'cur'; tip = 'Nível atual';
+    } else if (lv > Math.max(nivelAtual, melhorNivel)) {
+      cls = 'lk'; tip = '';
+    } else if (info.maestria) {
+      cls = 'dm'; tip = '💎 Maestria! 3x perfeito'; badge = '<span class="g-lc-bdi">💎</span>';
+    } else if (info.perfect) {
+      cls = 'pf'; tip = '⭐ Perfeito! Pode refazer'; badge = '<span class="g-lc-bdi">⭐</span>';
+    } else {
+      cls = 'dn'; tip = 'Refazer para ganhar ⭐';
+    }
+    const op = cls !== 'lk' ? `<span class="g-lc-op">${getLvOp(lv)}</span>` : '';
+    const click = cls !== 'lk' ? `onclick="jogarNivel(${lv})"` : '';
+    html += `<div class="g-lc ${cls}" data-tip="${tip}" ${click}>${badge}<span class="g-lc-n">${lv}</span>${op}</div>`;
   }
   return html;
 }
 
-function makeRankRows(arr) {
-  if (!arr.length) return `<div class="j-empty">Nenhum jogador ainda.</div>`;
-  const top5 = arr.slice(0, 5);
-  let html = top5.map((r, i) => makeRankRow(r, i + 1)).join('');
-
-  // Se o aluno não está no top 5, adicionar separador + linha dele
-  const myIdx = arr.findIndex(r => r.nome === nomeAluno && r.turma === turma);
-  if (myIdx >= 5) {
-    html += `<div style="text-align:center;font-size:11px;color:var(--j-muted);padding:4px 0">···</div>`;
-    html += makeRankRow(arr[myIdx], myIdx + 1);
+// ── Operations stats ───────────────────────────────────────────
+const opT = { add:0, sub:0, mul:0, div:0 };
+for (const [, v] of Object.entries(niveis.historico || {})) {
+  if (v.tipos_acertos) {
+    opT.add += v.tipos_acertos.add || 0;
+    opT.sub += v.tipos_acertos.sub || 0;
+    opT.mul += v.tipos_acertos.mul || 0;
+    opT.div += v.tipos_acertos.div || 0;
   }
-  return html;
+}
+const opSum = opT.add + opT.sub + opT.mul + opT.div;
+const opPct = k => opSum > 0 ? Math.round(opT[k] / opSum * 100) : 0;
+
+// ── History entries (last 6) ───────────────────────────────────
+const histDisplay = Object.entries(niveis.historico || {})
+  .map(([ts, v]) => ({ ts: Number(ts), ...v }))
+  .sort((a, b) => b.ts - a.ts)
+  .slice(0, 6);
+
+// ── Position badge ─────────────────────────────────────────────
+let posBadge = '';
+if (myGeral === 1)                        posBadge = '🏆 #1 Geral!';
+else if (myTurma === 1)                    posBadge = '👑 #1 na turma';
+else if (myTurma !== null && myTurma <= 5) posBadge = `🎉 #${myTurma} na turma`;
+else if (myTurma !== null)                 posBadge = `#${myTurma} na turma`;
+else if (myGeral !== null)                 posBadge = `#${myGeral} geral`;
+
+// ── Distance bar ───────────────────────────────────────────────
+const topLv   = liderGeral ? (liderGeral.melhor_nivel || 1) : nivelAtual;
+const barPct  = topLv > 0 ? Math.min(100, Math.round(nivelAtual / topLv * 100)) : 100;
+const distCap = liderGeral && liderGeral.nome !== nomeAluno
+  ? `<strong>${topLv - nivelAtual}</strong> nível${topLv - nivelAtual !== 1 ? 'is' : ''} de distância para ${escH(liderGeral.nome)} · ${escH(liderGeral.turma||'?')}`
+  : `<strong>🏆 Você é o líder geral!</strong>`;
+
+// ── Ranking rows ───────────────────────────────────────────────
+function buildRankList(list, meIdx) {
+  const top = list.slice(0, 7);
+  // Add current player if not in top 7
+  const meInTop = top.findIndex((p, i) => i === meIdx || (p.nome === nomeAluno && p.turma === turma)) >= 0;
+  if (!meInTop && meIdx >= 7) top.push(list[meIdx]);
+  return top.map((p, i) => {
+    const realIdx = list.findIndex(r => r.nome === p.nome && r.turma === p.turma);
+    const isMe = p.nome === nomeAluno && p.turma === turma;
+    return buildRankRow(p, realIdx, isMe);
+  }).join('');
 }
 
-const histHtml = historico.length === 0
-  ? `<div class="j-empty">Nenhuma partida ainda.<br>Jogue e volte aqui!</div>`
-  : historico.map(([ts, e]) => {
-      const ok      = e.resultado === 'completou';
-      const badgeCls = ok ? 'ok' : 'fail';
-      const acertos  = e.acertos ?? '—';
-      const erros    = e.erros    ?? '—';
-      const badgePerf = ok && (e.erros || 0) === 0 && e.acertos > 0
-        ? `<span class="j-badge-mini j-badge-perf">★ Perfeito</span>` : '';
-      const badgeFail = !ok
-        ? `<span class="j-badge-mini j-badge-fail">⏰ Tempo</span>` : '';
-      return `<div class="j-hist-row">
-        <div class="j-level-badge ${badgeCls}">N${e.nivel}</div>
-        <div class="j-hist-info">
-          <div class="j-hist-date">${fmtDate(Number(ts))}</div>
-          <div class="j-hist-scores">
-            ${typeof e.acertos === 'number' ? `<span class="j-score ok">✓ ${acertos}</span><span class="j-score fail">✗ ${erros}</span>` : `<span class="j-score ok">${ok ? 'Completou' : ''}</span>`}
-            ${badgePerf}${badgeFail}
-          </div>
-        </div>
-      </div>`;
-    }).join('');
-
-// Nível grid: show from 1 to max(melhorNivel, nivelAtual) + 5 (round to 6)
-const gridCount = Math.max(12, Math.ceil((maxLv + 2) / 6) * 6);
-
-const levelGridHtml = Array.from({ length: gridCount }, (_, i) => {
-  const lv = i + 1;
-  const stats = levelStats[lv] || {};
-  let cls, inner;
-
-  if (lv === nivelAtual) {
-    cls = 'current';
-    inner = `<span class="j-lv-tag">atual</span><div class="j-lv-num">${lv}</div>`;
-  } else if (lv > maxLv) {
-    cls = 'locked';
-    inner = `<div class="j-lv-num">${lv}</div>`;
-  } else if (stats.perfeito) {
-    cls = 'perfect';
-    inner = `<div class="j-lv-num">${lv}</div><div class="j-lv-sub">perfeito</div><div class="j-lv-star">★</div>`;
-  } else if (stats.feito) {
-    cls = 'done';
-    inner = `<div class="j-lv-num">${lv}</div><div class="j-lv-sub">feito</div>`;
-  } else if (lv < nivelAtual) {
-    cls = 'done';
-    inner = `<div class="j-lv-num">${lv}</div><div class="j-lv-sub">feito</div>`;
-  } else {
-    cls = 'locked';
-    inner = `<div class="j-lv-num">${lv}</div>`;
-  }
-
-  const clickable = cls !== 'locked';
-  return `<div class="j-lv ${cls}"${clickable ? ` onclick="jogarNivel(${lv})" title="Jogar nível ${lv}"` : ''}>${inner}</div>`;
-}).join('');
-
-// Sprint personal best do aluno
-const mySprintEntry = sprintAll.find(r => r.nome === nomeAluno && r.turma === turma);
-const mySprintBest  = mySprintEntry ? (mySprintEntry.melhor_acertos || 0) : 0;
-const mySprintRank  = mySprintEntry ? sprintAll.indexOf(mySprintEntry) + 1 : null;
-const mySprintRankT = mySprintEntry ? sprintTurma.indexOf(mySprintEntry) + 1 : null;
-
+// ── Render full page ───────────────────────────────────────────
 document.getElementById("content").innerHTML = `
-<div class="j-wrap">
+<div class="g-page">
 
-  <!-- Abas principais -->
-  <div class="j-main-tabs">
-    <button class="j-main-tab active" id="main-tab-normal" onclick="switchMainTab('normal')">
-      ▶ Normal
-    </button>
-    <button class="j-main-tab sprint" id="main-tab-sprint" onclick="switchMainTab('sprint')">
-      ⚡ Sprint
-    </button>
+  <div class="g-page-hdr">
+    <div>
+      <h1>🎮 Jogos</h1>
+      <span>Mini-jogos educativos · ${escH(nomeAluno)}${isDupla?' · '+escH(alunos[1]):''}</span>
+    </div>
   </div>
 
-  <!-- ── Aba Normal ── -->
-  <div class="j-tab-panel" id="panel-normal">
-
-    ${allPerfect ? `
-    <div class="j-parabens">
-      <div class="j-parabens-emoji">🏆</div>
-      <div>
-        <div class="j-parabens-title">Parabéns, ${escH(nomeAluno)}!</div>
-        <div class="j-parabens-sub">Você completou todos os ${maxLv} níveis com ★ estrela! Desempenho perfeito, sem nenhum erro!</div>
+  <!-- ── Tabuada card ── -->
+  <div class="g-card">
+    <div class="g-card-top">
+      <div class="g-title">
+        <div class="g-icon">🎯</div>
+        <div>
+          <h2>Tabuada</h2>
+          <p>Combine operações com seus resultados</p>
+        </div>
       </div>
-    </div>` : ''}
-
-    <!-- Stats + botão jogar -->
-    <div class="j-card" style="margin-bottom:16px;padding:0;overflow:hidden">
-      <div class="j-stats-row" style="border-top:none;margin-top:0">
-        <div class="j-stat"><div class="j-stat-val">${nivelAtual}</div><div class="j-stat-lbl">Nível atual</div></div>
-        <div class="j-stat"><div class="j-stat-val">${totalPartidas}</div><div class="j-stat-lbl">Partidas</div></div>
-        <div class="j-stat"><div class="j-stat-val orange">${sequencia}</div><div class="j-stat-lbl">Sequência 🔥</div></div>
-        <div class="j-stat"><div class="j-stat-val" style="color:#FAB800">${maiorCombo || '—'}</div><div class="j-stat-lbl">Maior combo 🔥</div></div>
-      </div>
-      <div style="padding:12px 16px;border-top:0.5px solid var(--j-border)">
-        <a href="/aluno/tabuada.html" class="j-play-btn" style="width:100%;justify-content:center">▶ Jogar agora</a>
+      <div class="g-lv-badge">
+        <span class="lbl">Nível atual</span>
+        <span class="val">${nivelAtual}</span>
       </div>
     </div>
 
-    <!-- Social stats -->
-    <div class="j-card" id="tab-social-card" style="margin-bottom:16px;padding:12px 16px;display:none">
-      <div id="tab-social-info" style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--j-muted);line-height:1.5"></div>
+    <div class="g-stats">
+      <div class="g-stat"><div class="v" style="color:var(--g-pl)">${melhorNivel}</div><div class="l">Melhor nível</div></div>
+      <div class="g-stat"><div class="v" style="color:var(--g-cyan)">${totalPart}</div><div class="l">Partidas</div></div>
+      <div class="g-stat"><div class="v" style="color:var(--g-orange)">🔥 ${maiorCombo||'—'}</div><div class="l">Maior combo</div></div>
     </div>
 
-    ${temTipos ? `
-    <!-- Stats por tipo de operação -->
-    <div class="j-card" style="margin-bottom:16px">
-      <div class="j-card-hdr" style="color:var(--j-pri)">
-        <svg viewBox="0 0 24 24" style="fill:var(--j-pri)"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
-        Operações praticadas
+    <!-- Distância pro líder -->
+    <div class="g-dist">
+      <div class="g-dist-lbl">Distância pro líder geral</div>
+      <div class="g-dist-row">
+        <span class="g-dist-you">Nv ${nivelAtual}</span>
+        <div class="g-dist-bw"><div class="g-dist-bf" style="width:${barPct}%"></div></div>
+        <span class="g-dist-top">Nv ${topLv}</span>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
-        ${[['add','+','Soma'],['sub','−','Subtração'],['mul','×','Multiplicação'],['div','÷','Divisão']].map(([k,sym,nome]) => {
-          const pct = totalTipos > 0 ? Math.round(tipoTotais[k] / totalTipos * 100) : 0;
-          return `
-        <div style="text-align:center;padding:12px 6px;background:rgba(255,255,255,.02);border:0.5px solid var(--j-border);border-radius:10px">
-          <div style="font-size:20px;font-weight:900;color:var(--j-pri);line-height:1">${tipoTotais[k]}</div>
-          <div style="font-size:13px;font-weight:700;color:var(--j-muted);margin-top:2px">${sym}</div>
-          <div style="font-size:10px;color:var(--j-muted);margin-top:2px">${nome}</div>
-          <div style="height:3px;background:var(--border);border-radius:2px;margin:6px 4px 0"><div style="height:3px;background:var(--j-pri);border-radius:2px;width:${pct}%"></div></div>
-          <div style="font-size:9px;color:var(--j-muted);margin-top:3px">${pct}%</div>
-        </div>`;
-        }).join('')}
-      </div>
-    </div>` : ''}
-
-    <!-- Grid 2 colunas -->
-    <div class="j-grid2">
-      <div class="j-card">
-        <div class="j-card-hdr" style="color:var(--j-orange)">
-          <svg viewBox="0 0 24 24" style="fill:var(--j-orange)"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21L13 13.04V8h-1z"/></svg>
-          Últimas partidas
-        </div>
-        ${histHtml}
-      </div>
-      <div class="j-card" style="overflow:visible">
-        <div class="j-card-hdr" style="color:var(--j-gold)">
-          <svg viewBox="0 0 24 24" style="fill:var(--j-gold)"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg>
-          Ranking · Nível
-        </div>
-        <div class="j-tabs" id="ranking-tabs">
-          <button class="j-tab" onclick="switchRankTab(this,'turma')">Turma ${escH(turma)}</button>
-          <button class="j-tab active" onclick="switchRankTab(this,'geral')">Geral</button>
-        </div>
-        <div class="j-rank-list hidden" id="tab-turma">${makeRankRows(rankingTurma)}</div>
-        <div class="j-rank-list" id="tab-geral">${makeRankRows(rankingAll)}</div>
-      </div>
+      <div class="g-dist-cap">${distCap}</div>
     </div>
 
-    <!-- Grid de níveis -->
-    <div class="j-levels-card">
-      <div class="j-levels-hdr">
-        <div class="j-levels-hdr-left">
-          <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          Níveis
-        </div>
-        <div class="j-legend">
-          <div class="j-leg-item"><div class="j-leg-dot gold"></div>Perfeito</div>
-          <div class="j-leg-item"><div class="j-leg-dot purple"></div>Concluído</div>
-          <div class="j-leg-item"><div class="j-leg-dot grey"></div>Bloqueado</div>
-        </div>
-      </div>
-      <div class="j-level-grid">${levelGridHtml}</div>
+    <!-- Live info -->
+    <div class="g-live">
+      <div class="g-live-dot"><span class="dot"></span><strong>${sessoesHoje}</strong>&nbsp;sessões hoje</div>
+      ${liderTurma && liderTurma.nome !== nomeAluno ? `
+      <div class="g-ldr-info">
+        <span>🏫</span>
+        <strong>${escH(liderTurma.nome)}</strong>
+        <span>lidera ${escH(turma)}</span>
+        <span class="g-ldr-lv">Nv ${liderTurma.melhor_nivel||1}</span>
+      </div>` : liderTurma ? `<div class="g-ldr-info">👑 <strong style="color:var(--g-gold)">Você lidera ${escH(turma)}!</strong></div>` : ''}
+      ${posBadge ? `<div class="g-pos-badge">${posBadge}</div>` : ''}
     </div>
 
+    <!-- Mode selector -->
+    <div class="g-modes">
+      <button class="g-mode normal active" id="gBtnNormal" onclick="gSetMode('normal')">
+        <span class="ico">▶</span>
+        <div><span class="nm">Normal</span><span class="ds">Suba de nível no seu ritmo</span></div>
+      </button>
+      <button class="g-mode sprint" id="gBtnSprint" onclick="gSetMode('sprint')">
+        <span class="ico">⚡</span>
+        <div><span class="nm">Sprint</span><span class="ds">Máximo de pares em 3 min</span></div>
+      </button>
+    </div>
+
+    <!-- Play button -->
+    <div class="g-play-area">
+      <button class="g-play-btn nm" id="gPlayBtn" onclick="gPlay()">
+        <span class="arr">▶</span> JOGAR AGORA
+      </button>
+    </div>
   </div>
 
-  <!-- ── Aba Sprint ── -->
-  <div class="j-tab-panel hidden" id="panel-sprint">
-
-    ${mySprintBest > 0 ? `
-    <div class="j-parabens">
-      <div class="j-parabens-emoji">⚡</div>
-      <div>
-        <div class="j-parabens-title">Parabéns, ${escH(nomeAluno)}!</div>
-        <div class="j-parabens-sub">Seu recorde de sprint é de <strong style="color:var(--j-gold)">${mySprintBest} operações</strong> em 3 minutos!${mySprintRank ? ` · #${mySprintRank} no ranking geral` : ''}</div>
+  <!-- ── Bottom grid: ops + history ── -->
+  <div class="g-bottom">
+    <div class="g-mini ops">
+      <h3>📊 Operações praticadas</h3>
+      <div class="g-ops">
+        ${[
+          ['add','+','Soma','var(--g-green)'],
+          ['sub','−','Subtração','var(--g-cyan)'],
+          ['mul','×','Multiplicação','var(--g-orange)'],
+          ['div','÷','Divisão','#ff79c6'],
+        ].map(([k,sym,nome,col]) => `
+        <div class="g-op">
+          <div class="v" style="color:${col}">${opT[k]||0}</div>
+          <div class="n">${sym} ${nome}</div>
+          <div class="p" style="color:${col}">${opPct(k)}%</div>
+        </div>`).join('')}
       </div>
-    </div>` : ''}
-
-    <!-- Personal best + botão -->
-    <div class="j-sprint-hero">
-      ${mySprintBest
-        ? `<div class="j-sprint-hero-val">${mySprintBest}</div>`
-        : `<div style="font-size:40px;line-height:1;flex-shrink:0">🏃</div>`}
-      <div class="j-sprint-hero-info">
-        <div class="j-sprint-hero-label">Seu recorde · 3 minutos</div>
-        <div class="j-sprint-hero-title">${mySprintBest ? `${mySprintBest} operações` : 'Ainda sem recorde'}</div>
-        <div class="j-sprint-hero-sub">
-          ${mySprintRank  ? `#${mySprintRank} geral` : ''}
-          ${mySprintRank && mySprintRankT ? ' · ' : ''}
-          ${mySprintRankT ? `#${mySprintRankT} na turma` : ''}
-          ${!mySprintRank ? 'Faça seu primeiro sprint e apareça no ranking!' : ''}
-        </div>
-      </div>
-      <a href="/aluno/tabuada.html?modo=sprint" class="j-sprint-play-btn">⚡ Iniciar Sprint</a>
     </div>
 
-    <!-- Ranking sprint -->
-    <div class="j-card" style="overflow:visible">
-      <div class="j-card-hdr" style="color:#a78bfa">
-        <svg viewBox="0 0 24 24" style="fill:#a78bfa"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg>
-        Ranking · Sprint · 3 min
+    <div class="g-mini hist">
+      <h3>🕐 Últimas partidas</h3>
+      <div class="g-hist">
+        ${histDisplay.length ? histDisplay.map(e => {
+          const ok = e.resultado === 'completou';
+          const ts = new Date(e.ts);
+          const tm = `${ts.getHours()}:${String(ts.getMinutes()).padStart(2,'0')}`;
+          const combo = e.maior_combo_sessao || 0;
+          const tag = ok ? (e.erros===0 ? '✨ Perfeito' : '✓ Ok') : '⏱ Tempo';
+          const tagCol = ok ? 'var(--g-green)' : 'var(--g-red)';
+          return `<div class="g-hi">
+            <span class="g-hi-b ${ok?'ok':'fail'}">N${e.nivel||'?'}</span>
+            <span class="g-hi-s">✓${e.acertos||0} ✗${e.erros||0}</span>
+            <span style="color:${tagCol};font-size:10px">${tag}</span>
+            <span class="g-hi-c">🔥${combo}</span>
+            <span class="g-hi-t">${tm}</span>
+          </div>`;
+        }).join('')
+        : '<div style="color:var(--g-muted);font-size:12px;padding:8px 0">Nenhuma partida ainda.</div>'}
       </div>
-      <div class="j-tabs" id="sprint-tabs">
-        <button class="j-tab" onclick="switchSprintTab(this,'turma')">Turma ${escH(turma)}</button>
-        <button class="j-tab active" onclick="switchSprintTab(this,'geral')">Geral</button>
-      </div>
-      <div class="j-rank-list hidden" id="sprint-tab-turma">${makeSprintRows(sprintTurma)}</div>
-      <div class="j-rank-list" id="sprint-tab-geral">${makeSprintRows(sprintAll)}</div>
     </div>
+  </div>
 
+  <!-- ── Ranking blocks ── -->
+  <div class="g-rank-wrap">
+    <div class="g-rb geral">
+      <div class="g-rb-hdr"><h3>🏆 Ranking Geral</h3></div>
+      <div class="g-rb-list">
+        ${rankAll.length
+          ? buildRankList(rankAll, myGeralIdx)
+          : '<div style="color:var(--g-muted);font-size:12px;padding:8px">Nenhum dado ainda.</div>'}
+      </div>
+    </div>
+    <div class="g-rb turma">
+      <div class="g-rb-hdr"><h3>🏫 Turma ${escH(turma)}</h3></div>
+      <div class="g-rb-list">
+        ${rankTurma.length
+          ? buildRankList(rankTurma, myTurmaIdx)
+          : '<div style="color:var(--g-muted);font-size:12px;padding:8px">Nenhum aluno da turma ainda.</div>'}
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Level map ── -->
+  <div class="g-lvmap">
+    <div class="g-lvmap-hdr">
+      <h3>⭐ Mapa de Níveis</h3>
+      <div class="g-legend">
+        <div class="g-leg"><span class="g-leg-d dm"></span>Maestria</div>
+        <div class="g-leg"><span class="g-leg-d pf"></span>Perfeito</div>
+        <div class="g-leg"><span class="g-leg-d dn"></span>Concluído</div>
+        <div class="g-leg"><span class="g-leg-d lk"></span>Bloqueado</div>
+      </div>
+    </div>
+    <div class="g-grid">${buildLevelMap()}</div>
   </div>
 
 </div>`;
 
-window.switchMainTab = function(tab) {
-  ['normal','sprint'].forEach(t => {
-    document.getElementById('panel-' + t).classList.toggle('hidden', t !== tab);
-    document.getElementById('main-tab-' + t).classList.toggle('active', t === tab);
-  });
+// ── Event handlers ─────────────────────────────────────────────
+let gMode = 'normal';
+
+window.gSetMode = function(mode) {
+  gMode = mode;
+  document.getElementById('gBtnNormal')?.classList.toggle('active', mode === 'normal');
+  document.getElementById('gBtnSprint')?.classList.toggle('active', mode === 'sprint');
+  const btn = document.getElementById('gPlayBtn');
+  if (!btn) return;
+  if (mode === 'sprint') {
+    btn.className = 'g-play-btn sp';
+    btn.innerHTML = '<span class="arr">⚡</span> SPRINT';
+  } else {
+    btn.className = 'g-play-btn nm';
+    btn.innerHTML = '<span class="arr">▶</span> JOGAR AGORA';
+  }
 };
 
-window.switchRankTab = function(btn, tab) {
-  document.querySelectorAll('#ranking-tabs .j-tab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('tab-turma').classList.add('hidden');
-  document.getElementById('tab-geral').classList.add('hidden');
-  document.getElementById('tab-' + tab).classList.remove('hidden');
-};
-
-window.switchSprintTab = function(btn, tab) {
-  document.querySelectorAll('#sprint-tabs .j-tab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('sprint-tab-turma').classList.add('hidden');
-  document.getElementById('sprint-tab-geral').classList.add('hidden');
-  document.getElementById('sprint-tab-' + tab).classList.remove('hidden');
+window.gPlay = function() {
+  window.location.href = gMode === 'sprint'
+    ? '/aluno/tabuada.html?modo=sprint'
+    : '/aluno/tabuada.html';
 };
 
 window.jogarNivel = function(lv) {
-  if (lv === nivelAtual) {
-    window.location.href = '/aluno/tabuada.html'; // nível atual: modo normal (salva progresso)
-  } else {
-    window.location.href = `/aluno/tabuada.html?nivel=${lv}`; // nível anterior: replay
-  }
+  window.location.href = lv === nivelAtual
+    ? '/aluno/tabuada.html'
+    : `/aluno/tabuada.html?nivel=${lv}`;
 };
 
 window.toggleAvatarMenu = function() {
   document.getElementById('avatar-menu').classList.toggle('open');
 };
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('.avatar-wrap')) {
+document.addEventListener('click', e => {
+  if (!e.target.closest('.avatar-wrap'))
     document.getElementById('avatar-menu')?.classList.remove('open');
-  }
 });
-
-// ── Estatísticas sociais da Tabuada (assíncrono) ──────────────
-(async () => {
-  const hojeISO = new Date().toISOString().slice(0, 10);
-  const hojeBR  = new Date().toLocaleDateString('pt-BR');
-
-  const sessoesSnap = await get(ref(db, 'tabuada_sessoes')).catch(() => null);
-
-  const jogadoresHoje = new Set();
-  if (sessoesSnap?.exists()) {
-    sessoesSnap.forEach(child => {
-      const v = child.val();
-      if (v?.data && (v.data === hojeISO || v.data.startsWith(hojeBR)))
-        jogadoresHoje.add(v.uid || v.nome);
-    });
-  }
-
-  // Usa rankingTurma já carregado
-  const topTurma = rankingTurma[0] || null;
-  const pos = rankingTurma.findIndex(r => r.nome === nomeAluno);
-
-  const linhas = [];
-  if (jogadoresHoje.size > 0)
-    linhas.push(`🔥 <strong>${jogadoresHoje.size}</strong> jogaram hoje`);
-  if (topTurma)
-    linhas.push(`🏆 Top da turma: <strong>${topTurma.nome}</strong> · Nível ${topTurma.melhor_nivel || topTurma.nivel_atual || 1}`);
-  if (pos >= 0)
-    linhas.push(`📍 Sua posição na turma: <strong>#${pos + 1}</strong>`);
-  if (maiorCombo > 0)
-    linhas.push(`🔥 Maior sequência: <strong>${maiorCombo}</strong> acertos seguidos`);
-
-  if (!linhas.length) return;
-  const card = document.getElementById('tab-social-card');
-  const info = document.getElementById('tab-social-info');
-  if (!card || !info) return;
-  info.innerHTML = linhas.map(l => `<div>${l}</div>`).join('');
-  card.style.display = '';
-})();
 </script>
 </body>
 </html>
