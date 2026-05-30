@@ -306,8 +306,8 @@ async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo
 
 // ── Level config ──────────────────────────────────────────────
 function getLevelConfig(lvl) {
-  // Níveis 81-100: dificuldade congelada no nível 80, +40s de tempo
-  if (lvl > 80 && lvl <= 100) { const cfg = getLevelConfig(80); return { ...cfg, secs: cfg.secs + 40 }; }
+  // Níveis 81-120: dificuldade congelada no nível 80, +40s de tempo
+  if (lvl > 80 && lvl <= 120) { const cfg = getLevelConfig(80); return { ...cfg, secs: cfg.secs + 40 }; }
   // Níveis 1-54: adição + subtração juntas, resultados crescem de 8 a 25
   if (lvl <= 54) {
     const t         = (lvl - 1) / 53;
