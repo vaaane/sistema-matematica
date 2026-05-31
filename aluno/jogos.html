@@ -279,9 +279,6 @@ function calcStdPos(lista) {
 // ── Skeleton ──────────────────────────────────────────────────
 document.getElementById("content").innerHTML = `
 <div class="g-page">
-  <div class="g-page-hdr">
-    <div><h1>🎮 Jogos</h1><span>Mini-jogos educativos</span></div>
-  </div>
   <div class="g-card">
     <div class="g-card-top">
       <div class="g-title">
@@ -520,13 +517,6 @@ function buildRankList(list, listPos, meIdx) {
 // ── Render full page ───────────────────────────────────────────
 document.getElementById("content").innerHTML = `
 <div class="g-page">
-
-  <div class="g-page-hdr">
-    <div>
-      <h1>🎮 Jogos</h1>
-      <span>Mini-jogos educativos · ${escH(nomeAluno)}${isDupla?' · '+escH(alunos[1]):''}</span>
-    </div>
-  </div>
 
   <!-- ── Tabuada card ── -->
   <div class="g-card">
