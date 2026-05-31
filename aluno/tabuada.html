@@ -842,7 +842,7 @@ function buildGame() {
   selectedCard = null;
   removedCount = 0;
   gameOver    = false;
-  acertos = 0; erros = 0;
+  acertos = 0; erros = 0; comboCount = 0;
   tipoAcertos = { add:0, sub:0, mul:0, div:0 };
   tipoErros   = { add:0, sub:0, mul:0, div:0 };
   _animating  = false;
@@ -1227,7 +1227,8 @@ async function onGameWin() {
 
 // ── Timer end ─────────────────────────────────────────────────
 async function onTimerEnd() {
-  gameOver = true;
+  gameOver   = true;
+  _animating = false;  // cancela qualquer lock de erro pendente
   somDerrota();
 
   const nivelJogado = nivelAtual;
@@ -1283,7 +1284,6 @@ window.fecharOverlay = function() {
 window.reiniciarNivel = function() {
   if (_sprintEnded) return;
   stopTimer();
-  comboCount = 0;
   buildGame();
 };
 
