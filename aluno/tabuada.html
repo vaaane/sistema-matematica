@@ -442,8 +442,7 @@ function opCardHtml(op) {
 // ── Card flight animation ─────────────────────────────────────
 function launchCard(el, card) {
   const gridRect = el.getBoundingClientRect();
-  const slot = document.getElementById(card.kind === 'op' ? 'slot-op' : 'slot-res');
-  const slotRect = slot.getBoundingClientRect();
+  const slotId   = card.kind === 'op' ? 'slot-op' : 'slot-res';
 
   el.style.visibility = 'hidden';
   el.style.pointerEvents = 'none';
@@ -465,6 +464,10 @@ function launchCard(el, card) {
   });
   document.body.appendChild(clone);
   requestAnimationFrame(() => requestAnimationFrame(() => {
+    // Relê a posição do slot dentro do rAF para garantir que seja atual
+    const slot     = document.getElementById(slotId);
+    if (!slot) return;
+    const slotRect = slot.getBoundingClientRect();
     clone.style.transition = 'left .28s ease, top .28s ease, width .28s ease, height .28s ease';
     clone.style.left   = slotRect.left   + 'px';
     clone.style.top    = slotRect.top    + 'px';
@@ -475,12 +478,14 @@ function launchCard(el, card) {
 }
 
 function flyBack(info, el) {
-  const { clone, origRect } = info;
+  const { clone } = info;
+  // Relê a posição atual do elemento (corrige deslocamento por scroll)
+  const rect = el.getBoundingClientRect();
   clone.style.transition = 'left .28s ease, top .28s ease, width .28s ease, height .28s ease';
-  clone.style.left   = origRect.left   + 'px';
-  clone.style.top    = origRect.top    + 'px';
-  clone.style.width  = origRect.width  + 'px';
-  clone.style.height = origRect.height + 'px';
+  clone.style.left   = rect.left   + 'px';
+  clone.style.top    = rect.top    + 'px';
+  clone.style.width  = rect.width  + 'px';
+  clone.style.height = rect.height + 'px';
   setTimeout(() => {
     clone.remove();
     el.style.visibility = '';
@@ -740,6 +745,7 @@ let timerInterval = null;
 let selectedCard = null;  // { el, pairId, kind, op, result }
 let removedCount = 0, totalPairs = 0;
 let gameOver = false;
+let _animating = false;  // bloqueia clicks durante animação de erro
 let acertos = 0, erros = 0, comboCount = 0, comboSessao = 0;
 let tipoAcertos = { add:0, sub:0, mul:0, div:0 };
 let tipoErros   = { add:0, sub:0, mul:0, div:0 };
@@ -839,6 +845,7 @@ function buildGame() {
   acertos = 0; erros = 0;
   tipoAcertos = { add:0, sub:0, mul:0, div:0 };
   tipoErros   = { add:0, sub:0, mul:0, div:0 };
+  _animating  = false;
 
   const pairs = generatePairs(cfg.type, cfg.pairs, cfg.maxResult, cfg.minMul || 0, cfg.minDiv || 0);
   // Fallback: completa com add usando o mesmo usedR para evitar resultados duplicados
@@ -1044,6 +1051,7 @@ function deselectCard() {
 
 function onCardClick(el, card) {
   if (gameOver) return;
+  if (_animating) return;
   if (el.style.visibility === 'hidden') return;
   resumeAudio();
 
@@ -1102,7 +1110,7 @@ function onCardClick(el, card) {
     if (removedCount >= totalPairs) setTimeout(onGameWin, 500);
 
   } else {
-    // ❌ Errado — zera selectedCard imediatamente para evitar race condition
+    // ❌ Errado
     erros++;
     const _tipoErr = symToTipo((first.kind === 'op' ? first.op : card.op)?.sym);
     if (_tipoErr) tipoErros[_tipoErr]++;
@@ -1115,9 +1123,11 @@ function onCardClick(el, card) {
     if (_badge) _badge.innerHTML = '';
     if (_isSprint) { _sprintErrTotal++; updateSprintDisplay(); }
     selectedCard = null;
+    _animating = true;  // bloqueia novos clicks enquanto clones voltam
     flyBack(first.flyInfo, first.el);
     flyBack(flyInfo2, el);
     setTimeout(() => {
+      _animating = false;
       clearSlots();
       setTimeout(() => setStatus(""), 800);
     }, 600);
