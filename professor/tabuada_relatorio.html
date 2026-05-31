@@ -60,6 +60,18 @@ requireProfessor();
 renderSidebarProfessor("sidebar", "tabuada_relatorio");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
+// Standard ranking: empates compartilham posição, próximo pula
+// ex: [84,84,82] → [1,1,3]
+function stdPos(lista, getVal) {
+  let pos = 0, n = 0, last = null;
+  return lista.map(item => {
+    n++;
+    const v = getVal(item);
+    if (v !== last) { pos = n; last = v; }
+    return pos;
+  });
+}
+
 // ── Load data ─────────────────────────────────────────────────
 let allData = [];
 let filtroTurma = "";
@@ -304,17 +316,19 @@ ${top3.length ? `
         <th>#</th><th>ALUNO</th><th>TURMA</th><th>NÍVEL ATUAL</th><th>PARTIDAS</th><th>MAIOR COMBO</th><th>ÚLTIMA PARTIDA</th>
       </tr></thead>
       <tbody>
-        ${data.map((d, i) => {
+        ${(() => {
+          const pos = stdPos(data, d => Math.max(d.nivel_atual||1, d.melhor_nivel||1));
+          return data.map((d, i) => {
           const nivelMax = Math.max(d.nivel_atual||1, d.melhor_nivel||1);
           return `<tr>
-          <td style="color:var(--text-muted);font-weight:600">${i+1}</td>
+          <td style="color:var(--text-muted);font-weight:600">${pos[i]}</td>
           <td><strong>${d.nome}</strong></td>
           <td>${d.turma}</td>
           <td><span class="lvl-badge ${lvlClass(nivelMax)}">${nivelMax}</span></td>
           <td style="color:var(--text-muted);font-size:13px">${d.total_partidas||0}</td>
           <td style="font-size:13px;color:${d.maior_combo>=5?'#FAB800':d.maior_combo>=3?'#f97316':'var(--text-muted)'};font-weight:${d.maior_combo>=3?'700':'400'}">${d.maior_combo||'—'}</td>
           <td style="color:var(--text-muted);font-size:12px">${fmtDate(d.ultima_partida)}</td>
-        </tr>`;}).join('')}
+        </tr>`;}).join('');})()}
       </tbody>
     </table>
   </div>`}

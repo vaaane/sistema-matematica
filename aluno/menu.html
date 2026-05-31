@@ -720,8 +720,13 @@ ${tempoPodioHtml}
 
   const myGeralIdx = rankAll.findIndex(r => r.nome === alunos[0] && r.turma === turma);
   const myTurmaIdx = rankTurma.findIndex(r => r.nome === alunos[0] && r.turma === turma);
-  const myGeral    = myGeralIdx >= 0 ? myGeralIdx + 1 : null;
-  const myTurma    = myTurmaIdx >= 0 ? myTurmaIdx + 1 : null;
+  // Standard ranking: empates → mesma posição, próximo pula
+  { let p = 0, n = 0, l = null;
+    rankAll.forEach(r => { n++; const v=r.melhor_nivel||0; if(v!==l){p=n;l=v;} r._pos=p; }); }
+  { let p = 0, n = 0, l = null;
+    rankTurma.forEach(r => { n++; const v=r.melhor_nivel||0; if(v!==l){p=n;l=v;} r._pos=p; }); }
+  const myGeral    = myGeralIdx >= 0 ? rankAll[myGeralIdx]._pos   : null;
+  const myTurma    = myTurmaIdx >= 0 ? rankTurma[myTurmaIdx]._pos : null;
   const meuNivel   = myGeralIdx >= 0 ? (rankAll[myGeralIdx].melhor_nivel || 1) : 0;
 
   // ── Preencher o body do card Tabuada ──────────────────────
@@ -769,13 +774,17 @@ ${tempoPodioHtml}
   if (cardEl) {
     const medals  = ['🥇','🥈','🥉'];
     const top3    = rankAll.slice(0, 3);
-    const top3Html = top3.length ? top3.map((d, i) => `
+    const top3Html = top3.length ? top3.map((d, i) => {
+      const p = d._pos || (i+1);
+      const med = p <= 3 ? medals[p-1] : p;
+      return `
       <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:${i < 2 ? '0.5px solid var(--border)' : 'none'}">
-        <span style="font-size:18px;min-width:24px">${medals[i]}</span>
+        <span style="font-size:18px;min-width:24px">${med}</span>
         <div style="flex:1;min-width:0;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(d.nome)}</div>
         <span style="font-size:11px;color:var(--text-muted);margin-right:6px">${esc(d.turma)}</span>
         <span style="font-size:12px;font-weight:700;color:#7F77DD">Nv ${d.melhor_nivel||1}</span>
-      </div>`).join('')
+      </div>`;
+    }).join('')
       : '<p style="font-size:13px;color:var(--text-muted);padding:4px 0">Nenhum aluno jogou ainda.</p>';
 
     const posRankHtml = (myGeral || myTurma) ? `

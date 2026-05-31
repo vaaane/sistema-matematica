@@ -146,6 +146,15 @@ if (rankTabSnap?.exists()) {
   tabTop5.sort((a, b) => (b.melhor_nivel||0) - (a.melhor_nivel||0) || (b.total_partidas||0) - (a.total_partidas||0));
   tabTop5.splice(5);
 }
+// Posições standard para o top 5
+{ let _p = 0, _n = 0, _l = null;
+  tabTop5.forEach((d, i) => {
+    _n++;
+    const v = d.melhor_nivel || 0;
+    if (v !== _l) { _p = _n; _l = v; }
+    d._pos = _p;
+  });
+}
 
 // ── Alertas automáticos ───────────────────────────────────────
 const todosAlunosFlat = Object.values(ALUNOS_POR_TURMA).flat();
@@ -270,7 +279,8 @@ document.getElementById("content").innerHTML = `
       ${tabTop5.length === 0
         ? '<div class="empty-state"><p>Nenhum aluno jogou ainda.</p></div>'
         : tabTop5.map((d, i) => {
-            const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `<span style="font-size:13px;font-weight:700;color:var(--text-muted)">${i+1}</span>`;
+            const pos = d._pos;
+            const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : `<span style="font-size:13px;font-weight:700;color:var(--text-muted)">${pos}</span>`;
             return `<div class="list-row">
               <span style="font-size:${i < 3 ? '20' : '14'}px;min-width:26px;text-align:center;line-height:1">${medal}</span>
               <div style="flex:1;min-width:0">

@@ -265,6 +265,17 @@ document.getElementById("avatar-initials").textContent = nomeAluno[0].toUpperCas
 
 function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+// Standard ranking: empates compartilham posição, próximo pula
+function calcStdPos(lista) {
+  let pos = 0, n = 0, last = null;
+  return lista.map(item => {
+    n++;
+    const v = item.melhor_nivel || 0;
+    if (v !== last) { pos = n; last = v; }
+    return pos;
+  });
+}
+
 // ── Skeleton ──────────────────────────────────────────────────
 document.getElementById("content").innerHTML = `
 <div class="g-page">
@@ -348,8 +359,10 @@ const liderGeral = rankAll[0] || null;
 const liderTurma = rankTurma[0] || null;
 const myGeralIdx = rankAll.findIndex(r => r.nome === nomeAluno && r.turma === turma);
 const myTurmaIdx = rankTurma.findIndex(r => r.nome === nomeAluno && r.turma === turma);
-const myGeral    = myGeralIdx >= 0 ? myGeralIdx + 1 : null;
-const myTurma    = myTurmaIdx >= 0 ? myTurmaIdx + 1 : null;
+const rankAllPos   = calcStdPos(rankAll);
+const rankTurmaPos = calcStdPos(rankTurma);
+const myGeral    = myGeralIdx >= 0 ? rankAllPos[myGeralIdx]   : null;
+const myTurma    = myTurmaIdx >= 0 ? rankTurmaPos[myTurmaIdx] : null;
 
 // Sessions today (no dedup)
 let sessoesHoje = 0;
@@ -378,7 +391,7 @@ function computeMyDelta() {
 }
 const myDelta = computeMyDelta();
 
-function buildRankRow(p, posIdx, isMe) {
+function buildRankRow(p, pos, isMe) {
   const medals  = ['🥇','🥈','🥉'];
   const lvCols  = ['var(--g-gold)','#c0c0c0','#cd7f32'];
   const avSt    = [
@@ -386,19 +399,20 @@ function buildRankRow(p, posIdx, isMe) {
     'background:rgba(192,192,192,.15);color:#c0c0c0;border:1.5px solid rgba(192,192,192,.3)',
     'background:rgba(205,127,50,.15);color:#cd7f32;border:1.5px solid rgba(205,127,50,.28)',
   ];
-  const pos = posIdx < 3
-    ? `<span class="g-ri-medal">${medals[posIdx]}</span>`
-    : `<span class="g-ri-pos">${posIdx+1}</span>`;
+  const posSlot = pos <= 3
+    ? `<span class="g-ri-medal">${medals[pos-1]}</span>`
+    : `<span class="g-ri-pos">${pos}</span>`;
+  const pi = pos - 1;  // índice de cor (0,1,2)
   const avStyle = isMe
     ? 'background:rgba(124,92,252,.2);color:var(--g-pl);border:1.5px solid rgba(124,92,252,.5)'
-    : posIdx < 3 ? avSt[posIdx]
+    : pos <= 3 ? avSt[pi]
     : 'background:var(--g-bg3);color:var(--g-muted);border:1.5px solid var(--g-bdr)';
-  const lvColor = isMe ? 'var(--g-pl)' : posIdx < 3 ? lvCols[posIdx] : 'var(--g-muted)';
+  const lvColor = isMe ? 'var(--g-pl)' : pos <= 3 ? lvCols[pi] : 'var(--g-muted)';
   const delta = isMe ? myDelta : 0;
   const dc = delta > 0 ? 'up' : delta < 0 ? 'down' : 'same';
   const dt = delta > 0 ? `↑${delta}` : delta < 0 ? `↓${Math.abs(delta)}` : '–';
   return `<div class="g-ri${isMe?' me':''}">
-    ${pos}
+    ${posSlot}
     <div class="g-ri-av" style="${avStyle}">${(p.nome||'?')[0].toUpperCase()}</div>
     <div class="g-ri-info">
       <div class="g-ri-name" style="${isMe?'color:var(--g-pl)':''}">${escH(p.nome)}${isMe?' ★':''}</div>
@@ -491,15 +505,15 @@ const distCap = liderGeral && liderGeral.nome !== nomeAluno
   : `<strong>🏆 Você é o líder geral!</strong>`;
 
 // ── Ranking rows ───────────────────────────────────────────────
-function buildRankList(list, meIdx) {
+function buildRankList(list, listPos, meIdx) {
   const top = list.slice(0, 7);
   // Add current player if not in top 7
-  const meInTop = top.findIndex((p, i) => i === meIdx || (p.nome === nomeAluno && p.turma === turma)) >= 0;
+  const meInTop = top.some(p => p.nome === nomeAluno && p.turma === turma);
   if (!meInTop && meIdx >= 7) top.push(list[meIdx]);
-  return top.map((p, i) => {
+  return top.map(p => {
     const realIdx = list.findIndex(r => r.nome === p.nome && r.turma === p.turma);
     const isMe = p.nome === nomeAluno && p.turma === turma;
-    return buildRankRow(p, realIdx, isMe);
+    return buildRankRow(p, listPos[realIdx], isMe);
   }).join('');
 }
 
@@ -628,7 +642,7 @@ document.getElementById("content").innerHTML = `
       <div class="g-rb-hdr"><h3>🏆 Ranking Geral</h3></div>
       <div class="g-rb-list">
         ${rankAll.length
-          ? buildRankList(rankAll, myGeralIdx)
+          ? buildRankList(rankAll, rankAllPos, myGeralIdx)
           : '<div style="color:var(--g-muted);font-size:12px;padding:8px">Nenhum dado ainda.</div>'}
       </div>
     </div>
@@ -636,7 +650,7 @@ document.getElementById("content").innerHTML = `
       <div class="g-rb-hdr"><h3>🏫 Turma ${escH(turma)}</h3></div>
       <div class="g-rb-list">
         ${rankTurma.length
-          ? buildRankList(rankTurma, myTurmaIdx)
+          ? buildRankList(rankTurma, rankTurmaPos, myTurmaIdx)
           : '<div style="color:var(--g-muted);font-size:12px;padding:8px">Nenhum aluno da turma ainda.</div>'}
       </div>
     </div>
