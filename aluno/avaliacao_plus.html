@@ -768,9 +768,10 @@ function renderQuestaoF1() {
   const v = valorAtualF1();
   const progPct = (idx / F1_TOTAL) * 100;
 
-  // Determine block label
-  const blockLbl = idx < 5 ? 'Fáceis (1–5)' : idx < 7 ? 'Médias (6–7)' : 'Difícil (8)';
-  const faseCls  = idx < 5 ? 'facil' : idx < 7 ? 'media' : 'dificil';
+  // Label baseado na categoria real do slot (não no índice posicional)
+  const slotMeta = MAPA_SLOT_META[idx];
+  const blockLbl = q.catLabel || slotMeta?.lbl || `Q${idx+1}`;
+  const faseCls  = q.dif === 3 ? 'dificil' : q.dif === 2 ? 'media' : 'facil';
 
   document.getElementById("content").innerHTML = `
     <div class="hud">
@@ -780,7 +781,7 @@ function renderQuestaoF1() {
       </div>
       <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px">
         <div class="hud-sessao${st.sessaoRestante<=60?' urgente':''}" id="hud-sessao">⏳ ${formatTempo(st.sessaoRestante)}</div>
-        <div class="hud-global-disp" id="hud-global-disp">Global: ${controle ? formatTempo(Math.ceil(globalRestanteMs(controle)/1000)) : '30:00'}</div>
+        <div class="hud-global-disp" id="hud-global-disp">Global: ${controle ? formatTempo(Math.ceil(globalRestanteMs(controle)/1000)) : '25:00'}</div>
       </div>
     </div>
     <div class="f1-progress">
