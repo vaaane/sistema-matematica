@@ -16,62 +16,39 @@
     @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
 
     /* Cards */
-    .av-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px;}
-    .av-cards-extra{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px;}
-    @media(max-width:720px){.av-cards{grid-template-columns:repeat(2,1fr);}.av-cards-extra{grid-template-columns:repeat(3,1fr);}}
-    @media(max-width:480px){.av-cards-extra{grid-template-columns:repeat(2,1fr);}}
-    .av-card{background:var(--card);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;border:1px solid var(--border);}
-    .av-card-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;}
-    .av-card-val{font-size:24px;font-weight:800;line-height:1;}
-    .av-card-label{font-size:11px;color:var(--text-muted);margin-top:3px;}
-    .av-card-sm{background:var(--card);border-radius:10px;padding:10px 12px;border:1px solid var(--border);}
-    .av-card-sm-val{font-size:18px;font-weight:800;line-height:1.1;}
-    .av-card-sm-label{font-size:10px;color:var(--text-muted);margin-top:3px;}
-
-    /* Distribuição */
-    .dist-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:16px;}
-    .dist-title{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;}
-    .dist-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:11px;}
-    .dist-lbl{width:32px;text-align:right;color:var(--text-muted);font-weight:600;flex-shrink:0;}
-    .dist-bg{flex:1;background:var(--bg);border-radius:4px;height:13px;overflow:hidden;}
-    .dist-fill{height:100%;border-radius:4px;transition:width .4s ease;}
-    .dist-cnt{width:48px;color:var(--text-muted);font-size:10px;flex-shrink:0;}
+    .av-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px;}
+    @media(max-width:640px){.av-cards{grid-template-columns:repeat(2,1fr);}}
+    .av-card{background:var(--card);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;border:1px solid var(--border);}
+    .av-card-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;}
+    .av-card-val{font-size:22px;font-weight:800;line-height:1;}
+    .av-card-label{font-size:11px;color:var(--text-muted);margin-top:2px;}
+    .av-stats-row{display:flex;gap:20px;align-items:center;font-size:12px;color:var(--text-muted);margin-bottom:14px;flex-wrap:wrap;padding:8px 12px;background:var(--bg);border-radius:8px;border:1px solid var(--border);}
+    .av-stat-item{display:flex;align-items:center;gap:5px;}
+    .av-stat-val{font-weight:700;color:var(--text);}
 
     /* Notificação topo */
     #top-notif{position:fixed;top:58px;left:50%;transform:translateX(-50%);z-index:9999;background:#EF4444;color:#fff;padding:9px 22px;border-radius:12px;font-weight:700;font-size:13px;box-shadow:0 4px 20px rgba(239,68,68,.45);display:none;white-space:nowrap;max-width:92vw;text-align:center;}
 
-    /* Sections */
-    .av-section{margin-bottom:22px;}
-    .av-section-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
-    .av-section-title{font-size:15px;font-weight:700;}
-    .av-section-count{font-size:12px;color:var(--text-muted);background:var(--bg);padding:2px 8px;border-radius:10px;border:1px solid var(--border);}
-
-    /* Tabelas */
-    .av-table{width:100%;border-collapse:collapse;font-size:13px;}
-    .av-table th{text-align:left;padding:8px 12px;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:2px solid var(--border);white-space:nowrap;}
-    .av-table th.srt{cursor:pointer;user-select:none;transition:color .15s;}
-    .av-table th.srt:hover{color:var(--text);}
-    .av-table th.srt-asc::after{content:' ↑';color:var(--blue);}
-    .av-table th.srt-desc::after{content:' ↓';color:var(--blue);}
-    .av-table td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+    /* Tabela unificada */
+    .av-table{width:100%;border-collapse:collapse;font-size:12px;}
+    .av-table th{text-align:left;padding:7px 10px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:2px solid var(--border);white-space:nowrap;background:var(--card);}
+    .av-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
     .av-table tr:last-child td{border-bottom:none;}
-    .av-table tbody tr:hover{background:rgba(0,0,0,.03);}
+    .av-table tbody tr:hover td{background:rgba(0,0,0,.025);}
+
+    /* Turma header */
+    .tr-turma-hdr{cursor:pointer;user-select:none;background:var(--bg)!important;}
+    .tr-turma-hdr:hover td{background:rgba(0,0,0,.03)!important;}
+    .tr-turma-hdr td{padding:7px 12px;font-size:12px;font-weight:700;color:var(--text-muted);border-bottom:2px solid var(--border);}
 
     /* Estados de alerta */
-    .row-10min{background:rgba(234,179,8,.07);}
     .row-10min td:first-child{border-left:3px solid #F59E0B;}
-    .row-5min{background:rgba(249,115,22,.1);}
+    .row-10min{background:rgba(234,179,8,.07);}
     .row-5min td:first-child{border-left:3px solid #F97316;}
-    .row-2min{animation:pulse-row-red 1s ease-in-out infinite;}
+    .row-5min{background:rgba(249,115,22,.1);}
     .row-2min td:first-child{border-left:3px solid #EF4444;}
+    .row-2min{animation:pulse-row-red 1s ease-in-out infinite;}
     @keyframes pulse-row-red{0%,100%{background:rgba(239,68,68,.08)}50%{background:rgba(239,68,68,.18)}}
-    .row-warn{background:rgba(234,179,8,.06);}
-    .row-expirada{background:rgba(0,0,0,.025);opacity:.75;}
-
-    /* Badges */
-    .badge-turma{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(47,158,220,.12);color:var(--blue);}
-    .badge-tent{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(0,0,0,.07);color:var(--text);}
-    .badge-last{background:rgba(234,179,8,.18);color:#B45309;}
 
     /* Cores de nota */
     .nc-green{color:#16A34A;font-weight:700;}
@@ -84,26 +61,32 @@
     .t-10{color:#D97706;font-weight:700;font-variant-numeric:tabular-nums;}
     .t-5{color:#EA580C;font-weight:800;font-variant-numeric:tabular-nums;}
     .t-2{color:#DC2626;font-weight:800;font-variant-numeric:tabular-nums;animation:blink .8s step-end infinite;}
-    .t-out{color:var(--text-muted);font-size:12px;}
     @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+    /* Status badges */
+    .status-and{color:#3B82F6;font-weight:700;animation:pulse-and 1.5s ease-in-out infinite;}
+    @keyframes pulse-and{0%,100%{opacity:1}50%{opacity:.5}}
+    .status-con{color:#16A34A;font-weight:700;}
+    .status-exp{color:#D97706;font-weight:600;}
+    .status-nao{color:var(--text-muted);}
 
     /* Flash */
     @keyframes flash-g{0%{background:rgba(34,197,94,.28)}100%{background:transparent}}
     .flash-green{animation:flash-g 2.4s ease forwards;}
+
+    /* Badge turma */
+    .badge-turma{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(47,158,220,.12);color:var(--blue);}
 
     /* Flags tooltip */
     .ftip{position:relative;display:inline-block;cursor:default;}
     .ftip .tt{visibility:hidden;opacity:0;background:#1E293B;color:#fff;font-size:11px;font-weight:600;border-radius:8px;padding:5px 10px;position:absolute;bottom:130%;left:50%;transform:translateX(-50%);white-space:nowrap;transition:opacity .15s;pointer-events:none;z-index:100;}
     .ftip:hover .tt{visibility:visible;opacity:1;}
 
-    .av-aviso{font-size:13px;color:var(--text-muted);padding:16px;}
-
     @media(max-width:768px){
       .av-filters{flex-direction:column;align-items:stretch;}
-      .av-filters select,.av-filters input{width:100%;box-sizing:border-box;}
       .av-search{width:100%;box-sizing:border-box;}
-      .av-table th:nth-child(n+5),.av-table td:nth-child(n+5){display:none;}
       .update-pill{margin-left:0;}
+      .av-table th:nth-child(n+5),.av-table td:nth-child(n+5){display:none;}
     }
   </style>
 </head>
@@ -147,16 +130,16 @@
       <!-- Cards resumo -->
       <div class="av-cards">
         <div class="av-card">
-          <div class="av-card-icon" style="background:rgba(47,158,220,.12)">👥</div>
-          <div><div class="av-card-val" id="card-total">0</div><div class="av-card-label">Total</div></div>
+          <div class="av-card-icon" style="background:rgba(59,130,246,.12)">⏳</div>
+          <div><div class="av-card-val" id="card-andamento" style="color:#3B82F6">0</div><div class="av-card-label">Em andamento</div></div>
         </div>
         <div class="av-card">
           <div class="av-card-icon" style="background:rgba(34,197,94,.12)">✅</div>
-          <div><div class="av-card-val" id="card-concluidas" style="color:var(--green)">0</div><div class="av-card-label">Concluídas</div></div>
+          <div><div class="av-card-val" id="card-concluidas" style="color:#16A34A">0</div><div class="av-card-label">Concluídas</div></div>
         </div>
         <div class="av-card">
-          <div class="av-card-icon" style="background:rgba(234,179,8,.12)">⏳</div>
-          <div><div class="av-card-val" id="card-andamento" style="color:#F59E0B">0</div><div class="av-card-label">Em andamento</div></div>
+          <div class="av-card-icon" style="background:rgba(234,179,8,.12)">⚠️</div>
+          <div><div class="av-card-val" id="card-expiradas" style="color:#D97706">0</div><div class="av-card-label">Só expiraram</div></div>
         </div>
         <div class="av-card">
           <div class="av-card-icon" style="background:rgba(239,68,68,.12)">❌</div>
@@ -164,81 +147,35 @@
         </div>
       </div>
 
-      <!-- Cards estatísticas extras -->
-      <div class="av-cards-extra" id="cards-extra" style="display:none">
-        <div class="av-card-sm">
-          <div class="av-card-sm-val" id="stat-mf1" style="color:#7C3AED">—</div>
-          <div class="av-card-sm-label">Média nota F1</div>
-        </div>
-        <div class="av-card-sm">
-          <div class="av-card-sm-val" id="stat-mpts" style="color:var(--gold)">—</div>
-          <div class="av-card-sm-label">Média pts total</div>
-        </div>
-        <div class="av-card-sm">
-          <div class="av-card-sm-val" id="stat-p7" style="color:var(--green)">—</div>
-          <div class="av-card-sm-label">% nota ≥ 7.0</div>
-        </div>
-        <div class="av-card-sm">
-          <div class="av-card-sm-val" id="stat-1t" style="color:var(--blue)">0</div>
-          <div class="av-card-sm-label">⚡ 1 tentativa</div>
-        </div>
-        <div class="av-card-sm">
-          <div class="av-card-sm-val" id="stat-exp" style="color:var(--text-muted)">0</div>
-          <div class="av-card-sm-label">⏱ Expiradas</div>
-        </div>
+      <!-- Stats micro-row -->
+      <div class="av-stats-row" id="stats-row" style="display:none">
+        <div class="av-stat-item">📊 Média F1: <span class="av-stat-val" id="stat-media-f1">—</span></div>
+        <div class="av-stat-item">🟢 ≥ 7.0: <span class="av-stat-val" id="stat-pct7">—</span></div>
+        <div class="av-stat-item">⚡ 1 tentativa: <span class="av-stat-val" id="stat-1tent">0</span></div>
       </div>
 
-      <!-- Gráfico distribuição -->
-      <div class="dist-card" id="dist-card" style="display:none">
-        <div class="dist-title">📊 Distribuição de notas F1</div>
-        <div id="dist-bars"></div>
-      </div>
-
-      <!-- Em andamento -->
-      <div class="av-section">
-        <div class="av-section-head">
-          <div class="av-section-title">⏳ Em andamento</div>
-          <div class="av-section-count" id="count-andamento">0</div>
-        </div>
-        <div class="card" style="padding:0;overflow:hidden">
-          <div id="sec-andamento"><div class="av-aviso">Carregando…</div></div>
-        </div>
-      </div>
-
-      <!-- Expiradas -->
-      <div class="av-section" id="sec-exp-wrap" style="display:none">
-        <div class="av-section-head">
-          <div class="av-section-title">⏱ Expiradas</div>
-          <div class="av-section-count" id="count-expiradas">0</div>
-          <span style="font-size:11px;color:var(--text-muted)">tempo esgotado sem concluir</span>
-        </div>
-        <div class="card" style="padding:0;overflow:hidden">
-          <div id="sec-expiradas"></div>
-        </div>
-      </div>
-
-      <!-- Concluídas -->
-      <div class="av-section">
-        <div class="av-section-head">
-          <div class="av-section-title">✅ Concluídas</div>
-          <div class="av-section-count" id="count-concluidas">0</div>
-        </div>
-        <div class="card" style="padding:0;overflow:hidden">
-          <div id="sec-concluidas"><div class="av-aviso">Carregando…</div></div>
-        </div>
-      </div>
-
-      <!-- Não iniciaram -->
-      <div class="av-section">
-        <div class="av-section-head">
-          <div class="av-section-title">❌ Não iniciaram</div>
-          <div class="av-section-count" id="count-nao">0</div>
-        </div>
-        <div class="card" style="padding:0;overflow:hidden">
-          <div id="sec-nao-aviso" class="av-aviso">
-            Selecione uma atividade e uma turma específicas para ver quem ainda não iniciou.
-          </div>
-          <div id="sec-nao-lista" style="display:none"></div>
+      <!-- Tabela unificada -->
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="overflow-x:auto">
+          <table class="av-table">
+            <thead>
+              <tr>
+                <th>Aluno(s)</th>
+                <th>Turma</th>
+                <th style="text-align:center">T1</th>
+                <th style="text-align:center">T2</th>
+                <th style="text-align:center">T3</th>
+                <th>Melhor F1</th>
+                <th>Pts F2</th>
+                <th>Tempo F1</th>
+                <th>Status</th>
+                <th>Início</th>
+              </tr>
+            </thead>
+            <tbody id="main-tbody">
+              <tr><td colspan="10" style="padding:24px;text-align:center;color:var(--text-muted)">Carregando…</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -266,12 +203,10 @@ let filtroAtiv  = '';
 let filtroTurma = '';
 let filtroData  = new Date().toISOString().split('T')[0];
 let searchText  = '';
-let sortAnd = { col: 'tempo', dir: 'asc' };
-let sortCon = { col: 'ts',    dir: 'desc' };
 let prevInProgress = new Set();
 let recentlyDone   = new Set();
 let alertSet = { 120: new Set(), 300: new Set(), 600: new Set() };
-let nextRefreshIn  = 30;
+let nextRefreshIn  = 15;
 let lastUpdateTime = Date.now();
 let notifTimer     = null;
 let _audioCtx      = null;
@@ -283,22 +218,14 @@ document.getElementById('filtro-ativ').addEventListener('change',  e => { filtro
 document.getElementById('filtro-turma').addEventListener('change', e => { filtroTurma = e.target.value; renderizarTudo(); });
 document.getElementById('filtro-data').addEventListener('change',  e => { filtroData  = e.target.value; renderizarTudo(); });
 
-window.onBusca     = v => { searchText = v.trim(); renderizarTudo(); };
-window.forcarAtt   = () => { renderizarTudo(); nextRefreshIn = 30; };
-window.toggleSort  = (tab, col) => {
-  const st = tab === 'and' ? sortAnd : sortCon;
-  if (st.col === col) st.dir = st.dir === 'asc' ? 'desc' : 'asc';
-  else { st.col = col; st.dir = (col === 'ts') ? 'desc' : 'asc'; }
-  if (tab === 'and') sortAnd = { ...st }; else sortCon = { ...st };
-  renderizarTudo();
-};
+window.onBusca   = v => { searchText = v.trim(); renderizarTudo(); };
+window.forcarAtt = () => { renderizarTudo(); nextRefreshIn = 15; };
 
 // ── Utilitários ─────────────────────────────────────────────────
 function isProfTest(r) {
   const a = (r.aluno || '').toUpperCase();
   return a.includes('PROFESSOR') || a.includes('TESTE') || r.modo_teste === true;
 }
-
 function notaCls(n) {
   if (n == null) return 'nc-gray';
   if (n >= 7)   return 'nc-green';
@@ -312,7 +239,7 @@ function fmtMs(ms) {
   return `${Math.floor(s/60)}m${String(s%60).padStart(2,'0')}s`;
 }
 function tempoHtml(ms) {
-  if (ms <= 0) return '<span class="t-out">Esgotado</span>';
+  if (ms <= 0) return '<span style="color:var(--text-muted);font-size:11px">Esgotado</span>';
   const s = Math.floor(ms / 1000);
   const str = `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
   if (ms < 2  * 60000) return `<span class="t-2">🚨 ${str}</span>`;
@@ -338,7 +265,6 @@ function playAlert(freq = 660, dur = 0.22) {
     osc.start(); osc.stop(ctx.currentTime + dur);
   } catch(e) {}
 }
-
 function showTopNotif(msg) {
   const el = document.getElementById('top-notif');
   if (!el) return;
@@ -346,12 +272,6 @@ function showTopNotif(msg) {
   el.style.display = 'block';
   clearTimeout(notifTimer);
   notifTimer = setTimeout(() => { el.style.display = 'none'; }, 6000);
-}
-
-function thSort(tab, col, label) {
-  const st = tab === 'and' ? sortAnd : sortCon;
-  const cls = st.col === col ? (st.dir === 'asc' ? 'srt-asc' : 'srt-desc') : '';
-  return `<th class="srt ${cls}" onclick="toggleSort('${tab}','${col}')">${label}</th>`;
 }
 
 // ── Firebase listener ───────────────────────────────────────────
@@ -365,8 +285,8 @@ onValue(ref(db, 'resultados'), snap => {
 
   popularDropdownAtiv();
 
-  const { emAndamento } = aplicarFiltros();
-  const currIds = new Set(emAndamento.map(r => r.id));
+  const filtered = aplicarFiltros();
+  const currIds = new Set(filtered.filter(r => !r.concluido && (r.ts_inicio * 1000 + DURACAO_MS) > Date.now()).map(r => r.id));
   recentlyDone = new Set([...prevInProgress].filter(id => !currIds.has(id)));
   prevInProgress = currIds;
 
@@ -382,12 +302,13 @@ setInterval(() => {
 
   document.querySelectorAll('.tempo-cell[data-ts]').forEach(cell => {
     const ms = parseInt(cell.dataset.ts) * 1000 + DURACAO_MS - now;
-    cell.innerHTML = tempoHtml(ms);
     if (ms <= 0) { needsRerender = true; return; }
+    const fase = cell.dataset.fase || '';
+    cell.innerHTML = `${fase} ${tempoHtml(ms)}`;
 
-    const row  = cell.closest('tr');
-    if (!row) return;
-    const sid  = row.dataset.sid;
+    const row = cell.closest('tr');
+    if (!row || row.classList.contains('flash-green') || row.classList.contains('tr-turma-hdr')) return;
+    const sid   = row.dataset.sid;
     const aluno = row.dataset.aluno || '?';
 
     if (ms < 2 * 60000) {
@@ -405,7 +326,7 @@ setInterval(() => {
         playAlert(660, 0.22);
       }
     } else if (ms < 10 * 60000) {
-      if (row.className !== 'row-10min' && row.className !== 'row-5min' && row.className !== 'row-2min')
+      if (!['row-10min','row-5min','row-2min'].includes(row.className))
         row.className = 'row-10min';
       alertSet[600].add(sid || '');
     }
@@ -414,11 +335,11 @@ setInterval(() => {
   if (needsRerender) renderizarTudo();
 
   nextRefreshIn--;
-  if (nextRefreshIn <= 0) { nextRefreshIn = 30; renderizarTudo(); }
+  if (nextRefreshIn <= 0) { nextRefreshIn = 15; renderizarTudo(); }
 
   const diff = Math.round((now - lastUpdateTime) / 1000);
   const el = document.getElementById('update-txt');
-  if (el) el.textContent = diff < 5 ? 'Ao vivo' : `Atualizado há ${diff}s`;
+  if (el) el.textContent = diff < 5 ? 'Ao vivo' : `Atualizado há ${diff}s · ↻ ${nextRefreshIn}s`;
 }, 1000);
 
 // ── Dropdown de atividades ──────────────────────────────────────
@@ -431,7 +352,7 @@ function popularDropdownAtiv() {
   sel.value = atividades.includes(cur) ? cur : (filtroAtiv = '');
 }
 
-// ── Filtros ─────────────────────────────────────────────────────
+// ── Filtros (retorna array plano de records) ────────────────────
 function aplicarFiltros() {
   let r = todosRegistros;
   if (filtroAtiv)  r = r.filter(x => x.atividade === filtroAtiv);
@@ -443,322 +364,339 @@ function aplicarFiltros() {
       ? new Date(x.ts_inicio * 1000).toLocaleDateString('pt-BR') === ptBR
       : x.data?.startsWith(ptBR));
   }
-  const now = Date.now();
-  const naoConc = r.filter(x => !x.concluido);
-  return {
-    emAndamento: naoConc.filter(x => (x.ts_inicio * 1000 + DURACAO_MS) > now),
-    expirados:   naoConc.filter(x => (x.ts_inicio * 1000 + DURACAO_MS) <= now),
-    concluidos:  r.filter(x => x.concluido),
-  };
+  return r;
 }
 
-function agruparPorSessao(registros) {
-  const map = new Map();
-  for (const r of registros) {
+// ── Build entries: uma entrada por aluno/dupla+atividade+turma ──
+function buildAllEntries(allRecords, now) {
+  // Passo 1: agrupar por ts_inicio para detectar duplas
+  const bySession = new Map();
+  for (const r of allRecords) {
     const k = `${r.turma}|${r.atividade}|${r.ts_inicio}`;
-    if (!map.has(k)) map.set(k, []);
-    map.get(k).push(r);
+    if (!bySession.has(k)) bySession.set(k, []);
+    bySession.get(k).push(r);
   }
-  return [...map.values()];
+
+  // Mapear record.id → group key e info
+  const idToGroup = new Map();
+  for (const recs of bySession.values()) {
+    const nomes = [...new Set(recs.map(r => r.aluno))].sort();
+    const rep   = recs[0];
+    const key   = `${nomes.join('||')}@@${rep.atividade}@@${rep.turma}`;
+    for (const r of recs) idToGroup.set(r.id, { key, nomes, atividade: rep.atividade, turma: rep.turma });
+  }
+
+  // Passo 2: agrupar sessões por composição de alunos + atividade + turma
+  const groups = new Map();
+  for (const r of allRecords) {
+    const info = idToGroup.get(r.id);
+    if (!info) continue;
+    if (!groups.has(info.key))
+      groups.set(info.key, { nomes: info.nomes, turma: info.turma, atividade: info.atividade, sessionsByTent: {} });
+    const g      = groups.get(info.key);
+    const tNum   = r.tentativa_num || 1;
+    if (!g.sessionsByTent[tNum]) g.sessionsByTent[tNum] = [];
+    if (!g.sessionsByTent[tNum].some(x => x.id === r.id))
+      g.sessionsByTent[tNum].push(r);
+  }
+
+  // Construir objetos de entrada
+  const entries = [];
+  for (const g of groups.values()) {
+    let melhorNota = null, melhorPts = 0, melhorTempoF1 = null;
+    let primeiroTs = Infinity, tempoRestanteMin = Infinity;
+    let hasAnd = false, hasCon = false, hasExp = false;
+    let andRecId = '', andTs = 0;
+    const tentativas = {};
+
+    for (const [tNum, recs] of Object.entries(g.sessionsByTent)) {
+      tentativas[Number(tNum)] = recs;
+      for (const r of recs) {
+        if ((r.ts_inicio || 0) < primeiroTs) primeiroTs = r.ts_inicio || 0;
+        const ms = r.ts_inicio * 1000 + DURACAO_MS - now;
+        if (!r.concluido && ms > 0) {
+          hasAnd = true;
+          if (ms < tempoRestanteMin) { tempoRestanteMin = ms; andRecId = r.id; andTs = r.ts_inicio; }
+        } else if (!r.concluido) {
+          hasExp = true;
+        } else {
+          hasCon = true;
+          if (r.nota_quiz != null && (melhorNota == null || r.nota_quiz > melhorNota)) melhorNota = r.nota_quiz;
+          if ((r.pontuacao || 0) > melhorPts) melhorPts = r.pontuacao || 0;
+          if (r.tempo_fase1_ms > 0 && (melhorTempoF1 == null || r.tempo_fase1_ms < melhorTempoF1)) melhorTempoF1 = r.tempo_fase1_ms;
+        }
+      }
+    }
+
+    let statusFinal = hasAnd ? 'andamento' : hasCon ? 'concluida' : hasExp ? 'expirada' : 'nao-iniciou';
+    const allRecs   = Object.values(tentativas).flat();
+    const isRecent  = allRecs.some(r => recentlyDone.has(r.id));
+    const flagSuspect = (() => {
+      const ns = allRecs.map(r => r.nota_quiz).filter(n => typeof n === 'number');
+      return ns.length > 1 && Math.min(...ns) === 0 && Math.max(...ns) >= 8;
+    })();
+    const flagRepeat = (() => {
+      if (flagSuspect) return false;
+      const ns = allRecs.map(r => r.nota_quiz).filter(n => typeof n === 'number');
+      return ns.length > 1 && (Math.max(...ns) - Math.min(...ns)) > 3;
+    })();
+
+    entries.push({
+      nomes: g.nomes, turma: g.turma, atividade: g.atividade, tentativas,
+      statusFinal, melhorNota, melhorPts, melhorTempoF1,
+      primeiroTs, tempoRestanteMin: hasAnd ? tempoRestanteMin : null,
+      andRecId, andTs, isRecent, flagSuspect, flagRepeat,
+    });
+  }
+  return entries;
 }
 
-function filtrarBusca(sessoes) {
-  if (!searchText) return sessoes;
+// ── "Não iniciou" para alunos sem registro ──────────────────────
+function addNaoIniciouEntries(entries) {
+  if (!filtroAtiv) return [];
+  const turmas = filtroTurma ? [filtroTurma] : Object.keys(ALUNOS_POR_TURMA);
+  const hasRec  = new Set(entries.flatMap(e => e.nomes.map(n => `${n}|||${e.turma}`)));
+  const result  = [];
+  for (const turma of turmas) {
+    if (searchText) {
+      // Filter to matching names only
+      const q = searchText.toLowerCase();
+      for (const aluno of (ALUNOS_POR_TURMA[turma] || [])) {
+        if (!aluno.toLowerCase().includes(q)) continue;
+        if (!hasRec.has(`${aluno}|||${turma}`))
+          result.push(_naoIniciouEntry(aluno, turma));
+      }
+    } else {
+      for (const aluno of (ALUNOS_POR_TURMA[turma] || [])) {
+        if (!hasRec.has(`${aluno}|||${turma}`))
+          result.push(_naoIniciouEntry(aluno, turma));
+      }
+    }
+  }
+  return result;
+}
+function _naoIniciouEntry(aluno, turma) {
+  return { nomes: [aluno], turma, atividade: filtroAtiv, tentativas: {},
+    statusFinal: 'nao-iniciou', melhorNota: null, melhorPts: 0, melhorTempoF1: null,
+    primeiroTs: Infinity, tempoRestanteMin: null, andRecId: '', andTs: 0,
+    isRecent: false, flagSuspect: false, flagRepeat: false };
+}
+
+// ── Busca ───────────────────────────────────────────────────────
+function filterBySearch(entries) {
+  if (!searchText) return entries;
   const q = searchText.toLowerCase();
-  return sessoes.filter(g => g.some(r => (r.aluno || '').toLowerCase().includes(q)));
+  return entries.filter(e => e.nomes.some(n => n.toLowerCase().includes(q)));
 }
 
 // ── Ordenação ───────────────────────────────────────────────────
-function ordenarAnd(sessoes) {
-  const { col, dir } = sortAnd;
-  const sign = dir === 'asc' ? 1 : -1;
-  return [...sessoes].sort((a, b) => {
-    const ra = a[0], rb = b[0];
-    if (col === 'tempo') {
-      const now = Date.now();
-      return sign * ((ra.ts_inicio * 1000 + DURACAO_MS - now) - (rb.ts_inicio * 1000 + DURACAO_MS - now));
+function sortEntries(entries) {
+  const order = { andamento: 0, concluida: 1, expirada: 2, 'nao-iniciou': 3 };
+  return [...entries].sort((a, b) => {
+    const oa = order[a.statusFinal] ?? 9, ob = order[b.statusFinal] ?? 9;
+    if (oa !== ob) return oa - ob;
+    if (a.statusFinal === 'andamento')
+      return (a.tempoRestanteMin || Infinity) - (b.tempoRestanteMin || Infinity);
+    if (a.statusFinal === 'concluida')
+      return (b.melhorNota ?? -1) - (a.melhorNota ?? -1);
+    return (a.nomes[0] || '').localeCompare(b.nomes[0] || '', 'pt-BR');
+  });
+}
+
+// ── Atualizar cards ─────────────────────────────────────────────
+function updateCards(entries) {
+  const nAnd = entries.filter(e => e.statusFinal === 'andamento').length;
+  const nCon = entries.filter(e => e.statusFinal === 'concluida').length;
+  const nExp = entries.filter(e => e.statusFinal === 'expirada').length;
+  const nNao = entries.filter(e => e.statusFinal === 'nao-iniciou').length;
+  document.getElementById('card-andamento').textContent  = nAnd;
+  document.getElementById('card-concluidas').textContent = nCon;
+  document.getElementById('card-expiradas').textContent  = nExp;
+  document.getElementById('card-nao').textContent        = nNao;
+
+  const notas = entries.filter(e => e.melhorNota != null).map(e => e.melhorNota);
+  const statsEl = document.getElementById('stats-row');
+  if (statsEl) {
+    if (notas.length > 0) {
+      statsEl.style.display = '';
+      document.getElementById('stat-media-f1').textContent = (notas.reduce((a,b)=>a+b,0)/notas.length).toFixed(1)+'/10';
+      document.getElementById('stat-pct7').textContent = Math.round(notas.filter(n=>n>=7).length/notas.length*100)+'%';
+      document.getElementById('stat-1tent').textContent = entries.filter(e => Object.keys(e.tentativas).length === 1 && e.statusFinal === 'concluida').length;
+    } else {
+      statsEl.style.display = 'none';
     }
-    if (col === 'aluno') return sign * (ra.aluno||'').localeCompare(rb.aluno||'','pt-BR');
-    if (col === 'turma') return sign * (ra.turma||'').localeCompare(rb.turma||'','pt-BR');
-    if (col === 'tent')  return sign * ((ra.tentativa_num||1) - (rb.tentativa_num||1));
-    return 0;
-  });
-}
-
-function ordenarCon(rows) {
-  const { col, dir } = sortCon;
-  const sign = dir === 'asc' ? 1 : -1;
-  return [...rows].sort((a, b) => {
-    if (col === 'ts')    return sign * (a.ultimaTs - b.ultimaTs);
-    if (col === 'nota')  return sign * ((a.melhorNota ?? -1) - (b.melhorNota ?? -1));
-    if (col === 'pts')   return sign * (a.melhorPts - b.melhorPts);
-    if (col === 'tent')  return sign * (a.maxTent - b.maxTent);
-    if (col === 'aluno') return sign * (a.nomes[0]||'').localeCompare(b.nomes[0]||'','pt-BR');
-    if (col === 'turma') return sign * (a.turma||'').localeCompare(b.turma||'','pt-BR');
-    if (col === 'tempo') return sign * ((a.tempoF1 ?? Infinity) - (b.tempoF1 ?? Infinity));
-    return 0;
-  });
-}
-
-// ── Build rows concluídas ───────────────────────────────────────
-function buildConRows(sessoesList) {
-  const byGroup = new Map();
-  for (const sessao of sessoesList) {
-    const key = [...new Set(sessao.map(r => r.aluno))].sort().join('|') + '|' + sessao[0].atividade + '|' + sessao[0].turma;
-    if (!byGroup.has(key))
-      byGroup.set(key, { nomes: [...new Set(sessao.map(r => r.aluno))], turma: sessao[0].turma, sessoes: [] });
-    byGroup.get(key).sessoes.push(sessao);
   }
-  return [...byGroup.values()].map(sg => {
-    const recs = sg.sessoes.flat();
-    const maxTent    = Math.max(...recs.map(r => r.tentativa_num || 1));
-    const notaVals   = recs.map(r => r.nota_quiz).filter(n => typeof n === 'number');
-    const melhorNota = notaVals.length ? Math.max(...notaVals) : null;
-    const melhorPts  = Math.max(0, ...recs.map(r => r.pontuacao || 0));
-    const ultimaTs   = Math.max(...recs.map(r => r.ts_inicio || 0));
-    const ultimaData = recs.find(r => r.ts_inicio === ultimaTs)?.data || '';
-    const isRecent   = recs.some(r => recentlyDone.has(r.id));
-    const temposF1   = recs.map(r => r.tempo_fase1_ms).filter(t => t > 0);
-    const tempoF1    = temposF1.length ? Math.min(...temposF1) : null;
-    const notaMin    = notaVals.length ? Math.min(...notaVals) : null;
-    const notaMax    = melhorNota;
-    const flagSuspect = notaVals.length > 1 && notaMin === 0 && notaMax >= 8;
-    const flagRepeat  = !flagSuspect && notaVals.length > 1 && (notaMax - notaMin) > 3;
-    return { nomes: sg.nomes, turma: sg.turma, maxTent, melhorNota, melhorPts, ultimaTs, ultimaData, isRecent, tempoF1, flagRepeat, flagSuspect };
-  });
 }
 
-// ── Stats extras ────────────────────────────────────────────────
-function atualizarStats(rows, nExp) {
-  const el = document.getElementById('cards-extra');
-  if (!el) return;
-  if (!rows.length) { el.style.display = 'none'; return; }
-  el.style.display = '';
-  const notas = rows.map(r => r.melhorNota).filter(n => n != null);
-  const pts   = rows.map(r => r.melhorPts).filter(p => p > 0);
-  document.getElementById('stat-mf1').textContent  = notas.length ? (notas.reduce((a,b)=>a+b,0)/notas.length).toFixed(1)+'/10' : '—';
-  document.getElementById('stat-mpts').textContent = pts.length   ? Math.round(pts.reduce((a,b)=>a+b,0)/pts.length)+' pts'     : '—';
-  document.getElementById('stat-p7').textContent   = notas.length ? Math.round(notas.filter(n=>n>=7).length/notas.length*100)+'%' : '—';
-  document.getElementById('stat-1t').textContent   = rows.filter(r => r.maxTent === 1).length;
-  document.getElementById('stat-exp').textContent  = nExp;
+// ── Célula T1/T2/T3 ────────────────────────────────────────────
+function tentCellHtml(tentRecs, now) {
+  if (!tentRecs || tentRecs.length === 0)
+    return `<td style="color:var(--text-muted);text-align:center;font-size:11px">—</td>`;
+
+  const rep      = tentRecs[0];
+  const concluida = tentRecs.some(r => r.concluido);
+  const ms       = rep.ts_inicio * 1000 + DURACAO_MS - now;
+  const emAnd    = !concluida && ms > 0;
+  const exp      = !concluida && ms <= 0;
+
+  if (emAnd) {
+    const f1Done = tentRecs.some(r => r.nota_quiz != null);
+    const fase = f1Done ? '⚔️' : '📖';
+    return `<td class="tempo-cell" data-ts="${rep.ts_inicio}" data-fase="${fase}" style="white-space:nowrap;font-size:12px">${fase} ${tempoHtml(ms)}</td>`;
+  }
+  if (exp) return `<td style="color:#D97706;text-align:center;font-size:15px" title="Expirou sem concluir">⏰</td>`;
+
+  const notas = tentRecs.flatMap(r => r.nota_quiz != null ? [r.nota_quiz] : []);
+  const n = notas.length ? Math.max(...notas) : null;
+  return `<td style="text-align:center"><span class="${notaCls(n)}" style="font-size:12px;white-space:nowrap">✅ ${notaStr(n)}</span></td>`;
 }
 
-function atualizarDist(rows) {
-  const el = document.getElementById('dist-card');
-  if (!el) return;
-  const notas = rows.map(r => r.melhorNota).filter(n => n != null);
-  if (!notas.length) { el.style.display = 'none'; return; }
-  el.style.display = '';
-  const ranges = [[0,2,'#EF4444'],[3,4,'#F97316'],[5,6,'#EAB308'],[7,8,'#84CC16'],[9,10,'#22C55E']];
-  const maxCnt = Math.max(1, ...ranges.map(([lo,hi]) => notas.filter(n=>n>=lo&&n<=hi).length));
-  document.getElementById('dist-bars').innerHTML = ranges.map(([lo,hi,color]) => {
-    const cnt = notas.filter(n=>n>=lo&&n<=hi).length;
-    return `<div class="dist-row">
-      <div class="dist-lbl">${lo}–${hi}</div>
-      <div class="dist-bg"><div class="dist-fill" style="width:${Math.round(cnt/maxCnt*100)}%;background:${color}"></div></div>
-      <div class="dist-cnt">${cnt} ${cnt===1?'dupla':'duplas'}</div>
-    </div>`;
-  }).join('');
+// ── Linha da tabela ─────────────────────────────────────────────
+function rowHtml(entry, now) {
+  const nomes = entry.nomes.join(' & ');
+  let cls = '';
+  if (entry.isRecent) cls = 'flash-green';
+  else if (entry.statusFinal === 'andamento') {
+    const ms = entry.tempoRestanteMin;
+    if (ms != null && ms < 2 * 60000) cls = 'row-2min';
+    else if (ms != null && ms < 5 * 60000) cls = 'row-5min';
+    else if (ms != null && ms < 10 * 60000) cls = 'row-10min';
+  }
+
+  const statusHtml = (() => {
+    switch (entry.statusFinal) {
+      case 'andamento': return `<span class="status-and">⏳ Em andamento</span>`;
+      case 'concluida': {
+        const flags = [
+          entry.flagSuspect ? `<span class="ftip" style="margin-left:5px"><span style="font-size:13px">⚠️</span><span class="tt">Variação suspeita: nota 0 e ≥ 8 em tentativas diferentes</span></span>` : '',
+          entry.flagRepeat  ? `<span class="ftip" style="margin-left:5px"><span style="font-size:13px">🔁</span><span class="tt">Diferença > 3 pts entre tentativas</span></span>` : '',
+          Object.keys(entry.tentativas).length === 1 ? `<span class="ftip" style="margin-left:5px"><span style="font-size:13px">⚡</span><span class="tt">Concluiu com apenas 1 tentativa</span></span>` : '',
+        ].filter(Boolean).join('');
+        return `<span class="status-con">✅ Concluída</span>${flags}`;
+      }
+      case 'expirada':     return `<span class="status-exp">⚠️ Só expirou</span>`;
+      default:             return `<span class="status-nao">❌ Não iniciou</span>`;
+    }
+  })();
+
+  const primeiroHora = entry.primeiroTs > 0 && entry.primeiroTs < Infinity
+    ? new Date(entry.primeiroTs * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    : '—';
+
+  return `<tr class="${cls}" data-turma="${escH(entry.turma)}" data-sid="${escH(entry.andRecId)}" data-aluno="${escH(nomes)}">
+    <td><strong>${entry.nomes.map(escH).join(' &amp; ')}</strong></td>
+    <td><span class="badge-turma">${escH(entry.turma)}</span></td>
+    ${tentCellHtml(entry.tentativas[1], now)}
+    ${tentCellHtml(entry.tentativas[2], now)}
+    ${tentCellHtml(entry.tentativas[3], now)}
+    <td><span class="${notaCls(entry.melhorNota)}">${notaStr(entry.melhorNota)}</span></td>
+    <td style="font-weight:700;color:var(--gold)">${entry.melhorPts > 0 ? entry.melhorPts + ' pts' : '—'}</td>
+    <td style="color:var(--text-muted);font-variant-numeric:tabular-nums">${fmtMs(entry.melhorTempoF1)}</td>
+    <td>${statusHtml}</td>
+    <td style="color:var(--text-muted);font-variant-numeric:tabular-nums;font-size:11px">${primeiroHora}</td>
+  </tr>`;
+}
+
+// ── Tabela principal ────────────────────────────────────────────
+function renderMainTable(sortedEntries, now) {
+  const tbody = document.getElementById('main-tbody');
+  if (!tbody) return;
+
+  if (!sortedEntries.length) {
+    tbody.innerHTML = `<tr><td colspan="10" style="padding:28px;text-align:center;color:var(--text-muted);font-size:13px">
+      ${filtroAtiv ? 'Nenhum resultado encontrado.' : 'Selecione uma atividade para visualizar os dados.'}
+    </td></tr>`;
+    return;
+  }
+
+  if (!filtroTurma) {
+    // Agrupar por turma com headers colapsáveis
+    const byTurma = {};
+    for (const e of sortedEntries) {
+      if (!byTurma[e.turma]) byTurma[e.turma] = [];
+      byTurma[e.turma].push(e);
+    }
+
+    let html = '';
+    for (const turma of Object.keys(byTurma).sort()) {
+      const ents  = byTurma[turma];
+      const nAnd  = ents.filter(e => e.statusFinal === 'andamento').length;
+      const nCon  = ents.filter(e => e.statusFinal === 'concluida').length;
+      const nExp  = ents.filter(e => e.statusFinal === 'expirada').length;
+      const nNao  = ents.filter(e => e.statusFinal === 'nao-iniciou').length;
+      const parts = [
+        nAnd ? `⏳ ${nAnd}` : '', nCon ? `✅ ${nCon}` : '',
+        nExp ? `⚠️ ${nExp}` : '', nNao ? `❌ ${nNao}` : '',
+      ].filter(Boolean).join(' · ');
+
+      html += `<tr class="tr-turma-hdr" id="th-${escH(turma)}" data-open="1" onclick="toggleTurma('${escH(turma)}')">
+        <td colspan="10">
+          <span class="th-chev" style="font-size:10px;margin-right:6px">▼</span>
+          <strong>Turma ${escH(turma)}</strong>
+          <span style="font-weight:400;color:var(--text-muted);margin-left:10px;font-size:11px">${parts}</span>
+        </td>
+      </tr>`;
+      html += ents.map(e => rowHtml(e, now)).join('');
+    }
+    tbody.innerHTML = html;
+  } else {
+    tbody.innerHTML = sortedEntries.map(e => rowHtml(e, now)).join('');
+  }
 }
 
 // ── Renderização principal ──────────────────────────────────────
 function renderizarTudo() {
-  const { emAndamento, expirados, concluidos } = aplicarFiltros();
+  const now        = Date.now();
+  const filtered   = aplicarFiltros();
+  const entries    = buildAllEntries(filtered, now);
+  const naoIniciou = addNaoIniciouEntries(entries);
+  const all        = filterBySearch([...entries, ...naoIniciou]);
+  const sorted     = sortEntries(all);
 
-  let sessoesAnd = filtrarBusca(agruparPorSessao(emAndamento));
-  let sessoesExp = filtrarBusca(agruparPorSessao(expirados));
-  let sessoesCon = filtrarBusca(agruparPorSessao(concluidos));
-
-  let naoIniciaram = [];
-  if (filtroAtiv && filtroTurma) {
-    const iniciaram = new Set(todosRegistros.filter(r => r.atividade === filtroAtiv && r.turma === filtroTurma).map(r => r.aluno));
-    naoIniciaram = (ALUNOS_POR_TURMA[filtroTurma] || []).filter(n => {
-      if (searchText && !n.toLowerCase().includes(searchText.toLowerCase())) return false;
-      return !iniciaram.has(n);
-    });
-  }
-
-  const rowsCon = buildConRows(sessoesCon);
-  const total = sessoesAnd.length + sessoesExp.length + sessoesCon.length + naoIniciaram.length;
-
-  document.getElementById('card-total').textContent       = total;
-  document.getElementById('card-concluidas').textContent  = sessoesCon.length;
-  document.getElementById('card-andamento').textContent   = sessoesAnd.length;
-  document.getElementById('card-nao').textContent         = naoIniciaram.length;
-  document.getElementById('count-andamento').textContent  = sessoesAnd.length;
-  document.getElementById('count-concluidas').textContent = sessoesCon.length;
-  document.getElementById('count-expiradas').textContent  = sessoesExp.length;
-  document.getElementById('count-nao').textContent        = naoIniciaram.length;
-
-  atualizarStats(rowsCon, sessoesExp.length);
-  atualizarDist(rowsCon);
-
-  document.getElementById('sec-andamento').innerHTML  = renderAndamento(sessoesAnd);
-  document.getElementById('sec-concluidas').innerHTML = renderConcluidas(rowsCon);
-  renderExpiradas(sessoesExp);
-  renderNaoIniciaram(naoIniciaram);
+  updateCards(sorted);
+  renderMainTable(sorted, now);
 }
 
-// ── Seção: Em andamento ─────────────────────────────────────────
-function renderAndamento(sessoes) {
-  if (!sessoes.length) return emptyState('Nenhum aluno em avaliação no momento.');
-  const sorted = ordenarAnd(sessoes);
-  return `<table class="av-table">
-    <thead><tr>
-      ${thSort('and','aluno','Aluno(s)')}
-      ${thSort('and','turma','Turma')}
-      <th>Fase · Nota F1</th>
-      ${thSort('and','tent','Tentativa')}
-      ${thSort('and','tempo','Tempo restante')}
-    </tr></thead>
-    <tbody>${sorted.map(grupo => {
-      const rep   = grupo[0];
-      const nomes = grupo.map(g => g.aluno).join(' & ');
-      const ms    = rep.ts_inicio * 1000 + DURACAO_MS - Date.now();
-      const f1Done = grupo.some(r => r.nota_quiz != null);
-
-      const faseTag = f1Done
-        ? `<span style="font-size:11px;color:#1D4ED8;font-weight:700;margin-right:4px">⚔️ F2</span>`
-        : `<span style="font-size:11px;color:#7C3AED;font-weight:700;margin-right:4px">📖 F1</span>`;
-
-      const notaF1Html = f1Done
-        ? grupo.map(r => r.nota_quiz != null
-            ? `<span class="${notaCls(r.nota_quiz)}" style="font-size:12px">${notaStr(r.nota_quiz)}</span>`
-            : '').filter(Boolean).join(' / ')
-        : `<span style="color:var(--text-muted);font-size:11px">em andamento…</span>`;
-
-      const isLast = (rep.tentativa_num || 1) >= 3;
-      const tentLabel = isLast
-        ? `<span class="badge-tent badge-last">${rep.tentativa_num || 1}ª de 3</span>`
-        : `<span class="badge-tent">${rep.tentativa_num || 1}ª de 3</span>`;
-
-      let cls = '';
-      if (ms <= 0 || ms < 2*60000) cls = 'row-2min';
-      else if (ms < 5*60000)       cls = 'row-5min';
-      else if (ms < 10*60000)      cls = 'row-10min';
-      else if (isLast)             cls = 'row-warn';
-
-      return `<tr class="${cls}" data-sid="${escH(rep.id)}" data-aluno="${escH(nomes)}">
-        <td><strong>${escH(nomes)}</strong></td>
-        <td><span class="badge-turma">${escH(rep.turma)}</span></td>
-        <td>${faseTag}${notaF1Html}</td>
-        <td>${tentLabel}</td>
-        <td class="tempo-cell" data-ts="${rep.ts_inicio}">${tempoHtml(ms)}</td>
-      </tr>`;
-    }).join('')}</tbody>
-  </table>`;
-}
-
-// ── Seção: Expiradas ────────────────────────────────────────────
-function renderExpiradas(sessoes) {
-  const wrap = document.getElementById('sec-exp-wrap');
-  const body = document.getElementById('sec-expiradas');
-  if (!wrap || !body) return;
-  if (!sessoes.length) { wrap.style.display = 'none'; return; }
-  wrap.style.display = '';
-  body.innerHTML = `<table class="av-table">
-    <thead><tr><th>Aluno(s)</th><th>Turma</th><th>Tentativa</th><th>Nota F1 obtida</th><th>Início</th></tr></thead>
-    <tbody>${sessoes.map(grupo => {
-      const rep = grupo[0];
-      const nomes = grupo.map(g => g.aluno).join(' & ');
-      const f1Done = grupo.some(r => r.nota_quiz != null);
-      const notaF1 = f1Done
-        ? grupo.map(r => r.nota_quiz != null
-            ? `<span class="${notaCls(r.nota_quiz)}">${notaStr(r.nota_quiz)}</span>` : '').filter(Boolean).join(' / ')
-        : '<span class="nc-gray">—</span>';
-      const hora = rep.data?.split(' ')[1] || '—';
-      return `<tr class="row-expirada">
-        <td><strong>${escH(nomes)}</strong></td>
-        <td><span class="badge-turma">${escH(rep.turma)}</span></td>
-        <td style="color:var(--text-muted)">${rep.tentativa_num || 1}ª de 3</td>
-        <td>${notaF1}</td>
-        <td style="color:var(--text-muted);font-variant-numeric:tabular-nums">${hora}</td>
-      </tr>`;
-    }).join('')}</tbody>
-  </table>`;
-}
-
-// ── Seção: Concluídas ───────────────────────────────────────────
-function renderConcluidas(rows) {
-  if (!rows.length) return emptyState('Nenhum aluno concluiu ainda.');
-  const sorted = ordenarCon(rows);
-  return `<table class="av-table">
-    <thead><tr>
-      ${thSort('con','aluno','Aluno(s)')}
-      ${thSort('con','turma','Turma')}
-      ${thSort('con','nota','Nota F1')}
-      ${thSort('con','pts','Pts total')}
-      ${thSort('con','tempo','Tempo F1')}
-      ${thSort('con','tent','Tentativas')}
-      <th>Flags</th>
-      <th>Horário</th>
-    </tr></thead>
-    <tbody>${sorted.map(row => {
-      const hora = row.ultimaData.split(' ')[1] || '—';
-      const flags = [
-        row.flagSuspect
-          ? `<span class="ftip"><span style="font-size:14px">⚠️</span><span class="tt">Variação suspeita: nota 0 e ≥ 8 em tentativas diferentes</span></span>`
-          : row.flagRepeat
-          ? `<span class="ftip"><span style="font-size:14px">🔁</span><span class="tt">Diferença > 3 pts entre tentativas</span></span>` : '',
-        row.maxTent === 1 ? `<span class="ftip"><span style="font-size:14px">⚡</span><span class="tt">Concluiu com apenas 1 tentativa</span></span>` : '',
-      ].filter(Boolean).join(' ');
-
-      return `<tr class="${row.isRecent ? 'flash-green' : ''}">
-        <td><strong>${row.nomes.map(escH).join(' &amp; ')}</strong></td>
-        <td><span class="badge-turma">${escH(row.turma)}</span></td>
-        <td><span class="${notaCls(row.melhorNota)}">${notaStr(row.melhorNota)}</span></td>
-        <td style="color:var(--gold);font-weight:700">${row.melhorPts > 0 ? row.melhorPts+' pts' : '—'}</td>
-        <td style="color:var(--text-muted);font-variant-numeric:tabular-nums">${fmtMs(row.tempoF1)}</td>
-        <td style="color:var(--text-muted)">${row.maxTent} de 3</td>
-        <td>${flags || '<span style="color:var(--text-muted)">—</span>'}</td>
-        <td style="color:var(--text-muted);font-variant-numeric:tabular-nums">${hora}</td>
-      </tr>`;
-    }).join('')}</tbody>
-  </table>`;
-}
-
-// ── Seção: Não iniciaram ────────────────────────────────────────
-function renderNaoIniciaram(lista) {
-  const aviso  = document.getElementById('sec-nao-aviso');
-  const listaEl = document.getElementById('sec-nao-lista');
-  if (!filtroAtiv || !filtroTurma) {
-    aviso.style.display = ''; listaEl.style.display = 'none'; return;
-  }
-  aviso.style.display = 'none'; listaEl.style.display = '';
-  if (!lista.length) { listaEl.innerHTML = emptyState('Todos os alunos já iniciaram! 🎉'); return; }
-  listaEl.innerHTML = `<table class="av-table">
-    <thead><tr><th>Aluno</th><th>Turma</th><th>Status</th></tr></thead>
-    <tbody>${lista.map(nome => `<tr>
-      <td>${escH(nome)}</td>
-      <td><span class="badge-turma">${escH(filtroTurma)}</span></td>
-      <td style="color:var(--text-muted);font-size:12px">Não iniciou</td>
-    </tr>`).join('')}</tbody>
-  </table>`;
-}
+// ── Toggle turma ────────────────────────────────────────────────
+window.toggleTurma = function(turma) {
+  const hdr = document.getElementById(`th-${turma}`);
+  if (!hdr) return;
+  const open = hdr.dataset.open !== '0';
+  document.querySelectorAll(`tr[data-turma="${turma}"]`).forEach(r => { r.style.display = open ? 'none' : ''; });
+  hdr.dataset.open = open ? '0' : '1';
+  const chev = hdr.querySelector('.th-chev');
+  if (chev) chev.textContent = open ? '▶' : '▼';
+};
 
 // ── Export CSV ──────────────────────────────────────────────────
 window.exportarCSV = function() {
-  const { emAndamento, expirados, concluidos } = aplicarFiltros();
-  const linhas = [['Nome','Turma','Status','Tentativas','Nota F1','Pts Total','Tempo F1 (s)','Horário']];
+  const now     = Date.now();
+  const filtered = aplicarFiltros();
+  const entries  = buildAllEntries(filtered, now);
+  const naoIni   = addNaoIniciouEntries(entries);
+  const sorted   = sortEntries(filterBySearch([...entries, ...naoIni]));
 
-  const add = (sessoes, status) => {
-    for (const g of agruparPorSessao(sessoes)) {
-      const rep = g[0];
-      const nomes = g.map(r => r.aluno).join(' & ');
-      const notas = g.map(r => r.nota_quiz).filter(n => typeof n === 'number');
-      const nota  = notas.length ? Math.max(...notas).toFixed(1) : '';
-      const pts   = Math.max(0, ...g.map(r => r.pontuacao || 0));
-      const tF1s  = g.map(r => r.tempo_fase1_ms).filter(t => t > 0);
-      const tF1   = tF1s.length ? Math.round(Math.min(...tF1s)/1000) : '';
-      const tent  = Math.max(...g.map(r => r.tentativa_num || 1));
-      const hora  = rep.data?.split(' ')[1] || '';
-      linhas.push([nomes, rep.turma||'', status, tent, nota, pts||'', tF1, hora]);
-    }
+  const tentStr = (tentRecs) => {
+    if (!tentRecs || !tentRecs.length) return '—';
+    const concluida = tentRecs.some(r => r.concluido);
+    const ms = tentRecs[0].ts_inicio * 1000 + DURACAO_MS - now;
+    if (!concluida && ms > 0) return 'Em andamento';
+    if (!concluida) return 'Expirou';
+    const ns = tentRecs.flatMap(r => r.nota_quiz != null ? [r.nota_quiz] : []);
+    return ns.length ? `${Math.max(...ns).toFixed(1)}/10` : 'Concluída s/ nota';
   };
 
-  add(emAndamento, 'Em andamento');
-  add(expirados,   'Expirada');
-  add(concluidos,  'Concluída');
+  const linhas = [['Nome','Turma','Atividade','T1','T2','T3','Melhor F1','Pts F2','Tempo F1 (s)','Status','Início']];
+  for (const e of sorted) {
+    linhas.push([
+      e.nomes.join(' & '), e.turma, e.atividade,
+      tentStr(e.tentativas[1]), tentStr(e.tentativas[2]), tentStr(e.tentativas[3]),
+      e.melhorNota != null ? e.melhorNota.toFixed(1) : '',
+      e.melhorPts || '', e.melhorTempoF1 ? Math.round(e.melhorTempoF1/1000) : '',
+      e.statusFinal,
+      e.primeiroTs < Infinity ? new Date(e.primeiroTs*1000).toLocaleString('pt-BR') : '',
+    ]);
+  }
 
   const ativSlug = (filtroAtiv || 'todas').replace(/[^a-zA-Z0-9À-ɏ]/g,'_').slice(0,40);
   const csv = linhas.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
@@ -767,15 +705,9 @@ window.exportarCSV = function() {
     href: URL.createObjectURL(blob),
     download: `avaliacao_${ativSlug}_${filtroData}.csv`,
   });
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 };
-
-function emptyState(msg) {
-  return `<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px">${escH(msg)}</div>`;
-}
 </script>
 </body>
 </html>
