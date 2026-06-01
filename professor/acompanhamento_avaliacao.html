@@ -179,6 +179,11 @@
         </div>
       </div>
 
+      <!-- Dica para ver "Não iniciou" -->
+      <div id="nao-iniciou-hint" style="display:none;margin-top:10px;padding:10px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--text-muted);text-align:center">
+        ℹ️ Selecione uma <strong>atividade</strong> e uma <strong>turma</strong> específicas para ver quem ainda não iniciou
+      </div>
+
     </div>
   </div>
 </div>
@@ -452,28 +457,23 @@ function buildAllEntries(allRecords, now) {
 }
 
 // ── "Não iniciou" para alunos sem registro ──────────────────────
-function addNaoIniciouEntries(entries) {
-  if (!filtroAtiv) return [];
-  const turmas = filtroTurma ? [filtroTurma] : Object.keys(ALUNOS_POR_TURMA);
-  const hasRec  = new Set(entries.flatMap(e => e.nomes.map(n => `${n}|||${e.turma}`)));
-  const result  = [];
-  for (const turma of turmas) {
-    if (searchText) {
-      // Filter to matching names only
-      const q = searchText.toLowerCase();
-      for (const aluno of (ALUNOS_POR_TURMA[turma] || [])) {
-        if (!aluno.toLowerCase().includes(q)) continue;
-        if (!hasRec.has(`${aluno}|||${turma}`))
-          result.push(_naoIniciouEntry(aluno, turma));
-      }
-    } else {
-      for (const aluno of (ALUNOS_POR_TURMA[turma] || [])) {
-        if (!hasRec.has(`${aluno}|||${turma}`))
-          result.push(_naoIniciouEntry(aluno, turma));
-      }
-    }
-  }
-  return result;
+function addNaoIniciouEntries() {
+  // Exige atividade E turma selecionadas; caso contrário não há contexto
+  if (!filtroAtiv || !filtroTurma) return [];
+
+  // Consulta todosRegistros SEM filtro de data — quem fez em qualquer dia
+  // não deve aparecer como "não iniciou"
+  const jaIniciaram = new Set(
+    todosRegistros
+      .filter(r => r.atividade === filtroAtiv && r.turma === filtroTurma)
+      .map(r => r.aluno)
+  );
+
+  const q = searchText.toLowerCase();
+  return (ALUNOS_POR_TURMA[filtroTurma] || [])
+    .filter(a => !jaIniciaram.has(a))
+    .filter(a => !searchText || a.toLowerCase().includes(q))
+    .map(a => _naoIniciouEntry(a, filtroTurma));
 }
 function _naoIniciouEntry(aluno, turma) {
   return { nomes: [aluno], turma, atividade: filtroAtiv, tentativas: {},
@@ -649,9 +649,13 @@ function renderizarTudo() {
   const now        = Date.now();
   const filtered   = aplicarFiltros();
   const entries    = buildAllEntries(filtered, now);
-  const naoIniciou = addNaoIniciouEntries(entries);
+  const naoIniciou = addNaoIniciouEntries();          // usa todosRegistros sem filtro de data
   const all        = filterBySearch([...entries, ...naoIniciou]);
   const sorted     = sortEntries(all);
+
+  // Aviso: exige atividade + turma para listar "não iniciou"
+  const hintEl = document.getElementById('nao-iniciou-hint');
+  if (hintEl) hintEl.style.display = (!filtroAtiv || !filtroTurma) ? '' : 'none';
 
   updateCards(sorted);
   renderMainTable(sorted, now);
@@ -673,7 +677,7 @@ window.exportarCSV = function() {
   const now     = Date.now();
   const filtered = aplicarFiltros();
   const entries  = buildAllEntries(filtered, now);
-  const naoIni   = addNaoIniciouEntries(entries);
+  const naoIni   = addNaoIniciouEntries();
   const sorted   = sortEntries(filterBySearch([...entries, ...naoIni]));
 
   const tentStr = (tentRecs) => {
