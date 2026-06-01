@@ -222,6 +222,7 @@ async function renderPainelPrincipal() {
     const melhor = {};
     for (const r of lista) {
       if (!r.concluido || !r.aluno) continue;
+      if (r.atividade === 'Atividade 4 - Geometria') continue;
       if (!melhor[r.aluno]) melhor[r.aluno] = {
         aluno: r.aluno, turma: r.turma || '?', porAtiv: {}, sessoes: 0,
         melhorSessao: 0, primeiroTs: Infinity
@@ -577,6 +578,7 @@ async function iniciarTVMode() {
     const melhor = {};
     for (const r of lista) {
       if (!r.concluido || !r.aluno) continue;
+      if (r.atividade === 'Atividade 4 - Geometria') continue;
       if (!melhor[r.aluno]) melhor[r.aluno] = {
         aluno: r.aluno, turma: r.turma || '?', porAtiv: {}, sessoes: 0,
         melhorSessao: 0, primeiroTs: Infinity

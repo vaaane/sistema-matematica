@@ -111,8 +111,10 @@ const melhorDash = {};
 const turmaDash  = {};
 const regsPorAluno = {};
 todos.filter(r => r.concluido).forEach(r => {
-  if (!melhorDash[r.aluno]) melhorDash[r.aluno] = {};
-  melhorDash[r.aluno][r.atividade] = Math.max(melhorDash[r.aluno][r.atividade] || 0, r.pontuacao || 0);
+  if (r.atividade !== 'Atividade 4 - Geometria') {
+    if (!melhorDash[r.aluno]) melhorDash[r.aluno] = {};
+    melhorDash[r.aluno][r.atividade] = Math.max(melhorDash[r.aluno][r.atividade] || 0, r.pontuacao || 0);
+  }
   if (!turmaDash[r.aluno]) turmaDash[r.aluno] = r.turma;
   if (!regsPorAluno[r.aluno]) regsPorAluno[r.aluno] = [];
   regsPorAluno[r.aluno].push(r);
@@ -256,6 +258,11 @@ document.getElementById("content").innerHTML = `
     </div>
   </div>
 
+  <div id="banner-avaliacao" style="display:none;margin:0 0 18px;padding:12px 18px;background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3);border-radius:10px;align-items:center;gap:10px;">
+    <span style="font-size:13px">⏳ <strong id="banner-av-count">0</strong> alunos fazendo avaliação agora</span>
+    <a href="/professor/acompanhamento_avaliacao.html" style="margin-left:auto;color:var(--blue);font-weight:600;font-size:13px;text-decoration:none;white-space:nowrap">Ver ao vivo →</a>
+  </div>
+
   <div class="tab-grid" style="grid-template-columns:${hasTabAlertas ? '1fr 1fr' : '1fr'}">
     ${hasTabAlertas ? `
     <div class="card">
@@ -333,23 +340,28 @@ document.getElementById("content").innerHTML = `
   </div>`;
 
 // ── Online Agora (listeners em tempo real) ────────────────────
-const ONLINE_WINDOW_MS = 5 * 60 * 1000;
+const ONLINE_WINDOW_MS  = 5 * 60 * 1000;
+const DURACAO_AVAL_MS   = 25 * 60 * 1000;
 let onlineQuiz    = [];
 let onlineTabuada = [];
 
 onValue(ref(db, 'resultados'), snap => {
   const now = Date.now();
   const seen = {};
+  let avalAndamento = 0;
   snap.forEach(child => {
     const v = child.val();
     if (!v.concluido && v.aluno && v.criadoEm && (now - v.criadoEm) < ONLINE_WINDOW_MS) {
       seen[v.aluno] = { nome: v.aluno, turma: v.turma || '?', atividade: v.atividade || '' };
     }
+    if (v.modo === 'avaliacao_plus' && !v.concluido && v.ts_inicio &&
+        (now - v.ts_inicio * 1000) < DURACAO_AVAL_MS) avalAndamento++;
   });
   onlineQuiz = Object.values(seen);
   const el = document.getElementById('online-quiz-count');
   if (el) el.textContent = onlineQuiz.length;
   atualizarListaOnline();
+  atualizarBannerAvaliacao(avalAndamento);
 });
 
 onValue(ref(db, 'tabuada_presenca'), snap => {
@@ -396,6 +408,18 @@ function atualizarListaOnline() {
   }
   if (!html) html = '<p style="color:var(--text-muted);font-size:13px;text-align:center;padding:12px 0">Nenhum aluno jogando agora.</p>';
   el.innerHTML = html;
+}
+
+function atualizarBannerAvaliacao(n) {
+  const banner = document.getElementById('banner-avaliacao');
+  if (!banner) return;
+  if (n > 0) {
+    banner.style.display = 'flex';
+    const countEl = document.getElementById('banner-av-count');
+    if (countEl) countEl.textContent = n;
+  } else {
+    banner.style.display = 'none';
+  }
 }
 
 window.abrirOnlineModal = function() {

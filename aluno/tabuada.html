@@ -391,23 +391,24 @@ function _getLevelConfigBase(lvl) {
     return { type:'mix_as', pairs, cols, secs, minMul, minDiv };
   }
   // Níveis 122-129: mesma dificuldade do 121 mas +20s (respiro antes do chefão)
+  // tempoBase = nível 121 + 20s; calculado dinamicamente para manter coerência
+  const TEMPO_BASE_129 = _getLevelConfigBase(121).secs + 20;
   if (lvl <= 129) {
-    return { type:'mix_as', pairs:18, cols:6, secs:65, minMul:4, minDiv:4 };
+    return { type:'mix_as', pairs:18, cols:6, secs:TEMPO_BASE_129, minMul:4, minDiv:4 };
   }
   // Níveis 130+: sistema de faixas com chefões
-  // Tempo base = 65s (mesmo que 122-129); chefões têm -10s
+  // Tempo base = TEMPO_BASE_129; chefões têm -10s; sem redução entre faixas
   // Grid máximo: 18 pares = 36 cards (6×6) — nunca exceder
-  const TEMPO_BASE_130 = 65; // herda o tempo das faixas 122-129
   const n = Math.floor((lvl - 130) / 10);          // 0 para 130-139, 1 para 140-149...
   if (lvl % 10 === 0) {
     // Chefão (130, 140, 150...): mesmo grid, -10s de desafio
-    const secs   = Math.max(20, TEMPO_BASE_130 - 10); // 55s (mín 20s)
+    const secs   = Math.max(20, TEMPO_BASE_129 - 10); // mín 20s
     const minMul = Math.min(5 + n, 7);                // 5, 6, 7, 7...
     const minDiv = Math.min(5 + n, 7);
     return { type:'mix_as', pairs:18, cols:6, secs, minMul, minDiv, ehChefao:true };
   } else {
-    // Pós-chefão (131-139, 141-149...): mantém tempo da faixa base
-    const secs   = TEMPO_BASE_130;                    // 65s (= mesmo que 122-129)
+    // Pós-chefão (131-139, 141-149...): mantém tempo da faixa base (sem redução entre faixas)
+    const secs   = TEMPO_BASE_129;
     const minMul = Math.min(4 + n, 6);               // 4, 5, 6, 6...
     const minDiv = Math.min(4 + n, 6);
     return { type:'mix_as', pairs:18, cols:6, secs, minMul, minDiv };

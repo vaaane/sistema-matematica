@@ -169,6 +169,7 @@ function buildRankingMedia(lista) {
   const melhor = {};
   for (const r of lista) {
     if (!r.concluido || !r.aluno) continue;
+    if (r.atividade === 'Atividade 4 - Geometria') continue;
     if (!melhor[r.aluno]) melhor[r.aluno] = { aluno: r.aluno, turma: r.turma || '?', porAtiv: {} };
     const pts = r.pontuacao || 0;
     const prev = melhor[r.aluno].porAtiv[r.atividade] || 0;
