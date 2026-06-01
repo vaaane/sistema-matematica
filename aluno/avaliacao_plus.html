@@ -466,10 +466,14 @@ function gerarQuestoesF1() {
     return { ...instanciarQuestao(t), pontos: BASE_F1[t.dificuldade] };
   }
 
+  // Derivar contagens diretamente do F1_STRUCT para ficar sempre sincronizado
+  const n1 = F1_STRUCT.filter(d => d === 1).length; // dificuldade 1 → poolF
+  const n2 = F1_STRUCT.filter(d => d === 2).length; // dificuldade 2 → poolM
+  const n3 = F1_STRUCT.filter(d => d === 3).length; // dificuldade 3 → poolD
   const questoes = [];
-  for (let i = 0; i < 5; i++) questoes.push(pick(poolF));
-  for (let i = 0; i < 2; i++) questoes.push(pick(poolM));
-  questoes.push(pick(poolD));
+  for (let i = 0; i < n1; i++) questoes.push(pick(poolF));
+  for (let i = 0; i < n2; i++) questoes.push(pick(poolM));
+  for (let i = 0; i < n3; i++) questoes.push(pick(poolD));
   return questoes;
 }
 
