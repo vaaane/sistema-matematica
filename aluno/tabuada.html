@@ -202,27 +202,21 @@
   <aside class="sidebar" id="sidebar"></aside>
   <div class="main">
     <div class="topbar">
-      <div class="topbar-left" style="flex-direction:row;align-items:center;gap:10px;display:flex">
-        <div style="display:flex;gap:5px;flex-shrink:0">
-          <a href="/aluno/jogos.html" class="btn btn-ghost" id="btn-voltar"
-            style="font-size:12px;padding:4px 10px;height:auto;display:inline-flex;align-items:center;gap:4px">
-            <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-            Voltar
-          </a>
-          <button onclick="reiniciarNivel()" id="btn-reiniciar-hdr" title="Reiniciar nível"
-            style="font-size:12px;padding:4px 10px;height:auto;display:none;align-items:center;gap:4px;background:none;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-family:inherit;color:var(--text-muted);transition:border-color .15s,color .15s"
-            onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'"
-            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
-            ↺ Reiniciar
-          </button>
-        </div>
-        <div style="min-width:0">
-          <div class="topbar-title">🎮 Tabuada</div>
-          <div class="topbar-sub" id="nivel-display">Carregando…</div>
-          <div id="leaders-line" style="font-size:10px;color:var(--text-muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px"></div>
-        </div>
+      <div class="topbar-left">
+        <div class="topbar-title">🎮 Tabuada</div>
       </div>
-      <div class="topbar-right">
+      <div class="topbar-right" style="display:flex;align-items:center;gap:8px">
+        <a href="/aluno/jogos.html" class="btn btn-ghost" id="btn-voltar"
+          style="font-size:12px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px">
+          <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+          Voltar
+        </a>
+        <button onclick="reiniciarNivel()" id="btn-reiniciar-hdr" title="Reiniciar nível"
+          style="font-size:12px;padding:4px 10px;display:none;align-items:center;gap:4px;background:none;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-family:inherit;color:var(--text-muted);transition:border-color .15s,color .15s"
+          onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'"
+          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+          ↺ Reiniciar
+        </button>
         <div class="avatar-wrap">
           <div class="avatar avatar-orange" id="avatar-initials" onclick="toggleAvatarMenu()">?</div>
           <div class="avatar-menu" id="avatar-menu">
@@ -776,7 +770,7 @@ function calcGameLayout(cardCount) {
   const vh  = window.innerHeight;
   const GAP = 7;
   const MIN_H = 44, MIN_W = 44;
-  // Topbar height medido dinamicamente (inclui leaders-line)
+  // Topbar height medido dinamicamente
   const topbarH = document.querySelector('.topbar')?.getBoundingClientRect().height || 64;
   // Elementos fixos dentro do content (sem back link, sem reiniciar, sem leaders):
   // cabeçalho-nivel(36) + timer(50) + barra(25) + dots(28) + status(28) + combo(26) + slots(76) + padding(30)
@@ -963,29 +957,34 @@ function symToTipo(sym) {
 }
 
 function updateNivelDisplay() {
-  if (_isSprint) {
-    document.getElementById("nivel-display").textContent = `⚡ Sprint · ${_sprintPairsOk} acerto${_sprintPairsOk !== 1 ? 's' : ''}`;
-  } else if (isDupla) {
-    document.getElementById("nivel-display").textContent = `👥 ${nomeAluno} · Nível ${nivelAtual}`;
-  } else {
-    document.getElementById("nivel-display").textContent =
-      nivelAtual === melhorNivel
-        ? `⭐ Nível ${nivelAtual}`
-        : `Nível ${nivelAtual} · 🏆 Melhor: ${melhorNivel}`;
+  // nivel-display removido do header — nível visível no badge dentro do jogo
+}
+
+function _buildLeadersHtml() {
+  if (_isProfMode) return '';
+  const g = rankingAll[0], t = rankingTurma[0];
+  if (!g && !t) return '';
+  const isMe = r => r && r.nome === nomeAluno && r.turma === turma;
+  const lines = [];
+  if (g) {
+    lines.push(isMe(g)
+      ? `<div style="font-size:12px;font-weight:700;color:#D97706">👑 <span style="color:var(--text-muted);font-weight:600">Geral:</span> <strong>Você lidera! 🥇</strong></div>`
+      : `<div style="font-size:12px;font-weight:600;color:#D97706">👑 <span style="color:var(--text-muted);font-weight:400;font-size:11px">Geral:</span> <strong>${escH(g.nome)}</strong><span style="color:var(--text-muted);font-weight:400"> · ${escH(g.turma||'')} · Nv ${g.melhor_nivel}</span></div>`);
   }
+  if (t && (!g || t.nome !== g.nome || t.turma !== g.turma)) {
+    lines.push(isMe(t)
+      ? `<div style="font-size:11px;color:#60A5FA;margin-top:2px">🏅 <span style="color:var(--text-muted);font-weight:400">Turma:</span> <strong>Você lidera!</strong></div>`
+      : `<div style="font-size:11px;color:#60A5FA;margin-top:2px">🏅 <span style="color:var(--text-muted);font-weight:400">Turma:</span> <strong>${escH(t.nome)}</strong><span style="color:var(--text-muted);font-weight:400"> · Nv ${t.melhor_nivel}</span></div>`);
+  }
+  return lines.join('');
 }
 
 function atualizarLeadersLine() {
-  const el = document.getElementById('leaders-line');
+  const el = document.getElementById('leaders-ingame');
   if (!el || _isProfMode) return;
-  const g = rankingAll[0], t = rankingTurma[0];
-  if (!g && !t) { el.textContent = ''; return; }
-  const isMe = r => r && r.nome === nomeAluno && r.turma === turma;
-  const parts = [];
-  if (g) parts.push(isMe(g) ? '🥇 Você lidera!' : `🏆 ${g.nome}·${g.turma}·Nv${g.melhor_nivel}`);
-  if (t && (!g || t.nome !== g.nome || t.turma !== g.turma))
-    parts.push(isMe(t) ? '🏅 Líder da turma!' : `🏅 ${t.nome}·Nv${t.melhor_nivel}`);
-  el.textContent = parts.join('   ');
+  const html = _buildLeadersHtml();
+  el.innerHTML = html;
+  el.style.display = html ? '' : 'none';
 }
 updateNivelDisplay();
 
@@ -1116,7 +1115,7 @@ function _buildGameInternal() {
   const content = document.getElementById("content");
   content.innerHTML = `
 <div style="max-width:630px;margin:0 auto">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px">
     <div style="display:flex;align-items:center;gap:10px">
       ${_isSprint
         ? `<div class="nivel-badge">⚡ Sprint</div>`
@@ -1127,6 +1126,7 @@ function _buildGameInternal() {
     </div>
     ${_isSprint ? `<div style="font-size:12px;color:var(--text-muted)">⚡ <strong style="color:var(--blue)">${_sprintPairsOk}</strong> acerto${_sprintPairsOk !== 1 ? 's' : ''}</div>` : ''}
   </div>
+  ${!_isSprint ? `<div id="leaders-ingame" style="margin-bottom:8px;line-height:1.6">${_buildLeadersHtml()}</div>` : ''}
 
   ${_isSprint ? `
   <div class="sprint-bar">
