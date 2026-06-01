@@ -125,7 +125,7 @@ async function loadData() {
   <div class="card" style="margin-bottom:16px">
     <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px">Testar nível específico</div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <input type="number" id="inp-nivel" min="1" max="50" value="${nivelAtual}"
+      <input type="number" id="inp-nivel" min="1" max="999" value="${nivelAtual}"
         style="width:76px;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;font-weight:700;text-align:center;background:var(--bg);color:var(--text)">
       <button onclick="testarNivel()" class="btn btn-blue">▶ Testar este nível</button>
       <span style="font-size:12px;color:var(--text-muted)">Não altera o nível atual</span>
@@ -185,8 +185,12 @@ async function loadData() {
 }
 
 window.testarNivel = function() {
-  const v = Math.max(1, Math.min(50, parseInt(document.getElementById('inp-nivel')?.value) || 1));
-  window.location.href = `/aluno/tabuada.html?nivel=${v}`;
+  const nivel = parseInt(document.getElementById('inp-nivel')?.value, 10);
+  if (isNaN(nivel) || nivel < 1 || nivel > 999) {
+    alert('Digite um nível entre 1 e 999.');
+    return;
+  }
+  window.location.href = `/aluno/tabuada.html?nivel=${nivel}`;
 };
 
 window.salvarNota = async function() {

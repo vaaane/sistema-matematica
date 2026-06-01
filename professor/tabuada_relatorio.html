@@ -21,6 +21,14 @@
     .spark.todo{background:var(--border);}
     .no-data{display:flex;flex-direction:column;align-items:center;padding:48px 20px;text-align:center;color:var(--text-muted);gap:10px;}
     .no-data svg{width:40px;height:40px;fill:var(--border);}
+    /* ── Config panel ── */
+    .cfg-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .cfg-label{font-size:13px;font-weight:600;color:var(--text);min-width:130px;}
+    .cfg-stepper{display:inline-flex;align-items:center;gap:0;border:1.5px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;}
+    .cfg-step-btn{width:32px;height:36px;border:none;background:var(--bg);color:var(--text);font-size:18px;font-weight:700;cursor:pointer;transition:background .12s;display:flex;align-items:center;justify-content:center;}
+    .cfg-step-btn:hover{background:var(--blue-pale);}
+    .cfg-val{width:56px;height:36px;text-align:center;font-size:14px;font-weight:700;color:var(--text);border:none;border-left:1.5px solid var(--border);border-right:1.5px solid var(--border);background:var(--card);font-family:inherit;}
+    .cfg-unit{font-size:12px;color:var(--text-muted);}
   </style>
 </head>
 <body>
@@ -53,12 +61,16 @@
 import { ALUNOS_POR_TURMA } from "/js/constants.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
-import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { escH, agruparPorTurma, compilarAlertasTabuada } from "/js/tabuada-alerts.js";
 
-requireProfessor();
+const _profSess = requireProfessor();
 renderSidebarProfessor("sidebar", "tabuada_relatorio");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+// Configurações do jogo
+let tabuadaConfig = { tempo_base: 40, dificuldade_multiplicador: 5 };
+const configRef   = ref(db, 'tabuada_config/global');
 
 // Standard ranking: empates compartilham posição, próximo pula
 // ex: [84,84,82] → [1,1,3]
@@ -83,6 +95,10 @@ async function loadData() {
   content.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>';
 
   try {
+    // Carregar configurações do jogo
+    const cfgSnap = await get(configRef);
+    if (cfgSnap.exists()) tabuadaConfig = { ...tabuadaConfig, ...cfgSnap.val() };
+
     const snap = await get(ref(db, 'tabuada_ranking'));
     allData = [];
     if (snap.exists()) {
@@ -172,7 +188,42 @@ function renderPage() {
     return { t, cadastrados: cadastrados.length, jogaram, mediaLvl, maxLvl };
   });
 
+  const cfgSalvoEm  = tabuadaConfig.salvo_em  ? fmtDate(tabuadaConfig.salvo_em)  : null;
+  const cfgSalvoPor = tabuadaConfig.salvo_por || null;
+
   document.getElementById("content").innerHTML = `
+<div class="card" style="margin-bottom:16px">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+    <span style="font-size:15px">⚙️</span>
+    <span style="font-size:13px;font-weight:700;color:var(--text)">Configurações do Jogo</span>
+    ${cfgSalvoEm ? `<span style="font-size:11px;color:var(--text-muted);margin-left:auto">Salvo em ${cfgSalvoEm}${cfgSalvoPor ? ' por ' + escH(cfgSalvoPor) : ''}</span>` : ''}
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div class="cfg-row">
+      <span class="cfg-label">Tempo limite</span>
+      <div class="cfg-stepper">
+        <button class="cfg-step-btn" onclick="ajustarConfig('tempo_base', -5)">−</button>
+        <input class="cfg-val" id="cfg-tempo" type="number" value="${tabuadaConfig.tempo_base}" min="15" max="120" readonly>
+        <button class="cfg-step-btn" onclick="ajustarConfig('tempo_base', +5)">+</button>
+      </div>
+      <span class="cfg-unit">s &nbsp;(padrão: 40s · min 15s · max 120s)</span>
+    </div>
+    <div class="cfg-row">
+      <span class="cfg-label">Dificuldade</span>
+      <div class="cfg-stepper">
+        <button class="cfg-step-btn" onclick="ajustarConfig('dificuldade_multiplicador', -1)">−</button>
+        <input class="cfg-val" id="cfg-diff" type="number" value="${tabuadaConfig.dificuldade_multiplicador}" min="1" max="10" readonly>
+        <button class="cfg-step-btn" onclick="ajustarConfig('dificuldade_multiplicador', +1)">+</button>
+      </div>
+      <span class="cfg-unit">(padrão: 5 · escala o tamanho dos números)</span>
+    </div>
+    <div>
+      <button class="btn btn-blue" onclick="salvarConfig()">💾 Salvar configurações</button>
+      <span id="cfg-status" style="font-size:12px;color:var(--text-muted);margin-left:10px"></span>
+    </div>
+  </div>
+</div>
+
 ${alertasIndividuais.length > 0 ? `
 <div class="card" style="margin-bottom:16px;border:1.5px solid rgba(234,179,8,.35);background:rgba(234,179,8,.04)">
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
@@ -341,6 +392,38 @@ window.mudarFiltro = function(t) {
 };
 
 window.recarregar = function() { loadData(); };
+
+window.ajustarConfig = function(campo, delta) {
+  if (campo === 'tempo_base') {
+    tabuadaConfig.tempo_base = Math.max(15, Math.min(120, (tabuadaConfig.tempo_base || 40) + delta));
+    const el = document.getElementById('cfg-tempo');
+    if (el) el.value = tabuadaConfig.tempo_base;
+  } else if (campo === 'dificuldade_multiplicador') {
+    tabuadaConfig.dificuldade_multiplicador = Math.max(1, Math.min(10, (tabuadaConfig.dificuldade_multiplicador || 5) + delta));
+    const el = document.getElementById('cfg-diff');
+    if (el) el.value = tabuadaConfig.dificuldade_multiplicador;
+  }
+};
+
+window.salvarConfig = async function() {
+  const statusEl = document.getElementById('cfg-status');
+  if (statusEl) statusEl.textContent = 'Salvando…';
+  try {
+    const agora = Date.now();
+    const novaConfig = {
+      tempo_base:               tabuadaConfig.tempo_base,
+      dificuldade_multiplicador: tabuadaConfig.dificuldade_multiplicador,
+      salvo_em:  agora,
+      salvo_por: 'professora',
+    };
+    await set(configRef, novaConfig);
+    tabuadaConfig = { ...tabuadaConfig, ...novaConfig };
+    if (statusEl) statusEl.textContent = `✅ Salvo — ${new Date(agora).toLocaleString('pt-BR')}`;
+  } catch(e) {
+    console.error('[Config] Erro ao salvar:', e);
+    if (statusEl) statusEl.textContent = '⚠️ Erro ao salvar. Verifique a conexão.';
+  }
+};
 
 window.exportarCSV = function() {
   const data = filtroTurma ? allData.filter(d => d.turma === filtroTurma) : allData;

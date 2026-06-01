@@ -21,19 +21,19 @@
     .nivel-badge svg{width:13px;height:13px;fill:currentColor;}
 
     /* ── Game grid ── */
-    .game-grid{display:grid;gap:7px;margin-bottom:18px;}
+    .game-grid{display:grid;gap:7px;margin-bottom:18px;position:relative;overflow:hidden;}
 
     /* ── Game card ── */
     .game-card{
-      position:relative;
+      position:static;
       background:var(--card);border:1.5px solid var(--border);border-radius:11px;
       padding:10px 6px;cursor:pointer;
-      transition:border-color .14s,background .14s,transform .1s,box-shadow .14s;
+      transition:border-color .14s,background .14s;
       display:flex;flex-direction:column;align-items:center;justify-content:center;
       min-height:72px;user-select:none;-webkit-tap-highlight-color:transparent;
     }
-    .game-card:hover{border-color:var(--blue);background:var(--blue-pale);transform:translateY(-1px);box-shadow:0 3px 12px rgba(47,158,220,.18);}
-    .game-card.selected{border:2.5px solid var(--blue);background:var(--blue-pale);box-shadow:0 0 0 3px rgba(47,158,220,.18);}
+    .game-card:hover{border-color:var(--blue);background:var(--blue-pale);}
+    .game-card.selected{border:2.5px solid var(--blue);background:var(--blue-pale);box-shadow:inset 0 0 0 2px rgba(47,158,220,.18);}
     .game-card.error{border-color:var(--red)!important;background:var(--red-pale)!important;animation:shake .4s;}
     .game-card.matched-flash{border-color:var(--green)!important;background:var(--green-pale)!important;pointer-events:none;}
     .game-card.removed{pointer-events:none;animation:cardOut .4s forwards;}
@@ -64,7 +64,7 @@
 
     /* ── Animations ── */
     @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
-    @keyframes cardOut{0%{opacity:1;transform:scale(1)}30%{opacity:.7;transform:scale(1.05)}100%{opacity:0;transform:scale(0);visibility:hidden}}
+    @keyframes cardOut{0%{opacity:1}100%{opacity:0;visibility:hidden}}
     @keyframes levelUpPop{0%{opacity:0;transform:scale(.45) rotate(-8deg)}70%{transform:scale(1.12) rotate(1.5deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
     @keyframes levelDownPop{0%{opacity:0;transform:scale(.88) translateY(8px)}65%{transform:scale(1.02) translateY(-2px)}100%{opacity:1;transform:scale(1) translateY(0)}}
     @keyframes fadeInUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
@@ -276,6 +276,13 @@ let niveisRef     = ref(db, _isProfMode ? `professor_tabuada_niveis/${uid}` : `t
 let rankingRef    = _isProfMode ? null : ref(db, `tabuada_ranking/${uid}`);
 let sprintRankRef = _isProfMode ? null : ref(db, `tabuada_sprint_ranking/${uid}`);
 
+// Configurações globais do jogo (lidas do Firebase, aplicadas em getLevelConfig)
+let tabuadaConfig = { tempo_base: 40, dificuldade_multiplicador: 5 };
+try {
+  const cfgSnap = await get(ref(db, 'tabuada_config/global'));
+  if (cfgSnap.exists()) tabuadaConfig = { ...tabuadaConfig, ...cfgSnap.val() };
+} catch(e) { console.warn('[Tabuada] Config não carregada:', e); }
+
 async function carregarProgresso() {
   try {
     const snap = await get(niveisRef);
@@ -329,8 +336,18 @@ async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo
 function isChefao(lvl) { return lvl >= 130 && lvl % 10 === 0; }
 
 function getLevelConfig(lvl) {
+  const cfg = _getLevelConfigBase(lvl);
+  // Aplicar offset de tempo configurado pela professora (padrão 40 = neutro)
+  const tempoOffset = (tabuadaConfig.tempo_base || 40) - 40;
+  if (tempoOffset !== 0) {
+    cfg.secs = Math.max(15, Math.min(120, cfg.secs + tempoOffset));
+  }
+  return cfg;
+}
+
+function _getLevelConfigBase(lvl) {
   // Níveis 81-120: dificuldade congelada no nível 80, +40s de tempo
-  if (lvl > 80 && lvl <= 120) { const cfg = getLevelConfig(80); return { ...cfg, secs: cfg.secs + 40 }; }
+  if (lvl > 80 && lvl <= 120) { const cfg = _getLevelConfigBase(80); return { ...cfg, secs: cfg.secs + 40 }; }
   // Níveis 1-54: adição + subtração juntas, resultados crescem de 8 a 25
   if (lvl <= 54) {
     const t         = (lvl - 1) / 53;
@@ -361,29 +378,27 @@ function getLevelConfig(lvl) {
     const minDiv = Math.max(1, Math.round(1 + t * (perOp - 1)));
     return { type:'mix_as', pairs, cols, secs, minMul, minDiv };
   }
-  // Níveis 122-129: mesma dificuldade do 121 (t=1 do branch 66+)
+  // Níveis 122-129: mesma dificuldade do 121 mas +20s (respiro antes do chefão)
   if (lvl <= 129) {
-    return { type:'mix_as', pairs:18, cols:6, secs:45, minMul:4, minDiv:4 };
+    return { type:'mix_as', pairs:18, cols:6, secs:65, minMul:4, minDiv:4 };
   }
   // Níveis 130+: sistema de faixas com chefões
-  // Chefões (130, 140, 150...): grade maior + tempo reduzido
-  // Pós-chefão (131-139, 141-149...): intermediário entre faixa anterior e próximo chefão
-  const chefaoAnterior = Math.floor(lvl / 10) * 10; // 130, 140, 150...
-  const n = (chefaoAnterior - 130) / 10;            // 0→130, 1→140, 2→150...
+  // Tempo base = 65s (mesmo que 122-129); chefões têm -10s
+  // Grid máximo: 18 pares = 36 cards (6×6) — nunca exceder
+  const TEMPO_BASE_130 = 65; // herda o tempo das faixas 122-129
+  const n = Math.floor((lvl - 130) / 10);          // 0 para 130-139, 1 para 140-149...
   if (lvl % 10 === 0) {
-    // Chefão N: pares+=3 por chefão, secs-=3 por chefão
-    const pairs  = 21 + n * 3;                    // 21, 24, 27, 30...
-    const secs   = Math.max(20, 35 - n * 3);      // 35, 32, 29, 26... (mín 20s)
-    const minMul = Math.min(5 + n, 7);            // 5, 6, 7, 7...
+    // Chefão (130, 140, 150...): mesmo grid, -10s de desafio
+    const secs   = Math.max(20, TEMPO_BASE_130 - 10); // 55s (mín 20s)
+    const minMul = Math.min(5 + n, 7);                // 5, 6, 7, 7...
     const minDiv = Math.min(5 + n, 7);
-    return { type:'mix_as', pairs, cols:6, secs, minMul, minDiv, ehChefao:true };
+    return { type:'mix_as', pairs:18, cols:6, secs, minMul, minDiv, ehChefao:true };
   } else {
-    // Pós-chefão N (131-139, 141-149...): respiro após chefão, escala suave
-    const pairs  = 18 + n * 3;                    // 18, 21, 24...
-    const secs   = Math.max(25, 42 - n * 3);      // 42, 39, 36...
-    const minMul = Math.min(4 + n, 6);            // 4, 5, 6, 6...
+    // Pós-chefão (131-139, 141-149...): mantém tempo da faixa base
+    const secs   = TEMPO_BASE_130;                    // 65s (= mesmo que 122-129)
+    const minMul = Math.min(4 + n, 6);               // 4, 5, 6, 6...
     const minDiv = Math.min(4 + n, 6);
-    return { type:'mix_as', pairs, cols:6, secs, minMul, minDiv };
+    return { type:'mix_as', pairs:18, cols:6, secs, minMul, minDiv };
   }
 }
 
@@ -959,6 +974,8 @@ function _buildGameInternal() {
       if (extra) pairs.push(extra); else break;
     }
   }
+  // Segurança: nunca exceder 18 pares (grid máximo 6×6 = 36 cards)
+  if (pairs.length > 18) pairs.splice(18);
 
   // Build cards array: op card + result card per pair
   const cards = [];
