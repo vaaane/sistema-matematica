@@ -434,11 +434,19 @@ function instanciarQuestao(t) {
     if (c.unidade) unidade = c.unidade;
   } else {
     const forcedVars = t._forcedVars || {};
-    for (const [k,v] of Object.entries(t.variaveis||{})) {
-      if (k in forcedVars) { vars[k] = forcedVars[k]; continue; }
-      vars[k] = Array.isArray(v) ? v[Math.floor(Math.random()*v.length)]
-                                 : v.min + Math.floor(Math.random()*(v.max-v.min+1));
-    }
+    const forbidden  = t.forbidden_combos || [];
+    // Tenta até 10 vezes para evitar combinações de valores que estiveram em sala
+    let attempts = 0;
+    do {
+      for (const [k,v] of Object.entries(t.variaveis||{})) {
+        if (k in forcedVars) { vars[k] = forcedVars[k]; continue; }
+        vars[k] = Array.isArray(v) ? v[Math.floor(Math.random()*v.length)]
+                                   : v.min + Math.floor(Math.random()*(v.max-v.min+1));
+      }
+      attempts++;
+    } while (attempts < 15 && forbidden.some(fc =>
+      Object.entries(fc).every(([k,fv]) => vars[k] === fv)
+    ));
     resposta = String(avaliar(t.resposta_expr, vars) ?? '?');
   }
   let enunciado = t.enunciado;
