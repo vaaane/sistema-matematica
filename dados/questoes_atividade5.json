@@ -7,7 +7,20 @@
     "tag": "Área de Triângulo",
     "enunciado": "Uma piscina tem formato triangular com base de {BASE} m e altura de {ALTURA} m. Qual é a área da piscina, em m²?",
     "imagem_svg_template": "<svg width='200' height='160' viewBox='0 0 200 160' xmlns='http://www.w3.org/2000/svg'><polygon points='100,10 10,140 190,140' fill='#a5d8ff' stroke='#1971c2' stroke-width='2'/><line x1='100' y1='10' x2='100' y2='140' stroke='#e03131' stroke-width='1.5' stroke-dasharray='5,4'/><rect x='100' y='128' width='12' height='12' fill='none' stroke='#e03131' stroke-width='1.5'/><text x='100' y='156' font-size='13' fill='#1971c2' font-weight='bold' text-anchor='middle'>{BASE} m</text><text x='114' y='80' font-size='13' fill='#e03131' font-weight='bold'>{ALTURA} m</text></svg>",
-    "variaveis": { "BASE": [6,8,10,12], "ALTURA": [4,5,6,8] },
+    "variaveis": {
+      "BASE": [
+        6,
+        8,
+        10,
+        12
+      ],
+      "ALTURA": [
+        4,
+        5,
+        6,
+        8
+      ]
+    },
     "resposta_expr": "BASE * ALTURA / 2"
   },
   {
@@ -18,7 +31,20 @@
     "tag": "Área de Triângulo",
     "enunciado": "Uma bandeira triangular tem base de {BASE} m e altura de {ALTURA} m. Qual é a área da bandeira, em m²?",
     "imagem_svg_template": "<svg width='200' height='160' viewBox='0 0 200 160' xmlns='http://www.w3.org/2000/svg'><polygon points='10,10 190,80 10,150' fill='#ffe3e3' stroke='#c92a2a' stroke-width='2'/><line x1='10' y1='80' x2='190' y2='80' stroke='#e03131' stroke-width='1.5' stroke-dasharray='5,4'/><rect x='10' y='68' width='12' height='12' fill='none' stroke='#e03131' stroke-width='1.5'/><text x='105' y='155' font-size='13' fill='#c92a2a' font-weight='bold' text-anchor='middle'>{BASE} m</text><text x='105' y='72' font-size='13' fill='#e03131' font-weight='bold' text-anchor='middle'>{ALTURA} m</text></svg>",
-    "variaveis": { "BASE": [4,6,8,10], "ALTURA": [3,4,5,6] },
+    "variaveis": {
+      "BASE": [
+        4,
+        6,
+        8,
+        10
+      ],
+      "ALTURA": [
+        3,
+        4,
+        5,
+        6
+      ]
+    },
     "resposta_expr": "BASE * ALTURA / 2"
   },
   {
@@ -29,7 +55,20 @@
     "tag": "Área de Triângulo",
     "enunciado": "Uma janela triangular tem base de {BASE} m e altura de {ALTURA} m. Qual é a área da janela, em m²?",
     "imagem_svg_template": "<svg width='200' height='160' viewBox='0 0 200 160' xmlns='http://www.w3.org/2000/svg'><polygon points='100,10 10,140 190,140' fill='#e3fafc' stroke='#0c8599' stroke-width='2'/><line x1='100' y1='10' x2='100' y2='140' stroke='#e03131' stroke-width='1.5' stroke-dasharray='5,4'/><rect x='100' y='128' width='12' height='12' fill='none' stroke='#e03131' stroke-width='1.5'/><text x='100' y='156' font-size='13' fill='#0c8599' font-weight='bold' text-anchor='middle'>{BASE} m</text><text x='114' y='80' font-size='13' fill='#e03131' font-weight='bold'>{ALTURA} m</text></svg>",
-    "variaveis": { "BASE": [4,6,8,10], "ALTURA": [3,4,5,6] },
+    "variaveis": {
+      "BASE": [
+        4,
+        6,
+        8,
+        10
+      ],
+      "ALTURA": [
+        3,
+        4,
+        5,
+        6
+      ]
+    },
     "resposta_expr": "BASE * ALTURA / 2"
   },
   {
@@ -40,7 +79,20 @@
     "tag": "Área de Triângulo",
     "enunciado": "Um tatame triangular de academia tem base de {BASE} m e altura de {ALTURA} m. Qual é a área do tatame, em m²?",
     "imagem_svg_template": "<svg width='200' height='160' viewBox='0 0 200 160' xmlns='http://www.w3.org/2000/svg'><polygon points='100,10 10,140 190,140' fill='#e9fac8' stroke='#5c940d' stroke-width='2'/><line x1='100' y1='10' x2='100' y2='140' stroke='#e03131' stroke-width='1.5' stroke-dasharray='5,4'/><rect x='100' y='128' width='12' height='12' fill='none' stroke='#e03131' stroke-width='1.5'/><text x='100' y='156' font-size='13' fill='#5c940d' font-weight='bold' text-anchor='middle'>{BASE} m</text><text x='114' y='80' font-size='13' fill='#e03131' font-weight='bold'>{ALTURA} m</text></svg>",
-    "variaveis": { "BASE": [4,6,8,10], "ALTURA": [3,4,5,6] },
+    "variaveis": {
+      "BASE": [
+        4,
+        6,
+        8,
+        10
+      ],
+      "ALTURA": [
+        3,
+        4,
+        5,
+        6
+      ]
+    },
     "resposta_expr": "BASE * ALTURA / 2"
   },
   {
@@ -51,7 +103,20 @@
     "tag": "Área de Triângulo",
     "enunciado": "Um pedaço de pizza tem formato triangular com base de {BASE} cm e altura de {ALTURA} cm. Qual é a área do pedaço, em cm²?",
     "imagem_svg_template": "<svg width='200' height='160' viewBox='0 0 200 160' xmlns='http://www.w3.org/2000/svg'><polygon points='100,10 10,140 190,140' fill='#fff3bf' stroke='#e67700' stroke-width='2'/><line x1='100' y1='10' x2='100' y2='140' stroke='#e03131' stroke-width='1.5' stroke-dasharray='5,4'/><rect x='100' y='128' width='12' height='12' fill='none' stroke='#e03131' stroke-width='1.5'/><text x='100' y='156' font-size='13' fill='#e67700' font-weight='bold' text-anchor='middle'>{BASE} cm</text><text x='114' y='80' font-size='13' fill='#e03131' font-weight='bold'>{ALTURA} cm</text></svg>",
-    "variaveis": { "BASE": [6,8,10,12], "ALTURA": [8,10,12,14] },
+    "variaveis": {
+      "BASE": [
+        6,
+        8,
+        10,
+        12
+      ],
+      "ALTURA": [
+        8,
+        10,
+        12,
+        14
+      ]
+    },
     "resposta_expr": "BASE * ALTURA / 2"
   },
   {
@@ -62,7 +127,20 @@
     "tag": "Área de Triângulo",
     "enunciado": "Um parque tem uma área de grama triangular com base de {BASE} m e altura de {ALTURA} m. Qual é a área gramada, em m²?",
     "imagem_svg_template": "<svg width='200' height='160' viewBox='0 0 200 160' xmlns='http://www.w3.org/2000/svg'><polygon points='100,10 10,140 190,140' fill='#ebfbee' stroke='#2f9e44' stroke-width='2'/><line x1='100' y1='10' x2='100' y2='140' stroke='#e03131' stroke-width='1.5' stroke-dasharray='5,4'/><rect x='100' y='128' width='12' height='12' fill='none' stroke='#e03131' stroke-width='1.5'/><text x='100' y='156' font-size='13' fill='#2f9e44' font-weight='bold' text-anchor='middle'>{BASE} m</text><text x='114' y='80' font-size='13' fill='#e03131' font-weight='bold'>{ALTURA} m</text></svg>",
-    "variaveis": { "BASE": [6,8,10,12], "ALTURA": [4,5,6,8] },
+    "variaveis": {
+      "BASE": [
+        6,
+        8,
+        10,
+        12
+      ],
+      "ALTURA": [
+        4,
+        5,
+        6,
+        8
+      ]
+    },
     "resposta_expr": "BASE * ALTURA / 2"
   },
   {
@@ -73,7 +151,20 @@
     "tag": "Área de Triângulo",
     "enunciado": "Uma calçada triangular na esquina tem base de {BASE} m e altura de {ALTURA} m. Qual é a área da calçada, em m²?",
     "imagem_svg_template": "<svg width='200' height='160' viewBox='0 0 200 160' xmlns='http://www.w3.org/2000/svg'><polygon points='20,140 20,20 170,140' fill='#f8f9fa' stroke='#495057' stroke-width='2'/><rect x='20' y='128' width='12' height='12' fill='none' stroke='#495057' stroke-width='1.5'/><text x='95' y='156' font-size='13' fill='#495057' font-weight='bold' text-anchor='middle'>{BASE} m</text><text x='5' y='83' font-size='13' fill='#495057' font-weight='bold'>{ALTURA} m</text></svg>",
-    "variaveis": { "BASE": [4,6,8,10], "ALTURA": [3,4,5,6] },
+    "variaveis": {
+      "BASE": [
+        4,
+        6,
+        8,
+        10
+      ],
+      "ALTURA": [
+        3,
+        4,
+        5,
+        6
+      ]
+    },
     "resposta_expr": "BASE * ALTURA / 2"
   },
   {
@@ -84,7 +175,20 @@
     "tag": "Área de Triângulo",
     "enunciado": "Uma fatia de bolo tem formato triangular com base de {BASE} cm e altura de {ALTURA} cm. Qual é a área da fatia, em cm²?",
     "imagem_svg_template": "<svg width='200' height='160' viewBox='0 0 200 160' xmlns='http://www.w3.org/2000/svg'><polygon points='100,10 10,140 190,140' fill='#fce4ec' stroke='#c2185b' stroke-width='2'/><line x1='100' y1='10' x2='100' y2='140' stroke='#e03131' stroke-width='1.5' stroke-dasharray='5,4'/><rect x='100' y='128' width='12' height='12' fill='none' stroke='#e03131' stroke-width='1.5'/><text x='100' y='156' font-size='13' fill='#c2185b' font-weight='bold' text-anchor='middle'>{BASE} cm</text><text x='114' y='80' font-size='13' fill='#e03131' font-weight='bold'>{ALTURA} cm</text></svg>",
-    "variaveis": { "BASE": [6,8,10,12], "ALTURA": [8,10,12,14] },
+    "variaveis": {
+      "BASE": [
+        6,
+        8,
+        10,
+        12
+      ],
+      "ALTURA": [
+        8,
+        10,
+        12,
+        14
+      ]
+    },
     "resposta_expr": "BASE * ALTURA / 2"
   },
   {
@@ -95,7 +199,11 @@
     "tag": "Pitágoras",
     "enunciado": "Um cabo de energia vai do topo de um poste de 4 m até um ponto no chão a 3 m de distância. Qual é o comprimento do cabo, em m?",
     "imagem_svg": "<svg width='170' height='160' viewBox='0 0 170 160' xmlns='http://www.w3.org/2000/svg'><line x1='20' y1='10' x2='20' y2='140' stroke='#495057' stroke-width='3'/><line x1='10' y1='140' x2='110' y2='140' stroke='#495057' stroke-width='3'/><line x1='20' y1='10' x2='110' y2='140' stroke='#e8590c' stroke-width='2.5'/><rect x='20' y='128' width='12' height='12' fill='none' stroke='#495057' stroke-width='1.5'/><text x='60' y='156' font-size='13' fill='#3b5bdb' font-weight='bold' text-anchor='middle'>3 m</text><text x='4' y='78' font-size='13' fill='#3b5bdb' font-weight='bold'>4 m</text><text x='78' y='85' font-size='13' fill='#e8590c' font-weight='bold'>?</text></svg>",
-    "conjuntos": [{ "resposta": 5 }]
+    "conjuntos": [
+      {
+        "resposta": 5
+      }
+    ]
   },
   {
     "id": "PIT-F02",
@@ -105,7 +213,11 @@
     "tag": "Pitágoras",
     "enunciado": "Uma trilha de parque forma um triângulo retângulo. Os dois trechos retos medem 6 m e 8 m. Qual é o comprimento do atalho diagonal, em m?",
     "imagem_svg": "<svg width='190' height='150' viewBox='0 0 190 150' xmlns='http://www.w3.org/2000/svg'><polygon points='20,130 160,130 20,20' fill='#ebfbee' stroke='#2f9e44' stroke-width='2' stroke-dasharray='6,4'/><line x1='20' y1='20' x2='160' y2='130' stroke='#e8590c' stroke-width='2.5'/><rect x='20' y='118' width='12' height='12' fill='none' stroke='#2f9e44' stroke-width='1.5'/><text x='90' y='145' font-size='13' fill='#2f9e44' font-weight='bold' text-anchor='middle'>6 m</text><text x='4' y='78' font-size='13' fill='#2f9e44' font-weight='bold'>8 m</text><text x='98' y='70' font-size='13' fill='#e8590c' font-weight='bold'>?</text></svg>",
-    "conjuntos": [{ "resposta": 10 }]
+    "conjuntos": [
+      {
+        "resposta": 10
+      }
+    ]
   },
   {
     "id": "PIT-F03",
@@ -114,7 +226,11 @@
     "tipo": "numerica",
     "tag": "Pitágoras",
     "enunciado": "Um fio de antena vai do topo de uma torre de 4 m até um ponto no chão a 3 m da base. Qual é o comprimento do fio, em m?",
-    "conjuntos": [{ "resposta": 5 }]
+    "conjuntos": [
+      {
+        "resposta": 5
+      }
+    ]
   },
   {
     "id": "PIT-F04",
@@ -124,7 +240,11 @@
     "tag": "Pitágoras",
     "enunciado": "Uma diagonal corta um terreno retangular de 6 m × 8 m. Qual é o comprimento da diagonal, em m?",
     "imagem_svg": "<svg width='190' height='150' viewBox='0 0 190 150' xmlns='http://www.w3.org/2000/svg'><rect x='20' y='20' width='150' height='110' fill='#fff9db' stroke='#e67700' stroke-width='2'/><line x1='20' y1='20' x2='170' y2='130' stroke='#e8590c' stroke-width='2.5' stroke-dasharray='6,4'/><text x='95' y='145' font-size='13' fill='#e67700' font-weight='bold' text-anchor='middle'>6 m</text><text x='4' y='78' font-size='13' fill='#e67700' font-weight='bold'>8 m</text><text x='98' y='75' font-size='13' fill='#e8590c' font-weight='bold'>?</text></svg>",
-    "conjuntos": [{ "resposta": 10 }]
+    "conjuntos": [
+      {
+        "resposta": 10
+      }
+    ]
   },
   {
     "id": "PIT-F05",
@@ -134,7 +254,11 @@
     "tag": "Pitágoras",
     "enunciado": "Uma rampa de acesso tem base de 9 m e altura de 12 m. Qual é o comprimento da rampa, em m?",
     "imagem_svg": "<svg width='200' height='160' viewBox='0 0 200 160' xmlns='http://www.w3.org/2000/svg'><polygon points='20,140 170,140 20,20' fill='#f8f9fa' stroke='#495057' stroke-width='2'/><rect x='20' y='128' width='12' height='12' fill='none' stroke='#495057' stroke-width='1.5'/><text x='95' y='156' font-size='13' fill='#3b5bdb' font-weight='bold' text-anchor='middle'>9 m</text><text x='4' y='83' font-size='13' fill='#3b5bdb' font-weight='bold'>12 m</text><text x='100' y='75' font-size='13' fill='#e8590c' font-weight='bold'>?</text></svg>",
-    "conjuntos": [{ "resposta": 15 }]
+    "conjuntos": [
+      {
+        "resposta": 15
+      }
+    ]
   },
   {
     "id": "TRI-M01",
@@ -143,7 +267,26 @@
     "tipo": "numerica",
     "tag": "Área de Triângulo + Preço",
     "enunciado": "Um tapete triangular tem base de {BASE} m e altura de {ALTURA} m. O tapete custa R$ {PRECO} o m². Qual é o preço total do tapete, em R$?",
-    "variaveis": { "BASE": [4,6,8,10], "ALTURA": [3,4,5,6], "PRECO": [2,3,4,5] },
+    "variaveis": {
+      "BASE": [
+        4,
+        6,
+        8,
+        10
+      ],
+      "ALTURA": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "PRECO": [
+        2,
+        3,
+        4,
+        5
+      ]
+    },
     "resposta_expr": "BASE * ALTURA / 2 * PRECO"
   },
   {
@@ -153,7 +296,26 @@
     "tipo": "numerica",
     "tag": "Área de Triângulo + Preço",
     "enunciado": "Um painel solar triangular tem base de {BASE} m e altura de {ALTURA} m. Cada m² custa R$ {PRECO}. Qual é o custo total do painel, em R$?",
-    "variaveis": { "BASE": [4,6,8,10], "ALTURA": [3,4,5,6], "PRECO": [3,4,5,6] },
+    "variaveis": {
+      "BASE": [
+        4,
+        6,
+        8,
+        10
+      ],
+      "ALTURA": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "PRECO": [
+        3,
+        4,
+        5,
+        6
+      ]
+    },
     "resposta_expr": "BASE * ALTURA / 2 * PRECO"
   },
   {
@@ -163,7 +325,26 @@
     "tipo": "numerica",
     "tag": "Área de Triângulo + Preço",
     "enunciado": "Uma varanda triangular será coberta com piso. O piso custa R$ {PRECO} o m². A varanda tem base de {BASE} m e altura de {ALTURA} m. Qual é o gasto total, em R$?",
-    "variaveis": { "BASE": [4,6,8,10], "ALTURA": [3,4,5,6], "PRECO": [2,3,4,5] },
+    "variaveis": {
+      "BASE": [
+        4,
+        6,
+        8,
+        10
+      ],
+      "ALTURA": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "PRECO": [
+        2,
+        3,
+        4,
+        5
+      ]
+    },
     "resposta_expr": "BASE * ALTURA / 2 * PRECO"
   },
   {
@@ -173,7 +354,26 @@
     "tipo": "numerica",
     "tag": "Área de Triângulo + Preço",
     "enunciado": "Um telhado triangular será coberto com telhas. Cada m² custa R$ {PRECO}. O telhado tem base de {BASE} m e altura de {ALTURA} m. Qual é o custo total, em R$?",
-    "variaveis": { "BASE": [6,8,10,12], "ALTURA": [4,5,6,8], "PRECO": [3,4,5,6] },
+    "variaveis": {
+      "BASE": [
+        6,
+        8,
+        10,
+        12
+      ],
+      "ALTURA": [
+        4,
+        5,
+        6,
+        8
+      ],
+      "PRECO": [
+        3,
+        4,
+        5,
+        6
+      ]
+    },
     "resposta_expr": "BASE * ALTURA / 2 * PRECO"
   },
   {
@@ -183,7 +383,26 @@
     "tipo": "numerica",
     "tag": "Área de Triângulo + Preço",
     "enunciado": "Um canteiro triangular numa praça será coberto com grama. A grama custa R$ {PRECO} o m². Base de {BASE} m e altura de {ALTURA} m. Qual é o gasto total, em R$?",
-    "variaveis": { "BASE": [4,6,8,10], "ALTURA": [3,4,5,6], "PRECO": [2,3,4,5] },
+    "variaveis": {
+      "BASE": [
+        4,
+        6,
+        8,
+        10
+      ],
+      "ALTURA": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "PRECO": [
+        2,
+        3,
+        4,
+        5
+      ]
+    },
     "resposta_expr": "BASE * ALTURA / 2 * PRECO"
   },
   {
@@ -193,7 +412,26 @@
     "tipo": "numerica",
     "tag": "Área de Triângulo + Preço",
     "enunciado": "Uma lona triangular para evento ao ar livre custa R$ {PRECO} o m². A lona tem base de {BASE} m e altura de {ALTURA} m. Qual é o preço total, em R$?",
-    "variaveis": { "BASE": [4,6,8,10], "ALTURA": [3,4,5,6], "PRECO": [2,3,4,5] },
+    "variaveis": {
+      "BASE": [
+        4,
+        6,
+        8,
+        10
+      ],
+      "ALTURA": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "PRECO": [
+        2,
+        3,
+        4,
+        5
+      ]
+    },
     "resposta_expr": "BASE * ALTURA / 2 * PRECO"
   },
   {
@@ -204,7 +442,11 @@
     "tag": "Pitágoras",
     "enunciado": "Uma escada está apoiada numa parede. A base fica a 5 m da parede e o topo chega a 12 m de altura. Qual é o comprimento da escada, em m?",
     "imagem_svg": "<svg width='170' height='170' viewBox='0 0 170 170' xmlns='http://www.w3.org/2000/svg'><line x1='20' y1='10' x2='20' y2='150' stroke='#888' stroke-width='3'/><line x1='10' y1='150' x2='140' y2='150' stroke='#888' stroke-width='3'/><line x1='20' y1='10' x2='130' y2='150' stroke='#e8590c' stroke-width='2.5'/><rect x='20' y='138' width='12' height='12' fill='none' stroke='#888' stroke-width='1.5'/><text x='75' y='165' font-size='13' fill='#3b5bdb' font-weight='bold' text-anchor='middle'>5 m</text><text x='4' y='83' font-size='13' fill='#3b5bdb' font-weight='bold'>12 m</text><text x='88' y='90' font-size='13' fill='#e8590c' font-weight='bold'>?</text></svg>",
-    "conjuntos": [{ "resposta": 13 }]
+    "conjuntos": [
+      {
+        "resposta": 13
+      }
+    ]
   },
   {
     "id": "PIT-M02",
@@ -213,7 +455,11 @@
     "tipo": "numerica",
     "tag": "Pitágoras",
     "enunciado": "Um cabo de TV vai do topo de um poste de 12 m até um ponto a 5 m da base. Qual é o comprimento do cabo, em m?",
-    "conjuntos": [{ "resposta": 13 }]
+    "conjuntos": [
+      {
+        "resposta": 13
+      }
+    ]
   },
   {
     "id": "PIT-M03",
@@ -223,7 +469,11 @@
     "tag": "Pitágoras",
     "enunciado": "Uma rampa de skate tem base de 9 m e altura de 12 m. Qual é o comprimento da superfície da rampa, em m?",
     "imagem_svg": "<svg width='200' height='160' viewBox='0 0 200 160' xmlns='http://www.w3.org/2000/svg'><polygon points='20,140 180,140 20,20' fill='#f8f9fa' stroke='#495057' stroke-width='2'/><rect x='20' y='128' width='12' height='12' fill='none' stroke='#495057' stroke-width='1.5'/><text x='100' y='156' font-size='13' fill='#3b5bdb' font-weight='bold' text-anchor='middle'>9 m</text><text x='4' y='83' font-size='13' fill='#3b5bdb' font-weight='bold'>12 m</text><text x='108' y='75' font-size='13' fill='#e8590c' font-weight='bold'>?</text></svg>",
-    "conjuntos": [{ "resposta": 15 }]
+    "conjuntos": [
+      {
+        "resposta": 15
+      }
+    ]
   },
   {
     "id": "PIT-M04",
@@ -232,7 +482,11 @@
     "tipo": "numerica",
     "tag": "Pitágoras",
     "enunciado": "Uma escada de emergência tem base de 5 m da parede e chega a 12 m de altura. Qual é o comprimento da escada, em m?",
-    "conjuntos": [{ "resposta": 13 }]
+    "conjuntos": [
+      {
+        "resposta": 13
+      }
+    ]
   },
   {
     "id": "PIT-M05",
@@ -242,7 +496,11 @@
     "tag": "Pitágoras",
     "enunciado": "Um varal vai do topo de um poste de 8 m até um gancho no muro a 6 m de distância. Qual é o comprimento do varal, em m?",
     "imagem_svg": "<svg width='190' height='160' viewBox='0 0 190 160' xmlns='http://www.w3.org/2000/svg'><line x1='20' y1='10' x2='20' y2='140' stroke='#495057' stroke-width='3'/><line x1='160' y1='60' x2='160' y2='140' stroke='#495057' stroke-width='3'/><line x1='10' y1='140' x2='170' y2='140' stroke='#495057' stroke-width='2'/><line x1='20' y1='10' x2='160' y2='60' stroke='#e8590c' stroke-width='2.5'/><rect x='20' y='128' width='12' height='12' fill='none' stroke='#495057' stroke-width='1.5'/><text x='90' y='156' font-size='13' fill='#3b5bdb' font-weight='bold' text-anchor='middle'>6 m</text><text x='4' y='78' font-size='13' fill='#3b5bdb' font-weight='bold'>8 m</text><text x='95' y='28' font-size='13' fill='#e8590c' font-weight='bold'>?</text></svg>",
-    "conjuntos": [{ "resposta": 10 }]
+    "conjuntos": [
+      {
+        "resposta": 10
+      }
+    ]
   },
   {
     "id": "COMP-M01",
@@ -252,7 +510,23 @@
     "tag": "Área Composta",
     "enunciado": "Uma sala retangular de {B1} m × {A1} m tem uma varanda triangular de base {B1} m e altura {A_TRI} m. Qual é a área total, em m²?",
     "imagem_svg_template": "<svg width='210' height='190' viewBox='0 0 210 190' xmlns='http://www.w3.org/2000/svg'><rect x='20' y='90' width='170' height='90' fill='#e8f0ff' stroke='#3b5bdb' stroke-width='2'/><polygon points='105,10 20,90 190,90' fill='#fff0e8' stroke='#e8590c' stroke-width='2'/><line x1='105' y1='10' x2='105' y2='90' stroke='#e03131' stroke-width='1.5' stroke-dasharray='4,3'/><text x='105' y='185' font-size='12' fill='#3b5bdb' font-weight='bold' text-anchor='middle'>{B1} m</text><text x='196' y='138' font-size='12' fill='#3b5bdb' font-weight='bold'>{A1} m</text><text x='118' y='52' font-size='12' fill='#e03131' font-weight='bold'>{A_TRI} m</text></svg>",
-    "variaveis": { "B1": [8,10,12], "A1": [5,6,8], "A_TRI": [3,4,5] },
+    "variaveis": {
+      "B1": [
+        8,
+        10,
+        12
+      ],
+      "A1": [
+        5,
+        6,
+        8
+      ],
+      "A_TRI": [
+        3,
+        4,
+        5
+      ]
+    },
     "resposta_expr": "B1 * A1 + B1 * A_TRI / 2"
   },
   {
@@ -261,10 +535,32 @@
     "timer": 40,
     "tipo": "numerica",
     "tag": "Área Composta",
-    "enunciado": "Um corredor retangular de {B1} m × {A1} m se conecta a um quarto retangular de {B2} m × {A2} m. Qual é a área total, em m²?",
-    "imagem_svg_template": "<svg width='210' height='160' viewBox='0 0 210 160' xmlns='http://www.w3.org/2000/svg'><rect x='10' y='70' width='190' height='80' fill='#e8f0ff' stroke='#3b5bdb' stroke-width='2'/><rect x='60' y='10' width='90' height='60' fill='#dbe4ff' stroke='#3b5bdb' stroke-width='2'/><text x='105' y='154' font-size='12' fill='#3b5bdb' font-weight='bold' text-anchor='middle'>{B1} m</text><text x='200' y='113' font-size='12' fill='#3b5bdb' font-weight='bold'>{A1} m</text><text x='105' y='44' font-size='12' fill='#3b5bdb' font-weight='bold' text-anchor='middle'>{B2} m</text><text x='156' y='44' font-size='12' fill='#3b5bdb' font-weight='bold'>{A2} m</text></svg>",
-    "variaveis": { "B1": [10,12,14], "A1": [4,5,6], "B2": [4,5,6], "A2": [3,4,5] },
-    "resposta_expr": "B1 * A1 + B2 * A2"
+    "enunciado": "Uma piscina retangular de {B1} m × {A1} m tem um deque triangular de base {B2} m e altura {A2} m ao lado. Qual é a área total, em m²?",
+    "imagem_svg_template": "<svg width='210' height='160' viewBox='0 0 210 160' xmlns='http://www.w3.org/2000/svg'><rect x='10' y='20' width='120' height='120' fill='#a5d8ff' stroke='#1971c2' stroke-width='2'/><polygon points='130,20 190,80 130,140' fill='#74c0fc' stroke='#1971c2' stroke-width='2'/><line x1='130' y1='80' x2='190' y2='80' stroke='#e03131' stroke-width='1.5' stroke-dasharray='4,3'/><rect x='130' y='68' width='11' height='11' fill='none' stroke='#e03131' stroke-width='1.5'/><text x='70' y='156' font-size='11' fill='#1971c2' font-weight='bold' text-anchor='middle'>{B1} m</text><text x='4' y='83' font-size='11' fill='#1971c2' font-weight='bold'>{A1} m</text><text x='162' y='75' font-size='10' fill='#e03131' font-weight='bold'>{A2} m</text></svg>",
+    "variaveis": {
+      "B1": [
+        6,
+        8,
+        10,
+        12
+      ],
+      "A1": [
+        4,
+        5,
+        6
+      ],
+      "B2": [
+        4,
+        6,
+        8
+      ],
+      "A2": [
+        4,
+        6,
+        8
+      ]
+    },
+    "resposta_expr": "B1 * A1 + B2 * A2 / 2"
   },
   {
     "id": "COMP-M03",
@@ -273,7 +569,23 @@
     "tipo": "numerica",
     "tag": "Área Composta",
     "enunciado": "Uma quadra retangular de {B1} m × {A1} m tem uma área triangular de aquecimento de base {B1} m e altura {A_TRI} m ao lado. Qual é a área total, em m²?",
-    "variaveis": { "B1": [8,10,12], "A1": [5,6,8], "A_TRI": [3,4,5] },
+    "variaveis": {
+      "B1": [
+        8,
+        10,
+        12
+      ],
+      "A1": [
+        5,
+        6,
+        8
+      ],
+      "A_TRI": [
+        3,
+        4,
+        5
+      ]
+    },
     "resposta_expr": "B1 * A1 + B1 * A_TRI / 2"
   },
   {
@@ -282,9 +594,31 @@
     "timer": 40,
     "tipo": "numerica",
     "tag": "Área Composta",
-    "enunciado": "Um apartamento tem sala retangular de {B1} m × {A1} m e cozinha retangular de {B2} m × {A2} m. Qual é a área total dos dois cômodos, em m²?",
-    "variaveis": { "B1": [5,6,8], "A1": [4,5,6], "B2": [3,4,5], "A2": [3,4,5] },
-    "resposta_expr": "B1 * A1 + B2 * A2"
+    "enunciado": "Uma quadra poliesportiva tem formato retangular de {B1} m × {A1} m e uma área de aquecimento triangular de base {B2} m e altura {A2} m. Qual é a área total, em m²?",
+    "variaveis": {
+      "B1": [
+        6,
+        8,
+        10
+      ],
+      "A1": [
+        5,
+        6,
+        8
+      ],
+      "B2": [
+        4,
+        6,
+        8
+      ],
+      "A2": [
+        4,
+        6,
+        8
+      ]
+    },
+    "resposta_expr": "B1 * A1 + B2 * A2 / 2",
+    "imagem_svg_template": "<svg width='210' height='160' viewBox='0 0 210 160' xmlns='http://www.w3.org/2000/svg'><rect x='10' y='20' width='120' height='120' fill='#ebfbee' stroke='#2f9e44' stroke-width='2'/><polygon points='130,20 190,80 130,140' fill='#d3f9d8' stroke='#2f9e44' stroke-width='2'/><line x1='130' y1='80' x2='190' y2='80' stroke='#e03131' stroke-width='1.5' stroke-dasharray='4,3'/><rect x='130' y='68' width='11' height='11' fill='none' stroke='#e03131' stroke-width='1.5'/><text x='70' y='156' font-size='11' fill='#2f9e44' font-weight='bold' text-anchor='middle'>{B1} m</text><text x='4' y='83' font-size='11' fill='#2f9e44' font-weight='bold'>{A1} m</text><text x='162' y='75' font-size='10' fill='#e03131' font-weight='bold'>{A2} m</text></svg>"
   },
   {
     "id": "TRI-D01",
@@ -293,7 +627,23 @@
     "tipo": "numerica",
     "tag": "Triângulo + Latas",
     "enunciado": "Uma parede triangular tem base de {BASE} m e altura de {ALTURA} m. Cada lata de tinta cobre {COB} m². Quantas latas inteiras são necessárias para pintar toda a parede?",
-    "variaveis": { "BASE": [8,10,12], "ALTURA": [6,8,10], "COB": [6,8,10] },
+    "variaveis": {
+      "BASE": [
+        8,
+        10,
+        12
+      ],
+      "ALTURA": [
+        6,
+        8,
+        10
+      ],
+      "COB": [
+        6,
+        8,
+        10
+      ]
+    },
     "resposta_expr": "Math.ceil(BASE * ALTURA / 2 / COB)"
   },
   {
@@ -303,7 +653,23 @@
     "tipo": "numerica",
     "tag": "Triângulo + Latas",
     "enunciado": "O telhado triangular de uma casa tem base de {BASE} m e altura de {ALTURA} m. Cada rolo de impermeabilizante cobre {COB} m². Quantos rolos inteiros são necessários?",
-    "variaveis": { "BASE": [10,12,14], "ALTURA": [6,8,10], "COB": [5,6,8] },
+    "variaveis": {
+      "BASE": [
+        10,
+        12,
+        14
+      ],
+      "ALTURA": [
+        6,
+        8,
+        10
+      ],
+      "COB": [
+        5,
+        6,
+        8
+      ]
+    },
     "resposta_expr": "Math.ceil(BASE * ALTURA / 2 / COB)"
   },
   {
@@ -314,7 +680,28 @@
     "tag": "Área Composta + Preço",
     "enunciado": "Uma quadra tem formato de retângulo de {B1} m × {A1} m com triângulo de base {B1} m e altura {A_TRI} m. O piso custa R$ {PRECO} o m². Qual é o gasto total, em R$?",
     "imagem_svg_template": "<svg width='210' height='190' viewBox='0 0 210 190' xmlns='http://www.w3.org/2000/svg'><rect x='20' y='90' width='170' height='90' fill='#e8f0ff' stroke='#3b5bdb' stroke-width='2'/><polygon points='105,10 20,90 190,90' fill='#fff0e8' stroke='#e8590c' stroke-width='2'/><line x1='105' y1='10' x2='105' y2='90' stroke='#e03131' stroke-width='1.5' stroke-dasharray='4,3'/><text x='105' y='185' font-size='12' fill='#3b5bdb' font-weight='bold' text-anchor='middle'>{B1} m</text><text x='196' y='138' font-size='12' fill='#3b5bdb' font-weight='bold'>{A1} m</text><text x='118' y='52' font-size='12' fill='#e03131' font-weight='bold'>{A_TRI} m</text></svg>",
-    "variaveis": { "B1": [8,10,12], "A1": [5,6,8], "A_TRI": [3,4,5], "PRECO": [2,3,4] },
+    "variaveis": {
+      "B1": [
+        8,
+        10,
+        12
+      ],
+      "A1": [
+        5,
+        6,
+        8
+      ],
+      "A_TRI": [
+        3,
+        4,
+        5
+      ],
+      "PRECO": [
+        2,
+        3,
+        4
+      ]
+    },
     "resposta_expr": "(B1 * A1 + B1 * A_TRI / 2) * PRECO"
   },
   {
@@ -323,10 +710,32 @@
     "timer": 90,
     "tipo": "numerica",
     "tag": "Área Composta + Preço",
-    "enunciado": "Uma piscina em L tem dois retângulos: {B1} m × {A1} m e {B2} m × {A2} m. O azulejo custa R$ {PRECO} o m². Qual é o custo total do azulejo, em R$?",
-    "imagem_svg_template": "<svg width='210' height='160' viewBox='0 0 210 160' xmlns='http://www.w3.org/2000/svg'><rect x='10' y='70' width='190' height='80' fill='#a5d8ff' stroke='#1971c2' stroke-width='2'/><rect x='60' y='10' width='90' height='60' fill='#74c0fc' stroke='#1971c2' stroke-width='2'/><text x='105' y='154' font-size='12' fill='#1971c2' font-weight='bold' text-anchor='middle'>{B1} m</text><text x='200' y='113' font-size='12' fill='#1971c2' font-weight='bold'>{A1} m</text><text x='105' y='44' font-size='12' fill='#1971c2' font-weight='bold' text-anchor='middle'>{B2} m</text><text x='156' y='44' font-size='12' fill='#1971c2' font-weight='bold'>{A2} m</text></svg>",
-    "variaveis": { "B1": [10,12,14], "A1": [4,5,6], "B2": [4,5,6], "A2": [3,4,5], "PRECO": [2,3,4] },
-    "resposta_expr": "(B1 * A1 + B2 * A2) * PRECO"
+    "enunciado": "Um terraço tem parte retangular de {B1} m × {A1} m e parte triangular de base {B1} m e altura {A_TRI} m. O piso custa R$ {PRECO} o m². Qual é o custo total, em R$?",
+    "imagem_svg_template": "<svg width='200' height='160' viewBox='0 0 200 160' xmlns='http://www.w3.org/2000/svg'><rect x='10' y='60' width='120' height='90' fill='#fff3bf' stroke='#e67700' stroke-width='2'/><polygon points='10,60 130,60 70,10' fill='#fef9c3' stroke='#e67700' stroke-width='2'/><line x1='70' y1='10' x2='70' y2='60' stroke='#e03131' stroke-width='1.5' stroke-dasharray='4,3'/><rect x='70' y='48' width='11' height='11' fill='none' stroke='#e03131' stroke-width='1.5'/><text x='70' y='156' font-size='11' fill='#e67700' font-weight='bold' text-anchor='middle'>{B1} m</text><text x='4' y='107' font-size='11' fill='#e67700' font-weight='bold'>{A1} m</text><text x='75' y='38' font-size='10' fill='#e03131' font-weight='bold'>{A_TRI} m</text></svg>",
+    "variaveis": {
+      "B1": [
+        6,
+        8,
+        10,
+        12
+      ],
+      "A1": [
+        4,
+        5,
+        6
+      ],
+      "A_TRI": [
+        2,
+        4,
+        6
+      ],
+      "PRECO": [
+        2,
+        3,
+        4
+      ]
+    },
+    "resposta_expr": "(B1 * A1 + B1 * A_TRI / 2) * PRECO"
   },
   {
     "id": "COMP-D03",
@@ -335,7 +744,28 @@
     "tipo": "numerica",
     "tag": "Área Composta + Latas",
     "enunciado": "A fachada de uma escola tem retângulo de {BASE} m × {ALT_RET} m e telhado triangular de base {BASE} m e altura {ALT_TRI} m. Cada lata de tinta cobre {COB} m². Quantas latas inteiras são necessárias?",
-    "variaveis": { "BASE": [8,10,12], "ALT_RET": [5,6,8], "ALT_TRI": [3,4,5], "COB": [6,8,10] },
+    "variaveis": {
+      "BASE": [
+        8,
+        10,
+        12
+      ],
+      "ALT_RET": [
+        5,
+        6,
+        8
+      ],
+      "ALT_TRI": [
+        3,
+        4,
+        5
+      ],
+      "COB": [
+        6,
+        8,
+        10
+      ]
+    },
     "resposta_expr": "Math.ceil((BASE * ALT_RET + BASE * ALT_TRI / 2) / COB)"
   },
   {
@@ -344,9 +774,36 @@
     "timer": 90,
     "tipo": "numerica",
     "tag": "Área Composta + Preço",
-    "enunciado": "Um pátio em L tem dois retângulos: {B1} m × {A1} m e {B2} m × {A2} m. O piso custa R$ {PRECO} o m². Qual é o custo total, em R$?",
-    "variaveis": { "B1": [10,12,14], "A1": [4,5,6], "B2": [4,5,6], "A2": [3,4,5], "PRECO": [2,3,4] },
-    "resposta_expr": "(B1 * A1 + B2 * A2) * PRECO"
+    "enunciado": "Um jardim tem parte retangular de {B1} m × {A1} m e uma área triangular de base {B2} m e altura {A2} m. O gramado custa R$ {PRECO} o m². Qual é o custo total, em R$?",
+    "variaveis": {
+      "B1": [
+        6,
+        8,
+        10
+      ],
+      "A1": [
+        4,
+        5,
+        6
+      ],
+      "B2": [
+        4,
+        6,
+        8
+      ],
+      "A2": [
+        4,
+        6,
+        8
+      ],
+      "PRECO": [
+        2,
+        3,
+        4
+      ]
+    },
+    "resposta_expr": "(B1 * A1 + B2 * A2 / 2) * PRECO",
+    "imagem_svg_template": "<svg width='210' height='160' viewBox='0 0 210 160' xmlns='http://www.w3.org/2000/svg'><rect x='10' y='20' width='120' height='120' fill='#ebfbee' stroke='#2f9e44' stroke-width='2'/><polygon points='130,20 190,80 130,140' fill='#d3f9d8' stroke='#2f9e44' stroke-width='2'/><line x1='130' y1='80' x2='190' y2='80' stroke='#e03131' stroke-width='1.5' stroke-dasharray='4,3'/><rect x='130' y='68' width='11' height='11' fill='none' stroke='#e03131' stroke-width='1.5'/><text x='70' y='156' font-size='11' fill='#2f9e44' font-weight='bold' text-anchor='middle'>{B1} m</text><text x='4' y='83' font-size='11' fill='#2f9e44' font-weight='bold'>{A1} m</text><text x='162' y='75' font-size='10' fill='#e03131' font-weight='bold'>{A2} m</text></svg>"
   },
   {
     "id": "COMP-D05",
@@ -355,7 +812,28 @@
     "tipo": "numerica",
     "tag": "Área Composta + Preço",
     "enunciado": "Uma praça tem formato de retângulo de {B1} m × {A1} m com área triangular de base {B1} m e altura {A_TRI} m. O piso custa R$ {PRECO} o m². Qual é o gasto total, em R$?",
-    "variaveis": { "B1": [8,10,12], "A1": [5,6,8], "A_TRI": [3,4,5], "PRECO": [2,3,4] },
+    "variaveis": {
+      "B1": [
+        8,
+        10,
+        12
+      ],
+      "A1": [
+        5,
+        6,
+        8
+      ],
+      "A_TRI": [
+        3,
+        4,
+        5
+      ],
+      "PRECO": [
+        2,
+        3,
+        4
+      ]
+    },
     "resposta_expr": "(B1 * A1 + B1 * A_TRI / 2) * PRECO"
   },
   {
@@ -365,7 +843,28 @@
     "tipo": "numerica",
     "tag": "Área Composta + Latas",
     "enunciado": "Um galpão tem parede retangular de {B1} m × {A1} m e telhado triangular de base {B1} m e altura {A_TRI} m. Cada lata de tinta cobre {COB} m². Quantas latas inteiras são necessárias?",
-    "variaveis": { "B1": [8,10,12], "A1": [5,6,8], "A_TRI": [3,4,5], "COB": [5,6,8] },
+    "variaveis": {
+      "B1": [
+        8,
+        10,
+        12
+      ],
+      "A1": [
+        5,
+        6,
+        8
+      ],
+      "A_TRI": [
+        3,
+        4,
+        5
+      ],
+      "COB": [
+        5,
+        6,
+        8
+      ]
+    },
     "resposta_expr": "Math.ceil((B1 * A1 + B1 * A_TRI / 2) / COB)"
   },
   {
@@ -375,7 +874,11 @@
     "tipo": "numerica",
     "tag": "Pitágoras + Perímetro",
     "enunciado": "Um terreno triangular retângulo tem catetos de 6 m e 8 m. Qual é o perímetro do terreno, em m?",
-    "conjuntos": [{ "resposta": 24 }]
+    "conjuntos": [
+      {
+        "resposta": 24
+      }
+    ]
   },
   {
     "id": "PIT-D02",
@@ -384,7 +887,11 @@
     "tipo": "numerica",
     "tag": "Pitágoras + Perímetro",
     "enunciado": "Uma rampa tem base de 9 m e altura de 12 m. Qual é o perímetro do triângulo formado, em m?",
-    "conjuntos": [{ "resposta": 36 }]
+    "conjuntos": [
+      {
+        "resposta": 36
+      }
+    ]
   },
   {
     "id": "PIT-D03",
@@ -393,7 +900,11 @@
     "tipo": "numerica",
     "tag": "Pitágoras + Perímetro",
     "enunciado": "Um jardim triangular retângulo tem catetos de 5 m e 12 m. Qual é o perímetro do jardim, em m?",
-    "conjuntos": [{ "resposta": 30 }]
+    "conjuntos": [
+      {
+        "resposta": 30
+      }
+    ]
   },
   {
     "id": "PIT-D04",
@@ -402,7 +913,11 @@
     "tipo": "numerica",
     "tag": "Pitágoras + Perímetro",
     "enunciado": "Uma tela de proteção cobre um triângulo retângulo com catetos de 8 m e 15 m. Qual é o perímetro da tela, em m?",
-    "conjuntos": [{ "resposta": 40 }]
+    "conjuntos": [
+      {
+        "resposta": 40
+      }
+    ]
   },
   {
     "id": "PIT-D05",
@@ -411,6 +926,10 @@
     "tipo": "numerica",
     "tag": "Pitágoras + Perímetro",
     "enunciado": "Um canteiro triangular retângulo tem catetos de 3 m e 4 m. Qual é o perímetro do canteiro, em m?",
-    "conjuntos": [{ "resposta": 12 }]
+    "conjuntos": [
+      {
+        "resposta": 12
+      }
+    ]
   }
 ]
