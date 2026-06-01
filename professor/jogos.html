@@ -13,6 +13,7 @@
     .nota-texto{font-size:13px;color:var(--text);line-height:1.5;margin-top:3px;white-space:pre-wrap;}
     .nota-ts{font-size:11px;color:var(--text-muted);margin-top:3px;}
     @media(max-width:560px){.stat-grid{grid-template-columns:repeat(2,1fr)!important;}}
+    .prog-tr:hover td{filter:brightness(.97);}
   </style>
 </head>
 <body>
@@ -56,6 +57,154 @@ function fmtDate(ts) {
   return new Date(Number(ts)).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
 }
 
+// ── Progressão de níveis (réplica fiel de _getLevelConfigBase em tabuada.html) ─
+const _TB129 = 65; // getLevelConfigBase(121).secs + 20 = 45 + 20
+
+function _getLvlCfg(lvl) {
+  if (lvl > 80 && lvl <= 120) { const b = _getLvlCfg(80); return { ...b, secs: b.secs + 40 }; }
+  if (lvl <= 54) {
+    const t = (lvl - 1) / 53;
+    const pairs = Math.round(2 + t * 6);
+    let secs = Math.round(70 - t * 15);
+    const maxResult = Math.round(8 + t * 17);
+    const cols = pairs <= 2 ? 2 : pairs <= 3 ? 3 : 4;
+    if (lvl <= 30) secs = Math.round(secs / 2);
+    return { pairs, cols, secs, maxResult, minMul: 0, minDiv: 0 };
+  }
+  if (lvl <= 65) {
+    const t = (lvl - 55) / 10;
+    const pairs = Math.round(4 + t * 4);
+    const secs = Math.round(65 - t * 10);
+    const cols = pairs <= 4 ? 3 : 4;
+    const minMul = Math.max(1, Math.round(1 + t * (Math.floor(pairs / 3) - 1)));
+    return { pairs, cols, secs, maxResult: 0, minMul, minDiv: 0 };
+  }
+  if (lvl <= 121) {
+    const t = Math.min(1, (lvl - 66) / 24);
+    const pairs = Math.round(4 + t * 14);
+    const secs = Math.round(60 - t * 15);
+    const cols = pairs <= 6 ? 4 : 6;
+    const perOp = Math.floor(pairs / 4);
+    const minMul = Math.max(1, Math.round(1 + t * (perOp - 1)));
+    const minDiv = Math.max(1, Math.round(1 + t * (perOp - 1)));
+    return { pairs, cols, secs, maxResult: 0, minMul, minDiv };
+  }
+  if (lvl <= 129) return { pairs: 18, cols: 6, secs: _TB129, maxResult: 0, minMul: 4, minDiv: 4 };
+  const n = Math.floor((lvl - 130) / 10);
+  if (lvl % 10 === 0) return { pairs: 18, cols: 6, secs: Math.max(20, _TB129 - 10), maxResult: 0, minMul: Math.min(5 + n, 7), minDiv: Math.min(5 + n, 7), ehChefao: true };
+  return { pairs: 18, cols: 6, secs: _TB129, maxResult: 0, minMul: Math.min(4 + n, 6), minDiv: Math.min(4 + n, 6) };
+}
+
+function _gerarGrupos() {
+  const gs = [];
+  let g = null;
+  for (let lvl = 1; lvl <= 200; lvl++) {
+    const cfg = _getLvlCfg(lvl);
+    const tipo = cfg.ehChefao ? 'chefao' : (lvl >= 130 && lvl % 10 !== 0 ? 'pos' : 'normal');
+    const sig = [cfg.pairs, cfg.cols, cfg.secs, cfg.minMul, cfg.minDiv, cfg.maxResult || 0, tipo].join('|');
+    if (g && g.sig === sig) { g.end = lvl; }
+    else { g = { start: lvl, end: lvl, cfg, tipo, sig }; gs.push(g); }
+  }
+  return gs;
+}
+
+function _fmtOps(cfg) {
+  let s = '➕ ➖';
+  if (cfg.minMul > 0) s += ' ×';
+  if (cfg.minDiv > 0) s += ' ÷';
+  const m = [];
+  if (cfg.minMul > 0) m.push(`${cfg.minMul}×`);
+  if (cfg.minDiv > 0) m.push(`${cfg.minDiv}÷`);
+  if (m.length) s += ` <span style="font-size:10px;color:var(--text-muted)">(mín ${m.join(' ')})</span>`;
+  return s;
+}
+
+function _rowObs(g) {
+  if (g.end <= 30)                            return '⏱️ Tempo ÷2 (aprendizado)';
+  if (g.start >= 55 && g.end <= 65)           return '× introduzida gradualmente';
+  if (g.start >= 66 && g.end <= 80)           return 'Todas as ops: ➕➖×÷';
+  if (g.start >= 81  && g.end <= 120)         return 'Dificuldade = nv 80  + 40 s extra';
+  if (g.start === 121)                         return 'Pico: 45 s · 18 pares';
+  if (g.start >= 122 && g.end <= 129)         return 'Respiro pré-chefão';
+  if (g.tipo === 'chefao')                     return '⚠️ Grid máximo · −10 s';
+  return '';
+}
+
+function _renderProgressaoTable() {
+  const gs = _gerarGrupos();
+  const YEL = 'background:#FEF9C3;';
+  const rows = gs.map((g, i) => {
+    const prev = gs[i - 1];
+    const lvlLabel = g.start === g.end ? `${g.start}` : `${g.start}–${g.end}`;
+    const rowBg = g.tipo === 'chefao'
+      ? 'background:rgba(239,68,68,.1);'
+      : g.tipo === 'pos'
+      ? 'background:rgba(249,115,22,.07);'
+      : i % 2 ? 'background:rgba(0,0,0,.018);' : '';
+    const tipoLabel = g.tipo === 'chefao' ? '👹 Chefão' : g.tipo === 'pos' ? 'Pós-chefão' : '—';
+    const gridLabel = `${g.cfg.cols}×${Math.ceil(g.cfg.pairs * 2 / g.cfg.cols)}`;
+    const faixaLabel = g.cfg.maxResult ? `1–${g.cfg.maxResult}` : '—';
+    const td = s => `style="padding:5px 10px;border-bottom:1px solid var(--border);${s}"`;
+    const cS  = prev && prev.cfg.secs    !== g.cfg.secs    ? YEL : '';
+    const cG  = prev && (prev.cfg.pairs  !== g.cfg.pairs || prev.cfg.cols !== g.cfg.cols) ? YEL : '';
+    const cC  = prev && prev.cfg.pairs   !== g.cfg.pairs   ? YEL : '';
+    const cO  = prev && (prev.cfg.minMul !== g.cfg.minMul  || prev.cfg.minDiv !== g.cfg.minDiv) ? YEL : '';
+    const cF  = prev && (prev.cfg.maxResult||0) !== (g.cfg.maxResult||0) ? YEL : '';
+    return `<tr class="prog-tr" style="${rowBg}cursor:pointer" onclick="selecionarNivelParaTeste(${g.start})" title="Testar nível ${g.start}">
+      <td ${td('font-weight:700;white-space:nowrap')}>${lvlLabel}</td>
+      <td ${td('font-size:11px')}>${tipoLabel}</td>
+      <td ${td('text-align:center;'+cS)}>${g.cfg.secs} s</td>
+      <td ${td('text-align:center;'+cG)}>${gridLabel}</td>
+      <td ${td('text-align:center;'+cC)}>${g.cfg.pairs * 2}</td>
+      <td ${td(cO)}>${_fmtOps(g.cfg)}</td>
+      <td ${td('text-align:center;'+cF)}>${faixaLabel}</td>
+      <td ${td('font-size:11px;color:var(--text-muted)')}>${_rowObs(g)}</td>
+    </tr>`;
+  }).join('');
+  const body = document.getElementById('prog-table-body');
+  if (body) body.innerHTML = rows;
+}
+
+window.toggleProgressao = function() {
+  const wrap = document.getElementById('prog-table-wrap');
+  const chev = document.getElementById('prog-chev');
+  if (!wrap) return;
+  const open = wrap.style.display !== 'none';
+  wrap.style.display = open ? 'none' : 'block';
+  if (chev) chev.textContent = open ? '▼' : '▲';
+  if (!open && !wrap.dataset.filled) { wrap.dataset.filled = '1'; _renderProgressaoTable(); }
+};
+
+window.exportarProgressaoCSV = function() {
+  const gs = _gerarGrupos();
+  const linhas = [['Nível','Tipo','Tempo (s)','Grid','Total cards','Min ×','Min ÷','Faixa números','Observação']];
+  gs.forEach(g => {
+    const tipo = g.tipo === 'chefao' ? 'Chefão' : g.tipo === 'pos' ? 'Pós-chefão' : 'Normal';
+    linhas.push([
+      g.start === g.end ? `${g.start}` : `${g.start}-${g.end}`,
+      tipo, g.cfg.secs,
+      `${g.cfg.cols}x${Math.ceil(g.cfg.pairs * 2 / g.cfg.cols)}`,
+      g.cfg.pairs * 2, g.cfg.minMul || 0, g.cfg.minDiv || 0,
+      g.cfg.maxResult ? `1-${g.cfg.maxResult}` : 'variada',
+      _rowObs(g),
+    ]);
+  });
+  const csv = linhas.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'progressao_niveis_tabuada.csv' });
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+
+window.selecionarNivelParaTeste = function(lvl) {
+  const inp = document.getElementById('inp-nivel');
+  if (!inp) return;
+  inp.value = lvl;
+  inp.closest('.card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  inp.focus();
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 async function loadData() {
   const content = document.getElementById('content');
 
@@ -176,6 +325,39 @@ async function loadData() {
             </div>
             <div class="nota-texto">${escH(n.texto || '')}</div>
           </div>`).join('')}
+    </div>
+  </div>
+
+  <!-- Progressão de níveis -->
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;padding:2px 0" onclick="toggleProgressao()">
+      <div style="font-size:13px;font-weight:700;color:var(--text)">📊 Ver progressão completa dos níveis (1–200)</div>
+      <span id="prog-chev" style="font-size:12px;color:var(--text-muted)">▼</span>
+    </div>
+    <div id="prog-table-wrap" style="display:none;margin-top:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:14px;font-size:11px;color:var(--text-muted);flex-wrap:wrap">
+          <span><span style="display:inline-block;width:10px;height:10px;background:rgba(239,68,68,.25);border-radius:2px;margin-right:4px;vertical-align:middle"></span>👹 Chefão</span>
+          <span><span style="display:inline-block;width:10px;height:10px;background:rgba(249,115,22,.2);border-radius:2px;margin-right:4px;vertical-align:middle"></span>Pós-chefão</span>
+          <span><span style="display:inline-block;width:10px;height:10px;background:#FEF9C3;border-radius:2px;border:1px solid #FCD34D;margin-right:4px;vertical-align:middle"></span>Valor mudou</span>
+        </div>
+        <button onclick="exportarProgressaoCSV()" class="btn btn-ghost" style="font-size:12px;padding:5px 12px">📥 Exportar CSV</button>
+      </div>
+      <div style="overflow-x:auto;max-height:540px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius)">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead style="position:sticky;top:0;z-index:1;background:var(--card)">
+            <tr>
+              ${['Nível','Tipo','Tempo','Grid','Cards','Operações','Faixa','Obs.'].map((h,i) =>
+                `<th style="padding:7px 10px;text-align:${i>=2&&i<=4?'center':'left'};font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:2px solid var(--border);white-space:nowrap">${h}</th>`
+              ).join('')}
+            </tr>
+          </thead>
+          <tbody id="prog-table-body"></tbody>
+        </table>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:6px;text-align:center">
+        Clique em qualquer linha para preencher "Testar nível específico" ↑
+      </div>
     </div>
   </div>
 
