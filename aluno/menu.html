@@ -146,7 +146,7 @@ const todos = todosRaw.filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE
 initAvBanner(turma, alunos[0], liberadas);
 
 // ── Avaliação+ controle ───────────────────────────────────────
-const DURACAO_GLOBAL_AV  = 30 * 60 * 1000;
+const DURACAO_GLOBAL_AV  = 25 * 60 * 1000;
 const MIN_TENT_AV_MS     = 8 * 60 * 1000;
 const MAX_TENT_AV        = 3;
 function avKey(s) {
@@ -555,31 +555,6 @@ ${tempoPodioHtml}
       </div>`}
     </div>
 
-    <div class="card" style="margin-bottom:14px">
-      <div class="section-label">
-        <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/></svg>
-        Atividades
-      </div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        ${LISTA_ATIVIDADES.map(a => {
-          const lib = liberadas.find(l => l.atividade === a.nome);
-          const encerrada = lib?.status === 'encerrada';
-          const realizadaNoAluno = todos.some(r => alunos.includes(r.aluno) && r.atividade === a.nome && r.concluido);
-          const chipClass = realizadaNoAluno ? '' : (encerrada && !realizadaNoAluno) ? ' encerrada' : lib ? ' liberada' : '';
-          return `<div class="ativ-chip${chipClass}">
-            <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/></svg>
-            ${a.nome}
-            ${realizadaNoAluno
-              ? `<span class="badge badge-green" style="margin-left:auto">✅ Concluída</span>`
-              : encerrada
-              ? `<span class="badge" style="margin-left:auto;color:#B45309;background:#FEF3C7;border-color:#FDE68A">⏰ Perdeu o prazo</span>`
-              : lib ? `<span class="badge badge-blue" style="margin-left:auto">▶ Disponível</span>`
-              : `<span class="badge" style="margin-left:auto;color:var(--text-muted);background:var(--bg);border-color:var(--border)">🔒 Não liberada</span>`}
-          </div>`;
-        }).join('')}
-      </div>
-    </div>
-
     <div class="card" style="margin-bottom:14px;border:1.5px solid rgba(127,119,221,.35);box-shadow:0 4px 20px rgba(127,119,221,.13),var(--shadow-sm)">
       <!-- Header -->
       <div style="display:flex;align-items:center;justify-content:space-between">
@@ -609,6 +584,31 @@ ${tempoPodioHtml}
         <a href="/aluno/tabuada.html?modo=sprint" class="btn" style="flex:1;justify-content:center;background:rgba(127,119,221,.15);color:#7F77DD;border:1px solid rgba(127,119,221,.3);gap:5px;box-shadow:none;padding:9px 14px;font-size:13px">
           ⚡ Sprint
         </a>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:14px">
+      <div class="section-label">
+        <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/></svg>
+        Atividades
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${LISTA_ATIVIDADES.map(a => {
+          const lib = liberadas.find(l => l.atividade === a.nome);
+          const encerrada = lib?.status === 'encerrada';
+          const realizadaNoAluno = todos.some(r => alunos.includes(r.aluno) && r.atividade === a.nome && r.concluido);
+          const chipClass = realizadaNoAluno ? '' : (encerrada && !realizadaNoAluno) ? ' encerrada' : lib ? ' liberada' : '';
+          return `<div class="ativ-chip${chipClass}">
+            <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/></svg>
+            ${a.nome}
+            ${realizadaNoAluno
+              ? `<span class="badge badge-green" style="margin-left:auto">✅ Concluída</span>`
+              : encerrada
+              ? `<span class="badge" style="margin-left:auto;color:#B45309;background:#FEF3C7;border-color:#FDE68A">⏰ Perdeu o prazo</span>`
+              : lib ? `<span class="badge badge-blue" style="margin-left:auto">▶ Disponível</span>`
+              : `<span class="badge" style="margin-left:auto;color:var(--text-muted);background:var(--bg);border-color:var(--border)">🔒 Não liberada</span>`}
+          </div>`;
+        }).join('')}
       </div>
     </div>
 

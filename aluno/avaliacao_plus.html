@@ -335,10 +335,11 @@ document.getElementById("topbar-sub").textContent = isTeste
   : `Turma ${turma} · Avaliação+${pctLabel}`;
 
 // ── Constantes gerais ──────────────────────────────────────────
-const DURACAO_GLOBAL_MS     = 30 * 60 * 1000;
+const DURACAO_GLOBAL_MS     = 25 * 60 * 1000;
 const DURACAO_SESSAO_S      = 8 * 60;
 const MIN_PARA_TENTATIVA_MS = 8 * 60 * 1000;
 const MAX_TENTATIVAS        = 3;
+const WARN_10_MS            = 10 * 60 * 1000;
 
 // ── Constantes Fase 1 ──────────────────────────────────────────
 const F1_STRUCT     = [1,1,1,1,1, 2,2, 3]; // 5 fáceis, 2 médias, 1 difícil
@@ -403,6 +404,23 @@ function formatTempoLongo(ms) {
 }
 function fmtPts(v) { return Number.isInteger(v) ? String(v) : v.toFixed(2).replace(/\.?0+$/, ''); }
 function globalRestanteMs(ctrl) { return DURACAO_GLOBAL_MS - (Date.now() - ctrl.inicio_global); }
+
+// ── Alerta de 10 minutos ───────────────────────────────────────
+function mostrarAlerta10min() {
+  beep(900, 120); setTimeout(() => beep(700, 120), 220); setTimeout(() => beep(500, 200), 440);
+  const el = document.createElement('div');
+  el.id = 'alerta-10min';
+  el.style.cssText = [
+    'position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:9500',
+    'background:#92400E;border:1.5px solid #F59E0B;border-radius:10px',
+    'padding:10px 18px;font-family:"Inter",sans-serif;font-size:13px;font-weight:700',
+    'color:#FEF3C7;box-shadow:0 4px 20px rgba(0,0,0,.5);text-align:center',
+    'animation:fadeUp .3s ease both',
+  ].join(';');
+  el.textContent = '⚠️ 10 minutos restantes — última tentativa completa possível';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 8000);
+}
 
 // ── Instanciar questão de um template ─────────────────────────
 function instanciarQuestao(t) {
@@ -484,6 +502,9 @@ function gerarDistratores(resp, n=3) {
 // ── Estado ─────────────────────────────────────────────────────
 let st = null;
 let controle = null;
+let tentativasHist = [];   // acumula dados de cada tentativa na sessão de página
+let _warned10 = false;     // flag: alerta de 10 min já disparado
+let tentativaSelecionada = 1; // tentativa escolhida na tela de comparação
 
 function novoEstado(duracaoSessao) {
   return {
@@ -1334,6 +1355,11 @@ function iniciarSessaoTimer() {
     if (sEl) { sEl.textContent = `⏳ ${formatTempo(st.sessaoRestante)}`; sEl.className = "hud-sessao"+(st.sessaoRestante<=60?" urgente":""); }
     const gEl = document.getElementById("hud-global-disp");
     if (gEl && controle) gEl.textContent = `Global: ${formatTempo(Math.ceil(globalRestanteMs(controle)/1000))}`;
+    // Alerta de 10 minutos globais restantes (dispara uma vez)
+    if (!_warned10 && controle) {
+      const gMs = globalRestanteMs(controle);
+      if (gMs <= WARN_10_MS && gMs > 0) { _warned10 = true; mostrarAlerta10min(); }
+    }
     // Alarme gradual nos últimos 60s (só na Fase 2 para não atrapalhar F1)
     if (st.fase === 2) {
       if (st.sessaoRestante === 60) { beep(600, 80); setTimeout(() => beep(600, 80), 200); }
@@ -1425,15 +1451,112 @@ async function encerrarSessao(motivo) {
   const novoMelhorF2 = f2aplicado > melhorAtual;
   if (novoMelhorF2 && f2aplicado > 0) lancarConfete();
 
+  // Acumula dados desta tentativa para a tela de comparação
+  tentativasHist.push({
+    num:  controle.tentativas_realizadas || 1,
+    f1:   { pontos: st.f1.pontos, nota: st.f1.nota_quiz, acertos: st.f1.acertos, concluida: st.f1.idx >= F1_TOTAL },
+    f2:   { bruta: f2bruta, aplicado: f2aplicado, acertos: st.acertos, erros: st.erros },
+  });
+
   mostrarResultado(motivo, f2aplicado, f2bruta, novoMelhorF2, bonusFim);
 }
 
+// ── Tela de comparação de tentativas ──────────────────────────
+function buildComparacaoHTML(hist) {
+  const melhorF1  = Math.max(...hist.map(t => t.f1.nota));
+  const melhorF2  = Math.max(...hist.map(t => t.f2.aplicado));
+  const cols = hist.map(t => {
+    const isF1Best = t.f1.nota === melhorF1;
+    const isF2Best = t.f2.aplicado === melhorF2;
+    return `
+      <div class="comp-col" id="comp-col-${t.num}" onclick="selecionarTentativa(${t.num})" style="cursor:pointer">
+        <div class="comp-head">Tent. ${t.num}</div>
+        <div class="comp-cell${isF1Best?' comp-best':''}">${t.f1.nota.toFixed(1)}/10${isF1Best?' ⭐':''}</div>
+        <div class="comp-cell${isF2Best?' comp-best':''}">${t.f2.aplicado} pts${isF2Best?' ⭐':''}</div>
+        <div class="comp-cell comp-radio" id="comp-radio-${t.num}">○</div>
+      </div>`;
+  }).join('');
+  return `
+    <div style="margin-top:16px;border-top:1px solid #1a1a40;padding-top:14px">
+      <div style="font-size:11px;font-weight:700;color:#4a4a80;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;text-align:center">📊 Comparar tentativas — escolha qual vale</div>
+      <div style="display:flex;gap:6px;justify-content:center;margin-bottom:10px">
+        <div class="comp-col comp-lbl">
+          <div class="comp-head" style="visibility:hidden">—</div>
+          <div class="comp-cell comp-row-lbl">Fase 1</div>
+          <div class="comp-cell comp-row-lbl">Fase 2</div>
+          <div class="comp-cell comp-row-lbl">Usar</div>
+        </div>
+        ${cols}
+      </div>
+      <div id="comp-confirm-area" style="text-align:center">
+        <button onclick="confirmarEscolha()" style="background:linear-gradient(135deg,#7c5cfc,#5a3fcf);color:#fff;border:none;border-radius:10px;padding:10px 24px;font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.5px">
+          ✓ Usar tentativa selecionada
+        </button>
+        <div style="font-size:10px;color:#3a3a60;margin-top:5px">A nota da tentativa escolhida será enviada à professora.</div>
+      </div>
+    </div>
+    <style>
+      .comp-col{display:flex;flex-direction:column;gap:4px;min-width:72px;}
+      .comp-lbl{min-width:56px;}
+      .comp-head{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:#4a4a80;text-align:center;padding:3px 0;}
+      .comp-cell{background:#0d0d28;border:1px solid #1e1e42;border-radius:6px;padding:6px 4px;font-size:11px;text-align:center;color:#9999cc;transition:all .2s;}
+      .comp-row-lbl{color:#4a4a80;font-size:10px;font-weight:700;background:transparent;border-color:transparent;}
+      .comp-best{color:#FAB800;}
+      .comp-radio{font-size:16px;color:#4a4a80;}
+      .comp-col.selected .comp-cell{border-color:#7c5cfc;background:rgba(124,92,252,.12);}
+      .comp-col.selected .comp-radio{color:#7c5cfc;}
+    </style>`;
+}
+
+function _atualizarSelecaoUI(num) {
+  document.querySelectorAll('.comp-col[id^="comp-col-"]').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.comp-radio').forEach(el => { el.textContent = '○'; });
+  const col = document.getElementById(`comp-col-${num}`);
+  const radio = document.getElementById(`comp-radio-${num}`);
+  if (col) col.classList.add('selected');
+  if (radio) radio.textContent = '●';
+}
+
+window.selecionarTentativa = function(num) {
+  tentativaSelecionada = num;
+  _atualizarSelecaoUI(num);
+};
+
+window.confirmarEscolha = async function() {
+  const escolha = tentativasHist.find(t => t.num === tentativaSelecionada);
+  if (!escolha) return;
+  const area = document.getElementById('comp-confirm-area');
+  if (area) area.innerHTML = `<div style="font-size:12px;color:#4a4a80">Salvando…</div>`;
+  let saved = true;
+  if (!isTeste) {
+    try {
+      const upd = {
+        tentativa_escolhida: tentativaSelecionada,
+        melhor_pontuacao:    escolha.f2.aplicado,
+        melhor_bruta:        escolha.f2.bruta,
+        melhor_nota_quiz:    escolha.f1.nota,
+      };
+      await update(controleRef, upd);
+      controle = { ...controle, ...upd };
+    } catch(e) {
+      console.error('[Avaliação] confirmarEscolha:', e);
+      saved = false;
+      if (area) area.innerHTML = `<div style="padding:10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;font-size:12px;color:#F87171;font-weight:700">⚠️ Erro ao salvar — verifique a conexão e tente novamente.</div>`;
+    }
+  }
+  if (saved && area) area.innerHTML = `
+    <div style="padding:10px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;font-size:12px;color:#4ADE80;font-weight:700">
+      ✅ Tentativa ${tentativaSelecionada} registrada como nota final.
+    </div>`;
+};
+
 // ── Tela de resultado / entre tentativas ───────────────────────
 function mostrarResultado(motivo, f2aplicado, f2bruta, novoMelhor, bonusFim = 0) {
-  const tentUsadas    = controle.tentativas_realizadas || 1;
-  const tentRestantes = MAX_TENTATIVAS - tentUsadas;
-  const gRestMs       = globalRestanteMs(controle);
-  const podeNovar     = isTeste || (tentRestantes > 0 && gRestMs >= MIN_PARA_TENTATIVA_MS);
+  const tentUsadas         = controle.tentativas_realizadas || 1;
+  const tentRestantes      = MAX_TENTATIVAS - tentUsadas;
+  const gRestMs            = globalRestanteMs(controle);
+  const tempoGlobalEsgotado = gRestMs <= 0 && motivo === 'tempo';
+  const podeNovar          = isTeste || (tentRestantes > 0 && gRestMs >= MIN_PARA_TENTATIVA_MS);
   const melhorExibida = controle.melhor_pontuacao || f2aplicado;
   const taxa = st.respondidas > 0 ? Math.round(st.acertos / st.respondidas * 100) : 0;
 
@@ -1471,15 +1594,23 @@ function mostrarResultado(motivo, f2aplicado, f2bruta, novoMelhor, bonusFim = 0)
         <div class="res-s"><div class="res-sv" style="color:#A855F7">${st.ajudasUsadasTotal||0}</div><div class="res-sl">Ajudas 🎯</div></div>
         <div class="res-s"><div class="res-sv" style="color:#5050a0">${st.comboMax}</div><div class="res-sl">Combo máx</div></div>
       </div>
+      ${tempoGlobalEsgotado?`<div style="margin:10px 0 4px;padding:8px 12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;font-size:12px;color:#F87171;text-align:center">⏰ Tempo global esgotado — sessão encerrada e salva automaticamente.</div>`:''}
       <div class="res-prox-info">
         <strong>Tentativas usadas:</strong> ${tentUsadas} / ${MAX_TENTATIVAS}<br>
         <strong>Tempo global restante:</strong> ${gRestMs>0?formatTempoLongo(gRestMs):'Esgotado'}
         ${!podeNovar&&tentRestantes>0?`<br><span style="color:#F87171">Tempo insuficiente para nova tentativa.</span>`:''}
       </div>
       ${podeNovar?`<button class="btn-nova-tent" onclick="iniciarNovaTentativa()">▶ NOVA TENTATIVA (${tentRestantes} restante${tentRestantes!==1?'s':''})</button>`:''}
+      ${!podeNovar && tentativasHist.length >= 2 ? buildComparacaoHTML(tentativasHist) : ''}
       <a class="btn-voltar-res" href="/aluno/atividades.html">← Voltar para atividades</a>
     </div>`;
   document.body.appendChild(ov);
+  // Inicializa seleção na tentativa com maior F2
+  if (!podeNovar && tentativasHist.length >= 2) {
+    const melhor = tentativasHist.reduce((a, b) => b.f2.aplicado > a.f2.aplicado ? b : a);
+    tentativaSelecionada = melhor.num;
+    _atualizarSelecaoUI(tentativaSelecionada);
+  }
 }
 
 // ── Iniciar nova tentativa ─────────────────────────────────────
@@ -1498,6 +1629,8 @@ window.iniciarNovaTentativa = async function() {
   if (!isTeste) await update(controleRef, { tentativas_realizadas: novaTent });
   controle.tentativas_realizadas = novaTent;
 
+  // Atualizar flag de 10min para a nova tentativa
+  _warned10 = !isTeste ? gRestMs <= WARN_10_MS : (globalRestanteMs(controle) <= WARN_10_MS);
   const duracaoSessao = Math.min(DURACAO_SESSAO_S, Math.floor(gRestMs/1000));
   st = novoEstado(duracaoSessao);
 
@@ -1526,7 +1659,7 @@ function mostrarBloqueada(motivo, ctrl) {
   const titulo = motivo==='tentativas' ? 'Avaliação Encerrada' : 'Tempo Esgotado';
   const sub    = motivo==='tentativas'
     ? 'Você já utilizou todas as tentativas disponíveis.'
-    : 'O tempo global de 30 minutos foi esgotado.';
+    : 'O tempo global de 25 minutos foi esgotado.';
   const melhor = ctrl?.melhor_pontuacao || 0;
   const tentUsadas = ctrl?.tentativas_realizadas || 0;
 
@@ -1598,7 +1731,7 @@ function mostrarPreJogo(ctrl) {
           • Terminou sem penalidade e ≥3 respondidas → <strong>+20pt bônus fim</strong>
         </div>
         <div class="phase-block">
-          <strong>Cronômetro global de 30 min — não para entre tentativas</strong><br>
+          <strong>Cronômetro global de 25 min — não para entre tentativas</strong><br>
           • Sessão de <strong>8 min</strong> compartilhados entre as duas fases<br>
           • Máximo de <strong>3 tentativas</strong> · vale a <strong>melhor</strong> delas
         </div>
@@ -1609,6 +1742,7 @@ function mostrarPreJogo(ctrl) {
 
 // ── Iniciar jogo ───────────────────────────────────────────────
 window.iniciarJogo = async function() {
+  tentativasHist = [];  // histórico limpo para esta sessão de página
   const btn = document.querySelector('.btn-iniciar');
   if (btn) btn.disabled = true;
   document.getElementById("content").innerHTML =
@@ -1624,6 +1758,8 @@ window.iniciarJogo = async function() {
   }
 
   const gRestMs = globalRestanteMs(controle);
+  // Não disparar alerta se o tempo já cruzou o limiar antes de entrar no jogo
+  _warned10 = gRestMs <= WARN_10_MS;
   const duracaoSessao = Math.min(DURACAO_SESSAO_S, Math.floor(gRestMs/1000));
   if (duracaoSessao <= 0) { mostrarBloqueada('tempo', controle); return; }
 

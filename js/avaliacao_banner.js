@@ -3,11 +3,11 @@ import { db } from "/js/firebase-config.js";
 import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { getLiberadasParaTurma } from "/js/db.js";
 
-const DURACAO_MS    = 30 * 60 * 1000;
+const DURACAO_MS    = 25 * 60 * 1000;
 const MIN_TENT_MS   = 8  * 60 * 1000;
 const MAX_TENT      = 3;
 const WARN_RED_MS   = 9  * 60 * 1000;
-const WARN_YEL_MS   = 15 * 60 * 1000;
+const WARN_YEL_MS   = 10 * 60 * 1000; // amarelo ao chegar em 10 min restantes
 
 function avKey(s) {
   return btoa(unescape(encodeURIComponent(s))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
@@ -64,6 +64,19 @@ export async function initAvBanner(turma, aluno, liberadasJaObtidas) {
 
   let tickInterval = null;
   let unsub = null;
+  let warned10 = false;
+
+  function beepBanner(freq, dur) {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator(), g = ctx.createGain();
+      osc.connect(g); g.connect(ctx.destination);
+      osc.frequency.value = freq;
+      g.gain.setValueAtTime(.18, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + dur/1000);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + dur/1000);
+    } catch(e) {}
+  }
 
   function remover() {
     if (banner) { banner.remove(); banner = null; }
@@ -79,6 +92,22 @@ export async function initAvBanner(turma, aluno, liberadasJaObtidas) {
     const tentRestantes  = MAX_TENT - tentUsadas;
 
     if (gRestMs <= 0 || tentRestantes <= 0) { remover(); return; }
+
+    // Alerta de 10 minutos (dispara uma vez)
+    if (!warned10 && gRestMs <= WARN_YEL_MS && gRestMs > 0) {
+      warned10 = true;
+      beepBanner(900, 120); setTimeout(() => beepBanner(700, 120), 220); setTimeout(() => beepBanner(500, 200), 440);
+      const toast = document.createElement('div');
+      toast.style.cssText = [
+        'position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:9500',
+        'background:#92400E;border:1.5px solid #F59E0B;border-radius:10px',
+        'padding:10px 18px;font-family:"Inter",sans-serif;font-size:13px;font-weight:700',
+        'color:#FEF3C7;box-shadow:0 4px 20px rgba(0,0,0,.5);text-align:center;white-space:nowrap',
+      ].join(';');
+      toast.textContent = '⚠️ 10 minutos restantes — última tentativa completa possível';
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 8000);
+    }
 
     const totalS = Math.ceil(gRestMs / 1000);
     const mins   = Math.floor(totalS / 60);

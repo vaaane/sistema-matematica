@@ -103,6 +103,27 @@
     .confete-wrap{position:fixed;inset:0;pointer-events:none;z-index:999;overflow:hidden;}
     .confete-particle{position:absolute;top:-12px;border-radius:3px;animation:confete-fall linear forwards;}
 
+    /* ── Chefão ── */
+    @keyframes chefao-pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
+    @keyframes chefao-badge-pulse{0%,100%{box-shadow:0 0 8px rgba(239,68,68,.5)}50%{box-shadow:0 0 18px rgba(239,68,68,.9),0 0 32px rgba(239,68,68,.3)}}
+    @keyframes chefao-modal-in{from{opacity:0;transform:scale(.8) rotate(-4deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+    .nivel-badge.chefao{background:linear-gradient(135deg,rgba(239,68,68,.18),rgba(249,115,22,.12));border-color:rgba(239,68,68,.5);color:#EF4444;animation:chefao-badge-pulse 1.4s infinite;}
+    .nivel-badge.chefao svg{fill:#EF4444;}
+    .timer-wrap.chefao{color:#EF4444!important;}
+    .timer-wrap.chefao svg{fill:#EF4444!important;}
+    .timer-bar.chefao{background:linear-gradient(90deg,#EF4444,#F97316)!important;}
+    .game-grid.chefao-grid{border:1.5px solid rgba(239,68,68,.3);border-radius:10px;padding:8px;background:rgba(239,68,68,.03);box-shadow:0 0 24px rgba(239,68,68,.12);}
+    .chefao-modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+    .chefao-modal-card{background:linear-gradient(135deg,#1a0505,#2d0a0a);border:2px solid rgba(239,68,68,.5);border-radius:22px;padding:38px 40px;text-align:center;max-width:340px;width:92vw;animation:chefao-modal-in .4s ease both;box-shadow:0 24px 64px rgba(239,68,68,.3);}
+    .chefao-modal-icon{font-size:72px;line-height:1;margin-bottom:10px;filter:drop-shadow(0 0 16px rgba(239,68,68,.6));}
+    .chefao-modal-title{font-size:26px;font-weight:800;color:#EF4444;letter-spacing:1px;margin-bottom:4px;}
+    .chefao-modal-sub{font-size:14px;color:#F87171;margin-bottom:18px;font-weight:600;}
+    .chefao-modal-stats{display:flex;gap:10px;justify-content:center;margin-bottom:20px;}
+    .chefao-modal-stat{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:8px 14px;font-size:12px;color:#FCA5A5;font-weight:700;}
+    .chefao-modal-desc{font-size:12px;color:#7f4444;margin-bottom:22px;line-height:1.6;}
+    .btn-enfrentar{width:100%;padding:14px;background:linear-gradient(135deg,#DC2626,#B91C1C);border:none;border-radius:13px;color:#fff;font-size:17px;font-weight:800;cursor:pointer;letter-spacing:1px;animation:chefao-pulse 1.6s infinite;font-family:'Inter',sans-serif;}
+    .btn-enfrentar:hover{background:linear-gradient(135deg,#EF4444,#DC2626);}
+
     /* ── Mini ranking ── */
     .mini-rank-wrap{margin-bottom:14px;}
     .mini-rank-leader{display:flex;align-items:center;gap:8px;background:rgba(234,179,8,.07);border:1px solid rgba(234,179,8,.25);border-radius:11px;padding:10px 14px;margin-bottom:6px;}
@@ -305,6 +326,8 @@ async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo
 
 
 // ── Level config ──────────────────────────────────────────────
+function isChefao(lvl) { return lvl >= 130 && lvl % 10 === 0; }
+
 function getLevelConfig(lvl) {
   // Níveis 81-120: dificuldade congelada no nível 80, +40s de tempo
   if (lvl > 80 && lvl <= 120) { const cfg = getLevelConfig(80); return { ...cfg, secs: cfg.secs + 40 }; }
@@ -327,15 +350,41 @@ function getLevelConfig(lvl) {
     const minMul = Math.max(1, Math.round(1 + t * (Math.floor(pairs / 3) - 1)));
     return { type:'mix_as', pairs, cols, secs, minMul, minDiv: 0 };
   }
-  // Níveis 66+: todas as operações; div começa em 1 garantido e cresce junto com mul até ~1/4 cada
-  const t      = Math.min(1, (lvl - 66) / 24); // 0→1 ao longo de 24 níveis
-  const pairs  = Math.round(4 + t * 14);        // 4 → 18
-  const secs   = Math.round(60 - t * 15);       // 60 → 45s
-  const cols   = pairs <= 6 ? 4 : 6;
-  const perOp  = Math.floor(pairs / 4);
-  const minMul = Math.max(1, Math.round(1 + t * (perOp - 1)));
-  const minDiv = Math.max(1, Math.round(1 + t * (perOp - 1)));
-  return { type:'mix_as', pairs, cols, secs, minMul, minDiv };
+  // Níveis 66-121: todas as operações; div cresce junto com mul até ~1/4 cada
+  if (lvl <= 121) {
+    const t      = Math.min(1, (lvl - 66) / 24); // 0→1 ao longo de 24 níveis, congela em 90+
+    const pairs  = Math.round(4 + t * 14);        // 4 → 18
+    const secs   = Math.round(60 - t * 15);       // 60 → 45s
+    const cols   = pairs <= 6 ? 4 : 6;
+    const perOp  = Math.floor(pairs / 4);
+    const minMul = Math.max(1, Math.round(1 + t * (perOp - 1)));
+    const minDiv = Math.max(1, Math.round(1 + t * (perOp - 1)));
+    return { type:'mix_as', pairs, cols, secs, minMul, minDiv };
+  }
+  // Níveis 122-129: mesma dificuldade do 121 (t=1 do branch 66+)
+  if (lvl <= 129) {
+    return { type:'mix_as', pairs:18, cols:6, secs:45, minMul:4, minDiv:4 };
+  }
+  // Níveis 130+: sistema de faixas com chefões
+  // Chefões (130, 140, 150...): grade maior + tempo reduzido
+  // Pós-chefão (131-139, 141-149...): intermediário entre faixa anterior e próximo chefão
+  const chefaoAnterior = Math.floor(lvl / 10) * 10; // 130, 140, 150...
+  const n = (chefaoAnterior - 130) / 10;            // 0→130, 1→140, 2→150...
+  if (lvl % 10 === 0) {
+    // Chefão N: pares+=3 por chefão, secs-=3 por chefão
+    const pairs  = 21 + n * 3;                    // 21, 24, 27, 30...
+    const secs   = Math.max(20, 35 - n * 3);      // 35, 32, 29, 26... (mín 20s)
+    const minMul = Math.min(5 + n, 7);            // 5, 6, 7, 7...
+    const minDiv = Math.min(5 + n, 7);
+    return { type:'mix_as', pairs, cols:6, secs, minMul, minDiv, ehChefao:true };
+  } else {
+    // Pós-chefão N (131-139, 141-149...): respiro após chefão, escala suave
+    const pairs  = 18 + n * 3;                    // 18, 21, 24...
+    const secs   = Math.max(25, 42 - n * 3);      // 42, 39, 36...
+    const minMul = Math.min(4 + n, 6);            // 4, 5, 6, 6...
+    const minDiv = Math.min(4 + n, 6);
+    return { type:'mix_as', pairs, cols:6, secs, minMul, minDiv };
+  }
 }
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -740,6 +789,49 @@ function lancarConfete(n = 80) {
   setTimeout(() => wrap.remove(), 7000);
 }
 
+function lancarConfeteChefao(n = 100) {
+  const wrap = document.createElement("div");
+  wrap.className = "confete-wrap";
+  document.body.appendChild(wrap);
+  const colors = ['#EF4444','#F97316','#FAB800','#FDE047','#FCA5A5','#FDBA74','#FEF08A'];
+  for (let i = 0; i < n; i++) {
+    const p = document.createElement("div");
+    p.className = "confete-particle";
+    const w = 7 + Math.random() * 10;
+    p.style.cssText = `left:${Math.random()*100}%;width:${w}px;height:${w*1.6}px;`
+      + `background:${colors[Math.floor(Math.random()*colors.length)]};`
+      + `animation-duration:${2+Math.random()*3}s;animation-delay:${Math.random()*1}s;`;
+    wrap.appendChild(p);
+  }
+  setTimeout(() => wrap.remove(), 7000);
+}
+
+function mostrarModalChefao(nivel, onStart) {
+  const cfg = getLevelConfig(nivel);
+  const ov  = document.createElement('div');
+  ov.className = 'chefao-modal-ov';
+  ov.innerHTML = `
+    <div class="chefao-modal-card">
+      <div class="chefao-modal-icon">👹</div>
+      <div class="chefao-modal-title">NÍVEL CHEFÃO!</div>
+      <div class="chefao-modal-sub">Nível ${nivel}</div>
+      <div class="chefao-modal-stats">
+        <div class="chefao-modal-stat">🃏 ${cfg.pairs} pares</div>
+        <div class="chefao-modal-stat">⏱ ${cfg.secs}s</div>
+        <div class="chefao-modal-stat">🔢 Ops. complexas</div>
+      </div>
+      <div class="chefao-modal-desc">
+        Grade maior · Tempo reduzido<br>Operações mais complexas<br><strong style="color:#F87171">Derrote o chefão para avançar!</strong>
+      </div>
+      <button class="btn-enfrentar" id="btn-enfrentar-chefao">⚔️ Enfrentar!</button>
+    </div>`;
+  document.body.appendChild(ov);
+  document.getElementById('btn-enfrentar-chefao').addEventListener('click', () => {
+    ov.remove();
+    onStart();
+  });
+}
+
 let timerTotal = 60, timerLeft = 60;
 let timerInterval = null;
 let selectedCard = null;  // { el, pairId, kind, op, result }
@@ -747,6 +839,7 @@ let removedCount = 0, totalPairs = 0;
 let gameOver = false;
 let _animating = false;  // bloqueia clicks durante animação de erro
 let acertos = 0, erros = 0, comboCount = 0, comboSessao = 0;
+let ehChefaoAtual = false; // true quando o nível atual é chefão
 let tipoAcertos = { add:0, sub:0, mul:0, div:0 };
 let tipoErros   = { add:0, sub:0, mul:0, div:0 };
 
@@ -831,12 +924,22 @@ async function endSprint(manual = false) {
 }
 
 // ── Build game ────────────────────────────────────────────────
-function buildGame() {
+function buildGame(skipBossModal = false) {
+  // Se é chefão e não estamos num replay/sprint, mostra o modal primeiro
+  if (!skipBossModal && isChefao(nivelAtual) && !_isSprint && !_isReplay) {
+    mostrarModalChefao(nivelAtual, () => _buildGameInternal());
+    return;
+  }
+  _buildGameInternal();
+}
+
+function _buildGameInternal() {
   stopTimer();
   _atualizarPresenca();
   // Limpa clones de voo e confetes de partidas anteriores
   document.querySelectorAll('.fly-clone, .confete-wrap').forEach(c => c.remove());
   const cfg = getLevelConfig(nivelAtual);
+  ehChefaoAtual = !!cfg.ehChefao;
   timerTotal = cfg.secs;
   timerLeft  = cfg.secs;
   selectedCard = null;
@@ -892,7 +995,9 @@ function buildGame() {
       </a>
       ${_isSprint
         ? `<div class="nivel-badge">⚡ Sprint</div>`
-        : `<div class="nivel-badge"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Nível ${nivelAtual}</div>`}
+        : ehChefaoAtual
+          ? `<div class="nivel-badge chefao">👹 CHEFÃO · Nível ${nivelAtual}</div>`
+          : `<div class="nivel-badge"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Nível ${nivelAtual}</div>`}
     </div>
     ${_isSprint
       ? `<div style="font-size:12px;color:var(--text-muted)">⚡ <strong style="color:var(--blue)">${_sprintPairsOk}</strong> acerto${_sprintPairsOk !== 1 ? 's' : ''}</div>`
@@ -926,7 +1031,7 @@ function buildGame() {
   <div class="status-msg" id="status-msg"></div>
   <div id="combo-badge" style="text-align:center;min-height:22px;margin-bottom:6px;margin-top:-6px"></div>
 
-  <div class="game-grid" id="game-grid"
+  <div class="game-grid${ehChefaoAtual ? ' chefao-grid' : ''}" id="game-grid"
        style="grid-template-columns:repeat(${cols},1fr)"></div>
 
   <div class="slots-wrap">
@@ -998,10 +1103,10 @@ function updateTimerUI() {
   const bar  = document.getElementById("timer-bar");
   if (!txt) return;
   txt.textContent = `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
-  if (wrap) wrap.className = `timer-wrap${timerLeft <= 10 ? ' warn' : ''}`;
+  if (wrap) wrap.className = `timer-wrap${ehChefaoAtual ? ' chefao' : (timerLeft <= 10 ? ' warn' : '')}`;
   if (bar) {
     bar.style.width = `${pct * 100}%`;
-    bar.className   = `timer-bar${pct < .2 ? ' danger' : pct < .4 ? ' warn' : ''}`;
+    bar.className   = `timer-bar${ehChefaoAtual ? ' chefao' : (pct < .2 ? ' danger' : pct < .4 ? ' warn' : '')}`;
   }
 }
 
@@ -1200,14 +1305,20 @@ async function onGameWin() {
 
   // Mostra overlay imediatamente com informações já conhecidas
   const isEstrela = erros === 0;
-  if (isEstrela) lancarConfete(50);
-  document.getElementById("lov-emoji").textContent = isEstrela ? '⭐' : '🎉';
-  document.getElementById("lov-title").textContent = isEstrela ? '⭐ Nível com estrela!' : 'Avançou de nível!';
-  document.getElementById("lov-sub").textContent   = isEstrela
-    ? `Perfeito! Sem erros! ${isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue assim!'}`
-    : `${erros} erro${erros !== 1 ? 's' : ''} — sem estrela desta vez. ${isNewRecord ? '🌟 Novo recorde!' : 'Continue avançando!'}`;
+  const foiChefao = isChefao(nivelJogado);
+  if (foiChefao) { lancarConfeteChefao(120); }
+  else if (isEstrela) lancarConfete(50);
+  document.getElementById("lov-emoji").textContent = foiChefao ? '👹' : (isEstrela ? '⭐' : '🎉');
+  document.getElementById("lov-title").textContent = foiChefao
+    ? `👹 Chefão derrotado!`
+    : (isEstrela ? '⭐ Nível com estrela!' : 'Avançou de nível!');
+  document.getElementById("lov-sub").textContent   = foiChefao
+    ? `Nível ${nivelJogado} conquistado! ${isEstrela ? '⭐ Sem erros!' : ''} ${isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue avançando!'}`
+    : (isEstrela
+      ? `Perfeito! Sem erros! ${isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue assim!'}`
+      : `${erros} erro${erros !== 1 ? 's' : ''} — sem estrela desta vez. ${isNewRecord ? '🌟 Novo recorde!' : 'Continue avançando!'}`);
   document.getElementById("lov-new").textContent   = `→ Nível ${novoNivel}`;
-  document.getElementById("lov-new").style.color   = isEstrela ? 'var(--gold)' : 'var(--blue)';
+  document.getElementById("lov-new").style.color   = foiChefao ? '#EF4444' : (isEstrela ? 'var(--gold)' : 'var(--blue)');
   document.getElementById("lov-btn").textContent   = 'Continuar →';
   document.querySelector('.level-card').style.animation = 'levelUpPop .45s';
   document.getElementById("level-overlay").style.display = 'flex';
@@ -1239,22 +1350,27 @@ async function onTimerEnd() {
   _registrarSessao(nivelJogado, 'tempo_esgotado');
   if (!isReplayDerrota) reloadRanking();
 
-  const frases = [
-    `Você acertou ${acertos} par${acertos !== 1 ? 'es' : ''}. Tente de novo! 💪`,
-    'Quase lá! Mais uma tentativa 🚀',
-    'Na próxima você passa! 🎯',
-    'Continue tentando, você consegue! ⭐',
-    'Não desista — o tempo vai sobrar! ⏱️',
-  ];
+  const foiChefao = isChefao(nivelJogado);
+  const frases = foiChefao
+    ? ['👹 O chefão venceu dessa vez... Tente novamente!',
+       '👹 Quase! O chefão ainda está de pé — revanche! ⚔️',
+       '👹 Não desista! Você vai derrotá-lo! 💪']
+    : [`Você acertou ${acertos} par${acertos !== 1 ? 'es' : ''}. Tente de novo! 💪`,
+       'Quase lá! Mais uma tentativa 🚀',
+       'Na próxima você passa! 🎯',
+       'Continue tentando, você consegue! ⭐',
+       'Não desista — o tempo vai sobrar! ⏱️'];
   const frase = frases[Math.floor(Math.random() * frases.length)];
   const nivelExibir = isReplayDerrota ? _nivelReal : nivelAtual;
 
-  document.getElementById("lov-emoji").textContent = '⏰';
-  document.getElementById("lov-title").textContent = 'Tempo esgotado!';
+  document.getElementById("lov-emoji").textContent = foiChefao ? '👹' : '⏰';
+  document.getElementById("lov-title").textContent = foiChefao ? '👹 O chefão resistiu!' : 'Tempo esgotado!';
   document.getElementById("lov-sub").textContent   = frase;
-  document.getElementById("lov-new").textContent   = `Nível ${nivelExibir} — tente de novo`;
-  document.getElementById("lov-new").style.color   = 'var(--orange)';
-  document.getElementById("lov-btn").textContent   = 'Tentar de novo →';
+  document.getElementById("lov-new").textContent   = foiChefao
+    ? `Nível Chefão ${nivelExibir} — revanche!`
+    : `Nível ${nivelExibir} — tente de novo`;
+  document.getElementById("lov-new").style.color   = foiChefao ? '#EF4444' : 'var(--orange)';
+  document.getElementById("lov-btn").textContent   = foiChefao ? '⚔️ Revanche! →' : 'Tentar de novo →';
   document.querySelector('.level-card').style.animation = 'levelDownPop .35s ease';
   document.getElementById("level-overlay").style.display = 'flex';
 }
@@ -1284,7 +1400,7 @@ window.fecharOverlay = function() {
 window.reiniciarNivel = function() {
   if (_sprintEnded) return;
   stopTimer();
-  buildGame();
+  buildGame(true); // skipBossModal: já está no nível, não repetir o modal
 };
 
 

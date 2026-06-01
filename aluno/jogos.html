@@ -203,6 +203,20 @@
     .g-lc.cur .g-lc-op { color:rgba(255,255,255,.8); }
     .g-lc-bdi { position:absolute;top:2px;right:2px;font-size:7px;line-height:1; }
     .g-lc:not(.lk):hover::after { content:attr(data-tip);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#1a1f35;border:1px solid var(--g-bdr);color:var(--g-text);font-size:10px;padding:4px 8px;border-radius:6px;white-space:nowrap;z-index:10;pointer-events:none;font-family:'Inter',sans-serif; }
+    /* Chefão cells */
+    @keyframes g-chefao-glow{0%,100%{box-shadow:0 0 6px rgba(239,68,68,.3)}50%{box-shadow:0 0 14px rgba(239,68,68,.7)}}
+    .g-lc.boss-lk { background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.25);cursor:default;opacity:.55; }
+    .g-lc.boss-lk:hover { transform:none; }
+    .g-lc.boss-lk .g-lc-n { color:rgba(239,68,68,.6); }
+    .g-lc.boss-dn { background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.4); }
+    .g-lc.boss-dn:hover { background:rgba(239,68,68,.18);box-shadow:0 3px 10px rgba(239,68,68,.25); }
+    .g-lc.boss-dn .g-lc-n { color:#F87171; }
+    .g-lc.boss-dn .g-lc-op { color:rgba(239,68,68,.7); }
+    .g-lc.boss-pf { background:rgba(250,184,0,.12);border-color:rgba(250,184,0,.45);animation:g-chefao-glow 2s infinite; }
+    .g-lc.boss-pf:hover { background:rgba(250,184,0,.22);box-shadow:0 3px 10px rgba(250,184,0,.3); }
+    .g-lc.boss-pf .g-lc-n { color:var(--g-gold); }
+    .g-lc.boss-cur { background:rgba(239,68,68,.22);border-color:#EF4444;animation:g-chefao-glow 1s infinite; }
+    .g-lc.boss-cur .g-lc-n { color:#fff; }
 
     /* ── Responsive ── */
     @media(max-width:600px) {
@@ -323,9 +337,9 @@ const ontemISO = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
 let niveisSnap, rankSnap, sessoesSnap;
 try {
   [niveisSnap, rankSnap, sessoesSnap] = await Promise.all([
-    get(ref(db, `tabuada_niveis/${uid}`)).catch(() => null),
-    get(ref(db, 'tabuada_ranking')).catch(() => null),
-    get(ref(db, 'tabuada_sessoes')).catch(() => null),
+    get(ref(db, `tabuada_niveis/${uid}`)).catch(e => { console.error('[jogos] tabuada_niveis:', e); return null; }),
+    get(ref(db, 'tabuada_ranking')).catch(e => { console.error('[jogos] tabuada_ranking:', e); return null; }),
+    get(ref(db, 'tabuada_sessoes')).catch(e => { console.error('[jogos] tabuada_sessoes:', e); return null; }),
   ]);
 } catch(e) {
   document.getElementById("content").innerHTML =
@@ -349,7 +363,10 @@ const rankAll = [];
 if (rankSnap?.exists()) {
   rankSnap.forEach(c => { const v = c.val(); if (v?.nome) rankAll.push(v); });
   rankAll.sort((a, b) => (b.melhor_nivel||0) - (a.melhor_nivel||0) || (b.total_partidas||0) - (a.total_partidas||0));
+} else {
+  console.warn('[jogos] tabuada_ranking vazio ou inacessível. rankSnap:', rankSnap);
 }
+console.log('[jogos] ranking:', rankAll.length, 'entradas totais');
 const rankTurma = rankAll.filter(r => r.turma === turma);
 
 const liderGeral = rankAll[0] || null;
@@ -422,6 +439,8 @@ function buildRankRow(p, pos, isMe) {
   </div>`;
 }
 
+function isChefaoLv(lv) { return lv >= 130 && lv % 10 === 0; }
+
 function buildLevelMap() {
   const hist = niveis.historico || {};
   const entries = Object.entries(hist)
@@ -447,12 +466,25 @@ function buildLevelMap() {
 
   let html = '';
   for (let lv = 1; lv <= displayCount; lv++) {
-    const info = li[lv] || {};
+    const info   = li[lv] || {};
+    const boss   = isChefaoLv(lv);
     let cls, tip, badge = '';
+
     if (lv === nivelAtual) {
-      cls = 'cur'; tip = 'Nível atual';
+      cls = boss ? 'boss-cur' : 'cur';
+      tip = boss ? '👹 Nível Chefão — enfrente agora!' : 'Nível atual';
     } else if (lv > Math.max(nivelAtual, melhorNivel)) {
-      cls = 'lk'; tip = '';
+      cls = boss ? 'boss-lk' : 'lk';
+      tip = boss ? '👹 Nível Chefão · Derrote para avançar!' : '';
+    } else if (boss) {
+      // Chefão já passado
+      if (info.perfect) {
+        cls = 'boss-pf'; tip = '👹 Chefão derrotado! ⭐ Perfeito!'; badge = '<span class="g-lc-bdi">💀</span>';
+      } else if (info.done) {
+        cls = 'boss-pf'; tip = '👹 Chefão derrotado!'; badge = '<span class="g-lc-bdi">💀</span>';
+      } else {
+        cls = 'boss-dn'; tip = '👹 Nível Chefão · Tente de novo!';
+      }
     } else if (info.maestria) {
       cls = 'dm'; tip = '💎 Maestria! 3x perfeito'; badge = '<span class="g-lc-bdi">💎</span>';
     } else if (info.perfect) {
@@ -460,9 +492,13 @@ function buildLevelMap() {
     } else {
       cls = 'dn'; tip = 'Refazer para ganhar ⭐';
     }
-    const op = cls !== 'lk' ? `<span class="g-lc-op">${getLvOp(lv)}</span>` : '';
-    const click = cls !== 'lk' ? `onclick="jogarNivel(${lv})"` : '';
-    html += `<div class="g-lc ${cls}" data-tip="${tip}" ${click}>${badge}<span class="g-lc-n">${lv}</span>${op}</div>`;
+
+    const isLocked = cls === 'lk' || cls === 'boss-lk';
+    const op    = !isLocked ? `<span class="g-lc-op">${getLvOp(lv)}</span>` : '';
+    const click = !isLocked ? `onclick="jogarNivel(${lv})"` : '';
+    // Chefões bloqueados mostram 👹 no lugar do número
+    const numDisplay = (cls === 'boss-lk') ? `<span style="font-size:12px;line-height:1">👹</span>` : `<span class="g-lc-n">${lv}</span>`;
+    html += `<div class="g-lc ${cls}" data-tip="${tip}" ${click}>${badge}${numDisplay}${op}</div>`;
   }
   return html;
 }
@@ -503,15 +539,19 @@ const distCap = liderGeral && liderGeral.nome !== nomeAluno
 
 // ── Ranking rows ───────────────────────────────────────────────
 function buildRankList(list, listPos, meIdx) {
-  const top = list.slice(0, 7);
-  // Add current player if not in top 7
-  const meInTop = top.some(p => p.nome === nomeAluno && p.turma === turma);
-  if (!meInTop && meIdx >= 7) top.push(list[meIdx]);
-  return top.map(p => {
-    const realIdx = list.findIndex(r => r.nome === p.nome && r.turma === p.turma);
-    const isMe = p.nome === nomeAluno && p.turma === turma;
-    return buildRankRow(p, listPos[realIdx], isMe);
-  }).join('');
+  try {
+    const top = list.slice(0, 7);
+    const meInTop = top.some(p => p.nome === nomeAluno && p.turma === turma);
+    if (!meInTop && meIdx >= 7) top.push(list[meIdx]);
+    return top.map(p => {
+      const realIdx = list.findIndex(r => r.nome === p.nome && r.turma === p.turma);
+      const isMe = p.nome === nomeAluno && p.turma === turma;
+      return buildRankRow(p, listPos[realIdx], isMe);
+    }).join('');
+  } catch(e) {
+    console.error('[jogos] buildRankList:', e);
+    return '<div style="color:var(--g-red);font-size:11px;padding:8px">Erro ao carregar ranking.</div>';
+  }
 }
 
 // ── Render full page ───────────────────────────────────────────
@@ -559,6 +599,7 @@ document.getElementById("content").innerHTML = `
         <span>🏫</span>
         <strong>${escH(liderTurma.nome)}</strong>
         <span>lidera ${escH(turma)}</span>
+        <span style="color:var(--g-muted);opacity:.5">·</span>
         <span class="g-ldr-lv">Nv ${liderTurma.melhor_nivel||1}</span>
       </div>` : liderTurma ? `<div class="g-ldr-info">👑 <strong style="color:var(--g-gold)">Você lidera ${escH(turma)}!</strong></div>` : ''}
       ${posBadge ? `<div class="g-pos-badge">${posBadge}</div>` : ''}
@@ -655,6 +696,7 @@ document.getElementById("content").innerHTML = `
         <div class="g-leg"><span class="g-leg-d pf"></span>Perfeito</div>
         <div class="g-leg"><span class="g-leg-d dn"></span>Concluído</div>
         <div class="g-leg"><span class="g-leg-d lk"></span>Bloqueado</div>
+        <div class="g-leg"><span style="font-size:8px;line-height:1">👹</span>Chefão</div>
       </div>
     </div>
     <div class="g-grid">${buildLevelMap()}</div>
