@@ -141,6 +141,13 @@ import { getResultadosByAluno, getDetalhes, getAlunoPreferencia, getConquistasBy
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+function avKey(s) {
+  return btoa(unescape(encodeURIComponent(s))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+}
+const tentativasOficiais = {};
 
 const sess = requireAluno();
 if (!sess) throw new Error();
@@ -373,7 +380,7 @@ function renderHistMetrics(regs) {
   </div>`;
 }
 
-function renderSessaoRow(r, isBest, idx, total) {
+function renderSessaoRow(r, isBest, idx, total, tentEsc = null) {
   const modo   = r.modo || 'classico';
   const isPlus = modo === 'competicao_plus';
   const isAvP  = modo === 'avaliacao_plus';
@@ -422,7 +429,16 @@ function renderSessaoRow(r, isBest, idx, total) {
       <div class="tent-info-wrap">
         <div style="font-size:13px;font-weight:600">${label}</div>
         <div class="tent-date">${r.data || ''}</div>
-        ${isBest ? `<div style="margin-bottom:5px"><span class="badge-nota-melhor">🏆 Conta para nota</span></div>` : ''}
+        ${(() => {
+          const isAvP = (r.modo || '') === 'avaliacao_plus';
+          const tentNum = r.tentativa_num || 1;
+          const isOficial = isAvP && tentEsc !== null && tentNum === tentEsc;
+          const isNaoSel  = isAvP && tentEsc !== null && !isOficial;
+          if (isOficial)  return `<div style="margin-bottom:5px"><span class="badge-nota-melhor">🏆 Nota oficial</span></div>`;
+          if (isNaoSel)   return `<div style="margin-bottom:5px"><span class="badge" style="background:var(--bg);color:var(--text-muted);font-size:10px">Não selecionada</span></div>`;
+          if (isBest)     return `<div style="margin-bottom:5px"><span class="badge-nota-melhor">🏆 Conta para nota</span></div>`;
+          return '';
+        })()}
         <div class="tent-badges">${badges}</div>
         ${cq ? `<div style="margin-top:6px">${cq}</div>` : ''}
       </div>
@@ -437,12 +453,16 @@ function renderSessaoRow(r, isBest, idx, total) {
 function renderModoBlock(modoRegs, modoLabel) {
   const sortedChron = [...modoRegs].sort((a, b) => (a.criadoEm || 0) - (b.criadoEm || 0));
   const sortedDesc  = [...modoRegs].sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
-  const bestId = modoRegs.reduce((best, r) => (r.pontuacao || 0) > (best.pontuacao || 0) ? r : best, modoRegs[0])?.id;
-  const labelSess = modoLabel === 'avaliacao_plus' ? 'Tentativas de Avaliação+' : modoLabel === 'competicao_plus' ? 'Sessões' : 'Tentativas';
+  const isAvPlus    = modoLabel === 'avaliacao_plus';
+  const tentEsc     = isAvPlus ? (tentativasOficiais[modoRegs[0]?.atividade] ?? null) : null;
+  const bestId = isAvPlus && tentEsc !== null
+    ? (modoRegs.find(r => (r.tentativa_num || 1) === tentEsc)?.id ?? modoRegs.reduce((b, r) => (r.pontuacao||0)>(b.pontuacao||0)?r:b, modoRegs[0])?.id)
+    : modoRegs.reduce((best, r) => (r.pontuacao || 0) > (best.pontuacao || 0) ? r : best, modoRegs[0])?.id;
+  const labelSess = isAvPlus ? 'Tentativas de Avaliação+' : modoLabel === 'competicao_plus' ? 'Sessões' : 'Tentativas';
   let s = renderHistMetrics(modoRegs);
   if (sortedChron.length >= 2) s += renderEvolucaoSVG(sortedChron);
   s += `<div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;text-transform:uppercase;margin:10px 0 6px">${labelSess}</div>`;
-  sortedDesc.forEach((r, i) => { s += renderSessaoRow(r, r.id === bestId, i, sortedDesc.length); });
+  sortedDesc.forEach((r, i) => { s += renderSessaoRow(r, r.id === bestId, i, sortedDesc.length, tentEsc); });
   return s;
 }
 
@@ -572,6 +592,23 @@ for (const c of allConquistas) {
     if (!conquistasBySessao[c.sessaoId]) conquistasBySessao[c.sessaoId] = [];
     conquistasBySessao[c.sessaoId].push(c);
   }
+}
+
+// Carregar tentativa_escolhida para atividades de avaliação+ do aluno
+{
+  const avAtivs = [...new Set(todos.filter(r => r.modo === 'avaliacao_plus').map(r => r.atividade))];
+  await Promise.all(avAtivs.map(async ativ => {
+    try {
+      for (const al of alunos) {
+        const k = avKey(turma + '|' + ativ);
+        const snap = await get(ref(db, `avaliacao_controle/${k}/${avKey(al)}`));
+        if (snap.exists()) {
+          const v = snap.val();
+          if (v.tentativa_escolhida != null) tentativasOficiais[ativ] = v.tentativa_escolhida;
+        }
+      }
+    } catch(e) {}
+  }));
 }
 
 const content = document.getElementById("content");

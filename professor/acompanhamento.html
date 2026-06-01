@@ -91,6 +91,12 @@
 import { ALUNOS_POR_TURMA } from "/js/constants.js";
 import { getResultados, getDetalhes } from "/js/db.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+function avKey(s) {
+  return btoa(unescape(encodeURIComponent(s))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+}
 
 requireProfessor();
 renderSidebarProfessor("sidebar", "acompanhamento");
@@ -119,18 +125,36 @@ window.mudarAluno = async function() {
   const aluno = selA.value;
   if (!aluno) return;
   const hist = todos.filter(r => r.aluno === aluno && r.turma === turma && r.concluido);
-  renderAluno(aluno, turma, hist);
+
+  // Carregar tentativa_escolhida para cada atividade com avaliação+
+  const avAtivs = [...new Set(hist.filter(r => r.modo === 'avaliacao_plus').map(r => r.atividade))];
+  const tentativasOficiais = {};
+  await Promise.all(avAtivs.map(async ativ => {
+    try {
+      const k = avKey(turma + '|' + ativ);
+      const snap = await get(ref(db, `avaliacao_controle/${k}/${avKey(aluno)}`));
+      if (snap.exists()) {
+        const v = snap.val();
+        if (v.tentativa_escolhida != null) tentativasOficiais[ativ] = v.tentativa_escolhida;
+      }
+    } catch(e) {}
+  }));
+
+  renderAluno(aluno, turma, hist, tentativasOficiais);
 };
 
 // ── Estatísticas ──────────────────────────────────────────────
 function calcSumario(hist) {
   const melhorPorAtiv = {};
+  const ativsPresentes = new Set();
   for (const r of hist) {
-    if ((r.pontuacao || 0) > (melhorPorAtiv[r.atividade] || 0))
-      melhorPorAtiv[r.atividade] = r.pontuacao || 0;
+    ativsPresentes.add(r.atividade);
+    const pts = r.pontuacao || 0;
+    if (pts > (melhorPorAtiv[r.atividade] || 0))
+      melhorPorAtiv[r.atividade] = pts;
   }
   const totalPts = Object.values(melhorPorAtiv).reduce((a, b) => a + b, 0);
-  const numAtivs = Object.keys(melhorPorAtiv).length;
+  const numAtivs = ativsPresentes.size;
   const comboMax = Math.max(0, ...hist.map(r => r.combo_max || 0));
   const totalAc  = hist.reduce((a, r) => a + (r.acertos || 0), 0);
   const totalErr = hist.reduce((a, r) => a + (r.erros || 0), 0);
@@ -182,7 +206,7 @@ function calcAtivStatsAvPlus(tentativas) {
   return { melhorNQ, melhorPts, melhorF1Pts, rapMax, comboMax, totalAc, totalErr, taxa };
 }
 
-function renderAluno(aluno, turma, hist) {
+function renderAluno(aluno, turma, hist, tentativasOficiais = {}) {
   if (!hist.length) {
     document.getElementById("content").innerHTML = `
       <div class="card"><div class="card-title" style="margin-bottom:12px">
@@ -311,7 +335,7 @@ function renderAluno(aluno, turma, hist) {
         </div>`;
         avBlockHtml = `<div id="modo-avplus-${uid}"${showTabs ? ' style="display:none"' : ''}>
           ${avMetrics}
-          <div id="tentativas-avplus-${uid}">${renderTentativas(avTentativas, false, ativNome, turma, true)}</div>
+          <div id="tentativas-avplus-${uid}">${renderTentativas(avTentativas, false, ativNome, turma, true, tentativasOficiais[ativNome] ?? null)}</div>
         </div>`;
       }
 
@@ -333,7 +357,7 @@ function renderAluno(aluno, turma, hist) {
   document.getElementById("content").innerHTML = html;
 }
 
-function renderTentativas(tentativas, isPlus, ativNome, turma, isAvPlus = false) {
+function renderTentativas(tentativas, isPlus, ativNome, turma, isAvPlus = false, tentEscolhida = null) {
   const sorted = [...tentativas].reverse();
 
   let evolucaoTempoHTML = '';
@@ -361,10 +385,22 @@ function renderTentativas(tentativas, isPlus, ativNome, turma, isAvPlus = false)
     const tempoS = r.tempo_medio_ms > 0 ? Math.round(r.tempo_medio_ms / 1000) : 0;
     const labelRow = i === 0 ? '→ Mais recente' : `${isAvPlus ? 'Tentativa' : isPlus ? 'Sessão' : 'Tentativa'} ${sorted.length - i}`;
 
+    const tentNum = r.tentativa_num || 1;
+    const isOficial = tentEscolhida !== null && tentNum === tentEscolhida;
+    const isNaoSel  = tentEscolhida !== null && !isOficial;
+    const badgeOficialHtml = isAvPlus
+      ? (isOficial
+          ? `<span class="badge" style="background:linear-gradient(90deg,#FEF9C3,#FDE68A);border:1px solid #FCD34D;color:#854D0E;font-weight:800;margin-right:4px">🏆 Nota oficial</span>`
+          : (isNaoSel
+              ? `<span class="badge" style="background:var(--bg);color:var(--text-muted);font-size:10px;margin-right:4px">Não selecionada</span>`
+              : `<span class="badge" style="background:#FEF3C7;border:1px solid #FCD34D;color:#D97706;font-size:10px;margin-right:4px">⏳ Aguardando escolha</span>`))
+      : '';
+
     return `<div>
-      <div class="tent-row" onclick="toggleTent('${uid2}','${r.id}',${isPlus || isAvPlus},${!!isAvPlus})">
+      <div class="tent-row${isOficial ? '" style="border-color:#F59E0B;background:linear-gradient(to right,#FFFDE7,var(--card))' : ''}" onclick="toggleTent('${uid2}','${r.id}',${isPlus || isAvPlus},${!!isAvPlus})">
         <div class="tent-info-wrap">
           <div style="font-size:13px;font-weight:600">${labelRow}</div>
+          ${isAvPlus && badgeOficialHtml ? `<div style="margin:3px 0 5px">${badgeOficialHtml}</div>` : ''}
           <div class="tent-date">${r.data || ''}</div>
           <div class="tent-badges">
             ${isAvPlus ? `
