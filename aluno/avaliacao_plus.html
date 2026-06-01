@@ -247,6 +247,8 @@
     .mapa-q.correct2{background:rgba(234,179,8,.22);border-color:#EAB308;color:#FDE047;font-size:11px;}
     .mapa-q.correct3{background:rgba(249,115,22,.22);border-color:#F97316;color:#FDBA74;font-size:11px;}
     .mapa-q.failed{background:rgba(239,68,68,.2);border-color:#EF4444;font-size:14px;}
+    .mapa-q.skipped{background:rgba(100,100,130,.15);border-color:#303055;color:#505080;cursor:pointer;}
+    .mapa-q.skipped:hover{background:rgba(100,100,160,.25);border-color:#4040a0;color:#8080c0;}
     .mapa-sep{color:#252545;font-size:20px;line-height:30px;margin:0 6px;align-self:flex-start;}
     .mapa-grp{display:flex;flex-direction:column;align-items:center;gap:3px;}
     .mapa-lbl{font-size:8px;color:#252545;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
@@ -431,7 +433,9 @@ function instanciarQuestao(t) {
     vars = {...c}; resposta = String(c.resposta);
     if (c.unidade) unidade = c.unidade;
   } else {
+    const forcedVars = t._forcedVars || {};
     for (const [k,v] of Object.entries(t.variaveis||{})) {
+      if (k in forcedVars) { vars[k] = forcedVars[k]; continue; }
       vars[k] = Array.isArray(v) ? v[Math.floor(Math.random()*v.length)]
                                  : v.min + Math.floor(Math.random()*(v.max-v.min+1));
     }
@@ -439,41 +443,87 @@ function instanciarQuestao(t) {
   }
   let enunciado = t.enunciado;
   for (const [k,v] of Object.entries(vars)) enunciado = enunciado.replaceAll(`{${k}}`, v);
-  return { enunciado, resposta, unidade, dif: t.dificuldade };
+  // Preserva id e timer para rastreamento no Firebase e timer individual por questão
+  return { enunciado, resposta, unidade, dif: t.dificuldade, id: t.id, timer: t.timer };
 }
 
 // ── Gerar sequência fixa de Fase 1 ────────────────────────────
-function gerarQuestoesF1() {
-  const poolF = shuffle([...faceis]);
-  const poolM = shuffle([...medias]);
-  const poolD = shuffle([...dificeis]);
-  console.log('[F1] Pool fáceis:', poolF.map(q => q.id));
-  console.log('[F1] Pool médias:', poolM.map(q => q.id));
-  console.log('[F1] Pool difíceis:', poolD.map(q => q.id));
+// ── Pools por categoria (Atividade 5) ─────────────────────────
+// Cada slot tem uma categoria específica de questões
+function _poolPorTag(tag) { return shuffle(templates.filter(t => t.tag === tag)); }
 
-  const usedIds  = new Set();
-  const usedCats = new Set();
+// Seleciona do pool sem repetir ID já usado na tentativa
+function _pickPool(pool, usedIds) {
+  const t = pool.find(q => !usedIds.has(q.id)) || pool[0];
+  usedIds.add(t.id);
+  return t;
+}
 
-  function pick(pool) {
-    // 1ª prioridade: template não usado + categoria não usada
-    let t = pool.find(q => !usedIds.has(q.id) && !usedCats.has(q.tag));
-    // 2ª prioridade: template não usado (qualquer categoria)
-    if (!t) t = pool.find(q => !usedIds.has(q.id));
-    // Fallback: primeiro do pool embaralhado
-    if (!t) t = pool[0];
-    usedIds.add(t.id);
-    usedCats.add(t.tag);
-    return { ...instanciarQuestao(t), pontos: BASE_F1[t.dificuldade] };
+// ── Equilíbrio numérico: nível A (menores valores) / nível B (maiores) ──
+function instanciarComNivel(template, nivelB) {
+  if (!template.variaveis) return instanciarQuestao(template);
+  const vars = {};
+  for (const [k, vals] of Object.entries(template.variaveis)) {
+    const arr = Array.isArray(vals) ? vals : [vals];
+    if (arr.length <= 1) { vars[k] = arr[0]; continue; }
+    const sorted = [...arr].sort((a,b) => a-b);
+    if (nivelB) {
+      // Nível B: escolhe aleatoriamente entre os maiores 50%
+      const top = sorted.slice(Math.floor(sorted.length / 2));
+      vars[k] = top[Math.floor(Math.random() * top.length)];
+    } else {
+      // Nível A: escolhe aleatoriamente entre os menores 50%
+      const bot = sorted.slice(0, Math.ceil(sorted.length / 2));
+      vars[k] = bot[Math.floor(Math.random() * bot.length)];
+    }
   }
+  // Reusar instanciarQuestao com vars sobrescritas
+  const overrideT = { ...template, _forcedVars: vars };
+  return instanciarQuestao(overrideT);
+}
 
-  // Derivar contagens diretamente do F1_STRUCT para ficar sempre sincronizado
-  const n1 = F1_STRUCT.filter(d => d === 1).length; // dificuldade 1 → poolF
-  const n2 = F1_STRUCT.filter(d => d === 2).length; // dificuldade 2 → poolM
-  const n3 = F1_STRUCT.filter(d => d === 3).length; // dificuldade 3 → poolD
+function gerarQuestoesF1() {
+  const usedIds = new Set();
+
+  // Pools por categoria conforme tabela da Atividade 5
+  const poolTriArea   = _poolPorTag('Área de Triângulo');          // Q1, Q2
+  const poolPitagoras = _poolPorTag('Pitágoras');                   // Q3, Q4
+  const poolLatas     = shuffle([                                   // Q5: divisão de área
+    ...templates.filter(t => t.tag === 'Triângulo + Latas'),
+    ...templates.filter(t => t.tag === 'Área Composta + Latas'),
+  ]);
+  const poolPreco     = _poolPorTag('Área Composta + Preço');       // Q6: multiplicação m²
+  const poolComposta  = shuffle([                                   // Q7: área composta (todos COMP)
+    ...templates.filter(t => t.tag === 'Área Composta + Latas'),
+    ...templates.filter(t => t.tag === 'Área Composta + Preço'),
+    ...templates.filter(t => t.tag === 'Área Composta'),
+  ]);
+  const poolPitDificil = _poolPorTag('Pitágoras + Perímetro');      // Q8: difícil
+
+  // Sequência de slots: [tag, pool, pontos]
+  const slots = [
+    ['Área de Triângulo', poolTriArea,    1],
+    ['Área de Triângulo', poolTriArea,    1],
+    ['Pitágoras',         poolPitagoras,  1],
+    ['Pitágoras',         poolPitagoras,  1],
+    ['Divisão de Área',   poolLatas,      1],
+    ['Preço por m²',      poolPreco,      1],
+    ['Área Composta',     poolComposta,   1],
+    ['Pit.+Perímetro',    poolPitDificil, 3],
+  ];
+
+  // Equilíbrio: alterna nível A/B para nunca dois seguidos com valores máximos
+  let ultimoNivelB = false;
   const questoes = [];
-  for (let i = 0; i < n1; i++) questoes.push(pick(poolF));
-  for (let i = 0; i < n2; i++) questoes.push(pick(poolM));
-  for (let i = 0; i < n3; i++) questoes.push(pick(poolD));
+  for (const [catLabel, pool, pontos] of slots) {
+    const t = _pickPool(pool, usedIds);
+    const nivelB = !ultimoNivelB; // alterna
+    ultimoNivelB = nivelB;
+    const q = instanciarComNivel(t, nivelB);
+    q.pontos    = pontos;
+    q.catLabel  = catLabel;
+    questoes.push(q);
+  }
   return questoes;
 }
 
@@ -623,6 +673,18 @@ function flashPts(tipo) {
 }
 
 // ── Mapa de questões F1 ────────────────────────────────────────
+// Ícones e labels dos 8 slots (Q1-Q8) conforme categorias da Atividade 5
+const MAPA_SLOT_META = [
+  { ico:'△',  lbl:'Área',   dif:1 },
+  { ico:'△',  lbl:'Área',   dif:1 },
+  { ico:'📐', lbl:'Pit.',   dif:1 },
+  { ico:'📐', lbl:'Pit.',   dif:1 },
+  { ico:'🪣', lbl:'Latas',  dif:1 },
+  { ico:'💲', lbl:'Preço',  dif:1 },
+  { ico:'⬡',  lbl:'Comp.', dif:1 },
+  { ico:'🏆', lbl:'Difícil',dif:3 },
+];
+
 function getEstadoMapa(i) {
   const mapa = st.f1.mapaEstados;
   if (mapa[i] !== 'pending') return mapa[i];
@@ -631,16 +693,24 @@ function getEstadoMapa(i) {
 }
 
 function buildMapaHTML() {
-  const grupos = [[0,1,2,3,4],[5,6],[7]];
-  const labels = ['Fáceis','Médias','Difícil'];
+  // Todos os 8 slots numa linha só, com ícone de categoria
+  const grupos = [[0,1],[2,3],[4],[5],[6],[7]];
+  const labels = ['Área','Pitágoras','Latas','Preço','Composta','Difícil'];
   const grupoDivs = grupos.map((g, gi) => {
-    const sep = gi > 0 ? '<span class="mapa-sep">│</span>' : '';
+    const sep = gi > 0 ? '<span class="mapa-sep">·</span>' : '';
     const icons = g.map(i => {
       const estado = getEstadoMapa(i);
-      const txt = estado === 'correct1' ? '✅' : estado === 'correct2' ? '✓2' : estado === 'correct3' ? '✓3' : estado === 'failed' ? '❌' : String(i + 1);
-      // pending (não atual) é clicável para navegação livre
-      const clickAttr = (estado === 'pending') ? ` onclick="navegarQuestaoF1(${i})"` : '';
-      return `<div class="mapa-q ${estado}" id="mapa-q-${i}"${clickAttr}>${txt}</div>`;
+      const meta   = MAPA_SLOT_META[i];
+      const isClickable = estado === 'pending' || estado === 'skipped';
+      const clickAttr = isClickable ? ` onclick="navegarQuestaoF1(${i})"` : '';
+      let txt;
+      if (estado === 'correct1' || estado === 'correct2' || estado === 'correct3') txt = '✅';
+      else if (estado === 'failed') txt = '❌';
+      else if (estado === 'skipped') txt = '⏭';
+      else if (estado === 'current') txt = meta.ico;
+      else txt = meta.ico; // pending
+      const numLbl = `<span style="position:absolute;top:1px;left:3px;font-size:7px;opacity:.55;font-family:'Orbitron',monospace">${i+1}</span>`;
+      return `<div class="mapa-q ${estado}" id="mapa-q-${i}"${clickAttr} style="position:relative;width:34px;height:34px;font-size:13px">${numLbl}${txt}</div>`;
     }).join('');
     return `${sep}<div class="mapa-grp"><div style="display:flex;gap:3px;">${icons}</div><span class="mapa-lbl">${labels[gi]}</span></div>`;
   }).join('');
@@ -650,13 +720,21 @@ function buildMapaHTML() {
 function renderMapaF1() {
   for (let i = 0; i < F1_TOTAL; i++) {
     const el = document.getElementById(`mapa-q-${i}`);
-    if (!el) return;
+    if (!el) continue;
     const estado = getEstadoMapa(i);
+    const meta   = MAPA_SLOT_META[i];
     el.className = `mapa-q ${estado}`;
-    el.textContent = estado === 'correct1' ? '✅' : estado === 'correct2' ? '✓2' : estado === 'correct3' ? '✓3' : estado === 'failed' ? '❌' : String(i + 1);
-    // Sincronizar clicabilidade: pendentes (não atuais) são navegáveis
-    if (estado === 'pending') {
-      const idx = i; // captura correta para closure
+    const numLbl = `<span style="position:absolute;top:1px;left:3px;font-size:7px;opacity:.55;font-family:'Orbitron',monospace">${i+1}</span>`;
+    let ico;
+    if (estado === 'correct1' || estado === 'correct2' || estado === 'correct3') ico = '✅';
+    else if (estado === 'failed') ico = '❌';
+    else if (estado === 'skipped') ico = '⏭';
+    else ico = meta.ico; // current e pending
+    el.innerHTML = numLbl + ico;
+    // Clicável: pending e skipped
+    const isClickable = estado === 'pending' || estado === 'skipped';
+    if (isClickable) {
+      const idx = i;
       el.onclick = () => navegarQuestaoF1(idx);
     } else {
       el.onclick = null;
@@ -667,8 +745,9 @@ function renderMapaF1() {
 // ── Navegação livre pelo mapa F1 ───────────────────────────────
 window.navegarQuestaoF1 = function(targetIdx) {
   if (!st || st.processando || st.finalizado || st.transicao) return;
-  // Só navega para questões pendentes que não são a atual
-  if (st.f1.mapaEstados[targetIdx] !== 'pending') return;
+  // Navega para pendentes e puladas
+  const estado = st.f1.mapaEstados[targetIdx];
+  if (estado !== 'pending' && estado !== 'skipped') return;
   if (targetIdx === st.f1.idx) return;
 
   st.f1.idx        = targetIdx;
@@ -802,30 +881,36 @@ function processarF1(resposta) {
 // ── Pular Fase 1 ───────────────────────────────────────────────
 function pularF1() {
   if (!st || st.processando || st.finalizado || st.transicao) return;
-  const q = st.questaoAtual;
-  st.questaoHist.push({ resposta: '(pulou)', correto: false, tempoMs: Date.now() - st.questaoInicioTs });
-  st.f1.erros++;
+  // Marca como skipped — permite voltar depois (não é erro permanente)
+  st.f1.mapaEstados[st.f1.idx] = 'skipped';
   st.tentativaQ = 0;
-  registrarQuestao(false, 0);
-  mostrarFeedback("warn", `Pulou — Resposta: <strong>${q.resposta}${q.unidade?' '+q.unidade:''}</strong>`);
-  beep(250, 300);
+  st.questaoHist = [];
+  st.questaoRegistrada = false; // questão ainda não respondida definitivamente
+  mostrarFeedback("warn", `Pulada — você pode voltar a esta questão clicando no mapa.`);
+  beep(250, 200);
   renderHUDF1();
   st.processando = true;
   setTimeout(() => {
     if (st.finalizado || st.transicao) return;
     st.processando = false;
     proximaF1();
-  }, 1800);
+  }, 1200);
 }
 
 // ── Próxima questão Fase 1 ─────────────────────────────────────
 function proximaF1() {
-  // Procura próxima pendente a partir da posição atual (gira pelo array)
-  // No fluxo sequencial normal isso equivale a idx++ — sem mudança de comportamento
+  // Procura próxima pendente (prioridade) ou pulada a partir da posição atual
   let next = -1;
   for (let d = 1; d < F1_TOTAL; d++) {
     const c = (st.f1.idx + d) % F1_TOTAL;
     if (st.f1.mapaEstados[c] === 'pending') { next = c; break; }
+  }
+  // Se não há mais pendentes, vai para puladas
+  if (next === -1) {
+    for (let d = 1; d < F1_TOTAL; d++) {
+      const c = (st.f1.idx + d) % F1_TOTAL;
+      if (st.f1.mapaEstados[c] === 'skipped') { next = c; break; }
+    }
   }
   if (next === -1) { encerrarFase1('completa'); return; }
 
@@ -1252,14 +1337,16 @@ function registrarQuestao(acertou, pontosGanhos, velocidade = false, speedPts = 
   const correctResp = hist.find(t => t.correto);
   const lastResp    = hist[hist.length - 1];
   st.questoesDetalhes.push({
+    id: q.id || null,
     fase: st.fase,
     enunciado: q.enunciado,
     resposta_correta: q.resposta + (q.unidade ? ' ' + q.unidade : ''),
     resposta_aluno: (correctResp || lastResp)?.resposta || '',
     resultado: acertou ? 'acerto' : 'erro',
     tentativas_count: hist.length,
-    tempo_resposta_ms: Math.round(Date.now() - st.questaoInicioTs),
+    tempo_gasto_ms: Math.round(Date.now() - st.questaoInicioTs),
     dificuldade: q.dif,
+    pulada: false,
     ehBonus: !!st.ehBonus,
     tentativas: hist,
     acertou, pontosGanhos,
@@ -1422,17 +1509,48 @@ async function encerrarSessao(motivo) {
   clearInterval(st.sessaoInterval);
   document.getElementById("transicao-f1")?.remove();
 
+  // Registrar questão atual se não registrada
   if (st.questaoAtual && !st.questaoRegistrada) {
+    const isSkipped = st.f1.mapaEstados[st.f1.idx] === 'skipped';
     st.questoesDetalhes.push({
+      id: st.questaoAtual.id || null,
       fase: st.fase,
       enunciado: st.questaoAtual.enunciado,
       resposta_correta: st.questaoAtual.resposta + (st.questaoAtual.unidade ? ' '+st.questaoAtual.unidade : ''),
       resposta_aluno: '',
-      resultado: 'nao_respondida',
+      resultado: isSkipped ? 'pulada' : 'nao_respondida',
       tentativas_count: st.questaoHist.length,
+      tempo_gasto_ms: Math.round(Date.now() - st.questaoInicioTs),
       dificuldade: st.questaoAtual.dif,
+      pulada: isSkipped,
       tentativas: [...st.questaoHist],
       acertou: false, pontosGanhos: 0,
+    });
+  }
+  // Registrar todas as questões F1 skipped que não foram respondidas definitivamente
+  if (st.fase === 1) {
+    st.f1.mapaEstados.forEach((estado, i) => {
+      if (estado !== 'skipped') return;
+      if (i === st.f1.idx) return; // já registrada acima
+      const q = st.f1.questoes[i];
+      if (!q) return;
+      const jaRegistrada = st.questoesDetalhes.some(d => d.id && d.id === q.id);
+      if (!jaRegistrada) {
+        st.questoesDetalhes.push({
+          id: q.id || null,
+          fase: 1,
+          enunciado: q.enunciado,
+          resposta_correta: q.resposta + (q.unidade ? ' '+q.unidade : ''),
+          resposta_aluno: '',
+          resultado: 'pulada',
+          tentativas_count: 0,
+          tempo_gasto_ms: 0,
+          dificuldade: q.dif,
+          pulada: true,
+          tentativas: [],
+          acertou: false, pontosGanhos: 0,
+        });
+      }
     });
   }
 
