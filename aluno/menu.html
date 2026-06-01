@@ -230,7 +230,7 @@ function resumoAluno(nome) {
   const taxa     = (acertos + erros) > 0 ? Math.round(acertos / (acertos + erros) * 100) : null;
   const posGeral = (rankAll.findIndex(r => r.aluno === nome) + 1) || '—';
   const posTurma = (rankTurma.findIndex(r => r.aluno === nome) + 1) || '—';
-  return { totalPts, sessoes: regs.length, acertos, taxa, posGeral, posTurma, total_ativ: vals.length };
+  return { totalPts, sessoes: regsComp.length, acertos, taxa, posGeral, posTurma, total_ativ: vals.length };
 }
 
 function ultimasAtividades(nome) {
