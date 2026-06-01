@@ -339,7 +339,7 @@ function renderHistMetrics(regs) {
   const isComp   = modoSet.has('competicao_plus');
   const totalAc  = regs.reduce((a, r) => a + (r.acertos || 0), 0);
   const totalErr = regs.reduce((a, r) => a + (r.erros   || 0), 0);
-  const taxa     = (totalAc + totalErr) > 0 ? Math.round(totalAc / (totalAc + totalErr) * 100) : 0;
+  const taxa     = (totalAc + totalErr) > 0 ? Math.round(totalAc / (totalAc + totalErr) * 100) : null;
 
   if (isAvOnly) {
     const melhorNQ  = Math.max(0, ...regs.map(r => r.nota_quiz ?? 0));
@@ -348,7 +348,7 @@ function renderHistMetrics(regs) {
       <div class="metric-box"><div class="metric-val" style="color:#7C3AED">${melhorNQ.toFixed(1)}</div><div class="metric-lbl">Melhor nota</div></div>
       <div class="metric-box"><div class="metric-val" style="color:var(--gold)">⭐ ${melhorPts}</div><div class="metric-lbl">Melhor pts</div></div>
       <div class="metric-box"><div class="metric-val" style="color:var(--blue)">${regs.length}/3</div><div class="metric-lbl">Tentativas</div></div>
-      <div class="metric-box"><div class="metric-val" style="color:var(--green)">${taxa}%</div><div class="metric-lbl">Taxa acerto</div></div>
+      <div class="metric-box"><div class="metric-val" style="color:var(--green)">${taxa !== null ? taxa + '%' : '—'}</div><div class="metric-lbl">Taxa acerto</div></div>
     </div>`;
   }
   if (isComp) {
@@ -359,7 +359,7 @@ function renderHistMetrics(regs) {
       <div class="metric-box"><div class="metric-val" style="color:var(--gold)">⭐ ${melhorPts}</div><div class="metric-lbl">Melhor saldo</div></div>
       <div class="metric-box"><div class="metric-val" style="color:var(--blue)">${regs.length}</div><div class="metric-lbl">Sessões</div></div>
       <div class="metric-box"><div class="metric-val" style="color:#60A5FA">${rapMax > 0 ? rapMax : '—'}</div><div class="metric-lbl">⚡ Veloz (max)</div></div>
-      <div class="metric-box"><div class="metric-val" style="color:var(--green)">${taxa}%</div><div class="metric-lbl">Taxa acerto</div></div>
+      <div class="metric-box"><div class="metric-val" style="color:var(--green)">${taxa !== null ? taxa + '%' : '—'}</div><div class="metric-lbl">Taxa acerto</div></div>
     </div>`;
   }
   // classico
@@ -369,7 +369,7 @@ function renderHistMetrics(regs) {
     <div class="metric-box"><div class="metric-val" style="color:var(--gold)">⭐ ${melhorPts}</div><div class="metric-lbl">Melhor pts</div></div>
     <div class="metric-box"><div class="metric-val" style="color:var(--blue)">${regs.length}</div><div class="metric-lbl">Tentativas</div></div>
     <div class="metric-box"><div class="metric-val" style="color:var(--orange)">${comboMax > 0 ? '×'+comboMax : '—'}</div><div class="metric-lbl">Combo máx</div></div>
-    <div class="metric-box"><div class="metric-val" style="color:var(--green)">${taxa}%</div><div class="metric-lbl">Taxa acerto</div></div>
+    <div class="metric-box"><div class="metric-val" style="color:var(--green)">${taxa !== null ? taxa + '%' : '—'}</div><div class="metric-lbl">Taxa acerto</div></div>
   </div>`;
 }
 
@@ -379,7 +379,7 @@ function renderSessaoRow(r, isBest, idx, total) {
   const isAvP  = modo === 'avaliacao_plus';
   const uid2   = `htent-${r.id}`;
   const tot2   = (r.acertos || 0) + (r.erros || 0);
-  const taxa   = tot2 > 0 ? Math.round((r.acertos || 0) / tot2 * 100) : 0;
+  const taxa   = tot2 > 0 ? Math.round((r.acertos || 0) / tot2 * 100) : null;
   const bruta  = r.pontuacao_bruta || r.pontuacao || 0;
   const tempoS = r.tempo_medio_ms > 0 ? Math.round(r.tempo_medio_ms / 1000) : 0;
   const label  = idx === 0 ? '→ Mais recente' : `${isAvP ? 'Tentativa' : isPlus ? 'Sessão' : 'Tentativa'} ${total - idx}`;
@@ -392,14 +392,14 @@ function renderSessaoRow(r, isBest, idx, total) {
       ${r.tentativa_num ? `<span class="badge badge-blue">Tentativa ${r.tentativa_num}</span>` : ''}
       <span class="badge badge-green">✅ ${r.acertos || 0}</span>
       <span class="badge badge-red">❌ ${r.erros || 0}</span>
-      <span class="badge badge-blue">📊 ${taxa}%</span>`;
+      <span class="badge badge-blue">📊 ${taxa !== null ? taxa + '%' : '—'}</span>`;
   } else if (isPlus) {
     badges = `
       <span class="badge badge-gold">⭐ ${bruta} pts</span>
       <span class="badge badge-green">✅ ${r.acertos || 0}</span>
       <span class="badge badge-red">❌ ${r.erros || 0}</span>
       ${(r.nao_respondidas || 0) > 0 ? `<span class="badge" style="background:#F3F4F6;color:#6B7280">⏸ ${r.nao_respondidas}</span>` : ''}
-      <span class="badge badge-blue">📊 ${taxa}%</span>
+      <span class="badge badge-blue">📊 ${taxa !== null ? taxa + '%' : '—'}</span>
       ${(r.acertos_rapidos || 0) > 0 ? `<span class="badge" style="background:#EFF6FF;color:#1D4ED8">⚡${r.acertos_rapidos}</span>` : ''}
       ${(r.acertos_dificeis || 0) > 0 ? `<span class="badge badge-gold">🏆${r.acertos_dificeis}</span>` : ''}
       ${(r.ajudas_usadas || 0) > 0 ? `<span class="badge" style="background:#F5F3FF;color:#6D28D9">🎯${r.ajudas_usadas}</span>` : ''}
@@ -411,7 +411,7 @@ function renderSessaoRow(r, isBest, idx, total) {
       ${renderAbatimento(r)}
       <span class="badge badge-green">✅ ${r.acertos || 0}</span>
       <span class="badge badge-red">❌ ${r.erros || 0}</span>
-      <span class="badge badge-blue">📊 ${taxa}%</span>
+      <span class="badge badge-blue">📊 ${taxa !== null ? taxa + '%' : '—'}</span>
       ${(r.combo_max || 0) > 1 ? `<span class="badge badge-orange">🔥×${r.combo_max}</span>` : ''}`;
   }
 
@@ -616,17 +616,19 @@ for (const aluno of alunos) {
       const allPts = Math.max(0, ...ativRegs.map(r => r.pontuacao || 0));
       const totAc  = ativRegs.reduce((a, r) => a + (r.acertos || 0), 0);
       const totErr = ativRegs.reduce((a, r) => a + (r.erros   || 0), 0);
-      const taxa   = (totAc + totErr) > 0 ? Math.round(totAc / (totAc + totErr) * 100) : 0;
+      const taxa   = (totAc + totErr) > 0 ? Math.round(totAc / (totAc + totErr) * 100) : null;
+      const isAtiv4 = atividade === 'Atividade 4 - Geometria';
 
       html += `<div class="ativ-summary" data-ativ-sec="${uid}" data-ativ="${atividade.replace(/"/g,'&quot;')}">
         <div class="ativ-summary-head" onclick="toggleHistAtiv('${ativUID}')">
           <div style="flex:1;font-size:14px;font-weight:700">${atividade}</div>
           <span class="badge badge-gold">⭐ ${allPts} pts</span>
           <span class="badge badge-blue">${ativRegs.length} sess.</span>
-          <span class="badge badge-green">${taxa}%</span>
+          <span class="badge badge-green">${taxa !== null ? taxa + '%' : '—'}</span>
           <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:var(--text-muted);flex-shrink:0" id="hchev-${ativUID}"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
         </div>
-        <div class="ativ-summary-body" id="hbody-${ativUID}" style="display:none">`;
+        <div class="ativ-summary-body" id="hbody-${ativUID}" style="display:none">
+        ${isAtiv4 ? '<div style="background:#FEF3C7;border:1px solid #FCD34D;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;font-weight:600;color:#854D0E">⚠️ Esta atividade não conta para o ranking</div>' : ''}`;
 
       if (multiModo) {
         const compRegs = ativRegs.filter(r => (r.modo || 'classico') !== 'avaliacao_plus');

@@ -153,6 +153,7 @@ const selAtiv = document.getElementById("sel-ativ");
 const pillRow = document.getElementById("pill-row");
 
 LISTA_ATIVIDADES.forEach(a => {
+  if (a.nome === 'Atividade 4 - Geometria') return;
   const o = document.createElement("option");
   o.value = o.textContent = a.nome;
   selAtiv.appendChild(o);

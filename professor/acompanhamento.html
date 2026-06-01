@@ -134,7 +134,7 @@ function calcSumario(hist) {
   const comboMax = Math.max(0, ...hist.map(r => r.combo_max || 0));
   const totalAc  = hist.reduce((a, r) => a + (r.acertos || 0), 0);
   const totalErr = hist.reduce((a, r) => a + (r.erros || 0), 0);
-  const taxa     = (totalAc + totalErr) > 0 ? Math.round(totalAc / (totalAc + totalErr) * 100) : 0;
+  const taxa     = (totalAc + totalErr) > 0 ? Math.round(totalAc / (totalAc + totalErr) * 100) : null;
   return { totalPts, numAtivs, comboMax, taxa };
 }
 
@@ -144,7 +144,7 @@ function calcAtivStats(tentativas) {
   const difMax       = Math.max(0, ...tentativas.map(r => r.acertos_dificeis || 0));
   const totalAc      = tentativas.reduce((a, r) => a + (r.acertos || 0), 0);
   const totalErr     = tentativas.reduce((a, r) => a + (r.erros || 0), 0);
-  const taxa         = (totalAc + totalErr) > 0 ? Math.round(totalAc / (totalAc + totalErr) * 100) : 0;
+  const taxa         = (totalAc + totalErr) > 0 ? Math.round(totalAc / (totalAc + totalErr) * 100) : null;
   const modos        = [...new Set(tentativas.map(r => r.modo || 'classico'))];
   // Competição+ extras
   const isPlus       = modos.includes('competicao_plus');
@@ -171,12 +171,15 @@ window.mostrarModoAcomp = function(uid, modo) {
 };
 
 function calcAtivStatsAvPlus(tentativas) {
-  const melhorNQ  = Math.max(0, ...tentativas.map(r => r.nota_quiz ?? 0));
-  const melhorPts = Math.max(0, ...tentativas.map(r => r.pontuacao  ?? 0));
-  const totalAc   = tentativas.reduce((a, r) => a + (r.acertos || 0), 0);
-  const totalErr  = tentativas.reduce((a, r) => a + (r.erros   || 0), 0);
-  const taxa      = (totalAc + totalErr) > 0 ? Math.round(totalAc / (totalAc + totalErr) * 100) : 0;
-  return { melhorNQ, melhorPts, totalAc, totalErr, taxa };
+  const melhorNQ    = Math.max(0, ...tentativas.map(r => r.nota_quiz ?? 0));
+  const melhorPts   = Math.max(0, ...tentativas.map(r => r.pontuacao  ?? 0));
+  const melhorF1Pts = Math.max(0, ...tentativas.map(r => r.pontos_fase1 ?? 0));
+  const rapMax      = Math.max(0, ...tentativas.map(r => r.acertos_rapidos || 0));
+  const comboMax    = Math.max(0, ...tentativas.map(r => r.combo_max || 0));
+  const totalAc     = tentativas.reduce((a, r) => a + (r.acertos || 0), 0);
+  const totalErr    = tentativas.reduce((a, r) => a + (r.erros   || 0), 0);
+  const taxa        = (totalAc + totalErr) > 0 ? Math.round(totalAc / (totalAc + totalErr) * 100) : null;
+  return { melhorNQ, melhorPts, melhorF1Pts, rapMax, comboMax, totalAc, totalErr, taxa };
 }
 
 function renderAluno(aluno, turma, hist) {
@@ -191,16 +194,17 @@ function renderAluno(aluno, turma, hist) {
     return;
   }
 
-  // Group by atividade then by modo
+  // Group by atividade then by modo (Atividade 4 excluída do resumo)
+  const histFiltrado = hist.filter(r => r.atividade !== 'Atividade 4 - Geometria');
   const porAtivModo = {};
-  for (const r of hist) {
+  for (const r of histFiltrado) {
     if (!porAtivModo[r.atividade]) porAtivModo[r.atividade] = {};
     const m = r.modo || 'classico';
     if (!porAtivModo[r.atividade][m]) porAtivModo[r.atividade][m] = [];
     porAtivModo[r.atividade][m].push(r);
   }
 
-  const sum = calcSumario(hist);
+  const sum = calcSumario(histFiltrado);
 
   let html = `
   <div class="card">
@@ -212,7 +216,7 @@ function renderAluno(aluno, turma, hist) {
       <div class="sum-box"><div class="sum-val" style="color:var(--gold)">${sum.totalPts}</div><div class="sum-lbl">Pontos (melhor)</div></div>
       <div class="sum-box"><div class="sum-val" style="color:var(--blue)">${sum.numAtivs}</div><div class="sum-lbl">Atividades</div></div>
       <div class="sum-box"><div class="sum-val" style="color:var(--orange)">${sum.comboMax > 0 ? '×'+sum.comboMax : '—'}</div><div class="sum-lbl">Combo máximo</div></div>
-      <div class="sum-box"><div class="sum-val" style="color:var(--green)">${sum.taxa}%</div><div class="sum-lbl">Taxa de acerto</div></div>
+      <div class="sum-box"><div class="sum-val" style="color:var(--green)">${sum.taxa !== null ? sum.taxa + '%' : '—'}</div><div class="sum-lbl">Taxa de acerto</div></div>
     </div>
 
     <div class="section-label" style="margin-bottom:12px">
@@ -234,7 +238,7 @@ function renderAluno(aluno, turma, hist) {
       const melhorPts = Math.max(0, ...allTentativas.map(r => r.pontuacao || 0));
       const totalAc   = allTentativas.reduce((a, r) => a + (r.acertos || 0), 0);
       const totalErr  = allTentativas.reduce((a, r) => a + (r.erros   || 0), 0);
-      const taxa      = (totalAc + totalErr) > 0 ? Math.round(totalAc / (totalAc + totalErr) * 100) : 0;
+      const taxa      = (totalAc + totalErr) > 0 ? Math.round(totalAc / (totalAc + totalErr) * 100) : null;
 
       const tabsHtml = showTabs ? `
         <div class="mode-tabs">
@@ -257,7 +261,7 @@ function renderAluno(aluno, turma, hist) {
             <div class="ativ-metrics-plus" style="margin-top:0">
               <div class="metric-box-plus"><div class="metric-val" style="color:#A855F7">${stComp.ajudasTotal}</div><div class="metric-lbl">🎯 Ajudas usadas</div></div>
               <div class="metric-box-plus"><div class="metric-val" style="color:var(--green)">${stComp.semPenCount}</div><div class="metric-lbl">🔥 Sessão limpa</div></div>
-              <div class="metric-box-plus"><div class="metric-val" style="color:var(--green)">${stComp.taxa}%</div><div class="metric-lbl">Taxa de acerto</div></div>
+              <div class="metric-box-plus"><div class="metric-val" style="color:var(--green)">${stComp.taxa !== null ? stComp.taxa + '%' : '—'}</div><div class="metric-lbl">Taxa de acerto</div></div>
               <div class="metric-box-plus"><div class="metric-val" style="color:var(--text-muted)">${stComp.totalAc} / ${stComp.totalAc+stComp.totalErr}</div><div class="metric-lbl">Ac / Total</div></div>
             </div>`;
         } else {
@@ -266,7 +270,7 @@ function renderAluno(aluno, turma, hist) {
             <div class="metric-box"><div class="metric-val" style="color:var(--blue)">${compTentativas.length}</div><div class="metric-lbl">Tentativas</div></div>
             <div class="metric-box"><div class="metric-val" style="color:var(--orange)">${stComp.comboMax > 0 ? '×'+stComp.comboMax : '—'}</div><div class="metric-lbl">Combo máx</div></div>
             <div class="metric-box"><div class="metric-val" style="color:var(--red)">${stComp.difMax > 0 ? stComp.difMax : '—'}</div><div class="metric-lbl">Difíceis ✓</div></div>
-            <div class="metric-box"><div class="metric-val" style="color:var(--green)">${stComp.taxa}%</div><div class="metric-lbl">Acertos</div></div>
+            <div class="metric-box"><div class="metric-val" style="color:var(--green)">${stComp.taxa !== null ? stComp.taxa + '%' : '—'}</div><div class="metric-lbl">Acertos</div></div>
             <div class="metric-box"><div class="metric-val" style="color:var(--text-muted)">${stComp.totalAc} / ${stComp.totalAc+stComp.totalErr}</div><div class="metric-lbl">Ac / Total</div></div>
           </div>`;
         }
@@ -286,11 +290,24 @@ function renderAluno(aluno, turma, hist) {
       let avBlockHtml = '';
       if (hasAvPlus) {
         const stAv = calcAtivStatsAvPlus(avTentativas);
-        const avMetrics = `<div class="ativ-metrics-plus">
-          <div class="metric-box-plus"><div class="metric-val" style="color:#7C3AED">${stAv.melhorNQ.toFixed(1)}</div><div class="metric-lbl">Melhor nota quiz</div></div>
-          <div class="metric-box-plus"><div class="metric-val" style="color:var(--gold)">${stAv.melhorPts}</div><div class="metric-lbl">Melhor pts total</div></div>
-          <div class="metric-box-plus"><div class="metric-val" style="color:var(--blue)">${avTentativas.length}/3</div><div class="metric-lbl">Tentativas usadas</div></div>
-          <div class="metric-box-plus"><div class="metric-val" style="color:var(--green)">${stAv.taxa}%</div><div class="metric-lbl">Taxa de acerto</div></div>
+        const avMetrics = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
+          <div style="background:#F5F3FF;border:1.5px solid #DDD6FE;border-radius:10px;padding:10px 12px">
+            <div style="font-size:11px;font-weight:700;color:#7C3AED;margin-bottom:8px">📝 Fase 1 — Quiz</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <div class="metric-box-plus"><div class="metric-val" style="color:#7C3AED;font-size:16px">${stAv.melhorNQ.toFixed(1)}/10</div><div class="metric-lbl">Melhor nota</div></div>
+              <div class="metric-box-plus"><div class="metric-val" style="color:var(--gold);font-size:16px">${stAv.melhorF1Pts}</div><div class="metric-lbl">Pontos F1</div></div>
+              <div class="metric-box-plus" style="grid-column:1/-1"><div class="metric-val" style="color:var(--blue);font-size:16px">${avTentativas.length}/3</div><div class="metric-lbl">Tentativas usadas</div></div>
+            </div>
+          </div>
+          <div style="background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:10px;padding:10px 12px">
+            <div style="font-size:11px;font-weight:700;color:#1D4ED8;margin-bottom:8px">🎮 Fase 2 — Ranking</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <div class="metric-box-plus"><div class="metric-val" style="color:var(--gold);font-size:16px">${stAv.melhorPts}</div><div class="metric-lbl">Pts total</div></div>
+              <div class="metric-box-plus"><div class="metric-val" style="color:var(--green);font-size:16px">${stAv.taxa !== null ? stAv.taxa + '%' : '—'}</div><div class="metric-lbl">Taxa acerto</div></div>
+              <div class="metric-box-plus"><div class="metric-val" style="color:#60A5FA;font-size:16px">${stAv.rapMax > 0 ? stAv.rapMax : '—'}</div><div class="metric-lbl">⚡ Veloz (max)</div></div>
+              <div class="metric-box-plus"><div class="metric-val" style="color:var(--orange);font-size:16px">${stAv.comboMax > 1 ? '×'+stAv.comboMax : '—'}</div><div class="metric-lbl">🔥 Combo</div></div>
+            </div>
+          </div>
         </div>`;
         avBlockHtml = `<div id="modo-avplus-${uid}"${showTabs ? ' style="display:none"' : ''}>
           ${avMetrics}
@@ -303,7 +320,7 @@ function renderAluno(aluno, turma, hist) {
           <div class="ativ-nome">${ativNome}</div>
           <span class="badge badge-gold">${melhorPts} pts</span>
           <span class="badge badge-blue">${allTentativas.length} sess.</span>
-          <span class="badge badge-green">${taxa}%</span>
+          <span class="badge badge-green">${taxa !== null ? taxa + '%' : '—'}</span>
           <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:var(--text-muted)" id="chev-${uid}"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
         </div>
         <div class="ativ-summary-body" id="body-${uid}" style="display:none">
@@ -339,7 +356,7 @@ function renderTentativas(tentativas, isPlus, ativNome, turma, isAvPlus = false)
   return `${evolucaoTempoHTML}<div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;text-transform:uppercase;margin:10px 0 6px">${labelSessao}</div>
   ${sorted.map((r, i) => {
     const total = (r.acertos || 0) + (r.erros || 0);
-    const taxa  = total > 0 ? Math.round((r.acertos || 0) / total * 100) : 0;
+    const taxa  = total > 0 ? Math.round((r.acertos || 0) / total * 100) : null;
     const uid2  = `tent-${r.id}`;
     const tempoS = r.tempo_medio_ms > 0 ? Math.round(r.tempo_medio_ms / 1000) : 0;
     const labelRow = i === 0 ? '→ Mais recente' : `${isAvPlus ? 'Tentativa' : isPlus ? 'Sessão' : 'Tentativa'} ${sorted.length - i}`;
@@ -354,7 +371,7 @@ function renderTentativas(tentativas, isPlus, ativNome, turma, isAvPlus = false)
               <span class="badge" style="background:#F5F3FF;color:#7C3AED;font-weight:700">📝 ${typeof r.nota_quiz === 'number' ? r.nota_quiz.toFixed(1) : '—'}</span>
               <span class="badge badge-gold">${r.pontuacao || 0} pts</span>
               ${r.tentativa_num ? `<span class="badge badge-blue">Tentativa ${r.tentativa_num}</span>` : ''}
-              <span class="badge badge-green">${taxa}%</span>
+              <span class="badge badge-green">${taxa !== null ? taxa + '%' : '—'}</span>
               <span class="badge badge-green">${r.acertos || 0} ✓</span>
               <span class="badge badge-red">${r.erros || 0} ✗</span>
             ` : `
@@ -362,7 +379,7 @@ function renderTentativas(tentativas, isPlus, ativNome, turma, isAvPlus = false)
               <span class="badge badge-green">${r.acertos || 0} ✓</span>
               <span class="badge badge-red">${r.erros || 0} ✗</span>
               ${(r.nao_respondidas || 0) > 0 ? `<span class="badge" style="background:#F3F4F6;color:#6B7280">⏸ ${r.nao_respondidas}</span>` : ''}
-              <span class="badge badge-blue">${taxa}%</span>
+              <span class="badge badge-blue">${taxa !== null ? taxa + '%' : '—'}</span>
               ${isPlus ? `
                 ${(r.acertos_rapidos || 0) > 0 ? `<span class="badge" style="background:#EFF6FF;color:#1D4ED8">⚡${r.acertos_rapidos}</span>` : ''}
                 ${(r.acertos_dificeis || 0) > 0 ? `<span class="badge badge-gold">🏆${r.acertos_dificeis}</span>` : ''}
@@ -557,7 +574,7 @@ window.verMeusTestes = function() {
   const rows = testes.length
     ? testes.map(r => {
         const total = (r.acertos || 0) + (r.erros || 0);
-        const taxa  = total > 0 ? Math.round((r.acertos || 0) / total * 100) : 0;
+        const taxa  = total > 0 ? Math.round((r.acertos || 0) / total * 100) : null;
         return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;flex-wrap:wrap">
           <div style="flex:1;min-width:160px">
             <div style="font-weight:700;font-size:13px">${r.atividade || '—'}</div>
@@ -566,7 +583,7 @@ window.verMeusTestes = function() {
           <span class="badge badge-gold">${r.pontuacao || 0} pts</span>
           <span class="badge badge-green">${r.acertos || 0} ✅</span>
           <span class="badge badge-red">${r.erros || 0} ❌</span>
-          <span class="badge badge-blue">${taxa}%</span>
+          <span class="badge badge-blue">${taxa !== null ? taxa + '%' : '—'}</span>
           ${r.tempo ? `<span class="badge" style="background:#f3f4f6;color:#6b7280">${r.tempo}</span>` : ''}
         </div>`;
       }).join('')
