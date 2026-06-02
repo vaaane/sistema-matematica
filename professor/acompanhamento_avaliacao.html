@@ -86,7 +86,14 @@
       .av-filters{flex-direction:column;align-items:stretch;}
       .av-search{width:100%;box-sizing:border-box;}
       .update-pill{margin-left:0;}
-      .av-table th:nth-child(n+5),.av-table td:nth-child(n+5){display:none;}
+      /* mobile: oculta T2, T3, Pts F2, T.F1, Início, Fim, Total — mantém Aluno, Turma, T1, Melhor F1, Status, Ações */
+      .av-table th:nth-child(4),.av-table td:nth-child(4),
+      .av-table th:nth-child(5),.av-table td:nth-child(5),
+      .av-table th:nth-child(7),.av-table td:nth-child(7),
+      .av-table th:nth-child(8),.av-table td:nth-child(8),
+      .av-table th:nth-child(10),.av-table td:nth-child(10),
+      .av-table th:nth-child(11),.av-table td:nth-child(11),
+      .av-table th:nth-child(12),.av-table td:nth-child(12){display:none;}
     }
   </style>
 </head>
@@ -118,7 +125,6 @@
           <option value="8D">8D</option><option value="8E">8E</option>
           <option value="8F">8F</option><option value="8G">8G</option><option value="8H">8H</option>
         </select>
-        <input type="date" id="filtro-data"/>
         <input type="search" id="busca-aluno" class="av-search" placeholder="Buscar aluno…" oninput="onBusca(this.value)"/>
         <button id="btn-extra-tent" class="btn btn-orange" onclick="darExtraTentativa()"
           style="font-size:12px;padding:6px 14px;white-space:nowrap;display:none"
@@ -172,13 +178,16 @@
                 <th style="text-align:center">T3</th>
                 <th>Melhor F1</th>
                 <th>Pts F2</th>
-                <th>Tempo F1</th>
+                <th>T. F1</th>
                 <th>Status</th>
                 <th>Início</th>
+                <th>Fim ≈</th>
+                <th>Total</th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody id="main-tbody">
-              <tr><td colspan="10" style="padding:24px;text-align:center;color:var(--text-muted)">Carregando…</td></tr>
+              <tr><td colspan="13" style="padding:24px;text-align:center;color:var(--text-muted)">Carregando…</td></tr>
             </tbody>
           </table>
         </div>
@@ -195,7 +204,7 @@
 
 <script type="module">
 import { db } from "/js/firebase-config.js";
-import { ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ref, onValue, get, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { ALUNOS_POR_TURMA } from "/js/constants.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 
@@ -212,7 +221,7 @@ function avKey(s) { return btoa(unescape(encodeURIComponent(s))).replace(/=/g,''
 let todosRegistros = [];
 let filtroAtiv  = '';
 let filtroTurma = '';
-let filtroData  = new Date().toISOString().split('T')[0];
+let filtroData  = ''; // removido — não filtrar por data
 let searchText  = '';
 let prevInProgress = new Set();
 let recentlyDone   = new Set();
@@ -222,8 +231,6 @@ let lastUpdateTime = Date.now();
 let notifTimer     = null;
 let _audioCtx      = null;
 
-document.getElementById('filtro-data').value = filtroData;
-
 // ── Eventos filtros ─────────────────────────────────────────────
 function _atualizarBotaoExtra() {
   const btn = document.getElementById('btn-extra-tent');
@@ -231,7 +238,6 @@ function _atualizarBotaoExtra() {
 }
 document.getElementById('filtro-ativ').addEventListener('change',  e => { filtroAtiv  = e.target.value; renderizarTudo(); _atualizarBotaoExtra(); });
 document.getElementById('filtro-turma').addEventListener('change', e => { filtroTurma = e.target.value; renderizarTudo(); _atualizarBotaoExtra(); });
-document.getElementById('filtro-data').addEventListener('change',  e => { filtroData  = e.target.value; renderizarTudo(); });
 
 window.onBusca   = v => { searchText = v.trim(); renderizarTudo(); };
 window.forcarAtt = () => { renderizarTudo(); nextRefreshIn = 15; };
@@ -372,13 +378,7 @@ function aplicarFiltros() {
   let r = todosRegistros;
   if (filtroAtiv)  r = r.filter(x => x.atividade === filtroAtiv);
   if (filtroTurma) r = r.filter(x => x.turma === filtroTurma);
-  if (filtroData) {
-    const [y, m, d] = filtroData.split('-');
-    const ptBR = `${d}/${m}/${y}`;
-    r = r.filter(x => x.ts_inicio
-      ? new Date(x.ts_inicio * 1000).toLocaleDateString('pt-BR') === ptBR
-      : x.data?.startsWith(ptBR));
-  }
+  // sem filtro de data
   return r;
 }
 
@@ -549,16 +549,61 @@ function tentCellHtml(tentRecs, now) {
   const emAnd    = !concluida && ms > 0;
   const exp      = !concluida && ms <= 0;
 
+  // Horário de início da tentativa
+  const horaInicio = rep.ts_inicio
+    ? new Date(rep.ts_inicio * 1000).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' })
+    : '';
+  const subInfo = s => s ? `<div style="font-size:10px;color:var(--text-muted);margin-top:2px;white-space:nowrap">${s}</div>` : '';
+
   if (emAnd) {
     const f1Done = tentRecs.some(r => r.nota_quiz != null);
     const fase = f1Done ? '⚔️' : '📖';
-    return `<td class="tempo-cell" data-ts="${rep.ts_inicio}" data-fase="${fase}" style="white-space:nowrap;font-size:12px">${fase} ${tempoHtml(ms)}</td>`;
+    return `<td class="tempo-cell" data-ts="${rep.ts_inicio}" data-fase="${fase}" style="white-space:nowrap;font-size:12px;text-align:center">
+      ${fase} ${tempoHtml(ms)}${subInfo(horaInicio)}
+    </td>`;
   }
-  if (exp) return `<td style="color:#D97706;text-align:center;font-size:15px" title="Expirou sem concluir">⏰</td>`;
 
+  if (exp) return `<td style="color:#D97706;text-align:center;font-size:13px" title="Expirou sem concluir">
+    <div>⏰</div>${subInfo(horaInicio)}
+  </td>`;
+
+  // Concluída: nota + duração F1 + horário
+  // Para duplas tentRecs tem 2 records (um por aluno); usar max, não soma
   const notas = tentRecs.flatMap(r => r.nota_quiz != null ? [r.nota_quiz] : []);
-  const n = notas.length ? Math.max(...notas) : null;
-  return `<td style="text-align:center"><span class="${notaCls(n)}" style="font-size:12px;white-space:nowrap">✅ ${notaStr(n)}</span></td>`;
+  const n     = notas.length ? Math.max(...notas) : null;
+  const f1Ms  = Math.max(0, ...tentRecs.map(r => r.tempo_fase1_ms || 0));
+  const meta  = [f1Ms > 0 ? fmtMs(f1Ms) : '', horaInicio].filter(Boolean).join(' · ');
+  return `<td style="text-align:center">
+    <span class="${notaCls(n)}" style="font-size:12px;white-space:nowrap">✅ ${notaStr(n)}</span>
+    ${subInfo(meta)}
+  </td>`;
+}
+
+// ── Cálculo de horários por aluno/dupla ─────────────────────────
+function calcTimings(entry) {
+  const allRecs = Object.values(entry.tentativas).flat();
+  if (!allRecs.length) return { inicio: '—', fim: '—', totalF1: '—' };
+
+  const fmt = ms => new Date(ms).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+
+  // Início: sessão mais antiga
+  const minTs = Math.min(...allRecs.map(r => r.ts_inicio || Infinity).filter(t => t < Infinity));
+  const inicio = minTs < Infinity ? fmt(minTs * 1000) : '—';
+
+  // Fim estimado: sessão mais recente (ts_inicio + DURACAO_SESSAO_S)
+  // Usa a sessão concluída mais recente; se não houver, usa a mais recente
+  const concluidas = allRecs.filter(r => r.concluido);
+  const refRecs = concluidas.length ? concluidas : allRecs;
+  const maxTs = Math.max(...refRecs.map(r => r.ts_inicio || 0));
+  const fim = maxTs > 0 ? fmt(maxTs * 1000 + 8 * 60 * 1000) : '—';
+
+  // Tempo total F1: soma o MAX de cada tentativa (evita duplicar para duplas)
+  const totalF1Ms = Object.values(entry.tentativas).reduce((sum, recs) => {
+    return sum + Math.max(0, ...recs.map(r => r.tempo_fase1_ms || 0));
+  }, 0);
+  const totalF1 = totalF1Ms > 0 ? fmtMs(totalF1Ms) : '—';
+
+  return { inicio, fim, totalF1 };
 }
 
 // ── Linha da tabela ─────────────────────────────────────────────
@@ -589,9 +634,16 @@ function rowHtml(entry, now) {
     }
   })();
 
-  const primeiroHora = entry.primeiroTs > 0 && entry.primeiroTs < Infinity
-    ? new Date(entry.primeiroTs * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-    : '—';
+  const { inicio, fim, totalF1 } = calcTimings(entry);
+  const temDados = entry.statusFinal !== 'nao-iniciou';
+  const da = `data-turma="${escH(entry.turma)}" data-ativ="${escH(entry.atividade)}" data-aluno0="${escH(entry.nomes[0])}" data-nomes="${escH(JSON.stringify(entry.nomes))}"`;
+  const acoesHtml = temDados ? `
+    <div style="display:flex;gap:4px;align-items:center">
+      <button class="btn btn-sm btn-orange" ${da} onclick="darTentativaAluno(this)" title="Dar +1 tentativa e reiniciar timer">+1 tent.</button>
+      <input type="number" value="10" min="1" max="120" class="acao-min" style="width:40px;padding:3px 4px;border:1.5px solid var(--border);border-radius:6px;font-size:11px;text-align:center;font-family:inherit;background:var(--bg);color:var(--text)">
+      <button class="btn btn-sm btn-blue" ${da} onclick="darTempoAluno(this)" title="+X minutos ao timer">+min</button>
+      <button class="btn btn-sm btn-red" ${da} onclick="deletarDadosAluno(this)" title="Apagar TODOS os dados desta dupla/aluno nesta atividade" style="padding:3px 7px">✕</button>
+    </div>` : '<span style="color:var(--text-muted);font-size:11px">—</span>';
 
   return `<tr class="${cls}" data-turma="${escH(entry.turma)}" data-sid="${escH(entry.andRecId)}" data-aluno="${escH(nomes)}">
     <td><strong>${entry.nomes.map(escH).join(' &amp; ')}</strong></td>
@@ -603,7 +655,10 @@ function rowHtml(entry, now) {
     <td style="font-weight:700;color:var(--gold)">${entry.melhorPts > 0 ? entry.melhorPts + ' pts' : '—'}</td>
     <td style="color:var(--text-muted);font-variant-numeric:tabular-nums">${fmtMs(entry.melhorTempoF1)}</td>
     <td>${statusHtml}</td>
-    <td style="color:var(--text-muted);font-variant-numeric:tabular-nums;font-size:11px">${primeiroHora}</td>
+    <td style="color:var(--text-muted);font-variant-numeric:tabular-nums;font-size:11px">${inicio}</td>
+    <td style="color:var(--text-muted);font-variant-numeric:tabular-nums;font-size:11px">${fim}</td>
+    <td style="color:var(--text-muted);font-variant-numeric:tabular-nums;font-size:11px">${totalF1}</td>
+    <td style="white-space:nowrap">${acoesHtml}</td>
   </tr>`;
 }
 
@@ -613,7 +668,7 @@ function renderMainTable(sortedEntries, now) {
   if (!tbody) return;
 
   if (!sortedEntries.length) {
-    tbody.innerHTML = `<tr><td colspan="10" style="padding:28px;text-align:center;color:var(--text-muted);font-size:13px">
+    tbody.innerHTML = `<tr><td colspan="13" style="padding:28px;text-align:center;color:var(--text-muted);font-size:13px">
       ${filtroAtiv ? 'Nenhum resultado encontrado.' : 'Selecione uma atividade para visualizar os dados.'}
     </td></tr>`;
     return;
@@ -640,7 +695,7 @@ function renderMainTable(sortedEntries, now) {
       ].filter(Boolean).join(' · ');
 
       html += `<tr class="tr-turma-hdr" id="th-${escH(turma)}" data-open="1" onclick="toggleTurma('${escH(turma)}')">
-        <td colspan="10">
+        <td colspan="13">
           <span class="th-chev" style="font-size:10px;margin-right:6px">▼</span>
           <strong>Turma ${escH(turma)}</strong>
           <span style="font-weight:400;color:var(--text-muted);margin-left:10px;font-size:11px">${parts}</span>
@@ -682,6 +737,86 @@ window.toggleTurma = function(turma) {
   if (chev) chev.textContent = open ? '▶' : '▼';
 };
 
+// ── Ações por aluno/dupla ───────────────────────────────────────
+async function _getControleAluno(turma, ativ, aluno0) {
+  const k    = avKey(turma + '|' + ativ);
+  const path = `avaliacao_controle/${k}/${avKey(aluno0)}`;
+  const snap = await get(ref(db, path));
+  return { snap, path };
+}
+
+window.darTentativaAluno = async function(btn) {
+  btn.disabled = true;
+  try {
+    const { turma, ativ, aluno0 } = btn.dataset;
+    const { snap, path } = await _getControleAluno(turma, ativ, aluno0);
+    if (!snap.exists()) { alert(`Controle não encontrado para "${aluno0}".`); return; }
+    const ctrl = snap.val();
+    const tentUsadas = ctrl.tentativas_realizadas || 0;
+    if (tentUsadas < 1) { alert(`${aluno0} ainda não fez nenhuma tentativa.`); return; }
+    // Tempo global não bloqueia mais — só decrementa a contagem
+    await update(ref(db, path), {
+      tentativas_realizadas: tentUsadas - 1,
+      inicio_global: Date.now(), // reset display; sistema não bloqueia por tempo
+    });
+    showTopNotif(`✅ +1 tentativa → ${aluno0}`);
+  } catch(e) {
+    alert('Erro: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+window.darTempoAluno = async function(btn) {
+  const minInput = btn.parentElement.querySelector('.acao-min');
+  const minutos  = parseInt(minInput?.value) || 10;
+  if (minutos < 1 || minutos > 120) { alert('Insira entre 1 e 120 minutos.'); return; }
+  btn.disabled = true;
+  try {
+    const { turma, ativ, aluno0 } = btn.dataset;
+    const { snap, path } = await _getControleAluno(turma, ativ, aluno0);
+    if (!snap.exists()) { alert(`Controle não encontrado para "${aluno0}".`); return; }
+    const ctrl = snap.val();
+    // Move inicio_global para frente no tempo → aluno ganha mais X minutos
+    const novoInicio = (ctrl.inicio_global || Date.now()) + minutos * 60 * 1000;
+    await update(ref(db, path), { inicio_global: novoInicio });
+    showTopNotif(`✅ +${minutos} min adicionados → ${aluno0}`);
+  } catch(e) {
+    alert('Erro: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+// ── Deletar todos os dados de uma dupla/aluno ──────────────────
+window.deletarDadosAluno = async function(btn) {
+  const { turma, ativ, nomes: nomesRaw, aluno0 } = btn.dataset;
+  let nomes;
+  try { nomes = JSON.parse(nomesRaw); } catch { nomes = [aluno0]; }
+  const label = nomes.join(' & ');
+
+  if (!confirm(`⚠️ Apagar TODOS os dados de:\n\n${label}\nAtividade: "${ativ}" · Turma: ${turma}\n\nIsso remove todas as tentativas e o controle do Firebase.\nEsta ação não pode ser desfeita.`)) return;
+
+  btn.disabled = true;
+  try {
+    // Deletar registros em resultados
+    const registrosAluno = todosRegistros.filter(r =>
+      nomes.includes(r.aluno) && r.atividade === ativ && r.turma === turma
+    );
+    await Promise.all(registrosAluno.map(r => remove(ref(db, `resultados/${r.id}`))));
+
+    // Deletar controle (avaliacao_controle usa o primeiro aluno como chave)
+    const k = avKey(turma + '|' + ativ);
+    await remove(ref(db, `avaliacao_controle/${k}/${avKey(aluno0)}`));
+
+    showTopNotif(`🗑️ Dados de ${label} apagados (${registrosAluno.length} registro${registrosAluno.length !== 1 ? 's' : ''})`);
+  } catch(e) {
+    alert('Erro ao deletar: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+};
+
 // ── Dar +1 tentativa à turma ────────────────────────────────────
 window.darExtraTentativa = async function() {
   if (!filtroAtiv || !filtroTurma) return;
@@ -707,18 +842,19 @@ window.darExtraTentativa = async function() {
       return;
     }
 
-    const agora   = Date.now();
-    const multi   = {};
-    let   contagem = 0;
+    // Tempo global não bloqueia mais — só decrementa contagem + reset display
+    const novoInicio = Date.now();
+    const multi      = {};
+    let   contagem   = 0;
 
     snap.forEach(child => {
-      const ctrl     = child.val();
+      const ctrl       = child.val();
       const tentUsadas = ctrl.tentativas_realizadas || 0;
       if (tentUsadas < 1) return; // nunca iniciou — não mexe
 
       const base = `avaliacao_controle/${k}/${child.key}`;
       multi[`${base}/tentativas_realizadas`] = tentUsadas - 1;
-      multi[`${base}/inicio_global`]         = agora;
+      multi[`${base}/inicio_global`]         = novoInicio;
       contagem++;
     });
 
@@ -772,7 +908,7 @@ window.exportarCSV = function() {
   const blob = new Blob(['﻿'+csv], { type:'text/csv;charset=utf-8' });
   const a = Object.assign(document.createElement('a'), {
     href: URL.createObjectURL(blob),
-    download: `avaliacao_${ativSlug}_${filtroData}.csv`,
+    download: `avaliacao_${ativSlug}.csv`,
   });
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);

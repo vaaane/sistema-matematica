@@ -460,7 +460,8 @@ function _getLevelConfigBase(lvl) {
   // tempoBase = nível 121 + 20s; calculado dinamicamente para manter coerência
   const TEMPO_BASE_129 = _getLevelConfigBase(121).secs + 20;
   if (lvl <= 129) {
-    return { type:'mix_as', pairs:18, cols:6, secs:TEMPO_BASE_129, minMul:4, minDiv:4 };
+    // 12p×2=24 ÷ 6cols = 4 linhas (desktop 6×4); mobile usa 4 cols → 4×6
+    return { type:'mix_as', pairs:12, cols:6, secs:TEMPO_BASE_129, minMul:4, minDiv:4 };
   }
   // Níveis 130+: chefões variados em ciclo de 3 tipos (rápido/difícil/grande)
   const n = Math.floor((lvl - 130) / 10);
@@ -469,22 +470,22 @@ function _getLevelConfigBase(lvl) {
     const minMul = Math.min(5 + n, 7);
     const minDiv = Math.min(5 + n, 7);
     if (tipo === 'rapido') {
-      // ⚡ Rápido: grid 6×6, tempo -15s
+      // ⚡ Rápido: 18p×2=36 ÷ 6cols = 6×6, tempo -15s
       return { type:'mix_as', pairs:18, cols:6, secs: Math.max(20, TEMPO_BASE_129 - 15), minMul, minDiv, ehChefao:true, tipoChefao:'rapido' };
     } else if (tipo === 'dificil') {
-      // 🧮 Difícil: grid 5 cols / 12 pares, tempo normal, ops pesadas
-      // 10 pares × 2 = 20 cards ÷ 5 cols = 4 linhas exatas (sem buraco no grid)
-      return { type:'mix_as', pairs:10, cols:5, secs: TEMPO_BASE_129, minMul: Math.min(6+n,8), minDiv: Math.min(6+n,8), ehChefao:true, tipoChefao:'dificil', pesado:true };
+      // 🧮 Difícil: 12p×2=24 ÷ 4cols = 4×6, ops pesadas, tempo normal
+      return { type:'mix_as', pairs:12, cols:4, secs: TEMPO_BASE_129, minMul: Math.min(6+n,8), minDiv: Math.min(6+n,8), ehChefao:true, tipoChefao:'dificil', pesado:true };
     } else {
-      // 📦 Grande: grid 7×6 / 21 pares, tempo +5s
-      return { type:'mix_as', pairs:21, cols:7, secs: Math.min(120, TEMPO_BASE_129 + 5), minMul, minDiv, ehChefao:true, tipoChefao:'grande' };
+      // 📦 Grande: 18p×2=36 ÷ 6cols = 6×6, tempo +5s
+      return { type:'mix_as', pairs:18, cols:6, secs: Math.min(120, TEMPO_BASE_129 + 5), minMul, minDiv, ehChefao:true, tipoChefao:'grande' };
     }
   } else {
     // Pós-chefão (131-139, 141-149...): mantém tempo da faixa base
     const secs   = TEMPO_BASE_129;
     const minMul = Math.min(4 + n, 6);
     const minDiv = Math.min(4 + n, 6);
-    return { type:'mix_as', pairs:18, cols:6, secs, minMul, minDiv };
+    // 12p×2=24 ÷ 6cols = 4 linhas (desktop 6×4)
+    return { type:'mix_as', pairs:12, cols:6, secs, minMul, minDiv };
   }
 }
 
@@ -1150,27 +1151,32 @@ function _buildGameInternal() {
   tipoErros   = { add:0, sub:0, mul:0, div:0 };
   _animating  = false;
 
-  // CAP DEFINITIVO — definido antes de gerar qualquer card
-  // Grids válidos: totalCards = pares×2 deve ser múltiplo exato de cols
-  // Normal/Rápido: 18p×2=36 / 6cols = 6 linhas ✓
-  // Difícil:       10p×2=20 / 5cols = 4 linhas ✓  (12p=24 deixava 1 buraco)
-  // Grande:        21p×2=42 / 7cols = 6 linhas ✓
-  const _maxPares = ehChefaoAtual && tipoChefaoAtual === 'grande'  ? 21
-                  : ehChefaoAtual && tipoChefaoAtual === 'dificil' ? 10
-                  : 18;
+  // ── 1. Colunas — definidas ANTES dos pares para garantir divisibilidade
+  const _topbarH = document.querySelector('.topbar')?.getBoundingClientRect().height || 62;
+  // Chefões: cols exato do config. Normais: 4 em mobile (<500px), 6 no desktop
+  const cols = ehChefaoAtual
+    ? (cfg.cols || 6)
+    : (window.innerWidth < 500 ? 4 : (cfg.cols || 6));
 
-  const pairs = generatePairs(cfg.type, _maxPares, cfg.maxResult, cfg.minMul || 0, cfg.minDiv || 0, cfg.pesado || false);
-  if (pairs.length < _maxPares) {
+  // ── 2. Pares: usar cfg.pairs como alvo (configs já são projetados para o grid)
+  const pairs = generatePairs(cfg.type, cfg.pairs, cfg.maxResult, cfg.minMul || 0, cfg.minDiv || 0, cfg.pesado || false);
+  if (pairs.length < cfg.pairs) {
     const usedResults = new Set(pairs.map(p => p.result));
-    for (let i = pairs.length; i < _maxPares; i++) {
+    for (let i = pairs.length; i < cfg.pairs; i++) {
       const extra = tryGenOp('add', usedResults, cfg.maxResult, cfg.pesado || false);
       if (extra) pairs.push(extra); else break;
     }
   }
-  if (pairs.length > _maxPares) pairs.splice(_maxPares);
-  console.log(`[Tabuada] Nv${nivelAtual} (${ehChefaoAtual ? tipoChefaoAtual||'chefao' : 'normal'}): ${pairs.length} pares / max=${_maxPares}`);
+  if (pairs.length > cfg.pairs) pairs.splice(cfg.pairs);
 
-  // Build cards array: op card + result card per pair
+  // ── 3. Garantir grid sem buracos: (pares × 2) % cols === 0 SEMPRE
+  // factor: para cols par → cols/2; para cols ímpar → cols
+  const _gridFactor = cols % 2 === 0 ? cols / 2 : cols;
+  const _validPares = Math.max(_gridFactor, Math.floor(pairs.length / _gridFactor) * _gridFactor);
+  if (pairs.length > _validPares) pairs.splice(_validPares);
+  console.log(`[Tabuada] Nv${nivelAtual} (${ehChefaoAtual ? tipoChefaoAtual||'chefao' : 'normal'}): ${pairs.length}p × 2 = ${pairs.length*2} cards ÷ ${cols} cols = ${pairs.length*2/cols} linhas`);
+
+  // ── 4. Build cards (pares e cols já garantidamente válidos)
   const cards = [];
   pairs.forEach((pair, i) => {
     cards.push({ kind:'op',     pairId:i, op:pair.op, result:pair.result });
@@ -1179,21 +1185,12 @@ function _buildGameInternal() {
   shuffle(cards);
 
   updateNivelDisplay();
-
   totalPairs = pairs.length;
 
-  // Colunas: calcGameLayout com cap por tipo
-  const _topbarH = document.querySelector('.topbar')?.getBoundingClientRect().height || 62;
-  const _maxCols = ehChefaoAtual ? (cfg.cols || 6) : 6; // normais: máx 6×6
-  let cols, isCompact;
-  ({ cols, compact: isCompact } = calcGameLayout(cards.length));
-  if (cols > _maxCols) {
-    console.log(`[Tabuada] Nv${nivelAtual}: cols ${cols} → ${_maxCols} (cap)`);
-    cols = _maxCols;
-    const gridH_ = Math.max(60, window.innerHeight - _topbarH - 200);
-    const rows_  = Math.ceil(cards.length / cols);
-    isCompact    = rows_ > 0 ? ((gridH_ - (rows_ - 1) * 5) / rows_) < 52 : false;
-  }
+  // isCompact: linhas exatas (sem Math.ceil pois divisibilidade está garantida)
+  const _gridRows  = pairs.length * 2 / cols;
+  const _gridH     = Math.max(60, window.innerHeight - _topbarH - 200);
+  const isCompact  = _gridRows > 0 ? ((_gridH - (_gridRows - 1) * 5) / _gridRows) < 52 : false;
 
   // Pairs dots
   const dotsHtml = Array.from({length: pairs.length}, (_,i) =>
