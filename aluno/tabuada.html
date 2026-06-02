@@ -460,7 +460,8 @@ function _getLevelConfigBase(lvl) {
   }
   // Níveis 122-129: mesma dificuldade do 121 mas +20s (respiro antes do chefão)
   // tempoBase = nível 121 + 20s; calculado dinamicamente para manter coerência
-  const TEMPO_BASE_129 = _getLevelConfigBase(121).secs + 20;
+  const TEMPO_BASE_129 = _getLevelConfigBase(121).secs + 20; // 65s
+  const TEMPO_BASE_200 = TEMPO_BASE_129 - 20;               // 45s — base para níveis 200+
   if (lvl <= 129) {
     // 12p×2=24 ÷ 6cols = 4 linhas (desktop 6×4); mobile usa 4 cols → 4×6
     return { type:'mix_as', pairs:12, cols:6, secs:TEMPO_BASE_129, minMul:4, minDiv:4 };
@@ -476,7 +477,7 @@ function _getLevelConfigBase(lvl) {
       return { type:'mix_as', pairs:12, cols:6, secs: Math.max(20, TEMPO_BASE_129 - 20), minMul, minDiv, ehChefao:true, tipoChefao:'rapido' };
     } else if (tipo === 'dificil') {
       // 🧮 Difícil: 12p×2=24 | desktop 6×4, mobile 4×6, ops pesadas
-      const secsD = lvl === 200 ? TEMPO_BASE_129 - 20 : TEMPO_BASE_129;
+      const secsD = lvl >= 200 ? TEMPO_BASE_200 : TEMPO_BASE_129;
       return { type:'mix_as', pairs:12, cols:6, secs: secsD, minMul: Math.min(6+n,8), minDiv: Math.min(6+n,8), ehChefao:true, tipoChefao:'dificil', pesado:true };
     } else {
       // 📦 Grande: 18p×2=36 desktop (6×6) | 12p×2=24 mobile (4×6)
@@ -484,15 +485,16 @@ function _getLevelConfigBase(lvl) {
       const grandeIdx         = Math.floor((lvl - 150) / 30);
       const grandeTempoReduz  = grandeIdx % 2 === 1;
       const grandePesado      = grandeIdx >= 2 && grandeIdx % 2 === 0;
+      const _tBase            = lvl > 200 ? TEMPO_BASE_200 : TEMPO_BASE_129;
       const grandeTime        = grandeTempoReduz
-        ? Math.max(20, TEMPO_BASE_129 - 10)   // 55s
-        : Math.min(120, TEMPO_BASE_129 + 5);   // 70s
+        ? Math.max(20, _tBase - 10)   // 55s / 35s após 200
+        : Math.min(120, _tBase + 5);  // 70s / 50s após 200
       return { type:'mix_as', pairs:18, cols:6, secs: grandeTime, minMul, minDiv,
         pesado: grandePesado, ehChefao:true, tipoChefao:'grande' };
     }
   } else {
-    // Pós-chefão: 131 respiro (65s), 132-139 pressão do rápido (45s), demais 65s
-    const secs   = (lvl >= 132 && lvl <= 139) ? Math.max(20, TEMPO_BASE_129 - 20) : TEMPO_BASE_129;
+    // Pós-chefão: 131 respiro (65s), 132-139 pressão do rápido (45s), demais 65s / 45s após 200
+    const secs   = (lvl >= 132 && lvl <= 139) ? Math.max(20, TEMPO_BASE_129 - 20) : (lvl > 200 ? TEMPO_BASE_200 : TEMPO_BASE_129);
     const minMul = Math.min(4 + n, 6);
     const minDiv = Math.min(4 + n, 6);
     // 12p×2=24 ÷ 6cols = 4 linhas (desktop 6×4)
