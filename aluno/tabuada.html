@@ -418,6 +418,11 @@ function getTipoChefao(lvl) {
 
 function getLevelConfig(lvl) {
   const cfg = _getLevelConfigBase(lvl);
+  // Override de tempo via URL ?secs= (professor testando nível específico)
+  if (_secsOverride && (_isProfMode || _isModoTesteAtivo)) {
+    cfg.secs = Math.max(5, _secsOverride);
+    return cfg;
+  }
   // Aplicar offset de tempo configurado pela professora (padrão 40 = neutro)
   const tempoOffset = (tabuadaConfig.tempo_base || 40) - 40;
   if (tempoOffset !== 0) {
@@ -671,12 +676,14 @@ function _registrarSessao(nivel, resultado, acertosOverride, errosOverride) {
   const ts = Date.now();
   if (_isModoTesteAtivo) {
     set(ref(db, `modo_teste_historico/PROFESSOR_TESTE/tabuada/${ts}`), {
-      nivel:     nivel     ?? nivelAtual,
-      resultado: resultado ?? 'desconhecido',
-      acertos:   acertosOverride ?? acertos,
-      erros:     errosOverride   ?? erros,
-      combo:     comboMax,
-      timestamp: ts,
+      nivel:       nivel     ?? nivelAtual,
+      resultado:   resultado ?? 'desconhecido',
+      acertos:     acertosOverride ?? acertos,
+      erros:       errosOverride   ?? erros,
+      combo:       comboMax,
+      timestamp:   ts,
+      tempo_usado: timerTotal - timerLeft + _timerOvertime,
+      secs_limite: timerTotal,
     }).catch(() => {});
     return;
   }
@@ -747,9 +754,10 @@ const _nivelReal = nivelAtual;
 let _maiorComboSalvo = progresso.maior_combo || 0;
 
 // Replay: ?nivel=X — jogar nível específico sem regredir o progresso real
-const _replayNivel = new URLSearchParams(location.search).get('nivel');
-const _isReplay    = !!_replayNivel;
+const _replayNivel   = new URLSearchParams(location.search).get('nivel');
+const _isReplay      = !!_replayNivel;
 if (_isReplay) nivelAtual = Math.max(1, parseInt(_replayNivel) || 1);
+const _secsOverride  = parseInt(new URLSearchParams(location.search).get('secs'), 10) || null;
 
 // Sprint: ?modo=sprint — sessão contínua de 3 min sem timer por nível
 const _isSprint     = new URLSearchParams(location.search).get('modo') === 'sprint';
