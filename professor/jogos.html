@@ -168,19 +168,35 @@ const _ovrRef  = ref(db, 'professor_tabuada_config/tempo_override');
 const _histRef = ref(db, 'modo_teste_historico/PROFESSOR_TESTE/tabuada');
 
 async function _carregarDadosProgressao() {
-  const [ovrSnap, histSnap] = await Promise.all([
+  const [ovrSnap, histSnap, profHistSnap] = await Promise.all([
     get(_ovrRef).catch(() => null),
     get(_histRef).catch(() => null),
+    get(ref(db, 'professor_tabuada_niveis/professora/historico')).catch(() => null),
   ]);
   _tempoOverrides = {};
   if (ovrSnap?.exists()) ovrSnap.forEach(c => { _tempoOverrides[+c.key] = c.val(); });
   _ultimoTeste = {};
+  // Histórico do modo teste (tem tempo_usado direto)
   if (histSnap?.exists()) {
     histSnap.forEach(c => {
       const v = c.val();
       if (!v?.nivel) return;
       const prev = _ultimoTeste[v.nivel];
       if (!prev || v.timestamp > prev.timestamp) _ultimoTeste[v.nivel] = v;
+    });
+  }
+  // Histórico do modo professor (chave = timestamp, calcula tempo_usado)
+  if (profHistSnap?.exists()) {
+    profHistSnap.forEach(c => {
+      const ts = +c.key;
+      const v  = c.val();
+      if (!v?.nivel) return;
+      const cfg  = _getLvlCfg(v.nivel);
+      const segs = v.segundos_restantes ?? null;
+      const tempo_usado = segs != null ? cfg.secs - segs : cfg.secs;
+      const entry = { ...v, timestamp: ts, tempo_usado };
+      const prev  = _ultimoTeste[v.nivel];
+      if (!prev || ts > prev.timestamp) _ultimoTeste[v.nivel] = entry;
     });
   }
 }
