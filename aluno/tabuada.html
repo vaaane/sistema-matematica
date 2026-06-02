@@ -59,6 +59,7 @@
     .slot{width:128px;height:60px;border:2px dashed var(--border);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--text-muted);background:var(--bg);transition:all .2s;text-align:center;padding:4px;}
     .slot.filled{border-style:solid;border-color:var(--blue);background:var(--blue-pale);color:var(--text);cursor:pointer;}
     .slot.filled:hover{border-color:var(--orange);}
+    .slot.filled .slot-ph{display:none;}
     .slot-eq{font-size:24px;font-weight:800;color:var(--text-muted);}
 
     /* ── Controls ── */
@@ -477,7 +478,7 @@ function _getLevelConfigBase(lvl) {
       return { type:'mix_as', pairs:12, cols:6, secs: Math.max(20, TEMPO_BASE_129 - 20), minMul, minDiv, ehChefao:true, tipoChefao:'rapido' };
     } else if (tipo === 'dificil') {
       // 🧮 Difícil: 12p×2=24 | desktop 6×4, mobile 4×6, ops pesadas
-      const secsD = lvl >= 200 ? TEMPO_BASE_200 : TEMPO_BASE_129;
+      const secsD = lvl === 200 ? TEMPO_BASE_200 - 5 : lvl > 200 ? TEMPO_BASE_200 : TEMPO_BASE_129;
       return { type:'mix_as', pairs:12, cols:6, secs: secsD, minMul: Math.min(6+n,8), minDiv: Math.min(6+n,8), ehChefao:true, tipoChefao:'dificil', pesado:true };
     } else {
       // 📦 Grande: 18p×2=36 desktop (6×6) | 12p×2=24 mobile (4×6)
@@ -1293,9 +1294,9 @@ function _buildGameInternal() {
 
   <!-- L5 (auto): slots — sempre visíveis, garantidos pelo CSS Grid -->
   <div class="slots-wrap">
-    <div class="slot" id="slot-op">operação</div>
+    <div class="slot" id="slot-op"><span class="slot-ph">operação</span></div>
     <span class="slot-eq">=</span>
-    <div class="slot" id="slot-res">resultado</div>
+    <div class="slot" id="slot-res"><span class="slot-ph">resultado</span></div>
   </div>
 
   ${_isSprint ? `<div class="game-controls" style="text-align:center;padding:4px 0"><button class="btn btn-ghost" onclick="endSprint(true)" style="color:var(--red);border-color:rgba(226,75,74,.3)">⚡ Encerrar Sprint</button></div>` : ''}
@@ -1397,20 +1398,13 @@ function setStatus(msg, color) {
 }
 
 function clearSlots() {
-  const slotOp  = document.getElementById("slot-op");
-  const slotRes = document.getElementById("slot-res");
-  if (slotOp)  { slotOp.innerHTML  = "operação";  slotOp.classList.remove("filled"); }
-  if (slotRes) { slotRes.innerHTML = "resultado"; slotRes.classList.remove("filled"); }
+  document.getElementById("slot-op")?.classList.remove("filled");
+  document.getElementById("slot-res")?.classList.remove("filled");
 }
 
 function fillSlot(card) {
-  if (card.kind === 'op') {
-    const slotOp = document.getElementById("slot-op");
-    if (slotOp) { slotOp.innerHTML = ''; slotOp.classList.add("filled"); }
-  } else {
-    const slotRes = document.getElementById("slot-res");
-    if (slotRes) { slotRes.innerHTML = ''; slotRes.classList.add("filled"); }
-  }
+  const slot = document.getElementById(card.kind === 'op' ? 'slot-op' : 'slot-res');
+  slot?.classList.add("filled");
 }
 
 function deselectCard() {
