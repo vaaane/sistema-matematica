@@ -488,8 +488,8 @@ function _getLevelConfigBase(lvl) {
         pesado: grandePesado, ehChefao:true, tipoChefao:'grande' };
     }
   } else {
-    // Pós-chefão (131-139, 141-149...): mantém tempo da faixa base
-    const secs   = TEMPO_BASE_129;
+    // Pós-chefão: 131 respiro (65s), 132-139 pressão do rápido (45s), demais 65s
+    const secs   = (lvl >= 132 && lvl <= 139) ? Math.max(20, TEMPO_BASE_129 - 20) : TEMPO_BASE_129;
     const minMul = Math.min(4 + n, 6);
     const minDiv = Math.min(4 + n, 6);
     // 12p×2=24 ÷ 6cols = 4 linhas (desktop 6×4)
