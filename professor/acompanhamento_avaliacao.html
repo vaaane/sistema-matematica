@@ -120,6 +120,11 @@
         </select>
         <input type="date" id="filtro-data"/>
         <input type="search" id="busca-aluno" class="av-search" placeholder="Buscar aluno…" oninput="onBusca(this.value)"/>
+        <button id="btn-extra-tent" class="btn btn-orange" onclick="darExtraTentativa()"
+          style="font-size:12px;padding:6px 14px;white-space:nowrap;display:none"
+          title="Dá mais 1 tentativa + reseta o timer de 25 min para todos os alunos desta turma que já fizeram ao menos 1 tentativa">
+          ➕ +1 tentativa
+        </button>
         <div class="update-pill">
           <div class="update-dot"></div>
           <span id="update-txt">Ao vivo</span>
@@ -190,7 +195,7 @@
 
 <script type="module">
 import { db } from "/js/firebase-config.js";
-import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { ALUNOS_POR_TURMA } from "/js/constants.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 
@@ -201,6 +206,7 @@ window.sair = () => { clearSession(); location.href = '/index.html'; };
 
 const DURACAO_MS = 25 * 60 * 1000;
 const escH = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function avKey(s) { return btoa(unescape(encodeURIComponent(s))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_'); }
 
 // ── State ───────────────────────────────────────────────────────
 let todosRegistros = [];
@@ -219,8 +225,12 @@ let _audioCtx      = null;
 document.getElementById('filtro-data').value = filtroData;
 
 // ── Eventos filtros ─────────────────────────────────────────────
-document.getElementById('filtro-ativ').addEventListener('change',  e => { filtroAtiv  = e.target.value; renderizarTudo(); });
-document.getElementById('filtro-turma').addEventListener('change', e => { filtroTurma = e.target.value; renderizarTudo(); });
+function _atualizarBotaoExtra() {
+  const btn = document.getElementById('btn-extra-tent');
+  if (btn) btn.style.display = (filtroAtiv && filtroTurma) ? 'inline-flex' : 'none';
+}
+document.getElementById('filtro-ativ').addEventListener('change',  e => { filtroAtiv  = e.target.value; renderizarTudo(); _atualizarBotaoExtra(); });
+document.getElementById('filtro-turma').addEventListener('change', e => { filtroTurma = e.target.value; renderizarTudo(); _atualizarBotaoExtra(); });
 document.getElementById('filtro-data').addEventListener('change',  e => { filtroData  = e.target.value; renderizarTudo(); });
 
 window.onBusca   = v => { searchText = v.trim(); renderizarTudo(); };
@@ -670,6 +680,61 @@ window.toggleTurma = function(turma) {
   hdr.dataset.open = open ? '0' : '1';
   const chev = hdr.querySelector('.th-chev');
   if (chev) chev.textContent = open ? '▶' : '▼';
+};
+
+// ── Dar +1 tentativa à turma ────────────────────────────────────
+window.darExtraTentativa = async function() {
+  if (!filtroAtiv || !filtroTurma) return;
+
+  const ok = confirm(
+    `➕ Dar +1 tentativa para ${filtroTurma}?\n\n` +
+    `Atividade: "${filtroAtiv}"\n\n` +
+    `• Só afeta quem já fez ao menos 1 tentativa\n` +
+    `• O timer global é reiniciado (25 min frescos)\n` +
+    `• Sessões em andamento NÃO são interrompidas`
+  );
+  if (!ok) return;
+
+  const btn = document.getElementById('btn-extra-tent');
+  if (btn) { btn.disabled = true; btn.textContent = 'Aguarde…'; }
+
+  try {
+    const k    = avKey(filtroTurma + '|' + filtroAtiv);
+    const snap = await get(ref(db, `avaliacao_controle/${k}`));
+
+    if (!snap.exists()) {
+      alert(`Nenhum controle encontrado para ${filtroTurma} — "${filtroAtiv}".`);
+      return;
+    }
+
+    const agora   = Date.now();
+    const multi   = {};
+    let   contagem = 0;
+
+    snap.forEach(child => {
+      const ctrl     = child.val();
+      const tentUsadas = ctrl.tentativas_realizadas || 0;
+      if (tentUsadas < 1) return; // nunca iniciou — não mexe
+
+      const base = `avaliacao_controle/${k}/${child.key}`;
+      multi[`${base}/tentativas_realizadas`] = tentUsadas - 1;
+      multi[`${base}/inicio_global`]         = agora;
+      contagem++;
+    });
+
+    if (contagem === 0) {
+      alert('Nenhum aluno com tentativas realizadas encontrado.');
+      return;
+    }
+
+    await update(ref(db), multi);
+    showTopNotif(`✅ +1 tentativa adicionada para ${contagem} aluno(s) de ${filtroTurma}`);
+  } catch (e) {
+    console.error('[+1 tentativa]', e);
+    alert('Erro ao atualizar: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '➕ +1 tentativa'; }
+  }
 };
 
 // ── Export CSV ──────────────────────────────────────────────────
