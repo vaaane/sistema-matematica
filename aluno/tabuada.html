@@ -236,12 +236,13 @@
     html,body{overflow:hidden;}
     .main{overflow:hidden;}
     #content{flex:1!important;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;padding:0!important;}
-    /* Grid cresce para preencher o espaço disponível */
-    .game-grid{flex:1;min-height:0;overflow:hidden;grid-auto-rows:1fr;margin-bottom:0!important;gap:5px!important;}
+    /* Área de jogo: CSS Grid — cards em 1fr, slots em auto (nunca somem da tela) */
+    .game-area{flex:1;min-height:0;display:grid;grid-template-rows:1fr auto;overflow:hidden;}
+    .game-grid{min-height:0;overflow:hidden;grid-auto-rows:1fr;margin-bottom:0!important;gap:5px!important;}
     /* Cards sem altura fixa — determinada pelo grid */
     .game-card{height:auto!important;min-height:0!important;}
     /* Elementos fixos não encolhem */
-    .timer-wrap,.timer-bar-bg,.pairs-bar-bg,.status-msg,.slots-wrap,.sprint-bar,.game-controls{flex-shrink:0;}
+    .timer-wrap,.timer-bar-bg,.pairs-bar-bg,.status-msg,.slots-wrap,.sprint-bar,.game-controls,#combo-badge{flex-shrink:0;}
     /* Margens reduzidas para caber no viewport */
     .timer-wrap{margin-bottom:4px!important;}
     .timer-bar-bg{margin-bottom:7px!important;}
@@ -1176,16 +1177,24 @@ function _buildGameInternal() {
 
   totalPairs = pairs.length;
 
-  // Layout: chefões usam cols do config; normais usam calcGameLayout
+  // Layout: chefões usam cols exatos do config; normais usam calcGameLayout com cap
+  const _topbarH = document.querySelector('.topbar')?.getBoundingClientRect().height || 62;
   let cols, isCompact;
   if (ehChefaoAtual && cfg.cols) {
     cols = cfg.cols;
-    const topbarH = document.querySelector('.topbar')?.getBoundingClientRect().height || 62;
-    const gridH   = Math.max(60, window.innerHeight - topbarH - 265);
-    const rows    = Math.ceil(cards.length / cols);
-    isCompact     = rows > 0 ? ((gridH - (rows - 1) * 5) / rows) < 52 : false;
+    const gridH = Math.max(60, window.innerHeight - _topbarH - 265);
+    const rows  = Math.ceil(cards.length / cols);
+    isCompact   = rows > 0 ? ((gridH - (rows - 1) * 5) / rows) < 52 : false;
   } else {
     ({ cols, compact: isCompact } = calcGameLayout(cards.length));
+    // Cap: níveis normais nunca excedem cols do config (máx 6 em todos os níveis altos)
+    const maxCols = cfg.cols || 6;
+    if (cols > maxCols) {
+      cols = maxCols;
+      const gridH = Math.max(60, window.innerHeight - _topbarH - 265);
+      const rows  = Math.ceil(cards.length / cols);
+      isCompact   = rows > 0 ? ((gridH - (rows - 1) * 5) / rows) < 52 : false;
+    }
   }
 
   // Pairs dots
@@ -1247,15 +1256,15 @@ function _buildGameInternal() {
   <div class="status-msg" id="status-msg"></div>
   <div id="combo-badge" style="text-align:center;min-height:22px;margin-bottom:6px;margin-top:-6px"></div>
 
-  <div class="${_gridClass}" id="game-grid"
-       style="grid-template-columns:repeat(${cols},1fr)"></div>
-
-  <div class="slots-wrap">
-    <div class="slot" id="slot-op">operação</div>
-    <span class="slot-eq">=</span>
-    <div class="slot" id="slot-res">resultado</div>
+  <div class="game-area">
+    <div class="${_gridClass}" id="game-grid"
+         style="grid-template-columns:repeat(${cols},1fr)"></div>
+    <div class="slots-wrap">
+      <div class="slot" id="slot-op">operação</div>
+      <span class="slot-eq">=</span>
+      <div class="slot" id="slot-res">resultado</div>
+    </div>
   </div>
-
   ${_isSprint ? `<div class="game-controls"><button class="btn btn-ghost" onclick="endSprint(true)" style="color:var(--red);border-color:rgba(226,75,74,.3)">⚡ Encerrar Sprint</button></div>` : ''}
 </div>`;
 
@@ -1522,11 +1531,15 @@ async function onGameWin() {
   // Mostra overlay imediatamente com informações já conhecidas
   const isEstrela = erros === 0;
   const foiChefao = isChefao(nivelJogado);
+  const _tcWin    = foiChefao ? tipoChefaoAtual : null;
+  const _bIco     = _tcWin === 'rapido' ? '⚡' : _tcWin === 'dificil' ? '🧮' : _tcWin === 'grande' ? '📦' : '👹';
+  const _bNome    = _tcWin === 'rapido' ? 'Chefão Rápido' : _tcWin === 'dificil' ? 'Chefão Difícil' : _tcWin === 'grande' ? 'Chefão Grande' : 'Chefão';
+  const _bCor     = _tcWin === 'dificil' ? '#A78BFA' : _tcWin === 'grande' ? '#60A5FA' : '#EF4444';
   if (foiChefao) { lancarConfeteChefao(120); }
   else if (isEstrela) lancarConfete(50);
-  document.getElementById("lov-emoji").textContent = foiChefao ? '👹' : (isEstrela ? '⭐' : '🎉');
+  document.getElementById("lov-emoji").textContent = foiChefao ? _bIco : (isEstrela ? '⭐' : '🎉');
   document.getElementById("lov-title").textContent = foiChefao
-    ? `👹 Chefão derrotado!`
+    ? `${_bIco} ${_bNome} derrotado!`
     : (isEstrela ? '⭐ Nível com estrela!' : 'Avançou de nível!');
   document.getElementById("lov-sub").textContent   = foiChefao
     ? `Nível ${nivelJogado} conquistado! ${isEstrela ? '⭐ Sem erros!' : ''} ${isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue avançando!'}`
@@ -1534,7 +1547,7 @@ async function onGameWin() {
       ? `Perfeito! Sem erros! ${isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue assim!'}`
       : `${erros} erro${erros !== 1 ? 's' : ''} — sem estrela desta vez. ${isNewRecord ? '🌟 Novo recorde!' : 'Continue avançando!'}`);
   document.getElementById("lov-new").textContent   = `→ Nível ${novoNivel}`;
-  document.getElementById("lov-new").style.color   = foiChefao ? '#EF4444' : (isEstrela ? 'var(--gold)' : 'var(--blue)');
+  document.getElementById("lov-new").style.color   = foiChefao ? _bCor : (isEstrela ? 'var(--gold)' : 'var(--blue)');
   document.getElementById("lov-btn").textContent   = 'Continuar →';
   document.querySelector('.level-card').style.animation = 'levelUpPop .45s';
   document.getElementById("level-overlay").style.display = 'flex';
@@ -1567,10 +1580,14 @@ async function onTimerEnd() {
   if (!isReplayDerrota) reloadRanking();
 
   const foiChefao = isChefao(nivelJogado);
+  const _tcLose   = foiChefao ? tipoChefaoAtual : null;
+  const _bIcoL    = _tcLose === 'rapido' ? '⚡' : _tcLose === 'dificil' ? '🧮' : _tcLose === 'grande' ? '📦' : '👹';
+  const _bNomeL   = _tcLose === 'rapido' ? 'Chefão Rápido' : _tcLose === 'dificil' ? 'Chefão Difícil' : _tcLose === 'grande' ? 'Chefão Grande' : 'Chefão';
+  const _bCorL    = _tcLose === 'dificil' ? '#A78BFA' : _tcLose === 'grande' ? '#60A5FA' : '#EF4444';
   const frases = foiChefao
-    ? ['👹 O chefão venceu dessa vez... Tente novamente!',
-       '👹 Quase! O chefão ainda está de pé — revanche! ⚔️',
-       '👹 Não desista! Você vai derrotá-lo! 💪']
+    ? [`${_bIcoL} O ${_bNomeL} venceu dessa vez... Tente novamente!`,
+       `${_bIcoL} Quase! O ${_bNomeL} ainda está de pé — revanche! ⚔️`,
+       `${_bIcoL} Não desista! Você vai derrotá-lo! 💪`]
     : [`Você acertou ${acertos} par${acertos !== 1 ? 'es' : ''}. Tente de novo! 💪`,
        'Quase lá! Mais uma tentativa 🚀',
        'Na próxima você passa! 🎯',
@@ -1579,13 +1596,13 @@ async function onTimerEnd() {
   const frase = frases[Math.floor(Math.random() * frases.length)];
   const nivelExibir = isReplayDerrota ? _nivelReal : nivelAtual;
 
-  document.getElementById("lov-emoji").textContent = foiChefao ? '👹' : '⏰';
-  document.getElementById("lov-title").textContent = foiChefao ? '👹 O chefão resistiu!' : 'Tempo esgotado!';
+  document.getElementById("lov-emoji").textContent = foiChefao ? _bIcoL : '⏰';
+  document.getElementById("lov-title").textContent = foiChefao ? `${_bIcoL} O ${_bNomeL} resistiu!` : 'Tempo esgotado!';
   document.getElementById("lov-sub").textContent   = frase;
   document.getElementById("lov-new").textContent   = foiChefao
-    ? `Nível Chefão ${nivelExibir} — revanche!`
+    ? `${_bNomeL} · Nível ${nivelExibir} — revanche!`
     : `Nível ${nivelExibir} — tente de novo`;
-  document.getElementById("lov-new").style.color   = foiChefao ? '#EF4444' : 'var(--orange)';
+  document.getElementById("lov-new").style.color   = foiChefao ? _bCorL : 'var(--orange)';
   document.getElementById("lov-btn").textContent   = foiChefao ? '⚔️ Revanche! →' : 'Tentar de novo →';
   document.querySelector('.level-card').style.animation = 'levelDownPop .35s ease';
   document.getElementById("level-overlay").style.display = 'flex';
