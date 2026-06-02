@@ -478,7 +478,7 @@ function _getLevelConfigBase(lvl) {
       return { type:'mix_as', pairs:12, cols:6, secs: Math.max(20, TEMPO_BASE_129 - 20), minMul, minDiv, ehChefao:true, tipoChefao:'rapido' };
     } else if (tipo === 'dificil') {
       // 🧮 Difícil: 12p×2=24 | desktop 6×4, mobile 4×6, ops pesadas
-      const secsD = lvl === 200 ? TEMPO_BASE_200 - 5 : lvl > 200 ? TEMPO_BASE_200 : TEMPO_BASE_129;
+      const secsD = lvl === 200 ? TEMPO_BASE_129 - 10 : lvl > 200 ? TEMPO_BASE_200 : TEMPO_BASE_129;
       return { type:'mix_as', pairs:12, cols:6, secs: secsD, minMul: Math.min(6+n,8), minDiv: Math.min(6+n,8), ehChefao:true, tipoChefao:'dificil', pesado:true };
     } else {
       // 📦 Grande: 18p×2=36 desktop (6×6) | 12p×2=24 mobile (4×6)
@@ -1033,6 +1033,7 @@ function mostrarModalChefao(nivel, onStart) {
 
 let timerTotal = 60, timerLeft = 60;
 let timerInterval = null;
+let _timerOvertime = 0;
 let selectedCard = null;  // { el, pairId, kind, op, result }
 let removedCount = 0, totalPairs = 0;
 let gameOver = false;
@@ -1170,6 +1171,7 @@ function _buildGameInternal() {
   tipoChefaoAtual = cfg.tipoChefao || null;
   timerTotal = cfg.secs;
   timerLeft  = cfg.secs;
+  _timerOvertime = 0;
   selectedCard = null;
   removedCount = 0;
   gameOver    = false;
@@ -1359,27 +1361,40 @@ function startTimer() {
   updateTimerUI();
   timerInterval = setInterval(() => {
     if (gameOver) return;
-    timerLeft = Math.max(0, timerLeft - 1);
-    updateTimerUI();
-    if (timerLeft === 0) { clearInterval(timerInterval); timerInterval = null; onTimerEnd(); }
+    if (timerLeft > 0) {
+      timerLeft--;
+      updateTimerUI();
+      if (timerLeft === 0 && !(_isProfMode || _isModoTesteAtivo)) {
+        clearInterval(timerInterval); timerInterval = null; onTimerEnd();
+      }
+    } else if (_isProfMode || _isModoTesteAtivo) {
+      _timerOvertime++;
+      updateTimerUI();
+    }
   }, 1000);
 }
 function stopTimer() {
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
 }
 function updateTimerUI() {
-  const pct  = timerTotal > 0 ? timerLeft / timerTotal : 0;
-  const min  = Math.floor(timerLeft / 60);
-  const sec  = timerLeft % 60;
+  const isOvertime = timerLeft === 0 && _timerOvertime > 0;
+  const pct  = isOvertime ? 0 : (timerTotal > 0 ? timerLeft / timerTotal : 0);
+  const secs = isOvertime ? _timerOvertime : timerLeft;
+  const min  = Math.floor(secs / 60);
+  const sec  = secs % 60;
   const txt  = document.getElementById("timer-text");
   const wrap = document.getElementById("timer-display");
   const bar  = document.getElementById("timer-bar");
   if (!txt) return;
-  txt.textContent = `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
-  const _timerTypeCls = ehChefaoAtual
+  txt.textContent = isOvertime
+    ? `-${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`
+    : `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  const _timerTypeCls = isOvertime ? ' warn'
+    : ehChefaoAtual
     ? (tipoChefaoAtual === 'dificil' ? ' chefao-dificil' : tipoChefaoAtual === 'grande' ? ' chefao-grande' : ' chefao')
     : (timerLeft <= 10 ? ' warn' : '');
-  const _barTypeCls = ehChefaoAtual
+  const _barTypeCls = isOvertime ? ' danger'
+    : ehChefaoAtual
     ? (tipoChefaoAtual === 'dificil' ? ' chefao-dificil' : tipoChefaoAtual === 'grande' ? ' chefao-grande' : ' chefao')
     : (pct < .2 ? ' danger' : pct < .4 ? ' warn' : '');
   if (wrap) wrap.className = `timer-wrap${_timerTypeCls}`;
@@ -1517,7 +1532,8 @@ async function onGameWin() {
   stopTimer();
 
   const nivelJogado = nivelAtual;
-  const _segsWin = _isSprint ? null : timerLeft;  // segundos restantes ao completar
+  const _segsWin = _isSprint ? null : (_timerOvertime > 0 ? -_timerOvertime : timerLeft);
+  const _overtimeStr = _timerOvertime > 0 ? ` · ⏱ +${_timerOvertime}s acima do limite` : '';
   somVitoria();
 
   if (_isSprint) {
@@ -1549,7 +1565,7 @@ async function onGameWin() {
     nivelAtual = nivelJogado + 1; // avança nível local da sessão de prática
     document.getElementById("lov-emoji").textContent = erros === 0 ? '⭐' : '✅';
     document.getElementById("lov-title").textContent = erros === 0 ? 'Perfeito!' : 'Nível concluído!';
-    document.getElementById("lov-sub").textContent   = `Nível ${nivelJogado} · ${acertos} acerto${acertos !== 1 ? 's' : ''}${erros > 0 ? ` · ${erros} erro${erros > 1 ? 's' : ''}` : ''}`;
+    document.getElementById("lov-sub").textContent   = `Nível ${nivelJogado} · ${acertos} acerto${acertos !== 1 ? 's' : ''}${erros > 0 ? ` · ${erros} erro${erros > 1 ? 's' : ''}` : ''}${_overtimeStr}`;
     document.getElementById("lov-new").textContent   = `→ Nível ${nivelAtual} (prática)`;
     document.getElementById("lov-new").style.color   = 'var(--blue)';
     document.getElementById("lov-btn").textContent   = 'Continuar →';
@@ -1589,10 +1605,10 @@ async function onGameWin() {
     ? `${_bIco} ${_bNome} derrotado!`
     : (isEstrela ? '⭐ Nível com estrela!' : 'Avançou de nível!');
   document.getElementById("lov-sub").textContent   = foiChefao
-    ? `Nível ${nivelJogado} conquistado! ${isEstrela ? '⭐ Sem erros!' : ''} ${isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue avançando!'}`
+    ? `Nível ${nivelJogado} conquistado! ${isEstrela ? '⭐ Sem erros!' : ''} ${isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue avançando!'}${_overtimeStr}`
     : (isEstrela
-      ? `Perfeito! Sem erros! ${isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue assim!'}`
-      : `${erros} erro${erros !== 1 ? 's' : ''} — sem estrela desta vez. ${isNewRecord ? '🌟 Novo recorde!' : 'Continue avançando!'}`);
+      ? `Perfeito! Sem erros! ${isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue assim!'}${_overtimeStr}`
+      : `${erros} erro${erros !== 1 ? 's' : ''} — sem estrela desta vez. ${isNewRecord ? '🌟 Novo recorde!' : 'Continue avançando!'}${_overtimeStr}`);
   document.getElementById("lov-new").textContent   = `→ Nível ${novoNivel}`;
   document.getElementById("lov-new").style.color   = foiChefao ? _bCor : (isEstrela ? 'var(--gold)' : 'var(--blue)');
   document.getElementById("lov-btn").textContent   = 'Continuar →';
