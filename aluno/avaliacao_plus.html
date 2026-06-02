@@ -365,6 +365,11 @@ const _avBase = `avaliacao_controle/${avKey(turma+'|'+liberada.atividade)}`;
 const controleRefs = alunos.map(al => ref(db, `${_avBase}/${avKey(al)}`));
 let controleRef = controleRefs[0]; // ref principal (alunos[0])
 
+// ── Refs em avaliacoes_sessoes (verificação de bloqueio por uid simples) ──
+function makeUid(nome) { return (turma + '_' + nome).replace(/[.#$\[\]/\s]/g, '_'); }
+const _sessAtivId = avKey(liberada.atividade);
+const sessaoRefs  = isTeste ? [] : alunos.map(al => ref(db, `avaliacoes_sessoes/${_sessAtivId}/${makeUid(al)}`));
+
 // ── Carregar questões ──────────────────────────────────────────
 const _arquivoQ = ARQUIVO_QUESTOES[liberada.atividade] ?? "/dados/questoes_competicao.json";
 const raw = await fetch(_arquivoQ).then(r => r.json());
@@ -1660,7 +1665,7 @@ function mostrarResultado(motivo, f2aplicado, f2bruta, novoMelhor, bonusFim = 0)
   const tentRestantes      = MAX_TENTATIVAS - tentUsadas;
   const gRestMs            = globalRestanteMs(controle);
   const tempoGlobalEsgotado = gRestMs <= 0 && motivo === 'tempo';
-  const podeNovar          = isTeste || tentRestantes > 0; // não bloquear por tempo global
+  const podeNovar          = isTeste || (tentRestantes > 0 && gRestMs > 0);
   const melhorExibida = controle.melhor_pontuacao || f2aplicado;
   const taxa = st.respondidas > 0 ? Math.round(st.acertos / st.respondidas * 100) : 0;
 
@@ -1721,11 +1726,23 @@ window.iniciarNovaTentativa = async function() {
     controle = snap.exists() ? snap.val() : controle;
   }
 
-  if (!isTeste && (controle.tentativas_realizadas||0) >= MAX_TENTATIVAS) { mostrarBloqueada('tentativas', controle); return; }
+  // Verificar bloqueio via avaliacoes_sessoes
+  const _bloqueadosNova = await verificarBloqueio();
+  if (_bloqueadosNova.length > 0) { mostrarModalBloqueio(_bloqueadosNova); return; }
+
+  // Verificar tentativas E tempo global
+  const _gRestNova = globalRestanteMs(controle);
+  if (!isTeste && ((controle.tentativas_realizadas||0) >= MAX_TENTATIVAS || _gRestNova <= 0)) {
+    mostrarBloqueada(_gRestNova <= 0 ? 'tempo' : 'tentativas', controle);
+    return;
+  }
 
   const novaTent = isTeste ? 1 : (controle.tentativas_realizadas||0) + 1;
   if (!isTeste) await Promise.all(controleRefs.map(r => update(r, { tentativas_realizadas: novaTent })));
   controle.tentativas_realizadas = novaTent;
+
+  // Sincronizar avaliacoes_sessoes
+  await sincronizarSessaoRefs(novaTent, controle.inicio_global);
 
   _warned10 = false;
   const duracaoSessao = DURACAO_SESSAO_S; // sempre 8 min fixos por tentativa
@@ -1829,7 +1846,7 @@ function mostrarPreJogo(ctrl) {
         </div>
         <div class="phase-block">
           <strong>Cronômetro global de 25 min — não para entre tentativas</strong><br>
-          • Máximo de <strong>3 tentativas</strong> · aluno escolhe qual tentativa usar<br>
+          • Máximo de <strong>3 tentativas</strong> · a melhor nota é registrada automaticamente<br>
           • Nota final = pontos obtidos (máx 10) · sem conversão de escala<br>
           • Se o tempo acabar durante uma tentativa: encerra e salva normalmente
         </div>
@@ -1843,6 +1860,15 @@ window.iniciarJogo = async function() {
   tentativasHist = [];  // histórico limpo para esta sessão de página
   const btn = document.querySelector('.btn-iniciar');
   if (btn) btn.disabled = true;
+
+  // ── Re-verificar bloqueio ao clicar "Iniciar" (estado pode ter mudado) ──
+  const _bloqueadosClick = await verificarBloqueio();
+  if (_bloqueadosClick.length > 0) {
+    if (btn) btn.disabled = false;
+    mostrarModalBloqueio(_bloqueadosClick);
+    return;
+  }
+
   document.getElementById("content").innerHTML =
     `<div style="text-align:center;padding:50px;color:#2a2a50;font-family:'Orbitron',monospace;font-size:12px;letter-spacing:3px">CARREGANDO…</div>`;
 
@@ -1854,6 +1880,9 @@ window.iniciarJogo = async function() {
     if (!isTeste) await Promise.all(controleRefs.map(r => update(r, { tentativas_realizadas: novaTent })));
     controle.tentativas_realizadas = novaTent;
   }
+
+  // ── Sincronizar avaliacoes_sessoes (sem apagar dados existentes) ──
+  await sincronizarSessaoRefs(controle.tentativas_realizadas, controle.inicio_global);
 
   _warned10 = false;
   const duracaoSessao = DURACAO_SESSAO_S; // sempre 8 min fixos por tentativa
@@ -1917,6 +1946,54 @@ window.addEventListener("beforeunload", () => {
   if (st) { clearInterval(st.timerInterval); clearInterval(st.sessaoInterval); }
 });
 
+// ── Verificação de bloqueio via avaliacoes_sessoes ────────────
+async function verificarBloqueio() {
+  if (isTeste || !sessaoRefs.length) return [];
+  const snaps = await Promise.all(sessaoRefs.map(r => get(r).catch(() => null)));
+  const bloqueados = [];
+  for (let i = 0; i < snaps.length; i++) {
+    if (!snaps[i]?.exists()) continue;
+    const d = snaps[i].val();
+    const tentativas  = d.tentativas_usadas || 0;
+    const decorrido   = Date.now() - (d.inicio || Date.now());
+    if (tentativas >= MAX_TENTATIVAS || decorrido >= DURACAO_GLOBAL_MS) {
+      const motivo = tentativas >= MAX_TENTATIVAS ? 'tentativas' : 'tempo';
+      bloqueados.push({ nome: alunos[i], motivo });
+    }
+  }
+  return bloqueados;
+}
+
+function mostrarModalBloqueio(bloqueados) {
+  document.getElementById('bloqueio-modal')?.remove();
+  const _esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const nomes = bloqueados.map(b => `<strong style="color:#F87171">${_esc(b.nome)}</strong>`).join(' e ');
+  const plural = bloqueados.length > 1;
+  const texto  = `${nomes} já ${plural ? 'realizaram' : 'realizou'} esta atividade e ${plural ? 'esgotaram suas' : 'esgotou suas'} tentativas/tempo disponível. Para continuar, faça login com outro aluno.`;
+  const ov = document.createElement('div');
+  ov.id = 'bloqueio-modal';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px)';
+  ov.innerHTML = `
+    <div style="background:#0d0d28;border:2px solid rgba(239,68,68,.5);border-radius:20px;padding:32px 28px;max-width:380px;width:100%;text-align:center;box-shadow:0 0 60px rgba(239,68,68,.25)">
+      <div style="font-size:52px;margin-bottom:10px">⚠️</div>
+      <div style="font-family:'Orbitron',monospace;font-size:15px;font-weight:700;color:#F87171;margin-bottom:12px;letter-spacing:1px">Atividade já realizada</div>
+      <div style="font-size:13px;color:#9999cc;margin-bottom:24px;line-height:1.7">${texto}</div>
+      <button onclick="window.sair()" style="width:100%;padding:13px;background:linear-gradient(135deg,#DC2626,#B91C1C);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Orbitron',monospace;letter-spacing:1px;margin-bottom:10px">🔄 Fazer novo login</button>
+      <button onclick="document.getElementById('bloqueio-modal').remove()" style="width:100%;padding:10px;background:transparent;border:1.5px solid #2a2a50;border-radius:10px;color:#5a5a90;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif">Cancelar</button>
+    </div>`;
+  document.body.appendChild(ov);
+}
+
+// Sincroniza avaliacoes_sessoes para TODOS os alunos da sessão (só escrita, nunca apaga)
+async function sincronizarSessaoRefs(tentativas, inicio) {
+  if (isTeste || !sessaoRefs.length) return;
+  await Promise.all(sessaoRefs.map(async r => {
+    const snap = await get(r).catch(() => null);
+    if (!snap?.exists()) await set(r, { inicio, tentativas_usadas: tentativas });
+    else await update(r, { tentativas_usadas: tentativas });
+  }));
+}
+
 // ── Init ───────────────────────────────────────────────────────
 // Lê controle de TODOS os alunos e usa o que tiver mais tentativas
 // (evita que aluno em dupla burle o limite usando outra dupla depois)
@@ -1932,11 +2009,14 @@ if (!isTeste) {
   }
 }
 
-if (controle) {
-  if ((controle.tentativas_realizadas||0) >= MAX_TENTATIVAS) mostrarBloqueada('tentativas', controle);
-  else mostrarPreJogo(controle);
+// Verificar bloqueio via avaliacoes_sessoes (tem prioridade — mostra modal específico)
+const _bloqueadosInit = await verificarBloqueio();
+if (_bloqueadosInit.length > 0) {
+  mostrarModalBloqueio(_bloqueadosInit);
+} else if (controle && (controle.tentativas_realizadas||0) >= MAX_TENTATIVAS) {
+  mostrarBloqueada('tentativas', controle);
 } else {
-  mostrarPreJogo(null);
+  mostrarPreJogo(controle || null);
 }
 </script>
 </body>

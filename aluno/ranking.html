@@ -7,59 +7,77 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
-    .tab-nav{display:flex;gap:4px;background:var(--bg);border-radius:12px;padding:4px;margin-bottom:20px;}
-    .tab-nav button{flex:1;padding:9px;border:none;border-radius:9px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);background:transparent;transition:all .2s;}
-    .tab-nav button.active{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(47,158,220,.3);}
-    .rank-row{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);}
-    .rank-row:last-child{border-bottom:none;}
-    .rank-row.destaque{background:linear-gradient(135deg,var(--blue-pale),transparent);border-left:3px solid var(--blue);}
-    .rank-row.rank-gold{background:linear-gradient(135deg,rgba(245,158,11,.12),transparent);}
-    .rank-row.rank-silver{background:linear-gradient(135deg,rgba(156,163,175,.1),transparent);}
-    .rank-row.rank-bronze{background:linear-gradient(135deg,rgba(180,83,9,.1),transparent);}
-    .rank-pos{font-size:14px;font-weight:800;width:28px;text-align:center;flex-shrink:0;}
-    .rank-nome{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    .rank-sub{font-size:11px;color:var(--text-muted);margin-top:1px;}
-    .rank-pts{font-size:14px;font-weight:800;color:var(--gold);flex-shrink:0;text-align:right;}
-    .rank-pts-label{font-size:10px;font-weight:400;color:var(--text-muted);}
-    .ativ-sel{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
-    .ativ-btn{padding:6px 14px;border:1.5px solid var(--border);border-radius:20px;background:var(--card);font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .2s;}
-    .ativ-btn.active{border-color:var(--blue);background:var(--blue);color:#fff;}
-    .rank-section-title{font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:.4px;text-transform:uppercase;margin:0 0 6px;display:flex;align-items:center;gap:8px;}
-    .live-tag{font-size:10px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.4);color:#16A34A;border-radius:10px;padding:1px 7px;font-weight:700;}
-    /* Pódio */
-    .podium-wrap{display:flex;align-items:flex-end;justify-content:center;gap:8px;padding:16px 8px 0;margin-bottom:8px;}
-    .podium-spot{display:flex;flex-direction:column;align-items:center;flex:1;max-width:120px;position:relative;}
-    .podium-trophy{font-size:30px;margin-bottom:3px;}
-    .podium-name{font-size:11px;font-weight:800;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 4px;margin-bottom:2px;}
-    .podium-turma{font-size:10px;color:var(--text-muted);margin-bottom:3px;text-align:center;}
-    .podium-pts{font-size:12px;font-weight:800;margin-bottom:6px;}
-    .podium-stand{display:flex;align-items:center;justify-content:center;width:100%;border-radius:6px 6px 0 0;font-size:16px;font-weight:800;color:white;}
-    .podium-you{outline:2px solid var(--blue);outline-offset:3px;border-radius:6px;padding:2px;}
-    /* diff de pontos */
-    .podium-diff{font-size:10px;color:var(--text-muted);text-align:center;margin-bottom:10px;}
-    @media(max-width:640px){.grid-2{grid-template-columns:1fr!important}}
-    @media(max-width:480px){
-      .pos-strip-wrap{flex-direction:column;gap:6px}
-      .pos-strip-sep{display:none}
-      .pos-strip-item{padding:6px 0}
-      .pos-rank-num{font-size:26px!important}
-      .rank-section-title{font-size:11px}
-      /* Pódio: reduz max-width para 3 spots caberem em 375px */
-      .podium-spot{max-width:96px!important;}
-      .podium-trophy{font-size:22px;}
-      /* !important sobrescreve inline style das duplas (white-space:normal;overflow:visible) */
-      .podium-name{
-        font-size:9px!important;
-        white-space:nowrap!important;
-        overflow:hidden!important;
-        text-overflow:ellipsis!important;
-        padding:0 2px!important;
-      }
-      .podium-turma{font-size:9px;}
-      .podium-pts{font-size:11px;}
+    /* ── Tabs ── */
+    .rnk-tabs{display:flex;gap:3px;background:var(--bg);border-radius:12px;padding:4px;margin-bottom:12px;}
+    .rnk-tab{flex:1;padding:9px 4px;border:none;border-radius:9px;font-family:'Inter',sans-serif;font-size:clamp(10px,2.2vw,12px);font-weight:600;cursor:pointer;color:var(--text-muted);background:transparent;transition:all .2s;white-space:nowrap;line-height:1.2;}
+    .rnk-tab.active{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(47,158,220,.3);}
+    /* ── Scope toggle ── */
+    .rnk-scope{display:flex;gap:6px;margin-bottom:14px;}
+    .rnk-scope-btn{padding:6px 18px;border:1.5px solid var(--border);border-radius:20px;background:var(--bg);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .15s;}
+    .rnk-scope-btn.active{border-color:var(--blue);background:var(--blue);color:#fff;}
+    /* ── Aluno card ── */
+    .rnk-aluno-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow-sm);padding:12px 16px;margin-bottom:16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;}
+    .rnk-aluno-name{font-size:14px;font-weight:800;flex-shrink:0;margin-right:2px;}
+    .rnk-pill{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:14px;white-space:nowrap;}
+    .rnk-pill.blue{background:rgba(47,158,220,.1);color:var(--blue);}
+    .rnk-pill.purple{background:rgba(139,92,246,.1);color:#7C3AED;}
+    .rnk-pill.green{background:rgba(34,197,94,.1);color:#16A34A;}
+    .rnk-pill.orange{background:rgba(249,115,22,.1);color:var(--orange);}
+    /* ── Podium ── */
+    .podium-section{margin-bottom:14px;}
+    /* Desktop: flex, align-items:flex-end, DOM order: 2º 1º 3º */
+    .podium-outer{display:flex;align-items:flex-end;justify-content:center;gap:10px;padding:28px 4px 0;}
+    .podium-spot{display:flex;flex-direction:column;align-items:center;flex:1;max-width:145px;position:relative;}
+    .podium-spot.p1{max-width:175px;}
+    /* Mobile: 1st full-width top, 2nd/3rd below */
+    @media(max-width:580px){
+      .podium-outer{flex-wrap:wrap;padding:10px 4px 0;gap:8px;}
+      .podium-spot{max-width:none!important;flex:none;}
+      .podium-spot.p1{width:100%;order:-1;margin-bottom:4px;}
+      .podium-spot.p2,.podium-spot.p3{width:calc(50% - 4px);}
     }
-    .confete-rank{position:absolute;top:-10px;width:7px;height:9px;border-radius:2px;opacity:0;pointer-events:none;animation:confete-rank-cair var(--dur,2s) var(--delay,0s) ease-in 1 forwards;}
-    @keyframes confete-rank-cair{0%{opacity:1;transform:translateY(0) rotate(0deg)}75%{opacity:.9}100%{opacity:0;transform:translateY(110vh) rotate(560deg) scale(.4)}}
+    .podium-crown{font-size:clamp(13px,3.5vw,20px);line-height:1;margin-bottom:2px;filter:drop-shadow(0 0 6px rgba(255,200,0,.8));}
+    .podium-trophy{font-size:clamp(22px,5vw,40px);line-height:1;margin-bottom:3px;}
+    .podium-spot.p1 .podium-trophy{font-size:clamp(28px,6vw,52px);}
+    .podium-name{font-size:clamp(10px,2.4vw,13px);font-weight:800;text-align:center;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 3px;margin-bottom:2px;}
+    .podium-spot.p1 .podium-name{font-size:clamp(11px,2.8vw,14px);}
+    .podium-turma{font-size:10px;color:var(--text-muted);text-align:center;margin-bottom:3px;}
+    .podium-score{font-size:clamp(10px,2.3vw,13px);font-weight:800;text-align:center;margin-bottom:6px;line-height:1.3;}
+    .podium-stand{display:flex;align-items:center;justify-content:center;width:100%;border-radius:6px 6px 0 0;font-size:clamp(14px,3.5vw,19px);font-weight:800;color:#fff;}
+    .podium-spot.p1 .podium-stand{font-size:clamp(16px,4vw,22px);}
+    .podium-spot.g1{background:rgba(245,158,11,.09);border-radius:12px;padding:8px 5px;}
+    .podium-spot.g2{background:rgba(156,163,175,.07);border-radius:10px;padding:5px 3px;}
+    .podium-spot.g3{background:rgba(180,83,9,.07);border-radius:10px;padding:5px 3px;}
+    @keyframes gold-glow{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}50%{box-shadow:0 0 22px rgba(245,158,11,.55)}}
+    .podium-spot.g1{animation:gold-glow 2.5s ease-in-out infinite;}
+    .podium-spot.me-border{outline:2.5px solid var(--blue);outline-offset:2px;border-radius:8px;}
+    /* ── Rank list ── */
+    .rnk-card{background:var(--card);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+    .rnk-row{display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid var(--border);}
+    .rnk-row:last-child{border-bottom:none;}
+    .rnk-row.me{background:linear-gradient(135deg,var(--blue-pale),transparent);border-left:3px solid var(--blue);}
+    .rnk-pos{font-size:clamp(10px,2.5vw,13px);font-weight:800;min-width:clamp(18px,5vw,26px);text-align:center;flex-shrink:0;color:var(--text-muted);}
+    .rnk-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;}
+    .rnk-info{flex:1;min-width:0;}
+    .rnk-name{font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .rnk-sub{font-size:10px;color:var(--text-muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .rnk-right{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex-shrink:0;}
+    .rnk-score{font-size:clamp(11px,2.8vw,14px);font-weight:800;}
+    .rnk-score-sub{font-size:9px;color:var(--text-muted);}
+    .rnk-delta{font-size:10px;font-weight:700;}
+    .rnk-delta.up{color:var(--green);}
+    .rnk-delta.dn{color:var(--red);}
+    .rnk-delta.eq{color:var(--text-muted);}
+    /* ── Activity selector ── */
+    .rnk-ativ-wrap{margin-bottom:12px;}
+    .rnk-ativ-wrap select{width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;}
+    /* ── Confetti ── */
+    @keyframes confete-rank-fall{0%{opacity:1;transform:translateY(0) rotate(0deg)}75%{opacity:.9}100%{opacity:0;transform:translateY(110vh) rotate(560deg) scale(.4)}}
+    .confete-rank{position:absolute;top:-10px;width:7px;height:9px;border-radius:2px;opacity:0;pointer-events:none;animation:confete-rank-fall var(--dur,2s) var(--delay,0s) ease-in 1 forwards;}
+    @media(max-width:400px){
+      .rnk-tab{font-size:9px;padding:7px 2px;}
+      .rnk-scope-btn{padding:5px 12px;font-size:11px;}
+    }
   </style>
 </head>
 <body>
@@ -92,6 +110,7 @@
     </div>
   </div>
 </div>
+
 <script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
 import { LISTA_ATIVIDADES } from "/js/constants.js";
@@ -111,568 +130,356 @@ window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 const { alunos, turma } = sess;
 initAvBanner(turma, alunos[0]);
 
-// Sync tema do Firebase (não-bloqueante)
 getAlunoPreferencia(turma, alunos[0], 'tema').then(t => {
   if (t && t !== localStorage.getItem('tema')) {
     localStorage.setItem('tema', t);
     document.documentElement.setAttribute('data-theme', t === 'escuro' ? 'dark' : '');
   }
 });
-
-getAlunoPreferencia(turma, alunos[0], 'robotica').then(isRob => {
-  localStorage.setItem('sm_pref_robotica', isRob ? '1' : '0');
+getAlunoPreferencia(turma, alunos[0], 'robotica').then(r => {
+  localStorage.setItem('sm_pref_robotica', r ? '1' : '0');
 }).catch(() => {});
+
 document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
 document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
 
-const todos = (await getResultados()).filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
+// ── Helpers ───────────────────────────────────────────────────
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+const isMob = () => window.innerWidth <= 480;
+const AV_COLORS = ['#7F77DD','#2F9EDC','#22C55E','#F59E0B','#EF4444','#8B5CF6','#EC4899','#14B8A6'];
+function avColor(n) { let h=0; for(const c of (n||'?')) h=(h*31+c.charCodeAt(0))&0xffff; return AV_COLORS[h%AV_COLORS.length]; }
 
-// ── Ranking por total ─────────────────────────────────────────
-function buildRankingMedia(lista) {
-  const melhor = {};
-  for (const r of lista) {
-    if (!r.concluido || !r.aluno) continue;
-    if (r.atividade === 'Atividade 4 - Geometria') continue;
-    if (!melhor[r.aluno]) melhor[r.aluno] = {
-      aluno: r.aluno, turma: r.turma || '?', porAtiv: {}, sessoes: 0,
-      melhorSessao: 0, primeiroTs: Infinity
-    };
-    const pts = r.pontuacao || 0;
-    const prev = melhor[r.aluno].porAtiv[r.atividade] || 0;
-    if (pts > prev) melhor[r.aluno].porAtiv[r.atividade] = pts;
-    if (pts > melhor[r.aluno].melhorSessao) melhor[r.aluno].melhorSessao = pts;
-    const ts = r.criadoEm || 0;
-    if (ts && ts < melhor[r.aluno].primeiroTs) melhor[r.aluno].primeiroTs = ts;
-    melhor[r.aluno].sessoes++;
-  }
-  const result = Object.values(melhor).map(a => {
-    const vals = Object.values(a.porAtiv);
-    const total = vals.reduce((s, v) => s + v, 0);
-    const media = vals.length ? Math.round(total / vals.length) : 0;
-    return {
-      aluno: a.aluno, turma: a.turma, total, media, atividades: vals.length, sessoes: a.sessoes,
-      melhorSessao: a.melhorSessao, primeiroTs: a.primeiroTs === Infinity ? 0 : a.primeiroTs
-    };
-  }).sort((a, b) => b.total - a.total);
-  return result;
+function abreviarNome(nome) {
+  const p = nome.trim().split(/\s+/);
+  if (p.length <= 1) return nome;
+  return p[0] + ' ' + p.slice(1).map(x => x[0]+'.').join(' ');
+}
+function displayNome(nome, mobile) {
+  return escH(mobile ? abreviarNome(nome) : nome);
 }
 
-
-const rankAll   = buildRankingMedia(todos);
-const rankTurma = rankAll.filter(r => r.turma === turma);
-saveRankPos(alunos, rankAll);
-applyTopRankVisuals();
-initTopNotif({ mode: 'aluno', alunoNome: alunos[0] });
-
-// ── Posição ───────────────────────────────────────────────────
-function posicaoAluno(nome) {
-  const posGeral = (rankAll.findIndex(r => r.aluno === nome) + 1) || '—';
-  const posTurma = (rankTurma.findIndex(r => r.aluno === nome) + 1) || '—';
-  return { posGeral, posTurma };
-}
-
-// ── Animações de destaque ─────────────────────────────────────
-function confettiHTML() {
-  const colors = ['#F59E0B','#3B82F6','#EF4444','#22C55E','#8B5CF6','#EC4899'];
-  return `<div style="position:absolute;top:0;left:50%;pointer-events:none;width:0;height:0;overflow:visible">
-    ${colors.map((c, i) => {
-      const cx = (i % 2 === 0 ? -1 : 1) * (10 + i * 6);
-      const delay = (i * 0.35).toFixed(2);
-      const dur   = (1.8 + i * 0.15).toFixed(2);
-      return `<div class="confetti-p" style="background:${c};--cx:${cx}px;--cd:${dur}s;--delay:${delay}s;left:${cx}px"></div>`;
-    }).join('')}
-  </div>`;
-}
-
-function sparklesHTML() {
-  return `<div style="position:absolute;top:-6px;right:2px;pointer-events:none">
-    ${['✨','⭐','✨'].map((s, i) => {
-      const rights = [0, 16, 8], tops = [0, 4, -4];
-      return `<span class="sparkle-p" style="right:${rights[i]}px;top:${tops[i]}px;--sd:${1.8+i*0.5}s;--delay:${i*0.4}s">${s}</span>`;
-    }).join('')}
-  </div>`;
-}
-
-// ── Pódio ─────────────────────────────────────────────────────
-function renderPodium(lista, { showTurma = true, size = 'medium' } = {}) {
-  if (!lista.length) return '';
-  const getScore = p => p.pts !== undefined ? p.pts : (p.total || 0);
-
-  // Group consecutive equal-score students into up to 3 podium spots
-  const groups = [];
-  let runPos = 1;
-  for (let gi = 0; gi < lista.length && groups.length < 3; ) {
-    const score = getScore(lista[gi]);
-    let gj = gi + 1;
-    while (gj < lista.length && getScore(lista[gj]) === score) gj++;
-    groups.push({ pos: runPos, students: lista.slice(gi, gj), score });
-    runPos += (gj - gi);
-    gi = gj;
-  }
-
-  const STAND_HEIGHTS = { large: [130,88,60], medium: [90,62,44], small: [50,34,22] };
-  const hs = STAND_HEIGHTS[size] || STAND_HEIGHTS.medium;
-  const STANDS = [
-    { h: hs[0], bg: 'linear-gradient(135deg,#F59E0B,#D97706)', glow: 'glow-gold' },
-    { h: hs[1], bg: 'linear-gradient(135deg,#9CA3AF,#6B7280)', glow: 'glow-silver' },
-    { h: hs[2], bg: 'linear-gradient(135deg,#CD853F,#92400E)', glow: 'glow-bronze' },
-  ];
-  const maxWNum  = size === 'large' ? 140 : size === 'small' ? 88 : 120;
-  const maxW     = maxWNum + 'px';
-  const nameFs   = size === 'large' ? '13px'  : size === 'small' ? '10px' : '11px';
-  const trophyFs = size === 'large' ? '64px'  : size === 'small' ? '36px' : '48px';
-  const ptsFs    = size === 'large' ? '15px'  : size === 'small' ? '10px' : '12px';
-  const standFs  = size === 'large' ? '20px'  : size === 'small' ? '11px' : '16px';
-  const crownSz  = size === 'large' ? '24px'  : '15px';
-  const crownTp  = size === 'large' ? '-28px' : '-18px';
-  const wrapGap  = size === 'large' ? '12px'  : size === 'small' ? '5px' : '8px';
-  const wrapPad  = size === 'large' ? '28px 8px 0' : size === 'small' ? '6px 4px 0' : '16px 8px 0';
-
-  // slotIdx: 0=1st, 1=2nd, 2=3rd (styling colors)
-  const spot = (g, slotIdx) => {
-    if (!g) return `<div class="podium-spot" style="max-width:${maxW}"></div>`;
-    const st = STANDS[slotIdx];
-    const trophy = ['🥇','🥈','🥉'][slotIdx];
-    const anyMe = g.students.some(p => alunos.includes(p.aluno));
-    let decoration = '';
-    if (anyMe && slotIdx === 0) decoration = confettiHTML();
-    if (anyMe && slotIdx === 1) decoration = sparklesHTML();
-    const subPts = g.students[0].pts === undefined && g.students[0].media != null
-      ? `méd. ${g.students[0].media}pts` : null;
-    let namesHtml;
-    if (g.students.length <= 1) {
-      const p = g.students[0];
-      const isMe = alunos.includes(p.aluno);
-      const youTag = isMe ? ' ★' : '';
-      const glowStyle = slotIdx <= 1
-        ? `color:${slotIdx===0?'#F59E0B':'#9CA3AF'};text-shadow:0 0 8px currentColor;` : '';
-      namesHtml = `<div class="podium-name" style="${glowStyle}font-size:${nameFs}">${p.aluno}${youTag}</div>
-        ${showTurma && p.turma ? `<div class="podium-turma">Turma ${p.turma}</div>` : ''}`;
-    } else {
-      namesHtml = `<div style="display:flex;align-items:flex-start;width:100%">${
-        g.students.map((p, ni) => {
-          const isMe = alunos.includes(p.aluno);
-          const youTag = isMe ? ' ★' : '';
-          const glowStyle = slotIdx <= 1
-            ? `color:${slotIdx===0?'#F59E0B':'#9CA3AF'};text-shadow:0 0 8px currentColor;` : '';
-          const vsep = ni < g.students.length - 1
-            ? `<div style="width:1px;background:var(--border);opacity:.5;align-self:stretch;margin:0 3px;flex-shrink:0"></div>` : '';
-          return `<div style="flex:1;min-width:0;text-align:center">
-            <div class="podium-name" style="${glowStyle}font-size:${nameFs};white-space:normal;overflow:visible">${p.aluno}${youTag}</div>
-            ${showTurma && p.turma ? `<div class="podium-turma">T ${p.turma}</div>` : ''}
-          </div>${vsep}`;
-        }).join('')
-      }</div>`;
-    }
-    const spotMaxW = g.students.length > 1 ? `${Math.min(g.students.length * maxWNum, 280)}px` : maxW;
-    return `<div class="podium-spot ${st.glow}${anyMe ? ' podium-you' : ''}" style="max-width:${spotMaxW}">
-      ${decoration}
-      <div class="podium-trophy" style="font-size:${trophyFs}">${trophy}</div>
-      ${namesHtml}
-      <div class="podium-pts" style="font-size:${ptsFs};color:${['#F59E0B','#9CA3AF','#CD853F'][slotIdx]};text-align:center">${g.score}${subPts ? `<div style="font-size:9px;font-weight:500;opacity:.75;margin-top:1px">${subPts}</div>` : ''}</div>
-      <div class="podium-stand" style="height:${st.h}px;background:${st.bg};font-size:${standFs}">${g.pos}</div>
-    </div>`;
-  };
-
-  const diffsHtml = () => {
-    const makeSlot = g => g
-      ? `<div style="flex:1;max-width:${maxW};text-align:center"><span class="podium-diff">${groups[0].score - g.score} pts atrás</span></div>`
-      : `<div style="flex:1;max-width:${maxW}"></div>`;
-    return `<div style="display:flex;justify-content:center;gap:${wrapGap};margin-bottom:4px">
-      ${makeSlot(groups[1])}
-      <div style="flex:1;max-width:${maxW};text-align:center"><span style="font-size:10px;color:var(--gold);font-weight:700">🏆 líder</span></div>
-      ${makeSlot(groups[2])}
-    </div>`;
-  };
-
-  // Visual order: 2nd(left), 1st(center), 3rd(right)
-  return `<div class="podium-wrap" style="gap:${wrapGap};padding:${wrapPad}">
-    ${spot(groups[1], 1)}
-    ${spot(groups[0], 0)}
-    ${spot(groups[2], 2)}
-  </div>
-  ${groups.length >= 2 ? diffsHtml() : ''}`;
-}
-
-// ── Por Atividade ─────────────────────────────────────────────
-let tabAtual   = 'geral';
-let ativSel    = LISTA_ATIVIDADES[0]?.nome || '';
-let modoAtivSel = '';
-
-function abrirAtividade(nome) {
-  const modoShouldReset = nome !== ativSel;
-  ativSel = nome;
-  document.querySelectorAll('.ativ-btn').forEach(b =>
-    b.classList.toggle('active', b.dataset.ativ === nome));
-
-  const resultadosAtiv = todos.filter(r => r.atividade === nome && r.concluido && r.aluno);
-  const modosPresentes  = new Set(resultadosAtiv.map(r => r.modo || 'competicao_plus'));
-  const temComp   = [...modosPresentes].some(m => m !== 'avaliacao_plus');
-  const temAvPlus = modosPresentes.has('avaliacao_plus');
-
-  if (modoShouldReset || !modoAtivSel ||
-      (!temComp && modoAtivSel !== 'avaliacao_plus') ||
-      (!temAvPlus && modoAtivSel === 'avaliacao_plus')) {
-    modoAtivSel = (temAvPlus && !temComp) ? 'avaliacao_plus' : 'competicao_plus';
-  }
-
-  const navEl = document.getElementById('ativ-mode-nav');
-  if (!navEl) return;
-
-  if (temComp && temAvPlus) {
-    navEl.innerHTML = `<div class="tab-nav" style="margin-bottom:12px">
-      <button id="atab-comp"   onclick="mudarModoAtiv('competicao_plus')" class="${modoAtivSel !== 'avaliacao_plus' ? 'active' : ''}">⚔️ Competição+</button>
-      <button id="atab-avplus" onclick="mudarModoAtiv('avaliacao_plus')"  class="${modoAtivSel === 'avaliacao_plus'  ? 'active' : ''}">📝 Avaliação+</button>
-    </div>`;
-  } else {
-    navEl.innerHTML = '';
-  }
-  renderAtivMode();
-}
-
-window.mudarModoAtiv = function(modo) {
-  modoAtivSel = modo;
-  document.getElementById('atab-comp')?.classList.toggle('active', modo !== 'avaliacao_plus');
-  document.getElementById('atab-avplus')?.classList.toggle('active', modo === 'avaliacao_plus');
-  renderAtivMode();
-};
-
-function renderAtivMode() {
-  const el = document.getElementById('ativ-mode-content');
-  if (!el) return;
-  const resultadosAtiv = todos.filter(r => r.atividade === ativSel && r.concluido && r.aluno);
-
-  if (modoAtivSel === 'avaliacao_plus') {
-    const avResults = resultadosAtiv.filter(r => r.modo === 'avaliacao_plus');
-    const melhor = {};
-    for (const r of avResults) {
-      const nq = r.nota_quiz ?? 0, pts = r.pontuacao ?? 0;
-      const prev = melhor[r.aluno];
-      if (!prev || nq > prev.nota_quiz || (nq === prev.nota_quiz && pts > prev.pts))
-        melhor[r.aluno] = { aluno: r.aluno, turma: r.turma || '?', nota_quiz: nq, pts };
-    }
-    const ranking = Object.values(melhor).sort((a, b) => b.nota_quiz - a.nota_quiz || b.pts - a.pts);
-    if (!ranking.length) {
-      el.innerHTML = '<div class="card" style="padding:16px;font-size:13px;color:var(--text-muted)">Sem resultados de Avaliação+ para esta atividade.</div>';
-      return;
-    }
-    let dp = 0, lastNQ = null, lastPts = null;
-    const rows = ranking.slice(0, 20).map(r => {
-      if (r.nota_quiz !== lastNQ || r.pts !== lastPts) { dp++; lastNQ = r.nota_quiz; lastPts = r.pts; }
-      const pos = dp, medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
-      const isMe = alunos.includes(r.aluno);
-      const cc = pos === 1 ? 'rank-gold' : pos === 2 ? 'rank-silver' : pos === 3 ? 'rank-bronze' : '';
-      return `<div class="rank-row ${cc}${isMe ? ' destaque' : ''}">
-        <div class="rank-pos">${medal}</div>
-        <div style="flex:1;min-width:0">
-          <div class="rank-nome">${r.aluno}${isMe ? ' ★' : ''}</div>
-          <div class="rank-sub">Turma ${r.turma} · ${r.pts} pts total</div>
-        </div>
-        <div class="rank-pts" style="color:#7C3AED">${r.nota_quiz.toFixed(1)}<div class="rank-pts-label">nota</div></div>
-      </div>`;
-    }).join('');
-    el.innerHTML = `<div class="card" style="padding:0">${rows}</div>`;
-  } else {
-    const compResults = resultadosAtiv.filter(r => r.modo !== 'avaliacao_plus');
-    const melhor = {};
-    for (const r of compResults) {
-      const pts = r.pontuacao || 0;
-      if (!melhor[r.aluno] || pts > melhor[r.aluno].pts)
-        melhor[r.aluno] = { aluno: r.aluno, turma: r.turma || '?', pts };
-    }
-    const ranking = Object.values(melhor).sort((a, b) => b.pts - a.pts);
-    if (!ranking.length) {
-      el.innerHTML = '<div class="card" style="padding:16px;font-size:13px;color:var(--text-muted)">Sem resultados de Competição+ para esta atividade.</div>';
-      return;
-    }
-    const buildAtivRows = (lista, showTurmaCol) => {
-      if (!lista.length) return `<p style="font-size:13px;color:var(--text-muted);padding:10px 16px">${showTurmaCol ? 'Sem resultados ainda.' : 'Nenhum resultado da sua turma ainda.'}</p>`;
-      let pos = 0, lastP = null;
-      return lista.map(r => {
-        if (r.pts !== lastP) { pos++; lastP = r.pts; }
-        const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
-        const isMe = alunos.includes(r.aluno);
-        const cc = pos === 1 ? 'rank-gold' : pos === 2 ? 'rank-silver' : pos === 3 ? 'rank-bronze' : '';
-        return `<div class="rank-row ${cc}${isMe ? ' destaque' : ''}">
-          <div class="rank-pos">${medal}</div>
-          <div style="flex:1;min-width:0">
-            <div class="rank-nome">${r.aluno}${isMe ? ' ★' : ''}</div>
-            ${showTurmaCol ? `<div class="rank-sub">Turma ${r.turma}</div>` : ''}
-          </div>
-          <div class="rank-pts">${r.pts}</div>
-        </div>`;
-      }).join('');
-    };
-    el.innerHTML = `<div class="grid-2" style="align-items:start">
-      <div>
-        <div class="rank-section-title">Top 10 Geral</div>
-        <div class="card" style="padding:0">${buildAtivRows(ranking.slice(0, 10), true)}</div>
-      </div>
-      <div>
-        <div class="rank-section-title">Sua Turma (Top 10)</div>
-        <div class="card" style="padding:0">${buildAtivRows(ranking.filter(r => r.turma === turma).slice(0, 10), false)}</div>
-      </div>
-    </div>`;
-  }
-}
-
-window.mudarTab = function(tab) {
-  tabAtual = tab;
-  ['geral','turma','ativ','tabuada'].forEach(t => {
-    document.getElementById(`tab-${t}`)?.classList.toggle('active', tab === t);
-    document.getElementById(`panel-${t}`).style.display = tab === t ? '' : 'none';
+function stdPos(lista, scoreFn) {
+  let p=0, n=0, last=null;
+  return lista.map(item => {
+    n++;
+    const v = scoreFn(item);
+    if (v !== last) { p=n; last=v; }
+    return p;
   });
-  if (tab === 'ativ') abrirAtividade(ativSel);
-  if (tab === 'tabuada') carregarTabuadaRanking();
-};
-
-// ── Ranking da Tabuada ────────────────────────────────────────
-let _tabRankLoaded = false;
-async function carregarTabuadaRanking() {
-  if (_tabRankLoaded) return;
-  _tabRankLoaded = true;
-  const el = document.getElementById('tabuada-rank-content');
-
-  const [rankSnap, niveisSnap] = await Promise.all([
-    get(ref(db, 'tabuada_ranking')).catch(() => null),
-    get(ref(db, 'tabuada_niveis')).catch(() => null),
-  ]);
-
-  const tabAll = [];
-  if (rankSnap?.exists()) {
-    rankSnap.forEach(c => { const v = c.val(); if (v?.nome) tabAll.push(v); });
-    tabAll.sort((a, b) => (b.melhor_nivel||0) - (a.melhor_nivel||0) || (b.total_partidas||0) - (a.total_partidas||0));
-  }
-  const tabTurma = tabAll.filter(r => r.turma === turma);
-
-  // Mesclar total_partidas do tabuada_niveis (mais preciso que o ranking)
-  if (niveisSnap?.exists()) {
-    niveisSnap.forEach(c => {
-      const nd = c.val();
-      if (!nd?.nome) return;
-      const r = tabAll.find(x => c.key === (x.turma + '_' + x.nome).replace(/[.#$\[\]/\s]/g, '_'));
-      if (r && nd.total_partidas) r.total_partidas = nd.total_partidas;
-    });
-  }
-
-  // Standard ranking: empates → mesma posição, próximo pula
-  function stdTabPos(lista) {
-    let pos = 0, n = 0, last = null;
-    return lista.map(item => {
-      n++;
-      const v = item.melhor_nivel || 0;
-      if (v !== last) { pos = n; last = v; }
-      return pos;
-    });
-  }
-
-  const allPos   = stdTabPos(tabAll);
-  const turmaPos = stdTabPos(tabTurma);
-
-  function buildTabRows(lista, posArr, showTurma) {
-    if (!lista.length) return `<p style="font-size:13px;color:var(--text-muted);padding:16px">Nenhum resultado ainda.</p>`;
-    const medals = ['🥇','🥈','🥉'];
-    return lista.map((r, i) => {
-      const pos   = posArr[i];
-      const medal = pos <= 3 ? medals[pos-1] : pos;
-      const isMe  = alunos.includes(r.nome) && r.turma === turma;
-      const cc    = pos === 1 ? 'rank-gold' : pos === 2 ? 'rank-silver' : pos === 3 ? 'rank-bronze' : '';
-      return `<div class="rank-row ${cc}${isMe ? ' destaque' : ''}">
-        <div class="rank-pos">${medal}</div>
-        <div style="flex:1;min-width:0">
-          <div class="rank-nome">${r.nome}${isMe ? ' ★' : ''}</div>
-          <div class="rank-sub">${showTurma ? `Turma ${r.turma} · ` : ''}${r.total_partidas||0} partidas</div>
-        </div>
-        <div class="rank-pts">Nv ${r.melhor_nivel||1}<div class="rank-pts-label">melhor</div></div>
-      </div>`;
-    }).join('');
-  }
-
-  // Posição do aluno logado
-  const meGeralIdx = tabAll.findIndex(r => alunos.includes(r.nome) && r.turma === turma);
-  const meTurmaIdx = tabTurma.findIndex(r => alunos.includes(r.nome) && r.turma === turma);
-  const meGeralPos = meGeralIdx >= 0 ? allPos[meGeralIdx]   : null;
-  const meTurmaPos = meTurmaIdx >= 0 ? turmaPos[meTurmaIdx] : null;
-
-  const posStripHtml = (meGeralPos || meTurmaPos) ? `
-    <div class="card" style="margin-bottom:14px;display:flex;gap:24px;align-items:center;padding:12px 16px;flex-wrap:wrap">
-      <div style="font-size:13px;font-weight:700;flex:1;min-width:80px">${alunos[0]}</div>
-      ${meGeralPos ? `<div style="text-align:center">
-        <div style="font-size:32px;font-weight:900;color:var(--blue);line-height:1">#${meGeralPos}</div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:3px">Geral</div>
-      </div>` : ''}
-      ${meTurmaPos ? `<div style="text-align:center">
-        <div style="font-size:32px;font-weight:900;color:var(--orange);line-height:1">#${meTurmaPos}</div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:3px">Turma</div>
-      </div>` : ''}
-    </div>` : '';
-
-  el.innerHTML = `
-    ${posStripHtml}
-    <div class="grid-2" style="align-items:start">
-      <div>
-        <div class="rank-section-title">Top 10 Geral <span class="live-tag">Por nível</span></div>
-        <div class="card" style="padding:0">${buildTabRows(tabAll.slice(0, 10), allPos, true)}</div>
-      </div>
-      <div>
-        <div class="rank-section-title">Sua Turma</div>
-        <div class="card" style="padding:0">${buildTabRows(tabTurma.slice(0, 10), turmaPos, false)}</div>
-      </div>
-    </div>`;
 }
 
-// ── Construir linhas ──────────────────────────────────────────
-function buildRows(lista, showTurma) {
-  if (!lista.length) return '<p style="font-size:13px;color:var(--text-muted);padding:16px">Nenhum resultado ainda.</p>';
-  let dPos = 0, lastTotal = null;
-  return lista.map(r => {
-    if (r.total !== lastTotal) { dPos++; lastTotal = r.total; }
-    const pos = dPos;
-    const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos;
-    const dest = alunos.includes(r.aluno);
-    const colorClass = pos === 1 ? 'rank-gold' : pos === 2 ? 'rank-silver' : pos === 3 ? 'rank-bronze' : '';
-    return `<div class="rank-row ${colorClass}${dest ? ' destaque' : ''}">
-      <div class="rank-pos">${medal}</div>
-      <div style="flex:1;min-width:0">
-        <div class="rank-nome">${r.aluno}${dest ? ' ★' : ''}</div>
-        <div class="rank-sub">${showTurma ? `Turma ${r.turma} · ` : ''}${r.atividades} ativ. · ${r.sessoes} sess.</div>
+// ── Load data ─────────────────────────────────────────────────
+const todos = (await getResultados()).filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
+const [rankSnap, niveisSnap] = await Promise.all([
+  get(ref(db, 'tabuada_ranking')).catch(() => null),
+  get(ref(db, 'tabuada_niveis')).catch(() => null),
+]);
+
+// ── Tabuada ranking ───────────────────────────────────────────
+const tabAll = [];
+if (rankSnap?.exists()) {
+  rankSnap.forEach(c => { const v=c.val(); if(v?.nome) tabAll.push({...v, _key:c.key}); });
+  tabAll.sort((a,b) => (b.melhor_nivel||0)-(a.melhor_nivel||0)||(b.total_partidas||0)-(a.total_partidas||0)||(a.nome||'').localeCompare(b.nome||''));
+}
+if (niveisSnap?.exists()) {
+  niveisSnap.forEach(c => {
+    const nd=c.val(); if(!nd?.nome) return;
+    const r=tabAll.find(x=>x._key===c.key);
+    if(r&&nd.total_partidas) r.total_partidas=nd.total_partidas;
+  });
+}
+
+// Delta desde ontem via historico
+const ontemISO = new Date(Date.now()-86400000).toISOString().slice(0,10);
+const deltaMap = {};
+if (niveisSnap?.exists()) {
+  niveisSnap.forEach(c => {
+    const nd=c.val(); if(!nd?.historico) return;
+    const entries=Object.entries(nd.historico)
+      .map(([ts,v])=>({ts:Number(ts),...v})).filter(e=>e.nivel).sort((a,b)=>a.ts-b.ts);
+    let best=0;
+    for(const e of entries) {
+      if(new Date(e.ts).toISOString().slice(0,10)<=ontemISO) best=Math.max(best,e.nivel);
+    }
+    const r=tabAll.find(x=>x._key===c.key);
+    if(r) deltaMap[c.key]=(r.melhor_nivel||0)-best;
+  });
+}
+const tabTurma    = tabAll.filter(r=>r.turma===turma);
+const tabAllPos   = stdPos(tabAll,   r=>r.melhor_nivel||0);
+const tabTurmaPos = stdPos(tabTurma, r=>r.melhor_nivel||0);
+
+// ── F1 / F2 rankings ─────────────────────────────────────────
+const avResults = todos.filter(r=>r.concluido&&r.aluno&&r.modo==='avaliacao_plus'&&r.atividade!=='Atividade 4 - Geometria');
+const f1Map={}, f2Map={};
+for(const r of avResults) {
+  const al=r.aluno, at=r.atividade, t=r.turma||'?';
+  if(!f1Map[al]) f1Map[al]={aluno:al,turma:t,ativs:{}};
+  if(!f2Map[al]) f2Map[al]={aluno:al,turma:t,ativs:{}};
+  f1Map[al].ativs[at]=Math.max(f1Map[al].ativs[at]||0, r.nota_quiz??0);
+  f2Map[al].ativs[at]=Math.max(f2Map[al].ativs[at]||0, r.pontuacao??0);
+}
+const rankF1All = Object.values(f1Map).map(a=>{
+  const vals=Object.values(a.ativs);
+  return {aluno:a.aluno,turma:a.turma,total:vals.reduce((s,v)=>s+v,0),numAtiv:vals.length,maxF1:vals.length*10};
+}).sort((a,b)=>b.total-a.total||a.aluno.localeCompare(b.aluno));
+
+const rankF2All = Object.values(f2Map).map(a=>{
+  const vals=Object.values(a.ativs);
+  return {aluno:a.aluno,turma:a.turma,total:vals.reduce((s,v)=>s+v,0)};
+}).sort((a,b)=>b.total-a.total||a.aluno.localeCompare(b.aluno));
+
+const rankF1Turma = rankF1All.filter(r=>r.turma===turma);
+const rankF2Turma = rankF2All.filter(r=>r.turma===turma);
+const f1AllPos    = stdPos(rankF1All,   r=>r.total);
+const f2AllPos    = stdPos(rankF2All,   r=>r.total);
+const f1TurmaPos  = stdPos(rankF1Turma, r=>r.total);
+const f2TurmaPos  = stdPos(rankF2Turma, r=>r.total);
+
+// ── Activity rankings ─────────────────────────────────────────
+const ativsList = [...new Set(avResults.map(r=>r.atividade))].sort();
+const rankAtivAll={}, rankAtivTurma={};
+for(const at of ativsList) {
+  const byAl={};
+  for(const r of avResults.filter(x=>x.atividade===at)) {
+    const al=r.aluno, t=r.turma||'?';
+    if(!byAl[al]) byAl[al]={aluno:al,turma:t,f1:0,f2:0};
+    byAl[al].f1=Math.max(byAl[al].f1, r.nota_quiz??0);
+    byAl[al].f2=Math.max(byAl[al].f2, r.pontuacao??0);
+  }
+  const sorted=Object.values(byAl).sort((a,b)=>b.f1-a.f1||b.f2-a.f2||a.aluno.localeCompare(b.aluno));
+  rankAtivAll[at]=sorted;
+  rankAtivTurma[at]=sorted.filter(r=>r.turma===turma);
+}
+
+// ── Rank positions (toprank) ──────────────────────────────────
+saveRankPos(alunos, rankF1All.map(r=>({aluno:r.aluno,total:r.total})));
+applyTopRankVisuals();
+initTopNotif({mode:'aluno', alunoNome:alunos[0]});
+
+// ── My positions ──────────────────────────────────────────────
+function myPos(lista, posArr) {
+  const idx=lista.findIndex(r=>(r.aluno||r.nome)===alunos[0]&&(r.turma||'?')===turma);
+  return idx>=0 ? posArr[idx] : null;
+}
+const myTab  = myPos(tabAll,    tabAllPos);
+const myTabT = myPos(tabTurma,  tabTurmaPos);
+const myF1   = myPos(rankF1All, f1AllPos);
+const myF1T  = myPos(rankF1Turma, f1TurmaPos);
+const myF2   = myPos(rankF2All, f2AllPos);
+const myF2T  = myPos(rankF2Turma, f2TurmaPos);
+
+// ── State ─────────────────────────────────────────────────────
+let activeTab='tabuada', activeScope='geral', activeAtiv=ativsList[0]||'';
+let _confettiDone=false;
+
+function getActiveData() {
+  switch(activeTab) {
+    case 'tabuada': return activeScope==='geral'?{list:tabAll,pos:tabAllPos}:{list:tabTurma,pos:tabTurmaPos};
+    case 'f1':  return activeScope==='geral'?{list:rankF1All,pos:f1AllPos}:{list:rankF1Turma,pos:f1TurmaPos};
+    case 'f2':  return activeScope==='geral'?{list:rankF2All,pos:f2AllPos}:{list:rankF2Turma,pos:f2TurmaPos};
+    case 'ativ':{
+      const l=activeScope==='geral'?(rankAtivAll[activeAtiv]||[]):(rankAtivTurma[activeAtiv]||[]);
+      return {list:l, pos:stdPos(l,r=>r.f1)};
+    }
+  }
+  return {list:[],pos:[]};
+}
+
+// ── Score display ─────────────────────────────────────────────
+function scoreRow(item, tab) {
+  switch(tab) {
+    case 'tabuada': return `<div class="rnk-score" style="color:var(--blue)">Nv ${item.melhor_nivel||1}</div>`;
+    case 'f1':  return `<div class="rnk-score" style="color:#7C3AED">${(item.total??0).toFixed(1)}<span class="rnk-score-sub"> / ${item.maxF1||0}</span></div>`;
+    case 'f2':  return `<div class="rnk-score" style="color:var(--green)">${item.total??0}<span class="rnk-score-sub"> pts</span></div>`;
+    case 'ativ':return `<div class="rnk-score" style="color:#7C3AED">${(item.f1??0).toFixed(1)}<span class="rnk-score-sub">/10</span><div style="font-size:10px;color:var(--green);font-weight:700">${item.f2??0}pts F2</div></div>`;
+  }
+  return '';
+}
+function scorePodium(item, tab) {
+  switch(tab) {
+    case 'tabuada': return `Nv ${item.melhor_nivel||1}`;
+    case 'f1':  return `${(item.total??0).toFixed(1)} / ${item.maxF1||0}`;
+    case 'f2':  return `${item.total??0} pts`;
+    case 'ativ':return `${(item.f1??0).toFixed(1)} / 10`;
+  }
+  return '';
+}
+function scoreColor(tab) {
+  return tab==='tabuada'?'var(--blue)':tab==='f2'?'var(--green)':'#7C3AED';
+}
+
+// ── Podium ────────────────────────────────────────────────────
+function renderPodium(lista, posArr) {
+  if(!lista.length) return `<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px">Sem dados ainda.</div>`;
+  const mobile=isMob();
+
+  // Build top-3 groups
+  const groups=[];
+  let gi=0;
+  while(gi<lista.length&&groups.length<3) {
+    const pos=posArr[gi];
+    let gj=gi+1;
+    while(gj<lista.length&&posArr[gj]===pos) gj++;
+    groups.push({pos,students:lista.slice(gi,gj)});
+    gi=gj;
+  }
+
+  const TROPHIES=['🥇','🥈','🥉'];
+  const COLORS  =['#F59E0B','#9CA3AF','#CD853F'];
+  const STANDS  =[
+    {h:mobile?60:80, bg:'linear-gradient(135deg,#F59E0B,#D97706)'},
+    {h:mobile?44:56, bg:'linear-gradient(135deg,#9CA3AF,#6B7280)'},
+    {h:mobile?32:40, bg:'linear-gradient(135deg,#CD853F,#92400E)'},
+  ];
+
+  const spot=(slotIdx)=>{
+    const g=groups[slotIdx];
+    if(!g) return `<div class="podium-spot p${slotIdx+1}"></div>`;
+    const st=STANDS[slotIdx];
+    const isMe=g.students.some(s=>(s.aluno||s.nome)===alunos[0]&&(s.turma||'?')===turma);
+    const names=g.students.map(s=>displayNome(s.aluno||s.nome||'?', mobile));
+    const nameStr=names.length===1?names[0]:names.join(' & ');
+    const turmaStr=activeScope==='geral'&&g.students[0]?.turma
+      ?`<div class="podium-turma">Turma ${escH(g.students[0].turma)}</div>`:'' ;
+
+    // Confetti for #1 me (once)
+    let confetti='';
+    if(isMe&&slotIdx===0&&!_confettiDone) {
+      _confettiDone=true;
+      const cols=['#F59E0B','#3B82F6','#EF4444','#22C55E','#8B5CF6'];
+      confetti=`<div style="position:absolute;top:0;left:50%;pointer-events:none;width:0;overflow:visible">`+
+        cols.map((c,i)=>{
+          const cx=(i%2===0?-1:1)*(8+i*6);
+          const dur=(1.5+i*.28).toFixed(2), del=(i*.38).toFixed(2);
+          return `<div class="confete-rank" style="background:${c};left:${cx}px;--dur:${dur}s;--delay:${del}s"></div>`;
+        }).join('')+`</div>`;
+    }
+    const crown=slotIdx===0?`<div class="podium-crown">👑</div>`:'';
+
+    return `<div class="podium-spot p${slotIdx+1} g${slotIdx+1}${isMe?' me-border':''}">
+      ${confetti}${crown}
+      <div class="podium-trophy">${TROPHIES[slotIdx]}</div>
+      <div class="podium-name" title="${g.students.map(s=>s.aluno||s.nome).join(' & ')}">${nameStr}</div>
+      ${turmaStr}
+      <div class="podium-score" style="color:${COLORS[slotIdx]}">${scorePodium(g.students[0],activeTab)}</div>
+      <div class="podium-stand" style="height:${st.h}px;background:${st.bg}">${g.pos}</div>
+    </div>`;
+  };
+
+  // Desktop DOM order: 2nd, 1st, 3rd (flex align-items:flex-end makes 1st tallest look right)
+  // Mobile: CSS order:-1 on .p1 pulls 1st to top
+  return `<div class="podium-outer">${spot(1)}${spot(0)}${spot(2)}</div>`;
+}
+
+// ── List (4th+) ───────────────────────────────────────────────
+function renderList(lista, posArr) {
+  const mobile=isMob();
+  // Rows from 4th place; always include "me" even if in podium position (shows context)
+  const meIdx=lista.findIndex(r=>(r.aluno||r.nome)===alunos[0]&&(r.turma||'?')===turma);
+  const showSet=new Set();
+  lista.forEach((_,i)=>{ if(posArr[i]>=4) showSet.add(i); });
+  // If me is in 4+ already it's included; if me is in podium, don't duplicate
+  const rows=lista.filter((_,i)=>showSet.has(i));
+  if(!rows.length) return '';
+
+  const html=rows.map(r=>{
+    const i=lista.indexOf(r);
+    const pos=posArr[i];
+    const nome=r.aluno||r.nome||'?';
+    const isMe=nome===alunos[0]&&(r.turma||'?')===turma;
+    const posColor=pos===1?'var(--gold)':pos===2?'#9CA3AF':pos===3?'#CD853F':'var(--text-muted)';
+
+    let deltaHtml='';
+    if(activeTab==='tabuada'&&r._key) {
+      const d=deltaMap[r._key];
+      if(d!=null) {
+        const cls=d>0?'up':d<0?'dn':'eq';
+        const txt=d>0?`↑${d}`:d<0?`↓${Math.abs(d)}`:'→';
+        deltaHtml=`<span class="rnk-delta ${cls}">${txt}</span>`;
+      }
+    }
+
+    const subLine=activeScope==='geral'
+      ?`Turma ${escH(r.turma||'?')}${activeTab==='tabuada'?` · ${r.total_partidas||0} part.`:''}`
+      :(activeTab==='tabuada'?`${r.total_partidas||0} partidas`:'');
+
+    return `<div class="rnk-row${isMe?' me':''}">
+      <span class="rnk-pos" style="color:${posColor}">${pos}</span>
+      <div class="rnk-av" style="background:${avColor(nome)};color:#fff">${nome[0].toUpperCase()}</div>
+      <div class="rnk-info">
+        <div class="rnk-name">${displayNome(nome,mobile)}${isMe?' ★':''}</div>
+        ${subLine?`<div class="rnk-sub">${subLine}</div>`:''}
       </div>
-      <div class="rank-pts">${r.total}<div class="rank-pts-label">total</div><div class="rank-pts-label">méd. ${r.media}</div></div>
+      <div class="rnk-right">${scoreRow(r,activeTab)}${deltaHtml}</div>
     </div>`;
   }).join('');
+
+  return `<div class="rnk-card">${html}</div>`;
 }
 
-const geralRows = buildRows(rankAll, true);
-const turmaRows = buildRows(rankTurma.slice(0, 10), false);
+// ── Aluno card ────────────────────────────────────────────────
+function renderAlunoCard() {
+  const el=document.getElementById('aluno-card');
+  if(!el) return;
+  const pills=[];
+  if(myTab)  pills.push(`<span class="rnk-pill blue">🎮 #${myTab} Tabuada</span>`);
+  if(myTabT) pills.push(`<span class="rnk-pill orange">🏫 #${myTabT} Tab. ${escH(turma)}</span>`);
+  if(myF1)   pills.push(`<span class="rnk-pill purple">📝 #${myF1} F1 Geral</span>`);
+  if(myF1T)  pills.push(`<span class="rnk-pill orange">🏫 #${myF1T} F1 ${escH(turma)}</span>`);
+  if(myF2)   pills.push(`<span class="rnk-pill green">📊 #${myF2} F2 Geral</span>`);
+  if(myF2T)  pills.push(`<span class="rnk-pill orange">🏫 #${myF2T} F2 ${escH(turma)}</span>`);
 
-const geralTop3 = rankAll.slice(0, 9).map(r => ({ aluno: r.aluno, total: r.total, media: r.media, turma: r.turma }));
-const turmaTop3 = rankTurma.slice(0, 9).map(r => ({ aluno: r.aluno, total: r.total, media: r.media, turma: r.turma }));
-
-const ativBtns = LISTA_ATIVIDADES.map(a =>
-  `<button class="ativ-btn${a.nome === ativSel ? ' active' : ''}" data-ativ="${a.nome}">${a.nome}</button>`
-).join('');
-
-// ── Faixa de posição ──────────────────────────────────────────
-const posStrip = alunos.map(nome => {
-  const p  = posicaoAluno(nome);
-  const pg = p.posGeral, pt = p.posTurma;
-  const pgColor  = pg !== '—' && pg <= 3 ? ['#F59E0B','#9CA3AF','#CD853F'][pg-1] : 'var(--blue)';
-  const pgBadge  = pg !== '—' && pg <= 3 ? `<div style="font-size:13px;line-height:1;margin-bottom:3px">${['🥇','🥈','🥉'][pg-1]}</div>` : '';
-  const ptBadge  = pt === 1 ? `<div style="font-size:13px;line-height:1;margin-bottom:3px">👑</div>` : '';
-  return `<div class="pos-strip-item" style="display:flex;align-items:center;gap:16px;padding:8px 0">
-    <div style="font-size:13px;font-weight:700;min-width:0;flex:1">${nome}</div>
-    <div style="display:flex;gap:22px;flex-shrink:0">
-      <div style="text-align:center">
-        ${pgBadge}
-        <div class="pos-rank-num" style="font-size:38px;font-weight:900;color:${pgColor};line-height:1">${pg === '—' ? '—' : '#'+pg}</div>
-        <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-top:3px">Geral</div>
-      </div>
-      <div style="text-align:center">
-        ${ptBadge}
-        <div class="pos-rank-num" style="font-size:38px;font-weight:900;color:var(--orange);line-height:1">${pt === '—' ? '—' : '#'+pt}</div>
-        <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-top:3px">Turma</div>
-      </div>
-    </div>
-  </div>`;
-}).join('<div style="width:1px;background:var(--border);margin:0 12px;align-self:stretch" class="pos-strip-sep"></div>');
-
-// ── Próxima Meta ──────────────────────────────────────────────
-const proximaMeta = alunos.map(nome => {
-  const idx = rankAll.findIndex(r => r.aluno === nome);
-  if (idx < 0) return '';
-  const userTotal = rankAll[idx].total;
-  let dPos = 0, lastT = null, userRank = 0;
-  rankAll.forEach(r => {
-    if (r.total !== lastT) { dPos++; lastT = r.total; }
-    if (r.aluno === nome) userRank = dPos;
-  });
-  if (userRank === 1) {
-    const below = rankAll.find(r => r.total < userTotal);
-    if (!below) return `<span style="font-size:13px;font-weight:700;color:var(--gold)">🏆 Você lidera sem concorrentes!</span>`;
-    const lead = userTotal - below.total;
-    return `<span style="font-size:13px;font-weight:700;color:var(--gold)">🏆 Você lidera com ${lead}pts de vantagem!</span>`;
-  } else {
-    let aboveTotal = null;
-    for (let i = idx - 1; i >= 0; i--) {
-      if (rankAll[i].total > userTotal) { aboveTotal = rankAll[i].total; break; }
-    }
-    if (aboveTotal === null) return '';
-    const gap = aboveTotal - userTotal;
-    const targetRank = userRank - 1;
-    return `<span style="font-size:13px;color:var(--text-muted)">Você está a <b style="color:var(--text)">${gap}pts</b> do ${targetRank}º lugar!</span>`;
-  }
-}).filter(Boolean).join('<span style="margin:0 8px;color:var(--border)">|</span>');
-
-const isMobile = window.innerWidth <= 480;
-
-document.getElementById('content').innerHTML = `
-  <div class="card pos-strip-wrap" style="margin-bottom:${proximaMeta ? '6px' : '16px'};display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 16px">
-    ${posStrip}
-  </div>
-  ${proximaMeta ? `<div style="text-align:center;padding:4px 0 12px;font-size:13px">${proximaMeta}</div>` : ''}
-
-  <div class="tab-nav">
-    <button id="tab-geral" class="active" onclick="mudarTab('geral')">🏆 Geral</button>
-    <button id="tab-turma"                onclick="mudarTab('turma')">🏫 Turma</button>
-    <button id="tab-ativ"                 onclick="mudarTab('ativ')">📚 Por Atividade</button>
-    <button id="tab-tabuada"              onclick="mudarTab('tabuada')">🎮 Tabuada</button>
-  </div>
-
-  <div id="panel-geral">
-    ${renderPodium(geralTop3, { showTurma: true, size: isMobile ? 'medium' : 'large' })}
-    <div class="card" style="padding:0">${geralRows}</div>
-  </div>
-
-  <div id="panel-turma" style="display:none">
-    ${renderPodium(turmaTop3, { showTurma: false, size: 'small' })}
-    <div class="card" style="padding:0">${turmaRows}</div>
-  </div>
-
-  <div id="panel-ativ" style="display:none">
-    <div class="ativ-sel" id="ativ-sel">${ativBtns}</div>
-    <div id="ativ-mode-nav"></div>
-    <div id="ativ-mode-content"></div>
-  </div>
-
-  <div id="panel-tabuada" style="display:none">
-    <div id="tabuada-rank-content"><div style="text-align:center;padding:40px;color:var(--text-muted)">Carregando…</div></div>
-  </div>`;
-
-document.querySelectorAll('.ativ-btn').forEach(b => {
-  b.addEventListener('click', () => abrirAtividade(b.dataset.ativ));
-});
-
-// Confetti quando o aluno logado é 1º no ranking geral
-const meuIdxRank = rankAll.findIndex(r => r.aluno === alunos[0]);
-const euSouPrimeiro = meuIdxRank >= 0 && rankAll[meuIdxRank].total >= rankAll[0].total;
-if (euSouPrimeiro) {
-  const colors = ['#F59E0B','#3B82F6','#EF4444','#22C55E','#8B5CF6','#EC4899','#F97316','#06B6D4'];
-  const wrap = document.createElement('div');
-  wrap.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden';
-  for (let i = 0; i < 20; i++) {
-    const dur = (1.5 + (i % 7) * 0.25).toFixed(2);
-    const del = ((i * 0.17) % 2.4).toFixed(2);
-    const left = Math.round(5 + (i / 19) * 90);
-    const el = document.createElement('div');
-    el.className = 'confete-rank';
-    el.style.background = colors[i % 8];
-    el.style.left = left + '%';
-    el.style.setProperty('--dur', dur + 's');
-    el.style.setProperty('--delay', del + 's');
-    wrap.appendChild(el);
-  }
-  document.body.appendChild(wrap);
-  setTimeout(() => wrap.remove(), 5500);
+  el.innerHTML=`<div class="rnk-aluno-name">${escH(alunos[0])}</div>`+
+    (pills.length?pills.join(''):`<span style="font-size:12px;color:var(--text-muted)">Sem avaliações realizadas ainda.</span>`);
 }
 
-window.toggleAvatarMenu = function() {
-  document.getElementById('avatar-menu').classList.toggle('open');
-};
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('.avatar-wrap')) {
-    document.getElementById('avatar-menu')?.classList.remove('open');
-  }
+// ── Render ────────────────────────────────────────────────────
+function render() {
+  const {list,pos}=getActiveData();
+  document.getElementById('podium-section').innerHTML=renderPodium(list,pos);
+  document.getElementById('list-section').innerHTML=renderList(list,pos);
+  document.querySelectorAll('.rnk-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===activeTab));
+  document.querySelectorAll('.rnk-scope-btn').forEach(b=>b.classList.toggle('active',b.dataset.scope===activeScope));
+  const as=document.getElementById('ativ-select');
+  if(as) as.style.display=activeTab==='ativ'?'':'none';
+  renderAlunoCard();
+}
+
+// ── Build static structure ────────────────────────────────────
+document.getElementById('content').innerHTML=`
+  <div id="aluno-card" class="rnk-aluno-card">
+    <div style="color:var(--text-muted);font-size:13px">Calculando…</div>
+  </div>
+  <div class="rnk-tabs">
+    <button class="rnk-tab" data-tab="tabuada" onclick="mudarTab('tabuada')">🎮 Tabuada</button>
+    <button class="rnk-tab" data-tab="f1"      onclick="mudarTab('f1')">📝 Fase 1</button>
+    <button class="rnk-tab" data-tab="f2"      onclick="mudarTab('f2')">📝 Fase 2</button>
+    <button class="rnk-tab" data-tab="ativ"    onclick="mudarTab('ativ')">📚 Atividade</button>
+  </div>
+  <div class="rnk-scope">
+    <button class="rnk-scope-btn" data-scope="geral"  onclick="mudarScope('geral')">Geral</button>
+    <button class="rnk-scope-btn" data-scope="turma"  onclick="mudarScope('turma')">🏫 ${escH(turma)}</button>
+  </div>
+  <div id="ativ-select" class="rnk-ativ-wrap" style="display:none">
+    <select onchange="mudarAtiv(this.value)">
+      ${ativsList.map(a=>`<option value="${escH(a)}">${escH(a)}</option>`).join('')}
+    </select>
+  </div>
+  <div id="podium-section" class="podium-section"></div>
+  <div id="list-section"></div>
+`;
+
+// ── Window functions ──────────────────────────────────────────
+window.mudarTab   = t => { activeTab=t;   render(); };
+window.mudarScope = s => { activeScope=s; render(); };
+window.mudarAtiv  = a => { activeAtiv=a;  render(); };
+window.toggleAvatarMenu = () => document.getElementById('avatar-menu').classList.toggle('open');
+document.addEventListener('click', e => {
+  if(!e.target.closest('.avatar-wrap')) document.getElementById('avatar-menu')?.classList.remove('open');
 });
+
+render();
 </script>
 </body>
 </html>

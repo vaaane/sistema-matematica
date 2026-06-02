@@ -470,14 +470,22 @@ function _getLevelConfigBase(lvl) {
     const minMul = Math.min(5 + n, 7);
     const minDiv = Math.min(5 + n, 7);
     if (tipo === 'rapido') {
-      // ⚡ Rápido: 18p×2=36 ÷ 6cols = 6×6, tempo -5s (60s total)
-      return { type:'mix_as', pairs:18, cols:6, secs: Math.max(20, TEMPO_BASE_129 - 5), minMul, minDiv, ehChefao:true, tipoChefao:'rapido' };
+      // ⚡ Rápido: 12p×2=24 | desktop 6×4, mobile 4×6, tempo 60s
+      return { type:'mix_as', pairs:12, cols:6, secs: Math.max(20, TEMPO_BASE_129 - 5), minMul, minDiv, ehChefao:true, tipoChefao:'rapido' };
     } else if (tipo === 'dificil') {
-      // 🧮 Difícil: 10p×2=20 ÷ 5cols = 5×4, ops pesadas, tempo normal
-      return { type:'mix_as', pairs:10, cols:5, secs: TEMPO_BASE_129, minMul: Math.min(6+n,8), minDiv: Math.min(6+n,8), ehChefao:true, tipoChefao:'dificil', pesado:true };
+      // 🧮 Difícil: 12p×2=24 | desktop 6×4, mobile 4×6, ops pesadas
+      return { type:'mix_as', pairs:12, cols:6, secs: TEMPO_BASE_129, minMul: Math.min(6+n,8), minDiv: Math.min(6+n,8), ehChefao:true, tipoChefao:'dificil', pesado:true };
     } else {
-      // 📦 Grande: 21p×2=42 ÷ 7cols = 7×6, tempo +5s
-      return { type:'mix_as', pairs:21, cols:7, secs: Math.min(120, TEMPO_BASE_129 + 5), minMul, minDiv, ehChefao:true, tipoChefao:'grande' };
+      // 📦 Grande: 18p×2=36 desktop (6×6) | 12p×2=24 mobile (4×6)
+      // Progressão: grandeIdx 0=normal, ímpar=tempo-10s, par≥2=pesado
+      const grandeIdx         = Math.floor((lvl - 150) / 30);
+      const grandeTempoReduz  = grandeIdx % 2 === 1;
+      const grandePesado      = grandeIdx >= 2 && grandeIdx % 2 === 0;
+      const grandeTime        = grandeTempoReduz
+        ? Math.max(20, TEMPO_BASE_129 - 10)   // 55s
+        : Math.min(120, TEMPO_BASE_129 + 5);   // 70s
+      return { type:'mix_as', pairs:18, cols:6, secs: grandeTime, minMul, minDiv,
+        pesado: grandePesado, ehChefao:true, tipoChefao:'grande' };
     }
   } else {
     // Pós-chefão (131-139, 141-149...): mantém tempo da faixa base
@@ -1017,6 +1025,8 @@ let ehChefaoAtual = false;  // true quando o nível atual é chefão
 let tipoChefaoAtual = null; // 'rapido' | 'dificil' | 'grande' | null
 let tipoAcertos = { add:0, sub:0, mul:0, div:0 };
 let tipoErros   = { add:0, sub:0, mul:0, div:0 };
+let _orientHandler  = null; // handler de resize para reflow de cols
+let _orientDebounce = null;
 
 function symToTipo(sym) {
   if (sym === '+') return 'add';
@@ -1151,30 +1161,33 @@ function _buildGameInternal() {
   tipoErros   = { add:0, sub:0, mul:0, div:0 };
   _animating  = false;
 
-  // ── 1. Colunas — definidas ANTES dos pares para garantir divisibilidade
+  // ── 1. Colunas — desktop: cfg.cols (geralmente 6), mobile (≤768px): 4
   const _topbarH = document.querySelector('.topbar')?.getBoundingClientRect().height || 62;
-  // Chefões: cols exato do config. Normais: 4 em mobile (<500px), 6 no desktop
-  const cols = ehChefaoAtual
-    ? (cfg.cols || 6)
-    : (window.innerWidth < 500 ? 4 : (cfg.cols || 6));
+  const _isMobile  = window.innerWidth <= 768;
+  const _desktopCols = cfg.cols || 6; // máx desktop para este nível
+  // Níveis pequenos (cols 2/3) mantêm seu layout; demais: mobile força 4
+  const cols = _isMobile ? Math.min(4, _desktopCols) : _desktopCols;
 
-  // ── 2. Pares: usar cfg.pairs como alvo (configs já são projetados para o grid)
-  const pairs = generatePairs(cfg.type, cfg.pairs, cfg.maxResult, cfg.minMul || 0, cfg.minDiv || 0, cfg.pesado || false);
-  if (pairs.length < cfg.pairs) {
+  // ── 2. Pares: Grande desktop=18p, todos os outros=máx 12p
+  // (24 cards normal/rápido/difícil | 36 cards grande desktop | 24 cards grande mobile)
+  const _targetPairs = (tipoChefaoAtual === 'grande' && !_isMobile)
+    ? cfg.pairs           // 18 pares no desktop grande
+    : Math.min(cfg.pairs, 12); // máx 12 para todos os demais
+  const pairs = generatePairs(cfg.type, _targetPairs, cfg.maxResult, cfg.minMul || 0, cfg.minDiv || 0, cfg.pesado || false);
+  if (pairs.length < _targetPairs) {
     const usedResults = new Set(pairs.map(p => p.result));
-    for (let i = pairs.length; i < cfg.pairs; i++) {
+    for (let i = pairs.length; i < _targetPairs; i++) {
       const extra = tryGenOp('add', usedResults, cfg.maxResult, cfg.pesado || false);
       if (extra) pairs.push(extra); else break;
     }
   }
-  if (pairs.length > cfg.pairs) pairs.splice(cfg.pairs);
+  if (pairs.length > _targetPairs) pairs.splice(_targetPairs);
 
   // ── 3. Garantir grid sem buracos: (pares × 2) % cols === 0 SEMPRE
-  // factor: para cols par → cols/2; para cols ímpar → cols
   const _gridFactor = cols % 2 === 0 ? cols / 2 : cols;
   const _validPares = Math.max(_gridFactor, Math.floor(pairs.length / _gridFactor) * _gridFactor);
   if (pairs.length > _validPares) pairs.splice(_validPares);
-  console.log(`[Tabuada] Nv${nivelAtual} (${ehChefaoAtual ? tipoChefaoAtual||'chefao' : 'normal'}): ${pairs.length}p × 2 = ${pairs.length*2} cards ÷ ${cols} cols = ${pairs.length*2/cols} linhas`);
+  console.log(`[Tabuada] Nv${nivelAtual} (${ehChefaoAtual ? tipoChefaoAtual||'chefao' : 'normal'}) ${_isMobile?'mobile':'desktop'}: ${pairs.length}p × 2 = ${pairs.length*2} cards ÷ ${cols} cols = ${pairs.length*2/cols} linhas`);
 
   // ── 4. Build cards (pares e cols já garantidamente válidos)
   const cards = [];
@@ -1290,6 +1303,26 @@ function _buildGameInternal() {
   // Clicar no slot devolve a carta ao lugar de origem
   document.getElementById('slot-op')?.addEventListener('click',  deselectCard);
   document.getElementById('slot-res')?.addEventListener('click', deselectCard);
+
+  // ── Orientation change: reflow de colunas ao girar a tela ──────
+  if (_orientHandler) { window.removeEventListener('resize', _orientHandler); }
+  { // IIFE para capturar _desktopCols no closure sem vazar variável
+    const _dc = _desktopCols;
+    let _cc   = cols;
+    _orientHandler = () => {
+      clearTimeout(_orientDebounce);
+      _orientDebounce = setTimeout(() => {
+        if (gameOver) return;
+        const nowMobile = window.innerWidth <= 768;
+        const newCols   = nowMobile ? Math.min(4, _dc) : _dc;
+        if (newCols === _cc) return;
+        _cc = newCols;
+        const g = document.getElementById('game-grid');
+        if (g) g.style.gridTemplateColumns = `repeat(${newCols}, 1fr)`;
+      }, 200);
+    };
+    window.addEventListener('resize', _orientHandler);
+  }
 
   if (_isSprint) {
     if (!_sprintStarted) {
