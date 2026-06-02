@@ -47,9 +47,19 @@
     .game-card-link{transition:background .15s;}
     .game-card-link:hover{background:rgba(127,119,221,.07)!important;}
     [data-theme="dark"] .game-card-link:hover{background:rgba(127,119,221,.12)!important;}
-    /* Confete Tabuada #1 */
+    /* Confete #1 Geral */
     @keyframes confete-tab-cair{0%{opacity:1;transform:translateY(0) rotate(0deg)}75%{opacity:.9}100%{opacity:0;transform:translateY(110vh) rotate(560deg) scale(.4)}}
     .confete-tab{position:absolute;top:-10px;width:7px;height:9px;border-radius:2px;opacity:0;pointer-events:none;animation:confete-tab-cair var(--dur,2s) var(--delay,0s) ease-in 1 forwards;}
+    /* Body dourado */
+    .body-gold-border{outline:3px solid #FFD700;box-shadow:inset 0 0 30px rgba(255,215,0,.15);}
+    /* Banner #1 full-width */
+    @keyframes shimmer-gold{0%{background-position:200% center}100%{background-position:-200% center}}
+    .banner-no1-wrap{display:flex;align-items:center;gap:14px;padding:13px 20px;color:#fff;font-family:inherit;font-weight:700;font-size:15px;background:linear-gradient(100deg,#D97706,#F59E0B,#FBBF24,#F59E0B,#D97706);background-size:200% auto;animation:shimmer-gold 3s linear infinite;box-shadow:0 2px 14px rgba(245,158,11,.45);}
+    /* Card ring dourado */
+    .card-gold-ring{border:2px solid #FFD700!important;box-shadow:0 0 0 1px rgba(255,215,0,.3),0 4px 20px rgba(255,215,0,.25)!important;animation:gold-ring-pulse 2s ease-in-out infinite;}
+    @keyframes gold-ring-pulse{0%,100%{box-shadow:0 0 0 1px rgba(255,215,0,.3),0 4px 20px rgba(255,215,0,.25)}50%{box-shadow:0 0 0 2px rgba(255,215,0,.5),0 4px 28px rgba(255,215,0,.4)}}
+    /* Badge no canto do card */
+    .badge-no1-card{display:inline-flex;align-items:center;gap:4px;position:absolute;top:-10px;right:12px;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;z-index:1;white-space:nowrap;box-shadow:0 2px 8px rgba(245,158,11,.4);}
     @media(max-width:480px){
       .ativ-liberada{flex-wrap:wrap;gap:10px;padding:14px 14px}
       .ativ-liberada .ativ-info{width:100%}
@@ -255,6 +265,7 @@ const posGerais  = alunos.map(n => rankAll.findIndex(r => r.aluno === n) + 1).fi
 const posTurmas  = alunos.map(n => rankTurma.findIndex(r => r.aluno === n) + 1).filter(p => p > 0);
 const posGeralMin  = posGerais.length ? Math.min(...posGerais) : 99;
 const posTurmaMin  = posTurmas.length ? Math.min(...posTurmas) : 99;
+const euSouQuiz1 = posGeralMin === 1;
 
 function bannerParticles() {
   return ['rgba(255,255,255,.55)','rgba(255,220,70,.55)','rgba(255,255,255,.38)','rgba(255,195,30,.48)','rgba(255,255,255,.45)'].map((c,i) => {
@@ -265,7 +276,7 @@ function bannerParticles() {
 
 const BANNER_BG = ['linear-gradient(135deg,#F59E0B,#D97706)','linear-gradient(135deg,#9CA3AF,#6B7280)','linear-gradient(135deg,#CD853F,#92400E)'];
 let bannerHtml = '';
-if (posGeralMin <= 3) {
+if (posGeralMin >= 2 && posGeralMin <= 3) {
   const icone = ['🥇','🥈','🥉'][posGeralMin - 1];
   bannerHtml = `<div class="banner-top3" style="background:${BANNER_BG[posGeralMin-1]};position:relative;overflow:hidden">
     ${bannerParticles()}
@@ -275,7 +286,7 @@ if (posGeralMin <= 3) {
       <div style="font-size:12px;opacity:.85;margin-top:2px;font-weight:400">Continue assim! 🔥</div>
     </div>
   </div>`;
-} else if (posTurmaMin === 1) {
+} else if (!euSouQuiz1 && posTurmaMin === 1) {
   bannerHtml = `<div class="banner-top3" style="background:linear-gradient(135deg,#3B82F6,#1D4ED8)">
     <span style="font-size:28px;flex-shrink:0">🏫</span>
     <div>
@@ -560,7 +571,7 @@ ${tempoPodioHtml}
       </div>`}
     </div>
 
-    <div class="card" style="margin-bottom:14px;border:1.5px solid rgba(127,119,221,.35);box-shadow:0 4px 20px rgba(127,119,221,.13),var(--shadow-sm)">
+    <div id="tabuada-game-card" class="card" style="margin-bottom:14px;position:relative;overflow:visible;border:1.5px solid rgba(127,119,221,.35);box-shadow:0 4px 20px rgba(127,119,221,.13),var(--shadow-sm)">
       <!-- Header -->
       <div style="display:flex;align-items:center;justify-content:space-between">
         <div style="display:flex;align-items:center;gap:8px">
@@ -671,7 +682,7 @@ ${tempoPodioHtml}
     </div>
     ${proximaMetaHtml ? `<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:2px 8px 10px;line-height:1.7">${proximaMetaHtml}</div>` : ''}
 
-    <div class="card" style="margin-bottom:14px;overflow:visible">
+    <div id="quiz-top3-card" class="card" style="margin-bottom:14px;overflow:visible;position:relative">
       <div class="section-label" style="color:#F59E0B">
         <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12V11c0 4.52-3.05 8.75-7 9.93-3.95-1.18-7-5.41-7-9.93V6.3l7-3.12z"/></svg>
         Top 3 Geral
@@ -690,6 +701,64 @@ ${tempoPodioHtml}
 
   </div>
 </div>`;
+
+// ── #1 Geral: efeitos dourados (Tabuada e/ou Quiz) ───────────
+function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
+  if (!isQuiz && !isTabuada) return;
+  document.body.classList.add('body-gold-border');
+  document.querySelector('.banner-top3')?.remove();
+  document.getElementById('no1-banner')?.remove();
+  let mainLine, subLine;
+  if (isQuiz && isTabuada) {
+    mainLine = '👑 Você domina tudo! #1 na Tabuada e no Quiz!';
+    subLine  = 'Continue defendendo o topo!';
+  } else if (isTabuada) {
+    mainLine = `👑 Você é o #1 Geral na Tabuada! · Nível ${tabLevel}`;
+    subLine  = 'Continue defendendo o topo!';
+  } else {
+    mainLine = '👑 Você é o #1 Geral no Quiz!';
+    subLine  = 'Continue defendendo o topo!';
+  }
+  const banner = document.createElement('div');
+  banner.id = 'no1-banner';
+  banner.className = 'banner-no1-wrap';
+  banner.innerHTML = `<span style="font-size:22px;flex-shrink:0">👑</span><div><div>${mainLine}</div><div style="font-size:12px;font-weight:400;opacity:.85;margin-top:2px">${subLine}</div></div>`;
+  document.getElementById('content').insertAdjacentElement('afterbegin', banner);
+  if (isTabuada) {
+    const tc = document.getElementById('tabuada-game-card');
+    if (tc) {
+      tc.classList.add('card-gold-ring');
+      tc.querySelector('.badge-no1-card')?.remove();
+      const b = document.createElement('div'); b.className = 'badge-no1-card'; b.textContent = '👑 #1 GERAL'; tc.appendChild(b);
+    }
+  }
+  if (isQuiz) {
+    const qc = document.getElementById('quiz-top3-card');
+    if (qc) {
+      qc.classList.add('card-gold-ring');
+      qc.querySelector('.badge-no1-card')?.remove();
+      const b = document.createElement('div'); b.className = 'badge-no1-card'; b.textContent = '👑 #1 GERAL'; qc.appendChild(b);
+    }
+  }
+  const goldColors = ['#FFD700','#F59E0B','#F97316','#ffffff','#FBBF24','#FED7AA'];
+  const count = (isQuiz && isTabuada) ? 40 : 20;
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden';
+  for (let i = 0; i < count; i++) {
+    const dur  = (1.5 + (i % 7) * 0.25).toFixed(2);
+    const del  = ((i * 0.17) % 2.4).toFixed(2);
+    const left = Math.round(5 + (i / (count - 1)) * 90);
+    const el   = document.createElement('div');
+    el.className = 'confete-tab';
+    el.style.background = goldColors[i % goldColors.length];
+    el.style.left = left + '%';
+    el.style.setProperty('--dur',   dur  + 's');
+    el.style.setProperty('--delay', del  + 's');
+    wrap.appendChild(el);
+  }
+  document.body.appendChild(wrap);
+  setTimeout(() => wrap.remove(), 5500);
+}
 
 // ── Tabuada: card social + ranking (assíncrono) ───────────────
 (async () => {
@@ -740,28 +809,9 @@ ${tempoPodioHtml}
     // Linha condicional de posição do aluno
     let posHtml = '';
     if (myGeral === 1) {
-      // Banner dourado com nível
       posHtml = `<div style="padding:8px 12px;background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(245,158,11,.06));border:1px solid rgba(245,158,11,.45);border-radius:9px;font-size:12px;font-weight:700;color:#92400E;line-height:1.5">
         👑 <strong>#1 Geral!</strong> Nível ${meuNivel} — Continue defendendo o topo!
       </div>`;
-      // Confete
-      const _tabColors = ['#F59E0B','#3B82F6','#EF4444','#22C55E','#8B5CF6','#EC4899','#F97316','#06B6D4'];
-      const _tabWrap = document.createElement('div');
-      _tabWrap.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden';
-      for (let i = 0; i < 20; i++) {
-        const dur  = (1.5 + (i % 7) * 0.25).toFixed(2);
-        const del  = ((i * 0.17) % 2.4).toFixed(2);
-        const left = Math.round(5 + (i / 19) * 90);
-        const p = document.createElement('div');
-        p.className = 'confete-tab';
-        p.style.background = _tabColors[i % 8];
-        p.style.left = left + '%';
-        p.style.setProperty('--dur',   dur  + 's');
-        p.style.setProperty('--delay', del  + 's');
-        _tabWrap.appendChild(p);
-      }
-      document.body.appendChild(_tabWrap);
-      setTimeout(() => _tabWrap.remove(), 5500);
     } else if (myTurma !== null && myTurma <= 5) {
       posHtml = `<div style="padding:7px 11px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:8px;font-size:12px;font-weight:700;color:var(--green)">🎉 Você está em #${myTurma} na turma!</div>`;
     } else if (myGeral !== null && myGeral <= 20) {
@@ -826,6 +876,7 @@ ${tempoPodioHtml}
       </div>
       ${top3Html}${posRankHtml}`;
   }
+  applyNo1PageVisuals({ isQuiz: euSouQuiz1, isTabuada: myGeral === 1, tabLevel: meuNivel });
 })();
 
 window.toggleAvatarMenu = function() {

@@ -441,6 +441,12 @@ function buildRankRow(p, pos, isMe) {
 
 function isChefaoLv(lv) { return lv >= 130 && lv % 10 === 0; }
 
+function getTipoChefao(lv) {
+  if (!isChefaoLv(lv)) return null;
+  const ciclo = Math.floor((lv - 130) / 10) % 3;
+  return ciclo === 0 ? 'rapido' : ciclo === 1 ? 'dificil' : 'grande';
+}
+
 function buildLevelMap() {
   const hist = niveis.historico || {};
   const entries = Object.entries(hist)
@@ -470,20 +476,31 @@ function buildLevelMap() {
     const boss   = isChefaoLv(lv);
     let cls, tip, badge = '';
 
+    const tipo = boss ? getTipoChefao(lv) : null;
+    const bossIcon = tipo === 'rapido' ? '⚡' : tipo === 'dificil' ? '🧮' : tipo === 'grande' ? '📦' : '👹';
+    const bossName = tipo === 'rapido' ? 'Chefão Rápido' : tipo === 'dificil' ? 'Chefão Difícil' : tipo === 'grande' ? 'Chefão Grande' : 'Chefão';
+
     if (lv === nivelAtual) {
       cls = boss ? 'boss-cur' : 'cur';
-      tip = boss ? '👹 Nível Chefão — enfrente agora!' : 'Nível atual';
+      tip = boss
+        ? (tipo === 'rapido' ? `${bossIcon} Chefão Rápido — tempo reduzido! Enfrente agora!`
+         : tipo === 'dificil' ? `${bossIcon} Chefão Difícil — contas pesadas! Enfrente agora!`
+         : `${bossIcon} Chefão Grande — grid 7×6! Enfrente agora!`)
+        : 'Nível atual';
     } else if (lv > Math.max(nivelAtual, melhorNivel)) {
       cls = boss ? 'boss-lk' : 'lk';
-      tip = boss ? '👹 Nível Chefão · Derrote para avançar!' : '';
+      tip = boss
+        ? (tipo === 'rapido' ? `👹 Chefão Rápido — tempo reduzido!`
+         : tipo === 'dificil' ? `👹 Chefão Difícil — contas pesadas!`
+         : `👹 Chefão Grande — grid 7×6!`)
+        : '';
     } else if (boss) {
-      // Chefão já passado
       if (info.perfect) {
-        cls = 'boss-pf'; tip = '👹 Chefão derrotado! ⭐ Perfeito!'; badge = '<span class="g-lc-bdi">💀</span>';
+        cls = 'boss-pf'; tip = `👹 ${bossName} derrotado! ⭐ Perfeito!`; badge = '<span class="g-lc-bdi">💀</span>';
       } else if (info.done) {
-        cls = 'boss-pf'; tip = '👹 Chefão derrotado!'; badge = '<span class="g-lc-bdi">💀</span>';
+        cls = 'boss-pf'; tip = `👹 ${bossName} derrotado!`; badge = '<span class="g-lc-bdi">💀</span>';
       } else {
-        cls = 'boss-dn'; tip = '👹 Nível Chefão · Tente de novo!';
+        cls = 'boss-dn'; tip = `👹 ${bossName} · Tente de novo!`;
       }
     } else if (info.maestria) {
       cls = 'dm'; tip = '💎 Maestria! 3x perfeito'; badge = '<span class="g-lc-bdi">💎</span>';
@@ -496,9 +513,14 @@ function buildLevelMap() {
     const isLocked = cls === 'lk' || cls === 'boss-lk';
     const op    = !isLocked ? `<span class="g-lc-op">${getLvOp(lv)}</span>` : '';
     const click = !isLocked ? `onclick="jogarNivel(${lv})"` : '';
-    // Chefões bloqueados mostram 👹 no lugar do número
-    const numDisplay = (cls === 'boss-lk') ? `<span style="font-size:12px;line-height:1">👹</span>` : `<span class="g-lc-n">${lv}</span>`;
-    html += `<div class="g-lc ${cls}" data-tip="${tip}" ${click}>${badge}${numDisplay}${op}</div>`;
+    // Chefões bloqueados: ícone do tipo; outros: número + ícone pequeno se sem badge
+    const numDisplay = (cls === 'boss-lk')
+      ? `<span style="font-size:12px;line-height:1">${bossIcon}</span>`
+      : `<span class="g-lc-n">${lv}</span>`;
+    const typeBdi = boss && !badge && cls !== 'boss-lk'
+      ? `<span class="g-lc-bdi" style="font-size:8px">${bossIcon}</span>`
+      : '';
+    html += `<div class="g-lc ${cls}" data-tip="${tip}" ${click}>${badge}${numDisplay}${typeBdi}${op}</div>`;
   }
   return html;
 }

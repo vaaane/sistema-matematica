@@ -129,6 +129,42 @@
     .btn-enfrentar{width:100%;padding:14px;background:linear-gradient(135deg,#DC2626,#B91C1C);border:none;border-radius:13px;color:#fff;font-size:17px;font-weight:800;cursor:pointer;letter-spacing:1px;animation:chefao-pulse 1.6s infinite;font-family:'Inter',sans-serif;}
     .btn-enfrentar:hover{background:linear-gradient(135deg,#EF4444,#DC2626);}
 
+    /* ── Chefão Difícil (roxo) ── */
+    @keyframes chefao-dificil-pulse{0%,100%{box-shadow:0 0 0 0 rgba(139,92,246,.4)}50%{box-shadow:0 0 0 6px rgba(139,92,246,0)}}
+    @keyframes chefao-dificil-badge{0%,100%{box-shadow:0 0 8px rgba(139,92,246,.5)}50%{box-shadow:0 0 18px rgba(139,92,246,.9),0 0 32px rgba(139,92,246,.3)}}
+    .nivel-badge.chefao-dificil{background:linear-gradient(135deg,rgba(139,92,246,.18),rgba(167,139,250,.12));border-color:rgba(139,92,246,.5);color:#A78BFA;animation:chefao-dificil-badge 1.4s infinite;}
+    .nivel-badge.chefao-dificil svg{fill:#A78BFA;}
+    .timer-wrap.chefao-dificil{color:#A78BFA!important;}
+    .timer-wrap.chefao-dificil svg{fill:#A78BFA!important;}
+    .timer-bar.chefao-dificil{background:linear-gradient(90deg,#7C3AED,#A78BFA)!important;}
+    .game-grid.chefao-dificil-grid{border:1.5px solid rgba(139,92,246,.3);border-radius:10px;padding:8px;background:rgba(139,92,246,.03);box-shadow:0 0 24px rgba(139,92,246,.12);}
+    .chefao-modal-card.dificil{background:linear-gradient(135deg,#0d0514,#1a0a2e);border-color:rgba(139,92,246,.5);box-shadow:0 24px 64px rgba(139,92,246,.3);}
+    .chefao-modal-card.dificil .chefao-modal-title{color:#A78BFA;}
+    .chefao-modal-card.dificil .chefao-modal-sub{color:#C4B5FD;}
+    .chefao-modal-card.dificil .chefao-modal-stat{background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3);color:#DDD6FE;}
+    .chefao-modal-card.dificil .chefao-modal-desc{color:#6b4a7f;}
+    .chefao-modal-card.dificil .chefao-modal-icon{filter:drop-shadow(0 0 16px rgba(139,92,246,.6));}
+    .chefao-modal-card.dificil .btn-enfrentar{background:linear-gradient(135deg,#7C3AED,#5B21B6);animation:chefao-dificil-pulse 1.6s infinite;}
+    .chefao-modal-card.dificil .btn-enfrentar:hover{background:linear-gradient(135deg,#8B5CF6,#7C3AED);}
+
+    /* ── Chefão Grande (azul escuro) ── */
+    @keyframes chefao-grande-pulse{0%,100%{box-shadow:0 0 0 0 rgba(30,64,175,.4)}50%{box-shadow:0 0 0 6px rgba(30,64,175,0)}}
+    @keyframes chefao-grande-badge{0%,100%{box-shadow:0 0 8px rgba(59,130,246,.5)}50%{box-shadow:0 0 18px rgba(59,130,246,.9),0 0 32px rgba(59,130,246,.3)}}
+    .nivel-badge.chefao-grande{background:linear-gradient(135deg,rgba(30,64,175,.18),rgba(59,130,246,.12));border-color:rgba(59,130,246,.5);color:#60A5FA;animation:chefao-grande-badge 1.4s infinite;}
+    .nivel-badge.chefao-grande svg{fill:#60A5FA;}
+    .timer-wrap.chefao-grande{color:#60A5FA!important;}
+    .timer-wrap.chefao-grande svg{fill:#60A5FA!important;}
+    .timer-bar.chefao-grande{background:linear-gradient(90deg,#1E40AF,#3B82F6)!important;}
+    .game-grid.chefao-grande-grid{border:1.5px solid rgba(59,130,246,.3);border-radius:10px;padding:8px;background:rgba(59,130,246,.03);box-shadow:0 0 24px rgba(59,130,246,.12);}
+    .chefao-modal-card.grande{background:linear-gradient(135deg,#020d1a,#0a1f3e);border-color:rgba(59,130,246,.5);box-shadow:0 24px 64px rgba(30,64,175,.3);}
+    .chefao-modal-card.grande .chefao-modal-title{color:#60A5FA;}
+    .chefao-modal-card.grande .chefao-modal-sub{color:#93C5FD;}
+    .chefao-modal-card.grande .chefao-modal-stat{background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.3);color:#BFDBFE;}
+    .chefao-modal-card.grande .chefao-modal-desc{color:#3a5275;}
+    .chefao-modal-card.grande .chefao-modal-icon{filter:drop-shadow(0 0 16px rgba(59,130,246,.6));}
+    .chefao-modal-card.grande .btn-enfrentar{background:linear-gradient(135deg,#1D4ED8,#1E40AF);animation:chefao-grande-pulse 1.6s infinite;}
+    .chefao-modal-card.grande .btn-enfrentar:hover{background:linear-gradient(135deg,#3B82F6,#2563EB);}
+
     /* ── Mini ranking ── */
     .mini-rank-wrap{margin-bottom:14px;}
     .mini-rank-leader{display:flex;align-items:center;gap:8px;background:rgba(234,179,8,.07);border:1px solid rgba(234,179,8,.25);border-radius:11px;padding:10px 14px;margin-bottom:6px;}
@@ -201,7 +237,7 @@
     .main{overflow:hidden;}
     #content{flex:1!important;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;padding:0!important;}
     /* Grid cresce para preencher o espaço disponível */
-    .game-grid{flex:1;min-height:0;grid-auto-rows:1fr;margin-bottom:0!important;gap:5px!important;}
+    .game-grid{flex:1;min-height:0;overflow:hidden;grid-auto-rows:1fr;margin-bottom:0!important;gap:5px!important;}
     /* Cards sem altura fixa — determinada pelo grid */
     .game-card{height:auto!important;min-height:0!important;}
     /* Elementos fixos não encolhem */
@@ -375,6 +411,12 @@ async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo
 // ── Level config ──────────────────────────────────────────────
 function isChefao(lvl) { return lvl >= 130 && lvl % 10 === 0; }
 
+function getTipoChefao(lvl) {
+  if (!isChefao(lvl)) return null;
+  const ciclo = Math.floor((lvl - 130) / 10) % 3;
+  return ciclo === 0 ? 'rapido' : ciclo === 1 ? 'dificil' : 'grande';
+}
+
 function getLevelConfig(lvl) {
   const cfg = _getLevelConfigBase(lvl);
   // Aplicar offset de tempo configurado pela professora (padrão 40 = neutro)
@@ -424,20 +466,26 @@ function _getLevelConfigBase(lvl) {
   if (lvl <= 129) {
     return { type:'mix_as', pairs:18, cols:6, secs:TEMPO_BASE_129, minMul:4, minDiv:4 };
   }
-  // Níveis 130+: sistema de faixas com chefões
-  // Tempo base = TEMPO_BASE_129; chefões têm -10s; sem redução entre faixas
-  // Grid máximo: 18 pares = 36 cards (6×6) — nunca exceder
-  const n = Math.floor((lvl - 130) / 10);          // 0 para 130-139, 1 para 140-149...
+  // Níveis 130+: chefões variados em ciclo de 3 tipos (rápido/difícil/grande)
+  const n = Math.floor((lvl - 130) / 10);
   if (lvl % 10 === 0) {
-    // Chefão (130, 140, 150...): mesmo grid, -10s de desafio
-    const secs   = Math.max(20, TEMPO_BASE_129 - 10); // mín 20s
-    const minMul = Math.min(5 + n, 7);                // 5, 6, 7, 7...
+    const tipo   = getTipoChefao(lvl);
+    const minMul = Math.min(5 + n, 7);
     const minDiv = Math.min(5 + n, 7);
-    return { type:'mix_as', pairs:18, cols:6, secs, minMul, minDiv, ehChefao:true };
+    if (tipo === 'rapido') {
+      // ⚡ Rápido: grid 6×6, tempo -15s
+      return { type:'mix_as', pairs:18, cols:6, secs: Math.max(20, TEMPO_BASE_129 - 15), minMul, minDiv, ehChefao:true, tipoChefao:'rapido' };
+    } else if (tipo === 'dificil') {
+      // 🧮 Difícil: grid 5 cols / 12 pares, tempo normal, ops pesadas
+      return { type:'mix_as', pairs:12, cols:5, secs: TEMPO_BASE_129, minMul: Math.min(6+n,8), minDiv: Math.min(6+n,8), ehChefao:true, tipoChefao:'dificil', pesado:true };
+    } else {
+      // 📦 Grande: grid 7×6 / 21 pares, tempo +5s
+      return { type:'mix_as', pairs:21, cols:7, secs: Math.min(120, TEMPO_BASE_129 + 5), minMul, minDiv, ehChefao:true, tipoChefao:'grande' };
+    }
   } else {
-    // Pós-chefão (131-139, 141-149...): mantém tempo da faixa base (sem redução entre faixas)
+    // Pós-chefão (131-139, 141-149...): mantém tempo da faixa base
     const secs   = TEMPO_BASE_129;
-    const minMul = Math.min(4 + n, 6);               // 4, 5, 6, 6...
+    const minMul = Math.min(4 + n, 6);
     const minDiv = Math.min(4 + n, 6);
     return { type:'mix_as', pairs:18, cols:6, secs, minMul, minDiv };
   }
@@ -457,7 +505,7 @@ function escH(s) {
 }
 
 // ── Op generator ──────────────────────────────────────────────
-function tryGenOp(type, usedR, maxResult = 999) {
+function tryGenOp(type, usedR, maxResult = 999, pesado = false) {
   let a, b, result, sym, label = null;
   for (let t = 0; t < 60; t++) {
     label = null;
@@ -488,26 +536,27 @@ function tryGenOp(type, usedR, maxResult = 999) {
       }
       sym = '−';
     } else if (type === 'mul') {
-      a = rnd(2, 9); b = rnd(2, 9);
+      if (pesado) { a = rnd(4, 12); b = rnd(4, 12); }
+      else        { a = rnd(2, 9);  b = rnd(2, 9); }
       result = a * b;
-      if (result > 81 || usedR.has(result)) continue;
+      if (result > (pesado ? 144 : 81) || usedR.has(result)) continue;
       sym = '×';
     } else if (type === 'div') {
-      b = rnd(2, 9); result = rnd(2, 11);
+      if (pesado) { b = rnd(4, 12); result = rnd(4, 15); }
+      else        { b = rnd(2, 9);  result = rnd(2, 11); }
       if (usedR.has(result)) continue;
       a = b * result;
       sym = '÷';
     } else if (type === 'mix_as') {
-      return tryGenOp(rnd(0, 1) === 0 ? 'add' : 'sub', usedR, maxResult);
+      return tryGenOp(rnd(0, 1) === 0 ? 'add' : 'sub', usedR, maxResult, pesado);
     } else if (type === 'mix_asm_lite') {
-      // mul com peso menor (20%) para introdução gradual
       const r = rnd(0, 4);
-      return tryGenOp(r <= 1 ? 'add' : r <= 3 ? 'sub' : 'mul', usedR, maxResult);
+      return tryGenOp(r <= 1 ? 'add' : r <= 3 ? 'sub' : 'mul', usedR, maxResult, pesado);
     } else if (type === 'mix_asm') {
-      return tryGenOp(['add','sub','mul'][rnd(0, 2)], usedR, maxResult);
+      return tryGenOp(['add','sub','mul'][rnd(0, 2)], usedR, maxResult, pesado);
     } else if (type === 'mix') {
       const types = ['add','sub','mul','div'];
-      return tryGenOp(types[rnd(0, 3)], usedR, maxResult);
+      return tryGenOp(types[rnd(0, 3)], usedR, maxResult, pesado);
     } else {
       return null;
     }
@@ -517,19 +566,19 @@ function tryGenOp(type, usedR, maxResult = 999) {
   return null;
 }
 
-function generatePairs(type, count, maxResult = 999, minMul = 0, minDiv = 0) {
+function generatePairs(type, count, maxResult = 999, minMul = 0, minDiv = 0, pesado = false) {
   const pairs = [];
   const usedR = new Set();
   for (let i = 0; i < minMul && pairs.length < count; i++) {
-    const p = tryGenOp('mul', usedR);
+    const p = tryGenOp('mul', usedR, maxResult, pesado);
     if (p) pairs.push(p);
   }
   for (let i = 0; i < minDiv && pairs.length < count; i++) {
-    const p = tryGenOp('div', usedR);
+    const p = tryGenOp('div', usedR, maxResult, pesado);
     if (p) pairs.push(p);
   }
   for (let attempt = 0; attempt < 600 && pairs.length < count; attempt++) {
-    const p = tryGenOp(type, usedR, maxResult) || tryGenOp('add', usedR, maxResult);
+    const p = tryGenOp(type, usedR, maxResult, pesado) || tryGenOp('add', usedR, maxResult, pesado);
     if (p) pairs.push(p);
   }
   return pairs;
@@ -913,21 +962,42 @@ function lancarConfeteChefao(n = 100) {
 }
 
 function mostrarModalChefao(nivel, onStart) {
-  const cfg = getLevelConfig(nivel);
-  const ov  = document.createElement('div');
+  const cfg  = getLevelConfig(nivel);
+  const tipo = getTipoChefao(nivel);
+  const typeCls = tipo === 'dificil' ? ' dificil' : tipo === 'grande' ? ' grande' : '';
+
+  let icon, titulo, stat3, desc, strongColor;
+  if (tipo === 'rapido') {
+    icon = '⚡'; titulo = 'CHEFÃO RÁPIDO';
+    stat3 = '⚡ Tempo reduzido';
+    strongColor = '#F87171';
+    desc = `⚡ O tempo está REDUZIDO!<br>Seja rápido — cada segundo conta!`;
+  } else if (tipo === 'dificil') {
+    icon = '🧮'; titulo = 'CHEFÃO DIFÍCIL';
+    stat3 = '🧮 Números maiores';
+    strongColor = '#C4B5FD';
+    desc = `🧮 As contas são mais PESADAS!<br>Concentre-se nas operações!`;
+  } else {
+    icon = '📦'; titulo = 'CHEFÃO GRANDE';
+    stat3 = `📦 ${cfg.cols}×${Math.ceil(cfg.pairs * 2 / cfg.cols)} tabuleiro`;
+    strongColor = '#93C5FD';
+    desc = `📦 O tabuleiro é MAIOR!<br>${cfg.pairs} pares para limpar!`;
+  }
+
+  const ov = document.createElement('div');
   ov.className = 'chefao-modal-ov';
   ov.innerHTML = `
-    <div class="chefao-modal-card">
-      <div class="chefao-modal-icon">👹</div>
-      <div class="chefao-modal-title">NÍVEL CHEFÃO!</div>
+    <div class="chefao-modal-card${typeCls}">
+      <div class="chefao-modal-icon">${icon}</div>
+      <div class="chefao-modal-title">${titulo}</div>
       <div class="chefao-modal-sub">Nível ${nivel}</div>
       <div class="chefao-modal-stats">
         <div class="chefao-modal-stat">🃏 ${cfg.pairs} pares</div>
         <div class="chefao-modal-stat">⏱ ${cfg.secs}s</div>
-        <div class="chefao-modal-stat">🔢 Ops. complexas</div>
+        <div class="chefao-modal-stat">${stat3}</div>
       </div>
       <div class="chefao-modal-desc">
-        Grade maior · Tempo reduzido<br>Operações mais complexas<br><strong style="color:#F87171">Derrote o chefão para avançar!</strong>
+        ${desc}<br><strong style="color:${strongColor}">Derrote o chefão para avançar!</strong>
       </div>
       <button class="btn-enfrentar" id="btn-enfrentar-chefao">⚔️ Enfrentar!</button>
     </div>`;
@@ -945,7 +1015,8 @@ let removedCount = 0, totalPairs = 0;
 let gameOver = false;
 let _animating = false;  // bloqueia clicks durante animação de erro
 let acertos = 0, erros = 0, comboCount = 0, comboSessao = 0;
-let ehChefaoAtual = false; // true quando o nível atual é chefão
+let ehChefaoAtual = false;  // true quando o nível atual é chefão
+let tipoChefaoAtual = null; // 'rapido' | 'dificil' | 'grande' | null
 let tipoAcertos = { add:0, sub:0, mul:0, div:0 };
 let tipoErros   = { add:0, sub:0, mul:0, div:0 };
 
@@ -1051,11 +1122,15 @@ async function endSprint(manual = false) {
 }
 
 // ── Build game ────────────────────────────────────────────────
+const _shownBossModals = new Set(); // evita re-exibir modal no mesmo nível
+
 function buildGame(skipBossModal = false) {
-  // Se é chefão e não estamos num replay/sprint, mostra o modal primeiro
   if (!skipBossModal && isChefao(nivelAtual) && !_isSprint && !_isReplay) {
-    mostrarModalChefao(nivelAtual, () => _buildGameInternal());
-    return;
+    if (!_shownBossModals.has(nivelAtual)) {
+      _shownBossModals.add(nivelAtual);
+      mostrarModalChefao(nivelAtual, () => _buildGameInternal());
+      return;
+    }
   }
   _buildGameInternal();
 }
@@ -1066,7 +1141,8 @@ function _buildGameInternal() {
   // Limpa clones de voo e confetes de partidas anteriores
   document.querySelectorAll('.fly-clone, .confete-wrap').forEach(c => c.remove());
   const cfg = getLevelConfig(nivelAtual);
-  ehChefaoAtual = !!cfg.ehChefao;
+  ehChefaoAtual   = !!cfg.ehChefao;
+  tipoChefaoAtual = cfg.tipoChefao || null;
   timerTotal = cfg.secs;
   timerLeft  = cfg.secs;
   selectedCard = null;
@@ -1077,17 +1153,16 @@ function _buildGameInternal() {
   tipoErros   = { add:0, sub:0, mul:0, div:0 };
   _animating  = false;
 
-  const pairs = generatePairs(cfg.type, cfg.pairs, cfg.maxResult, cfg.minMul || 0, cfg.minDiv || 0);
-  // Fallback: completa com add usando o mesmo usedR para evitar resultados duplicados
+  const pairs = generatePairs(cfg.type, cfg.pairs, cfg.maxResult, cfg.minMul || 0, cfg.minDiv || 0, cfg.pesado || false);
   if (pairs.length < cfg.pairs) {
     const usedResults = new Set(pairs.map(p => p.result));
     for (let i = pairs.length; i < cfg.pairs; i++) {
-      const extra = tryGenOp('add', usedResults, cfg.maxResult);
+      const extra = tryGenOp('add', usedResults, cfg.maxResult, cfg.pesado || false);
       if (extra) pairs.push(extra); else break;
     }
   }
-  // Segurança: nunca exceder 18 pares (grid máximo 6×6 = 36 cards)
-  if (pairs.length > 18) pairs.splice(18);
+  // Segurança: cap pelo config (18 normal, 12 difícil, 21 grande)
+  if (pairs.length > cfg.pairs) pairs.splice(cfg.pairs);
 
   // Build cards array: op card + result card per pair
   const cards = [];
@@ -1101,12 +1176,35 @@ function _buildGameInternal() {
 
   totalPairs = pairs.length;
 
-  // Layout adaptativo: colunas pelo viewport (altura determinada pelo CSS flex)
-  const { cols, compact: isCompact } = calcGameLayout(cards.length);
+  // Layout: chefões usam cols do config; normais usam calcGameLayout
+  let cols, isCompact;
+  if (ehChefaoAtual && cfg.cols) {
+    cols = cfg.cols;
+    const topbarH = document.querySelector('.topbar')?.getBoundingClientRect().height || 62;
+    const gridH   = Math.max(60, window.innerHeight - topbarH - 265);
+    const rows    = Math.ceil(cards.length / cols);
+    isCompact     = rows > 0 ? ((gridH - (rows - 1) * 5) / rows) < 52 : false;
+  } else {
+    ({ cols, compact: isCompact } = calcGameLayout(cards.length));
+  }
 
   // Pairs dots
   const dotsHtml = Array.from({length: pairs.length}, (_,i) =>
     `<div class="pair-dot" id="dot-${i}"></div>`).join('');
+
+  // Pré-computa badge e grid class baseados no tipo de chefão
+  const _tc = tipoChefaoAtual;
+  const _nivelBadgeHtml = _isSprint
+    ? `<div class="nivel-badge">⚡ Sprint</div>`
+    : ehChefaoAtual
+    ? (()=>{
+        const xCls = _tc === 'dificil' ? ' chefao-dificil' : _tc === 'grande' ? ' chefao-grande' : '';
+        const icon = _tc === 'rapido' ? '⚡' : _tc === 'dificil' ? '🧮' : _tc === 'grande' ? '📦' : '👹';
+        const nome = _tc === 'rapido' ? 'CHEFÃO RÁPIDO' : _tc === 'dificil' ? 'CHEFÃO DIFÍCIL' : _tc === 'grande' ? 'CHEFÃO GRANDE' : 'CHEFÃO';
+        return `<div class="nivel-badge chefao${xCls}">${icon} ${nome} · Nível ${nivelAtual}</div>`;
+      })()
+    : `<div class="nivel-badge"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Nível ${nivelAtual}</div>`;
+  const _gridClass = `game-grid${ehChefaoAtual ? (_tc === 'dificil' ? ' chefao-dificil-grid' : _tc === 'grande' ? ' chefao-grande-grid' : ' chefao-grid') : ''}`;
 
   // Mostrar botão Reiniciar no header
   const _hdrRein = document.getElementById('btn-reiniciar-hdr');
@@ -1117,11 +1215,7 @@ function _buildGameInternal() {
 <div style="max-width:630px;margin:0 auto;width:100%;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;padding:6px 16px 4px;box-sizing:border-box">
   <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:4px">
     <div style="display:flex;align-items:center;gap:10px">
-      ${_isSprint
-        ? `<div class="nivel-badge">⚡ Sprint</div>`
-        : ehChefaoAtual
-          ? `<div class="nivel-badge chefao">👹 CHEFÃO · Nível ${nivelAtual}</div>`
-          : `<div class="nivel-badge"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Nível ${nivelAtual}</div>`}
+      ${_nivelBadgeHtml}
       <span id="combo-seguidos" class="combo-seguidos baixo" style="display:none"></span>
     </div>
     ${_isSprint ? `<div style="font-size:12px;color:var(--text-muted)">⚡ <strong style="color:var(--blue)">${_sprintPairsOk}</strong> acerto${_sprintPairsOk !== 1 ? 's' : ''}</div>` : ''}
@@ -1153,7 +1247,7 @@ function _buildGameInternal() {
   <div class="status-msg" id="status-msg"></div>
   <div id="combo-badge" style="text-align:center;min-height:22px;margin-bottom:6px;margin-top:-6px"></div>
 
-  <div class="game-grid${ehChefaoAtual ? ' chefao-grid' : ''}" id="game-grid"
+  <div class="${_gridClass}" id="game-grid"
        style="grid-template-columns:repeat(${cols},1fr)"></div>
 
   <div class="slots-wrap">
@@ -1219,10 +1313,16 @@ function updateTimerUI() {
   const bar  = document.getElementById("timer-bar");
   if (!txt) return;
   txt.textContent = `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
-  if (wrap) wrap.className = `timer-wrap${ehChefaoAtual ? ' chefao' : (timerLeft <= 10 ? ' warn' : '')}`;
+  const _timerTypeCls = ehChefaoAtual
+    ? (tipoChefaoAtual === 'dificil' ? ' chefao-dificil' : tipoChefaoAtual === 'grande' ? ' chefao-grande' : ' chefao')
+    : (timerLeft <= 10 ? ' warn' : '');
+  const _barTypeCls = ehChefaoAtual
+    ? (tipoChefaoAtual === 'dificil' ? ' chefao-dificil' : tipoChefaoAtual === 'grande' ? ' chefao-grande' : ' chefao')
+    : (pct < .2 ? ' danger' : pct < .4 ? ' warn' : '');
+  if (wrap) wrap.className = `timer-wrap${_timerTypeCls}`;
   if (bar) {
     bar.style.width = `${pct * 100}%`;
-    bar.className   = `timer-bar${ehChefaoAtual ? ' chefao' : (pct < .2 ? ' danger' : pct < .4 ? ' warn' : '')}`;
+    bar.className   = `timer-bar${_barTypeCls}`;
   }
 }
 
