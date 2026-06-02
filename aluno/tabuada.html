@@ -483,7 +483,7 @@ function _getLevelConfigBase(lvl) {
       return { type:'mix_as', pairs:12, cols:6, secs: Math.max(20, TEMPO_BASE_129 - 20), minMul, minDiv, ehChefao:true, tipoChefao:'rapido' };
     } else if (tipo === 'dificil') {
       // 🧮 Difícil: 12p×2=24 | desktop 6×4, mobile 4×6, ops pesadas
-      const secsD = lvl === 200 ? TEMPO_BASE_129 - 10 : lvl > 200 ? TEMPO_BASE_200 : TEMPO_BASE_129;
+      const secsD = lvl >= 200 ? TEMPO_BASE_200 : TEMPO_BASE_129;
       return { type:'mix_as', pairs:12, cols:6, secs: secsD, minMul: Math.min(6+n,8), minDiv: Math.min(6+n,8), ehChefao:true, tipoChefao:'dificil', pesado:true };
     } else {
       // 📦 Grande: 18p×2=36 desktop (6×6) | 12p×2=24 mobile (4×6)

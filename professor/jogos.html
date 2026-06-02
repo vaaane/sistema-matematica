@@ -109,7 +109,7 @@ function _getLvlCfg(lvl) {
     if (tipo === 'rapido')
       return { pairs: 12, cols: 6, secs: Math.max(20, _TB129 - 20), maxResult: 0, minMul, minDiv, ehChefao: true, tipoChefao: 'rapido' };
     if (tipo === 'dificil') {
-      const secsD = lvl === 200 ? _TB129 - 10 : lvl > 200 ? _TB200 : _TB129;
+      const secsD = lvl >= 200 ? _TB200 : _TB129;
       return { pairs: 12, cols: 6, secs: secsD, maxResult: 0, minMul: Math.min(6+n,8), minDiv: Math.min(6+n,8), ehChefao: true, tipoChefao: 'dificil' };
     }
     const tBase = lvl > 200 ? _TB200 : _TB129;
