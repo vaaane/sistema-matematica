@@ -45,14 +45,14 @@
 
     /* ── Operação: operador + fração como unidade centralizada no card ── */
     .op-wrap{ display:flex;align-items:center;gap:4px; }
-    .operador{ font-size:14px;font-weight:900;color:var(--text);line-height:1;flex-shrink:0; }
+    .operador{ font-size:clamp(9px,2.2vw,14px);font-weight:900;color:var(--text);line-height:1;flex-shrink:0; }
     .fracao{ display:flex;flex-direction:column;align-items:center; }
-    .num-cima,.num-baixo{ font-size:22px;font-weight:800;line-height:1.1;color:var(--text);min-width:20px;text-align:center; }
-    .traco{ width:100%;height:2.5px;background:var(--text);border-radius:1px;margin:2px 0; }
+    .num-cima,.num-baixo{ font-size:clamp(12px,3.5vw,22px);font-weight:800;line-height:1.1;color:var(--text);min-width:16px;text-align:center; }
+    .traco{ width:100%;height:2px;background:var(--text);border-radius:1px;margin:1px 0; }
     /* Expressão composta (nível 16+) */
-    .op-compound{font-size:13px;font-weight:800;color:var(--text);text-align:center;line-height:1.4;letter-spacing:-.3px;padding:0 4px;}
+    .op-compound{font-size:clamp(10px,2.8vw,13px);font-weight:800;color:var(--text);text-align:center;line-height:1.4;letter-spacing:-.3px;padding:0 3px;}
     /* Número resultado */
-    .res-number{font-size:28px;font-weight:800;color:var(--text);line-height:1;}
+    .res-number{font-size:clamp(14px,4.5vw,28px);font-weight:800;color:var(--text);line-height:1;}
 
     /* ── Slots ── */
     .slots-wrap{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
@@ -218,28 +218,25 @@
 
     /* ── Responsive ── */
     @media(max-width:480px){
-      .game-card{min-height:60px;padding:8px 4px;}
-      .num-cima,.num-baixo{font-size:18px;}
-      .res-number{font-size:22px;}
-      .op-compound{font-size:11px;}
-      .operador{font-size:11px;}
+      .game-card{padding:5px 3px;}
       .timer-wrap{font-size:26px;}
       .slot{width:110px;height:54px;}
     }
     @media(max-width:360px){
-      .num-cima,.num-baixo{font-size:15px;}
-      .res-number{font-size:18px;}
-      .operador{font-size:10px;}
+      .slot{width:94px;height:50px;}
+      .slot-eq{font-size:20px;}
     }
 
     /* ── Fullscreen game — CSS Grid de 5 linhas ── */
-    html,body{overflow:hidden;}
-    .main{overflow:hidden;}
+    html,body{overflow:hidden;height:100%;}
+    /* iOS Safari: dvh descontam a barra do browser; vh não desconta */
+    .layout{min-height:100vh;min-height:100dvh;}
+    .main{overflow:hidden;min-height:0!important;height:100vh;height:100dvh;}
     #content{flex:1!important;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;padding:0!important;}
-    /* .tb-wrap: 5 linhas — info | timer/líderes | status | 1fr cards | slots */
+    /* .tb-wrap: Grid de 5 linhas — info | timer/líderes | status | 1fr cards | slots */
     .tb-wrap{display:grid;grid-template-rows:auto auto auto 1fr auto;height:100%;width:100%;max-width:630px;margin:0 auto;overflow:hidden;padding:6px 16px 4px;box-sizing:border-box;}
-    /* Linha 1fr (cards): min-height:0 garante que o grid não extrapola */
-    .game-grid{min-height:0;overflow:hidden;margin-bottom:0!important;grid-auto-rows:1fr;gap:5px!important;}
+    /* Linha 1fr (cards): min-height:0 garante que não extrapola */
+    .game-grid{min-height:0;overflow:hidden;margin-bottom:0!important;grid-auto-rows:1fr;gap:clamp(3px,.8vw,7px)!important;}
     .game-card{height:auto!important;min-height:0!important;}
     /* Margens compactas dentro das linhas */
     .timer-wrap{margin-bottom:3px!important;}

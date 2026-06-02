@@ -72,8 +72,9 @@
     .tent-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
     .tent-detail-body{padding:8px 12px 12px;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;background:#FAFAFA;margin-top:-6px;margin-bottom:6px;}
     .tent-row.melhor{border-color:#F59E0B;border-width:1.5px;background:linear-gradient(to right,#FFFDE7,var(--card));}
-    .mode-tabs{display:flex;gap:4px;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:14px;}
-    .mode-tab{padding:7px 12px;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);background:transparent;transition:all .2s;}
+    .mode-tabs{display:flex;gap:4px;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:14px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;-ms-overflow-style:none;}
+    .mode-tabs::-webkit-scrollbar{display:none;}
+    .mode-tab{padding:7px 12px;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);background:transparent;transition:all .2s;white-space:nowrap;flex-shrink:0;min-height:36px;}
     .mode-tab.on{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(47,158,220,.3);}
 
     @media(max-width:480px){
