@@ -255,7 +255,7 @@ function computeStats(ativ, turma) {
     d.acertos     += Number(r.acertos)     || 0;
     d.erros       += Number(r.erros)       || 0;
     d.respondidas += Number(r.respondidas) || 0;
-    alunoSessList[canonical].push({ pts: r.pontuacao || 0, criadoEm: r.criadoEm || 0 });
+    alunoSessList[canonical].push({ pts: r.pontuacao || 0, nota_quiz: r.nota_quiz ?? null, criadoEm: r.criadoEm || 0 });
     for (const q of (detCache[r.id] || [])) {
       if (!q.acertou) {
         const k = q.enunciado || q.pergunta || '?';
@@ -738,16 +738,25 @@ function fillExpand(turma, stats, questoes) {
     if (!d || d.sessoes === 0) return `<tr>
       <td style="color:var(--text-muted)">${idx + 1}</td>
       <td><span class="nao-jogou">${al}</span></td>
-      <td colspan="9" style="color:var(--text-muted);font-style:italic;font-size:11px;text-align:center">—</td>
+      <td colspan="6" style="color:var(--text-muted);font-style:italic;font-size:11px;text-align:center">—</td>
     </tr>`;
     const taxa = pct(d.acertos, d.respondidas);
+    // Melhor nota_quiz dentre as sessões (para avaliacao_plus)
+    const temF1 = sessions.some(s => s.nota_quiz != null);
+    const melhorNq = temF1 ? Math.max(...sessions.map(s => s.nota_quiz ?? 0)) : null;
     const sCell = (i) => {
       const s = sessions[i];
-      if (s == null) return '—';
-      const isBest = d.melhorPts > 0 && s.pts === d.melhorPts;
-      return isBest
-        ? `<strong style="color:var(--gold)">${s.pts}</strong>`
+      if (s == null) return '<span style="color:var(--text-muted)">—</span>';
+      const isBestPts = d.melhorPts > 0 && s.pts === d.melhorPts;
+      const isBestNq  = melhorNq != null && s.nota_quiz === melhorNq;
+      const isContabilizada = isBestPts || (isBestNq && melhorNq != null);
+      const ptsHtml = isContabilizada
+        ? `<strong style="color:var(--gold)">${s.pts} ✓</strong>`
         : `<span style="color:var(--text-muted)">${s.pts}</span>`;
+      const nqHtml = s.nota_quiz != null
+        ? `<span style="display:block;font-size:10px;color:${isBestNq ? '#22C55E' : 'var(--text-muted)'}">F1: ${s.nota_quiz.toFixed(1)}</span>`
+        : '';
+      return ptsHtml + nqHtml;
     };
     let trend = '';
     if (sessions.length >= 2) {
@@ -763,8 +772,6 @@ function fillExpand(turma, stats, questoes) {
       <td style="text-align:center;font-size:11px">${sCell(0)}</td>
       <td style="text-align:center;font-size:11px">${sCell(1)}</td>
       <td style="text-align:center;font-size:11px">${sCell(2)}</td>
-      <td style="text-align:center;font-size:11px">${sCell(3)}</td>
-      <td style="text-align:center;font-size:11px">${sCell(4)}</td>
       <td style="text-align:center">${trend}</td>
       <td style="text-align:center">${d.sessoes}</td>
       <td><span class="pf ${pfCls(taxa)}">${taxa}%</span>
@@ -810,8 +817,6 @@ function fillExpand(turma, stats, questoes) {
           <th style="text-align:center;font-size:9px">1ª</th>
           <th style="text-align:center;font-size:9px">2ª</th>
           <th style="text-align:center;font-size:9px">3ª</th>
-          <th style="text-align:center;font-size:9px">4ª</th>
-          <th style="text-align:center;font-size:9px">5ª</th>
           <th style="text-align:center;font-size:9px">Tend.</th>
           <th style="text-align:center">Sess.</th>
           <th>Taxa acerto</th>

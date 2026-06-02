@@ -405,12 +405,12 @@ function renderAtivMode() {
     };
     el.innerHTML = `<div class="grid-2" style="align-items:start">
       <div>
-        <div class="rank-section-title">Sua Turma (Top 10)</div>
-        <div class="card" style="padding:0">${buildAtivRows(ranking.filter(r => r.turma === turma).slice(0, 10), false)}</div>
-      </div>
-      <div>
         <div class="rank-section-title">Top 10 Geral</div>
         <div class="card" style="padding:0">${buildAtivRows(ranking.slice(0, 10), true)}</div>
+      </div>
+      <div>
+        <div class="rank-section-title">Sua Turma (Top 10)</div>
+        <div class="card" style="padding:0">${buildAtivRows(ranking.filter(r => r.turma === turma).slice(0, 10), false)}</div>
       </div>
     </div>`;
   }
@@ -511,12 +511,12 @@ async function carregarTabuadaRanking() {
     ${posStripHtml}
     <div class="grid-2" style="align-items:start">
       <div>
-        <div class="rank-section-title">Sua Turma</div>
-        <div class="card" style="padding:0">${buildTabRows(tabTurma.slice(0, 10), turmaPos, false)}</div>
-      </div>
-      <div>
         <div class="rank-section-title">Top 10 Geral <span class="live-tag">Por nível</span></div>
         <div class="card" style="padding:0">${buildTabRows(tabAll.slice(0, 10), allPos, true)}</div>
+      </div>
+      <div>
+        <div class="rank-section-title">Sua Turma</div>
+        <div class="card" style="padding:0">${buildTabRows(tabTurma.slice(0, 10), turmaPos, false)}</div>
       </div>
     </div>`;
 }

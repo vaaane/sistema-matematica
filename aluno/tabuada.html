@@ -470,14 +470,14 @@ function _getLevelConfigBase(lvl) {
     const minMul = Math.min(5 + n, 7);
     const minDiv = Math.min(5 + n, 7);
     if (tipo === 'rapido') {
-      // ⚡ Rápido: 18p×2=36 ÷ 6cols = 6×6, tempo -15s
-      return { type:'mix_as', pairs:18, cols:6, secs: Math.max(20, TEMPO_BASE_129 - 15), minMul, minDiv, ehChefao:true, tipoChefao:'rapido' };
+      // ⚡ Rápido: 18p×2=36 ÷ 6cols = 6×6, tempo -5s (60s total)
+      return { type:'mix_as', pairs:18, cols:6, secs: Math.max(20, TEMPO_BASE_129 - 5), minMul, minDiv, ehChefao:true, tipoChefao:'rapido' };
     } else if (tipo === 'dificil') {
-      // 🧮 Difícil: 12p×2=24 ÷ 4cols = 4×6, ops pesadas, tempo normal
-      return { type:'mix_as', pairs:12, cols:4, secs: TEMPO_BASE_129, minMul: Math.min(6+n,8), minDiv: Math.min(6+n,8), ehChefao:true, tipoChefao:'dificil', pesado:true };
+      // 🧮 Difícil: 10p×2=20 ÷ 5cols = 5×4, ops pesadas, tempo normal
+      return { type:'mix_as', pairs:10, cols:5, secs: TEMPO_BASE_129, minMul: Math.min(6+n,8), minDiv: Math.min(6+n,8), ehChefao:true, tipoChefao:'dificil', pesado:true };
     } else {
-      // 📦 Grande: 18p×2=36 ÷ 6cols = 6×6, tempo +5s
-      return { type:'mix_as', pairs:18, cols:6, secs: Math.min(120, TEMPO_BASE_129 + 5), minMul, minDiv, ehChefao:true, tipoChefao:'grande' };
+      // 📦 Grande: 21p×2=42 ÷ 7cols = 7×6, tempo +5s
+      return { type:'mix_as', pairs:21, cols:7, secs: Math.min(120, TEMPO_BASE_129 + 5), minMul, minDiv, ehChefao:true, tipoChefao:'grande' };
     }
   } else {
     // Pós-chefão (131-139, 141-149...): mantém tempo da faixa base

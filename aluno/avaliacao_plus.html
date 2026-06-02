@@ -360,7 +360,10 @@ const FATORES_F2  = [1.0, 0.75, 0.5];
 function avKey(s) {
   return btoa(unescape(encodeURIComponent(s))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
 }
-const controleRef = ref(db, `avaliacao_controle/${avKey(turma+'|'+liberada.atividade)}/${avKey(alunos[0])}`);
+const _avBase = `avaliacao_controle/${avKey(turma+'|'+liberada.atividade)}`;
+// Refs para TODOS os alunos da sessão — evita duplas contornarem o limite de tentativas
+const controleRefs = alunos.map(al => ref(db, `${_avBase}/${avKey(al)}`));
+let controleRef = controleRefs[0]; // ref principal (alunos[0])
 
 // ── Carregar questões ──────────────────────────────────────────
 const _arquivoQ = ARQUIVO_QUESTOES[liberada.atividade] ?? "/dados/questoes_competicao.json";
@@ -1627,94 +1630,29 @@ async function encerrarSessao(motivo) {
   mostrarResultado(motivo, f2aplicado, f2bruta, novoMelhorF2, bonusFim);
 }
 
-// ── Tela de comparação de tentativas ──────────────────────────
-function buildComparacaoHTML(hist) {
-  const melhorF1  = Math.max(...hist.map(t => t.f1.nota));
-  const melhorF2  = Math.max(...hist.map(t => t.f2.aplicado));
+// ── Resumo automático de tentativas (sem seleção manual) ──────
+function buildResumoTentativasHTML(hist) {
+  if (hist.length < 2) return '';
+  const melhorNq = Math.max(...hist.map(t => t.f1.nota));
+  const melhorF2 = Math.max(...hist.map(t => t.f2.aplicado));
   const cols = hist.map(t => {
-    const isF1Best = t.f1.nota === melhorF1;
+    const isBest = t.f1.nota === melhorNq && t.f2.aplicado === melhorF2;
+    const isF1Best = t.f1.nota === melhorNq;
     const isF2Best = t.f2.aplicado === melhorF2;
     return `
-      <div class="comp-col" id="comp-col-${t.num}" onclick="selecionarTentativa(${t.num})" style="cursor:pointer">
-        <div class="comp-head">Tent. ${t.num}</div>
-        <div class="comp-cell${isF1Best?' comp-best':''}">${t.f1.nota.toFixed(1)}/10${isF1Best?' ⭐':''}</div>
-        <div class="comp-cell${isF2Best?' comp-best':''}">${t.f2.aplicado} pts${isF2Best?' ⭐':''}</div>
-        <div class="comp-cell comp-radio" id="comp-radio-${t.num}">○</div>
+      <div style="background:#0d0d28;border:${isBest?'2px solid #FAB800':'1px solid #1e1e42'};border-radius:10px;padding:10px 8px;text-align:center;min-width:80px">
+        <div style="font-size:10px;font-weight:700;color:#4a4a80;margin-bottom:6px">Tent. ${t.num}</div>
+        <div style="font-size:13px;font-weight:700;color:${isF1Best?'#4ADE80':'#5a5a90'}">F1: ${t.f1.nota.toFixed(1)}/10${isF1Best?' ⭐':''}</div>
+        <div style="font-size:11px;color:${isF2Best?'#FAB800':'#4a4a70'};margin-top:3px">F2: ${t.f2.aplicado} pts${isF2Best?' ⭐':''}</div>
+        ${isBest?`<div style="font-size:9px;color:#FAB800;margin-top:4px;font-weight:700">✓ CONTABILIZADA</div>`:''}
       </div>`;
   }).join('');
   return `
-    <div style="margin-top:16px;border-top:1px solid #1a1a40;padding-top:14px">
-      <div style="font-size:11px;font-weight:700;color:#4a4a80;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;text-align:center">📊 Comparar tentativas — escolha qual vale</div>
-      <div style="display:flex;gap:6px;justify-content:center;margin-bottom:10px">
-        <div class="comp-col comp-lbl">
-          <div class="comp-head" style="visibility:hidden">—</div>
-          <div class="comp-cell comp-row-lbl">Fase 1</div>
-          <div class="comp-cell comp-row-lbl">Fase 2</div>
-          <div class="comp-cell comp-row-lbl">Usar</div>
-        </div>
-        ${cols}
-      </div>
-      <div id="comp-confirm-area" style="text-align:center">
-        <button onclick="confirmarEscolha()" style="background:linear-gradient(135deg,#7c5cfc,#5a3fcf);color:#fff;border:none;border-radius:10px;padding:10px 24px;font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.5px">
-          ✓ Usar tentativa selecionada
-        </button>
-        <div style="font-size:10px;color:#3a3a60;margin-top:5px">A nota da tentativa escolhida será enviada à professora.</div>
-      </div>
-    </div>
-    <style>
-      .comp-col{display:flex;flex-direction:column;gap:4px;min-width:72px;}
-      .comp-lbl{min-width:56px;}
-      .comp-head{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:#4a4a80;text-align:center;padding:3px 0;}
-      .comp-cell{background:#0d0d28;border:1px solid #1e1e42;border-radius:6px;padding:6px 4px;font-size:11px;text-align:center;color:#9999cc;transition:all .2s;}
-      .comp-row-lbl{color:#4a4a80;font-size:10px;font-weight:700;background:transparent;border-color:transparent;}
-      .comp-best{color:#FAB800;}
-      .comp-radio{font-size:16px;color:#4a4a80;}
-      .comp-col.selected .comp-cell{border-color:#7c5cfc;background:rgba(124,92,252,.12);}
-      .comp-col.selected .comp-radio{color:#7c5cfc;}
-    </style>`;
-}
-
-function _atualizarSelecaoUI(num) {
-  document.querySelectorAll('.comp-col[id^="comp-col-"]').forEach(el => el.classList.remove('selected'));
-  document.querySelectorAll('.comp-radio').forEach(el => { el.textContent = '○'; });
-  const col = document.getElementById(`comp-col-${num}`);
-  const radio = document.getElementById(`comp-radio-${num}`);
-  if (col) col.classList.add('selected');
-  if (radio) radio.textContent = '●';
-}
-
-window.selecionarTentativa = function(num) {
-  tentativaSelecionada = num;
-  _atualizarSelecaoUI(num);
-};
-
-window.confirmarEscolha = async function() {
-  const escolha = tentativasHist.find(t => t.num === tentativaSelecionada);
-  if (!escolha) return;
-  const area = document.getElementById('comp-confirm-area');
-  if (area) area.innerHTML = `<div style="font-size:12px;color:#4a4a80">Salvando…</div>`;
-  let saved = true;
-  if (!isTeste) {
-    try {
-      const upd = {
-        tentativa_escolhida: tentativaSelecionada,
-        melhor_pontuacao:    escolha.f2.aplicado,
-        melhor_bruta:        escolha.f2.bruta,
-        melhor_nota_quiz:    escolha.f1.nota,
-      };
-      await update(controleRef, upd);
-      controle = { ...controle, ...upd };
-    } catch(e) {
-      console.error('[Avaliação] confirmarEscolha:', e);
-      saved = false;
-      if (area) area.innerHTML = `<div style="padding:10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;font-size:12px;color:#F87171;font-weight:700">⚠️ Erro ao salvar — verifique a conexão e tente novamente.</div>`;
-    }
-  }
-  if (saved && area) area.innerHTML = `
-    <div style="padding:10px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;font-size:12px;color:#4ADE80;font-weight:700">
-      ✅ Tentativa ${tentativaSelecionada} registrada como nota final.
+    <div style="margin-top:14px;border-top:1px solid #1a1a40;padding-top:12px">
+      <div style="font-size:11px;font-weight:700;color:#4a4a80;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;text-align:center">📊 Resumo das tentativas — melhor nota registrada automaticamente</div>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">${cols}</div>
     </div>`;
-};
+}
 
 // ── Tela de resultado / entre tentativas ───────────────────────
 function mostrarResultado(motivo, f2aplicado, f2bruta, novoMelhor, bonusFim = 0) {
@@ -1769,16 +1707,10 @@ function mostrarResultado(motivo, f2aplicado, f2bruta, novoMelhor, bonusFim = 0)
         ${!podeNovar&&tentRestantes>0?`<br><span style="color:#F87171">Tempo insuficiente para nova tentativa.</span>`:''}
       </div>
       ${podeNovar?`<button class="btn-nova-tent" onclick="iniciarNovaTentativa()">▶ NOVA TENTATIVA (${tentRestantes} restante${tentRestantes!==1?'s':''})</button>`:''}
-      ${!podeNovar && tentativasHist.length >= 2 ? buildComparacaoHTML(tentativasHist) : ''}
+      ${tentativasHist.length >= 2 ? buildResumoTentativasHTML(tentativasHist) : ''}
       <a class="btn-voltar-res" href="/aluno/atividades.html">← Voltar para atividades</a>
     </div>`;
   document.body.appendChild(ov);
-  // Inicializa seleção na tentativa com maior F2
-  if (!podeNovar && tentativasHist.length >= 2) {
-    const melhor = tentativasHist.reduce((a, b) => b.f2.aplicado > a.f2.aplicado ? b : a);
-    tentativaSelecionada = melhor.num;
-    _atualizarSelecaoUI(tentativaSelecionada);
-  }
 }
 
 // ── Iniciar nova tentativa ─────────────────────────────────────
@@ -1792,7 +1724,7 @@ window.iniciarNovaTentativa = async function() {
   if (!isTeste && (controle.tentativas_realizadas||0) >= MAX_TENTATIVAS) { mostrarBloqueada('tentativas', controle); return; }
 
   const novaTent = isTeste ? 1 : (controle.tentativas_realizadas||0) + 1;
-  if (!isTeste) await update(controleRef, { tentativas_realizadas: novaTent });
+  if (!isTeste) await Promise.all(controleRefs.map(r => update(r, { tentativas_realizadas: novaTent })));
   controle.tentativas_realizadas = novaTent;
 
   _warned10 = false;
@@ -1916,10 +1848,10 @@ window.iniciarJogo = async function() {
 
   if (!controle) {
     controle = { inicio_global: Date.now(), tentativas_realizadas: 1, melhor_pontuacao: 0, melhor_bruta: 0, melhor_nota_quiz: 0 };
-    if (!isTeste) await set(controleRef, { ...controle });
+    if (!isTeste) await Promise.all(controleRefs.map(r => set(r, { ...controle })));
   } else {
     const novaTent = (controle.tentativas_realizadas||0) + 1;
-    if (!isTeste) await update(controleRef, { tentativas_realizadas: novaTent });
+    if (!isTeste) await Promise.all(controleRefs.map(r => update(r, { tentativas_realizadas: novaTent })));
     controle.tentativas_realizadas = novaTent;
   }
 
@@ -1986,11 +1918,21 @@ window.addEventListener("beforeunload", () => {
 });
 
 // ── Init ───────────────────────────────────────────────────────
-const controleSnap = isTeste ? null : await get(controleRef);
-controle = controleSnap?.exists() ? controleSnap.val() : null;
+// Lê controle de TODOS os alunos e usa o que tiver mais tentativas
+// (evita que aluno em dupla burle o limite usando outra dupla depois)
+if (!isTeste) {
+  const snaps = await Promise.all(controleRefs.map(r => get(r).catch(() => null)));
+  for (let i = 0; i < snaps.length; i++) {
+    if (!snaps[i]?.exists()) continue;
+    const val = snaps[i].val();
+    if (!controle || (val.tentativas_realizadas||0) > (controle.tentativas_realizadas||0)) {
+      controle = val;
+      controleRef = controleRefs[i];
+    }
+  }
+}
 
 if (controle) {
-  // Bloqueia apenas por número de tentativas — tempo global não impede mais
   if ((controle.tentativas_realizadas||0) >= MAX_TENTATIVAS) mostrarBloqueada('tentativas', controle);
   else mostrarPreJogo(controle);
 } else {

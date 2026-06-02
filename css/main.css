@@ -504,6 +504,10 @@ body, .card, .topbar, .main, .mini-stat, .list-row, .input, .table td, .table th
   .evolucao-bar { padding: 6px 8px; gap: 6px; }
 }
 
+/* ── Esconder barra de rolagem em todas as páginas ── */
+::-webkit-scrollbar { width: 0; height: 0; }
+* { scrollbar-width: none; -ms-overflow-style: none; }
+
 @media (max-width: 480px) {
   /* Posição do aluno no ranking: números menores */
   .pos-rank-num { font-size: 26px !important; }

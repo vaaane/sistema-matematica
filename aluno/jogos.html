@@ -419,10 +419,18 @@ function buildRankRow(p, pos, isMe) {
     'background:rgba(192,192,192,.15);color:#c0c0c0;border:1.5px solid rgba(192,192,192,.3)',
     'background:rgba(205,127,50,.15);color:#cd7f32;border:1.5px solid rgba(205,127,50,.28)',
   ];
-  const posSlot = pos <= 3
+
+  // 1º lugar: coroa acima da medalha (igual ao menu.html)
+  const posSlot = pos === 1
+    ? `<div style="display:flex;flex-direction:column;align-items:center;gap:1px;min-width:20px">
+        <span style="font-size:11px;line-height:1;filter:drop-shadow(0 0 5px rgba(255,215,0,.85))">👑</span>
+        <span class="g-ri-medal">🥇</span>
+      </div>`
+    : pos <= 3
     ? `<span class="g-ri-medal">${medals[pos-1]}</span>`
     : `<span class="g-ri-pos">${pos}</span>`;
-  const pi = pos - 1;  // índice de cor (0,1,2)
+
+  const pi = pos - 1;
   const avStyle = isMe
     ? 'background:rgba(124,92,252,.2);color:var(--g-pl);border:1.5px solid rgba(124,92,252,.5)'
     : pos <= 3 ? avSt[pi]
@@ -431,7 +439,17 @@ function buildRankRow(p, pos, isMe) {
   const delta = isMe ? myDelta : 0;
   const dc = delta > 0 ? 'up' : delta < 0 ? 'down' : 'same';
   const dt = delta > 0 ? `↑${delta}` : delta < 0 ? `↓${Math.abs(delta)}` : '–';
-  return `<div class="g-ri${isMe?' me':''}">
+
+  // Fundo suave dourado/prata/bronze para top 3 (não sobrescreve o fundo roxo do "me")
+  const top3Style = (!isMe && pos <= 3)
+    ? (pos === 1
+        ? 'background:rgba(255,215,0,.07);border:1px solid rgba(255,215,0,.16);margin:2px 0;'
+        : pos === 2
+        ? 'background:rgba(192,192,192,.06);border:1px solid rgba(192,192,192,.12);margin:2px 0;'
+        : 'background:rgba(205,127,50,.07);border:1px solid rgba(205,127,50,.14);margin:2px 0;')
+    : '';
+
+  return `<div class="g-ri${isMe?' me':''}" style="${top3Style}">
     ${posSlot}
     <div class="g-ri-av" style="${avStyle}">${(p.nome||'?')[0].toUpperCase()}</div>
     <div class="g-ri-info">
