@@ -348,15 +348,13 @@ function _renderizarAlertasTabuada(niveisSnap, rankSnap) {
   document.getElementById('tabuada-alertas-card').style.display = items.length ? '' : 'none';
 }
 
-let _rankTabSnapLive = rankTabSnap;
-onValue(ref(db, 'tabuada_niveis'), snap => {
-  _renderizarAlertasTabuada(snap, _rankTabSnapLive);
-});
-onValue(ref(db, 'tabuada_ranking'), snap => {
-  _rankTabSnapLive = snap;
-});
+let _snapNiveis  = niveisTabSnap;
+let _snapRanking = rankTabSnap;
+function _reRenderAlertas() { _renderizarAlertasTabuada(_snapNiveis, _snapRanking); }
+onValue(ref(db, 'tabuada_niveis'),  snap => { _snapNiveis  = snap; _reRenderAlertas(); });
+onValue(ref(db, 'tabuada_ranking'), snap => { _snapRanking = snap; _reRenderAlertas(); });
 // Render inicial com dados já carregados
-_renderizarAlertasTabuada(niveisTabSnap, rankTabSnap);
+_reRenderAlertas();
 
 // ── Online Agora (listeners em tempo real) ────────────────────
 const ONLINE_WINDOW_MS  = 5 * 60 * 1000;
