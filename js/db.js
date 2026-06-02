@@ -4,6 +4,20 @@ import {
   query, orderByChild, limitToLast, equalTo, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
+// ── Histórico exclusivo do Modo Teste ────────────────────────
+const _UID_PT = 'PROFESSOR_TESTE';
+export async function addHistoricoTeste(tipo, dados) {
+  const ts = Date.now();
+  await set(ref(db, `modo_teste_historico/${_UID_PT}/${tipo}/${ts}`), { ...dados, criadoEm: ts });
+}
+export async function getHistoricoTeste(tipo) {
+  const snap = await get(ref(db, `modo_teste_historico/${_UID_PT}/${tipo}`));
+  if (!snap.exists()) return [];
+  const result = [];
+  snap.forEach(child => { result.push({ id: child.key, ...child.val() }); });
+  return result.sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
+}
+
 // ── Resultados ──────────────────────────────────────────────
 export async function addResultado(data) {
   const newRef = await push(ref(db, "resultados"), { ...data, criadoEm: serverTimestamp() });

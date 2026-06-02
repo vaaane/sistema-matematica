@@ -470,9 +470,9 @@
 <script>(()=>{const t=localStorage.getItem("tema");if(t==="escuro")document.documentElement.setAttribute("data-theme","dark");})()</script>
 <script type="module">
 import { respostasEquivalentes, dataAgora, ARQUIVO_QUESTOES, LISTA_ATIVIDADES } from "/js/constants.js";
-import { addResultado, updateResultado, saveDetalhes, getLiberadasParaTurma, listenRankingAtividade, getBestResultado, getResultadosByAluno, getAtividadeStatus, salvarConquistas } from "/js/db.js";
+import { addResultado, updateResultado, saveDetalhes, getLiberadasParaTurma, listenRankingAtividade, getBestResultado, getResultadosByAluno, getAtividadeStatus, salvarConquistas, addHistoricoTeste } from "/js/db.js";
 import { calcularConquistas, CONQUISTAS } from "/js/conquistas.js";
-import { requireAluno, renderSidebarAluno, requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { requireAluno, renderSidebarAluno, requireProfessor, renderSidebarProfessor, clearSession, isModoTeste } from "/js/auth.js";
 import { initTopNotif } from "/js/topnotif.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
 
@@ -483,11 +483,11 @@ document.addEventListener('keydown', e => {
 });
 
 const _urlP   = new URLSearchParams(window.location.search);
-const isTeste = _urlP.get('modo') === 'teste';
+let isTeste = _urlP.get('modo') === 'teste';
 
 let alunos, turma, liberada;
 
-if (isTeste) {
+if (_urlP.get('modo') === 'teste') {
   requireProfessor();
   renderSidebarProfessor("sidebar", "atividades");
   window.sair = () => { window.close(); };
@@ -498,6 +498,19 @@ if (isTeste) {
   _tb.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10000;background:#d97706;color:#fff;text-align:center;padding:5px 8px;font-size:11px;font-weight:700;letter-spacing:2px;pointer-events:none';
   _tb.textContent = '👩‍🏫 MODO TESTE · dados salvos como PROFESSOR_TESTE / Turma TESTE';
   document.body.prepend(_tb);
+} else if (isModoTeste()) {
+  isTeste = true;
+  const sess = requireAluno();
+  if (!sess) throw new Error();
+  renderSidebarAluno("sidebar", "atividades");
+  window.sair = () => { document.body.classList.remove('arcade-mode'); clearSession(); window.location.href = "/index.html"; };
+  alunos = sess.alunos;
+  turma  = sess.turma;
+  initTopNotif({ mode: 'aluno', alunoNome: alunos[0] });
+  initAvBanner(turma, alunos[0]);
+  const nomeAtiv = _urlP.get("ativ");
+  if (!nomeAtiv) { window.location.href = "/aluno/atividades.html"; throw new Error(); }
+  liberada = { atividade: nomeAtiv, percentual: 100, modo: 'competicao_plus' };
 } else {
   const sess = requireAluno();
   if (!sess) throw new Error();
@@ -1418,6 +1431,16 @@ async function encerrarSessao(motivo) {
         saveDetalhes(rid, st.questoesDetalhes).catch(() => {});
       }
     }
+  }
+  if (isTeste) {
+    addHistoricoTeste('atividades', {
+      aluno: 'PROFESSOR_TESTE', turma: 'TESTE',
+      atividade: liberada.atividade, modo: 'competicao_plus',
+      pontuacao: dados.pontuacao, pontuacao_bruta: dados.pontuacao_bruta,
+      acertos: dados.acertos, erros: dados.erros,
+      combo_max: dados.combo_max || 0, sem_penalidade: dados.sem_penalidade || false,
+      tempo: dados.tempo, concluido: true,
+    }).catch(() => {});
   }
 
   const novoMelhor = st.saldo > melhorPts;

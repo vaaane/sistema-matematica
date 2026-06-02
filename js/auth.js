@@ -7,7 +7,12 @@ export function setSession(data) {
 }
 export function clearSession() {
   localStorage.removeItem("sm_session");
+  localStorage.removeItem("modoTeste");
   sessionStorage.removeItem("sm_jogo");
+}
+
+export function isModoTeste() {
+  return localStorage.getItem('modoTeste') === 'true';
 }
 
 export function requireAluno(redirectTo = "/index.html") {
@@ -89,7 +94,10 @@ export function renderSidebarAluno(containerId, activePage) {
     nav.push({ divider: true });
     nav.push({ id:"robotica", href:"/aluno/robotica.html", label:"🤖 Robótica", icon:`<path d="M20 9V7c0-1.1-.9-2-2-2h-3c0-1.66-1.34-3-3-3S9 3.34 9 5H6c-1.1 0-2 .9-2 2v2c-1.66 0-3 1.34-3 3s1.34 3 3 3v4c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4c1.66 0 3-1.34 3-3s-1.34-3-3-3zm-2 10H6V7h12v12zm-9-6c-.83 0-1.5-.67-1.5-1.5S8.17 10 9 10s1.5.67 1.5 1.5S9.83 13 9 13zm6 0c-.83 0-1.5-.67-1.5-1.5S14.17 10 15 10s1.5.67 1.5 1.5S15.83 13 15 13z"/>` });
   }
-  const userHtml = alunos.map((a,i) => `<div class="user-name">${a}<span>Aluno${alunos.length>1?' '+(i+1):''}</span></div>`).join('');
+  const isMT = isModoTeste();
+  const userHtml = isMT
+    ? '<div class="user-name">Professora<span>Conta Teste</span></div>'
+    : alunos.map((a,i) => `<div class="user-name">${a}<span>Aluno${alunos.length>1?' '+(i+1):''}</span></div>`).join('');
   const navHtml  = nav.map(n => n.divider
     ? '<div class="nav-divider"></div>'
     : `<a class="nav-item${activePage===n.id?' active-orange':''}" href="${n.href}"><svg viewBox="0 0 24 24">${n.icon}</svg>${n.label}</a>`
@@ -101,7 +109,7 @@ export function renderSidebarAluno(containerId, activePage) {
       <div class="brand-sub">Plataforma Educacional</div>
     </div>
     <div class="sidebar-user">
-      <div class="role-badge aluno"><svg viewBox="0 0 24 24"><path d="M12 3L1 9l4 2.18V17h2v-4.82L9 13.36V17c0 1.1 1.35 2 3 2s3-.9 3-2v-3.64l2-1.09V17h2v-5.82L23 9 12 3z"/></svg>Turma ${turma}</div>
+      <div class="role-badge aluno"><svg viewBox="0 0 24 24"><path d="M12 3L1 9l4 2.18V17h2v-4.82L9 13.36V17c0 1.1 1.35 2 3 2s3-.9 3-2v-3.64l2-1.09V17h2v-5.82L23 9 12 3z"/></svg>${isMT ? '🧪 Modo Teste' : 'Turma ' + turma}</div>
       ${userHtml}
     </div>
     <nav class="sidebar-nav">
@@ -115,6 +123,24 @@ export function renderSidebarAluno(containerId, activePage) {
       </button>
     </div>`;
   setupMobileNav(containerId);
+  if (isModoTeste()) {
+    if (!localStorage.getItem('tema')) {
+      localStorage.setItem('tema', 'escuro');
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  }
+  if (isModoTeste() && !document.getElementById('modo-teste-banner')) {
+    const main = document.querySelector('.main');
+    if (main) {
+      const banner = document.createElement('div');
+      banner.id = 'modo-teste-banner';
+      banner.style.cssText = 'background:#7C3AED;color:#fff;padding:6px 16px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;letter-spacing:0.2px;flex-shrink:0;z-index:50;';
+      banner.innerHTML = '🧪 Modo Teste <span style="opacity:.7;font-weight:400;flex:1">· seus dados não aparecem para os alunos</span><button onclick="window.sair&&window.sair()" style="flex-shrink:0;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Sair</button>';
+      const topbar = main.querySelector('.topbar');
+      if (topbar) main.insertBefore(banner, topbar.nextSibling);
+      else main.insertBefore(banner, main.firstChild);
+    }
+  }
 }
 
 // ── Hash e geração de senha de aluno ─────────────────────────

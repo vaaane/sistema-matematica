@@ -11,5 +11,5 @@ const firebaseConfig = {
   databaseURL:       "https://sistemamatematica-50eff-default-rtdb.firebaseio.com"
 };
 
-const app = initializeApp(firebaseConfig);
+export const app = initializeApp(firebaseConfig);
 export const db = getDatabase(app);

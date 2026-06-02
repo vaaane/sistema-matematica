@@ -108,7 +108,7 @@
 <script type="module">
 import { LISTA_ATIVIDADES } from "/js/constants.js";
 import { getResultados, getLiberadasParaTurma, getAlunoPreferencia } from "/js/db.js";
-import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+import { requireAluno, renderSidebarAluno, clearSession, isModoTeste } from "/js/auth.js";
 import { saveRankPos, applyTopRankVisuals } from "/js/toprank.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
 import { initTopNotif } from "/js/topnotif.js";
@@ -150,11 +150,14 @@ document.getElementById("topbar-sub").textContent   = `Turma ${turma} · Bom tra
 document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
 
 const tabuadaUid = (turma + '_' + alunos[0]).replace(/[.#$\[\]/\s]/g, '_');
-const [todosRaw, liberadas, tabuadaSnap] = await Promise.all([
+const [todosRaw, _libRaw, tabuadaSnap] = await Promise.all([
   getResultados(),
   getLiberadasParaTurma(turma),
   get(ref(db, `tabuada_niveis/${tabuadaUid}`)).catch(() => null),
 ]);
+const liberadas = isModoTeste()
+  ? LISTA_ATIVIDADES.map(a => ({ atividade: a.nome, modo: a.modo || 'classico', percentual: 100, status: 'ativa', criadoEm: null }))
+  : _libRaw;
 const nivelTabuada = tabuadaSnap?.exists() ? (tabuadaSnap.val().melhor_nivel || tabuadaSnap.val().nivel_atual || 1) : 1;
 const todos = todosRaw.filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
 initAvBanner(turma, alunos[0], liberadas);
@@ -167,15 +170,17 @@ function avKey(s) {
   return btoa(unescape(encodeURIComponent(s))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
 }
 const controleAv = {};
-const avPlusLibs = liberadas.filter(l => l.modo === 'avaliacao_plus' && l.status !== 'encerrada');
-if (avPlusLibs.length && alunos.length) {
-  await Promise.all(avPlusLibs.map(async l => {
-    try {
-      const k = avKey(turma + '|' + l.atividade);
-      const snap = await get(ref(db, `avaliacao_controle/${k}/${avKey(alunos[0])}`));
-      controleAv[l.atividade] = snap.exists() ? snap.val() : null;
-    } catch(e) {}
-  }));
+if (!isModoTeste()) {
+  const avPlusLibs = liberadas.filter(l => l.modo === 'avaliacao_plus' && l.status !== 'encerrada');
+  if (avPlusLibs.length && alunos.length) {
+    await Promise.all(avPlusLibs.map(async l => {
+      try {
+        const k = avKey(turma + '|' + l.atividade);
+        const snap = await get(ref(db, `avaliacao_controle/${k}/${avKey(alunos[0])}`));
+        controleAv[l.atividade] = snap.exists() ? snap.val() : null;
+      } catch(e) {}
+    }));
+  }
 }
 
 // ── Ranking (média por atividade) ─────────────────────────────

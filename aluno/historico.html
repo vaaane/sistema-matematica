@@ -138,8 +138,8 @@
 </div>
 <script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
-import { getResultadosByAluno, getDetalhes, getAlunoPreferencia, getConquistasByAluno, getAllAtividadeStatus } from "/js/db.js";
-import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+import { getResultadosByAluno, getDetalhes, getAlunoPreferencia, getConquistasByAluno, getAllAtividadeStatus, getHistoricoTeste } from "/js/db.js";
+import { requireAluno, renderSidebarAluno, clearSession, isModoTeste } from "/js/auth.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
 import { db } from "/js/firebase-config.js";
@@ -581,13 +581,22 @@ window.toggleHistTent = async function(uid, resultadoId, modo) {
 };
 
 // ── Dados ──────────────────────────────────────────────────────
-const [todosRaw, statusMap, allConquisTaskRaw] = await Promise.all([
-  Promise.all(alunos.map(a => getResultadosByAluno(a))).then(r => r.flat()),
-  getAllAtividadeStatus(),
-  Promise.all(alunos.map(a => getConquistasByAluno(a))),
-]);
-const todos = todosRaw.filter(r => !r.modo_teste);
-const allConquistas = allConquisTaskRaw.flat();
+let todos, statusMap, allConquistas;
+if (isModoTeste()) {
+  const testRegs = await getHistoricoTeste('atividades');
+  todos = testRegs;
+  statusMap = {};
+  allConquistas = [];
+} else {
+  const [todosRaw, _statusMap, allConquisTaskRaw] = await Promise.all([
+    Promise.all(alunos.map(a => getResultadosByAluno(a))).then(r => r.flat()),
+    getAllAtividadeStatus(),
+    Promise.all(alunos.map(a => getConquistasByAluno(a))),
+  ]);
+  todos = todosRaw.filter(r => !r.modo_teste);
+  statusMap = _statusMap;
+  allConquistas = allConquisTaskRaw.flat();
+}
 for (const c of allConquistas) {
   if (c.sessaoId) {
     if (!conquistasBySessao[c.sessaoId]) conquistasBySessao[c.sessaoId] = [];
@@ -616,7 +625,7 @@ const content = document.getElementById("content");
 let html = '';
 
 for (const aluno of alunos) {
-  const regs = todos.filter(r => r.aluno === aluno && r.concluido && !r.modo_teste)
+  const regs = todos.filter(r => (isModoTeste() || (r.aluno === aluno && !r.modo_teste)) && r.concluido)
     .sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
 
   const uid = aluno.replace(/\s+/g, '_');

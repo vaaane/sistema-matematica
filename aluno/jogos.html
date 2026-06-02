@@ -340,12 +340,13 @@ document.getElementById("content").innerHTML = `
 const hojeISO = new Date().toISOString().slice(0, 10);
 const ontemISO = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
 
-let niveisSnap, rankSnap, sessoesSnap;
+let niveisSnap, rankSnap, sessoesSnap, allNiveisSnap;
 try {
-  [niveisSnap, rankSnap, sessoesSnap] = await Promise.all([
+  [niveisSnap, rankSnap, sessoesSnap, allNiveisSnap] = await Promise.all([
     get(ref(db, `tabuada_niveis/${uid}`)).catch(e => { console.error('[jogos] tabuada_niveis:', e); return null; }),
     get(ref(db, 'tabuada_ranking')).catch(e => { console.error('[jogos] tabuada_ranking:', e); return null; }),
     get(ref(db, 'tabuada_sessoes')).catch(e => { console.error('[jogos] tabuada_sessoes:', e); return null; }),
+    get(ref(db, 'tabuada_niveis')).catch(() => null),
   ]);
 } catch(e) {
   document.getElementById("content").innerHTML =
@@ -365,10 +366,23 @@ const totalPart   = niveis.total_partidas || 0;
 const maiorCombo  = niveis.maior_combo || 0;
 
 // Ranking
+// total_partidas por uid: prioridade tabuada_niveis → sessoes (fallback) → ranking
+const niveisAllMap = {};
+if (allNiveisSnap?.exists()) {
+  allNiveisSnap.forEach(c => { niveisAllMap[c.key] = c.val(); });
+}
+const partidasPorUid = {};
+if (sessoesSnap?.exists()) {
+  sessoesSnap.forEach(c => { const v = c.val(); if (v?.uid) partidasPorUid[v.uid] = (partidasPorUid[v.uid] || 0) + 1; });
+}
+function getPartidas(uid_) {
+  return niveisAllMap[uid_]?.total_partidas ?? partidasPorUid[uid_] ?? 0;
+}
+
 const rankAll = [];
 if (rankSnap?.exists()) {
-  rankSnap.forEach(c => { const v = c.val(); if (v?.nome) rankAll.push(v); });
-  rankAll.sort((a, b) => (b.melhor_nivel||0) - (a.melhor_nivel||0) || (b.total_partidas||0) - (a.total_partidas||0));
+  rankSnap.forEach(c => { const v = c.val(); if (v?.nome) rankAll.push({ ...v, _uid: c.key }); });
+  rankAll.sort((a, b) => (b.melhor_nivel||0) - (a.melhor_nivel||0) || getPartidas(b._uid) - getPartidas(a._uid));
 } else {
   console.warn('[jogos] tabuada_ranking vazio ou inacessível. rankSnap:', rankSnap);
 }
@@ -454,7 +468,7 @@ function buildRankRow(p, pos, isMe) {
     <div class="g-ri-av" style="${avStyle}">${(p.nome||'?')[0].toUpperCase()}</div>
     <div class="g-ri-info">
       <div class="g-ri-name" style="${isMe?'color:var(--g-pl)':''}">${escH(p.nome)}${isMe?' ★':''}</div>
-      <div class="g-ri-meta">${escH(p.turma||'?')} · ${p.total_partidas||0} part.</div>
+      <div class="g-ri-meta">${escH(p.turma||'?')} · ${getPartidas(p._uid)} part.</div>
     </div>
     <div class="g-ri-right">
       <span class="g-ri-lv" style="color:${lvColor}">${p.melhor_nivel||1}</span>

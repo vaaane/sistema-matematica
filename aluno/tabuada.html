@@ -315,13 +315,14 @@
 
 <script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
-import { getSession, renderSidebarAluno, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { getSession, renderSidebarAluno, renderSidebarProfessor, clearSession, isModoTeste } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 // ── Auth ──────────────────────────────────────────────────────
 const sess = getSession();
 const _isProfMode = sess?.modo === 'professor';
+const _isModoTesteAtivo = !_isProfMode && isModoTeste();
 if (!_isProfMode && (!sess || sess.modo !== 'aluno')) { window.location.href = '/index.html'; throw new Error(); }
 
 if (_isProfMode) {
@@ -344,9 +345,9 @@ let uid = _isProfMode ? _profUid : _makeUid(nomeAluno);
 document.getElementById("avatar-initials").textContent = _isProfMode ? 'P' : nomeAluno[0].toUpperCase();
 
 // ── Firebase ──────────────────────────────────────────────────
-let niveisRef     = ref(db, _isProfMode ? `professor_tabuada_niveis/${uid}` : `tabuada_niveis/${uid}`);
-let rankingRef    = _isProfMode ? null : ref(db, `tabuada_ranking/${uid}`);
-let sprintRankRef = _isProfMode ? null : ref(db, `tabuada_sprint_ranking/${uid}`);
+let niveisRef     = ref(db, _isProfMode ? `professor_tabuada_niveis/${uid}` : _isModoTesteAtivo ? `modo_teste_historico/PROFESSOR_TESTE/tabuada_niveis` : `tabuada_niveis/${uid}`);
+let rankingRef    = (_isProfMode || _isModoTesteAtivo) ? null : ref(db, `tabuada_ranking/${uid}`);
+let sprintRankRef = (_isProfMode || _isModoTesteAtivo) ? null : ref(db, `tabuada_sprint_ranking/${uid}`);
 
 // Configurações globais do jogo (lidas do Firebase, aplicadas em getLevelConfig)
 let tabuadaConfig = { tempo_base: 40, dificuldade_multiplicador: 5 };
@@ -384,6 +385,7 @@ async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo
         melhor_nivel:   p.melhor_nivel,
         ultima_partida: ts,
         maior_combo:    novoMaiorCombo,
+        total_partidas: p.total_partidas,
       });
     }
     if (resultado) {
@@ -397,7 +399,7 @@ async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo
       if (segsRestantes !== null) entry.segundos_restantes = segsRestantes;
       const t = { ...tipoAcertos };
       if (t.add || t.sub || t.mul || t.div) entry.tipos_acertos = t;
-      const _niveisBase = _isProfMode ? `professor_tabuada_niveis/${uid}` : `tabuada_niveis/${uid}`;
+      const _niveisBase = _isProfMode ? `professor_tabuada_niveis/${uid}` : _isModoTesteAtivo ? `modo_teste_historico/PROFESSOR_TESTE/tabuada_niveis` : `tabuada_niveis/${uid}`;
       await set(ref(db, `${_niveisBase}/historico/${ts}`), entry);
     }
   } catch(e) { console.warn('[Tabuada] Erro ao salvar:', e); }
@@ -657,12 +659,23 @@ function flyBack(info, el) {
 
 // ── Presença / sessões Firebase ──────────────────────────────
 function _atualizarPresenca() {
-  if (_isProfMode) return;
+  if (_isProfMode || _isModoTesteAtivo) return;
   set(ref(db, `tabuada_presenca/${uid}`), { nome: nomeAluno, turma, ts: Date.now() }).catch(() => {});
 }
 function _registrarSessao(nivel, resultado, acertosOverride, errosOverride) {
   if (_isProfMode) return;
   const ts = Date.now();
+  if (_isModoTesteAtivo) {
+    set(ref(db, `modo_teste_historico/PROFESSOR_TESTE/tabuada/${ts}`), {
+      nivel:     nivel     ?? nivelAtual,
+      resultado: resultado ?? 'desconhecido',
+      acertos:   acertosOverride ?? acertos,
+      erros:     errosOverride   ?? erros,
+      combo:     comboMax,
+      timestamp: ts,
+    }).catch(() => {});
+    return;
+  }
   const d  = new Date(ts);
   set(ref(db, `tabuada_sessoes/${ts}`), {
     uid,

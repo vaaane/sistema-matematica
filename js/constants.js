@@ -1,3 +1,5 @@
+export const UID_PROFESSOR_TESTE = 'PROFESSOR_TESTE';
+
 export const FATOR_ATRASO = { dia: 1.0, anterior: 0.75, antiga: 0.5 };
 export const LABEL_TIPO   = { dia: "do dia", anterior: "anterior", antiga: "antiga" };
 export const BASES = { 1: 10, 2: 20, 3: 30 };

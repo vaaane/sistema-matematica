@@ -913,6 +913,69 @@ window.exportarCSV = function() {
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 };
+
+// ── Corrigir dupla esquecida ─────────────────────────────────────
+// Uso no console: fixarDupla('heitor', 'Arthur Silva', '8F')
+// 1ª chamada sem confirmar → lista os registros encontrados
+// 2ª chamada com confirmar=true → cria os registros do segundo aluno
+window.fixarDupla = async function(buscaNome, nomeDestino, turmaFiltro = '8F', confirmar = false) {
+  const snap = await get(ref(db, 'resultados'));
+  const achados = [];
+  snap.forEach(child => {
+    const v = child.val();
+    if (v.turma === turmaFiltro &&
+        v.modo === 'avaliacao_plus' &&
+        !v.modo_teste &&
+        v.aluno?.toLowerCase().includes(buscaNome.toLowerCase())) {
+      achados.push({ id: child.key, ...v });
+    }
+  });
+
+  if (!achados.length) {
+    console.warn(`Nenhum registro encontrado para "${buscaNome}" em ${turmaFiltro}.`);
+    return;
+  }
+
+  // Agrupar por tentativa para exibir resumo
+  const por = {};
+  achados.forEach(r => {
+    const k = `${r.atividade}|T${r.tentativa_num}`;
+    if (!por[k]) por[k] = [];
+    por[k].push(r);
+  });
+  console.log(`\n✅ ${achados.length} registro(s) de "${achados[0].aluno}" encontrado(s):`);
+  Object.entries(por).forEach(([k, rs]) => {
+    const r = rs[0];
+    console.log(`  ${k} | concluído:${r.concluido} | nota:${r.nota_quiz ?? '—'} | ts_inicio:${r.ts_inicio}`);
+  });
+
+  if (!confirmar) {
+    console.log(`\n▶ Para criar os registros de "${nomeDestino}", chame:\n  fixarDupla('${buscaNome}', '${nomeDestino}', '${turmaFiltro}', true)`);
+    return;
+  }
+
+  // Criar registros para o segundo aluno
+  let criados = 0;
+  for (const r of achados) {
+    const novoRec = { ...r };
+    delete novoRec.id;
+    novoRec.aluno = nomeDestino;
+    // Chave única: ts do original + sufixo para não colidir
+    const novaChave = String(Number(r.id) + 1);
+    await set(ref(db, `resultados/${novaChave}`), novoRec);
+    criados++;
+  }
+
+  // Copiar avaliacao_controle (se existir para o aluno original)
+  const k = avKey(turmaFiltro + '|' + achados[0].atividade);
+  const ctrlSnap = await get(ref(db, `avaliacao_controle/${k}/${avKey(achados[0].aluno)}`));
+  if (ctrlSnap.exists()) {
+    await set(ref(db, `avaliacao_controle/${k}/${avKey(nomeDestino)}`), ctrlSnap.val());
+    console.log(`✅ avaliacao_controle copiado para "${nomeDestino}"`);
+  }
+
+  console.log(`\n🎉 ${criados} registro(s) criado(s) para "${nomeDestino}".\nRecarregue a página para ver os dados atualizados.`);
+};
 </script>
 </body>
 </html>

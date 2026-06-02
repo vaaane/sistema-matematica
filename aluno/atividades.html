@@ -9,6 +9,7 @@
   <style>
     .ativ-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:14px;display:flex;align-items:center;gap:18px;transition:border-color .2s,box-shadow .2s;}
     .ativ-card.liberada{border-color:#BAE6FD;background:linear-gradient(135deg,#EBF6FD,#fff);}
+    [data-theme="dark"] .ativ-card.liberada{background:linear-gradient(135deg,rgba(47,158,220,.12),var(--card));border-color:rgba(47,158,220,.3);}
     .ativ-card.bloqueada{opacity:.6;}
     .ativ-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
     .ativ-dot.blue{background:var(--blue);}
@@ -56,11 +57,11 @@
     </div>
   </div>
 </div>
-<script>(()=>{const t=localStorage.getItem("tema");if(t==="escuro")document.documentElement.setAttribute("data-theme","dark");})()</script>
+<script>(()=>{const t=localStorage.getItem("tema");const mt=localStorage.getItem("modoTeste")==="true";if(t==="escuro"||(mt&&!t))document.documentElement.setAttribute("data-theme","dark");})()</script>
 <script type="module">
 import { LISTA_ATIVIDADES, MAX_TENTATIVAS_ATIVIDADE } from "/js/constants.js";
 import { contarTentativas, getLiberadasParaTurma, getAlunoPreferencia, getResultados } from "/js/db.js";
-import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+import { requireAluno, renderSidebarAluno, clearSession, isModoTeste } from "/js/auth.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
 import { db } from "/js/firebase-config.js";
@@ -100,7 +101,9 @@ const loadTimeout = setTimeout(() => {
   }
 }, 6000);
 
-const liberadas = await getLiberadasParaTurma(turma);
+const liberadas = isModoTeste()
+  ? LISTA_ATIVIDADES.map(a => ({ atividade: a.nome, modo: a.modo || 'classico', percentual: 100, status: 'ativa', criadoEm: null }))
+  : await getLiberadasParaTurma(turma);
 const liberadasMap = {};
 for (const lib of liberadas) liberadasMap[lib.atividade] = lib;
 
@@ -233,7 +236,7 @@ content.innerHTML = `
       botao = `<span class="badge badge-red">Bloqueada</span>`;
     } else {
       botao = `<a href="${url}" class="btn btn-blue">
-        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>▶ Disponível
+        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Disponível
       </a>`;
     }
 
@@ -260,7 +263,7 @@ content.innerHTML = `
           return `<span class="tent-info" style="color:#7C3AED">📝 Avaliação+ · ${tentUsadas}/${MAX_TENT_AV} tentativas${timerInfo}</span>`;
         })()
       : bloq.competicao
-      ? `<span class="tent-info" style="color:var(--blue)">Modo competição · ao vivo</span>`
+      ? ''
       : alunos.map(al => {
           const usado = bloq.tentativas[al] || 0;
           const rest  = Math.max(0, MAX_TENTATIVAS_ATIVIDADE - usado);

@@ -90,9 +90,9 @@ import {
   addResultado, updateResultado, saveDetalhes,
   getLiberadasParaTurma, contarTentativas,
   addConquista, hasConquista, addAlerta, verificarTentativasSuspeitas,
-  getResultadosByAluno, getAtividadeStatus, addQuizSessao
+  getResultadosByAluno, getAtividadeStatus, addQuizSessao, addHistoricoTeste
 } from "/js/db.js";
-import { requireAluno, renderSidebarAluno, clearSession, setJogo } from "/js/auth.js";
+import { requireAluno, renderSidebarAluno, clearSession, setJogo, isModoTeste } from "/js/auth.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
 
 const sess = requireAluno();
@@ -172,6 +172,7 @@ for (const al of jogo.alunos) {
     aluno: al, turma: jogo.turma, atividade: jogo.nome,
     concluido: false, pontuacao: 0, acertos: 0, erros: 0, respondidas: 0,
     tempo: "0s", data: agora,
+    ...(isModoTeste() ? { modo_teste: true } : {}),
   });
   jogo.resultadoIds[al] = novoId;
 }
@@ -411,8 +412,16 @@ async function finalizarJogo() {
   try {
     for (const al of jogo.alunos) {
       const id = jogo.resultadoIds[al];
-      await updateResultado(id, { aluno: al, turma: jogo.turma, atividade: jogo.nome, ...dadosFinais });
+      await updateResultado(id, { aluno: al, turma: jogo.turma, atividade: jogo.nome, ...dadosFinais, ...(isModoTeste() ? { modo_teste: true } : {}) });
       try { await saveDetalhes(id, jogo.historico); } catch(e) { console.warn("[saveDetalhes]", e); }
+    }
+    if (isModoTeste()) {
+      addHistoricoTeste('atividades', {
+        aluno: 'PROFESSOR_TESTE', turma: 'TESTE',
+        atividade: jogo.nome, modo: 'classico',
+        pontuacao: dadosFinais.pontuacao, pontuacao_bruta: dadosFinais.pontuacao_bruta,
+        acertos: dadosFinais.acertos, erros: dadosFinais.erros, concluido: true,
+      }).catch(() => {});
     }
     jogo.salvoFirebase = true;
   } catch(err) {
