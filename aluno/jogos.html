@@ -219,6 +219,12 @@
     .g-lc.boss-cur .g-lc-n { color:#fff; }
 
     /* ── Responsive ── */
+    @media(max-width:768px) {
+      /* Nível já aparece no badge topo — ocultar stat redundante em mobile */
+      .g-stat-nivel { display:none!important; }
+      /* Com 2 stats visíveis, ajustar para 2 colunas */
+      .g-stats { grid-template-columns:repeat(2,1fr); }
+    }
     @media(max-width:600px) {
       .g-bottom,.g-rank-wrap { grid-template-columns:1fr; }
       .g-grid { grid-template-columns:repeat(8,1fr); }
@@ -597,7 +603,7 @@ document.getElementById("content").innerHTML = `
     </div>
 
     <div class="g-stats">
-      <div class="g-stat"><div class="v" style="color:var(--g-pl)">${melhorNivel}</div><div class="l">Melhor nível</div></div>
+      <div class="g-stat g-stat-nivel"><div class="v" style="color:var(--g-pl)">${melhorNivel}</div><div class="l">Melhor nível</div></div>
       <div class="g-stat"><div class="v" style="color:var(--g-cyan)">${totalPart}</div><div class="l">Partidas</div></div>
       <div class="g-stat"><div class="v" style="color:var(--g-orange)">🔥 ${maiorCombo||'—'}</div><div class="l">Maior combo</div></div>
     </div>

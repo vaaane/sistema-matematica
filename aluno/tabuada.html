@@ -473,7 +473,8 @@ function _getLevelConfigBase(lvl) {
       return { type:'mix_as', pairs:18, cols:6, secs: Math.max(20, TEMPO_BASE_129 - 15), minMul, minDiv, ehChefao:true, tipoChefao:'rapido' };
     } else if (tipo === 'dificil') {
       // 🧮 Difícil: grid 5 cols / 12 pares, tempo normal, ops pesadas
-      return { type:'mix_as', pairs:12, cols:5, secs: TEMPO_BASE_129, minMul: Math.min(6+n,8), minDiv: Math.min(6+n,8), ehChefao:true, tipoChefao:'dificil', pesado:true };
+      // 10 pares × 2 = 20 cards ÷ 5 cols = 4 linhas exatas (sem buraco no grid)
+      return { type:'mix_as', pairs:10, cols:5, secs: TEMPO_BASE_129, minMul: Math.min(6+n,8), minDiv: Math.min(6+n,8), ehChefao:true, tipoChefao:'dificil', pesado:true };
     } else {
       // 📦 Grande: grid 7×6 / 21 pares, tempo +5s
       return { type:'mix_as', pairs:21, cols:7, secs: Math.min(120, TEMPO_BASE_129 + 5), minMul, minDiv, ehChefao:true, tipoChefao:'grande' };
@@ -1150,9 +1151,13 @@ function _buildGameInternal() {
   _animating  = false;
 
   // CAP DEFINITIVO — definido antes de gerar qualquer card
+  // Grids válidos: totalCards = pares×2 deve ser múltiplo exato de cols
+  // Normal/Rápido: 18p×2=36 / 6cols = 6 linhas ✓
+  // Difícil:       10p×2=20 / 5cols = 4 linhas ✓  (12p=24 deixava 1 buraco)
+  // Grande:        21p×2=42 / 7cols = 6 linhas ✓
   const _maxPares = ehChefaoAtual && tipoChefaoAtual === 'grande'  ? 21
-                  : ehChefaoAtual && tipoChefaoAtual === 'dificil' ? 12
-                  : 18; // 6×6 = 36 cards máximo em níveis normais
+                  : ehChefaoAtual && tipoChefaoAtual === 'dificil' ? 10
+                  : 18;
 
   const pairs = generatePairs(cfg.type, _maxPares, cfg.maxResult, cfg.minMul || 0, cfg.minDiv || 0, cfg.pesado || false);
   if (pairs.length < _maxPares) {

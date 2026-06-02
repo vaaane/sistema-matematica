@@ -44,10 +44,19 @@
       .pos-strip-item{padding:6px 0}
       .pos-rank-num{font-size:26px!important}
       .rank-section-title{font-size:11px}
-      /* Pódio: reduz max-width para caber em 375px sem overflow */
+      /* Pódio: reduz max-width para 3 spots caberem em 375px */
       .podium-spot{max-width:96px!important;}
-      .podium-trophy{font-size:24px;}
-      .podium-name{font-size:10px;}
+      .podium-trophy{font-size:22px;}
+      /* !important sobrescreve inline style das duplas (white-space:normal;overflow:visible) */
+      .podium-name{
+        font-size:9px!important;
+        white-space:nowrap!important;
+        overflow:hidden!important;
+        text-overflow:ellipsis!important;
+        padding:0 2px!important;
+      }
+      .podium-turma{font-size:9px;}
+      .podium-pts{font-size:11px;}
     }
     .confete-rank{position:absolute;top:-10px;width:7px;height:9px;border-radius:2px;opacity:0;pointer-events:none;animation:confete-rank-cair var(--dur,2s) var(--delay,0s) ease-in 1 forwards;}
     @keyframes confete-rank-cair{0%{opacity:1;transform:translateY(0) rotate(0deg)}75%{opacity:.9}100%{opacity:0;transform:translateY(110vh) rotate(560deg) scale(.4)}}
