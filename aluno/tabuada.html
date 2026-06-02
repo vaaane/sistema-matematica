@@ -470,8 +470,8 @@ function _getLevelConfigBase(lvl) {
     const minMul = Math.min(5 + n, 7);
     const minDiv = Math.min(5 + n, 7);
     if (tipo === 'rapido') {
-      // ⚡ Rápido: 12p×2=24 | desktop 6×4, mobile 4×6, tempo 60s
-      return { type:'mix_as', pairs:12, cols:6, secs: Math.max(20, TEMPO_BASE_129 - 5), minMul, minDiv, ehChefao:true, tipoChefao:'rapido' };
+      // ⚡ Rápido: 12p×2=24 | desktop 6×4, mobile 4×6, tempo 45s
+      return { type:'mix_as', pairs:12, cols:6, secs: Math.max(20, TEMPO_BASE_129 - 20), minMul, minDiv, ehChefao:true, tipoChefao:'rapido' };
     } else if (tipo === 'dificil') {
       // 🧮 Difícil: 12p×2=24 | desktop 6×4, mobile 4×6, ops pesadas
       return { type:'mix_as', pairs:12, cols:6, secs: TEMPO_BASE_129, minMul: Math.min(6+n,8), minDiv: Math.min(6+n,8), ehChefao:true, tipoChefao:'dificil', pesado:true };
