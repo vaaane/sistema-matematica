@@ -553,13 +553,13 @@ function tryGenOp(type, usedR, maxResult = 999, pesado = false) {
       }
       sym = '−';
     } else if (type === 'mul') {
-      if (pesado) { a = rnd(4, 12); b = rnd(4, 12); }
+      if (pesado) { a = rnd(4, 10); b = rnd(4, 10); }
       else        { a = rnd(2, 9);  b = rnd(2, 9); }
       result = a * b;
-      if (result > (pesado ? 144 : 81) || usedR.has(result)) continue;
+      if (result > (pesado ? 100 : 81) || usedR.has(result)) continue;
       sym = '×';
     } else if (type === 'div') {
-      if (pesado) { b = rnd(4, 12); result = rnd(4, 15); }
+      if (pesado) { b = rnd(4, 10); result = rnd(4, 12); }
       else        { b = rnd(2, 9);  result = rnd(2, 11); }
       if (usedR.has(result)) continue;
       a = b * result;
