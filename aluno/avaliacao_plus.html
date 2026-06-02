@@ -1722,7 +1722,7 @@ function mostrarResultado(motivo, f2aplicado, f2bruta, novoMelhor, bonusFim = 0)
   const tentRestantes      = MAX_TENTATIVAS - tentUsadas;
   const gRestMs            = globalRestanteMs(controle);
   const tempoGlobalEsgotado = gRestMs <= 0 && motivo === 'tempo';
-  const podeNovar          = isTeste || (tentRestantes > 0 && gRestMs >= MIN_PARA_TENTATIVA_MS);
+  const podeNovar          = isTeste || tentRestantes > 0; // não bloquear por tempo global
   const melhorExibida = controle.melhor_pontuacao || f2aplicado;
   const taxa = st.respondidas > 0 ? Math.round(st.acertos / st.respondidas * 100) : 0;
 
@@ -1789,17 +1789,14 @@ window.iniciarNovaTentativa = async function() {
     controle = snap.exists() ? snap.val() : controle;
   }
 
-  const gRestMs = isTeste ? DURACAO_GLOBAL_MS : globalRestanteMs(controle);
-  if (!isTeste && gRestMs < MIN_PARA_TENTATIVA_MS) { mostrarBloqueada('tempo', controle); return; }
   if (!isTeste && (controle.tentativas_realizadas||0) >= MAX_TENTATIVAS) { mostrarBloqueada('tentativas', controle); return; }
 
   const novaTent = isTeste ? 1 : (controle.tentativas_realizadas||0) + 1;
   if (!isTeste) await update(controleRef, { tentativas_realizadas: novaTent });
   controle.tentativas_realizadas = novaTent;
 
-  // Atualizar flag de 10min para a nova tentativa
-  _warned10 = !isTeste ? gRestMs <= WARN_10_MS : (globalRestanteMs(controle) <= WARN_10_MS);
-  const duracaoSessao = Math.min(DURACAO_SESSAO_S, Math.floor(gRestMs/1000));
+  _warned10 = false;
+  const duracaoSessao = DURACAO_SESSAO_S; // sempre 8 min fixos por tentativa
   st = novoEstado(duracaoSessao);
 
   const agora = dataAgora();
@@ -1926,11 +1923,8 @@ window.iniciarJogo = async function() {
     controle.tentativas_realizadas = novaTent;
   }
 
-  const gRestMs = globalRestanteMs(controle);
-  // Não disparar alerta se o tempo já cruzou o limiar antes de entrar no jogo
-  _warned10 = gRestMs <= WARN_10_MS;
-  const duracaoSessao = Math.min(DURACAO_SESSAO_S, Math.floor(gRestMs/1000));
-  if (duracaoSessao <= 0) { mostrarBloqueada('tempo', controle); return; }
+  _warned10 = false;
+  const duracaoSessao = DURACAO_SESSAO_S; // sempre 8 min fixos por tentativa
 
   st = novoEstado(duracaoSessao);
 
@@ -1996,9 +1990,8 @@ const controleSnap = isTeste ? null : await get(controleRef);
 controle = controleSnap?.exists() ? controleSnap.val() : null;
 
 if (controle) {
-  const gRestMs = globalRestanteMs(controle);
+  // Bloqueia apenas por número de tentativas — tempo global não impede mais
   if ((controle.tentativas_realizadas||0) >= MAX_TENTATIVAS) mostrarBloqueada('tentativas', controle);
-  else if (gRestMs < MIN_PARA_TENTATIVA_MS) mostrarBloqueada('tempo', controle);
   else mostrarPreJogo(controle);
 } else {
   mostrarPreJogo(null);
