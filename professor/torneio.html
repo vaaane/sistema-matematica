@@ -11,7 +11,9 @@
     .turmas-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
     .turma-chk{display:none;}
     .turma-lbl{padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);font-size:12px;font-weight:600;color:var(--text-muted);cursor:pointer;transition:all .15s;user-select:none;}
-    .turma-chk:checked+.turma-lbl{border-color:var(--blue);background:var(--blue);color:#fff;}
+    .turma-chk:checked+.turma-lbl{border-color:var(--blue)!important;background:var(--blue)!important;color:#fff!important;}
+    .turma-lbl-teste{background:rgba(124,58,237,.08);border-color:rgba(124,58,237,.35);color:#7C3AED;}
+    .turma-chk:checked+.turma-lbl-teste{border-color:#7C3AED!important;background:#7C3AED!important;color:#fff!important;}
     /* ── Operações ── */
     .ops-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
     .ops-radio{display:none;}
@@ -223,7 +225,7 @@ function _htmlFormCriar(temAtivo) {
     <input type="checkbox" id="chk-${t}" class="turma-chk" name="turma" value="${t}">
     <label for="chk-${t}" class="turma-lbl">${t}</label>`).join('') + `
     <input type="checkbox" id="chk-TESTE" class="turma-chk" name="turma" value="TESTE">
-    <label for="chk-TESTE" class="turma-lbl" style="background:rgba(124,58,237,.08);border-color:rgba(124,58,237,.35);color:#7C3AED">🧪 Teste</label>`;
+    <label for="chk-TESTE" class="turma-lbl turma-lbl-teste">🧪 Teste</label>`;
 
   const nomeDefault = _jsonConfig?.nome || 'Torneio — Números Negativos';
   const jsonSel = _jsonLista.length > 1
