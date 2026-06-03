@@ -52,13 +52,71 @@ import { ALUNOS_POR_TURMA } from "/js/constants.js";
 import { getResultados, getDetalhes, getConquistas, salvarConquistas } from "/js/db.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 import { calcularConquistas, CONQUISTAS } from "/js/conquistas.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 requireProfessor();
 renderSidebarProfessor("sidebar", "historico");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
-const [todosRaw, conquistas] = await Promise.all([getResultados(), getConquistas()]);
+function fmtData(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+const [todosRaw, conquistas, torneiosSnap] = await Promise.all([
+  getResultados(),
+  getConquistas(),
+  get(ref(db, 'torneios')).catch(() => null),
+]);
 const todos = todosRaw.filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
+
+// ── Carregar sessões dos torneios encerrados ──────────────────
+const torneiosMeta   = []; // { id, nome, encerrado_em }
+const torneioEntries = []; // itens planos para exibição
+
+if (torneiosSnap?.exists()) {
+  const encerrados = [];
+  torneiosSnap.forEach(c => {
+    const v = c.val();
+    if (v.status === 'encerrado' && !v.modo_teste) encerrados.push({ id: c.key, ...v });
+  });
+  encerrados.sort((a, b) => (b.encerrado_em || 0) - (a.encerrado_em || 0));
+
+  await Promise.all(encerrados.map(async t => {
+    const sessSnap = await get(ref(db, `torneios/${t.id}/sessoes`)).catch(() => null);
+    if (!sessSnap?.exists()) return;
+    const sessoes = [];
+    sessSnap.forEach(c => {
+      const s = c.val();
+      if (s.turma !== 'TESTE') sessoes.push({ _uid: c.key, ...s });
+    });
+    if (!sessoes.length) return;
+    torneiosMeta.push({ id: t.id, nome: t.nome || 'Torneio', encerrado_em: t.encerrado_em });
+    // Calcular posição por turma
+    const porTurma = {};
+    for (const s of sessoes) {
+      if (!porTurma[s.turma]) porTurma[s.turma] = [];
+      porTurma[s.turma].push(s);
+    }
+    for (const [turma, lista] of Object.entries(porTurma)) {
+      lista.sort((a, b) => (b.pontuacao || 0) - (a.pontuacao || 0));
+      lista.forEach((s, pos) => {
+        torneioEntries.push({
+          _tipo: 'torneio', torneioId: t.id, torneioNome: t.nome || 'Torneio',
+          turma, aluno: s.aluno || '',
+          pontuacao: s.pontuacao || 0, acertos: s.acertos || 0, erros: s.erros || 0,
+          tabuleiros: s.tabuleiros_completos || 0, streak: s.maior_streak || 0,
+          tipos_acertos: s.tipos_acertos || {}, tipos_erros: s.tipos_erros || {},
+          posicao: pos + 1, total_turma: lista.length,
+          encerrado_em: t.encerrado_em || 0,
+          data: fmtData(t.encerrado_em),
+        });
+      });
+    }
+  }));
+}
 
 const selT = document.getElementById("sel-turma");
 const selA = document.getElementById("sel-ativ");
@@ -66,6 +124,13 @@ const turmas = Object.keys(ALUNOS_POR_TURMA);
 turmas.forEach(t => { selT.innerHTML += `<option value="${t}">Turma ${t}</option>`; });
 const ativNomes = [...new Set(todos.map(r=>r.atividade))].sort();
 ativNomes.forEach(a => { selA.innerHTML += `<option value="${a}">${a}</option>`; });
+// Adicionar torneios ao dropdown
+if (torneiosMeta.length) {
+  selA.innerHTML += `<option disabled>──────────────</option>`;
+  torneiosMeta.forEach(t => {
+    selA.innerHTML += `<option value="__tn__${t.id}">🏆 ${t.nome} · ${fmtData(t.encerrado_em)}</option>`;
+  });
+}
 
 window.setFiltroTurma = function(turma) {
   selT.value = turma;
@@ -105,16 +170,58 @@ window.toggleDetalhes = async function(id, bodyEl) {
   }).join('');
 };
 
+const TIPO_LABELS = { adicao:'Adição', subtracao:'Subtração', duplo_neg:'−(−)', multiplicacao:'Mult.', divisao:'Div.' };
+
+function renderTorneioItem(e) {
+  const medals = ['🥇','🥈','🥉'];
+  const pos    = e.posicao;
+  const posLabel = pos <= 3 ? medals[pos-1]+` ${pos}º` : `#${pos}º`;
+  const tot  = (e.acertos||0) + (e.erros||0);
+  const taxa = tot > 0 ? Math.round(e.acertos/tot*100) + '%' : '—';
+  const tipos = Object.keys(TIPO_LABELS);
+  const pior  = tipos.reduce((acc, tp) => {
+    const t = (e.tipos_acertos[tp]||0) + (e.tipos_erros[tp]||0);
+    const pct = t > 0 ? (e.tipos_erros[tp]||0)/t : -1;
+    return pct > acc.pct ? { tp, pct } : acc;
+  }, { tp: null, pct: -1 });
+  return `<div class="hist-item" style="border-color:rgba(245,158,11,.35)">
+    <div class="hist-header" style="cursor:default">
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:14px;font-weight:700">🏆 ${e.torneioNome}</span>
+          <span class="badge badge-blue">T${e.turma}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">${e.aluno}</div>
+        <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">
+          <span class="badge badge-gold">${e.pontuacao} pts</span>
+          <span class="badge" style="background:#FFFBEB;color:#92400E;border-color:#FDE68A">${posLabel} de ${e.total_turma}</span>
+          <span class="badge badge-green">${e.acertos} ✓</span>
+          <span class="badge badge-red">${e.erros} ✗</span>
+          <span class="badge badge-blue">${taxa}</span>
+          ${e.tabuleiros > 0 ? `<span class="badge badge-blue">${e.tabuleiros} tab.</span>` : ''}
+          ${e.streak > 0 ? `<span class="badge badge-orange">🔥×${e.streak}</span>` : ''}
+          ${pior.tp ? `<span class="badge" style="background:#FEF2F2;color:#DC2626;border-color:#FECACA">⚠️ ${TIPO_LABELS[pior.tp]}</span>` : ''}
+        </div>
+      </div>
+      <div class="hist-data">${e.data}</div>
+    </div>
+  </div>`;
+}
+
 window.filtrar = function() {
   const turma = selT.value;
   const ativ  = selA.value;
-  let dados = [...todos].reverse().filter(r => r.concluido);
-  if (turma !== "Todas") dados = dados.filter(r => r.turma === turma);
-  if (ativ  !== "Todas") dados = dados.filter(r => r.atividade === ativ);
+  const isTnFilter = ativ.startsWith('__tn__');
+  const tnFiltId   = isTnFilter ? ativ.slice(5) : null;
 
   const conquFilt = turma === "Todas" ? conquistas : conquistas.filter(c => c.turma === turma);
 
-  const listaHtml = dados.slice(0, 50).map(r => {
+  // ── Atividades regulares ──────────────────────────────────
+  let dadosAtiv = isTnFilter ? [] : [...todos].reverse().filter(r => r.concluido);
+  if (turma !== "Todas") dadosAtiv = dadosAtiv.filter(r => r.turma === turma);
+  if (!isTnFilter && ativ !== "Todas") dadosAtiv = dadosAtiv.filter(r => r.atividade === ativ);
+
+  const listaAtivHtml = dadosAtiv.slice(0, 50).map(r => {
     const total = (r.acertos||0) + (r.erros||0);
     const aproveit = total > 0 ? Math.round((r.acertos||0)/total*100) : 0;
     return `<div class="hist-item">
@@ -124,11 +231,11 @@ window.filtrar = function() {
             <span style="font-size:14px;font-weight:700">${r.atividade}</span>
             ${r.turma === 'TESTE' ? '<span class="badge" style="background:#FEF9C3;color:#854D0E;border:1px solid #FDE68A">👩‍🏫 TESTE</span>' : `<span class="badge badge-blue">T${r.turma}</span>`}
           </div>
-          <div style="font-size:12px;color:${r.modo_teste || r.aluno === 'PROFESSOR_TESTE' ? '#d97706' : 'var(--text-muted)'};margin-top:2px;font-weight:${r.modo_teste || r.aluno === 'PROFESSOR_TESTE' ? '600' : 'normal'}">${r.modo_teste || r.aluno === 'PROFESSOR_TESTE' ? '👩‍🏫 Teste da professora' : r.aluno}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">${r.aluno}</div>
           <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
             <span class="badge badge-gold">${r.pontuacao||0} pts</span>
-            <span class="badge badge-green">${r.acertos||0} acertos</span>
-            <span class="badge badge-red">${r.erros||0} erros</span>
+            <span class="badge badge-green">${r.acertos||0} ✓</span>
+            <span class="badge badge-red">${r.erros||0} ✗</span>
             <span class="badge badge-blue">${aproveit}%</span>
           </div>
         </div>
@@ -139,16 +246,32 @@ window.filtrar = function() {
         <p style="font-size:12px;color:var(--text-muted);padding-top:8px">Carregando…</p>
       </div>
     </div>`;
-  }).join('') || '<div class="empty-state"><p>Nenhum resultado.</p></div>';
+  }).join('');
+
+  // ── Torneios ──────────────────────────────────────────────
+  let dadosTn = isTnFilter
+    ? torneioEntries.filter(e => e.torneioId === tnFiltId)
+    : (ativ === "Todas" ? [...torneioEntries] : []);
+  if (turma !== "Todas") dadosTn = dadosTn.filter(e => e.turma === turma);
+  dadosTn.sort((a, b) => b.pontuacao - a.pontuacao || a.posicao - b.posicao);
+
+  const tornTitulo = isTnFilter
+    ? (torneiosMeta.find(t => t.id === tnFiltId)?.nome || 'Torneio')
+    : '🏆 Torneios realizados';
+
+  const listaTnHtml = dadosTn.length
+    ? dadosTn.map(renderTorneioItem).join('')
+    : '<div class="empty-state"><p>Nenhum torneio.</p></div>';
+
+  // ── Layout ────────────────────────────────────────────────
+  const colEsq = isTnFilter
+    ? `<div class="card"><div class="card-title" style="margin-bottom:16px">${tornTitulo} (${dadosTn.length})</div>${listaTnHtml}</div>`
+    : `<div class="card" style="margin-bottom:14px"><div class="card-title" style="margin-bottom:16px">Atividades (${dadosAtiv.length})</div>${listaAtivHtml || '<div class="empty-state"><p>Nenhum resultado.</p></div>'}</div>
+       ${dadosTn.length ? `<div class="card"><div class="card-title" style="margin-bottom:16px">${tornTitulo} (${dadosTn.length})</div>${listaTnHtml}</div>` : ''}`;
 
   document.getElementById("content").innerHTML = `
     <div class="grid-2">
-      <div>
-        <div class="card">
-          <div class="card-title" style="margin-bottom:16px">Resultados (${dados.length})</div>
-          ${listaHtml}
-        </div>
-      </div>
+      <div>${colEsq}</div>
       <div>
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">

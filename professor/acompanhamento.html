@@ -140,7 +140,24 @@ window.mudarAluno = async function() {
     } catch(e) {}
   }));
 
-  renderAluno(aluno, turma, hist, tentativasOficiais);
+  // Carregar sessões detalhadas dos torneios para este aluno
+  const sessionUid = (turma + '_' + aluno).replace(/[.#$[\]/\s]/g, '_');
+  const tornHistIds = [...new Set(hist.filter(r => r.tipo === 'torneio' && r.torneio_id).map(r => r.torneio_id))];
+  const sessoesTorneio = {};
+  await Promise.all(tornHistIds.map(async tid => {
+    try {
+      const [sessSnap, totalSnap] = await Promise.all([
+        get(ref(db, `torneios/${tid}/sessoes/${sessionUid}`)).catch(() => null),
+        get(ref(db, `torneios/${tid}/sessoes`)).catch(() => null),
+      ]);
+      sessoesTorneio[tid] = {
+        sess: sessSnap?.exists() ? sessSnap.val() : null,
+        total: totalSnap?.exists() ? Object.values(totalSnap.val()).filter(s => s.turma === turma).length : null,
+      };
+    } catch(e) {}
+  }));
+
+  renderAluno(aluno, turma, hist, tentativasOficiais, sessoesTorneio);
 };
 
 // ── Estatísticas ──────────────────────────────────────────────
@@ -206,7 +223,9 @@ function calcAtivStatsAvPlus(tentativas) {
   return { melhorNQ, melhorPts, melhorF1Pts, rapMax, comboMax, totalAc, totalErr, taxa };
 }
 
-function renderAluno(aluno, turma, hist, tentativasOficiais = {}) {
+const TIPO_LABELS_ACOMP = { adicao:'Adição', subtracao:'Subtração', duplo_neg:'−(−)', multiplicacao:'Mult.', divisao:'Div.' };
+
+function renderAluno(aluno, turma, hist, tentativasOficiais = {}, sessoesTorneio = {}) {
   if (!hist.length) {
     document.getElementById("content").innerHTML = `
       <div class="card"><div class="card-title" style="margin-bottom:12px">
@@ -271,13 +290,32 @@ function renderAluno(aluno, turma, hist, tentativasOficiais = {}) {
         const tot = (r.acertos||0)+(r.erros||0);
         const tx  = tot > 0 ? Math.round((r.acertos||0)/tot*100) : null;
         const pos = r.posicao ? (r.posicao <= 3 ? medals[r.posicao-1]+' #'+r.posicao+'º' : '#'+r.posicao+'º') : '—';
-        return `<div class="list-row" style="flex-wrap:wrap;gap:6px;align-items:center">
+        const sd  = sessoesTorneio[r.torneio_id];
+        const s   = sd?.sess;
+        const totalTurma = sd?.total;
+        const tabs   = s?.tabuleiros_completos || 0;
+        const streak = s?.maior_streak || 0;
+        const tiposA = s?.tipos_acertos || {};
+        const tiposE = s?.tipos_erros || {};
+        const tiposArr = Object.keys(TIPO_LABELS_ACOMP).map(tp => {
+          const a = tiposA[tp]||0, e = tiposE[tp]||0, t = a+e;
+          return t > 0 ? { tp, pct: a/t } : null;
+        }).filter(Boolean);
+        const melhorTipo = tiposArr.length ? tiposArr.reduce((b,x) => x.pct>b.pct?x:b, tiposArr[0]) : null;
+        const piorTipo   = tiposArr.length ? tiposArr.reduce((b,x) => x.pct<b.pct?x:b, tiposArr[0]) : null;
+        return `<div class="list-row" style="flex-wrap:wrap;gap:6px;align-items:flex-start">
           <div style="flex:1;min-width:120px">
             <div style="font-size:13px;font-weight:600">${i===0 ? '→ Mais recente' : 'Torneio '+(regs.length-i)}</div>
             <div style="font-size:11px;color:var(--text-muted)">${r.data||''}</div>
+            ${tabs>0||streak>0 ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">${tabs>0?tabs+' tabuleiros':''}${tabs>0&&streak>0?' · ':''}${streak>0?'🔥 streak '+streak:''}</div>` : ''}
+            ${melhorTipo&&piorTipo&&melhorTipo.tp!==piorTipo.tp ? `<div style="font-size:11px;margin-top:2px">
+              <span style="color:var(--green)">✅ ${TIPO_LABELS_ACOMP[melhorTipo.tp]}</span>
+              <span style="color:var(--text-muted)"> · </span>
+              <span style="color:var(--red)">⚠️ ${TIPO_LABELS_ACOMP[piorTipo.tp]}</span>
+            </div>` : ''}
           </div>
           <span class="badge badge-gold">${r.pontuacao||0} pts</span>
-          <span class="badge" style="background:#FFFBEB;color:#92400E;border-color:#FDE68A">${pos}</span>
+          <span class="badge" style="background:#FFFBEB;color:#92400E;border-color:#FDE68A">${pos}${totalTurma ? ' de '+totalTurma : ''}</span>
           <span class="badge badge-green">${r.acertos||0} ✓</span>
           <span class="badge badge-red">${r.erros||0} ✗</span>
           ${tx !== null ? `<span class="badge badge-blue">${tx}%</span>` : ''}
