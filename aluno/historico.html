@@ -376,7 +376,10 @@ if (isModoTeste()) {
   }));
 }
 
-// ── Construir lista plana de itens ─────────────────────────────
+// ── Construir e renderizar ────────────────────────────────────
+// Wrapping em try/catch garante que o skeleton SEMPRE é substituído
+try {
+
 const ATIVIDADES_OCULTAS = new Set(['Atividade 4 - Geometria']);
 const MODOS_OCULTOS      = new Set(['tabuada', 'tabuada_speed']);
 
@@ -811,6 +814,19 @@ if (!allItems.length) {
 }
 
 content.innerHTML = html;
+
+} catch(_renderErr) {
+  console.error('[historico] Erro ao renderizar:', _renderErr);
+  const _eMsg = isModoTeste()
+    ? '🧪 Erro ao renderizar histórico de teste.'
+    : 'Erro ao renderizar histórico. Tente novamente.';
+  content.innerHTML = `<div class="card" style="text-align:center;padding:40px">
+    <div style="font-size:36px;margin-bottom:12px">⚠️</div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:6px">${_eMsg}</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;font-family:monospace">${_renderErr?.message || ''}</div>
+    <button class="btn btn-blue" onclick="location.reload()">Recarregar</button>
+  </div>`;
+}
 
 // Tooltip conquistas (event delegation)
 let _touchConqTip;
