@@ -606,13 +606,14 @@ if (torneioId) {
     if (count > 0) document.getElementById('heat-section').style.display = '';
   });
 
-  // Status vem de torneio_ativo/{turma} quando turma especificada
-  if (_tvTurma) {
-    onValue(ref(db, `torneio_ativo/${_tvTurma}`), snap => {
+  // Status vem de torneio_ativo/{turma}/{torneioId}
+  if (_tvTurma && torneioId) {
+    onValue(ref(db, `torneio_ativo/${_tvTurma}/${torneioId}`), snap => {
       const dados = snap?.val();
       if (!dados) return;
       if (!_torneio) _torneio = {};
       Object.assign(_torneio, { status: dados.status, inicio: dados.inicio, pausa_inicio: dados.pausa_inicio, pausa_total_ms: dados.pausa_total_ms, tempo_segundos: dados.tempo_segundos });
+      if (dados.status === 'teste_permanente') dados.status = 'iniciado';
       if (!_timerInt) iniciarTimer();
       if (dados.status === 'encerrado' && !_encerrado) { _encerrado = true; setTimeout(() => triggerEncerramento(), 800); }
     });

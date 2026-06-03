@@ -159,17 +159,53 @@ document.getElementById("avatar-initials").textContent = _isTeste ? '🧪' : alu
 
 let torneioId = _urlP.get('id');
 // Descobrir torneio ativo: modo teste usa turma TESTE, aluno usa sua turma
+// Estrutura Firebase: torneio_ativo/{turma}/{torneioId} = { status, nome, ... }
 if (!torneioId) {
   const lookupTurma = isModoTeste() ? 'TESTE' : (!_isTeste && turma ? turma : null);
   if (lookupTurma) {
     const snap = await get(ref(db, `torneio_ativo/${lookupTurma}`)).catch(() => null);
-    if (snap?.exists()) torneioId = snap.val().torneioId;
+    if (snap?.exists()) {
+      const val = snap.val();
+      // Backward compat: estrutura antiga era { torneioId, status, ... }
+      if (val.torneioId && typeof val.torneioId === 'string') {
+        torneioId = val.torneioId;
+      } else {
+        const STATUS_OK = new Set(['liberada', 'iniciado', 'pausado', 'teste_permanente']);
+        const ativos = Object.entries(val)
+          .filter(([, a]) => a && typeof a === 'object' && STATUS_OK.has(a.status))
+          .map(([id, a]) => ({ id, ...a }));
+        if (ativos.length === 1) {
+          torneioId = ativos[0].id;
+        } else if (ativos.length > 1) {
+          torneioId = await _escolherTorneio(ativos);
+        }
+      }
+    }
   }
 }
 if (!torneioId) {
   document.getElementById('content').innerHTML =
     '<div class="card" style="text-align:center;padding:40px"><p style="color:var(--text-muted);margin-bottom:12px">Nenhum torneio ativo para a sua turma agora.</p><a href="/aluno/menu.html" class="btn btn-blue">Voltar</a></div>';
   throw new Error('no torneio');
+}
+
+function _escolherTorneio(ativos) {
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return new Promise(resolve => {
+    window._resolveEscolha = resolve;
+    document.getElementById('content').innerHTML = `
+      <div class="card" style="padding:30px;text-align:center">
+        <div style="font-size:18px;font-weight:800;margin-bottom:18px">🏆 Escolha um torneio</div>
+        ${ativos.map(a => `
+          <div style="border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div style="text-align:left">
+              <div style="font-weight:700">${esc(a.nome||'Torneio')}</div>
+              <div style="font-size:12px;color:var(--text-muted)">${Math.round((a.tempo_segundos||300)/60)} min</div>
+            </div>
+            <button class="btn btn-blue" onclick="window._resolveEscolha('${esc(a.id)}')">Entrar</button>
+          </div>`).join('')}
+      </div>`;
+  });
 }
 
 const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
@@ -1155,10 +1191,11 @@ onValue(ref(db, `torneios/${torneioId}`), snap => {
   document.getElementById('topbar-title').textContent = `🏆 ${_torneio.nome || 'Torneio'}`;
 });
 
-// Status vem de torneio_ativo/{turma} ou TESTE (modo teste) ou torneios/{id} (fallback)
-const _statusPath = isModoTeste()
-  ? `torneio_ativo/TESTE`
-  : (!_isTeste && turma ? `torneio_ativo/${turma}` : `torneios/${torneioId}`);
+// Status: nova estrutura torneio_ativo/{turma}/{torneioId}
+// _isTeste = URL ?modo=teste (testarTorneio rápido) → usa torneios/{id} diretamente
+const _statusPath = _isTeste && !isModoTeste()
+  ? `torneios/${torneioId}`
+  : `torneio_ativo/${isModoTeste() ? 'TESTE' : turma}/${torneioId}`;
 
 onValue(ref(db, _statusPath), snap => {
   if (!snap.exists()) return;
@@ -1184,7 +1221,7 @@ onValue(ref(db, _statusPath), snap => {
   if (st === 'liberada' || !st) {
     if (_prevStatus !== 'liberada') mostrarEspera();
     else { const wt = document.getElementById('wt-count'); if (wt) wt.textContent = _sessoes.length; }
-  } else if (st === 'iniciado') {
+  } else if (st === 'iniciado' || st === 'teste_permanente') {
     esconderOverlay();
     if (!_gameOk) mostrarJogo();
     else if (!_timerInt) _timerInt = setInterval(tickTimer, 500);

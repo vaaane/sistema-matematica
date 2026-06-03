@@ -7,58 +7,39 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
-    /* ── Turmas checkboxes ── */
     .turmas-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
     .turma-chk{display:none;}
     .turma-lbl{padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);font-size:12px;font-weight:600;color:var(--text-muted);cursor:pointer;transition:all .15s;user-select:none;}
     .turma-chk:checked+.turma-lbl{border-color:var(--blue)!important;background:var(--blue)!important;color:#fff!important;}
     .turma-lbl-teste{background:rgba(124,58,237,.08);border-color:rgba(124,58,237,.35);color:#7C3AED;}
     .turma-chk:checked+.turma-lbl-teste{border-color:#7C3AED!important;background:#7C3AED!important;color:#fff!important;}
-    /* ── Operações ── */
-    .ops-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
-    .ops-radio{display:none;}
-    .ops-lbl{padding:7px 16px;border-radius:9px;border:1.5px solid var(--border);background:var(--bg);font-size:13px;font-weight:600;color:var(--text-muted);cursor:pointer;transition:all .15s;}
-    .ops-radio:checked+.ops-lbl{border-color:var(--orange);background:var(--orange-pale);color:var(--orange);}
-    /* ── Stepper ── */
     .stepper{display:inline-flex;align-items:center;gap:4px;}
     .stp-btn{width:30px;height:30px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;transition:all .12s;}
     .stp-btn:hover{border-color:var(--blue);color:var(--blue);}
     .stp-val{min-width:60px;text-align:center;font-weight:700;font-size:14px;color:var(--text);}
-    /* ── Torneio ativo ── */
     .torneio-ativo{border:2px solid var(--blue);border-radius:var(--radius);background:linear-gradient(135deg,var(--blue-pale),transparent);padding:20px;margin-bottom:16px;}
-    .torneio-timer{font-size:42px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--blue);text-align:center;letter-spacing:2px;margin:8px 0;}
+    .torneio-timer{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--blue);letter-spacing:1px;vertical-align:middle;}
     .torneio-timer.warn{color:var(--orange);}
     .torneio-timer.danger{color:var(--red);}
-    .torneio-timer.pausado{color:var(--text-muted);}
     .status-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;}
     .status-liberada{background:rgba(34,197,94,.12);color:var(--green);}
     .status-iniciado{background:rgba(47,158,220,.12);color:var(--blue);}
     .status-pausado{background:rgba(245,158,11,.12);color:var(--gold);}
-    .status-encerrado{background:rgba(107,114,128,.1);color:var(--text-muted);}
-    .participantes-count{text-align:center;font-size:28px;font-weight:800;color:var(--text);}
-    .participantes-label{text-align:center;font-size:12px;color:var(--text-muted);margin-top:2px;}
-    .ctrl-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px;}
-    /* ── Ranking ── */
     .rank-row{display:grid;grid-template-columns:32px 1fr 60px 60px 60px;gap:8px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--border);font-size:13px;}
     .rank-row:last-child{border-bottom:none;}
     .rank-pos{font-weight:800;text-align:center;font-size:15px;}
-    .rank-1{color:var(--gold);}
-    .rank-2{color:#9CA3AF;}
-    .rank-3{color:#CD853F;}
+    .rank-1{color:var(--gold);} .rank-2{color:#9CA3AF;} .rank-3{color:#CD853F;}
     .rank-nome{font-weight:600;}
     .rank-turma{font-size:11px;color:var(--text-muted);}
     .rank-pts{text-align:right;font-weight:700;color:var(--blue);}
-    /* ── Histórico ── */
     .hist-card{border:1px solid var(--border);border-radius:11px;overflow:hidden;margin-bottom:10px;}
     .hist-header{padding:12px 16px;background:var(--bg);display:flex;align-items:center;justify-content:space-between;cursor:pointer;gap:10px;}
     .hist-body{padding:14px 16px;border-top:1px solid var(--border);display:none;}
     .hist-body.open{display:block;}
-    /* ── Form ── */
     .form-field{margin-bottom:14px;}
     .form-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:5px;display:block;}
     .form-input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);transition:border .15s;}
     .form-input:focus{outline:none;border-color:var(--blue);}
-    /* ── Análise de erros ── */
     .analise-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;}
     .analise-table th{padding:5px 8px;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-muted);border-bottom:2px solid var(--border);white-space:nowrap;text-align:center;}
     .analise-table th:first-child{text-align:left;}
@@ -68,18 +49,16 @@
     .heat-bar-pr{height:7px;background:rgba(0,0,0,.06);border-radius:3px;overflow:hidden;margin-top:4px;}
     .heat-bar-pr-inner{height:100%;border-radius:3px;background:#3B82F6;}
     .heat-bar-pr-inner.worst{background:#DC2626;}
-    /* ── Global ranking table ── */
     .grank-row{display:grid;grid-template-columns:28px 1fr 55px 55px 70px 60px;gap:6px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px;}
     .grank-header{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);background:var(--bg);}
-    @media(max-width:560px){
-      .rank-row{grid-template-columns:28px 1fr 50px 50px;}
-      .grank-row{grid-template-columns:24px 1fr 44px 44px 56px;}
-    }
-    /* ── Preview ── */
     .preview-box{margin-top:8px;padding:10px 12px;background:var(--bg);border-radius:8px;border:1.5px dashed var(--border);}
     .preview-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:6px;}
     .preview-pairs{display:flex;gap:6px;flex-wrap:wrap;}
     .preview-par{padding:5px 10px;background:var(--card);border-radius:7px;border:1px solid var(--border);font-size:12px;font-weight:600;}
+    @media(max-width:560px){
+      .rank-row{grid-template-columns:28px 1fr 50px 50px;}
+      .grank-row{grid-template-columns:24px 1fr 44px 44px 56px;}
+    }
   </style>
 </head>
 <body>
@@ -115,20 +94,26 @@ requireProfessor();
 renderSidebarProfessor("sidebar", "torneio");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
-// ── Constantes ───────────────────────────────────────────────
 const TURMAS = Object.keys(ALUNOS_POR_TURMA);
 
-// ── Estado local ─────────────────────────────────────────────
-let _tempoStepper    = 5;
-let _jsonNome        = 'torneio1_negativos';
-let _jsonConfig      = null;
-let _jsonLista       = ['torneio1_negativos'];
-// Per-turma: turma → { torneioId, nome, status, inicio, pausa_inicio, pausa_total_ms, tempo_segundos, config }
-let _ativoPorTurma   = {};
-let _timerMap        = {};    // turma → setInterval id
-let _liveUnsub       = null;  // sessoes listener
+// ── Estado ────────────────────────────────────────────────────
+let _tempoStepper = 5;
+let _jsonNome     = 'torneio1_negativos';
+let _jsonConfig   = null;
+let _jsonLista    = ['torneio1_negativos'];
 
-// ── Helpers ──────────────────────────────────────────────────
+// { turma → { torneioId → data } }
+let _ativoNested = {};
+
+// `${turma}_${torneioId}` → intervalId
+let _timerMap = {};
+
+// torneioId → unsubFn
+let _liveUnsubs = {};
+
+const STATUS_ATIVOS = new Set(['liberada', 'iniciado', 'pausado', 'teste_permanente']);
+
+// ── Helpers ───────────────────────────────────────────────────
 function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function fmtTs(ts) {
   if (!ts) return '—';
@@ -154,41 +139,54 @@ function _calcRestanteTurma(a) {
   const el = Date.now() - (a.inicio || Date.now()) - (a.pausa_total_ms || 0);
   return Math.max(0, (a.tempo_segundos || 300) - Math.floor(el / 1000));
 }
-
 function _contarNiveis(json) {
   if (!json) return '?';
   if (json.modo === 'progressao') return json.progressao?.reduce((acc, e) => {
-    if (e.niveis.endsWith('+')) return acc + 10; // indefinido, diz "15+"
+    if (e.niveis.endsWith('+')) return acc + 10;
     const [lo, hi] = e.niveis.split('-').map(Number);
     return acc + (hi - lo + 1);
   }, 0) + '+';
   return json.niveis?.length ?? '?';
 }
 
-// ── Firebase refs ────────────────────────────────────────────
+// ── Firebase ref ─────────────────────────────────────────────
 const torneiosRef = ref(db, 'torneios');
 
-// ── Load ─────────────────────────────────────────────────────
+// ── Agrupar ativos por torneioId ──────────────────────────────
+function _agruparPorTorneio() {
+  const map = new Map(); // torneioId → { torneioId, nome, rows: [{turma, a}] }
+  for (const [turma, torneios] of Object.entries(_ativoNested)) {
+    for (const [torneioId, a] of Object.entries(torneios || {})) {
+      if (!STATUS_ATIVOS.has(a.status)) continue;
+      if (!map.has(torneioId)) map.set(torneioId, { torneioId, nome: a.nome || 'Torneio', rows: [] });
+      map.get(torneioId).rows.push({ turma, a });
+    }
+  }
+  const result = [...map.values()];
+  result.forEach(t => t.rows.sort((x, y) => {
+    if (x.turma === 'TESTE') return 1;
+    if (y.turma === 'TESTE') return -1;
+    return x.turma.localeCompare(y.turma);
+  }));
+  return result;
+}
+
+// ── Load ──────────────────────────────────────────────────────
 window.loadData = async function() {
   _pararLive();
   _pararTodosTimers();
   document.getElementById('content').innerHTML =
     `<div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>`;
 
-  // Ler torneio_ativo por turma (inclui TESTE)
   const todasTurmas = [...TURMAS, 'TESTE'];
   const snapsTurma = await Promise.all(
     todasTurmas.map(t => get(ref(db, `torneio_ativo/${t}`)).catch(() => null))
   );
-  _ativoPorTurma = {};
+  _ativoNested = {};
   todasTurmas.forEach((t, i) => {
-    if (snapsTurma[i]?.exists()) _ativoPorTurma[t] = snapsTurma[i].val();
+    if (snapsTurma[i]?.exists()) _ativoNested[t] = snapsTurma[i].val();
   });
-  const ativoEntries = Object.entries(_ativoPorTurma).filter(
-    ([, a]) => a && ['liberada','iniciado','pausado'].includes(a.status)
-  );
 
-  // Ler histórico de torneios encerrados
   const histSnap = await get(torneiosRef).catch(() => null);
   const historico = [];
   if (histSnap?.exists()) histSnap.forEach(c => {
@@ -197,34 +195,103 @@ window.loadData = async function() {
   });
   historico.sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
 
-  _renderPage(ativoEntries, historico);
+  _renderPage(historico);
 
-  // Live: sessoes do torneio ativo (mesmo id para todas as turmas)
-  if (ativoEntries.length) {
-    const torneioId = ativoEntries[0][1].torneioId;
-    _iniciarLive(torneioId);
-    // Iniciar timers para turmas em andamento
-    ativoEntries.forEach(([turma, a]) => {
-      if (a.status === 'iniciado') _iniciarTimerTurma(turma, a);
-    });
+  const torneiosAtivos = _agruparPorTorneio();
+  torneiosAtivos.forEach(({ torneioId }) => _iniciarLive(torneioId));
+  for (const [turma, torneios] of Object.entries(_ativoNested)) {
+    for (const [torneioId, a] of Object.entries(torneios || {})) {
+      if (a.status === 'iniciado') _iniciarTimerTurma(turma, torneioId, a);
+    }
   }
 };
 
-// ── Render principal ─────────────────────────────────────────
-function _renderPage(ativoEntries, historico) {
+// ── Render ────────────────────────────────────────────────────
+function _renderPage(historico) {
+  const torneiosAtivos = _agruparPorTorneio();
   const conteudo = document.getElementById('content');
   conteudo.innerHTML = `
-    ${ativoEntries.length ? _htmlAtivo(ativoEntries) : ''}
-    ${_htmlFormCriar(ativoEntries.length > 0)}
+    ${torneiosAtivos.length ? _htmlAtivo(torneiosAtivos) : ''}
+    ${_htmlFormCriar()}
     ${_htmlHistorico(historico)}
   `;
   document.getElementById('stp-minus')?.addEventListener('click', () => { _tempoStepper = Math.max(1, _tempoStepper - 1); _atualizarStepper(); });
   document.getElementById('stp-plus' )?.addEventListener('click', () => { _tempoStepper = Math.min(30, _tempoStepper + 1); _atualizarStepper(); });
 }
 
-// ── Seção 1: Formulário criar torneio ────────────────────────
-function _htmlFormCriar(temAtivo) {
-  if (temAtivo) return '';
+// ── Seção 1: Torneios ativos ──────────────────────────────────
+function _htmlAtivo(torneiosAtivos) {
+  return torneiosAtivos.map(({ torneioId, nome, rows }) => {
+    const linhas = rows.map(({ turma, a }) => _htmlLinhaTurma(torneioId, turma, a)).join('');
+    return `
+      <div class="torneio-ativo" id="torneio-card-${escH(torneioId)}">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+          <span style="font-size:15px;font-weight:800">🏆 ${escH(nome)}</span>
+          <span style="font-size:11px;color:var(--text-muted)">${rows.length} turma${rows.length!==1?'s':''}</span>
+        </div>
+        <div data-linhas="${escH(torneioId)}" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">${linhas}</div>
+        <div id="ranking-live-${escH(torneioId)}" style="margin-top:14px"></div>
+      </div>`;
+  }).join('');
+}
+
+function _htmlLinhaTurma(torneioId, turma, a) {
+  const isTeste = a.status === 'teste_permanente';
+  const st      = a.status;
+  const tid     = escH(torneioId);
+  let statusHtml, jogarBtn = '', btnI = '', btnP = '', btnR = '';
+
+  if (isTeste) {
+    const mins = Math.round((a.tempo_segundos || 300) / 60);
+    statusHtml = `<span class="status-badge" style="background:rgba(124,58,237,.12);color:#7C3AED">✅ Sempre disponível</span>
+      <span style="font-size:12px;color:var(--text-muted);margin-left:4px">${mins} min</span>`;
+    jogarBtn = `<button class="btn btn-sm btn-blue" onclick="jogarTeste('${tid}')">▶ Jogar</button>`;
+  } else {
+    statusHtml = st === 'liberada'
+      ? `<span class="status-badge status-liberada">⏳ Aguardando</span>`
+      : st === 'iniciado'
+      ? `<span class="status-badge status-iniciado">▶ Em andamento</span>
+         <span class="torneio-timer" id="timer-${turma}-${tid}">${fmtSecs(_calcRestanteTurma(a))}</span>`
+      : `<span class="status-badge status-pausado">⏸ Pausado</span>`;
+    btnI = st === 'liberada'
+      ? `<button class="btn btn-sm btn-blue" onclick="iniciarTurmaTorneio('${tid}','${turma}')">▶ Iniciar</button>` : '';
+    btnP = st === 'iniciado'
+      ? `<button class="btn btn-sm" style="background:var(--gold);color:#fff;border:none" onclick="pausarTurmaTorneio('${tid}','${turma}')">⏸</button>` : '';
+    btnR = st === 'pausado'
+      ? `<button class="btn btn-sm btn-blue" onclick="retomarTurmaTorneio('${tid}','${turma}')">▶</button>` : '';
+  }
+
+  const tvBtn  = `<a href="/professor/torneio_tv.html?turma=${turma}&id=${tid}" target="_blank" class="btn btn-sm btn-ghost" title="TV">🖥️</a>`;
+  const encBtn = `<button class="btn btn-sm btn-ghost" title="${isTeste?'Remover':'Encerrar'}" onclick="encerrarTurmaTorneio('${tid}','${turma}')" style="color:var(--red)">✕</button>`;
+
+  const turmaLabel = turma === 'TESTE'
+    ? `<span style="font-size:13px;font-weight:700;color:#7C3AED">🧪 Teste</span>`
+    : `<strong style="font-size:13px">Turma ${turma}</strong>`;
+  const rowBg = turma === 'TESTE' ? 'background:rgba(124,58,237,.04);' : '';
+
+  return `<div style="display:grid;grid-template-columns:120px 1fr auto;align-items:center;gap:12px;padding:9px 14px;border-bottom:1px solid var(--border);${rowBg}">
+    ${turmaLabel}
+    <div style="font-size:12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">${statusHtml}</div>
+    <div style="display:flex;gap:4px;align-items:center">${jogarBtn}${btnI}${btnP}${btnR}${tvBtn}${encBtn}</div>
+  </div>`;
+}
+
+// ── Atualizar card de torneio ativo ───────────────────────────
+function _atualizarCartaoTorneio(torneioId) {
+  const card = document.getElementById(`torneio-card-${torneioId}`);
+  if (!card) { loadData(); return; }
+  const torneiosAtivos = _agruparPorTorneio();
+  const t = torneiosAtivos.find(x => x.torneioId === torneioId);
+  if (!t) { loadData(); return; }
+  const linhasDiv = card.querySelector(`[data-linhas="${torneioId}"]`);
+  if (linhasDiv) linhasDiv.innerHTML = t.rows.map(({ turma, a }) => _htmlLinhaTurma(torneioId, turma, a)).join('');
+  t.rows.forEach(({ turma, a }) => {
+    if (a.status === 'iniciado') _iniciarTimerTurma(turma, torneioId, a);
+  });
+}
+
+// ── Seção 2: Formulário (sempre visível) ──────────────────────
+function _htmlFormCriar() {
   const turmasChk = TURMAS.map(t => `
     <input type="checkbox" id="chk-${t}" class="turma-chk" name="turma" value="${t}">
     <label for="chk-${t}" class="turma-lbl">${t}</label>`).join('') + `
@@ -256,7 +323,7 @@ function _htmlFormCriar(temAtivo) {
       </div>
 
       <div class="form-field">
-        <label class="form-label">Turmas participantes (cada turma terá controle independente)</label>
+        <label class="form-label">Turmas participantes</label>
         <div class="turmas-grid">${turmasChk}</div>
       </div>
 
@@ -277,7 +344,7 @@ function _htmlFormCriar(temAtivo) {
       <p id="form-erro" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></p>
       <div style="display:flex;gap:8px">
         <button class="btn btn-ghost" onclick="testarTorneio()" style="flex:1;justify-content:center;padding:11px;font-size:13px">
-          🧪 Testar
+          🧪 Testar (rápido)
         </button>
         <button class="btn btn-blue" onclick="liberarTorneio()" style="flex:2;justify-content:center;padding:12px">
           <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor"><path d="M18 11v-1c0-2.21-1.79-4-4-4s-4 1.79-4 4v1H8v9h8v-9h-2zm-6-1c0-1.1.9-2 2-2s2 .9 2 2v1h-4v-1zm4 8.5c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5.67-1.5 1.5-1.5 1.5.67 1.5 1.5z"/></svg>
@@ -292,99 +359,34 @@ function _atualizarStepper() {
   if (el) el.textContent = `${_tempoStepper} min`;
 }
 
-// ── Tipo details: descrição + ajustes + preview ───────────────
-function _htmlTipoDetails() {
-  const tipo = _tiposConfig.find(t => t.id === _selectedTipoId);
-  if (!tipo) return '';
-
-  const descHtml = tipo.descricao
-    ? `<div style="font-size:12px;color:var(--text-muted);margin-top:6px">${escH(tipo.descricao)}</div>` : '';
-
-  // Tipos com JSON de níveis: mostrar info fixa, sem painel de ajuste
-  if (tipo.json_nome) {
-    return `
-      ${descHtml}
-      <div style="margin-top:8px;padding:9px 12px;background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.2);border-radius:8px;font-size:12px;color:var(--blue)">
-        📋 Dificuldade progressiva em 15 níveis — configuração fixa do arquivo <code>${tipo.json_nome}.json</code>
-      </div>
-      <div id="tipo-preview">${_htmlPreview()}</div>`;
-  }
-
-  // Operações disponíveis para ajuste
-  const opsDisp = tipo.id === 'personalizado' ? Object.keys(OP_LABELS) : (tipo.operacoes || []);
-  const opsHtml = opsDisp.map(op => `
-    <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;padding:2px 0">
-      <input type="checkbox" value="${op}" ${_cfgOps.includes(op)?'checked':''}
-        onchange="toggleOp('${op}')">
-      ${escH(OP_LABELS[op]||op)}
-    </label>`).join('');
-
-  const ajusteBody = _ajustesAbertos ? `
-    <div class="ajustes-body">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-        <div>
-          <label class="form-label">Operandos mín</label>
-          <input type="number" value="${_cfgOpMin}" id="inp-op-min" class="form-input"
-            style="font-size:13px;padding:7px 10px" oninput="updateOpRange()">
-        </div>
-        <div>
-          <label class="form-label">Operandos máx</label>
-          <input type="number" value="${_cfgOpMax}" id="inp-op-max" class="form-input"
-            style="font-size:13px;padding:7px 10px" oninput="updateOpRange()">
-        </div>
-      </div>
-      <div class="form-label" style="margin-bottom:5px">Operações incluídas</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px 20px">${opsHtml}</div>
-    </div>` : '';
-
-  return `
-    ${descHtml}
-    <div class="ajustes-panel">
-      <div class="ajustes-tgl" onclick="toggleAjustes()">
-        ⚙ Ajustar configurações
-        <span style="margin-left:auto;font-size:11px">${_ajustesAbertos?'▲':'▼'}</span>
-      </div>
-      ${ajusteBody}
-    </div>
-    <div id="tipo-preview">${_htmlPreview()}</div>`;
-}
-
 function _htmlPreview() {
   const pares = _gerarPreviewPares();
   if (!pares.length) return '';
   return `<div class="preview-box">
     <div class="preview-lbl">Preview das operações</div>
     <div class="preview-pairs">
-      ${pares.map(p => `<span class="preview-par">${escH(p.expr)} = ${escH(p.resultStr??String(p.result))}</span>`).join('')}
+      ${pares.map(p => `<span class="preview-par">${escH(p.expr)} = ${escH(String(p.result))}</span>`).join('')}
     </div>
   </div>`;
 }
 
 function _gerarPreviewPares() {
-  // Usa exemplos do JSON ou gera dinamicamente
   if (!_jsonConfig) return [];
-  // Para modo progressao, pega ops do primeiro nível
   let ops = [], MIN = -10, MAX = 10;
   if (_jsonConfig.modo === 'progressao' && _jsonConfig.progressao?.[0]) {
     const e0 = _jsonConfig.progressao[0];
-    ops = e0.operacoes || [];
-    MIN = e0.operandos_min ?? -10;
-    MAX = e0.operandos_max ?? 10;
+    ops = e0.operacoes || []; MIN = e0.operandos_min ?? -10; MAX = e0.operandos_max ?? 10;
   } else if (_jsonConfig.niveis?.[0]) {
     const n0 = _jsonConfig.niveis[0];
-    ops = n0.operacoes || [];
-    MIN = n0.operandos_min ?? -10;
-    MAX = n0.operandos_max ?? 10;
+    ops = n0.operacoes || []; MIN = n0.operandos_min ?? -10; MAX = n0.operandos_max ?? 10;
   }
   if (!ops.length) return [];
-  const fakeCfg = { operacoes: ops, operandos_min: MIN, operandos_max: MAX };
-  // Gera pares usando a config do fakeCfg
   const ri_  = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
   const rNZ_ = (a,b) => { let n; do { n=ri_(a,b); } while(n===0); return n; };
   const fN_  = n => n<0?`(${n})`:String(n);
   const pares=[]; const usedR=new Set();
   for (let att=0; pares.length<3 && att<90; att++) {
-    const op = fakeCfg.operacoes[Math.floor(Math.random()*fakeCfg.operacoes.length)];
+    const op = ops[Math.floor(Math.random()*ops.length)];
     let p=null;
     switch(op){
       case 'adicao':case 'adicao_neg':case 'adicao_neg_simples':{const a=ri_(MIN,MAX),b=ri_(MIN,MAX);p={expr:`${fN_(a)} + ${fN_(b)}`,result:a+b};break;}
@@ -400,62 +402,317 @@ function _gerarPreviewPares() {
 
 window.trocarJson = async function(nome) {
   _jsonNome = nome;
-  try {
-    const r = await fetch(`/dados/${nome}.json`);
-    _jsonConfig = await r.json();
-  } catch(e) { _jsonConfig = null; }
-  // Atualizar preview e info no form
-  const det = document.getElementById('tipo-details-wrapper');
-  if (det) det.innerHTML = _htmlJsonInfo();
+  try { const r = await fetch(`/dados/${nome}.json`); _jsonConfig = await r.json(); } catch(e) { _jsonConfig = null; }
+  loadData();
 };
 
-// ── Seção 2: Torneio ativo (por turma) ──────────────────────
-function _htmlAtivo(ativoEntries) {
-  if (!ativoEntries.length) return '';
-  const nome      = ativoEntries[0][1].nome || 'Torneio';
-  const torneioId = ativoEntries[0][1].torneioId;
-
-  const linhas = ativoEntries.map(([turma, a]) => {
-    const st = a.status;
-    const statusHtml = st === 'liberada'
-      ? `<span class="status-badge status-liberada">⏳ Aguardando</span>`
-      : st === 'iniciado'
-      ? `<span class="status-badge status-iniciado">▶ Em andamento</span> <span class="torneio-timer" id="timer-${turma}" style="font-size:16px;vertical-align:middle">${fmtSecs(_calcRestanteTurma(a))}</span>`
-      : `<span class="status-badge status-pausado">⏸ Pausado</span>`;
-    const btnI = st === 'liberada'
-      ? `<button class="btn btn-sm btn-blue" onclick="iniciarTurmaTorneio('${escH(torneioId)}','${turma}')">▶</button>` : '';
-    const btnP = st === 'iniciado'
-      ? `<button class="btn btn-sm" style="background:var(--gold);color:#fff;border:none" onclick="pausarTurmaTorneio('${escH(torneioId)}','${turma}')">⏸</button>` : '';
-    const btnR = st === 'pausado'
-      ? `<button class="btn btn-sm btn-blue" onclick="retomarTurmaTorneio('${escH(torneioId)}','${turma}')">▶</button>` : '';
-    const btnE = `<button class="btn btn-sm" style="background:var(--red);color:#fff;border:none" onclick="encerrarTurmaTorneio('${escH(torneioId)}','${turma}')">⏹</button>`;
-    const isTeste = turma === 'TESTE';
-    const turmaLabel = isTeste
-      ? `<span style="font-size:13px;font-weight:700;color:#7C3AED">🧪 Modo Teste</span>`
-      : `<strong style="font-size:13px">Turma ${turma}</strong>`;
-    const rowBg = isTeste ? 'background:rgba(124,58,237,.04);' : '';
-    return `<div style="display:grid;grid-template-columns:100px 1fr auto;align-items:center;gap:12px;padding:9px 14px;border-bottom:1px solid var(--border);${rowBg}" id="turma-row-${turma}">
-      ${turmaLabel}
-      <div style="font-size:12px;display:flex;align-items:center;gap:8px">${statusHtml}</div>
-      <div style="display:flex;gap:4px;align-items:center">
-        ${btnI}${btnP}${btnR}${btnE}
-        <a href="/professor/torneio_tv.html?turma=${turma}&id=${escH(torneioId)}" target="_blank" class="btn btn-sm btn-ghost" title="Tela TV para ${turma}">🖥️</a>
-      </div>
-    </div>`;
-  }).join('');
-
-  return `
-    <div class="torneio-ativo" style="margin-bottom:16px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
-        <span style="font-size:15px;font-weight:800">${escH(nome)}</span>
-        <span style="font-size:11px;color:var(--text-muted)">${ativoEntries.length} turma${ativoEntries.length!==1?'s':''}</span>
-      </div>
-      <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">${linhas}</div>
-      <div id="ranking-live" style="margin-top:14px"></div>
-    </div>`;
+// ── Ações ─────────────────────────────────────────────────────
+function _buildConfig() {
+  return { tipo: _jsonNome, tipo_nome: _jsonConfig?.nome || _jsonNome, json_nome: _jsonNome };
 }
 
-// ── Seção 3: Histórico ───────────────────────────────────────
+window.testarTorneio = async function() {
+  if (!_jsonConfig) { _showErro('JSON de configuração não carregado.'); return; }
+  document.getElementById('form-erro').style.display = 'none';
+  const nome = document.getElementById('inp-nome')?.value.trim() || 'Torneio Teste';
+  const dadosTeste = {
+    nome: `[TESTE] ${nome}`, turmas: [],
+    tempo_segundos: _tempoStepper * 60, config: _buildConfig(),
+    status: 'iniciado', inicio: Date.now(),
+    pausa_inicio: null, pausa_total_ms: 0, criadoEm: Date.now(), modo_teste: true,
+  };
+  const novoRef = await push(torneiosRef, dadosTeste);
+  window.open(`/aluno/torneio.html?id=${novoRef.key}&modo=teste`, '_blank');
+};
+
+window.liberarTorneio = async function() {
+  const nome   = document.getElementById('inp-nome')?.value.trim();
+  const turmas = [...document.querySelectorAll('.turma-chk:checked')].map(c => c.value);
+  if (!nome)          { _showErro('Digite o nome do torneio.'); return; }
+  if (!turmas.length) { _showErro('Selecione ao menos uma turma.'); return; }
+  if (!_jsonConfig)   { _showErro('JSON de configuração não carregado.'); return; }
+  document.getElementById('form-erro').style.display = 'none';
+
+  const config = _buildConfig();
+  const novoRef = await push(torneiosRef, { nome, turmas, config, criadoEm: Date.now() });
+  const torneioId = novoRef.key;
+
+  const updates = {};
+  turmas.forEach(t => {
+    const isTeste = t === 'TESTE';
+    updates[`torneio_ativo/${t}/${torneioId}`] = {
+      torneioId, nome, config, turma: t,
+      status: isTeste ? 'teste_permanente' : 'liberada',
+      inicio: null, pausa_inicio: null, pausa_total_ms: 0,
+      tempo_segundos: _tempoStepper * 60,
+      ...(isTeste ? { pode_reiniciar: true } : {}),
+    };
+  });
+  await update(ref(db), updates);
+
+  // Reset form
+  document.getElementById('inp-nome').value = '';
+  document.querySelectorAll('.turma-chk:checked').forEach(c => c.checked = false);
+
+  loadData();
+};
+
+window.jogarTeste = function(torneioId) {
+  window.open(`/aluno/torneio.html?id=${torneioId}&turma=TESTE&modo=teste`, '_blank');
+};
+
+// ── Controles por turma ───────────────────────────────────────
+window.iniciarTurmaTorneio = async function(torneioId, turma) {
+  const agora = Date.now();
+  await update(ref(db, `torneio_ativo/${turma}/${torneioId}`), { status: 'iniciado', inicio: agora });
+  if (_ativoNested[turma]?.[torneioId]) {
+    _ativoNested[turma][torneioId].status = 'iniciado';
+    _ativoNested[turma][torneioId].inicio = agora;
+    _iniciarTimerTurma(turma, torneioId, _ativoNested[turma][torneioId]);
+  }
+  _atualizarCartaoTorneio(torneioId);
+};
+
+window.pausarTurmaTorneio = async function(torneioId, turma) {
+  const agora = Date.now();
+  await update(ref(db, `torneio_ativo/${turma}/${torneioId}`), { status: 'pausado', pausa_inicio: agora });
+  clearInterval(_timerMap[`${turma}_${torneioId}`]); delete _timerMap[`${turma}_${torneioId}`];
+  if (_ativoNested[turma]?.[torneioId]) {
+    _ativoNested[turma][torneioId].status = 'pausado';
+    _ativoNested[turma][torneioId].pausa_inicio = agora;
+  }
+  _atualizarCartaoTorneio(torneioId);
+};
+
+window.retomarTurmaTorneio = async function(torneioId, turma) {
+  const agora = Date.now();
+  const a = _ativoNested[turma]?.[torneioId] || {};
+  const pausaMs = a.pausa_inicio ? agora - a.pausa_inicio : 0;
+  const novaPausaTotal = (a.pausa_total_ms || 0) + pausaMs;
+  await update(ref(db, `torneio_ativo/${turma}/${torneioId}`), { status: 'iniciado', pausa_inicio: null, pausa_total_ms: novaPausaTotal });
+  if (_ativoNested[turma]?.[torneioId]) {
+    Object.assign(_ativoNested[turma][torneioId], { status: 'iniciado', pausa_inicio: null, pausa_total_ms: novaPausaTotal });
+    _iniciarTimerTurma(turma, torneioId, _ativoNested[turma][torneioId]);
+  }
+  _atualizarCartaoTorneio(torneioId);
+};
+
+window.encerrarTurmaTorneio = async function(torneioId, turma) {
+  const isTeste = turma === 'TESTE';
+  const label = isTeste ? '🧪 Modo Teste' : `a turma ${turma}`;
+  if (!confirm(`Encerrar o torneio para ${label}?`)) return;
+
+  const key = `${turma}_${torneioId}`;
+  clearInterval(_timerMap[key]); delete _timerMap[key];
+
+  if (!isTeste) {
+    const sessSnap = await get(ref(db, `torneios/${torneioId}/sessoes`)).catch(() => null);
+    let vencedor_nome = null, vencedor_pts = -1;
+    const rankingTurma = [];
+    if (sessSnap?.exists()) {
+      sessSnap.forEach(c => {
+        const s = c.val();
+        if (s.turma === turma) {
+          rankingTurma.push({ uid: c.key, ...s });
+          if ((s.pontuacao || 0) > vencedor_pts) { vencedor_pts = s.pontuacao || 0; vencedor_nome = s.aluno; }
+        }
+      });
+    }
+    rankingTurma.sort((a, b) => (b.pontuacao||0) - (a.pontuacao||0));
+    await set(ref(db, `torneios/${torneioId}/resultado_turmas/${turma}`), {
+      encerrado_em: Date.now(), vencedor_nome, vencedor_pts, ranking: rankingTurma.slice(0, 20),
+    });
+  }
+
+  await remove(ref(db, `torneio_ativo/${turma}/${torneioId}`)).catch(() => {});
+  if (_ativoNested[turma]) delete _ativoNested[turma][torneioId];
+
+  // Se todas as turmas não-teste do torneio foram encerradas, marcar como encerrado
+  const aindaAtivas = Object.entries(_ativoNested).some(([t, tns]) =>
+    t !== 'TESTE' && tns[torneioId] && ['liberada','iniciado','pausado'].includes(tns[torneioId]?.status)
+  );
+
+  if (!aindaAtivas && !isTeste) {
+    const resSnap = await get(ref(db, `torneios/${torneioId}/resultado_turmas`)).catch(() => null);
+    let bestNome = null, bestPts = -1, bestTurma = null;
+    resSnap?.forEach(c => {
+      const r = c.val();
+      if ((r.vencedor_pts || 0) > bestPts) { bestPts = r.vencedor_pts || 0; bestNome = r.vencedor_nome; bestTurma = c.key; }
+    });
+    await update(ref(db, `torneios/${torneioId}`), {
+      status: 'encerrado', encerrado_em: Date.now(),
+      vencedor_nome: bestNome, vencedor_turma: bestTurma, vencedor_pts: bestPts,
+    });
+    if (_liveUnsubs[torneioId]) { _liveUnsubs[torneioId](); delete _liveUnsubs[torneioId]; }
+  }
+
+  loadData();
+};
+
+// ── Timers ────────────────────────────────────────────────────
+function _iniciarTimerTurma(turma, torneioId, a) {
+  const key = `${turma}_${torneioId}`;
+  clearInterval(_timerMap[key]);
+  _timerMap[key] = setInterval(() => {
+    const data = _ativoNested[turma]?.[torneioId] || a;
+    const restante = _calcRestanteTurma(data);
+    const el = document.getElementById(`timer-${turma}-${torneioId}`);
+    if (el) {
+      el.textContent = fmtSecs(restante);
+      el.className = 'torneio-timer' + (restante <= 30 ? ' danger' : restante <= 60 ? ' warn' : '');
+    }
+    if (restante <= 0) {
+      clearInterval(_timerMap[key]); delete _timerMap[key];
+      encerrarTurmaTorneio(torneioId, turma);
+    }
+  }, 1000);
+}
+
+function _pararTodosTimers() {
+  Object.values(_timerMap).forEach(clearInterval);
+  _timerMap = {};
+}
+
+// ── Live listeners ────────────────────────────────────────────
+function _iniciarLive(torneioId) {
+  if (_liveUnsubs[torneioId]) return;
+  _liveUnsubs[torneioId] = onValue(ref(db, `torneios/${torneioId}/sessoes`), snap => {
+    const sess = [];
+    if (snap?.exists()) snap.forEach(c => sess.push({ uid: c.key, ...c.val() }));
+    _renderRankingLive(torneioId, sess);
+  });
+}
+
+function _pararLive() {
+  Object.values(_liveUnsubs).forEach(u => u && u());
+  _liveUnsubs = {};
+}
+
+function _renderRankingLive(torneioId, sess) {
+  const el = document.getElementById(`ranking-live-${torneioId}`);
+  if (!el || !sess.length) return;
+  const sorted = [...sess].sort((a, b) => (b.pontuacao || 0) - (a.pontuacao || 0)).slice(0, 10);
+  const medals = ['🥇','🥈','🥉'];
+  const rows = sorted.map((s, i) => `
+    <div class="rank-row">
+      <span class="rank-pos ${i<3?'rank-'+(i+1):''}">${medals[i]||i+1}</span>
+      <div><div class="rank-nome">${escH(s.aluno||'—')}</div><div class="rank-turma">${escH(s.turma||'')}</div></div>
+      <span class="rank-pts" style="grid-column:3/6">${s.pontuacao||0} pts</span>
+    </div>`).join('');
+  el.innerHTML = `
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);margin-bottom:4px">Ranking ao vivo</div>
+    <div style="border:1px solid var(--border);border-radius:9px;overflow:hidden">${rows}</div>`;
+}
+
+// ── Rematch ───────────────────────────────────────────────────
+window.rematch = async function(torneioId) {
+  const snap = await get(ref(db, `torneios/${torneioId}`)).catch(() => null);
+  if (!snap?.exists()) return;
+  const orig = snap.val();
+
+  const m = (orig.nome || '').match(/— Rodada (\d+)$/);
+  const rodada = m ? parseInt(m[1]) + 1 : 2;
+  const novoNome = m
+    ? orig.nome.replace(/— Rodada \d+$/, `— Rodada ${rodada}`)
+    : `${orig.nome} — Rodada ${rodada}`;
+
+  const novoRef = await push(torneiosRef, { nome: novoNome, turmas: orig.turmas, config: orig.config, criadoEm: Date.now() });
+  const novoId = novoRef.key;
+  const updates = {};
+  (orig.turmas || []).forEach(t => {
+    const isTeste = t === 'TESTE';
+    updates[`torneio_ativo/${t}/${novoId}`] = {
+      torneioId: novoId, nome: novoNome, config: orig.config,
+      status: isTeste ? 'teste_permanente' : 'liberada', turma: t,
+      inicio: null, pausa_inicio: null, pausa_total_ms: 0,
+      tempo_segundos: orig.tempo_segundos || 300,
+      ...(isTeste ? { pode_reiniciar: true } : {}),
+    };
+  });
+  await update(ref(db), updates);
+  loadData();
+};
+
+// ── Comparativo entre turmas ──────────────────────────────────
+async function _renderComparativoTurmas(torneioId) {
+  const el = document.getElementById(`comparativo-${torneioId}`);
+  if (!el || el.dataset.loaded) return;
+  el.dataset.loaded = '1';
+  el.innerHTML = '<span style="color:var(--text-muted);font-size:12px">Carregando comparativo…</span>';
+
+  const [sessSnap, resSnap] = await Promise.all([
+    get(ref(db, `torneios/${torneioId}/sessoes`)).catch(() => null),
+    get(ref(db, `torneio_resultados/${torneioId}`)).catch(() => null),
+  ]);
+  const sess = [], resMap = {};
+  sessSnap?.forEach(c => sess.push({ uid: c.key, ...c.val() }));
+  resSnap?.forEach(c => { resMap[c.key] = c.val(); });
+
+  const porTurma = {};
+  sess.forEach(s => {
+    const t = s.turma || '?';
+    if (!porTurma[t]) porTurma[t] = { pts: [], acertos: 0, erros: 0, tiposAc: {}, tiposErr: {} };
+    porTurma[t].pts.push(s.pontuacao || 0);
+    porTurma[t].acertos += s.acertos || 0; porTurma[t].erros += s.erros || 0;
+    const r = resMap[s.uid];
+    if (r?.tipos_acertos) Object.entries(r.tipos_acertos).forEach(([k,v]) => { porTurma[t].tiposAc[k] = (porTurma[t].tiposAc[k]||0)+v; });
+    if (r?.tipos_erros)   Object.entries(r.tipos_erros  ).forEach(([k,v]) => { porTurma[t].tiposErr[k] = (porTurma[t].tiposErr[k]||0)+v; });
+  });
+
+  const tipos = ['adicao','subtracao','duplo_neg','multiplicacao','divisao'];
+  const tLabels = { adicao:'Adição', subtracao:'Subtração', duplo_neg:'−(−)', multiplicacao:'Mult.', divisao:'Div.' };
+  const turmas = Object.keys(porTurma).sort();
+  if (!turmas.length) { el.innerHTML = '<span style="color:var(--text-muted);font-size:12px">Sem dados por turma.</span>'; return; }
+
+  const linhas = turmas.map(t => {
+    const d = porTurma[t];
+    const media = d.pts.length ? (d.pts.reduce((a,b)=>a+b,0)/d.pts.length).toFixed(1) : '—';
+    const melhor = d.pts.length ? Math.max(...d.pts) : 0;
+    const pctAcerto = (d.acertos + d.erros) > 0 ? Math.round(d.acertos / (d.acertos + d.erros) * 100) + '%' : '—';
+    const piorTipo = tipos.reduce((acc, tp) => {
+      const tot = (d.tiposAc[tp]||0) + (d.tiposErr[tp]||0);
+      const pct = tot > 0 ? (d.tiposErr[tp]||0)/tot : -1;
+      return pct > acc.pct ? { tp, pct } : acc;
+    }, { tp: null, pct: -1 });
+    return `<tr>
+      <td style="font-weight:700">${t}</td>
+      <td style="text-align:center">${media}</td>
+      <td style="text-align:center;font-weight:700;color:var(--gold)">${melhor}</td>
+      <td style="text-align:center">${pctAcerto}</td>
+      <td style="text-align:center;color:var(--red)">${piorTipo.tp ? tLabels[piorTipo.tp] : '—'}</td>
+    </tr>`;
+  }).join('');
+
+  const melhorTurma = turmas.reduce((acc, t) => {
+    const d = porTurma[t]; const media = d.pts.length ? d.pts.reduce((a,b)=>a+b,0)/d.pts.length : 0;
+    return media > acc.media ? { t, media } : acc;
+  }, { t: null, media: -1 });
+  const totalAc = {}, totalErr = {};
+  tipos.forEach(tp => { totalAc[tp]=0; totalErr[tp]=0; });
+  turmas.forEach(t => { tipos.forEach(tp => { totalAc[tp] += porTurma[t].tiposAc[tp]||0; totalErr[tp] += porTurma[t].tiposErr[tp]||0; }); });
+  const piorGlobal = tipos.reduce((acc, tp) => {
+    const tot = totalAc[tp]+totalErr[tp]; const pct = tot > 0 ? totalErr[tp]/tot : -1;
+    return pct > acc.pct ? { tp, pct } : acc;
+  }, { tp: null, pct: -1 });
+
+  el.innerHTML = `
+    <div style="font-size:12px;margin-bottom:10px">
+      ${melhorTurma.t ? `<span style="color:var(--gold);margin-right:12px">🏆 Melhor turma: <strong>${melhorTurma.t}</strong></span>` : ''}
+      ${piorGlobal.tp ? `<span style="color:var(--red)">⚠️ Maior dificuldade geral: <strong>${tLabels[piorGlobal.tp]}</strong></span>` : ''}
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-muted)">
+        <th style="text-align:left;padding:4px 6px;border-bottom:1px solid var(--border)">Turma</th>
+        <th style="text-align:center;padding:4px 6px;border-bottom:1px solid var(--border)">Média pts</th>
+        <th style="text-align:center;padding:4px 6px;border-bottom:1px solid var(--border)">Melhor</th>
+        <th style="text-align:center;padding:4px 6px;border-bottom:1px solid var(--border)">% acerto</th>
+        <th style="text-align:center;padding:4px 6px;border-bottom:1px solid var(--border)">Tipo + difícil</th>
+      </tr></thead>
+      <tbody>${linhas}</tbody>
+    </table>`;
+}
+
+// ── Seção 3: Histórico ────────────────────────────────────────
 function _htmlHistorico(historico) {
   if (!historico.length) {
     return `<div class="card">
@@ -516,7 +773,6 @@ function _htmlHistorico(historico) {
 }
 
 function _htmlRankingGlobal(historico) {
-  // Agregar dados de todos os torneios (usa sessoes já carregadas via _rankCache)
   return `
     <div class="card">
       <div class="card-header"><div class="card-title">
@@ -534,316 +790,12 @@ function _htmlRankingGlobal(historico) {
     </div>`;
 }
 
-// ── Rematch automático ────────────────────────────────────────
-window.rematch = async function(torneioId) {
-  const snap = await get(ref(db, `torneios/${torneioId}`)).catch(() => null);
-  if (!snap?.exists()) return;
-  const orig = snap.val();
-
-  // Detectar rodada atual no nome
-  const m = (orig.nome || '').match(/— Rodada (\d+)$/);
-  const rodada = m ? parseInt(m[1]) + 1 : 2;
-  const novoNome = m
-    ? orig.nome.replace(/— Rodada \d+$/, `— Rodada ${rodada}`)
-    : `${orig.nome} — Rodada ${rodada}`;
-
-  const novoRef = await push(torneiosRef, {
-    nome: novoNome, turmas: orig.turmas, config: orig.config, criadoEm: Date.now(),
-  });
-  const novoId = novoRef.key;
-  const updates = {};
-  (orig.turmas || []).forEach(t => {
-    updates[`torneio_ativo/${t}`] = {
-      torneioId: novoId, nome: novoNome, config: orig.config,
-      status: 'liberada', turma: t,
-      inicio: null, pausa_inicio: null, pausa_total_ms: 0,
-      tempo_segundos: orig.tempo_segundos || 300,
-    };
-  });
-  await update(ref(db), updates);
-  loadData();
-};
-
-// ── Comparativo entre turmas ──────────────────────────────────
-async function _renderComparativoTurmas(torneioId) {
-  const el = document.getElementById(`comparativo-${torneioId}`);
-  if (!el || el.dataset.loaded) return;
-  el.dataset.loaded = '1';
-  el.innerHTML = '<span style="color:var(--text-muted);font-size:12px">Carregando comparativo…</span>';
-
-  const [sessSnap, resSnap] = await Promise.all([
-    get(ref(db, `torneios/${torneioId}/sessoes`)).catch(() => null),
-    get(ref(db, `torneio_resultados/${torneioId}`)).catch(() => null),
-  ]);
-  const sess = [], resMap = {};
-  sessSnap?.forEach(c => sess.push({ uid: c.key, ...c.val() }));
-  resSnap?.forEach(c => { resMap[c.key] = c.val(); });
-
-  const porTurma = {};
-  sess.forEach(s => {
-    const t = s.turma || '?';
-    if (!porTurma[t]) porTurma[t] = { pts: [], acertos: 0, erros: 0, tiposAc: {}, tiposErr: {} };
-    porTurma[t].pts.push(s.pontuacao || 0);
-    porTurma[t].acertos += s.acertos || 0;
-    porTurma[t].erros   += s.erros   || 0;
-    const r = resMap[s.uid];
-    if (r?.tipos_acertos) Object.entries(r.tipos_acertos).forEach(([k,v]) => { porTurma[t].tiposAc[k] = (porTurma[t].tiposAc[k]||0)+v; });
-    if (r?.tipos_erros)   Object.entries(r.tipos_erros  ).forEach(([k,v]) => { porTurma[t].tiposErr[k] = (porTurma[t].tiposErr[k]||0)+v; });
-  });
-
-  const tipos = ['adicao','subtracao','duplo_neg','multiplicacao','divisao'];
-  const tLabels = { adicao:'Adição', subtracao:'Subtração', duplo_neg:'−(−)', multiplicacao:'Mult.', divisao:'Div.' };
-  const turmas = Object.keys(porTurma).sort();
-  if (!turmas.length) { el.innerHTML = '<span style="color:var(--text-muted);font-size:12px">Sem dados por turma.</span>'; return; }
-
-  const linhas = turmas.map(t => {
-    const d = porTurma[t];
-    const media = d.pts.length ? (d.pts.reduce((a,b)=>a+b,0)/d.pts.length).toFixed(1) : '—';
-    const melhor = d.pts.length ? Math.max(...d.pts) : 0;
-    const pctAcerto = (d.acertos + d.erros) > 0
-      ? Math.round(d.acertos / (d.acertos + d.erros) * 100) + '%' : '—';
-    const piorTipo = tipos.reduce((acc, tp) => {
-      const tot = (d.tiposAc[tp]||0) + (d.tiposErr[tp]||0);
-      const pct = tot > 0 ? (d.tiposErr[tp]||0)/tot : -1;
-      return pct > acc.pct ? { tp, pct } : acc;
-    }, { tp: null, pct: -1 });
-    return `<tr>
-      <td style="font-weight:700">${t}</td>
-      <td style="text-align:center">${media}</td>
-      <td style="text-align:center;font-weight:700;color:var(--gold)">${melhor}</td>
-      <td style="text-align:center">${pctAcerto}</td>
-      <td style="text-align:center;color:var(--red)">${piorTipo.tp ? tLabels[piorTipo.tp] : '—'}</td>
-    </tr>`;
-  }).join('');
-
-  // Melhor turma por média
-  const melhorTurma = turmas.reduce((acc, t) => {
-    const d = porTurma[t];
-    const media = d.pts.length ? d.pts.reduce((a,b)=>a+b,0)/d.pts.length : 0;
-    return media > acc.media ? { t, media } : acc;
-  }, { t: null, media: -1 });
-  // Pior tipo global
-  const totalAc = {}, totalErr = {};
-  tipos.forEach(tp => { totalAc[tp]=0; totalErr[tp]=0; });
-  turmas.forEach(t => {
-    tipos.forEach(tp => { totalAc[tp] += porTurma[t].tiposAc[tp]||0; totalErr[tp] += porTurma[t].tiposErr[tp]||0; });
-  });
-  const piorGlobal = tipos.reduce((acc, tp) => {
-    const tot = totalAc[tp]+totalErr[tp];
-    const pct = tot > 0 ? totalErr[tp]/tot : -1;
-    return pct > acc.pct ? { tp, pct } : acc;
-  }, { tp: null, pct: -1 });
-
-  el.innerHTML = `
-    <div style="font-size:12px;margin-bottom:10px">
-      ${melhorTurma.t ? `<span style="color:var(--gold);margin-right:12px">🏆 Melhor turma: <strong>${melhorTurma.t}</strong></span>` : ''}
-      ${piorGlobal.tp ? `<span style="color:var(--red)">⚠️ Maior dificuldade geral: <strong>${tLabels[piorGlobal.tp]}</strong></span>` : ''}
-    </div>
-    <table style="width:100%;border-collapse:collapse;font-size:12px">
-      <thead><tr style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-muted)">
-        <th style="text-align:left;padding:4px 6px;border-bottom:1px solid var(--border)">Turma</th>
-        <th style="text-align:center;padding:4px 6px;border-bottom:1px solid var(--border)">Média pts</th>
-        <th style="text-align:center;padding:4px 6px;border-bottom:1px solid var(--border)">Melhor</th>
-        <th style="text-align:center;padding:4px 6px;border-bottom:1px solid var(--border)">% acerto</th>
-        <th style="text-align:center;padding:4px 6px;border-bottom:1px solid var(--border)">Tipo + difícil</th>
-      </tr></thead>
-      <tbody>${linhas}</tbody>
-    </table>`;
-}
-
-// ── Ações ─────────────────────────────────────────────────────
-function _buildConfig() {
-  return {
-    tipo: _jsonNome,
-    tipo_nome: _jsonConfig?.nome || _jsonNome,
-    json_nome: _jsonNome,
-  };
-}
-
-window.testarTorneio = async function() {
-  if (!_jsonConfig) { _showErro('JSON de configuração não carregado.'); return; }
-  document.getElementById('form-erro').style.display = 'none';
-  const nome = document.getElementById('inp-nome')?.value.trim() || 'Torneio Teste';
-  const dadosTeste = {
-    nome: `[TESTE] ${nome}`, turmas: [],
-    tempo_segundos: _tempoStepper * 60,
-    config: _buildConfig(),
-    status: 'iniciado', inicio: Date.now(),
-    pausa_inicio: null, pausa_total_ms: 0,
-    criadoEm: Date.now(), modo_teste: true,
-  };
-  const novoRef = await push(torneiosRef, dadosTeste);
-  window.open(`/aluno/torneio.html?id=${novoRef.key}&modo=teste`, '_blank');
-};
-
-window.liberarTorneio = async function() {
-  const nome   = document.getElementById('inp-nome')?.value.trim();
-  const turmas = [...document.querySelectorAll('.turma-chk:checked')].map(c => c.value);
-  if (!nome)          { _showErro('Digite o nome do torneio.'); return; }
-  if (!turmas.length) { _showErro('Selecione ao menos uma turma.'); return; }
-  if (!_jsonConfig)   { _showErro('JSON de configuração não carregado.'); return; }
-  document.getElementById('form-erro').style.display = 'none';
-
-  const config = _buildConfig();
-  // Criar entrada de metadados
-  const novoRef = await push(torneiosRef, { nome, turmas, config, criadoEm: Date.now() });
-  const torneioId = novoRef.key;
-  // Criar entrada por turma
-  const updates = {};
-  turmas.forEach(t => {
-    updates[`torneio_ativo/${t}`] = {
-      torneioId, nome, config,
-      status: 'liberada', turma: t,
-      inicio: null, pausa_inicio: null, pausa_total_ms: 0,
-      tempo_segundos: _tempoStepper * 60,
-    };
-  });
-  await update(ref(db), updates);
-  loadData();
-};
-
-// ── Controles por turma ───────────────────────────────────────
-window.iniciarTurmaTorneio = async function(torneioId, turma) {
-  const agora = Date.now();
-  await update(ref(db, `torneio_ativo/${turma}`), { status: 'iniciado', inicio: agora });
-  if (_ativoPorTurma[turma]) {
-    _ativoPorTurma[turma].status = 'iniciado';
-    _ativoPorTurma[turma].inicio = agora;
-    _iniciarTimerTurma(turma, _ativoPorTurma[turma]);
-  }
-  _atualizarLinhaTurma(torneioId, turma);
-};
-
-window.pausarTurmaTorneio = async function(torneioId, turma) {
-  const agora = Date.now();
-  await update(ref(db, `torneio_ativo/${turma}`), { status: 'pausado', pausa_inicio: agora });
-  clearInterval(_timerMap[turma]); delete _timerMap[turma];
-  if (_ativoPorTurma[turma]) { _ativoPorTurma[turma].status = 'pausado'; _ativoPorTurma[turma].pausa_inicio = agora; }
-  _atualizarLinhaTurma(torneioId, turma);
-};
-
-window.retomarTurmaTorneio = async function(torneioId, turma) {
-  const agora   = Date.now();
-  const a       = _ativoPorTurma[turma] || {};
-  const pausaMs = a.pausa_inicio ? agora - a.pausa_inicio : 0;
-  const novaPausaTotal = (a.pausa_total_ms || 0) + pausaMs;
-  await update(ref(db, `torneio_ativo/${turma}`), { status: 'iniciado', pausa_inicio: null, pausa_total_ms: novaPausaTotal });
-  if (_ativoPorTurma[turma]) {
-    Object.assign(_ativoPorTurma[turma], { status: 'iniciado', pausa_inicio: null, pausa_total_ms: novaPausaTotal });
-    _iniciarTimerTurma(turma, _ativoPorTurma[turma]);
-  }
-  _atualizarLinhaTurma(torneioId, turma);
-};
-
-window.encerrarTurmaTorneio = async function(torneioId, turma) {
-  if (!confirm(`Encerrar o torneio para a turma ${turma}?`)) return;
-  clearInterval(_timerMap[turma]); delete _timerMap[turma];
-
-  // Determinar vencedor da turma
-  const sessSnap = await get(ref(db, `torneios/${torneioId}/sessoes`)).catch(() => null);
-  let vencedor_nome = null, vencedor_pts = -1;
-  const rankingTurma = [];
-  if (sessSnap?.exists()) {
-    sessSnap.forEach(c => {
-      const s = c.val();
-      if (s.turma === turma) {
-        rankingTurma.push({ uid: c.key, ...s });
-        if ((s.pontuacao || 0) > vencedor_pts) { vencedor_pts = s.pontuacao || 0; vencedor_nome = s.aluno; }
-      }
-    });
-  }
-  rankingTurma.sort((a, b) => (b.pontuacao||0) - (a.pontuacao||0));
-
-  // Salvar histórico por turma
-  await set(ref(db, `torneios/${torneioId}/resultado_turmas/${turma}`), {
-    encerrado_em: Date.now(), vencedor_nome, vencedor_pts,
-    ranking: rankingTurma.slice(0, 20),
-  });
-  // Remover entrada ativa da turma
-  await remove(ref(db, `torneio_ativo/${turma}`)).catch(() => {});
-  delete _ativoPorTurma[turma];
-
-  // Se era a última turma, marcar torneio como encerrado
-  const aindaAtivas = TURMAS.filter(t => _ativoPorTurma[t] && ['liberada','iniciado','pausado'].includes(_ativoPorTurma[t]?.status));
-  if (!aindaAtivas.length) {
-    await update(ref(db, `torneios/${torneioId}`), { status: 'encerrado', encerrado_em: Date.now(), vencedor_nome, vencedor_turma: turma, vencedor_pts });
-    _pararLive();
-  }
-  loadData();
-};
-
-// ── Timers por turma ──────────────────────────────────────────
-function _iniciarTimerTurma(turma, a) {
-  clearInterval(_timerMap[turma]);
-  _timerMap[turma] = setInterval(() => {
-    const restante = _calcRestanteTurma(_ativoPorTurma[turma] || a);
-    const el = document.getElementById(`timer-${turma}`);
-    if (el) {
-      el.textContent = fmtSecs(restante);
-      el.className   = 'torneio-timer' + (restante <= 30 ? ' danger' : restante <= 60 ? ' warn' : '');
-    }
-    if (restante <= 0) {
-      clearInterval(_timerMap[turma]); delete _timerMap[turma];
-      const tId = (_ativoPorTurma[turma] || a).torneioId;
-      if (tId) encerrarTurmaTorneio(tId, turma);
-    }
-  }, 1000);
-}
-
-function _pararTodosTimers() {
-  Object.values(_timerMap).forEach(clearInterval);
-  _timerMap = {};
-}
-
-function _atualizarLinhaTurma(torneioId, turma) {
-  const ativoEntries = Object.entries(_ativoPorTurma).filter(
-    ([, a]) => a && ['liberada','iniciado','pausado'].includes(a.status)
-  );
-  const wrapper = document.querySelector('.torneio-ativo');
-  if (wrapper) wrapper.innerHTML = _htmlAtivo(ativoEntries).match(/<div class="torneio-ativo"[^>]*>([\s\S]*)<\/div>$/)?.[0] || '';
-  // Re-init timers para iniciados
-  ativoEntries.forEach(([t, a]) => { if (a.status === 'iniciado') _iniciarTimerTurma(t, a); });
-}
-
-// ── Live listener ─────────────────────────────────────────────
-function _iniciarLive(torneioId) {
-  _pararLive();
-  _liveUnsub = onValue(ref(db, `torneios/${torneioId}/sessoes`), snap => {
-    const sess = [];
-    if (snap?.exists()) snap.forEach(c => sess.push({ uid: c.key, ...c.val() }));
-    _renderRankingLive(sess);
-  });
-}
-
-function _pararLive() {
-  if (_liveUnsub) { _liveUnsub(); _liveUnsub = null; }
-}
-
-function _renderRankingLive(sess) {
-  const el = document.getElementById('ranking-live');
-  if (!el || !sess.length) return;
-  const sorted = [...sess].sort((a, b) => (b.pontuacao || 0) - (a.pontuacao || 0)).slice(0, 10);
-  const medals = ['🥇','🥈','🥉'];
-  const rows = sorted.map((s, i) => `
-    <div class="rank-row">
-      <span class="rank-pos ${i<3?'rank-'+(i+1):''}">${medals[i]||i+1}</span>
-      <div><div class="rank-nome">${escH(s.aluno||'—')}</div><div class="rank-turma">${escH(s.turma||'')}</div></div>
-      <span class="rank-pts" style="grid-column:3/6">${s.pontuacao||0} pts</span>
-    </div>`).join('');
-  el.innerHTML = `
-    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);margin-bottom:4px">Ranking ao vivo</div>
-    <div style="border:1px solid var(--border);border-radius:9px;overflow:hidden">${rows}</div>`;
-}
-
-// ── Render botões ativo ───────────────────────────────────────
-// _renderAtivoStatus removida — substituída por _atualizarLinhaTurma
-
-// ── Histórico: toggle + carregar ranking ──────────────────────
+// ── Histórico: toggle + ranking ───────────────────────────────
 const _rankCache = {};
+const _sessCache = {};
 
 window.toggleHist = async function(bodyId) {
-  const body  = document.getElementById(bodyId);
-  const torneioId = bodyId.replace('hist-', '');   // índice local, não o ID Firebase
+  const body = document.getElementById(bodyId);
   if (!body) return;
   const isOpen = body.classList.toggle('open');
   const chevIdx = bodyId.split('-')[1];
@@ -851,7 +803,6 @@ window.toggleHist = async function(bodyId) {
   if (chev) chev.textContent = isOpen ? '▲' : '▼';
   if (!isOpen) return;
 
-  // Buscar torneio pelo índice
   const histCards = document.querySelectorAll('.hist-card');
   const idx = Array.from(histCards).findIndex(c => c.querySelector(`#${bodyId}`));
   if (idx < 0) return;
@@ -887,7 +838,6 @@ window.toggleHist = async function(bodyId) {
   _rankCache[t.id] = html;
   rankEl.innerHTML = html;
 
-  // ── Análise de erros ─────────────────────────────────────
   const analiseEl = document.getElementById(`hist-analise-${t.id}`);
   if (analiseEl && !analiseEl.dataset.loaded) {
     analiseEl.dataset.loaded = '1';
@@ -898,55 +848,34 @@ window.toggleHist = async function(bodyId) {
       const labels = { adicao:'Adição', subtracao:'Subtração', duplo_neg:'−(−)', multiplicacao:'Mult.', divisao:'Div.' };
       const alunos = [];
       rSnap.forEach(c => alunos.push({ uid: c.key, ...c.val() }));
-      // Média por tipo
       const totAc = {}, totErr = {};
       tipos.forEach(tp => { totAc[tp]=0; totErr[tp]=0; });
-      alunos.forEach(a => {
-        tipos.forEach(tp => {
-          totAc[tp]  += a.tipos_acertos?.[tp]  || 0;
-          totErr[tp] += a.tipos_erros?.[tp]    || 0;
-        });
-      });
-      const pctMedia = tipos.map(tp => {
-        const tot = totAc[tp] + totErr[tp];
-        return tot > 0 ? Math.round(totAc[tp] / tot * 100) : null;
-      });
+      alunos.forEach(a => { tipos.forEach(tp => { totAc[tp] += a.tipos_acertos?.[tp]||0; totErr[tp] += a.tipos_erros?.[tp]||0; }); });
+      const pctMedia = tipos.map(tp => { const tot = totAc[tp]+totErr[tp]; return tot > 0 ? Math.round(totAc[tp]/tot*100) : null; });
       const validos = pctMedia.filter(p => p != null);
-      const maxAc  = validos.length ? Math.max(...validos) : null;
-      const minAc  = validos.length ? Math.min(...validos) : null;
+      const maxAc = validos.length ? Math.max(...validos) : null;
+      const minAc = validos.length ? Math.min(...validos) : null;
       const labelMin = minAc != null ? labels[tipos[pctMedia.indexOf(minAc)]] : '—';
       const labelMax = maxAc != null ? labels[tipos[pctMedia.indexOf(maxAc)]] : '—';
-
       function acCls(p) { if (p==null) return 'ac-gray'; if (p>=70) return 'ac-green'; if (p>=50) return 'ac-yellow'; return 'ac-red'; }
-
-      const tabelaAlunos = `
-        <table class="analise-table">
-          <thead><tr><th>Aluno</th>${tipos.map(tp=>`<th>${labels[tp]}</th>`).join('')}</tr></thead>
-          <tbody>
-            ${alunos.sort((a,b)=>(a.aluno||'').localeCompare(b.aluno||'')).map(a => {
-              const pcts = tipos.map(tp => {
-                const tot = (a.tipos_acertos?.[tp]||0) + (a.tipos_erros?.[tp]||0);
-                return tot > 0 ? Math.round((a.tipos_acertos?.[tp]||0) / tot * 100) : null;
-              });
-              return `<tr><td>${escH(a.aluno||a.uid)}</td>${pcts.map(p => `<td class="${acCls(p)}">${p != null ? p+'%' : '—'}</td>`).join('')}</tr>`;
-            }).join('')}
-          </tbody>
-        </table>`;
-
+      const tabelaAlunos = `<table class="analise-table">
+        <thead><tr><th>Aluno</th>${tipos.map(tp=>`<th>${labels[tp]}</th>`).join('')}</tr></thead>
+        <tbody>${alunos.sort((a,b)=>(a.aluno||'').localeCompare(b.aluno||'')).map(a => {
+          const pcts = tipos.map(tp => { const tot=(a.tipos_acertos?.[tp]||0)+(a.tipos_erros?.[tp]||0); return tot>0?Math.round((a.tipos_acertos?.[tp]||0)/tot*100):null; });
+          return `<tr><td>${escH(a.aluno||a.uid)}</td>${pcts.map(p=>`<td class="${acCls(p)}">${p!=null?p+'%':'—'}</td>`).join('')}</tr>`;
+        }).join('')}</tbody></table>`;
       const barras = tipos.map((tp, i) => {
-        const p = pctMedia[i];
-        const isWorst = p === minAc && minAc != null;
+        const p = pctMedia[i]; const isWorst = p === minAc && minAc != null;
         return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:12px">
           <span style="width:80px;color:var(--text-muted);flex-shrink:0">${labels[tp]}</span>
           <div style="flex:1"><div class="heat-bar-pr"><div class="heat-bar-pr-inner${isWorst?' worst':''}" style="width:${p??0}%"></div></div></div>
-          <span class="${acCls(p)}" style="width:36px;text-align:right">${p != null ? p+'%' : '—'}</span>
+          <span class="${acCls(p)}" style="width:36px;text-align:right">${p!=null?p+'%':'—'}</span>
         </div>`;
       }).join('');
-
       analiseEl.innerHTML = `
         <div style="font-size:12px;margin-bottom:10px">
-          ${minAc != null ? `<span style="color:var(--red);margin-right:12px">⚠️ Maior dificuldade: <strong>${labelMin}</strong></span>` : ''}
-          ${maxAc != null ? `<span style="color:var(--green)">✅ Melhor desempenho: <strong>${labelMax}</strong></span>` : ''}
+          ${minAc!=null?`<span style="color:var(--red);margin-right:12px">⚠️ Maior dificuldade: <strong>${labelMin}</strong></span>`:''}
+          ${maxAc!=null?`<span style="color:var(--green)">✅ Melhor desempenho: <strong>${labelMax}</strong></span>`:''}
         </div>
         <div style="margin-bottom:14px">${barras}</div>
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">Por aluno</div>
@@ -954,33 +883,31 @@ window.toggleHist = async function(bodyId) {
     }).catch(() => { analiseEl.innerHTML = '<span style="color:var(--text-muted);font-size:12px">Erro ao carregar análise.</span>'; });
   }
 
-  // Atualizar ranking global
   _sessCache[t.id] = sess;
   renderRankGlobal();
 };
 
 // ── Ranking global ────────────────────────────────────────────
-const _sessCache = {};
-
 window.renderRankGlobal = function() {
   const el = document.getElementById('rank-global-body');
   if (!el) return;
   const filtroTurma = document.getElementById('filtro-turma-grank')?.value || '';
   const porAluno = {};
   for (const [tid, sess] of Object.entries(_sessCache)) {
-    const sorted = [...sess].sort((a,b)=>(b.pontuacao||0)-(a.pontuacao||0));
-    sess.forEach((s,i) => {
+    sess.forEach((s, i) => {
+      const sorted = [...sess].sort((a,b)=>(b.pontuacao||0)-(a.pontuacao||0));
+      const rank = sorted.findIndex(x => x.uid === s.uid);
       const k = `${s.aluno}|||${s.turma}`;
       if (!porAluno[k]) porAluno[k] = { aluno: s.aluno, turma: s.turma, torneios: 0, vitorias: 0, melhor: 0, totalPts: 0 };
       porAluno[k].torneios++;
-      if (i === 0) porAluno[k].vitorias++;
+      if (rank === 0) porAluno[k].vitorias++;
       if ((s.pontuacao||0) > porAluno[k].melhor) porAluno[k].melhor = s.pontuacao||0;
       porAluno[k].totalPts += s.pontuacao||0;
     });
   }
   let lista = Object.values(porAluno);
   if (filtroTurma) lista = lista.filter(a => a.turma === filtroTurma);
-  lista.sort((a,b) => b.vitorias - a.vitorias || b.melhor - a.melhor);
+  lista.sort((a,b) => b.vitorias-a.vitorias||b.melhor-a.melhor);
   if (!lista.length) { el.innerHTML = '<span style="color:var(--text-muted)">Abra torneios do histórico para ver o ranking.</span>'; return; }
   el.innerHTML = `<div style="border:1px solid var(--border);border-radius:9px;overflow:hidden">
     <div class="grank-row grank-header">
@@ -992,14 +919,14 @@ window.renderRankGlobal = function() {
       <span style="text-align:right">${a.torneios}</span>
       <span style="text-align:right;font-weight:700;color:var(--gold)">${a.vitorias}</span>
       <span style="text-align:right;color:var(--blue);font-weight:600">${a.melhor}</span>
-      <span style="text-align:right">${a.torneios > 0 ? Math.round(a.totalPts/a.torneios) : 0}</span>
+      <span style="text-align:right">${a.torneios>0?Math.round(a.totalPts/a.torneios):0}</span>
     </div>`).join('')}
   </div>`;
 };
 
-// ── Exportar CSV ──────────────────────────────────────────────
+// ── CSV export ────────────────────────────────────────────────
 window.exportarCSV = async function(torneioId, nomeArquivo) {
-  let sess = _rankCache[torneioId] ? _sessCache[torneioId] : null;
+  let sess = _sessCache[torneioId] || null;
   if (!sess) {
     const snap = await get(ref(db, `torneios/${torneioId}/sessoes`)).catch(() => null);
     sess = [];
@@ -1007,7 +934,7 @@ window.exportarCSV = async function(torneioId, nomeArquivo) {
     sess.sort((a,b)=>(b.pontuacao||0)-(a.pontuacao||0));
   }
   const linhas = [['Pos','Aluno','Turma','Pontuação','Acertos','Erros','Concluído']];
-  sess.forEach((s,i) => linhas.push([i+1, s.aluno||'', s.turma||'', s.pontuacao||0, s.acertos||0, s.erros||0, s.concluido?'Sim':'Não']));
+  sess.forEach((s,i) => linhas.push([i+1,s.aluno||'',s.turma||'',s.pontuacao||0,s.acertos||0,s.erros||0,s.concluido?'Sim':'Não']));
   _downloadCSV(linhas, `torneio_${nomeArquivo}_ranking.csv`);
 };
 
@@ -1016,11 +943,12 @@ window.exportarRankingGlobal = function() {
   const porAluno = {};
   for (const sess of Object.values(_sessCache)) {
     const sorted = [...sess].sort((a,b)=>(b.pontuacao||0)-(a.pontuacao||0));
-    sess.forEach((s,i) => {
+    sess.forEach(s => {
+      const rank = sorted.findIndex(x => x.uid === s.uid);
       const k = `${s.aluno}|||${s.turma}`;
       if (!porAluno[k]) porAluno[k] = { aluno: s.aluno, turma: s.turma, torneios: 0, vitorias: 0, melhor: 0, totalPts: 0 };
       porAluno[k].torneios++;
-      if (i === 0) porAluno[k].vitorias++;
+      if (rank === 0) porAluno[k].vitorias++;
       if ((s.pontuacao||0) > porAluno[k].melhor) porAluno[k].melhor = s.pontuacao||0;
       porAluno[k].totalPts += s.pontuacao||0;
     });
@@ -1048,19 +976,14 @@ function _showErro(msg) {
 
 // ── Init ──────────────────────────────────────────────────────
 async function init() {
-  // Tentar carregar lista de JSONs disponíveis
   try {
     const lista = await fetch('/dados/torneios_lista.json').then(r => r.json()).catch(() => null);
     if (Array.isArray(lista)) _jsonLista = lista;
   } catch(e) {}
-
-  // Carregar JSON padrão
   try {
     const r = await fetch(`/dados/${_jsonNome}.json`);
     _jsonConfig = await r.json();
-  } catch(e) {
-    console.warn('JSON de torneio não carregado:', e);
-  }
+  } catch(e) { console.warn('JSON de torneio não carregado:', e); }
   loadData();
 }
 init();
