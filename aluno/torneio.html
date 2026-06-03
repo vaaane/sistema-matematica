@@ -89,6 +89,11 @@
     .tn-info-rule code{background:rgba(59,130,246,.1);color:var(--blue);border-radius:4px;padding:1px 5px;font-family:monospace;font-size:12px;}
     .tn-info-btn{width:100%;padding:13px;border:none;border-radius:12px;background:var(--blue);color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;transition:opacity .15s;}
     .tn-info-btn:hover{opacity:.88;}
+    /* Botão encerrar */
+    .tn-enc-btn{padding:3px 9px;border:1.5px solid var(--red);border-radius:7px;background:transparent;color:var(--red);font-size:11px;font-weight:600;cursor:pointer;opacity:.65;transition:opacity .15s;font-family:'Inter',sans-serif;}
+    .tn-enc-btn:hover{opacity:1;}
+    /* Modal encerrar */
+    .enc-modal-card{background:var(--card);border-radius:18px;padding:28px 24px;max-width:360px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3);}
     /* Banner não-bloqueante */
     .tn-nivel-banner{position:relative;margin:0 0 10px;padding:11px 36px 11px 14px;background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3);border-radius:10px;font-size:13px;line-height:1.5;animation:banner-in .3s ease;}
     @keyframes banner-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
@@ -978,6 +983,7 @@ async function mostrarJogo() {
             <div style="display:flex;align-items:center;gap:6px">
               <span style="font-size:11px;color:var(--text-muted)">global</span>
               <div id="tn-timer" class="tn-timer" style="font-size:16px">${fmtSecs(calcRestante(_torneio))}</div>
+              <button class="tn-enc-btn" onclick="confirmarEncerrar()" title="Encerrar torneio">⏹</button>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:10px;width:100%;margin-top:8px;flex-wrap:wrap">
@@ -1025,6 +1031,7 @@ async function mostrarJogo() {
         <div class="tn-title">🏆 ${escH(_torneio?.nome || 'Torneio')}</div>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <div id="tn-timer" class="tn-timer">${fmtSecs(calcRestante(_torneio))}</div>
+          <button class="tn-enc-btn" onclick="confirmarEncerrar()" title="Encerrar torneio">⏹</button>
           <div class="tn-stat-wrap">
             <div class="tn-stat"><div class="tn-stat-val" id="tn-pts">0</div><div class="tn-stat-lbl">pts</div></div>
             <div class="tn-stat"><div class="tn-stat-val" id="tn-pos">—</div><div class="tn-stat-lbl">posição</div></div>
@@ -1152,7 +1159,7 @@ async function mostrarEncerrado() {
             </div>`).join('')}
         </div>
       </div>
-      <a href="/aluno/menu.html" class="btn btn-blue" style="width:100%;justify-content:center">Voltar ao início</a>
+      <a href="/aluno/torneios.html" class="btn btn-blue" style="width:100%;justify-content:center">← Voltar aos torneios</a>
     </div>`;
 }
 
@@ -1188,19 +1195,59 @@ async function mostrarResultadoTeste() {
         <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
         🔁 Jogar de novo
       </button>
-      <button onclick="window.close()" class="btn btn-ghost" style="width:100%;justify-content:center">Fechar</button>
+      ${_isTeste
+        ? `<button onclick="window.close()" class="btn btn-ghost" style="width:100%;justify-content:center">Fechar</button>`
+        : `<a href="/aluno/torneios.html" class="btn btn-ghost" style="width:100%;justify-content:center">← Voltar aos torneios</a>`}
     </div>`;
 }
 
 window.reiniciarTeste = function() {
   _pts = 0; _acertos = 0; _erros = 0;
   _streak = 0; _streakMax = 0; _errBoard = 0;
+  _tabuleirosCompletos = 0; _temposTabuleiros = []; _tabuleiroInicioTs = 0;
+  _tiposAcertos = { adicao:0, subtracao:0, duplo_neg:0, multiplicacao:0, divisao:0 };
+  _tiposErros   = { adicao:0, subtracao:0, duplo_neg:0, multiplicacao:0, divisao:0 };
   _done = false; _gameOk = false;
   _nivelAtual = 1; _nivelMax = 1;
+  _sessoes = [];
   clearInterval(_timerInt); _timerInt = null;
   _torneio.inicio = null;
   _torneio.pausa_total_ms = 0;
   mostrarJogo();
+};
+
+window.confirmarEncerrar = function() {
+  if (_done) return;
+  const ptsFinal = Math.round(_pts * 10) / 10;
+  const tabs = _tabuleirosCompletos;
+  const el = document.createElement('div');
+  el.className = 'tn-overlay'; el.id = 'modal-encerrar';
+  el.innerHTML = `
+    <div class="enc-modal-card">
+      <div style="font-size:18px;font-weight:800;margin-bottom:16px">Encerrar o torneio?</div>
+      <div style="padding:14px;background:var(--bg);border-radius:12px;border:1px solid var(--border);margin-bottom:18px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span style="font-size:13px;color:var(--text-muted)">Pontuação atual</span>
+          <span style="font-size:20px;font-weight:800;color:var(--gold)">${ptsFinal} pts</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;color:var(--text-muted)">Tabuleiros completos</span>
+          <span style="font-size:16px;font-weight:700">${tabs}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="document.getElementById('modal-encerrar').remove()">Continuar jogando</button>
+        <button class="btn" style="flex:1;justify-content:center;background:var(--red);color:#fff;border:none" onclick="encerrarPorAluno()">Encerrar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+};
+
+window.encerrarPorAluno = function() {
+  document.getElementById('modal-encerrar')?.remove();
+  const isTesteMode = _torneio?.status === 'teste_permanente' || isModoTeste();
+  if (isTesteMode) mostrarResultadoTeste();
+  else mostrarEncerrado();
 };
 
 function spawnConfettiDourado() {
