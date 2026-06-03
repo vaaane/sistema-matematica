@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Torneios — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .tn-card{border:1.5px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:10px;display:flex;align-items:center;gap:16px;transition:border-color .15s;}
+    .tn-card.ativo{border-color:#BAE6FD;background:linear-gradient(135deg,rgba(47,158,220,.06),var(--card));}
+    .tn-card.ativo-on{border-color:rgba(34,197,94,.4);background:linear-gradient(135deg,rgba(34,197,94,.06),var(--card));}
+    .tn-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+    .tn-icon.blue{background:var(--blue-pale);}
+    .tn-icon.green{background:var(--green-pale);}
+    .tn-icon.gold{background:rgba(245,158,11,.12);}
+    .tn-icon.muted{background:var(--bg);}
+    .tn-info{flex:1;min-width:0;}
+    .tn-nome{font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .tn-sub{font-size:11px;color:var(--text-muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+    .tn-result{text-align:right;flex-shrink:0;}
+    .tn-pts{font-size:18px;font-weight:800;color:var(--gold);line-height:1;}
+    .tn-pos{font-size:11px;color:var(--text-muted);margin-top:2px;}
+    @media(max-width:480px){
+      .tn-card{flex-wrap:wrap;gap:10px;}
+      .tn-card>.btn{width:100%;justify-content:center;}
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">🏆 Torneios</div>
+        <div class="topbar-sub" id="topbar-sub"></div>
+      </div>
+      <div class="topbar-right">
+        <div class="avatar-wrap">
+          <div class="avatar avatar-orange" id="avatar-initials" onclick="toggleAvatarMenu()">?</div>
+          <div class="avatar-menu" id="avatar-menu">
+            <a href="/aluno/config.html" class="avatar-menu-item">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+              Configurações
+            </a>
+            <button class="avatar-menu-item avatar-menu-danger" onclick="sair()">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+              Sair
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+    </div>
+  </div>
+</div>
+
+<script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
+<script type="module">
+import { db } from "/js/firebase-config.js";
+import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+import { getResultadosByAluno } from "/js/db.js";
+
+const sess = requireAluno();
+if (!sess) throw new Error();
+const { alunos, turma } = sess;
+
+renderSidebarAluno("sidebar", "torneios");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
+document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
+
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtData(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+// ── Carregar dados em paralelo ────────────────────────────────
+const [torneiosSnap, resultados] = await Promise.all([
+  get(ref(db, 'torneios')).catch(() => null),
+  getResultadosByAluno(alunos[0]).catch(() => []),
+]);
+
+// ── Torneios do Firebase ──────────────────────────────────────
+const todos = [];
+if (torneiosSnap?.exists()) {
+  torneiosSnap.forEach(c => todos.push({ id: c.key, ...c.val() }));
+}
+todos.sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
+
+// Separar por status e filtrar pela turma do aluno
+const ativos     = todos.filter(t => ['liberada','iniciado','pausado'].includes(t.status) && (t.turmas||[]).includes(turma));
+const encerrados = todos.filter(t => t.status === 'encerrado' && (t.turmas||[]).includes(turma));
+
+// ── Resultados de torneios deste aluno ────────────────────────
+const meusTorneios = resultados.filter(r => r.tipo === 'torneio' && r.concluido);
+const resultMap = {};
+for (const r of meusTorneios) {
+  if (!resultMap[r.torneio_id] || (r.pontuacao||0) > (resultMap[r.torneio_id].pontuacao||0)) {
+    resultMap[r.torneio_id] = r;
+  }
+}
+
+const medals = ['🥇','🥈','🥉'];
+
+function posLabel(r) {
+  if (!r?.posicao) return '';
+  const p = r.posicao;
+  return p <= 3 ? medals[p-1] + ` ${p}º lugar` : `#${p}º lugar`;
+}
+function posColor(r) {
+  if (!r?.posicao) return 'var(--text-muted)';
+  return r.posicao===1 ? '#F59E0B' : r.posicao===2 ? '#9CA3AF' : r.posicao===3 ? '#CD853F' : 'var(--blue)';
+}
+
+// ── Render ────────────────────────────────────────────────────
+const content = document.getElementById('content');
+let html = '';
+
+// Ativos
+if (ativos.length) {
+  html += `<div class="card" style="margin-bottom:14px">
+    <div class="card-header">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
+        Disponível agora
+      </div>
+    </div>`;
+  for (const t of ativos) {
+    const st = t.status;
+    const isOn = st === 'iniciado';
+    const isPaused = st === 'pausado';
+    const statusBadge = st === 'liberada'
+      ? `<span class="badge badge-blue">⏳ Aguardando início</span>`
+      : isPaused
+      ? `<span class="badge" style="background:#FEF9C3;color:#92400E;border-color:#FDE68A">⏸ Pausado</span>`
+      : `<span class="badge badge-green">▶ Em andamento</span>`;
+    const btnLabel = st === 'liberada' ? 'Entrar' : isPaused ? 'Aguardar' : 'Jogar agora';
+    const btnCls   = isOn ? 'btn' : 'btn btn-blue';
+    const btnStyle = isOn ? 'background:#22C55E;color:#fff;border:none' : '';
+    html += `<div class="tn-card ${isOn ? 'ativo-on' : 'ativo'}">
+      <div class="tn-icon ${isOn ? 'green' : 'blue'}">${isOn ? '▶' : '⏳'}</div>
+      <div class="tn-info">
+        <div class="tn-nome">${escH(t.nome || 'Torneio')}</div>
+        <div class="tn-sub">
+          ${statusBadge}
+          <span>⏱ ${Math.round((t.tempo_segundos||300)/60)} min</span>
+          <span>${(t.turmas||[]).join(', ')}</span>
+        </div>
+      </div>
+      <a href="/aluno/torneio.html?id=${t.id}" class="${btnCls}" style="${btnStyle}">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M8 5v14l11-7z"/></svg>
+        ${escH(btnLabel)}
+      </a>
+    </div>`;
+  }
+  html += `</div>`;
+}
+
+// Encerrados / histórico
+if (encerrados.length) {
+  html += `<div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21L13 13.04V8h-1z"/></svg>
+        Histórico
+      </div>
+      <span class="badge">${encerrados.length} torneio${encerrados.length !== 1 ? 's' : ''}</span>
+    </div>`;
+  for (const t of encerrados) {
+    const res = resultMap[t.id];
+    const participou = !!res;
+    const icon = participou ? (res.posicao <= 3 ? medals[res.posicao-1] : '🏁') : '—';
+    html += `<div class="tn-card">
+      <div class="tn-icon ${participou ? 'gold' : 'muted'}" style="font-size:20px">${icon}</div>
+      <div class="tn-info">
+        <div class="tn-nome">${escH(t.nome || 'Torneio')}</div>
+        <div class="tn-sub">
+          <span>${fmtData(t.encerrado_em || t.criadoEm)}</span>
+          <span>${(t.turmas||[]).join(', ')}</span>
+          ${!participou ? `<span style="color:var(--text-muted)">Não participou</span>` : ''}
+        </div>
+      </div>
+      ${participou ? `
+      <div class="tn-result">
+        <div class="tn-pts">${res.pontuacao || 0} pts</div>
+        <div class="tn-pos" style="color:${posColor(res)}">${posLabel(res)}</div>
+        <div class="tn-pos">✅ ${res.acertos||0} &nbsp;❌ ${res.erros||0}</div>
+      </div>` : ''}
+    </div>`;
+  }
+  html += `</div>`;
+}
+
+if (!ativos.length && !encerrados.length) {
+  html = `<div class="card" style="text-align:center;padding:52px 24px">
+    <div style="font-size:48px;margin-bottom:12px">🏆</div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:6px">Nenhum torneio ainda</div>
+    <div style="font-size:13px;color:var(--text-muted)">Quando a professora criar um torneio para sua turma, ele aparece aqui.</div>
+  </div>`;
+}
+
+content.innerHTML = html;
+
+window.toggleAvatarMenu = () => document.getElementById('avatar-menu').classList.toggle('open');
+document.addEventListener('click', e => {
+  if (!e.target.closest('.avatar-wrap')) document.getElementById('avatar-menu')?.classList.remove('open');
+});
+</script>
+</body>
+</html>

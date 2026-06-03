@@ -342,6 +342,20 @@ window.filtrarHistorico = function(uid, ativNome) {
 // ── Formato acompanhamento ─────────────────────────────────────
 
 function renderHistMetrics(regs) {
+  if (regs[0]?.tipo === 'torneio') {
+    const melhorPts = Math.max(0, ...regs.map(r => r.pontuacao || 0));
+    const melhorPos = Math.min(...regs.map(r => r.posicao || 999).filter(p => p > 0));
+    const totalAc   = regs.reduce((a, r) => a + (r.acertos || 0), 0);
+    const totalErr  = regs.reduce((a, r) => a + (r.erros   || 0), 0);
+    const taxa      = (totalAc + totalErr) > 0 ? Math.round(totalAc / (totalAc + totalErr) * 100) : null;
+    const posLabel  = melhorPos < 999 ? `#${melhorPos}º` : '—';
+    return `<div class="ativ-metrics">
+      <div class="metric-box"><div class="metric-val" style="color:var(--gold)">⭐ ${melhorPts}</div><div class="metric-lbl">Melhor pts</div></div>
+      <div class="metric-box"><div class="metric-val" style="color:#F59E0B">${posLabel}</div><div class="metric-lbl">Melhor posição</div></div>
+      <div class="metric-box"><div class="metric-val" style="color:var(--blue)">${regs.length}</div><div class="metric-lbl">Torneios</div></div>
+      <div class="metric-box"><div class="metric-val" style="color:var(--green)">${taxa !== null ? taxa + '%' : '—'}</div><div class="metric-lbl">Taxa acerto</div></div>
+    </div>`;
+  }
   const modoSet  = new Set(regs.map(r => r.modo || 'classico'));
   const isAvOnly = modoSet.size === 1 && modoSet.has('avaliacao_plus');
   const isComp   = modoSet.has('competicao_plus');
@@ -413,6 +427,16 @@ function renderSessaoRow(r, isBest, idx, total, tentEsc = null) {
       ${(r.ajudas_usadas || 0) > 0 ? `<span class="badge" style="background:#F5F3FF;color:#6D28D9">🎯${r.ajudas_usadas}</span>` : ''}
       ${r.sem_penalidade ? `<span class="badge" style="background:#F0FDF4;color:#16A34A">🔥 Limpo</span>` : ''}
       ${tempoS > 0 ? `<span class="badge" style="background:#F0F9FF;color:#0369A1">⏱ ${tempoS}s/q</span>` : ''}`;
+  } else if (r.tipo === 'torneio') {
+    const medals = ['🥇','🥈','🥉'];
+    const posLabel = r.posicao ? (r.posicao <= 3 ? medals[r.posicao - 1] : `#${r.posicao}º`) : '';
+    badges = `
+      <span class="badge" style="background:#FFFBEB;color:#92400E;border-color:#FDE68A">🏆 Torneio</span>
+      <span class="badge badge-gold">⭐ ${r.pontuacao || 0} pts</span>
+      ${posLabel ? `<span class="badge" style="background:#FEF3C7;color:#92400E;border-color:#FDE68A">${posLabel}</span>` : ''}
+      <span class="badge badge-green">✅ ${r.acertos || 0}</span>
+      <span class="badge badge-red">❌ ${r.erros || 0}</span>
+      <span class="badge badge-blue">📊 ${taxa !== null ? taxa + '%' : '—'}</span>`;
   } else {
     badges = `
       <span class="badge badge-gold">⭐ ${bruta} pts${r.com_abatimento ? ' (bruta)' : ''}</span>
@@ -426,7 +450,7 @@ function renderSessaoRow(r, isBest, idx, total, tentEsc = null) {
   const cq = renderConquistasBadges(r.id, r);
 
   return `<div>
-    <div class="tent-row${isBest ? ' melhor' : ''}" onclick="toggleHistTent('${uid2}','${r.id}','${modo}')">
+    <div class="tent-row${isBest ? ' melhor' : ''}" onclick="toggleHistTent('${uid2}','${r.id}','${modo}','${r.tipo||''}')">
       <div class="tent-info-wrap">
         <div style="font-size:13px;font-weight:600">${label}</div>
         <div class="tent-date">${r.data || ''}</div>
@@ -459,9 +483,10 @@ function renderModoBlock(modoRegs, modoLabel) {
   const bestId = isAvPlus && tentEsc !== null
     ? (modoRegs.find(r => (r.tentativa_num || 1) === tentEsc)?.id ?? modoRegs.reduce((b, r) => (r.pontuacao||0)>(b.pontuacao||0)?r:b, modoRegs[0])?.id)
     : modoRegs.reduce((best, r) => (r.pontuacao || 0) > (best.pontuacao || 0) ? r : best, modoRegs[0])?.id;
-  const labelSess = isAvPlus ? 'Tentativas de Avaliação+' : modoLabel === 'competicao_plus' ? 'Sessões' : 'Tentativas';
+  const isTorneio   = modoLabel === 'torneio';
+  const labelSess   = isAvPlus ? 'Tentativas de Avaliação+' : modoLabel === 'competicao_plus' ? 'Sessões' : isTorneio ? 'Torneios disputados' : 'Tentativas';
   let s = renderHistMetrics(modoRegs);
-  if (sortedChron.length >= 2) s += renderEvolucaoSVG(sortedChron);
+  if (!isTorneio && sortedChron.length >= 2) s += renderEvolucaoSVG(sortedChron);
   s += `<div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;text-transform:uppercase;margin:10px 0 6px">${labelSess}</div>`;
   sortedDesc.forEach((r, i) => { s += renderSessaoRow(r, r.id === bestId, i, sortedDesc.length, tentEsc); });
   return s;
@@ -485,7 +510,7 @@ window.mostrarHistModo = function(aUID, modo) {
     b.classList.toggle('on', b.dataset.modo === modo));
 };
 
-window.toggleHistTent = async function(uid, resultadoId, modo) {
+window.toggleHistTent = async function(uid, resultadoId, modo, tipo) {
   const body = document.getElementById(uid);
   const chev = document.getElementById(`hchev2-${uid}`);
   if (!body) return;
@@ -494,6 +519,18 @@ window.toggleHistTent = async function(uid, resultadoId, modo) {
   if (chev) chev.style.transform = open ? '' : 'rotate(180deg)';
   if (open || body.dataset.loaded === 'true') return;
   body.dataset.loaded = 'true';
+
+  if (tipo === 'torneio') {
+    const r = todos.find(x => x.id === resultadoId);
+    const medals = ['🥇','🥈','🥉'];
+    const posLabel = r?.posicao ? (r.posicao <= 3 ? medals[r.posicao-1]+' '+r.posicao+'º lugar' : '#'+r.posicao+'º lugar') : '—';
+    body.innerHTML = `<div style="font-size:12px;line-height:1.8;padding:2px 0">
+      <span style="font-weight:700">Posição:</span> ${posLabel}<br>
+      <span style="font-weight:700">Pontuação:</span> ${r?.pontuacao||0} pts<br>
+      <span style="font-weight:700">Acertos:</span> ${r?.acertos||0} &nbsp;|&nbsp; <span style="font-weight:700">Erros:</span> ${r?.erros||0}
+    </div>`;
+    return;
+  }
 
   const questoes = await getDetalhes(resultadoId);
   if (!questoes || !questoes.length) {
@@ -660,6 +697,7 @@ for (const aluno of alunos) {
       const aUID    = uid + '__' + atividade.replace(/\W/g, '_');
       const ativUID = uid + '_' + atividade.replace(/\W/g, '_');
 
+      const isTorneioAtiv = ativRegs[0]?.tipo === 'torneio';
       const allPts = Math.max(0, ...ativRegs.map(r => r.pontuacao || 0));
       const totAc  = ativRegs.reduce((a, r) => a + (r.acertos || 0), 0);
       const totErr = ativRegs.reduce((a, r) => a + (r.erros   || 0), 0);
@@ -668,7 +706,7 @@ for (const aluno of alunos) {
 
       html += `<div class="ativ-summary" data-ativ-sec="${uid}" data-ativ="${atividade.replace(/"/g,'&quot;')}">
         <div class="ativ-summary-head" onclick="toggleHistAtiv('${ativUID}')">
-          <div style="flex:1;font-size:14px;font-weight:700">${atividade}</div>
+          <div style="flex:1;font-size:14px;font-weight:700">${atividade}${isTorneioAtiv ? ' <span style="font-size:11px;background:#FFFBEB;color:#92400E;border:1px solid #FDE68A;border-radius:10px;padding:1px 7px;font-weight:700">🏆 Torneio</span>' : ''}</div>
           <span class="badge badge-gold">⭐ ${allPts} pts</span>
           <span class="badge badge-blue">${ativRegs.length} sess.</span>
           <span class="badge badge-green">${taxa !== null ? taxa + '%' : '—'}</span>
@@ -687,7 +725,8 @@ for (const aluno of alunos) {
         <div id="hmc-${aUID}">${renderModoBlock(compRegs, 'competicao_plus')}</div>
         <div id="hma-${aUID}" style="display:none">${renderModoBlock(avRegs, 'avaliacao_plus')}</div>`;
       } else {
-        html += renderModoBlock(ativRegs, [...modoSet][0] || 'classico');
+        const modoLabel = isTorneioAtiv ? 'torneio' : ([...modoSet][0] || 'classico');
+        html += renderModoBlock(ativRegs, modoLabel);
       }
 
       html += `</div></div>`;

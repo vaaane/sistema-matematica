@@ -801,6 +801,33 @@ document.addEventListener('click', e => {
   if (!e.target.closest('.avatar-wrap'))
     document.getElementById('avatar-menu')?.classList.remove('open');
 });
+
+// ── Badges de Torneio (assíncrono) ────────────────────────────
+(async () => {
+  try {
+    const { getResultados } = await import('/js/db.js');
+    const todos = await getResultados();
+    const torneios = todos.filter(r =>
+      r.aluno === nomeAluno && r.turma === turma &&
+      r.tipo === 'torneio' && r.concluido && r.posicao === 1
+    );
+    if (!torneios.length) return;
+    const vitorias = torneios.length;
+    const badge = vitorias >= 3
+      ? { icon: '👑', label: 'Multi-campeão', desc: `${vitorias} vitórias em torneios`, color: 'var(--g-gold)', bg: 'rgba(255,215,0,.12)', border: 'rgba(255,215,0,.4)' }
+      : { icon: '🏆', label: 'Campeão de Torneio', desc: `Venceu ${vitorias} torneio${vitorias>1?'s':''}`, color: 'var(--g-orange)', bg: 'rgba(255,123,46,.12)', border: 'rgba(255,123,46,.35)' };
+    const badgeEl = document.createElement('div');
+    badgeEl.style.cssText = `background:${badge.bg};border:1.5px solid ${badge.border};border-radius:14px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;animation:g-up .4s ease both;position:relative;overflow:hidden;z-index:1`;
+    badgeEl.innerHTML = `
+      <span style="font-size:28px;flex-shrink:0">${badge.icon}</span>
+      <div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:${badge.color}">${badge.label}</div>
+        <div style="font-size:11px;color:var(--g-muted);margin-top:2px">${badge.desc}</div>
+      </div>`;
+    const page = document.querySelector('.g-page');
+    if (page) page.insertBefore(badgeEl, page.firstChild);
+  } catch(e) {}
+})();
 </script>
 </body>
 </html>

@@ -326,6 +326,20 @@ const _isProfMode = sess?.modo === 'professor';
 const _isModoTesteAtivo = !_isProfMode && isModoTeste();
 if (!_isProfMode && (!sess || sess.modo !== 'aluno')) { window.location.href = '/index.html'; throw new Error(); }
 
+// Turma 8D sem acesso à tabuada por enquanto
+if (!_isProfMode && sess.turma === '8D') {
+  document.getElementById('content').innerHTML = `
+    <div class="card" style="text-align:center;padding:48px 24px;max-width:480px;margin:0 auto">
+      <div style="font-size:48px;margin-bottom:16px">🔒</div>
+      <div style="font-size:18px;font-weight:800;margin-bottom:8px">Tabuada indisponível</div>
+      <div style="font-size:14px;color:var(--text-muted);margin-bottom:24px">
+        A tabuada ainda não está liberada para a turma 8D.<br>Fique atento às novidades!
+      </div>
+      <a href="/aluno/menu.html" class="btn btn-blue" style="justify-content:center">← Voltar ao menu</a>
+    </div>`;
+  throw new Error('8D bloqueado');
+}
+
 if (_isProfMode) {
   renderSidebarProfessor("sidebar", "jogos");
 } else {

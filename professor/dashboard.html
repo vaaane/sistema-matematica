@@ -251,7 +251,7 @@ document.getElementById("content").innerHTML = `
     <div class="stat-card stat-card-clickable" onclick="window.abrirOnlineModal()">
       <div class="stat-icon green"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg></div>
       <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:5px"><span class="stat-value green" id="online-quiz-count" style="font-size:20px;line-height:1">—</span><span class="stat-meta">Quiz <span class="online-dot"></span></span></div>
+        <div style="display:flex;align-items:center;gap:5px"><span class="stat-value green" id="online-quiz-count" style="font-size:20px;line-height:1">—</span><span class="stat-meta">Em avaliação <span class="online-dot"></span></span></div>
         <div style="height:1px;background:var(--border);margin:5px 0"></div>
         <div style="display:flex;align-items:center;gap:5px"><span class="stat-value blue" id="online-tabuada-count" style="font-size:20px;line-height:1">—</span><span class="stat-meta">Tabuada <span class="online-dot" style="background:var(--blue)"></span></span></div>
       </div>
@@ -365,20 +365,20 @@ let onlineTabuada = [];
 onValue(ref(db, 'resultados'), snap => {
   const now = Date.now();
   const seen = {};
-  let avalAndamento = 0;
+  let alunosEmAndamento = 0;   // fonte única: avaliacao_plus não-concluído dentro dos 25 min
   snap.forEach(child => {
     const v = child.val();
     if (!v.concluido && v.aluno && v.criadoEm && (now - v.criadoEm) < ONLINE_WINDOW_MS) {
       seen[v.aluno] = { nome: v.aluno, turma: v.turma || '?', atividade: v.atividade || '' };
     }
     if (v.modo === 'avaliacao_plus' && !v.concluido && v.ts_inicio &&
-        (now - v.ts_inicio * 1000) < DURACAO_AVAL_MS) avalAndamento++;
+        (now - v.ts_inicio * 1000) < DURACAO_AVAL_MS) alunosEmAndamento++;
   });
-  onlineQuiz = Object.values(seen);
+  onlineQuiz = Object.values(seen);   // mantido para o modal de lista
   const el = document.getElementById('online-quiz-count');
-  if (el) el.textContent = onlineQuiz.length;
+  if (el) el.textContent = alunosEmAndamento;   // card usa a mesma fonte do banner
   atualizarListaOnline();
-  atualizarBannerAvaliacao(avalAndamento);
+  atualizarBannerAvaliacao(alunosEmAndamento);  // banner usa a mesma fonte do card
 });
 
 onValue(ref(db, 'tabuada_presenca'), snap => {

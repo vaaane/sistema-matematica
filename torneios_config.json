@@ -1,0 +1,70 @@
+{
+  "tipos": [
+    {
+      "id": "negativos",
+      "nome": "Números Negativos",
+      "descricao": "Operações com números negativos: +, −, ×, ÷",
+      "operacoes": ["adicao_neg", "subtracao_neg", "multiplicacao_neg", "divisao_neg"],
+      "operandos_min": -12,
+      "operandos_max": 12,
+      "resultado_min": -144,
+      "resultado_max": 144,
+      "exemplos": ["(-3) + 5 = 2", "(-4) × 3 = -12", "(-12) ÷ 4 = -3"]
+    },
+    {
+      "id": "tabuada_normal",
+      "nome": "Tabuada Normal",
+      "descricao": "Multiplicação e divisão básica",
+      "operacoes": ["multiplicacao", "divisao"],
+      "operandos_min": 1,
+      "operandos_max": 10,
+      "resultado_min": 1,
+      "resultado_max": 100,
+      "exemplos": ["3 × 4 = 12", "24 ÷ 6 = 4", "7 × 8 = 56"]
+    },
+    {
+      "id": "fracoes",
+      "nome": "Frações",
+      "descricao": "Adição e subtração de frações simples",
+      "operacoes": ["adicao_fracao", "subtracao_fracao"],
+      "operandos_min": 1,
+      "operandos_max": 12,
+      "resultado_min": -24,
+      "resultado_max": 24,
+      "exemplos": ["1/2 + 1/4 = 3/4", "3/4 − 1/4 = 1/2", "1/3 + 1/6 = 1/2"]
+    },
+    {
+      "id": "potencias",
+      "nome": "Potências",
+      "descricao": "Quadrados e raízes quadradas simples",
+      "operacoes": ["potencia", "raiz"],
+      "operandos_min": 1,
+      "operandos_max": 12,
+      "resultado_min": 1,
+      "resultado_max": 144,
+      "exemplos": ["3² = 9", "√64 = 8", "5² = 25"]
+    },
+    {
+      "id": "misto",
+      "nome": "Misto",
+      "descricao": "Todas as operações básicas misturadas",
+      "operacoes": ["adicao", "subtracao", "multiplicacao", "divisao"],
+      "operandos_min": 1,
+      "operandos_max": 20,
+      "resultado_min": 0,
+      "resultado_max": 400,
+      "exemplos": ["3 + 7 = 10", "15 − 8 = 7", "4 × 6 = 24"]
+    },
+    {
+      "id": "personalizado",
+      "nome": "Personalizado",
+      "descricao": "Configure manualmente as operações e os limites dos operandos",
+      "operacoes": [],
+      "operandos_min": 1,
+      "operandos_max": 10,
+      "resultado_min": 0,
+      "resultado_max": 100,
+      "exemplos": []
+    }
+  ]
+}

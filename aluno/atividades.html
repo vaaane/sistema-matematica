@@ -65,7 +65,7 @@ import { requireAluno, renderSidebarAluno, clearSession, isModoTeste } from "/js
 import { applyTopRankVisuals } from "/js/toprank.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
 import { db } from "/js/firebase-config.js";
-import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ref, get, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const sess = requireAluno();
 if (!sess) throw new Error();
@@ -173,6 +173,20 @@ for (const ativ of avPlusAtivs) {
 
 clearTimeout(loadTimeout);
 
+// ── Torneios ativos para esta turma ───────────────────────────
+const torneiosAtivos = [];
+if (!isModoTeste()) {
+  const tSnap = await get(ref(db, 'torneios')).catch(() => null);
+  if (tSnap?.exists()) {
+    tSnap.forEach(c => {
+      const v = c.val();
+      if (['liberada','iniciado','pausado'].includes(v.status) && (v.turmas||[]).includes(turma)) {
+        torneiosAtivos.push({ id: c.key, ...v });
+      }
+    });
+  }
+}
+
 const todosResultados = await getResultados();
 const realizadaMap = {};
 for (const r of todosResultados) {
@@ -187,7 +201,42 @@ function formatTs(ts) {
     + ' às ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0');
 }
 
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+const torneioHtml = torneiosAtivos.length ? `
+<div class="card" style="margin-bottom:14px;border-color:rgba(245,158,11,.5);background:linear-gradient(135deg,rgba(255,251,235,.8),var(--card));">
+  <div class="card-header">
+    <div class="card-title" style="color:#92400E">
+      <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      🏆 Torneio em Andamento
+    </div>
+    <span class="badge" style="background:rgba(245,158,11,.15);color:#92400E;border-color:rgba(245,158,11,.4)">Novo!</span>
+  </div>
+  ${torneiosAtivos.map(t => {
+    const stBadge = t.status==='liberada'
+      ? `<span class="badge badge-blue">⏳ Aguardando início</span>`
+      : t.status==='pausado'
+      ? `<span class="badge" style="background:#FEF9C3;color:#92400E;border-color:#FDE68A">⏸ Pausado</span>`
+      : `<span class="badge badge-green">▶ Em andamento</span>`;
+    const btnTxt = t.status==='liberada' ? 'Entrar' : t.status==='pausado' ? 'Aguardar' : 'Jogar';
+    return `<div class="ativ-card liberada" style="border-color:rgba(245,158,11,.4)">
+      <div class="ativ-dot" style="background:#F59E0B"></div>
+      <div style="flex:1">
+        <div class="ativ-nome">${escH(t.nome||'Torneio')}</div>
+        <div class="ativ-info-row">
+          ${stBadge}
+          <span class="tent-info">⏱ ${Math.round((t.tempo_segundos||300)/60)} min · 🏅 Números Negativos</span>
+        </div>
+      </div>
+      <a href="/aluno/torneio.html?id=${t.id}" class="btn" style="background:#F59E0B;color:#fff;border:none;flex-shrink:0">
+        <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:currentColor"><path d="M8 5v14l11-7z"/></svg>${escH(btnTxt)}
+      </a>
+    </div>`;
+  }).join('')}
+</div>` : '';
+
 content.innerHTML = `
+${torneioHtml}
 <div class="card">
   <div class="card-header">
     <div class="card-title">

@@ -183,8 +183,9 @@ requireProfessor();
 renderSidebarProfessor("sidebar", "atividades");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
+
 const selAtiv = document.getElementById("sel-ativ");
-LISTA_ATIVIDADES.forEach(a => { selAtiv.innerHTML += `<option value="${a.nome}">${a.nome}</option>`; });
+LISTA_ATIVIDADES.filter(a => a.modo !== 'torneio').forEach(a => { selAtiv.innerHTML += `<option value="${a.nome}">${a.nome}</option>`; });
 const selTurma = document.getElementById("sel-turma");
 Object.keys(ALUNOS_POR_TURMA).forEach(t => { selTurma.innerHTML += `<option value="${t}">Turma ${t}</option>`; });
 
@@ -448,7 +449,7 @@ window.liberar = async function() {
 window.abrirTestarModal = function() {
   const sel = document.getElementById('testar-sel-ativ');
   sel.innerHTML = '<option value="">Selecionar…</option>';
-  LISTA_ATIVIDADES.forEach(a => { sel.innerHTML += `<option value="${a.nome}">${a.nome}</option>`; });
+  LISTA_ATIVIDADES.filter(a => a.modo !== 'torneio').forEach(a => { sel.innerHTML += `<option value="${a.nome}">${a.nome}</option>`; });
   document.getElementById('testar-modal-ov').classList.add('open');
 };
 window.fecharTestarModal = function() {

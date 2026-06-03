@@ -966,7 +966,23 @@ function encerrarFase1(motivo) {
   // Nota = pontuação direta (max 10 pts = nota 10, sem conversão)
   st.f1.nota_quiz = parseFloat(Math.min(st.f1.pontos, F1_MAX_PTS).toFixed(2));
 
-  if (motivo === 'tempo' || motivo === 'manual') {
+  if (motivo === 'tempo') {
+    // Salvar nota IMEDIATAMENTE (fire-and-forget) antes do encerramento assíncrono.
+    // Garante que nota_quiz chega ao Firebase mesmo que a página seja fechada a seguir.
+    if (!isTeste) {
+      for (const al of alunos) {
+        const rid = st.resultadoIds?.[al];
+        if (rid) updateResultado(rid, {
+          nota_quiz: st.f1.nota_quiz,
+          tempo_fase1_ms: st.f1.tempo_ms,
+        }).catch(() => {});
+      }
+    }
+    encerrarSessao(motivo);
+    return;
+  }
+
+  if (motivo === 'manual') {
     encerrarSessao(motivo);
     return;
   }
@@ -1644,6 +1660,15 @@ async function encerrarSessao(motivo) {
   if (f2bruta > (controle.melhor_bruta||0)) upd.melhor_bruta = f2bruta;
   if (st.f1.nota_quiz > melhorNqAtual) upd.melhor_nota_quiz = st.f1.nota_quiz;
   if (!isTeste && Object.keys(upd).length) { try { await update(controleRef, upd); controle = {...controle,...upd}; } catch(e) {} }
+  // Marcar fim da tentativa — permite que _getProximaTentativa saiba que foi concluída
+  if (!isTeste) {
+    const tentNum = controle.tentativas_realizadas;
+    Promise.all(alunos.map(al =>
+      update(ref(db, `avaliacoes_sessoes/${_sessAtivId}/${makeUid(al)}`), {
+        [`tentativas/t${tentNum}/fim`]: Date.now()
+      })
+    )).catch(() => {});
+  }
 
   const novoMelhorF2 = f2aplicado > melhorAtual;
   if (novoMelhorF2 && f2aplicado > 0) lancarConfete();
@@ -1742,6 +1767,36 @@ function mostrarResultado(motivo, f2aplicado, f2bruta, novoMelhor, bonusFim = 0)
 }
 
 // ── Iniciar nova tentativa ─────────────────────────────────────
+// ── Determina próxima tentativa lendo chaves reais do Firebase ──
+// Evita o "buraco" (T2 vazia, T3 preenchida) causado por recarregamentos
+async function _getProximaTentativa() {
+  if (isTeste || !sessaoRefs.length) return 1;
+  try {
+    const snap = await get(ref(db, `avaliacoes_sessoes/${_sessAtivId}/${makeUid(alunos[0])}/tentativas`));
+    if (!snap.exists()) return 1;
+    const chaves = Object.keys(snap.val()).sort();  // ['t1', 't2', ...]
+    const ultimaChave = chaves[chaves.length - 1];
+    const ultimaVal   = snap.val()[ultimaChave];
+    // Reusa o número se a última tentativa não tem 'fim' (page reload durante tentativa)
+    if (ultimaVal && !ultimaVal.fim) return parseInt(ultimaChave.replace('t', ''), 10);
+    return chaves.length + 1;
+  } catch(e) {
+    console.warn('[avaliacao_plus] _getProximaTentativa fallback:', e);
+    return (controle?.tentativas_realizadas || 0) + 1;
+  }
+}
+
+// Registra início de tentativa na sub-path tentativas/t{N}
+async function _registrarInicioTentativa(num) {
+  if (isTeste || !sessaoRefs.length) return;
+  const ts = st.inicioTs * 1000;
+  await Promise.all(alunos.map(al =>
+    update(ref(db, `avaliacoes_sessoes/${_sessAtivId}/${makeUid(al)}`), {
+      [`tentativas/t${num}`]: { inicio: ts }
+    })
+  )).catch(() => {});
+}
+
 window.iniciarNovaTentativa = async function() {
   document.querySelector(".resultado-overlay")?.remove();
   if (!isTeste) {
@@ -1760,8 +1815,10 @@ window.iniciarNovaTentativa = async function() {
     return;
   }
 
-  const novaTent = isTeste ? 1 : (controle.tentativas_realizadas||0) + 1;
-  if (!isTeste) await Promise.all(controleRefs.map(r => update(r, { tentativas_realizadas: novaTent })));
+  // Próxima tentativa lida do Firebase (não depende de variável local)
+  const novaTent = isTeste ? 1 : await _getProximaTentativa();
+  if (!isTeste) await Promise.all(controleRefs.map(r =>
+    update(r, { tentativas_realizadas: novaTent })));
   controle.tentativas_realizadas = novaTent;
 
   // Sincronizar avaliacoes_sessoes
@@ -1780,6 +1837,7 @@ window.iniciarNovaTentativa = async function() {
       ...(isTeste ? { modo_teste: true } : {}),
     });
   }
+  await _registrarInicioTentativa(novaTent);
 
   iniciarSessaoTimer();
   // Iniciar Fase 1
@@ -1895,17 +1953,21 @@ window.iniciarJogo = async function() {
   document.getElementById("content").innerHTML =
     `<div style="text-align:center;padding:50px;color:#2a2a50;font-family:'Orbitron',monospace;font-size:12px;letter-spacing:3px">CARREGANDO…</div>`;
 
+  // Próxima tentativa lida do Firebase (fonte única de verdade)
+  const _tentNum = isTeste ? 1 : await _getProximaTentativa();
+
   if (!controle) {
-    controle = { inicio_global: Date.now(), tentativas_realizadas: 1, melhor_pontuacao: 0, melhor_bruta: 0, melhor_nota_quiz: 0 };
+    controle = { inicio_global: Date.now(), tentativas_realizadas: _tentNum,
+                 melhor_pontuacao: 0, melhor_bruta: 0, melhor_nota_quiz: 0 };
     if (!isTeste) await Promise.all(controleRefs.map(r => set(r, { ...controle })));
   } else {
-    const novaTent = (controle.tentativas_realizadas||0) + 1;
-    if (!isTeste) await Promise.all(controleRefs.map(r => update(r, { tentativas_realizadas: novaTent })));
-    controle.tentativas_realizadas = novaTent;
+    if (!isTeste) await Promise.all(controleRefs.map(r =>
+      update(r, { tentativas_realizadas: _tentNum })));
+    controle.tentativas_realizadas = _tentNum;
   }
 
   // ── Sincronizar avaliacoes_sessoes (sem apagar dados existentes) ──
-  await sincronizarSessaoRefs(controle.tentativas_realizadas, controle.inicio_global);
+  await sincronizarSessaoRefs(_tentNum, controle.inicio_global);
 
   _warned10 = false;
   const duracaoSessao = DURACAO_SESSAO_S; // sempre 8 min fixos por tentativa
@@ -1917,10 +1979,12 @@ window.iniciarJogo = async function() {
     st.resultadoIds[al] = await addResultado({
       aluno: al, turma, atividade: liberada.atividade,
       modo: "avaliacao_plus", concluido: false,
-      pontuacao: 0, data: agora, ts_inicio: st.inicioTs, tentativa_num: controle.tentativas_realizadas,
+      pontuacao: 0, data: agora, ts_inicio: st.inicioTs,
+      tentativa_num: _tentNum,
       ...(isTeste ? { modo_teste: true } : {}),
     });
   }
+  await _registrarInicioTentativa(_tentNum);
 
   iniciarSessaoTimer();
   // Iniciar Fase 1

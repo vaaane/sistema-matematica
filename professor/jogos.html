@@ -176,13 +176,15 @@ async function _carregarDadosProgressao() {
   _tempoOverrides = {};
   if (ovrSnap?.exists()) ovrSnap.forEach(c => { _tempoOverrides[+c.key] = c.val(); });
   _ultimoTeste = {};
-  // Histórico do modo teste (tem tempo_usado direto)
+  // Histórico do modo teste (chave = timestamp, tem tempo_usado direto no valor)
   if (histSnap?.exists()) {
     histSnap.forEach(c => {
-      const v = c.val();
+      const ts = +c.key;           // timestamp está na chave, não no valor
+      const v  = c.val();
       if (!v?.nivel) return;
-      const prev = _ultimoTeste[v.nivel];
-      if (!prev || v.timestamp > prev.timestamp) _ultimoTeste[v.nivel] = v;
+      const entry = { ...v, timestamp: ts };
+      const prev  = _ultimoTeste[v.nivel];
+      if (!prev || ts > prev.timestamp) _ultimoTeste[v.nivel] = entry;
     });
   }
   // Histórico do modo professor (chave = timestamp, calcula tempo_usado)
@@ -484,10 +486,21 @@ window.ajustarTempoGrupo = async function(start, end, delta) {
   const novo = Math.max(5, Math.min(300, current + delta));
   const updates = {};
   for (let l = start; l <= end; l++) updates[l] = novo;
-  await update(ref(db, 'professor_tabuada_config/tempo_override'), updates);
-  for (let l = start; l <= end; l++) _tempoOverrides[l] = novo;
-  const el = document.getElementById(`ovr-${start}`);
-  if (el) { el.textContent = `${novo}s`; el.className = 'ovr-val changed'; }
+  try {
+    await update(ref(db, 'professor_tabuada_config/tempo_override'), updates);
+    for (let l = start; l <= end; l++) _tempoOverrides[l] = novo;
+    const el = document.getElementById(`ovr-${start}`);
+    if (el) {
+      el.textContent = `${novo}s`;
+      el.className = 'ovr-val changed';
+      // Confirmação visual: verde por 1.5s
+      el.style.color = '#16A34A';
+      setTimeout(() => { el.style.color = ''; }, 1500);
+    }
+  } catch(e) {
+    console.error('[tempo_override] Erro ao salvar:', e);
+    alert(`Erro ao salvar override: ${e.message}\n\nVerifique se há permissão de escrita em professor_tabuada_config/tempo_override no Firebase.`);
+  }
 };
 
 window.resetarTempoGrupo = async function(start, end) {

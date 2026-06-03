@@ -30,9 +30,9 @@
     #top-notif{position:fixed;top:58px;left:50%;transform:translateX(-50%);z-index:9999;background:#EF4444;color:#fff;padding:9px 22px;border-radius:12px;font-weight:700;font-size:13px;box-shadow:0 4px 20px rgba(239,68,68,.45);display:none;white-space:nowrap;max-width:92vw;text-align:center;}
 
     /* Tabela unificada */
-    .av-table{width:100%;border-collapse:collapse;font-size:12px;}
-    .av-table th{text-align:left;padding:7px 10px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:2px solid var(--border);white-space:nowrap;background:var(--card);}
-    .av-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+    .av-table{width:100%;border-collapse:collapse;font-size:11.5px;}
+    .av-table th{text-align:left;padding:6px 7px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:2px solid var(--border);white-space:nowrap;background:var(--card);}
+    .av-table td{padding:6px 7px;border-bottom:1px solid var(--border);vertical-align:middle;}
     .av-table tr:last-child td{border-bottom:none;}
     .av-table tbody tr:hover td{background:rgba(0,0,0,.025);}
 
@@ -82,18 +82,48 @@
     .ftip .tt{visibility:hidden;opacity:0;background:#1E293B;color:#fff;font-size:11px;font-weight:600;border-radius:8px;padding:5px 10px;position:absolute;bottom:130%;left:50%;transform:translateX(-50%);white-space:nowrap;transition:opacity .15s;pointer-events:none;z-index:100;}
     .ftip:hover .tt{visibility:visible;opacity:1;}
 
+    /* Sticky primeira coluna — overflow:visible no card pai é obrigatório */
+    #av-table-scroll .av-table th:first-child,
+    #av-table-scroll .av-table td:first-child{
+      position:sticky!important;left:0!important;z-index:3!important;
+      background:var(--card)!important;
+      box-shadow:2px 0 5px rgba(0,0,0,.18)!important;
+    }
+    .tr-turma-hdr td{background:var(--bg)!important;}
+    .row-10min td:first-child{background:rgba(234,179,8,.14)!important;}
+    .row-5min  td:first-child{background:rgba(249,115,22,.17)!important;}
+    .row-2min  td:first-child{background:rgba(239,68,68,.16)!important;}
+    .flash-green td:first-child{background:rgba(34,197,94,.2)!important;}
+
+    /* Badge recusou */
+    .status-rec{color:#DC2626;font-weight:600;}
+    .tr-recusou-hdr td{padding:5px 12px!important;font-size:11px;font-weight:700;color:#DC2626;
+      background:rgba(239,68,68,.06)!important;border-top:2px solid rgba(239,68,68,.25)!important;
+      border-bottom:1px solid var(--border)!important;}
+
+    /* Modal "Não quis fazer" */
+    #modal-recusou{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.55);
+      align-items:center;justify-content:center;}
+    #modal-recusou.ativo{display:flex;}
+    .modal-box{background:var(--card);border-radius:14px;padding:24px;max-width:380px;width:90%;
+      box-shadow:0 24px 60px rgba(0,0,0,.35);}
+    .modal-titulo{font-size:15px;font-weight:700;margin-bottom:12px;}
+    .modal-nome{font-size:14px;font-weight:600;padding:10px 12px;background:var(--bg);border-radius:8px;
+      border:1px solid var(--border);margin-bottom:10px;}
+    .modal-obs{font-size:12px;color:var(--text-muted);margin-bottom:20px;}
+    .modal-btns{display:flex;gap:10px;justify-content:flex-end;}
+
     @media(max-width:768px){
       .av-filters{flex-direction:column;align-items:stretch;}
       .av-search{width:100%;box-sizing:border-box;}
       .update-pill{margin-left:0;}
-      /* mobile: oculta T2, T3, Pts F2, T.F1, Início, Fim, Total — mantém Aluno, Turma, T1, Melhor F1, Status, Ações */
+      /* mobile: oculta T2, T3, Pts F2, Início, Fim, Restante — mantém Aluno, Turma, T1, Melhor F1, Status, Ações */
       .av-table th:nth-child(4),.av-table td:nth-child(4),
       .av-table th:nth-child(5),.av-table td:nth-child(5),
       .av-table th:nth-child(7),.av-table td:nth-child(7),
-      .av-table th:nth-child(8),.av-table td:nth-child(8),
+      .av-table th:nth-child(9),.av-table td:nth-child(9),
       .av-table th:nth-child(10),.av-table td:nth-child(10),
-      .av-table th:nth-child(11),.av-table td:nth-child(11),
-      .av-table th:nth-child(12),.av-table td:nth-child(12){display:none;}
+      .av-table th:nth-child(11),.av-table td:nth-child(11){display:none;}
     }
   </style>
 </head>
@@ -166,8 +196,8 @@
       </div>
 
       <!-- Tabela unificada -->
-      <div class="card" style="padding:0;overflow:hidden">
-        <div style="overflow-x:auto">
+      <div class="card" style="padding:0;overflow:visible" id="av-table-card">
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--radius)" id="av-table-scroll">
           <table class="av-table">
             <thead>
               <tr>
@@ -178,16 +208,15 @@
                 <th style="text-align:center">T3</th>
                 <th>Melhor F1</th>
                 <th>Pts F2</th>
-                <th>T. F1</th>
                 <th>Status</th>
                 <th>Início</th>
                 <th>Fim ≈</th>
-                <th>Total</th>
+                <th>Restante</th>
                 <th>Ações</th>
               </tr>
             </thead>
             <tbody id="main-tbody">
-              <tr><td colspan="13" style="padding:24px;text-align:center;color:var(--text-muted)">Carregando…</td></tr>
+              <tr><td colspan="12" style="padding:24px;text-align:center;color:var(--text-muted)">Carregando…</td></tr>
             </tbody>
           </table>
         </div>
@@ -202,9 +231,21 @@
   </div>
 </div>
 
+<div id="modal-recusou">
+  <div class="modal-box">
+    <div class="modal-titulo">Marcar como "Não quis fazer"?</div>
+    <div id="modal-recusou-nome" class="modal-nome"></div>
+    <div class="modal-obs">Isso ficará registrado no histórico da avaliação. Pode ser desfeito a qualquer momento.</div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" id="modal-btn-cancelar" style="font-size:13px">Cancelar</button>
+      <button class="btn btn-red"   id="modal-btn-confirmar" style="font-size:13px">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import { db } from "/js/firebase-config.js";
-import { ref, onValue, get, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ref, onValue, get, set, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { ALUNOS_POR_TURMA } from "/js/constants.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 
@@ -213,7 +254,8 @@ if (!sess) throw new Error();
 renderSidebarProfessor("sidebar", "acomp_aval");
 window.sair = () => { clearSession(); location.href = '/index.html'; };
 
-const DURACAO_MS = 25 * 60 * 1000;
+const DURACAO_MS      = 25 * 60 * 1000;  // sessão global
+const DURACAO_TENT_MS =  8 * 60 * 1000;  // por tentativa individual
 const escH = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 function avKey(s) { return btoa(unescape(encodeURIComponent(s))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_'); }
 
@@ -230,14 +272,28 @@ let nextRefreshIn  = 15;
 let lastUpdateTime = Date.now();
 let notifTimer     = null;
 let _audioCtx      = null;
+let recusasData    = {};  // { avKey(aluno) → { aluno, status, timestamp, registrado_por } }
+let unsubRecusas   = null;
 
 // ── Eventos filtros ─────────────────────────────────────────────
 function _atualizarBotaoExtra() {
   const btn = document.getElementById('btn-extra-tent');
   if (btn) btn.style.display = (filtroAtiv && filtroTurma) ? 'inline-flex' : 'none';
 }
-document.getElementById('filtro-ativ').addEventListener('change',  e => { filtroAtiv  = e.target.value; renderizarTudo(); _atualizarBotaoExtra(); });
-document.getElementById('filtro-turma').addEventListener('change', e => { filtroTurma = e.target.value; renderizarTudo(); _atualizarBotaoExtra(); });
+function subscribeRecusas() {
+  if (unsubRecusas) { unsubRecusas(); unsubRecusas = null; }
+  recusasData = {};
+  if (!filtroAtiv || !filtroTurma) { renderizarTudo(); return; }
+  const k = avKey(filtroTurma + '|' + filtroAtiv);
+  unsubRecusas = onValue(ref(db, `avaliacoes_recusas/${k}`), snap => {
+    recusasData = {};
+    snap.forEach(child => { recusasData[child.key] = child.val(); });
+    renderizarTudo();
+  });
+}
+
+document.getElementById('filtro-ativ').addEventListener('change',  e => { filtroAtiv  = e.target.value; subscribeRecusas(); _atualizarBotaoExtra(); });
+document.getElementById('filtro-turma').addEventListener('change', e => { filtroTurma = e.target.value; subscribeRecusas(); _atualizarBotaoExtra(); });
 
 window.onBusca   = v => { searchText = v.trim(); renderizarTudo(); };
 window.forcarAtt = () => { renderizarTudo(); nextRefreshIn = 15; };
@@ -267,6 +323,11 @@ function tempoHtml(ms) {
   if (ms < 5  * 60000) return `<span class="t-5">🔶 ${str}</span>`;
   if (ms < 10 * 60000) return `<span class="t-10">⚠️ ${str}</span>`;
   return `<span class="t-ok">⏱ ${str}</span>`;
+}
+function elapsedHtml(ms) {
+  const s = Math.floor(Math.max(0, ms) / 1000);
+  const str = `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  return `<span style="font-variant-numeric:tabular-nums;color:var(--text-muted)">⏱ ${str}</span>`;
 }
 
 function getAudioCtx() {
@@ -321,36 +382,54 @@ setInterval(() => {
   const now = Date.now();
   let needsRerender = false;
 
-  document.querySelectorAll('.tempo-cell[data-ts]').forEach(cell => {
-    const ms = parseInt(cell.dataset.ts) * 1000 + DURACAO_MS - now;
-    if (ms <= 0) { needsRerender = true; return; }
-    const fase = cell.dataset.fase || '';
-    cell.innerHTML = `${fase} ${tempoHtml(ms)}`;
+  // T1/T2/T3 células ativas: mostra tempo decorrido; alertas de linha pelo timer global
+  document.querySelectorAll('td.tempo-cell[data-ts]').forEach(cell => {
+    const ts        = parseInt(cell.dataset.ts);
+    const tentExpiry = ts * 1000 + DURACAO_TENT_MS - now;  // 8min — define se célula ainda é ativa
+    if (tentExpiry <= 0) { needsRerender = true; return; }  // tentativa expirou → rerender para encTempo
+    const globalRem = ts * 1000 + DURACAO_MS - now;         // 25min — usado para alertas de linha
+    const elapsed   = now - ts * 1000;
+    const fase      = cell.dataset.fase || '';
+    const hora      = cell.dataset.hora || '';
+    const horaDiv   = hora ? `<div style="font-size:10px;color:var(--text-muted);margin-top:2px;white-space:nowrap">${hora}</div>` : '';
+    cell.innerHTML = `${fase} ${elapsedHtml(elapsed)}${horaDiv}`;
 
     const row = cell.closest('tr');
     if (!row || row.classList.contains('flash-green') || row.classList.contains('tr-turma-hdr')) return;
     const sid   = row.dataset.sid;
     const aluno = row.dataset.aluno || '?';
 
-    if (ms < 2 * 60000) {
+    if (globalRem < 2 * 60000) {
       if (row.className !== 'row-2min') row.className = 'row-2min';
       if (sid && !alertSet[120].has(sid)) {
         alertSet[120].add(sid);
         showTopNotif(`🚨 ${aluno} — 2 minutos restantes!`);
         playAlert(880, 0.35);
       }
-    } else if (ms < 5 * 60000) {
+    } else if (globalRem < 5 * 60000) {
       if (row.className !== 'row-5min') row.className = 'row-5min';
       if (sid && !alertSet[300].has(sid)) {
         alertSet[300].add(sid);
         showTopNotif(`🔶 ${aluno} — 5 minutos restantes`);
         playAlert(660, 0.22);
       }
-    } else if (ms < 10 * 60000) {
+    } else if (globalRem < 10 * 60000) {
       if (!['row-10min','row-5min','row-2min'].includes(row.className))
         row.className = 'row-10min';
       alertSet[600].add(sid || '');
     }
+  });
+
+  // Coluna TOTAL: cronômetro regressivo dos 25 min globais
+  document.querySelectorAll('td.total-cell[data-ts]').forEach(cell => {
+    const remaining = parseInt(cell.dataset.ts) * 1000 + DURACAO_MS - now;
+    if (remaining <= 0) { needsRerender = true; return; }
+    const s   = Math.floor(remaining / 1000);
+    const str = `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+    if      (remaining < 2  * 60000) cell.innerHTML = `<span class="t-2"  style="font-variant-numeric:tabular-nums">🚨 ${str} restantes</span>`;
+    else if (remaining < 5  * 60000) cell.innerHTML = `<span class="t-5"  style="font-variant-numeric:tabular-nums">🔶 ${str} restantes</span>`;
+    else if (remaining < 10 * 60000) cell.innerHTML = `<span class="t-10" style="font-variant-numeric:tabular-nums">⚠️ ${str} restantes</span>`;
+    else                             cell.innerHTML = `<span class="t-ok" style="font-variant-numeric:tabular-nums">⏱ ${str} restantes</span>`;
   });
 
   if (needsRerender) renderizarTudo();
@@ -424,8 +503,28 @@ function buildAllEntries(allRecords, now) {
     let andRecId = '', andTs = 0;
     const tentativas = {};
 
-    for (const [tNum, recs] of Object.entries(g.sessionsByTent)) {
-      tentativas[Number(tNum)] = recs;
+    // Ordenar sessões por ts_inicio (cronológico) e atribuir posições 1, 2, 3
+    // — ignora tentativa_num do Firebase para corrigir numerações erradas
+    // — filtra sessões completamente abandonadas (sem nota e timer expirado) para
+    //   evitar buracos no meio (T1 ✅, T2 —, T3 ✅)
+    const sessOrdenadas = Object.values(g.sessionsByTent)
+      .sort((a, b) => {
+        const tsA = Math.min(...a.map(r => r.ts_inicio || Infinity));
+        const tsB = Math.min(...b.map(r => r.ts_inicio || Infinity));
+        return tsA - tsB;
+      })
+      .filter(recs => {
+        const concluida = recs.some(r => r.concluido);
+        const temNota   = recs.some(r => r.nota_quiz != null);
+        const todosExp  = recs.every(r => r.ts_inicio * 1000 + DURACAO_TENT_MS <= now);
+        // Manter se: algum registro concluído, ou há nota parcial (encTempo),
+        // ou o timer ainda não expirou (emAnd/superseded). Descartar só se
+        // completamente abandonado: sem nota, sem conclusão e timer expirado.
+        return concluida || temNota || !todosExp;
+      });
+    for (let _si = 0; _si < sessOrdenadas.length; _si++) {
+      const recs = sessOrdenadas[_si];
+      tentativas[_si + 1] = recs;
       for (const r of recs) {
         if ((r.ts_inicio || 0) < primeiroTs) primeiroTs = r.ts_inicio || 0;
         const ms = r.ts_inicio * 1000 + DURACAO_MS - now;
@@ -479,9 +578,10 @@ function addNaoIniciouEntries() {
       .map(r => r.aluno)
   );
 
+  const recusadosKeys = new Set(Object.keys(recusasData));
   const q = searchText.toLowerCase();
   return (ALUNOS_POR_TURMA[filtroTurma] || [])
-    .filter(a => !jaIniciaram.has(a))
+    .filter(a => !jaIniciaram.has(a) && !recusadosKeys.has(avKey(a)))
     .filter(a => !searchText || a.toLowerCase().includes(q))
     .map(a => _naoIniciouEntry(a, filtroTurma));
 }
@@ -490,6 +590,23 @@ function _naoIniciouEntry(aluno, turma) {
     statusFinal: 'nao-iniciou', melhorNota: null, melhorPts: 0, melhorTempoF1: null,
     primeiroTs: Infinity, tempoRestanteMin: null, andRecId: '', andTs: 0,
     isRecent: false, flagSuspect: false, flagRepeat: false };
+}
+
+// ── "Recusou fazer" para alunos marcados pelo professor ─────────
+function addRecusouEntries() {
+  if (!filtroAtiv || !filtroTurma) return [];
+  const q = searchText.toLowerCase();
+  return Object.values(recusasData)
+    .filter(rec => rec.status === 'recusou' && rec.aluno)
+    .filter(rec => !searchText || rec.aluno.toLowerCase().includes(q))
+    .map(rec => _recusouEntry(rec.aluno, filtroTurma, rec));
+}
+function _recusouEntry(aluno, turma, rec) {
+  return { nomes: [aluno], turma, atividade: filtroAtiv, tentativas: {},
+    statusFinal: 'recusou', melhorNota: null, melhorPts: 0, melhorTempoF1: null,
+    primeiroTs: Infinity, tempoRestanteMin: null, andRecId: '', andTs: 0,
+    isRecent: false, flagSuspect: false, flagRepeat: false,
+    recusaTs: rec.timestamp || 0 };
 }
 
 // ── Busca ───────────────────────────────────────────────────────
@@ -501,7 +618,7 @@ function filterBySearch(entries) {
 
 // ── Ordenação ───────────────────────────────────────────────────
 function sortEntries(entries) {
-  const order = { andamento: 0, concluida: 1, expirada: 2, 'nao-iniciou': 3 };
+  const order = { andamento: 0, concluida: 1, expirada: 2, 'nao-iniciou': 3, recusou: 4 };
   return [...entries].sort((a, b) => {
     const oa = order[a.statusFinal] ?? 9, ob = order[b.statusFinal] ?? 9;
     if (oa !== ob) return oa - ob;
@@ -539,40 +656,58 @@ function updateCards(entries) {
 }
 
 // ── Célula T1/T2/T3 ────────────────────────────────────────────
-function tentCellHtml(tentRecs, now) {
+// tentNum: número da tentativa (1/2/3); maxActive: maior tentativa dentro do timer individual
+function tentCellHtml(tentRecs, now, tentNum = 1, maxActive = 0) {
   if (!tentRecs || tentRecs.length === 0)
     return `<td style="color:var(--text-muted);text-align:center;font-size:11px">—</td>`;
 
   const rep      = tentRecs[0];
   const concluida = tentRecs.some(r => r.concluido);
-  const ms       = rep.ts_inicio * 1000 + DURACAO_MS - now;
-  const emAnd    = !concluida && ms > 0;
-  const exp      = !concluida && ms <= 0;
+  // Para duplas: usar max nota e max f1Ms
+  const notas    = tentRecs.flatMap(r => r.nota_quiz != null ? [r.nota_quiz] : []);
+  const n        = notas.length ? Math.max(...notas) : null;
+  const f1Ms     = Math.max(0, ...tentRecs.map(r => r.tempo_fase1_ms || 0));
 
-  // Horário de início da tentativa
-  const horaInicio = rep.ts_inicio
-    ? new Date(rep.ts_inicio * 1000).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' })
-    : '';
-  const subInfo = s => s ? `<div style="font-size:10px;color:var(--text-muted);margin-top:2px;white-space:nowrap">${s}</div>` : '';
+  const msTent      = rep.ts_inicio * 1000 + DURACAO_TENT_MS - now;  // 8min individual
+  const tentExpired = msTent <= 0;
+  // superseded: timer individual ainda não expirou mas uma tentativa posterior está ativa
+  const superseded = !concluida && !tentExpired && tentNum < maxActive;
+  const emAnd      = !concluida && !tentExpired && !superseded;
+  // encerrada por tempo: individual expirou com nota parcial salva
+  const encTempo   = !concluida && tentExpired && n != null;
+  // tentExpired && n == null → sem nota, mostrar —
 
+  const fmtHora = ts => new Date(ts).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+  const horaInicio = rep.ts_inicio ? fmtHora(rep.ts_inicio * 1000) : '';
+  const subInfo    = s => s ? `<div style="font-size:10px;color:var(--text-muted);margin-top:2px;white-space:nowrap">${s}</div>` : '';
+
+  // Casos que exibem —
+  if (superseded || (!concluida && tentExpired && n == null))
+    return `<td style="color:var(--text-muted);text-align:center;font-size:11px">—</td>`;
+
+  // Em andamento: tempo decorrido contando para cima
   if (emAnd) {
-    const f1Done = tentRecs.some(r => r.nota_quiz != null);
-    const fase = f1Done ? '⚔️' : '📖';
-    return `<td class="tempo-cell" data-ts="${rep.ts_inicio}" data-fase="${fase}" style="white-space:nowrap;font-size:12px;text-align:center">
-      ${fase} ${tempoHtml(ms)}${subInfo(horaInicio)}
+    const fase    = n != null ? '⚔️' : '📖';
+    const elapsed = now - rep.ts_inicio * 1000;
+    return `<td class="tempo-cell" data-ts="${rep.ts_inicio}" data-fase="${fase}" data-hora="${horaInicio}" style="white-space:nowrap;font-size:12px;text-align:center">
+      ${fase} ${elapsedHtml(elapsed)}${subInfo(horaInicio)}
     </td>`;
   }
 
-  if (exp) return `<td style="color:#D97706;text-align:center;font-size:13px" title="Expirou sem concluir">
-    <div>⏰</div>${subInfo(horaInicio)}
-  </td>`;
+  // Encerrada por tempo (8min esgotaram) — nota parcial salva, ícone laranja
+  if (encTempo) {
+    const horaFim = fmtHora(rep.ts_inicio * 1000 + DURACAO_TENT_MS);
+    return `<td style="text-align:center" title="Tempo da tentativa esgotou — nota parcial salva">
+      <span style="color:#D97706;font-size:12px;white-space:nowrap">⏱ ${notaStr(n)}</span>
+      ${subInfo(`8m00s · ${horaFim}`)}
+    </td>`;
+  }
 
-  // Concluída: nota + duração F1 + horário
-  // Para duplas tentRecs tem 2 records (um por aluno); usar max, não soma
-  const notas = tentRecs.flatMap(r => r.nota_quiz != null ? [r.nota_quiz] : []);
-  const n     = notas.length ? Math.max(...notas) : null;
-  const f1Ms  = Math.max(0, ...tentRecs.map(r => r.tempo_fase1_ms || 0));
-  const meta  = [f1Ms > 0 ? fmtMs(f1Ms) : '', horaInicio].filter(Boolean).join(' · ');
+  // Concluída normalmente (concluido = true)
+  const horaFim = rep.ts_inicio && f1Ms > 0
+    ? fmtHora(rep.ts_inicio * 1000 + f1Ms)
+    : horaInicio;
+  const meta = [f1Ms > 0 ? fmtMs(f1Ms) : '', horaFim].filter(Boolean).join(' · ');
   return `<td style="text-align:center">
     <span class="${notaCls(n)}" style="font-size:12px;white-space:nowrap">✅ ${notaStr(n)}</span>
     ${subInfo(meta)}
@@ -582,28 +717,71 @@ function tentCellHtml(tentRecs, now) {
 // ── Cálculo de horários por aluno/dupla ─────────────────────────
 function calcTimings(entry) {
   const allRecs = Object.values(entry.tentativas).flat();
-  if (!allRecs.length) return { inicio: '—', fim: '—', totalF1: '—' };
+  if (!allRecs.length) return { inicio: '—', fim: '—' };
 
   const fmt = ms => new Date(ms).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
 
   // Início: sessão mais antiga
-  const minTs = Math.min(...allRecs.map(r => r.ts_inicio || Infinity).filter(t => t < Infinity));
+  const minTs  = Math.min(...allRecs.map(r => r.ts_inicio || Infinity).filter(t => t < Infinity));
   const inicio = minTs < Infinity ? fmt(minTs * 1000) : '—';
 
-  // Fim estimado: sessão mais recente (ts_inicio + DURACAO_SESSAO_S)
-  // Usa a sessão concluída mais recente; se não houver, usa a mais recente
-  const concluidas = allRecs.filter(r => r.concluido);
-  const refRecs = concluidas.length ? concluidas : allRecs;
-  const maxTs = Math.max(...refRecs.map(r => r.ts_inicio || 0));
-  const fim = maxTs > 0 ? fmt(maxTs * 1000 + 8 * 60 * 1000) : '—';
+  // Fim real: calculado apenas para sessões definitivamente encerradas
+  let fim = '—';
+  if (entry.statusFinal === 'expirada' && entry.primeiroTs < Infinity) {
+    // expirou pelo timer global de 25min
+    fim = fmt(entry.primeiroTs * 1000 + DURACAO_MS);
+  } else if (entry.statusFinal === 'concluida') {
+    // usa o horário real de encerramento da última tentativa concluída
+    const concs = allRecs.filter(r => r.concluido && r.ts_inicio);
+    if (concs.length) {
+      const last  = concs.reduce((a, b) => a.ts_inicio > b.ts_inicio ? a : b);
+      const f1Ms  = last.tempo_fase1_ms || 0;
+      fim = fmt(last.ts_inicio * 1000 + (f1Ms > 0 ? f1Ms : DURACAO_TENT_MS));
+    }
+  }
 
-  // Tempo total F1: soma o MAX de cada tentativa (evita duplicar para duplas)
-  const totalF1Ms = Object.values(entry.tentativas).reduce((sum, recs) => {
-    return sum + Math.max(0, ...recs.map(r => r.tempo_fase1_ms || 0));
-  }, 0);
-  const totalF1 = totalF1Ms > 0 ? fmtMs(totalF1Ms) : '—';
+  return { inicio, fim };
+}
 
-  return { inicio, fim, totalF1 };
+// ── Coluna RESTANTE: cronômetro regressivo (andamento) ou histórico estático ─
+function totalTdHtml(entry, now) {
+  const sty = 'font-variant-numeric:tabular-nums;font-size:11px;text-align:center;white-space:nowrap';
+
+  if (entry.statusFinal === 'expirada')
+    return `<td style="${sty};color:#D97706;font-weight:600">⏰ Expirado</td>`;
+
+  if (entry.statusFinal === 'concluida') {
+    // calcula quanto tempo global sobrou quando o aluno concluiu
+    if (entry.primeiroTs >= Infinity)
+      return `<td style="${sty};color:var(--text-muted)">—</td>`;
+    const allRecs  = Object.values(entry.tentativas).flat();
+    const concs    = allRecs.filter(r => r.concluido && r.ts_inicio);
+    if (!concs.length)
+      return `<td style="${sty};color:var(--text-muted)">—</td>`;
+    const last     = concs.reduce((a, b) => a.ts_inicio > b.ts_inicio ? a : b);
+    const f1Ms     = last.tempo_fase1_ms || 0;
+    const finishMs = last.ts_inicio * 1000 + (f1Ms > 0 ? f1Ms : DURACAO_TENT_MS);
+    const rem      = entry.primeiroTs * 1000 + DURACAO_MS - finishMs;
+    if (rem < 60000)
+      return `<td style="${sty};color:var(--text-muted)">✅ ~0min</td>`;
+    const mins = Math.round(rem / 60000);
+    return `<td style="${sty};color:var(--text-muted)">✅ ${mins}min restavam</td>`;
+  }
+
+  if (entry.statusFinal !== 'andamento' || entry.primeiroTs >= Infinity)
+    return `<td style="${sty};color:var(--text-muted)">—</td>`;
+
+  const ms = entry.primeiroTs * 1000 + DURACAO_MS - now;
+  if (ms <= 0)
+    return `<td style="${sty};color:#D97706;font-weight:600">⏰ Expirado</td>`;
+  const s   = Math.floor(ms / 1000);
+  const str = `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  let inner;
+  if      (ms < 2  * 60000) inner = `<span class="t-2"  style="font-variant-numeric:tabular-nums">🚨 ${str}</span>`;
+  else if (ms < 5  * 60000) inner = `<span class="t-5"  style="font-variant-numeric:tabular-nums">🔶 ${str}</span>`;
+  else if (ms < 10 * 60000) inner = `<span class="t-10" style="font-variant-numeric:tabular-nums">⚠️ ${str}</span>`;
+  else                      inner = `<span class="t-ok" style="font-variant-numeric:tabular-nums">⏱ ${str}</span>`;
+  return `<td class="total-cell" data-ts="${entry.primeiroTs}" style="${sty}">${inner}</td>`;
 }
 
 // ── Linha da tabela ─────────────────────────────────────────────
@@ -629,35 +807,53 @@ function rowHtml(entry, now) {
         ].filter(Boolean).join('');
         return `<span class="status-con">✅ Concluída</span>${flags}`;
       }
-      case 'expirada':     return `<span class="status-exp">⚠️ Só expirou</span>`;
-      default:             return `<span class="status-nao">❌ Não iniciou</span>`;
+      case 'expirada':  return `<span class="status-exp">⚠️ Só expirou</span>`;
+      case 'recusou': {
+        const hora = entry.recusaTs ? new Date(entry.recusaTs).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
+        return `<span class="status-rec">⚠️ Recusou${hora ? ' · '+hora : ''}</span>`;
+      }
+      default:          return `<span class="status-nao">❌ Não iniciou</span>`;
     }
   })();
 
-  const { inicio, fim, totalF1 } = calcTimings(entry);
-  const temDados = entry.statusFinal !== 'nao-iniciou';
+  const { inicio, fim } = calcTimings(entry);
   const da = `data-turma="${escH(entry.turma)}" data-ativ="${escH(entry.atividade)}" data-aluno0="${escH(entry.nomes[0])}" data-nomes="${escH(JSON.stringify(entry.nomes))}"`;
-  const acoesHtml = temDados ? `
-    <div style="display:flex;gap:4px;align-items:center">
-      <button class="btn btn-sm btn-orange" ${da} onclick="darTentativaAluno(this)" title="Dar +1 tentativa e reiniciar timer">+1 tent.</button>
-      <input type="number" value="10" min="1" max="120" class="acao-min" style="width:40px;padding:3px 4px;border:1.5px solid var(--border);border-radius:6px;font-size:11px;text-align:center;font-family:inherit;background:var(--bg);color:var(--text)">
-      <button class="btn btn-sm btn-blue" ${da} onclick="darTempoAluno(this)" title="+X minutos ao timer">+min</button>
-      <button class="btn btn-sm btn-red" ${da} onclick="deletarDadosAluno(this)" title="Apagar TODOS os dados desta dupla/aluno nesta atividade" style="padding:3px 7px">✕</button>
-    </div>` : '<span style="color:var(--text-muted);font-size:11px">—</span>';
+  let acoesHtml;
+  if (entry.statusFinal === 'nao-iniciou') {
+    acoesHtml = (filtroAtiv && filtroTurma)
+      ? `<button class="btn btn-sm" style="color:#DC2626;border-color:rgba(220,38,38,.4);font-size:11px;padding:3px 9px"
+           ${da} onclick="marcarRecusou(this)" title="Marcar que o aluno estava presente mas se recusou a fazer">✗ Não quis</button>`
+      : '<span style="color:var(--text-muted);font-size:11px">—</span>';
+  } else if (entry.statusFinal === 'recusou') {
+    acoesHtml = `<button class="btn btn-sm btn-ghost" style="font-size:11px;padding:3px 9px"
+      ${da} onclick="desfazerRecusa(this)" title="Remover esta marcação">↩ Desfazer</button>`;
+  } else {
+    acoesHtml = `
+      <div style="display:flex;gap:2px;align-items:center">
+        <button class="btn btn-sm btn-orange" ${da} onclick="darTentativaAluno(this)" title="Dar tentativa extra ao aluno" style="padding:3px 7px;font-size:11px">+1</button>
+        <input type="number" value="10" min="1" max="120" class="acao-min" title="Número de minutos a adicionar" style="width:34px;padding:3px 3px;border:1.5px solid var(--border);border-radius:6px;font-size:11px;text-align:center;font-family:inherit;background:var(--bg);color:var(--text)">
+        <button class="btn btn-sm btn-blue" ${da} onclick="darTempoAluno(this)" title="Adicionar minutos ao timer do aluno" style="padding:3px 7px;font-size:11px">+min</button>
+        <button class="btn btn-sm btn-red" ${da} onclick="deletarDadosAluno(this)" title="Apagar TODOS os dados desta dupla/aluno nesta atividade" style="padding:3px 6px;font-size:11px">✕</button>
+      </div>`;
+  }
+
+  // maior tentativa cujo timer individual (8min) ainda não expirou
+  const maxActive = Math.max(0, ...Object.entries(entry.tentativas)
+    .filter(([, recs]) => recs.some(r => !r.concluido && r.ts_inicio * 1000 + DURACAO_TENT_MS > now))
+    .map(([n]) => Number(n)));
 
   return `<tr class="${cls}" data-turma="${escH(entry.turma)}" data-sid="${escH(entry.andRecId)}" data-aluno="${escH(nomes)}">
     <td><strong>${entry.nomes.map(escH).join(' &amp; ')}</strong></td>
     <td><span class="badge-turma">${escH(entry.turma)}</span></td>
-    ${tentCellHtml(entry.tentativas[1], now)}
-    ${tentCellHtml(entry.tentativas[2], now)}
-    ${tentCellHtml(entry.tentativas[3], now)}
+    ${tentCellHtml(entry.tentativas[1], now, 1, maxActive)}
+    ${tentCellHtml(entry.tentativas[2], now, 2, maxActive)}
+    ${tentCellHtml(entry.tentativas[3], now, 3, maxActive)}
     <td><span class="${notaCls(entry.melhorNota)}">${notaStr(entry.melhorNota)}</span></td>
     <td style="font-weight:700;color:var(--gold)">${entry.melhorPts > 0 ? entry.melhorPts + ' pts' : '—'}</td>
-    <td style="color:var(--text-muted);font-variant-numeric:tabular-nums">${fmtMs(entry.melhorTempoF1)}</td>
     <td>${statusHtml}</td>
     <td style="color:var(--text-muted);font-variant-numeric:tabular-nums;font-size:11px">${inicio}</td>
-    <td style="color:var(--text-muted);font-variant-numeric:tabular-nums;font-size:11px">${fim}</td>
-    <td style="color:var(--text-muted);font-variant-numeric:tabular-nums;font-size:11px">${totalF1}</td>
+    <td style="color:var(--text-muted);font-variant-numeric:tabular-nums;font-size:11px">${entry.statusFinal === 'andamento' ? '—' : fim}</td>
+    ${totalTdHtml(entry, now)}
     <td style="white-space:nowrap">${acoesHtml}</td>
   </tr>`;
 }
@@ -668,7 +864,7 @@ function renderMainTable(sortedEntries, now) {
   if (!tbody) return;
 
   if (!sortedEntries.length) {
-    tbody.innerHTML = `<tr><td colspan="13" style="padding:28px;text-align:center;color:var(--text-muted);font-size:13px">
+    tbody.innerHTML = `<tr><td colspan="12" style="padding:28px;text-align:center;color:var(--text-muted);font-size:13px">
       ${filtroAtiv ? 'Nenhum resultado encontrado.' : 'Selecione uma atividade para visualizar os dados.'}
     </td></tr>`;
     return;
@@ -695,7 +891,7 @@ function renderMainTable(sortedEntries, now) {
       ].filter(Boolean).join(' · ');
 
       html += `<tr class="tr-turma-hdr" id="th-${escH(turma)}" data-open="1" onclick="toggleTurma('${escH(turma)}')">
-        <td colspan="13">
+        <td colspan="12">
           <span class="th-chev" style="font-size:10px;margin-right:6px">▼</span>
           <strong>Turma ${escH(turma)}</strong>
           <span style="font-weight:400;color:var(--text-muted);margin-left:10px;font-size:11px">${parts}</span>
@@ -714,8 +910,9 @@ function renderizarTudo() {
   const now        = Date.now();
   const filtered   = aplicarFiltros();
   const entries    = buildAllEntries(filtered, now);
-  const naoIniciou = addNaoIniciouEntries();          // usa todosRegistros sem filtro de data
-  const all        = filterBySearch([...entries, ...naoIniciou]);
+  const naoIniciou = addNaoIniciouEntries();
+  const recusou    = addRecusouEntries();
+  const all        = filterBySearch([...entries, ...naoIniciou, ...recusou]);
   const sorted     = sortEntries(all);
 
   // Aviso: exige atividade + turma para listar "não iniciou"
@@ -913,6 +1110,57 @@ window.exportarCSV = function() {
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 };
+
+// ── "Não quis fazer" — modal + Firebase ──────────────────────────
+let _modalPendingData = null;
+
+function initModal() {
+  const modal   = document.getElementById('modal-recusou');
+  const btnConf = document.getElementById('modal-btn-confirmar');
+  const btnCanc = document.getElementById('modal-btn-cancelar');
+  if (!modal || !btnConf || !btnCanc) return;
+
+  const fechar = () => { modal.classList.remove('ativo'); _modalPendingData = null; };
+  btnCanc.addEventListener('click', fechar);
+  modal.addEventListener('click', e => { if (e.target === modal) fechar(); });
+
+  btnConf.addEventListener('click', async () => {
+    if (!_modalPendingData) return;
+    btnConf.disabled = true; btnConf.textContent = 'Salvando…';
+    try {
+      const { turma, ativ, aluno0 } = _modalPendingData;
+      const k = avKey(turma + '|' + ativ);
+      await set(ref(db, `avaliacoes_recusas/${k}/${avKey(aluno0)}`), {
+        aluno: aluno0, status: 'recusou',
+        registrado_por: sess?.nome || sess?.email || 'professor',
+        timestamp: Date.now(),
+      });
+      showTopNotif(`✅ "${aluno0}" marcado como "Não quis fazer"`);
+    } catch(e) { alert('Erro ao salvar: ' + e.message); }
+    finally {
+      btnConf.disabled = false; btnConf.textContent = 'Confirmar';
+      fechar();
+    }
+  });
+}
+
+window.marcarRecusou = function(btn) {
+  _modalPendingData = { turma: btn.dataset.turma, ativ: btn.dataset.ativ, aluno0: btn.dataset.aluno0 };
+  document.getElementById('modal-recusou-nome').textContent = btn.dataset.aluno0;
+  document.getElementById('modal-recusou').classList.add('ativo');
+};
+
+window.desfazerRecusa = async function(btn) {
+  btn.disabled = true;
+  try {
+    const k = avKey(btn.dataset.turma + '|' + btn.dataset.ativ);
+    await remove(ref(db, `avaliacoes_recusas/${k}/${avKey(btn.dataset.aluno0)}`));
+    showTopNotif(`↩ Marcação removida para ${btn.dataset.aluno0}`);
+  } catch(e) { alert('Erro: ' + e.message); }
+  finally { btn.disabled = false; }
+};
+
+initModal();
 
 // ── Corrigir dupla esquecida ─────────────────────────────────────
 // Uso no console: fixarDupla('heitor', 'Arthur Silva', '8F')

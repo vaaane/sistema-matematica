@@ -161,10 +161,11 @@ document.getElementById("topbar-sub").textContent   = `Turma ${turma} · Bom tra
 document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
 
 const tabuadaUid = (turma + '_' + alunos[0]).replace(/[.#$\[\]/\s]/g, '_');
-const [todosRaw, _libRaw, tabuadaSnap] = await Promise.all([
+const [todosRaw, _libRaw, tabuadaSnap, torneioSnap] = await Promise.all([
   getResultados(),
   getLiberadasParaTurma(turma),
   get(ref(db, `tabuada_niveis/${tabuadaUid}`)).catch(() => null),
+  isModoTeste() ? Promise.resolve(null) : get(ref(db, 'torneios')).catch(() => null),
 ]);
 const liberadas = isModoTeste()
   ? LISTA_ATIVIDADES.map(a => ({ atividade: a.nome, modo: a.modo || 'classico', percentual: 100, status: 'ativa', criadoEm: null }))
@@ -435,6 +436,17 @@ function computeProximaMeta(aluno) {
   return `Você está a ${gap}pts do ${userRank - 1}º lugar!`;
 }
 
+// ── Torneio ativo para esta turma ────────────────────────────
+let torneioAtivo = null;
+if (torneioSnap?.exists()) {
+  torneioSnap.forEach(c => {
+    const v = c.val();
+    if (['liberada','iniciado','pausado'].includes(v.status) && (v.turmas||[]).includes(turma) && !torneioAtivo) {
+      torneioAtivo = { id: c.key, ...v };
+    }
+  });
+}
+
 // ── Sessão lookup para percentual ─────────────────────────────
 const sessMap = {};
 for (const r of todos) sessMap[r.id] = r;
@@ -463,9 +475,12 @@ function renderHistSessoes(nome, filtroAtiv) {
   const all = todos.filter(r => r.aluno === nome && r.concluido);
   const makeRow = (r, labelOverride, showNomeAtiv) => {
     const mE = getModoEfetivo(r);
+    const isTorneio = r.tipo === 'torneio';
     const isAv = mE === 'avaliacao_plus';
     const isComp = mE === 'competicao_plus' || mE === 'competicao';
-    const modeTag = isAv
+    const modeTag = isTorneio
+      ? `<span class="badge" style="background:#FFFBEB;color:#92400E;border-color:#FDE68A;font-size:10px">🏆 Torneio${r.posicao ? ' · #'+r.posicao+'º' : ''}</span>`
+      : isAv
       ? `<span class="badge" style="background:#F5F3FF;color:#7C3AED;font-size:10px">📝 Avaliação+</span>`
       : isComp
       ? `<span class="badge badge-gold" style="font-size:10px">⚔️ Competição+</span>`
@@ -526,11 +541,21 @@ ${bannerHtml}
 ${tempoPodioHtml}
 <div class="grid-2">
   <div id="col-left">
-    <div id="card-liberada" class="card${liberadasAtivas.length ? ' card-pulse' : ''}">
+    <div id="card-liberada" class="card${(liberadasAtivas.length || torneioAtivo) ? ' card-pulse' : ''}">
       <div class="section-label" style="color:#F59E0B">
         <svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
         Atividade Liberada
       </div>
+      ${torneioAtivo ? `<div class="ativ-liberada" style="border-color:#FDE68A;background:linear-gradient(135deg,rgba(255,251,235,.9),var(--card))">
+        <div class="ativ-icon" style="background:#F59E0B"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+        <div class="ativ-info">
+          <h3>🏆 ${torneioAtivo.nome || 'Torneio'}</h3>
+          <p>${torneioAtivo.status==='liberada' ? '⏳ Aguardando início' : torneioAtivo.status==='pausado' ? '⏸ Pausado' : '▶ Em andamento'} · ⏱ ${Math.round((torneioAtivo.tempo_segundos||300)/60)} min · 🏅 Torneio</p>
+        </div>
+        <a href="/aluno/torneio.html?id=${torneioAtivo.id}" class="btn" style="background:#F59E0B;color:#fff;border:none">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>${torneioAtivo.status==='liberada' ? 'Entrar' : 'Jogar'}
+        </a>
+      </div>` : ''}
       ${liberadasAtivas.length ? liberadasAtivas.map(lib => {
         const ativDef = LISTA_ATIVIDADES.find(a => a.nome === lib.atividade);
         const modoEfetivo = lib.modo || ativDef?.modo || 'classico';
@@ -581,11 +606,11 @@ ${tempoPodioHtml}
           </div>
           ${botaoHtml}
         </div>`;
-      }).join('') : `
+      }).join('') : (!torneioAtivo ? `
       <div class="ativ-vazia">
         <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
         Nenhuma atividade no momento. Continue praticando! 💪
-      </div>`}
+      </div>` : '')}
     </div>
 
     <div id="tabuada-game-card" class="card" style="margin-bottom:14px;position:relative;overflow:visible;border:1.5px solid rgba(127,119,221,.35);box-shadow:0 4px 20px rgba(127,119,221,.13),var(--shadow-sm)">
@@ -626,6 +651,11 @@ ${tempoPodioHtml}
         Atividades
       </div>
       <div style="display:flex;flex-direction:column;gap:8px">
+        ${torneioAtivo ? `<div class="ativ-chip liberada" style="border-color:rgba(245,158,11,.5)">
+          <svg viewBox="0 0 24 24" style="flex-shrink:0"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <span style="flex:1;min-width:0;word-break:break-word">🏆 ${torneioAtivo.nome || 'Torneio'}</span>
+          <span class="badge" style="margin-left:auto;background:rgba(245,158,11,.15);color:#92400E;border-color:rgba(245,158,11,.4)">▶ Disponível</span>
+        </div>` : ''}
         ${LISTA_ATIVIDADES.map(a => {
           const lib = liberadas.find(l => l.atividade === a.nome);
           const encerrada = lib?.status === 'encerrada';

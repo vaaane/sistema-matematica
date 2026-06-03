@@ -220,15 +220,25 @@ function renderAluno(aluno, turma, hist, tentativasOficiais = {}) {
 
   // Group by atividade then by modo (Atividade 4 excluída do resumo)
   const histFiltrado = hist.filter(r => r.atividade !== 'Atividade 4 - Geometria');
+
+  // Torneios separados por tipo
+  const torneiosHist = histFiltrado.filter(r => r.tipo === 'torneio');
+  const porTorneio   = {};
+  for (const r of torneiosHist) {
+    if (!porTorneio[r.atividade]) porTorneio[r.atividade] = [];
+    porTorneio[r.atividade].push(r);
+  }
+
+  const histSemTorneio = histFiltrado.filter(r => r.tipo !== 'torneio');
   const porAtivModo = {};
-  for (const r of histFiltrado) {
+  for (const r of histSemTorneio) {
     if (!porAtivModo[r.atividade]) porAtivModo[r.atividade] = {};
     const m = r.modo || 'classico';
     if (!porAtivModo[r.atividade][m]) porAtivModo[r.atividade][m] = [];
     porAtivModo[r.atividade][m].push(r);
   }
 
-  const sum = calcSumario(histFiltrado);
+  const sum = calcSumario(histSemTorneio);
 
   let html = `
   <div class="card">
@@ -247,6 +257,52 @@ function renderAluno(aluno, turma, hist, tentativasOficiais = {}) {
       <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/></svg>
       Resumo por Atividade
     </div>
+
+    ${Object.entries(porTorneio).map(([ativNome, regs]) => {
+      const uid = 'tn_' + ativNome.replace(/\W/g, '_');
+      const melhorPts = Math.max(0, ...regs.map(r => r.pontuacao || 0));
+      const melhorPos = Math.min(...regs.map(r => r.posicao || 999).filter(p => p > 0));
+      const totalAc   = regs.reduce((a, r) => a + (r.acertos || 0), 0);
+      const totalErr  = regs.reduce((a, r) => a + (r.erros   || 0), 0);
+      const taxa      = (totalAc + totalErr) > 0 ? Math.round(totalAc / (totalAc + totalErr) * 100) : null;
+      const medals    = ['🥇','🥈','🥉'];
+      const posLabel  = melhorPos < 999 ? (melhorPos <= 3 ? medals[melhorPos-1]+' #'+melhorPos+'º' : '#'+melhorPos+'º') : '—';
+      const rows = [...regs].sort((a,b) => (b.criadoEm||0)-(a.criadoEm||0)).map((r, i) => {
+        const tot = (r.acertos||0)+(r.erros||0);
+        const tx  = tot > 0 ? Math.round((r.acertos||0)/tot*100) : null;
+        const pos = r.posicao ? (r.posicao <= 3 ? medals[r.posicao-1]+' #'+r.posicao+'º' : '#'+r.posicao+'º') : '—';
+        return `<div class="list-row" style="flex-wrap:wrap;gap:6px;align-items:center">
+          <div style="flex:1;min-width:120px">
+            <div style="font-size:13px;font-weight:600">${i===0 ? '→ Mais recente' : 'Torneio '+(regs.length-i)}</div>
+            <div style="font-size:11px;color:var(--text-muted)">${r.data||''}</div>
+          </div>
+          <span class="badge badge-gold">${r.pontuacao||0} pts</span>
+          <span class="badge" style="background:#FFFBEB;color:#92400E;border-color:#FDE68A">${pos}</span>
+          <span class="badge badge-green">${r.acertos||0} ✓</span>
+          <span class="badge badge-red">${r.erros||0} ✗</span>
+          ${tx !== null ? `<span class="badge badge-blue">${tx}%</span>` : ''}
+        </div>`;
+      }).join('');
+      return `<div class="ativ-summary">
+        <div class="ativ-summary-head" onclick="toggleAtiv('${uid}')">
+          <div class="ativ-nome">🏆 ${ativNome}</div>
+          <span class="badge" style="background:#FFFBEB;color:#92400E;border-color:#FDE68A">Torneio</span>
+          <span class="badge badge-gold">${melhorPts} pts</span>
+          <span class="badge badge-blue">${regs.length} torneios</span>
+          <span class="badge" style="background:#FEF3C7;color:#92400E;border-color:#FDE68A">${posLabel}</span>
+          <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:var(--text-muted)" id="chev-${uid}"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+        </div>
+        <div class="ativ-summary-body" id="body-${uid}" style="display:none">
+          <div class="ativ-metrics-plus" style="margin-bottom:10px">
+            <div class="metric-box-plus"><div class="metric-val" style="color:var(--gold)">${melhorPts}</div><div class="metric-lbl">Melhor pts</div></div>
+            <div class="metric-box-plus"><div class="metric-val" style="color:#F59E0B">${posLabel}</div><div class="metric-lbl">Melhor posição</div></div>
+            <div class="metric-box-plus"><div class="metric-val" style="color:var(--blue)">${regs.length}</div><div class="metric-lbl">Torneios</div></div>
+            <div class="metric-box-plus"><div class="metric-val" style="color:var(--green)">${taxa !== null ? taxa+'%' : '—'}</div><div class="metric-lbl">Taxa acerto</div></div>
+          </div>
+          ${rows}
+        </div>
+      </div>`;
+    }).join('')}
 
     ${Object.entries(porAtivModo).map(([ativNome, modoMap]) => {
       const uid = ativNome.replace(/\W/g, '_');

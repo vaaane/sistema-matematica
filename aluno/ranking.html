@@ -236,8 +236,28 @@ const f2AllPos    = stdPos(rankF2All,   r=>r.total);
 const f1TurmaPos  = stdPos(rankF1Turma, r=>r.total);
 const f2TurmaPos  = stdPos(rankF2Turma, r=>r.total);
 
+// ── Torneio rankings ──────────────────────────────────────────
+const torneioResults = todos.filter(r => r.concluido && r.aluno && r.tipo === 'torneio');
+const torneioAtivsList = [...new Set(torneioResults.map(r => r.atividade))].sort();
+const rankTorneioAll = {}, rankTorneioTurma = {};
+for (const at of torneioAtivsList) {
+  const byAl = {};
+  for (const r of torneioResults.filter(x => x.atividade === at)) {
+    const al = r.aluno, t = r.turma || '?';
+    if (!byAl[al]) byAl[al] = { aluno: al, turma: t, pts: 0, posicao: null };
+    if ((r.pontuacao||0) > byAl[al].pts) {
+      byAl[al].pts = r.pontuacao || 0;
+      byAl[al].posicao = r.posicao;
+    }
+  }
+  const sorted = Object.values(byAl).sort((a,b) => b.pts - a.pts || a.aluno.localeCompare(b.aluno));
+  rankTorneioAll[at] = sorted;
+  rankTorneioTurma[at] = sorted.filter(r => r.turma === turma);
+}
+
 // ── Activity rankings ─────────────────────────────────────────
 const ativsList = [...new Set(avResults.map(r=>r.atividade))].sort();
+const allAtivsList = [...ativsList, ...torneioAtivsList.filter(a => !ativsList.includes(a))];
 const rankAtivAll={}, rankAtivTurma={};
 for(const at of ativsList) {
   const byAl={};
@@ -270,7 +290,7 @@ const myF2   = myPos(rankF2All, f2AllPos);
 const myF2T  = myPos(rankF2Turma, f2TurmaPos);
 
 // ── State ─────────────────────────────────────────────────────
-let activeTab='tabuada', activeScope='geral', activeAtiv=ativsList[0]||'';
+let activeTab='tabuada', activeScope='geral', activeAtiv=allAtivsList[0]||'';
 let _confettiDone=false;
 
 function getActiveData() {
@@ -279,6 +299,10 @@ function getActiveData() {
     case 'f1':  return activeScope==='geral'?{list:rankF1All,pos:f1AllPos}:{list:rankF1Turma,pos:f1TurmaPos};
     case 'f2':  return activeScope==='geral'?{list:rankF2All,pos:f2AllPos}:{list:rankF2Turma,pos:f2TurmaPos};
     case 'ativ':{
+      if (torneioAtivsList.includes(activeAtiv)) {
+        const l = activeScope==='geral' ? (rankTorneioAll[activeAtiv]||[]) : (rankTorneioTurma[activeAtiv]||[]);
+        return { list: l, pos: stdPos(l, r => r.pts) };
+      }
       const l=activeScope==='geral'?(rankAtivAll[activeAtiv]||[]):(rankAtivTurma[activeAtiv]||[]);
       return {list:l, pos:stdPos(l,r=>r.f1)};
     }
@@ -292,7 +316,12 @@ function scoreRow(item, tab) {
     case 'tabuada': return `<div class="rnk-score" style="color:var(--blue)">Nv ${item.melhor_nivel||1}</div>`;
     case 'f1':  return `<div class="rnk-score" style="color:#7C3AED">${(item.total??0).toFixed(1)}<span class="rnk-score-sub"> / ${item.maxF1||0}</span></div>`;
     case 'f2':  return `<div class="rnk-score" style="color:var(--green)">${item.total??0}<span class="rnk-score-sub"> pts</span></div>`;
-    case 'ativ':return `<div class="rnk-score" style="color:#7C3AED">${(item.f1??0).toFixed(1)}<span class="rnk-score-sub">/10</span><div style="font-size:10px;color:var(--green);font-weight:700">${item.f2??0}pts F2</div></div>`;
+    case 'ativ':
+      if (item.pts !== undefined && item.f1 === undefined) {
+        const pm = item.posicao ? (item.posicao<=3?['🥇','🥈','🥉'][item.posicao-1]:`#${item.posicao}º`) : '';
+        return `<div class="rnk-score" style="color:var(--gold)">${item.pts}<span class="rnk-score-sub"> pts</span>${pm?`<div style="font-size:9px;color:#92400E">${pm}</div>`:''}</div>`;
+      }
+      return `<div class="rnk-score" style="color:#7C3AED">${(item.f1??0).toFixed(1)}<span class="rnk-score-sub">/10</span><div style="font-size:10px;color:var(--green);font-weight:700">${item.f2??0}pts F2</div></div>`;
   }
   return '';
 }
@@ -301,7 +330,9 @@ function scorePodium(item, tab) {
     case 'tabuada': return `Nv ${item.melhor_nivel||1}`;
     case 'f1':  return `${(item.total??0).toFixed(1)} / ${item.maxF1||0}`;
     case 'f2':  return `${item.total??0} pts`;
-    case 'ativ':return `${(item.f1??0).toFixed(1)} / 10`;
+    case 'ativ':
+      if (item.pts !== undefined && item.f1 === undefined) return `${item.pts} pts`;
+      return `${(item.f1??0).toFixed(1)} / 10`;
   }
   return '';
 }
@@ -463,7 +494,7 @@ document.getElementById('content').innerHTML=`
   </div>
   <div id="ativ-select" class="rnk-ativ-wrap" style="display:none">
     <select onchange="mudarAtiv(this.value)">
-      ${ativsList.map(a=>`<option value="${escH(a)}">${escH(a)}</option>`).join('')}
+      ${allAtivsList.map(a=>`<option value="${escH(a)}">${escH(a)}</option>`).join('')}
     </select>
   </div>
   <div id="podium-section" class="podium-section"></div>
