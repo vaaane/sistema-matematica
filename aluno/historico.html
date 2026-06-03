@@ -156,7 +156,7 @@
 </div>
 <script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
-import { getResultadosByAluno, getDetalhes, getAlunoPreferencia, getConquistasByAluno, getAllAtividadeStatus } from "/js/db.js";
+import { getResultadosByAluno, getDetalhes, getAlunoPreferencia, getConquistasByAluno, getAllAtividadeStatus, getHistoricoTeste } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession, isModoTeste } from "/js/auth.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
@@ -317,49 +317,64 @@ content.innerHTML = ['','','',''].map(() => `<div class="sk"></div>`).join('');
 
 // ── Carregar dados ─────────────────────────────────────────────
 let todos = [], statusMap = {}, allConquistas = [], testeHistSnap = null;
-try {
-  const [todosRaw, _statusMap, allConquisTaskRaw, _testeSnap] = await Promise.all([
-    Promise.all(alunos.map(a => getResultadosByAluno(a))).then(r => r.flat()).catch(() => []),
-    getAllAtividadeStatus().catch(() => ({})),
-    Promise.all(alunos.map(a => getConquistasByAluno(a))).catch(() => [[]]),
-    get(ref(db, `modo_teste_historico/${uid}/torneios`)).catch(() => null),
-  ]);
-  todos          = todosRaw.filter(r => !r.modo_teste);
-  statusMap      = _statusMap || {};
-  allConquistas  = allConquisTaskRaw.flat();
-  testeHistSnap  = _testeSnap;
-} catch(e) {
-  console.error('[historico] Erro ao carregar dados:', e);
-  content.innerHTML = `<div class="card" style="text-align:center;padding:40px">
-    <div style="font-size:36px;margin-bottom:12px">⚠️</div>
-    <div style="font-size:15px;font-weight:700;margin-bottom:6px">Erro ao carregar histórico</div>
-    <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">${e.message || 'Verifique sua conexão e tente novamente.'}</div>
-    <button class="btn btn-blue" onclick="location.reload()">Tentar novamente</button>
-  </div>`;
-  throw e;
-}
 
-for (const c of allConquistas) {
-  if (c.sessaoId) {
-    if (!conquistasBySessao[c.sessaoId]) conquistasBySessao[c.sessaoId] = [];
-    conquistasBySessao[c.sessaoId].push(c);
-  }
-}
-
-// Tentativas oficiais (avaliação+)
-const avAtivs = [...new Set(todos.filter(r => r.modo === 'avaliacao_plus').map(r => r.atividade))];
-await Promise.all(avAtivs.map(async ativ => {
+if (isModoTeste()) {
+  // Modo teste: carregar apenas dos paths corretos, sem chamadas desnecessárias
   try {
-    for (const al of alunos) {
-      const k = avKey(turma + '|' + ativ);
-      const snap = await get(ref(db, `avaliacao_controle/${k}/${avKey(al)}`));
-      if (snap.exists()) {
-        const v = snap.val();
-        if (v.tentativa_escolhida != null) tentativasOficiais[ativ] = v.tentativa_escolhida;
-      }
+    const [ativRegs, _tornSnap] = await Promise.all([
+      // Atividades: salvas por db.js com uid fixo 'PROFESSOR_TESTE'
+      getHistoricoTeste('atividades').catch(() => []),
+      // Torneios: salvos por torneio.html com uid da sessão
+      get(ref(db, `modo_teste_historico/${uid}/torneios`)).catch(() => null),
+    ]);
+    todos         = ativRegs;
+    testeHistSnap = _tornSnap;
+  } catch(e) {
+    console.error('[historico modo_teste] Erro ao carregar:', e);
+  }
+} else {
+  try {
+    const [todosRaw, _statusMap, allConquisTaskRaw] = await Promise.all([
+      Promise.all(alunos.map(a => getResultadosByAluno(a))).then(r => r.flat()).catch(() => []),
+      getAllAtividadeStatus().catch(() => ({})),
+      Promise.all(alunos.map(a => getConquistasByAluno(a))).catch(() => [[]]),
+    ]);
+    todos         = todosRaw.filter(r => !r.modo_teste);
+    statusMap     = _statusMap || {};
+    allConquistas = allConquisTaskRaw.flat();
+  } catch(e) {
+    console.error('[historico] Erro ao carregar dados:', e);
+    content.innerHTML = `<div class="card" style="text-align:center;padding:40px">
+      <div style="font-size:36px;margin-bottom:12px">⚠️</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:6px">Erro ao carregar histórico</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">${e.message || 'Verifique sua conexão e tente novamente.'}</div>
+      <button class="btn btn-blue" onclick="location.reload()">Tentar novamente</button>
+    </div>`;
+    throw e;
+  }
+
+  for (const c of allConquistas) {
+    if (c.sessaoId) {
+      if (!conquistasBySessao[c.sessaoId]) conquistasBySessao[c.sessaoId] = [];
+      conquistasBySessao[c.sessaoId].push(c);
     }
-  } catch(e) {}
-}));
+  }
+
+  // Tentativas oficiais (avaliação+) — apenas fora do modo teste
+  const avAtivs = [...new Set(todos.filter(r => r.modo === 'avaliacao_plus').map(r => r.atividade))];
+  await Promise.all(avAtivs.map(async ativ => {
+    try {
+      for (const al of alunos) {
+        const k = avKey(turma + '|' + ativ);
+        const snap = await get(ref(db, `avaliacao_controle/${k}/${avKey(al)}`));
+        if (snap.exists()) {
+          const v = snap.val();
+          if (v.tentativa_escolhida != null) tentativasOficiais[ativ] = v.tentativa_escolhida;
+        }
+      }
+    } catch(e) {}
+  }));
+}
 
 // ── Construir lista plana de itens ─────────────────────────────
 const ATIVIDADES_OCULTAS = new Set(['Atividade 4 - Geometria']);
@@ -778,10 +793,13 @@ let html = `<div class="filter-pills">
 </div>`;
 
 if (!allItems.length) {
+  const vazioMsg = isModoTeste()
+    ? '🧪 Nenhum teste realizado ainda. Complete uma atividade ou torneio no modo teste para ver aqui.'
+    : 'Seu histórico de atividades e torneios aparece aqui.';
   html += `<div class="card" style="text-align:center;padding:52px 24px">
     <div style="font-size:40px;margin-bottom:12px">📋</div>
     <div style="font-size:15px;font-weight:700;margin-bottom:6px">Nenhum registro ainda</div>
-    <div style="font-size:13px;color:var(--text-muted)">Seu histórico de atividades e torneios aparece aqui.</div>
+    <div style="font-size:13px;color:var(--text-muted)">${vazioMsg}</div>
   </div>`;
 } else {
   for (const item of allItems) {
