@@ -4,124 +4,127 @@
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Histórico — Sistema de Matemática</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
-    .q-rev{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);margin-top:6px;font-size:12px;}
-    .q-rev.ok{background:#F0FDF4;border-color:#BBF7D0;}
-    .q-rev.err{background:#FEF2F2;border-color:#FECACA;}
-    .aluno-section{margin-bottom:24px;}
-    .aluno-title{font-size:13px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
-
-    /* ── Evolução ─────────────────────────────────────────────── */
-    .evolucao-bar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#F8FAFC;border-radius:8px;margin-bottom:8px;border:1px solid var(--border);}
-    .evolucao-label{font-size:10px;font-weight:700;color:var(--text-muted);flex-shrink:0;}
-
-    /* ── Abatimento ───────────────────────────────────────────── */
-    .badge-atraso{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:#FFEDD5;color:#9A3412;border:1px solid #FED7AA;}
-
-    /* ── Competição+ questões ─────────────────────────────────── */
-    .plus-q-wrap{margin-top:6px;}
-    .plus-q-row{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);margin-top:6px;font-size:12px;cursor:pointer;transition:background .12s;}
-    .plus-q-row:hover{filter:brightness(.97);}
-    .plus-q-row.ok{background:#F0FDF4;border-color:#BBF7D0;}
-    .plus-q-row.err{background:#FEF2F2;border-color:#FECACA;}
-    .plus-q-row.nr{background:#F9FAFB;border-color:#E5E7EB;}
-    .plus-q-row.bonus{border-color:#FDE68A;background:#FFFBEB;}
-    .plus-q-num{font-size:10px;font-weight:700;color:var(--text-muted);width:24px;flex-shrink:0;padding-top:1px;}
-    .plus-q-enun{flex:1;line-height:1.4;}
-    .plus-q-pts{font-weight:700;font-size:11px;white-space:nowrap;}
-    .plus-q-detail{display:none;padding:6px 0 2px;font-size:11px;border-top:1px solid rgba(0,0,0,.07);margin-top:5px;color:var(--text-muted);}
-    .plus-tent-row{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:4px;}
-    .plus-tent-ans{padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;}
-    .plus-tent-ans.ok{background:#DCFCE7;color:#166534;}
-    .plus-tent-ans.err{background:#FEE2E2;color:#991B1B;}
-    .plus-tent-ans.time{background:#F3F4F6;color:#6B7280;}
-
-    /* ── Tooltip conquistas ───────────────────────────────────── */
-    .conq-tip{position:fixed;background:#1E293B;color:#F1F5F9;padding:8px 12px;border-radius:10px;font-size:12px;pointer-events:none;z-index:9999;max-width:220px;box-shadow:0 4px 16px rgba(0,0,0,.35);opacity:0;transition:opacity .15s;}
-    .conq-tip.show{opacity:1;}
-    .conq-tip-nome{font-weight:700;font-size:13px;margin-bottom:2px;}
-    .conq-tip-desc{font-size:11px;opacity:.8;}
-
-    /* ── Filtros ─────────────────────────────────────────────── */
-    .filter-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
-    .pill{padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .15s;}
-    .pill.on{border-color:var(--blue);background:var(--blue);color:#fff;}
-    /* ── Card de item do histórico ───────────────────────────── */
-    .hi-card{border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;transition:border-color .15s;}
-    .hi-card.atividade:hover{border-color:var(--blue);}
-    .hi-card.torneio{border-color:rgba(245,158,11,.35);background:linear-gradient(135deg,rgba(245,158,11,.03),var(--card));}
-    .hi-card.torneio-teste{border-color:rgba(124,58,237,.3);background:linear-gradient(135deg,rgba(124,58,237,.04),var(--card));}
-    .hi-head{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;cursor:pointer;}
-    .hi-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
-    .hi-info{flex:1;min-width:0;}
-    .hi-nome{font-size:13px;font-weight:700;line-height:1.3;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    .hi-sub{font-size:11px;color:var(--text-muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;}
-    .hi-meta{text-align:right;flex-shrink:0;}
-    .hi-date{font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px;}
-    .hi-pts{font-size:16px;font-weight:800;color:var(--gold);}
-    .hi-detail{padding:10px 16px 14px;border-top:1px solid var(--border);background:var(--bg);}
-    /* skeleton */
-    .sk{height:72px;background:linear-gradient(90deg,var(--border) 25%,var(--bg) 50%,var(--border) 75%);background-size:200% 100%;animation:sk-shimmer 1.4s infinite;border-radius:var(--radius);margin-bottom:8px;}
-    @keyframes sk-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-
-    /* ── Avaliação+ fases ─────────────────────────────────────── */
-    .hist-mode-badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;margin-left:6px;vertical-align:middle;}
-    .hist-mode-badge.avplus{background:#F5F3FF;color:#7C3AED;}
-    .fase-sep-bar{display:flex;align-items:center;gap:6px;margin:12px 0 8px}
-    .fase-sep-bar::before,.fase-sep-bar::after{content:'';flex:1;height:1px;background:var(--border)}
-    .fase-sep-label{font-size:10px;font-weight:700;color:var(--text-muted);white-space:nowrap;padding:2px 8px;border:1px solid var(--border);border-radius:10px;letter-spacing:.5px;background:var(--card)}
-
-    /* ── Formato acompanhamento ───────────────────────────────── */
-    .ativ-summary{border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
-    .ativ-summary-head{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--bg);cursor:pointer;transition:background .15s;}
-    .ativ-summary-head:hover{background:#f0f0f0;}
-    .ativ-summary-body{padding:12px 16px 14px;border-top:1px solid var(--border);}
-    .ativ-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;}
-    @media(max-width:640px){.ativ-metrics{grid-template-columns:repeat(2,1fr);}}
-    .metric-box{background:var(--bg);border-radius:8px;padding:10px 6px;text-align:center;border:1px solid var(--border);}
-    .metric-val{font-size:18px;font-weight:800;line-height:1;}
-    .metric-lbl{font-size:10px;color:var(--text-muted);margin-top:3px;}
-    .tent-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;background:var(--card);cursor:pointer;transition:background .15s;}
-    .tent-row:hover{background:#fafafa;}
-    .tent-info-wrap{flex:1;}
-    .tent-date{font-size:11px;color:var(--text-muted);}
-    .tent-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
-    .tent-detail-body{padding:8px 12px 12px;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;background:#FAFAFA;margin-top:-6px;margin-bottom:6px;}
-    .tent-row.melhor{border-color:#F59E0B;border-width:1.5px;background:linear-gradient(to right,#FFFDE7,var(--card));}
-    .mode-tabs{display:flex;gap:4px;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:14px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;-ms-overflow-style:none;}
-    .mode-tabs::-webkit-scrollbar{display:none;}
-    .mode-tab{padding:7px 12px;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);background:transparent;transition:all .2s;white-space:nowrap;flex-shrink:0;min-height:36px;}
-    .mode-tab.on{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(47,158,220,.3);}
-
-    @media(max-width:480px){
-      .q-rev{font-size:11px;padding:6px 8px;gap:6px}
-      .plus-q-row{font-size:11px;padding:6px 8px;gap:6px}
-      .evolucao-bar{padding:6px 8px;gap:6px}
-      .ativ-summary-head{padding:10px 12px;gap:8px}
-      .ativ-summary-body{padding:10px 12px 12px}
+    /* ── Variáveis do protótipo (escopo .hc) ── */
+    .hc{
+      --hc-bg:#0d0f1a;--hc-bg2:#131627;--hc-bg3:#1a1f35;
+      --hc-purple:#7c5cfc;--hc-pl:#9b7ffe;
+      --hc-cyan:#00d4ff;--hc-orange:#ff7b2e;--hc-gold:#ffd700;
+      --hc-green:#00e676;--hc-red:#ff4444;
+      --hc-text:#e8eaf6;--hc-muted:#8892b0;
+      --hc-border:rgba(124,92,252,0.15);
+      background:var(--hc-bg);color:var(--hc-text);
+      font-family:'Inter',sans-serif;
     }
 
-    /* ── Badge "Conta para nota" ─────────────────────────────── */
-    .badge-nota-melhor{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;background:linear-gradient(90deg,#FEF9C3,#FDE68A);border:1px solid #FCD34D;color:#854D0E;}
+    /* Filtros */
+    .hc-filters{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+    .hc-fbtn{padding:6px 16px;border-radius:20px;border:1px solid var(--hc-border);background:transparent;color:var(--hc-muted);font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;}
+    .hc-fbtn.on{background:rgba(124,92,252,0.2);border-color:var(--hc-purple);color:var(--hc-pl);}
 
-    /* ── Tema escuro: fundos claros fixos → versão escura ─────── */
-    [data-theme="dark"] .q-rev.ok  {background:rgba(22,163,74,.15);border-color:rgba(34,197,94,.35);color:var(--text);}
-    [data-theme="dark"] .q-rev.err {background:rgba(220,38,38,.15);border-color:rgba(248,113,113,.35);color:var(--text);}
-    [data-theme="dark"] .badge-nota-melhor{background:rgba(245,158,11,.2);border-color:rgba(252,211,77,.4);color:#FCD34D;}
-    [data-theme="dark"] .tent-row.melhor{background:rgba(245,158,11,.08);border-color:#F59E0B;}
-    [data-theme="dark"] .plus-q-row.ok  {background:rgba(22,163,74,.15);border-color:rgba(34,197,94,.35);}
-    [data-theme="dark"] .plus-q-row.err {background:rgba(220,38,38,.15);border-color:rgba(248,113,113,.35);}
-    [data-theme="dark"] .plus-q-row.nr  {background:#1e293b;border-color:#334155;}
-    [data-theme="dark"] .plus-q-row.bonus{background:rgba(245,158,11,.15);border-color:rgba(252,211,77,.35);}
-    [data-theme="dark"] .tent-detail-body{background:#1e293b;}
-    [data-theme="dark"] .evolucao-bar   {background:#1e293b;}
-    [data-theme="dark"] .ativ-summary-head:hover{background:#1e293b;}
-    [data-theme="dark"] .tent-row:hover {background:#1e293b;}
-    [data-theme="dark"] .plus-tent-ans.ok  {background:rgba(22,163,74,.25);color:#86efac;}
-    [data-theme="dark"] .plus-tent-ans.err {background:rgba(220,38,38,.25);color:#fca5a5;}
-    [data-theme="dark"] .plus-tent-ans.time{background:#1e293b;color:#94a3b8;}
+    /* Entry card */
+    .entry{background:var(--hc-bg2);border:1px solid var(--hc-border);border-radius:16px;overflow:hidden;margin-bottom:12px;transition:border-color .2s;animation:hcFU .3s ease both;}
+    .entry:hover{border-color:rgba(124,92,252,0.3);}
+    @keyframes hcFU{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+    .entry-header{padding:14px 18px;display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none;}
+    .entry-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+    .entry-icon.atividade{background:rgba(124,92,252,0.15);border:1px solid rgba(124,92,252,0.3);}
+    .entry-icon.torneio{background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.3);}
+
+    .entry-info{flex:1;min-width:0;}
+    .entry-title{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--hc-text);}
+    .entry-meta{display:flex;align-items:center;gap:8px;margin-top:3px;flex-wrap:wrap;}
+    .hc-tag{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;}
+    .hc-tag.avp{background:rgba(255,123,46,0.15);color:var(--hc-orange);border:1px solid rgba(255,123,46,0.3);}
+    .hc-tag.tn{background:rgba(255,215,0,0.12);color:var(--hc-gold);border:1px solid rgba(255,215,0,0.25);}
+    .hc-tag.cls{background:rgba(0,212,255,0.1);color:var(--hc-cyan);border:1px solid rgba(0,212,255,0.2);}
+    .entry-date{font-size:11px;color:var(--hc-muted);}
+
+    .entry-score{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;}
+    .score-main{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;}
+    .score-main.green{color:var(--hc-green);}
+    .score-main.orange{color:var(--hc-orange);}
+    .score-main.red{color:var(--hc-red);}
+    .score-main.gold{color:var(--hc-gold);}
+    .score-label{font-size:10px;color:var(--hc-muted);}
+    .chevron{color:var(--hc-muted);font-size:12px;margin-left:4px;transition:transform .2s;flex-shrink:0;}
+    .entry.open .chevron{transform:rotate(180deg);}
+
+    .entry-body{border-top:1px solid var(--hc-border);display:none;}
+    .entry.open .entry-body{display:block;}
+
+    /* Tentativas strip */
+    .tent-strip{padding:12px 18px;display:flex;gap:8px;align-items:flex-start;background:rgba(255,255,255,0.02);border-bottom:1px solid var(--hc-border);flex-wrap:wrap;}
+    .tent-lbl-outer{font-size:11px;color:var(--hc-muted);margin-right:4px;padding-top:10px;flex-shrink:0;}
+    .tent-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 14px;border-radius:10px;border:1px solid;min-width:76px;}
+    .tent-item.ok{background:rgba(0,230,118,0.06);border-color:rgba(0,230,118,0.25);}
+    .tent-item.fail{background:rgba(255,123,46,0.06);border-color:rgba(255,123,46,0.25);}
+    .tent-item.empty{background:rgba(255,255,255,0.02);border-color:rgba(255,255,255,0.07);opacity:.5;}
+    .tent-item.chosen{box-shadow:0 0 0 2px var(--hc-gold);}
+    .tent-tlabel{font-size:10px;color:var(--hc-muted);text-transform:uppercase;letter-spacing:.5px;}
+    .tent-nota{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;}
+    .tent-item.ok   .tent-nota{color:var(--hc-green);}
+    .tent-item.fail .tent-nota{color:var(--hc-orange);}
+    .tent-item.empty .tent-nota{color:var(--hc-muted);}
+    .tent-time{font-size:10px;color:var(--hc-muted);}
+    .tent-chosen{font-size:9px;color:var(--hc-gold);font-weight:600;}
+
+    /* Fases */
+    .fases{display:grid;grid-template-columns:1fr 1fr;}
+    .fase{padding:14px 18px;}
+    .fase:first-child{border-right:1px solid var(--hc-border);}
+    .fase-header{display:flex;align-items:center;gap:6px;margin-bottom:10px;}
+    .fase-header h3{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--hc-muted);margin:0;}
+    .fase-nota{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;margin-bottom:6px;}
+    .fase-nota.f1{color:var(--hc-pl);}
+    .fase-nota.f2{color:var(--hc-cyan);}
+    .fase-nota-s{font-size:14px;color:var(--hc-muted);}
+    .fase-stats{display:flex;flex-direction:column;gap:4px;}
+    .fase-stat{display:flex;align-items:center;justify-content:space-between;font-size:12px;}
+    .fase-stat .lbl{color:var(--hc-muted);}
+    .fase-stat .val{font-weight:600;color:var(--hc-text);}
+    .fase-stat .val.green{color:var(--hc-green);}
+    .fase-stat .val.orange{color:var(--hc-orange);}
+
+    /* Questões */
+    .questoes{padding:12px 18px;border-top:1px solid var(--hc-border);}
+    .questoes h4{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--hc-muted);margin-bottom:10px;}
+    .questao-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+    .questao-item:last-child{border-bottom:none;}
+    .q-num{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:var(--hc-muted);min-width:24px;flex-shrink:0;}
+    .q-text{font-size:12px;color:var(--hc-text);flex:1;line-height:1.4;}
+    .q-resp{font-size:11px;color:var(--hc-muted);margin-top:2px;}
+    .q-status{font-size:14px;flex-shrink:0;}
+
+    /* Torneio */
+    .torneio-body{padding:14px 18px;}
+    .torneio-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px;}
+    .t-stat{background:var(--hc-bg3);border-radius:10px;padding:10px;text-align:center;}
+    .t-stat .val{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;line-height:1;}
+    .t-stat .lbl{font-size:10px;color:var(--hc-muted);margin-top:3px;}
+    .t-stat:nth-child(1) .val{color:var(--hc-gold);}
+    .t-stat:nth-child(2) .val{color:var(--hc-pl);}
+    .t-stat:nth-child(3) .val{color:var(--hc-green);}
+    .t-stat:nth-child(4) .val{color:var(--hc-orange);}
+    .torneio-extras{display:flex;gap:16px;font-size:12px;color:var(--hc-muted);flex-wrap:wrap;}
+
+    /* Skeleton */
+    .hc-sk{height:72px;border-radius:16px;margin-bottom:12px;background:linear-gradient(90deg,#131627 25%,#1a1f35 50%,#131627 75%);background-size:200% 100%;animation:hcSk 1.4s infinite;}
+    @keyframes hcSk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+    .hc-empty{text-align:center;padding:60px 20px;color:var(--hc-muted);font-size:14px;}
+    .hc-empty div{font-size:40px;margin-bottom:12px;}
+
+    /* Questões F2 loading */
+    .q-loading{font-size:12px;color:var(--hc-muted);padding:8px 0;}
+
+    @media(max-width:480px){
+      .torneio-stats{grid-template-columns:repeat(2,1fr);}
+      .fases{grid-template-columns:1fr;}
+      .fase:first-child{border-right:none;border-bottom:1px solid var(--hc-border);}
+    }
   </style>
 </head>
 <body>
@@ -130,7 +133,7 @@
   <div class="main">
     <div class="topbar">
       <div class="topbar-left">
-        <div class="topbar-title">Histórico</div>
+        <div class="topbar-title">📋 Histórico</div>
         <div class="topbar-sub" id="topbar-sub"></div>
       </div>
       <div class="topbar-right">
@@ -149,719 +152,468 @@
         </div>
       </div>
     </div>
-    <div class="content" id="content">
-      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+    <div class="content hc" id="content-wrap">
+      <div class="hc-filters">
+        <button class="hc-fbtn on" onclick="setFiltro(this,'tudo')">🗂️ Tudo</button>
+        <button class="hc-fbtn"    onclick="setFiltro(this,'atividade')">📝 Atividades</button>
+        <button class="hc-fbtn"    onclick="setFiltro(this,'torneio')">🏆 Torneios</button>
+      </div>
+      <div id="entries">
+        <div class="hc-sk"></div>
+        <div class="hc-sk" style="animation-delay:.1s"></div>
+        <div class="hc-sk" style="animation-delay:.2s"></div>
+      </div>
     </div>
   </div>
 </div>
-<script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
+
+<script>(()=>{ document.documentElement.setAttribute('data-theme','dark'); })()</script>
 <script type="module">
-import { getResultadosByAluno, getDetalhes, getAlunoPreferencia, getConquistasByAluno, getAllAtividadeStatus, getHistoricoTeste } from "/js/db.js";
-import { requireAluno, renderSidebarAluno, clearSession, isModoTeste } from "/js/auth.js";
-import { applyTopRankVisuals } from "/js/toprank.js";
-import { initAvBanner } from "/js/avaliacao_banner.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { requireAluno, renderSidebarAluno, clearSession, isModoTeste } from "/js/auth.js";
+import { getResultadosByAluno, getDetalhes, getHistoricoTeste, getAlunoPreferencia } from "/js/db.js";
+import { applyTopRankVisuals } from "/js/toprank.js";
 
-function avKey(s) {
-  return btoa(unescape(encodeURIComponent(s))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
-}
-function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function fmtData(ts) {
-  if (!ts) return '';
-  const d = new Date(ts);
-  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
-}
-function fmtHora(ts) {
-  if (!ts) return '';
-  const d = new Date(ts);
-  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-}
-const tentativasOficiais = {};
+document.documentElement.setAttribute('data-theme', 'dark');
 
 const sess = requireAluno();
 if (!sess) throw new Error();
+const { alunos, turma } = sess;
+const alunoNome = alunos[0];
+const sessionUid = (turma + '_' + alunoNome).replace(/[.#$[\]/\s]/g, '_');
+
+function avKey(s) { return btoa(unescape(encodeURIComponent(s))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_'); }
+
 renderSidebarAluno("sidebar", "historico");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
-
-const { alunos, turma } = sess;
-initAvBanner(turma, alunos[0]);
-let conquistasBySessao = {};
-document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
-document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
+document.getElementById("topbar-sub").textContent = isModoTeste() ? '🧪 Modo Teste' : `Turma ${turma}`;
+document.getElementById("avatar-initials").textContent = isModoTeste() ? '🧪' : alunoNome[0].toUpperCase();
 applyTopRankVisuals();
 
-getAlunoPreferencia(turma, alunos[0], 'tema').then(t => {
-  if (t && t !== localStorage.getItem('tema')) {
-    localStorage.setItem('tema', t);
-    document.documentElement.setAttribute('data-theme', t === 'escuro' ? 'dark' : '');
-  }
-});
-
-getAlunoPreferencia(turma, alunos[0], 'robotica').then(isRob => {
-  localStorage.setItem('sm_pref_robotica', isRob ? '1' : '0');
+getAlunoPreferencia(turma, alunoNome, 'robotica').then(v => {
+  if (v) localStorage.setItem('sm_pref_robotica', '1');
 }).catch(() => {});
 
-
-function renderPlusQuestao(q, i, mostrarRespostas) {
-  const resultado = q.resultado ?? null;
-  const isNR = resultado === 'nao_respondida';
-  const isOk = resultado === 'acerto' || (resultado === null && !!q.acertou);
-  const rowCls = isNR ? 'nr' : isOk ? 'ok' : 'err';
-  const icon   = isNR ? '⏸' : isOk ? '✅' : '❌';
-  const ptsVal = q.pontosGanhos ?? 0;
-  const ptsClass = ptsVal > 0 ? 'color:var(--green)' : ptsVal < 0 ? 'color:var(--red)' : 'color:var(--text-muted)';
-  const ptsTxt   = ptsVal > 0 ? `+${ptsVal}` : String(ptsVal);
-  const badges = [];
-  if (q.bonus_velocidade ?? q.velocidade) badges.push('<span style="color:#3B82F6;font-size:10px">⚡ rápido</span>');
-  if (q.usou_ajuda ?? q.usouAjuda)        badges.push('<span style="color:#A855F7;font-size:10px">🎯 ajuda</span>');
-  if (q.ehBonus)                           badges.push('<span style="color:#F59E0B;font-size:10px">🏆 bônus</span>');
-  const tempoMs  = q.tempo_resposta_ms ?? null;
-  const tempoTxt = isNR ? 'não respondida' : tempoMs != null ? `${Math.round(tempoMs / 1000)}s` : null;
-  const tentativas = (q.tentativas ?? []).map(t => {
-    const isTime = t.resposta === '(tempo)' || t.resposta === '(pulou)';
-    const cls = t.correto ? 'ok' : isTime ? 'time' : 'err';
-    const tempo = !isTime && t.tempoUsado != null ? ` · ${t.tempoUsado}s` : '';
-    return `<span class="plus-tent-ans ${cls}">${t.correto ? '✓ ' : ''}${t.resposta || '—'}${tempo}</span>`;
-  }).join('');
-  const enun = q.enunciado ?? q.pergunta ?? '—';
-  const suaResp = q.resposta_aluno ?? (() => {
-    const ts = q.tentativas ?? [];
-    const certa = ts.find(t => t.correto);
-    const ultima = ts[ts.length - 1];
-    return (certa ?? ultima)?.resposta ?? '—';
-  })();
-  let detailHTML = '';
-  if (!isNR && mostrarRespostas) {
-    detailHTML += `<div><strong>Sua resposta:</strong> <span style="${isOk?'color:var(--green)':'color:var(--red)'};font-weight:700">${suaResp}</span></div>`;
-    detailHTML += `<div style="margin-top:3px"><strong>Resposta correta:</strong> ${q.resposta_correta ?? '—'}</div>`;
-    detailHTML += `<div style="margin-top:3px"><strong>Pontos:</strong> <span style="${ptsClass};font-weight:700">${ptsTxt}</span></div>`;
-  }
-  if (tempoTxt) detailHTML += `<div style="margin-top:3px"><strong>Tempo:</strong> ${tempoTxt}</div>`;
-  if (tentativas) detailHTML += `<div class="plus-tent-row" style="margin-top:4px">${tentativas}</div>`;
-  return `<div class="plus-q-row ${rowCls}${q.ehBonus ? ' bonus' : ''}"
-    onclick="const d=this.querySelector('.plus-q-detail');d.style.display=d.style.display==='block'?'none':'block'">
-    <span class="plus-q-num">Q${i+1}</span>
-    <div class="plus-q-enun">
-      <div>${enun}</div>
-      ${badges.length ? `<div style="margin-top:3px;display:flex;gap:6px;flex-wrap:wrap">${badges.join('')}</div>` : ''}
-      <div class="plus-q-detail">${detailHTML || '<span style="color:var(--text-muted);font-size:11px">Clique para ver detalhes.</span>'}</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
-      ${tempoTxt && !isNR ? `<span style="font-size:10px;color:var(--text-muted)">${tempoTxt}</span>` : ''}
-      <span>${icon}</span>
-    </div>
-  </div>`;
+// ── Helpers ─────────────────────────────────────────────────
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtTs(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
-
-function renderAbatimento(r) {
-  if (!r.com_abatimento || !r.percentual_nota || r.percentual_nota >= 100) return '';
-  const bruta = r.pontuacao_bruta || r.pontuacao || 0;
-  const aplic = r.pontuacao || 0;
-  return `<span class="badge-atraso">⏰ ${bruta} pts bruta → ${aplic} pts (${r.percentual_nota}%)</span>`;
-}
-
-function formatMs(ms) {
-  if (!ms || ms <= 0) return '—';
+function fmtMs(ms) {
+  if (!ms || ms <= 0) return null;
   const s = Math.round(ms / 1000);
   return `${Math.floor(s/60)}m${String(s%60).padStart(2,'0')}s`;
 }
-
-
-let _conqTip = null;
-function getConqTip() {
-  if (!_conqTip) {
-    _conqTip = document.createElement('div');
-    _conqTip.className = 'conq-tip';
-    _conqTip.innerHTML = '<div class="conq-tip-nome"></div><div class="conq-tip-desc"></div>';
-    document.body.appendChild(_conqTip);
-  }
-  return _conqTip;
-}
-function showConqTip(x, y, nome, desc) {
-  const tip = getConqTip();
-  tip.querySelector('.conq-tip-nome').textContent = nome;
-  tip.querySelector('.conq-tip-desc').textContent = desc;
-  tip.style.left = `${Math.min(x + 12, window.innerWidth - 230)}px`;
-  tip.style.top  = `${Math.max(y - 60, 8)}px`;
-  tip.classList.add('show');
-}
-function hideConqTip() { if (_conqTip) _conqTip.classList.remove('show'); }
-
-function renderConquistasBadges(sessaoId, r) {
-  const pctSessao = r?.percentual ?? 100;
-  const cs = (conquistasBySessao[sessaoId] || []).filter(c => {
-    const t = c.tipo || c.id;
-    if (t === 'recorde_pessoal') return false;
-    if ((t === 'lider_turma' || t === 'elite') && pctSessao > 75) return false;
-    return true;
-  });
-  if (!cs.length) return '';
-  return `<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">
-    <span style="font-size:10px;color:var(--text-muted);font-weight:600;flex-shrink:0">Conquistas:</span>
-    ${cs.map(c => {
-      const nome = c.nome || c.tipo;
-      const desc = c.descricao || c.desc || '';
-      return `<span class="badge" style="background:rgba(168,85,247,.1);border-color:rgba(168,85,247,.4);color:#7C3AED;cursor:default"
-        data-nome="${nome.replace(/"/g,'&quot;')}" data-desc="${desc.replace(/"/g,'&quot;')}">${c.icon || '🏆'} ${nome}</span>`;
-    }).join('')}
-  </div>`;
+function notaColor(n) {
+  if (n == null) return '';
+  return n >= 7 ? 'green' : n >= 4 ? 'orange' : 'red';
 }
 
-
-const content = document.getElementById("content");
-const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
-
-// Skeleton enquanto carrega
-content.innerHTML = ['','','',''].map(() => `<div class="sk"></div>`).join('');
-
-// ── Carregar dados ─────────────────────────────────────────────
-let todos = [], statusMap = {}, allConquistas = [], testeHistSnap = null;
-
-if (isModoTeste()) {
-  // Modo teste: carregar apenas dos paths corretos, sem chamadas desnecessárias
-  try {
-    const [ativRegs, _tornSnap] = await Promise.all([
-      // Atividades: salvas por db.js com uid fixo 'PROFESSOR_TESTE'
-      getHistoricoTeste('atividades').catch(() => []),
-      // Torneios: salvos por torneio.html com uid da sessão
-      get(ref(db, `modo_teste_historico/${uid}/torneios`)).catch(() => null),
-    ]);
-    todos         = ativRegs;
-    testeHistSnap = _tornSnap;
-  } catch(e) {
-    console.error('[historico modo_teste] Erro ao carregar:', e);
-  }
-} else {
-  try {
-    const [todosRaw, _statusMap, allConquisTaskRaw] = await Promise.all([
-      Promise.all(alunos.map(a => getResultadosByAluno(a))).then(r => r.flat()).catch(() => []),
-      getAllAtividadeStatus().catch(() => ({})),
-      Promise.all(alunos.map(a => getConquistasByAluno(a))).catch(() => [[]]),
-    ]);
-    todos         = todosRaw.filter(r => !r.modo_teste);
-    statusMap     = _statusMap || {};
-    allConquistas = allConquisTaskRaw.flat();
-  } catch(e) {
-    console.error('[historico] Erro ao carregar dados:', e);
-    content.innerHTML = `<div class="card" style="text-align:center;padding:40px">
-      <div style="font-size:36px;margin-bottom:12px">⚠️</div>
-      <div style="font-size:15px;font-weight:700;margin-bottom:6px">Erro ao carregar histórico</div>
-      <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">${e.message || 'Verifique sua conexão e tente novamente.'}</div>
-      <button class="btn btn-blue" onclick="location.reload()">Tentar novamente</button>
-    </div>`;
-    throw e;
-  }
-
-  for (const c of allConquistas) {
-    if (c.sessaoId) {
-      if (!conquistasBySessao[c.sessaoId]) conquistasBySessao[c.sessaoId] = [];
-      conquistasBySessao[c.sessaoId].push(c);
-    }
-  }
-
-  // Tentativas oficiais (avaliação+) — apenas fora do modo teste
-  const avAtivs = [...new Set(todos.filter(r => r.modo === 'avaliacao_plus').map(r => r.atividade))];
-  await Promise.all(avAtivs.map(async ativ => {
-    try {
-      for (const al of alunos) {
-        const k = avKey(turma + '|' + ativ);
-        const snap = await get(ref(db, `avaliacao_controle/${k}/${avKey(al)}`));
-        if (snap.exists()) {
-          const v = snap.val();
-          if (v.tentativa_escolhida != null) tentativasOficiais[ativ] = v.tentativa_escolhida;
-        }
-      }
-    } catch(e) {}
-  }));
-}
-
-// ── Construir e renderizar ────────────────────────────────────
-// Wrapping em try/catch garante que o skeleton SEMPRE é substituído
-try {
-
+// ── Agrupamento avaliação+ ───────────────────────────────────
 const ATIVIDADES_OCULTAS = new Set(['Atividade 4 - Geometria']);
-const MODOS_OCULTOS      = new Set(['tabuada', 'tabuada_speed']);
+const MODOS_IGNORAR      = new Set(['tabuada', 'tabuada_speed']);
 
-// Avaliação+: agrupar tentativas da mesma sessão num único item
-function _chaveSessao(r) {
-  if (r.sessao_id) return r.sessao_id;
+function chaveSessao(r) {
+  if (r.sessao_id)     return r.sessao_id;
   if (r.inicio_sessao) return String(r.inicio_sessao);
-  // fallback: mesmo dia + atividade (máx 1 sessão/dia)
-  return `${r.aluno}|${r.atividade}|${r.data || fmtData(r.criadoEm)}`;
+  return `${r.aluno}|${r.atividade}|${r.data || ''}`;
 }
 
 function agruparAvP(regs) {
   const map = new Map();
   for (const r of regs) {
-    const k = _chaveSessao(r);
+    const k = chaveSessao(r);
     if (!map.has(k)) map.set(k, []);
     map.get(k).push(r);
   }
-  const sessoes = [];
-  for (const [k, tents] of map) {
-    // Ordenar por tentativa_num, depois por criadoEm
+  return [...map.values()].map(tents => {
     tents.sort((a, b) => (a.tentativa_num || 1) - (b.tentativa_num || 1) || (a.criadoEm || 0) - (b.criadoEm || 0));
     const first = tents[0];
     const ts = first.inicio_sessao || first.criadoEm || 0;
-    sessoes.push({
-      _key: k,
-      atividade: first.atividade,
-      aluno:     first.aluno,
-      turma:     first.turma,
-      tentativas: tents,
-      ids:        tents.map(r => r.id),
-      _ts:        ts,
-    });
-  }
-  return sessoes;
-}
-
-// Incluir T1 mesmo sem concluido=true (pode ter sido salva parcialmente)
-const avpRegs   = todos.filter(r => r.modo === 'avaliacao_plus' && !ATIVIDADES_OCULTAS.has(r.atividade));
-const avpItems  = agruparAvP(avpRegs).map(s => ({ _tipo: 'avaliacao_plus', _ts: s._ts, _res: s }));
-
-const ativItems = todos.filter(r =>
-  r.concluido &&
-  r.tipo !== 'torneio' &&
-  r.modo !== 'avaliacao_plus' &&
-  !ATIVIDADES_OCULTAS.has(r.atividade) &&
-  !MODOS_OCULTOS.has(r.modo)
-).map(r => ({ _tipo: 'atividade', _ts: r.criadoEm || 0, _res: r }));
-
-const tornItems = todos.filter(r =>
-  r.concluido && r.tipo === 'torneio'
-).map(r => ({ _tipo: 'torneio', _ts: r.criadoEm || 0, _res: r }));
-
-const testeItems = [];
-if (testeHistSnap?.exists()) {
-  testeHistSnap.forEach(c => {
-    const v = c.val();
-    testeItems.push({ _tipo: 'torneio-teste', _ts: parseInt(c.key), _res: { ...v, _key: c.key } });
+    return { atividade: first.atividade, tentativas: tents, _ts: ts };
   });
 }
 
-const allItems = [...avpItems, ...ativItems, ...tornItems, ...testeItems]
-  .sort((a, b) => b._ts - a._ts);
+// ── Carregar dados ───────────────────────────────────────────
+let avpSessoes = [], ativSimples = [], tornItems = [], tentativasOficiais = {};
+let testeHistSnap = null;
 
-// ── Render de um item de atividade ────────────────────────────
-function renderItemAtividade(r) {
-  const modo   = r.modo || 'classico';
-  const isAvP  = modo === 'avaliacao_plus';
-  const isComp = modo === 'competicao_plus';
-  const medId  = `hdet-${r.id}`;
-  const tentEsc = tentativasOficiais[r.atividade] ?? null;
-  const tentNum = r.tentativa_num || 1;
-  const isOficial = isAvP && tentEsc !== null && tentNum === tentEsc;
+try {
+  let todosRegs = [];
 
-  let modoBadge = '';
-  if (isAvP)  modoBadge = `<span class="badge" style="background:#F5F3FF;color:#7C3AED">📝 Avaliação+</span>`;
-  else if (isComp) modoBadge = `<span class="badge badge-blue">⚔️ Competição+</span>`;
-
-  let subLine = '', pts = 0;
-  if (isAvP) {
-    const nq   = r.nota_quiz != null ? r.nota_quiz.toFixed(1) : '—';
-    const f2p  = r.pontuacao || 0;
-    const cred = r.credito_final != null ? (Number.isInteger(r.credito_final) ? r.credito_final : r.credito_final.toFixed(2)) : null;
-    const tentLabel = isOficial
-      ? `<span class="badge-nota-melhor">🏆 Nota oficial</span>`
-      : tentEsc !== null
-      ? `<span class="badge" style="background:var(--bg);color:var(--text-muted);font-size:10px">Tentativa ${tentNum}</span>`
-      : `Tentativa ${tentNum}`;
-    subLine = `<div class="hi-sub">${modoBadge} ${tentLabel}</div>
-      <div class="hi-sub" style="margin-top:3px">F1: ${nq}/10 · F2: ${f2p} pts${cred != null ? ` · Total: ${cred}` : ''}</div>`;
-    pts = r.pontuacao || 0;
-  } else if (isComp) {
-    const tot = (r.acertos||0) + (r.erros||0);
-    const taxa = tot > 0 ? Math.round((r.acertos||0)/tot*100)+'%' : '—';
-    subLine = `<div class="hi-sub">${modoBadge}</div>
-      <div class="hi-sub" style="margin-top:3px">
-        ${r.pontuacao||0} pts · ✅ ${r.acertos||0} ❌ ${r.erros||0} · ${taxa}
-        ${(r.acertos_rapidos||0)>0?`· ⚡${r.acertos_rapidos}`:''}</div>`;
-    pts = r.pontuacao || 0;
+  if (isModoTeste()) {
+    [todosRegs, testeHistSnap] = await Promise.all([
+      getHistoricoTeste('atividades').catch(() => []),
+      get(ref(db, `modo_teste_historico/${sessionUid}/torneios`)).catch(() => null),
+    ]);
   } else {
-    const bruta = r.pontuacao_bruta || r.pontuacao || 0;
-    const tot   = (r.acertos||0) + (r.erros||0);
-    const taxa  = tot > 0 ? Math.round((r.acertos||0)/tot*100)+'%' : '—';
-    subLine = `<div class="hi-sub">
-      ${bruta} pts · ✅ ${r.acertos||0} ❌ ${r.erros||0} · ${taxa}
-      ${(r.combo_max||0)>1?`· 🔥×${r.combo_max}`:''}</div>`;
-    pts = bruta;
+    todosRegs = await getResultadosByAluno(alunoNome).catch(() => []);
+    todosRegs = todosRegs.filter(r => !r.modo_teste);
   }
 
-  const cq = renderConquistasBadges(r.id, r);
-  return `<div class="hi-card atividade" data-type="atividade">
-    <div class="hi-head" onclick="toggleHiCard('${medId}','${r.id}','${modo}','')">
-      <span class="hi-icon">📝</span>
-      <div class="hi-info">
-        <div class="hi-nome">${escH(r.atividade || '—')}</div>
-        ${subLine}
-        ${cq ? `<div style="margin-top:5px">${cq}</div>` : ''}
-      </div>
-      <div class="hi-meta">
-        <span class="hi-date">${r.data || fmtData(r.criadoEm)}</span>
-        <span class="hi-pts">${pts}</span>
-        <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:var(--text-muted);display:block;margin:2px auto 0" id="hichev-${medId}"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
-      </div>
-    </div>
-    <div class="hi-detail" id="${medId}" style="display:none" data-loaded="false">
-      <p style="font-size:12px;color:var(--text-muted)">Carregando…</p>
-    </div>
+  // Avaliação+: agrupar por sessão (sem filtro de concluido — inclui T1 parcial)
+  avpSessoes = agruparAvP(
+    todosRegs.filter(r => r.modo === 'avaliacao_plus' && !ATIVIDADES_OCULTAS.has(r.atividade))
+  );
+
+  // Tentativas oficiais (avaliação+)
+  if (!isModoTeste()) {
+    const avAtivs = [...new Set(todosRegs.filter(r => r.modo === 'avaliacao_plus').map(r => r.atividade))];
+    await Promise.all(avAtivs.map(async ativ => {
+      try {
+        const k    = avKey(turma + '|' + ativ);
+        const snap = await get(ref(db, `avaliacao_controle/${k}/${avKey(alunoNome)}`));
+        if (snap.exists()) {
+          const v = snap.val();
+          if (v.tentativa_escolhida != null) tentativasOficiais[ativ] = v.tentativa_escolhida;
+        }
+      } catch(e) {}
+    }));
+  }
+
+  // Atividades simples (classico, competicao+)
+  ativSimples = todosRegs.filter(r =>
+    r.concluido &&
+    r.modo !== 'avaliacao_plus' &&
+    r.tipo !== 'torneio' &&
+    !ATIVIDADES_OCULTAS.has(r.atividade) &&
+    !MODOS_IGNORAR.has(r.modo)
+  );
+
+  // Torneios
+  if (!isModoTeste()) {
+    const tornRegs = todosRegs.filter(r => r.concluido && r.tipo === 'torneio');
+    const tornIds  = [...new Set(tornRegs.map(r => r.torneio_id).filter(Boolean))];
+    const sessData = {};
+    await Promise.all(tornIds.map(async tid => {
+      try {
+        const snap = await get(ref(db, `torneios/${tid}/sessoes/${sessionUid}`));
+        if (snap.exists()) sessData[tid] = snap.val();
+      } catch(e) {}
+    }));
+    tornItems = tornRegs.map(r => ({ ...r, _sess: sessData[r.torneio_id] || null, _ts: r.criadoEm || 0 }));
+  } else if (testeHistSnap?.exists()) {
+    testeHistSnap.forEach(c => tornItems.push({ ...c.val(), _ts: parseInt(c.key), _isTeste: true }));
+  }
+
+} catch(e) {
+  console.error('[historico] Erro ao carregar:', e);
+  document.getElementById('entries').innerHTML = `<div class="hc-empty">
+    <div>⚠️</div>Erro ao carregar histórico.<br>
+    <button onclick="location.reload()" style="margin-top:12px;padding:6px 16px;border-radius:8px;border:1px solid rgba(124,92,252,0.4);background:rgba(124,92,252,0.15);color:#9b7ffe;cursor:pointer;font-family:Inter,sans-serif;">Tentar novamente</button>
   </div>`;
 }
 
-// ── Render de um item de torneio ──────────────────────────────
-function renderItemTorneio(r) {
-  const medals  = ['🥇','🥈','🥉'];
-  const pos     = r.posicao;
-  const posLabel = pos ? (pos <= 3 ? medals[pos-1]+` ${pos}º` : `#${pos}º lugar`) : '';
-  const tot = (r.acertos||0)+(r.erros||0);
-  const taxa = tot > 0 ? Math.round((r.acertos||0)/tot*100)+'%' : '—';
-  const mins = r.tempo_segundos ? Math.round(r.tempo_segundos/60) : null;
-  return `<div class="hi-card torneio" data-type="torneio">
-    <div class="hi-head">
-      <span class="hi-icon">🏆</span>
-      <div class="hi-info">
-        <div class="hi-nome">${escH(r.atividade || r.nome || 'Torneio')}</div>
-        <div class="hi-sub">
-          <span>Turma ${escH(r.turma||'')}</span>
-          ${mins ? `<span>· ${mins} min</span>` : ''}
-        </div>
-        <div class="hi-sub" style="margin-top:3px">
-          <span style="color:var(--gold);font-weight:700">${r.pontuacao||0} pts</span>
-          ${posLabel ? `<span>· ${posLabel}</span>` : ''}
-          <span>· ✅${r.acertos||0} ❌${r.erros||0} · ${taxa}</span>
-        </div>
-      </div>
-      <div class="hi-meta">
-        <span class="hi-date">${r.data || fmtData(r.criadoEm)}</span>
-        <span class="hi-pts">${r.pontuacao||0}</span>
-      </div>
-    </div>
-  </div>`;
-}
+// ── Lista unificada ordenada ─────────────────────────────────
+const allItems = [
+  ...avpSessoes.map(s  => ({ _tipo: 'avp',     _ts: s._ts,                _res: s })),
+  ...ativSimples.map(r => ({ _tipo: 'ativ',    _ts: r.criadoEm || 0,      _res: r })),
+  ...tornItems.map(r   => ({ _tipo: 'torneio', _ts: r._ts || r.criadoEm || 0, _res: r })),
+].sort((a, b) => b._ts - a._ts);
 
-// ── Render de um item de torneio teste ───────────────────────
-function renderItemTorneioTeste(r) {
-  const tabs = r.tabuleiros_completos || 0;
-  return `<div class="hi-card torneio-teste" data-type="torneio">
-    <div class="hi-head">
-      <span class="hi-icon">🧪</span>
-      <div class="hi-info">
-        <div class="hi-nome">
-          ${escH(r.nome || 'Torneio Teste')}
-          <span class="badge" style="background:rgba(124,58,237,.12);color:#7C3AED;border:1px solid rgba(124,58,237,.25);font-size:10px;margin-left:5px">🧪 Teste</span>
-        </div>
-        <div class="hi-sub" style="margin-top:3px">
-          <span style="color:var(--gold);font-weight:700">${r.pontuacao||0} pts</span>
-          <span>· ✅${r.acertos||0} ❌${r.erros||0}</span>
-          <span>· ${tabs} tabuleiro${tabs!==1?'s':''}</span>
-          ${(r.maior_streak||0)>2?`<span>· 🔥 streak ${r.maior_streak}</span>`:''}
-        </div>
-      </div>
-      <div class="hi-meta">
-        <span class="hi-date">${fmtData(parseInt(r._key))}</span>
-        <span class="hi-pts">${r.pontuacao||0}</span>
-      </div>
-    </div>
-  </div>`;
-}
-
-// ── Toggle expand para atividades ─────────────────────────────
-window.toggleHiCard = async function(detId, resultadoId, modo, tipo) {
-  const body = document.getElementById(detId);
-  const chev = document.getElementById(`hichev-${detId}`);
-  if (!body) return;
-  const open = body.style.display !== 'none';
-  body.style.display = open ? 'none' : 'block';
-  if (chev) chev.style.transform = open ? '' : 'rotate(180deg)';
-  if (open || body.dataset.loaded === 'true') return;
-  body.dataset.loaded = 'true';
-
-  const r = todos.find(x => x.id === resultadoId);
-  const statusInfo = statusMap?.[`${r?.turma}|${r?.atividade}`];
-  const mostrarR = !statusInfo || statusInfo.status !== 'ativa' || (statusInfo.percentual ?? 100) < 100;
-
-  const questoes = await getDetalhes(resultadoId);
-  if (!questoes?.length) {
-    body.innerHTML = '<p style="font-size:12px;color:var(--text-muted)">Detalhes não disponíveis.</p>';
-    return;
-  }
-
-  if (modo === 'avaliacao_plus') {
-    const f1Qs   = questoes.filter(q => q.fase === 1);
-    const f2Qs   = questoes.filter(q => q.fase === 2);
-    const f1nq   = r?.nota_quiz != null ? r.nota_quiz.toFixed(1) : '—';
-    const f1pts  = r?.pontos_fase1 != null ? r.pontos_fase1 : '—';
-    const f1cred = r?.credito_final != null ? (Number.isInteger(r.credito_final)?r.credito_final:r.credito_final.toFixed(2)) : null;
-    const f1t    = r?.tempo_fase1_ms ? formatMs(r.tempo_fase1_ms) : null;
-    const f2rap  = r?.acertos_rapidos||0; const f2combo=r?.combo_max||0; const f2aj=r?.ajudas_usadas||0;
-    const f2nr   = f2Qs.filter(q=>q.resultado==='nao_respondida').length;
-    const f2ac   = f2Qs.filter(q=>q.resultado==='acerto'||(q.resultado==null&&q.acertou)).length;
-    const f2err  = f2Qs.filter(q=>q.resultado==='erro'  ||(q.resultado==null&&!q.acertou)).length;
-    body.innerHTML = `
-      <div style="margin-bottom:10px">
-        <div style="font-size:11px;font-weight:700;color:#7C3AED;background:#F5F3FF;padding:5px 10px;border-radius:7px;margin-bottom:6px;display:inline-block">📖 Fase 1 — Quiz</div>
-        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px">
-          <span class="badge" style="background:#F5F3FF;color:#7C3AED;font-weight:700">📝 ${f1nq}/10</span>
-          <span class="badge badge-gold">${f1pts}/12 pts</span>
-          ${f1t?`<span class="badge badge-blue">⏱ ${f1t}</span>`:''}
-          ${f1cred!=null?`<span class="badge badge-green">Crédito: ${f1cred}</span>`:''}
-        </div>
-        ${f1Qs.length?`<div class="plus-q-wrap">${f1Qs.map((q,i)=>renderPlusQuestao(q,i,mostrarR)).join('')}</div>`:''}
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;margin:8px 0">
-        <div style="flex:1;height:1px;background:var(--border)"></div>
-        <span style="font-size:10px;color:var(--text-muted);font-weight:700;padding:2px 8px;border:1px solid var(--border);border-radius:10px">FASE 2</span>
-        <div style="flex:1;height:1px;background:var(--border)"></div>
-      </div>
-      <div>
-        <div style="font-size:11px;font-weight:700;color:#1D4ED8;background:#EFF6FF;padding:5px 10px;border-radius:7px;margin-bottom:6px;display:inline-block">⚔️ Fase 2 — Ranking</div>
-        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px">
-          <span class="badge badge-green">✅ ${f2ac}</span><span class="badge badge-red">❌ ${f2err}</span>
-          ${f2nr>0?`<span class="badge" style="background:#F3F4F6;color:#6B7280">⏸ ${f2nr}</span>`:''}
-          ${f2rap>0?`<span class="badge" style="background:#EFF6FF;color:#1D4ED8">⚡ ${f2rap}</span>`:''}
-          ${f2combo>1?`<span class="badge badge-orange">🔥 ×${f2combo}</span>`:''}
-          ${f2aj>0?`<span class="badge" style="background:#F5F3FF;color:#6D28D9">🎯 ${f2aj}</span>`:''}
-        </div>
-        ${f2Qs.length?`<div class="plus-q-wrap">${f2Qs.map((q,i)=>renderPlusQuestao(q,i,mostrarR)).join('')}</div>`:''}
-      </div>`;
-  } else if (modo === 'competicao_plus') {
-    const nrCount = questoes.filter(q=>q.resultado==='nao_respondida').length;
-    const acertos = questoes.filter(q=>q.resultado==='acerto'||(q.resultado==null&&q.acertou)).length;
-    const erros   = questoes.filter(q=>q.resultado==='erro'  ||(q.resultado==null&&!q.acertou)).length;
-    body.innerHTML = `<div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px">
-      ✅ ${acertos} | ❌ ${erros}${nrCount>0?` | ⏸ ${nrCount}`:''}</div>
-      <div class="plus-q-wrap">${questoes.map((q,i)=>renderPlusQuestao(q,i,mostrarR)).join('')}</div>`;
-  } else {
-    body.innerHTML = questoes.map((q,i) => {
-      const enun=q.enunciado||q.pergunta||'—';
-      const rA=q.resposta_aluno||'—';
-      const rC=(q.resposta_correta&&q.resposta_correta!=='undefined')?q.resposta_correta:'—';
-      const pts=q.pontos!=null?(q.pontos>0?`+${q.pontos}`:String(q.pontos)):null;
-      return `<div class="q-rev ${q.acertou?'ok':'err'}">
-        <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:24px">Q${i+1}</span>
-        <div style="flex:1"><div>${enun}</div>
-          <div style="margin-top:3px;font-size:11px">
-            <span style="${q.acertou?'color:var(--green)':'color:var(--red)'};font-weight:700">${rA}</span>
-            ${!q.acertou?`<span style="color:var(--text-muted);margin-left:6px">✓ ${rC}</span>`:''}
-            ${pts?`<span style="${q.acertou?'color:var(--green)':'color:var(--red)'};font-weight:700;margin-left:6px">${pts}pt</span>`:''}
-          </div></div>
-        <span>${q.acertou?'✅':'❌'}</span></div>`;
-    }).join('');
-  }
-};
-
-// ── Render de uma sessão Avaliação+ (múltiplas tentativas) ────
-function renderItemSessaoAvP(sessao) {
-  const tentEsc = tentativasOficiais[sessao.atividade] ?? null;
-  const detId   = `hdet-avp-${sessao._key.replace(/[^a-zA-Z0-9]/g, '_')}`;
-  const idsAttr = sessao.ids.join(',');
-  const ativEsc = sessao.atividade.replace(/'/g, "\\'");
-
-  // T1, T2, T3 sempre visíveis — "—" para as não realizadas
+// ── Render: tentativas strip ─────────────────────────────────
+function renderTentativasStrip(sessao, tentEsc) {
   const byNum = {};
   for (const r of sessao.tentativas) byNum[r.tentativa_num || 1] = r;
-  const tentTokens = [1, 2, 3].map(num => {
-    const r   = byNum[num];
-    if (!r) return `<span style="white-space:nowrap;color:var(--text-muted)">T${num}:&nbsp;—</span>`;
-    const nq  = r.nota_quiz != null ? r.nota_quiz.toFixed(1) : '?';
-    const isEc = tentEsc !== null && num === tentEsc;
-    const exp  = r.expirou_tempo ? '&nbsp;⏱' : '';
-    return `<span style="white-space:nowrap">T${num}:&nbsp;<strong>${nq}/10</strong>${isEc ? '&nbsp;✅' : ''}${exp}</span>`;
-  }).join('<span style="color:var(--text-muted);margin:0 4px">·</span>');
 
-  const melhor   = sessao.tentativas.reduce((b, r) => (r.nota_quiz ?? 0) > (b.nota_quiz ?? 0) ? r : b, sessao.tentativas[0]);
-  const melhorF2 = Math.max(0, ...sessao.tentativas.map(r => r.pontuacao || 0));
-  const escolhida = tentEsc != null ? sessao.tentativas.find(r => (r.tentativa_num || 1) === tentEsc) : null;
-  const credito   = (escolhida ?? melhor)?.credito_final ?? null;
-  const creditoStr = credito != null ? (Number.isInteger(credito) ? credito : Number(credito).toFixed(2)) : null;
-  const f1Best  = melhor?.nota_quiz != null ? melhor.nota_quiz.toFixed(1) : '—';
-  const ptsExib = melhorF2 > 0 ? melhorF2 : f1Best;
+  const items = [1, 2, 3].map(num => {
+    const r = byNum[num];
+    if (!r) {
+      return `<div class="tent-item empty">
+        <span class="tent-tlabel">T${num}</span>
+        <span class="tent-nota">—</span>
+        <span class="tent-time">—</span>
+      </div>`;
+    }
+    const nq       = r.nota_quiz != null ? r.nota_quiz.toFixed(1) : '?';
+    const isOk     = (r.nota_quiz ?? 0) >= 5;
+    const isChosen = tentEsc === num;
+    const dur      = fmtMs(r.tempo_fase1_ms) || '';
+    const exp      = r.expirou_tempo ? ' ⏱' : '';
+    return `<div class="tent-item ${isOk ? 'ok' : 'fail'}${isChosen ? ' chosen' : ''}">
+      <span class="tent-tlabel">T${num}</span>
+      <span class="tent-nota">${nq}</span>
+      <span class="tent-time">${dur}${exp}</span>
+      ${isChosen ? `<span class="tent-chosen">⭐ Escolhida</span>` : ''}
+    </div>`;
+  }).join('');
 
-  const hora  = fmtHora(sessao._ts);
-  const data  = sessao.tentativas[0]?.data || fmtData(sessao._ts);
-  const nTent = sessao.tentativas.length;
+  return `<div class="tent-strip">
+    <span class="tent-lbl-outer">Tentativas:</span>
+    ${items}
+  </div>`;
+}
 
-  const cqs = sessao.tentativas.map(r => renderConquistasBadges(r.id, r)).filter(Boolean).join('');
+// ── Render: fases (F1 + F2) ──────────────────────────────────
+function renderFases(r) {
+  const nq    = r.nota_quiz != null ? r.nota_quiz.toFixed(1) : '—';
+  const nqN   = r.nota_quiz ?? 0;
+  const nqCls = nqN >= 7 ? 'green' : nqN >= 4 ? 'orange' : '';
+  const f1t   = fmtMs(r.tempo_fase1_ms);
+  const f1ac  = r.acertos_f1 ?? null;
+  const f1tot = r.total_f1   ?? null;
+  const f2p   = r.pontuacao  || 0;
+  const f2ac  = r.acertos    || 0;
+  const f2er  = r.erros      || 0;
+  const f2cb  = r.combo_max  || 0;
 
-  return `<div class="hi-card atividade" data-type="atividade">
-    <div class="hi-head" onclick="toggleHiSessao('${detId}','${idsAttr}','${ativEsc}')">
-      <span class="hi-icon">📝</span>
-      <div class="hi-info">
-        <div class="hi-nome">${escH(sessao.atividade)}</div>
-        <div class="hi-sub">
-          <span class="badge" style="background:#F5F3FF;color:#7C3AED">📝 Avaliação+</span>
-          <span style="color:var(--text-muted)">${nTent} tentativa${nTent !== 1 ? 's' : ''}</span>
-        </div>
-        <div class="hi-sub" style="margin-top:4px;flex-wrap:wrap;gap:5px">${tentTokens}</div>
-        ${tentEsc != null ? `<div class="hi-sub" style="margin-top:2px;color:var(--gold);font-size:11px;font-weight:600">🏆 Tentativa escolhida: T${tentEsc}</div>` : ''}
-        <div class="hi-sub" style="margin-top:2px;font-size:11px">
-          📝 F1: ${f1Best}/10${melhorF2 > 0 ? ` · 🎮 F2: ${melhorF2} pts` : ''}${creditoStr != null ? ` · Total: <strong>${creditoStr}</strong>` : ''}
-        </div>
-        ${cqs ? `<div style="margin-top:5px">${cqs}</div>` : ''}
-      </div>
-      <div class="hi-meta">
-        <span class="hi-date">${data}${hora ? ` ${hora}` : ''}</span>
-        <span class="hi-pts">${ptsExib}</span>
-        <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:var(--text-muted);display:block;margin:2px auto 0" id="hichev-${detId}"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+  return `<div class="fases">
+    <div class="fase">
+      <div class="fase-header"><span class="fase-icon">📝</span><h3>Fase 1 · Quiz</h3></div>
+      <div class="fase-nota f1">${nq}<span class="fase-nota-s">/10</span></div>
+      <div class="fase-stats">
+        ${f1ac != null && f1tot != null
+          ? `<div class="fase-stat"><span class="lbl">Acertos</span><span class="val ${nqCls}">${f1ac}/${f1tot} questões</span></div>`
+          : ''}
+        ${f1t ? `<div class="fase-stat"><span class="lbl">Tempo</span><span class="val">${f1t}</span></div>` : ''}
       </div>
     </div>
-    <div class="hi-detail" id="${detId}" style="display:none" data-loaded="false">
-      <p style="font-size:12px;color:var(--text-muted)">Carregando…</p>
+    <div class="fase">
+      <div class="fase-header"><span class="fase-icon">🎮</span><h3>Fase 2 · Livre</h3></div>
+      <div class="fase-nota f2">${f2p}<span class="fase-nota-s"> pts</span></div>
+      <div class="fase-stats">
+        <div class="fase-stat"><span class="lbl">Acertos</span><span class="val green">${f2ac}</span></div>
+        <div class="fase-stat"><span class="lbl">Erros</span><span class="val orange">${f2er}</span></div>
+        ${f2cb > 1 ? `<div class="fase-stat"><span class="lbl">Combo máx.</span><span class="val">🔥 ×${f2cb}</span></div>` : ''}
+      </div>
     </div>
   </div>`;
 }
 
-window.toggleHiSessao = async function(detId, idsStr, atividade) {
-  const body = document.getElementById(detId);
-  const chev = document.getElementById(`hichev-${detId}`);
-  if (!body) return;
-  const open = body.style.display !== 'none';
-  body.style.display = open ? 'none' : 'block';
-  if (chev) chev.style.transform = open ? '' : 'rotate(180deg)';
-  if (open || body.dataset.loaded === 'true') return;
-  body.dataset.loaded = 'true';
+// ── Render: questões (lazy) ───────────────────────────────────
+function renderQuestaoItem(q, i) {
+  const enun = escH(q.enunciado || q.pergunta || '—');
+  const ok   = q.resultado === 'acerto' || (q.resultado == null && !!q.acertou);
+  const nr   = q.resultado === 'nao_respondida';
+  const rA   = q.resposta_aluno || '—';
+  const rC   = q.resposta_correta && q.resposta_correta !== 'undefined' ? q.resposta_correta : null;
+  return `<div class="questao-item">
+    <span class="q-num">Q${i+1}</span>
+    <div class="q-text">
+      ${enun}
+      ${!ok && rC ? `<div class="q-resp">✓ correto: <strong>${escH(rC)}</strong>${rA !== '—' ? ` · sua resposta: ${escH(rA)}` : ''}</div>` : ''}
+    </div>
+    <span class="q-status">${nr ? '⏸' : ok ? '✅' : '❌'}</span>
+  </div>`;
+}
 
-  const ids   = idsStr.split(',').filter(Boolean);
-  const tentEsc = tentativasOficiais[atividade] ?? null;
+// ── Render: card avaliação+ ───────────────────────────────────
+function renderAvP(sessao) {
+  const tentEsc = tentativasOficiais[sessao.atividade] ?? null;
+  const melhor  = sessao.tentativas.reduce((b, r) => (r.nota_quiz ?? 0) > (b.nota_quiz ?? 0) ? r : b, sessao.tentativas[0]);
+  const nqBest  = melhor?.nota_quiz ?? null;
+  const ptsDisp = nqBest != null ? nqBest.toFixed(1) : '—';
+  const nCol    = notaColor(nqBest);
+  const ts      = sessao._ts;
+  const nTent   = sessao.tentativas.length;
 
-  const questoesPorId = {};
-  await Promise.all(ids.map(async id => {
-    questoesPorId[id] = await getDetalhes(id).catch(() => []);
-  }));
+  // escolhida ou melhor record para fases
+  const chosen  = tentEsc != null ? sessao.tentativas.find(r => (r.tentativa_num||1) === tentEsc) : null;
+  const fasesR  = chosen ?? melhor;
+  const cred    = fasesR?.credito_final;
+  const credStr = cred != null ? (Number.isInteger(cred) ? cred : Number(cred).toFixed(2)) : null;
 
-  const regsOrdenados = ids.map(id => todos.find(r => r.id === id)).filter(Boolean)
-    .sort((a, b) => (a.tentativa_num || 1) - (b.tentativa_num || 1));
+  const entryId = `avp-${sessao.atividade.replace(/\W/g,'_')}-${ts}`;
+  const idsJson = JSON.stringify(sessao.tentativas.map(r => r.id));
 
-  const statusInfo = statusMap?.[`${regsOrdenados[0]?.turma}|${atividade}`];
-  const mostrarR   = !statusInfo || statusInfo.status !== 'ativa' || (statusInfo.percentual ?? 100) < 100;
-
-  body.innerHTML = regsOrdenados.map((r, idx) => {
-    const num   = r.tentativa_num || 1;
-    const isEsc = tentEsc != null && num === tentEsc;
-    const nq    = r.nota_quiz != null ? r.nota_quiz.toFixed(1) : '—';
-    const f2p   = r.pontuacao || 0;
-    const cred  = r.credito_final != null ? (Number.isInteger(r.credito_final) ? r.credito_final : Number(r.credito_final).toFixed(2)) : null;
-    const f1t   = r.tempo_fase1_ms ? formatMs(r.tempo_fase1_ms) : null;
-    const questoes = questoesPorId[r.id] || [];
-    const f1Qs  = questoes.filter(q => q.fase === 1);
-    const f2Qs  = questoes.filter(q => q.fase === 2);
-    const f2ac  = f2Qs.filter(q => q.resultado === 'acerto' || (q.resultado == null && q.acertou)).length;
-    const f2err = f2Qs.filter(q => q.resultado === 'erro'   || (q.resultado == null && !q.acertou)).length;
-    const f2nr  = f2Qs.filter(q => q.resultado === 'nao_respondida').length;
-    const sep   = idx < regsOrdenados.length - 1;
-
-    return `<div style="${sep ? 'margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:16px' : ''}">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <span style="font-size:13px;font-weight:800;color:#7C3AED">T${num}/10</span>
-        <span style="font-size:13px;font-weight:800">— ${nq}</span>
-        ${isEsc ? `<span class="badge-nota-melhor">🏆 Nota oficial</span>` : ''}
-        ${r.expirou_tempo ? `<span class="badge" style="background:#F3F4F6;color:#6B7280">⏱ Expirou</span>` : ''}
-        ${f1t ? `<span class="badge badge-blue">⏱ ${f1t}</span>` : ''}
-        ${cred != null ? `<span class="badge badge-green">Total: ${cred}</span>` : ''}
+  return `<div class="entry" data-tipo="atividade" id="${entryId}">
+    <div class="entry-header" onclick="toggleEntry('${entryId}','avp','${escH(idsJson.replace(/'/g,"\\'"))}',${tentEsc ?? 'null'})">
+      <div class="entry-icon atividade">📝</div>
+      <div class="entry-info">
+        <div class="entry-title">${escH(sessao.atividade)}</div>
+        <div class="entry-meta">
+          <span class="hc-tag avp">📋 Avaliação+</span>
+          <span class="entry-date">${fmtTs(ts)}</span>
+          <span class="entry-date">${nTent} tentativa${nTent !== 1 ? 's' : ''}${tentEsc ? ` · T${tentEsc} escolhida` : ''}${credStr ? ` · total: ${credStr}` : ''}</span>
+        </div>
       </div>
-      <div style="font-size:11px;font-weight:700;color:#7C3AED;background:#F5F3FF;padding:4px 10px;border-radius:6px;display:inline-block;margin-bottom:6px">📖 F1 — Quiz (${nq}/10)</div>
-      ${f1Qs.length ? `<div class="plus-q-wrap">${f1Qs.map((q,i) => renderPlusQuestao(q, i, mostrarR)).join('')}</div>`
-        : '<p style="font-size:11px;color:var(--text-muted)">Detalhes F1 não disponíveis.</p>'}
-      ${f2Qs.length ? `
-      <div style="margin:10px 0 6px;display:flex;align-items:center;gap:6px">
-        <div style="flex:1;height:1px;background:var(--border)"></div>
-        <span style="font-size:10px;color:var(--text-muted);font-weight:700;padding:2px 8px;border:1px solid var(--border);border-radius:10px">F2 — ${f2p} pts</span>
-        <div style="flex:1;height:1px;background:var(--border)"></div>
+      <div class="entry-score">
+        <span class="score-main ${nCol}">${ptsDisp}</span>
+        <span class="score-label">/ 10 pts</span>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">
-        <span class="badge badge-green">✅ ${f2ac}</span><span class="badge badge-red">❌ ${f2err}</span>
-        ${f2nr>0?`<span class="badge" style="background:#F3F4F6;color:#6B7280">⏸ ${f2nr}</span>`:''}
-        ${(r.acertos_rapidos||0)>0?`<span class="badge" style="background:#EFF6FF;color:#1D4ED8">⚡ ${r.acertos_rapidos}</span>`:''}
-        ${(r.combo_max||0)>1?`<span class="badge badge-orange">🔥 ×${r.combo_max}</span>`:''}
+      <span class="chevron">▼</span>
+    </div>
+    <div class="entry-body">
+      ${renderTentativasStrip(sessao, tentEsc)}
+      ${renderFases(fasesR)}
+      <div class="questoes" id="q-${entryId}" data-loaded="false">
+        <p class="q-loading">Clique para ver questões…</p>
       </div>
-      <div class="plus-q-wrap">${f2Qs.map((q,i)=>renderPlusQuestao(q,i,mostrarR)).join('')}</div>` : ''}
-    </div>`;
-  }).join('');
+    </div>
+  </div>`;
+}
+
+// ── Render: card atividade simples ────────────────────────────
+function renderAtivSimples(r) {
+  const modo  = r.modo || 'classico';
+  const isAv  = modo === 'avaliacao_plus';
+  const isC   = modo === 'competicao_plus';
+  const pts   = r.pontuacao_bruta || r.pontuacao || 0;
+  const tot   = (r.acertos||0) + (r.erros||0);
+  const taxa  = tot > 0 ? Math.round((r.acertos||0)/tot*100) + '%' : '—';
+  const entryId = `ativ-${r.id}`;
+  const tag   = isC
+    ? `<span class="hc-tag cls">⚔️ Competição+</span>`
+    : `<span class="hc-tag cls">📝 ${modo}</span>`;
+
+  return `<div class="entry" data-tipo="atividade" id="${entryId}">
+    <div class="entry-header" onclick="toggleEntry('${entryId}','ativ','${r.id}',null)">
+      <div class="entry-icon atividade">📝</div>
+      <div class="entry-info">
+        <div class="entry-title">${escH(r.atividade || '—')}</div>
+        <div class="entry-meta">
+          ${tag}
+          <span class="entry-date">${r.data || fmtTs(r.criadoEm)}</span>
+          <span class="entry-date">${pts} pts · ✅${r.acertos||0} ❌${r.erros||0} · ${taxa}</span>
+        </div>
+      </div>
+      <div class="entry-score">
+        <span class="score-main ${pts > 0 ? 'orange' : ''}">${pts}</span>
+        <span class="score-label">pts</span>
+      </div>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="entry-body">
+      <div class="questoes" id="q-${entryId}" data-loaded="false">
+        <p class="q-loading">Clique para ver questões…</p>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Render: card torneio ─────────────────────────────────────
+function renderTorneio(r) {
+  const medals   = ['🥇','🥈','🥉'];
+  const pos      = r.posicao || r._sess?.posicao;
+  const posLabel = pos ? (pos <= 3 ? medals[pos-1]+` #${pos}º` : `#${pos}º`) : '—';
+  const pts      = r.pontuacao || r._sess?.pontuacao || 0;
+  const acertos  = r.acertos   || r._sess?.acertos   || 0;
+  const tabs     = r._sess?.tabuleiros_completos || r.tabuleiros_completos || 0;
+  const streak   = r._sess?.maior_streak || 0;
+  const erros    = r.erros || r._sess?.erros || 0;
+  const mins     = r.tempo_segundos ? Math.round(r.tempo_segundos/60) : null;
+  const nome     = r.atividade || r.nome || 'Torneio';
+  const isTeste  = r._isTeste;
+  const entryId  = `tn-${r.id || r._ts}`;
+
+  return `<div class="entry" data-tipo="torneio" id="${entryId}">
+    <div class="entry-header" onclick="toggleEntry('${entryId}','torneio',null,null)">
+      <div class="entry-icon torneio">🏆</div>
+      <div class="entry-info">
+        <div class="entry-title">${escH(nome)}</div>
+        <div class="entry-meta">
+          <span class="hc-tag tn">${isTeste ? '🧪 Teste' : '🏆 Torneio'}</span>
+          <span class="entry-date">${r.data || fmtTs(r._ts || r.criadoEm)}</span>
+          ${r.turma ? `<span class="entry-date">Turma ${escH(r.turma)}</span>` : ''}
+        </div>
+      </div>
+      <div class="entry-score">
+        <span class="score-main gold">${pts}</span>
+        <span class="score-label">${posLabel}</span>
+      </div>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="entry-body">
+      <div class="torneio-body">
+        <div class="torneio-stats">
+          <div class="t-stat"><div class="val">${pts}</div><div class="lbl">Pontos</div></div>
+          <div class="t-stat"><div class="val">${pos ? '#'+pos : '—'}</div><div class="lbl">Posição</div></div>
+          <div class="t-stat"><div class="val">${acertos}</div><div class="lbl">Acertos</div></div>
+          <div class="t-stat"><div class="val">${tabs || '—'}</div><div class="lbl">Tabuleiros</div></div>
+        </div>
+        <div class="torneio-extras">
+          ${mins ? `<span>⏱ Duração: ${mins} min</span>` : ''}
+          ${streak > 0 ? `<span>🔥 Maior streak: ×${streak}</span>` : ''}
+          ${erros > 0 ? `<span>❌ Erros: ${erros}</span>` : ''}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Toggle entry ─────────────────────────────────────────────
+const _questoesCache = {};
+
+window.toggleEntry = async function(entryId, tipo, dataStr, tentEsc) {
+  const el = document.getElementById(entryId);
+  if (!el) return;
+  el.classList.toggle('open');
+  if (!el.classList.contains('open')) return;
+
+  const qEl = document.getElementById(`q-${entryId}`);
+  if (!qEl || qEl.dataset.loaded === 'true') return;
+  qEl.dataset.loaded = 'true';
+
+  if (tipo === 'torneio') return; // torneio não tem questões lazy
+
+  // Carregar questões
+  let ids = [];
+  if (tipo === 'avp') {
+    try { ids = JSON.parse(dataStr.replace(/&quot;/g, '"')); } catch(e) { ids = []; }
+    // Mostrar questões da tentativa escolhida (ou melhor/primeira)
+    const escolhidaId = tentEsc != null ? ids[tentEsc - 1] : ids[0];
+    const targetId = escolhidaId || ids[0];
+    if (!targetId) { qEl.innerHTML = ''; return; }
+    const cacheKey = targetId;
+    if (!_questoesCache[cacheKey]) {
+      _questoesCache[cacheKey] = await getDetalhes(targetId).catch(() => []);
+    }
+    const questoes = _questoesCache[cacheKey] || [];
+    const f1Qs = questoes.filter(q => q.fase === 1);
+    const f2Qs = questoes.filter(q => q.fase === 2);
+    if (!questoes.length) { qEl.innerHTML = ''; return; }
+    qEl.innerHTML = `
+      ${f1Qs.length ? `<h4>📝 Questões — Fase 1</h4>${f1Qs.map((q,i) => renderQuestaoItem(q,i)).join('')}` : ''}
+      ${f2Qs.length ? `<h4 style="margin-top:14px">🎮 Questões — Fase 2</h4>${f2Qs.map((q,i) => renderQuestaoItem(q,i)).join('')}` : ''}`;
+  } else {
+    // Atividade simples: dataStr é o resultadoId
+    if (!dataStr || !_questoesCache) { qEl.innerHTML = ''; return; }
+    if (!_questoesCache[dataStr]) {
+      _questoesCache[dataStr] = await getDetalhes(dataStr).catch(() => []);
+    }
+    const questoes = _questoesCache[dataStr] || [];
+    if (!questoes.length) { qEl.innerHTML = ''; return; }
+    qEl.innerHTML = `<h4>📝 Questões</h4>${questoes.map((q,i) => renderQuestaoItem(q,i)).join('')}`;
+  }
 };
 
-// ── Filtro ────────────────────────────────────────────────────
-let _filtroAtivo = 'tudo';
-window.setFiltro = function(f) {
-  _filtroAtivo = f;
-  document.querySelectorAll('.filter-pills .pill').forEach(p =>
-    p.classList.toggle('on', p.dataset.f === f));
-  document.querySelectorAll('.hi-card').forEach(card => {
-    const tipo = card.dataset.type;
-    const show = f === 'tudo' ||
-      (f === 'atividade' && tipo === 'atividade') ||
-      (f === 'torneio'   && (tipo === 'torneio'));
-    card.style.display = show ? '' : 'none';
+// ── Filtro ───────────────────────────────────────────────────
+window.setFiltro = function(btn, tipo) {
+  document.querySelectorAll('.hc-fbtn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('#entries .entry').forEach(el => {
+    el.style.display = (tipo === 'tudo' || el.dataset.tipo === tipo) ? '' : 'none';
   });
 };
 
-// ── Render ────────────────────────────────────────────────────
-let html = `<div class="filter-pills">
-  <button class="pill on" data-f="tudo"      onclick="setFiltro('tudo')">🗂️ Tudo</button>
-  <button class="pill"    data-f="atividade" onclick="setFiltro('atividade')">📝 Atividades</button>
-  <button class="pill"    data-f="torneio"   onclick="setFiltro('torneio')">🏆 Torneios</button>
-</div>`;
-
-if (!allItems.length) {
-  const vazioMsg = isModoTeste()
-    ? '🧪 Nenhum teste realizado ainda. Complete uma atividade ou torneio no modo teste para ver aqui.'
-    : 'Seu histórico de atividades e torneios aparece aqui.';
-  html += `<div class="card" style="text-align:center;padding:52px 24px">
-    <div style="font-size:40px;margin-bottom:12px">📋</div>
-    <div style="font-size:15px;font-weight:700;margin-bottom:6px">Nenhum registro ainda</div>
-    <div style="font-size:13px;color:var(--text-muted)">${vazioMsg}</div>
-  </div>`;
-} else {
-  for (const item of allItems) {
-    if      (item._tipo === 'avaliacao_plus') html += renderItemSessaoAvP(item._res);
-    else if (item._tipo === 'atividade')      html += renderItemAtividade(item._res);
-    else if (item._tipo === 'torneio')        html += renderItemTorneio(item._res);
-    else if (item._tipo === 'torneio-teste')  html += renderItemTorneioTeste(item._res);
+// ── Render ───────────────────────────────────────────────────
+try {
+  const entriesEl = document.getElementById('entries');
+  if (!allItems.length) {
+    const msg = isModoTeste()
+      ? '🧪 Nenhum teste realizado ainda.'
+      : 'Nenhuma atividade ou torneio no histórico ainda.';
+    entriesEl.innerHTML = `<div class="hc-empty"><div>📋</div>${msg}</div>`;
+  } else {
+    entriesEl.innerHTML = allItems.map(item => {
+      if (item._tipo === 'avp')     return renderAvP(item._res);
+      if (item._tipo === 'ativ')    return renderAtivSimples(item._res);
+      if (item._tipo === 'torneio') return renderTorneio(item._res);
+      return '';
+    }).join('');
   }
-}
-
-content.innerHTML = html;
-
-} catch(_renderErr) {
-  console.error('[historico] Erro ao renderizar:', _renderErr);
-  const _eMsg = isModoTeste()
-    ? '🧪 Erro ao renderizar histórico de teste.'
-    : 'Erro ao renderizar histórico. Tente novamente.';
-  content.innerHTML = `<div class="card" style="text-align:center;padding:40px">
-    <div style="font-size:36px;margin-bottom:12px">⚠️</div>
-    <div style="font-size:15px;font-weight:700;margin-bottom:6px">${_eMsg}</div>
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;font-family:monospace">${_renderErr?.message || ''}</div>
-    <button class="btn btn-blue" onclick="location.reload()">Recarregar</button>
+} catch(e) {
+  console.error('[historico] Erro ao renderizar:', e);
+  document.getElementById('entries').innerHTML = `<div class="hc-empty">
+    <div>⚠️</div>Erro ao renderizar: ${escH(e?.message || String(e))}<br>
+    <button onclick="location.reload()" style="margin-top:12px;padding:6px 16px;border-radius:8px;border:1px solid rgba(124,92,252,0.4);background:rgba(124,92,252,0.15);color:#9b7ffe;cursor:pointer;font-family:Inter,sans-serif;">Recarregar</button>
   </div>`;
 }
 
-// Tooltip conquistas (event delegation)
-let _touchConqTip;
-content.addEventListener('mouseover', e => {
-  const el = e.target.closest('[data-nome]');
-  if (el) showConqTip(e.clientX, e.clientY, el.dataset.nome, el.dataset.desc || '');
-});
-content.addEventListener('mousemove', e => {
-  if (!_conqTip?.classList.contains('show')) return;
-  const el = e.target.closest('[data-nome]');
-  if (el) {
-    _conqTip.style.left = `${Math.min(e.clientX + 12, window.innerWidth - 230)}px`;
-    _conqTip.style.top  = `${Math.max(e.clientY - 60, 8)}px`;
-  }
-});
-content.addEventListener('mouseout', e => {
-  if (e.target.closest('[data-nome]') && !e.relatedTarget?.closest('[data-nome]')) hideConqTip();
-});
-content.addEventListener('touchstart', e => {
-  const el = e.target.closest('[data-nome]');
-  if (!el) return;
-  const t = e.touches[0];
-  _touchConqTip = setTimeout(() => showConqTip(t.clientX, t.clientY, el.dataset.nome, el.dataset.desc || ''), 400);
-}, {passive: true});
-content.addEventListener('touchend', () => { clearTimeout(_touchConqTip); setTimeout(hideConqTip, 2500); }, {passive: true});
-content.addEventListener('touchcancel', () => clearTimeout(_touchConqTip), {passive: true});
-
+// ── Avatar menu ──────────────────────────────────────────────
 window.toggleAvatarMenu = () => document.getElementById('avatar-menu').classList.toggle('open');
 document.addEventListener('click', e => {
   if (!e.target.closest('.avatar-wrap')) document.getElementById('avatar-menu')?.classList.remove('open');
