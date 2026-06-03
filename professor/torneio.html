@@ -140,7 +140,10 @@ function fmtSecs(s) {
   return `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
 }
 function turmasBadges(turmas) {
-  return (turmas||[]).map(t => `<span class="badge badge-blue" style="font-size:10px">${t}</span>`).join(' ');
+  return (turmas||[]).map(t => t === 'TESTE'
+    ? `<span class="badge" style="font-size:10px;background:rgba(124,58,237,.12);color:#7C3AED">🧪 Teste</span>`
+    : `<span class="badge badge-blue" style="font-size:10px">${t}</span>`
+  ).join(' ');
 }
 function _calcRestanteTurma(a) {
   if (!a || a.status === 'liberada') return a?.tempo_segundos || 300;
@@ -172,12 +175,13 @@ window.loadData = async function() {
   document.getElementById('content').innerHTML =
     `<div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>`;
 
-  // Ler torneio_ativo por turma
+  // Ler torneio_ativo por turma (inclui TESTE)
+  const todasTurmas = [...TURMAS, 'TESTE'];
   const snapsTurma = await Promise.all(
-    TURMAS.map(t => get(ref(db, `torneio_ativo/${t}`)).catch(() => null))
+    todasTurmas.map(t => get(ref(db, `torneio_ativo/${t}`)).catch(() => null))
   );
   _ativoPorTurma = {};
-  TURMAS.forEach((t, i) => {
+  todasTurmas.forEach((t, i) => {
     if (snapsTurma[i]?.exists()) _ativoPorTurma[t] = snapsTurma[i].val();
   });
   const ativoEntries = Object.entries(_ativoPorTurma).filter(
@@ -466,11 +470,13 @@ function _htmlHistorico(historico) {
   const rows = historico.map((t, i) => {
     const vencedor = t.vencedor_nome ? `🥇 ${escH(t.vencedor_nome)} (${escH(t.vencedor_turma||'')})` : '—';
     const nPart = t.num_participantes || 0;
+    const isTeste = (t.turmas||[]).includes('TESTE');
+    const testeBadge = isTeste ? `<span style="font-size:10px;font-weight:700;color:#7C3AED;background:rgba(124,58,237,.1);padding:2px 7px;border-radius:5px;margin-left:6px">🧪 Teste</span>` : '';
     return `
       <div class="hist-card">
         <div class="hist-header" onclick="toggleHist('hist-${i}')">
           <div style="flex:1;min-width:0">
-            <div style="font-weight:700;font-size:13px">${escH(t.nome||'Torneio')}</div>
+            <div style="font-weight:700;font-size:13px">${escH(t.nome||'Torneio')}${testeBadge}</div>
             <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${fmtTs(t.encerrado_em||t.criadoEm)} · ${turmasBadges(t.turmas)} · ${nPart} participante${nPart!==1?'s':''}</div>
           </div>
           <div style="text-align:right;font-size:12px;flex-shrink:0">
