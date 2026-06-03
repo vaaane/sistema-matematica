@@ -158,10 +158,13 @@ document.getElementById("topbar-sub").textContent = _isTeste ? 'Modo Teste' : `T
 document.getElementById("avatar-initials").textContent = _isTeste ? '🧪' : alunos[0][0].toUpperCase();
 
 let torneioId = _urlP.get('id');
-// Se não veio por URL, descobrir pelo path da turma do aluno
-if (!torneioId && !_isTeste && turma) {
-  const snap = await get(ref(db, `torneio_ativo/${turma}`)).catch(() => null);
-  if (snap?.exists()) torneioId = snap.val().torneioId;
+// Descobrir torneio ativo: modo teste usa turma TESTE, aluno usa sua turma
+if (!torneioId) {
+  const lookupTurma = isModoTeste() ? 'TESTE' : (!_isTeste && turma ? turma : null);
+  if (lookupTurma) {
+    const snap = await get(ref(db, `torneio_ativo/${lookupTurma}`)).catch(() => null);
+    if (snap?.exists()) torneioId = snap.val().torneioId;
+  }
 }
 if (!torneioId) {
   document.getElementById('content').innerHTML =
@@ -1152,10 +1155,10 @@ onValue(ref(db, `torneios/${torneioId}`), snap => {
   document.getElementById('topbar-title').textContent = `🏆 ${_torneio.nome || 'Torneio'}`;
 });
 
-// Status vem de torneio_ativo/{turma} (por turma, se não for modo teste)
-const _statusPath = (!_isTeste && turma)
-  ? `torneio_ativo/${turma}`
-  : `torneios/${torneioId}`;
+// Status vem de torneio_ativo/{turma} ou TESTE (modo teste) ou torneios/{id} (fallback)
+const _statusPath = isModoTeste()
+  ? `torneio_ativo/TESTE`
+  : (!_isTeste && turma ? `torneio_ativo/${turma}` : `torneios/${torneioId}`);
 
 onValue(ref(db, _statusPath), snap => {
   if (!snap.exists()) return;

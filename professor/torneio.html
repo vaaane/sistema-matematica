@@ -221,7 +221,9 @@ function _htmlFormCriar(temAtivo) {
   if (temAtivo) return '';
   const turmasChk = TURMAS.map(t => `
     <input type="checkbox" id="chk-${t}" class="turma-chk" name="turma" value="${t}">
-    <label for="chk-${t}" class="turma-lbl">${t}</label>`).join('');
+    <label for="chk-${t}" class="turma-lbl">${t}</label>`).join('') + `
+    <input type="checkbox" id="chk-TESTE" class="turma-chk" name="turma" value="TESTE">
+    <label for="chk-TESTE" class="turma-lbl" style="background:rgba(124,58,237,.08);border-color:rgba(124,58,237,.35);color:#7C3AED">🧪 Teste</label>`;
 
   const nomeDefault = _jsonConfig?.nome || 'Torneio — Números Negativos';
   const jsonSel = _jsonLista.length > 1
@@ -421,8 +423,13 @@ function _htmlAtivo(ativoEntries) {
     const btnR = st === 'pausado'
       ? `<button class="btn btn-sm btn-blue" onclick="retomarTurmaTorneio('${escH(torneioId)}','${turma}')">▶</button>` : '';
     const btnE = `<button class="btn btn-sm" style="background:var(--red);color:#fff;border:none" onclick="encerrarTurmaTorneio('${escH(torneioId)}','${turma}')">⏹</button>`;
-    return `<div style="display:grid;grid-template-columns:80px 1fr auto;align-items:center;gap:12px;padding:9px 14px;border-bottom:1px solid var(--border)" id="turma-row-${turma}">
-      <strong style="font-size:13px">Turma ${turma}</strong>
+    const isTeste = turma === 'TESTE';
+    const turmaLabel = isTeste
+      ? `<span style="font-size:13px;font-weight:700;color:#7C3AED">🧪 Modo Teste</span>`
+      : `<strong style="font-size:13px">Turma ${turma}</strong>`;
+    const rowBg = isTeste ? 'background:rgba(124,58,237,.04);' : '';
+    return `<div style="display:grid;grid-template-columns:100px 1fr auto;align-items:center;gap:12px;padding:9px 14px;border-bottom:1px solid var(--border);${rowBg}" id="turma-row-${turma}">
+      ${turmaLabel}
       <div style="font-size:12px;display:flex;align-items:center;gap:8px">${statusHtml}</div>
       <div style="display:flex;gap:4px;align-items:center">
         ${btnI}${btnP}${btnR}${btnE}

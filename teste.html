@@ -48,7 +48,7 @@
     <div class="field-wrap">
       <span class="field-icon">🔑</span>
       <input type="password" id="inp-senha" placeholder="••••••••••"
-        autocomplete="off" autocorrect="off" spellcheck="false"/>
+        autocomplete="new-password" autocorrect="off" spellcheck="false" value=""/>
     </div>
     <button class="btn" id="btn-entrar" onclick="entrar()">Entrar no modo teste</button>
   </div>
@@ -76,7 +76,7 @@ window.entrar = function() {
   if (!senha || btn.disabled) return;
   btn.disabled = true;
 
-  if (senha === 'nicoyuri2426') {
+  if (senha === 'professorteste2426') {
     setSession({ modo: 'aluno', turma: 'TESTE', alunos: ['PROFESSOR_TESTE'] });
     localStorage.setItem('modoTeste', 'true');
     localStorage.setItem('tema', 'escuro');
