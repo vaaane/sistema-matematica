@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Modo Teste — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;font-family:'Inter',sans-serif;background:#0f0f1a;color:#e0e0ff;display:flex;align-items:center;justify-content:center;}
+    .wrap{width:100%;max-width:380px;padding:24px 16px;text-align:center;}
+    .logo{font-size:44px;margin-bottom:12px;}
+    .title{font-size:20px;font-weight:800;color:#fff;margin-bottom:4px;}
+    .sub{font-size:13px;color:#555590;margin-bottom:32px;letter-spacing:.5px;}
+    .card{background:#07071a;border:1px solid #1a1a3a;border-radius:16px;padding:28px 24px;}
+    .field-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#444470;margin-bottom:8px;display:block;text-align:left;}
+    .field-wrap{position:relative;margin-bottom:16px;}
+    .field-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;}
+    input[type=password]{
+      width:100%;padding:13px 14px 13px 40px;
+      background:#0d0d22;border:1.5px solid #1a1a3a;border-radius:10px;
+      color:#e0e0ff;font-size:15px;font-family:'Inter',sans-serif;
+      outline:none;transition:border .15s;
+    }
+    input[type=password]:focus{border-color:#5bc0ff;}
+    input[type=password].shake{animation:shake .35s ease;}
+    @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+    .btn{
+      width:100%;padding:13px;border:none;border-radius:10px;
+      background:linear-gradient(135deg,#1a4aff,#5bc0ff);
+      color:#fff;font-size:15px;font-weight:700;cursor:pointer;
+      font-family:'Inter',sans-serif;transition:opacity .15s;
+    }
+    .btn:hover{opacity:.88;}
+    .btn:disabled{opacity:.5;cursor:default;}
+    .hint{margin-top:24px;font-size:12px;color:#333360;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">🧪</div>
+  <div class="title">Sistema de Matemática</div>
+  <div class="sub">ACESSO · MODO TESTE</div>
+
+  <div class="card">
+    <label class="field-label">Senha de acesso</label>
+    <div class="field-wrap">
+      <span class="field-icon">🔑</span>
+      <input type="password" id="inp-senha" placeholder="••••••••••"
+        autocomplete="off" autocorrect="off" spellcheck="false"/>
+    </div>
+    <button class="btn" id="btn-entrar" onclick="entrar()">Entrar no modo teste</button>
+  </div>
+
+  <div class="hint">Dúvidas? Entre em contato com a professora</div>
+</div>
+
+<script type="module">
+import { setSession, getSession } from "/js/auth.js";
+
+// Se já estiver logado como modo teste → redirecionar direto
+const sess = getSession();
+if (sess?.modo === 'aluno' && localStorage.getItem('modoTeste') === 'true') {
+  location.href = '/aluno/menu.html';
+}
+
+const inp = document.getElementById('inp-senha');
+const btn = document.getElementById('btn-entrar');
+
+inp.addEventListener('keydown', e => { if (e.key === 'Enter') entrar(); });
+inp.focus();
+
+window.entrar = function() {
+  const senha = inp.value;
+  if (!senha || btn.disabled) return;
+  btn.disabled = true;
+
+  if (senha === 'nicoyuri2426') {
+    setSession({ modo: 'aluno', turma: 'TESTE', alunos: ['PROFESSOR_TESTE'] });
+    localStorage.setItem('modoTeste', 'true');
+    localStorage.setItem('tema', 'escuro');
+    location.href = '/aluno/menu.html';
+  } else {
+    inp.value = '';
+    inp.classList.remove('shake');
+    void inp.offsetWidth;
+    inp.classList.add('shake');
+    inp.addEventListener('animationend', () => inp.classList.remove('shake'), { once: true });
+    btn.disabled = false;
+    inp.focus();
+  }
+};
+</script>
+</body>
+</html>

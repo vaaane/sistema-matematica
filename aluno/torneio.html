@@ -52,6 +52,49 @@
     .cp{position:fixed;top:-16px;pointer-events:none;z-index:400;border-radius:2px;animation:cp-fall linear forwards;}
     @keyframes cp-fall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
     @media(max-width:480px){.tn-hdr{gap:8px;}.tn-stat{padding:5px 10px;}.tn-stat-val{font-size:15px;}.tn-timer{font-size:18px;}}
+    /* ── Card animations ── */
+    @keyframes gc-in{from{opacity:0;transform:scale(.5) translateY(8px)}to{opacity:1;transform:none}}
+    @keyframes gc-out{to{opacity:0;transform:scale(.5)}}
+    .gc.leaving{animation:gc-out .25s ease forwards;}
+    /* ── Contador tabuleiros ── */
+    #tn-tab-count{font-size:12px;font-weight:700;color:var(--text-muted);}
+    /* ── Streak badge ── */
+    #tn-streak{position:absolute;top:-16px;left:50%;transform:translateX(-50%);
+      padding:4px 14px;border-radius:20px;font-size:15px;font-weight:800;
+      white-space:nowrap;z-index:10;pointer-events:none;
+      animation:streak-pop .3s cubic-bezier(.36,2,.5,1) both;}
+    @keyframes streak-pop{from{opacity:0;transform:translateX(-50%) scale(.5)}to{opacity:1;transform:translateX(-50%) scale(1)}}
+    #tn-streak.out{animation:streak-out .25s ease forwards;}
+    @keyframes streak-out{to{opacity:0;transform:translateX(-50%) scale(.7)}}
+    #tn-streak.s3{background:rgba(249,115,22,.18);color:#EA580C;border:1.5px solid rgba(249,115,22,.4);}
+    #tn-streak.s5{background:rgba(220,38,38,.18);color:#DC2626;border:1.5px solid rgba(220,38,38,.4);animation:streak-pop .3s cubic-bezier(.36,2,.5,1) both,streak-pulse 1s ease infinite;}
+    @keyframes streak-pulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.4)}50%{box-shadow:0 0 0 6px rgba(220,38,38,0)}}
+    #tn-streak.s10{background:rgba(217,119,6,.2);color:#D97706;border:1.5px solid rgba(217,119,6,.5);animation:streak-pop .3s cubic-bezier(.36,2,.5,1) both,streak-glow 1.2s ease infinite;}
+    @keyframes streak-glow{0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,.5)}50%{box-shadow:0 0 12px 4px rgba(251,191,36,.35)}}
+    /* ── Dica relâmpago ── */
+    #tn-dica{margin:0 0 8px;padding:9px 36px 9px 12px;background:rgba(59,130,246,.08);
+      border:1px solid rgba(59,130,246,.25);border-radius:8px;font-size:12px;line-height:1.5;
+      position:relative;animation:banner-in .25s ease;}
+    #tn-dica-close{position:absolute;top:7px;right:8px;background:none;border:none;cursor:pointer;
+      font-size:14px;color:var(--text-muted);padding:0 3px;}
+    /* ── Contador de pares ── */
+    #tn-pares-count{font-size:12px;font-weight:700;color:var(--text-muted);text-align:right;margin-bottom:6px;}
+    /* ── Blocos informativos ── */
+    .tn-info-modal{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px;}
+    .tn-info-box{background:var(--card);border-radius:18px;padding:28px 24px;max-width:480px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto;}
+    .tn-info-title{font-size:16px;font-weight:800;margin-bottom:16px;text-align:center;}
+    .tn-info-section{margin-bottom:14px;}
+    .tn-info-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:6px;}
+    .tn-info-rule{background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:13px;line-height:1.5;}
+    .tn-info-rule code{background:rgba(59,130,246,.1);color:var(--blue);border-radius:4px;padding:1px 5px;font-family:monospace;font-size:12px;}
+    .tn-info-btn{width:100%;padding:13px;border:none;border-radius:12px;background:var(--blue);color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;transition:opacity .15s;}
+    .tn-info-btn:hover{opacity:.88;}
+    /* Banner não-bloqueante */
+    .tn-nivel-banner{position:relative;margin:0 0 10px;padding:11px 36px 11px 14px;background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3);border-radius:10px;font-size:13px;line-height:1.5;animation:banner-in .3s ease;}
+    @keyframes banner-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+    .tn-nivel-banner.fade-out{animation:banner-out .3s ease forwards;}
+    @keyframes banner-out{to{opacity:0;transform:translateY(-6px)}}
+    .tn-nivel-banner-close{position:absolute;top:8px;right:10px;background:none;border:none;cursor:pointer;font-size:15px;color:var(--text-muted);line-height:1;padding:2px 4px;}
   </style>
 </head>
 <body>
@@ -84,23 +127,46 @@
 <script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
 import { db } from "/js/firebase-config.js";
-import { ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { requireAluno, renderSidebarAluno, clearSession, isModoTeste } from "/js/auth.js";
+import { ref, onValue, update, get, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { requireAluno, requireProfessor, renderSidebarAluno, renderSidebarProfessor, clearSession, isModoTeste } from "/js/auth.js";
 import { addResultado } from "/js/db.js";
 
-const sess = requireAluno();
-if (!sess) throw new Error();
-const { alunos, turma } = sess;
-renderSidebarAluno("sidebar", "atividades");
-window.sair = () => { clearSession(); window.location.href = "/index.html"; };
-document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
-document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
+const _urlP    = new URLSearchParams(location.search);
+const _isTeste = _urlP.get('modo') === 'teste';
 
-const torneioId = new URLSearchParams(location.search).get('id');
+let alunos, turma;
+if (_isTeste) {
+  requireProfessor();
+  renderSidebarProfessor("sidebar", "jogos");
+  window.sair = () => { window.close(); };
+  alunos = ['PROFESSOR_TESTE'];
+  turma  = 'TESTE';
+  // Banner laranja idêntico ao padrão do sistema
+  const _tb = document.createElement('div');
+  _tb.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10000;background:#d97706;color:#fff;text-align:center;padding:5px 8px;font-size:11px;font-weight:700;letter-spacing:2px;pointer-events:none';
+  _tb.textContent = '🧪 MODO TESTE · dados isolados, não afetam os alunos';
+  document.body.prepend(_tb);
+} else {
+  const sess = requireAluno();
+  if (!sess) throw new Error();
+  alunos = sess.alunos;
+  turma  = sess.turma;
+  renderSidebarAluno("sidebar", "atividades");
+  window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+}
+document.getElementById("topbar-sub").textContent = _isTeste ? 'Modo Teste' : `Turma ${turma}`;
+document.getElementById("avatar-initials").textContent = _isTeste ? '🧪' : alunos[0][0].toUpperCase();
+
+let torneioId = _urlP.get('id');
+// Se não veio por URL, descobrir pelo path da turma do aluno
+if (!torneioId && !_isTeste && turma) {
+  const snap = await get(ref(db, `torneio_ativo/${turma}`)).catch(() => null);
+  if (snap?.exists()) torneioId = snap.val().torneioId;
+}
 if (!torneioId) {
   document.getElementById('content').innerHTML =
-    '<div class="card" style="text-align:center;padding:40px"><p style="color:var(--red);margin-bottom:12px">ID do torneio não informado.</p><a href="/aluno/atividades.html" class="btn btn-blue">Voltar</a></div>';
-  throw new Error('no id');
+    '<div class="card" style="text-align:center;padding:40px"><p style="color:var(--text-muted);margin-bottom:12px">Nenhum torneio ativo para a sua turma agora.</p><a href="/aluno/menu.html" class="btn btn-blue">Voltar</a></div>';
+  throw new Error('no torneio');
 }
 
 const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
@@ -109,10 +175,10 @@ const nomeAluno = alunos.length > 1 ? alunos.join(' e ') : alunos[0];
 // ── Constantes ────────────────────────────────────────────────
 const PARES         = 12;
 const PTS_OK        = 1;
-const PTS_ERR       = -0.5;
 const PTS_COMBO_EX  = 0.5;
 const PTS_PERFEITO  = 2;
 const COMBO_MIN     = 3;
+let   PTS_ERR       = -0.5;  // sobrescrito pelo JSON quando modo níveis
 
 // ── Estado ────────────────────────────────────────────────────
 let _torneio  = null;
@@ -123,11 +189,104 @@ let _pts      = 0;
 let _acertos  = 0;
 let _erros    = 0;
 let _combo    = 0;
+let _streak   = 0;   // acertos consecutivos sem erro
+let _streakMax= 0;
 let _errBoard = 0;
 let _timerInt = null;
 let _gameOk   = false;   // game board is rendered
 let _done     = false;   // torneio ended
 let _sessoes  = [];      // all sessions snapshot
+// Contadores por tipo de operação
+let _tiposAcertos = { adicao:0, subtracao:0, duplo_neg:0, multiplicacao:0, divisao:0 };
+let _tiposErros   = { adicao:0, subtracao:0, duplo_neg:0, multiplicacao:0, divisao:0 };
+let _ultimaDica   = '';
+let _ultimaDicaCount = 0;
+let _tabuleirosCompletos = 0;
+let _temposTabuleiros    = [];   // array de segundos por tabuleiro
+let _tabuleiroInicioTs   = 0;    // timestamp de início do tabuleiro atual
+
+// ── Modo por Níveis (JSON) ────────────────────────────────────
+let _modoNiveis   = false;
+let _torneioJson  = null;
+let _nivelAtual   = 1;
+let _nivelMax     = 1;
+let _nivelCfg     = null;   // config do nível corrente
+let _numPares     = PARES;  // pares do tabuleiro atual
+
+function lerNivelCfg(json, n) {
+  // ── modo explicito (lista fixa de níveis) ──────────────────
+  if (json.modo === 'explicito') {
+    return json.niveis.find(x => x.nivel === n) ?? json.niveis.at(-1);
+  }
+
+  // ── modo progressao (faixas "1-5", "6-10", "21+") ─────────
+  if (json.modo === 'progressao') {
+    // Encontrar a entrada que cobre o nível n
+    let entry = json.progressao.at(-1);
+    for (const e of json.progressao) {
+      if (e.niveis.endsWith('+')) {
+        if (n >= parseInt(e.niveis)) { entry = e; break; }
+      } else {
+        const [lo, hi] = e.niveis.split('-').map(Number);
+        if (n >= lo && n <= hi) { entry = e; break; }
+      }
+    }
+
+    // Calcular pairs (fixo ou dinâmico para "21+")
+    let pairs;
+    if (entry.pares != null) {
+      pairs = entry.pares;
+    } else {
+      const start = parseInt(entry.niveis);
+      const incr  = Math.floor((n - start) / entry.pares_incremento_a_cada) * entry.pares_incremento;
+      pairs = Math.min(entry.pares_max, entry.pares_base + Math.max(0, incr));
+    }
+
+    // Cols responsivos
+    const isMob = typeof window !== 'undefined' && window.innerWidth <= 599;
+    let cols;
+    if (entry.grid_desktop) {
+      cols = isMob ? (entry.grid_mobile?.cols ?? entry.grid_desktop.cols) : entry.grid_desktop.cols;
+    } else {
+      // Entrada "21+": cols baseadas no número de pares
+      const maxD = entry.grid_desktop_max?.cols ?? 6;
+      const maxM = entry.grid_mobile_max?.cols  ?? 4;
+      const total = pairs * 2;
+      cols = isMob ? maxM : (total <= 20 ? Math.min(5, maxD) : maxD);
+    }
+
+    return {
+      nivel:                n,
+      pairs,
+      cols,
+      operacoes:            entry.operacoes,
+      operandos_min:        entry.operandos_min,
+      operandos_max:        entry.operandos_max,
+      permite_duplo_negativo: entry.permite_duplo_negativo ?? true,
+    };
+  }
+
+  // ── modo formula (interpolação linear) ────────────────────
+  const f = json.formula;
+  const N = f.total_niveis;
+  const t = N > 1 ? Math.min(1, (n - 1) / (N - 1)) : 1;
+  const lerp = (a, b) => Math.round(a + t * (b - a));
+  return {
+    nivel: n,
+    pairs:         lerp(f.pairs_inicio,         f.pairs_fim),
+    cols:          lerp(f.cols_inicio,          f.cols_fim),
+    operandos_min: lerp(f.operandos_min_inicio, f.operandos_min_fim),
+    operandos_max: lerp(f.operandos_max_inicio, f.operandos_max_fim),
+    operacoes:     f.operacoes,
+  };
+}
+
+async function _carregarJsonNiveis(nome) {
+  const r = await fetch(`/dados/${nome}.json`);
+  _torneioJson = await r.json();
+  _modoNiveis  = true;
+  PTS_ERR = -Math.abs(_torneioJson.penalidade_erro ?? 0.5);
+}
 
 // ── Geração de problemas ──────────────────────────────────────
 function ri(a, b)  { return Math.floor(Math.random() * (b - a + 1)) + a; }
@@ -174,13 +333,24 @@ function gerarPar(cfg, usedR) {
   function tenta() {
     const op = ops[Math.floor(Math.random()*ops.length)];
     switch (op) {
-      case 'adicao': case 'adicao_neg': {
+      case 'adicao': case 'adicao_neg': case 'adicao_neg_simples': {
         const a=ri(MIN,MAX), b=ri(MIN,MAX), r=a+b;
         return inR(r) ? { expr:`${fN(a)} + ${fN(b)}`, result:r } : null;
       }
       case 'subtracao': case 'subtracao_neg': {
         const a=ri(MIN,MAX), b=ri(MIN,MAX), r=a-b;
         return inR(r) ? { expr:`${fN(a)} − ${fN(b)}`, result:r } : null;
+      }
+      // subtrai um positivo (nunca -(-x)) — para níveis sem duplo negativo
+      case 'subtracao_neg_simples': {
+        const a=ri(MIN,MAX), b=ri(0,Math.max(0,MAX)), r=a-b;
+        return inR(r) ? { expr:`${fN(a)} − ${b}`, result:r } : null;
+      }
+      // especificamente a − (−b) = a + b — introduzido a partir do nível 6
+      case 'subtracao_duplo_neg': {
+        const a=ri(MIN,MAX), b=ri(1,Math.max(1,Math.abs(MIN)));
+        const r=a+b;  // a - (-b) = a + b
+        return inR(r) ? { expr:`${fN(a)} − ${fN(-b)}`, result:r } : null;
       }
       case 'multiplicacao': case 'multiplicacao_neg': {
         const a=rNZ(MIN,MAX), b=rNZ(MIN,MAX), r=a*b;
@@ -228,8 +398,9 @@ function gerarPar(cfg, usedR) {
 }
 
 function gerarCartas(cfg) {
+  _numPares = cfg?.pairs ?? PARES;
   const usedR=new Set(), cartas=[];
-  for (let i=0; i<PARES; i++) {
+  for (let i=0; i<_numPares; i++) {
     const p=gerarPar(cfg, usedR);
     usedR.add(p.result);
     cartas.push({ id:`e${i}`, type:'expr',   value: p.expr,                      pairId:i, matched:false });
@@ -274,18 +445,40 @@ function agendarSave() {
   _saveQ = setTimeout(doSave, 350);
 }
 function doSave(extraFields = {}) {
-  if (isModoTeste()) return;
+  if (_isTeste || isModoTeste()) return;
   update(ref(db, `torneios/${torneioId}/sessoes/${uid}`), {
     aluno: nomeAluno, turma,
     pontuacao: Math.round(_pts * 10) / 10,
     acertos: _acertos, erros: _erros,
     combo_atual: _combo,
     ultimo_update: Date.now(),
+    ...(_modoNiveis ? { nivel_max: _nivelMax } : {}),
     ...extraFields,
   }).catch(() => {});
 }
+let _saveResQ = null;
+function salvarResultados() {
+  if (_isTeste || isModoTeste()) return;
+  clearTimeout(_saveResQ);
+  _saveResQ = setTimeout(() => {
+    update(ref(db, `torneio_resultados/${torneioId}/${uid}`), {
+      aluno: nomeAluno, turma,
+      pontos:               Math.round(_pts * 10) / 10,
+      acertos:              _acertos,
+      erros:                _erros,
+      streak_atual:         _streak,
+      maior_streak:         _streakMax,
+      tabuleiros_completos: _tabuleirosCompletos,
+      tempos_tabuleiros:    [..._temposTabuleiros],
+      tipos_acertos: { ..._tiposAcertos },
+      tipos_erros:   { ..._tiposErros },
+      ultimo_update: Date.now(),
+    }).catch(() => {});
+  }, 400);
+}
+
 function registrarPresenca() {
-  if (isModoTeste()) return;
+  if (_isTeste || isModoTeste()) return;
   update(ref(db, `torneios/${torneioId}/sessoes/${uid}`), {
     aluno: nomeAluno, turma,
     pontuacao: Math.round(_pts * 10) / 10,
@@ -307,8 +500,12 @@ function atualizarHUD() {
   }
   if (prEl) {
     const done = _cartas.filter(c => c.matched).length / 2;
-    prEl.innerHTML = Array.from({length: PARES}, (_, i) =>
+    prEl.innerHTML = Array.from({length: _numPares}, (_, i) =>
       `<div class="bp-dot${i < done ? ' done' : ''}"></div>`).join('');
+  }
+  if (_modoNiveis) {
+    const nvEl = document.getElementById('tn-nivel');
+    if (nvEl) nvEl.textContent = `Nível ${_nivelAtual}`;
   }
   // Rank
   const sorted = [..._sessoes].sort((a,b) => (b.pontuacao||0) - (a.pontuacao||0));
@@ -317,14 +514,148 @@ function atualizarHUD() {
   if (posEl && myPos > 0) posEl.textContent = `#${myPos}`;
 }
 
-// ── Render board ──────────────────────────────────────────────
-function renderBoard() {
+// ── Streak visual ────────────────────────────────────────────
+function atualizarStreak(acertou) {
+  if (acertou) {
+    _streak++;
+    if (_streak > _streakMax) _streakMax = _streak;
+    if (_streak === 3 || _streak === 5 || _streak >= 10) _mostrarStreakBadge(_streak);
+  } else {
+    if (_streak >= 3) _removerStreakBadge(true);
+    _streak = 0;
+  }
+}
+
+function _mostrarStreakBadge(n) {
   const grid = document.getElementById('game-grid');
   if (!grid) return;
-  grid.innerHTML = _cartas.map(c =>
-    `<div class="gc${c.matched ? ' matched' : ''}" id="gc-${c.id}" onclick="clickCard('${c.id}')">${escH(c.value)}</div>`
+  document.getElementById('tn-streak')?.remove();
+  const cls = n >= 10 ? 's10' : n >= 5 ? 's5' : 's3';
+  const icon = n >= 10 ? '⚡' : '🔥';
+  const el = document.createElement('div');
+  el.id = 'tn-streak';
+  el.className = cls;
+  el.textContent = `${icon} x${n}`;
+  // Posicionar acima do grid
+  grid.style.position = 'relative';
+  grid.appendChild(el);
+  clearTimeout(el._t);
+  el._t = setTimeout(() => _removerStreakBadge(false), 1500);
+}
+
+function _removerStreakBadge(quebrado) {
+  const el = document.getElementById('tn-streak');
+  if (!el) return;
+  clearTimeout(el._t);
+  if (quebrado) {
+    el.style.animation = 'streak-out .25s ease forwards';
+    setTimeout(() => el.remove(), 250);
+  } else {
+    el.classList.add('out');
+    setTimeout(() => el.remove(), 250);
+  }
+}
+
+// ── Dica relâmpago ────────────────────────────────────────────
+const _DICAS = {
+  adicao_iguais:    '💡 Adição: sinais iguais → some e mantenha o sinal\nex: (-3) + (-2) = -5',
+  adicao_diferentes:'💡 Adição: sinais diferentes → subtraia e repita o sinal do maior\nex: (-5) + 3 = -2 (5 > 3, mantém o −)',
+  subtracao_iguais: '💡 Subtração: sinais iguais → some e mantenha o sinal\nex: (-4) − (-1) = -3',
+  subtracao_diferentes:'💡 Subtração: sinais diferentes → subtraia e repita o sinal do maior\nex: 3 − (-2) = 5',
+  duplo_neg:        '💡 Subtração de negativo: −(−3) = +3 → inverte o sinal\nex: 5 − (−2) = 5 + 2 = 7',
+  multiplicacao:    '💡 Multiplicação: sinais iguais = positivo · sinais diferentes = negativo\nex: (−3)×(−4) = +12 · (−3)×4 = −12',
+  divisao:          '💡 Divisão: mesma regra da multiplicação\nsinais iguais = positivo · sinais diferentes = negativo\nex: (−12)÷(−4) = +3 · (−12)÷4 = −3',
+};
+
+function _dicaParaExpr(expr) {
+  if (!expr) return null;
+  if (expr.includes('×')) return 'multiplicacao';
+  if (expr.includes('÷')) return 'divisao';
+  // Detectar duplo negativo: contém "− (" ou "−(-"
+  if (/−\s*\(/.test(expr)) return 'duplo_neg';
+  // Adição ou subtração
+  const nums = expr.match(/-?\d+/g)?.map(Number) || [];
+  if (nums.length < 2) return null;
+  const [a, b] = nums;
+  const op = expr.includes('−') ? 'sub' : 'add';
+  const mesmosinal = (a < 0 && b < 0) || (a >= 0 && b >= 0);
+  return op === 'add'
+    ? (mesmosinal ? 'adicao_iguais' : 'adicao_diferentes')
+    : (mesmosinal ? 'subtracao_iguais' : 'subtracao_diferentes');
+}
+
+function _tipoParaCategoria(expr) {
+  if (!expr) return null;
+  if (expr.includes('×')) return 'multiplicacao';
+  if (expr.includes('÷')) return 'divisao';
+  if (/−\s*\(/.test(expr)) return 'duplo_neg';
+  return expr.includes('−') ? 'subtracao' : 'adicao';
+}
+
+function mostrarDica(expr) {
+  const key = _dicaParaExpr(expr);
+  if (!key) return;
+  // Não repetir a mesma dica 2x seguidas
+  if (key === _ultimaDica) {
+    _ultimaDicaCount++;
+    if (_ultimaDicaCount >= 2) return;
+  } else {
+    _ultimaDica = key;
+    _ultimaDicaCount = 1;
+  }
+  document.getElementById('tn-dica')?.remove();
+  const div = document.createElement('div');
+  div.id = 'tn-dica';
+  const linhas = _DICAS[key].split('\n');
+  div.innerHTML = `<button id="tn-dica-close" onclick="this.closest('#tn-dica').remove()">✕</button>
+    <strong>${linhas[0]}</strong>${linhas[1] ? `<br><span style="color:var(--text-muted)">${linhas[1]}</span>` : ''}`;
+  const ref_ = document.getElementById('board-prog');
+  ref_?.parentElement?.insertBefore(div, ref_);
+  setTimeout(() => { if (div.isConnected) { div.style.transition='opacity .3s'; div.style.opacity='0'; setTimeout(()=>div.remove(),300); } }, 2000);
+}
+
+// ── Contador de pares ─────────────────────────────────────────
+function atualizarContadorPares() {
+  const el = document.getElementById('tn-pares-count');
+  if (!el) return;
+  const feitos = _cartas.filter(c => c.matched).length / 2;
+  el.textContent = `${feitos}/${_numPares} pares`;
+}
+
+// ── Render board ──────────────────────────────────────────────
+function renderBoard(comAnimacao = false) {
+  const grid = document.getElementById('game-grid');
+  if (!grid) return;
+  if (comAnimacao) {
+    // Fade-out dos cards existentes, depois insere os novos com stagger
+    const velhos = [...grid.children];
+    velhos.forEach(el => el.classList.add('leaving'));
+    setTimeout(() => {
+      grid.innerHTML = '';
+      _cartas.forEach((c, i) => {
+        const div = document.createElement('div');
+        div.className = `gc${c.matched ? ' matched' : ''}`;
+        div.id = `gc-${c.id}`;
+        div.onclick = () => clickCard(c.id);
+        div.textContent = c.value;
+        div.style.animationDelay = `${i * 50}ms`;
+        div.style.animation = `gc-in .3s ease ${i * 50}ms both`;
+        grid.appendChild(div);
+      });
+      _tabuleiroInicioTs = Date.now();
+      atualizarHUD();
+      atualizarContadorPares();
+    }, 280);
+    return;
+  }
+  grid.innerHTML = _cartas.map((c, i) =>
+    `<div class="gc${c.matched ? ' matched' : ''}" id="gc-${c.id}"
+      style="animation:gc-in .3s ease ${i*50}ms both"
+      onclick="clickCard('${c.id}')">${escH(c.value)}</div>`
   ).join('');
+  _tabuleiroInicioTs = Date.now();
   atualizarHUD();
+  atualizarContadorPares();
 }
 
 // ── Game logic ────────────────────────────────────────────────
@@ -358,22 +689,35 @@ window.clickCard = function(id) {
   document.getElementById(`gc-${id}`)?.classList.add('selected');
   _block = true;
 
+  // Expressão envolvida (para dica e tipo)
+  const exprCard = c1.type === 'expr' ? c1 : card;
+  const exprVal  = exprCard.value;
+
   if (c1.pairId === card.pairId) {
     c1.matched = true; card.matched = true;
     _combo++; _acertos++;
     _pts = Math.max(0, _pts + PTS_OK + (_combo >= COMBO_MIN ? PTS_COMBO_EX : 0));
+    // Tipo de operação
+    const cat = _tipoParaCategoria(exprVal);
+    if (cat) _tiposAcertos[cat] = (_tiposAcertos[cat] || 0) + 1;
+    atualizarStreak(true);
     [s1, id].forEach(cid => {
       const el = document.getElementById(`gc-${cid}`);
       el?.classList.remove('selected'); el?.classList.add('matched');
     });
     _sel = []; _block = false;
-    agendarSave(); atualizarHUD();
+    agendarSave(); salvarResultados(); atualizarHUD(); atualizarContadorPares();
     if (_cartas.every(c => c.matched)) tabuleiroConcluido();
   } else {
     _errBoard++; _erros++; _combo = 0;
     _pts = Math.max(0, _pts + PTS_ERR);
+    // Tipo de operação
+    const cat = _tipoParaCategoria(exprVal);
+    if (cat) _tiposErros[cat] = (_tiposErros[cat] || 0) + 1;
+    atualizarStreak(false);
+    mostrarDica(exprVal);
     [s1, id].forEach(cid => document.getElementById(`gc-${cid}`)?.classList.add('error'));
-    agendarSave(); atualizarHUD();
+    agendarSave(); salvarResultados(); atualizarHUD();
     setTimeout(() => {
       [s1, id].forEach(cid => {
         const el = document.getElementById(`gc-${cid}`);
@@ -385,17 +729,34 @@ window.clickCard = function(id) {
 };
 
 function tabuleiroConcluido() {
+  // Medir tempo do tabuleiro
+  const segsTab = _tabuleiroInicioTs ? Math.round((Date.now() - _tabuleiroInicioTs) / 1000) : 0;
+  if (segsTab > 0) _temposTabuleiros.push(segsTab);
+  _tabuleirosCompletos++;
+
+  // Atualizar contador no header
+  const tabEl = document.getElementById('tn-tab-count');
+  if (tabEl) tabEl.textContent = `📋 ${_tabuleirosCompletos} tabuleiro${_tabuleirosCompletos!==1?'s':''}`;
+
+  const mTab = Math.floor(segsTab / 60), sTab = segsTab % 60;
+  const tempoStr = mTab > 0 ? `${mTab}:${String(sTab).padStart(2,'0')}` : `0:${String(sTab).padStart(2,'0')}`;
+
   if (_errBoard === 0) {
     _pts += PTS_PERFEITO;
-    mostrarToast('✨ Tabuleiro Perfeito! +2 pts');
-    // Sinalizar tabuleiro perfeito para a TV
+    mostrarToast(`✨ Perfeito! +2 pts · ⚡ ${tempoStr}`);
     doSave({ perfeito_ts: Date.now() });
     atualizarHUD();
   } else {
+    mostrarToast(`⚡ Completo em ${tempoStr}!`, 'var(--blue)');
     agendarSave();
   }
+  salvarResultados();
   _errBoard = 0;
-  setTimeout(() => { _cartas = gerarCartas(_torneio?.config); renderBoard(); }, 900);
+  if (_modoNiveis) { setTimeout(() => _nivelConcluido(), 900); return; }
+  setTimeout(() => {
+    _cartas = gerarCartas(_torneio?.config);
+    renderBoard(true);  // com animação
+  }, 350);
 }
 
 function mostrarToast(msg, cor) {
@@ -406,6 +767,131 @@ function mostrarToast(msg, cor) {
   t.textContent = msg;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 2400);
+}
+
+// ── Modo por Níveis: funções de controle ──────────────────────
+function _iniciarNivel(n) {
+  _nivelAtual = n;
+  _nivelMax   = Math.max(_nivelMax, n);
+  _nivelCfg   = lerNivelCfg(_torneioJson, n);
+  _cartas     = gerarCartas(_nivelCfg); // atualiza _numPares
+  _errBoard   = 0;
+
+  // Aplicar número de colunas dinamicamente
+  const grid = document.getElementById('game-grid');
+  if (grid) grid.style.gridTemplateColumns = `repeat(${_nivelCfg.cols}, 1fr)`;
+
+  renderBoard();
+  agendarSave();
+  _mostrarBannerNivel(n);
+}
+
+function _nivelConcluido() {
+  const temProximo = _torneioJson.niveis
+    ? _nivelAtual < _torneioJson.niveis.length
+    : true; // modo fórmula: avança até o timer global acabar
+
+  if (!temProximo) {
+    mostrarToast('🏆 Todos os níveis concluídos!', 'var(--gold)');
+    agendarSave();
+    return;
+  }
+  const proximo = _nivelAtual + 1;
+  mostrarToast(`✅ Nível ${_nivelAtual} → Nível ${proximo}`, 'var(--blue)');
+  setTimeout(() => _iniciarNivel(proximo), 900);
+}
+
+// ── Blocos informativos ────────────────────────────────────────
+const _SK_INFO = `tn_info_${torneioId}`;  // sessionStorage key
+function _infoVisto(id) { return (sessionStorage.getItem(_SK_INFO)||'').includes(id); }
+function _marcarVisto(id) {
+  const vis = sessionStorage.getItem(_SK_INFO) || '';
+  if (!vis.includes(id)) sessionStorage.setItem(_SK_INFO, vis + id + ',');
+}
+
+// Modal obrigatório pré-jogo
+function _mostrarModalInicial(tempoMin, onClose) {
+  if (_infoVisto('modal_inicial')) { onClose(); return; }
+  const div = document.createElement('div');
+  div.className = 'tn-info-modal';
+  div.id = 'tn-info-modal';
+  div.innerHTML = `
+    <div class="tn-info-box">
+      <div class="tn-info-title">🏆 Como funciona o torneio</div>
+      <div class="tn-info-section">
+        <div class="tn-info-rule">🎯 Combine cada expressão com seu resultado</div>
+        <div class="tn-info-rule">⏱ Sem tempo por fase — o torneio tem <strong>${tempoMin} minuto${tempoMin!==1?'s':''}</strong> no total</div>
+        <div class="tn-info-rule">✅ Cada acerto: <strong>+1 ponto</strong></div>
+        <div class="tn-info-rule">❌ Cada erro: <strong>−0,5 ponto</strong> (mínimo 0)</div>
+        <div class="tn-info-rule">🔄 Complete o tabuleiro → novo tabuleiro gerado automaticamente!</div>
+      </div>
+      <div class="tn-info-section">
+        <div class="tn-info-label">📐 Regras dos sinais — Adição e Subtração</div>
+        <div class="tn-info-rule">
+          <strong>Sinais IGUAIS</strong> → some e mantenha o sinal<br>
+          <code>(-3) + (-2) = -5</code> &nbsp;·&nbsp; <code>4 + 3 = 7</code>
+        </div>
+        <div class="tn-info-rule">
+          <strong>Sinais DIFERENTES</strong> → subtraia e repita o sinal do maior<br>
+          <code>(-5) + 3 = -2</code> &nbsp;(5 > 3, mantém o −)<br>
+          <code>(-3) + 7 = +4</code> &nbsp;(7 > 3, mantém o +)
+        </div>
+      </div>
+      <button class="tn-info-btn" id="tn-info-btn-ok">Entendi! Vamos jogar! 🚀</button>
+    </div>`;
+  document.body.appendChild(div);
+  div.querySelector('#tn-info-btn-ok').onclick = () => {
+    _marcarVisto('modal_inicial');
+    div.remove();
+    onClose();
+  };
+}
+
+// Banner não-bloqueante de nível
+const _BANNERS_NIVEL = {
+  6:  { emoji:'💡', titulo:'Novo tipo desbloqueado!', html:`
+        <strong>Subtração de negativo:</strong> −(−3) = +3 → inverte o sinal<br>
+        <code>5 − (−2) = 5 + 2 = 7</code>` },
+  11: { emoji:'💡', titulo:'Multiplicação com negativos!', html:`
+        <strong>Sinais IGUAIS = positivo:</strong> <code>(−3) × (−4) = +12</code><br>
+        <strong>Sinais DIFERENTES = negativo:</strong> <code>(−3) × 4 = −12</code>` },
+  16: { emoji:'💡', titulo:'Divisão com negativos!', html:`
+        Mesma regra da multiplicação:<br>
+        <code>(−12) ÷ (−4) = +3</code> &nbsp;·&nbsp; <code>(−12) ÷ 4 = −3</code>` },
+};
+
+function _mostrarBannerNivel(n) {
+  const cfg = _BANNERS_NIVEL[n];
+  if (!cfg || _infoVisto(`banner_${n}`)) return;
+  _marcarVisto(`banner_${n}`);
+
+  // Remover banner anterior se existir
+  document.getElementById('tn-nivel-banner')?.remove();
+
+  const div = document.createElement('div');
+  div.className = 'tn-nivel-banner';
+  div.id = 'tn-nivel-banner';
+  div.innerHTML = `
+    <button class="tn-nivel-banner-close" title="Fechar">✕</button>
+    <strong>${cfg.emoji} ${cfg.titulo}</strong><br>
+    <span style="color:var(--text-muted)">${cfg.html}</span>`;
+  div.querySelector('.tn-nivel-banner-close').onclick = () => _fecharBannerNivel();
+
+  // Inserir antes do board-prog
+  const ref = document.getElementById('board-prog');
+  ref?.parentElement?.insertBefore(div, ref);
+
+  // Some após 10s
+  const t = setTimeout(_fecharBannerNivel, 10000);
+  div._timer = t;
+}
+
+function _fecharBannerNivel() {
+  const div = document.getElementById('tn-nivel-banner');
+  if (!div) return;
+  clearTimeout(div._timer);
+  div.classList.add('fade-out');
+  setTimeout(() => div.remove(), 300);
 }
 
 // ── Views ─────────────────────────────────────────────────────
@@ -423,9 +909,60 @@ function mostrarEspera() {
   registrarPresenca();
 }
 
-function mostrarJogo() {
+async function mostrarJogo() {
   if (_gameOk) return;
   _gameOk = true;
+
+  // Carregar JSON de níveis se indicado na config
+  if (!_modoNiveis && _torneio?.config?.json_nome) {
+    try { await _carregarJsonNiveis(_torneio.config.json_nome); }
+    catch(e) { console.warn('[torneio] JSON de níveis não carregado, modo padrão:', e); _modoNiveis = false; }
+  }
+
+  if (_modoNiveis) {
+    // Layout com timer global + timer por nível + indicador de nível
+    document.getElementById('content').innerHTML = `
+      <div style="max-width:680px;margin:0 auto">
+        <div class="tn-hdr">
+          <div style="display:flex;align-items:center;gap:8px;width:100%;flex-wrap:wrap">
+            <div class="tn-title" style="flex:1;min-width:0">🏆 ${escH(_torneio?.nome || 'Torneio')}</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:11px;color:var(--text-muted)">global</span>
+              <div id="tn-timer" class="tn-timer" style="font-size:16px">${fmtSecs(calcRestante(_torneio))}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;width:100%;margin-top:8px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span id="tn-nivel" style="font-size:13px;font-weight:700;color:var(--blue)">Nível 1</span>
+              <div style="font-size:10px;color:var(--text-muted)">de ${_torneioJson?.niveis?.length ?? '?'}</div>
+            </div>
+            <div style="flex:1"></div>
+            <div class="tn-stat-wrap">
+              <div class="tn-stat"><div class="tn-stat-val" id="tn-pts">0</div><div class="tn-stat-lbl">pts</div></div>
+              <div class="tn-stat"><div class="tn-stat-val" id="tn-pos">—</div><div class="tn-stat-lbl">posição</div></div>
+            </div>
+            <div id="tn-combo" class="tn-combo" style="display:none">🔥 x0</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <div id="tn-tab-count" style="font-size:12px;font-weight:700;color:var(--text-muted)"></div>
+          <div id="tn-pares-count"></div>
+        </div>
+        <div id="board-prog" class="board-prog"></div>
+        <div id="game-grid" class="game-grid" style="position:relative"></div>
+        <div style="text-align:center;font-size:12px;color:var(--text-muted)">
+          Combine cada expressão com seu resultado
+        </div>
+      </div>`;
+    clearInterval(_timerInt);
+    _timerInt = setInterval(tickTimer, 500);
+    registrarPresenca();
+    const tempoMin = Math.round((_torneio?.tempo_segundos ?? 300) / 60);
+    _mostrarModalInicial(tempoMin, () => _iniciarNivel(1));
+    return;
+  }
+
+  // Modo padrão (tabuleiro único, timer global)
   _cartas = gerarCartas(_torneio?.config); _errBoard = 0;
   document.getElementById('content').innerHTML = `
     <div style="max-width:680px;margin:0 auto">
@@ -483,22 +1020,49 @@ async function mostrarEncerrado() {
   clearInterval(_timerInt);
   esconderOverlay();
 
-  // Flush pending save
   clearTimeout(_saveQ); doSave();
 
   const sorted = [..._sessoes].sort((a,b) => (b.pontuacao||0) - (a.pontuacao||0));
   const myPos  = (sorted.findIndex(s => s.uid === uid) + 1) || sorted.length + 1;
   const medals = ['🥇','🥈','🥉'];
+  const ptsFinal = Math.round(_pts * 10) / 10;
 
-  // Save to resultados (once per session)
+  // ── Recorde pessoal ─────────────────────────────────────
+  const tipoTorneio = _torneio?.config?.tipo || _torneio?.operacoes || 'geral';
+  const recRef = ref(db, `torneio_recordes/${uid}/${tipoTorneio}`);
+  let recordeHtml = '';
+  if (!_isTeste && !isModoTeste()) {
+    const recSnap = await get(recRef).catch(() => null);
+    const recAnterior = recSnap?.exists() ? recSnap.val().maior_pontuacao : null;
+    const novoRecorde = recAnterior == null || ptsFinal > recAnterior;
+    if (novoRecorde) {
+      await set(recRef, { maior_pontuacao: ptsFinal, data: Date.now(), torneio_id: torneioId }).catch(() => {});
+      spawnConfettiDourado();
+      recordeHtml = `
+        <div style="margin-bottom:16px;padding:14px 16px;background:rgba(245,158,11,.1);border:2px solid rgba(245,158,11,.4);border-radius:12px;text-align:left">
+          <div style="font-size:15px;font-weight:800;color:var(--gold);margin-bottom:4px">🏆 Novo recorde pessoal!</div>
+          <div style="font-size:13px">Você fez <strong>${ptsFinal} pts</strong> — seu melhor até agora!</div>
+          ${recAnterior != null ? `<div style="font-size:12px;color:var(--text-muted);margin-top:3px">Anterior: ${recAnterior} pts</div>` : ''}
+        </div>`;
+    } else if (recAnterior != null) {
+      const faltou = Math.round((recAnterior - ptsFinal) * 10) / 10;
+      recordeHtml = `
+        <div style="margin-bottom:16px;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;font-size:13px;display:flex;align-items:center;gap:10px">
+          <span>🏆 Seu recorde: <strong>${recAnterior} pts</strong></span>
+          <span style="color:var(--text-muted)">faltaram ${faltou} pts</span>
+        </div>`;
+    }
+  }
+
+  // ── Save to resultados ───────────────────────────────────
   const sk = `tn_ok_${torneioId}`;
-  if (!sessionStorage.getItem(sk) && !isModoTeste()) {
+  if (!sessionStorage.getItem(sk) && !_isTeste && !isModoTeste()) {
     sessionStorage.setItem(sk, '1');
     addResultado({
       aluno: alunos[0], turma,
       atividade: _torneio?.nome || 'Torneio',
       tipo: 'torneio', torneio_id: torneioId,
-      pontuacao: Math.round(_pts * 10) / 10,
+      pontuacao: ptsFinal,
       acertos: _acertos, erros: _erros,
       posicao: myPos, concluido: true,
       data: new Date().toLocaleDateString('pt-BR'),
@@ -515,8 +1079,9 @@ async function mostrarEncerrado() {
       <div style="font-size:52px;margin-bottom:8px">${myPos<=3 ? medals[myPos-1] : '🏁'}</div>
       <div style="font-size:22px;font-weight:800;margin-bottom:4px">Torneio Encerrado!</div>
       <div style="font-size:14px;color:var(--text-muted);margin-bottom:20px">${escH(_torneio?.nome||'Torneio')}</div>
+      ${recordeHtml}
       <div class="end-grid">
-        <div class="end-stat"><div class="end-stat-v" style="color:var(--gold)">${Math.round(_pts*10)/10}</div><div class="end-stat-l">pontos</div></div>
+        <div class="end-stat"><div class="end-stat-v" style="color:var(--gold)">${ptsFinal}</div><div class="end-stat-l">pontos</div></div>
         <div class="end-stat"><div class="end-stat-v" style="color:${posColor}">${posLabel}</div><div class="end-stat-l">posição</div></div>
         <div class="end-stat"><div class="end-stat-v" style="color:var(--green)">${_acertos}</div><div class="end-stat-l">acertos</div></div>
       </div>
@@ -534,6 +1099,17 @@ async function mostrarEncerrado() {
       </div>
       <a href="/aluno/menu.html" class="btn btn-blue" style="width:100%;justify-content:center">Voltar ao início</a>
     </div>`;
+}
+
+function spawnConfettiDourado() {
+  const cols = ['#FFD700','#FBC02D','#F59E0B','#FFF176','#FFCA28'];
+  for (let i = 0; i < 70; i++) {
+    const el = document.createElement('div');
+    el.className = 'cp';
+    el.style.cssText = `left:${Math.random()*100}vw;width:${5+Math.random()*9}px;height:${9+Math.random()*9}px;background:${cols[i%cols.length]};animation-duration:${2+Math.random()*2.5}s;animation-delay:${Math.random()*1.5}s`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 5000);
+  }
 }
 
 function spawnConfetti() {
@@ -566,27 +1142,49 @@ onValue(ref(db, `torneios/${torneioId}/sessoes`), snap => {
   }
 });
 
+// Ler metadados (nome, config) de torneios/{id}
 onValue(ref(db, `torneios/${torneioId}`), snap => {
   if (!snap.exists()) return;
-  _torneio = { id: torneioId, ...snap.val() };
-  const st = _torneio.status;
+  const meta = snap.val();
+  if (!_torneio) _torneio = { id: torneioId };
+  _torneio.nome   = meta.nome   || _torneio.nome;
+  _torneio.config = meta.config || _torneio.config;
   document.getElementById('topbar-title').textContent = `🏆 ${_torneio.nome || 'Torneio'}`;
+});
+
+// Status vem de torneio_ativo/{turma} (por turma, se não for modo teste)
+const _statusPath = (!_isTeste && turma)
+  ? `torneio_ativo/${turma}`
+  : `torneios/${torneioId}`;
+
+onValue(ref(db, _statusPath), snap => {
+  if (!snap.exists()) return;
+  const dados = snap.val();
+  // torneio_ativo/{turma} tem { torneioId, status, tempo_segundos, inicio, ... }
+  // torneios/{id} tem { status, ... } no modo teste
+  const st = dados.status;
+  if (!_torneio) _torneio = { id: torneioId };
+  _torneio.status        = st;
+  _torneio.inicio        = dados.inicio        ?? _torneio.inicio;
+  _torneio.pausa_inicio  = dados.pausa_inicio  ?? _torneio.pausa_inicio;
+  _torneio.pausa_total_ms= dados.pausa_total_ms?? _torneio.pausa_total_ms;
+  _torneio.tempo_segundos= dados.tempo_segundos?? _torneio.tempo_segundos;
+
+  if (!_torneio.nome && dados.nome) {
+    _torneio.nome   = dados.nome;
+    _torneio.config = dados.config;
+    document.getElementById('topbar-title').textContent = `🏆 ${_torneio.nome}`;
+  }
 
   if (st === 'encerrado') { mostrarEncerrado(); return; }
 
   if (st === 'liberada' || !st) {
     if (_prevStatus !== 'liberada') mostrarEspera();
-    else {
-      const wt = document.getElementById('wt-count');
-      if (wt) wt.textContent = _sessoes.length;
-    }
+    else { const wt = document.getElementById('wt-count'); if (wt) wt.textContent = _sessoes.length; }
   } else if (st === 'iniciado') {
     esconderOverlay();
-    if (!_gameOk) {
-      mostrarJogo();
-    } else if (!_timerInt) {
-      _timerInt = setInterval(tickTimer, 500);
-    }
+    if (!_gameOk) mostrarJogo();
+    else if (!_timerInt) _timerInt = setInterval(tickTimer, 500);
   } else if (st === 'pausado') {
     clearInterval(_timerInt);
     if (_gameOk) { _gameOk = false; mostrarPausa(); }

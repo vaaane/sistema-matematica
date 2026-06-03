@@ -191,6 +191,35 @@
     /* ── Waiting ── */
     #waiting { flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px; }
     .wt-title { font-family:'Orbitron'; font-size:18px; color:#1c1c3c; letter-spacing:2px; }
+
+    /* ── Gráfico de calor ── */
+    #heat-section { flex-shrink:0; padding:6px 36px 10px; border-top:1px solid rgba(255,255,255,.05); }
+    #heat-toggle { background:none; border:none; color:#333360; font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; cursor:pointer; padding:4px 0; font-family:inherit; width:100%; text-align:left; }
+    #heat-toggle:hover { color:#555590; }
+    #heat-body { display:none; margin-top:8px; }
+    #heat-body.open { display:block; }
+    .heat-row { display:grid; grid-template-columns:130px 1fr 42px; align-items:center; gap:8px; margin-bottom:5px; font-size:12px; }
+    .heat-label { color:#555590; white-space:nowrap; }
+    .heat-bar-wrap { height:8px; background:rgba(255,255,255,.07); border-radius:4px; overflow:hidden; }
+    .heat-bar { height:100%; border-radius:4px; background:#2b8fff; transition:width .6s ease; }
+    .heat-bar.worst { background:#EF4444; }
+    .heat-pct { color:#6666aa; text-align:right; font-variant-numeric:tabular-nums; }
+
+    /* ── Esconder ranking ── */
+    #rank-hidden-msg { display:none; flex:1; align-items:center; justify-content:center; flex-direction:column; gap:16px; }
+    .rh-icon { font-size:64px; }
+    .rh-text { font-family:'Orbitron'; font-size:22px; color:#333360; letter-spacing:2px; text-align:center; }
+    @keyframes reveal-card { from{opacity:0;transform:translateY(60px) scale(.85)} to{opacity:1;transform:none} }
+    .rank-card.revealing { animation:reveal-card .55s cubic-bezier(.34,1.56,.64,1) both; }
+    /* ── Histórico de liderança ── */
+    #lider-section { flex-shrink:0; padding:4px 36px 8px; border-top:1px solid rgba(255,255,255,.04); }
+    #lider-toggle { background:none; border:none; color:#222244; font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; cursor:pointer; padding:3px 0; font-family:inherit; }
+    #lider-body { display:none; margin-top:6px; font-size:12px; color:#333360; line-height:1.6; }
+    #lider-body.open { display:block; }
+    /* ── Toggle individual/duplas ── */
+    #mode-toggle { display:flex; gap:1px; border-radius:8px; overflow:hidden; flex-shrink:0; }
+    .mt-btn { padding:5px 12px; font-size:11px; font-weight:700; border:none; cursor:pointer; font-family:inherit; background:rgba(255,255,255,.06); color:#555590; transition:all .15s; }
+    .mt-btn.active { background:rgba(91,192,255,.2); color:#5bc0ff; }
   </style>
 </head>
 <body>
@@ -198,12 +227,34 @@
 <div id="tv-hdr">
   <div id="hdr-title">🏆 Torneio</div>
   <div id="hdr-timer">--:--</div>
+  <button id="btn-esconder" onclick="toggleEsconderRanking()" style="background:rgba(255,255,255,.06);border:none;color:#555590;font-size:11px;font-weight:700;padding:5px 12px;border-radius:8px;cursor:pointer;font-family:inherit">👁️ Ocultar</button>
+  <div id="mode-toggle">
+    <button class="mt-btn active" id="btn-individual" onclick="setModo('individual')">👤 Individual</button>
+    <button class="mt-btn" id="btn-duplas" onclick="setModo('duplas')">👥 Duplas</button>
+  </div>
   <div id="hdr-count">👥 --</div>
 </div>
 
 <div id="ranking-wrap">
   <div id="waiting">
     <div class="wt-title">AGUARDANDO TORNEIO…</div>
+  </div>
+</div>
+
+<div id="rank-hidden-msg">
+  <div class="rh-icon">🎭</div>
+  <div class="rh-text">Ranking oculto — revelação em breve!</div>
+</div>
+
+<div id="lider-section" style="display:none">
+  <button id="lider-toggle" onclick="toggleLiderHistorico()">📈 Histórico de liderança ▼</button>
+  <div id="lider-body"></div>
+</div>
+
+<div id="heat-section" style="display:none">
+  <button id="heat-toggle" onclick="toggleHeat()">📊 Dificuldades da turma — ao vivo ▼</button>
+  <div id="heat-body">
+    <div id="heat-bars"></div>
   </div>
 </div>
 
@@ -215,10 +266,15 @@
 import { db } from "/js/firebase-config.js";
 import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-// ── Parâmetro id ──────────────────────────────────────────────
-const torneioId = new URLSearchParams(location.search).get('id');
+// ── Parâmetros ────────────────────────────────────────────────
+const _tvParams  = new URLSearchParams(location.search);
+const torneioId  = _tvParams.get('id');
+const _tvTurma   = _tvParams.get('turma') || '';
 if (!torneioId) {
   document.getElementById('waiting').innerHTML = '<div class="wt-title" style="color:#661111">ID do torneio não informado na URL.</div>';
+}
+if (_tvTurma) {
+  document.getElementById('hdr-title').textContent = `🏆 Torneio · Turma ${_tvTurma}`;
 }
 
 // ── Web Audio API ─────────────────────────────────────────────
@@ -295,16 +351,172 @@ function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').r
 // ── Estado ────────────────────────────────────────────────────
 let _torneio    = null;
 let _sessoes    = {};
-let _prevRank   = {};   // uid → posição anterior (snapshot para próxima comparação)
-let _prevPts    = {};   // uid → pts anteriores (snapshot para próxima comparação)
-let _pendingDeltas     = {};   // uid → delta pts a mostrar no próximo render
-let _pendingPosChanged = new Set(); // uids com mudança de posição a animar
+let _resultados = {};   // torneio_resultados por uid
+let _prevRank   = {};
+let _prevPts    = {};
+let _pendingDeltas     = {};
+let _pendingPosChanged = new Set();
 let _timerInt   = null;
 let _encerrado  = false;
 let _tickSec    = -1;
 let _bottomTimeout  = null;
 let _floatTimeout   = null;
 let _centerTimeout  = null;
+let _modoTV          = 'individual';
+let _heatOpen        = false;
+let _heatInterval    = null;
+let _rankOculto      = false;
+let _liderHistorico  = [];   // [{ ts, nome }]
+let _liderOpen       = false;
+let _erroComumInt    = null;
+
+// ── Esconder / revelar ranking ────────────────────────────────
+window.toggleEsconderRanking = function() {
+  _rankOculto = !_rankOculto;
+  const wrap   = document.getElementById('ranking-wrap');
+  const hidden = document.getElementById('rank-hidden-msg');
+  const btn    = document.getElementById('btn-esconder');
+  if (_rankOculto) {
+    wrap.style.display   = 'none';
+    hidden.style.display = 'flex';
+    btn.textContent = '👁️ Revelar';
+  } else {
+    hidden.style.display = 'none';
+    wrap.style.display   = '';
+    btn.textContent = '👁️ Ocultar';
+    // Revelar cards um a um com stagger
+    const cards = document.querySelectorAll('.rank-card');
+    cards.forEach((c, i) => {
+      c.classList.remove('revealing');
+      void c.offsetWidth;
+      c.style.animationDelay = `${i * 120}ms`;
+      c.classList.add('revealing');
+    });
+    playArpejo();
+  }
+};
+
+// ── Histórico de liderança ────────────────────────────────────
+window.toggleLiderHistorico = function() {
+  _liderOpen = !_liderOpen;
+  const body = document.getElementById('lider-body');
+  const btn  = document.getElementById('lider-toggle');
+  if (body) body.classList.toggle('open', _liderOpen);
+  if (btn)  btn.textContent = `📈 Histórico de liderança ${_liderOpen ? '▲' : '▼'}`;
+  if (_liderOpen) renderLiderHistorico();
+};
+
+function renderLiderHistorico() {
+  const el = document.getElementById('lider-body');
+  if (!el) return;
+  if (!_liderHistorico.length) { el.textContent = 'Nenhuma mudança de liderança ainda.'; return; }
+  const fmt = ts => new Date(ts).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+  el.innerHTML = _liderHistorico.map((e, i) =>
+    `<span style="margin-right:16px">${fmt(e.ts)} <strong style="color:#FFD700">${escH(e.nome)}</strong> assumiu${i===_liderHistorico.length-1?' 👑':''}</span>`
+  ).join('');
+}
+
+function registrarMudancaLider(nome) {
+  _liderHistorico.push({ ts: Date.now(), nome });
+  if (_liderOpen) renderLiderHistorico();
+  if (_liderHistorico.length >= 1 && document.getElementById('lider-section'))
+    document.getElementById('lider-section').style.display = '';
+}
+
+// ── Destaque de erro comum (>50% da turma) ────────────────────
+function verificarErroComum() {
+  if (!Object.keys(_resultados).length) return;
+  const tipos = ['adicao','subtracao','duplo_neg','multiplicacao','divisao'];
+  const labels = { adicao:'adição com neg.', subtracao:'subtração com neg.', duplo_neg:'subtração −(−)', multiplicacao:'multiplicação', divisao:'divisão' };
+  const totAc = {}, totErr = {};
+  tipos.forEach(t => { totAc[t]=0; totErr[t]=0; });
+  Object.values(_resultados).forEach(r => {
+    tipos.forEach(t => {
+      totAc[t]  += r.tipos_acertos?.[t]  || 0;
+      totErr[t] += r.tipos_erros?.[t]    || 0;
+    });
+  });
+  // Encontrar tipo com >50% de erro e pelo menos 5 tentativas
+  for (const t of tipos) {
+    const tot = totAc[t] + totErr[t];
+    if (tot >= 5 && totErr[t] / tot > 0.5) {
+      showBottomAlert(`⚠️ +50% da turma está errando: ${labels[t]}`);
+      return;
+    }
+  }
+}
+
+// ── Toggle individual / duplas ────────────────────────────────
+window.setModo = function(modo) {
+  _modoTV = modo;
+  document.getElementById('btn-individual').classList.toggle('active', modo === 'individual');
+  document.getElementById('btn-duplas').classList.toggle('active', modo === 'duplas');
+  renderRanking(Object.values(_sessoes));
+};
+
+// ── Agrupamento por duplas ─────────────────────────────────────
+function agruparDuplas(sessArr) {
+  const grupos = {};
+  sessArr.forEach(s => {
+    // uid tem formato turma_Nome → extrair nome para duplas
+    // duplas compartilham mesmo ts de início — agrupar por (turma, pts próximos)
+    // Estratégia: uid sem número final = grupo; senão, agrupar manualmente
+    // Usa nomes com " e " ou pares de turma
+    const nomes = (s.aluno || '').split(' e ');
+    const key = `${s.turma}||${nomes.sort().join('|')}`;
+    if (!grupos[key]) grupos[key] = { aluno: s.aluno, turma: s.turma, pontuacao: 0, acertos: 0, erros: 0, combo_atual: 0, uids: [] };
+    grupos[key].pontuacao   += s.pontuacao  || 0;
+    grupos[key].acertos     += s.acertos    || 0;
+    grupos[key].erros       += s.erros      || 0;
+    grupos[key].combo_atual  = Math.max(grupos[key].combo_atual, s.combo_atual || 0);
+    grupos[key].uids.push(s.uid);
+  });
+  return Object.values(grupos).map((g, i) => ({ ...g, uid: `dup_${i}` }));
+}
+
+// ── Gráfico de calor ──────────────────────────────────────────
+window.toggleHeat = function() {
+  _heatOpen = !_heatOpen;
+  const body = document.getElementById('heat-body');
+  const btn  = document.getElementById('heat-toggle');
+  if (body) body.classList.toggle('open', _heatOpen);
+  if (btn)  btn.textContent = `📊 Dificuldades da turma — ao vivo ${_heatOpen ? '▲' : '▼'}`;
+  if (_heatOpen) renderHeat();
+};
+
+function renderHeat() {
+  const container = document.getElementById('heat-bars');
+  if (!container) return;
+
+  // Agregar tipos_acertos e tipos_erros de todos os alunos
+  const tipos = ['adicao', 'subtracao', 'duplo_neg', 'multiplicacao', 'divisao'];
+  const labels = { adicao:'Adição c/ neg.', subtracao:'Subtração c/ neg.', duplo_neg:'Subtração −(−)', multiplicacao:'Multiplicação', divisao:'Divisão' };
+  const totAc = {}, totErr = {};
+  tipos.forEach(t => { totAc[t] = 0; totErr[t] = 0; });
+
+  Object.values(_resultados).forEach(r => {
+    if (r.tipos_acertos)  tipos.forEach(t => { totAc[t]  += r.tipos_acertos[t]  || 0; });
+    if (r.tipos_erros)    tipos.forEach(t => { totErr[t] += r.tipos_erros[t]   || 0; });
+  });
+
+  // Calcular % de erro e encontrar pior
+  const pcts = tipos.map(t => {
+    const total = totAc[t] + totErr[t];
+    return total > 0 ? Math.round((totErr[t] / total) * 100) : null;
+  });
+  const pctValidos = pcts.filter(p => p !== null);
+  const maxPct = pctValidos.length ? Math.max(...pctValidos) : 0;
+
+  container.innerHTML = tipos.map((t, i) => {
+    const pct = pcts[i];
+    const isWorst = pct === maxPct && maxPct > 0;
+    return `<div class="heat-row">
+      <div class="heat-label">${labels[t]}</div>
+      <div class="heat-bar-wrap"><div class="heat-bar${isWorst ? ' worst' : ''}" style="width:${pct ?? 0}%"></div></div>
+      <div class="heat-pct heat-pct">${pct != null ? pct + '%' : '—'}</div>
+    </div>`;
+  }).join('');
+}
 
 // ── Timer (sincronizado com Firebase) ─────────────────────────
 function calcRestante(t) {
@@ -379,7 +591,11 @@ if (torneioId) {
   // ── Listener: sessões (ranking ao vivo) ───────────────────
   onValue(ref(db, `torneios/${torneioId}/sessoes`), snap => {
     const novo = {};
-    if (snap?.exists()) snap.forEach(c => { novo[c.key] = { uid: c.key, ...c.val() }; });
+    if (snap?.exists()) snap.forEach(c => {
+      const v = c.val();
+      // Filtrar por turma se parâmetro fornecido
+      if (!_tvTurma || v.turma === _tvTurma) novo[c.key] = { uid: c.key, ...v };
+    });
     processarMudancas(novo);
     _sessoes = novo;
 
@@ -387,7 +603,32 @@ if (torneioId) {
     document.getElementById('hdr-count').textContent = `👥 ${count}`;
 
     renderRanking(Object.values(novo));
+    if (count > 0) document.getElementById('heat-section').style.display = '';
   });
+
+  // Status vem de torneio_ativo/{turma} quando turma especificada
+  if (_tvTurma) {
+    onValue(ref(db, `torneio_ativo/${_tvTurma}`), snap => {
+      const dados = snap?.val();
+      if (!dados) return;
+      if (!_torneio) _torneio = {};
+      Object.assign(_torneio, { status: dados.status, inicio: dados.inicio, pausa_inicio: dados.pausa_inicio, pausa_total_ms: dados.pausa_total_ms, tempo_segundos: dados.tempo_segundos });
+      if (!_timerInt) iniciarTimer();
+      if (dados.status === 'encerrado' && !_encerrado) { _encerrado = true; setTimeout(() => triggerEncerramento(), 800); }
+    });
+  }
+
+  // ── Listener: resultados analíticos (tipos de erro) ────────
+  onValue(ref(db, `torneio_resultados/${torneioId}`), snap => {
+    _resultados = {};
+    if (snap?.exists()) snap.forEach(c => { _resultados[c.key] = c.val(); });
+    if (_heatOpen) renderHeat();
+  });
+
+  // Atualizar heat a cada 10s
+  _heatInterval = setInterval(() => { if (_heatOpen) renderHeat(); }, 10000);
+  // Verificar erro comum a cada 30s
+  _erroComumInt = setInterval(verificarErroComum, 30000);
 }
 
 // ── Detecção de mudanças ──────────────────────────────────────
@@ -472,7 +713,8 @@ function renderRanking(sessArr) {
   const wrap = document.getElementById('ranking-wrap');
   if (!wrap) return;
 
-  const sorted = [...sessArr].sort((a, b) => (b.pontuacao||0) - (a.pontuacao||0)).slice(0, 10);
+  const base = _modoTV === 'duplas' ? agruparDuplas(sessArr) : sessArr;
+  const sorted = [...base].sort((a, b) => (b.pontuacao||0) - (a.pontuacao||0)).slice(0, 10);
   if (!sorted.length) {
     wrap.innerHTML = '<div id="waiting"><div class="wt-title">AGUARDANDO PARTICIPANTES…</div></div>';
     return;
@@ -558,17 +800,12 @@ function buildCard(s, i, leaderPts, medals, posCls, deltasMap) {
 
 // ── Animações / efeitos ───────────────────────────────────────
 function triggerNovoLider(nome) {
-  // Flash dourado
   const flash = document.getElementById('screen-flash');
   flash.classList.remove('active'); void flash.offsetWidth; flash.classList.add('active');
-
-  // Card do líder pulsa
   const card = document.querySelector('.rank-card.p1');
   if (card) { card.classList.remove('gold-pulse'); void card.offsetWidth; card.classList.add('gold-pulse'); }
-
-  // Mensagem flutuante
   showFloatMsg(`👑 ${nome} assume a liderança!`);
-
+  registrarMudancaLider(nome);
   playFanfarra();
 }
 
@@ -701,7 +938,32 @@ function triggerEncerramento() {
   spawnFireworks();
   spawnConfetti();
 
-  setTimeout(() => mostrarRankingCompleto(sessArr), 10000);
+  // Certificado digital do 1º lugar após 7s
+  if (sessArr[0]) {
+    setTimeout(() => mostrarCertificado(sessArr[0]), 7000);
+  }
+  setTimeout(() => mostrarRankingCompleto(sessArr), 14000);
+}
+
+function mostrarCertificado(vencedor) {
+  const endEl = document.getElementById('end-screen');
+  if (!endEl) return;
+  const data = new Date().toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' });
+  const nomeTorneio = _torneio?.nome || 'Torneio';
+  endEl.innerHTML += `
+    <div id="cert-card" style="
+      margin-top:32px; padding:32px 48px; border:3px solid #FFD700;
+      border-radius:20px; text-align:center; background:linear-gradient(160deg,#03030f 0%,#0d0d2a 100%);
+      max-width:600px; animation:ep-pop 1s cubic-bezier(.34,1.56,.64,1) both;
+    ">
+      <div style="font-size:48px;margin-bottom:8px">🏆</div>
+      <div style="font-family:'Orbitron';font-size:13px;color:#FFD700;letter-spacing:3px;margin-bottom:16px">CERTIFICADO DE CAMPEÃO</div>
+      <div style="font-size:26px;font-weight:900;color:#fff;margin-bottom:4px">${escH(vencedor.aluno||'—')}</div>
+      <div style="font-size:14px;color:#6666aa;margin-bottom:16px">Turma ${escH(vencedor.turma||'?')}</div>
+      <div style="font-family:'Orbitron';font-size:36px;font-weight:900;color:#FFD700;margin-bottom:8px">${vencedor.pontuacao||0} pts</div>
+      <div style="font-size:13px;color:#333360;margin-bottom:4px">${escH(nomeTorneio)}</div>
+      <div style="font-size:12px;color:#222244">${data}</div>
+    </div>`;
 }
 
 function mostrarRankingCompleto(sessArr) {

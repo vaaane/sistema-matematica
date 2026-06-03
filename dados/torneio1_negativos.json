@@ -1,0 +1,62 @@
+{
+  "nome": "Torneio — Operações com Números Negativos",
+  "descricao": "Progressão de 20+ níveis: do básico ao avançado, foco no sinal",
+  "modo": "progressao",
+  "penalidade_erro": 0.5,
+  "_comentario": "modo progressao: cada entrada em progressao[] cobre uma faixa de niveis. niveis: '1-5' ou '21+'. Para o campo 21+ o code calcula pares dinamicamente via pares_base + floor((n-21)/pares_incremento_a_cada)*pares_incremento, clamped em pares_max. cols vem de grid_desktop/grid_mobile conforme viewport (<=599px = mobile).",
+  "progressao": [
+    {
+      "niveis": "1-5",
+      "operacoes": ["adicao_neg_simples", "subtracao_neg_simples"],
+      "permite_duplo_negativo": false,
+      "operandos_min": -10,
+      "operandos_max": 10,
+      "pares": 6,
+      "grid_desktop": { "cols": 4 },
+      "grid_mobile":  { "cols": 3 }
+    },
+    {
+      "niveis": "6-10",
+      "operacoes": ["adicao_neg_simples", "subtracao_neg_simples", "subtracao_duplo_neg"],
+      "permite_duplo_negativo": true,
+      "operandos_min": -10,
+      "operandos_max": 10,
+      "pares": 6,
+      "grid_desktop": { "cols": 4 },
+      "grid_mobile":  { "cols": 3 }
+    },
+    {
+      "niveis": "11-15",
+      "operacoes": ["adicao_neg_simples", "subtracao_neg_simples", "subtracao_duplo_neg", "multiplicacao_neg"],
+      "permite_duplo_negativo": true,
+      "operandos_min": -10,
+      "operandos_max": 10,
+      "pares": 10,
+      "grid_desktop": { "cols": 5 },
+      "grid_mobile":  { "cols": 4 }
+    },
+    {
+      "niveis": "16-20",
+      "operacoes": ["adicao_neg_simples", "subtracao_neg_simples", "subtracao_duplo_neg", "multiplicacao_neg", "divisao_neg"],
+      "permite_duplo_negativo": true,
+      "operandos_min": -10,
+      "operandos_max": 10,
+      "pares": 10,
+      "grid_desktop": { "cols": 5 },
+      "grid_mobile":  { "cols": 4 }
+    },
+    {
+      "niveis": "21+",
+      "operacoes": ["adicao_neg_simples", "subtracao_neg_simples", "subtracao_duplo_neg", "multiplicacao_neg", "divisao_neg"],
+      "permite_duplo_negativo": true,
+      "operandos_min": -15,
+      "operandos_max": 15,
+      "pares_base": 10,
+      "pares_incremento": 1,
+      "pares_incremento_a_cada": 5,
+      "pares_max": 18,
+      "grid_desktop_max": { "cols": 6 },
+      "grid_mobile_max":  { "cols": 4 }
+    }
+  ]
+}
