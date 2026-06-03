@@ -68,6 +68,7 @@ import { getResultadosByAluno } from "/js/db.js";
 const sess = requireAluno();
 if (!sess) throw new Error();
 const { alunos, turma } = sess;
+const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
 
 renderSidebarAluno("sidebar", "torneios");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
@@ -82,12 +83,13 @@ function fmtData(ts) {
 }
 
 // ── Carregar dados em paralelo ────────────────────────────────
-// Ativos: buscar de torneio_ativo/{turma}/{torneioId} (nova estrutura)
-// Encerrados: buscar de torneios/ (metadata com status='encerrado')
-const [ativoSnap, torneiosSnap, resultados] = await Promise.all([
+const [ativoSnap, torneiosSnap, resultados, testeHistSnap] = await Promise.all([
   get(ref(db, `torneio_ativo/${turma}`)).catch(() => null),
   get(ref(db, 'torneios')).catch(() => null),
   getResultadosByAluno(alunos[0]).catch(() => []),
+  isModoTeste()
+    ? get(ref(db, `modo_teste_historico/${uid}/torneios`)).catch(() => null)
+    : Promise.resolve(null),
 ]);
 
 // ── Torneios ativos ───────────────────────────────────────────
@@ -96,11 +98,9 @@ const ativos = [];
 if (ativoSnap?.exists()) {
   const val = ativoSnap.val();
   if (val && typeof val === 'object') {
-    // Backward compat: estrutura antiga era { torneioId: 'xxx', status: ... } (valor plano)
     if (typeof val.torneioId === 'string' && val.status) {
       if (STATUS_ATIVOS.has(val.status)) ativos.push({ id: val.torneioId, ...val });
     } else {
-      // Nova estrutura: { torneioId → { status, nome, ... } }
       Object.entries(val).forEach(([id, a]) => {
         if (a && typeof a === 'object' && STATUS_ATIVOS.has(a.status)) ativos.push({ id, ...a });
       });
@@ -108,25 +108,30 @@ if (ativoSnap?.exists()) {
   }
 }
 
-// ── Encerrados ────────────────────────────────────────────────
+// ── Encerrados (somente onde o aluno participou) ──────────────
+const resultMap = {};
+for (const r of resultados.filter(r => r.tipo === 'torneio' && r.concluido)) {
+  if (!resultMap[r.torneio_id] || (r.pontuacao||0) > (resultMap[r.torneio_id].pontuacao||0)) {
+    resultMap[r.torneio_id] = r;
+  }
+}
 const encerrados = [];
 if (torneiosSnap?.exists()) {
   torneiosSnap.forEach(c => {
     const v = c.val();
-    if (v.status === 'encerrado' && (v.turmas||[]).includes(turma)) {
+    // Mostrar no histórico apenas se o aluno participou (tem resultado salvo)
+    if (v.status === 'encerrado' && (v.turmas||[]).includes(turma) && resultMap[c.key]) {
       encerrados.push({ id: c.key, ...v });
     }
   });
 }
 encerrados.sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
 
-// ── Resultados de torneios deste aluno ────────────────────────
-const meusTorneios = resultados.filter(r => r.tipo === 'torneio' && r.concluido);
-const resultMap = {};
-for (const r of meusTorneios) {
-  if (!resultMap[r.torneio_id] || (r.pontuacao||0) > (resultMap[r.torneio_id].pontuacao||0)) {
-    resultMap[r.torneio_id] = r;
-  }
+// ── Histórico de testes ───────────────────────────────────────
+const testeHistorico = [];
+if (testeHistSnap?.exists()) {
+  testeHistSnap.forEach(c => testeHistorico.push({ _key: c.key, ...c.val() }));
+  testeHistorico.sort((a, b) => parseInt(b._key) - parseInt(a._key));
 }
 
 const medals = ['🥇','🥈','🥉'];
@@ -175,9 +180,9 @@ if (ativos.length) {
     const iconChar  = isTeste ? '🧪' : isOn ? '▶' : '⏳';
     const iconCls   = isTeste ? 'muted' : isOn ? 'green' : 'blue';
     const iconStyle = isTeste ? 'background:rgba(124,58,237,.12);' : '';
-    const url = isTeste
-      ? `/aluno/torneio.html?id=${t.id}&turma=TESTE&modo=teste`
-      : `/aluno/torneio.html?id=${t.id}`;
+    // Correção: professor.teste tem modo="aluno" na sessão — não usar &modo=teste
+    // A função isModoTeste() + turma=TESTE da sessão tratam o comportamento de teste
+    const url = `/aluno/torneio.html?id=${t.id}`;
     html += `<div class="tn-card ${isOn ? 'ativo-on' : 'ativo'}" style="${cardStyle}">
       <div class="tn-icon ${iconCls}" style="${iconStyle}">${iconChar}</div>
       <div class="tn-info">
@@ -196,7 +201,7 @@ if (ativos.length) {
   html += `</div>`;
 }
 
-// Encerrados / histórico
+// Encerrados — apenas torneios onde o aluno participou
 if (encerrados.length) {
   html += `<div class="card">
     <div class="card-header">
@@ -208,30 +213,58 @@ if (encerrados.length) {
     </div>`;
   for (const t of encerrados) {
     const res = resultMap[t.id];
-    const participou = !!res;
-    const icon = participou ? (res.posicao <= 3 ? medals[res.posicao-1] : '🏁') : '—';
+    const icon = res?.posicao <= 3 ? medals[res.posicao-1] : '🏁';
     html += `<div class="tn-card">
-      <div class="tn-icon ${participou ? 'gold' : 'muted'}" style="font-size:20px">${icon}</div>
+      <div class="tn-icon gold" style="font-size:20px">${icon}</div>
       <div class="tn-info">
         <div class="tn-nome">${escH(t.nome || 'Torneio')}</div>
         <div class="tn-sub">
           <span>${fmtData(t.encerrado_em || t.criadoEm)}</span>
-          <span>${(t.turmas||[]).join(', ')}</span>
-          ${!participou ? `<span style="color:var(--text-muted)">Não participou</span>` : ''}
+          <span>${(t.turmas||[]).filter(x=>x!=='TESTE').join(', ')}</span>
         </div>
       </div>
-      ${participou ? `
       <div class="tn-result">
-        <div class="tn-pts">${res.pontuacao || 0} pts</div>
+        <div class="tn-pts">${res?.pontuacao || 0} pts</div>
         <div class="tn-pos" style="color:${posColor(res)}">${posLabel(res)}</div>
-        <div class="tn-pos">✅ ${res.acertos||0} &nbsp;❌ ${res.erros||0}</div>
-      </div>` : ''}
+        <div class="tn-pos">✅ ${res?.acertos||0} &nbsp;❌ ${res?.erros||0}</div>
+      </div>
     </div>`;
   }
   html += `</div>`;
 }
 
-if (!ativos.length && !encerrados.length) {
+// Histórico de testes (modo teste permanente)
+if (testeHistorico.length) {
+  html += `<div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21L13 13.04V8h-1z"/></svg>
+        Histórico de testes
+      </div>
+      <span class="badge">${testeHistorico.length} sessão${testeHistorico.length !== 1 ? 'ões' : ''}</span>
+    </div>`;
+  for (const t of testeHistorico) {
+    const tabs = t.tabuleiros_completos || 0;
+    html += `<div class="tn-card">
+      <div class="tn-icon muted" style="font-size:20px;background:rgba(124,58,237,.12)">🧪</div>
+      <div class="tn-info">
+        <div class="tn-nome">${escH(t.nome || 'Torneio Teste')}</div>
+        <div class="tn-sub">
+          <span>${fmtData(parseInt(t._key))}</span>
+          <span class="badge" style="background:rgba(124,58,237,.12);color:#7C3AED;border:1px solid rgba(124,58,237,.25)">🧪 Teste</span>
+          <span>${tabs} tabuleiro${tabs !== 1 ? 's' : ''}</span>
+        </div>
+      </div>
+      <div class="tn-result">
+        <div class="tn-pts">${t.pontuacao || 0} pts</div>
+        <div class="tn-pos">✅ ${t.acertos||0} &nbsp;❌ ${t.erros||0}</div>
+      </div>
+    </div>`;
+  }
+  html += `</div>`;
+}
+
+if (!ativos.length && !encerrados.length && !testeHistorico.length) {
   const msg = isModoTeste()
     ? 'Crie um torneio com "🧪 Teste" selecionado no painel do professor.'
     : 'Quando a professora criar um torneio para sua turma, ele aparece aqui.';

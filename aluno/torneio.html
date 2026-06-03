@@ -1165,6 +1165,15 @@ async function mostrarResultadoTeste() {
   clearTimeout(_saveQ);
 
   const ptsFinal = Math.round(_pts * 10) / 10;
+
+  // Salvar em modo_teste_historico/{uid}/torneios/{timestamp}
+  await set(ref(db, `modo_teste_historico/${uid}/torneios/${Date.now()}`), {
+    torneioId, nome: _torneio?.nome || '',
+    pontuacao: ptsFinal, acertos: _acertos, erros: _erros,
+    tabuleiros_completos: _tabuleirosCompletos, maior_streak: _streakMax,
+    tipos_acertos: { ..._tiposAcertos }, tipos_erros: { ..._tiposErros },
+    modo_teste: true, fim: Date.now(),
+  }).catch(() => {});
   document.getElementById('content').innerHTML = `
     <div class="card" style="text-align:center;max-width:500px;margin:0 auto;padding:32px">
       <div style="font-size:52px;margin-bottom:8px">🧪</div>
