@@ -166,6 +166,7 @@ import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-da
 function avKey(s) {
   return btoa(unescape(encodeURIComponent(s))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
 }
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 const tentativasOficiais = {};
 
 const sess = requireAluno();
@@ -305,16 +306,28 @@ const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
 content.innerHTML = ['','','',''].map(() => `<div class="sk"></div>`).join('');
 
 // ── Carregar dados ─────────────────────────────────────────────
-const [todosRaw, _statusMap, allConquisTaskRaw, testeHistSnap] = await Promise.all([
-  Promise.all(alunos.map(a => getResultadosByAluno(a))).then(r => r.flat()),
-  getAllAtividadeStatus().catch(() => ({})),
-  Promise.all(alunos.map(a => getConquistasByAluno(a))).catch(() => [[]]),
-  get(ref(db, `modo_teste_historico/${uid}/torneios`)).catch(() => null),
-]);
-
-const todos    = todosRaw.filter(r => !r.modo_teste);
-const statusMap = _statusMap;
-const allConquistas = allConquisTaskRaw.flat();
+let todos = [], statusMap = {}, allConquistas = [], testeHistSnap = null;
+try {
+  const [todosRaw, _statusMap, allConquisTaskRaw, _testeSnap] = await Promise.all([
+    Promise.all(alunos.map(a => getResultadosByAluno(a))).then(r => r.flat()).catch(() => []),
+    getAllAtividadeStatus().catch(() => ({})),
+    Promise.all(alunos.map(a => getConquistasByAluno(a))).catch(() => [[]]),
+    get(ref(db, `modo_teste_historico/${uid}/torneios`)).catch(() => null),
+  ]);
+  todos          = todosRaw.filter(r => !r.modo_teste);
+  statusMap      = _statusMap || {};
+  allConquistas  = allConquisTaskRaw.flat();
+  testeHistSnap  = _testeSnap;
+} catch(e) {
+  console.error('[historico] Erro ao carregar dados:', e);
+  content.innerHTML = `<div class="card" style="text-align:center;padding:40px">
+    <div style="font-size:36px;margin-bottom:12px">⚠️</div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:6px">Erro ao carregar histórico</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">${e.message || 'Verifique sua conexão e tente novamente.'}</div>
+    <button class="btn btn-blue" onclick="location.reload()">Tentar novamente</button>
+  </div>`;
+  throw e;
+}
 
 for (const c of allConquistas) {
   if (c.sessaoId) {
