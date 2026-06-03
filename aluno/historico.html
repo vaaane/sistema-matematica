@@ -167,6 +167,16 @@ function avKey(s) {
   return btoa(unescape(encodeURIComponent(s))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
 }
 function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtData(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+function fmtHora(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
 const tentativasOficiais = {};
 
 const sess = requireAluno();
@@ -353,11 +363,49 @@ await Promise.all(avAtivs.map(async ativ => {
 
 // ── Construir lista plana de itens ─────────────────────────────
 const ATIVIDADES_OCULTAS = new Set(['Atividade 4 - Geometria']);
-const MODOS_OCULTOS = new Set(['tabuada','tabuada_speed']); // não mostrar sessões de tabuada
+const MODOS_OCULTOS      = new Set(['tabuada', 'tabuada_speed']);
+
+// Avaliação+: agrupar tentativas da mesma sessão num único item
+function _chaveSessao(r) {
+  if (r.sessao_id) return r.sessao_id;
+  if (r.inicio_sessao) return String(r.inicio_sessao);
+  // fallback: mesmo dia + atividade (máx 1 sessão/dia)
+  return `${r.aluno}|${r.atividade}|${r.data || fmtData(r.criadoEm)}`;
+}
+
+function agruparAvP(regs) {
+  const map = new Map();
+  for (const r of regs) {
+    const k = _chaveSessao(r);
+    if (!map.has(k)) map.set(k, []);
+    map.get(k).push(r);
+  }
+  const sessoes = [];
+  for (const [k, tents] of map) {
+    // Ordenar por tentativa_num, depois por criadoEm
+    tents.sort((a, b) => (a.tentativa_num || 1) - (b.tentativa_num || 1) || (a.criadoEm || 0) - (b.criadoEm || 0));
+    const first = tents[0];
+    const ts = first.inicio_sessao || first.criadoEm || 0;
+    sessoes.push({
+      _key: k,
+      atividade: first.atividade,
+      aluno:     first.aluno,
+      turma:     first.turma,
+      tentativas: tents,
+      ids:        tents.map(r => r.id),
+      _ts:        ts,
+    });
+  }
+  return sessoes;
+}
+
+const avpRegs   = todos.filter(r => r.concluido && r.modo === 'avaliacao_plus' && !ATIVIDADES_OCULTAS.has(r.atividade));
+const avpItems  = agruparAvP(avpRegs).map(s => ({ _tipo: 'avaliacao_plus', _ts: s._ts, _res: s }));
 
 const ativItems = todos.filter(r =>
   r.concluido &&
   r.tipo !== 'torneio' &&
+  r.modo !== 'avaliacao_plus' &&
   !ATIVIDADES_OCULTAS.has(r.atividade) &&
   !MODOS_OCULTOS.has(r.modo)
 ).map(r => ({ _tipo: 'atividade', _ts: r.criadoEm || 0, _res: r }));
@@ -374,7 +422,7 @@ if (testeHistSnap?.exists()) {
   });
 }
 
-const allItems = [...ativItems, ...tornItems, ...testeItems]
+const allItems = [...avpItems, ...ativItems, ...tornItems, ...testeItems]
   .sort((a, b) => b._ts - a._ts);
 
 // ── Render de um item de atividade ────────────────────────────
@@ -585,6 +633,128 @@ window.toggleHiCard = async function(detId, resultadoId, modo, tipo) {
   }
 };
 
+// ── Render de uma sessão Avaliação+ (múltiplas tentativas) ────
+function renderItemSessaoAvP(sessao) {
+  const tentEsc = tentativasOficiais[sessao.atividade] ?? null;
+  const detId   = `hdet-avp-${sessao._key.replace(/[^a-zA-Z0-9]/g, '_')}`;
+  const idsAttr = sessao.ids.join(',');
+  const ativEsc = sessao.atividade.replace(/'/g, "\\'");
+
+  // Linha "T1: 7.3/10 · T2: 8.5/10 🏆"
+  const tentTokens = sessao.tentativas.map(r => {
+    const num  = r.tentativa_num || 1;
+    const nq   = r.nota_quiz != null ? r.nota_quiz.toFixed(1) : '?';
+    const isEc = tentEsc !== null && num === tentEsc;
+    const exp  = r.expirou_tempo ? ' ⏱' : '';
+    return `<span style="white-space:nowrap">T${num}:&nbsp;<strong>${nq}/10</strong>${isEc ? '&nbsp;🏆' : ''}${exp}</span>`;
+  }).join('<span style="color:var(--text-muted);margin:0 3px">·</span>');
+
+  // Melhor nota F1 e F2 para exibir no canto
+  const melhor   = sessao.tentativas.reduce((b, r) => (r.nota_quiz ?? 0) > (b.nota_quiz ?? 0) ? r : b, sessao.tentativas[0]);
+  const melhorF2 = Math.max(0, ...sessao.tentativas.map(r => r.pontuacao || 0));
+  const escolhida= tentEsc != null ? sessao.tentativas.find(r => (r.tentativa_num || 1) === tentEsc) : null;
+  const credito  = (escolhida ?? melhor)?.credito_final ?? null;
+  const creditoStr = credito != null ? (Number.isInteger(credito) ? credito : Number(credito).toFixed(2)) : null;
+  const ptsExib  = melhorF2 > 0 ? melhorF2 : (melhor?.nota_quiz != null ? melhor.nota_quiz.toFixed(1) : '—');
+
+  const hora = fmtHora(sessao._ts);
+  const data = sessao.tentativas[0]?.data || fmtData(sessao._ts);
+
+  const cqs = sessao.tentativas.map(r => renderConquistasBadges(r.id, r)).filter(Boolean).join('');
+
+  return `<div class="hi-card atividade" data-type="atividade">
+    <div class="hi-head" onclick="toggleHiSessao('${detId}','${idsAttr}','${ativEsc}')">
+      <span class="hi-icon">📝</span>
+      <div class="hi-info">
+        <div class="hi-nome">${escH(sessao.atividade)}</div>
+        <div class="hi-sub">
+          <span class="badge" style="background:#F5F3FF;color:#7C3AED">📝 Avaliação+</span>
+          ${tentEsc != null ? `<span class="badge-nota-melhor">T${tentEsc} escolhida</span>` : ''}
+        </div>
+        <div class="hi-sub" style="margin-top:4px;flex-wrap:wrap;gap:6px">${tentTokens}</div>
+        ${creditoStr != null ? `<div class="hi-sub" style="margin-top:2px">Total: <strong>${creditoStr}</strong></div>` : ''}
+        ${cqs ? `<div style="margin-top:5px">${cqs}</div>` : ''}
+      </div>
+      <div class="hi-meta">
+        <span class="hi-date">${data}${hora ? ` ${hora}` : ''}</span>
+        <span class="hi-pts">${ptsExib}</span>
+        <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:var(--text-muted);display:block;margin:2px auto 0" id="hichev-${detId}"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+      </div>
+    </div>
+    <div class="hi-detail" id="${detId}" style="display:none" data-loaded="false">
+      <p style="font-size:12px;color:var(--text-muted)">Carregando…</p>
+    </div>
+  </div>`;
+}
+
+window.toggleHiSessao = async function(detId, idsStr, atividade) {
+  const body = document.getElementById(detId);
+  const chev = document.getElementById(`hichev-${detId}`);
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (chev) chev.style.transform = open ? '' : 'rotate(180deg)';
+  if (open || body.dataset.loaded === 'true') return;
+  body.dataset.loaded = 'true';
+
+  const ids   = idsStr.split(',').filter(Boolean);
+  const tentEsc = tentativasOficiais[atividade] ?? null;
+
+  const questoesPorId = {};
+  await Promise.all(ids.map(async id => {
+    questoesPorId[id] = await getDetalhes(id).catch(() => []);
+  }));
+
+  const regsOrdenados = ids.map(id => todos.find(r => r.id === id)).filter(Boolean)
+    .sort((a, b) => (a.tentativa_num || 1) - (b.tentativa_num || 1));
+
+  const statusInfo = statusMap?.[`${regsOrdenados[0]?.turma}|${atividade}`];
+  const mostrarR   = !statusInfo || statusInfo.status !== 'ativa' || (statusInfo.percentual ?? 100) < 100;
+
+  body.innerHTML = regsOrdenados.map((r, idx) => {
+    const num   = r.tentativa_num || 1;
+    const isEsc = tentEsc != null && num === tentEsc;
+    const nq    = r.nota_quiz != null ? r.nota_quiz.toFixed(1) : '—';
+    const f2p   = r.pontuacao || 0;
+    const cred  = r.credito_final != null ? (Number.isInteger(r.credito_final) ? r.credito_final : Number(r.credito_final).toFixed(2)) : null;
+    const f1t   = r.tempo_fase1_ms ? formatMs(r.tempo_fase1_ms) : null;
+    const questoes = questoesPorId[r.id] || [];
+    const f1Qs  = questoes.filter(q => q.fase === 1);
+    const f2Qs  = questoes.filter(q => q.fase === 2);
+    const f2ac  = f2Qs.filter(q => q.resultado === 'acerto' || (q.resultado == null && q.acertou)).length;
+    const f2err = f2Qs.filter(q => q.resultado === 'erro'   || (q.resultado == null && !q.acertou)).length;
+    const f2nr  = f2Qs.filter(q => q.resultado === 'nao_respondida').length;
+    const sep   = idx < regsOrdenados.length - 1;
+
+    return `<div style="${sep ? 'margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:16px' : ''}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:13px;font-weight:800;color:#7C3AED">T${num}/10</span>
+        <span style="font-size:13px;font-weight:800">— ${nq}</span>
+        ${isEsc ? `<span class="badge-nota-melhor">🏆 Nota oficial</span>` : ''}
+        ${r.expirou_tempo ? `<span class="badge" style="background:#F3F4F6;color:#6B7280">⏱ Expirou</span>` : ''}
+        ${f1t ? `<span class="badge badge-blue">⏱ ${f1t}</span>` : ''}
+        ${cred != null ? `<span class="badge badge-green">Total: ${cred}</span>` : ''}
+      </div>
+      <div style="font-size:11px;font-weight:700;color:#7C3AED;background:#F5F3FF;padding:4px 10px;border-radius:6px;display:inline-block;margin-bottom:6px">📖 F1 — Quiz (${nq}/10)</div>
+      ${f1Qs.length ? `<div class="plus-q-wrap">${f1Qs.map((q,i) => renderPlusQuestao(q, i, mostrarR)).join('')}</div>`
+        : '<p style="font-size:11px;color:var(--text-muted)">Detalhes F1 não disponíveis.</p>'}
+      ${f2Qs.length ? `
+      <div style="margin:10px 0 6px;display:flex;align-items:center;gap:6px">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:10px;color:var(--text-muted);font-weight:700;padding:2px 8px;border:1px solid var(--border);border-radius:10px">F2 — ${f2p} pts</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">
+        <span class="badge badge-green">✅ ${f2ac}</span><span class="badge badge-red">❌ ${f2err}</span>
+        ${f2nr>0?`<span class="badge" style="background:#F3F4F6;color:#6B7280">⏸ ${f2nr}</span>`:''}
+        ${(r.acertos_rapidos||0)>0?`<span class="badge" style="background:#EFF6FF;color:#1D4ED8">⚡ ${r.acertos_rapidos}</span>`:''}
+        ${(r.combo_max||0)>1?`<span class="badge badge-orange">🔥 ×${r.combo_max}</span>`:''}
+      </div>
+      <div class="plus-q-wrap">${f2Qs.map((q,i)=>renderPlusQuestao(q,i,mostrarR)).join('')}</div>` : ''}
+    </div>`;
+  }).join('');
+};
+
 // ── Filtro ────────────────────────────────────────────────────
 let _filtroAtivo = 'tudo';
 window.setFiltro = function(f) {
@@ -615,9 +785,10 @@ if (!allItems.length) {
   </div>`;
 } else {
   for (const item of allItems) {
-    if      (item._tipo === 'atividade')     html += renderItemAtividade(item._res);
-    else if (item._tipo === 'torneio')       html += renderItemTorneio(item._res);
-    else if (item._tipo === 'torneio-teste') html += renderItemTorneioTeste(item._res);
+    if      (item._tipo === 'avaliacao_plus') html += renderItemSessaoAvP(item._res);
+    else if (item._tipo === 'atividade')      html += renderItemAtividade(item._res);
+    else if (item._tipo === 'torneio')        html += renderItemTorneio(item._res);
+    else if (item._tipo === 'torneio-teste')  html += renderItemTorneioTeste(item._res);
   }
 }
 
