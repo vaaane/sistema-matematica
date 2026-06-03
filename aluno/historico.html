@@ -417,7 +417,8 @@ function agruparAvP(regs) {
   return sessoes;
 }
 
-const avpRegs   = todos.filter(r => r.concluido && r.modo === 'avaliacao_plus' && !ATIVIDADES_OCULTAS.has(r.atividade));
+// Incluir T1 mesmo sem concluido=true (pode ter sido salva parcialmente)
+const avpRegs   = todos.filter(r => r.modo === 'avaliacao_plus' && !ATIVIDADES_OCULTAS.has(r.atividade));
 const avpItems  = agruparAvP(avpRegs).map(s => ({ _tipo: 'avaliacao_plus', _ts: s._ts, _res: s }));
 
 const ativItems = todos.filter(r =>
@@ -658,25 +659,29 @@ function renderItemSessaoAvP(sessao) {
   const idsAttr = sessao.ids.join(',');
   const ativEsc = sessao.atividade.replace(/'/g, "\\'");
 
-  // Linha "T1: 7.3/10 · T2: 8.5/10 🏆"
-  const tentTokens = sessao.tentativas.map(r => {
-    const num  = r.tentativa_num || 1;
-    const nq   = r.nota_quiz != null ? r.nota_quiz.toFixed(1) : '?';
+  // T1, T2, T3 sempre visíveis — "—" para as não realizadas
+  const byNum = {};
+  for (const r of sessao.tentativas) byNum[r.tentativa_num || 1] = r;
+  const tentTokens = [1, 2, 3].map(num => {
+    const r   = byNum[num];
+    if (!r) return `<span style="white-space:nowrap;color:var(--text-muted)">T${num}:&nbsp;—</span>`;
+    const nq  = r.nota_quiz != null ? r.nota_quiz.toFixed(1) : '?';
     const isEc = tentEsc !== null && num === tentEsc;
-    const exp  = r.expirou_tempo ? ' ⏱' : '';
-    return `<span style="white-space:nowrap">T${num}:&nbsp;<strong>${nq}/10</strong>${isEc ? '&nbsp;🏆' : ''}${exp}</span>`;
-  }).join('<span style="color:var(--text-muted);margin:0 3px">·</span>');
+    const exp  = r.expirou_tempo ? '&nbsp;⏱' : '';
+    return `<span style="white-space:nowrap">T${num}:&nbsp;<strong>${nq}/10</strong>${isEc ? '&nbsp;✅' : ''}${exp}</span>`;
+  }).join('<span style="color:var(--text-muted);margin:0 4px">·</span>');
 
-  // Melhor nota F1 e F2 para exibir no canto
   const melhor   = sessao.tentativas.reduce((b, r) => (r.nota_quiz ?? 0) > (b.nota_quiz ?? 0) ? r : b, sessao.tentativas[0]);
   const melhorF2 = Math.max(0, ...sessao.tentativas.map(r => r.pontuacao || 0));
-  const escolhida= tentEsc != null ? sessao.tentativas.find(r => (r.tentativa_num || 1) === tentEsc) : null;
-  const credito  = (escolhida ?? melhor)?.credito_final ?? null;
+  const escolhida = tentEsc != null ? sessao.tentativas.find(r => (r.tentativa_num || 1) === tentEsc) : null;
+  const credito   = (escolhida ?? melhor)?.credito_final ?? null;
   const creditoStr = credito != null ? (Number.isInteger(credito) ? credito : Number(credito).toFixed(2)) : null;
-  const ptsExib  = melhorF2 > 0 ? melhorF2 : (melhor?.nota_quiz != null ? melhor.nota_quiz.toFixed(1) : '—');
+  const f1Best  = melhor?.nota_quiz != null ? melhor.nota_quiz.toFixed(1) : '—';
+  const ptsExib = melhorF2 > 0 ? melhorF2 : f1Best;
 
-  const hora = fmtHora(sessao._ts);
-  const data = sessao.tentativas[0]?.data || fmtData(sessao._ts);
+  const hora  = fmtHora(sessao._ts);
+  const data  = sessao.tentativas[0]?.data || fmtData(sessao._ts);
+  const nTent = sessao.tentativas.length;
 
   const cqs = sessao.tentativas.map(r => renderConquistasBadges(r.id, r)).filter(Boolean).join('');
 
@@ -687,10 +692,13 @@ function renderItemSessaoAvP(sessao) {
         <div class="hi-nome">${escH(sessao.atividade)}</div>
         <div class="hi-sub">
           <span class="badge" style="background:#F5F3FF;color:#7C3AED">📝 Avaliação+</span>
-          ${tentEsc != null ? `<span class="badge-nota-melhor">T${tentEsc} escolhida</span>` : ''}
+          <span style="color:var(--text-muted)">${nTent} tentativa${nTent !== 1 ? 's' : ''}</span>
         </div>
-        <div class="hi-sub" style="margin-top:4px;flex-wrap:wrap;gap:6px">${tentTokens}</div>
-        ${creditoStr != null ? `<div class="hi-sub" style="margin-top:2px">Total: <strong>${creditoStr}</strong></div>` : ''}
+        <div class="hi-sub" style="margin-top:4px;flex-wrap:wrap;gap:5px">${tentTokens}</div>
+        ${tentEsc != null ? `<div class="hi-sub" style="margin-top:2px;color:var(--gold);font-size:11px;font-weight:600">🏆 Tentativa escolhida: T${tentEsc}</div>` : ''}
+        <div class="hi-sub" style="margin-top:2px;font-size:11px">
+          📝 F1: ${f1Best}/10${melhorF2 > 0 ? ` · 🎮 F2: ${melhorF2} pts` : ''}${creditoStr != null ? ` · Total: <strong>${creditoStr}</strong>` : ''}
+        </div>
         ${cqs ? `<div style="margin-top:5px">${cqs}</div>` : ''}
       </div>
       <div class="hi-meta">
