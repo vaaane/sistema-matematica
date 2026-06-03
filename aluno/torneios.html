@@ -62,7 +62,7 @@
 <script type="module">
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+import { requireAluno, renderSidebarAluno, clearSession, isModoTeste } from "/js/auth.js";
 import { getResultadosByAluno } from "/js/db.js";
 
 const sess = requireAluno();
@@ -71,8 +71,8 @@ const { alunos, turma } = sess;
 
 renderSidebarAluno("sidebar", "torneios");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
-document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
-document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
+document.getElementById("topbar-sub").textContent = isModoTeste() ? '🧪 Modo Teste' : `Turma ${turma}`;
+document.getElementById("avatar-initials").textContent = isModoTeste() ? '🧪' : alunos[0][0].toUpperCase();
 
 function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function fmtData(ts) {
@@ -82,21 +82,43 @@ function fmtData(ts) {
 }
 
 // ── Carregar dados em paralelo ────────────────────────────────
-const [torneiosSnap, resultados] = await Promise.all([
+// Ativos: buscar de torneio_ativo/{turma}/{torneioId} (nova estrutura)
+// Encerrados: buscar de torneios/ (metadata com status='encerrado')
+const [ativoSnap, torneiosSnap, resultados] = await Promise.all([
+  get(ref(db, `torneio_ativo/${turma}`)).catch(() => null),
   get(ref(db, 'torneios')).catch(() => null),
   getResultadosByAluno(alunos[0]).catch(() => []),
 ]);
 
-// ── Torneios do Firebase ──────────────────────────────────────
-const todos = [];
-if (torneiosSnap?.exists()) {
-  torneiosSnap.forEach(c => todos.push({ id: c.key, ...c.val() }));
+// ── Torneios ativos ───────────────────────────────────────────
+const STATUS_ATIVOS = new Set(['liberada', 'iniciado', 'pausado', 'teste_permanente']);
+const ativos = [];
+if (ativoSnap?.exists()) {
+  const val = ativoSnap.val();
+  if (val && typeof val === 'object') {
+    // Backward compat: estrutura antiga era { torneioId: 'xxx', status: ... } (valor plano)
+    if (typeof val.torneioId === 'string' && val.status) {
+      if (STATUS_ATIVOS.has(val.status)) ativos.push({ id: val.torneioId, ...val });
+    } else {
+      // Nova estrutura: { torneioId → { status, nome, ... } }
+      Object.entries(val).forEach(([id, a]) => {
+        if (a && typeof a === 'object' && STATUS_ATIVOS.has(a.status)) ativos.push({ id, ...a });
+      });
+    }
+  }
 }
-todos.sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
 
-// Separar por status e filtrar pela turma do aluno
-const ativos     = todos.filter(t => ['liberada','iniciado','pausado'].includes(t.status) && (t.turmas||[]).includes(turma));
-const encerrados = todos.filter(t => t.status === 'encerrado' && (t.turmas||[]).includes(turma));
+// ── Encerrados ────────────────────────────────────────────────
+const encerrados = [];
+if (torneiosSnap?.exists()) {
+  torneiosSnap.forEach(c => {
+    const v = c.val();
+    if (v.status === 'encerrado' && (v.turmas||[]).includes(turma)) {
+      encerrados.push({ id: c.key, ...v });
+    }
+  });
+}
+encerrados.sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
 
 // ── Resultados de torneios deste aluno ────────────────────────
 const meusTorneios = resultados.filter(r => r.tipo === 'torneio' && r.concluido);
@@ -133,28 +155,39 @@ if (ativos.length) {
       </div>
     </div>`;
   for (const t of ativos) {
-    const st = t.status;
-    const isOn = st === 'iniciado';
+    const st       = t.status;
+    const isTeste  = st === 'teste_permanente';
+    const isOn     = st === 'iniciado';
     const isPaused = st === 'pausado';
-    const statusBadge = st === 'liberada'
+    const statusBadge = isTeste
+      ? `<span class="badge" style="background:rgba(124,58,237,.12);color:#7C3AED;border:1px solid rgba(124,58,237,.25)">🧪 Sempre disponível</span>`
+      : st === 'liberada'
       ? `<span class="badge badge-blue">⏳ Aguardando início</span>`
       : isPaused
       ? `<span class="badge" style="background:#FEF9C3;color:#92400E;border-color:#FDE68A">⏸ Pausado</span>`
       : `<span class="badge badge-green">▶ Em andamento</span>`;
-    const btnLabel = st === 'liberada' ? 'Entrar' : isPaused ? 'Aguardar' : 'Jogar agora';
-    const btnCls   = isOn ? 'btn' : 'btn btn-blue';
-    const btnStyle = isOn ? 'background:#22C55E;color:#fff;border:none' : '';
-    html += `<div class="tn-card ${isOn ? 'ativo-on' : 'ativo'}">
-      <div class="tn-icon ${isOn ? 'green' : 'blue'}">${isOn ? '▶' : '⏳'}</div>
+    const btnLabel = isTeste ? 'Jogar agora' : st === 'liberada' ? 'Entrar' : isPaused ? 'Aguardar' : 'Jogar agora';
+    const btnCls   = (isOn || isTeste) ? 'btn' : 'btn btn-blue';
+    const btnStyle = isTeste
+      ? 'background:#7C3AED;color:#fff;border:none'
+      : isOn ? 'background:#22C55E;color:#fff;border:none' : '';
+    const cardStyle = isTeste ? 'border-color:rgba(124,58,237,.35);background:linear-gradient(135deg,rgba(124,58,237,.05),var(--card));' : '';
+    const iconChar  = isTeste ? '🧪' : isOn ? '▶' : '⏳';
+    const iconCls   = isTeste ? 'muted' : isOn ? 'green' : 'blue';
+    const iconStyle = isTeste ? 'background:rgba(124,58,237,.12);' : '';
+    const url = isTeste
+      ? `/aluno/torneio.html?id=${t.id}&turma=TESTE&modo=teste`
+      : `/aluno/torneio.html?id=${t.id}`;
+    html += `<div class="tn-card ${isOn ? 'ativo-on' : 'ativo'}" style="${cardStyle}">
+      <div class="tn-icon ${iconCls}" style="${iconStyle}">${iconChar}</div>
       <div class="tn-info">
         <div class="tn-nome">${escH(t.nome || 'Torneio')}</div>
         <div class="tn-sub">
           ${statusBadge}
           <span>⏱ ${Math.round((t.tempo_segundos||300)/60)} min</span>
-          <span>${(t.turmas||[]).join(', ')}</span>
         </div>
       </div>
-      <a href="/aluno/torneio.html?id=${t.id}" class="${btnCls}" style="${btnStyle}">
+      <a href="${url}" class="${btnCls}" style="${btnStyle}">
         <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M8 5v14l11-7z"/></svg>
         ${escH(btnLabel)}
       </a>
@@ -199,10 +232,13 @@ if (encerrados.length) {
 }
 
 if (!ativos.length && !encerrados.length) {
+  const msg = isModoTeste()
+    ? 'Crie um torneio com "🧪 Teste" selecionado no painel do professor.'
+    : 'Quando a professora criar um torneio para sua turma, ele aparece aqui.';
   html = `<div class="card" style="text-align:center;padding:52px 24px">
     <div style="font-size:48px;margin-bottom:12px">🏆</div>
-    <div style="font-size:16px;font-weight:700;margin-bottom:6px">Nenhum torneio ainda</div>
-    <div style="font-size:13px;color:var(--text-muted)">Quando a professora criar um torneio para sua turma, ele aparece aqui.</div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:6px">Nenhum torneio ativo</div>
+    <div style="font-size:13px;color:var(--text-muted)">${msg}</div>
   </div>`;
 }
 
