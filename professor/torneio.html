@@ -97,10 +97,11 @@ window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 const TURMAS = Object.keys(ALUNOS_POR_TURMA);
 
 // ── Estado ────────────────────────────────────────────────────
-let _tempoStepper = 5;
-let _jsonNome     = 'torneio1_negativos';
-let _jsonConfig   = null;
-let _jsonLista    = ['torneio1_negativos'];
+let _tempoStepper      = 5;
+let _jsonNome          = 'torneio_negativos';
+let _jsonConfig        = null;
+let _jsonLista         = ['torneio_negativos'];
+let _lastSuggestedNome = '';
 
 // { turma → { torneioId → data } }
 let _ativoNested = {};
@@ -298,17 +299,13 @@ function _htmlFormCriar() {
     <input type="checkbox" id="chk-TESTE" class="turma-chk" name="turma" value="TESTE">
     <label for="chk-TESTE" class="turma-lbl turma-lbl-teste">🧪 Teste</label>`;
 
-  const nomeDefault = _jsonConfig?.nome || 'Torneio — Números Negativos';
-  const jsonSel = _jsonLista.length > 1
-    ? `<label class="form-label">Arquivo de configuração</label>
-       <select class="form-input" style="font-size:13px;padding:7px 10px;margin-bottom:8px" onchange="trocarJson(this.value)">
-         ${_jsonLista.map(n => `<option value="${n}" ${n===_jsonNome?'selected':''}>${n}.json</option>`).join('')}
-       </select>` : '';
-  const nLevels = _contarNiveis(_jsonConfig);
-  const jsonInfo = `<div style="padding:9px 12px;background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.2);border-radius:8px;font-size:12px;color:var(--blue)">
-    📋 Dificuldade progressiva em ${nLevels} níveis · arquivo: <code>${_jsonNome}.json</code>
-  </div>`;
-  const preview = _htmlPreview();
+  const nomeDefault = _jsonConfig?.nome || '';
+
+  const jsonSel = `
+    <label class="form-label">Configuração do torneio</label>
+    <select id="json-sel" class="form-input" style="font-size:13px;padding:7px 10px;margin-bottom:8px" onchange="trocarJson(this.value)">
+      ${_jsonLista.map(n => `<option value="${n}" ${n===_jsonNome?'selected':''}>${n}.json</option>`).join('')}
+    </select>`;
 
   return `
     <div class="card" style="margin-bottom:16px">
@@ -320,6 +317,11 @@ function _htmlFormCriar() {
       <div class="form-field">
         <label class="form-label">Nome do torneio</label>
         <input type="text" id="inp-nome" class="form-input" placeholder="Ex: Torneio 1 — Números Negativos" value="${escH(nomeDefault)}" maxlength="80">
+      </div>
+
+      <div class="form-field">
+        ${jsonSel}
+        <div id="json-info-box">${_htmlJsonInfoBox()}</div>
       </div>
 
       <div class="form-field">
@@ -336,11 +338,6 @@ function _htmlFormCriar() {
         </div>
       </div>
 
-      <div class="form-field">
-        ${jsonSel}${jsonInfo}
-        ${preview ? `<div style="margin-top:8px">${preview}</div>` : ''}
-      </div>
-
       <p id="form-erro" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></p>
       <div style="display:flex;gap:8px">
         <button class="btn btn-ghost" onclick="testarTorneio()" style="flex:1;justify-content:center;padding:11px;font-size:13px">
@@ -352,6 +349,18 @@ function _htmlFormCriar() {
         </button>
       </div>
     </div>`;
+}
+
+function _htmlJsonInfoBox() {
+  const nLevels = _contarNiveis(_jsonConfig);
+  const desc    = _jsonConfig?.descricao || '';
+  const preview = _htmlPreview();
+  return `
+    <div style="padding:9px 12px;background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.2);border-radius:8px;font-size:12px;color:var(--blue)">
+      📋 Dificuldade progressiva em ${nLevels} níveis · arquivo: <code>${_jsonNome}.json</code>
+    </div>
+    ${desc ? `<div style="font-size:12px;color:var(--text-muted);margin-top:5px;padding:0 2px">${escH(desc)}</div>` : ''}
+    ${preview ? `<div style="margin-top:8px">${preview}</div>` : ''}`;
 }
 
 function _atualizarStepper() {
@@ -403,7 +412,16 @@ function _gerarPreviewPares() {
 window.trocarJson = async function(nome) {
   _jsonNome = nome;
   try { const r = await fetch(`/dados/${nome}.json`); _jsonConfig = await r.json(); } catch(e) { _jsonConfig = null; }
-  loadData();
+  // Atualizar info+preview sem recarregar a página
+  const box = document.getElementById('json-info-box');
+  if (box) box.innerHTML = _htmlJsonInfoBox();
+  // Auto-sugerir nome se o professor não editou manualmente
+  const inp = document.getElementById('inp-nome');
+  if (inp) {
+    const suggested = _jsonConfig?.nome || '';
+    if (!inp.value || inp.value === _lastSuggestedNome) inp.value = suggested;
+    _lastSuggestedNome = suggested;
+  }
 };
 
 // ── Ações ─────────────────────────────────────────────────────
@@ -983,6 +1001,7 @@ async function init() {
   try {
     const r = await fetch(`/dados/${_jsonNome}.json`);
     _jsonConfig = await r.json();
+    _lastSuggestedNome = _jsonConfig?.nome || '';
   } catch(e) { console.warn('JSON de torneio não carregado:', e); }
   loadData();
 }

@@ -4,7 +4,7 @@
       "id": "negativos",
       "nome": "Números Negativos",
       "descricao": "Operações com números negativos: +, −, ×, ÷",
-      "json_nome": "torneio1_negativos",
+      "json_nome": "torneio_negativos",
       "operacoes": ["adicao_neg", "subtracao_neg", "multiplicacao_neg", "divisao_neg"],
       "operandos_min": -12,
       "operandos_max": 12,
