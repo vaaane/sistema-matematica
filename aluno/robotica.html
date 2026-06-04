@@ -7,6 +7,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
+    /* ── Card do Guia ── */
+    .rob-guia-card{display:flex;align-items:center;gap:14px;padding:16px 20px;background:var(--card);border:1.5px solid var(--blue-pale,#EBF6FD);border-radius:var(--radius);text-decoration:none;color:inherit;transition:border-color .2s,box-shadow .2s;margin-bottom:6px;}
+    .rob-guia-card:hover{border-color:var(--blue);box-shadow:0 2px 12px rgba(37,99,235,.12);}
+    [data-theme="dark"] .rob-guia-card{border-color:rgba(59,130,246,.2);}
+    [data-theme="dark"] .rob-guia-card:hover{border-color:rgba(59,130,246,.5);}
+    .rob-guia-icon{width:44px;height:44px;border-radius:10px;background:var(--blue-pale,#EBF6FD);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+    [data-theme="dark"] .rob-guia-icon{background:rgba(59,130,246,.15);}
+    .rob-guia-info{flex:1;min-width:0;}
+    .rob-guia-titulo{font-size:15px;font-weight:700;color:var(--text);}
+    .rob-guia-desc{font-size:12px;color:var(--text-muted);margin-top:2px;}
+    .rob-guia-arrow{font-size:18px;color:var(--blue);flex-shrink:0;}
     /* ── Stats row ── */
     .rob-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px;}
     .rob-stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;display:flex;align-items:center;gap:12px;}
@@ -154,6 +165,12 @@
     .rq-btn-proxima{width:100%;padding:14px;background:var(--orange);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .15s,transform .1s;display:flex;align-items:center;justify-content:center;gap:8px;}
     .rq-btn-proxima:hover{background:#ea6c0a;transform:translateY(-1px);}
     .rq-btn-proxima:active{transform:translateY(0);}
+    .rq-chips-wrap{margin-top:4px;}
+    .rq-chips-label{font-size:11px;color:var(--text-muted);margin-bottom:8px;letter-spacing:.3px;}
+    .rq-chips{display:flex;gap:8px;flex-wrap:wrap;}
+    .rq-chip{padding:5px 13px;border-radius:20px;border:1px solid rgba(124,92,252,.25);background:rgba(124,92,252,.06);color:var(--text-muted);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;font-family:inherit;}
+    .rq-chip:hover{border-color:rgba(124,92,252,.5);color:var(--purple-light);}
+    .rq-chip.selected{border-color:#7c5cfc;background:rgba(124,92,252,.2);color:#9b7ffe;font-weight:700;}
     @media(max-width:560px){.rq-topbar{gap:8px;padding:10px 14px;}.rq-opcoes-grid{grid-template-columns:1fr;}.rq-content{padding:16px 12px;}}
     /* ══ FIM NOVO QUIZ LAYOUT ═════════════════════════════════ */
     /* Summary */
@@ -216,6 +233,7 @@
             <div id="quiz-enunciado"></div>
             <div id="quiz-opcoes"></div>
             <div class="quiz-fb" id="quiz-fb"></div>
+            <div class="rq-chips-wrap" id="rq-chips-wrap" style="display:none;"></div>
             <button class="rq-btn-proxima" id="btn-proxima" style="display:none;">Próxima →</button>
           </div>
         </div>
@@ -290,7 +308,13 @@ const ATIVIDADES = [
   { n:2, label:"Atividade 2", desc:"Aprofundamento de hardware e operadores", emoji:"⚡", bg:"#F5F3FF" },
   { n:3, label:"Atividade 3", desc:"Operadores avançados, se/então e lógica", emoji:"🧠", bg:"#DCFCE7" },
   { n:4, label:"Atividade 4", desc:"Revisão — 20 questões mais erradas",      emoji:"🎯", bg:"#FEF3C7" },
+  { n:5, label:"Atividade 5", desc:"Questionário geral — 60 questões",        emoji:"🚗", bg:"#FCE7F3", soPara:{aluno:"Murillo",turma:"8H"} },
 ];
+
+function podeVer(a) {
+  if (!a.soPara) return true;
+  return aluno === a.soPara.aluno && turma === a.soPara.turma;
+}
 
 const MINIMO_APROVACAO = 85;
 
@@ -315,7 +339,7 @@ const summWrap  = document.getElementById('summary-wrap');
 // ── Carrega todas as questões para exibir histórico ───────────────────────
 async function carregarQuestoesMap() {
   const results = await Promise.allSettled(
-    [1,2,3,4].map(n => fetch(`/dados/robotica/atividade_${n}.json`).then(r => r.json()))
+    ATIVIDADES.map(a => fetch(`/dados/robotica/atividade_${a.n}.json`).then(r => r.json()))
   );
   for (const r of results) {
     if (r.status === 'fulfilled') for (const q of r.value.questoes) questoesMap[q.id] = q;
@@ -326,9 +350,9 @@ async function carregarLista() {
   try {
     tentativasDB = await getRoboticaTentativasAluno(turma, aluno);
     console.log(`[Robótica] carregarLista: ${tentativasDB.length} tentativas carregadas para ${aluno} (${turma})`);
-    for (const a of [1,2,3,4]) {
-      const n = getTentativasPorAtiv(a).length;
-      if (n > 0) console.log(`  Atividade ${a}: ${n} tentativa(s)`);
+    for (const a of ATIVIDADES) {
+      const n = getTentativasPorAtiv(a.n).length;
+      if (n > 0) console.log(`  Atividade ${a.n}: ${n} tentativa(s)`);
     }
   } catch(e) {
     console.error('[Robótica] ERRO ao carregar histórico:', e);
@@ -362,7 +386,7 @@ function renderQuestoesDetalhe(tent) {
   });
 
   // questoes da atividade específica
-  const qsAtiv = [1,2,3,4].reduce((acc, n) => {
+  const qsAtiv = ATIVIDADES.map(a => a.n).reduce((acc, n) => {
     if (n == ativN) {
       // Filtramos questoesMap pelas questões que têm ID no respostas OU pela atividade
       // Usamos uma abordagem: pegar todas as IDs respondidas e buscar no map
@@ -474,7 +498,7 @@ function renderLista() {
       </div>
     </div>`;
 
-  const cardsHtml = ATIVIDADES.map(a => {
+  const cardsHtml = ATIVIDADES.filter(podeVer).map(a => {
     const tents = getTentativasPorAtiv(a.n).slice().reverse();
     const done = tents.length > 0;
     const melhorAcertos = done ? Math.max(...tents.map(t => t.acertos || 0)) : 0;
@@ -585,7 +609,16 @@ function renderLista() {
 
   listWrap.innerHTML = celebracaoHtml + `
     ${statsHtml}
-    <div class="rob-section-lbl">Atividades</div>
+    <div class="rob-section-lbl">Material de Apoio</div>
+    <a href="/aluno/guia_robotica.html" target="_blank" class="rob-guia-card">
+      <div class="rob-guia-icon">📖</div>
+      <div class="rob-guia-info">
+        <div class="rob-guia-titulo">Guia de Robótica</div>
+        <div class="rob-guia-desc">Pinos do Arduino, PWM, DRV8833, motores, operadores e estruturas de decisão</div>
+      </div>
+      <div class="rob-guia-arrow">→</div>
+    </a>
+    <div class="rob-section-lbl" style="margin-top:24px;">Atividades</div>
     <div class="rob-atv-list">${cardsHtml}</div>
   `;
 }
@@ -634,6 +667,8 @@ window.verTodasTentativas = function(ativN, el) {
 
 // ── Iniciar atividade ─────────────────────────────────────────────────────
 window.iniciarAtividade = async (n) => {
+  const atv = ATIVIDADES.find(a => a.n === n);
+  if (!atv || !podeVer(atv)) return;
   _finalizando = false;
   atividadeAtual = n;
   qIdx = 0;
@@ -659,6 +694,8 @@ function renderQuestao() {
   document.getElementById('quiz-enunciado').innerHTML = `<div class="rq-enunciado">${q.enunciado}</div>`;
 
   document.getElementById('quiz-fb').style.display = 'none';
+  const cw = document.getElementById('rq-chips-wrap');
+  if (cw) { cw.style.display = 'none'; cw.innerHTML = ''; }
   const _btnP = document.getElementById('btn-proxima');
   _btnP.style.display = 'none';
   _btnP.disabled = false; // re-habilita para a próxima questão
@@ -726,7 +763,26 @@ function mostrarFeedback(acertou, q) {
   btnP.textContent = qIdx === questoes.length - 1 ? 'Concluir ✓' : 'Próxima →';
   btnP.style.display = 'flex';
   btnP.className = 'rq-btn-proxima';
+  const cw2 = document.getElementById('rq-chips-wrap');
+  if (cw2) {
+    const curFb = respostas[q.id]?.feedback;
+    cw2.innerHTML = `<div class="rq-chips-label">Como você se sentiu nessa questão?</div>
+      <div class="rq-chips" id="rq-chips">${['Muito difícil','Não entendi','Não lembro','Tranquila'].map(op =>
+        `<button class="rq-chip${curFb===op?' selected':''}" onclick="marcarFeedback('${op}')">${op}</button>`
+      ).join('')}</div>`;
+    cw2.style.display = 'block';
+  }
 }
+
+window.marcarFeedback = function(opcao) {
+  const q = questoes[qIdx];
+  if (!q) return;
+  if (!respostas[q.id]) respostas[q.id] = {};
+  respostas[q.id].feedback = opcao;
+  document.querySelectorAll('#rq-chips .rq-chip').forEach(c => {
+    c.classList.toggle('selected', c.textContent === opcao);
+  });
+};
 
 window.responder = (letra) => {
   const q = questoes[qIdx];

@@ -752,7 +752,7 @@ ${tempoPodioHtml}
 // ── #1 Geral: efeitos dourados (Tabuada e/ou Quiz) ───────────
 function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
   if (!isQuiz && !isTabuada) return;
-  document.body.classList.add('body-gold-border');
+  document.documentElement.classList.add('body-gold-border');
   document.querySelector('.banner-top3')?.remove();
   document.getElementById('no1-banner')?.remove();
   let mainLine, subLine;

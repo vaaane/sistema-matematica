@@ -23,10 +23,10 @@ export function applyTopRankVisuals() {
     const emojis = ['🥇', '🥈', '🥉'];
     document.documentElement.style.setProperty('--top-color', colors[melhor - 1]);
     if (!document.getElementById('top-rank-overlay')) {
-      const overlay = document.createElement('div');
-      overlay.id = 'top-rank-overlay';
-      overlay.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:99999;border:3px solid var(--top-color,#F59E0B);animation:top-border-pulse 2.4s ease-in-out infinite;';
-      document.body.appendChild(overlay);
+      const s = document.createElement('style');
+      s.id = 'top-rank-overlay';
+      s.textContent = `html{box-shadow:inset 0 0 0 3px var(--top-color,#F59E0B);animation:top-border-pulse 2.4s ease-in-out infinite;}`;
+      document.head.appendChild(s);
     }
     if (!document.getElementById('top-rank-badge')) {
       const d = document.createElement('div');
