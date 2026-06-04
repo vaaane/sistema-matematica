@@ -1,0 +1,52 @@
+{
+  "rules": {
+
+    "resultados": {
+      ".read": true,
+      ".write": true,
+      "$id": {
+        ".validate": "newData.hasChildren(['aluno', 'atividade', 'turma'])"
+      }
+    },
+    "detalhes": { ".read": true, ".write": true },
+
+    "tabuada_niveis":          { ".read": true, ".write": true },
+    "tabuada_ranking":         { ".read": true, ".write": true },
+    "tabuada_sessoes":         { ".read": true, ".write": true },
+    "tabuada_config":          { ".read": true, ".write": true },
+    "tabuada_presenca":        { ".read": true, ".write": true },
+    "tabuada_conquistas":      { ".read": true, ".write": true },
+    "professor_tabuada_niveis":{ ".read": true, ".write": true },
+    "professor_tabuada_config":{ ".read": true, ".write": true },
+
+    "liberacoes_ativas":    { ".read": true, ".write": true },
+    "liberacoes_historico": { ".read": true, ".write": true },
+    "config":               { ".read": true, ".write": true },
+    "questoes_revisao":     { ".read": true, ".write": true },
+
+    "torneios":           { ".read": true, ".write": true },
+    "torneio_resultados": { ".read": true, ".write": true },
+    "torneio_historico":  { ".read": true, ".write": true },
+    "torneio_recordes":   { ".read": true, ".write": true },
+    "torneio_ativo":      { ".read": true, ".write": true },
+
+    "ranking_geral":  { ".read": true, ".write": true },
+    "ranking_turmas": { ".read": true, ".write": true },
+
+    "aluno_senhas":  { ".read": true, ".write": true },
+    "aluno_prefs":   { ".read": true, ".write": true },
+
+    "conquistas":          { ".read": true, ".write": true },
+    "alertas":             { ".read": true, ".write": true },
+    "analytics":           { ".read": true, ".write": true },
+    "quiz_sessoes":        { ".read": true, ".write": true },
+    "modo_teste_historico":{ ".read": true, ".write": true },
+    "avaliacao_controle":  { ".read": true, ".write": true },
+    "robotica_tentativas": { ".read": true, ".write": true },
+
+    "$outro": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}
