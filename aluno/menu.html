@@ -324,9 +324,9 @@ function renderRankRow({ pos, nome, sub, valor, valorLabel, isMe }) {
   const medal  = pos <= 3 ? medals[pos - 1] : `#${pos}`;
 
   const valueBadge = pos === 1
-    ? `<span class="crown-anim" style="position:absolute;top:-18px;right:2px;font-size:18px;filter:drop-shadow(0 2px 6px rgba(250,184,0,.9));pointer-events:none">👑</span>`
+    ? `<span class="crown-anim" style="position:absolute;top:-10px;right:0;font-size:22px;filter:drop-shadow(0 2px 8px rgba(250,184,0,.9));pointer-events:none">👑</span>`
     : pos <= 3
-    ? `<span class="sparkle-p" style="position:absolute;top:-6px;right:2px;font-size:11px;--sd:2s;--delay:${(pos-1)*.4}s;pointer-events:none">⭐</span>`
+    ? `<span class="sparkle-p" style="position:absolute;top:-4px;right:2px;font-size:9px;--sd:2s;--delay:${(pos-1)*.4}s;pointer-events:none">⭐</span>`
     : '';
 
   return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-left:3px solid ${border};border-radius:0 8px 8px 0;background:${bg};margin-bottom:6px;overflow:visible;position:relative">
@@ -335,7 +335,7 @@ function renderRankRow({ pos, nome, sub, valor, valorLabel, isMe }) {
       <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap${isMe ? ';color:var(--orange)' : ''}">${nome}${isMe ? ' ★' : ''}</div>
       <div style="font-size:11px;color:var(--text-muted);margin-top:1px">${sub}</div>
     </div>
-    <div style="text-align:right;flex-shrink:0;position:relative;${pos <= 3 ? 'padding-top:14px' : ''}">
+    <div style="text-align:right;flex-shrink:0;position:relative;${pos === 1 ? 'padding-top:14px' : pos <= 3 ? 'padding-top:10px' : ''}">
       ${valueBadge}
       <div style="font-size:13px;font-weight:700;color:var(--text)">${valor}</div>
       <div style="font-size:10px;color:var(--text-muted)">${valorLabel}</div>
@@ -534,7 +534,7 @@ ${bannerHtml}
 ${tempoPodioHtml}
 <div class="grid-2">
   <div id="col-left">
-    <div id="card-liberada" class="card${(liberadasAtivas.length || torneioAtivo) ? ' card-pulse' : ''}">
+    ${(liberadasAtivas.length || torneioAtivo) ? `<div id="card-liberada" class="card card-pulse">
       <div class="section-label" style="color:#F59E0B">
         <svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
         Atividade Liberada
@@ -602,9 +602,9 @@ ${tempoPodioHtml}
       }).join('') : (!torneioAtivo ? `
       <div class="ativ-vazia">
         <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
-        Nenhuma atividade no momento. Continue praticando! 💪
+        Nenhuma atividade liberada para sua turma no momento.
       </div>` : '')}
-    </div>
+    </div>` : ''}
 
     <div id="tabuada-game-card" class="card" style="margin-bottom:14px;position:relative;overflow:visible;border:1.5px solid rgba(127,119,221,.35);box-shadow:0 4px 20px rgba(127,119,221,.13),var(--shadow-sm)">
       <!-- Header -->
@@ -714,15 +714,19 @@ ${tempoPodioHtml}
             <div class="mini-stat"><div class="mini-stat-value" style="color:${turmaColor};font-size:22px">${turmaCrown}${r.posTurma === '—' ? '—' : '#'+r.posTurma}</div><div class="mini-stat-label">Na Turma</div></div>
             <div class="mini-stat"><div class="mini-stat-value" style="color:${geralColor};font-size:22px">${geralCrown}${r.posGeral === '—' ? '—' : '#'+r.posGeral}</div><div class="mini-stat-label">Geral</div></div>
             <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green);font-size:22px">${r.sessoes}</div><div class="mini-stat-label">Sessões</div></div>
-            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue);font-size:22px">${r.acertos}</div><div class="mini-stat-label">✅ Acertos</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green);font-size:22px">${r.acertos}</div><div class="mini-stat-label">✅ Acertos</div></div>
             <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green);font-size:22px">${r.taxa !== null ? r.taxa + '%' : '—'}</div><div class="mini-stat-label">📊 Taxa</div></div>
           </div>
+          ${(() => {
+            const meta = computeProximaMeta(a);
+            if (!meta || r.totalPts === 0) return '';
+            return `<div style="margin-top:10px;padding:7px 12px;background:rgba(47,158,220,.07);border:1px solid rgba(47,158,220,.2);border-radius:8px;font-size:12px;color:var(--blue);font-weight:600;line-height:1.5">🎯 ${meta}</div>`;
+          })()}
         </div>`;
       }).join('')}
     </div>
-    ${proximaMetaHtml ? `<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:2px 8px 10px;line-height:1.7">${proximaMetaHtml}</div>` : ''}
 
-    <div id="tab-ranking-card" class="card" style="margin-bottom:14px;overflow:visible">
+    <div id="tab-ranking-card" class="card" style="margin-bottom:14px;overflow:visible;position:relative">
       <div class="section-label" style="color:#F59E0B">
         <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
         Ranking Tabuada
@@ -762,6 +766,7 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
   const banner = document.createElement('div');
   banner.id = 'no1-banner';
   banner.className = 'banner-no1-wrap';
+  banner.style.marginBottom = '14px';
   banner.innerHTML = `<span style="font-size:22px;flex-shrink:0">👑</span><div><div>${mainLine}</div><div style="font-size:12px;font-weight:400;opacity:.85;margin-top:2px">${subLine}</div></div>`;
   document.getElementById('content').insertAdjacentElement('afterbegin', banner);
   if (isTabuada) {
@@ -849,7 +854,8 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
     // Linha condicional de posição do aluno
     let posHtml = '';
     if (myGeral === 1) {
-      posHtml = `<div style="padding:8px 12px;background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(245,158,11,.06));border:1px solid rgba(245,158,11,.45);border-radius:9px;font-size:12px;font-weight:700;color:#92400E;line-height:1.5">
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      posHtml = `<div style="padding:8px 12px;background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(245,158,11,.06));border:1px solid rgba(245,158,11,.45);border-radius:9px;font-size:12px;font-weight:700;color:${isDark ? '#FCD34D' : '#92400E'};line-height:1.5">
         👑 <strong>#1 Geral!</strong> Nível ${meuNivel} — Continue defendendo o topo!
       </div>`;
     } else if (myTurma !== null && myTurma <= 5) {
