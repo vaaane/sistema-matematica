@@ -79,8 +79,8 @@
       #tabuada-game-card{order:3;}
       #card-atividades{order:4;}
       #card-historico{order:5;}
-      #quiz-top3-card{order:6;}
-      #tab-ranking-card{order:7;}
+      #tab-ranking-card{order:6;}
+      #quiz-top3-card{order:7;}
     }
   </style>
 </head>
@@ -314,13 +314,36 @@ if (posGeralMin >= 2 && posGeralMin <= 3) {
   </div>`;
 }
 
-// ── Top 3 cards ───────────────────────────────────────────────
-const TOP3_BG = [
-  'linear-gradient(135deg,#F59E0B,#D97706)',
-  'linear-gradient(135deg,#9CA3AF,#6B7280)',
-  'linear-gradient(135deg,#CD853F,#92400E)',
-];
-// Group top3Geral into up to 3 distinct score positions
+// ── Helper compartilhado: linha de ranking ────────────────────
+function renderRankRow({ pos, nome, sub, valor, valorLabel, isMe }) {
+  const borderColors = ['#F59E0B', '#9CA3AF', '#CD853F'];
+  const bgColors     = ['rgba(245,158,11,.09)', 'rgba(156,163,175,.07)', 'rgba(180,83,9,.07)'];
+  const border = pos <= 3 ? borderColors[pos - 1] : 'var(--border)';
+  const bg     = pos <= 3 ? bgColors[pos - 1]     : 'var(--card)';
+  const medals = ['🥇','🥈','🥉'];
+  const medal  = pos <= 3 ? medals[pos - 1] : `#${pos}`;
+
+  const valueBadge = pos === 1
+    ? `<span class="crown-anim" style="position:absolute;top:-18px;right:2px;font-size:18px;filter:drop-shadow(0 2px 6px rgba(250,184,0,.9));pointer-events:none">👑</span>`
+    : pos <= 3
+    ? `<span class="sparkle-p" style="position:absolute;top:-6px;right:2px;font-size:11px;--sd:2s;--delay:${(pos-1)*.4}s;pointer-events:none">⭐</span>`
+    : '';
+
+  return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-left:3px solid ${border};border-radius:0 8px 8px 0;background:${bg};margin-bottom:6px;overflow:visible;position:relative">
+    <span style="font-size:17px;min-width:24px;text-align:center;flex-shrink:0">${medal}</span>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap${isMe ? ';color:var(--orange)' : ''}">${nome}${isMe ? ' ★' : ''}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:1px">${sub}</div>
+    </div>
+    <div style="text-align:right;flex-shrink:0;position:relative;${pos <= 3 ? 'padding-top:14px' : ''}">
+      ${valueBadge}
+      <div style="font-size:13px;font-weight:700;color:var(--text)">${valor}</div>
+      <div style="font-size:10px;color:var(--text-muted)">${valorLabel}</div>
+    </div>
+  </div>`;
+}
+
+// ── Top 3 Geral ───────────────────────────────────────────────
 const top3Groups = [];
 { let gPos = 1, gi = 0;
   while (gi < top3Geral.length && top3Groups.length < 3) {
@@ -331,41 +354,11 @@ const top3Groups = [];
     gPos += (gj - gi); gi = gj;
   }
 }
-const top3Html = top3Groups.length ? top3Groups.map((g, i) => {
-  const glowClass = ['glow-gold','glow-silver','glow-bronze'][i];
-  const trophy = ['🥇','🥈','🥉'][i];
-  let namesHtml;
-  if (g.students.length <= 1) {
-    const p = g.students[0];
-    const isMe = alunos.includes(p.aluno);
-    namesHtml = `<div><div class="top3-nome">${p.aluno}${isMe ? ' ★' : ''}</div><div class="top3-turma">Turma ${p.turma}</div></div>`;
-  } else {
-    namesHtml = `<div style="display:flex;align-items:flex-start;gap:0;flex:1;min-width:0">${
-      g.students.map((p, ni) => {
-        const isMe = alunos.includes(p.aluno);
-        const vsep = ni < g.students.length - 1
-          ? `<div style="width:1px;background:rgba(255,255,255,.35);align-self:stretch;margin:0 8px;flex-shrink:0"></div>` : '';
-        return `<div style="flex:1;min-width:0"><div class="top3-nome">${p.aluno}${isMe ? ' ★' : ''}</div><div class="top3-turma">Turma ${p.turma}</div></div>${vsep}`;
-      }).join('')
-    }</div>`;
-  }
-  // Score block: crown + sparkles centered above the pts number (1st only)
-  const scoreBlock = i === 0
-    ? `<div style="text-align:right;flex-shrink:0;position:relative;padding-top:14px;white-space:nowrap">
-        <span class="crown-anim" style="position:absolute;top:-24px;left:50%;transform:translateX(-50%);font-size:22px;filter:drop-shadow(0 2px 8px rgba(250,184,0,.9));pointer-events:none">👑</span>
-        <div style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);width:56px;display:flex;justify-content:space-around;pointer-events:none">
-          ${['✨','⭐','✨'].map((s,j)=>`<span class="sparkle-p" style="font-size:${10+j%2*2}px;--sd:${1.5+j*.45}s;--delay:${j*.32}s">${s}</span>`).join('')}
-        </div>
-        <div class="top3-pts">${g.score}<span style="font-size:10px;font-weight:600;margin-left:2px">pts</span></div>
-      </div>`
-    : `<div style="text-align:right;flex-shrink:0;white-space:nowrap">
-        <div class="top3-pts">${g.score}<span style="font-size:10px;font-weight:600;margin-left:2px">pts</span></div>
-      </div>`;
-  return `<div class="top3-card ${glowClass}" style="background:${TOP3_BG[i]};position:relative;overflow:visible${i === 0 ? ';margin-top:26px' : ''}">
-    <div style="font-size:30px;flex-shrink:0">${trophy}</div>
-    <div style="flex:1;min-width:0">${namesHtml}</div>
-    ${scoreBlock}
-  </div>`;
+const top3Html = top3Groups.length ? top3Groups.map(g => {
+  const isMe = g.students.some(p => alunos.includes(p.aluno));
+  const nomes = g.students.map(p => p.aluno + (alunos.includes(p.aluno) ? ' ★' : '')).join(' · ');
+  const turmas = [...new Set(g.students.map(p => p.turma))].map(t => `Turma ${t}`).join(' · ');
+  return renderRankRow({ pos: g.pos, nome: nomes, sub: turmas, valor: `${g.score}`, valorLabel: 'pts', isMe });
 }).join('')
 : '<p style="font-size:13px;color:var(--text-muted);padding:6px 0">Nenhum resultado ainda.</p>';
 
@@ -729,21 +722,21 @@ ${tempoPodioHtml}
     </div>
     ${proximaMetaHtml ? `<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:2px 8px 10px;line-height:1.7">${proximaMetaHtml}</div>` : ''}
 
-    <div id="quiz-top3-card" class="card" style="margin-bottom:14px;overflow:visible;position:relative">
-      <div class="section-label" style="color:#F59E0B">
-        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12V11c0 4.52-3.05 8.75-7 9.93-3.95-1.18-7-5.41-7-9.93V6.3l7-3.12z"/></svg>
-        Top 3 Geral
-      </div>
-      ${top3Html}
-    </div>
-
-    <div id="tab-ranking-card" class="card" style="margin-bottom:14px">
+    <div id="tab-ranking-card" class="card" style="margin-bottom:14px;overflow:visible">
       <div class="section-label" style="color:#F59E0B">
         <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
         Ranking Tabuada
         <a href="/aluno/ranking.html" style="margin-left:auto;font-size:12px;font-weight:600;color:var(--blue-dark);text-decoration:none">Ver tudo →</a>
       </div>
       <div style="font-size:12px;color:var(--text-muted);padding:8px 0">Carregando…</div>
+    </div>
+
+    <div id="quiz-top3-card" class="card" style="margin-bottom:14px;overflow:visible;position:relative">
+      <div class="section-label" style="color:#F59E0B">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12V11c0 4.52-3.05 8.75-7 9.93-3.95-1.18-7-5.41-7-9.93V6.3l7-3.12z"/></svg>
+        Top 3 Geral
+      </div>
+      <div style="margin-top:10px;overflow:visible">${top3Html}</div>
     </div>
 
   </div>
@@ -895,20 +888,13 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
   // ── Ranking card (coluna direita) ─────────────────────────
   const cardEl = document.getElementById('tab-ranking-card');
   if (cardEl) {
-    const medals  = ['🥇','🥈','🥉'];
     const top3    = rankAll.slice(0, 3);
-    const top3Html = top3.length ? top3.map((d, i) => {
-      const p = d._pos || (i+1);
-      const med = p <= 3 ? medals[p-1] : p;
-      return `
-      <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:${i < 2 ? '0.5px solid var(--border)' : 'none'}">
-        <span style="font-size:18px;min-width:24px">${med}</span>
-        <div style="flex:1;min-width:0;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(d.nome)}</div>
-        <span style="font-size:11px;color:var(--text-muted);margin-right:6px">${esc(d.turma)}</span>
-        <span style="font-size:12px;font-weight:700;color:#7F77DD">Nv ${d.melhor_nivel||1}</span>
-      </div>`;
+    const tabTop3Html = top3.length ? top3.map((d, i) => {
+      const pos = d._pos || (i + 1);
+      const isMe = alunos.includes(d.nome) && d.turma === turma;
+      return renderRankRow({ pos, nome: esc(d.nome), sub: `Turma ${esc(d.turma)}`, valor: `Nv ${d.melhor_nivel || 1}`, valorLabel: 'tabuada', isMe });
     }).join('')
-      : '<p style="font-size:13px;color:var(--text-muted);padding:4px 0">Nenhum aluno jogou ainda.</p>';
+    : '<p style="font-size:13px;color:var(--text-muted);padding:4px 0">Nenhum aluno jogou ainda.</p>';
 
     const posRankHtml = (myGeral || myTurma) ? `
       <div style="margin-top:8px;padding:7px 10px;background:rgba(127,119,221,.08);border-radius:8px;font-size:12px;font-weight:600;color:#7F77DD;text-align:center">
@@ -921,7 +907,8 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
         Ranking Tabuada
         <a href="/aluno/ranking.html" style="margin-left:auto;font-size:12px;font-weight:600;color:var(--blue-dark);text-decoration:none">Ver tudo →</a>
       </div>
-      ${top3Html}${posRankHtml}`;
+      <div style="margin-top:10px;overflow:visible">${tabTop3Html}</div>
+      ${posRankHtml}`;
   }
   applyNo1PageVisuals({ isQuiz: euSouQuiz1, isTabuada: myGeral === 1, tabLevel: meuNivel });
 })();
