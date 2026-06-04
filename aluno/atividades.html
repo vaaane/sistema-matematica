@@ -4,26 +4,101 @@
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Atividades — Sistema de Matemática</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
-    .ativ-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:14px;display:flex;align-items:center;gap:18px;transition:border-color .2s,box-shadow .2s;}
-    .ativ-card.liberada{border-color:#BAE6FD;background:linear-gradient(135deg,#EBF6FD,#fff);}
-    [data-theme="dark"] .ativ-card.liberada{background:linear-gradient(135deg,rgba(47,158,220,.12),var(--card));border-color:rgba(47,158,220,.3);}
-    .ativ-card.bloqueada{opacity:.6;}
-    .ativ-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
-    .ativ-dot.blue{background:var(--blue);}
-    .ativ-dot.green{background:var(--green);}
-    .ativ-dot.orange{background:var(--orange);}
-    .ativ-nome{font-size:15px;font-weight:700;flex:1;}
-    .ativ-info-row{display:flex;align-items:center;gap:8px;margin-top:5px;flex-wrap:wrap;}
-    .tent-info{font-size:11px;color:var(--text-muted);}
-    .tent-info.warn{color:var(--red);}
+    /* ── Dark theme para conteúdo .ac ── */
+    .ac{
+      --ac-bg:#0d0f1a;--ac-bg2:#131627;--ac-bg3:#1a1f35;
+      --ac-purple:#7c5cfc;--ac-pl:#9b7ffe;
+      --ac-gold:#ffd700;--ac-green:#00e676;--ac-orange:#ff7b2e;--ac-red:#ff4444;
+      --ac-text:#e8eaf6;--ac-muted:#8892b0;
+      --ac-border:rgba(124,92,252,0.15);
+      background:var(--ac-bg);color:var(--ac-text);
+      font-family:'Inter',sans-serif;
+    }
+
+    /* Banner liberada */
+    .ac-liberada-banner{background:linear-gradient(135deg,rgba(124,92,252,0.15),rgba(0,212,255,0.08));border:1.5px solid rgba(124,92,252,0.4);border-radius:16px;padding:20px 24px;margin-bottom:16px;position:relative;overflow:hidden;}
+    .ac-liberada-banner::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(124,92,252,0.15),transparent 70%);pointer-events:none;}
+    .ac-liberada-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(124,92,252,0.2);border:1px solid rgba(124,92,252,0.4);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;color:var(--ac-pl);margin-bottom:10px;}
+    .ac-dot{width:6px;height:6px;background:var(--ac-pl);border-radius:50%;animation:acPulse 1.5s infinite;}
+    @keyframes acPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(1.4);}}
+    .ac-liberada-nome{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;margin-bottom:6px;}
+    .ac-liberada-meta{display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
+    .ac-liberada-meta span{font-size:12px;color:var(--ac-muted);}
+    .ac-btn-iniciar{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--ac-purple),#5a3fd8);color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;box-shadow:0 4px 20px rgba(124,92,252,0.3);text-decoration:none;}
+    .ac-btn-iniciar:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(124,92,252,0.4);}
+
+    /* Aviso torneio discreto */
+    .ac-torneio-aviso{background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.2);border-radius:12px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s;}
+    .ac-torneio-aviso:hover{background:rgba(255,215,0,0.1);border-color:rgba(255,215,0,0.35);}
+    .ac-torneio-icon{font-size:18px;flex-shrink:0;}
+    .ac-torneio-text{flex:1;}
+    .ac-torneio-text strong{font-size:13px;color:var(--ac-gold);display:block;}
+    .ac-torneio-text span{font-size:11px;color:var(--ac-muted);}
+    .ac-torneio-arrow{color:var(--ac-gold);font-size:16px;}
+
+    /* Título de seção */
+    .ac-section-title{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--ac-muted);margin-bottom:10px;margin-top:4px;}
+
+    /* Lista de atividades */
+    .ac-atividades-lista{display:flex;flex-direction:column;gap:8px;}
+    .ac-atv-card{background:var(--ac-bg2);border:1px solid var(--ac-border);border-radius:14px;padding:14px 16px 14px 20px;display:flex;align-items:center;gap:14px;transition:all .2s;position:relative;overflow:hidden;}
+    .ac-atv-card.clicavel{cursor:pointer;}
+    .ac-atv-card.clicavel:hover{border-color:rgba(124,92,252,0.35);}
+    .ac-atv-card.concluida{border-color:rgba(0,230,118,0.15);}
+    .ac-atv-card.bloqueada{opacity:.5;}
+    .ac-atv-card.em-breve{opacity:.55;}
+    .ac-atv-card.disponivel{border-color:rgba(124,92,252,0.2);}
+
+    /* Linha lateral de status */
+    .ac-atv-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;}
+    .ac-atv-card.concluida::before{background:var(--ac-green);}
+    .ac-atv-card.disponivel::before{background:var(--ac-purple);}
+    .ac-atv-card.bloqueada::before{background:rgba(255,255,255,0.07);}
+    .ac-atv-card.em-breve::before{background:rgba(255,255,255,0.07);}
+
+    /* Número da atividade */
+    .ac-atv-num{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:11px;font-weight:700;flex-shrink:0;}
+    .ac-atv-num.concluida{background:rgba(0,230,118,0.12);color:var(--ac-green);border:1px solid rgba(0,230,118,0.2);}
+    .ac-atv-num.disponivel{background:rgba(124,92,252,0.15);color:var(--ac-pl);border:1px solid rgba(124,92,252,0.3);}
+    .ac-atv-num.bloqueada,.ac-atv-num.em-breve{background:rgba(255,255,255,0.04);color:var(--ac-muted);border:1px solid rgba(255,255,255,0.07);}
+
+    .ac-atv-info{flex:1;min-width:0;}
+    .ac-atv-nome{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ac-text);}
+    .ac-atv-detalhe{display:flex;gap:8px;margin-top:4px;align-items:center;flex-wrap:wrap;}
+    .ac-atv-tag{font-size:11px;padding:2px 8px;border-radius:8px;font-weight:500;}
+    .ac-atv-tag.avaliacao{background:rgba(255,123,46,0.12);color:var(--ac-orange);}
+    .ac-atv-tag.em-breve-t{background:rgba(255,255,255,0.06);color:var(--ac-muted);}
+    .ac-atv-data{font-size:11px;color:var(--ac-muted);}
+
+    .ac-atv-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+    .ac-atv-nota{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;text-align:right;line-height:1;}
+    .ac-atv-nota.green{color:var(--ac-green);}
+    .ac-atv-nota.orange{color:var(--ac-orange);}
+    .ac-atv-nota.red{color:var(--ac-red);}
+    .ac-atv-nota.muted{color:var(--ac-muted);font-size:13px;}
+    .ac-atv-nota-label{font-size:10px;color:var(--ac-muted);text-align:right;margin-top:2px;}
+
+    .ac-status-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:8px;white-space:nowrap;}
+    .ac-status-badge.concluida{background:rgba(0,230,118,0.12);color:var(--ac-green);}
+    .ac-status-badge.bloqueada{background:rgba(255,255,255,0.05);color:var(--ac-muted);}
+    .ac-btn-disponivel{display:inline-flex;align-items:center;gap:6px;background:rgba(124,92,252,0.2);border:1px solid rgba(124,92,252,0.4);color:var(--ac-pl);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;text-decoration:none;transition:all .2s;font-family:'Inter',sans-serif;}
+    .ac-btn-disponivel:hover{background:rgba(124,92,252,0.35);}
+
+    @keyframes acFadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .ac-liberada-banner{animation:acFadeUp .3s ease both;}
+    .ac-torneio-aviso{animation:acFadeUp .3s ease .05s both;}
+    .ac-atv-card:nth-child(1){animation:acFadeUp .3s ease .1s both;}
+    .ac-atv-card:nth-child(2){animation:acFadeUp .3s ease .15s both;}
+    .ac-atv-card:nth-child(3){animation:acFadeUp .3s ease .2s both;}
+    .ac-atv-card:nth-child(4){animation:acFadeUp .3s ease .25s both;}
+
     @media(max-width:560px){
-      .ativ-card{flex-wrap:wrap;gap:10px;padding:14px}
-      .ativ-card>div[style*="flex:1"]{width:100%}
-      .ativ-card>.btn{width:100%;min-height:50px;font-size:15px;justify-content:center}
-      .ativ-card>.badge{margin-left:auto}
+      .ac-atv-card{padding:12px 14px 12px 18px;}
+      .ac-liberada-meta{gap:8px;}
+      .ac-atv-right{gap:6px;}
     }
   </style>
 </head>
@@ -57,7 +132,7 @@
     </div>
   </div>
 </div>
-<script>(()=>{const t=localStorage.getItem("tema");const mt=localStorage.getItem("modoTeste")==="true";if(t==="escuro"||(mt&&!t))document.documentElement.setAttribute("data-theme","dark");})()</script>
+<script>(()=>{ document.documentElement.setAttribute('data-theme','dark'); })()</script>
 <script type="module">
 import { LISTA_ATIVIDADES, MAX_TENTATIVAS_ATIVIDADE } from "/js/constants.js";
 import { contarTentativas, getLiberadasParaTurma, getAlunoPreferencia, getResultados } from "/js/db.js";
@@ -89,7 +164,9 @@ getAlunoPreferencia(turma, alunos[0], 'robotica').then(isRob => {
 document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
 document.getElementById("avatar-initials").textContent = alunos[0][0].toUpperCase();
 
+document.documentElement.setAttribute('data-theme','dark');
 const content = document.getElementById("content");
+content.classList.add('ac');
 
 // Timeout: after 6s show retry if still loading
 const loadTimeout = setTimeout(() => {
@@ -188,11 +265,15 @@ if (!isModoTeste()) {
 }
 
 const todosResultados = await getResultados();
-const realizadaMap = {};
+const realizadaMap = {}, melhorNota = {}, melhorPts = {};
 for (const r of todosResultados) {
   if (!alunos.includes(r.aluno) || !r.concluido || r.modo_teste) continue;
   const prev = realizadaMap[r.atividade];
   if (!prev || (r.criadoEm || 0) > (prev.ts || 0)) realizadaMap[r.atividade] = { ts: r.criadoEm || 0 };
+  const nq = r.nota_quiz ?? null;
+  if (nq != null && (melhorNota[r.atividade] ?? -1) < nq) melhorNota[r.atividade] = nq;
+  const pts = r.pontuacao || 0;
+  if (pts > (melhorPts[r.atividade] ?? -1)) melhorPts[r.atividade] = pts;
 }
 function formatTs(ts) {
   if (!ts) return '';
@@ -200,141 +281,140 @@ function formatTs(ts) {
   return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0')
     + ' às ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0');
 }
-
 function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function ativNumStr(nome) { const m = nome.match(/\d+/); return m ? 'A'+m[0] : '?'; }
+function notaColorCls(n) { if (n == null) return 'muted'; return n >= 7 ? 'green' : n >= 4 ? 'orange' : 'red'; }
 
-const torneioHtml = torneiosAtivos.length ? `
-<div class="card" style="margin-bottom:14px;border-color:rgba(245,158,11,.5);background:linear-gradient(135deg,rgba(255,251,235,.8),var(--card));">
-  <div class="card-header">
-    <div class="card-title" style="color:#92400E">
-      <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-      🏆 Torneio em Andamento
+// ── Aviso de torneio ativo (discreto) ────────────────────────
+const tornAviso = torneiosAtivos.length ? `
+  <div class="ac-torneio-aviso" onclick="location.href='/aluno/torneios.html'">
+    <span class="ac-torneio-icon">🏆</span>
+    <div class="ac-torneio-text">
+      <strong>${escH(torneiosAtivos[0].nome || 'Torneio ativo')}</strong>
+      <span>${torneiosAtivos[0].status === 'iniciado' ? 'Em andamento' : 'Aguardando início'} · Turma ${turma} · Ver em Torneios →</span>
     </div>
-    <span class="badge" style="background:rgba(245,158,11,.15);color:#92400E;border-color:rgba(245,158,11,.4)">Novo!</span>
-  </div>
-  ${torneiosAtivos.map(t => {
-    const stBadge = t.status==='liberada'
-      ? `<span class="badge badge-blue">⏳ Aguardando início</span>`
-      : t.status==='pausado'
-      ? `<span class="badge" style="background:#FEF9C3;color:#92400E;border-color:#FDE68A">⏸ Pausado</span>`
-      : `<span class="badge badge-green">▶ Em andamento</span>`;
-    const btnTxt = t.status==='liberada' ? 'Entrar' : t.status==='pausado' ? 'Aguardar' : 'Jogar';
-    return `<div class="ativ-card liberada" style="border-color:rgba(245,158,11,.4)">
-      <div class="ativ-dot" style="background:#F59E0B"></div>
-      <div style="flex:1">
-        <div class="ativ-nome">${escH(t.nome||'Torneio')}</div>
-        <div class="ativ-info-row">
-          ${stBadge}
-          <span class="tent-info">⏱ ${Math.round((t.tempo_segundos||300)/60)} min · 🏅 Números Negativos</span>
-        </div>
+    <span class="ac-torneio-arrow">›</span>
+  </div>` : '';
+
+// ── Banner da atividade liberada ──────────────────────────────
+const liberadaParaBanner = LISTA_ATIVIDADES.find(ativ => {
+  const lib = liberadasMap[ativ.nome];
+  if (!lib || lib.status === 'encerrada') return false;
+  const bloq = bloqueios[ativ.nome];
+  return !bloq?.bloqueado && !bloq?.esgotada;
+});
+
+const bannerHtml = liberadaParaBanner ? (() => {
+  const ativ  = liberadaParaBanner;
+  const lib   = liberadasMap[ativ.nome];
+  const modoEf = lib?.modo || ativ.modo || 'classico';
+  const url   = modoEf === 'avaliacao_plus'
+    ? `/aluno/avaliacao_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
+    : modoEf === 'competicao_plus'
+    ? `/aluno/competicao_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
+    : modoEf === 'competicao'
+    ? `/aluno/competicao.html?ativ=${encodeURIComponent(ativ.nome)}`
+    : `/aluno/jogar.html?ativ=${encodeURIComponent(ativ.nome)}`;
+  const bloq = bloqueios[ativ.nome];
+  const isAvP = modoEf === 'avaliacao_plus';
+  const tentStr = isAvP
+    ? `⏱ 25 min · ${bloq?.tentUsadas || 0}/3 tentativas usadas`
+    : '';
+  return `<div class="ac-liberada-banner">
+    <div class="ac-liberada-tag"><span class="ac-dot"></span> Disponível agora</div>
+    <div class="ac-liberada-nome">${escH(ativ.nome)}</div>
+    <div class="ac-liberada-meta">
+      ${isAvP ? '<span>📋 Avaliação+</span>' : '<span>📝 Atividade</span>'}
+      ${tentStr ? `<span>${tentStr}</span>` : ''}
+      ${isAvP ? '<span>🏆 Vale 10 pts na Fase 1</span>' : '<span>🏆 Vale pontos no ranking</span>'}
+    </div>
+    <a href="${url}" class="ac-btn-iniciar">▶ Iniciar agora</a>
+  </div>`;
+})() : '';
+
+// ── Cards de atividades ───────────────────────────────────────
+const cardsHtml = LISTA_ATIVIDADES.map(ativ => {
+  const lib         = liberadasMap[ativ.nome];
+  const isLib       = !!lib;
+  const isEncerrada = lib?.status === 'encerrada';
+  const bloq        = bloqueios[ativ.nome];
+  const foiRealizada = !!realizadaMap[ativ.nome];
+  const lastTs       = realizadaMap[ativ.nome]?.ts;
+  const modoEf      = lib?.modo || ativ.modo || 'classico';
+  const isAvP       = modoEf === 'avaliacao_plus';
+  const nota        = isAvP ? (melhorNota[ativ.nome] ?? null) : (melhorPts[ativ.nome] ?? null);
+  const notaStr     = nota != null ? (isAvP ? nota.toFixed(1) : String(nota)) : null;
+  const url = modoEf === 'avaliacao_plus'
+    ? `/aluno/avaliacao_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
+    : modoEf === 'competicao_plus'
+    ? `/aluno/competicao_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
+    : modoEf === 'competicao'
+    ? `/aluno/competicao.html?ativ=${encodeURIComponent(ativ.nome)}`
+    : `/aluno/jogar.html?ativ=${encodeURIComponent(ativ.nome)}`;
+
+  let statusCls, numCls, statusBadge;
+  if (foiRealizada) {
+    statusCls = 'concluida clicavel'; numCls = 'concluida';
+    statusBadge = `<span class="ac-status-badge concluida">✅ Concluída</span>`;
+  } else if (isEncerrada) {
+    statusCls = 'bloqueada'; numCls = 'bloqueada';
+    statusBadge = `<span class="ac-status-badge bloqueada">⏰ Perdeu prazo</span>`;
+  } else if (!isLib) {
+    statusCls = 'bloqueada'; numCls = 'bloqueada';
+    statusBadge = `<span class="ac-status-badge bloqueada">🔒 Não liberada</span>`;
+  } else if (bloq?.esgotada || bloq?.bloqueado) {
+    statusCls = 'bloqueada'; numCls = 'bloqueada';
+    statusBadge = `<span class="ac-status-badge bloqueada">${bloq?.esgotada ? '✅ Esgotada' : '🔒 Bloqueada'}</span>`;
+  } else {
+    statusCls = 'disponivel clicavel'; numCls = 'disponivel';
+    statusBadge = `<a href="${url}" class="ac-btn-disponivel">▶ Entrar</a>`;
+  }
+
+  const detalhe = foiRealizada && lastTs
+    ? `<span class="ac-atv-data">✅ ${formatTs(lastTs)}</span>`
+    : isAvP && (bloq?.tentUsadas || 0) > 0
+    ? `<span class="ac-atv-data">📝 ${bloq.tentUsadas}/3 tentativas</span>`
+    : '';
+
+  const clickAttr = foiRealizada ? `onclick="location.href='/aluno/historico.html'"` : '';
+
+  return `<div class="ac-atv-card ${statusCls}" ${clickAttr}>
+    <div class="ac-atv-num ${numCls}">${ativNumStr(ativ.nome)}</div>
+    <div class="ac-atv-info">
+      <div class="ac-atv-nome">${escH(ativ.nome)}</div>
+      <div class="ac-atv-detalhe">
+        ${isAvP ? `<span class="ac-atv-tag avaliacao">📋 Avaliação+</span>` : ''}
+        ${detalhe}
       </div>
-      <a href="/aluno/torneio.html?id=${t.id}" class="btn" style="background:#F59E0B;color:#fff;border:none;flex-shrink:0">
-        <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:currentColor"><path d="M8 5v14l11-7z"/></svg>${escH(btnTxt)}
-      </a>
-    </div>`;
-  }).join('')}
-</div>` : '';
+    </div>
+    <div class="ac-atv-right">
+      ${notaStr ? `<div>
+        <div class="ac-atv-nota ${notaColorCls(nota)}">${notaStr}</div>
+        <div class="ac-atv-nota-label">${isAvP ? 'F1 / 10 pts' : 'pts'}</div>
+      </div>` : ''}
+      ${statusBadge}
+    </div>
+  </div>`;
+}).join('');
+
+// Slot "Em breve" para próxima atividade
+const emBreve = `<div class="ac-atv-card em-breve">
+  <div class="ac-atv-num em-breve">A6</div>
+  <div class="ac-atv-info">
+    <div class="ac-atv-nome">Atividade 6</div>
+    <div class="ac-atv-detalhe"><span class="ac-atv-tag em-breve-t">🕐 Em breve</span></div>
+  </div>
+  <div class="ac-atv-right">
+    <div class="ac-atv-nota muted">—</div>
+    <span class="ac-status-badge bloqueada">🕐 Em breve</span>
+  </div>
+</div>`;
 
 content.innerHTML = `
-${torneioHtml}
-<div class="card">
-  <div class="card-header">
-    <div class="card-title">
-      <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/></svg>
-      Atividades Disponíveis
-    </div>
-    ${liberadas.length ? `<span class="badge badge-blue">${liberadas.length} liberada(s)</span>` : ''}
-  </div>
-
-  ${liberadas.length ? `
-  <div class="alert alert-info" style="margin-bottom:16px">
-    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-    ${liberadas.map(l=>`<strong>${l.atividade}</strong> (${Math.round(l.percentual??100)}%${l.tempo_maximo ? ' · '+Math.round(l.tempo_maximo/60)+'min' : ''})`).join(' &nbsp;·&nbsp; ')} disponíve${liberadas.length>1?'is':'l'} agora.
-  </div>` : `
-  <div class="alert alert-warn" style="margin-bottom:16px">
-    <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
-    Nenhuma atividade liberada no momento. Aguarde o professor.
-  </div>`}
-
-  ${LISTA_ATIVIDADES.map(ativ => {
-    const isLib       = !!liberadasMap[ativ.nome];
-    const lib         = liberadasMap[ativ.nome];
-    const bloq        = bloqueios[ativ.nome];
-    const isEncerrada = lib?.status === 'encerrada';
-    const foiRealizada = !!realizadaMap[ativ.nome];
-    const lastTs       = realizadaMap[ativ.nome]?.ts;
-    const classes      = `ativ-card${isLib&&!isEncerrada?' liberada':''}${(bloq.bloqueado||(isEncerrada&&!foiRealizada))?' bloqueada':''}`;
-
-    const modoEfetivo = lib?.modo || ativ.modo || 'classico';
-    const url = modoEfetivo === 'avaliacao_plus'
-      ? `/aluno/avaliacao_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
-      : modoEfetivo === 'competicao_plus'
-      ? `/aluno/competicao_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
-      : modoEfetivo === 'competicao'
-      ? `/aluno/competicao.html?ativ=${encodeURIComponent(ativ.nome)}`
-      : `/aluno/jogar.html?ativ=${encodeURIComponent(ativ.nome)}`;
-
-    let botao = '';
-    if (foiRealizada) {
-      botao = `<span class="badge badge-green">✅ Concluída</span>`;
-    } else if (isEncerrada) {
-      botao = `<span class="badge" style="color:#B45309;background:#FEF3C7;border-color:#FDE68A">⏰ Perdeu o prazo</span>`;
-    } else if (!isLib) {
-      botao = `<span class="badge" style="color:var(--text-muted);background:var(--bg);border-color:var(--border)">🔒 Não liberada</span>`;
-    } else if (!bloq.competicao && bloq.bloqueado) {
-      botao = `<span class="badge badge-red">Bloqueada</span>`;
-    } else {
-      botao = `<a href="${url}" class="btn btn-blue">
-        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Disponível
-      </a>`;
-    }
-
-    const tsSpan = foiRealizada && lastTs
-      ? `<span class="tent-info" style="color:var(--green)">✅ Realizada em ${formatTs(lastTs)}</span>`
-      : '';
-    const tentInfos = !isLib && !foiRealizada
-      ? `<span class="tent-info">Aguarde a liberação pela professora</span>`
-      : (isEncerrada && !foiRealizada)
-      ? `<span class="tent-info" style="color:#B45309">Prazo encerrado · atividade não realizada</span>`
-      : isEncerrada
-      ? ''
-      : bloq.avaliacao
-      ? (() => {
-          const ctrl = bloq.ctrl;
-          const tentUsadas = bloq.tentUsadas || 0;
-          let timerInfo = '';
-          if (ctrl?.inicio_global) {
-            const ini = new Date(ctrl.inicio_global);
-            const fim = new Date(ctrl.inicio_global + 30*60*1000);
-            const fH = d => d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0');
-            timerInfo = ` · ⏱ ${fH(ini)}–${fH(fim)}`;
-          }
-          return `<span class="tent-info" style="color:#7C3AED">📝 Avaliação+ · ${tentUsadas}/${MAX_TENT_AV} tentativas${timerInfo}</span>`;
-        })()
-      : bloq.competicao
-      ? ''
-      : alunos.map(al => {
-          const usado = bloq.tentativas[al] || 0;
-          const rest  = Math.max(0, MAX_TENTATIVAS_ATIVIDADE - usado);
-          return rest === 0
-            ? `<span class="tent-info warn">${al}: bloqueado</span>`
-            : `<span class="tent-info">${al}: ${rest} tent. restante(s)</span>`;
-        }).join('<span style="color:var(--border);margin:0 4px">·</span>');
-
-    return `<div class="${classes}">
-      <div class="ativ-dot ${ativ.cor}"></div>
-      <div style="flex:1">
-        <div class="ativ-nome">${ativ.nome}</div>
-        <div class="ativ-info-row" style="margin-top:5px">
-          ${tentInfos}
-          ${tsSpan}
-          ${isLib && !isEncerrada && !foiRealizada ? `<span class="badge badge-blue">Disponível</span>` : ''}
-        </div>
-      </div>
-      ${botao}
-    </div>`;
-  }).join('')}
-</div>`;
+  ${bannerHtml}
+  ${tornAviso}
+  <div class="ac-section-title">Todas as atividades</div>
+  <div class="ac-atividades-lista">${cardsHtml}${emBreve}</div>`;
 
 window.toggleAvatarMenu = function() {
   document.getElementById('avatar-menu').classList.toggle('open');

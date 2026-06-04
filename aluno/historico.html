@@ -56,48 +56,69 @@
     .entry-body{border-top:1px solid var(--hc-border);display:none;}
     .entry.open .entry-body{display:block;}
 
-    /* Tentativas strip */
-    .tent-strip{padding:12px 18px;display:flex;gap:8px;align-items:flex-start;background:rgba(255,255,255,0.02);border-bottom:1px solid var(--hc-border);flex-wrap:wrap;}
-    .tent-lbl-outer{font-size:11px;color:var(--hc-muted);margin-right:4px;padding-top:10px;flex-shrink:0;}
-    .tent-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 14px;border-radius:10px;border:1px solid;min-width:76px;}
-    .tent-item.ok{background:rgba(0,230,118,0.06);border-color:rgba(0,230,118,0.25);}
-    .tent-item.fail{background:rgba(255,123,46,0.06);border-color:rgba(255,123,46,0.25);}
-    .tent-item.empty{background:rgba(255,255,255,0.02);border-color:rgba(255,255,255,0.07);opacity:.5;}
-    .tent-item.chosen{box-shadow:0 0 0 2px var(--hc-gold);}
-    .tent-tlabel{font-size:10px;color:var(--hc-muted);text-transform:uppercase;letter-spacing:.5px;}
-    .tent-nota{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;}
-    .tent-item.ok   .tent-nota{color:var(--hc-green);}
-    .tent-item.fail .tent-nota{color:var(--hc-orange);}
-    .tent-item.empty .tent-nota{color:var(--hc-muted);}
-    .tent-time{font-size:10px;color:var(--hc-muted);}
-    .tent-chosen{font-size:9px;color:var(--hc-gold);font-weight:600;}
+    /* Tentativas — botões clicáveis */
+    .tentativas-section{padding:14px 18px;background:rgba(255,255,255,0.02);border-bottom:1px solid var(--hc-border);}
+    .tentativas-label{font-size:11px;color:var(--hc-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+    .tentativas-row{display:flex;gap:8px;flex-wrap:wrap;}
+    .selected-indicator{font-size:10px;color:var(--hc-pl);margin-top:8px;font-weight:600;}
 
-    /* Fases */
-    .fases{display:grid;grid-template-columns:1fr 1fr;}
-    .fase{padding:14px 18px;}
-    .fase:first-child{border-right:1px solid var(--hc-border);}
-    .fase-header{display:flex;align-items:center;gap:6px;margin-bottom:10px;}
-    .fase-header h3{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--hc-muted);margin:0;}
-    .fase-nota{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;margin-bottom:6px;}
+    .tent-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 16px;border-radius:12px;border:1.5px solid;cursor:pointer;transition:all .2s;min-width:90px;position:relative;}
+    .tent-btn.ok{background:rgba(0,230,118,0.06);border-color:rgba(0,230,118,0.25);}
+    .tent-btn.ok:hover{background:rgba(0,230,118,0.12);border-color:rgba(0,230,118,0.5);}
+    .tent-btn.ok.selected{background:rgba(0,230,118,0.18);border-color:var(--hc-green);box-shadow:0 0 12px rgba(0,230,118,0.2);}
+    .tent-btn.fail{background:rgba(255,123,46,0.06);border-color:rgba(255,123,46,0.25);}
+    .tent-btn.fail:hover{background:rgba(255,123,46,0.12);border-color:rgba(255,123,46,0.5);}
+    .tent-btn.fail.selected{background:rgba(255,123,46,0.18);border-color:var(--hc-orange);box-shadow:0 0 12px rgba(255,123,46,0.2);}
+    .tent-btn.empty{background:rgba(255,255,255,0.02);border-color:rgba(255,255,255,0.08);cursor:default;opacity:.45;}
+    .tent-btn.chosen-mark::after{content:'⭐';position:absolute;top:-8px;right:-4px;font-size:12px;}
+    .tent-label{font-size:10px;color:var(--hc-muted);text-transform:uppercase;letter-spacing:.5px;}
+    .tent-nota{font-family:'Orbitron',monospace;font-size:15px;font-weight:700;}
+    .tent-btn.ok   .tent-nota{color:var(--hc-green);}
+    .tent-btn.fail .tent-nota{color:var(--hc-orange);}
+    .tent-btn.empty .tent-nota{color:var(--hc-muted);}
+    .tent-time{font-size:10px;color:var(--hc-muted);}
+    .tent-hint{font-size:9px;color:rgba(155,127,254,0.7);margin-top:2px;}
+
+    /* Fases — cards expansíveis */
+    .fases-section{padding:14px 18px;}
+    .fases-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .fase-card{border-radius:12px;border:1.5px solid;overflow:hidden;cursor:pointer;transition:all .2s;}
+    .fase-card.f1{background:rgba(124,92,252,0.06);border-color:rgba(124,92,252,0.25);}
+    .fase-card.f1:hover{background:rgba(124,92,252,0.1);border-color:rgba(124,92,252,0.5);}
+    .fase-card.f1.open{border-color:var(--hc-purple);}
+    .fase-card.f2{background:rgba(0,212,255,0.06);border-color:rgba(0,212,255,0.2);}
+    .fase-card.f2:hover{background:rgba(0,212,255,0.1);border-color:rgba(0,212,255,0.4);}
+    .fase-card.f2.open{border-color:var(--hc-cyan);}
+    .fase-card-header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;}
+    .fase-card-left{display:flex;align-items:center;gap:8px;}
+    .fase-card-left h3{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--hc-muted);margin:0;}
+    .fase-card-right{display:flex;align-items:center;gap:8px;}
+    .fase-nota{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;}
     .fase-nota.f1{color:var(--hc-pl);}
     .fase-nota.f2{color:var(--hc-cyan);}
-    .fase-nota-s{font-size:14px;color:var(--hc-muted);}
-    .fase-stats{display:flex;flex-direction:column;gap:4px;}
-    .fase-stat{display:flex;align-items:center;justify-content:space-between;font-size:12px;}
-    .fase-stat .lbl{color:var(--hc-muted);}
-    .fase-stat .val{font-weight:600;color:var(--hc-text);}
-    .fase-stat .val.green{color:var(--hc-green);}
-    .fase-stat .val.orange{color:var(--hc-orange);}
+    .fase-nota-s{font-size:11px;color:var(--hc-muted);}
+    .fase-chevron{font-size:10px;color:var(--hc-muted);transition:transform .2s;}
+    .fase-card.open .fase-chevron{transform:rotate(180deg);}
+    .fase-card-body{display:none;border-top:1px solid;padding:12px 14px;}
+    .fase-card.f1 .fase-card-body{border-color:rgba(124,92,252,0.2);}
+    .fase-card.f2 .fase-card-body{border-color:rgba(0,212,255,0.15);}
+    .fase-card.open .fase-card-body{display:block;}
 
     /* Questões */
-    .questoes{padding:12px 18px;border-top:1px solid var(--hc-border);}
-    .questoes h4{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--hc-muted);margin-bottom:10px;}
-    .questao-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
-    .questao-item:last-child{border-bottom:none;}
-    .q-num{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:var(--hc-muted);min-width:24px;flex-shrink:0;}
-    .q-text{font-size:12px;color:var(--hc-text);flex:1;line-height:1.4;}
+    .q-list{display:flex;flex-direction:column;gap:6px;}
+    .q-item{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;}
+    .q-num{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:var(--hc-muted);min-width:22px;padding-top:1px;flex-shrink:0;}
+    .q-text{font-size:12px;color:var(--hc-text);flex:1;line-height:1.5;}
     .q-resp{font-size:11px;color:var(--hc-muted);margin-top:2px;}
     .q-status{font-size:14px;flex-shrink:0;}
+
+    /* Fase 2 stats */
+    .f2-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    .f2-stat{background:rgba(255,255,255,0.03);border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;}
+    .f2-stat .lbl{font-size:11px;color:var(--hc-muted);}
+    .f2-stat .val{font-size:12px;font-weight:600;color:var(--hc-text);}
+    .f2-stat .val.green{color:var(--hc-green);}
+    .f2-stat .val.orange{color:var(--hc-orange);}
 
     /* Torneio */
     .torneio-body{padding:14px 18px;}
@@ -122,8 +143,9 @@
 
     @media(max-width:480px){
       .torneio-stats{grid-template-columns:repeat(2,1fr);}
-      .fases{grid-template-columns:1fr;}
-      .fase:first-child{border-right:none;border-bottom:1px solid var(--hc-border);}
+      .fases-row{grid-template-columns:1fr;}
+      .tentativas-row{gap:6px;}
+      .tent-btn{min-width:70px;padding:8px 10px;}
     }
   </style>
 </head>
@@ -216,10 +238,18 @@ function notaColor(n) {
 const ATIVIDADES_OCULTAS = new Set(['Atividade 4 - Geometria']);
 const MODOS_IGNORAR      = new Set(['tabuada', 'tabuada_speed']);
 
+function diaDe(ts) {
+  // Derivar YYYY-MM-DD do timestamp para agrupar por dia
+  if (!ts) return 'sem-data';
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
 function chaveSessao(r) {
-  if (r.sessao_id)     return r.sessao_id;
+  if (r.sessao_id) return r.sessao_id;
   if (r.inicio_sessao) return String(r.inicio_sessao);
-  return `${r.aluno}|${r.atividade}|${r.data || ''}`;
+  // Usar criadoEm (server timestamp) — mais confiável que r.data (string formatada pelo cliente)
+  return `${r.aluno}|${r.atividade}|${diaDe(r.criadoEm)}`;
 }
 
 function agruparAvP(regs) {
@@ -314,83 +344,17 @@ const allItems = [
   ...tornItems.map(r   => ({ _tipo: 'torneio', _ts: r._ts || r.criadoEm || 0, _res: r })),
 ].sort((a, b) => b._ts - a._ts);
 
-// ── Render: tentativas strip ─────────────────────────────────
-function renderTentativasStrip(sessao, tentEsc) {
-  const byNum = {};
-  for (const r of sessao.tentativas) byNum[r.tentativa_num || 1] = r;
+// ── Dados de tentativas por entry (para selecionarTent) ───────
+const _tentData = {}; // entryId → [{id, tentNum, nota, duracao, expirou, f2p, f2ac, f2er, f2cb, f2rap}]
 
-  const items = [1, 2, 3].map(num => {
-    const r = byNum[num];
-    if (!r) {
-      return `<div class="tent-item empty">
-        <span class="tent-tlabel">T${num}</span>
-        <span class="tent-nota">—</span>
-        <span class="tent-time">—</span>
-      </div>`;
-    }
-    const nq       = r.nota_quiz != null ? r.nota_quiz.toFixed(1) : '?';
-    const isOk     = (r.nota_quiz ?? 0) >= 5;
-    const isChosen = tentEsc === num;
-    const dur      = fmtMs(r.tempo_fase1_ms) || '';
-    const exp      = r.expirou_tempo ? ' ⏱' : '';
-    return `<div class="tent-item ${isOk ? 'ok' : 'fail'}${isChosen ? ' chosen' : ''}">
-      <span class="tent-tlabel">T${num}</span>
-      <span class="tent-nota">${nq}</span>
-      <span class="tent-time">${dur}${exp}</span>
-      ${isChosen ? `<span class="tent-chosen">⭐ Escolhida</span>` : ''}
-    </div>`;
-  }).join('');
-
-  return `<div class="tent-strip">
-    <span class="tent-lbl-outer">Tentativas:</span>
-    ${items}
-  </div>`;
-}
-
-// ── Render: fases (F1 + F2) ──────────────────────────────────
-function renderFases(r) {
-  const nq    = r.nota_quiz != null ? r.nota_quiz.toFixed(1) : '—';
-  const nqN   = r.nota_quiz ?? 0;
-  const nqCls = nqN >= 7 ? 'green' : nqN >= 4 ? 'orange' : '';
-  const f1t   = fmtMs(r.tempo_fase1_ms);
-  const f1ac  = r.acertos_f1 ?? null;
-  const f1tot = r.total_f1   ?? null;
-  const f2p   = r.pontuacao  || 0;
-  const f2ac  = r.acertos    || 0;
-  const f2er  = r.erros      || 0;
-  const f2cb  = r.combo_max  || 0;
-
-  return `<div class="fases">
-    <div class="fase">
-      <div class="fase-header"><span class="fase-icon">📝</span><h3>Fase 1 · Quiz</h3></div>
-      <div class="fase-nota f1">${nq}<span class="fase-nota-s">/10</span></div>
-      <div class="fase-stats">
-        ${f1ac != null && f1tot != null
-          ? `<div class="fase-stat"><span class="lbl">Acertos</span><span class="val ${nqCls}">${f1ac}/${f1tot} questões</span></div>`
-          : ''}
-        ${f1t ? `<div class="fase-stat"><span class="lbl">Tempo</span><span class="val">${f1t}</span></div>` : ''}
-      </div>
-    </div>
-    <div class="fase">
-      <div class="fase-header"><span class="fase-icon">🎮</span><h3>Fase 2 · Livre</h3></div>
-      <div class="fase-nota f2">${f2p}<span class="fase-nota-s"> pts</span></div>
-      <div class="fase-stats">
-        <div class="fase-stat"><span class="lbl">Acertos</span><span class="val green">${f2ac}</span></div>
-        <div class="fase-stat"><span class="lbl">Erros</span><span class="val orange">${f2er}</span></div>
-        ${f2cb > 1 ? `<div class="fase-stat"><span class="lbl">Combo máx.</span><span class="val">🔥 ×${f2cb}</span></div>` : ''}
-      </div>
-    </div>
-  </div>`;
-}
-
-// ── Render: questões (lazy) ───────────────────────────────────
+// ── Render: item de questão ───────────────────────────────────
 function renderQuestaoItem(q, i) {
   const enun = escH(q.enunciado || q.pergunta || '—');
   const ok   = q.resultado === 'acerto' || (q.resultado == null && !!q.acertou);
   const nr   = q.resultado === 'nao_respondida';
   const rA   = q.resposta_aluno || '—';
   const rC   = q.resposta_correta && q.resposta_correta !== 'undefined' ? q.resposta_correta : null;
-  return `<div class="questao-item">
+  return `<div class="q-item">
     <span class="q-num">Q${i+1}</span>
     <div class="q-text">
       ${enun}
@@ -400,47 +364,130 @@ function renderQuestaoItem(q, i) {
   </div>`;
 }
 
+// ── Render: f2 body ───────────────────────────────────────────
+function renderF2Body(d) {
+  const rows = [
+    ['Acertos', d.f2ac, d.f2ac > 0 ? 'green' : ''],
+    ['Erros',   d.f2er, d.f2er > 0 ? 'orange' : ''],
+    d.f2cb > 1 ? ['Combo máx.', `🔥 ×${d.f2cb}`, ''] : null,
+    d.f2rap > 0 ? ['Veloz (máx)', `+${d.f2rap}`, 'green'] : null,
+  ].filter(Boolean);
+  return `<div class="f2-stats">${rows.map(([l,v,c]) =>
+    `<div class="f2-stat"><span class="lbl">${l}</span><span class="val${c?' '+c:''}">${v}</span></div>`
+  ).join('')}</div>`;
+}
+
 // ── Render: card avaliação+ ───────────────────────────────────
 function renderAvP(sessao) {
   const tentEsc = tentativasOficiais[sessao.atividade] ?? null;
+  const byNum   = {};
+  for (const r of sessao.tentativas) byNum[r.tentativa_num || 1] = r;
+
   const melhor  = sessao.tentativas.reduce((b, r) => (r.nota_quiz ?? 0) > (b.nota_quiz ?? 0) ? r : b, sessao.tentativas[0]);
   const nqBest  = melhor?.nota_quiz ?? null;
-  const ptsDisp = nqBest != null ? nqBest.toFixed(1) : '—';
   const nCol    = notaColor(nqBest);
   const ts      = sessao._ts;
-  const nTent   = sessao.tentativas.length;
-
-  // escolhida ou melhor record para fases
-  const chosen  = tentEsc != null ? sessao.tentativas.find(r => (r.tentativa_num||1) === tentEsc) : null;
-  const fasesR  = chosen ?? melhor;
-  const cred    = fasesR?.credito_final;
+  const cred    = (tentEsc != null ? byNum[tentEsc] : melhor)?.credito_final ?? null;
   const credStr = cred != null ? (Number.isInteger(cred) ? cred : Number(cred).toFixed(2)) : null;
 
   const entryId = `avp-${sessao.atividade.replace(/\W/g,'_')}-${ts}`;
-  const idsJson = JSON.stringify(sessao.tentativas.map(r => r.id));
 
-  return `<div class="entry" data-tipo="atividade" id="${entryId}">
-    <div class="entry-header" onclick="toggleEntry('${entryId}','avp','${escH(idsJson.replace(/'/g,"\\'"))}',${tentEsc ?? 'null'})">
+  // Guardar metadados para selecionarTent
+  _tentData[entryId] = sessao.tentativas.map(r => ({
+    id:       r.id,
+    tentNum:  r.tentativa_num || 1,
+    nota:     r.nota_quiz ?? null,
+    duracao:  fmtMs(r.tempo_fase1_ms) || '',
+    expirou:  r.expirou_tempo || false,
+    f2p:      r.pontuacao      || 0,
+    f2ac:     r.acertos        || 0,
+    f2er:     r.erros          || 0,
+    f2cb:     r.combo_max      || 0,
+    f2rap:    r.acertos_rapidos || 0,
+  }));
+
+  // índice inicial: tentativa escolhida ou melhor
+  const initNum = tentEsc ?? melhor?.tentativa_num ?? 1;
+  const initIdx = _tentData[entryId].findIndex(d => d.tentNum === initNum);
+
+  // Botões de tentativa
+  const tentBtns = [1, 2, 3].map(num => {
+    const r = byNum[num];
+    if (!r) return `<div class="tent-btn empty">
+      <span class="tent-label">T${num}</span>
+      <span class="tent-nota">—</span>
+      <span class="tent-time">—</span>
+    </div>`;
+    const idx      = _tentData[entryId].findIndex(d => d.tentNum === num);
+    const nq       = r.nota_quiz != null ? r.nota_quiz.toFixed(1) : '?';
+    const isOk     = (r.nota_quiz ?? 0) >= 5;
+    const isChosen = tentEsc === num;
+    const exp      = r.expirou_tempo ? ' ⏱' : '';
+    const dur      = fmtMs(r.tempo_fase1_ms) || '';
+    return `<div class="tent-btn ${isOk ? 'ok' : 'fail'}${isChosen ? ' chosen-mark' : ''}"
+      data-entry="${entryId}" data-tent-idx="${idx}">
+      <span class="tent-label">T${num}</span>
+      <span class="tent-nota">${nq}</span>
+      <span class="tent-time">${dur}${exp}</span>
+      <span class="tent-hint">👆 Ver detalhes</span>
+    </div>`;
+  }).join('');
+
+  // Nota inicial para o header do card
+  const initData = _tentData[entryId][initIdx >= 0 ? initIdx : 0];
+  const f1NotaInicial = initData?.nota != null ? initData.nota.toFixed(1) : '—';
+  const f2PtsInicial  = initData?.f2p ?? 0;
+
+  return `<div class="entry" data-tipo="atividade" id="${entryId}" data-init-idx="${initIdx >= 0 ? initIdx : 0}">
+    <div class="entry-header" data-entry="${entryId}" data-tipo-entry="avp">
       <div class="entry-icon atividade">📝</div>
       <div class="entry-info">
         <div class="entry-title">${escH(sessao.atividade)}</div>
         <div class="entry-meta">
           <span class="hc-tag avp">📋 Avaliação+</span>
           <span class="entry-date">${fmtTs(ts)}</span>
-          <span class="entry-date">${nTent} tentativa${nTent !== 1 ? 's' : ''}${tentEsc ? ` · T${tentEsc} escolhida` : ''}${credStr ? ` · total: ${credStr}` : ''}</span>
+          ${credStr ? `<span class="entry-date">total: ${credStr}</span>` : ''}
         </div>
       </div>
       <div class="entry-score">
-        <span class="score-main ${nCol}">${ptsDisp}</span>
-        <span class="score-label">/ 10 pts</span>
+        <span class="score-main ${nCol}" id="${entryId}-score">${nqBest != null ? nqBest.toFixed(1) : '—'}</span>
+        <span class="score-label">/ 10 pts F1</span>
       </div>
       <span class="chevron">▼</span>
     </div>
     <div class="entry-body">
-      ${renderTentativasStrip(sessao, tentEsc)}
-      ${renderFases(fasesR)}
-      <div class="questoes" id="q-${entryId}" data-loaded="false">
-        <p class="q-loading">Clique para ver questões…</p>
+      <div class="tentativas-section">
+        <div class="tentativas-label">Tentativas — clique para ver detalhes</div>
+        <div class="tentativas-row" id="${entryId}-tents">${tentBtns}</div>
+        <div class="selected-indicator" id="${entryId}-sel"></div>
+      </div>
+      <div class="fases-section">
+        <div class="fases-row">
+          <div class="fase-card f1" data-fase="${entryId}-f1">
+            <div class="fase-card-header" data-toggle-fase="${entryId}-f1">
+              <div class="fase-card-left"><span>📝</span><h3>Fase 1 · Quiz</h3></div>
+              <div class="fase-card-right">
+                <span class="fase-nota f1" id="${entryId}-f1-nota">${f1NotaInicial}<span class="fase-nota-s">/10</span></span>
+                <span class="fase-chevron">▼</span>
+              </div>
+            </div>
+            <div class="fase-card-body" id="${entryId}-f1-body">
+              <p style="font-size:12px;color:var(--hc-muted)">Selecione uma tentativa…</p>
+            </div>
+          </div>
+          <div class="fase-card f2" data-fase="${entryId}-f2">
+            <div class="fase-card-header" data-toggle-fase="${entryId}-f2">
+              <div class="fase-card-left"><span>🎮</span><h3>Fase 2 · Livre</h3></div>
+              <div class="fase-card-right">
+                <span class="fase-nota f2" id="${entryId}-f2-nota">${f2PtsInicial}<span class="fase-nota-s"> pts</span></span>
+                <span class="fase-chevron">▼</span>
+              </div>
+            </div>
+            <div class="fase-card-body" id="${entryId}-f2-body">
+              ${initData ? renderF2Body(initData) : ''}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>`;
@@ -460,7 +507,7 @@ function renderAtivSimples(r) {
     : `<span class="hc-tag cls">📝 ${modo}</span>`;
 
   return `<div class="entry" data-tipo="atividade" id="${entryId}">
-    <div class="entry-header" onclick="toggleEntry('${entryId}','ativ','${r.id}',null)">
+    <div class="entry-header" data-entry="${entryId}" data-tipo-entry="ativ" data-ids="${r.id}" data-tent-esc="">
       <div class="entry-icon atividade">📝</div>
       <div class="entry-info">
         <div class="entry-title">${escH(r.atividade || '—')}</div>
@@ -477,8 +524,10 @@ function renderAtivSimples(r) {
       <span class="chevron">▼</span>
     </div>
     <div class="entry-body">
-      <div class="questoes" id="q-${entryId}" data-loaded="false">
-        <p class="q-loading">Clique para ver questões…</p>
+      <div style="padding:14px 18px;">
+        <div id="q-${entryId}" class="q-list">
+          <p style="font-size:12px;color:var(--hc-muted)">Abrindo…</p>
+        </div>
       </div>
     </div>
   </div>`;
@@ -500,7 +549,7 @@ function renderTorneio(r) {
   const entryId  = `tn-${r.id || r._ts}`;
 
   return `<div class="entry" data-tipo="torneio" id="${entryId}">
-    <div class="entry-header" onclick="toggleEntry('${entryId}','torneio',null,null)">
+    <div class="entry-header" data-entry="${entryId}" data-tipo-entry="torneio" data-ids="" data-tent-esc="">
       <div class="entry-icon torneio">🏆</div>
       <div class="entry-info">
         <div class="entry-title">${escH(nome)}</div>
@@ -534,51 +583,105 @@ function renderTorneio(r) {
   </div>`;
 }
 
-// ── Toggle entry ─────────────────────────────────────────────
+// ── Event delegation ─────────────────────────────────────────
 const _questoesCache = {};
 
-window.toggleEntry = async function(entryId, tipo, dataStr, tentEsc) {
-  const el = document.getElementById(entryId);
+async function carregarQuestoesF1(entryId, tentIdx) {
+  const tents   = _tentData[entryId];
+  if (!tents || tentIdx < 0 || tentIdx >= tents.length) return;
+  const d       = tents[tentIdx];
+  const f1Body  = document.getElementById(`${entryId}-f1-body`);
+  const f1Nota  = document.getElementById(`${entryId}-f1-nota`);
+  if (!f1Body) return;
+
+  // Atualizar nota F1 no card header
+  const notaStr = d.nota != null ? d.nota.toFixed(1) : '—';
+  if (f1Nota) f1Nota.innerHTML = `${notaStr}<span class="fase-nota-s">/10</span>`;
+
+  // Atualizar F2 nota + body
+  const f2Nota = document.getElementById(`${entryId}-f2-nota`);
+  const f2Body = document.getElementById(`${entryId}-f2-body`);
+  if (f2Nota) f2Nota.innerHTML = `${d.f2p}<span class="fase-nota-s"> pts</span>`;
+  if (f2Body) f2Body.innerHTML = renderF2Body(d);
+
+  // Indicador de seleção
+  const sel = document.getElementById(`${entryId}-sel`);
+  if (sel) sel.textContent = `Visualizando: T${d.tentNum} · ${notaStr}/10`;
+
+  // Carregar questões F1
+  if (!_questoesCache[d.id]) {
+    f1Body.innerHTML = '<p style="font-size:12px;color:var(--hc-muted)">Carregando questões…</p>';
+    _questoesCache[d.id] = await getDetalhes(d.id).catch(() => []);
+  }
+  const questoes = _questoesCache[d.id] || [];
+  const f1Qs = questoes.filter(q => q.fase === 1);
+  if (f1Qs.length) {
+    f1Body.innerHTML = `<div class="q-list">${f1Qs.map((q,i) => renderQuestaoItem(q,i)).join('')}</div>`;
+  } else {
+    f1Body.innerHTML = '<p style="font-size:12px;color:var(--hc-muted)">Questões não disponíveis.</p>';
+  }
+
+  // Fases permanecem fechadas — o aluno clica manualmente para expandir
+}
+
+document.getElementById('entries').addEventListener('click', async function(e) {
+  // 1. Tent-btn click (não propagar para entry-header)
+  const tentBtn = e.target.closest('.tent-btn:not(.empty)');
+  if (tentBtn) {
+    const entryId = tentBtn.dataset.entry;
+    const tentIdx = parseInt(tentBtn.dataset.tentIdx, 10);
+    // Marcar como selected
+    const tentsRow = document.getElementById(`${entryId}-tents`);
+    if (tentsRow) {
+      tentsRow.querySelectorAll('.tent-btn:not(.empty)').forEach((b,i) => {
+        b.classList.toggle('selected', i === tentIdx);
+      });
+    }
+    await carregarQuestoesF1(entryId, tentIdx);
+    return;
+  }
+
+  // 2. Fase-card header click
+  const faseHeader = e.target.closest('[data-toggle-fase]');
+  if (faseHeader) {
+    const faseId = faseHeader.dataset.toggleFase;
+    const faseEl = document.querySelector(`[data-fase="${faseId}"]`);
+    if (faseEl) faseEl.classList.toggle('open');
+    return;
+  }
+
+  // 3. Entry header click
+  const header = e.target.closest('[data-tipo-entry]');
+  if (!header) return;
+  const entryId = header.dataset.entry;
+  const tipo    = header.dataset.tipoEntry;
+  const el      = document.getElementById(entryId);
   if (!el) return;
   el.classList.toggle('open');
   if (!el.classList.contains('open')) return;
 
-  const qEl = document.getElementById(`q-${entryId}`);
-  if (!qEl || qEl.dataset.loaded === 'true') return;
-  qEl.dataset.loaded = 'true';
-
-  if (tipo === 'torneio') return; // torneio não tem questões lazy
-
-  // Carregar questões
-  let ids = [];
+  // Auto-selecionar tentativa inicial ao abrir
   if (tipo === 'avp') {
-    try { ids = JSON.parse(dataStr.replace(/&quot;/g, '"')); } catch(e) { ids = []; }
-    // Mostrar questões da tentativa escolhida (ou melhor/primeira)
-    const escolhidaId = tentEsc != null ? ids[tentEsc - 1] : ids[0];
-    const targetId = escolhidaId || ids[0];
-    if (!targetId) { qEl.innerHTML = ''; return; }
-    const cacheKey = targetId;
-    if (!_questoesCache[cacheKey]) {
-      _questoesCache[cacheKey] = await getDetalhes(targetId).catch(() => []);
+    const initIdx = parseInt(el.dataset.initIdx || '0', 10);
+    const tentsRow = document.getElementById(`${entryId}-tents`);
+    if (tentsRow) {
+      const btns = tentsRow.querySelectorAll('.tent-btn:not(.empty)');
+      btns.forEach((b, i) => b.classList.toggle('selected', i === initIdx));
     }
-    const questoes = _questoesCache[cacheKey] || [];
-    const f1Qs = questoes.filter(q => q.fase === 1);
-    const f2Qs = questoes.filter(q => q.fase === 2);
-    if (!questoes.length) { qEl.innerHTML = ''; return; }
-    qEl.innerHTML = `
-      ${f1Qs.length ? `<h4>📝 Questões — Fase 1</h4>${f1Qs.map((q,i) => renderQuestaoItem(q,i)).join('')}` : ''}
-      ${f2Qs.length ? `<h4 style="margin-top:14px">🎮 Questões — Fase 2</h4>${f2Qs.map((q,i) => renderQuestaoItem(q,i)).join('')}` : ''}`;
-  } else {
-    // Atividade simples: dataStr é o resultadoId
-    if (!dataStr || !_questoesCache) { qEl.innerHTML = ''; return; }
-    if (!_questoesCache[dataStr]) {
-      _questoesCache[dataStr] = await getDetalhes(dataStr).catch(() => []);
-    }
+    await carregarQuestoesF1(entryId, initIdx);
+  } else if (tipo === 'ativ') {
+    // Atividade simples: carregar questões lazy
+    const dataStr = header.dataset.ids || '';
+    if (!dataStr || _questoesCache[dataStr] != null) return;
+    _questoesCache[dataStr] = await getDetalhes(dataStr).catch(() => []);
     const questoes = _questoesCache[dataStr] || [];
+    const qEl = document.getElementById(`q-${entryId}`);
+    if (!qEl) return;
     if (!questoes.length) { qEl.innerHTML = ''; return; }
-    qEl.innerHTML = `<h4>📝 Questões</h4>${questoes.map((q,i) => renderQuestaoItem(q,i)).join('')}`;
+    qEl.innerHTML = `<div class="q-list">${questoes.map((q,i) => renderQuestaoItem(q,i)).join('')}</div>`;
   }
-};
+  // torneio: sem ação extra
+});
 
 // ── Filtro ───────────────────────────────────────────────────
 window.setFiltro = function(btn, tipo) {
