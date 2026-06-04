@@ -4,6 +4,7 @@
     "resultados": {
       ".read": true,
       ".write": true,
+      ".indexOn": ["aluno", "turma", "atividade"],
       "$id": {
         ".validate": "newData.hasChildren(['aluno', 'atividade', 'turma'])"
       }

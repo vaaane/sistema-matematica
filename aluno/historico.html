@@ -283,7 +283,7 @@ try {
   } else {
     todosRegs = await getResultadosByAluno(alunoNome, turma).catch(() => []);
     console.log('[historico] todosRegs carregados:', todosRegs.length, todosRegs.slice(0,3));
-    todosRegs = todosRegs.filter(r => !r.modo_teste);
+    todosRegs = todosRegs.filter(r => !r.modo_teste && r.turma === turma);
   }
 
   // Avaliação+: agrupar por sessão (sem filtro de concluido — inclui T1 parcial)

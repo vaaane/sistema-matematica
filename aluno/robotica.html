@@ -101,32 +101,61 @@
     .q-badge.facil{background:#DCFCE7;color:#15803D;}
     .q-badge.medio{background:#FEF9C3;color:#854D0E;}
     .q-badge.dificil{background:#FEE2E2;color:#B91C1C;}
-    /* Question */
-    .quiz-q{font-size:20px;font-weight:700;line-height:1.4;margin-bottom:22px;}
-    .quiz-opcoes-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px;}
-    .quiz-opcao{padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);font-size:14px;font-weight:600;color:var(--text);cursor:pointer;text-align:left;transition:background .12s,border-color .12s;width:100%;display:block;font-family:'Inter',sans-serif;}
-    .quiz-opcao:hover:not([disabled]){border-color:var(--blue);background:var(--blue-pale);}
-    .quiz-opcao.correta{border-color:var(--green)!important;background:#F0FDF4!important;color:#15803D!important;font-weight:700;}
-    .quiz-opcao.errada{border-color:var(--red)!important;background:#FEF2F2!important;color:#B91C1C!important;}
-    .quiz-opcao.neutra{opacity:.45;}
-    .vf-wrap{display:flex;gap:12px;margin-bottom:16px;}
-    .vf-btn{flex:1;padding:14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-weight:700;color:var(--text);cursor:pointer;transition:all .15s;background:var(--card);font-family:'Inter',sans-serif;}
-    .vf-btn:hover:not([disabled]){border-color:var(--blue);background:var(--blue-pale);}
-    .vf-btn.correta{border-color:var(--green)!important;background:#F0FDF4!important;color:#15803D!important;}
-    .vf-btn.errada{border-color:var(--red)!important;background:#FEF2F2!important;color:#B91C1C!important;}
     /* ── Tema escuro ─────────────────────────────────────── */
-    [data-theme="dark"] .quiz-opcao.correta{background:rgba(34,197,94,.15)!important;color:#86efac!important;border-color:rgba(34,197,94,.6)!important;}
-    [data-theme="dark"] .quiz-opcao.errada{background:rgba(239,68,68,.15)!important;color:#fca5a5!important;border-color:rgba(239,68,68,.6)!important;}
-    [data-theme="dark"] .vf-btn.correta{background:rgba(34,197,94,.15)!important;color:#86efac!important;border-color:rgba(34,197,94,.6)!important;}
-    [data-theme="dark"] .vf-btn.errada{background:rgba(239,68,68,.15)!important;color:#fca5a5!important;border-color:rgba(239,68,68,.6)!important;}
     [data-theme="dark"] .quiz-fb.ok{background:rgba(34,197,94,.12)!important;color:#86efac!important;border-color:rgba(34,197,94,.4)!important;}
     [data-theme="dark"] .quiz-fb.err{background:rgba(239,68,68,.12)!important;color:#fca5a5!important;border-color:rgba(239,68,68,.4)!important;}
     .num-wrap{display:flex;gap:10px;margin-bottom:16px;align-items:center;}
     .num-input{flex:1;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;background:var(--card);color:var(--text);}
     .num-input:focus{outline:none;border-color:var(--blue);}
-    .quiz-fb{padding:12px 16px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:14px;display:none;}
-    .quiz-fb.ok{background:#F0FDF4;color:#15803D;border:1px solid #BBF7D0;}
-    .quiz-fb.err{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;}
+    .quiz-fb{display:none;}
+    .quiz-fb.ok{background:var(--green-pale);border:1px solid #BBF7D0;color:#15803D;}
+    .quiz-fb.err{background:var(--red-pale);border:1px solid #FECACA;color:#B91C1C;}
+
+    /* ══ NOVO QUIZ LAYOUT ══════════════════════════════════════ */
+    .rq-topbar{display:flex;align-items:center;gap:12px;padding:13px 20px;background:var(--card);border-bottom:1px solid var(--border);margin-bottom:0;}
+    .rq-btn-voltar{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;flex-shrink:0;}
+    .rq-btn-voltar:hover{border-color:var(--text-muted);color:var(--text);}
+    .rq-titulo{font-size:14px;font-weight:700;flex-shrink:0;}
+    .rq-prog-text{font-size:12px;color:var(--text-muted);flex-shrink:0;}
+    .rq-prog-track{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;min-width:60px;}
+    .rq-prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--orange),#fb923c);transition:width .4s ease;}
+    .rq-btn-encerrar{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;border:1px solid rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:var(--red);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;flex-shrink:0;}
+    .rq-btn-encerrar:hover{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.5);}
+    .rq-content{display:flex;justify-content:center;padding:28px 20px;}
+    .rq-card{width:100%;max-width:700px;display:flex;flex-direction:column;gap:22px;}
+    .rq-meta{display:flex;align-items:center;justify-content:space-between;}
+    .rq-cat{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);font-size:11px;font-weight:700;color:var(--blue);letter-spacing:.3px;}
+    [data-theme="dark"] .rq-cat{background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.25);color:#93c5fd;}
+    .rq-qnum{font-size:11px;font-weight:700;color:var(--text-muted);font-family:monospace;}
+    .rq-enunciado{font-size:20px;font-weight:700;line-height:1.5;color:var(--text);white-space:pre-wrap;}
+    .rq-opcoes-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+    .rq-opcao{padding:13px 16px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:14px;font-weight:500;cursor:pointer;text-align:left;width:100%;font-family:inherit;transition:background .12s,border-color .12s,transform .1s;display:flex;align-items:center;gap:11px;}
+    .rq-letra{width:27px;height:27px;border-radius:7px;flex-shrink:0;background:var(--bg);border:1px solid var(--border);display:grid;place-items:center;font-size:11px;font-weight:700;font-family:monospace;color:var(--text-muted);transition:all .12s;}
+    .rq-opcao:hover:not([disabled]){border-color:var(--orange);background:var(--orange-pale);transform:translateY(-1px);}
+    .rq-opcao:hover:not([disabled]) .rq-letra{background:var(--orange);color:#fff;border-color:var(--orange);}
+    .rq-opcao.correta{border-color:var(--green)!important;background:var(--green-pale)!important;}
+    .rq-opcao.errada{border-color:var(--red)!important;background:var(--red-pale)!important;}
+    .rq-opcao.neutra{opacity:.35;}
+    .rq-opcao.correta .rq-letra{background:var(--green);color:#fff;border-color:var(--green);}
+    .rq-opcao.errada .rq-letra{background:var(--red);color:#fff;border-color:var(--red);}
+    [data-theme="dark"] .rq-opcao.correta{background:rgba(34,197,94,.12)!important;border-color:rgba(34,197,94,.5)!important;}
+    [data-theme="dark"] .rq-opcao.errada{background:rgba(239,68,68,.12)!important;border-color:rgba(239,68,68,.5)!important;}
+    .rq-vf-wrap{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .rq-vf-btn{padding:22px 16px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:8px;}
+    .rq-vf-icon{font-size:26px;}
+    .rq-vf-btn.rq-vf-v:hover:not([disabled]){border-color:var(--green);background:var(--green-pale);}
+    .rq-vf-btn.rq-vf-f:hover:not([disabled]){border-color:var(--red);background:var(--red-pale);}
+    .rq-vf-btn.correta{border-color:var(--green)!important;background:var(--green-pale)!important;}
+    .rq-vf-btn.errada{border-color:var(--red)!important;background:var(--red-pale)!important;}
+    [data-theme="dark"] .rq-vf-btn.correta{background:rgba(34,197,94,.12)!important;border-color:rgba(34,197,94,.5)!important;}
+    [data-theme="dark"] .rq-vf-btn.errada{background:rgba(239,68,68,.12)!important;border-color:rgba(239,68,68,.5)!important;}
+    .quiz-fb{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-radius:10px;font-size:14px;font-weight:600;animation:rq-fadeUp .2s ease;}
+    @keyframes rq-fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    .rq-btn-proxima{width:100%;padding:14px;background:var(--orange);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .15s,transform .1s;display:flex;align-items:center;justify-content:center;gap:8px;}
+    .rq-btn-proxima:hover{background:#ea6c0a;transform:translateY(-1px);}
+    .rq-btn-proxima:active{transform:translateY(0);}
+    @media(max-width:560px){.rq-topbar{gap:8px;padding:10px 14px;}.rq-opcoes-grid{grid-template-columns:1fr;}.rq-content{padding:16px 12px;}}
+    /* ══ FIM NOVO QUIZ LAYOUT ═════════════════════════════════ */
     /* Summary */
     .summ-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
     .summ-stat{display:flex;align-items:center;gap:12px;padding:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);}
@@ -165,21 +194,32 @@
       </div>
 
       <div id="quiz-wrap">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:12px 16px;background:var(--card);border-radius:var(--radius);border:1px solid var(--border);">
-          <button class="btn btn-ghost btn-sm" id="btn-voltar">← Voltar</button>
-          <span style="font-size:13px;font-weight:700;flex-shrink:0;" id="quiz-titulo"></span>
-          <span style="font-size:12px;color:var(--text-muted);flex-shrink:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;" id="quiz-prog-text"></span>
-          <div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;min-width:40px;">
-            <div id="quiz-bar" style="height:100%;border-radius:3px;background:var(--blue);transition:width .4s;width:0%"></div>
+
+        <!-- Topbar do quiz -->
+        <div class="rq-topbar">
+          <button class="rq-btn-voltar" id="btn-voltar">← Voltar</button>
+          <span class="rq-titulo" id="quiz-titulo"></span>
+          <span class="rq-prog-text" id="quiz-prog-text"></span>
+          <div class="rq-prog-track">
+            <div class="rq-prog-fill" id="quiz-bar" style="width:0%"></div>
           </div>
-          <button class="btn btn-ghost btn-sm" id="btn-encerrar" onclick="pedirEncerrar()" style="color:var(--red);border-color:#FECACA;flex-shrink:0;">Encerrar</button>
+          <button class="rq-btn-encerrar" id="btn-encerrar" onclick="pedirEncerrar()">⛔ Encerrar</button>
         </div>
-        <div style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px 24px 20px;">
-          <div id="quiz-enunciado"></div>
-          <div id="quiz-opcoes"></div>
-          <div class="quiz-fb" id="quiz-fb"></div>
-          <button class="btn btn-blue" id="btn-proxima" style="display:none;width:100%;margin-top:4px;">Próxima →</button>
+
+        <!-- Card da questão -->
+        <div class="rq-content">
+          <div class="rq-card">
+            <div class="rq-meta">
+              <span class="rq-cat" id="rq-cat"></span>
+              <span class="rq-qnum" id="rq-qnum"></span>
+            </div>
+            <div id="quiz-enunciado"></div>
+            <div id="quiz-opcoes"></div>
+            <div class="quiz-fb" id="quiz-fb"></div>
+            <button class="rq-btn-proxima" id="btn-proxima" style="display:none;">Próxima →</button>
+          </div>
         </div>
+
       </div>
 
       <div id="summary-wrap">
@@ -611,14 +651,12 @@ function renderQuestao() {
   const q = questoes[qIdx];
   document.getElementById('quiz-prog-text').textContent = `Questão ${qIdx + 1} de ${questoes.length}`;
   document.getElementById('quiz-bar').style.width = `${(qIdx / questoes.length) * 100}%`;
+  const catEl = document.getElementById('rq-cat');
+  const qnumEl = document.getElementById('rq-qnum');
+  if (catEl) catEl.textContent = q.categoria ? '🔌 ' + q.categoria : '';
+  if (qnumEl) qnumEl.textContent = `Q${String(qIdx+1).padStart(2,'0')} / ${questoes.length}`;
 
-  const dif = q.dificuldade || '';
-  const badgeCls = dif === 'facil' ? 'facil' : dif === 'medio' ? 'medio' : dif === 'dificil' ? 'dificil' : '';
-  const badgeLabel = q.categoria || (dif ? dif.charAt(0).toUpperCase() + dif.slice(1) : '');
-  const badge = badgeCls
-    ? `<div class="q-badge ${badgeCls}">${badgeLabel}</div>`
-    : (badgeLabel ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">${badgeLabel}</div>` : '');
-  document.getElementById('quiz-enunciado').innerHTML = badge + `<div class="quiz-q" style="white-space:pre-wrap">${q.enunciado}</div>`;
+  document.getElementById('quiz-enunciado').innerHTML = `<div class="rq-enunciado">${q.enunciado}</div>`;
 
   document.getElementById('quiz-fb').style.display = 'none';
   const _btnP = document.getElementById('btn-proxima');
@@ -627,13 +665,21 @@ function renderQuestao() {
 
   const div = document.getElementById('quiz-opcoes');
   if (q.tipo === 'multipla_escolha') {
-    div.innerHTML = `<div class="quiz-opcoes-grid">${q.opcoes.map(o =>
-      `<button class="quiz-opcao" data-letra="${o[0]}" onclick="responder('${o[0]}')">${o}</button>`
-    ).join('')}</div>`;
+    div.innerHTML = `<div class="rq-opcoes-grid">${q.opcoes.map(o => {
+      const letra = o[0];
+      const texto = o.length > 3 ? o.substring(3) : o;
+      return `<button class="rq-opcao" data-letra="${letra}" onclick="responder('${letra}')">
+        <span class="rq-letra">${letra}</span><span>${texto}</span>
+      </button>`;
+    }).join('')}</div>`;
   } else if (q.tipo === 'verdadeiro_falso') {
-    div.innerHTML = `<div class="vf-wrap">
-      <button class="vf-btn" onclick="responderVF('Verdadeiro')">✓ Verdadeiro</button>
-      <button class="vf-btn" onclick="responderVF('Falso')">✗ Falso</button>
+    div.innerHTML = `<div class="rq-vf-wrap">
+      <button class="rq-vf-btn rq-vf-v" onclick="responderVF('Verdadeiro')">
+        <span class="rq-vf-icon">✓</span><span>Verdadeiro</span>
+      </button>
+      <button class="rq-vf-btn rq-vf-f" onclick="responderVF('Falso')">
+        <span class="rq-vf-icon">✗</span><span>Falso</span>
+      </button>
     </div>`;
   } else if (q.tipo === 'numerica') {
     div.innerHTML = `<div class="num-wrap">
@@ -645,7 +691,7 @@ function renderQuestao() {
 }
 
 function travar() {
-  document.querySelectorAll('.quiz-opcao,.vf-btn').forEach(b => b.setAttribute('disabled','1'));
+  document.querySelectorAll('.quiz-opcao,.vf-btn,.rq-opcao,.rq-vf-btn').forEach(b => b.setAttribute('disabled','1'));
   const ni = document.getElementById('num-resp');
   if (ni) ni.disabled = true;
 }
@@ -655,14 +701,14 @@ function mostrarFeedback(acertou, q) {
   const fb = document.getElementById('quiz-fb');
   fb.style.display = 'block';
   if (q.tipo === 'multipla_escolha') {
-    document.querySelectorAll('.quiz-opcao').forEach(b => {
+    document.querySelectorAll('.quiz-opcao, .rq-opcao').forEach(b => {
       if (b.dataset.letra === q.resposta) b.classList.add('correta');
       else if (!acertou && b.classList.contains('selecionada')) b.classList.add('errada');
       else b.classList.add('neutra');
     });
   } else if (q.tipo === 'verdadeiro_falso') {
     const cor = q.resposta.startsWith('Verdadeiro') ? 'Verdadeiro' : 'Falso';
-    document.querySelectorAll('.vf-btn').forEach(b => {
+    document.querySelectorAll('.vf-btn, .rq-vf-btn').forEach(b => {
       const val = b.textContent.includes('Verdadeiro') ? 'Verdadeiro' : 'Falso';
       if (val === cor) b.classList.add('correta');
       else if (!acertou) b.classList.add('errada');
@@ -676,15 +722,17 @@ function mostrarFeedback(acertou, q) {
     fb.className = 'quiz-fb err';
     fb.textContent = `✗ Errado. Resposta correta: ${resp}`;
   }
-  document.getElementById('btn-proxima').textContent = qIdx === questoes.length - 1 ? 'Concluir ✓' : 'Próxima →';
-  document.getElementById('btn-proxima').style.display = 'block';
+  const btnP = document.getElementById('btn-proxima');
+  btnP.textContent = qIdx === questoes.length - 1 ? 'Concluir ✓' : 'Próxima →';
+  btnP.style.display = 'flex';
+  btnP.className = 'rq-btn-proxima';
 }
 
 window.responder = (letra) => {
   const q = questoes[qIdx];
   const acertou = letra === q.resposta;
   respostas[q.id] = { acertou, resposta_dada: letra };
-  document.querySelectorAll('.quiz-opcao').forEach(b => { if (b.dataset.letra === letra) b.classList.add('selecionada'); });
+  document.querySelectorAll('.quiz-opcao, .rq-opcao').forEach(b => { if (b.dataset.letra === letra) b.classList.add('selecionada'); });
   mostrarFeedback(acertou, q);
 };
 window.responderVF = (val) => {
