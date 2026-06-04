@@ -203,6 +203,7 @@ const sess = requireAluno();
 if (!sess) throw new Error();
 const { alunos, turma } = sess;
 const alunoNome = alunos[0];
+  console.log('[historico] alunoNome:', JSON.stringify(alunoNome), '| turma:', turma);
 const sessionUid = (turma + '_' + alunoNome).replace(/[.#$[\]/\s]/g, '_');
 
 function avKey(s) { return btoa(unescape(encodeURIComponent(s))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_'); }
@@ -280,7 +281,8 @@ try {
       get(ref(db, `modo_teste_historico/${sessionUid}/torneios`)).catch(() => null),
     ]);
   } else {
-    todosRegs = await getResultadosByAluno(alunoNome).catch(() => []);
+    todosRegs = await getResultadosByAluno(alunoNome, turma).catch(() => []);
+    console.log('[historico] todosRegs carregados:', todosRegs.length, todosRegs.slice(0,3));
     todosRegs = todosRegs.filter(r => !r.modo_teste);
   }
 
@@ -306,7 +308,7 @@ try {
 
   // Atividades simples (classico, competicao+)
   ativSimples = todosRegs.filter(r =>
-    r.concluido &&
+    (r.concluido || r.acertos != null) &&
     r.modo !== 'avaliacao_plus' &&
     r.tipo !== 'torneio' &&
     !ATIVIDADES_OCULTAS.has(r.atividade) &&

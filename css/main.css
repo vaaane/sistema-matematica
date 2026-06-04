@@ -421,9 +421,7 @@ body, .card, .topbar, .main, .mini-stat, .list-row, .input, .table td, .table th
   50%      { opacity:.8; }
 }
 .top-rank-glow::before {
-  content:''; position:fixed; inset:0; z-index:9980; pointer-events:none;
-  border: 3px solid var(--top-color, #F59E0B);
-  animation: top-border-pulse 2.4s ease-in-out infinite;
+  display: none; /* substituído por #top-rank-overlay */
 }
 .top-rank-badge {
   position:fixed; bottom:20px; right:20px; z-index:9981;

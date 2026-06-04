@@ -22,7 +22,12 @@ export function applyTopRankVisuals() {
     const colors = ['#F59E0B', '#9CA3AF', '#CD853F'];
     const emojis = ['🥇', '🥈', '🥉'];
     document.documentElement.style.setProperty('--top-color', colors[melhor - 1]);
-    document.body.classList.add('top-rank-glow');
+    if (!document.getElementById('top-rank-overlay')) {
+      const overlay = document.createElement('div');
+      overlay.id = 'top-rank-overlay';
+      overlay.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:99999;border:3px solid var(--top-color,#F59E0B);animation:top-border-pulse 2.4s ease-in-out infinite;';
+      document.body.appendChild(overlay);
+    }
     if (!document.getElementById('top-rank-badge')) {
       const d = document.createElement('div');
       d.id = 'top-rank-badge';

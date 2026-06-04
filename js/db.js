@@ -44,11 +44,21 @@ export async function getResultadosByTurma(turma) {
   return result;
 }
 
-export async function getResultadosByAluno(aluno) {
+export async function getResultadosByAluno(aluno, turma = null) {
   const snap = await get(query(ref(db, "resultados"), orderByChild("aluno"), equalTo(aluno)));
-  if (!snap.exists()) return [];
+  if (snap.exists()) {
+    const result = [];
+    snap.forEach(child => { result.push({ id: child.key, ...child.val() }); });
+    if (result.length > 0) return result;
+  }
+  if (!turma) return [];
+  const snapTurma = await get(query(ref(db, "resultados"), orderByChild("turma"), equalTo(turma)));
+  if (!snapTurma.exists()) return [];
   const result = [];
-  snap.forEach(child => { result.push({ id: child.key, ...child.val() }); });
+  snapTurma.forEach(child => {
+    const v = child.val();
+    if (v.aluno === aluno) result.push({ id: child.key, ...v });
+  });
   return result;
 }
 
