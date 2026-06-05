@@ -43,6 +43,7 @@
     "quiz_sessoes":        { ".read": true, ".write": true },
     "modo_teste_historico":{ ".read": true, ".write": true },
     "avaliacao_controle":  { ".read": true, ".write": true },
+    "avaliacoes_recusas":  { ".read": true, ".write": true },
     "robotica_tentativas": { ".read": true, ".write": true },
 
     "$outro": {
