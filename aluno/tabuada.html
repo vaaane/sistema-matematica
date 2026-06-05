@@ -430,6 +430,7 @@ function getLevelConfig(lvl) {
   if (lvl >= 270 && lvl <= 279) cfg.secs -= 5;
   if (lvl === 280) cfg.secs = 35;
   if (lvl >= 281 && lvl <= 289) cfg.secs -= 10;
+  if (lvl === 300) cfg.secs -= 15;
   // Aplicar offset de tempo configurado pela professora (padrão 40 = neutro)
   const tempoOffset = (tabuadaConfig.tempo_base || 40) - 40;
   if (tempoOffset !== 0) {

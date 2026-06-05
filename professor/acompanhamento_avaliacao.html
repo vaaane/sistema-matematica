@@ -337,7 +337,22 @@ document.getElementById('filtro-ativ').addEventListener('change',  e => { filtro
 document.getElementById('filtro-turma').addEventListener('change', e => { filtroTurma = e.target.value; subscribeRecusas(); _atualizarBotaoExtra(); });
 
 window.onBusca   = v => { searchText = v.trim(); renderizarTudo(); };
-window.forcarAtt = () => { renderizarTudo(); nextRefreshIn = 15; };
+window.forcarAtt = async () => {
+  nextRefreshIn = 15;
+  try {
+    const snap = await get(ref(db, 'resultados'));
+    todosRegistros = [];
+    snap.forEach(child => {
+      const v = child.val();
+      if (v?.aluno && !isProfTest(v)) todosRegistros.push({ id: child.key, ...v });
+    });
+    popularDropdownAtiv();
+    lastUpdateTime = Date.now();
+  } catch(e) {
+    console.error('Erro ao atualizar:', e);
+  }
+  renderizarTudo();
+};
 
 // ── Utilitários ─────────────────────────────────────────────────
 function isProfTest(r) {
