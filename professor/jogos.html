@@ -65,6 +65,7 @@ function fmtDate(ts) {
 // ── Progressão de níveis (réplica fiel de _getLevelConfigBase em tabuada.html) ─
 const _TB129 = 65;  // TEMPO_BASE_129 = getLevelConfigBase(121).secs + 20 = 45+20
 const _TB200 = 45;  // TEMPO_BASE_200 = _TB129 - 20
+const _TB300 = 35;  // TEMPO_BASE_300 = _TB200 - 10 — base para níveis 301+
 
 function _tipoChefao(lvl) {
   if (lvl < 130 || lvl % 10 !== 0) return null;
@@ -106,20 +107,22 @@ function _getLvlCfg(lvl) {
   if (lvl % 10 === 0) {
     const tipo = _tipoChefao(lvl);
     const minMul = Math.min(5 + n, 7), minDiv = Math.min(5 + n, 7);
-    if (tipo === 'rapido')
-      return { pairs: 12, cols: 6, secs: Math.max(20, _TB129 - 20), maxResult: 0, minMul, minDiv, ehChefao: true, tipoChefao: 'rapido' };
+    if (tipo === 'rapido') {
+      const secsR = lvl > 300 ? _TB300 - 5 : _TB129 - 20;
+      return { pairs: 12, cols: 6, secs: Math.max(20, secsR), maxResult: 0, minMul, minDiv, ehChefao: true, tipoChefao: 'rapido' };
+    }
     if (tipo === 'dificil') {
-      const secsD = lvl >= 200 ? _TB200 : _TB129;
+      const secsD = lvl > 300 ? _TB300 : lvl >= 200 ? _TB200 : _TB129;
       return { pairs: 12, cols: 6, secs: secsD, maxResult: 0, minMul: Math.min(6+n,8), minDiv: Math.min(6+n,8), ehChefao: true, tipoChefao: 'dificil' };
     }
-    const tBase = lvl > 200 ? _TB200 : _TB129;
+    const tBase = lvl > 300 ? _TB300 : lvl > 200 ? _TB200 : _TB129;
     const grandeIdx = Math.floor((lvl - 150) / 30);
-    const secsG = grandeIdx % 2 === 1 ? Math.max(20, tBase - 10) : Math.min(120, tBase + 5);
+    const secsG = lvl === 300 ? 20 : grandeIdx % 2 === 1 ? Math.max(20, tBase - 10) : Math.min(120, tBase + 5);
     return { pairs: 18, cols: 6, secs: secsG, maxResult: 0, minMul, minDiv, ehChefao: true, tipoChefao: 'grande' };
   }
-  const tBase = lvl > 200 ? _TB200 : _TB129;
+  const tBase = lvl > 300 ? _TB300 : lvl > 200 ? _TB200 : _TB129;
   const secs = (lvl >= 132 && lvl <= 139) ? Math.max(20, _TB129 - 20) : tBase;
-  return { pairs: 12, cols: 6, secs, maxResult: 0, minMul: Math.min(4+n,6), minDiv: Math.min(4+n,6) };
+  return { pairs: 12, cols: 6, secs, maxResult: 0, minMul: Math.min(4+n,6), minDiv: Math.min(4+n,6), pesado: lvl > 300 };
 }
 
 function _gerarGrupos() {
