@@ -38,7 +38,7 @@
     "aluno_prefs":   { ".read": true, ".write": true },
 
     "conquistas":          { ".read": true, ".write": true },
-    "alertas":             { ".read": true, ".write": true },
+    "alertas":             { ".read": true, ".write": true, ".indexOn": ["visto"] },
     "analytics":           { ".read": true, ".write": true },
     "quiz_sessoes":        { ".read": true, ".write": true },
     "modo_teste_historico":{ ".read": true, ".write": true },
