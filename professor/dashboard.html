@@ -32,8 +32,6 @@
     .alerta-list-row:hover{background:var(--hover,rgba(0,0,0,.04));border-radius:6px;}
     @media(max-width:900px){.dash-stats-grid{grid-template-columns:repeat(3,1fr)!important;}}
     @media(max-width:560px){.dash-stats-grid{grid-template-columns:repeat(2,1fr)!important;}}
-    .tab-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px;}
-    @media(max-width:768px){.tab-grid{grid-template-columns:1fr;}}
     .alert-row{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:8px;margin-bottom:5px;border-left:3px solid transparent}
     .alert-row:last-child{margin-bottom:0}
     .alert-row.sev-high{background:#FEF2F2;border-color:#EF4444}
@@ -114,7 +112,7 @@ import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES } from "/js/constants.js";
 import { getResultados, getLiberadas, getAlertas, getAllAtividadeStatus, getDetalhes, contarSessoesTabuadaHoje, somarPartidasTabuadaTotal } from "/js/db.js";
 import { db } from "/js/firebase-config.js";
 import { ref, onValue, get, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { escH, agruparPorTurma, compilarAlertasTabuada } from "/js/tabuada-alerts.js";
+import { escH, agruparPorTurma } from "/js/tabuada-alerts.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 
 const sess = requireProfessor();
@@ -158,24 +156,7 @@ const ptsPorAluno = Object.fromEntries(
 );
 const ultimos = [...todos].reverse().filter(r => r.concluido).slice(0, 6);
 
-// ── Tabuada: alertas + ranking top 5 ─────────────────────────
-const { individuais: tabAlertasInd, coletivos: tabColetivos } = compilarAlertasTabuada(niveisTabSnap, rankTabSnap);
-
-const tabAlertaItems = [];
-for (const a of tabColetivos.esgotados) {
-  if (tabAlertaItems.length >= 3) break;
-  tabAlertaItems.push({ tipo: 'esgotado', nivel: a.nivel, count: a.count });
-}
-for (const a of tabColetivos.quasePerda) {
-  if (tabAlertaItems.length >= 3) break;
-  tabAlertaItems.push({ tipo: 'quasePerda', nivel: a.nivel, count: a.count });
-}
-for (const a of tabAlertasInd) {
-  if (tabAlertaItems.length >= 3) break;
-  tabAlertaItems.push({ tipo: 'individual', nome: a.nome, turma: a.turma, nivel: a.nivel, falhas: a.falhas });
-}
-const hasTabAlertas = tabAlertaItems.length > 0;
-
+// ── Tabuada: ranking top 5 ───────────────────────────────────
 const tabTop5 = [];
 if (rankTabSnap?.exists()) {
   rankTabSnap.forEach(child => { const v = child.val(); if (v?.nome) tabTop5.push(v); });
@@ -184,7 +165,7 @@ if (rankTabSnap?.exists()) {
 }
 let totalTabJogadores = 0;
 if (rankTabSnap?.exists()) {
-  rankTabSnap.forEach(() => totalTabJogadores++);
+  rankTabSnap.forEach(child => { if (child.val()?.nome) totalTabJogadores++; });
 }
 // Posições standard para o top 5
 { let _p = 0, _n = 0, _l = null;
@@ -303,51 +284,6 @@ document.getElementById("content").innerHTML = `
     <a href="/professor/acompanhamento_avaliacao.html" style="margin-left:auto;color:var(--blue);font-weight:600;font-size:13px;text-decoration:none;white-space:nowrap">Ver ao vivo →</a>
   </div>
 
-  <div class="tab-grid" id="tab-grid-tabuada" style="grid-template-columns:1fr 1fr">
-    <div class="card" id="tabuada-alertas-card">
-      <div class="card-header">
-        <div class="card-title">⚠️ Atenção · Tabuada<span id="tabuada-alertas-count" class="card-count" style="display:none"></span></div>
-        <a href="/professor/tabuada_relatorio.html" class="btn btn-sm btn-ghost" style="font-size:11px">Ver tudo →</a>
-      </div>
-      <div id="tabuada-alertas-body"><div style="font-size:13px;color:var(--text-muted)">Verificando…</div></div>
-    </div>
-    <div class="card" id="tabuada-ranking-card" style="overflow:visible">
-      <div class="card-header">
-        <div class="card-title"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>Ranking Tabuada <span class="card-count">${totalTabJogadores} jogadores</span></div>
-        <a href="/professor/tabuada_relatorio.html" class="btn btn-sm btn-ghost" style="font-size:11px">Ver completo →</a>
-      </div>
-      <div id="tabuada-ranking-body">
-        ${tabTop5.length === 0
-          ? '<div class="empty-state"><p>Nenhum aluno jogou ainda.</p></div>'
-          : (() => {
-              const maxNivel = tabTop5[0]?.melhor_nivel || 1;
-              const barColors = ['#F59E0B','#9CA3AF','#CD853F','#CBD5E1','#CBD5E1'];
-              return tabTop5.map((d, i) => {
-                const pos = d._pos;
-                const posClass = pos === 1 ? 'pos-1' : pos === 2 ? 'pos-2' : pos === 3 ? 'pos-3' : 'pos-n';
-                const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : `<span style="font-size:12px;font-weight:700;color:var(--text-muted)">${pos}</span>`;
-                const barPct = Math.round((d.melhor_nivel || 1) / maxNivel * 100);
-                const badge = pos === 1 ? `<span class="rank-crown">👑</span>` : pos <= 3 ? `<span class="rank-star">⭐</span>` : '';
-                const padTop = pos === 1 ? 'padding-top:14px' : pos <= 3 ? 'padding-top:10px' : '';
-                return `<div class="rank-row ${posClass}">
-                  <span style="font-size:${pos<=3?'18':'12'}px;min-width:24px;text-align:center;flex-shrink:0;line-height:1">${medal}</span>
-                  <div style="flex:1;min-width:0">
-                    <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(d.nome)}</div>
-                    <div style="font-size:11px;color:var(--text-muted);margin-top:1px">Turma ${escH(d.turma||'?')}</div>
-                    <div class="rank-bar-wrap"><div class="rank-bar" style="width:${barPct}%;background:${barColors[Math.min(i,4)]}"></div></div>
-                  </div>
-                  <div class="rank-val" style="${padTop}">
-                    ${badge}
-                    <div class="rank-val-num">Nv ${d.melhor_nivel||1}</div>
-                    <div class="rank-val-label">tabuada</div>
-                  </div>
-                </div>`;
-              }).join('');
-            })()}
-      </div>
-    </div>
-  </div>
-
   <div class="grid-2">
     <div>
       <div class="card">
@@ -388,7 +324,42 @@ document.getElementById("content").innerHTML = `
     </div>
 
     <div>
-      <div class="card" style="overflow:visible">
+      <div class="card" id="tabuada-ranking-card" style="overflow:visible;margin-bottom:16px">
+        <div class="card-header">
+          <div class="card-title"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>Ranking Tabuada <span class="card-count">${totalTabJogadores} jogadores</span></div>
+          <a href="/professor/tabuada_relatorio.html" class="btn btn-sm btn-ghost" style="font-size:11px">Ver completo →</a>
+        </div>
+        <div id="tabuada-ranking-body">
+          ${tabTop5.length === 0
+            ? '<div class="empty-state"><p>Nenhum aluno jogou ainda.</p></div>'
+            : (() => {
+                const maxNivel = tabTop5[0]?.melhor_nivel || 1;
+                const barColors = ['#F59E0B','#9CA3AF','#CD853F','#CBD5E1','#CBD5E1'];
+                return tabTop5.map((d, i) => {
+                  const pos = d._pos;
+                  const posClass = pos === 1 ? 'pos-1' : pos === 2 ? 'pos-2' : pos === 3 ? 'pos-3' : 'pos-n';
+                  const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : `<span style="font-size:12px;font-weight:700;color:var(--text-muted)">${pos}</span>`;
+                  const barPct = Math.round((d.melhor_nivel || 1) / maxNivel * 100);
+                  const badge = pos === 1 ? `<span class="rank-crown">👑</span>` : pos <= 3 ? `<span class="rank-star">⭐</span>` : '';
+                  const padTop = pos === 1 ? 'padding-top:14px' : pos <= 3 ? 'padding-top:10px' : '';
+                  return `<div class="rank-row ${posClass}">
+                    <span style="font-size:${pos<=3?'18':'12'}px;min-width:24px;text-align:center;flex-shrink:0;line-height:1">${medal}</span>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(d.nome)}</div>
+                      <div style="font-size:11px;color:var(--text-muted);margin-top:1px">Turma ${escH(d.turma||'?')}</div>
+                      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${barPct}%;background:${barColors[Math.min(i,4)]}"></div></div>
+                    </div>
+                    <div class="rank-val" style="${padTop}">
+                      ${badge}
+                      <div class="rank-val-num">Nv ${d.melhor_nivel||1}</div>
+                      <div class="rank-val-label">tabuada</div>
+                    </div>
+                  </div>`;
+                }).join('');
+              })()}
+        </div>
+      </div>
+      <div class="card" style="overflow:visible;margin-bottom:0">
         <div class="card-header">
           <div class="card-title"><svg viewBox="0 0 24 24"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg>Top Alunos <span class="card-count">ranking geral</span></div>
           <a href="/professor/ranking.html" class="btn btn-sm btn-ghost" style="font-size:11px">Ver ranking →</a>
@@ -398,29 +369,6 @@ document.getElementById("content").innerHTML = `
     </div>
   </div>`;
 
-// ── Alertas Tabuada em tempo real ────────────────────────────
-function _renderizarAlertasTabuada(niveisSnap, rankSnap) {
-  const body = document.getElementById('tabuada-alertas-body');
-  if (!body) return;
-  const { individuais, coletivos } = compilarAlertasTabuada(niveisSnap, rankSnap);
-  const items = [];
-  for (const a of coletivos.esgotados)  { if (items.length >= 4) break; items.push(`<div class="alert-row sev-high"><div class="alert-info"><div class="alert-nome">Nível ${a.nivel} — esgotado</div><div class="alert-sub">${a.count} alunos perderam por tempo</div></div><div class="alert-falhas">⏱ tempo</div></div>`); }
-  for (const a of coletivos.quasePerda) { if (items.length >= 4) break; items.push(`<div class="alert-row sev-med"><div class="alert-info"><div class="alert-nome">Nível ${a.nivel} — quase perderam</div><div class="alert-sub">${a.count} alunos quase não completaram</div></div><div class="alert-falhas">⚠️ risco</div></div>`); }
-  for (const a of individuais)           { if (items.length >= 4) break; const sev = a.falhas >= 10 ? 'sev-high' : a.falhas >= 5 ? 'sev-med' : 'sev-low'; items.push(`<div class="alert-row ${sev}"><div class="alert-info"><div class="alert-nome">${escH(a.nome)}</div><div class="alert-sub">Turma ${escH(a.turma)} · Nível ${a.nivel}</div></div><div class="alert-falhas">${a.falhas} falhas</div></div>`); }
-  body.innerHTML = items.length ? items.join('') : '<div style="font-size:13px;color:var(--text-muted)">Nenhum alerta no momento.</div>';
-  const countEl = document.getElementById('tabuada-alertas-count');
-  if (countEl) { countEl.textContent = `${items.length} aluno${items.length !== 1 ? 's' : ''}`; countEl.style.display = items.length ? '' : 'none'; }
-  document.getElementById('tab-grid-tabuada').style.gridTemplateColumns = items.length ? '1fr 1fr' : '1fr';
-  document.getElementById('tabuada-alertas-card').style.display = items.length ? '' : 'none';
-}
-
-let _snapNiveis  = niveisTabSnap;
-let _snapRanking = rankTabSnap;
-function _reRenderAlertas() { _renderizarAlertasTabuada(_snapNiveis, _snapRanking); }
-onValue(ref(db, 'tabuada_niveis'),  snap => { _snapNiveis  = snap; _reRenderAlertas(); });
-onValue(ref(db, 'tabuada_ranking'), snap => { _snapRanking = snap; _reRenderAlertas(); });
-// Render inicial com dados já carregados
-_reRenderAlertas();
 
 // ── Online Agora (listeners em tempo real) ────────────────────
 const ONLINE_WINDOW_MS  = 5 * 60 * 1000;

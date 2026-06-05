@@ -37,9 +37,18 @@
     .av-table tbody tr:hover td{background:rgba(0,0,0,.025);}
 
     /* Turma header */
-    .tr-turma-hdr{cursor:pointer;user-select:none;background:var(--bg)!important;}
-    .tr-turma-hdr:hover td{background:rgba(0,0,0,.03)!important;}
-    .tr-turma-hdr td{padding:7px 12px;font-size:12px;font-weight:700;color:var(--text-muted);border-bottom:2px solid var(--border);}
+    .tr-turma-hdr{cursor:pointer;user-select:none;}
+    .tr-turma-hdr:hover td{background:rgba(59,130,246,.06)!important;}
+    .tr-turma-hdr td{padding:10px 14px;font-size:12px;font-weight:700;color:var(--text);background:rgba(59,130,246,.05)!important;border-top:2px solid rgba(59,130,246,.15)!important;border-bottom:2px solid rgba(59,130,246,.15)!important;border-left:3px solid #3B82F6!important;}
+    .turma-chip{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:4px}
+    .turma-chip-con{background:#DCFCE7;color:#166534}
+    .turma-chip-and{background:#EFF6FF;color:#1D4ED8}
+    .turma-chip-exp{background:#FEF3C7;color:#92400E}
+    .turma-chip-nao{background:#FEE2E2;color:#991B1B}
+    .turma-chip-falta{background:#F3F4F6;color:#374151}
+    .tr-turma-spacer td{padding:6px 0;background:transparent!important;border:none!important}
+    .btn-falta{font-size:11px;font-weight:700;padding:3px 9px;border-radius:6px;border:1px solid rgba(107,114,128,.35);background:rgba(107,114,128,.08);color:#374151;cursor:pointer;font-family:inherit}
+    .btn-falta:hover{background:rgba(107,114,128,.15)}
 
     /* Estados de alerta */
     .row-10min td:first-child{border-left:3px solid #F59E0B;}
@@ -64,11 +73,21 @@
     @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
     /* Status badges */
-    .status-and{color:#3B82F6;font-weight:700;animation:pulse-and 1.5s ease-in-out infinite;}
+    .status-and{color:#3B82F6;font-weight:700;font-size:15px;animation:pulse-and 1.5s ease-in-out infinite;}
     @keyframes pulse-and{0%,100%{opacity:1}50%{opacity:.5}}
-    .status-con{color:#16A34A;font-weight:700;}
-    .status-exp{color:#D97706;font-weight:600;}
-    .status-nao{color:var(--text-muted);}
+    .status-con{color:#16A34A;font-weight:700;font-size:15px;}
+    .status-exp{color:#D97706;font-weight:600;font-size:15px;}
+    .status-nao{color:var(--text-muted);font-size:15px;}
+    /* Melhor nota destacada */
+    .t-best{background:rgba(22,163,74,.08);border-radius:6px;padding:1px 4px;outline:1.5px solid rgba(22,163,74,.2)}
+    /* Badges de ação do professor */
+    .prof-action-badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
+    .prof-badge-tent{font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;background:rgba(249,115,22,.12);color:#EA580C;border:1px solid rgba(249,115,22,.3);cursor:default;white-space:nowrap}
+    .prof-badge-time{font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;background:rgba(59,130,246,.1);color:#2563EB;border:1px solid rgba(59,130,246,.25);cursor:default;white-space:nowrap}
+    /* Avatar de iniciais */
+    .av-avatar{width:26px;height:26px;border-radius:50%;font-size:10px;font-weight:700;color:#fff;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:7px}
+    /* Input minutos */
+    .acao-min{width:36px;min-width:36px;padding:3px;border:1.5px solid var(--border);border-radius:6px;font-size:11px;text-align:center;font-family:inherit;background:var(--bg);color:var(--text)}
 
     /* Flash */
     @keyframes flash-g{0%{background:rgba(34,197,94,.28)}100%{background:transparent}}
@@ -191,8 +210,7 @@
       <!-- Stats micro-row -->
       <div class="av-stats-row" id="stats-row" style="display:none">
         <div class="av-stat-item">📊 Média F1: <span class="av-stat-val" id="stat-media-f1">—</span></div>
-        <div class="av-stat-item">🟢 ≥ 7.0: <span class="av-stat-val" id="stat-pct7">—</span></div>
-        <div class="av-stat-item">⚡ 1 tentativa: <span class="av-stat-val" id="stat-1tent">0</span></div>
+        <div class="av-stat-item">🟢 Aprovados (≥5): <span class="av-stat-val" id="stat-pct5">—</span></div>
       </div>
 
       <!-- Tabela unificada -->
@@ -206,7 +224,6 @@
                 <th style="text-align:center">T1</th>
                 <th style="text-align:center">T2</th>
                 <th style="text-align:center">T3</th>
-                <th>Melhor F1</th>
                 <th>Pts F2</th>
                 <th>Status</th>
                 <th>Início</th>
@@ -243,6 +260,18 @@
   </div>
 </div>
 
+<div id="modal-falta" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.55);align-items:center;justify-content:center;">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-titulo">🏠 Marcar Falta</div>
+    <div class="modal-nome" id="modal-falta-nome"></div>
+    <div class="modal-obs">O aluno não estava presente nesta aula. Esta marcação pode ser desfeita.</div>
+    <div class="modal-btns">
+      <button id="modal-falta-cancelar" class="btn btn-ghost" style="font-size:13px;padding:7px 16px">Cancelar</button>
+      <button id="modal-falta-confirmar" class="btn btn-orange" style="font-size:13px;padding:7px 16px;background:#6B7280;color:#fff;border:none">Confirmar falta</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import { db } from "/js/firebase-config.js";
 import { ref, onValue, get, set, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -274,6 +303,8 @@ let notifTimer     = null;
 let _audioCtx      = null;
 let recusasData    = {};  // { avKey(aluno) → { aluno, status, timestamp, registrado_por } }
 let unsubRecusas   = null;
+let unsubControle  = null;
+let avControlCache = {};  // { avKey(aluno0) → acoes_professor[] }
 
 // ── Eventos filtros ─────────────────────────────────────────────
 function _atualizarBotaoExtra() {
@@ -282,12 +313,22 @@ function _atualizarBotaoExtra() {
 }
 function subscribeRecusas() {
   if (unsubRecusas) { unsubRecusas(); unsubRecusas = null; }
+  if (unsubControle) { unsubControle(); unsubControle = null; }
   recusasData = {};
+  avControlCache = {};
   if (!filtroAtiv || !filtroTurma) { renderizarTudo(); return; }
   const k = avKey(filtroTurma + '|' + filtroAtiv);
   unsubRecusas = onValue(ref(db, `avaliacoes_recusas/${k}`), snap => {
     recusasData = {};
     snap.forEach(child => { recusasData[child.key] = child.val(); });
+    renderizarTudo();
+  });
+  unsubControle = onValue(ref(db, `avaliacao_controle/${k}`), snap => {
+    avControlCache = {};
+    if (snap.exists()) snap.forEach(child => {
+      const v = child.val();
+      if (v.acoes_professor) avControlCache[child.key] = v.acoes_professor;
+    });
     renderizarTudo();
   });
 }
@@ -549,17 +590,13 @@ function buildAllEntries(allRecords, now) {
       const ns = allRecs.map(r => r.nota_quiz).filter(n => typeof n === 'number');
       return ns.length > 1 && Math.min(...ns) === 0 && Math.max(...ns) >= 8;
     })();
-    const flagRepeat = (() => {
-      if (flagSuspect) return false;
-      const ns = allRecs.map(r => r.nota_quiz).filter(n => typeof n === 'number');
-      return ns.length > 1 && (Math.max(...ns) - Math.min(...ns)) > 3;
-    })();
 
     entries.push({
       nomes: g.nomes, turma: g.turma, atividade: g.atividade, tentativas,
       statusFinal, melhorNota, melhorPts, melhorTempoF1,
       primeiroTs, tempoRestanteMin: hasAnd ? tempoRestanteMin : null,
-      andRecId, andTs, isRecent, flagSuspect, flagRepeat,
+      andRecId, andTs, isRecent, flagSuspect,
+      acoesProfessor: avControlCache[avKey(g.nomes[0])] || [],
     });
   }
   return entries;
@@ -589,7 +626,7 @@ function _naoIniciouEntry(aluno, turma) {
   return { nomes: [aluno], turma, atividade: filtroAtiv, tentativas: {},
     statusFinal: 'nao-iniciou', melhorNota: null, melhorPts: 0, melhorTempoF1: null,
     primeiroTs: Infinity, tempoRestanteMin: null, andRecId: '', andTs: 0,
-    isRecent: false, flagSuspect: false, flagRepeat: false };
+    isRecent: false, flagSuspect: false };
 }
 
 // ── "Recusou fazer" para alunos marcados pelo professor ─────────
@@ -605,8 +642,23 @@ function _recusouEntry(aluno, turma, rec) {
   return { nomes: [aluno], turma, atividade: filtroAtiv, tentativas: {},
     statusFinal: 'recusou', melhorNota: null, melhorPts: 0, melhorTempoF1: null,
     primeiroTs: Infinity, tempoRestanteMin: null, andRecId: '', andTs: 0,
-    isRecent: false, flagSuspect: false, flagRepeat: false,
-    recusaTs: rec.timestamp || 0 };
+    isRecent: false, flagSuspect: false,
+    recusaTs: rec.timestamp || 0, acoesProfessor: [] };
+}
+function addFaltaEntries() {
+  if (!filtroAtiv || !filtroTurma) return [];
+  const q = searchText.toLowerCase();
+  return Object.values(recusasData)
+    .filter(rec => rec.status === 'falta' && rec.aluno)
+    .filter(rec => !searchText || rec.aluno.toLowerCase().includes(q))
+    .map(rec => _faltaEntry(rec.aluno, filtroTurma, rec));
+}
+function _faltaEntry(aluno, turma, rec) {
+  return { nomes: [aluno], turma, atividade: filtroAtiv, tentativas: {},
+    statusFinal: 'falta', melhorNota: null, melhorPts: 0, melhorTempoF1: null,
+    primeiroTs: Infinity, tempoRestanteMin: null, andRecId: '', andTs: 0,
+    isRecent: false, flagSuspect: false,
+    recusaTs: rec.timestamp || 0, acoesProfessor: [] };
 }
 
 // ── Busca ───────────────────────────────────────────────────────
@@ -618,7 +670,7 @@ function filterBySearch(entries) {
 
 // ── Ordenação ───────────────────────────────────────────────────
 function sortEntries(entries) {
-  const order = { andamento: 0, concluida: 1, expirada: 2, 'nao-iniciou': 3, recusou: 4 };
+  const order = { andamento: 0, concluida: 1, expirada: 2, 'nao-iniciou': 3, recusou: 4, falta: 5 };
   return [...entries].sort((a, b) => {
     const oa = order[a.statusFinal] ?? 9, ob = order[b.statusFinal] ?? 9;
     if (oa !== ob) return oa - ob;
@@ -635,11 +687,12 @@ function updateCards(entries) {
   const nAnd = entries.filter(e => e.statusFinal === 'andamento').length;
   const nCon = entries.filter(e => e.statusFinal === 'concluida').length;
   const nExp = entries.filter(e => e.statusFinal === 'expirada').length;
-  const nNao = entries.filter(e => e.statusFinal === 'nao-iniciou').length;
+  const nNao   = entries.filter(e => e.statusFinal === 'nao-iniciou').length;
+  const nFalta = entries.filter(e => e.statusFinal === 'falta').length;
   document.getElementById('card-andamento').textContent  = nAnd;
   document.getElementById('card-concluidas').textContent = nCon;
   document.getElementById('card-expiradas').textContent  = nExp;
-  document.getElementById('card-nao').textContent        = nNao;
+  document.getElementById('card-nao').textContent        = nNao - nFalta > 0 ? nNao - nFalta : nNao;
 
   const notas = entries.filter(e => e.melhorNota != null).map(e => e.melhorNota);
   const statsEl = document.getElementById('stats-row');
@@ -647,8 +700,7 @@ function updateCards(entries) {
     if (notas.length > 0) {
       statsEl.style.display = '';
       document.getElementById('stat-media-f1').textContent = (notas.reduce((a,b)=>a+b,0)/notas.length).toFixed(1)+'/10';
-      document.getElementById('stat-pct7').textContent = Math.round(notas.filter(n=>n>=7).length/notas.length*100)+'%';
-      document.getElementById('stat-1tent').textContent = entries.filter(e => Object.keys(e.tentativas).length === 1 && e.statusFinal === 'concluida').length;
+      document.getElementById('stat-pct5').textContent = Math.round(notas.filter(n=>n>=5).length/notas.length*100)+'%';
     } else {
       statsEl.style.display = 'none';
     }
@@ -657,7 +709,7 @@ function updateCards(entries) {
 
 // ── Célula T1/T2/T3 ────────────────────────────────────────────
 // tentNum: número da tentativa (1/2/3); maxActive: maior tentativa dentro do timer individual
-function tentCellHtml(tentRecs, now, tentNum = 1, maxActive = 0) {
+function tentCellHtml(tentRecs, now, tentNum = 1, maxActive = 0, isBest = false) {
   if (!tentRecs || tentRecs.length === 0)
     return `<td style="color:var(--text-muted);text-align:center;font-size:11px">—</td>`;
 
@@ -708,8 +760,9 @@ function tentCellHtml(tentRecs, now, tentNum = 1, maxActive = 0) {
     ? fmtHora(rep.ts_inicio * 1000 + f1Ms)
     : horaInicio;
   const meta = [f1Ms > 0 ? fmtMs(f1Ms) : '', horaFim].filter(Boolean).join(' · ');
+  const bestCls = isBest ? ' t-best' : '';
   return `<td style="text-align:center">
-    <span class="${notaCls(n)}" style="font-size:12px;white-space:nowrap">✅ ${notaStr(n)}</span>
+    <span class="${notaCls(n)}${bestCls}" style="font-size:12px;white-space:nowrap">✅ ${notaStr(n)}</span>
     ${subInfo(meta)}
   </td>`;
 }
@@ -763,9 +816,9 @@ function totalTdHtml(entry, now) {
     const finishMs = last.ts_inicio * 1000 + (f1Ms > 0 ? f1Ms : DURACAO_TENT_MS);
     const rem      = entry.primeiroTs * 1000 + DURACAO_MS - finishMs;
     if (rem < 60000)
-      return `<td style="${sty};color:var(--text-muted)">✅ ~0min</td>`;
+      return `<td style="${sty};color:var(--text-muted)">~0min</td>`;
     const mins = Math.round(rem / 60000);
-    return `<td style="${sty};color:var(--text-muted)">✅ ${mins}min restavam</td>`;
+    return `<td style="${sty};color:var(--text-muted)">${mins}min</td>`;
   }
 
   if (entry.statusFinal !== 'andamento' || entry.primeiroTs >= Infinity)
@@ -777,10 +830,12 @@ function totalTdHtml(entry, now) {
   const s   = Math.floor(ms / 1000);
   const str = `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
   let inner;
-  if      (ms < 2  * 60000) inner = `<span class="t-2"  style="font-variant-numeric:tabular-nums">🚨 ${str}</span>`;
-  else if (ms < 5  * 60000) inner = `<span class="t-5"  style="font-variant-numeric:tabular-nums">🔶 ${str}</span>`;
-  else if (ms < 10 * 60000) inner = `<span class="t-10" style="font-variant-numeric:tabular-nums">⚠️ ${str}</span>`;
-  else                      inner = `<span class="t-ok" style="font-variant-numeric:tabular-nums">⏱ ${str}</span>`;
+  const expiraHora = new Date(entry.primeiroTs * 1000 + DURACAO_MS).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const expiraLabel = `<div style="font-size:10px;color:var(--text-muted);margin-top:1px">expira</div>`;
+  if      (ms < 2  * 60000) inner = `<span class="t-2"  style="font-variant-numeric:tabular-nums">🚨 ${expiraHora}</span>${expiraLabel}`;
+  else if (ms < 5  * 60000) inner = `<span class="t-5"  style="font-variant-numeric:tabular-nums">🔶 ${expiraHora}</span>${expiraLabel}`;
+  else if (ms < 10 * 60000) inner = `<span class="t-10" style="font-variant-numeric:tabular-nums">⚠️ ${expiraHora}</span>${expiraLabel}`;
+  else                      inner = `<span class="t-ok" style="font-variant-numeric:tabular-nums">⏱ ${expiraHora}</span>${expiraLabel}`;
   return `<td class="total-cell" data-ts="${entry.primeiroTs}" style="${sty}">${inner}</td>`;
 }
 
@@ -798,21 +853,23 @@ function rowHtml(entry, now) {
 
   const statusHtml = (() => {
     switch (entry.statusFinal) {
-      case 'andamento': return `<span class="status-and">⏳ Em andamento</span>`;
+      case 'andamento': return `<span class="status-and">⏳</span>`;
       case 'concluida': {
         const flags = [
           entry.flagSuspect ? `<span class="ftip" style="margin-left:5px"><span style="font-size:13px">⚠️</span><span class="tt">Variação suspeita: nota 0 e ≥ 8 em tentativas diferentes</span></span>` : '',
-          entry.flagRepeat  ? `<span class="ftip" style="margin-left:5px"><span style="font-size:13px">🔁</span><span class="tt">Diferença > 3 pts entre tentativas</span></span>` : '',
-          Object.keys(entry.tentativas).length === 1 ? `<span class="ftip" style="margin-left:5px"><span style="font-size:13px">⚡</span><span class="tt">Concluiu com apenas 1 tentativa</span></span>` : '',
         ].filter(Boolean).join('');
-        return `<span class="status-con">✅ Concluída</span>${flags}`;
+        return `<span class="status-con">✅</span>${flags}`;
       }
-      case 'expirada':  return `<span class="status-exp">⚠️ Só expirou</span>`;
+      case 'falta': {
+        const hora = entry.recusaTs ? new Date(entry.recusaTs).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
+        return `<span style="color:#6B7280;font-weight:600">🏠${hora ? ' · '+hora : ''}</span>`;
+      }
+      case 'expirada':  return `<span class="status-exp">⚠️</span>`;
       case 'recusou': {
         const hora = entry.recusaTs ? new Date(entry.recusaTs).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
-        return `<span class="status-rec">⚠️ Recusou${hora ? ' · '+hora : ''}</span>`;
+        return `<span class="status-rec">⚠️${hora ? ' · '+hora : ''}</span>`;
       }
-      default:          return `<span class="status-nao">❌ Não iniciou</span>`;
+      default: return `<span class="status-nao">❌</span>`;
     }
   })();
 
@@ -821,9 +878,15 @@ function rowHtml(entry, now) {
   let acoesHtml;
   if (entry.statusFinal === 'nao-iniciou') {
     acoesHtml = (filtroAtiv && filtroTurma)
-      ? `<button class="btn btn-sm" style="color:#DC2626;border-color:rgba(220,38,38,.4);font-size:11px;padding:3px 9px"
-           ${da} onclick="marcarRecusou(this)" title="Marcar que o aluno estava presente mas se recusou a fazer">✗ Não quis</button>`
+      ? `<div style="display:flex;gap:4px">
+          <button class="btn btn-sm" style="color:#DC2626;border:1px solid rgba(220,38,38,.3);background:rgba(220,38,38,.06);font-size:11px;padding:3px 8px"
+            ${da} onclick="marcarRecusou(this)" title="Aluno presente mas recusou fazer">✗ Não quis</button>
+          <button class="btn-falta" ${da} onclick="marcarFalta(this)" title="Aluno ausente — registrar falta">F</button>
+        </div>`
       : '<span style="color:var(--text-muted);font-size:11px">—</span>';
+  } else if (entry.statusFinal === 'falta') {
+    acoesHtml = `<button class="btn btn-sm btn-ghost" style="font-size:11px;padding:3px 9px"
+      ${da} onclick="desfazerFalta(this)" title="Remover falta">↩ Desfazer</button>`;
   } else if (entry.statusFinal === 'recusou') {
     acoesHtml = `<button class="btn btn-sm btn-ghost" style="font-size:11px;padding:3px 9px"
       ${da} onclick="desfazerRecusa(this)" title="Remover esta marcação">↩ Desfazer</button>`;
@@ -831,7 +894,7 @@ function rowHtml(entry, now) {
     acoesHtml = `
       <div style="display:flex;gap:2px;align-items:center">
         <button class="btn btn-sm btn-orange" ${da} onclick="darTentativaAluno(this)" title="Dar tentativa extra ao aluno" style="padding:3px 7px;font-size:11px">+1</button>
-        <input type="number" value="10" min="1" max="120" class="acao-min" title="Número de minutos a adicionar" style="width:34px;padding:3px 3px;border:1.5px solid var(--border);border-radius:6px;font-size:11px;text-align:center;font-family:inherit;background:var(--bg);color:var(--text)">
+        <input type="number" value="10" min="1" max="120" class="acao-min" title="Número de minutos a adicionar">
         <button class="btn btn-sm btn-blue" ${da} onclick="darTempoAluno(this)" title="Adicionar minutos ao timer do aluno" style="padding:3px 7px;font-size:11px">+min</button>
         <button class="btn btn-sm btn-red" ${da} onclick="deletarDadosAluno(this)" title="Apagar TODOS os dados desta dupla/aluno nesta atividade" style="padding:3px 6px;font-size:11px">✕</button>
       </div>`;
@@ -842,13 +905,40 @@ function rowHtml(entry, now) {
     .filter(([, recs]) => recs.some(r => !r.concluido && r.ts_inicio * 1000 + DURACAO_TENT_MS > now))
     .map(([n]) => Number(n)));
 
+  // Melhor tentativa (para destacar)
+  const notasPorTent = {};
+  for (const [num, recs] of Object.entries(entry.tentativas)) {
+    const ns = (recs || []).flatMap(r => r.nota_quiz != null ? [r.nota_quiz] : []);
+    if (ns.length) notasPorTent[num] = Math.max(...ns);
+  }
+  const melhorTent = Object.entries(notasPorTent).sort((a,b) => b[1]-a[1])[0]?.[0];
+
+  // Badges de ação do professor
+  const acoes = entry.acoesProfessor || [];
+  const nTent = acoes.filter(a => a.tipo === 'tentativa').length;
+  const tempos = acoes.filter(a => a.tipo === 'tempo');
+  const totalMin = tempos.reduce((s, a) => s + (a.minutos || 0), 0);
+  const fmtTs = ts => new Date(ts).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+  const tentBadge = nTent > 0 ? `<span class="ftip prof-badge-tent">+${nTent} tent<span class="tt">Tentativa extra dada às ${fmtTs(acoes.filter(a=>a.tipo==='tentativa').slice(-1)[0].ts)}</span></span>` : '';
+  const timeBadge = totalMin > 0 ? `<span class="ftip prof-badge-time">+${totalMin}min<span class="tt">Tempo adicionado às ${fmtTs(tempos.slice(-1)[0].ts)}</span></span>` : '';
+  const profBadgesHtml = (tentBadge || timeBadge) ? `<div class="prof-action-badges">${tentBadge}${timeBadge}</div>` : '';
+
+  // Avatar
+  const initials = entry.nomes.map(n => n.trim()[0]?.toUpperCase() || '?').join('');
+  const avatarColors = ['#6366F1','#0EA5E9','#8B5CF6','#F59E0B','#10B981','#F97316','#EC4899'];
+  const avatarColor = avatarColors[entry.nomes[0].charCodeAt(0) % avatarColors.length];
+
   return `<tr class="${cls}" data-turma="${escH(entry.turma)}" data-sid="${escH(entry.andRecId)}" data-aluno="${escH(nomes)}">
-    <td><strong>${entry.nomes.map(escH).join(' &amp; ')}</strong></td>
+    <td>
+      <div style="display:flex;align-items:flex-start">
+        <div class="av-avatar" style="background:${avatarColor};margin-top:${profBadgesHtml ? '2px' : '0'}">${escH(initials)}</div>
+        <div><strong>${entry.nomes.map(escH).join(' &amp; ')}</strong>${profBadgesHtml}</div>
+      </div>
+    </td>
     <td><span class="badge-turma">${escH(entry.turma)}</span></td>
-    ${tentCellHtml(entry.tentativas[1], now, 1, maxActive)}
-    ${tentCellHtml(entry.tentativas[2], now, 2, maxActive)}
-    ${tentCellHtml(entry.tentativas[3], now, 3, maxActive)}
-    <td><span class="${notaCls(entry.melhorNota)}">${notaStr(entry.melhorNota)}</span></td>
+    ${tentCellHtml(entry.tentativas[1], now, 1, maxActive, melhorTent === '1')}
+    ${tentCellHtml(entry.tentativas[2], now, 2, maxActive, melhorTent === '2')}
+    ${tentCellHtml(entry.tentativas[3], now, 3, maxActive, melhorTent === '3')}
     <td style="font-weight:700;color:var(--gold)">${entry.melhorPts > 0 ? entry.melhorPts + ' pts' : '—'}</td>
     <td>${statusHtml}</td>
     <td style="color:var(--text-muted);font-variant-numeric:tabular-nums;font-size:11px">${inicio}</td>
@@ -885,16 +975,25 @@ function renderMainTable(sortedEntries, now) {
       const nCon  = ents.filter(e => e.statusFinal === 'concluida').length;
       const nExp  = ents.filter(e => e.statusFinal === 'expirada').length;
       const nNao  = ents.filter(e => e.statusFinal === 'nao-iniciou').length;
-      const parts = [
-        nAnd ? `⏳ ${nAnd}` : '', nCon ? `✅ ${nCon}` : '',
-        nExp ? `⚠️ ${nExp}` : '', nNao ? `❌ ${nNao}` : '',
-      ].filter(Boolean).join(' · ');
-
-      html += `<tr class="tr-turma-hdr" id="th-${escH(turma)}" data-open="1" onclick="toggleTurma('${escH(turma)}')">
+      const nFalta = ents.filter(e => e.statusFinal === 'falta').length;
+      const nRec   = ents.filter(e => e.statusFinal === 'recusou').length;
+      const chips = [
+        nCon   ? `<span class="turma-chip turma-chip-con">✅ ${nCon}</span>`    : '',
+        nAnd   ? `<span class="turma-chip turma-chip-and">⏳ ${nAnd}</span>`    : '',
+        nExp   ? `<span class="turma-chip turma-chip-exp">⚠️ ${nExp}</span>`    : '',
+        nNao   ? `<span class="turma-chip turma-chip-nao">❌ ${nNao}</span>`    : '',
+        nRec   ? `<span class="turma-chip turma-chip-nao">✗ ${nRec}</span>`     : '',
+        nFalta ? `<span class="turma-chip turma-chip-falta">F ${nFalta}</span>` : '',
+      ].filter(Boolean).join('');
+      const isFirst = Object.keys(byTurma).sort().indexOf(turma) === 0;
+      const spacer  = isFirst ? '' : `<tr><td colspan="12" style="padding:6px 0;background:transparent!important;border:none!important"></td></tr>`;
+      html += `${spacer}<tr class="tr-turma-hdr" id="th-${escH(turma)}" data-open="1" onclick="toggleTurma('${escH(turma)}')">
         <td colspan="12">
-          <span class="th-chev" style="font-size:10px;margin-right:6px">▼</span>
-          <strong>Turma ${escH(turma)}</strong>
-          <span style="font-weight:400;color:var(--text-muted);margin-left:10px;font-size:11px">${parts}</span>
+          <div style="display:flex;align-items:center">
+            <span class="th-chev" style="font-size:12px;margin-right:8px;color:#3B82F6">▼</span>
+            <strong style="font-size:13px">Turma ${escH(turma)}</strong>
+            <span style="display:flex;align-items:center;flex-wrap:wrap;margin-left:6px">${chips}</span>
+          </div>
         </td>
       </tr>`;
       html += ents.map(e => rowHtml(e, now)).join('');
@@ -912,7 +1011,8 @@ function renderizarTudo() {
   const entries    = buildAllEntries(filtered, now);
   const naoIniciou = addNaoIniciouEntries();
   const recusou    = addRecusouEntries();
-  const all        = filterBySearch([...entries, ...naoIniciou, ...recusou]);
+  const falta      = addFaltaEntries();
+  const all        = filterBySearch([...entries, ...naoIniciou, ...recusou, ...falta]);
   const sorted     = sortEntries(all);
 
   // Aviso: exige atividade + turma para listar "não iniciou"
@@ -954,8 +1054,13 @@ window.darTentativaAluno = async function(btn) {
     // Tempo global não bloqueia mais — só decrementa a contagem
     await update(ref(db, path), {
       tentativas_realizadas: tentUsadas - 1,
-      inicio_global: Date.now(), // reset display; sistema não bloqueia por tempo
+      inicio_global: Date.now(),
     });
+    const acoesRef1 = ref(db, `${path}/acoes_professor`);
+    const acoesSnap1 = await get(acoesRef1);
+    const acoes1 = acoesSnap1.exists() ? acoesSnap1.val() : [];
+    acoes1.push({ tipo: 'tentativa', ts: Date.now() });
+    await set(acoesRef1, acoes1);
     showTopNotif(`✅ +1 tentativa → ${aluno0}`);
   } catch(e) {
     alert('Erro: ' + e.message);
@@ -977,6 +1082,11 @@ window.darTempoAluno = async function(btn) {
     // Move inicio_global para frente no tempo → aluno ganha mais X minutos
     const novoInicio = (ctrl.inicio_global || Date.now()) + minutos * 60 * 1000;
     await update(ref(db, path), { inicio_global: novoInicio });
+    const acoesRef2 = ref(db, `${path}/acoes_professor`);
+    const acoesSnap2 = await get(acoesRef2);
+    const acoes2 = acoesSnap2.exists() ? acoesSnap2.val() : [];
+    acoes2.push({ tipo: 'tempo', minutos, ts: Date.now() });
+    await set(acoesRef2, acoes2);
     showTopNotif(`✅ +${minutos} min adicionados → ${aluno0}`);
   } catch(e) {
     alert('Erro: ' + e.message);
@@ -1143,6 +1253,44 @@ function initModal() {
     }
   });
 }
+
+// ── Modal falta ──────────────────────────────────────────────────
+const modalFalta   = document.getElementById('modal-falta');
+const btnFaltaConf = document.getElementById('modal-falta-confirmar');
+const btnFaltaCanc = document.getElementById('modal-falta-cancelar');
+let   _faltaPending = null;
+const fecharFalta = () => { modalFalta.style.display = 'none'; _faltaPending = null; };
+btnFaltaCanc.addEventListener('click', fecharFalta);
+modalFalta.addEventListener('click', e => { if (e.target === modalFalta) fecharFalta(); });
+btnFaltaConf.addEventListener('click', async () => {
+  if (!_faltaPending) return;
+  btnFaltaConf.disabled = true; btnFaltaConf.textContent = 'Salvando…';
+  try {
+    const { turma, ativ, aluno0 } = _faltaPending;
+    const k = avKey(turma + '|' + ativ);
+    await set(ref(db, `avaliacoes_recusas/${k}/${avKey(aluno0)}`), {
+      aluno: aluno0, status: 'falta',
+      registrado_por: sess?.nome || sess?.email || 'professor',
+      timestamp: Date.now(),
+    });
+    showTopNotif(`✅ Falta registrada para "${aluno0}"`);
+  } catch(e) { alert('Erro ao salvar: ' + e.message); }
+  finally { btnFaltaConf.disabled = false; btnFaltaConf.textContent = 'Confirmar falta'; fecharFalta(); }
+});
+window.marcarFalta = function(btn) {
+  _faltaPending = { turma: btn.dataset.turma, ativ: btn.dataset.ativ, aluno0: btn.dataset.aluno0 };
+  document.getElementById('modal-falta-nome').textContent = btn.dataset.aluno0;
+  modalFalta.style.display = 'flex';
+};
+window.desfazerFalta = async function(btn) {
+  btn.disabled = true;
+  try {
+    const k = avKey(btn.dataset.turma + '|' + btn.dataset.ativ);
+    await remove(ref(db, `avaliacoes_recusas/${k}/${avKey(btn.dataset.aluno0)}`));
+    showTopNotif(`↩ Falta removida para ${btn.dataset.aluno0}`);
+  } catch(e) { alert('Erro: ' + e.message); }
+  finally { btn.disabled = false; }
+};
 
 window.marcarRecusou = function(btn) {
   _modalPendingData = { turma: btn.dataset.turma, ativ: btn.dataset.ativ, aluno0: btn.dataset.aluno0 };
