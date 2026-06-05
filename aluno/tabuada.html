@@ -426,6 +426,7 @@ function getLevelConfig(lvl) {
   }
   // Overrides pontuais por nível
   if (lvl === 240) cfg.secs += 8;
+  if (lvl === 250 || lvl === 260) cfg.secs = 35;
   // Aplicar offset de tempo configurado pela professora (padrão 40 = neutro)
   const tempoOffset = (tabuadaConfig.tempo_base || 40) - 40;
   if (tempoOffset !== 0) {

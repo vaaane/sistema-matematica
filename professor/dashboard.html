@@ -34,6 +34,40 @@
     @media(max-width:560px){.dash-stats-grid{grid-template-columns:repeat(2,1fr)!important;}}
     .tab-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px;}
     @media(max-width:768px){.tab-grid{grid-template-columns:1fr;}}
+    .alert-row{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:8px;margin-bottom:5px;border-left:3px solid transparent}
+    .alert-row:last-child{margin-bottom:0}
+    .alert-row.sev-high{background:#FEF2F2;border-color:#EF4444}
+    .alert-row.sev-med{background:#FFFBEB;border-color:#F59E0B}
+    .alert-row.sev-low{background:#FFFBEB;border-color:#FCD34D;opacity:.85}
+    .alert-info{flex:1;min-width:0;background:transparent;border:none;color:inherit}
+    .alert-nome{font-size:13px;font-weight:700;color:var(--text);line-height:1.3}
+    .alert-sub{font-size:11px;color:var(--text-muted);margin-top:2px}
+    .alert-falhas{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;flex-shrink:0;margin-top:1px}
+    .sev-high .alert-falhas{background:#FEE2E2;color:#DC2626}
+    .sev-med .alert-falhas{background:#FEF3C7;color:#92400E}
+    .sev-low .alert-falhas{background:#FEF9C3;color:#A16207}
+    .stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;display:flex;align-items:center;gap:10px}
+    .stat-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .stat-icon svg{width:18px;height:18px}
+    .stat-body{flex:1;min-width:0}
+    .stat-val{font-size:20px;font-weight:800;line-height:1}
+    .stat-meta{font-size:11px;color:var(--text-muted);margin-top:2px;white-space:nowrap}
+    .stat-divider{height:1px;background:var(--border);margin:6px 0}
+    .stat-row{display:flex;align-items:baseline;gap:4px}
+    .rank-row{display:flex;align-items:center;gap:10px;padding:9px 12px 9px 0;border-radius:0 8px 8px 0;margin-bottom:5px;position:relative;overflow:visible}
+    .rank-row:last-child{margin-bottom:0}
+    .rank-row.pos-1{border-left:3px solid #F59E0B;background:rgba(245,158,11,.07);padding-left:12px}
+    .rank-row.pos-2{border-left:3px solid #9CA3AF;background:rgba(156,163,175,.05);padding-left:12px}
+    .rank-row.pos-3{border-left:3px solid #CD853F;background:rgba(180,83,9,.06);padding-left:12px}
+    .rank-row.pos-n{border-left:3px solid var(--border);padding-left:12px}
+    .rank-bar-wrap{margin-top:4px;height:3px;background:var(--border);border-radius:2px;overflow:hidden;max-width:80px}
+    .rank-bar{height:100%;border-radius:2px}
+    .rank-val{text-align:right;flex-shrink:0;position:relative}
+    .rank-val-num{font-size:13px;font-weight:700}
+    .rank-val-label{font-size:10px;color:var(--text-muted)}
+    .rank-crown{position:absolute;top:-12px;right:0;font-size:18px;filter:drop-shadow(0 2px 8px rgba(250,184,0,.9));pointer-events:none}
+    .rank-star{position:absolute;top:-4px;right:0;font-size:9px;pointer-events:none}
+    .card-count{font-size:11px;font-weight:600;color:var(--text-muted);background:#F1F5F9;padding:2px 8px;border-radius:20px;margin-left:6px}
   </style>
 </head>
 <body>
@@ -148,6 +182,10 @@ if (rankTabSnap?.exists()) {
   tabTop5.sort((a, b) => (b.melhor_nivel||0) - (a.melhor_nivel||0) || (b.total_partidas||0) - (a.total_partidas||0));
   tabTop5.splice(5);
 }
+let totalTabJogadores = 0;
+if (rankTabSnap?.exists()) {
+  rankTabSnap.forEach(() => totalTabJogadores++);
+}
 // Posições standard para o top 5
 { let _p = 0, _n = 0, _l = null;
   tabTop5.forEach((d, i) => {
@@ -193,29 +231,30 @@ function renderPodiumDash() {
     gi = gj;
   }
 
-  const TOP3_BG = [
-    'linear-gradient(135deg,#F59E0B,#D97706)',
-    'linear-gradient(135deg,#9CA3AF,#6B7280)',
-    'linear-gradient(135deg,#CD853F,#92400E)',
-  ];
-  const TROPHIES = ['🥇', '🥈', '🥉'];
-  const GLOWS    = ['glow-gold', 'glow-silver', 'glow-bronze'];
+  const maxScore = groups[0]?.score || 1;
+  const borderColors = ['#F59E0B','#9CA3AF','#CD853F'];
+  const bgColors = ['rgba(245,158,11,.07)','rgba(156,163,175,.05)','rgba(180,83,9,.06)'];
+  const barColors = ['#F59E0B','#9CA3AF','#CD853F'];
+  const medals = ['🥇','🥈','🥉'];
 
   return groups.map((g, i) => {
-    const namesHtml = g.students.length === 1
-      ? `<div><div class="top3-nome">${g.students[0].nome}</div><div class="top3-turma">Turma ${g.students[0].turma}</div></div>`
-      : `<div style="display:flex;align-items:flex-start;gap:0;flex:1;min-width:0">${
-          g.students.map((s, ni) => {
-            const vsep = ni < g.students.length - 1
-              ? `<div style="width:1px;background:rgba(255,255,255,.35);align-self:stretch;margin:0 8px;flex-shrink:0"></div>` : '';
-            return `<div style="flex:1;min-width:0"><div class="top3-nome">${s.nome}</div><div class="top3-turma">T${s.turma}</div></div>${vsep}`;
-          }).join('')
-        }</div>`;
-    return `<div class="top3-card ${GLOWS[i]}" style="background:${TOP3_BG[i]}">
-      <div style="font-size:28px;flex-shrink:0">${TROPHIES[i]}</div>
-      <div style="flex:1;min-width:0">${namesHtml}</div>
-      <div style="text-align:right;flex-shrink:0;white-space:nowrap">
-        <div class="top3-pts">${g.score}<span style="font-size:10px;font-weight:600;margin-left:2px">pts</span></div>
+    const pos = g.pos;
+    const nomes = g.students.map(s => escH(s.nome)).join(' · ');
+    const turmas = [...new Set(g.students.map(s => `Turma ${s.turma}`))].join(' · ');
+    const barPct = Math.round(g.score / maxScore * 100);
+    const badge = pos === 1 ? `<span class="rank-crown">👑</span>` : `<span class="rank-star">⭐</span>`;
+    const padTop = pos === 1 ? 'padding-top:14px' : 'padding-top:10px';
+    return `<div class="rank-row pos-${pos}" style="border-left-color:${borderColors[i]};background:${bgColors[i]}">
+      <span style="font-size:18px;min-width:24px;text-align:center;flex-shrink:0;line-height:1">${medals[i]}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nomes}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:1px">${turmas}</div>
+        <div class="rank-bar-wrap"><div class="rank-bar" style="width:${barPct}%;background:${barColors[i]}"></div></div>
+      </div>
+      <div class="rank-val" style="${padTop}">
+        ${badge}
+        <div class="rank-val-num">${g.score}</div>
+        <div class="rank-val-label">pts</div>
       </div>
     </div>`;
   }).join('');
@@ -236,7 +275,7 @@ document.getElementById("content").innerHTML = `
       <div class="stat-icon green"><svg viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg></div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:baseline;gap:5px"><span class="stat-value green" style="font-size:20px;line-height:1">${quizTotal}</span><span class="stat-meta">Quiz total</span></div>
-        <div style="height:1px;background:var(--border);margin:5px 0"></div>
+        <div style="height:1px;background:var(--border);margin:7px 0"></div>
         <div style="display:flex;align-items:baseline;gap:5px"><span class="stat-value blue" style="font-size:20px;line-height:1">${tabuadaTotal}</span><span class="stat-meta">Tabuada total</span></div>
       </div>
     </div>
@@ -244,7 +283,7 @@ document.getElementById("content").innerHTML = `
       <div class="stat-icon orange"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 11H6v-2h12v2zm0-4H6V8h12v2z"/></svg></div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:baseline;gap:5px"><span class="stat-value green" style="font-size:20px;line-height:1">${quizHoje}</span><span class="stat-meta">Quiz hoje</span></div>
-        <div style="height:1px;background:var(--border);margin:5px 0"></div>
+        <div style="height:1px;background:var(--border);margin:7px 0"></div>
         <div style="display:flex;align-items:baseline;gap:5px"><span class="stat-value blue" style="font-size:20px;line-height:1">${tabuadaHoje}</span><span class="stat-meta">Tabuada hoje</span></div>
       </div>
     </div>
@@ -252,8 +291,9 @@ document.getElementById("content").innerHTML = `
       <div class="stat-icon green"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg></div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:5px"><span class="stat-value green" id="online-quiz-count" style="font-size:20px;line-height:1">—</span><span class="stat-meta">Em avaliação <span class="online-dot"></span></span></div>
-        <div style="height:1px;background:var(--border);margin:5px 0"></div>
+        <div style="height:1px;background:var(--border);margin:7px 0"></div>
         <div style="display:flex;align-items:center;gap:5px"><span class="stat-value blue" id="online-tabuada-count" style="font-size:20px;line-height:1">—</span><span class="stat-meta">Tabuada <span class="online-dot" style="background:var(--blue)"></span></span></div>
+        <div id="stat-ts-online" style="font-size:10px;color:var(--text-muted);margin-top:5px;opacity:.65">atualizado agora</div>
       </div>
     </div>
   </div>
@@ -266,31 +306,44 @@ document.getElementById("content").innerHTML = `
   <div class="tab-grid" id="tab-grid-tabuada" style="grid-template-columns:1fr 1fr">
     <div class="card" id="tabuada-alertas-card">
       <div class="card-header">
-        <div class="card-title">⚠️ Atenção · Tabuada</div>
+        <div class="card-title">⚠️ Atenção · Tabuada<span id="tabuada-alertas-count" class="card-count" style="display:none"></span></div>
         <a href="/professor/tabuada_relatorio.html" class="btn btn-sm btn-ghost" style="font-size:11px">Ver tudo →</a>
       </div>
       <div id="tabuada-alertas-body"><div style="font-size:13px;color:var(--text-muted)">Verificando…</div></div>
     </div>
-    <div class="card" id="tabuada-ranking-card">
+    <div class="card" id="tabuada-ranking-card" style="overflow:visible">
       <div class="card-header">
-        <div class="card-title"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>Ranking Tabuada</div>
+        <div class="card-title"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>Ranking Tabuada <span class="card-count">${totalTabJogadores} jogadores</span></div>
         <a href="/professor/tabuada_relatorio.html" class="btn btn-sm btn-ghost" style="font-size:11px">Ver completo →</a>
       </div>
       <div id="tabuada-ranking-body">
         ${tabTop5.length === 0
           ? '<div class="empty-state"><p>Nenhum aluno jogou ainda.</p></div>'
-          : tabTop5.map((d, i) => {
-              const pos = d._pos;
-              const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : `<span style="font-size:13px;font-weight:700;color:var(--text-muted)">${pos}</span>`;
-              return `<div class="list-row">
-                <span style="font-size:${i < 3 ? '20' : '14'}px;min-width:26px;text-align:center;line-height:1">${medal}</span>
-                <div style="flex:1;min-width:0">
-                  <div style="font-size:13px;font-weight:700">${escH(d.nome)}</div>
-                  <div style="font-size:11px;color:var(--text-muted)">Turma ${escH(d.turma || '?')}</div>
-                </div>
-                <span class="badge badge-gold">Nível ${d.melhor_nivel||1}</span>
-              </div>`;
-            }).join('')}
+          : (() => {
+              const maxNivel = tabTop5[0]?.melhor_nivel || 1;
+              const barColors = ['#F59E0B','#9CA3AF','#CD853F','#CBD5E1','#CBD5E1'];
+              return tabTop5.map((d, i) => {
+                const pos = d._pos;
+                const posClass = pos === 1 ? 'pos-1' : pos === 2 ? 'pos-2' : pos === 3 ? 'pos-3' : 'pos-n';
+                const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : `<span style="font-size:12px;font-weight:700;color:var(--text-muted)">${pos}</span>`;
+                const barPct = Math.round((d.melhor_nivel || 1) / maxNivel * 100);
+                const badge = pos === 1 ? `<span class="rank-crown">👑</span>` : pos <= 3 ? `<span class="rank-star">⭐</span>` : '';
+                const padTop = pos === 1 ? 'padding-top:14px' : pos <= 3 ? 'padding-top:10px' : '';
+                return `<div class="rank-row ${posClass}">
+                  <span style="font-size:${pos<=3?'18':'12'}px;min-width:24px;text-align:center;flex-shrink:0;line-height:1">${medal}</span>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(d.nome)}</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:1px">Turma ${escH(d.turma||'?')}</div>
+                    <div class="rank-bar-wrap"><div class="rank-bar" style="width:${barPct}%;background:${barColors[Math.min(i,4)]}"></div></div>
+                  </div>
+                  <div class="rank-val" style="${padTop}">
+                    ${badge}
+                    <div class="rank-val-num">Nv ${d.melhor_nivel||1}</div>
+                    <div class="rank-val-label">tabuada</div>
+                  </div>
+                </div>`;
+              }).join('');
+            })()}
       </div>
     </div>
   </div>
@@ -312,21 +365,32 @@ document.getElementById("content").innerHTML = `
 
       <div class="card">
         <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21L13 13.04V8h-1z"/></svg>Últimos Resultados</div></div>
-        ${ultimos.map(r => `
-        <div class="list-row">
-          <div style="flex:1"><div style="font-size:13px;font-weight:600">${r.aluno}</div>
-          <div style="font-size:11px;color:var(--text-muted)">${r.atividade} · Turma ${r.turma}</div></div>
-          <span class="badge badge-gold">${r.pontuacao} pts</span>
-          <span style="font-size:11px;color:var(--text-muted)">${r.data || ''}</span>
-        </div>`).join('')}
+        ${ultimos.map(r => {
+          const modoChip = r.modo === 'avaliacao_plus'
+            ? `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:#FEF3C7;color:#92400E;flex-shrink:0">📝 Avaliação+</span>`
+            : r.modo === 'competicao_plus'
+            ? `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:#EDE9FE;color:#6D28D9;flex-shrink:0">⚔️ Competição+</span>`
+            : '';
+          return `<div class="list-row">
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+                <span style="font-size:13px;font-weight:700">${r.aluno}</span>
+                ${modoChip}
+              </div>
+              <div style="font-size:11px;color:var(--text-muted)">${r.atividade} · Turma ${r.turma}</div>
+            </div>
+            <span class="badge badge-gold" style="margin-right:6px">${r.pontuacao} pts</span>
+            <span style="font-size:11px;color:var(--text-muted);white-space:nowrap">${r.data || ''}</span>
+          </div>`;
+        }).join('')}
         ${!ultimos.length ? '<div class="empty-state"><p>Nenhum resultado ainda.</p></div>' : ''}
       </div>
     </div>
 
     <div>
-      <div class="card">
+      <div class="card" style="overflow:visible">
         <div class="card-header">
-          <div class="card-title"><svg viewBox="0 0 24 24"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg>Top Alunos</div>
+          <div class="card-title"><svg viewBox="0 0 24 24"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg>Top Alunos <span class="card-count">ranking geral</span></div>
           <a href="/professor/ranking.html" class="btn btn-sm btn-ghost" style="font-size:11px">Ver ranking →</a>
         </div>
         ${renderPodiumDash()}
@@ -340,10 +404,12 @@ function _renderizarAlertasTabuada(niveisSnap, rankSnap) {
   if (!body) return;
   const { individuais, coletivos } = compilarAlertasTabuada(niveisSnap, rankSnap);
   const items = [];
-  for (const a of coletivos.esgotados)  { if (items.length >= 4) break; items.push(`<div class="list-row" style="gap:8px;font-size:13px">🔴 <span>Nível <strong>${a.nivel}</strong> — ${a.count} alunos perderam por tempo</span></div>`); }
-  for (const a of coletivos.quasePerda) { if (items.length >= 4) break; items.push(`<div class="list-row" style="gap:8px;font-size:13px">🟡 <span>Nível <strong>${a.nivel}</strong> — ${a.count} alunos quase não completaram</span></div>`); }
-  for (const a of individuais)           { if (items.length >= 4) break; items.push(`<div class="list-row" style="gap:8px;font-size:13px">⚠️ <span>${escH(a.nome)} · ${escH(a.turma)} · Nível <strong>${a.nivel}</strong> · ${a.falhas} falhas</span></div>`); }
+  for (const a of coletivos.esgotados)  { if (items.length >= 4) break; items.push(`<div class="alert-row sev-high"><div class="alert-info"><div class="alert-nome">Nível ${a.nivel} — esgotado</div><div class="alert-sub">${a.count} alunos perderam por tempo</div></div><div class="alert-falhas">⏱ tempo</div></div>`); }
+  for (const a of coletivos.quasePerda) { if (items.length >= 4) break; items.push(`<div class="alert-row sev-med"><div class="alert-info"><div class="alert-nome">Nível ${a.nivel} — quase perderam</div><div class="alert-sub">${a.count} alunos quase não completaram</div></div><div class="alert-falhas">⚠️ risco</div></div>`); }
+  for (const a of individuais)           { if (items.length >= 4) break; const sev = a.falhas >= 10 ? 'sev-high' : a.falhas >= 5 ? 'sev-med' : 'sev-low'; items.push(`<div class="alert-row ${sev}"><div class="alert-info"><div class="alert-nome">${escH(a.nome)}</div><div class="alert-sub">Turma ${escH(a.turma)} · Nível ${a.nivel}</div></div><div class="alert-falhas">${a.falhas} falhas</div></div>`); }
   body.innerHTML = items.length ? items.join('') : '<div style="font-size:13px;color:var(--text-muted)">Nenhum alerta no momento.</div>';
+  const countEl = document.getElementById('tabuada-alertas-count');
+  if (countEl) { countEl.textContent = `${items.length} aluno${items.length !== 1 ? 's' : ''}`; countEl.style.display = items.length ? '' : 'none'; }
   document.getElementById('tab-grid-tabuada').style.gridTemplateColumns = items.length ? '1fr 1fr' : '1fr';
   document.getElementById('tabuada-alertas-card').style.display = items.length ? '' : 'none';
 }
@@ -374,11 +440,13 @@ onValue(ref(db, 'resultados'), snap => {
     if (v.modo === 'avaliacao_plus' && !v.concluido && v.ts_inicio &&
         (now - v.ts_inicio * 1000) < DURACAO_AVAL_MS) alunosEmAndamento++;
   });
-  onlineQuiz = Object.values(seen);   // mantido para o modal de lista
+  onlineQuiz = Object.values(seen);
   const el = document.getElementById('online-quiz-count');
-  if (el) el.textContent = alunosEmAndamento;   // card usa a mesma fonte do banner
+  if (el) el.textContent = alunosEmAndamento;
   atualizarListaOnline();
-  atualizarBannerAvaliacao(alunosEmAndamento);  // banner usa a mesma fonte do card
+  atualizarBannerAvaliacao(alunosEmAndamento);
+  const tsEl = document.getElementById('stat-ts-online');
+  if (tsEl) { const _ts = new Date(); tsEl.textContent = `atualizado às ${_ts.getHours().toString().padStart(2,'0')}:${_ts.getMinutes().toString().padStart(2,'0')}`; }
 });
 
 onValue(ref(db, 'tabuada_presenca'), snap => {
@@ -394,6 +462,8 @@ onValue(ref(db, 'tabuada_presenca'), snap => {
   const el = document.getElementById('online-tabuada-count');
   if (el) el.textContent = onlineTabuada.length;
   atualizarListaOnline();
+  const tsEl = document.getElementById('stat-ts-online');
+  if (tsEl) { const _ts = new Date(); tsEl.textContent = `atualizado às ${_ts.getHours().toString().padStart(2,'0')}:${_ts.getMinutes().toString().padStart(2,'0')}`; }
 });
 
 function atualizarListaOnline() {
