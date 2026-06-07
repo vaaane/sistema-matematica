@@ -797,12 +797,17 @@ function mostrarFeedback(acertou, q) {
   btnP.className = 'rq-btn-proxima';
   const cw2 = document.getElementById('rq-chips-wrap');
   if (cw2) {
-    const curFb = respostas[q.id]?.feedback;
-    cw2.innerHTML = `<div class="rq-chips-label">Como você se sentiu nessa questão?</div>
-      <div class="rq-chips" id="rq-chips">${['Muito difícil','Não entendi','Não lembro','Tranquila'].map(op =>
-        `<button class="rq-chip${curFb===op?' selected':''}" onclick="marcarFeedback('${op}')">${op}</button>`
-      ).join('')}</div>`;
-    cw2.style.display = 'block';
+    const isMonitor = aluno === 'Murillo' && turma === '8H';
+    if (isMonitor) {
+      const curFb = respostas[q.id]?.feedback;
+      cw2.innerHTML = `<div class="rq-chips-label">Como você se sentiu nessa questão?</div>
+        <div class="rq-chips" id="rq-chips">${['Muito difícil','Não entendi','Não lembro','Tranquila'].map(op =>
+          `<button class="rq-chip${curFb===op?' selected':''}" onclick="marcarFeedback('${op}')">${op}</button>`
+        ).join('')}</div>`;
+      cw2.style.display = 'block';
+    } else {
+      cw2.style.display = 'none';
+    }
   }
 }
 
