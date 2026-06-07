@@ -942,8 +942,10 @@ async function finalizarAtividade(parcial = false) {
 
   let saveError = null;
   let saveOk = false;
-  if (respondidas < 3) {
+  if (!parcial && respondidas < 3) {
     console.log(`[Robótica] Tentativa não salva: apenas ${respondidas} questão(ões) respondida(s) (mínimo: 3).`);
+  } else if (respondidas === 0) {
+    console.log('[Robótica] Tentativa não salva: nenhuma questão respondida.');
   } else {
     console.log('[Robótica] Salvando tentativa…', { turma, aluno, atividade: atividadeAtual, acertos, total: questoes.length });
     try {
