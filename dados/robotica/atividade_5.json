@@ -346,12 +346,12 @@
       "numero": 24,
       "nivel": "facil",
       "tipo": "multipla_escolha",
-      "enunciado": "O bloco verde 🟢 ◯ > ◯ é verdadeiro quando:",
+      "enunciado": "O bloco verde 🟢 valor 1 > valor 2 é verdadeiro quando:",
       "opcoes": [
-        "A) Os dois valores são iguais",
-        "B) O primeiro é maior que o segundo",
-        "C) O primeiro é menor que o segundo",
-        "D) Qualquer um for zero"
+        "A) \"valor 1\" é igual a \"valor 2\"",
+        "B) \"valor 1\" é maior que \"valor 2\"",
+        "C) \"valor 1\" é menor que \"valor 2\"",
+        "D) Os dois valores são zero"
       ],
       "resposta": "B",
       "categoria": "Operadores"
@@ -361,11 +361,11 @@
       "numero": 25,
       "nivel": "facil",
       "tipo": "multipla_escolha",
-      "enunciado": "O bloco 🟢 ◯ < ◯ é verdadeiro quando:",
+      "enunciado": "O bloco 🟢 valor 1 < valor 2 é verdadeiro quando:",
       "opcoes": [
-        "A) Os dois valores são iguais",
-        "B) O primeiro é maior",
-        "C) O primeiro é menor que o segundo",
+        "A) \"valor 1\" é igual a \"valor 2\"",
+        "B) \"valor 1\" é maior que \"valor 2\"",
+        "C) \"valor 1\" é menor que \"valor 2\"",
         "D) O resultado é zero"
       ],
       "resposta": "C",
