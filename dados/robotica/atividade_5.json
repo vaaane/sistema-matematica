@@ -774,7 +774,7 @@
       "id": "Q50",
       "nivel": "facil",
       "tipo": "multipla_escolha",
-      "enunciado": "Em um LED novo, como identificar o terminal POSITIVO (ânodo)?",
+      "enunciado": "Em um LED novo, como identificar o terminal POSITIVO?",
       "opcoes": [
         "A) É o terminal mais curto",
         "B) É o terminal mais longo",
