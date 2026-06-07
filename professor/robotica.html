@@ -84,6 +84,7 @@
         <button class="pill" data-v="2">Atividade 2</button>
         <button class="pill" data-v="3">Atividade 3</button>
         <button class="pill" data-v="4">Atividade 4 🎯</button>
+        <button class="pill" data-v="5">Atividade 5 🚗</button>
       </div>
     </div>
     <div class="content">
@@ -137,7 +138,7 @@ window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 const questoesMap = {};
 async function carregarQuestoes() {
   const res = await Promise.allSettled(
-    [1, 2, 3, 4].map(n => fetch(`/dados/robotica/atividade_${n}.json`).then(r => r.json()))
+    [1, 2, 3, 4, 5].map(n => fetch(`/dados/robotica/atividade_${n}.json`).then(r => r.json()))
   );
   for (const r of res) {
     if (r.status === 'fulfilled' && r.value?.questoes) {
@@ -441,7 +442,7 @@ function renderAlunos(tentativas) {
     return;
   }
 
-  const ativsMostrar = filtroAtiv ? [filtroAtiv] : [1, 2, 3];
+  const ativsMostrar = filtroAtiv ? [filtroAtiv] : [1, 2, 3, 4, 5];
 
   wrap.innerHTML = alunos.map((al, si) => {
     const cor = COR_TURMA[al.turma] || 'var(--blue)';

@@ -308,7 +308,7 @@ const ATIVIDADES = [
   { n:2, label:"Atividade 2", desc:"Aprofundamento de hardware e operadores", emoji:"⚡", bg:"#F5F3FF" },
   { n:3, label:"Atividade 3", desc:"Operadores avançados, se/então e lógica", emoji:"🧠", bg:"#DCFCE7" },
   { n:4, label:"Atividade 4", desc:"Revisão — 20 questões mais erradas",      emoji:"🎯", bg:"#FEF3C7" },
-  { n:5, label:"Atividade 5", desc:"Questionário geral — 60 questões",        emoji:"🚗", bg:"#FCE7F3", soPara:{aluno:"Murillo",turma:"8H"} },
+  { n:5, label:"Atividade 5", desc:"Questionário geral — 60 questões",        emoji:"🚗", bg:"#FCE7F3", embaralhar:true },
 ];
 
 function podeVer(a) {
@@ -665,6 +665,28 @@ window.verTodasTentativas = function(ativN, el) {
   el.remove();
 };
 
+function embaralhar(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function embaralharOpcoes(questoes) {
+  const letras = ['A', 'B', 'C', 'D', 'E', 'F'];
+  return questoes.map(q => {
+    if (q.tipo !== 'multipla_escolha' || !q.opcoes?.length) return q;
+    const textos = q.opcoes.map(o => o.length > 3 ? o.substring(3) : o);
+    const corretaTexto = textos[q.opcoes.findIndex(o => o[0] === q.resposta)];
+    const shuffled = embaralhar(textos);
+    const novasOpcoes = shuffled.map((t, i) => `${letras[i]}) ${t}`);
+    const novaResposta = letras[shuffled.indexOf(corretaTexto)];
+    return { ...q, opcoes: novasOpcoes, resposta: novaResposta };
+  });
+}
+
 // ── Iniciar atividade ─────────────────────────────────────────────────────
 window.iniciarAtividade = async (n) => {
   const atv = ATIVIDADES.find(a => a.n === n);
@@ -674,7 +696,8 @@ window.iniciarAtividade = async (n) => {
   qIdx = 0;
   respostas = {};
   const data = await fetch(`/dados/robotica/atividade_${n}.json`).then(r => r.json());
-  questoes = data.questoes;
+  questoes = atv.embaralhar ? embaralhar(data.questoes) : data.questoes;
+  questoes = embaralharOpcoes(questoes);
   listWrap.style.display  = 'none';
   summWrap.style.display  = 'none';
   quizWrap.style.display  = 'block';
