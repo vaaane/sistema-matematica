@@ -1,0 +1,864 @@
+{
+  "atividade": 5,
+  "descricao": "Questionário geral baseado no Guia de Robótica — do básico ao avançado. Cobre pinos do Arduino (com imagem), PWM, DRV8833, motor, polaridade, operadores e estruturas de decisão (se separados e aninhados).",
+  "total": 60,
+  "niveis": {
+    "facil": 26,
+    "medio": 24,
+    "dificil": 10
+  },
+  "instrucoes_imagem": "Nas questões com o campo 'imagem' (categoria 'Pinos do Arduino — Imagem'), insira a figura da placa Arduino Uno indicando os pinos. Convenção do guia: pinos PWM são os marcados com ~ (3, 5, 6, 9, 10, 11); pinos analógicos são A0–A5; os demais pinos numerados (0,1,2,4,7,8,12,13) são apenas digitais.",
+  "questoes": [
+    {
+      "id": "Q01",
+      "numero": 1,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Um pino digital do Arduino trabalha com quantos estados possíveis?",
+      "opcoes": [
+        "A) Um valor entre 0 e 1023",
+        "B) Apenas dois: ALTO (5V) ou BAIXO (0V)",
+        "C) Três estados diferentes",
+        "D) Qualquer tensão entre 0V e 5V"
+      ],
+      "resposta": "B",
+      "categoria": "Pinos do Arduino"
+    },
+    {
+      "id": "Q02",
+      "numero": 2,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Os pinos analógicos do Arduino (A0–A5) convertem uma tensão de 0V a 5V em um número entre:",
+      "opcoes": [
+        "A) 0 e 255",
+        "B) 0 e 100",
+        "C) 0 e 1023",
+        "D) 0 e 5"
+      ],
+      "resposta": "C",
+      "categoria": "Pinos do Arduino"
+    },
+    {
+      "id": "Q03",
+      "numero": 3,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "No Arduino Uno, quais pinos suportam PWM?",
+      "opcoes": [
+        "A) Todos os pinos digitais",
+        "B) Apenas os pinos analógicos A0–A5",
+        "C) Os pinos marcados com ~ (3, 5, 6, 9, 10 e 11)",
+        "D) Somente os pinos 0 e 1"
+      ],
+      "resposta": "C",
+      "categoria": "PWM"
+    },
+    {
+      "id": "Q04",
+      "numero": 4,
+      "nivel": "facil",
+      "tipo": "verdadeiro_falso",
+      "enunciado": "Um pino digital em ALTO (HIGH) no Arduino Uno fornece 5V.",
+      "resposta": "Verdadeiro",
+      "categoria": "Pinos do Arduino"
+    },
+    {
+      "id": "QIMG01",
+      "numero": 5,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Observe a imagem da placa. O pino 7 é do tipo:",
+      "imagem": "",
+      "opcoes": [
+        "A) Analógico",
+        "B) PWM",
+        "C) Digital",
+        "D) Pino de alimentação"
+      ],
+      "resposta": "C",
+      "categoria": "Pinos do Arduino — Imagem"
+    },
+    {
+      "id": "QIMG02",
+      "numero": 6,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Observe a imagem da placa. O pino A0 é do tipo:",
+      "imagem": "",
+      "opcoes": [
+        "A) Digital",
+        "B) PWM",
+        "C) Analógico",
+        "D) Terra (GND)"
+      ],
+      "resposta": "C",
+      "categoria": "Pinos do Arduino — Imagem"
+    },
+    {
+      "id": "QIMG03",
+      "numero": 7,
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Observe a imagem da placa. O pino 9 (marcado com ~) é do tipo:",
+      "imagem": "",
+      "opcoes": [
+        "A) Apenas digital",
+        "B) Digital com suporte a PWM",
+        "C) Analógico",
+        "D) Pino de 5V"
+      ],
+      "resposta": "B",
+      "categoria": "Pinos do Arduino — Imagem"
+    },
+    {
+      "id": "QIMG04",
+      "numero": 8,
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Observe a imagem da placa. Você precisa controlar a velocidade de um motor (sinal variável). Qual pino serve para isso?",
+      "imagem": "",
+      "opcoes": [
+        "A) Pino 2",
+        "B) Pino 7",
+        "C) Pino 6 (~)",
+        "D) Pino A3"
+      ],
+      "resposta": "C",
+      "categoria": "Pinos do Arduino — Imagem"
+    },
+    {
+      "id": "QIMG05",
+      "numero": 9,
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Observe a imagem da placa. Para ler um joystick (valor de 0 a 1023), qual pino você deve usar?",
+      "imagem": "",
+      "opcoes": [
+        "A) Pino 13",
+        "B) Pino A1",
+        "C) Pino 5 (~)",
+        "D) Pino GND"
+      ],
+      "resposta": "B",
+      "categoria": "Pinos do Arduino — Imagem"
+    },
+    {
+      "id": "Q05",
+      "numero": 10,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O pino GND do Arduino representa:",
+      "opcoes": [
+        "A) Saída de 5V",
+        "B) Terra / referência 0V / negativo",
+        "C) Sinal analógico",
+        "D) Entrada de tensão externa"
+      ],
+      "resposta": "B",
+      "categoria": "Pinos do Arduino"
+    },
+    {
+      "id": "Q06",
+      "numero": 11,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "No bloco PWM, o valor MÁXIMO é:",
+      "opcoes": [
+        "A) 1023",
+        "B) 100",
+        "C) 5",
+        "D) 255"
+      ],
+      "resposta": "D",
+      "categoria": "PWM"
+    },
+    {
+      "id": "Q07",
+      "numero": 12,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Um valor de PWM igual a 127 corresponde aproximadamente a:",
+      "opcoes": [
+        "A) Desligado (0V)",
+        "B) Metade da potência (~2,5V)",
+        "C) Potência máxima (5V)",
+        "D) 1023"
+      ],
+      "resposta": "B",
+      "categoria": "PWM"
+    },
+    {
+      "id": "Q08",
+      "numero": 13,
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Um valor de PWM igual a 255 é equivalente a deixar o pino em:",
+      "opcoes": [
+        "A) BAIXO (LOW), 0V",
+        "B) 3,3V",
+        "C) ALTO (HIGH), 5V — potência máxima",
+        "D) 512"
+      ],
+      "resposta": "C",
+      "categoria": "PWM"
+    },
+    {
+      "id": "Q09",
+      "numero": 14,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O motor DC consome entre 100 e 500 mA, mas cada pino do Arduino fornece no máximo ~40 mA. Por isso, o motor deve ser ligado:",
+      "opcoes": [
+        "A) Direto em um pino digital",
+        "B) Direto no pino 5V",
+        "C) Através do driver DRV8833",
+        "D) Direto no pino analógico"
+      ],
+      "resposta": "C",
+      "categoria": "Motor e Driver"
+    },
+    {
+      "id": "Q10",
+      "numero": 15,
+      "nivel": "facil",
+      "tipo": "verdadeiro_falso",
+      "enunciado": "Ligar um motor DC diretamente em um pino do Arduino pode queimar o microcontrolador.",
+      "resposta": "Verdadeiro",
+      "categoria": "Motor e Driver"
+    },
+    {
+      "id": "Q11",
+      "numero": 16,
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "No DRV8833, o pino IN1 deve ser conectado em que tipo de pino do Arduino?",
+      "opcoes": [
+        "A) Em um pino analógico (A0–A5)",
+        "B) Em um pino PWM (~) do Arduino",
+        "C) No pino GND",
+        "D) No pino de 5V"
+      ],
+      "resposta": "B",
+      "categoria": "Motor e Driver"
+    },
+    {
+      "id": "Q12",
+      "numero": 17,
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "No DRV8833, o pino OUT1 deve ser conectado no Arduino ou nos motores?",
+      "opcoes": [
+        "A) No Arduino",
+        "B) Nos motores",
+        "C) No pino 5V do Arduino",
+        "D) Em qualquer trilha da protoboard"
+      ],
+      "resposta": "B",
+      "categoria": "Motor e Driver"
+    },
+    {
+      "id": "Q13",
+      "numero": 18,
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "No DRV8833, os pinos IN1 e IN2 servem para:",
+      "opcoes": [
+        "A) Alimentar o circuito lógico",
+        "B) Receber os sinais de controle do Arduino para o Motor A",
+        "C) Ligar diretamente nos terminais do motor",
+        "D) Fazer a leitura da distância"
+      ],
+      "resposta": "B",
+      "categoria": "Motor e Driver"
+    },
+    {
+      "id": "Q14",
+      "numero": 19,
+      "nivel": "medio",
+      "tipo": "verdadeiro_falso",
+      "enunciado": "No DRV8833, o pino GND deve ser comum (ligado) ao GND do Arduino.",
+      "resposta": "Verdadeiro",
+      "categoria": "Motor e Driver"
+    },
+    {
+      "id": "Q15",
+      "numero": 20,
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "No DRV8833, para o Motor A girar com velocidade máxima (para qualquer lado), os pinos IN1 e IN2 devem estar:",
+      "opcoes": [
+        "A) Os dois em 255",
+        "B) Os dois em 0",
+        "C) Um em 255 e o outro em 0",
+        "D) Os dois em 127"
+      ],
+      "resposta": "C",
+      "categoria": "Motor e Driver"
+    },
+    {
+      "id": "Q16",
+      "numero": 21,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Em um motor DC, o que define a DIREÇÃO de rotação?",
+      "opcoes": [
+        "A) O valor do PWM",
+        "B) A polaridade (qual terminal recebe + e −)",
+        "C) A cor dos fios",
+        "D) O número do pino"
+      ],
+      "resposta": "B",
+      "categoria": "Polaridade"
+    },
+    {
+      "id": "Q17",
+      "numero": 22,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Em um motor DC, o que define a VELOCIDADE de rotação?",
+      "opcoes": [
+        "A) A polaridade",
+        "B) A tensão (controlada pelo PWM, de 0 a 255)",
+        "C) O comprimento do fio",
+        "D) A posição na protoboard"
+      ],
+      "resposta": "B",
+      "categoria": "Polaridade"
+    },
+    {
+      "id": "Q18",
+      "numero": 23,
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Se a polaridade de um LED for invertida, o que acontece?",
+      "opcoes": [
+        "A) Acende com mais brilho",
+        "B) Não acende (bloqueia a corrente)",
+        "C) Pisca rapidamente",
+        "D) Explode"
+      ],
+      "resposta": "B",
+      "categoria": "Polaridade"
+    },
+    {
+      "id": "Q19",
+      "numero": 24,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O bloco verde 🟢 ◯ > ◯ é verdadeiro quando:",
+      "opcoes": [
+        "A) Os dois valores são iguais",
+        "B) O primeiro é maior que o segundo",
+        "C) O primeiro é menor que o segundo",
+        "D) Qualquer um for zero"
+      ],
+      "resposta": "B",
+      "categoria": "Operadores"
+    },
+    {
+      "id": "Q20",
+      "numero": 25,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O bloco 🟢 ◯ < ◯ é verdadeiro quando:",
+      "opcoes": [
+        "A) Os dois valores são iguais",
+        "B) O primeiro é maior",
+        "C) O primeiro é menor que o segundo",
+        "D) O resultado é zero"
+      ],
+      "resposta": "C",
+      "categoria": "Operadores"
+    },
+    {
+      "id": "Q21",
+      "numero": 26,
+      "nivel": "facil",
+      "tipo": "verdadeiro_falso",
+      "enunciado": "🟢 8 > 3 é Verdadeiro.",
+      "resposta": "Verdadeiro",
+      "categoria": "Operadores"
+    },
+    {
+      "id": "Q22",
+      "numero": 27,
+      "nivel": "facil",
+      "tipo": "verdadeiro_falso",
+      "enunciado": "🟢 4 < 2 é Verdadeiro.",
+      "resposta": "Falso",
+      "categoria": "Operadores"
+    },
+    {
+      "id": "Q23",
+      "numero": 28,
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "O bloco 🟢 ◆ e ◆ só é verdadeiro quando:",
+      "opcoes": [
+        "A) Pelo menos uma condição for verdadeira",
+        "B) As duas condições forem verdadeiras ao mesmo tempo",
+        "C) As duas forem falsas",
+        "D) O resultado for maior que zero"
+      ],
+      "resposta": "B",
+      "categoria": "Operadores"
+    },
+    {
+      "id": "Q24",
+      "numero": 29,
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "O bloco 🟢 ◆ ou ◆ é verdadeiro quando:",
+      "opcoes": [
+        "A) As duas condições forem verdadeiras ao mesmo tempo",
+        "B) As duas forem falsas",
+        "C) Pelo menos uma condição for verdadeira",
+        "D) O resultado for 1023"
+      ],
+      "resposta": "C",
+      "categoria": "Operadores"
+    },
+    {
+      "id": "Q25",
+      "numero": 30,
+      "nivel": "medio",
+      "tipo": "verdadeiro_falso",
+      "enunciado": "distancia = 15. O bloco 🟢 (distancia > 10) e (distancia < 50) é Verdadeiro.",
+      "resposta": "Verdadeiro",
+      "categoria": "Operadores"
+    },
+    {
+      "id": "Q26",
+      "numero": 31,
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Um aluno monta o bloco 🟢 (distancia > 50) e (distancia < 10). Esse bloco alguma vez é Verdadeiro?",
+      "opcoes": [
+        "A) Sim, quando distancia = 30",
+        "B) Sim, quando distancia = 5",
+        "C) Nunca — nenhum número é maior que 50 e menor que 10 ao mesmo tempo",
+        "D) Sempre"
+      ],
+      "resposta": "C",
+      "categoria": "Operadores"
+    },
+    {
+      "id": "Q27",
+      "numero": 32,
+      "nivel": "facil",
+      "tipo": "verdadeiro_falso",
+      "enunciado": "Programa:\n🟡 se < (distancia) < (10) > então: acender LED\n\ndistancia = 6. O LED acende.",
+      "resposta": "Verdadeiro",
+      "categoria": "Se/Então"
+    },
+    {
+      "id": "Q28",
+      "numero": 33,
+      "nivel": "facil",
+      "tipo": "verdadeiro_falso",
+      "enunciado": "Programa:\n🟡 se < (distancia) > (30) > então: acender LED\n\ndistancia = 12. O LED acende.",
+      "resposta": "Falso",
+      "categoria": "Se/Então"
+    },
+    {
+      "id": "Q29",
+      "numero": 34,
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Programa:\n🟡 se < (distancia) < (10) > então\n   acender LED verde\n🟡 senão\n   acender LED vermelho\n\ndistancia = 8. Qual LED acende?",
+      "opcoes": [
+        "A) LED vermelho",
+        "B) Os dois",
+        "C) Nenhum",
+        "D) LED verde"
+      ],
+      "resposta": "D",
+      "categoria": "Se/Então"
+    },
+    {
+      "id": "Q30",
+      "numero": 35,
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O LED só deve acender quando a distância estiver ENTRE 10 e 50 (maior que 10 E menor que 50). Qual condição está correta?",
+      "opcoes": [
+        "A) (distancia) < (10) ou (distancia) > (50)",
+        "B) (distancia) > (10) e (distancia) < (50)",
+        "C) (distancia) > (10) ou (distancia) < (50)",
+        "D) (distancia) < (10) e (distancia) > (50)"
+      ],
+      "resposta": "B",
+      "categoria": "Se/Então"
+    },
+    {
+      "id": "Q31",
+      "numero": 36,
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O LED deve acender quando a distância estiver FORA do intervalo seguro (menor que 20 OU maior que 80). Qual condição está correta?",
+      "opcoes": [
+        "A) (distancia) > (20) e (distancia) < (80)",
+        "B) (distancia) < (20) ou (distancia) > (80)",
+        "C) (distancia) < (20) e (distancia) > (80)",
+        "D) (distancia) > (20) ou (distancia) < (80)"
+      ],
+      "resposta": "B",
+      "categoria": "Se/Então"
+    },
+    {
+      "id": "Q32",
+      "numero": 37,
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Programa com SE's SEPARADOS:\n🟡 se < (distancia) < (10) > então\n   acender LED vermelho\n🟡 se < (distancia) < (20) > então\n   acender LED amarelo\n\ndistancia = 8. O que acontece?",
+      "opcoes": [
+        "A) Só o vermelho acende",
+        "B) Só o amarelo acende",
+        "C) Os dois acendem — 8 é menor que 10 E menor que 20, e são dois 'se' separados",
+        "D) Nenhum acende"
+      ],
+      "resposta": "C",
+      "categoria": "Se Aninhado e Separados"
+    },
+    {
+      "id": "Q33",
+      "numero": 38,
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Programa com SE ANINHADO:\n🟡 se < (distancia) < (10) > então\n   acender LED vermelho\n   🟡 se < (distancia) < (5) > então\n      ligar buzzer\n\ndistancia = 7. O que acontece?",
+      "opcoes": [
+        "A) LED acende E buzzer toca",
+        "B) Só o LED vermelho acende — 7 < 10 é verdadeiro, mas 7 < 5 é falso",
+        "C) Só o buzzer toca",
+        "D) Nada acontece"
+      ],
+      "resposta": "B",
+      "categoria": "Se Aninhado e Separados"
+    },
+    {
+      "id": "Q34",
+      "numero": 39,
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Programa com SENÃO SE:\n🟡 se < (distancia) < (10) > então\n   LED vermelho\n🟡 senão se < (distancia) < (20) > então\n   LED amarelo\n🟡 senão se < (distancia) < (30) > então\n   LED azul\n🟡 senão\n   LED verde\n\ndistancia = 25. Qual LED acende?",
+      "opcoes": [
+        "A) Vermelho",
+        "B) Amarelo",
+        "C) Azul",
+        "D) Verde"
+      ],
+      "resposta": "C",
+      "categoria": "Se Aninhado e Separados"
+    },
+    {
+      "id": "Q35",
+      "numero": 40,
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "No carrinho, o joystick parado fica em ~512. Por que o programa precisa de uma faixa de 'zona morta' (ex.: entre 400 e 600) em vez de mandar o motor girar para qualquer valor diferente de 512?",
+      "opcoes": [
+        "A) Para o carrinho andar mais rápido",
+        "B) Porque a leitura do joystick parado varia um pouco e, sem a zona morta, o motor giraria sozinho",
+        "C) Porque o DRV8833 exige isso",
+        "D) Para economizar bateria do Arduino"
+      ],
+      "resposta": "B",
+      "categoria": "Se Aninhado e Separados"
+    },
+    {
+      "id": "Q36",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Programa do carrinho com SE's SEPARADOS:\n🟡 se < (A0) > (600) > então: motor gira sentido A\n🟡 se < (A0) < (400) > então: motor gira sentido B\n🟡 se < (A0) > (400) e (A0) < (600) > então: motor parado\n\nA0 = 512. O que acontece?",
+      "opcoes": [
+        "A) Gira no sentido A",
+        "B) Gira no sentido B",
+        "C) Fica parado — 512 está entre 400 e 600",
+        "D) Os dois sentidos ao mesmo tempo"
+      ],
+      "resposta": "C",
+      "categoria": "Se Aninhado e Separados",
+      "numero": 41
+    },
+    {
+      "id": "Q37",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "O pino Vin do Arduino serve para:",
+      "opcoes": [
+        "A) Fornecer uma saída regulada de 3,3V",
+        "B) Receber tensão de uma fonte externa para alimentar a placa (entrada de alimentação)",
+        "C) Ler sinais analógicos de sensores",
+        "D) Funcionar como mais um pino GND"
+      ],
+      "resposta": "B",
+      "categoria": "Pinos do Arduino",
+      "numero": 42
+    },
+    {
+      "id": "Q38",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Um aluno tenta usar o bloco 'definir a saída PWM' no pino 7 para controlar a velocidade de um motor, mas não funciona como esperado. Por quê?",
+      "opcoes": [
+        "A) O pino 7 está queimado",
+        "B) O pino 7 não tem o símbolo ~, então não suporta PWM",
+        "C) O valor de PWM precisa ser maior que 255",
+        "D) PWM só funciona em pinos analógicos (A0–A5)"
+      ],
+      "resposta": "B",
+      "categoria": "PWM",
+      "numero": 43
+    },
+    {
+      "id": "Q39",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Ao montar o carrinho, o DRV8833 funciona de forma instável e os motores se comportam de modo errado. Uma causa comum desse problema é:",
+      "opcoes": [
+        "A) O GND do DRV8833 não foi ligado ao GND do Arduino (falta o terra comum)",
+        "B) O Arduino está com a tensão alta demais nos pinos analógicos",
+        "C) Os pinos IN1 e IN2 estão recebendo valores menores que 255",
+        "D) O motor foi ligado diretamente nos pinos OUT, o que é proibido"
+      ],
+      "resposta": "A",
+      "categoria": "Motor e Driver",
+      "numero": 44
+    },
+    {
+      "id": "Q40",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Você quer converter a leitura de um pino analógico (0 a 1023) para um valor de PWM (0 a 255). Como deve usar o bloco Mapa?",
+      "opcoes": [
+        "A) Mapa (leitura) de 0, 1023 para 0, 255",
+        "B) Mapa (leitura) de 0, 255 para 0, 1023",
+        "C) Mapa (leitura) de 0, 1023 para 1023, 0",
+        "D) Mapa (leitura) de 255, 0 para 0, 1023"
+      ],
+      "resposta": "A",
+      "categoria": "Função Mapa",
+      "numero": 45
+    },
+    {
+      "id": "Q41",
+      "nivel": "medio",
+      "tipo": "verdadeiro_falso",
+      "enunciado": "É essencial que o GND (terra) de todos os dispositivos do circuito esteja ligado ao mesmo ponto (terra comum) para tudo funcionar corretamente.",
+      "resposta": "Verdadeiro",
+      "categoria": "Fios e Conexões",
+      "numero": 46
+    },
+    {
+      "id": "Q42",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "No carrinho, você quer que o motor acelere quanto MAIS PERTO de 0 estiver a leitura do joystick (0 a 400). Qual bloco Mapa faz essa inversão?",
+      "opcoes": [
+        "A) Mapa (leitura) de 0, 400 para 0, 255",
+        "B) Mapa (leitura) de 0, 400 para 255, 0",
+        "C) Mapa (leitura) de 400, 0 para 0, 255",
+        "D) Mapa (leitura) de 0, 1023 para 0, 255"
+      ],
+      "resposta": "B",
+      "categoria": "Função Mapa",
+      "numero": 47
+    },
+    {
+      "id": "Q43",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Para que serve a função (bloco) Mapa no mBlock?",
+      "opcoes": [
+        "A) Ligar e desligar um pino digital",
+        "B) Converter um valor de uma escala para outra",
+        "C) Ler a distância do sensor ultrassônico",
+        "D) Inverter a polaridade de um motor"
+      ],
+      "resposta": "B",
+      "categoria": "Função Mapa",
+      "numero": 48
+    },
+    {
+      "id": "Q44",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Qual a tensão fornecida pelo pino 5V do Arduino?",
+      "opcoes": [
+        "A) 3,3 Volts",
+        "B) 12 Volts",
+        "C) 5 Volts",
+        "D) 9 Volts"
+      ],
+      "resposta": "C",
+      "categoria": "Pinos do Arduino",
+      "numero": 49
+    },
+    {
+      "id": "Q45",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Qual a diferença entre o pino 5V e o pino Vin do Arduino?",
+      "opcoes": [
+        "A) São exatamente iguais",
+        "B) O 5V é uma saída regulada; o Vin é entrada de tensão de uma fonte externa",
+        "C) O Vin só serve para LEDs",
+        "D) O 5V serve para ler sensores"
+      ],
+      "resposta": "B",
+      "categoria": "Pinos do Arduino",
+      "numero": 50
+    },
+    {
+      "id": "Q46",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Se um fio do positivo (5V) encostar diretamente em um fio do negativo (GND), isso causa:",
+      "opcoes": [
+        "A) Nada acontece",
+        "B) O LED pisca",
+        "C) Um curto-circuito",
+        "D) O motor acelera"
+      ],
+      "resposta": "C",
+      "categoria": "Fios e Conexões",
+      "numero": 51
+    },
+    {
+      "id": "Q47",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O sensor ultrassônico HC-SR04 mede distância usando:",
+      "opcoes": [
+        "A) Luz infravermelha",
+        "B) Ondas de rádio",
+        "C) Pulso de som (ultrassom)",
+        "D) Variação de temperatura"
+      ],
+      "resposta": "C",
+      "categoria": "Sensor Ultrassônico",
+      "numero": 52
+    },
+    {
+      "id": "Q48",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Você quer que o carrinho PARE quando um obstáculo estiver a menos de 15 cm. Qual condição usar?\nse < (distancia) ___ (15) > então: parar",
+      "opcoes": [
+        "A) >",
+        "B) <",
+        "C) =",
+        "D) ou"
+      ],
+      "resposta": "B",
+      "categoria": "Sensor Ultrassônico",
+      "numero": 53
+    },
+    {
+      "id": "Q49",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Com o joystick parado no centro, o bloco 'ler pino analógico' retorna aproximadamente:",
+      "opcoes": [
+        "A) 0",
+        "B) 255",
+        "C) 512",
+        "D) 1023"
+      ],
+      "resposta": "C",
+      "categoria": "Botão e Joystick",
+      "numero": 54
+    },
+    {
+      "id": "Q50",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Em um LED novo, como identificar o terminal POSITIVO (ânodo)?",
+      "opcoes": [
+        "A) É o terminal mais curto",
+        "B) É o terminal mais longo",
+        "C) É sempre o da esquerda",
+        "D) É o que tem cor vermelha"
+      ],
+      "resposta": "B",
+      "categoria": "LED",
+      "numero": 55
+    },
+    {
+      "id": "Q51",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Num carrinho com 2 motores (um de cada lado), como fazer o carrinho VIRAR (fazer uma curva no próprio eixo)?",
+      "opcoes": [
+        "A) Os dois motores girando no mesmo sentido e na mesma velocidade",
+        "B) Os dois motores parados",
+        "C) Um motor girando e o outro parado, ou os dois girando em sentidos opostos",
+        "D) Aumentando o valor do PWM dos dois ao mesmo tempo"
+      ],
+      "resposta": "C",
+      "categoria": "Polaridade",
+      "numero": 56
+    },
+    {
+      "id": "Q52",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Programa:\n🟡 se < (distancia) < (30) > então\n   🟡 se < (distancia) < (10) > então\n      LED vermelho\n   🟡 senão\n      LED amarelo\n🟡 senão\n   LED verde\n\ndistancia = 20. Qual LED acende?",
+      "opcoes": [
+        "A) Vermelho",
+        "B) Amarelo",
+        "C) Verde",
+        "D) Nenhum"
+      ],
+      "resposta": "B",
+      "categoria": "Se Aninhado e Separados",
+      "numero": 57
+    },
+    {
+      "id": "Q53",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "O bloco 🟢 não ◆ inverte o resultado. Então 🟢 não (Verdadeiro) resulta em:",
+      "opcoes": [
+        "A) Verdadeiro",
+        "B) Falso",
+        "C) 0",
+        "D) ALTO"
+      ],
+      "resposta": "B",
+      "categoria": "Operadores",
+      "numero": 58
+    },
+    {
+      "id": "Q54",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Na protoboard, as linhas das laterais marcadas em vermelho e azul (trilhas de alimentação) servem para:",
+      "opcoes": [
+        "A) Distribuir o positivo (vermelho) e o negativo/GND (azul) por todo o circuito",
+        "B) Conectar apenas LEDs",
+        "C) Ler valores analógicos",
+        "D) Substituir o Arduino"
+      ],
+      "resposta": "A",
+      "categoria": "Protoboard",
+      "numero": 59
+    },
+    {
+      "id": "Q55",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "O LED deve acender SOMENTE quando a distância estiver entre 10 e 50 cm. Considerando 'distancia = 50', o LED acende com a condição (distancia > 10) e (distancia < 50)?",
+      "opcoes": [
+        "A) Sim, acende",
+        "B) Não — 50 < 50 é falso, então a condição inteira é falsa",
+        "C) Sim, porque 50 > 10",
+        "D) Dá erro"
+      ],
+      "resposta": "B",
+      "categoria": "Operadores",
+      "numero": 60
+    }
+  ]
+}

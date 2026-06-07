@@ -25,7 +25,7 @@ export function applyTopRankVisuals() {
     if (!document.getElementById('top-rank-overlay')) {
       const s = document.createElement('style');
       s.id = 'top-rank-overlay';
-      s.textContent = `html{box-shadow:inset 0 0 0 3px var(--top-color,#F59E0B);animation:top-border-pulse 2.4s ease-in-out infinite;}`;
+      s.textContent = `html{animation:top-border-pulse 2.4s ease-in-out infinite;}`;
       document.head.appendChild(s);
     }
     if (!document.getElementById('top-rank-badge')) {
