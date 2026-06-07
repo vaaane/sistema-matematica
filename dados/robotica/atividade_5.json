@@ -394,7 +394,7 @@
       "numero": 28,
       "nivel": "medio",
       "tipo": "multipla_escolha",
-      "enunciado": "O bloco 🟢 ◆ e ◆ só é verdadeiro quando:",
+      "enunciado": "O bloco 🟢 condição 1 e condição 2 só é verdadeiro quando:",
       "opcoes": [
         "A) Pelo menos uma condição for verdadeira",
         "B) As duas condições forem verdadeiras ao mesmo tempo",
@@ -409,7 +409,7 @@
       "numero": 29,
       "nivel": "medio",
       "tipo": "multipla_escolha",
-      "enunciado": "O bloco 🟢 ◆ ou ◆ é verdadeiro quando:",
+      "enunciado": "O bloco 🟢 condição 1 ou condição 2 é verdadeiro quando:",
       "opcoes": [
         "A) As duas condições forem verdadeiras ao mesmo tempo",
         "B) As duas forem falsas",
@@ -819,7 +819,7 @@
       "id": "Q53",
       "nivel": "medio",
       "tipo": "multipla_escolha",
-      "enunciado": "O bloco 🟢 não ◆ inverte o resultado. Então 🟢 não (Verdadeiro) resulta em:",
+      "enunciado": "O bloco 🟢 não (condição) inverte o resultado. Então 🟢 não (Verdadeiro) resulta em:",
       "opcoes": [
         "A) Verdadeiro",
         "B) Falso",

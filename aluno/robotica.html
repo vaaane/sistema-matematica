@@ -674,6 +674,15 @@ function embaralhar(arr) {
   return a;
 }
 
+function embaralharPorNivel(questoes) {
+  const grupos = { facil: [], medio: [], dificil: [] };
+  for (const q of questoes) {
+    const n = q.nivel || 'facil';
+    (grupos[n] ?? grupos.facil).push(q);
+  }
+  return [...embaralhar(grupos.facil), ...embaralhar(grupos.medio), ...embaralhar(grupos.dificil)];
+}
+
 function embaralharOpcoes(questoes) {
   const letras = ['A', 'B', 'C', 'D', 'E', 'F'];
   return questoes.map(q => {
@@ -696,7 +705,7 @@ window.iniciarAtividade = async (n) => {
   qIdx = 0;
   respostas = {};
   const data = await fetch(`/dados/robotica/atividade_${n}.json`).then(r => r.json());
-  questoes = atv.embaralhar ? embaralhar(data.questoes) : data.questoes;
+  questoes = atv.embaralhar ? embaralharPorNivel(data.questoes) : data.questoes;
   questoes = embaralharOpcoes(questoes);
   listWrap.style.display  = 'none';
   summWrap.style.display  = 'none';
