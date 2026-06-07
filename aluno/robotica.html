@@ -269,6 +269,18 @@
   </div>
 </div>
 
+<!-- Modal sair da atividade via navegação -->
+<div id="modal-sair-quiz" class="enc-overlay" style="display:none;">
+  <div class="enc-box">
+    <div style="font-size:17px;font-weight:800;margin-bottom:10px;">⚠️ Sair da atividade?</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:22px;line-height:1.6;">A atividade será encerrada e as respostas dadas até agora serão salvas.</div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn" onclick="confirmarSairQuiz()" style="flex:1;background:#DC2626;border-color:#DC2626;">Salvar e sair</button>
+      <button class="btn btn-outline" onclick="fecharModalSair()" style="flex:1;">Continuar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal encerrar -->
 <div id="modal-encerrar" class="enc-overlay" style="display:none;" onclick="if(event.target===this)fecharEncerrar()">
   <div class="enc-box">
@@ -331,6 +343,8 @@ let respostas = {};
 let tentativasDB = [];
 let questoesMap = {}; // id → questão completa (todas as atividades)
 let _finalizando = false; // guard: impede chamadas concorrentes a finalizarAtividade
+let quizAtivo = false;
+let navegacaoPendente = null;
 
 const listWrap  = document.getElementById('list-wrap');
 const quizWrap  = document.getElementById('quiz-wrap');
@@ -707,6 +721,8 @@ window.iniciarAtividade = async (n) => {
   const data = await fetch(`/dados/robotica/atividade_${n}.json`).then(r => r.json());
   questoes = atv.embaralhar ? embaralharPorNivel(data.questoes) : data.questoes;
   questoes = embaralharOpcoes(questoes);
+  quizAtivo = true;
+  window.addEventListener('beforeunload', alertaSair);
   listWrap.style.display  = 'none';
   summWrap.style.display  = 'none';
   quizWrap.style.display  = 'block';
@@ -855,8 +871,13 @@ document.getElementById('btn-proxima').addEventListener('click', async () => {
   else renderQuestao(); // esconde e re-habilita o botão para a próxima questão
 });
 document.getElementById('btn-voltar').addEventListener('click', () => {
-  quizWrap.style.display = 'none';
-  listWrap.style.display = 'block';
+  if (quizAtivo) {
+    navegacaoPendente = null;
+    document.getElementById('modal-sair-quiz').style.display = 'flex';
+  } else {
+    quizWrap.style.display = 'none';
+    listWrap.style.display = 'block';
+  }
 });
 
 // ── Modal encerrar ────────────────────────────────────────────────────────
@@ -871,6 +892,38 @@ window.confirmarEncerrar = async function() {
   await finalizarAtividade(true);
 };
 
+// ── Modal sair via navegação ──────────────────────────────────────────────
+window.fecharModalSair = function() {
+  document.getElementById('modal-sair-quiz').style.display = 'none';
+  navegacaoPendente = null;
+};
+window.confirmarSairQuiz = async function() {
+  document.getElementById('modal-sair-quiz').style.display = 'none';
+  await finalizarAtividade(true);
+  if (navegacaoPendente) {
+    window.removeEventListener('beforeunload', alertaSair);
+    window.location.href = navegacaoPendente;
+  }
+};
+
+function alertaSair(e) {
+  if (!quizAtivo) return;
+  e.preventDefault();
+  e.returnValue = '';
+}
+
+document.addEventListener('click', function(e) {
+  if (!quizAtivo) return;
+  const link = e.target.closest('a[href]');
+  if (!link) return;
+  const href = link.getAttribute('href');
+  if (!href || href.startsWith('#') || href.startsWith('javascript')) return;
+  e.preventDefault();
+  e.stopPropagation();
+  navegacaoPendente = link.href;
+  document.getElementById('modal-sair-quiz').style.display = 'flex';
+}, true);
+
 // ── Finalizar (normal ou parcial) ─────────────────────────────────────────
 async function finalizarAtividade(parcial = false) {
   if (_finalizando) {
@@ -878,6 +931,8 @@ async function finalizarAtividade(parcial = false) {
     return;
   }
   _finalizando = true;
+  quizAtivo = false;
+  window.removeEventListener('beforeunload', alertaSair);
   const acertos = Object.values(respostas).filter(r => r.acertou).length;
   const erros   = Object.values(respostas).filter(r => !r.acertou).length;
   const respondidas = Object.keys(respostas).length;

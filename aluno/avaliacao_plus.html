@@ -588,6 +588,7 @@ let controle = null;
 let tentativasHist = [];   // acumula dados de cada tentativa na sessão de página
 let _warned10 = false;     // flag: alerta de 10 min já disparado
 let tentativaSelecionada = 1; // tentativa escolhida na tela de comparação
+let navegacaoPendente = null;
 
 function novoEstado(duracaoSessao) {
   return {
@@ -2029,9 +2030,62 @@ window.cancelarEncerrar = function() {
   document.getElementById("encerrar-modal")?.remove();
 };
 
-window.addEventListener("beforeunload", () => {
+// ── Interceptar navegação durante sessão ──────────────────────
+function _alertaSairQuiz(e) {
+  if (!st || st.finalizado) return;
+  e.preventDefault();
+  e.returnValue = '';
+}
+window.addEventListener('beforeunload', (e) => {
+  if (st && !st.finalizado) { e.preventDefault(); e.returnValue = ''; }
   if (st) { clearInterval(st.timerInterval); clearInterval(st.sessaoInterval); }
 });
+
+function mostrarModalSair(href) {
+  document.getElementById('sair-quiz-modal')?.remove();
+  navegacaoPendente = href;
+  const info = !st ? '' : st.fase === 1
+    ? `Fase 1 · Pontos: <strong style="color:#FAB800">${fmtPts(st.f1.pontos)}</strong>`
+    : `Fase 2 · Pontuação: <strong style="color:#FAB800">${st.saldo} pts</strong>`;
+  const ov = document.createElement('div');
+  ov.id = 'sair-quiz-modal';
+  ov.className = 'encerrar-modal-ov';
+  ov.innerHTML = `
+    <div class="encerrar-modal-card">
+      <div style="font-size:20px;margin-bottom:8px">⚠️ Sair da atividade?</div>
+      <div style="font-size:13px;color:#9999dd;margin-bottom:6px;line-height:1.6">A atividade será encerrada e as respostas salvas.</div>
+      <div style="font-size:12px;color:#6060a0;margin-bottom:18px">${info}</div>
+      <button onclick="confirmarSairQuiz()" style="width:100%;padding:13px;background:linear-gradient(135deg,#DC2626,#B91C1C);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Orbitron',monospace;letter-spacing:1px;margin-bottom:10px">Salvar e sair</button>
+      <button onclick="fecharModalSair()" style="width:100%;padding:10px;background:transparent;border:1.5px solid #2a2a50;border-radius:10px;color:#5a5a90;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif">Continuar</button>
+    </div>`;
+  document.body.appendChild(ov);
+}
+
+window.fecharModalSair = function() {
+  document.getElementById('sair-quiz-modal')?.remove();
+  navegacaoPendente = null;
+};
+
+window.confirmarSairQuiz = async function() {
+  document.getElementById('sair-quiz-modal')?.remove();
+  if (st && !st.finalizado) {
+    clearInterval(st.timerInterval);
+    clearInterval(st.sessaoInterval);
+    await encerrarSessao('manual');
+  }
+  if (navegacaoPendente) window.location.href = navegacaoPendente;
+};
+
+document.addEventListener('click', function(e) {
+  if (!st || st.finalizado) return;
+  const link = e.target.closest('a[href]');
+  if (!link) return;
+  const href = link.getAttribute('href');
+  if (!href || href.startsWith('#') || href.startsWith('javascript')) return;
+  e.preventDefault();
+  e.stopPropagation();
+  mostrarModalSair(link.href);
+}, true);
 
 // ── Verificação de bloqueio via avaliacoes_sessoes ────────────
 async function verificarBloqueio() {
