@@ -53,7 +53,7 @@ export const ALUNOS_POR_TURMA = {
     "Emanuelle", "Esllinder", "Honny", "Laryssa", "Leonardo",
     "Levi", "Marcus", "Maria Fernanda", "Matheus", "Murillo",
     "Nicolas", "Nicolle", "Nicolly", "Pedro Jorge", "Pedro Riquelme", "Pedro Willian",
-    "Rana", "Riquelme", "Samuel", "Sophia", "Thayanne",
+    "Rana", "Ricardo", "Riquelme", "Samuel", "Sophia", "Thayanne",
     "Victor Gabriel", "Victor Hugo", "Victória", "Vinícius", "Yann", "Yasmin", "Yoxiris",
   ],
 };
