@@ -1,4 +1,5 @@
 export const UID_PROFESSOR_TESTE = 'PROFESSOR_TESTE';
+export const NIVEL_MAX = 300; // Último nível disponível na tabuada
 
 export const FATOR_ATRASO = { dia: 1.0, anterior: 0.75, antiga: 0.5 };
 export const LABEL_TIPO   = { dia: "do dia", anterior: "anterior", antiga: "antiga" };

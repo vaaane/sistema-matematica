@@ -111,6 +111,8 @@
     .g-mode.normal.active,.g-mode.normal:hover { background:linear-gradient(135deg,rgba(124,92,252,.32),rgba(124,92,252,.14));border-color:var(--g-purple);box-shadow:0 4px 18px rgba(124,92,252,.28);transform:translateY(-1px); }
     .g-mode.sprint { background:linear-gradient(135deg,rgba(255,123,46,.18),rgba(255,123,46,.07));border-color:rgba(255,123,46,.35);color:var(--g-orange); }
     .g-mode.sprint.active,.g-mode.sprint:hover { background:linear-gradient(135deg,rgba(255,123,46,.32),rgba(255,123,46,.14));border-color:var(--g-orange);box-shadow:0 4px 18px rgba(255,123,46,.28);transform:translateY(-1px); }
+    .g-mode.sprint.unavailable { opacity:0.42;cursor:not-allowed;pointer-events:none;filter:grayscale(0.5); }
+    .g-mode.sprint.unavailable .ds::after { content:' · Em breve';color:var(--g-muted);font-style:italic; }
 
     .g-play-area { padding:0 24px 20px; }
     .g-play-btn { width:100%;padding:13px;min-height:44px;border-radius:13px;border:none;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;position:relative;overflow:hidden;color:#fff; }
@@ -270,6 +272,8 @@
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { NIVEL_MAX } from "/js/constants.js";
+import { getLiberadasParaTurma } from "/js/db.js";
 
 const sess = requireAluno("/index.html");
 if (!sess) throw new Error("não autenticado");
@@ -316,7 +320,7 @@ document.getElementById("content").innerHTML = `
     </div>
     <div class="g-modes">
       <div class="g-mode normal active"><span class="ico">▶</span><div><span class="nm">Normal</span><span class="ds">Suba de nível no seu ritmo</span></div></div>
-      <div class="g-mode sprint"><span class="ico">⚡</span><div><span class="nm">Sprint</span><span class="ds">Máximo de pares em 3 min</span></div></div>
+      <div class="g-mode sprint unavailable"><span class="ico">⚡</span><div><span class="nm">Sprint</span><span class="ds">Máximo de pares em 3 min</span></div></div>
     </div>
     <div class="g-play-area">
       <button class="g-play-btn nm"><span class="arr">▶</span> JOGAR AGORA</button>
@@ -335,6 +339,36 @@ document.getElementById("content").innerHTML = `
     <div style="padding:8px 10px 12px"><div class="g-sk" style="height:80px;border-radius:8px"></div></div>
   </div>
 </div>`;
+
+// ── Detectar Avaliação+ ativa ─────────────────────────────────
+const DURACAO_AV_MS = 25 * 60 * 1000;
+const MAX_TENT_AV   = 3;
+
+function avKey(s) {
+  return btoa(unescape(encodeURIComponent(s))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+}
+
+async function detectarAvaliacaoAtiva() {
+  try {
+    const liberadas = await getLiberadasParaTurma(turma);
+    const avLibs = liberadas.filter(l => l.modo === 'avaliacao_plus' && l.status !== 'encerrada');
+    for (const lib of avLibs) {
+      const ctrlSnap = await get(ref(db, `avaliacao_controle/${avKey(turma+'|'+lib.atividade)}/${avKey(nomeAluno)}`));
+      if (ctrlSnap.exists()) {
+        const ctrl = ctrlSnap.val();
+        const gRest = DURACAO_AV_MS - (Date.now() - ctrl.inicio_global);
+        if (gRest > 0 && (ctrl.tentativas_realizadas || 0) < MAX_TENT_AV) {
+          return { ativa: true, atividade: lib.atividade, restMs: gRest };
+        }
+      }
+    }
+  } catch(e) {
+    console.warn('[jogos] Erro ao verificar avaliação ativa:', e);
+  }
+  return { ativa: false };
+}
+
+const _avStatus = await detectarAvaliacaoAtiva();
 
 // ── Load Firebase data ─────────────────────────────────────────
 const hojeISO = new Date().toISOString().slice(0, 10);
@@ -593,9 +627,11 @@ else if (myGeral !== null)                 posBadge = `#${myGeral} geral`;
 // ── Distance bar ───────────────────────────────────────────────
 const topLv   = liderGeral ? (liderGeral.melhor_nivel || 1) : nivelAtual;
 const barPct  = topLv > 0 ? Math.min(100, Math.round(nivelAtual / topLv * 100)) : 100;
-const distCap = liderGeral && liderGeral.nome !== nomeAluno
-  ? `<strong>${topLv - nivelAtual}</strong> nível${topLv - nivelAtual !== 1 ? 'is' : ''} de distância para ${escH(liderGeral.nome)} · ${escH(liderGeral.turma||'?')}`
-  : `<strong>🏆 Você é o líder geral!</strong>`;
+const distCap = nivelAtual >= NIVEL_MAX
+  ? `<strong>🏆 Nível máximo atingido!</strong> Aguarde novas liberações.`
+  : liderGeral && liderGeral.nome !== nomeAluno
+    ? `<strong>${topLv - nivelAtual}</strong> nível${topLv - nivelAtual !== 1 ? 'is' : ''} de distância para ${escH(liderGeral.nome)} · ${escH(liderGeral.turma||'?')}`
+    : `<strong>🏆 Você é o líder geral!</strong>`;
 
 // ── Ranking rows ───────────────────────────────────────────────
 function buildRankList(list, listPos, meIdx) {
@@ -629,7 +665,7 @@ document.getElementById("content").innerHTML = `
         </div>
       </div>
       <div class="g-lv-badge">
-        <span class="lbl">Nível atual</span>
+        <span class="lbl">${nivelAtual >= NIVEL_MAX ? '🏆 Nível máximo' : 'Nível atual'}</span>
         <span class="val">${nivelAtual}</span>
       </div>
     </div>
@@ -671,7 +707,7 @@ document.getElementById("content").innerHTML = `
         <span class="ico">▶</span>
         <div><span class="nm">Normal</span><span class="ds">Suba de nível no seu ritmo</span></div>
       </button>
-      <button class="g-mode sprint" id="gBtnSprint" onclick="gSetMode('sprint')">
+      <button class="g-mode sprint unavailable" id="gBtnSprint" disabled aria-disabled="true">
         <span class="ico">⚡</span>
         <div><span class="nm">Sprint</span><span class="ds">Máximo de pares em 3 min</span></div>
       </button>
@@ -764,10 +800,49 @@ document.getElementById("content").innerHTML = `
 
 </div>`;
 
+// ── Bloquear tabuada se avaliação ativa ──────────────────────
+if (_avStatus.ativa) {
+  const mins = Math.ceil(_avStatus.restMs / 60000);
+  const playArea = document.getElementById('gPlayBtn')?.closest('.g-play-area');
+  const modesEl  = document.querySelector('.g-modes');
+  const playBtn  = document.getElementById('gPlayBtn');
+  if (playBtn) {
+    playBtn.disabled = true;
+    playBtn.style.cssText = 'opacity:.35;cursor:not-allowed;pointer-events:none;filter:grayscale(1);';
+  }
+  if (modesEl) {
+    modesEl.style.opacity = '.3';
+    modesEl.style.pointerEvents = 'none';
+  }
+  if (playArea) {
+    const aviso = document.createElement('div');
+    aviso.style.cssText = [
+      'margin:0 24px 10px',
+      'padding:10px 14px',
+      'background:rgba(239,68,68,.1)',
+      'border:1px solid rgba(239,68,68,.35)',
+      'border-radius:10px',
+      "font-family:'Inter',sans-serif",
+      'font-size:12px',
+      'font-weight:600',
+      'color:#F87171',
+      'display:flex',
+      'align-items:center',
+      'gap:8px',
+    ].join(';');
+    aviso.innerHTML = `<span style="font-size:16px;flex-shrink:0">📝</span>
+      <span>Você tem uma <strong>${_avStatus.atividade}</strong> em andamento (${mins} min restante${mins !== 1 ? 's' : ''}).
+      <a href="/aluno/avaliacao_plus.html?ativ=${encodeURIComponent(_avStatus.atividade)}"
+         style="color:#FCA5A5;text-decoration:underline;font-weight:700">Terminar avaliação →</a></span>`;
+    playArea.insertAdjacentElement('beforebegin', aviso);
+  }
+}
+
 // ── Event handlers ─────────────────────────────────────────────
 let gMode = 'normal';
 
 window.gSetMode = function(mode) {
+  if (mode === 'sprint') return; // Sprint indisponível
   gMode = mode;
   document.getElementById('gBtnNormal')?.classList.toggle('active', mode === 'normal');
   document.getElementById('gBtnSprint')?.classList.toggle('active', mode === 'sprint');
@@ -783,9 +858,8 @@ window.gSetMode = function(mode) {
 };
 
 window.gPlay = function() {
-  window.location.href = gMode === 'sprint'
-    ? '/aluno/tabuada.html?modo=sprint'
-    : '/aluno/tabuada.html';
+  if (_avStatus?.ativa) return;
+  window.location.href = '/aluno/tabuada.html';
 };
 
 window.jogarNivel = function(lv) {

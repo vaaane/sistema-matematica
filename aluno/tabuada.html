@@ -220,8 +220,16 @@
     /* ── Responsive ── */
     @media(max-width:480px){
       .game-card{padding:5px 3px;}
-      .timer-wrap{font-size:26px;}
-      .slot{width:110px;height:54px;}
+      #btn-voltar{font-size:11px!important;padding:3px 7px!important;}
+      #btn-reiniciar-hdr{font-size:11px!important;padding:3px 7px!important;}
+      .topbar{padding:6px 10px!important;min-height:0!important;}
+      .topbar-title{font-size:14px;}
+      .tb-wrap{padding:4px 10px 2px!important;}
+      .timer-wrap{font-size:26px!important;margin-bottom:2px!important;}
+      .timer-wrap svg{width:24px!important;height:24px!important;}
+      #leaders-ingame div{font-size:11px!important;}
+      .slot{width:110px!important;height:52px!important;}
+      .slots-wrap{gap:8px!important;}
     }
     @media(max-width:360px){
       .slot{width:94px;height:50px;}
@@ -317,6 +325,7 @@
 <script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
 import { getSession, renderSidebarAluno, renderSidebarProfessor, clearSession, isModoTeste } from "/js/auth.js";
+import { NIVEL_MAX } from "/js/constants.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -1199,11 +1208,17 @@ function _buildGameInternal() {
   _animating  = false;
 
   // ── 1. Colunas — desktop: cfg.cols (geralmente 6), mobile (≤768px): 4
-  const _topbarH = document.querySelector('.topbar')?.getBoundingClientRect().height || 62;
-  const _isMobile  = window.innerWidth <= 768;
-  const _desktopCols = cfg.cols || 6; // máx desktop para este nível
+  const _topbarEl = document.querySelector('.topbar');
+  const _topbarH  = _topbarEl ? (_topbarEl.offsetHeight || _topbarEl.getBoundingClientRect().height || 62) : 62;
+  const _isMobile      = window.innerWidth <= 768;
+  const _isNarrow      = window.innerWidth <= 420;
+  const _desktopCols   = cfg.cols || 6;
   // Níveis pequenos (cols 2/3) mantêm seu layout; demais: mobile força 4
-  const cols = _isMobile ? Math.min(4, _desktopCols) : _desktopCols;
+  const cols = _isNarrow
+    ? Math.min(4, _desktopCols)
+    : _isMobile
+      ? Math.min(4, _desktopCols)
+      : _desktopCols;
 
   // ── 2. Pares: Grande desktop=18p, todos os outros=máx 12p
   // (24 cards normal/rápido/difícil | 36 cards grande desktop | 24 cards grande mobile)
@@ -1239,8 +1254,9 @@ function _buildGameInternal() {
 
   // isCompact: linhas exatas (sem Math.ceil pois divisibilidade está garantida)
   const _gridRows  = pairs.length * 2 / cols;
-  const _gridH     = Math.max(60, window.innerHeight - _topbarH - 200);
-  const isCompact  = _gridRows > 0 ? ((_gridH - (_gridRows - 1) * 5) / _gridRows) < 52 : false;
+  const _mobileOverhead = window.innerWidth <= 480 ? 290 : 250;
+  const _gridH     = Math.max(60, window.innerHeight - _topbarH - _mobileOverhead);
+  const isCompact  = _gridRows > 0 ? ((_gridH - (_gridRows - 1) * 5) / _gridRows) < 56 : false;
 
   // Pairs dots
   const dotsHtml = Array.from({length: pairs.length}, (_,i) =>
@@ -1606,6 +1622,26 @@ async function onGameWin() {
 
   await salvarProgresso(progresso, 'completou', nivelJogado, acertos, erros, false, _segsWin);
   _registrarSessao(nivelJogado, 'completou');
+
+  // ── Nível máximo atingido ──────────────────────────────────────
+  if (nivelJogado >= NIVEL_MAX) {
+    progresso.nivel_atual = NIVEL_MAX;
+    nivelAtual = NIVEL_MAX;
+    lancarConfeteChefao(180);
+    document.getElementById("lov-emoji").textContent = '🏆';
+    document.getElementById("lov-title").textContent = '🎉 Nível máximo atingido!';
+    document.getElementById("lov-sub").textContent   =
+      `Você concluiu o Nível ${NIVEL_MAX} — o último disponível! Aguarde novas liberações. Incrível! 🌟`;
+    document.getElementById("lov-new").textContent   = '🏆 Você chegou ao fim!';
+    document.getElementById("lov-new").style.color   = 'var(--gold)';
+    document.getElementById("lov-btn").textContent   = 'Ver ranking →';
+    document.querySelector('.level-card').style.animation = 'levelUpPop .45s';
+    document.getElementById("level-overlay").style.display = 'flex';
+    document.getElementById("lov-btn").onclick = () => {
+      window.location.href = '/aluno/ranking.html';
+    };
+    return;
+  }
 
   const isNewRecord = novoNivel > melhorAnterior;
 

@@ -958,23 +958,17 @@ async function finalizarAtividade(parcial = false) {
 
   let saveError = null;
   let saveOk = false;
-  if (!parcial && respondidas < 3) {
-    console.log(`[Robótica] Tentativa não salva: apenas ${respondidas} questão(ões) respondida(s) (mínimo: 3).`);
-  } else if (respondidas === 0) {
-    console.log('[Robótica] Tentativa não salva: nenhuma questão respondida.');
-  } else {
-    console.log('[Robótica] Salvando tentativa…', { turma, aluno, atividade: atividadeAtual, acertos, total: questoes.length });
-    try {
-      await saveRoboticaTentativa(turma, aluno, atividadeAtual, {
-        acertos, erros, total: questoes.length, respondidas, parcial: parcial || false, respostas
-      });
-      saveOk = true;
-      console.log('[Robótica] Tentativa salva com sucesso no Firebase.');
-    } catch(e) {
-      saveError = (e?.message || String(e) || 'erro desconhecido');
-      console.error('[Robótica] SAVE FALHOU:', e);
-      alert('⚠️ Robótica: erro ao salvar!\n\n' + saveError + '\n\nTurma: ' + turma + '\nAluno: ' + aluno + '\n\nVerifique as regras do Firebase Realtime Database.');
-    }
+  console.log('[Robótica] Salvando tentativa…', { turma, aluno, atividade: atividadeAtual, acertos, total: questoes.length, respondidas });
+  try {
+    await saveRoboticaTentativa(turma, aluno, atividadeAtual, {
+      acertos, erros, total: questoes.length, respondidas, parcial: parcial || false, respostas
+    });
+    saveOk = true;
+    console.log('[Robótica] Tentativa salva com sucesso no Firebase.');
+  } catch(e) {
+    saveError = (e?.message || String(e) || 'erro desconhecido');
+    console.error('[Robótica] SAVE FALHOU:', e);
+    alert('⚠️ Robótica: erro ao salvar!\n\n' + saveError + '\n\nTurma: ' + turma + '\nAluno: ' + aluno + '\n\nVerifique as regras do Firebase Realtime Database.');
   }
   try {
     tentativasDB = await getRoboticaTentativasAluno(turma, aluno);

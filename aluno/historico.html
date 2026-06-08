@@ -20,7 +20,7 @@
     }
 
     /* Filtros */
-    .hc-filters{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+    .hc-filters{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;max-width:100%;overflow:hidden;}
     .hc-fbtn{padding:6px 16px;border-radius:20px;border:1px solid var(--hc-border);background:transparent;color:var(--hc-muted);font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;}
     .hc-fbtn.on{background:rgba(124,92,252,0.2);border-color:var(--hc-purple);color:var(--hc-pl);}
 
@@ -29,7 +29,7 @@
     .entry:hover{border-color:rgba(124,92,252,0.3);}
     @keyframes hcFU{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-    .entry-header{padding:14px 18px;display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none;}
+    .entry-header{padding:14px 18px;display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none;overflow:hidden;min-width:0;}
     .entry-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
     .entry-icon.atividade{background:rgba(124,92,252,0.15);border:1px solid rgba(124,92,252,0.3);}
     .entry-icon.torneio{background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.3);}
@@ -146,6 +146,9 @@
       .fases-row{grid-template-columns:1fr;}
       .tentativas-row{gap:6px;}
       .tent-btn{min-width:70px;padding:8px 10px;}
+      .entry-score{flex-shrink:1;}
+      .score-main{font-size:15px;}
+      .score-label{font-size:9px;white-space:nowrap;}
     }
   </style>
 </head>
