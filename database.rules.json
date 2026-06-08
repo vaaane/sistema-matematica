@@ -46,6 +46,11 @@
     "avaliacoes_recusas":  { ".read": true, ".write": true },
     "robotica_tentativas": { ".read": true, ".write": true },
 
+    "perfis":          { ".read": true, ".write": true },
+    "presenca_online": { ".read": true, ".write": true },
+    "duelos":          { ".read": true, ".write": true },
+    "feed_global":     { ".read": true, ".write": true },
+
     "$outro": {
       ".read": false,
       ".write": false
