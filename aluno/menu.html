@@ -841,17 +841,31 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
   const liderGeral = rankAll[0] || null;
   const liderTurma = rankTurma[0] || null;
 
-  const myUid      = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
-  const myGeralIdx = rankAll.findIndex(r => r._uid === myUid);
-  const myTurmaIdx = rankTurma.findIndex(r => r._uid === myUid);
-  console.log('[Tabuada Rank] myUid:', myUid, '| myGeralIdx:', myGeralIdx, '| top5:', rankAll.slice(0,5).map(r => `${r._uid}=${r.melhor_nivel}`));
+  // Localiza o aluno por NOME normalizado (acento/maiúsc/espaços), não por UID reconstruído.
+  const norm = s => (s || '')
+    .toString()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .trim().toLowerCase();
+
+  const meusNomes = (alunos || []).map(norm);
+
+  const myGeralIdx = rankAll.findIndex(r => meusNomes.includes(norm(r.nome)));
+  const myTurmaIdx = rankTurma.findIndex(r => meusNomes.includes(norm(r.nome)));
+
+  console.log('[Tabuada Rank] nome buscado:', alunos[0],
+    '| nome casado:', myGeralIdx >= 0 ? rankAll[myGeralIdx].nome : '(nenhum)',
+    '| myGeralIdx:', myGeralIdx,
+    '| top5:', rankAll.slice(0,5).map(r => `${r.nome}=${r.melhor_nivel}`));
   // Standard ranking: empates → mesma posição, próximo pula
+  // Usa propriedades separadas para não misturar posição geral com posição da turma
+  // (rankAll e rankTurma compartilham os mesmos objetos — sobrescrever _pos no loop da turma
+  //  fazia myGeral ler a posição da turma, não a geral)
   { let p = 0, n = 0, l = null;
-    rankAll.forEach(r => { n++; const v=r.melhor_nivel||0; if(v!==l){p=n;l=v;} r._pos=p; }); }
+    rankAll.forEach(r => { n++; const v=r.melhor_nivel||0; if(v!==l){p=n;l=v;} r._pos=p; r._posGeral=p; }); }
   { let p = 0, n = 0, l = null;
-    rankTurma.forEach(r => { n++; const v=r.melhor_nivel||0; if(v!==l){p=n;l=v;} r._pos=p; }); }
-  const myGeral    = myGeralIdx >= 0 ? rankAll[myGeralIdx]._pos   : null;
-  const myTurma    = myTurmaIdx >= 0 ? rankTurma[myTurmaIdx]._pos : null;
+    rankTurma.forEach(r => { n++; const v=r.melhor_nivel||0; if(v!==l){p=n;l=v;} r._posTurma=p; }); }
+  const myGeral    = myGeralIdx >= 0 ? rankAll[myGeralIdx]._posGeral : null;
+  const myTurma    = myTurmaIdx >= 0 ? rankTurma[myTurmaIdx]._posTurma : null;
   const meuNivel   = myGeralIdx >= 0 ? (rankAll[myGeralIdx].melhor_nivel || 1) : 0;
 
   // ── Preencher o body do card Tabuada ──────────────────────
@@ -903,7 +917,7 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
     const top3    = rankAll.slice(0, 3);
     const tabTop3Html = top3.length ? top3.map((d, i) => {
       const pos = d._pos || (i + 1);
-      const isMe = d._uid === myUid;
+      const isMe = meusNomes.includes(norm(d.nome));
       return renderRankRow({ pos, nome: esc(d.nome), sub: `Turma ${esc(d.turma)}`, valor: `Nv ${d.melhor_nivel || 1}`, valorLabel: 'tabuada', isMe });
     }).join('')
     : '<p style="font-size:13px;color:var(--text-muted);padding:4px 0">Nenhum aluno jogou ainda.</p>';
