@@ -69,7 +69,10 @@
       .mini-stats{grid-template-columns:repeat(3,1fr)}
       .mini-stat{padding:10px 4px}
       .mini-stat-value{font-size:17px}
-      .top3-card{padding:8px 10px;gap:7px}
+      .top3-card{padding:7px 9px;gap:6px;}
+      .top3-nome{font-size:12px;}
+      .badge-no1-card{font-size:9px;padding:2px 8px;right:8px;top:-8px;}
+      .tabuada-btns{flex-direction:column;}
     }
     @media(max-width:768px){
       .grid-2{display:flex!important;flex-direction:column;}
@@ -628,7 +631,7 @@ ${tempoPodioHtml}
       <!-- Divider -->
       <div style="height:1px;background:var(--border);margin:10px 0 11px"></div>
       <!-- Botões -->
-      <div style="display:flex;gap:8px" onclick="event.stopPropagation()">
+      <div class="tabuada-btns" style="display:flex;gap:8px" onclick="event.stopPropagation()">
         <a href="/aluno/tabuada.html" class="btn" style="flex:1;justify-content:center;background:#7F77DD;color:#fff;gap:5px;box-shadow:none;padding:9px 14px;font-size:13px">
           <i class="ti ti-player-play" style="font-size:13px"></i>▶ Jogar
         </a>
@@ -726,7 +729,7 @@ ${tempoPodioHtml}
       }).join('')}
     </div>
 
-    <div id="tab-ranking-card" class="card" style="margin-bottom:14px;overflow:visible;position:relative">
+    <div id="tab-ranking-card" class="card" style="margin-bottom:14px;overflow:visible;position:relative;padding-top:18px">
       <div class="section-label" style="color:#F59E0B">
         <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
         Ranking Tabuada
