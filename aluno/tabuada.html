@@ -511,7 +511,7 @@ function _getLevelConfigBase(lvl) {
       const grandeTempoReduz  = grandeIdx % 2 === 1;
       const grandePesado      = grandeIdx >= 2 && grandeIdx % 2 === 0;
       const _tBase            = lvl > 300 ? TEMPO_BASE_300 : lvl > 200 ? TEMPO_BASE_200 : TEMPO_BASE_129;
-      const grandeTime        = lvl === 300 ? 20 : grandeTempoReduz
+      const grandeTime        = lvl === 300 ? 65 : grandeTempoReduz
         ? Math.max(20, _tBase - 10)   // 55s / 35s / 25s após 300
         : Math.min(120, _tBase + 5);  // 70s / 50s / 40s após 300
       return { type:'mix_as', pairs:18, cols:6, secs: grandeTime, minMul, minDiv,

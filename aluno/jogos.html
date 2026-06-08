@@ -627,12 +627,13 @@ else if (myGeral !== null)                 posBadge = `#${myGeral} geral`;
 
 // ── Distance bar ───────────────────────────────────────────────
 const topLv   = liderGeral ? (liderGeral.melhor_nivel || 1) : nivelAtual;
-const barPct  = NIVEL_MAX > 0 ? Math.min(100, Math.round(nivelAtual / NIVEL_MAX * 100)) : 100;
+const barPct  = Math.min(100, Math.round(nivelAtual / NIVEL_MAX * 100));
+const faltam  = NIVEL_MAX - nivelAtual;
 const distCap = nivelAtual >= NIVEL_MAX
   ? `<strong>🏆 Nível máximo atingido!</strong> Aguarde novas liberações.`
   : liderGeral && liderGeral._uid !== myUid
-    ? `<strong>${topLv - nivelAtual}</strong> nível${topLv - nivelAtual !== 1 ? 'is' : ''} de distância para ${escH(liderGeral.nome)} · ${escH(liderGeral.turma||'?')} · <span style="opacity:.6">Máx: ${NIVEL_MAX}</span>`
-    : `<strong>🏆 Você é o líder geral!</strong> <span style="opacity:.6">Máx: ${NIVEL_MAX}</span>`;
+    ? `Faltam <strong>${faltam}</strong> nível${faltam !== 1 ? 'is' : ''} para o máximo · <span style="opacity:.55">${topLv - nivelAtual} atrás de ${escH(liderGeral.nome)} · ${escH(liderGeral.turma||'?')}</span>`
+    : `Faltam <strong>${faltam}</strong> nível${faltam !== 1 ? 'is' : ''} para o máximo · <span style="opacity:.55">Você lidera o ranking!</span>`;
 
 // ── Ranking rows ───────────────────────────────────────────────
 function buildRankList(list, listPos, meIdx) {
@@ -679,11 +680,11 @@ document.getElementById("content").innerHTML = `
 
     <!-- Distância pro líder -->
     <div class="g-dist">
-      <div class="g-dist-lbl">Distância pro líder geral</div>
+      <div class="g-dist-lbl">Progresso até o nível máximo</div>
       <div class="g-dist-row">
         <span class="g-dist-you">Nv ${nivelAtual}</span>
         <div class="g-dist-bw"><div class="g-dist-bf" style="width:${barPct}%"></div></div>
-        <span class="g-dist-top">Nv ${topLv}</span>
+        <span class="g-dist-top">Nv ${NIVEL_MAX}</span>
       </div>
       <div class="g-dist-cap">${distCap}</div>
     </div>
