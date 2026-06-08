@@ -85,6 +85,14 @@
       #card-historico{order:5;}
       #tab-ranking-card{order:6;}
       #quiz-top3-card{order:7;}
+      /* Conter overflow horizontal — cards com overflow:visible e filhos absolutos estouram a tela */
+      .grid-2{width:100%;max-width:100%;}
+      #card-resumo,#tabuada-game-card,#tab-ranking-card,#quiz-top3-card,#card-liberada,#card-atividades,#card-historico{
+        width:100%!important;max-width:100%!important;box-sizing:border-box!important;overflow-x:clip!important;
+      }
+      .badge-no1-card{right:10px!important;max-width:calc(100% - 20px);}
+      .card-gold-ring{box-shadow:0 0 0 1px rgba(255,215,0,.4)!important;}
+      #tabuada-game-card *,#tab-ranking-card *,#quiz-top3-card *{min-width:0;}
     }
   </style>
 </head>
