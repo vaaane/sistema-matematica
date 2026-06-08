@@ -852,10 +852,6 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
   const myGeralIdx = rankAll.findIndex(r => meusNomes.includes(norm(r.nome)));
   const myTurmaIdx = rankTurma.findIndex(r => meusNomes.includes(norm(r.nome)));
 
-  console.log('[Tabuada Rank] nome buscado:', alunos[0],
-    '| nome casado:', myGeralIdx >= 0 ? rankAll[myGeralIdx].nome : '(nenhum)',
-    '| myGeralIdx:', myGeralIdx,
-    '| top5:', rankAll.slice(0,5).map(r => `${r.nome}=${r.melhor_nivel}`));
   // Standard ranking: empates → mesma posição, próximo pula
   // Usa propriedades separadas para não misturar posição geral com posição da turma
   // (rankAll e rankTurma compartilham os mesmos objetos — sobrescrever _pos no loop da turma
@@ -878,7 +874,7 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
       posHtml = `<div style="padding:8px 12px;background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(245,158,11,.06));border:1px solid rgba(245,158,11,.45);border-radius:9px;font-size:12px;font-weight:700;color:${isDark ? '#FCD34D' : '#92400E'};line-height:1.5">
         👑 <strong>#1 Geral!</strong> Nível ${meuNivel} — Continue defendendo o topo!
       </div>`;
-    } else if (myTurma !== null && myTurma <= 5) {
+    } else if (myTurma !== null && myTurma >= 2 && myTurma <= 5) {
       posHtml = `<div style="padding:7px 11px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:8px;font-size:12px;font-weight:700;color:var(--green)">🎉 Você está em #${myTurma} na turma!</div>`;
     } else if (myGeral !== null && myGeral <= 20) {
       posHtml = `<div style="padding:7px 11px;background:rgba(47,158,220,.08);border:1px solid rgba(47,158,220,.25);border-radius:8px;font-size:12px;font-weight:700;color:var(--blue)">⭐ Você está em #${myGeral} geral!</div>`;
