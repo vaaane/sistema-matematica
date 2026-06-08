@@ -425,8 +425,9 @@ const rankTurma = rankAll.filter(r => r.turma === turma);
 
 const liderGeral = rankAll[0] || null;
 const liderTurma = rankTurma[0] || null;
-const myGeralIdx = rankAll.findIndex(r => r.nome === nomeAluno && r.turma === turma);
-const myTurmaIdx = rankTurma.findIndex(r => r.nome === nomeAluno && r.turma === turma);
+const myUid      = uid; // uid já definido como (turma + '_' + nomeAluno).replace(...)
+const myGeralIdx = rankAll.findIndex(r => r._uid === myUid);
+const myTurmaIdx = rankTurma.findIndex(r => r._uid === myUid);
 const rankAllPos   = calcStdPos(rankAll);
 const rankTurmaPos = calcStdPos(rankTurma);
 const myGeral    = myGeralIdx >= 0 ? rankAllPos[myGeralIdx]   : null;
@@ -626,12 +627,12 @@ else if (myGeral !== null)                 posBadge = `#${myGeral} geral`;
 
 // ── Distance bar ───────────────────────────────────────────────
 const topLv   = liderGeral ? (liderGeral.melhor_nivel || 1) : nivelAtual;
-const barPct  = topLv > 0 ? Math.min(100, Math.round(nivelAtual / topLv * 100)) : 100;
+const barPct  = NIVEL_MAX > 0 ? Math.min(100, Math.round(nivelAtual / NIVEL_MAX * 100)) : 100;
 const distCap = nivelAtual >= NIVEL_MAX
   ? `<strong>🏆 Nível máximo atingido!</strong> Aguarde novas liberações.`
-  : liderGeral && liderGeral.nome !== nomeAluno
-    ? `<strong>${topLv - nivelAtual}</strong> nível${topLv - nivelAtual !== 1 ? 'is' : ''} de distância para ${escH(liderGeral.nome)} · ${escH(liderGeral.turma||'?')}`
-    : `<strong>🏆 Você é o líder geral!</strong>`;
+  : liderGeral && liderGeral._uid !== myUid
+    ? `<strong>${topLv - nivelAtual}</strong> nível${topLv - nivelAtual !== 1 ? 'is' : ''} de distância para ${escH(liderGeral.nome)} · ${escH(liderGeral.turma||'?')} · <span style="opacity:.6">Máx: ${NIVEL_MAX}</span>`
+    : `<strong>🏆 Você é o líder geral!</strong> <span style="opacity:.6">Máx: ${NIVEL_MAX}</span>`;
 
 // ── Ranking rows ───────────────────────────────────────────────
 function buildRankList(list, listPos, meIdx) {
@@ -666,7 +667,7 @@ document.getElementById("content").innerHTML = `
       </div>
       <div class="g-lv-badge">
         <span class="lbl">${nivelAtual >= NIVEL_MAX ? '🏆 Nível máximo' : 'Nível atual'}</span>
-        <span class="val">${nivelAtual}</span>
+        <span class="val">${nivelAtual}<span style="font-size:11px;font-weight:500;opacity:0.5;margin-left:2px">/ ${NIVEL_MAX}</span></span>
       </div>
     </div>
 

@@ -798,7 +798,7 @@ let rankingTurma = [];
 function _parseRanking(snap) {
   rankingAll = [];
   if (snap && snap.exists()) {
-    snap.forEach(c => { const v = c.val(); if (v && v.nome) rankingAll.push(v); });
+    snap.forEach(c => { const v = c.val(); if (v && v.nome) rankingAll.push({ ...v, _uid: c.key }); });
     rankingAll.sort((a, b) => (b.melhor_nivel || 0) - (a.melhor_nivel || 0));
   }
   rankingTurma = rankingAll.filter(r => r.turma === turma);
@@ -818,7 +818,7 @@ function miniRankingHtml() {
   const g2 = rankingAll[1];
   const t  = rankingTurma[0];
   if (!g && !t) return '';
-  const isMe = (r) => r && r.nome === nomeAluno && r.turma === turma;
+  const isMe = (r) => r && r._uid === uid;
   const iAmLeader = isMe(g);
 
   let html = '<div class="mini-rank-wrap">';
@@ -865,7 +865,7 @@ function miniRankingHtmlCompact() {
   const g = rankingAll[0];
   const t = rankingTurma[0];
   if (!g && !t) return '';
-  const isMe = (r) => r && r.nome === nomeAluno && r.turma === turma;
+  const isMe = (r) => r && r._uid === uid;
   const parts = [];
   if (g) {
     parts.push(isMe(g)
@@ -1089,7 +1089,7 @@ function _buildLeadersHtml() {
   if (_isProfMode) return '';
   const g = rankingAll[0], t = rankingTurma[0];
   if (!g && !t) return '';
-  const isMe = r => r && r.nome === nomeAluno && r.turma === turma;
+  const isMe = r => r && r._uid === uid;
   const lines = [];
   if (g) {
     lines.push(isMe(g)
@@ -1608,7 +1608,7 @@ async function onGameWin() {
     return;
   }
 
-  const eraLider    = rankingAll[0]?.nome === nomeAluno && rankingAll[0]?.turma === turma;
+  const eraLider    = rankingAll[0]?._uid === uid;
   const melhorAnterior = melhorNivel;
   const novoNivel  = nivelAtual + 1;
   const novoMelhor = Math.max(melhorNivel, novoNivel);
@@ -1671,7 +1671,7 @@ async function onGameWin() {
 
   // Atualiza ranking em background — se virou líder, atualiza overlay
   reloadRanking().then(() => {
-    const eLider = rankingAll[0]?.nome === nomeAluno && rankingAll[0]?.turma === turma;
+    const eLider = rankingAll[0]?._uid === uid;
     if (eLider && !eraLider) {
       if (!isEstrela) lancarConfete(80);
       document.getElementById("lov-emoji").textContent = '🏆';

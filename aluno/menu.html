@@ -71,7 +71,8 @@
       .mini-stat-value{font-size:17px}
       .top3-card{padding:7px 9px;gap:6px;}
       .top3-nome{font-size:12px;}
-      .badge-no1-card{font-size:9px;padding:2px 8px;right:8px;top:-8px;}
+      .badge-no1-card{font-size:9px;padding:2px 7px;right:8px;top:-8px;}
+      #tabuada-game-card{margin-top:14px;}
       .tabuada-btns{flex-direction:column;}
     }
     @media(max-width:768px){
@@ -832,7 +833,7 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
   if (rankSnap?.exists()) {
     rankSnap.forEach(child => {
       const v = child.val();
-      if (v?.nome) rankAll.push(v);
+      if (v?.nome) rankAll.push({ ...v, _uid: child.key });
     });
     rankAll.sort((a, b) => (b.melhor_nivel||0) - (a.melhor_nivel||0) || (b.total_partidas||0) - (a.total_partidas||0));
   }
@@ -840,8 +841,10 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
   const liderGeral = rankAll[0] || null;
   const liderTurma = rankTurma[0] || null;
 
-  const myGeralIdx = rankAll.findIndex(r => r.nome === alunos[0] && r.turma === turma);
-  const myTurmaIdx = rankTurma.findIndex(r => r.nome === alunos[0] && r.turma === turma);
+  const myUid      = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+  const myGeralIdx = rankAll.findIndex(r => r._uid === myUid);
+  const myTurmaIdx = rankTurma.findIndex(r => r._uid === myUid);
+  console.log('[Tabuada Rank] myUid:', myUid, '| myGeralIdx:', myGeralIdx, '| top5:', rankAll.slice(0,5).map(r => `${r._uid}=${r.melhor_nivel}`));
   // Standard ranking: empates → mesma posição, próximo pula
   { let p = 0, n = 0, l = null;
     rankAll.forEach(r => { n++; const v=r.melhor_nivel||0; if(v!==l){p=n;l=v;} r._pos=p; }); }
@@ -900,7 +903,7 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
     const top3    = rankAll.slice(0, 3);
     const tabTop3Html = top3.length ? top3.map((d, i) => {
       const pos = d._pos || (i + 1);
-      const isMe = alunos.includes(d.nome) && d.turma === turma;
+      const isMe = d._uid === myUid;
       return renderRankRow({ pos, nome: esc(d.nome), sub: `Turma ${esc(d.turma)}`, valor: `Nv ${d.melhor_nivel || 1}`, valorLabel: 'tabuada', isMe });
     }).join('')
     : '<p style="font-size:13px;color:var(--text-muted);padding:4px 0">Nenhum aluno jogou ainda.</p>';
