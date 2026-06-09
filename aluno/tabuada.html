@@ -1206,6 +1206,10 @@ function buildGame(skipBossModal = false) {
 function _buildGameInternal() {
   stopTimer();
   _atualizarPresenca();
+  if (!_isProfMode && !_isModoTesteAtivo) (async () => { try {
+    const { atualizarPresenca } = await import('/js/presenca.js');
+    await atualizarPresenca({ status: 'ocupado', pagina: 'tabuada' });
+  } catch(_) {} })();
   // Limpa clones de voo e confetes de partidas anteriores
   document.querySelectorAll('.fly-clone, .confete-wrap').forEach(c => c.remove());
   const cfg = getLevelConfig(nivelAtual);
@@ -1778,6 +1782,17 @@ window.profIr = function() {
   const v = Math.max(1, Math.min(50, parseInt(document.getElementById('prof-nivel-inp')?.value) || 1));
   window.location.href = `/aluno/tabuada.html?nivel=${v}`;
 };
+
+// Restaurar status ao voltar da tabuada
+document.getElementById('btn-voltar')?.addEventListener('click', () => {
+  if (_isProfMode || _isModoTesteAtivo) return;
+  (async () => { try {
+    const { atualizarPresenca } = await import('/js/presenca.js');
+    const { getPerfil } = await import('/js/db.js');
+    const _p = await getPerfil(uid).catch(() => ({}));
+    await atualizarPresenca({ status: _p?.duelos_disponivel !== false ? 'disponivel' : 'indisponivel', pagina: 'menu' });
+  } catch(_) {} })();
+});
 
 // ── Start ─────────────────────────────────────────────────────
 buildGame();

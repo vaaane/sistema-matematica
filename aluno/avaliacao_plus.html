@@ -1700,6 +1700,13 @@ async function encerrarSessao(motivo) {
     f2:   { bruta: f2bruta, aplicado: f2aplicado, acertos: st.acertos, erros: st.erros },
   });
 
+  if (!isTeste) (async () => { try {
+    const { atualizarPresenca } = await import('/js/presenca.js');
+    const { getPerfil } = await import('/js/db.js');
+    const _pUid = (turma + '_' + alunos[0]).replace(/[.#$\[\]/\s]/g, '_');
+    const _p = await getPerfil(_pUid).catch(() => ({}));
+    await atualizarPresenca({ status: _p?.duelos_disponivel !== false ? 'disponivel' : 'indisponivel', pagina: 'atividades' });
+  } catch(_) {} })();
   mostrarResultado(motivo, f2aplicado, f2bruta, novoMelhorF2, bonusFim);
 }
 
@@ -1860,6 +1867,10 @@ window.iniciarNovaTentativa = async function() {
   await _registrarInicioTentativa(novaTent);
 
   iniciarSessaoTimer();
+  if (!isTeste) (async () => { try {
+    const { atualizarPresenca } = await import('/js/presenca.js');
+    await atualizarPresenca({ status: 'indisponivel', pagina: 'avaliacao' });
+  } catch(_) {} })();
   // Iniciar Fase 1
   st.f1.inicioMs = Date.now();
   st.questaoAtual = st.f1.questoes[0];
@@ -2007,6 +2018,10 @@ window.iniciarJogo = async function() {
   await _registrarInicioTentativa(_tentNum);
 
   iniciarSessaoTimer();
+  if (!isTeste) (async () => { try {
+    const { atualizarPresenca } = await import('/js/presenca.js');
+    await atualizarPresenca({ status: 'indisponivel', pagina: 'avaliacao' });
+  } catch(_) {} })();
   // Iniciar Fase 1
   st.f1.inicioMs = Date.now();
   st.questaoAtual = st.f1.questoes[0];

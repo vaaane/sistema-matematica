@@ -1556,6 +1556,14 @@ function mostrarFim(motivo, novoMelhor, bonusFim, earnedConquistas = []) {
       }, 600 + i * 600);
     });
   }
+
+  if (!isTeste) (async () => { try {
+    const { atualizarPresenca } = await import('/js/presenca.js');
+    const { getPerfil } = await import('/js/db.js');
+    const _pUid = (turma + '_' + alunos[0]).replace(/[.#$\[\]/\s]/g, '_');
+    const _p = await getPerfil(_pUid).catch(() => ({}));
+    await atualizarPresenca({ status: _p?.duelos_disponivel !== false ? 'disponivel' : 'indisponivel', pagina: 'atividades' });
+  } catch(_) {} })();
 }
 
 // ── Reiniciar ─────────────────────────────────────────────────
@@ -1686,6 +1694,10 @@ window.iniciarJogo = async function() {
   }
 
   iniciarGlobalTimer();
+  if (!isTeste) (async () => { try {
+    const { atualizarPresenca } = await import('/js/presenca.js');
+    await atualizarPresenca({ status: 'indisponivel', pagina: 'competicao' });
+  } catch(_) {} })();
   proxima();
 };
 

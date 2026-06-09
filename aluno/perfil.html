@@ -202,9 +202,25 @@
 
       <!-- Tab: Preferências (placeholder Etapa 6) -->
       <div class="tab-pane" id="tab-prefs">
-        <div class="tab-placeholder">
-          <div class="icon">⚙️</div>
-          <p>Configurações de duelo e preferências chegam em breve.</p>
+        <div class="pref-section">
+          <div style="display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;">
+            <div style="font-size:28px">⚔️</div>
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:700">Disponível para duelos</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:3px;line-height:1.5">
+                Quando ativo, outros alunos podem te ver online e enviar desafios.<br>
+                <strong style="color:var(--red,#ef4444)">Desativado automaticamente</strong>
+                durante Avaliação+ e Competição+.
+              </div>
+            </div>
+            <div id="duelSwitch"
+                 style="width:52px;height:28px;border-radius:14px;background:var(--card2);border:1px solid var(--border);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0"
+                 onclick="toggleDuelAvail()">
+              <div id="duelSwitchThumb"
+                   style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.3)">
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -412,6 +428,34 @@ window.enviarApelido = async function() {
 };
 
 renderApelidoSection();
+
+// ── Toggle disponibilidade para duelos ────────────────────────
+let _duelDisponivel = perfil?.duelos_disponivel !== false;
+
+function renderDuelSwitch() {
+  const sw    = document.getElementById('duelSwitch');
+  const thumb = document.getElementById('duelSwitchThumb');
+  if (!sw || !thumb) return;
+  if (_duelDisponivel) {
+    sw.style.background   = 'var(--green, #22c55e)';
+    sw.style.borderColor  = 'var(--green, #22c55e)';
+    thumb.style.transform = 'translateX(24px)';
+  } else {
+    sw.style.background   = 'var(--card2)';
+    sw.style.borderColor  = 'var(--border)';
+    thumb.style.transform = 'translateX(0)';
+  }
+}
+
+window.toggleDuelAvail = async function() {
+  _duelDisponivel = !_duelDisponivel;
+  renderDuelSwitch();
+  await update(ref(db, `perfis/${uid}`), { duelos_disponivel: _duelDisponivel });
+  const { atualizarPresenca } = await import('/js/presenca.js');
+  await atualizarPresenca({ status: _duelDisponivel ? 'disponivel' : 'indisponivel' });
+};
+
+renderDuelSwitch();
 </script>
 </body>
 </html>
