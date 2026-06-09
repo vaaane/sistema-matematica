@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aquecimento Diário</title>
+<title>🔥 Treino do Dia — Sistema de Matemática</title>
 <link rel="stylesheet" href="/css/main.css">
 <style>
   :root {
@@ -49,6 +49,7 @@
   .aq-hero  { text-align: center; margin-bottom: 24px; }
   .aq-icon  { font-size: 72px; display: block; line-height: 1; margin-bottom: 8px; animation: pulse-fire 2s ease-in-out infinite; }
   @keyframes pulse-fire { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+  .aq-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--orange); margin-bottom: 4px; }
   .aq-tema  { font-size: 22px; font-weight: 800; font-family: 'Rajdhani', sans-serif; }
   .aq-sub   { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
   .aq-stats { display: flex; gap: 12px; margin: 20px 0; }
@@ -60,7 +61,24 @@
   .aq-dot   { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 14px; }
   .aq-dot.feito   { background: var(--green); border-color: var(--green); }
   .aq-dot.hoje    { border-color: var(--orange); }
+  .aq-dot.futuro  { opacity: .3; }
   .aq-day-lbl { font-size: 9px; color: var(--text-muted); }
+  .aq-progress-wrap {
+    background: var(--card2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px; margin: 16px 0;
+  }
+  .aq-progress-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+  }
+  .aq-progress-track {
+    height: 8px; background: rgba(255,255,255,.06); border-radius: 99px; overflow: hidden;
+  }
+  .aq-progress-fill {
+    height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, var(--fire1), var(--fire2));
+    transition: width .6s ease;
+    box-shadow: 0 0 8px rgba(255,107,0,.4);
+  }
   .aq-hud   { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
   .aq-timer { font-size: 22px; font-weight: 800; font-family: 'Orbitron', sans-serif; color: var(--cyan); min-width: 56px; }
   .aq-num   { font-size: 12px; color: var(--text-muted); flex: 1; }
@@ -89,8 +107,8 @@
   <div class="main">
     <div class="topbar">
       <div class="topbar-left">
-        <div class="topbar-title">🔥 Aquecimento</div>
-        <div class="topbar-sub">Exercício diário</div>
+        <div class="topbar-title">🔥 Treino do Dia</div>
+        <div class="topbar-sub">20 questões · 2 minutos</div>
       </div>
       <div class="topbar-right">
         <div id="topbar-avatar-circle" class="avatar-circle" style="width:36px;height:36px;cursor:pointer" onclick="window.location.href='/aluno/perfil.html'"></div>
@@ -111,7 +129,7 @@ import { requireAluno, renderSidebarAluno, clearSession } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
 import { ref, get, set } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { getPerfil, adicionarXP, registrarAtividadeDia } from '/js/db.js';
-import { avatarHtml, avatarConfigDefault } from '/js/gamificacao.js';
+import { avatarUrl, avatarConfigDefault } from '/js/gamificacao.js';
 
 const sess = requireAluno('/index.html');
 const { alunos, turma } = sess;
@@ -128,10 +146,18 @@ window.sair = () => { clearSession(); window.location.href = '/index.html'; };
 const perfil = await getPerfil(uid);
 try {
   const el = document.getElementById('topbar-avatar-circle');
-  if (el) el.innerHTML = avatarHtml(perfil?.avatar || avatarConfigDefault(), alunos[0], '100%');
+  if (el) {
+    const _url   = avatarUrl(perfil?.avatar || avatarConfigDefault());
+    const _letra = (alunos[0] || '?')[0].toUpperCase();
+    el.innerHTML = `<div style="width:100%;height:100%;position:relative;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#7F77DD,#00d4ff)"><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;z-index:0">${_letra}</span><img src="${_url}" alt="" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:1;border-radius:50%" onerror="this.style.display='none'"></div>`;
+  }
 } catch(_) {}
 
 const hoje = new Date().toISOString().slice(0, 10);
+
+const TOTAL_QUESTOES = 20;
+const TIMER_INICIAL  = 120;
+const META_TREINOS   = 30;
 
 const TEMAS = {
   0: { nome: 'Mix',           ops: ['+','-','x','/'], emoji: '🎲' },
@@ -167,60 +193,140 @@ function gerarOpcoes(resp) {
   return [...erradas, resp].sort(() => Math.random()-0.5);
 }
 
-const estado = { acertos:0, erros:0, questaoNum:0, timer:180, finalizado:false, timerInterval:null };
+const estado = { acertos:0, erros:0, questaoNum:0, timer:TIMER_INICIAL, finalizado:false, timerInterval:null };
 
 async function carregarHistoricoSemana() {
   const dots = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(); d.setDate(d.getDate()-i);
-    const dStr = d.toISOString().slice(0,10);
+  const hoje = new Date();
+  const diaSemana = hoje.getDay(); // 0=Dom, 1=Seg...5=Sex, 6=Sáb
+
+  const seg = new Date(hoje);
+  seg.setDate(hoje.getDate() - (diaSemana === 0 ? 6 : diaSemana - 1));
+
+  const NOMES = ['Seg','Ter','Qua','Qui','Sex'];
+  for (let i = 0; i < 5; i++) {
+    const d = new Date(seg);
+    d.setDate(seg.getDate() + i);
+    const dStr = d.toISOString().slice(0, 10);
+    const hojeStr = hoje.toISOString().slice(0, 10);
     const snap = await get(ref(db, `aquecimento/${uid}/${dStr}`));
-    dots.push({ feito: snap.exists(), hoje: dStr===hoje, diaNome: ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][d.getDay()] });
+    dots.push({
+      feito:   snap.exists(),
+      hoje:    dStr === hojeStr,
+      futuro:  d > hoje && dStr !== hojeStr,
+      diaNome: NOMES[i],
+    });
   }
   return dots;
 }
 
 function renderDots(dots) {
-  return dots.map(d =>
-    `<div class="aq-day">` +
-    `<div class="aq-dot${d.feito?' feito':''}${d.hoje?' hoje':''}">${d.feito?'✓':''}</div>` +
-    `<div class="aq-day-lbl">${d.diaNome}</div></div>`
-  ).join('');
+  return dots.map(d => {
+    let dotClass = 'aq-dot';
+    let inner = '';
+    if (d.feito)        { dotClass += ' feito'; inner = '✓'; }
+    else if (d.futuro)  { dotClass += ' futuro'; inner = '—'; }
+    else if (d.hoje)    { dotClass += ' hoje'; inner = ''; }
+    return `<div class="aq-day">
+      <div class="${dotClass}">${inner}</div>
+      <div class="aq-day-lbl">${d.diaNome}</div>
+    </div>`;
+  }).join('');
+}
+
+async function getTotalTreinos() {
+  const snap = await get(ref(db, `aquecimento/${uid}`));
+  if (!snap.exists()) return 0;
+  return Object.keys(snap.val()).length;
 }
 
 async function renderLobby() {
-  const dots = await carregarHistoricoSemana();
-  const sa = perfil?.streak_atual||0, sm = perfil?.streak_maximo||0;
+  const [dots, totalTreinos] = await Promise.all([
+    carregarHistoricoSemana(),
+    getTotalTreinos(),
+  ]);
+  const sa = perfil?.streak_atual || 0;
+  const mediaBruta = perfil?.treino_media_acertos;
+  const media = mediaBruta != null ? Math.round(mediaBruta * 10) / 10 : '—';
+  const progPct = Math.min(100, Math.round((totalTreinos / META_TREINOS) * 100));
+
   document.getElementById('aq-main').innerHTML = `
     <div class="aq-card">
       <div class="aq-hero">
         <span class="aq-icon">${temaHoje.emoji}</span>
+        <div class="aq-label">Treino do Dia</div>
         <div class="aq-tema">${temaHoje.nome}</div>
-        <div class="aq-sub">10 questões · 3 minutos${temaHoje.xpBonus?' · 🎁 XP×1.5 hoje!':''}</div>
+        <div class="aq-sub">20 questões · 2 minutos${temaHoje.xpBonus ? ' · 🎁 XP×1.5 hoje!' : ''}</div>
+        <div class="aq-week" style="margin-top:18px">${renderDots(dots)}</div>
       </div>
+
       <div class="aq-stats">
-        <div class="aq-stat"><div class="val">${sa>0?sa+'🔥':'0'}</div><div class="lbl">Sequência</div></div>
-        <div class="aq-stat"><div class="val" style="color:var(--cyan)">${sm}</div><div class="lbl">Recorde</div></div>
+        <div class="aq-stat">
+          <div class="val" style="color:var(--orange)">${sa > 0 ? sa + '🔥' : '0'}</div>
+          <div class="lbl">Sequência</div>
+        </div>
+        <div class="aq-stat">
+          <div class="val" style="color:var(--cyan)">${totalTreinos}</div>
+          <div class="lbl">Treinos feitos</div>
+        </div>
+        <div class="aq-stat">
+          <div class="val" style="color:var(--green)">${media !== '—' ? media + '/20' : '—'}</div>
+          <div class="lbl">Média acertos</div>
+        </div>
       </div>
-      <div class="aq-week">${renderDots(dots)}</div>
-      <button class="btn-comecar" onclick="iniciarJogo()">Começar aquecimento ▶</button>
+
+      <div class="aq-progress-wrap">
+        <div class="aq-progress-header">
+          <span style="font-size:12px;font-weight:700">🎯 Meta: ${META_TREINOS} treinos</span>
+          <span style="font-size:11px;color:var(--muted)">${totalTreinos}/${META_TREINOS}</span>
+        </div>
+        <div class="aq-progress-track">
+          <div class="aq-progress-fill" style="width:${progPct}%"></div>
+        </div>
+        ${totalTreinos >= META_TREINOS
+          ? `<div style="font-size:11px;color:var(--green);margin-top:4px;font-weight:700">🏆 Meta conquistada!</div>`
+          : `<div style="font-size:10px;color:var(--muted);margin-top:4px">${META_TREINOS - totalTreinos} treinos para a conquista</div>`
+        }
+      </div>
+
+      <button class="btn-comecar" onclick="iniciarJogo()">⚡ Começar Treino</button>
     </div>`;
 }
 
 async function renderJaFeito(dados) {
-  const dots = await carregarHistoricoSemana();
+  const [dots, totalTreinos] = await Promise.all([
+    carregarHistoricoSemana(),
+    getTotalTreinos(),
+  ]);
+  const progPct = Math.min(100, Math.round((totalTreinos / META_TREINOS) * 100));
+
   document.getElementById('aq-main').innerHTML = `
     <div class="aq-card">
       <div style="text-align:center;margin-bottom:20px">
         <div style="font-size:48px">✅</div>
-        <div style="font-size:18px;font-weight:800;font-family:'Rajdhani',sans-serif;margin-top:8px">Aquecimento feito hoje!</div>
-        <div style="font-size:13px;color:var(--text-muted);margin-top:4px">${dados.acertos} acertos · +${dados.xp_ganho} XP · ${dados.tema}</div>
-      </div>
-      <div style="text-align:center;margin:16px 0">
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Próximo aquecimento em</div>
-        <div class="aq-countdown" id="aq-countdown">--:--:--</div>
+        <div style="font-size:18px;font-weight:800;font-family:'Rajdhani',sans-serif;margin-top:8px">Treino de hoje concluído!</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px">${dados.acertos}/20 acertos · +${dados.xp_ganho} XP · ${dados.tema}</div>
       </div>
       <div class="aq-week" style="justify-content:center;margin:16px 0">${renderDots(dots)}</div>
+
+      <div class="aq-progress-wrap">
+        <div class="aq-progress-header">
+          <span style="font-size:12px;font-weight:700">🎯 Meta: ${META_TREINOS} treinos</span>
+          <span style="font-size:11px;color:var(--muted)">${totalTreinos}/${META_TREINOS}</span>
+        </div>
+        <div class="aq-progress-track">
+          <div class="aq-progress-fill" style="width:${progPct}%"></div>
+        </div>
+        ${totalTreinos >= META_TREINOS
+          ? `<div style="font-size:11px;color:var(--green);margin-top:4px;font-weight:700">🏆 Meta conquistada!</div>`
+          : `<div style="font-size:10px;color:var(--muted);margin-top:4px">${META_TREINOS - totalTreinos} treinos para a conquista</div>`
+        }
+      </div>
+
+      <div style="text-align:center;margin:16px 0">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Próximo treino em</div>
+        <div class="aq-countdown" id="aq-countdown">--:--:--</div>
+      </div>
       <button class="btn-menu" onclick="window.location.href='/aluno/menu.html'">← Voltar ao início</button>
     </div>`;
   countdownMeianoite();
@@ -238,12 +344,12 @@ function countdownMeianoite() {
 
 window.iniciarJogo = function() {
   estado.acertos=0; estado.erros=0; estado.questaoNum=0;
-  estado.timer=180; estado.finalizado=false;
+  estado.timer=TIMER_INICIAL; estado.finalizado=false;
   document.getElementById('aq-main').innerHTML = `
     <div class="aq-card">
       <div class="aq-hud">
-        <div class="aq-timer" id="aq-timer">3:00</div>
-        <div class="aq-num"  id="aq-num">Questão 1</div>
+        <div class="aq-timer" id="aq-timer">2:00</div>
+        <div class="aq-num"  id="aq-num">Questão 1 de ${TOTAL_QUESTOES}</div>
         <div class="aq-score"><span class="ac">✓ <span id="aq-acertos">0</span></span><span class="er">✗ <span id="aq-erros">0</span></span></div>
       </div>
       <div id="aq-questao"></div>
@@ -256,7 +362,7 @@ function renderQuestao() {
   if (estado.finalizado) return;
   const q = gerarQuestao();
   const opts = gerarOpcoes(q.resp);
-  document.getElementById('aq-num').textContent = `Questão ${estado.questaoNum+1}`;
+  document.getElementById('aq-num').textContent = `Questão ${estado.questaoNum + 1} de ${TOTAL_QUESTOES}`;
   document.getElementById('aq-questao').innerHTML =
     `<div class="aq-expr"><span>${q.expr} = ?</span></div>` +
     `<div class="aq-opts">${opts.map(o=>`<button class="opcao" data-valor="${o}" onclick="responder(${o},${q.resp},this)">${o}</button>`).join('')}</div>`;
@@ -272,7 +378,7 @@ window.responder = function(escolha, respCorreta, btnEl) {
   document.getElementById('aq-acertos').textContent = estado.acertos;
   document.getElementById('aq-erros').textContent   = estado.erros;
   estado.questaoNum++;
-  if (estado.questaoNum >= 10) setTimeout(encerrarAquecimento, 600);
+  if (estado.questaoNum >= TOTAL_QUESTOES) setTimeout(encerrarAquecimento, 600);
   else setTimeout(renderQuestao, 600);
 };
 
@@ -290,42 +396,74 @@ async function encerrarAquecimento() {
   if (estado.finalizado) return;
   estado.finalizado = true;
   clearInterval(estado.timerInterval);
+
   const total = estado.questaoNum;
-  const taxa  = total>0 ? estado.acertos/total : 0;
-  let xp=5;
-  if (taxa===1) xp=35; else if (taxa>=0.7) xp=20; else if (taxa>=0.4) xp=12;
-  if (temaHoje.xpBonus) xp=Math.round(xp*1.5);
+  const taxa  = total > 0 ? estado.acertos / total : 0;
+
+  let xp = 5;
+  if (taxa === 1)       xp = 40;
+  else if (taxa >= 0.8) xp = 25;
+  else if (taxa >= 0.6) xp = 15;
+  else if (taxa >= 0.4) xp = 8;
+  if (temaHoje.xpBonus) xp = Math.round(xp * 1.5);
 
   await set(ref(db, `aquecimento/${uid}/${hoje}`), {
-    acertos:estado.acertos, erros:estado.erros, questoes:total, xp_ganho:xp, tema:temaHoje.nome, ts:Date.now()
+    acertos: estado.acertos, erros: estado.erros,
+    questoes: total, xp_ganho: xp,
+    tema: temaHoje.nome, ts: Date.now()
   });
+
+  try {
+    const { update } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+    const totalTreinos = await getTotalTreinos();
+    const mediaAtual = perfil?.treino_media_acertos || 0;
+    const totalAnt   = totalTreinos - 1;
+    const novaMedia  = totalAnt <= 0
+      ? estado.acertos
+      : (mediaAtual * totalAnt + estado.acertos) / totalTreinos;
+    await update(ref(db, `perfis/${uid}`), {
+      treino_media_acertos: Math.round(novaMedia * 10) / 10,
+    });
+  } catch(e) {}
+
   await adicionarXP(uid, xp);
   await registrarAtividadeDia(uid);
 
-  try { const {verificarConquistas}=await import('/js/conquistas.js'); await verificarConquistas(uid,{}); } catch(e){}
+  try { const { verificarConquistas } = await import('/js/conquistas.js'); await verificarConquistas(uid, {}); } catch(e) {}
+
   try {
-    const {push}=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
-    const nome=perfil?.apelido_ativo||alunos[0];
-    if (taxa===1) await set(push(ref(db,'feed_global')),{tipo:'aquecimento',uid,nome,texto:`🔥 ${nome} zerou o aquecimento de hoje com 100%!`,ts:Date.now()});
-  } catch(e){}
+    const { push } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+    const nome = perfil?.apelido_ativo || alunos[0];
+    if (taxa === 1) {
+      await set(push(ref(db, 'feed_global')), {
+        tipo: 'treino', uid, nome,
+        texto: `🔥 ${nome} zerou o Treino do Dia com 20/20!`,
+        ts: Date.now()
+      });
+    }
+  } catch(e) {}
 
   mostrarResultado(xp, taxa, total);
 }
 
 function mostrarResultado(xp, taxa, total) {
-  const pct=Math.round(taxa*100);
-  const nota=taxa===1?'🏆 Perfeito!':taxa>=0.7?'⭐ Muito bom!':taxa>=0.4?'👍 Bom trabalho!':'💪 Continue assim!';
-  const cor=pct===100?'var(--gold)':pct>=70?'var(--green)':'var(--orange)';
+  const acertos = estado.acertos;
+  const pct = Math.round(taxa * 100);
+  const nota = taxa === 1   ? '🏆 Perfeito!'
+             : taxa >= 0.8  ? '⭐ Muito bom!'
+             : taxa >= 0.6  ? '👍 Bom trabalho!'
+             :                '💪 Continue assim!';
+  const cor = pct === 100 ? 'var(--gold)' : pct >= 70 ? 'var(--green)' : 'var(--orange)';
   document.getElementById('aq-main').innerHTML = `
     <div class="aq-card aq-result">
-      <div style="font-size:42px;margin-bottom:4px">${pct===100?'🎯':'🔥'}</div>
-      <div class="big-score" style="color:${cor}">${pct}%</div>
+      <div style="font-size:42px;margin-bottom:4px">${pct === 100 ? '🎯' : '🔥'}</div>
+      <div class="big-score" style="color:${cor}">${acertos}<span style="font-size:28px;color:var(--muted)">/20</span></div>
       <div style="font-size:15px;font-weight:700;margin:6px 0">${nota}</div>
       <div class="xp-badge">+${xp} XP</div>
-      <div style="display:flex;gap:24px;justify-content:center;margin:16px 0;font-size:13px">
-        <span>✅ ${estado.acertos} acertos</span>
+      <div style="display:flex;gap:20px;justify-content:center;margin:16px 0;font-size:13px">
+        <span>✅ ${acertos} acertos</span>
         <span>❌ ${estado.erros} erros</span>
-        <span>📝 ${total} questões</span>
+        <span>⏱ ${TIMER_INICIAL - estado.timer}s usados</span>
       </div>
       <button class="btn-menu" onclick="window.location.href='/aluno/menu.html'">← Voltar ao início</button>
     </div>`;

@@ -337,13 +337,15 @@ if (_streakAtual > 0 && perfil.streak_maximo)
 
 // Atualizar avatar no topbar e hero
 function _aplicarAvatar(cfg) {
-  const html = avatarHtml(cfg, alunos[0], '100%');
+  const _url   = avatarUrl(cfg);
+  const _letra = (alunos[0] || '?')[0].toUpperCase();
+  const _av    = `<div style="width:100%;height:100%;position:relative;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#7F77DD,#00d4ff)"><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;z-index:0">${_letra}</span><img src="${_url}" alt="" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:1;border-radius:50%" onerror="this.style.display='none'"></div>`;
   const hero = document.getElementById('avatar-circle-hero');
   const top  = document.getElementById('topbar-avatar-circle');
   const prev = document.getElementById('editor-preview-circle');
-  if (hero) hero.innerHTML = html;
-  if (top)  top.innerHTML  = html;
-  if (prev) prev.innerHTML = html;
+  if (hero) hero.innerHTML = _av;
+  if (top)  top.innerHTML  = _av;
+  if (prev) prev.innerHTML = _av;
 }
 _aplicarAvatar(avatarConfig);
 
@@ -558,19 +560,30 @@ async function carregarConquistas() {
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
                   gap:8px;margin-bottom:20px">
-        ${conquistadas.map(c => `
-          <div style="background:var(--card);border:1px solid rgba(245,158,11,.3);
+        ${conquistadas.map(c => {
+          const dataStr = conqus[c.id]?.ts
+            ? new Date(conqus[c.id].ts).toLocaleDateString('pt-BR')
+            : '';
+          const isDiploma = c.id === 'tabuada_300';
+          return `
+          <div style="background:${isDiploma ? 'rgba(245,158,11,.04)' : 'var(--card)'};
+                      border:1px solid ${isDiploma ? 'rgba(245,158,11,.5)' : 'rgba(245,158,11,.3)'};
                       border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:4px">
             <div style="font-size:26px">${c.emoji}</div>
             <div style="font-size:12px;font-weight:700">${c.nome}</div>
             <div style="font-size:10px;color:var(--muted)">${c.desc}</div>
-            <div style="font-size:9px;color:var(--gold);margin-top:4px">
-              ${conqus[c.id]?.ts
-                ? new Date(conqus[c.id].ts).toLocaleDateString('pt-BR')
-                : ''}
-            </div>
-          </div>
-        `).join('')}
+            ${dataStr ? `<div style="font-size:9px;color:var(--gold);margin-top:2px">${dataStr}</div>` : ''}
+            ${isDiploma ? `
+              <a href="/aluno/diploma_tabuada.html"
+                 style="margin-top:8px;display:flex;align-items:center;justify-content:center;
+                        gap:6px;background:linear-gradient(135deg,#c9a84c,#f7e98e);
+                        color:#1a0f00;border-radius:8px;padding:8px 12px;
+                        font-size:11px;font-weight:800;text-decoration:none;letter-spacing:.5px">
+                🎓 Ver meu diploma
+              </a>
+            ` : ''}
+          </div>`;
+        }).join('')}
       </div>
     ` : ''}
 

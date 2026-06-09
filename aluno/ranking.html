@@ -133,11 +133,15 @@ getAlunoPreferencia(turma, alunos[0], 'robotica').then(r => {
 document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
 (async () => { try {
   const { getPerfil } = await import('/js/db.js');
-  const { avatarHtml, avatarConfigDefault } = await import('/js/gamificacao.js');
+  const { avatarUrl: _avUrl, avatarConfigDefault: _avDef } = await import('/js/gamificacao.js');
   const _aUid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
   const _p = await getPerfil(_aUid);
   const _c = document.getElementById('topbar-avatar-circle');
-  if (_c) _c.innerHTML = avatarHtml(_p.avatar || avatarConfigDefault(), alunos[0], '100%');
+  if (_c) {
+    const _url   = _avUrl(_p.avatar || _avDef());
+    const _letra = (alunos[0] || '?')[0].toUpperCase();
+    _c.innerHTML = `<div style="width:100%;height:100%;position:relative;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#7F77DD,#00d4ff)"><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;z-index:0">${_letra}</span><img src="${_url}" alt="" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:1;border-radius:50%" onerror="this.style.display='none'"></div>`;
+  }
 } catch(_) {} })();
 
 (async () => { try {

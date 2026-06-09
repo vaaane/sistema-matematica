@@ -193,6 +193,35 @@
       .online-grid { grid-template-columns: repeat(2, 1fr); }
       .diff-select { grid-template-columns: 1fr; }
     }
+
+    /* ── Pódio de duelos ── */
+    .podium-outer { display:flex; align-items:flex-end; justify-content:center; gap:10px; padding:24px 4px 0; }
+    .podium-spot  { display:flex; flex-direction:column; align-items:center; flex:1; max-width:140px; position:relative; }
+    .podium-spot.p1 { max-width:170px; }
+    @media(max-width:500px) {
+      .podium-outer { flex-wrap:wrap; padding:10px 4px 0; gap:8px; }
+      .podium-spot  { max-width:none!important; flex:none; }
+      .podium-spot.p1 { width:100%; order:-1; margin-bottom:4px; }
+      .podium-spot.p2,.podium-spot.p3 { width:calc(50% - 4px); }
+    }
+    .podium-crown  { font-size:18px; line-height:1; margin-bottom:2px; filter:drop-shadow(0 0 6px rgba(255,200,0,.8)); }
+    .podium-av     { width:44px; height:44px; border-radius:50%; overflow:hidden; border:2px solid #F59E0B; margin-bottom:5px; background:var(--card2); flex-shrink:0; position:relative; }
+    .podium-spot.p1 .podium-av { width:54px; height:54px; border-width:3px; }
+    .podium-spot.p2 .podium-av { border-color:#9CA3AF; }
+    .podium-spot.p3 .podium-av { border-color:#CD853F; }
+    .podium-av img { width:100%; height:100%; object-fit:cover; position:relative; z-index:1; display:block; }
+    .podium-av-letra { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:800; color:#fff; z-index:0; }
+    .podium-name  { font-size:11px; font-weight:800; text-align:center; width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 3px; margin-bottom:2px; }
+    .podium-spot.p1 .podium-name { font-size:13px; }
+    .podium-turma { font-size:10px; color:var(--text-muted); text-align:center; margin-bottom:3px; }
+    .podium-score { font-size:12px; font-weight:800; text-align:center; margin-bottom:6px; }
+    .podium-stand { display:flex; align-items:center; justify-content:center; width:100%; border-radius:6px 6px 0 0; font-size:18px; font-weight:800; color:#fff; }
+    .podium-spot.p1 .podium-stand { font-size:22px; }
+    .podium-spot.g1 { background:rgba(245,158,11,.09); border-radius:12px; padding:8px 5px; animation:gold-glow 2.5s ease-in-out infinite; }
+    .podium-spot.g2 { background:rgba(156,163,175,.07); border-radius:10px; padding:5px 3px; }
+    .podium-spot.g3 { background:rgba(180,83,9,.07); border-radius:10px; padding:5px 3px; }
+    @keyframes gold-glow { 0%,100%{box-shadow:0 0 0 rgba(245,158,11,0)} 50%{box-shadow:0 0 18px rgba(245,158,11,.25)} }
+    .podium-me { outline:2.5px solid var(--purple); outline-offset:2px; border-radius:8px; }
   </style>
 </head>
 <body>
@@ -342,7 +371,11 @@ const meuApelido = perfil?.apelido_ativo || alunos[0];
 // Avatar topbar
 (async () => { try {
   const _c = document.getElementById('topbar-avatar-circle');
-  if (_c) _c.innerHTML = avatarHtml(perfil?.avatar || avatarConfigDefault(), alunos[0], '100%');
+  if (_c) {
+    const url   = avatarUrl(perfil?.avatar || avatarConfigDefault());
+    const letra = (alunos[0] || '?')[0].toUpperCase();
+    _c.innerHTML = `<div style="width:100%;height:100%;position:relative;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#7F77DD,#00d4ff)"><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;z-index:0">${letra}</span><img src="${url}" alt="" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:1;border-radius:50%" onerror="this.style.display='none'"></div>`;
+  }
 } catch(_) {} })();
 
 // ── Presença ──────────────────────────────────────────────────
@@ -835,7 +868,7 @@ async function carregarRankingDuelos() {
   snap.forEach(c => {
     const v = c.val();
     if (!v?.nome) return;
-    if ((v.duelos_total || 0) === 0) return;
+    if ((v.duelos_vitorias || 0) === 0 && (v.duelos_total || 0) === 0) return;
     if (v.nome?.includes('PROFESSOR') || v.nome?.includes('TESTE')) return;
     if (v.turma === 'TESTE') return;
     lista.push({
@@ -857,44 +890,84 @@ async function carregarRankingDuelos() {
   }
 
   const { avatarUrl, avatarConfigDefault } = await import('/js/gamificacao.js');
-  const posEmoji = ['👑', '🥈', '🥉'];
+
+  const COLORS = ['#F59E0B','#9CA3AF','#CD853F'];
+  const STANDS = [
+    { h: 70, bg: 'linear-gradient(135deg,#F59E0B,#D97706)' },
+    { h: 50, bg: 'linear-gradient(135deg,#9CA3AF,#6B7280)' },
+    { h: 36, bg: 'linear-gradient(135deg,#CD853F,#92400E)' },
+  ];
+
+  const top3 = lista.slice(0, 3);
+  const resto = lista.slice(3, 30);
+
+  function renderPodiumAv(p, size) {
+    const url   = avatarUrl(p.avatar || avatarConfigDefault());
+    const letra = (p.nome || '?')[0].toUpperCase();
+    return `<div class="podium-av" style="width:${size}px;height:${size}px">
+      <span class="podium-av-letra">${letra}</span>
+      <img src="${url}" alt="" onerror="this.style.display='none'">
+    </div>`;
+  }
+
+  function spotHtml(p, slotIdx) {
+    if (!p) return `<div class="podium-spot p${slotIdx+1}"></div>`;
+    const isMe  = p.uid === uid;
+    const st    = STANDS[slotIdx];
+    const taxa  = p.total > 0 ? Math.round((p.vitorias / p.total) * 100) : 0;
+    const crown = slotIdx === 0 ? '<div class="podium-crown">👑</div>' : '';
+    const sizes = [54, 44, 44];
+    return `<div class="podium-spot p${slotIdx+1} g${slotIdx+1}${isMe?' podium-me':''}">
+      ${crown}
+      ${renderPodiumAv(p, sizes[slotIdx])}
+      <div class="podium-name" style="color:${isMe?'var(--purple)':'var(--text)'}">${escH(p.nome)}</div>
+      <div class="podium-turma">${escH(p.turma)}</div>
+      <div class="podium-score" style="color:${COLORS[slotIdx]}">${p.vitorias}⚔️ · ${taxa}%</div>
+      <div class="podium-stand" style="height:${st.h}px;background:${st.bg}">${slotIdx+1}</div>
+    </div>`;
+  }
+
+  const podiumHtml = `<div class="podium-outer">
+    ${spotHtml(top3[1], 1)}
+    ${spotHtml(top3[0], 0)}
+    ${spotHtml(top3[2], 2)}
+  </div>`;
+
+  const listaHtml = resto.length ? `
+    <div style="margin-top:16px;display:flex;flex-direction:column;gap:6px">
+      ${resto.map((p, i) => {
+        const isMe  = p.uid === uid;
+        const pos   = i + 4;
+        const taxa  = p.total > 0 ? Math.round((p.vitorias / p.total) * 100) : 0;
+        const av    = avatarUrl(p.avatar || avatarConfigDefault());
+        const letra = (p.nome || '?')[0].toUpperCase();
+        return `<div style="background:${isMe?'rgba(127,119,221,.06)':'var(--card)'};
+                            border:1px solid ${isMe?'rgba(127,119,221,.35)':'var(--border)'};
+                            border-radius:10px;padding:10px 14px;
+                            display:flex;align-items:center;gap:10px">
+          <div style="font-size:12px;font-weight:900;min-width:28px;text-align:center;color:var(--text-muted)">#${pos}</div>
+          <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#7F77DD,#00d4ff);flex-shrink:0;position:relative">
+            <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;z-index:0">${letra}</span>
+            <img src="${av}" alt="" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:1;border-radius:50%" onerror="this.style.display='none'">
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700;${isMe?'color:var(--purple)':''};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              ${escH(p.nome)}${isMe?' ← você':''}
+            </div>
+            <div style="font-size:10px;color:var(--text-muted)">${escH(p.turma)} · ${p.total} duelos · ${taxa}% vitórias</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:13px;font-weight:800;color:var(--green)">${p.vitorias}⚔️</div>
+            <div style="font-size:10px;color:var(--text-muted)">${p.xp} XP</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>` : '';
 
   el.innerHTML = `
-    <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
-      <div style="font-size:12px;color:var(--text-muted)">${lista.length} jogadores · atualizado agora</div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:6px">
-      ${lista.slice(0, 30).map((p, i) => {
-        const isMe = p.uid === uid;
-        const pos  = i + 1;
-        const av   = avatarUrl(p.avatar || avatarConfigDefault());
-        const taxa = p.total > 0 ? Math.round((p.vitorias / p.total) * 100) : 0;
-        return `
-          <div style="background:${isMe ? 'rgba(59,130,246,.06)' : 'var(--card)'};
-                      border:1px solid ${isMe ? 'rgba(59,130,246,.4)' : 'var(--border)'};
-                      border-radius:10px;padding:10px 14px;
-                      display:flex;align-items:center;gap:12px">
-            <div style="font-size:${pos<=3?'16':'13'}px;font-weight:900;min-width:28px;text-align:center;
-                        color:${pos <= 3 ? 'var(--gold,#ffd700)' : 'var(--text-muted)'}">
-              ${pos <= 3 ? posEmoji[pos-1] : '#'+pos}
-            </div>
-            <div style="width:34px;height:34px;border-radius:50%;overflow:hidden;
-                        background:var(--card2);flex-shrink:0">
-              <img src="${av}" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">
-            </div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:700;${isMe ? 'color:#93c5fd' : ''}">
-                ${escH(p.nome)}${isMe ? ' ← você' : ''}
-              </div>
-              <div style="font-size:10px;color:var(--text-muted)">${escH(p.turma)} · ${p.total} duelos · ${taxa}% vitórias</div>
-            </div>
-            <div style="text-align:right;flex-shrink:0">
-              <div style="font-size:14px;font-weight:800;color:var(--green)">${p.vitorias}⚔️</div>
-              <div style="font-size:10px;color:var(--text-muted)">${p.xp} XP</div>
-            </div>
-          </div>`;
-      }).join('')}
-    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">${lista.length} jogadores · atualizado agora</div>
+    ${podiumHtml}
+    ${listaHtml}
   `;
 }
 </script>

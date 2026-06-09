@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Diploma — Tabuada Nível 300</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/css/main.css"/>
+<style>
+  :root {
+    --bg:#0d0f1a; --card:#151828; --card2:#1c2035;
+    --border:rgba(255,255,255,0.07);
+    --text:#e8eaf0; --muted:#6b7280;
+    --gold:#F59E0B; --green:#22c55e; --purple:#7F77DD;
+  }
+  html, body { background: var(--bg) !important; color: var(--text) !important; }
+  .main { background: var(--bg) !important; }
+
+  /* ── Tela do site ── */
+  .diploma-page { max-width: 520px; margin: 0 auto; padding: 24px 16px 60px; }
+
+  .diploma-site-card {
+    background: var(--card); border: 1px solid rgba(245,158,11,.2);
+    border-radius: 20px; padding: 32px 24px; text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .diploma-site-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(245,158,11,.12) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  .diploma-medal-glow {
+    width: 88px; height: 88px; border-radius: 50%;
+    background: linear-gradient(135deg, #f7e98e, #c9a84c, #f7e98e);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 42px; margin: 0 auto 18px;
+    border: 3px solid #c9a84c;
+    box-shadow: 0 0 0 8px rgba(201,168,76,.1), 0 0 40px rgba(245,158,11,.4);
+    animation: medal-pulse 2.5s ease-in-out infinite;
+  }
+  @keyframes medal-pulse {
+    0%,100% { box-shadow: 0 0 0 8px rgba(201,168,76,.1), 0 0 30px rgba(245,158,11,.35); }
+    50%      { box-shadow: 0 0 0 14px rgba(201,168,76,.07), 0 0 60px rgba(245,158,11,.6); }
+  }
+
+  .diploma-site-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 3px;
+    text-transform: uppercase; color: #c9a84c; margin-bottom: 10px;
+  }
+  .diploma-site-nome {
+    font-family: 'Cinzel', serif; font-size: 24px; font-weight: 700;
+    color: var(--text); margin-bottom: 4px;
+  }
+  .diploma-site-turma {
+    font-size: 13px; color: var(--muted); margin-bottom: 6px;
+  }
+  .diploma-site-data {
+    font-size: 11px; color: rgba(245,158,11,.7); margin-bottom: 24px;
+  }
+
+  .diploma-ops-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-bottom: 24px;
+  }
+  .diploma-op-box {
+    background: rgba(201,168,76,.07); border: 1px solid rgba(201,168,76,.2);
+    border-radius: 12px; padding: 14px 10px; text-align: center;
+  }
+  .diploma-op-val {
+    font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700;
+    color: #c9a84c; line-height: 1;
+  }
+  .diploma-op-lbl {
+    font-size: 9px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: .8px; margin-top: 4px;
+  }
+  .diploma-total-ops {
+    font-size: 12px; color: var(--muted); margin-bottom: 24px;
+    font-style: italic;
+  }
+  .diploma-total-ops strong { color: #c9a84c; }
+
+  .btn-imprimir {
+    width: 100%; padding: 16px;
+    background: linear-gradient(135deg, #c9a84c, #f7e98e);
+    color: #1a0f00; font-size: 15px; font-weight: 800;
+    border: none; border-radius: 12px; cursor: pointer;
+    font-family: 'Inter', sans-serif; letter-spacing: .5px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: opacity .15s;
+  }
+  .btn-imprimir:hover { opacity: .88; }
+  .btn-voltar {
+    width: 100%; padding: 12px; background: transparent;
+    border: 1px solid var(--border); color: var(--muted);
+    border-radius: 10px; cursor: pointer; font-size: 13px;
+    font-weight: 600; margin-top: 10px; font-family: 'Inter', sans-serif;
+  }
+
+  /* ── Versão impressão (oculta na tela) ── */
+  .diploma-print { display: none; }
+
+  @media print {
+    body, html { background: #fff !important; }
+    .main-screen { display: none !important; }
+    .diploma-print { display: block !important; }
+
+    .dp-wrap {
+      width: 100%; max-width: 24cm;
+      background: #fdfaf4;
+      position: relative; overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      page-break-inside: avoid;
+    }
+    .dp-outer { position: absolute; inset: 10px; border: 2px solid #c9a84c; }
+    .dp-inner { position: absolute; inset: 14px; border: 1px solid rgba(201,168,76,.35); }
+    .dp-corner {
+      position: absolute; width: 28px; height: 28px;
+      font-size: 18px; color: #c9a84c; line-height: 1; z-index: 2;
+    }
+    .dp-corner.tl { top:7px; left:7px; }
+    .dp-corner.tr { top:7px; right:7px; transform:scaleX(-1); }
+    .dp-corner.bl { bottom:7px; left:7px; transform:scaleY(-1); }
+    .dp-corner.br { bottom:7px; right:7px; transform:scale(-1); }
+
+    .dp-bg {
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        45deg, transparent, transparent 18px,
+        rgba(201,168,76,.025) 18px, rgba(201,168,76,.025) 19px
+      );
+    }
+
+    .dp-content {
+      position: relative; z-index: 1;
+      padding: 44px 56px 40px; text-align: center; color: #2c1f0e;
+    }
+
+    .dp-escola { font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #8a6a2e; margin-bottom: 2px; }
+    .dp-unidade { font-size: 9px; color: #a08040; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 20px; }
+
+    .dp-divider { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .dp-divider::before, .dp-divider::after { content:''; flex:1; height:1px; background: linear-gradient(90deg,transparent,#c9a84c,transparent); }
+    .dp-divider span { font-size:16px; color:#c9a84c; }
+
+    .dp-titulo { font-family:'Cinzel',serif; font-size:12px; font-weight:600; letter-spacing:4px; text-transform:uppercase; color:#8a6a2e; margin-bottom:5px; }
+    .dp-certifica { font-family:'Playfair Display',serif; font-size:13px; color:#5a4020; margin-bottom:16px; font-style:italic; }
+
+    .dp-nome { font-family:'Cinzel',serif; font-size:28px; font-weight:700; color:#1a0f00; margin-bottom:4px; }
+    .dp-turma { font-size:12px; color:#8a6a2e; font-family:'Playfair Display',serif; font-style:italic; margin-bottom:22px; }
+
+    .dp-texto { font-family:'Playfair Display',serif; font-size:13px; color:#3a2810; line-height:1.8; margin-bottom:22px; max-width:420px; margin-left:auto; margin-right:auto; }
+    .dp-texto strong { color:#1a0f00; }
+
+    .dp-medal { display:inline-flex; flex-direction:column; align-items:center; margin-bottom:18px; }
+    .dp-medal-circle { width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg,#f7e98e,#c9a84c,#f7e98e); display:flex; align-items:center; justify-content:center; font-size:28px; border:2px solid #c9a84c; margin-bottom:5px; }
+    .dp-medal-txt { font-family:'Cinzel',serif; font-size:9px; color:#8a6a2e; letter-spacing:2px; text-transform:uppercase; }
+
+    .dp-ops { display:flex; justify-content:center; gap:0; margin-bottom:6px; }
+    .dp-op { display:flex; flex-direction:column; align-items:center; padding:10px 18px; position:relative; }
+    .dp-op + .dp-op::before { content:''; position:absolute; left:0; top:20%; height:60%; width:1px; background:rgba(201,168,76,.3); }
+    .dp-op-val { font-family:'Cinzel',serif; font-size:20px; font-weight:700; color:#8a6a2e; }
+    .dp-op-lbl { font-size:9px; color:#a08040; letter-spacing:1px; text-transform:uppercase; margin-top:3px; }
+
+    .dp-total { font-size:11px; color:#a08040; margin-bottom:20px; font-style:italic; }
+
+    .dp-divider2 { height:1px; background:linear-gradient(90deg,transparent,#c9a84c 30%,#c9a84c 70%,transparent); margin-bottom:22px; }
+
+    .dp-assin { display:flex; justify-content:center; }
+    .dp-assin-bloco { display:flex; flex-direction:column; align-items:center; gap:3px; }
+    .dp-assin-linha { width:160px; height:1px; background:linear-gradient(90deg,transparent,#5a4020,transparent); }
+    .dp-assin-nome { font-size:10px; font-weight:700; color:#3a2810; }
+    .dp-assin-cargo { font-size:9px; color:#8a6a2e; }
+
+    .dp-data { font-size:10px; color:#a08040; margin-top:16px; font-family:'Playfair Display',serif; font-style:italic; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">🎓 Diploma</div>
+        <div class="topbar-sub">Tabuada · Nível 300</div>
+      </div>
+      <div class="topbar-right">
+        <div id="topbar-avatar-circle" class="avatar-circle" style="width:36px;height:36px;cursor:pointer" onclick="window.location.href='/aluno/perfil.html'"></div>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Tela do site (dark) -->
+      <div class="main-screen">
+        <div class="diploma-page">
+          <div id="diploma-content">
+            <div style="text-align:center;padding:60px;color:var(--muted)">Carregando…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Versão impressão -->
+      <div class="diploma-print" id="diploma-print-area"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireAluno, renderSidebarAluno, clearSession } from '/js/auth.js';
+import { db } from '/js/firebase-config.js';
+import { ref, get } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { getPerfil } from '/js/db.js';
+import { avatarUrl, avatarConfigDefault } from '/js/gamificacao.js';
+
+const sess = requireAluno('/index.html');
+const { alunos, turma } = sess;
+const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+
+renderSidebarAluno('sidebar', 'jogos');
+window.sair = () => { clearSession(); window.location.href = '/index.html'; };
+
+// Avatar topbar
+(async () => { try {
+  const _p = await getPerfil(uid);
+  const _c = document.getElementById('topbar-avatar-circle');
+  if (_c) {
+    const url   = avatarUrl(_p?.avatar || avatarConfigDefault());
+    const letra = (alunos[0] || '?')[0].toUpperCase();
+    _c.innerHTML = `<div style="width:100%;height:100%;position:relative;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#7F77DD,#00d4ff)"><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;z-index:0">${letra}</span><img src="${url}" alt="" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:1;border-radius:50%" onerror="this.style.display='none'"></div>`;
+  }
+} catch(_) {} })();
+
+// Verificar conquista e carregar perfil
+const [conquSnap, perfil] = await Promise.all([
+  get(ref(db, `conquistas/${uid}/tabuada_300`)),
+  getPerfil(uid),
+]);
+
+const conquistou  = conquSnap.exists() && conquSnap.val().conquistado === true;
+const tsConquista = conquSnap.exists() ? conquSnap.val().ts : null;
+
+const nomeAluno    = perfil?.apelido_ativo || alunos[0];
+const dataConquista = tsConquista
+  ? new Date(tsConquista).toLocaleDateString('pt-BR', { day:'numeric', month:'long', year:'numeric' })
+  : null;
+
+const now    = new Date();
+const meses  = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const dataImpressao = `São Sebastião, DF · ${meses[now.getMonth()]} de ${now.getFullYear()}`;
+
+if (!conquistou) {
+  document.getElementById('diploma-content').innerHTML = `
+    <div style="text-align:center;padding:48px 20px;background:var(--card);border:1px solid var(--border);border-radius:20px">
+      <div style="font-size:48px;margin-bottom:12px">🔒</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:8px">Diploma ainda não disponível</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px">Chegue ao nível 300 da tabuada para desbloquear este diploma.</div>
+      <button onclick="window.location.href='/aluno/jogos.html'"
+              style="background:var(--purple);color:#fff;border:none;border-radius:10px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer">
+        Ir para a Tabuada →
+      </button>
+    </div>`;
+} else {
+  // ── Tela do site ──
+  document.getElementById('diploma-content').innerHTML = `
+    <div class="diploma-site-card">
+      <div class="diploma-medal-glow">🏆</div>
+      <div class="diploma-site-label">Diploma de Excelência</div>
+      <div class="diploma-site-nome">${nomeAluno}</div>
+      <div class="diploma-site-turma">Turma ${turma}</div>
+      ${dataConquista ? `<div class="diploma-site-data">Conquistado em ${dataConquista}</div>` : ''}
+
+      <div class="diploma-ops-grid">
+        <div class="diploma-op-box">
+          <div class="diploma-op-val">300</div>
+          <div class="diploma-op-lbl">🎯 Níveis concluídos</div>
+        </div>
+        <div class="diploma-op-box">
+          <div class="diploma-op-val">+3.100</div>
+          <div class="diploma-op-lbl">➕✖️ Operações resolvidas</div>
+        </div>
+      </div>
+
+      <div class="diploma-total-ops">
+        <strong>mais de 3.100 operações matemáticas</strong> resolvidas ao longo dos 300 níveis
+      </div>
+
+      <button class="btn-imprimir" onclick="window.print()">
+        🖨️ Imprimir diploma
+      </button>
+      <button class="btn-voltar" onclick="window.history.back()">← Voltar</button>
+    </div>`;
+
+  // ── Versão para impressão ──
+  document.getElementById('diploma-print-area').innerHTML = `
+    <div class="dp-wrap">
+      <div class="dp-bg"></div>
+      <div class="dp-outer"></div>
+      <div class="dp-inner"></div>
+      <div class="dp-corner tl">❧</div>
+      <div class="dp-corner tr">❧</div>
+      <div class="dp-corner bl">❧</div>
+      <div class="dp-corner br">❧</div>
+
+      <div class="dp-content">
+        <div class="dp-escola">Centro Educacional São Bartolomeu</div>
+        <div class="dp-unidade">São Sebastião · Distrito Federal</div>
+
+        <div class="dp-divider"><span>✦</span></div>
+
+        <div class="dp-titulo">Diploma de Excelência</div>
+        <div class="dp-certifica">Certificamos que o(a) aluno(a)</div>
+
+        <div class="dp-nome">${alunos[0]}</div>
+        <div class="dp-turma">Turma ${turma} · Ano letivo de ${now.getFullYear()}</div>
+
+        <div class="dp-texto">
+          concluiu com êxito todos os <strong>300 níveis</strong> do programa de
+          Cálculo Mental da disciplina de <strong>Matemática</strong>,
+          demonstrando dedicação, persistência e domínio das operações fundamentais,
+          com a resolução de <strong>mais de 3.100 operações matemáticas</strong>.
+        </div>
+
+        <div class="dp-medal">
+          <div class="dp-medal-circle">🏆</div>
+          <div class="dp-medal-txt">Nível 300 Concluído</div>
+        </div>
+
+        <div class="dp-ops">
+          <div class="dp-op">
+            <div class="dp-op-val">300</div>
+            <div class="dp-op-lbl">Níveis concluídos</div>
+          </div>
+          <div class="dp-op">
+            <div class="dp-op-val">+3.100</div>
+            <div class="dp-op-lbl">Operações resolvidas</div>
+          </div>
+          ${dataConquista ? `<div class="dp-op">
+            <div class="dp-op-val" style="font-size:13px">${dataConquista}</div>
+            <div class="dp-op-lbl">Data da conquista</div>
+          </div>` : ''}
+        </div>
+
+        <div class="dp-divider2"></div>
+
+        <div class="dp-assin">
+          <div class="dp-assin-bloco">
+            <div class="dp-assin-linha"></div>
+            <div class="dp-assin-nome">Vanessa Oliveira</div>
+            <div class="dp-assin-cargo">Professora de Matemática</div>
+          </div>
+        </div>
+
+        <div class="dp-data">${dataImpressao}</div>
+      </div>
+    </div>`;
+}
+</script>
+</body>
+</html>
