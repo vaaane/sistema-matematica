@@ -411,6 +411,7 @@ async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo
         ultima_partida: ts,
         total_partidas: p.total_partidas,
         maior_combo:    novoMaiorCombo,
+        ...(p.concluiu_300_em ? { concluiu_300_em: p.concluiu_300_em } : {}),
       });
       if (rankingRef) await set(rankingRef, {
         nome:           nomeAluno,
@@ -420,6 +421,7 @@ async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo
         ultima_partida: ts,
         maior_combo:    novoMaiorCombo,
         total_partidas: p.total_partidas,
+        ...(p.concluiu_300_em ? { concluiu_300_em: p.concluiu_300_em } : {}),
       });
       // ── XP de gamificação (tabuada) ───────────────────────────────
       if (resultado === 'completou') try {
@@ -1659,6 +1661,10 @@ async function onGameWin() {
 
   nivelAtual  = novoNivel;
   melhorNivel = novoMelhor;
+
+  if (nivelJogado >= NIVEL_MAX && !progresso.concluiu_300_em) {
+    progresso.concluiu_300_em = Date.now();
+  }
 
   await salvarProgresso(progresso, 'completou', nivelJogado, acertos, erros, false, _segsWin);
   _registrarSessao(nivelJogado, 'completou');

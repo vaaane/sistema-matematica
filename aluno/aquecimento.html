@@ -429,7 +429,11 @@ async function encerrarAquecimento() {
   await adicionarXP(uid, xp);
   await registrarAtividadeDia(uid);
 
-  try { const { verificarConquistas } = await import('/js/conquistas.js'); await verificarConquistas(uid, {}); } catch(e) {}
+  try {
+    const { verificarConquistas } = await import('/js/conquistas.js');
+    const _tt = await getTotalTreinos();
+    await verificarConquistas(uid, { totalTreinos: _tt });
+  } catch(e) {}
 
   try {
     const { push } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');

@@ -282,42 +282,6 @@ const nomeCompleto = getNomeCompleto(turma, alunos[0]);
 renderSidebarAluno('sidebar', 'jogos');
 window.sair = () => { clearSession(); window.location.href = '/index.html'; };
 
-window.imprimirDiploma = function() {
-  const style = document.createElement('style');
-  style.id = '_print_override';
-  style.textContent = `
-    @page { size: A4 landscape !important; margin: 0.8cm !important; }
-    @media print {
-      body * { visibility: hidden !important; }
-      #diploma-print-area, #diploma-print-area * { visibility: visible !important; }
-      #diploma-print-area {
-        display: block !important;
-        position: fixed !important;
-        top: 0 !important; left: 0 !important;
-        width: 100vw !important; height: 100vh !important;
-        z-index: 99999 !important;
-        background: #fdfaf4 !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-      .dp-wrap {
-        width: 100% !important; height: 100% !important;
-        background: #fdfaf4 !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-    }
-  `;
-  document.head.appendChild(style);
-  setTimeout(() => {
-    window.print();
-    setTimeout(() => {
-      const el = document.getElementById('_print_override');
-      if (el) el.remove();
-    }, 1000);
-  }, 100);
-};
-
 // Avatar topbar
 (async () => { try {
   const _p = await getPerfil(uid);
@@ -383,7 +347,7 @@ if (!conquistou) {
         <strong>mais de 3.100 operações matemáticas</strong> resolvidas ao longo dos 300 níveis
       </div>
 
-      <button class="btn-imprimir" onclick="imprimirDiploma()">
+      <button class="btn-imprimir" onclick="window.open('/aluno/diploma_print.html','_blank')">
         🖨️ Imprimir diploma
       </button>
       <button class="btn-voltar" onclick="window.history.back()">← Voltar</button>

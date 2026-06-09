@@ -231,23 +231,77 @@ function fmtPts(n) {
 
 // ── Questões ──────────────────────────────────────────────────
 function gerarUmaQuestao() {
-  const ops = {
-    facil:   ['+', '-', '×'],
-    medio:   ['+', '-', '×', '÷'],
-    dificil: ['×', '÷', '×', '÷'],
-  }[dificuldade];
-  const op = ops[Math.floor(Math.random() * ops.length)];
-  let a, b, resp;
-  if (op === '+') { a = r(10,50); b = r(10,50); resp = a + b; }
-  else if (op === '-') { a = r(20,80); b = r(5,a); resp = a - b; }
-  else if (op === '×') {
-    a = dificuldade === 'facil' ? r(2,9) : r(2,12);
-    b = dificuldade === 'facil' ? r(2,9) : r(2,12);
-    resp = a * b;
-  } else {
-    b = r(2,9); resp = r(2,12); a = b * resp;
+  // offset por dificuldade: medio começa na faixa 3, dificil na faixa 4-5
+  const offset = dificuldade === 'dificil' ? 24 : dificuldade === 'medio' ? 16 : 0;
+  const faixaNum = estado.questaoAtual + 1 + offset;
+
+  let tipo;
+  if      (faixaNum <= 8)  tipo = 'aquecimento';
+  else if (faixaNum <= 16) tipo = 'subtNeg';
+  else if (faixaNum <= 24) tipo = 'sinalFrente';
+  else if (faixaNum <= 32) tipo = 'multDiv';
+  else if (faixaNum <= 40) tipo = 'parenteses';
+  else {
+    const tipos = ['subtNeg', 'sinalFrente', 'multDiv', 'parenteses'];
+    tipo = tipos[Math.floor(Math.random() * tipos.length)];
   }
-  return { expr: `${a} ${op} ${b}`, resp };
+
+  let expr, resp;
+
+  if (tipo === 'aquecimento') {
+    const ops = ['+', '-', '×'];
+    const op = ops[Math.floor(Math.random() * ops.length)];
+    if (op === '+') {
+      const a = r(1,12), b = r(1,12);
+      expr = `${a} + ${b}`; resp = a + b;
+    } else if (op === '-') {
+      const b = r(1,12), a = r(b,12);
+      expr = `${a} - ${b}`; resp = a - b;
+    } else {
+      const a = r(1,11), b = r(1,11);
+      expr = `${a} × ${b}`; resp = a * b;
+    }
+
+  } else if (tipo === 'subtNeg') {
+    const b = r(2,12), a = r(1, b - 1);
+    expr = `${a} - ${b}`; resp = a - b;
+
+  } else if (tipo === 'sinalFrente') {
+    const A = r(1,12), b = r(1,12);
+    const op = Math.random() > 0.5 ? '+' : '-';
+    expr = `-${A}${op}${b}`;
+    resp = op === '+' ? (-A + b) : (-A - b);
+
+  } else if (tipo === 'multDiv') {
+    const usaDiv = Math.random() > 0.5;
+    const sA = Math.random() > 0.5 ? -1 : 1;
+    const sB = Math.random() > 0.5 ? -1 : 1;
+    if (usaDiv) {
+      const bAbs = r(1,11), rAbs = r(1,11);
+      const A = sA * bAbs * rAbs, B = sB * bAbs;
+      resp = A / B;
+      expr = `${A}÷${B}`;
+    } else {
+      const A = sA * r(1,11), B = sB * r(1,11);
+      resp = A * B;
+      expr = `${A}×${B}`;
+    }
+
+  } else { // parenteses
+    const a = r(1,10), b = r(1,10);
+    const fmt = Math.floor(Math.random() * 4);
+    if (fmt === 0) {
+      expr = `${a}-(${b})`; resp = a - b;
+    } else if (fmt === 1) {
+      expr = `-${a}-(-${b})`; resp = -a + b;
+    } else if (fmt === 2) {
+      expr = `(-${a})+(${b})`; resp = -a + b;
+    } else {
+      expr = `-(${a})+${b}`; resp = -a + b;
+    }
+  }
+
+  return { expr, resp };
 }
 
 function proximaQuestao() {
@@ -259,12 +313,14 @@ function proximaQuestao() {
 // ── Opções ────────────────────────────────────────────────────
 function gerarOpcoes(resp) {
   const erradas = new Set();
+  // distrator de sinal: incluir -resp para treinar regra de sinais
+  if (resp !== 0) erradas.add(-resp);
   let tentativas = 0;
-  while (erradas.size < 3 && tentativas < 50) {
+  while (erradas.size < 3 && tentativas < 100) {
     tentativas++;
-    const delta = Math.floor(Math.random() * 15) + 1;
-    const op = Math.random() > 0.5 ? resp + delta : Math.max(0, resp - delta);
-    if (op !== resp) erradas.add(op);
+    const delta = r(1, 10);
+    const candidato = Math.random() > 0.5 ? resp + delta : resp - delta;
+    if (candidato !== resp && !erradas.has(candidato)) erradas.add(candidato);
   }
   return [...erradas, resp].sort(() => Math.random() - 0.5);
 }
@@ -316,6 +372,7 @@ window.responder = function(escolha, respCorreta, btnEl) {
   document.querySelectorAll('.opcao').forEach(b => { b.onclick = null; b.disabled = true; });
 
   const certo = escolha === respCorreta;
+  const erroSinal = !certo && respCorreta !== 0 && escolha === -respCorreta;
   btnEl.classList.add(certo ? 'certo' : 'errado');
 
   if (certo) {
@@ -325,6 +382,10 @@ window.responder = function(escolha, respCorreta, btnEl) {
     document.querySelectorAll('.opcao').forEach(b => {
       if (Number(b.textContent) === respCorreta) b.classList.add('certo');
     });
+    if (erroSinal) {
+      const numEl = document.getElementById('questao-num');
+      if (numEl) numEl.textContent += ' ⚠️ Cuidado com o sinal!';
+    }
   }
 
   // placar ao vivo
@@ -335,7 +396,7 @@ window.responder = function(escolha, respCorreta, btnEl) {
   setTimeout(() => {
     if (estado.finalizado) return;
     proximaQuestao();
-  }, 600);
+  }, erroSinal ? 1000 : 600);
 };
 
 // ── Timer ─────────────────────────────────────────────────────

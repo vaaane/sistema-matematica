@@ -310,17 +310,15 @@ let _confettiDone=false;
 
 function getActiveData() {
   switch(activeTab) {
-    case 'tabuada': return activeScope==='geral'?{list:tabAll,pos:tabAllPos}:{list:tabTurma,pos:tabTurmaPos};
-    case 'f1':  return activeScope==='geral'?{list:rankF1All,pos:f1AllPos}:{list:rankF1Turma,pos:f1TurmaPos};
-    case 'f2':  return activeScope==='geral'?{list:rankF2All,pos:f2AllPos}:{list:rankF2Turma,pos:f2TurmaPos};
-    case 'ativ':{
-      if (torneioAtivsList.includes(activeAtiv)) {
-        const l = activeScope==='geral' ? (rankTorneioAll[activeAtiv]||[]) : (rankTorneioTurma[activeAtiv]||[]);
-        return { list: l, pos: stdPos(l, r => r.pts) };
-      }
-      const l=activeScope==='geral'?(rankAtivAll[activeAtiv]||[]):(rankAtivTurma[activeAtiv]||[]);
-      return {list:l, pos:stdPos(l,r=>r.f1)};
+    case 'tabuada': {
+      const base = activeScope==='geral' ? tabAll : tabTurma;
+      const concl = base.filter(r=>(r.melhor_nivel||0)>=300)
+        .sort((a,b)=>(a.concluiu_300_em||a.ultima_partida||0)-(b.concluiu_300_em||b.ultima_partida||0));
+      const corr  = base.filter(r=>(r.melhor_nivel||0)<300);
+      const corrPos = stdPos(corr, r=>r.melhor_nivel||0);
+      return { list: base, pos: activeScope==='geral'?tabAllPos:tabTurmaPos, concluintes: concl, corrida: corr, corridaPos: corrPos };
     }
+    case 'f1':  return activeScope==='geral'?{list:rankF1All,pos:f1AllPos}:{list:rankF1Turma,pos:f1TurmaPos};
   }
   return {list:[],pos:[]};
 }
@@ -471,10 +469,7 @@ function renderAlunoCard() {
   const pills=[];
   if(myTab)  pills.push(`<span class="rnk-pill blue">🎮 #${myTab} Tabuada</span>`);
   if(myTabT) pills.push(`<span class="rnk-pill orange">🏫 #${myTabT} Tab. ${escH(turma)}</span>`);
-  if(myF1)   pills.push(`<span class="rnk-pill purple">📝 #${myF1} F1 Geral</span>`);
-  if(myF1T)  pills.push(`<span class="rnk-pill orange">🏫 #${myF1T} F1 ${escH(turma)}</span>`);
-  if(myF2)   pills.push(`<span class="rnk-pill green">📊 #${myF2} F2 Geral</span>`);
-  if(myF2T)  pills.push(`<span class="rnk-pill orange">🏫 #${myF2T} F2 ${escH(turma)}</span>`);
+  if(myF1)   pills.push(`<span class="rnk-pill purple">📚 #${myF1} Atividades</span>`);
 
   el.innerHTML=`<div class="rnk-aluno-name">${escH(alunos[0])}</div>`+
     (pills.length?pills.join(''):`<span style="font-size:12px;color:var(--text-muted)">Sem avaliações realizadas ainda.</span>`);
@@ -482,13 +477,65 @@ function renderAlunoCard() {
 
 // ── Render ────────────────────────────────────────────────────
 function render() {
-  const {list,pos}=getActiveData();
-  document.getElementById('podium-section').innerHTML=renderPodium(list,pos);
-  document.getElementById('list-section').innerHTML=renderList(list,pos);
+  const data=getActiveData();
   document.querySelectorAll('.rnk-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===activeTab));
   document.querySelectorAll('.rnk-scope-btn').forEach(b=>b.classList.toggle('active',b.dataset.scope===activeScope));
-  const as=document.getElementById('ativ-select');
-  if(as) as.style.display=activeTab==='ativ'?'':'none';
+  if (activeTab === 'tabuada' && data.concluintes !== undefined) {
+    const { concluintes, corrida, corridaPos } = data;
+
+    // ── Hall da Fama ──
+    let hallHtml = '';
+    if (concluintes.length > 0) {
+      const MAX_VISIBLE = 5;
+      const visiveis  = concluintes.slice(0, MAX_VISIBLE);
+      const restantes = concluintes.slice(MAX_VISIBLE);
+      const hallRows = (lista) => lista.map((r, i) => {
+        const ordem = concluintes.indexOf(r) + 1;
+        const sufixo = ordem === 1 ? '1º' : ordem === 2 ? '2º' : ordem === 3 ? '3º' : `${ordem}º`;
+        const isMe   = (r.nome||'')===alunos[0]&&(r.turma||'?')===turma;
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-left:3px solid rgba(239,159,39,.5);border-radius:0 8px 8px 0;background:rgba(245,158,11,.07);margin-bottom:6px;position:relative">
+          <span style="font-size:17px;min-width:24px;text-align:center;flex-shrink:0">🏆</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700;color:#F59E0B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(r.nome||'?')}${isMe?' ★':''}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:1px">Turma ${escH(r.turma||'?')} · ${sufixo} a concluir</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:13px;font-weight:700;color:#F59E0B">Nível 300</div>
+            <div style="font-size:10px;color:var(--text-muted)">tabuada</div>
+          </div>
+        </div>`;
+      }).join('');
+      hallHtml = `
+        <div style="margin-bottom:20px">
+          <div style="font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#F59E0B;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+            🏆 Hall da Fama — Nível 300 · ordem de chegada
+          </div>
+          ${hallRows(visiveis)}
+          ${restantes.length > 0 ? `
+            <div id="hall-extra" style="display:none">${hallRows(restantes)}</div>
+            <button onclick="const e=document.getElementById('hall-extra');const b=document.getElementById('hall-btn');if(e.style.display==='none'){e.style.display='';b.textContent='Ocultar ▲';}else{e.style.display='none';b.textContent='Ver todos os concluintes (${concluintes.length}) →';}" id="hall-btn"
+              style="width:100%;padding:8px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:8px;color:#F59E0B;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px">
+              Ver todos os concluintes (${concluintes.length}) →
+            </button>` : ''}
+        </div>`;
+    }
+
+    // ── Corrida ──
+    const corridaHtml = corrida.length > 0 ? `
+      <div style="font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">
+        🏃 Ranking — em progresso
+      </div>
+      ${renderPodium(corrida, corridaPos)}
+      ${renderList(corrida, corridaPos)}`
+      : (concluintes.length === 0 ? '<p style="color:var(--text-muted);font-size:13px">Nenhum aluno jogou ainda.</p>' : '');
+
+    document.getElementById('podium-section').innerHTML = hallHtml + corridaHtml;
+    document.getElementById('list-section').innerHTML = '';
+  } else {
+    document.getElementById('podium-section').innerHTML=renderPodium(data.list,data.pos);
+    document.getElementById('list-section').innerHTML=renderList(data.list,data.pos);
+  }
+
   renderAlunoCard();
 }
 
@@ -499,18 +546,11 @@ document.getElementById('content').innerHTML=`
   </div>
   <div class="rnk-tabs">
     <button class="rnk-tab" data-tab="tabuada" onclick="mudarTab('tabuada')">🎮 Tabuada</button>
-    <button class="rnk-tab" data-tab="f1"      onclick="mudarTab('f1')">📝 Fase 1</button>
-    <button class="rnk-tab" data-tab="f2"      onclick="mudarTab('f2')">📝 Fase 2</button>
-    <button class="rnk-tab" data-tab="ativ"    onclick="mudarTab('ativ')">📚 Atividade</button>
+    <button class="rnk-tab" data-tab="f1"      onclick="mudarTab('f1')">📚 Atividades</button>
   </div>
   <div class="rnk-scope">
     <button class="rnk-scope-btn" data-scope="geral"  onclick="mudarScope('geral')">Geral</button>
     <button class="rnk-scope-btn" data-scope="turma"  onclick="mudarScope('turma')">🏫 ${escH(turma)}</button>
-  </div>
-  <div id="ativ-select" class="rnk-ativ-wrap" style="display:none">
-    <select onchange="mudarAtiv(this.value)">
-      ${allAtivsList.map(a=>`<option value="${escH(a)}">${escH(a)}</option>`).join('')}
-    </select>
   </div>
   <div id="podium-section" class="podium-section"></div>
   <div id="list-section"></div>
@@ -519,7 +559,6 @@ document.getElementById('content').innerHTML=`
 // ── Window functions ──────────────────────────────────────────
 window.mudarTab   = t => { activeTab=t;   render(); };
 window.mudarScope = s => { activeScope=s; render(); };
-window.mudarAtiv  = a => { activeAtiv=a;  render(); };
 
 render();
 </script>
