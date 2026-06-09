@@ -392,32 +392,32 @@ const OPTS = {
   eyes: {
     label: '👁️ Olhos',
     items: [
-      { v:'default',   lv:1, label:'Normal'     },
-      { v:'happy',     lv:1, label:'Feliz'       },
-      { v:'wink',      lv:1, label:'Piscadela'   },
-      { v:'surprised', lv:1, label:'Surpreso'    },
-      { v:'squint',    lv:1, label:'Apertado'    },
-      { v:'closed',    lv:1, label:'Fechado'     },
-      { v:'cry',       lv:1, label:'Chorando'    },
-      { v:'eyeRoll',   lv:4, label:'Revirado'    },
-      { v:'winkWacky', lv:4, label:'Careta'      },
-      { v:'hearts',    lv:6, label:'❤️ Coração'   },
-      { v:'xDizzy',   lv:10, label:'X Tonto'    },
+      { v:'default',   lv:1,  label:'Normal'     },
+      { v:'happy',     lv:1,  label:'Feliz'       },
+      { v:'wink',      lv:1,  label:'Piscadela'   },
+      { v:'surprised', lv:1,  label:'Surpreso'    },
+      { v:'closed',    lv:1,  label:'Fechado'     },
+      { v:'squint',    lv:1,  label:'Apertado'    },
+      { v:'cry',       lv:3,  label:'Chorando'    },
+      { v:'eyeRoll',   lv:4,  label:'Revirado'    },
+      { v:'winkWacky', lv:4,  label:'Careta'      },
+      { v:'hearts',    lv:6,  label:'❤️ Coração'   },
+      { v:'xDizzy',    lv:10, label:'X Tonto'     },
     ],
   },
   mouth: {
     label: '😊 Boca',
     items: [
-      { v:'smile',      lv:1, label:'Sorriso'    },
-      { v:'default',    lv:1, label:'Normal'     },
-      { v:'twinkle',    lv:1, label:'Brilhante'  },
-      { v:'tongue',     lv:1, label:'Língua'     },
-      { v:'eating',     lv:1, label:'Comendo'    },
-      { v:'concerned',  lv:1, label:'Preocupado' },
-      { v:'sad',        lv:1, label:'Triste'     },
-      { v:'grimace',    lv:1, label:'Careta'     },
-      { v:'serious',    lv:7, label:'Sério'      },
-      { v:'screamOpen', lv:10,label:'Gritando'  },
+      { v:'smile',      lv:1,  label:'Sorriso'    },
+      { v:'default',    lv:1,  label:'Normal'     },
+      { v:'twinkle',    lv:1,  label:'Brilhante'  },
+      { v:'tongue',     lv:1,  label:'Língua'     },
+      { v:'eating',     lv:1,  label:'Comendo'    },
+      { v:'sad',        lv:1,  label:'Triste'     },
+      { v:'concerned',  lv:3,  label:'Preocupado' },
+      { v:'grimace',    lv:4,  label:'Careta'     },
+      { v:'serious',    lv:7,  label:'Sério'      },
+      { v:'screamOpen', lv:10, label:'Gritando'   },
     ],
   },
   facial: {
@@ -434,17 +434,17 @@ const OPTS = {
   clothColor: {
     label: '👕 Cor da roupa',
     items: [
-      { v:'black',       lv:1, hex:'#262E33', label:'Preto'        },
-      { v:'blue01',      lv:1, hex:'#65C9FF', label:'Azul claro'   },
-      { v:'blue02',      lv:1, hex:'#5199E4', label:'Azul'         },
-      { v:'blue03',      lv:1, hex:'#25557C', label:'Azul escuro'  },
       { v:'heather',     lv:1, hex:'#3C4F5C', label:'Cinza'        },
-      { v:'pastelBlue',  lv:1, hex:'#B1E2FF', label:'Azul pastel'  },
-      { v:'pastelGreen', lv:1, hex:'#A7FFC4', label:'Verde pastel' },
-      { v:'pastelRed',   lv:1, hex:'#FFAFB9', label:'Rosa'         },
-      { v:'red',         lv:1, hex:'#FF5C5C', label:'Vermelho'     },
-      { v:'pink',        lv:1, hex:'#FF488E', label:'Pink'         },
-      { v:'white',       lv:1, hex:'#FFFFFF', label:'Branco'       },
+      { v:'blue03',      lv:1, hex:'#25557C', label:'Azul escuro'  },
+      { v:'blue02',      lv:1, hex:'#5199E4', label:'Azul'         },
+      { v:'black',       lv:1, hex:'#262E33', label:'Preto'        },
+      { v:'blue01',      lv:2, hex:'#65C9FF', label:'Azul claro'   },
+      { v:'pastelBlue',  lv:3, hex:'#B1E2FF', label:'Azul pastel'  },
+      { v:'pastelGreen', lv:4, hex:'#A7FFC4', label:'Verde pastel' },
+      { v:'pastelRed',   lv:5, hex:'#FFAFB9', label:'Rosa'         },
+      { v:'red',         lv:6, hex:'#FF5C5C', label:'Vermelho'     },
+      { v:'pink',        lv:7, hex:'#FF488E', label:'Pink'         },
+      { v:'white',       lv:8, hex:'#FFFFFF', label:'Branco'       },
     ],
   },
 };
@@ -466,8 +466,10 @@ function renderEditor() {
               : (item.label || item.v);
           const cls     = ['av-opt', sel ? 'selected' : '', locked ? 'locked' : ''].filter(Boolean).join(' ');
           const tooltip = locked ? `title="Nível ${item.lv}"` : '';
-          const action  = locked ? '' : `onclick="selecionarOpt('${key}','${item.v}')"`;
-          return `<div class="${cls}" ${tooltip} ${action}>${label}${locked ? '' : ''}</div>`;
+          const action  = locked
+            ? `onclick="mostrarToastBloqueado(${item.lv})"`
+            : `onclick="selecionarOpt('${key}','${item.v}')"`;
+          return `<div class="${cls}" ${tooltip} ${action}>${label}</div>`;
         }).join('')}
       </div>
     </div>
@@ -480,6 +482,10 @@ window.selecionarOpt = function(key, val) {
   avatarConfig[key] = val;
   _aplicarAvatar(avatarConfig);
   renderEditor();
+};
+
+window.mostrarToastBloqueado = function(nivel) {
+  toast(`🔒 Desbloqueado no nível ${nivel}`);
 };
 
 // ── Salvar avatar ─────────────────────────────────────────────
