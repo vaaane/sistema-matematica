@@ -167,11 +167,21 @@ document.getElementById("topbar-title").textContent = `Olá, ${alunos[0]}${aluno
 document.getElementById("topbar-sub").textContent   = `Turma ${turma} · Bom trabalho hoje!`;
 (async () => { try {
   const { getPerfil } = await import('/js/db.js');
-  const { avatarHtml, avatarConfigDefault } = await import('/js/gamificacao.js');
+  const { avatarUrl, avatarConfigDefault } = await import('/js/gamificacao.js');
   const _aUid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
   const _p = await getPerfil(_aUid);
   const _c = document.getElementById('topbar-avatar-circle');
-  if (_c) _c.innerHTML = avatarHtml(_p.avatar || avatarConfigDefault(), alunos[0], '100%');
+  if (_c) {
+    const url   = avatarUrl(_p.avatar || avatarConfigDefault());
+    const letra = (alunos[0] || '?')[0].toUpperCase();
+    _c.innerHTML = `
+      <div style="width:100%;height:100%;position:relative;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--purple),var(--cyan,#00d4ff))">
+        <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;z-index:0">${letra}</span>
+        <img src="${url}" alt="avatar"
+             style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:1;border-radius:50%"
+             onerror="this.style.display='none'">
+      </div>`;
+  }
 } catch(_) {} })();
 
 (async () => { try {
@@ -241,7 +251,7 @@ async function carregarTopDuelos() {
     const MEDALHA = ['🥇','🥈','🥉'];
     const COR     = ['#F59E0B','#9CA3AF','#cd7f32'];
     const html = `
-      <div class="card" style="margin-bottom:14px">
+      <div class="card" style="margin-bottom:14px" id="duelos-top3-card">
         <div class="section-label" style="color:var(--purple)">⚔️ Top Duelos</div>
         <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
           ${top3.map((p, i) => {
@@ -249,8 +259,8 @@ async function carregarTopDuelos() {
             const av   = avatarUrl(p.avatar || avatarConfigDefault());
             return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:${isMe ? 'rgba(127,119,221,.08)' : 'var(--card2)'};border:1px solid ${isMe ? 'rgba(127,119,221,.3)' : 'var(--border)'};">
               <div style="font-size:18px;min-width:24px">${MEDALHA[i]}</div>
-              <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;border:2px solid ${COR[i]};">
-                <img src="${av}" style="width:100%;height:100%" onerror="this.style.display='none'">
+              <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;border:2px solid ${COR[i]};background:var(--card2)">
+                <img src="${av}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">
               </div>
               <div style="flex:1;min-width:0">
                 <div style="font-size:12px;font-weight:700;${isMe ? 'color:var(--purpleL)' : ''};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
@@ -264,12 +274,8 @@ async function carregarTopDuelos() {
           <a href="/aluno/duelos.html" style="font-size:11px;color:var(--purple);text-align:center;display:block;margin-top:4px;text-decoration:none">Ver ranking completo →</a>
         </div>
       </div>`;
-    const tabCard = document.getElementById('tab-ranking-card');
-    if (tabCard) {
-      const div = document.createElement('div');
-      div.innerHTML = html;
-      tabCard.insertAdjacentElement('afterend', div.firstElementChild);
-    }
+    const anchor = document.getElementById('duelos-top3-anchor');
+    if (anchor) anchor.outerHTML = html;
   } catch(e) { console.warn('[TopDuelos]', e); }
 }
 carregarTopDuelos();
@@ -870,6 +876,8 @@ ${tempoPodioHtml}
       </div>
       <div style="font-size:12px;color:var(--text-muted);padding:8px 0">Carregando…</div>
     </div>
+
+    <div id="duelos-top3-anchor"></div>
 
     <div id="quiz-top3-card" class="card" style="margin-bottom:14px;overflow:visible;position:relative">
       <div class="section-label" style="color:#F59E0B">

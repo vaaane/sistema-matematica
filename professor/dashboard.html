@@ -572,43 +572,34 @@ function toast(msg) {
 }
 
 // ── Apelidos pendentes ────────────────────────────────────────
-async function carregarApelidosPendentes() {
-  try {
-    const snap = await get(ref(db, 'perfis'));
-    const pendentes = [];
-    if (snap.exists()) {
-      snap.forEach(child => {
-        const v = child.val();
-        if (v?.apelido_status === 'pendente') pendentes.push({ uid: child.key, ...v });
-      });
-    }
-    const badge = document.getElementById('apelidos-badge');
-    if (badge) badge.textContent = pendentes.length || '0';
-    const lista = document.getElementById('apelidos-lista');
-    if (!lista) return;
-    if (!pendentes.length) {
-      lista.innerHTML = '<p style="color:var(--text-muted);font-size:13px">Nenhum apelido pendente.</p>';
-      return;
-    }
-    lista.innerHTML = pendentes.map(p => `
-      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
-        <div style="flex:1">
-          <strong>${escH(p.nome || '')}</strong>
-          <span style="color:var(--text-muted);font-size:11px"> · ${escH(p.turma || '')}</span><br>
-          <span style="font-size:12px">Apelido: <strong style="color:var(--orange)">"${escH(p.apelido_pendente || '')}"</strong></span>
-          ${p.apelido_ativo ? `<span style="font-size:10px;color:var(--text-muted)"> (atual: ${escH(p.apelido_ativo)})</span>` : ''}
-        </div>
-        <button onclick="aprovarApelido('${p.uid}')"
-          style="padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer">
-          ✅ Aprovar
-        </button>
-        <button onclick="pedirMotivo('${p.uid}','${escH(p.apelido_pendente || '')}')"
-          style="padding:6px 14px;background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3);border-radius:8px;font-weight:700;font-size:12px;cursor:pointer">
-          ❌ Recusar
-        </button>
-      </div>`).join('');
-  } catch(e) { console.warn('[Apelidos]', e); }
-}
+onValue(ref(db, 'perfis'), async (snap) => {
+  if (!snap.exists()) return;
+  const pendentes = [];
+  snap.forEach(child => {
+    const v = child.val();
+    if (v?.apelido_status === 'pendente') pendentes.push({ uid: child.key, ...v });
+  });
+  const badge = document.getElementById('apelidos-badge');
+  if (badge) badge.textContent = pendentes.length || '0';
+  const lista = document.getElementById('apelidos-lista');
+  if (!lista) return;
+  if (!pendentes.length) {
+    lista.innerHTML = '<p style="color:var(--text-muted);font-size:13px">Nenhum apelido pendente.</p>';
+    return;
+  }
+  lista.innerHTML = pendentes.map(p => `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600">${escH(p.nome || '')} <span style="color:var(--text-muted);font-weight:400;font-size:11px">(${escH(p.turma || '')})</span></div>
+        <span style="font-size:12px">Apelido: <strong style="color:var(--orange)">"${escH(p.apelido_pendente || '')}"</strong></span>
+        ${p.apelido_ativo ? `<span style="font-size:10px;color:var(--text-muted)"> (atual: ${escH(p.apelido_ativo)})</span>` : ''}
+      </div>
+      <button onclick="aprovarApelido('${p.uid}')"
+              style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer">✅ Aprovar</button>
+      <button onclick="pedirMotivo('${p.uid}','${escH(p.apelido_pendente || '')}')"
+              style="background:var(--card2);color:var(--red);border:1px solid var(--red);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer">❌ Recusar</button>
+    </div>`).join('');
+});
 
 window.aprovarApelido = async function(uid) {
   try {
@@ -623,7 +614,6 @@ window.aprovarApelido = async function(uid) {
       apelido_trocas_bim: (p.apelido_trocas_bim || 0) + 1,
     });
     toast(`✅ Apelido aprovado para ${escH(p.nome || '')}`);
-    carregarApelidosPendentes();
   } catch(e) { toast('Erro ao aprovar. Tente novamente.'); }
 };
 
@@ -641,11 +631,8 @@ async function rejeitarApelido(uid, motivo) {
       apelido_pendente: null,
     });
     toast('❌ Apelido recusado');
-    carregarApelidosPendentes();
   } catch(e) { toast('Erro ao recusar. Tente novamente.'); }
 }
-
-carregarApelidosPendentes();
 
 // ── Análise anti-IA: conta suspeitos em background ────────────
 (async () => {

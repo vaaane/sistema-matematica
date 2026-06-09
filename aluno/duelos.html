@@ -836,6 +836,8 @@ async function carregarRankingDuelos() {
     const v = c.val();
     if (!v?.nome) return;
     if ((v.duelos_total || 0) === 0) return;
+    if (v.nome?.includes('PROFESSOR') || v.nome?.includes('TESTE')) return;
+    if (v.turma === 'TESTE') return;
     lista.push({
       uid:      c.key,
       nome:     v.apelido_ativo || v.nome,
@@ -858,38 +860,39 @@ async function carregarRankingDuelos() {
   const posEmoji = ['👑', '🥈', '🥉'];
 
   el.innerHTML = `
+    <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:12px;color:var(--text-muted)">${lista.length} jogadores · atualizado agora</div>
+    </div>
     <div style="display:flex;flex-direction:column;gap:6px">
-      ${lista.slice(0, 20).map((p, i) => {
+      ${lista.slice(0, 30).map((p, i) => {
         const isMe = p.uid === uid;
         const pos  = i + 1;
         const av   = avatarUrl(p.avatar || avatarConfigDefault());
+        const taxa = p.total > 0 ? Math.round((p.vitorias / p.total) * 100) : 0;
         return `
-          <div style="background:var(--card);
+          <div style="background:${isMe ? 'rgba(59,130,246,.06)' : 'var(--card)'};
                       border:1px solid ${isMe ? 'rgba(59,130,246,.4)' : 'var(--border)'};
-                      ${isMe ? 'background:rgba(59,130,246,.04);' : ''}
                       border-radius:10px;padding:10px 14px;
                       display:flex;align-items:center;gap:12px">
-            <div style="font-size:16px;font-weight:900;min-width:28px;text-align:center;
+            <div style="font-size:${pos<=3?'16':'13'}px;font-weight:900;min-width:28px;text-align:center;
                         color:${pos <= 3 ? 'var(--gold,#ffd700)' : 'var(--text-muted)'}">
-              ${pos <= 3 ? posEmoji[pos-1] : `#${pos}`}
+              ${pos <= 3 ? posEmoji[pos-1] : '#'+pos}
             </div>
             <div style="width:34px;height:34px;border-radius:50%;overflow:hidden;
                         background:var(--card2);flex-shrink:0">
-              <img src="${av}" alt="" style="width:100%;height:100%" onerror="this.src=''">
+              <img src="${av}" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">
             </div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:700;
-                          ${isMe ? 'color:#93c5fd' : ''}">
+              <div style="font-size:13px;font-weight:700;${isMe ? 'color:#93c5fd' : ''}">
                 ${escH(p.nome)}${isMe ? ' ← você' : ''}
               </div>
-              <div style="font-size:10px;color:var(--text-muted)">${escH(p.turma)} · ${p.total} duelos</div>
+              <div style="font-size:10px;color:var(--text-muted)">${escH(p.turma)} · ${p.total} duelos · ${taxa}% vitórias</div>
             </div>
-            <div style="text-align:right">
-              <div style="font-size:14px;font-weight:800;color:var(--green)">${p.vitorias} vitórias</div>
-              <div style="font-size:10px;color:var(--text-muted)">${p.xp} XP total</div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:14px;font-weight:800;color:var(--green)">${p.vitorias}⚔️</div>
+              <div style="font-size:10px;color:var(--text-muted)">${p.xp} XP</div>
             </div>
-          </div>
-        `;
+          </div>`;
       }).join('')}
     </div>
   `;
