@@ -16,9 +16,9 @@ export const CONQUISTAS_DEF = [
   { id: 'primeira_atividade',emoji: '📝',  nome: 'Primeira atividade',   desc: 'Complete sua primeira atividade',            meta: null  },
   { id: 'atividade_100pct',  emoji: '🎖️', nome: 'Perfeito!',            desc: 'Tire 100% em uma atividade',                meta: null  },
   // Streak
-  { id: 'streak_3',          emoji: '🔥',  nome: 'Aquecendo',            desc: 'Faça atividades por 3 dias seguidos',        meta: 3     },
-  { id: 'streak_7',          emoji: '🔥🔥', nome: 'Em chamas',           desc: 'Faça atividades por 7 dias seguidos',        meta: 7     },
-  { id: 'streak_30',         emoji: '💥',  nome: 'Imparável',            desc: 'Faça atividades por 30 dias seguidos',       meta: 30    },
+  { id: 'streak_3',          emoji: '🔥',   nome: 'Constante',            desc: 'Faça atividades por 3 semanas seguidas',     meta: 3     },
+  { id: 'streak_7',          emoji: '🔥🔥', nome: 'Dedicado',             desc: 'Faça atividades por 7 semanas seguidas',     meta: 7     },
+  { id: 'streak_30',         emoji: '💥',  nome: 'Imparável',            desc: 'Faça atividades por 30 semanas seguidas',    meta: 30    },
   // Perfil
   { id: 'nivel_perfil_5',    emoji: '⭐',  nome: 'Estrategista',         desc: 'Chegue ao nível 5 de perfil',               meta: null  },
   { id: 'nivel_perfil_10',   emoji: '🌠',  nome: 'Lenda',                desc: 'Chegue ao nível máximo de perfil',          meta: null  },

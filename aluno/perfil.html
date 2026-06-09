@@ -7,6 +7,64 @@
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
+    :root {
+      --bg:      #0d0f1a;
+      --card:    #151828;
+      --card2:   #1c2035;
+      --border:  rgba(255,255,255,0.07);
+      --purple:  #7F77DD;
+      --purpleL: #a59ef5;
+      --gold:    #F59E0B;
+      --green:   #22c55e;
+      --text:    #e8eaf0;
+      --muted:   #6b7280;
+      --red:     #ef4444;
+    }
+    html, body { background: var(--bg) !important; color: var(--text) !important; }
+    .main { background: var(--bg) !important; }
+    .card, .profile-hero, .opt-section, .nick-section,
+    .conquista, .temp-row, .duel-avail-section,
+    [class*="card"], section, .tab-panel > div {
+      background: var(--card) !important;
+      color: var(--text) !important;
+      border-color: var(--border) !important;
+    }
+    .pill {
+      background: var(--card2) !important;
+      color: var(--text) !important;
+      border-color: var(--border) !important;
+    }
+    .pill:hover:not(.locked) { border-color: var(--purple) !important; color: var(--purpleL) !important; }
+    .pill.active { background: rgba(127,119,221,.18) !important; border-color: var(--purple) !important; color: var(--purpleL) !important; }
+    .pill.locked { opacity: .35 !important; }
+    input, textarea, select {
+      background: var(--card2) !important;
+      color: var(--text) !important;
+      border-color: var(--border) !important;
+    }
+    input::placeholder { color: var(--muted) !important; }
+    input:focus { border-color: var(--purple) !important; outline: none !important; }
+    label, p, span, div, h1, h2, h3, h4 { color: inherit; }
+    .opt-title, .sec-title, .section-title { color: var(--muted) !important; }
+    .tabs { border-bottom-color: var(--border) !important; background: transparent !important; }
+    .tab { color: var(--muted) !important; background: transparent !important; }
+    .tab.active { color: var(--purpleL) !important; border-bottom-color: var(--purple) !important; }
+    .tab:hover { color: var(--text) !important; }
+    .dot { border-color: transparent !important; cursor: pointer !important; }
+    .dot.active { border-color: #fff !important; transform: scale(1.18) !important; }
+    .conquista.locked-c, .conquista[style*="opacity"] {
+      background: var(--card) !important;
+      border-color: var(--border) !important;
+    }
+    .save-av-btn, .btn-submit-nick {
+      background: linear-gradient(135deg, var(--purple), #5b52cc) !important;
+      color: #fff !important;
+      border: none !important;
+    }
+    .profile-hero { background: var(--card) !important; border-color: var(--border) !important; }
+    .xp-bar      { background: var(--card2) !important; }
+    .xp-bar-fill { background: linear-gradient(90deg, var(--purple), var(--purpleL)) !important; }
+
     /* ── Hero ── */
     .profile-hero {
       background: var(--card); border: 1px solid var(--border); border-radius: 16px;
@@ -148,7 +206,7 @@
         <div class="hero-stats">
           <div class="hero-stat"><div class="val" id="stat-xp">0</div><div class="lbl">⭐ XP Total</div></div>
           <div class="hero-stat"><div class="val" id="stat-vitorias">0</div><div class="lbl">⚔️ Vitórias</div></div>
-          <div class="hero-stat"><div class="val" id="stat-streak">0</div><div class="lbl">🔥 Streak</div></div>
+          <div class="hero-stat"><div class="val" id="stat-streak">0</div><div class="lbl">🔥 Semanas ativas</div></div>
         </div>
       </div>
 
@@ -245,6 +303,11 @@ const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
   if (_p?.duelos_disponivel !== false) iniciarNotifDuelo(uid, _apelido);
 } catch(e) { console.warn('[DueloNotif]', e); } })();
 
+(async () => { try {
+  const { initDueloAvail } = await import('/js/duelo_avail.js');
+  await initDueloAvail(uid);
+} catch(e) {} })();
+
 window.sair = () => { clearSession(); window.location.href = '/index.html'; };
 renderSidebarAluno('sidebar', 'perfil');
 
@@ -270,7 +333,7 @@ document.getElementById('stat-vitorias').textContent = perfil.duelos_vitorias ||
 const _streakAtual = perfil.streak_atual || 0;
 document.getElementById('stat-streak').textContent = _streakAtual > 0 ? `${_streakAtual}🔥` : '0';
 if (_streakAtual > 0 && perfil.streak_maximo)
-  document.getElementById('stat-streak').title = `Máximo: ${perfil.streak_maximo} dias`;
+  document.getElementById('stat-streak').title = `Máximo: ${perfil.streak_maximo} semana${perfil.streak_maximo > 1 ? 's' : ''}`;
 
 // Atualizar avatar no topbar e hero
 function _aplicarAvatar(cfg) {
@@ -326,6 +389,64 @@ const OPTS = {
       { v:'0a3d62',lv:1 }, { v:'1b4332',lv:1 }, { v:'3d2a00',lv:1 },
     ],
   },
+  eyes: {
+    label: '👁️ Olhos',
+    items: [
+      { v:'default',   lv:1, label:'Normal'     },
+      { v:'happy',     lv:1, label:'Feliz'       },
+      { v:'wink',      lv:1, label:'Piscadela'   },
+      { v:'surprised', lv:1, label:'Surpreso'    },
+      { v:'squint',    lv:1, label:'Apertado'    },
+      { v:'closed',    lv:1, label:'Fechado'     },
+      { v:'cry',       lv:1, label:'Chorando'    },
+      { v:'eyeRoll',   lv:4, label:'Revirado'    },
+      { v:'winkWacky', lv:4, label:'Careta'      },
+      { v:'hearts',    lv:6, label:'❤️ Coração'   },
+      { v:'xDizzy',   lv:10, label:'X Tonto'    },
+    ],
+  },
+  mouth: {
+    label: '😊 Boca',
+    items: [
+      { v:'smile',      lv:1, label:'Sorriso'    },
+      { v:'default',    lv:1, label:'Normal'     },
+      { v:'twinkle',    lv:1, label:'Brilhante'  },
+      { v:'tongue',     lv:1, label:'Língua'     },
+      { v:'eating',     lv:1, label:'Comendo'    },
+      { v:'concerned',  lv:1, label:'Preocupado' },
+      { v:'sad',        lv:1, label:'Triste'     },
+      { v:'grimace',    lv:1, label:'Careta'     },
+      { v:'serious',    lv:7, label:'Sério'      },
+      { v:'screamOpen', lv:10,label:'Gritando'  },
+    ],
+  },
+  facial: {
+    label: '🧔 Barba/Bigode',
+    items: [
+      { v:'none',            lv:1, label:'Nenhuma'         },
+      { v:'beardLight',      lv:5, label:'Barba leve'      },
+      { v:'beardMedium',     lv:7, label:'Barba média'     },
+      { v:'beardMagestic',   lv:9, label:'Barba majest.'   },
+      { v:'moustaceFancy',   lv:8, label:'Bigode elegante' },
+      { v:'moustacheMagnum', lv:9, label:'Bigode Magnum'   },
+    ],
+  },
+  clothColor: {
+    label: '👕 Cor da roupa',
+    items: [
+      { v:'black',       lv:1, hex:'#262E33', label:'Preto'        },
+      { v:'blue01',      lv:1, hex:'#65C9FF', label:'Azul claro'   },
+      { v:'blue02',      lv:1, hex:'#5199E4', label:'Azul'         },
+      { v:'blue03',      lv:1, hex:'#25557C', label:'Azul escuro'  },
+      { v:'heather',     lv:1, hex:'#3C4F5C', label:'Cinza'        },
+      { v:'pastelBlue',  lv:1, hex:'#B1E2FF', label:'Azul pastel'  },
+      { v:'pastelGreen', lv:1, hex:'#A7FFC4', label:'Verde pastel' },
+      { v:'pastelRed',   lv:1, hex:'#FFAFB9', label:'Rosa'         },
+      { v:'red',         lv:1, hex:'#FF5C5C', label:'Vermelho'     },
+      { v:'pink',        lv:1, hex:'#FF488E', label:'Pink'         },
+      { v:'white',       lv:1, hex:'#FFFFFF', label:'Branco'       },
+    ],
+  },
 };
 
 // ── Renderizar editor ─────────────────────────────────────────
@@ -338,7 +459,11 @@ function renderEditor() {
         ${def.items.map(item => {
           const locked  = nivelInfo.n < item.lv;
           const sel     = avatarConfig[key] === item.v;
-          const label   = key === 'bg' ? `<span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#${item.v};vertical-align:middle;margin-right:4px"></span>#${item.v}` : item.v;
+          const label   = key === 'bg'
+            ? `<span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#${item.v};vertical-align:middle;margin-right:4px"></span>#${item.v}`
+            : item.hex
+              ? `<span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:${item.hex};vertical-align:middle;margin-right:4px"></span>${item.label || item.v}`
+              : (item.label || item.v);
           const cls     = ['av-opt', sel ? 'selected' : '', locked ? 'locked' : ''].filter(Boolean).join(' ');
           const tooltip = locked ? `title="Nível ${item.lv}"` : '';
           const action  = locked ? '' : `onclick="selecionarOpt('${key}','${item.v}')"`;

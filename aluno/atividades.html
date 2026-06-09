@@ -195,6 +195,11 @@ document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
   if (_p?.duelos_disponivel !== false) iniciarNotifDuelo(_pUid, _apelido);
 } catch(e) { console.warn('[DueloNotif]', e); } })();
 
+(async () => { try {
+  const { initDueloAvail } = await import('/js/duelo_avail.js');
+  await initDueloAvail((turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_'));
+} catch(e) {} })();
+
 document.documentElement.setAttribute('data-theme','dark');
 const content = document.getElementById("content");
 content.classList.add('ac');

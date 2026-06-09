@@ -583,46 +583,44 @@ export async function inicializarPerfil(uid, nome, turma) {
 }
 
 /**
- * Registra atividade do dia e atualiza streak.
- * Chamar uma vez por dia quando o aluno fizer qualquer atividade.
+ * Registra atividade da semana e atualiza streak semanal.
+ * Conta a semana ISO para evitar ambiguidade de fuso horário.
  */
 export async function registrarAtividadeDia(uid) {
   try {
-    const hoje = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const agora    = new Date();
+    const semanaId = getSemanaISO(agora);
 
     const perfSnap = await get(ref(db, `perfis/${uid}`));
-    const perf = perfSnap.val() || {};
+    const perf     = perfSnap.val() || {};
 
-    const ultimoDia    = perf.streak_ultimo_dia || null;
-    const streakAtual  = perf.streak_atual      || 0;
-    const streakMaximo = perf.streak_maximo     || 0;
+    const ultimaSemana = perf.streak_ultima_semana || null;
+    const streakAtual  = perf.streak_atual         || 0;
+    const streakMaximo = perf.streak_maximo        || 0;
 
-    if (ultimoDia === hoje) {
+    if (ultimaSemana === semanaId) {
       return { streakAtual, streakMaximo, ganhouBonus: false, xpBonus: 0 };
     }
 
+    const semanaAnterior = getSemanaAnterior(semanaId);
     let novoStreak;
-    if (!ultimoDia) {
-      novoStreak = 1;
-    } else {
-      const ontem = new Date();
-      ontem.setDate(ontem.getDate() - 1);
-      const ontemStr = ontem.toISOString().slice(0, 10);
-      novoStreak = ultimoDia === ontemStr ? streakAtual + 1 : 1;
-    }
+    if (!ultimaSemana)                        novoStreak = 1;
+    else if (ultimaSemana === semanaAnterior) novoStreak = streakAtual + 1;
+    else                                      novoStreak = 1;
 
     const novoMaximo = Math.max(novoStreak, streakMaximo);
     const { XP_STREAK_DIA } = await import('/js/gamificacao.js');
 
     await update(ref(db, `perfis/${uid}`), {
-      streak_atual:      novoStreak,
-      streak_maximo:     novoMaximo,
-      streak_ultimo_dia: hoje,
+      streak_atual:         novoStreak,
+      streak_maximo:        novoMaximo,
+      streak_ultima_semana: semanaId,
+      streak_ultimo_dia:    agora.toISOString().slice(0, 10),
     });
 
     await adicionarXP(uid, XP_STREAK_DIA);
 
-    if (novoStreak >= 3) {
+    if (novoStreak >= 2) {
       try {
         const { push } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
         const nome = perf.apelido_ativo || perf.nome || uid;
@@ -630,7 +628,7 @@ export async function registrarAtividadeDia(uid) {
           tipo:  'streak',
           uid,
           nome,
-          texto: `🔥 ${nome} está em sequência de ${novoStreak} dias!`,
+          texto: `🔥 ${nome} está ativo há ${novoStreak} semana${novoStreak > 1 ? 's' : ''} seguidas!`,
           ts:    Date.now(),
         });
       } catch(e) {}
@@ -648,9 +646,25 @@ export async function registrarAtividadeDia(uid) {
       xpBonus:      XP_STREAK_DIA,
     };
   } catch(e) {
-    console.warn('[Streak]', e);
+    console.warn('[Streak semanal]', e);
     return { streakAtual: 0, streakMaximo: 0, ganhouBonus: false, xpBonus: 0 };
   }
+}
+
+function getSemanaISO(data) {
+  const d = new Date(data);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
+  const semana1 = new Date(d.getFullYear(), 0, 4);
+  const numSem  = 1 + Math.round(((d - semana1) / 86400000 - 3 + ((semana1.getDay() + 6) % 7)) / 7);
+  return `${d.getFullYear()}-W${numSem.toString().padStart(2, '0')}`;
+}
+
+function getSemanaAnterior(semanaId) {
+  const [ano, semStr] = semanaId.split('-W');
+  const sem = parseInt(semStr);
+  if (sem > 1) return `${ano}-W${(sem - 1).toString().padStart(2, '0')}`;
+  return getSemanaISO(new Date(parseInt(ano) - 1, 11, 28));
 }
 
 export async function limparFeedAntigo() {

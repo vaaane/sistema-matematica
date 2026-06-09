@@ -305,6 +305,11 @@ const uid = (turma + '_' + nomeAluno).replace(/[.#$\[\]/\s]/g, '_');
   if (_p?.duelos_disponivel !== false) iniciarNotifDuelo(uid, _apelido);
 } catch(e) { console.warn('[DueloNotif]', e); } })();
 
+(async () => { try {
+  const { initDueloAvail } = await import('/js/duelo_avail.js');
+  await initDueloAvail(uid);
+} catch(e) {} })();
+
 function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // Standard ranking: empates compartilham posição, próximo pula

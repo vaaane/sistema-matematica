@@ -320,6 +320,11 @@ const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
 renderSidebarAluno('sidebar', 'duelos');
 window.sair = () => { encerrarPresenca(); clearSession(); window.location.href = '/index.html'; };
 
+(async () => { try {
+  const { initDueloAvail } = await import('/js/duelo_avail.js');
+  await initDueloAvail(uid);
+} catch(e) {} })();
+
 // ── Tabs — definido antes dos awaits para estar disponível imediatamente ──
 window.ativarTab = function(id) {
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));

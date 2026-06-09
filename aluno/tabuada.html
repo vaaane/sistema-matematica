@@ -373,6 +373,11 @@ if (!_isProfMode) (async () => { try {
   if (_p?.duelos_disponivel !== false) iniciarNotifDuelo(uid, _apelido);
 } catch(e) { console.warn('[DueloNotif]', e); } })();
 
+(async () => { try {
+  const { initDueloAvail } = await import('/js/duelo_avail.js');
+  await initDueloAvail(uid);
+} catch(e) {} })();
+
 // ── Firebase ──────────────────────────────────────────────────
 let niveisRef     = ref(db, _isProfMode ? `professor_tabuada_niveis/${uid}` : _isModoTesteAtivo ? `modo_teste_historico/PROFESSOR_TESTE/tabuada_niveis` : `tabuada_niveis/${uid}`);
 let rankingRef    = (_isProfMode || _isModoTesteAtivo) ? null : ref(db, `tabuada_ranking/${uid}`);

@@ -220,6 +220,11 @@ document.getElementById("topbar-sub").textContent = isModoTeste() ? '🧪 Modo T
   if (_p?.duelos_disponivel !== false) iniciarNotifDuelo(sessionUid, _apelido);
 } catch(e) { console.warn('[DueloNotif]', e); } })();
 
+(async () => { try {
+  const { initDueloAvail } = await import('/js/duelo_avail.js');
+  await initDueloAvail(sessionUid);
+} catch(e) {} })();
+
 applyTopRankVisuals();
 
 getAlunoPreferencia(turma, alunoNome, 'robotica').then(v => {

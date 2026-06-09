@@ -1,0 +1,339 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aquecimento Diário</title>
+<link rel="stylesheet" href="/css/main.css">
+<style>
+  :root {
+    --bg:#0d0f1a; --card:#151828; --card2:#1c2035;
+    --border:rgba(255,255,255,0.07);
+    --purple:#7F77DD; --purpleL:#a59ef5;
+    --gold:#F59E0B; --green:#22c55e;
+    --text:#e8eaf0; --muted:#6b7280;
+    --orange:#f97316; --fire1:#FF6B00; --fire2:#FF9500;
+  }
+  html, body { background: var(--bg) !important; color: var(--text) !important; }
+  .main      { background: var(--bg) !important; }
+  .card, section, [class*="card"], .lobby-card, .result-card, .done-card {
+    background: var(--card) !important;
+    border-color: var(--border) !important;
+    color: var(--text) !important;
+  }
+  .stat-box, .aq-stat, [class*="stat"] {
+    background: var(--card2) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+  }
+  .stat-label, .label, small, .sub { color: var(--muted) !important; }
+  .dia-dot, .aq-dot {
+    background: var(--card2) !important;
+    border-color: var(--border) !important;
+    color: var(--muted) !important;
+  }
+  .dia-dot.feito, .aq-dot.feito { background: rgba(255,107,0,.15) !important; border-color: var(--fire2) !important; }
+  .dia-dot.hoje,  .aq-dot.hoje  { background: linear-gradient(135deg,var(--fire1),var(--fire2)) !important; border-color: transparent !important; }
+  .dia-label, .aq-day-lbl       { color: var(--muted) !important; }
+  .opcao {
+    background: var(--card) !important;
+    border-color: var(--border) !important;
+    color: var(--text) !important;
+  }
+  .opcao:hover:not(:disabled) { border-color: var(--fire2) !important; color: var(--fire2) !important; }
+  .opcao.certo  { border-color: var(--green) !important; background: rgba(34,197,94,.15) !important; color: var(--green) !important; }
+  .opcao.errado { border-color: #ef4444 !important; background: rgba(239,68,68,.12) !important; color: #ef4444 !important; }
+
+  .aq-wrap { max-width: 520px; margin: 0 auto; padding: 24px 16px; }
+  .aq-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 28px 24px; }
+  .aq-hero  { text-align: center; margin-bottom: 24px; }
+  .aq-icon  { font-size: 72px; display: block; line-height: 1; margin-bottom: 8px; animation: pulse-fire 2s ease-in-out infinite; }
+  @keyframes pulse-fire { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+  .aq-tema  { font-size: 22px; font-weight: 800; font-family: 'Rajdhani', sans-serif; }
+  .aq-sub   { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+  .aq-stats { display: flex; gap: 12px; margin: 20px 0; }
+  .aq-stat  { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px; text-align: center; }
+  .aq-stat .val { font-size: 24px; font-weight: 800; font-family: 'Orbitron', sans-serif; color: var(--orange); }
+  .aq-stat .lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+  .aq-week  { display: flex; gap: 6px; justify-content: center; margin: 18px 0; }
+  .aq-day   { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .aq-dot   { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .aq-dot.feito   { background: var(--green); border-color: var(--green); }
+  .aq-dot.hoje    { border-color: var(--orange); }
+  .aq-day-lbl { font-size: 9px; color: var(--text-muted); }
+  .aq-hud   { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+  .aq-timer { font-size: 22px; font-weight: 800; font-family: 'Orbitron', sans-serif; color: var(--cyan); min-width: 56px; }
+  .aq-num   { font-size: 12px; color: var(--text-muted); flex: 1; }
+  .aq-score { display: flex; gap: 10px; font-size: 12px; font-weight: 700; }
+  .aq-score .ac { color: var(--green); }
+  .aq-score .er { color: #ef4444; }
+  .aq-expr  { text-align: center; padding: 28px 16px; }
+  .aq-expr span { font-size: 42px; font-weight: 900; font-family: 'Orbitron', sans-serif; }
+  .aq-opts  { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+  .opcao    { background: var(--bg); border: 2px solid var(--border); border-radius: 12px; padding: 16px; font-size: 22px; font-weight: 800; font-family: 'Orbitron', sans-serif; color: var(--text); cursor: pointer; transition: border-color .15s, background .15s; text-align: center; }
+  .opcao:hover:not(:disabled) { border-color: var(--purple); background: rgba(124,92,252,.08); }
+  .opcao.certo  { border-color: var(--green) !important; background: rgba(0,230,118,.12) !important; color: var(--green); }
+  .opcao.errado { border-color: #ef4444 !important; background: rgba(239,68,68,.10) !important; color: #ef4444; }
+  .aq-result { text-align: center; }
+  .aq-result .big-score { font-size: 64px; font-weight: 900; font-family: 'Orbitron', sans-serif; }
+  .aq-result .xp-badge  { display: inline-block; background: rgba(255,123,46,.15); border: 1px solid var(--orange); color: var(--orange); border-radius: 20px; padding: 6px 18px; font-size: 14px; font-weight: 700; margin: 10px 0; }
+  .aq-countdown { font-size: 28px; font-weight: 800; font-family: 'Orbitron', sans-serif; color: var(--cyan); }
+  .btn-comecar { width: 100%; padding: 16px; background: var(--orange); color: #fff; font-size: 16px; font-weight: 800; border: none; border-radius: 12px; cursor: pointer; font-family: 'Rajdhani', sans-serif; letter-spacing: 1px; margin-top: 8px; transition: opacity .15s; }
+  .btn-comecar:hover { opacity: .88; }
+  .btn-menu   { width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--border); color: var(--text-muted); font-size: 14px; font-weight: 600; border-radius: 10px; cursor: pointer; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">🔥 Aquecimento</div>
+        <div class="topbar-sub">Exercício diário</div>
+      </div>
+      <div class="topbar-right">
+        <div id="topbar-avatar-circle" class="avatar-circle" style="width:36px;height:36px;cursor:pointer" onclick="window.location.href='/aluno/perfil.html'"></div>
+        <button class="btn-icon" onclick="sair()">⏻</button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="aq-wrap">
+        <div id="aq-main">
+          <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module">
+import { requireAluno, renderSidebarAluno, clearSession } from '/js/auth.js';
+import { db } from '/js/firebase-config.js';
+import { ref, get, set } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { getPerfil, adicionarXP, registrarAtividadeDia } from '/js/db.js';
+import { avatarHtml, avatarConfigDefault } from '/js/gamificacao.js';
+
+const sess = requireAluno('/index.html');
+const { alunos, turma } = sess;
+const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+
+renderSidebarAluno('sidebar', 'aquecimento');
+window.sair = () => { clearSession(); window.location.href = '/index.html'; };
+
+(async () => { try {
+  const { initDueloAvail } = await import('/js/duelo_avail.js');
+  await initDueloAvail(uid);
+} catch(e) {} })();
+
+const perfil = await getPerfil(uid);
+try {
+  const el = document.getElementById('topbar-avatar-circle');
+  if (el) el.innerHTML = avatarHtml(perfil?.avatar || avatarConfigDefault(), alunos[0], '100%');
+} catch(_) {}
+
+const hoje = new Date().toISOString().slice(0, 10);
+
+const TEMAS = {
+  0: { nome: 'Mix',           ops: ['+','-','x','/'], emoji: '🎲' },
+  1: { nome: 'Multiplicação', ops: ['x','x','x'],     emoji: '✖️' },
+  2: { nome: 'Divisão',       ops: ['/','/','/'],     emoji: '➗' },
+  3: { nome: 'Adição',        ops: ['+','+','+'],     emoji: '➕' },
+  4: { nome: 'Subtração',     ops: ['-','-','-'],     emoji: '➖' },
+  5: { nome: 'Mix',           ops: ['+','-','x','/'], emoji: '🎲' },
+  6: { nome: 'Desafio 🔥',    ops: ['x','/','x','/'], emoji: '🔥', xpBonus: true },
+};
+const temaHoje = TEMAS[new Date().getDay()];
+
+function r(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+function gerarQuestao() {
+  const op = temaHoje.ops[Math.floor(Math.random() * temaHoje.ops.length)];
+  let a, b, resp;
+  if (op === '+')      { a = r(10,50); b = r(10,50); resp = a+b; }
+  else if (op === '-') { a = r(20,80); b = r(5,a);   resp = a-b; }
+  else if (op === 'x') { a = r(2,12);  b = r(2,12);  resp = a*b; }
+  else                 { b = r(2,9);   resp = r(2,12); a = b*resp; }
+  const sym = {'+':'+', '-':'−', 'x':'×', '/':'÷'}[op];
+  return { expr: a+' '+sym+' '+b, resp };
+}
+
+function gerarOpcoes(resp) {
+  const erradas = new Set();
+  while (erradas.size < 3) {
+    const d = Math.floor(Math.random()*15)+1;
+    const o = Math.random()>0.5 ? resp+d : Math.max(0,resp-d);
+    if (o !== resp) erradas.add(o);
+  }
+  return [...erradas, resp].sort(() => Math.random()-0.5);
+}
+
+const estado = { acertos:0, erros:0, questaoNum:0, timer:180, finalizado:false, timerInterval:null };
+
+async function carregarHistoricoSemana() {
+  const dots = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const dStr = d.toISOString().slice(0,10);
+    const snap = await get(ref(db, `aquecimento/${uid}/${dStr}`));
+    dots.push({ feito: snap.exists(), hoje: dStr===hoje, diaNome: ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][d.getDay()] });
+  }
+  return dots;
+}
+
+function renderDots(dots) {
+  return dots.map(d =>
+    `<div class="aq-day">` +
+    `<div class="aq-dot${d.feito?' feito':''}${d.hoje?' hoje':''}">${d.feito?'✓':''}</div>` +
+    `<div class="aq-day-lbl">${d.diaNome}</div></div>`
+  ).join('');
+}
+
+async function renderLobby() {
+  const dots = await carregarHistoricoSemana();
+  const sa = perfil?.streak_atual||0, sm = perfil?.streak_maximo||0;
+  document.getElementById('aq-main').innerHTML = `
+    <div class="aq-card">
+      <div class="aq-hero">
+        <span class="aq-icon">${temaHoje.emoji}</span>
+        <div class="aq-tema">${temaHoje.nome}</div>
+        <div class="aq-sub">10 questões · 3 minutos${temaHoje.xpBonus?' · 🎁 XP×1.5 hoje!':''}</div>
+      </div>
+      <div class="aq-stats">
+        <div class="aq-stat"><div class="val">${sa>0?sa+'🔥':'0'}</div><div class="lbl">Sequência</div></div>
+        <div class="aq-stat"><div class="val" style="color:var(--cyan)">${sm}</div><div class="lbl">Recorde</div></div>
+      </div>
+      <div class="aq-week">${renderDots(dots)}</div>
+      <button class="btn-comecar" onclick="iniciarJogo()">Começar aquecimento ▶</button>
+    </div>`;
+}
+
+async function renderJaFeito(dados) {
+  const dots = await carregarHistoricoSemana();
+  document.getElementById('aq-main').innerHTML = `
+    <div class="aq-card">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:48px">✅</div>
+        <div style="font-size:18px;font-weight:800;font-family:'Rajdhani',sans-serif;margin-top:8px">Aquecimento feito hoje!</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:4px">${dados.acertos} acertos · +${dados.xp_ganho} XP · ${dados.tema}</div>
+      </div>
+      <div style="text-align:center;margin:16px 0">
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Próximo aquecimento em</div>
+        <div class="aq-countdown" id="aq-countdown">--:--:--</div>
+      </div>
+      <div class="aq-week" style="justify-content:center;margin:16px 0">${renderDots(dots)}</div>
+      <button class="btn-menu" onclick="window.location.href='/aluno/menu.html'">← Voltar ao início</button>
+    </div>`;
+  countdownMeianoite();
+}
+
+function countdownMeianoite() {
+  const mn = new Date(); mn.setHours(24,0,0,0);
+  setInterval(() => {
+    const rest = Math.max(0, mn - new Date());
+    const h=Math.floor(rest/3600000), m=Math.floor((rest%3600000)/60000), s=Math.floor((rest%60000)/1000);
+    const el = document.getElementById('aq-countdown');
+    if (el) el.textContent = h+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  }, 1000);
+}
+
+window.iniciarJogo = function() {
+  estado.acertos=0; estado.erros=0; estado.questaoNum=0;
+  estado.timer=180; estado.finalizado=false;
+  document.getElementById('aq-main').innerHTML = `
+    <div class="aq-card">
+      <div class="aq-hud">
+        <div class="aq-timer" id="aq-timer">3:00</div>
+        <div class="aq-num"  id="aq-num">Questão 1</div>
+        <div class="aq-score"><span class="ac">✓ <span id="aq-acertos">0</span></span><span class="er">✗ <span id="aq-erros">0</span></span></div>
+      </div>
+      <div id="aq-questao"></div>
+    </div>`;
+  iniciarTimer();
+  renderQuestao();
+};
+
+function renderQuestao() {
+  if (estado.finalizado) return;
+  const q = gerarQuestao();
+  const opts = gerarOpcoes(q.resp);
+  document.getElementById('aq-num').textContent = `Questão ${estado.questaoNum+1}`;
+  document.getElementById('aq-questao').innerHTML =
+    `<div class="aq-expr"><span>${q.expr} = ?</span></div>` +
+    `<div class="aq-opts">${opts.map(o=>`<button class="opcao" data-valor="${o}" onclick="responder(${o},${q.resp},this)">${o}</button>`).join('')}</div>`;
+}
+
+window.responder = function(escolha, respCorreta, btnEl) {
+  if (estado.finalizado) return;
+  document.querySelectorAll('.opcao').forEach(b => b.onclick = null);
+  const certo = escolha === respCorreta;
+  btnEl.classList.add(certo ? 'certo' : 'errado');
+  if (certo) { estado.acertos++; }
+  else { estado.erros++; document.querySelectorAll('.opcao').forEach(b => { if (Number(b.dataset.valor)===respCorreta) b.classList.add('certo'); }); }
+  document.getElementById('aq-acertos').textContent = estado.acertos;
+  document.getElementById('aq-erros').textContent   = estado.erros;
+  estado.questaoNum++;
+  if (estado.questaoNum >= 10) setTimeout(encerrarAquecimento, 600);
+  else setTimeout(renderQuestao, 600);
+};
+
+function iniciarTimer() {
+  estado.timerInterval = setInterval(() => {
+    estado.timer--;
+    const m=Math.floor(estado.timer/60), s=estado.timer%60;
+    const el=document.getElementById('aq-timer');
+    if (el) { el.textContent=m+':'+String(s).padStart(2,'0'); if(estado.timer<=30) el.style.color='#ef4444'; }
+    if (estado.timer<=0) encerrarAquecimento();
+  }, 1000);
+}
+
+async function encerrarAquecimento() {
+  if (estado.finalizado) return;
+  estado.finalizado = true;
+  clearInterval(estado.timerInterval);
+  const total = estado.questaoNum;
+  const taxa  = total>0 ? estado.acertos/total : 0;
+  let xp=5;
+  if (taxa===1) xp=35; else if (taxa>=0.7) xp=20; else if (taxa>=0.4) xp=12;
+  if (temaHoje.xpBonus) xp=Math.round(xp*1.5);
+
+  await set(ref(db, `aquecimento/${uid}/${hoje}`), {
+    acertos:estado.acertos, erros:estado.erros, questoes:total, xp_ganho:xp, tema:temaHoje.nome, ts:Date.now()
+  });
+  await adicionarXP(uid, xp);
+  await registrarAtividadeDia(uid);
+
+  try { const {verificarConquistas}=await import('/js/conquistas.js'); await verificarConquistas(uid,{}); } catch(e){}
+  try {
+    const {push}=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+    const nome=perfil?.apelido_ativo||alunos[0];
+    if (taxa===1) await set(push(ref(db,'feed_global')),{tipo:'aquecimento',uid,nome,texto:`🔥 ${nome} zerou o aquecimento de hoje com 100%!`,ts:Date.now()});
+  } catch(e){}
+
+  mostrarResultado(xp, taxa, total);
+}
+
+function mostrarResultado(xp, taxa, total) {
+  const pct=Math.round(taxa*100);
+  const nota=taxa===1?'🏆 Perfeito!':taxa>=0.7?'⭐ Muito bom!':taxa>=0.4?'👍 Bom trabalho!':'💪 Continue assim!';
+  const cor=pct===100?'var(--gold)':pct>=70?'var(--green)':'var(--orange)';
+  document.getElementById('aq-main').innerHTML = `
+    <div class="aq-card aq-result">
+      <div style="font-size:42px;margin-bottom:4px">${pct===100?'🎯':'🔥'}</div>
+      <div class="big-score" style="color:${cor}">${pct}%</div>
+      <div style="font-size:15px;font-weight:700;margin:6px 0">${nota}</div>
+      <div class="xp-badge">+${xp} XP</div>
+      <div style="display:flex;gap:24px;justify-content:center;margin:16px 0;font-size:13px">
+        <span>✅ ${estado.acertos} acertos</span>
+        <span>❌ ${estado.erros} erros</span>
+        <span>📝 ${total} questões</span>
+      </div>
+      <button class="btn-menu" onclick="window.location.href='/aluno/menu.html'">← Voltar ao início</button>
+    </div>`;
+}
+
+const aquecSnap = await get(ref(db, `aquecimento/${uid}/${hoje}`));
+if (aquecSnap.exists()) { await renderJaFeito(aquecSnap.val()); }
+else { await renderLobby(); }
+</script>
+</body>
+</html>

@@ -647,6 +647,47 @@ window.confirmarSair = async function() {
   window.location.href = '/aluno/duelos.html';
 };
 
+// ── Interceptar navegação durante duelo ───────────────────────
+document.addEventListener('click', function(e) {
+  if (estado?.finalizado) return;
+  const link = e.target.closest('a[href]');
+  if (!link) return;
+  const href = link.getAttribute('href');
+  if (!href || href === '#') return;
+  e.preventDefault();
+  e.stopPropagation();
+  const confirmado = confirm(
+    '⚠️ Sair do duelo?\n\n' +
+    '• Você será marcado como PERDEDOR\n' +
+    '• Adversário ganha automaticamente\n' +
+    '• O duelo encerra para os dois\n\n' +
+    'Tem certeza?'
+  );
+  if (confirmado) {
+    encerrarPartida('abandono').then(() => { window.location.href = href; });
+  }
+}, true);
+
+history.pushState({ duelo: true }, '', location.href);
+window.addEventListener('popstate', function() {
+  if (estado?.finalizado) return;
+  history.pushState({ duelo: true }, '', location.href);
+  const confirmado = confirm(
+    '⚠️ Sair do duelo?\n\n' +
+    '• Você perde automaticamente\n\n' +
+    'Tem certeza?'
+  );
+  if (confirmado) {
+    encerrarPartida('abandono').then(() => { history.back(); history.back(); });
+  }
+});
+
+window.addEventListener('beforeunload', function(e) {
+  if (estado?.finalizado) return;
+  e.preventDefault();
+  e.returnValue = '';
+});
+
 // ── Start ──────────────────────────────────────────────────────
 iniciarPartida();
 </script>
