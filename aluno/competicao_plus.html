@@ -1449,7 +1449,21 @@ async function encerrarSessao(motivo) {
     const resultado = await adicionarXP(uidXP, xpGanho);
     if (resultado.subiu) {
       console.log(`[XP] Subiu para nível ${resultado.nivelDepois} — ${resultado.nivelNome}!`);
-      // TODO Etapa 10: emitir evento para feed
+    }
+    if (taxa === 1) {
+      try {
+        const { push } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+        const { set: fbSet, ref: fbRef } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+        const { db: fbDb } = await import('/js/firebase-config.js');
+        await fbSet(push(fbRef(fbDb, 'feed_global')), {
+          tipo:  'atividade',
+          uid:   uidXP,
+          nome:  alunos[0],
+          turma,
+          texto: `🎯 ${alunos[0]} zerou a ${liberada?.atividade || 'atividade'} com 100%!`,
+          ts:    Date.now(),
+        });
+      } catch(e) {}
     }
   } catch(e) { console.warn('[XP] Erro ao adicionar XP:', e); }
   if (isTeste) {

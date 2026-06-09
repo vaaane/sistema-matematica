@@ -519,6 +519,22 @@ async function mostrarResultado(resultadosParam) {
     _adversarioUid, _adversarioNome, _adversarioTurma
   );
 
+  // Feed global — escrever evento do duelo (só quem ganhou escreve, evita duplicação)
+  if (euGanhei) {
+    try {
+      const { push: fbPush } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+      const diffLabel = { facil: 'Fácil', medio: 'Médio', dificil: 'Difícil' }[dificuldade] || dificuldade;
+      await set(fbPush(ref(db, 'feed_global')), {
+        tipo:  'duelo',
+        uid,
+        nome:  apelido,
+        turma,
+        texto: `⚔️ ${apelido} venceu ${_adversarioNome} no duelo ${diffLabel}`,
+        ts:    Date.now(),
+      });
+    } catch(e) { console.warn('[Feed duelo]', e); }
+  }
+
   // Renderizar tela de resultado
   document.getElementById('duelo-arena').innerHTML = `
     <div style="text-align:center;padding:32px 20px;

@@ -83,8 +83,9 @@
       #tabuada-game-card{order:3;}
       #card-atividades{order:4;}
       #card-historico{order:5;}
-      #tab-ranking-card{order:6;}
-      #quiz-top3-card{order:7;}
+      #feed-card{order:6;}
+      #tab-ranking-card{order:7;}
+      #quiz-top3-card{order:8;}
       /* Conter overflow horizontal — cards com overflow:visible e filhos absolutos estouram a tela */
       .grid-2{width:100%;max-width:100%;}
       #card-resumo,#tabuada-game-card,#tab-ranking-card,#quiz-top3-card,#card-liberada,#card-atividades,#card-historico{
@@ -126,7 +127,7 @@ import { saveRankPos, applyTopRankVisuals } from "/js/toprank.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
 import { initTopNotif } from "/js/topnotif.js";
 import { db } from "/js/firebase-config.js";
-import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ref, get, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const sess = requireAluno("/index.html");
 if (!sess) throw new Error("não autenticado");
@@ -759,6 +760,18 @@ ${tempoPodioHtml}
       }).join('')}
     </div>
 
+    <div id="feed-card" class="card" style="margin-bottom:14px">
+      <div class="section-label" style="color:var(--purple)">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+        </svg>
+        Novidades
+      </div>
+      <div id="feed-lista" style="margin-top:10px;display:flex;flex-direction:column;gap:6px">
+        <div style="color:var(--text-muted);font-size:12px;padding:8px 0">Carregando...</div>
+      </div>
+    </div>
+
     <div id="tab-ranking-card" class="card" style="margin-bottom:14px;overflow:visible;position:relative;padding-top:18px">
       <div class="section-label" style="color:#F59E0B">
         <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
@@ -963,6 +976,53 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
   }
   applyNo1PageVisuals({ isQuiz: euSouQuiz1, isTabuada: myGeral === 1, tabLevel: meuNivel });
 })();
+
+// ── Feed em tempo real ─────────────────────────────────────────
+function _escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function _tempoRelativo(ts) {
+  const diff = Date.now() - ts;
+  const min  = Math.floor(diff / 60000);
+  const h    = Math.floor(diff / 3600000);
+  const d    = Math.floor(diff / 86400000);
+  if (min < 1)  return 'agora';
+  if (min < 60) return `${min} min atrás`;
+  if (h < 24)   return `${h}h atrás`;
+  return `${d}d atrás`;
+}
+
+onValue(
+  query(ref(db, 'feed_global'), orderByChild('ts'), limitToLast(8)),
+  snap => {
+    const lista = document.getElementById('feed-lista');
+    if (!lista) return;
+
+    if (!snap.exists()) {
+      lista.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px 0">Nenhuma novidade ainda.</div>';
+      return;
+    }
+
+    const eventos = [];
+    snap.forEach(c => eventos.push({ id: c.key, ...c.val() }));
+    eventos.sort((a, b) => b.ts - a.ts);
+
+    const icones = { duelo:'⚔️', nivel:'⭐', atividade:'🎯', streak:'🔥' };
+
+    lista.innerHTML = eventos.map(e => {
+      const tempo = _tempoRelativo(e.ts);
+      const icone = icones[e.tipo] || '📢';
+      return `
+        <div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;
+                    border-bottom:1px solid var(--border);">
+          <span style="font-size:14px;flex-shrink:0;margin-top:1px">${icone}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;color:var(--text);line-height:1.4">${_escH(e.texto)}</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${tempo}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+);
 
 </script>
 </body>

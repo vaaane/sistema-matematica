@@ -541,6 +541,21 @@ export async function adicionarXP(uid, delta) {
     nivel: nivelDepois,
   });
 
+  if (nivelDepois > nivelAntes) {
+    try {
+      const { push } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+      const pSnap = await get(ref(db, `perfis/${uid}/nome`));
+      const nome  = pSnap.val() || uid;
+      await set(push(ref(db, 'feed_global')), {
+        tipo:  'nivel',
+        uid,
+        nome,
+        texto: `⭐ ${nome} subiu para Nível ${nivelDepois} de perfil!`,
+        ts:    Date.now(),
+      });
+    } catch(e) {}
+  }
+
   return {
     xpAntes, xpDepois, delta,
     nivelAntes, nivelDepois,
@@ -565,4 +580,20 @@ export async function inicializarPerfil(uid, nome, turma) {
     streak_maximo:     0,
     streak_ultimo_dia: null,
   });
+}
+
+export async function limparFeedAntigo() {
+  try {
+    const { remove } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+    const snap = await get(ref(db, 'feed_global'));
+    if (!snap.exists()) return;
+    const entries = [];
+    snap.forEach(c => entries.push({ key: c.key, ts: c.val()?.ts || 0 }));
+    if (entries.length <= 50) return;
+    entries.sort((a, b) => a.ts - b.ts);
+    const paraRemover = entries.slice(0, entries.length - 50);
+    for (const e of paraRemover) {
+      await remove(ref(db, `feed_global/${e.key}`));
+    }
+  } catch(e) {}
 }
