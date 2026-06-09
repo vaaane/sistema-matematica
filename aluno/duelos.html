@@ -679,79 +679,81 @@ setInterval(async () => {
 
 // ── Histórico ─────────────────────────────────────────────────
 async function carregarHistorico() {
-  const el = document.getElementById('historico-content');
-  if (!el) return;
-  el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">Carregando...</div>';
-
-  const snap = await get(ref(db, `perfis/${uid}/historico_duelos`));
-  if (!snap.exists()) {
-    el.innerHTML = '<p style="text-align:center;padding:40px;color:var(--text-muted)">Nenhum duelo realizado ainda.</p>';
+  const container = document.getElementById('historico-content');
+  if (!container) {
+    console.error('[Histórico] elemento historico-content não encontrado');
     return;
   }
 
-  const duelos = [];
-  snap.forEach(c => duelos.push({ id: c.key, ...c.val() }));
-  duelos.sort((a, b) => b.ts - a.ts);
+  container.innerHTML = '<p style="padding:20px;color:var(--text-muted)">Carregando...</p>';
 
-  const total    = duelos.length;
-  const vitorias = duelos.filter(d => d.resultado === 'vitoria').length;
-  const derrotas = duelos.filter(d => d.resultado === 'derrota').length;
-  const xpTotal  = duelos.reduce((s, d) => s + (d.xp_delta || 0), 0);
+  try {
+    console.log('[Histórico] carregando para uid:', uid);
+    const snap = await get(ref(db, `perfis/${uid}/historico_duelos`));
+    console.log('[Histórico] existe:', snap.exists(), '| valor:', JSON.stringify(snap.val()));
 
-  const DIFF_LABEL = { facil:'Fácil', medio:'Médio', dificil:'Difícil' };
-  const DIFF_CLASS = { facil:'facil', medio:'medio', dificil:'dificil' };
+    if (!snap.exists()) {
+      container.innerHTML = '<p style="text-align:center;padding:40px;color:var(--text-muted)">Nenhum duelo ainda.</p>';
+      return;
+    }
 
-  el.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">
-      <div class="hstat"><div class="v" style="color:var(--green)">${vitorias}</div><div class="l">Vitórias</div></div>
-      <div class="hstat"><div class="v" style="color:#ef4444">${derrotas}</div><div class="l">Derrotas</div></div>
-      <div class="hstat"><div class="v" style="color:var(--purple)">${total}</div><div class="l">Total</div></div>
-      <div class="hstat"><div class="v" style="color:var(--gold,#ffd700)">${xpTotal >= 0 ? '+' : ''}${xpTotal}</div><div class="l">XP duelos</div></div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      ${duelos.map(d => {
-        const isVit = d.resultado === 'vitoria';
-        const isEmp = d.resultado === 'empate';
-        const data  = new Date(d.ts).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
-        const hora  = new Date(d.ts).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
-        const msgAband = d.abandono
-          ? ' · <span style="color:var(--text-muted);font-size:9px">desistiu</span>'
-          : d.ganhou_abandono
-            ? ' · <span style="color:var(--text-muted);font-size:9px">adversário desistiu</span>'
-            : '';
-        return `
-          <div style="background:var(--card);border:1px solid var(--border);border-radius:11px;
-                      padding:12px 16px;display:grid;
-                      grid-template-columns:28px 1fr auto auto;align-items:center;gap:12px">
-            <div style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;
-                        justify-content:center;font-size:12px;font-weight:900;
-                        background:${isVit ? 'rgba(34,197,94,.15)' : isEmp ? 'rgba(127,119,221,.15)' : 'rgba(239,68,68,.12)'};
-                        color:${isVit ? 'var(--green)' : isEmp ? 'var(--purple)' : '#ef4444'}">
-              ${isVit ? 'W' : isEmp ? '=' : 'L'}
-            </div>
-            <div>
-              <div style="font-size:12px;font-weight:700">${escH(d.adversario_nome)}
-                <span style="color:var(--text-muted);font-weight:400;font-size:10px">· ${escH(d.adversario_turma || '')}</span>${msgAband}
+    const duelos = [];
+    snap.forEach(c => duelos.push({ id: c.key, ...c.val() }));
+    duelos.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+
+    const vitorias = duelos.filter(d => d.resultado === 'vitoria').length;
+    const derrotas = duelos.filter(d => d.resultado === 'derrota').length;
+    const total    = duelos.length;
+
+    const DIFF = { facil:'Fácil', medio:'Médio', dificil:'Difícil' };
+
+    container.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--green)">${vitorias}</div>
+          <div style="font-size:10px;color:var(--text-muted)">Vitórias</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:#ef4444">${derrotas}</div>
+          <div style="font-size:10px;color:var(--text-muted)">Derrotas</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--purple)">${total}</div>
+          <div style="font-size:10px;color:var(--text-muted)">Total</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${duelos.map(d => {
+          const isW    = d.resultado === 'vitoria';
+          const data   = d.ts ? new Date(d.ts).toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit'}) : '—';
+          const hora   = d.ts ? new Date(d.ts).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '';
+          const motivo = d.abandono ? ' · desistiu' : d.ganhou_abandono ? ' · adversário desistiu' : '';
+          return `
+            <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;
+                        padding:12px 16px;display:flex;align-items:center;gap:12px">
+              <div style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;
+                          justify-content:center;font-size:12px;font-weight:900;flex-shrink:0;
+                          background:${isW ? 'rgba(34,197,94,.15)' : 'rgba(239,68,68,.12)'};
+                          color:${isW ? 'var(--green)' : '#ef4444'}">
+                ${isW ? 'W' : 'L'}
               </div>
-              <div style="font-size:10px;color:var(--text-muted)">${data} às ${hora}</div>
-            </div>
-            <div style="font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap">
-              <span style="color:${isVit ? 'var(--green)' : '#ef4444'}">${d.meus_pares?.toFixed(1).replace('.0','') ?? '?'}</span>
-              <span style="color:var(--text-muted);margin:0 3px">×</span>
-              <span style="color:${!isVit && !isEmp ? 'var(--green)' : '#ef4444'}">${d.adv_pares?.toFixed(1).replace('.0','') ?? '?'}</span>
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
-              <div style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;border:1px solid"
-                   class="duel-diff ${DIFF_CLASS[d.dificuldade] || ''}">${DIFF_LABEL[d.dificuldade] || d.dificuldade}</div>
-              <div style="font-size:10px;font-weight:700;color:${(d.xp_delta||0) >= 0 ? 'var(--green)' : '#ef4444'}">
-                ${(d.xp_delta||0) >= 0 ? '+' : ''}${d.xp_delta || 0} XP
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:700">${escH(d.adversario_nome || '?')}</div>
+                <div style="font-size:10px;color:var(--text-muted)">${data} ${hora}${motivo}</div>
+              </div>
+              <div style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;
+                          border:1px solid var(--border);color:var(--text-muted)">
+                ${DIFF[d.dificuldade] || d.dificuldade || '—'}
               </div>
             </div>
-          </div>
-        `;
-      }).join('')}
-    </div>
-  `;
+          `;
+        }).join('')}
+      </div>
+    `;
+  } catch(e) {
+    console.error('[Histórico ERRO]', e);
+    container.innerHTML = `<p style="color:#ef4444;padding:20px">Erro: ${e.message}</p>`;
+  }
 }
 
 // ── Ranking de duelos ─────────────────────────────────────────
