@@ -106,7 +106,7 @@
 
   /* Header da página */
   .certs-header {
-    background: var(--card); border: 1px solid var(--border);
+    background: #151828 !important; border: 1px solid rgba(255,255,255,0.07) !important;
     border-radius: 16px; padding: 24px; margin-bottom: 24px;
     display: flex; align-items: center; gap: 16px;
   }
@@ -120,7 +120,7 @@
     font-size: 28px; font-weight: 900; color: #c9a84c;
     font-family: 'Cinzel', serif; line-height: 1;
   }
-  .certs-header-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .certs-header-sub { font-size: 12px; color: #6b7280 !important; margin-top: 2px; }
 
   @media (max-width: 500px) {
     .cert-grid { grid-template-columns: 1fr; }
@@ -200,8 +200,8 @@ el.innerHTML = `
   <div class="certs-header">
     <div class="certs-header-icon">🎓</div>
     <div>
-      <div class="certs-header-count">${desbloqueados.length}<span style="font-size:16px;color:var(--muted)">/${CERTIFICADOS.length}</span></div>
-      <div class="certs-header-sub">
+      <div style="font-size:28px;font-weight:900;color:#c9a84c;font-family:'Cinzel',serif;line-height:1">${desbloqueados.length}<span style="font-size:16px;color:#6b7280">/${CERTIFICADOS.length}</span></div>
+      <div style="font-size:12px;color:#6b7280;margin-top:2px">
         ${desbloqueados.length === 0
           ? 'Nenhum certificado ainda — continue jogando!'
           : desbloqueados.length === CERTIFICADOS.length
@@ -235,11 +235,11 @@ el.innerHTML = `
   </div>
 
   <div style="text-align:center;margin-top:28px;padding:20px;
-              background:var(--card);border:1px solid var(--border);
-              border-radius:14px;border-style:dashed">
+              background:#151828;border:1px dashed rgba(255,255,255,.07);
+              border-radius:14px">
     <div style="font-size:20px;margin-bottom:6px">✨</div>
-    <div style="font-size:13px;font-weight:700;margin-bottom:4px">Mais certificados em breve</div>
-    <div style="font-size:11px;color:var(--muted)">Novos diplomas serão adicionados ao longo do ano letivo</div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:4px;color:#e8eaf0">Mais certificados em breve</div>
+    <div style="font-size:11px;color:#6b7280">Novos diplomas serão adicionados ao longo do ano letivo</div>
   </div>`;
 </script>
 </body>
