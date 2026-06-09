@@ -370,10 +370,10 @@ window.toggleDisponivel = async function() {
 // ── Helpers ───────────────────────────────────────────────────
 function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-function paginaLabel(p) {
-  return ({ menu:'no início', jogos:'em jogos', tabuada:'na tabuada',
-            atividades:'em atividade', avaliacao:'em avaliação',
-            competicao:'em competição', robotica:'em robótica', duelos:'em duelos' })[p] || 'online';
+function statusAluno(aluno) {
+  if (aluno.em_duelo)                 return { label: '⚔️ Duelando',   disponivel: false, dot: '#F59E0B' };
+  if (aluno.status === 'indisponivel') return { label: '📝 Em quiz',    disponivel: false, dot: '#6b7280' };
+  return                                     { label: '🟢 Disponível', disponivel: true,  dot: '#22c55e' };
 }
 
 function diffLabel(d) {
@@ -418,30 +418,31 @@ function renderOnlineGrid(lista) {
 }
 
 function renderOnlineCard(aluno) {
+  const st      = statusAluno(aluno);
   const isDupla = (aluno.nome || '').includes('·');
-  const emDuelo = aluno.em_duelo;
   const av      = avatarUrl(aluno.avatar || avatarConfigDefault());
   const apelido = escH(aluno.apelido || aluno.nome);
-  const dotColor = emDuelo || aluno.status === 'ocupado' ? '#F59E0B' : '#22c55e';
-  const btnLabel = emDuelo ? '⏳ Em duelo'
-                 : aluno.status === 'indisponivel' ? '🔕 Indisponível'
-                 : '⚔️ Desafiar';
-  const btnDisabled = emDuelo || aluno.status === 'indisponivel';
   return `
-    <div class="online-card${emDuelo?' in-duel':''}">
+    <div class="online-card${!st.disponivel ? ' in-duel' : ''}">
       ${isDupla ? '<div class="oc-dupla">DUPLA</div>' : ''}
       <div class="oc-top">
         <div class="oc-av"><img src="${av}" alt="" onerror="this.src=''"></div>
         <div class="oc-info">
           <div class="oc-name">${apelido}</div>
-          <div class="oc-tag">${escH(aluno.turma)} · ${paginaLabel(aluno.pagina)}</div>
+          <div class="oc-tag">${escH(aluno.turma)}</div>
         </div>
-        <div class="oc-dot" style="background:${dotColor}"></div>
+        <div class="oc-dot" style="background:${st.dot}"></div>
       </div>
-      <button class="btn-desafiar${btnDisabled?' disabled':''}"
-              ${btnDisabled?'disabled':`onclick="abrirModalDesafio('${aluno.uid}','${escH(aluno.apelido||aluno.nome)}',${isDupla})"`}>
-        ${btnLabel}
-      </button>
+      ${st.disponivel
+        ? `<button class="btn-desafiar"
+                   onclick="abrirModalDesafio('${aluno.uid}','${apelido}',${isDupla})">
+             ⚔️ Desafiar
+           </button>`
+        : `<button class="btn-desafiar"
+                   style="opacity:.4;cursor:not-allowed" disabled>
+             ${st.label}
+           </button>`
+      }
     </div>`;
 }
 
@@ -449,6 +450,10 @@ function renderOnlineCard(aluno) {
 window.criarDesafioAberto = async function() {
   if (!_disponivel) {
     alert('Ative sua disponibilidade para criar desafios.');
+    return;
+  }
+  if (_meuDueloAguardandoId) {
+    alert('⚠️ Você já tem um desafio aguardando resposta.\nCancele-o antes de criar outro.');
     return;
   }
   const btn = document.getElementById('btnDesafioAberto');
@@ -473,6 +478,10 @@ let _modalUid = null, _modalNome = '';
 
 window.abrirModalDesafio = function(adversarioUid, adversarioNome, isDupla) {
   if (!_disponivel) { alert('Ative sua disponibilidade para criar desafios.'); return; }
+  if (_meuDueloAguardandoId) {
+    alert('⚠️ Você já tem um desafio aguardando resposta.\nCancele-o antes de criar outro.');
+    return;
+  }
   _modalUid  = adversarioUid;
   _modalNome = adversarioNome;
   _modalDiff = _diff;
@@ -507,11 +516,13 @@ window.confirmarDesafioDireto = async function() {
 };
 
 // ── Aguardando adversário ─────────────────────────────────────
+let _meuDueloAguardandoId = null; // id do meu desafio em aberto
 let _aguardandoId  = null;
 let _aguardandoExp = 0;
 let _aguardandoInt = null;
 
 function mostrarAguardando(id) {
+  _meuDueloAguardandoId = id;
   _aguardandoId  = id;
   _aguardandoExp = Date.now() + DUELO_TIMEOUT_ACEITAR_S * 1000;
   document.getElementById('modal-aguardando').style.display = 'flex';
@@ -542,6 +553,7 @@ window.cancelarDesafio = async function() {
     clearInterval(_aguardandoInt);
     try { await update(ref(db, `duelos/${_aguardandoId}`), { status: 'expirado' }); } catch(_) {}
     _aguardandoId = null;
+    _meuDueloAguardandoId = null;
   }
   document.getElementById('modal-aguardando').style.display = 'none';
   document.getElementById('btnDesafioAberto').disabled = false;
@@ -575,6 +587,15 @@ onValue(ref(db, 'duelos'), snap => {
       }
 
       mostrarToastRecusa(d.adversario_nome || 'O aluno');
+    }
+
+    // Recuperar meu desafio ao recarregar página
+    if (d.criador_uid === uid && d.status === 'aguardando') {
+      _meuDueloAguardandoId = id;
+    }
+    // Limpar quando meu desafio for aceito/expirado por outro caminho
+    if (d.criador_uid === uid && d.status !== 'aguardando' && _meuDueloAguardandoId === id) {
+      _meuDueloAguardandoId = null;
     }
 
     if (d.status !== 'aguardando') return;
