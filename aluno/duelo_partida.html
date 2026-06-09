@@ -433,12 +433,6 @@ async function salvarHistoricoLocal(euGanhei, empate, xpDelta, meuRes, advRes,
     const perfSnap = await get(ref(db, `perfis/${uid}`));
     const perf = perfSnap.exists() ? perfSnap.val() : {};
 
-    const histSnap = await get(ref(db, `perfis/${uid}/historico_duelos/${dueloId}`));
-    if (histSnap.exists()) {
-      console.log('[Histórico] já salvo, pulando');
-      return;
-    }
-
     await set(ref(db, `perfis/${uid}/historico_duelos/${dueloId}`), {
       duelo_id:         dueloId,
       dificuldade:      dificuldade,
