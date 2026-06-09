@@ -523,13 +523,25 @@ window.confirmarDuplaDuelos = async function() {
     const [hash, rec] = await Promise.all([hashSenha(t, nome, pin), getSenhaAluno(t, nome)]);
     if (!rec) { erro.textContent = `Senha não cadastrada para ${nome}.`; erro.style.display = 'block'; return; }
     if (rec.hash !== hash) { erro.textContent = 'Senha incorreta.'; erro.style.display = 'block'; return; }
+    const presSnap = await get(ref(db, 'presenca_online'));
+    if (presSnap.exists()) {
+      let jaLogado = false;
+      const tsMin = Date.now() - 60000;
+      presSnap.forEach(child => {
+        const v = child.val();
+        if ((v.nome === nome || v.parceiro_nome === nome) && (v.ts || 0) > tsMin && child.key !== uid) jaLogado = true;
+      });
+      if (jaLogado) { erro.textContent = 'Este aluno já está online em outro computador.'; erro.style.display = 'block'; return; }
+    }
     sessionStorage.setItem('sm_dupla_duelo', JSON.stringify({ nome, turma: t }));
+    await atualizarPresenca({ parceiro_nome: nome, parceiro_turma: t });
     _mostrarBadgeDueloDupla(nome, t);
     document.getElementById('painel-dupla-duelos')?.classList.remove('aberto');
   } catch(e) { erro.textContent = 'Erro ao verificar senha.'; erro.style.display = 'block'; }
 };
 
-window.removerDuplaDuelos = function() {
+window.removerDuplaDuelos = async function() {
+  await atualizarPresenca({ parceiro_nome: null, parceiro_turma: null });
   sessionStorage.removeItem('sm_dupla_duelo');
   document.getElementById('dupla-badge-duelos').style.display = 'none';
   document.getElementById('btn-add-dupla').style.display = '';
@@ -595,31 +607,29 @@ function renderOnlineGrid(lista) {
 }
 
 function renderOnlineCard(aluno) {
-  const st      = statusAluno(aluno);
-  const isDupla = (aluno.nome || '').includes('·');
-  const av      = avatarUrl(aluno.avatar || avatarConfigDefault());
-  const apelido = escH(aluno.apelido || aluno.nome);
+  const st = statusAluno(aluno);
+  const temParceiro = !!(aluno.parceiro_nome);
+  const av = avatarUrl(aluno.avatar || avatarConfigDefault());
+  const nomeExib = temParceiro
+    ? `${escH(aluno.apelido || aluno.nome)} <span style="opacity:.6;font-size:11px">+ ${escH(aluno.parceiro_nome)}</span>`
+    : escH(aluno.apelido || aluno.nome);
+  const turmaExib = temParceiro
+    ? `${escH(aluno.turma)} · ${escH(aluno.parceiro_turma)}`
+    : escH(aluno.turma);
   return `
     <div class="online-card${!st.disponivel ? ' in-duel' : ''}">
-      ${isDupla ? '<div class="oc-dupla">DUPLA</div>' : ''}
+      ${temParceiro ? '<div class="oc-dupla">DUPLA</div>' : ''}
       <div class="oc-top">
         <div class="oc-av"><img src="${av}" alt="" onerror="this.src=''"></div>
         <div class="oc-info">
-          <div class="oc-name">${apelido}</div>
-          <div class="oc-tag">${escH(aluno.turma)}</div>
+          <div class="oc-name">${nomeExib}</div>
+          <div class="oc-tag">${turmaExib}</div>
         </div>
         <div class="oc-dot" style="background:${st.dot}"></div>
       </div>
       ${st.disponivel
-        ? `<button class="btn-desafiar"
-                   onclick="abrirModalDesafio('${aluno.uid}','${apelido}',${isDupla})">
-             ⚔️ Desafiar
-           </button>`
-        : `<button class="btn-desafiar"
-                   style="opacity:.4;cursor:not-allowed" disabled>
-             ${st.label}
-           </button>`
-      }
+        ? `<button class="btn-desafiar" onclick="abrirModalDesafio('${aluno.uid}','${escH(aluno.apelido||aluno.nome)}',${temParceiro})">⚔️ Desafiar</button>`
+        : `<button class="btn-desafiar" style="opacity:.4;cursor:not-allowed" disabled>${st.label}</button>`}
     </div>`;
 }
 
@@ -821,7 +831,7 @@ function mostrarNotificacaoDesafio(id, duelo) {
   el.className = 'challenge-notif';
   el.innerHTML = `
     <div class="cn-info">
-      <div class="cn-title"><strong>${escH(duelo.criador_nome)}</strong> · ${escH(duelo.criador_turma)} te desafiou!</div>
+      <div class="cn-title"><strong>${escH(duelo.criador_nome)}${duelo.parceiro_nome ? ` + ${escH(duelo.parceiro_nome)}` : ''}</strong> · ${escH(duelo.criador_turma)} te desafiou!</div>
       <div class="cn-sub">
         ${duelo.tipo === 'aberto' ? '🌐 Desafio aberto' : '🎯 Desafio direto'} ·
         <strong>${diffLabel(duelo.dificuldade)}</strong> · ${TEMPO_LABEL[duelo.dificuldade] || ''}

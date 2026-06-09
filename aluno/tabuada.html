@@ -308,9 +308,9 @@
     <div class="level-sub" id="lov-sub">Excelente trabalho!</div>
     <div class="level-new" id="lov-new">Nível 2</div>
     <button class="btn btn-blue btn-lg" id="lov-btn" onclick="fecharOverlay()">Continuar →</button>
-    <button class="btn btn-sm" id="lov-btn-repetir" onclick="repetirNivelAtual()"
-      style="display:none;margin-top:8px;background:transparent;border:1px solid var(--border);color:var(--text-muted);font-size:12px;padding:6px 16px;border-radius:8px;cursor:pointer;width:100%">
-      🔁 Repetir Nível
+    <button id="lov-btn-repetir" onclick="repetirNivelAtual()"
+      style="display:none;margin-top:8px;width:100%;padding:7px 0;background:transparent;border:1px solid var(--border);color:var(--text-muted);font-size:12px;font-weight:600;border-radius:8px;cursor:pointer">
+      🔁 Repetir este nível
     </button>
   </div>
 </div>
@@ -835,14 +835,16 @@ let _sprintEnded     = false;
 let _sprintWinTimeout = null;
 
 // Ranking
-let rankingAll   = [];
-let rankingTurma = [];
+let rankingAll          = [];
+let rankingTurma        = [];
+let rankingEmProgresso  = [];
 function _parseRanking(snap) {
   rankingAll = [];
   if (snap && snap.exists()) {
     snap.forEach(c => { const v = c.val(); if (v && v.nome) rankingAll.push({ ...v, _uid: c.key }); });
     rankingAll.sort((a, b) => (b.melhor_nivel || 0) - (a.melhor_nivel || 0));
   }
+  rankingEmProgresso = rankingAll.filter(r => (r.melhor_nivel || 0) < 300);
   rankingTurma = rankingAll.filter(r => r.turma === turma);
 }
 _parseRanking(_rankingSnap);
@@ -856,8 +858,8 @@ async function reloadRanking() {
 
 // ── Mini ranking compacto (1 linha) ──────────────────────────
 function miniRankingHtml() {
-  const g  = rankingAll[0];
-  const g2 = rankingAll[1];
+  const g  = rankingEmProgresso[0];
+  const g2 = rankingEmProgresso[1];
   const t  = rankingTurma[0];
   if (!g && !t) return '';
   const isMe = (r) => r && r._uid === uid;
@@ -904,7 +906,7 @@ function miniRankingHtml() {
 
 // Versão compacta: 1 linha fina usada durante o jogo
 function miniRankingHtmlCompact() {
-  const g = rankingAll[0];
+  const g = rankingEmProgresso[0];
   const t = rankingTurma[0];
   if (!g && !t) return '';
   const isMe = (r) => r && r._uid === uid;
@@ -1214,6 +1216,7 @@ async function endSprint(manual = false) {
   document.getElementById("lov-btn").textContent   = 'Voltar →';
   document.querySelector('.level-card').style.animation = manual ? 'levelUpPop .35s' : 'levelDownPop .35s ease';
   document.getElementById("level-overlay").style.display = 'flex';
+  { const b = document.getElementById('lov-btn-repetir'); if(b){ b.style.display='block'; b._nv=nivelAtual; } }
 }
 
 // ── Build game ────────────────────────────────────────────────
@@ -1629,6 +1632,7 @@ async function onGameWin() {
     document.getElementById("lov-btn").textContent   = 'Avançar →';
     document.querySelector('.level-card').style.animation = 'levelUpPop .35s';
     document.getElementById("level-overlay").style.display = 'flex';
+    { const b = document.getElementById('lov-btn-repetir'); if(b){ b.style.display='block'; b._nv=nivelJogado; } }
     _sprintWinTimeout = setTimeout(() => {
       _sprintWinTimeout = null;
       if (_sprintEnded) return;
@@ -1651,6 +1655,7 @@ async function onGameWin() {
     document.getElementById("lov-btn").textContent   = 'Continuar →';
     document.querySelector('.level-card').style.animation = 'levelUpPop .45s';
     document.getElementById("level-overlay").style.display = 'flex';
+    { const b = document.getElementById('lov-btn-repetir'); if(b){ b.style.display='block'; b._nv=nivelJogado; } }
     return;
   }
 
@@ -1687,6 +1692,7 @@ async function onGameWin() {
     document.getElementById("lov-btn").textContent   = 'Ver ranking →';
     document.querySelector('.level-card').style.animation = 'levelUpPop .45s';
     document.getElementById("level-overlay").style.display = 'flex';
+    { const b = document.getElementById('lov-btn-repetir'); if(b){ b.style.display='block'; b._nv=nivelJogado; } }
     document.getElementById("lov-btn").onclick = () => {
       window.location.href = '/aluno/ranking.html';
     };
@@ -1718,12 +1724,7 @@ async function onGameWin() {
   document.getElementById("lov-btn").textContent   = 'Continuar →';
   document.querySelector('.level-card').style.animation = 'levelUpPop .45s';
   document.getElementById("level-overlay").style.display = 'flex';
-
-  const _btnRep = document.getElementById('lov-btn-repetir');
-  if (_btnRep) {
-    _btnRep.style.display = (erros > 0 && !_isSprint && !_isReplay && nivelJogado < NIVEL_MAX) ? 'block' : 'none';
-    _btnRep._nivelRepetir = nivelJogado;
-  }
+  { const b = document.getElementById('lov-btn-repetir'); if(b){ b.style.display='block'; b._nv=nivelJogado; } }
 
   // Atualiza ranking em background — se virou líder, atualiza overlay
   reloadRanking().then(() => {
@@ -1779,6 +1780,7 @@ async function onTimerEnd() {
   document.getElementById("lov-btn").textContent   = foiChefao ? '⚔️ Revanche! →' : 'Tentar de novo →';
   document.querySelector('.level-card').style.animation = 'levelDownPop .35s ease';
   document.getElementById("level-overlay").style.display = 'flex';
+  { const b = document.getElementById('lov-btn-repetir'); if(b){ b.style.display='block'; b._nv=nivelJogado; } }
 }
 
 // ── Public functions ──────────────────────────────────────────
@@ -1792,15 +1794,15 @@ window.fecharOverlay = function() {
   }
   if (_sprintWinTimeout) { clearTimeout(_sprintWinTimeout); _sprintWinTimeout = null; }
   document.getElementById("level-overlay").style.display = 'none';
-  document.getElementById('lov-btn-repetir').style.display = 'none';
+  const _br = document.getElementById('lov-btn-repetir'); if(_br) _br.style.display='none';
   buildGame();
 };
 
 window.repetirNivelAtual = function() {
-  const btn = document.getElementById('lov-btn-repetir');
-  const nv  = btn?._nivelRepetir;
+  const b = document.getElementById('lov-btn-repetir');
+  const nv = b?._nv;
   if (!nv) return;
-  btn.style.display = 'none';
+  b.style.display = 'none';
   document.getElementById('level-overlay').style.display = 'none';
   nivelAtual = nv;
   progresso.nivel_atual = nv;
