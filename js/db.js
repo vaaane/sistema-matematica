@@ -582,6 +582,77 @@ export async function inicializarPerfil(uid, nome, turma) {
   });
 }
 
+/**
+ * Registra atividade do dia e atualiza streak.
+ * Chamar uma vez por dia quando o aluno fizer qualquer atividade.
+ */
+export async function registrarAtividadeDia(uid) {
+  try {
+    const hoje = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+    const perfSnap = await get(ref(db, `perfis/${uid}`));
+    const perf = perfSnap.val() || {};
+
+    const ultimoDia    = perf.streak_ultimo_dia || null;
+    const streakAtual  = perf.streak_atual      || 0;
+    const streakMaximo = perf.streak_maximo     || 0;
+
+    if (ultimoDia === hoje) {
+      return { streakAtual, streakMaximo, ganhouBonus: false, xpBonus: 0 };
+    }
+
+    let novoStreak;
+    if (!ultimoDia) {
+      novoStreak = 1;
+    } else {
+      const ontem = new Date();
+      ontem.setDate(ontem.getDate() - 1);
+      const ontemStr = ontem.toISOString().slice(0, 10);
+      novoStreak = ultimoDia === ontemStr ? streakAtual + 1 : 1;
+    }
+
+    const novoMaximo = Math.max(novoStreak, streakMaximo);
+    const { XP_STREAK_DIA } = await import('/js/gamificacao.js');
+
+    await update(ref(db, `perfis/${uid}`), {
+      streak_atual:      novoStreak,
+      streak_maximo:     novoMaximo,
+      streak_ultimo_dia: hoje,
+    });
+
+    await adicionarXP(uid, XP_STREAK_DIA);
+
+    if (novoStreak >= 3) {
+      try {
+        const { push } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+        const nome = perf.apelido_ativo || perf.nome || uid;
+        await set(push(ref(db, 'feed_global')), {
+          tipo:  'streak',
+          uid,
+          nome,
+          texto: `🔥 ${nome} está em sequência de ${novoStreak} dias!`,
+          ts:    Date.now(),
+        });
+      } catch(e) {}
+    }
+
+    try {
+      const { verificarConquistas } = await import('/js/conquistas.js');
+      await verificarConquistas(uid, {});
+    } catch(e) {}
+
+    return {
+      streakAtual:  novoStreak,
+      streakMaximo: novoMaximo,
+      ganhouBonus:  true,
+      xpBonus:      XP_STREAK_DIA,
+    };
+  } catch(e) {
+    console.warn('[Streak]', e);
+    return { streakAtual: 0, streakMaximo: 0, ganhouBonus: false, xpBonus: 0 };
+  }
+}
+
 export async function limparFeedAntigo() {
   try {
     const { remove } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');

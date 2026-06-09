@@ -267,7 +267,10 @@ document.getElementById('xp-proximo-label').textContent = nivelInfo.n < 10 ? `Fa
 document.getElementById('xp-bar').style.width = nivelInfo.progresso + '%';
 document.getElementById('stat-xp').textContent      = perfil.xp || 0;
 document.getElementById('stat-vitorias').textContent = perfil.duelos_vitorias || 0;
-document.getElementById('stat-streak').textContent   = perfil.streak_atual || 0;
+const _streakAtual = perfil.streak_atual || 0;
+document.getElementById('stat-streak').textContent = _streakAtual > 0 ? `${_streakAtual}🔥` : '0';
+if (_streakAtual > 0 && perfil.streak_maximo)
+  document.getElementById('stat-streak').title = `Máximo: ${perfil.streak_maximo} dias`;
 
 // Atualizar avatar no topbar e hero
 function _aplicarAvatar(cfg) {

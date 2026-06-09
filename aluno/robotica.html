@@ -999,6 +999,10 @@ async function finalizarAtividade(parcial = false) {
       const uidXP   = (turma + '_' + aluno).replace(/[.#$\[\]/\s]/g, '_');
       await adicionarXP(uidXP, xpGanho);
     } catch(e) { console.warn('[XP] Erro ao adicionar XP robótica:', e); }
+    try {
+      const { registrarAtividadeDia } = await import('/js/db.js');
+      await registrarAtividadeDia(uidXP);
+    } catch(e) {}
   } catch(e) {
     saveError = (e?.message || String(e) || 'erro desconhecido');
     console.error('[Robótica] SAVE FALHOU:', e);

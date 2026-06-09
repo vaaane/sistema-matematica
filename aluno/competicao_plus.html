@@ -1472,6 +1472,12 @@ async function encerrarSessao(motivo) {
         cem_pct: taxa === 1,
       });
     } catch(e) {}
+    try {
+      const { registrarAtividadeDia } = await import('/js/db.js');
+      const streak = await registrarAtividadeDia(uidXP);
+      if (streak.ganhouBonus)
+        console.log(`[Streak] Dia ${streak.streakAtual} — +${streak.xpBonus} XP bônus`);
+    } catch(e) {}
   } catch(e) { console.warn('[XP] Erro ao adicionar XP:', e); }
   if (isTeste) {
     addHistoricoTeste('atividades', {
