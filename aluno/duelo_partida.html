@@ -215,12 +215,10 @@ const estado = {
   questaoAtual: 0,
   meusPontos:   0,
   advPontos:    0,
-  questoes:     [],
   finalizado:   false,
 };
 
 let _timerInterval;
-let _tempoRestante = duracaoS;
 
 // ── Helpers ───────────────────────────────────────────────────
 function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -232,50 +230,30 @@ function fmtPts(n) {
 }
 
 // ── Questões ──────────────────────────────────────────────────
-function gerarQuestoes() {
+function gerarUmaQuestao() {
   const ops = {
     facil:   ['+', '-', '×'],
     medio:   ['+', '-', '×', '÷'],
     dificil: ['×', '÷', '×', '÷'],
   }[dificuldade];
-
-  const questoes = [];
-  for (let i = 0; i < 10; i++) {
-    const op = ops[Math.floor(Math.random() * ops.length)];
-    let a, b, resp;
-    if (op === '+') { a = r(10,50); b = r(10,50); resp = a + b; }
-    else if (op === '-') { a = r(20,80); b = r(5,a); resp = a - b; }
-    else if (op === '×') {
-      a = dificuldade === 'facil' ? r(2,9) : r(2,12);
-      b = dificuldade === 'facil' ? r(2,9) : r(2,12);
-      resp = a * b;
-    } else {
-      b = r(2,9); resp = r(2,12); a = b * resp;
-    }
-    questoes.push({ expr: `${a} ${op} ${b}`, resp, op });
+  const op = ops[Math.floor(Math.random() * ops.length)];
+  let a, b, resp;
+  if (op === '+') { a = r(10,50); b = r(10,50); resp = a + b; }
+  else if (op === '-') { a = r(20,80); b = r(5,a); resp = a - b; }
+  else if (op === '×') {
+    a = dificuldade === 'facil' ? r(2,9) : r(2,12);
+    b = dificuldade === 'facil' ? r(2,9) : r(2,12);
+    resp = a * b;
+  } else {
+    b = r(2,9); resp = r(2,12); a = b * resp;
   }
-  return questoes;
+  return { expr: `${a} ${op} ${b}`, resp };
 }
 
-async function obterQuestoes() {
-  const snap = await get(ref(db, `duelos/${dueloId}/questoes`));
-  if (snap.exists()) return snap.val();
-
-  if (duelo.criador_uid !== uid) {
-    return new Promise(resolve => {
-      let tentativas = 0;
-      const iv = setInterval(async () => {
-        tentativas++;
-        const s = await get(ref(db, `duelos/${dueloId}/questoes`));
-        if (s.exists()) { clearInterval(iv); resolve(s.val()); return; }
-        if (tentativas > 10) { clearInterval(iv); resolve(gerarQuestoes()); }
-      }, 500);
-    });
-  }
-
-  const questoes = gerarQuestoes();
-  await set(ref(db, `duelos/${dueloId}/questoes`), questoes);
-  return questoes;
+function proximaQuestao() {
+  const questao = gerarUmaQuestao();
+  estado.questaoAtual++;
+  renderQuestaoUnica(questao);
 }
 
 // ── Opções ────────────────────────────────────────────────────
@@ -321,13 +299,9 @@ function renderArena() {
 }
 
 // ── Render questão ────────────────────────────────────────────
-function renderQuestao() {
-  const q = estado.questoes[estado.questaoAtual];
-  if (!q) { encerrarPartida('questoes'); return; }
-
+function renderQuestaoUnica(q) {
   document.getElementById('questao-expr').textContent = q.expr;
-  document.getElementById('questao-num').textContent  =
-    `Questão ${estado.questaoAtual + 1} / ${estado.questoes.length}`;
+  document.getElementById('questao-num').textContent  = `Questão ${estado.questaoAtual}`;
 
   const opcoes = gerarOpcoes(q.resp);
   document.getElementById('opcoes-grid').innerHTML = opcoes.map(op =>
@@ -358,38 +332,36 @@ window.responder = function(escolha, respCorreta, btnEl) {
   const euEl = document.getElementById('eu-pts');
   if (euEl) euEl.textContent = fmtPts(estado.meusPontos);
 
-  estado.questaoAtual++;
-
   setTimeout(() => {
     if (estado.finalizado) return;
-    if (estado.questaoAtual >= estado.questoes.length) {
-      encerrarPartida('questoes');
-    } else {
-      renderQuestao();
-    }
-  }, 700);
+    proximaQuestao();
+  }, 600);
 };
 
 // ── Timer ─────────────────────────────────────────────────────
-function iniciarTimer() {
+async function iniciarTimer() {
+  const snap = await get(ref(db, `duelos/${dueloId}/ts_aceito`));
+  const tsInicio  = snap.val() || Date.now();
+  const tsEncerra = tsInicio + (duracaoS * 1000);
+
   _timerInterval = setInterval(() => {
-    _tempoRestante--;
-    const m = Math.floor(_tempoRestante / 60);
-    const s = _tempoRestante % 60;
+    const restMs = tsEncerra - Date.now();
+    const restS  = Math.max(0, Math.ceil(restMs / 1000));
+    const m = Math.floor(restS / 60);
+    const s = restS % 60;
     const el = document.getElementById('vs-timer');
     if (el) {
       el.textContent = `${m}:${s.toString().padStart(2,'0')}`;
-      el.className = 'vs-timer' + (_tempoRestante <= 30 ? ' urgente' : '');
+      el.className = 'vs-timer' + (restS <= 30 ? ' urgente' : '');
     }
-    if (_tempoRestante <= 0) encerrarPartida('tempo');
-  }, 1000);
+    if (restMs <= 0) encerrarPartida('tempo');
+  }, 500);
 }
 
 // ── Iniciar partida ───────────────────────────────────────────
 async function iniciarPartida() {
   renderArena();
-  estado.questoes = await obterQuestoes();
-  renderQuestao();
+  proximaQuestao();
   iniciarTimer();
 
   // Escutar placar do adversário em tempo real
@@ -401,10 +373,10 @@ async function iniciarPartida() {
     }
   });
 
-  // Escutar se adversário encerrou
-  onValue(ref(db, `duelos/${dueloId}/resultado/${adversarioUid}`), snap => {
-    if (snap.exists() && !estado.finalizado) {
-      // adversário terminou — a tela de resultado será acionada no encerrarPartida
+  // Encerrar se adversário abandonar (status vai para 'encerrado' antes do tempo)
+  onValue(ref(db, `duelos/${dueloId}/status`), snap => {
+    if (snap.val() === 'encerrado' && !estado.finalizado) {
+      encerrarPartida('tempo');
     }
   });
 }
@@ -416,111 +388,185 @@ async function encerrarPartida(motivo) {
   clearInterval(_timerInterval);
 
   if (motivo === 'abandono') {
+    await set(ref(db, `duelos/${dueloId}/resultado/${uid}`), {
+      pares: 0, tempo_ms: 0, abandono: true,
+    });
+    await update(ref(db, `duelos/${dueloId}`), {
+      status:                 'encerrado',
+      vencedor_uid:           adversarioUid,
+      encerrado_por_abandono: true,
+    });
     try {
-      await set(ref(db, `duelos/${dueloId}/resultado/${uid}`), {
-        pares:    0,
-        tempo_ms: (duracaoS - _tempoRestante) * 1000,
-        abandono: true,
-      });
-      await atualizarPresenca({ em_duelo: false, status: 'disponivel' });
-    } catch(_) {}
+      const { adicionarXP } = await import('/js/db.js');
+      await adicionarXP(uid, XP_DUELO[dificuldade].derrota);
+    } catch(e) {}
+    await atualizarPresenca({ em_duelo: false, status: 'disponivel' });
+    window.location.href = '/aluno/duelos.html';
     return;
   }
 
-  const tempoUsadoMs = (duracaoS - _tempoRestante) * 1000;
+  // Salvar meu resultado
+  await set(ref(db, `duelos/${dueloId}/resultado/${uid}`), {
+    pares:    estado.meusPontos,
+    tempo_ms: duracaoS * 1000,
+  });
 
-  try {
-    await update(ref(db, `duelos/${dueloId}`), { status: 'encerrado' });
-    await set(ref(db, `duelos/${dueloId}/resultado/${uid}`), {
-      pares:    estado.meusPontos,
-      tempo_ms: tempoUsadoMs,
-    });
-  } catch(e) { console.warn('[Duelo] Erro ao salvar resultado:', e); }
-
-  try {
-    await atualizarPresenca({ em_duelo: false, status: 'disponivel' });
-  } catch(_) {}
-
-  // Aguardar resultado do adversário (max 3s)
-  setTimeout(() => mostrarResultado(), 3000);
+  // Aguardar resultado do adversário (max 5s) — timer sincronizado, encerram juntos
+  let tentativas = 0;
+  const aguardar = setInterval(async () => {
+    tentativas++;
+    const snap = await get(ref(db, `duelos/${dueloId}/resultado`));
+    const res  = snap.val() || {};
+    if ((res[uid] && res[adversarioUid]) || tentativas >= 5) {
+      clearInterval(aguardar);
+      await update(ref(db, `duelos/${dueloId}`), { status: 'encerrado' });
+      await atualizarPresenca({ em_duelo: false, status: 'disponivel' });
+      mostrarResultado(res);
+    }
+  }, 1000);
 }
 
-// ── Resultado ─────────────────────────────────────────────────
-async function mostrarResultado() {
-  let meuRes  = { pares: estado.meusPontos };
-  let advRes  = { pares: estado.advPontos  };
-
+// ── Salvar histórico local ─────────────────────────────────────
+async function salvarHistoricoLocal(euGanhei, empate, xpDelta, meuRes, advRes,
+                                    _adversarioUid, _adversarioNome, _adversarioTurma) {
   try {
-    const snap = await get(ref(db, `duelos/${dueloId}/resultado`));
-    const resultados = snap.val() || {};
-    if (resultados[uid])           meuRes  = resultados[uid];
-    if (resultados[adversarioUid]) advRes  = resultados[adversarioUid];
-  } catch(_) {}
+    const perfSnap = await get(ref(db, `perfis/${uid}`));
+    const perf = perfSnap.exists() ? perfSnap.val() : {};
 
-  const euGanhei = meuRes.pares > advRes.pares;
-  const empate   = meuRes.pares === advRes.pares;
-  const xpDelta  = euGanhei
-    ? XP_DUELO[dificuldade].vitoria
-    : empate ? 0 : XP_DUELO[dificuldade].derrota;
-
-  try {
-    if (xpDelta !== 0) {
-      const { adicionarXP } = await import('/js/db.js');
-      await adicionarXP(uid, xpDelta);
+    const histSnap = await get(ref(db, `perfis/${uid}/historico_duelos/${dueloId}`));
+    if (histSnap.exists()) {
+      console.log('[Histórico] já salvo, pulando');
+      return;
     }
-    if (euGanhei) {
-      await update(ref(db, `duelos/${dueloId}`), { vencedor_uid: uid });
-    } else if (!empate) {
-      await update(ref(db, `duelos/${dueloId}`), { vencedor_uid: adversarioUid });
-    }
-  } catch(_) {}
 
-  // Salvar no histórico do aluno
-  try {
-    const histEntry = {
+    await set(ref(db, `perfis/${uid}/historico_duelos/${dueloId}`), {
       duelo_id:         dueloId,
-      dificuldade,
-      adversario_uid:   adversarioUid,
-      adversario_nome:  adversarioNome,
-      adversario_turma: duelo.criador_uid === uid ? duelo.criador_turma : (duelo.adversario_turma || ''),
-      meus_pares:       meuRes.pares,
-      adv_pares:        advRes.pares,
+      dificuldade:      dificuldade,
+      adversario_uid:   _adversarioUid  || '',
+      adversario_nome:  _adversarioNome || '',
+      adversario_turma: _adversarioTurma || '',
+      meus_pares:       meuRes?.pares  ?? 0,
+      adv_pares:        advRes?.pares  ?? 0,
       resultado:        euGanhei ? 'vitoria' : empate ? 'empate' : 'derrota',
       xp_delta:         xpDelta,
       ts:               Date.now(),
-    };
-    await set(ref(db, `perfis/${uid}/historico_duelos/${dueloId}`), histEntry);
-
-    const _perfAtual = await getPerfil(uid).catch(() => ({}));
-    await update(ref(db, `perfis/${uid}`), {
-      duelos_total:    (_perfAtual.duelos_total    || 0) + 1,
-      duelos_vitorias: (_perfAtual.duelos_vitorias || 0) + (euGanhei ? 1 : 0),
     });
-  } catch(e) { console.warn('[Histórico duelo]', e); }
 
-  const emoji   = euGanhei ? '🏆' : empate ? '🤝' : '😤';
-  const titulo  = euGanhei ? 'Você venceu!' : empate ? 'Empate!' : 'Você perdeu!';
-  const xpCor   = xpDelta >= 0 ? '#22c55e' : 'var(--adv)';
-  const xpTxt   = (xpDelta >= 0 ? '+' : '') + xpDelta + ' XP';
+    await update(ref(db, `perfis/${uid}`), {
+      duelos_total:    (perf.duelos_total    || 0) + 1,
+      duelos_vitorias: (perf.duelos_vitorias || 0) + (euGanhei ? 1 : 0),
+    });
 
+    console.log('[Histórico] salvo com sucesso');
+  } catch(e) {
+    console.error('[Histórico ERRO]', e);
+  }
+}
+
+// ── Resultado ─────────────────────────────────────────────────
+async function mostrarResultado(resultadosParam) {
+  let resultados = resultadosParam;
+  if (!resultados) {
+    const snap = await get(ref(db, `duelos/${dueloId}/resultado`));
+    resultados = snap.val() || {};
+  }
+
+  // Re-carregar duelo para pegar vencedor_uid e dados atualizados
+  const dueloAtualSnap = await get(ref(db, `duelos/${dueloId}`));
+  const dueloAtual     = dueloAtualSnap.val() || duelo;
+
+  const _adversarioUid  = dueloAtual.criador_uid === uid
+    ? dueloAtual.adversario_uid
+    : dueloAtual.criador_uid;
+  const _adversarioNome = dueloAtual.criador_uid === uid
+    ? (dueloAtual.adversario_nome  || adversarioNome)
+    : (dueloAtual.criador_nome     || adversarioNome);
+  const _adversarioTurma = dueloAtual.criador_uid === uid
+    ? (dueloAtual.adversario_turma || '')
+    : (dueloAtual.criador_turma    || '');
+
+  const meuRes  = resultados[uid]            || { pares: estado.meusPontos };
+  const advRes  = resultados[_adversarioUid] || { pares: estado.advPontos  };
+
+  // Se vencedor_uid já está definido (abandono), usar isso
+  let euGanhei, empate;
+  if (dueloAtual.vencedor_uid) {
+    euGanhei = dueloAtual.vencedor_uid === uid;
+    empate   = false;
+  } else {
+    euGanhei = meuRes.pares > advRes.pares;
+    empate   = meuRes.pares === advRes.pares;
+  }
+
+  const xpDelta = euGanhei
+    ? XP_DUELO[dificuldade].vitoria
+    : empate ? 0 : XP_DUELO[dificuldade].derrota;
+
+  // Aplicar XP
+  if (xpDelta !== 0) {
+    try {
+      const { adicionarXP } = await import('/js/db.js');
+      await adicionarXP(uid, xpDelta);
+    } catch(e) { console.error('[XP ERRO]', e); }
+  }
+
+  // XP de vitória para quem ficou quando o adversário abandonou
+  if (dueloAtual.encerrado_por_abandono && euGanhei) {
+    try {
+      const { adicionarXP } = await import('/js/db.js');
+      await adicionarXP(uid, XP_DUELO[dificuldade].vitoria);
+    } catch(e) { console.error('[XP abandono ERRO]', e); }
+  }
+
+  // Salvar histórico (guarda duplicação internamente)
+  await salvarHistoricoLocal(
+    euGanhei, empate, xpDelta,
+    meuRes, advRes,
+    _adversarioUid, _adversarioNome, _adversarioTurma
+  );
+
+  // Renderizar tela de resultado
   document.getElementById('duelo-arena').innerHTML = `
-    <div class="resultado-wrap">
-      <div class="resultado-emoji">${emoji}</div>
-      <div class="resultado-titulo">${titulo}</div>
-      <div class="resultado-placar">
-        <div class="resultado-lado eu">
-          <div class="resultado-nome">${escH(apelido)}</div>
-          <div class="resultado-pts">${fmtPts(meuRes.pares)}</div>
+    <div style="text-align:center;padding:32px 20px;
+                display:flex;flex-direction:column;gap:20px;align-items:center">
+      <div style="font-size:64px">
+        ${euGanhei ? '🏆' : empate ? '🤝' : dueloAtual.encerrado_por_abandono ? '🏃' : '😤'}
+      </div>
+      <div style="font-size:24px;font-weight:900">
+        ${euGanhei
+          ? (dueloAtual.encerrado_por_abandono ? 'Vitória! Adversário saiu.' : 'Você venceu!')
+          : empate ? 'Empate!'
+          : 'Você perdeu!'}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%">
+        <div style="background:var(--card);border:2px solid var(--eu,#3b82f6);
+                    border-radius:14px;padding:16px;text-align:center">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">
+            ${escH(apelido)}
+          </div>
+          <div style="font-size:36px;font-weight:900;color:var(--eu,#3b82f6)">
+            ${meuRes.pares?.toFixed(1).replace('.0','') ?? 0}
+          </div>
           <div style="font-size:10px;color:var(--text-muted)">pares</div>
         </div>
-        <div class="resultado-lado adv">
-          <div class="resultado-nome">${escH(adversarioNome)}</div>
-          <div class="resultado-pts">${fmtPts(advRes.pares)}</div>
+        <div style="background:var(--card);border:2px solid var(--adv,#ef4444);
+                    border-radius:14px;padding:16px;text-align:center">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">
+            ${escH(_adversarioNome)}
+          </div>
+          <div style="font-size:36px;font-weight:900;color:var(--adv,#ef4444)">
+            ${advRes.pares != null ? advRes.pares.toFixed(1).replace('.0','') : '—'}
+          </div>
           <div style="font-size:10px;color:var(--text-muted)">pares</div>
         </div>
       </div>
-      <div class="resultado-xp" style="color:${xpCor}">${xpTxt}</div>
-      <button class="btn-voltar-duelos" onclick="window.location.href='/aluno/duelos.html'">
+      <div style="font-size:20px;font-weight:800;
+                  color:${xpDelta >= 0 ? 'var(--green,#22c55e)' : '#ef4444'}">
+        ${xpDelta >= 0 ? '+' : ''}${xpDelta} XP
+      </div>
+      <button onclick="window.location.href='/aluno/duelos.html'"
+        style="padding:12px 28px;background:var(--purple,#7F77DD);color:#fff;
+               border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">
         Voltar aos duelos
       </button>
     </div>
@@ -528,13 +574,62 @@ async function mostrarResultado() {
 }
 
 // ── Sair ──────────────────────────────────────────────────────
-window.confirmarSair = function() {
+window.confirmarSair = async function() {
+  console.log('[confirmarSair] estado.finalizado =', estado.finalizado);
+  console.log('[DEBUG]', { uid, adversarioUid, dueloId, dificuldade, adversarioNome, apelido });
+
   if (estado.finalizado) {
     window.location.href = '/aluno/duelos.html';
     return;
   }
-  if (!confirm('Sair do duelo agora? Você perderá os pontos desta partida.')) return;
-  encerrarPartida('abandono');
+
+  const confirmado = confirm(
+    '⚠️ Sair do duelo?\n\n' +
+    '• Você perde\n' +
+    '• Adversário ganha automaticamente\n\n' +
+    'Tem certeza?'
+  );
+  if (!confirmado) return;
+
+  estado.finalizado = true;
+  clearInterval(_timerInterval);
+
+  // Salvar L para mim
+  await set(ref(db, `perfis/${uid}/historico_duelos/${dueloId}`), {
+    duelo_id:        dueloId,
+    dificuldade:     dificuldade,
+    adversario_nome: adversarioNome,
+    resultado:       'derrota',
+    abandono:        true,
+    ts:              Date.now(),
+  });
+
+  // Salvar W para adversário
+  await set(ref(db, `perfis/${adversarioUid}/historico_duelos/${dueloId}`), {
+    duelo_id:        dueloId,
+    dificuldade:     dificuldade,
+    adversario_nome: apelido,
+    resultado:       'vitoria',
+    ganhou_abandono: true,
+    ts:              Date.now(),
+  });
+
+  // Marcar duelo encerrado
+  await update(ref(db, `duelos/${dueloId}`), {
+    status:       'encerrado',
+    vencedor_uid: adversarioUid,
+  });
+
+  // XP
+  try {
+    const { adicionarXP } = await import('/js/db.js');
+    await adicionarXP(uid,           XP_DUELO[dificuldade].derrota);
+    await adicionarXP(adversarioUid, XP_DUELO[dificuldade].vitoria);
+  } catch(e) {}
+
+  // Presença
+  await atualizarPresenca({ em_duelo: false, status: 'disponivel' });
+
   window.location.href = '/aluno/duelos.html';
 };
 

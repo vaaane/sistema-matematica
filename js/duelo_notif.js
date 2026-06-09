@@ -144,7 +144,18 @@ window.aceitarDueloBanner = async function(id) {
   window.location.href = `/aluno/duelo_partida.html?id=${id}`;
 };
 
-window.recusarDueloBanner = function(id) {
+window.recusarDueloBanner = async function(id) {
   const banner = document.getElementById(`dnb-${id}`);
   if (banner) { clearInterval(banner._interval); banner.remove(); }
+
+  try {
+    const [{ update, get, ref: fbRef }, { db: fbDb }] = await Promise.all([
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js'),
+      import('/js/firebase-config.js'),
+    ]);
+    const snap = await get(fbRef(fbDb, `duelos/${id}`));
+    if (snap.exists() && snap.val().tipo === 'direto') {
+      await update(fbRef(fbDb, `duelos/${id}`), { status: 'recusado' });
+    }
+  } catch(e) { console.warn('[Recusa duelo]', e); }
 };
