@@ -38,7 +38,7 @@ export const ALUNOS_POR_TURMA = {
     "Carlos", "Evellyn", "Fábio", "Fellype", "Guilherme",
     "Heitor", "João Pedro", "Joaquim", "Kayla", "Luana",
     "Maria Elisangela", "Maria Santa", "Marlon", "Miguel", "Mycaela",
-    "Nathalia", "Pedro", "Rafael", "Renato", "Ryan",
+    "Nathalia", "Pedro", "Pedro Lukas", "Rafael", "Renato", "Ryan",
     "Sara", "Sofia", "Victor Hugo", "Vitor Hugo", "Wesley", "Ycaro",
   ],
   "8G": [

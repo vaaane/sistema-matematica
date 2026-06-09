@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>⚔️ Duelo — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    :root {
+      --eu:  #3b82f6;
+      --adv: #ef4444;
+    }
+    body { min-height: 100dvh; background: var(--bg); }
+
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 20px; background: var(--card);
+      border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10;
+    }
+    .topbar-title { font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; }
+    .topbar-sub   { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+    /* ── Arena ── */
+    .duelo-arena {
+      max-width: 560px; margin: 0 auto;
+      padding: 20px 16px 40px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+
+    /* ── Placar ── */
+    .placar-wrap {
+      display: grid; grid-template-columns: 1fr auto 1fr;
+      gap: 10px; align-items: center;
+    }
+    .lado {
+      background: var(--card); border: 2px solid;
+      border-radius: 16px; padding: 12px 10px; text-align: center;
+    }
+    .lado.eu  { border-color: var(--eu);  box-shadow: 0 0 16px rgba(59,130,246,.2); }
+    .lado.adv { border-color: var(--adv); box-shadow: 0 0 16px rgba(239,68,68,.15); }
+    .lado-av  {
+      width: 46px; height: 46px; border-radius: 50%; overflow: hidden;
+      margin: 0 auto 6px; border: 2px solid; background: var(--card2);
+    }
+    .lado.eu  .lado-av { border-color: var(--eu); }
+    .lado.adv .lado-av { border-color: var(--adv); }
+    .lado-av img { width: 100%; height: 100%; object-fit: cover; }
+    .lado-nome { font-size: 10px; font-weight: 700; color: var(--text-muted);
+                 overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lado-pts  { font-size: 30px; font-weight: 900; line-height: 1.1; margin-top: 3px; }
+    .lado.eu  .lado-pts { color: var(--eu); }
+    .lado.adv .lado-pts { color: var(--adv); }
+    .lado-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+
+    .vs-center  { text-align: center; }
+    .vs-label   { font-size: 16px; font-weight: 900; color: var(--text-muted); margin-bottom: 4px; }
+    .vs-timer   {
+      font-family: 'Orbitron', monospace; font-size: 24px; font-weight: 900;
+      color: var(--text); font-variant-numeric: tabular-nums;
+    }
+    .vs-timer.urgente { color: var(--adv); animation: blink .5s step-end infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+    /* ── Questão ── */
+    .questao-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 18px; padding: 28px 20px; text-align: center;
+    }
+    .questao-expr {
+      font-family: 'Orbitron', monospace; font-size: 42px; font-weight: 900;
+      color: var(--text); margin-bottom: 8px; line-height: 1.1;
+    }
+    .questao-num { font-size: 12px; color: var(--text-muted); }
+
+    /* ── Opções ── */
+    .opcoes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .opcao {
+      padding: 18px 10px; background: var(--card); border: 2px solid var(--border);
+      border-radius: 14px; font-size: 24px; font-weight: 800;
+      font-family: 'Orbitron', monospace; text-align: center;
+      cursor: pointer; transition: all .12s; color: var(--text);
+    }
+    .opcao:hover:not(:disabled)  { border-color: var(--eu); color: var(--eu); }
+    .opcao.certo  { border-color: #22c55e; background: rgba(34,197,94,.15); color: #22c55e; }
+    .opcao.errado { border-color: var(--adv); background: rgba(239,68,68,.12); color: var(--adv); }
+    .opcao:disabled { cursor: not-allowed; }
+
+    /* ── Loading ── */
+    .loading-wrap {
+      text-align: center; padding: 60px 20px;
+      color: var(--text-muted); font-size: 14px;
+    }
+    .loading-spinner {
+      width: 40px; height: 40px; border: 3px solid var(--border);
+      border-top-color: var(--purple); border-radius: 50%;
+      animation: spin .8s linear infinite; margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Resultado ── */
+    .resultado-wrap {
+      text-align: center; padding: 32px 20px;
+      display: flex; flex-direction: column; gap: 18px; align-items: center;
+    }
+    .resultado-emoji { font-size: 64px; }
+    .resultado-titulo { font-size: 26px; font-weight: 900; font-family: 'Rajdhani', sans-serif; }
+    .resultado-placar {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%;
+    }
+    .resultado-lado {
+      background: var(--card); border: 2px solid;
+      border-radius: 14px; padding: 16px; text-align: center;
+    }
+    .resultado-lado.eu  { border-color: var(--eu); }
+    .resultado-lado.adv { border-color: var(--adv); }
+    .resultado-nome { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
+    .resultado-pts  { font-size: 38px; font-weight: 900; }
+    .resultado-lado.eu  .resultado-pts { color: var(--eu); }
+    .resultado-lado.adv .resultado-pts { color: var(--adv); }
+    .resultado-xp {
+      font-size: 22px; font-weight: 800;
+      padding: 10px 24px; border-radius: 12px;
+      background: var(--card); border: 1px solid var(--border);
+    }
+    .btn-voltar-duelos {
+      padding: 13px 32px; background: var(--purple); color: #fff;
+      border: none; border-radius: 12px; font-size: 15px;
+      font-weight: 700; cursor: pointer;
+    }
+    .btn-voltar-duelos:hover { opacity: .85; }
+
+    @media (max-width: 400px) {
+      .questao-expr { font-size: 32px; }
+      .opcao { font-size: 20px; padding: 14px 8px; }
+      .lado-pts { font-size: 24px; }
+      .vs-timer { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+<script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-title">⚔️ Duelo em andamento</div>
+    <div class="topbar-sub" id="topbar-diff"></div>
+  </div>
+  <div id="topbar-avatar-circle" style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--card2)"></div>
+</div>
+
+<div id="duelo-arena" class="duelo-arena">
+  <div class="loading-wrap">
+    <div class="loading-spinner"></div>
+    Carregando duelo...
+  </div>
+</div>
+
+<script type="module">
+import { requireAluno, clearSession } from '/js/auth.js';
+import { db } from '/js/firebase-config.js';
+import { ref, get, set, update, onValue } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { getPerfil } from '/js/db.js';
+import { avatarUrl, avatarHtml, avatarConfigDefault, DUELO_DURACAO_SEGUNDOS, DUELO_ERRO_PENALIDADE, XP_DUELO } from '/js/gamificacao.js';
+import { atualizarPresenca } from '/js/presenca.js';
+
+// ── Setup ──────────────────────────────────────────────────────
+const sess = requireAluno('/index.html');
+if (!sess) throw new Error();
+const { alunos, turma } = sess;
+const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+
+const params  = new URLSearchParams(location.search);
+const dueloId = params.get('id');
+if (!dueloId) { window.location.href = '/aluno/duelos.html'; throw new Error(); }
+
+const perfil   = await getPerfil(uid);
+const apelido  = perfil?.apelido_ativo || alunos[0];
+const meuAvatar = avatarUrl(perfil?.avatar || avatarConfigDefault());
+
+// Avatar topbar
+(async () => { try {
+  const _c = document.getElementById('topbar-avatar-circle');
+  if (_c) _c.innerHTML = avatarHtml(perfil?.avatar || avatarConfigDefault(), alunos[0], '100%');
+} catch(_) {} })();
+
+// ── Carregar duelo ─────────────────────────────────────────────
+const dueloSnap = await get(ref(db, `duelos/${dueloId}`));
+if (!dueloSnap.exists()) { window.location.href = '/aluno/duelos.html'; throw new Error(); }
+const duelo = dueloSnap.val();
+
+if (duelo.status === 'encerrado' || duelo.status === 'expirado') {
+  window.location.href = '/aluno/duelos.html';
+  throw new Error();
+}
+
+const adversarioUid   = duelo.criador_uid === uid ? duelo.adversario_uid   : duelo.criador_uid;
+const adversarioNome  = duelo.criador_uid === uid ? (duelo.adversario_nome || '?') : duelo.criador_nome;
+const adversarioPerfil = await getPerfil(adversarioUid).catch(() => ({}));
+const adversarioAvatar = avatarUrl(adversarioPerfil?.avatar || avatarConfigDefault());
+
+const dificuldade = duelo.dificuldade || 'medio';
+const duracaoS    = DUELO_DURACAO_SEGUNDOS[dificuldade];
+const diffLabels  = { facil: '🟢 Fácil · 3 min', medio: '🟡 Médio · 4 min', dificil: '🔴 Difícil · 5 min' };
+document.getElementById('topbar-diff').textContent = diffLabels[dificuldade] || dificuldade;
+
+// ── Estado ────────────────────────────────────────────────────
+const estado = {
+  questaoAtual: 0,
+  meusPontos:   0,
+  advPontos:    0,
+  questoes:     [],
+  finalizado:   false,
+};
+
+let _timerInterval;
+let _tempoRestante = duracaoS;
+
+// ── Helpers ───────────────────────────────────────────────────
+function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function r(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+function fmtPts(n) {
+  const s = n.toFixed(1);
+  return s.endsWith('.0') ? s.slice(0,-2) : s;
+}
+
+// ── Questões ──────────────────────────────────────────────────
+function gerarQuestoes() {
+  const ops = {
+    facil:   ['+', '-', '×'],
+    medio:   ['+', '-', '×', '÷'],
+    dificil: ['×', '÷', '×', '÷'],
+  }[dificuldade];
+
+  const questoes = [];
+  for (let i = 0; i < 10; i++) {
+    const op = ops[Math.floor(Math.random() * ops.length)];
+    let a, b, resp;
+    if (op === '+') { a = r(10,50); b = r(10,50); resp = a + b; }
+    else if (op === '-') { a = r(20,80); b = r(5,a); resp = a - b; }
+    else if (op === '×') {
+      a = dificuldade === 'facil' ? r(2,9) : r(2,12);
+      b = dificuldade === 'facil' ? r(2,9) : r(2,12);
+      resp = a * b;
+    } else {
+      b = r(2,9); resp = r(2,12); a = b * resp;
+    }
+    questoes.push({ expr: `${a} ${op} ${b}`, resp, op });
+  }
+  return questoes;
+}
+
+async function obterQuestoes() {
+  const snap = await get(ref(db, `duelos/${dueloId}/questoes`));
+  if (snap.exists()) return snap.val();
+
+  if (duelo.criador_uid !== uid) {
+    return new Promise(resolve => {
+      let tentativas = 0;
+      const iv = setInterval(async () => {
+        tentativas++;
+        const s = await get(ref(db, `duelos/${dueloId}/questoes`));
+        if (s.exists()) { clearInterval(iv); resolve(s.val()); return; }
+        if (tentativas > 10) { clearInterval(iv); resolve(gerarQuestoes()); }
+      }, 500);
+    });
+  }
+
+  const questoes = gerarQuestoes();
+  await set(ref(db, `duelos/${dueloId}/questoes`), questoes);
+  return questoes;
+}
+
+// ── Opções ────────────────────────────────────────────────────
+function gerarOpcoes(resp) {
+  const erradas = new Set();
+  let tentativas = 0;
+  while (erradas.size < 3 && tentativas < 50) {
+    tentativas++;
+    const delta = Math.floor(Math.random() * 15) + 1;
+    const op = Math.random() > 0.5 ? resp + delta : Math.max(0, resp - delta);
+    if (op !== resp) erradas.add(op);
+  }
+  return [...erradas, resp].sort(() => Math.random() - 0.5);
+}
+
+// ── Render placar (template) ──────────────────────────────────
+function renderArena() {
+  document.getElementById('duelo-arena').innerHTML = `
+    <div class="placar-wrap">
+      <div class="lado eu">
+        <div class="lado-av"><img src="${meuAvatar}" alt="" onerror="this.src=''"></div>
+        <div class="lado-nome">${escH(apelido)}</div>
+        <div class="lado-pts" id="eu-pts">0</div>
+        <div class="lado-label">pares</div>
+      </div>
+      <div class="vs-center">
+        <div class="vs-label">VS</div>
+        <div class="vs-timer" id="vs-timer">${Math.floor(duracaoS/60)}:00</div>
+      </div>
+      <div class="lado adv">
+        <div class="lado-av"><img src="${adversarioAvatar}" alt="" onerror="this.src=''"></div>
+        <div class="lado-nome">${escH(adversarioNome)}</div>
+        <div class="lado-pts" id="adv-pts">0</div>
+        <div class="lado-label">pares</div>
+      </div>
+    </div>
+    <div class="questao-card">
+      <div class="questao-expr" id="questao-expr">...</div>
+      <div class="questao-num"  id="questao-num"></div>
+    </div>
+    <div class="opcoes-grid" id="opcoes-grid"></div>
+  `;
+}
+
+// ── Render questão ────────────────────────────────────────────
+function renderQuestao() {
+  const q = estado.questoes[estado.questaoAtual];
+  if (!q) { encerrarPartida('questoes'); return; }
+
+  document.getElementById('questao-expr').textContent = q.expr;
+  document.getElementById('questao-num').textContent  =
+    `Questão ${estado.questaoAtual + 1} / ${estado.questoes.length}`;
+
+  const opcoes = gerarOpcoes(q.resp);
+  document.getElementById('opcoes-grid').innerHTML = opcoes.map(op =>
+    `<button class="opcao" onclick="responder(${op},${q.resp},this)">${op}</button>`
+  ).join('');
+}
+
+// ── Responder ─────────────────────────────────────────────────
+window.responder = function(escolha, respCorreta, btnEl) {
+  if (estado.finalizado) return;
+  // desabilitar todos
+  document.querySelectorAll('.opcao').forEach(b => { b.onclick = null; b.disabled = true; });
+
+  const certo = escolha === respCorreta;
+  btnEl.classList.add(certo ? 'certo' : 'errado');
+
+  if (certo) {
+    estado.meusPontos += 1;
+  } else {
+    estado.meusPontos = Math.max(0, estado.meusPontos - DUELO_ERRO_PENALIDADE);
+    document.querySelectorAll('.opcao').forEach(b => {
+      if (Number(b.textContent) === respCorreta) b.classList.add('certo');
+    });
+  }
+
+  // placar ao vivo
+  set(ref(db, `duelos/${dueloId}/placar_live/${uid}`), estado.meusPontos).catch(() => {});
+  const euEl = document.getElementById('eu-pts');
+  if (euEl) euEl.textContent = fmtPts(estado.meusPontos);
+
+  estado.questaoAtual++;
+
+  setTimeout(() => {
+    if (estado.finalizado) return;
+    if (estado.questaoAtual >= estado.questoes.length) {
+      encerrarPartida('questoes');
+    } else {
+      renderQuestao();
+    }
+  }, 700);
+};
+
+// ── Timer ─────────────────────────────────────────────────────
+function iniciarTimer() {
+  _timerInterval = setInterval(() => {
+    _tempoRestante--;
+    const m = Math.floor(_tempoRestante / 60);
+    const s = _tempoRestante % 60;
+    const el = document.getElementById('vs-timer');
+    if (el) {
+      el.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+      el.className = 'vs-timer' + (_tempoRestante <= 30 ? ' urgente' : '');
+    }
+    if (_tempoRestante <= 0) encerrarPartida('tempo');
+  }, 1000);
+}
+
+// ── Iniciar partida ───────────────────────────────────────────
+async function iniciarPartida() {
+  renderArena();
+  estado.questoes = await obterQuestoes();
+  renderQuestao();
+  iniciarTimer();
+
+  // Escutar placar do adversário em tempo real
+  onValue(ref(db, `duelos/${dueloId}/placar_live/${adversarioUid}`), snap => {
+    if (snap.exists()) {
+      estado.advPontos = snap.val();
+      const el = document.getElementById('adv-pts');
+      if (el) el.textContent = fmtPts(estado.advPontos);
+    }
+  });
+
+  // Escutar se adversário encerrou
+  onValue(ref(db, `duelos/${dueloId}/resultado/${adversarioUid}`), snap => {
+    if (snap.exists() && !estado.finalizado) {
+      // adversário terminou — a tela de resultado será acionada no encerrarPartida
+    }
+  });
+}
+
+// ── Encerrar ──────────────────────────────────────────────────
+async function encerrarPartida(motivo) {
+  if (estado.finalizado) return;
+  estado.finalizado = true;
+  clearInterval(_timerInterval);
+
+  const tempoUsadoMs = (duracaoS - _tempoRestante) * 1000;
+
+  try {
+    await update(ref(db, `duelos/${dueloId}`), { status: 'encerrado' });
+    await set(ref(db, `duelos/${dueloId}/resultado/${uid}`), {
+      pares:    estado.meusPontos,
+      tempo_ms: tempoUsadoMs,
+    });
+  } catch(e) { console.warn('[Duelo] Erro ao salvar resultado:', e); }
+
+  try {
+    await atualizarPresenca({ em_duelo: false, status: 'disponivel' });
+  } catch(_) {}
+
+  // Aguardar resultado do adversário (max 3s)
+  setTimeout(() => mostrarResultado(), 3000);
+}
+
+// ── Resultado ─────────────────────────────────────────────────
+async function mostrarResultado() {
+  let meuRes  = { pares: estado.meusPontos };
+  let advRes  = { pares: estado.advPontos  };
+
+  try {
+    const snap = await get(ref(db, `duelos/${dueloId}/resultado`));
+    const resultados = snap.val() || {};
+    if (resultados[uid])           meuRes  = resultados[uid];
+    if (resultados[adversarioUid]) advRes  = resultados[adversarioUid];
+  } catch(_) {}
+
+  const euGanhei = meuRes.pares > advRes.pares;
+  const empate   = meuRes.pares === advRes.pares;
+  const xpDelta  = euGanhei
+    ? XP_DUELO[dificuldade].vitoria
+    : empate ? 0 : XP_DUELO[dificuldade].derrota;
+
+  try {
+    if (xpDelta !== 0) {
+      const { adicionarXP } = await import('/js/db.js');
+      await adicionarXP(uid, xpDelta);
+    }
+    if (euGanhei) {
+      await update(ref(db, `duelos/${dueloId}`), { vencedor_uid: uid });
+    } else if (!empate) {
+      await update(ref(db, `duelos/${dueloId}`), { vencedor_uid: adversarioUid });
+    }
+  } catch(_) {}
+
+  const emoji   = euGanhei ? '🏆' : empate ? '🤝' : '😤';
+  const titulo  = euGanhei ? 'Você venceu!' : empate ? 'Empate!' : 'Você perdeu!';
+  const xpCor   = xpDelta >= 0 ? '#22c55e' : 'var(--adv)';
+  const xpTxt   = (xpDelta >= 0 ? '+' : '') + xpDelta + ' XP';
+
+  document.getElementById('duelo-arena').innerHTML = `
+    <div class="resultado-wrap">
+      <div class="resultado-emoji">${emoji}</div>
+      <div class="resultado-titulo">${titulo}</div>
+      <div class="resultado-placar">
+        <div class="resultado-lado eu">
+          <div class="resultado-nome">${escH(apelido)}</div>
+          <div class="resultado-pts">${fmtPts(meuRes.pares)}</div>
+          <div style="font-size:10px;color:var(--text-muted)">pares</div>
+        </div>
+        <div class="resultado-lado adv">
+          <div class="resultado-nome">${escH(adversarioNome)}</div>
+          <div class="resultado-pts">${fmtPts(advRes.pares)}</div>
+          <div style="font-size:10px;color:var(--text-muted)">pares</div>
+        </div>
+      </div>
+      <div class="resultado-xp" style="color:${xpCor}">${xpTxt}</div>
+      <button class="btn-voltar-duelos" onclick="window.location.href='/aluno/duelos.html'">
+        Voltar aos duelos
+      </button>
+    </div>
+  `;
+}
+
+// ── Start ──────────────────────────────────────────────────────
+iniciarPartida();
+</script>
+</body>
+</html>
