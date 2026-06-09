@@ -1673,6 +1673,13 @@ async function encerrarSessao(motivo) {
         });
       } catch(e) {}
     }
+    try {
+      const { verificarConquistas } = await import('/js/conquistas.js');
+      await verificarConquistas(makeUid(alunos[0]), {
+        completouAtividade: true,
+        cem_pct: taxa === 1,
+      });
+    } catch(e) {}
   } catch(e) { console.warn('[XP] Erro ao adicionar XP:', e); }
   if (isTeste) {
     addHistoricoTeste('atividades', {

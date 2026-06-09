@@ -534,6 +534,10 @@ async function mostrarResultado(resultadosParam) {
       });
     } catch(e) { console.warn('[Feed duelo]', e); }
   }
+  try {
+    const { verificarConquistas } = await import('/js/conquistas.js');
+    await verificarConquistas(uid, {});
+  } catch(e) {}
 
   // Renderizar tela de resultado
   document.getElementById('duelo-arena').innerHTML = `

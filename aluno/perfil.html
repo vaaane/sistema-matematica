@@ -184,12 +184,9 @@
         </div>
       </div>
 
-      <!-- Tab: Conquistas (placeholder Etapa 11) -->
+      <!-- Tab: Conquistas -->
       <div class="tab-pane" id="tab-conquistas">
-        <div class="tab-placeholder">
-          <div class="icon">🏆</div>
-          <p>As conquistas chegam na próxima atualização.<br>Continue jogando para desbloquear!</p>
-        </div>
+        <div id="conquistas-content"></div>
       </div>
 
       <!-- Tab: Temporadas (placeholder Etapa 13) -->
@@ -231,7 +228,7 @@
 <script type="module">
 import { requireAluno, renderSidebarAluno, clearSession } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
-import { ref, update } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { ref, update, get } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { getPerfil } from '/js/db.js';
 import { calcularNivelPerfil, avatarUrl, avatarHtml, avatarConfigDefault, NIVEIS_PERFIL } from '/js/gamificacao.js';
 
@@ -373,7 +370,93 @@ window.ativarTab = function(id) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + id).classList.add('active');
   document.getElementById('tab-btn-' + id).classList.add('active');
+  if (id === 'conquistas') carregarConquistas();
 };
+
+async function carregarConquistas() {
+  const container = document.getElementById('conquistas-content');
+  if (!container) return;
+  container.innerHTML = '<p style="padding:20px;color:var(--muted)">Verificando conquistas...</p>';
+
+  // Verificar retroativamente com dados existentes antes de exibir
+  try {
+    const { verificarConquistas } = await import('/js/conquistas.js');
+
+    const tabSnap = await get(ref(db, `tabuada_ranking/${uid}`));
+    const nivelTab = tabSnap.val()?.melhor_nivel || 0;
+
+    const { getResultadosByAluno } = await import('/js/db.js');
+    const resultados = await getResultadosByAluno(alunos[0]).catch(() => []);
+    const temAtividade = resultados.some(r => r.concluido);
+    const tem100pct    = resultados.some(r => r.concluido && r.acertos === r.respondidas && r.respondidas > 0);
+
+    await verificarConquistas(uid, {
+      nivelTabuada:       nivelTab,
+      completouAtividade: temAtividade,
+      cem_pct:            tem100pct,
+    });
+  } catch(e) {
+    console.warn('[Conquistas retroativo]', e);
+  }
+
+  const [conquSnap, perfSnap] = await Promise.all([
+    get(ref(db, `conquistas/${uid}`)),
+    get(ref(db, `perfis/${uid}`)),
+  ]);
+
+  const conqus = conquSnap.val() || {};
+  const perf   = perfSnap.val()  || {};
+
+  const { CONQUISTAS_DEF } = await import('/js/conquistas.js');
+
+  const conquistadas = CONQUISTAS_DEF.filter(c => conqus[c.id]?.conquistado);
+  const pendentes    = CONQUISTAS_DEF.filter(c => !conqus[c.id]?.conquistado);
+
+  container.innerHTML = `
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px">
+      ${conquistadas.length} / ${CONQUISTAS_DEF.length} conquistas desbloqueadas
+    </div>
+
+    ${conquistadas.length > 0 ? `
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;
+                  letter-spacing:1px;color:var(--gold);margin-bottom:8px">
+        ✅ Desbloqueadas
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
+                  gap:8px;margin-bottom:20px">
+        ${conquistadas.map(c => `
+          <div style="background:var(--card);border:1px solid rgba(245,158,11,.3);
+                      border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:4px">
+            <div style="font-size:26px">${c.emoji}</div>
+            <div style="font-size:12px;font-weight:700">${c.nome}</div>
+            <div style="font-size:10px;color:var(--muted)">${c.desc}</div>
+            <div style="font-size:9px;color:var(--gold);margin-top:4px">
+              ${conqus[c.id]?.ts
+                ? new Date(conqus[c.id].ts).toLocaleDateString('pt-BR')
+                : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;
+                letter-spacing:1px;color:var(--muted);margin-bottom:8px">
+      🔒 Bloqueadas
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px">
+      ${pendentes.map(c => `
+        <div style="background:var(--card);border:1px solid var(--border);
+                    border-radius:12px;padding:14px;display:flex;flex-direction:column;
+                    gap:4px;opacity:.45">
+          <div style="font-size:26px">${c.emoji}</div>
+          <div style="font-size:12px;font-weight:700">${c.nome}</div>
+          <div style="font-size:10px;color:var(--muted)">${c.desc}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
 
 // ── Toast ──────────────────────────────────────────────────────
 function toast(msg) {

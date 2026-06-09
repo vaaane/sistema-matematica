@@ -421,6 +421,10 @@ async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo
         const { adicionarXP } = await import('/js/db.js');
         await adicionarXP(uid, 5);
       } catch(e) { console.warn('[XP] Erro ao adicionar XP tabuada:', e); }
+      try {
+        const { verificarConquistas } = await import('/js/conquistas.js');
+        await verificarConquistas(uid, { nivelTabuada: p.melhor_nivel || 0 });
+      } catch(e) {}
     }
     if (resultado) {
       const entry = {
