@@ -308,8 +308,8 @@
     <div class="level-sub" id="lov-sub">Excelente trabalho!</div>
     <div class="level-new" id="lov-new">Nível 2</div>
     <button class="btn btn-blue btn-lg" id="lov-btn" onclick="fecharOverlay()">Continuar →</button>
-    <button class="btn btn-outline btn-sm" id="lov-btn-repetir"
-      onclick="repetirNivelAtual()" style="margin-top:8px;display:none">
+    <button class="btn btn-sm" id="lov-btn-repetir" onclick="repetirNivelAtual()"
+      style="display:none;margin-top:8px;background:transparent;border:1px solid var(--border);color:var(--text-muted);font-size:12px;padding:6px 16px;border-radius:8px;cursor:pointer;width:100%">
       🔁 Repetir Nível
     </button>
   </div>
@@ -1719,11 +1719,10 @@ async function onGameWin() {
   document.querySelector('.level-card').style.animation = 'levelUpPop .45s';
   document.getElementById("level-overlay").style.display = 'flex';
 
-  const btnRepetir = document.getElementById('lov-btn-repetir');
-  if (btnRepetir) {
-    btnRepetir.style.display = (!_isSprint && !_isReplay && erros > 0 && nivelJogado < NIVEL_MAX)
-      ? 'block' : 'none';
-    btnRepetir._nivelParaRepetir = nivelJogado;
+  const _btnRep = document.getElementById('lov-btn-repetir');
+  if (_btnRep) {
+    _btnRep.style.display = (erros > 0 && !_isSprint && !_isReplay && nivelJogado < NIVEL_MAX) ? 'block' : 'none';
+    _btnRep._nivelRepetir = nivelJogado;
   }
 
   // Atualiza ranking em background — se virou líder, atualiza overlay
@@ -1799,12 +1798,12 @@ window.fecharOverlay = function() {
 
 window.repetirNivelAtual = function() {
   const btn = document.getElementById('lov-btn-repetir');
-  const nv  = btn?._nivelParaRepetir;
+  const nv  = btn?._nivelRepetir;
   if (!nv) return;
+  btn.style.display = 'none';
   document.getElementById('level-overlay').style.display = 'none';
   nivelAtual = nv;
-  progresso.nivel_atual  = nv;
-  progresso.melhor_nivel = melhorNivel;
+  progresso.nivel_atual = nv;
   buildGame();
 };
 

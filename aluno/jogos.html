@@ -448,14 +448,19 @@ if (rankSnap?.exists()) {
   console.warn('[jogos] tabuada_ranking vazio ou inacessível. rankSnap:', rankSnap);
 }
 console.log('[jogos] ranking:', rankAll.length, 'entradas totais');
+const concluintes      = rankAll.filter(r => (r.melhor_nivel || 0) >= 300);
+const rankEmProgresso  = rankAll.filter(r => (r.melhor_nivel || 0) < 300);
 const rankTurma = rankAll.filter(r => r.turma === turma);
 
-const liderGeral = rankAll[0] || null;
+const liderGeral    = rankAll[0] || null;
+const liderProgresso = rankEmProgresso[0] || null;
 const liderTurma = rankTurma[0] || null;
 const myUid      = uid; // uid já definido como (turma + '_' + nomeAluno).replace(...)
 const myGeralIdx = rankAll.findIndex(r => r._uid === myUid);
 const myTurmaIdx = rankTurma.findIndex(r => r._uid === myUid);
-const rankAllPos   = calcStdPos(rankAll);
+const rankAllPos          = calcStdPos(rankAll);
+const rankEmProgressoPos  = calcStdPos(rankEmProgresso);
+const myGeralIdxProg      = rankEmProgresso.findIndex(r => r._uid === myUid);
 const rankTurmaPos = calcStdPos(rankTurma);
 const myGeral    = myGeralIdx >= 0 ? rankAllPos[myGeralIdx]   : null;
 const myTurma    = myTurmaIdx >= 0 ? rankTurmaPos[myTurmaIdx] : null;
@@ -658,8 +663,8 @@ const barPct  = Math.min(100, Math.round(nivelAtual / NIVEL_MAX * 100));
 const faltam  = NIVEL_MAX - nivelAtual;
 const distCap = nivelAtual >= NIVEL_MAX
   ? `<strong>🏆 Nível máximo atingido!</strong> Aguarde novas liberações.`
-  : liderGeral && liderGeral._uid !== myUid
-    ? `Faltam <strong>${faltam}</strong> nível${faltam !== 1 ? 'is' : ''} para o máximo · <span style="opacity:.55">${topLv - nivelAtual} atrás de ${escH(liderGeral.nome)} · ${escH(liderGeral.turma||'?')}</span>`
+  : liderProgresso && liderProgresso._uid !== myUid
+    ? `Faltam <strong>${faltam}</strong> nível${faltam !== 1 ? 'is' : ''} para o máximo · <span style="opacity:.55">${liderProgresso.melhor_nivel - nivelAtual} atrás de ${escH(liderProgresso.nome)} · ${escH(liderProgresso.turma||'?')}</span>`
     : `Faltam <strong>${faltam}</strong> nível${faltam !== 1 ? 'is' : ''} para o máximo · <span style="opacity:.55">Você lidera o ranking!</span>`;
 
 // ── Ranking rows ───────────────────────────────────────────────
@@ -797,8 +802,8 @@ document.getElementById("content").innerHTML = `
     <div class="g-rb geral">
       <div class="g-rb-hdr"><h3>🏆 Ranking Geral</h3></div>
       <div class="g-rb-list">
-        ${rankAll.length
-          ? buildRankList(rankAll, rankAllPos, myGeralIdx)
+        ${rankEmProgresso.length
+          ? buildRankList(rankEmProgresso, rankEmProgressoPos, myGeralIdxProg)
           : '<div style="color:var(--g-muted);font-size:12px;padding:8px">Nenhum dado ainda.</div>'}
       </div>
     </div>
