@@ -146,6 +146,12 @@
     <div class="topbar-title">⚔️ Duelo em andamento</div>
     <div class="topbar-sub" id="topbar-diff"></div>
   </div>
+  <button onclick="confirmarSair()"
+    style="padding:7px 14px;border-radius:9px;border:1px solid var(--border);
+           background:transparent;color:var(--text-muted);font-size:12px;
+           font-weight:600;cursor:pointer;margin-left:auto">
+    ✖ Sair do duelo
+  </button>
   <div id="topbar-avatar-circle" style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--card2)"></div>
 </div>
 
@@ -409,6 +415,18 @@ async function encerrarPartida(motivo) {
   estado.finalizado = true;
   clearInterval(_timerInterval);
 
+  if (motivo === 'abandono') {
+    try {
+      await set(ref(db, `duelos/${dueloId}/resultado/${uid}`), {
+        pares:    0,
+        tempo_ms: (duracaoS - _tempoRestante) * 1000,
+        abandono: true,
+      });
+      await atualizarPresenca({ em_duelo: false, status: 'disponivel' });
+    } catch(_) {}
+    return;
+  }
+
   const tempoUsadoMs = (duracaoS - _tempoRestante) * 1000;
 
   try {
@@ -485,6 +503,17 @@ async function mostrarResultado() {
     </div>
   `;
 }
+
+// ── Sair ──────────────────────────────────────────────────────
+window.confirmarSair = function() {
+  if (estado.finalizado) {
+    window.location.href = '/aluno/duelos.html';
+    return;
+  }
+  if (!confirm('Sair do duelo agora? Você perderá os pontos desta partida.')) return;
+  encerrarPartida('abandono');
+  window.location.href = '/aluno/duelos.html';
+};
 
 // ── Start ──────────────────────────────────────────────────────
 iniciarPartida();

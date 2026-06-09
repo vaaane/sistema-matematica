@@ -211,6 +211,15 @@ document.getElementById("topbar-sub").textContent = isModoTeste() ? '🧪 Modo T
   const _c = document.getElementById('topbar-avatar-circle');
   if (_c) _c.innerHTML = avatarHtml(_p.avatar || avatarConfigDefault(), alunoNome, '100%');
 } catch(_) {} })();
+
+(async () => { try {
+  const { iniciarNotifDuelo } = await import('/js/duelo_notif.js');
+  const { getPerfil } = await import('/js/db.js');
+  const _p = await getPerfil(sessionUid).catch(() => ({}));
+  const _apelido = _p?.apelido_ativo || alunoNome;
+  if (_p?.duelos_disponivel !== false) iniciarNotifDuelo(sessionUid, _apelido);
+} catch(e) { console.warn('[DueloNotif]', e); } })();
+
 applyTopRankVisuals();
 
 getAlunoPreferencia(turma, alunoNome, 'robotica').then(v => {

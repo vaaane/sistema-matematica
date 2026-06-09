@@ -240,6 +240,14 @@ if (!sess) throw new Error();
 const { alunos, turma } = sess;
 const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
 
+(async () => { try {
+  const { iniciarNotifDuelo } = await import('/js/duelo_notif.js');
+  const { getPerfil } = await import('/js/db.js');
+  const _p = await getPerfil(uid).catch(() => ({}));
+  const _apelido = _p?.apelido_ativo || alunos[0];
+  if (_p?.duelos_disponivel !== false) iniciarNotifDuelo(uid, _apelido);
+} catch(e) { console.warn('[DueloNotif]', e); } })();
+
 window.sair = () => { clearSession(); window.location.href = '/index.html'; };
 renderSidebarAluno('sidebar', 'perfil');
 

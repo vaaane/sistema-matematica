@@ -297,6 +297,14 @@ const uid = (turma + '_' + nomeAluno).replace(/[.#$\[\]/\s]/g, '_');
   window.addEventListener('beforeunload', () => encerrarPresenca());
 } catch(e) { console.warn('[Presença]', e); } })();
 
+(async () => { try {
+  const { iniciarNotifDuelo } = await import('/js/duelo_notif.js');
+  const { getPerfil } = await import('/js/db.js');
+  const _p = await getPerfil(uid).catch(() => ({}));
+  const _apelido = _p?.apelido_ativo || nomeAluno;
+  if (_p?.duelos_disponivel !== false) iniciarNotifDuelo(uid, _apelido);
+} catch(e) { console.warn('[DueloNotif]', e); } })();
+
 function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // Standard ranking: empates compartilham posição, próximo pula

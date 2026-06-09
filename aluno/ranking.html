@@ -140,6 +140,15 @@ document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
   if (_c) _c.innerHTML = avatarHtml(_p.avatar || avatarConfigDefault(), alunos[0], '100%');
 } catch(_) {} })();
 
+(async () => { try {
+  const { iniciarNotifDuelo } = await import('/js/duelo_notif.js');
+  const { getPerfil } = await import('/js/db.js');
+  const _uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+  const _p = await getPerfil(_uid).catch(() => ({}));
+  const _apelido = _p?.apelido_ativo || alunos[0];
+  if (_p?.duelos_disponivel !== false) iniciarNotifDuelo(_uid, _apelido);
+} catch(e) { console.warn('[DueloNotif]', e); } })();
+
 // ── Helpers ───────────────────────────────────────────────────
 function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 const isMob = () => window.innerWidth <= 480;

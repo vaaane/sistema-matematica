@@ -187,6 +187,14 @@ document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
   window.addEventListener('beforeunload', () => encerrarPresenca());
 } catch(e) { console.warn('[Presença]', e); } })();
 
+(async () => { try {
+  const { iniciarNotifDuelo } = await import('/js/duelo_notif.js');
+  const { getPerfil } = await import('/js/db.js');
+  const _p = await getPerfil(_pUid).catch(() => ({}));
+  const _apelido = _p?.apelido_ativo || alunos[0];
+  if (_p?.duelos_disponivel !== false) iniciarNotifDuelo(_pUid, _apelido);
+} catch(e) { console.warn('[DueloNotif]', e); } })();
+
 document.documentElement.setAttribute('data-theme','dark');
 const content = document.getElementById("content");
 content.classList.add('ac');

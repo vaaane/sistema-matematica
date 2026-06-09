@@ -346,6 +346,15 @@ document.getElementById('topbar-sub').textContent = `Olá, ${aluno}!`;
   window.addEventListener('beforeunload', () => encerrarPresenca());
 } catch(e) { console.warn('[Presença]', e); } })();
 
+(async () => { try {
+  const { iniciarNotifDuelo } = await import('/js/duelo_notif.js');
+  const { getPerfil } = await import('/js/db.js');
+  const _pUidRob = (turma + '_' + aluno).replace(/[.#$[\]/\s]/g, '_');
+  const _p = await getPerfil(_pUidRob).catch(() => ({}));
+  const _apelido = _p?.apelido_ativo || aluno;
+  if (_p?.duelos_disponivel !== false) iniciarNotifDuelo(_pUidRob, _apelido);
+} catch(e) { console.warn('[DueloNotif]', e); } })();
+
 const ATIVIDADES = [
   { n:1, label:"Atividade 1", desc:"Hardware básico e blocos fundamentais",  emoji:"🔌", bg:"#EBF6FD" },
   { n:2, label:"Atividade 2", desc:"Aprofundamento de hardware e operadores", emoji:"⚡", bg:"#F5F3FF" },

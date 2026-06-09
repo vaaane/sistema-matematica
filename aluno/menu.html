@@ -185,6 +185,15 @@ document.getElementById("topbar-sub").textContent   = `Turma ${turma} · Bom tra
 } catch(e) { console.warn('[Presença]', e); } })();
 
 const tabuadaUid = (turma + '_' + alunos[0]).replace(/[.#$\[\]/\s]/g, '_');
+
+(async () => { try {
+  const { iniciarNotifDuelo } = await import('/js/duelo_notif.js');
+  const { getPerfil } = await import('/js/db.js');
+  const _p = await getPerfil(tabuadaUid).catch(() => ({}));
+  const _apelido = _p?.apelido_ativo || alunos[0];
+  if (_p?.duelos_disponivel !== false) iniciarNotifDuelo(tabuadaUid, _apelido);
+} catch(e) { console.warn('[DueloNotif]', e); } })();
+
 const [todosRaw, _libRaw, tabuadaSnap, torneioSnap] = await Promise.all([
   getResultados(),
   getLiberadasParaTurma(turma),
