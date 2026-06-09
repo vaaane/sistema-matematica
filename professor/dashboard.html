@@ -607,10 +607,19 @@ onValue(ref(db, 'perfis'), async (snap) => {
     lista.innerHTML = '<p style="color:var(--text-muted);font-size:13px">Nenhum apelido pendente.</p>';
     return;
   }
-  lista.innerHTML = pendentes.map(p => `
+  function nomeDoUid(uid) {
+    const parts = uid.split('_');
+    if (parts.length < 2) return { nome: uid, turma: '' };
+    return { nome: parts.slice(1).join(' '), turma: parts[0] };
+  }
+  lista.innerHTML = pendentes.map(p => {
+    const fallback = nomeDoUid(p.uid);
+    const nome  = p.nome  || fallback.nome;
+    const turma = p.turma || fallback.turma;
+    return `
     <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600">${escH(p.nome || '')} <span style="color:var(--text-muted);font-weight:400;font-size:11px">(${escH(p.turma || '')})</span></div>
+        <div style="font-size:13px;font-weight:600">${escH(nome)} <span style="color:var(--text-muted);font-weight:400;font-size:11px">(${escH(turma)})</span></div>
         <span style="font-size:12px">Apelido: <strong style="color:var(--orange)">"${escH(p.apelido_pendente || '')}"</strong></span>
         ${p.apelido_ativo ? `<span style="font-size:10px;color:var(--text-muted)"> (atual: ${escH(p.apelido_ativo)})</span>` : ''}
       </div>
@@ -618,7 +627,7 @@ onValue(ref(db, 'perfis'), async (snap) => {
               style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer">✅ Aprovar</button>
       <button onclick="pedirMotivo('${p.uid}','${escH(p.apelido_pendente || '')}')"
               style="background:var(--card2);color:var(--red);border:1px solid var(--red);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer">❌ Recusar</button>
-    </div>`).join('');
+    </div>`; }).join('');
 });
 
 window.aprovarApelido = async function(uid) {

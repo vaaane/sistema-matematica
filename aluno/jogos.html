@@ -829,6 +829,29 @@ document.getElementById("content").innerHTML = `
 
 </div>`;
 
+// ── Hall da Fama ──────────────────────────────────────────────
+{
+  const concluintes = rankAll.filter(r => (r.melhor_nivel || 0) >= 300);
+  if (concluintes.length > 0) {
+    const hallCard = document.createElement('div');
+    hallCard.style.cssText = `background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(245,158,11,.05));border:1.5px solid rgba(245,158,11,.5);border-radius:14px;padding:14px 16px;margin-bottom:16px;box-shadow:0 0 20px rgba(245,158,11,.1);`;
+    const emojis = ['🥇','🥈','🥉'];
+    const rows = concluintes.map((r, i) => {
+      const isMe = r._uid === myUid;
+      return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;margin-bottom:5px;background:rgba(245,158,11,${isMe?'.18':'.07'});border:1px solid rgba(245,158,11,${isMe?'.5':'.2'})">
+        <span style="font-size:17px;min-width:26px;text-align:center">${emojis[i] || `${i+1}º`}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;color:#F59E0B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(r.nome||'?')}${isMe?' ⭐':''}</div>
+          <div style="font-size:11px;color:var(--g-muted);margin-top:1px">Turma ${escH(r.turma||'?')} · ${i+1}º a concluir</div>
+        </div>
+        <span style="font-size:11px;font-weight:700;color:#F59E0B;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:3px 9px;flex-shrink:0">Nível 300 🏆</span>
+      </div>`;
+    }).join('');
+    hallCard.innerHTML = `<div style="font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#F59E0B;display:flex;align-items:center;gap:6px;margin-bottom:12px">🏆 Hall da Fama — Nível 300</div>${rows}`;
+    document.querySelector('.g-rank-wrap').insertAdjacentElement('afterend', hallCard);
+  }
+}
+
 // ── Bloquear tabuada se avaliação ativa ──────────────────────
 if (_avStatus.ativa) {
   const mins = Math.ceil(_avStatus.restMs / 60000);

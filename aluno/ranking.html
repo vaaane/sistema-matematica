@@ -12,6 +12,15 @@
     .rnk-tab{flex:1;padding:9px 4px;border:none;border-radius:9px;font-family:'Inter',sans-serif;font-size:clamp(10px,2.2vw,12px);font-weight:600;cursor:pointer;color:var(--text-muted);background:transparent;transition:all .2s;white-space:nowrap;line-height:1.2;}
     .rnk-tab.active{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(47,158,220,.3);}
     /* ── Scope toggle ── */
+    /* ── Hall da Fama ── */
+    .hall-wrap{background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(245,158,11,.05));border:1.5px solid rgba(245,158,11,.5);border-radius:14px;padding:14px 16px;margin-bottom:20px;box-shadow:0 0 20px rgba(245,158,11,.1);}
+    .hall-title{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#F59E0B;display:flex;align-items:center;gap:6px;margin-bottom:12px;}
+    .hall-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:6px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);}
+    .hall-row.is-me{background:rgba(245,158,11,.18);border-color:rgba(245,158,11,.5);}
+    .hall-ordem{font-size:18px;min-width:28px;text-align:center;flex-shrink:0;}
+    .hall-nome{flex:1;font-size:14px;font-weight:700;color:#F59E0B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .hall-sub{font-size:11px;color:var(--text-muted);margin-top:2px;}
+    .hall-badge{font-size:12px;font-weight:700;color:#F59E0B;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:3px 10px;flex-shrink:0;}
     .rnk-scope{display:flex;gap:6px;margin-bottom:14px;}
     .rnk-scope-btn{padding:6px 18px;border:1.5px solid var(--border);border-radius:20px;background:var(--bg);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .15s;}
     .rnk-scope-btn.active{border-color:var(--blue);background:var(--blue);color:#fff;}
@@ -489,33 +498,29 @@ function render() {
       const MAX_VISIBLE = 5;
       const visiveis  = concluintes.slice(0, MAX_VISIBLE);
       const restantes = concluintes.slice(MAX_VISIBLE);
-      const hallRows = (lista) => lista.map((r, i) => {
+      const ordemEmoji = ['🥇','🥈','🥉'];
+      const hallRows = (lista) => lista.map((r) => {
         const ordem = concluintes.indexOf(r) + 1;
-        const sufixo = ordem === 1 ? '1º' : ordem === 2 ? '2º' : ordem === 3 ? '3º' : `${ordem}º`;
-        const isMe   = (r.nome||'')===alunos[0]&&(r.turma||'?')===turma;
-        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-left:3px solid rgba(239,159,39,.5);border-radius:0 8px 8px 0;background:rgba(245,158,11,.07);margin-bottom:6px;position:relative">
-          <span style="font-size:17px;min-width:24px;text-align:center;flex-shrink:0">🏆</span>
+        const isMe  = (r.nome||'') === alunos[0] && (r.turma||'?') === turma;
+        const emoji = ordemEmoji[ordem-1] || `${ordem}º`;
+        return `<div class="hall-row${isMe?' is-me':''}">
+          <span class="hall-ordem">${emoji}</span>
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:700;color:#F59E0B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(r.nome||'?')}${isMe?' ★':''}</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:1px">Turma ${escH(r.turma||'?')} · ${sufixo} a concluir</div>
+            <div class="hall-nome">${escH(r.nome||'?')}${isMe?' ⭐':''}</div>
+            <div class="hall-sub">Turma ${escH(r.turma||'?')} · ${ordem}º a concluir</div>
           </div>
-          <div style="text-align:right;flex-shrink:0">
-            <div style="font-size:13px;font-weight:700;color:#F59E0B">Nível 300</div>
-            <div style="font-size:10px;color:var(--text-muted)">tabuada</div>
-          </div>
+          <span class="hall-badge">Nível 300 🏆</span>
         </div>`;
       }).join('');
       hallHtml = `
-        <div style="margin-bottom:20px">
-          <div style="font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#F59E0B;margin-bottom:10px;display:flex;align-items:center;gap:6px">
-            🏆 Hall da Fama — Nível 300 · ordem de chegada
-          </div>
+        <div class="hall-wrap">
+          <div class="hall-title">🏆 Hall da Fama — Nível 300 · Ordem de chegada</div>
           ${hallRows(visiveis)}
           ${restantes.length > 0 ? `
             <div id="hall-extra" style="display:none">${hallRows(restantes)}</div>
-            <button onclick="const e=document.getElementById('hall-extra');const b=document.getElementById('hall-btn');if(e.style.display==='none'){e.style.display='';b.textContent='Ocultar ▲';}else{e.style.display='none';b.textContent='Ver todos os concluintes (${concluintes.length}) →';}" id="hall-btn"
+            <button onclick="const e=document.getElementById('hall-extra');const b=document.getElementById('hall-btn');if(e.style.display==='none'){e.style.display='';b.textContent='Ocultar ▲';}else{e.style.display='none';b.textContent='Ver todos (${concluintes.length}) →';}" id="hall-btn"
               style="width:100%;padding:8px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:8px;color:#F59E0B;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px">
-              Ver todos os concluintes (${concluintes.length}) →
+              Ver todos (${concluintes.length}) →
             </button>` : ''}
         </div>`;
     }
