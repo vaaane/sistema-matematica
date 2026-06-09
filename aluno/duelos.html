@@ -174,6 +174,14 @@
       font-weight: 700; color: var(--purple); margin: 8px 0;
     }
 
+    /* histórico + ranking */
+    .hstat { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; }
+    .hstat .v { font-size: 22px; font-weight: 900; margin-bottom: 2px; }
+    .hstat .l { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .3px; }
+    .duel-diff.facil   { color: #22c55e; border-color: #22c55e !important; }
+    .duel-diff.medio   { color: #f59e0b; border-color: #f59e0b !important; }
+    .duel-diff.dificil { color: #ef4444; border-color: #ef4444 !important; }
+
     /* placeholder */
     .tab-placeholder {
       text-align: center; padding: 50px 20px;
@@ -242,17 +250,21 @@
 
         <!-- Tab: Histórico -->
         <div class="tab-pane" id="tab-historico">
-          <div class="tab-placeholder">
-            <div class="icon">📋</div>
-            <p>Histórico disponível após o primeiro duelo.</p>
+          <div id="historico-content">
+            <div class="tab-placeholder">
+              <div class="icon">📋</div>
+              <p>Histórico disponível após o primeiro duelo.</p>
+            </div>
           </div>
         </div>
 
         <!-- Tab: Ranking -->
         <div class="tab-pane" id="tab-ranking">
-          <div class="tab-placeholder">
-            <div class="icon">🏆</div>
-            <p>Ranking de duelos disponível em breve.</p>
+          <div id="ranking-content">
+            <div class="tab-placeholder">
+              <div class="icon">🏆</div>
+              <p>Ranking de duelos disponível em breve.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -351,6 +363,8 @@ window.ativarTab = function(id) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(`tab-${id}`)?.classList.add('active');
   document.getElementById(`tab-btn-${id}`)?.classList.add('active');
+  if (id === 'historico') carregarHistorico();
+  if (id === 'ranking')   carregarRankingDuelos();
 };
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -619,6 +633,154 @@ setInterval(async () => {
     });
   } catch(_) {}
 }, 10_000);
+
+// ── Histórico ─────────────────────────────────────────────────
+async function carregarHistorico() {
+  const el = document.getElementById('historico-content');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">Carregando...</div>';
+
+  const snap = await get(ref(db, `perfis/${uid}/historico_duelos`));
+  if (!snap.exists()) {
+    el.innerHTML = '<p style="text-align:center;padding:40px;color:var(--text-muted)">Nenhum duelo realizado ainda.</p>';
+    return;
+  }
+
+  const duelos = [];
+  snap.forEach(c => duelos.push({ id: c.key, ...c.val() }));
+  duelos.sort((a, b) => b.ts - a.ts);
+
+  const total    = duelos.length;
+  const vitorias = duelos.filter(d => d.resultado === 'vitoria').length;
+  const derrotas = duelos.filter(d => d.resultado === 'derrota').length;
+  const xpTotal  = duelos.reduce((s, d) => s + (d.xp_delta || 0), 0);
+
+  const DIFF_LABEL = { facil:'Fácil', medio:'Médio', dificil:'Difícil' };
+  const DIFF_CLASS = { facil:'facil', medio:'medio', dificil:'dificil' };
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">
+      <div class="hstat"><div class="v" style="color:var(--green)">${vitorias}</div><div class="l">Vitórias</div></div>
+      <div class="hstat"><div class="v" style="color:#ef4444">${derrotas}</div><div class="l">Derrotas</div></div>
+      <div class="hstat"><div class="v" style="color:var(--purple)">${total}</div><div class="l">Total</div></div>
+      <div class="hstat"><div class="v" style="color:var(--gold,#ffd700)">${xpTotal >= 0 ? '+' : ''}${xpTotal}</div><div class="l">XP duelos</div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${duelos.map(d => {
+        const isVit = d.resultado === 'vitoria';
+        const isEmp = d.resultado === 'empate';
+        const data  = new Date(d.ts).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
+        const hora  = new Date(d.ts).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+        return `
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:11px;
+                      padding:12px 16px;display:grid;
+                      grid-template-columns:28px 1fr auto auto;align-items:center;gap:12px">
+            <div style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;
+                        justify-content:center;font-size:12px;font-weight:900;
+                        background:${isVit ? 'rgba(34,197,94,.15)' : isEmp ? 'rgba(127,119,221,.15)' : 'rgba(239,68,68,.12)'};
+                        color:${isVit ? 'var(--green)' : isEmp ? 'var(--purple)' : '#ef4444'}">
+              ${isVit ? 'W' : isEmp ? '=' : 'L'}
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:700">${escH(d.adversario_nome)}
+                <span style="color:var(--text-muted);font-weight:400;font-size:10px">· ${escH(d.adversario_turma || '')}</span>
+              </div>
+              <div style="font-size:10px;color:var(--text-muted)">${data} às ${hora}</div>
+            </div>
+            <div style="font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap">
+              <span style="color:${isVit ? 'var(--green)' : '#ef4444'}">${d.meus_pares?.toFixed(1).replace('.0','') ?? '?'}</span>
+              <span style="color:var(--text-muted);margin:0 3px">×</span>
+              <span style="color:${!isVit && !isEmp ? 'var(--green)' : '#ef4444'}">${d.adv_pares?.toFixed(1).replace('.0','') ?? '?'}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+              <div style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;border:1px solid"
+                   class="duel-diff ${DIFF_CLASS[d.dificuldade] || ''}">${DIFF_LABEL[d.dificuldade] || d.dificuldade}</div>
+              <div style="font-size:10px;font-weight:700;color:${(d.xp_delta||0) >= 0 ? 'var(--green)' : '#ef4444'}">
+                ${(d.xp_delta||0) >= 0 ? '+' : ''}${d.xp_delta || 0} XP
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+// ── Ranking de duelos ─────────────────────────────────────────
+async function carregarRankingDuelos() {
+  const el = document.getElementById('ranking-content');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">Carregando...</div>';
+
+  const snap = await get(ref(db, 'perfis'));
+  if (!snap.exists()) {
+    el.innerHTML = '<p style="text-align:center;padding:40px;color:var(--text-muted)">Nenhum duelo realizado ainda.</p>';
+    return;
+  }
+
+  const lista = [];
+  snap.forEach(c => {
+    const v = c.val();
+    if (!v?.nome) return;
+    if ((v.duelos_total || 0) === 0) return;
+    lista.push({
+      uid:      c.key,
+      nome:     v.apelido_ativo || v.nome,
+      turma:    v.turma || '',
+      vitorias: v.duelos_vitorias || 0,
+      total:    v.duelos_total    || 0,
+      xp:       v.xp || 0,
+      avatar:   v.avatar,
+    });
+  });
+
+  lista.sort((a, b) => b.vitorias - a.vitorias || b.xp - a.xp);
+
+  if (lista.length === 0) {
+    el.innerHTML = '<p style="text-align:center;padding:40px;color:var(--text-muted)">Nenhum duelo realizado ainda.</p>';
+    return;
+  }
+
+  const { avatarUrl, avatarConfigDefault } = await import('/js/gamificacao.js');
+  const posEmoji = ['👑', '🥈', '🥉'];
+
+  el.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:6px">
+      ${lista.slice(0, 20).map((p, i) => {
+        const isMe = p.uid === uid;
+        const pos  = i + 1;
+        const av   = avatarUrl(p.avatar || avatarConfigDefault());
+        return `
+          <div style="background:var(--card);
+                      border:1px solid ${isMe ? 'rgba(59,130,246,.4)' : 'var(--border)'};
+                      ${isMe ? 'background:rgba(59,130,246,.04);' : ''}
+                      border-radius:10px;padding:10px 14px;
+                      display:flex;align-items:center;gap:12px">
+            <div style="font-size:16px;font-weight:900;min-width:28px;text-align:center;
+                        color:${pos <= 3 ? 'var(--gold,#ffd700)' : 'var(--text-muted)'}">
+              ${pos <= 3 ? posEmoji[pos-1] : `#${pos}`}
+            </div>
+            <div style="width:34px;height:34px;border-radius:50%;overflow:hidden;
+                        background:var(--card2);flex-shrink:0">
+              <img src="${av}" alt="" style="width:100%;height:100%" onerror="this.src=''">
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:700;
+                          ${isMe ? 'color:#93c5fd' : ''}">
+                ${escH(p.nome)}${isMe ? ' ← você' : ''}
+              </div>
+              <div style="font-size:10px;color:var(--text-muted)">${escH(p.turma)} · ${p.total} duelos</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:14px;font-weight:800;color:var(--green)">${p.vitorias} vitórias</div>
+              <div style="font-size:10px;color:var(--text-muted)">${p.xp} XP total</div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
 </script>
 </body>
 </html>

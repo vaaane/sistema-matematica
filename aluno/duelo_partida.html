@@ -475,6 +475,29 @@ async function mostrarResultado() {
     }
   } catch(_) {}
 
+  // Salvar no histórico do aluno
+  try {
+    const histEntry = {
+      duelo_id:         dueloId,
+      dificuldade,
+      adversario_uid:   adversarioUid,
+      adversario_nome:  adversarioNome,
+      adversario_turma: duelo.criador_uid === uid ? duelo.criador_turma : (duelo.adversario_turma || ''),
+      meus_pares:       meuRes.pares,
+      adv_pares:        advRes.pares,
+      resultado:        euGanhei ? 'vitoria' : empate ? 'empate' : 'derrota',
+      xp_delta:         xpDelta,
+      ts:               Date.now(),
+    };
+    await set(ref(db, `perfis/${uid}/historico_duelos/${dueloId}`), histEntry);
+
+    const _perfAtual = await getPerfil(uid).catch(() => ({}));
+    await update(ref(db, `perfis/${uid}`), {
+      duelos_total:    (_perfAtual.duelos_total    || 0) + 1,
+      duelos_vitorias: (_perfAtual.duelos_vitorias || 0) + (euGanhei ? 1 : 0),
+    });
+  } catch(e) { console.warn('[Histórico duelo]', e); }
+
   const emoji   = euGanhei ? '🏆' : empate ? '🤝' : '😤';
   const titulo  = euGanhei ? 'Você venceu!' : empate ? 'Empate!' : 'Você perdeu!';
   const xpCor   = xpDelta >= 0 ? '#22c55e' : 'var(--adv)';
