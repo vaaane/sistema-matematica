@@ -112,28 +112,31 @@ export function aplicarXP(xpAtual, delta) {
   return Math.max(0, (xpAtual || 0) + delta);
 }
 
+const SKIN_HEX = {
+  tanned:    'fd9841', yellow:    'f8d25c', pale:      'fddbb4',
+  light:     'edb98a', brown:     'd08b5b', darkBrown: 'ae5d29',
+  black:     '614335',
+};
+
 export function avatarUrl(config = {}) {
-  const c = {
-    skin:       config.skin       || 'light',
-    top:        config.top        || 'shortFlat',
-    acc:        config.acc        || 'blank',
-    cloth:      config.cloth      || 'hoodie',
-    clothColor: config.clothColor || 'blue03',
-    bg:         config.bg         || '1a3a4a',
-  };
+  const skin = SKIN_HEX[config.skin] || SKIN_HEX['light'];
+  const top  = config.top || 'shortFlat';
+  const acc  = config.acc || 'blank';
+  const bg   = config.bg  || 'b6e3f4';
+
   const params = new URLSearchParams();
-  params.set('skinColor', c.skin);
-  params.set('top', c.top);
-  params.set('backgroundColor', c.bg);
+  params.set('skinColor', skin);
+  params.set('top', top);
+  params.set('backgroundColor', bg);
   params.set('backgroundType', 'solid');
-  if (c.acc && c.acc !== 'blank') {
-    params.set('accessories', c.acc);
+
+  if (acc && acc !== 'blank') {
+    params.set('accessories', acc);
     params.set('accessoriesProbability', '100');
   } else {
     params.set('accessoriesProbability', '0');
   }
-  params.set('clothesType', c.cloth);
-  params.set('clothesColor', c.clothColor);
+
   return `https://api.dicebear.com/9.x/avataaars/svg?${params}`;
 }
 
@@ -144,5 +147,5 @@ export function avatarHtml(config = {}, fallbackLetra = '?', tamanho = '100%') {
 }
 
 export function avatarConfigDefault() {
-  return { skin:'light', top:'shortFlat', acc:'blank', cloth:'hoodie', clothColor:'blue03', bg:'1a3a4a' };
+  return { skin: 'light', top: 'shortFlat', acc: 'blank', bg: 'b6e3f4' };
 }
