@@ -222,6 +222,19 @@
     .podium-spot.g3 { background:rgba(180,83,9,.07); border-radius:10px; padding:5px 3px; }
     @keyframes gold-glow { 0%,100%{box-shadow:0 0 0 rgba(245,158,11,0)} 50%{box-shadow:0 0 18px rgba(245,158,11,.25)} }
     .podium-me { outline:2.5px solid var(--purple); outline-offset:2px; border-radius:8px; }
+    /* Mini-login dupla */
+    .dupla-wrap { margin-bottom:14px; }
+    .dupla-add-btn { background:rgba(0,212,255,.08); border:1px solid rgba(0,212,255,.3); color:#00d4ff; border-radius:10px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; width:100%; text-align:left; }
+    .dupla-add-btn:hover { background:rgba(0,212,255,.15); }
+    .dupla-panel { display:none; flex-direction:column; gap:10px; background:rgba(0,212,255,.04); border:1px solid rgba(0,212,255,.2); border-radius:12px; padding:14px; margin-top:8px; }
+    .dupla-panel.aberto { display:flex; }
+    .dupla-row { display:flex; gap:8px; flex-wrap:wrap; }
+    .dupla-sel { flex:1; min-width:100px; background:#0d0f1a; border:1px solid rgba(0,212,255,.3); border-radius:8px; padding:7px 10px; color:#e8eaf6; font-size:13px; outline:none; }
+    .dupla-pin { width:90px; background:#0d0f1a; border:1px solid rgba(0,212,255,.3); border-radius:8px; padding:7px 10px; color:#e8eaf6; font-size:13px; letter-spacing:4px; outline:none; }
+    .dupla-ok { background:linear-gradient(135deg,#00d4ff,#0090cc); color:#000; border:none; border-radius:8px; padding:7px 16px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; }
+    .dupla-badge { display:flex; align-items:center; gap:8px; background:rgba(0,212,255,.1); border:1px solid rgba(0,212,255,.35); border-radius:10px; padding:8px 14px; font-size:13px; font-weight:600; color:#00d4ff; }
+    .dupla-remove { background:none; border:none; color:rgba(0,212,255,.6); cursor:pointer; font-size:16px; margin-left:auto; }
+    .dupla-erro { font-size:12px; color:#ff4444; display:none; }
   </style>
 </head>
 <body>
@@ -255,6 +268,31 @@
 
         <!-- Tab: Duelos -->
         <div class="tab-pane active" id="tab-duelos">
+          <!-- Mini-login dupla -->
+          <div class="dupla-wrap">
+            <div id="dupla-badge-duelos" style="display:none" class="dupla-badge">
+              <span id="dupla-badge-texto"></span>
+              <button class="dupla-remove" onclick="removerDuplaDuelos()">✕</button>
+            </div>
+            <button class="dupla-add-btn" id="btn-add-dupla" onclick="toggleDuplaDuelos()">👥 + Adicionar parceiro</button>
+            <div class="dupla-panel" id="painel-dupla-duelos">
+              <div style="font-size:12px;color:#00d4ff;font-weight:600">Parceiro — qualquer turma</div>
+              <div class="dupla-row">
+                <select class="dupla-sel" id="dupla-turma-sel" onchange="carregarAlunosDupla()">
+                  <option value="">Turma...</option>
+                  <option>8D</option><option>8E</option><option>8F</option><option>8G</option><option>8H</option>
+                </select>
+                <select class="dupla-sel" id="dupla-aluno-sel" disabled>
+                  <option value="">Aluno...</option>
+                </select>
+              </div>
+              <div class="dupla-row">
+                <input class="dupla-pin" type="password" id="dupla-pin-duelos" maxlength="4" inputmode="numeric" placeholder="Senha">
+                <button class="dupla-ok" onclick="confirmarDuplaDuelos()">Entrar como dupla</button>
+              </div>
+              <div class="dupla-erro" id="dupla-erro-duelos"></div>
+            </div>
+          </div>
           <div class="card" style="margin-bottom:14px">
             <div class="card-title" style="margin-bottom:14px">🎯 Criar desafio</div>
             <div class="diff-select" id="diff-select">
@@ -330,10 +368,11 @@
 </div>
 
 <script type="module">
-import { requireAluno, renderSidebarAluno, clearSession } from '/js/auth.js';
+import { requireAluno, renderSidebarAluno, clearSession, hashSenha } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
 import { ref, set, get, push, onValue, remove, update, runTransaction } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
-import { getPerfil } from '/js/db.js';
+import { getPerfil, getSenhaAluno } from '/js/db.js';
+import { ALUNOS_POR_TURMA } from '/js/constants.js';
 import { avatarUrl, avatarHtml, avatarConfigDefault, DUELO_TIMEOUT_ACEITAR_S, XP_DUELO } from '/js/gamificacao.js';
 import { iniciarPresenca, encerrarPresenca, atualizarPresenca, filtrarOnline } from '/js/presenca.js';
 
@@ -387,6 +426,64 @@ await iniciarPresenca(uid, {
   pagina:  'duelos',
 });
 window.addEventListener('beforeunload', () => encerrarPresenca());
+window.addEventListener('pagehide', () => sessionStorage.removeItem('sm_dupla_duelo'));
+
+// ── Dupla mini-login ──────────────────────────────────────────
+(function() {
+  try {
+    const d = JSON.parse(sessionStorage.getItem('sm_dupla_duelo') || 'null');
+    if (d?.nome) _mostrarBadgeDueloDupla(d.nome, d.turma);
+  } catch(e) {}
+})();
+
+window.toggleDuplaDuelos = function() {
+  const p = document.getElementById('painel-dupla-duelos');
+  if (!p) return;
+  p.classList.toggle('aberto');
+};
+
+window.carregarAlunosDupla = function() {
+  const t  = document.getElementById('dupla-turma-sel')?.value;
+  const sl = document.getElementById('dupla-aluno-sel');
+  if (!sl) return;
+  const lista = (ALUNOS_POR_TURMA[t] || []).filter(n => !(t === turma && n === alunos[0]));
+  sl.innerHTML = '<option value="">Aluno...</option>' + lista.map(n => `<option value="${escH(n)}">${escH(n)}</option>`).join('');
+  sl.disabled = !t;
+};
+
+window.confirmarDuplaDuelos = async function() {
+  const t    = document.getElementById('dupla-turma-sel')?.value;
+  const nome = document.getElementById('dupla-aluno-sel')?.value;
+  const pin  = document.getElementById('dupla-pin-duelos')?.value;
+  const erro = document.getElementById('dupla-erro-duelos');
+  erro.style.display = 'none';
+  if (!t || !nome) { erro.textContent = 'Selecione a turma e o aluno.'; erro.style.display = 'block'; return; }
+  if (t === turma && nome === alunos[0]) { erro.textContent = 'Parceiro não pode ser o mesmo aluno logado.'; erro.style.display = 'block'; return; }
+  if (!pin || !/^\d{4}$/.test(pin)) { erro.textContent = 'Digite a senha de 4 dígitos.'; erro.style.display = 'block'; return; }
+  try {
+    const [hash, rec] = await Promise.all([hashSenha(t, nome, pin), getSenhaAluno(t, nome)]);
+    if (!rec) { erro.textContent = `Senha não cadastrada para ${nome}.`; erro.style.display = 'block'; return; }
+    if (rec.hash !== hash) { erro.textContent = 'Senha incorreta.'; erro.style.display = 'block'; return; }
+    sessionStorage.setItem('sm_dupla_duelo', JSON.stringify({ nome, turma: t }));
+    _mostrarBadgeDueloDupla(nome, t);
+    document.getElementById('painel-dupla-duelos')?.classList.remove('aberto');
+  } catch(e) { erro.textContent = 'Erro ao verificar senha.'; erro.style.display = 'block'; }
+};
+
+window.removerDuplaDuelos = function() {
+  sessionStorage.removeItem('sm_dupla_duelo');
+  document.getElementById('dupla-badge-duelos').style.display = 'none';
+  document.getElementById('btn-add-dupla').style.display = '';
+};
+
+function _mostrarBadgeDueloDupla(nome, t) {
+  const badge = document.getElementById('dupla-badge-duelos');
+  const texto = document.getElementById('dupla-badge-texto');
+  if (!badge || !texto) return;
+  texto.textContent = `👥 ${nome} · ${t}`;
+  badge.style.display = 'flex';
+  document.getElementById('btn-add-dupla').style.display = 'none';
+}
 
 // ── Helpers ───────────────────────────────────────────────────
 function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -480,10 +577,12 @@ window.criarDesafioAberto = async function() {
   const btn = document.getElementById('btnDesafioAberto');
   btn.disabled = true;
   try {
+    const _dp = JSON.parse(sessionStorage.getItem('sm_dupla_duelo') || 'null');
     const id = push(ref(db, 'duelos')).key;
     await set(ref(db, `duelos/${id}`), {
       tipo: 'aberto', dificuldade: _diff,
       criador_uid: uid, criador_nome: meuApelido, criador_turma: turma,
+      ...(_dp?.nome ? { parceiro_nome: _dp.nome, parceiro_turma: _dp.turma } : {}),
       status: 'aguardando', ts_criado: Date.now(),
       expira_em: Date.now() + DUELO_TIMEOUT_ACEITAR_S * 1000,
     });
@@ -524,11 +623,13 @@ window.confirmarDesafioDireto = async function() {
   if (!_modalUid) return;
   document.getElementById('modal-desafio').style.display = 'none';
   try {
+    const _dp2 = JSON.parse(sessionStorage.getItem('sm_dupla_duelo') || 'null');
     const id = push(ref(db, 'duelos')).key;
     await set(ref(db, `duelos/${id}`), {
       tipo: 'direto', dificuldade: _modalDiff,
       criador_uid: uid, criador_nome: meuApelido, criador_turma: turma,
       adversario_uid: _modalUid, adversario_nome: _modalNome,
+      ...(_dp2?.nome ? { parceiro_nome: _dp2.nome, parceiro_turma: _dp2.turma } : {}),
       status: 'aguardando', ts_criado: Date.now(),
       expira_em: Date.now() + DUELO_TIMEOUT_ACEITAR_S * 1000,
     });

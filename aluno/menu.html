@@ -349,7 +349,9 @@ function buildRankingMedia(lista) {
     if (!r.concluido || !r.aluno) continue;
     if (r.atividade === 'Atividade 4 - Geometria') continue;
     if (!melhor[r.aluno]) melhor[r.aluno] = { aluno: r.aluno, turma: r.turma || '?', porAtiv: {} };
-    const pts = r.pontuacao || 0;
+    const pts = r.nota_quiz != null
+      ? parseFloat(r.nota_quiz.toFixed(2))
+      : parseFloat(((r.pontuacao || 0) / 10).toFixed(2));
     const prev = melhor[r.aluno].porAtiv[r.atividade] || 0;
     if (pts > prev) melhor[r.aluno].porAtiv[r.atividade] = pts;
   }
@@ -400,7 +402,12 @@ function resumoAluno(nome) {
   const regs = todos.filter(r => r.aluno === nome && r.concluido);
   const regsComp = regs.filter(r => r.atividade !== 'Atividade 4 - Geometria');
   const melhor = {};
-  regsComp.forEach(r => { melhor[r.atividade] = Math.max(melhor[r.atividade]||0, r.pontuacao||0); });
+  regsComp.forEach(r => {
+    const pts = r.nota_quiz != null
+      ? parseFloat(r.nota_quiz.toFixed(2))
+      : parseFloat(((r.pontuacao || 0) / 10).toFixed(2));
+    melhor[r.atividade] = Math.max(melhor[r.atividade] || 0, pts);
+  });
   const vals     = Object.values(melhor);
   const totalPts = vals.reduce((s, v) => s + v, 0);
   const acertos  = regsComp.reduce((a, r) => a + (r.acertos || 0), 0);

@@ -1439,6 +1439,13 @@ async function encerrarSessao(motivo) {
       }
     }
   }
+  // Dupla: salvar resultado para parceiro
+  try {
+    const _d = JSON.parse(sessionStorage.getItem('sm_dupla_temp') || 'null');
+    if (_d?.nome && !alunos.includes(_d.nome)) {
+      await addResultado({ ...dados, aluno: _d.nome, turma: _d.turma || turma, atividade: liberada.atividade, dupla_de: alunos[0], ...(isTeste ? { modo_teste: true } : {}) });
+    }
+  } catch(e) {}
   // ── XP de gamificação ─────────────────────────────────────────
   if (!isTeste) try {
     const { adicionarXP } = await import('/js/db.js');

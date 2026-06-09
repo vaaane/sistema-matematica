@@ -155,6 +155,7 @@
   <div id="topbar-avatar-circle" style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--card2)"></div>
 </div>
 
+<div id="dupla-badge-partida" style="display:none;text-align:center;padding:4px 0 0;font-size:12px;color:#00d4ff;font-weight:600"></div>
 <div id="duelo-arena" class="duelo-arena">
   <div class="loading-wrap">
     <div class="loading-spinner"></div>
@@ -199,6 +200,14 @@ if (duelo.status === 'encerrado' || duelo.status === 'expirado') {
   window.location.href = '/aluno/duelos.html';
   throw new Error();
 }
+// Badge de dupla
+try {
+  const _dd = JSON.parse(sessionStorage.getItem('sm_dupla_duelo') || 'null');
+  if (_dd?.nome) {
+    const el = document.getElementById('dupla-badge-partida');
+    if (el) { el.textContent = `👥 Dupla: ${_dd.nome} · ${_dd.turma}`; el.style.display = 'block'; }
+  }
+} catch(e) {}
 
 const adversarioUid   = duelo.criador_uid === uid ? duelo.adversario_uid   : duelo.criador_uid;
 const adversarioNome  = duelo.criador_uid === uid ? (duelo.adversario_nome || '?') : duelo.criador_nome;
@@ -579,6 +588,20 @@ async function mostrarResultado(resultadosParam) {
     meuRes, advRes,
     _adversarioUid, _adversarioNome, _adversarioTurma
   );
+  // Dupla: salvar histórico para parceiro
+  try {
+    const _dd = JSON.parse(sessionStorage.getItem('sm_dupla_duelo') || 'null');
+    if (_dd?.nome) {
+      const _pUid = (_dd.turma + '_' + _dd.nome).replace(/[.#$[\]/\s]/g, '_');
+      await set(ref(db, `perfis/${_pUid}/historico_duelos/${dueloId}`), {
+        duelo_id: dueloId, dificuldade,
+        adversario_uid: _adversarioUid, adversario_nome: _adversarioNome, adversario_turma: _adversarioTurma,
+        meus_pares: meuRes?.pares ?? 0, adv_pares: advRes?.pares ?? 0,
+        resultado: euGanhei ? 'vitoria' : empate ? 'empate' : 'derrota',
+        xp_delta: xpDelta, ts: Date.now(), dupla_de: alunos[0],
+      });
+    }
+  } catch(e) {}
 
   // Feed global — escrever evento do duelo (só quem ganhou escreve, evita duplicação)
   if (euGanhei) {

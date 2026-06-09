@@ -111,6 +111,19 @@
       .ac-atv-info{flex:1;min-width:0;}
       .ac-atv-right{width:100%;justify-content:flex-end;border-top:1px solid var(--ac-border);padding-top:8px;margin-top:4px;}
     }
+    /* Dupla */
+    .ac-dupla-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.35);color:#00d4ff;border-radius:10px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;margin-left:8px;}
+    .ac-dupla-btn:hover{background:rgba(0,212,255,0.2);}
+    .ac-dupla-panel{background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.25);border-radius:12px;padding:14px 16px;margin-top:12px;display:none;flex-direction:column;gap:10px;}
+    .ac-dupla-panel.aberto{display:flex;}
+    .ac-dupla-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;}
+    .ac-dupla-select,.ac-dupla-pin{background:#0d0f1a;border:1px solid rgba(0,212,255,0.3);border-radius:8px;padding:7px 10px;color:#e8eaf6;font-size:13px;font-family:'Inter',sans-serif;outline:none;}
+    .ac-dupla-select{flex:1;min-width:120px;}
+    .ac-dupla-pin{width:90px;letter-spacing:4px;}
+    .ac-dupla-confirmar{background:linear-gradient(135deg,#00d4ff,#0090cc);color:#000;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
+    .ac-dupla-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(0,212,255,0.12);border:1px solid rgba(0,212,255,0.35);border-radius:10px;padding:7px 12px;font-size:13px;font-weight:600;color:#00d4ff;margin-top:8px;}
+    .ac-dupla-remove{background:none;border:none;color:rgba(0,212,255,.6);cursor:pointer;font-size:15px;line-height:1;padding:0 0 0 4px;}
+    .ac-dupla-erro{font-size:12px;color:#ff4444;margin-top:4px;display:none;}
   </style>
 </head>
 <body>
@@ -135,9 +148,9 @@
 </div>
 <script>(()=>{ document.documentElement.setAttribute('data-theme','dark'); })()</script>
 <script type="module">
-import { LISTA_ATIVIDADES, MAX_TENTATIVAS_ATIVIDADE } from "/js/constants.js";
-import { contarTentativas, getLiberadasParaTurma, getAlunoPreferencia, getResultados } from "/js/db.js";
-import { requireAluno, renderSidebarAluno, clearSession, isModoTeste } from "/js/auth.js";
+import { LISTA_ATIVIDADES, MAX_TENTATIVAS_ATIVIDADE, ALUNOS_POR_TURMA } from "/js/constants.js";
+import { contarTentativas, getLiberadasParaTurma, getAlunoPreferencia, getResultados, getSenhaAluno } from "/js/db.js";
+import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, hashSenha } from "/js/auth.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
 import { db } from "/js/firebase-config.js";
@@ -360,7 +373,9 @@ const bannerHtml = liberadaParaBanner ? (() => {
   const tentStr = isAvP
     ? `⏱ 25 min · ${bloq?.tentUsadas || 0}/3 tentativas usadas`
     : '';
-  return `<div class="ac-liberada-banner">
+  const _alunosDupla = (ALUNOS_POR_TURMA[turma] || []).filter(n => n !== alunos[0]);
+  const _opsDupla = _alunosDupla.map(n => `<option value="${escH(n)}">${escH(n)}</option>`).join('');
+  return `<div class="ac-liberada-banner" id="banner-liberada">
     <div class="ac-liberada-tag"><span class="ac-dot"></span> Disponível agora</div>
     <div class="ac-liberada-nome">${escH(ativ.nome)}</div>
     <div class="ac-liberada-meta">
@@ -368,7 +383,20 @@ const bannerHtml = liberadaParaBanner ? (() => {
       ${tentStr ? `<span>${tentStr}</span>` : ''}
       ${isAvP ? '<span>🏆 Vale 10 pts na Fase 1</span>' : '<span>🏆 Vale pontos no ranking</span>'}
     </div>
-    <a href="${url}" class="ac-btn-iniciar">▶ Iniciar agora</a>
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">
+      <a href="${url}" class="ac-btn-iniciar" id="btn-iniciar-ativ">▶ Iniciar agora</a>
+      <button class="ac-dupla-btn" id="btn-dupla-toggle" onclick="togglePainelDupla()">👥 Jogar em Dupla</button>
+    </div>
+    <div class="ac-dupla-panel" id="painel-dupla">
+      <div style="font-size:12px;color:#00d4ff;font-weight:600">Adicionar parceiro da turma ${escH(turma)}</div>
+      <div class="ac-dupla-row">
+        <select class="ac-dupla-select" id="dupla-select"><option value="">Selecionar colega...</option>${_opsDupla}</select>
+        <input class="ac-dupla-pin" type="password" id="dupla-pin" maxlength="4" inputmode="numeric" placeholder="Senha">
+        <button class="ac-dupla-confirmar" onclick="confirmarDupla()">Confirmar</button>
+      </div>
+      <div class="ac-dupla-erro" id="dupla-erro"></div>
+    </div>
+    <div id="dupla-badge-wrap"></div>
   </div>`;
 })() : '';
 
@@ -455,6 +483,55 @@ content.innerHTML = `
   ${tornAviso}
   <div class="ac-section-title">Todas as atividades</div>
   <div class="ac-atividades-lista">${cardsHtml}${emBreve}</div>`;
+
+// Restaurar badge de dupla se já estava ativa
+(function() {
+  try {
+    const d = JSON.parse(sessionStorage.getItem('sm_dupla_temp') || 'null');
+    if (d?.nome) _mostrarBadgeDupla(d.nome);
+  } catch(e) {}
+})();
+
+function togglePainelDupla() {
+  const p = document.getElementById('painel-dupla');
+  if (!p) return;
+  const aberto = p.classList.toggle('aberto');
+  document.getElementById('btn-dupla-toggle').textContent = aberto ? '✕ Cancelar' : '👥 Jogar em Dupla';
+}
+
+window.togglePainelDupla = togglePainelDupla;
+
+window.confirmarDupla = async function() {
+  const sel  = document.getElementById('dupla-select');
+  const pin  = document.getElementById('dupla-pin');
+  const erro = document.getElementById('dupla-erro');
+  const nome = sel?.value;
+  erro.style.display = 'none';
+  if (!nome) { erro.textContent = 'Selecione um colega.'; erro.style.display = 'block'; return; }
+  if (!pin?.value || !/^\d{4}$/.test(pin.value)) { erro.textContent = 'Digite a senha de 4 dígitos.'; erro.style.display = 'block'; return; }
+  try {
+    const [hash, rec] = await Promise.all([hashSenha(turma, nome, pin.value), getSenhaAluno(turma, nome)]);
+    if (!rec) { erro.textContent = `Senha não cadastrada para ${nome}.`; erro.style.display = 'block'; return; }
+    if (rec.hash !== hash) { erro.textContent = 'Senha incorreta.'; erro.style.display = 'block'; return; }
+    sessionStorage.setItem('sm_dupla_temp', JSON.stringify({ nome, turma }));
+    _mostrarBadgeDupla(nome);
+    document.getElementById('painel-dupla')?.classList.remove('aberto');
+    document.getElementById('btn-dupla-toggle').style.display = 'none';
+  } catch(e) { erro.textContent = 'Erro ao verificar senha.'; erro.style.display = 'block'; }
+};
+
+window.removerDupla = function() {
+  sessionStorage.removeItem('sm_dupla_temp');
+  document.getElementById('dupla-badge-wrap').innerHTML = '';
+  document.getElementById('btn-dupla-toggle').style.display = '';
+  document.getElementById('btn-dupla-toggle').textContent = '👥 Jogar em Dupla';
+};
+
+function _mostrarBadgeDupla(nome) {
+  const wrap = document.getElementById('dupla-badge-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = `<div class="ac-dupla-badge">👥 ${escH(nome)} <button class="ac-dupla-remove" onclick="removerDupla()">✕</button></div>`;
+}
 
 </script>
 </body>

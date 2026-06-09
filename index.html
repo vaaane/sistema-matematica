@@ -225,29 +225,6 @@
         </div>
       </div>
 
-      <div class="divider field-anim" style="animation-delay:0.2s"><span>dupla (opcional)</span></div>
-
-      <div class="field-row-2 field-anim" style="animation-delay:0.25s">
-        <div class="field">
-          <div class="optional-label">Aluno 2 <span class="optional-badge">OPCIONAL</span></div>
-          <select id="aluno2Select" disabled onchange="onAluno2Change()">
-            <option value="">Nenhum</option>
-          </select>
-        </div>
-        <div class="field">
-          <label class="field-label" style="visibility:hidden">Senha</label>
-          <div class="pin-wrap">
-            <input type="password" id="senhaAluno2" maxlength="4" inputmode="numeric" disabled
-              onkeydown="if(event.key==='Enter') entrarAluno(event)">
-            <button class="pin-eye" id="eyeAluno2" tabindex="-1"
-              onmousedown="showPin('senhaAluno2','eyeAluno2')" onmouseup="hidePin('senhaAluno2','eyeAluno2')" onmouseleave="hidePin('senhaAluno2','eyeAluno2')"
-              ontouchstart="showPin('senhaAluno2','eyeAluno2')" ontouchend="hidePin('senhaAluno2','eyeAluno2')">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
       <div class="error-msg" id="errorAluno">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
         <span id="errorAlunoMsg">Senha incorreta</span>
@@ -411,19 +388,14 @@ window.carregarAlunos = function() {
   const turma  = document.getElementById('turmaSelect').value;
   const alunos = ALUNOS_POR_TURMA[turma] || [];
   const sel1   = document.getElementById('alunoSelect');
-  const sel2   = document.getElementById('aluno2Select');
   const pin1   = document.getElementById('senhaAluno');
   sel1.innerHTML = '<option value="">Selecionar...</option>';
-  sel2.innerHTML = '<option value="">Nenhum</option>';
   alunos.forEach(n => {
     sel1.innerHTML += `<option value="${n}">${n}</option>`;
-    sel2.innerHTML += `<option value="${n}">${n}</option>`;
   });
-  sel1.disabled = sel2.disabled = !turma;
+  sel1.disabled = !turma;
   pin1.disabled = !turma;
   pin1.value = '';
-  document.getElementById('senhaAluno2').value = '';
-  document.getElementById('senhaAluno2').disabled = true;
   if (turma) setTimeout(() => sel1.focus(), 50);
 
   // Alert: só mostra se a turma selecionada tem atividade liberada
@@ -435,14 +407,6 @@ window.focusSenha = function() {
   const sel = document.getElementById('alunoSelect');
   const pin = document.getElementById('senhaAluno');
   if (sel.value) { pin.disabled = false; setTimeout(() => pin.focus(), 50); }
-};
-
-window.onAluno2Change = function() {
-  const val  = document.getElementById('aluno2Select').value;
-  const pin2 = document.getElementById('senhaAluno2');
-  pin2.disabled = !val;
-  pin2.value = '';
-  if (val) setTimeout(() => pin2.focus(), 50);
 };
 
 window.showPin = function(inputId, btnId) {
@@ -513,16 +477,12 @@ window.entrarAluno = async function(e) {
 
   const turma  = document.getElementById('turmaSelect').value;
   const aluno1 = document.getElementById('alunoSelect').value;
-  const aluno2 = document.getElementById('aluno2Select').value;
   const pin1   = document.getElementById('senhaAluno').value;
-  const pin2   = document.getElementById('senhaAluno2').value;
 
   document.getElementById('errorAluno').classList.remove('show');
 
-  if (!turma || !aluno1) return showError('errorAluno', 'Selecione a turma e pelo menos um aluno.');
-  if (aluno2 && aluno1 === aluno2) return showError('errorAluno', 'Os dois alunos não podem ser iguais.');
-  if (!pin1 || !/^\d{4}$/.test(pin1)) return showError('errorAluno', 'Digite a senha de 4 dígitos do Aluno 1.');
-  if (aluno2 && (!pin2 || !/^\d{4}$/.test(pin2))) return showError('errorAluno', `Digite a senha de 4 dígitos de ${aluno2}.`);
+  if (!turma || !aluno1) return showError('errorAluno', 'Selecione a turma e o aluno.');
+  if (!pin1 || !/^\d{4}$/.test(pin1)) return showError('errorAluno', 'Digite a senha de 4 dígitos.');
   if (tentativas <= 0) return showError('errorAluno', 'Acesso bloqueado após 5 tentativas. Recarregue a página.');
 
   setLoading('btnAluno', true);
@@ -534,16 +494,7 @@ window.entrarAluno = async function(e) {
       const suf = tentativas <= 0 ? ' Acesso bloqueado. Recarregue.' : ` (${tentativas} tentativa${tentativas > 1 ? 's' : ''} restante${tentativas > 1 ? 's' : ''})`;
       return showError('errorAluno', `Senha incorreta para ${aluno1}.${suf}`);
     }
-    if (aluno2) {
-      const [hash2, rec2] = await Promise.all([hashSenha(turma, aluno2, pin2), getSenhaAluno(turma, aluno2)]);
-      if (!rec2) return showError('errorAluno', `Senha não cadastrada para ${aluno2}. Peça ao professor.`);
-      if (rec2.hash !== hash2) {
-        tentativas--;
-        const suf = tentativas <= 0 ? ' Acesso bloqueado. Recarregue.' : ` (${tentativas} restante${tentativas > 1 ? 's' : ''})`;
-        return showError('errorAluno', `Senha incorreta para ${aluno2}.${suf}`);
-      }
-    }
-    const alunos = [aluno1, ...(aluno2 ? [aluno2] : [])];
+    const alunos = [aluno1];
     setSession({ modo: 'aluno', turma, alunos });
     // Inicializar perfil de gamificação (só cria se não existir)
     try {
