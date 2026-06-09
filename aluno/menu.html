@@ -280,6 +280,34 @@ async function carregarTopDuelos() {
 }
 carregarTopDuelos();
 
+async function carregarCardCertificado() {
+  try {
+    const snap = await get(ref(db, `conquistas/${uidMenu}/tabuada_300`));
+    if (!snap.exists() || !snap.val().conquistado) return;
+    const ts = snap.val().ts;
+    const data = ts ? new Date(ts).toLocaleDateString('pt-BR') : '';
+    const anchor = document.getElementById('certificado-card-anchor');
+    if (!anchor) return;
+    anchor.outerHTML = `
+      <div class="card" style="margin-bottom:14px;cursor:pointer;border-color:rgba(201,168,76,.3);background:rgba(201,168,76,.04)"
+           onclick="window.location.href='/aluno/certificados.html'">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:44px;height:44px;border-radius:50%;
+                      background:linear-gradient(135deg,#f7e98e,#c9a84c);
+                      display:flex;align-items:center;justify-content:center;
+                      font-size:22px;flex-shrink:0;
+                      box-shadow:0 0 16px rgba(245,158,11,.35)">🏆</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:800;color:#c9a84c">Diploma desbloqueado!</div>
+            <div style="font-size:11px;color:var(--text-muted)">Nível 300 da Tabuada · ${data}</div>
+          </div>
+          <div style="font-size:18px;color:var(--text-muted)">→</div>
+        </div>
+      </div>`;
+  } catch(e) {}
+}
+carregarCardCertificado();
+
 const [todosRaw, _libRaw, tabuadaSnap, torneioSnap] = await Promise.all([
   getResultados(),
   getLiberadasParaTurma(turma),
@@ -878,6 +906,7 @@ ${tempoPodioHtml}
     </div>
 
     <div id="duelos-top3-anchor"></div>
+    <div id="certificado-card-anchor"></div>
 
     <div id="quiz-top3-card" class="card" style="margin-bottom:14px;overflow:visible;position:relative">
       <div class="section-label" style="color:#F59E0B">

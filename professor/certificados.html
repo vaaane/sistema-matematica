@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Certificados — Professor</title>
+<link rel="stylesheet" href="/css/main.css"/>
+<style>
+  .certs-tabs {
+    display: flex; gap: 8px; margin-bottom: 20px;
+  }
+  .certs-tab {
+    padding: 8px 20px; border-radius: 20px; font-size: 13px;
+    font-weight: 700; cursor: pointer; border: 1px solid var(--border);
+    background: var(--card2); color: var(--muted); transition: all .15s;
+  }
+  .certs-tab.active {
+    background: var(--purple); color: #fff; border-color: var(--purple);
+  }
+
+  .aluno-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; background: var(--card);
+    border: 1px solid var(--border); border-radius: 12px;
+    margin-bottom: 8px; transition: border-color .15s;
+  }
+  .aluno-row:hover { border-color: rgba(201,168,76,.35); }
+  .aluno-row.entregue { opacity: .65; }
+
+  .aluno-info { flex: 1; min-width: 0; }
+  .aluno-nome { font-size: 14px; font-weight: 700; }
+  .aluno-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .badge-pendente {
+    font-size: 10px; font-weight: 700; padding: 3px 10px;
+    border-radius: 20px; background: rgba(245,158,11,.15);
+    color: #F59E0B; border: 1px solid rgba(245,158,11,.3);
+    white-space: nowrap;
+  }
+  .badge-entregue {
+    font-size: 10px; font-weight: 700; padding: 3px 10px;
+    border-radius: 20px; background: rgba(34,197,94,.1);
+    color: var(--green); border: 1px solid rgba(34,197,94,.25);
+    white-space: nowrap;
+  }
+
+  .btn-action {
+    padding: 7px 14px; border-radius: 8px; font-size: 12px;
+    font-weight: 700; cursor: pointer; border: none; white-space: nowrap;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+  }
+  .btn-print {
+    background: var(--card2); color: var(--text);
+    border: 1px solid var(--border) !important;
+  }
+  .btn-entregar { background: var(--green); color: #fff; }
+  .btn-desfazer {
+    background: transparent; color: var(--muted);
+    border: 1px solid var(--border) !important; font-size: 11px;
+  }
+
+  .empty-state {
+    text-align: center; padding: 48px 20px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; color: var(--muted);
+  }
+  .empty-state .icon { font-size: 36px; margin-bottom: 10px; }
+
+  .summary-bar {
+    display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .summary-box {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 18px; flex: 1; min-width: 120px;
+    text-align: center;
+  }
+  .summary-val {
+    font-size: 28px; font-weight: 900; line-height: 1;
+  }
+  .summary-lbl { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  .turma-filter {
+    display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px;
+  }
+  .turma-chip {
+    padding: 5px 14px; border-radius: 20px; font-size: 12px;
+    font-weight: 600; cursor: pointer; border: 1px solid var(--border);
+    background: var(--card2); color: var(--muted); transition: all .15s;
+  }
+  .turma-chip.active {
+    background: rgba(127,119,221,.15); color: var(--purple);
+    border-color: rgba(127,119,221,.4);
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">🎓 Certificados</div>
+        <div class="topbar-sub">Controle de impressão e entrega</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div style="max-width:760px;margin:0 auto;padding:24px 16px 60px">
+        <div id="certs-content">
+          <div style="text-align:center;padding:60px;color:var(--muted)">Carregando…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireProfessor, renderSidebarProfessor, clearSession } from '/js/auth.js';
+import { db } from '/js/firebase-config.js';
+import { ref, get, set } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+
+const sess = requireProfessor();
+if (!sess) throw new Error('não autenticado');
+
+renderSidebarProfessor('sidebar', 'certificados');
+window.sair = () => { clearSession(); window.location.href = '/professor/login.html'; };
+
+const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function toast(msg) {
+  let t = document.getElementById('_toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = '_toast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 20px;border-radius:10px;font-size:14px;font-weight:600;z-index:9999;transition:opacity .3s';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._to);
+  t._to = setTimeout(() => t.style.opacity = '0', 2500);
+}
+
+let todosAlunos = [];
+let abaAtiva    = 'pendentes';
+let turmaFiltro = 'todas';
+
+async function carregar() {
+  const [perfisSnap, conquSnap, impressosSnap] = await Promise.all([
+    get(ref(db, 'perfis')),
+    get(ref(db, 'conquistas')),
+    get(ref(db, 'diplomas_impressos')),
+  ]);
+
+  if (!conquSnap.exists()) { renderVazio(); return; }
+
+  const perfis    = perfisSnap.exists()    ? perfisSnap.val()    : {};
+  const impressos = impressosSnap.exists() ? impressosSnap.val() : {};
+
+  todosAlunos = [];
+  conquSnap.forEach(child => {
+    const uid    = child.key;
+    const conqus = child.val();
+    if (!conqus?.tabuada_300?.conquistado) return;
+    const perfil = perfis[uid];
+    if (!perfil?.nome) return;
+    if (perfil.nome?.includes('TESTE') || perfil.turma === 'TESTE') return;
+    const entregue   = impressos[uid]?.tabuada_300?.impresso === true;
+    const tsEntrega  = impressos[uid]?.tabuada_300?.ts || null;
+    todosAlunos.push({ uid, nome: perfil.nome, turma: perfil.turma || '', tsConquista: conqus.tabuada_300.ts, entregue, tsEntrega });
+  });
+
+  todosAlunos.sort((a, b) => a.turma.localeCompare(b.turma) || a.nome.localeCompare(b.nome));
+  render();
+}
+
+function render() {
+  const pendentes = todosAlunos.filter(a => !a.entregue);
+  const entregues = todosAlunos.filter(a =>  a.entregue);
+  const turmas    = [...new Set(todosAlunos.map(a => a.turma))].sort();
+
+  const lista         = abaAtiva === 'pendentes' ? pendentes : entregues;
+  const listaFiltrada = turmaFiltro === 'todas' ? lista : lista.filter(a => a.turma === turmaFiltro);
+
+  document.getElementById('certs-content').innerHTML = `
+    <div class="summary-bar">
+      <div class="summary-box">
+        <div class="summary-val" style="color:#F59E0B">${todosAlunos.length}</div>
+        <div class="summary-lbl">🏆 Total conquistaram</div>
+      </div>
+      <div class="summary-box">
+        <div class="summary-val" style="color:#ef4444">${pendentes.length}</div>
+        <div class="summary-lbl">⏳ Pendentes de entrega</div>
+      </div>
+      <div class="summary-box">
+        <div class="summary-val" style="color:var(--green)">${entregues.length}</div>
+        <div class="summary-lbl">✅ Entregues</div>
+      </div>
+    </div>
+
+    <div class="certs-tabs">
+      <div class="certs-tab ${abaAtiva==='pendentes'?'active':''}" onclick="trocarAba('pendentes')">
+        ⏳ Pendentes ${pendentes.length > 0 ? `<span style="background:rgba(255,255,255,.25);padding:1px 7px;border-radius:10px;margin-left:4px">${pendentes.length}</span>` : ''}
+      </div>
+      <div class="certs-tab ${abaAtiva==='entregues'?'active':''}" onclick="trocarAba('entregues')">
+        ✅ Entregues ${entregues.length > 0 ? `<span style="background:rgba(255,255,255,.25);padding:1px 7px;border-radius:10px;margin-left:4px">${entregues.length}</span>` : ''}
+      </div>
+    </div>
+
+    ${turmas.length > 1 ? `
+    <div class="turma-filter">
+      <div class="turma-chip ${turmaFiltro==='todas'?'active':''}" onclick="filtrarTurma('todas')">Todas</div>
+      ${turmas.map(t => `<div class="turma-chip ${turmaFiltro===t?'active':''}" onclick="filtrarTurma('${escH(t)}')">${escH(t)}</div>`).join('')}
+    </div>` : ''}
+
+    <div id="lista-alunos">
+      ${listaFiltrada.length === 0
+        ? `<div class="empty-state">
+             <div class="icon">${abaAtiva==='pendentes'?'🎉':'📋'}</div>
+             <div style="font-size:14px;font-weight:700;margin-bottom:6px">
+               ${abaAtiva==='pendentes' ? 'Nenhum diploma pendente!' : 'Nenhum diploma entregue ainda'}
+             </div>
+             <div style="font-size:12px">
+               ${abaAtiva==='pendentes' ? 'Todos os diplomas conquistados já foram entregues.' : 'Os diplomas entregues aparecerão aqui.'}
+             </div>
+           </div>`
+        : listaFiltrada.map(a => {
+            const dataConquista = a.tsConquista ? new Date(a.tsConquista).toLocaleDateString('pt-BR') : '';
+            const dataEntrega   = a.tsEntrega   ? new Date(a.tsEntrega).toLocaleDateString('pt-BR')   : '';
+            return `
+              <div class="aluno-row ${a.entregue?'entregue':''}">
+                <div style="font-size:24px">🏆</div>
+                <div class="aluno-info">
+                  <div class="aluno-nome">${escH(a.nome)}</div>
+                  <div class="aluno-meta">
+                    ${escH(a.turma)}
+                    ${dataConquista ? ` · Conquistado em ${dataConquista}` : ''}
+                    ${a.entregue && dataEntrega ? ` · Entregue em ${dataEntrega}` : ''}
+                  </div>
+                </div>
+                <a href="/aluno/diploma_tabuada.html?uid=${encodeURIComponent(a.uid)}"
+                   target="_blank" class="btn-action btn-print">
+                  🖨️ Ver diploma
+                </a>
+                ${!a.entregue
+                  ? `<button class="btn-action btn-entregar" onclick="marcarEntregue('${a.uid}')">✅ Entregue</button>`
+                  : `<button class="btn-action btn-desfazer" onclick="desfazerEntrega('${a.uid}')">↩ Desfazer</button>`
+                }
+              </div>`;
+          }).join('')
+      }
+    </div>`;
+}
+
+function renderVazio() {
+  document.getElementById('certs-content').innerHTML = `
+    <div class="empty-state">
+      <div class="icon">🎓</div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:6px">Nenhum diploma conquistado ainda</div>
+      <div style="font-size:12px">Quando um aluno atingir o nível 300 da tabuada, aparecerá aqui.</div>
+    </div>`;
+}
+
+window.trocarAba = function(aba) { abaAtiva = aba; render(); };
+window.filtrarTurma = function(turma) { turmaFiltro = turma; render(); };
+
+window.marcarEntregue = async function(uid) {
+  try {
+    await set(ref(db, `diplomas_impressos/${uid}/tabuada_300`), { impresso: true, ts: Date.now() });
+    const aluno = todosAlunos.find(a => a.uid === uid);
+    if (aluno) { aluno.entregue = true; aluno.tsEntrega = Date.now(); }
+    toast('✅ Marcado como entregue!');
+    render();
+  } catch(e) { toast('Erro ao salvar.'); }
+};
+
+window.desfazerEntrega = async function(uid) {
+  if (!confirm('Desfazer marcação de entregue?')) return;
+  try {
+    await set(ref(db, `diplomas_impressos/${uid}/tabuada_300`), { impresso: false, ts: null });
+    const aluno = todosAlunos.find(a => a.uid === uid);
+    if (aluno) { aluno.entregue = false; aluno.tsEntrega = null; }
+    toast('↩ Marcação desfeita.');
+    render();
+  } catch(e) { toast('Erro ao salvar.'); }
+};
+
+carregar();
+</script>
+</body>
+</html>

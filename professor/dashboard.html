@@ -377,6 +377,26 @@ document.getElementById("content").innerHTML = `
     <div id="apelidos-lista">
       <p style="color:var(--text-muted);font-size:13px">Verificando…</p>
     </div>
+  </div>
+
+  <div id="diplomas-card" class="card" style="margin-top:20px;display:none">
+    <div class="card-header">
+      <div class="card-title">
+        🎓 Diplomas para imprimir
+        <span id="diplomas-badge"
+              style="background:var(--gold,#F59E0B);color:#fff;padding:1px 7px;
+                     border-radius:10px;font-size:10px;margin-left:6px">0</span>
+      </div>
+    </div>
+    <div id="diplomas-lista">
+      <p style="color:var(--text-muted);font-size:13px">Verificando…</p>
+    </div>
+    <div style="margin-top:12px">
+      <a href="/professor/certificados.html"
+         style="font-size:12px;color:var(--purple);text-decoration:none;font-weight:600">
+        Ver todos os certificados →
+      </a>
+    </div>
   </div>`;
 
 
@@ -633,6 +653,78 @@ async function rejeitarApelido(uid, motivo) {
     toast('❌ Apelido recusado');
   } catch(e) { toast('Erro ao recusar. Tente novamente.'); }
 }
+
+// ── Diplomas pendentes ────────────────────────────────────────
+async function carregarDiplomasPendentes() {
+  try {
+    const [perfisSnap, impressosSnap, conquSnap] = await Promise.all([
+      get(ref(db, 'perfis')),
+      get(ref(db, 'diplomas_impressos')),
+      get(ref(db, 'conquistas')),
+    ]);
+    if (!conquSnap.exists()) return;
+
+    const impressos = impressosSnap.exists() ? impressosSnap.val() : {};
+    const pendentes = [];
+
+    conquSnap.forEach(child => {
+      const uid      = child.key;
+      const conquistas = child.val();
+      if (!conquistas?.tabuada_300?.conquistado) return;
+      if (impressos[uid]?.tabuada_300?.impresso) return;
+      const perfil = perfisSnap.exists() ? perfisSnap.child(uid).val() : null;
+      if (!perfil?.nome) return;
+      if (perfil.nome?.includes('TESTE') || perfil.turma === 'TESTE') return;
+      pendentes.push({ uid, nome: perfil.nome, turma: perfil.turma || '', ts: conquistas.tabuada_300.ts });
+    });
+
+    const card  = document.getElementById('diplomas-card');
+    const badge = document.getElementById('diplomas-badge');
+    const lista = document.getElementById('diplomas-lista');
+    if (!card || !badge || !lista) return;
+
+    badge.textContent = pendentes.length || '0';
+    if (!pendentes.length) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+
+    lista.innerHTML = pendentes.map(p => {
+      const data = p.ts ? new Date(p.ts).toLocaleDateString('pt-BR') : '';
+      return `
+        <div style="display:flex;align-items:center;gap:12px;
+                    padding:10px 0;border-bottom:1px solid var(--border)">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700">${escH(p.nome)}
+              <span style="font-size:11px;color:var(--text-muted);font-weight:400"> · ${escH(p.turma)}</span>
+            </div>
+            ${data ? `<div style="font-size:10px;color:var(--text-muted)">Conquistado em ${data}</div>` : ''}
+          </div>
+          <a href="/aluno/diploma_tabuada.html?uid=${encodeURIComponent(p.uid)}"
+             target="_blank"
+             style="padding:6px 12px;background:var(--card2);color:var(--text);
+                    border:1px solid var(--border);border-radius:8px;
+                    font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap">
+            🖨️ Ver diploma
+          </a>
+          <button onclick="marcarImpresso('${p.uid}')"
+                  style="padding:6px 14px;background:var(--green);color:#fff;
+                         border:none;border-radius:8px;font-weight:700;
+                         font-size:12px;cursor:pointer;white-space:nowrap">
+            ✅ Entregue
+          </button>
+        </div>`;
+    }).join('');
+  } catch(e) { console.warn('[Diplomas]', e); }
+}
+
+window.marcarImpresso = async function(uid) {
+  try {
+    await set(ref(db, `diplomas_impressos/${uid}/tabuada_300`), { impresso: true, ts: Date.now() });
+    toast('✅ Marcado como entregue!');
+    carregarDiplomasPendentes();
+  } catch(e) { toast('Erro ao salvar. Tente novamente.'); }
+};
+
+carregarDiplomasPendentes();
 
 // ── Análise anti-IA: conta suspeitos em background ────────────
 (async () => {

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Meus Certificados</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/css/main.css"/>
+<style>
+  html, body {
+    background: #0d0f1a !important;
+    color: #e8eaf0 !important;
+    min-height: 100vh;
+  }
+  .main    { background: #0d0f1a !important; }
+  .content { background: #0d0f1a !important; }
+
+  .cert-card {
+    background: #151828 !important;
+    border-color: rgba(255,255,255,0.07) !important;
+  }
+  .cert-card.desbloqueado {
+    background: rgba(201,168,76,.04) !important;
+    border-color: rgba(201,168,76,.35) !important;
+  }
+  .summary-box {
+    background: #151828 !important;
+    border-color: rgba(255,255,255,0.07) !important;
+  }
+  .certs-tab { background: #1c2035 !important; }
+
+  /* ── Cards de certificado ── */
+  .cert-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .cert-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px; position: relative;
+    overflow: hidden; transition: border-color .2s;
+  }
+  .cert-card.desbloqueado {
+    border-color: rgba(201,168,76,.35);
+    background: rgba(201,168,76,.03);
+    cursor: pointer;
+  }
+  .cert-card.desbloqueado:hover { border-color: rgba(201,168,76,.6); }
+  .cert-card.bloqueado { opacity: .45; cursor: default; }
+
+  .cert-card::before {
+    content: ''; position: absolute; inset: 0;
+    pointer-events: none;
+  }
+  .cert-card.desbloqueado::before {
+    background: radial-gradient(ellipse at 0% 0%, rgba(201,168,76,.08) 0%, transparent 60%);
+  }
+
+  .cert-icon {
+    width: 56px; height: 56px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; margin-bottom: 14px; flex-shrink: 0;
+  }
+  .cert-card.desbloqueado .cert-icon {
+    background: linear-gradient(135deg, #f7e98e, #c9a84c);
+    box-shadow: 0 0 20px rgba(245,158,11,.35);
+  }
+  .cert-card.bloqueado .cert-icon {
+    background: var(--card2); border: 1px solid var(--border);
+  }
+
+  .cert-nome {
+    font-size: 15px; font-weight: 800; margin-bottom: 4px;
+    color: var(--text);
+  }
+  .cert-card.desbloqueado .cert-nome { color: #c9a84c; }
+
+  .cert-desc { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 12px; }
+
+  .cert-data {
+    font-size: 10px; color: rgba(201,168,76,.7);
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px;
+  }
+
+  .cert-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: linear-gradient(135deg, #c9a84c, #f7e98e);
+    color: #1a0f00; border-radius: 8px; padding: 8px 16px;
+    font-size: 12px; font-weight: 800; text-decoration: none;
+    letter-spacing: .5px; transition: opacity .15s;
+  }
+  .cert-btn:hover { opacity: .85; }
+
+  .cert-lock {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--card2); border: 1px solid var(--border);
+    color: var(--muted); border-radius: 8px; padding: 8px 16px;
+    font-size: 12px; font-weight: 600;
+  }
+
+  .cert-requisito {
+    font-size: 11px; color: var(--muted); margin-top: 8px;
+  }
+
+  /* Header da página */
+  .certs-header {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px; margin-bottom: 24px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .certs-header-icon {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: linear-gradient(135deg, #c9a84c, #f7e98e);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; flex-shrink: 0;
+  }
+  .certs-header-count {
+    font-size: 28px; font-weight: 900; color: #c9a84c;
+    font-family: 'Cinzel', serif; line-height: 1;
+  }
+  .certs-header-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  @media (max-width: 500px) {
+    .cert-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">🎓 Meus Certificados</div>
+        <div class="topbar-sub">Conquistas que viraram diploma</div>
+      </div>
+      <div class="topbar-right">
+        <div id="topbar-avatar-circle" class="avatar-circle" style="width:36px;height:36px;cursor:pointer" onclick="window.location.href='/aluno/perfil.html'"></div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div style="max-width:760px;margin:0 auto;padding:24px 16px 60px">
+        <div id="certs-content">
+          <div style="text-align:center;padding:60px;color:var(--muted)">Carregando…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireAluno, renderSidebarAluno, clearSession } from '/js/auth.js';
+import { db } from '/js/firebase-config.js';
+import { ref, get } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+
+const sess = requireAluno('/index.html');
+const { alunos, turma } = sess;
+const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+
+renderSidebarAluno('sidebar', 'certificados');
+window.sair = () => { clearSession(); window.location.href = '/index.html'; };
+
+// Avatar topbar
+(async () => { try {
+  const { getPerfil } = await import('/js/db.js');
+  const { avatarUrl, avatarConfigDefault } = await import('/js/gamificacao.js');
+  const _p = await getPerfil(uid);
+  const _c = document.getElementById('topbar-avatar-circle');
+  if (_c) {
+    const url   = avatarUrl(_p?.avatar || avatarConfigDefault());
+    const letra = (alunos[0] || '?')[0].toUpperCase();
+    _c.innerHTML = `<div style="width:100%;height:100%;position:relative;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#7F77DD,#00d4ff)"><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;z-index:0">${letra}</span><img src="${url}" alt="" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:1;border-radius:50%" onerror="this.style.display='none'"></div>`;
+  }
+} catch(_) {} })();
+
+// ── Definição de todos os certificados ──
+const CERTIFICADOS = [
+  {
+    id:        'tabuada_300',
+    emoji:     '🏆',
+    nome:      'Mestre da Tabuada',
+    desc:      'Concluiu todos os 300 níveis do programa de Cálculo Mental, resolvendo mais de 3.100 operações matemáticas.',
+    requisito: 'Chegue ao nível 300 na tabuada',
+    href:      '/aluno/diploma_tabuada.html',
+    btnLabel:  '🎓 Ver diploma',
+  },
+];
+
+// Buscar conquistas do aluno
+const conquSnap = await get(ref(db, `conquistas/${uid}`));
+const conqus = conquSnap.exists() ? conquSnap.val() : {};
+
+const desbloqueados = CERTIFICADOS.filter(c => conqus[c.id]?.conquistado === true);
+
+const el = document.getElementById('certs-content');
+el.innerHTML = `
+  <div class="certs-header">
+    <div class="certs-header-icon">🎓</div>
+    <div>
+      <div class="certs-header-count">${desbloqueados.length}<span style="font-size:16px;color:var(--muted)">/${CERTIFICADOS.length}</span></div>
+      <div class="certs-header-sub">
+        ${desbloqueados.length === 0
+          ? 'Nenhum certificado ainda — continue jogando!'
+          : desbloqueados.length === CERTIFICADOS.length
+            ? '🏆 Todos os certificados conquistados!'
+            : `${CERTIFICADOS.length - desbloqueados.length} ainda por conquistar`}
+      </div>
+    </div>
+  </div>
+
+  <div class="cert-grid">
+    ${CERTIFICADOS.map(c => {
+      const conquistou = conqus[c.id]?.conquistado === true;
+      const ts   = conqus[c.id]?.ts;
+      const data = ts ? new Date(ts).toLocaleDateString('pt-BR', { day:'numeric', month:'long', year:'numeric' }) : null;
+      return `
+        <div class="cert-card ${conquistou ? 'desbloqueado' : 'bloqueado'}"
+             ${conquistou ? `onclick="window.location.href='${c.href}'"` : ''}>
+          <div class="cert-icon">${c.emoji}</div>
+          <div class="cert-nome">${c.nome}</div>
+          <div class="cert-desc">${c.desc}</div>
+          ${conquistou && data ? `<div class="cert-data">✅ Conquistado em ${data}</div>` : ''}
+          ${conquistou
+            ? `<a class="cert-btn" href="${c.href}" onclick="event.stopPropagation()">${c.btnLabel}</a>`
+            : `<div>
+                <div class="cert-lock">🔒 Bloqueado</div>
+                <div class="cert-requisito">${c.requisito}</div>
+               </div>`
+          }
+        </div>`;
+    }).join('')}
+  </div>
+
+  <div style="text-align:center;margin-top:28px;padding:20px;
+              background:var(--card);border:1px solid var(--border);
+              border-radius:14px;border-style:dashed">
+    <div style="font-size:20px;margin-bottom:6px">✨</div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:4px">Mais certificados em breve</div>
+    <div style="font-size:11px;color:var(--muted)">Novos diplomas serão adicionados ao longo do ano letivo</div>
+  </div>`;
+</script>
+</body>
+</html>
