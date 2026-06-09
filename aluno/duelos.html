@@ -307,7 +307,7 @@
 <script type="module">
 import { requireAluno, renderSidebarAluno, clearSession } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
-import { ref, set, get, push, onValue, remove, update } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { ref, set, get, push, onValue, remove, update, runTransaction } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { getPerfil } from '/js/db.js';
 import { avatarUrl, avatarHtml, avatarConfigDefault, DUELO_TIMEOUT_ACEITAR_S, XP_DUELO } from '/js/gamificacao.js';
 import { iniciarPresenca, encerrarPresenca, atualizarPresenca, filtrarOnline } from '/js/presenca.js';
@@ -643,14 +643,30 @@ function mostrarNotificacaoDesafio(id, duelo) {
 }
 
 window.aceitarDesafio = async function(id) {
+  const dueloRef = ref(db, `duelos/${id}`);
   try {
-    await update(ref(db, `duelos/${id}`), {
-      status: 'em_jogo', adversario_uid: uid, adversario_nome: meuApelido,
-      ts_aceito: Date.now(),
+    const result = await runTransaction(dueloRef, (duelo) => {
+      if (!duelo) return;
+      if (duelo.status !== 'aguardando') return;
+      duelo.status          = 'em_jogo';
+      duelo.adversario_uid  = uid;
+      duelo.adversario_nome = meuApelido;
+      duelo.ts_aceito       = Date.now();
+      return duelo;
     });
+
+    if (!result.committed) {
+      alert('⚡ Este desafio já foi aceito por outro aluno!');
+      document.getElementById(`notif-${id}`)?.remove();
+      return;
+    }
+
     await atualizarPresenca({ em_duelo: true, status: 'ocupado' });
     window.location.href = `/aluno/duelo_partida.html?id=${id}`;
-  } catch(e) { console.error(e); }
+  } catch(e) {
+    console.error('[Aceitar duelo]', e);
+    alert('Erro ao aceitar duelo. Tente novamente.');
+  }
 };
 
 window.recusarDesafio = async function(id) {

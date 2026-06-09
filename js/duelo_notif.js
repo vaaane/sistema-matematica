@@ -121,27 +121,49 @@ function escapeHtml(s) {
 
 window.aceitarDueloBanner = async function(id) {
   const banner = document.getElementById(`dnb-${id}`);
-  if (banner) { clearInterval(banner._interval); banner.remove(); }
 
-  const raw = sessionStorage.getItem('sm_session') || localStorage.getItem('sm_session') || '{}';
-  const { alunos = [], turma = '' } = JSON.parse(raw);
-  const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+  const { runTransaction, ref: fbRef } =
+    await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+  const { db: fbDb } = await import('/js/firebase-config.js');
+
+  const sess = JSON.parse(
+    sessionStorage.getItem('sm_session') ||
+    localStorage.getItem('sm_session') || '{}'
+  );
+  const { alunos = [], turma = '' } = sess;
+  const uid     = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
   const apelido = alunos[0];
 
-  const [{ update: fbUpdate, ref: fbRef }, { db: fbDb }] = await Promise.all([
-    import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js'),
-    import('/js/firebase-config.js'),
-  ]);
-  const { atualizarPresenca } = await import('/js/presenca.js');
+  try {
+    const dueloRef = fbRef(fbDb, `duelos/${id}`);
+    const result   = await runTransaction(dueloRef, (duelo) => {
+      if (!duelo) return;
+      if (duelo.status !== 'aguardando') return;
+      duelo.status          = 'em_jogo';
+      duelo.adversario_uid  = uid;
+      duelo.adversario_nome = apelido;
+      duelo.ts_aceito       = Date.now();
+      return duelo;
+    });
 
-  await fbUpdate(fbRef(fbDb, `duelos/${id}`), {
-    status:          'em_jogo',
-    adversario_uid:  uid,
-    adversario_nome: apelido,
-    ts_aceito:       Date.now(),
-  });
-  await atualizarPresenca({ em_duelo: true, status: 'ocupado' });
-  window.location.href = `/aluno/duelo_partida.html?id=${id}`;
+    if (!result.committed) {
+      if (banner) { clearInterval(banner._interval); banner.remove(); }
+      const t = document.createElement('div');
+      t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1c2035;border:1px solid rgba(239,68,68,.4);color:#e8eaf0;padding:9px 16px;border-radius:10px;font-size:12px;font-weight:600;z-index:9999;white-space:nowrap';
+      t.textContent = '⚡ Desafio já aceito por outro aluno!';
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 3000);
+      return;
+    }
+
+    if (banner) { clearInterval(banner._interval); banner.remove(); }
+    const { atualizarPresenca } = await import('/js/presenca.js');
+    await atualizarPresenca({ em_duelo: true, status: 'ocupado' });
+    window.location.href = `/aluno/duelo_partida.html?id=${id}`;
+
+  } catch(e) {
+    console.error('[Aceitar banner]', e);
+  }
 };
 
 window.recusarDueloBanner = async function(id) {
