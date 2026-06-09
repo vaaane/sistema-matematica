@@ -321,7 +321,7 @@ const { alunos, turma } = sess;
 const aluno = alunos[0];
 initAvBanner(turma, aluno);
 
-window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+window.sair = () => { import('/js/presenca.js').then(m => m.encerrarPresenca()); clearSession(); window.location.href = "/index.html"; };
 renderSidebarAluno("sidebar", "robotica");
 
 const isRob = await getAlunoPreferencia(turma, aluno, 'robotica');
@@ -330,6 +330,21 @@ if (!isRob) { window.location.href = '/aluno/menu.html'; throw new Error("sem ac
 localStorage.setItem('sm_pref_robotica', '1');
 
 document.getElementById('topbar-sub').textContent = `Olá, ${aluno}!`;
+
+(async () => { try {
+  const _pUid = (turma + '_' + aluno).replace(/[.#$\[\]/\s]/g, '_');
+  const { iniciarPresenca, encerrarPresenca } = await import('/js/presenca.js');
+  const { getPerfil } = await import('/js/db.js');
+  const _perfil = await getPerfil(_pUid).catch(() => ({}));
+  await iniciarPresenca(_pUid, {
+    nome:    aluno,
+    apelido: _perfil?.apelido_ativo || aluno,
+    turma,
+    status:  _perfil?.duelos_disponivel !== false ? 'disponivel' : 'indisponivel',
+    pagina:  'robotica',
+  });
+  window.addEventListener('beforeunload', () => encerrarPresenca());
+} catch(e) { console.warn('[Presença]', e); } })();
 
 const ATIVIDADES = [
   { n:1, label:"Atividade 1", desc:"Hardware básico e blocos fundamentais",  emoji:"🔌", bg:"#EBF6FD" },

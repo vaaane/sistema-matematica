@@ -132,7 +132,7 @@ const sess = requireAluno("/index.html");
 if (!sess) throw new Error("não autenticado");
 
 renderSidebarAluno("sidebar", "inicio");
-window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+window.sair = () => { import('/js/presenca.js').then(m => m.encerrarPresenca()); clearSession(); window.location.href = "/index.html"; };
 
 const { alunos, turma } = sess;
 
@@ -168,6 +168,21 @@ document.getElementById("topbar-sub").textContent   = `Turma ${turma} · Bom tra
   const _c = document.getElementById('topbar-avatar-circle');
   if (_c) _c.innerHTML = avatarHtml(_p.avatar || avatarConfigDefault(), alunos[0], '100%');
 } catch(_) {} })();
+
+(async () => { try {
+  const _pUid = (turma + '_' + alunos[0]).replace(/[.#$\[\]/\s]/g, '_');
+  const { iniciarPresenca, encerrarPresenca } = await import('/js/presenca.js');
+  const { getPerfil } = await import('/js/db.js');
+  const _perfil = await getPerfil(_pUid).catch(() => ({}));
+  await iniciarPresenca(_pUid, {
+    nome:    alunos[0],
+    apelido: _perfil?.apelido_ativo || alunos[0],
+    turma,
+    status:  _perfil?.duelos_disponivel !== false ? 'disponivel' : 'indisponivel',
+    pagina:  'menu',
+  });
+  window.addEventListener('beforeunload', () => encerrarPresenca());
+} catch(e) { console.warn('[Presença]', e); } })();
 
 const tabuadaUid = (turma + '_' + alunos[0]).replace(/[.#$\[\]/\s]/g, '_');
 const [todosRaw, _libRaw, tabuadaSnap, torneioSnap] = await Promise.all([

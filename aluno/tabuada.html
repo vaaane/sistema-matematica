@@ -331,7 +331,7 @@ if (_isProfMode) {
 } else {
   renderSidebarAluno("sidebar", "jogos");
 }
-window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+window.sair = () => { import('/js/presenca.js').then(m => m.encerrarPresenca()); clearSession(); window.location.href = "/index.html"; };
 
 const _profUid = 'professora';
 const alunos   = _isProfMode ? ['Professora'] : sess.alunos;
@@ -350,6 +350,20 @@ if (!_isProfMode) (async () => { try {
   const _c = document.getElementById('topbar-avatar-circle');
   if (_c) _c.innerHTML = avatarHtml(_p.avatar || avatarConfigDefault(), nomeAluno, '100%');
 } catch(_) {} })();
+
+if (!_isProfMode) (async () => { try {
+  const { iniciarPresenca, encerrarPresenca } = await import('/js/presenca.js');
+  const { getPerfil } = await import('/js/db.js');
+  const _perfil = await getPerfil(uid).catch(() => ({}));
+  await iniciarPresenca(uid, {
+    nome:    nomeAluno,
+    apelido: _perfil?.apelido_ativo || nomeAluno,
+    turma,
+    status:  _perfil?.duelos_disponivel !== false ? 'disponivel' : 'indisponivel',
+    pagina:  'tabuada',
+  });
+  window.addEventListener('beforeunload', () => encerrarPresenca());
+} catch(e) { console.warn('[Presença]', e); } })();
 
 // ── Firebase ──────────────────────────────────────────────────
 let niveisRef     = ref(db, _isProfMode ? `professor_tabuada_niveis/${uid}` : _isModoTesteAtivo ? `modo_teste_historico/PROFESSOR_TESTE/tabuada_niveis` : `tabuada_niveis/${uid}`);

@@ -309,7 +309,7 @@ if (_urlP.get('modo') === 'teste') {
   const sess = requireAluno();
   if (!sess) throw new Error();
   renderSidebarAluno("sidebar", "atividades");
-  window.sair = () => { document.body.classList.remove('arcade-mode'); clearSession(); window.location.href = "/index.html"; };
+  window.sair = () => { document.body.classList.remove('arcade-mode'); import('/js/presenca.js').then(m => m.encerrarPresenca()); clearSession(); window.location.href = "/index.html"; };
   alunos = sess.alunos;
   turma  = sess.turma;
   const nomeAtiv = _urlP.get("ativ");
@@ -320,9 +320,16 @@ if (_urlP.get('modo') === 'teste') {
   const sess = requireAluno();
   if (!sess) throw new Error();
   renderSidebarAluno("sidebar", "atividades");
-  window.sair = () => { document.body.classList.remove('arcade-mode'); clearSession(); window.location.href = "/index.html"; };
+  window.sair = () => { document.body.classList.remove('arcade-mode'); import('/js/presenca.js').then(m => m.encerrarPresenca()); clearSession(); window.location.href = "/index.html"; };
   alunos = sess.alunos;
   turma  = sess.turma;
+
+  (async () => { try {
+    const _pUid = (turma + '_' + alunos[0]).replace(/[.#$\[\]/\s]/g, '_');
+    const { iniciarPresenca, encerrarPresenca } = await import('/js/presenca.js');
+    await iniciarPresenca(_pUid, { nome: alunos[0], turma, status: 'indisponivel', pagina: 'avaliacao' });
+    window.addEventListener('beforeunload', () => encerrarPresenca());
+  } catch(e) { console.warn('[Presença]', e); } })();
 
   const nomeAtiv = _urlP.get("ativ");
   if (!nomeAtiv) { window.location.href = "/aluno/atividades.html"; throw new Error(); }
