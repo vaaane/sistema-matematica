@@ -237,10 +237,6 @@
         </div>
       </div>
       <div class="topbar-right" style="gap:8px">
-        <div class="topbar-toggle-wrap" id="topbar-avail" onclick="toggleDisponivel()">
-          <span id="topbar-avail-label">⚔️</span>
-          <div class="sw"><div class="sw-thumb"></div></div>
-        </div>
         <div class="avatar-wrap" onclick="window.location.href='/aluno/perfil.html'">
           <div class="avatar" id="topbar-avatar-circle" style="overflow:hidden;padding:0"></div>
         </div>
@@ -349,9 +345,11 @@ const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
 renderSidebarAluno('sidebar', 'duelos');
 window.sair = () => { encerrarPresenca(); clearSession(); window.location.href = '/index.html'; };
 
+let estaDisponivel = () => true;
 (async () => { try {
-  const { initDueloAvail } = await import('/js/duelo_avail.js');
-  await initDueloAvail(uid);
+  const mod = await import('/js/duelo_avail.js');
+  estaDisponivel = mod.estaDisponivel;
+  await mod.initDueloAvail(uid);
 } catch(e) {} })();
 
 // ── Tabs — definido antes dos awaits para estar disponível imediatamente ──
@@ -389,21 +387,6 @@ await iniciarPresenca(uid, {
   pagina:  'duelos',
 });
 window.addEventListener('beforeunload', () => encerrarPresenca());
-
-function _renderTopbarAvail() {
-  const el = document.getElementById('topbar-avail');
-  if (!el) return;
-  el.classList.toggle('on', _disponivel);
-  document.getElementById('topbar-avail-label').textContent = _disponivel ? '⚔️' : '🔕';
-}
-_renderTopbarAvail();
-
-window.toggleDisponivel = async function() {
-  _disponivel = !_disponivel;
-  _renderTopbarAvail();
-  await update(ref(db, `perfis/${uid}`), { duelos_disponivel: _disponivel });
-  await atualizarPresenca({ status: _disponivel ? 'disponivel' : 'indisponivel' });
-};
 
 // ── Helpers ───────────────────────────────────────────────────
 function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -486,7 +469,7 @@ function renderOnlineCard(aluno) {
 
 // ── Desafio aberto ────────────────────────────────────────────
 window.criarDesafioAberto = async function() {
-  if (!_disponivel) {
+  if (!estaDisponivel()) {
     alert('Ative sua disponibilidade para criar desafios.');
     return;
   }
@@ -515,7 +498,7 @@ window.criarDesafioAberto = async function() {
 let _modalUid = null, _modalNome = '';
 
 window.abrirModalDesafio = function(adversarioUid, adversarioNome, isDupla) {
-  if (!_disponivel) { alert('Ative sua disponibilidade para criar desafios.'); return; }
+  if (!estaDisponivel()) { alert('Ative sua disponibilidade para criar desafios.'); return; }
   if (_meuDueloAguardandoId) {
     alert('⚠️ Você já tem um desafio aguardando resposta.\nCancele-o antes de criar outro.');
     return;

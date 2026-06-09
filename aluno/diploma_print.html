@@ -121,10 +121,10 @@
   }
 
   /* Assinatura */
-  .assinatura { display: flex; justify-content: center; margin-bottom: 0; }
-  .assin-bloco { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .assinatura { display: flex; justify-content: center; margin-bottom: 0; padding-top: 28px; }
+  .assin-bloco { display: flex; flex-direction: column; align-items: center; gap: 3px; margin-top: 8px; }
   .assin-linha {
-    width: 160px; height: 1px;
+    width: 220px; height: 1px;
     background: linear-gradient(90deg, transparent, #5a4020, transparent);
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }
@@ -136,7 +136,26 @@
   /* Ocultar na tela (só aparece ao imprimir) */
   .no-print { display: block; }
   @media print {
+    @page {
+      size: A4 landscape;
+      margin: 0;
+    }
+    html, body {
+      width: 297mm;
+      height: 210mm;
+      overflow: hidden;
+    }
     .no-print { display: none !important; }
+    .diploma {
+      width: 297mm !important;
+      height: 210mm !important;
+      padding: 0 !important;
+    }
+    .conteudo {
+      padding: 0 50px !important;
+      transform: scale(0.85);
+      transform-origin: center center;
+    }
   }
 </style>
 </head>
@@ -147,9 +166,16 @@
   <button onclick="window.close()" style="background:#1a1a2e;color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer">
     ← Fechar
   </button>
-  <button onclick="window.print()" style="background:#c9a84c;color:#1a0f00;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;margin-left:8px">
+  <button onclick="imprimirLandscape()" style="background:#c9a84c;color:#1a0f00;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;margin-left:8px">
     🖨️ Imprimir
   </button>
+</div>
+<div class="no-print" style="position:fixed;top:56px;left:12px;z-index:999;
+     background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.4);
+     border-radius:8px;padding:8px 14px;font-size:12px;color:#8a6a2e;
+     max-width:320px;line-height:1.5">
+  💡 <strong>Dica:</strong> No diálogo de impressão, mude
+  <strong>Disposição → Paisagem</strong> para melhor resultado.
 </div>
 
 <div class="diploma">
@@ -248,6 +274,25 @@ const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','ag
 const now = new Date();
 document.getElementById('dp-data-impressao').textContent =
   `São Sebastião, DF · ${meses[now.getMonth()]} de ${now.getFullYear()}`;
+</script>
+<script>
+function imprimirLandscape() {
+  const s = document.createElement('style');
+  s.id = '__ls';
+  s.textContent = `
+    @page { size: 297mm 210mm landscape !important; margin: 0 !important; }
+    @media print {
+      html, body { width: 297mm !important; height: 210mm !important; }
+      .diploma { width: 297mm !important; height: 210mm !important; }
+    }
+  `;
+  document.head.appendChild(s);
+  window.print();
+  setTimeout(() => {
+    const el = document.getElementById('__ls');
+    if (el) el.remove();
+  }, 2000);
+}
 </script>
 </body>
 </html>

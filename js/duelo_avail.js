@@ -53,4 +53,6 @@ function renderToggle() {
   }
 }
 
+export function estaDisponivel() { return _disponivel; }
+
 window.toggleDueloDisp = toggleDueloDisp;
