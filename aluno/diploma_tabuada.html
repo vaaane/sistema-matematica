@@ -271,13 +271,52 @@ import { db } from '/js/firebase-config.js';
 import { ref, get } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { getPerfil } from '/js/db.js';
 import { avatarUrl, avatarConfigDefault } from '/js/gamificacao.js';
+import { getNomeCompleto } from '/js/nomes_completos.js';
 
 const sess = requireAluno('/index.html');
 const { alunos, turma } = sess;
 const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
 
+const nomeCompleto = getNomeCompleto(turma, alunos[0]);
+
 renderSidebarAluno('sidebar', 'jogos');
 window.sair = () => { clearSession(); window.location.href = '/index.html'; };
+
+window.imprimirDiploma = function() {
+  const style = document.createElement('style');
+  style.id = '_print_override';
+  style.textContent = `
+    @page { size: A4 landscape !important; margin: 0.8cm !important; }
+    @media print {
+      body * { visibility: hidden !important; }
+      #diploma-print-area, #diploma-print-area * { visibility: visible !important; }
+      #diploma-print-area {
+        display: block !important;
+        position: fixed !important;
+        top: 0 !important; left: 0 !important;
+        width: 100vw !important; height: 100vh !important;
+        z-index: 99999 !important;
+        background: #fdfaf4 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .dp-wrap {
+        width: 100% !important; height: 100% !important;
+        background: #fdfaf4 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => {
+      const el = document.getElementById('_print_override');
+      if (el) el.remove();
+    }, 1000);
+  }, 100);
+};
 
 // Avatar topbar
 (async () => { try {
@@ -344,7 +383,7 @@ if (!conquistou) {
         <strong>mais de 3.100 operações matemáticas</strong> resolvidas ao longo dos 300 níveis
       </div>
 
-      <button class="btn-imprimir" onclick="window.print()">
+      <button class="btn-imprimir" onclick="imprimirDiploma()">
         🖨️ Imprimir diploma
       </button>
       <button class="btn-voltar" onclick="window.history.back()">← Voltar</button>
@@ -370,7 +409,7 @@ if (!conquistou) {
         <div class="dp-titulo">Diploma de Excelência</div>
         <div class="dp-certifica">Certificamos que o(a) aluno(a)</div>
 
-        <div class="dp-nome">${alunos[0]}</div>
+        <div class="dp-nome">${nomeCompleto}</div>
         <div class="dp-turma">Turma ${turma} · Ano letivo de ${now.getFullYear()}</div>
 
         <div class="dp-texto">

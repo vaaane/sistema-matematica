@@ -126,7 +126,7 @@ export function avatarUrl(config = {}) {
   params.set('backgroundType',  'solid');
   params.set('eyes',            config.eyes       || 'default');
   params.set('mouth',           config.mouth      || 'smile');
-  params.set('clothesType',     config.cloth      || 'hoodie');
+  params.set('clothing',        config.cloth      || 'hoodie');
   params.set('clothesColor',    config.clothColor || 'blue03');
 
   const acc = config.acc || 'blank';
@@ -154,5 +154,5 @@ export function avatarHtml(config = {}, fallbackLetra = '?', tamanho = '100%') {
 }
 
 export function avatarConfigDefault() {
-  return { skin: 'light', top: 'shortFlat', acc: 'blank', bg: 'b6e3f4', eyes: 'default', mouth: 'smile', facial: 'none', cloth: 'hoodie', clothColor: 'blue03' };
+  return { skin: 'light', top: 'shortFlat', acc: 'blank', bg: 'b6e3f4', eyes: 'default', mouth: 'smile', facial: 'none', cloth: 'hoodie', clothColor: '25557c' };
 }
