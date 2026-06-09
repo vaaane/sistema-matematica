@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>⚔️ Duelos — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    /* ── Notificações de desafio ── */
+    #notificacoes-wrap {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; flex-direction: column; gap: 8px;
+      padding: 0 16px; margin-bottom: 0;
+      pointer-events: none;
+    }
+    .challenge-notif {
+      background: linear-gradient(135deg, #1a1030, #130d28);
+      border: 1.5px solid var(--purple); border-radius: 14px;
+      padding: 14px 16px; display: flex; align-items: center;
+      gap: 12px; pointer-events: all;
+      box-shadow: 0 4px 24px rgba(124,92,252,.35);
+      animation: notif-in .25s ease;
+    }
+    @keyframes notif-in { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:none; } }
+    .cn-info { flex: 1; min-width: 0; }
+    .cn-title { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.3; }
+    .cn-sub   { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+    .cn-timer { font-family: 'Orbitron', monospace; font-size: 16px; font-weight: 700;
+                color: #ffd700; flex-shrink: 0; min-width: 38px; text-align: center; }
+    .cn-btns  { display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
+    .btn-aceitar { background: var(--purple); color: #fff; border: none;
+                   padding: 6px 12px; border-radius: 8px; font-size: 12px;
+                   font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .btn-recusar { background: transparent; color: var(--text-muted); border: 1px solid var(--border);
+                   padding: 5px 12px; border-radius: 8px; font-size: 11px; cursor: pointer; }
+    .btn-aceitar:hover { opacity: .85; }
+    .btn-recusar:hover { color: var(--text); }
+
+    /* ── Layout ── */
+    .duelos-page { max-width: 700px; margin: 0 auto; padding: 16px 16px 40px; }
+
+    /* ── Tabs ── */
+    .tabs-nav { display: flex; gap: 4px; margin-bottom: 18px; overflow-x: auto; }
+    .tab-btn {
+      padding: 7px 16px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--card); color: var(--text-muted); font-size: 13px;
+      font-weight: 600; cursor: pointer; white-space: nowrap; transition: all .15s;
+    }
+    .tab-btn.active { background: var(--purple); color: #fff; border-color: var(--purple); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* ── Topbar toggle ── */
+    .topbar-toggle-wrap {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--card2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 5px 10px 5px 8px;
+      cursor: pointer; font-size: 11px; font-weight: 600;
+      color: var(--text-muted); flex-shrink: 0; user-select: none;
+    }
+    .topbar-toggle-wrap .sw {
+      width: 32px; height: 17px; border-radius: 9px; background: var(--card2);
+      border: 1px solid var(--border); position: relative; transition: background .2s;
+    }
+    .topbar-toggle-wrap .sw-thumb {
+      position: absolute; top: 2px; left: 2px;
+      width: 11px; height: 11px; border-radius: 50%;
+      background: #fff; transition: transform .2s;
+    }
+    .topbar-toggle-wrap.on .sw { background: #22c55e; border-color: #22c55e; }
+    .topbar-toggle-wrap.on .sw-thumb { transform: translateX(15px); }
+
+    /* ── Dificuldade ── */
+    .diff-select {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px;
+    }
+    .diff-btn {
+      background: var(--card2); border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 10px 8px; text-align: center;
+      cursor: pointer; font-size: 12px; font-weight: 600;
+      color: var(--text-muted); transition: all .15s; line-height: 1.5;
+    }
+    .diff-btn small { font-size: 10px; font-weight: 400; color: var(--text-muted); }
+    .diff-btn.active { border-color: var(--purple); background: rgba(124,92,252,.15); color: var(--purple); }
+    .diff-btn.active small { color: var(--purple); }
+    .diff-btn:hover:not(.active) { border-color: var(--purple); }
+
+    .btn-desafio-aberto {
+      width: 100%; padding: 13px; border-radius: 12px; border: none;
+      background: linear-gradient(135deg, var(--purple), #5a3fcf);
+      color: #fff; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: opacity .15s; letter-spacing: .3px;
+    }
+    .btn-desafio-aberto:hover { opacity: .85; }
+    .btn-desafio-aberto:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* ── Online grid ── */
+    .section-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .8px; color: var(--text-muted); margin: 20px 0 10px;
+    }
+    .online-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 10px;
+    }
+    .online-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 12px; position: relative;
+      transition: border-color .15s;
+    }
+    .online-card:hover { border-color: var(--purple); }
+    .online-card.in-duel { opacity: .6; }
+    .oc-dupla {
+      position: absolute; top: -8px; left: 12px;
+      background: #ffd700; color: #000; font-size: 9px;
+      font-weight: 800; padding: 2px 7px; border-radius: 10px;
+      letter-spacing: .5px;
+    }
+    .oc-top { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+    .oc-av {
+      width: 38px; height: 38px; border-radius: 50%;
+      overflow: hidden; background: var(--card2); flex-shrink: 0;
+    }
+    .oc-av img { width: 100%; height: 100%; object-fit: cover; }
+    .oc-info { flex: 1; min-width: 0; }
+    .oc-name { font-size: 13px; font-weight: 700; overflow: hidden;
+               text-overflow: ellipsis; white-space: nowrap; }
+    .oc-tag  { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+    .oc-dot  { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .btn-desafiar {
+      width: 100%; padding: 7px; border-radius: 8px; border: 1px solid var(--purple);
+      background: rgba(124,92,252,.12); color: var(--purple);
+      font-size: 12px; font-weight: 700; cursor: pointer; transition: all .15s;
+    }
+    .btn-desafiar:hover:not(.disabled) { background: var(--purple); color: #fff; }
+    .btn-desafiar.disabled { opacity: .5; cursor: not-allowed; border-color: var(--border);
+                              background: transparent; color: var(--text-muted); }
+    .online-vazio {
+      text-align: center; padding: 30px 20px; color: var(--text-muted);
+      font-size: 13px; grid-column: 1/-1;
+    }
+
+    /* ── Modais ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; padding: 16px;
+    }
+    .modal-box {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 18px; padding: 24px; width: 100%; max-width: 360px;
+    }
+    .modal-title { font-family: 'Rajdhani', sans-serif; font-size: 20px;
+                   font-weight: 700; margin-bottom: 16px; }
+    .modal-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.5; }
+    .modal-btns { display: flex; gap: 8px; margin-top: 18px; }
+    .modal-btns button { flex: 1; padding: 11px; border-radius: 10px;
+                         font-size: 14px; font-weight: 700; cursor: pointer; border: none; }
+    .btn-confirm { background: var(--purple); color: #fff; }
+    .btn-cancel  { background: var(--card2); color: var(--text); border: 1px solid var(--border) !important; }
+    .btn-confirm:hover { opacity: .85; }
+
+    /* aguardando */
+    .aguardando-wrap { text-align: center; padding: 8px 0 4px; }
+    .aguardando-spinner {
+      width: 48px; height: 48px; border: 3px solid var(--border);
+      border-top-color: var(--purple); border-radius: 50%;
+      animation: spin .8s linear infinite; margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .aguardando-timer {
+      font-family: 'Orbitron', monospace; font-size: 28px;
+      font-weight: 700; color: var(--purple); margin: 8px 0;
+    }
+
+    /* placeholder */
+    .tab-placeholder {
+      text-align: center; padding: 50px 20px;
+      color: var(--text-muted); font-size: 13px;
+    }
+    .tab-placeholder .icon { font-size: 36px; margin-bottom: 12px; }
+
+    @media (max-width: 480px) {
+      .online-grid { grid-template-columns: repeat(2, 1fr); }
+      .diff-select { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div>
+          <div class="topbar-title">⚔️ Duelos</div>
+          <div class="topbar-sub" id="online-sub">Verificando...</div>
+        </div>
+      </div>
+      <div class="topbar-right" style="gap:8px">
+        <div class="topbar-toggle-wrap" id="topbar-avail" onclick="toggleDisponivel()">
+          <span id="topbar-avail-label">⚔️</span>
+          <div class="sw"><div class="sw-thumb"></div></div>
+        </div>
+        <div class="avatar-wrap" onclick="window.location.href='/aluno/perfil.html'">
+          <div class="avatar" id="topbar-avatar-circle" style="overflow:hidden;padding:0"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="notificacoes-wrap"></div>
+
+    <div class="content">
+      <div class="duelos-page">
+        <div class="tabs-nav">
+          <button class="tab-btn active" id="tab-btn-duelos"   onclick="ativarTab('duelos')">⚔️ Duelos</button>
+          <button class="tab-btn"        id="tab-btn-historico" onclick="ativarTab('historico')">📋 Histórico</button>
+          <button class="tab-btn"        id="tab-btn-ranking"   onclick="ativarTab('ranking')">🏆 Ranking</button>
+        </div>
+
+        <!-- Tab: Duelos -->
+        <div class="tab-pane active" id="tab-duelos">
+          <div class="card" style="margin-bottom:14px">
+            <div class="card-title" style="margin-bottom:14px">🎯 Criar desafio</div>
+            <div class="diff-select" id="diff-select">
+              <div class="diff-btn" onclick="setDiff('facil',this)">🟢 Fácil<br><small>+15 XP · 3 min</small></div>
+              <div class="diff-btn active" onclick="setDiff('medio',this)">🟡 Médio<br><small>+25 XP · 4 min</small></div>
+              <div class="diff-btn" onclick="setDiff('dificil',this)">🔴 Difícil<br><small>+40 XP · 5 min</small></div>
+            </div>
+            <button class="btn-desafio-aberto" id="btnDesafioAberto" onclick="criarDesafioAberto()">
+              ⚔️ Desafio Aberto — todos online
+            </button>
+          </div>
+
+          <div class="section-label">Online agora · <span id="online-count">0</span></div>
+          <div class="online-grid" id="online-grid">
+            <div class="online-vazio">Verificando quem está online...</div>
+          </div>
+        </div>
+
+        <!-- Tab: Histórico -->
+        <div class="tab-pane" id="tab-historico">
+          <div class="tab-placeholder">
+            <div class="icon">📋</div>
+            <p>Histórico disponível após o primeiro duelo.</p>
+          </div>
+        </div>
+
+        <!-- Tab: Ranking -->
+        <div class="tab-pane" id="tab-ranking">
+          <div class="tab-placeholder">
+            <div class="icon">🏆</div>
+            <p>Ranking de duelos disponível em breve.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: aguardando adversário -->
+<div id="modal-aguardando" class="modal-overlay" style="display:none">
+  <div class="modal-box">
+    <div class="modal-title">Aguardando adversário...</div>
+    <div class="aguardando-wrap">
+      <div class="aguardando-spinner"></div>
+      <div style="font-size:13px;color:var(--text-muted)">Expira em</div>
+      <div class="aguardando-timer" id="aguardando-timer">3:00</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:6px" id="aguardando-info"></div>
+    </div>
+    <button class="btn-desafio-aberto" style="margin-top:16px;background:var(--card2);color:var(--text-muted);border:1px solid var(--border)"
+            onclick="cancelarDesafio()">Cancelar desafio</button>
+  </div>
+</div>
+
+<!-- Modal: desafiar direto -->
+<div id="modal-desafio" class="modal-overlay" style="display:none">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-desafio-title">Desafiar</div>
+    <div class="modal-sub" id="modal-desafio-sub"></div>
+    <div class="diff-select" id="modal-diff-select">
+      <div class="diff-btn" onclick="setModalDiff('facil',this)">🟢 Fácil<br><small>+15 XP · 3 min</small></div>
+      <div class="diff-btn active" onclick="setModalDiff('medio',this)">🟡 Médio<br><small>+25 XP · 4 min</small></div>
+      <div class="diff-btn" onclick="setModalDiff('dificil',this)">🔴 Difícil<br><small>+40 XP · 5 min</small></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="fecharModalDesafio()">Cancelar</button>
+      <button class="btn-confirm" onclick="confirmarDesafioDireto()">⚔️ Desafiar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireAluno, renderSidebarAluno, clearSession } from '/js/auth.js';
+import { db } from '/js/firebase-config.js';
+import { ref, set, get, push, onValue, remove, update } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { getPerfil } from '/js/db.js';
+import { avatarUrl, avatarHtml, avatarConfigDefault, DUELO_TIMEOUT_ACEITAR_S, XP_DUELO } from '/js/gamificacao.js';
+import { iniciarPresenca, encerrarPresenca, atualizarPresenca, filtrarOnline } from '/js/presenca.js';
+
+const sess = requireAluno('/index.html');
+if (!sess) throw new Error();
+const { alunos, turma } = sess;
+const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+
+renderSidebarAluno('sidebar', 'duelos');
+window.sair = () => { encerrarPresenca(); clearSession(); window.location.href = '/index.html'; };
+
+// ── Perfil ────────────────────────────────────────────────────
+const perfil   = await getPerfil(uid);
+const meuApelido = perfil?.apelido_ativo || alunos[0];
+
+// Avatar topbar
+(async () => { try {
+  const _c = document.getElementById('topbar-avatar-circle');
+  if (_c) _c.innerHTML = avatarHtml(perfil?.avatar || avatarConfigDefault(), alunos[0], '100%');
+} catch(_) {} })();
+
+// ── Presença ──────────────────────────────────────────────────
+let _disponivel = perfil?.duelos_disponivel !== false;
+
+await iniciarPresenca(uid, {
+  nome:    alunos[0],
+  apelido: meuApelido,
+  turma,
+  status:  _disponivel ? 'disponivel' : 'indisponivel',
+  pagina:  'duelos',
+});
+window.addEventListener('beforeunload', () => encerrarPresenca());
+
+function _renderTopbarAvail() {
+  const el = document.getElementById('topbar-avail');
+  if (!el) return;
+  el.classList.toggle('on', _disponivel);
+  document.getElementById('topbar-avail-label').textContent = _disponivel ? '⚔️' : '🔕';
+}
+_renderTopbarAvail();
+
+window.toggleDisponivel = async function() {
+  _disponivel = !_disponivel;
+  _renderTopbarAvail();
+  await update(ref(db, `perfis/${uid}`), { duelos_disponivel: _disponivel });
+  await atualizarPresenca({ status: _disponivel ? 'disponivel' : 'indisponivel' });
+};
+
+// ── Tabs ──────────────────────────────────────────────────────
+window.ativarTab = function(id) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`tab-${id}`)?.classList.add('active');
+  document.getElementById(`tab-btn-${id}`)?.classList.add('active');
+};
+
+// ── Helpers ───────────────────────────────────────────────────
+function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function paginaLabel(p) {
+  return ({ menu:'no início', jogos:'em jogos', tabuada:'na tabuada',
+            atividades:'em atividade', avaliacao:'em avaliação',
+            competicao:'em competição', robotica:'em robótica', duelos:'em duelos' })[p] || 'online';
+}
+
+function diffLabel(d) {
+  return ({ facil:'🟢 Fácil', medio:'🟡 Médio', dificil:'🔴 Difícil' })[d] || d;
+}
+
+const TEMPO_LABEL = { facil:'3 min', medio:'4 min', dificil:'5 min' };
+
+// ── Dificuldade ───────────────────────────────────────────────
+let _diff = 'medio';
+let _modalDiff = 'medio';
+
+window.setDiff = function(d, el) {
+  _diff = d;
+  document.querySelectorAll('#diff-select .diff-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+};
+
+window.setModalDiff = function(d, el) {
+  _modalDiff = d;
+  document.querySelectorAll('#modal-diff-select .diff-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+};
+
+// ── Online em tempo real ──────────────────────────────────────
+onValue(ref(db, 'presenca_online'), snap => {
+  const online = filtrarOnline(snap, uid);
+  renderOnlineGrid(online);
+  const n = online.length;
+  document.getElementById('online-count').textContent = n;
+  document.getElementById('online-sub').textContent =
+    n === 0 ? 'Nenhum colega online' : `${n} colega${n>1?'s':''} online`;
+});
+
+function renderOnlineGrid(lista) {
+  const grid = document.getElementById('online-grid');
+  if (!lista.length) {
+    grid.innerHTML = '<div class="online-vazio">Nenhum colega disponível no momento.</div>';
+    return;
+  }
+  grid.innerHTML = lista.map(a => renderOnlineCard(a)).join('');
+}
+
+function renderOnlineCard(aluno) {
+  const isDupla = (aluno.nome || '').includes('·');
+  const emDuelo = aluno.em_duelo;
+  const av      = avatarUrl(aluno.avatar || avatarConfigDefault());
+  const apelido = escH(aluno.apelido || aluno.nome);
+  const dotColor = emDuelo || aluno.status === 'ocupado' ? '#F59E0B' : '#22c55e';
+  const btnLabel = emDuelo ? '⏳ Em duelo'
+                 : aluno.status === 'indisponivel' ? '🔕 Indisponível'
+                 : '⚔️ Desafiar';
+  const btnDisabled = emDuelo || aluno.status === 'indisponivel';
+  return `
+    <div class="online-card${emDuelo?' in-duel':''}">
+      ${isDupla ? '<div class="oc-dupla">DUPLA</div>' : ''}
+      <div class="oc-top">
+        <div class="oc-av"><img src="${av}" alt="" onerror="this.src=''"></div>
+        <div class="oc-info">
+          <div class="oc-name">${apelido}</div>
+          <div class="oc-tag">${escH(aluno.turma)} · ${paginaLabel(aluno.pagina)}</div>
+        </div>
+        <div class="oc-dot" style="background:${dotColor}"></div>
+      </div>
+      <button class="btn-desafiar${btnDisabled?' disabled':''}"
+              ${btnDisabled?'disabled':`onclick="abrirModalDesafio('${aluno.uid}','${escH(aluno.apelido||aluno.nome)}',${isDupla})"`}>
+        ${btnLabel}
+      </button>
+    </div>`;
+}
+
+// ── Desafio aberto ────────────────────────────────────────────
+window.criarDesafioAberto = async function() {
+  if (!_disponivel) {
+    alert('Ative sua disponibilidade para criar desafios.');
+    return;
+  }
+  const btn = document.getElementById('btnDesafioAberto');
+  btn.disabled = true;
+  try {
+    const id = push(ref(db, 'duelos')).key;
+    await set(ref(db, `duelos/${id}`), {
+      tipo: 'aberto', dificuldade: _diff,
+      criador_uid: uid, criador_nome: meuApelido, criador_turma: turma,
+      status: 'aguardando', ts_criado: Date.now(),
+      expira_em: Date.now() + DUELO_TIMEOUT_ACEITAR_S * 1000,
+    });
+    mostrarAguardando(id);
+  } catch(e) {
+    btn.disabled = false;
+    console.error(e);
+  }
+};
+
+// ── Desafio direto ────────────────────────────────────────────
+let _modalUid = null, _modalNome = '';
+
+window.abrirModalDesafio = function(adversarioUid, adversarioNome, isDupla) {
+  if (!_disponivel) { alert('Ative sua disponibilidade para criar desafios.'); return; }
+  _modalUid  = adversarioUid;
+  _modalNome = adversarioNome;
+  _modalDiff = _diff;
+  document.querySelectorAll('#modal-diff-select .diff-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['facil','medio','dificil'][i] === _diff);
+  });
+  document.getElementById('modal-desafio-title').textContent = `Desafiar ${adversarioNome}`;
+  document.getElementById('modal-desafio-sub').textContent =
+    `${isDupla ? '⚠️ Dupla — ' : ''}Escolha a dificuldade da partida.`;
+  document.getElementById('modal-desafio').style.display = 'flex';
+};
+
+window.fecharModalDesafio = function() {
+  document.getElementById('modal-desafio').style.display = 'none';
+  _modalUid = null;
+};
+
+window.confirmarDesafioDireto = async function() {
+  if (!_modalUid) return;
+  document.getElementById('modal-desafio').style.display = 'none';
+  try {
+    const id = push(ref(db, 'duelos')).key;
+    await set(ref(db, `duelos/${id}`), {
+      tipo: 'direto', dificuldade: _modalDiff,
+      criador_uid: uid, criador_nome: meuApelido, criador_turma: turma,
+      adversario_uid: _modalUid, adversario_nome: _modalNome,
+      status: 'aguardando', ts_criado: Date.now(),
+      expira_em: Date.now() + DUELO_TIMEOUT_ACEITAR_S * 1000,
+    });
+    mostrarAguardando(id);
+  } catch(e) { console.error(e); }
+};
+
+// ── Aguardando adversário ─────────────────────────────────────
+let _aguardandoId  = null;
+let _aguardandoExp = 0;
+let _aguardandoInt = null;
+
+function mostrarAguardando(id) {
+  _aguardandoId  = id;
+  _aguardandoExp = Date.now() + DUELO_TIMEOUT_ACEITAR_S * 1000;
+  document.getElementById('modal-aguardando').style.display = 'flex';
+  document.getElementById('aguardando-info').textContent = `ID: ${id.slice(-6)}`;
+  _aguardandoInt = setInterval(() => {
+    const rest = Math.max(0, _aguardandoExp - Date.now());
+    const m = Math.floor(rest / 60000);
+    const s = Math.floor((rest % 60000) / 1000);
+    document.getElementById('aguardando-timer').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+    if (rest <= 0) {
+      clearInterval(_aguardandoInt);
+      document.getElementById('modal-aguardando').style.display = 'none';
+      document.getElementById('btnDesafioAberto').disabled = false;
+    }
+  }, 1000);
+
+  // Escutar se alguém aceitou
+  onValue(ref(db, `duelos/${id}/status`), snap => {
+    if (snap.val() === 'em_jogo') {
+      clearInterval(_aguardandoInt);
+      window.location.href = `/aluno/duelo_partida.html?id=${id}`;
+    }
+  });
+}
+
+window.cancelarDesafio = async function() {
+  if (_aguardandoId) {
+    clearInterval(_aguardandoInt);
+    try { await update(ref(db, `duelos/${_aguardandoId}`), { status: 'expirado' }); } catch(_) {}
+    _aguardandoId = null;
+  }
+  document.getElementById('modal-aguardando').style.display = 'none';
+  document.getElementById('btnDesafioAberto').disabled = false;
+};
+
+// ── Receber desafios em tempo real ────────────────────────────
+const _notifVistas = new Set();
+
+onValue(ref(db, 'duelos'), snap => {
+  const agora = Date.now();
+  snap.forEach(child => {
+    const d  = child.val();
+    const id = child.key;
+    if (d.status !== 'aguardando') return;
+    if (d.criador_uid === uid) return;
+    if (d.expira_em < agora) return;
+    if (_notifVistas.has(id)) return;
+    if (d.tipo === 'aberto' || d.adversario_uid === uid) {
+      _notifVistas.add(id);
+      mostrarNotificacaoDesafio(id, d);
+    }
+  });
+});
+
+function mostrarNotificacaoDesafio(id, duelo) {
+  if (document.getElementById(`notif-${id}`)) return;
+  const restMs = duelo.expira_em - Date.now();
+  if (restMs <= 0) return;
+
+  const el = document.createElement('div');
+  el.id = `notif-${id}`;
+  el.className = 'challenge-notif';
+  el.innerHTML = `
+    <div class="cn-info">
+      <div class="cn-title"><strong>${escH(duelo.criador_nome)}</strong> · ${escH(duelo.criador_turma)} te desafiou!</div>
+      <div class="cn-sub">
+        ${duelo.tipo === 'aberto' ? '🌐 Desafio aberto' : '🎯 Desafio direto'} ·
+        <strong>${diffLabel(duelo.dificuldade)}</strong> · ${TEMPO_LABEL[duelo.dificuldade] || ''}
+      </div>
+    </div>
+    <div class="cn-timer" id="timer-${id}"></div>
+    <div class="cn-btns">
+      <button class="btn-aceitar" onclick="aceitarDesafio('${id}')">⚔️ Aceitar</button>
+      <button class="btn-recusar" onclick="recusarDesafio('${id}')">Recusar</button>
+    </div>`;
+  document.getElementById('notificacoes-wrap').prepend(el);
+
+  const interval = setInterval(() => {
+    const rest = Math.max(0, duelo.expira_em - Date.now());
+    const m = Math.floor(rest / 60000);
+    const s = Math.floor((rest % 60000) / 1000);
+    const timerEl = document.getElementById(`timer-${id}`);
+    if (timerEl) timerEl.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+    if (rest <= 0) { clearInterval(interval); el.remove(); }
+  }, 1000);
+}
+
+window.aceitarDesafio = async function(id) {
+  try {
+    await update(ref(db, `duelos/${id}`), {
+      status: 'em_jogo', adversario_uid: uid, adversario_nome: meuApelido,
+      ts_aceito: Date.now(),
+    });
+    await atualizarPresenca({ em_duelo: true, status: 'ocupado' });
+    window.location.href = `/aluno/duelo_partida.html?id=${id}`;
+  } catch(e) { console.error(e); }
+};
+
+window.recusarDesafio = async function(id) {
+  document.getElementById(`notif-${id}`)?.remove();
+  try {
+    const snap = await get(ref(db, `duelos/${id}`));
+    if (snap.val()?.tipo === 'direto') {
+      await update(ref(db, `duelos/${id}`), { status: 'recusado' });
+    }
+  } catch(_) {}
+};
+
+// ── Expirar desafios a cada 10s ───────────────────────────────
+setInterval(async () => {
+  try {
+    const snap = await get(ref(db, 'duelos'));
+    const agora = Date.now();
+    snap.forEach(async child => {
+      const d = child.val();
+      if (d.status === 'aguardando' && d.expira_em < agora) {
+        await update(ref(db, `duelos/${child.key}`), { status: 'expirado' });
+      }
+    });
+  } catch(_) {}
+}, 10_000);
+</script>
+</body>
+</html>
