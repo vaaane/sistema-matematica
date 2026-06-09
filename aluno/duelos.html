@@ -698,12 +698,20 @@ async function carregarHistorico() {
     }
 
     const duelos = [];
-    snap.forEach(c => duelos.push({ id: c.key, ...c.val() }));
+    snap.forEach(c => {
+      duelos.push({ id: c.key, ...c.val() });
+    });
     duelos.sort((a, b) => (b.ts || 0) - (a.ts || 0));
 
     const vitorias = duelos.filter(d => d.resultado === 'vitoria').length;
     const derrotas = duelos.filter(d => d.resultado === 'derrota').length;
     const total    = duelos.length;
+
+    // Corrigir contadores no Firebase com valores reais do histórico
+    await update(ref(db, `perfis/${uid}`), {
+      duelos_total:    total,
+      duelos_vitorias: vitorias,
+    });
 
     const DIFF = { facil:'Fácil', medio:'Médio', dificil:'Difícil' };
 
