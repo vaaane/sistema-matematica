@@ -606,16 +606,22 @@ function renderOnlineGrid(lista) {
   grid.innerHTML = lista.map(a => renderOnlineCard(a)).join('');
 }
 
+function _nomeDoUidOnline(uid) {
+  const parts = (uid || '').split('_');
+  return parts.length >= 2 ? parts.slice(1).join(' ') : uid;
+}
+
 function renderOnlineCard(aluno) {
   const st = statusAluno(aluno);
   const temParceiro = !!(aluno.parceiro_nome);
   const av = avatarUrl(aluno.avatar || avatarConfigDefault());
+  const nomeBase = aluno.apelido || aluno.nome || _nomeDoUidOnline(aluno.uid) || '—';
   const nomeExib = temParceiro
-    ? `${escH(aluno.apelido || aluno.nome)} <span style="opacity:.6;font-size:11px">+ ${escH(aluno.parceiro_nome)}</span>`
-    : escH(aluno.apelido || aluno.nome);
+    ? `${escH(nomeBase)} <span style="opacity:.6;font-size:11px">+ ${escH(aluno.parceiro_nome)}</span>`
+    : escH(nomeBase);
   const turmaExib = temParceiro
-    ? `${escH(aluno.turma)} · ${escH(aluno.parceiro_turma)}`
-    : escH(aluno.turma);
+    ? `${escH(aluno.turma || '?')} · ${escH(aluno.parceiro_turma || '?')}`
+    : escH(aluno.turma || '?');
   return `
     <div class="online-card${!st.disponivel ? ' in-duel' : ''}">
       ${temParceiro ? '<div class="oc-dupla">DUPLA</div>' : ''}
@@ -628,7 +634,7 @@ function renderOnlineCard(aluno) {
         <div class="oc-dot" style="background:${st.dot}"></div>
       </div>
       ${st.disponivel
-        ? `<button class="btn-desafiar" onclick="abrirModalDesafio('${aluno.uid}','${escH(aluno.apelido||aluno.nome)}',${temParceiro})">⚔️ Desafiar</button>`
+        ? `<button class="btn-desafiar" onclick="abrirModalDesafio('${aluno.uid}','${escH(nomeBase)}',${temParceiro})">⚔️ Desafiar</button>`
         : `<button class="btn-desafiar" style="opacity:.4;cursor:not-allowed" disabled>${st.label}</button>`}
     </div>`;
 }
