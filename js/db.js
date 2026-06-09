@@ -516,3 +516,53 @@ export async function getAllSenhasAlunos() {
   });
   return result;
 }
+
+// ── Gamificação: XP e perfil ──────────────────────────────────
+import { calcularNivelPerfil, aplicarXP } from '/js/gamificacao.js';
+
+export async function getPerfil(uid) {
+  try {
+    const snap = await get(ref(db, `perfis/${uid}`));
+    if (snap.exists()) return snap.val();
+  } catch(_) {}
+  return { xp: 0, nivel: 1, avatar: null, apelido_ativo: null, duelos_disponivel: true };
+}
+
+export async function adicionarXP(uid, delta) {
+  const perfil      = await getPerfil(uid);
+  const xpAntes     = perfil.xp || 0;
+  const nivelAntes  = perfil.nivel || 1;
+  const xpDepois    = aplicarXP(xpAntes, delta);
+  const nivelInfo   = calcularNivelPerfil(xpDepois);
+  const nivelDepois = nivelInfo.n;
+
+  await update(ref(db, `perfis/${uid}`), {
+    xp:    xpDepois,
+    nivel: nivelDepois,
+  });
+
+  return {
+    xpAntes, xpDepois, delta,
+    nivelAntes, nivelDepois,
+    subiu: nivelDepois > nivelAntes,
+    nivelNome: nivelInfo.nome,
+  };
+}
+
+export async function inicializarPerfil(uid, nome, turma) {
+  const snap = await get(ref(db, `perfis/${uid}`));
+  if (snap.exists()) return;
+  await set(ref(db, `perfis/${uid}`), {
+    xp:                0,
+    nivel:             1,
+    nome,
+    turma,
+    avatar:            null,
+    apelido_ativo:     null,
+    apelido_status:    null,
+    duelos_disponivel: true,
+    streak_atual:      0,
+    streak_maximo:     0,
+    streak_ultimo_dia: null,
+  });
+}

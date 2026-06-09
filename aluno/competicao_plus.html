@@ -1432,6 +1432,19 @@ async function encerrarSessao(motivo) {
       }
     }
   }
+  // ── XP de gamificação ─────────────────────────────────────────
+  if (!isTeste) try {
+    const { adicionarXP } = await import('/js/db.js');
+    const { XP_ATIVIDADE_COMPLETA, XP_ATIVIDADE_100PCT } = await import('/js/gamificacao.js');
+    const taxa    = st.respondidas > 0 ? (st.acertos / st.respondidas) : 0;
+    const xpGanho = taxa === 1 ? XP_ATIVIDADE_100PCT : XP_ATIVIDADE_COMPLETA;
+    const uidXP   = (turma + '_' + alunos[0]).replace(/[.#$\[\]/\s]/g, '_');
+    const resultado = await adicionarXP(uidXP, xpGanho);
+    if (resultado.subiu) {
+      console.log(`[XP] Subiu para nível ${resultado.nivelDepois} — ${resultado.nivelNome}!`);
+      // TODO Etapa 10: emitir evento para feed
+    }
+  } catch(e) { console.warn('[XP] Erro ao adicionar XP:', e); }
   if (isTeste) {
     addHistoricoTeste('atividades', {
       aluno: 'PROFESSOR_TESTE', turma: 'TESTE',

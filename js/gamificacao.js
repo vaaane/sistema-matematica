@@ -121,17 +121,26 @@ export function avatarUrl(config = {}) {
     clothColor: config.clothColor || 'blue03',
     bg:         config.bg         || '1a3a4a',
   };
-  const p = new URLSearchParams({
-    skinColor:              c.skin,
-    top:                    c.top,
-    accessories:            c.acc === 'blank' ? 'blank' : c.acc,
-    accessoriesProbability: c.acc === 'blank' ? '0' : '100',
-    clothesType:            c.cloth,
-    clothesColor:           c.clothColor,
-    backgroundColor:        c.bg,
-    backgroundType:         'solid',
-  });
-  return `https://api.dicebear.com/9.x/avataaars/svg?${p}`;
+  const params = new URLSearchParams();
+  params.set('skinColor', c.skin);
+  params.set('top', c.top);
+  params.set('backgroundColor', c.bg);
+  params.set('backgroundType', 'solid');
+  if (c.acc && c.acc !== 'blank') {
+    params.set('accessories', c.acc);
+    params.set('accessoriesProbability', '100');
+  } else {
+    params.set('accessoriesProbability', '0');
+  }
+  params.set('clothesType', c.cloth);
+  params.set('clothesColor', c.clothColor);
+  return `https://api.dicebear.com/9.x/avataaars/svg?${params}`;
+}
+
+export function avatarHtml(config = {}, fallbackLetra = '?', tamanho = '100%') {
+  const url   = avatarUrl(config);
+  const letra = (fallbackLetra || '?')[0].toUpperCase();
+  return `<img src="${url}" alt="avatar" style="width:${tamanho};height:${tamanho};object-fit:cover;display:block" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:16px;font-weight:800">${letra}</span>`;
 }
 
 export function avatarConfigDefault() {

@@ -965,6 +965,16 @@ async function finalizarAtividade(parcial = false) {
     });
     saveOk = true;
     console.log('[Robótica] Tentativa salva com sucesso no Firebase.');
+    // ── XP de gamificação ─────────────────────────────────────────
+    try {
+      const { adicionarXP } = await import('/js/db.js');
+      const { XP_ATIVIDADE_COMPLETA, XP_ATIVIDADE_100PCT } = await import('/js/gamificacao.js');
+      const total   = questoes.length;
+      const taxa    = total > 0 ? (acertos / total) : 0;
+      const xpGanho = taxa === 1 ? XP_ATIVIDADE_100PCT : XP_ATIVIDADE_COMPLETA;
+      const uidXP   = (turma + '_' + aluno).replace(/[.#$\[\]/\s]/g, '_');
+      await adicionarXP(uidXP, xpGanho);
+    } catch(e) { console.warn('[XP] Erro ao adicionar XP robótica:', e); }
   } catch(e) {
     saveError = (e?.message || String(e) || 'erro desconhecido');
     console.error('[Robótica] SAVE FALHOU:', e);

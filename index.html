@@ -545,6 +545,12 @@ window.entrarAluno = async function(e) {
     }
     const alunos = [aluno1, ...(aluno2 ? [aluno2] : [])];
     setSession({ modo: 'aluno', turma, alunos });
+    // Inicializar perfil de gamificação (só cria se não existir)
+    try {
+      const { inicializarPerfil } = await import('/js/db.js');
+      const uidPerfil = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+      await inicializarPerfil(uidPerfil, alunos[0], turma);
+    } catch(e) { console.warn('[Perfil] Erro ao inicializar:', e); }
     window.location.href = '/aluno/menu.html';
   } catch(err) {
     showError('errorAluno', 'Erro ao verificar senha. Tente novamente.');

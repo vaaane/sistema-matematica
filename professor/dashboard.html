@@ -111,7 +111,7 @@
 import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES } from "/js/constants.js";
 import { getResultados, getLiberadas, getAlertas, getAllAtividadeStatus, getDetalhes, contarSessoesTabuadaHoje, somarPartidasTabuadaTotal } from "/js/db.js";
 import { db } from "/js/firebase-config.js";
-import { ref, onValue, get, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ref, onValue, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { escH, agruparPorTurma } from "/js/tabuada-alerts.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 
@@ -367,6 +367,16 @@ document.getElementById("content").innerHTML = `
         ${renderPodiumDash()}
       </div>
     </div>
+  </div>
+
+  <div id="apelidos-card" class="card" style="margin-top:20px">
+    <div style="font-size:14px;font-weight:700;margin-bottom:14px">
+      🎮 Apelidos aguardando aprovação
+      <span id="apelidos-badge" style="background:var(--orange);color:#fff;padding:1px 7px;border-radius:10px;font-size:10px;margin-left:6px">0</span>
+    </div>
+    <div id="apelidos-lista">
+      <p style="color:var(--text-muted);font-size:13px">Verificando…</p>
+    </div>
   </div>`;
 
 
@@ -545,6 +555,97 @@ window.fecharAlertaModal = function(e) {
     document.getElementById('alerta-modal-bg').style.display = 'none';
   }
 };
+
+// ── Toast helper ──────────────────────────────────────────────
+function toast(msg) {
+  let t = document.getElementById('_toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = '_toast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 20px;border-radius:10px;font-size:14px;font-weight:600;z-index:9999;transition:opacity .3s;pointer-events:none';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._to);
+  t._to = setTimeout(() => { t.style.opacity = '0'; }, 2500);
+}
+
+// ── Apelidos pendentes ────────────────────────────────────────
+async function carregarApelidosPendentes() {
+  try {
+    const snap = await get(ref(db, 'perfis'));
+    const pendentes = [];
+    if (snap.exists()) {
+      snap.forEach(child => {
+        const v = child.val();
+        if (v?.apelido_status === 'pendente') pendentes.push({ uid: child.key, ...v });
+      });
+    }
+    const badge = document.getElementById('apelidos-badge');
+    if (badge) badge.textContent = pendentes.length || '0';
+    const lista = document.getElementById('apelidos-lista');
+    if (!lista) return;
+    if (!pendentes.length) {
+      lista.innerHTML = '<p style="color:var(--text-muted);font-size:13px">Nenhum apelido pendente.</p>';
+      return;
+    }
+    lista.innerHTML = pendentes.map(p => `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="flex:1">
+          <strong>${escH(p.nome || '')}</strong>
+          <span style="color:var(--text-muted);font-size:11px"> · ${escH(p.turma || '')}</span><br>
+          <span style="font-size:12px">Apelido: <strong style="color:var(--orange)">"${escH(p.apelido_pendente || '')}"</strong></span>
+          ${p.apelido_ativo ? `<span style="font-size:10px;color:var(--text-muted)"> (atual: ${escH(p.apelido_ativo)})</span>` : ''}
+        </div>
+        <button onclick="aprovarApelido('${p.uid}')"
+          style="padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer">
+          ✅ Aprovar
+        </button>
+        <button onclick="pedirMotivo('${p.uid}','${escH(p.apelido_pendente || '')}')"
+          style="padding:6px 14px;background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3);border-radius:8px;font-weight:700;font-size:12px;cursor:pointer">
+          ❌ Recusar
+        </button>
+      </div>`).join('');
+  } catch(e) { console.warn('[Apelidos]', e); }
+}
+
+window.aprovarApelido = async function(uid) {
+  try {
+    const snap = await get(ref(db, `perfis/${uid}`));
+    const p = snap.val();
+    if (!p) return;
+    await update(ref(db, `perfis/${uid}`), {
+      apelido_ativo:      p.apelido_pendente,
+      apelido_status:     'aprovado',
+      apelido_pendente:   null,
+      apelido_motivo:     null,
+      apelido_trocas_bim: (p.apelido_trocas_bim || 0) + 1,
+    });
+    toast(`✅ Apelido aprovado para ${escH(p.nome || '')}`);
+    carregarApelidosPendentes();
+  } catch(e) { toast('Erro ao aprovar. Tente novamente.'); }
+};
+
+window.pedirMotivo = function(uid, apelido) {
+  const motivo = prompt(`Motivo para recusar "${apelido}" (opcional):`);
+  if (motivo === null) return;
+  rejeitarApelido(uid, motivo);
+};
+
+async function rejeitarApelido(uid, motivo) {
+  try {
+    await update(ref(db, `perfis/${uid}`), {
+      apelido_status:   'rejeitado',
+      apelido_motivo:   motivo || '',
+      apelido_pendente: null,
+    });
+    toast('❌ Apelido recusado');
+    carregarApelidosPendentes();
+  } catch(e) { toast('Erro ao recusar. Tente novamente.'); }
+}
+
+carregarApelidosPendentes();
 
 // ── Análise anti-IA: conta suspeitos em background ────────────
 (async () => {

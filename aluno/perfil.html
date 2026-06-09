@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Meu Perfil — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    /* ── Hero ── */
+    .profile-hero {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 28px 24px 20px; display: flex; flex-direction: column; align-items: center;
+      gap: 10px; margin-bottom: 20px; text-align: center;
+    }
+    .hero-avatar-wrap { position: relative; width: 110px; height: 110px; margin-bottom: 4px; }
+    .hero-avatar {
+      width: 110px; height: 110px; border-radius: 50%; overflow: hidden;
+      border: 3px solid var(--purple); background: var(--card2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 40px; font-weight: 800; color: var(--text);
+    }
+    .hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .hero-edit-btn {
+      position: absolute; bottom: 2px; right: 2px;
+      width: 28px; height: 28px; border-radius: 50%; border: none;
+      background: var(--purple); color: #fff; font-size: 13px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .hero-name { font-size: 20px; font-weight: 800; }
+    .hero-turma { font-size: 12px; color: var(--text-muted); margin-top: -6px; }
+    .hero-apelido { font-size: 13px; color: var(--purple); font-weight: 600; }
+    .hero-apelido a { color: var(--text-muted); font-size: 11px; margin-left: 6px; }
+    .xp-bar-wrap { width: 100%; max-width: 320px; }
+    .xp-bar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 5px; }
+    .xp-bar-track { height: 8px; background: rgba(255,255,255,.06); border-radius: 4px; overflow: hidden; }
+    .xp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--purple), #00d4ff); border-radius: 4px; transition: width .4s ease; }
+    .hero-stats { display: flex; gap: 20px; margin-top: 6px; }
+    .hero-stat { text-align: center; }
+    .hero-stat .val { font-family: 'Orbitron', monospace; font-size: 18px; font-weight: 700; color: var(--purple); }
+    .hero-stat .lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .6px; }
+
+    /* ── Tabs ── */
+    .tabs-nav { display: flex; gap: 4px; margin-bottom: 16px; overflow-x: auto; }
+    .tab-btn {
+      padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--card); color: var(--text-muted); font-size: 12px;
+      font-weight: 600; cursor: pointer; white-space: nowrap; transition: all .15s;
+    }
+    .tab-btn.active { background: var(--purple); color: #fff; border-color: var(--purple); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* ── Avatar editor ── */
+    .av-section { margin-bottom: 20px; }
+    .av-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text-muted); margin-bottom: 8px; }
+    .av-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+    .av-opt {
+      padding: 5px 10px; border-radius: 8px; border: 1.5px solid var(--border);
+      background: var(--card2); font-size: 12px; cursor: pointer;
+      transition: border-color .12s, background .12s; user-select: none;
+    }
+    .av-opt:hover { border-color: var(--purple); }
+    .av-opt.selected { border-color: var(--purple); background: rgba(124,92,252,.15); color: var(--purple); font-weight: 700; }
+    .av-opt.locked { opacity: .4; cursor: not-allowed; position: relative; }
+    .av-opt.locked::after { content: '🔒'; margin-left: 4px; }
+    .av-preview-wrap { display: flex; justify-content: center; margin-bottom: 16px; }
+    .av-preview {
+      width: 120px; height: 120px; border-radius: 50%; overflow: hidden;
+      border: 3px solid var(--purple); background: var(--card2);
+    }
+    .av-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .btn-save-av {
+      width: 100%; padding: 12px; border-radius: 12px; border: none;
+      background: var(--purple); color: #fff; font-size: 15px; font-weight: 700;
+      cursor: pointer; margin-top: 8px; transition: opacity .15s;
+    }
+    .btn-save-av:hover { opacity: .85; }
+    .save-ok { color: #00e676; font-size: 13px; text-align: center; margin-top: 6px; display: none; }
+
+    /* ── Apelido ── */
+    .nick-input {
+      width: 100%; padding: 10px 14px; border-radius: 10px;
+      border: 1.5px solid var(--border); background: var(--card2);
+      color: var(--text); font-size: 14px; font-family: inherit;
+      margin-bottom: 10px; box-sizing: border-box;
+    }
+    .nick-input:focus { outline: none; border-color: var(--purple); }
+    .btn-submit-nick {
+      width: 100%; padding: 10px; border-radius: 10px; border: none;
+      background: var(--purple); color: #fff; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: opacity .15s;
+    }
+    .btn-submit-nick:hover { opacity: .85; }
+    .nick-status { font-size: 13px; font-weight: 600; padding: 10px 14px; border-radius: 10px; margin-bottom: 8px; }
+    .nick-status.pendente  { background: rgba(245,158,11,.12); color: #92400E; border: 1px solid rgba(245,158,11,.3); }
+    .nick-status.aprovado  { background: rgba(34,197,94,.1);   color: #166534; border: 1px solid rgba(34,197,94,.25); }
+    .nick-status.rejeitado { background: rgba(239,68,68,.1);   color: #991B1B; border: 1px solid rgba(239,68,68,.25); }
+    .nick-change-info { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+
+    /* ── Placeholder tabs ── */
+    .tab-placeholder {
+      text-align: center; padding: 40px 20px; color: var(--text-muted);
+      background: var(--card); border: 1px dashed var(--border); border-radius: 12px;
+    }
+    .tab-placeholder .icon { font-size: 36px; margin-bottom: 8px; }
+    .tab-placeholder p { font-size: 13px; }
+
+    @media(max-width: 768px) {
+      .hero-stats { gap: 14px; }
+      .hero-stat .val { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Meu Perfil</div>
+        <div class="topbar-sub" id="topbar-sub">Personalize seu avatar e veja seu progresso</div>
+      </div>
+      <div class="topbar-right">
+        <div class="avatar-wrap" onclick="window.location.href='/aluno/perfil.html'" style="cursor:default">
+          <div class="avatar" id="topbar-avatar-circle" style="overflow:hidden;padding:0"></div>
+        </div>
+      </div>
+    </div>
+    <div class="content" id="content">
+
+      <!-- Hero -->
+      <div class="profile-hero">
+        <div class="hero-avatar-wrap">
+          <div class="hero-avatar" id="avatar-circle-hero"></div>
+          <button class="hero-edit-btn" onclick="ativarTab('avatar')" title="Editar avatar">✏️</button>
+        </div>
+        <div class="hero-name" id="hero-nome">—</div>
+        <div class="hero-turma" id="hero-turma">—</div>
+        <div class="hero-apelido" id="hero-apelido" style="display:none"></div>
+        <div class="xp-bar-wrap">
+          <div class="xp-bar-label">
+            <span id="xp-nivel-label">Nível 1 — Aprendiz</span>
+            <span id="xp-proximo-label">0 XP</span>
+          </div>
+          <div class="xp-bar-track"><div class="xp-bar-fill" id="xp-bar" style="width:0%"></div></div>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat"><div class="val" id="stat-xp">0</div><div class="lbl">⭐ XP Total</div></div>
+          <div class="hero-stat"><div class="val" id="stat-vitorias">0</div><div class="lbl">⚔️ Vitórias</div></div>
+          <div class="hero-stat"><div class="val" id="stat-streak">0</div><div class="lbl">🔥 Streak</div></div>
+        </div>
+      </div>
+
+      <!-- Tabs nav -->
+      <div class="tabs-nav">
+        <button class="tab-btn active" id="tab-btn-avatar" onclick="ativarTab('avatar')">🎨 Avatar & Apelido</button>
+        <button class="tab-btn" id="tab-btn-conquistas" onclick="ativarTab('conquistas')">🏆 Conquistas</button>
+        <button class="tab-btn" id="tab-btn-temporadas" onclick="ativarTab('temporadas')">🌟 Temporadas</button>
+        <button class="tab-btn" id="tab-btn-prefs" onclick="ativarTab('prefs')">⚙️ Preferências</button>
+      </div>
+
+      <!-- Tab: Avatar -->
+      <div class="tab-pane active" id="tab-avatar">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title" style="margin-bottom:16px">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+            Editor de Avatar
+          </div>
+
+          <div class="av-preview-wrap">
+            <div class="av-preview" id="editor-preview-circle"></div>
+          </div>
+
+          <div id="av-editor"></div>
+
+          <button class="btn-save-av" onclick="salvarAvatar()">💾 Salvar avatar</button>
+          <div class="save-ok" id="save-ok">✅ Avatar salvo!</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px">🎮 Apelido público</div>
+          <div id="nick-section-wrap"></div>
+        </div>
+      </div>
+
+      <!-- Tab: Conquistas (placeholder Etapa 11) -->
+      <div class="tab-pane" id="tab-conquistas">
+        <div class="tab-placeholder">
+          <div class="icon">🏆</div>
+          <p>As conquistas chegam na próxima atualização.<br>Continue jogando para desbloquear!</p>
+        </div>
+      </div>
+
+      <!-- Tab: Temporadas (placeholder Etapa 13) -->
+      <div class="tab-pane" id="tab-temporadas">
+        <div class="tab-placeholder">
+          <div class="icon">🌟</div>
+          <p>Sistema de temporadas em breve!</p>
+        </div>
+      </div>
+
+      <!-- Tab: Preferências (placeholder Etapa 6) -->
+      <div class="tab-pane" id="tab-prefs">
+        <div class="tab-placeholder">
+          <div class="icon">⚙️</div>
+          <p>Configurações de duelo e preferências chegam em breve.</p>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div>
+
+<script type="module">
+import { requireAluno, renderSidebarAluno, clearSession } from '/js/auth.js';
+import { db } from '/js/firebase-config.js';
+import { ref, update } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { getPerfil } from '/js/db.js';
+import { calcularNivelPerfil, avatarUrl, avatarHtml, avatarConfigDefault, NIVEIS_PERFIL } from '/js/gamificacao.js';
+
+const sess = requireAluno('/index.html');
+if (!sess) throw new Error();
+const { alunos, turma } = sess;
+const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+
+window.sair = () => { clearSession(); window.location.href = '/index.html'; };
+renderSidebarAluno('sidebar', 'perfil');
+
+// ── Carregar perfil ───────────────────────────────────────────
+const perfil     = await getPerfil(uid);
+const nivelInfo  = calcularNivelPerfil(perfil.xp || 0);
+let avatarConfig = perfil.avatar ? { ...avatarConfigDefault(), ...perfil.avatar } : avatarConfigDefault();
+
+// ── Hero ──────────────────────────────────────────────────────
+document.getElementById('hero-nome').textContent  = alunos[0];
+document.getElementById('hero-turma').textContent = `Turma ${turma}`;
+if (perfil.apelido_ativo) {
+  const el = document.getElementById('hero-apelido');
+  el.style.display = '';
+  el.innerHTML = `🎮 ${perfil.apelido_ativo}`;
+}
+document.getElementById('xp-nivel-label').textContent  = `Nível ${nivelInfo.n} — ${nivelInfo.nome}`;
+const faltam = nivelInfo.xpProximo - (perfil.xp || 0);
+document.getElementById('xp-proximo-label').textContent = nivelInfo.n < 10 ? `Faltam ${faltam} XP` : 'Máximo!';
+document.getElementById('xp-bar').style.width = nivelInfo.progresso + '%';
+document.getElementById('stat-xp').textContent      = perfil.xp || 0;
+document.getElementById('stat-vitorias').textContent = perfil.duelos_vitorias || 0;
+document.getElementById('stat-streak').textContent   = perfil.streak_atual || 0;
+
+// Atualizar avatar no topbar e hero
+function _aplicarAvatar(cfg) {
+  const html = avatarHtml(cfg, alunos[0], '100%');
+  const hero = document.getElementById('avatar-circle-hero');
+  const top  = document.getElementById('topbar-avatar-circle');
+  const prev = document.getElementById('editor-preview-circle');
+  if (hero) hero.innerHTML = html;
+  if (top)  top.innerHTML  = html;
+  if (prev) prev.innerHTML = html;
+}
+_aplicarAvatar(avatarConfig);
+
+// ── Definição de opções do editor ────────────────────────────
+const OPTS = {
+  top: {
+    label: 'Cabelo / Chapéu',
+    items: [
+      { v:'shortFlat',         lv:1 }, { v:'shortWaved',        lv:1 },
+      { v:'bun',               lv:1 }, { v:'shortRound',        lv:1 },
+      { v:'sides',             lv:1 }, { v:'shortCurly',        lv:1 },
+      { v:'bob',               lv:2 }, { v:'dreads',            lv:2 }, { v:'straight01',       lv:2 },
+      { v:'curly',             lv:3 }, { v:'longButNotTooLong', lv:3 },
+      { v:'theCaesar',         lv:4 }, { v:'straight02',        lv:4 },
+      { v:'fro',               lv:5 }, { v:'hijab',             lv:5 }, { v:'turban',           lv:5 },
+      { v:'curvy',             lv:6 }, { v:'shavedSides',       lv:6 },
+      { v:'dreads01',          lv:7 }, { v:'dreads02',          lv:7 },
+      { v:'hat',               lv:8 }, { v:'winterHat01',       lv:8 }, { v:'winterHat02',      lv:8 },
+      { v:'winterHat03',       lv:9 }, { v:'winterHat04',       lv:9 }, { v:'bigHair',          lv:9 },
+      { v:'frida',             lv:10}, { v:'eyepatch',          lv:10}, { v:'shaggyMullet',     lv:10},
+    ],
+  },
+  acc: {
+    label: 'Acessórios',
+    items: [
+      { v:'blank',         lv:1 }, { v:'prescription01', lv:1 }, { v:'round', lv:1 }, { v:'sunglasses', lv:1 },
+      { v:'kurt',          lv:3 },
+      { v:'wayfarers',     lv:8 },
+    ],
+  },
+  cloth: {
+    label: 'Roupa',
+    items: [
+      { v:'hoodie',          lv:1 }, { v:'shirtCrewNeck', lv:1 }, { v:'shirtScoopNeck', lv:1 },
+      { v:'shirtVNeck',      lv:1 }, { v:'graphicShirt',  lv:1 },
+      { v:'blazerAndShirt',  lv:5 },
+      { v:'collarAndSweater',lv:6 },
+      { v:'blazerAndSweater',lv:8 },
+      { v:'overall',         lv:10},
+    ],
+  },
+  skin: {
+    label: 'Cor de pele',
+    items: [
+      { v:'tanned',lv:1 }, { v:'yellow',lv:1 }, { v:'pale',lv:1 }, { v:'light',lv:1 },
+      { v:'brown', lv:1 }, { v:'darkBrown',lv:1 }, { v:'black',lv:1 },
+    ],
+  },
+  bg: {
+    label: 'Fundo',
+    items: [
+      { v:'1a3a4a',lv:1 }, { v:'1a1a2e',lv:1 }, { v:'2d4a22',lv:1 }, { v:'4a1a2e',lv:1 },
+      { v:'3d3580',lv:1 }, { v:'6c3483',lv:1 }, { v:'b5451b',lv:1 }, { v:'0a3d62',lv:1 },
+      { v:'1b4332',lv:1 }, { v:'3d2a00',lv:1 },
+    ],
+  },
+};
+
+// ── Renderizar editor ─────────────────────────────────────────
+function renderEditor() {
+  const editorEl = document.getElementById('av-editor');
+  editorEl.innerHTML = Object.entries(OPTS).map(([key, def]) => `
+    <div class="av-section">
+      <div class="av-section-title">${def.label}</div>
+      <div class="av-grid">
+        ${def.items.map(item => {
+          const locked  = nivelInfo.n < item.lv;
+          const sel     = avatarConfig[key] === item.v;
+          const label   = key === 'bg' ? `<span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#${item.v};vertical-align:middle;margin-right:4px"></span>#${item.v}` : item.v;
+          const cls     = ['av-opt', sel ? 'selected' : '', locked ? 'locked' : ''].filter(Boolean).join(' ');
+          const tooltip = locked ? `title="Nível ${item.lv}"` : '';
+          const action  = locked ? '' : `onclick="selecionarOpt('${key}','${item.v}')"`;
+          return `<div class="${cls}" ${tooltip} ${action}>${label}${locked ? '' : ''}</div>`;
+        }).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+renderEditor();
+
+// ── Selecionar opção ──────────────────────────────────────────
+window.selecionarOpt = function(key, val) {
+  avatarConfig[key] = val;
+  _aplicarAvatar(avatarConfig);
+  renderEditor();
+};
+
+// ── Salvar avatar ─────────────────────────────────────────────
+window.salvarAvatar = async function() {
+  try {
+    await update(ref(db, `perfis/${uid}`), { avatar: avatarConfig });
+    const ok = document.getElementById('save-ok');
+    ok.style.display = 'block';
+    setTimeout(() => { ok.style.display = 'none'; }, 2500);
+  } catch(e) { alert('Erro ao salvar avatar. Tente novamente.'); }
+};
+
+// ── Tabs ──────────────────────────────────────────────────────
+window.ativarTab = function(id) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  document.getElementById('tab-btn-' + id).classList.add('active');
+};
+
+// ── Toast ──────────────────────────────────────────────────────
+function toast(msg) {
+  let t = document.getElementById('_toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = '_toast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 20px;border-radius:10px;font-size:14px;font-weight:600;z-index:9999;transition:opacity .3s;pointer-events:none';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._to);
+  t._to = setTimeout(() => { t.style.opacity = '0'; }, 2500);
+}
+
+// ── Apelido ───────────────────────────────────────────────────
+function renderApelidoSection() {
+  const status    = perfil.apelido_status;
+  const ativo     = perfil.apelido_ativo;
+  const pend      = perfil.apelido_pendente;
+  const motivo    = perfil.apelido_motivo;
+  const trocasBim = perfil.apelido_trocas_bim || 0;
+  const wrap      = document.getElementById('nick-section-wrap');
+  if (!wrap) return;
+
+  if (!status) {
+    wrap.innerHTML = `
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Escolha um apelido que aparecerá para todos no ranking. Precisa de aprovação.</p>
+      <input class="nick-input" id="nickInput" maxlength="16" placeholder="Seu apelido...">
+      <button class="btn-submit-nick" onclick="enviarApelido()">Enviar para aprovação</button>`;
+  } else if (status === 'pendente') {
+    wrap.innerHTML = `
+      <div class="nick-status pendente">🕐 Apelido "<strong>${pend || ''}</strong>" aguardando aprovação da professora</div>
+      <div class="nick-change-info">Você será avisado quando for aprovado ou rejeitado.</div>`;
+  } else if (status === 'aprovado') {
+    wrap.innerHTML = `
+      <div class="nick-status aprovado">✅ Apelido "<strong>${ativo || ''}</strong>" ativo</div>
+      <div class="nick-change-info">Você pode trocar o apelido 1× por bimestre.${trocasBim >= 1 ? ' Próxima troca disponível no próximo bimestre.' : ''}</div>
+      ${trocasBim < 1 ? `<input class="nick-input" id="nickInput" maxlength="16" placeholder="Novo apelido..."><button class="btn-submit-nick" onclick="enviarApelido()">Trocar apelido</button>` : ''}`;
+  } else if (status === 'rejeitado') {
+    wrap.innerHTML = `
+      <div class="nick-status rejeitado">❌ Apelido "<strong>${pend || ''}</strong>" foi recusado${motivo ? `<br><span style="font-size:10px">Motivo: ${motivo}</span>` : ''}</div>
+      <input class="nick-input" id="nickInput" maxlength="16" placeholder="Tente outro apelido...">
+      <button class="btn-submit-nick" onclick="enviarApelido()">Enviar novo apelido</button>`;
+  }
+}
+
+window.enviarApelido = async function() {
+  const nick = document.getElementById('nickInput')?.value?.trim();
+  if (!nick || nick.length < 2) { toast('⚠️ Apelido muito curto (mínimo 2 caracteres)'); return; }
+  if (!/^[a-zA-ZÀ-ú0-9 _\-\.!?]{2,16}$/.test(nick)) { toast('⚠️ Apelido com caracteres inválidos'); return; }
+  try {
+    await update(ref(db, `perfis/${uid}`), { apelido_pendente: nick, apelido_status: 'pendente', apelido_motivo: null });
+    perfil.apelido_pendente = nick;
+    perfil.apelido_status   = 'pendente';
+    toast('✅ Apelido enviado para aprovação!');
+    renderApelidoSection();
+  } catch(e) { toast('Erro ao enviar. Tente novamente.'); }
+};
+
+renderApelidoSection();
+</script>
+</body>
+</html>
