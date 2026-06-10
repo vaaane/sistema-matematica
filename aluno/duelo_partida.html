@@ -894,25 +894,75 @@ window.confirmarSair = async function() {
   estado.finalizado = true;
   clearInterval(_timerInterval);
 
-  // Salvar L para mim
+  // Salvar L para mim (com dados de dupla)
   await set(ref(db, `perfis/${uid}/historico_duelos/${dueloId}`), {
-    duelo_id:        dueloId,
-    dificuldade:     dificuldade,
-    adversario_nome: adversarioNome,
-    resultado:       'derrota',
-    abandono:        true,
-    ts:              Date.now(),
+    duelo_id:           dueloId,
+    dificuldade:        dificuldade,
+    adversario_uid:     adversarioUid,
+    adversario_nome:    adversarioNome,
+    adversario_turma:   (adversarioUid || '').split('_')[0] || '',
+    adv_parceiro_nome:  _advParceiroNome  || '',
+    adv_parceiro_turma: _advParceiroTurma || '',
+    parceiro_nome:      _meuParceiroNome  || '',
+    parceiro_turma:     _meuParceiroTurma || '',
+    resultado:          'derrota',
+    abandono:           true,
+    ts:                 Date.now(),
   });
+  // Parceiro de quem saiu (L)
+  if (_meuParcUid) {
+    try {
+      await set(ref(db, `perfis/${_meuParcUid}/historico_duelos/${dueloId}`), {
+        duelo_id:           dueloId,
+        dificuldade:        dificuldade,
+        adversario_uid:     adversarioUid,
+        adversario_nome:    adversarioNome,
+        adversario_turma:   (adversarioUid || '').split('_')[0] || '',
+        adv_parceiro_nome:  _advParceiroNome  || '',
+        adv_parceiro_turma: _advParceiroTurma || '',
+        parceiro_nome:      apelido,
+        parceiro_turma:     turma,
+        resultado:          'derrota',
+        abandono:           true,
+        ts:                 Date.now(),
+      });
+    } catch(e) {}
+  }
 
-  // Salvar W para adversário
+  // Salvar W para adversário (com dados de dupla + ganhou_abandono)
   await set(ref(db, `perfis/${adversarioUid}/historico_duelos/${dueloId}`), {
-    duelo_id:        dueloId,
-    dificuldade:     dificuldade,
-    adversario_nome: apelido,
-    resultado:       'vitoria',
-    ganhou_abandono: true,
-    ts:              Date.now(),
+    duelo_id:           dueloId,
+    dificuldade:        dificuldade,
+    adversario_uid:     uid,
+    adversario_nome:    apelido,
+    adversario_turma:   turma,
+    adv_parceiro_nome:  _meuParceiroNome  || '',
+    adv_parceiro_turma: _meuParceiroTurma || '',
+    parceiro_nome:      _advParceiroNome  || '',
+    parceiro_turma:     _advParceiroTurma || '',
+    resultado:          'vitoria',
+    ganhou_abandono:    true,
+    ts:                 Date.now(),
   });
+  // Parceiro do adversário (W)
+  if (_advParcUid) {
+    try {
+      await set(ref(db, `perfis/${_advParcUid}/historico_duelos/${dueloId}`), {
+        duelo_id:           dueloId,
+        dificuldade:        dificuldade,
+        adversario_uid:     uid,
+        adversario_nome:    apelido,
+        adversario_turma:   turma,
+        adv_parceiro_nome:  _meuParceiroNome  || '',
+        adv_parceiro_turma: _meuParceiroTurma || '',
+        parceiro_nome:      adversarioNome    || '',
+        parceiro_turma:     (adversarioUid || '').split('_')[0] || '',
+        resultado:          'vitoria',
+        ganhou_abandono:    true,
+        ts:                 Date.now(),
+      });
+    } catch(e) {}
+  }
 
   // Marcar duelo encerrado
   await update(ref(db, `duelos/${dueloId}`), {
