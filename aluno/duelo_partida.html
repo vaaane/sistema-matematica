@@ -214,15 +214,19 @@ try {
 const adversarioUid   = duelo.criador_uid === uid ? duelo.adversario_uid   : duelo.criador_uid;
 const adversarioNome  = duelo.criador_uid === uid ? (duelo.adversario_nome || '?') : duelo.criador_nome;
 
-const _meuParceiroNome  = _duplaPartida?.nome  || duelo.criador_parceiro_nome  || duelo.adversario_parceiro_nome  || '';
-const _meuParceiroTurma = _duplaPartida?.turma || duelo.criador_parceiro_turma || duelo.adversario_parceiro_turma || '';
+// ── Parceiros de dupla ──────────────────────────────────────
+const _meuParceiroNome  = duelo.criador_uid === uid
+  ? (duelo.criador_parceiro_nome   || '')
+  : (duelo.adversario_parceiro_nome || '');
+const _meuParceiroTurma = duelo.criador_uid === uid
+  ? (duelo.criador_parceiro_turma   || '')
+  : (duelo.adversario_parceiro_turma || '');
 const _advParceiroNome  = duelo.criador_uid === uid
-  ? (duelo.adversario_parceiro_nome  || '')
-  : (duelo.criador_parceiro_nome     || '');
+  ? (duelo.adversario_parceiro_nome || '')
+  : (duelo.criador_parceiro_nome    || '');
 const _advParceiroTurma = duelo.criador_uid === uid
   ? (duelo.adversario_parceiro_turma || '')
   : (duelo.criador_parceiro_turma    || '');
-
 const _meuParcUid = _meuParceiroNome
   ? (_meuParceiroTurma + '_' + _meuParceiroNome).replace(/[.#$[\]/\s]/g, '_')
   : null;
@@ -468,10 +472,18 @@ async function iniciarPartida() {
     }
   });
 
-  // Encerrar se adversário abandonar (status vai para 'encerrado' antes do tempo)
-  onValue(ref(db, `duelos/${dueloId}/status`), snap => {
+  // Detectar encerramento pelo outro lado e salvar+mostrar imediatamente
+  onValue(ref(db, `duelos/${dueloId}/status`), async snap => {
     if (snap.val() === 'encerrado' && !estado.finalizado) {
-      encerrarPartida('tempo');
+      estado.finalizado = true;
+      clearInterval(_timerInterval);
+      await set(ref(db, `duelos/${dueloId}/resultado/${uid}`), {
+        pares:    estado.meusPontos,
+        tempo_ms: duracaoS * 1000,
+      });
+      await atualizarPresenca({ em_duelo: false, status: 'disponivel' });
+      const resSnap = await get(ref(db, `duelos/${dueloId}/resultado`));
+      mostrarResultado(resSnap.val() || {});
     }
   });
 }
@@ -509,19 +521,21 @@ async function encerrarPartida(motivo) {
     tempo_ms: duracaoS * 1000,
   });
 
-  // Aguardar resultado do adversário (max 5s) — timer sincronizado, encerram juntos
+  // Marcar encerrado imediatamente — o outro lado detecta via onValue
+  await update(ref(db, `duelos/${dueloId}`), { status: 'encerrado' });
+  await atualizarPresenca({ em_duelo: false, status: 'disponivel' });
+
+  // Aguardar resultado do adversário (max 1.5s) para mostrar placar completo
   let tentativas = 0;
   const aguardar = setInterval(async () => {
     tentativas++;
     const snap = await get(ref(db, `duelos/${dueloId}/resultado`));
     const res  = snap.val() || {};
-    if ((res[uid] && res[adversarioUid]) || tentativas >= 5) {
+    if (res[adversarioUid] || tentativas >= 3) {
       clearInterval(aguardar);
-      await update(ref(db, `duelos/${dueloId}`), { status: 'encerrado' });
-      await atualizarPresenca({ em_duelo: false, status: 'disponivel' });
       mostrarResultado(res);
     }
-  }, 1000);
+  }, 500);
 }
 
 // ── Salvar histórico local ─────────────────────────────────────
@@ -531,49 +545,83 @@ async function salvarHistoricoLocal(euGanhei, empate, xpDelta, meuRes, advRes,
     const perfSnap = await get(ref(db, `perfis/${uid}`));
     const perf = perfSnap.exists() ? perfSnap.val() : {};
 
+    const _histBase = {
+      duelo_id:              dueloId,
+      dificuldade:           dificuldade,
+      adversario_uid:        _adversarioUid   || '',
+      adversario_nome:       _adversarioNome  || '',
+      adversario_turma:      _adversarioTurma || '',
+      adv_parceiro_nome:     _advParceiroNome  || '',
+      adv_parceiro_turma:    _advParceiroTurma || '',
+      meus_pares:            meuRes?.pares  ?? 0,
+      adv_pares:             advRes?.pares  ?? 0,
+      ts:                    Date.now(),
+    };
+
+    // Salvar para o aluno principal
     await set(ref(db, `perfis/${uid}/historico_duelos/${dueloId}`), {
-      duelo_id:           dueloId,
-      dificuldade:        dificuldade,
-      adversario_uid:     _adversarioUid  || '',
-      adversario_nome:    _adversarioNome || '',
-      adversario_turma:   _adversarioTurma || '',
-      parceiro_nome:      _meuParceiroNome  || '',
-      parceiro_turma:     _meuParceiroTurma || '',
-      adv_parceiro_nome:  _advParceiroNome  || '',
-      adv_parceiro_turma: _advParceiroTurma || '',
-      meus_pares:         meuRes?.pares  ?? 0,
-      adv_pares:          advRes?.pares  ?? 0,
-      resultado:          euGanhei ? 'vitoria' : empate ? 'empate' : 'derrota',
-      xp_delta:           xpDelta,
-      ts:                 Date.now(),
+      ..._histBase,
+      parceiro_nome:  _meuParceiroNome  || '',
+      parceiro_turma: _meuParceiroTurma || '',
+      resultado:      euGanhei ? 'vitoria' : empate ? 'empate' : 'derrota',
+      xp_delta:       xpDelta,
     });
 
     await update(ref(db, `perfis/${uid}`), {
       duelos_total:    (perf.duelos_total    || 0) + 1,
       duelos_vitorias: (perf.duelos_vitorias || 0) + (euGanhei ? 1 : 0),
     });
+
+    // Salvar para meu parceiro
     if (_meuParcUid) {
       try {
-        const parcSnap = await get(ref(db, `perfis/${_meuParcUid}`));
-        const parc = parcSnap.exists() ? parcSnap.val() : {};
+        const pSnap = await get(ref(db, `perfis/${_meuParcUid}`));
+        const p = pSnap.exists() ? pSnap.val() : {};
+        await set(ref(db, `perfis/${_meuParcUid}/historico_duelos/${dueloId}`), {
+          ..._histBase,
+          parceiro_nome:  alunos[0],
+          parceiro_turma: turma,
+          resultado:      euGanhei ? 'vitoria' : empate ? 'empate' : 'derrota',
+          xp_delta:       xpDelta,
+        });
         await update(ref(db, `perfis/${_meuParcUid}`), {
-          duelos_total:    (parc.duelos_total    || 0) + 1,
-          duelos_vitorias: (parc.duelos_vitorias || 0) + (euGanhei ? 1 : 0),
+          duelos_total:    (p.duelos_total    || 0) + 1,
+          duelos_vitorias: (p.duelos_vitorias || 0) + (euGanhei ? 1 : 0),
         });
-      } catch(e) { console.warn('[Ranking parceiro]', e); }
-    }
-    if (_advParcUid) {
-      try {
-        const advParcSnap = await get(ref(db, `perfis/${_advParcUid}`));
-        const advParc = advParcSnap.exists() ? advParcSnap.val() : {};
-        await update(ref(db, `perfis/${_advParcUid}`), {
-          duelos_total:    (advParc.duelos_total    || 0) + 1,
-          duelos_vitorias: (advParc.duelos_vitorias || 0) + (euGanhei ? 0 : empate ? 0 : 1),
-        });
-      } catch(e) { console.warn('[Ranking parceiro adv]', e); }
+      } catch(e) { console.warn('[Histórico meu parceiro]', e); }
     }
 
-    console.log('[Histórico] salvo com sucesso');
+    // Salvar para parceiro do adversário
+    if (_advParcUid) {
+      try {
+        const apSnap = await get(ref(db, `perfis/${_advParcUid}`));
+        const ap = apSnap.exists() ? apSnap.val() : {};
+        await set(ref(db, `perfis/${_advParcUid}/historico_duelos/${dueloId}`), {
+          duelo_id:              dueloId,
+          dificuldade:           dificuldade,
+          adversario_uid:        uid,
+          adversario_nome:       alunos[0],
+          adversario_turma:      turma,
+          adv_parceiro_nome:     _meuParceiroNome  || '',
+          adv_parceiro_turma:    _meuParceiroTurma || '',
+          parceiro_nome:         _adversarioNome   || '',
+          parceiro_turma:        _adversarioTurma  || '',
+          meus_pares:            advRes?.pares  ?? 0,
+          adv_pares:             meuRes?.pares  ?? 0,
+          resultado:             euGanhei ? 'derrota' : empate ? 'empate' : 'vitoria',
+          xp_delta:              euGanhei
+                                   ? XP_DUELO[dificuldade].derrota
+                                   : XP_DUELO[dificuldade].vitoria,
+          ts:                    Date.now(),
+        });
+        await update(ref(db, `perfis/${_advParcUid}`), {
+          duelos_total:    (ap.duelos_total    || 0) + 1,
+          duelos_vitorias: (ap.duelos_vitorias || 0) + (euGanhei ? 0 : 1),
+        });
+      } catch(e) { console.warn('[Histórico parceiro adv]', e); }
+    }
+
+    console.log('[Histórico] salvo para todos');
   } catch(e) {
     console.error('[Histórico ERRO]', e);
   }
@@ -640,56 +688,12 @@ async function mostrarResultado(resultadosParam) {
     } catch(e) { console.error('[XP abandono ERRO]', e); }
   }
 
-  // Salvar histórico (guarda duplicação internamente)
+  // Salvar histórico (inclui parceiros internamente)
   await salvarHistoricoLocal(
     euGanhei, empate, xpDelta,
     meuRes, advRes,
     _adversarioUid, _adversarioNome, _adversarioTurma
   );
-  // Dupla: salvar histórico para parceiro
-  if (_meuParceiroNome && _meuParceiroTurma) {
-    const _parcUid = (_meuParceiroTurma + '_' + _meuParceiroNome).replace(/[.#$[\]/\s]/g, '_');
-    try {
-      await set(ref(db, `perfis/${_parcUid}/historico_duelos/${dueloId}`), {
-        duelo_id:           dueloId,
-        dificuldade:        dificuldade,
-        adversario_uid:     _adversarioUid  || '',
-        adversario_nome:    _adversarioNome || '',
-        adversario_turma:   _adversarioTurma || '',
-        adv_parceiro_nome:  _advParceiroNome  || '',
-        adv_parceiro_turma: _advParceiroTurma || '',
-        parceiro_nome:      alunos[0],
-        parceiro_turma:     turma,
-        meus_pares:         meuRes?.pares  ?? 0,
-        adv_pares:          advRes?.pares  ?? 0,
-        resultado:          euGanhei ? 'vitoria' : empate ? 'empate' : 'derrota',
-        xp_delta:           xpDelta,
-        ts:                 Date.now(),
-      });
-    } catch(e) { console.error('[Histórico parceiro ERRO]', e); }
-  }
-  if (_advParcUid) {
-    try {
-      await set(ref(db, `perfis/${_advParcUid}/historico_duelos/${dueloId}`), {
-        duelo_id:              dueloId,
-        dificuldade:           dificuldade,
-        adversario_uid:        uid,
-        adversario_nome:       alunos[0],
-        adversario_turma:      turma,
-        adv_parceiro_nome:     _meuParceiroNome  || '',
-        adv_parceiro_turma:    _meuParceiroTurma || '',
-        parceiro_nome:         _adversarioNome   || '',
-        parceiro_turma:        _adversarioTurma  || '',
-        meus_pares:            advRes?.pares  ?? 0,
-        adv_pares:             meuRes?.pares  ?? 0,
-        resultado:             euGanhei ? 'derrota' : empate ? 'empate' : 'vitoria',
-        xp_delta:              euGanhei
-                                 ? XP_DUELO[dificuldade].derrota
-                                 : XP_DUELO[dificuldade].vitoria,
-        ts:                    Date.now(),
-      });
-    } catch(e) { console.warn('[Histórico parceiro adv]', e); }
-  }
 
   // Feed global — escrever evento do duelo (só quem ganhou escreve, evita duplicação)
   if (euGanhei) {

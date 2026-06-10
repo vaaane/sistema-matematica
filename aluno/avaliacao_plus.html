@@ -290,7 +290,7 @@ document.addEventListener('keydown', e => {
 const _urlP   = new URLSearchParams(window.location.search);
 let isTeste = _urlP.get('modo') === 'teste';
 
-let alunos, turma, liberada, statusInfo;
+let alunos, turma, liberada, statusInfo, _duplaTemp;
 
 if (_urlP.get('modo') === 'teste') {
   requireProfessor();
@@ -323,6 +323,21 @@ if (_urlP.get('modo') === 'teste') {
   window.sair = () => { document.body.classList.remove('arcade-mode'); import('/js/presenca.js').then(m => m.encerrarPresenca()); clearSession(); window.location.href = "/index.html"; };
   alunos = sess.alunos;
   turma  = sess.turma;
+  _duplaTemp = (() => {
+    try {
+      const raw = sessionStorage.getItem('sm_dupla_temp');
+      if (!raw) return null;
+      const d = JSON.parse(raw);
+      if (d.dono_nome && d.dono_nome !== sess.alunos[0]) {
+        sessionStorage.removeItem('sm_dupla_temp');
+        return null;
+      }
+      return d;
+    } catch(_) { return null; }
+  })();
+  if (_duplaTemp && !alunos.includes(_duplaTemp.nome)) {
+    alunos = [...alunos, _duplaTemp.nome];
+  }
 
   (async () => { try {
     const _pUid = (turma + '_' + alunos[0]).replace(/[.#$\[\]/\s]/g, '_');
@@ -1655,6 +1670,7 @@ async function encerrarSessao(motivo) {
       await addResultado({ ...dados, aluno: _d.nome, turma: _d.turma || turma, atividade: liberada.atividade, dupla_de: alunos[0], ...(isTeste ? { modo_teste: true } : {}) });
     }
   } catch(e) {}
+  sessionStorage.removeItem('sm_dupla_temp');
   // ── XP de gamificação ─────────────────────────────────────────
   if (!isTeste) try {
     const { adicionarXP } = await import('/js/db.js');
@@ -1662,6 +1678,10 @@ async function encerrarSessao(motivo) {
     const taxa    = st.respondidas > 0 ? (st.acertos / st.respondidas) : 0;
     const xpGanho = taxa === 1 ? XP_ATIVIDADE_100PCT : XP_ATIVIDADE_COMPLETA;
     const resultado = await adicionarXP(makeUid(alunos[0]), xpGanho);
+    if (_duplaTemp) {
+      const _parcUid = (turma + '_' + _duplaTemp.nome).replace(/[.#$[\]/\s]/g, '_');
+      try { await adicionarXP(_parcUid, xpGanho); } catch(e) {}
+    }
     if (resultado.subiu) {
       console.log(`[XP] Subiu para nível ${resultado.nivelDepois} — ${resultado.nivelNome}!`);
     }

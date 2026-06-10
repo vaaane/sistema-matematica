@@ -529,6 +529,10 @@ function renderAtivSimples(r) {
   const tag   = isC
     ? `<span class="hc-tag cls">⚔️ Competição+</span>`
     : `<span class="hc-tag cls">📝 ${modo}</span>`;
+  const parceiro = r.alunos?.[1] || r.parceiro_nome || r.dupla_de || '';
+  const parceiroTag = parceiro
+    ? `<span style="opacity:.5;font-size:10px">👥 + ${escH(parceiro)}</span>`
+    : '';
 
   return `<div class="entry" data-tipo="atividade" id="${entryId}">
     <div class="entry-header" data-entry="${entryId}" data-tipo-entry="ativ" data-ids="${r.id}" data-tent-esc="">
@@ -537,6 +541,7 @@ function renderAtivSimples(r) {
         <div class="entry-title">${escH(r.atividade || '—')}</div>
         <div class="entry-meta">
           ${tag}
+          ${parceiroTag}
           <span class="entry-date">${r.data || fmtTs(r.criadoEm)}</span>
           <span class="entry-date">${pts} pts · ✅${r.acertos||0} ❌${r.erros||0} · ${taxa}</span>
         </div>

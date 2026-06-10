@@ -722,10 +722,15 @@ window.criarDesafioAberto = async function() {
     const _dp = lerDuplaAtiva();
     const id = push(ref(db, 'duelos')).key;
     await set(ref(db, `duelos/${id}`), {
-      tipo: 'aberto', dificuldade: _diff,
-      criador_uid: uid, criador_nome: meuApelido, criador_turma: turma,
-      ...(_dp?.nome ? { parceiro_nome: _dp.nome, parceiro_turma: _dp.turma } : {}),
-      status: 'aguardando', ts_criado: Date.now(),
+      tipo:                   'aberto',
+      dificuldade:            _diff,
+      criador_uid:            uid,
+      criador_nome:           meuApelido,
+      criador_turma:          turma,
+      criador_parceiro_nome:  _dp?.nome  || '',
+      criador_parceiro_turma: _dp?.turma || '',
+      status:    'aguardando',
+      ts_criado: Date.now(),
       expira_em: Date.now() + DUELO_TIMEOUT_ACEITAR_S * 1000,
     });
     mostrarAguardando(id, 'Desafio aberto');
@@ -770,11 +775,17 @@ window.confirmarDesafioDireto = async function() {
     const _dp2 = lerDuplaAtiva();
     const id = push(ref(db, 'duelos')).key;
     await set(ref(db, `duelos/${id}`), {
-      tipo: 'direto', dificuldade: _modalDiff,
-      criador_uid: uid, criador_nome: meuApelido, criador_turma: turma,
-      adversario_uid: _modalUid, adversario_nome: _modalNome,
-      ...(_dp2?.nome ? { parceiro_nome: _dp2.nome, parceiro_turma: _dp2.turma } : {}),
-      status: 'aguardando', ts_criado: Date.now(),
+      tipo:                   'direto',
+      dificuldade:            _modalDiff,
+      criador_uid:            uid,
+      criador_nome:           meuApelido,
+      criador_turma:          turma,
+      criador_parceiro_nome:  _dp2?.nome  || '',
+      criador_parceiro_turma: _dp2?.turma || '',
+      adversario_uid:         _modalUid,
+      adversario_nome:        _modalNome,
+      status:    'aguardando',
+      ts_criado: Date.now(),
       expira_em: Date.now() + DUELO_TIMEOUT_ACEITAR_S * 1000,
     });
     mostrarAguardando(id, _modalNome);
@@ -962,6 +973,16 @@ window.aceitarDesafio = async function(id) {
       showToast('⚡ Este desafio já foi aceito por outro aluno!', 'info');
       document.getElementById(`notif-${id}`)?.remove();
       return;
+    }
+    const _dpAdv = lerDuplaAtiva();
+    if (_dpAdv) {
+      try {
+        await update(ref(db, `duelos/${id}`), {
+          adversario_parceiro_nome:  _dpAdv.nome  || '',
+          adversario_parceiro_turma: _dpAdv.turma || '',
+          adversario_turma:          turma,
+        });
+      } catch(_) {}
     }
 
     if (_aguardandoId) {
