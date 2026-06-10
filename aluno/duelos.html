@@ -614,7 +614,7 @@ function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;
 
 function statusAluno(aluno) {
   if (aluno.em_duelo)                 return { label: '⚔️ Duelando',   disponivel: false, dot: '#F59E0B' };
-  if (aluno.status === 'indisponivel') return { label: '📝 Em quiz',    disponivel: false, dot: '#6b7280' };
+  if (aluno.status === 'indisponivel') return { label: '⛔ Indisponível', disponivel: false, dot: '#6b7280' };
   return                                     { label: '🟢 Disponível', disponivel: true,  dot: '#22c55e' };
 }
 

@@ -139,8 +139,15 @@ renderSidebarAluno('sidebar', 'aquecimento');
 window.sair = () => { clearSession(); window.location.href = '/index.html'; };
 
 (async () => { try {
+  const { iniciarPresenca, encerrarPresenca } = await import('/js/presenca.js');
+  const _dispSnap = await get(ref(db, `perfis/${uid}/duelos_disponivel`));
+  const _disp = _dispSnap.val() !== false;
+  await iniciarPresenca(uid, { nome: alunos[0], turma, status: _disp ? 'disponivel' : 'indisponivel', pagina: 'navegando' });
+  window.addEventListener('beforeunload', () => encerrarPresenca());
   const { initDueloAvail } = await import('/js/duelo_avail.js');
   await initDueloAvail(uid);
+  const { iniciarNotifDuelo } = await import('/js/duelo_notif.js');
+  if (_disp) iniciarNotifDuelo(uid, alunos[0]);
 } catch(e) {} })();
 
 const perfil = await getPerfil(uid);

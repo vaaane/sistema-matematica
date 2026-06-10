@@ -52,6 +52,7 @@ export function filtrarOnline(snap, meuUid) {
     const v = child.val();
     if (!v?.ts) return;
     if (agora - v.ts > 25_000) return;
+    if (v.status === 'indisponivel') return;
     lista.push({ uid: child.key, ...v });
   });
   return lista;

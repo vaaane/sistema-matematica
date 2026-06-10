@@ -121,6 +121,8 @@ const { alunos, turma } = sess;
   window.addEventListener('beforeunload', () => encerrarPresenca());
   const { initDueloAvail } = await import('/js/duelo_avail.js');
   await initDueloAvail(_uid);
+  const { iniciarNotifDuelo } = await import('/js/duelo_notif.js');
+  if (_disp) iniciarNotifDuelo(_uid, alunos[0]);
 } catch(e) {} })();
 initAvBanner(turma, alunos[0]);
 

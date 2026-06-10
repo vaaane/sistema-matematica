@@ -133,6 +133,10 @@ export function renderSidebarAluno(containerId, activePage) {
     </div>`;
   setupMobileNav(containerId);
   injetarFaixaDupla();
+  if (!isMT && alunos.length > 0) {
+    const _sessUid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+    iniciarVerificacaoSessao(_sessUid).catch(() => {});
+  }
   // Inject disponibilidade toggle into topbar-right (before avatar)
   const _topbarRight = document.querySelector('.topbar-right');
   if (_topbarRight && !document.getElementById('duelo-avail-toggle')) {
@@ -211,6 +215,26 @@ export function atualizarBadgeDupla() {
   } else {
     badge.style.display = 'none';
   }
+}
+
+// ── Verificação de sessão única ──────────────────────────────
+export async function iniciarVerificacaoSessao(uid) {
+  const s = getSession();
+  if (!s?.session_token) return;
+  const verificar = async () => {
+    try {
+      const { db } = await import('/js/firebase-config.js');
+      const { ref, get } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+      const snap = await get(ref(db, `perfis/${uid}/session_token`));
+      if (snap.val() && snap.val() !== s.session_token) {
+        clearSession();
+        localStorage.removeItem('sm_dupla_duelo');
+        window.location.href = '/index.html?motivo=novo_login';
+      }
+    } catch(_) {}
+  };
+  setInterval(verificar, 30_000);
+  verificar();
 }
 
 // ── Hash e geração de senha de aluno ─────────────────────────

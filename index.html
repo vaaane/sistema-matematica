@@ -495,11 +495,18 @@ window.entrarAluno = async function(e) {
       return showError('errorAluno', `Senha incorreta para ${aluno1}.${suf}`);
     }
     const alunos = [aluno1];
-    setSession({ modo: 'aluno', turma, alunos });
+    const sessionToken = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    const uidPerfil = (turma + '_' + aluno1).replace(/[.#$[\]/\s]/g, '_');
+    try {
+      const { ref: fbRef, set } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+      const { db } = await import('/js/firebase-config.js');
+      await set(fbRef(db, `perfis/${uidPerfil}/session_token`), sessionToken);
+      localStorage.removeItem('sm_dupla_duelo');
+    } catch(_) {}
+    setSession({ modo: 'aluno', turma, alunos, session_token: sessionToken });
     // Inicializar perfil de gamificação (só cria se não existir)
     try {
       const { inicializarPerfil } = await import('/js/db.js');
-      const uidPerfil = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
       await inicializarPerfil(uidPerfil, alunos[0], turma);
     } catch(e) { console.warn('[Perfil] Erro ao inicializar:', e); }
     window.location.href = '/aluno/menu.html';
@@ -534,6 +541,10 @@ window.entrarProf = async function(e) {
     setLoading('btnProf', false);
   }
 };
+
+if (new URLSearchParams(location.search).get('motivo') === 'novo_login') {
+  showError('errorAluno', 'Sua sessão foi encerrada porque outro login foi realizado.');
+}
 </script>
 </body>
 </html>
