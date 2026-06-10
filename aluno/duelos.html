@@ -460,12 +460,12 @@ window.sair = () => { encerrarPresenca(); clearSession(); window.location.href =
 // Aviso ao sair com dupla ativa
 document.querySelectorAll('.nav-item, .btn-sair').forEach(el => {
   el.addEventListener('click', (e) => {
-    if (sessionStorage.getItem('sm_dupla_duelo')) {
+    if (localStorage.getItem('sm_dupla_duelo')) {
       if (!confirm('Sua dupla será desconectada ao sair desta página. Deseja continuar?')) {
         e.preventDefault();
         e.stopPropagation();
       } else {
-        sessionStorage.removeItem('sm_dupla_duelo');
+        localStorage.removeItem('sm_dupla_duelo');
       }
     }
   });
@@ -514,7 +514,7 @@ await iniciarPresenca(uid, {
 });
 window.addEventListener('beforeunload', (e) => {
   encerrarPresenca();
-  if (sessionStorage.getItem('sm_dupla_duelo')) {
+  if (localStorage.getItem('sm_dupla_duelo')) {
     e.preventDefault();
     e.returnValue = '';
   }
@@ -566,7 +566,7 @@ window.confirmarDupla = async function() {
     if (!rec) { erroEl.textContent = 'Senha não cadastrada. Peça ao professor.'; erroEl.style.display = 'block'; return; }
     if (hash !== rec.hash) { erroEl.textContent = 'Senha incorreta.'; erroEl.style.display = 'block'; return; }
   } catch(e) { erroEl.textContent = 'Erro ao verificar senha.'; erroEl.style.display = 'block'; return; }
-  sessionStorage.setItem('sm_dupla_duelo', JSON.stringify({ nome: parceiroNome, turma: parceiroTurma }));
+  localStorage.setItem('sm_dupla_duelo', JSON.stringify({ nome: parceiroNome, turma: parceiroTurma }));
   // Cancelar desafio enviado pendente
   if (_meuDueloAguardandoId) {
     clearInterval(_aguardandoInt);
@@ -588,14 +588,14 @@ window.confirmarDupla = async function() {
   document.getElementById('dupla-ativa-nome').textContent = `Jogando em dupla com ${parceiroNome} · ${parceiroTurma}`;
 };
 window.removerDupla = async function() {
-  sessionStorage.removeItem('sm_dupla_duelo');
+  localStorage.removeItem('sm_dupla_duelo');
   await atualizarPresenca({ parceiro_nome: null, parceiro_turma: null });
   document.getElementById('dupla-ativa').style.display = 'none';
   document.getElementById('dupla-btn-wrap').style.display = 'block';
 };
 // Restaurar estado ao carregar
 {
-  const _duplaAtiva = sessionStorage.getItem('sm_dupla_duelo');
+  const _duplaAtiva = localStorage.getItem('sm_dupla_duelo');
   if (_duplaAtiva) {
     try {
       const d = JSON.parse(_duplaAtiva);
@@ -704,7 +704,7 @@ window.criarDesafioAberto = async function() {
   const btn = document.getElementById('btnDesafioAberto');
   btn.disabled = true;
   try {
-    const _dp = JSON.parse(sessionStorage.getItem('sm_dupla_duelo') || 'null');
+    const _dp = JSON.parse(localStorage.getItem('sm_dupla_duelo') || 'null');
     const id = push(ref(db, 'duelos')).key;
     await set(ref(db, `duelos/${id}`), {
       tipo: 'aberto', dificuldade: _diff,
@@ -752,7 +752,7 @@ window.confirmarDesafioDireto = async function() {
   if (!_modalUid) return;
   document.getElementById('modal-desafio').style.display = 'none';
   try {
-    const _dp2 = JSON.parse(sessionStorage.getItem('sm_dupla_duelo') || 'null');
+    const _dp2 = JSON.parse(localStorage.getItem('sm_dupla_duelo') || 'null');
     const id = push(ref(db, 'duelos')).key;
     await set(ref(db, `duelos/${id}`), {
       tipo: 'direto', dificuldade: _modalDiff,

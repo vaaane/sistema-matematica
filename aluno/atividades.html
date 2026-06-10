@@ -384,7 +384,7 @@ const bannerHtml = liberadaParaBanner ? (() => {
       ${isAvP ? '<span>🏆 Vale 10 pts na Fase 1</span>' : '<span>🏆 Vale pontos no ranking</span>'}
     </div>
     <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">
-      <a href="${url}" class="ac-btn-iniciar" id="btn-iniciar-ativ">▶ Iniciar agora</a>
+      <button class="ac-btn-iniciar" id="btn-iniciar-ativ" onclick="iniciarAtividade('${url}')">▶ Iniciar agora</button>
       <button class="ac-dupla-btn" id="btn-dupla-toggle" onclick="togglePainelDupla()">👥 Jogar em Dupla</button>
     </div>
     <div class="ac-dupla-panel" id="painel-dupla">
@@ -532,6 +532,18 @@ function _mostrarBadgeDupla(nome) {
   if (!wrap) return;
   wrap.innerHTML = `<div class="ac-dupla-badge">👥 ${escH(nome)} <button class="ac-dupla-remove" onclick="removerDupla()">✕</button></div>`;
 }
+
+window.iniciarAtividade = async function(url) {
+  const _duplaAtiva = localStorage.getItem('sm_dupla_duelo');
+  if (_duplaAtiva) {
+    try {
+      localStorage.removeItem('sm_dupla_duelo');
+      const { atualizarPresenca } = await import('/js/presenca.js');
+      await atualizarPresenca({ parceiro_nome: null, parceiro_turma: null });
+    } catch(_) {}
+  }
+  window.location.href = url;
+};
 
 </script>
 </body>

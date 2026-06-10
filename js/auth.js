@@ -8,6 +8,7 @@ export function setSession(data) {
 export function clearSession() {
   localStorage.removeItem("sm_session");
   localStorage.removeItem("modoTeste");
+  localStorage.removeItem("sm_dupla_duelo");
   sessionStorage.removeItem("sm_jogo");
 }
 
@@ -99,9 +100,15 @@ export function renderSidebarAluno(containerId, activePage) {
     nav.push({ id:"robotica", href:"/aluno/robotica.html", label:"🤖 Robótica", icon:`<path d="M20 9V7c0-1.1-.9-2-2-2h-3c0-1.66-1.34-3-3-3S9 3.34 9 5H6c-1.1 0-2 .9-2 2v2c-1.66 0-3 1.34-3 3s1.34 3 3 3v4c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4c1.66 0 3-1.34 3-3s-1.34-3-3-3zm-2 10H6V7h12v12zm-9-6c-.83 0-1.5-.67-1.5-1.5S8.17 10 9 10s1.5.67 1.5 1.5S9.83 13 9 13zm6 0c-.83 0-1.5-.67-1.5-1.5S14.17 10 15 10s1.5.67 1.5 1.5S15.83 13 15 13z"/>` });
   }
   const isMT = isModoTeste();
+  const _duplaAtiva = (() => {
+    try { return JSON.parse(localStorage.getItem('sm_dupla_duelo') || 'null'); } catch(_) { return null; }
+  })();
   const userHtml = isMT
     ? '<div class="user-name">Professora<span>Conta Teste</span></div>'
-    : alunos.map((a,i) => `<div class="user-name">${a}<span>Aluno${alunos.length>1?' '+(i+1):''}</span></div>`).join('');
+    : alunos.map((a,i) => `<div class="user-name">${a}<span>Aluno${alunos.length>1?' '+(i+1):''}</span></div>`).join('')
+      + (_duplaAtiva
+        ? `<div class="user-name" style="margin-top:4px;opacity:.8"><span style="color:#00d4ff;font-size:11px;font-weight:700">👥 Em dupla com ${_duplaAtiva.nome}</span><span style="font-size:10px;color:#64748b">${_duplaAtiva.turma} · só em Duelos</span></div>`
+        : '');
   const navHtml  = nav.map(n => n.divider
     ? '<div class="nav-divider"></div>'
     : `<a class="nav-item${activePage===n.id?' active-orange':''}" href="${n.href}"><svg viewBox="0 0 24 24">${n.icon}</svg>${n.label}</a>`
