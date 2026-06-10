@@ -1,19 +1,19 @@
-// ── Sessão em localStorage ───────────────────────────────────
+// ── Sessão em sessionStorage (limpa ao fechar o navegador) ───
 export function getSession() {
-  try { return JSON.parse(localStorage.getItem("sm_session") || "null"); } catch(e) { return null; }
+  try { return JSON.parse(sessionStorage.getItem("sm_session") || "null"); } catch(e) { return null; }
 }
 export function setSession(data) {
-  localStorage.setItem("sm_session", JSON.stringify(data));
+  sessionStorage.setItem("sm_session", JSON.stringify(data));
 }
 export function clearSession() {
-  localStorage.removeItem("sm_session");
-  localStorage.removeItem("modoTeste");
+  sessionStorage.removeItem("sm_session");
+  sessionStorage.removeItem("modoTeste");
   localStorage.removeItem("sm_dupla_duelo");
   sessionStorage.removeItem("sm_jogo");
 }
 
 export function isModoTeste() {
-  return localStorage.getItem('modoTeste') === 'true';
+  return sessionStorage.getItem('modoTeste') === 'true';
 }
 
 export function requireAluno(redirectTo = "/index.html") {
@@ -221,20 +221,21 @@ export function atualizarBadgeDupla() {
 export async function iniciarVerificacaoSessao(uid) {
   const s = getSession();
   if (!s?.session_token) return;
+  const myToken = s.session_token;
   const verificar = async () => {
     try {
       const { db } = await import('/js/firebase-config.js');
       const { ref, get } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
       const snap = await get(ref(db, `perfis/${uid}/session_token`));
-      if (snap.val() && snap.val() !== s.session_token) {
+      if (snap.val() && snap.val() !== myToken) {
         clearSession();
         localStorage.removeItem('sm_dupla_duelo');
         window.location.href = '/index.html?motivo=novo_login';
       }
     } catch(_) {}
   };
-  setInterval(verificar, 30_000);
-  verificar();
+  setInterval(verificar, 15_000);
+  await verificar();
 }
 
 // ── Hash e geração de senha de aluno ─────────────────────────

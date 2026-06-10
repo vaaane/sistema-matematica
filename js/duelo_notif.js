@@ -126,10 +126,7 @@ window.aceitarDueloBanner = async function(id) {
     await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
   const { db: fbDb } = await import('/js/firebase-config.js');
 
-  const sess = JSON.parse(
-    sessionStorage.getItem('sm_session') ||
-    localStorage.getItem('sm_session') || '{}'
-  );
+  const sess = JSON.parse(sessionStorage.getItem('sm_session') || '{}');
   const { alunos = [], turma = '' } = sess;
   const uid     = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
   const apelido = alunos[0];

@@ -459,7 +459,7 @@ window.confirmarModoTeste = function() {
   if (!senha) return;
   if (senha === 'professorteste2426') {
     setSession({ modo: 'aluno', turma: 'TESTE', alunos: ['PROFESSOR_TESTE'] });
-    localStorage.setItem('modoTeste', 'true');
+    sessionStorage.setItem('modoTeste', 'true');
     localStorage.setItem('tema', 'escuro');
     window.location.href = '/aluno/menu.html';
   } else {
@@ -555,7 +555,7 @@ window.entrarProf = async function(e) {
 };
 
 if (new URLSearchParams(location.search).get('motivo') === 'novo_login') {
-  showError('errorAluno', 'Sua sessão foi encerrada porque outro login foi realizado.');
+  showError('errorAluno', '⚠️ Sua sessão foi encerrada porque este aluno fez login em outro dispositivo.');
 }
 </script>
 </body>
