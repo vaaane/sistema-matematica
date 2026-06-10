@@ -122,6 +122,10 @@
   }
   .certs-header-sub { font-size: 12px; color: #6b7280 !important; margin-top: 2px; }
 
+  .topbar { background: #151828 !important; border-color: rgba(255,255,255,0.07) !important; }
+  .topbar-title { color: #e8eaf0 !important; }
+  .topbar-sub   { color: #6b7280 !important; }
+
   @media (max-width: 500px) {
     .cert-grid { grid-template-columns: 1fr; }
   }
@@ -198,6 +202,24 @@ const CERTIFICADOS = [
     href:      '/aluno/diploma_tabuada.html',
     btnLabel:  '🎓 Ver diploma',
   },
+  {
+    id:        'tabuada_ouro',
+    emoji:     '🥇',
+    nome:      'Todos com Estrela',
+    desc:      'Completou todos os 300 níveis da tabuada sem nenhum erro pelo menos uma vez — perfeição em cada desafio.',
+    requisito: 'Complete todos os 300 níveis sem erros (pelo menos 1×)',
+    href:      null,
+    btnLabel:  null,
+  },
+  {
+    id:        'tabuada_diamante',
+    emoji:     '💎',
+    nome:      'Maestria Total',
+    desc:      'Alcançou maestria em todos os 300 níveis da tabuada — 3 completions perfeitas consecutivas em cada um.',
+    requisito: 'Complete todos os 300 níveis com maestria (3× perfeito)',
+    href:      null,
+    btnLabel:  null,
+  },
 ];
 
 // Buscar conquistas do aluno
@@ -229,13 +251,14 @@ el.innerHTML = `
       const data = ts ? new Date(ts).toLocaleDateString('pt-BR', { day:'numeric', month:'long', year:'numeric' }) : null;
       return `
         <div class="cert-card ${conquistou ? 'desbloqueado' : 'bloqueado'}"
-             ${conquistou ? `onclick="window.location.href='${c.href}'"` : ''}>
+             ${conquistou && c.href ? `onclick="window.location.href='${c.href}'"` : ''}>
           <div class="cert-icon">${c.emoji}</div>
           <div class="cert-nome">${c.nome}</div>
           <div class="cert-desc">${c.desc}</div>
           ${conquistou && data ? `<div class="cert-data">✅ Conquistado em ${data}</div>` : ''}
           ${conquistou
-            ? `<a class="cert-btn" href="${c.href}" onclick="event.stopPropagation()">${c.btnLabel}</a>`
+            ? (c.href ? `<a class="cert-btn" href="${c.href}" onclick="event.stopPropagation()">${c.btnLabel}</a>`
+                      : `<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.4);color:#c9a84c;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700">${c.emoji} Conquista desbloqueada!</div>`)
             : `<div>
                 <div class="cert-lock">🔒 Bloqueado</div>
                 <div class="cert-requisito">${c.requisito}</div>

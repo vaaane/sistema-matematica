@@ -21,7 +21,7 @@ export const ALUNOS_POR_TURMA = {
   "8D": [
     "Alice Tavares", "Alice Paz", "Ana Julia",
     "Arthur", "Dandara", "Francisco",
-    "Isaac", "João Pedro", "Karolinny",
+    "Isaac", "Izabelly Monik", "João Pedro", "Karolinny",
     "Ketelly", "Leticia", "Lucas Gabriel",
     "Lucas Matheus", "Luis Gabriel", "Luis Miguel",
     "Miguel Henrique", "Miguel Nascimento", "Thayna",

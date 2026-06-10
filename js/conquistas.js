@@ -12,6 +12,8 @@ export const CONQUISTAS_DEF = [
   { id: 'tabuada_50',        emoji: '🎯',  nome: 'Nível 50',             desc: 'Chegue ao nível 50 na tabuada',              meta: null  },
   { id: 'tabuada_100',       emoji: '💯',  nome: 'Nível 100',            desc: 'Chegue ao nível 100 na tabuada',             meta: null  },
   { id: 'tabuada_300',       emoji: '🌟',  nome: 'Nível máximo',         desc: 'Chegue ao nível 300 na tabuada',             meta: null  },
+  { id: 'tabuada_ouro',      emoji: '🥇',  nome: 'Todos com ⭐',         desc: 'Complete todos os 300 níveis sem erros pelo menos uma vez', meta: null },
+  { id: 'tabuada_diamante',  emoji: '💎',  nome: 'Maestria Total',       desc: 'Complete todos os 300 níveis com maestria (3× perfeito)',   meta: null },
   // Atividades
   { id: 'primeira_atividade',emoji: '📝',  nome: 'Primeira atividade',   desc: 'Complete sua primeira atividade',            meta: null  },
   { id: 'atividade_100pct',  emoji: '🎖️', nome: 'Perfeito!',            desc: 'Tire 100% em uma atividade',                meta: null  },
@@ -59,6 +61,31 @@ export async function verificarConquistas(uid, contexto = {}) {
     if (!tem('tabuada_50')  && nivelTab >= 50)  novas.push('tabuada_50');
     if (!tem('tabuada_100') && nivelTab >= 100) novas.push('tabuada_100');
     if (!tem('tabuada_300') && nivelTab >= 300) novas.push('tabuada_300');
+
+    if (nivelTab >= 300 && (!tem('tabuada_ouro') || !tem('tabuada_diamante'))) {
+      try {
+        const histSnap = await get(ref(db, `tabuada_niveis/${uid}/historico`));
+        const hist = histSnap.val() || {};
+        const li = {};
+        Object.entries(hist)
+          .map(([ts, v]) => ({ ts: Number(ts), ...v }))
+          .sort((a, b) => a.ts - b.ts)
+          .forEach(e => {
+            const lv = e.nivel; if (!lv) return;
+            if (!li[lv]) li[lv] = { perfect: false, maestria: false, consec: 0 };
+            if (e.resultado === 'completou') {
+              const isP = (e.erros || 0) === 0;
+              if (isP) { li[lv].perfect = true; li[lv].consec++; if (li[lv].consec >= 3) li[lv].maestria = true; }
+              else li[lv].consec = 0;
+            } else {
+              li[lv].consec = 0;
+            }
+          });
+        const niveis300 = Array.from({ length: 300 }, (_, i) => i + 1);
+        if (!tem('tabuada_ouro')     && niveis300.every(n => li[n]?.perfect))   novas.push('tabuada_ouro');
+        if (!tem('tabuada_diamante') && niveis300.every(n => li[n]?.maestria))  novas.push('tabuada_diamante');
+      } catch(_) {}
+    }
 
     // ── Atividades ───────────────────────────────────────────
     if (!tem('primeira_atividade') && contexto.completouAtividade)

@@ -504,6 +504,19 @@ await iniciarPresenca(uid, {
 restaurarEstadoDupla();
 window.addEventListener('beforeunload', () => encerrarPresenca());
 
+// Notificação quando parceiro faz login e desfaz dupla
+onValue(ref(db, `notif_dupla/${uid}`), snap => {
+  if (!snap.exists()) return;
+  const n = snap.val();
+  if (!n?.ts || Date.now() - n.ts > 15_000) return;
+  set(ref(db, `notif_dupla/${uid}`), null).catch(() => {});
+  localStorage.removeItem('sm_dupla_duelo');
+  window.removerDuplaUI?.();
+  if (typeof atualizarBadgeDupla === 'function') atualizarBadgeDupla();
+  document.getElementById('faixa-dupla-global')?.remove();
+  showToast(n.msg || 'Sua dupla realizou login e a dupla foi desfeita.', 'warn', 5000);
+});
+
 // ── Dupla de duelo ────────────────────────────────────────────
 window.abrirDuplaPanel = function() {
   document.getElementById('dupla-btn-wrap').style.display = 'none';
@@ -545,11 +558,11 @@ window.confirmarDupla = async function() {
         if ((v.ts || 0) < tsMin) return;
         if (v.nome === parceiroNome && v.turma === parceiroTurma) {
           jaLogado = true;
-          motivo = 'Este aluno já está logado em outro computador.';
+          motivo = 'Não foi possível adicionar: este aluno já está logado em outro dispositivo.';
         }
         if (v.parceiro_nome === parceiroNome && v.parceiro_turma === parceiroTurma) {
           jaLogado = true;
-          motivo = 'Este aluno já é parceiro de dupla em outro computador.';
+          motivo = 'Não foi possível adicionar: este aluno já é dupla de outra pessoa.';
         }
       });
       if (jaLogado) { erroEl.textContent = motivo; erroEl.style.display = 'block'; return; }
