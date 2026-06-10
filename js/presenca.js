@@ -8,6 +8,18 @@ export async function iniciarPresenca(uid, dados) {
   _uid = uid;
   const presRef = ref(db, `presenca_online/${uid}`);
 
+  // Reidratar parceiro de dupla a partir do localStorage (a dupla persiste entre navegações).
+  // Apenas o DONO da dupla restaura o vínculo na própria presença, para o card "online" não
+  // perder a dupla ao recriar a presença (ex.: voltar de uma partida ou trocar de página).
+  let _parceiroNome = null, _parceiroTurma = null;
+  try {
+    const _d = JSON.parse(localStorage.getItem('sm_dupla_duelo') || 'null');
+    if (_d && _d.nome && _d.dono_nome === (dados.nome || '') && _d.dono_turma === (dados.turma || '')) {
+      _parceiroNome  = _d.nome;
+      _parceiroTurma = _d.turma || '';
+    }
+  } catch(_) {}
+
   const payload = {
     nome:     dados.nome     || '',
     apelido:  dados.apelido  || dados.nome || '',
@@ -16,6 +28,7 @@ export async function iniciarPresenca(uid, dados) {
     pagina:   dados.pagina   || 'menu',
     em_duelo: false,
     ts:       Date.now(),
+    ...(_parceiroNome ? { parceiro_nome: _parceiroNome, parceiro_turma: _parceiroTurma } : {}),
   };
 
   await onDisconnect(presRef).remove();
