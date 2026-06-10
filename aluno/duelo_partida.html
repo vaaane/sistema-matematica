@@ -164,7 +164,7 @@
 </div>
 
 <script type="module">
-import { requireAluno, clearSession, lerDuplaAtiva } from '/js/auth.js';
+import { requireAluno, clearSession, lerDuplaAtiva, getSession } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
 import { ref, get, set, update, onValue } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { getPerfil } from '/js/db.js';
@@ -202,15 +202,6 @@ if (duelo.status === 'encerrado' || duelo.status === 'expirado') {
   window.location.href = '/aluno/duelos.html';
   throw new Error();
 }
-// Badge de dupla
-try {
-  const _dd = _duplaPartida;
-  if (_dd?.nome) {
-    const el = document.getElementById('dupla-badge-partida');
-    if (el) { el.textContent = `👥 Dupla: ${_dd.nome} · ${_dd.turma}`; el.style.display = 'block'; }
-  }
-} catch(e) {}
-
 const adversarioUid   = duelo.criador_uid === uid ? duelo.adversario_uid   : duelo.criador_uid;
 const adversarioNome  = duelo.criador_uid === uid ? (duelo.adversario_nome || '?') : duelo.criador_nome;
 
@@ -233,6 +224,35 @@ const _meuParcUid = _meuParceiroNome
 const _advParcUid = _advParceiroNome
   ? (_advParceiroTurma + '_' + _advParceiroNome).replace(/[.#$[\]/\s]/g, '_')
   : null;
+
+// Badge de dupla — usar dados do Firebase
+try {
+  if (_meuParceiroNome) {
+    const el = document.getElementById('dupla-badge-partida');
+    if (el) {
+      el.textContent = `👥 Dupla: ${_meuParceiroNome} · ${_meuParceiroTurma}`;
+      el.style.display = 'block';
+    }
+  }
+} catch(e) {}
+
+// Restaurar dupla no localStorage antes de redirecionar (evita perda ao encerrar)
+function _restaurarDuplaLocalStorage() {
+  try {
+    if (!_meuParceiroNome) return;
+    const _sess = (typeof getSession === 'function') ? getSession() : null;
+    localStorage.setItem('sm_dupla_duelo', JSON.stringify({
+      uid:           _meuParcUid,
+      nome:          _meuParceiroNome,
+      turma:         _meuParceiroTurma,
+      dono_nome:     alunos[0],
+      dono_turma:    turma,
+      session_token: _sess?.session_token,
+      ts:            Date.now(),
+    }));
+  } catch(e) {}
+}
+window._restaurarDuplaLocalStorage = _restaurarDuplaLocalStorage;
 
 const adversarioPerfil = await getPerfil(adversarioUid).catch(() => ({}));
 const adversarioAvatar = avatarUrl(adversarioPerfil?.avatar || avatarConfigDefault());
@@ -503,6 +523,33 @@ async function encerrarPartida(motivo) {
       vencedor_uid:           adversarioUid,
       encerrado_por_abandono: true,
     });
+    // Salvar histórico com abandono: true para quem saiu
+    try {
+      await set(ref(db, `perfis/${uid}/historico_duelos/${dueloId}`), {
+        duelo_id:        dueloId,
+        dificuldade:     dificuldade,
+        adversario_uid:  adversarioUid,
+        adversario_nome: adversarioNome,
+        resultado:       'derrota',
+        abandono:        true,
+        xp_delta:        XP_DUELO[dificuldade].derrota,
+        ts:              Date.now(),
+      });
+      if (_meuParcUid) {
+        try {
+          await set(ref(db, `perfis/${_meuParcUid}/historico_duelos/${dueloId}`), {
+            duelo_id:        dueloId,
+            dificuldade:     dificuldade,
+            adversario_uid:  adversarioUid,
+            adversario_nome: adversarioNome,
+            resultado:       'derrota',
+            abandono:        true,
+            xp_delta:        XP_DUELO[dificuldade].derrota,
+            ts:              Date.now(),
+          });
+        } catch(e) {}
+      }
+    } catch(e) {}
     try {
       const { adicionarXP } = await import('/js/db.js');
       await adicionarXP(uid, XP_DUELO[dificuldade].derrota);
@@ -511,6 +558,7 @@ async function encerrarPartida(motivo) {
       }
     } catch(e) {}
     await atualizarPresenca({ em_duelo: false, status: 'disponivel' });
+    _restaurarDuplaLocalStorage();
     window.location.href = '/aluno/duelos.html';
     return;
   }
@@ -540,7 +588,8 @@ async function encerrarPartida(motivo) {
 
 // ── Salvar histórico local ─────────────────────────────────────
 async function salvarHistoricoLocal(euGanhei, empate, xpDelta, meuRes, advRes,
-                                    _adversarioUid, _adversarioNome, _adversarioTurma) {
+                                    _adversarioUid, _adversarioNome, _adversarioTurma,
+                                    _advAbandonou) {
   try {
     const perfSnap = await get(ref(db, `perfis/${uid}`));
     const perf = perfSnap.exists() ? perfSnap.val() : {};
@@ -561,10 +610,11 @@ async function salvarHistoricoLocal(euGanhei, empate, xpDelta, meuRes, advRes,
     // Salvar para o aluno principal
     await set(ref(db, `perfis/${uid}/historico_duelos/${dueloId}`), {
       ..._histBase,
-      parceiro_nome:  _meuParceiroNome  || '',
-      parceiro_turma: _meuParceiroTurma || '',
-      resultado:      euGanhei ? 'vitoria' : empate ? 'empate' : 'derrota',
-      xp_delta:       xpDelta,
+      parceiro_nome:   _meuParceiroNome  || '',
+      parceiro_turma:  _meuParceiroTurma || '',
+      resultado:       euGanhei ? 'vitoria' : empate ? 'empate' : 'derrota',
+      xp_delta:        xpDelta,
+      ...(euGanhei && _advAbandonou ? { ganhou_abandono: true } : {}),
     });
 
     await update(ref(db, `perfis/${uid}`), {
@@ -583,6 +633,7 @@ async function salvarHistoricoLocal(euGanhei, empate, xpDelta, meuRes, advRes,
           parceiro_turma: turma,
           resultado:      euGanhei ? 'vitoria' : empate ? 'empate' : 'derrota',
           xp_delta:       xpDelta,
+          ...(euGanhei && _advAbandonou ? { ganhou_abandono: true } : {}),
         });
         await update(ref(db, `perfis/${_meuParcUid}`), {
           duelos_total:    (p.duelos_total    || 0) + 1,
@@ -689,10 +740,12 @@ async function mostrarResultado(resultadosParam) {
   }
 
   // Salvar histórico (inclui parceiros internamente)
+  const _advAbandonouNesteResultado = !!(dueloAtual.encerrado_por_abandono && euGanhei);
   await salvarHistoricoLocal(
     euGanhei, empate, xpDelta,
     meuRes, advRes,
-    _adversarioUid, _adversarioNome, _adversarioTurma
+    _adversarioUid, _adversarioNome, _adversarioTurma,
+    _advAbandonouNesteResultado
   );
 
   // Feed global — escrever evento do duelo (só quem ganhou escreve, evita duplicação)
@@ -760,7 +813,7 @@ async function mostrarResultado(resultadosParam) {
                   color:${xpDelta >= 0 ? 'var(--green,#22c55e)' : '#ef4444'}">
         ${xpDelta >= 0 ? '+' : ''}${xpDelta} XP
       </div>
-      <button onclick="window.location.href='/aluno/duelos.html'"
+      <button onclick="_restaurarDuplaLocalStorage();window.location.href='/aluno/duelos.html'"
         style="padding:12px 28px;background:var(--purple,#7F77DD);color:#fff;
                border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">
         Voltar aos duelos
@@ -832,6 +885,7 @@ window.confirmarSair = async function() {
   // Presença
   await atualizarPresenca({ em_duelo: false, status: 'disponivel' });
 
+  _restaurarDuplaLocalStorage();
   window.location.href = '/aluno/duelos.html';
 };
 
@@ -852,7 +906,7 @@ document.addEventListener('click', function(e) {
     'Tem certeza?'
   );
   if (confirmado) {
-    encerrarPartida('abandono').then(() => { window.location.href = href; });
+    encerrarPartida('abandono').then(() => { _restaurarDuplaLocalStorage(); window.location.href = href; });
   }
 }, true);
 
@@ -866,7 +920,7 @@ window.addEventListener('popstate', function() {
     'Tem certeza?'
   );
   if (confirmado) {
-    encerrarPartida('abandono').then(() => { history.back(); history.back(); });
+    encerrarPartida('abandono').then(() => { _restaurarDuplaLocalStorage(); history.back(); history.back(); });
   }
 });
 

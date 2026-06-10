@@ -34,6 +34,12 @@ export function lerDuplaAtiva() {
       localStorage.removeItem('sm_dupla_duelo');
       return null;
     }
+    // Dupla só é válida se pertencer à sessão atual (token do login mais recente).
+    // Qualquer dupla de uma sessão anterior é descartada — aluno logado nunca fica em dupla antiga.
+    if (!d.session_token || d.session_token !== s?.session_token) {
+      localStorage.removeItem('sm_dupla_duelo');
+      return null;
+    }
     return d;
   } catch(_) { return null; }
 }
@@ -189,8 +195,50 @@ export function renderSidebarAluno(containerId, activePage) {
   }
 }
 
+function _avisarRompimentoDupla(msg) {
+  try {
+    const el = document.createElement('div');
+    el.setAttribute('role', 'status');
+    el.textContent = '👥 ' + msg;
+    el.style.cssText = [
+      'position:fixed', 'left:50%', 'bottom:24px', 'transform:translateX(-50%)',
+      'background:#7C3AED', 'color:#fff', 'padding:12px 18px', 'border-radius:10px',
+      'font-size:13px', 'font-weight:600', 'font-family:inherit', 'z-index:99999',
+      'box-shadow:0 6px 24px rgba(0,0,0,.35)', 'max-width:90vw', 'text-align:center',
+      'opacity:0', 'transition:opacity .2s ease'
+    ].join(';');
+    document.body.appendChild(el);
+    requestAnimationFrame(() => { el.style.opacity = '1'; });
+    setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 250); }, 5000);
+  } catch(_) {}
+}
+
 // ── Faixa global de dupla ────────────────────────────────────
-export function injetarFaixaDupla() {
+export async function injetarFaixaDupla() {
+  // Ouvir notificação de desconexão de dupla (parceiro fez login)
+  try {
+    const s = getSession();
+    if (s?.uid_perfil || s?.alunos) {
+      const _myUid = s.uid_perfil ||
+        (s.turma + '_' + s.alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+      const { db: _db } = await import('/js/firebase-config.js');
+      const { ref: _ref, onValue: _onValue, set: _set } =
+        await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+      _onValue(_ref(_db, `notif_dupla/${_myUid}`), snap => {
+        if (!snap.exists()) return;
+        const n = snap.val();
+        if (!n?.ts) return;
+        _set(_ref(_db, `notif_dupla/${_myUid}`), null).catch(() => {});
+        localStorage.removeItem('sm_dupla_duelo');
+        document.getElementById('faixa-dupla-global')?.remove();
+        const badge = document.getElementById('sidebar-dupla-badge');
+        if (badge) badge.style.display = 'none';
+        if (typeof atualizarBadgeDupla === 'function') atualizarBadgeDupla();
+        _avisarRompimentoDupla(n.msg || 'Seu parceiro fez login e a dupla foi desfeita.');
+      });
+    }
+  } catch(_) {}
+
   const _paginaAtual = window.location.pathname;
   const _paginasIgnorar = ['/aluno/duelo_partida.html', '/aluno/avaliacao_plus.html',
                             '/aluno/competicao_plus.html', '/aluno/competicao.html',

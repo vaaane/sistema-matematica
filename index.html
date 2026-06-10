@@ -501,18 +501,24 @@ window.entrarAluno = async function(e) {
       const { ref: fbRef, set, get: fbGet, update: fbUpdate } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
       const { db } = await import('/js/firebase-config.js');
       await set(fbRef(db, `perfis/${uidPerfil}/session_token`), sessionToken);
-      // Se este aluno é dupla de alguém, desfazer (atualização em lote) e notificar
+      // Desfazer a dupla nos DOIS lados: quem tem este aluno como parceiro E a própria presença deste aluno.
       const _presSnap = await fbGet(fbRef(db, 'presenca_online'));
       if (_presSnap.exists()) {
         const _updates = {};
         _presSnap.forEach(child => {
           const v = child.val();
+          // Lado A: alguém tem este aluno como parceiro
           if (v.parceiro_nome === aluno1 && v.parceiro_turma === turma) {
             _updates[`${child.key}/parceiro_nome`]  = null;
             _updates[`${child.key}/parceiro_turma`] = null;
             set(fbRef(db, `notif_dupla/${child.key}`), { msg: `${aluno1} realizou login e saiu da dupla.`, ts: Date.now() }).catch(() => {});
           }
         });
+        // Lado B: a própria presença deste aluno (caso ele fosse o dono de uma dupla)
+        if (_presSnap.child(uidPerfil).exists()) {
+          _updates[`${uidPerfil}/parceiro_nome`]  = null;
+          _updates[`${uidPerfil}/parceiro_turma`] = null;
+        }
         if (Object.keys(_updates).length > 0) {
           await fbUpdate(fbRef(db, 'presenca_online'), _updates);
         }

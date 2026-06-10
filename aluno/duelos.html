@@ -508,13 +508,13 @@ window.addEventListener('beforeunload', () => encerrarPresenca());
 onValue(ref(db, `notif_dupla/${uid}`), snap => {
   if (!snap.exists()) return;
   const n = snap.val();
-  if (!n?.ts || Date.now() - n.ts > 15_000) return;
+  if (!n?.ts) return;
   set(ref(db, `notif_dupla/${uid}`), null).catch(() => {});
   localStorage.removeItem('sm_dupla_duelo');
   window.removerDuplaUI?.();
   if (typeof atualizarBadgeDupla === 'function') atualizarBadgeDupla();
   document.getElementById('faixa-dupla-global')?.remove();
-  showToast(n.msg || 'Sua dupla realizou login e a dupla foi desfeita.', 'warn', 5000);
+  showToast(n.msg || 'Seu parceiro fez login e a dupla foi desfeita.', 'warn', 5000);
 });
 
 // ── Dupla de duelo ────────────────────────────────────────────
@@ -573,7 +573,7 @@ window.confirmarDupla = async function() {
     if (!rec) { erroEl.textContent = 'Senha não cadastrada. Peça ao professor.'; erroEl.style.display = 'block'; return; }
     if (hash !== rec.hash) { erroEl.textContent = 'Senha incorreta.'; erroEl.style.display = 'block'; return; }
   } catch(e) { erroEl.textContent = 'Erro ao verificar senha.'; erroEl.style.display = 'block'; return; }
-  localStorage.setItem('sm_dupla_duelo', JSON.stringify({ nome: parceiroNome, turma: parceiroTurma, dono_nome: alunos[0], dono_turma: turma }));
+  localStorage.setItem('sm_dupla_duelo', JSON.stringify({ nome: parceiroNome, turma: parceiroTurma, dono_nome: alunos[0], dono_turma: turma, session_token: requireAluno()?.session_token }));
   // Cancelar desafio enviado pendente
   if (_meuDueloAguardandoId) {
     clearInterval(_aguardandoInt);
@@ -933,7 +933,7 @@ function mostrarNotificacaoDesafio(id, duelo) {
   el.className = 'challenge-notif';
   el.innerHTML = `
     <div class="cn-info">
-      <div class="cn-title"><strong>${escH(duelo.criador_nome)}${duelo.parceiro_nome ? ` + ${escH(duelo.parceiro_nome)}` : ''}</strong> · ${escH(duelo.criador_turma)} te desafiou!</div>
+      <div class="cn-title"><strong>${escH(duelo.criador_nome)}${duelo.criador_parceiro_nome ? ` + ${escH(duelo.criador_parceiro_nome)}` : ''}</strong> · ${escH(duelo.criador_turma)} te desafiou!</div>
       <div class="cn-sub">
         ${duelo.tipo === 'aberto' ? '🌐 Desafio aberto' : '🎯 Desafio direto'} ·
         <strong>${diffLabel(duelo.dificuldade)}</strong> · ${TEMPO_LABEL[duelo.dificuldade] || ''}
@@ -975,15 +975,13 @@ window.aceitarDesafio = async function(id) {
       return;
     }
     const _dpAdv = lerDuplaAtiva();
-    if (_dpAdv) {
-      try {
-        await update(ref(db, `duelos/${id}`), {
-          adversario_parceiro_nome:  _dpAdv.nome  || '',
-          adversario_parceiro_turma: _dpAdv.turma || '',
-          adversario_turma:          turma,
-        });
-      } catch(_) {}
-    }
+    try {
+      await update(ref(db, `duelos/${id}`), {
+        adversario_turma:          turma,
+        adversario_parceiro_nome:  _dpAdv?.nome  || '',
+        adversario_parceiro_turma: _dpAdv?.turma || '',
+      });
+    } catch(_) {}
 
     if (_aguardandoId) {
       clearInterval(_aguardandoInt);
@@ -1103,19 +1101,20 @@ async function carregarHistorico() {
                <span style="color:${isW?'#ef4444':'#22c55e'}">${d.adv_pares}</span>
              </div>` : '';
         const abTag  = d.abandono
-          ? `<span class="hist-tag ab">desistiu</span>`
+          ? `<span class="hist-tag ab">você desistiu</span>`
           : d.ganhou_abandono ? `<span class="hist-tag adv-ab">adv. desistiu</span>` : '';
         const advNome  = d.adversario_nome || '?';
         const advTurma = d.adversario_turma || '';
         const diff     = d.dificuldade || 'medio';
         const xpVal    = { facil: isW?15:-8, medio: isW?25:-13, dificil: isW?40:-20 }[diff] ?? 0;
         const xpHtml   = `<div class="hist-xp ${xpVal>=0?'pos':'neg'}">${xpVal>=0?'+':''}${xpVal} XP</div>`;
-        const temParceiro = !!(d.parceiro_nome);
-        const nomeExib = temParceiro
-          ? `${escH(advNome)} <span style="opacity:.5;font-size:10px">+ ${escH(d.parceiro_nome)}</span>`
+        const temAdvParceiro = !!(d.adv_parceiro_nome);
+        const temMeuParceiro = !!(d.parceiro_nome);
+        const nomeExib = temAdvParceiro
+          ? `${escH(advNome)} <span style="opacity:.5;font-size:10px">+ ${escH(d.adv_parceiro_nome)}</span>`
           : escH(advNome);
-        const turmaExib = temParceiro && d.parceiro_turma
-          ? `${escH(advTurma)} · ${escH(d.parceiro_turma)}`
+        const turmaExib = temAdvParceiro && d.adv_parceiro_turma
+          ? `${escH(advTurma)} · ${escH(d.adv_parceiro_turma)}`
           : escH(advTurma);
         return `
           <div class="hist-row ${isW?'win':'loss'}${d.abandono?' abandon':''}" data-tipo="${isW?'win':'loss'}">
@@ -1123,6 +1122,7 @@ async function carregarHistorico() {
             <div class="hist-avatar" style="background:${avatarColor(advNome)}">${escH((advNome)[0]?.toUpperCase()||'?')}</div>
             <div class="hist-info">
               <div class="hist-nome">${nomeExib}</div>
+              ${temMeuParceiro ? `<div style="font-size:10px;color:#00d4ff;opacity:.7">👥 dupla com ${escH(d.parceiro_nome)}</div>` : ''}
               <div class="hist-meta">
                 <span>${hora}</span>
                 ${turmaExib ? `<span class="hist-tag turma">${turmaExib}</span>` : ''}
