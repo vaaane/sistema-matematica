@@ -23,7 +23,7 @@ export async function iniciarPresenca(uid, dados) {
 
   _heartbeatInterval = setInterval(async () => {
     try { await set(ref(db, `presenca_online/${uid}/ts`), Date.now()); } catch(_) {}
-  }, 30_000);
+  }, 10_000);
 }
 
 export async function encerrarPresenca() {
@@ -51,7 +51,7 @@ export function filtrarOnline(snap, meuUid) {
     if (child.key === meuUid) return;
     const v = child.val();
     if (!v?.ts) return;
-    if (agora - v.ts > 60_000) return;
+    if (agora - v.ts > 25_000) return;
     lista.push({ uid: child.key, ...v });
   });
   return lista;

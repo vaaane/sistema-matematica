@@ -185,6 +185,10 @@ const perfil   = await getPerfil(uid);
 const apelido  = perfil?.apelido_ativo || alunos[0];
 const meuAvatar = avatarUrl(perfil?.avatar || avatarConfigDefault());
 
+const _duplaPartida = (() => {
+  try { return JSON.parse(sessionStorage.getItem('sm_dupla_duelo') || 'null'); } catch(_) { return null; }
+})();
+
 // Avatar topbar
 (async () => { try {
   const _c = document.getElementById('topbar-avatar-circle');
@@ -509,6 +513,8 @@ async function salvarHistoricoLocal(euGanhei, empate, xpDelta, meuRes, advRes,
       adversario_uid:   _adversarioUid  || '',
       adversario_nome:  _adversarioNome || '',
       adversario_turma: _adversarioTurma || '',
+      parceiro_nome:    _duplaPartida?.nome  || '',
+      parceiro_turma:   _duplaPartida?.turma || '',
       meus_pares:       meuRes?.pares  ?? 0,
       adv_pares:        advRes?.pares  ?? 0,
       resultado:        euGanhei ? 'vitoria' : empate ? 'empate' : 'derrota',
