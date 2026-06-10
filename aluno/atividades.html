@@ -150,7 +150,7 @@
 <script type="module">
 import { LISTA_ATIVIDADES, MAX_TENTATIVAS_ATIVIDADE, ALUNOS_POR_TURMA } from "/js/constants.js";
 import { contarTentativas, getLiberadasParaTurma, getAlunoPreferencia, getResultados, getSenhaAluno } from "/js/db.js";
-import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, hashSenha } from "/js/auth.js";
+import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, hashSenha, lerDuplaAtiva } from "/js/auth.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
 import { db } from "/js/firebase-config.js";
@@ -534,7 +534,7 @@ function _mostrarBadgeDupla(nome) {
 }
 
 window.iniciarAtividade = async function(url) {
-  const _duplaAtiva = localStorage.getItem('sm_dupla_duelo');
+  const _duplaAtiva = lerDuplaAtiva();
   if (_duplaAtiva) {
     try {
       localStorage.removeItem('sm_dupla_duelo');

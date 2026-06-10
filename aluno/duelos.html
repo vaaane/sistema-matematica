@@ -422,7 +422,7 @@
 </div>
 
 <script type="module">
-import { requireAluno, renderSidebarAluno, clearSession, hashSenha, atualizarBadgeDupla, injetarFaixaDupla } from '/js/auth.js';
+import { requireAluno, renderSidebarAluno, clearSession, hashSenha, atualizarBadgeDupla, injetarFaixaDupla, lerDuplaAtiva } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
 import { ref, set, get, push, onValue, remove, update, runTransaction } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { getPerfil, getSenhaAluno } from '/js/db.js';
@@ -573,7 +573,7 @@ window.confirmarDupla = async function() {
     if (!rec) { erroEl.textContent = 'Senha não cadastrada. Peça ao professor.'; erroEl.style.display = 'block'; return; }
     if (hash !== rec.hash) { erroEl.textContent = 'Senha incorreta.'; erroEl.style.display = 'block'; return; }
   } catch(e) { erroEl.textContent = 'Erro ao verificar senha.'; erroEl.style.display = 'block'; return; }
-  localStorage.setItem('sm_dupla_duelo', JSON.stringify({ nome: parceiroNome, turma: parceiroTurma }));
+  localStorage.setItem('sm_dupla_duelo', JSON.stringify({ nome: parceiroNome, turma: parceiroTurma, dono_nome: alunos[0], dono_turma: turma }));
   // Cancelar desafio enviado pendente
   if (_meuDueloAguardandoId) {
     clearInterval(_aguardandoInt);
@@ -607,10 +607,9 @@ window.removerDuplaUI = function() {
   document.getElementById('dupla-btn-wrap').style.display = 'block';
 };
 function restaurarEstadoDupla() {
-  const raw = localStorage.getItem('sm_dupla_duelo');
-  if (!raw) return;
+  const d = lerDuplaAtiva();
+  if (!d) return;
   try {
-    const d = JSON.parse(raw);
     const btnWrap = document.getElementById('dupla-btn-wrap');
     const ativaEl = document.getElementById('dupla-ativa');
     const nomeEl  = document.getElementById('dupla-ativa-nome');
@@ -720,7 +719,7 @@ window.criarDesafioAberto = async function() {
   const btn = document.getElementById('btnDesafioAberto');
   btn.disabled = true;
   try {
-    const _dp = JSON.parse(localStorage.getItem('sm_dupla_duelo') || 'null');
+    const _dp = lerDuplaAtiva();
     const id = push(ref(db, 'duelos')).key;
     await set(ref(db, `duelos/${id}`), {
       tipo: 'aberto', dificuldade: _diff,
@@ -768,7 +767,7 @@ window.confirmarDesafioDireto = async function() {
   if (!_modalUid) return;
   document.getElementById('modal-desafio').style.display = 'none';
   try {
-    const _dp2 = JSON.parse(localStorage.getItem('sm_dupla_duelo') || 'null');
+    const _dp2 = lerDuplaAtiva();
     const id = push(ref(db, 'duelos')).key;
     await set(ref(db, `duelos/${id}`), {
       tipo: 'direto', dificuldade: _modalDiff,

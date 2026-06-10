@@ -164,7 +164,7 @@
 </div>
 
 <script type="module">
-import { requireAluno, clearSession } from '/js/auth.js';
+import { requireAluno, clearSession, lerDuplaAtiva } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
 import { ref, get, set, update, onValue } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { getPerfil } from '/js/db.js';
@@ -185,9 +185,7 @@ const perfil   = await getPerfil(uid);
 const apelido  = perfil?.apelido_ativo || alunos[0];
 const meuAvatar = avatarUrl(perfil?.avatar || avatarConfigDefault());
 
-const _duplaPartida = (() => {
-  try { return JSON.parse(sessionStorage.getItem('sm_dupla_duelo') || 'null'); } catch(_) { return null; }
-})();
+const _duplaPartida = lerDuplaAtiva();
 
 // Avatar topbar
 (async () => { try {
@@ -206,7 +204,7 @@ if (duelo.status === 'encerrado' || duelo.status === 'expirado') {
 }
 // Badge de dupla
 try {
-  const _dd = JSON.parse(sessionStorage.getItem('sm_dupla_duelo') || 'null');
+  const _dd = _duplaPartida;
   if (_dd?.nome) {
     const el = document.getElementById('dupla-badge-partida');
     if (el) { el.textContent = `👥 Dupla: ${_dd.nome} · ${_dd.turma}`; el.style.display = 'block'; }
@@ -215,6 +213,16 @@ try {
 
 const adversarioUid   = duelo.criador_uid === uid ? duelo.adversario_uid   : duelo.criador_uid;
 const adversarioNome  = duelo.criador_uid === uid ? (duelo.adversario_nome || '?') : duelo.criador_nome;
+
+const _meuParceiroNome  = _duplaPartida?.nome  || duelo.criador_parceiro_nome  || duelo.adversario_parceiro_nome  || '';
+const _meuParceiroTurma = _duplaPartida?.turma || duelo.criador_parceiro_turma || duelo.adversario_parceiro_turma || '';
+const _advParceiroNome  = duelo.criador_uid === uid
+  ? (duelo.adversario_parceiro_nome  || '')
+  : (duelo.criador_parceiro_nome     || '');
+const _advParceiroTurma = duelo.criador_uid === uid
+  ? (duelo.adversario_parceiro_turma || '')
+  : (duelo.criador_parceiro_turma    || '');
+
 const adversarioPerfil = await getPerfil(adversarioUid).catch(() => ({}));
 const adversarioAvatar = avatarUrl(adversarioPerfil?.avatar || avatarConfigDefault());
 
@@ -344,7 +352,10 @@ function renderArena() {
     <div class="placar-wrap">
       <div class="lado eu">
         <div class="lado-av"><img src="${meuAvatar}" alt="" onerror="this.src=''"></div>
-        <div class="lado-nome">${escH(apelido)}</div>
+        <div class="lado-nome">
+          ${escH(apelido)}
+          ${_meuParceiroNome ? `<span style="font-size:10px;opacity:.6"> + ${escH(_meuParceiroNome)}</span>` : ''}
+        </div>
         <div class="lado-pts" id="eu-pts">0</div>
         <div class="lado-label">pares</div>
       </div>
@@ -354,7 +365,10 @@ function renderArena() {
       </div>
       <div class="lado adv">
         <div class="lado-av"><img src="${adversarioAvatar}" alt="" onerror="this.src=''"></div>
-        <div class="lado-nome">${escH(adversarioNome)}</div>
+        <div class="lado-nome">
+          ${escH(adversarioNome)}
+          ${_advParceiroNome ? `<span style="font-size:10px;opacity:.6"> + ${escH(_advParceiroNome)}</span>` : ''}
+        </div>
         <div class="lado-pts" id="adv-pts">0</div>
         <div class="lado-label">pares</div>
       </div>
@@ -508,18 +522,20 @@ async function salvarHistoricoLocal(euGanhei, empate, xpDelta, meuRes, advRes,
     const perf = perfSnap.exists() ? perfSnap.val() : {};
 
     await set(ref(db, `perfis/${uid}/historico_duelos/${dueloId}`), {
-      duelo_id:         dueloId,
-      dificuldade:      dificuldade,
-      adversario_uid:   _adversarioUid  || '',
-      adversario_nome:  _adversarioNome || '',
-      adversario_turma: _adversarioTurma || '',
-      parceiro_nome:    _duplaPartida?.nome  || '',
-      parceiro_turma:   _duplaPartida?.turma || '',
-      meus_pares:       meuRes?.pares  ?? 0,
-      adv_pares:        advRes?.pares  ?? 0,
-      resultado:        euGanhei ? 'vitoria' : empate ? 'empate' : 'derrota',
-      xp_delta:         xpDelta,
-      ts:               Date.now(),
+      duelo_id:           dueloId,
+      dificuldade:        dificuldade,
+      adversario_uid:     _adversarioUid  || '',
+      adversario_nome:    _adversarioNome || '',
+      adversario_turma:   _adversarioTurma || '',
+      parceiro_nome:      _meuParceiroNome  || '',
+      parceiro_turma:     _meuParceiroTurma || '',
+      adv_parceiro_nome:  _advParceiroNome  || '',
+      adv_parceiro_turma: _advParceiroTurma || '',
+      meus_pares:         meuRes?.pares  ?? 0,
+      adv_pares:          advRes?.pares  ?? 0,
+      resultado:          euGanhei ? 'vitoria' : empate ? 'empate' : 'derrota',
+      xp_delta:           xpDelta,
+      ts:                 Date.now(),
     });
 
     await update(ref(db, `perfis/${uid}`), {
@@ -595,19 +611,27 @@ async function mostrarResultado(resultadosParam) {
     _adversarioUid, _adversarioNome, _adversarioTurma
   );
   // Dupla: salvar histórico para parceiro
-  try {
-    const _dd = JSON.parse(sessionStorage.getItem('sm_dupla_duelo') || 'null');
-    if (_dd?.nome) {
-      const _pUid = (_dd.turma + '_' + _dd.nome).replace(/[.#$[\]/\s]/g, '_');
-      await set(ref(db, `perfis/${_pUid}/historico_duelos/${dueloId}`), {
-        duelo_id: dueloId, dificuldade,
-        adversario_uid: _adversarioUid, adversario_nome: _adversarioNome, adversario_turma: _adversarioTurma,
-        meus_pares: meuRes?.pares ?? 0, adv_pares: advRes?.pares ?? 0,
-        resultado: euGanhei ? 'vitoria' : empate ? 'empate' : 'derrota',
-        xp_delta: xpDelta, ts: Date.now(), dupla_de: alunos[0],
+  if (_meuParceiroNome && _meuParceiroTurma) {
+    const _parcUid = (_meuParceiroTurma + '_' + _meuParceiroNome).replace(/[.#$[\]/\s]/g, '_');
+    try {
+      await set(ref(db, `perfis/${_parcUid}/historico_duelos/${dueloId}`), {
+        duelo_id:           dueloId,
+        dificuldade:        dificuldade,
+        adversario_uid:     _adversarioUid  || '',
+        adversario_nome:    _adversarioNome || '',
+        adversario_turma:   _adversarioTurma || '',
+        adv_parceiro_nome:  _advParceiroNome  || '',
+        adv_parceiro_turma: _advParceiroTurma || '',
+        parceiro_nome:      alunos[0],
+        parceiro_turma:     turma,
+        meus_pares:         meuRes?.pares  ?? 0,
+        adv_pares:          advRes?.pares  ?? 0,
+        resultado:          euGanhei ? 'vitoria' : empate ? 'empate' : 'derrota',
+        xp_delta:           xpDelta,
+        ts:                 Date.now(),
       });
-    }
-  } catch(e) {}
+    } catch(e) { console.error('[Histórico parceiro ERRO]', e); }
+  }
 
   // Feed global — escrever evento do duelo (só quem ganhou escreve, evita duplicação)
   if (euGanhei) {
@@ -646,7 +670,7 @@ async function mostrarResultado(resultadosParam) {
         <div style="background:var(--card);border:2px solid var(--eu,#3b82f6);
                     border-radius:14px;padding:16px;text-align:center">
           <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">
-            ${escH(apelido)}
+            ${escH(apelido)}${_meuParceiroNome ? `<br><span style="font-size:10px;opacity:.6">+ ${escH(_meuParceiroNome)}</span>` : ''}
           </div>
           <div style="font-size:36px;font-weight:900;color:var(--eu,#3b82f6)">
             ${meuRes.pares?.toFixed(1).replace('.0','') ?? 0}
@@ -656,7 +680,7 @@ async function mostrarResultado(resultadosParam) {
         <div style="background:var(--card);border:2px solid var(--adv,#ef4444);
                     border-radius:14px;padding:16px;text-align:center">
           <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">
-            ${escH(_adversarioNome)}
+            ${escH(_adversarioNome)}${_advParceiroNome ? `<br><span style="font-size:10px;opacity:.6">+ ${escH(_advParceiroNome)}</span>` : ''}
           </div>
           <div style="font-size:36px;font-weight:900;color:var(--adv,#ef4444)">
             ${advRes.pares != null ? advRes.pares.toFixed(1).replace('.0','') : '—'}

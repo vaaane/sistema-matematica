@@ -61,7 +61,7 @@ import { setSession, getSession } from "/js/auth.js";
 
 // Se já estiver logado como modo teste → redirecionar direto
 const sess = getSession();
-if (sess?.modo === 'aluno' && sessionStorage.getItem('modoTeste') === 'true') {
+if (sess?.modo === 'aluno' && localStorage.getItem('modoTeste') === 'true') {
   location.href = '/aluno/menu.html';
 }
 
@@ -78,7 +78,7 @@ window.entrar = function() {
 
   if (senha === 'professorteste2426') {
     setSession({ modo: 'aluno', turma: 'TESTE', alunos: ['PROFESSOR_TESTE'] });
-    sessionStorage.setItem('modoTeste', 'true');
+    localStorage.setItem('modoTeste', 'true');
     localStorage.setItem('tema', 'escuro');
     location.href = '/aluno/menu.html';
   } else {

@@ -459,7 +459,7 @@ window.confirmarModoTeste = function() {
   if (!senha) return;
   if (senha === 'professorteste2426') {
     setSession({ modo: 'aluno', turma: 'TESTE', alunos: ['PROFESSOR_TESTE'] });
-    sessionStorage.setItem('modoTeste', 'true');
+    localStorage.setItem('modoTeste', 'true');
     localStorage.setItem('tema', 'escuro');
     window.location.href = '/aluno/menu.html';
   } else {
@@ -501,20 +501,24 @@ window.entrarAluno = async function(e) {
       const { ref: fbRef, set, get: fbGet, update: fbUpdate } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
       const { db } = await import('/js/firebase-config.js');
       await set(fbRef(db, `perfis/${uidPerfil}/session_token`), sessionToken);
-      localStorage.removeItem('sm_dupla_duelo');
-      // Se este aluno é dupla de alguém, desfazer e notificar
+      // Se este aluno é dupla de alguém, desfazer (atualização em lote) e notificar
       const _presSnap = await fbGet(fbRef(db, 'presenca_online'));
       if (_presSnap.exists()) {
+        const _updates = {};
         _presSnap.forEach(child => {
           const v = child.val();
           if (v.parceiro_nome === aluno1 && v.parceiro_turma === turma) {
-            const outroUid = child.key;
-            fbUpdate(fbRef(db, `presenca_online/${outroUid}`), { parceiro_nome: null, parceiro_turma: null, ts: Date.now() }).catch(() => {});
-            set(fbRef(db, `notif_dupla/${outroUid}`), { msg: `${aluno1} realizou login e saiu da dupla.`, ts: Date.now() }).catch(() => {});
+            _updates[`${child.key}/parceiro_nome`]  = null;
+            _updates[`${child.key}/parceiro_turma`] = null;
+            set(fbRef(db, `notif_dupla/${child.key}`), { msg: `${aluno1} realizou login e saiu da dupla.`, ts: Date.now() }).catch(() => {});
           }
         });
+        if (Object.keys(_updates).length > 0) {
+          await fbUpdate(fbRef(db, 'presenca_online'), _updates);
+        }
       }
     } catch(_) {}
+    localStorage.removeItem('sm_dupla_duelo');
     setSession({ modo: 'aluno', turma, alunos, session_token: sessionToken });
     // Inicializar perfil de gamificação (só cria se não existir)
     try {
@@ -555,7 +559,7 @@ window.entrarProf = async function(e) {
 };
 
 if (new URLSearchParams(location.search).get('motivo') === 'novo_login') {
-  showError('errorAluno', '⚠️ Sua sessão foi encerrada porque este aluno fez login em outro dispositivo.');
+  showError('errorAluno', '⚠️ Sessão encerrada: este aluno fez login em outro dispositivo ou aba.');
 }
 </script>
 </body>

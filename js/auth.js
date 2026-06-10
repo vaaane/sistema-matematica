@@ -4,16 +4,38 @@ export function getSession() {
 }
 export function setSession(data) {
   sessionStorage.setItem("sm_session", JSON.stringify(data));
+  if (data.modo === 'aluno' && data.session_token) {
+    localStorage.setItem('sm_login_broadcast', JSON.stringify({
+      token: data.session_token,
+      aluno: data.alunos?.[0],
+      turma: data.turma,
+      ts:    Date.now()
+    }));
+    setTimeout(() => localStorage.removeItem('sm_login_broadcast'), 500);
+  }
 }
 export function clearSession() {
   sessionStorage.removeItem("sm_session");
-  sessionStorage.removeItem("modoTeste");
+  localStorage.removeItem("modoTeste");
   localStorage.removeItem("sm_dupla_duelo");
   sessionStorage.removeItem("sm_jogo");
 }
 
 export function isModoTeste() {
-  return sessionStorage.getItem('modoTeste') === 'true';
+  return localStorage.getItem('modoTeste') === 'true';
+}
+
+export function lerDuplaAtiva() {
+  const s = getSession();
+  try {
+    const d = JSON.parse(localStorage.getItem('sm_dupla_duelo') || 'null');
+    if (!d) return null;
+    if (d.dono_nome && (d.dono_nome !== s?.alunos?.[0] || d.dono_turma !== s?.turma)) {
+      localStorage.removeItem('sm_dupla_duelo');
+      return null;
+    }
+    return d;
+  } catch(_) { return null; }
 }
 
 export function requireAluno(redirectTo = "/index.html") {
@@ -100,9 +122,7 @@ export function renderSidebarAluno(containerId, activePage) {
     nav.push({ id:"robotica", href:"/aluno/robotica.html", label:"🤖 Robótica", icon:`<path d="M20 9V7c0-1.1-.9-2-2-2h-3c0-1.66-1.34-3-3-3S9 3.34 9 5H6c-1.1 0-2 .9-2 2v2c-1.66 0-3 1.34-3 3s1.34 3 3 3v4c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4c1.66 0 3-1.34 3-3s-1.34-3-3-3zm-2 10H6V7h12v12zm-9-6c-.83 0-1.5-.67-1.5-1.5S8.17 10 9 10s1.5.67 1.5 1.5S9.83 13 9 13zm6 0c-.83 0-1.5-.67-1.5-1.5S14.17 10 15 10s1.5.67 1.5 1.5S15.83 13 15 13z"/>` });
   }
   const isMT = isModoTeste();
-  const _duplaAtiva = (() => {
-    try { return JSON.parse(localStorage.getItem('sm_dupla_duelo') || 'null'); } catch(_) { return null; }
-  })();
+  const _duplaAtiva = lerDuplaAtiva();
   const userHtml = isMT
     ? '<div class="user-name">Professora<span>Conta Teste</span></div>'
     : alunos.map((a,i) => `<div class="user-name">${a}<span>Aluno${alunos.length>1?' '+(i+1):''}</span></div>`).join('')
@@ -171,11 +191,9 @@ export function injetarFaixaDupla() {
                             '/aluno/competicao_plus.html', '/aluno/competicao.html',
                             '/aluno/jogar.html', '/aluno/tabuada.html'];
   if (_paginasIgnorar.some(p => _paginaAtual.includes(p))) return;
-  const raw = localStorage.getItem('sm_dupla_duelo');
   document.getElementById('faixa-dupla-global')?.remove();
-  if (!raw) return;
-  let d;
-  try { d = JSON.parse(raw); } catch(_) { return; }
+  const d = lerDuplaAtiva();
+  if (!d) return;
 
   const faixa = document.createElement('div');
   faixa.id = 'faixa-dupla-global';
@@ -204,14 +222,11 @@ export function injetarFaixaDupla() {
 export function atualizarBadgeDupla() {
   const badge = document.getElementById('sidebar-dupla-badge');
   if (!badge) return;
-  const raw = localStorage.getItem('sm_dupla_duelo');
-  if (raw) {
-    try {
-      const d = JSON.parse(raw);
-      badge.style.display = 'block';
-      badge.querySelector('.dupla-nome').textContent = `👥 Em dupla com ${d.nome}`;
-      badge.querySelector('.dupla-sub').textContent  = `${d.turma} · só em Duelos`;
-    } catch(_) { badge.style.display = 'none'; }
+  const d = lerDuplaAtiva();
+  if (d) {
+    badge.style.display = 'block';
+    badge.querySelector('.dupla-nome').textContent = `👥 Em dupla com ${d.nome}`;
+    badge.querySelector('.dupla-sub').textContent  = `${d.turma} · só em Duelos`;
   } else {
     badge.style.display = 'none';
   }
@@ -222,6 +237,23 @@ export async function iniciarVerificacaoSessao(uid) {
   const s = getSession();
   if (!s?.session_token) return;
   const myToken = s.session_token;
+
+  // Detectar novo login em outra aba do mesmo browser
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'sm_login_broadcast' && e.newValue) {
+      try {
+        const broadcast = JSON.parse(e.newValue);
+        if (broadcast.aluno === s.alunos?.[0]
+            && broadcast.turma === s.turma
+            && broadcast.token !== myToken) {
+          clearSession();
+          localStorage.removeItem('sm_dupla_duelo');
+          window.location.href = '/index.html?motivo=novo_login';
+        }
+      } catch(_) {}
+    }
+  });
+
   const verificar = async () => {
     try {
       const { db } = await import('/js/firebase-config.js');
@@ -234,7 +266,7 @@ export async function iniciarVerificacaoSessao(uid) {
       }
     } catch(_) {}
   };
-  setInterval(verificar, 15_000);
+  setInterval(verificar, 5_000);
   await verificar();
 }
 
