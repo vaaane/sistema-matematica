@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Limpar Duelos de Teste — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .lp-section{max-width:760px;}
+    .lp-opt{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:10px;background:var(--card);border:1px solid var(--border);margin-bottom:10px;cursor:pointer;}
+    .lp-opt input{margin-top:3px;width:18px;height:18px;flex-shrink:0;cursor:pointer;}
+    .lp-opt-title{font-size:14px;font-weight:700;}
+    .lp-opt-desc{font-size:12px;color:var(--text-muted);margin-top:3px;line-height:1.5;}
+    .log-area{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:12px;font-family:'Courier New',monospace;max-height:280px;overflow-y:auto;color:var(--text-muted);line-height:1.7;}
+    .log-ok{color:#16A34A;} .log-warn{color:#D97706;} .log-err{color:#DC2626;} .log-info{color:var(--blue);}
+    .aviso{background:#7f1d1d22;border:1px solid #b91c1c;border-radius:10px;padding:12px 16px;font-size:13px;color:#fca5a5;margin-bottom:18px;line-height:1.6;}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Limpar Duelos de Teste</div>
+        <div class="topbar-sub">Apaga registros de duelo e zera estatísticas/ranking</div>
+      </div>
+      <div class="topbar-right">
+        <a href="/professor/dashboard.html" class="btn btn-ghost">← Painel</a>
+      </div>
+    </div>
+    <div class="content">
+      <div class="lp-section">
+
+        <div class="aviso">
+          ⚠️ <strong>Atenção:</strong> esta ação é permanente e não pode ser desfeita. Apaga os dados marcados abaixo de <strong>todos os alunos</strong>. Os nomes, senhas, XP, atividades e tabuada NÃO são afetados — apenas os dados de duelos.
+        </div>
+
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-title" style="margin-bottom:14px">O que limpar</div>
+
+          <label class="lp-opt">
+            <input type="checkbox" id="op-hist" checked>
+            <div>
+              <div class="lp-opt-title">Histórico de duelos de todos os alunos</div>
+              <div class="lp-opt-desc">Remove <code>perfis/{aluno}/historico_duelos</code>. Limpa a lista de duelos e as estatísticas (vitórias/derrotas/total).</div>
+            </div>
+          </label>
+
+          <label class="lp-opt">
+            <input type="checkbox" id="op-stats" checked>
+            <div>
+              <div class="lp-opt-title">Estatísticas e ranking de duelos</div>
+              <div class="lp-opt-desc">Zera <code>duelos_total</code> e <code>duelos_vitorias</code> no perfil de cada aluno. Necessário para o ranking de duelos não ficar inflado pelos testes.</div>
+            </div>
+          </label>
+
+          <label class="lp-opt">
+            <input type="checkbox" id="op-duelos" checked>
+            <div>
+              <div class="lp-opt-title">Objetos de duelo (partidas)</div>
+              <div class="lp-opt-desc">Apaga o nó <code>duelos</code> inteiro (desafios e partidas, ativos ou encerrados). Remove duelos "presos".</div>
+            </div>
+          </label>
+
+          <label class="lp-opt">
+            <input type="checkbox" id="op-feed">
+            <div>
+              <div class="lp-opt-title">Feed global</div>
+              <div class="lp-opt-desc">Apaga <code>feed_global</code> (mensagens de "fulano venceu o duelo…"). Opcional.</div>
+            </div>
+          </label>
+
+          <label class="lp-opt">
+            <input type="checkbox" id="op-notif">
+            <div>
+              <div class="lp-opt-title">Notificações de dupla pendentes</div>
+              <div class="lp-opt-desc">Apaga <code>notif_dupla</code>. Limpa avisos de "parceiro logou" que ficaram presos. Opcional.</div>
+            </div>
+          </label>
+
+          <div style="margin-top:18px">
+            <button class="btn" id="btn-limpar" style="background:#DC2626;color:#fff" onclick="limpar()">🗑️ Limpar selecionados</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:12px">Log</div>
+          <div class="log-area" id="log-area">Marque o que deseja limpar e clique no botão.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get, remove, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const sess = requireProfessor();
+if (!sess) throw new Error();
+renderSidebarProfessor("sidebar", "");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+function log(msg, tipo = 'info') {
+  const el = document.getElementById('log-area');
+  const ts = new Date().toLocaleTimeString('pt-BR');
+  el.innerHTML += `<div class="log-${tipo}">[${ts}] ${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+window.limpar = async function() {
+  const opHist   = document.getElementById('op-hist').checked;
+  const opStats  = document.getElementById('op-stats').checked;
+  const opDuelos = document.getElementById('op-duelos').checked;
+  const opFeed   = document.getElementById('op-feed').checked;
+  const opNotif  = document.getElementById('op-notif').checked;
+
+  if (!opHist && !opStats && !opDuelos && !opFeed && !opNotif) {
+    log('Nada selecionado.', 'warn');
+    return;
+  }
+
+  const ok = confirm('Confirmar limpeza permanente dos itens selecionados?\n\nEsta ação NÃO pode ser desfeita.');
+  if (!ok) { log('Cancelado pela professora.', 'warn'); return; }
+
+  const btn = document.getElementById('btn-limpar');
+  btn.disabled = true;
+  document.getElementById('log-area').innerHTML = '';
+
+  // Histórico e estatísticas por aluno
+  if (opHist || opStats) {
+    log('Lendo perfis…', 'info');
+    let snap;
+    try {
+      snap = await get(ref(db, 'perfis'));
+    } catch(e) { log('Erro ao ler perfis: ' + e.message, 'err'); btn.disabled = false; return; }
+
+    if (snap.exists()) {
+      const uids = [];
+      snap.forEach(c => uids.push(c.key));
+      let n = 0;
+      for (const uid of uids) {
+        try {
+          if (opHist) {
+            await remove(ref(db, `perfis/${uid}/historico_duelos`));
+          }
+          if (opStats) {
+            await update(ref(db, `perfis/${uid}`), { duelos_total: 0, duelos_vitorias: 0 });
+          }
+          n++;
+        } catch(e) {
+          log(`✗ ${uid}: ${e.message}`, 'err');
+        }
+      }
+      log(`✓ ${n} perfis processados (histórico ${opHist?'apagado':'mantido'}, estatísticas ${opStats?'zeradas':'mantidas'}).`, 'ok');
+    } else {
+      log('Nenhum perfil encontrado.', 'warn');
+    }
+  }
+
+  // Objetos de duelo
+  if (opDuelos) {
+    try { await remove(ref(db, 'duelos')); log('✓ Nó "duelos" apagado.', 'ok'); }
+    catch(e) { log('✗ duelos: ' + e.message, 'err'); }
+  }
+
+  // Feed global
+  if (opFeed) {
+    try { await remove(ref(db, 'feed_global')); log('✓ Feed global apagado.', 'ok'); }
+    catch(e) { log('✗ feed_global: ' + e.message, 'err'); }
+  }
+
+  // Notificações de dupla
+  if (opNotif) {
+    try { await remove(ref(db, 'notif_dupla')); log('✓ notif_dupla apagado.', 'ok'); }
+    catch(e) { log('✗ notif_dupla: ' + e.message, 'err'); }
+  }
+
+  log('Limpeza concluída.', 'ok');
+  btn.disabled = false;
+};
+</script>
+</body>
+</html>
