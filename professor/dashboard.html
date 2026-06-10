@@ -397,6 +397,20 @@ document.getElementById("content").innerHTML = `
         Ver todos os certificados →
       </a>
     </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;border-color:rgba(239,68,68,.3)">
+    <div class="card-header">
+      <div class="card-title" style="color:#ef4444">⚙️ Administração</div>
+    </div>
+    <div style="padding:0 0 4px">
+      <button onclick="encerrarTodasSessoes()"
+        style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);
+               color:#ef4444;border-radius:10px;padding:10px 20px;font-size:13px;
+               font-weight:700;cursor:pointer">
+        ⚠️ Encerrar todas as sessões de alunos
+      </button>
+    </div>
   </div>`;
 
 
@@ -734,6 +748,28 @@ window.marcarImpresso = async function(uid) {
 };
 
 carregarDiplomasPendentes();
+
+// ── Encerrar todas as sessões ─────────────────────────────────
+window.encerrarTodasSessoes = async function() {
+  if (!confirm('Isso vai desconectar TODOS os alunos logados. Confirma?')) return;
+  try {
+    const snap = await get(ref(db, 'perfis'));
+    const updates = {};
+    snap.forEach(child => {
+      if (child.val()?.session_token) {
+        updates[`${child.key}/session_token`] = null;
+      }
+    });
+    if (Object.keys(updates).length > 0) {
+      await update(ref(db, 'perfis'), updates);
+    }
+    await set(ref(db, 'presenca_online'), null);
+    toast('Todas as sessões foram encerradas.');
+  } catch(e) {
+    toast('Erro ao encerrar sessões.');
+    console.error(e);
+  }
+};
 
 // ── Análise anti-IA: conta suspeitos em background ────────────
 (async () => {

@@ -156,6 +156,11 @@ export function renderSidebarAluno(containerId, activePage) {
   if (!isMT && alunos.length > 0) {
     const _sessUid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
     iniciarVerificacaoSessao(_sessUid).catch(() => {});
+    const _paginasJogo = ['/aluno/tabuada.html', '/aluno/avaliacao_plus.html',
+                          '/aluno/competicao_plus.html', '/aluno/duelo_partida.html'];
+    if (!_paginasJogo.some(p => location.pathname.includes(p))) {
+      iniciarTimeoutInatividade(5);
+    }
   }
   // Inject disponibilidade toggle into topbar-right (before avatar)
   const _topbarRight = document.querySelector('.topbar-right');
@@ -268,6 +273,24 @@ export async function iniciarVerificacaoSessao(uid) {
   };
   setInterval(verificar, 5_000);
   await verificar();
+}
+
+// ── Timeout de inatividade ──────────────────────────────────
+export function iniciarTimeoutInatividade(minutos = 5) {
+  const MS = minutos * 60 * 1000;
+  let _timer = null;
+  const resetar = () => {
+    clearTimeout(_timer);
+    _timer = setTimeout(() => {
+      clearSession();
+      localStorage.removeItem('sm_dupla_duelo');
+      window.location.href = '/index.html?motivo=inatividade';
+    }, MS);
+  };
+  ['mousemove', 'keydown', 'click', 'touchstart', 'scroll'].forEach(ev => {
+    document.addEventListener(ev, resetar, { passive: true });
+  });
+  resetar();
 }
 
 // ── Hash e geração de senha de aluno ─────────────────────────

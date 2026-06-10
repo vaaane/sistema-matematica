@@ -558,8 +558,12 @@ window.entrarProf = async function(e) {
   }
 };
 
-if (new URLSearchParams(location.search).get('motivo') === 'novo_login') {
+const _motivo = new URLSearchParams(location.search).get('motivo');
+if (_motivo === 'novo_login') {
   showError('errorAluno', '⚠️ Sessão encerrada: este aluno fez login em outro dispositivo ou aba.');
+}
+if (_motivo === 'inatividade') {
+  showError('errorAluno', '⏱️ Sessão encerrada por inatividade. Faça login novamente.');
 }
 </script>
 </body>

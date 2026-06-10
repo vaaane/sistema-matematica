@@ -223,6 +223,13 @@ const _advParceiroTurma = duelo.criador_uid === uid
   ? (duelo.adversario_parceiro_turma || '')
   : (duelo.criador_parceiro_turma    || '');
 
+const _meuParcUid = _meuParceiroNome
+  ? (_meuParceiroTurma + '_' + _meuParceiroNome).replace(/[.#$[\]/\s]/g, '_')
+  : null;
+const _advParcUid = _advParceiroNome
+  ? (_advParceiroTurma + '_' + _advParceiroNome).replace(/[.#$[\]/\s]/g, '_')
+  : null;
+
 const adversarioPerfil = await getPerfil(adversarioUid).catch(() => ({}));
 const adversarioAvatar = avatarUrl(adversarioPerfil?.avatar || avatarConfigDefault());
 
@@ -487,6 +494,9 @@ async function encerrarPartida(motivo) {
     try {
       const { adicionarXP } = await import('/js/db.js');
       await adicionarXP(uid, XP_DUELO[dificuldade].derrota);
+      if (_meuParcUid) {
+        try { await adicionarXP(_meuParcUid, XP_DUELO[dificuldade].derrota); } catch(e) {}
+      }
     } catch(e) {}
     await atualizarPresenca({ em_duelo: false, status: 'disponivel' });
     window.location.href = '/aluno/duelos.html';
@@ -542,6 +552,26 @@ async function salvarHistoricoLocal(euGanhei, empate, xpDelta, meuRes, advRes,
       duelos_total:    (perf.duelos_total    || 0) + 1,
       duelos_vitorias: (perf.duelos_vitorias || 0) + (euGanhei ? 1 : 0),
     });
+    if (_meuParcUid) {
+      try {
+        const parcSnap = await get(ref(db, `perfis/${_meuParcUid}`));
+        const parc = parcSnap.exists() ? parcSnap.val() : {};
+        await update(ref(db, `perfis/${_meuParcUid}`), {
+          duelos_total:    (parc.duelos_total    || 0) + 1,
+          duelos_vitorias: (parc.duelos_vitorias || 0) + (euGanhei ? 1 : 0),
+        });
+      } catch(e) { console.warn('[Ranking parceiro]', e); }
+    }
+    if (_advParcUid) {
+      try {
+        const advParcSnap = await get(ref(db, `perfis/${_advParcUid}`));
+        const advParc = advParcSnap.exists() ? advParcSnap.val() : {};
+        await update(ref(db, `perfis/${_advParcUid}`), {
+          duelos_total:    (advParc.duelos_total    || 0) + 1,
+          duelos_vitorias: (advParc.duelos_vitorias || 0) + (euGanhei ? 0 : empate ? 0 : 1),
+        });
+      } catch(e) { console.warn('[Ranking parceiro adv]', e); }
+    }
 
     console.log('[Histórico] salvo com sucesso');
   } catch(e) {
@@ -593,6 +623,9 @@ async function mostrarResultado(resultadosParam) {
     try {
       const { adicionarXP } = await import('/js/db.js');
       await adicionarXP(uid, xpDelta);
+      if (_meuParcUid) {
+        try { await adicionarXP(_meuParcUid, xpDelta); } catch(e) { console.warn('[XP parceiro]', e); }
+      }
     } catch(e) { console.error('[XP ERRO]', e); }
   }
 
@@ -601,6 +634,9 @@ async function mostrarResultado(resultadosParam) {
     try {
       const { adicionarXP } = await import('/js/db.js');
       await adicionarXP(uid, XP_DUELO[dificuldade].vitoria);
+      if (_meuParcUid) {
+        try { await adicionarXP(_meuParcUid, XP_DUELO[dificuldade].vitoria); } catch(e) {}
+      }
     } catch(e) { console.error('[XP abandono ERRO]', e); }
   }
 
@@ -632,6 +668,28 @@ async function mostrarResultado(resultadosParam) {
       });
     } catch(e) { console.error('[Histórico parceiro ERRO]', e); }
   }
+  if (_advParcUid) {
+    try {
+      await set(ref(db, `perfis/${_advParcUid}/historico_duelos/${dueloId}`), {
+        duelo_id:              dueloId,
+        dificuldade:           dificuldade,
+        adversario_uid:        uid,
+        adversario_nome:       alunos[0],
+        adversario_turma:      turma,
+        adv_parceiro_nome:     _meuParceiroNome  || '',
+        adv_parceiro_turma:    _meuParceiroTurma || '',
+        parceiro_nome:         _adversarioNome   || '',
+        parceiro_turma:        _adversarioTurma  || '',
+        meus_pares:            advRes?.pares  ?? 0,
+        adv_pares:             meuRes?.pares  ?? 0,
+        resultado:             euGanhei ? 'derrota' : empate ? 'empate' : 'vitoria',
+        xp_delta:              euGanhei
+                                 ? XP_DUELO[dificuldade].derrota
+                                 : XP_DUELO[dificuldade].vitoria,
+        ts:                    Date.now(),
+      });
+    } catch(e) { console.warn('[Histórico parceiro adv]', e); }
+  }
 
   // Feed global — escrever evento do duelo (só quem ganhou escreve, evita duplicação)
   if (euGanhei) {
@@ -643,7 +701,7 @@ async function mostrarResultado(resultadosParam) {
         uid,
         nome:  apelido,
         turma,
-        texto: `⚔️ ${apelido} venceu ${_adversarioNome} no duelo ${diffLabel}`,
+        texto: `⚔️ ${apelido}${_meuParceiroNome ? ' + ' + _meuParceiroNome : ''} venceu ${_adversarioNome}${_advParceiroNome ? ' + ' + _advParceiroNome : ''} no duelo ${diffLabel}`,
         ts:    Date.now(),
       });
     } catch(e) { console.warn('[Feed duelo]', e); }
@@ -651,6 +709,12 @@ async function mostrarResultado(resultadosParam) {
   try {
     const { verificarConquistas } = await import('/js/conquistas.js');
     await verificarConquistas(uid, {});
+    if (_meuParcUid) {
+      try { await verificarConquistas(_meuParcUid, {}); } catch(e) {}
+    }
+    if (_advParcUid) {
+      try { await verificarConquistas(_advParcUid, {}); } catch(e) {}
+    }
   } catch(e) {}
 
   // Renderizar tela de resultado
@@ -753,6 +817,12 @@ window.confirmarSair = async function() {
     const { adicionarXP } = await import('/js/db.js');
     await adicionarXP(uid,           XP_DUELO[dificuldade].derrota);
     await adicionarXP(adversarioUid, XP_DUELO[dificuldade].vitoria);
+    if (_meuParcUid) {
+      try { await adicionarXP(_meuParcUid, XP_DUELO[dificuldade].derrota); } catch(e) {}
+    }
+    if (_advParcUid) {
+      try { await adicionarXP(_advParcUid, XP_DUELO[dificuldade].vitoria); } catch(e) {}
+    }
   } catch(e) {}
 
   // Presença
