@@ -535,6 +535,8 @@ async function encerrarPartida(motivo) {
         adv_parceiro_turma: _advParceiroTurma || '',
         parceiro_nome:      _meuParceiroNome  || '',
         parceiro_turma:     _meuParceiroTurma || '',
+        meus_pares:         estado.meusPontos,
+        adv_pares:          estado.advPontos,
         resultado:          'derrota',
         abandono:           true,
         xp_delta:           XP_DUELO[dificuldade].derrota,
@@ -552,6 +554,8 @@ async function encerrarPartida(motivo) {
             adv_parceiro_turma: _advParceiroTurma || '',
             parceiro_nome:      alunos[0],
             parceiro_turma:     turma,
+            meus_pares:         estado.meusPontos,
+            adv_pares:          estado.advPontos,
             resultado:          'derrota',
             abandono:           true,
             xp_delta:           XP_DUELO[dificuldade].derrota,
@@ -571,11 +575,11 @@ async function encerrarPartida(motivo) {
           adv_parceiro_turma: _meuParceiroTurma || '',
           parceiro_nome:      _advParceiroNome  || '',
           parceiro_turma:     _advParceiroTurma || '',
-          meus_pares:         0,
-          adv_pares:          0,
+          meus_pares:         estado.advPontos,
+          adv_pares:          estado.meusPontos,
           resultado:          'vitoria',
           ganhou_abandono:    true,
-          xp_delta:           XP_DUELO[dificuldade].vitoria,
+          xp_delta:           Math.round(XP_DUELO[dificuldade].vitoria * 0.5),
           ts:                 Date.now(),
         });
       } catch(e) {}
@@ -591,11 +595,11 @@ async function encerrarPartida(motivo) {
             adv_parceiro_turma: _meuParceiroTurma || '',
             parceiro_nome:      adversarioNome    || '',
             parceiro_turma:     (adversarioUid || '').split('_')[0] || '',
-            meus_pares:         0,
-            adv_pares:          0,
+            meus_pares:         estado.advPontos,
+            adv_pares:          estado.meusPontos,
             resultado:          'vitoria',
             ganhou_abandono:    true,
-            xp_delta:           XP_DUELO[dificuldade].vitoria,
+            xp_delta:           Math.round(XP_DUELO[dificuldade].vitoria * 0.5),
             ts:                 Date.now(),
           });
         } catch(e) {}
@@ -789,9 +793,10 @@ async function mostrarResultado(resultadosParam) {
   if (dueloAtual.encerrado_por_abandono && euGanhei) {
     try {
       const { adicionarXP } = await import('/js/db.js');
-      await adicionarXP(uid, XP_DUELO[dificuldade].vitoria);
+      const _xpAb = Math.round(XP_DUELO[dificuldade].vitoria * 0.5);
+      await adicionarXP(uid, _xpAb);
       if (_meuParcUid) {
-        try { await adicionarXP(_meuParcUid, XP_DUELO[dificuldade].vitoria); } catch(e) {}
+        try { await adicionarXP(_meuParcUid, _xpAb); } catch(e) {}
       }
     } catch(e) { console.error('[XP abandono ERRO]', e); }
   }
@@ -911,6 +916,8 @@ window.confirmarSair = async function() {
     adv_parceiro_turma: _advParceiroTurma || '',
     parceiro_nome:      _meuParceiroNome  || '',
     parceiro_turma:     _meuParceiroTurma || '',
+    meus_pares:         estado.meusPontos,
+    adv_pares:          estado.advPontos,
     resultado:          'derrota',
     abandono:           true,
     ts:                 Date.now(),
@@ -928,6 +935,8 @@ window.confirmarSair = async function() {
         adv_parceiro_turma: _advParceiroTurma || '',
         parceiro_nome:      apelido,
         parceiro_turma:     turma,
+        meus_pares:         estado.meusPontos,
+        adv_pares:          estado.advPontos,
         resultado:          'derrota',
         abandono:           true,
         ts:                 Date.now(),
@@ -979,13 +988,14 @@ window.confirmarSair = async function() {
   // XP
   try {
     const { adicionarXP } = await import('/js/db.js');
+    const _xpAbW = Math.round(XP_DUELO[dificuldade].vitoria * 0.5);
     await adicionarXP(uid,           XP_DUELO[dificuldade].derrota);
-    await adicionarXP(adversarioUid, XP_DUELO[dificuldade].vitoria);
+    await adicionarXP(adversarioUid, _xpAbW);
     if (_meuParcUid) {
       try { await adicionarXP(_meuParcUid, XP_DUELO[dificuldade].derrota); } catch(e) {}
     }
     if (_advParcUid) {
-      try { await adicionarXP(_advParcUid, XP_DUELO[dificuldade].vitoria); } catch(e) {}
+      try { await adicionarXP(_advParcUid, _xpAbW); } catch(e) {}
     }
   } catch(e) {}
 
