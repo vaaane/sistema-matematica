@@ -523,80 +523,29 @@ async function encerrarPartida(motivo) {
       vencedor_uid:           adversarioUid,
       encerrado_por_abandono: true,
     });
-    // Salvar histórico com abandono: true para quem saiu (inclui dados de dupla)
+    // Salvar histórico com abandono: true para quem saiu
     try {
       await set(ref(db, `perfis/${uid}/historico_duelos/${dueloId}`), {
-        duelo_id:           dueloId,
-        dificuldade:        dificuldade,
-        adversario_uid:     adversarioUid,
-        adversario_nome:    adversarioNome,
-        adversario_turma:   (adversarioUid || '').split('_')[0] || '',
-        adv_parceiro_nome:  _advParceiroNome  || '',
-        adv_parceiro_turma: _advParceiroTurma || '',
-        parceiro_nome:      _meuParceiroNome  || '',
-        parceiro_turma:     _meuParceiroTurma || '',
-        resultado:          'derrota',
-        abandono:           true,
-        xp_delta:           XP_DUELO[dificuldade].derrota,
-        ts:                 Date.now(),
+        duelo_id:        dueloId,
+        dificuldade:     dificuldade,
+        adversario_uid:  adversarioUid,
+        adversario_nome: adversarioNome,
+        resultado:       'derrota',
+        abandono:        true,
+        xp_delta:        XP_DUELO[dificuldade].derrota,
+        ts:              Date.now(),
       });
       if (_meuParcUid) {
         try {
           await set(ref(db, `perfis/${_meuParcUid}/historico_duelos/${dueloId}`), {
-            duelo_id:           dueloId,
-            dificuldade:        dificuldade,
-            adversario_uid:     adversarioUid,
-            adversario_nome:    adversarioNome,
-            adversario_turma:   (adversarioUid || '').split('_')[0] || '',
-            adv_parceiro_nome:  _advParceiroNome  || '',
-            adv_parceiro_turma: _advParceiroTurma || '',
-            parceiro_nome:      alunos[0],
-            parceiro_turma:     turma,
-            resultado:          'derrota',
-            abandono:           true,
-            xp_delta:           XP_DUELO[dificuldade].derrota,
-            ts:                 Date.now(),
-          });
-        } catch(e) {}
-      }
-      // ADVERSARIO venceu por abandono - grava na fonte (garante "adv. desistiu" + dupla)
-      try {
-        await set(ref(db, `perfis/${adversarioUid}/historico_duelos/${dueloId}`), {
-          duelo_id:           dueloId,
-          dificuldade:        dificuldade,
-          adversario_uid:     uid,
-          adversario_nome:    alunos[0],
-          adversario_turma:   turma,
-          adv_parceiro_nome:  _meuParceiroNome  || '',
-          adv_parceiro_turma: _meuParceiroTurma || '',
-          parceiro_nome:      _advParceiroNome  || '',
-          parceiro_turma:     _advParceiroTurma || '',
-          meus_pares:         0,
-          adv_pares:          0,
-          resultado:          'vitoria',
-          ganhou_abandono:    true,
-          xp_delta:           XP_DUELO[dificuldade].vitoria,
-          ts:                 Date.now(),
-        });
-      } catch(e) {}
-      if (_advParcUid) {
-        try {
-          await set(ref(db, `perfis/${_advParcUid}/historico_duelos/${dueloId}`), {
-            duelo_id:           dueloId,
-            dificuldade:        dificuldade,
-            adversario_uid:     uid,
-            adversario_nome:    alunos[0],
-            adversario_turma:   turma,
-            adv_parceiro_nome:  _meuParceiroNome  || '',
-            adv_parceiro_turma: _meuParceiroTurma || '',
-            parceiro_nome:      adversarioNome    || '',
-            parceiro_turma:     (adversarioUid || '').split('_')[0] || '',
-            meus_pares:         0,
-            adv_pares:          0,
-            resultado:          'vitoria',
-            ganhou_abandono:    true,
-            xp_delta:           XP_DUELO[dificuldade].vitoria,
-            ts:                 Date.now(),
+            duelo_id:        dueloId,
+            dificuldade:     dificuldade,
+            adversario_uid:  adversarioUid,
+            adversario_nome: adversarioNome,
+            resultado:       'derrota',
+            abandono:        true,
+            xp_delta:        XP_DUELO[dificuldade].derrota,
+            ts:              Date.now(),
           });
         } catch(e) {}
       }
