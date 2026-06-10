@@ -654,6 +654,32 @@ window.setModalDiff = function(d, el) {
 
 // ── Online em tempo real ──────────────────────────────────────
 onValue(ref(db, 'presenca_online'), snap => {
+  // Reconciliação: se o parceiro da minha dupla ativa está online agora, a dupla foi desfeita
+  // (ele fez login em outro lugar). Desfaz na hora, sem depender da notificação chegar.
+  try {
+    const _d = lerDuplaAtiva();
+    if (_d) {
+      const _tsMin = Date.now() - 120_000;
+      let _parceiroOnline = false;
+      snap.forEach(c => {
+        if (c.key === uid) return;
+        const v = c.val();
+        if (!v?.ts || v.ts < _tsMin) return;
+        if (v.nome === _d.nome && v.turma === _d.turma) { _parceiroOnline = true; }
+      });
+      if (_parceiroOnline) {
+        localStorage.removeItem('sm_dupla_duelo');
+        window.removerDuplaUI?.();
+        document.getElementById('faixa-dupla-global')?.remove();
+        if (typeof atualizarBadgeDupla === 'function') atualizarBadgeDupla();
+        atualizarPresenca({ parceiro_nome: null, parceiro_turma: null }).catch(() => {});
+        if (typeof showToast === 'function') {
+          showToast('Sua dupla foi desconectada porque fez login em outro dispositivo.', 'warn', 5000);
+        }
+      }
+    }
+  } catch(_) {}
+
   const online = filtrarOnline(snap, uid);
   renderOnlineGrid(online);
   const n = online.length;

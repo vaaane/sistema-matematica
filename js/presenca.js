@@ -14,7 +14,11 @@ export async function iniciarPresenca(uid, dados) {
   let _parceiroNome = null, _parceiroTurma = null;
   try {
     const _d = JSON.parse(localStorage.getItem('sm_dupla_duelo') || 'null');
-    if (_d && _d.nome && _d.dono_nome === (dados.nome || '') && _d.dono_turma === (dados.turma || '')) {
+    const _sess = JSON.parse(sessionStorage.getItem('sm_session') || 'null');
+    // Só reidrata se for o DONO da dupla E a dupla pertencer à sessão de login atual.
+    // Validar o session_token impede ressuscitar uma dupla órfã (parceiro logou em outro lugar).
+    const _tokenOk = _d?.session_token && _d.session_token === _sess?.session_token;
+    if (_d && _d.nome && _tokenOk && _d.dono_nome === (dados.nome || '') && _d.dono_turma === (dados.turma || '')) {
       _parceiroNome  = _d.nome;
       _parceiroTurma = _d.turma || '';
     }
