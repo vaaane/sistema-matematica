@@ -621,7 +621,7 @@ async function encerrarPartida(motivo) {
   });
 
   // Marcar encerrado imediatamente — o outro lado detecta via onValue
-  await update(ref(db, `duelos/${dueloId}`), { status: 'encerrado' });
+  await update(ref(db, `duelos/${dueloId}`), { status: 'encerrado', vencedor_uid: adversarioUid, encerrado_por_abandono: true });
   await atualizarPresenca({ em_duelo: false, status: 'disponivel' });
 
   // Aguardar resultado do adversário (max 1.5s) para mostrar placar completo
@@ -644,6 +644,12 @@ async function salvarHistoricoLocal(euGanhei, empate, xpDelta, meuRes, advRes,
   try {
     const perfSnap = await get(ref(db, `perfis/${uid}`));
     const perf = perfSnap.exists() ? perfSnap.val() : {};
+    let _histExistente = null;
+    try {
+      const _hSnap = await get(ref(db, `perfis/${uid}/historico_duelos/${dueloId}`));
+      _histExistente = _hSnap.exists() ? _hSnap.val() : null;
+    } catch(_) {}
+    const _ganhouAbandonoFinal = (euGanhei && (_advAbandonou || _histExistente?.ganhou_abandono)) ? true : false;
 
     const _histBase = {
       duelo_id:              dueloId,
@@ -665,7 +671,7 @@ async function salvarHistoricoLocal(euGanhei, empate, xpDelta, meuRes, advRes,
       parceiro_turma:  _meuParceiroTurma || '',
       resultado:       euGanhei ? 'vitoria' : empate ? 'empate' : 'derrota',
       xp_delta:        xpDelta,
-      ...(euGanhei && _advAbandonou ? { ganhou_abandono: true } : {}),
+      ...(_ganhouAbandonoFinal ? { ganhou_abandono: true } : {}),
     });
 
     await update(ref(db, `perfis/${uid}`), {
