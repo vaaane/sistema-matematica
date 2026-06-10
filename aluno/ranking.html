@@ -163,8 +163,14 @@ document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
 } catch(e) { console.warn('[DueloNotif]', e); } })();
 
 (async () => { try {
+  const _uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+  const { iniciarPresenca, encerrarPresenca } = await import('/js/presenca.js');
+  const _dispSnap = await get(ref(db, `perfis/${_uid}/duelos_disponivel`));
+  const _disp = _dispSnap.val() !== false;
+  await iniciarPresenca(_uid, { nome: alunos[0], turma, status: _disp ? 'disponivel' : 'indisponivel', pagina: 'navegando' });
+  window.addEventListener('beforeunload', () => encerrarPresenca());
   const { initDueloAvail } = await import('/js/duelo_avail.js');
-  await initDueloAvail((turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_'));
+  await initDueloAvail(_uid);
 } catch(e) {} })();
 
 // ── Helpers ───────────────────────────────────────────────────

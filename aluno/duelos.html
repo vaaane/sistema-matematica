@@ -353,7 +353,7 @@
               <span style="font-size:20px">👥</span>
               <div style="flex:1">
                 <div style="font-size:13px;font-weight:700;color:#00d4ff" id="dupla-ativa-nome">Jogando em dupla com —</div>
-                <div style="font-size:11px;color:var(--text-muted)">Parceiro ativo nesta sessão de duelos</div>
+                <div style="font-size:11px;color:var(--text-muted)">Parceiro de duelos ativo</div>
               </div>
               <button onclick="removerDupla()"
                 style="padding:5px 12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;color:#ef4444;font-size:11px;font-weight:700;cursor:pointer">
@@ -422,7 +422,7 @@
 </div>
 
 <script type="module">
-import { requireAluno, renderSidebarAluno, clearSession, hashSenha } from '/js/auth.js';
+import { requireAluno, renderSidebarAluno, clearSession, hashSenha, atualizarBadgeDupla, injetarFaixaDupla } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
 import { ref, set, get, push, onValue, remove, update, runTransaction } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { getPerfil, getSenhaAluno } from '/js/db.js';
@@ -455,21 +455,9 @@ const { alunos, turma } = sess;
 const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
 
 renderSidebarAluno('sidebar', 'duelos');
+injetarFaixaDupla();
 window.sair = () => { encerrarPresenca(); clearSession(); window.location.href = '/index.html'; };
 
-// Aviso ao sair com dupla ativa
-document.querySelectorAll('.nav-item, .btn-sair').forEach(el => {
-  el.addEventListener('click', (e) => {
-    if (localStorage.getItem('sm_dupla_duelo')) {
-      if (!confirm('Sua dupla será desconectada ao sair desta página. Deseja continuar?')) {
-        e.preventDefault();
-        e.stopPropagation();
-      } else {
-        localStorage.removeItem('sm_dupla_duelo');
-      }
-    }
-  });
-});
 
 let estaDisponivel = () => true;
 (async () => { try {
@@ -486,6 +474,7 @@ window.ativarTab = function(id) {
   document.getElementById(`tab-btn-${id}`)?.classList.add('active');
   if (id === 'historico') carregarHistorico();
   if (id === 'ranking')   carregarRankingDuelos();
+  if (id === 'duelos')    restaurarEstadoDupla();
 };
 
 // ── Perfil ────────────────────────────────────────────────────
@@ -512,13 +501,8 @@ await iniciarPresenca(uid, {
   status:  _disponivel ? 'disponivel' : 'indisponivel',
   pagina:  'duelos',
 });
-window.addEventListener('beforeunload', (e) => {
-  encerrarPresenca();
-  if (localStorage.getItem('sm_dupla_duelo')) {
-    e.preventDefault();
-    e.returnValue = '';
-  }
-});
+restaurarEstadoDupla();
+window.addEventListener('beforeunload', () => encerrarPresenca());
 
 // ── Dupla de duelo ────────────────────────────────────────────
 window.abrirDuplaPanel = function() {
@@ -552,13 +536,23 @@ window.confirmarDupla = async function() {
   try {
     const presSnap = await get(ref(db, 'presenca_online'));
     if (presSnap.exists()) {
-      const tsMin = Date.now() - 60000;
+      const tsMin = Date.now() - 120_000;
       let jaLogado = false;
+      let motivo   = '';
       presSnap.forEach(c => {
         const v = c.val();
-        if ((v.nome === parceiroNome || v.parceiro_nome === parceiroNome) && (v.ts||0) > tsMin && c.key !== uid) jaLogado = true;
+        if (c.key === uid) return;
+        if ((v.ts || 0) < tsMin) return;
+        if (v.nome === parceiroNome && v.turma === parceiroTurma) {
+          jaLogado = true;
+          motivo = 'Este aluno já está logado em outro computador.';
+        }
+        if (v.parceiro_nome === parceiroNome && v.parceiro_turma === parceiroTurma) {
+          jaLogado = true;
+          motivo = 'Este aluno já é parceiro de dupla em outro computador.';
+        }
       });
-      if (jaLogado) { erroEl.textContent = 'Este aluno já está online em outro computador.'; erroEl.style.display = 'block'; return; }
+      if (jaLogado) { erroEl.textContent = motivo; erroEl.style.display = 'block'; return; }
     }
   } catch(_) {}
   try {
@@ -586,25 +580,34 @@ window.confirmarDupla = async function() {
   document.getElementById('dupla-panel').style.display = 'none';
   document.getElementById('dupla-ativa').style.display = 'flex';
   document.getElementById('dupla-ativa-nome').textContent = `Jogando em dupla com ${parceiroNome} · ${parceiroTurma}`;
+  if (typeof atualizarBadgeDupla === 'function') atualizarBadgeDupla();
 };
 window.removerDupla = async function() {
   localStorage.removeItem('sm_dupla_duelo');
   await atualizarPresenca({ parceiro_nome: null, parceiro_turma: null });
+  window.removerDuplaUI();
+  if (typeof atualizarBadgeDupla === 'function') atualizarBadgeDupla();
+  document.getElementById('faixa-dupla-global')?.remove();
+};
+window.removerDuplaUI = function() {
   document.getElementById('dupla-ativa').style.display = 'none';
   document.getElementById('dupla-btn-wrap').style.display = 'block';
 };
-// Restaurar estado ao carregar
-{
-  const _duplaAtiva = localStorage.getItem('sm_dupla_duelo');
-  if (_duplaAtiva) {
-    try {
-      const d = JSON.parse(_duplaAtiva);
-      document.getElementById('dupla-btn-wrap').style.display = 'none';
-      document.getElementById('dupla-ativa').style.display = 'flex';
-      document.getElementById('dupla-ativa-nome').textContent = `Jogando em dupla com ${d.nome} · ${d.turma}`;
-    } catch(_) {}
-  }
+function restaurarEstadoDupla() {
+  const raw = localStorage.getItem('sm_dupla_duelo');
+  if (!raw) return;
+  try {
+    const d = JSON.parse(raw);
+    const btnWrap = document.getElementById('dupla-btn-wrap');
+    const ativaEl = document.getElementById('dupla-ativa');
+    const nomeEl  = document.getElementById('dupla-ativa-nome');
+    if (!btnWrap || !ativaEl || !nomeEl) return;
+    btnWrap.style.display = 'none';
+    ativaEl.style.display = 'flex';
+    nomeEl.textContent = `Jogando em dupla com ${d.nome} · ${d.turma}`;
+  } catch(_) {}
 }
+restaurarEstadoDupla();
 
 // ── Helpers ───────────────────────────────────────────────────
 function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -1078,7 +1081,7 @@ async function carregarHistorico() {
         const nomeExib = temParceiro
           ? `${escH(advNome)} <span style="opacity:.5;font-size:10px">+ ${escH(d.parceiro_nome)}</span>`
           : escH(advNome);
-        const turmaExib = temParceiro
+        const turmaExib = temParceiro && d.parceiro_turma
           ? `${escH(advTurma)} · ${escH(d.parceiro_turma)}`
           : escH(advTurma);
         return `

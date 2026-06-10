@@ -110,6 +110,18 @@ window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 applyTopRankVisuals();
 
 const { alunos, turma } = sess;
+(async () => { try {
+  const _uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+  const { db: _db } = await import('/js/firebase-config.js');
+  const { ref: _ref, get: _get } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+  const { iniciarPresenca, encerrarPresenca } = await import('/js/presenca.js');
+  const _dispSnap = await _get(_ref(_db, `perfis/${_uid}/duelos_disponivel`));
+  const _disp = _dispSnap.val() !== false;
+  await iniciarPresenca(_uid, { nome: alunos[0], turma, status: _disp ? 'disponivel' : 'indisponivel', pagina: 'navegando' });
+  window.addEventListener('beforeunload', () => encerrarPresenca());
+  const { initDueloAvail } = await import('/js/duelo_avail.js');
+  await initDueloAvail(_uid);
+} catch(e) {} })();
 initAvBanner(turma, alunos[0]);
 
 // ── Tema ──────────────────────────────────────────

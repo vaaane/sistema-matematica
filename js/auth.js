@@ -106,9 +106,7 @@ export function renderSidebarAluno(containerId, activePage) {
   const userHtml = isMT
     ? '<div class="user-name">Professora<span>Conta Teste</span></div>'
     : alunos.map((a,i) => `<div class="user-name">${a}<span>Aluno${alunos.length>1?' '+(i+1):''}</span></div>`).join('')
-      + (_duplaAtiva
-        ? `<div class="user-name" style="margin-top:4px;opacity:.8"><span style="color:#00d4ff;font-size:11px;font-weight:700">👥 Em dupla com ${_duplaAtiva.nome}</span><span style="font-size:10px;color:#64748b">${_duplaAtiva.turma} · só em Duelos</span></div>`
-        : '');
+      + `<div id="sidebar-dupla-badge" style="display:${_duplaAtiva ? 'block' : 'none'};margin-top:4px;opacity:.8"><span class="dupla-nome" style="color:#00d4ff;font-size:11px;font-weight:700">👥 Em dupla com ${_duplaAtiva?.nome || ''}</span><span class="dupla-sub" style="display:block;font-size:10px;color:#64748b">${_duplaAtiva?.turma || ''} · só em Duelos</span></div>`;
   const navHtml  = nav.map(n => n.divider
     ? '<div class="nav-divider"></div>'
     : `<a class="nav-item${activePage===n.id?' active-orange':''}" href="${n.href}"><svg viewBox="0 0 24 24">${n.icon}</svg>${n.label}</a>`
@@ -134,6 +132,7 @@ export function renderSidebarAluno(containerId, activePage) {
       </button>
     </div>`;
   setupMobileNav(containerId);
+  injetarFaixaDupla();
   // Inject disponibilidade toggle into topbar-right (before avatar)
   const _topbarRight = document.querySelector('.topbar-right');
   if (_topbarRight && !document.getElementById('duelo-avail-toggle')) {
@@ -158,6 +157,59 @@ export function renderSidebarAluno(containerId, activePage) {
       if (topbar) main.insertBefore(banner, topbar.nextSibling);
       else main.insertBefore(banner, main.firstChild);
     }
+  }
+}
+
+// ── Faixa global de dupla ────────────────────────────────────
+export function injetarFaixaDupla() {
+  const _paginaAtual = window.location.pathname;
+  const _paginasIgnorar = ['/aluno/duelo_partida.html', '/aluno/avaliacao_plus.html',
+                            '/aluno/competicao_plus.html', '/aluno/competicao.html',
+                            '/aluno/jogar.html', '/aluno/tabuada.html'];
+  if (_paginasIgnorar.some(p => _paginaAtual.includes(p))) return;
+  const raw = localStorage.getItem('sm_dupla_duelo');
+  document.getElementById('faixa-dupla-global')?.remove();
+  if (!raw) return;
+  let d;
+  try { d = JSON.parse(raw); } catch(_) { return; }
+
+  const faixa = document.createElement('div');
+  faixa.id = 'faixa-dupla-global';
+  faixa.style.cssText = 'background:linear-gradient(90deg,rgba(0,212,255,.15),rgba(0,212,255,.08));border-bottom:1.5px solid rgba(0,212,255,.3);padding:8px 20px;display:flex;align-items:center;gap:10px;font-size:12px;font-weight:600;color:#00d4ff;z-index:100';
+  faixa.innerHTML = `<span style="font-size:16px">👥</span><span style="flex:1">Em dupla com <strong>${d.nome}</strong> · ${d.turma}<span style="opacity:.6;font-weight:400"> — ativo só em Duelos</span></span><button id="faixa-dupla-cancelar" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#ef4444;border-radius:8px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">✕ Cancelar dupla</button>`;
+
+  const topbar = document.querySelector('.topbar');
+  if (topbar) topbar.insertAdjacentElement('afterend', faixa);
+  else document.body.prepend(faixa);
+
+  document.getElementById('faixa-dupla-cancelar').addEventListener('click', async () => {
+    localStorage.removeItem('sm_dupla_duelo');
+    faixa.remove();
+    try {
+      const { atualizarPresenca } = await import('/js/presenca.js');
+      await atualizarPresenca({ parceiro_nome: null, parceiro_turma: null });
+    } catch(_) {}
+    const badge = document.getElementById('sidebar-dupla-badge');
+    if (badge) badge.style.display = 'none';
+    if (typeof restaurarEstadoDupla === 'function') restaurarEstadoDupla();
+    if (typeof window.removerDuplaUI === 'function') window.removerDuplaUI();
+  });
+}
+
+// ── Badge de dupla reativo ───────────────────────────────────
+export function atualizarBadgeDupla() {
+  const badge = document.getElementById('sidebar-dupla-badge');
+  if (!badge) return;
+  const raw = localStorage.getItem('sm_dupla_duelo');
+  if (raw) {
+    try {
+      const d = JSON.parse(raw);
+      badge.style.display = 'block';
+      badge.querySelector('.dupla-nome').textContent = `👥 Em dupla com ${d.nome}`;
+      badge.querySelector('.dupla-sub').textContent  = `${d.turma} · só em Duelos`;
+    } catch(_) { badge.style.display = 'none'; }
+  } else {
+    badge.style.display = 'none';
   }
 }
 
