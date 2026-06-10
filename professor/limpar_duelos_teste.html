@@ -80,7 +80,8 @@
             </div>
           </label>
 
-          <div style="margin-top:18px">
+          <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-blue" id="btn-analisar" onclick="analisar()">🔍 Analisar (ver o que existe)</button>
             <button class="btn" id="btn-limpar" style="background:#DC2626;color:#fff" onclick="limpar()">🗑️ Limpar selecionados</button>
           </div>
         </div>
@@ -112,6 +113,30 @@ function log(msg, tipo = 'info') {
   el.scrollTop = el.scrollHeight;
 }
 
+window.analisar = async function() {
+  document.getElementById('log-area').innerHTML = '';
+  log('Lendo perfis…', 'info');
+  let snap;
+  try { snap = await get(ref(db, 'perfis')); }
+  catch(e) { log('Erro ao ler perfis: ' + e.message, 'err'); return; }
+  if (!snap.exists()) { log('Nenhum perfil em /perfis.', 'warn'); return; }
+  let totalPerfis = 0, comDuelo = 0;
+  snap.forEach(c => {
+    totalPerfis++;
+    const p = c.val() || {};
+    const nHist = p.historico_duelos ? Object.keys(p.historico_duelos).length : 0;
+    const dt = p.duelos_total || 0, dv = p.duelos_vitorias || 0;
+    if (nHist > 0 || dt > 0 || dv > 0) {
+      comDuelo++;
+      log(`• ${c.key} (${p.nome||'?'} · ${p.turma||'?'}): ${nHist} registros, total=${dt}, vitórias=${dv}`, 'info');
+    }
+  });
+  log(`Total: ${totalPerfis} perfis em /perfis, ${comDuelo} com dados de duelo.`, 'ok');
+  if (totalPerfis < 2) {
+    log('ATENÇÃO: poucos perfis encontrados. Alunos que nunca geraram XP/histórico podem não ter perfil ainda — nesse caso não há o que limpar para eles.', 'warn');
+  }
+};
+
 window.limpar = async function() {
   const opHist   = document.getElementById('op-hist').checked;
   const opStats  = document.getElementById('op-stats').checked;
@@ -131,35 +156,37 @@ window.limpar = async function() {
   btn.disabled = true;
   document.getElementById('log-area').innerHTML = '';
 
-  // Histórico e estatísticas por aluno
+  // Histórico e estatísticas por aluno — em LOOP até zerar.
+  // (O get do Firebase pode retornar os perfis em lotes parciais; repetimos até não sobrar.)
   if (opHist || opStats) {
-    log('Lendo perfis…', 'info');
-    let snap;
-    try {
-      snap = await get(ref(db, 'perfis'));
-    } catch(e) { log('Erro ao ler perfis: ' + e.message, 'err'); btn.disabled = false; return; }
+    let rodada = 0, totalLimpos = 0;
+    while (rodada < 15) {
+      rodada++;
+      let snap;
+      try { snap = await get(ref(db, 'perfis')); }
+      catch(e) { log('Erro ao ler perfis: ' + e.message, 'err'); break; }
+      if (!snap.exists()) { break; }
 
-    if (snap.exists()) {
       const uids = [];
-      snap.forEach(c => uids.push(c.key));
-      let n = 0;
+      snap.forEach(c => {
+        const p = c.val() || {};
+        const h = p.historico_duelos ? Object.keys(p.historico_duelos).length : 0;
+        const temStat = (p.duelos_total || 0) > 0 || (p.duelos_vitorias || 0) > 0;
+        if ((opHist && h > 0) || (opStats && temStat)) uids.push(c.key);
+      });
+
+      log(`Rodada ${rodada}: ${uids.length} perfil(is) com dados de duelo.`, 'info');
+      if (uids.length === 0) break;
+
       for (const uid of uids) {
         try {
-          if (opHist) {
-            await remove(ref(db, `perfis/${uid}/historico_duelos`));
-          }
-          if (opStats) {
-            await update(ref(db, `perfis/${uid}`), { duelos_total: 0, duelos_vitorias: 0 });
-          }
-          n++;
-        } catch(e) {
-          log(`✗ ${uid}: ${e.message}`, 'err');
-        }
+          if (opHist)  await remove(ref(db, `perfis/${uid}/historico_duelos`));
+          if (opStats) await update(ref(db, `perfis/${uid}`), { duelos_total: 0, duelos_vitorias: 0 });
+          totalLimpos++;
+        } catch(e) { log(`✗ ${uid}: ${e.message}`, 'err'); }
       }
-      log(`✓ ${n} perfis processados (histórico ${opHist?'apagado':'mantido'}, estatísticas ${opStats?'zeradas':'mantidas'}).`, 'ok');
-    } else {
-      log('Nenhum perfil encontrado.', 'warn');
     }
+    log(`✓ Limpeza de perfis concluída em ${rodada} rodada(s). ${totalLimpos} operação(ões) de limpeza.`, 'ok');
   }
 
   // Objetos de duelo
@@ -174,10 +201,22 @@ window.limpar = async function() {
     catch(e) { log('✗ feed_global: ' + e.message, 'err'); }
   }
 
-  // Notificações de dupla
+  // Notificações de dupla (apaga por aluno para respeitar regras de segurança)
   if (opNotif) {
-    try { await remove(ref(db, 'notif_dupla')); log('✓ notif_dupla apagado.', 'ok'); }
-    catch(e) { log('✗ notif_dupla: ' + e.message, 'err'); }
+    try {
+      const ndSnap = await get(ref(db, 'notif_dupla'));
+      if (ndSnap.exists()) {
+        let nd = 0;
+        const keys = [];
+        ndSnap.forEach(c => keys.push(c.key));
+        for (const k of keys) {
+          try { await remove(ref(db, `notif_dupla/${k}`)); nd++; } catch(_) {}
+        }
+        log(`✓ notif_dupla: ${nd} entrada(s) apagada(s).`, 'ok');
+      } else {
+        log('✓ notif_dupla: nada a apagar.', 'ok');
+      }
+    } catch(e) { log('notif_dupla (ignorado): ' + e.message, 'warn'); }
   }
 
   log('Limpeza concluída.', 'ok');
