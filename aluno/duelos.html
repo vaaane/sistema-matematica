@@ -1106,7 +1106,7 @@ async function carregarHistorico() {
         const advNome  = d.adversario_nome || '?';
         const advTurma = d.adversario_turma || '';
         const diff     = d.dificuldade || 'medio';
-        const xpVal    = { facil: isW?15:-8, medio: isW?25:-13, dificil: isW?40:-20 }[diff] ?? 0;
+        const xpVal    = (d.xp_delta != null) ? d.xp_delta : ({ facil: isW?15:-8, medio: isW?25:-13, dificil: isW?40:-20 }[diff] ?? 0);
         const xpHtml   = `<div class="hist-xp ${xpVal>=0?'pos':'neg'}">${xpVal>=0?'+':''}${xpVal} XP</div>`;
         const temAdvParceiro = !!(d.adv_parceiro_nome);
         const temMeuParceiro = !!(d.parceiro_nome);
