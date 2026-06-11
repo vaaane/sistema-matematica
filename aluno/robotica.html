@@ -312,7 +312,7 @@
 <script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
 import { getAlunoPreferencia, saveRoboticaTentativa, getRoboticaTentativasAluno } from "/js/db.js";
-import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+import { requireAluno, renderSidebarAluno, clearSession, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
 
 const sess = requireAluno("/index.html");
@@ -346,14 +346,7 @@ document.getElementById('topbar-sub').textContent = `Olá, ${aluno}!`;
   window.addEventListener('beforeunload', () => encerrarPresenca());
 } catch(e) { console.warn('[Presença]', e); } })();
 
-(async () => { try {
-  const { iniciarNotifDuelo } = await import('/js/duelo_notif.js');
-  const { getPerfil } = await import('/js/db.js');
-  const _pUidRob = (turma + '_' + aluno).replace(/[.#$[\]/\s]/g, '_');
-  const _p = await getPerfil(_pUidRob).catch(() => ({}));
-  const _apelido = _p?.apelido_ativo || aluno;
-  if (_p?.duelos_disponivel !== false) iniciarNotifDuelo(_pUidRob, _apelido);
-} catch(e) { console.warn('[DueloNotif]', e); } })();
+iniciarNotifDueloGlobal();
 
 (async () => { try {
   const { initDueloAvail } = await import('/js/duelo_avail.js');

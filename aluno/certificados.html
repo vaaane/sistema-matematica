@@ -156,7 +156,7 @@
 </div>
 
 <script type="module">
-import { requireAluno, renderSidebarAluno, clearSession } from '/js/auth.js';
+import { requireAluno, renderSidebarAluno, clearSession, iniciarNotifDueloGlobal } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
 import { ref, get } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
@@ -174,9 +174,8 @@ window.sair = () => { clearSession(); window.location.href = '/index.html'; };
   window.addEventListener('beforeunload', () => encerrarPresenca());
   const { initDueloAvail } = await import('/js/duelo_avail.js');
   await initDueloAvail(uid);
-  const { iniciarNotifDuelo } = await import('/js/duelo_notif.js');
-  if (_disp) iniciarNotifDuelo(uid, alunos[0]);
 } catch(e) {} })();
+iniciarNotifDueloGlobal();
 
 // Avatar topbar
 (async () => { try {

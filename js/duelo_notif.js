@@ -32,7 +32,7 @@ export function iniciarNotifDuelo(uid, apelido) {
       .dnb-info { flex:1; min-width:0; overflow:hidden; }
       .dnb-title {
         font-size:13px; font-weight:800; margin-bottom:3px;
-        white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+        line-height:1.35;
       }
       .dnb-title span { color:#c4b5fd; }
       .dnb-sub { font-size:11px; color:#a78bfa; }

@@ -150,7 +150,7 @@
 <script type="module">
 import { LISTA_ATIVIDADES, MAX_TENTATIVAS_ATIVIDADE, ALUNOS_POR_TURMA } from "/js/constants.js";
 import { contarTentativas, getLiberadasParaTurma, getAlunoPreferencia, getResultados, getSenhaAluno } from "/js/db.js";
-import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, hashSenha, lerDuplaAtiva, injetarFaixaDuelo } from "/js/auth.js";
+import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, hashSenha, lerDuplaAtiva, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
 import { db } from "/js/firebase-config.js";
@@ -205,13 +205,7 @@ document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
   window.addEventListener('beforeunload', () => encerrarPresenca());
 } catch(e) { console.warn('[Presença]', e); } })();
 
-(async () => { try {
-  const { iniciarNotifDuelo } = await import('/js/duelo_notif.js');
-  const { getPerfil } = await import('/js/db.js');
-  const _p = await getPerfil(_pUid).catch(() => ({}));
-  const _apelido = _p?.apelido_ativo || alunos[0];
-  if (_p?.duelos_disponivel !== false) iniciarNotifDuelo(_pUid, _apelido);
-} catch(e) { console.warn('[DueloNotif]', e); } })();
+iniciarNotifDueloGlobal();
 
 (async () => { try {
   const { initDueloAvail } = await import('/js/duelo_avail.js');

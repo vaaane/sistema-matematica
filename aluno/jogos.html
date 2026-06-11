@@ -259,7 +259,7 @@
 
 <script>(()=>{ document.documentElement.setAttribute('data-theme','dark'); })()</script>
 <script type="module">
-import { requireAluno, renderSidebarAluno, clearSession, injetarFaixaDuelo } from "/js/auth.js";
+import { requireAluno, renderSidebarAluno, clearSession, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { NIVEL_MAX } from "/js/constants.js";
@@ -302,13 +302,7 @@ const uid = (turma + '_' + nomeAluno).replace(/[.#$\[\]/\s]/g, '_');
   window.addEventListener('beforeunload', () => encerrarPresenca());
 } catch(e) { console.warn('[Presença]', e); } })();
 
-(async () => { try {
-  const { iniciarNotifDuelo } = await import('/js/duelo_notif.js');
-  const { getPerfil } = await import('/js/db.js');
-  const _p = await getPerfil(uid).catch(() => ({}));
-  const _apelido = _p?.apelido_ativo || nomeAluno;
-  if (_p?.duelos_disponivel !== false) iniciarNotifDuelo(uid, _apelido);
-} catch(e) { console.warn('[DueloNotif]', e); } })();
+iniciarNotifDueloGlobal();
 
 (async () => { try {
   const { initDueloAvail } = await import('/js/duelo_avail.js');

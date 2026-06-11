@@ -506,7 +506,7 @@
 </div>
 
 <script type="module">
-import { requireAluno, renderSidebarAluno, clearSession, hashSenha, atualizarBadgeDupla, injetarFaixaDupla, lerDuplaAtiva } from '/js/auth.js';
+import { requireAluno, renderSidebarAluno, clearSession, hashSenha, atualizarBadgeDupla, injetarFaixaDupla, lerDuplaAtiva, iniciarNotifDueloGlobal } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
 import { ref, set, get, push, onValue, remove, update, runTransaction } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { getPerfil, getSenhaAluno } from '/js/db.js';
@@ -588,13 +588,7 @@ await iniciarPresenca(uid, {
 restaurarEstadoDupla();
 window.addEventListener('beforeunload', () => encerrarPresenca());
 
-// Notificação de desafio via módulo centralizado
-try {
-  const { iniciarNotifDuelo } = await import('/js/duelo_notif.js');
-  if (perfil?.duelos_disponivel !== false) {
-    iniciarNotifDuelo(uid, meuApelido);
-  }
-} catch(_) {}
+iniciarNotifDueloGlobal();
 
 // Buscar último adversário para revanche
 let _ultimoAdvUid  = null;

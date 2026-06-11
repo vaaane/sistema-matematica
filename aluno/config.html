@@ -98,7 +98,7 @@
 
 <script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
-import { requireAluno, renderSidebarAluno, clearSession, hashSenha } from "/js/auth.js";
+import { requireAluno, renderSidebarAluno, clearSession, hashSenha, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { getSenhaAluno, setSenhaAluno, saveAlunoPreferencia, getAlunoPreferencia } from "/js/db.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
@@ -121,9 +121,8 @@ const { alunos, turma } = sess;
   window.addEventListener('beforeunload', () => encerrarPresenca());
   const { initDueloAvail } = await import('/js/duelo_avail.js');
   await initDueloAvail(_uid);
-  const { iniciarNotifDuelo } = await import('/js/duelo_notif.js');
-  if (_disp) iniciarNotifDuelo(_uid, alunos[0]);
 } catch(e) {} })();
+iniciarNotifDueloGlobal();
 initAvBanner(turma, alunos[0]);
 
 // ── Tema ──────────────────────────────────────────

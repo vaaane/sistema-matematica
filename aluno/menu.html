@@ -129,7 +129,7 @@
 <script type="module">
 import { LISTA_ATIVIDADES } from "/js/constants.js";
 import { getResultados, getLiberadasParaTurma, getAlunoPreferencia } from "/js/db.js";
-import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, injetarFaixaDuelo } from "/js/auth.js";
+import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { saveRankPos, applyTopRankVisuals } from "/js/toprank.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
 import { initTopNotif } from "/js/topnotif.js";
@@ -205,13 +205,7 @@ document.getElementById("topbar-sub").textContent   = `Turma ${turma} · Bom tra
 
 const tabuadaUid = (turma + '_' + alunos[0]).replace(/[.#$\[\]/\s]/g, '_');
 
-(async () => { try {
-  const { iniciarNotifDuelo } = await import('/js/duelo_notif.js');
-  const { getPerfil } = await import('/js/db.js');
-  const _p = await getPerfil(tabuadaUid).catch(() => ({}));
-  const _apelido = _p?.apelido_ativo || alunos[0];
-  if (_p?.duelos_disponivel !== false) iniciarNotifDuelo(tabuadaUid, _apelido);
-} catch(e) { console.warn('[DueloNotif]', e); } })();
+iniciarNotifDueloGlobal();
 
 (async () => { try {
   const { initDueloAvail } = await import('/js/duelo_avail.js');

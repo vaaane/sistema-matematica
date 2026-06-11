@@ -345,6 +345,20 @@ export async function injetarFaixaDuelo() {
   });
 }
 
+// ── Notificação de desafio: inicialização centralizada ────────
+export async function iniciarNotifDueloGlobal() {
+  const s = getSession();
+  if (!s?.alunos?.[0] || !s?.turma) return;
+  const uid = (s.turma + '_' + s.alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+  try {
+    const { getPerfil } = await import('/js/db.js');
+    const { iniciarNotifDuelo } = await import('/js/duelo_notif.js');
+    const _p = await getPerfil(uid).catch(() => ({}));
+    const apelido = _p?.apelido_ativo || s.alunos[0];
+    if (_p?.duelos_disponivel !== false) iniciarNotifDuelo(uid, apelido);
+  } catch(_) {}
+}
+
 // ── Badge de dupla reativo ───────────────────────────────────
 export function atualizarBadgeDupla() {
   const badge = document.getElementById('sidebar-dupla-badge');
