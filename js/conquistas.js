@@ -11,12 +11,16 @@ export const CONQUISTAS_DEF = [
   // Tabuada
   { id: 'tabuada_50',        emoji: '🎯',  nome: 'Nível 50',             desc: 'Chegue ao nível 50 na tabuada',              meta: null  },
   { id: 'tabuada_100',       emoji: '💯',  nome: 'Nível 100',            desc: 'Chegue ao nível 100 na tabuada',             meta: null  },
+  { id: 'tabuada_150',       emoji: '🚀',  nome: 'Nível 150',            desc: 'Chegue ao nível 150 na tabuada',             meta: null  },
+  { id: 'tabuada_200',       emoji: '⚡',  nome: 'Nível 200',            desc: 'Chegue ao nível 200 na tabuada',             meta: null  },
+  { id: 'tabuada_250',       emoji: '🔥',  nome: 'Nível 250',            desc: 'Chegue ao nível 250 na tabuada',             meta: null  },
   { id: 'tabuada_300',       emoji: '🌟',  nome: 'Nível máximo',         desc: 'Chegue ao nível 300 na tabuada',             meta: null  },
   { id: 'tabuada_ouro',      emoji: '🥇',  nome: 'Todos com ⭐',         desc: 'Complete todos os 300 níveis sem erros pelo menos uma vez', meta: null },
   { id: 'tabuada_diamante',  emoji: '💎',  nome: 'Maestria Total',       desc: 'Complete todos os 300 níveis com maestria (3× perfeito)',   meta: null },
   // Atividades
   { id: 'primeira_atividade',emoji: '📝',  nome: 'Primeira atividade',   desc: 'Complete sua primeira atividade',            meta: null  },
   { id: 'atividade_100pct',  emoji: '🎖️', nome: 'Perfeito!',            desc: 'Tire 100% em uma atividade',                meta: null  },
+  { id: 'atividade_nota8',   emoji: '✅',  nome: 'Nota alta',            desc: 'Tire nota 8 ou mais em uma atividade',      meta: null  },
   // Streak
   { id: 'streak_3',          emoji: '🔥',   nome: 'Constante',            desc: 'Faça atividades por 3 semanas seguidas',     meta: 3     },
   { id: 'streak_7',          emoji: '🔥🔥', nome: 'Dedicado',             desc: 'Faça atividades por 7 semanas seguidas',     meta: 7     },
@@ -60,6 +64,9 @@ export async function verificarConquistas(uid, contexto = {}) {
     const nivelTab = contexto.nivelTabuada || 0;
     if (!tem('tabuada_50')  && nivelTab >= 50)  novas.push('tabuada_50');
     if (!tem('tabuada_100') && nivelTab >= 100) novas.push('tabuada_100');
+    if (!tem('tabuada_150') && nivelTab >= 150) novas.push('tabuada_150');
+    if (!tem('tabuada_200') && nivelTab >= 200) novas.push('tabuada_200');
+    if (!tem('tabuada_250') && nivelTab >= 250) novas.push('tabuada_250');
     if (!tem('tabuada_300') && nivelTab >= 300) novas.push('tabuada_300');
 
     if (nivelTab >= 300 && (!tem('tabuada_ouro') || !tem('tabuada_diamante'))) {
@@ -119,11 +126,14 @@ export async function verificarConquistas(uid, contexto = {}) {
       if (def) {
         try {
           const { push } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+          const texto = id === 'tabuada_300'
+            ? `🏆 ${nome} concluiu os 300 níveis e entrou no Hall da Fama!`
+            : `${def.emoji} ${nome} desbloqueou: ${def.nome}!`;
           await set(push(ref(db, 'feed_global')), {
             tipo:  'conquista',
             uid,
             nome,
-            texto: `${def.emoji} ${nome} desbloqueou: ${def.nome}!`,
+            texto,
             ts:    Date.now(),
           });
         } catch(e) {}

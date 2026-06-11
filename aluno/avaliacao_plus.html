@@ -1700,6 +1700,34 @@ async function encerrarSessao(motivo) {
         });
       } catch(e) {}
     }
+    // ── Marco: nota ≥ 8 na atividade ───────────────────────────
+    // Atividade 5 considera apenas a Fase 1 (nota_quiz); demais usam a
+    // nota final geral (pontuacao). Anuncia só a 1ª vez por aluno+atividade.
+    if (!isTeste) try {
+      const _atvNome = liberada?.atividade || '';
+      const _ehAtv5  = /atividade\s*5|^5\b/i.test(String(_atvNome));
+      const _notaMarco = _ehAtv5 ? (dados.nota_quiz || 0) : (dados.pontuacao || 0);
+      if (_notaMarco >= 8) {
+        const { push, set: fbSet, ref: fbRef, get: fbGet } =
+          await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+        const { db: fbDb } = await import('/js/firebase-config.js');
+        const _uidM = makeUid(alunos[0]);
+        const _chave = ('nota8_' + _atvNome).replace(/[.#$[\]/\s]/g, '_');
+        const _marcoRef = fbRef(fbDb, `feed_marcos/${_uidM}/${_chave}`);
+        const _jaTem = await fbGet(_marcoRef);
+        if (!_jaTem.exists()) {
+          await fbSet(_marcoRef, { ts: Date.now() });
+          await fbSet(push(fbRef(fbDb, 'feed_global')), {
+            tipo:  'atividade',
+            uid:   _uidM,
+            nome:  alunos[0],
+            turma,
+            texto: `✅ ${alunos[0]} tirou nota ${_notaMarco.toFixed(1)} na ${_atvNome || 'atividade'}!`,
+            ts:    Date.now(),
+          });
+        }
+      }
+    } catch(e) {}
     try {
       const { verificarConquistas } = await import('/js/conquistas.js');
       await verificarConquistas(makeUid(alunos[0]), {

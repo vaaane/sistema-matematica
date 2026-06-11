@@ -125,6 +125,17 @@ export async function getConquistas() {
   return result.reverse();
 }
 
+// Feed global de conquistas/marcos (usado no ticker da tela de login).
+// Retorna os itens mais recentes primeiro.
+export async function getFeedGlobal(limite = 40) {
+  const snap = await get(ref(db, "feed_global"));
+  if (!snap.exists()) return [];
+  const result = [];
+  snap.forEach(child => { result.push({ id: child.key, ...child.val() }); });
+  result.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  return result.slice(0, limite);
+}
+
 export async function salvarConquistas(list) {
   await Promise.all(list.map(item =>
     push(ref(db, "conquistas"), { ...item, criadoEm: serverTimestamp() })

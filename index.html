@@ -286,7 +286,7 @@
 
 <script type="module">
 import { ALUNOS_POR_TURMA } from "/js/constants.js";
-import { getConfig, getSenhaAluno, getResultados, getLiberadas, contarSessoesTabuadaHoje } from "/js/db.js";
+import { getConfig, getSenhaAluno, getResultados, getLiberadas, contarSessoesTabuadaHoje, getFeedGlobal } from "/js/db.js";
 import { getSession, setSession, hashSenha } from "/js/auth.js";
 
 // Redireciona se já logado
@@ -332,8 +332,8 @@ let liberadasCache = [];
 
 (async () => {
   try {
-    const [resultados, liberadas, sessTabuada] = await Promise.all([
-      getResultados(), getLiberadas(), contarSessoesTabuadaHoje()
+    const [resultados, liberadas, sessTabuada, feed] = await Promise.all([
+      getResultados(), getLiberadas(), contarSessoesTabuadaHoje(), getFeedGlobal(40)
     ]);
     liberadasCache = liberadas;
 
@@ -342,26 +342,10 @@ let liberadasCache = [];
     document.getElementById('statSessoesQuiz').textContent = sessQuiz;
     document.getElementById('statSessoesTabuada').textContent = sessTabuada;
 
-    // Ticker com dados reais
-    const concluidos = resultados.filter(r => r.concluido);
-    const melhorPorAluno = {};
-    const turmaPorAluno  = {};
-    concluidos.forEach(r => {
-      if (!melhorPorAluno[r.aluno] || r.pontuacao > melhorPorAluno[r.aluno]) melhorPorAluno[r.aluno] = r.pontuacao || 0;
-      turmaPorAluno[r.aluno] = r.turma;
-    });
-    const ranking = Object.entries(melhorPorAluno).sort((a, b) => b[1] - a[1]).slice(0, 10);
-    const hoje2 = concluidos.filter(r => r.data === hoje);
-
-    const tickerItems = [];
-    if (ranking[0]) tickerItems.push(`🏆 <span>${ranking[0][0]}</span> lidera com ${ranking[0][1]} pts`);
-    if (ranking[1]) tickerItems.push(`🥈 <span>${ranking[1][0]}</span> em 2º com ${ranking[1][1]} pts`);
-    if (ranking[2]) tickerItems.push(`🥉 <span>${ranking[2][0]}</span> em 3º com ${ranking[2][1]} pts`);
-    if (hoje2.length) tickerItems.push(`📈 <span>${hoje2.length} sessão${hoje2.length > 1 ? 'ões' : ''}</span> concluída${hoje2.length > 1 ? 's' : ''} hoje`);
-    for (let i = 3; i < Math.min(ranking.length, 8); i++) {
-      tickerItems.push(`⭐ <span>${ranking[i][0]}</span> — ${ranking[i][1]} pts · Turma ${turmaPorAluno[ranking[i][0]] || '?'}`);
-    }
-    liberadas.forEach(lib => tickerItems.push(`⚡ Atividade <span>${lib.atividade}</span> liberada para Turma ${lib.turma}`));
+    // Ticker: conquistas e marcos dos alunos (feed_global), mais recentes primeiro.
+    const tickerItems = feed
+      .filter(f => f && f.texto)
+      .map(f => f.texto);
 
     if (tickerItems.length > 0) {
       const ticker = document.getElementById('ticker');

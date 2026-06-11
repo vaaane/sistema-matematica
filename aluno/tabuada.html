@@ -1131,20 +1131,46 @@ function updateNivelDisplay() {
 
 function _buildLeadersHtml() {
   if (_isProfMode) return '';
-  const g = rankingAll[0], t = rankingTurma[0];
-  if (!g && !t) return '';
   const isMe = r => r && r._uid === uid;
+
+  // Hall da Fama = quem concluiu os 300 níveis. Quem está no Hall não
+  // disputa o ranking "Geral"/"Turma" exibido aos demais; o líder geral
+  // e o líder da turma passam a ser o 1º que AINDA NÃO concluiu os 300.
+  const hall      = rankingAll.filter(r => (r.melhor_nivel || 0) >= 300);
+  const g         = rankingEmProgresso[0];               // 1º geral (não concluiu 300)
+  const turmaProg = rankingEmProgresso.filter(r => r.turma === turma);
+  const t         = turmaProg[0];                        // 1º da turma (não concluiu 300)
+
+  if (!hall.length && !g && !t) return '';
   const lines = [];
+
+  // ── 🏆 Hall da Fama (concluintes dos 300) ──────────────────────
+  // Apenas nome + turma de cada concluinte (sem número de nível).
+  if (hall.length) {
+    const nomesHall = hall.map(r =>
+      `<strong>${isMe(r) ? 'Você' : escH(r.nome)}</strong><span style="color:var(--text-muted);font-weight:400"> - ${escH(r.turma||'')}</span>`
+    ).join('<span style="color:var(--text-muted)"> · </span>');
+    lines.push(
+      `<div style="font-size:11px;font-weight:600;color:#FBBF24;margin-bottom:2px">` +
+      `🏆 <span style="color:var(--text-muted);font-weight:400">Hall da Fama:</span> ${nomesHall}` +
+      `</div>`
+    );
+  }
+
+  // ── 🥇 Geral (1º que ainda não concluiu 300) ───────────────────
   if (g) {
     lines.push(isMe(g)
       ? `<div style="font-size:12px;font-weight:700;color:#D97706">👑 <span style="color:var(--text-muted);font-weight:600">Geral:</span> <strong>Você lidera! 🥇</strong></div>`
       : `<div style="font-size:12px;font-weight:600;color:#D97706">👑 <span style="color:var(--text-muted);font-weight:400;font-size:11px">Geral:</span> <strong>${escH(g.nome)}</strong><span style="color:var(--text-muted);font-weight:400"> · ${escH(g.turma||'')} · Nv ${g.melhor_nivel}</span></div>`);
   }
-  if (t && (!g || t.nome !== g.nome || t.turma !== g.turma)) {
+
+  // ── 🏅 Turma (1º da turma que ainda não concluiu 300) ──────────
+  if (t && (!g || t._uid !== g._uid)) {
     lines.push(isMe(t)
       ? `<div style="font-size:11px;color:#60A5FA;margin-top:2px">🏅 <span style="color:var(--text-muted);font-weight:400">Turma:</span> <strong>Você lidera!</strong></div>`
       : `<div style="font-size:11px;color:#60A5FA;margin-top:2px">🏅 <span style="color:var(--text-muted);font-weight:400">Turma:</span> <strong>${escH(t.nome)}</strong><span style="color:var(--text-muted);font-weight:400"> · Nv ${t.melhor_nivel}</span></div>`);
   }
+
   return lines.join('');
 }
 
@@ -1610,10 +1636,11 @@ function onCardClick(el, card) {
 }
 
 // ── Detecta maestria (3× perfeito consecutivo) de um nível ─────
-// Replica a lógica de jogos.html: lê o histórico do nível e conta
-// completions perfeitas consecutivas. Como salvarProgresso() já gravou
-// a partida atual antes do overlay, ela já está incluída na contagem.
-async function _checarMaestria(nivelAlvo) {
+// Lê o histórico do nível e conta completions perfeitas consecutivas.
+// Recebe errosPartidaAtual para garantir que a partida recém-salva
+// seja contabilizada mesmo que o Firebase ainda não tenha propagado
+// a entrada no cache — evita falso positivo na 2ª vez perfeita.
+async function _checarMaestria(nivelAlvo, errosPartidaAtual) {
   try {
     const _niveisBase = _isProfMode
       ? `professor_tabuada_niveis/${uid}`
@@ -1621,7 +1648,10 @@ async function _checarMaestria(nivelAlvo) {
         ? `modo_teste_historico/PROFESSOR_TESTE/tabuada_niveis`
         : `tabuada_niveis/${uid}`;
     const snap = await get(ref(db, `${_niveisBase}/historico`));
-    if (!snap.exists()) return false;
+    if (!snap.exists()) {
+      // historico vazio: se esta é a 1ª partida e foi perfeita, consec=1 (longe de 3)
+      return false;
+    }
     const entries = Object.entries(snap.val())
       .map(([ts, v]) => ({ ts: Number(ts), ...v }))
       .sort((a, b) => a.ts - b.ts);
@@ -1635,6 +1665,15 @@ async function _checarMaestria(nivelAlvo) {
         consec = 0;
       }
     }
+    // Garantia anti-cache: se a partida atual (recém-salva) ainda não apareceu
+    // no snapshot retornado, soma manualmente para não disparar maestria com 2x.
+    const _entriesDoNivel = entries.filter(e => e.nivel === nivelAlvo);
+    const _ultimaEntry    = _entriesDoNivel.at(-1);
+    const _jaInclusa      = _ultimaEntry
+      && (Date.now() - _ultimaEntry.ts) < 8000
+      && (_ultimaEntry.erros || 0) === (errosPartidaAtual || 0)
+      && _ultimaEntry.resultado === 'completou';
+    if (!_jaInclusa && (errosPartidaAtual || 0) === 0) consec++;
     return consec >= 3;
   } catch (e) {
     return false;
@@ -1682,8 +1721,8 @@ async function onGameWin() {
 
     // Maestria: 3× perfeito consecutivo → diamante. Calculado ANTES de
     // montar a tela para que a estrela não apareça primeiro.
-    const _maestriaReplay = (erros === 0 && !isChefao(nivelJogado))
-      ? await _checarMaestria(nivelJogado)
+    const _maestriaReplay = (erros === 0)
+      ? await _checarMaestria(nivelJogado, erros)
       : false;
 
     if (_maestriaReplay) {
@@ -1753,21 +1792,26 @@ async function onGameWin() {
   const foiChefao = isChefao(nivelJogado);
   // Maestria: 3× perfeito consecutivo → diamante. Calculado ANTES de
   // montar a tela para que a estrela não apareça primeiro.
-  const _maestria = (isEstrela && !foiChefao)
-    ? await _checarMaestria(nivelJogado)
+  const _maestria = isEstrela
+    ? await _checarMaestria(nivelJogado, erros)
     : false;
   const _tcWin    = foiChefao ? tipoChefaoAtual : null;
   const _bIco     = _tcWin === 'rapido' ? '⚡' : _tcWin === 'dificil' ? '🧮' : _tcWin === 'grande' ? '📦' : '👹';
   const _bNome    = _tcWin === 'rapido' ? 'Chefão Rápido' : _tcWin === 'dificil' ? 'Chefão Difícil' : _tcWin === 'grande' ? 'Chefão Grande' : 'Chefão';
   const _bCor     = _tcWin === 'dificil' ? '#A78BFA' : _tcWin === 'grande' ? '#60A5FA' : '#EF4444';
-  if (foiChefao) { lancarConfeteChefao(120); }
+  if (foiChefao && _maestria) { lancarConfeteChefao(120); lancarConfete(70); }
+  else if (foiChefao) { lancarConfeteChefao(120); }
   else if (_maestria) lancarConfete(70);
   else if (isEstrela) lancarConfete(50);
-  document.getElementById("lov-emoji").textContent = foiChefao ? _bIco : (_maestria ? '💎' : (isEstrela ? '⭐' : '🎉'));
-  document.getElementById("lov-title").textContent = foiChefao
+  document.getElementById("lov-emoji").textContent = (foiChefao && _maestria) ? '💎' : foiChefao ? _bIco : (_maestria ? '💎' : (isEstrela ? '⭐' : '🎉'));
+  document.getElementById("lov-title").textContent = (foiChefao && _maestria)
+    ? `💎 ${_bNome} derrotado com maestria!`
+    : foiChefao
     ? `${_bIco} ${_bNome} derrotado!`
     : (_maestria ? 'Você concluiu esse nível com maestria!' : (isEstrela ? '⭐ Nível com estrela!' : 'Avançou de nível!'));
-  document.getElementById("lov-sub").textContent   = foiChefao
+  document.getElementById("lov-sub").textContent   = (foiChefao && _maestria)
+    ? `Nível ${nivelJogado} — 3× perfeito consecutivo! ${isNewRecord ? '🌟 Novo recorde pessoal!' : ''}${_overtimeStr}`
+    : foiChefao
     ? `Nível ${nivelJogado} conquistado! ${isEstrela ? '⭐ Sem erros!' : ''} ${isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue avançando!'}${_overtimeStr}`
     : (_maestria
       ? `Nível ${nivelJogado} dominado — 3× perfeito consecutivo! ${isNewRecord ? '🌟 Novo recorde pessoal!' : ''}${_overtimeStr}`

@@ -625,7 +625,9 @@ async function encerrarPartida(motivo) {
   });
 
   // Marcar encerrado imediatamente — o outro lado detecta via onValue
-  await update(ref(db, `duelos/${dueloId}`), { status: 'encerrado', vencedor_uid: adversarioUid, encerrado_por_abandono: true });
+  // Não gravar vencedor_uid nem encerrado_por_abandono: encerramento por tempo
+  // determina vencedor por pontuação em mostrarResultado(), não por quem zerou primeiro.
+  await update(ref(db, `duelos/${dueloId}`), { status: 'encerrado' });
   await atualizarPresenca({ em_duelo: false, status: 'disponivel' });
 
   // Aguardar resultado do adversário (max 1.5s) para mostrar placar completo

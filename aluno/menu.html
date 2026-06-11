@@ -76,17 +76,20 @@
       .tabuada-btns{flex-direction:column;}
     }
     @media(max-width:768px){
+      /* Resumo de Desempenho: 3 colunas em toda a faixa mobile
+         (sobrepõe a regra de 2 colunas do main.css em 481–768px). */
+      .mini-stats{grid-template-columns:repeat(3,1fr)}
       .grid-2{display:flex!important;flex-direction:column;}
       #col-left,#col-right{display:contents;}
       #card-resumo{order:1;}
       #card-liberada{order:2;}
-      #tabuada-game-card{order:3;}
-      #card-atividades{order:4;}
-      #card-historico{order:5;}
-      #aquecimento-card{order:6;}
-      #feed-card{order:7;}
-      #tab-ranking-card{order:8;}
-      #quiz-top3-card{order:9;}
+      #aquecimento-card{order:3;}
+      #tabuada-game-card{order:4;}
+      #card-atividades{order:5;}
+      #feed-card{order:6;}
+      #tab-ranking-card{order:7;}
+      #quiz-top3-card{order:8;}
+      #card-historico{order:9;}
       /* Conter overflow horizontal — cards com overflow:visible e filhos absolutos estouram a tela */
       .grid-2{width:100%;max-width:100%;}
       #card-resumo,#tabuada-game-card,#tab-ranking-card,#quiz-top3-card,#card-liberada,#card-atividades,#card-historico{
@@ -319,6 +322,24 @@ const liberadas = isModoTeste()
   : _libRaw;
 const nivelTabuada = tabuadaSnap?.exists() ? (tabuadaSnap.val().melhor_nivel || tabuadaSnap.val().nivel_atual || 1) : 1;
 const todos = todosRaw.filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
+
+// ── Dados extras por aluno (tabuada · duelos · treinos) p/ o Resumo ──
+const _uidDe = (nome) => (turma + '_' + nome).replace(/[.#$[\]/\s]/g, '_');
+const dadosExtra = {};
+await Promise.all(alunos.map(async (nome) => {
+  const u = _uidDe(nome);
+  const [tabSnap, perfSnap, aqSnap] = await Promise.all([
+    get(ref(db, `tabuada_niveis/${u}`)).catch(() => null),
+    get(ref(db, `perfis/${u}`)).catch(() => null),
+    get(ref(db, `aquecimento/${u}`)).catch(() => null),
+  ]);
+  dadosExtra[nome] = {
+    nivelTab:  tabSnap?.exists() ? (tabSnap.val().melhor_nivel || tabSnap.val().nivel_atual || 1) : 1,
+    duelosVit: perfSnap?.exists() ? (perfSnap.val().duelos_vitorias || 0) : 0,
+    treinos:   aqSnap?.exists()   ? Object.keys(aqSnap.val()).length : 0,
+  };
+}));
+
 initAvBanner(turma, alunos[0], liberadas);
 
 // ── Avaliação+ controle ───────────────────────────────────────
@@ -860,13 +881,11 @@ ${tempoPodioHtml}
       </div>
       ${alunos.map(a => {
         const r = resumoAluno(a);
-        const nota3 = r.total_ativ > 0 ? ((r.totalPts / (r.total_ativ * 10)) * 3).toFixed(1).replace('.', ',') : null;
+        const ex = dadosExtra[a] || { nivelTab: 1, duelosVit: 0, treinos: 0 };
         const propAluno = notaProp(a);
         const tooltipAbaixo = propAluno !== null && mediaTurma !== null && propAluno < mediaTurma ? 'title="Você está abaixo da média da turma, mas pode recuperar nas próximas atividades. Fique atento(a)!"' : '';
-        const geralColor = r.posGeral === 1 ? '#F59E0B' : r.posGeral === 2 ? '#9CA3AF' : r.posGeral === 3 ? '#CD853F' : 'var(--blue)';
         const turmaColor = r.posTurma === 1 ? '#F59E0B' : 'var(--orange)';
         const wrapStyle  = r.posGeral === 1 ? 'border-color:rgba(245,158,11,.4);background:linear-gradient(135deg,rgba(245,158,11,.07),transparent)' : '';
-        const geralCrown = r.posGeral === 1 ? '<div style="font-size:10px;line-height:1;margin-bottom:1px">👑</div>' : '';
         const turmaCrown = r.posTurma === 1 ? '<div style="font-size:10px;line-height:1;margin-bottom:1px">👑</div>' : '';
         return `<div class="resumo-wrap" style="${wrapStyle}" ${tooltipAbaixo}>
           <div class="resumo-header">
@@ -875,11 +894,11 @@ ${tempoPodioHtml}
           </div>
           <div class="mini-stats">
             <div class="mini-stat"><div class="mini-stat-value" style="color:var(--gold);font-size:22px">${r.total_ativ > 0 ? r.totalPts+'/'+r.total_ativ*10 : '—'}</div><div class="mini-stat-label">Nota</div></div>
-            <div class="mini-stat"><div class="mini-stat-value" style="color:${turmaColor};font-size:22px">${turmaCrown}${r.posTurma === '—' ? '—' : '#'+r.posTurma}</div><div class="mini-stat-label">Na Turma</div></div>
-            <div class="mini-stat"><div class="mini-stat-value" style="color:${geralColor};font-size:22px">${geralCrown}${r.posGeral === '—' ? '—' : '#'+r.posGeral}</div><div class="mini-stat-label">Geral</div></div>
-            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green);font-size:22px">${nota3 !== null ? nota3+'/3,0' : '—/3,0'}</div><div class="mini-stat-label">Nota (vale 3,0)</div></div>
-            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green);font-size:22px">${r.acertos}</div><div class="mini-stat-label">✅ Acertos</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:${turmaColor};font-size:22px">${turmaCrown}${r.posTurma === '—' ? '—' : '#'+r.posTurma}</div><div class="mini-stat-label">🏅 Na Turma</div></div>
             <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green);font-size:22px">${r.taxa !== null ? r.taxa + '%' : '—'}</div><div class="mini-stat-label">📊 Taxa</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue);font-size:22px">${ex.nivelTab}</div><div class="mini-stat-label">🔢 Nível tabuada</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:#EF4444;font-size:22px">${ex.duelosVit}</div><div class="mini-stat-label">⚔️ Duelos vencidos</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--orange);font-size:22px">${ex.treinos}</div><div class="mini-stat-label">🔥 Treinos diários</div></div>
           </div>
           ${(() => {
             const meta = computeProximaMeta(a);
