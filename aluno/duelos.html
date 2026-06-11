@@ -283,6 +283,54 @@
     .hist-xp { font-size:11px;font-weight:800;white-space:nowrap;flex-shrink:0;min-width:52px;text-align:right; }
     .hist-xp.pos { color:#22c55e; }
     .hist-xp.neg { color:#ef4444; }
+
+    /* ── Mini-perfil modal ── */
+    .profile-modal { background: var(--card); border: 1px solid rgba(255,255,255,.1); border-radius: 20px; width: 100%; max-width: 320px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.6); }
+    .pm-header { background: linear-gradient(135deg,rgba(47,158,220,.12),rgba(124,92,252,.08)); padding: 18px 18px 14px; display: flex; gap: 14px; align-items: center; border-bottom: 1px solid var(--border); }
+    .pm-av { width: 58px; height: 58px; border-radius: 50%; overflow: hidden; flex-shrink: 0; border: 2px solid rgba(255,255,255,.12); box-shadow: 0 4px 16px rgba(0,0,0,.3); background: var(--card2); }
+    .pm-av img { width: 100%; height: 100%; object-fit: cover; }
+    .pm-name { font-family: 'Rajdhani', sans-serif; font-size: 19px; font-weight: 700; color: var(--text); }
+    .pm-turma { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .pm-level { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; background: rgba(249,115,22,.1); border: 1px solid rgba(249,115,22,.22); border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 700; color: var(--orange); }
+    .pm-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
+    .pm-stat { background: var(--card); padding: 11px 6px; text-align: center; }
+    .pm-stat-num { font-size: 17px; font-weight: 800; line-height: 1; }
+    .pm-stat-num.gold { color: var(--gold); }
+    .pm-stat-num.blue { color: var(--blue); }
+    .pm-stat-num.purple { color: var(--purple); font-size: 13px; }
+    .pm-stat-label { font-size: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .8px; margin-top: 3px; }
+    .pm-h2h { padding: 10px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .pm-h2h-label { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+    .pm-h2h-score { font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .pm-h2h-score .green { color: var(--green); }
+    .pm-h2h-score .red   { color: var(--red); }
+    .pm-h2h-score .muted { color: var(--text-muted); font-size: 12px; }
+    .pm-h2h-tag { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 10px; }
+    .pm-h2h-tag.winning { background: rgba(34,197,94,.15); color: var(--green); border: 1px solid rgba(34,197,94,.25); }
+    .pm-h2h-tag.losing  { background: rgba(239,68,68,.12); color: var(--red);   border: 1px solid rgba(239,68,68,.2); }
+    .pm-h2h-tag.even    { background: rgba(255,255,255,.06); color: var(--text-muted); border: 1px solid var(--border); }
+    .pm-emojis { padding: 12px 18px; border-bottom: 1px solid var(--border); }
+    .pm-emojis-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
+    .pm-emoji-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 5px; }
+    .pm-ej-btn { height: 36px; background: var(--card2); border: 1px solid var(--border); border-radius: 9px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+    .pm-ej-btn:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.2); transform: scale(1.15); }
+    .pm-ej-btn:active { transform: scale(.9); }
+    .pm-ej-btn.sent { background: rgba(249,115,22,.18); border-color: rgba(249,115,22,.4); }
+    .pm-cooldown-bar { height: 2px; background: var(--border); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+    .pm-cooldown-fill { height: 100%; background: var(--orange); border-radius: 2px; width: 0; transition: width .1s linear; }
+    .pm-spam-msg { font-size: 11px; color: var(--text-muted); margin-top: 6px; text-align: center; }
+    .pm-footer { padding: 12px 18px; }
+    .pm-btn-desafiar { width: 100%; padding: 12px; background: linear-gradient(135deg,var(--purple),#5a3fcf); border: none; border-radius: 12px; font-family: 'Rajdhani',sans-serif; font-size: 16px; font-weight: 700; color: #fff; cursor: pointer; box-shadow: 0 4px 16px rgba(124,92,252,.3); transition: all .2s; }
+    .pm-btn-desafiar:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,252,.5); }
+
+    /* ── Emoji feed ── */
+    @keyframes bubbleIn { 0%{opacity:0;transform:translateX(-50%) translateY(20px) scale(.7)} 60%{opacity:1;transform:translateX(-50%) translateY(-6px) scale(1.05)} 100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)} }
+    @keyframes bubbleOut { 0%{opacity:1} 100%{opacity:0;transform:translateX(-50%) translateY(-20px) scale(.7)} }
+    @keyframes feedItemIn  { from{opacity:0;transform:translateX(18px)} to{opacity:1;transform:translateX(0)} }
+    @keyframes feedItemOut { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(18px)} }
+    .emoji-feed-item { background:rgba(13,15,26,.85); border:1px solid rgba(255,255,255,.09); border-radius:11px; padding:6px 11px; display:flex; align-items:center; gap:8px; backdrop-filter:blur(10px); animation:feedItemIn .3s ease; font-size:11px; color:rgba(255,255,255,.5); }
+    .emoji-feed-item .ef-emoji { font-size:19px; flex-shrink:0; }
+    .emoji-feed-item strong { color:#fff; font-weight:700; }
   </style>
 </head>
 <body>
@@ -535,6 +583,41 @@ onValue(ref(db, `notif_dupla/${uid}`), snap => {
   showToast(n.msg || 'Seu parceiro fez login e a dupla foi desfeita.', 'warn', 5000);
 });
 
+// ── Emoji recebido ────────────────────────────────────────────
+onValue(ref(db, `notif_emoji/${uid}/reacao`), async snap => {
+  if (!snap.exists()) return;
+  const d = snap.val();
+  if (!d?.emoji || !d?.ts) return;
+  if (Date.now() - d.ts > 10000) { await set(snap.ref, null); return; }
+  mostrarBolhaEmoji(d.emoji, d.de || '?');
+  adicionarFeedEmoji(d.emoji, d.de || '?', sess.alunos[0] || 'você');
+  await set(snap.ref, null);
+});
+
+onValue(ref(db, `notif_emoji/${uid}/watching`), async snap => {
+  if (!snap.exists()) return;
+  const d = snap.val();
+  if (!d?.ts || Date.now() - d.ts > 10000) { await set(snap.ref, null); return; }
+  showToast('👀 alguém está te observando…', 'info');
+  await set(snap.ref, null);
+});
+
+onValue(ref(db, 'emoji_feed'), snap => {
+  if (!snap.exists()) return;
+  const feed = document.getElementById('emoji-feed');
+  if (!feed) return;
+  feed.innerHTML = '';
+  const items = [];
+  snap.forEach(c => items.push(c.val()));
+  items.sort((a,b) => (b.ts||0)-(a.ts||0)).slice(0,5).forEach(d => {
+    if (!d?.emoji) return;
+    const item = document.createElement('div');
+    item.className = 'emoji-feed-item';
+    item.innerHTML = `<span class="ef-emoji">${d.emoji}</span><span><strong>${escH(d.de||'?')}</strong> → <strong>${escH(d.para||'?')}</strong></span>`;
+    feed.appendChild(item);
+  });
+});
+
 // ── Dupla de duelo ────────────────────────────────────────────
 window.abrirDuplaPanel = function() {
   document.getElementById('dupla-btn-wrap').style.display = 'none';
@@ -733,7 +816,7 @@ function renderOnlineCard(aluno) {
     ? `${escH(aluno.turma || _turmaDoUidOnline(aluno.uid))} · ${escH(aluno.parceiro_turma || '?')}`
     : escH(aluno.turma || _turmaDoUidOnline(aluno.uid));
   return `
-    <div class="online-card${!st.disponivel ? ' in-duel' : ''}">
+    <div class="online-card${!st.disponivel ? ' in-duel' : ''}" onclick="abrirModalPerfil('${aluno.uid}','${escH(nomeBase)}')" style="cursor:pointer">
       ${temParceiro ? '<div class="oc-dupla">DUPLA</div>' : ''}
       <div class="oc-top">
         <div class="oc-av"><img src="${av}" alt="" onerror="this.src=''"></div>
@@ -744,8 +827,8 @@ function renderOnlineCard(aluno) {
         <div class="oc-dot" style="background:${st.dot}"></div>
       </div>
       ${st.disponivel
-        ? `<button class="btn-desafiar" onclick="abrirModalDesafio('${aluno.uid}','${escH(nomeBase)}',${temParceiro})">⚔️ Desafiar</button>`
-        : `<button class="btn-desafiar" style="opacity:.4;cursor:not-allowed" disabled>${st.label}</button>`}
+        ? `<button class="btn-desafiar" onclick="event.stopPropagation();abrirModalDesafio('${aluno.uid}','${escH(nomeBase)}',${temParceiro})">⚔️ Desafiar</button>`
+        : `<button class="btn-desafiar" style="opacity:.4;cursor:not-allowed" disabled onclick="event.stopPropagation()">${st.label}</button>`}
     </div>`;
 }
 
@@ -890,6 +973,194 @@ window.cancelarDesafio = async function() {
   if (_ban) _ban.style.display = 'none';
   document.getElementById('btnDesafioAberto').disabled = false;
 };
+
+// ── Mini-perfil + emojis ──────────────────────────────────────
+const EMOJIS = ['👊','😤','🔥','💀','😂','👑','😈','❤️','🌸','✨','🤝','😊','🫶','🥺'];
+let _pmAlvoUid  = null;
+let _pmAlvoNome = null;
+let _emojiWindow = [];
+let _bubbleTimer = null;
+
+window.abrirModalPerfil = async function(alvoUid, nomeBase) {
+  const modal = document.getElementById('modal-perfil');
+  modal.style.display = 'flex';
+  document.getElementById('pm-name').textContent  = nomeBase;
+  document.getElementById('pm-turma').textContent = '…';
+  document.getElementById('pm-level').textContent  = '…';
+  document.getElementById('pm-rank').textContent   = '…';
+  document.getElementById('pm-total').textContent  = '…';
+  document.getElementById('pm-fav').textContent    = '…';
+  document.getElementById('pm-h2h-me').textContent  = '—';
+  document.getElementById('pm-h2h-adv').textContent = '—';
+
+  try { await set(ref(db, `notif_emoji/${alvoUid}/watching`), { ts: Date.now() }); } catch(_) {}
+
+  const [perfSnap, histSnap, meuHistSnap, todosSnap] = await Promise.all([
+    get(ref(db, `perfis/${alvoUid}`)).catch(()=>null),
+    get(ref(db, `perfis/${alvoUid}/historico_duelos`)).catch(()=>null),
+    get(ref(db, `perfis/${uid}/historico_duelos`)).catch(()=>null),
+    get(ref(db, 'perfis')).catch(()=>null),
+  ]);
+
+  const p = perfSnap?.val() || {};
+
+  const avEl = document.getElementById('pm-av');
+  const avConfig = p.avatar || avatarConfigDefault();
+  const letraFallback = (p.apelido_ativo || p.nome || nomeBase || '?')[0].toUpperCase();
+  avEl.innerHTML = avatarHtml(avConfig, letraFallback, '100%');
+  document.getElementById('pm-name').textContent  = p.apelido_ativo || p.nome || nomeBase;
+  document.getElementById('pm-turma').textContent = `Turma ${p.turma || '?'}`;
+  document.getElementById('pm-level').textContent  = `⚡ Nível ${p.nivel || 1} · ${p.xp || 0} XP`;
+  document.getElementById('pm-total').textContent  = p.duelos_total || 0;
+
+  let rankPos = '—';
+  if (todosSnap?.exists()) {
+    const lista = [];
+    todosSnap.forEach(c => {
+      const v = c.val();
+      if (!v?.nome || v.nome.includes('PROFESSOR') || v.nome.includes('TESTE')) return;
+      if ((v.duelos_vitorias||0) === 0 && (v.duelos_total||0) === 0) return;
+      lista.push({ uid: c.key, vitorias: v.duelos_vitorias||0, xp: v.xp||0 });
+    });
+    lista.sort((a,b) => b.vitorias - a.vitorias || b.xp - a.xp);
+    const idx = lista.findIndex(x => x.uid === alvoUid);
+    rankPos = idx >= 0 ? `#${idx+1}` : '—';
+  }
+  document.getElementById('pm-rank').textContent = rankPos;
+
+  let favLabel = '—';
+  if (histSnap?.exists()) {
+    const cont = { facil:0, medio:0, dificil:0 };
+    histSnap.forEach(c => { const d = c.val()?.dificuldade; if (d && cont[d] !== undefined) cont[d]++; });
+    const fav = Object.entries(cont).sort((a,b)=>b[1]-a[1])[0];
+    if (fav && fav[1] > 0) favLabel = fav[0]==='facil'?'🟢 Fácil':fav[0]==='medio'?'🟡 Médio':'🔴 Difícil';
+  }
+  document.getElementById('pm-fav').textContent = favLabel;
+
+  let meWins = 0, advWins = 0;
+  if (meuHistSnap?.exists()) {
+    meuHistSnap.forEach(c => {
+      const d = c.val();
+      if (d?.adversario_uid !== alvoUid) return;
+      if (d.resultado === 'vitoria') meWins++;
+      else if (d.resultado === 'derrota') advWins++;
+    });
+  }
+  document.getElementById('pm-h2h-me').textContent  = `${meWins}v`;
+  document.getElementById('pm-h2h-adv').textContent = `${advWins}d`;
+  const tag = document.getElementById('pm-h2h-tag');
+  tag.className = 'pm-h2h-tag';
+  if (meWins === 0 && advWins === 0) { tag.classList.add('even');    tag.textContent = 'Nunca duelaram'; }
+  else if (meWins > advWins)         { tag.classList.add('winning'); tag.textContent = 'Você vence'; }
+  else if (meWins < advWins)         { tag.classList.add('losing');  tag.textContent = 'Perdendo'; }
+  else                               { tag.classList.add('even');    tag.textContent = 'Empate'; }
+
+  const nomeExib = p.apelido_ativo || p.nome || nomeBase;
+  document.getElementById('pm-btn-nome').textContent = nomeExib;
+  document.getElementById('pm-btn-desafiar-action')?.remove();
+  const btnAction = document.createElement('button');
+  btnAction.id = 'pm-btn-desafiar-action';
+  btnAction.style.display = 'none';
+  btnAction.onclick = () => abrirModalDesafio(alvoUid, nomeBase, !!(p.parceiro_nome));
+  document.body.appendChild(btnAction);
+
+  _pmAlvoUid  = alvoUid;
+  _pmAlvoNome = nomeExib;
+  renderEmojiGrid();
+  resetEmojiCount();
+};
+
+window.fecharModalPerfil = function() {
+  document.getElementById('modal-perfil').style.display = 'none';
+  document.getElementById('pm-btn-desafiar-action')?.remove();
+};
+
+function renderEmojiGrid() {
+  const grid = document.getElementById('pm-emoji-grid');
+  if (!grid) return;
+  grid.innerHTML = EMOJIS.map(e =>
+    `<button class="pm-ej-btn" onclick="enviarEmojiPerfil('${e}',this)">${e}</button>`
+  ).join('');
+}
+
+function resetEmojiCount() {
+  _emojiWindow = _emojiWindow.filter(t => Date.now() - t < 60000);
+  const restam = 10 - _emojiWindow.length;
+  const countEl = document.getElementById('pm-emoji-count');
+  if (countEl) countEl.textContent = restam > 0 ? `(${restam} restantes)` : '(limite atingido 😄)';
+  const spamEl = document.getElementById('pm-spam-msg');
+  if (spamEl) spamEl.style.display = restam <= 0 ? 'block' : 'none';
+  const fill = document.getElementById('pm-cooldown-fill');
+  if (fill) fill.style.width = `${(restam / 10) * 100}%`;
+}
+
+window.enviarEmojiPerfil = async function(emoji, btn) {
+  if (!_pmAlvoUid) return;
+  _emojiWindow = _emojiWindow.filter(t => Date.now() - t < 60000);
+  if (_emojiWindow.length >= 10) {
+    const sp = document.getElementById('pm-spam-msg');
+    if (sp) sp.style.display = 'block';
+    return;
+  }
+  _emojiWindow.push(Date.now());
+  resetEmojiCount();
+
+  btn.classList.add('sent');
+  setTimeout(() => btn.classList.remove('sent'), 400);
+
+  const meuNomeExib = sess.alunos[0] || uid;
+
+  try {
+    await set(ref(db, `notif_emoji/${_pmAlvoUid}/reacao`), { de: meuNomeExib, emoji, ts: Date.now() });
+  } catch(_) {}
+
+  mostrarBolhaEmoji(emoji, _pmAlvoNome);
+  adicionarFeedEmoji(emoji, meuNomeExib, _pmAlvoNome);
+  gravarFeedEmoji(emoji, meuNomeExib, _pmAlvoNome);
+};
+
+function mostrarBolhaEmoji(emoji, para) {
+  const el = document.getElementById('emoji-bubble');
+  if (!el) return;
+  document.getElementById('bubble-emoji').textContent  = emoji;
+  document.getElementById('bubble-sender').textContent = sess.alunos[0] || 'Você';
+  document.getElementById('bubble-target').textContent = para;
+  el.style.display = 'flex';
+  el.style.animation = 'bubbleIn .4s cubic-bezier(.34,1.4,.64,1) both';
+  clearTimeout(_bubbleTimer);
+  _bubbleTimer = setTimeout(() => {
+    el.style.animation = 'bubbleOut .3s ease forwards';
+    setTimeout(() => { el.style.display = 'none'; }, 300);
+  }, 4000);
+}
+
+function adicionarFeedEmoji(emoji, de, para) {
+  if (!emoji || !de || !para) return;
+  const feed = document.getElementById('emoji-feed');
+  if (!feed) return;
+  const item = document.createElement('div');
+  item.className = 'emoji-feed-item';
+  item.innerHTML = `<span class="ef-emoji">${emoji}</span><span><strong>${escH(de)}</strong> → <strong>${escH(para)}</strong></span>`;
+  feed.insertBefore(item, feed.firstChild);
+  while (feed.children.length > 5) feed.removeChild(feed.lastChild);
+  setTimeout(() => {
+    item.style.animation = 'feedItemOut .3s ease forwards';
+    setTimeout(() => item.remove(), 300);
+  }, 7000);
+}
+
+async function gravarFeedEmoji(emoji, de, para) {
+  try {
+    const newRef = push(ref(db, 'emoji_feed'));
+    await set(newRef, { emoji, de, para, ts: Date.now() });
+    const snap = await get(ref(db, 'emoji_feed'));
+    if (!snap.exists()) return;
+    const agora = Date.now();
+    const updates = {};
+    snap.forEach(c => { if (agora - (c.val()?.ts||0) > 60000) updates[c.key] = null; });
+    if (Object.keys(updates).length) await update(ref(db, 'emoji_feed'), updates);
+  } catch(_) {}
+}
 
 // ── Receber desafios em tempo real ────────────────────────────
 const _notifVistas = new Set();
@@ -1338,5 +1609,58 @@ async function carregarRankingDuelos() {
   </div>
   <button onclick="cancelarDesafio()" style="background:rgba(239,68,68,.15);border:1.5px solid rgba(239,68,68,.5);color:#ef4444;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:800;cursor:pointer;flex-shrink:0;white-space:nowrap">✕ Cancelar</button>
 </div>
+
+<!-- Mini-perfil modal -->
+<div id="modal-perfil" class="modal-overlay" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px" onclick="fecharModalPerfil()">
+  <div class="profile-modal" onclick="event.stopPropagation()">
+    <div class="pm-header">
+      <div id="pm-av" class="pm-av"></div>
+      <div>
+        <div id="pm-name" class="pm-name"></div>
+        <div id="pm-turma" class="pm-turma"></div>
+        <div id="pm-level" class="pm-level"></div>
+      </div>
+    </div>
+    <div class="pm-stats">
+      <div class="pm-stat"><div id="pm-rank"  class="pm-stat-num gold">—</div><div class="pm-stat-label">Ranking</div></div>
+      <div class="pm-stat"><div id="pm-total" class="pm-stat-num blue">—</div><div class="pm-stat-label">Duelos</div></div>
+      <div class="pm-stat"><div id="pm-fav"   class="pm-stat-num purple">—</div><div class="pm-stat-label">Favorito</div></div>
+    </div>
+    <div class="pm-h2h">
+      <div>
+        <div class="pm-h2h-label">Vocês já se enfrentaram</div>
+        <div class="pm-h2h-score">
+          <span id="pm-h2h-me"  class="green">0v</span>
+          <span class="muted">×</span>
+          <span id="pm-h2h-adv" class="red">0d</span>
+        </div>
+      </div>
+      <span id="pm-h2h-tag" class="pm-h2h-tag even">Nunca duelaram</span>
+    </div>
+    <div class="pm-emojis">
+      <div class="pm-emojis-label">Mandar emoji <span id="pm-emoji-count" style="font-weight:400;color:var(--text-muted)">(10 restantes)</span></div>
+      <div class="pm-emoji-grid" id="pm-emoji-grid"></div>
+      <div class="pm-cooldown-bar"><div id="pm-cooldown-fill" class="pm-cooldown-fill"></div></div>
+      <div id="pm-spam-msg" class="pm-spam-msg" style="display:none">Ei, calma! Você está mandando muitos emojis. Aguarde um pouco 😄</div>
+    </div>
+    <div class="pm-footer">
+      <button id="pm-btn-desafiar" class="pm-btn-desafiar" onclick="fecharModalPerfil();setTimeout(()=>document.getElementById('pm-btn-desafiar-action')?.click(),100)">
+        ⚔️ Desafiar <span id="pm-btn-nome">—</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Emoji bubble (aparece quando recebe/envia emoji) -->
+<div id="emoji-bubble" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(13,15,26,.92);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:10px 18px;align-items:center;gap:10px;z-index:9000;backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,.5);pointer-events:none;white-space:nowrap">
+  <span id="bubble-emoji" style="font-size:28px"></span>
+  <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.4">
+    <strong id="bubble-sender" style="color:#fff"></strong> mandou para <strong id="bubble-target" style="color:#fff"></strong>
+  </div>
+</div>
+
+<!-- Emoji feed (canto inferior direito) -->
+<div id="emoji-feed" style="position:fixed;bottom:20px;right:16px;width:200px;z-index:500;display:flex;flex-direction:column;gap:5px;pointer-events:none"></div>
+
 </body>
 </html>
