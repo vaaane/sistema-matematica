@@ -635,7 +635,7 @@ onValue(ref(db, `notif_emoji/${uid}/watching`), async snap => {
   if (!snap.exists()) return;
   const d = snap.val();
   if (!d?.ts || Date.now() - d.ts > 10000) { await set(snap.ref, null); return; }
-  showToast('👀 alguém está te observando…', 'info');
+  showToast('👀 alguém está te observando…', 'info', 5000);
   await set(snap.ref, null);
 });
 
