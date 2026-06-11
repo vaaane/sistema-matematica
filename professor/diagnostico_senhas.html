@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Diagnóstico — Alunos sem senha</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .diag-section { max-width: 800px; }
+    .resumo { font-size: 13px; color: var(--text-muted); margin: 8px 0 16px; line-height: 1.6; }
+    .diag-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .diag-table th { text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase;
+                     letter-spacing: .6px; color: var(--text-muted); padding: 6px 10px;
+                     border-bottom: 1px solid var(--border); }
+    .diag-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); }
+    .diag-table tr:last-child td { border-bottom: none; }
+    .tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px;
+           border-radius: 10px; margin-right: 3px; }
+    .tag-tab  { background: rgba(0,212,255,.15); color: #00d4ff; }
+    .tag-atv  { background: rgba(124,92,252,.15); color: var(--purple); }
+    .tag-sem  { background: rgba(239,68,68,.15); color: #ef4444; }
+    .log-area { background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+                padding: 14px; font-size: 12px; font-family: 'Courier New', monospace;
+                max-height: 200px; overflow-y: auto; color: var(--text-muted); line-height: 1.7; }
+    .log-ok   { color: #16A34A; } .log-warn { color: #D97706; }
+    .log-err  { color: #DC2626; } .log-info { color: var(--blue); }
+    .status-loading { color: var(--text-muted); font-size: 13px; padding: 32px; text-align: center; }
+    .count-badge { font-size: 18px; font-weight: 800; color: var(--text); }
+    .count-label { font-size: 11px; color: var(--text-muted); }
+    .stats-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 16px; }
+    .stat-box { background: var(--card2); border-radius: 10px; padding: 12px 16px; min-width: 100px; }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Diagnóstico — Alunos sem senha</div>
+        <div class="topbar-sub">Alunos com dados no Firebase mas sem senha cadastrada</div>
+      </div>
+      <div class="topbar-right">
+        <a href="/professor/dashboard.html" class="btn btn-ghost">← Painel</a>
+      </div>
+    </div>
+    <div class="content">
+      <div class="diag-section">
+
+        <div class="card" style="margin-bottom:20px">
+          <button class="btn btn-blue" onclick="analisar()">🔍 Analisar</button>
+          <div class="resumo">
+            Lista alunos que têm dados de <strong>tabuada</strong> (<code>tabuada_niveis</code>) ou
+            <strong>atividades</strong> (<code>resultados</code>) no Firebase mas cuja senha
+            está marcada como "não cadastrada" em <code>aluno_senhas</code>.
+            Filtro: ignora perfis PROFESSOR/TESTE.
+          </div>
+        </div>
+
+        <div id="stats-wrap" style="display:none" class="stats-row">
+          <div class="stat-box"><div class="count-badge" id="st-total">—</div><div class="count-label">alunos analisados</div></div>
+          <div class="stat-box"><div class="count-badge" id="st-dados">—</div><div class="count-label">com dados</div></div>
+          <div class="stat-box"><div class="count-badge" id="st-sem">—</div><div class="count-label">sem senha</div></div>
+        </div>
+
+        <div id="resultado-wrap">
+          <div class="status-loading">Clique em "🔍 Analisar" para começar.</div>
+        </div>
+
+        <div class="card" style="margin-top:20px">
+          <div class="card-title" style="margin-bottom:10px">Log</div>
+          <div class="log-area" id="log-area">Aguardando…</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireProfessor, renderSidebarProfessor, clearSession } from '/js/auth.js';
+import { db } from '/js/firebase-config.js';
+import { ref, get } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+
+const sess = requireProfessor();
+if (!sess) throw new Error();
+renderSidebarProfessor('sidebar', '');
+window.sair = () => { clearSession(); window.location.href = '/index.html'; };
+
+function log(msg, tipo = 'info') {
+  const el = document.getElementById('log-area');
+  const ts = new Date().toLocaleTimeString('pt-BR');
+  el.innerHTML += `<div class="log-${tipo}">[${ts}] ${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+function escH(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Reconstrói a chave usada em aluno_senhas (mesma lógica do db.js)
+function senhaKey(turma, nome) {
+  return btoa(unescape(encodeURIComponent(turma + '|' + nome)))
+    .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+}
+
+// Reconstrói o UID turma_nome usado em tabuada_niveis (mesma lógica do auth.js)
+function makeUidTurma(turma, nome) {
+  return (turma + '_' + nome).replace(/[.#$[\]/\s]/g, '_');
+}
+
+window.analisar = async function() {
+  document.getElementById('log-area').innerHTML = '';
+  document.getElementById('resultado-wrap').innerHTML = '<div class="status-loading">Carregando dados do Firebase…</div>';
+  document.getElementById('stats-wrap').style.display = 'none';
+
+  log('Lendo alunos, senhas, tabuada_niveis e resultados…', 'info');
+
+  // Ler os 4 nós em paralelo
+  let [snapAlunos, snapSenhas, snapTabuada, snapResultados] = [];
+  try {
+    [snapAlunos, snapSenhas, snapTabuada, snapResultados] = await Promise.all([
+      get(ref(db, 'alunos')),
+      get(ref(db, 'aluno_senhas')),
+      get(ref(db, 'tabuada_niveis')),
+      get(ref(db, 'resultados')),
+    ]);
+  } catch(e) {
+    document.getElementById('resultado-wrap').innerHTML = '<div class="status-loading">Erro ao ler Firebase.</div>';
+    log('Erro: ' + e.message, 'err');
+    return;
+  }
+
+  // Conjunto de chaves com senha cadastrada
+  const temSenha = new Set();
+  if (snapSenhas.exists()) {
+    snapSenhas.forEach(c => temSenha.add(c.key));
+    log(`${temSenha.size} senhas cadastradas encontradas.`, 'info');
+  } else {
+    log('Nenhuma senha cadastrada em aluno_senhas.', 'warn');
+  }
+
+  // Conjunto de UIDs turma_nome com dados na tabuada
+  const uidTabuada = new Set();
+  if (snapTabuada.exists()) {
+    snapTabuada.forEach(c => uidTabuada.add(c.key));
+    log(`${uidTabuada.size} UIDs com dados em tabuada_niveis.`, 'info');
+  }
+
+  // Conjunto de Firebase Auth UIDs com dados em resultados
+  const uidResultados = new Set();
+  if (snapResultados.exists()) {
+    snapResultados.forEach(c => uidResultados.add(c.key));
+    log(`${uidResultados.size} UIDs com dados em resultados.`, 'info');
+  }
+
+  if (!snapAlunos.exists()) {
+    document.getElementById('resultado-wrap').innerHTML = '<div class="status-loading">Nenhum aluno em /alunos.</div>';
+    log('Nenhum aluno encontrado.', 'warn');
+    return;
+  }
+
+  const semSenha = [];
+  let totalAnalisados = 0, totalComDados = 0;
+
+  snapAlunos.forEach(child => {
+    const authUid = child.key;
+    const a = child.val() || {};
+    const nome  = a.nome  || '';
+    const turma = a.turma || '';
+
+    // Filtrar professor/teste
+    if (!nome || !turma
+      || String(nome).toUpperCase().includes('PROFESSOR')
+      || String(nome).toUpperCase().includes('TESTE')
+      || turma === 'TESTE') return;
+
+    totalAnalisados++;
+
+    const tabUid    = makeUidTurma(turma, nome);
+    const temTab    = uidTabuada.has(tabUid);
+    const temAtv    = uidResultados.has(authUid);
+    const temDados  = temTab || temAtv;
+
+    if (!temDados) return;
+    totalComDados++;
+
+    const chave = senhaKey(turma, nome);
+    if (temSenha.has(chave)) return;
+
+    semSenha.push({ nome, turma, temTab, temAtv });
+  });
+
+  log(`Análise concluída: ${totalAnalisados} alunos, ${totalComDados} com dados, ${semSenha.length} sem senha.`,
+      semSenha.length > 0 ? 'warn' : 'ok');
+
+  // Estatísticas
+  document.getElementById('st-total').textContent = totalAnalisados;
+  document.getElementById('st-dados').textContent = totalComDados;
+  document.getElementById('st-sem').textContent   = semSenha.length;
+  document.getElementById('stats-wrap').style.display = 'flex';
+
+  if (semSenha.length === 0) {
+    document.getElementById('resultado-wrap').innerHTML =
+      '<div class="status-loading" style="color:#22c55e">✅ Todos os alunos com dados têm senha cadastrada.</div>';
+    return;
+  }
+
+  // Ordenar por turma, depois nome
+  semSenha.sort((a, b) => a.turma.localeCompare(b.turma) || a.nome.localeCompare(b.nome));
+
+  const linhas = semSenha.map(a => `
+    <tr>
+      <td><strong>${escH(a.nome)}</strong></td>
+      <td>${escH(a.turma)}</td>
+      <td>
+        ${a.temTab ? '<span class="tag tag-tab">Tabuada</span>' : ''}
+        ${a.temAtv ? '<span class="tag tag-atv">Atividades</span>' : ''}
+      </td>
+      <td><span class="tag tag-sem">sem senha</span></td>
+    </tr>`).join('');
+
+  document.getElementById('resultado-wrap').innerHTML = `
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="diag-table">
+        <thead>
+          <tr>
+            <th>Nome</th><th>Turma</th><th>Dados</th><th>Senha</th>
+          </tr>
+        </thead>
+        <tbody>${linhas}</tbody>
+      </table>
+    </div>`;
+};
+</script>
+</body>
+</html>

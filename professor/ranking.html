@@ -190,6 +190,8 @@
 import { getLiberadas, listenRankingProfessor, getResultados } from "/js/db.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 import { LISTA_ATIVIDADES, ALUNOS_POR_TURMA } from "/js/constants.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 requireProfessor();
 renderSidebarProfessor("sidebar", "ranking");
@@ -215,8 +217,62 @@ if (ativParam) {
 async function renderPainelPrincipal() {
   document.getElementById('topbar-right').innerHTML =
     `<button class="btn btn-ghost" style="font-size:12px" onclick="window.open('/professor/ranking_tv.html','_blank')">📺 Modo TV</button>`;
-  const todos = await getResultados();
+  const todosRaw = await getResultados();
+  const todos = todosRaw.filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
   let filtroTurma = '';
+
+  // ── Tabuada ───────────────────────────────────────────────────
+  const [rankTabSnap, niveisTabSnap] = await Promise.all([
+    get(ref(db, 'tabuada_ranking')).catch(() => null),
+    get(ref(db, 'tabuada_niveis')).catch(() => null),
+  ]);
+
+  const tabAll = [];
+  if (rankTabSnap?.exists()) {
+    rankTabSnap.forEach(c => { const v = c.val(); if (v?.nome) tabAll.push({ ...v, _key: c.key }); });
+    tabAll.sort((a,b) => (b.melhor_nivel||0)-(a.melhor_nivel||0)||(b.total_partidas||0)-(a.total_partidas||0)||(a.nome||'').localeCompare(b.nome||''));
+  }
+  if (niveisTabSnap?.exists()) {
+    niveisTabSnap.forEach(c => {
+      const nd = c.val(); if (!nd?.nome) return;
+      const r = tabAll.find(x => x._key === c.key);
+      if (r && nd.total_partidas) r.total_partidas = nd.total_partidas;
+    });
+  }
+
+  // Delta desde ontem
+  const _ontemISO = new Date(Date.now()-86400000).toISOString().slice(0,10);
+  const _deltaMap = {};
+  if (niveisTabSnap?.exists()) {
+    niveisTabSnap.forEach(c => {
+      const nd = c.val(); if (!nd?.historico) return;
+      const entries = Object.entries(nd.historico)
+        .map(([ts,v]) => ({ts:Number(ts),...v})).filter(e=>e.nivel).sort((a,b)=>a.ts-b.ts);
+      let best = 0;
+      for (const e of entries) {
+        if (new Date(e.ts).toISOString().slice(0,10) <= _ontemISO) best = Math.max(best, e.nivel);
+      }
+      const r = tabAll.find(x => x._key === c.key);
+      if (r) _deltaMap[c.key] = (r.melhor_nivel||0) - best;
+    });
+  }
+
+  // Hall da Fama e corrida
+  const tabConcluintes = tabAll
+    .filter(r => (r.melhor_nivel||0) >= 300)
+    .sort((a,b) => (a.concluiu_300_em||a.ultima_partida||0)-(b.concluiu_300_em||b.ultima_partida||0));
+  const tabCorrida = tabAll.filter(r => (r.melhor_nivel||0) < 300);
+
+  function tabStdPos(lista) {
+    let p=0,n=0,last=null;
+    return lista.map(item => {
+      n++; const v = item.melhor_nivel||0;
+      if (v !== last) { p=n; last=v; }
+      return p;
+    });
+  }
+  const tabCorridaPos = tabStdPos(tabCorrida);
+  const tabAllPos     = tabStdPos(tabAll);
 
   function buildRankingMedia(lista) {
     const melhor = {};
@@ -418,12 +474,115 @@ async function renderPainelPrincipal() {
     }
   }
 
+  // ── Render aba Tabuada ───────────────────────────────────────
+  function renderTabuadaProf() {
+    const el = document.getElementById('ppanel-tabuada');
+    if (!el) return;
+
+    // Filtro de turma
+    const corrida  = filtroTurma ? tabCorrida.filter(r => r.turma === filtroTurma) : tabCorrida;
+    const concl    = filtroTurma ? tabConcluintes.filter(r => r.turma === filtroTurma) : tabConcluintes;
+    const corridaPos = tabStdPos(corrida);
+
+    // Hall da Fama
+    let hallHtml = '';
+    if (concl.length > 0) {
+      const MAX_VISIBLE = 5;
+      const ordemEmoji = ['🥇','🥈','🥉'];
+      const hallRows = lista => lista.map(r => {
+        const ordem = concl.indexOf(r) + 1;
+        const emoji = ordemEmoji[ordem-1] || `${ordem}º`;
+        return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;margin-bottom:5px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2)">
+          <span style="font-size:18px;min-width:26px;text-align:center">${emoji}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700;color:#F59E0B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(r.nome||'?')}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:1px">Turma ${escH(r.turma||'?')} · ${ordem}º a concluir</div>
+          </div>
+          <span style="font-size:12px;font-weight:700;color:#F59E0B;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:3px 10px;flex-shrink:0">Nível 300 🏆</span>
+        </div>`;
+      }).join('');
+
+      const visiveis  = concl.slice(0, MAX_VISIBLE);
+      const restantes = concl.slice(MAX_VISIBLE);
+      hallHtml = `
+        <div style="background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(245,158,11,.05));border:1.5px solid rgba(245,158,11,.5);border-radius:14px;padding:14px 16px;margin-bottom:20px;box-shadow:0 0 20px rgba(245,158,11,.1)">
+          <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#F59E0B;display:flex;align-items:center;gap:6px;margin-bottom:12px">
+            🏆 Hall da Fama — Nível 300 · Ordem de chegada
+            <span style="background:rgba(245,158,11,.2);color:#D97706;font-size:10px;padding:2px 8px;border-radius:10px;margin-left:auto">${concl.length} aluno${concl.length !== 1 ? 's' : ''}</span>
+          </div>
+          ${hallRows(visiveis)}
+          ${restantes.length > 0 ? `
+            <div id="tab-hall-extra" style="display:none">${hallRows(restantes)}</div>
+            <button onclick="const e=document.getElementById('tab-hall-extra');const b=document.getElementById('tab-hall-btn');if(e.style.display==='none'){e.style.display='';b.textContent='Ocultar ▲';}else{e.style.display='none';b.textContent='Ver todos (${concl.length}) →';}" id="tab-hall-btn"
+              style="width:100%;padding:8px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:8px;color:#F59E0B;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px">
+              Ver todos (${concl.length}) →
+            </button>` : ''}
+        </div>`;
+    }
+
+    // Corrida (em progresso)
+    let corridaHtml = '';
+    if (corrida.length > 0) {
+      corridaHtml = `
+        <div style="font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">
+          🏃 Ranking — em progresso
+        </div>`;
+
+      // Pódio top 3 da corrida
+      const top3 = corrida.slice(0, 3);
+      const TROPHIES = ['🥇','🥈','🥉'];
+      const COLORS   = ['#F59E0B','#9CA3AF','#CD853F'];
+      corridaHtml += `<div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">` +
+        top3.map((r, i) => {
+          const pos = corridaPos[i];
+          const delta = _deltaMap[r._key];
+          const deltaStr = delta != null ? (delta > 0 ? ` ↑${delta}` : delta < 0 ? ` ↓${Math.abs(delta)}` : '') : '';
+          return `<div style="flex:1;min-width:120px;background:var(--card);border-radius:10px;padding:10px 12px;border:1px solid var(--border);text-align:center">
+            <div style="font-size:22px;margin-bottom:3px">${TROPHIES[i]}</div>
+            <div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(r.nome||'?')}</div>
+            <div style="font-size:10px;color:var(--text-muted)">Turma ${escH(r.turma||'?')}</div>
+            <div style="font-size:14px;font-weight:800;color:${COLORS[i]};margin-top:4px">Nv ${r.melhor_nivel||1}<span style="font-size:10px;color:${delta>0?'var(--green)':delta<0?'var(--red)':'var(--text-muted)'}">${deltaStr}</span></div>
+          </div>`;
+        }).join('') +
+        `</div>`;
+
+      // Lista 4º+
+      const resto = corrida.slice(3);
+      if (resto.length > 0) {
+        corridaHtml += `<div class="card" style="padding:0">` +
+          resto.map((r, j) => {
+            const pos = corridaPos[j + 3];
+            const delta = _deltaMap[r._key];
+            const dCls  = delta > 0 ? 'var(--green)' : delta < 0 ? 'var(--red)' : 'var(--text-muted)';
+            const dTxt  = delta != null ? (delta > 0 ? `↑${delta}` : delta < 0 ? `↓${Math.abs(delta)}` : '→') : '';
+            return `<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border)">
+              <span style="font-size:12px;font-weight:800;min-width:24px;text-align:center;color:var(--text-muted)">${pos}</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(r.nome||'?')}</div>
+                <div style="font-size:10px;color:var(--text-muted)">Turma ${escH(r.turma||'?')} · ${r.total_partidas||0} partidas</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:13px;font-weight:800;color:var(--blue)">Nv ${r.melhor_nivel||1}</div>
+                ${dTxt ? `<div style="font-size:10px;font-weight:700;color:${dCls}">${dTxt}</div>` : ''}
+              </div>
+            </div>`;
+          }).join('') +
+          `</div>`;
+      }
+    } else if (concl.length === 0) {
+      corridaHtml = `<p style="color:var(--text-muted);font-size:13px;padding:8px 0">Nenhum aluno jogou ainda.</p>`;
+    }
+
+    el.innerHTML = hallHtml + corridaHtml;
+  }
+
   window.mudarTabPainel = function(tab) {
-    ['geral','ativ'].forEach(t => {
+    ['geral','ativ','tabuada'].forEach(t => {
       document.getElementById('ptab-' + t)?.classList.toggle('active', t === tab);
       document.getElementById('ppanel-' + t).style.display = t === tab ? '' : 'none';
     });
     if (tab === 'ativ') abrirAtivProf(ativSel);
+    if (tab === 'tabuada') renderTabuadaProf();
   };
 
   window.setFiltroTurmaRank = function(turma) {
@@ -432,6 +591,8 @@ async function renderPainelPrincipal() {
       p.classList.toggle('on', p.dataset.t === turma));
     if (document.getElementById('ppanel-geral')?.style.display !== 'none') {
       renderTabelaGeral();
+    } else if (document.getElementById('ppanel-tabuada')?.style.display !== 'none') {
+      renderTabuadaProf();
     } else {
       renderAtivRanking();
     }
@@ -450,9 +611,12 @@ async function renderPainelPrincipal() {
       ).join('')}
     </div>
     <div class="tab-nav">
-      <button id="ptab-geral" class="active" onclick="mudarTabPainel('geral')">🏆 Geral</button>
-      <button id="ptab-ativ"                 onclick="mudarTabPainel('ativ')">📚 Por Atividade</button>
+      <button id="ptab-geral"    class="active" onclick="mudarTabPainel('geral')">🏆 Geral</button>
+      <button id="ptab-ativ"                    onclick="mudarTabPainel('ativ')">📚 Por Atividade</button>
+      <button id="ptab-tabuada"                 onclick="mudarTabPainel('tabuada')">🎮 Tabuada</button>
     </div>
+
+    <div id="ppanel-tabuada" style="display:none" id="ppanel-tabuada"></div>
 
     <div id="ppanel-geral">
       <div class="card" style="padding:0">

@@ -142,10 +142,12 @@ const totalTurmas = Object.keys(ALUNOS_POR_TURMA).length;
 const melhorDash = {};
 const turmaDash  = {};
 const regsPorAluno = {};
-todos.filter(r => r.concluido).forEach(r => {
-  if (r.atividade !== 'Atividade 4 - Geometria') {
+todos.filter(r => r.concluido && !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE').forEach(r => {
+  if (r.atividade !== 'Atividade 4 - Geometria' && r.modo === 'avaliacao_plus') {
+    // Usa nota_quiz (F1, escala 0–10) — igual ao ranking do aluno
+    const nq = r.nota_quiz ?? 0;
     if (!melhorDash[r.aluno]) melhorDash[r.aluno] = {};
-    melhorDash[r.aluno][r.atividade] = Math.max(melhorDash[r.aluno][r.atividade] || 0, r.pontuacao || 0);
+    melhorDash[r.aluno][r.atividade] = Math.max(melhorDash[r.aluno][r.atividade] || 0, nq);
   }
   if (!turmaDash[r.aluno]) turmaDash[r.aluno] = r.turma;
   if (!regsPorAluno[r.aluno]) regsPorAluno[r.aluno] = [];
@@ -234,8 +236,8 @@ function renderPodiumDash() {
       </div>
       <div class="rank-val" style="${padTop}">
         ${badge}
-        <div class="rank-val-num">${g.score}</div>
-        <div class="rank-val-label">pts</div>
+        <div class="rank-val-num">${typeof g.score === 'number' ? g.score.toFixed(1) : g.score}</div>
+        <div class="rank-val-label">F1 (nota)</div>
       </div>
     </div>`;
   }).join('');
