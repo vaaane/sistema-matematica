@@ -1679,28 +1679,30 @@ async function onGameWin() {
     await salvarProgresso(progresso, 'completou', nivelJogado, acertos, erros, true, _segsWin);
     _registrarSessao(nivelJogado, 'completou');
     nivelAtual = nivelJogado + 1; // avança nível local da sessão de prática
-    document.getElementById("lov-emoji").textContent = erros === 0 ? '⭐' : '✅';
-    document.getElementById("lov-title").textContent = erros === 0 ? 'Perfeito!' : 'Nível concluído!';
-    document.getElementById("lov-sub").textContent   = `Nível ${nivelJogado} · ${acertos} acerto${acertos !== 1 ? 's' : ''}${erros > 0 ? ` · ${erros} erro${erros > 1 ? 's' : ''}` : ''}${_overtimeStr}`;
+
+    // Maestria: 3× perfeito consecutivo → diamante. Calculado ANTES de
+    // montar a tela para que a estrela não apareça primeiro.
+    const _maestriaReplay = (erros === 0 && !isChefao(nivelJogado))
+      ? await _checarMaestria(nivelJogado)
+      : false;
+
+    if (_maestriaReplay) {
+      lancarConfete(60);
+      document.getElementById("lov-emoji").textContent = '💎';
+      document.getElementById("lov-title").textContent = 'Você concluiu esse nível com maestria!';
+      document.getElementById("lov-sub").textContent   =
+        `Nível ${nivelJogado} dominado — 3× perfeito consecutivo!`;
+    } else {
+      document.getElementById("lov-emoji").textContent = erros === 0 ? '⭐' : '✅';
+      document.getElementById("lov-title").textContent = erros === 0 ? 'Perfeito!' : 'Nível concluído!';
+      document.getElementById("lov-sub").textContent   = `Nível ${nivelJogado} · ${acertos} acerto${acertos !== 1 ? 's' : ''}${erros > 0 ? ` · ${erros} erro${erros > 1 ? 's' : ''}` : ''}${_overtimeStr}`;
+    }
     document.getElementById("lov-new").textContent   = `→ Nível ${nivelAtual} (prática)`;
     document.getElementById("lov-new").style.color   = 'var(--blue)';
     document.getElementById("lov-btn").textContent   = 'Continuar →';
     document.querySelector('.level-card').style.animation = 'levelUpPop .45s';
     document.getElementById("level-overlay").style.display = 'flex';
     { const b = document.getElementById('lov-btn-repetir'); if(b){ b.style.display='block'; b._nv=nivelJogado; } }
-
-    // ── Maestria: 3× perfeito consecutivo → diamante 💎 ─────────
-    if (erros === 0 && !isChefao(nivelJogado)) {
-      const _nvReplay = nivelJogado;
-      _checarMaestria(_nvReplay).then(atingiuMaestria => {
-        if (!atingiuMaestria) return;
-        lancarConfete(60);
-        document.getElementById("lov-emoji").textContent = '💎';
-        document.getElementById("lov-title").textContent = '💎 Você conseguiu nível maestria!';
-        document.getElementById("lov-sub").textContent   =
-          `Nível ${_nvReplay} dominado — 3× perfeito consecutivo!`;
-      });
-    }
     return;
   }
 
@@ -1749,21 +1751,29 @@ async function onGameWin() {
   // Mostra overlay imediatamente com informações já conhecidas
   const isEstrela = erros === 0;
   const foiChefao = isChefao(nivelJogado);
+  // Maestria: 3× perfeito consecutivo → diamante. Calculado ANTES de
+  // montar a tela para que a estrela não apareça primeiro.
+  const _maestria = (isEstrela && !foiChefao)
+    ? await _checarMaestria(nivelJogado)
+    : false;
   const _tcWin    = foiChefao ? tipoChefaoAtual : null;
   const _bIco     = _tcWin === 'rapido' ? '⚡' : _tcWin === 'dificil' ? '🧮' : _tcWin === 'grande' ? '📦' : '👹';
   const _bNome    = _tcWin === 'rapido' ? 'Chefão Rápido' : _tcWin === 'dificil' ? 'Chefão Difícil' : _tcWin === 'grande' ? 'Chefão Grande' : 'Chefão';
   const _bCor     = _tcWin === 'dificil' ? '#A78BFA' : _tcWin === 'grande' ? '#60A5FA' : '#EF4444';
   if (foiChefao) { lancarConfeteChefao(120); }
+  else if (_maestria) lancarConfete(70);
   else if (isEstrela) lancarConfete(50);
-  document.getElementById("lov-emoji").textContent = foiChefao ? _bIco : (isEstrela ? '⭐' : '🎉');
+  document.getElementById("lov-emoji").textContent = foiChefao ? _bIco : (_maestria ? '💎' : (isEstrela ? '⭐' : '🎉'));
   document.getElementById("lov-title").textContent = foiChefao
     ? `${_bIco} ${_bNome} derrotado!`
-    : (isEstrela ? '⭐ Nível com estrela!' : 'Avançou de nível!');
+    : (_maestria ? 'Você concluiu esse nível com maestria!' : (isEstrela ? '⭐ Nível com estrela!' : 'Avançou de nível!'));
   document.getElementById("lov-sub").textContent   = foiChefao
     ? `Nível ${nivelJogado} conquistado! ${isEstrela ? '⭐ Sem erros!' : ''} ${isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue avançando!'}${_overtimeStr}`
-    : (isEstrela
-      ? `Perfeito! Sem erros! ${isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue assim!'}${_overtimeStr}`
-      : `${erros} erro${erros !== 1 ? 's' : ''} — sem estrela desta vez. ${isNewRecord ? '🌟 Novo recorde!' : 'Continue avançando!'}${_overtimeStr}`);
+    : (_maestria
+      ? `Nível ${nivelJogado} dominado — 3× perfeito consecutivo! ${isNewRecord ? '🌟 Novo recorde pessoal!' : ''}${_overtimeStr}`
+      : (isEstrela
+        ? `Perfeito! Sem erros! ${isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue assim!'}${_overtimeStr}`
+        : `${erros} erro${erros !== 1 ? 's' : ''} — sem estrela desta vez. ${isNewRecord ? '🌟 Novo recorde!' : 'Continue avançando!'}${_overtimeStr}`));
   document.getElementById("lov-new").textContent   = `→ Nível ${novoNivel}`;
   document.getElementById("lov-new").style.color   = foiChefao ? _bCor : (isEstrela ? 'var(--gold)' : 'var(--blue)');
   document.getElementById("lov-btn").textContent   = 'Continuar →';
@@ -1771,29 +1781,13 @@ async function onGameWin() {
   document.getElementById("level-overlay").style.display = 'flex';
   { const b = document.getElementById('lov-btn-repetir'); if(b){ b.style.display='block'; b._nv=nivelJogado; } }
 
-  // ── Maestria: 3× perfeito consecutivo → diamante 💎 ───────────
-  // Não se aplica a chefões (que usam ícone próprio).
-  if (isEstrela && !foiChefao) {
-    _checarMaestria(nivelJogado).then(atingiuMaestria => {
-      if (!atingiuMaestria) return;
-      // Se virou líder no meio-tempo, não sobrescreve o aviso de líder.
-      if (document.getElementById("lov-emoji").textContent === '🏆') return;
-      lancarConfete(60);
-      document.getElementById("lov-emoji").textContent = '💎';
-      document.getElementById("lov-title").textContent = '💎 Você conseguiu nível maestria!';
-      document.getElementById("lov-sub").textContent   =
-        `Nível ${nivelJogado} dominado — 3× perfeito consecutivo! ${isNewRecord ? '🌟 Novo recorde pessoal!' : ''}${_overtimeStr}`;
-      document.getElementById("lov-new").style.color = 'var(--blue)';
-    });
-  }
-
   // Atualiza ranking em background — se virou líder, atualiza overlay
   reloadRanking().then(() => {
     const eLider = rankingAll[0]?._uid === uid;
     if (eLider && !eraLider) {
       if (!isEstrela) lancarConfete(80);
       // Não sobrescreve a celebração de maestria (💎).
-      if (document.getElementById("lov-emoji").textContent === '💎') return;
+      if (_maestria) return;
       document.getElementById("lov-emoji").textContent = '🏆';
       document.getElementById("lov-title").textContent = '🥇 Você é o novo líder!';
       document.getElementById("lov-sub").textContent   =
