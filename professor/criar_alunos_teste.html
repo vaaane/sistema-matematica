@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Criar Alunos de Teste</title>
+  <link rel="stylesheet" href="/css/main.css"/>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Criar Alunos de Teste</div>
+        <div class="topbar-sub">Cria teste1 e teste2 na turma 8D com senha 1234</div>
+      </div>
+      <div class="topbar-right">
+        <a href="/professor/dashboard.html" class="btn btn-ghost">← Painel</a>
+      </div>
+    </div>
+    <div class="content">
+      <div style="max-width:500px">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title" style="margin-bottom:14px">Alunos a criar</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.8">
+            Turma: <strong style="color:var(--text)">8D</strong><br>
+            Nomes: <strong style="color:var(--text)">teste1, teste2</strong><br>
+            Senha: <strong style="color:var(--text)">1234</strong>
+          </div>
+          <button class="btn" id="btn-criar" style="background:var(--purple);color:#fff;width:100%" onclick="criarAlunos()">
+            ✅ Criar alunos
+          </button>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:10px">Log</div>
+          <div id="log" style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:12px;font-family:'Courier New',monospace;max-height:300px;overflow-y:auto;color:var(--text-muted);line-height:1.8">Aguardando…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireProfessor, renderSidebarProfessor, hashSenha } from '/js/auth.js';
+import { db } from '/js/firebase-config.js';
+import { ref, set, get } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+
+const sess = requireProfessor();
+if (!sess) throw new Error();
+renderSidebarProfessor('sidebar', '');
+
+function log(msg, tipo = 'info') {
+  const el = document.getElementById('log');
+  const ts = new Date().toLocaleTimeString('pt-BR');
+  const cores = { ok:'#16A34A', warn:'#D97706', err:'#DC2626', info:'var(--text-muted)' };
+  el.innerHTML += `<div style="color:${cores[tipo]||cores.info}">[${ts}] ${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+function makeUid(turma, nome) {
+  return (turma + '_' + nome).replace(/[.#$[\]/\s]/g, '_');
+}
+
+window.criarAlunos = async function() {
+  const btn = document.getElementById('btn-criar');
+  btn.disabled = true;
+  document.getElementById('log').innerHTML = '';
+
+  const TURMA = '8D';
+  const ALUNOS = ['teste1', 'teste2'];
+  const SENHA  = '1234';
+
+  for (const nome of ALUNOS) {
+    try {
+      const uid  = makeUid(TURMA, nome);
+      const hash = await hashSenha(TURMA, nome, SENHA);
+
+      // Verificar se já existe
+      const jaExiste = await get(ref(db, `aluno_senhas/${uid}`));
+      if (jaExiste.exists()) {
+        log(`⚠️ ${nome} (${uid}) já existe — pulando.`, 'warn');
+        continue;
+      }
+
+      // Criar senha
+      await set(ref(db, `aluno_senhas/${uid}`), hash);
+      log(`🔑 Senha criada para ${nome} (${uid})`, 'ok');
+
+      // Criar perfil básico
+      await set(ref(db, `perfis/${uid}`), {
+        nome:   nome,
+        turma:  TURMA,
+        nivel:  1,
+        xp:     0,
+        duelos_total:    0,
+        duelos_vitorias: 0,
+      });
+      log(`👤 Perfil criado para ${nome}`, 'ok');
+
+    } catch(e) {
+      log(`✗ Erro em ${nome}: ${e.message}`, 'err');
+    }
+  }
+
+  log('Concluído.', 'ok');
+  btn.disabled = false;
+};
+</script>
+</body>
+</html>

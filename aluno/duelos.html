@@ -263,9 +263,9 @@
     .hist-row.loss { background:linear-gradient(90deg,rgba(239,68,68,.09) 0%,rgba(239,68,68,.02) 40%,var(--card) 100%);border-color:rgba(239,68,68,.35); }
     .hist-row.loss::before { background:linear-gradient(180deg,#ef4444,#dc2626); }
     .hist-row.abandon { opacity:.55; }
-    .hist-wl { width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;flex-shrink:0; }
-    .hist-wl.win  { background:rgba(34,197,94,.2); color:#22c55e;box-shadow:0 0 10px rgba(34,197,94,.2); }
-    .hist-wl.loss { background:rgba(239,68,68,.15);color:#ef4444;box-shadow:0 0 10px rgba(239,68,68,.15); }
+    .hist-wl { width:auto;min-width:54px;padding:3px 8px;border-radius:8px;font-size:11px;font-weight:800;text-align:center;flex-shrink:0;letter-spacing:.3px; }
+    .hist-wl.win  { background:rgba(34,197,94,.15);  color:#22c55e; }
+    .hist-wl.loss { background:rgba(239,68,68,.12);   color:#ef4444; }
     .hist-avatar { width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0;color:#fff;background:#334155; }
     .hist-info { flex:1;min-width:0; }
     .hist-nome { font-size:13px;font-weight:700; }
@@ -283,6 +283,18 @@
     .hist-xp { font-size:11px;font-weight:800;white-space:nowrap;flex-shrink:0;min-width:52px;text-align:right; }
     .hist-xp.pos { color:#22c55e; }
     .hist-xp.neg { color:#ef4444; }
+
+    /* ── Upset bonus ── */
+    .pm-upset { display:none; padding: 8px 18px; border-bottom: 1px solid var(--border); align-items: center; gap: 8px; background: rgba(249,115,22,.06); }
+    .pm-upset-text { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+    .pm-upset-bonus { color: var(--orange); font-weight: 800; }
+
+    /* ── Badges nos cards online ── */
+    .online-card { position: relative; }
+    .oc-badge { position: absolute; top: -8px; left: 12px; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 10px; letter-spacing: .5px; white-space: nowrap; z-index: 1; }
+    .badge-rival   { background: #ef4444; color: #fff; }
+    .badge-hunter  { background: var(--gold); color: #000; }
+    .badge-streak  { background: var(--orange); color: #fff; }
 
     /* ── Mini-perfil modal ── */
     .profile-modal { background: var(--card); border: 1px solid rgba(255,255,255,.1); border-radius: 20px; width: 100%; max-width: 320px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.6); }
@@ -331,6 +343,7 @@
     .emoji-feed-item { background:rgba(13,15,26,.85); border:1px solid rgba(255,255,255,.09); border-radius:11px; padding:6px 11px; display:flex; align-items:center; gap:8px; backdrop-filter:blur(10px); animation:feedItemIn .3s ease; font-size:11px; color:rgba(255,255,255,.5); }
     .emoji-feed-item .ef-emoji { font-size:19px; flex-shrink:0; }
     .emoji-feed-item strong { color:#fff; font-weight:700; }
+    .ef-time { display:block; font-size:9px; color:rgba(255,255,255,.25); margin-top:1px; letter-spacing:.3px; }
   </style>
 </head>
 <body>
@@ -493,7 +506,7 @@ import { db } from '/js/firebase-config.js';
 import { ref, set, get, push, onValue, remove, update, runTransaction } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { getPerfil, getSenhaAluno } from '/js/db.js';
 import { ALUNOS_POR_TURMA } from '/js/constants.js';
-import { avatarUrl, avatarHtml, avatarConfigDefault, DUELO_TIMEOUT_ACEITAR_S, XP_DUELO } from '/js/gamificacao.js';
+import { avatarUrl, avatarHtml, avatarConfigDefault, DUELO_TIMEOUT_ACEITAR_S, XP_DUELO, NIVEIS_PERFIL } from '/js/gamificacao.js';
 import { iniciarPresenca, encerrarPresenca, atualizarPresenca, filtrarOnline } from '/js/presenca.js';
 
 // Garantir que o banner existe no DOM
@@ -590,7 +603,7 @@ onValue(ref(db, `notif_emoji/${uid}/reacao`), async snap => {
   if (!d?.emoji || !d?.ts) return;
   if (Date.now() - d.ts > 10000) { await set(snap.ref, null); return; }
   mostrarBolhaEmoji(d.emoji, d.de || '?');
-  adicionarFeedEmoji(d.emoji, d.de || '?', sess.alunos[0] || 'você');
+  adicionarFeedEmoji(d.emoji, d.de || '?', sess.alunos[0] || 'você', d.ts);
   await set(snap.ref, null);
 });
 
@@ -613,7 +626,8 @@ onValue(ref(db, 'emoji_feed'), snap => {
     if (!d?.emoji) return;
     const item = document.createElement('div');
     item.className = 'emoji-feed-item';
-    item.innerHTML = `<span class="ef-emoji">${d.emoji}</span><span><strong>${escH(d.de||'?')}</strong> → <strong>${escH(d.para||'?')}</strong></span>`;
+    item.dataset.ts = d.ts || Date.now();
+    item.innerHTML = `<span class="ef-emoji">${d.emoji}</span><span class="ef-text"><strong>${escH(d.de||'?')}</strong> → <strong>${escH(d.para||'?')}</strong><span class="ef-time">${tempoRelativo(d.ts || Date.now())}</span></span>`;
     feed.appendChild(item);
   });
 });
@@ -787,6 +801,13 @@ onValue(ref(db, 'presenca_online'), snap => {
   document.getElementById('online-count').textContent = n;
   document.getElementById('online-sub').textContent =
     n === 0 ? 'Nenhum colega online' : `${n} colega${n>1?'s':''} online`;
+
+  // Atualizar cache de perfis e re-renderizar com badges
+  get(ref(db, 'perfis')).then(perfSnap => {
+    if (!perfSnap.exists()) return;
+    perfSnap.forEach(c => { _perfisCache[c.key] = c.val(); });
+    renderOnlineGrid(online);
+  }).catch(() => {});
 });
 
 function renderOnlineGrid(lista) {
@@ -815,14 +836,18 @@ function renderOnlineCard(aluno) {
   const turmaExib = temParceiro
     ? `${escH(aluno.turma || _turmaDoUidOnline(aluno.uid))} · ${escH(aluno.parceiro_turma || '?')}`
     : escH(aluno.turma || _turmaDoUidOnline(aluno.uid));
+  const perfil    = _perfisCache[aluno.uid];
+  const badge     = calcularBadge(aluno, perfil);
+  const nivelInfo = NIVEIS_PERFIL.find(n => n.n === (perfil?.nivel || 1)) || NIVEIS_PERFIL[0];
+  const nivelTag  = nivelInfo ? ` · ${nivelInfo.nome}` : '';
   return `
     <div class="online-card${!st.disponivel ? ' in-duel' : ''}" onclick="abrirModalPerfil('${aluno.uid}','${escH(nomeBase)}')" style="cursor:pointer">
-      ${temParceiro ? '<div class="oc-dupla">DUPLA</div>' : ''}
+      ${badge ? `<div class="oc-badge ${badge.cls}">${badge.txt}</div>` : (temParceiro ? '<div class="oc-dupla">DUPLA</div>' : '')}
       <div class="oc-top">
         <div class="oc-av"><img src="${av}" alt="" onerror="this.src=''"></div>
         <div class="oc-info">
           <div class="oc-name">${nomeExib}</div>
-          <div class="oc-tag">${turmaExib}</div>
+          <div class="oc-tag">${turmaExib}${nivelTag}</div>
         </div>
         <div class="oc-dot" style="background:${st.dot}"></div>
       </div>
@@ -974,6 +999,32 @@ window.cancelarDesafio = async function() {
   document.getElementById('btnDesafioAberto').disabled = false;
 };
 
+// ── Cache de perfis e H2H para badges ────────────────────────
+let _perfisCache = {};
+let _h2hCache    = {}; // uid → { me, adv }
+
+// Carrega o H2H do usuário logado uma vez ao iniciar
+get(ref(db, `perfis/${uid}/historico_duelos`)).then(snap => {
+  if (!snap.exists()) return;
+  snap.forEach(c => {
+    const d = c.val();
+    const auid = d?.adversario_uid;
+    if (!auid) return;
+    if (!_h2hCache[auid]) _h2hCache[auid] = { me: 0, adv: 0 };
+    if (d.resultado === 'vitoria')  _h2hCache[auid].me++;
+    else if (d.resultado === 'derrota') _h2hCache[auid].adv++;
+  });
+}).catch(() => {});
+
+function calcularBadge(aluno, perfil) {
+  const h2h = _h2hCache[aluno.uid] || { me: 0, adv: 0 };
+  if ((h2h.me + h2h.adv) >= 5) return { txt: '⚔️ Rival', cls: 'badge-rival' };
+  if (perfil?.venceu_rank1)     return { txt: '🎯 Caçador', cls: 'badge-hunter' };
+  const streak = perfil?.streak_vitorias || 0;
+  if (streak >= 3)               return { txt: `🔥 ${streak} seguidas`, cls: 'badge-streak' };
+  return null;
+}
+
 // ── Mini-perfil + emojis ──────────────────────────────────────
 const EMOJIS = ['👊','😤','🔥','💀','😂','👑','😈','❤️','🌸','✨','🤝','😊','🫶','🥺'];
 let _pmAlvoUid  = null;
@@ -995,11 +1046,12 @@ window.abrirModalPerfil = async function(alvoUid, nomeBase) {
 
   try { await set(ref(db, `notif_emoji/${alvoUid}/watching`), { ts: Date.now() }); } catch(_) {}
 
-  const [perfSnap, histSnap, meuHistSnap, todosSnap] = await Promise.all([
+  const [perfSnap, histSnap, meuHistSnap, todosSnap, meuPerfSnap] = await Promise.all([
     get(ref(db, `perfis/${alvoUid}`)).catch(()=>null),
     get(ref(db, `perfis/${alvoUid}/historico_duelos`)).catch(()=>null),
     get(ref(db, `perfis/${uid}/historico_duelos`)).catch(()=>null),
     get(ref(db, 'perfis')).catch(()=>null),
+    get(ref(db, `perfis/${uid}`)).catch(()=>null),
   ]);
 
   const p = perfSnap?.val() || {};
@@ -1013,7 +1065,7 @@ window.abrirModalPerfil = async function(alvoUid, nomeBase) {
   document.getElementById('pm-level').textContent  = `⚡ Nível ${p.nivel || 1} · ${p.xp || 0} XP`;
   document.getElementById('pm-total').textContent  = p.duelos_total || 0;
 
-  let rankPos = '—';
+  let rankPos = '—', rankAdvNum = 999, meuRankNum = 999;
   if (todosSnap?.exists()) {
     const lista = [];
     todosSnap.forEach(c => {
@@ -1023,8 +1075,10 @@ window.abrirModalPerfil = async function(alvoUid, nomeBase) {
       lista.push({ uid: c.key, vitorias: v.duelos_vitorias||0, xp: v.xp||0 });
     });
     lista.sort((a,b) => b.vitorias - a.vitorias || b.xp - a.xp);
-    const idx = lista.findIndex(x => x.uid === alvoUid);
-    rankPos = idx >= 0 ? `#${idx+1}` : '—';
+    const idxAdv = lista.findIndex(x => x.uid === alvoUid);
+    const idxMeu = lista.findIndex(x => x.uid === uid);
+    if (idxAdv >= 0) { rankAdvNum = idxAdv + 1; rankPos = `#${rankAdvNum}`; }
+    if (idxMeu >= 0) meuRankNum = idxMeu + 1;
   }
   document.getElementById('pm-rank').textContent = rankPos;
 
@@ -1068,6 +1122,34 @@ window.abrirModalPerfil = async function(alvoUid, nomeBase) {
   _pmAlvoNome = nomeExib;
   renderEmojiGrid();
   resetEmojiCount();
+
+  // ── Upset bonus ──
+  const meuPerf = meuPerfSnap?.val() || {};
+  const UPSET_MINIMO_DUELOS = 10;
+  const meusDuelosTotal = meuPerf.duelos_total || 0;
+  const upsetDesbloqueado = meusDuelosTotal >= UPSET_MINIMO_DUELOS;
+  const diff = meuRankNum - rankAdvNum;
+  let upsetPct = 0;
+  if (upsetDesbloqueado) {
+    if (rankAdvNum === 1)                upsetPct = 100;
+    else if (rankAdvNum <= 3)            upsetPct = 75;
+    else if (diff >= 4 && diff <= 10)    upsetPct = 25;
+    else if (diff > 10)                  upsetPct = 10;
+  }
+  const upsetEl = document.getElementById('pm-upset');
+  const upsetTxt = document.getElementById('pm-upset-text');
+  if (!upsetDesbloqueado) {
+    upsetEl.style.display = 'flex';
+    const faltam = UPSET_MINIMO_DUELOS - meusDuelosTotal;
+    upsetTxt.innerHTML = `⚔️ Dispute mais <span class="pm-upset-bonus">${faltam} duelo${faltam !== 1 ? 's' : ''}</span> para desbloquear o bônus de upset!`;
+  } else if (upsetPct > 0) {
+    upsetEl.style.display = 'flex';
+    const xpBase  = XP_DUELO[_modalDiff]?.vitoria || 25;
+    const xpBonus = Math.round(xpBase * upsetPct / 100);
+    upsetTxt.innerHTML = `Vencer o ${rankPos} dá <span class="pm-upset-bonus">+${upsetPct}% XP</span> de bônus (+${xpBonus} XP extra)!`;
+  } else {
+    upsetEl.style.display = 'none';
+  }
 };
 
 window.fecharModalPerfil = function() {
@@ -1134,20 +1216,38 @@ function mostrarBolhaEmoji(emoji, para) {
   }, 4000);
 }
 
-function adicionarFeedEmoji(emoji, de, para) {
+function tempoRelativo(ts) {
+  const diff = Math.floor((Date.now() - ts) / 1000);
+  if (diff < 60)  return 'agora';
+  if (diff < 120) return '1min';
+  return `${Math.floor(diff / 60)}min`;
+}
+
+function adicionarFeedEmoji(emoji, de, para, ts = Date.now()) {
   if (!emoji || !de || !para) return;
   const feed = document.getElementById('emoji-feed');
   if (!feed) return;
   const item = document.createElement('div');
   item.className = 'emoji-feed-item';
-  item.innerHTML = `<span class="ef-emoji">${emoji}</span><span><strong>${escH(de)}</strong> → <strong>${escH(para)}</strong></span>`;
+  item.dataset.ts = ts;
+  item.innerHTML = `
+    <span class="ef-emoji">${emoji}</span>
+    <span class="ef-text"><strong>${escH(de)}</strong> → <strong>${escH(para)}</strong><span class="ef-time">agora</span></span>
+  `;
   feed.insertBefore(item, feed.firstChild);
   while (feed.children.length > 5) feed.removeChild(feed.lastChild);
   setTimeout(() => {
     item.style.animation = 'feedItemOut .3s ease forwards';
     setTimeout(() => item.remove(), 300);
-  }, 7000);
+  }, 10 * 60 * 1000);
 }
+
+setInterval(() => {
+  document.querySelectorAll('.emoji-feed-item[data-ts]').forEach(item => {
+    const el = item.querySelector('.ef-time');
+    if (el) el.textContent = tempoRelativo(parseInt(item.dataset.ts));
+  });
+}, 30000);
 
 async function gravarFeedEmoji(emoji, de, para) {
   try {
@@ -1376,11 +1476,37 @@ async function carregarHistorico() {
     const derrotas = duelos.filter(d => d.resultado === 'derrota').length;
     const total    = duelos.length;
 
+    // Calcular streak (vitórias consecutivas do final)
+    let streak = 0;
+    for (const d of duelos) {
+      if (d.resultado === 'vitoria') streak++;
+      else break;
+    }
+
+    // Calcular venceu_rank1: verificar se alguma vitória foi contra o atual #1
+    let venceuRank1 = false;
+    try {
+      const todosSnap = await get(ref(db, 'perfis'));
+      if (todosSnap.exists()) {
+        const lista = [];
+        todosSnap.forEach(c => {
+          const v = c.val();
+          if (!v?.nome || v.nome.includes('PROFESSOR') || v.nome.includes('TESTE')) return;
+          if ((v.duelos_vitorias||0) === 0 && (v.duelos_total||0) === 0) return;
+          lista.push({ uid: c.key, vitorias: v.duelos_vitorias||0, xp: v.xp||0 });
+        });
+        lista.sort((a,b) => b.vitorias - a.vitorias || b.xp - a.xp);
+        const rank1uid = lista[0]?.uid;
+        if (rank1uid) {
+          venceuRank1 = duelos.some(d => d.resultado === 'vitoria' && d.adversario_uid === rank1uid);
+        }
+      }
+    } catch(_) {}
+
     // Corrigir contadores no Firebase com valores reais do histórico
-    await update(ref(db, `perfis/${uid}`), {
-      duelos_total:    total,
-      duelos_vitorias: vitorias,
-    });
+    const perfilUpdate = { duelos_total: total, duelos_vitorias: vitorias, streak_vitorias: streak };
+    if (venceuRank1) perfilUpdate.venceu_rank1 = true;
+    await update(ref(db, `perfis/${uid}`), perfilUpdate);
 
     // ── helpers ──
     const DIFF_CLASS = { facil:'facil', medio:'medio', dificil:'dificil' };
@@ -1433,7 +1559,7 @@ async function carregarHistorico() {
           : escH(advTurma);
         return `
           <div class="hist-row ${isW?'win':'loss'}${d.abandono?' abandon':''}" data-tipo="${isW?'win':'loss'}">
-            <div class="hist-wl ${isW?'win':'loss'}">${isW?'W':'L'}</div>
+            <div class="hist-wl ${isW?'win':'loss'}">${isW?'Vitória':'Derrota'}</div>
             <div class="hist-avatar" style="background:${avatarColor(advNome)}">${escH((advNome)[0]?.toUpperCase()||'?')}</div>
             <div class="hist-info">
               <div class="hist-nome">${nomeExib}</div>
@@ -1636,6 +1762,9 @@ async function carregarRankingDuelos() {
         </div>
       </div>
       <span id="pm-h2h-tag" class="pm-h2h-tag even">Nunca duelaram</span>
+    </div>
+    <div id="pm-upset" class="pm-upset">
+      <span class="pm-upset-text" id="pm-upset-text"></span>
     </div>
     <div class="pm-emojis">
       <div class="pm-emojis-label">Mandar emoji <span id="pm-emoji-count" style="font-weight:400;color:var(--text-muted)">(10 restantes)</span></div>
