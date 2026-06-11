@@ -14,37 +14,44 @@ export function iniciarNotifDuelo(uid, apelido) {
     style.textContent = `
       .duelo-notif-banner {
         position: fixed; bottom: 20px; right: 20px; z-index: 9999;
-        background: #151828;
-        border: 1px solid rgba(239,68,68,.5);
+        background: linear-gradient(135deg, #1a1040, #2d1b69);
+        border: 2px solid #a78bfa;
         border-radius: 16px;
-        padding: 16px 18px;
-        box-shadow: 0 8px 32px rgba(239,68,68,.2);
-        display: flex; align-items: center; gap: 14px;
+        padding: 14px 16px;
+        box-shadow: 0 0 32px rgba(167,139,250,.4), 0 8px 32px rgba(0,0,0,.4);
+        display: flex; align-items: center; gap: 12px;
         max-width: 360px; width: calc(100vw - 40px);
         animation: slideInRight .35s cubic-bezier(.4,0,.2,1);
-        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-family: 'Inter', system-ui, sans-serif;
         color: #e8eaf0;
       }
       @keyframes slideInRight {
         from { opacity:0; transform:translateX(30px); }
         to   { opacity:1; transform:translateX(0); }
       }
-      .dnb-info { flex:1; min-width:0; }
-      .dnb-title { font-size:13px; font-weight:800; margin-bottom:3px; }
-      .dnb-title span { color:#ef4444; }
-      .dnb-sub { font-size:11px; color:#6b7280; }
-      .dnb-timer { font-size:20px; font-weight:900; color:#ef4444;
-                   font-variant-numeric:tabular-nums; min-width:36px; text-align:center; }
-      .dnb-btns { display:flex; gap:7px; flex-direction:column; }
+      .dnb-info { flex:1; min-width:0; overflow:hidden; }
+      .dnb-title {
+        font-size:13px; font-weight:800; margin-bottom:3px;
+        white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      }
+      .dnb-title span { color:#c4b5fd; }
+      .dnb-sub { font-size:11px; color:#a78bfa; }
+      .dnb-timer {
+        font-family:'Orbitron', monospace;
+        font-size:20px; font-weight:700; color:#ffd700;
+        font-variant-numeric:tabular-nums; min-width:44px; text-align:center; flex-shrink:0;
+      }
+      .dnb-btns { display:flex; gap:6px; flex-direction:column; flex-shrink:0; }
       .dnb-aceitar {
-        padding:7px 14px; border-radius:8px; border:none;
-        background:#22c55e; color:#fff; font-size:12px; font-weight:800;
+        padding:8px 14px; border-radius:8px; border:none;
+        background:#7c5cfc; color:#fff; font-size:12px; font-weight:800;
         cursor:pointer; white-space:nowrap;
       }
+      .dnb-aceitar:hover { background:#6d4fe0; }
       .dnb-recusar {
-        padding:7px 12px; border-radius:8px;
-        border:1px solid rgba(255,255,255,.1);
-        background:transparent; color:#6b7280; font-size:11px;
+        padding:6px 12px; border-radius:8px;
+        border:1px solid rgba(255,255,255,.15);
+        background:transparent; color:rgba(255,255,255,.45); font-size:11px;
         font-weight:600; cursor:pointer;
       }
     `;
@@ -88,9 +95,10 @@ function mostrarBanner(id, duelo, uid) {
   banner.id = `dnb-${id}`;
   banner.style.pointerEvents = 'auto';
   banner.innerHTML = `
+    <span style="font-size:22px;flex-shrink:0">⚔️</span>
     <div class="dnb-info">
-      <div class="dnb-title"><span>${escapeHtml(duelo.criador_nome)}</span> te desafiou!</div>
-      <div class="dnb-sub">${DIFF_LABEL[duelo.dificuldade] || duelo.dificuldade}</div>
+      <div class="dnb-title"><span>${escapeHtml(duelo.criador_nome)}${duelo.criador_parceiro_nome ? ' + ' + escapeHtml(duelo.criador_parceiro_nome) : ''}</span> te desafiou!</div>
+      <div class="dnb-sub">${duelo.tipo === 'aberto' ? '🌐 Desafio aberto · ' : '🎯 Desafio direto · '}${DIFF_LABEL[duelo.dificuldade] || duelo.dificuldade}</div>
     </div>
     <div class="dnb-timer" id="dnb-timer-${id}"></div>
     <div class="dnb-btns">

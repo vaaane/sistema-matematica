@@ -186,7 +186,7 @@
 <script type="module">
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { requireAluno, renderSidebarAluno, clearSession, isModoTeste } from "/js/auth.js";
+import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, injetarFaixaDuelo } from "/js/auth.js";
 import { getResultadosByAluno, getDetalhes, getHistoricoTeste, getAlunoPreferencia } from "/js/db.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
 
@@ -202,6 +202,7 @@ const sessionUid = (turma + '_' + alunoNome).replace(/[.#$[\]/\s]/g, '_');
 function avKey(s) { return btoa(unescape(encodeURIComponent(s))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_'); }
 
 renderSidebarAluno("sidebar", "historico");
+injetarFaixaDuelo();
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 document.getElementById("topbar-sub").textContent = isModoTeste() ? '🧪 Modo Teste' : `Turma ${turma}`;
 (async () => { try {

@@ -25,7 +25,7 @@ export const ALUNOS_POR_TURMA = {
     "Ketelly", "Leticia", "Lucas Gabriel",
     "Lucas Matheus", "Luis Gabriel", "Luis Miguel",
     "Miguel Henrique", "Miguel Nascimento", "Thayna",
-    "Wanderson",
+    "Wanderson", "teste1", "teste2",
   ],
   "8E": [
     "Ana Beatriz", "Arthur", "Caio",

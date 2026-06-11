@@ -271,6 +271,80 @@ export async function injetarFaixaDupla() {
   });
 }
 
+// ── Faixa global: duelo aguardando resposta ──────────────────
+export async function injetarFaixaDuelo() {
+  const _paginaAtual = window.location.pathname;
+  const _paginasIgnorar = [
+    '/aluno/duelos.html',
+    '/aluno/duelo_partida.html',
+    '/aluno/avaliacao_plus.html',
+    '/aluno/competicao_plus.html',
+    '/aluno/competicao.html',
+    '/aluno/jogar.html',
+    '/aluno/tabuada.html',
+  ];
+  if (_paginasIgnorar.some(p => _paginaAtual.includes(p))) return;
+
+  document.getElementById('faixa-duelo-global')?.remove();
+
+  let _dadosDuelo = null;
+  try { _dadosDuelo = JSON.parse(sessionStorage.getItem('sm_duelo_aguardando') || 'null'); } catch(_) {}
+
+  if (!_dadosDuelo?.id || !_dadosDuelo?.expira_em) return;
+  if (_dadosDuelo.expira_em <= Date.now()) {
+    sessionStorage.removeItem('sm_duelo_aguardando'); return;
+  }
+
+  try {
+    const { db: _db } = await import('/js/firebase-config.js');
+    const { ref: _ref, get: _get } =
+      await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+    const _snap = await _get(_ref(_db, `duelos/${_dadosDuelo.id}/status`));
+    if (_snap.val() !== 'aguardando') {
+      sessionStorage.removeItem('sm_duelo_aguardando'); return;
+    }
+  } catch(_) { return; }
+
+  const faixa = document.createElement('div');
+  faixa.id = 'faixa-duelo-global';
+  faixa.style.cssText = 'background:linear-gradient(90deg,rgba(124,92,252,.18),rgba(124,92,252,.08));border-bottom:1.5px solid rgba(124,92,252,.35);padding:7px 20px;display:flex;align-items:center;gap:10px;font-size:12px;font-weight:600;color:#c4b5fd;z-index:100;position:relative';
+
+  const nomeAdv = _dadosDuelo.adversario_nome || 'adversário';
+  faixa.innerHTML = `<span style="font-size:15px;flex-shrink:0">⚔️</span><span style="flex:1">Aguardando resposta de <strong>${nomeAdv}</strong></span><span id="faixa-duelo-timer" style="font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:#e9d5ff;flex-shrink:0;margin-right:8px"></span><button id="faixa-duelo-cancelar" style="background:rgba(124,92,252,.15);border:1px solid rgba(124,92,252,.4);color:#a78bfa;border-radius:8px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">✕ Cancelar</button>`;
+
+  const topbar = document.querySelector('.topbar');
+  if (topbar) topbar.insertAdjacentElement('afterend', faixa);
+  else document.body.prepend(faixa);
+
+  const _timerInterval = setInterval(() => {
+    const rest = Math.max(0, _dadosDuelo.expira_em - Date.now());
+    const m = Math.floor(rest / 60000);
+    const s = Math.floor((rest % 60000) / 1000);
+    const el = document.getElementById('faixa-duelo-timer');
+    if (el) el.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+    if (rest <= 0) {
+      clearInterval(_timerInterval);
+      sessionStorage.removeItem('sm_duelo_aguardando');
+      faixa.remove();
+    }
+  }, 1000);
+
+  document.getElementById('faixa-duelo-cancelar').addEventListener('click', async () => {
+    clearInterval(_timerInterval);
+    sessionStorage.removeItem('sm_duelo_aguardando');
+    faixa.remove();
+    try {
+      const { db: _db } = await import('/js/firebase-config.js');
+      const { ref: _ref, update: _update } =
+        await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+      await _update(_ref(_db, `duelos/${_dadosDuelo.id}`), {
+        status: 'expirado',
+        cancelado_por: getSession()?.alunos?.[0] || '',
+      });
+    } catch(_) {}
+  });
+}
+
 // ── Badge de dupla reativo ───────────────────────────────────
 export function atualizarBadgeDupla() {
   const badge = document.getElementById('sidebar-dupla-badge');

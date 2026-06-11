@@ -289,6 +289,11 @@
     .pm-upset-text { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
     .pm-upset-bonus { color: var(--orange); font-weight: 800; }
 
+    /* ── Revanche ── */
+    .btn-revanche { background:rgba(249,115,22,.15) !important; border-color:rgba(249,115,22,.5) !important; color:var(--orange) !important; animation:revanchePulse 2s ease-in-out infinite; }
+    .btn-revanche:hover:not(.disabled) { background:var(--orange) !important; color:#fff !important; }
+    @keyframes revanchePulse { 0%,100%{box-shadow:0 0 0 rgba(249,115,22,.3)} 50%{box-shadow:0 0 10px rgba(249,115,22,.4)} }
+
     /* ── Badges nos cards online ── */
     .online-card { position: relative; }
     .oc-badge { position: absolute; top: -8px; left: 12px; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 10px; letter-spacing: .5px; white-space: nowrap; z-index: 1; }
@@ -514,7 +519,7 @@ if (!document.getElementById('banner-aguardando')) {
   const _banEl = document.createElement('div');
   _banEl.id = 'banner-aguardando';
   _banEl.style.cssText = 'display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9000;width:min(560px,calc(100vw - 32px));background:linear-gradient(135deg,#2d1b69,#1a1040);border:2px solid #a78bfa;border-radius:14px;padding:16px 20px;align-items:center;gap:14px;box-shadow:0 0 32px rgba(167,139,250,.5),0 8px 32px rgba(0,0,0,.4)';
-  _banEl.innerHTML = `<span style="font-size:26px;flex-shrink:0">⚔️</span><div style="flex:1;min-width:0"><div id="aguardando-nome-txt" style="font-size:15px;font-weight:800;color:#c4b5fd">Aguardando resposta...</div><div style="font-size:12px;color:#a78bfa;margin-top:3px">Expira em <span id="aguardando-timer" style="font-weight:700;color:#e9d5ff">3:00</span></div></div><button onclick="cancelarDesafio()" style="background:rgba(239,68,68,.15);border:1.5px solid rgba(239,68,68,.5);color:#ef4444;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:800;cursor:pointer;flex-shrink:0">✕ Cancelar</button>`;
+  _banEl.innerHTML = `<span style="font-size:26px;flex-shrink:0">⚔️</span><div style="flex:1;min-width:0"><div id="aguardando-nome-txt" style="font-size:15px;font-weight:800;color:#c4b5fd">Aguardando resposta...</div><div style="font-size:12px;color:#a78bfa;margin-top:3px">Expira em <span id="aguardando-timer" style="font-weight:700;color:#e9d5ff">3:00</span></div></div><button onclick="cancelarDesafio()" style="background:rgba(124,92,252,.15);border:1.5px solid rgba(124,92,252,.5);color:#a78bfa;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:800;cursor:pointer;flex-shrink:0">✕ Cancelar</button>`;
   document.body.appendChild(_banEl);
 }
 
@@ -583,6 +588,31 @@ await iniciarPresenca(uid, {
 restaurarEstadoDupla();
 window.addEventListener('beforeunload', () => encerrarPresenca());
 
+// Notificação de desafio via módulo centralizado
+try {
+  const { iniciarNotifDuelo } = await import('/js/duelo_notif.js');
+  if (perfil?.duelos_disponivel !== false) {
+    iniciarNotifDuelo(uid, meuApelido);
+  }
+} catch(_) {}
+
+// Buscar último adversário para revanche
+let _ultimoAdvUid  = null;
+let _ultimoAdvNome = null;
+try {
+  const _histSnap = await get(ref(db, `perfis/${uid}/historico_duelos`));
+  if (_histSnap.exists()) {
+    const _todos = [];
+    _histSnap.forEach(c => _todos.push({ ...c.val() }));
+    _todos.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+    const _ultimo = _todos[0];
+    if (_ultimo?.resultado === 'derrota' && _ultimo?.adversario_uid) {
+      _ultimoAdvUid  = _ultimo.adversario_uid;
+      _ultimoAdvNome = _ultimo.adversario_nome || '?';
+    }
+  }
+} catch(_) {}
+
 // Notificação quando parceiro faz login e desfaz dupla
 onValue(ref(db, `notif_dupla/${uid}`), snap => {
   if (!snap.exists()) return;
@@ -612,6 +642,16 @@ onValue(ref(db, `notif_emoji/${uid}/watching`), async snap => {
   const d = snap.val();
   if (!d?.ts || Date.now() - d.ts > 10000) { await set(snap.ref, null); return; }
   showToast('👀 alguém está te observando…', 'info');
+  await set(snap.ref, null);
+});
+
+onValue(ref(db, `notif_emoji/${uid}/duelo_cancelado`), async snap => {
+  if (!snap.exists()) return;
+  const d = snap.val();
+  if (!d?.duelo_id || !d?.ts) return;
+  if (Date.now() - d.ts > 15000) { await set(snap.ref, null); return; }
+  document.getElementById(`dnb-${d.duelo_id}`)?.remove();
+  _notifVistas.delete(d.duelo_id);
   await set(snap.ref, null);
 });
 
@@ -695,6 +735,7 @@ window.confirmarDupla = async function() {
     try { await update(ref(db, `duelos/${_meuDueloAguardandoId}`), { status: 'expirado' }); } catch(_) {}
     _aguardandoId = null;
     _meuDueloAguardandoId = null;
+    sessionStorage.removeItem('sm_duelo_aguardando');
     const _ban = document.getElementById('banner-aguardando');
     if (_ban) _ban.style.display = 'none';
   }
@@ -852,7 +893,9 @@ function renderOnlineCard(aluno) {
         <div class="oc-dot" style="background:${st.dot}"></div>
       </div>
       ${st.disponivel
-        ? `<button class="btn-desafiar" onclick="event.stopPropagation();abrirModalDesafio('${aluno.uid}','${escH(nomeBase)}',${temParceiro})">⚔️ Desafiar</button>`
+        ? aluno.uid === _ultimoAdvUid
+          ? `<button class="btn-desafiar btn-revanche" onclick="event.stopPropagation();abrirModalDesafio('${aluno.uid}','${escH(nomeBase)}',${temParceiro})">🔁 Revanche!</button>`
+          : `<button class="btn-desafiar" onclick="event.stopPropagation();abrirModalDesafio('${aluno.uid}','${escH(nomeBase)}',${temParceiro})">⚔️ Desafiar</button>`
         : `<button class="btn-desafiar" style="opacity:.4;cursor:not-allowed" disabled onclick="event.stopPropagation()">${st.label}</button>`}
     </div>`;
 }
@@ -866,6 +909,7 @@ window.criarDesafioAberto = async function() {
     clearInterval(_aguardandoInt);
     try { await update(ref(db, `duelos/${_meuDueloAguardandoId}`), { status: 'expirado' }); } catch(_) {}
     _aguardandoId = null; _meuDueloAguardandoId = null;
+    sessionStorage.removeItem('sm_duelo_aguardando');
     const _ban = document.getElementById('banner-aguardando'); if(_ban) _ban.style.display = 'none';
   }
   const btn = document.getElementById('btnDesafioAberto');
@@ -901,6 +945,7 @@ window.abrirModalDesafio = async function(adversarioUid, adversarioNome, isDupla
     clearInterval(_aguardandoInt);
     try { await update(ref(db, `duelos/${_meuDueloAguardandoId}`), { status: 'expirado' }); } catch(_) {}
     _aguardandoId = null; _meuDueloAguardandoId = null;
+    sessionStorage.removeItem('sm_duelo_aguardando');
     const _ban = document.getElementById('banner-aguardando'); if(_ban) _ban.style.display = 'none';
   }
   _modalUid  = adversarioUid;
@@ -956,6 +1001,11 @@ function mostrarAguardando(id, nomeAdversario = '') {
   _meuDueloAguardandoId = id;
   _aguardandoId  = id;
   _aguardandoExp = Date.now() + DUELO_TIMEOUT_ACEITAR_S * 1000;
+  sessionStorage.setItem('sm_duelo_aguardando', JSON.stringify({
+    id,
+    expira_em: _aguardandoExp,
+    adversario_nome: nomeAdversario || '',
+  }));
   const _ban = document.getElementById('banner-aguardando');
   if (_ban) {
     _ban.style.display = 'flex';
@@ -973,6 +1023,7 @@ function mostrarAguardando(id, nomeAdversario = '') {
     document.getElementById('aguardando-timer').textContent = `${m}:${s.toString().padStart(2,'0')}`;
     if (rest <= 0) {
       clearInterval(_aguardandoInt);
+      sessionStorage.removeItem('sm_duelo_aguardando');
       { const _ban = document.getElementById('banner-aguardando'); if(_ban) _ban.style.display = 'none'; }
       document.getElementById('btnDesafioAberto').disabled = false;
     }
@@ -982,6 +1033,7 @@ function mostrarAguardando(id, nomeAdversario = '') {
   onValue(ref(db, `duelos/${id}/status`), snap => {
     if (snap.val() === 'em_jogo') {
       clearInterval(_aguardandoInt);
+      sessionStorage.removeItem('sm_duelo_aguardando');
       window.location.href = `/aluno/duelo_partida.html?id=${id}`;
     }
   });
@@ -990,9 +1042,23 @@ function mostrarAguardando(id, nomeAdversario = '') {
 window.cancelarDesafio = async function() {
   if (_aguardandoId) {
     clearInterval(_aguardandoInt);
-    try { await update(ref(db, `duelos/${_aguardandoId}`), { status: 'expirado', cancelado_por: alunos[0] }); } catch(_) {}
+    try {
+      const dSnap = await get(ref(db, `duelos/${_aguardandoId}`));
+      const dData = dSnap.val();
+      await update(ref(db, `duelos/${_aguardandoId}`), {
+        status: 'expirado',
+        cancelado_por: alunos[0],
+      });
+      if (dData?.adversario_uid && dData.tipo === 'direto') {
+        await set(ref(db, `notif_emoji/${dData.adversario_uid}/duelo_cancelado`), {
+          duelo_id: _aguardandoId,
+          ts: Date.now(),
+        });
+      }
+    } catch(_) {}
     _aguardandoId = null;
     _meuDueloAguardandoId = null;
+    sessionStorage.removeItem('sm_duelo_aguardando');
   }
   const _ban = document.getElementById('banner-aguardando');
   if (_ban) _ban.style.display = 'none';
@@ -1122,6 +1188,16 @@ window.abrirModalPerfil = async function(alvoUid, nomeBase) {
   _pmAlvoNome = nomeExib;
   renderEmojiGrid();
   resetEmojiCount();
+
+  // ── Botão revanche ──
+  const btnDesafiar = document.getElementById('pm-btn-desafiar');
+  if (alvoUid === _ultimoAdvUid) {
+    btnDesafiar.innerHTML = '🔁 Revanche contra ' + escH(nomeExib);
+    btnDesafiar.style.background = 'linear-gradient(135deg, var(--orange), #fb923c)';
+  } else {
+    btnDesafiar.innerHTML = '⚔️ Desafiar <span id="pm-btn-nome">' + escH(nomeExib) + '</span>';
+    btnDesafiar.style.background = '';
+  }
 
   // ── Upset bonus ──
   const meuPerf = meuPerfSnap?.val() || {};
@@ -1285,6 +1361,7 @@ onValue(ref(db, 'duelos'), snap => {
       if (_aguardandoId === id) {
         clearInterval(_aguardandoInt);
         _aguardandoId = null;
+        sessionStorage.removeItem('sm_duelo_aguardando');
         { const _ban = document.getElementById('banner-aguardando'); if(_ban) _ban.style.display = 'none'; }
         document.getElementById('btnDesafioAberto').disabled = false;
       }
@@ -1292,9 +1369,15 @@ onValue(ref(db, 'duelos'), snap => {
       mostrarToastRecusa(d.adversario_nome || 'O aluno');
     }
 
-    // Recuperar meu desafio ao recarregar página
-    if (d.criador_uid === uid && d.status === 'aguardando') {
+    // Recuperar meu desafio ao recarregar página — restaurar banner
+    if (d.criador_uid === uid && d.status === 'aguardando' && !_aguardandoId) {
       _meuDueloAguardandoId = id;
+      _aguardandoId  = id;
+      _aguardandoExp = d.expira_em || (Date.now() + DUELO_TIMEOUT_ACEITAR_S * 1000);
+      if (_aguardandoExp > Date.now()) {
+        const nomeAdv = d.adversario_nome || (d.tipo === 'aberto' ? 'todos online' : '');
+        mostrarAguardando(id, nomeAdv);
+      }
     }
     // Limpar quando meu desafio for aceito/expirado por outro caminho
     if (d.criador_uid === uid && d.status !== 'aguardando' && _meuDueloAguardandoId === id) {
@@ -1302,18 +1385,10 @@ onValue(ref(db, 'duelos'), snap => {
     }
 
     // Remover notificação se desafio foi cancelado/expirado pelo criador
-    if ((d.status === 'expirado' || d.status === 'cancelado') && _notifVistas.has(id)) {
-      document.getElementById(`notif-${id}`)?.remove();
+    if (d.status === 'expirado' || d.status === 'cancelado') {
+      document.getElementById(`dnb-${id}`)?.remove();
     }
 
-    if (d.status !== 'aguardando') return;
-    if (d.criador_uid === uid) return;
-    if (d.expira_em < agora) return;
-    if (_notifVistas.has(id)) return;
-    if (d.tipo === 'aberto' || d.adversario_uid === uid) {
-      _notifVistas.add(id);
-      mostrarNotificacaoDesafio(id, d);
-    }
   });
 });
 
@@ -1336,39 +1411,6 @@ function mostrarToastRecusa(nome) {
   t.textContent = `❌ ${nome} recusou seu desafio`;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 4000);
-}
-
-function mostrarNotificacaoDesafio(id, duelo) {
-  if (document.getElementById(`notif-${id}`)) return;
-  const restMs = duelo.expira_em - Date.now();
-  if (restMs <= 0) return;
-
-  const el = document.createElement('div');
-  el.id = `notif-${id}`;
-  el.className = 'challenge-notif';
-  el.innerHTML = `
-    <div class="cn-info">
-      <div class="cn-title"><strong>${escH(duelo.criador_nome)}${duelo.criador_parceiro_nome ? ` + ${escH(duelo.criador_parceiro_nome)}` : ''}</strong> · ${escH(duelo.criador_turma)} te desafiou!</div>
-      <div class="cn-sub">
-        ${duelo.tipo === 'aberto' ? '🌐 Desafio aberto' : '🎯 Desafio direto'} ·
-        <strong>${diffLabel(duelo.dificuldade)}</strong> · ${TEMPO_LABEL[duelo.dificuldade] || ''}
-      </div>
-    </div>
-    <div class="cn-timer" id="timer-${id}"></div>
-    <div class="cn-btns">
-      <button class="btn-aceitar" onclick="aceitarDesafio('${id}')">⚔️ Aceitar</button>
-      <button class="btn-recusar" onclick="recusarDesafio('${id}')">Recusar</button>
-    </div>`;
-  document.getElementById('notificacoes-wrap').prepend(el);
-
-  const interval = setInterval(() => {
-    const rest = Math.max(0, duelo.expira_em - Date.now());
-    const m = Math.floor(rest / 60000);
-    const s = Math.floor((rest % 60000) / 1000);
-    const timerEl = document.getElementById(`timer-${id}`);
-    if (timerEl) timerEl.textContent = `${m}:${s.toString().padStart(2,'0')}`;
-    if (rest <= 0) { clearInterval(interval); el.remove(); }
-  }, 1000);
 }
 
 window.aceitarDesafio = async function(id) {
@@ -1403,6 +1445,7 @@ window.aceitarDesafio = async function(id) {
       try { await update(ref(db, `duelos/${_aguardandoId}`), { status: 'expirado' }); } catch(_) {}
       _aguardandoId = null;
       _meuDueloAguardandoId = null;
+      sessionStorage.removeItem('sm_duelo_aguardando');
       { const _ban = document.getElementById('banner-aguardando'); if(_ban) _ban.style.display = 'none'; }
     }
     // Cancelar todos os outros convites recebidos pendentes
@@ -1733,7 +1776,7 @@ async function carregarRankingDuelos() {
     <div id="aguardando-nome-txt" style="font-size:15px;font-weight:800;color:#c4b5fd">Aguardando resposta...</div>
     <div style="font-size:12px;color:#a78bfa;margin-top:3px">Expira em <span id="aguardando-timer" style="font-weight:700;color:#e9d5ff">3:00</span></div>
   </div>
-  <button onclick="cancelarDesafio()" style="background:rgba(239,68,68,.15);border:1.5px solid rgba(239,68,68,.5);color:#ef4444;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:800;cursor:pointer;flex-shrink:0;white-space:nowrap">✕ Cancelar</button>
+  <button onclick="cancelarDesafio()" style="background:rgba(124,92,252,.15);border:1.5px solid rgba(124,92,252,.5);color:#a78bfa;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:800;cursor:pointer;flex-shrink:0;white-space:nowrap">✕ Cancelar</button>
 </div>
 
 <!-- Mini-perfil modal -->

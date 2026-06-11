@@ -129,7 +129,7 @@
 <script type="module">
 import { LISTA_ATIVIDADES } from "/js/constants.js";
 import { getResultados, getLiberadasParaTurma, getAlunoPreferencia } from "/js/db.js";
-import { requireAluno, renderSidebarAluno, clearSession, isModoTeste } from "/js/auth.js";
+import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, injetarFaixaDuelo } from "/js/auth.js";
 import { saveRankPos, applyTopRankVisuals } from "/js/toprank.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
 import { initTopNotif } from "/js/topnotif.js";
@@ -140,6 +140,7 @@ const sess = requireAluno("/index.html");
 if (!sess) throw new Error("não autenticado");
 
 renderSidebarAluno("sidebar", "inicio");
+injetarFaixaDuelo();
 window.sair = () => { import('/js/presenca.js').then(m => m.encerrarPresenca()); clearSession(); window.location.href = "/index.html"; };
 
 const { alunos, turma } = sess;

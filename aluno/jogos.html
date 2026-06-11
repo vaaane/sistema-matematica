@@ -259,7 +259,7 @@
 
 <script>(()=>{ document.documentElement.setAttribute('data-theme','dark'); })()</script>
 <script type="module">
-import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+import { requireAluno, renderSidebarAluno, clearSession, injetarFaixaDuelo } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { NIVEL_MAX } from "/js/constants.js";
@@ -268,6 +268,7 @@ import { getLiberadasParaTurma } from "/js/db.js";
 const sess = requireAluno("/index.html");
 if (!sess) throw new Error("não autenticado");
 renderSidebarAluno("sidebar", "jogos");
+injetarFaixaDuelo();
 window.sair = () => { import('/js/presenca.js').then(m => m.encerrarPresenca()); clearSession(); window.location.href = "/index.html"; };
 
 const { alunos, turma } = sess;

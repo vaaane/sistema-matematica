@@ -136,6 +136,9 @@
       .lado-pts { font-size: 24px; }
       .vs-timer { font-size: 18px; }
     }
+    .btn-reacao { padding:10px 8px; background:var(--card2); border:1px solid var(--border); border-radius:10px; color:var(--text); font-size:12px; font-weight:600; cursor:pointer; transition:all .15s; font-family:'Inter',sans-serif; }
+    .btn-reacao:hover { background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.2); }
+    .btn-reacao.enviado { opacity:.4; cursor:not-allowed; }
   </style>
 </head>
 <body>
@@ -877,6 +880,19 @@ async function mostrarResultado(resultadosParam) {
                   color:${xpDelta >= 0 ? 'var(--green,#22c55e)' : '#ef4444'}">
         ${xpDelta >= 0 ? '+' : ''}${xpDelta} XP
       </div>
+      <div id="reacao-pos-duelo" style="width:100%">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px;font-weight:600">
+          Mandar mensagem para ${escH(_adversarioNome)}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          <button onclick="enviarReacaoPos('gg 🤝')" class="btn-reacao">gg 🤝</button>
+          <button onclick="enviarReacaoPos('revancha! 😤')" class="btn-reacao">revancha! 😤</button>
+          <button onclick="enviarReacaoPos('bem jogado 👏')" class="btn-reacao">bem jogado 👏</button>
+        </div>
+        <div id="reacao-enviada" style="display:none;font-size:12px;color:var(--green);text-align:center;margin-top:8px">
+          ✅ Mensagem enviada!
+        </div>
+      </div>
       <button onclick="_restaurarDuplaLocalStorage();window.location.href='/aluno/duelos.html'"
         style="padding:12px 28px;background:var(--purple,#7F77DD);color:#fff;
                border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">
@@ -885,6 +901,23 @@ async function mostrarResultado(resultadosParam) {
     </div>
   `;
 }
+
+// ── Reação pós-duelo ──────────────────────────────────────────
+let _reacaoEnviada = false;
+window.enviarReacaoPos = async function(msg) {
+  if (_reacaoEnviada) return;
+  _reacaoEnviada = true;
+  document.querySelectorAll('.btn-reacao').forEach(b => b.classList.add('enviado'));
+  document.getElementById('reacao-enviada').style.display = 'block';
+  try {
+    await set(ref(db, `notif_emoji/${adversarioUid}/reacao`), {
+      de:    apelido || alunos[0],
+      emoji: msg,
+      ts:    Date.now(),
+      tipo:  'pos_duelo',
+    });
+  } catch(_) {}
+};
 
 // ── Sair ──────────────────────────────────────────────────────
 window.confirmarSair = async function() {
