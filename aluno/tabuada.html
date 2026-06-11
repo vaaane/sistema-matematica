@@ -430,7 +430,7 @@ async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo
       // ── XP de gamificação (tabuada) ───────────────────────────────
       if (resultado === 'completou') try {
         const { adicionarXP } = await import('/js/db.js');
-        await adicionarXP(uid, 5);
+        await adicionarXP(uid, 2);
       } catch(e) { console.warn('[XP] Erro ao adicionar XP tabuada:', e); }
       try {
         const { verificarConquistas } = await import('/js/conquistas.js');

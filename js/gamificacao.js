@@ -73,13 +73,13 @@ export const NIVEL_PERFIL_MAX = 10;
 
 // ── XP por ação ───────────────────────────────────────────────
 export const XP_ATIVIDADE_COMPLETA  = 20;
-export const XP_ATIVIDADE_100PCT    = 35; // bônus por nota máxima (substitui o de cima)
+export const XP_ATIVIDADE_100PCT    = 40; // bônus por nota máxima (substitui o de cima)
 export const XP_STREAK_DIA          = 10;
 
 export const XP_DUELO = {
-  facil:  { vitoria: 15, derrota: -8  },
-  medio:  { vitoria: 25, derrota: -13 },
-  dificil:{ vitoria: 40, derrota: -20 },
+  facil:  { vitoria: 15, derrota: -3  },
+  medio:  { vitoria: 25, derrota: -5  },
+  dificil:{ vitoria: 40, derrota: -8  },
 };
 
 // ── Configurações de duelo ────────────────────────────────────
