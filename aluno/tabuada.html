@@ -1609,6 +1609,38 @@ function onCardClick(el, card) {
   }
 }
 
+// ── Detecta maestria (3× perfeito consecutivo) de um nível ─────
+// Replica a lógica de jogos.html: lê o histórico do nível e conta
+// completions perfeitas consecutivas. Como salvarProgresso() já gravou
+// a partida atual antes do overlay, ela já está incluída na contagem.
+async function _checarMaestria(nivelAlvo) {
+  try {
+    const _niveisBase = _isProfMode
+      ? `professor_tabuada_niveis/${uid}`
+      : _isModoTesteAtivo
+        ? `modo_teste_historico/PROFESSOR_TESTE/tabuada_niveis`
+        : `tabuada_niveis/${uid}`;
+    const snap = await get(ref(db, `${_niveisBase}/historico`));
+    if (!snap.exists()) return false;
+    const entries = Object.entries(snap.val())
+      .map(([ts, v]) => ({ ts: Number(ts), ...v }))
+      .sort((a, b) => a.ts - b.ts);
+    let consec = 0;
+    for (const e of entries) {
+      if (e.nivel !== nivelAlvo) continue;
+      if (e.resultado === 'completou') {
+        if ((e.erros || 0) === 0) consec++;
+        else consec = 0;
+      } else {
+        consec = 0;
+      }
+    }
+    return consec >= 3;
+  } catch (e) {
+    return false;
+  }
+}
+
 // ── Win ───────────────────────────────────────────────────────
 async function onGameWin() {
   gameOver = true;
@@ -1656,6 +1688,19 @@ async function onGameWin() {
     document.querySelector('.level-card').style.animation = 'levelUpPop .45s';
     document.getElementById("level-overlay").style.display = 'flex';
     { const b = document.getElementById('lov-btn-repetir'); if(b){ b.style.display='block'; b._nv=nivelJogado; } }
+
+    // ── Maestria: 3× perfeito consecutivo → diamante 💎 ─────────
+    if (erros === 0 && !isChefao(nivelJogado)) {
+      const _nvReplay = nivelJogado;
+      _checarMaestria(_nvReplay).then(atingiuMaestria => {
+        if (!atingiuMaestria) return;
+        lancarConfete(60);
+        document.getElementById("lov-emoji").textContent = '💎';
+        document.getElementById("lov-title").textContent = '💎 Você conseguiu nível maestria!';
+        document.getElementById("lov-sub").textContent   =
+          `Nível ${_nvReplay} dominado — 3× perfeito consecutivo!`;
+      });
+    }
     return;
   }
 
@@ -1726,11 +1771,29 @@ async function onGameWin() {
   document.getElementById("level-overlay").style.display = 'flex';
   { const b = document.getElementById('lov-btn-repetir'); if(b){ b.style.display='block'; b._nv=nivelJogado; } }
 
+  // ── Maestria: 3× perfeito consecutivo → diamante 💎 ───────────
+  // Não se aplica a chefões (que usam ícone próprio).
+  if (isEstrela && !foiChefao) {
+    _checarMaestria(nivelJogado).then(atingiuMaestria => {
+      if (!atingiuMaestria) return;
+      // Se virou líder no meio-tempo, não sobrescreve o aviso de líder.
+      if (document.getElementById("lov-emoji").textContent === '🏆') return;
+      lancarConfete(60);
+      document.getElementById("lov-emoji").textContent = '💎';
+      document.getElementById("lov-title").textContent = '💎 Você conseguiu nível maestria!';
+      document.getElementById("lov-sub").textContent   =
+        `Nível ${nivelJogado} dominado — 3× perfeito consecutivo! ${isNewRecord ? '🌟 Novo recorde pessoal!' : ''}${_overtimeStr}`;
+      document.getElementById("lov-new").style.color = 'var(--blue)';
+    });
+  }
+
   // Atualiza ranking em background — se virou líder, atualiza overlay
   reloadRanking().then(() => {
     const eLider = rankingAll[0]?._uid === uid;
     if (eLider && !eraLider) {
       if (!isEstrela) lancarConfete(80);
+      // Não sobrescreve a celebração de maestria (💎).
+      if (document.getElementById("lov-emoji").textContent === '💎') return;
       document.getElementById("lov-emoji").textContent = '🏆';
       document.getElementById("lov-title").textContent = '🥇 Você é o novo líder!';
       document.getElementById("lov-sub").textContent   =
