@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .top3-card{border-radius:12px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+    .top3-card:last-child{margin-bottom:0;}
+    .top3-nome{font-size:12px;font-weight:800;color:#fff;line-height:1.2;}
+    .top3-turma{font-size:10px;color:rgba(255,255,255,.75);margin-top:2px;}
+    .top3-pts{font-size:16px;font-weight:800;color:#fff;}
+    /* Online */
+    .online-dot{width:7px;height:7px;border-radius:50%;background:#22C55E;display:inline-block;vertical-align:middle;margin-left:4px;box-shadow:0 0 5px #22C55E;animation:pulse-dot 1.5s ease-in-out infinite;}
+    @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.55;transform:scale(1.35)}}
+    .online-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:center;justify-content:center;}
+    .online-modal{background:var(--card);border-radius:16px;padding:24px;min-width:280px;max-width:420px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,.22);max-height:80vh;overflow-y:auto;}
+    .online-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+    .online-row:last-child{border-bottom:none;}
+    .stat-card-clickable{cursor:pointer;transition:transform .15s,box-shadow .15s;}
+    .stat-card-clickable:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(34,197,94,.18);}
+    .alerta-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:center;justify-content:center;}
+    .alerta-modal{background:var(--card);border-radius:16px;padding:24px;min-width:300px;max-width:500px;width:92%;box-shadow:0 8px 40px rgba(0,0,0,.22);max-height:80vh;overflow-y:auto;}
+    .alerta-turma-head{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;padding:12px 0 4px;border-bottom:1px solid var(--border);margin-bottom:2px;}
+    .alerta-turma-head:first-child{padding-top:0;}
+    .alerta-aluno-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);}
+    .alerta-aluno-row:last-child{border-bottom:none;}
+    .alerta-taxa-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:#FEF2F2;color:#DC2626;flex-shrink:0;}
+    .alerta-list-row{cursor:pointer;}
+    .alerta-list-row:hover{background:var(--hover,rgba(0,0,0,.04));border-radius:6px;}
+    @media(max-width:900px){.dash-stats-grid{grid-template-columns:repeat(3,1fr)!important;}}
+    @media(max-width:560px){.dash-stats-grid{grid-template-columns:repeat(2,1fr)!important;}}
+    .alert-row{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:8px;margin-bottom:5px;border-left:3px solid transparent}
+    .alert-row:last-child{margin-bottom:0}
+    .alert-row.sev-high{background:#FEF2F2;border-color:#EF4444}
+    .alert-row.sev-med{background:#FFFBEB;border-color:#F59E0B}
+    .alert-row.sev-low{background:#FFFBEB;border-color:#FCD34D;opacity:.85}
+    .alert-info{flex:1;min-width:0;background:transparent;border:none;color:inherit}
+    .alert-nome{font-size:13px;font-weight:700;color:var(--text);line-height:1.3}
+    .alert-sub{font-size:11px;color:var(--text-muted);margin-top:2px}
+    .alert-falhas{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;flex-shrink:0;margin-top:1px}
+    .sev-high .alert-falhas{background:#FEE2E2;color:#DC2626}
+    .sev-med .alert-falhas{background:#FEF3C7;color:#92400E}
+    .sev-low .alert-falhas{background:#FEF9C3;color:#A16207}
+    .stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;display:flex;align-items:center;gap:10px}
+    .stat-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .stat-icon svg{width:18px;height:18px}
+    .stat-body{flex:1;min-width:0}
+    .stat-val{font-size:20px;font-weight:800;line-height:1}
+    .stat-meta{font-size:11px;color:var(--text-muted);margin-top:2px;white-space:nowrap}
+    .stat-divider{height:1px;background:var(--border);margin:6px 0}
+    .stat-row{display:flex;align-items:baseline;gap:4px}
+    .rank-row{display:flex;align-items:center;gap:10px;padding:9px 12px 9px 0;border-radius:0 8px 8px 0;margin-bottom:5px;position:relative;overflow:visible}
+    .rank-row:last-child{margin-bottom:0}
+    .rank-row.pos-1{border-left:3px solid #F59E0B;background:rgba(245,158,11,.07);padding-left:12px}
+    .rank-row.pos-2{border-left:3px solid #9CA3AF;background:rgba(156,163,175,.05);padding-left:12px}
+    .rank-row.pos-3{border-left:3px solid #CD853F;background:rgba(180,83,9,.06);padding-left:12px}
+    .rank-row.pos-n{border-left:3px solid var(--border);padding-left:12px}
+    .rank-bar-wrap{margin-top:4px;height:3px;background:var(--border);border-radius:2px;overflow:hidden;max-width:80px}
+    .rank-bar{height:100%;border-radius:2px}
+    .rank-val{text-align:right;flex-shrink:0;position:relative}
+    .rank-val-num{font-size:13px;font-weight:700}
+    .rank-val-label{font-size:10px;color:var(--text-muted)}
+    .rank-crown{position:absolute;top:-12px;right:0;font-size:18px;filter:drop-shadow(0 2px 8px rgba(250,184,0,.9));pointer-events:none}
+    .rank-star{position:absolute;top:-4px;right:0;font-size:9px;pointer-events:none}
+    .card-count{font-size:11px;font-weight:600;color:var(--text-muted);background:#F1F5F9;padding:2px 8px;border-radius:20px;margin-left:6px}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Dashboard</div>
+        <div class="topbar-sub">Visão geral do sistema</div>
+      </div>
+      <div class="topbar-right"><div class="avatar avatar-blue">P</div></div>
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Alertas -->
+<div id="alerta-modal-bg" class="alerta-modal-bg" style="display:none" onclick="fecharAlertaModal(event)">
+  <div class="alerta-modal" onclick="event.stopPropagation()">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div id="alerta-modal-titulo" style="font-size:15px;font-weight:700"></div>
+      <button onclick="fecharAlertaModal()" style="border:none;background:none;cursor:pointer;font-size:18px;color:var(--text-muted);line-height:1;padding:2px 6px">✕</button>
+    </div>
+    <div id="alerta-modal-list"></div>
+  </div>
+</div>
+
+<!-- Modal: Alunos Online -->
+<div id="online-modal-bg" class="online-modal-bg" style="display:none" onclick="fecharOnlineModal(event)">
+  <div class="online-modal" onclick="event.stopPropagation()">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:15px;font-weight:700">Alunos Online Agora <span class="online-dot"></span></div>
+      <button onclick="fecharOnlineModal()" style="border:none;background:none;cursor:pointer;font-size:18px;color:var(--text-muted);line-height:1;padding:2px 6px">✕</button>
+    </div>
+    <div id="online-modal-list"><p style="color:var(--text-muted);font-size:13px">Verificando…</p></div>
+  </div>
+</div>
+
+<script type="module">
+import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES } from "/js/constants.js";
+import { getResultados, getLiberadas, getAlertas, getAllAtividadeStatus, getDetalhes, contarSessoesTabuadaHoje, somarPartidasTabuadaTotal } from "/js/db.js";
+import { db } from "/js/firebase-config.js";
+import { ref, onValue, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { escH, agruparPorTurma } from "/js/tabuada-alerts.js";
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+
+const sess = requireProfessor();
+if (!sess) throw new Error();
+renderSidebarProfessor("sidebar", "dashboard");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const [todos, liberadasRaw, alertas, statusMap, tabuadaHoje, tabuadaTotal, rankTabSnap, niveisTabSnap] = await Promise.all([
+  getResultados(), getLiberadas(), getAlertas(true), getAllAtividadeStatus(),
+  contarSessoesTabuadaHoje(), somarPartidasTabuadaTotal(),
+  get(ref(db, 'tabuada_ranking')).catch(() => null),
+  get(ref(db, 'tabuada_niveis')).catch(() => null),
+]);
+
+const hoje = new Date().toLocaleDateString('pt-BR');
+const quizHoje  = todos.filter(r => r.concluido && r.data && r.data.startsWith(hoje)).length;
+const quizTotal = todos.filter(r => r.concluido).length;
+
+const liberadas = liberadasRaw.map(lib => {
+  const st = statusMap[`${lib.turma}|${lib.atividade}`] || { status: 'ativa', percentual: lib.percentual ?? 100 };
+  return { ...lib, percentual: st.percentual, status: st.status };
+}).filter(lib => lib.status !== 'encerrada');
+
+const totalAlunos = Object.values(ALUNOS_POR_TURMA).reduce((a, b) => a + b.length, 0);
+const totalTurmas = Object.keys(ALUNOS_POR_TURMA).length;
+
+const melhorDash = {};
+const turmaDash  = {};
+const regsPorAluno = {};
+todos.filter(r => r.concluido).forEach(r => {
+  if (r.atividade !== 'Atividade 4 - Geometria') {
+    if (!melhorDash[r.aluno]) melhorDash[r.aluno] = {};
+    melhorDash[r.aluno][r.atividade] = Math.max(melhorDash[r.aluno][r.atividade] || 0, r.pontuacao || 0);
+  }
+  if (!turmaDash[r.aluno]) turmaDash[r.aluno] = r.turma;
+  if (!regsPorAluno[r.aluno]) regsPorAluno[r.aluno] = [];
+  regsPorAluno[r.aluno].push(r);
+});
+const ptsPorAluno = Object.fromEntries(
+  Object.entries(melhorDash).map(([a, m]) => [a, Object.values(m).reduce((x, y) => x + y, 0)])
+);
+const ultimos = [...todos].reverse().filter(r => r.concluido).slice(0, 6);
+
+// ── Tabuada: ranking top 5 ───────────────────────────────────
+const tabTop5 = [];
+if (rankTabSnap?.exists()) {
+  rankTabSnap.forEach(child => { const v = child.val(); if (v?.nome) tabTop5.push(v); });
+  tabTop5.sort((a, b) => (b.melhor_nivel||0) - (a.melhor_nivel||0) || (b.total_partidas||0) - (a.total_partidas||0));
+  tabTop5.splice(5);
+}
+let totalTabJogadores = 0;
+if (rankTabSnap?.exists()) {
+  rankTabSnap.forEach(child => { if (child.val()?.nome) totalTabJogadores++; });
+}
+// Posições standard para o top 5
+{ let _p = 0, _n = 0, _l = null;
+  tabTop5.forEach((d, i) => {
+    _n++;
+    const v = d.melhor_nivel || 0;
+    if (v !== _l) { _p = _n; _l = v; }
+    d._pos = _p;
+  });
+}
+
+// ── Alertas automáticos ───────────────────────────────────────
+const todosAlunosFlat = Object.values(ALUNOS_POR_TURMA).flat();
+const semAtividade = todosAlunosFlat.filter(a => !regsPorAluno[a]);
+const baixaTaxa = Object.entries(regsPorAluno).filter(([_, regs]) => {
+  const ac  = regs.reduce((s, r) => s + (r.acertos || 0), 0);
+  const tot = regs.reduce((s, r) => s + (r.acertos || 0) + (r.erros || 0), 0);
+  return tot > 0 && ac / tot < 0.3;
+});
+const zeroAcertoUlt = liberadas.length ? (() => {
+  const ativ = liberadas[0].atividade;
+  return todos.filter(r => r.concluido && r.atividade === ativ && (r.acertos || 0) === 0 && (r.erros || 0) > 0);
+})() : [];
+const autoAlertas = [];
+if (semAtividade.length)   autoAlertas.push({ icon: '📭', tipo: 'semAtividade', msg: `${semAtividade.length} aluno${semAtividade.length > 1 ? 's' : ''} sem nenhuma atividade` });
+if (baixaTaxa.length)      autoAlertas.push({ icon: '⚠️', tipo: 'baixaTaxa',    msg: `${baixaTaxa.length} aluno${baixaTaxa.length > 1 ? 's' : ''} com taxa de acerto abaixo de 30%` });
+if (zeroAcertoUlt.length)  autoAlertas.push({ icon: '🚨', tipo: 'zeroAcerto',   msg: `${zeroAcertoUlt.length} aluno${zeroAcertoUlt.length > 1 ? 's' : ''} com 0% de acerto em "${liberadas[0]?.atividade}"` });
+
+// ── Top Alunos: cards horizontais ─────────────────────────────
+function renderPodiumDash() {
+  const lista = Object.entries(ptsPorAluno)
+    .sort((a, b) => b[1] - a[1])
+    .map(([nome, pts]) => ({ nome, pts, turma: turmaDash[nome] || '?' }));
+
+  if (!lista.length) return '<div class="empty-state"><p>Nenhum resultado ainda.</p></div>';
+
+  const groups = [];
+  let gi = 0;
+  while (gi < lista.length && groups.length < 3) {
+    const pts = lista[gi].pts;
+    let gj = gi + 1;
+    while (gj < lista.length && lista[gj].pts === pts) gj++;
+    groups.push({ pos: groups.length + 1, students: lista.slice(gi, gj), score: pts });
+    gi = gj;
+  }
+
+  const maxScore = groups[0]?.score || 1;
+  const borderColors = ['#F59E0B','#9CA3AF','#CD853F'];
+  const bgColors = ['rgba(245,158,11,.07)','rgba(156,163,175,.05)','rgba(180,83,9,.06)'];
+  const barColors = ['#F59E0B','#9CA3AF','#CD853F'];
+  const medals = ['🥇','🥈','🥉'];
+
+  return groups.map((g, i) => {
+    const pos = g.pos;
+    const nomes = g.students.map(s => escH(s.nome)).join(' · ');
+    const turmas = [...new Set(g.students.map(s => `Turma ${s.turma}`))].join(' · ');
+    const barPct = Math.round(g.score / maxScore * 100);
+    const badge = pos === 1 ? `<span class="rank-crown">👑</span>` : `<span class="rank-star">⭐</span>`;
+    const padTop = pos === 1 ? 'padding-top:14px' : 'padding-top:10px';
+    return `<div class="rank-row pos-${pos}" style="border-left-color:${borderColors[i]};background:${bgColors[i]}">
+      <span style="font-size:18px;min-width:24px;text-align:center;flex-shrink:0;line-height:1">${medals[i]}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nomes}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:1px">${turmas}</div>
+        <div class="rank-bar-wrap"><div class="rank-bar" style="width:${barPct}%;background:${barColors[i]}"></div></div>
+      </div>
+      <div class="rank-val" style="${padTop}">
+        ${badge}
+        <div class="rank-val-num">${g.score}</div>
+        <div class="rank-val-label">pts</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Renderizar página ─────────────────────────────────────────
+document.getElementById("content").innerHTML = `
+  <div class="dash-stats-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px">
+    <div class="stat-card">
+      <div class="stat-icon blue"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div>
+      <div><div class="stat-value blue">${totalAlunos}</div><div class="stat-meta">Total de Alunos</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon orange"><svg viewBox="0 0 24 24"><path d="M12 3L1 9l4 2.18V17h2v-4.82L9 13.36V17c0 1.1 1.35 2 3 2s3-.9 3-2v-3.64l2-1.09V17h2v-5.82L23 9 12 3z"/></svg></div>
+      <div><div class="stat-value orange">${totalTurmas}</div><div class="stat-meta">Turmas</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green"><svg viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg></div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:baseline;gap:5px"><span class="stat-value green" style="font-size:20px;line-height:1">${quizTotal}</span><span class="stat-meta">Quiz total</span></div>
+        <div style="height:1px;background:var(--border);margin:7px 0"></div>
+        <div style="display:flex;align-items:baseline;gap:5px"><span class="stat-value blue" style="font-size:20px;line-height:1">${tabuadaTotal}</span><span class="stat-meta">Tabuada total</span></div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon orange"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 11H6v-2h12v2zm0-4H6V8h12v2z"/></svg></div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:baseline;gap:5px"><span class="stat-value green" style="font-size:20px;line-height:1">${quizHoje}</span><span class="stat-meta">Quiz hoje</span></div>
+        <div style="height:1px;background:var(--border);margin:7px 0"></div>
+        <div style="display:flex;align-items:baseline;gap:5px"><span class="stat-value blue" style="font-size:20px;line-height:1">${tabuadaHoje}</span><span class="stat-meta">Tabuada hoje</span></div>
+      </div>
+    </div>
+    <div class="stat-card stat-card-clickable" onclick="window.abrirOnlineModal()">
+      <div class="stat-icon green"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg></div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:5px"><span class="stat-value green" id="online-quiz-count" style="font-size:20px;line-height:1">—</span><span class="stat-meta">Em avaliação <span class="online-dot"></span></span></div>
+        <div style="height:1px;background:var(--border);margin:7px 0"></div>
+        <div style="display:flex;align-items:center;gap:5px"><span class="stat-value blue" id="online-tabuada-count" style="font-size:20px;line-height:1">—</span><span class="stat-meta">Tabuada <span class="online-dot" style="background:var(--blue)"></span></span></div>
+        <div id="stat-ts-online" style="font-size:10px;color:var(--text-muted);margin-top:5px;opacity:.65">atualizado agora</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="banner-avaliacao" style="display:none;margin:0 0 18px;padding:12px 18px;background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3);border-radius:10px;align-items:center;gap:10px;">
+    <span style="font-size:13px">⏳ <strong id="banner-av-count">0</strong> alunos fazendo avaliação agora</span>
+    <a href="/professor/acompanhamento_avaliacao.html" style="margin-left:auto;color:var(--blue);font-weight:600;font-size:13px;text-decoration:none;white-space:nowrap">Ver ao vivo →</a>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>Atividades Liberadas</div>
+          <a href="/professor/atividades.html" class="btn btn-sm btn-blue">Liberar atividade</a>
+        </div>
+        ${liberadas.length ? liberadas.map(lib => `
+        <div class="list-row">
+          <div style="flex:1"><div style="font-size:13px;font-weight:700">${lib.atividade}</div>
+          <div style="font-size:11px;color:var(--text-muted)">Turma ${lib.turma} · ${lib.percentual}% da nota · ${lib.modo === 'avaliacao_plus' ? '📝 Avaliação+' : lib.modo === 'competicao_plus' ? '⚔️ Competição+' : lib.modo || ''}</div></div>
+          <span class="badge badge-green">Ativa</span>
+        </div>`).join('') : '<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg><p>Nenhuma atividade liberada.</p></div>'}
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21L13 13.04V8h-1z"/></svg>Últimos Resultados</div></div>
+        ${ultimos.map(r => {
+          const modoChip = r.modo === 'avaliacao_plus'
+            ? `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:#FEF3C7;color:#92400E;flex-shrink:0">📝 Avaliação+</span>`
+            : r.modo === 'competicao_plus'
+            ? `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:#EDE9FE;color:#6D28D9;flex-shrink:0">⚔️ Competição+</span>`
+            : '';
+          return `<div class="list-row">
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+                <span style="font-size:13px;font-weight:700">${r.aluno}</span>
+                ${modoChip}
+              </div>
+              <div style="font-size:11px;color:var(--text-muted)">${r.atividade} · Turma ${r.turma}</div>
+            </div>
+            <span class="badge badge-gold" style="margin-right:6px">${r.pontuacao} pts</span>
+            <span style="font-size:11px;color:var(--text-muted);white-space:nowrap">${r.data || ''}</span>
+          </div>`;
+        }).join('')}
+        ${!ultimos.length ? '<div class="empty-state"><p>Nenhum resultado ainda.</p></div>' : ''}
+      </div>
+    </div>
+
+    <div>
+      <div class="card" id="tabuada-ranking-card" style="overflow:visible;margin-bottom:16px">
+        <div class="card-header">
+          <div class="card-title"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>Ranking Tabuada <span class="card-count">${totalTabJogadores} jogadores</span></div>
+          <a href="/professor/tabuada_relatorio.html" class="btn btn-sm btn-ghost" style="font-size:11px">Ver completo →</a>
+        </div>
+        <div id="tabuada-ranking-body">
+          ${tabTop5.length === 0
+            ? '<div class="empty-state"><p>Nenhum aluno jogou ainda.</p></div>'
+            : (() => {
+                const maxNivel = tabTop5[0]?.melhor_nivel || 1;
+                const barColors = ['#F59E0B','#9CA3AF','#CD853F','#CBD5E1','#CBD5E1'];
+                return tabTop5.map((d, i) => {
+                  const pos = d._pos;
+                  const posClass = pos === 1 ? 'pos-1' : pos === 2 ? 'pos-2' : pos === 3 ? 'pos-3' : 'pos-n';
+                  const medal = pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : `<span style="font-size:12px;font-weight:700;color:var(--text-muted)">${pos}</span>`;
+                  const barPct = Math.round((d.melhor_nivel || 1) / maxNivel * 100);
+                  const badge = pos === 1 ? `<span class="rank-crown">👑</span>` : pos <= 3 ? `<span class="rank-star">⭐</span>` : '';
+                  const padTop = pos === 1 ? 'padding-top:14px' : pos <= 3 ? 'padding-top:10px' : '';
+                  return `<div class="rank-row ${posClass}">
+                    <span style="font-size:${pos<=3?'18':'12'}px;min-width:24px;text-align:center;flex-shrink:0;line-height:1">${medal}</span>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(d.nome)}</div>
+                      <div style="font-size:11px;color:var(--text-muted);margin-top:1px">Turma ${escH(d.turma||'?')}</div>
+                      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${barPct}%;background:${barColors[Math.min(i,4)]}"></div></div>
+                    </div>
+                    <div class="rank-val" style="${padTop}">
+                      ${badge}
+                      <div class="rank-val-num">Nv ${d.melhor_nivel||1}</div>
+                      <div class="rank-val-label">tabuada</div>
+                    </div>
+                  </div>`;
+                }).join('');
+              })()}
+        </div>
+      </div>
+      <div class="card" style="overflow:visible;margin-bottom:0">
+        <div class="card-header">
+          <div class="card-title"><svg viewBox="0 0 24 24"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg>Top Alunos <span class="card-count">ranking geral</span></div>
+          <a href="/professor/ranking.html" class="btn btn-sm btn-ghost" style="font-size:11px">Ver ranking →</a>
+        </div>
+        ${renderPodiumDash()}
+      </div>
+    </div>
+  </div>
+
+  <div id="apelidos-card" class="card" style="margin-top:20px">
+    <div style="font-size:14px;font-weight:700;margin-bottom:14px">
+      🎮 Apelidos aguardando aprovação
+      <span id="apelidos-badge" style="background:var(--orange);color:#fff;padding:1px 7px;border-radius:10px;font-size:10px;margin-left:6px">0</span>
+    </div>
+    <div id="apelidos-lista">
+      <p style="color:var(--text-muted);font-size:13px">Verificando…</p>
+    </div>
+  </div>
+
+  <div id="diplomas-card" class="card" style="margin-top:20px;display:none">
+    <div class="card-header">
+      <div class="card-title">
+        🎓 Diplomas para imprimir
+        <span id="diplomas-badge"
+              style="background:var(--gold,#F59E0B);color:#fff;padding:1px 7px;
+                     border-radius:10px;font-size:10px;margin-left:6px">0</span>
+      </div>
+    </div>
+    <div id="diplomas-lista">
+      <p style="color:var(--text-muted);font-size:13px">Verificando…</p>
+    </div>
+    <div style="margin-top:12px">
+      <a href="/professor/certificados.html"
+         style="font-size:12px;color:var(--purple);text-decoration:none;font-weight:600">
+        Ver todos os certificados →
+      </a>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;border-color:rgba(239,68,68,.3)">
+    <div class="card-header">
+      <div class="card-title" style="color:#ef4444">⚙️ Administração</div>
+    </div>
+    <div style="padding:0 0 4px">
+      <button onclick="encerrarTodasSessoes()"
+        style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);
+               color:#ef4444;border-radius:10px;padding:10px 20px;font-size:13px;
+               font-weight:700;cursor:pointer">
+        ⚠️ Encerrar todas as sessões de alunos
+      </button>
+    </div>
+  </div>`;
+
+
+// ── Online Agora (listeners em tempo real) ────────────────────
+const ONLINE_WINDOW_MS  = 5 * 60 * 1000;
+const DURACAO_AVAL_MS   = 25 * 60 * 1000;
+let onlineQuiz    = [];
+let onlineTabuada = [];
+
+onValue(ref(db, 'resultados'), snap => {
+  const now = Date.now();
+  const seen = {};
+  let alunosEmAndamento = 0;   // fonte única: avaliacao_plus não-concluído dentro dos 25 min
+  snap.forEach(child => {
+    const v = child.val();
+    if (!v.concluido && v.aluno && v.criadoEm && (now - v.criadoEm) < ONLINE_WINDOW_MS) {
+      seen[v.aluno] = { nome: v.aluno, turma: v.turma || '?', atividade: v.atividade || '' };
+    }
+    if (v.modo === 'avaliacao_plus' && !v.concluido && v.ts_inicio &&
+        (now - v.ts_inicio * 1000) < DURACAO_AVAL_MS) alunosEmAndamento++;
+  });
+  onlineQuiz = Object.values(seen);
+  const el = document.getElementById('online-quiz-count');
+  if (el) el.textContent = alunosEmAndamento;
+  atualizarListaOnline();
+  atualizarBannerAvaliacao(alunosEmAndamento);
+  const tsEl = document.getElementById('stat-ts-online');
+  if (tsEl) { const _ts = new Date(); tsEl.textContent = `atualizado às ${_ts.getHours().toString().padStart(2,'0')}:${_ts.getMinutes().toString().padStart(2,'0')}`; }
+});
+
+onValue(ref(db, 'tabuada_presenca'), snap => {
+  const now = Date.now();
+  const found = [];
+  snap.forEach(child => {
+    const v = child.val();
+    if (v?.nome && v.ts && (now - v.ts) < ONLINE_WINDOW_MS) {
+      found.push({ nome: v.nome, turma: v.turma || '?' });
+    }
+  });
+  onlineTabuada = found;
+  const el = document.getElementById('online-tabuada-count');
+  if (el) el.textContent = onlineTabuada.length;
+  atualizarListaOnline();
+  const tsEl = document.getElementById('stat-ts-online');
+  if (tsEl) { const _ts = new Date(); tsEl.textContent = `atualizado às ${_ts.getHours().toString().padStart(2,'0')}:${_ts.getMinutes().toString().padStart(2,'0')}`; }
+});
+
+function atualizarListaOnline() {
+  const el = document.getElementById('online-modal-list');
+  if (!el) return;
+  let html = '';
+  if (onlineQuiz.length) {
+    html += `<div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">🎮 Quiz</div>`;
+    html += onlineQuiz.map(a => `
+      <div class="online-row">
+        <span class="online-dot"></span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600">${a.nome}</div>
+          <div style="font-size:11px;color:var(--text-muted)">Turma ${a.turma}${a.atividade ? ' · ' + a.atividade : ''}</div>
+        </div>
+      </div>`).join('');
+  }
+  if (onlineTabuada.length) {
+    if (html) html += `<div style="height:1px;background:var(--border);margin:10px 0"></div>`;
+    html += `<div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">🔢 Tabuada</div>`;
+    html += onlineTabuada.map(a => `
+      <div class="online-row">
+        <span class="online-dot" style="background:var(--blue)"></span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600">${a.nome}</div>
+          <div style="font-size:11px;color:var(--text-muted)">Turma ${a.turma}</div>
+        </div>
+      </div>`).join('');
+  }
+  if (!html) html = '<p style="color:var(--text-muted);font-size:13px;text-align:center;padding:12px 0">Nenhum aluno jogando agora.</p>';
+  el.innerHTML = html;
+}
+
+function atualizarBannerAvaliacao(n) {
+  const banner = document.getElementById('banner-avaliacao');
+  if (!banner) return;
+  if (n > 0) {
+    banner.style.display = 'flex';
+    const countEl = document.getElementById('banner-av-count');
+    if (countEl) countEl.textContent = n;
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+window.abrirOnlineModal = function() {
+  document.getElementById('online-modal-bg').style.display = 'flex';
+  atualizarListaOnline();
+};
+window.fecharOnlineModal = function(e) {
+  if (!e || e.target === document.getElementById('online-modal-bg')) {
+    document.getElementById('online-modal-bg').style.display = 'none';
+  }
+};
+
+// ── Modais de alertas ─────────────────────────────────────────
+const semAtividadeSet = new Set(semAtividade);
+const baixaTaxaData = baixaTaxa.map(([aluno, regs]) => {
+  const ac  = regs.reduce((s, r) => s + (r.acertos || 0), 0);
+  const tot = regs.reduce((s, r) => s + (r.acertos || 0) + (r.erros || 0), 0);
+  return { aluno, turma: turmaDash[aluno] || '?', taxa: tot > 0 ? ac / tot * 100 : 0 };
+});
+
+function _verAcomp(nome) {
+  return `<a href="/professor/acompanhamento.html?aluno=${encodeURIComponent(nome)}" class="btn btn-sm btn-ghost" style="font-size:11px;white-space:nowrap">Ver acompanhamento</a>`;
+}
+
+function _renderPorTurma(grupos) {
+  return Object.entries(grupos).sort(([a],[b]) => a.localeCompare(b)).map(([turma, rows]) => rows.length ? `
+    <div class="alerta-turma-head">Turma ${turma} &nbsp;(${rows.length})</div>
+    ${rows.join('')}` : '').join('');
+}
+
+window.abrirModalAlerta = function(tipo) {
+  const tit  = document.getElementById('alerta-modal-titulo');
+  const list = document.getElementById('alerta-modal-list');
+
+  if (tipo === 'semAtividade') {
+    tit.textContent = `📭 Sem atividade (${semAtividade.length} aluno${semAtividade.length > 1 ? 's' : ''})`;
+    const grupos = {};
+    for (const [turma, alunoList] of Object.entries(ALUNOS_POR_TURMA)) {
+      const grupo = alunoList.filter(a => semAtividadeSet.has(a));
+      if (!grupo.length) continue;
+      grupos[turma] = grupo.map(nome => `
+        <div class="alerta-aluno-row">
+          <div style="flex:1;font-size:13px;font-weight:600">${nome}</div>
+          ${_verAcomp(nome)}
+        </div>`);
+    }
+    list.innerHTML = _renderPorTurma(grupos) || '<p style="color:var(--text-muted);font-size:13px">Nenhum aluno.</p>';
+
+  } else if (tipo === 'baixaTaxa') {
+    tit.textContent = `⚠️ Taxa abaixo de 30% (${baixaTaxaData.length} aluno${baixaTaxaData.length > 1 ? 's' : ''})`;
+    const grupos = {};
+    for (const d of baixaTaxaData) {
+      if (!grupos[d.turma]) grupos[d.turma] = [];
+      grupos[d.turma].push(d);
+    }
+    for (const g of Object.values(grupos)) g.sort((a, b) => a.taxa - b.taxa);
+    const htmlGrupos = {};
+    for (const [turma, grupo] of Object.entries(grupos)) {
+      htmlGrupos[turma] = grupo.map(d => `
+        <div class="alerta-aluno-row">
+          <div style="flex:1;font-size:13px;font-weight:600">${d.aluno}</div>
+          <span class="alerta-taxa-badge">${Math.round(d.taxa)}%</span>
+          ${_verAcomp(d.aluno)}
+        </div>`);
+    }
+    list.innerHTML = _renderPorTurma(htmlGrupos) || '<p style="color:var(--text-muted);font-size:13px">Nenhum aluno.</p>';
+
+  } else if (tipo === 'zeroAcerto') {
+    const nomeAtiv = liberadas[0]?.atividade || '';
+    tit.textContent = `🚨 Zero acertos em "${nomeAtiv}" (${zeroAcertoUlt.length})`;
+    const grupos = {};
+    for (const r of zeroAcertoUlt) {
+      const t = r.turma || '?';
+      if (!grupos[t]) grupos[t] = [];
+      grupos[t].push(`<div class="alerta-aluno-row">
+        <div style="flex:1;font-size:13px;font-weight:600">${r.aluno}</div>
+        ${_verAcomp(r.aluno)}
+      </div>`);
+    }
+    list.innerHTML = _renderPorTurma(grupos) || '<p style="color:var(--text-muted);font-size:13px">Nenhum aluno.</p>';
+  }
+
+  document.getElementById('alerta-modal-bg').style.display = 'flex';
+};
+
+window.fecharAlertaModal = function(e) {
+  if (!e || e.target === document.getElementById('alerta-modal-bg')) {
+    document.getElementById('alerta-modal-bg').style.display = 'none';
+  }
+};
+
+// ── Toast helper ──────────────────────────────────────────────
+function toast(msg) {
+  let t = document.getElementById('_toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = '_toast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 20px;border-radius:10px;font-size:14px;font-weight:600;z-index:9999;transition:opacity .3s;pointer-events:none';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._to);
+  t._to = setTimeout(() => { t.style.opacity = '0'; }, 2500);
+}
+
+// ── Apelidos pendentes ────────────────────────────────────────
+onValue(ref(db, 'perfis'), async (snap) => {
+  if (!snap.exists()) return;
+  const pendentes = [];
+  snap.forEach(child => {
+    const v = child.val();
+    if (v?.apelido_status === 'pendente') pendentes.push({ uid: child.key, ...v });
+  });
+  const badge = document.getElementById('apelidos-badge');
+  if (badge) badge.textContent = pendentes.length || '0';
+  const lista = document.getElementById('apelidos-lista');
+  if (!lista) return;
+  if (!pendentes.length) {
+    lista.innerHTML = '<p style="color:var(--text-muted);font-size:13px">Nenhum apelido pendente.</p>';
+    return;
+  }
+  function nomeDoUid(uid) {
+    const parts = uid.split('_');
+    if (parts.length < 2) return { nome: uid, turma: '' };
+    return { nome: parts.slice(1).join(' '), turma: parts[0] };
+  }
+  lista.innerHTML = pendentes.map(p => {
+    const fallback = nomeDoUid(p.uid);
+    const nome  = p.nome  || fallback.nome;
+    const turma = p.turma || fallback.turma;
+    return `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600">${escH(nome)} <span style="color:var(--text-muted);font-weight:400;font-size:11px">(${escH(turma)})</span></div>
+        <span style="font-size:12px">Apelido: <strong style="color:var(--orange)">"${escH(p.apelido_pendente || '')}"</strong></span>
+        ${p.apelido_ativo ? `<span style="font-size:10px;color:var(--text-muted)"> (atual: ${escH(p.apelido_ativo)})</span>` : ''}
+      </div>
+      <button onclick="aprovarApelido('${p.uid}')"
+              style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer">✅ Aprovar</button>
+      <button onclick="pedirMotivo('${p.uid}','${escH(p.apelido_pendente || '')}')"
+              style="background:var(--card2);color:var(--red);border:1px solid var(--red);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer">❌ Recusar</button>
+    </div>`; }).join('');
+});
+
+window.aprovarApelido = async function(uid) {
+  try {
+    const snap = await get(ref(db, `perfis/${uid}`));
+    const p = snap.val();
+    if (!p) return;
+    await update(ref(db, `perfis/${uid}`), {
+      apelido_ativo:      p.apelido_pendente,
+      apelido_status:     'aprovado',
+      apelido_pendente:   null,
+      apelido_motivo:     null,
+      apelido_trocas_bim: (p.apelido_trocas_bim || 0) + 1,
+    });
+    toast(`✅ Apelido aprovado para ${escH(p.nome || '')}`);
+  } catch(e) { toast('Erro ao aprovar. Tente novamente.'); }
+};
+
+window.pedirMotivo = function(uid, apelido) {
+  const motivo = prompt(`Motivo para recusar "${apelido}" (opcional):`);
+  if (motivo === null) return;
+  rejeitarApelido(uid, motivo);
+};
+
+async function rejeitarApelido(uid, motivo) {
+  try {
+    await update(ref(db, `perfis/${uid}`), {
+      apelido_status:   'rejeitado',
+      apelido_motivo:   motivo || '',
+      apelido_pendente: null,
+    });
+    toast('❌ Apelido recusado');
+  } catch(e) { toast('Erro ao recusar. Tente novamente.'); }
+}
+
+// ── Diplomas pendentes ────────────────────────────────────────
+async function carregarDiplomasPendentes() {
+  try {
+    const [perfisSnap, impressosSnap, conquSnap] = await Promise.all([
+      get(ref(db, 'perfis')),
+      get(ref(db, 'diplomas_impressos')),
+      get(ref(db, 'conquistas')),
+    ]);
+    if (!conquSnap.exists()) return;
+
+    const impressos = impressosSnap.exists() ? impressosSnap.val() : {};
+    const pendentes = [];
+
+    conquSnap.forEach(child => {
+      const uid      = child.key;
+      const conquistas = child.val();
+      if (!conquistas?.tabuada_300?.conquistado) return;
+      if (impressos[uid]?.tabuada_300?.impresso) return;
+      const perfil = perfisSnap.exists() ? perfisSnap.child(uid).val() : null;
+      if (!perfil?.nome) return;
+      if (perfil.nome?.includes('TESTE') || perfil.turma === 'TESTE') return;
+      pendentes.push({ uid, nome: perfil.nome, turma: perfil.turma || '', ts: conquistas.tabuada_300.ts });
+    });
+
+    const card  = document.getElementById('diplomas-card');
+    const badge = document.getElementById('diplomas-badge');
+    const lista = document.getElementById('diplomas-lista');
+    if (!card || !badge || !lista) return;
+
+    badge.textContent = pendentes.length || '0';
+    if (!pendentes.length) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+
+    lista.innerHTML = pendentes.map(p => {
+      const data = p.ts ? new Date(p.ts).toLocaleDateString('pt-BR') : '';
+      return `
+        <div style="display:flex;align-items:center;gap:12px;
+                    padding:10px 0;border-bottom:1px solid var(--border)">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700">${escH(p.nome)}
+              <span style="font-size:11px;color:var(--text-muted);font-weight:400"> · ${escH(p.turma)}</span>
+            </div>
+            ${data ? `<div style="font-size:10px;color:var(--text-muted)">Conquistado em ${data}</div>` : ''}
+          </div>
+          <a href="/aluno/diploma_tabuada.html?uid=${encodeURIComponent(p.uid)}"
+             target="_blank"
+             style="padding:6px 12px;background:var(--card2);color:var(--text);
+                    border:1px solid var(--border);border-radius:8px;
+                    font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap">
+            🖨️ Ver diploma
+          </a>
+          <button onclick="marcarImpresso('${p.uid}')"
+                  style="padding:6px 14px;background:var(--green);color:#fff;
+                         border:none;border-radius:8px;font-weight:700;
+                         font-size:12px;cursor:pointer;white-space:nowrap">
+            ✅ Entregue
+          </button>
+        </div>`;
+    }).join('');
+  } catch(e) { console.warn('[Diplomas]', e); }
+}
+
+window.marcarImpresso = async function(uid) {
+  try {
+    await set(ref(db, `diplomas_impressos/${uid}/tabuada_300`), { impresso: true, ts: Date.now() });
+    toast('✅ Marcado como entregue!');
+    carregarDiplomasPendentes();
+  } catch(e) { toast('Erro ao salvar. Tente novamente.'); }
+};
+
+carregarDiplomasPendentes();
+
+// ── Encerrar todas as sessões ─────────────────────────────────
+window.encerrarTodasSessoes = async function() {
+  if (!confirm('Isso vai desconectar TODOS os alunos logados. Confirma?')) return;
+  try {
+    const snap = await get(ref(db, 'perfis'));
+    const updates = {};
+    snap.forEach(child => {
+      if (child.val()?.session_token) {
+        updates[`${child.key}/session_token`] = null;
+      }
+    });
+    if (Object.keys(updates).length > 0) {
+      await update(ref(db, 'perfis'), updates);
+    }
+    await set(ref(db, 'presenca_online'), null);
+    toast('Todas as sessões foram encerradas.');
+  } catch(e) {
+    toast('Erro ao encerrar sessões.');
+    console.error(e);
+  }
+};
+
+// ── Análise anti-IA: conta suspeitos em background ────────────
+(async () => {
+  const plusSessoes = todos.filter(r => r.concluido && r.modo === 'competicao_plus');
+  if (!plusSessoes.length) return;
+  const detalhesList = await Promise.all(plusSessoes.map(s => getDetalhes(s.id).then(d => [s.id, d || []])));
+  const detalhesPorId = Object.fromEntries(detalhesList);
+  const grupos = {};
+  for (const s of plusSessoes) {
+    const key = s.aluno + '|||' + s.atividade;
+    if (!grupos[key]) grupos[key] = [];
+    grupos[key].push(s);
+  }
+  let suspeitos = 0;
+  for (const sessoes of Object.values(grupos)) {
+    const validas = sessoes.filter(s => ((s.acertos||0)+(s.erros||0)+(s.nao_respondidas||0)) >= 10);
+    if (!validas.length) continue;
+    const todasQ = validas.flatMap(s => detalhesPorId[s.id] || []);
+    let score = 0;
+    const faceis = todasQ.filter(q => q.dificuldade === 1);
+    const difs   = todasQ.filter(q => q.dificuldade === 2 || q.dificuldade === 3);
+    if (faceis.length >= 3 && difs.length >= 3) {
+      const acF = faceis.filter(q => { const r = q.resultado ?? null; return r === 'acerto' || (r === null && !!q.acertou); }).length;
+      const acD = difs.filter(q => { const r = q.resultado ?? null; return r === 'acerto' || (r === null && !!q.acertou); }).length;
+      if (acD / difs.length > acF / faceis.length + 0.20) score += 25;
+    }
+    if (validas.length >= 2) {
+      const sorted = [...validas].sort((a, b) => (a.ts_inicio||0) - (b.ts_inicio||0));
+      if ((sorted[0].pontuacao||0) > 0 && (sorted[1].pontuacao||0) > sorted[0].pontuacao * 3) score += 25;
+    }
+    const comTempo = todasQ.filter(q => q.tempo_resposta_ms != null);
+    if (comTempo.length >= 5) {
+      const tempos = comTempo.map(q => q.tempo_resposta_ms);
+      const avg = tempos.reduce((a, b) => a + b, 0) / tempos.length;
+      const std = Math.sqrt(tempos.reduce((s, t) => s + (t - avg) ** 2, 0) / tempos.length);
+      if (std < 3000) score += 25;
+      const fT = comTempo.filter(q => q.dificuldade === 1);
+      if (fT.length >= 3 && fT.reduce((s, q) => s + q.tempo_resposta_ms, 0) / fT.length > 7000) score += 25;
+    }
+    if (score > 50) suspeitos++;
+  }
+  if (suspeitos > 0) {
+    const card = document.getElementById('analise-card');
+    if (card) { card.querySelector('#analise-count').textContent = suspeitos; card.style.display = 'flex'; }
+  }
+})();
+</script>
+</body>
+</html>
