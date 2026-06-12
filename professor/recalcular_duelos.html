@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Recalcular Duelos — Sistema de Matemática</title>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .lp-section { max-width: 760px; }
+    .log-area { background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:12px;font-family:'Courier New',monospace;max-height:320px;overflow-y:auto;color:var(--text-muted);line-height:1.7; }
+    .log-ok   { color:#16A34A; }
+    .log-warn { color:#D97706; }
+    .log-err  { color:#DC2626; }
+    .log-info { color:var(--blue); }
+    .aviso { background:#1c3d2222;border:1px solid #16a34a55;border-radius:10px;padding:12px 16px;font-size:13px;color:#86efac;margin-bottom:18px;line-height:1.6; }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Recalcular Estatísticas de Duelos</div>
+        <div class="topbar-sub">Corrige duelos_total, duelos_vitorias e streak_vitorias de todos os alunos</div>
+      </div>
+      <div class="topbar-right">
+        <a href="/professor/dashboard.html" class="btn btn-ghost">← Painel</a>
+      </div>
+    </div>
+    <div class="content">
+      <div class="lp-section">
+
+        <div class="aviso">
+          ℹ️ Esta operação é <strong>segura e não destrutiva</strong> — recalcula a partir dos objetos de duelo em <code>duelos/</code>, capturando todos os participantes mesmo quem saiu antes do encerramento. Nenhum dado é apagado.
+        </div>
+
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-title" style="margin-bottom:8px">O que faz</div>
+          <ul style="font-size:13px;color:var(--text-muted);line-height:1.9;padding-left:18px">
+            <li>Lê todos os objetos em <code>duelos/</code> com <code>ts_aceito</code> (duelos realmente jogados)</li>
+            <li>Reconstrói <code>duelos_total</code> e <code>duelos_vitorias</code> por UID</li>
+            <li>Recalcula <code>streak_vitorias</code> (vitórias consecutivas mais recentes)</li>
+            <li>Grava os valores corrigidos em <code>perfis/{uid}</code></li>
+          </ul>
+        </div>
+
+        <button class="btn btn-primary" id="btnRecalcular" onclick="recalcular()" style="margin-bottom:16px">
+          🔄 Recalcular todos os alunos
+        </button>
+
+        <div class="log-area" id="logArea">
+          <span class="log-info">Aguardando início...</span>
+        </div>
+
+        <div id="resumo" style="display:none;margin-top:16px" class="card">
+          <div class="card-title" style="margin-bottom:8px">Resumo</div>
+          <div id="resumo-content" style="font-size:13px;color:var(--text-muted);line-height:1.8"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module">
+import { requireProfessor, renderSidebarProfessor } from '/js/auth.js';
+import { db } from '/js/firebase-config.js';
+import { ref, get, update } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+
+requireProfessor('/professor/login.html');
+renderSidebarProfessor('sidebar', 'manutencao');
+
+const logArea = document.getElementById('logArea');
+
+function log(msg, tipo = 'info') {
+  const span = document.createElement('span');
+  span.className = `log-${tipo}`;
+  span.innerHTML = msg + '<br>';
+  logArea.appendChild(span);
+  logArea.scrollTop = logArea.scrollHeight;
+}
+
+function clearLog() { logArea.innerHTML = ''; }
+
+window.recalcular = async function() {
+  const btn = document.getElementById('btnRecalcular');
+  btn.disabled = true;
+  btn.textContent = '⏳ Processando...';
+  clearLog();
+  log('Lendo todos os duelos...', 'info');
+
+  let atualizados = 0, erros = 0;
+
+  try {
+    const duelosSnap = await get(ref(db, 'duelos'));
+    if (!duelosSnap.exists()) { log('Nenhum duelo encontrado.', 'warn'); return; }
+
+    // Mapa uid → { total, vitorias, partidas[] }
+    const stats = {};
+    function garantir(uid) {
+      if (!stats[uid]) stats[uid] = { total: 0, vitorias: 0, partidas: [] };
+    }
+
+    let duelosContados = 0;
+    duelosSnap.forEach(c => {
+      const d = c.val();
+      if (!d) return;
+      if (d.status !== 'encerrado') return;
+
+      const cUid = d.criador_uid;
+      const aUid = d.adversario_uid;
+      if (!cUid || !aUid) return;
+
+      if (cUid.includes('PROFESSOR') || cUid.includes('TESTE')) return;
+      if (aUid.includes('PROFESSOR') || aUid.includes('TESTE')) return;
+
+      garantir(cUid);
+      garantir(aUid);
+
+      stats[cUid].total++;
+      stats[aUid].total++;
+      duelosContados++;
+
+      const ts = d.ts_aceito || 0;
+
+      if (d.vencedor_uid === cUid) {
+        stats[cUid].vitorias++;
+        stats[cUid].partidas.push({ resultado: 'vitoria', ts });
+        stats[aUid].partidas.push({ resultado: 'derrota', ts });
+      } else if (d.vencedor_uid === aUid) {
+        stats[aUid].vitorias++;
+        stats[aUid].partidas.push({ resultado: 'vitoria', ts });
+        stats[cUid].partidas.push({ resultado: 'derrota', ts });
+      } else {
+        stats[cUid].partidas.push({ resultado: 'empate', ts });
+        stats[aUid].partidas.push({ resultado: 'empate', ts });
+      }
+    });
+
+    log(`${duelosContados} duelos válidos encontrados. ${Object.keys(stats).length} UIDs envolvidos. Atualizando perfis...`, 'info');
+
+    for (const [uid, s] of Object.entries(stats)) {
+      try {
+        s.partidas.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+        let streak = 0;
+        for (const p of s.partidas) {
+          if (p.resultado === 'vitoria') streak++;
+          else break;
+        }
+
+        const perfSnap = await get(ref(db, `perfis/${uid}`));
+        const perf = perfSnap.val() || {};
+        const nomeExib = perf.apelido_ativo || perf.nome || uid;
+
+        const atuais = {
+          total:    perf.duelos_total    || 0,
+          vitorias: perf.duelos_vitorias || 0,
+          streak:   perf.streak_vitorias || 0,
+        };
+
+        log(`📊 ${nomeExib} (${uid}) — calculado: ${s.total} duelos, ${s.vitorias} vitórias`, 'info');
+
+        try {
+          await update(ref(db, `perfis/${uid}`), {
+            duelos_total:    s.total,
+            duelos_vitorias: s.vitorias,
+            streak_vitorias: streak,
+          });
+          const confirmSnap = await get(ref(db, `perfis/${uid}/duelos_total`));
+          const gravado = confirmSnap.val();
+          if (gravado !== s.total) {
+            log(`❌ ${nomeExib} — ERRO: tentou gravar ${s.total} mas Firebase tem ${gravado}`, 'err');
+            erros++;
+          } else {
+            log(`✅ ${nomeExib} — total: ${atuais.total}→<strong>${s.total}</strong> | vit: ${atuais.vitorias}→<strong>${s.vitorias}</strong> | streak: ${atuais.streak}→<strong>${streak}</strong> ✓ confirmado`, 'ok');
+            atualizados++;
+          }
+        } catch(e) {
+          log(`❌ ${nomeExib} — ERRO no update: ${e.message}`, 'err');
+          erros++;
+        }
+      } catch(e) {
+        log(`❌ Erro em ${uid}: ${e.message}`, 'err');
+        erros++;
+      }
+    }
+
+    log(`<br>─── Concluído ───`, 'info');
+    log(`UIDs processados: ${Object.keys(stats).length}`, 'info');
+    log(`Atualizados: ${atualizados}`, 'ok');
+    if (erros > 0) log(`Erros: ${erros}`, 'err');
+
+    const resumo = document.getElementById('resumo');
+    document.getElementById('resumo-content').innerHTML =
+      `✅ <strong>${atualizados}</strong> perfis corrigidos &nbsp;·&nbsp; ` +
+      `${Object.keys(stats).length - atualizados - erros} já estavam corretos` +
+      (erros > 0 ? ` &nbsp;·&nbsp; ❌ ${erros} erros` : '');
+    resumo.style.display = 'block';
+
+  } catch(e) {
+    log(`❌ Erro geral: ${e.message}`, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔄 Recalcular todos os alunos';
+  }
+};
+</script>
+</body>
+</html>

@@ -263,7 +263,7 @@ import { requireAluno, renderSidebarAluno, clearSession, injetarFaixaDuelo, inic
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { NIVEL_MAX } from "/js/constants.js";
-import { getLiberadasParaTurma } from "/js/db.js";
+import { getLiberadasParaTurma, somarPartidasTabuadaTotal } from "/js/db.js";
 
 const sess = requireAluno("/index.html");
 if (!sess) throw new Error("não autenticado");
@@ -445,11 +445,12 @@ if (rankSnap?.exists()) {
 console.log('[jogos] ranking:', rankAll.length, 'entradas totais');
 const concluintes      = rankAll.filter(r => (r.melhor_nivel || 0) >= 300);
 const rankEmProgresso  = rankAll.filter(r => (r.melhor_nivel || 0) < 300);
-const rankTurma = rankAll.filter(r => r.turma === turma);
+const rankTurma = rankEmProgresso.filter(r => r.turma === turma);
 
-const liderGeral    = rankAll[0] || null;
+const liderGeral     = rankEmProgresso[0] || null;
 const liderProgresso = rankEmProgresso[0] || null;
-const liderTurma = rankTurma[0] || null;
+const rankTurmaProgresso = rankEmProgresso.filter(r => r.turma === turma);
+const liderTurma     = rankTurmaProgresso[0] || null;
 const myUid      = uid; // uid já definido como (turma + '_' + nomeAluno).replace(...)
 const myGeralIdx = rankAll.findIndex(r => r._uid === myUid);
 const myTurmaIdx = rankTurma.findIndex(r => r._uid === myUid);
@@ -465,6 +466,7 @@ let sessoesHoje = 0;
 if (sessoesSnap?.exists()) {
   sessoesSnap.forEach(c => { const v = c.val(); if (v?.data === hojeISO) sessoesHoje++; });
 }
+const sessoesTotal = await somarPartidasTabuadaTotal().catch(() => 0);
 
 // ── Helper functions ───────────────────────────────────────────
 function getLvOp(lv) {
@@ -699,6 +701,18 @@ document.getElementById("content").innerHTML = `
       </div>
     </div>
 
+    <!-- Nova linha: total geral e hoje -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--g-border,rgba(255,255,255,.08))">
+      <div style="text-align:center;padding:10px 8px">
+        <div style="font-size:20px;font-weight:800;color:var(--g-purple,#7c5cfc);line-height:1">${sessoesTotal}</div>
+        <div style="font-size:9px;color:var(--g-muted);text-transform:uppercase;letter-spacing:.8px;margin-top:3px">Total de partidas</div>
+      </div>
+      <div style="text-align:center;padding:10px 8px;border-left:1px solid var(--g-border,rgba(255,255,255,.08))">
+        <div style="font-size:20px;font-weight:800;color:var(--g-orange,#f97316);line-height:1">+${sessoesHoje}</div>
+        <div style="font-size:9px;color:var(--g-muted);text-transform:uppercase;letter-spacing:.8px;margin-top:3px">Hoje</div>
+      </div>
+    </div>
+
     <div class="g-stats">
       <div class="g-stat g-stat-nivel"><div class="v" style="color:var(--g-pl)">${melhorNivel}</div><div class="l">Melhor nível</div></div>
       <div class="g-stat"><div class="v" style="color:var(--g-cyan)">${totalPart}</div><div class="l">Partidas</div></div>
@@ -714,20 +728,6 @@ document.getElementById("content").innerHTML = `
         <span class="g-dist-top">Nv ${NIVEL_MAX}</span>
       </div>
       <div class="g-dist-cap">${distCap}</div>
-    </div>
-
-    <!-- Live info -->
-    <div class="g-live">
-      <div class="g-live-dot"><span class="dot"></span><strong>${sessoesHoje}</strong>&nbsp;sessões hoje</div>
-      ${liderTurma && liderTurma.nome !== nomeAluno ? `
-      <div class="g-ldr-info">
-        <span>🏫</span>
-        <strong>${escH(liderTurma.nome)}</strong>
-        <span>lidera ${escH(turma)}</span>
-        <span style="color:var(--g-muted);opacity:.5">·</span>
-        <span class="g-ldr-lv">Nv ${liderTurma.melhor_nivel||1}</span>
-      </div>` : liderTurma ? `<div class="g-ldr-info">👑 <strong style="color:var(--g-gold)">Você lidera ${escH(turma)}!</strong></div>` : ''}
-      ${posBadge ? `<div class="g-pos-badge">${posBadge}</div>` : ''}
     </div>
 
     <!-- Mode selector -->

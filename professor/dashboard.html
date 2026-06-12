@@ -419,6 +419,18 @@ document.getElementById("content").innerHTML = `
         <span id="toggle-guia-label" style="font-size:12px;font-weight:600;color:var(--text-muted)">Desativado</span>
       </label>
     </div>
+    <div class="list-divider" style="border-top:1px solid var(--border);margin:10px 0"></div>
+    <div style="margin-bottom:8px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:2px">🏆 Desafio da Semana</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Aparece no topo da página de Duelos</div>
+      <input id="ds-titulo-input"  type="text" placeholder="Título do desafio" style="width:100%;box-sizing:border-box;padding:7px 10px;background:var(--bg,#0d0f1a);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;margin-bottom:6px"/>
+      <input id="ds-desc-input"    type="text" placeholder="Descrição / prazo (ex: Até sexta, 13/06)" style="width:100%;box-sizing:border-box;padding:7px 10px;background:var(--bg,#0d0f1a);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;margin-bottom:6px"/>
+      <input id="ds-recomp-input"  type="text" placeholder="Recompensa (ex: +100 XP bônus)" style="width:100%;box-sizing:border-box;padding:7px 10px;background:var(--bg,#0d0f1a);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;margin-bottom:8px"/>
+      <div style="display:flex;gap:8px">
+        <button onclick="salvarDesafioSemana(true)"  style="flex:1;padding:8px;background:var(--purple,#7c5cfc);border:none;color:#fff;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">✅ Ativar</button>
+        <button onclick="salvarDesafioSemana(false)" style="flex:1;padding:8px;background:var(--card2);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">❌ Desativar</button>
+      </div>
+    </div>
   </div>
 
   <div class="card" style="margin-top:20px;border-color:rgba(239,68,68,.3)">
@@ -432,6 +444,9 @@ document.getElementById("content").innerHTML = `
                font-weight:700;cursor:pointer">
         ⚠️ Encerrar todas as sessões de alunos
       </button>
+      <a href="/professor/recalcular_duelos.html" class="btn btn-ghost" style="font-size:12px;margin-top:10px;display:inline-block">
+        🔄 Recalcular estatísticas de duelos
+      </a>
     </div>
   </div>`;
 
@@ -463,6 +478,37 @@ window.toggleMostrarGuia = async function(ativo) {
   } catch(e) { console.error('[Toggle guia]', e); }
 };
 carregarToggleGuia();
+
+// ── Desafio da Semana ─────────────────────────────────────────
+async function carregarDesafioSemana() {
+  try {
+    const snap = await get(ref(db, 'config/desafio_semana'));
+    const ds = snap.val();
+    if (ds?.titulo)    document.getElementById('ds-titulo-input').value  = ds.titulo;
+    if (ds?.descricao) document.getElementById('ds-desc-input').value    = ds.descricao;
+    if (ds?.recompensa) document.getElementById('ds-recomp-input').value = ds.recompensa;
+  } catch(_) {}
+}
+carregarDesafioSemana();
+
+window.salvarDesafioSemana = async function(ativo) {
+  try {
+    const titulo     = document.getElementById('ds-titulo-input')?.value?.trim()  || '';
+    const descricao  = document.getElementById('ds-desc-input')?.value?.trim()    || '';
+    const recompensa = document.getElementById('ds-recomp-input')?.value?.trim()  || '';
+    await set(ref(db, 'config/desafio_semana'), {
+      ativo,
+      titulo,
+      descricao,
+      recompensa,
+      atualizado_em: Date.now(),
+    });
+    toast(ativo ? '✅ Desafio da semana ativado!' : '❌ Desafio desativado.');
+  } catch(e) {
+    console.error('[Desafio semana]', e);
+    toast('Erro ao salvar.');
+  }
+};
 
 // ── Online Agora (listeners em tempo real) ────────────────────
 const ONLINE_WINDOW_MS  = 5 * 60 * 1000;

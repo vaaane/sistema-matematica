@@ -263,9 +263,9 @@
     .hist-row.loss { background:linear-gradient(90deg,rgba(239,68,68,.09) 0%,rgba(239,68,68,.02) 40%,var(--card) 100%);border-color:rgba(239,68,68,.35); }
     .hist-row.loss::before { background:linear-gradient(180deg,#ef4444,#dc2626); }
     .hist-row.abandon { opacity:.55; }
-    .hist-wl { width:auto;min-width:54px;padding:3px 8px;border-radius:8px;font-size:11px;font-weight:800;text-align:center;flex-shrink:0;letter-spacing:.3px; }
-    .hist-wl.win  { background:rgba(34,197,94,.15);  color:#22c55e; }
-    .hist-wl.loss { background:rgba(239,68,68,.12);   color:#ef4444; }
+    .hist-wl { width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;flex-shrink:0; }
+    .hist-wl.win  { background:rgba(34,197,94,.2); color:#22c55e;box-shadow:0 0 10px rgba(34,197,94,.2); }
+    .hist-wl.loss { background:rgba(239,68,68,.15);color:#ef4444;box-shadow:0 0 10px rgba(239,68,68,.15); }
     .hist-avatar { width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0;color:#fff;background:#334155; }
     .hist-info { flex:1;min-width:0; }
     .hist-nome { font-size:13px;font-weight:700; }
@@ -283,72 +283,18 @@
     .hist-xp { font-size:11px;font-weight:800;white-space:nowrap;flex-shrink:0;min-width:52px;text-align:right; }
     .hist-xp.pos { color:#22c55e; }
     .hist-xp.neg { color:#ef4444; }
-
-    /* ── Upset bonus ── */
-    .pm-upset { display:none; padding: 8px 18px; border-bottom: 1px solid var(--border); align-items: center; gap: 8px; background: rgba(249,115,22,.06); }
-    .pm-upset-text { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
-    .pm-upset-bonus { color: var(--orange); font-weight: 800; }
-
-    /* ── Revanche ── */
-    .btn-revanche { background:rgba(249,115,22,.15) !important; border-color:rgba(249,115,22,.5) !important; color:var(--orange) !important; animation:revanchePulse 2s ease-in-out infinite; }
-    .btn-revanche:hover:not(.disabled) { background:var(--orange) !important; color:#fff !important; }
-    @keyframes revanchePulse { 0%,100%{box-shadow:0 0 0 rgba(249,115,22,.3)} 50%{box-shadow:0 0 10px rgba(249,115,22,.4)} }
-
-    /* ── Badges nos cards online ── */
-    .online-card { position: relative; }
-    .oc-badge { position: absolute; top: -8px; left: 12px; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 10px; letter-spacing: .5px; white-space: nowrap; z-index: 1; }
-    .badge-rival   { background: #ef4444; color: #fff; }
-    .badge-hunter  { background: var(--gold); color: #000; }
-    .badge-streak  { background: var(--orange); color: #fff; }
-
-    /* ── Mini-perfil modal ── */
-    .profile-modal { background: var(--card); border: 1px solid rgba(255,255,255,.1); border-radius: 20px; width: 100%; max-width: 320px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.6); }
-    .pm-header { background: linear-gradient(135deg,rgba(47,158,220,.12),rgba(124,92,252,.08)); padding: 18px 18px 14px; display: flex; gap: 14px; align-items: center; border-bottom: 1px solid var(--border); }
-    .pm-av { width: 58px; height: 58px; border-radius: 50%; overflow: hidden; flex-shrink: 0; border: 2px solid rgba(255,255,255,.12); box-shadow: 0 4px 16px rgba(0,0,0,.3); background: var(--card2); }
-    .pm-av img { width: 100%; height: 100%; object-fit: cover; }
-    .pm-name { font-family: 'Rajdhani', sans-serif; font-size: 19px; font-weight: 700; color: var(--text); }
-    .pm-turma { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
-    .pm-level { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; background: rgba(249,115,22,.1); border: 1px solid rgba(249,115,22,.22); border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 700; color: var(--orange); }
-    .pm-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
-    .pm-stat { background: var(--card); padding: 11px 6px; text-align: center; }
-    .pm-stat-num { font-size: 17px; font-weight: 800; line-height: 1; }
-    .pm-stat-num.gold { color: var(--gold); }
-    .pm-stat-num.blue { color: var(--blue); }
-    .pm-stat-num.purple { color: var(--purple); font-size: 13px; }
-    .pm-stat-label { font-size: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .8px; margin-top: 3px; }
-    .pm-h2h { padding: 10px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-    .pm-h2h-label { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
-    .pm-h2h-score { font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
-    .pm-h2h-score .green { color: var(--green); }
-    .pm-h2h-score .red   { color: var(--red); }
-    .pm-h2h-score .muted { color: var(--text-muted); font-size: 12px; }
-    .pm-h2h-tag { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 10px; }
-    .pm-h2h-tag.winning { background: rgba(34,197,94,.15); color: var(--green); border: 1px solid rgba(34,197,94,.25); }
-    .pm-h2h-tag.losing  { background: rgba(239,68,68,.12); color: var(--red);   border: 1px solid rgba(239,68,68,.2); }
-    .pm-h2h-tag.even    { background: rgba(255,255,255,.06); color: var(--text-muted); border: 1px solid var(--border); }
-    .pm-emojis { padding: 12px 18px; border-bottom: 1px solid var(--border); }
-    .pm-emojis-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
-    .pm-emoji-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 5px; }
-    .pm-ej-btn { height: 36px; background: var(--card2); border: 1px solid var(--border); border-radius: 9px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
-    .pm-ej-btn:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.2); transform: scale(1.15); }
-    .pm-ej-btn:active { transform: scale(.9); }
-    .pm-ej-btn.sent { background: rgba(249,115,22,.18); border-color: rgba(249,115,22,.4); }
-    .pm-cooldown-bar { height: 2px; background: var(--border); border-radius: 2px; margin-top: 8px; overflow: hidden; }
-    .pm-cooldown-fill { height: 100%; background: var(--orange); border-radius: 2px; width: 0; transition: width .1s linear; }
-    .pm-spam-msg { font-size: 11px; color: var(--text-muted); margin-top: 6px; text-align: center; }
-    .pm-footer { padding: 12px 18px; }
-    .pm-btn-desafiar { width: 100%; padding: 12px; background: linear-gradient(135deg,var(--purple),#5a3fcf); border: none; border-radius: 12px; font-family: 'Rajdhani',sans-serif; font-size: 16px; font-weight: 700; color: #fff; cursor: pointer; box-shadow: 0 4px 16px rgba(124,92,252,.3); transition: all .2s; }
-    .pm-btn-desafiar:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,252,.5); }
-
-    /* ── Emoji feed ── */
-    @keyframes bubbleIn { 0%{opacity:0;transform:translateX(-50%) translateY(20px) scale(.7)} 60%{opacity:1;transform:translateX(-50%) translateY(-6px) scale(1.05)} 100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)} }
-    @keyframes bubbleOut { 0%{opacity:1} 100%{opacity:0;transform:translateX(-50%) translateY(-20px) scale(.7)} }
-    @keyframes feedItemIn  { from{opacity:0;transform:translateX(18px)} to{opacity:1;transform:translateX(0)} }
-    @keyframes feedItemOut { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(18px)} }
-    .emoji-feed-item { background:rgba(13,15,26,.85); border:1px solid rgba(255,255,255,.09); border-radius:11px; padding:6px 11px; display:flex; align-items:center; gap:8px; backdrop-filter:blur(10px); animation:feedItemIn .3s ease; font-size:11px; color:rgba(255,255,255,.5); }
-    .emoji-feed-item .ef-emoji { font-size:19px; flex-shrink:0; }
-    .emoji-feed-item strong { color:#fff; font-weight:700; }
-    .ef-time { display:block; font-size:9px; color:rgba(255,255,255,.25); margin-top:1px; letter-spacing:.3px; }
+    @keyframes emojiChuva {
+      0%   { transform: translateY(-60px) rotate(0deg) scale(1);  opacity: 0; }
+      8%   { opacity: .9; }
+      92%  { opacity: .9; }
+      100% { transform: translateY(110vh) rotate(var(--rot, 360deg)) scale(.5); opacity: 0; }
+    }
+    .emoji-chuva-item {
+      position: fixed; top: -60px; font-size: var(--sz, 28px);
+      pointer-events: none; z-index: 8000;
+      animation: emojiChuva var(--dur, 2.5s) var(--delay, 0s) ease-in both;
+      user-select: none;
+    }
   </style>
 </head>
 <body>
@@ -378,6 +324,21 @@
           <button class="tab-btn active" id="tab-btn-duelos"   onclick="ativarTab('duelos')">⚔️ Duelos</button>
           <button class="tab-btn"        id="tab-btn-historico" onclick="ativarTab('historico')">📋 Histórico</button>
           <button class="tab-btn"        id="tab-btn-ranking"   onclick="ativarTab('ranking')">🏆 Ranking</button>
+        </div>
+
+        <!-- Desafio da Semana -->
+        <div id="card-desafio-semana" style="display:none;background:linear-gradient(135deg,rgba(124,92,252,.15),rgba(47,158,220,.08));border:1.5px solid rgba(124,92,252,.4);border-radius:14px;padding:14px 16px;margin-bottom:14px">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <span style="font-size:22px;flex-shrink:0">🏆</span>
+            <div style="flex:1">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#a78bfa;margin-bottom:3px">Desafio da Semana</div>
+              <div id="ds-titulo" style="font-size:14px;font-weight:800;color:#fff;margin-bottom:3px"></div>
+              <div id="ds-desc"   style="font-size:12px;color:var(--text-muted)"></div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div id="ds-recompensa" style="font-size:12px;font-weight:800;color:#a78bfa;background:rgba(124,92,252,.15);border:1px solid rgba(124,92,252,.3);border-radius:8px;padding:4px 10px"></div>
+            </div>
+          </div>
         </div>
 
         <!-- Aviso de fase de testes -->
@@ -477,10 +438,12 @@
         <!-- Tab: Ranking -->
         <div class="tab-pane" id="tab-ranking">
           <div id="ranking-content">
-            <div class="tab-placeholder">
-              <div class="icon">🏆</div>
-              <p>Ranking de duelos disponível em breve.</p>
+            <div style="display:flex;gap:6px;margin-bottom:14px">
+              <button id="rtab-individual" class="tab-btn active" onclick="ativarRankingTab('individual')">👤 Individual</button>
+              <button id="rtab-turmas"     class="tab-btn"        onclick="ativarRankingTab('turmas')">🏫 Turmas</button>
             </div>
+            <div id="rpanel-individual"></div>
+            <div id="rpanel-turmas" style="display:none"></div>
           </div>
         </div>
       </div>
@@ -506,12 +469,12 @@
 </div>
 
 <script type="module">
-import { requireAluno, renderSidebarAluno, clearSession, hashSenha, atualizarBadgeDupla, injetarFaixaDupla, lerDuplaAtiva, iniciarNotifDueloGlobal } from '/js/auth.js';
+import { requireAluno, renderSidebarAluno, clearSession, hashSenha, atualizarBadgeDupla, injetarFaixaDupla, lerDuplaAtiva } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
 import { ref, set, get, push, onValue, remove, update, runTransaction } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { getPerfil, getSenhaAluno } from '/js/db.js';
 import { ALUNOS_POR_TURMA } from '/js/constants.js';
-import { avatarUrl, avatarHtml, avatarConfigDefault, DUELO_TIMEOUT_ACEITAR_S, XP_DUELO, NIVEIS_PERFIL } from '/js/gamificacao.js';
+import { avatarUrl, avatarHtml, avatarConfigDefault, DUELO_TIMEOUT_ACEITAR_S, XP_DUELO } from '/js/gamificacao.js';
 import { iniciarPresenca, encerrarPresenca, atualizarPresenca, filtrarOnline } from '/js/presenca.js';
 
 // Garantir que o banner existe no DOM
@@ -519,7 +482,7 @@ if (!document.getElementById('banner-aguardando')) {
   const _banEl = document.createElement('div');
   _banEl.id = 'banner-aguardando';
   _banEl.style.cssText = 'display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9000;width:min(560px,calc(100vw - 32px));background:linear-gradient(135deg,#2d1b69,#1a1040);border:2px solid #a78bfa;border-radius:14px;padding:16px 20px;align-items:center;gap:14px;box-shadow:0 0 32px rgba(167,139,250,.5),0 8px 32px rgba(0,0,0,.4)';
-  _banEl.innerHTML = `<span style="font-size:26px;flex-shrink:0">⚔️</span><div style="flex:1;min-width:0"><div id="aguardando-nome-txt" style="font-size:15px;font-weight:800;color:#c4b5fd">Aguardando resposta...</div><div style="font-size:12px;color:#a78bfa;margin-top:3px">Expira em <span id="aguardando-timer" style="font-weight:700;color:#e9d5ff">3:00</span></div></div><button onclick="cancelarDesafio()" style="background:rgba(124,92,252,.15);border:1.5px solid rgba(124,92,252,.5);color:#a78bfa;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:800;cursor:pointer;flex-shrink:0">✕ Cancelar</button>`;
+  _banEl.innerHTML = `<span style="font-size:26px;flex-shrink:0">⚔️</span><div style="flex:1;min-width:0"><div id="aguardando-nome-txt" style="font-size:15px;font-weight:800;color:#c4b5fd">Aguardando resposta...</div><div style="font-size:12px;color:#a78bfa;margin-top:3px">Expira em <span id="aguardando-timer" style="font-weight:700;color:#e9d5ff">3:00</span></div></div><button onclick="cancelarDesafio()" style="background:rgba(239,68,68,.15);border:1.5px solid rgba(239,68,68,.5);color:#ef4444;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:800;cursor:pointer;flex-shrink:0">✕ Cancelar</button>`;
   document.body.appendChild(_banEl);
 }
 
@@ -557,8 +520,17 @@ window.ativarTab = function(id) {
   document.getElementById(`tab-${id}`)?.classList.add('active');
   document.getElementById(`tab-btn-${id}`)?.classList.add('active');
   if (id === 'historico') carregarHistorico();
-  if (id === 'ranking')   carregarRankingDuelos();
+  if (id === 'ranking')   renderRankingIndividual();
   if (id === 'duelos')    restaurarEstadoDupla();
+};
+
+window.ativarRankingTab = function(tab) {
+  ['individual','turmas'].forEach(t => {
+    document.getElementById(`rtab-${t}`)?.classList.toggle('active', t === tab);
+    document.getElementById(`rpanel-${t}`).style.display = t === tab ? '' : 'none';
+  });
+  if (tab === 'turmas') renderRankingTurmas();
+  else renderRankingIndividual();
 };
 
 // ── Perfil ────────────────────────────────────────────────────
@@ -588,25 +560,6 @@ await iniciarPresenca(uid, {
 restaurarEstadoDupla();
 window.addEventListener('beforeunload', () => encerrarPresenca());
 
-iniciarNotifDueloGlobal();
-
-// Buscar último adversário para revanche
-let _ultimoAdvUid  = null;
-let _ultimoAdvNome = null;
-try {
-  const _histSnap = await get(ref(db, `perfis/${uid}/historico_duelos`));
-  if (_histSnap.exists()) {
-    const _todos = [];
-    _histSnap.forEach(c => _todos.push({ ...c.val() }));
-    _todos.sort((a, b) => (b.ts || 0) - (a.ts || 0));
-    const _ultimo = _todos[0];
-    if (_ultimo?.resultado === 'derrota' && _ultimo?.adversario_uid) {
-      _ultimoAdvUid  = _ultimo.adversario_uid;
-      _ultimoAdvNome = _ultimo.adversario_nome || '?';
-    }
-  }
-} catch(_) {}
-
 // Notificação quando parceiro faz login e desfaz dupla
 onValue(ref(db, `notif_dupla/${uid}`), snap => {
   if (!snap.exists()) return;
@@ -620,51 +573,20 @@ onValue(ref(db, `notif_dupla/${uid}`), snap => {
   showToast(n.msg || 'Seu parceiro fez login e a dupla foi desfeita.', 'warn', 5000);
 });
 
-// ── Emoji recebido ────────────────────────────────────────────
-onValue(ref(db, `notif_emoji/${uid}/reacao`), async snap => {
-  if (!snap.exists()) return;
-  const d = snap.val();
-  if (!d?.emoji || !d?.ts) return;
-  if (Date.now() - d.ts > 10000) { await set(snap.ref, null); return; }
-  mostrarBolhaEmoji(d.emoji, d.de || '?');
-  adicionarFeedEmoji(d.emoji, d.de || '?', sess.alunos[0] || 'você', d.ts);
-  await set(snap.ref, null);
-});
-
-onValue(ref(db, `notif_emoji/${uid}/watching`), async snap => {
-  if (!snap.exists()) return;
-  const d = snap.val();
-  if (!d?.ts || Date.now() - d.ts > 10000) { await set(snap.ref, null); return; }
-  showToast('👀 alguém está te observando…', 'info', 5000);
-  await set(snap.ref, null);
-});
-
-onValue(ref(db, `notif_emoji/${uid}/duelo_cancelado`), async snap => {
-  if (!snap.exists()) return;
-  const d = snap.val();
-  if (!d?.duelo_id || !d?.ts) return;
-  if (Date.now() - d.ts > 15000) { await set(snap.ref, null); return; }
-  document.getElementById(`dnb-${d.duelo_id}`)?.remove();
-  _notifVistas.delete(d.duelo_id);
-  await set(snap.ref, null);
-});
-
-onValue(ref(db, 'emoji_feed'), snap => {
-  if (!snap.exists()) return;
-  const feed = document.getElementById('emoji-feed');
-  if (!feed) return;
-  feed.innerHTML = '';
-  const items = [];
-  snap.forEach(c => items.push(c.val()));
-  items.sort((a,b) => (b.ts||0)-(a.ts||0)).slice(0,5).forEach(d => {
-    if (!d?.emoji) return;
-    const item = document.createElement('div');
-    item.className = 'emoji-feed-item';
-    item.dataset.ts = d.ts || Date.now();
-    item.innerHTML = `<span class="ef-emoji">${d.emoji}</span><span class="ef-text"><strong>${escH(d.de||'?')}</strong> → <strong>${escH(d.para||'?')}</strong><span class="ef-time">${tempoRelativo(d.ts || Date.now())}</span></span>`;
-    feed.appendChild(item);
-  });
-});
+// Carregar desafio da semana
+try {
+  const dsSnap = await get(ref(db, 'config/desafio_semana'));
+  const ds = dsSnap.val();
+  if (ds?.ativo && ds?.titulo) {
+    const card = document.getElementById('card-desafio-semana');
+    if (card) {
+      document.getElementById('ds-titulo').textContent     = ds.titulo;
+      document.getElementById('ds-desc').textContent       = ds.descricao || '';
+      document.getElementById('ds-recompensa').textContent = ds.recompensa || '';
+      card.style.display = 'block';
+    }
+  }
+} catch(_) {}
 
 // ── Dupla de duelo ────────────────────────────────────────────
 window.abrirDuplaPanel = function() {
@@ -729,7 +651,6 @@ window.confirmarDupla = async function() {
     try { await update(ref(db, `duelos/${_meuDueloAguardandoId}`), { status: 'expirado' }); } catch(_) {}
     _aguardandoId = null;
     _meuDueloAguardandoId = null;
-    sessionStorage.removeItem('sm_duelo_aguardando');
     const _ban = document.getElementById('banner-aguardando');
     if (_ban) _ban.style.display = 'none';
   }
@@ -803,6 +724,9 @@ window.setModalDiff = function(d, el) {
 };
 
 // ── Online em tempo real ──────────────────────────────────────
+let _onlineConhecidos = new Set();
+let _onlineIniciado   = false;
+
 onValue(ref(db, 'presenca_online'), snap => {
   // Reconciliação: se o parceiro da minha dupla ativa está online agora, a dupla foi desfeita
   // (ele fez login em outro lugar). Desfaz na hora, sem depender da notificação chegar.
@@ -831,18 +755,23 @@ onValue(ref(db, 'presenca_online'), snap => {
   } catch(_) {}
 
   const online = filtrarOnline(snap, uid);
+
+  if (_onlineIniciado) {
+    online.forEach(a => {
+      if (!_onlineConhecidos.has(a.uid)) {
+        const nomeExib = a.apelido || a.nome || _nomeDoUidOnline(a.uid);
+        showToast(`🟢 ${escH(nomeExib)} entrou nos duelos`, 'info', 3000);
+      }
+    });
+  }
+  _onlineConhecidos = new Set(online.map(a => a.uid));
+  _onlineIniciado = true;
+
   renderOnlineGrid(online);
   const n = online.length;
   document.getElementById('online-count').textContent = n;
   document.getElementById('online-sub').textContent =
     n === 0 ? 'Nenhum colega online' : `${n} colega${n>1?'s':''} online`;
-
-  // Atualizar cache de perfis e re-renderizar com badges
-  get(ref(db, 'perfis')).then(perfSnap => {
-    if (!perfSnap.exists()) return;
-    perfSnap.forEach(c => { _perfisCache[c.key] = c.val(); });
-    renderOnlineGrid(online);
-  }).catch(() => {});
 });
 
 function renderOnlineGrid(lista) {
@@ -871,26 +800,20 @@ function renderOnlineCard(aluno) {
   const turmaExib = temParceiro
     ? `${escH(aluno.turma || _turmaDoUidOnline(aluno.uid))} · ${escH(aluno.parceiro_turma || '?')}`
     : escH(aluno.turma || _turmaDoUidOnline(aluno.uid));
-  const perfil    = _perfisCache[aluno.uid];
-  const badge     = calcularBadge(aluno, perfil);
-  const nivelInfo = NIVEIS_PERFIL.find(n => n.n === (perfil?.nivel || 1)) || NIVEIS_PERFIL[0];
-  const nivelTag  = nivelInfo ? ` · ${nivelInfo.nome}` : '';
   return `
-    <div class="online-card${!st.disponivel ? ' in-duel' : ''}" onclick="abrirModalPerfil('${aluno.uid}','${escH(nomeBase)}')" style="cursor:pointer">
-      ${badge ? `<div class="oc-badge ${badge.cls}">${badge.txt}</div>` : (temParceiro ? '<div class="oc-dupla">DUPLA</div>' : '')}
+    <div class="online-card${!st.disponivel ? ' in-duel' : ''}">
+      ${temParceiro ? '<div class="oc-dupla">DUPLA</div>' : ''}
       <div class="oc-top">
         <div class="oc-av"><img src="${av}" alt="" onerror="this.src=''"></div>
         <div class="oc-info">
           <div class="oc-name">${nomeExib}</div>
-          <div class="oc-tag">${turmaExib}${nivelTag}</div>
+          <div class="oc-tag">${turmaExib}</div>
         </div>
         <div class="oc-dot" style="background:${st.dot}"></div>
       </div>
       ${st.disponivel
-        ? aluno.uid === _ultimoAdvUid
-          ? `<button class="btn-desafiar btn-revanche" onclick="event.stopPropagation();abrirModalDesafio('${aluno.uid}','${escH(nomeBase)}',${temParceiro})">🔁 Revanche!</button>`
-          : `<button class="btn-desafiar" onclick="event.stopPropagation();abrirModalDesafio('${aluno.uid}','${escH(nomeBase)}',${temParceiro})">⚔️ Desafiar</button>`
-        : `<button class="btn-desafiar" style="opacity:.4;cursor:not-allowed" disabled onclick="event.stopPropagation()">${st.label}</button>`}
+        ? `<button class="btn-desafiar" onclick="abrirModalDesafio('${aluno.uid}','${escH(nomeBase)}',${temParceiro})">⚔️ Desafiar</button>`
+        : `<button class="btn-desafiar" style="opacity:.4;cursor:not-allowed" disabled>${st.label}</button>`}
     </div>`;
 }
 
@@ -903,7 +826,6 @@ window.criarDesafioAberto = async function() {
     clearInterval(_aguardandoInt);
     try { await update(ref(db, `duelos/${_meuDueloAguardandoId}`), { status: 'expirado' }); } catch(_) {}
     _aguardandoId = null; _meuDueloAguardandoId = null;
-    sessionStorage.removeItem('sm_duelo_aguardando');
     const _ban = document.getElementById('banner-aguardando'); if(_ban) _ban.style.display = 'none';
   }
   const btn = document.getElementById('btnDesafioAberto');
@@ -939,7 +861,6 @@ window.abrirModalDesafio = async function(adversarioUid, adversarioNome, isDupla
     clearInterval(_aguardandoInt);
     try { await update(ref(db, `duelos/${_meuDueloAguardandoId}`), { status: 'expirado' }); } catch(_) {}
     _aguardandoId = null; _meuDueloAguardandoId = null;
-    sessionStorage.removeItem('sm_duelo_aguardando');
     const _ban = document.getElementById('banner-aguardando'); if(_ban) _ban.style.display = 'none';
   }
   _modalUid  = adversarioUid;
@@ -995,11 +916,6 @@ function mostrarAguardando(id, nomeAdversario = '') {
   _meuDueloAguardandoId = id;
   _aguardandoId  = id;
   _aguardandoExp = Date.now() + DUELO_TIMEOUT_ACEITAR_S * 1000;
-  sessionStorage.setItem('sm_duelo_aguardando', JSON.stringify({
-    id,
-    expira_em: _aguardandoExp,
-    adversario_nome: nomeAdversario || '',
-  }));
   const _ban = document.getElementById('banner-aguardando');
   if (_ban) {
     _ban.style.display = 'flex';
@@ -1017,7 +933,6 @@ function mostrarAguardando(id, nomeAdversario = '') {
     document.getElementById('aguardando-timer').textContent = `${m}:${s.toString().padStart(2,'0')}`;
     if (rest <= 0) {
       clearInterval(_aguardandoInt);
-      sessionStorage.removeItem('sm_duelo_aguardando');
       { const _ban = document.getElementById('banner-aguardando'); if(_ban) _ban.style.display = 'none'; }
       document.getElementById('btnDesafioAberto').disabled = false;
     }
@@ -1027,7 +942,6 @@ function mostrarAguardando(id, nomeAdversario = '') {
   onValue(ref(db, `duelos/${id}/status`), snap => {
     if (snap.val() === 'em_jogo') {
       clearInterval(_aguardandoInt);
-      sessionStorage.removeItem('sm_duelo_aguardando');
       window.location.href = `/aluno/duelo_partida.html?id=${id}`;
     }
   });
@@ -1036,301 +950,14 @@ function mostrarAguardando(id, nomeAdversario = '') {
 window.cancelarDesafio = async function() {
   if (_aguardandoId) {
     clearInterval(_aguardandoInt);
-    try {
-      const dSnap = await get(ref(db, `duelos/${_aguardandoId}`));
-      const dData = dSnap.val();
-      await update(ref(db, `duelos/${_aguardandoId}`), {
-        status: 'expirado',
-        cancelado_por: alunos[0],
-      });
-      if (dData?.adversario_uid && dData.tipo === 'direto') {
-        await set(ref(db, `notif_emoji/${dData.adversario_uid}/duelo_cancelado`), {
-          duelo_id: _aguardandoId,
-          ts: Date.now(),
-        });
-      }
-    } catch(_) {}
+    try { await update(ref(db, `duelos/${_aguardandoId}`), { status: 'expirado', cancelado_por: alunos[0] }); } catch(_) {}
     _aguardandoId = null;
     _meuDueloAguardandoId = null;
-    sessionStorage.removeItem('sm_duelo_aguardando');
   }
   const _ban = document.getElementById('banner-aguardando');
   if (_ban) _ban.style.display = 'none';
   document.getElementById('btnDesafioAberto').disabled = false;
 };
-
-// ── Cache de perfis e H2H para badges ────────────────────────
-let _perfisCache = {};
-let _h2hCache    = {}; // uid → { me, adv }
-
-// Carrega o H2H do usuário logado uma vez ao iniciar
-get(ref(db, `perfis/${uid}/historico_duelos`)).then(snap => {
-  if (!snap.exists()) return;
-  snap.forEach(c => {
-    const d = c.val();
-    const auid = d?.adversario_uid;
-    if (!auid) return;
-    if (!_h2hCache[auid]) _h2hCache[auid] = { me: 0, adv: 0 };
-    if (d.resultado === 'vitoria')  _h2hCache[auid].me++;
-    else if (d.resultado === 'derrota') _h2hCache[auid].adv++;
-  });
-}).catch(() => {});
-
-function calcularBadge(aluno, perfil) {
-  const h2h = _h2hCache[aluno.uid] || { me: 0, adv: 0 };
-  if ((h2h.me + h2h.adv) >= 5) return { txt: '⚔️ Rival', cls: 'badge-rival' };
-  if (perfil?.venceu_rank1)     return { txt: '🎯 Caçador', cls: 'badge-hunter' };
-  const streak = perfil?.streak_vitorias || 0;
-  if (streak >= 3)               return { txt: `🔥 ${streak} seguidas`, cls: 'badge-streak' };
-  return null;
-}
-
-// ── Mini-perfil + emojis ──────────────────────────────────────
-const EMOJIS = ['👊','😤','🔥','💀','😂','👑','😈','❤️','🌸','✨','🤝','😊','🫶','🥺'];
-let _pmAlvoUid  = null;
-let _pmAlvoNome = null;
-let _emojiWindow = [];
-let _bubbleTimer = null;
-
-window.abrirModalPerfil = async function(alvoUid, nomeBase) {
-  const modal = document.getElementById('modal-perfil');
-  modal.style.display = 'flex';
-  document.getElementById('pm-name').textContent  = nomeBase;
-  document.getElementById('pm-turma').textContent = '…';
-  document.getElementById('pm-level').textContent  = '…';
-  document.getElementById('pm-rank').textContent   = '…';
-  document.getElementById('pm-total').textContent  = '…';
-  document.getElementById('pm-fav').textContent    = '…';
-  document.getElementById('pm-h2h-me').textContent  = '—';
-  document.getElementById('pm-h2h-adv').textContent = '—';
-
-  try { await set(ref(db, `notif_emoji/${alvoUid}/watching`), { ts: Date.now() }); } catch(_) {}
-
-  const [perfSnap, histSnap, meuHistSnap, todosSnap, meuPerfSnap] = await Promise.all([
-    get(ref(db, `perfis/${alvoUid}`)).catch(()=>null),
-    get(ref(db, `perfis/${alvoUid}/historico_duelos`)).catch(()=>null),
-    get(ref(db, `perfis/${uid}/historico_duelos`)).catch(()=>null),
-    get(ref(db, 'perfis')).catch(()=>null),
-    get(ref(db, `perfis/${uid}`)).catch(()=>null),
-  ]);
-
-  const p = perfSnap?.val() || {};
-
-  const avEl = document.getElementById('pm-av');
-  const avConfig = p.avatar || avatarConfigDefault();
-  const letraFallback = (p.apelido_ativo || p.nome || nomeBase || '?')[0].toUpperCase();
-  avEl.innerHTML = avatarHtml(avConfig, letraFallback, '100%');
-  document.getElementById('pm-name').textContent  = p.apelido_ativo || p.nome || nomeBase;
-  document.getElementById('pm-turma').textContent = `Turma ${p.turma || '?'}`;
-  document.getElementById('pm-level').textContent  = `⚡ Nível ${p.nivel || 1} · ${p.xp || 0} XP`;
-  document.getElementById('pm-total').textContent  = p.duelos_total || 0;
-
-  let rankPos = '—', rankAdvNum = 999, meuRankNum = 999;
-  if (todosSnap?.exists()) {
-    const lista = [];
-    todosSnap.forEach(c => {
-      const v = c.val();
-      if (!v?.nome || v.nome.includes('PROFESSOR') || v.nome.includes('TESTE')) return;
-      if ((v.duelos_vitorias||0) === 0 && (v.duelos_total||0) === 0) return;
-      lista.push({ uid: c.key, vitorias: v.duelos_vitorias||0, xp: v.xp||0 });
-    });
-    lista.sort((a,b) => b.vitorias - a.vitorias || b.xp - a.xp);
-    const idxAdv = lista.findIndex(x => x.uid === alvoUid);
-    const idxMeu = lista.findIndex(x => x.uid === uid);
-    if (idxAdv >= 0) { rankAdvNum = idxAdv + 1; rankPos = `#${rankAdvNum}`; }
-    if (idxMeu >= 0) meuRankNum = idxMeu + 1;
-  }
-  document.getElementById('pm-rank').textContent = rankPos;
-
-  let favLabel = '—';
-  if (histSnap?.exists()) {
-    const cont = { facil:0, medio:0, dificil:0 };
-    histSnap.forEach(c => { const d = c.val()?.dificuldade; if (d && cont[d] !== undefined) cont[d]++; });
-    const fav = Object.entries(cont).sort((a,b)=>b[1]-a[1])[0];
-    if (fav && fav[1] > 0) favLabel = fav[0]==='facil'?'🟢 Fácil':fav[0]==='medio'?'🟡 Médio':'🔴 Difícil';
-  }
-  document.getElementById('pm-fav').textContent = favLabel;
-
-  let meWins = 0, advWins = 0;
-  if (meuHistSnap?.exists()) {
-    meuHistSnap.forEach(c => {
-      const d = c.val();
-      if (d?.adversario_uid !== alvoUid) return;
-      if (d.resultado === 'vitoria') meWins++;
-      else if (d.resultado === 'derrota') advWins++;
-    });
-  }
-  document.getElementById('pm-h2h-me').textContent  = `${meWins}v`;
-  document.getElementById('pm-h2h-adv').textContent = `${advWins}d`;
-  const tag = document.getElementById('pm-h2h-tag');
-  tag.className = 'pm-h2h-tag';
-  if (meWins === 0 && advWins === 0) { tag.classList.add('even');    tag.textContent = 'Nunca duelaram'; }
-  else if (meWins > advWins)         { tag.classList.add('winning'); tag.textContent = 'Você vence'; }
-  else if (meWins < advWins)         { tag.classList.add('losing');  tag.textContent = 'Perdendo'; }
-  else                               { tag.classList.add('even');    tag.textContent = 'Empate'; }
-
-  const nomeExib = p.apelido_ativo || p.nome || nomeBase;
-  document.getElementById('pm-btn-nome').textContent = nomeExib;
-  document.getElementById('pm-btn-desafiar-action')?.remove();
-  const btnAction = document.createElement('button');
-  btnAction.id = 'pm-btn-desafiar-action';
-  btnAction.style.display = 'none';
-  btnAction.onclick = () => abrirModalDesafio(alvoUid, nomeBase, !!(p.parceiro_nome));
-  document.body.appendChild(btnAction);
-
-  _pmAlvoUid  = alvoUid;
-  _pmAlvoNome = nomeExib;
-  renderEmojiGrid();
-  resetEmojiCount();
-
-  // ── Botão revanche ──
-  const btnDesafiar = document.getElementById('pm-btn-desafiar');
-  if (alvoUid === _ultimoAdvUid) {
-    btnDesafiar.innerHTML = '🔁 Revanche contra ' + escH(nomeExib);
-    btnDesafiar.style.background = 'linear-gradient(135deg, var(--orange), #fb923c)';
-  } else {
-    btnDesafiar.innerHTML = '⚔️ Desafiar <span id="pm-btn-nome">' + escH(nomeExib) + '</span>';
-    btnDesafiar.style.background = '';
-  }
-
-  // ── Upset bonus ──
-  const meuPerf = meuPerfSnap?.val() || {};
-  const UPSET_MINIMO_DUELOS = 10;
-  const meusDuelosTotal = meuPerf.duelos_total || 0;
-  const upsetDesbloqueado = meusDuelosTotal >= UPSET_MINIMO_DUELOS;
-  const diff = meuRankNum - rankAdvNum;
-  let upsetPct = 0;
-  if (upsetDesbloqueado) {
-    if (rankAdvNum === 1)                upsetPct = 100;
-    else if (rankAdvNum <= 3)            upsetPct = 75;
-    else if (diff >= 4 && diff <= 10)    upsetPct = 25;
-    else if (diff > 10)                  upsetPct = 10;
-  }
-  const upsetEl = document.getElementById('pm-upset');
-  const upsetTxt = document.getElementById('pm-upset-text');
-  if (!upsetDesbloqueado) {
-    upsetEl.style.display = 'flex';
-    const faltam = UPSET_MINIMO_DUELOS - meusDuelosTotal;
-    upsetTxt.innerHTML = `⚔️ Dispute mais <span class="pm-upset-bonus">${faltam} duelo${faltam !== 1 ? 's' : ''}</span> para desbloquear o bônus de upset!`;
-  } else if (upsetPct > 0) {
-    upsetEl.style.display = 'flex';
-    const xpBase  = XP_DUELO[_modalDiff]?.vitoria || 25;
-    const xpBonus = Math.round(xpBase * upsetPct / 100);
-    upsetTxt.innerHTML = `Vencer o ${rankPos} dá <span class="pm-upset-bonus">+${upsetPct}% XP</span> de bônus (+${xpBonus} XP extra)!`;
-  } else {
-    upsetEl.style.display = 'none';
-  }
-};
-
-window.fecharModalPerfil = function() {
-  document.getElementById('modal-perfil').style.display = 'none';
-  document.getElementById('pm-btn-desafiar-action')?.remove();
-};
-
-function renderEmojiGrid() {
-  const grid = document.getElementById('pm-emoji-grid');
-  if (!grid) return;
-  grid.innerHTML = EMOJIS.map(e =>
-    `<button class="pm-ej-btn" onclick="enviarEmojiPerfil('${e}',this)">${e}</button>`
-  ).join('');
-}
-
-function resetEmojiCount() {
-  _emojiWindow = _emojiWindow.filter(t => Date.now() - t < 60000);
-  const restam = 10 - _emojiWindow.length;
-  const countEl = document.getElementById('pm-emoji-count');
-  if (countEl) countEl.textContent = restam > 0 ? `(${restam} restantes)` : '(limite atingido 😄)';
-  const spamEl = document.getElementById('pm-spam-msg');
-  if (spamEl) spamEl.style.display = restam <= 0 ? 'block' : 'none';
-  const fill = document.getElementById('pm-cooldown-fill');
-  if (fill) fill.style.width = `${(restam / 10) * 100}%`;
-}
-
-window.enviarEmojiPerfil = async function(emoji, btn) {
-  if (!_pmAlvoUid) return;
-  _emojiWindow = _emojiWindow.filter(t => Date.now() - t < 60000);
-  if (_emojiWindow.length >= 10) {
-    const sp = document.getElementById('pm-spam-msg');
-    if (sp) sp.style.display = 'block';
-    return;
-  }
-  _emojiWindow.push(Date.now());
-  resetEmojiCount();
-
-  btn.classList.add('sent');
-  setTimeout(() => btn.classList.remove('sent'), 400);
-
-  const meuNomeExib = sess.alunos[0] || uid;
-
-  try {
-    await set(ref(db, `notif_emoji/${_pmAlvoUid}/reacao`), { de: meuNomeExib, emoji, ts: Date.now() });
-  } catch(_) {}
-
-  mostrarBolhaEmoji(emoji, _pmAlvoNome);
-  adicionarFeedEmoji(emoji, meuNomeExib, _pmAlvoNome);
-  gravarFeedEmoji(emoji, meuNomeExib, _pmAlvoNome);
-};
-
-function mostrarBolhaEmoji(emoji, para) {
-  const el = document.getElementById('emoji-bubble');
-  if (!el) return;
-  document.getElementById('bubble-emoji').textContent  = emoji;
-  document.getElementById('bubble-sender').textContent = sess.alunos[0] || 'Você';
-  document.getElementById('bubble-target').textContent = para;
-  el.style.display = 'flex';
-  el.style.animation = 'bubbleIn .4s cubic-bezier(.34,1.4,.64,1) both';
-  clearTimeout(_bubbleTimer);
-  _bubbleTimer = setTimeout(() => {
-    el.style.animation = 'bubbleOut .3s ease forwards';
-    setTimeout(() => { el.style.display = 'none'; }, 300);
-  }, 4000);
-}
-
-function tempoRelativo(ts) {
-  const diff = Math.floor((Date.now() - ts) / 1000);
-  if (diff < 60)  return 'agora';
-  if (diff < 120) return '1min';
-  return `${Math.floor(diff / 60)}min`;
-}
-
-function adicionarFeedEmoji(emoji, de, para, ts = Date.now()) {
-  if (!emoji || !de || !para) return;
-  const feed = document.getElementById('emoji-feed');
-  if (!feed) return;
-  const item = document.createElement('div');
-  item.className = 'emoji-feed-item';
-  item.dataset.ts = ts;
-  item.innerHTML = `
-    <span class="ef-emoji">${emoji}</span>
-    <span class="ef-text"><strong>${escH(de)}</strong> → <strong>${escH(para)}</strong><span class="ef-time">agora</span></span>
-  `;
-  feed.insertBefore(item, feed.firstChild);
-  while (feed.children.length > 5) feed.removeChild(feed.lastChild);
-  setTimeout(() => {
-    item.style.animation = 'feedItemOut .3s ease forwards';
-    setTimeout(() => item.remove(), 300);
-  }, 10 * 60 * 1000);
-}
-
-setInterval(() => {
-  document.querySelectorAll('.emoji-feed-item[data-ts]').forEach(item => {
-    const el = item.querySelector('.ef-time');
-    if (el) el.textContent = tempoRelativo(parseInt(item.dataset.ts));
-  });
-}, 30000);
-
-async function gravarFeedEmoji(emoji, de, para) {
-  try {
-    const newRef = push(ref(db, 'emoji_feed'));
-    await set(newRef, { emoji, de, para, ts: Date.now() });
-    const snap = await get(ref(db, 'emoji_feed'));
-    if (!snap.exists()) return;
-    const agora = Date.now();
-    const updates = {};
-    snap.forEach(c => { if (agora - (c.val()?.ts||0) > 60000) updates[c.key] = null; });
-    if (Object.keys(updates).length) await update(ref(db, 'emoji_feed'), updates);
-  } catch(_) {}
-}
 
 // ── Receber desafios em tempo real ────────────────────────────
 const _notifVistas = new Set();
@@ -1355,7 +982,6 @@ onValue(ref(db, 'duelos'), snap => {
       if (_aguardandoId === id) {
         clearInterval(_aguardandoInt);
         _aguardandoId = null;
-        sessionStorage.removeItem('sm_duelo_aguardando');
         { const _ban = document.getElementById('banner-aguardando'); if(_ban) _ban.style.display = 'none'; }
         document.getElementById('btnDesafioAberto').disabled = false;
       }
@@ -1363,15 +989,9 @@ onValue(ref(db, 'duelos'), snap => {
       mostrarToastRecusa(d.adversario_nome || 'O aluno');
     }
 
-    // Recuperar meu desafio ao recarregar página — restaurar banner
-    if (d.criador_uid === uid && d.status === 'aguardando' && !_aguardandoId) {
+    // Recuperar meu desafio ao recarregar página
+    if (d.criador_uid === uid && d.status === 'aguardando') {
       _meuDueloAguardandoId = id;
-      _aguardandoId  = id;
-      _aguardandoExp = d.expira_em || (Date.now() + DUELO_TIMEOUT_ACEITAR_S * 1000);
-      if (_aguardandoExp > Date.now()) {
-        const nomeAdv = d.adversario_nome || (d.tipo === 'aberto' ? 'todos online' : '');
-        mostrarAguardando(id, nomeAdv);
-      }
     }
     // Limpar quando meu desafio for aceito/expirado por outro caminho
     if (d.criador_uid === uid && d.status !== 'aguardando' && _meuDueloAguardandoId === id) {
@@ -1379,10 +999,18 @@ onValue(ref(db, 'duelos'), snap => {
     }
 
     // Remover notificação se desafio foi cancelado/expirado pelo criador
-    if (d.status === 'expirado' || d.status === 'cancelado') {
-      document.getElementById(`dnb-${id}`)?.remove();
+    if ((d.status === 'expirado' || d.status === 'cancelado') && _notifVistas.has(id)) {
+      document.getElementById(`notif-${id}`)?.remove();
     }
 
+    if (d.status !== 'aguardando') return;
+    if (d.criador_uid === uid) return;
+    if (d.expira_em < agora) return;
+    if (_notifVistas.has(id)) return;
+    if (d.tipo === 'aberto' || d.adversario_uid === uid) {
+      _notifVistas.add(id);
+      mostrarNotificacaoDesafio(id, d);
+    }
   });
 });
 
@@ -1405,6 +1033,39 @@ function mostrarToastRecusa(nome) {
   t.textContent = `❌ ${nome} recusou seu desafio`;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 4000);
+}
+
+function mostrarNotificacaoDesafio(id, duelo) {
+  if (document.getElementById(`notif-${id}`)) return;
+  const restMs = duelo.expira_em - Date.now();
+  if (restMs <= 0) return;
+
+  const el = document.createElement('div');
+  el.id = `notif-${id}`;
+  el.className = 'challenge-notif';
+  el.innerHTML = `
+    <div class="cn-info">
+      <div class="cn-title"><strong>${escH(duelo.criador_nome)}${duelo.criador_parceiro_nome ? ` + ${escH(duelo.criador_parceiro_nome)}` : ''}</strong> · ${escH(duelo.criador_turma)} te desafiou!</div>
+      <div class="cn-sub">
+        ${duelo.tipo === 'aberto' ? '🌐 Desafio aberto' : '🎯 Desafio direto'} ·
+        <strong>${diffLabel(duelo.dificuldade)}</strong> · ${TEMPO_LABEL[duelo.dificuldade] || ''}
+      </div>
+    </div>
+    <div class="cn-timer" id="timer-${id}"></div>
+    <div class="cn-btns">
+      <button class="btn-aceitar" onclick="aceitarDesafio('${id}')">⚔️ Aceitar</button>
+      <button class="btn-recusar" onclick="recusarDesafio('${id}')">Recusar</button>
+    </div>`;
+  document.getElementById('notificacoes-wrap').prepend(el);
+
+  const interval = setInterval(() => {
+    const rest = Math.max(0, duelo.expira_em - Date.now());
+    const m = Math.floor(rest / 60000);
+    const s = Math.floor((rest % 60000) / 1000);
+    const timerEl = document.getElementById(`timer-${id}`);
+    if (timerEl) timerEl.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+    if (rest <= 0) { clearInterval(interval); el.remove(); }
+  }, 1000);
 }
 
 window.aceitarDesafio = async function(id) {
@@ -1439,7 +1100,6 @@ window.aceitarDesafio = async function(id) {
       try { await update(ref(db, `duelos/${_aguardandoId}`), { status: 'expirado' }); } catch(_) {}
       _aguardandoId = null;
       _meuDueloAguardandoId = null;
-      sessionStorage.removeItem('sm_duelo_aguardando');
       { const _ban = document.getElementById('banner-aguardando'); if(_ban) _ban.style.display = 'none'; }
     }
     // Cancelar todos os outros convites recebidos pendentes
@@ -1483,6 +1143,49 @@ setInterval(async () => {
   } catch(_) {}
 }, 10_000);
 
+// ── Reação emoji pós-duelo ────────────────────────────────────
+function mostrarBolhaEmoji(emoji, de) {
+  const el = document.createElement('div');
+  el.style.cssText = [
+    'position:fixed','bottom:90px','right:20px','z-index:8500',
+    'background:#1c2035','border:1.5px solid rgba(124,92,252,.5)',
+    'border-radius:16px 16px 4px 16px','padding:12px 18px',
+    'display:flex','align-items:center','gap:10px',
+    'font-size:13px','color:#e8eaf0','font-weight:600',
+    'box-shadow:0 4px 24px rgba(0,0,0,.4)','max-width:260px',
+    'animation:notif-in .25s ease',
+  ].join(';');
+  el.innerHTML = `<span style="font-size:32px;line-height:1">${escH(emoji)}</span><span style="opacity:.75">${escH(de)} te mandou!</span>`;
+  document.body.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .4s'; }, 3200);
+  setTimeout(() => el.remove(), 3700);
+}
+
+function lancarChuvaEmoji(emoji) {
+  for (let i = 0; i < 22; i++) {
+    const el = document.createElement('div');
+    el.className = 'emoji-chuva-item';
+    el.textContent = emoji;
+    const dur   = (Math.random() * 1.8 + 1.8).toFixed(2);
+    const delay = (Math.random() * 1.4).toFixed(2);
+    const left  = (Math.random() * 96 + 1).toFixed(1);
+    const sz    = Math.floor(Math.random() * 28 + 20);
+    const rot   = Math.floor(Math.random() * 720 - 360);
+    el.style.cssText = `left:${left}%;--sz:${sz}px;--dur:${dur}s;--delay:${delay}s;--rot:${rot}deg;`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), (parseFloat(dur) + parseFloat(delay) + 0.4) * 1000);
+  }
+}
+
+onValue(ref(db, `notif_emoji/${uid}/reacao`), snap => {
+  if (!snap.exists()) return;
+  const d = snap.val();
+  if (!d?.emoji) return;
+  set(ref(db, `notif_emoji/${uid}/reacao`), null).catch(() => {});
+  mostrarBolhaEmoji(d.emoji, d.de || '?');
+  lancarChuvaEmoji(d.emoji);
+});
+
 // ── Histórico ─────────────────────────────────────────────────
 async function carregarHistorico() {
   const container = document.getElementById('historico-content');
@@ -1513,37 +1216,11 @@ async function carregarHistorico() {
     const derrotas = duelos.filter(d => d.resultado === 'derrota').length;
     const total    = duelos.length;
 
-    // Calcular streak (vitórias consecutivas do final)
-    let streak = 0;
-    for (const d of duelos) {
-      if (d.resultado === 'vitoria') streak++;
-      else break;
-    }
-
-    // Calcular venceu_rank1: verificar se alguma vitória foi contra o atual #1
-    let venceuRank1 = false;
-    try {
-      const todosSnap = await get(ref(db, 'perfis'));
-      if (todosSnap.exists()) {
-        const lista = [];
-        todosSnap.forEach(c => {
-          const v = c.val();
-          if (!v?.nome || v.nome.includes('PROFESSOR') || v.nome.includes('TESTE')) return;
-          if ((v.duelos_vitorias||0) === 0 && (v.duelos_total||0) === 0) return;
-          lista.push({ uid: c.key, vitorias: v.duelos_vitorias||0, xp: v.xp||0 });
-        });
-        lista.sort((a,b) => b.vitorias - a.vitorias || b.xp - a.xp);
-        const rank1uid = lista[0]?.uid;
-        if (rank1uid) {
-          venceuRank1 = duelos.some(d => d.resultado === 'vitoria' && d.adversario_uid === rank1uid);
-        }
-      }
-    } catch(_) {}
-
     // Corrigir contadores no Firebase com valores reais do histórico
-    const perfilUpdate = { duelos_total: total, duelos_vitorias: vitorias, streak_vitorias: streak };
-    if (venceuRank1) perfilUpdate.venceu_rank1 = true;
-    await update(ref(db, `perfis/${uid}`), perfilUpdate);
+    await update(ref(db, `perfis/${uid}`), {
+      duelos_total:    total,
+      duelos_vitorias: vitorias,
+    });
 
     // ── helpers ──
     const DIFF_CLASS = { facil:'facil', medio:'medio', dificil:'dificil' };
@@ -1596,7 +1273,7 @@ async function carregarHistorico() {
           : escH(advTurma);
         return `
           <div class="hist-row ${isW?'win':'loss'}${d.abandono?' abandon':''}" data-tipo="${isW?'win':'loss'}">
-            <div class="hist-wl ${isW?'win':'loss'}">${isW?'Vitória':'Derrota'}</div>
+            <div class="hist-wl ${isW?'win':'loss'}">${isW?'W':'L'}</div>
             <div class="hist-avatar" style="background:${avatarColor(advNome)}">${escH((advNome)[0]?.toUpperCase()||'?')}</div>
             <div class="hist-info">
               <div class="hist-nome">${nomeExib}</div>
@@ -1644,12 +1321,21 @@ window.histFiltrar = function(btn, tipo) {
 };
 
 // ── Ranking de duelos ─────────────────────────────────────────
-async function carregarRankingDuelos() {
-  const el = document.getElementById('ranking-content');
+async function renderRankingIndividual() {
+  const el = document.getElementById('rpanel-individual');
   if (!el) return;
   el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">Carregando...</div>';
 
-  const snap = await get(ref(db, 'perfis'));
+  // Forçar leitura sem cache via REST
+  let snap;
+  try {
+    const res = await fetch('https://sistemamatematica-50eff-default-rtdb.firebaseio.com/perfis.json?t=' + Date.now());
+    const data = await res.json();
+    // Criar objeto compatível com snap.forEach
+    snap = { exists: () => !!data, forEach: (cb) => { if (data) Object.entries(data).forEach(([k,v]) => cb({ key: k, val: () => v })); } };
+  } catch(_) {
+    snap = await get(ref(db, 'perfis'));
+  }
   if (!snap.exists()) {
     el.innerHTML = '<p style="text-align:center;padding:40px;color:var(--text-muted)">Nenhum duelo realizado ainda.</p>';
     return;
@@ -1658,18 +1344,27 @@ async function carregarRankingDuelos() {
   const lista = [];
   snap.forEach(c => {
     const v = c.val();
-    if (!v?.nome) return;
-    if ((v.duelos_vitorias || 0) === 0 && (v.duelos_total || 0) === 0) return;
-    if (v.nome?.includes('PROFESSOR') || v.nome?.includes('TESTE')) return;
-    if (v.turma === 'TESTE') return;
+    const _nomeDoUid = c.key.includes('_')
+      ? c.key.split('_').slice(1).join(' ')
+      : c.key;
+    const _nome  = v?.apelido_ativo || v?.nome || _nomeDoUid;
+    const _turma = v?.turma || (c.key.startsWith('8') ? c.key.split('_')[0] : '');
+
+    if (!_nome) return;
+    if (_nome.includes('PROFESSOR') || _nome.includes('TESTE')) return;
+    if (c.key.includes('PROFESSOR') || c.key.includes('TESTE')) return;
+    if (c.key === '8D_teste1' || c.key === '8D_teste2') return;
+    if (_turma === 'TESTE') return;
+    if ((v?.duelos_vitorias || 0) === 0 && (v?.duelos_total || 0) === 0) return;
+
     lista.push({
       uid:      c.key,
-      nome:     v.apelido_ativo || v.nome,
-      turma:    v.turma || '',
-      vitorias: v.duelos_vitorias || 0,
-      total:    v.duelos_total    || 0,
-      xp:       v.xp || 0,
-      avatar:   v.avatar,
+      nome:     _nome,
+      turma:    _turma,
+      vitorias: v?.duelos_vitorias || 0,
+      total:    v?.duelos_total    || 0,
+      xp:       v?.xp || 0,
+      avatar:   v?.avatar,
     });
   });
 
@@ -1705,7 +1400,6 @@ async function carregarRankingDuelos() {
     if (!p) return `<div class="podium-spot p${slotIdx+1}"></div>`;
     const isMe  = p.uid === uid;
     const st    = STANDS[slotIdx];
-    const taxa  = p.total > 0 ? Math.round((p.vitorias / p.total) * 100) : 0;
     const crown = slotIdx === 0 ? '<div class="podium-crown">👑</div>' : '';
     const sizes = [54, 44, 44];
     return `<div class="podium-spot p${slotIdx+1} g${slotIdx+1}${isMe?' podium-me':''}">
@@ -1713,7 +1407,7 @@ async function carregarRankingDuelos() {
       ${renderPodiumAv(p, sizes[slotIdx])}
       <div class="podium-name" style="color:${isMe?'var(--purple)':'var(--text)'}">${escH(p.nome)}</div>
       <div class="podium-turma">${escH(p.turma)}</div>
-      <div class="podium-score" style="color:${COLORS[slotIdx]}">${p.vitorias}⚔️ · ${taxa}%</div>
+      <div class="podium-score" style="color:${COLORS[slotIdx]}">${p.vitorias}⚔️</div>
       <div class="podium-stand" style="height:${st.h}px;background:${st.bg}">${slotIdx+1}</div>
     </div>`;
   }
@@ -1729,7 +1423,6 @@ async function carregarRankingDuelos() {
       ${resto.map((p, i) => {
         const isMe  = p.uid === uid;
         const pos   = i + 4;
-        const taxa  = p.total > 0 ? Math.round((p.vitorias / p.total) * 100) : 0;
         const av    = avatarUrl(p.avatar || avatarConfigDefault());
         const letra = (p.nome || '?')[0].toUpperCase();
         return `<div style="background:${isMe?'rgba(127,119,221,.06)':'var(--card)'};
@@ -1745,11 +1438,10 @@ async function carregarRankingDuelos() {
             <div style="font-size:13px;font-weight:700;${isMe?'color:var(--purple)':''};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
               ${escH(p.nome)}${isMe?' ← você':''}
             </div>
-            <div style="font-size:10px;color:var(--text-muted)">${escH(p.turma)} · ${p.total} duelos · ${taxa}% vitórias</div>
+            <div style="font-size:10px;color:var(--text-muted)">${escH(p.turma)} · ${p.total} duelos</div>
           </div>
           <div style="text-align:right;flex-shrink:0">
             <div style="font-size:13px;font-weight:800;color:var(--green)">${p.vitorias}⚔️</div>
-            <div style="font-size:10px;color:var(--text-muted)">${p.xp} XP</div>
           </div>
         </div>`;
       }).join('')}
@@ -1761,6 +1453,66 @@ async function carregarRankingDuelos() {
     ${listaHtml}
   `;
 }
+
+async function renderRankingTurmas() {
+  const el = document.getElementById('rpanel-turmas');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">Carregando...</div>';
+
+  const TURMA_SIZE = { '8D': 20, '8E': 33, '8F': 32, '8G': 30, '8H': 33 };
+
+  const snap = await get(ref(db, 'perfis')).catch(() => null);
+  if (!snap?.exists()) { el.innerHTML = '<p style="color:var(--text-muted);padding:12px">Sem dados.</p>'; return; }
+
+  const xpPorTurma = { '8D': 0, '8E': 0, '8F': 0, '8G': 0, '8H': 0 };
+  snap.forEach(c => {
+    const v = c.val();
+    if (!v?.turma || !v?.nome) return;
+    if (v.nome.includes('PROFESSOR') || v.nome.includes('TESTE')) return;
+    const t = v.turma;
+    if (xpPorTurma[t] !== undefined) xpPorTurma[t] += (v.xp || 0);
+  });
+
+  const ranking = Object.entries(xpPorTurma)
+    .map(([turma, xpTotal]) => ({
+      turma,
+      xpTotal,
+      media: TURMA_SIZE[turma] ? Math.round(xpTotal / TURMA_SIZE[turma]) : 0,
+      size: TURMA_SIZE[turma] || 0,
+    }))
+    .sort((a, b) => b.media - a.media);
+
+  const MEDALS = ['🥇','🥈','🥉'];
+  const COLORS = ['#F59E0B','#9CA3AF','#CD853F'];
+
+  const podioHTML = `
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      ${ranking.slice(0,3).map((r,i) => `
+        <div style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;${i===0?'border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.06)':''}">
+          <div style="font-size:28px;margin-bottom:6px">${MEDALS[i]}</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:800;color:${COLORS[i]}">${escH(r.turma)}</div>
+          <div style="font-size:14px;font-weight:800;color:${COLORS[i]};margin-top:4px">${r.media} XP</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">média/aluno</div>
+        </div>`).join('')}
+    </div>`;
+
+  const restaHTML = ranking.slice(3).map((r, i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:6px">
+      <span style="font-size:13px;font-weight:800;color:var(--text-muted);min-width:22px">${i+4}º</span>
+      <div style="flex:1">
+        <div style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700">${escH(r.turma)}</div>
+        <div style="font-size:10px;color:var(--text-muted)">${r.size} alunos · ${r.xpTotal} XP total</div>
+      </div>
+      <div style="font-size:14px;font-weight:800;color:var(--purple)">${r.media} XP</div>
+    </div>`).join('');
+
+  const notaHTML = `
+    <div style="font-size:10px;color:var(--text-muted);text-align:center;margin-top:10px;padding:8px;background:rgba(255,255,255,.03);border-radius:8px">
+      Média = XP total da turma ÷ total oficial de alunos (inclui quem ainda não duelou)
+    </div>`;
+
+  el.innerHTML = podioHTML + restaHTML + notaHTML;
+}
 </script>
 
 <!-- Banner: desafio aguardando resposta -->
@@ -1770,63 +1522,7 @@ async function carregarRankingDuelos() {
     <div id="aguardando-nome-txt" style="font-size:15px;font-weight:800;color:#c4b5fd">Aguardando resposta...</div>
     <div style="font-size:12px;color:#a78bfa;margin-top:3px">Expira em <span id="aguardando-timer" style="font-weight:700;color:#e9d5ff">3:00</span></div>
   </div>
-  <button onclick="cancelarDesafio()" style="background:rgba(124,92,252,.15);border:1.5px solid rgba(124,92,252,.5);color:#a78bfa;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:800;cursor:pointer;flex-shrink:0;white-space:nowrap">✕ Cancelar</button>
+  <button onclick="cancelarDesafio()" style="background:rgba(239,68,68,.15);border:1.5px solid rgba(239,68,68,.5);color:#ef4444;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:800;cursor:pointer;flex-shrink:0;white-space:nowrap">✕ Cancelar</button>
 </div>
-
-<!-- Mini-perfil modal -->
-<div id="modal-perfil" class="modal-overlay" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px" onclick="fecharModalPerfil()">
-  <div class="profile-modal" onclick="event.stopPropagation()">
-    <div class="pm-header">
-      <div id="pm-av" class="pm-av"></div>
-      <div>
-        <div id="pm-name" class="pm-name"></div>
-        <div id="pm-turma" class="pm-turma"></div>
-        <div id="pm-level" class="pm-level"></div>
-      </div>
-    </div>
-    <div class="pm-stats">
-      <div class="pm-stat"><div id="pm-rank"  class="pm-stat-num gold">—</div><div class="pm-stat-label">Ranking</div></div>
-      <div class="pm-stat"><div id="pm-total" class="pm-stat-num blue">—</div><div class="pm-stat-label">Duelos</div></div>
-      <div class="pm-stat"><div id="pm-fav"   class="pm-stat-num purple">—</div><div class="pm-stat-label">Favorito</div></div>
-    </div>
-    <div class="pm-h2h">
-      <div>
-        <div class="pm-h2h-label">Vocês já se enfrentaram</div>
-        <div class="pm-h2h-score">
-          <span id="pm-h2h-me"  class="green">0v</span>
-          <span class="muted">×</span>
-          <span id="pm-h2h-adv" class="red">0d</span>
-        </div>
-      </div>
-      <span id="pm-h2h-tag" class="pm-h2h-tag even">Nunca duelaram</span>
-    </div>
-    <div id="pm-upset" class="pm-upset">
-      <span class="pm-upset-text" id="pm-upset-text"></span>
-    </div>
-    <div class="pm-emojis">
-      <div class="pm-emojis-label">Mandar emoji <span id="pm-emoji-count" style="font-weight:400;color:var(--text-muted)">(10 restantes)</span></div>
-      <div class="pm-emoji-grid" id="pm-emoji-grid"></div>
-      <div class="pm-cooldown-bar"><div id="pm-cooldown-fill" class="pm-cooldown-fill"></div></div>
-      <div id="pm-spam-msg" class="pm-spam-msg" style="display:none">Ei, calma! Você está mandando muitos emojis. Aguarde um pouco 😄</div>
-    </div>
-    <div class="pm-footer">
-      <button id="pm-btn-desafiar" class="pm-btn-desafiar" onclick="fecharModalPerfil();setTimeout(()=>document.getElementById('pm-btn-desafiar-action')?.click(),100)">
-        ⚔️ Desafiar <span id="pm-btn-nome">—</span>
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- Emoji bubble (aparece quando recebe/envia emoji) -->
-<div id="emoji-bubble" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(13,15,26,.92);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:10px 18px;align-items:center;gap:10px;z-index:9000;backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,.5);pointer-events:none;white-space:nowrap">
-  <span id="bubble-emoji" style="font-size:28px"></span>
-  <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.4">
-    <strong id="bubble-sender" style="color:#fff"></strong> mandou para <strong id="bubble-target" style="color:#fff"></strong>
-  </div>
-</div>
-
-<!-- Emoji feed (canto inferior direito) -->
-<div id="emoji-feed" style="position:fixed;bottom:20px;right:16px;width:200px;z-index:500;display:flex;flex-direction:column;gap:5px;pointer-events:none"></div>
-
 </body>
 </html>
