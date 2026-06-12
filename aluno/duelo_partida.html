@@ -287,6 +287,12 @@ function fmtPts(n) {
   return s.endsWith('.0') ? s.slice(0,-2) : s;
 }
 
+// Envolve negativos em () quando precedidos de operador: 5 × -3 → 5 × (-3)
+function fmtExpr(expr) {
+  return String(expr)
+    .replace(/([\+\-\×\÷])\s*(-\d)/g, (_, op, neg) => `${op} (${neg})`);
+}
+
 // ── Questões por dificuldade ───────────────────────────────────
 function gerarUmaQuestao() {
   const q = estado.questaoAtual + 1;
@@ -300,14 +306,14 @@ function gerarUmaQuestao() {
 
     if (tipo === 'soma') {
       const a = r(1,15), b = r(1,15);
-      return { expr: `${a} + ${b}`, resp: a + b };
+      return { expr: fmtExpr(`${a} + ${b}`), resp: a + b };
     }
     if (tipo === 'subPos') {
       const b = r(1,12), a = r(b, 15);
-      return { expr: `${a} - ${b}`, resp: a - b };
+      return { expr: fmtExpr(`${a} - ${b}`), resp: a - b };
     }
     const a = r(2,9), b = r(2,9);
-    return { expr: `${a} × ${b}`, resp: a * b };
+    return { expr: fmtExpr(`${a} × ${b}`), resp: a * b };
   }
 
   // ── MÉDIO: negativos, × e ÷ com sinais, parênteses simples ──
@@ -319,32 +325,32 @@ function gerarUmaQuestao() {
 
     if (tipo === 'subtNeg') {
       const b = r(3,18), a = r(1, b - 1);
-      return { expr: `${a} - ${b}`, resp: a - b };
+      return { expr: fmtExpr(`${a} - ${b}`), resp: a - b };
     }
     if (tipo === 'sinalFrente') {
       const A = r(2,15), b = r(2,15);
       const op = Math.random() > 0.5 ? '+' : '-';
-      return { expr: `-${A} ${op} ${b}`, resp: op === '+' ? -A + b : -A - b };
+      return { expr: fmtExpr(`-${A} ${op} ${b}`), resp: op === '+' ? -A + b : -A - b };
     }
     if (tipo === 'multMed') {
       const sA = Math.random() > 0.5 ? -1 : 1;
       const sB = Math.random() > 0.5 ? -1 : 1;
       const A = sA * r(2,13), B = sB * r(2,13);
-      return { expr: `${A} × ${B}`, resp: A * B };
+      return { expr: fmtExpr(`${A} × ${B}`), resp: A * B };
     }
     if (tipo === 'divMed') {
       const bAbs = r(2,12), rAbs = r(2,10);
       const sA = Math.random() > 0.5 ? -1 : 1;
       const A = sA * bAbs * rAbs, B = bAbs;
-      return { expr: `${A} ÷ ${B}`, resp: A / B };
+      return { expr: fmtExpr(`${A} ÷ ${B}`), resp: A / B };
     }
     // parentSimples
     const a = r(2,15), b = r(2,15);
     const fmt = Math.floor(Math.random() * 4);
-    if (fmt === 0) return { expr: `${a} - (${b})`,    resp: a - b };
-    if (fmt === 1) return { expr: `-${a} - (-${b})`,  resp: -a + b };
-    if (fmt === 2) return { expr: `(-${a}) + (${b})`, resp: -a + b };
-    return              { expr: `-(${a}) + ${b}`,     resp: -a + b };
+    if (fmt === 0) return { expr: fmtExpr(`${a} - (${b})`),    resp: a - b };
+    if (fmt === 1) return { expr: fmtExpr(`-${a} - (-${b})`),  resp: -a + b };
+    if (fmt === 2) return { expr: fmtExpr(`(-${a}) + (${b})`), resp: -a + b };
+    return              { expr: fmtExpr(`-(${a}) + ${b}`),     resp: -a + b };
   }
 
   // ── DIFÍCIL: 2 operandos, números maiores, todas as operações com negativos ──
@@ -355,7 +361,7 @@ function gerarUmaQuestao() {
     const sA = Math.random() > 0.5 ? -1 : 1;
     const sB = Math.random() > 0.5 ? -1 : 1;
     const A = sA * r(6, 25), B = sB * r(6, 25);
-    return { expr: `${A} × ${B}`, resp: A * B };
+    return { expr: fmtExpr(`${A} × ${B}`), resp: A * B };
   }
 
   if (tipo === 'divGrande') {
@@ -363,19 +369,19 @@ function gerarUmaQuestao() {
     const sB = Math.random() > 0.5 ? -1 : 1;
     const bAbs = r(4, 15), rAbs = r(3, 15);
     const A = sA * bAbs * rAbs, B = sB * bAbs;
-    return { expr: `${A} ÷ ${B}`, resp: A / B };
+    return { expr: fmtExpr(`${A} ÷ ${B}`), resp: A / B };
   }
 
   if (tipo === 'somaNegs') {
     const A = -r(10, 50), B = -r(10, 50);
-    return { expr: `${A} + ${B}`, resp: A + B };
+    return { expr: fmtExpr(`${A} + ${B}`), resp: A + B };
   }
 
   // subNegs: subtrações com negativos grandes
   const sA = Math.random() > 0.5 ? -1 : 1;
   const sB = Math.random() > 0.5 ? -1 : 1;
   const A = sA * r(10, 50), B = sB * r(10, 50);
-  return { expr: `${A} - ${B}`, resp: A - B };
+  return { expr: fmtExpr(`${A} - ${B}`), resp: A - B };
 }
 
 function proximaQuestao() {

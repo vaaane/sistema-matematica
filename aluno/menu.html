@@ -101,7 +101,9 @@
     }
     /* ── Modal Guia ── */
     .modal-guia-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9500;display:flex;align-items:center;justify-content:center;padding:16px;}
-    .modal-guia-box{background:var(--card);border:1px solid rgba(255,255,255,.1);border-radius:20px;width:100%;max-width:460px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.7);max-height:90dvh;overflow-y:auto;}
+    .modal-guia-box{background:var(--card);border:1px solid rgba(255,255,255,.1);border-radius:20px;width:100%;max-width:460px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.7);max-height:90dvh;overflow-y:auto;position:relative;}
+    .mg-close{position:absolute;top:12px;right:14px;width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;transition:background .15s;}
+    .mg-close:hover{background:rgba(255,255,255,.2);color:#fff;}
     .mg-header{background:linear-gradient(135deg,rgba(124,92,252,.2),rgba(47,158,220,.1));padding:22px 24px 18px;text-align:center;border-bottom:1px solid var(--border);}
     .mg-icon{font-size:38px;margin-bottom:8px;}
     .mg-title{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;margin-bottom:5px;}
@@ -1291,6 +1293,7 @@ try {
 <!-- Modal Guia -->
 <div class="modal-guia-overlay" id="modal-guia" style="display:none">
   <div class="modal-guia-box">
+    <button class="mg-close" onclick="document.getElementById('modal-guia').style.display='none'" aria-label="Fechar">✕</button>
     <div class="mg-header">
       <div class="mg-icon">⚡</div>
       <div class="mg-title">Bem-vindo ao Sistema de Matemática!</div>
