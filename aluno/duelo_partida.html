@@ -266,10 +266,13 @@ const diffLabels  = { facil: '🟢 Fácil · 3 min', medio: '🟡 Médio · 4 mi
 document.getElementById('topbar-diff').textContent = diffLabels[dificuldade] || dificuldade;
 
 // ── Estado ────────────────────────────────────────────────────
+const CERTOS_MINIMOS = { facil: 5, medio: 4, dificil: 3 };
+
 const estado = {
   questaoAtual: 0,
   meusPontos:   0,
   advPontos:    0,
+  meusCertos:   0,
   finalizado:   false,
 };
 
@@ -284,79 +287,117 @@ function fmtPts(n) {
   return s.endsWith('.0') ? s.slice(0,-2) : s;
 }
 
-// ── Questões ──────────────────────────────────────────────────
+// ── Questões por dificuldade ───────────────────────────────────
 function gerarUmaQuestao() {
-  // offset por dificuldade: medio começa na faixa 3, dificil na faixa 4-5
-  const offset = dificuldade === 'dificil' ? 24 : dificuldade === 'medio' ? 16 : 0;
-  const faixaNum = estado.questaoAtual + 1 + offset;
+  const q = estado.questaoAtual + 1;
 
-  let tipo;
-  if      (faixaNum <= 8)  tipo = 'aquecimento';
-  else if (faixaNum <= 16) tipo = 'subtNeg';
-  else if (faixaNum <= 24) tipo = 'sinalFrente';
-  else if (faixaNum <= 32) tipo = 'multDiv';
-  else if (faixaNum <= 40) tipo = 'parenteses';
-  else {
-    const tipos = ['subtNeg', 'sinalFrente', 'multDiv', 'parenteses'];
-    tipo = tipos[Math.floor(Math.random() * tipos.length)];
+  // ── FÁCIL: adição, subtração positiva, multiplicação pequena ──
+  if (dificuldade === 'facil') {
+    const tipos = q <= 4
+      ? ['soma', 'soma', 'subPos']
+      : ['soma', 'subPos', 'multPeq'];
+    const tipo = tipos[Math.floor(Math.random() * tipos.length)];
+
+    if (tipo === 'soma') {
+      const a = r(1,15), b = r(1,15);
+      return { expr: `${a} + ${b}`, resp: a + b };
+    }
+    if (tipo === 'subPos') {
+      const b = r(1,12), a = r(b, 15);
+      return { expr: `${a} - ${b}`, resp: a - b };
+    }
+    // multPeq
+    const a = r(2,9), b = r(2,9);
+    return { expr: `${a} × ${b}`, resp: a * b };
   }
 
-  let expr, resp;
+  // ── MÉDIO: negativos, mult/div maiores, parênteses simples ──
+  if (dificuldade === 'medio') {
+    const tipos = q <= 3
+      ? ['multMed', 'divMed']
+      : ['subtNeg', 'sinalFrente', 'multMed', 'divMed', 'parentSimples'];
+    const tipo = tipos[Math.floor(Math.random() * tipos.length)];
 
-  if (tipo === 'aquecimento') {
-    const ops = ['+', '-', '×'];
-    const op = ops[Math.floor(Math.random() * ops.length)];
-    if (op === '+') {
-      const a = r(1,12), b = r(1,12);
-      expr = `${a} + ${b}`; resp = a + b;
-    } else if (op === '-') {
-      const b = r(1,12), a = r(b,12);
-      expr = `${a} - ${b}`; resp = a - b;
-    } else {
-      const a = r(1,11), b = r(1,11);
-      expr = `${a} × ${b}`; resp = a * b;
+    if (tipo === 'subtNeg') {
+      const b = r(3,18), a = r(1, b - 1);
+      return { expr: `${a} - ${b}`, resp: a - b };
     }
+    if (tipo === 'sinalFrente') {
+      const A = r(2,15), b = r(2,15);
+      const op = Math.random() > 0.5 ? '+' : '-';
+      return { expr: `-${A} ${op} ${b}`, resp: op === '+' ? -A + b : -A - b };
+    }
+    if (tipo === 'multMed') {
+      const sA = Math.random() > 0.5 ? -1 : 1;
+      const sB = Math.random() > 0.5 ? -1 : 1;
+      const A = sA * r(2,13), B = sB * r(2,13);
+      return { expr: `${A} × ${B}`, resp: A * B };
+    }
+    if (tipo === 'divMed') {
+      const bAbs = r(2,12), rAbs = r(2,10);
+      const sA = Math.random() > 0.5 ? -1 : 1;
+      const A = sA * bAbs * rAbs, B = bAbs;
+      return { expr: `${A} ÷ ${B}`, resp: A / B };
+    }
+    // parentSimples
+    const a = r(2,15), b = r(2,15);
+    const fmt = Math.floor(Math.random() * 4);
+    if (fmt === 0) return { expr: `${a} - (${b})`,    resp: a - b };
+    if (fmt === 1) return { expr: `-${a} - (-${b})`,  resp: -a + b };
+    if (fmt === 2) return { expr: `(-${a}) + (${b})`, resp: -a + b };
+    return              { expr: `-(${a}) + ${b}`,     resp: -a + b };
+  }
 
-  } else if (tipo === 'subtNeg') {
-    const b = r(2,12), a = r(1, b - 1);
-    expr = `${a} - ${b}`; resp = a - b;
+  // ── DIFÍCIL: expressões mistas, parênteses duplos, potências ──
+  // dificuldade === 'dificil'
+  const tipos = ['parentDuplo', 'expressaoMista', 'potencia', 'multDivNeg', 'parentDuplo'];
+  const tipo = tipos[Math.floor(Math.random() * tipos.length)];
 
-  } else if (tipo === 'sinalFrente') {
-    const A = r(1,12), b = r(1,12);
-    const op = Math.random() > 0.5 ? '+' : '-';
-    expr = `-${A}${op}${b}`;
-    resp = op === '+' ? (-A + b) : (-A - b);
+  if (tipo === 'potencia') {
+    const usaCubo = Math.random() > 0.7;
+    if (usaCubo) {
+      const a = r(2,5);
+      return { expr: `${a}³`, resp: a * a * a };
+    }
+    const a = r(2,12);
+    return { expr: `${a}²`, resp: a * a };
+  }
 
-  } else if (tipo === 'multDiv') {
+  if (tipo === 'multDivNeg') {
     const usaDiv = Math.random() > 0.5;
     const sA = Math.random() > 0.5 ? -1 : 1;
     const sB = Math.random() > 0.5 ? -1 : 1;
     if (usaDiv) {
-      const bAbs = r(1,11), rAbs = r(1,11);
+      const bAbs = r(3,12), rAbs = r(2,12);
       const A = sA * bAbs * rAbs, B = sB * bAbs;
-      resp = A / B;
-      expr = `${A}÷${B}`;
-    } else {
-      const A = sA * r(1,11), B = sB * r(1,11);
-      resp = A * B;
-      expr = `${A}×${B}`;
+      return { expr: `${A} ÷ ${B}`, resp: A / B };
     }
-
-  } else { // parenteses
-    const a = r(1,10), b = r(1,10);
-    const fmt = Math.floor(Math.random() * 4);
-    if (fmt === 0) {
-      expr = `${a}-(${b})`; resp = a - b;
-    } else if (fmt === 1) {
-      expr = `-${a}-(-${b})`; resp = -a + b;
-    } else if (fmt === 2) {
-      expr = `(-${a})+(${b})`; resp = -a + b;
-    } else {
-      expr = `-(${a})+${b}`; resp = -a + b;
-    }
+    const A = sA * r(3,15), B = sB * r(3,15);
+    return { expr: `${A} × ${B}`, resp: A * B };
   }
 
-  return { expr, resp };
+  if (tipo === 'parentDuplo') {
+    const fmt = Math.floor(Math.random() * 3);
+    const sA = Math.random() > 0.5 ? -1 : 1;
+    if (fmt === 0) {
+      const a = sA * r(2,10), b = r(2,10), c = r(2,8);
+      return { expr: `(${a} + ${b}) × ${c}`, resp: (a + b) * c };
+    }
+    if (fmt === 1) {
+      const a = r(3,12), b = r(2, a), c = r(2,8);
+      return { expr: `${a} × (${b} - ${c})`, resp: a * (b - c) };
+    }
+    const a = r(2,8), b = r(2,8), c = r(1, a*b);
+    return { expr: `(${a} × ${b}) - ${c}`, resp: a * b - c };
+  }
+
+  // expressaoMista: testa precedência de operadores
+  const a = r(2,15), b = r(2,8), c = r(2,8);
+  const op = Math.random() > 0.5 ? '+' : '-';
+  return {
+    expr: `${a} ${op} ${b} × ${c}`,
+    resp: op === '+' ? a + b * c : a - b * c,
+  };
 }
 
 function proximaQuestao() {
@@ -438,6 +479,7 @@ window.responder = function(escolha, respCorreta, btnEl) {
 
   if (certo) {
     estado.meusPontos += 1;
+    estado.meusCertos += 1;
   } else {
     estado.meusPontos = Math.max(0, estado.meusPontos - DUELO_ERRO_PENALIDADE);
     document.querySelectorAll('.opcao').forEach(b => {
@@ -779,8 +821,10 @@ async function mostrarResultado(resultadosParam) {
     empate   = meuRes.pares === advRes.pares;
   }
 
+  const _minCertos    = CERTOS_MINIMOS[dificuldade] || 5;
+  const _atingiuMinimo = estado.meusCertos >= _minCertos;
   const xpDelta = euGanhei
-    ? XP_DUELO[dificuldade].vitoria
+    ? (_atingiuMinimo ? XP_DUELO[dificuldade].vitoria : 0)
     : empate ? 0 : XP_DUELO[dificuldade].derrota;
 
   // Aplicar XP
@@ -798,7 +842,9 @@ async function mostrarResultado(resultadosParam) {
   if (dueloAtual.encerrado_por_abandono && euGanhei) {
     try {
       const { adicionarXP } = await import('/js/db.js');
-      const _xpAb = Math.round(XP_DUELO[dificuldade].vitoria * 0.5);
+      const _xpAb = _atingiuMinimo
+        ? Math.round(XP_DUELO[dificuldade].vitoria * 0.5)
+        : 0;
       await adicionarXP(uid, _xpAb);
       if (_meuParcUid) {
         try { await adicionarXP(_meuParcUid, _xpAb); } catch(e) {}
@@ -880,6 +926,10 @@ async function mostrarResultado(resultadosParam) {
                   color:${xpDelta >= 0 ? 'var(--green,#22c55e)' : '#ef4444'}">
         ${xpDelta >= 0 ? '+' : ''}${xpDelta} XP
       </div>
+      ${euGanhei && !_atingiuMinimo ? `
+      <div style="font-size:12px;color:rgba(245,158,11,.8);text-align:center;margin-top:6px;padding:8px 12px;background:rgba(245,158,11,.08);border-radius:8px;border:1px solid rgba(245,158,11,.2)">
+        ⚠️ Mínimo de ${_minCertos} acertos para ganhar XP (você acertou ${estado.meusCertos}).
+      </div>` : ''}
       <div id="reacao-pos-duelo" style="width:100%">
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px;font-weight:600">
           Mandar mensagem para ${escH(_adversarioNome)}

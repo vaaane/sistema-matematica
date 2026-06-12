@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>📖 Guia — Sistema de Matemática</title>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    body { background: #0d0f1a !important; color: #e8e8f0 !important; }
+    .gs-card { background: #131520 !important; border-color: rgba(255,255,255,.08) !important; color: rgba(255,255,255,.38) !important; }
+    .gs-card strong { color: rgba(255,255,255,.75) !important; }
+    .gs-card-title { color: #e8e8f0 !important; }
+    .gs-pill { background: #131520 !important; border-color: rgba(255,255,255,.08) !important; }
+    .gs-pill-title { color: #e8e8f0 !important; }
+    .gs-pill-desc { color: rgba(255,255,255,.38) !important; }
+    .guia-header { background: linear-gradient(135deg,rgba(124,92,252,.15),rgba(47,158,220,.08)) !important; border-color: rgba(255,255,255,.08) !important; }
+    .guia-title { color: #fff !important; }
+    .guia-sub { color: rgba(255,255,255,.38) !important; }
+    .gs-title { color: #fff !important; }
+    .gs-head { border-color: rgba(255,255,255,.08) !important; }
+    .guia-page { max-width: 680px; margin: 0 auto; padding: 16px 16px 60px; }
+    .guia-header { text-align: center; margin-bottom: 28px; padding: 20px; background: linear-gradient(135deg,rgba(124,92,252,.12),rgba(47,158,220,.08)); border-radius: 16px; border: 1px solid var(--border); }
+    .guia-title { font-family: 'Rajdhani', sans-serif; font-size: 26px; font-weight: 700; margin-bottom: 5px; }
+    .guia-sub { font-size: 13px; color: var(--text-muted); }
+    .gs { margin-bottom: 24px; }
+    .gs-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .gs-icon { font-size: 20px; }
+    .gs-title { font-family: 'Rajdhani', sans-serif; font-size: 17px; font-weight: 700; }
+    .gs-tag { margin-left: auto; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 10px; white-space: nowrap; }
+    .tag-nota  { background: rgba(34,197,94,.15);  border: 1px solid rgba(34,197,94,.3);  color: #22c55e; }
+    .tag-extra { background: rgba(245,158,11,.12); border: 1px solid rgba(245,158,11,.3); color: #f59e0b; }
+    .gs-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; font-size: 13px; line-height: 1.7; color: var(--text-muted); }
+    .gs-card strong { color: rgba(255,255,255,.75); }
+    .gs-card-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .5px; }
+    .gs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    @media(max-width:480px){ .gs-grid { grid-template-columns: 1fr; } }
+    .gs-pill { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; }
+    .gs-pill-icon { font-size: 20px; flex-shrink: 0; }
+    .gs-pill-title { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+    .gs-pill-desc { font-size: 11px; color: var(--text-muted); }
+    .aviso-box { background: rgba(245,158,11,.07); border: 1.5px solid rgba(245,158,11,.25); border-radius: 12px; padding: 14px 16px; display: flex; gap: 10px; align-items: flex-start; font-size: 12px; color: rgba(245,158,11,.9); line-height: 1.6; margin-top: 24px; }
+    .xp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    @media(max-width:480px){ .xp-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">📖 Guia do Sistema</div>
+        <div class="topbar-sub">Como funciona tudo por aqui</div>
+      </div>
+      <div class="topbar-right">
+        <div class="avatar-wrap" onclick="window.location.href='/aluno/perfil.html'">
+          <div class="avatar" id="topbar-avatar-circle" style="overflow:hidden;padding:0"></div>
+        </div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="guia-page">
+
+        <div class="guia-header">
+          <div class="guia-title">⚡ Sistema de Matemática</div>
+          <div class="guia-sub">CED São Bartolomeu · 8º ano · Profª Vanessa</div>
+        </div>
+
+        <!-- Atividades -->
+        <div class="gs">
+          <div class="gs-head">
+            <span class="gs-icon">📚</span>
+            <span class="gs-title">Atividades</span>
+            <span class="gs-tag tag-nota">3 pontos na média</span>
+          </div>
+          <div class="gs-card">
+            <div class="gs-card-title">O que são?</div>
+            As atividades do site <strong>valem 3 pontos na sua média final de Matemática</strong>. Elas substituem avaliações tradicionais — você faz aqui no computador ou celular, respondendo questões de múltipla escolha.
+          </div>
+          <div class="gs-card">
+            <div class="gs-card-title">Quando acontecem?</div>
+            A professora libera as atividades em <strong>dias e horários específicos</strong>, geralmente durante a aula. Quando estiver liberado, aparece um aviso na tela de login. Fique atento — cada atividade tem prazo.
+          </div>
+          <div class="gs-card">
+            <div class="gs-card-title">Pontuação</div>
+            Quanto melhor sua nota, maior o XP ganho. <strong>Nota 10 = bônus especial de XP.</strong> A nota é calculada pelas respostas corretas no modo Avaliação+.
+          </div>
+        </div>
+
+        <!-- Tabuada -->
+        <div class="gs">
+          <div class="gs-head">
+            <span class="gs-icon">🔢</span>
+            <span class="gs-title">Tabuada</span>
+            <span class="gs-tag tag-extra">nota extra</span>
+          </div>
+          <div class="gs-grid">
+            <div class="gs-pill"><div class="gs-pill-icon">🎮</div><div><div class="gs-pill-title">Suba de nível</div><div class="gs-pill-desc">Cada partida perfeita avança um nível</div></div></div>
+            <div class="gs-pill"><div class="gs-pill-icon">👑</div><div><div class="gs-pill-title">Chefões</div><div class="gs-pill-desc">A cada 10 níveis (130+) enfrenta um chefão especial</div></div></div>
+            <div class="gs-pill"><div class="gs-pill-icon">💎</div><div><div class="gs-pill-title">Maestria</div><div class="gs-pill-desc">3× perfeito no mesmo nível = conquista diamante</div></div></div>
+            <div class="gs-pill" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.05)"><div class="gs-pill-icon">🏆</div><div><div class="gs-pill-title" style="color:#f59e0b">Nível 300</div><div class="gs-pill-desc">Certificado impresso entregue pela professora!</div></div></div>
+          </div>
+        </div>
+
+        <!-- Duelos -->
+        <div class="gs">
+          <div class="gs-head">
+            <span class="gs-icon">⚔️</span>
+            <span class="gs-title">Duelos</span>
+            <span class="gs-tag tag-extra">nota extra</span>
+          </div>
+          <div class="gs-card">
+            <div class="gs-card-title">Como funciona?</div>
+            Desafie um colega para uma partida de matemática em tempo real. Escolha a dificuldade — <strong>Fácil (3min)</strong>, <strong>Médio (4min)</strong> ou <strong>Difícil (5min)</strong>. Resolva mais pares de operação que o adversário para vencer.
+          </div>
+          <div class="gs-grid">
+            <div class="gs-pill"><div class="gs-pill-icon">📊</div><div><div class="gs-pill-title">Ranking</div><div class="gs-pill-desc">Vença duelos para subir no ranking geral</div></div></div>
+            <div class="gs-pill"><div class="gs-pill-icon">🔥</div><div><div class="gs-pill-title">Upset Bônus</div><div class="gs-pill-desc">Vencer o #1 dá +100% XP (após 10 duelos)</div></div></div>
+            <div class="gs-pill"><div class="gs-pill-icon">👥</div><div><div class="gs-pill-title">Duplas</div><div class="gs-pill-desc">Jogue em dupla com um colega de qualquer turma</div></div></div>
+            <div class="gs-pill"><div class="gs-pill-icon">🔁</div><div><div class="gs-pill-title">Revanche</div><div class="gs-pill-desc">Perdeu? Desafie de volta com 1 clique</div></div></div>
+          </div>
+        </div>
+
+        <!-- Treino Diário -->
+        <div class="gs">
+          <div class="gs-head">
+            <span class="gs-icon">🔥</span>
+            <span class="gs-title">Treino Diário</span>
+            <span class="gs-tag tag-extra">nota extra</span>
+          </div>
+          <div class="gs-card">
+            <div class="gs-card-title">O que é?</div>
+            Uma atividade rápida disponível todo dia. Faça ao menos uma por dia para manter sua <strong>sequência (streak)</strong>. Cada dia consecutivo gera <strong>+10 XP</strong> de bônus. Não perca o ritmo!
+          </div>
+        </div>
+
+        <!-- XP e Níveis -->
+        <div class="gs">
+          <div class="gs-head">
+            <span class="gs-icon">⚡</span>
+            <span class="gs-title">XP e Níveis de Perfil</span>
+          </div>
+          <div class="xp-grid">
+            <div class="gs-pill"><div class="gs-pill-icon">1️⃣</div><div><div class="gs-pill-title">Aprendiz</div><div class="gs-pill-desc">0 XP</div></div></div>
+            <div class="gs-pill"><div class="gs-pill-icon">2️⃣</div><div><div class="gs-pill-title">Estudante</div><div class="gs-pill-desc">120 XP</div></div></div>
+            <div class="gs-pill"><div class="gs-pill-icon">3️⃣</div><div><div class="gs-pill-title">Calculista</div><div class="gs-pill-desc">280 XP</div></div></div>
+            <div class="gs-pill"><div class="gs-pill-icon">4️⃣</div><div><div class="gs-pill-title">Algebrista</div><div class="gs-pill-desc">500 XP</div></div></div>
+            <div class="gs-pill"><div class="gs-pill-icon">5️⃣</div><div><div class="gs-pill-title">Estrategista</div><div class="gs-pill-desc">800 XP</div></div></div>
+            <div class="gs-pill"><div class="gs-pill-icon">6️⃣</div><div><div class="gs-pill-title">Especialista</div><div class="gs-pill-desc">1.200 XP</div></div></div>
+            <div class="gs-pill"><div class="gs-pill-icon">7️⃣</div><div><div class="gs-pill-title">Mestre</div><div class="gs-pill-desc">1.700 XP</div></div></div>
+            <div class="gs-pill"><div class="gs-pill-icon">8️⃣</div><div><div class="gs-pill-title">Grão-Mestre</div><div class="gs-pill-desc">2.350 XP</div></div></div>
+            <div class="gs-pill"><div class="gs-pill-icon">9️⃣</div><div><div class="gs-pill-title">Campeão</div><div class="gs-pill-desc">3.100 XP</div></div></div>
+            <div class="gs-pill" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.05)"><div class="gs-pill-icon">🏆</div><div><div class="gs-pill-title" style="color:#f59e0b">Lenda</div><div class="gs-pill-desc">4.000 XP</div></div></div>
+          </div>
+        </div>
+
+        <!-- Aviso nota extra -->
+        <div class="aviso-box">
+          <span style="font-size:18px;flex-shrink:0">⏳</span>
+          <div><strong>Nota extra em breve:</strong> Tabuada, Duelos e Treino Diário gerarão nota extra na média final. Os valores exatos serão divulgados pela professora em breve.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module">
+import { requireAluno, renderSidebarAluno, clearSession, injetarFaixaDupla, injetarFaixaDuelo, iniciarNotifDueloGlobal } from '/js/auth.js';
+import { getPerfil } from '/js/db.js';
+import { avatarUrl, avatarConfigDefault } from '/js/gamificacao.js';
+
+const sess = requireAluno('/index.html');
+if (!sess) throw new Error();
+const { alunos, turma } = sess;
+const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+
+renderSidebarAluno('sidebar', 'guia');
+injetarFaixaDupla();
+injetarFaixaDuelo();
+iniciarNotifDueloGlobal();
+window.sair = () => { clearSession(); window.location.href = '/index.html'; };
+
+(async () => { try {
+  const p = await getPerfil(uid).catch(() => ({}));
+  const _c = document.getElementById('topbar-avatar-circle');
+  if (_c) {
+    const url   = avatarUrl(p?.avatar || avatarConfigDefault());
+    const letra = (alunos[0] || '?')[0].toUpperCase();
+    _c.innerHTML = `<div style="width:100%;height:100%;position:relative;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--purple),var(--cyan,#00d4ff))"><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;z-index:0">${letra}</span><img src="${url}" alt="avatar" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:1;border-radius:50%" onerror="this.style.display='none'"></div>`;
+  }
+} catch(_) {} })();
+</script>
+</body>
+</html>

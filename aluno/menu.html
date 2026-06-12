@@ -99,6 +99,24 @@
       .card-gold-ring{box-shadow:0 0 0 1px rgba(255,215,0,.4)!important;}
       #tabuada-game-card *,#tab-ranking-card *,#quiz-top3-card *{min-width:0;}
     }
+    /* ── Modal Guia ── */
+    .modal-guia-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9500;display:flex;align-items:center;justify-content:center;padding:16px;}
+    .modal-guia-box{background:var(--card);border:1px solid rgba(255,255,255,.1);border-radius:20px;width:100%;max-width:460px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.7);max-height:90dvh;overflow-y:auto;}
+    .mg-header{background:linear-gradient(135deg,rgba(124,92,252,.2),rgba(47,158,220,.1));padding:22px 24px 18px;text-align:center;border-bottom:1px solid var(--border);}
+    .mg-icon{font-size:38px;margin-bottom:8px;}
+    .mg-title{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;margin-bottom:5px;}
+    .mg-sub{font-size:12px;color:var(--text-muted);}
+    .mg-body{padding:16px 20px;}
+    .mg-item{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+    .mg-item:last-child{border-bottom:none;}
+    .mg-item-icon{font-size:22px;flex-shrink:0;width:32px;text-align:center;margin-top:1px;}
+    .mg-item-title{font-size:13px;font-weight:700;margin-bottom:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+    .mg-item-desc{font-size:12px;color:var(--text-muted);line-height:1.6;}
+    .mg-tag-nota{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#22c55e;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+    .mg-tag-extra{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:#f59e0b;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+    .mg-footer{padding:14px 20px 20px;display:flex;flex-direction:column;gap:8px;}
+    .mg-btn-primary{width:100%;padding:13px;background:linear-gradient(135deg,var(--purple,#7c5cfc),#5a3fcf);border:none;border-radius:12px;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:#fff;cursor:pointer;}
+    .mg-btn-ghost{width:100%;padding:9px;background:transparent;border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text-muted);cursor:pointer;}
   </style>
 </head>
 <body>
@@ -1255,6 +1273,69 @@ onValue(
   }
 );
 
+// Modal de guia — exibir se config/mostrar_guia === true
+(async () => { try {
+  const guiaSnap = await get(ref(db, 'config/mostrar_guia'));
+  if (guiaSnap.val() === true) {
+    setTimeout(() => {
+      const modal = document.getElementById('modal-guia');
+      if (modal) modal.style.display = 'flex';
+    }, 500);
+  }
+} catch(e) { console.error('[Modal guia]', e); } })();
+
 </script>
+
+<!-- Modal Guia -->
+<div class="modal-guia-overlay" id="modal-guia" style="display:none">
+  <div class="modal-guia-box">
+    <div class="mg-header">
+      <div class="mg-icon">⚡</div>
+      <div class="mg-title">Bem-vindo ao Sistema de Matemática!</div>
+      <div class="mg-sub">Veja como tudo funciona antes de começar</div>
+    </div>
+    <div class="mg-body">
+      <div class="mg-item">
+        <div class="mg-item-icon">📚</div>
+        <div>
+          <div class="mg-item-title">Atividades <span class="mg-tag-nota">3 pontos na média</span></div>
+          <div class="mg-item-desc">As atividades do site <strong>valem 3 pontos na sua média final de Matemática</strong>. Feitas em sala em dias e horários específicos, quando a professora liberar.</div>
+        </div>
+      </div>
+      <div class="mg-item">
+        <div class="mg-item-icon">🔢</div>
+        <div>
+          <div class="mg-item-title">Tabuada <span class="mg-tag-extra">nota extra</span></div>
+          <div class="mg-item-desc">Jogue todo dia para subir de nível. Chegou ao <strong>nível 300</strong>? Você ganha um <strong>certificado</strong> entregue pela professora.</div>
+        </div>
+      </div>
+      <div class="mg-item">
+        <div class="mg-item-icon">⚔️</div>
+        <div>
+          <div class="mg-item-title">Duelos <span class="mg-tag-extra">nota extra</span></div>
+          <div class="mg-item-desc">Desafie colegas para duelos de matemática em tempo real. Ganhe XP, suba no ranking e desbloqueie conquistas.</div>
+        </div>
+      </div>
+      <div class="mg-item">
+        <div class="mg-item-icon">🔥</div>
+        <div>
+          <div class="mg-item-title">Treino Diário <span class="mg-tag-extra">nota extra</span></div>
+          <div class="mg-item-desc">Faça ao menos uma atividade por dia para manter sua sequência. Cada dia consecutivo dá <strong>+10 XP</strong> de bônus.</div>
+        </div>
+      </div>
+      <div class="mg-item">
+        <div class="mg-item-icon">⚡</div>
+        <div>
+          <div class="mg-item-title">XP e Níveis</div>
+          <div class="mg-item-desc">Tudo que você faz gera XP e sobe seu nível — de <strong>Aprendiz</strong> até <strong>Lenda</strong>. Os valores de nota extra serão divulgados em breve.</div>
+        </div>
+      </div>
+    </div>
+    <div class="mg-footer">
+      <button class="mg-btn-primary" onclick="document.getElementById('modal-guia').style.display='none'">✅ Entendi, vamos começar!</button>
+      <button class="mg-btn-ghost" onclick="document.getElementById('modal-guia').style.display='none';window.location.href='/aluno/guia.html'">📖 Ver guia completo →</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

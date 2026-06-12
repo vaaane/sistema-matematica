@@ -401,6 +401,26 @@ document.getElementById("content").innerHTML = `
     </div>
   </div>
 
+  <div class="card" style="margin-top:16px">
+    <div class="card-header">
+      <div class="card-title">⚙️ Configurações Rápidas</div>
+    </div>
+    <div class="list-row" style="align-items:center">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700">Modal de boas-vindas</div>
+        <div style="font-size:11px;color:var(--text-muted)">Exibir guia do sistema para alunos ao entrar</div>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="toggle-mostrar-guia" style="display:none"
+          onchange="toggleMostrarGuia(this.checked)">
+        <div id="toggle-guia-sw" style="width:40px;height:22px;border-radius:11px;background:var(--card2);border:1px solid var(--border);position:relative;transition:background .2s;cursor:pointer" onclick="const cb=document.getElementById('toggle-mostrar-guia');cb.checked=!cb.checked;toggleMostrarGuia(cb.checked)">
+          <div id="toggle-guia-thumb" style="position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .2s"></div>
+        </div>
+        <span id="toggle-guia-label" style="font-size:12px;font-weight:600;color:var(--text-muted)">Desativado</span>
+      </label>
+    </div>
+  </div>
+
   <div class="card" style="margin-top:20px;border-color:rgba(239,68,68,.3)">
     <div class="card-header">
       <div class="card-title" style="color:#ef4444">⚙️ Administração</div>
@@ -415,6 +435,34 @@ document.getElementById("content").innerHTML = `
     </div>
   </div>`;
 
+
+// ── Toggle "Mostrar Guia" ─────────────────────────────────────
+async function carregarToggleGuia() {
+  try {
+    const snap = await get(ref(db, 'config/mostrar_guia'));
+    atualizarToggleGuiaUI(snap.val() === true);
+  } catch(_) {}
+}
+function atualizarToggleGuiaUI(ativo) {
+  const sw    = document.getElementById('toggle-guia-sw');
+  const thumb = document.getElementById('toggle-guia-thumb');
+  const label = document.getElementById('toggle-guia-label');
+  const cb    = document.getElementById('toggle-mostrar-guia');
+  if (!sw) return;
+  sw.style.background   = ativo ? 'var(--purple,#7c5cfc)' : 'var(--card2)';
+  sw.style.borderColor  = ativo ? 'var(--purple,#7c5cfc)' : 'var(--border)';
+  thumb.style.transform = ativo ? 'translateX(18px)' : 'translateX(0)';
+  label.textContent     = ativo ? 'Ativado' : 'Desativado';
+  label.style.color     = ativo ? 'var(--purple,#7c5cfc)' : 'var(--text-muted)';
+  if (cb) cb.checked = ativo;
+}
+window.toggleMostrarGuia = async function(ativo) {
+  try {
+    await set(ref(db, 'config/mostrar_guia'), ativo);
+    atualizarToggleGuiaUI(ativo);
+  } catch(e) { console.error('[Toggle guia]', e); }
+};
+carregarToggleGuia();
 
 // ── Online Agora (listeners em tempo real) ────────────────────
 const ONLINE_WINDOW_MS  = 5 * 60 * 1000;
