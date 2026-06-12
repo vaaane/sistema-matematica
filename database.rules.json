@@ -49,7 +49,7 @@
     "perfis":          { ".read": true, ".write": true },
     "presenca_online": { ".read": true, ".write": true },
     "duelos":          { ".read": true, ".write": true },
-    "feed_global":     { ".read": true, ".write": true },
+    "feed_global":     { ".read": true, ".write": true, ".indexOn": ["ts"] },
 
     "$outro": {
       ".read": false,

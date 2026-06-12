@@ -306,12 +306,11 @@ function gerarUmaQuestao() {
       const b = r(1,12), a = r(b, 15);
       return { expr: `${a} - ${b}`, resp: a - b };
     }
-    // multPeq
     const a = r(2,9), b = r(2,9);
     return { expr: `${a} × ${b}`, resp: a * b };
   }
 
-  // ── MÉDIO: negativos, mult/div maiores, parênteses simples ──
+  // ── MÉDIO: negativos, × e ÷ com sinais, parênteses simples ──
   if (dificuldade === 'medio') {
     const tipos = q <= 3
       ? ['multMed', 'divMed']
@@ -348,56 +347,35 @@ function gerarUmaQuestao() {
     return              { expr: `-(${a}) + ${b}`,     resp: -a + b };
   }
 
-  // ── DIFÍCIL: expressões mistas, parênteses duplos, potências ──
-  // dificuldade === 'dificil'
-  const tipos = ['parentDuplo', 'expressaoMista', 'potencia', 'multDivNeg', 'parentDuplo'];
+  // ── DIFÍCIL: 2 operandos, números maiores, todas as operações com negativos ──
+  const tipos = ['multGrande', 'divGrande', 'somaNegs', 'subNegs', 'multGrande', 'divGrande'];
   const tipo = tipos[Math.floor(Math.random() * tipos.length)];
 
-  if (tipo === 'potencia') {
-    const usaCubo = Math.random() > 0.7;
-    if (usaCubo) {
-      const a = r(2,5);
-      return { expr: `${a}³`, resp: a * a * a };
-    }
-    const a = r(2,12);
-    return { expr: `${a}²`, resp: a * a };
-  }
-
-  if (tipo === 'multDivNeg') {
-    const usaDiv = Math.random() > 0.5;
+  if (tipo === 'multGrande') {
     const sA = Math.random() > 0.5 ? -1 : 1;
     const sB = Math.random() > 0.5 ? -1 : 1;
-    if (usaDiv) {
-      const bAbs = r(3,12), rAbs = r(2,12);
-      const A = sA * bAbs * rAbs, B = sB * bAbs;
-      return { expr: `${A} ÷ ${B}`, resp: A / B };
-    }
-    const A = sA * r(3,15), B = sB * r(3,15);
+    const A = sA * r(6, 25), B = sB * r(6, 25);
     return { expr: `${A} × ${B}`, resp: A * B };
   }
 
-  if (tipo === 'parentDuplo') {
-    const fmt = Math.floor(Math.random() * 3);
+  if (tipo === 'divGrande') {
     const sA = Math.random() > 0.5 ? -1 : 1;
-    if (fmt === 0) {
-      const a = sA * r(2,10), b = r(2,10), c = r(2,8);
-      return { expr: `(${a} + ${b}) × ${c}`, resp: (a + b) * c };
-    }
-    if (fmt === 1) {
-      const a = r(3,12), b = r(2, a), c = r(2,8);
-      return { expr: `${a} × (${b} - ${c})`, resp: a * (b - c) };
-    }
-    const a = r(2,8), b = r(2,8), c = r(1, a*b);
-    return { expr: `(${a} × ${b}) - ${c}`, resp: a * b - c };
+    const sB = Math.random() > 0.5 ? -1 : 1;
+    const bAbs = r(4, 15), rAbs = r(3, 15);
+    const A = sA * bAbs * rAbs, B = sB * bAbs;
+    return { expr: `${A} ÷ ${B}`, resp: A / B };
   }
 
-  // expressaoMista: testa precedência de operadores
-  const a = r(2,15), b = r(2,8), c = r(2,8);
-  const op = Math.random() > 0.5 ? '+' : '-';
-  return {
-    expr: `${a} ${op} ${b} × ${c}`,
-    resp: op === '+' ? a + b * c : a - b * c,
-  };
+  if (tipo === 'somaNegs') {
+    const A = -r(10, 50), B = -r(10, 50);
+    return { expr: `${A} + ${B}`, resp: A + B };
+  }
+
+  // subNegs: subtrações com negativos grandes
+  const sA = Math.random() > 0.5 ? -1 : 1;
+  const sB = Math.random() > 0.5 ? -1 : 1;
+  const A = sA * r(10, 50), B = sB * r(10, 50);
+  return { expr: `${A} - ${B}`, resp: A - B };
 }
 
 function proximaQuestao() {

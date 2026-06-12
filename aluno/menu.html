@@ -1273,16 +1273,18 @@ onValue(
   }
 );
 
-// Modal de guia — exibir se config/mostrar_guia === true
-(async () => { try {
+// Verificar se deve mostrar o modal de guia
+try {
   const guiaSnap = await get(ref(db, 'config/mostrar_guia'));
   if (guiaSnap.val() === true) {
     setTimeout(() => {
       const modal = document.getElementById('modal-guia');
       if (modal) modal.style.display = 'flex';
-    }, 500);
+    }, 600);
   }
-} catch(e) { console.error('[Modal guia]', e); } })();
+} catch(e) {
+  console.warn('[Modal guia]', e);
+}
 
 </script>
 
