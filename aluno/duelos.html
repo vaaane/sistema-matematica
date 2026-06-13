@@ -1536,7 +1536,7 @@ window.fecharModalPerfil = function() {
   if (m) m.style.display = 'none';
 };
 
-window.abrirModalPerfil = async function(alvoUid, alvoNome) {
+window.abrirModalPerfil = async function(alvoUid, alvoNome, somenteLeitura = false) {
   const modal = document.getElementById('modal-perfil');
   if (!modal) return;
   modal.style.display = 'flex';
@@ -1615,30 +1615,10 @@ window.abrirModalPerfil = async function(alvoUid, alvoNome) {
     const nivelLabel = nivelInfo ? `${nivelInfo.emoji || '⚔️'} ${nivelInfo.nome}` : `Nível ${p.nivel || 1}`;
 
     const isRevanche = alvoUid === _ultimoAdvUid;
+    const ehProprio  = alvoUid === uid;
 
-    body.innerHTML = `
-      <div class="pm-header">
-        <div class="pm-av"><img src="${av}" alt=""></div>
-        <div>
-          <div class="pm-name">${escH(nome)}</div>
-          <div class="pm-turma">${escH(turmaP)}</div>
-          <div class="pm-level">${escH(nivelLabel)}</div>
-        </div>
-        <button onclick="fecharModalPerfil()" style="margin-left:auto;background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;padding:0 4px">✕</button>
-      </div>
-      <div class="pm-stats">
-        <div class="pm-stat"><div class="pm-stat-num gold">${rankPos > 0 ? '#' + rankPos : '—'}</div><div class="pm-stat-label">Ranking</div></div>
-        <div class="pm-stat"><div class="pm-stat-num blue">${advTotal}</div><div class="pm-stat-label">Duelos</div></div>
-        <div class="pm-stat"><div class="pm-stat-num purple">${escH(favDiff)}</div><div class="pm-stat-label">Favorito</div></div>
-      </div>
-      <div class="pm-h2h">
-        <div>
-          <div class="pm-h2h-label">Histórico H2H</div>
-          <div class="pm-h2h-score"><span class="green">${h2hMeu}V</span><span class="muted">×</span><span class="red">${h2hDele}D</span></div>
-        </div>
-        ${h2hTag}
-      </div>
-      ${upsetEl}
+    // Modo leitura (aberto pelo ranking): sem emojis e sem botão de desafio
+    const blocoInterativo = somenteLeitura ? '' : `
       <div class="pm-emojis">
         <div class="pm-emojis-label">Enviar reação</div>
         <div class="pm-emoji-grid" id="pm-emoji-grid">
@@ -1655,6 +1635,31 @@ window.abrirModalPerfil = async function(alvoUid, alvoNome) {
           ${isRevanche ? '🔁 Revanche!' : '⚔️ Desafiar'}
         </button>
       </div>`;
+
+    body.innerHTML = `
+      <div class="pm-header">
+        <div class="pm-av"><img src="${av}" alt=""></div>
+        <div>
+          <div class="pm-name">${escH(nome)}</div>
+          <div class="pm-turma">${escH(turmaP)}</div>
+          <div class="pm-level">${escH(nivelLabel)}</div>
+        </div>
+        <button onclick="fecharModalPerfil()" style="margin-left:auto;background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;padding:0 4px">✕</button>
+      </div>
+      <div class="pm-stats">
+        <div class="pm-stat"><div class="pm-stat-num gold">${rankPos > 0 ? '#' + rankPos : '—'}</div><div class="pm-stat-label">Ranking</div></div>
+        <div class="pm-stat"><div class="pm-stat-num blue">${advTotal}</div><div class="pm-stat-label">Duelos</div></div>
+        <div class="pm-stat"><div class="pm-stat-num purple">${escH(favDiff)}</div><div class="pm-stat-label">Favorito</div></div>
+      </div>
+      ${ehProprio ? '' : `<div class="pm-h2h">
+        <div>
+          <div class="pm-h2h-label">Histórico H2H</div>
+          <div class="pm-h2h-score"><span class="green">${h2hMeu}V</span><span class="muted">×</span><span class="red">${h2hDele}D</span></div>
+        </div>
+        ${h2hTag}
+      </div>`}
+      ${ehProprio ? '' : upsetEl}
+      ${blocoInterativo}`;
   } catch(e) {
     console.error('[abrirModalPerfil]', e);
     const body2 = document.querySelector('#modal-perfil .profile-modal');
@@ -1781,7 +1786,7 @@ async function renderRankingIndividual() {
     const st    = STANDS[slotIdx];
     const crown = slotIdx === 0 ? '<div class="podium-crown">👑</div>' : '';
     const sizes = [54, 44, 44];
-    return `<div class="podium-spot p${slotIdx+1} g${slotIdx+1}${isMe?' podium-me':''}">
+    return `<div class="podium-spot p${slotIdx+1} g${slotIdx+1}${isMe?' podium-me':''}" style="cursor:pointer" onclick="abrirModalPerfil('${p.uid}','${escH(p.nome)}',true)" title="Ver perfil">
       ${crown}
       ${renderPodiumAv(p, sizes[slotIdx])}
       <div class="podium-name" style="color:${isMe?'var(--purple)':'var(--text)'}">${escH(p.nome)}</div>
@@ -1804,7 +1809,7 @@ async function renderRankingIndividual() {
         const pos   = i + 4;
         const av    = avatarUrl(p.avatar || avatarConfigDefault());
         const letra = (p.nome || '?')[0].toUpperCase();
-        return `<div style="background:${isMe?'rgba(127,119,221,.06)':'var(--card)'};
+        return `<div onclick="abrirModalPerfil('${p.uid}','${escH(p.nome)}',true)" title="Ver perfil" style="cursor:pointer;background:${isMe?'rgba(127,119,221,.06)':'var(--card)'};
                             border:1px solid ${isMe?'rgba(127,119,221,.35)':'var(--border)'};
                             border-radius:10px;padding:10px 14px;
                             display:flex;align-items:center;gap:10px">
