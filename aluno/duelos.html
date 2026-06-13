@@ -87,6 +87,39 @@
     .diff-btn.active small { color: var(--purple); }
     .diff-btn:hover:not(.active) { border-color: var(--purple); }
 
+    /* ── Aviso colapsável ── */
+    .aviso-faixa {
+      display:flex; align-items:center; gap:10px;
+      background:rgba(251,191,36,.06); border:1px solid rgba(251,191,36,.2);
+      border-radius:10px; padding:9px 14px; margin-bottom:0; cursor:pointer;
+      transition:background .15s;
+    }
+    .aviso-faixa:hover { background:rgba(251,191,36,.1); }
+    .aviso-faixa .aviso-chevron { font-size:11px; color:#fcd34d; transition:transform .2s; flex-shrink:0; }
+    .aviso-faixa.open .aviso-chevron { transform:rotate(180deg); }
+    .aviso-body {
+      display:none; background:rgba(251,191,36,.05);
+      border:1px solid rgba(251,191,36,.15); border-top:none;
+      border-radius:0 0 10px 10px; padding:10px 14px;
+      font-size:12px; color:#fcd34d; line-height:1.6; margin-bottom:12px;
+    }
+    .aviso-body.open { display:block; }
+    /* ── Card ação unificado ── */
+    .card-acao { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:14px; }
+    .dupla-linha {
+      display:flex; align-items:center; gap:8px; padding:8px 2px;
+      border-bottom:1px solid var(--border); margin-bottom:12px; cursor:pointer;
+    }
+    .btns-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    @media(max-width:480px) { .btns-row { grid-template-columns:1fr; } }
+    .btn-treino {
+      width:100%; padding:11px; background:rgba(34,197,94,.08);
+      border:1px solid rgba(34,197,94,.25); border-radius:12px;
+      font-family:'Rajdhani',sans-serif; font-size:15px; font-weight:700;
+      color:#6ee7a0; cursor:pointer; transition:opacity .15s;
+    }
+    .btn-treino:hover { opacity:.85; }
+
     .btn-desafio-aberto {
       width: 100%; padding: 13px; border-radius: 12px; border: none;
       background: linear-gradient(135deg, var(--purple), #5a3fcf);
@@ -227,8 +260,7 @@
     .dupla-wrap { margin-bottom:14px; }
     .dupla-add-btn { background:rgba(0,212,255,.08); border:1px solid rgba(0,212,255,.3); color:#00d4ff; border-radius:10px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; width:100%; text-align:left; }
     .dupla-add-btn:hover { background:rgba(0,212,255,.15); }
-    .dupla-panel { display:none; flex-direction:column; gap:10px; background:rgba(0,212,255,.04); border:1px solid rgba(0,212,255,.2); border-radius:12px; padding:14px; margin-top:8px; }
-    .dupla-panel.aberto { display:flex; }
+    /* dupla-panel gerenciado por style inline */
     .dupla-row { display:flex; gap:8px; flex-wrap:wrap; }
     .dupla-sel { flex:1; min-width:100px; background:#0d0f1a; border:1px solid rgba(0,212,255,.3); border-radius:8px; padding:7px 10px; color:#e8eaf6; font-size:13px; outline:none; }
     .dupla-pin { width:90px; background:#0d0f1a; border:1px solid rgba(0,212,255,.3); border-radius:8px; padding:7px 10px; color:#e8eaf6; font-size:13px; letter-spacing:4px; outline:none; }
@@ -409,87 +441,53 @@
           </div>
         </div>
 
-        <!-- Aviso de fase de testes -->
-        <div id="aviso-beta" style="
-          background: rgba(251,191,36,.07);
-          border: 1.5px solid rgba(251,191,36,.35);
-          border-radius: 12px;
-          padding: 12px 15px;
-          margin-bottom: 14px;
-          display: flex;
-          gap: 10px;
-          align-items: flex-start;
-        ">
-          <span style="font-size:18px;line-height:1.3;flex-shrink:0">🧪</span>
-          <div style="font-size:12.5px;color:#fcd34d;line-height:1.6">
-            <strong style="display:block;margin-bottom:2px;font-size:13px">Modo Duelo em fase de testes</strong>
-            Este recurso ainda pode apresentar erros. Se você perceber algo estranho — duelo encerrando sozinho, placar errado, adversário que não aparece — <strong>avise a professora</strong> descrevendo o que aconteceu.
-          </div>
+        <!-- Aviso de fase de testes (colapsável) -->
+        <div id="aviso-beta" class="aviso-faixa" onclick="this.classList.toggle('open');document.getElementById('aviso-beta-body').classList.toggle('open')" style="margin-bottom:0">
+          <span style="font-size:14px;flex-shrink:0">🧪</span>
+          <span style="font-size:12px;color:#fcd34d;font-weight:600;flex:1">Modo Duelo em fase de testes — toque para saber mais</span>
+          <span class="aviso-chevron">▾</span>
+        </div>
+        <div class="aviso-body" id="aviso-beta-body">
+          Este recurso ainda pode apresentar erros. Se você perceber algo estranho — duelo encerrando sozinho, placar errado, adversário que não aparece — <strong>avise a professora</strong> descrevendo o que aconteceu.
         </div>
 
         <!-- Tab: Duelos -->
         <div class="tab-pane active" id="tab-duelos">
-          <!-- Mini-login dupla -->
-          <div id="dupla-section" style="margin-bottom:14px">
-            <div id="dupla-btn-wrap">
-              <button onclick="abrirDuplaPanel()"
-                style="width:100%;padding:11px 16px;background:rgba(0,212,255,.06);border:1.5px dashed rgba(0,212,255,.3);border-radius:12px;color:#00d4ff;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px">
-                <span>👥</span> + Adicionar parceiro de dupla
-              </button>
-            </div>
-            <div id="dupla-panel" style="display:none;background:var(--card2);border:1.5px solid rgba(0,212,255,.3);border-radius:12px;padding:14px 16px">
-              <div style="font-size:12px;font-weight:700;color:#00d4ff;margin-bottom:10px">👥 Parceiro — qualquer turma</div>
-              <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-                <select id="dupla-turma-sel" onchange="onDuplaTurmaChange()"
-                  style="flex:1;min-width:80px;padding:7px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px">
-                  <option value="">Turma</option>
-                  <option>8D</option><option>8E</option><option>8F</option><option>8G</option><option>8H</option>
-                </select>
-                <select id="dupla-aluno-sel" disabled
-                  style="flex:2;min-width:120px;padding:7px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px">
-                  <option value="">Selecione o aluno</option>
-                </select>
+
+          <!-- Card unificado: dupla + criar desafio + treinar -->
+          <div class="card-acao">
+
+            <!-- linha de dupla -->
+            <div id="dupla-section">
+              <div id="dupla-btn-wrap" style="display:block">
+                <div class="dupla-linha" onclick="abrirDuplaPanel()">
+                  <span style="font-size:14px">👥</span>
+                  <small style="font-size:12px;color:var(--text-muted);flex:1">Sem parceiro de dupla</small>
+                  <span style="font-size:12px;color:#00d4ff;font-weight:700">+ Adicionar</span>
+                </div>
               </div>
-              <div style="display:flex;gap:8px;align-items:center">
-                <input type="password" id="dupla-senha" maxlength="4" inputmode="numeric" placeholder="Senha (4 dígitos)"
-                  style="flex:1;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px">
-                <button onclick="confirmarDupla()"
-                  style="padding:8px 16px;background:#00d4ff;border:none;border-radius:8px;color:#000;font-size:12px;font-weight:700;cursor:pointer">
-                  Entrar como dupla
-                </button>
-                <button onclick="fecharDuplaPanel()"
-                  style="padding:8px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font-size:12px;cursor:pointer">✕</button>
+              <div id="dupla-ativa" style="display:none;align-items:center;gap:8px;padding:8px 2px;border-bottom:1px solid var(--border);margin-bottom:10px">
+                <span style="font-size:14px">👥</span>
+                <div style="flex:1;font-size:12px;font-weight:700;color:#00d4ff" id="dupla-ativa-nome">Jogando em dupla com —</div>
+                <button onclick="removerDupla()"
+                  style="padding:3px 10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;color:#ef4444;font-size:11px;font-weight:700;cursor:pointer">✕</button>
               </div>
-              <div id="dupla-erro" style="display:none;color:#ef4444;font-size:11px;margin-top:8px"></div>
-            </div>
-            <div id="dupla-ativa" style="display:none;background:rgba(0,212,255,.08);border:1.5px solid rgba(0,212,255,.35);border-radius:12px;padding:12px 16px;align-items:center;gap:10px">
-              <span style="font-size:20px">👥</span>
-              <div style="flex:1">
-                <div style="font-size:13px;font-weight:700;color:#00d4ff" id="dupla-ativa-nome">Jogando em dupla com —</div>
-                <div style="font-size:11px;color:var(--text-muted)">Parceiro de duelos ativo</div>
-              </div>
-              <button onclick="removerDupla()"
-                style="padding:5px 12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;color:#ef4444;font-size:11px;font-weight:700;cursor:pointer">
-                ✕ Remover
-              </button>
-            </div>
-          </div>
-          <!-- Banner: aguardando adversário -->
-          <div class="card" style="margin-bottom:14px">
-            <div class="card-title" style="margin-bottom:14px">🎯 Criar desafio</div>
-            <div class="diff-select" id="diff-select">
+            </div><!-- /dupla-section -->
+
+            <!-- seletor de dificuldade -->
+            <div class="diff-select" id="diff-select" style="margin-bottom:10px">
               <div class="diff-btn" onclick="setDiff('facil',this)">🟢 Fácil<br><small>+15 XP · 3 min</small></div>
               <div class="diff-btn active" onclick="setDiff('medio',this)">🟡 Médio<br><small>+25 XP · 4 min</small></div>
               <div class="diff-btn" onclick="setDiff('dificil',this)">🔴 Difícil<br><small>+40 XP · 5 min</small></div>
             </div>
-            <button class="btn-desafio-aberto" id="btnDesafioAberto" onclick="criarDesafioAberto()">
-              ⚔️ Desafio Aberto — todos online
-            </button>
-            <button onclick="window.location.href='/aluno/duelo_partida.html?modo=treino&dif='+_diff"
-              style="margin-top:8px;width:100%;padding:10px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:12px;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:#6ee7a0;cursor:pointer">
-              🎓 Treinar antes de duelar
-            </button>
-          </div>
+
+            <!-- botões lado a lado -->
+            <div class="btns-row">
+              <button class="btn-desafio-aberto" id="btnDesafioAberto" onclick="criarDesafioAberto()">⚔️ Desafio Aberto</button>
+              <button class="btn-treino" onclick="window.irParaTreino()">🎓 Treinar primeiro</button>
+            </div>
+
+          </div><!-- /card-acao -->
 
           <div class="section-label">Online agora · <span id="online-count">0</span></div>
           <div class="online-grid" id="online-grid">
@@ -524,6 +522,32 @@
 </div>
 
 <!-- Modal: desafiar direto -->
+<!-- Modal: adicionar parceiro de dupla -->
+<div id="modal-dupla" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharDuplaPanel()">
+  <div class="modal-box">
+    <div class="modal-title">👥 Parceiro de dupla</div>
+    <div class="modal-sub">Qualquer turma · o parceiro precisa estar presente</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <select id="dupla-turma-sel" onchange="onDuplaTurmaChange()"
+        style="flex:1;min-width:80px;padding:9px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px">
+        <option value="">Turma</option>
+        <option>8D</option><option>8E</option><option>8F</option><option>8G</option><option>8H</option>
+      </select>
+      <select id="dupla-aluno-sel" disabled
+        style="flex:2;min-width:120px;padding:9px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px">
+        <option value="">Selecione o aluno</option>
+      </select>
+    </div>
+    <input type="password" id="dupla-senha" maxlength="4" inputmode="numeric" placeholder="Senha do parceiro (4 dígitos)"
+      style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;margin-bottom:8px">
+    <div id="dupla-erro" style="display:none;color:#ef4444;font-size:11px;margin-bottom:8px"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="fecharDuplaPanel()">Cancelar</button>
+      <button class="btn-confirm" onclick="confirmarDupla()">Entrar como dupla</button>
+    </div>
+  </div>
+</div>
+
 <div id="modal-desafio" class="modal-overlay" style="display:none">
   <div class="modal-box">
     <div class="modal-title" id="modal-desafio-title">Desafiar</div>
@@ -694,12 +718,11 @@ get(ref(db, `perfis/${uid}/historico_duelos`)).then(snap => {
 
 // ── Dupla de duelo ────────────────────────────────────────────
 window.abrirDuplaPanel = function() {
-  document.getElementById('dupla-btn-wrap').style.display = 'none';
-  document.getElementById('dupla-panel').style.display = 'block';
+  document.getElementById('modal-dupla').style.display = 'flex';
+  document.getElementById('dupla-erro').style.display = 'none';
 };
 window.fecharDuplaPanel = function() {
-  document.getElementById('dupla-panel').style.display = 'none';
-  document.getElementById('dupla-btn-wrap').style.display = 'block';
+  document.getElementById('modal-dupla').style.display = 'none';
   document.getElementById('dupla-erro').style.display = 'none';
 };
 window.onDuplaTurmaChange = function() {
@@ -765,7 +788,8 @@ window.confirmarDupla = async function() {
     el.remove();
   });
   await atualizarPresenca({ parceiro_nome: parceiroNome, parceiro_turma: parceiroTurma });
-  document.getElementById('dupla-panel').style.display = 'none';
+  document.getElementById('modal-dupla').style.display = 'none';
+  document.getElementById('dupla-btn-wrap').style.display = 'none';
   document.getElementById('dupla-ativa').style.display = 'flex';
   document.getElementById('dupla-ativa-nome').textContent = `Jogando em dupla com ${parceiroNome} · ${parceiroTurma}`;
   if (typeof atualizarBadgeDupla === 'function') atualizarBadgeDupla();
@@ -814,6 +838,10 @@ const TEMPO_LABEL = { facil:'3 min', medio:'4 min', dificil:'5 min' };
 // ── Dificuldade ───────────────────────────────────────────────
 let _diff = 'medio';
 let _modalDiff = 'medio';
+
+window.irParaTreino = function() {
+  window.location.href = '/aluno/duelo_partida.html?modo=treino&dif=' + _diff;
+};
 
 window.setDiff = function(d, el) {
   _diff = d;

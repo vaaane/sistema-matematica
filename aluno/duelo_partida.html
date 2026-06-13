@@ -153,7 +153,7 @@
     style="padding:7px 14px;border-radius:9px;border:1px solid var(--border);
            background:transparent;color:var(--text-muted);font-size:12px;
            font-weight:600;cursor:pointer;margin-left:auto">
-    ✖ Sair do duelo
+    <span id="btn-sair-txt">✖ Sair do duelo</span>
   </button>
   <div id="topbar-avatar-circle" style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--card2)"></div>
 </div>
@@ -271,6 +271,10 @@ const dificuldade = duelo.dificuldade || 'medio';
 const duracaoS    = DUELO_DURACAO_SEGUNDOS[dificuldade];
 const diffLabels  = { facil: '🟢 Fácil · 3 min', medio: '🟡 Médio · 4 min', dificil: '🔴 Difícil · 5 min' };
 document.getElementById('topbar-diff').textContent = (MODO_TREINO ? '🎓 Treino · ' : '') + (diffLabels[dificuldade] || dificuldade);
+if (MODO_TREINO) {
+  const btnTxt = document.getElementById('btn-sair-txt');
+  if (btnTxt) btnTxt.textContent = '← Encerrar treino';
+}
 
 // ── Estado ────────────────────────────────────────────────────
 const CERTOS_MINIMOS = { facil: 5, medio: 4, dificil: 3 };
@@ -282,6 +286,7 @@ const estado = {
   meusCertos:   0,
   erros:        0,
   errosSinal:   0,
+  errosDetalhados: [],
   finalizado:   false,
 };
 
@@ -299,7 +304,7 @@ function fmtPts(n) {
 // Envolve negativos em () quando precedidos de operador: 5 × -3 → 5 × (-3)
 function fmtExpr(expr) {
   return String(expr)
-    .replace(/([\+\-\×\÷])\s*(-\d)/g, (_, op, neg) => `${op} (${neg})`);
+    .replace(/([\+\-\×\÷])\s*(-\d+)/g, (_, op, neg) => `${op} (${neg})`);
 }
 
 // ── Questões por dificuldade ───────────────────────────────────
@@ -315,14 +320,14 @@ function gerarUmaQuestao() {
 
     if (tipo === 'soma') {
       const a = r(1,15), b = r(1,15);
-      return { expr: fmtExpr(`${a} + ${b}`), resp: a + b };
+      return { expr: fmtExpr(`${a} + ${b}`), resp: a + b, tipo: 'soma' };
     }
     if (tipo === 'subPos') {
       const b = r(1,12), a = r(b, 15);
-      return { expr: fmtExpr(`${a} - ${b}`), resp: a - b };
+      return { expr: fmtExpr(`${a} - ${b}`), resp: a - b, tipo: 'subPos' };
     }
     const a = r(2,9), b = r(2,9);
-    return { expr: fmtExpr(`${a} × ${b}`), resp: a * b };
+    return { expr: fmtExpr(`${a} × ${b}`), resp: a * b, tipo: 'multPeq' };
   }
 
   // ── MÉDIO: negativos, × e ÷ com sinais, parênteses simples ──
@@ -334,32 +339,32 @@ function gerarUmaQuestao() {
 
     if (tipo === 'subtNeg') {
       const b = r(3,18), a = r(1, b - 1);
-      return { expr: fmtExpr(`${a} - ${b}`), resp: a - b };
+      return { expr: fmtExpr(`${a} - ${b}`), resp: a - b, tipo: 'subtNeg' };
     }
     if (tipo === 'sinalFrente') {
       const A = r(2,15), b = r(2,15);
       const op = Math.random() > 0.5 ? '+' : '-';
-      return { expr: fmtExpr(`-${A} ${op} ${b}`), resp: op === '+' ? -A + b : -A - b };
+      return { expr: fmtExpr(`-${A} ${op} ${b}`), resp: op === '+' ? -A + b : -A - b, tipo: 'sinalFrente' };
     }
     if (tipo === 'multMed') {
       const sA = Math.random() > 0.5 ? -1 : 1;
       const sB = Math.random() > 0.5 ? -1 : 1;
       const A = sA * r(2,13), B = sB * r(2,13);
-      return { expr: fmtExpr(`${A} × ${B}`), resp: A * B };
+      return { expr: fmtExpr(`${A} × ${B}`), resp: A * B, tipo: 'multMed' };
     }
     if (tipo === 'divMed') {
       const bAbs = r(2,12), rAbs = r(2,10);
       const sA = Math.random() > 0.5 ? -1 : 1;
       const A = sA * bAbs * rAbs, B = bAbs;
-      return { expr: fmtExpr(`${A} ÷ ${B}`), resp: A / B };
+      return { expr: fmtExpr(`${A} ÷ ${B}`), resp: A / B, tipo: 'divMed' };
     }
     // parentSimples
     const a = r(2,15), b = r(2,15);
     const fmt = Math.floor(Math.random() * 4);
-    if (fmt === 0) return { expr: fmtExpr(`${a} - (${b})`),    resp: a - b };
-    if (fmt === 1) return { expr: fmtExpr(`-${a} - (-${b})`),  resp: -a + b };
-    if (fmt === 2) return { expr: fmtExpr(`(-${a}) + (${b})`), resp: -a + b };
-    return              { expr: fmtExpr(`-(${a}) + ${b}`),     resp: -a + b };
+    if (fmt === 0) return { expr: fmtExpr(`${a} - (${b})`),    resp: a - b,  tipo: 'parentSimples' };
+    if (fmt === 1) return { expr: fmtExpr(`-${a} - (-${b})`),  resp: -a + b, tipo: 'parentSimples' };
+    if (fmt === 2) return { expr: fmtExpr(`(-${a}) + (${b})`), resp: -a + b, tipo: 'parentSimples' };
+    return              { expr: fmtExpr(`-(${a}) + ${b}`),     resp: -a + b, tipo: 'parentSimples' };
   }
 
   // ── DIFÍCIL: 2 operandos, números maiores, todas as operações com negativos ──
@@ -369,28 +374,28 @@ function gerarUmaQuestao() {
   if (tipo === 'multGrande') {
     const sA = Math.random() > 0.5 ? -1 : 1;
     const sB = Math.random() > 0.5 ? -1 : 1;
-    const A = sA * r(6, 25), B = sB * r(6, 25);
-    return { expr: fmtExpr(`${A} × ${B}`), resp: A * B };
+    const A = sA * r(3, 12), B = sB * r(3, 12);
+    return { expr: fmtExpr(`${A} × ${B}`), resp: A * B, tipo: 'multGrande' };
   }
 
   if (tipo === 'divGrande') {
     const sA = Math.random() > 0.5 ? -1 : 1;
     const sB = Math.random() > 0.5 ? -1 : 1;
-    const bAbs = r(4, 15), rAbs = r(3, 15);
+    const bAbs = r(2, 8), rAbs = r(2, 9);
     const A = sA * bAbs * rAbs, B = sB * bAbs;
-    return { expr: fmtExpr(`${A} ÷ ${B}`), resp: A / B };
+    return { expr: fmtExpr(`${A} ÷ ${B}`), resp: A / B, tipo: 'divGrande' };
   }
 
   if (tipo === 'somaNegs') {
-    const A = -r(10, 50), B = -r(10, 50);
-    return { expr: fmtExpr(`${A} + ${B}`), resp: A + B };
+    const A = -r(5, 20), B = -r(5, 20);
+    return { expr: fmtExpr(`${A} + ${B}`), resp: A + B, tipo: 'somaNegs' };
   }
 
   // subNegs: subtrações com negativos grandes
   const sA = Math.random() > 0.5 ? -1 : 1;
   const sB = Math.random() > 0.5 ? -1 : 1;
-  const A = sA * r(10, 50), B = sB * r(10, 50);
-  return { expr: fmtExpr(`${A} - ${B}`), resp: A - B };
+  const A = sA * r(5, 20), B = sB * r(5, 20);
+  return { expr: fmtExpr(`${A} - ${B}`), resp: A - B, tipo: 'subNegs' };
 }
 
 function proximaQuestao() {
@@ -457,7 +462,9 @@ function renderArena() {
 }
 
 // ── Render questão ────────────────────────────────────────────
+let _questaoAtual = null;
 function renderQuestaoUnica(q) {
+  _questaoAtual = q;
   document.getElementById('questao-expr').textContent = q.expr;
   document.getElementById('questao-num').textContent  = `Questão ${estado.questaoAtual}`;
 
@@ -483,6 +490,15 @@ window.responder = function(escolha, respCorreta, btnEl) {
   } else {
     estado.erros += 1;
     if (erroSinal) estado.errosSinal += 1;
+    if (MODO_TREINO && _questaoAtual) {
+      estado.errosDetalhados.push({
+        expr:      _questaoAtual.expr,
+        resp:      _questaoAtual.resp,
+        escolha:   escolha,
+        tipo:      _questaoAtual.tipo || 'outro',
+        erroSinal: erroSinal,
+      });
+    }
     estado.meusPontos = Math.max(0, estado.meusPontos - DUELO_ERRO_PENALIDADE);
     document.querySelectorAll('.opcao').forEach(b => {
       if (Number(b.textContent) === respCorreta) b.classList.add('certo');
@@ -982,7 +998,7 @@ window.enviarReacaoPos = async function(msg) {
 
 // ── Sair ──────────────────────────────────────────────────────
 window.confirmarSair = async function() {
-  if (MODO_TREINO) { window.location.href = '/aluno/duelos.html'; return; }
+  if (MODO_TREINO) { if (!estado.finalizado) { estado.finalizado = true; clearInterval(_timerInterval); } mostrarResultadoTreino(); return; }
   console.log('[confirmarSair] estado.finalizado =', estado.finalizado);
   console.log('[DEBUG]', { uid, adversarioUid, dueloId, dificuldade, adversarioNome, apelido });
 
@@ -1147,36 +1163,110 @@ window.addEventListener('beforeunload', function(e) {
 });
 
 
+// ── Navegação do relatório de treino (exposta para onclick inline) ──
+window.treino_novamente = function() {
+  const difTreino = params.get('dif') || 'medio';
+  window.location.href = '/aluno/duelo_partida.html?modo=treino&dif=' + difTreino;
+};
+window.treino_duelos = function() {
+  window.location.href = '/aluno/duelos.html';
+};
+
 // ── Tela de resultado do treino ──────────────────────────────
 function mostrarResultadoTreino() {
-  const pares  = estado.meusPontos;
-  const erros  = estado.erros;
-  const sinal  = estado.errosSinal;
+  const pares   = estado.meusPontos;
   const acertos = estado.meusCertos;
-
+  const erros   = estado.erros;
+  const sinal   = estado.errosSinal;
+  const errosD  = estado.errosDetalhados;
   const paresStr = fmtPts(pares);
-  const nota = erros === 0
-    ? '🎉 Perfeito! Nenhum erro.' 
-    : sinal > 0 && sinal === erros
-      ? `⚠️ Todos os seus ${erros} erro${erros>1?'s':''} foram de sinal — revise a regra dos sinais!`
-      : sinal > 0
-        ? `${erros} erro${erros>1?'s':''}, sendo ${sinal} de sinal — atenção com os sinais!`
-        : `${erros} erro${erros>1?'s':''}.`;
-
   const dif = ({ facil:'🟢 Fácil', medio:'🟡 Médio', dificil:'🔴 Difícil' })[dificuldade] || dificuldade;
-
   const difTreino = params.get('dif') || 'medio';
   const urlTreino = `/aluno/duelo_partida.html?modo=treino&dif=${difTreino}`;
+
+  // ── Labels por tipo ──
+  const TIPO_LABEL = {
+    soma:          'Adição',
+    subPos:        'Subtração (positivos)',
+    multPeq:       'Multiplicação pequena',
+    subtNeg:       'Subtração com negativos',
+    sinalFrente:   'Sinal na frente',
+    multMed:       'Multiplicação com sinais',
+    divMed:        'Divisão com sinais',
+    parentSimples: 'Parênteses',
+    multGrande:    'Multiplicação com negativos',
+    divGrande:     'Divisão com negativos',
+    somaNegs:      'Soma de negativos',
+    subNegs:       'Subtração com negativos',
+    outro:         'Outro',
+  };
+
+  // ── Regra visual por tipo (destaque, não dica) ──
+  const TIPO_REGRA = {
+    multMed:       { linhas: ['+ × + = +', '− × − = +', '+ × − = −', '− × + = −'], nota: 'Sinais iguais → positivo · Sinais diferentes → negativo' },
+    divMed:        { linhas: ['+ ÷ + = +', '− ÷ − = +', '+ ÷ − = −', '− ÷ + = −'], nota: 'Sinais iguais → positivo · Sinais diferentes → negativo' },
+    multGrande:    { linhas: ['+ × + = +', '− × − = +', '+ × − = −', '− × + = −'], nota: 'Sinais iguais → positivo · Sinais diferentes → negativo' },
+    divGrande:     { linhas: ['+ ÷ + = +', '− ÷ − = +', '+ ÷ − = −', '− ÷ + = −'], nota: 'Sinais iguais → positivo · Sinais diferentes → negativo' },
+    subtNeg:       { linhas: ['a − b = negativo se b > a'], nota: 'Ex: 3 − 8 = −5' },
+    sinalFrente:   { linhas: ['−a + b = b − a', '−a − b = −(a + b)'], nota: 'O − na frente inverte o valor' },
+    parentSimples: { linhas: ['−(a) = −a', '−(−a) = +a', 'a + (−b) = a − b', 'a − (−b) = a + b'], nota: 'Abrir parêntese com − inverte o sinal' },
+    somaNegs:      { linhas: ['−a + (−b) = −a − b'], nota: 'Ex: −5 + (−3) = −5 − 3 = −8' },
+    subNegs:       { linhas: ['a − (−b) = a + b'], nota: 'Subtrair negativo é somar' },
+  };
+
+  // ── Agrupar erros por tipo ──
+  const porTipo = {};
+  errosD.forEach(e => {
+    if (!porTipo[e.tipo]) porTipo[e.tipo] = [];
+    porTipo[e.tipo].push(e);
+  });
+
+  // ── HTML dos erros por tipo ──
+  const errosHTML = Object.entries(porTipo).map(([tipo, lista]) => {
+    const label  = TIPO_LABEL[tipo] || tipo;
+    const regra  = TIPO_REGRA[tipo];
+
+    const regraHTML = regra ? `
+      <div style="background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.25);border-radius:10px;padding:10px 14px;margin:8px 0">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px">
+          ${regra.linhas.map(l => `<span style="font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;background:rgba(167,139,250,.12);color:#c4b5fd;padding:4px 12px;border-radius:8px">${escH(l)}</span>`).join('')}
+        </div>
+        <div style="font-size:11px;color:var(--text-muted)">${escH(regra.nota)}</div>
+      </div>` : '';
+
+    const questoesHTML = lista.map(e => `
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-top:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:15px;font-weight:800;font-family:'Rajdhani',sans-serif;flex-shrink:0">${escH(e.expr)} = ${e.resp}</span>
+        <span style="font-size:11px;background:rgba(239,68,68,.10);color:#f87171;border:1px solid rgba(239,68,68,.2);padding:2px 9px;border-radius:99px;flex-shrink:0">
+          ✗ você: ${e.escolha}${e.erroSinal ? ' (erro de sinal)' : ''}
+        </span>
+      </div>`).join('');
+
+    return `
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-top:10px">
+        <div style="font-size:12px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">${escH(label)} · ${lista.length} erro${lista.length > 1 ? 's' : ''}</div>
+        ${regraHTML}
+        ${questoesHTML}
+      </div>`;
+  }).join('');
+
+  const semErrosHTML = `
+    <div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.3);border-radius:12px;padding:14px;text-align:center;color:var(--green);font-weight:700;font-size:14px;margin-top:10px">
+      🎉 Nenhum erro! Treino perfeito.
+    </div>`;
 
   const el = document.getElementById('duelo-arena');
   if (!el) return;
   el.innerHTML = `
-    <div style="max-width:400px;margin:0 auto;padding:20px 0;display:flex;flex-direction:column;gap:14px;align-items:center">
-      <div style="font-size:56px;line-height:1">🎓</div>
-      <div style="font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:900">Treino encerrado!</div>
-      <div style="font-size:13px;color:var(--text-muted)">${dif}</div>
+    <div style="max-width:420px;margin:0 auto;padding:16px 0 40px;display:flex;flex-direction:column;gap:0">
 
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:48px;line-height:1.1">🎓</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:900;margin-top:6px">Relatório do treino</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">${dif}</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px">
         <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center">
           <div style="font-size:22px;font-weight:900;color:var(--purple)">${paresStr}</div>
           <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Pares</div>
@@ -1186,38 +1276,40 @@ function mostrarResultadoTreino() {
           <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Acertos</div>
         </div>
         <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center">
-          <div style="font-size:22px;font-weight:900;color:${erros>0?'var(--red)':'var(--green)'}">${erros}</div>
+          <div style="font-size:22px;font-weight:900;color:${erros > 0 ? '#f87171' : 'var(--green)'}">${erros}</div>
           <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Erros</div>
         </div>
       </div>
 
-      <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;width:100%;font-size:13px;line-height:1.5;color:var(--text-muted);text-align:center">
-        ${nota}
-      </div>
+      ${erros > 0 ? `
+        <div style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--text-muted);margin:14px 0 0;text-transform:uppercase;letter-spacing:.6px">
+          Questões erradas
+        </div>
+        ${errosHTML}
+      ` : semErrosHTML}
 
-      ${sinal > 0 ? `
-      <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:12px;padding:12px 16px;width:100%;font-size:12px;line-height:1.6;color:var(--text-muted)">
-        <b style="color:#f87171">Regra dos sinais:</b><br>
-        + × + = + &nbsp;|&nbsp; − × − = + &nbsp;|&nbsp; + × − = − &nbsp;|&nbsp; − × + = −<br>
-        <span style="opacity:.7">A mesma regra vale para a divisão (÷).</span>
-      </div>` : ''}
-
-      <div style="display:flex;flex-direction:column;gap:8px;width:100%;margin-top:4px">
-        <button onclick="window.location.href='${urlTreino}'"
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:20px">
+        <button onclick="treino_novamente()"
           style="width:100%;padding:13px;background:linear-gradient(135deg,var(--purple),#5a3fcf);border:none;border-radius:12px;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:#fff;cursor:pointer">
           🔁 Treinar de novo
         </button>
-        <button onclick="window.location.href='/aluno/duelos.html'"
+        <button onclick="treino_duelos()"
           style="width:100%;padding:13px;background:var(--card2);border:1px solid var(--border);border-radius:12px;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:var(--text);cursor:pointer">
           ⚔️ Pronto para um duelo!
         </button>
       </div>
     </div>`;
 
-  // Esconder questões e opções
   const qc = document.getElementById('questao-card');
   if (qc) qc.style.display = 'none';
+  // Trocar botão do topo para voltar direto para duelos
+  const btnTxt = document.getElementById('btn-sair-txt');
+  if (btnTxt) {
+    btnTxt.textContent = '← Voltar';
+    btnTxt.closest('button').onclick = function() { window.location.href = '/aluno/duelos.html'; };
+  }
 }
+
 
 // ── Start ──────────────────────────────────────────────────────
 iniciarPartida();
