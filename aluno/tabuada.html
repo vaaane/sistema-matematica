@@ -554,8 +554,8 @@ function _getLevelConfigBase(lvl) {
         pesado: grandePesado, ehChefao:true, tipoChefao:'grande' };
     }
   } else {
-    // Pós-chefão: 131 respiro (65s), 132-139 pressão do rápido (45s), demais 65s / 45s / 35s após 300
-    const secs   = (lvl >= 132 && lvl <= 139) ? Math.max(20, TEMPO_BASE_129 - 20) : (lvl > 300 ? TEMPO_BASE_300 : lvl > 200 ? TEMPO_BASE_200 : TEMPO_BASE_129);
+    // Pós-chefão: 131 respiro (75s), 132-139 pressão do rápido (55s), demais 65s / 45s / 35s após 300
+    const secs   = (lvl >= 131 && lvl <= 139) ? (lvl === 131 ? TEMPO_BASE_129 + 10 : Math.max(20, TEMPO_BASE_129 - 10)) : (lvl > 300 ? TEMPO_BASE_300 : lvl > 200 ? TEMPO_BASE_200 : TEMPO_BASE_129);
     const minMul = Math.min(4 + n, 6);
     const minDiv = Math.min(4 + n, 6);
     // 12p×2=24 ÷ 6cols = 4 linhas (desktop 6×4); 301+: pesado (fatores 4–10)
