@@ -9,20 +9,21 @@
   <style>
     /* ── Notificações de desafio ── */
     #notificacoes-wrap {
-      position: sticky; top: 0; z-index: 100;
-      display: flex; flex-direction: column; gap: 8px;
-      padding: 0 16px; margin-bottom: 0;
+      position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+      display: flex; flex-direction: column; gap: 10px;
+      align-items: flex-end;
       pointer-events: none;
     }
     .challenge-notif {
-      background: linear-gradient(135deg, #1a1030, #130d28);
-      border: 1.5px solid var(--purple); border-radius: 14px;
+      background: linear-gradient(135deg, #1a1040, #2d1b69);
+      border: 2px solid #a78bfa; border-radius: 16px;
       padding: 14px 16px; display: flex; align-items: center;
       gap: 12px; pointer-events: all;
-      box-shadow: 0 4px 24px rgba(124,92,252,.35);
-      animation: notif-in .25s ease;
+      box-shadow: 0 0 32px rgba(167,139,250,.4), 0 8px 32px rgba(0,0,0,.4);
+      max-width: 360px; width: calc(100vw - 40px);
+      animation: notif-in .35s cubic-bezier(.4,0,.2,1);
     }
-    @keyframes notif-in { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:none; } }
+    @keyframes notif-in { from { opacity:0; transform:translateX(30px); } to { opacity:1; transform:translateX(0); } }
     .cn-info { flex: 1; min-width: 0; }
     .cn-title { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.3; }
     .cn-sub   { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
@@ -312,6 +313,7 @@
     .badge-rival   { background: #ef4444; color: #fff; }
     .badge-hunter  { background: var(--gold); color: #000; }
     .badge-streak  { background: var(--orange); color: #fff; }
+    .badge-novato  { background: rgba(34,197,94,.15); color: #6ee7a0; border: 1px solid rgba(34,197,94,.3); }
 
     /* ── Mini-perfil modal ── */
     .profile-modal { background: var(--card); border: 1px solid rgba(255,255,255,.1); border-radius: 20px; width: 100%; max-width: 320px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.6); }
@@ -482,6 +484,10 @@
             </div>
             <button class="btn-desafio-aberto" id="btnDesafioAberto" onclick="criarDesafioAberto()">
               ⚔️ Desafio Aberto — todos online
+            </button>
+            <button onclick="window.location.href='/aluno/duelo_partida.html?modo=treino&dif='+_diff"
+              style="margin-top:8px;width:100%;padding:10px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:12px;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:#6ee7a0;cursor:pointer">
+              🎓 Treinar antes de duelar
             </button>
           </div>
 
@@ -900,6 +906,8 @@ function calcularBadge(aluno, perfil) {
   if (perfil?.venceu_rank1)       return { txt: '🎯 Caçador',            cls: 'badge-hunter' };
   const streak = perfil?.streak_vitorias || 0;
   if (streak >= 3)                 return { txt: `🔥 ${streak} seguidas`, cls: 'badge-streak' };
+  const total = perfil?.duelos_total || 0;
+  if (total === 0)                 return { txt: '🌱 Novato',              cls: 'badge-novato' };
   return null;
 }
 
@@ -1791,7 +1799,7 @@ async function renderRankingIndividual() {
       ${renderPodiumAv(p, sizes[slotIdx])}
       <div class="podium-name" style="color:${isMe?'var(--purple)':'var(--text)'}">${escH(p.nome)}</div>
       <div class="podium-turma">${escH(p.turma)}</div>
-      <div class="podium-score" style="color:${COLORS[slotIdx]}">${p.vitorias}⚔️</div>
+      <div class="podium-score" style="color:${COLORS[slotIdx]}">🏆 ${p.vitorias}</div>
       <div class="podium-stand" style="height:${st.h}px;background:${st.bg}">${slotIdx+1}</div>
     </div>`;
   }
@@ -1802,6 +1810,21 @@ async function renderRankingIndividual() {
     ${spotHtml(top3[2], 2)}
   </div>`;
 
+  // Cores da tag de turma e da régua de posição (lista 4º+)
+  const CORES_TURMA = {
+    '8D': 'background:rgba(127,119,221,.15);color:#a99ff0;border:1px solid rgba(127,119,221,.3)',
+    '8E': 'background:rgba(34,211,238,.12);color:#67e8f9;border:1px solid rgba(34,211,238,.25)',
+    '8F': 'background:rgba(34,197,94,.12);color:#6ee7a0;border:1px solid rgba(34,197,94,.25)',
+    '8G': 'background:rgba(249,115,22,.12);color:#fdba74;border:1px solid rgba(249,115,22,.25)',
+    '8H': 'background:rgba(236,72,153,.12);color:#f9a8d4;border:1px solid rgba(236,72,153,.25)',
+  };
+  const corTurma = t => CORES_TURMA[t] || 'background:rgba(255,255,255,.06);color:var(--text-muted);border:1px solid var(--border)';
+  const corRegua = pos => pos <= 6
+    ? 'background:linear-gradient(180deg,#7F77DD,#5a3fcf)'
+    : pos <= 10
+      ? 'background:rgba(127,119,221,.35)'
+      : 'background:rgba(255,255,255,.10)';
+
   const listaHtml = resto.length ? `
     <div style="margin-top:16px;display:flex;flex-direction:column;gap:6px">
       ${resto.map((p, i) => {
@@ -1809,24 +1832,25 @@ async function renderRankingIndividual() {
         const pos   = i + 4;
         const av    = avatarUrl(p.avatar || avatarConfigDefault());
         const letra = (p.nome || '?')[0].toUpperCase();
-        return `<div onclick="abrirModalPerfil('${p.uid}','${escH(p.nome)}',true)" title="Ver perfil" style="cursor:pointer;background:${isMe?'rgba(127,119,221,.06)':'var(--card)'};
+        const badgeVit = p.vitorias > 0
+          ? `<span style="font-family:'Rajdhani',sans-serif;font-size:13.5px;font-weight:700;padding:4px 12px;border-radius:99px;flex-shrink:0;white-space:nowrap;background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.3)">🏆 ${p.vitorias} vitória${p.vitorias > 1 ? 's' : ''}</span>`
+          : `<span style="font-family:'Rajdhani',sans-serif;font-size:13.5px;font-weight:700;padding:4px 12px;border-radius:99px;flex-shrink:0;white-space:nowrap;background:rgba(255,255,255,.05);color:var(--text-muted);border:1px solid var(--border)">0 vitórias</span>`;
+        return `<div onclick="abrirModalPerfil('${p.uid}','${escH(p.nome)}',true)" title="Ver perfil" style="cursor:pointer;overflow:hidden;background:${isMe?'rgba(127,119,221,.07)':'var(--card)'};
                             border:1px solid ${isMe?'rgba(127,119,221,.35)':'var(--border)'};
-                            border-radius:10px;padding:10px 14px;
+                            border-radius:12px;padding:8px 12px 8px 0;
                             display:flex;align-items:center;gap:10px">
-          <div style="font-size:12px;font-weight:900;min-width:28px;text-align:center;color:var(--text-muted)">#${pos}</div>
-          <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#7F77DD,#00d4ff);flex-shrink:0;position:relative">
-            <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;z-index:0">${letra}</span>
+          <div style="width:4px;align-self:stretch;border-radius:0 3px 3px 0;flex-shrink:0;${corRegua(pos)}"></div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;min-width:30px;text-align:center;color:var(--text-muted);flex-shrink:0">#${pos}</div>
+          <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#7F77DD,#00d4ff);flex-shrink:0;position:relative">
+            <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;z-index:0">${letra}</span>
             <img src="${av}" alt="" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:1;border-radius:50%" onerror="this.style.display='none'">
           </div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:700;${isMe?'color:var(--purple)':''};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-              ${escH(p.nome)}${isMe?' ← você':''}
-            </div>
-            <div style="font-size:10px;color:var(--text-muted)">${escH(p.turma)} · ${p.total} duelos</div>
+          <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px">
+            <span style="font-size:13.5px;font-weight:700;${isMe?'color:var(--purple)':''};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escH(p.nome)}</span>
+            ${isMe ? '<span style="color:var(--purple);font-size:11px;font-weight:700;flex-shrink:0">← você</span>' : ''}
+            <span style="font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px;letter-spacing:.4px;flex-shrink:0;${corTurma(p.turma)}">${escH(p.turma)}</span>
           </div>
-          <div style="text-align:right;flex-shrink:0">
-            <div style="font-size:13px;font-weight:800;color:var(--green)">${p.vitorias}⚔️</div>
-          </div>
+          ${badgeVit}
         </div>`;
       }).join('')}
     </div>` : '';
