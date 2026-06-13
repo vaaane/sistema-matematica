@@ -234,6 +234,58 @@
       .g-card-top { flex-direction:column;align-items:flex-start;gap:10px; }
     }
     @media(max-width:400px) { .g-grid { grid-template-columns:repeat(6,1fr); } }
+
+    /* ── Grade de jogos (hub) ── */
+    .jogos-hub { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
+    .jh-card {
+      background:var(--g-bg2); border:1px solid var(--g-bdr);
+      border-radius:14px; overflow:hidden; position:relative;
+    }
+    .jh-card.disponivel { cursor:pointer; transition:border-color .15s, transform .15s; }
+    .jh-card.disponivel:hover { border-color:rgba(124,92,252,.5); transform:translateY(-2px); }
+    .jh-card.destaque { grid-column:1 / -1; }
+    .jh-card.breve { opacity:.65; }
+    .jh-acento { height:3px; }
+    .jh-ac-tab { background:linear-gradient(90deg,#7c5cfc,#00d4ff); }
+    .jh-ac-neg { background:linear-gradient(90deg,#ef4444,#f97316); }
+    .jh-ac-run { background:linear-gradient(90deg,#22c55e,#16a34a); }
+    .jh-body { padding:14px; }
+    .jh-topo { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+    .jh-icon { font-size:24px; line-height:1; flex-shrink:0; }
+    .jh-nome { font-family:'Rajdhani',sans-serif; font-size:17px; font-weight:700; line-height:1.1; }
+    .jh-desc { font-size:11px; color:var(--g-muted); margin-top:1px; line-height:1.4; }
+    .jh-prog { margin-bottom:10px; }
+    .jh-prog-labels { display:flex; justify-content:space-between; font-size:10px; color:var(--g-muted); margin-bottom:4px; }
+    .jh-prog-labels b { color:var(--g-purple); }
+    .jh-prog-bar { height:4px; background:rgba(255,255,255,.07); border-radius:99px; overflow:hidden; }
+    .jh-prog-fill { height:100%; border-radius:99px; background:linear-gradient(90deg,var(--g-purple),var(--g-cyan)); }
+    .jh-btns { display:flex; gap:8px; }
+    .jh-btn-play {
+      flex:1; padding:9px; border:none; border-radius:10px;
+      font-family:'Rajdhani',sans-serif; font-size:14px; font-weight:700;
+      background:linear-gradient(135deg,#7c5cfc,#5a3fcf); color:#fff;
+      cursor:pointer; transition:opacity .15s;
+    }
+    .jh-btn-play:hover { opacity:.88; }
+    .jh-btn-ver {
+      padding:9px 12px; border:1px solid var(--g-bdr); border-radius:10px;
+      background:transparent; color:var(--g-muted);
+      font-family:'Rajdhani',sans-serif; font-size:12px; font-weight:700;
+      cursor:pointer; white-space:nowrap; transition:all .15s;
+    }
+    .jh-btn-ver:hover { color:var(--g-text); border-color:rgba(255,255,255,.2); }
+    .jh-btn-breve {
+      flex:1; padding:9px; border:1px solid var(--g-bdr); border-radius:10px;
+      background:transparent; color:var(--g-muted);
+      font-family:'Rajdhani',sans-serif; font-size:12px; font-weight:700;
+      cursor:not-allowed;
+    }
+    .jh-badge-breve {
+      position:absolute; top:11px; right:11px;
+      font-size:9px; font-weight:800; padding:2px 7px; border-radius:99px;
+      background:rgba(255,255,255,.05); color:var(--g-muted);
+      border:1px solid var(--g-bdr); letter-spacing:.4px;
+    }
   </style>
 </head>
 <body>
@@ -251,8 +303,86 @@
         </div>
       </div>
     </div>
-    <div class="content" id="content">
-      <div style="text-align:center;padding:80px;color:var(--g-muted);font-family:'Inter',sans-serif">Carregando…</div>
+    <div class="content" style="display:flex;flex-direction:column;gap:0;padding-top:16px">
+
+      <!-- Grade de jogos — estática, aparece imediatamente -->
+      <div class="jogos-hub" style="margin-bottom:20px">
+
+        <!-- Tabuada (destaque) -->
+        <div class="jh-card disponivel destaque" onclick="void(0)">
+          <div class="jh-acento jh-ac-tab"></div>
+          <div class="jh-body">
+            <div class="jh-topo">
+              <div class="jh-icon">🎯</div>
+              <div>
+                <div class="jh-nome">Tabuada</div>
+                <div class="jh-desc">Combine operações com seus resultados</div>
+              </div>
+            </div>
+            <div class="jh-prog">
+              <div class="jh-prog-labels">
+                <span>Nível atual <b id="jh-nivel-atual">—</b></span>
+                <span style="color:var(--g-muted)">Nível máximo <b style="color:var(--g-muted)" id="jh-nivel-max">300</b></span>
+              </div>
+              <div class="jh-prog-bar">
+                <div class="jh-prog-fill" id="jh-prog-fill" style="width:0.5%"></div>
+              </div>
+            </div>
+            <div class="jh-btns">
+              <button class="jh-btn-play" onclick="window.location.href='/aluno/tabuada.html'">▶ Jogar agora</button>
+              <button class="jh-btn-ver" id="jh-btn-ver-tab" onclick="
+                const d=document.getElementById('tabuada-detalhes');
+                const btn=document.getElementById('jh-btn-ver-tab');
+                if(d.style.display==='none'||d.style.display===''){d.style.display='block';btn.textContent='Recolher ↑';d.scrollIntoView({behavior:'smooth'});}
+                else{d.style.display='none';btn.textContent='Ver detalhes ↓';}
+              ">Ver detalhes ↓</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabuada Negativa (em breve) -->
+        <div class="jh-card breve">
+          <div class="jh-acento jh-ac-neg"></div>
+          <span class="jh-badge-breve">EM BREVE</span>
+          <div class="jh-body">
+            <div class="jh-topo">
+              <div class="jh-icon">➖</div>
+              <div>
+                <div class="jh-nome">Tabuada Negativa</div>
+                <div class="jh-desc">A tabuada com números negativos</div>
+              </div>
+            </div>
+            <div class="jh-btns">
+              <button class="jh-btn-breve" disabled>🔒 Em breve</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fugindo dos Problemas -->
+        <div class="jh-card disponivel" style="position:relative;">
+          <div class="jh-acento jh-ac-run"></div>
+          <span style="position:absolute;top:11px;right:11px;font-size:9px;font-weight:800;padding:2px 8px;border-radius:99px;background:rgba(251,191,36,.12);color:#fcd34d;border:1px solid rgba(251,191,36,.3);letter-spacing:.4px;">🧪 BETA</span>
+          <div class="jh-body">
+            <div class="jh-topo">
+              <div class="jh-icon">🏃</div>
+              <div>
+                <div class="jh-nome">Fugindo dos Problemas</div>
+                <div class="jh-desc">Digite a resposta para pular os obstáculos</div>
+              </div>
+            </div>
+            <div class="jh-btns">
+              <button class="jh-btn-play" onclick="window.location.href='/aluno/runner.html'">▶ Jogar agora</button>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /jogos-hub -->
+
+      <!-- Detalhes da tabuada — colapsado, preenchido pelo JS -->
+      <div id="tabuada-detalhes" style="display:none">
+        <div id="content"></div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -417,6 +547,11 @@ try {
 // ── Parse data ─────────────────────────────────────────────────
 const niveis      = niveisSnap?.exists() ? niveisSnap.val() : {};
 const nivelAtual  = Math.max(niveis.nivel_atual || 1, niveis.melhor_nivel || 1);
+// Atualizar card estático da grade
+const _jhNivel = document.getElementById('jh-nivel-atual');
+const _jhFill  = document.getElementById('jh-prog-fill');
+if (_jhNivel) _jhNivel.textContent = nivelAtual;
+if (_jhFill)  _jhFill.style.width  = Math.max(0.5, (nivelAtual/NIVEL_MAX)*100).toFixed(1) + '%';
 const melhorNivel = niveis.melhor_nivel || nivelAtual;
 const totalPart   = niveis.total_partidas || 0;
 const maiorCombo  = niveis.maior_combo || 0;
@@ -685,6 +820,8 @@ function buildRankList(list, listPos, meIdx) {
 document.getElementById("content").innerHTML = `
 <div class="g-page">
 
+  <!-- ── Tabuada card (detalhes) ── -->
+
   <!-- ── Tabuada card ── -->
   <div class="g-card">
     <div class="g-card-top">
@@ -826,6 +963,7 @@ document.getElementById("content").innerHTML = `
     </div>
     <div class="g-grid">${buildLevelMap()}</div>
   </div>
+
 
 </div>`;
 
