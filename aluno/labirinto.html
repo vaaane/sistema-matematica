@@ -189,57 +189,54 @@ canvas{
   font-size:.7rem;color:#3a5a7a;text-align:center;
 }
 
-/* ── D-PAD (clicável: serve para mouse e toque) ── */
-.dpad{
-  display:grid;
-  grid-template-columns:repeat(3,var(--dp,46px));
-  grid-template-rows:repeat(3,var(--dp,46px));
-  gap:5px;
-  justify-content:center;
-  touch-action:none;
-}
-.dpad .dp-btn{
-  display:flex;align-items:center;justify-content:center;
-  background:rgba(126,232,250,.12);
-  border:1px solid rgba(126,232,250,.38);
-  border-radius:9px;
-  color:#7ee8fa;
-  font-size:1.1rem;font-weight:700;
-  font-family:'Orbitron',sans-serif;
-  cursor:pointer;user-select:none;-webkit-user-select:none;
+/* ── JOYSTICK virtual (arraste do dedo/mouse) ── */
+.joystick{
+  --joy:var(--dp,120px);
+  position:relative;
+  width:var(--joy);height:var(--joy);
+  border-radius:50%;
+  background:rgba(126,232,250,.06);
+  border:1.5px solid rgba(126,232,250,.25);
+  touch-action:none;user-select:none;-webkit-user-select:none;
   -webkit-tap-highlight-color:transparent;
-  transition:background .08s,transform .08s;
+  cursor:grab;
 }
-.dpad .dp-btn:active{background:rgba(126,232,250,.3);transform:scale(.93);}
-.dpad .dp-center{background:rgba(126,232,250,.04);border:none;cursor:default;}
+.joystick:active{cursor:grabbing;}
+.joystick .joy-stick{
+  position:absolute;top:50%;left:50%;
+  width:38%;height:38%;
+  margin:-19% 0 0 -19%;
+  border-radius:50%;
+  background:rgba(126,232,250,.22);
+  border:1px solid rgba(126,232,250,.55);
+  transition:transform .04s linear;
+  pointer-events:none;
+}
+.joystick .joy-hint{
+  position:absolute;color:#2a4a6a;font-size:.7rem;pointer-events:none;
+  font-family:'Orbitron',sans-serif;
+}
+.joystick .joy-up{top:5px;left:50%;transform:translateX(-50%);}
+.joystick .joy-down{bottom:5px;left:50%;transform:translateX(-50%);}
+.joystick .joy-left{left:5px;top:50%;transform:translateY(-50%);}
+.joystick .joy-right{right:5px;top:50%;transform:translateY(-50%);}
 /* cores por jogador no duo */
-.dpad.dp-p1 .dp-btn{background:rgba(239,71,111,.14);border-color:rgba(239,71,111,.4);color:#ef476f;}
-.dpad.dp-p1 .dp-btn:active{background:rgba(239,71,111,.32);}
-.dpad.dp-p2 .dp-btn{background:rgba(255,209,102,.14);border-color:rgba(255,209,102,.4);color:#ffd166;}
-.dpad.dp-p2 .dp-btn:active{background:rgba(255,209,102,.32);}
+.joystick.dp-p1{border-color:rgba(239,71,111,.4);background:rgba(239,71,111,.06);}
+.joystick.dp-p1 .joy-stick{background:rgba(239,71,111,.25);border-color:rgba(239,71,111,.6);}
+.joystick.dp-p2{border-color:rgba(255,209,102,.4);background:rgba(255,209,102,.06);}
+.joystick.dp-p2 .joy-stick{background:rgba(255,209,102,.25);border-color:rgba(255,209,102,.6);}
 .dpad-label{
   font-family:'Orbitron',sans-serif;font-size:.5rem;letter-spacing:2px;
-  text-align:center;color:#3a5a7a;margin-bottom:4px;text-transform:uppercase;
+  text-align:center;color:#3a5a7a;margin-bottom:6px;text-transform:uppercase;
 }
-/* d-pad flutuante transparente sobre o canto do mapa — SÓ no celular.
-   Escondido por padrão; o @media mobile o ativa. */
-#float-dpad{
-  display:none;
-  position:absolute;
-  left:10px;
-  bottom:10px;
-  z-index:20;
-  opacity:.35;
-  transition:opacity .15s;
-}
-#float-dpad:active{opacity:.85;}
-#float-dpad .dpad{--dp:52px;}
+/* #float-dpad não é mais usado (joystick fica sempre fora do mapa, via #side-dpad) */
+#float-dpad{display:none!important;}
 #canvas-area{position:relative;}
 
-/* coluna direita (PC): d-pad menor, fora do mapa, alinhado na base.
-   Escondida por padrão; o @media desktop a ativa. */
+/* coluna/área do joystick, fora do mapa (PC: à direita; mobile: abaixo à direita).
+   Escondida por padrão; os @media a ativam. */
 #right-col{display:none;}
-#side-dpad .dpad{--dp:40px;}
+#side-dpad .joystick{--dp:120px;}
 
 /* ── Seletor de método de controle no duo ── */
 .ctrl-pick{display:flex;gap:6px;}
@@ -324,11 +321,14 @@ canvas{
   /* canvas ocupa a largura, quadrado */
   #canvas-area{width:100%;}
   canvas{width:100%!important;height:auto!important;aspect-ratio:1/1;}
-  /* d-pad flutuante transparente sobre o canto do mapa (ativado por JS via display) */
-  #float-dpad{left:10px;bottom:10px;}
-  #float-dpad .dpad{--dp:52px;}
-  /* coluna direita do PC não aparece no celular */
-  #right-col{display:none!important;}
+  /* joystick abaixo do mapa, alinhado à direita, fora das células */
+  #right-col{
+    display:flex;
+    justify-content:flex-end;
+    width:100%;
+    padding:6px 10px 0 0;
+  }
+  #side-dpad .joystick{--dp:128px;}
   /* esconde controls-grid do teclado na tela inicial mobile */
   .controls-grid{display:none;}
 }
@@ -1875,66 +1875,83 @@ window.labiPickCtrl = function(player, id){
 };
 
 // Constrói o(s) d-pad(s) na tela. Cada botão seta a chave do método daquele player.
-function dpadHTML(playerClass, keys){
-  const b = (dir,glyph)=>`<div class="dp-btn" data-dir="${keys[dir]}">${glyph}</div>`;
-  return `<div class="dpad ${playerClass}">
-    <div></div>${b('up','▲')}<div></div>
-    ${b('left','◀')}<div class="dp-center">●</div>${b('right','▶')}
-    <div></div>${b('down','▼')}<div></div>
+// Cria o HTML de um joystick (base + manípulo). `cls` colore por jogador no duo.
+function dpadHTML(cls, keymap){
+  return `<div class="joystick ${cls}" data-up="${keymap.up}" data-down="${keymap.down}" data-left="${keymap.left}" data-right="${keymap.right}">
+    <span class="joy-hint joy-up">▲</span>
+    <span class="joy-hint joy-down">▼</span>
+    <span class="joy-hint joy-left">◀</span>
+    <span class="joy-hint joy-right">▶</span>
+    <div class="joy-stick"></div>
   </div>`;
 }
 
+// Ativa o arraste do joystick: traduz a posição do dedo/mouse na direção dominante
+// e seta as MESMAS keys[...] que o teclado usa (não muda a lógica de movimento).
 function bindDpad(container){
   if(!container) return;
-  container.querySelectorAll('.dp-btn').forEach(btn=>{
-    const key = btn.getAttribute('data-dir');
-    if(!key) return;
-    const press = (e)=>{ e.preventDefault(); keys[key]=true; };
-    const release = (e)=>{ e.preventDefault(); keys[key]=false; };
-    btn.addEventListener('mousedown', press);
-    btn.addEventListener('mouseup', release);
-    btn.addEventListener('mouseleave', release);
-    btn.addEventListener('touchstart', press, {passive:false});
-    btn.addEventListener('touchend', release, {passive:false});
-    btn.addEventListener('touchcancel', release, {passive:false});
-  });
+  const joy = container.querySelector('.joystick');
+  if(!joy) return;
+  const stick = joy.querySelector('.joy-stick');
+  const KMAP = { up:joy.dataset.up, down:joy.dataset.down, left:joy.dataset.left, right:joy.dataset.right };
+  const allKeys = [KMAP.up,KMAP.down,KMAP.left,KMAP.right];
+  let active = false;
+
+  const clearKeys = ()=>{ allKeys.forEach(k=>{ keys[k]=false; }); };
+  const center = ()=>{ stick.style.transform = 'translate(0,0)'; };
+
+  function apply(clientX, clientY){
+    const r = joy.getBoundingClientRect();
+    const cx = r.left + r.width/2, cy = r.top + r.height/2;
+    let dx = clientX - cx, dy = clientY - cy;
+    const max = r.width/2 - 6;            // limite do manípulo dentro da base
+    const dist = Math.hypot(dx, dy);
+    if(dist > max){ dx *= max/dist; dy *= max/dist; }
+    stick.style.transform = `translate(${dx}px,${dy}px)`;
+
+    clearKeys();
+    const DEAD = 8;                        // zona morta no centro
+    if(Math.hypot(dx,dy) < DEAD) return;
+    // direção DOMINANTE: o maior eixo vence (sem diagonais)
+    if(Math.abs(dx) >= Math.abs(dy)) keys[dx>0?KMAP.right:KMAP.left] = true;
+    else                            keys[dy>0?KMAP.down:KMAP.up]   = true;
+  }
+
+  const start = (e)=>{ active=true; e.preventDefault(); const p=e.touches?e.touches[0]:e; apply(p.clientX,p.clientY); };
+  const move  = (e)=>{ if(!active) return; e.preventDefault(); const p=e.touches?e.touches[0]:e; apply(p.clientX,p.clientY); };
+  const end   = (e)=>{ if(!active) return; active=false; if(e&&e.preventDefault)e.preventDefault(); clearKeys(); center(); };
+
+  joy.addEventListener('mousedown', start);
+  window.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+  joy.addEventListener('touchstart', start, {passive:false});
+  joy.addEventListener('touchmove', move, {passive:false});
+  joy.addEventListener('touchend', end, {passive:false});
+  joy.addEventListener('touchcancel', end, {passive:false});
 }
 
 // Monta os d-pads conforme o modo e os métodos escolhidos.
 function buildDpads(){
-  const fd = document.getElementById('float-dpad');
   const sd = document.getElementById('side-dpad');
+  if(!sd) return;
   const isMobile = window.matchMedia('(max-width:760px)').matches;
 
-  // ── MOBILE: d-pad flutuante de toque, sempre (move o p1) ──
-  if(fd){
-    if(isMobile){
-      fd.innerHTML = dpadHTML('', KEYMAP[ctrlP1==='mouse'?'mouse':ctrlP1] || KEYMAP.wasd);
-      fd.style.display = 'block';
-      bindDpad(fd);
-    } else {
-      fd.innerHTML = '';
-      fd.style.display = 'none';
-    }
+  let html = '';
+  if(isMobile){
+    // mobile: joystick sempre (toque) — move o p1 (duo é só PC)
+    html = `<div class="dpad-label">🕹️ Mover</div>${dpadHTML('', KEYMAP[ctrlP1==='mouse'?'mouse':ctrlP1] || KEYMAP.wasd)}`;
+  } else if(mode==='duo'){
+    // PC duo: joystick só para quem escolheu mouse (no máximo um)
+    if(ctrlP1==='mouse')      html = `<div class="dpad-label" style="color:#ef476f">🩷 P1</div>${dpadHTML('dp-p1', KEYMAP.mouse)}`;
+    else if(ctrlP2==='mouse') html = `<div class="dpad-label" style="color:#ffd166">💛 P2</div>${dpadHTML('dp-p2', KEYMAP.mouse)}`;
+  } else {
+    // PC solo: joystick sempre disponível junto com o teclado.
+    // Seta as teclas do método ativo do player → teclado e joystick movem o mesmo personagem.
+    html = `<div class="dpad-label">🕹️ Mover</div>${dpadHTML('', KEYMAP[ctrlP1] || KEYMAP.wasd)}`;
   }
 
-  // ── PC: d-pad na coluna direita, fora do mapa ──
-  if(sd){
-    let html = '';
-    if(!isMobile){
-      if(mode==='duo'){
-        // só para quem escolheu mouse (no máximo um — mouse+mouse não existe)
-        if(ctrlP1==='mouse') html = `<div class="dpad-label" style="color:#ef476f">🩷 P1</div>${dpadHTML('dp-p1', KEYMAP.mouse)}`;
-        else if(ctrlP2==='mouse') html = `<div class="dpad-label" style="color:#ffd166">💛 P2</div>${dpadHTML('dp-p2', KEYMAP.mouse)}`;
-      } else {
-        // SOLO: mouse sempre disponível junto com o teclado.
-        // O d-pad seta as teclas do método ativo do player → teclado e clique movem o mesmo personagem.
-        html = `<div class="dpad-label">🖱️ Mover</div>${dpadHTML('', KEYMAP[ctrlP1] || KEYMAP.wasd)}`;
-      }
-    }
-    sd.innerHTML = html;
-    if(html) bindDpad(sd);
-  }
+  sd.innerHTML = html;
+  if(html) bindDpad(sd);
 }
 function labelOf(id){ return ({wasd:'WASD',setas:'Setas',mouse:'Mouse'})[id]||id; }
 
