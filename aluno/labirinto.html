@@ -221,8 +221,8 @@ canvas{
   font-family:'Orbitron',sans-serif;font-size:.5rem;letter-spacing:2px;
   text-align:center;color:#3a5a7a;margin-bottom:4px;text-transform:uppercase;
 }
-/* d-pad flutuante transparente sobre o canto inferior do mapa (PC e mobile).
-   Preenchido por JS; escondido quando não há controle por clique/toque. */
+/* d-pad flutuante transparente sobre o canto do mapa — SÓ no celular.
+   Escondido por padrão; o @media mobile o ativa. */
 #float-dpad{
   display:none;
   position:absolute;
@@ -232,9 +232,14 @@ canvas{
   opacity:.35;
   transition:opacity .15s;
 }
-#float-dpad:hover,#float-dpad:active{opacity:.85;}
-#float-dpad .dpad{--dp:46px;}
+#float-dpad:active{opacity:.85;}
+#float-dpad .dpad{--dp:52px;}
 #canvas-area{position:relative;}
+
+/* coluna direita (PC): d-pad menor, fora do mapa, alinhado na base.
+   Escondida por padrão; o @media desktop a ativa. */
+#right-col{display:none;}
+#side-dpad .dpad{--dp:40px;}
 
 /* ── Seletor de método de controle no duo ── */
 .ctrl-pick{display:flex;gap:6px;}
@@ -282,9 +287,17 @@ canvas{
     max-height:100%;
     overflow-y:auto;
   }
-  /* no PC o float-dpad fica sobre o canto do mapa (dentro do canvas-area) */
-  #float-dpad{left:auto;right:14px;bottom:14px;}
-  #float-dpad .dpad{--dp:50px;}
+  /* coluna direita do d-pad: acompanha a altura e alinha o d-pad na BASE (junto da linha inferior do mapa) */
+  #right-col{
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    height:100%;
+    flex-shrink:0;
+    padding-bottom:6px;
+  }
+  /* float-dpad nunca aparece no PC (é só mobile) */
+  #float-dpad{display:none!important;}
 }
 
 /* ════════════════════════════════════════════════
@@ -311,9 +324,11 @@ canvas{
   /* canvas ocupa a largura, quadrado */
   #canvas-area{width:100%;}
   canvas{width:100%!important;height:auto!important;aspect-ratio:1/1;}
-  /* d-pad flutuante transparente sobre o canto do mapa */
+  /* d-pad flutuante transparente sobre o canto do mapa (ativado por JS via display) */
   #float-dpad{left:10px;bottom:10px;}
   #float-dpad .dpad{--dp:52px;}
+  /* coluna direita do PC não aparece no celular */
+  #right-col{display:none!important;}
   /* esconde controls-grid do teclado na tela inicial mobile */
   .controls-grid{display:none;}
 }
@@ -426,9 +441,13 @@ canvas{
     <canvas id="gameCanvas" width="560" height="560"></canvas>
     <div id="op-display">? + ? = ?</div>
     <div id="feedback-text"></div>
-    <!-- D-pad flutuante transparente sobre o canto do mapa (PC e mobile).
-         Aparece para quem usa mouse (PC) ou sempre (mobile, touch). -->
+    <!-- D-pad flutuante transparente sobre o canto do mapa — SÓ no celular (touch). -->
     <div id="float-dpad"></div>
+  </div>
+
+  <!-- Coluna direita (PC): d-pad fora do mapa, alinhado embaixo. -->
+  <div id="right-col">
+    <div id="side-dpad"></div>
   </div>
 
 </div>
@@ -1884,26 +1903,38 @@ function bindDpad(container){
 // Monta os d-pads conforme o modo e os métodos escolhidos.
 function buildDpads(){
   const fd = document.getElementById('float-dpad');
-  if(!fd) return;
+  const sd = document.getElementById('side-dpad');
   const isMobile = window.matchMedia('(max-width:760px)').matches;
 
-  let html = '';
-  if(isMobile){
-    // mobile: sempre solo (duo é só PC) → d-pad de toque com as teclas do p1
-    html = dpadHTML('', KEYMAP[ctrlP1==='mouse'?'mouse':ctrlP1] || KEYMAP.wasd);
-  } else {
-    // PC: só para quem ESCOLHEU mouse (no máximo um — mouse+mouse não existe)
-    if(mode==='duo'){
-      if(ctrlP1==='mouse') html = dpadHTML('dp-p1', KEYMAP.mouse);
-      else if(ctrlP2==='mouse') html = dpadHTML('dp-p2', KEYMAP.mouse);
-    } else if(ctrlP1==='mouse'){
-      html = dpadHTML('', KEYMAP.mouse);
+  // ── MOBILE: d-pad flutuante de toque, sempre (move o p1) ──
+  if(fd){
+    if(isMobile){
+      fd.innerHTML = dpadHTML('', KEYMAP[ctrlP1==='mouse'?'mouse':ctrlP1] || KEYMAP.wasd);
+      fd.style.display = 'block';
+      bindDpad(fd);
+    } else {
+      fd.innerHTML = '';
+      fd.style.display = 'none';
     }
   }
 
-  fd.innerHTML = html;
-  fd.style.display = html ? 'block' : 'none';
-  if(html) bindDpad(fd);
+  // ── PC: d-pad na coluna direita, fora do mapa ──
+  if(sd){
+    let html = '';
+    if(!isMobile){
+      if(mode==='duo'){
+        // só para quem escolheu mouse (no máximo um — mouse+mouse não existe)
+        if(ctrlP1==='mouse') html = `<div class="dpad-label" style="color:#ef476f">🩷 P1</div>${dpadHTML('dp-p1', KEYMAP.mouse)}`;
+        else if(ctrlP2==='mouse') html = `<div class="dpad-label" style="color:#ffd166">💛 P2</div>${dpadHTML('dp-p2', KEYMAP.mouse)}`;
+      } else {
+        // SOLO: mouse sempre disponível junto com o teclado.
+        // O d-pad seta as teclas do método ativo do player → teclado e clique movem o mesmo personagem.
+        html = `<div class="dpad-label">🖱️ Mover</div>${dpadHTML('', KEYMAP[ctrlP1] || KEYMAP.wasd)}`;
+      }
+    }
+    sd.innerHTML = html;
+    if(html) bindDpad(sd);
+  }
 }
 function labelOf(id){ return ({wasd:'WASD',setas:'Setas',mouse:'Mouse'})[id]||id; }
 
