@@ -463,12 +463,12 @@ window.carregarAlunos = async function() {
 
   sel1.innerHTML = '<option value="">Carregando...</option>';
   try {
-    const resp = await fetch('https://sistemamatematica-50eff-default-rtdb.firebaseio.com/perfis.json');
+    const resp = await fetch('https://sistemamatematica-50eff-default-rtdb.firebaseio.com/aluno_senhas.json');
     const data = await resp.json();
     const nomes = data
       ? Object.values(data)
-          .filter(p => p && p.turma === turma && p.nome && p.nome !== 'PROFESSOR_TESTE')
-          .map(p => p.nome)
+          .filter(v => v && typeof v === 'object' && v.turma === turma && v.nome)
+          .map(v => v.nome)
           .sort((a, b) => a.localeCompare(b, 'pt-BR'))
       : [];
     sel1.innerHTML = '<option value="">Selecionar...</option>';
