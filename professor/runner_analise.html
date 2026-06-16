@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Runner · Análise — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .ra-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px;}
+    .ra-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;}
+    .ra-stat b{display:block;font-size:22px;font-weight:800;color:var(--purple);}
+    .ra-stat span{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;}
+    .ra-table{width:100%;border-collapse:collapse;font-size:13px;}
+    .ra-table th{background:var(--card2);font-weight:700;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);}
+    .ra-table td{padding:8px 12px;border-bottom:0.5px solid var(--border);vertical-align:middle;}
+    .ra-table tr:last-child td{border-bottom:none;}
+    .ra-table tr:hover td{background:rgba(255,255,255,.02);}
+    .tag-turma{font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px;margin-left:6px;}
+    .t8D{background:rgba(127,119,221,.15);color:#a99ff0;}
+    .t8E{background:rgba(34,211,238,.12);color:#67e8f9;}
+    .t8F{background:rgba(34,197,94,.12);color:#6ee7a0;}
+    .t8G{background:rgba(249,115,22,.12);color:#fdba74;}
+    .t8H{background:rgba(236,72,153,.12);color:#f9a8d4;}
+    .erro-bar{height:8px;border-radius:4px;background:var(--border);overflow:hidden;min-width:80px;}
+    .erro-fill{height:100%;border-radius:4px;background:#ef476f;}
+    .secao-titulo{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;margin:20px 0 10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;}
+    .filtros{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+    .filtro-btn{padding:5px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;cursor:pointer;transition:all .15s;}
+    .filtro-btn.on{border-color:var(--purple);background:rgba(127,119,221,.12);color:var(--purple);}
+    .sk{background:var(--card2);border-radius:8px;animation:sk-pulse 1.2s ease-in-out infinite;}
+    @keyframes sk-pulse{0%,100%{opacity:.5}50%{opacity:1}}
+    .badge-rec{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:rgba(34,197,94,.12);color:#22c55e;border:1px solid rgba(34,197,94,.3);}
+    .tipo-label{font-size:12px;font-weight:700;color:var(--text);}
+    .tipo-sub{font-size:10px;color:var(--text-muted);}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">🏃 Runner · Análise</div>
+        <div class="topbar-sub">Fugindo dos Problemas — dados de sessões dos alunos</div>
+      </div>
+      <div class="topbar-right"><div class="avatar avatar-blue">P</div></div>
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+    </div>
+  </div>
+</div>
+
+<script>(()=>{ document.documentElement.setAttribute('data-theme','dark'); })()</script>
+<script type="module">
+import { db } from "/js/firebase-config.js";
+import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { requireProfessor, renderSidebarProfessor } from "/js/auth.js";
+import { ALUNOS_POR_TURMA } from "/js/constants.js";
+
+document.documentElement.setAttribute('data-theme','dark');
+const sess = requireProfessor();
+if (!sess) throw new Error();
+renderSidebarProfessor("sidebar", "runner_analise");
+
+const TURMAS = ['8D','8E','8F','8G','8H'];
+const TIPO_LABEL = {
+  soma:'Adição', sub:'Subtração', mult:'Multiplicação', div:'Divisão',
+  quad:'Quadrado (n²)', raiz:'Raiz quadrada', quad_neg:'(−n)²',
+  cubo:'Cubo (n³)', neg:'Negativo (geral)', dupla_neg:'a − (−b)',
+};
+const UIDs_IGNORAR = ['PROFESSOR_TESTE','8D_teste1','8D_teste2'];
+
+function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function tagTurma(t){ return `<span class="tag-turma t${t}">${escH(t)}</span>`; }
+function tsStr(ts){ return new Date(ts).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+
+let _filtroTurma = 'todas';
+let _dadosGlobais = null;
+
+async function carregar() {
+  const perfisSnap = await get(ref(db, 'perfis'));
+  const perfis = perfisSnap.val() || {};
+
+  // Coletar dados de todos os alunos
+  const alunos = [];
+  for (const [uid, p] of Object.entries(perfis)) {
+    if (UIDs_IGNORAR.some(x => uid.includes(x))) continue;
+    if (!p?.turma || !p?.nome) continue;
+    const sessoes = Object.values(p.runner_sessoes || {});
+    if (!sessoes.length) continue;
+    const recorde = p.runner_record || 0;
+    const nivelMax = Math.max(...sessoes.map(s => s.nivel_max || 1));
+    const totalSessoes = sessoes.length;
+    const totalAcertos = sessoes.reduce((a,s)=>a+(s.acertos||0),0);
+    const totalErrosPorTipo = {};
+    sessoes.forEach(s => {
+      Object.entries(s.erros_por_tipo||{}).forEach(([t,n])=>{
+        totalErrosPorTipo[t] = (totalErrosPorTipo[t]||0)+n;
+      });
+    });
+    alunos.push({
+      uid, nome: p.apelido_ativo||p.nome, turma: p.turma,
+      recorde, nivelMax, totalSessoes, totalAcertos, totalErrosPorTipo,
+      ultimaSessao: Math.max(...sessoes.map(s=>s.ts||0)),
+    });
+  }
+
+  _dadosGlobais = alunos;
+  renderizar(alunos);
+}
+
+function renderizar(alunos) {
+  const filtrados = _filtroTurma === 'todas' ? alunos : alunos.filter(a=>a.turma===_filtroTurma);
+  filtrados.sort((a,b)=>b.recorde-a.recorde);
+
+  // Stats globais
+  const totalJogaram = filtrados.length;
+  const melhorRec = filtrados.length ? Math.max(...filtrados.map(a=>a.recorde)) : 0;
+  const nivelMedMax = filtrados.length ? Math.round(filtrados.reduce((s,a)=>s+a.nivelMax,0)/filtrados.length) : 0;
+  const totalSessoes = filtrados.reduce((s,a)=>s+a.totalSessoes,0);
+
+  // Erros agregados por tipo
+  const errosGlobal = {};
+  filtrados.forEach(a=>{
+    Object.entries(a.totalErrosPorTipo).forEach(([t,n])=>{
+      errosGlobal[t]=(errosGlobal[t]||0)+n;
+    });
+  });
+  const totalErros = Object.values(errosGlobal).reduce((a,b)=>a+b,0);
+  const errosOrdenados = Object.entries(errosGlobal).sort((a,b)=>b[1]-a[1]);
+
+  document.getElementById('content').innerHTML = `
+    <!-- Filtros de turma -->
+    <div class="filtros">
+      <button class="filtro-btn${_filtroTurma==='todas'?' on':''}" onclick="setFiltro('todas')">Todas as turmas</button>
+      ${TURMAS.map(t=>`<button class="filtro-btn${_filtroTurma===t?' on':''}" onclick="setFiltro('${t}')">${t}</button>`).join('')}
+    </div>
+
+    <!-- Stats gerais -->
+    <div class="ra-grid">
+      <div class="ra-stat"><b>${totalJogaram}</b><span>Alunos que jogaram</span></div>
+      <div class="ra-stat"><b>${totalSessoes}</b><span>Partidas totais</span></div>
+      <div class="ra-stat"><b>${melhorRec} pts</b><span>Melhor recorde</span></div>
+      <div class="ra-stat"><b>Nv ${nivelMedMax}</b><span>Nível médio máximo</span></div>
+    </div>
+
+    <!-- Erros por tipo -->
+    ${errosOrdenados.length ? `
+    <div class="secao-titulo">Erros por tipo de operação</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;">
+      <table class="ra-table">
+        <thead><tr>
+          <th style="width:200px">Operação</th>
+          <th>Erros</th>
+          <th style="width:180px">Proporção</th>
+          <th style="width:80px">%</th>
+        </tr></thead>
+        <tbody>
+          ${errosOrdenados.map(([tipo,n])=>`
+            <tr>
+              <td>
+                <div class="tipo-label">${escH(TIPO_LABEL[tipo]||tipo)}</div>
+              </td>
+              <td><b>${n}</b></td>
+              <td><div class="erro-bar"><div class="erro-fill" style="width:${totalErros?Math.round(n/totalErros*100):0}%"></div></div></td>
+              <td style="color:var(--text-muted)">${totalErros?Math.round(n/totalErros*100):0}%</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>` : ''}
+
+    <!-- Ranking de alunos -->
+    <div class="secao-titulo">Alunos — ranking por recorde</div>
+    ${filtrados.length===0 ? `<p style="color:var(--text-muted);font-size:13px">Nenhum aluno jogou ainda${_filtroTurma!=='todas'?' nessa turma':''}.</p>` : `
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <table class="ra-table">
+        <thead><tr>
+          <th style="width:30px">#</th>
+          <th>Aluno</th>
+          <th>Recorde</th>
+          <th>Nível máx</th>
+          <th>Partidas</th>
+          <th>Última partida</th>
+          <th>Erros principais</th>
+        </tr></thead>
+        <tbody>
+          ${filtrados.map((a,i)=>{
+            const topErros = Object.entries(a.totalErrosPorTipo).sort((x,y)=>y[1]-x[1]).slice(0,2);
+            return `<tr>
+              <td style="color:var(--text-muted);font-weight:700">${i+1}</td>
+              <td><b>${escH(a.nome)}</b>${tagTurma(a.turma)}</td>
+              <td><span class="badge-rec">${a.recorde} pts</span></td>
+              <td style="color:var(--purple);font-weight:700">Nv ${a.nivelMax}</td>
+              <td style="color:var(--text-muted)">${a.totalSessoes}</td>
+              <td style="color:var(--text-muted);font-size:12px">${tsStr(a.ultimaSessao)}</td>
+              <td style="font-size:11px;color:var(--text-muted)">${topErros.map(([t,n])=>`${escH(TIPO_LABEL[t]||t)} (${n})`).join(' · ')||'—'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`}
+  `;
+}
+
+window.setFiltro = function(turma) {
+  _filtroTurma = turma;
+  if (_dadosGlobais) renderizar(_dadosGlobais);
+  // Atualizar botões
+  document.querySelectorAll('.filtro-btn').forEach(b=>{
+    b.classList.toggle('on', b.textContent.trim()===(turma==='todas'?'Todas as turmas':turma));
+  });
+};
+
+carregar().catch(e=>{
+  document.getElementById('content').innerHTML=`<p style="color:#ef4444;padding:20px">Erro ao carregar: ${e.message}</p>`;
+});
+</script>
+</body>
+</html>

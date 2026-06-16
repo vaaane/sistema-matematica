@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Labirinto Matemático — Sistema de Matemática</title>
+<link rel="stylesheet" href="/css/main.css"/>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+
+/* área de jogo centralizada dentro do .content do sistema */
+.labi-stage{
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding:12px 16px 40px;
+  min-height:60vh;
+}
+
+/* ── Layout principal ── */
+#wrapper{
+  display:flex;
+  gap:14px;
+  align-items:flex-start;
+}
+
+/* ── Painel lateral ── */
+#side-panel{
+  width:170px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  flex-shrink:0;
+}
+.panel-box{
+  background:#0a0f1e;
+  border:1px solid #1a2a40;
+  border-radius:12px;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+.panel-title{
+  font-family:'Orbitron',sans-serif;
+  font-size:.55rem;
+  letter-spacing:3px;
+  color:#3a5a7a;
+  text-transform:uppercase;
+}
+.panel-value{
+  font-family:'Orbitron',sans-serif;
+  font-size:1.5rem;
+  font-weight:900;
+  color:#ffd166;
+  text-align:center;
+}
+#timer-display{
+  font-family:'Orbitron',sans-serif;
+  font-size:2rem;
+  font-weight:900;
+  text-align:center;
+  color:#ffd166;
+}
+#op-timer-bar-bg{
+  width:100%;height:5px;
+  background:#1a2a40;
+  border-radius:3px;
+  overflow:hidden;
+  margin-top:2px;
+}
+#op-timer-bar{
+  height:100%;
+  border-radius:3px;
+  background:#06d6a0;
+  transition:width .1s linear,background .3s;
+}
+.player-status{display:flex;flex-direction:column;gap:3px;}
+.p-lives{font-size:.95rem;letter-spacing:2px;}
+.p-powerup{font-size:.7rem;color:#ffd166;min-height:16px;}
+.rank-entry{
+  display:flex;justify-content:space-between;
+  font-size:.68rem;color:#7ee8fa;
+  padding:2px 0;border-bottom:1px solid #0d1a2a;
+}
+.rank-entry .rank-pts{font-family:'Orbitron',sans-serif;color:#ffd166;}
+
+/* ── Canvas area ── */
+#canvas-area{
+  position:relative;
+  flex-shrink:0;
+}
+canvas{
+  display:block;
+  border-radius:14px;
+  border:2px solid #0d1a2e;
+}
+#op-display{
+  position:absolute;
+  top:8px;left:50%;transform:translateX(-50%);
+  font-family:'Orbitron',sans-serif;
+  font-size:1.5rem;font-weight:900;
+  color:#ffd166;text-shadow:0 0 18px #ffd16688;
+  background:rgba(4,6,15,.8);
+  padding:5px 18px;border-radius:18px;
+  border:1px solid #ffd16633;
+  white-space:nowrap;pointer-events:none;
+}
+#feedback-text{
+  position:absolute;top:52px;left:50%;transform:translateX(-50%);
+  font-family:'Orbitron',sans-serif;
+  font-size:1.1rem;font-weight:900;
+  pointer-events:none;opacity:0;transition:opacity .12s;white-space:nowrap;
+}
+
+/* ── OVERLAY — fora do canvas, cobre tudo ── */
+#overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(4,6,15,.96);
+  z-index:9999;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:10px;
+  padding:20px;
+}
+#overlay.visible{display:flex;}
+#overlay h1{
+  font-family:'Orbitron',sans-serif;
+  font-weight:900;
+  text-align:center;
+  line-height:1.2;
+}
+#overlay h1 .big{
+  font-size:1.6rem;display:block;
+  background:linear-gradient(135deg,#7ee8fa,#ffd166);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+#overlay h1 .sub{
+  font-size:.75rem;display:block;
+  letter-spacing:3px;color:#3a5a7a;margin-top:4px;
+}
+#overlay p{
+  color:#888;font-size:.8rem;
+  text-align:center;max-width:360px;line-height:1.6;
+}
+.controls-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:6px;width:100%;max-width:400px;
+}
+.ctrl-box{
+  background:#0a0f1e;border:1px solid #1a2a40;
+  border-radius:8px;padding:8px;text-align:center;
+}
+.ctrl-box .ctrl-title{
+  font-family:'Orbitron',sans-serif;
+  font-size:.5rem;letter-spacing:2px;color:#3a5a7a;margin-bottom:4px;
+}
+.ctrl-box .ctrl-keys{font-size:.82rem;line-height:1.7;color:#aaa;}
+.mode-btns{display:flex;gap:8px;}
+.mode-btn{
+  font-family:'Orbitron',sans-serif;font-size:.7rem;font-weight:700;
+  padding:9px 18px;border:1px solid #3a5a7a;border-radius:10px;
+  background:transparent;color:#7ee8fa;cursor:pointer;letter-spacing:1px;
+  transition:all .2s;
+}
+.mode-btn:hover,.mode-btn.active{background:#0d2a45;border-color:#7ee8fa;}
+#start-btn,#restart-btn{
+  font-family:'Orbitron',sans-serif;font-size:.9rem;font-weight:700;
+  padding:12px 36px;border:none;border-radius:12px;
+  background:linear-gradient(135deg,#06d6a0,#3a86ff);
+  color:#fff;cursor:pointer;letter-spacing:2px;
+  transition:transform .1s,box-shadow .2s;
+  margin-top:4px;
+}
+#start-btn:hover,#restart-btn:hover{transform:scale(1.06);box-shadow:0 4px 20px #06d6a055;}
+.final-score{
+  font-family:'Orbitron',sans-serif;
+  font-size:1.8rem;color:#ffd166;font-weight:900;text-align:center;
+}
+.final-detail{
+  font-size:.72rem;color:#3a5a7a;text-align:center;
+  font-family:'Orbitron',sans-serif;letter-spacing:1px;
+}
+.items-row{
+  font-size:.7rem;color:#3a5a7a;text-align:center;
+}
+
+/* ── D-PAD (clicável: serve para mouse e toque) ── */
+.dpad{
+  display:grid;
+  grid-template-columns:repeat(3,var(--dp,46px));
+  grid-template-rows:repeat(3,var(--dp,46px));
+  gap:5px;
+  justify-content:center;
+  touch-action:none;
+}
+.dpad .dp-btn{
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(126,232,250,.12);
+  border:1px solid rgba(126,232,250,.38);
+  border-radius:9px;
+  color:#7ee8fa;
+  font-size:1.1rem;font-weight:700;
+  font-family:'Orbitron',sans-serif;
+  cursor:pointer;user-select:none;-webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .08s,transform .08s;
+}
+.dpad .dp-btn:active{background:rgba(126,232,250,.3);transform:scale(.93);}
+.dpad .dp-center{background:rgba(126,232,250,.04);border:none;cursor:default;}
+/* cores por jogador no duo */
+.dpad.dp-p1 .dp-btn{background:rgba(239,71,111,.14);border-color:rgba(239,71,111,.4);color:#ef476f;}
+.dpad.dp-p1 .dp-btn:active{background:rgba(239,71,111,.32);}
+.dpad.dp-p2 .dp-btn{background:rgba(255,209,102,.14);border-color:rgba(255,209,102,.4);color:#ffd166;}
+.dpad.dp-p2 .dp-btn:active{background:rgba(255,209,102,.32);}
+.dpad-label{
+  font-family:'Orbitron',sans-serif;font-size:.5rem;letter-spacing:2px;
+  text-align:center;color:#3a5a7a;margin-bottom:4px;text-transform:uppercase;
+}
+/* d-pad flutuante do mobile — escondido por padrão (só aparece no mobile) */
+#mobile-dpad{display:none;}
+
+/* ── Seletor de método de controle no duo ── */
+.ctrl-pick{display:flex;gap:6px;}
+.ctrl-pick .cp-opt{
+  flex:1;padding:9px 4px;border-radius:8px;
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.12);
+  text-align:center;cursor:pointer;transition:all .15s;user-select:none;
+}
+.ctrl-pick .cp-opt .cp-ico{font-size:1.1rem;}
+.ctrl-pick .cp-opt .cp-name{font-size:.6rem;color:#9ab;font-weight:700;margin-top:2px;font-family:'Orbitron',sans-serif;letter-spacing:1px;}
+.ctrl-pick .cp-opt.sel-p1{background:rgba(239,71,111,.18);border-color:#ef476f;}
+.ctrl-pick .cp-opt.sel-p1 .cp-name{color:#ef476f;}
+.ctrl-pick .cp-opt.sel-p2{background:rgba(255,209,102,.18);border-color:#ffd166;}
+.ctrl-pick .cp-opt.sel-p2 .cp-name{color:#ffd166;}
+.ctrl-pick .cp-opt.locked{opacity:.35;cursor:not-allowed;}
+.ctrl-pick .cp-opt.locked .cp-tag{font-size:.45rem;color:#667;display:block;margin-top:1px;}
+.ctrl-row-label{font-family:'Orbitron',sans-serif;font-size:.6rem;letter-spacing:1px;font-weight:700;margin-bottom:5px;}
+
+/* HUD compacto do mobile — escondido no desktop */
+#mobile-hud{display:none;}
+
+/* ── Coluna direita (desktop): controles ── */
+#right-panel{
+  width:170px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  flex-shrink:0;
+}
+#right-panel #desktop-dpad-box{align-items:center;}
+
+/* ── Desktop: tudo cabe na tela, sem rolagem ──
+   O tabuleiro reduz só o necessário para caber na altura disponível
+   (descontando a topbar do sistema ~64px e respiros). Mantém quadrado. */
+@media (min-width:761px){
+  .labi-stage{padding:10px 16px;}
+  #wrapper{
+    height:calc(100vh - 64px - 24px);
+    max-height:calc(100vh - 64px - 24px);
+    align-items:center;
+  }
+  #canvas-area{
+    height:100%;
+    display:flex;align-items:center;justify-content:center;
+  }
+  #gameCanvas{
+    height:100%;
+    width:auto;
+    max-width:100%;
+    /* quadrado: a altura manda, a largura acompanha */
+    aspect-ratio:1/1;
+  }
+  /* painéis acompanham a altura e rolam internamente só se preciso (raro) */
+  #side-panel,#right-panel{
+    max-height:100%;
+    overflow-y:auto;
+  }
+}
+
+/* ════════════════════════════════════════════════
+   MOBILE — retrato. Tabuleiro cheio, HUD em 1 linha,
+   d-pad flutuando no rodapé fora do mapa.
+   ════════════════════════════════════════════════ */
+@media (max-width:760px){
+  .labi-stage{padding:6px 6px 10px;}
+  #wrapper{flex-direction:column;gap:8px;width:100%;align-items:stretch;}
+  /* painel lateral some no mobile (vira HUD em linha) */
+  #side-panel{display:none;}
+  /* HUD em uma linha */
+  #mobile-hud{
+    display:flex;align-items:center;gap:10px;
+    padding:4px 6px;font-family:'Orbitron',sans-serif;
+  }
+  #mobile-hud .mh-item{display:flex;align-items:center;gap:4px;font-size:.8rem;font-weight:700;}
+  #mobile-hud .mh-nivel{color:#7ee8fa;}
+  #mobile-hud .mh-acertos{color:#ffd166;}
+  #mobile-hud .mh-vidas{margin-left:auto;font-size:.9rem;letter-spacing:1px;}
+  #mobile-hud .mh-bar-bg{width:100%;height:5px;background:#1a2a40;border-radius:3px;overflow:hidden;margin-top:2px;}
+  #mobile-hud .mh-bar{height:100%;background:#06d6a0;border-radius:3px;transition:width .1s linear,background .3s;}
+  #mobile-hud-wrap{display:flex;flex-direction:column;gap:2px;}
+  /* canvas ocupa a largura, quadrado */
+  #canvas-area{width:100%;}
+  canvas{width:100%!important;height:auto!important;aspect-ratio:1/1;}
+  /* d-pad flutuante no rodapé, fora do mapa */
+  #mobile-dpad{
+    display:flex;justify-content:center;
+    padding:8px 0 4px;
+  }
+  #mobile-dpad .dpad{--dp:54px;}
+  /* esconde controls-grid do teclado na tela inicial mobile */
+  .controls-grid{display:none;}
+}
+</style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar"></aside>
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">🧩 Labirinto Matemático</div>
+      <div class="topbar-sub" id="topbar-sub"></div>
+    </div>
+    <div class="topbar-right">
+      <div class="avatar-wrap" onclick="window.location.href='/aluno/perfil.html'">
+        <div class="avatar" id="topbar-avatar-circle" style="overflow:hidden;padding:0"></div>
+      </div>
+    </div>
+  </div>
+  <div class="content">
+   <div class="labi-stage">
+
+<!-- OVERLAY — fora de tudo, cobre a tela inteira -->
+<div id="overlay" class="visible">
+  <h1>
+    <span class="big">🧩 LABIRINTO</span>
+    <span class="big">MATEMÁTICO</span>
+    <span class="sub">— colaborativo —</span>
+  </h1>
+  <p>
+    Passe pelo bloco com a resposta certa! Cada operação dura <b style="color:#ffd166">10s</b>.<br>
+    Errou ou ficou fora da 🟢 zona segura = <b style="color:#ef476f">−1 vida</b>.<br>
+    <span style="color:#06d6a0">🤝 DUPLA</span> = os dois tocam juntos → pontos dobrados!
+  </p>
+  <div class="controls-grid">
+    <div class="ctrl-box">
+      <div class="ctrl-title">🩷 Jogador 1</div>
+      <div class="ctrl-keys">W A S D — mover</div>
+    </div>
+    <div class="ctrl-box">
+      <div class="ctrl-title">💛 Jogador 2</div>
+      <div class="ctrl-keys">↑ ← ↓ → — mover</div>
+    </div>
+  </div>
+  <div class="items-row">👟 Velocidade &nbsp;|&nbsp; 🛡️ Escudo &nbsp;|&nbsp; ⭐ x2 pts &nbsp;|&nbsp; 💣 Bomba</div>
+  <div class="mode-btns">
+    <button class="mode-btn active" id="btn-solo" onclick="selectMode('solo')">👤 Solo</button>
+    <button class="mode-btn" id="btn-duo" onclick="selectMode('duo')">👥 Dupla</button>
+  </div>
+  <!-- Seletor de controle no duo (preenchido por JS; oculto no solo) -->
+  <div id="duo-ctrl-pick" style="display:none;width:100%;max-width:400px;margin-top:4px;"></div>
+  <button id="start-btn" onclick="startGame()">▶ JOGAR</button>
+</div>
+
+<!-- Layout do jogo -->
+<div id="wrapper">
+
+  <!-- HUD compacto (só mobile) -->
+  <div id="mobile-hud-wrap">
+    <div id="mobile-hud">
+      <span class="mh-item mh-nivel">NÍVEL <span id="mh-nivel-val">1</span></span>
+      <span class="mh-item mh-acertos">⭐ <span id="mh-acertos-val">0</span></span>
+      <span class="mh-item mh-vidas" id="mh-vidas-val">❤️❤️❤️</span>
+    </div>
+    <div class="mh-bar-bg"><div class="mh-bar" id="mh-bar" style="width:100%"></div></div>
+  </div>
+
+  <!-- Painel lateral (desktop) -->
+  <div id="side-panel">
+    <div class="panel-box">
+      <div class="panel-title">🎮 Nível</div>
+      <div id="timer-display">1</div>
+    </div>
+    <div class="panel-box">
+      <div class="panel-title">🔢 Operação (10s)</div>
+      <div id="op-timer-bar-bg"><div id="op-timer-bar" style="width:100%"></div></div>
+    </div>
+    <div class="panel-box">
+      <div class="panel-title">⭐ Acertos</div>
+      <div class="panel-value" id="score-display">0</div>
+    </div>
+    <div class="panel-box" id="p1-box">
+      <div class="panel-title" style="color:#ef476f">P1 — WASD</div>
+      <div class="player-status">
+        <div class="p-lives" id="p1-lives">❤️❤️❤️</div>
+        <div class="p-powerup" id="p1-powerup"></div>
+      </div>
+    </div>
+    <div class="panel-box" id="p2-box" style="display:none;">
+      <div class="panel-title" style="color:#ffd166">P2 — Setas</div>
+      <div class="player-status">
+        <div class="p-lives" id="p2-lives">❤️❤️❤️</div>
+        <div class="p-powerup" id="p2-powerup"></div>
+      </div>
+    </div>
+    <!-- D-pads movidos para a coluna direita (#right-panel) -->
+    <div class="panel-box">
+      <div class="panel-title">🏆 Solo</div>
+      <div id="rank-solo"><div style="color:#3a5a7a;font-size:.68rem;text-align:center">—</div></div>
+    </div>
+    <div class="panel-box">
+      <div class="panel-title">👥 Dupla</div>
+      <div id="rank-duo"><div style="color:#3a5a7a;font-size:.68rem;text-align:center">—</div></div>
+    </div>
+  </div>
+
+  <!-- Canvas -->
+  <div id="canvas-area">
+    <canvas id="gameCanvas" width="560" height="560"></canvas>
+    <div id="op-display">? + ? = ?</div>
+    <div id="feedback-text"></div>
+  </div>
+
+  <!-- Coluna direita (desktop): controles na tela -->
+  <div id="right-panel">
+    <div class="panel-box" id="desktop-dpad-box">
+      <div id="desktop-dpads"></div>
+    </div>
+  </div>
+
+  <!-- D-pad flutuante (só mobile) -->
+  <div id="mobile-dpad"></div>
+
+</div>
+
+   </div><!-- /labi-stage -->
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>(()=>{ document.documentElement.setAttribute('data-theme','dark'); })()</script>
+<script type="module">
+
+// ══════════════════════════════════════════════════
+//  INTEGRAÇÃO COM O SISTEMA (login, sidebar, presença, avatar)
+//  Padrão copiado de aluno/runner.html
+// ══════════════════════════════════════════════════
+import { db } from "/js/firebase-config.js";
+import { ref, get, update as fbUpdate, push as fbPush } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
+import { adicionarXP } from "/js/db.js";
+import { avatarUrl, avatarConfigDefault } from "/js/gamificacao.js";
+
+document.documentElement.setAttribute('data-theme','dark');
+const sess = requireAluno();
+if (!sess) throw new Error();
+const { alunos, turma } = sess;
+const alunoNome = alunos[0];
+const uid = (turma + '_' + alunoNome).replace(/[.#$[\]/\s]/g, '_');
+
+renderSidebarAluno("sidebar", "jogos");
+injetarFaixaDuelo();
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+document.getElementById("topbar-sub").textContent = isModoTeste() ? '🧪 Modo Teste' : `Turma ${turma}`;
+
+(async () => { try {
+  const { getPerfil } = await import('/js/db.js');
+  const _p = await getPerfil(uid);
+  const _c = document.getElementById('topbar-avatar-circle');
+  if (_c) {
+    const _url = avatarUrl(_p.avatar || avatarConfigDefault());
+    const _letra = (alunoNome||'?')[0].toUpperCase();
+    _c.innerHTML = `<div style="width:100%;height:100%;position:relative;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#7F77DD,#00d4ff)"><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;z-index:0">${_letra}</span><img src="${_url}" alt="" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:1;border-radius:50%" onerror="this.style.display='none'"></div>`;
+  }
+} catch(_) {} })();
+
+iniciarNotifDueloGlobal();
+
+(async () => { try {
+  const { iniciarPresenca } = await import('/js/presenca.js');
+  const _dispSnap = await get(ref(db, `perfis/${uid}/duelos_disponivel`));
+  const _disp = _dispSnap.val() !== false;
+  await iniciarPresenca(uid, { nome: alunoNome, turma, status: _disp ? 'disponivel' : 'indisponivel', pagina: 'navegando' });
+  const { initDueloAvail } = await import('/js/duelo_avail.js');
+  await initDueloAvail(uid);
+} catch(e) {} })();
+
+// Recorde do labirinto (carregado do Firebase)
+let recordeAtual = 0;
+(async () => { try {
+  const snap = await get(ref(db, `perfis/${uid}/labirinto_record`));
+  recordeAtual = snap.val() || 0;
+  if (window._labiOnRecordeLoaded) window._labiOnRecordeLoaded(recordeAtual);
+} catch(_) {} })();
+
+// ── Ponte para o módulo do jogo (escopos de module são isolados) ──
+window._labiAluno = { uid, nome: alunoNome, turma };
+window._labiGetRecorde = () => recordeAtual;
+
+// Salva o recorde + credita XP (mesma fórmula do runner). Retorna XP ganho.
+window._labiSalvarRecorde = async function(pontos){
+  if (pontos <= recordeAtual) return 0;
+  const xpNovo   = Math.min(Math.max(Math.floor(pontos / 20), 5), 40);
+  const xpAntigo = Math.min(Math.max(Math.floor(recordeAtual / 20), 0), 40);
+  const xpDelta  = Math.max(xpNovo - xpAntigo, 5);
+  try {
+    await fbUpdate(ref(db, `perfis/${uid}`), { labirinto_record: pontos });
+    await adicionarXP(uid, xpDelta);
+    recordeAtual = pontos;
+  } catch(e){ console.error('[labirinto] salvarRecorde', e); }
+  return xpDelta;
+};
+
+// Grava a sessão (cada partida) para análise da professora.
+window._labiSalvarSessao = async function(pontos, nivelMax, acertos, modo){
+  try {
+    await fbPush(ref(db, `perfis/${uid}/labirinto_sessoes`), {
+      ts: Date.now(),
+      pontos, nivel_max: nivelMax, acertos, modo,
+    });
+  } catch(e){ console.warn('[labirinto] salvarSessao', e); }
+};
+
+// Lê os top-5 recordes individuais (perfis/*/labirinto_record).
+window._labiLerRanking = async function(){
+  const snap = await get(ref(db, 'perfis'));
+  const perfis = snap.val() || {};
+  return Object.entries(perfis)
+    .map(([k,p]) => ({ nome: (p && (p.apelido_ativo||p.nome)) || k, rec: (p && p.labirinto_record) || 0 }))
+    .filter(x => x.rec > 0)
+    .sort((a,b) => b.rec - a.rec)
+    .slice(0,5);
+};
+
+</script>
+<script type="module">
+
+// ══════════════════════════════════════════════════
+//  ÁUDIO
+// ══════════════════════════════════════════════════
+let audioCtx=null;
+function ga(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
+function tone(f,d,v=.1,t='square',w=0){
+  try{const c=ga(),ts=c.currentTime+w;const o=c.createOscillator(),g=c.createGain();
+  o.type=t;o.frequency.setValueAtTime(f,ts);g.gain.setValueAtTime(v,ts);
+  g.gain.exponentialRampToValueAtTime(.001,ts+d);o.connect(g);g.connect(c.destination);o.start(ts);o.stop(ts+d+.02);}catch(e){}}
+function sfxCorrect(){[523,659,784].forEach((f,i)=>tone(f,.1,.13,'square',i*.07));}
+function sfxWrong(){tone(150,.3,.15,'sawtooth');tone(100,.2,.12,'sawtooth',.15);}
+function sfxExplosion(){tone(80,.4,.2,'sawtooth');tone(55,.3,.15,'sawtooth',.12);}
+function sfxItem(){[440,554,659].forEach((f,i)=>tone(f,.07,.1,'sine',i*.05));}
+function sfxWallify(){tone(200,.15,.1,'sawtooth');tone(150,.2,.1,'sawtooth',.1);}
+function sfxBomb(){tone(300,.05,.15,'square');tone(100,.4,.2,'sawtooth',.05);}
+function sfxTick(){tone(880,.03,.06,'square');}
+
+// ══════════════════════════════════════════════════
+//  CONSTANTES
+// ══════════════════════════════════════════════════
+const canvas=document.getElementById('gameCanvas');
+const ctx=canvas.getContext('2d');
+const W=canvas.width,H=canvas.height;
+const CELL=28;
+const COLS=Math.floor(W/CELL); // 20
+const ROWS=Math.floor(H/CELL); // 20
+const MAX_LIVES=3;
+  // 2 minutos
+const OP_TIME=10;      // cada operação dura 5s
+const WALL_GROW_INTERVAL=10;
+const SAFE_COL=Math.floor(COLS/2);
+const SAFE_ROW=Math.floor(ROWS/2); // nova parede a cada 10s
+
+
+// ══════════════════════════════════════════════════
+//  ESTADO
+// ══════════════════════════════════════════════════
+let mode='solo';
+let gameRunning=false,frameId=null,lastTime=0;
+let score,opTimeLeft,totalCorrect,totalErrors,streak,streakSpeed,specialQ,teleportMoveTimer,teleportPending,_wasRunning=false,soloCount=[0,0];
+let walls,numberBlocks,items,particles,floatTexts,bonusBlocks,fakeWalls,teleports;
+let players;
+let currentQ,wallGrowTimer,itemSpawnTimer,level;
+
+function selectMode(m){
+  mode=m;
+  document.getElementById('btn-solo').classList.toggle('active',m==='solo');
+  document.getElementById('btn-duo').classList.toggle('active',m==='duo');
+  document.getElementById('p2-box').style.display=m==='duo'?'':'none';
+  const p2wrap=document.getElementById('p2-color-wrap');
+  if(p2wrap)p2wrap.style.display=m==='duo'?'':'none';
+  }
+
+// ══════════════════════════════════════════════════
+//  PERGUNTA
+// ══════════════════════════════════════════════════
+function makeQ(lv){
+  // Todas as operações disponíveis desde o início
+  // Números e complexidade crescem com o nível
+
+  // Pool de geradores por tipo
+  const generators = [];
+
+  // ── Subtração com resultado negativo ─────────────────────────
+  generators.push(()=>{
+    const scale = Math.min(lv, 8);
+    const b = 2 + Math.floor(Math.random()*(2+scale));
+    const a = 1 + Math.floor(Math.random()*(b-1)); // a < b → resultado negativo
+    return { label:`${a} − ${b}`, answer:a-b, type:'sub' };
+  });
+
+  // ── Multiplicação com negativos ───────────────────────────────
+  generators.push(()=>{
+    const scale = Math.min(lv, 8);
+    const a = 2 + Math.floor(Math.random()*(2+scale));
+    const b = 2 + Math.floor(Math.random()*(2+scale));
+    const sa = Math.random()<.5?-1:1;
+    const sb = lv>=3?(Math.random()<.5?-1:1):1;
+    const res = sa*a * sb*b;
+    const la = sa===-1?`(−${a})`:`${a}`;
+    const lb = sb===-1?`(−${b})`:`${b}`;
+    return { label:`${la} × ${lb}`, answer:res, type:'mult' };
+  });
+
+  // ── Divisão com negativos ─────────────────────────────────────
+  generators.push(()=>{
+    const scale = Math.min(lv, 8);
+    const b = 2 + Math.floor(Math.random()*(2+scale));
+    const q = 2 + Math.floor(Math.random()*(2+scale));
+    const sa = Math.random()<.5?-1:1;
+    const sb = lv>=3?(Math.random()<.5?-1:1):1;
+    const a = sa*sb * b * q; // garante divisão exata
+    const res = (sa*sb*b*q) / (sb*b);
+    const la = a<0?`(${a})`:`${a}`;
+    const lb = sb===-1?`(−${b})`:`${b}`;
+    return { label:`${la} ÷ ${lb}`, answer:Math.round(res), type:'div' };
+  });
+
+  // ── Potência (nível 3+) ──────────────────────────────────────────
+  if(lv>=3) generators.push(()=>{
+    const roll=Math.random();
+    // Expoente 0: base 1-10, resultado sempre 1
+    if(roll<0.15){
+      const base=1+Math.floor(Math.random()*10);
+      return{label:`${base}⁰`,answer:1,type:'pow'};
+    }
+    // Expoente 1: base 1-10, resultado = base
+    if(roll<0.30){
+      const base=1+Math.floor(Math.random()*10);
+      return{label:`${base}¹`,answer:base,type:'pow'};
+    }
+    // Expoente 2: base cresce com nível
+    if(roll<0.65||lv<5){
+      const maxBase=lv<=4?6:lv<=7?10:12;
+      const base=2+Math.floor(Math.random()*(maxBase-1));
+      return{label:`${base}²`,answer:base*base,type:'pow'};
+    }
+    // Expoente 3: só bases 1,2,3 no início; depois cresce
+    const maxBase3=lv<=6?3:lv<=9?5:7;
+    const base=1+Math.floor(Math.random()*maxBase3);
+    return{label:`${base}³`,answer:base*base*base,type:'pow'};
+  });
+
+  // ── Potência base negativa (nível 5+) ─────────────────────────
+  if(lv>=5) generators.push(()=>{
+    const roll=Math.random();
+    if(roll<0.4){
+      // Quadrado de negativo
+      const maxBase=lv<=7?5:8;
+      const base=2+Math.floor(Math.random()*(maxBase-1));
+      return{label:`(−${base})²`,answer:base*base,type:'negpow'};
+    } else {
+      // Cubo de negativo — só bases 1,2,3
+      const maxBase=lv<=7?3:4;
+      const base=1+Math.floor(Math.random()*maxBase);
+      return{label:`(−${base})³`,answer:-(base*base*base),type:'negpow'};
+    }
+  });
+
+  // ── Raiz quadrada (nível 5+) — positiva e negativa ───────────
+  if(lv>=5) generators.push(()=>{
+    const squares = lv<=6?[4,9,16,25,36]:lv<=8?[4,9,16,25,36,49,64,81,100]:[4,9,16,25,36,49,64,81,100,121,144];
+    const n   = squares[Math.floor(Math.random()*squares.length)];
+    const ans = Math.round(Math.sqrt(n));
+    // Nível 7+: 30% de chance de ser raiz negativa (−√n)
+    if(lv>=7&&Math.random()<0.3){
+      return{label:`−√${n}`,answer:-ans,type:'sqrt'};
+    }
+    return { label:`√${n}`, answer:ans, type:'sqrt' };
+  });
+
+  // ── Encadeada simples (nível 7+) ──────────────────────────────
+  if(lv>=7) generators.push(()=>{
+    const templates = [
+      ()=>{ const a=2+Math.floor(Math.random()*6),b=2+Math.floor(Math.random()*8); return {label:`${a}² − ${b}`,answer:a*a-b}; },
+      ()=>{ const a=2+Math.floor(Math.random()*5),b=1+Math.floor(Math.random()*6); return {label:`${a}² + ${b}`,answer:a*a+b}; },
+      ()=>{ const a=2+Math.floor(Math.random()*5),b=2+Math.floor(Math.random()*4),c=1+Math.floor(Math.random()*8); return {label:`${a} × ${b} − ${c}`,answer:a*b-c}; },
+      ()=>{ const a=2+Math.floor(Math.random()*5),b=2+Math.floor(Math.random()*4),c=1+Math.floor(Math.random()*8); return {label:`${a} × ${b} + ${c}`,answer:a*b+c}; },
+      ()=>{ const sq=[4,9,16,25,36],n=sq[Math.floor(Math.random()*sq.length)],r=Math.sqrt(n),b=2+Math.floor(Math.random()*4); return {label:`√${n} + ${b}`,answer:r+b}; },
+      ()=>{ const a=2+Math.floor(Math.random()*4),b=1+Math.floor(Math.random()*5); return {label:`(−${a})² + ${b}`,answer:a*a+b}; },
+      ()=>{ const a=2+Math.floor(Math.random()*4),b=1+Math.floor(Math.random()*10); return {label:`(−${a})² − ${b}`,answer:a*a-b}; },
+    ];
+    const t = templates[Math.floor(Math.random()*templates.length)]();
+    return { ...t, type:'chain' };
+  });
+
+  // ── Fração simples (nível 9+) ─────────────────────────────────
+  if(lv>=9) generators.push(()=>{
+    const fracs = [
+      {n:1,d:2,label:'½'},{n:1,d:4,label:'¼'},
+      {n:1,d:3,label:'⅓'},{n:3,d:4,label:'¾'},
+    ];
+    const fr = fracs[Math.floor(Math.random()*fracs.length)];
+    // Garantir divisão exata
+    const multiples = [];
+    for(let m=2;m<=24;m++) if((m*fr.n)%fr.d===0) multiples.push(m);
+    if(!multiples.length) return generators[0](); // fallback
+    const base = multiples[Math.floor(Math.random()*multiples.length)];
+    const usenegative = lv>=10 && Math.random()<.4;
+    const val = usenegative ? -base : base;
+    const ans = Math.round(val * fr.n / fr.d);
+    const label = usenegative ? `${fr.label} de (−${base})` : `${fr.label} de ${base}`;
+    return { label, answer:ans, type:'frac' };
+  });
+
+  // Selecionar gerador aleatório disponível
+  const q = generators[Math.floor(Math.random()*generators.length)]();
+  return q;
+}
+
+function makeDecoys(answer, count, qtype){
+  const set = new Set();
+
+  // Decoys inteligentes por tipo
+  if(qtype==='pow'||qtype==='negpow'){
+    // Para potências: incluir base, expoente, base*exp, resposta±variação
+    const near = [answer-1,answer+1,answer-4,answer+4,answer*2,Math.round(Math.sqrt(Math.abs(answer)))];
+    near.forEach(v=>{ if(v!==answer)set.add(v); });
+  } else if(qtype==='sqrt'){
+    // Para raízes: incluir o quadrado, answer±1, answer*2
+    const near = [answer*answer, answer+1, answer-1, answer+2, answer*2, answer+3];
+    near.forEach(v=>{ if(v>0&&v!==answer)set.add(v); });
+  } else if(qtype==='chain'){
+    // Encadeadas: valores próximos incluindo erros comuns
+    const near = [answer+1,answer-1,answer+2,answer-2,answer+5,answer-5,answer*2,-answer];
+    near.forEach(v=>{ if(v!==answer)set.add(v); });
+  } else if(qtype==='frac'){
+    // Frações: incluir o dobro, metade, resultado positivo se negativo
+    const near = [answer*2, Math.round(answer/2), -answer, answer+1, answer-1, answer+2];
+    near.forEach(v=>{ if(v!==answer)set.add(v); });
+  } else {
+    // Padrão: variações próximas da resposta, incluindo erro de sinal
+    const range = Math.max(3, Math.min(Math.floor(Math.abs(answer)*.3), 12));
+    for(let d=1;d<=range*2&&set.size<count+4;d++){
+      const v1=answer+d; set.add(v1);
+      const v2=answer-d; set.add(v2);
+    }
+    if(answer!==0) set.add(-answer); // erro de sinal comum
+  }
+
+  set.delete(answer);
+  const arr=[...set];
+  for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
+  return arr.slice(0,count);
+}
+
+
+
+function isWall(col,row){
+  return walls.some(w=>w.col===col&&w.row===row);
+}
+
+function freeCell(){
+  const occ=new Set();
+  walls.forEach(w=>occ.add(`${w.col},${w.row}`));
+  fakeWalls.forEach(w=>occ.add(`${w.col},${w.row}`));
+  teleports.forEach(t=>occ.add(`${t.col},${t.row}`));
+  numberBlocks.forEach(b=>occ.add(`${b.col},${b.row}`));
+  items.forEach(i=>occ.add(`${i.col},${i.row}`));
+  players.forEach(p=>{
+    for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++)
+      occ.add(`${p.col+dc},${p.row+dr}`);
+  });
+  const cands=[];
+  for(let r=1;r<ROWS-1;r++)for(let c=1;c<COLS-1;c++)
+    if(!occ.has(`${c},${r}`))cands.push({col:c,row:r});
+  if(!cands.length)return null;
+  return cands[Math.floor(Math.random()*cands.length)];
+}
+
+function spawnWall(){
+  const nonPerm=walls.filter(w=>!w.permanent);
+  const total=nonPerm.length+fakeWalls.length;
+
+  // Acima de 120: para de spawnar
+  if(total>=120)return;
+
+  // Entre 80 e 120: remove o muro não-permanente mais antigo antes de adicionar
+  if(total>=80){
+    // Remover o mais antigo (primeiro da lista não-permanente)
+    const oldest=walls.findIndex(w=>!w.permanent&&!w.correct&&!w.penalty);
+    if(oldest>=0) walls.splice(oldest,1);
+  }
+
+  const cell=freeCell();
+  if(!cell)return;
+  if(Math.abs(cell.col-SAFE_COL)<=1&&Math.abs(cell.row-SAFE_ROW)<=1)return;
+  if(Math.random()<0.2){
+    fakeWalls.push({col:cell.col,row:cell.row,alpha:0});
+  } else {
+    walls.push({col:cell.col,row:cell.row,alpha:0,permanent:false});
+  }
+}
+
+function spawnBonusBlock(){
+  const cell=freeCell();
+  if(!cell)return;
+  bonusBlocks.push({col:cell.col,row:cell.row,pulse:0,life:15});
+}
+
+function spawnBorderWalls(){
+  for(let c=0;c<COLS;c++){
+    walls.push({col:c,row:0,alpha:1,permanent:true});
+    walls.push({col:c,row:ROWS-1,alpha:1,permanent:true});
+  }
+  for(let r=1;r<ROWS-1;r++){
+    walls.push({col:0,row:r,alpha:1,permanent:true});
+    walls.push({col:COLS-1,row:r,alpha:1,permanent:true});
+  }
+}
+
+function spawnNumberBlocks(){
+  if(!currentQ)return;
+  numberBlocks=[];
+  specialQ=null;
+  if(mode==='duo'){
+    const alive=players.filter(p=>!p.ghost);
+    if(alive.length===2){
+      const roll=Math.random();
+      if(roll<0.20){
+        specialQ={type:'coop',touched:new Set()};
+      } else if(roll<0.40){
+        // Balancear: escolher o jogador que teve menos rodadas solo
+        let designated;
+        if(soloCount[0]<=soloCount[1]){
+          designated=alive.find(p=>p.idx===0)||alive[0];
+        } else {
+          designated=alive.find(p=>p.idx===1)||alive[0];
+        }
+        soloCount[designated.idx]++;
+        specialQ={type:'solo',playerIdx:designated.idx,color:designated.color};
+      }
+    }
+  }
+  const count=Math.min(3+Math.floor(level/2),7);
+  const decoys=makeDecoys(currentQ.answer,count-1,currentQ.type);
+  const nums=[currentQ.answer,...decoys];
+  for(let i=nums.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[nums[i],nums[j]]=[nums[j],nums[i]];}
+
+  // Pré-calcular células livres
+  const occ=new Set();
+  walls.forEach(w=>occ.add(`${w.col},${w.row}`));
+  fakeWalls.forEach(w=>occ.add(`${w.col},${w.row}`));
+  teleports.forEach(t=>occ.add(`${t.col},${t.row}`));
+  items.forEach(i=>occ.add(`${i.col},${i.row}`));
+  // Excluir raio 2 ao redor de cada jogador para blocos não spawnarem em cima
+  players.forEach(p=>{
+    for(let dr=-2;dr<=2;dr++)for(let dc=-2;dc<=2;dc++)
+      occ.add(`${p.col+dc},${p.row+dr}`);
+  });
+  const freeCells=[];
+  for(let r=1;r<ROWS-1;r++)for(let c=1;c<COLS-1;c++)
+    if(!occ.has(`${c},${r}`))freeCells.push({col:c,row:r});
+  for(let i=freeCells.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[freeCells[i],freeCells[j]]=[freeCells[j],freeCells[i]];}
+
+  for(let i=0;i<nums.length;i++){
+    if(i>=freeCells.length)break;
+    const cell=freeCells[i];
+    occ.add(`${cell.col},${cell.row}`);
+    numberBlocks.push({
+      col:cell.col,row:cell.row,num:nums[i],
+      isAnswer:nums[i]===currentQ.answer,
+      pulse:Math.random()*Math.PI*2,
+      special:specialQ&&specialQ.type==='solo'&&nums[i]===currentQ.answer?specialQ:null,
+    });
+  }
+  if(specialQ){
+    if(specialQ.type==='coop') showFeedback('🤝 DUPLA! OS DOIS NO BLOCO!','#06d6a0');
+    else showFeedback(`🎯 P${specialQ.playerIdx+1} deve pegar!`,specialQ.color);
+  }
+}
+
+function spawnTeleports(){
+  teleports=[];
+  const a=freeCell(),b=freeCell();
+  if(!a||!b)return;
+  teleports.push({col:a.col,row:a.row,pair:1,pulse:0});
+  teleports.push({col:b.col,row:b.row,pair:2,pulse:0});
+}
+
+function spawnItem(){
+  const types=['speed','shield','star','bomb','heart'];
+  // Bomba aumenta com o nível: 2 no início, até 8 nos níveis altos
+  const bombWeight=Math.min(2+Math.floor(level/2),8);
+  const totalWeight=3+2+2+bombWeight+2;
+  const weights=[3,2,2,bombWeight,2];
+  let roll=Math.random()*totalWeight,cumul=0,type='speed';
+  for(let i=0;i<types.length;i++){cumul+=weights[i];if(roll<=cumul){type=types[i];break;}}
+  const cell=freeCell();
+  if(!cell)return;
+  items.push({col:cell.col,row:cell.row,type,life:10+Math.random()*6,pulse:0,
+    emoji:{speed:'👟',shield:'🛡️',star:'⭐',clock:'⭐',bomb:'💣',heart:'❤️'}[type]});
+}
+
+// ══════════════════════════════════════════════════
+//  JOGADOR
+// ══════════════════════════════════════════════════
+function makePlayer(col,row,color,keys,idx){
+  return{col,row,px:col*CELL+CELL/2,py:row*CELL+CELL/2,
+    color,keys,idx,lives:MAX_LIVES,
+    moveTimer:0,moveCooldown:.16,
+    shield:false,shieldTimer:0,
+    speed:false,speedTimer:0,
+    star:false,starTimer:0,
+    hasBomb:false,
+    ghost:false,
+    reviveTimer:0,
+    invincible:0,trail:[]};
+}
+
+// ══════════════════════════════════════════════════
+//  START
+// ══════════════════════════════════════════════════
+
+function wallifyAnswer(){
+  const correct=numberBlocks.find(b=>b.isAnswer);
+  if(correct){
+    walls.push({col:correct.col,row:correct.row,alpha:0,permanent:false,penalty:true});
+    sfxWallify();
+    addFloat('⏰ MURO!',correct.col*CELL+CELL/2,correct.row*CELL+CELL/2,'#ff9900');
+    spawnParticles(correct.col*CELL+CELL/2,correct.row*CELL+CELL/2,'#ff9900',10);
+  }
+}
+
+function cancelGame(){
+  gameRunning=false;
+  cancelAnimationFrame(frameId);
+  Object.keys(keys).forEach(k=>delete keys[k]);
+  resetAndShowStart();
+}
+
+function resetAndShowStart(){
+  walls=[];numberBlocks=[];items=[];particles=[];floatTexts=[];bonusBlocks=[];
+  fakeWalls=[];teleports=[];players=[];currentQ=null;
+  const ov=document.getElementById('overlay');
+  ov.innerHTML=
+    '<h1>'+
+    '<span class="big">🧩 LABIRINTO</span>'+
+    '<span class="big">MATEMÁTICO</span>'+
+    '<span class="sub">— colaborativo —</span>'+
+    '</h1>'+
+    '<p>Passe pelo bloco com a resposta certa! Cada operação dura <b style="color:#ffd166">10s</b>.<br>'+
+    'Errou ou ficou fora da 🟢 zona segura = <b style="color:#ef476f">−1 vida</b>.<br>'+
+    '<span style="color:#06d6a0">🤝 DUPLA</span> = os dois tocam juntos → pontos dobrados!</p>'+
+    '<div class="controls-grid">'+
+    '<div class="ctrl-box"><div class="ctrl-title">🩷 Jogador 1</div><div class="ctrl-keys">W A S D — mover</div></div>'+
+    '<div class="ctrl-box"><div class="ctrl-title">💛 Jogador 2</div><div class="ctrl-keys">↑ ← ↓ → — mover</div></div>'+
+    '</div>'+
+    '<div class="items-row">👟 Velocidade &nbsp;|&nbsp; 🛡️ Escudo &nbsp;|&nbsp; ⭐ x2 pts &nbsp;|&nbsp; 💣 Bomba</div>'+
+    '<div class="mode-btns">'+
+    "<button class=\"mode-btn active\" id=\"btn-solo\" onclick=\"selectMode('solo')\">👤 Solo</button>"+
+    "<button class=\"mode-btn\" id=\"btn-duo\" onclick=\"selectMode('duo')\">👥 Dupla</button>"+
+    '</div>'+
+    "<button id=\"start-btn\" onclick=\"startGame()\">▶ JOGAR</button>";
+  ov.classList.add('visible');
+  renderRanking();
+}
+
+function startGame(){
+  score=0;opTimeLeft=OP_TIME;totalCorrect=0;totalErrors=0;level=1;streak=0;streakSpeed=0;specialQ=null;teleportPending=false;_wasRunning=false;soloCount=[0,0];
+  walls=[];numberBlocks=[];items=[];particles=[];floatTexts=[];bonusBlocks=[];fakeWalls=[];teleports=[];players=[];
+  wallGrowTimer=WALL_GROW_INTERVAL;
+  itemSpawnTimer=6;
+  bonusBlocks=[];
+  teleportMoveTimer=20;
+
+  spawnBorderWalls();
+  spawnTeleports();
+
+  players=[makePlayer(3,3,'#ef476f',{up:'w',down:'s',left:'a',right:'d'},0)];
+  if(mode==='duo')players.push(makePlayer(COLS-4,ROWS-4,'#ffd166',
+    {up:'ArrowUp',down:'ArrowDown',left:'ArrowLeft',right:'ArrowRight'},1));
+
+  currentQ=makeQ(level);
+  spawnNumberBlocks();
+  document.getElementById('overlay').classList.remove('visible');
+  document.getElementById('p2-box').style.display=mode==='duo'?'':'none';
+  updateHUD();
+  gameRunning=true;lastTime=performance.now();
+  frameId=requestAnimationFrame(loop);
+}
+
+// ══════════════════════════════════════════════════
+//  LOOP
+// ══════════════════════════════════════════════════
+const keys={};
+document.addEventListener('keydown',e=>{
+  keys[e.key]=true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();
+  if(!gameRunning)return;
+});
+document.addEventListener('keyup',e=>{keys[e.key]=false;});
+window.addEventListener('blur',()=>{Object.keys(keys).forEach(k=>delete keys[k]);});
+window.addEventListener('visibilitychange',()=>{
+  // Só limpa teclas ao sair — jogo continua rodando
+  if(document.hidden) Object.keys(keys).forEach(k=>delete keys[k]);
+  // Ao voltar: resetar lastTime para evitar dt enorme
+  else if(gameRunning) lastTime=performance.now();
+});
+
+function loop(now){
+  const dt=Math.min((now-lastTime)/1000,.05);
+  lastTime=now;
+  update(dt);render();
+  if(gameRunning)frameId=requestAnimationFrame(loop);
+}
+
+function update(dt){
+  if(!gameRunning)return;
+
+  // Timer da operação
+  opTimeLeft=Math.max(0,opTimeLeft-dt);
+  if(opTimeLeft<=0){
+    // Tempo da operação acabou
+    wallifyAnswer(); // bloco certo vira muro
+    const wasSpecial=!!specialQ;
+    // Checar se jogadores estão na zona segura
+    for(const p of players){
+      if(p.ghost||p.lives<=0)continue;
+      const inSafe=Math.abs(p.col-SAFE_COL)<=1&&Math.abs(p.row-SAFE_ROW)<=1;
+      if(!inSafe){
+        if(p.shield){
+          p.shield=false;p.shieldTimer=0;
+          addFloat('🛡️ PROTEGIDO!',p.px,p.py,'#c77dff');
+        } else {
+          streak=0;streakSpeed=0;
+          p.lives=Math.max(0,p.lives-1);
+          p.invincible=1.5;
+          addFloat(wasSpecial?'🎯 FALTOU! -1❤️':'⏰ -1 ❤️',p.px,p.py,'#ff9900');
+          sfxWrong();
+        }
+      } else {
+        addFloat('🟢 SAFE!',p.px,p.py,'#06d6a0');
+      }
+    }
+    specialQ=null;
+    currentQ=makeQ(level);
+    opTimeLeft=OP_TIME;
+    spawnNumberBlocks();
+    triggerFlash('#ff9900',.4);
+    updateHUD();
+  }
+
+  // Tick sonoro nos últimos 3s da operação
+  if(opTimeLeft<=3&&Math.floor(opTimeLeft*2)!==Math.floor((opTimeLeft+dt)*2))sfxTick();
+
+  // Nível
+  const nl=Math.floor(totalCorrect/3)+1;
+  if(nl!==level){level=nl;}
+
+  // Streak: velocidade aumentada
+  if(streakSpeed>0)streakSpeed=Math.max(0,streakSpeed-dt);
+
+  // Paredes periódicas
+  wallGrowTimer-=dt;
+  if(wallGrowTimer<=0){
+    const count=Math.min(1+Math.floor(level/3),3); // max 3 por vez
+    for(let i=0;i<count;i++)spawnWall();
+    wallGrowTimer=Math.max(5,WALL_GROW_INTERVAL-level*.8);
+  }
+
+  // Blocos bônus (x2)
+  for(const b of bonusBlocks){
+    b.pulse+=.07;
+    const x=b.col*CELL,y=b.row*CELL;
+    const g=.5+.4*Math.sin(b.pulse);
+    const urgency=b.life<4?b.life/4:1;
+    ctx.save();ctx.globalAlpha=urgency;
+    ctx.shadowColor='#ffd166';ctx.shadowBlur=10+6*g;
+    ctx.fillStyle=`rgba(40,30,0,${.7+.2*g})`;
+    ctx.beginPath();ctx.roundRect(x+2,y+2,CELL-4,CELL-4,4);ctx.fill();
+    ctx.strokeStyle=`rgba(255,209,102,${.5+.3*g})`;ctx.lineWidth=1.5;ctx.stroke();
+    ctx.shadowBlur=0;
+    ctx.font=`bold ${CELL*.38}px Inter,Arial,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle=`rgba(255,209,102,${.8+.2*g})`;ctx.fillText('x2',x+CELL/2,y+CELL/2);
+    ctx.restore();
+  }
+
+  // Itens periódicos
+  itemSpawnTimer-=dt;
+  if(itemSpawnTimer<=0){
+    spawnItem();
+    itemSpawnTimer=Math.max(4,8-level*.3);
+  }
+
+  // Atualizar paredes (alpha)
+  for(const w of walls)if(w.alpha<1)w.alpha=Math.min(1,w.alpha+dt*3);
+  for(const w of fakeWalls)if(w.alpha<1)w.alpha=Math.min(1,w.alpha+dt*3);
+
+  // Atualizar itens
+  for(const it of items)it.life-=dt;
+  items=items.filter(i=>i.life>0);
+  if(items.length>10)items=items.slice(-10); // max 10 itens
+  for(const b of bonusBlocks)b.life-=dt;
+  bonusBlocks=bonusBlocks.filter(b=>b.life>0);
+  for(const t of teleports)t.pulse+=dt;
+  // Reposicionar teleportes periodicamente
+  teleportMoveTimer-=dt;
+  if(teleportMoveTimer<=0&&!teleportPending){
+    // Animação de saída: marcar como "saindo"
+    for(const t of teleports)t.leaving=true;
+    teleportPending=true;
+    setTimeout(()=>{
+      teleportPending=false;
+      if(gameRunning) spawnTeleports();
+    },600);
+    teleportMoveTimer=18+Math.random()*10;
+  }
+
+  // Partículas e floats
+  particles=particles.filter(p=>p.life>0);
+  if(particles.length>80)particles=particles.slice(-80);
+  for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=200*dt;p.life-=dt;}
+  floatTexts=floatTexts.filter(f=>f.life>0);
+  if(floatTexts.length>20)floatTexts=floatTexts.slice(-20); // limitar
+  for(const f of floatTexts){f.y-=55*dt;f.life-=dt;}
+
+  // Mover jogadores
+  let coopSolvedThisFrame=-1, coopPts=0;
+  for(const p of players){
+    if(p.ghost) continue; // fantasma não se move
+    p.moveTimer=Math.max(0,p.moveTimer-dt);
+    p.invincible=Math.max(0,p.invincible-dt);
+    if(p.shieldTimer>0){p.shieldTimer-=dt;if(p.shieldTimer<=0)p.shield=false;}
+    if(p.speedTimer>0){p.speedTimer-=dt;if(p.speedTimer<=0)p.speed=false;}
+    if(p.starTimer>0){p.starTimer-=dt;if(p.starTimer<=0)p.star=false;}
+
+    const onFire=streak>=3&&streakSpeed>0;
+    const cd=p.speed?p.moveCooldown*.5:onFire?p.moveCooldown*.7:p.moveCooldown;
+    if(p.moveTimer<=0){
+      let dc=0,dr=0;
+      if(keys[p.keys.up])       dr=-1;
+      else if(keys[p.keys.down]) dr=1;
+      else if(keys[p.keys.left]) dc=-1;
+      else if(keys[p.keys.right])dc=1;
+
+      if(dc!==0||dr!==0){
+        const nc=p.col+dc,nr=p.row+dr;
+        const wallIdx=walls.findIndex(w=>w.col===nc&&w.row===nr&&!w.permanent);
+        const isWallAhead=isWall(nc,nr);
+        // Com bomba: ao tentar andar em uma parede não-permanente, destrói ela
+        if(p.hasBomb&&isWallAhead&&wallIdx>=0){
+          walls.splice(wallIdx,1);
+          p.hasBomb=false;
+          sfxBomb();
+          spawnParticles(nc*CELL+CELL/2,nr*CELL+CELL/2,'#ff9900',18);
+          addFloat('💣 BOOM!',p.px,p.py,'#ff9900');
+          triggerFlash('#ff9900',.18);
+          updateHUD();
+          // Não move — o bloco sumiu, pode tentar de novo
+        }
+        const canMove=nc>=0&&nc<COLS&&nr>=0&&nr<ROWS&&!isWall(nc,nr);
+        if(canMove){
+          p.trail.push({x:p.px,y:p.py,life:.25});
+          if(p.trail.length>6)p.trail.shift();
+          p.col=nc;p.row=nr;
+          p.moveTimer=cd;
+          p.reviveTimer=0; // moveu — reseta timer de revive
+
+
+          // Item
+          const ii=items.findIndex(i=>i.col===nc&&i.row===nr);
+          if(ii>=0){applyItem(p,items[ii]);items.splice(ii,1);}
+          // Teleporte
+          const ti=teleports.findIndex(t=>t.col===nc&&t.row===nr);
+          if(ti>=0){
+            const dest=teleports[1-ti]; // o outro portal
+            if(dest&&dest.col>0&&dest.col<COLS-1&&dest.row>0&&dest.row<ROWS-1&&!isWall(dest.col,dest.row)){
+              p.col=dest.col;p.row=dest.row;
+              p.px=dest.col*CELL+CELL/2;p.py=dest.row*CELL+CELL/2;
+              spawnParticles(dest.col*CELL+CELL/2,dest.row*CELL+CELL/2,'#c77dff',14);
+              addFloat('🌀',p.px,p.py,'#c77dff');
+              p.moveTimer=.5;
+            }
+          }
+
+          // Bloco bônus
+          const bni=bonusBlocks.findIndex(b=>b.col===nc&&b.row===nr);
+          if(bni>=0){
+            bonusBlocks.splice(bni,1);
+            p.star=true;p.starTimer=8;
+            sfxItem();addFloat('⭐ x2 POR 8s!',p.px,p.py,'#ffd166');
+            spawnParticles(nc*CELL+CELL/2,nr*CELL+CELL/2,'#ffd166',12);
+          }
+
+          // Bloco numérico
+          const bi=numberBlocks.findIndex(b=>b.col===nc&&b.row===nr);
+          if(bi>=0){
+            const b=numberBlocks[bi];
+            if(b.isAnswer&&specialQ&&specialQ.type==='solo'&&specialQ.playerIdx!==p.idx){
+              // Solo: jogador errado tentou pegar — não pode
+              addFloat('🚫 Não é seu!',p.px,p.py,'#ef476f');
+              p.col=Math.max(1,Math.min(COLS-2,p.col-dc));p.row=Math.max(1,Math.min(ROWS-2,p.row-dr));
+            } else if(b.isAnswer&&specialQ&&specialQ.type==='coop'){
+              // Cooperativa: marcar que esse jogador chegou no bloco
+              if(!specialQ.touched)specialQ.touched=new Set();
+              if(!specialQ.touched.has(p.idx)){
+                // Primeira vez que esse jogador toca — registra
+                specialQ.touched.add(p.idx);
+                addFloat('✓ aguarda parceiro!',p.px,p.py,'#06d6a0');
+              }
+              // Verificar se os dois já tocaram
+              const allTouched=players.filter(pl=>!pl.ghost).every(pl=>specialQ.touched.has(pl.idx));
+              if(!allTouched){
+                // Volta um passo — fica na borda do bloco esperando o parceiro
+                p.col=Math.max(1,Math.min(COLS-2,p.col-dc));p.row=Math.max(1,Math.min(ROWS-2,p.row-dr));
+              }
+              if(allTouched){
+                numberBlocks.splice(bi,1);
+                streak++;
+                const pts=(p.star?2:1)*(streak>=3?2:1)*2;
+                score+=pts;totalCorrect++;
+                sfxCorrect();tone(784,.15,.18,'square',.1);
+                addFloat(`🤝 +${pts}!`,b.col*CELL+CELL/2,b.row*CELL+CELL/2,'#06d6a0');
+                players.forEach(pl=>spawnParticles(pl.px,pl.py,'#06d6a0',14));
+                triggerFlash('#06d6a0',.35);
+                const wallCol=b.col,wallRow=b.row;
+                setTimeout(()=>{if(gameRunning)walls.push({col:wallCol,row:wallRow,alpha:0,permanent:false,correct:true});},400);
+                if(totalCorrect%3===0)spawnBonusBlock();
+                currentQ=makeQ(level);opTimeLeft=OP_TIME;specialQ=null;
+                spawnNumberBlocks();
+                showFeedback('🤝 DUPLA! x2 pts','#06d6a0');
+                updateHUD();
+              }
+            } else if(b.isAnswer){
+              // CERTO! — remove o bloco imediatamente
+              numberBlocks.splice(bi,1);
+              streak++;
+              const pts=(p.star?2:1)*(streak>=3?2:1);
+              score+=pts;totalCorrect++;
+              if(streak===3){
+                streakSpeed=8;
+                showFeedback('🔥 EM CHAMAS! x2 pts!','#ff9900');
+                triggerFlash('#ff6600',.2);
+                // Som simples de "em chamas" — sem loop de notas
+                tone(659,.08,.15,'square');tone(784,.1,.15,'square',.1);
+              } else if(streak>3){
+                streakSpeed=Math.max(streakSpeed,5);
+              }
+              sfxCorrect();
+              addFloat(`+${pts}`,p.px,p.py,'#06d6a0');
+              spawnParticles(nc*CELL+CELL/2,nr*CELL+CELL/2,'#06d6a0',16);
+              // Muro aparece após 400ms — jogador já saiu da célula
+              const wallCol=b.col,wallRow=b.row;
+              setTimeout(()=>{
+                if(gameRunning) walls.push({col:wallCol,row:wallRow,alpha:0,permanent:false,correct:true});
+              },400);
+              if(totalCorrect%3===0){spawnBonusBlock();}
+              currentQ=makeQ(level);
+              opTimeLeft=OP_TIME;
+              specialQ=null;
+              spawnNumberBlocks();
+              showFeedback('✓ CERTO!','#06d6a0');
+              triggerFlash('#06d6a0',.25);
+            } else {
+              numberBlocks.splice(bi,1);
+              totalErrors++;
+              streak=0;streakSpeed=0;
+              sfxExplosion();
+              spawnParticles(nc*CELL+CELL/2,nr*CELL+CELL/2,'#ef476f',16);
+              addFloat('💥 ERRADO!',p.px,p.py,'#ef476f');
+              triggerFlash('#ef476f',.3);
+              showFeedback('✗ ERRADO!','#ef476f');
+              if(p.shield){
+                p.shield=false;p.shieldTimer=0;
+                addFloat('🛡️ BLOQUEOU!',p.px,p.py,'#c77dff');
+              } else {
+                p.lives=Math.max(0,p.lives-1);
+                p.invincible=1.5;
+                addFloat('-1 ❤️',p.px,p.py,'#ef476f');
+                sfxWrong();
+              }
+              // Se não sobrou bloco correto, gera nova operação
+              if(!numberBlocks.some(b=>b.isAnswer)&&gameRunning){
+                currentQ=makeQ(level);opTimeLeft=OP_TIME;specialQ=null;
+                spawnNumberBlocks();
+              }
+            }
+            updateHUD();
+          }
+        }
+      }
+    }
+
+    // Suavizar posição visual — garantir que col/row estão dentro dos limites
+    p.col=Math.max(1,Math.min(COLS-2,p.col));
+    p.row=Math.max(1,Math.min(ROWS-2,p.row));
+    const tx=p.col*CELL+CELL/2,ty=p.row*CELL+CELL/2;
+    p.px+=(tx-p.px)*.3;p.py+=(ty-p.py)*.3;
+    p.trail=p.trail.filter(t=>t.life>0);
+    for(const t of p.trail)t.life-=dt;
+  }
+
+  // Processar acerto coop (após loop de jogadores para evitar índice inválido)
+  if(coopSolvedThisFrame>=0&&coopSolvedThisFrame<numberBlocks.length){
+    const b=numberBlocks[coopSolvedThisFrame];
+    numberBlocks.splice(coopSolvedThisFrame,1);
+    streak++;
+    const pts=coopPts;
+    score+=pts;totalCorrect++;
+    sfxCorrect();tone(784,.15,.18,'square',.1);
+    addFloat(`🤝 +${pts}!`,b.col*CELL+CELL/2,b.row*CELL+CELL/2,'#06d6a0');
+    players.forEach(pl=>spawnParticles(pl.px,pl.py,'#06d6a0',14));
+    triggerFlash('#06d6a0',.35);
+    const wc=b.col,wr=b.row;
+    setTimeout(()=>{if(gameRunning)walls.push({col:wc,row:wr,alpha:0,permanent:false,correct:true});},400);
+    if(totalCorrect%3===0)spawnBonusBlock();
+    currentQ=makeQ(level);opTimeLeft=OP_TIME;specialQ=null;
+    spawnNumberBlocks();
+    showFeedback('🤝 DUPLA! x2 pts','#06d6a0');
+    updateHUD();
+  }
+
+  // Checar morte
+  for(const p of players){
+    if(p.lives<=0&&!p.ghost){
+      p.ghost=true;
+      if(mode==='duo') addFloat('💀 MORREU! Parceiro revive!',p.px,p.py,'#ef476f');
+    }
+  }
+  // Reviver parceiro: jogador vivo precisa ficar 2s parado em cima do fantasma
+  if(mode==='duo'){
+    const alive=players.filter(p=>!p.ghost&&p.lives>1);
+    const ghosts=players.filter(p=>p.ghost);
+    for(const a of alive){
+      let onGhost=false;
+      for(const g of ghosts){
+        if(a.col===g.col&&a.row===g.row){
+          onGhost=true;
+          a.reviveTimer+=dt;
+          // Feedback de progresso
+          const pct=Math.floor((a.reviveTimer/2)*100);
+          if(Math.floor(a.reviveTimer*4)!==Math.floor((a.reviveTimer-dt)*4)){
+            addFloat(`💖 ${pct}%`,g.px,g.py-10,'#06d6a0');
+          }
+          if(a.reviveTimer>=2){
+            g.ghost=false;g.lives=1;g.invincible=2;
+            a.lives=Math.max(0,a.lives-1);a.invincible=1;
+            a.reviveTimer=0;
+            sfxCorrect();
+            addFloat('💖 REVIVEU!',g.px,g.py,'#06d6a0');
+            addFloat('-1 ❤️',a.px,a.py,'#ef476f');
+            updateHUD();
+          }
+          break;
+        }
+      }
+      if(!onGhost) a.reviveTimer=0; // saiu de cima — reseta timer
+    }
+  }
+  // Fim se todos mortos (solo) ou todos fantasmas (dupla)
+  if(mode==='solo'&&players[0].lives<=0){endGame();return;}
+  if(mode==='duo'&&players.every(p=>p.ghost)){endGame();return;}
+
+  updateHUD();
+}
+
+// ══════════════════════════════════════════════════
+//  BOMBA
+// ══════════════════════════════════════════════════
+
+
+// ══════════════════════════════════════════════════
+//  ITENS
+// ══════════════════════════════════════════════════
+function applyItem(p,it){
+  sfxItem();
+  switch(it.type){
+    case 'speed':  p.speed=true;p.speedTimer=6;addFloat('👟 RÁPIDO! 6s',p.px,p.py,'#7ee8fa');break;
+    case 'shield': p.shield=true;p.shieldTimer=20;addFloat('🛡️ ESCUDO!',p.px,p.py,'#c77dff');break;
+    case 'star':   p.star=true;p.starTimer=10;addFloat('⭐ x2 PTS! 10s',p.px,p.py,'#ffd166');break;
+    case 'clock':  score+=5;addFloat('⏱️ +5 pts!',p.px,p.py,'#7ee8fa');break;
+    case 'bomb':   p.hasBomb=true;addFloat('💣 PEGOU BOMBA!',p.px,p.py,'#ff9900');sfxBomb();break;
+    case 'heart':
+      p.lives=Math.min(p.lives+1,MAX_LIVES);
+      updateHUD();
+      addFloat('+1 ❤️',p.px,p.py,'#ef476f');
+      sfxItem();
+      spawnParticles(p.px,p.py,'#ef476f',12);
+      break;
+  }
+}
+
+function spawnParticles(x,y,color,n){
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2,s=40+Math.random()*120;
+    particles.push({x,y,color,vx:Math.cos(a)*s,vy:Math.sin(a)*s-60,life:.5+Math.random()*.4,r:3+Math.random()*3});
+  }
+}
+
+function addFloat(txt,x,y,color){floatTexts.push({txt,x,y,color,life:.85});}
+
+let fbTimer=null;
+function showFeedback(txt,color){
+  const el=document.getElementById('feedback-text');
+  el.textContent=txt;el.style.color=color;el.style.opacity='1';
+  el.style.textShadow=`0 0 16px ${color}`;
+  clearTimeout(fbTimer);fbTimer=setTimeout(()=>{el.style.opacity='0';},800);
+}
+
+// ══════════════════════════════════════════════════
+//  HUD
+// ══════════════════════════════════════════════════
+function updateHUD(){
+  document.getElementById('score-display').textContent=score;
+  const td=document.getElementById('timer-display');
+  td.textContent=level;
+  td.style.color='#ffd166';
+
+  // Barra da operação
+  const pct=(opTimeLeft/OP_TIME)*100;
+  const bar=document.getElementById('op-timer-bar');
+  bar.style.width=pct+'%';
+  bar.style.background=pct>50?'#06d6a0':pct>20?'#ff9900':'#ef476f';
+
+  players.forEach((p,i)=>{
+    const lel=document.getElementById(`p${i+1}-lives`);
+    let h='';for(let j=0;j<MAX_LIVES;j++)h+=j<p.lives?'❤️':'🖤';
+    lel.textContent=h;
+    const pel=document.getElementById(`p${i+1}-powerup`);
+    const pups=[];
+    if(p.shield)pups.push(`🛡️${p.shieldTimer.toFixed(0)}s`);
+    if(p.speed) pups.push(`👟${p.speedTimer.toFixed(0)}s`);
+    if(p.star)  pups.push(`⭐${p.starTimer.toFixed(0)}s`);
+    if(p.hasBomb) pups.push('💣 BOMBA');
+    if(streak>=3&&streakSpeed>0) pups.push(`🔥x${streak}`);
+    pel.textContent=pups.join(' ');
+  });
+
+  // ── espelha no HUD compacto do mobile ──
+  const mhn=document.getElementById('mh-nivel-val'); if(mhn)mhn.textContent=level;
+  const mha=document.getElementById('mh-acertos-val'); if(mha)mha.textContent=score;
+  const mhv=document.getElementById('mh-vidas-val');
+  if(mhv){ let hh='';const p0=players[0];const lv=p0?p0.lives:0;for(let j=0;j<MAX_LIVES;j++)hh+=j<lv?'❤️':'🖤';mhv.textContent=hh; }
+  const mhb=document.getElementById('mh-bar');
+  if(mhb){ const pct2=(opTimeLeft/OP_TIME)*100; mhb.style.width=pct2+'%'; mhb.style.background=pct2>50?'#06d6a0':pct2>20?'#ff9900':'#ef476f'; }
+
+  const opText=currentQ?currentQ.label+' = ?':'';
+  let spLabel='';
+  if(specialQ&&mode==='duo'){
+    if(specialQ.type==='coop') spLabel=' 🤝 DUPLA!';
+    else spLabel=` 🎯 P${specialQ.playerIdx+1}`;
+  }
+  document.getElementById('op-display').textContent=opText+spLabel;
+}
+
+// ══════════════════════════════════════════════════
+//  FIM DE JOGO & RANKING
+// ══════════════════════════════════════════════════
+async function endGame(){
+  gameRunning=false;
+  cancelAnimationFrame(frameId);
+  Object.keys(keys).forEach(k=>delete keys[k]);
+
+  // salva sessão sempre; recorde + XP só se superou
+  const novoRecorde = window._labiGetRecorde ? (score > window._labiGetRecorde()) : false;
+  let xpGanho = 0;
+  try {
+    if (window._labiSalvarSessao) await window._labiSalvarSessao(score, level, totalCorrect, mode);
+    if (novoRecorde && window._labiSalvarRecorde) xpGanho = await window._labiSalvarRecorde(score);
+  } catch(_) {}
+
+  const recAtual = window._labiGetRecorde ? window._labiGetRecorde() : 0;
+  const ov=document.getElementById('overlay');
+  ov.innerHTML=`
+    <h1><span class="big">⏱ FIM DE JOGO</span></h1>
+    <div class="final-score">${score} acertos</div>
+    <div class="final-detail">Nível alcançado: ${level}</div>
+    <div class="final-detail" style="margin-top:2px">Modo: ${mode==='duo'?'👥 Dupla':'👤 Solo'}</div>
+    ${novoRecorde
+      ? `<div class="final-detail" style="color:#06d6a0;margin-top:6px">🏆 Novo recorde! +${xpGanho} XP</div>`
+      : `<div class="final-detail" style="margin-top:6px">Recorde: ${recAtual} — supere para ganhar XP!</div>`}
+    <button id="restart-btn" onclick="startGame()">↺ JOGAR NOVAMENTE</button>
+    <button id="voltar-btn" onclick="window.location.href='/aluno/jogos.html'" style="font-family:'Orbitron',sans-serif;font-size:.7rem;padding:9px 22px;border:1px solid #3a5a7a;border-radius:10px;background:transparent;color:#7ee8fa;cursor:pointer;letter-spacing:1px;margin-top:6px;">← Voltar aos jogos</button>
+  `;
+  ov.classList.add('visible');
+  renderRanking();
+}
+
+// Ranking lido do Firebase (perfis/*/labirinto_record) — substitui localStorage.
+async function renderRanking(){
+  const elSolo=document.getElementById('rank-solo');
+  const elDuo=document.getElementById('rank-duo');
+  if(!elSolo&&!elDuo)return;
+  try{
+    const lista = window._labiLerRanking ? await window._labiLerRanking() : [];
+    const html = !lista.length
+      ? '<div style="color:#3a5a7a;font-size:.68rem;text-align:center">—</div>'
+      : lista.map((e,i)=>`
+        <div class="rank-entry">
+          <span>${['🥇','🥈','🥉','4°','5°'][i]} ${e.nome}</span>
+          <span class="rank-pts">${e.rec}</span>
+        </div>`).join('');
+    if(elSolo)elSolo.innerHTML=html;
+    if(elDuo)elDuo.innerHTML='<div style="color:#3a5a7a;font-size:.62rem;text-align:center;line-height:1.5">Recorde individual<br>conta nos dois modos</div>';
+  }catch(e){
+    if(elSolo)elSolo.innerHTML='<div style="color:#3a5a7a;font-size:.68rem;text-align:center">—</div>';
+  }
+}
+
+// ══════════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════════
+let bgT=0;
+let flashColor='',flashAlpha=0;
+function triggerFlash(color,alpha){flashColor=color;flashAlpha=alpha;}
+function render(){
+  bgT+=.006;
+  ctx.clearRect(0,0,W,H);
+
+  // Fundo
+  ctx.fillStyle='#06080f';ctx.fillRect(0,0,W,H);
+
+  // Grade
+  ctx.strokeStyle='#0b1020';ctx.lineWidth=.5;
+  for(let c=0;c<=COLS;c++){ctx.beginPath();ctx.moveTo(c*CELL,0);ctx.lineTo(c*CELL,H);ctx.stroke();}
+  for(let r=0;r<=ROWS;r++){ctx.beginPath();ctx.moveTo(0,r*CELL);ctx.lineTo(W,r*CELL);ctx.stroke();}
+
+  // Paredes — todas iguais visualmente
+  for(const w of walls){
+    const x=w.col*CELL,y=w.row*CELL;
+    ctx.globalAlpha=w.alpha;
+    ctx.fillStyle='#0d1e32';
+    ctx.fillRect(x+1,y+1,CELL-2,CELL-2);
+    // Detalhe sutil no topo
+    ctx.fillStyle='rgba(255,255,255,.03)';
+    ctx.fillRect(x+2,y+2,CELL-4,3);
+    ctx.globalAlpha=1;
+  }
+
+  // Zona segura (centro)
+  const sz=1;
+  for(let dc=-sz;dc<=sz;dc++){
+    for(let dr=-sz;dr<=sz;dr++){
+      const sx=(SAFE_COL+dc)*CELL,sy=(SAFE_ROW+dr)*CELL;
+      const dist=Math.max(Math.abs(dc),Math.abs(dr));
+      const a=dist===0?.12:.05;
+      ctx.fillStyle=`rgba(6,214,160,${a+.04*Math.sin(bgT*2)})`;
+      ctx.fillRect(sx+1,sy+1,CELL-2,CELL-2);
+    }
+  }
+  // Label zona segura
+  ctx.font=`bold ${CELL*.22}px Inter`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillStyle='rgba(6,214,160,.35)';
+  ctx.fillText('SAFE',SAFE_COL*CELL+CELL/2,SAFE_ROW*CELL+CELL/2);
+
+  // Blocos FALSOS — parecem muros mas são passáveis (levemente diferentes)
+  for(const w of fakeWalls){
+    const x=w.col*CELL,y=w.row*CELL;
+    ctx.globalAlpha=w.alpha;
+    // Mesmo estilo que muro normal mas ligeiramente mais claro e com borda sutil
+    ctx.fillStyle='#112436';
+    ctx.fillRect(x+1,y+1,CELL-2,CELL-2);
+    ctx.fillStyle='rgba(255,255,255,.055)';
+    ctx.fillRect(x+2,y+2,CELL-4,3);
+    // Borda levemente visível para quem prestar atenção
+    ctx.strokeStyle='rgba(126,232,250,.08)';
+    ctx.lineWidth=1;
+    ctx.strokeRect(x+1.5,y+1.5,CELL-3,CELL-3);
+    ctx.globalAlpha=1;
+  }
+
+  // Blocos numéricos
+  for(const b of numberBlocks){
+    b.pulse+=.05;
+    const x=b.col*CELL,y=b.row*CELL;
+    const glow=.4+.3*Math.sin(b.pulse);
+    // Em rodada especial: todos os blocos ficam coloridos
+    const isSpecialRound=!!specialQ;
+    const isSpecialBlock=b.isAnswer&&b.special;
+    const isCoop=specialQ&&specialQ.type==='coop';
+    const spColor=isCoop?'#06d6a0':isSpecialRound?specialQ.color:'#7ee8fa';
+    ctx.save();
+    ctx.shadowColor=spColor;ctx.shadowBlur=isSpecialRound?10+5*glow:6+4*glow;
+    // Fundo neutro (especial tem fundo levemente colorido)
+    const grad=ctx.createLinearGradient(x,y,x,y+CELL);
+    if(isSpecialRound){
+      grad.addColorStop(0,'#1a1a2a');grad.addColorStop(1,'#0a0a18');
+    } else {
+      grad.addColorStop(0,'#0d1e38');grad.addColorStop(1,'#060e1e');
+    }
+    ctx.fillStyle=grad;
+    ctx.beginPath();ctx.roundRect(x+2,y+2,CELL-4,CELL-4,4);ctx.fill();
+    // Borda: especial usa cor do jogador, normal usa azul suave
+    ctx.strokeStyle=isSpecialRound
+      ?`${spColor}`
+      :`rgba(126,232,250,${.3+.2*glow})`;
+    ctx.lineWidth=isSpecialRound?2:1.5;
+    ctx.stroke();
+    ctx.shadowBlur=0;
+    // Número
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font=`bold ${CELL*.44}px Inter,Arial,sans-serif`;
+    ctx.fillStyle=isSpecialRound
+      ?spColor
+      :`rgba(200,230,255,${.75+.2*glow})`;
+    ctx.fillText(b.num,x+CELL/2,y+CELL/2);
+    ctx.restore();
+  }
+
+  // Blocos bônus (x2)
+  for(const b of bonusBlocks){
+    b.pulse+=.07;
+    const x=b.col*CELL,y=b.row*CELL;
+    const g=.5+.4*Math.sin(b.pulse);
+    const urgency=b.life<4?b.life/4:1;
+    ctx.save();ctx.globalAlpha=urgency;
+    ctx.shadowColor='#ffd166';ctx.shadowBlur=10+6*g;
+    ctx.fillStyle=`rgba(40,30,0,${.7+.2*g})`;
+    ctx.beginPath();ctx.roundRect(x+2,y+2,CELL-4,CELL-4,4);ctx.fill();
+    ctx.strokeStyle=`rgba(255,209,102,${.5+.3*g})`;ctx.lineWidth=1.5;ctx.stroke();
+    ctx.shadowBlur=0;
+    ctx.font=`bold ${CELL*.38}px Inter,Arial,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle=`rgba(255,209,102,${.8+.2*g})`;ctx.fillText('x2',x+CELL/2,y+CELL/2);
+    ctx.restore();
+  }
+
+  // Itens
+  for(const it of items){
+    it.pulse+=.08;
+    const x=it.col*CELL,y=it.row*CELL;
+    const g=.5+.4*Math.sin(it.pulse);
+    const urgency=it.life<3?it.life/3:1;
+    ctx.save();ctx.globalAlpha=urgency;
+    ctx.shadowColor='#c77dff';ctx.shadowBlur=10+5*g;
+    ctx.fillStyle=`rgba(30,15,50,${.7+.2*g})`;
+    ctx.beginPath();ctx.roundRect(x+3,y+3,CELL-6,CELL-6,5);ctx.fill();
+    ctx.strokeStyle=`rgba(199,125,255,${.4+.3*g})`;ctx.lineWidth=1.2;ctx.stroke();
+    ctx.shadowBlur=0;
+    ctx.font=`${CELL*.52}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(it.emoji,x+CELL/2,y+CELL/2);
+    // Brilho extra para coração
+    if(it.type==='heart'){
+      ctx.shadowColor='#ef476f';ctx.shadowBlur=20+10*g;
+      ctx.strokeStyle=`rgba(239,71,111,${.5+.3*g})`;ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.roundRect(x+3,y+3,CELL-6,CELL-6,5);ctx.stroke();
+      ctx.shadowBlur=0;
+    }
+    ctx.restore();
+  }
+
+  // Partículas
+  for(const p of particles){
+    if(p.r<=0)continue;
+    ctx.globalAlpha=Math.min(p.life*2.5,1);
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=p.color;ctx.shadowColor=p.color;ctx.shadowBlur=6;ctx.fill();
+    ctx.shadowBlur=0;
+  }
+  ctx.globalAlpha=1;
+
+  // Flash de evento
+  if(flashAlpha>0){
+    ctx.globalAlpha=flashAlpha;
+    ctx.fillStyle=flashColor;
+    ctx.fillRect(0,0,W,H);
+    ctx.globalAlpha=1;
+    flashAlpha=Math.max(0,flashAlpha-.06);
+  }
+
+  // Teleportes
+  for(const t of teleports){
+    const x=t.col*CELL,y=t.row*CELL;
+    const g=.5+.5*Math.sin(t.pulse*3);
+    if(t.fadeAlpha===undefined)t.fadeAlpha=0;
+    t.fadeAlpha=t.leaving?(.4+.6*Math.abs(Math.sin(t.pulse*12))):Math.min(1,t.fadeAlpha+.06);
+    ctx.save();
+    ctx.globalAlpha=t.fadeAlpha;
+    ctx.shadowColor='#c77dff';ctx.shadowBlur=10+8*g;
+    const tgrad=ctx.createRadialGradient(x+CELL/2,y+CELL/2,2,x+CELL/2,y+CELL/2,CELL/2-2);
+    tgrad.addColorStop(0,`rgba(199,125,255,${.5+.3*g})`);
+    tgrad.addColorStop(1,`rgba(80,0,120,${.3+.2*g})`);
+    ctx.fillStyle=tgrad;
+    ctx.beginPath();ctx.roundRect(x+2,y+2,CELL-4,CELL-4,CELL/2);ctx.fill();
+    ctx.strokeStyle=`rgba(199,125,255,${.6+.3*g})`;ctx.lineWidth=1.5;ctx.stroke();
+    ctx.shadowBlur=0;
+    ctx.font=`${CELL*.45}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('🌀',x+CELL/2,y+CELL/2);
+    ctx.restore();
+  }
+
+    // Jogadores
+  for(const p of players)drawPlayer(p);
+
+  // Float texts
+  for(const f of floatTexts){
+    ctx.save();ctx.globalAlpha=f.life*1.2;
+    ctx.font='bold 10px Orbitron,sans-serif';
+    ctx.textAlign='center';ctx.fillStyle=f.color;
+    ctx.shadowColor=f.color;ctx.shadowBlur=8;
+    ctx.fillText(f.txt,f.x,f.y);
+    ctx.restore();
+  }
+}
+
+function drawPlayer(p){
+  const blink=p.invincible>0&&Math.floor(Date.now()/80)%2===0;
+  if(blink&&!p.ghost)return;
+  // Fantasma: desenha transparente com emoji
+  if(p.ghost){
+    ctx.save();ctx.translate(p.px,p.py);
+    ctx.globalAlpha=.45+.2*Math.sin(Date.now()*.003);
+    ctx.font=`${CELL*.9}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('👻',0,0);
+    ctx.globalAlpha=1;
+    ctx.font=`bold ${CELL*.2}px Orbitron`;ctx.fillStyle='#ef476f';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('P'+(p.idx+1),0,CELL*.58);
+    // Barra de revive se alguém está em cima
+    const reviver=players.find(a=>!a.ghost&&a.col===p.col&&a.row===p.row&&a.reviveTimer>0);
+    if(reviver){
+      const bw=CELL-4,bh=4;
+      ctx.fillStyle='#1a2a40';
+      ctx.fillRect(-bw/2,CELL*.7,bw,bh);
+      ctx.fillStyle='#06d6a0';
+      ctx.fillRect(-bw/2,CELL*.7,bw*(reviver.reviveTimer/2),bh);
+    }
+    ctx.restore();
+    return;
+  }
+  ctx.save();ctx.translate(p.px,p.py);
+
+  // Trail
+  for(const t of p.trail){
+    ctx.globalAlpha=t.life*1.5;
+    ctx.beginPath();ctx.arc(t.x-p.px,t.y-p.py,CELL*.2,0,Math.PI*2);
+    ctx.fillStyle=p.color;ctx.fill();
+  }
+  ctx.globalAlpha=1;
+
+  // Escudo
+  if(p.shield){
+    const sp=.5+.5*Math.sin(bgT*4);
+    ctx.strokeStyle=`rgba(199,125,255,${.5+.3*sp})`;ctx.lineWidth=2;
+    ctx.shadowColor='#c77dff';ctx.shadowBlur=12;
+    ctx.beginPath();ctx.arc(0,0,CELL*.55,0,Math.PI*2);ctx.stroke();
+    ctx.shadowBlur=0;
+  }
+
+  // Sombra no chão
+  ctx.fillStyle='rgba(0,0,0,.25)';
+  ctx.beginPath();ctx.ellipse(0,CELL*.3,CELL*.28,CELL*.09,0,0,Math.PI*2);ctx.fill();
+
+  // Corpo
+  const onFire2=streak>=3&&streakSpeed>0;
+  ctx.shadowColor=onFire2?'#ff6600':p.color;ctx.shadowBlur=onFire2?22:p.speed?18:10;
+  const bg=ctx.createRadialGradient(-CELL*.07,-CELL*.07,0,0,0,CELL*.3);
+  bg.addColorStop(0,'#fff');bg.addColorStop(.25,p.color);bg.addColorStop(1,p.color+'99');
+  ctx.fillStyle=bg;
+  ctx.beginPath();ctx.arc(0,0,CELL*.29,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;
+
+  // Rosto
+  ctx.fillStyle='#040810';
+  ctx.beginPath();ctx.arc(-CELL*.09,-CELL*.05,CELL*.065,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(CELL*.09,-CELL*.05,CELL*.065,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#040810';ctx.lineWidth=1.4;ctx.lineCap='round';
+  ctx.beginPath();ctx.arc(0,CELL*.04,CELL*.09,.2,Math.PI-.2);ctx.stroke();
+
+  // Indicadores de power-up
+  if(p.star){ctx.font=`${CELL*.28}px serif`;ctx.textAlign='center';ctx.fillText('⭐',-CELL*.33,-CELL*.33);}
+  if(streak>=3&&streakSpeed>0){
+    ctx.font=`${CELL*.3}px serif`;ctx.textAlign='center';
+    ctx.fillText('🔥',CELL*.33,CELL*.05);
+  }
+  if(p.hasBomb){ctx.font=`${CELL*.25}px serif`;ctx.textAlign='center';ctx.fillText('💣',CELL*.33,-CELL*.33);}
+
+  // Label P1/P2
+  ctx.font=`bold ${CELL*.2}px Orbitron`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillStyle=p.color;ctx.shadowColor=p.color;ctx.shadowBlur=6;
+  ctx.fillText(`P${p.idx+1}`,0,CELL*.5);ctx.shadowBlur=0;
+
+  ctx.restore();
+}
+
+// ══════════════════════════════════════════════════
+//  CONTROLES NA TELA (d-pad) + escolha de método no duo
+//  Métodos: 'wasd' | 'setas' | 'mouse'
+//  Mouse = mover clicando no d-pad da tela.
+//  A lógica de movimento lê keys[p.keys.*]; o d-pad só seta/limpa essas chaves.
+// ══════════════════════════════════════════════════
+const KEYMAP = {
+  wasd:  { up:'w', down:'s', left:'a', right:'d' },
+  setas: { up:'ArrowUp', down:'ArrowDown', left:'ArrowLeft', right:'ArrowRight' },
+  // 'mouse' usa um conjunto de chaves sintéticas próprias, exclusivas
+  mouse: { up:'mUp', down:'mDown', left:'mLeft', right:'mRight' },
+};
+// método de cada jogador (no solo só p1 importa)
+let ctrlP1 = 'wasd';
+let ctrlP2 = 'setas';
+
+const CTRL_OPTS = [
+  { id:'wasd',  ico:'⌨️', name:'WASD'  },
+  { id:'setas', ico:'🎯', name:'Setas' },
+  { id:'mouse', ico:'🖱️', name:'Mouse' },
+];
+
+function renderDuoCtrlPick(){
+  const host = document.getElementById('duo-ctrl-pick');
+  if(!host) return;
+  if(mode!=='duo'){ host.style.display='none'; return; }
+  host.style.display='';
+  const row = (player, sel, other) => {
+    const cor = player===1?'#ef476f':'#ffd166';
+    const emoji = player===1?'🩷':'💛';
+    const opts = CTRL_OPTS.map(o=>{
+      const locked = o.id===other;
+      const isSel = o.id===sel;
+      const cls = ['cp-opt', isSel?(player===1?'sel-p1':'sel-p2'):'', locked?'locked':''].filter(Boolean).join(' ');
+      return `<div class="${cls}" ${locked?'':`onclick="window.labiPickCtrl(${player},'${o.id}')"`}>
+        <div class="cp-ico">${o.ico}</div>
+        <div class="cp-name">${o.name}${locked?'<span class="cp-tag">(em uso)</span>':''}</div>
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:8px">
+      <div class="ctrl-row-label" style="color:${cor}">${emoji} JOGADOR ${player}</div>
+      <div class="ctrl-pick">${opts}</div>
+    </div>`;
+  };
+  host.innerHTML = row(1, ctrlP1, ctrlP2) + row(2, ctrlP2, ctrlP1);
+}
+
+window.labiPickCtrl = function(player, id){
+  if(player===1){ if(id===ctrlP2) return; ctrlP1=id; }
+  else          { if(id===ctrlP1) return; ctrlP2=id; }
+  renderDuoCtrlPick();
+};
+
+// Constrói o(s) d-pad(s) na tela. Cada botão seta a chave do método daquele player.
+function dpadHTML(playerClass, keys){
+  const b = (dir,glyph)=>`<div class="dp-btn" data-dir="${keys[dir]}">${glyph}</div>`;
+  return `<div class="dpad ${playerClass}">
+    <div></div>${b('up','▲')}<div></div>
+    ${b('left','◀')}<div class="dp-center">●</div>${b('right','▶')}
+    <div></div>${b('down','▼')}<div></div>
+  </div>`;
+}
+
+function bindDpad(container){
+  if(!container) return;
+  container.querySelectorAll('.dp-btn').forEach(btn=>{
+    const key = btn.getAttribute('data-dir');
+    if(!key) return;
+    const press = (e)=>{ e.preventDefault(); keys[key]=true; };
+    const release = (e)=>{ e.preventDefault(); keys[key]=false; };
+    btn.addEventListener('mousedown', press);
+    btn.addEventListener('mouseup', release);
+    btn.addEventListener('mouseleave', release);
+    btn.addEventListener('touchstart', press, {passive:false});
+    btn.addEventListener('touchend', release, {passive:false});
+    btn.addEventListener('touchcancel', release, {passive:false});
+  });
+}
+
+// Monta os d-pads conforme o modo e os métodos escolhidos.
+function buildDpads(){
+  const desktop = document.getElementById('desktop-dpads');
+  const mobile  = document.getElementById('mobile-dpad');
+
+  // mobile: sempre solo (duo é só PC) → d-pad único com as teclas do p1
+  if(mobile){
+    mobile.innerHTML = dpadHTML('', KEYMAP[ctrlP1==='mouse'?'mouse':ctrlP1] || KEYMAP.wasd);
+    bindDpad(mobile);
+  }
+
+  // desktop: solo = 1 d-pad; duo = 2 d-pads rotulados (só p/ quem usa mouse precisa,
+  // mas exibimos para indicar o controle de cada jogador)
+  if(desktop){
+    if(mode==='duo'){
+      const p1 = `<div class="dpad-label" style="color:#ef476f">🩷 P1 · ${labelOf(ctrlP1)}</div>${dpadHTML('dp-p1', KEYMAP[ctrlP1])}`;
+      const p2 = `<div class="dpad-label" style="color:#ffd166;margin-top:8px">💛 P2 · ${labelOf(ctrlP2)}</div>${dpadHTML('dp-p2', KEYMAP[ctrlP2])}`;
+      desktop.innerHTML = p1 + p2;
+    } else {
+      desktop.innerHTML = `<div class="dpad-label">🎮 Mover</div>${dpadHTML('', KEYMAP[ctrlP1])}`;
+    }
+    bindDpad(desktop);
+  }
+}
+function labelOf(id){ return ({wasd:'WASD',setas:'Setas',mouse:'Mouse'})[id]||id; }
+
+// ── Exposição no window (necessário: script é type="module") ──
+window.cancelGame = cancelGame;
+
+// Hooks: ao trocar de modo, atualiza seletor e d-pads. Envolve selectMode original.
+const _selectModeBase = selectMode;
+selectMode = function(m){
+  _selectModeBase(m);
+  if(m==='solo'){ ctrlP1='wasd'; }              // solo volta ao padrão
+  else { if(ctrlP1==='setas'&&ctrlP2==='setas') ctrlP2='mouse'; } // evita choque inicial
+  renderDuoCtrlPick();
+  buildDpads();
+};
+window.selectMode = selectMode;
+
+// Envolve startGame para aplicar os métodos escolhidos às teclas dos players.
+const _startGameBase = startGame;
+startGame = function(){
+  _startGameBase();
+  // aplica método de controle (sobrescreve o keymap padrão dos players)
+  if(players[0]) players[0].keys = KEYMAP[ctrlP1] || KEYMAP.wasd;
+  if(mode==='duo' && players[1]) players[1].keys = KEYMAP[ctrlP2] || KEYMAP.setas;
+  buildDpads();
+};
+window.startGame = startGame;
+
+// No mobile, força solo e desabilita o botão duo (precisa de 2 teclados).
+function aplicarRestricaoMobile(){
+  if(window.matchMedia('(max-width:760px)').matches){
+    const btnDuo=document.getElementById('btn-duo');
+    if(btnDuo){ btnDuo.disabled=true; btnDuo.style.opacity='.4'; btnDuo.title='Modo dupla só no computador'; }
+    if(mode!=='solo') selectMode('solo');
+  }
+}
+
+// monta d-pads iniciais
+buildDpads();
+aplicarRestricaoMobile();
+
+
+</script>
+</body>
+</html>
