@@ -221,8 +221,20 @@ canvas{
   font-family:'Orbitron',sans-serif;font-size:.5rem;letter-spacing:2px;
   text-align:center;color:#3a5a7a;margin-bottom:4px;text-transform:uppercase;
 }
-/* d-pad flutuante do mobile — escondido por padrão (só aparece no mobile) */
-#mobile-dpad{display:none;}
+/* d-pad flutuante transparente sobre o canto inferior do mapa (PC e mobile).
+   Preenchido por JS; escondido quando não há controle por clique/toque. */
+#float-dpad{
+  display:none;
+  position:absolute;
+  left:10px;
+  bottom:10px;
+  z-index:20;
+  opacity:.35;
+  transition:opacity .15s;
+}
+#float-dpad:hover,#float-dpad:active{opacity:.85;}
+#float-dpad .dpad{--dp:46px;}
+#canvas-area{position:relative;}
 
 /* ── Seletor de método de controle no duo ── */
 .ctrl-pick{display:flex;gap:6px;}
@@ -243,16 +255,6 @@ canvas{
 
 /* HUD compacto do mobile — escondido no desktop */
 #mobile-hud{display:none;}
-
-/* ── Coluna direita (desktop): controles ── */
-#right-panel{
-  width:170px;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  flex-shrink:0;
-}
-#right-panel #desktop-dpad-box{align-items:center;}
 
 /* ── Desktop: tudo cabe na tela, sem rolagem ──
    O tabuleiro reduz só o necessário para caber na altura disponível
@@ -275,11 +277,14 @@ canvas{
     /* quadrado: a altura manda, a largura acompanha */
     aspect-ratio:1/1;
   }
-  /* painéis acompanham a altura e rolam internamente só se preciso (raro) */
-  #side-panel,#right-panel{
+  /* painel de status acompanha a altura e rola internamente só se preciso (raro) */
+  #side-panel{
     max-height:100%;
     overflow-y:auto;
   }
+  /* no PC o float-dpad fica sobre o canto do mapa (dentro do canvas-area) */
+  #float-dpad{left:auto;right:14px;bottom:14px;}
+  #float-dpad .dpad{--dp:50px;}
 }
 
 /* ════════════════════════════════════════════════
@@ -306,12 +311,9 @@ canvas{
   /* canvas ocupa a largura, quadrado */
   #canvas-area{width:100%;}
   canvas{width:100%!important;height:auto!important;aspect-ratio:1/1;}
-  /* d-pad flutuante no rodapé, fora do mapa */
-  #mobile-dpad{
-    display:flex;justify-content:center;
-    padding:8px 0 4px;
-  }
-  #mobile-dpad .dpad{--dp:54px;}
+  /* d-pad flutuante transparente sobre o canto do mapa */
+  #float-dpad{left:10px;bottom:10px;}
+  #float-dpad .dpad{--dp:52px;}
   /* esconde controls-grid do teclado na tela inicial mobile */
   .controls-grid{display:none;}
 }
@@ -408,7 +410,7 @@ canvas{
         <div class="p-powerup" id="p2-powerup"></div>
       </div>
     </div>
-    <!-- D-pads movidos para a coluna direita (#right-panel) -->
+    <!-- D-pad flutua sobre o canto do mapa (#float-dpad, dentro de #canvas-area) -->
     <div class="panel-box">
       <div class="panel-title">🏆 Solo</div>
       <div id="rank-solo"><div style="color:#3a5a7a;font-size:.68rem;text-align:center">—</div></div>
@@ -424,17 +426,10 @@ canvas{
     <canvas id="gameCanvas" width="560" height="560"></canvas>
     <div id="op-display">? + ? = ?</div>
     <div id="feedback-text"></div>
+    <!-- D-pad flutuante transparente sobre o canto do mapa (PC e mobile).
+         Aparece para quem usa mouse (PC) ou sempre (mobile, touch). -->
+    <div id="float-dpad"></div>
   </div>
-
-  <!-- Coluna direita (desktop): controles na tela -->
-  <div id="right-panel">
-    <div class="panel-box" id="desktop-dpad-box">
-      <div id="desktop-dpads"></div>
-    </div>
-  </div>
-
-  <!-- D-pad flutuante (só mobile) -->
-  <div id="mobile-dpad"></div>
 
 </div>
 
@@ -1010,13 +1005,27 @@ document.addEventListener('keydown',e=>{
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();
   if(!gameRunning)return;
 });
+let _hiddenAt=0;
 document.addEventListener('keyup',e=>{keys[e.key]=false;});
 window.addEventListener('blur',()=>{Object.keys(keys).forEach(k=>delete keys[k]);});
 window.addEventListener('visibilitychange',()=>{
-  // Só limpa teclas ao sair — jogo continua rodando
-  if(document.hidden) Object.keys(keys).forEach(k=>delete keys[k]);
-  // Ao voltar: resetar lastTime para evitar dt enorme
-  else if(gameRunning) lastTime=performance.now();
+  if(document.hidden){
+    // Saiu da aba: limpa teclas e marca o instante (o tempo NÃO para de contar)
+    Object.keys(keys).forEach(k=>delete keys[k]);
+    if(gameRunning) _hiddenAt=performance.now();
+  } else if(gameRunning){
+    // Voltou: aplica todo o tempo real que passou, em fatias iguais às do loop.
+    // Assim sair da aba não serve de pausa — o relógio correu igual.
+    let elapsed=(performance.now()-(_hiddenAt||performance.now()))/1000;
+    _hiddenAt=0;
+    const STEP=0.05; // mesmo teto de dt do loop
+    while(elapsed>0 && gameRunning){
+      const step=Math.min(STEP,elapsed);
+      update(step);
+      elapsed-=step;
+    }
+    lastTime=performance.now();
+  }
 });
 
 function loop(now){
@@ -1874,29 +1883,30 @@ function bindDpad(container){
 
 // Monta os d-pads conforme o modo e os métodos escolhidos.
 function buildDpads(){
-  const desktop = document.getElementById('desktop-dpads');
-  const mobile  = document.getElementById('mobile-dpad');
+  const fd = document.getElementById('float-dpad');
+  if(!fd) return;
+  const isMobile = window.matchMedia('(max-width:760px)').matches;
 
-  // mobile: sempre solo (duo é só PC) → d-pad único com as teclas do p1
-  if(mobile){
-    mobile.innerHTML = dpadHTML('', KEYMAP[ctrlP1==='mouse'?'mouse':ctrlP1] || KEYMAP.wasd);
-    bindDpad(mobile);
-  }
-
-  // desktop: solo = 1 d-pad; duo = 2 d-pads rotulados (só p/ quem usa mouse precisa,
-  // mas exibimos para indicar o controle de cada jogador)
-  if(desktop){
+  let html = '';
+  if(isMobile){
+    // mobile: sempre solo (duo é só PC) → d-pad de toque com as teclas do p1
+    html = dpadHTML('', KEYMAP[ctrlP1==='mouse'?'mouse':ctrlP1] || KEYMAP.wasd);
+  } else {
+    // PC: só para quem ESCOLHEU mouse (no máximo um — mouse+mouse não existe)
     if(mode==='duo'){
-      const p1 = `<div class="dpad-label" style="color:#ef476f">🩷 P1 · ${labelOf(ctrlP1)}</div>${dpadHTML('dp-p1', KEYMAP[ctrlP1])}`;
-      const p2 = `<div class="dpad-label" style="color:#ffd166;margin-top:8px">💛 P2 · ${labelOf(ctrlP2)}</div>${dpadHTML('dp-p2', KEYMAP[ctrlP2])}`;
-      desktop.innerHTML = p1 + p2;
-    } else {
-      desktop.innerHTML = `<div class="dpad-label">🎮 Mover</div>${dpadHTML('', KEYMAP[ctrlP1])}`;
+      if(ctrlP1==='mouse') html = dpadHTML('dp-p1', KEYMAP.mouse);
+      else if(ctrlP2==='mouse') html = dpadHTML('dp-p2', KEYMAP.mouse);
+    } else if(ctrlP1==='mouse'){
+      html = dpadHTML('', KEYMAP.mouse);
     }
-    bindDpad(desktop);
   }
+
+  fd.innerHTML = html;
+  fd.style.display = html ? 'block' : 'none';
+  if(html) bindDpad(fd);
 }
 function labelOf(id){ return ({wasd:'WASD',setas:'Setas',mouse:'Mouse'})[id]||id; }
+
 
 // ── Exposição no window (necessário: script é type="module") ──
 window.cancelGame = cancelGame;
@@ -1935,6 +1945,8 @@ function aplicarRestricaoMobile(){
 // monta d-pads iniciais
 buildDpads();
 aplicarRestricaoMobile();
+// reconstrói o d-pad ao girar o celular ou redimensionar a janela
+window.addEventListener('resize', ()=>{ buildDpads(); });
 
 
 </script>
