@@ -168,7 +168,7 @@ Jogo educacional onde o aluno atravessa um labirinto até o bloco com a resposta
 
 # Projeto futuro: Multiplayer em tempo real via WebSocket
 
-> Planejado em junho/2026. Objetivo duplo: (1) habilitar o labirinto multiplayer entre dispositivos; (2) aprendizado intencional de construção de sistemas online (meta da Vanessa). Ainda NÃO iniciado.
+> Planejado em junho/2026. Objetivo duplo: (1) habilitar o labirinto multiplayer entre dispositivos; (2) aprendizado intencional de construção de sistemas online (meta da Vanessa). **Fundamentos JÁ aprendidos via piloto "quadradinhos" (passos 2 e 3 feitos — Node+Socket.IO no ar no Render). Falta o passo 4: aplicar ao labirinto.**
 
 ## Por que WebSocket e não Firebase
 - O Firebase Realtime Database NÃO foi feito para estado de jogo em tempo real (posições a ~30×/seg): fica caro e com lag perceptível. É a ferramenta errada para isso.
@@ -192,10 +192,24 @@ Jogo educacional onde o aluno atravessa um labirinto até o bloco com a resposta
 
 ## Plano de aprendizado recomendado (camadas)
 1. Terminar o labirinto duo-PC atual (Firebase, sem servidor). FEITO/em finalização.
-2. **Projeto-piloto separado, NÃO começar pelo labirinto:** o "dois quadradinhos" — a coisa mais simples possível que prove mover algo na tela de um e ver na tela do outro via WebSocket. O labirinto tem muita lógica de jogo que esconderia o que o WebSocket faz. Quando os quadradinhos funcionarem, o conceito está entendido.
-3. Subir esse piloto num Render/Railway (aprender deploy de servidor).
-4. Só então aplicar ao labirinto (Opção A primeiro).
+2. **Projeto-piloto separado, NÃO começar pelo labirinto:** o "dois quadradinhos" — a coisa mais simples possível que prove mover algo na tela de um e ver na tela do outro via WebSocket. O labirinto tem muita lógica de jogo que esconderia o que o WebSocket faz. Quando os quadradinhos funcionarem, o conceito está entendido. **FEITO (junho/2026 — ver "Piloto quadradinhos" abaixo).**
+3. Subir esse piloto num Render/Railway (aprender deploy de servidor). **FEITO (Render, junho/2026).**
+4. Só então aplicar ao labirinto (Opção A primeiro). **← PRÓXIMO PASSO.**
 - Ressalva honesta: mesmo com WebSocket, o tempo-real tem armadilhas de design (latência, autoridade) difíceis por natureza. A diferença é lutar o problema real (WebSocket) em vez do problema + a ferramenta errada (Firebase RTDB).
+
+## Piloto "quadradinhos" — passos 2 e 3 concluídos (junho/2026)
+> Prova de conceito isolada, fora do `sistema-matematica` (repositório próprio `vaaane/quadradinhos`). Prova que dá pra mover algo na tela de um aparelho e ver no outro em tempo real. O labirinto NÃO foi tocado.
+
+- **Stack:** Node.js + Express (serve a página estática de `/public`) + Socket.IO (a "linha aberta" bidirecional). `server.js` + `public/index.html` (canvas, arrastar com mouse/dedo).
+- **O que o servidor faz (e o que NÃO faz):** só recebe a posição de um cliente (`mover`) e repassa aos outros (`broadcast` de `moveu`). Não decide lógica de jogo — toda a lógica fica no navegador. Estado efêmero em memória (`jogadores[socket.id]`), nada persiste. Confirma o princípio do plano: WebSocket cuida só do efêmero.
+- **Porta:** `process.env.PORT || 3000`. NUNCA fixar porta em produção — o Render injeta a dele via env var. Foi o único ajuste necessário entre rodar local e rodar no Render.
+- **Deploy:** Render, Web Service, plano Free. Build `npm install`, start `npm start`. Lê direto do GitHub (push → redeploy automático). HTTPS automático no domínio `*.onrender.com`.
+
+### Duas armadilhas reais encontradas (guardar para o passo 4)
+- **HTTP local vs HTTPS no celular:** abrindo pelo IP da rede local (`http://192.168.x.x:3000`), o navegador do celular force-upgrade para HTTPS e dá "não foi possível estabelecer uma conexão segura". O servidor de teste é HTTP puro. Contornos: digitar `http://` na unha (sem autocompletar), aba anônima, ou Firefox. **Some de vez no Render** (HTTPS de verdade). Roteamento 5G via hotspot Wi-Fi funciona (mesma rede); USB tethering tende a não deixar o celular acessar o PC de volta.
+- **Cold start do Render Free:** o serviço hiberna após ~15 min sem tráfego; a 1ª abertura depois disso demora ~1 min pra acordar. Não é erro. Para usar com a turma: abrir o link alguns minutos antes da aula.
+
+- Ressalva honesta sobre o piloto: ele esconde os 3 problemas difíceis da Opção B (latência, autoridade de estado, interpolação) porque move um só quadrado sem regras. O passo 4 (Opção A — placares sincronizados) reusa padrões dos duelos; a Opção B (mesmo mapa ao vivo) é onde esses problemas aparecem de verdade.
 
 ---
 

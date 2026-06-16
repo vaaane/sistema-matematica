@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>⚔️ Duelo — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    :root {
+      --eu:  #3b82f6;
+      --adv: #ef4444;
+    }
+    body { min-height: 100dvh; background: var(--bg); }
+
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 20px; background: var(--card);
+      border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10;
+    }
+    .topbar-title { font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; }
+    .topbar-sub   { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+    /* ── Arena ── */
+    .duelo-arena {
+      max-width: 560px; margin: 0 auto;
+      padding: 20px 16px 40px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+
+    /* ── Placar ── */
+    .placar-wrap {
+      display: grid; grid-template-columns: 1fr auto 1fr;
+      gap: 10px; align-items: center;
+    }
+    .lado {
+      background: var(--card); border: 2px solid;
+      border-radius: 16px; padding: 12px 10px; text-align: center;
+    }
+    .lado.eu  { border-color: var(--eu);  box-shadow: 0 0 16px rgba(59,130,246,.2); }
+    .lado.adv { border-color: var(--adv); box-shadow: 0 0 16px rgba(239,68,68,.15); }
+    .lado-av  {
+      width: 46px; height: 46px; border-radius: 50%; overflow: hidden;
+      margin: 0 auto 6px; border: 2px solid; background: var(--card2);
+    }
+    .lado.eu  .lado-av { border-color: var(--eu); }
+    .lado.adv .lado-av { border-color: var(--adv); }
+    .lado-av img { width: 100%; height: 100%; object-fit: cover; }
+    .lado-nome { font-size: 10px; font-weight: 700; color: var(--text-muted);
+                 overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lado-pts  { font-size: 30px; font-weight: 900; line-height: 1.1; margin-top: 3px; }
+    .lado.eu  .lado-pts { color: var(--eu); }
+    .lado.adv .lado-pts { color: var(--adv); }
+    .lado-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+
+    .vs-center  { text-align: center; }
+    .vs-label   { font-size: 16px; font-weight: 900; color: var(--text-muted); margin-bottom: 4px; }
+    .vs-timer   {
+      font-family: 'Orbitron', monospace; font-size: 24px; font-weight: 900;
+      color: var(--text); font-variant-numeric: tabular-nums;
+    }
+    .vs-timer.urgente { color: var(--adv); animation: blink .5s step-end infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+    /* ── Questão ── */
+    .questao-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 18px; padding: 28px 20px; text-align: center;
+    }
+    .questao-expr {
+      font-family: 'Orbitron', monospace; font-size: 42px; font-weight: 900;
+      color: var(--text); margin-bottom: 8px; line-height: 1.1;
+    }
+    .questao-num { font-size: 12px; color: var(--text-muted); }
+
+    /* ── Opções ── */
+    .opcoes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .opcao {
+      padding: 18px 10px; background: var(--card); border: 2px solid var(--border);
+      border-radius: 14px; font-size: 24px; font-weight: 800;
+      font-family: 'Orbitron', monospace; text-align: center;
+      cursor: pointer; transition: all .12s; color: var(--text);
+    }
+    .opcao:hover:not(:disabled)  { border-color: var(--eu); color: var(--eu); }
+    .opcao.certo  { border-color: #22c55e; background: rgba(34,197,94,.15); color: #22c55e; }
+    .opcao.errado { border-color: var(--adv); background: rgba(239,68,68,.12); color: var(--adv); }
+    .opcao:disabled { cursor: not-allowed; }
+
+    /* ── Loading ── */
+    .loading-wrap {
+      text-align: center; padding: 60px 20px;
+      color: var(--text-muted); font-size: 14px;
+    }
+    .loading-spinner {
+      width: 40px; height: 40px; border: 3px solid var(--border);
+      border-top-color: var(--purple); border-radius: 50%;
+      animation: spin .8s linear infinite; margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Resultado ── */
+    .resultado-wrap {
+      text-align: center; padding: 32px 20px;
+      display: flex; flex-direction: column; gap: 18px; align-items: center;
+    }
+    .resultado-emoji { font-size: 64px; }
+    .resultado-titulo { font-size: 26px; font-weight: 900; font-family: 'Rajdhani', sans-serif; }
+    .resultado-placar {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%;
+    }
+    .resultado-lado {
+      background: var(--card); border: 2px solid;
+      border-radius: 14px; padding: 16px; text-align: center;
+    }
+    .resultado-lado.eu  { border-color: var(--eu); }
+    .resultado-lado.adv { border-color: var(--adv); }
+    .resultado-nome { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
+    .resultado-pts  { font-size: 38px; font-weight: 900; }
+    .resultado-lado.eu  .resultado-pts { color: var(--eu); }
+    .resultado-lado.adv .resultado-pts { color: var(--adv); }
+    .resultado-xp {
+      font-size: 22px; font-weight: 800;
+      padding: 10px 24px; border-radius: 12px;
+      background: var(--card); border: 1px solid var(--border);
+    }
+    .btn-voltar-duelos {
+      padding: 13px 32px; background: var(--purple); color: #fff;
+      border: none; border-radius: 12px; font-size: 15px;
+      font-weight: 700; cursor: pointer;
+    }
+    .btn-voltar-duelos:hover { opacity: .85; }
+
+    @media (max-width: 400px) {
+      .questao-expr { font-size: 32px; }
+      .opcao { font-size: 20px; padding: 14px 8px; }
+      .lado-pts { font-size: 24px; }
+      .vs-timer { font-size: 18px; }
+    }
+    .btn-reacao { padding:10px 8px; background:var(--card2); border:1px solid var(--border); border-radius:10px; color:var(--text); font-size:12px; font-weight:600; cursor:pointer; transition:all .15s; font-family:'Inter',sans-serif; }
+    .btn-reacao:hover { background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.2); }
+    .btn-reacao.enviado { opacity:.4; cursor:not-allowed; }
+  </style>
+</head>
+<body>
+<script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-title">⚔️ Duelo em andamento</div>
+    <div class="topbar-sub" id="topbar-diff"></div>
+  </div>
+  <button onclick="confirmarSair()"
+    style="padding:7px 14px;border-radius:9px;border:1px solid var(--border);
+           background:transparent;color:var(--text-muted);font-size:12px;
+           font-weight:600;cursor:pointer;margin-left:auto">
+    ✖ Sair do duelo
+  </button>
+  <div id="topbar-avatar-circle" style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--card2)"></div>
+</div>
+
+<div id="dupla-badge-partida" style="display:none;text-align:center;padding:4px 0 0;font-size:12px;color:#00d4ff;font-weight:600"></div>
+<div id="duelo-arena" class="duelo-arena">
+  <div class="loading-wrap">
+    <div class="loading-spinner"></div>
+    Carregando duelo...
+  </div>
+</div>
+
+<script type="module">
+import { requireAluno, clearSession, lerDuplaAtiva, getSession } from '/js/auth.js';
+import { db } from '/js/firebase-config.js';
+import { ref, get, set, update, onValue } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { getPerfil } from '/js/db.js';
+import { avatarUrl, avatarHtml, avatarConfigDefault, DUELO_DURACAO_SEGUNDOS, DUELO_ERRO_PENALIDADE, XP_DUELO } from '/js/gamificacao.js';
+import { atualizarPresenca } from '/js/presenca.js';
+
+// ── Setup ──────────────────────────────────────────────────────
+const sess = requireAluno('/index.html');
+if (!sess) throw new Error();
+const { alunos, turma } = sess;
+const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+
+const params  = new URLSearchParams(location.search);
+const dueloId = params.get('id');
+if (!dueloId) { window.location.href = '/aluno/duelos.html'; throw new Error(); }
+
+const perfil   = await getPerfil(uid);
+const apelido  = perfil?.apelido_ativo || alunos[0];
+const meuAvatar = avatarUrl(perfil?.avatar || avatarConfigDefault());
+
+const _duplaPartida = lerDuplaAtiva();
+
+// Avatar topbar
+(async () => { try {
+  const _c = document.getElementById('topbar-avatar-circle');
+  if (_c) _c.innerHTML = avatarHtml(perfil?.avatar || avatarConfigDefault(), alunos[0], '100%');
+} catch(_) {} })();
+
+// ── Carregar duelo ─────────────────────────────────────────────
+const dueloSnap = await get(ref(db, `duelos/${dueloId}`));
+if (!dueloSnap.exists()) { window.location.href = '/aluno/duelos.html'; throw new Error(); }
+const duelo = dueloSnap.val();
+
+if (duelo.status === 'encerrado' || duelo.status === 'expirado') {
+  window.location.href = '/aluno/duelos.html';
+  throw new Error();
+}
+const adversarioUid   = duelo.criador_uid === uid ? duelo.adversario_uid   : duelo.criador_uid;
+const adversarioNome  = duelo.criador_uid === uid ? (duelo.adversario_nome || '?') : duelo.criador_nome;
+
+// ── Parceiros de dupla ──────────────────────────────────────
+const _meuParceiroNome  = duelo.criador_uid === uid
+  ? (duelo.criador_parceiro_nome   || '')
+  : (duelo.adversario_parceiro_nome || '');
+const _meuParceiroTurma = duelo.criador_uid === uid
+  ? (duelo.criador_parceiro_turma   || '')
+  : (duelo.adversario_parceiro_turma || '');
+const _advParceiroNome  = duelo.criador_uid === uid
+  ? (duelo.adversario_parceiro_nome || '')
+  : (duelo.criador_parceiro_nome    || '');
+const _advParceiroTurma = duelo.criador_uid === uid
+  ? (duelo.adversario_parceiro_turma || '')
+  : (duelo.criador_parceiro_turma    || '');
+const _meuParcUid = _meuParceiroNome
+  ? (_meuParceiroTurma + '_' + _meuParceiroNome).replace(/[.#$[\]/\s]/g, '_')
+  : null;
+const _advParcUid = _advParceiroNome
+  ? (_advParceiroTurma + '_' + _advParceiroNome).replace(/[.#$[\]/\s]/g, '_')
+  : null;
+
+// Badge de dupla — usar dados do Firebase
+try {
+  if (_meuParceiroNome) {
+    const el = document.getElementById('dupla-badge-partida');
+    if (el) {
+      el.textContent = `👥 Dupla: ${_meuParceiroNome} · ${_meuParceiroTurma}`;
+      el.style.display = 'block';
+    }
+  }
+} catch(e) {}
+
+// Restaurar dupla no localStorage antes de redirecionar (evita perda ao encerrar)
+function _restaurarDuplaLocalStorage() {
+  try {
+    if (!_meuParceiroNome) return;
+    const _sess = (typeof getSession === 'function') ? getSession() : null;
+    localStorage.setItem('sm_dupla_duelo', JSON.stringify({
+      uid:           _meuParcUid,
+      nome:          _meuParceiroNome,
+      turma:         _meuParceiroTurma,
+      dono_nome:     alunos[0],
+      dono_turma:    turma,
+      session_token: _sess?.session_token,
+      ts:            Date.now(),
+    }));
+  } catch(e) {}
+}
+window._restaurarDuplaLocalStorage = _restaurarDuplaLocalStorage;
+
+const adversarioPerfil = await getPerfil(adversarioUid).catch(() => ({}));
+const adversarioAvatar = avatarUrl(adversarioPerfil?.avatar || avatarConfigDefault());
+
+const dificuldade = duelo.dificuldade || 'medio';
+const duracaoS    = DUELO_DURACAO_SEGUNDOS[dificuldade];
+const diffLabels  = { facil: '🟢 Fácil · 3 min', medio: '🟡 Médio · 4 min', dificil: '🔴 Difícil · 5 min' };
+document.getElementById('topbar-diff').textContent = diffLabels[dificuldade] || dificuldade;
+
+// ── Estado ────────────────────────────────────────────────────
+const CERTOS_MINIMOS = { facil: 5, medio: 4, dificil: 3 };
+
+const estado = {
+  questaoAtual: 0,
+  meusPontos:   0,
+  advPontos:    0,
+  meusCertos:   0,
+  finalizado:   false,
+};
+
+let _timerInterval;
+
+// ── Helpers ───────────────────────────────────────────────────
+function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function r(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+function fmtPts(n) {
+  const s = n.toFixed(1);
+  return s.endsWith('.0') ? s.slice(0,-2) : s;
+}
+
+// Envolve negativos em () quando precedidos de operador: 5 × -3 → 5 × (-3)
+function fmtExpr(expr) {
+  return String(expr)
+    .replace(/([\+\-\×\÷])\s*(-\d)/g, (_, op, neg) => `${op} (${neg})`);
+}
+
+// ── Questões por dificuldade ───────────────────────────────────
+function gerarUmaQuestao() {
+  const q = estado.questaoAtual + 1;
+
+  // ── FÁCIL: adição, subtração positiva, multiplicação pequena ──
+  if (dificuldade === 'facil') {
+    const tipos = q <= 4
+      ? ['soma', 'soma', 'subPos']
+      : ['soma', 'subPos', 'multPeq'];
+    const tipo = tipos[Math.floor(Math.random() * tipos.length)];
+
+    if (tipo === 'soma') {
+      const a = r(1,15), b = r(1,15);
+      return { expr: fmtExpr(`${a} + ${b}`), resp: a + b };
+    }
+    if (tipo === 'subPos') {
+      const b = r(1,12), a = r(b, 15);
+      return { expr: fmtExpr(`${a} - ${b}`), resp: a - b };
+    }
+    const a = r(2,9), b = r(2,9);
+    return { expr: fmtExpr(`${a} × ${b}`), resp: a * b };
+  }
+
+  // ── MÉDIO: negativos, × e ÷ com sinais, parênteses simples ──
+  if (dificuldade === 'medio') {
+    const tipos = q <= 3
+      ? ['multMed', 'divMed']
+      : ['subtNeg', 'sinalFrente', 'multMed', 'divMed', 'parentSimples'];
+    const tipo = tipos[Math.floor(Math.random() * tipos.length)];
+
+    if (tipo === 'subtNeg') {
+      const b = r(3,18), a = r(1, b - 1);
+      return { expr: fmtExpr(`${a} - ${b}`), resp: a - b };
+    }
+    if (tipo === 'sinalFrente') {
+      const A = r(2,15), b = r(2,15);
+      const op = Math.random() > 0.5 ? '+' : '-';
+      return { expr: fmtExpr(`-${A} ${op} ${b}`), resp: op === '+' ? -A + b : -A - b };
+    }
+    if (tipo === 'multMed') {
+      const sA = Math.random() > 0.5 ? -1 : 1;
+      const sB = Math.random() > 0.5 ? -1 : 1;
+      const A = sA * r(2,13), B = sB * r(2,13);
+      return { expr: fmtExpr(`${A} × ${B}`), resp: A * B };
+    }
+    if (tipo === 'divMed') {
+      const bAbs = r(2,12), rAbs = r(2,10);
+      const sA = Math.random() > 0.5 ? -1 : 1;
+      const A = sA * bAbs * rAbs, B = bAbs;
+      return { expr: fmtExpr(`${A} ÷ ${B}`), resp: A / B };
+    }
+    // parentSimples
+    const a = r(2,15), b = r(2,15);
+    const fmt = Math.floor(Math.random() * 4);
+    if (fmt === 0) return { expr: fmtExpr(`${a} - (${b})`),    resp: a - b };
+    if (fmt === 1) return { expr: fmtExpr(`-${a} - (-${b})`),  resp: -a + b };
+    if (fmt === 2) return { expr: fmtExpr(`(-${a}) + (${b})`), resp: -a + b };
+    return              { expr: fmtExpr(`-(${a}) + ${b}`),     resp: -a + b };
+  }
+
+  // ── DIFÍCIL: 2 operandos, números maiores, todas as operações com negativos ──
+  const tipos = ['multGrande', 'divGrande', 'somaNegs', 'subNegs', 'multGrande', 'divGrande'];
+  const tipo = tipos[Math.floor(Math.random() * tipos.length)];
+
+  if (tipo === 'multGrande') {
+    const sA = Math.random() > 0.5 ? -1 : 1;
+    const sB = Math.random() > 0.5 ? -1 : 1;
+    const A = sA * r(6, 25), B = sB * r(6, 25);
+    return { expr: fmtExpr(`${A} × ${B}`), resp: A * B };
+  }
+
+  if (tipo === 'divGrande') {
+    const sA = Math.random() > 0.5 ? -1 : 1;
+    const sB = Math.random() > 0.5 ? -1 : 1;
+    const bAbs = r(4, 15), rAbs = r(3, 15);
+    const A = sA * bAbs * rAbs, B = sB * bAbs;
+    return { expr: fmtExpr(`${A} ÷ ${B}`), resp: A / B };
+  }
+
+  if (tipo === 'somaNegs') {
+    const A = -r(10, 50), B = -r(10, 50);
+    return { expr: fmtExpr(`${A} + ${B}`), resp: A + B };
+  }
+
+  // subNegs: subtrações com negativos grandes
+  const sA = Math.random() > 0.5 ? -1 : 1;
+  const sB = Math.random() > 0.5 ? -1 : 1;
+  const A = sA * r(10, 50), B = sB * r(10, 50);
+  return { expr: fmtExpr(`${A} - ${B}`), resp: A - B };
+}
+
+function proximaQuestao() {
+  const questao = gerarUmaQuestao();
+  estado.questaoAtual++;
+  renderQuestaoUnica(questao);
+}
+
+// ── Opções ────────────────────────────────────────────────────
+function gerarOpcoes(resp) {
+  const erradas = new Set();
+  // distrator de sinal: incluir -resp para treinar regra de sinais
+  if (resp !== 0) erradas.add(-resp);
+  let tentativas = 0;
+  while (erradas.size < 3 && tentativas < 100) {
+    tentativas++;
+    const delta = r(1, 10);
+    const candidato = Math.random() > 0.5 ? resp + delta : resp - delta;
+    if (candidato !== resp && !erradas.has(candidato)) erradas.add(candidato);
+  }
+  return [...erradas, resp].sort(() => Math.random() - 0.5);
+}
+
+// ── Render placar (template) ──────────────────────────────────
+function renderArena() {
+  document.getElementById('duelo-arena').innerHTML = `
+    <div class="placar-wrap">
+      <div class="lado eu">
+        <div class="lado-av"><img src="${meuAvatar}" alt="" onerror="this.src=''"></div>
+        <div class="lado-nome">
+          ${escH(apelido)}
+          ${_meuParceiroNome ? `<span style="font-size:10px;opacity:.6"> + ${escH(_meuParceiroNome)}</span>` : ''}
+        </div>
+        <div class="lado-pts" id="eu-pts">0</div>
+        <div class="lado-label">pares</div>
+      </div>
+      <div class="vs-center">
+        <div class="vs-label">VS</div>
+        <div class="vs-timer" id="vs-timer">${Math.floor(duracaoS/60)}:00</div>
+      </div>
+      <div class="lado adv">
+        <div class="lado-av"><img src="${adversarioAvatar}" alt="" onerror="this.src=''"></div>
+        <div class="lado-nome">
+          ${escH(adversarioNome)}
+          ${_advParceiroNome ? `<span style="font-size:10px;opacity:.6"> + ${escH(_advParceiroNome)}</span>` : ''}
+        </div>
+        <div class="lado-pts" id="adv-pts">0</div>
+        <div class="lado-label">pares</div>
+      </div>
+    </div>
+    <div class="questao-card">
+      <div class="questao-expr" id="questao-expr">...</div>
+      <div class="questao-num"  id="questao-num"></div>
+    </div>
+    <div class="opcoes-grid" id="opcoes-grid"></div>
+  `;
+}
+
+// ── Render questão ────────────────────────────────────────────
+function renderQuestaoUnica(q) {
+  document.getElementById('questao-expr').textContent = q.expr;
+  document.getElementById('questao-num').textContent  = `Questão ${estado.questaoAtual}`;
+
+  const opcoes = gerarOpcoes(q.resp);
+  document.getElementById('opcoes-grid').innerHTML = opcoes.map(op =>
+    `<button class="opcao" onclick="responder(${op},${q.resp},this)">${op}</button>`
+  ).join('');
+}
+
+// ── Responder ─────────────────────────────────────────────────
+window.responder = function(escolha, respCorreta, btnEl) {
+  if (estado.finalizado) return;
+  // desabilitar todos
+  document.querySelectorAll('.opcao').forEach(b => { b.onclick = null; b.disabled = true; });
+
+  const certo = escolha === respCorreta;
+  const erroSinal = !certo && respCorreta !== 0 && escolha === -respCorreta;
+  btnEl.classList.add(certo ? 'certo' : 'errado');
+
+  if (certo) {
+    estado.meusPontos += 1;
+    estado.meusCertos += 1;
+  } else {
+    estado.meusPontos = Math.max(0, estado.meusPontos - DUELO_ERRO_PENALIDADE);
+    document.querySelectorAll('.opcao').forEach(b => {
+      if (Number(b.textContent) === respCorreta) b.classList.add('certo');
+    });
+    if (erroSinal) {
+      const numEl = document.getElementById('questao-num');
+      if (numEl) numEl.textContent += ' ⚠️ Cuidado com o sinal!';
+    }
+  }
+
+  // placar ao vivo
+  set(ref(db, `duelos/${dueloId}/placar_live/${uid}`), estado.meusPontos).catch(() => {});
+  const euEl = document.getElementById('eu-pts');
+  if (euEl) euEl.textContent = fmtPts(estado.meusPontos);
+
+  setTimeout(() => {
+    if (estado.finalizado) return;
+    proximaQuestao();
+  }, erroSinal ? 1000 : 600);
+};
+
+// ── Timer ─────────────────────────────────────────────────────
+async function iniciarTimer() {
+  const snap = await get(ref(db, `duelos/${dueloId}/ts_aceito`));
+  const tsInicio  = snap.val() || Date.now();
+  const tsEncerra = tsInicio + (duracaoS * 1000);
+
+  _timerInterval = setInterval(() => {
+    const restMs = tsEncerra - Date.now();
+    const restS  = Math.max(0, Math.ceil(restMs / 1000));
+    const m = Math.floor(restS / 60);
+    const s = restS % 60;
+    const el = document.getElementById('vs-timer');
+    if (el) {
+      el.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+      el.className = 'vs-timer' + (restS <= 30 ? ' urgente' : '');
+    }
+    if (restMs <= 0) encerrarPartida('tempo');
+  }, 500);
+}
+
+// ── Iniciar partida ───────────────────────────────────────────
+async function iniciarPartida() {
+  renderArena();
+  proximaQuestao();
+  iniciarTimer();
+
+  // Escutar placar do adversário em tempo real
+  onValue(ref(db, `duelos/${dueloId}/placar_live/${adversarioUid}`), snap => {
+    if (snap.exists()) {
+      estado.advPontos = snap.val();
+      const el = document.getElementById('adv-pts');
+      if (el) el.textContent = fmtPts(estado.advPontos);
+    }
+  });
+
+  // Detectar encerramento pelo outro lado e salvar+mostrar imediatamente
+  onValue(ref(db, `duelos/${dueloId}/status`), async snap => {
+    if (snap.val() === 'encerrado' && !estado.finalizado) {
+      estado.finalizado = true;
+      clearInterval(_timerInterval);
+      await set(ref(db, `duelos/${dueloId}/resultado/${uid}`), {
+        pares:    estado.meusPontos,
+        tempo_ms: duracaoS * 1000,
+      });
+      await atualizarPresenca({ em_duelo: false, status: 'disponivel' });
+      const resSnap = await get(ref(db, `duelos/${dueloId}/resultado`));
+      mostrarResultado(resSnap.val() || {});
+    }
+  });
+}
+
+// ── Encerrar ──────────────────────────────────────────────────
+async function encerrarPartida(motivo) {
+  if (estado.finalizado) return;
+  estado.finalizado = true;
+  clearInterval(_timerInterval);
+
+  if (motivo === 'abandono') {
+    await set(ref(db, `duelos/${dueloId}/resultado/${uid}`), {
+      pares: 0, tempo_ms: 0, abandono: true,
+    });
+    await update(ref(db, `duelos/${dueloId}`), {
+      status:                 'encerrado',
+      vencedor_uid:           adversarioUid,
+      encerrado_por_abandono: true,
+    });
+    // Salvar histórico com abandono: true para quem saiu (inclui dados de dupla)
+    try {
+      await set(ref(db, `perfis/${uid}/historico_duelos/${dueloId}`), {
+        duelo_id:           dueloId,
+        dificuldade:        dificuldade,
+        adversario_uid:     adversarioUid,
+        adversario_nome:    adversarioNome,
+        adversario_turma:   (adversarioUid || '').split('_')[0] || '',
+        adv_parceiro_nome:  _advParceiroNome  || '',
+        adv_parceiro_turma: _advParceiroTurma || '',
+        parceiro_nome:      _meuParceiroNome  || '',
+        parceiro_turma:     _meuParceiroTurma || '',
+        meus_pares:         estado.meusPontos,
+        adv_pares:          estado.advPontos,
+        resultado:          'derrota',
+        abandono:           true,
+        xp_delta:           XP_DUELO[dificuldade].derrota,
+        ts:                 Date.now(),
+      });
+      if (_meuParcUid) {
+        try {
+          await set(ref(db, `perfis/${_meuParcUid}/historico_duelos/${dueloId}`), {
+            duelo_id:           dueloId,
+            dificuldade:        dificuldade,
+            adversario_uid:     adversarioUid,
+            adversario_nome:    adversarioNome,
+            adversario_turma:   (adversarioUid || '').split('_')[0] || '',
+            adv_parceiro_nome:  _advParceiroNome  || '',
+            adv_parceiro_turma: _advParceiroTurma || '',
+            parceiro_nome:      alunos[0],
+            parceiro_turma:     turma,
+            meus_pares:         estado.meusPontos,
+            adv_pares:          estado.advPontos,
+            resultado:          'derrota',
+            abandono:           true,
+            xp_delta:           XP_DUELO[dificuldade].derrota,
+            ts:                 Date.now(),
+          });
+        } catch(e) {}
+      }
+      // ADVERSARIO venceu por abandono - grava na fonte (garante "adv. desistiu" + dupla)
+      try {
+        await set(ref(db, `perfis/${adversarioUid}/historico_duelos/${dueloId}`), {
+          duelo_id:           dueloId,
+          dificuldade:        dificuldade,
+          adversario_uid:     uid,
+          adversario_nome:    alunos[0],
+          adversario_turma:   turma,
+          adv_parceiro_nome:  _meuParceiroNome  || '',
+          adv_parceiro_turma: _meuParceiroTurma || '',
+          parceiro_nome:      _advParceiroNome  || '',
+          parceiro_turma:     _advParceiroTurma || '',
+          meus_pares:         estado.advPontos,
+          adv_pares:          estado.meusPontos,
+          resultado:          'vitoria',
+          ganhou_abandono:    true,
+          xp_delta:           Math.round(XP_DUELO[dificuldade].vitoria * 0.5),
+          ts:                 Date.now(),
+        });
+      } catch(e) {}
+      if (_advParcUid) {
+        try {
+          await set(ref(db, `perfis/${_advParcUid}/historico_duelos/${dueloId}`), {
+            duelo_id:           dueloId,
+            dificuldade:        dificuldade,
+            adversario_uid:     uid,
+            adversario_nome:    alunos[0],
+            adversario_turma:   turma,
+            adv_parceiro_nome:  _meuParceiroNome  || '',
+            adv_parceiro_turma: _meuParceiroTurma || '',
+            parceiro_nome:      adversarioNome    || '',
+            parceiro_turma:     (adversarioUid || '').split('_')[0] || '',
+            meus_pares:         estado.advPontos,
+            adv_pares:          estado.meusPontos,
+            resultado:          'vitoria',
+            ganhou_abandono:    true,
+            xp_delta:           Math.round(XP_DUELO[dificuldade].vitoria * 0.5),
+            ts:                 Date.now(),
+          });
+        } catch(e) {}
+      }
+    } catch(e) {}
+    try {
+      const { adicionarXP } = await import('/js/db.js');
+      await adicionarXP(uid, XP_DUELO[dificuldade].derrota);
+      if (_meuParcUid) {
+        try { await adicionarXP(_meuParcUid, XP_DUELO[dificuldade].derrota); } catch(e) {}
+      }
+    } catch(e) {}
+    await atualizarPresenca({ em_duelo: false, status: 'disponivel' });
+    _restaurarDuplaLocalStorage();
+    window.location.href = '/aluno/duelos.html';
+    return;
+  }
+
+  // Salvar meu resultado
+  await set(ref(db, `duelos/${dueloId}/resultado/${uid}`), {
+    pares:    estado.meusPontos,
+    tempo_ms: duracaoS * 1000,
+  });
+
+  // Marcar encerrado imediatamente — o outro lado detecta via onValue
+  // Não gravar vencedor_uid nem encerrado_por_abandono: encerramento por tempo
+  // determina vencedor por pontuação em mostrarResultado(), não por quem zerou primeiro.
+  await update(ref(db, `duelos/${dueloId}`), { status: 'encerrado' });
+  await atualizarPresenca({ em_duelo: false, status: 'disponivel' });
+
+  // Aguardar resultado do adversário (max 1.5s) para mostrar placar completo
+  let tentativas = 0;
+  const aguardar = setInterval(async () => {
+    tentativas++;
+    const snap = await get(ref(db, `duelos/${dueloId}/resultado`));
+    const res  = snap.val() || {};
+    if (res[adversarioUid] || tentativas >= 3) {
+      clearInterval(aguardar);
+      mostrarResultado(res);
+    }
+  }, 500);
+}
+
+// ── Salvar histórico local ─────────────────────────────────────
+async function salvarHistoricoLocal(euGanhei, empate, xpDelta, meuRes, advRes,
+                                    _adversarioUid, _adversarioNome, _adversarioTurma,
+                                    _advAbandonou) {
+  try {
+    const perfSnap = await get(ref(db, `perfis/${uid}`));
+    const perf = perfSnap.exists() ? perfSnap.val() : {};
+    let _histExistente = null;
+    try {
+      const _hSnap = await get(ref(db, `perfis/${uid}/historico_duelos/${dueloId}`));
+      _histExistente = _hSnap.exists() ? _hSnap.val() : null;
+    } catch(_) {}
+    const _ganhouAbandonoFinal = (euGanhei && (_advAbandonou || _histExistente?.ganhou_abandono)) ? true : false;
+
+    const _histBase = {
+      duelo_id:              dueloId,
+      dificuldade:           dificuldade,
+      adversario_uid:        _adversarioUid   || '',
+      adversario_nome:       _adversarioNome  || '',
+      adversario_turma:      _adversarioTurma || '',
+      adv_parceiro_nome:     _advParceiroNome  || '',
+      adv_parceiro_turma:    _advParceiroTurma || '',
+      meus_pares:            meuRes?.pares  ?? 0,
+      adv_pares:             advRes?.pares  ?? 0,
+      ts:                    Date.now(),
+    };
+
+    // Salvar para o aluno principal
+    await set(ref(db, `perfis/${uid}/historico_duelos/${dueloId}`), {
+      ..._histBase,
+      parceiro_nome:   _meuParceiroNome  || '',
+      parceiro_turma:  _meuParceiroTurma || '',
+      resultado:       euGanhei ? 'vitoria' : empate ? 'empate' : 'derrota',
+      xp_delta:        xpDelta,
+      ...(_ganhouAbandonoFinal ? { ganhou_abandono: true } : {}),
+    });
+
+    await update(ref(db, `perfis/${uid}`), {
+      duelos_total:    (perf.duelos_total    || 0) + 1,
+      duelos_vitorias: (perf.duelos_vitorias || 0) + (euGanhei ? 1 : 0),
+    });
+
+    // Salvar para meu parceiro
+    if (_meuParcUid) {
+      try {
+        const pSnap = await get(ref(db, `perfis/${_meuParcUid}`));
+        const p = pSnap.exists() ? pSnap.val() : {};
+        await set(ref(db, `perfis/${_meuParcUid}/historico_duelos/${dueloId}`), {
+          ..._histBase,
+          parceiro_nome:  alunos[0],
+          parceiro_turma: turma,
+          resultado:      euGanhei ? 'vitoria' : empate ? 'empate' : 'derrota',
+          xp_delta:       xpDelta,
+          ...(euGanhei && _advAbandonou ? { ganhou_abandono: true } : {}),
+        });
+        await update(ref(db, `perfis/${_meuParcUid}`), {
+          duelos_total:    (p.duelos_total    || 0) + 1,
+          duelos_vitorias: (p.duelos_vitorias || 0) + (euGanhei ? 1 : 0),
+        });
+      } catch(e) { console.warn('[Histórico meu parceiro]', e); }
+    }
+
+    // Salvar para parceiro do adversário
+    if (_advParcUid) {
+      try {
+        const apSnap = await get(ref(db, `perfis/${_advParcUid}`));
+        const ap = apSnap.exists() ? apSnap.val() : {};
+        await set(ref(db, `perfis/${_advParcUid}/historico_duelos/${dueloId}`), {
+          duelo_id:              dueloId,
+          dificuldade:           dificuldade,
+          adversario_uid:        uid,
+          adversario_nome:       alunos[0],
+          adversario_turma:      turma,
+          adv_parceiro_nome:     _meuParceiroNome  || '',
+          adv_parceiro_turma:    _meuParceiroTurma || '',
+          parceiro_nome:         _adversarioNome   || '',
+          parceiro_turma:        _adversarioTurma  || '',
+          meus_pares:            advRes?.pares  ?? 0,
+          adv_pares:             meuRes?.pares  ?? 0,
+          resultado:             euGanhei ? 'derrota' : empate ? 'empate' : 'vitoria',
+          xp_delta:              euGanhei
+                                   ? XP_DUELO[dificuldade].derrota
+                                   : XP_DUELO[dificuldade].vitoria,
+          ts:                    Date.now(),
+        });
+        await update(ref(db, `perfis/${_advParcUid}`), {
+          duelos_total:    (ap.duelos_total    || 0) + 1,
+          duelos_vitorias: (ap.duelos_vitorias || 0) + (euGanhei ? 0 : 1),
+        });
+      } catch(e) { console.warn('[Histórico parceiro adv]', e); }
+    }
+
+    console.log('[Histórico] salvo para todos');
+  } catch(e) {
+    console.error('[Histórico ERRO]', e);
+  }
+}
+
+// ── Resultado ─────────────────────────────────────────────────
+async function mostrarResultado(resultadosParam) {
+  let resultados = resultadosParam;
+  if (!resultados) {
+    const snap = await get(ref(db, `duelos/${dueloId}/resultado`));
+    resultados = snap.val() || {};
+  }
+
+  // Re-carregar duelo para pegar vencedor_uid e dados atualizados
+  const dueloAtualSnap = await get(ref(db, `duelos/${dueloId}`));
+  const dueloAtual     = dueloAtualSnap.val() || duelo;
+
+  const _adversarioUid  = dueloAtual.criador_uid === uid
+    ? dueloAtual.adversario_uid
+    : dueloAtual.criador_uid;
+  const _adversarioNome = dueloAtual.criador_uid === uid
+    ? (dueloAtual.adversario_nome  || adversarioNome)
+    : (dueloAtual.criador_nome     || adversarioNome);
+  const _adversarioTurma = dueloAtual.criador_uid === uid
+    ? (dueloAtual.adversario_turma || '')
+    : (dueloAtual.criador_turma    || '');
+
+  const meuRes  = resultados[uid]            || { pares: estado.meusPontos };
+  const advRes  = resultados[_adversarioUid] || { pares: estado.advPontos  };
+
+  // Se vencedor_uid já está definido (abandono), usar isso
+  let euGanhei, empate;
+  if (dueloAtual.vencedor_uid) {
+    euGanhei = dueloAtual.vencedor_uid === uid;
+    empate   = false;
+  } else {
+    euGanhei = meuRes.pares > advRes.pares;
+    empate   = meuRes.pares === advRes.pares;
+  }
+
+  const _minCertos    = CERTOS_MINIMOS[dificuldade] || 5;
+  const _atingiuMinimo = estado.meusCertos >= _minCertos;
+  const xpDelta = euGanhei
+    ? (_atingiuMinimo ? XP_DUELO[dificuldade].vitoria : 0)
+    : empate ? 0 : XP_DUELO[dificuldade].derrota;
+
+  // Aplicar XP
+  if (xpDelta !== 0) {
+    try {
+      const { adicionarXP } = await import('/js/db.js');
+      await adicionarXP(uid, xpDelta);
+      if (_meuParcUid) {
+        try { await adicionarXP(_meuParcUid, xpDelta); } catch(e) { console.warn('[XP parceiro]', e); }
+      }
+    } catch(e) { console.error('[XP ERRO]', e); }
+  }
+
+  // XP de vitória para quem ficou quando o adversário abandonou
+  if (dueloAtual.encerrado_por_abandono && euGanhei) {
+    try {
+      const { adicionarXP } = await import('/js/db.js');
+      const _xpAb = _atingiuMinimo
+        ? Math.round(XP_DUELO[dificuldade].vitoria * 0.5)
+        : 0;
+      await adicionarXP(uid, _xpAb);
+      if (_meuParcUid) {
+        try { await adicionarXP(_meuParcUid, _xpAb); } catch(e) {}
+      }
+    } catch(e) { console.error('[XP abandono ERRO]', e); }
+  }
+
+  // Salvar histórico (inclui parceiros internamente)
+  const _advAbandonouNesteResultado = !!(dueloAtual.encerrado_por_abandono && euGanhei);
+  await salvarHistoricoLocal(
+    euGanhei, empate, xpDelta,
+    meuRes, advRes,
+    _adversarioUid, _adversarioNome, _adversarioTurma,
+    _advAbandonouNesteResultado
+  );
+
+  // Feed global — escrever evento do duelo (só quem ganhou escreve, evita duplicação)
+  if (euGanhei) {
+    try {
+      const { push: fbPush } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+      const diffLabel = { facil: 'Fácil', medio: 'Médio', dificil: 'Difícil' }[dificuldade] || dificuldade;
+      await set(fbPush(ref(db, 'feed_global')), {
+        tipo:  'duelo',
+        uid,
+        nome:  apelido,
+        turma,
+        texto: `⚔️ ${apelido}${_meuParceiroNome ? ' + ' + _meuParceiroNome : ''} venceu ${_adversarioNome}${_advParceiroNome ? ' + ' + _advParceiroNome : ''} no duelo ${diffLabel}`,
+        ts:    Date.now(),
+      });
+    } catch(e) { console.warn('[Feed duelo]', e); }
+  }
+  try {
+    const { verificarConquistas } = await import('/js/conquistas.js');
+    await verificarConquistas(uid, {});
+    if (_meuParcUid) {
+      try { await verificarConquistas(_meuParcUid, {}); } catch(e) {}
+    }
+    if (_advParcUid) {
+      try { await verificarConquistas(_advParcUid, {}); } catch(e) {}
+    }
+  } catch(e) {}
+
+  // Renderizar tela de resultado
+  document.getElementById('duelo-arena').innerHTML = `
+    <div style="text-align:center;padding:32px 20px;
+                display:flex;flex-direction:column;gap:20px;align-items:center">
+      <div style="font-size:64px">
+        ${euGanhei ? '🏆' : empate ? '🤝' : dueloAtual.encerrado_por_abandono ? '🏃' : '😤'}
+      </div>
+      <div style="font-size:24px;font-weight:900">
+        ${euGanhei
+          ? (dueloAtual.encerrado_por_abandono ? 'Vitória! Adversário saiu.' : 'Você venceu!')
+          : empate ? 'Empate!'
+          : 'Você perdeu!'}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%">
+        <div style="background:var(--card);border:2px solid var(--eu,#3b82f6);
+                    border-radius:14px;padding:16px;text-align:center">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">
+            ${escH(apelido)}${_meuParceiroNome ? `<br><span style="font-size:10px;opacity:.6">+ ${escH(_meuParceiroNome)}</span>` : ''}
+          </div>
+          <div style="font-size:36px;font-weight:900;color:var(--eu,#3b82f6)">
+            ${meuRes.pares?.toFixed(1).replace('.0','') ?? 0}
+          </div>
+          <div style="font-size:10px;color:var(--text-muted)">pares</div>
+        </div>
+        <div style="background:var(--card);border:2px solid var(--adv,#ef4444);
+                    border-radius:14px;padding:16px;text-align:center">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">
+            ${escH(_adversarioNome)}${_advParceiroNome ? `<br><span style="font-size:10px;opacity:.6">+ ${escH(_advParceiroNome)}</span>` : ''}
+          </div>
+          <div style="font-size:36px;font-weight:900;color:var(--adv,#ef4444)">
+            ${advRes.pares != null ? advRes.pares.toFixed(1).replace('.0','') : '—'}
+          </div>
+          <div style="font-size:10px;color:var(--text-muted)">pares</div>
+        </div>
+      </div>
+      <div style="font-size:20px;font-weight:800;
+                  color:${xpDelta >= 0 ? 'var(--green,#22c55e)' : '#ef4444'}">
+        ${xpDelta >= 0 ? '+' : ''}${xpDelta} XP
+      </div>
+      ${euGanhei && !_atingiuMinimo ? `
+      <div style="font-size:12px;color:rgba(245,158,11,.8);text-align:center;margin-top:6px;padding:8px 12px;background:rgba(245,158,11,.08);border-radius:8px;border:1px solid rgba(245,158,11,.2)">
+        ⚠️ Mínimo de ${_minCertos} acertos para ganhar XP (você acertou ${estado.meusCertos}).
+      </div>` : ''}
+      <div id="reacao-pos-duelo" style="width:100%">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px;font-weight:600">
+          Mandar mensagem para ${escH(_adversarioNome)}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          <button onclick="enviarReacaoPos('gg 🤝')" class="btn-reacao">gg 🤝</button>
+          <button onclick="enviarReacaoPos('revancha! 😤')" class="btn-reacao">revancha! 😤</button>
+          <button onclick="enviarReacaoPos('bem jogado 👏')" class="btn-reacao">bem jogado 👏</button>
+        </div>
+        <div id="reacao-enviada" style="display:none;font-size:12px;color:var(--green);text-align:center;margin-top:8px">
+          ✅ Mensagem enviada!
+        </div>
+      </div>
+      <button onclick="_restaurarDuplaLocalStorage();window.location.href='/aluno/duelos.html'"
+        style="padding:12px 28px;background:var(--purple,#7F77DD);color:#fff;
+               border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">
+        Voltar aos duelos
+      </button>
+    </div>
+  `;
+}
+
+// ── Reação pós-duelo ──────────────────────────────────────────
+let _reacaoEnviada = false;
+window.enviarReacaoPos = async function(msg) {
+  if (_reacaoEnviada) return;
+  _reacaoEnviada = true;
+  document.querySelectorAll('.btn-reacao').forEach(b => b.classList.add('enviado'));
+  document.getElementById('reacao-enviada').style.display = 'block';
+  try {
+    await set(ref(db, `notif_emoji/${adversarioUid}/reacao`), {
+      de:    apelido || alunos[0],
+      emoji: msg,
+      ts:    Date.now(),
+      tipo:  'pos_duelo',
+    });
+  } catch(_) {}
+};
+
+// ── Sair ──────────────────────────────────────────────────────
+window.confirmarSair = async function() {
+  console.log('[confirmarSair] estado.finalizado =', estado.finalizado);
+  console.log('[DEBUG]', { uid, adversarioUid, dueloId, dificuldade, adversarioNome, apelido });
+
+  if (estado.finalizado) {
+    window.location.href = '/aluno/duelos.html';
+    return;
+  }
+
+  const confirmado = confirm(
+    '⚠️ Sair do duelo?\n\n' +
+    '• Você perde\n' +
+    '• Adversário ganha automaticamente\n\n' +
+    'Tem certeza?'
+  );
+  if (!confirmado) return;
+
+  estado.finalizado = true;
+  clearInterval(_timerInterval);
+
+  // Salvar L para mim (com dados de dupla)
+  await set(ref(db, `perfis/${uid}/historico_duelos/${dueloId}`), {
+    duelo_id:           dueloId,
+    dificuldade:        dificuldade,
+    adversario_uid:     adversarioUid,
+    adversario_nome:    adversarioNome,
+    adversario_turma:   (adversarioUid || '').split('_')[0] || '',
+    adv_parceiro_nome:  _advParceiroNome  || '',
+    adv_parceiro_turma: _advParceiroTurma || '',
+    parceiro_nome:      _meuParceiroNome  || '',
+    parceiro_turma:     _meuParceiroTurma || '',
+    meus_pares:         estado.meusPontos,
+    adv_pares:          estado.advPontos,
+    resultado:          'derrota',
+    abandono:           true,
+    ts:                 Date.now(),
+  });
+  // Parceiro de quem saiu (L)
+  if (_meuParcUid) {
+    try {
+      await set(ref(db, `perfis/${_meuParcUid}/historico_duelos/${dueloId}`), {
+        duelo_id:           dueloId,
+        dificuldade:        dificuldade,
+        adversario_uid:     adversarioUid,
+        adversario_nome:    adversarioNome,
+        adversario_turma:   (adversarioUid || '').split('_')[0] || '',
+        adv_parceiro_nome:  _advParceiroNome  || '',
+        adv_parceiro_turma: _advParceiroTurma || '',
+        parceiro_nome:      apelido,
+        parceiro_turma:     turma,
+        meus_pares:         estado.meusPontos,
+        adv_pares:          estado.advPontos,
+        resultado:          'derrota',
+        abandono:           true,
+        ts:                 Date.now(),
+      });
+    } catch(e) {}
+  }
+
+  // Salvar W para adversário (com dados de dupla + ganhou_abandono)
+  await set(ref(db, `perfis/${adversarioUid}/historico_duelos/${dueloId}`), {
+    duelo_id:           dueloId,
+    dificuldade:        dificuldade,
+    adversario_uid:     uid,
+    adversario_nome:    apelido,
+    adversario_turma:   turma,
+    adv_parceiro_nome:  _meuParceiroNome  || '',
+    adv_parceiro_turma: _meuParceiroTurma || '',
+    parceiro_nome:      _advParceiroNome  || '',
+    parceiro_turma:     _advParceiroTurma || '',
+    resultado:          'vitoria',
+    ganhou_abandono:    true,
+    ts:                 Date.now(),
+  });
+  // Parceiro do adversário (W)
+  if (_advParcUid) {
+    try {
+      await set(ref(db, `perfis/${_advParcUid}/historico_duelos/${dueloId}`), {
+        duelo_id:           dueloId,
+        dificuldade:        dificuldade,
+        adversario_uid:     uid,
+        adversario_nome:    apelido,
+        adversario_turma:   turma,
+        adv_parceiro_nome:  _meuParceiroNome  || '',
+        adv_parceiro_turma: _meuParceiroTurma || '',
+        parceiro_nome:      adversarioNome    || '',
+        parceiro_turma:     (adversarioUid || '').split('_')[0] || '',
+        resultado:          'vitoria',
+        ganhou_abandono:    true,
+        ts:                 Date.now(),
+      });
+    } catch(e) {}
+  }
+
+  // Marcar duelo encerrado
+  await update(ref(db, `duelos/${dueloId}`), {
+    status:       'encerrado',
+    vencedor_uid: adversarioUid,
+  });
+
+  // XP
+  try {
+    const { adicionarXP } = await import('/js/db.js');
+    const _xpAbW = Math.round(XP_DUELO[dificuldade].vitoria * 0.5);
+    await adicionarXP(uid,           XP_DUELO[dificuldade].derrota);
+    await adicionarXP(adversarioUid, _xpAbW);
+    if (_meuParcUid) {
+      try { await adicionarXP(_meuParcUid, XP_DUELO[dificuldade].derrota); } catch(e) {}
+    }
+    if (_advParcUid) {
+      try { await adicionarXP(_advParcUid, _xpAbW); } catch(e) {}
+    }
+  } catch(e) {}
+
+  // Presença
+  await atualizarPresenca({ em_duelo: false, status: 'disponivel' });
+
+  _restaurarDuplaLocalStorage();
+  window.location.href = '/aluno/duelos.html';
+};
+
+// ── Interceptar navegação durante duelo ───────────────────────
+document.addEventListener('click', function(e) {
+  if (estado?.finalizado) return;
+  const link = e.target.closest('a[href]');
+  if (!link) return;
+  const href = link.getAttribute('href');
+  if (!href || href === '#') return;
+  e.preventDefault();
+  e.stopPropagation();
+  const confirmado = confirm(
+    '⚠️ Sair do duelo?\n\n' +
+    '• Você será marcado como PERDEDOR\n' +
+    '• Adversário ganha automaticamente\n' +
+    '• O duelo encerra para os dois\n\n' +
+    'Tem certeza?'
+  );
+  if (confirmado) {
+    encerrarPartida('abandono').then(() => { _restaurarDuplaLocalStorage(); window.location.href = href; });
+  }
+}, true);
+
+history.pushState({ duelo: true }, '', location.href);
+window.addEventListener('popstate', function() {
+  if (estado?.finalizado) return;
+  history.pushState({ duelo: true }, '', location.href);
+  const confirmado = confirm(
+    '⚠️ Sair do duelo?\n\n' +
+    '• Você perde automaticamente\n\n' +
+    'Tem certeza?'
+  );
+  if (confirmado) {
+    encerrarPartida('abandono').then(() => { _restaurarDuplaLocalStorage(); history.back(); history.back(); });
+  }
+});
+
+window.addEventListener('beforeunload', function(e) {
+  if (estado?.finalizado) return;
+  e.preventDefault();
+  e.returnValue = '';
+});
+
+// ── Start ──────────────────────────────────────────────────────
+iniciarPartida();
+</script>
+</body>
+</html>

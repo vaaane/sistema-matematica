@@ -1,0 +1,1941 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>⚔️ Duelos — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    /* ── Notificações de desafio ── */
+    #notificacoes-wrap {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; flex-direction: column; gap: 8px;
+      padding: 0 16px; margin-bottom: 0;
+      pointer-events: none;
+    }
+    .challenge-notif {
+      background: linear-gradient(135deg, #1a1030, #130d28);
+      border: 1.5px solid var(--purple); border-radius: 14px;
+      padding: 14px 16px; display: flex; align-items: center;
+      gap: 12px; pointer-events: all;
+      box-shadow: 0 4px 24px rgba(124,92,252,.35);
+      animation: notif-in .25s ease;
+    }
+    @keyframes notif-in { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:none; } }
+    .cn-info { flex: 1; min-width: 0; }
+    .cn-title { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.3; }
+    .cn-sub   { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+    .cn-timer { font-family: 'Orbitron', monospace; font-size: 16px; font-weight: 700;
+                color: #ffd700; flex-shrink: 0; min-width: 38px; text-align: center; }
+    .cn-btns  { display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
+    .btn-aceitar { background: var(--purple); color: #fff; border: none;
+                   padding: 6px 12px; border-radius: 8px; font-size: 12px;
+                   font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .btn-recusar { background: transparent; color: var(--text-muted); border: 1px solid var(--border);
+                   padding: 5px 12px; border-radius: 8px; font-size: 11px; cursor: pointer; }
+    .btn-aceitar:hover { opacity: .85; }
+    .btn-recusar:hover { color: var(--text); }
+
+    /* ── Layout ── */
+    .duelos-page { max-width: 700px; margin: 0 auto; padding: 16px 16px 40px; }
+
+    /* ── Tabs ── */
+    .tabs-nav { display: flex; gap: 4px; margin-bottom: 18px; overflow-x: auto; }
+    .tab-btn {
+      padding: 7px 16px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--card); color: var(--text-muted); font-size: 13px;
+      font-weight: 600; cursor: pointer; white-space: nowrap; transition: all .15s;
+    }
+    .tab-btn.active { background: var(--purple); color: #fff; border-color: var(--purple); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* ── Topbar toggle ── */
+    .topbar-toggle-wrap {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--card2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 5px 10px 5px 8px;
+      cursor: pointer; font-size: 11px; font-weight: 600;
+      color: var(--text-muted); flex-shrink: 0; user-select: none;
+    }
+    .topbar-toggle-wrap .sw {
+      width: 32px; height: 17px; border-radius: 9px; background: var(--card2);
+      border: 1px solid var(--border); position: relative; transition: background .2s;
+    }
+    .topbar-toggle-wrap .sw-thumb {
+      position: absolute; top: 2px; left: 2px;
+      width: 11px; height: 11px; border-radius: 50%;
+      background: #fff; transition: transform .2s;
+    }
+    .topbar-toggle-wrap.on .sw { background: #22c55e; border-color: #22c55e; }
+    .topbar-toggle-wrap.on .sw-thumb { transform: translateX(15px); }
+
+    /* ── Dificuldade ── */
+    .diff-select {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px;
+    }
+    .diff-btn {
+      background: var(--card2); border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 10px 8px; text-align: center;
+      cursor: pointer; font-size: 12px; font-weight: 600;
+      color: var(--text-muted); transition: all .15s; line-height: 1.5;
+    }
+    .diff-btn small { font-size: 10px; font-weight: 400; color: var(--text-muted); }
+    .diff-btn.active { border-color: var(--purple); background: rgba(124,92,252,.15); color: var(--purple); }
+    .diff-btn.active small { color: var(--purple); }
+    .diff-btn:hover:not(.active) { border-color: var(--purple); }
+
+    .btn-desafio-aberto {
+      width: 100%; padding: 13px; border-radius: 12px; border: none;
+      background: linear-gradient(135deg, var(--purple), #5a3fcf);
+      color: #fff; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: opacity .15s; letter-spacing: .3px;
+    }
+    .btn-desafio-aberto:hover { opacity: .85; }
+    .btn-desafio-aberto:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* ── Online grid ── */
+    .section-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .8px; color: var(--text-muted); margin: 20px 0 10px;
+    }
+    .online-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 10px;
+    }
+    .online-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 12px; position: relative;
+      transition: border-color .15s;
+    }
+    .online-card:hover { border-color: var(--purple); }
+    .online-card.in-duel { opacity: .6; }
+    .oc-dupla {
+      position: absolute; top: -8px; left: 12px;
+      background: #ffd700; color: #000; font-size: 9px;
+      font-weight: 800; padding: 2px 7px; border-radius: 10px;
+      letter-spacing: .5px;
+    }
+    .oc-top { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+    .oc-av {
+      width: 38px; height: 38px; border-radius: 50%;
+      overflow: hidden; background: var(--card2); flex-shrink: 0;
+    }
+    .oc-av img { width: 100%; height: 100%; object-fit: cover; }
+    .oc-info { flex: 1; min-width: 0; }
+    .oc-name { font-size: 13px; font-weight: 700; overflow: hidden;
+               text-overflow: ellipsis; white-space: nowrap; }
+    .oc-tag  { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+    .oc-dot  { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .btn-desafiar {
+      width: 100%; padding: 7px; border-radius: 8px; border: 1px solid var(--purple);
+      background: rgba(124,92,252,.12); color: var(--purple);
+      font-size: 12px; font-weight: 700; cursor: pointer; transition: all .15s;
+    }
+    .btn-desafiar:hover:not(.disabled) { background: var(--purple); color: #fff; }
+    .btn-desafiar.disabled { opacity: .5; cursor: not-allowed; border-color: var(--border);
+                              background: transparent; color: var(--text-muted); }
+    .online-vazio {
+      text-align: center; padding: 30px 20px; color: var(--text-muted);
+      font-size: 13px; grid-column: 1/-1;
+    }
+
+    /* ── Modais ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; padding: 16px;
+    }
+    .modal-box {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 18px; padding: 24px; width: 100%; max-width: 360px;
+    }
+    .modal-title { font-family: 'Rajdhani', sans-serif; font-size: 20px;
+                   font-weight: 700; margin-bottom: 16px; }
+    .modal-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.5; }
+    .modal-btns { display: flex; gap: 8px; margin-top: 18px; }
+    .modal-btns button { flex: 1; padding: 11px; border-radius: 10px;
+                         font-size: 14px; font-weight: 700; cursor: pointer; border: none; }
+    .btn-confirm { background: var(--purple); color: #fff; }
+    .btn-cancel  { background: var(--card2); color: var(--text); border: 1px solid var(--border) !important; }
+    .btn-confirm:hover { opacity: .85; }
+
+    /* aguardando */
+    .aguardando-wrap { text-align: center; padding: 8px 0 4px; }
+    .aguardando-spinner {
+      width: 48px; height: 48px; border: 3px solid var(--border);
+      border-top-color: var(--purple); border-radius: 50%;
+      animation: spin .8s linear infinite; margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .aguardando-timer {
+      font-family: 'Orbitron', monospace; font-size: 28px;
+      font-weight: 700; color: var(--purple); margin: 8px 0;
+    }
+
+    /* histórico + ranking */
+    .hstat { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; }
+    .hstat .v { font-size: 22px; font-weight: 900; margin-bottom: 2px; }
+    .hstat .l { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .3px; }
+    .duel-diff.facil   { color: #22c55e; border-color: #22c55e !important; }
+    .duel-diff.medio   { color: #f59e0b; border-color: #f59e0b !important; }
+    .duel-diff.dificil { color: #ef4444; border-color: #ef4444 !important; }
+
+    /* placeholder */
+    .tab-placeholder {
+      text-align: center; padding: 50px 20px;
+      color: var(--text-muted); font-size: 13px;
+    }
+    .tab-placeholder .icon { font-size: 36px; margin-bottom: 12px; }
+
+    @media (max-width: 480px) {
+      .online-grid { grid-template-columns: repeat(2, 1fr); }
+      .diff-select { grid-template-columns: 1fr; }
+    }
+
+    /* ── Pódio de duelos ── */
+    .podium-outer { display:flex; align-items:flex-end; justify-content:center; gap:10px; padding:24px 4px 0; }
+    .podium-spot  { display:flex; flex-direction:column; align-items:center; flex:1; max-width:140px; position:relative; }
+    .podium-spot.p1 { max-width:170px; }
+    @media(max-width:500px) {
+      .podium-outer { flex-wrap:wrap; padding:10px 4px 0; gap:8px; }
+      .podium-spot  { max-width:none!important; flex:none; }
+      .podium-spot.p1 { width:100%; order:-1; margin-bottom:4px; }
+      .podium-spot.p2,.podium-spot.p3 { width:calc(50% - 4px); }
+    }
+    .podium-crown  { font-size:18px; line-height:1; margin-bottom:2px; filter:drop-shadow(0 0 6px rgba(255,200,0,.8)); }
+    .podium-av     { width:44px; height:44px; border-radius:50%; overflow:hidden; border:2px solid #F59E0B; margin-bottom:5px; background:var(--card2); flex-shrink:0; position:relative; }
+    .podium-spot.p1 .podium-av { width:54px; height:54px; border-width:3px; }
+    .podium-spot.p2 .podium-av { border-color:#9CA3AF; }
+    .podium-spot.p3 .podium-av { border-color:#CD853F; }
+    .podium-av img { width:100%; height:100%; object-fit:cover; position:relative; z-index:1; display:block; }
+    .podium-av-letra { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:800; color:#fff; z-index:0; }
+    .podium-name  { font-size:11px; font-weight:800; text-align:center; width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 3px; margin-bottom:2px; }
+    .podium-spot.p1 .podium-name { font-size:13px; }
+    .podium-turma { font-size:10px; color:var(--text-muted); text-align:center; margin-bottom:3px; }
+    .podium-score { font-size:12px; font-weight:800; text-align:center; margin-bottom:6px; }
+    .podium-stand { display:flex; align-items:center; justify-content:center; width:100%; border-radius:6px 6px 0 0; font-size:18px; font-weight:800; color:#fff; }
+    .podium-spot.p1 .podium-stand { font-size:22px; }
+    .podium-spot.g1 { background:rgba(245,158,11,.09); border-radius:12px; padding:8px 5px; animation:gold-glow 2.5s ease-in-out infinite; }
+    .podium-spot.g2 { background:rgba(156,163,175,.07); border-radius:10px; padding:5px 3px; }
+    .podium-spot.g3 { background:rgba(180,83,9,.07); border-radius:10px; padding:5px 3px; }
+    @keyframes gold-glow { 0%,100%{box-shadow:0 0 0 rgba(245,158,11,0)} 50%{box-shadow:0 0 18px rgba(245,158,11,.25)} }
+    .podium-me { outline:2.5px solid var(--purple); outline-offset:2px; border-radius:8px; }
+    /* Mini-login dupla */
+    .dupla-wrap { margin-bottom:14px; }
+    .dupla-add-btn { background:rgba(0,212,255,.08); border:1px solid rgba(0,212,255,.3); color:#00d4ff; border-radius:10px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; width:100%; text-align:left; }
+    .dupla-add-btn:hover { background:rgba(0,212,255,.15); }
+    .dupla-panel { display:none; flex-direction:column; gap:10px; background:rgba(0,212,255,.04); border:1px solid rgba(0,212,255,.2); border-radius:12px; padding:14px; margin-top:8px; }
+    .dupla-panel.aberto { display:flex; }
+    .dupla-row { display:flex; gap:8px; flex-wrap:wrap; }
+    .dupla-sel { flex:1; min-width:100px; background:#0d0f1a; border:1px solid rgba(0,212,255,.3); border-radius:8px; padding:7px 10px; color:#e8eaf6; font-size:13px; outline:none; }
+    .dupla-pin { width:90px; background:#0d0f1a; border:1px solid rgba(0,212,255,.3); border-radius:8px; padding:7px 10px; color:#e8eaf6; font-size:13px; letter-spacing:4px; outline:none; }
+    .dupla-ok { background:linear-gradient(135deg,#00d4ff,#0090cc); color:#000; border:none; border-radius:8px; padding:7px 16px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; }
+    .dupla-badge { display:flex; align-items:center; gap:8px; background:rgba(0,212,255,.1); border:1px solid rgba(0,212,255,.35); border-radius:10px; padding:8px 14px; font-size:13px; font-weight:600; color:#00d4ff; }
+    .dupla-remove { background:none; border:none; color:rgba(0,212,255,.6); cursor:pointer; font-size:16px; margin-left:auto; }
+    .dupla-erro { font-size:12px; color:#ff4444; display:none; }
+    .duelo-toast { position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1e2235;border:1px solid var(--border);border-radius:12px;padding:12px 20px;font-size:13px;font-weight:600;color:var(--text);z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:toastIn .25s ease;pointer-events:none;display:flex;align-items:center;gap:8px; }
+    .duelo-toast.warn  { border-color:rgba(245,158,11,.5);color:#F59E0B; }
+    .duelo-toast.error { border-color:rgba(239,68,68,.4); color:#ef4444; }
+    .duelo-toast.info  { border-color:rgba(99,102,241,.4);color:#818cf8; }
+    @keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)} }
+    @keyframes pulseGlow {
+      0%,100% { box-shadow:0 0 24px rgba(167,139,250,.35),0 0 48px rgba(167,139,250,.15); }
+      50%     { box-shadow:0 0 36px rgba(167,139,250,.6), 0 0 64px rgba(167,139,250,.25); }
+    }
+    /* ── Histórico redesign ── */
+    .hist-stats { display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px; }
+    .hist-stat { background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 12px;text-align:center; }
+    .hist-stat.win  { border-color:rgba(34,197,94,.4); background:rgba(34,197,94,.08); }
+    .hist-stat.loss { border-color:rgba(239,68,68,.4); background:rgba(239,68,68,.08); }
+    .hist-stat.taxa { border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.08); }
+    .hist-stat-val { font-size:26px;font-weight:800;line-height:1; }
+    .hist-stat-lbl { font-size:10px;color:var(--text-muted);margin-top:5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px; }
+    .hist-filters { display:flex;gap:6px;margin-bottom:14px; }
+    .hist-filter-btn { padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--text-muted);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s; }
+    .hist-filter-btn.active { background:#7c3aed;border-color:#7c3aed;color:#fff; }
+    .hist-date-sep { font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:1px;padding:8px 2px 4px; }
+    .hist-row { border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden;border:1.5px solid;margin-bottom:7px; }
+    .hist-row::before { content:'';position:absolute;left:0;top:0;bottom:0;width:4px; }
+    .hist-row.win  { background:linear-gradient(90deg,rgba(34,197,94,.1) 0%,rgba(34,197,94,.03) 40%,var(--card) 100%);border-color:rgba(34,197,94,.4); }
+    .hist-row.win::before  { background:linear-gradient(180deg,#22c55e,#16a34a); }
+    .hist-row.loss { background:linear-gradient(90deg,rgba(239,68,68,.09) 0%,rgba(239,68,68,.02) 40%,var(--card) 100%);border-color:rgba(239,68,68,.35); }
+    .hist-row.loss::before { background:linear-gradient(180deg,#ef4444,#dc2626); }
+    .hist-row.abandon { opacity:.55; }
+    .hist-wl { width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;flex-shrink:0; }
+    .hist-wl.win  { background:rgba(34,197,94,.2); color:#22c55e;box-shadow:0 0 10px rgba(34,197,94,.2); }
+    .hist-wl.loss { background:rgba(239,68,68,.15);color:#ef4444;box-shadow:0 0 10px rgba(239,68,68,.15); }
+    .hist-avatar { width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0;color:#fff;background:#334155; }
+    .hist-info { flex:1;min-width:0; }
+    .hist-nome { font-size:13px;font-weight:700; }
+    .hist-meta { font-size:10px;color:var(--text-muted);margin-top:3px;display:flex;align-items:center;gap:5px;flex-wrap:wrap; }
+    .hist-tag { border-radius:4px;padding:1px 6px;font-size:9px;font-weight:700;border:1px solid; }
+    .hist-tag.turma  { background:rgba(99,102,241,.12);border-color:rgba(99,102,241,.25);color:#818cf8; }
+    .hist-tag.ab     { background:rgba(239,68,68,.1);  border-color:rgba(239,68,68,.25); color:#ef4444; }
+    .hist-tag.adv-ab { background:rgba(34,197,94,.1);  border-color:rgba(34,197,94,.25); color:#22c55e; }
+    .hist-placar { font-size:16px;font-weight:900;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:5px;font-variant-numeric:tabular-nums; }
+    .hist-placar .sep { color:#334155;font-size:13px;font-weight:400; }
+    .hist-diff { font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid;flex-shrink:0; }
+    .hist-diff.facil   { border-color:rgba(34,197,94,.35); color:#22c55e;background:rgba(34,197,94,.08); }
+    .hist-diff.medio   { border-color:rgba(245,158,11,.35);color:#F59E0B;background:rgba(245,158,11,.08); }
+    .hist-diff.dificil { border-color:rgba(239,68,68,.35); color:#f87171;background:rgba(239,68,68,.08); }
+    .hist-xp { font-size:11px;font-weight:800;white-space:nowrap;flex-shrink:0;min-width:52px;text-align:right; }
+    .hist-xp.pos { color:#22c55e; }
+    .hist-xp.neg { color:#ef4444; }
+    @keyframes emojiChuva {
+      0%   { transform: translateY(-60px) rotate(0deg) scale(1);  opacity: 0; }
+      8%   { opacity: .9; }
+      92%  { opacity: .9; }
+      100% { transform: translateY(110vh) rotate(var(--rot, 360deg)) scale(.5); opacity: 0; }
+    }
+    .emoji-chuva-item {
+      position: fixed; top: -60px; font-size: var(--sz, 28px);
+      pointer-events: none; z-index: 8000;
+      animation: emojiChuva var(--dur, 2.5s) var(--delay, 0s) ease-in both;
+      user-select: none;
+    }
+
+    /* ── Upset bonus ── */
+    .pm-upset { display:none; padding: 8px 18px; border-bottom: 1px solid var(--border); align-items: center; gap: 8px; background: rgba(249,115,22,.06); }
+    .pm-upset-text { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+    .pm-upset-bonus { color: var(--orange); font-weight: 800; }
+
+    /* ── Revanche ── */
+    .btn-revanche { background:rgba(249,115,22,.15) !important; border-color:rgba(249,115,22,.5) !important; color:var(--orange) !important; animation:revanchePulse 2s ease-in-out infinite; }
+    .btn-revanche:hover:not(.disabled) { background:var(--orange) !important; color:#fff !important; }
+    @keyframes revanchePulse { 0%,100%{box-shadow:0 0 0 rgba(249,115,22,.3)} 50%{box-shadow:0 0 10px rgba(249,115,22,.4)} }
+
+    /* ── Badges nos cards online ── */
+    .online-card { position: relative; }
+    .oc-badge { position: absolute; top: -8px; left: 12px; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 10px; letter-spacing: .5px; white-space: nowrap; z-index: 1; }
+    .badge-rival   { background: #ef4444; color: #fff; }
+    .badge-hunter  { background: var(--gold); color: #000; }
+    .badge-streak  { background: var(--orange); color: #fff; }
+
+    /* ── Mini-perfil modal ── */
+    .profile-modal { background: var(--card); border: 1px solid rgba(255,255,255,.1); border-radius: 20px; width: 100%; max-width: 320px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.6); }
+    .pm-header { background: linear-gradient(135deg,rgba(47,158,220,.12),rgba(124,92,252,.08)); padding: 18px 18px 14px; display: flex; gap: 14px; align-items: center; border-bottom: 1px solid var(--border); }
+    .pm-av { width: 58px; height: 58px; border-radius: 50%; overflow: hidden; flex-shrink: 0; border: 2px solid rgba(255,255,255,.12); box-shadow: 0 4px 16px rgba(0,0,0,.3); background: var(--card2); }
+    .pm-av img { width: 100%; height: 100%; object-fit: cover; }
+    .pm-name { font-family: 'Rajdhani', sans-serif; font-size: 19px; font-weight: 700; color: var(--text); }
+    .pm-turma { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .pm-level { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; background: rgba(249,115,22,.1); border: 1px solid rgba(249,115,22,.22); border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 700; color: var(--orange); }
+    .pm-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
+    .pm-stat { background: var(--card); padding: 11px 6px; text-align: center; }
+    .pm-stat-num { font-size: 17px; font-weight: 800; line-height: 1; }
+    .pm-stat-num.gold { color: var(--gold); }
+    .pm-stat-num.blue { color: var(--blue); }
+    .pm-stat-num.purple { color: var(--purple); font-size: 13px; }
+    .pm-stat-label { font-size: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .8px; margin-top: 3px; }
+    .pm-h2h { padding: 10px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .pm-h2h-label { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+    .pm-h2h-score { font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .pm-h2h-score .green { color: var(--green); }
+    .pm-h2h-score .red   { color: var(--red); }
+    .pm-h2h-score .muted { color: var(--text-muted); font-size: 12px; }
+    .pm-h2h-tag { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 10px; }
+    .pm-h2h-tag.winning { background: rgba(34,197,94,.15); color: var(--green); border: 1px solid rgba(34,197,94,.25); }
+    .pm-h2h-tag.losing  { background: rgba(239,68,68,.12); color: var(--red);   border: 1px solid rgba(239,68,68,.2); }
+    .pm-h2h-tag.even    { background: rgba(255,255,255,.06); color: var(--text-muted); border: 1px solid var(--border); }
+    .pm-emojis { padding: 12px 18px; border-bottom: 1px solid var(--border); }
+    .pm-emojis-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
+    .pm-emoji-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 5px; }
+    .pm-ej-btn { height: 36px; background: var(--card2); border: 1px solid var(--border); border-radius: 9px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+    .pm-ej-btn:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.2); transform: scale(1.15); }
+    .pm-ej-btn:active { transform: scale(.9); }
+    .pm-ej-btn.sent { background: rgba(249,115,22,.18); border-color: rgba(249,115,22,.4); }
+    .pm-cooldown-bar { height: 2px; background: var(--border); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+    .pm-cooldown-fill { height: 100%; background: var(--orange); border-radius: 2px; width: 0; transition: width .1s linear; }
+    .pm-spam-msg { font-size: 11px; color: var(--text-muted); margin-top: 6px; text-align: center; }
+    .pm-footer { padding: 12px 18px; }
+    .pm-btn-desafiar { width: 100%; padding: 12px; background: linear-gradient(135deg,var(--purple),#5a3fcf); border: none; border-radius: 12px; font-family: 'Rajdhani',sans-serif; font-size: 16px; font-weight: 700; color: #fff; cursor: pointer; box-shadow: 0 4px 16px rgba(124,92,252,.3); transition: all .2s; }
+    .pm-btn-desafiar:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,252,.5); }
+
+    /* ── Emoji feed ── */
+    @keyframes bubbleIn { 0%{opacity:0;transform:translateX(-50%) translateY(20px) scale(.7)} 60%{opacity:1;transform:translateX(-50%) translateY(-6px) scale(1.05)} 100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)} }
+    @keyframes bubbleOut { 0%{opacity:1} 100%{opacity:0;transform:translateX(-50%) translateY(-20px) scale(.7)} }
+    @keyframes feedItemIn  { from{opacity:0;transform:translateX(18px)} to{opacity:1;transform:translateX(0)} }
+    @keyframes feedItemOut { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(18px)} }
+    .emoji-feed-item { background:rgba(13,15,26,.85); border:1px solid rgba(255,255,255,.09); border-radius:11px; padding:6px 11px; display:flex; align-items:center; gap:8px; backdrop-filter:blur(10px); animation:feedItemIn .3s ease; font-size:11px; color:rgba(255,255,255,.5); }
+    .emoji-feed-item .ef-emoji { font-size:19px; flex-shrink:0; }
+    .emoji-feed-item strong { color:#fff; font-weight:700; }
+    .ef-time { display:block; font-size:9px; color:rgba(255,255,255,.25); margin-top:1px; letter-spacing:.3px; }
+  </style>
+</head>
+<body>
+<script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div>
+          <div class="topbar-title">⚔️ Duelos</div>
+          <div class="topbar-sub" id="online-sub">Verificando...</div>
+        </div>
+      </div>
+      <div class="topbar-right" style="gap:8px">
+        <div class="avatar-wrap" onclick="window.location.href='/aluno/perfil.html'">
+          <div class="avatar" id="topbar-avatar-circle" style="overflow:hidden;padding:0"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="notificacoes-wrap"></div>
+
+    <div class="content">
+      <div class="duelos-page">
+        <div class="tabs-nav">
+          <button class="tab-btn active" id="tab-btn-duelos"   onclick="ativarTab('duelos')">⚔️ Duelos</button>
+          <button class="tab-btn"        id="tab-btn-historico" onclick="ativarTab('historico')">📋 Histórico</button>
+          <button class="tab-btn"        id="tab-btn-ranking"   onclick="ativarTab('ranking')">🏆 Ranking</button>
+        </div>
+
+        <!-- Desafio da Semana -->
+        <div id="card-desafio-semana" style="display:none;background:linear-gradient(135deg,rgba(124,92,252,.15),rgba(47,158,220,.08));border:1.5px solid rgba(124,92,252,.4);border-radius:14px;padding:14px 16px;margin-bottom:14px">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <span style="font-size:22px;flex-shrink:0">🏆</span>
+            <div style="flex:1">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#a78bfa;margin-bottom:3px">Desafio da Semana</div>
+              <div id="ds-titulo" style="font-size:14px;font-weight:800;color:#fff;margin-bottom:3px"></div>
+              <div id="ds-desc"   style="font-size:12px;color:var(--text-muted)"></div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div id="ds-recompensa" style="font-size:12px;font-weight:800;color:#a78bfa;background:rgba(124,92,252,.15);border:1px solid rgba(124,92,252,.3);border-radius:8px;padding:4px 10px"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Aviso de fase de testes -->
+        <div id="aviso-beta" style="
+          background: rgba(251,191,36,.07);
+          border: 1.5px solid rgba(251,191,36,.35);
+          border-radius: 12px;
+          padding: 12px 15px;
+          margin-bottom: 14px;
+          display: flex;
+          gap: 10px;
+          align-items: flex-start;
+        ">
+          <span style="font-size:18px;line-height:1.3;flex-shrink:0">🧪</span>
+          <div style="font-size:12.5px;color:#fcd34d;line-height:1.6">
+            <strong style="display:block;margin-bottom:2px;font-size:13px">Modo Duelo em fase de testes</strong>
+            Este recurso ainda pode apresentar erros. Se você perceber algo estranho — duelo encerrando sozinho, placar errado, adversário que não aparece — <strong>avise a professora</strong> descrevendo o que aconteceu.
+          </div>
+        </div>
+
+        <!-- Tab: Duelos -->
+        <div class="tab-pane active" id="tab-duelos">
+          <!-- Mini-login dupla -->
+          <div id="dupla-section" style="margin-bottom:14px">
+            <div id="dupla-btn-wrap">
+              <button onclick="abrirDuplaPanel()"
+                style="width:100%;padding:11px 16px;background:rgba(0,212,255,.06);border:1.5px dashed rgba(0,212,255,.3);border-radius:12px;color:#00d4ff;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px">
+                <span>👥</span> + Adicionar parceiro de dupla
+              </button>
+            </div>
+            <div id="dupla-panel" style="display:none;background:var(--card2);border:1.5px solid rgba(0,212,255,.3);border-radius:12px;padding:14px 16px">
+              <div style="font-size:12px;font-weight:700;color:#00d4ff;margin-bottom:10px">👥 Parceiro — qualquer turma</div>
+              <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+                <select id="dupla-turma-sel" onchange="onDuplaTurmaChange()"
+                  style="flex:1;min-width:80px;padding:7px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px">
+                  <option value="">Turma</option>
+                  <option>8D</option><option>8E</option><option>8F</option><option>8G</option><option>8H</option>
+                </select>
+                <select id="dupla-aluno-sel" disabled
+                  style="flex:2;min-width:120px;padding:7px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px">
+                  <option value="">Selecione o aluno</option>
+                </select>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="password" id="dupla-senha" maxlength="4" inputmode="numeric" placeholder="Senha (4 dígitos)"
+                  style="flex:1;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px">
+                <button onclick="confirmarDupla()"
+                  style="padding:8px 16px;background:#00d4ff;border:none;border-radius:8px;color:#000;font-size:12px;font-weight:700;cursor:pointer">
+                  Entrar como dupla
+                </button>
+                <button onclick="fecharDuplaPanel()"
+                  style="padding:8px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font-size:12px;cursor:pointer">✕</button>
+              </div>
+              <div id="dupla-erro" style="display:none;color:#ef4444;font-size:11px;margin-top:8px"></div>
+            </div>
+            <div id="dupla-ativa" style="display:none;background:rgba(0,212,255,.08);border:1.5px solid rgba(0,212,255,.35);border-radius:12px;padding:12px 16px;align-items:center;gap:10px">
+              <span style="font-size:20px">👥</span>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:700;color:#00d4ff" id="dupla-ativa-nome">Jogando em dupla com —</div>
+                <div style="font-size:11px;color:var(--text-muted)">Parceiro de duelos ativo</div>
+              </div>
+              <button onclick="removerDupla()"
+                style="padding:5px 12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;color:#ef4444;font-size:11px;font-weight:700;cursor:pointer">
+                ✕ Remover
+              </button>
+            </div>
+          </div>
+          <!-- Banner: aguardando adversário -->
+          <div class="card" style="margin-bottom:14px">
+            <div class="card-title" style="margin-bottom:14px">🎯 Criar desafio</div>
+            <div class="diff-select" id="diff-select">
+              <div class="diff-btn" onclick="setDiff('facil',this)">🟢 Fácil<br><small>+15 XP · 3 min</small></div>
+              <div class="diff-btn active" onclick="setDiff('medio',this)">🟡 Médio<br><small>+25 XP · 4 min</small></div>
+              <div class="diff-btn" onclick="setDiff('dificil',this)">🔴 Difícil<br><small>+40 XP · 5 min</small></div>
+            </div>
+            <button class="btn-desafio-aberto" id="btnDesafioAberto" onclick="criarDesafioAberto()">
+              ⚔️ Desafio Aberto — todos online
+            </button>
+          </div>
+
+          <div class="section-label">Online agora · <span id="online-count">0</span></div>
+          <div class="online-grid" id="online-grid">
+            <div class="online-vazio">Verificando quem está online...</div>
+          </div>
+        </div>
+
+        <!-- Tab: Histórico -->
+        <div class="tab-pane" id="tab-historico">
+          <div id="historico-content">
+            <div class="tab-placeholder">
+              <div class="icon">📋</div>
+              <p>Histórico disponível após o primeiro duelo.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Ranking -->
+        <div class="tab-pane" id="tab-ranking">
+          <div id="ranking-content">
+            <div style="display:flex;gap:6px;margin-bottom:14px">
+              <button id="rtab-individual" class="tab-btn active" onclick="ativarRankingTab('individual')">👤 Individual</button>
+              <button id="rtab-turmas"     class="tab-btn"        onclick="ativarRankingTab('turmas')">🏫 Turmas</button>
+            </div>
+            <div id="rpanel-individual"></div>
+            <div id="rpanel-turmas" style="display:none"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: desafiar direto -->
+<div id="modal-desafio" class="modal-overlay" style="display:none">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-desafio-title">Desafiar</div>
+    <div class="modal-sub" id="modal-desafio-sub"></div>
+    <div class="diff-select" id="modal-diff-select">
+      <div class="diff-btn" onclick="setModalDiff('facil',this)">🟢 Fácil<br><small>+15 XP · 3 min</small></div>
+      <div class="diff-btn active" onclick="setModalDiff('medio',this)">🟡 Médio<br><small>+25 XP · 4 min</small></div>
+      <div class="diff-btn" onclick="setModalDiff('dificil',this)">🔴 Difícil<br><small>+40 XP · 5 min</small></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="fecharModalDesafio()">Cancelar</button>
+      <button class="btn-confirm" onclick="confirmarDesafioDireto()">⚔️ Desafiar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireAluno, renderSidebarAluno, clearSession, hashSenha, atualizarBadgeDupla, injetarFaixaDupla, lerDuplaAtiva } from '/js/auth.js';
+import { db } from '/js/firebase-config.js';
+import { ref, set, get, push, onValue, remove, update, runTransaction } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { getPerfil, getSenhaAluno } from '/js/db.js';
+import { ALUNOS_POR_TURMA } from '/js/constants.js';
+import { avatarUrl, avatarHtml, avatarConfigDefault, DUELO_TIMEOUT_ACEITAR_S, XP_DUELO, NIVEIS_PERFIL } from '/js/gamificacao.js';
+import { iniciarPresenca, encerrarPresenca, atualizarPresenca, filtrarOnline } from '/js/presenca.js';
+
+// Garantir que o banner existe no DOM
+if (!document.getElementById('banner-aguardando')) {
+  const _banEl = document.createElement('div');
+  _banEl.id = 'banner-aguardando';
+  _banEl.style.cssText = 'display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9000;width:min(560px,calc(100vw - 32px));background:linear-gradient(135deg,#2d1b69,#1a1040);border:2px solid #a78bfa;border-radius:14px;padding:16px 20px;align-items:center;gap:14px;box-shadow:0 0 32px rgba(167,139,250,.5),0 8px 32px rgba(0,0,0,.4)';
+  _banEl.innerHTML = `<span style="font-size:26px;flex-shrink:0">⚔️</span><div style="flex:1;min-width:0"><div id="aguardando-nome-txt" style="font-size:15px;font-weight:800;color:#c4b5fd">Aguardando resposta...</div><div style="font-size:12px;color:#a78bfa;margin-top:3px">Expira em <span id="aguardando-timer" style="font-weight:700;color:#e9d5ff">3:00</span></div></div><button onclick="cancelarDesafio()" style="background:rgba(239,68,68,.15);border:1.5px solid rgba(239,68,68,.5);color:#ef4444;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:800;cursor:pointer;flex-shrink:0">✕ Cancelar</button>`;
+  document.body.appendChild(_banEl);
+}
+
+function showToast(msg, tipo = 'warn', duracao = 3000) {
+  document.querySelectorAll('.duelo-toast').forEach(t => t.remove());
+  const t = document.createElement('div');
+  t.className = `duelo-toast ${tipo}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.style.opacity = '0', duracao - 300);
+  setTimeout(() => t.remove(), duracao);
+}
+
+const sess = requireAluno('/index.html');
+if (!sess) throw new Error();
+const { alunos, turma } = sess;
+const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+
+renderSidebarAluno('sidebar', 'duelos');
+injetarFaixaDupla();
+window.sair = () => { encerrarPresenca(); clearSession(); window.location.href = '/index.html'; };
+
+
+let estaDisponivel = () => true;
+(async () => { try {
+  const mod = await import('/js/duelo_avail.js');
+  estaDisponivel = mod.estaDisponivel;
+  await mod.initDueloAvail(uid);
+} catch(e) {} })();
+
+// ── Tabs — definido antes dos awaits para estar disponível imediatamente ──
+window.ativarTab = function(id) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`tab-${id}`)?.classList.add('active');
+  document.getElementById(`tab-btn-${id}`)?.classList.add('active');
+  if (id === 'historico') carregarHistorico();
+  if (id === 'ranking')   renderRankingIndividual();
+  if (id === 'duelos')    restaurarEstadoDupla();
+};
+
+window.ativarRankingTab = function(tab) {
+  ['individual','turmas'].forEach(t => {
+    document.getElementById(`rtab-${t}`)?.classList.toggle('active', t === tab);
+    document.getElementById(`rpanel-${t}`).style.display = t === tab ? '' : 'none';
+  });
+  if (tab === 'turmas') renderRankingTurmas();
+  else renderRankingIndividual();
+};
+
+// ── Perfil ────────────────────────────────────────────────────
+const perfil   = await getPerfil(uid);
+const meuApelido = perfil?.apelido_ativo || alunos[0];
+
+// Avatar topbar
+(async () => { try {
+  const _c = document.getElementById('topbar-avatar-circle');
+  if (_c) {
+    const url   = avatarUrl(perfil?.avatar || avatarConfigDefault());
+    const letra = (alunos[0] || '?')[0].toUpperCase();
+    _c.innerHTML = `<div style="width:100%;height:100%;position:relative;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#7F77DD,#00d4ff)"><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;z-index:0">${letra}</span><img src="${url}" alt="" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:1;border-radius:50%" onerror="this.style.display='none'"></div>`;
+  }
+} catch(_) {} })();
+
+// ── Presença ──────────────────────────────────────────────────
+let _disponivel = perfil?.duelos_disponivel !== false;
+
+await iniciarPresenca(uid, {
+  nome:    alunos[0],
+  apelido: meuApelido,
+  turma,
+  status:  _disponivel ? 'disponivel' : 'indisponivel',
+  pagina:  'duelos',
+});
+restaurarEstadoDupla();
+window.addEventListener('beforeunload', () => encerrarPresenca());
+
+// Notificação quando parceiro faz login e desfaz dupla
+onValue(ref(db, `notif_dupla/${uid}`), snap => {
+  if (!snap.exists()) return;
+  const n = snap.val();
+  if (!n?.ts) return;
+  set(ref(db, `notif_dupla/${uid}`), null).catch(() => {});
+  localStorage.removeItem('sm_dupla_duelo');
+  window.removerDuplaUI?.();
+  if (typeof atualizarBadgeDupla === 'function') atualizarBadgeDupla();
+  document.getElementById('faixa-dupla-global')?.remove();
+  showToast(n.msg || 'Seu parceiro fez login e a dupla foi desfeita.', 'warn', 5000);
+});
+
+// Carregar desafio da semana
+try {
+  const dsSnap = await get(ref(db, 'config/desafio_semana'));
+  const ds = dsSnap.val();
+  if (ds?.ativo && ds?.titulo) {
+    const card = document.getElementById('card-desafio-semana');
+    if (card) {
+      document.getElementById('ds-titulo').textContent     = ds.titulo;
+      document.getElementById('ds-desc').textContent       = ds.descricao || '';
+      document.getElementById('ds-recompensa').textContent = ds.recompensa || '';
+      card.style.display = 'block';
+    }
+  }
+} catch(_) {}
+
+// Detectar último adversário para botão "Revanche"
+let _ultimoAdvUid  = null;
+let _ultimoAdvNome = null;
+try {
+  const _histSnap = await get(ref(db, `perfis/${uid}/historico_duelos`));
+  if (_histSnap.exists()) {
+    const _todos = [];
+    _histSnap.forEach(c => _todos.push({ ...c.val() }));
+    _todos.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+    const _ultimo = _todos[0];
+    if (_ultimo?.resultado === 'derrota' && _ultimo?.adversario_uid) {
+      _ultimoAdvUid  = _ultimo.adversario_uid;
+      _ultimoAdvNome = _ultimo.adversario_nome || '?';
+    }
+  }
+} catch(_) {}
+
+// Cache de perfis e H2H para badges e mini-perfil
+let _perfisCache = {};
+let _h2hCache    = {};
+get(ref(db, `perfis/${uid}/historico_duelos`)).then(snap => {
+  if (!snap.exists()) return;
+  snap.forEach(c => {
+    const d = c.val();
+    const auid = d?.adversario_uid;
+    if (!auid) return;
+    if (!_h2hCache[auid]) _h2hCache[auid] = { me: 0, adv: 0 };
+    if (d.resultado === 'vitoria')       _h2hCache[auid].me++;
+    else if (d.resultado === 'derrota')  _h2hCache[auid].adv++;
+  });
+}).catch(() => {});
+
+// ── Dupla de duelo ────────────────────────────────────────────
+window.abrirDuplaPanel = function() {
+  document.getElementById('dupla-btn-wrap').style.display = 'none';
+  document.getElementById('dupla-panel').style.display = 'block';
+};
+window.fecharDuplaPanel = function() {
+  document.getElementById('dupla-panel').style.display = 'none';
+  document.getElementById('dupla-btn-wrap').style.display = 'block';
+  document.getElementById('dupla-erro').style.display = 'none';
+};
+window.onDuplaTurmaChange = function() {
+  const t = document.getElementById('dupla-turma-sel').value;
+  const sel = document.getElementById('dupla-aluno-sel');
+  sel.innerHTML = '<option value="">Selecione o aluno</option>';
+  if (t && ALUNOS_POR_TURMA[t]) {
+    ALUNOS_POR_TURMA[t].forEach(n => {
+      if (!(t === turma && n === alunos[0])) sel.innerHTML += `<option value="${escH(n)}">${escH(n)}</option>`;
+    });
+    sel.disabled = false;
+  }
+};
+window.confirmarDupla = async function() {
+  const parceiroTurma = document.getElementById('dupla-turma-sel').value;
+  const parceiroNome  = document.getElementById('dupla-aluno-sel').value;
+  const senha         = document.getElementById('dupla-senha').value;
+  const erroEl        = document.getElementById('dupla-erro');
+  erroEl.style.display = 'none';
+  if (!parceiroTurma || !parceiroNome) { erroEl.textContent = 'Selecione a turma e o aluno.'; erroEl.style.display = 'block'; return; }
+  if (!/^\d{4}$/.test(senha)) { erroEl.textContent = 'Digite a senha de 4 dígitos.'; erroEl.style.display = 'block'; return; }
+  try {
+    const presSnap = await get(ref(db, 'presenca_online'));
+    if (presSnap.exists()) {
+      const tsMin = Date.now() - 120_000;
+      let jaLogado = false;
+      let motivo   = '';
+      presSnap.forEach(c => {
+        const v = c.val();
+        if (c.key === uid) return;
+        if ((v.ts || 0) < tsMin) return;
+        if (v.nome === parceiroNome && v.turma === parceiroTurma) {
+          jaLogado = true;
+          motivo = 'Não foi possível adicionar: este aluno já está logado em outro dispositivo.';
+        }
+        if (v.parceiro_nome === parceiroNome && v.parceiro_turma === parceiroTurma) {
+          jaLogado = true;
+          motivo = 'Não foi possível adicionar: este aluno já é dupla de outra pessoa.';
+        }
+      });
+      if (jaLogado) { erroEl.textContent = motivo; erroEl.style.display = 'block'; return; }
+    }
+  } catch(_) {}
+  try {
+    const [hash, rec] = await Promise.all([hashSenha(parceiroTurma, parceiroNome, senha), getSenhaAluno(parceiroTurma, parceiroNome)]);
+    if (!rec) { erroEl.textContent = 'Senha não cadastrada. Peça ao professor.'; erroEl.style.display = 'block'; return; }
+    if (hash !== rec.hash) { erroEl.textContent = 'Senha incorreta.'; erroEl.style.display = 'block'; return; }
+  } catch(e) { erroEl.textContent = 'Erro ao verificar senha.'; erroEl.style.display = 'block'; return; }
+  localStorage.setItem('sm_dupla_duelo', JSON.stringify({ nome: parceiroNome, turma: parceiroTurma, dono_nome: alunos[0], dono_turma: turma, session_token: requireAluno()?.session_token }));
+  // Cancelar desafio enviado pendente
+  if (_meuDueloAguardandoId) {
+    clearInterval(_aguardandoInt);
+    try { await update(ref(db, `duelos/${_meuDueloAguardandoId}`), { status: 'expirado' }); } catch(_) {}
+    _aguardandoId = null;
+    _meuDueloAguardandoId = null;
+    const _ban = document.getElementById('banner-aguardando');
+    if (_ban) _ban.style.display = 'none';
+  }
+  // Cancelar todos os convites recebidos pendentes
+  document.querySelectorAll('[id^="notif-"]').forEach(el => {
+    const pendId = el.id.replace('notif-', '');
+    try { update(ref(db, `duelos/${pendId}`), { status: 'recusado' }); } catch(_) {}
+    el.remove();
+  });
+  await atualizarPresenca({ parceiro_nome: parceiroNome, parceiro_turma: parceiroTurma });
+  document.getElementById('dupla-panel').style.display = 'none';
+  document.getElementById('dupla-ativa').style.display = 'flex';
+  document.getElementById('dupla-ativa-nome').textContent = `Jogando em dupla com ${parceiroNome} · ${parceiroTurma}`;
+  if (typeof atualizarBadgeDupla === 'function') atualizarBadgeDupla();
+};
+window.removerDupla = async function() {
+  localStorage.removeItem('sm_dupla_duelo');
+  await atualizarPresenca({ parceiro_nome: null, parceiro_turma: null });
+  window.removerDuplaUI();
+  if (typeof atualizarBadgeDupla === 'function') atualizarBadgeDupla();
+  document.getElementById('faixa-dupla-global')?.remove();
+};
+window.removerDuplaUI = function() {
+  document.getElementById('dupla-ativa').style.display = 'none';
+  document.getElementById('dupla-btn-wrap').style.display = 'block';
+};
+function restaurarEstadoDupla() {
+  const d = lerDuplaAtiva();
+  if (!d) return;
+  try {
+    const btnWrap = document.getElementById('dupla-btn-wrap');
+    const ativaEl = document.getElementById('dupla-ativa');
+    const nomeEl  = document.getElementById('dupla-ativa-nome');
+    if (!btnWrap || !ativaEl || !nomeEl) return;
+    btnWrap.style.display = 'none';
+    ativaEl.style.display = 'flex';
+    nomeEl.textContent = `Jogando em dupla com ${d.nome} · ${d.turma}`;
+  } catch(_) {}
+}
+restaurarEstadoDupla();
+
+// ── Helpers ───────────────────────────────────────────────────
+function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function statusAluno(aluno) {
+  if (aluno.em_duelo)                 return { label: '⚔️ Duelando',   disponivel: false, dot: '#F59E0B' };
+  if (aluno.status === 'indisponivel') return { label: '⛔ Indisponível', disponivel: false, dot: '#6b7280' };
+  return                                     { label: '🟢 Disponível', disponivel: true,  dot: '#22c55e' };
+}
+
+function diffLabel(d) {
+  return ({ facil:'🟢 Fácil', medio:'🟡 Médio', dificil:'🔴 Difícil' })[d] || d;
+}
+
+const TEMPO_LABEL = { facil:'3 min', medio:'4 min', dificil:'5 min' };
+
+// ── Dificuldade ───────────────────────────────────────────────
+let _diff = 'medio';
+let _modalDiff = 'medio';
+
+window.setDiff = function(d, el) {
+  _diff = d;
+  document.querySelectorAll('#diff-select .diff-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+};
+
+window.setModalDiff = function(d, el) {
+  _modalDiff = d;
+  document.querySelectorAll('#modal-diff-select .diff-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+};
+
+// ── Online em tempo real ──────────────────────────────────────
+let _onlineConhecidos = new Set();
+let _onlineIniciado   = false;
+
+onValue(ref(db, 'presenca_online'), snap => {
+  // Reconciliação: se o parceiro da minha dupla ativa está online agora, a dupla foi desfeita
+  // (ele fez login em outro lugar). Desfaz na hora, sem depender da notificação chegar.
+  try {
+    const _d = lerDuplaAtiva();
+    if (_d) {
+      const _tsMin = Date.now() - 120_000;
+      let _parceiroOnline = false;
+      snap.forEach(c => {
+        if (c.key === uid) return;
+        const v = c.val();
+        if (!v?.ts || v.ts < _tsMin) return;
+        if (v.nome === _d.nome && v.turma === _d.turma) { _parceiroOnline = true; }
+      });
+      if (_parceiroOnline) {
+        localStorage.removeItem('sm_dupla_duelo');
+        window.removerDuplaUI?.();
+        document.getElementById('faixa-dupla-global')?.remove();
+        if (typeof atualizarBadgeDupla === 'function') atualizarBadgeDupla();
+        atualizarPresenca({ parceiro_nome: null, parceiro_turma: null }).catch(() => {});
+        if (typeof showToast === 'function') {
+          showToast('Sua dupla foi desconectada porque fez login em outro dispositivo.', 'warn', 5000);
+        }
+      }
+    }
+  } catch(_) {}
+
+  const online = filtrarOnline(snap, uid);
+
+  if (_onlineIniciado) {
+    online.forEach(a => {
+      if (!_onlineConhecidos.has(a.uid)) {
+        const nomeExib = a.apelido || a.nome || _nomeDoUidOnline(a.uid);
+        showToast(`🟢 ${escH(nomeExib)} entrou nos duelos`, 'info', 3000);
+      }
+    });
+  }
+  _onlineConhecidos = new Set(online.map(a => a.uid));
+  _onlineIniciado = true;
+
+  renderOnlineGrid(online);
+  const n = online.length;
+  document.getElementById('online-count').textContent = n;
+  document.getElementById('online-sub').textContent =
+    n === 0 ? 'Nenhum colega online' : `${n} colega${n>1?'s':''} online`;
+
+  // Carregar perfis para badges e mini-perfil
+  get(ref(db, 'perfis')).then(perfSnap => {
+    if (!perfSnap.exists()) return;
+    perfSnap.forEach(c => { _perfisCache[c.key] = c.val(); });
+    renderOnlineGrid(online);
+  }).catch(() => {});
+});
+
+function renderOnlineGrid(lista) {
+  const grid = document.getElementById('online-grid');
+  if (!lista.length) {
+    grid.innerHTML = '<div class="online-vazio">Nenhum colega disponível no momento.</div>';
+    return;
+  }
+  grid.innerHTML = lista.map(a => renderOnlineCard(a)).join('');
+}
+
+function _nomeDoUidOnline(uid) {
+  const parts = (uid || '').split('_');
+  return parts.length >= 2 ? parts.slice(1).join(' ') : uid;
+}
+function _turmaDoUidOnline(uid) { return (uid || '').split('_')[0] || '?'; }
+
+function calcularBadge(aluno, perfil) {
+  const h2h = _h2hCache[aluno.uid] || { me: 0, adv: 0 };
+  if ((h2h.me + h2h.adv) >= 5)   return { txt: '⚔️ Rival',              cls: 'badge-rival' };
+  if (perfil?.venceu_rank1)       return { txt: '🎯 Caçador',            cls: 'badge-hunter' };
+  const streak = perfil?.streak_vitorias || 0;
+  if (streak >= 3)                 return { txt: `🔥 ${streak} seguidas`, cls: 'badge-streak' };
+  return null;
+}
+
+function renderOnlineCard(aluno) {
+  const st = statusAluno(aluno);
+  const temParceiro = !!(aluno.parceiro_nome);
+  const av = avatarUrl(aluno.avatar || avatarConfigDefault());
+  const nomeBase = aluno.apelido || aluno.nome || _nomeDoUidOnline(aluno.uid) || '—';
+  const nomeExib = temParceiro
+    ? `${escH(nomeBase)} <span style="opacity:.6;font-size:11px">+ ${escH(aluno.parceiro_nome)}</span>`
+    : escH(nomeBase);
+  const turmaBase = aluno.turma || _turmaDoUidOnline(aluno.uid);
+  const turmaExib = temParceiro
+    ? `${escH(turmaBase)} · ${escH(aluno.parceiro_turma || '?')}`
+    : escH(turmaBase);
+
+  const perfil    = _perfisCache[aluno.uid];
+  const badge     = calcularBadge(aluno, perfil);
+  const nivelInfo = Array.isArray(NIVEIS_PERFIL) ? NIVEIS_PERFIL.find(n => n.n === (perfil?.nivel || 1)) : null;
+  const nivelTag  = nivelInfo ? ` · ${nivelInfo.nome}` : '';
+
+  const isRevanche = aluno.uid === _ultimoAdvUid;
+
+  return `
+    <div class="online-card${!st.disponivel ? ' in-duel' : ''}" onclick="abrirModalPerfil('${aluno.uid}','${escH(nomeBase)}')" style="cursor:pointer">
+      ${badge
+        ? `<div class="oc-badge ${badge.cls}">${badge.txt}</div>`
+        : (temParceiro ? '<div class="oc-dupla">DUPLA</div>' : '')}
+      <div class="oc-top">
+        <div class="oc-av"><img src="${av}" alt="" onerror="this.src=''"></div>
+        <div class="oc-info">
+          <div class="oc-name">${nomeExib}</div>
+          <div class="oc-tag">${turmaExib}${nivelTag}</div>
+        </div>
+        <div class="oc-dot" style="background:${st.dot}"></div>
+      </div>
+      ${st.disponivel
+        ? isRevanche
+          ? `<button class="btn-desafiar btn-revanche" onclick="event.stopPropagation();abrirModalDesafio('${aluno.uid}','${escH(nomeBase)}',${temParceiro})">🔁 Revanche!</button>`
+          : `<button class="btn-desafiar" onclick="event.stopPropagation();abrirModalDesafio('${aluno.uid}','${escH(nomeBase)}',${temParceiro})">⚔️ Desafiar</button>`
+        : `<button class="btn-desafiar" style="opacity:.4;cursor:not-allowed" onclick="event.stopPropagation()" disabled>${st.label}</button>`}
+    </div>`;
+}
+
+// ── Desafio aberto ────────────────────────────────────────────
+window.criarDesafioAberto = async function() {
+  if (!estaDisponivel()) {
+    showToast('Ative sua disponibilidade para criar desafios.', 'warn'); return;
+  }
+  if (_meuDueloAguardandoId) {
+    clearInterval(_aguardandoInt);
+    try { await update(ref(db, `duelos/${_meuDueloAguardandoId}`), { status: 'expirado' }); } catch(_) {}
+    _aguardandoId = null; _meuDueloAguardandoId = null;
+    const _ban = document.getElementById('banner-aguardando'); if(_ban) _ban.style.display = 'none';
+  }
+  const btn = document.getElementById('btnDesafioAberto');
+  btn.disabled = true;
+  try {
+    const _dp = lerDuplaAtiva();
+    const id = push(ref(db, 'duelos')).key;
+    await set(ref(db, `duelos/${id}`), {
+      tipo:                   'aberto',
+      dificuldade:            _diff,
+      criador_uid:            uid,
+      criador_nome:           meuApelido,
+      criador_turma:          turma,
+      criador_parceiro_nome:  _dp?.nome  || '',
+      criador_parceiro_turma: _dp?.turma || '',
+      status:    'aguardando',
+      ts_criado: Date.now(),
+      expira_em: Date.now() + DUELO_TIMEOUT_ACEITAR_S * 1000,
+    });
+    mostrarAguardando(id, 'Desafio aberto');
+  } catch(e) {
+    btn.disabled = false;
+    console.error(e);
+  }
+};
+
+// ── Desafio direto ────────────────────────────────────────────
+let _modalUid = null, _modalNome = '';
+
+window.abrirModalDesafio = async function(adversarioUid, adversarioNome, isDupla) {
+  if (!estaDisponivel()) { showToast('Ative sua disponibilidade para criar desafios.', 'warn'); return; }
+  if (_meuDueloAguardandoId) {
+    clearInterval(_aguardandoInt);
+    try { await update(ref(db, `duelos/${_meuDueloAguardandoId}`), { status: 'expirado' }); } catch(_) {}
+    _aguardandoId = null; _meuDueloAguardandoId = null;
+    const _ban = document.getElementById('banner-aguardando'); if(_ban) _ban.style.display = 'none';
+  }
+  _modalUid  = adversarioUid;
+  _modalNome = adversarioNome;
+  _modalDiff = _diff;
+  document.querySelectorAll('#modal-diff-select .diff-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['facil','medio','dificil'][i] === _diff);
+  });
+  document.getElementById('modal-desafio-title').textContent = `Desafiar ${adversarioNome}`;
+  document.getElementById('modal-desafio-sub').textContent =
+    `${isDupla ? '⚠️ Dupla — ' : ''}Escolha a dificuldade da partida.`;
+  document.getElementById('modal-desafio').style.display = 'flex';
+};
+
+window.fecharModalDesafio = function() {
+  document.getElementById('modal-desafio').style.display = 'none';
+  _modalUid = null;
+};
+
+window.confirmarDesafioDireto = async function() {
+  if (!_modalUid) return;
+  document.getElementById('modal-desafio').style.display = 'none';
+  try {
+    const _dp2 = lerDuplaAtiva();
+    const id = push(ref(db, 'duelos')).key;
+    await set(ref(db, `duelos/${id}`), {
+      tipo:                   'direto',
+      dificuldade:            _modalDiff,
+      criador_uid:            uid,
+      criador_nome:           meuApelido,
+      criador_turma:          turma,
+      criador_parceiro_nome:  _dp2?.nome  || '',
+      criador_parceiro_turma: _dp2?.turma || '',
+      adversario_uid:         _modalUid,
+      adversario_nome:        _modalNome,
+      status:    'aguardando',
+      ts_criado: Date.now(),
+      expira_em: Date.now() + DUELO_TIMEOUT_ACEITAR_S * 1000,
+    });
+    mostrarAguardando(id, _modalNome);
+  } catch(e) { console.error(e); }
+};
+
+// ── Aguardando adversário ─────────────────────────────────────
+let _meuDueloAguardandoId = null; // id do meu desafio em aberto
+let _aguardandoId  = null;
+let _aguardandoExp = 0;
+let _aguardandoInt = null;
+
+function mostrarAguardando(id, nomeAdversario = '') {
+  console.log('[mostrarAguardando] chamado, id=', id, 'nome=', nomeAdversario);
+  console.log('[mostrarAguardando] banner el=', document.getElementById('banner-aguardando'));
+  _meuDueloAguardandoId = id;
+  _aguardandoId  = id;
+  _aguardandoExp = Date.now() + DUELO_TIMEOUT_ACEITAR_S * 1000;
+  const _ban = document.getElementById('banner-aguardando');
+  if (_ban) {
+    _ban.style.display = 'flex';
+    document.getElementById('aguardando-nome-txt').textContent =
+      nomeAdversario ? `Você desafiou ${nomeAdversario} · aguardando resposta` : 'Aguardando adversário...';
+  }
+  setTimeout(() => {
+    const b = document.getElementById('banner-aguardando');
+    if (b) { b.style.setProperty('display', 'flex', 'important'); }
+  }, 100);
+  _aguardandoInt = setInterval(() => {
+    const rest = Math.max(0, _aguardandoExp - Date.now());
+    const m = Math.floor(rest / 60000);
+    const s = Math.floor((rest % 60000) / 1000);
+    document.getElementById('aguardando-timer').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+    if (rest <= 0) {
+      clearInterval(_aguardandoInt);
+      { const _ban = document.getElementById('banner-aguardando'); if(_ban) _ban.style.display = 'none'; }
+      document.getElementById('btnDesafioAberto').disabled = false;
+    }
+  }, 1000);
+
+  // Escutar se alguém aceitou
+  onValue(ref(db, `duelos/${id}/status`), snap => {
+    if (snap.val() === 'em_jogo') {
+      clearInterval(_aguardandoInt);
+      window.location.href = `/aluno/duelo_partida.html?id=${id}`;
+    }
+  });
+}
+
+window.cancelarDesafio = async function() {
+  if (_aguardandoId) {
+    clearInterval(_aguardandoInt);
+    try { await update(ref(db, `duelos/${_aguardandoId}`), { status: 'expirado', cancelado_por: alunos[0] }); } catch(_) {}
+    _aguardandoId = null;
+    _meuDueloAguardandoId = null;
+  }
+  const _ban = document.getElementById('banner-aguardando');
+  if (_ban) _ban.style.display = 'none';
+  document.getElementById('btnDesafioAberto').disabled = false;
+};
+
+// ── Receber desafios em tempo real ────────────────────────────
+const _notifVistas = new Set();
+const _recusasNotificadas = new Set();
+
+onValue(ref(db, 'duelos'), snap => {
+  const agora = Date.now();
+  snap.forEach(child => {
+    const d  = child.val();
+    const id = child.key;
+
+    // Detectar se MEU desafio direto foi recusado
+    if (
+      d.criador_uid === uid &&
+      d.tipo === 'direto' &&
+      d.status === 'recusado' &&
+      !_recusasNotificadas.has(id)
+    ) {
+      _recusasNotificadas.add(id);
+
+      // Fechar modal de aguardando se for o mesmo desafio
+      if (_aguardandoId === id) {
+        clearInterval(_aguardandoInt);
+        _aguardandoId = null;
+        { const _ban = document.getElementById('banner-aguardando'); if(_ban) _ban.style.display = 'none'; }
+        document.getElementById('btnDesafioAberto').disabled = false;
+      }
+
+      mostrarToastRecusa(d.adversario_nome || 'O aluno');
+    }
+
+    // Recuperar meu desafio ao recarregar página
+    if (d.criador_uid === uid && d.status === 'aguardando') {
+      _meuDueloAguardandoId = id;
+    }
+    // Limpar quando meu desafio for aceito/expirado por outro caminho
+    if (d.criador_uid === uid && d.status !== 'aguardando' && _meuDueloAguardandoId === id) {
+      _meuDueloAguardandoId = null;
+    }
+
+    // Remover notificação se desafio foi cancelado/expirado pelo criador
+    if ((d.status === 'expirado' || d.status === 'cancelado') && _notifVistas.has(id)) {
+      document.getElementById(`notif-${id}`)?.remove();
+    }
+
+    if (d.status !== 'aguardando') return;
+    if (d.criador_uid === uid) return;
+    if (d.expira_em < agora) return;
+    if (_notifVistas.has(id)) return;
+    if (d.tipo === 'aberto' || d.adversario_uid === uid) {
+      _notifVistas.add(id);
+      mostrarNotificacaoDesafio(id, d);
+    }
+  });
+});
+
+function mostrarToastRecusa(nome) {
+  const t = document.createElement('div');
+  t.style.cssText = [
+    'position:fixed', 'bottom:20px', 'left:50%',
+    'transform:translateX(-50%)',
+    'background:#1c2035',
+    'border:1px solid rgba(239,68,68,.4)',
+    'color:#e8eaf0',
+    'padding:10px 18px',
+    'border-radius:10px',
+    'font-size:13px',
+    'font-weight:600',
+    'z-index:9999',
+    'white-space:nowrap',
+    'pointer-events:none',
+  ].join(';');
+  t.textContent = `❌ ${nome} recusou seu desafio`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+
+function mostrarNotificacaoDesafio(id, duelo) {
+  if (document.getElementById(`notif-${id}`)) return;
+  const restMs = duelo.expira_em - Date.now();
+  if (restMs <= 0) return;
+
+  const el = document.createElement('div');
+  el.id = `notif-${id}`;
+  el.className = 'challenge-notif';
+  el.innerHTML = `
+    <div class="cn-info">
+      <div class="cn-title"><strong>${escH(duelo.criador_nome)}${duelo.criador_parceiro_nome ? ` + ${escH(duelo.criador_parceiro_nome)}` : ''}</strong> · ${escH(duelo.criador_turma)} te desafiou!</div>
+      <div class="cn-sub">
+        ${duelo.tipo === 'aberto' ? '🌐 Desafio aberto' : '🎯 Desafio direto'} ·
+        <strong>${diffLabel(duelo.dificuldade)}</strong> · ${TEMPO_LABEL[duelo.dificuldade] || ''}
+      </div>
+    </div>
+    <div class="cn-timer" id="timer-${id}"></div>
+    <div class="cn-btns">
+      <button class="btn-aceitar" onclick="aceitarDesafio('${id}')">⚔️ Aceitar</button>
+      <button class="btn-recusar" onclick="recusarDesafio('${id}')">Recusar</button>
+    </div>`;
+  document.getElementById('notificacoes-wrap').prepend(el);
+
+  const interval = setInterval(() => {
+    const rest = Math.max(0, duelo.expira_em - Date.now());
+    const m = Math.floor(rest / 60000);
+    const s = Math.floor((rest % 60000) / 1000);
+    const timerEl = document.getElementById(`timer-${id}`);
+    if (timerEl) timerEl.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+    if (rest <= 0) { clearInterval(interval); el.remove(); }
+  }, 1000);
+}
+
+window.aceitarDesafio = async function(id) {
+  const dueloRef = ref(db, `duelos/${id}`);
+  try {
+    const result = await runTransaction(dueloRef, (duelo) => {
+      if (!duelo) return;
+      if (duelo.status !== 'aguardando') return;
+      duelo.status          = 'em_jogo';
+      duelo.adversario_uid  = uid;
+      duelo.adversario_nome = meuApelido;
+      duelo.ts_aceito       = Date.now();
+      return duelo;
+    });
+
+    if (!result.committed) {
+      showToast('⚡ Este desafio já foi aceito por outro aluno!', 'info');
+      document.getElementById(`notif-${id}`)?.remove();
+      return;
+    }
+    const _dpAdv = lerDuplaAtiva();
+    try {
+      await update(ref(db, `duelos/${id}`), {
+        adversario_turma:          turma,
+        adversario_parceiro_nome:  _dpAdv?.nome  || '',
+        adversario_parceiro_turma: _dpAdv?.turma || '',
+      });
+    } catch(_) {}
+
+    if (_aguardandoId) {
+      clearInterval(_aguardandoInt);
+      try { await update(ref(db, `duelos/${_aguardandoId}`), { status: 'expirado' }); } catch(_) {}
+      _aguardandoId = null;
+      _meuDueloAguardandoId = null;
+      { const _ban = document.getElementById('banner-aguardando'); if(_ban) _ban.style.display = 'none'; }
+    }
+    // Cancelar todos os outros convites recebidos pendentes
+    document.querySelectorAll('[id^="notif-"]').forEach(el => {
+      if (el.id !== `notif-${id}`) {
+        const pendId = el.id.replace('notif-', '');
+        try { update(ref(db, `duelos/${pendId}`), { status: 'recusado' }); } catch(_) {}
+        el.remove();
+      }
+    });
+    document.getElementById(`notif-${id}`)?.remove();
+    await atualizarPresenca({ em_duelo: true, status: 'ocupado' });
+    window.location.href = `/aluno/duelo_partida.html?id=${id}`;
+  } catch(e) {
+    console.error('[Aceitar duelo]', e);
+    showToast('Erro ao aceitar duelo. Tente novamente.', 'error');
+  }
+};
+
+window.recusarDesafio = async function(id) {
+  document.getElementById(`notif-${id}`)?.remove();
+  try {
+    const snap = await get(ref(db, `duelos/${id}`));
+    if (snap.val()?.tipo === 'direto') {
+      await update(ref(db, `duelos/${id}`), { status: 'recusado' });
+    }
+  } catch(_) {}
+};
+
+// ── Expirar desafios a cada 10s ───────────────────────────────
+setInterval(async () => {
+  try {
+    const snap = await get(ref(db, 'duelos'));
+    const agora = Date.now();
+    snap.forEach(async child => {
+      const d = child.val();
+      if (d.status === 'aguardando' && d.expira_em < agora) {
+        await update(ref(db, `duelos/${child.key}`), { status: 'expirado' });
+      }
+    });
+  } catch(_) {}
+}, 10_000);
+
+// ── Reação emoji pós-duelo ────────────────────────────────────
+function mostrarBolhaEmoji(emoji, de) {
+  const el = document.createElement('div');
+  el.style.cssText = [
+    'position:fixed','bottom:90px','right:20px','z-index:8500',
+    'background:#1c2035','border:1.5px solid rgba(124,92,252,.5)',
+    'border-radius:16px 16px 4px 16px','padding:12px 18px',
+    'display:flex','align-items:center','gap:10px',
+    'font-size:13px','color:#e8eaf0','font-weight:600',
+    'box-shadow:0 4px 24px rgba(0,0,0,.4)','max-width:260px',
+    'animation:notif-in .25s ease',
+  ].join(';');
+  el.innerHTML = `<span style="font-size:32px;line-height:1">${escH(emoji)}</span><span style="opacity:.75">${escH(de)} te mandou!</span>`;
+  document.body.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .4s'; }, 3200);
+  setTimeout(() => el.remove(), 3700);
+}
+
+function lancarChuvaEmoji(emoji) {
+  for (let i = 0; i < 22; i++) {
+    const el = document.createElement('div');
+    el.className = 'emoji-chuva-item';
+    el.textContent = emoji;
+    const dur   = (Math.random() * 1.8 + 1.8).toFixed(2);
+    const delay = (Math.random() * 1.4).toFixed(2);
+    const left  = (Math.random() * 96 + 1).toFixed(1);
+    const sz    = Math.floor(Math.random() * 28 + 20);
+    const rot   = Math.floor(Math.random() * 720 - 360);
+    el.style.cssText = `left:${left}%;--sz:${sz}px;--dur:${dur}s;--delay:${delay}s;--rot:${rot}deg;`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), (parseFloat(dur) + parseFloat(delay) + 0.4) * 1000);
+  }
+}
+
+onValue(ref(db, `notif_emoji/${uid}/reacao`), async snap => {
+  if (!snap.exists()) return;
+  const d = snap.val();
+  if (!d?.emoji || !d?.ts) return;
+  if (Date.now() - d.ts > 10000) { await set(snap.ref, null).catch(()=>{}); return; }
+  mostrarBolhaEmoji(d.emoji, d.de || '?');
+  adicionarFeedEmoji(d.emoji, d.de || '?', meuApelido || '?', d.ts);
+  lancarChuvaEmoji(d.emoji);
+  await set(snap.ref, null).catch(()=>{});
+});
+
+onValue(ref(db, `notif_emoji/${uid}/watching`), async snap => {
+  if (!snap.exists()) return;
+  const d = snap.val();
+  if (!d?.ts || Date.now() - d.ts > 10000) { await set(snap.ref, null).catch(()=>{}); return; }
+  showToast('👀 alguém está te observando…', 'info', 5000);
+  await set(snap.ref, null).catch(()=>{});
+});
+
+onValue(ref(db, `notif_emoji/${uid}/duelo_cancelado`), async snap => {
+  if (!snap.exists()) return;
+  const d = snap.val();
+  if (!d?.duelo_id || !d?.ts) return;
+  if (Date.now() - d.ts > 15000) { await set(snap.ref, null).catch(()=>{}); return; }
+  document.getElementById(`dnb-${d.duelo_id}`)?.remove();
+  _notifVistas.delete(d.duelo_id);
+  await set(snap.ref, null).catch(()=>{});
+});
+
+onValue(ref(db, 'emoji_feed'), snap => {
+  if (!snap.exists()) return;
+  const feed = document.getElementById('emoji-feed');
+  if (!feed) return;
+  const items = [];
+  snap.forEach(c => items.push(c.val()));
+  feed.innerHTML = '';
+  items.sort((a,b) => (b.ts||0)-(a.ts||0)).slice(0,5).forEach(d => {
+    if (!d?.emoji) return;
+    const item = document.createElement('div');
+    item.className = 'emoji-feed-item';
+    item.dataset.ts = d.ts || Date.now();
+    item.innerHTML = `<span class="ef-emoji">${d.emoji}</span><span class="ef-text"><strong>${escH(d.de||'?')}</strong> → <strong>${escH(d.para||'?')}</strong><span class="ef-time">${tempoRelativo(d.ts || Date.now())}</span></span>`;
+    feed.appendChild(item);
+  });
+});
+
+// Atualizar timestamps do feed a cada 30s
+setInterval(() => {
+  document.querySelectorAll('.emoji-feed-item[data-ts]').forEach(el => {
+    const ef = el.querySelector('.ef-time');
+    if (ef) ef.textContent = tempoRelativo(Number(el.dataset.ts));
+  });
+}, 30_000);
+
+function tempoRelativo(ts) {
+  const diff = Math.floor((Date.now() - ts) / 1000);
+  if (diff < 60)  return 'agora';
+  if (diff < 3600) return `${Math.floor(diff/60)}min atrás`;
+  return `${Math.floor(diff/3600)}h atrás`;
+}
+
+function adicionarFeedEmoji(emoji, de, para, ts) {
+  const feed = document.getElementById('emoji-feed');
+  if (!feed) return;
+  const item = document.createElement('div');
+  item.className = 'emoji-feed-item';
+  item.dataset.ts = ts || Date.now();
+  item.innerHTML = `<span class="ef-emoji">${emoji}</span><span class="ef-text"><strong>${escH(de)}</strong> → <strong>${escH(para)}</strong><span class="ef-time">${tempoRelativo(ts || Date.now())}</span></span>`;
+  feed.prepend(item);
+  while (feed.children.length > 5) feed.lastChild.remove();
+}
+
+async function gravarFeedEmoji(emoji, de, para) {
+  try {
+    const entry = { emoji, de, para, ts: Date.now() };
+    const newRef = push(ref(db, 'emoji_feed'));
+    await set(newRef, entry);
+    // Limpar entradas antigas (manter só 20 no DB)
+    const allSnap = await get(ref(db, 'emoji_feed'));
+    if (allSnap.exists()) {
+      const keys = Object.keys(allSnap.val());
+      if (keys.length > 20) {
+        const toDelete = keys.slice(0, keys.length - 20);
+        for (const k of toDelete) await set(ref(db, `emoji_feed/${k}`), null).catch(()=>{});
+      }
+    }
+  } catch(_) {}
+}
+
+// ── Histórico ─────────────────────────────────────────────────
+async function carregarHistorico() {
+  const container = document.getElementById('historico-content');
+  if (!container) {
+    console.error('[Histórico] elemento historico-content não encontrado');
+    return;
+  }
+
+  container.innerHTML = '<p style="padding:20px;color:var(--text-muted)">Carregando...</p>';
+
+  try {
+    console.log('[Histórico] carregando para uid:', uid);
+    const snap = await get(ref(db, `perfis/${uid}/historico_duelos`));
+    console.log('[Histórico] existe:', snap.exists(), '| valor:', JSON.stringify(snap.val()));
+
+    if (!snap.exists()) {
+      container.innerHTML = '<p style="text-align:center;padding:40px;color:var(--text-muted)">Nenhum duelo ainda.</p>';
+      return;
+    }
+
+    const duelos = [];
+    snap.forEach(c => {
+      duelos.push({ id: c.key, ...c.val() });
+    });
+    duelos.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+
+    const vitorias = duelos.filter(d => d.resultado === 'vitoria').length;
+    const derrotas = duelos.filter(d => d.resultado === 'derrota').length;
+    const total    = duelos.length;
+
+    // Corrigir contadores no Firebase com valores reais do histórico
+    await update(ref(db, `perfis/${uid}`), {
+      duelos_total:    total,
+      duelos_vitorias: vitorias,
+    });
+
+    // ── helpers ──
+    const DIFF_CLASS = { facil:'facil', medio:'medio', dificil:'dificil' };
+    const DIFF_LABEL = { facil:'Fácil', medio:'Médio', dificil:'Difícil' };
+    const CORES_AVATAR = ['#7c3aed','#0e7490','#b45309','#065f46','#1e3a5f','#be185d','#1d4ed8','#92400e'];
+    function avatarColor(nome) {
+      let h = 0;
+      for (const c of (nome||'')) h = (h * 31 + c.charCodeAt(0)) & 0xffffffff;
+      return CORES_AVATAR[Math.abs(h) % CORES_AVATAR.length];
+    }
+
+    const taxa = total > 0 ? Math.round(vitorias / total * 100) : 0;
+
+    // Agrupar por data
+    const grupos = {};
+    for (const d of duelos) {
+      const dia = d.ts ? new Date(d.ts).toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit'}) : 'Sem data';
+      (grupos[dia] = grupos[dia] || []).push(d);
+    }
+
+    const rowsHtml = Object.entries(grupos).map(([dia, lista]) => {
+      const hoje  = new Date().toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit'});
+      const ontem = new Date(Date.now()-86400000).toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit'});
+      const label = dia === hoje ? `Hoje · ${dia}` : dia === ontem ? `Ontem · ${dia}` : dia;
+      const rows  = lista.map(d => {
+        const isW    = d.resultado === 'vitoria';
+        const hora   = d.ts ? new Date(d.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
+        const temPl  = d.meus_pares != null && d.adv_pares != null;
+        const placar = temPl
+          ? `<div class="hist-placar">
+               <span style="color:${isW?'#22c55e':'#ef4444'}">${d.meus_pares}</span>
+               <span class="sep">×</span>
+               <span style="color:${isW?'#ef4444':'#22c55e'}">${d.adv_pares}</span>
+             </div>` : '';
+        const abTag  = d.abandono
+          ? `<span class="hist-tag ab">você desistiu</span>`
+          : d.ganhou_abandono ? `<span class="hist-tag adv-ab">adv. desistiu</span>` : '';
+        const advNome  = d.adversario_nome || '?';
+        const advTurma = d.adversario_turma || '';
+        const diff     = d.dificuldade || 'medio';
+        const xpVal    = (d.xp_delta != null) ? d.xp_delta : ({ facil: isW?15:-8, medio: isW?25:-13, dificil: isW?40:-20 }[diff] ?? 0);
+        const xpHtml   = `<div class="hist-xp ${xpVal>=0?'pos':'neg'}">${xpVal>=0?'+':''}${xpVal} XP</div>`;
+        const temAdvParceiro = !!(d.adv_parceiro_nome);
+        const temMeuParceiro = !!(d.parceiro_nome);
+        const nomeExib = temAdvParceiro
+          ? `${escH(advNome)} <span style="opacity:.5;font-size:10px">+ ${escH(d.adv_parceiro_nome)}</span>`
+          : escH(advNome);
+        const turmaExib = temAdvParceiro && d.adv_parceiro_turma
+          ? `${escH(advTurma)} · ${escH(d.adv_parceiro_turma)}`
+          : escH(advTurma);
+        return `
+          <div class="hist-row ${isW?'win':'loss'}${d.abandono?' abandon':''}" data-tipo="${isW?'win':'loss'}">
+            <div class="hist-wl ${isW?'win':'loss'}">${isW?'W':'L'}</div>
+            <div class="hist-avatar" style="background:${avatarColor(advNome)}">${escH((advNome)[0]?.toUpperCase()||'?')}</div>
+            <div class="hist-info">
+              <div class="hist-nome">${nomeExib}</div>
+              ${temMeuParceiro ? `<div style="font-size:10px;color:#00d4ff;opacity:.7">👥 dupla com ${escH(d.parceiro_nome)}</div>` : ''}
+              <div class="hist-meta">
+                <span>${hora}</span>
+                ${turmaExib ? `<span class="hist-tag turma">${turmaExib}</span>` : ''}
+                ${abTag}
+              </div>
+            </div>
+            ${placar}
+            <div class="hist-diff ${DIFF_CLASS[diff]||'medio'}">${DIFF_LABEL[diff]||diff}</div>
+            ${xpHtml}
+          </div>`;
+      }).join('');
+      return `<div class="hist-date-sep">${label}</div>${rows}`;
+    }).join('');
+
+    container.innerHTML = `
+      <div class="hist-stats">
+        <div class="hist-stat win"><div class="hist-stat-val" style="color:#22c55e">${vitorias}</div><div class="hist-stat-lbl">Vitórias</div></div>
+        <div class="hist-stat loss"><div class="hist-stat-val" style="color:#ef4444">${derrotas}</div><div class="hist-stat-lbl">Derrotas</div></div>
+        <div class="hist-stat"><div class="hist-stat-val" style="color:#a78bfa">${total}</div><div class="hist-stat-lbl">Total</div></div>
+        <div class="hist-stat taxa"><div class="hist-stat-val" style="color:#F59E0B">${taxa}%</div><div class="hist-stat-lbl">Taxa Vitória</div></div>
+      </div>
+      <div class="hist-filters">
+        <button class="hist-filter-btn active" onclick="histFiltrar(this,'todos')">Todos</button>
+        <button class="hist-filter-btn" onclick="histFiltrar(this,'win')">✅ Vitórias</button>
+        <button class="hist-filter-btn" onclick="histFiltrar(this,'loss')">❌ Derrotas</button>
+      </div>
+      <div id="hist-rows">${rowsHtml}</div>
+    `;
+  } catch(e) {
+    console.error('[Histórico ERRO]', e);
+    container.innerHTML = `<p style="color:#ef4444;padding:20px">Erro: ${e.message}</p>`;
+  }
+}
+
+window.histFiltrar = function(btn, tipo) {
+  document.querySelectorAll('.hist-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#hist-rows .hist-row').forEach(row => {
+    row.style.display = (tipo === 'todos' || row.dataset.tipo === tipo) ? 'flex' : 'none';
+  });
+};
+
+// ── Mini-perfil ───────────────────────────────────────────────
+let _emojiCooldownAt = 0;
+let _emojiCooldownTimer = null;
+
+window.fecharModalPerfil = function() {
+  const m = document.getElementById('modal-perfil');
+  if (m) m.style.display = 'none';
+};
+
+window.abrirModalPerfil = async function(alvoUid, alvoNome, somenteLeitura = false) {
+  const modal = document.getElementById('modal-perfil');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  const body = modal.querySelector('.profile-modal');
+  if (!body) return;
+
+  // Estado de carregamento
+  body.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted)">Carregando…</div>`;
+
+  try {
+    const [perfilSnap, histAdvSnap, histMeuSnap, todosSnap, meuPerfilSnap] = await Promise.all([
+      get(ref(db, `perfis/${alvoUid}`)),
+      get(ref(db, `perfis/${alvoUid}/historico_duelos`)),
+      get(ref(db, `perfis/${uid}/historico_duelos`)),
+      get(ref(db, 'perfis')),
+      get(ref(db, `perfis/${uid}`)),
+    ]);
+
+    const p    = perfilSnap.exists() ? perfilSnap.val() : {};
+    const nome = p.apelido_ativo || p.nome || alvoNome || alvoUid;
+    const turmaP = p.turma || (alvoUid.startsWith('8') ? alvoUid.split('_')[0] : '—');
+    const av   = avatarUrl(p.avatar || avatarConfigDefault());
+
+    // Ranking geral
+    const rankLista = [];
+    if (todosSnap.exists()) {
+      todosSnap.forEach(c => {
+        const v = c.val();
+        if ((v?.duelos_vitorias || 0) === 0 && (v?.duelos_total || 0) === 0) return;
+        if ((c.key||'').includes('PROFESSOR') || (c.key||'').includes('TESTE')) return;
+        rankLista.push({ uid: c.key, vit: v?.duelos_vitorias || 0, tot: v?.duelos_total || 0 });
+      });
+    }
+    rankLista.sort((a,b) => b.vit - a.vit || b.tot - a.tot);
+    const rankPos = rankLista.findIndex(r => r.uid === alvoUid) + 1;
+
+    // Stats do adversário
+    const advDuelos = [];
+    if (histAdvSnap.exists()) histAdvSnap.forEach(c => advDuelos.push(c.val()));
+    const advTotal = p.duelos_total || advDuelos.length;
+    const favDiff  = (() => {
+      const cnt = {};
+      advDuelos.forEach(d => { const dif = d.dificuldade || 'normal'; cnt[dif] = (cnt[dif]||0)+1; });
+      let best = null, max = 0;
+      Object.entries(cnt).forEach(([k,v]) => { if (v > max) { max = v; best = k; } });
+      return best ? (best.charAt(0).toUpperCase() + best.slice(1)) : '—';
+    })();
+
+    // H2H
+    let h2hMeu = 0, h2hDele = 0;
+    if (histMeuSnap.exists()) {
+      histMeuSnap.forEach(c => {
+        const d = c.val();
+        if (d?.adversario_uid !== alvoUid) return;
+        if (d.resultado === 'vitoria')  h2hMeu++;
+        if (d.resultado === 'derrota')  h2hDele++;
+      });
+    }
+    const h2hTag = h2hMeu > h2hDele
+      ? '<span class="pm-h2h-tag winning">Você lidera</span>'
+      : h2hMeu < h2hDele
+        ? '<span class="pm-h2h-tag losing">Perdendo</span>'
+        : '<span class="pm-h2h-tag even">Empate</span>';
+
+    // Upset bonus — se adversário está acima de mim no ranking
+    const meuRankPos = rankLista.findIndex(r => r.uid === uid) + 1;
+    const upsetEl   = (rankPos > 0 && meuRankPos > 0 && rankPos < meuRankPos)
+      ? `<div class="pm-upset" style="display:flex">
+           <span class="pm-upset-text">Vencer ${escH(nome)} vale bônus de upset!</span>
+           <span class="pm-upset-bonus">+0,5 XP</span>
+         </div>`
+      : '';
+
+    // Nível do perfil
+    const nivelInfo = Array.isArray(NIVEIS_PERFIL) ? NIVEIS_PERFIL.find(n => n.n === (p.nivel || 1)) : null;
+    const nivelLabel = nivelInfo ? `${nivelInfo.emoji || '⚔️'} ${nivelInfo.nome}` : `Nível ${p.nivel || 1}`;
+
+    const isRevanche = alvoUid === _ultimoAdvUid;
+    const ehProprio  = alvoUid === uid;
+
+    // Modo leitura (aberto pelo ranking): sem emojis e sem botão de desafio
+    const blocoInterativo = somenteLeitura ? '' : `
+      <div class="pm-emojis">
+        <div class="pm-emojis-label">Enviar reação</div>
+        <div class="pm-emoji-grid" id="pm-emoji-grid">
+          ${['🔥','💀','🎯','😤','😂','👑','⚡','🤝','😎','👻','💪','🥶','🤯','🏆'].map(e =>
+            `<button class="pm-ej-btn" onclick="enviarEmojiPerfil('${alvoUid}','${escH(nome)}','${e}')">${e}</button>`
+          ).join('')}
+        </div>
+        <div class="pm-cooldown-bar"><div class="pm-cooldown-fill" id="pm-cooldown-fill"></div></div>
+        <div class="pm-spam-msg" id="pm-spam-msg"></div>
+      </div>
+      <div class="pm-footer">
+        <button class="pm-btn-desafiar${isRevanche ? ' btn-revanche' : ''}"
+          onclick="fecharModalPerfil();abrirModalDesafio('${alvoUid}','${escH(alvoNome)}',false)">
+          ${isRevanche ? '🔁 Revanche!' : '⚔️ Desafiar'}
+        </button>
+      </div>`;
+
+    body.innerHTML = `
+      <div class="pm-header">
+        <div class="pm-av"><img src="${av}" alt=""></div>
+        <div>
+          <div class="pm-name">${escH(nome)}</div>
+          <div class="pm-turma">${escH(turmaP)}</div>
+          <div class="pm-level">${escH(nivelLabel)}</div>
+        </div>
+        <button onclick="fecharModalPerfil()" style="margin-left:auto;background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;padding:0 4px">✕</button>
+      </div>
+      <div class="pm-stats">
+        <div class="pm-stat"><div class="pm-stat-num gold">${rankPos > 0 ? '#' + rankPos : '—'}</div><div class="pm-stat-label">Ranking</div></div>
+        <div class="pm-stat"><div class="pm-stat-num blue">${advTotal}</div><div class="pm-stat-label">Duelos</div></div>
+        <div class="pm-stat"><div class="pm-stat-num purple">${escH(favDiff)}</div><div class="pm-stat-label">Favorito</div></div>
+      </div>
+      ${ehProprio ? '' : `<div class="pm-h2h">
+        <div>
+          <div class="pm-h2h-label">Histórico H2H</div>
+          <div class="pm-h2h-score"><span class="green">${h2hMeu}V</span><span class="muted">×</span><span class="red">${h2hDele}D</span></div>
+        </div>
+        ${h2hTag}
+      </div>`}
+      ${ehProprio ? '' : upsetEl}
+      ${blocoInterativo}`;
+  } catch(e) {
+    console.error('[abrirModalPerfil]', e);
+    const body2 = document.querySelector('#modal-perfil .profile-modal');
+    if (body2) body2.innerHTML = `<div style="padding:20px;color:var(--red)">Erro ao carregar perfil.</div>`;
+  }
+};
+
+window.enviarEmojiPerfil = async function(alvoUid, alvoNome, emoji) {
+  const agora = Date.now();
+  if (agora < _emojiCooldownAt) {
+    const resto = Math.ceil((_emojiCooldownAt - agora) / 1000);
+    document.getElementById('pm-spam-msg').textContent = `Aguarde ${resto}s para enviar outro emoji`;
+    return;
+  }
+  _emojiCooldownAt = agora + 8000;
+
+  // Feedback visual
+  const btnClicado = event?.target;
+  if (btnClicado) { btnClicado.classList.add('sent'); setTimeout(() => btnClicado.classList.remove('sent'), 600); }
+
+  // Cooldown bar
+  const fill = document.getElementById('pm-cooldown-fill');
+  const msg  = document.getElementById('pm-spam-msg');
+  if (fill) {
+    fill.style.width = '100%';
+    clearInterval(_emojiCooldownTimer);
+    let elapsed = 0;
+    _emojiCooldownTimer = setInterval(() => {
+      elapsed += 100;
+      const pct = Math.max(0, 100 - (elapsed / 80));
+      if (fill) fill.style.width = pct + '%';
+      if (pct <= 0) { clearInterval(_emojiCooldownTimer); if (msg) msg.textContent = ''; }
+    }, 100);
+  }
+
+  try {
+    const meuNomeExib = meuApelido || '?';
+    await set(ref(db, `notif_emoji/${alvoUid}/reacao`), {
+      emoji, de: meuNomeExib, ts: agora,
+    });
+    await gravarFeedEmoji(emoji, meuNomeExib, alvoNome);
+  } catch(_) {}
+};
+
+// ── Ranking de duelos ─────────────────────────────────────────
+async function renderRankingIndividual() {
+  const el = document.getElementById('rpanel-individual');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">Carregando...</div>';
+
+  // Forçar leitura sem cache via REST
+  let snap;
+  try {
+    const res = await fetch('https://sistemamatematica-50eff-default-rtdb.firebaseio.com/perfis.json?t=' + Date.now());
+    const data = await res.json();
+    // Criar objeto compatível com snap.forEach
+    snap = { exists: () => !!data, forEach: (cb) => { if (data) Object.entries(data).forEach(([k,v]) => cb({ key: k, val: () => v })); } };
+  } catch(_) {
+    snap = await get(ref(db, 'perfis'));
+  }
+  if (!snap.exists()) {
+    el.innerHTML = '<p style="text-align:center;padding:40px;color:var(--text-muted)">Nenhum duelo realizado ainda.</p>';
+    return;
+  }
+
+  const lista = [];
+  snap.forEach(c => {
+    const v = c.val();
+    const _nomeDoUid = c.key.includes('_')
+      ? c.key.split('_').slice(1).join(' ')
+      : c.key;
+    const _nome  = v?.apelido_ativo || v?.nome || _nomeDoUid;
+    const _turma = v?.turma || (c.key.startsWith('8') ? c.key.split('_')[0] : '');
+
+    if (!_nome) return;
+    if (_nome.includes('PROFESSOR') || _nome.includes('TESTE')) return;
+    if (c.key.includes('PROFESSOR') || c.key.includes('TESTE')) return;
+    if (c.key === '8D_teste1' || c.key === '8D_teste2') return;
+    if (_turma === 'TESTE') return;
+    if ((v?.duelos_vitorias || 0) === 0 && (v?.duelos_total || 0) === 0) return;
+
+    lista.push({
+      uid:      c.key,
+      nome:     _nome,
+      turma:    _turma,
+      vitorias: v?.duelos_vitorias || 0,
+      total:    v?.duelos_total    || 0,
+      xp:       v?.xp || 0,
+      avatar:   v?.avatar,
+    });
+  });
+
+  lista.sort((a, b) => b.vitorias - a.vitorias || b.xp - a.xp);
+
+  if (lista.length === 0) {
+    el.innerHTML = '<p style="text-align:center;padding:40px;color:var(--text-muted)">Nenhum duelo realizado ainda.</p>';
+    return;
+  }
+
+  const { avatarUrl, avatarConfigDefault } = await import('/js/gamificacao.js');
+
+  const COLORS = ['#F59E0B','#9CA3AF','#CD853F'];
+  const STANDS = [
+    { h: 70, bg: 'linear-gradient(135deg,#F59E0B,#D97706)' },
+    { h: 50, bg: 'linear-gradient(135deg,#9CA3AF,#6B7280)' },
+    { h: 36, bg: 'linear-gradient(135deg,#CD853F,#92400E)' },
+  ];
+
+  const top3 = lista.slice(0, 3);
+  const resto = lista.slice(3, 30);
+
+  function renderPodiumAv(p, size) {
+    const url   = avatarUrl(p.avatar || avatarConfigDefault());
+    const letra = (p.nome || '?')[0].toUpperCase();
+    return `<div class="podium-av" style="width:${size}px;height:${size}px">
+      <span class="podium-av-letra">${letra}</span>
+      <img src="${url}" alt="" onerror="this.style.display='none'">
+    </div>`;
+  }
+
+  function spotHtml(p, slotIdx) {
+    if (!p) return `<div class="podium-spot p${slotIdx+1}"></div>`;
+    const isMe  = p.uid === uid;
+    const st    = STANDS[slotIdx];
+    const crown = slotIdx === 0 ? '<div class="podium-crown">👑</div>' : '';
+    const sizes = [54, 44, 44];
+    return `<div class="podium-spot p${slotIdx+1} g${slotIdx+1}${isMe?' podium-me':''}" style="cursor:pointer" onclick="abrirModalPerfil('${p.uid}','${escH(p.nome)}',true)" title="Ver perfil">
+      ${crown}
+      ${renderPodiumAv(p, sizes[slotIdx])}
+      <div class="podium-name" style="color:${isMe?'var(--purple)':'var(--text)'}">${escH(p.nome)}</div>
+      <div class="podium-turma">${escH(p.turma)}</div>
+      <div class="podium-score" style="color:${COLORS[slotIdx]}">🏆 ${p.vitorias}</div>
+      <div class="podium-stand" style="height:${st.h}px;background:${st.bg}">${slotIdx+1}</div>
+    </div>`;
+  }
+
+  const podiumHtml = `<div class="podium-outer">
+    ${spotHtml(top3[1], 1)}
+    ${spotHtml(top3[0], 0)}
+    ${spotHtml(top3[2], 2)}
+  </div>`;
+
+  // Cores da tag de turma e da régua de posição (lista 4º+)
+  const CORES_TURMA = {
+    '8D': 'background:rgba(127,119,221,.15);color:#a99ff0;border:1px solid rgba(127,119,221,.3)',
+    '8E': 'background:rgba(34,211,238,.12);color:#67e8f9;border:1px solid rgba(34,211,238,.25)',
+    '8F': 'background:rgba(34,197,94,.12);color:#6ee7a0;border:1px solid rgba(34,197,94,.25)',
+    '8G': 'background:rgba(249,115,22,.12);color:#fdba74;border:1px solid rgba(249,115,22,.25)',
+    '8H': 'background:rgba(236,72,153,.12);color:#f9a8d4;border:1px solid rgba(236,72,153,.25)',
+  };
+  const corTurma = t => CORES_TURMA[t] || 'background:rgba(255,255,255,.06);color:var(--text-muted);border:1px solid var(--border)';
+  const corRegua = pos => pos <= 6
+    ? 'background:linear-gradient(180deg,#7F77DD,#5a3fcf)'
+    : pos <= 10
+      ? 'background:rgba(127,119,221,.35)'
+      : 'background:rgba(255,255,255,.10)';
+
+  const listaHtml = resto.length ? `
+    <div style="margin-top:16px;display:flex;flex-direction:column;gap:6px">
+      ${resto.map((p, i) => {
+        const isMe  = p.uid === uid;
+        const pos   = i + 4;
+        const av    = avatarUrl(p.avatar || avatarConfigDefault());
+        const letra = (p.nome || '?')[0].toUpperCase();
+        const badgeVit = p.vitorias > 0
+          ? `<span style="font-family:'Rajdhani',sans-serif;font-size:13.5px;font-weight:700;padding:4px 12px;border-radius:99px;flex-shrink:0;white-space:nowrap;background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.3)">🏆 ${p.vitorias} vitória${p.vitorias > 1 ? 's' : ''}</span>`
+          : `<span style="font-family:'Rajdhani',sans-serif;font-size:13.5px;font-weight:700;padding:4px 12px;border-radius:99px;flex-shrink:0;white-space:nowrap;background:rgba(255,255,255,.05);color:var(--text-muted);border:1px solid var(--border)">0 vitórias</span>`;
+        return `<div onclick="abrirModalPerfil('${p.uid}','${escH(p.nome)}',true)" title="Ver perfil" style="cursor:pointer;overflow:hidden;background:${isMe?'rgba(127,119,221,.07)':'var(--card)'};
+                            border:1px solid ${isMe?'rgba(127,119,221,.35)':'var(--border)'};
+                            border-radius:12px;padding:8px 12px 8px 0;
+                            display:flex;align-items:center;gap:10px">
+          <div style="width:4px;align-self:stretch;border-radius:0 3px 3px 0;flex-shrink:0;${corRegua(pos)}"></div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;min-width:30px;text-align:center;color:var(--text-muted);flex-shrink:0">#${pos}</div>
+          <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#7F77DD,#00d4ff);flex-shrink:0;position:relative">
+            <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;z-index:0">${letra}</span>
+            <img src="${av}" alt="" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:1;border-radius:50%" onerror="this.style.display='none'">
+          </div>
+          <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px">
+            <span style="font-size:13.5px;font-weight:700;${isMe?'color:var(--purple)':''};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escH(p.nome)}</span>
+            ${isMe ? '<span style="color:var(--purple);font-size:11px;font-weight:700;flex-shrink:0">← você</span>' : ''}
+            <span style="font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px;letter-spacing:.4px;flex-shrink:0;${corTurma(p.turma)}">${escH(p.turma)}</span>
+          </div>
+          ${badgeVit}
+        </div>`;
+      }).join('')}
+    </div>` : '';
+
+  el.innerHTML = `
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">${lista.length} jogadores · atualizado agora</div>
+    ${podiumHtml}
+    ${listaHtml}
+  `;
+}
+
+async function renderRankingTurmas() {
+  const el = document.getElementById('rpanel-turmas');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">Carregando...</div>';
+
+  const TURMA_SIZE = { '8D': 20, '8E': 33, '8F': 32, '8G': 30, '8H': 33 };
+
+  const snap = await get(ref(db, 'perfis')).catch(() => null);
+  if (!snap?.exists()) { el.innerHTML = '<p style="color:var(--text-muted);padding:12px">Sem dados.</p>'; return; }
+
+  const xpPorTurma = { '8D': 0, '8E': 0, '8F': 0, '8G': 0, '8H': 0 };
+  snap.forEach(c => {
+    const v = c.val();
+    if (!v?.turma || !v?.nome) return;
+    if (v.nome.includes('PROFESSOR') || v.nome.includes('TESTE')) return;
+    const t = v.turma;
+    if (xpPorTurma[t] !== undefined) xpPorTurma[t] += (v.xp || 0);
+  });
+
+  const ranking = Object.entries(xpPorTurma)
+    .map(([turma, xpTotal]) => ({
+      turma,
+      xpTotal,
+      media: TURMA_SIZE[turma] ? Math.round(xpTotal / TURMA_SIZE[turma]) : 0,
+      size: TURMA_SIZE[turma] || 0,
+    }))
+    .sort((a, b) => b.media - a.media);
+
+  const MEDALS = ['🥇','🥈','🥉'];
+  const COLORS = ['#F59E0B','#9CA3AF','#CD853F'];
+
+  const podioHTML = `
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      ${ranking.slice(0,3).map((r,i) => `
+        <div style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;${i===0?'border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.06)':''}">
+          <div style="font-size:28px;margin-bottom:6px">${MEDALS[i]}</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:800;color:${COLORS[i]}">${escH(r.turma)}</div>
+          <div style="font-size:14px;font-weight:800;color:${COLORS[i]};margin-top:4px">${r.media} XP</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">média/aluno</div>
+        </div>`).join('')}
+    </div>`;
+
+  const restaHTML = ranking.slice(3).map((r, i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:6px">
+      <span style="font-size:13px;font-weight:800;color:var(--text-muted);min-width:22px">${i+4}º</span>
+      <div style="flex:1">
+        <div style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700">${escH(r.turma)}</div>
+        <div style="font-size:10px;color:var(--text-muted)">${r.size} alunos · ${r.xpTotal} XP total</div>
+      </div>
+      <div style="font-size:14px;font-weight:800;color:var(--purple)">${r.media} XP</div>
+    </div>`).join('');
+
+  const notaHTML = `
+    <div style="font-size:10px;color:var(--text-muted);text-align:center;margin-top:10px;padding:8px;background:rgba(255,255,255,.03);border-radius:8px">
+      Média = XP total da turma ÷ total oficial de alunos (inclui quem ainda não duelou)
+    </div>`;
+
+  el.innerHTML = podioHTML + restaHTML + notaHTML;
+}
+</script>
+
+<!-- Banner: desafio aguardando resposta -->
+<div id="banner-aguardando" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9000;width:min(560px,calc(100vw - 32px));background:linear-gradient(135deg,#2d1b69,#1a1040);border:2px solid #a78bfa;border-radius:14px;padding:16px 20px;align-items:center;gap:14px;box-shadow:0 0 32px rgba(167,139,250,.5),0 8px 32px rgba(0,0,0,.4)">
+  <span style="font-size:26px;flex-shrink:0">⚔️</span>
+  <div style="flex:1;min-width:0">
+    <div id="aguardando-nome-txt" style="font-size:15px;font-weight:800;color:#c4b5fd">Aguardando resposta...</div>
+    <div style="font-size:12px;color:#a78bfa;margin-top:3px">Expira em <span id="aguardando-timer" style="font-weight:700;color:#e9d5ff">3:00</span></div>
+  </div>
+  <button onclick="cancelarDesafio()" style="background:rgba(239,68,68,.15);border:1.5px solid rgba(239,68,68,.5);color:#ef4444;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:800;cursor:pointer;flex-shrink:0;white-space:nowrap">✕ Cancelar</button>
+</div>
+
+<!-- ── Mini-perfil modal ── -->
+<div id="modal-perfil" class="modal-overlay" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:16px" onclick="fecharModalPerfil()">
+  <div class="profile-modal" onclick="event.stopPropagation()">
+    <div style="padding:40px;text-align:center;color:var(--text-muted)">Carregando…</div>
+  </div>
+</div>
+
+<!-- ── Emoji bubble ── -->
+<div id="emoji-bubble" style="display:none;position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:8500;background:#1c2035;border:1.5px solid rgba(124,92,252,.5);border-radius:20px 20px 20px 4px;padding:14px 20px;text-align:center;pointer-events:none;animation:bubbleIn .35s ease;font-size:13px;color:var(--text-muted)"></div>
+
+<!-- ── Emoji feed ── -->
+<div id="emoji-feed" style="position:fixed;bottom:80px;right:12px;z-index:7000;display:flex;flex-direction:column;gap:5px;max-width:220px;pointer-events:none"></div>
+</body>
+</html>

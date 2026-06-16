@@ -50,9 +50,22 @@ Se precisar salvar trabalho: apenas informar "alterações prontas para commit q
 ## Firebase — estrutura de dados principal
 
 ### Alunos e auth
-- `alunos/{uid}`: dados do aluno (nome, turma, role)
 - `ranking_geral/{uid}`: ranking geral do quiz
 - `ranking_turmas/{turma}/{uid}`: ranking por turma
+
+### Sistema de login dos alunos
+- Auth customizado — **não usa Firebase Auth**
+- `aluno_senhas/{base64key}`: senha cadastrada — objeto `{ turma, nome, hash }`
+  - Chave base64: `btoa(UTF8("turma|nome"))` sem `=`, `+`→`-`, `/`→`_`
+  - Hash: SHA-256 de `"turma|nome|pin"`
+- `perfis/{uid}`: perfil do aluno (XP, nível, streak, avatar…) — uid = `"turma_nome"`
+  - Criado no primeiro cadastro; só existe após o aluno ser registrado
+- O dropdown de login (`index.html`) usa a lista **local** `ALUNOS_POR_TURMA` de `js/constants.js`
+  - **Não** carrega do Firebase — é hardcoded
+- Para criar um aluno novo: obrigatório atualizar **os dois**:
+  1. Firebase `aluno_senhas/` (para autenticar)
+  2. `ALUNOS_POR_TURMA` em `js/constants.js` (para aparecer no dropdown)
+- Usar o skill `/criar-aluno` — já faz os dois passos
 
 ### Tabuada
 - `tabuada_niveis/{uid}`: progresso individual (nivel_atual, melhor_nivel, historico)
