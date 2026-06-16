@@ -323,7 +323,6 @@
 </div></div>
 
 <script type="module">
-import { ALUNOS_POR_TURMA } from "/js/constants.js";
 import { getConfig, getSenhaAluno, getResultados, getLiberadas, contarSessoesTabuadaHoje, somarPartidasTabuadaTotal, getFeedGlobal } from "/js/db.js";
 import { getSession, setSession, hashSenha } from "/js/auth.js";
 
@@ -354,14 +353,9 @@ function updateClock() {
 }
 updateClock(); setInterval(updateClock, 1000);
 
-// Stats estáticas (sem Firebase)
-const totalAlunos = Object.values(ALUNOS_POR_TURMA).reduce((a, b) => a + b.length, 0);
-const totalTurmas = Object.keys(ALUNOS_POR_TURMA).length;
-// statAlunos e statTurmas removidos do layout
-
 // Popula turmas
 const turmaSelect = document.getElementById('turmaSelect');
-Object.keys(ALUNOS_POR_TURMA).forEach(t => {
+['8D', '8E', '8F', '8G', '8H'].forEach(t => {
   turmaSelect.innerHTML += `<option value="${t}">${t}</option>`;
 });
 
@@ -452,23 +446,39 @@ window.setRole = function(role) {
   form.querySelectorAll('.field-anim,.btn-submit').forEach(el => { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; });
 };
 
-window.carregarAlunos = function() {
-  const turma  = document.getElementById('turmaSelect').value;
-  const alunos = ALUNOS_POR_TURMA[turma] || [];
-  const sel1   = document.getElementById('alunoSelect');
-  const pin1   = document.getElementById('senhaAluno');
-  sel1.innerHTML = '<option value="">Selecionar...</option>';
-  alunos.forEach(n => {
-    sel1.innerHTML += `<option value="${n}">${n}</option>`;
-  });
-  sel1.disabled = !turma;
-  pin1.disabled = !turma;
-  pin1.value = '';
-  if (turma) setTimeout(() => sel1.focus(), 50);
+window.carregarAlunos = async function() {
+  const turma = document.getElementById('turmaSelect').value;
+  const sel1  = document.getElementById('alunoSelect');
+  const pin1  = document.getElementById('senhaAluno');
 
-  // Alert: só mostra se a turma selecionada tem atividade liberada
+  sel1.innerHTML = '<option value="">Selecionar...</option>';
+  sel1.disabled = true;
+  pin1.disabled = true;
+  pin1.value = '';
+
   const temAtividade = turma && liberadasCache.some(l => l.turma === turma);
   document.getElementById('activityAlert').style.display = temAtividade ? 'flex' : 'none';
+
+  if (!turma) return;
+
+  sel1.innerHTML = '<option value="">Carregando...</option>';
+  try {
+    const resp = await fetch('https://sistemamatematica-50eff-default-rtdb.firebaseio.com/perfis.json');
+    const data = await resp.json();
+    const nomes = data
+      ? Object.values(data)
+          .filter(p => p && p.turma === turma && p.nome && p.nome !== 'PROFESSOR_TESTE')
+          .map(p => p.nome)
+          .sort((a, b) => a.localeCompare(b, 'pt-BR'))
+      : [];
+    sel1.innerHTML = '<option value="">Selecionar...</option>';
+    nomes.forEach(n => { sel1.innerHTML += `<option value="${n}">${n}</option>`; });
+    sel1.disabled = false;
+    pin1.disabled = false;
+    if (nomes.length > 0) setTimeout(() => sel1.focus(), 50);
+  } catch(_) {
+    sel1.innerHTML = '<option value="">Erro ao carregar</option>';
+  }
 };
 
 window.focusSenha = function() {
