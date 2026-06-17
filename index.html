@@ -174,16 +174,93 @@
 </style>
 </head>
 <body>
-<div id="splash-screen" style="position:fixed;inset:0;width:100vw;height:100vh;background:#0d0a2e;display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.5s ease;">
-  <img src="/splash.png" alt="" style="max-width:400px;width:90%;">
+<style>
+  #splash-screen {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(circle at center, #1a0040 0%, #0a0020 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.6s ease;
+  }
+  @keyframes shieldEntry {
+    0%   { transform: scale(0);    opacity: 0; }
+    70%  { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1);    opacity: 1; }
+  }
+  @keyframes shieldPulse {
+    0%, 100% { transform: scale(1);    }
+    50%       { transform: scale(1.08); }
+  }
+  #splash-shield {
+    width: 160px;
+    height: 160px;
+    animation: shieldEntry 0.9s ease-out forwards;
+  }
+  #splash-shield.pulsing {
+    animation: shieldPulse 1.8s ease-in-out infinite;
+  }
+  #splash-title {
+    margin-top: 24px;
+    text-align: center;
+    opacity: 0;
+    animation: fadeIn 0.5s ease forwards;
+    animation-delay: 0.9s;
+  }
+  #splash-title .line1 {
+    display: block;
+    color: #fff;
+    font-size: 22px;
+    font-weight: 300;
+    letter-spacing: 3px;
+    font-family: sans-serif;
+  }
+  #splash-title .line2 {
+    display: block;
+    color: #fff;
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    font-family: sans-serif;
+  }
+  #splash-sub {
+    margin-top: 12px;
+    color: #f0a500;
+    font-size: 11px;
+    letter-spacing: 4px;
+    font-weight: 400;
+    font-family: sans-serif;
+    opacity: 0;
+    animation: fadeIn 0.5s ease forwards;
+    animation-delay: 1.3s;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+</style>
+<div id="splash-screen">
+  <img id="splash-shield" src="/icon-192.png" alt="">
+  <div id="splash-title">
+    <span class="line1">Sistema de</span>
+    <span class="line2">Matemática</span>
+  </div>
+  <div id="splash-sub">APRENDER • COMPETIR • EVOLUIR</div>
 </div>
 <script>
   (function(){
+    var shield = document.getElementById('splash-shield');
     var s = document.getElementById('splash-screen');
+    setTimeout(function(){ shield.classList.add('pulsing'); }, 900);
     setTimeout(function(){
       s.style.opacity = '0';
-      setTimeout(function(){ s.remove(); }, 500);
-    }, 1500);
+      setTimeout(function(){ s.style.display = 'none'; }, 600);
+    }, 3000);
   })();
 </script>
 
