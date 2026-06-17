@@ -148,7 +148,7 @@
   </div>
 </div>
 
-<script>(()=>{document.documentElement.setAttribute('data-theme','dark');})()</script>
+<script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
 <script type="module">
 import { LISTA_ATIVIDADES } from "/js/constants.js";
 import { getResultados, getLiberadasParaTurma, getAlunoPreferencia } from "/js/db.js";

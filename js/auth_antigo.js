@@ -140,7 +140,7 @@ export function renderSidebarAluno(containerId, activePage) {
   ).join('');
   document.getElementById(containerId).innerHTML = `
     <div class="sidebar-brand">
-      <div class="brand-icon"><img src="/logo_fundotransparente.png" style="width:56px;height:56px;object-fit:contain;"></div>
+      <div class="brand-icon"><img src="/logo_fundotransparente.png" style="width:44px;height:44px;object-fit:contain;"></div>
       <div class="brand-title">Sistema de Matemática</div>
       <div class="brand-sub">Plataforma Educacional</div>
     </div>
@@ -469,7 +469,7 @@ export function renderSidebarProfessor(containerId, activePage) {
   const jogosHtml = navJogos.map(n => `<a class="nav-item${activePage===n.id?' active-blue':''}" href="${n.href}"><svg viewBox="0 0 24 24">${n.icon}</svg>${n.label}</a>`).join('');
   document.getElementById(containerId).innerHTML = `
     <div class="sidebar-brand">
-      <div class="brand-icon"><img src="/logo_fundotransparente.png" style="width:56px;height:56px;object-fit:contain;"></div>
+      <div class="brand-icon"><img src="/logo_fundotransparente.png" style="width:44px;height:44px;object-fit:contain;"></div>
       <div class="brand-title">Sistema de Matemática</div>
       <div class="brand-sub">Plataforma Educacional</div>
     </div>
