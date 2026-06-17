@@ -203,8 +203,8 @@
     50%       { transform: scale(1.08); }
   }
   @keyframes splashFadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; }
+    to   { opacity: 1; }
   }
   #splash-logo {
     width: 200px;
@@ -219,8 +219,7 @@
     margin-top: 20px;
     text-align: center;
     opacity: 0;
-    animation: splashFadeIn 0.5s ease forwards;
-    animation-delay: 0.3s;
+    transition: opacity 0.5s ease;
   }
   #splash-title .line1 {
     display: block;
@@ -246,8 +245,7 @@
     font-weight: 400;
     font-family: sans-serif;
     opacity: 0;
-    animation: splashFadeIn 0.5s ease forwards;
-    animation-delay: 0.5s;
+    transition: opacity 0.5s ease;
   }
 </style>
 <div id="splash-screen">
@@ -260,13 +258,33 @@
 </div>
 <script>
   (function(){
-    var logo = document.getElementById('splash-logo');
-    var s = document.getElementById('splash-screen');
-    setTimeout(function(){ logo.classList.add('pulsing'); }, 900);
-    setTimeout(function(){
-      s.style.opacity = '0';
-      setTimeout(function(){ s.remove(); }, 500);
-    }, 2000);
+    var logo  = document.getElementById('splash-logo');
+    var s     = document.getElementById('splash-screen');
+    var title = document.getElementById('splash-title');
+    var sub   = document.getElementById('splash-sub');
+
+    function iniciar() {
+      // Mostra tela
+      s.style.opacity = '1';
+      // Logo já tem animação CSS (splashEntry)
+      // Título e sub aparecem junto, logo após
+      setTimeout(function(){ title.style.opacity = '1'; }, 300);
+      setTimeout(function(){ sub.style.opacity   = '1'; }, 500);
+      // Pulso da logo
+      setTimeout(function(){ logo.classList.add('pulsing'); }, 900);
+      // Fade out e remove
+      setTimeout(function(){
+        s.style.opacity = '0';
+        setTimeout(function(){ s.remove(); }, 500);
+      }, 3000);
+    }
+
+    if (logo.complete && logo.naturalWidth > 0) {
+      iniciar();
+    } else {
+      logo.addEventListener('load',  iniciar);
+      logo.addEventListener('error', iniciar);
+    }
   })();
 </script>
 
