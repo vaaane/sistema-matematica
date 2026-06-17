@@ -19,13 +19,18 @@
     --muted: #8A8A9A;
     --muted-2: #5A5A7A;
     --white: #FFFFFF;
+    --purple: #6c00d4;
+    --purple-dark: #1a0040;
+    --purple-light: #9b30ff;
+    --gold: #f0a500;
+    --gold-light: #ffc84a;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
     font-family: 'DM Sans', sans-serif;
-    background: var(--dark-3);
+    background: radial-gradient(ellipse at center, #1a0040 0%, #0a0020 100%);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -38,11 +43,11 @@
 
   .bg-shapes { position: fixed; inset: 0; overflow: hidden; z-index: 0; pointer-events: none; }
   .shape { position: absolute; }
-  .shape-1 { width: 520px; height: 520px; border: 48px solid var(--orange); border-radius: 50%; top: -160px; right: -160px; opacity: .05; animation: rotate 28s linear infinite; }
-  .shape-2 { width: 260px; height: 260px; border: 28px solid var(--orange-light); bottom: 4%; left: -90px; transform: rotate(45deg); opacity: .04; animation: rotate 17s linear infinite reverse; }
-  .shape-3 { width: 190px; height: 190px; border: 22px solid var(--orange); border-radius: 38px; bottom: 22%; right: 4%; opacity: .035; animation: float 11s ease-in-out infinite; }
-  .shape-4 { width: 120px; height: 120px; border: 18px solid var(--orange-light); border-radius: 50%; top: 40%; left: 5%; opacity: .03; animation: float 14s ease-in-out infinite reverse; }
-  .shape-5 { width: 80px; height: 80px; border: 14px solid var(--orange); top: 15%; left: 20%; opacity: .04; transform: rotate(20deg); animation: rotate 22s linear infinite; }
+  .shape-1 { width: 520px; height: 520px; border: 48px solid var(--purple-light); border-radius: 50%; top: -160px; right: -160px; opacity: .05; animation: rotate 28s linear infinite; }
+  .shape-2 { width: 260px; height: 260px; border: 28px solid var(--gold); bottom: 4%; left: -90px; transform: rotate(45deg); opacity: .04; animation: rotate 17s linear infinite reverse; }
+  .shape-3 { width: 190px; height: 190px; border: 22px solid var(--purple-light); border-radius: 38px; bottom: 22%; right: 4%; opacity: .035; animation: float 11s ease-in-out infinite; }
+  .shape-4 { width: 120px; height: 120px; border: 18px solid var(--gold); border-radius: 50%; top: 40%; left: 5%; opacity: .03; animation: float 14s ease-in-out infinite reverse; }
+  .shape-5 { width: 80px; height: 80px; border: 14px solid var(--purple-light); top: 15%; left: 20%; opacity: .04; transform: rotate(20deg); animation: rotate 22s linear infinite; }
   .shape-6 { width: 340px; height: 340px; border: 1px solid rgba(255,107,26,.06); border-radius: 50%; bottom: -100px; left: 30%; animation: rotate 40s linear infinite reverse; }
 
   .dot-grid { position: fixed; inset: 0; z-index: 0; pointer-events: none; background-image: radial-gradient(circle, rgba(255,107,26,.06) 1px, transparent 1px); background-size: 38px 38px; mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%); -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%); }
@@ -88,8 +93,8 @@
   .stat-col { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 4px 8px; position: relative; }
   .stat-col + .stat-col::before { content: ''; position: absolute; left: 0; top: 10%; height: 80%; width: 1px; background: rgba(255,255,255,.07); }
   .stat-top { display: flex; align-items: baseline; gap: 5px; }
-  .stat-num { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: var(--orange); line-height: 1; }
-  .stat-today { font-size: 11px; font-weight: 700; color: rgba(249,115,22,.55); line-height: 1; white-space: nowrap; }
+  .stat-num { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: var(--gold); line-height: 1; }
+  .stat-today { font-size: 11px; font-weight: 700; color: rgba(240,165,0,.6); line-height: 1; white-space: nowrap; }
   .stat-label { font-size: 8px; color: var(--muted-2); text-transform: uppercase; letter-spacing: 1px; margin-top: 3px; }
 
 
@@ -98,7 +103,7 @@
   .container { position: relative; z-index: 10; width: 100%; max-width: 420px; padding: 0 20px; animation: bounceIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
   .logo-area { text-align: center; margin-bottom: 10px; }
-  .logo-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; color: var(--white); letter-spacing: -0.5px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .logo-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; color: var(--white); letter-spacing: -0.5px; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px; }
   .logo-bolt { font-size: 22px; color: var(--orange); animation: boltPulse 2.5s ease-in-out infinite; display: inline-block; }
   .logo-sub { font-size: 11px; color: var(--muted-2); margin-top: 3px; }
 
@@ -108,7 +113,7 @@
 
   .role-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 14px; background: rgba(255,255,255,0.04); padding: 4px; border-radius: 12px; animation: slideUpDelay 0.8s ease both; }
   .role-tab { padding: 8px; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--muted); background: transparent; }
-  .role-tab.active { background: var(--orange); color: white; box-shadow: 0 3px 12px rgba(255,107,26,0.3); }
+  .role-tab.active { background: linear-gradient(135deg, var(--purple), var(--purple-light)); color: white; box-shadow: 0 3px 12px rgba(108,0,212,0.35); }
   .role-tab:not(.active):hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6); }
 
   .field { margin-bottom: 9px; }
@@ -125,7 +130,7 @@
     color: var(--white); outline: none; transition: all 0.25s ease; appearance: none; -webkit-appearance: none;
   }
   select option { background: var(--dark-2); color: var(--white); }
-  select:focus, input:focus { border-color: var(--orange); background: rgba(255,107,26,0.07); box-shadow: 0 0 0 3px rgba(255,107,26,0.1); }
+  select:focus, input:focus { border-color: var(--purple-light); background: rgba(108,0,212,0.07); box-shadow: 0 0 0 3px rgba(108,0,212,0.1); }
   select:disabled, input:disabled { opacity: 0.32; cursor: not-allowed; }
 
   .pw-wrap { position: relative; }
@@ -149,10 +154,10 @@
   .error-msg.show { display: flex; }
   .error-msg.shake { animation: shake 0.4s ease; }
 
-  .btn-submit { width: 100%; background: linear-gradient(135deg, var(--orange), var(--orange-light)); border: none; border-radius: 12px; padding: 11px; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: white; cursor: pointer; transition: all 0.2s ease; margin-top: 4px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 8px; animation: slideUpDelay 1.1s ease both; }
+  .btn-submit { width: 100%; background: linear-gradient(135deg, var(--purple) 0%, var(--gold) 100%); border: none; border-radius: 12px; padding: 11px; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: white; cursor: pointer; transition: all 0.2s ease; margin-top: 4px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 8px; animation: slideUpDelay 1.1s ease both; }
   .btn-submit::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent); opacity: 0; transition: opacity 0.2s; }
   .btn-submit:hover::before { opacity: 1; }
-  .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(255,107,26,0.45); }
+  .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(108,0,212,0.45); }
   .btn-submit:active { transform: translateY(0); }
   .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
@@ -186,30 +191,35 @@
     align-items: center;
     justify-content: center;
     z-index: 9999;
-    transition: opacity 0.6s ease;
+    transition: opacity 0.5s ease;
   }
-  @keyframes shieldEntry {
+  @keyframes splashEntry {
     0%   { transform: scale(0);    opacity: 0; }
-    70%  { transform: scale(1.15); opacity: 1; }
+    67%  { transform: scale(1.15); opacity: 1; }
     100% { transform: scale(1);    opacity: 1; }
   }
-  @keyframes shieldPulse {
+  @keyframes splashPulse {
     0%, 100% { transform: scale(1);    }
     50%       { transform: scale(1.08); }
   }
-  #splash-shield {
-    width: 160px;
-    height: 160px;
-    animation: shieldEntry 0.9s ease-out forwards;
+  @keyframes splashFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
   }
-  #splash-shield.pulsing {
-    animation: shieldPulse 1.8s ease-in-out infinite;
+  #splash-logo {
+    width: 200px;
+    height: auto;
+    object-fit: contain;
+    animation: splashEntry 0.9s ease-out forwards;
+  }
+  #splash-logo.pulsing {
+    animation: splashPulse 1.8s ease-in-out infinite;
   }
   #splash-title {
-    margin-top: 24px;
+    margin-top: 20px;
     text-align: center;
     opacity: 0;
-    animation: fadeIn 0.5s ease forwards;
+    animation: splashFadeIn 0.5s ease forwards;
     animation-delay: 0.9s;
   }
   #splash-title .line1 {
@@ -236,16 +246,12 @@
     font-weight: 400;
     font-family: sans-serif;
     opacity: 0;
-    animation: fadeIn 0.5s ease forwards;
+    animation: splashFadeIn 0.5s ease forwards;
     animation-delay: 1.3s;
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
   }
 </style>
 <div id="splash-screen">
-  <img id="splash-shield" src="/icon-192.png" alt="">
+  <img id="splash-logo" src="/logo_fundotransparente.png" alt="">
   <div id="splash-title">
     <span class="line1">Sistema de</span>
     <span class="line2">Matemática</span>
@@ -254,13 +260,13 @@
 </div>
 <script>
   (function(){
-    var shield = document.getElementById('splash-shield');
+    var logo = document.getElementById('splash-logo');
     var s = document.getElementById('splash-screen');
-    setTimeout(function(){ shield.classList.add('pulsing'); }, 900);
+    setTimeout(function(){ logo.classList.add('pulsing'); }, 900);
     setTimeout(function(){
       s.style.opacity = '0';
-      setTimeout(function(){ s.style.display = 'none'; }, 600);
-    }, 3000);
+      setTimeout(function(){ s.remove(); }, 500);
+    }, 2000);
   })();
 </script>
 
@@ -278,8 +284,9 @@
 
 <div class="container">
   <div class="logo-area">
-    <div class="logo-title"><span class="logo-bolt">⚡</span> Sistema de Matemática</div>
+    <div class="logo-title"><img src="/logo_fundotransparente.png" style="width:80px;height:80px;object-fit:contain;flex-shrink:0;"><span style="white-space:nowrap;">Sistema de<br>Matemática</span></div>
     <div class="logo-sub">CED São Bartolomeu · São Sebastião</div>
+    <div style="font-size:10px;color:#f0a500;letter-spacing:3px;margin-top:4px;">APRENDER • COMPETIR • EVOLUIR</div>
   </div>
 
   <div class="stats-bar">
