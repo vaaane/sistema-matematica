@@ -174,6 +174,18 @@
 </style>
 </head>
 <body>
+<div id="splash-screen" style="position:fixed;inset:0;width:100vw;height:100vh;background:#0d0a2e;display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.5s ease;">
+  <img src="/splash.png" alt="" style="max-width:400px;width:90%;">
+</div>
+<script>
+  (function(){
+    var s = document.getElementById('splash-screen');
+    setTimeout(function(){
+      s.style.opacity = '0';
+      setTimeout(function(){ s.remove(); }, 500);
+    }, 1500);
+  })();
+</script>
 
 <div class="bg-shapes">
   <div class="shape shape-1"></div>
