@@ -1,6 +1,7 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <meta name="theme-color" content="#6c00d4">
@@ -9,16 +10,18 @@
 <title>🔥 Treino do Dia — Sistema de Matemática</title>
 <link rel="stylesheet" href="/css/main.css">
 <style>
+  ::-webkit-scrollbar { width: 0; height: 0; }
+  * { scrollbar-width: none; -ms-overflow-style: none; }
   :root {
-    --bg:#0d0f1a; --card:#151828; --card2:#1c2035;
+    --bg:#11111f; --card:#1a1a2e; --card2:#222238;
     --border:rgba(255,255,255,0.07);
     --purple:#7F77DD; --purpleL:#a59ef5;
-    --gold:#F59E0B; --green:#22c55e;
+    --gold:#f0a500; --green:#22c55e;
     --text:#e8eaf0; --muted:#6b7280;
     --orange:#f97316; --fire1:#FF6B00; --fire2:#FF9500;
   }
-  html, body { background: var(--bg) !important; color: var(--text) !important; }
-  .main      { background: var(--bg) !important; }
+  html, body { background: transparent !important; color: var(--text) !important; }
+  .main      { background: transparent !important; }
   .card, section, [class*="card"], .lobby-card, .result-card, .done-card {
     background: var(--card) !important;
     border-color: var(--border) !important;
@@ -99,12 +102,13 @@
   .aq-result .big-score { font-size: 64px; font-weight: 900; font-family: 'Orbitron', sans-serif; }
   .aq-result .xp-badge  { display: inline-block; background: rgba(255,123,46,.15); border: 1px solid var(--orange); color: var(--orange); border-radius: 20px; padding: 6px 18px; font-size: 14px; font-weight: 700; margin: 10px 0; }
   .aq-countdown { font-size: 28px; font-weight: 800; font-family: 'Orbitron', sans-serif; color: var(--cyan); }
-  .btn-comecar { width: 100%; padding: 16px; background: var(--orange); color: #fff; font-size: 16px; font-weight: 800; border: none; border-radius: 12px; cursor: pointer; font-family: 'Rajdhani', sans-serif; letter-spacing: 1px; margin-top: 8px; transition: opacity .15s; }
+  .btn-comecar { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--purple), var(--gold)); color: #fff; font-size: 16px; font-weight: 800; border: none; border-radius: 12px; cursor: pointer; font-family: 'Rajdhani', sans-serif; letter-spacing: 1px; margin-top: 8px; transition: opacity .15s; }
   .btn-comecar:hover { opacity: .88; }
   .btn-menu   { width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--border); color: var(--text-muted); font-size: 14px; font-weight: 600; border-radius: 10px; cursor: pointer; margin-top: 10px; }
 </style>
 </head>
 <body>
+
 <div class="layout">
   <aside class="sidebar" id="sidebar"></aside>
   <div class="main">
@@ -483,9 +487,14 @@ function mostrarResultado(xp, taxa, total) {
     </div>`;
 }
 
-const aquecSnap = await get(ref(db, `aquecimento/${uid}/${hoje}`));
-if (aquecSnap.exists()) { await renderJaFeito(aquecSnap.val()); }
-else { await renderLobby(); }
+try {
+  const aquecSnap = await get(ref(db, `aquecimento/${uid}/${hoje}`));
+  if (aquecSnap.exists()) { await renderJaFeito(aquecSnap.val()); }
+  else { await renderLobby(); }
+} catch(e) {
+  console.error('[aquecimento] erro ao carregar dados:', e);
+  try { await renderLobby(); } catch(_) {}
+}
 </script>
 </body>
 </html>

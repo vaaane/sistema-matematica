@@ -1,6 +1,7 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <meta name="theme-color" content="#6c00d4">
@@ -216,7 +217,7 @@
     .hstat .v { font-size: 22px; font-weight: 900; margin-bottom: 2px; }
     .hstat .l { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .3px; }
     .duel-diff.facil   { color: #22c55e; border-color: #22c55e !important; }
-    .duel-diff.medio   { color: #f59e0b; border-color: #f59e0b !important; }
+    .duel-diff.medio   { color: #f0a500; border-color: #f0a500 !important; }
     .duel-diff.dificil { color: #ef4444; border-color: #ef4444 !important; }
 
     /* placeholder */
@@ -242,7 +243,7 @@
       .podium-spot.p2,.podium-spot.p3 { width:calc(50% - 4px); }
     }
     .podium-crown  { font-size:18px; line-height:1; margin-bottom:2px; filter:drop-shadow(0 0 6px rgba(255,200,0,.8)); }
-    .podium-av     { width:44px; height:44px; border-radius:50%; overflow:hidden; border:2px solid #F59E0B; margin-bottom:5px; background:var(--card2); flex-shrink:0; position:relative; }
+    .podium-av     { width:44px; height:44px; border-radius:50%; overflow:hidden; border:2px solid #f0a500; margin-bottom:5px; background:var(--card2); flex-shrink:0; position:relative; }
     .podium-spot.p1 .podium-av { width:54px; height:54px; border-width:3px; }
     .podium-spot.p2 .podium-av { border-color:#9CA3AF; }
     .podium-spot.p3 .podium-av { border-color:#CD853F; }
@@ -265,14 +266,14 @@
     .dupla-add-btn:hover { background:rgba(0,212,255,.15); }
     /* dupla-panel gerenciado por style inline */
     .dupla-row { display:flex; gap:8px; flex-wrap:wrap; }
-    .dupla-sel { flex:1; min-width:100px; background:#0d0f1a; border:1px solid rgba(0,212,255,.3); border-radius:8px; padding:7px 10px; color:#e8eaf6; font-size:13px; outline:none; }
-    .dupla-pin { width:90px; background:#0d0f1a; border:1px solid rgba(0,212,255,.3); border-radius:8px; padding:7px 10px; color:#e8eaf6; font-size:13px; letter-spacing:4px; outline:none; }
+    .dupla-sel { flex:1; min-width:100px; background:#11111f; border:1px solid rgba(0,212,255,.3); border-radius:8px; padding:7px 10px; color:#e8eaf6; font-size:13px; outline:none; }
+    .dupla-pin { width:90px; background:#11111f; border:1px solid rgba(0,212,255,.3); border-radius:8px; padding:7px 10px; color:#e8eaf6; font-size:13px; letter-spacing:4px; outline:none; }
     .dupla-ok { background:linear-gradient(135deg,#00d4ff,#0090cc); color:#000; border:none; border-radius:8px; padding:7px 16px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; }
     .dupla-badge { display:flex; align-items:center; gap:8px; background:rgba(0,212,255,.1); border:1px solid rgba(0,212,255,.35); border-radius:10px; padding:8px 14px; font-size:13px; font-weight:600; color:#00d4ff; }
     .dupla-remove { background:none; border:none; color:rgba(0,212,255,.6); cursor:pointer; font-size:16px; margin-left:auto; }
     .dupla-erro { font-size:12px; color:#ff4444; display:none; }
     .duelo-toast { position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1e2235;border:1px solid var(--border);border-radius:12px;padding:12px 20px;font-size:13px;font-weight:600;color:var(--text);z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:toastIn .25s ease;pointer-events:none;display:flex;align-items:center;gap:8px; }
-    .duelo-toast.warn  { border-color:rgba(245,158,11,.5);color:#F59E0B; }
+    .duelo-toast.warn  { border-color:rgba(245,158,11,.5);color:#f0a500; }
     .duelo-toast.error { border-color:rgba(239,68,68,.4); color:#ef4444; }
     .duelo-toast.info  { border-color:rgba(99,102,241,.4);color:#818cf8; }
     @keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)} }
@@ -314,7 +315,7 @@
     .hist-placar .sep { color:#334155;font-size:13px;font-weight:400; }
     .hist-diff { font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid;flex-shrink:0; }
     .hist-diff.facil   { border-color:rgba(34,197,94,.35); color:#22c55e;background:rgba(34,197,94,.08); }
-    .hist-diff.medio   { border-color:rgba(245,158,11,.35);color:#F59E0B;background:rgba(245,158,11,.08); }
+    .hist-diff.medio   { border-color:rgba(245,158,11,.35);color:#f0a500;background:rgba(245,158,11,.08); }
     .hist-diff.dificil { border-color:rgba(239,68,68,.35); color:#f87171;background:rgba(239,68,68,.08); }
     .hist-xp { font-size:11px;font-weight:800;white-space:nowrap;flex-shrink:0;min-width:52px;text-align:right; }
     .hist-xp.pos { color:#22c55e; }
@@ -401,7 +402,7 @@
   </style>
 </head>
 <body>
-<script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
+
 <div class="layout">
   <aside class="sidebar" id="sidebar"></aside>
   <div class="main">
@@ -827,7 +828,7 @@ restaurarEstadoDupla();
 function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function statusAluno(aluno) {
-  if (aluno.em_duelo)                 return { label: '⚔️ Duelando',   disponivel: false, dot: '#F59E0B' };
+  if (aluno.em_duelo)                 return { label: '⚔️ Duelando',   disponivel: false, dot: '#f0a500' };
   if (aluno.status === 'indisponivel') return { label: '⛔ Indisponível', disponivel: false, dot: '#6b7280' };
   return                                     { label: '🟢 Disponível', disponivel: true,  dot: '#22c55e' };
 }
@@ -1185,7 +1186,7 @@ function mostrarToastRecusa(nome) {
   t.style.cssText = [
     'position:fixed', 'bottom:20px', 'left:50%',
     'transform:translateX(-50%)',
-    'background:#1c2035',
+    'background:#222238',
     'border:1px solid rgba(239,68,68,.4)',
     'color:#e8eaf0',
     'padding:10px 18px',
@@ -1314,7 +1315,7 @@ function mostrarBolhaEmoji(emoji, de) {
   const el = document.createElement('div');
   el.style.cssText = [
     'position:fixed','bottom:90px','right:20px','z-index:8500',
-    'background:#1c2035','border:1.5px solid rgba(124,92,252,.5)',
+    'background:#222238','border:1.5px solid rgba(124,92,252,.5)',
     'border-radius:16px 16px 4px 16px','padding:12px 18px',
     'display:flex','align-items:center','gap:10px',
     'font-size:13px','color:#e8eaf0','font-weight:600',
@@ -1543,7 +1544,7 @@ async function carregarHistorico() {
         <div class="hist-stat win"><div class="hist-stat-val" style="color:#22c55e">${vitorias}</div><div class="hist-stat-lbl">Vitórias</div></div>
         <div class="hist-stat loss"><div class="hist-stat-val" style="color:#ef4444">${derrotas}</div><div class="hist-stat-lbl">Derrotas</div></div>
         <div class="hist-stat"><div class="hist-stat-val" style="color:#a78bfa">${total}</div><div class="hist-stat-lbl">Total</div></div>
-        <div class="hist-stat taxa"><div class="hist-stat-val" style="color:#F59E0B">${taxa}%</div><div class="hist-stat-lbl">Taxa Vitória</div></div>
+        <div class="hist-stat taxa"><div class="hist-stat-val" style="color:#f0a500">${taxa}%</div><div class="hist-stat-lbl">Taxa Vitória</div></div>
       </div>
       <div class="hist-filters">
         <button class="hist-filter-btn active" onclick="histFiltrar(this,'todos')">Todos</button>
@@ -1800,9 +1801,9 @@ async function renderRankingIndividual() {
 
   const { avatarUrl, avatarConfigDefault } = await import('/js/gamificacao.js');
 
-  const COLORS = ['#F59E0B','#9CA3AF','#CD853F'];
+  const COLORS = ['#f0a500','#9CA3AF','#CD853F'];
   const STANDS = [
-    { h: 70, bg: 'linear-gradient(135deg,#F59E0B,#D97706)' },
+    { h: 70, bg: 'linear-gradient(135deg,#f0a500,#D97706)' },
     { h: 50, bg: 'linear-gradient(135deg,#9CA3AF,#6B7280)' },
     { h: 36, bg: 'linear-gradient(135deg,#CD853F,#92400E)' },
   ];
@@ -1922,7 +1923,7 @@ async function renderRankingTurmas() {
     .sort((a, b) => b.media - a.media);
 
   const MEDALS = ['🥇','🥈','🥉'];
-  const COLORS = ['#F59E0B','#9CA3AF','#CD853F'];
+  const COLORS = ['#f0a500','#9CA3AF','#CD853F'];
 
   const podioHTML = `
     <div style="display:flex;gap:10px;margin-bottom:16px">
@@ -1972,7 +1973,7 @@ async function renderRankingTurmas() {
 </div>
 
 <!-- ── Emoji bubble ── -->
-<div id="emoji-bubble" style="display:none;position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:8500;background:#1c2035;border:1.5px solid rgba(124,92,252,.5);border-radius:20px 20px 20px 4px;padding:14px 20px;text-align:center;pointer-events:none;animation:bubbleIn .35s ease;font-size:13px;color:var(--text-muted)"></div>
+<div id="emoji-bubble" style="display:none;position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:8500;background:#222238;border:1.5px solid rgba(124,92,252,.5);border-radius:20px 20px 20px 4px;padding:14px 20px;text-align:center;pointer-events:none;animation:bubbleIn .35s ease;font-size:13px;color:var(--text-muted)"></div>
 
 <!-- ── Emoji feed ── -->
 <div id="emoji-feed" style="position:fixed;bottom:80px;right:12px;z-index:7000;display:flex;flex-direction:column;gap:5px;max-width:220px;pointer-events:none"></div>

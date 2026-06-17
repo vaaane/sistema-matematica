@@ -1,6 +1,8 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <meta name="theme-color" content="#6c00d4">
@@ -16,25 +18,16 @@
       --g-cyan:#00d4ff;   --g-orange:#ff7b2e;
       --g-gold:#ffd700;   --g-green:#00e676;
       --g-red:#ff4444;    --g-diamond:#a8f0ff;
-      --g-bg:#0d0f1a;     --g-bg2:#131627; --g-bg3:#1a1f35;
+      --g-bg:#11111f;     --g-bg2:#1a1a2e; --g-bg3:#222238;
       --g-text:#e8eaf6;   --g-muted:#8892b0;
       --g-bdr:rgba(124,92,252,0.2);
     }
 
     /* ── Force dark on whole page ── */
     .content {
-      background: var(--g-bg);
+      background: transparent;
       min-height: calc(100vh - 60px);
       position: relative;
-    }
-    .content::before {
-      content: '';
-      position: fixed; inset: 0;
-      background-image:
-        linear-gradient(rgba(124,92,252,.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(124,92,252,.03) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none; z-index: 0;
     }
 
     /* ── Animations ── */
@@ -64,7 +57,7 @@
 
     /* ── Game card ── */
     .g-card {
-      background:linear-gradient(135deg,#1a1f35,#151929);
+      background:linear-gradient(135deg,#222238,#1a1a2e);
       border:1px solid var(--g-bdr); border-radius:20px;
       overflow:hidden; margin-bottom:18px;
       position:relative; animation:g-up .4s ease both;
@@ -207,7 +200,7 @@
     .g-lc.dn .g-lc-op { color:rgba(155,127,254,.8); }
     .g-lc.cur .g-lc-op { color:rgba(255,255,255,.8); }
     .g-lc-bdi { position:absolute;top:2px;right:2px;font-size:7px;line-height:1; }
-    .g-lc:not(.lk):hover::after { content:attr(data-tip);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#1a1f35;border:1px solid var(--g-bdr);color:var(--g-text);font-size:10px;padding:4px 8px;border-radius:6px;white-space:nowrap;z-index:10;pointer-events:none;font-family:'Inter',sans-serif; }
+    .g-lc:not(.lk):hover::after { content:attr(data-tip);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#222238;border:1px solid var(--g-bdr);color:var(--g-text);font-size:10px;padding:4px 8px;border-radius:6px;white-space:nowrap;z-index:10;pointer-events:none;font-family:'Inter',sans-serif; }
     /* Chefão cells */
     @keyframes g-chefao-glow{0%,100%{box-shadow:0 0 6px rgba(239,68,68,.3)}50%{box-shadow:0 0 14px rgba(239,68,68,.7)}}
     .g-lc.boss-lk { background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.25);cursor:default;opacity:.55; }
@@ -239,7 +232,7 @@
     @media(max-width:400px) { .g-grid { grid-template-columns:repeat(6,1fr); } }
 
     /* ── Grade de jogos (hub) ── */
-    .jogos-hub { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
+    .jogos-hub { display:grid; grid-template-columns:1fr; gap:10px; margin-bottom:20px; }
     .jh-card {
       background:var(--g-bg2); border:1px solid var(--g-bdr);
       border-radius:14px; overflow:hidden; position:relative;
@@ -390,7 +383,7 @@
   </div>
 </div>
 
-<script>(()=>{ document.documentElement.setAttribute('data-theme','dark'); })()</script>
+
 <script type="module">
 import { requireAluno, renderSidebarAluno, clearSession, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
@@ -982,13 +975,13 @@ document.getElementById("content").innerHTML = `
       return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;margin-bottom:5px;background:rgba(245,158,11,${isMe?'.18':'.07'});border:1px solid rgba(245,158,11,${isMe?'.5':'.2'})">
         <span style="font-size:17px;min-width:26px;text-align:center">${emojis[i] || `${i+1}º`}</span>
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:700;color:#F59E0B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(r.nome||'?')}${isMe?' ⭐':''}</div>
+          <div style="font-size:13px;font-weight:700;color:#f0a500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(r.nome||'?')}${isMe?' ⭐':''}</div>
           <div style="font-size:11px;color:var(--g-muted);margin-top:1px">Turma ${escH(r.turma||'?')} · ${i+1}º a concluir</div>
         </div>
-        <span style="font-size:11px;font-weight:700;color:#F59E0B;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:3px 9px;flex-shrink:0">Nível 300 🏆</span>
+        <span style="font-size:11px;font-weight:700;color:#f0a500;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:3px 9px;flex-shrink:0">Nível 300 🏆</span>
       </div>`;
     }).join('');
-    hallCard.innerHTML = `<div style="font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#F59E0B;display:flex;align-items:center;gap:6px;margin-bottom:12px">🏆 Hall da Fama — Nível 300</div>${rows}`;
+    hallCard.innerHTML = `<div style="font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#f0a500;display:flex;align-items:center;gap:6px;margin-bottom:12px">🏆 Hall da Fama — Nível 300</div>${rows}`;
     document.querySelector('.g-rank-wrap').insertAdjacentElement('beforebegin', hallCard);
   }
 }

@@ -1,6 +1,7 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <meta name="theme-color" content="#6c00d4">
@@ -85,7 +86,7 @@
     .t-type{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);}
     .t-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
     .t-dot.ok{background:var(--green);}
-    .t-dot.warn{background:#F59E0B;}
+    .t-dot.warn{background:#f0a500;}
     .t-date{font-size:12px;color:var(--text-muted);text-align:right;white-space:nowrap;}
     .q-expand-row{display:none;}
     .q-expand-row td{padding:0 20px 0 48px;}
@@ -206,7 +207,7 @@
     .enc-box{background:var(--card);border-radius:var(--radius);padding:28px 24px;max-width:380px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.2);}
     #quiz-wrap,#summary-wrap{display:none;}
     /* ── Celebração 100% nas 3 atividades ─────────────────── */
-    .rob-celebracao{position:relative;overflow:hidden;background:linear-gradient(135deg,#FFFBEB,#FEF3C7 40%,#FDE68A 60%,#FEF3C7);border:2px solid #F59E0B;border-radius:var(--radius);padding:24px 20px;margin-bottom:20px;text-align:center;box-shadow:0 4px 24px rgba(245,158,11,.25);}
+    .rob-celebracao{position:relative;overflow:hidden;background:linear-gradient(135deg,#FFFBEB,#FEF3C7 40%,#FDE68A 60%,#FEF3C7);border:2px solid #f0a500;border-radius:var(--radius);padding:24px 20px;margin-bottom:20px;text-align:center;box-shadow:0 4px 24px rgba(245,158,11,.25);}
     .rob-celebracao-shine{position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.6) 50%,transparent 70%);animation:shine-slide 2.2s ease-in-out infinite;pointer-events:none;}
     @keyframes shine-slide{0%{transform:translateX(-160%)}100%{transform:translateX(160%)}}
     .confete{position:absolute;top:0;width:7px;height:9px;border-radius:2px;opacity:0;pointer-events:none;animation:confete-cair var(--dur,2s) var(--delay,0s) ease-in infinite;}
@@ -312,7 +313,7 @@
   </div>
 </div>
 
-<script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
+
 <script type="module">
 import { getAlunoPreferencia, saveRoboticaTentativa, getRoboticaTentativasAluno } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession, iniciarNotifDueloGlobal } from "/js/auth.js";
@@ -372,7 +373,7 @@ function podeVer(a) {
 const MINIMO_APROVACAO = 85;
 
 function statusPct(pct) {
-  if (pct === 100) return { cor: '#F59E0B', bg: '#FEF3C7', border: '#FDE68A', aprovado: true };
+  if (pct === 100) return { cor: '#f0a500', bg: '#FEF3C7', border: '#FDE68A', aprovado: true };
   if (pct >= MINIMO_APROVACAO) return { cor: 'var(--green)', bg: '#DCFCE7', border: '#BBF7D0', aprovado: true };
   return { cor: 'var(--red)', bg: '#FEF2F2', border: '#FECACA', aprovado: false };
 }
@@ -498,7 +499,7 @@ function renderLista() {
 
   let celebracaoHtml = '';
   if (zerou) {
-    const CORES = ['#F59E0B','#EF4444','#22C55E','#3B82F6','#A855F7','#EC4899','#F97316','#14B8A6'];
+    const CORES = ['#f0a500','#EF4444','#22C55E','#3B82F6','#A855F7','#EC4899','#F97316','#14B8A6'];
     const pecas = Array.from({ length: 20 }, (_, i) => {
       const cor  = CORES[i % CORES.length];
       const left = ((i / 20) * 98 + 1).toFixed(1);
@@ -1071,7 +1072,7 @@ async function finalizarAtividade(parcial = false) {
       compHtml += piorou.map(q => `<div class="comp-q piora">✓→✗ <span style="font-weight:600;">[${q.id}]</span> <span>${q.enunciado.replace(/\n/g,' ').substring(0, 60)}${q.enunciado.length > 60 ? '…' : ''}</span></div>`).join('');
     }
     if (aindarErrado.length) {
-      compHtml += `<div style="font-size:12px;font-weight:700;color:#F59E0B;margin-top:8px;margin-bottom:4px;">Ainda errado (${aindarErrado.length}):</div>`;
+      compHtml += `<div style="font-size:12px;font-weight:700;color:#f0a500;margin-top:8px;margin-bottom:4px;">Ainda errado (${aindarErrado.length}):</div>`;
       compHtml += aindarErrado.slice(0, 5).map(q => `<div class="comp-q manteve-err">✗✗ <span style="font-weight:600;">[${q.id}]</span> <span>${q.enunciado.replace(/\n/g,' ').substring(0, 60)}${q.enunciado.length > 60 ? '…' : ''}</span></div>`).join('');
       if (aindarErrado.length > 5) compHtml += `<div style="font-size:11px;color:var(--text-muted);padding:4px 12px;">+ ${aindarErrado.length - 5} outras</div>`;
     }

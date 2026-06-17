@@ -28,7 +28,7 @@ Plataforma educacional web para alunos do 8º ano.
 - Tabuada: individual, sem dupla
 - Concluintes tabuada (nível 300) ficam só no Hall da Fama, fora do ranking em progresso
 - UID do professor teste (`PROFESSOR_TESTE`) filtrado de listas públicas
-- Tema escuro obrigatório (`#0d0f1a`)
+- Tema escuro obrigatório, fixo via `<script>document.documentElement.setAttribute("data-theme","dark")</script>` no `<head>` de cada página (antes do CSS, p/ evitar flash). Paleta roxo/dourado centralizada em `css/main.css` (ver seção "Identidade visual" no final). Fundo base `#11111f`.
 - **Apelidos:** o sistema exibe `apelido_ativo || nome`. Há a página `professor/migrar_apelidos.html` que iguala `apelido_ativo` ao nome real de todos os alunos (mantendo a possibilidade de troca futura via perfil).
 
 ## Sistema de Duplas (Duelos)
@@ -168,7 +168,7 @@ Jogo educacional onde o aluno atravessa um labirinto até o bloco com a resposta
 
 # Projeto futuro: Multiplayer em tempo real via WebSocket
 
-> Planejado em junho/2026. Objetivo duplo: (1) habilitar o labirinto multiplayer entre dispositivos; (2) aprendizado intencional de construção de sistemas online (meta da Vanessa). Ainda NÃO iniciado.
+> Planejado em junho/2026. Objetivo duplo: (1) habilitar o labirinto multiplayer entre dispositivos; (2) aprendizado intencional de construção de sistemas online (meta da Vanessa). **Fundamentos JÁ aprendidos via piloto "quadradinhos" (passos 2 e 3 feitos — Node+Socket.IO no ar no Render). Falta o passo 4: aplicar ao labirinto.**
 
 ## Por que WebSocket e não Firebase
 - O Firebase Realtime Database NÃO foi feito para estado de jogo em tempo real (posições a ~30×/seg): fica caro e com lag perceptível. É a ferramenta errada para isso.
@@ -192,10 +192,72 @@ Jogo educacional onde o aluno atravessa um labirinto até o bloco com a resposta
 
 ## Plano de aprendizado recomendado (camadas)
 1. Terminar o labirinto duo-PC atual (Firebase, sem servidor). FEITO/em finalização.
-2. **Projeto-piloto separado, NÃO começar pelo labirinto:** o "dois quadradinhos" — a coisa mais simples possível que prove mover algo na tela de um e ver na tela do outro via WebSocket. O labirinto tem muita lógica de jogo que esconderia o que o WebSocket faz. Quando os quadradinhos funcionarem, o conceito está entendido.
-3. Subir esse piloto num Render/Railway (aprender deploy de servidor).
-4. Só então aplicar ao labirinto (Opção A primeiro).
+2. **Projeto-piloto separado, NÃO começar pelo labirinto:** o "dois quadradinhos" — a coisa mais simples possível que prove mover algo na tela de um e ver na tela do outro via WebSocket. O labirinto tem muita lógica de jogo que esconderia o que o WebSocket faz. Quando os quadradinhos funcionarem, o conceito está entendido. **FEITO (junho/2026 — ver "Piloto quadradinhos" abaixo).**
+3. Subir esse piloto num Render/Railway (aprender deploy de servidor). **FEITO (Render, junho/2026).**
+4. Só então aplicar ao labirinto (Opção A primeiro). **← PRÓXIMO PASSO.**
 - Ressalva honesta: mesmo com WebSocket, o tempo-real tem armadilhas de design (latência, autoridade) difíceis por natureza. A diferença é lutar o problema real (WebSocket) em vez do problema + a ferramenta errada (Firebase RTDB).
+
+## Piloto "quadradinhos" — passos 2 e 3 concluídos (junho/2026)
+> Prova de conceito isolada, fora do `sistema-matematica` (repositório próprio `vaaane/quadradinhos`). Prova que dá pra mover algo na tela de um aparelho e ver no outro em tempo real. O labirinto NÃO foi tocado.
+
+- **Stack:** Node.js + Express (serve a página estática de `/public`) + Socket.IO (a "linha aberta" bidirecional). `server.js` + `public/index.html` (canvas, arrastar com mouse/dedo).
+- **O que o servidor faz (e o que NÃO faz):** só recebe a posição de um cliente (`mover`) e repassa aos outros (`broadcast` de `moveu`). Não decide lógica de jogo — toda a lógica fica no navegador. Estado efêmero em memória (`jogadores[socket.id]`), nada persiste. Confirma o princípio do plano: WebSocket cuida só do efêmero.
+- **Porta:** `process.env.PORT || 3000`. NUNCA fixar porta em produção — o Render injeta a dele via env var. Foi o único ajuste necessário entre rodar local e rodar no Render.
+- **Deploy:** Render, Web Service, plano Free. Build `npm install`, start `npm start`. Lê direto do GitHub (push → redeploy automático). HTTPS automático no domínio `*.onrender.com`.
+
+### Duas armadilhas reais encontradas (guardar para o passo 4)
+- **HTTP local vs HTTPS no celular:** abrindo pelo IP da rede local (`http://192.168.x.x:3000`), o navegador do celular force-upgrade para HTTPS e dá "não foi possível estabelecer uma conexão segura". O servidor de teste é HTTP puro. Contornos: digitar `http://` na unha (sem autocompletar), aba anônima, ou Firefox. **Some de vez no Render** (HTTPS de verdade). Roteamento 5G via hotspot Wi-Fi funciona (mesma rede); USB tethering tende a não deixar o celular acessar o PC de volta.
+- **Cold start do Render Free:** o serviço hiberna após ~15 min sem tráfego; a 1ª abertura depois disso demora ~1 min pra acordar. Não é erro. Para usar com a turma: abrir o link alguns minutos antes da aula.
+
+- Ressalva honesta sobre o piloto: ele esconde os 3 problemas difíceis da Opção B (latência, autoridade de estado, interpolação) porque move um só quadrado sem regras. O passo 4 (Opção A — placares sincronizados) reusa padrões dos duelos; a Opção B (mesmo mapa ao vivo) é onde esses problemas aparecem de verdade.
+
+---
+
+# Labirinto multiplayer — DECISÃO: é Opção B, não A (junho/2026)
+
+> Correção importante de rumo. Ao detalhar o passo 4, ficou claro que a Vanessa quer **Opção B** (os dois no MESMO mapa, vendo o boneco um do outro andar, cooperativo), NÃO a Opção A. A Opção A ("cada um no seu mapa, só o placar soma") já existe pronta no sistema via Firebase (`duelo_partida.html` usa `placar_live/{uid}` + `onValue`) — não precisa de WebSocket. A Opção B precisa de WebSocket de verdade. O piloto dos quadradinhos é literalmente o esqueleto da Opção B.
+
+## Modelo de login decidido (diferente dos duelos)
+- Nos DUELOS a dupla nasce dentro da sessão de um aluno (login-dentro-do-login, `parceiro_nome`).
+- No LABIRINTO cooperativo: **dois alunos independentes**, cada um logado sozinho pelo `index.html` no seu aparelho. Unidos só pela PARTIDA. Entram por **convite no estilo "desafiar para duelo"** (reusar o fluxo de `js/duelo_notif.js`: `duelos/{id}` com `status:aguardando`, banner flutuante, `aceitarDueloBanner` → redireciona), NÃO o convite de formar dupla.
+
+## Regras do jogo cooperativo decididas
+- Mesma conta para os dois ao mesmo tempo. Acertos SOMAM num placar único da dupla.
+- Vidas SEPARADAS (3 cada). Errar tira vida só de quem errou. A dupla perde quando os DOIS zeram.
+- **Três tipos de conta** (visão final): "qualquer" (quem chegar primeiro no bloco certo resolve p/ dupla), "exclusiva" (cada um tem a sua, o outro espera) e "ambos" (só vale quando os DOIS pegam o bloco certo). Implementar como "rodada com `tipo`".
+- **Mapa é DINÂMICO** (igual ao labirinto.html atual): começa VAZIO e as paredes vão SURGINDO ao longo do tempo ("paredes que crescem"). O piloto faz o oposto (mapa fixo no início) — precisa trocar. Isso é o problema "autoridade de estado dinâmico"; resolve-se de graça com a arquitetura autoritativa (servidor decide onde/quando a parede nasce e avisa os dois).
+
+## Plano em camadas (estender o piloto, NÃO mexer no labirinto.html ainda)
+- **Camada 1 — autoridade do mapa: FEITA.** Servidor é dono do mapa; junta 2 numa sala; gera UM grid e manda igual p/ os dois. (`quadradinhos-v2`)
+- **Camada 2 — autoridade de movimento: FEITA.** Cliente só PEDE direção (`pedir_passo`); servidor valida contra o mapa e confirma (`passo_confirmado`); paredes bloqueiam e não dá p/ burlar pelo cliente. Servidor pensa em CÉLULAS (cx,cy), pixel é só desenho. (`quadradinhos-v2-camada2`)
+- **Camada 3 bloco 1 — jogo cooperativo (sem Firebase): FEITO.** Rodada com conta (tabuada) igual p/ os dois; 4 blocos de resposta (1 certa + 3 erradas plausíveis); modo "qualquer" implementado; placar soma; vidas separadas (3); fim quando os dois zeram; servidor NÃO revela o bloco certo (anti-trapaça). Campo `rodada.tipo` já existe p/ "exclusiva"/"ambos" encaixarem depois. (`quadradinhos-v3-camada3`)
+- **Camada 3.5 — mapa dinâmico (mecânica REAL do labirinto.html): FEITA e testada nos dois notebooks.** Mapa começa VAZIO (só bordas permanentes); paredes SURGEM por tempo (servidor roda o relógio); teto 120, recicla acima de 80, 20% paredes falsas; ZONA SEGURA única no centro; bloco certo VIRA MURO quando o tempo (OP_TIME=10s) esgota; quem fica fora da zona segura ao esgotar perde vida. Servidor é a fonte única do relógio (`setInterval` 10x/s → emite `tempo`, `paredes_novas`, `tempo_esgotado`). (`labirinto-coop-camada3.5-bomba`)
+  - **Jogadores FICAM onde estão** entre contas (não voltam ao centro) — corrigido p/ bater com o jogo real.
+  - **Blocos PODEM nascer na zona segura** (como no real); só excluem raio 2 ao redor de cada jogador. Paredes NÃO nascem na zona segura.
+  - **Item BOMBA (💣):** nasce no mapa (máx 3); pega andando por cima; guarda 1; botão ● (ou espaço) explode as 4 paredes adjacentes (reais e falsas; borda nunca). Servidor valida e sincroniza.
+  - **Morte→FANTASMA:** ao zerar vidas vira fantasma — caído, NÃO se move, não pega nada. Jogo só acaba quando os DOIS são fantasmas.
+  - **REVIVE:** jogador vivo com 2+ vidas, 2s parado em cima do fantasma, revive (barra verde). Fantasma volta com 1 vida; reviver perde 1. Mover zera o progresso.
+  - **Conta errada substitui imediato** (como no real). NOTA cooperativo: como a conta é a mesma p/ os dois, o erro de um troca a conta de ambos — observar se atrapalha; se sim, mudar p/ trocar só p/ quem errou.
+  - **Reset:** botão "↻ Resetar" sempre visível; reinicia p/ a DUPLA (placar 0, vidas 3, limpa paredes/itens, todos ao centro, conta nova).
+  - **Pausa entre contas (PAUSA_RODADA=600ms):** ao acertar/errar/esgotar tempo, os blocos ficam INERTES (rodada.resolvida=true — servidor ignora pisadas) por 600ms até a próxima conta. No cliente, os blocos ficam esmaecidos (alpha 0.25) nesse intervalo p/ deixar claro que não contam. Resolve o bug de "pisar em bloco errado da conta velha no vácuo entre rodadas".
+  - **Fantasma sincronizado nos dois lados:** o cliente deriva "é fantasma?" de `vidas[id]<=0` (estado reenviado pelo servidor em quase todo evento), NÃO de um evento avulso `virou_fantasma`. Assim o fantasma aparece IGUAL para os dois jogadores, e quem morre também se vê como fantasma. PRINCÍPIO: sempre derivar visual de um estado reenviado, não de evento avulso — eventos podem se perder.
+  - **Layout:** mapa cabe sem rolagem (cliente calcula CELULA pela altura/largura da janela, recalcula no resize). D-pad (setas + botão bomba) à DIREITA do mapa, alinhado pela base. Boneco desenhado por célula (cx,cy), não por pixel do servidor, para acompanhar o zoom.
+- **Camada 3 resto — PENDENTE:** tipos "exclusiva" e "ambos"; outros itens (velocidade 👟, escudo 🛡️, x2 ⭐, coração ❤️); teleports; níveis de dificuldade da conta (não só tabuada).
+- **Camada 3 bloco 2 — PENDENTE:** plugar login (index.html), convite estilo-desafio, salvar resultado no Firebase (`labirinto_record`, `adicionarXP`, sessão p/ professora).
+- **Camada 3 bloco 3 — PENDENTE:** migrar do piloto para o `labirinto.html` real (visual bonito: Orbitron, itens, cores — tudo entra aqui; o piloto é feio de propósito).
+- **Camada 4 — PENDENTE:** interpolação de movimento (suavizar o boneco do parceiro), reconexão.
+
+## Como o piloto está hospedado
+- Repositório próprio `vaaane/quadradinhos` (separado do sistema-matematica), no ar no Render (passo 3). Versões evoluem em pastas separadas em `C:\`, mantendo cada marco que funciona intacto: `quadradinhos`, `quadradinhos-v2`, `quadradinhos-v2-camada2`, `quadradinhos-v3-camada3`, `labirinto-coop-camada3.5-bomba` (atual).
+- Stack: Node + Express + Socket.IO. Servidor autoritativo (dono do mapa, do movimento, do relógio, das paredes, da bomba, da morte/revive). Cliente só desenha o que o servidor confirma. Servidor pensa em CÉLULAS; o CLIENTE escolhe o tamanho do pixel da célula p/ caber na tela (recalcula no resize) — por isso o boneco é desenhado por (cx,cy), não pelo pixel do servidor.
+- Assinaturas relevantes do sistema p/ o bloco 2: `auth.js` exporta `requireAluno`, `injetarFaixaDuelo`, `iniciarNotifDueloGlobal`; `db.js` exporta `adicionarXP(uid, delta)`; labirinto.html salva em `perfis/{uid}/labirinto_record` e `perfis/{uid}/labirinto_sessoes`. Convite estilo-desafio vive em `js/duelo_notif.js` + criação em `duelos.html`; partida lê id e usa `placar_live/{uid}` em `duelo_partida.html`.
+
+## Lições técnicas aprendidas (guardar p/ o bloco 3 e produção)
+- **Rede local com hotspot:** o endereço a abrir nos aparelhos é o IPv4 da MÁQUINA-SERVIDOR (ver `ipconfig`), não o de quem entra. Roteando 5G a faixa costuma ser `10.x.x.x`, não `192.168.x.x`. Firewall do Windows precisa liberar o Node (redes particular e pública).
+- **Emoji em `<canvas>` é frágil:** `fillText("💣")` saiu invisível num notebook sem fonte de emoji colorido (bug "bomba não aparece p/ J2"). Solução: desenhar itens com FORMAS vetoriais (arc/fill/stroke) e usar caracteres simples (♥/♡) no HUD. ATENÇÃO: o `labirinto.html` real usa emojis no canvas — pode ter o mesmo problema em alguns aparelhos da turma; trocar por vetor no bloco 3.
+- **Cache do navegador:** durante o dev, o servidor agora manda `Cache-Control: no-store` (express.static com setHeaders) p/ o navegador sempre pegar a versão nova — evita "mudei mas não aparece".
+- **Itens vs paredes:** nascimento de parede/item deve excluir células de paredes, blocos, jogadores E itens existentes — senão parede nasce sobre a bomba e trava o jogador.
+- **Gerenciamento de pastas/versões:** manter cada marco em pasta separada em `C:\` é útil, mas atentar: ao baixar zip novo, confirmar que os arquivos foram extraídos para a pasta correta ANTES de rodar. Usar `dir C:\labirinto-coop* -Directory` no PowerShell p/ achar a pasta certa. O `npm install` roda na pasta ANTIGA se você não trocar de diretório.
 
 ---
 
@@ -221,3 +283,52 @@ Jogo educacional onde o aluno atravessa um labirinto até o bloco com a resposta
 
 ## Aprendizado de depuração (junho/2026)
 - Editar o `ALUNOS_POR_TURMA`/`constants.js` e quebrar o `export` (ou removê-lo) derruba TODAS as páginas que o importam de uma vez (`index`, `duelos`, `atividades`, várias do professor) com `does not provide an export named 'ALUNOS_POR_TURMA'`. `node --check` passa (sintaxe ok) mas o import falha — só o navegador acusa. Conferir o `export` ao editar.
+
+---
+
+# Identidade visual e PWA (junho/2026)
+
+> A plataforma ganhou identidade visual própria (logo de escudo + raio) e virou PWA instalável. Tudo centralizado em `css/main.css` — mudar cor de TODO o site é mexer só nas variáveis do `:root`, não página por página.
+
+## Logo e marca
+- Logo oficial: escudo roxo com raio dourado e símbolo Σ. Arquivo: `logo_fundotransparente.png` (fundo transparente, usado no site) na raiz do projeto.
+- Ícone do app: `icon-192.png` na raiz (mesmo escudo, p/ o ícone do PWA na tela inicial).
+- A logo aparece na splash screen (`index.html`) e na sidebar de todas as páginas (renderizada por `renderSidebarAluno`/`renderSidebarProfessor` em `auth.js`, dentro de `.sidebar-brand` → `.brand-icon img`).
+
+## Paleta (variáveis CSS em `css/main.css` → `:root`)
+- `--bg: #11111f` — fundo base
+- `--sidebar-bg: #05050f` — sidebar (mais escura que o resto, p/ destaque)
+- `--card: #1a1a2e` — cards
+- card2/terciário: `#222238`
+- `--purple: #9b30ff`, `--purple-dark: #6c00d4` — roxo (cor primária)
+- `--gold: #f0a500`, `--gold-light: #ffc84a` — dourado (destaques, números, XP)
+- `--text: #F1F5F9`, `--text-muted: #94A3B8`
+- O `body` tem gradiente radial sutil: `radial-gradient(ellipse at 20% 50%, #1e1535 0%, #11111f 100%) fixed`. Páginas NÃO devem cobrir isso com fundo sólido próprio — usar `background: transparent` em `html, body` e `.main` quando tiverem `<style>` próprio, p/ o gradiente aparecer.
+- Botões principais: gradiente `linear-gradient(135deg, var(--purple-dark), var(--gold))`.
+- Item ativo da sidebar: fundo roxo/dourado translúcido + borda esquerda dourada/roxa (`.nav-item.active-orange`/`.active-blue`).
+
+## Regra de cores: NUNCA hardcodar
+- Cores antigas REMOVIDAS de todo o `aluno/`: laranja `#FF7A2F`/`#F59E0B`/`#ffd166`, azul `#2F9EDC`, fundos claros. Substituídas por variáveis (`var(--gold)`, `var(--purple)`) ou pelas novas cores escuras.
+- Fundos antigos trocados em massa: `#0d0f1a`/`#0d0d1a`→`#11111f`; `#131627`/`#151828`→`#1a1a2e`; `#1a1f35`/`#1c2035`→`#222238`.
+- Ao criar/editar página: usar SEMPRE `var(--…)` do main.css. Cor nova hardcoded = vai destoar do resto e dar retrabalho.
+- Cores semânticas (verde acerto `#22c55e`, vermelho erro `#ef4444`) podem ficar hardcoded — são funcionais, não de tema.
+
+## Exceções (NÃO aplicar o tema escuro/transparente)
+- `aluno/diploma_print.html` e `aluno/diploma_tabuada.html`: fundo creme `#fdfaf4` (documento de impressão A4). Não tocar.
+- `aluno/labirinto.html` (e jogos de tela cheia): têm visual de jogo próprio (`#0a0f1e` etc.). Mantêm fundo próprio.
+
+## PWA (instalável na tela inicial)
+- `manifest.json` na raiz: `name`/`short_name` "Sistema de Matemática", `display: standalone`, `background_color: #0a0020`, `theme_color: #6c00d4`, ícones 192/512 apontando `icon-192.png` (`purpose: "any maskable"`).
+- Cada HTML tem no `<head>`: `<link rel="manifest">`, `<link rel="apple-touch-icon" href="/icon-192.png">`, `<meta name="theme-color" content="#6c00d4">`.
+- Splash screen nativa do Android (ícone + cor de fundo) é gerada automaticamente pelo manifest — comportamento esperado, não é bug.
+- Splash screen própria (animada, logo + "Sistema de Matemática" + "APRENDER • COMPETIR • EVOLUIR") roda no `index.html`: `#splash-screen` começa invisível, espera a imagem carregar (`logo.complete`), aparece ~3s e some com fade. Mantém logo+texto juntos.
+
+## Modal de boas-vindas (menu.html)
+- Aparece UMA vez por aluno (flag `localStorage 'sm_guia_visto'`), só se `config/mostrar_guia === true` no Firebase. Não reaparece a cada visita ao menu. Limpar o localStorage (ou aba anônima) p/ testar de novo.
+
+## Layout
+- Cards de jogos em `aluno/jogos.html`: 1 por linha (`.jogos-hub { grid-template-columns: 1fr }`), desktop e mobile.
+- Scrollbars escondidas globalmente (`::-webkit-scrollbar { width:0 }` + `scrollbar-width:none`). Páginas com `<style>` próprio precisam repetir essa regra p/ não aparecer scrollbar branca.
+
+## Dica de teste local
+- Firebase pode não conectar em `localhost` (páginas que dependem dele ficam em "Carregando…"). No site publicado funciona. Testar visual ≠ testar dados.

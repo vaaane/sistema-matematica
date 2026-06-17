@@ -47,9 +47,7 @@ a { text-decoration: none; color: inherit; }
   position: fixed; top: 0; left: 0; bottom: 0;
   z-index: 100; overflow-y: auto;
   border-right: 1px solid rgba(255,255,255,.12);
-  scrollbar-width: none; -ms-overflow-style: none;
 }
-.sidebar::-webkit-scrollbar { width: 0; display: none; }
 
 .sidebar-brand { padding: 20px 22px 16px; border-bottom: 1px solid rgba(255,255,255,.07); flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
 .brand-icon { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; flex-shrink: 0; filter: drop-shadow(0 0 10px rgba(240,165,0,.45)); }

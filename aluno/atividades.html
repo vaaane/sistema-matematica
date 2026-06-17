@@ -1,6 +1,7 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <meta name="theme-color" content="#6c00d4">
@@ -12,12 +13,12 @@
   <style>
     /* ── Dark theme para conteúdo .ac ── */
     .ac{
-      --ac-bg:#0d0f1a;--ac-bg2:#131627;--ac-bg3:#1a1f35;
+      --ac-bg:#11111f;--ac-bg2:#1a1a2e;--ac-bg3:#222238;
       --ac-purple:#7c5cfc;--ac-pl:#9b7ffe;
       --ac-gold:#ffd700;--ac-green:#00e676;--ac-orange:#ff7b2e;--ac-red:#ff4444;
       --ac-text:#e8eaf6;--ac-muted:#8892b0;
       --ac-border:rgba(124,92,252,0.15);
-      background:var(--ac-bg);color:var(--ac-text);
+      background:transparent;color:var(--ac-text);
       font-family:'Inter',sans-serif;
     }
 
@@ -120,7 +121,7 @@
     .ac-dupla-panel{background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.25);border-radius:12px;padding:14px 16px;margin-top:12px;display:none;flex-direction:column;gap:10px;}
     .ac-dupla-panel.aberto{display:flex;}
     .ac-dupla-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;}
-    .ac-dupla-select,.ac-dupla-pin{background:#0d0f1a;border:1px solid rgba(0,212,255,0.3);border-radius:8px;padding:7px 10px;color:#e8eaf6;font-size:13px;font-family:'Inter',sans-serif;outline:none;}
+    .ac-dupla-select,.ac-dupla-pin{background:#11111f;border:1px solid rgba(0,212,255,0.3);border-radius:8px;padding:7px 10px;color:#e8eaf6;font-size:13px;font-family:'Inter',sans-serif;outline:none;}
     .ac-dupla-select{flex:1;min-width:120px;}
     .ac-dupla-pin{width:90px;letter-spacing:4px;}
     .ac-dupla-confirmar{background:linear-gradient(135deg,#00d4ff,#0090cc);color:#000;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
@@ -149,7 +150,6 @@
     </div>
   </div>
 </div>
-<script>(()=>{ document.documentElement.setAttribute('data-theme','dark'); })()</script>
 <script type="module">
 import { LISTA_ATIVIDADES, MAX_TENTATIVAS_ATIVIDADE, ALUNOS_POR_TURMA } from "/js/constants.js";
 import { contarTentativas, getLiberadasParaTurma, getAlunoPreferencia, getResultados, getSenhaAluno } from "/js/db.js";
@@ -168,13 +168,6 @@ applyTopRankVisuals();
 
 const { alunos, turma } = sess;
 initAvBanner(turma, alunos[0]);
-
-getAlunoPreferencia(turma, alunos[0], 'tema').then(t => {
-  if (t && t !== localStorage.getItem('tema')) {
-    localStorage.setItem('tema', t);
-    document.documentElement.setAttribute('data-theme', t === 'escuro' ? 'dark' : '');
-  }
-});
 
 getAlunoPreferencia(turma, alunos[0], 'robotica').then(isRob => {
   localStorage.setItem('sm_pref_robotica', isRob ? '1' : '0');

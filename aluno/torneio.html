@@ -1,6 +1,7 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <meta name="theme-color" content="#6c00d4">
@@ -132,7 +133,7 @@
   </div>
 </div>
 
-<script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
+
 <script type="module">
 import { db } from "/js/firebase-config.js";
 import { ref, onValue, update, get, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -1137,7 +1138,7 @@ async function mostrarEncerrado() {
   if (myPos <= 3) spawnConfetti();
 
   const posLabel = myPos <= 3 ? medals[myPos-1] : `#${myPos}º`;
-  const posColor = myPos===1 ? '#F59E0B' : myPos===2 ? '#9CA3AF' : myPos===3 ? '#CD853F' : 'var(--blue)';
+  const posColor = myPos===1 ? '#f0a500' : myPos===2 ? '#9CA3AF' : myPos===3 ? '#CD853F' : 'var(--blue)';
 
   document.getElementById('content').innerHTML = `
     <div class="card" style="text-align:center;max-width:500px;margin:0 auto;padding:32px">
@@ -1254,7 +1255,7 @@ window.encerrarPorAluno = function() {
 };
 
 function spawnConfettiDourado() {
-  const cols = ['#FFD700','#FBC02D','#F59E0B','#FFF176','#FFCA28'];
+  const cols = ['#FFD700','#FBC02D','#f0a500','#FFF176','#FFCA28'];
   for (let i = 0; i < 70; i++) {
     const el = document.createElement('div');
     el.className = 'cp';

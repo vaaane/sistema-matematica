@@ -1,6 +1,7 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <meta name="theme-color" content="#6c00d4">
@@ -61,7 +62,7 @@
   </div>
 </div>
 
-<script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
+
 <script type="module">
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -155,7 +156,7 @@ function posLabel(r) {
 }
 function posColor(r) {
   if (!r?.posicao) return 'var(--text-muted)';
-  return r.posicao===1 ? '#F59E0B' : r.posicao===2 ? '#9CA3AF' : r.posicao===3 ? '#CD853F' : 'var(--blue)';
+  return r.posicao===1 ? '#f0a500' : r.posicao===2 ? '#9CA3AF' : r.posicao===3 ? '#CD853F' : 'var(--blue)';
 }
 
 // ── Render ────────────────────────────────────────────────────

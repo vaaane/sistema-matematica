@@ -1,6 +1,7 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <meta name="theme-color" content="#6c00d4">
@@ -15,16 +16,16 @@
     #hud{display:flex;justify-content:space-between;align-items:center;padding:8px 6px;font-family:'Orbitron',sans-serif;}
     #score-display{font-size:.95rem;color:#7ee8fa;letter-spacing:2px;}
     #lives-display{font-size:1.1rem;letter-spacing:3px;}
-    #level-display{font-size:.8rem;color:#ffd166;letter-spacing:2px;}
-    #combo-display{font-family:'Orbitron',sans-serif;font-size:.85rem;font-weight:900;color:#ff9900;letter-spacing:2px;opacity:0;transition:opacity .3s;text-shadow:0 0 12px #ff990088;}
+    #level-display{font-size:.8rem;color:#f0a500;letter-spacing:2px;}
+    #combo-display{font-family:'Orbitron',sans-serif;font-size:.85rem;font-weight:900;color:#f0a500;letter-spacing:2px;opacity:0;transition:opacity .3s;text-shadow:0 0 12px #f0a50088;}
     canvas{display:block;border-radius:14px;border:2px solid #1a1a3a;background:#0a0f1e;width:100%;}
     #record-bar{display:flex;align-items:center;justify-content:space-between;width:100%;padding:5px 6px;font-family:'Orbitron',sans-serif;font-size:.72rem;color:#555;letter-spacing:1px;}
     #record-bar span{color:#7c5cfc;}
     #input-area{margin-top:10px;display:flex;flex-direction:column;gap:8px;align-items:center;}
     .inp-row{display:flex;align-items:center;justify-content:center;gap:12px;}
-    #question-label{font-family:'Orbitron',sans-serif;font-size:1.8rem;font-weight:900;color:#ffd166;letter-spacing:2px;min-width:160px;text-align:right;text-shadow:0 0 20px #ffd16699;}
+    #question-label{font-family:'Orbitron',sans-serif;font-size:1.8rem;font-weight:900;color:#f0a500;letter-spacing:2px;min-width:160px;text-align:right;text-shadow:0 0 20px #f0a50099;}
     #answer-input{font-family:'Orbitron',sans-serif;font-size:1.6rem;font-weight:700;width:110px;padding:8px 10px;border:2px solid #7ee8fa;border-radius:10px;background:#0d1b2a;color:#7ee8fa;text-align:center;outline:none;transition:border-color .2s,box-shadow .2s;}
-    #answer-input:focus{border-color:#ffd166;box-shadow:0 0 18px #ffd16655;}
+    #answer-input:focus{border-color:#f0a500;box-shadow:0 0 18px #f0a50055;}
     #answer-input.correct{border-color:#06d6a0;box-shadow:0 0 26px #06d6a099;animation:pulse-green .35s;}
     #answer-input.wrong{border-color:#ef476f;box-shadow:0 0 26px #ef476f99;animation:shake .4s;}
     @keyframes pulse-green{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
@@ -33,7 +34,7 @@
     .np-btn{font-family:'Orbitron',sans-serif;font-size:1.1rem;font-weight:700;padding:11px;border:1px solid #2a2a4a;border-radius:8px;background:#0d1b2a;color:#7ee8fa;cursor:pointer;transition:background .1s,transform .08s;touch-action:manipulation;user-select:none;}
     .np-btn:hover{background:#1a2a3a;}
     .np-btn:active{background:#2a3a4a;transform:scale(.93);}
-    .np-neg{color:#ffd166;}
+    .np-neg{color:#f0a500;}
     .np-del{color:#ef476f;}
     .action-btn{font-family:'Orbitron',sans-serif;font-size:.9rem;font-weight:700;padding:10px 18px;border:none;border-radius:10px;cursor:pointer;letter-spacing:1px;display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1;}
     .key-hint{font-size:.6rem;opacity:.6;letter-spacing:0;}
@@ -46,7 +47,7 @@
     .color-swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s;}
     .color-swatch:hover{transform:scale(1.2);}
     .color-swatch.selected{border-color:#fff;transform:scale(1.2);}
-    .final-score{font-family:'Orbitron',sans-serif;font-size:2.2rem;color:#ffd166;font-weight:900;}
+    .final-score{font-family:'Orbitron',sans-serif;font-size:2.2rem;color:#f0a500;font-weight:900;}
     .xp-badge{font-family:'Orbitron',sans-serif;font-size:1.1rem;font-weight:700;color:#06d6a0;background:rgba(6,214,160,.1);border:1px solid rgba(6,214,160,.3);padding:6px 18px;border-radius:10px;}
     #start-btn,#restart-btn{font-family:'Orbitron',sans-serif;font-size:.95rem;font-weight:700;padding:12px 34px;border:none;border-radius:12px;background:linear-gradient(135deg,#06d6a0,#3a86ff);color:#fff;cursor:pointer;letter-spacing:2px;transition:transform .1s,box-shadow .2s;}
     #start-btn:hover,#restart-btn:hover{transform:scale(1.06);box-shadow:0 6px 26px #06d6a066;}
@@ -55,14 +56,14 @@
     #mute-btn{position:absolute;top:8px;right:10px;background:transparent;border:1px solid #333;border-radius:8px;color:#555;font-size:1rem;padding:3px 7px;cursor:pointer;transition:all .2s;z-index:11;}
     #mute-btn:hover{border-color:#7ee8fa;color:#7ee8fa;}
     #pause-btn{position:absolute;top:8px;right:52px;background:transparent;border:1px solid #333;border-radius:8px;color:#555;font-size:1rem;padding:3px 7px;cursor:pointer;transition:all .2s;z-index:11;}
-    #pause-btn:hover{border-color:#ffd166;color:#ffd166;}
+    #pause-btn:hover{border-color:#f0a500;color:#f0a500;}
     #feedback-text{position:absolute;top:44px;left:50%;transform:translateX(-50%);font-family:'Orbitron',sans-serif;font-size:1.3rem;font-weight:900;pointer-events:none;opacity:0;transition:opacity .12s;white-space:nowrap;}
     #speed-bar-wrap{margin-top:6px;display:flex;align-items:center;gap:8px;justify-content:center;font-family:'Orbitron',sans-serif;font-size:.7rem;color:#555;letter-spacing:1px;}
     #speed-bar-bg{width:140px;height:5px;background:#1a1a3a;border-radius:4px;overflow:hidden;}
-    #speed-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#06d6a0,#ffd166,#ef476f);transition:width .6s ease;}
+    #speed-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#06d6a0,#f0a500,#ef476f);transition:width .6s ease;}
     #slow-indicator{position:absolute;top:7px;left:50%;transform:translateX(-50%);font-family:'Orbitron',sans-serif;font-size:.72rem;color:#7ee8fa;background:rgba(0,100,150,.4);border:1px solid #7ee8fa44;padding:2px 10px;border-radius:20px;opacity:0;transition:opacity .3s;white-space:nowrap;}
     #regras-box{background:#0d1b2a;border:1.5px solid #7c5cfc;border-radius:16px;padding:20px 24px;max-width:540px;width:100%;max-height:88%;overflow-y:auto;}
-    #regras-box h3{font-family:'Orbitron',sans-serif;font-size:.85rem;font-weight:700;color:#ffd166;letter-spacing:2px;margin:0 0 14px;}
+    #regras-box h3{font-family:'Orbitron',sans-serif;font-size:.85rem;font-weight:700;color:#f0a500;letter-spacing:2px;margin:0 0 14px;}
     .rs{margin-bottom:14px;} .rs h4{font-family:'Orbitron',sans-serif;font-size:.68rem;font-weight:700;color:#7ee8fa;letter-spacing:1.5px;margin:0 0 7px;}
     .rg{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:5px;}
     .ri{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:7px;padding:6px 8px;font-family:'Orbitron',sans-serif;font-size:.75rem;font-weight:700;text-align:center;color:#e8eaf2;}
@@ -71,11 +72,11 @@
     #btn-fechar-regras{font-family:'Orbitron',sans-serif;font-size:.85rem;font-weight:700;padding:10px 30px;border:none;border-radius:10px;background:linear-gradient(135deg,#7c5cfc,#5a3fcf);color:#fff;cursor:pointer;margin-top:14px;width:100%;}
 
     /* ── Overlay start/end ── */
-    #overlay h1{font-family:'Orbitron',sans-serif;font-weight:900;background:linear-gradient(135deg,#7ee8fa,#ffd166);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;line-height:1.15;margin:0;}
+    #overlay h1{font-family:'Orbitron',sans-serif;font-weight:900;background:linear-gradient(135deg,#7ee8fa,#f0a500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;line-height:1.15;margin:0;}
     #overlay h1 .big{font-size:2.6rem;display:block;}
     #overlay h1 .sub{font-size:1rem;display:block;letter-spacing:4px;opacity:.7;margin-top:6px;-webkit-text-fill-color:rgba(255,255,255,.7);}
     #overlay p{color:#aaa;font-size:.9rem;text-align:center;max-width:380px;line-height:1.8;margin:0;}
-    .final-score{font-family:'Orbitron',sans-serif;font-size:2.6rem;color:#ffd166;font-weight:900;}
+    .final-score{font-family:'Orbitron',sans-serif;font-size:2.6rem;color:#f0a500;font-weight:900;}
     #overlay #start-btn,#overlay #restart-btn{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:700;padding:14px 38px;border:none;border-radius:12px;background:linear-gradient(135deg,#06d6a0,#3a86ff);color:#fff;cursor:pointer;letter-spacing:2px;transition:transform .1s,box-shadow .2s;}
     #overlay #start-btn:hover,#overlay #restart-btn:hover{transform:scale(1.06);box-shadow:0 6px 26px #06d6a066;}
 
@@ -137,8 +138,8 @@
           <button id="mute-btn" onclick="window.toggleMute()" title="Mute">🔊</button>
           <div id="overlay" style="position:fixed;top:0;left:0;right:0;bottom:0;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(8,8,20,.92);gap:10px;z-index:100;overflow-y:auto;padding:20px;"></div>
           <div id="pause-overlay" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(8,8,20,.88);border-radius:14px;gap:10px;z-index:12;">
-            <h2 style="font-family:'Orbitron',sans-serif;font-size:1.8rem;font-weight:900;color:#ffd166;letter-spacing:4px;">⏸ PAUSA</h2>
-            <p style="color:#aaa;font-size:.85rem;">Pressione <b style="color:#ffd166">P</b> ou clique em ⏸ para continuar</p>
+            <h2 style="font-family:'Orbitron',sans-serif;font-size:1.8rem;font-weight:900;color:#f0a500;letter-spacing:4px;">⏸ PAUSA</h2>
+            <p style="color:#aaa;font-size:.85rem;">Pressione <b style="color:#f0a500">P</b> ou clique em ⏸ para continuar</p>
           </div>
         </div>
         
@@ -180,7 +181,7 @@
     </div>
   </div>
 </div>
-<script>(()=>{ document.documentElement.setAttribute('data-theme','dark'); })()</script>
+
 <script type="module">
 import { db } from "/js/firebase-config.js";
 import { ref, get, update as fbUpdate } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -294,7 +295,7 @@ const MAX_LIVES=5, SLOW_DURATION=4;
 
 const PLAYER_COLORS=[
   {body:'#7ee8fa',head:'#c4f4ff'},{body:'#06d6a0',head:'#a0ffe0'},
-  {body:'#ffd166',head:'#fff0a0'},{body:'#ef476f',head:'#ffb0c0'},
+  {body:'#f0a500',head:'#fff0a0'},{body:'#ef476f',head:'#ffb0c0'},
   {body:'#c77dff',head:'#e8c0ff'},{body:'#ff9f43',head:'#ffd4a0'},
 ];
 let playerColorIdx=0;
@@ -473,7 +474,7 @@ function showStartOverlay(){
   ov.innerHTML=`
     <h1><span class="big">FUGINDO DOS</span><span class="big">PROBLEMAS</span><span class="sub">— matemática em movimento —</span></h1>
     <p>Resolva a conta e pressione <b style="color:#7ee8fa">Espaço ou Enter</b> dentro da faixa amarela!<br>
-    <span style="color:#ef476f">❤</span> +1 vida &nbsp;|&nbsp; <span style="color:#7ee8fa">❄</span> lentidão &nbsp;|&nbsp; <b style="color:#ffd166">P</b> = pausar</p>
+    <span style="color:#ef476f">❤</span> +1 vida &nbsp;|&nbsp; <span style="color:#7ee8fa">❄</span> lentidão &nbsp;|&nbsp; <b style="color:#f0a500">P</b> = pausar</p>
     <div id="color-picker"></div>
     <button onclick="window.abrirRegras()" style="font-family:'Orbitron',sans-serif;font-size:.8rem;font-weight:700;padding:8px 22px;border:1px solid rgba(126,232,250,.4);border-radius:10px;background:transparent;color:#7ee8fa;cursor:pointer;letter-spacing:1px;margin-bottom:4px;">📋 Ver regras</button>
     <button id="start-btn" onclick="window.startGame()">▶ JOGAR</button>
@@ -529,13 +530,13 @@ window.submitAnswer = function(){
     wrongCount++;inp.classList.remove('correct');inp.classList.add('wrong');setTimeout(()=>inp.classList.remove('wrong'),500);
     showFeedback('✗ Cedo demais!','#ef476f');sfxWrong();if(currentObs)currentObs.active=false;currentObs=null;pendingQ=null;clearQuestion();combo=0;updateHUD();inp.value='';inp.focus();return;
   }
-  if(!inJumpZone()){showFeedback('⚠ Tarde demais!','#ff9900');sfxWrong();combo=0;updateHUD();inp.value='';inp.focus();return;}
+  if(!inJumpZone()){showFeedback('⚠ Tarde demais!','#f0a500');sfxWrong();combo=0;updateHUD();inp.value='';inp.focus();return;}
   if(val===pendingQ.answer){
     inp.classList.remove('wrong');inp.classList.add('correct');setTimeout(()=>inp.classList.remove('correct'),400);
     combo++;if(combo>bestCombo)bestCombo=combo;
     score+=(Math.max(30-wrongCount*8,8)+level*3)*Math.min(combo,5);
     totalCorrect++;wrongCount=0;updateHUD();sfxCorrect();if(combo>=2)sfxCombo(combo);
-    showFeedback(`✓ CERTO!${combo>=2?' x'+combo:''}`,combo>=3?'#ff9900':'#06d6a0');
+    showFeedback(`✓ CERTO!${combo>=2?' x'+combo:''}`,combo>=3?'#f0a500':'#06d6a0');
     inp.value='';currentObs.active=false;currentObs=null;pendingQ=null;clearQuestion();
     player.jumping=true;player.vy=JUMP_VEL;sfxJump();spawnParticles(PLAYER_X+PLAYER_W/2,player.y,'#06d6a0',12);
   } else {
@@ -696,7 +697,7 @@ function updateHUD(){
   const cd=document.getElementById('combo-display');
   document.getElementById('combo-count').textContent=combo;
   cd.style.opacity=combo>=2?'1':'0';
-  cd.style.color=combo>=5?'#ef476f':combo>=3?'#ff9900':'#ffd166';
+  cd.style.color=combo>=5?'#ef476f':combo>=3?'#f0a500':'#f0a500';
 }
 
 let fbTimer=null;
@@ -718,7 +719,7 @@ function render(){
     const zg=ctx.createLinearGradient(zL,0,zR,0);
     zg.addColorStop(0,'rgba(255,209,102,0)');zg.addColorStop(.25,'rgba(255,209,102,1)');zg.addColorStop(.75,'rgba(255,209,102,1)');zg.addColorStop(1,'rgba(255,209,102,0)');
     ctx.fillStyle=zg;ctx.fillRect(zL,GROUND_Y,zR-zL,H-GROUND_Y);ctx.globalAlpha=1;
-    ctx.save();ctx.setLineDash([5,4]);ctx.lineWidth=1.8;ctx.strokeStyle='rgba(255,209,102,.65)';ctx.shadowColor='#ffd166';ctx.shadowBlur=8;
+    ctx.save();ctx.setLineDash([5,4]);ctx.lineWidth=1.8;ctx.strokeStyle='rgba(255,209,102,.65)';ctx.shadowColor='#f0a500';ctx.shadowBlur=8;
     ctx.beginPath();ctx.moveTo(zL,GROUND_Y-4);ctx.lineTo(zL,H);ctx.stroke();
     ctx.beginPath();ctx.moveTo(zR,GROUND_Y-4);ctx.lineTo(zR,H);ctx.stroke();ctx.restore();
     ctx.font='bold 11px Inter';ctx.textAlign='center';ctx.fillStyle='rgba(255,209,102,.65)';ctx.fillText('PULAR AQUI',trigX,GROUND_Y-11);ctx.restore();
@@ -755,12 +756,12 @@ function render(){
       const lbl=pendingQ.label,bx=obs.x+obs.w/2,by=obs.y-12;
       ctx.save();ctx.font='bold 16px Orbitron,monospace';
       const tw=ctx.measureText(lbl).width,bw=Math.max(tw+30,90),bh=38;
-      ctx.shadowColor='#ffd166';ctx.shadowBlur=20;ctx.fillStyle='rgba(14,8,0,.92)';
+      ctx.shadowColor='#f0a500';ctx.shadowBlur=20;ctx.fillStyle='rgba(14,8,0,.92)';
       ctx.beginPath();ctx.roundRect(bx-bw/2,by-bh,bw,bh,9);ctx.fill();
-      ctx.strokeStyle='#ffd166';ctx.lineWidth=2.5;ctx.stroke();ctx.shadowBlur=0;
-      ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#ffd166';ctx.shadowColor='#ffd166';ctx.shadowBlur=14;
+      ctx.strokeStyle='#f0a500';ctx.lineWidth=2.5;ctx.stroke();ctx.shadowBlur=0;
+      ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#f0a500';ctx.shadowColor='#f0a500';ctx.shadowBlur=14;
       ctx.fillText(lbl,bx,by-bh/2);ctx.shadowBlur=0;ctx.textBaseline='alphabetic';
-      ctx.fillStyle='#ffd166';ctx.shadowColor='#ffd166';ctx.shadowBlur=8;
+      ctx.fillStyle='#f0a500';ctx.shadowColor='#f0a500';ctx.shadowBlur=8;
       ctx.beginPath();ctx.moveTo(bx,by+5);ctx.lineTo(bx-8,by-7);ctx.lineTo(bx+8,by-7);ctx.closePath();ctx.fill();ctx.shadowBlur=0;
       ctx.restore();
     }
@@ -819,7 +820,7 @@ function _sec(titulo, cols, itens) {
 }
 function _buildRegrasHTML() {
   return '<div style="background:#0d1b2a;border:1.5px solid #7c5cfc;border-radius:16px;padding:16px 18px;max-width:500px;width:95%;max-height:90%;overflow-y:auto;">'
-    +'<div style="font-size:.82rem;font-weight:700;color:#ffd166;margin:0 0 12px;">Regras das operacoes</div>'
+    +'<div style="font-size:.82rem;font-weight:700;color:#f0a500;margin:0 0 12px;">Regras das operacoes</div>'
     +_sec('MULTIPLICACAO E DIVISAO',4,[['(+)*(+)=(+)','pos'],['(-)*(-)=(+)','pos'],['(+)*(-)=(-)','neg'],['(-)*( +)=(-)','neg'],['(+)/(+)=(+)','pos'],['(-)/(-)=(+)','pos'],['(+)/(-)=(-)','neg'],['(-)/(+)=(-)','neg']])
     +'<div style="height:1px;background:rgba(255,255,255,.08);margin:8px 0;"></div>'
     +_sec('POTENCIAS',4,[['n2 = n*n','neu'],['(-n)2=(+)','pos'],['(-n)3=(-)','neg'],['n3=n*n*n','neu']])

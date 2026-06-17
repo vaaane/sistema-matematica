@@ -1,6 +1,8 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <meta name="theme-color" content="#6c00d4">
@@ -16,14 +18,14 @@
     .rnk-tab.active{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(47,158,220,.3);}
     /* ── Scope toggle ── */
     /* ── Hall da Fama ── */
-    .hall-wrap{background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(245,158,11,.05));border:1.5px solid rgba(245,158,11,.5);border-radius:14px;padding:14px 16px;margin-bottom:20px;box-shadow:0 0 20px rgba(245,158,11,.1);}
-    .hall-title{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#F59E0B;display:flex;align-items:center;gap:6px;margin-bottom:12px;}
-    .hall-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:6px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);}
-    .hall-row.is-me{background:rgba(245,158,11,.18);border-color:rgba(245,158,11,.5);}
+    .hall-wrap{background:linear-gradient(135deg,rgba(240,165,0,.08),rgba(240,165,0,.02));border:1px solid rgba(240,165,0,.3);border-radius:14px;padding:14px 16px;margin-bottom:20px;}
+    .hall-title{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:6px;margin-bottom:12px;}
+    .hall-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:6px;background:rgba(240,165,0,.05);border:1px solid rgba(240,165,0,.15);}
+    .hall-row.is-me{background:rgba(240,165,0,.12);border-color:rgba(240,165,0,.4);}
     .hall-ordem{font-size:18px;min-width:28px;text-align:center;flex-shrink:0;}
-    .hall-nome{flex:1;font-size:14px;font-weight:700;color:#F59E0B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .hall-nome{flex:1;font-size:14px;font-weight:700;color:var(--gold);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     .hall-sub{font-size:11px;color:var(--text-muted);margin-top:2px;}
-    .hall-badge{font-size:12px;font-weight:700;color:#F59E0B;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:3px 10px;flex-shrink:0;}
+    .hall-badge{font-size:12px;font-weight:700;color:var(--gold);background:rgba(240,165,0,.12);border:1px solid rgba(240,165,0,.25);border-radius:8px;padding:3px 10px;flex-shrink:0;}
     .rnk-scope{display:flex;gap:6px;margin-bottom:14px;}
     .rnk-scope-btn{padding:6px 18px;border:1.5px solid var(--border);border-radius:20px;background:var(--bg);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .15s;}
     .rnk-scope-btn.active{border-color:var(--blue);background:var(--blue);color:#fff;}
@@ -113,7 +115,7 @@
   </div>
 </div>
 
-<script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
+
 <script type="module">
 import { LISTA_ATIVIDADES } from "/js/constants.js";
 import { getResultados, getAlunoPreferencia } from "/js/db.js";
@@ -173,7 +175,7 @@ iniciarNotifDueloGlobal();
 // ── Helpers ───────────────────────────────────────────────────
 function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 const isMob = () => window.innerWidth <= 480;
-const AV_COLORS = ['#7F77DD','#2F9EDC','#22C55E','#F59E0B','#EF4444','#8B5CF6','#EC4899','#14B8A6'];
+const AV_COLORS = ['#7F77DD','#2F9EDC','#22C55E','#f0a500','#EF4444','#8B5CF6','#EC4899','#14B8A6'];
 function avColor(n) { let h=0; for(const c of (n||'?')) h=(h*31+c.charCodeAt(0))&0xffff; return AV_COLORS[h%AV_COLORS.length]; }
 
 function abreviarNome(nome) {
@@ -382,9 +384,9 @@ function renderPodium(lista, posArr) {
   }
 
   const TROPHIES=['🥇','🥈','🥉'];
-  const COLORS  =['#F59E0B','#9CA3AF','#CD853F'];
+  const COLORS  =['#f0a500','#9CA3AF','#CD853F'];
   const STANDS  =[
-    {h:mobile?60:80, bg:'linear-gradient(135deg,#F59E0B,#D97706)'},
+    {h:mobile?60:80, bg:'linear-gradient(135deg,#f0a500,#D97706)'},
     {h:mobile?44:56, bg:'linear-gradient(135deg,#9CA3AF,#6B7280)'},
     {h:mobile?32:40, bg:'linear-gradient(135deg,#CD853F,#92400E)'},
   ];
@@ -403,7 +405,7 @@ function renderPodium(lista, posArr) {
     let confetti='';
     if(isMe&&slotIdx===0&&!_confettiDone) {
       _confettiDone=true;
-      const cols=['#F59E0B','#3B82F6','#EF4444','#22C55E','#8B5CF6'];
+      const cols=['#f0a500','#3B82F6','#EF4444','#22C55E','#8B5CF6'];
       confetti=`<div style="position:absolute;top:0;left:50%;pointer-events:none;width:0;overflow:visible">`+
         cols.map((c,i)=>{
           const cx=(i%2===0?-1:1)*(8+i*6);
@@ -522,7 +524,7 @@ function render() {
           ${restantes.length > 0 ? `
             <div id="hall-extra" style="display:none">${hallRows(restantes)}</div>
             <button onclick="const e=document.getElementById('hall-extra');const b=document.getElementById('hall-btn');if(e.style.display==='none'){e.style.display='';b.textContent='Ocultar ▲';}else{e.style.display='none';b.textContent='Ver todos (${concluintes.length}) →';}" id="hall-btn"
-              style="width:100%;padding:8px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:8px;color:#F59E0B;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px">
+              style="width:100%;padding:8px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:8px;color:#f0a500;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px">
               Ver todos (${concluintes.length}) →
             </button>` : ''}
         </div>`;

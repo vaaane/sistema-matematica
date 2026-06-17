@@ -50,6 +50,8 @@
     "presenca_online": { ".read": true, ".write": true },
     "duelos":          { ".read": true, ".write": true },
     "feed_global":     { ".read": true, ".write": true, ".indexOn": ["ts"] },
+    "aquecimento":     { ".read": true, ".write": true },
+    "notif_dupla":     { ".read": true, ".write": true },
 
     "$outro": {
       ".read": false,

@@ -1,6 +1,7 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <meta name="theme-color" content="#6c00d4">
@@ -56,7 +57,7 @@
   font-family:'Orbitron',sans-serif;
   font-size:1.5rem;
   font-weight:900;
-  color:#ffd166;
+  color:#f0a500;
   text-align:center;
 }
 #timer-display{
@@ -64,7 +65,7 @@
   font-size:2rem;
   font-weight:900;
   text-align:center;
-  color:#ffd166;
+  color:#f0a500;
 }
 #op-timer-bar-bg{
   width:100%;height:5px;
@@ -81,13 +82,13 @@
 }
 .player-status{display:flex;flex-direction:column;gap:3px;}
 .p-lives{font-size:.95rem;letter-spacing:2px;}
-.p-powerup{font-size:.7rem;color:#ffd166;min-height:16px;}
+.p-powerup{font-size:.7rem;color:#f0a500;min-height:16px;}
 .rank-entry{
   display:flex;justify-content:space-between;
   font-size:.68rem;color:#7ee8fa;
   padding:2px 0;border-bottom:1px solid #0d1a2a;
 }
-.rank-entry .rank-pts{font-family:'Orbitron',sans-serif;color:#ffd166;}
+.rank-entry .rank-pts{font-family:'Orbitron',sans-serif;color:#f0a500;}
 
 /* ── Canvas area ── */
 #canvas-area{
@@ -104,10 +105,10 @@ canvas{
   top:8px;left:50%;transform:translateX(-50%);
   font-family:'Orbitron',sans-serif;
   font-size:1.5rem;font-weight:900;
-  color:#ffd166;text-shadow:0 0 18px #ffd16688;
+  color:#f0a500;text-shadow:0 0 18px #f0a50088;
   background:rgba(4,6,15,.8);
   padding:5px 18px;border-radius:18px;
-  border:1px solid #ffd16633;
+  border:1px solid #f0a50033;
   white-space:nowrap;pointer-events:none;
 }
 #feedback-text{
@@ -139,7 +140,7 @@ canvas{
 }
 #overlay h1 .big{
   font-size:1.6rem;display:block;
-  background:linear-gradient(135deg,#7ee8fa,#ffd166);
+  background:linear-gradient(135deg,#7ee8fa,#f0a500);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
 }
 #overlay h1 .sub{
@@ -182,7 +183,7 @@ canvas{
 #start-btn:hover,#restart-btn:hover{transform:scale(1.06);box-shadow:0 4px 20px #06d6a055;}
 .final-score{
   font-family:'Orbitron',sans-serif;
-  font-size:1.8rem;color:#ffd166;font-weight:900;text-align:center;
+  font-size:1.8rem;color:#f0a500;font-weight:900;text-align:center;
 }
 .final-detail{
   font-size:.72rem;color:#3a5a7a;text-align:center;
@@ -252,8 +253,8 @@ canvas{
 .ctrl-pick .cp-opt .cp-name{font-size:.6rem;color:#9ab;font-weight:700;margin-top:2px;font-family:'Orbitron',sans-serif;letter-spacing:1px;}
 .ctrl-pick .cp-opt.sel-p1{background:rgba(239,71,111,.18);border-color:#ef476f;}
 .ctrl-pick .cp-opt.sel-p1 .cp-name{color:#ef476f;}
-.ctrl-pick .cp-opt.sel-p2{background:rgba(255,209,102,.18);border-color:#ffd166;}
-.ctrl-pick .cp-opt.sel-p2 .cp-name{color:#ffd166;}
+.ctrl-pick .cp-opt.sel-p2{background:rgba(255,209,102,.18);border-color:#f0a500;}
+.ctrl-pick .cp-opt.sel-p2 .cp-name{color:#f0a500;}
 .ctrl-pick .cp-opt.locked{opacity:.35;cursor:not-allowed;}
 .ctrl-pick .cp-opt.locked .cp-tag{font-size:.45rem;color:#667;display:block;margin-top:1px;}
 .ctrl-row-label{font-family:'Orbitron',sans-serif;font-size:.6rem;letter-spacing:1px;font-weight:700;margin-bottom:5px;}
@@ -316,7 +317,7 @@ canvas{
   }
   #mobile-hud .mh-item{display:flex;align-items:center;gap:4px;font-size:.8rem;font-weight:700;}
   #mobile-hud .mh-nivel{color:#7ee8fa;}
-  #mobile-hud .mh-acertos{color:#ffd166;}
+  #mobile-hud .mh-acertos{color:#f0a500;}
   #mobile-hud .mh-vidas{margin-left:auto;font-size:.9rem;letter-spacing:1px;}
   #mobile-hud .mh-bar-bg{width:100%;height:5px;background:#1a2a40;border-radius:3px;overflow:hidden;margin-top:2px;}
   #mobile-hud .mh-bar{height:100%;background:#06d6a0;border-radius:3px;transition:width .1s linear,background .3s;}
@@ -363,7 +364,7 @@ canvas{
     <span class="sub">— colaborativo —</span>
   </h1>
   <p>
-    Passe pelo bloco com a resposta certa! Cada operação dura <b style="color:#ffd166">10s</b>.<br>
+    Passe pelo bloco com a resposta certa! Cada operação dura <b style="color:#f0a500">10s</b>.<br>
     Errou ou ficou fora da 🟢 zona segura = <b style="color:#ef476f">−1 vida</b>.<br>
     <span style="color:#06d6a0">🤝 DUPLA</span> = os dois tocam juntos → pontos dobrados!
   </p>
@@ -422,7 +423,7 @@ canvas{
       </div>
     </div>
     <div class="panel-box" id="p2-box" style="display:none;">
-      <div class="panel-title" style="color:#ffd166">P2 — Setas</div>
+      <div class="panel-title" style="color:#f0a500">P2 — Setas</div>
       <div class="player-status">
         <div class="p-lives" id="p2-lives">❤️❤️❤️</div>
         <div class="p-powerup" id="p2-powerup"></div>
@@ -459,7 +460,7 @@ canvas{
   </div><!-- /content -->
 </div><!-- /main -->
 
-<script>(()=>{ document.documentElement.setAttribute('data-theme','dark'); })()</script>
+
 <script type="module">
 
 // ══════════════════════════════════════════════════
@@ -955,8 +956,8 @@ function wallifyAnswer(){
   if(correct){
     walls.push({col:correct.col,row:correct.row,alpha:0,permanent:false,penalty:true});
     sfxWallify();
-    addFloat('⏰ MURO!',correct.col*CELL+CELL/2,correct.row*CELL+CELL/2,'#ff9900');
-    spawnParticles(correct.col*CELL+CELL/2,correct.row*CELL+CELL/2,'#ff9900',10);
+    addFloat('⏰ MURO!',correct.col*CELL+CELL/2,correct.row*CELL+CELL/2,'#f0a500');
+    spawnParticles(correct.col*CELL+CELL/2,correct.row*CELL+CELL/2,'#f0a500',10);
   }
 }
 
@@ -977,7 +978,7 @@ function resetAndShowStart(){
     '<span class="big">MATEMÁTICO</span>'+
     '<span class="sub">— colaborativo —</span>'+
     '</h1>'+
-    '<p>Passe pelo bloco com a resposta certa! Cada operação dura <b style="color:#ffd166">10s</b>.<br>'+
+    '<p>Passe pelo bloco com a resposta certa! Cada operação dura <b style="color:#f0a500">10s</b>.<br>'+
     'Errou ou ficou fora da 🟢 zona segura = <b style="color:#ef476f">−1 vida</b>.<br>'+
     '<span style="color:#06d6a0">🤝 DUPLA</span> = os dois tocam juntos → pontos dobrados!</p>'+
     '<div class="controls-grid">'+
@@ -1006,7 +1007,7 @@ function startGame(){
   spawnTeleports();
 
   players=[makePlayer(3,3,'#ef476f',{up:'w',down:'s',left:'a',right:'d'},0)];
-  if(mode==='duo')players.push(makePlayer(COLS-4,ROWS-4,'#ffd166',
+  if(mode==='duo')players.push(makePlayer(COLS-4,ROWS-4,'#f0a500',
     {up:'ArrowUp',down:'ArrowDown',left:'ArrowLeft',right:'ArrowRight'},1));
 
   currentQ=makeQ(level);
@@ -1078,7 +1079,7 @@ function update(dt){
           streak=0;streakSpeed=0;
           p.lives=Math.max(0,p.lives-1);
           p.invincible=1.5;
-          addFloat(wasSpecial?'🎯 FALTOU! -1❤️':'⏰ -1 ❤️',p.px,p.py,'#ff9900');
+          addFloat(wasSpecial?'🎯 FALTOU! -1❤️':'⏰ -1 ❤️',p.px,p.py,'#f0a500');
           sfxWrong();
         }
       } else {
@@ -1089,7 +1090,7 @@ function update(dt){
     currentQ=makeQ(level);
     opTimeLeft=OP_TIME;
     spawnNumberBlocks();
-    triggerFlash('#ff9900',.4);
+    triggerFlash('#f0a500',.4);
     updateHUD();
   }
 
@@ -1118,7 +1119,7 @@ function update(dt){
     const g=.5+.4*Math.sin(b.pulse);
     const urgency=b.life<4?b.life/4:1;
     ctx.save();ctx.globalAlpha=urgency;
-    ctx.shadowColor='#ffd166';ctx.shadowBlur=10+6*g;
+    ctx.shadowColor='#f0a500';ctx.shadowBlur=10+6*g;
     ctx.fillStyle=`rgba(40,30,0,${.7+.2*g})`;
     ctx.beginPath();ctx.roundRect(x+2,y+2,CELL-4,CELL-4,4);ctx.fill();
     ctx.strokeStyle=`rgba(255,209,102,${.5+.3*g})`;ctx.lineWidth=1.5;ctx.stroke();
@@ -1195,9 +1196,9 @@ function update(dt){
           walls.splice(wallIdx,1);
           p.hasBomb=false;
           sfxBomb();
-          spawnParticles(nc*CELL+CELL/2,nr*CELL+CELL/2,'#ff9900',18);
-          addFloat('💣 BOOM!',p.px,p.py,'#ff9900');
-          triggerFlash('#ff9900',.18);
+          spawnParticles(nc*CELL+CELL/2,nr*CELL+CELL/2,'#f0a500',18);
+          addFloat('💣 BOOM!',p.px,p.py,'#f0a500');
+          triggerFlash('#f0a500',.18);
           updateHUD();
           // Não move — o bloco sumiu, pode tentar de novo
         }
@@ -1231,8 +1232,8 @@ function update(dt){
           if(bni>=0){
             bonusBlocks.splice(bni,1);
             p.star=true;p.starTimer=8;
-            sfxItem();addFloat('⭐ x2 POR 8s!',p.px,p.py,'#ffd166');
-            spawnParticles(nc*CELL+CELL/2,nr*CELL+CELL/2,'#ffd166',12);
+            sfxItem();addFloat('⭐ x2 POR 8s!',p.px,p.py,'#f0a500');
+            spawnParticles(nc*CELL+CELL/2,nr*CELL+CELL/2,'#f0a500',12);
           }
 
           // Bloco numérico
@@ -1282,7 +1283,7 @@ function update(dt){
               score+=pts;totalCorrect++;
               if(streak===3){
                 streakSpeed=8;
-                showFeedback('🔥 EM CHAMAS! x2 pts!','#ff9900');
+                showFeedback('🔥 EM CHAMAS! x2 pts!','#f0a500');
                 triggerFlash('#ff6600',.2);
                 // Som simples de "em chamas" — sem loop de notas
                 tone(659,.08,.15,'square');tone(784,.1,.15,'square',.1);
@@ -1420,9 +1421,9 @@ function applyItem(p,it){
   switch(it.type){
     case 'speed':  p.speed=true;p.speedTimer=6;addFloat('👟 RÁPIDO! 6s',p.px,p.py,'#7ee8fa');break;
     case 'shield': p.shield=true;p.shieldTimer=20;addFloat('🛡️ ESCUDO!',p.px,p.py,'#c77dff');break;
-    case 'star':   p.star=true;p.starTimer=10;addFloat('⭐ x2 PTS! 10s',p.px,p.py,'#ffd166');break;
+    case 'star':   p.star=true;p.starTimer=10;addFloat('⭐ x2 PTS! 10s',p.px,p.py,'#f0a500');break;
     case 'clock':  score+=5;addFloat('⏱️ +5 pts!',p.px,p.py,'#7ee8fa');break;
-    case 'bomb':   p.hasBomb=true;addFloat('💣 PEGOU BOMBA!',p.px,p.py,'#ff9900');sfxBomb();break;
+    case 'bomb':   p.hasBomb=true;addFloat('💣 PEGOU BOMBA!',p.px,p.py,'#f0a500');sfxBomb();break;
     case 'heart':
       p.lives=Math.min(p.lives+1,MAX_LIVES);
       updateHUD();
@@ -1457,13 +1458,13 @@ function updateHUD(){
   document.getElementById('score-display').textContent=score;
   const td=document.getElementById('timer-display');
   td.textContent=level;
-  td.style.color='#ffd166';
+  td.style.color='#f0a500';
 
   // Barra da operação
   const pct=(opTimeLeft/OP_TIME)*100;
   const bar=document.getElementById('op-timer-bar');
   bar.style.width=pct+'%';
-  bar.style.background=pct>50?'#06d6a0':pct>20?'#ff9900':'#ef476f';
+  bar.style.background=pct>50?'#06d6a0':pct>20?'#f0a500':'#ef476f';
 
   players.forEach((p,i)=>{
     const lel=document.getElementById(`p${i+1}-lives`);
@@ -1485,7 +1486,7 @@ function updateHUD(){
   const mhv=document.getElementById('mh-vidas-val');
   if(mhv){ let hh='';const p0=players[0];const lv=p0?p0.lives:0;for(let j=0;j<MAX_LIVES;j++)hh+=j<lv?'❤️':'🖤';mhv.textContent=hh; }
   const mhb=document.getElementById('mh-bar');
-  if(mhb){ const pct2=(opTimeLeft/OP_TIME)*100; mhb.style.width=pct2+'%'; mhb.style.background=pct2>50?'#06d6a0':pct2>20?'#ff9900':'#ef476f'; }
+  if(mhb){ const pct2=(opTimeLeft/OP_TIME)*100; mhb.style.width=pct2+'%'; mhb.style.background=pct2>50?'#06d6a0':pct2>20?'#f0a500':'#ef476f'; }
 
   const opText=currentQ?currentQ.label+' = ?':'';
   let spLabel='';
@@ -1657,7 +1658,7 @@ function render(){
     const g=.5+.4*Math.sin(b.pulse);
     const urgency=b.life<4?b.life/4:1;
     ctx.save();ctx.globalAlpha=urgency;
-    ctx.shadowColor='#ffd166';ctx.shadowBlur=10+6*g;
+    ctx.shadowColor='#f0a500';ctx.shadowBlur=10+6*g;
     ctx.fillStyle=`rgba(40,30,0,${.7+.2*g})`;
     ctx.beginPath();ctx.roundRect(x+2,y+2,CELL-4,CELL-4,4);ctx.fill();
     ctx.strokeStyle=`rgba(255,209,102,${.5+.3*g})`;ctx.lineWidth=1.5;ctx.stroke();
@@ -1852,7 +1853,7 @@ function renderDuoCtrlPick(){
   if(mode!=='duo'){ host.style.display='none'; return; }
   host.style.display='';
   const row = (player, sel, other) => {
-    const cor = player===1?'#ef476f':'#ffd166';
+    const cor = player===1?'#ef476f':'#f0a500';
     const emoji = player===1?'🩷':'💛';
     const opts = CTRL_OPTS.map(o=>{
       const locked = o.id===other;
@@ -1946,7 +1947,7 @@ function buildDpads(){
   } else if(mode==='duo'){
     // PC duo: joystick só para quem escolheu mouse (no máximo um)
     if(ctrlP1==='mouse')      html = `<div class="dpad-label" style="color:#ef476f">🩷 P1</div>${dpadHTML('dp-p1', KEYMAP.mouse)}`;
-    else if(ctrlP2==='mouse') html = `<div class="dpad-label" style="color:#ffd166">💛 P2</div>${dpadHTML('dp-p2', KEYMAP.mouse)}`;
+    else if(ctrlP2==='mouse') html = `<div class="dpad-label" style="color:#f0a500">💛 P2</div>${dpadHTML('dp-p2', KEYMAP.mouse)}`;
   } else {
     // PC solo: joystick sempre disponível junto com o teclado.
     // Seta as teclas do método ativo do player → teclado e joystick movem o mesmo personagem.
