@@ -1,6 +1,7 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <meta name="theme-color" content="#6c00d4">
@@ -58,12 +59,12 @@
     .body-gold-border{box-shadow:inset 0 0 0 3px #FFD700,inset 0 0 30px rgba(255,215,0,.15);}
     /* Banner #1 full-width */
     @keyframes shimmer-gold{0%{background-position:200% center}100%{background-position:-200% center}}
-    .banner-no1-wrap{display:flex;align-items:center;gap:14px;padding:13px 20px;color:#fff;font-family:inherit;font-weight:700;font-size:15px;background:linear-gradient(100deg,#D97706,#F59E0B,#FBBF24,#F59E0B,#D97706);background-size:200% auto;animation:shimmer-gold 3s linear infinite;box-shadow:0 2px 14px rgba(245,158,11,.45);}
+    .banner-no1-wrap{display:flex;align-items:center;gap:14px;padding:13px 20px;color:#fff;font-family:inherit;font-weight:700;font-size:15px;background:linear-gradient(100deg,#D97706,#f0a500,#FBBF24,#f0a500,#D97706);background-size:200% auto;animation:shimmer-gold 3s linear infinite;box-shadow:0 2px 14px rgba(245,158,11,.45);}
     /* Card ring dourado */
     .card-gold-ring{border:2px solid #FFD700!important;box-shadow:0 0 0 1px rgba(255,215,0,.3),0 4px 20px rgba(255,215,0,.25)!important;animation:gold-ring-pulse 2s ease-in-out infinite;}
     @keyframes gold-ring-pulse{0%,100%{box-shadow:0 0 0 1px rgba(255,215,0,.3),0 4px 20px rgba(255,215,0,.25)}50%{box-shadow:0 0 0 2px rgba(255,215,0,.5),0 4px 28px rgba(255,215,0,.4)}}
     /* Badge no canto do card */
-    .badge-no1-card{display:inline-flex;align-items:center;gap:4px;position:absolute;top:-10px;right:12px;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;z-index:1;white-space:nowrap;box-shadow:0 2px 8px rgba(245,158,11,.4);}
+    .badge-no1-card{display:inline-flex;align-items:center;gap:4px;position:absolute;top:-10px;right:12px;background:linear-gradient(135deg,#f0a500,#D97706);color:#fff;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;z-index:1;white-space:nowrap;box-shadow:0 2px 8px rgba(245,158,11,.4);}
     @media(max-width:480px){
       .ativ-liberada{flex-wrap:wrap;gap:10px;padding:14px 14px}
       .ativ-liberada .ativ-info{width:100%}
@@ -95,7 +96,7 @@
       #card-historico{order:9;}
       /* Conter overflow horizontal — cards com overflow:visible e filhos absolutos estouram a tela */
       .grid-2{width:100%;max-width:100%;}
-      #card-resumo,#tabuada-game-card,#tab-ranking-card,#quiz-top3-card,#card-liberada,#card-atividades,#card-historico{
+      #card-resumo,#tabuada-game-card,#tab-ranking-card,#quiz-top3-card,#card-liberada,#card-atividades,#card-historico,#aquecimento-card,#feed-card{
         width:100%!important;max-width:100%!important;box-sizing:border-box!important;overflow-x:clip!important;
       }
       .badge-no1-card{right:10px!important;max-width:calc(100% - 20px);}
@@ -107,20 +108,20 @@
     .modal-guia-box{background:var(--card);border:1px solid rgba(255,255,255,.1);border-radius:20px;width:100%;max-width:460px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.7);max-height:90dvh;overflow-y:auto;position:relative;}
     .mg-close{position:absolute;top:12px;right:14px;width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;transition:background .15s;}
     .mg-close:hover{background:rgba(255,255,255,.2);color:#fff;}
-    .mg-header{background:linear-gradient(135deg,rgba(124,92,252,.2),rgba(47,158,220,.1));padding:22px 24px 18px;text-align:center;border-bottom:1px solid var(--border);}
-    .mg-icon{font-size:38px;margin-bottom:8px;}
-    .mg-title{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;margin-bottom:5px;}
+    .mg-header{background:linear-gradient(135deg,rgba(108,0,212,.2),rgba(240,165,0,.08));padding:16px 24px 14px;text-align:center;border-bottom:1px solid var(--border);}
+    .mg-icon{font-size:30px;margin-bottom:4px;}
+    .mg-title{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;margin-bottom:3px;}
     .mg-sub{font-size:12px;color:var(--text-muted);}
-    .mg-body{padding:16px 20px;}
-    .mg-item{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+    .mg-body{padding:10px 20px;}
+    .mg-item{display:flex;gap:12px;align-items:flex-start;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05);}
     .mg-item:last-child{border-bottom:none;}
-    .mg-item-icon{font-size:22px;flex-shrink:0;width:32px;text-align:center;margin-top:1px;}
-    .mg-item-title{font-size:13px;font-weight:700;margin-bottom:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
-    .mg-item-desc{font-size:12px;color:var(--text-muted);line-height:1.6;}
+    .mg-item-icon{font-size:20px;flex-shrink:0;width:30px;text-align:center;margin-top:1px;}
+    .mg-item-title{font-size:13px;font-weight:700;margin-bottom:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+    .mg-item-desc{font-size:12px;color:var(--text-muted);line-height:1.45;}
     .mg-tag-nota{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#22c55e;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;}
-    .mg-tag-extra{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:#f59e0b;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;}
-    .mg-footer{padding:14px 20px 20px;display:flex;flex-direction:column;gap:8px;}
-    .mg-btn-primary{width:100%;padding:13px;background:linear-gradient(135deg,var(--purple,#7c5cfc),#5a3fcf);border:none;border-radius:12px;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:#fff;cursor:pointer;}
+    .mg-tag-extra{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:#f0a500;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+    .mg-footer{padding:12px 20px 16px;display:flex;flex-direction:column;gap:8px;}
+    .mg-btn-primary{width:100%;padding:12px;background:linear-gradient(135deg,var(--purple,#7c5cfc),#5a3fcf);border:none;border-radius:12px;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:#fff;cursor:pointer;}
     .mg-btn-ghost{width:100%;padding:9px;background:transparent;border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text-muted);cursor:pointer;}
   </style>
 </head>
@@ -148,7 +149,7 @@
   </div>
 </div>
 
-<script>(()=>{const t=localStorage.getItem('tema');if(t==='escuro')document.documentElement.setAttribute('data-theme','dark');})()</script>
+
 <script type="module">
 import { LISTA_ATIVIDADES } from "/js/constants.js";
 import { getResultados, getLiberadasParaTurma, getAlunoPreferencia } from "/js/db.js";
@@ -270,7 +271,7 @@ async function carregarTopDuelos() {
     if (top3.length === 0) return;
     const { avatarUrl, avatarConfigDefault } = await import('/js/gamificacao.js');
     const MEDALHA = ['🥇','🥈','🥉'];
-    const COR     = ['#F59E0B','#9CA3AF','#cd7f32'];
+    const COR     = ['#f0a500','#9CA3AF','#cd7f32'];
     const html = `
       <div class="card" style="margin-bottom:14px" id="duelos-top3-card">
         <div class="section-label" style="color:var(--purple)">⚔️ Top Duelos</div>
@@ -491,7 +492,7 @@ function bannerParticles() {
   }).join('');
 }
 
-const BANNER_BG = ['linear-gradient(135deg,#F59E0B,#D97706)','linear-gradient(135deg,#9CA3AF,#6B7280)','linear-gradient(135deg,#CD853F,#92400E)'];
+const BANNER_BG = ['linear-gradient(135deg,#f0a500,#D97706)','linear-gradient(135deg,#9CA3AF,#6B7280)','linear-gradient(135deg,#CD853F,#92400E)'];
 let bannerHtml = '';
 if (posGeralMin >= 2 && posGeralMin <= 3) {
   const icone = ['🥇','🥈','🥉'][posGeralMin - 1];
@@ -515,9 +516,9 @@ if (posGeralMin >= 2 && posGeralMin <= 3) {
 
 // ── Helper compartilhado: linha de ranking ────────────────────
 function renderRankRow({ pos, nome, sub, valor, valorLabel, isMe, hall = false }) {
-  const borderColors = ['#F59E0B', '#9CA3AF', '#CD853F'];
+  const borderColors = ['#f0a500', '#9CA3AF', '#CD853F'];
   const bgColors     = ['rgba(245,158,11,.09)', 'rgba(156,163,175,.07)', 'rgba(180,83,9,.07)'];
-  const border = hall ? '#F59E0B' : pos <= 3 ? borderColors[pos - 1] : 'var(--border)';
+  const border = hall ? '#f0a500' : pos <= 3 ? borderColors[pos - 1] : 'var(--border)';
   const bg     = hall ? 'rgba(245,158,11,.09)' : pos <= 3 ? bgColors[pos - 1] : 'var(--card)';
   const medals = ['🥇','🥈','🥉'];
   const medal  = hall ? '🏆' : pos <= 3 ? medals[pos - 1] : `#${pos}`;
@@ -531,7 +532,7 @@ function renderRankRow({ pos, nome, sub, valor, valorLabel, isMe, hall = false }
   return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-left:3px solid ${border};border-radius:0 8px 8px 0;background:${bg};margin-bottom:6px;overflow:visible;position:relative">
     <span style="font-size:17px;min-width:24px;text-align:center;flex-shrink:0">${medal}</span>
     <div style="flex:1;min-width:0">
-      <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap${hall ? ';color:#F59E0B' : isMe ? ';color:var(--orange)' : ''}">${nome}${isMe ? ' ★' : ''}</div>
+      <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap${hall ? ';color:#f0a500' : isMe ? ';color:var(--orange)' : ''}">${nome}${isMe ? ' ★' : ''}</div>
       <div style="font-size:11px;color:var(--text-muted);margin-top:1px">${sub}</div>
     </div>
     <div style="text-align:right;flex-shrink:0;position:relative;${pos === 1 ? 'padding-top:14px' : pos <= 3 ? 'padding-top:10px' : ''}">
@@ -734,17 +735,17 @@ ${tempoPodioHtml}
 <div class="grid-2">
   <div id="col-left">
     ${(liberadasAtivas.length || torneioAtivo) ? `<div id="card-liberada" class="card card-pulse">
-      <div class="section-label" style="color:#F59E0B">
+      <div class="section-label" style="color:#f0a500">
         <svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
         Atividade Liberada
       </div>
       ${torneioAtivo ? `<div class="ativ-liberada" style="border-color:#FDE68A;background:linear-gradient(135deg,rgba(255,251,235,.9),var(--card))">
-        <div class="ativ-icon" style="background:#F59E0B"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+        <div class="ativ-icon" style="background:#f0a500"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
         <div class="ativ-info">
           <h3>🏆 ${torneioAtivo.nome || 'Torneio'}</h3>
           <p>${torneioAtivo.status==='liberada' ? '⏳ Aguardando início' : torneioAtivo.status==='pausado' ? '⏸ Pausado' : '▶ Em andamento'} · ⏱ ${Math.round((torneioAtivo.tempo_segundos||300)/60)} min · 🏅 Torneio</p>
         </div>
-        <a href="/aluno/torneio.html?id=${torneioAtivo.id}" class="btn" style="background:#F59E0B;color:#fff;border:none">
+        <a href="/aluno/torneio.html?id=${torneioAtivo.id}" class="btn" style="background:#f0a500;color:#fff;border:none">
           <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>${torneioAtivo.status==='liberada' ? 'Entrar' : 'Jogar'}
         </a>
       </div>` : ''}
@@ -902,7 +903,7 @@ ${tempoPodioHtml}
         const ex = dadosExtra[a] || { nivelTab: 1, duelosVit: 0, treinos: 0 };
         const propAluno = notaProp(a);
         const tooltipAbaixo = propAluno !== null && mediaTurma !== null && propAluno < mediaTurma ? 'title="Você está abaixo da média da turma, mas pode recuperar nas próximas atividades. Fique atento(a)!"' : '';
-        const turmaColor = r.posTurma === 1 ? '#F59E0B' : 'var(--orange)';
+        const turmaColor = r.posTurma === 1 ? '#f0a500' : 'var(--orange)';
         const wrapStyle  = r.posGeral === 1 ? 'border-color:rgba(245,158,11,.4);background:linear-gradient(135deg,rgba(245,158,11,.07),transparent)' : '';
         const turmaCrown = r.posTurma === 1 ? '<div style="font-size:10px;line-height:1;margin-bottom:1px">👑</div>' : '';
         return `<div class="resumo-wrap" style="${wrapStyle}" ${tooltipAbaixo}>
@@ -951,7 +952,7 @@ ${tempoPodioHtml}
     </div>
 
     <div id="tab-ranking-card" class="card" style="margin-bottom:14px;overflow:visible;position:relative;padding-top:18px">
-      <div class="section-label" style="color:#F59E0B">
+      <div class="section-label" style="color:#f0a500">
         <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
         Ranking Tabuada
         <a href="/aluno/ranking.html" style="margin-left:auto;font-size:12px;font-weight:600;color:var(--blue-dark);text-decoration:none">Ver tudo →</a>
@@ -963,7 +964,7 @@ ${tempoPodioHtml}
     <div id="certificado-card-anchor"></div>
 
     <div id="quiz-top3-card" class="card" style="margin-bottom:14px;overflow:visible;position:relative">
-      <div class="section-label" style="color:#F59E0B">
+      <div class="section-label" style="color:#f0a500">
         <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12V11c0 4.52-3.05 8.75-7 9.93-3.95-1.18-7-5.41-7-9.93V6.3l7-3.12z"/></svg>
         Top 3 · Atividades
       </div>
@@ -1019,7 +1020,7 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
       const b = document.createElement('div'); b.className = 'badge-no1-card'; b.textContent = '👑 #1 GERAL'; qc.appendChild(b);
     }
   }
-  const goldColors = ['#FFD700','#F59E0B','#F97316','#ffffff','#FBBF24','#FED7AA'];
+  const goldColors = ['#FFD700','#f0a500','#F97316','#ffffff','#FBBF24','#FED7AA'];
   const count = (isQuiz && isTabuada) ? 40 : 20;
   const wrap = document.createElement('div');
   wrap.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden';
@@ -1193,7 +1194,7 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
       </div>` : '';
 
     cardEl.innerHTML = `
-      <div class="section-label" style="color:#F59E0B">
+      <div class="section-label" style="color:#f0a500">
         <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
         Ranking Tabuada
         <a href="/aluno/ranking.html" style="margin-left:auto;font-size:12px;font-weight:600;color:var(--blue-dark);text-decoration:none">Ver tudo →</a>
@@ -1203,7 +1204,7 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
       ${posRankHtml}`;
   } catch(e) {
     console.error('Erro ao montar Ranking Tabuada:', e);
-    cardEl.innerHTML = `<div class="section-label" style="color:#F59E0B">Ranking Tabuada</div>
+    cardEl.innerHTML = `<div class="section-label" style="color:#f0a500">Ranking Tabuada</div>
       <div style="font-size:12px;color:var(--text-muted);padding:8px 0">Não foi possível carregar o ranking agora.</div>`;
   } }
   try { applyNo1PageVisuals({ isQuiz: euSouQuiz1, isTabuada: myGeral === 1, tabLevel: meuNivel }); } catch(e) { console.error('applyNo1PageVisuals:', e); }
@@ -1281,10 +1282,12 @@ onValue(
 // Verificar se deve mostrar o modal de guia
 try {
   const guiaSnap = await get(ref(db, 'config/mostrar_guia'));
-  if (guiaSnap.val() === true) {
+  const jaViu = localStorage.getItem('sm_guia_visto');
+  if (guiaSnap.val() === true && !jaViu) {
     setTimeout(() => {
       const modal = document.getElementById('modal-guia');
       if (modal) modal.style.display = 'flex';
+      localStorage.setItem('sm_guia_visto', '1');
     }, 600);
   }
 } catch(e) {
@@ -1306,36 +1309,29 @@ try {
       <div class="mg-item">
         <div class="mg-item-icon">📚</div>
         <div>
-          <div class="mg-item-title">Atividades <span class="mg-tag-nota">3 pontos na média</span></div>
-          <div class="mg-item-desc">As atividades do site <strong>valem 3 pontos na sua média final de Matemática</strong>. Feitas em sala em dias e horários específicos, quando a professora liberar.</div>
+          <div class="mg-item-title">Atividades <span class="mg-tag-nota">3 pontos</span></div>
+          <div class="mg-item-desc">Valem <strong>3 pontos na média</strong>. Feitas em sala quando a professora liberar.</div>
         </div>
       </div>
       <div class="mg-item">
         <div class="mg-item-icon">🔢</div>
         <div>
           <div class="mg-item-title">Tabuada <span class="mg-tag-extra">nota extra</span></div>
-          <div class="mg-item-desc">Jogue todo dia para subir de nível. Chegou ao <strong>nível 300</strong>? Você ganha um <strong>certificado</strong> entregue pela professora.</div>
+          <div class="mg-item-desc">Jogue todo dia para subir de nível. No <strong>nível 300</strong> você ganha um certificado!</div>
         </div>
       </div>
       <div class="mg-item">
         <div class="mg-item-icon">⚔️</div>
         <div>
           <div class="mg-item-title">Duelos <span class="mg-tag-extra">nota extra</span></div>
-          <div class="mg-item-desc">Desafie colegas para duelos de matemática em tempo real. Ganhe XP, suba no ranking e desbloqueie conquistas.</div>
+          <div class="mg-item-desc">Desafie colegas em tempo real, ganhe XP e suba no ranking.</div>
         </div>
       </div>
       <div class="mg-item">
         <div class="mg-item-icon">🔥</div>
         <div>
           <div class="mg-item-title">Treino Diário <span class="mg-tag-extra">nota extra</span></div>
-          <div class="mg-item-desc">Faça ao menos uma atividade por dia para manter sua sequência. Cada dia consecutivo dá <strong>+10 XP</strong> de bônus.</div>
-        </div>
-      </div>
-      <div class="mg-item">
-        <div class="mg-item-icon">⚡</div>
-        <div>
-          <div class="mg-item-title">XP e Níveis</div>
-          <div class="mg-item-desc">Tudo que você faz gera XP e sobe seu nível — de <strong>Aprendiz</strong> até <strong>Lenda</strong>. Os valores de nota extra serão divulgados em breve.</div>
+          <div class="mg-item-desc">Treine todo dia e mantenha sua sequência: <strong>+10 XP</strong> por dia.</div>
         </div>
       </div>
     </div>
