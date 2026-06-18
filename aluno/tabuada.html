@@ -942,7 +942,7 @@ function calcGameLayout(cardCount) {
 
   // Estimar altura dos cards para detectar modo compacto
   const topbarH = document.querySelector('.topbar')?.getBoundingClientRect().height || 62;
-  const OVERHEAD = 265; // topbar + header-nivel + líderes + timer + barra + dots + status + combo + slots
+  const OVERHEAD = 180; // topbar + header-nivel + timer + barra + dots + status + combo + slots (sem líderes)
   const gridH = Math.max(60, window.innerHeight - topbarH - OVERHEAD);
   const rows  = Math.ceil(cardCount / bestC);
   const estCardH = (gridH - (rows - 1) * GAP) / rows;
@@ -1173,6 +1173,7 @@ function _buildLeadersHtml() {
 }
 
 function atualizarLeadersLine() {
+  return; // Hall da Fama removido do topo do jogo (a pedido)
   const el = document.getElementById('leaders-ingame');
   if (!el || _isProfMode) return;
   const html = _buildLeadersHtml();
@@ -1327,7 +1328,7 @@ function _buildGameInternal() {
 
   // isCompact: linhas exatas (sem Math.ceil pois divisibilidade está garantida)
   const _gridRows  = pairs.length * 2 / cols;
-  const _mobileOverhead = window.innerWidth <= 480 ? 290 : 250;
+  const _mobileOverhead = window.innerWidth <= 480 ? 205 : 175;
   const _gridH     = Math.max(60, window.innerHeight - _topbarH - _mobileOverhead);
   const isCompact  = _gridRows > 0 ? ((_gridH - (_gridRows - 1) * 5) / _gridRows) < 56 : false;
 
@@ -1380,7 +1381,7 @@ function _buildGameInternal() {
         <div class="sprint-stat"><div class="sprint-stat-val" id="sprint-err">${_sprintErrTotal}</div><div class="sprint-stat-lbl">Erros</div></div>
       </div>
     </div>` : `
-    <div id="leaders-ingame" style="margin-bottom:4px;line-height:1.5">${_buildLeadersHtml()}</div>
+    <div id="leaders-ingame" style="display:none"></div>
     <div class="timer-wrap" id="timer-display">
       <svg viewBox="0 0 24 24"><path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61 1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
       <span id="timer-text">${String(Math.floor(timerTotal/60)).padStart(2,'0')}:${String(timerTotal%60).padStart(2,'0')}</span>
