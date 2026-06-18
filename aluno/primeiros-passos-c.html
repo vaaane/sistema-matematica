@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Primeiros Passos em C — Robótica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#15161f;
+    --bg2:#1a1b26;
+    --surface:#1f2233;
+    --code:#1d2030;
+    --border:#2c3047;
+    --text:#c5cce6;
+    --muted:#7c82a3;
+    /* cores que ENSINAM: cada "tipo de coisa" no código tem sempre a mesma cor */
+    --tipo:#f7768e;     /* tipos e palavras-chave: int, float, return... */
+    --texto:#9ece6a;    /* texto entre aspas (strings) */
+    --funcao:#7aa2f7;   /* funcoes: printf, scanf, main */
+    --num:#ff9e64;      /* numeros e %especificadores: %d %f ... */
+    --pont:#e9c46a;     /* pontuacao: ; { } ( ) */
+    --coment:#5a6080;   /* comentarios */
+    --var:#7dcfff;      /* nome das variaveis */
+    --roxo:#bb9af7;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  /* barra de progresso de leitura */
+  #progresso{position:fixed;top:0;left:0;height:3px;width:0;
+    background:linear-gradient(90deg,var(--funcao),var(--roxo),var(--num));
+    z-index:100;transition:width .1s linear}
+
+  .wrap{max-width:860px;margin:0 auto;padding:0 22px}
+
+  /* ---------- HERO ---------- */
+  header{padding:70px 0 40px;text-align:center;position:relative}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:.8rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--funcao);margin-bottom:18px}
+  h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(2.4rem,7vw,4rem);
+    line-height:1.05;letter-spacing:-.02em;color:#fff;margin-bottom:18px}
+  h1 .arrow{color:var(--num);font-family:'JetBrains Mono',monospace;font-weight:400}
+  .lead{font-size:1.12rem;color:var(--muted);max-width:560px;margin:0 auto 38px}
+
+  /* janela de terminal */
+  .terminal{background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+    text-align:left;overflow:hidden;box-shadow:0 24px 60px -20px rgba(0,0,0,.6);
+    max-width:560px;margin:0 auto}
+  .term-bar{display:flex;align-items:center;gap:7px;padding:12px 16px;
+    background:var(--surface);border-bottom:1px solid var(--border)}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .dot.r{background:#f7768e}.dot.y{background:#e9c46a}.dot.g{background:#9ece6a}
+  .term-title{margin-left:10px;font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted)}
+  .term-body{padding:20px 22px;font-family:'JetBrains Mono',monospace;font-size:.92rem;line-height:1.85}
+  .term-out{background:#101119;padding:14px 22px;font-family:'JetBrains Mono',monospace;
+    font-size:.9rem;border-top:1px solid var(--border)}
+  .term-out .label{color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;display:block;margin-bottom:6px}
+  .cursor{display:inline-block;width:9px;height:1.05em;background:var(--texto);
+    vertical-align:-2px;margin-left:2px;animation:blink 1.1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  /* tokens coloridos (servem em todo o site) */
+  .t-tipo{color:var(--tipo)} .t-txt{color:var(--texto)} .t-fn{color:var(--funcao)}
+  .t-num{color:var(--num)} .t-pt{color:var(--pont);font-weight:700} .t-cm{color:var(--coment);font-style:italic}
+  .t-var{color:var(--var)}
+
+  /* ---------- LEGENDA DE CORES ---------- */
+  .legenda{display:flex;flex-wrap:wrap;gap:10px 18px;justify-content:center;
+    margin:46px auto 10px;max-width:680px;padding:16px 20px;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px}
+  .legenda .li{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:.82rem}
+  .swatch{width:12px;height:12px;border-radius:3px}
+  .legenda small{display:block;width:100%;text-align:center;color:var(--muted);
+    font-family:'Inter';font-size:.8rem;margin-bottom:4px}
+
+  /* ---------- SEÇÕES ---------- */
+  section{padding:52px 0;border-top:1px solid var(--border)}
+  .num{font-family:'JetBrains Mono',monospace;color:var(--funcao);font-size:.85rem;
+    letter-spacing:.1em;margin-bottom:8px}
+  h2{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:clamp(1.6rem,4vw,2.1rem);
+    color:#fff;letter-spacing:-.01em;margin-bottom:6px}
+  .sub{color:var(--muted);font-size:1.02rem;margin-bottom:24px}
+  p{margin-bottom:16px}
+  p code,li code{font-family:'JetBrains Mono',monospace;font-size:.88em;
+    background:var(--code);padding:2px 7px;border-radius:5px;color:var(--var)}
+  .analogia{background:linear-gradient(135deg,rgba(122,162,247,.1),rgba(187,154,247,.08));
+    border-left:3px solid var(--roxo);padding:14px 18px;border-radius:0 10px 10px 0;margin:20px 0;font-size:.98rem}
+  .analogia b{color:var(--roxo)}
+
+  /* bloco de codigo */
+  pre{background:var(--code);border:1px solid var(--border);border-radius:12px;
+    padding:18px 20px;overflow-x:auto;font-family:'JetBrains Mono',monospace;
+    font-size:.92rem;line-height:1.8;margin:18px 0;position:relative}
+  pre .fname{position:absolute;top:0;right:14px;transform:translateY(-50%);
+    background:var(--bg);border:1px solid var(--border);border-radius:6px;
+    padding:2px 9px;font-size:.72rem;color:var(--muted)}
+  .saida{background:#101119;border:1px solid var(--border);border-left:3px solid var(--texto);
+    border-radius:10px;padding:12px 18px;font-family:'JetBrains Mono',monospace;font-size:.9rem;margin:-6px 0 18px}
+  .saida .label{display:block;color:var(--muted);font-size:.7rem;letter-spacing:.12em;
+    text-transform:uppercase;margin-bottom:6px}
+
+  /* tabela de tipos */
+  .tipos{width:100%;border-collapse:collapse;margin:18px 0;font-size:.92rem}
+  .tipos th,.tipos td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--border)}
+  .tipos th{font-family:'JetBrains Mono',monospace;font-size:.78rem;text-transform:uppercase;
+    letter-spacing:.08em;color:var(--muted);font-weight:500}
+  .tipos td:first-child{font-family:'JetBrains Mono',monospace;color:var(--tipo);font-weight:700}
+  .tipos td:nth-child(2){font-family:'JetBrains Mono',monospace;color:var(--num)}
+
+  /* ---------- ASSINATURA: anatomia da linha ---------- */
+  .anatomia{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:30px 22px 26px;margin:22px 0}
+  .linha{font-family:'JetBrains Mono',monospace;font-size:clamp(1rem,3.2vw,1.5rem);
+    text-align:center;line-height:2.4;white-space:nowrap;overflow-x:auto;padding-bottom:6px}
+  .peca{position:relative;cursor:pointer;padding:2px 1px;border-radius:5px;transition:.18s}
+  .peca:hover,.peca:focus{background:rgba(255,255,255,.08);outline:none}
+  .peca.on{background:rgba(255,255,255,.1)}
+  .info{margin-top:18px;min-height:70px;background:var(--code);border:1px solid var(--border);
+    border-radius:10px;padding:16px 18px;transition:.2s}
+  .info .it{font-family:'JetBrains Mono',monospace;font-size:1.1rem;margin-bottom:4px}
+  .info .id{color:var(--muted);font-size:.95rem}
+  .dica-toque{text-align:center;color:var(--muted);font-size:.82rem;margin-top:14px}
+
+  /* erros comuns */
+  .erros{display:grid;gap:14px;margin-top:6px}
+  .erro{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:16px 18px;border-left:3px solid var(--tipo)}
+  .erro .et{font-family:'Space Grotesk';font-weight:600;color:#fff;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .erro .et span{color:var(--tipo)}
+  .erro .cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-family:'JetBrains Mono',monospace;font-size:.85rem}
+  .erro .bad,.erro .good{padding:8px 11px;border-radius:7px}
+  .erro .bad{background:rgba(247,118,142,.1);border:1px solid rgba(247,118,142,.3)}
+  .erro .good{background:rgba(158,206,106,.1);border:1px solid rgba(158,206,106,.3)}
+  .erro .tag{display:block;font-family:'Inter';font-size:.7rem;text-transform:uppercase;
+    letter-spacing:.1em;margin-bottom:4px}
+  .erro .bad .tag{color:var(--tipo)}.erro .good .tag{color:var(--texto)}
+  @media(max-width:520px){.erro .cmp{grid-template-columns:1fr}}
+
+  /* checklist final */
+  .check{list-style:none;display:grid;gap:10px;margin-top:8px}
+  .check li{background:var(--surface);border:1px solid var(--border);border-radius:10px;
+    padding:13px 16px;display:flex;gap:12px;align-items:flex-start}
+  .check li::before{content:"✓";color:var(--texto);font-weight:700;font-family:'JetBrains Mono';flex-shrink:0}
+
+  footer{padding:50px 0 70px;text-align:center;color:var(--muted);font-size:.9rem;border-top:1px solid var(--border)}
+  footer .mono{font-family:'JetBrains Mono',monospace;color:var(--funcao)}
+
+  /* reveal no scroll */
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity .6s,transform .6s}
+  .reveal.vis{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){
+    .reveal{opacity:1;transform:none;transition:none}
+    .cursor{animation:none}
+    html{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+<div id="progresso"></div>
+
+<header class="wrap">
+  <div class="eyebrow">Robótica · Programação em C</div>
+  <h1>Do bloco <span class="arrow">→</span> ao código</h1>
+  <p class="lead">No mBlock você arrastava blocos. Agora você vai <b>escrever</b> as ordens pro robô em C — a linguagem de verdade. Parece difícil, mas são só algumas regras. Bora?</p>
+
+  <div class="terminal">
+    <div class="term-bar">
+      <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+      <span class="term-title">robo.c</span>
+    </div>
+    <div class="term-body">
+<span class="t-fn">#include</span> <span class="t-num">&lt;stdio.h&gt;</span><br>
+<br>
+<span class="t-tipo">int</span> <span class="t-fn">main</span><span class="t-pt">()</span> <span class="t-pt">{</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-fn">printf</span><span class="t-pt">(</span><span class="t-txt">"Oi, eu sou o robo!\n"</span><span class="t-pt">)</span><span class="t-pt">;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-tipo">return</span> <span class="t-num">0</span><span class="t-pt">;</span><br>
+<span class="t-pt">}</span><span class="cursor"></span>
+    </div>
+    <div class="term-out">
+      <span class="label">o que aparece na tela</span>
+      Oi, eu sou o robo!
+    </div>
+  </div>
+
+  <div class="legenda">
+    <small>As cores não são enfeite — cada tipo de pedaço tem sempre a mesma cor. Vai te ajudar a "ler" o código.</small>
+    <div class="li"><span class="swatch" style="background:var(--tipo)"></span> tipos / palavras-chave</div>
+    <div class="li"><span class="swatch" style="background:var(--funcao)"></span> funções</div>
+    <div class="li"><span class="swatch" style="background:var(--texto)"></span> texto entre aspas</div>
+    <div class="li"><span class="swatch" style="background:var(--num)"></span> números e <code style="background:none;padding:0;color:var(--num)">%</code></div>
+    <div class="li"><span class="swatch" style="background:var(--pont)"></span> pontuação <code style="background:none;padding:0;color:var(--pont)">; { } ( )</code></div>
+    <div class="li"><span class="swatch" style="background:var(--var)"></span> nome das variáveis</div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- 1 -->
+  <section class="reveal">
+    <div class="num">01 · O esqueleto</div>
+    <h2>A estrutura de um programa</h2>
+    <p class="sub">Todo programa em C começa praticamente igual. Decore esse esqueleto.</p>
+    <pre><span class="fname">robo.c</span><span class="t-fn">#include</span> <span class="t-num">&lt;stdio.h&gt;</span>   <span class="t-cm">// liga as ferramentas de tela (printf, scanf)</span>
+
+<span class="t-tipo">int</span> <span class="t-fn">main</span><span class="t-pt">()</span> <span class="t-pt">{</span>        <span class="t-cm">// aqui começa o programa</span>
+
+    <span class="t-cm">// suas ordens vão aqui dentro</span>
+
+    <span class="t-tipo">return</span> <span class="t-num">0</span><span class="t-pt">;</span>       <span class="t-cm">// avisa que deu tudo certo</span>
+<span class="t-pt">}</span>                  <span class="t-cm">// aqui termina o programa</span></pre>
+    <div class="analogia"><b>Pensa assim:</b> o <code>main()</code> é a receita principal. Tudo que estiver entre as chaves <code>{ }</code> é o "passo a passo" que o computador vai seguir, de cima pra baixo, uma linha por vez.</div>
+  </section>
+
+  <!-- 2 -->
+  <section class="reveal">
+    <div class="num">02 · Falar com a tela</div>
+    <h2>printf — mostrar coisas</h2>
+    <p class="sub">O <code>printf</code> é o programa "falando": ele escreve algo na tela.</p>
+    <pre><span class="t-fn">printf</span><span class="t-pt">(</span><span class="t-txt">"Bateria carregada!\n"</span><span class="t-pt">);</span>
+<span class="t-fn">printf</span><span class="t-pt">(</span><span class="t-txt">"Robo pronto pra correr.\n"</span><span class="t-pt">);</span></pre>
+    <div class="saida"><span class="label">na tela</span>Bateria carregada!<br>Robo pronto pra correr.</div>
+    <p>Repare em três coisas que <b>sempre</b> aparecem: as aspas <code>" "</code> em volta do texto, os parênteses <code>( )</code> e o ponto e vírgula <code>;</code> no final.</p>
+    <div class="analogia"><b>O <code>\n</code> é o "Enter".</b> Ele pula pra próxima linha. Sem o <code>\n</code>, tudo sai grudado na mesma linha.</div>
+  </section>
+
+  <!-- 3 -->
+  <section class="reveal">
+    <div class="num">03 · Guardar valores</div>
+    <h2>Variáveis — caixinhas com nome</h2>
+    <p class="sub">Uma variável é uma caixinha onde o programa guarda um valor pra usar depois.</p>
+    <pre><span class="t-tipo">int</span> <span class="t-var">idade</span> <span class="t-pt">=</span> <span class="t-num">13</span><span class="t-pt">;</span>        <span class="t-cm">// caixinha de número inteiro</span>
+<span class="t-tipo">float</span> <span class="t-var">velocidade</span> <span class="t-pt">=</span> <span class="t-num">2.5</span><span class="t-pt">;</span> <span class="t-cm">// caixinha de número com vírgula</span>
+<span class="t-tipo">char</span> <span class="t-var">letra</span> <span class="t-pt">=</span> <span class="t-txt">'V'</span><span class="t-pt">;</span>      <span class="t-cm">// caixinha de UM caractere</span></pre>
+    <div class="analogia"><b>Pensa numa caixa etiquetada:</b> primeiro você diz <u>que tipo</u> de coisa cabe nela (<code>int</code>, <code>float</code>...), depois o <u>nome</u> da etiqueta (<code>idade</code>), e aí coloca o valor dentro com o <code>=</code>.</div>
+    <p>Depois de criada, você pode trocar o valor a qualquer hora: <code>idade = 14;</code> (sem repetir o tipo, porque a caixa já existe).</p>
+  </section>
+
+  <!-- 4 -->
+  <section class="reveal">
+    <div class="num">04 · Que tipo de coisa cabe</div>
+    <h2>Os tipos de variável</h2>
+    <p class="sub">Você precisa avisar o C que tipo de valor vai guardar. Os principais:</p>
+    <table class="tipos">
+      <tr><th>Tipo</th><th>Imprime com</th><th>Pra que serve</th><th>Exemplo</th></tr>
+      <tr><td>int</td><td>%d</td><td>número inteiro</td><td>0, 42, -7</td></tr>
+      <tr><td>float</td><td>%f</td><td>número com vírgula</td><td>2.5, 8.75</td></tr>
+      <tr><td>double</td><td>%lf</td><td>vírgula mais preciso</td><td>3.14159</td></tr>
+      <tr><td>char</td><td>%c</td><td>um caractere só</td><td>'A', 'z'</td></tr>
+    </table>
+    <p>Em C, vírgula de número é <b>ponto</b>: escreve-se <code>2.5</code>, nunca <code>2,5</code>.</p>
+  </section>
+
+  <!-- 5 -->
+  <section class="reveal">
+    <div class="num">05 · As lacunas do printf</div>
+    <h2>%d, %f e os "espaços reservados"</h2>
+    <p class="sub">Pra mostrar o valor de uma variável, você deixa uma lacuna no texto e diz qual variável preenche ela.</p>
+    <pre><span class="t-tipo">int</span> <span class="t-var">pontos</span> <span class="t-pt">=</span> <span class="t-num">50</span><span class="t-pt">;</span>
+<span class="t-fn">printf</span><span class="t-pt">(</span><span class="t-txt">"Voce fez <span class="t-num">%d</span> pontos\n"</span><span class="t-pt">,</span> <span class="t-var">pontos</span><span class="t-pt">);</span></pre>
+    <div class="saida"><span class="label">na tela</span>Voce fez 50 pontos</div>
+    <div class="analogia"><b>O <code>%d</code> é uma janelinha vazia.</b> O <code>printf</code> tira o valor da variável que está depois da vírgula e "encaixa" naquela janelinha. Inteiro usa <code>%d</code>; número com vírgula usa <code>%f</code>.</div>
+    <pre><span class="t-tipo">float</span> <span class="t-var">nota</span> <span class="t-pt">=</span> <span class="t-num">8.5</span><span class="t-pt">;</span>
+<span class="t-fn">printf</span><span class="t-pt">(</span><span class="t-txt">"Sua nota: <span class="t-num">%.1f</span>\n"</span><span class="t-pt">,</span> <span class="t-var">nota</span><span class="t-pt">);</span>  <span class="t-cm">// .1f = 1 casa depois da virgula</span></pre>
+    <div class="saida"><span class="label">na tela</span>Sua nota: 8.5</div>
+  </section>
+
+  <!-- ASSINATURA -->
+  <section class="reveal">
+    <div class="num">06 · Peça por peça</div>
+    <h2>Anatomia de uma linha</h2>
+    <p class="sub">Toque (ou passe o mouse) em cada pedaço pra ver o nome dele e por que está ali.</p>
+    <div class="anatomia">
+      <div class="linha" id="linha">
+        <span class="peca t-fn" data-n="A função" data-d="printf é o comando que escreve na tela.">printf</span><span class="peca t-pt" data-n="Abre parênteses" data-d="Tudo que o printf vai usar fica DENTRO dos parênteses.">(</span><span class="peca t-txt" data-n="O texto (string)" data-d="Fica entre aspas. O %d é uma lacuna que será preenchida.">"Nota: <span class="t-num">%d</span>\n"</span><span class="peca t-pt" data-n="Vírgula" data-d="Separa o texto da variável que vai preencher a lacuna.">,</span> <span class="peca t-var" data-n="A variável" data-d="O valor guardado aqui entra no lugar do %d.">nota</span><span class="peca t-pt" data-n="Fecha parênteses" data-d="Todo ( que abre PRECISA de um ) que fecha.">)</span><span class="peca t-pt" data-n="Ponto e vírgula" data-d="É o ponto final da frase. Toda ordem em C termina com ;">;</span>
+      </div>
+      <div class="info" id="info">
+        <div class="it" style="color:var(--text)">Toque numa peça acima 👆</div>
+        <div class="id">Cada cor é um tipo de pedaço. Juntos eles formam uma ordem completa.</div>
+      </div>
+      <div class="dica-toque">Dica: leia sempre da esquerda pra direita, igual uma frase.</div>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="reveal">
+    <div class="num">07 · Ouvir o usuário</div>
+    <h2>scanf — receber um valor digitado</h2>
+    <p class="sub">Se o <code>printf</code> é o programa falando, o <code>scanf</code> é o programa <b>ouvindo</b>: ele espera você digitar algo e guarda numa variável.</p>
+    <pre><span class="t-tipo">int</span> <span class="t-var">idade</span><span class="t-pt">;</span>
+<span class="t-fn">printf</span><span class="t-pt">(</span><span class="t-txt">"Quantos anos voce tem? "</span><span class="t-pt">);</span>
+<span class="t-fn">scanf</span><span class="t-pt">(</span><span class="t-txt">"<span class="t-num">%d</span>"</span><span class="t-pt">,</span> <span class="t-pt">&amp;</span><span class="t-var">idade</span><span class="t-pt">);</span>
+<span class="t-fn">printf</span><span class="t-pt">(</span><span class="t-txt">"Voce tem <span class="t-num">%d</span> anos!\n"</span><span class="t-pt">,</span> <span class="t-var">idade</span><span class="t-pt">);</span></pre>
+    <div class="analogia"><b>Cuidado com o <code>&amp;</code>!</b> No <code>scanf</code> a variável vem com um <code>&amp;</code> na frente (<code>&amp;idade</code>). Ele é o "endereço" da caixinha — é onde o valor digitado vai ser guardado. <u>Esquecer o <code>&amp;</code> é o erro nº 1 de quem começa.</u></div>
+  </section>
+
+  <!-- 8 -->
+  <section class="reveal">
+    <div class="num">08 · A pontuação do código</div>
+    <h2>; { } ( ) — os sinais que organizam tudo</h2>
+    <p class="sub">Em C, esses sinais não são opcionais. Cada um tem um trabalho.</p>
+    <table class="tipos">
+      <tr><th>Sinal</th><th>Nome</th><th>O que faz</th></tr>
+      <tr><td style="color:var(--pont)">;</td><td>ponto e vírgula</td><td>termina uma ordem. É o "ponto final" de cada frase.</td></tr>
+      <tr><td style="color:var(--pont)">{ }</td><td>chaves</td><td>agrupam um bloco de ordens (o "corpo" do main, de um <code>if</code>...).</td></tr>
+      <tr><td style="color:var(--pont)">( )</td><td>parênteses</td><td>guardam o que uma função recebe: <code>printf(...)</code>, <code>main()</code>.</td></tr>
+      <tr><td style="color:var(--texto)">" "</td><td>aspas duplas</td><td>marcam o início e o fim de um texto.</td></tr>
+    </table>
+    <div class="analogia"><b>Regra de ouro:</b> tudo que <u>abre</u> precisa <u>fechar</u>. Abriu <code>(</code> → fecha <code>)</code>. Abriu <code>{</code> → fecha <code>}</code>. Abriu <code>"</code> → fecha <code>"</code>. Conte os pares quando der erro!</div>
+  </section>
+
+  <!-- 9 -->
+  <section class="reveal">
+    <div class="num">09 · Tudo junto</div>
+    <h2>Um programa completo</h2>
+    <p class="sub">Um programinha que pede dois números e mostra a soma. Tudo que você aprendeu, junto:</p>
+    <pre><span class="fname">soma.c</span><span class="t-fn">#include</span> <span class="t-num">&lt;stdio.h&gt;</span>
+
+<span class="t-tipo">int</span> <span class="t-fn">main</span><span class="t-pt">()</span> <span class="t-pt">{</span>
+    <span class="t-tipo">int</span> <span class="t-var">a</span><span class="t-pt">,</span> <span class="t-var">b</span><span class="t-pt">,</span> <span class="t-var">soma</span><span class="t-pt">;</span>
+
+    <span class="t-fn">printf</span><span class="t-pt">(</span><span class="t-txt">"Digite dois numeros: "</span><span class="t-pt">);</span>
+    <span class="t-fn">scanf</span><span class="t-pt">(</span><span class="t-txt">"<span class="t-num">%d %d</span>"</span><span class="t-pt">,</span> <span class="t-pt">&amp;</span><span class="t-var">a</span><span class="t-pt">,</span> <span class="t-pt">&amp;</span><span class="t-var">b</span><span class="t-pt">);</span>
+
+    <span class="t-var">soma</span> <span class="t-pt">=</span> <span class="t-var">a</span> <span class="t-pt">+</span> <span class="t-var">b</span><span class="t-pt">;</span>
+    <span class="t-fn">printf</span><span class="t-pt">(</span><span class="t-txt">"A soma e <span class="t-num">%d</span>\n"</span><span class="t-pt">,</span> <span class="t-var">soma</span><span class="t-pt">);</span>
+
+    <span class="t-tipo">return</span> <span class="t-num">0</span><span class="t-pt">;</span>
+<span class="t-pt">}</span></pre>
+    <div class="saida"><span class="label">exemplo de execução</span>Digite dois numeros: 7 5<br>A soma e 12</div>
+  </section>
+
+  <!-- 10 -->
+  <section class="reveal">
+    <div class="num">10 · Antes de pedir ajuda</div>
+    <h2>Erros que todo iniciante comete</h2>
+    <p class="sub">90% dos erros do começo são um destes. Se deu errado, confira aqui primeiro.</p>
+    <div class="erros">
+      <div class="erro">
+        <div class="et"><span>✕</span> Esqueceu o ponto e vírgula</div>
+        <div class="cmp">
+          <div class="bad"><span class="tag">errado</span><span class="t-fn">printf</span>(<span class="t-txt">"Oi"</span>)</div>
+          <div class="good"><span class="tag">certo</span><span class="t-fn">printf</span>(<span class="t-txt">"Oi"</span>)<span class="t-pt">;</span></div>
+        </div>
+      </div>
+      <div class="erro">
+        <div class="et"><span>✕</span> Esqueceu o &amp; no scanf</div>
+        <div class="cmp">
+          <div class="bad"><span class="tag">errado</span><span class="t-fn">scanf</span>(<span class="t-txt">"%d"</span>, idade)</div>
+          <div class="good"><span class="tag">certo</span><span class="t-fn">scanf</span>(<span class="t-txt">"%d"</span>, <span class="t-pt">&amp;</span>idade)</div>
+        </div>
+      </div>
+      <div class="erro">
+        <div class="et"><span>✕</span> Usou %d pra número com vírgula</div>
+        <div class="cmp">
+          <div class="bad"><span class="tag">errado</span><span class="t-num">%d</span> com um <span class="t-tipo">float</span></div>
+          <div class="good"><span class="tag">certo</span><span class="t-num">%f</span> com um <span class="t-tipo">float</span></div>
+        </div>
+      </div>
+      <div class="erro">
+        <div class="et"><span>✕</span> Não fechou uma chave ou parêntese</div>
+        <div class="cmp">
+          <div class="bad"><span class="tag">errado</span><span class="t-fn">main</span>() <span class="t-pt">{</span> ...</div>
+          <div class="good"><span class="tag">certo</span><span class="t-fn">main</span>() <span class="t-pt">{</span> ... <span class="t-pt">}</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- checklist -->
+  <section class="reveal">
+    <div class="num">11 · Cola rápida</div>
+    <h2>Checklist antes de rodar</h2>
+    <ul class="check">
+      <li>Tem <code>#include &lt;stdio.h&gt;</code> no topo?</li>
+      <li>Toda linha de ordem termina com <code>;</code> ?</li>
+      <li>Todo <code>(</code> tem um <code>)</code> e todo <code>{</code> tem um <code>}</code> ?</li>
+      <li>No <code>scanf</code>, a variável tem <code>&amp;</code> na frente?</li>
+      <li>O <code>%d</code>/<code>%f</code> combina com o tipo da variável?</li>
+      <li>Tem um <code>return 0;</code> antes da última chave?</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer class="wrap">
+  Feito para a turma de robótica · agora o robô obedece o que <span class="mono">você escreve</span>.
+</footer>
+
+<script>
+  // barra de progresso
+  const prog=document.getElementById('progresso');
+  addEventListener('scroll',()=>{
+    const h=document.documentElement;
+    const p=h.scrollTop/(h.scrollHeight-h.clientHeight)*100;
+    prog.style.width=p+'%';
+  });
+
+  // reveal no scroll
+  const io=new IntersectionObserver((es)=>{
+    es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');io.unobserve(e.target)}});
+  },{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+  // anatomia interativa
+  const info=document.getElementById('info');
+  const pecas=document.querySelectorAll('#linha .peca');
+  pecas.forEach(p=>{
+    p.setAttribute('tabindex','0');
+    const show=()=>{
+      pecas.forEach(x=>x.classList.remove('on'));
+      p.classList.add('on');
+      info.innerHTML='<div class="it" style="color:'+getComputedStyle(p).color+'">'+
+        p.dataset.n+'</div><div class="id">'+p.dataset.d+'</div>';
+    };
+    p.addEventListener('mouseenter',show);
+    p.addEventListener('click',show);
+    p.addEventListener('focus',show);
+  });
+</script>
+</body>
+</html>

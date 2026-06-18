@@ -90,15 +90,18 @@
     .t-date{font-size:12px;color:var(--text-muted);text-align:right;white-space:nowrap;}
     .q-expand-row{display:none;}
     .q-expand-row td{padding:0 20px 0 48px;}
-    .q-expand-inner{padding:10px 0;display:flex;flex-direction:column;gap:4px;}
-    .q-exp-item{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;}
-    .q-exp-item:last-child{border-bottom:none;}
-    .q-exp-n{color:var(--text-muted);font-size:10px;min-width:20px;margin-top:1px;flex-shrink:0;}
-    .q-exp-ic{flex-shrink:0;font-size:13px;}
-    .q-exp-txt{flex:1;line-height:1.45;color:var(--text);}
-    .q-exp-r{font-size:11px;font-weight:700;white-space:nowrap;}
-    .q-exp-r.ok{color:var(--green);}
-    .q-exp-r.fail{color:var(--red);}
+    .q-expand-inner{padding:10px 0;display:flex;flex-direction:column;gap:8px;}
+    .q-exp-item{display:flex;align-items:flex-start;gap:10px;padding:11px 13px;border-radius:10px;background:var(--bg);border:1px solid var(--border);border-left:4px solid var(--border);font-size:12px;}
+    .q-exp-item.ok{border-left-color:var(--green);}
+    .q-exp-item.err{border-left-color:var(--red);}
+    .q-exp-n{color:var(--text-muted);font-size:11px;min-width:18px;margin-top:2px;flex-shrink:0;}
+    .q-exp-ic{flex-shrink:0;font-size:14px;margin-top:1px;}
+    .q-exp-body{flex:1;min-width:0;}
+    .q-exp-q{font-size:13px;font-weight:600;color:var(--text);line-height:1.45;margin-bottom:5px;white-space:pre-wrap;}
+    .q-exp-line{font-size:12px;line-height:1.4;margin-top:2px;}
+    .q-exp-line .lbl{color:var(--text-muted);}
+    .q-exp-line .sua{color:var(--red);font-weight:700;}
+    .q-exp-line .cor{color:var(--green);font-weight:700;}
     .rob-tent-footer{padding:12px 20px;border-top:1px solid var(--border);text-align:center;font-size:12px;color:var(--text-muted);cursor:pointer;transition:color .15s;}
     .rob-tent-footer:hover{color:var(--orange);}
     .rob-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;}
@@ -202,10 +205,49 @@
     .comp-q.melhora{background:#DCFCE7;border:1px solid #BBF7D0;}
     .comp-q.piora{background:#FEE2E2;border:1px solid #FECACA;}
     .comp-q.manteve-err{background:#FFF7ED;border:1px solid #FED7AA;}
+    [data-theme="dark"] .comp-q{color:var(--text);}
+    [data-theme="dark"] .comp-q.melhora{background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.35);}
+    [data-theme="dark"] .comp-q.piora{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.35);}
+    [data-theme="dark"] .comp-q.manteve-err{background:rgba(240,165,0,.12);border-color:rgba(240,165,0,.35);}
     /* Modal encerrar */
     .enc-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;}
     .enc-box{background:var(--card);border-radius:var(--radius);padding:28px 24px;max-width:380px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.2);}
     #quiz-wrap,#summary-wrap{display:none;}
+    /* ── Análise por questão ───────────────────────────────── */
+    .rq-analise-wrap  { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:14px; }
+    .rq-filtros       { display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+    .rq-filtro        { padding:5px 14px; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--text-muted); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all .15s; }
+    .rq-filtro.ativo  { background:var(--orange); border-color:var(--orange); color:#fff; }
+    .rq-analise-card  { display:flex; gap:12px; padding:12px 14px; border-radius:10px; background:var(--bg); border:1px solid var(--border); border-left:4px solid transparent; margin-bottom:8px; }
+    .rq-analise-card.ok   { border-left-color:var(--green); background:rgba(34,197,94,.06); border-color:rgba(34,197,94,.25); }
+    .rq-analise-card.err  { border-left-color:var(--red);   background:rgba(239,68,68,.06);  border-color:rgba(239,68,68,.25); }
+    .rq-analise-card.skip { border-left-color:var(--border); opacity:.7; }
+    [data-theme="dark"] .rq-analise-card.ok  { background:rgba(34,197,94,.08); }
+    [data-theme="dark"] .rq-analise-card.err { background:rgba(239,68,68,.08); }
+    .rq-analise-num  { font-size:11px; font-weight:700; color:var(--text-muted); width:28px; flex-shrink:0; padding-top:2px; }
+    .rq-analise-body { flex:1; min-width:0; }
+    .rq-analise-cat  { display:inline-block; font-size:10px; font-weight:700; color:var(--blue); background:rgba(59,130,246,.1); border:1px solid rgba(59,130,246,.2); border-radius:20px; padding:2px 8px; margin-bottom:6px; }
+    .rq-analise-q    { font-size:13px; font-weight:600; color:var(--text); line-height:1.5; margin-bottom:8px; white-space:pre-wrap; }
+    .rq-analise-linha{ font-size:12px; margin-bottom:3px; color:var(--text); line-height:1.45; }
+    .rq-analise-expl { font-size:11px; color:var(--text-muted); border-top:1px solid var(--border); margin-top:8px; padding-top:6px; font-style:italic; line-height:1.5; }
+    .rq-analise-icon { font-size:15px; font-weight:700; flex-shrink:0; margin-top:2px; width:18px; text-align:center; }
+    /* ── Quiz sem scroll ───────────────────────────────────── */
+    body.quiz-ativo .layout  { height: 100dvh; overflow: hidden; }
+    body.quiz-ativo .topbar  { flex-shrink: 0; }
+    body.quiz-ativo .main    { height: 100dvh; min-height: unset; overflow: hidden; }
+    body.quiz-ativo .content { padding: 0; overflow: hidden; }
+    body.quiz-ativo #quiz-wrap { display: flex !important; flex-direction: column; height: 100%; overflow: hidden; }
+    body.quiz-ativo .rq-topbar { flex-shrink: 0; padding: 10px 14px; }
+    body.quiz-ativo .rq-content { flex: 1; min-height: 0; overflow-y: auto; padding: 16px; align-items: safe center; }
+    body.quiz-ativo .rq-card    { gap: 16px; }
+    body.quiz-ativo .rq-meta        { flex-shrink: 0; }
+    body.quiz-ativo #quiz-enunciado { flex-shrink: 0; }
+    body.quiz-ativo #quiz-opcoes    { flex: 0 0 auto; }
+    body.quiz-ativo .quiz-fb        { flex-shrink: 0; padding: 10px 14px; }
+    body.quiz-ativo .rq-chips-wrap  { flex-shrink: 0; margin-top: 0; }
+    body.quiz-ativo .rq-btn-proxima { flex-shrink: 0; padding: 10px 14px; font-size: 14px; }
+    body.quiz-ativo .rq-opcao    { padding: 8px 14px; }
+    body.quiz-ativo .rq-enunciado{ font-size: clamp(1rem, 2.5vh, 1.2rem); }
     /* ── Celebração 100% nas 3 atividades ─────────────────── */
     .rob-celebracao{position:relative;overflow:hidden;background:linear-gradient(135deg,#FFFBEB,#FEF3C7 40%,#FDE68A 60%,#FEF3C7);border:2px solid #f0a500;border-radius:var(--radius);padding:24px 20px;margin-bottom:20px;text-align:center;box-shadow:0 4px 24px rgba(245,158,11,.25);}
     .rob-celebracao-shine{position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.6) 50%,transparent 70%);animation:shine-slide 2.2s ease-in-out infinite;pointer-events:none;}
@@ -363,6 +405,7 @@ const ATIVIDADES = [
   { n:3, label:"Atividade 3", desc:"Operadores avançados, se/então e lógica", emoji:"🧠", bg:"#DCFCE7" },
   { n:4, label:"Atividade 4", desc:"Revisão — 20 questões mais erradas",      emoji:"🎯", bg:"#FEF3C7" },
   { n:5, label:"Atividade 5", desc:"Questionário geral — 60 questões",        emoji:"🚗", bg:"#FCE7F3", embaralhar:true },
+  { n:6, label:"Atividade 6", desc:"Primeiros Passos em C",                  emoji:"💻", bg:"#EDE9FE" },
 ];
 
 function podeVer(a) {
@@ -614,13 +657,20 @@ function renderLista() {
                   <div class="q-expand-inner">
                     ${Object.entries(t.respostas).map(([qid, r], qi) => {
                       const qObj = questoesMap[qid];
-                      const enunciado = qObj ? qObj.enunciado.substring(0, 80) + (qObj.enunciado.length > 80 ? '…' : '') : qid;
+                      const enunciado = qObj ? qObj.enunciado.replace(/\n/g,' ') : qid;
                       const ac = r?.acertou;
-                      return `<div class="q-exp-item">
+                      const sua = r?.resposta_dada_texto || r?.resposta_dada || '—';
+                      const cor = r?.correta_texto || (qObj && qObj.opcoes ? (qObj.opcoes.find(o => o[0] === qObj.resposta) || qObj.resposta) : (qObj ? qObj.resposta : '—'));
+                      const linhas = ac
+                        ? `<div class="q-exp-line"><span class="lbl">Resposta correta:</span> <span class="cor">${cor}</span></div>`
+                        : `<div class="q-exp-line"><span class="lbl">Sua resposta:</span> <span class="sua">${sua}</span></div><div class="q-exp-line"><span class="lbl">Correta:</span> <span class="cor">${cor}</span></div>`;
+                      return `<div class="q-exp-item ${ac ? 'ok' : 'err'}">
                         <span class="q-exp-n">${qi+1}.</span>
                         <span class="q-exp-ic">${ac ? '✅' : '❌'}</span>
-                        <span class="q-exp-txt">${enunciado}</span>
-                        <span class="q-exp-r ${ac ? 'ok' : 'fail'}">Resp: ${r?.resposta_dada || '—'}</span>
+                        <div class="q-exp-body">
+                          <div class="q-exp-q">${enunciado}</div>
+                          ${linhas}
+                        </div>
                       </div>`;
                     }).join('')}
                   </div>
@@ -671,6 +721,14 @@ function renderLista() {
       <div class="rob-guia-info">
         <div class="rob-guia-titulo">Guia de Robótica</div>
         <div class="rob-guia-desc">Pinos do Arduino, PWM, DRV8833, motores, operadores e estruturas de decisão</div>
+      </div>
+      <div class="rob-guia-arrow">→</div>
+    </a>
+    <a href="/aluno/primeiros-passos-c.html" target="_blank" class="rob-guia-card">
+      <div class="rob-guia-icon">📘</div>
+      <div class="rob-guia-info">
+        <div class="rob-guia-titulo">Primeiros Passos em C</div>
+        <div class="rob-guia-desc">Variáveis, printf, scanf e a base da linguagem</div>
       </div>
       <div class="rob-guia-arrow">→</div>
     </a>
@@ -768,6 +826,7 @@ window.iniciarAtividade = async (n) => {
   listWrap.style.display  = 'none';
   summWrap.style.display  = 'none';
   quizWrap.style.display  = 'block';
+  document.body.classList.add('quiz-ativo');
   document.getElementById('quiz-titulo').textContent = `Atividade ${n}`;
   renderQuestao();
 };
@@ -882,7 +941,9 @@ window.marcarFeedback = function(opcao) {
 window.responder = (letra) => {
   const q = questoes[qIdx];
   const acertou = letra === q.resposta;
-  respostas[q.id] = { acertou, resposta_dada: letra };
+  respostas[q.id] = { acertou, resposta_dada: letra,
+    resposta_dada_texto: (q.opcoes && q.opcoes.find(o => o[0] === letra)) || letra,
+    correta_texto: (q.opcoes && q.opcoes.find(o => o[0] === q.resposta)) || q.resposta };
   document.querySelectorAll('.quiz-opcao, .rq-opcao').forEach(b => { if (b.dataset.letra === letra) b.classList.add('selecionada'); });
   mostrarFeedback(acertou, q);
 };
@@ -890,7 +951,7 @@ window.responderVF = (val) => {
   const q = questoes[qIdx];
   const cor = q.resposta.startsWith('Verdadeiro') ? 'Verdadeiro' : 'Falso';
   const acertou = val === cor;
-  respostas[q.id] = { acertou, resposta_dada: val };
+  respostas[q.id] = { acertou, resposta_dada: val, resposta_dada_texto: val, correta_texto: cor };
   mostrarFeedback(acertou, q);
 };
 window.responderNum = () => {
@@ -900,7 +961,7 @@ window.responderNum = () => {
   const dado = inp.value.trim();
   const acertou = dado === q.resposta ||
     (!isNaN(parseFloat(dado)) && !isNaN(parseFloat(q.resposta)) && Math.abs(parseFloat(dado) - parseFloat(q.resposta)) < 1e-9);
-  respostas[q.id] = { acertou, resposta_dada: dado };
+  respostas[q.id] = { acertou, resposta_dada: dado, resposta_dada_texto: dado, correta_texto: q.resposta };
   inp.style.borderColor = acertou ? 'var(--green)' : 'var(--red)';
   inp.style.background  = acertou ? 'var(--green-pale)' : 'var(--red-pale)';
   mostrarFeedback(acertou, q);
@@ -919,6 +980,7 @@ document.getElementById('btn-voltar').addEventListener('click', () => {
   } else {
     quizWrap.style.display = 'none';
     listWrap.style.display = 'block';
+    document.body.classList.remove('quiz-ativo');
   }
 });
 
@@ -1018,6 +1080,7 @@ async function finalizarAtividade(parcial = false) {
 
   quizWrap.style.display  = 'none';
   summWrap.style.display  = 'block';
+  document.body.classList.remove('quiz-ativo');
   document.getElementById('quiz-bar').style.width = '100%';
 
   const totalQ = questoes.length;
@@ -1083,38 +1146,51 @@ async function finalizarAtividade(parcial = false) {
   }
 
   // Análise completa por questão
-  document.getElementById('summ-analise').innerHTML = `<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;">
-    <div style="font-size:13px;font-weight:700;margin-bottom:10px;">📋 Análise por questão</div>
-    ${questoes.map((q, i) => {
+  (function() {
+    const textoOpcao = (q, letra) => q.opcoes?.find(o => o[0] === letra) || letra;
+    const cardsHtml = questoes.map((q, i) => {
       const resp = respostas[q.id];
-      if (!resp) {
-        // Não respondida (encerramento parcial)
-        return `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:8px;border:1px dashed var(--border);background:var(--bg);margin-bottom:6px;opacity:.7;">
-          <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:24px;flex-shrink:0;padding-top:2px;">Q${i+1}</span>
-          <div style="flex:1;min-width:0;">
-            ${q.categoria ? `<div style="font-size:10px;font-weight:700;color:var(--text-muted);margin-bottom:2px;">${q.categoria}</div>` : ''}
-            <div style="font-size:12px;white-space:pre-wrap;margin-bottom:4px;">${q.enunciado}</div>
-            <div style="font-size:11px;color:var(--text-muted);">Não respondida · ✓ Correta: ${q.resposta}</div>
-          </div>
-          <span style="font-size:16px;flex-shrink:0;">—</span>
-        </div>`;
-      }
-      const ac = resp.acertou;
-      const rdada = resp.resposta_dada ?? '—';
-      return `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:8px;border:1px solid ${ac ? '#BBF7D0' : '#FECACA'};background:${ac ? '#F0FDF4' : '#FEF2F2'};margin-bottom:6px;">
-        <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:24px;flex-shrink:0;padding-top:2px;">Q${i+1}</span>
-        <div style="flex:1;min-width:0;">
-          ${q.categoria ? `<div style="font-size:10px;font-weight:700;color:var(--text-muted);margin-bottom:2px;">${q.categoria}</div>` : ''}
-          <div style="font-size:12px;white-space:pre-wrap;margin-bottom:4px;">${q.enunciado}</div>
-          <div style="font-size:11px;">
-            <span style="font-weight:600;color:${ac ? 'var(--green)' : 'var(--red)'};">Sua resposta: ${rdada}</span>
-            ${!ac ? `<span style="color:var(--text-muted);margin-left:10px;">✓ Correta: ${q.resposta}</span>` : ''}
-          </div>
+      const ac   = resp?.acertou;
+      const rdada = resp?.resposta_dada ?? null;
+      const cls  = !resp ? 'skip' : ac ? 'ok' : 'err';
+      const iconCor = !resp ? 'var(--text-muted)' : ac ? 'var(--green)' : 'var(--red)';
+      const icon = !resp ? '—' : ac ? '✓' : '✕';
+
+      const suaRespHtml = !rdada
+        ? `<div class="rq-analise-linha" style="color:var(--text-muted);">Não respondida</div>`
+        : `<div class="rq-analise-linha"><span style="font-weight:700;color:${ac ? 'var(--green)' : 'var(--red)'};">Sua resposta:</span> ${textoOpcao(q, rdada)}</div>`;
+
+      const corretaHtml = !ac
+        ? `<div class="rq-analise-linha"><span style="font-weight:700;color:var(--green);">Correta:</span> ${textoOpcao(q, q.resposta)}</div>`
+        : '';
+
+      const explHtml = (!ac || !resp) && q.explicacao
+        ? `<div class="rq-analise-expl">💡 ${q.explicacao}</div>`
+        : '';
+
+      return `<div class="rq-analise-card ${cls}" data-tipo="${cls}">
+        <div class="rq-analise-num">Q${String(i+1).padStart(2,'0')}</div>
+        <div class="rq-analise-body">
+          ${q.categoria ? `<span class="rq-analise-cat">${q.categoria}</span>` : ''}
+          <div class="rq-analise-q">${q.enunciado}</div>
+          ${suaRespHtml}${corretaHtml}${explHtml}
         </div>
-        <span style="font-size:16px;flex-shrink:0;">${ac ? '✅' : '❌'}</span>
+        <div class="rq-analise-icon" style="color:${iconCor}">${icon}</div>
       </div>`;
-    }).join('')}
-  </div>`;
+    }).join('');
+
+    document.getElementById('summ-analise').innerHTML = `
+      <div class="rq-analise-wrap">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px;">📋 Análise por questão</div>
+        <div class="rq-filtros">
+          <button class="rq-filtro ativo" onclick="filtrarAnalise('todas')">Todas</button>
+          <button class="rq-filtro" onclick="filtrarAnalise('err')">Erros</button>
+          <button class="rq-filtro" onclick="filtrarAnalise('ok')">Acertos</button>
+          <button class="rq-filtro" onclick="filtrarAnalise('skip')">Puladas</button>
+        </div>
+        ${cardsHtml}
+      </div>`;
+  })();
 
   const saveStatusHtml = saveError
     ? `<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:12px;margin:10px 0;font-size:13px;color:#B91C1C;font-weight:600;">
@@ -1131,6 +1207,16 @@ async function finalizarAtividade(parcial = false) {
   }
 }
 
+window.filtrarAnalise = function(tipo) {
+  document.querySelectorAll('.rq-filtro').forEach(b => {
+    const map = { todas:'todas', err:'erros', ok:'acertos', skip:'puladas' };
+    b.classList.toggle('ativo', b.textContent.trim().toLowerCase() === map[tipo]);
+  });
+  document.querySelectorAll('.rq-analise-card').forEach(c => {
+    c.style.display = (tipo === 'todas' || c.dataset.tipo === tipo) ? '' : 'none';
+  });
+};
+
 document.getElementById('btn-refazer').addEventListener('click', () => {
   summWrap.style.display = 'none';
   iniciarAtividade(atividadeAtual);
@@ -1138,6 +1224,7 @@ document.getElementById('btn-refazer').addEventListener('click', () => {
 document.getElementById('btn-voltar-lista').addEventListener('click', () => {
   summWrap.style.display = 'none';
   listWrap.style.display = 'block';
+  document.body.classList.remove('quiz-ativo');
   renderLista();
 });
 

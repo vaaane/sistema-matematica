@@ -1,0 +1,813 @@
+{
+  "atividade": 6,
+  "titulo": "Primeiros Passos em C",
+  "descricao": "Fundamentos da linguagem C para a robótica: variáveis, tipos, printf, scanf, especificadores (%d, %f, %c) e a pontuação do código (; { } ( )). Atividade de transição do mBlock para código de verdade.",
+  "total": 80,
+  "niveis": {
+    "facil": 26,
+    "medio": 24,
+    "dificil": 30
+  },
+  "questoes": [
+    {
+      "id": 1,
+      "categoria": "Pontuação",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Toda instrução em C termina com qual símbolo?",
+      "opcoes": ["A) :", "B) ;", "C) .", "D) ,"],
+      "resposta": "B",
+      "explicacao": "É o 'ponto final' de cada ordem em C."
+    },
+    {
+      "id": 2,
+      "categoria": "Estrutura",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Qual linha vai no topo do programa pra poder usar printf e scanf?",
+      "opcoes": ["A) #include <stdio.h>", "B) import tela;", "C) using printf;", "D) #tela"],
+      "resposta": "A",
+      "explicacao": "O stdio.h traz as ferramentas de tela."
+    },
+    {
+      "id": 3,
+      "categoria": "Estrutura",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Onde o programa começa a rodar?",
+      "opcoes": ["A) na função inicio()", "B) na primeira variável", "C) na função main()", "D) na última linha"],
+      "resposta": "C",
+      "explicacao": "main() é sempre o ponto de partida."
+    },
+    {
+      "id": 4,
+      "categoria": "Estrutura",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O que faz o return 0; no fim do main?",
+      "opcoes": ["A) repete o programa", "B) avisa que o programa terminou sem erro", "C) zera as variáveis", "D) imprime o número 0"],
+      "resposta": "B",
+      "explicacao": "Sinaliza que terminou bem."
+    },
+    {
+      "id": 5,
+      "categoria": "printf",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Qual comando mostra texto na tela?",
+      "opcoes": ["A) scanf", "B) print", "C) printf", "D) echo"],
+      "resposta": "C",
+      "explicacao": "printf = print formatted."
+    },
+    {
+      "id": 6,
+      "categoria": "printf",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O que o \\n faz dentro de um printf?",
+      "opcoes": ["A) imprime a letra n", "B) pula para a próxima linha", "C) apaga a tela", "D) dá um espaço"],
+      "resposta": "B",
+      "explicacao": "É o 'Enter' do código."
+    },
+    {
+      "id": 7,
+      "categoria": "printf",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O texto dentro do printf fica entre quais sinais?",
+      "opcoes": ["A) ( )", "B) { }", "C) \" \"", "D) [ ]"],
+      "resposta": "C",
+      "explicacao": "Aspas duplas marcam o texto (string)."
+    },
+    {
+      "id": 8,
+      "categoria": "Variáveis",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Para que serve uma variável?",
+      "opcoes": ["A) guardar um valor com um nome", "B) imprimir na tela", "C) terminar o programa", "D) criar cores"],
+      "resposta": "A",
+      "explicacao": "É uma 'caixinha' etiquetada."
+    },
+    {
+      "id": 9,
+      "categoria": "Variáveis",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Qual símbolo coloca um valor dentro de uma variável?",
+      "opcoes": ["A) ==", "B) =>", "C) =", "D) ::"],
+      "resposta": "C",
+      "explicacao": "O = atribui o valor."
+    },
+    {
+      "id": 10,
+      "categoria": "Tipos",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Para guardar um número inteiro usamos:",
+      "opcoes": ["A) float", "B) int", "C) char", "D) double"],
+      "resposta": "B",
+      "explicacao": "int = número inteiro."
+    },
+    {
+      "id": 11,
+      "categoria": "Tipos",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Para guardar um número com casas decimais usamos:",
+      "opcoes": ["A) int", "B) char", "C) float", "D) bit"],
+      "resposta": "C",
+      "explicacao": "float guarda números com vírgula."
+    },
+    {
+      "id": 12,
+      "categoria": "Tipos",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O tipo char guarda:",
+      "opcoes": ["A) um texto inteiro", "B) um número muito grande", "C) um único caractere", "D) verdadeiro ou falso"],
+      "resposta": "C",
+      "explicacao": "char = um caractere só."
+    },
+    {
+      "id": 13,
+      "categoria": "Tipos",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Como se escreve 'dois e meio' em C?",
+      "opcoes": ["A) 2,5", "B) 2.5", "C) 2-5", "D) \"2,5\""],
+      "resposta": "B",
+      "explicacao": "Decimal usa ponto, não vírgula."
+    },
+    {
+      "id": 14,
+      "categoria": "Tipos",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Um valor do tipo char fica entre:",
+      "opcoes": ["A) aspas duplas \" \"", "B) aspas simples ' '", "C) parênteses ( )", "D) nada"],
+      "resposta": "B",
+      "explicacao": "Ex.: 'V'."
+    },
+    {
+      "id": 15,
+      "categoria": "Especificador",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Para imprimir um int dentro do texto usamos:",
+      "opcoes": ["A) %f", "B) %d", "C) %s", "D) %c"],
+      "resposta": "B",
+      "explicacao": "%d = inteiro (decimal)."
+    },
+    {
+      "id": 16,
+      "categoria": "Especificador",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Para imprimir um float dentro do texto usamos:",
+      "opcoes": ["A) %d", "B) %f", "C) %c", "D) %i"],
+      "resposta": "B",
+      "explicacao": "%f = float."
+    },
+    {
+      "id": 17,
+      "categoria": "Especificador",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Para imprimir um char dentro do texto usamos:",
+      "opcoes": ["A) %c", "B) %d", "C) %f", "D) %s"],
+      "resposta": "A",
+      "explicacao": "%c = caractere."
+    },
+    {
+      "id": 18,
+      "categoria": "Especificador",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O %d dentro do texto do printf representa:",
+      "opcoes": ["A) uma cor", "B) uma lacuna que será preenchida por um valor", "C) uma divisão", "D) o fim da linha"],
+      "resposta": "B",
+      "explicacao": "É a 'janelinha' que o valor preenche."
+    },
+    {
+      "id": 19,
+      "categoria": "scanf",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Qual comando lê o que o usuário digita?",
+      "opcoes": ["A) printf", "B) read", "C) scanf", "D) input"],
+      "resposta": "C",
+      "explicacao": "scanf = scan formatted."
+    },
+    {
+      "id": 20,
+      "categoria": "scanf",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Antes do nome da variável, no scanf, vem qual símbolo?",
+      "opcoes": ["A) %", "B) &", "C) #", "D) @"],
+      "resposta": "B",
+      "explicacao": "O & diz ONDE guardar o valor."
+    },
+    {
+      "id": 21,
+      "categoria": "scanf",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "scanf(\"%d\", &idade); espera que o usuário digite:",
+      "opcoes": ["A) um texto", "B) um número inteiro", "C) uma letra", "D) nada"],
+      "resposta": "B",
+      "explicacao": "%d pede um inteiro."
+    },
+    {
+      "id": 22,
+      "categoria": "Pontuação",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "As chaves { } servem para:",
+      "opcoes": ["A) agrupar um bloco de instruções", "B) imprimir na tela", "C) criar variáveis", "D) separar números"],
+      "resposta": "A",
+      "explicacao": "Delimitam um bloco (o corpo do main, de um if...)."
+    },
+    {
+      "id": 23,
+      "categoria": "Pontuação",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Os parênteses ( ) de uma função guardam:",
+      "opcoes": ["A) o nome do programa", "B) o que a função recebe", "C) os comentários", "D) a cor"],
+      "resposta": "B",
+      "explicacao": "Ex.: printf(...), main()."
+    },
+    {
+      "id": 24,
+      "categoria": "Estrutura",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Um comentário escrito com // é:",
+      "opcoes": ["A) um erro", "B) um texto que o C ignora", "C) um comando especial", "D) uma variável"],
+      "resposta": "B",
+      "explicacao": "Serve só para humanos lerem."
+    },
+    {
+      "id": 25,
+      "categoria": "printf",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Quantas casas decimais aparecem com %.1f?",
+      "opcoes": ["A) nenhuma", "B) uma", "C) duas", "D) todas"],
+      "resposta": "B",
+      "explicacao": "O .1 limita a 1 casa."
+    },
+    {
+      "id": 26,
+      "categoria": "Tipos",
+      "nivel": "facil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Qual destes NÃO é um tipo de variável em C?",
+      "opcoes": ["A) int", "B) float", "C) char", "D) numero"],
+      "resposta": "D",
+      "explicacao": "'numero' não existe como tipo."
+    },
+    {
+      "id": 27,
+      "categoria": "Erro",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "O que falta nesta linha? printf(\"Robo pronto\")",
+      "opcoes": ["A) um %d", "B) o ponto e vírgula ;", "C) o &", "D) nada"],
+      "resposta": "B",
+      "explicacao": "Toda ordem termina com ;."
+    },
+    {
+      "id": 28,
+      "categoria": "Erro",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Qual é o problema em scanf(\"%d\", idade);?",
+      "opcoes": ["A) falta o & antes de idade", "B) %d deveria ser %f", "C) falta o ;", "D) está certo"],
+      "resposta": "A",
+      "explicacao": "No scanf a variável precisa do &."
+    },
+    {
+      "id": 29,
+      "categoria": "Erro",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Por que int velocidade = 2,5; está errado?",
+      "opcoes": ["A) int não existe", "B) decimal usa ponto e deveria ser float velocidade = 2.5;", "C) falta o &", "D) falta aspas"],
+      "resposta": "B",
+      "explicacao": "Vírgula de número é ponto, e decimal pede float."
+    },
+    {
+      "id": 30,
+      "categoria": "Erro",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "O que falta em printf(\"Pontos: %d\\n\");?",
+      "opcoes": ["A) o ;", "B) passar a variável depois da vírgula", "C) o #", "D) nada"],
+      "resposta": "B",
+      "explicacao": "Há um %d sem valor para preencher."
+    },
+    {
+      "id": 31,
+      "categoria": "Erro",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Onde está o erro em: int main() { printf(\"oi\");",
+      "opcoes": ["A) faltou abrir (", "B) faltou fechar a chave }", "C) sobra um ;", "D) está certo"],
+      "resposta": "B",
+      "explicacao": "Toda { que abre precisa de uma } que fecha."
+    },
+    {
+      "id": 32,
+      "categoria": "Erro",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Qual linha está correta?",
+      "opcoes": ["A) Printf(\"oi\");", "B) printf(\"oi\")", "C) printf(\"oi\");", "D) printf(oi);"],
+      "resposta": "C",
+      "explicacao": "Nome em minúsculo, texto entre aspas e ; no fim."
+    },
+    {
+      "id": 33,
+      "categoria": "Erro",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Qual é o erro em char letra = \"V\";?",
+      "opcoes": ["A) char não existe", "B) char usa aspas simples: 'V'", "C) falta o &", "D) falta o ;"],
+      "resposta": "B",
+      "explicacao": "Aspas duplas formam texto, não um char."
+    },
+    {
+      "id": 34,
+      "categoria": "Aplicação",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Para imprimir o valor de int pontos, a linha certa é:",
+      "opcoes": ["A) printf(\"%d\", pontos);", "B) printf(\"pontos\");", "C) printf(%d, pontos)", "D) printf(\"%f\", pontos);"],
+      "resposta": "A",
+      "explicacao": "%d para int, e a variável após a vírgula."
+    },
+    {
+      "id": 35,
+      "categoria": "Aplicação",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Qual é a ordem certa para ler a idade?",
+      "opcoes": ["A) scanf(&idade, \"%d\");", "B) scanf(\"%d\", &idade);", "C) scanf(\"%d\", idade);", "D) scanf(idade);"],
+      "resposta": "B",
+      "explicacao": "Primeiro o formato, depois &variável."
+    },
+    {
+      "id": 36,
+      "categoria": "Erro",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Qual o erro em printf(\"Soma: \" soma);?",
+      "opcoes": ["A) falta uma vírgula e um %d na string", "B) falta o ;", "C) sobra um parêntese", "D) está certo"],
+      "resposta": "A",
+      "explicacao": "O certo: printf(\"Soma: %d\\n\", soma);"
+    },
+    {
+      "id": 37,
+      "categoria": "Aplicação",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Como somar a e b guardando em soma?",
+      "opcoes": ["A) soma = a + b;", "B) a + b = soma;", "C) soma == a + b;", "D) soma = a b;"],
+      "resposta": "A",
+      "explicacao": "O resultado vai para a variável à esquerda do =."
+    },
+    {
+      "id": 38,
+      "categoria": "Conceito",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Qual a diferença entre = e ==?",
+      "opcoes": ["A) são iguais", "B) = atribui um valor, == compara", "C) = compara, == atribui", "D) == não existe"],
+      "resposta": "B",
+      "explicacao": "Um guarda, o outro pergunta 'é igual?'."
+    },
+    {
+      "id": 39,
+      "categoria": "Aplicação",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "float nota = 7.5; printf(___, nota); — o que vai na lacuna?",
+      "opcoes": ["A) \"%d\"", "B) \"%f\"", "C) \"%c\"", "D) \"nota\""],
+      "resposta": "B",
+      "explicacao": "float imprime com %f."
+    },
+    {
+      "id": 40,
+      "categoria": "Erro",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Quantos ; faltam em: int a = 1 int b = 2;",
+      "opcoes": ["A) nenhum", "B) um (depois do 1)", "C) dois", "D) três"],
+      "resposta": "B",
+      "explicacao": "Faltou terminar a primeira declaração."
+    },
+    {
+      "id": 41,
+      "categoria": "Aplicação",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "O que faz printf(\"Digite a velocidade: \"); scanf(\"%d\", &v);?",
+      "opcoes": ["A) só mostra texto", "B) mostra o texto e espera um inteiro digitado", "C) imprime a velocidade", "D) dá erro"],
+      "resposta": "B",
+      "explicacao": "printf pergunta, scanf lê."
+    },
+    {
+      "id": 42,
+      "categoria": "Erro",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "O que falta em printf(\"Oi\\n)?",
+      "opcoes": ["A) fechar as aspas \" antes do )", "B) o ;", "C) um %d", "D) nada"],
+      "resposta": "A",
+      "explicacao": "A string não foi fechada."
+    },
+    {
+      "id": 43,
+      "categoria": "Aplicação",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Como declarar três inteiros de uma vez?",
+      "opcoes": ["A) int a, b, c;", "B) int a; b; c;", "C) int a b c;", "D) int = a, b, c;"],
+      "resposta": "A",
+      "explicacao": "Mesmo tipo, separados por vírgula."
+    },
+    {
+      "id": 44,
+      "categoria": "Estrutura",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "O que costuma vir antes de main()?",
+      "opcoes": ["A) int", "B) print", "C) start", "D) nada"],
+      "resposta": "A",
+      "explicacao": "int main()."
+    },
+    {
+      "id": 45,
+      "categoria": "Aplicação",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "char inicial = 'A'; printf(\"%c\", inicial); mostra na tela:",
+      "opcoes": ["A) A", "B) 'A'", "C) %c", "D) 65"],
+      "resposta": "A",
+      "explicacao": "%c mostra o caractere (65 seria o código ASCII)."
+    },
+    {
+      "id": 46,
+      "categoria": "Erro",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "O que falta em scanf(\"%d\" &n);?",
+      "opcoes": ["A) a vírgula entre \"%d\" e &n", "B) o &", "C) o ;", "D) nada"],
+      "resposta": "A",
+      "explicacao": "Formato e variáveis são separados por vírgula."
+    },
+    {
+      "id": 47,
+      "categoria": "Aplicação",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Para imprimir a frase com o valor de int vel (= 100), a certa é:",
+      "opcoes": ["A) printf(\"Vel: %d\", vel);", "B) printf(\"Vel: vel\");", "C) printf(\"Vel: %f\", vel);", "D) printf(\"Vel: &vel\");"],
+      "resposta": "A",
+      "explicacao": "%d combina com int e a variável vem depois."
+    },
+    {
+      "id": 48,
+      "categoria": "Aplicação",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Em printf(\"Media: %f\", media); a variável media deve ser:",
+      "opcoes": ["A) int", "B) char", "C) float ou double", "D) texto"],
+      "resposta": "C",
+      "explicacao": "%f pede um número com vírgula."
+    },
+    {
+      "id": 49,
+      "categoria": "Saída",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "O que mostra printf(\"A\"); printf(\"B\");?",
+      "opcoes": ["A) A B", "B) AB", "C) A e B em linhas separadas", "D) erro"],
+      "resposta": "B",
+      "explicacao": "Sem \\n, sai tudo grudado."
+    },
+    {
+      "id": 50,
+      "categoria": "Conceito",
+      "nivel": "medio",
+      "tipo": "multipla_escolha",
+      "enunciado": "Qual nome de variável é INVÁLIDO?",
+      "opcoes": ["A) velocidade", "B) vel2", "C) 2vel", "D) vel_max"],
+      "resposta": "C",
+      "explicacao": "Nome não pode começar com número."
+    },
+    {
+      "id": 51,
+      "categoria": "Saída",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "int x = 4; printf(\"%d\", x + 1); mostra:",
+      "opcoes": ["A) x + 1", "B) 5", "C) 4", "D) %d"],
+      "resposta": "B",
+      "explicacao": "O C calcula 4+1 antes de imprimir."
+    },
+    {
+      "id": 52,
+      "categoria": "Saída",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "printf(\"%d\", 7 / 2); (divisão entre inteiros) mostra:",
+      "opcoes": ["A) 3.5", "B) 3", "C) 4", "D) 2"],
+      "resposta": "B",
+      "explicacao": "Divisão inteira descarta a parte decimal."
+    },
+    {
+      "id": 53,
+      "categoria": "Saída",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "printf(\"%d\", 10 % 3); (o % aqui é 'resto') mostra:",
+      "opcoes": ["A) 3", "B) 1", "C) 0", "D) 10"],
+      "resposta": "B",
+      "explicacao": "O resto de 10 dividido por 3 é 1."
+    },
+    {
+      "id": 54,
+      "categoria": "Saída",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "float r = 7.0 / 2; printf(\"%.1f\", r); mostra:",
+      "opcoes": ["A) 3", "B) 3.5", "C) 4.0", "D) 3,5"],
+      "resposta": "B",
+      "explicacao": "Com 7.0 a conta é real: 3.5."
+    },
+    {
+      "id": 55,
+      "categoria": "Saída",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "int a = 5; a = a + 3; printf(\"%d\", a); mostra:",
+      "opcoes": ["A) 5", "B) 3", "C) 8", "D) 53"],
+      "resposta": "C",
+      "explicacao": "a passa a valer 5+3 = 8."
+    },
+    {
+      "id": 56,
+      "categoria": "Conceito",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Qual a diferença entre 'A' e \"A\"?",
+      "opcoes": ["A) nenhuma", "B) 'A' é um char; \"A\" é um texto (string)", "C) \"A\" é char; 'A' é número", "D) os dois dão erro"],
+      "resposta": "B",
+      "explicacao": "Aspas simples = caractere; duplas = texto."
+    },
+    {
+      "id": 57,
+      "categoria": "Saída",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "printf(\"10\\n20\"); mostra:",
+      "opcoes": ["A) 10 20", "B) 1020", "C) 10 e 20 em linhas separadas", "D) 10\\n20"],
+      "resposta": "C",
+      "explicacao": "O \\n quebra a linha entre eles."
+    },
+    {
+      "id": 58,
+      "categoria": "Saída",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "int n = 9; printf(\"%d%d\", n, n); mostra:",
+      "opcoes": ["A) 9 9", "B) 99", "C) 18", "D) 9"],
+      "resposta": "B",
+      "explicacao": "Duas lacunas coladas, sem espaço."
+    },
+    {
+      "id": 59,
+      "categoria": "Conceito",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Por que scanf usa &idade mas printf usa só idade?",
+      "opcoes": ["A) é só costume", "B) scanf precisa do endereço para guardar o valor lido; printf só lê o valor", "C) printf está errado", "D) os dois deveriam usar &"],
+      "resposta": "B",
+      "explicacao": "Ler exige saber onde gravar; mostrar não."
+    },
+    {
+      "id": 60,
+      "categoria": "Saída",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "int v = 250; printf(\"Velocidade: %d km/h\\n\", v); mostra:",
+      "opcoes": ["A) Velocidade: %d km/h", "B) Velocidade: v km/h", "C) Velocidade: 250 km/h", "D) Velocidade: 250"],
+      "resposta": "C",
+      "explicacao": "O %d é trocado pelo valor de v."
+    },
+    {
+      "id": 61,
+      "categoria": "scanf",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Para ler dois inteiros de uma vez: scanf(\"____\", &a, &b); — o que vai na lacuna?",
+      "opcoes": ["A) \"%d\"", "B) \"%d %d\"", "C) \"%d, %d &\"", "D) \"%a %b\""],
+      "resposta": "B",
+      "explicacao": "Um %d para cada variável lida."
+    },
+    {
+      "id": 62,
+      "categoria": "scanf",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "scanf(\"%d\", a); (sem o &) provavelmente:",
+      "opcoes": ["A) lê normalmente", "B) não guarda o valor e o programa pode travar", "C) imprime a", "D) lê um float"],
+      "resposta": "B",
+      "explicacao": "Sem & o scanf não sabe onde guardar."
+    },
+    {
+      "id": 63,
+      "categoria": "scanf",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Para ler um double, o especificador no scanf é:",
+      "opcoes": ["A) %f", "B) %d", "C) %lf", "D) %df"],
+      "resposta": "C",
+      "explicacao": "No scanf, double pede %lf (no printf, %f basta)."
+    },
+    {
+      "id": 64,
+      "categoria": "scanf",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Para ler um float, o especificador no scanf é:",
+      "opcoes": ["A) %lf", "B) %f", "C) %d", "D) %fl"],
+      "resposta": "B",
+      "explicacao": "float usa %f; só o double muda para %lf."
+    },
+    {
+      "id": 65,
+      "categoria": "scanf",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Após scanf(\"%d\", &n);, um scanf(\"%c\", &c); logo em seguida costuma capturar:",
+      "opcoes": ["A) a letra digitada", "B) o Enter (\\n) que sobrou do número", "C) nada", "D) o número de novo"],
+      "resposta": "B",
+      "explicacao": "O \\n fica no buffer; por isso se usa \" %c\"."
+    },
+    {
+      "id": 66,
+      "categoria": "scanf",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Quantos valores scanf(\"%d\", &a, &b); lê de fato?",
+      "opcoes": ["A) dois", "B) só um (só há um %d)", "C) nenhum", "D) três"],
+      "resposta": "B",
+      "explicacao": "A quantidade de % define quantos valores são lidos."
+    },
+    {
+      "id": 67,
+      "categoria": "scanf",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Dentro dos parênteses do scanf, o que vem primeiro?",
+      "opcoes": ["A) as variáveis com &", "B) o texto de formato entre aspas", "C) o ;", "D) o tipo"],
+      "resposta": "B",
+      "explicacao": "Formato primeiro, depois os &variável."
+    },
+    {
+      "id": 68,
+      "categoria": "scanf",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "scanf(\"%d %f\", &i, &f); espera o usuário digitar:",
+      "opcoes": ["A) dois inteiros", "B) um inteiro e um número com vírgula", "C) dois textos", "D) um caractere"],
+      "resposta": "B",
+      "explicacao": "%d para int, %f para float."
+    },
+    {
+      "id": 69,
+      "categoria": "scanf",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O & antes da variável no scanf representa:",
+      "opcoes": ["A) o 'e' lógico", "B) o endereço (a localização na memória) da variável", "C) um número", "D) o fim da linha"],
+      "resposta": "B",
+      "explicacao": "É onde o valor lido será guardado."
+    },
+    {
+      "id": 70,
+      "categoria": "scanf",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Por que o printf não usa & e o scanf usa?",
+      "opcoes": ["A) é só costume", "B) o printf só lê o valor; o scanf precisa saber ONDE guardar", "C) o printf está errado", "D) os dois deveriam usar &"],
+      "resposta": "B",
+      "explicacao": "Gravar exige endereço; mostrar não."
+    },
+    {
+      "id": 71,
+      "categoria": "scanf",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "scanf(\"%d,%d\", &a, &b); exige que o usuário digite:",
+      "opcoes": ["A) 7 5", "B) 7,5 (separados por vírgula)", "C) 7;5", "D) qualquer coisa"],
+      "resposta": "B",
+      "explicacao": "O scanf cobra os mesmos sinais que estão no formato."
+    },
+    {
+      "id": 72,
+      "categoria": "scanf",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Declarei int n; e escrevi scanf(\"%f\", &n); (especificador errado). O resultado:",
+      "opcoes": ["A) converte sozinho", "B) guarda um valor errado/lixo", "C) dá 0", "D) lê normalmente"],
+      "resposta": "B",
+      "explicacao": "O tipo da variável tem que combinar com o %."
+    },
+    {
+      "id": 73,
+      "categoria": "scanf",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "scanf(\"%d\", &a); e o usuário digita 'abc' em vez de número:",
+      "opcoes": ["A) a vira 0", "B) a leitura falha e a fica indefinido", "C) a vira abc", "D) o programa repete sozinho"],
+      "resposta": "B",
+      "explicacao": "%d não casa com letras."
+    },
+    {
+      "id": 74,
+      "categoria": "scanf",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "O valor que o scanf devolve indica:",
+      "opcoes": ["A) o último valor lido", "B) quantos valores foram lidos com sucesso", "C) o tamanho do texto", "D) sempre 0"],
+      "resposta": "B",
+      "explicacao": "Serve para checar se a leitura deu certo."
+    },
+    {
+      "id": 75,
+      "categoria": "scanf",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Para ler três notas: scanf(\"%f %f %f\", ____); — o que vai na lacuna?",
+      "opcoes": ["A) n1, n2, n3", "B) &n1, &n2, &n3", "C) &n1 &n2 &n3", "D) &n1; &n2; &n3"],
+      "resposta": "B",
+      "explicacao": "Cada variável com & e separadas por vírgula."
+    },
+    {
+      "id": 76,
+      "categoria": "scanf",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Em scanf(\" %c\", &letra);, para que serve o espaço antes do %c?",
+      "opcoes": ["A) deixa mais bonito", "B) manda pular espaços/Enter que sobraram", "C) lê dois caracteres", "D) é um erro"],
+      "resposta": "B",
+      "explicacao": "É o truque para não pegar o \\n antigo."
+    },
+    {
+      "id": 77,
+      "categoria": "scanf",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Quero ler primeiro a, mas escrevi scanf(\"%d\", &b, &a);. O que acontece?",
+      "opcoes": ["A) lê para a", "B) lê o valor para b (só há um %d); o &a é ignorado", "C) lê para os dois", "D) dá erro de compilação"],
+      "resposta": "B",
+      "explicacao": "O número de % manda, não a quantidade de variáveis."
+    },
+    {
+      "id": 78,
+      "categoria": "scanf",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "Verdade ou cilada: 'uso %f para double no printf, mas %lf no scanf'.",
+      "opcoes": ["A) os dois usam %f", "B) é verdade — o printf aceita %f, mas o scanf exige %lf", "C) os dois usam %lf", "D) double não pode ser lido"],
+      "resposta": "B",
+      "explicacao": "É a diferença que mais confunde no começo."
+    },
+    {
+      "id": 79,
+      "categoria": "scanf",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "scanf(\"Idade %d\", &x); faz o usuário precisar digitar:",
+      "opcoes": ["A) só o número", "B) literalmente 'Idade' antes do número", "C) 'Idade ='", "D) nada"],
+      "resposta": "B",
+      "explicacao": "Por isso o 'pergunte' vai no printf, não no scanf."
+    },
+    {
+      "id": 80,
+      "categoria": "scanf",
+      "nivel": "dificil",
+      "tipo": "multipla_escolha",
+      "enunciado": "scanf(\"%d\", &a); scanf(\"%d\", &b); e o usuário digita '7 5' na mesma linha:",
+      "opcoes": ["A) a=7 e b fica vazio", "B) a=7 e b=5 (o scanf pula o espaço)", "C) dá erro", "D) a=75"],
+      "resposta": "B",
+      "explicacao": "O scanf ignora o espaço entre os números."
+    }
+  ]
+}
