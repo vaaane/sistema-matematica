@@ -49,23 +49,22 @@
 
     /* ── Operação: operador + fração como unidade centralizada no card ── */
     .op-wrap{ display:flex;align-items:center;gap:4px; }
-    .operador{ font-size:clamp(8px,min(2.2vw,2.5vh),14px);font-weight:900;color:var(--text);line-height:1;flex-shrink:0; }
+    .operador{ font-size:clamp(9px,2.2vw,14px);font-weight:900;color:var(--text);line-height:1;flex-shrink:0; }
     .fracao{ display:flex;flex-direction:column;align-items:center; }
-    .num-cima,.num-baixo{ font-size:clamp(10px,min(3.5vw,3.6vh),22px);font-weight:800;line-height:1.1;color:var(--text);min-width:16px;text-align:center; }
+    .num-cima,.num-baixo{ font-size:clamp(12px,3.5vw,22px);font-weight:800;line-height:1.1;color:var(--text);min-width:16px;text-align:center; }
     .traco{ width:100%;height:2px;background:var(--text);border-radius:1px;margin:1px 0; }
     /* Expressão composta (nível 16+) */
-    .op-compound{font-size:clamp(9px,min(2.8vw,2.7vh),13px);font-weight:800;color:var(--text);text-align:center;line-height:1.4;letter-spacing:-.3px;padding:0 3px;}
+    .op-compound{font-size:clamp(10px,2.8vw,13px);font-weight:800;color:var(--text);text-align:center;line-height:1.4;letter-spacing:-.3px;padding:0 3px;}
     /* Número resultado */
-    .res-number{font-size:clamp(12px,min(4.5vw,4.6vh),28px);font-weight:800;color:var(--text);line-height:1;}
+    .res-number{font-size:clamp(14px,4.5vw,28px);font-weight:800;color:var(--text);line-height:1;}
 
     /* ── Slots ── */
-    .slots-wrap{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;flex-wrap:nowrap;}
-    .slot{width:128px;height:60px;border:2px dashed var(--border);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--text-muted);background:var(--bg);transition:all .2s;text-align:center;padding:4px;flex-shrink:0;}
-    .slot-ph{white-space:nowrap;overflow:visible;}
+    .slots-wrap{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+    .slot{width:128px;height:60px;border:2px dashed var(--border);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--text-muted);background:var(--bg);transition:all .2s;text-align:center;padding:4px;}
     .slot.filled{border-style:solid;border-color:var(--blue);background:var(--blue-pale);color:var(--text);cursor:pointer;}
     .slot.filled:hover{border-color:var(--orange);}
     .slot.filled .slot-ph{display:none;}
-    .slot-eq{font-size:24px;font-weight:800;color:var(--text-muted);flex-shrink:0;}
+    .slot-eq{font-size:24px;font-weight:800;color:var(--text-muted);}
 
     /* ── Controls ── */
     .game-controls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
@@ -224,7 +223,7 @@
 
     /* ── Responsive ── */
     @media(max-width:480px){
-      .game-card{padding:4px 4px;}
+      .game-card{padding:5px 3px;}
       #btn-voltar{font-size:11px!important;padding:3px 7px!important;}
       #btn-reiniciar-hdr{font-size:11px!important;padding:3px 7px!important;}
       .topbar{padding:6px 10px!important;min-height:0!important;}
@@ -233,14 +232,12 @@
       .timer-wrap{font-size:26px!important;margin-bottom:2px!important;}
       .timer-wrap svg{width:24px!important;height:24px!important;}
       #leaders-ingame div{font-size:11px!important;}
-      /* Slots: largura adaptativa para garantir texto visível */
-      .slot{width:min(110px,38vw)!important;height:48px!important;font-size:11px!important;padding:3px!important;}
-      .slots-wrap{gap:clamp(4px,2vw,8px)!important;}
-      .slot-eq{font-size:20px!important;}
+      .slot{width:110px!important;height:52px!important;}
+      .slots-wrap{gap:8px!important;}
     }
     @media(max-width:360px){
-      .slot{width:min(88px,36vw)!important;height:46px!important;font-size:10px!important;}
-      .slot-eq{font-size:18px!important;}
+      .slot{width:94px;height:50px;}
+      .slot-eq{font-size:20px;}
     }
 
     /* ── Fullscreen game — CSS Grid de 5 linhas ── */
@@ -250,17 +247,16 @@
     .main{overflow:hidden;min-height:0!important;height:100vh;height:100dvh;}
     #content{flex:1!important;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;padding:0!important;}
     /* .tb-wrap: Grid de 5 linhas — info | timer/líderes | status | 1fr cards | slots */
-    /* slots-wrap tem min-height garantido para nunca ser cortado pelo overflow:hidden */
-    .tb-wrap{display:grid;grid-template-rows:auto auto auto 1fr minmax(52px,auto);height:100%;width:100%;max-width:630px;margin:0 auto;overflow:hidden;padding:6px 16px 4px;box-sizing:border-box;}
+    .tb-wrap{display:grid;grid-template-rows:auto auto auto 1fr auto;height:100%;width:100%;max-width:630px;margin:0 auto;overflow:hidden;padding:6px 16px 4px;box-sizing:border-box;}
     /* Linha 1fr (cards): min-height:0 garante que não extrapola */
-    .game-grid{min-height:0;overflow:hidden;margin-bottom:0!important;grid-auto-rows:minmax(0,1fr)!important;gap:clamp(3px,.7vw,6px)!important;}
+    .game-grid{min-height:0;overflow:hidden;margin-bottom:0!important;grid-auto-rows:1fr;gap:clamp(3px,.8vw,7px)!important;}
     .game-card{height:auto!important;min-height:0!important;}
     /* Margens compactas dentro das linhas */
     .timer-wrap{margin-bottom:3px!important;}
     .timer-bar-bg{margin-bottom:4px!important;}
     .pairs-bar-bg{margin-bottom:2px!important;}
     .status-msg{margin-bottom:2px!important;min-height:14px!important;}
-    .slots-wrap{padding:3px 0 2px!important;min-height:52px;align-items:center;}
+    .slots-wrap{padding:3px 0 2px!important;}
     .sprint-bar{margin-bottom:4px!important;}
   </style>
 </head>
@@ -946,7 +942,7 @@ function calcGameLayout(cardCount) {
 
   // Estimar altura dos cards para detectar modo compacto
   const topbarH = document.querySelector('.topbar')?.getBoundingClientRect().height || 62;
-  const OVERHEAD = 250; // topbar + header-nivel + líderes(3 linhas) + timer + barra + dots + status + combo + slots
+  const OVERHEAD = 265; // topbar + header-nivel + líderes + timer + barra + dots + status + combo + slots
   const gridH = Math.max(60, window.innerHeight - topbarH - OVERHEAD);
   const rows  = Math.ceil(cardCount / bestC);
   const estCardH = (gridH - (rows - 1) * GAP) / rows;
@@ -1147,29 +1143,30 @@ function _buildLeadersHtml() {
   const lines = [];
 
   // ── 🏆 Hall da Fama (concluintes dos 300) ──────────────────────
+  // Apenas nome + turma de cada concluinte (sem número de nível).
   if (hall.length) {
     const nomesHall = hall.map(r =>
       `<strong>${isMe(r) ? 'Você' : escH(r.nome)}</strong><span style="color:var(--text-muted);font-weight:400"> - ${escH(r.turma||'')}</span>`
     ).join('<span style="color:var(--text-muted)"> · </span>');
     lines.push(
-      `<div style="font-size:10px;font-weight:600;color:#FBBF24;margin-bottom:1px;line-height:1.35">` +
+      `<div style="font-size:11px;font-weight:600;color:#FBBF24;margin-bottom:2px">` +
       `🏆 <span style="color:var(--text-muted);font-weight:400">Hall da Fama:</span> ${nomesHall}` +
       `</div>`
     );
   }
 
-  // ── 👑 Geral (1º que ainda não concluiu 300) ───────────────────
+  // ── 🥇 Geral (1º que ainda não concluiu 300) ───────────────────
   if (g) {
     lines.push(isMe(g)
-      ? `<div style="font-size:11px;font-weight:700;color:#D97706;line-height:1.35">👑 <span style="color:var(--text-muted);font-weight:600">Geral:</span> <strong>Você lidera! 🥇</strong></div>`
-      : `<div style="font-size:11px;font-weight:600;color:#D97706;line-height:1.35">👑 <span style="color:var(--text-muted);font-weight:400">Geral:</span> <strong>${escH(g.nome)}</strong><span style="color:var(--text-muted);font-weight:400"> · ${escH(g.turma||'')} · Nv ${g.melhor_nivel}</span></div>`);
+      ? `<div style="font-size:12px;font-weight:700;color:#D97706">👑 <span style="color:var(--text-muted);font-weight:600">Geral:</span> <strong>Você lidera! 🥇</strong></div>`
+      : `<div style="font-size:12px;font-weight:600;color:#D97706">👑 <span style="color:var(--text-muted);font-weight:400;font-size:11px">Geral:</span> <strong>${escH(g.nome)}</strong><span style="color:var(--text-muted);font-weight:400"> · ${escH(g.turma||'')} · Nv ${g.melhor_nivel}</span></div>`);
   }
 
   // ── 🏅 Turma (1º da turma que ainda não concluiu 300) ──────────
   if (t && (!g || t._uid !== g._uid)) {
     lines.push(isMe(t)
-      ? `<div style="font-size:10px;color:#60A5FA;margin-top:1px;line-height:1.35">🏅 <span style="color:var(--text-muted);font-weight:400">Turma:</span> <strong>Você lidera!</strong></div>`
-      : `<div style="font-size:10px;color:#60A5FA;margin-top:1px;line-height:1.35">🏅 <span style="color:var(--text-muted);font-weight:400">Turma:</span> <strong>${escH(t.nome)}</strong><span style="color:var(--text-muted);font-weight:400"> · Nv ${t.melhor_nivel}</span></div>`);
+      ? `<div style="font-size:11px;color:#60A5FA;margin-top:2px">🏅 <span style="color:var(--text-muted);font-weight:400">Turma:</span> <strong>Você lidera!</strong></div>`
+      : `<div style="font-size:11px;color:#60A5FA;margin-top:2px">🏅 <span style="color:var(--text-muted);font-weight:400">Turma:</span> <strong>${escH(t.nome)}</strong><span style="color:var(--text-muted);font-weight:400"> · Nv ${t.melhor_nivel}</span></div>`);
   }
 
   return lines.join('');
@@ -1330,7 +1327,7 @@ function _buildGameInternal() {
 
   // isCompact: linhas exatas (sem Math.ceil pois divisibilidade está garantida)
   const _gridRows  = pairs.length * 2 / cols;
-  const _mobileOverhead = window.innerWidth <= 480 ? 275 : 240;
+  const _mobileOverhead = window.innerWidth <= 480 ? 290 : 250;
   const _gridH     = Math.max(60, window.innerHeight - _topbarH - _mobileOverhead);
   const isCompact  = _gridRows > 0 ? ((_gridH - (_gridRows - 1) * 5) / _gridRows) < 56 : false;
 
@@ -1383,7 +1380,7 @@ function _buildGameInternal() {
         <div class="sprint-stat"><div class="sprint-stat-val" id="sprint-err">${_sprintErrTotal}</div><div class="sprint-stat-lbl">Erros</div></div>
       </div>
     </div>` : `
-    <div id="leaders-ingame" style="margin-bottom:4px;line-height:1.4">${_buildLeadersHtml()}</div>
+    <div id="leaders-ingame" style="margin-bottom:4px;line-height:1.5">${_buildLeadersHtml()}</div>
     <div class="timer-wrap" id="timer-display">
       <svg viewBox="0 0 24 24"><path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61 1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
       <span id="timer-text">${String(Math.floor(timerTotal/60)).padStart(2,'0')}:${String(timerTotal%60).padStart(2,'0')}</span>

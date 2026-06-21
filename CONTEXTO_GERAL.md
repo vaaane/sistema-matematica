@@ -28,7 +28,7 @@ Plataforma educacional web para alunos do 8º ano.
 - Tabuada: individual, sem dupla
 - Concluintes tabuada (nível 300) ficam só no Hall da Fama, fora do ranking em progresso
 - UID do professor teste (`PROFESSOR_TESTE`) filtrado de listas públicas
-- Tema escuro obrigatório, fixo via `<script>document.documentElement.setAttribute("data-theme","dark")</script>` no `<head>` de cada página (antes do CSS, p/ evitar flash). Paleta roxo/dourado centralizada em `css/main.css` (ver seção "Identidade visual" no final). Fundo base `#11111f`.
+- Tema escuro obrigatório, fixo via `<script>document.documentElement.setAttribute("data-theme","dark")</script>` no `<head>` (antes do CSS, p/ evitar flash). Paleta roxo/dourado centralizada em `css/main.css`. Fundo base `#11111f` (ver seção "Identidade visual e PWA" no final).
 - **Apelidos:** o sistema exibe `apelido_ativo || nome`. Há a página `professor/migrar_apelidos.html` que iguala `apelido_ativo` ao nome real de todos os alunos (mantendo a possibilidade de troca futura via perfil).
 
 ## Sistema de Duplas (Duelos)
@@ -291,44 +291,45 @@ Jogo educacional onde o aluno atravessa um labirinto até o bloco com a resposta
 > A plataforma ganhou identidade visual própria (logo de escudo + raio) e virou PWA instalável. Tudo centralizado em `css/main.css` — mudar cor de TODO o site é mexer só nas variáveis do `:root`, não página por página.
 
 ## Logo e marca
-- Logo oficial: escudo roxo com raio dourado e símbolo Σ. Arquivo: `logo_fundotransparente.png` (fundo transparente, usado no site) na raiz do projeto.
+- Logo oficial: escudo roxo com raio dourado e símbolo Σ. Arquivo: `logo_fundotransparente.png` (fundo transparente, usado no site) na raiz.
 - Ícone do app: `icon-192.png` na raiz (mesmo escudo, p/ o ícone do PWA na tela inicial).
-- A logo aparece na splash screen (`index.html`) e na sidebar de todas as páginas (renderizada por `renderSidebarAluno`/`renderSidebarProfessor` em `auth.js`, dentro de `.sidebar-brand` → `.brand-icon img`).
+- Aparece na splash screen (`index.html`) e na sidebar de todas as páginas (renderizada por `renderSidebarAluno`/`renderSidebarProfessor` em `auth.js`, dentro de `.sidebar-brand` → `.brand-icon img`). Logo em cima, "Sistema de Matemática" + "Plataforma Educacional" embaixo.
 
 ## Paleta (variáveis CSS em `css/main.css` → `:root`)
 - `--bg: #11111f` — fundo base
 - `--sidebar-bg: #05050f` — sidebar (mais escura que o resto, p/ destaque)
-- `--card: #1a1a2e` — cards
-- card2/terciário: `#222238`
+- `--card: #1a1a2e` — cards; terciário `#222238`
 - `--purple: #9b30ff`, `--purple-dark: #6c00d4` — roxo (cor primária)
 - `--gold: #f0a500`, `--gold-light: #ffc84a` — dourado (destaques, números, XP)
 - `--text: #F1F5F9`, `--text-muted: #94A3B8`
-- O `body` tem gradiente radial sutil: `radial-gradient(ellipse at 20% 50%, #1e1535 0%, #11111f 100%) fixed`. Páginas NÃO devem cobrir isso com fundo sólido próprio — usar `background: transparent` em `html, body` e `.main` quando tiverem `<style>` próprio, p/ o gradiente aparecer.
+- O `body` tem gradiente radial sutil: `radial-gradient(ellipse at 20% 50%, #1e1535 0%, #11111f 100%) fixed`.
 - Botões principais: gradiente `linear-gradient(135deg, var(--purple-dark), var(--gold))`.
-- Item ativo da sidebar: fundo roxo/dourado translúcido + borda esquerda dourada/roxa (`.nav-item.active-orange`/`.active-blue`).
+- Item ativo da sidebar: fundo translúcido + borda esquerda dourada/roxa (`.nav-item.active-orange`/`.active-blue`).
 
-## Regra de cores: NUNCA hardcodar
-- Cores antigas REMOVIDAS de todo o `aluno/`: laranja `#FF7A2F`/`#F59E0B`/`#ffd166`, azul `#2F9EDC`, fundos claros. Substituídas por variáveis (`var(--gold)`, `var(--purple)`) ou pelas novas cores escuras.
-- Fundos antigos trocados em massa: `#0d0f1a`/`#0d0d1a`→`#11111f`; `#131627`/`#151828`→`#1a1a2e`; `#1a1f35`/`#1c2035`→`#222238`.
-- Ao criar/editar página: usar SEMPRE `var(--…)` do main.css. Cor nova hardcoded = vai destoar do resto e dar retrabalho.
-- Cores semânticas (verde acerto `#22c55e`, vermelho erro `#ef4444`) podem ficar hardcoded — são funcionais, não de tema.
+## Regras de ouro ao criar/editar páginas
+1. **NUNCA hardcodar cor de tema.** Usar SEMPRE `var(--…)` do main.css. Cor nova fixa vai destoar e dar retrabalho. (Cores semânticas verde acerto `#22c55e` / vermelho erro `#ef4444` podem ficar fixas — são funcionais.)
+2. **Não cobrir o gradiente do body.** Se a página tem `<style>` próprio, NÃO colocar `background` sólido nem `transparent !important` em `html, body` (transparent cancela o gradiente). Deixar o body herdar do main.css; no máximo `.main { background: transparent }`.
+3. **Esconder scrollbar.** Páginas com `<style>` próprio precisam repetir: `::-webkit-scrollbar{width:0;height:0} * {scrollbar-width:none;-ms-overflow-style:none}` — senão aparece scrollbar branca.
+4. **Cores antigas já removidas em massa** de `aluno/`: laranja `#FF7A2F`/`#F59E0B`/`#ffd166`/`#ff9900`→dourado; azul `#2F9EDC`→roxo; fundos `#0d0f1a`/`#0d0d1a`→`#11111f`, `#131627`/`#151828`→`#1a1a2e`, `#1a1f35`/`#1c2035`→`#222238`.
 
-## Exceções (NÃO aplicar o tema escuro/transparente)
-- `aluno/diploma_print.html` e `aluno/diploma_tabuada.html`: fundo creme `#fdfaf4` (documento de impressão A4). Não tocar.
-- `aluno/labirinto.html` (e jogos de tela cheia): têm visual de jogo próprio (`#0a0f1e` etc.). Mantêm fundo próprio.
+## Exceções (NÃO aplicar tema escuro/transparente)
+- `aluno/diploma_print.html` e `aluno/diploma_tabuada.html`: fundo creme `#fdfaf4` (impressão A4). Não tocar.
+- `aluno/labirinto.html` e jogos de tela cheia: visual de jogo próprio (`#0a0f1e` etc.). Mantêm fundo próprio.
+- `aluno/aquecimento.html` (Treino Diário): mantém temática de fogo/laranja nos elementos de streak (chama, sequência), mas botão principal e fundo seguem a paleta.
 
-## PWA (instalável na tela inicial)
-- `manifest.json` na raiz: `name`/`short_name` "Sistema de Matemática", `display: standalone`, `background_color: #0a0020`, `theme_color: #6c00d4`, ícones 192/512 apontando `icon-192.png` (`purpose: "any maskable"`).
+## PWA (instalável)
+- `manifest.json` na raiz: name "Sistema de Matemática", `display: standalone`, `background_color: #0a0020`, `theme_color: #6c00d4`, ícones 192/512 → `icon-192.png` (`purpose: "any maskable"`).
 - Cada HTML tem no `<head>`: `<link rel="manifest">`, `<link rel="apple-touch-icon" href="/icon-192.png">`, `<meta name="theme-color" content="#6c00d4">`.
-- Splash screen nativa do Android (ícone + cor de fundo) é gerada automaticamente pelo manifest — comportamento esperado, não é bug.
-- Splash screen própria (animada, logo + "Sistema de Matemática" + "APRENDER • COMPETIR • EVOLUIR") roda no `index.html`: `#splash-screen` começa invisível, espera a imagem carregar (`logo.complete`), aparece ~3s e some com fade. Mantém logo+texto juntos.
+- Splash nativa do Android (ícone + cor) é gerada pelo manifest — comportamento esperado, não é bug.
+- Splash própria animada no `index.html`: `#splash-screen` começa invisível, espera `logo.complete`, aparece ~3s, some com fade.
 
 ## Modal de boas-vindas (menu.html)
-- Aparece UMA vez por aluno (flag `localStorage 'sm_guia_visto'`), só se `config/mostrar_guia === true` no Firebase. Não reaparece a cada visita ao menu. Limpar o localStorage (ou aba anônima) p/ testar de novo.
+- Aparece UMA vez por aluno (flag `localStorage 'sm_guia_visto'`), só se `config/mostrar_guia === true` no Firebase. Limpar localStorage (ou aba anônima) p/ testar de novo.
 
-## Layout
-- Cards de jogos em `aluno/jogos.html`: 1 por linha (`.jogos-hub { grid-template-columns: 1fr }`), desktop e mobile.
-- Scrollbars escondidas globalmente (`::-webkit-scrollbar { width:0 }` + `scrollbar-width:none`). Páginas com `<style>` próprio precisam repetir essa regra p/ não aparecer scrollbar branca.
+## Layout / responsivo
+- Cards de jogos (`aluno/jogos.html`): 1 por linha (`.jogos-hub { grid-template-columns: 1fr }`), desktop e mobile.
+- No `menu.html` mobile, a regra que força `width:100%` nos cards precisa incluir TODOS os ids dos cards (incl. `#aquecimento-card`, `#feed-card`) senão alguns não esticam.
+- **Pendente:** `aluno/tabuada.html` no mobile corta os blocos de operação/resultado — reduzir largura dos blocos p/ caberem.
 
-## Dica de teste local
+## Teste local
 - Firebase pode não conectar em `localhost` (páginas que dependem dele ficam em "Carregando…"). No site publicado funciona. Testar visual ≠ testar dados.

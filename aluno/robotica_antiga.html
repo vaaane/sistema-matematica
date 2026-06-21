@@ -1,0 +1,1219 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Robótica — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    /* ── Card do Guia ── */
+    .rob-guia-card{display:flex;align-items:center;gap:14px;padding:16px 20px;background:var(--card);border:1.5px solid var(--blue-pale,#EBF6FD);border-radius:var(--radius);text-decoration:none;color:inherit;transition:border-color .2s,box-shadow .2s;margin-bottom:6px;}
+    .rob-guia-card:hover{border-color:var(--blue);box-shadow:0 2px 12px rgba(37,99,235,.12);}
+    [data-theme="dark"] .rob-guia-card{border-color:rgba(59,130,246,.2);}
+    [data-theme="dark"] .rob-guia-card:hover{border-color:rgba(59,130,246,.5);}
+    .rob-guia-icon{width:44px;height:44px;border-radius:10px;background:var(--blue-pale,#EBF6FD);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+    [data-theme="dark"] .rob-guia-icon{background:rgba(59,130,246,.15);}
+    .rob-guia-info{flex:1;min-width:0;}
+    .rob-guia-titulo{font-size:15px;font-weight:700;color:var(--text);}
+    .rob-guia-desc{font-size:12px;color:var(--text-muted);margin-top:2px;}
+    .rob-guia-arrow{font-size:18px;color:var(--blue);flex-shrink:0;}
+    /* ── Stats row ── */
+    .rob-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px;}
+    .rob-stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;display:flex;align-items:center;gap:12px;}
+    .rob-stat-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+    .rob-stat-icon.green{background:#DCFCE7;}
+    .rob-stat-icon.orange{background:var(--orange-pale);}
+    .rob-stat-icon.blue{background:var(--blue-pale);}
+    .rob-stat-val{font-size:20px;font-weight:800;line-height:1;}
+    .rob-stat-val.green{color:var(--green);}
+    .rob-stat-val.orange{color:var(--orange);}
+    .rob-stat-val.blue{color:var(--blue);}
+    .rob-stat-lbl{font-size:12px;color:var(--text-muted);margin-top:3px;}
+    /* ── Section label ── */
+    .rob-section-lbl{font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;}
+    /* ── Atividade card expansível ── */
+    .rob-atv-list{display:flex;flex-direction:column;gap:14px;}
+    .rob-atv{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .2s;}
+    .rob-atv.expanded{border-color:#3a4a60;}
+    .rob-atv.aprovado.expanded{border-color:rgba(34,197,94,.4);}
+    .rob-atv::before{content:'';display:block;height:3px;}
+    .rob-atv.aprovado::before{background:var(--green);}
+    .rob-atv.reprovado::before{background:var(--red);}
+    .rob-atv.pendente::before{background:var(--border);}
+    .rob-atv-hdr{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;transition:background .15s;user-select:none;}
+    .rob-atv-hdr:hover{background:rgba(0,0,0,.025);}
+    [data-theme="dark"] .rob-atv-hdr:hover{background:rgba(255,255,255,.025);}
+    .rob-atv-icon{width:44px;height:44px;border-radius:10px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+    .rob-atv-info{flex:1;min-width:0;}
+    .rob-atv-tag{font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:.8px;text-transform:uppercase;margin-bottom:3px;}
+    .rob-atv-nome{font-size:15px;font-weight:700;}
+    .rob-atv-desc{font-size:12px;color:var(--text-muted);margin-top:2px;}
+    .rob-atv-meta{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+    .rob-atv-score{font-size:12px;color:var(--text-muted);background:var(--bg);border:1px solid var(--border);padding:4px 10px;border-radius:20px;white-space:nowrap;}
+    .rob-atv-score .hi{color:var(--green);font-weight:800;}
+    .rob-chevron{color:var(--text-muted);font-size:11px;transition:transform .2s;flex-shrink:0;}
+    .rob-atv.expanded .rob-chevron{transform:rotate(180deg);}
+    .rob-atv-body{display:none;border-top:1px solid var(--border);background:var(--bg);}
+    .rob-atv.expanded .rob-atv-body{display:block;}
+    .rob-action-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);}
+    .rob-action-info{font-size:13px;color:var(--text-muted);}
+    .rob-action-info strong{color:var(--text);}
+    .btn-iniciar-rob{display:inline-flex;align-items:center;gap:8px;background:var(--orange);color:#fff;font-size:13px;font-weight:700;padding:9px 20px;border-radius:8px;border:none;cursor:pointer;transition:background .15s,transform .1s;font-family:inherit;}
+    .btn-iniciar-rob:hover{background:#ea6c0a;transform:translateY(-1px);}
+    .btn-iniciar-rob:active{transform:translateY(0);}
+    .rob-no-tent{padding:28px 20px;text-align:center;color:var(--text-muted);font-size:13px;}
+    .rob-no-tent .emoji{font-size:28px;display:block;margin-bottom:8px;}
+    .rob-tent-table-wrap{overflow-x:auto;}
+    table.rob-tent-table{width:100%;border-collapse:collapse;}
+    .rob-tent-table thead tr{background:rgba(0,0,0,.03);}
+    [data-theme="dark"] .rob-tent-table thead tr{background:rgba(255,255,255,.02);}
+    .rob-tent-table th{padding:9px 20px;text-align:left;font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:.8px;text-transform:uppercase;border-bottom:1px solid var(--border);}
+    .rob-tent-table th:last-child{text-align:right;}
+    .rob-tent-table td{padding:11px 20px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;}
+    .rob-tent-table tr:last-child td{border-bottom:none;}
+    .rob-tent-table .data-row:hover td{background:rgba(0,0,0,.02);cursor:pointer;}
+    [data-theme="dark"] .rob-tent-table .data-row:hover td{background:rgba(255,255,255,.018);}
+    .t-num{font-size:11px;color:var(--text-muted);}
+    .t-score{font-weight:800;}
+    .t-score.ok{color:var(--green);}
+    .t-score.fail{color:var(--red);}
+    .t-pct{font-size:11px;color:var(--text-muted);margin-left:4px;}
+    .t-type{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);}
+    .t-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+    .t-dot.ok{background:var(--green);}
+    .t-dot.warn{background:#f0a500;}
+    .t-date{font-size:12px;color:var(--text-muted);text-align:right;white-space:nowrap;}
+    .q-expand-row{display:none;}
+    .q-expand-row td{padding:0 20px 0 48px;}
+    .q-expand-inner{padding:10px 0;display:flex;flex-direction:column;gap:4px;}
+    .q-exp-item{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;}
+    .q-exp-item:last-child{border-bottom:none;}
+    .q-exp-n{color:var(--text-muted);font-size:10px;min-width:20px;margin-top:1px;flex-shrink:0;}
+    .q-exp-ic{flex-shrink:0;font-size:13px;}
+    .q-exp-txt{flex:1;line-height:1.45;color:var(--text);}
+    .q-exp-r{font-size:11px;font-weight:700;white-space:nowrap;}
+    .q-exp-r.ok{color:var(--green);}
+    .q-exp-r.fail{color:var(--red);}
+    .rob-tent-footer{padding:12px 20px;border-top:1px solid var(--border);text-align:center;font-size:12px;color:var(--text-muted);cursor:pointer;transition:color .15s;}
+    .rob-tent-footer:hover{color:var(--orange);}
+    .rob-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;}
+    .rob-badge.green{background:#DCFCE7;color:#15803D;}
+    .rob-badge.red{background:#FEF2F2;color:#B91C1C;}
+    .rob-badge.gray{background:var(--bg);color:var(--text-muted);border:1px solid var(--border);}
+    [data-theme="dark"] .rob-badge.green{background:rgba(34,197,94,.15);color:#86efac;}
+    [data-theme="dark"] .rob-badge.red{background:rgba(239,68,68,.15);color:#fca5a5;}
+    @media(max-width:640px){
+      .rob-stats{grid-template-columns:1fr 1fr;}
+      .rob-stats .rob-stat:last-child:nth-child(odd){grid-column:1 / -1;}
+      .rob-atv-hdr{padding:12px 14px;gap:10px;}
+      .rob-atv-icon{width:38px;height:38px;font-size:18px;}
+      .rob-atv-tag{font-size:9px;}
+      .rob-atv-nome{font-size:14px;}
+      .rob-atv-desc{font-size:11px;}
+      .rob-atv-meta{flex-direction:row;flex-wrap:wrap;gap:6px;margin-top:6px;}
+      .rob-atv-score{font-size:11px;padding:3px 8px;}
+      .rob-tent-table th:nth-child(2),.rob-tent-table td:nth-child(2){display:none;}
+    }
+    @media(max-width:480px){
+      .rob-atv-hdr{flex-wrap:wrap;}
+      .rob-atv-info{width:calc(100% - 48px);}
+      .rob-atv-meta{width:100%;justify-content:flex-start;padding-left:48px;}
+    }
+    /* Progress bar */
+    .quiz-pbar{height:8px;background:var(--border);border-radius:4px;margin-bottom:20px;overflow:hidden;}
+    .quiz-pbar-fill{height:100%;background:var(--blue);border-radius:4px;transition:width .4s;}
+    /* Category badge */
+    .q-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;margin-bottom:14px;}
+    .q-badge.facil{background:#DCFCE7;color:#15803D;}
+    .q-badge.medio{background:#FEF9C3;color:#854D0E;}
+    .q-badge.dificil{background:#FEE2E2;color:#B91C1C;}
+    /* ── Tema escuro ─────────────────────────────────────── */
+    [data-theme="dark"] .quiz-fb.ok{background:rgba(34,197,94,.12)!important;color:#86efac!important;border-color:rgba(34,197,94,.4)!important;}
+    [data-theme="dark"] .quiz-fb.err{background:rgba(239,68,68,.12)!important;color:#fca5a5!important;border-color:rgba(239,68,68,.4)!important;}
+    .num-wrap{display:flex;gap:10px;margin-bottom:16px;align-items:center;}
+    .num-input{flex:1;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;background:var(--card);color:var(--text);}
+    .num-input:focus{outline:none;border-color:var(--blue);}
+    .quiz-fb{display:none;}
+    .quiz-fb.ok{background:var(--green-pale);border:1px solid #BBF7D0;color:#15803D;}
+    .quiz-fb.err{background:var(--red-pale);border:1px solid #FECACA;color:#B91C1C;}
+
+    /* ══ NOVO QUIZ LAYOUT ══════════════════════════════════════ */
+    .rq-topbar{display:flex;align-items:center;gap:12px;padding:13px 20px;background:var(--card);border-bottom:1px solid var(--border);margin-bottom:0;}
+    .rq-btn-voltar{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;flex-shrink:0;}
+    .rq-btn-voltar:hover{border-color:var(--text-muted);color:var(--text);}
+    .rq-titulo{font-size:14px;font-weight:700;flex-shrink:0;}
+    .rq-prog-text{font-size:12px;color:var(--text-muted);flex-shrink:0;}
+    .rq-prog-track{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;min-width:60px;}
+    .rq-prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--orange),#fb923c);transition:width .4s ease;}
+    .rq-btn-encerrar{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;border:1px solid rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:var(--red);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;flex-shrink:0;}
+    .rq-btn-encerrar:hover{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.5);}
+    .rq-content{display:flex;justify-content:center;padding:28px 20px;}
+    .rq-card{width:100%;max-width:700px;display:flex;flex-direction:column;gap:22px;}
+    .rq-meta{display:flex;align-items:center;justify-content:space-between;}
+    .rq-cat{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);font-size:11px;font-weight:700;color:var(--blue);letter-spacing:.3px;}
+    [data-theme="dark"] .rq-cat{background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.25);color:#93c5fd;}
+    .rq-qnum{font-size:11px;font-weight:700;color:var(--text-muted);font-family:monospace;}
+    .rq-enunciado{font-size:20px;font-weight:700;line-height:1.5;color:var(--text);white-space:pre-wrap;}
+    .rq-opcoes-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+    .rq-opcao{padding:13px 16px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:14px;font-weight:500;cursor:pointer;text-align:left;width:100%;font-family:inherit;transition:background .12s,border-color .12s,transform .1s;display:flex;align-items:center;gap:11px;}
+    .rq-letra{width:27px;height:27px;border-radius:7px;flex-shrink:0;background:var(--bg);border:1px solid var(--border);display:grid;place-items:center;font-size:11px;font-weight:700;font-family:monospace;color:var(--text-muted);transition:all .12s;}
+    .rq-opcao:hover:not([disabled]){border-color:var(--orange);background:var(--orange-pale);transform:translateY(-1px);}
+    .rq-opcao:hover:not([disabled]) .rq-letra{background:var(--orange);color:#fff;border-color:var(--orange);}
+    .rq-opcao.correta{border-color:var(--green)!important;background:var(--green-pale)!important;}
+    .rq-opcao.errada{border-color:var(--red)!important;background:var(--red-pale)!important;}
+    .rq-opcao.neutra{opacity:.35;}
+    .rq-opcao.correta .rq-letra{background:var(--green);color:#fff;border-color:var(--green);}
+    .rq-opcao.errada .rq-letra{background:var(--red);color:#fff;border-color:var(--red);}
+    [data-theme="dark"] .rq-opcao.correta{background:rgba(34,197,94,.12)!important;border-color:rgba(34,197,94,.5)!important;}
+    [data-theme="dark"] .rq-opcao.errada{background:rgba(239,68,68,.12)!important;border-color:rgba(239,68,68,.5)!important;}
+    .rq-vf-wrap{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .rq-vf-btn{padding:22px 16px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:8px;}
+    .rq-vf-icon{font-size:26px;}
+    .rq-vf-btn.rq-vf-v:hover:not([disabled]){border-color:var(--green);background:var(--green-pale);}
+    .rq-vf-btn.rq-vf-f:hover:not([disabled]){border-color:var(--red);background:var(--red-pale);}
+    .rq-vf-btn.correta{border-color:var(--green)!important;background:var(--green-pale)!important;}
+    .rq-vf-btn.errada{border-color:var(--red)!important;background:var(--red-pale)!important;}
+    [data-theme="dark"] .rq-vf-btn.correta{background:rgba(34,197,94,.12)!important;border-color:rgba(34,197,94,.5)!important;}
+    [data-theme="dark"] .rq-vf-btn.errada{background:rgba(239,68,68,.12)!important;border-color:rgba(239,68,68,.5)!important;}
+    .quiz-fb{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-radius:10px;font-size:14px;font-weight:600;animation:rq-fadeUp .2s ease;}
+    @keyframes rq-fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    .rq-btn-proxima{width:100%;padding:14px;background:var(--orange);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .15s,transform .1s;display:flex;align-items:center;justify-content:center;gap:8px;}
+    .rq-btn-proxima:hover{background:#ea6c0a;transform:translateY(-1px);}
+    .rq-btn-proxima:active{transform:translateY(0);}
+    .rq-chips-wrap{margin-top:4px;}
+    .rq-chips-label{font-size:11px;color:var(--text-muted);margin-bottom:8px;letter-spacing:.3px;}
+    .rq-chips{display:flex;gap:8px;flex-wrap:wrap;}
+    .rq-chip{padding:5px 13px;border-radius:20px;border:1px solid rgba(124,92,252,.25);background:rgba(124,92,252,.06);color:var(--text-muted);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;font-family:inherit;}
+    .rq-chip:hover{border-color:rgba(124,92,252,.5);color:var(--purple-light);}
+    .rq-chip.selected{border-color:#7c5cfc;background:rgba(124,92,252,.2);color:#9b7ffe;font-weight:700;}
+    @media(max-width:560px){.rq-topbar{gap:8px;padding:10px 14px;}.rq-opcoes-grid{grid-template-columns:1fr;}.rq-content{padding:16px 12px;}}
+    /* ══ FIM NOVO QUIZ LAYOUT ═════════════════════════════════ */
+    /* Summary */
+    .summ-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+    .summ-stat{display:flex;align-items:center;gap:12px;padding:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);}
+    .summ-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+    /* Comparação */
+    .comp-q{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:8px;font-size:12px;margin-bottom:4px;}
+    .comp-q.melhora{background:#DCFCE7;border:1px solid #BBF7D0;}
+    .comp-q.piora{background:#FEE2E2;border:1px solid #FECACA;}
+    .comp-q.manteve-err{background:#FFF7ED;border:1px solid #FED7AA;}
+    /* Modal encerrar */
+    .enc-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;}
+    .enc-box{background:var(--card);border-radius:var(--radius);padding:28px 24px;max-width:380px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.2);}
+    #quiz-wrap,#summary-wrap{display:none;}
+    /* ── Análise por questão ───────────────────────────────── */
+    .rq-analise-wrap  { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:14px; }
+    .rq-filtros       { display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+    .rq-filtro        { padding:5px 14px; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--text-muted); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all .15s; }
+    .rq-filtro.ativo  { background:var(--orange); border-color:var(--orange); color:#fff; }
+    .rq-analise-card  { display:flex; gap:12px; padding:12px 14px; border-radius:10px; background:var(--bg); border:1px solid var(--border); border-left:4px solid transparent; margin-bottom:8px; }
+    .rq-analise-card.ok   { border-left-color:var(--green); background:rgba(34,197,94,.06); border-color:rgba(34,197,94,.25); }
+    .rq-analise-card.err  { border-left-color:var(--red);   background:rgba(239,68,68,.06);  border-color:rgba(239,68,68,.25); }
+    .rq-analise-card.skip { border-left-color:var(--border); opacity:.7; }
+    [data-theme="dark"] .rq-analise-card.ok  { background:rgba(34,197,94,.08); }
+    [data-theme="dark"] .rq-analise-card.err { background:rgba(239,68,68,.08); }
+    .rq-analise-num  { font-size:11px; font-weight:700; color:var(--text-muted); width:28px; flex-shrink:0; padding-top:2px; }
+    .rq-analise-body { flex:1; min-width:0; }
+    .rq-analise-cat  { display:inline-block; font-size:10px; font-weight:700; color:var(--blue); background:rgba(59,130,246,.1); border:1px solid rgba(59,130,246,.2); border-radius:20px; padding:2px 8px; margin-bottom:6px; }
+    .rq-analise-q    { font-size:13px; font-weight:600; color:var(--text); line-height:1.5; margin-bottom:8px; white-space:pre-wrap; }
+    .rq-analise-linha{ font-size:12px; margin-bottom:3px; color:var(--text); line-height:1.45; }
+    .rq-analise-expl { font-size:11px; color:var(--text-muted); border-top:1px solid var(--border); margin-top:8px; padding-top:6px; font-style:italic; line-height:1.5; }
+    .rq-analise-icon { font-size:15px; font-weight:700; flex-shrink:0; margin-top:2px; width:18px; text-align:center; }
+    /* ── Quiz sem scroll ───────────────────────────────────── */
+    body.quiz-ativo .layout  { height: 100dvh; overflow: hidden; }
+    body.quiz-ativo .topbar  { flex-shrink: 0; }
+    body.quiz-ativo .main    { height: 100dvh; min-height: unset; overflow: hidden; }
+    body.quiz-ativo .content { padding: 0; overflow: hidden; }
+    body.quiz-ativo #quiz-wrap { display: flex !important; flex-direction: column; height: 100%; overflow: hidden; }
+    body.quiz-ativo .rq-topbar { flex-shrink: 0; padding: 10px 14px; }
+    body.quiz-ativo .rq-content { flex: 1; min-height: 0; overflow: hidden; padding: 10px 16px; align-items: stretch; }
+    body.quiz-ativo .rq-card    { flex: 1; min-height: 0; gap: 10px; }
+    body.quiz-ativo .rq-meta        { flex-shrink: 0; }
+    body.quiz-ativo #quiz-enunciado { flex-shrink: 0; }
+    body.quiz-ativo #quiz-opcoes    { flex: 1; min-height: 0; }
+    body.quiz-ativo .quiz-fb        { flex-shrink: 0; padding: 10px 14px; }
+    body.quiz-ativo .rq-chips-wrap  { flex-shrink: 0; margin-top: 0; }
+    body.quiz-ativo .rq-btn-proxima { flex-shrink: 0; padding: 10px 14px; font-size: 14px; }
+    body.quiz-ativo .rq-opcao    { padding: 8px 14px; }
+    body.quiz-ativo .rq-enunciado{ font-size: clamp(1rem, 2.5vh, 1.2rem); }
+    /* ── Celebração 100% nas 3 atividades ─────────────────── */
+    .rob-celebracao{position:relative;overflow:hidden;background:linear-gradient(135deg,#FFFBEB,#FEF3C7 40%,#FDE68A 60%,#FEF3C7);border:2px solid #f0a500;border-radius:var(--radius);padding:24px 20px;margin-bottom:20px;text-align:center;box-shadow:0 4px 24px rgba(245,158,11,.25);}
+    .rob-celebracao-shine{position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.6) 50%,transparent 70%);animation:shine-slide 2.2s ease-in-out infinite;pointer-events:none;}
+    @keyframes shine-slide{0%{transform:translateX(-160%)}100%{transform:translateX(160%)}}
+    .confete{position:absolute;top:0;width:7px;height:9px;border-radius:2px;opacity:0;pointer-events:none;animation:confete-cair var(--dur,2s) var(--delay,0s) ease-in infinite;}
+    @keyframes confete-cair{0%{opacity:1;transform:translateY(-8px) rotate(0deg)}75%{opacity:.9}100%{opacity:0;transform:translateY(115px) rotate(560deg) scale(.4)}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">🤖 Robótica</div>
+        <div class="topbar-sub" id="topbar-sub">Carregando…</div>
+      </div>
+    </div>
+    <div class="content">
+
+      <div id="list-wrap">
+        <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+      </div>
+
+      <div id="quiz-wrap">
+
+        <!-- Topbar do quiz -->
+        <div class="rq-topbar">
+          <button class="rq-btn-voltar" id="btn-voltar">← Voltar</button>
+          <span class="rq-titulo" id="quiz-titulo"></span>
+          <span class="rq-prog-text" id="quiz-prog-text"></span>
+          <div class="rq-prog-track">
+            <div class="rq-prog-fill" id="quiz-bar" style="width:0%"></div>
+          </div>
+          <button class="rq-btn-encerrar" id="btn-encerrar" onclick="pedirEncerrar()">⛔ Encerrar</button>
+        </div>
+
+        <!-- Card da questão -->
+        <div class="rq-content">
+          <div class="rq-card">
+            <div class="rq-meta">
+              <span class="rq-cat" id="rq-cat"></span>
+              <span class="rq-qnum" id="rq-qnum"></span>
+            </div>
+            <div id="quiz-enunciado"></div>
+            <div id="quiz-opcoes"></div>
+            <div class="quiz-fb" id="quiz-fb"></div>
+            <div class="rq-chips-wrap" id="rq-chips-wrap" style="display:none;"></div>
+            <button class="rq-btn-proxima" id="btn-proxima" style="display:none;">Próxima →</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="summary-wrap">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="font-size:52px;margin-bottom:8px;" id="summ-emoji"></div>
+          <div style="font-size:22px;font-weight:800;" id="summ-titulo"></div>
+          <div style="font-size:14px;color:var(--text-muted);margin-top:4px;" id="summ-sub"></div>
+        </div>
+        <div id="summ-veredicto" style="margin-bottom:18px;"></div>
+        <div class="summ-grid">
+          <div class="summ-stat">
+            <div class="summ-icon" style="background:#DCFCE7;">✅</div>
+            <div><div style="font-size:26px;font-weight:800;color:var(--green);" id="summ-acertos"></div><div style="font-size:12px;color:var(--text-muted);">acertos</div></div>
+          </div>
+          <div class="summ-stat">
+            <div class="summ-icon" style="background:#FEE2E2;">❌</div>
+            <div><div style="font-size:26px;font-weight:800;color:var(--red);" id="summ-erros"></div><div style="font-size:12px;color:var(--text-muted);">erros</div></div>
+          </div>
+        </div>
+        <div id="summ-comparacao" style="margin-bottom:16px;"></div>
+        <div id="summ-analise" style="margin-bottom:16px;"></div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-outline" id="btn-refazer" style="flex:1;">↺ Refazer</button>
+          <button class="btn" id="btn-voltar-lista" style="flex:1;">← Lista</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal sair da atividade via navegação -->
+<div id="modal-sair-quiz" class="enc-overlay" style="display:none;">
+  <div class="enc-box">
+    <div style="font-size:17px;font-weight:800;margin-bottom:10px;">⚠️ Sair da atividade?</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:22px;line-height:1.6;">A atividade será encerrada e as respostas dadas até agora serão salvas.</div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn" onclick="confirmarSairQuiz()" style="flex:1;background:#DC2626;border-color:#DC2626;">Salvar e sair</button>
+      <button class="btn btn-outline" onclick="fecharModalSair()" style="flex:1;">Continuar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal encerrar -->
+<div id="modal-encerrar" class="enc-overlay" style="display:none;" onclick="if(event.target===this)fecharEncerrar()">
+  <div class="enc-box">
+    <div style="font-size:17px;font-weight:800;margin-bottom:10px;">⛔ Encerrar atividade?</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:22px;line-height:1.6;">As questões não respondidas até agora não serão contabilizadas como acerto.</div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn" onclick="confirmarEncerrar()" style="flex:1;background:#DC2626;border-color:#DC2626;">Encerrar</button>
+      <button class="btn btn-outline" onclick="fecharEncerrar()" style="flex:1;">Continuar</button>
+    </div>
+  </div>
+</div>
+
+
+<script type="module">
+import { getAlunoPreferencia, saveRoboticaTentativa, getRoboticaTentativasAluno } from "/js/db.js";
+import { requireAluno, renderSidebarAluno, clearSession, iniciarNotifDueloGlobal } from "/js/auth.js";
+import { initAvBanner } from "/js/avaliacao_banner.js";
+
+const sess = requireAluno("/index.html");
+if (!sess) throw new Error("não autenticado");
+const { alunos, turma } = sess;
+const aluno = alunos[0];
+initAvBanner(turma, aluno);
+
+window.sair = () => { import('/js/presenca.js').then(m => m.encerrarPresenca()); clearSession(); window.location.href = "/index.html"; };
+renderSidebarAluno("sidebar", "robotica");
+
+const isRob = await getAlunoPreferencia(turma, aluno, 'robotica');
+if (!isRob) { window.location.href = '/aluno/menu.html'; throw new Error("sem acesso"); }
+
+localStorage.setItem('sm_pref_robotica', '1');
+
+document.getElementById('topbar-sub').textContent = `Olá, ${aluno}!`;
+
+(async () => { try {
+  const _pUid = (turma + '_' + aluno).replace(/[.#$\[\]/\s]/g, '_');
+  const { iniciarPresenca, encerrarPresenca } = await import('/js/presenca.js');
+  const { getPerfil } = await import('/js/db.js');
+  const _perfil = await getPerfil(_pUid).catch(() => ({}));
+  await iniciarPresenca(_pUid, {
+    nome:    aluno,
+    apelido: _perfil?.apelido_ativo || aluno,
+    turma,
+    status:  _perfil?.duelos_disponivel !== false ? 'disponivel' : 'indisponivel',
+    pagina:  'robotica',
+  });
+  window.addEventListener('beforeunload', () => encerrarPresenca());
+} catch(e) { console.warn('[Presença]', e); } })();
+
+iniciarNotifDueloGlobal();
+
+(async () => { try {
+  const { initDueloAvail } = await import('/js/duelo_avail.js');
+  await initDueloAvail((turma + '_' + aluno).replace(/[.#$[\]/\s]/g, '_'));
+} catch(e) {} })();
+
+const ATIVIDADES = [
+  { n:1, label:"Atividade 1", desc:"Hardware básico e blocos fundamentais",  emoji:"🔌", bg:"#EBF6FD" },
+  { n:2, label:"Atividade 2", desc:"Aprofundamento de hardware e operadores", emoji:"⚡", bg:"#F5F3FF" },
+  { n:3, label:"Atividade 3", desc:"Operadores avançados, se/então e lógica", emoji:"🧠", bg:"#DCFCE7" },
+  { n:4, label:"Atividade 4", desc:"Revisão — 20 questões mais erradas",      emoji:"🎯", bg:"#FEF3C7" },
+  { n:5, label:"Atividade 5", desc:"Questionário geral — 60 questões",        emoji:"🚗", bg:"#FCE7F3", embaralhar:true },
+  { n:6, label:"Atividade 6", desc:"Primeiros Passos em C",                  emoji:"💻", bg:"#EDE9FE" },
+];
+
+function podeVer(a) {
+  if (!a.soPara) return true;
+  return aluno === a.soPara.aluno && turma === a.soPara.turma;
+}
+
+const MINIMO_APROVACAO = 85;
+
+function statusPct(pct) {
+  if (pct === 100) return { cor: '#f0a500', bg: '#FEF3C7', border: '#FDE68A', aprovado: true };
+  if (pct >= MINIMO_APROVACAO) return { cor: 'var(--green)', bg: '#DCFCE7', border: '#BBF7D0', aprovado: true };
+  return { cor: 'var(--red)', bg: '#FEF2F2', border: '#FECACA', aprovado: false };
+}
+
+let questoes = [];
+let atividadeAtual = null;
+let qIdx = 0;
+let respostas = {};
+let tentativasDB = [];
+let questoesMap = {}; // id → questão completa (todas as atividades)
+let _finalizando = false; // guard: impede chamadas concorrentes a finalizarAtividade
+let quizAtivo = false;
+let navegacaoPendente = null;
+
+const listWrap  = document.getElementById('list-wrap');
+const quizWrap  = document.getElementById('quiz-wrap');
+const summWrap  = document.getElementById('summary-wrap');
+
+// ── Carrega todas as questões para exibir histórico ───────────────────────
+async function carregarQuestoesMap() {
+  const results = await Promise.allSettled(
+    ATIVIDADES.map(a => fetch(`/dados/robotica/atividade_${a.n}.json`).then(r => r.json()))
+  );
+  for (const r of results) {
+    if (r.status === 'fulfilled') for (const q of r.value.questoes) questoesMap[q.id] = q;
+  }
+}
+
+async function carregarLista() {
+  try {
+    tentativasDB = await getRoboticaTentativasAluno(turma, aluno);
+    console.log(`[Robótica] carregarLista: ${tentativasDB.length} tentativas carregadas para ${aluno} (${turma})`);
+    for (const a of ATIVIDADES) {
+      const n = getTentativasPorAtiv(a.n).length;
+      if (n > 0) console.log(`  Atividade ${a.n}: ${n} tentativa(s)`);
+    }
+  } catch(e) {
+    console.error('[Robótica] ERRO ao carregar histórico:', e);
+    tentativasDB = [];
+  }
+  console.log('[Robótica] renderLista() chamado, tentativasDB.length =', tentativasDB.length);
+  renderLista();
+}
+
+function getTentativasPorAtiv(n) {
+  return tentativasDB.filter(t => t.atividade == n); // == para tolerar string/number
+}
+
+function formatData(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+}
+
+// ── Renderiza detalhe de questões de uma tentativa ──────────────────────────
+function renderQuestoesDetalhe(tent) {
+  const ativN = tent.atividade;
+  const atResps = tent.respostas || {};
+  // Todas as questões da atividade nesta ordem
+  const todasQs = Object.values(questoesMap).filter(q => {
+    // identifica por prefixo ou por atividade — precisamos saber a qual atividade pertence
+    // Usamos os índices carregados no fetch; como questoesMap tem todas, filtramos pelas respondidas
+    // e pelas da atividade correta. Mas questoesMap não guarda n. Então usamos apenas as respondidas
+    // + qualquer questão encontrada.
+    return true; // fallback: usa respondidas
+  });
+
+  // questoes da atividade específica
+  const qsAtiv = ATIVIDADES.map(a => a.n).reduce((acc, n) => {
+    if (n == ativN) {
+      // Filtramos questoesMap pelas questões que têm ID no respostas OU pela atividade
+      // Usamos uma abordagem: pegar todas as IDs respondidas e buscar no map
+    }
+    return acc;
+  }, null);
+
+  // Pega questões respondidas da tentativa, na ordem das IDs
+  const respondidosIds = Object.keys(atResps);
+  const naoRespondidosIds = [];
+
+  // Busca questoes da atividade a partir do questoesMap (prefixo não é confiável)
+  // Melhor: usar fetch de atividade_N.json em cache (não temos aqui)
+  // Então: mostra só as respondidas + indica total
+
+  const rows = respondidosIds.map((qid, i) => {
+    const r = atResps[qid];
+    const q = questoesMap[qid];
+    const enunciado = q ? q.enunciado : `Questão ${qid}`;
+    const correta = q ? q.resposta : '—';
+    const ac = r?.acertou;
+    const rdada = r?.resposta_dada ?? '—';
+    const cls = (ac === null || ac === undefined) ? 'skip' : ac ? 'ok' : 'err';
+    return `<div class="tent-q ${cls}">
+      <span style="font-size:10px;font-weight:700;color:var(--text-muted);width:20px;flex-shrink:0;padding-top:1px;">${i+1}.</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:11px;white-space:pre-wrap;margin-bottom:3px;">${enunciado}</div>
+        <div style="font-size:10px;">
+          <span style="font-weight:700;color:${ac ? 'var(--green)' : ac === false ? 'var(--red)' : 'var(--text-muted)'};">
+            ${rdada === null || rdada === undefined || rdada === '' ? 'Não respondida' : 'Resposta: ' + rdada}
+          </span>
+          ${!ac && correta !== '—' ? `<span style="color:var(--text-muted);margin-left:8px;">✓ Correta: ${correta}</span>` : ''}
+        </div>
+      </div>
+      <span style="font-size:14px;flex-shrink:0;">${ac ? '✅' : ac === false ? '❌' : '—'}</span>
+    </div>`;
+  }).join('');
+
+  const naoResp = (tent.total || 0) - respondidosIds.length;
+  const naoRespHtml = naoResp > 0
+    ? `<div style="font-size:11px;color:var(--text-muted);margin-top:6px;padding:6px 8px;background:var(--bg);border-radius:6px;border:1px dashed var(--border);">
+        ${naoResp} questão(ões) não respondida(s)
+       </div>`
+    : '';
+
+  return rows + naoRespHtml;
+}
+
+// ── Renderiza lista de atividades ─────────────────────────────────────────
+function renderLista() {
+  const zerou = [1, 2, 3].every(n =>
+    getTentativasPorAtiv(n).some(t => t.acertos > 0 && t.acertos === t.total)
+  );
+
+  let celebracaoHtml = '';
+  if (zerou) {
+    const CORES = ['#f0a500','#EF4444','#22C55E','#3B82F6','#A855F7','#EC4899','#F97316','#14B8A6'];
+    const pecas = Array.from({ length: 20 }, (_, i) => {
+      const cor  = CORES[i % CORES.length];
+      const left = ((i / 20) * 98 + 1).toFixed(1);
+      const dur  = (1.5 + (i % 7) * 0.25).toFixed(2);
+      const del  = ((i * 0.17) % 2.4).toFixed(2);
+      return `<span class="confete" style="left:${left}%;background:${cor};--dur:${dur}s;--delay:${del}s"></span>`;
+    }).join('');
+    celebracaoHtml = `
+      <div class="rob-celebracao">
+        <div class="rob-celebracao-shine"></div>
+        ${pecas}
+        <div style="position:relative;z-index:1;">
+          <div style="font-size:52px;line-height:1;margin-bottom:8px;">🏆</div>
+          <div style="font-size:19px;font-weight:800;color:#92400E;margin-bottom:6px;">Parabéns, ${aluno}!</div>
+          <div style="font-size:14px;color:#B45309;line-height:1.6;">Você zerou todas as atividades de Robótica<br>com <strong>⭐ 100%</strong> de aproveitamento! Incrível!</div>
+        </div>
+      </div>`;
+  }
+
+  const totalAprovadas = ATIVIDADES.filter(a => {
+    const tents = getTentativasPorAtiv(a.n);
+    return tents.some(t => t.total > 0 && statusPct(Math.round((t.acertos||0)/t.total*100)).aprovado);
+  }).length;
+  const todasPcts = ATIVIDADES.flatMap(a =>
+    getTentativasPorAtiv(a.n).map(t => t.total > 0 ? Math.round((t.acertos||0)/t.total*100) : 0)
+  );
+  const melhorPctGlobal = todasPcts.length > 0 ? Math.max(...todasPcts) : 0;
+  const totalTentativas = tentativasDB.length;
+
+  const statsHtml = `
+    <div class="rob-stats">
+      <div class="rob-stat">
+        <div class="rob-stat-icon green">✅</div>
+        <div>
+          <div class="rob-stat-val green">${totalAprovadas}</div>
+          <div class="rob-stat-lbl">Atividades aprovadas</div>
+        </div>
+      </div>
+      <div class="rob-stat">
+        <div class="rob-stat-icon orange">🎯</div>
+        <div>
+          <div class="rob-stat-val orange">${melhorPctGlobal > 0 ? melhorPctGlobal + '%' : '—'}</div>
+          <div class="rob-stat-lbl">Melhor pontuação</div>
+        </div>
+      </div>
+      <div class="rob-stat">
+        <div class="rob-stat-icon blue">🔁</div>
+        <div>
+          <div class="rob-stat-val blue">${totalTentativas}</div>
+          <div class="rob-stat-lbl">Total de tentativas</div>
+        </div>
+      </div>
+    </div>`;
+
+  const cardsHtml = ATIVIDADES.filter(podeVer).map(a => {
+    const tents = getTentativasPorAtiv(a.n).slice().reverse();
+    const done = tents.length > 0;
+    const melhorAcertos = done ? Math.max(...tents.map(t => t.acertos || 0)) : 0;
+    const total = done ? (tents[0].total || 0) : 0;
+    const melhorPct = total > 0 ? Math.round(melhorAcertos / total * 100) : 0;
+    const stMelhor = done ? statusPct(melhorPct) : null;
+    const aprovado = stMelhor?.aprovado ?? false;
+    const statusClass = !done ? 'pendente' : aprovado ? 'aprovado' : 'reprovado';
+
+    const badge = !done
+      ? `<span class="rob-badge gray">Não iniciada</span>`
+      : aprovado
+        ? `<span class="rob-badge green">✅ Aprovado</span>`
+        : `<span class="rob-badge red">❌ Reprovado</span>`;
+
+    const scorePill = done
+      ? `<span class="rob-atv-score">Melhor: <span class="hi">${melhorAcertos}/${total}</span> ${melhorPct}%</span>`
+      : `<span class="rob-atv-score" style="color:var(--text-muted)">—</span>`;
+
+    const ultimaData = done ? formatData(tents[0].completadoEm) : '';
+    const actionInfo = done
+      ? `<strong>${tents.length}</strong> tentativa${tents.length > 1 ? 's' : ''} · última em ${ultimaData}`
+      : `Nenhuma tentativa ainda`;
+
+    const LIMITE = 5;
+    const tentsVisiveis = tents.slice(0, LIMITE);
+
+    const tabelaHtml = done ? `
+      <div class="rob-tent-table-wrap">
+        <table class="rob-tent-table">
+          <thead><tr><th>Nº</th><th>Tipo</th><th>Pontuação</th><th>Status</th><th>Data</th></tr></thead>
+          <tbody>
+            ${tentsVisiveis.map((t, i) => {
+              const pct = t.total > 0 ? Math.round((t.acertos || 0) / t.total * 100) : 0;
+              const st = statusPct(pct);
+              const tentNum = tents.length - i;
+              const isCom = t.parcial;
+              const dotClass = isCom ? 'warn' : pct >= 85 ? 'ok' : 'fail';
+              const tipoLabel = isCom ? 'Parcial' : 'Completa';
+              const scoreClass = st.aprovado ? 'ok' : 'fail';
+              const badgeHtml = st.aprovado
+                ? `<span class="rob-badge green">Aprovado</span>`
+                : `<span class="rob-badge red">Reprovado</span>`;
+              const rowId = `qrow-${a.n}-${t.id}`;
+              const arrowId = `qarrow-${a.n}-${t.id}`;
+              const hasRespostas = t.respostas && Object.keys(t.respostas).length > 0;
+              return `
+                <tr class="data-row" onclick="${hasRespostas ? `toggleQuestoes('${rowId}','${arrowId}')` : ''}">
+                  <td><span class="t-num">${tentNum}ª</span></td>
+                  <td><div class="t-type"><span class="t-dot ${dotClass}"></span>${tipoLabel}</div></td>
+                  <td><span class="t-score ${scoreClass}">${t.acertos || 0}/${t.total || 0}</span><span class="t-pct">${pct}%</span></td>
+                  <td>${badgeHtml}</td>
+                  <td class="t-date">${formatData(t.completadoEm)} ${hasRespostas ? `<span id="${arrowId}" style="margin-left:4px;color:var(--text-muted);font-size:10px">▾</span>` : ''}</td>
+                </tr>
+                ${hasRespostas ? `
+                <tr class="q-expand-row" id="${rowId}"><td colspan="5">
+                  <div class="q-expand-inner">
+                    ${Object.entries(t.respostas).map(([qid, r], qi) => {
+                      const qObj = questoesMap[qid];
+                      const enunciado = qObj ? qObj.enunciado.substring(0, 80) + (qObj.enunciado.length > 80 ? '…' : '') : qid;
+                      const ac = r?.acertou;
+                      return `<div class="q-exp-item">
+                        <span class="q-exp-n">${qi+1}.</span>
+                        <span class="q-exp-ic">${ac ? '✅' : '❌'}</span>
+                        <span class="q-exp-txt">${enunciado}</span>
+                        <span class="q-exp-r ${ac ? 'ok' : 'fail'}">Resp: ${r?.resposta_dada || '—'}</span>
+                      </div>`;
+                    }).join('')}
+                  </div>
+                </td></tr>` : ''}`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+      ${tents.length > LIMITE ? `<div class="rob-tent-footer" onclick="verTodasTentativas(${a.n}, this)">▾ Ver todas as ${tents.length} tentativas</div>` : ''}
+    ` : `
+      <div class="rob-no-tent">
+        <span class="emoji">🚀</span>
+        Você ainda não tentou esta atividade. Clique em <strong>Iniciar</strong> para começar!
+      </div>`;
+
+    const nomeLabel = a.label.replace('Atividade ' + a.n + ' — ', '').replace('Atividade ' + a.n, '').trim() || a.label;
+
+    return `
+      <div class="rob-atv ${statusClass}" id="rob-atv-${a.n}">
+        <div class="rob-atv-hdr" onclick="toggleRobAtv(${a.n})">
+          <div class="rob-atv-icon">${a.emoji}</div>
+          <div class="rob-atv-info">
+            <div class="rob-atv-tag">Atividade ${String(a.n).padStart(2, '0')}</div>
+            <div class="rob-atv-nome">${nomeLabel}</div>
+            <div class="rob-atv-desc">${a.desc}</div>
+          </div>
+          <div class="rob-atv-meta">
+            ${badge}
+            ${scorePill}
+            <span class="rob-chevron">▾</span>
+          </div>
+        </div>
+        <div class="rob-atv-body">
+          <div class="rob-action-bar">
+            <div class="rob-action-info">${actionInfo}</div>
+            <button class="btn-iniciar-rob" onclick="event.stopPropagation(); iniciarAtividade(${a.n})">▶ Iniciar${done ? ' nova tentativa' : ''}</button>
+          </div>
+          ${tabelaHtml}
+        </div>
+      </div>`;
+  }).join('');
+
+  listWrap.innerHTML = celebracaoHtml + `
+    ${statsHtml}
+    <div class="rob-section-lbl">Material de Apoio</div>
+    <a href="/aluno/guia_robotica.html" target="_blank" class="rob-guia-card">
+      <div class="rob-guia-icon">📖</div>
+      <div class="rob-guia-info">
+        <div class="rob-guia-titulo">Guia de Robótica</div>
+        <div class="rob-guia-desc">Pinos do Arduino, PWM, DRV8833, motores, operadores e estruturas de decisão</div>
+      </div>
+      <div class="rob-guia-arrow">→</div>
+    </a>
+    <a href="/aluno/primeiros-passos-c.html" target="_blank" class="rob-guia-card">
+      <div class="rob-guia-icon">📘</div>
+      <div class="rob-guia-info">
+        <div class="rob-guia-titulo">Primeiros Passos em C</div>
+        <div class="rob-guia-desc">Variáveis, printf, scanf e a base da linguagem</div>
+      </div>
+      <div class="rob-guia-arrow">→</div>
+    </a>
+    <div class="rob-section-lbl" style="margin-top:24px;">Atividades</div>
+    <div class="rob-atv-list">${cardsHtml}</div>
+  `;
+}
+
+window.toggleRobAtv = function(n) {
+  document.getElementById(`rob-atv-${n}`)?.classList.toggle('expanded');
+};
+
+window.toggleQuestoes = function(rowId, arrowId) {
+  const row = document.getElementById(rowId);
+  const arrow = document.getElementById(arrowId);
+  if (!row) return;
+  const visible = row.style.display === 'table-row';
+  row.style.display = visible ? 'none' : 'table-row';
+  if (arrow) arrow.textContent = visible ? '▾' : '▴';
+};
+
+window.verTodasTentativas = function(ativN, el) {
+  const tents = getTentativasPorAtiv(ativN).slice().reverse();
+  const tbody = el.previousElementSibling?.querySelector('tbody');
+  if (!tbody) return;
+  const jaRenderizadas = tbody.querySelectorAll('tr.data-row').length;
+  const restantes = tents.slice(jaRenderizadas);
+  restantes.forEach((t, i) => {
+    const pct = t.total > 0 ? Math.round((t.acertos || 0) / t.total * 100) : 0;
+    const st = statusPct(pct);
+    const tentNum = tents.length - jaRenderizadas - i;
+    const scoreClass = st.aprovado ? 'ok' : 'fail';
+    const badgeHtml = st.aprovado
+      ? `<span class="rob-badge green">Aprovado</span>`
+      : `<span class="rob-badge red">Reprovado</span>`;
+    const isCom = t.parcial;
+    const dotClass = isCom ? 'warn' : pct >= 85 ? 'ok' : 'fail';
+    const tr = document.createElement('tr');
+    tr.className = 'data-row';
+    tr.innerHTML = `
+      <td><span class="t-num">${tentNum}ª</span></td>
+      <td><div class="t-type"><span class="t-dot ${dotClass}"></span>${isCom ? 'Parcial' : 'Completa'}</div></td>
+      <td><span class="t-score ${scoreClass}">${t.acertos || 0}/${t.total || 0}</span><span class="t-pct">${pct}%</span></td>
+      <td>${badgeHtml}</td>
+      <td class="t-date">${formatData(t.completadoEm)}</td>`;
+    tbody.appendChild(tr);
+  });
+  el.remove();
+};
+
+function embaralhar(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function embaralharPorNivel(questoes) {
+  const grupos = { facil: [], medio: [], dificil: [] };
+  for (const q of questoes) {
+    const n = q.nivel || 'facil';
+    (grupos[n] ?? grupos.facil).push(q);
+  }
+  return [...embaralhar(grupos.facil), ...embaralhar(grupos.medio), ...embaralhar(grupos.dificil)];
+}
+
+function embaralharOpcoes(questoes) {
+  const letras = ['A', 'B', 'C', 'D', 'E', 'F'];
+  return questoes.map(q => {
+    if (q.tipo !== 'multipla_escolha' || !q.opcoes?.length) return q;
+    const textos = q.opcoes.map(o => o.length > 3 ? o.substring(3) : o);
+    const corretaTexto = textos[q.opcoes.findIndex(o => o[0] === q.resposta)];
+    const shuffled = embaralhar(textos);
+    const novasOpcoes = shuffled.map((t, i) => `${letras[i]}) ${t}`);
+    const novaResposta = letras[shuffled.indexOf(corretaTexto)];
+    return { ...q, opcoes: novasOpcoes, resposta: novaResposta };
+  });
+}
+
+// ── Iniciar atividade ─────────────────────────────────────────────────────
+window.iniciarAtividade = async (n) => {
+  const atv = ATIVIDADES.find(a => a.n === n);
+  if (!atv || !podeVer(atv)) return;
+  _finalizando = false;
+  atividadeAtual = n;
+  qIdx = 0;
+  respostas = {};
+  const data = await fetch(`/dados/robotica/atividade_${n}.json`).then(r => r.json());
+  questoes = atv.embaralhar ? embaralharPorNivel(data.questoes) : data.questoes;
+  questoes = embaralharOpcoes(questoes);
+  quizAtivo = true;
+  window.addEventListener('beforeunload', alertaSair);
+  listWrap.style.display  = 'none';
+  summWrap.style.display  = 'none';
+  quizWrap.style.display  = 'block';
+  document.body.classList.add('quiz-ativo');
+  document.getElementById('quiz-titulo').textContent = `Atividade ${n}`;
+  renderQuestao();
+};
+
+function renderQuestao() {
+  const q = questoes[qIdx];
+  document.getElementById('quiz-prog-text').textContent = `Questão ${qIdx + 1} de ${questoes.length}`;
+  document.getElementById('quiz-bar').style.width = `${(qIdx / questoes.length) * 100}%`;
+  const catEl = document.getElementById('rq-cat');
+  const qnumEl = document.getElementById('rq-qnum');
+  if (catEl) catEl.textContent = q.categoria ? '🔌 ' + q.categoria : '';
+  if (qnumEl) qnumEl.textContent = `Q${String(qIdx+1).padStart(2,'0')} / ${questoes.length}`;
+
+  document.getElementById('quiz-enunciado').innerHTML = `<div class="rq-enunciado">${q.enunciado}</div>`;
+
+  document.getElementById('quiz-fb').style.display = 'none';
+  const cw = document.getElementById('rq-chips-wrap');
+  if (cw) { cw.style.display = 'none'; cw.innerHTML = ''; }
+  const _btnP = document.getElementById('btn-proxima');
+  _btnP.style.display = 'none';
+  _btnP.disabled = false; // re-habilita para a próxima questão
+
+  const div = document.getElementById('quiz-opcoes');
+  if (q.tipo === 'multipla_escolha') {
+    div.innerHTML = `<div class="rq-opcoes-grid">${q.opcoes.map(o => {
+      const letra = o[0];
+      const texto = o.length > 3 ? o.substring(3) : o;
+      return `<button class="rq-opcao" data-letra="${letra}" onclick="responder('${letra}')">
+        <span class="rq-letra">${letra}</span><span>${texto}</span>
+      </button>`;
+    }).join('')}</div>`;
+  } else if (q.tipo === 'verdadeiro_falso') {
+    div.innerHTML = `<div class="rq-vf-wrap">
+      <button class="rq-vf-btn rq-vf-v" onclick="responderVF('Verdadeiro')">
+        <span class="rq-vf-icon">✓</span><span>Verdadeiro</span>
+      </button>
+      <button class="rq-vf-btn rq-vf-f" onclick="responderVF('Falso')">
+        <span class="rq-vf-icon">✗</span><span>Falso</span>
+      </button>
+    </div>`;
+  } else if (q.tipo === 'numerica') {
+    div.innerHTML = `<div class="num-wrap">
+      <input class="num-input" id="num-resp" type="text" placeholder="Sua resposta…" onkeydown="if(event.key==='Enter')responderNum()"/>
+      <button class="btn" onclick="responderNum()">OK</button>
+    </div>`;
+    setTimeout(() => document.getElementById('num-resp')?.focus(), 80);
+  }
+}
+
+function travar() {
+  document.querySelectorAll('.quiz-opcao,.vf-btn,.rq-opcao,.rq-vf-btn').forEach(b => b.setAttribute('disabled','1'));
+  const ni = document.getElementById('num-resp');
+  if (ni) ni.disabled = true;
+}
+
+function mostrarFeedback(acertou, q) {
+  travar();
+  const fb = document.getElementById('quiz-fb');
+  fb.style.display = 'block';
+  if (q.tipo === 'multipla_escolha') {
+    document.querySelectorAll('.quiz-opcao, .rq-opcao').forEach(b => {
+      if (b.dataset.letra === q.resposta) b.classList.add('correta');
+      else if (!acertou && b.classList.contains('selecionada')) b.classList.add('errada');
+      else b.classList.add('neutra');
+    });
+  } else if (q.tipo === 'verdadeiro_falso') {
+    const cor = q.resposta.startsWith('Verdadeiro') ? 'Verdadeiro' : 'Falso';
+    document.querySelectorAll('.vf-btn, .rq-vf-btn').forEach(b => {
+      const val = b.textContent.includes('Verdadeiro') ? 'Verdadeiro' : 'Falso';
+      if (val === cor) b.classList.add('correta');
+      else if (!acertou) b.classList.add('errada');
+    });
+  }
+  if (acertou) {
+    fb.className = 'quiz-fb ok';
+    fb.textContent = '✓ Correto!';
+  } else {
+    const resp = q.resposta.length > 60 ? q.resposta.substring(0, 60) + '…' : q.resposta;
+    fb.className = 'quiz-fb err';
+    fb.textContent = `✗ Errado. Resposta correta: ${resp}`;
+  }
+  const btnP = document.getElementById('btn-proxima');
+  btnP.textContent = qIdx === questoes.length - 1 ? 'Concluir ✓' : 'Próxima →';
+  btnP.style.display = 'flex';
+  btnP.className = 'rq-btn-proxima';
+  const cw2 = document.getElementById('rq-chips-wrap');
+  if (cw2) {
+    const isMonitor = aluno === 'Murillo' && turma === '8H';
+    if (isMonitor) {
+      const curFb = respostas[q.id]?.feedback;
+      cw2.innerHTML = `<div class="rq-chips-label">Como você se sentiu nessa questão?</div>
+        <div class="rq-chips" id="rq-chips">${['Muito difícil','Não entendi','Não lembro','Tranquila'].map(op =>
+          `<button class="rq-chip${curFb===op?' selected':''}" onclick="marcarFeedback('${op}')">${op}</button>`
+        ).join('')}</div>`;
+      cw2.style.display = 'block';
+    } else {
+      cw2.style.display = 'none';
+    }
+  }
+}
+
+window.marcarFeedback = function(opcao) {
+  const q = questoes[qIdx];
+  if (!q) return;
+  if (!respostas[q.id]) respostas[q.id] = {};
+  respostas[q.id].feedback = opcao;
+  document.querySelectorAll('#rq-chips .rq-chip').forEach(c => {
+    c.classList.toggle('selected', c.textContent === opcao);
+  });
+};
+
+window.responder = (letra) => {
+  const q = questoes[qIdx];
+  const acertou = letra === q.resposta;
+  respostas[q.id] = { acertou, resposta_dada: letra };
+  document.querySelectorAll('.quiz-opcao, .rq-opcao').forEach(b => { if (b.dataset.letra === letra) b.classList.add('selecionada'); });
+  mostrarFeedback(acertou, q);
+};
+window.responderVF = (val) => {
+  const q = questoes[qIdx];
+  const cor = q.resposta.startsWith('Verdadeiro') ? 'Verdadeiro' : 'Falso';
+  const acertou = val === cor;
+  respostas[q.id] = { acertou, resposta_dada: val };
+  mostrarFeedback(acertou, q);
+};
+window.responderNum = () => {
+  const q = questoes[qIdx];
+  const inp = document.getElementById('num-resp');
+  if (!inp || !inp.value.trim()) return;
+  const dado = inp.value.trim();
+  const acertou = dado === q.resposta ||
+    (!isNaN(parseFloat(dado)) && !isNaN(parseFloat(q.resposta)) && Math.abs(parseFloat(dado) - parseFloat(q.resposta)) < 1e-9);
+  respostas[q.id] = { acertou, resposta_dada: dado };
+  inp.style.borderColor = acertou ? 'var(--green)' : 'var(--red)';
+  inp.style.background  = acertou ? 'var(--green-pale)' : 'var(--red-pale)';
+  mostrarFeedback(acertou, q);
+};
+
+document.getElementById('btn-proxima').addEventListener('click', async () => {
+  document.getElementById('btn-proxima').disabled = true; // bloqueia duplo-clique imediatamente
+  qIdx++;
+  if (qIdx >= questoes.length) await finalizarAtividade(false);
+  else renderQuestao(); // esconde e re-habilita o botão para a próxima questão
+});
+document.getElementById('btn-voltar').addEventListener('click', () => {
+  if (quizAtivo) {
+    navegacaoPendente = null;
+    document.getElementById('modal-sair-quiz').style.display = 'flex';
+  } else {
+    quizWrap.style.display = 'none';
+    listWrap.style.display = 'block';
+    document.body.classList.remove('quiz-ativo');
+  }
+});
+
+// ── Modal encerrar ────────────────────────────────────────────────────────
+window.pedirEncerrar = function() {
+  document.getElementById('modal-encerrar').style.display = 'flex';
+};
+window.fecharEncerrar = function() {
+  document.getElementById('modal-encerrar').style.display = 'none';
+};
+window.confirmarEncerrar = async function() {
+  document.getElementById('modal-encerrar').style.display = 'none';
+  await finalizarAtividade(true);
+};
+
+// ── Modal sair via navegação ──────────────────────────────────────────────
+window.fecharModalSair = function() {
+  document.getElementById('modal-sair-quiz').style.display = 'none';
+  navegacaoPendente = null;
+};
+window.confirmarSairQuiz = async function() {
+  document.getElementById('modal-sair-quiz').style.display = 'none';
+  await finalizarAtividade(true);
+  if (navegacaoPendente) {
+    window.removeEventListener('beforeunload', alertaSair);
+    window.location.href = navegacaoPendente;
+  }
+};
+
+function alertaSair(e) {
+  if (!quizAtivo) return;
+  e.preventDefault();
+  e.returnValue = '';
+}
+
+document.addEventListener('click', function(e) {
+  if (!quizAtivo) return;
+  const link = e.target.closest('a[href]');
+  if (!link) return;
+  const href = link.getAttribute('href');
+  if (!href || href.startsWith('#') || href.startsWith('javascript')) return;
+  e.preventDefault();
+  e.stopPropagation();
+  navegacaoPendente = link.href;
+  document.getElementById('modal-sair-quiz').style.display = 'flex';
+}, true);
+
+// ── Finalizar (normal ou parcial) ─────────────────────────────────────────
+async function finalizarAtividade(parcial = false) {
+  if (_finalizando) {
+    console.warn('[Robótica] finalizarAtividade ignorado — já em andamento ou concluído');
+    return;
+  }
+  _finalizando = true;
+  quizAtivo = false;
+  window.removeEventListener('beforeunload', alertaSair);
+  const acertos = Object.values(respostas).filter(r => r.acertou).length;
+  const erros   = Object.values(respostas).filter(r => !r.acertou).length;
+  const respondidas = Object.keys(respostas).length;
+
+  const tentAntes = getTentativasPorAtiv(atividadeAtual);
+  const ultimaAnt = tentAntes.length > 0 ? tentAntes[tentAntes.length - 1] : null;
+
+  let saveError = null;
+  let saveOk = false;
+  console.log('[Robótica] Salvando tentativa…', { turma, aluno, atividade: atividadeAtual, acertos, total: questoes.length, respondidas });
+  try {
+    await saveRoboticaTentativa(turma, aluno, atividadeAtual, {
+      acertos, erros, total: questoes.length, respondidas, parcial: parcial || false, respostas
+    });
+    saveOk = true;
+    console.log('[Robótica] Tentativa salva com sucesso no Firebase.');
+    // ── XP de gamificação ─────────────────────────────────────────
+    try {
+      const { adicionarXP } = await import('/js/db.js');
+      const { XP_ATIVIDADE_COMPLETA, XP_ATIVIDADE_100PCT } = await import('/js/gamificacao.js');
+      const total   = questoes.length;
+      const taxa    = total > 0 ? (acertos / total) : 0;
+      const xpGanho = taxa === 1 ? XP_ATIVIDADE_100PCT : XP_ATIVIDADE_COMPLETA;
+      const uidXP   = (turma + '_' + aluno).replace(/[.#$\[\]/\s]/g, '_');
+      await adicionarXP(uidXP, xpGanho);
+    } catch(e) { console.warn('[XP] Erro ao adicionar XP robótica:', e); }
+    try {
+      const { registrarAtividadeDia } = await import('/js/db.js');
+      await registrarAtividadeDia(uidXP);
+    } catch(e) {}
+  } catch(e) {
+    saveError = (e?.message || String(e) || 'erro desconhecido');
+    console.error('[Robótica] SAVE FALHOU:', e);
+    alert('⚠️ Robótica: erro ao salvar!\n\n' + saveError + '\n\nTurma: ' + turma + '\nAluno: ' + aluno + '\n\nVerifique as regras do Firebase Realtime Database.');
+  }
+  try {
+    tentativasDB = await getRoboticaTentativasAluno(turma, aluno);
+  } catch(e) {
+    console.error('[Robótica] LEITURA FALHOU:', e);
+  }
+
+  quizWrap.style.display  = 'none';
+  summWrap.style.display  = 'block';
+  document.body.classList.remove('quiz-ativo');
+  document.getElementById('quiz-bar').style.width = '100%';
+
+  const totalQ = questoes.length;
+  const pct = respondidas > 0 ? Math.round(acertos / totalQ * 100) : 0;
+  const stSumm = statusPct(pct);
+  document.getElementById('summ-emoji').textContent = pct === 100 ? '🏆' : stSumm.aprovado ? '🎉' : '📚';
+  document.getElementById('summ-titulo').textContent = pct === 100 ? 'Perfeito!' : stSumm.aprovado ? 'Aprovado!' : 'Continue praticando!';
+  document.getElementById('summ-acertos').textContent = acertos;
+  document.getElementById('summ-erros').textContent = erros;
+
+  if (parcial) {
+    const naoresp = totalQ - respondidas;
+    document.getElementById('summ-sub').textContent =
+      `Atividade ${atividadeAtual} — Encerrado · ${respondidas}/${totalQ} respondidas · ${naoresp} pulada(s)`;
+  } else {
+    document.getElementById('summ-sub').textContent =
+      `Atividade ${atividadeAtual} — ${pct === 100 ? '⭐ 100%' : pct + '%'} de aproveitamento`;
+  }
+
+  document.getElementById('summ-veredicto').innerHTML = `
+    <div style="text-align:center;padding:18px 20px;border-radius:var(--radius);background:${stSumm.bg};border:2px solid ${stSumm.border};">
+      <div style="font-size:28px;font-weight:800;color:${stSumm.aprovado ? '#15803D' : '#B91C1C'};line-height:1.2">${stSumm.aprovado ? '✅ Aprovado' : '❌ Reprovado'}</div>
+      <div style="font-size:13px;color:${stSumm.aprovado ? '#166534' : '#991B1B'};margin-top:6px;">${pct === 100 ? '⭐ 100%' : pct + '%'} obtido · mínimo ${MINIMO_APROVACAO}%</div>
+    </div>`;
+
+  // Comparação com tentativa anterior
+  if (ultimaAnt && ultimaAnt.respostas) {
+    const melhorou = [], piorou = [], aindarErrado = [];
+    for (const q of questoes) {
+      const antes = ultimaAnt.respostas[q.id];
+      const agora = respostas[q.id];
+      if (!antes || !agora) continue;
+      if (!antes.acertou && agora.acertou)        melhorou.push(q);
+      else if (antes.acertou && !agora.acertou)   piorou.push(q);
+      else if (!antes.acertou && !agora.acertou)  aindarErrado.push(q);
+    }
+    const diff = acertos - (ultimaAnt.acertos || 0);
+    const diffHtml = diff > 0
+      ? `<span style="color:var(--green);font-weight:800;">+${diff} ↑ melhora</span>`
+      : diff < 0
+      ? `<span style="color:var(--red);font-weight:800;">${diff} ↓ regrediu</span>`
+      : `<span style="color:var(--text-muted);font-weight:700;">= sem mudança</span>`;
+
+    let compHtml = `<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Comparação com tentativa anterior: ${diffHtml}</div>`;
+    if (melhorou.length) {
+      compHtml += `<div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:4px;">✓ Agora acertou (${melhorou.length}):</div>`;
+      compHtml += melhorou.map(q => `<div class="comp-q melhora">✗→✓ <span style="font-weight:600;">[${q.id}]</span> <span>${q.enunciado.replace(/\n/g,' ').substring(0, 60)}${q.enunciado.length > 60 ? '…' : ''}</span></div>`).join('');
+    }
+    if (piorou.length) {
+      compHtml += `<div style="font-size:12px;font-weight:700;color:var(--red);margin-top:8px;margin-bottom:4px;">✗ Passou a errar (${piorou.length}):</div>`;
+      compHtml += piorou.map(q => `<div class="comp-q piora">✓→✗ <span style="font-weight:600;">[${q.id}]</span> <span>${q.enunciado.replace(/\n/g,' ').substring(0, 60)}${q.enunciado.length > 60 ? '…' : ''}</span></div>`).join('');
+    }
+    if (aindarErrado.length) {
+      compHtml += `<div style="font-size:12px;font-weight:700;color:#f0a500;margin-top:8px;margin-bottom:4px;">Ainda errado (${aindarErrado.length}):</div>`;
+      compHtml += aindarErrado.slice(0, 5).map(q => `<div class="comp-q manteve-err">✗✗ <span style="font-weight:600;">[${q.id}]</span> <span>${q.enunciado.replace(/\n/g,' ').substring(0, 60)}${q.enunciado.length > 60 ? '…' : ''}</span></div>`).join('');
+      if (aindarErrado.length > 5) compHtml += `<div style="font-size:11px;color:var(--text-muted);padding:4px 12px;">+ ${aindarErrado.length - 5} outras</div>`;
+    }
+    compHtml += '</div>';
+    document.getElementById('summ-comparacao').innerHTML = compHtml;
+  } else {
+    document.getElementById('summ-comparacao').innerHTML = '';
+  }
+
+  // Análise completa por questão
+  (function() {
+    const textoOpcao = (q, letra) => q.opcoes?.find(o => o[0] === letra) || letra;
+    const cardsHtml = questoes.map((q, i) => {
+      const resp = respostas[q.id];
+      const ac   = resp?.acertou;
+      const rdada = resp?.resposta_dada ?? null;
+      const cls  = !resp ? 'skip' : ac ? 'ok' : 'err';
+      const iconCor = !resp ? 'var(--text-muted)' : ac ? 'var(--green)' : 'var(--red)';
+      const icon = !resp ? '—' : ac ? '✓' : '✕';
+
+      const suaRespHtml = !rdada
+        ? `<div class="rq-analise-linha" style="color:var(--text-muted);">Não respondida</div>`
+        : `<div class="rq-analise-linha"><span style="font-weight:700;color:${ac ? 'var(--green)' : 'var(--red)'};">Sua resposta:</span> ${textoOpcao(q, rdada)}</div>`;
+
+      const corretaHtml = !ac
+        ? `<div class="rq-analise-linha"><span style="font-weight:700;color:var(--green);">Correta:</span> ${textoOpcao(q, q.resposta)}</div>`
+        : '';
+
+      const explHtml = (!ac || !resp) && q.explicacao
+        ? `<div class="rq-analise-expl">💡 ${q.explicacao}</div>`
+        : '';
+
+      return `<div class="rq-analise-card ${cls}" data-tipo="${cls}">
+        <div class="rq-analise-num">Q${String(i+1).padStart(2,'0')}</div>
+        <div class="rq-analise-body">
+          ${q.categoria ? `<span class="rq-analise-cat">${q.categoria}</span>` : ''}
+          <div class="rq-analise-q">${q.enunciado}</div>
+          ${suaRespHtml}${corretaHtml}${explHtml}
+        </div>
+        <div class="rq-analise-icon" style="color:${iconCor}">${icon}</div>
+      </div>`;
+    }).join('');
+
+    document.getElementById('summ-analise').innerHTML = `
+      <div class="rq-analise-wrap">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px;">📋 Análise por questão</div>
+        <div class="rq-filtros">
+          <button class="rq-filtro ativo" onclick="filtrarAnalise('todas')">Todas</button>
+          <button class="rq-filtro" onclick="filtrarAnalise('err')">Erros</button>
+          <button class="rq-filtro" onclick="filtrarAnalise('ok')">Acertos</button>
+          <button class="rq-filtro" onclick="filtrarAnalise('skip')">Puladas</button>
+        </div>
+        ${cardsHtml}
+      </div>`;
+  })();
+
+  const saveStatusHtml = saveError
+    ? `<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:12px;margin:10px 0;font-size:13px;color:#B91C1C;font-weight:600;">
+        ⚠️ Erro ao salvar resultado! O professor não verá esta tentativa.<br>
+        <span style="font-weight:400;font-size:12px;">${saveError}</span>
+       </div>`
+    : saveOk
+    ? `<div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:10px 12px;margin:10px 0;font-size:12px;color:#15803D;font-weight:600;">
+        ✅ Resultado salvo com sucesso!
+       </div>`
+    : '';
+  if (saveStatusHtml) {
+    document.getElementById('summ-analise').insertAdjacentHTML('afterend', saveStatusHtml);
+  }
+}
+
+window.filtrarAnalise = function(tipo) {
+  document.querySelectorAll('.rq-filtro').forEach(b => {
+    const map = { todas:'todas', err:'erros', ok:'acertos', skip:'puladas' };
+    b.classList.toggle('ativo', b.textContent.trim().toLowerCase() === map[tipo]);
+  });
+  document.querySelectorAll('.rq-analise-card').forEach(c => {
+    c.style.display = (tipo === 'todas' || c.dataset.tipo === tipo) ? '' : 'none';
+  });
+};
+
+document.getElementById('btn-refazer').addEventListener('click', () => {
+  summWrap.style.display = 'none';
+  iniciarAtividade(atividadeAtual);
+});
+document.getElementById('btn-voltar-lista').addEventListener('click', () => {
+  summWrap.style.display = 'none';
+  listWrap.style.display = 'block';
+  document.body.classList.remove('quiz-ativo');
+  renderLista();
+});
+
+await carregarQuestoesMap();
+await carregarLista();
+</script>
+</body>
+</html>
