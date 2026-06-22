@@ -240,23 +240,27 @@
       .slot-eq{font-size:20px;}
     }
 
-    /* ── Fullscreen game — CSS Grid de 5 linhas ── */
+    /* ── Fullscreen game — Flexbox coluna ── */
     html,body{overflow:hidden;height:100%;}
     /* iOS Safari: dvh descontam a barra do browser; vh não desconta */
     .layout{min-height:100vh;min-height:100dvh;}
     .main{overflow:hidden;min-height:0!important;height:100vh;height:100dvh;}
     #content{flex:1!important;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;padding:0!important;}
-    /* .tb-wrap: Grid de 5 linhas — info | timer/líderes | status | 1fr cards | slots */
-    .tb-wrap{display:grid;grid-template-rows:auto auto auto 1fr auto;height:100%;width:100%;max-width:630px;margin:0 auto;overflow:hidden;padding:6px 16px 4px;box-sizing:border-box;}
-    /* Linha 1fr (cards): min-height:0 garante que não extrapola */
-    .game-grid{min-height:0;overflow:hidden;margin-bottom:0!important;grid-auto-rows:minmax(0,1fr)!important;gap:clamp(3px,.8vw,7px)!important;}
+    /* .tb-wrap: flex-column — info | timer/líderes | status | 1fr cards | slots */
+    /* Não usa CSS Grid + 1fr+auto pois browsers antigos (Safari iOS) calculam 1fr   */
+    /* sem reservar o espaço do último auto, empurrando os slots pra fora da tela.   */
+    .tb-wrap{display:flex;flex-direction:column;height:100%;width:100%;max-width:630px;margin:0 auto;overflow:hidden;padding:6px 16px 4px;box-sizing:border-box;}
+    /* Todos os filhos diretos não encolhem — exceto o game-grid (flex:1) */
+    .tb-wrap > *{flex-shrink:0;}
+    /* Linha flex (cards): cresce para preencher o espaço restante */
+    .game-grid{flex:1 1 0%!important;min-height:0;overflow:hidden;margin-bottom:0!important;grid-auto-rows:minmax(0,1fr)!important;gap:clamp(3px,.8vw,7px)!important;}
     .game-card{height:auto!important;min-height:0!important;}
-    /* Margens compactas dentro das linhas */
+    /* Margens compactas */
     .timer-wrap{margin-bottom:3px!important;}
     .timer-bar-bg{margin-bottom:4px!important;}
     .pairs-bar-bg{margin-bottom:2px!important;}
     .status-msg{margin-bottom:2px!important;min-height:14px!important;}
-    .slots-wrap{padding:3px 0 2px!important;}
+    .slots-wrap{padding:3px 0 2px!important;flex-shrink:0!important;}
     .sprint-bar{margin-bottom:4px!important;}
   </style>
 </head>
@@ -1144,12 +1148,17 @@ function _buildLeadersHtml() {
 
   // ── 🏆 Hall da Fama (concluintes dos 300) ──────────────────────
   if (hall.length) {
-    const nomesHall = hall.map(r =>
-      `<strong>${isMe(r) ? 'Você' : escH(r.nome)}</strong><span style="color:var(--text-muted);font-weight:400"> - ${escH(r.turma||'')}</span>`
-    ).join('<span style="color:var(--text-muted)"> · </span>');
+    const primeiro = hall[0];
+    const nomeLabel = isMe(primeiro)
+      ? `<strong>Você</strong>`
+      : `<strong>${escH(primeiro.nome)}</strong><span style="color:var(--text-muted);font-weight:400"> ${escH(primeiro.turma||'')}</span>`;
+    const resto = hall.length - 1;
+    const extra = resto > 0
+      ? `<span style="color:var(--text-muted);font-weight:400"> + ${resto} aluno${resto > 1 ? 's' : ''} concluíram</span>`
+      : '';
     lines.push(
       `<div style="font-size:10px;font-weight:600;color:#FBBF24;margin-bottom:1px;line-height:1.35">` +
-      `🏆 <span style="color:var(--text-muted);font-weight:400">Hall da Fama:</span> ${nomesHall}` +
+      `🏆 <span style="color:var(--text-muted);font-weight:400">Hall da Fama:</span> ${nomeLabel}${extra}` +
       `</div>`
     );
   }
