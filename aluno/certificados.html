@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <script>document.documentElement.setAttribute("data-theme","dark");</script>
@@ -11,16 +11,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="/css/main.css"/>
 <style>
-
-
-  /* ── Cards de certificado ── */
   .cert-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 16px;
-    margin-top: 16px;
+    gap: 16px; margin-top: 16px;
   }
-
   .cert-card {
     background: var(--card); border: 1px solid var(--border);
     border-radius: 16px; padding: 24px; position: relative;
@@ -28,19 +23,12 @@
   }
   .cert-card.desbloqueado {
     border-color: rgba(201,168,76,.35);
-    background: rgba(201,168,76,.03);
-    cursor: pointer;
+    background: rgba(201,168,76,.03); cursor: pointer;
   }
   .cert-card.desbloqueado:hover { border-color: rgba(201,168,76,.6); }
   .cert-card.bloqueado { opacity: .45; cursor: default; }
-
-  .cert-card::before {
-    content: ''; position: absolute; inset: 0;
-    pointer-events: none;
-  }
-  .cert-card.desbloqueado::before {
-    background: radial-gradient(ellipse at 0% 0%, rgba(201,168,76,.08) 0%, transparent 60%);
-  }
+  .cert-card::before { content: ''; position: absolute; inset: 0; pointer-events: none; }
+  .cert-card.desbloqueado::before { background: radial-gradient(ellipse at 0% 0%, rgba(201,168,76,.08) 0%, transparent 60%); }
 
   .cert-icon {
     width: 56px; height: 56px; border-radius: 50%;
@@ -51,22 +39,12 @@
     background: linear-gradient(135deg, #f7e98e, #c9a84c);
     box-shadow: 0 0 20px rgba(245,158,11,.35);
   }
-  .cert-card.bloqueado .cert-icon {
-    background: var(--card2); border: 1px solid var(--border);
-  }
+  .cert-card.bloqueado .cert-icon { background: var(--card2); border: 1px solid var(--border); }
 
-  .cert-nome {
-    font-size: 15px; font-weight: 800; margin-bottom: 4px;
-    color: var(--text);
-  }
+  .cert-nome { font-size: 15px; font-weight: 800; margin-bottom: 4px; color: var(--text); }
   .cert-card.desbloqueado .cert-nome { color: #c9a84c; }
-
   .cert-desc { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 12px; }
-
-  .cert-data {
-    font-size: 10px; color: rgba(201,168,76,.7);
-    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px;
-  }
+  .cert-data { font-size: 10px; color: rgba(201,168,76,.7); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
 
   .cert-btn {
     display: inline-flex; align-items: center; gap: 6px;
@@ -76,19 +54,9 @@
     letter-spacing: .5px; transition: opacity .15s;
   }
   .cert-btn:hover { opacity: .85; }
+  .cert-lock { display: inline-flex; align-items: center; gap: 6px; background: var(--card2); border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 8px 16px; font-size: 12px; font-weight: 600; }
+  .cert-requisito { font-size: 11px; color: var(--muted); margin-top: 8px; }
 
-  .cert-lock {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: var(--card2); border: 1px solid var(--border);
-    color: var(--muted); border-radius: 8px; padding: 8px 16px;
-    font-size: 12px; font-weight: 600;
-  }
-
-  .cert-requisito {
-    font-size: 11px; color: var(--muted); margin-top: 8px;
-  }
-
-  /* Header da página */
   .certs-header {
     background: #1a1a2e !important; border: 1px solid rgba(255,255,255,0.07) !important;
     border-radius: 16px; padding: 24px; margin-bottom: 24px;
@@ -100,16 +68,8 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 24px; flex-shrink: 0;
   }
-  .certs-header-count {
-    font-size: 28px; font-weight: 900; color: #c9a84c;
-    font-family: 'Cinzel', serif; line-height: 1;
-  }
-  .certs-header-sub { font-size: 12px; color: #6b7280 !important; margin-top: 2px; }
 
-
-  @media (max-width: 500px) {
-    .cert-grid { grid-template-columns: 1fr; }
-  }
+  @media(max-width:500px) { .cert-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -125,7 +85,6 @@
         <div id="topbar-avatar-circle" class="avatar-circle" style="width:36px;height:36px;cursor:pointer" onclick="window.location.href='/aluno/perfil.html'"></div>
       </div>
     </div>
-
     <div class="content">
       <div style="max-width:760px;margin:0 auto;padding:24px 16px 60px">
         <div id="certs-content">
@@ -147,6 +106,7 @@ const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
 
 renderSidebarAluno('sidebar', 'certificados');
 window.sair = () => { clearSession(); window.location.href = '/index.html'; };
+
 (async () => { try {
   const { iniciarPresenca, encerrarPresenca } = await import('/js/presenca.js');
   const _dispSnap = await get(ref(db, `perfis/${uid}/duelos_disponivel`));
@@ -158,7 +118,6 @@ window.sair = () => { clearSession(); window.location.href = '/index.html'; };
 } catch(e) {} })();
 iniciarNotifDueloGlobal();
 
-// Avatar topbar
 (async () => { try {
   const { getPerfil } = await import('/js/db.js');
   const { avatarUrl, avatarConfigDefault } = await import('/js/gamificacao.js');
@@ -171,90 +130,60 @@ iniciarNotifDueloGlobal();
   }
 } catch(_) {} })();
 
-// ── Definição de todos os certificados ──
-const CERTIFICADOS = [
-  {
-    id:        'tabuada_300',
-    emoji:     '🏆',
-    nome:      'Mestre da Tabuada',
-    desc:      'Concluiu todos os 300 níveis do programa de Cálculo Mental, resolvendo mais de 3.100 operações matemáticas.',
-    requisito: 'Chegue ao nível 300 na tabuada',
-    href:      '/aluno/diploma_tabuada.html',
-    btnLabel:  '🎓 Ver diploma',
-  },
-  {
-    id:        'tabuada_ouro',
-    emoji:     '🥇',
-    nome:      'Todos com Estrela',
-    desc:      'Completou todos os 300 níveis da tabuada sem nenhum erro pelo menos uma vez — perfeição em cada desafio.',
-    requisito: 'Complete todos os 300 níveis sem erros (pelo menos 1×)',
-    href:      null,
-    btnLabel:  null,
-  },
-  {
-    id:        'tabuada_diamante',
-    emoji:     '💎',
-    nome:      'Maestria Total',
-    desc:      'Alcançou maestria em todos os 300 níveis da tabuada — 3 completions perfeitas consecutivas em cada um.',
-    requisito: 'Complete todos os 300 níveis com maestria (3× perfeito)',
-    href:      null,
-    btnLabel:  null,
-  },
-];
-
-// Buscar conquistas do aluno
 const conquSnap = await get(ref(db, `conquistas/${uid}`));
-const conqus = conquSnap.exists() ? conquSnap.val() : {};
-
-const desbloqueados = CERTIFICADOS.filter(c => conqus[c.id]?.conquistado === true);
+const conqus    = conquSnap.exists() ? conquSnap.val() : {};
+const temBase   = conqus['tabuada_300']?.conquistado === true;
+const tsBase    = conqus['tabuada_300']?.ts;
+const dataBase  = tsBase ? new Date(tsBase).toLocaleDateString('pt-BR', { day:'numeric', month:'long', year:'numeric' }) : null;
 
 const el = document.getElementById('certs-content');
-el.innerHTML = `
-  <div class="certs-header">
-    <div class="certs-header-icon">🎓</div>
-    <div>
-      <div style="font-size:28px;font-weight:900;color:#c9a84c;font-family:'Cinzel',serif;line-height:1">${desbloqueados.length}<span style="font-size:16px;color:#6b7280">/${CERTIFICADOS.length}</span></div>
-      <div style="font-size:12px;color:#6b7280;margin-top:2px">
-        ${desbloqueados.length === 0
-          ? 'Nenhum certificado ainda — continue jogando!'
-          : desbloqueados.length === CERTIFICADOS.length
-            ? '🏆 Todos os certificados conquistados!'
-            : `${CERTIFICADOS.length - desbloqueados.length} ainda por conquistar`}
+
+if (!temBase) {
+  el.innerHTML = `
+    <div class="certs-header">
+      <div class="certs-header-icon">🎓</div>
+      <div>
+        <div style="font-size:28px;font-weight:900;color:#c9a84c;font-family:'Cinzel',serif;line-height:1">0<span style="font-size:16px;color:#6b7280">/1</span></div>
+        <div style="font-size:12px;color:#6b7280;margin-top:2px">Nenhum certificado ainda — continue jogando!</div>
       </div>
     </div>
-  </div>
-
-  <div class="cert-grid">
-    ${CERTIFICADOS.map(c => {
-      const conquistou = conqus[c.id]?.conquistado === true;
-      const ts   = conqus[c.id]?.ts;
-      const data = ts ? new Date(ts).toLocaleDateString('pt-BR', { day:'numeric', month:'long', year:'numeric' }) : null;
-      return `
-        <div class="cert-card ${conquistou ? 'desbloqueado' : 'bloqueado'}"
-             ${conquistou && c.href ? `onclick="window.location.href='${c.href}'"` : ''}>
-          <div class="cert-icon">${c.emoji}</div>
-          <div class="cert-nome">${c.nome}</div>
-          <div class="cert-desc">${c.desc}</div>
-          ${conquistou && data ? `<div class="cert-data">✅ Conquistado em ${data}</div>` : ''}
-          ${conquistou
-            ? (c.href ? `<a class="cert-btn" href="${c.href}" onclick="event.stopPropagation()">${c.btnLabel}</a>`
-                      : `<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.4);color:#c9a84c;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700">${c.emoji} Conquista desbloqueada!</div>`)
-            : `<div>
-                <div class="cert-lock">🔒 Bloqueado</div>
-                <div class="cert-requisito">${c.requisito}</div>
-               </div>`
-          }
-        </div>`;
-    }).join('')}
-  </div>
-
-  <div style="text-align:center;margin-top:28px;padding:20px;
-              background:#1a1a2e;border:1px dashed rgba(255,255,255,.07);
-              border-radius:14px">
-    <div style="font-size:20px;margin-bottom:6px">✨</div>
-    <div style="font-size:13px;font-weight:700;margin-bottom:4px;color:#e8eaf0">Mais certificados em breve</div>
-    <div style="font-size:11px;color:#6b7280">Novos diplomas serão adicionados ao longo do ano letivo</div>
-  </div>`;
+    <div class="cert-grid">
+      <div class="cert-card bloqueado">
+        <div class="cert-icon">🏆</div>
+        <div class="cert-nome">Mestre da Tabuada</div>
+        <div class="cert-desc">Conclua todos os 300 níveis do programa de Cálculo Mental para desbloquear este diploma.</div>
+        <div><div class="cert-lock">🔒 Bloqueado</div><div class="cert-requisito">Chegue ao nível 300 na tabuada</div></div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:28px;padding:20px;background:#1a1a2e;border:1px dashed rgba(255,255,255,.07);border-radius:14px">
+      <div style="font-size:20px;margin-bottom:6px">✨</div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:4px;color:#e8eaf0">Mais certificados em breve</div>
+      <div style="font-size:11px;color:#6b7280">Novos diplomas serão adicionados ao longo do ano letivo</div>
+    </div>`;
+} else {
+  el.innerHTML = `
+    <div class="certs-header">
+      <div class="certs-header-icon">🎓</div>
+      <div>
+        <div style="font-size:28px;font-weight:900;color:#c9a84c;font-family:'Cinzel',serif;line-height:1">1<span style="font-size:16px;color:#6b7280">/1</span></div>
+        <div style="font-size:12px;color:#6b7280;margin-top:2px">🏆 Certificado conquistado!</div>
+      </div>
+    </div>
+    <div class="cert-grid">
+      <div class="cert-card desbloqueado" onclick="window.location.href='/aluno/diploma_tabuada.html'">
+        <div class="cert-icon">🏆</div>
+        <div class="cert-nome">Mestre da Tabuada</div>
+        <div class="cert-desc">Concluiu todos os 300 níveis do programa de Cálculo Mental, resolvendo mais de 3.100 operações matemáticas.</div>
+        ${dataBase ? `<div class="cert-data">✅ Conquistado em ${dataBase}</div>` : ''}
+        <a class="cert-btn" href="/aluno/diploma_tabuada.html" onclick="event.stopPropagation()">🎓 Ver diploma</a>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:28px;padding:20px;background:#1a1a2e;border:1px dashed rgba(255,255,255,.07);border-radius:14px">
+      <div style="font-size:20px;margin-bottom:6px">✨</div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:4px;color:#e8eaf0">Mais certificados em breve</div>
+      <div style="font-size:11px;color:#6b7280">Novos diplomas serão adicionados ao longo do ano letivo</div>
+    </div>`;
+}
 </script>
 </body>
 </html>

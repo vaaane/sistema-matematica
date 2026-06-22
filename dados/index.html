@@ -440,7 +440,7 @@
 </div></div>
 
 <script type="module">
-import { getConfig, getSenhaAluno, getResultados, getLiberadas, getAllAtividadeStatus, contarSessoesTabuadaHoje, somarPartidasTabuadaTotal, getFeedGlobal } from "/js/db.js";
+import { getConfig, getSenhaAluno, getResultados, getLiberadas, contarSessoesTabuadaHoje, somarPartidasTabuadaTotal, getFeedGlobal } from "/js/db.js";
 import { getSession, setSession, hashSenha } from "/js/auth.js";
 import { ALUNOS_POR_TURMA } from "/js/constants.js";
 
@@ -493,19 +493,14 @@ let liberadasCache = [];
     const inicioHoje = new Date(); inicioHoje.setHours(0,0,0,0);
     const tsInicioHoje = inicioHoje.getTime();
 
-    const [resultados, liberadas, atividadeStatus, tabuadaHoje, tabuadaTotal, feed] = await Promise.all([
+    const [resultados, liberadas, tabuadaHoje, tabuadaTotal, feed] = await Promise.all([
       getResultados(),
       getLiberadas(),
-      getAllAtividadeStatus(),
       contarSessoesTabuadaHoje(),
       somarPartidasTabuadaTotal(),
       getFeedGlobal(40),
     ]);
-    // Filtra liberações encerradas usando config/atividade_status
-    liberadasCache = liberadas.filter(l => {
-      const st = atividadeStatus[`${l.turma}|${l.atividade}`];
-      return !st || st.status !== 'encerrada';
-    });
+    liberadasCache = liberadas;
 
     const reais = resultados.filter(r => r.concluido && !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
 
@@ -584,7 +579,7 @@ window.carregarAlunos = function() {
   if (turma) setTimeout(() => sel1.focus(), 50);
 
   // Alert: só mostra se a turma selecionada tem atividade liberada
-  const temAtividade = turma && liberadasCache.some(l => l.turma === turma);
+  const temAtividade = turma && liberadasCache.some(l => l.turma === turma && l.status !== 'encerrada');
   document.getElementById('activityAlert').style.display = temAtividade ? 'flex' : 'none';
 };
 

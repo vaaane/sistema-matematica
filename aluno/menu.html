@@ -1105,12 +1105,15 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
   if (bodyEl) { try {
     // Linha condicional de posição do aluno
     let posHtml = '';
-    if (myGeral === 1) {
+    if (meuNivel >= 300) {
       const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
       posHtml = `<div style="padding:8px 12px;background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(245,158,11,.06));border:1px solid rgba(245,158,11,.45);border-radius:9px;font-size:12px;font-weight:700;color:${isDark ? '#FCD34D' : '#92400E'};line-height:1.5">
-        ${meuNivel >= 300
-          ? '🏆 <strong>Hall da Fama!</strong> Você concluiu toda a Tabuada (Nível 300) 🌟'
-          : `👑 <strong>#1 Geral!</strong> Nível ${meuNivel} — Continue subindo!`}
+        🏆 <strong>Hall da Fama!</strong> Você concluiu toda a Tabuada (Nível 300) 🌟
+      </div>`;
+    } else if (myGeral === 1) {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      posHtml = `<div style="padding:8px 12px;background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(245,158,11,.06));border:1px solid rgba(245,158,11,.45);border-radius:9px;font-size:12px;font-weight:700;color:${isDark ? '#FCD34D' : '#92400E'};line-height:1.5">
+        👑 <strong>#1 Geral!</strong> Nível ${meuNivel} — Continue subindo!
       </div>`;
     } else if (myTurma !== null && myTurma >= 2 && myTurma <= 5) {
       posHtml = `<div style="padding:7px 11px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:8px;font-size:12px;font-weight:700;color:var(--green)">🎉 Você está em #${myTurma} na turma!</div>`;

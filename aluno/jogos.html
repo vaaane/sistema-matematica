@@ -689,14 +689,11 @@ function buildLevelMap() {
   const li = {}; // level -> { done, perfect, maestria, consec }
   for (const e of entries) {
     const lv = e.nivel; if (!lv) continue;
-    if (!li[lv]) li[lv] = { done: false, perfect: false, maestria: false, consec: 0 };
+    if (!li[lv]) li[lv] = { done: false, perfect: false, maestria: false, perfeitas: 0 };
     if (e.resultado === 'completou') {
       li[lv].done = true;
       const isP = (e.erros || 0) === 0;
-      if (isP) { li[lv].perfect = true; li[lv].consec++; if (li[lv].consec >= 3) li[lv].maestria = true; }
-      else li[lv].consec = 0;
-    } else {
-      if (li[lv]) li[lv].consec = 0;
+      if (isP) { li[lv].perfect = true; li[lv].perfeitas++; if (li[lv].perfeitas >= 3) li[lv].maestria = true; }
     }
   }
 

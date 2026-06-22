@@ -79,13 +79,10 @@ export async function verificarConquistas(uid, contexto = {}) {
           .sort((a, b) => a.ts - b.ts)
           .forEach(e => {
             const lv = e.nivel; if (!lv) return;
-            if (!li[lv]) li[lv] = { perfect: false, maestria: false, consec: 0 };
+            if (!li[lv]) li[lv] = { perfect: false, maestria: false, perfeitas: 0 };
             if (e.resultado === 'completou') {
               const isP = (e.erros || 0) === 0;
-              if (isP) { li[lv].perfect = true; li[lv].consec++; if (li[lv].consec >= 3) li[lv].maestria = true; }
-              else li[lv].consec = 0;
-            } else {
-              li[lv].consec = 0;
+              if (isP) { li[lv].perfect = true; li[lv].perfeitas++; if (li[lv].perfeitas >= 3) li[lv].maestria = true; }
             }
           });
         const niveis300 = Array.from({ length: 300 }, (_, i) => i + 1);

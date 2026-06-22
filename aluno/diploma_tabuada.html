@@ -1,241 +1,141 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <meta name="theme-color" content="#15102a">
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Diploma — Tabuada Nível 300</title>
+<title>Diploma — Tabuada</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="/css/main.css"/>
 <style>
   :root {
-    --bg:#0d0f1a; --card:#151828; --card2:#1c2035;
-    --border:rgba(255,255,255,0.07);
-    --text:#e8eaf0; --muted:#6b7280;
-    --gold:#F59E0B; --green:#22c55e; --purple:#7F77DD;
+    --bg:#0d0f1a; --card:#151828; --border:rgba(255,255,255,0.07);
+    --text:#e8eaf0; --muted:#6b7280; --purple:#7F77DD;
   }
-  html, body { background: var(--bg) !important; color: var(--text) !important; }
-  .main { background: var(--bg) !important; }
+  html,body { background:var(--bg)!important; color:var(--text)!important; }
+  .main { background:var(--bg)!important; }
 
-  /* ── Tela do site ── */
-  .diploma-page { max-width: 520px; margin: 0 auto; padding: 24px 16px 60px; }
+  .dp-page { max-width: 860px; margin: 0 auto; padding: 24px 16px 60px; }
 
-  .diploma-site-card {
-    background: var(--card); border: 1px solid rgba(245,158,11,.2);
-    border-radius: 20px; padding: 32px 24px; text-align: center;
-    position: relative; overflow: hidden;
+  /* ── Intro card ── */
+  .dp-intro {
+    background: var(--card); border: 1px solid rgba(201,168,76,.2);
+    border-radius: 20px; padding: 28px 24px; text-align: center;
+    margin-bottom: 28px; position: relative; overflow: hidden;
   }
-  .diploma-site-card::before {
-    content: ''; position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 50% 0%, rgba(245,158,11,.12) 0%, transparent 65%);
-    pointer-events: none;
+  .dp-intro::before {
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background: radial-gradient(ellipse at 50% 0%, rgba(201,168,76,.1) 0%, transparent 65%);
   }
+  .dp-intro-nome { font-family:'Cinzel',serif; font-size:26px; font-weight:700; color:var(--text); margin-bottom:4px; }
+  .dp-intro-turma { font-size:13px; color:var(--muted); margin-bottom:6px; }
+  .dp-intro-data  { font-size:11px; color:rgba(201,168,76,.7); margin-bottom:0; }
 
-  .diploma-medal-glow {
-    width: 88px; height: 88px; border-radius: 50%;
-    background: linear-gradient(135deg, #f7e98e, #c9a84c, #f7e98e);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 42px; margin: 0 auto 18px;
-    border: 3px solid #c9a84c;
-    box-shadow: 0 0 0 8px rgba(201,168,76,.1), 0 0 40px rgba(245,158,11,.4);
-    animation: medal-pulse 2.5s ease-in-out infinite;
+  /* ── Grid de 3 cards ── */
+  .dp-grid {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 20px;
   }
-  @keyframes medal-pulse {
-    0%,100% { box-shadow: 0 0 0 8px rgba(201,168,76,.1), 0 0 30px rgba(245,158,11,.35); }
-    50%      { box-shadow: 0 0 0 14px rgba(201,168,76,.07), 0 0 60px rgba(245,158,11,.6); }
-  }
+  @media(max-width:700px) { .dp-grid { grid-template-columns: 1fr; } }
 
-  .diploma-site-label {
-    font-size: 10px; font-weight: 700; letter-spacing: 3px;
-    text-transform: uppercase; color: #c9a84c; margin-bottom: 10px;
+  /* ── Diploma card ── */
+  .dp-card {
+    border-radius: 18px; padding: 28px 20px; text-align: center;
+    position: relative; overflow: hidden; display: flex; flex-direction: column;
+    transition: transform .15s, box-shadow .15s;
   }
-  .diploma-site-nome {
-    font-family: 'Cinzel', serif; font-size: 24px; font-weight: 700;
-    color: var(--text); margin-bottom: 4px;
-  }
-  .diploma-site-turma {
-    font-size: 13px; color: var(--muted); margin-bottom: 6px;
-  }
-  .diploma-site-data {
-    font-size: 11px; color: rgba(245,158,11,.7); margin-bottom: 24px;
-  }
+  .dp-card:hover { transform: translateY(-2px); }
+  .dp-card.locked { opacity: .38; pointer-events: none; }
 
-  .diploma-ops-grid {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 10px; margin-bottom: 24px;
+  /* cores por tier */
+  .dp-card.tier-base {
+    background: var(--card); border: 1px solid rgba(201,168,76,.25);
   }
-  .diploma-op-box {
-    background: rgba(201,168,76,.07); border: 1px solid rgba(201,168,76,.2);
-    border-radius: 12px; padding: 14px 10px; text-align: center;
+  .dp-card.tier-base::before {
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background: radial-gradient(ellipse at 50% 0%, rgba(201,168,76,.1) 0%, transparent 65%);
   }
-  .diploma-op-val {
-    font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700;
-    color: #c9a84c; line-height: 1;
+  .dp-card.tier-ouro {
+    background: #100d02; border: 1.5px solid rgba(234,179,8,.5);
+    box-shadow: 0 0 30px rgba(234,179,8,.1);
   }
-  .diploma-op-lbl {
-    font-size: 9px; color: var(--muted); text-transform: uppercase;
-    letter-spacing: .8px; margin-top: 4px;
+  .dp-card.tier-ouro::before {
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background: radial-gradient(ellipse at 50% 0%, rgba(234,179,8,.15) 0%, transparent 60%);
   }
-  .diploma-total-ops {
-    font-size: 12px; color: var(--muted); margin-bottom: 24px;
-    font-style: italic;
+  .dp-card.tier-diamante {
+    background: #07061a; border: 1.5px solid rgba(139,92,246,.5);
+    box-shadow: 0 0 30px rgba(139,92,246,.12);
   }
-  .diploma-total-ops strong { color: #c9a84c; }
-
-  .btn-imprimir {
-    width: 100%; padding: 16px;
-    background: linear-gradient(135deg, #c9a84c, #f7e98e);
-    color: #1a0f00; font-size: 15px; font-weight: 800;
-    border: none; border-radius: 12px; cursor: pointer;
-    font-family: 'Inter', sans-serif; letter-spacing: .5px;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    transition: opacity .15s;
-  }
-  .btn-imprimir:hover { opacity: .88; }
-  .btn-voltar {
-    width: 100%; padding: 12px; background: transparent;
-    border: 1px solid var(--border); color: var(--muted);
-    border-radius: 10px; cursor: pointer; font-size: 13px;
-    font-weight: 600; margin-top: 10px; font-family: 'Inter', sans-serif;
+  .dp-card.tier-diamante::before {
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background: radial-gradient(ellipse at 50% 0%, rgba(139,92,246,.15) 0%, transparent 60%);
   }
 
-  /* ── Versão impressão (oculta na tela) ── */
-  .diploma-print { display: none; }
-
-  @media print {
-    @page {
-      size: A4 landscape;
-      margin: 0.8cm;
-    }
-
-    body * {
-      visibility: hidden !important;
-    }
-
-    #diploma-print-area,
-    #diploma-print-area * {
-      visibility: visible !important;
-    }
-
-    #diploma-print-area {
-      display: block !important;
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
-      z-index: 99999 !important;
-      background: #fdfaf4 !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-
-    .dp-wrap {
-      width: 100% !important;
-      height: 100% !important;
-      background: #fdfaf4 !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-      position: relative !important;
-      box-sizing: border-box !important;
-    }
-
-    .dp-outer {
-      position: absolute !important; inset: 10px !important;
-      border: 2px solid #c9a84c !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    .dp-inner {
-      position: absolute !important; inset: 14px !important;
-      border: 1px solid rgba(201,168,76,.35) !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-
-    .dp-corner { position: absolute !important; color: #c9a84c !important; z-index: 2 !important; font-size: 18px !important; }
-    .dp-corner.tl { top: 7px !important; left: 7px !important; }
-    .dp-corner.tr { top: 7px !important; right: 7px !important; transform: scaleX(-1) !important; }
-    .dp-corner.bl { bottom: 7px !important; left: 7px !important; transform: scaleY(-1) !important; }
-    .dp-corner.br { bottom: 7px !important; right: 7px !important; transform: scale(-1) !important; }
-
-    .dp-bg {
-      position: absolute !important; inset: 0 !important;
-      background: repeating-linear-gradient(
-        45deg, transparent, transparent 18px,
-        rgba(201,168,76,.03) 18px, rgba(201,168,76,.03) 19px
-      ) !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-
-    .dp-content {
-      position: relative !important; z-index: 1 !important;
-      padding: 44px 64px 40px !important;
-      text-align: center !important;
-      color: #2c1f0e !important;
-      height: 100% !important;
-      box-sizing: border-box !important;
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: center !important;
-      justify-content: center !important;
-    }
-
-    .dp-escola  { font-size: 10px !important; font-weight: 700 !important; letter-spacing: 3px !important; text-transform: uppercase !important; color: #8a6a2e !important; margin-bottom: 2px !important; }
-    .dp-unidade { font-size: 9px !important; color: #a08040 !important; letter-spacing: 1.5px !important; text-transform: uppercase !important; margin-bottom: 18px !important; }
-
-    .dp-divider { display: flex !important; align-items: center !important; gap: 10px !important; margin-bottom: 16px !important; width: 100% !important; }
-    .dp-divider::before, .dp-divider::after { content: '' !important; flex: 1 !important; height: 1px !important; background: linear-gradient(90deg, transparent, #c9a84c, transparent) !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    .dp-divider span { font-size: 14px !important; color: #c9a84c !important; }
-
-    .dp-titulo    { font-family: 'Cinzel', serif !important; font-size: 11px !important; font-weight: 600 !important; letter-spacing: 4px !important; text-transform: uppercase !important; color: #8a6a2e !important; margin-bottom: 5px !important; }
-    .dp-certifica { font-family: 'Playfair Display', serif !important; font-size: 13px !important; color: #5a4020 !important; margin-bottom: 14px !important; font-style: italic !important; }
-
-    .dp-nome  { font-family: 'Cinzel', serif !important; font-size: 26px !important; font-weight: 700 !important; color: #1a0f00 !important; margin-bottom: 4px !important; }
-    .dp-turma { font-size: 11px !important; color: #8a6a2e !important; font-family: 'Playfair Display', serif !important; font-style: italic !important; margin-bottom: 18px !important; }
-
-    .dp-texto { font-family: 'Playfair Display', serif !important; font-size: 13px !important; color: #3a2810 !important; line-height: 1.7 !important; margin-bottom: 18px !important; max-width: 480px !important; }
-    .dp-texto strong { color: #1a0f00 !important; }
-
-    .dp-medal { display: inline-flex !important; flex-direction: column !important; align-items: center !important; margin-bottom: 16px !important; }
-    .dp-medal-circle {
-      width: 52px !important; height: 52px !important; border-radius: 50% !important;
-      background: linear-gradient(135deg, #f7e98e, #c9a84c, #f7e98e) !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-      display: flex !important; align-items: center !important; justify-content: center !important;
-      border: 2px solid #c9a84c !important;
-      margin-bottom: 4px !important;
-      font-size: 0 !important;
-    }
-    .dp-medal-circle::after {
-      content: '★' !important;
-      font-size: 26px !important;
-      color: #8a6a2e !important;
-      line-height: 1 !important;
-      font-family: serif !important;
-    }
-    .dp-medal-txt { font-family: 'Cinzel', serif !important; font-size: 9px !important; color: #8a6a2e !important; letter-spacing: 2px !important; text-transform: uppercase !important; }
-
-    .dp-ops { display: flex !important; justify-content: center !important; gap: 0 !important; margin-bottom: 6px !important; }
-    .dp-op  { display: flex !important; flex-direction: column !important; align-items: center !important; padding: 8px 20px !important; position: relative !important; }
-    .dp-op + .dp-op::before { content: '' !important; position: absolute !important; left: 0 !important; top: 20% !important; height: 60% !important; width: 1px !important; background: rgba(201,168,76,.3) !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    .dp-op-val { font-family: 'Cinzel', serif !important; font-size: 18px !important; font-weight: 700 !important; color: #8a6a2e !important; }
-    .dp-op-lbl { font-size: 9px !important; color: #a08040 !important; letter-spacing: 1px !important; text-transform: uppercase !important; margin-top: 3px !important; }
-
-    .dp-divider2 { height: 1px !important; width: 100% !important; background: linear-gradient(90deg, transparent, #c9a84c 30%, #c9a84c 70%, transparent) !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; margin-bottom: 18px !important; }
-
-    .dp-assin       { display: flex !important; justify-content: center !important; }
-    .dp-assin-bloco { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 3px !important; }
-    .dp-assin-linha { width: 160px !important; height: 1px !important; background: linear-gradient(90deg, transparent, #5a4020, transparent) !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    .dp-assin-nome  { font-size: 10px !important; font-weight: 700 !important; color: #3a2810 !important; }
-    .dp-assin-cargo { font-size: 9px !important; color: #8a6a2e !important; }
-
-    .dp-data { font-size: 10px !important; color: #a08040 !important; margin-top: 14px !important; font-family: 'Playfair Display', serif !important; font-style: italic !important; }
+  /* medal */
+  .dp-medal {
+    width: 72px; height: 72px; border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:34px; margin: 0 auto 16px; border: 2.5px solid #c9a84c;
+    position:relative; z-index:1;
   }
+  .dp-medal.base     { background:linear-gradient(135deg,#f7e98e,#c9a84c,#f7e98e); animation:mp-b 2.5s ease-in-out infinite; }
+  .dp-medal.ouro     { background:linear-gradient(135deg,#fffde7,#f59e0b,#fde68a); border-color:#f59e0b; animation:mp-o 2s ease-in-out infinite; }
+  .dp-medal.diamante { background:linear-gradient(135deg,#ede9fe,#818cf8,#c4b5fd,#818cf8,#ede9fe); border-color:#818cf8; animation:mp-d 2s ease-in-out infinite; }
+  @keyframes mp-b { 0%,100%{box-shadow:0 0 0 6px rgba(201,168,76,.1),0 0 24px rgba(245,158,11,.3)} 50%{box-shadow:0 0 0 10px rgba(201,168,76,.06),0 0 44px rgba(245,158,11,.55)} }
+  @keyframes mp-o { 0%,100%{box-shadow:0 0 0 6px rgba(234,179,8,.1),0 0 28px rgba(234,179,8,.4)} 50%{box-shadow:0 0 0 10px rgba(234,179,8,.06),0 0 52px rgba(234,179,8,.7)} }
+  @keyframes mp-d { 0%,100%{box-shadow:0 0 0 6px rgba(139,92,246,.1),0 0 28px rgba(139,92,246,.4)} 50%{box-shadow:0 0 0 10px rgba(139,92,246,.06),0 0 52px rgba(139,92,246,.7)} }
+
+  .dp-tier-lbl { font-size:9px; font-weight:700; letter-spacing:3px; text-transform:uppercase; margin-bottom:8px; position:relative; z-index:1; }
+  .tier-base     .dp-tier-lbl { color:#c9a84c; }
+  .tier-ouro     .dp-tier-lbl { color:#f59e0b; }
+  .tier-diamante .dp-tier-lbl { color:#a78bfa; }
+
+  .dp-tier-nome { font-family:'Cinzel',serif; font-size:15px; font-weight:700; color:var(--text); margin-bottom:6px; position:relative; z-index:1; }
+
+  .dp-tier-desc { font-size:11px; color:var(--muted); line-height:1.55; margin-bottom:16px; position:relative; z-index:1; flex:1; }
+
+  /* stats */
+  .dp-stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px; position:relative; z-index:1; }
+  .dp-stat { border-radius:10px; padding:10px 6px; text-align:center; }
+  .tier-base     .dp-stat { background:rgba(201,168,76,.07); border:1px solid rgba(201,168,76,.18); }
+  .tier-ouro     .dp-stat { background:rgba(234,179,8,.08);  border:1px solid rgba(234,179,8,.25); }
+  .tier-diamante .dp-stat { background:rgba(139,92,246,.08); border:1px solid rgba(139,92,246,.25); }
+  .dp-stat-val { font-family:'Cinzel',serif; font-size:16px; font-weight:700; line-height:1; }
+  .tier-base     .dp-stat-val { color:#c9a84c; }
+  .tier-ouro     .dp-stat-val { color:#f59e0b; }
+  .tier-diamante .dp-stat-val { color:#a78bfa; }
+  .dp-stat-lbl { font-size:8px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; margin-top:3px; }
+
+  /* badge conquista (desbloqueado) */
+  .dp-conquista-badge {
+    font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+    margin-bottom:12px; position:relative; z-index:1;
+    display:inline-flex; align-items:center; gap:4px;
+    border-radius:20px; padding:3px 10px;
+  }
+  .tier-base     .dp-conquista-badge { background:rgba(201,168,76,.12); color:#c9a84c; border:1px solid rgba(201,168,76,.3); }
+  .tier-ouro     .dp-conquista-badge { background:rgba(234,179,8,.12);  color:#f59e0b; border:1px solid rgba(234,179,8,.35); }
+  .tier-diamante .dp-conquista-badge { background:rgba(139,92,246,.12); color:#a78bfa; border:1px solid rgba(139,92,246,.35); }
+
+  /* botão imprimir */
+  .dp-btn {
+    width:100%; padding:12px; font-size:13px; font-weight:800;
+    border:none; border-radius:10px; cursor:pointer; font-family:'Inter',sans-serif;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    transition:opacity .15s; position:relative; z-index:1; margin-top:auto;
+  }
+  .tier-base     .dp-btn { background:linear-gradient(135deg,#c9a84c,#f7e98e); color:#1a0f00; }
+  .tier-ouro     .dp-btn { background:linear-gradient(135deg,#b45309,#f59e0b,#fde68a); color:#1a0f00; }
+  .tier-diamante .dp-btn { background:linear-gradient(135deg,#4c1d95,#7c3aed,#c4b5fd); color:#fff; }
+  .dp-btn:hover { opacity:.88; }
+
+  /* lock overlay */
+  .dp-lock-msg { font-size:11px; color:var(--muted); position:relative; z-index:1; margin-top:auto; padding-top:8px; }
+
+  .btn-voltar { display:block; text-align:center; margin-top:8px; color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; background:none; border:1px solid var(--border); border-radius:10px; padding:10px; width:100%; font-family:'Inter',sans-serif; }
 </style>
 </head>
 <body>
@@ -251,19 +151,12 @@
         <div id="topbar-avatar-circle" class="avatar-circle" style="width:36px;height:36px;cursor:pointer" onclick="window.location.href='/aluno/perfil.html'"></div>
       </div>
     </div>
-
     <div class="content">
-      <!-- Tela do site (dark) -->
-      <div class="main-screen">
-        <div class="diploma-page">
-          <div id="diploma-content">
-            <div style="text-align:center;padding:60px;color:var(--muted)">Carregando…</div>
-          </div>
+      <div class="dp-page">
+        <div id="dp-content">
+          <div style="text-align:center;padding:60px;color:var(--muted)">Carregando…</div>
         </div>
       </div>
-
-      <!-- Versão impressão -->
-      <div class="diploma-print" id="diploma-print-area"></div>
     </div>
   </div>
 </div>
@@ -279,13 +172,13 @@ import { getNomeCompleto } from '/js/nomes_completos.js';
 const sess = requireAluno('/index.html');
 const { alunos, turma } = sess;
 const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
-
 const nomeCompleto = getNomeCompleto(turma, alunos[0]);
 
 renderSidebarAluno('sidebar', 'jogos');
 window.sair = () => { clearSession(); window.location.href = '/index.html'; };
 
-// Avatar topbar
+(async () => {
+
 (async () => { try {
   const _p = await getPerfil(uid);
   const _c = document.getElementById('topbar-avatar-circle');
@@ -296,130 +189,115 @@ window.sair = () => { clearSession(); window.location.href = '/index.html'; };
   }
 } catch(_) {} })();
 
-// Verificar conquista e carregar perfil
-const [conquSnap, perfil] = await Promise.all([
+const [conq300, conquOuro, conquDia, perfil, histSnap] = await Promise.all([
   get(ref(db, `conquistas/${uid}/tabuada_300`)),
+  get(ref(db, `conquistas/${uid}/tabuada_ouro`)),
+  get(ref(db, `conquistas/${uid}/tabuada_diamante`)),
   getPerfil(uid),
+  get(ref(db, `tabuada_niveis/${uid}/historico`)),
 ]);
 
-const conquistou  = conquSnap.exists() && conquSnap.val().conquistado === true;
-const tsConquista = conquSnap.exists() ? conquSnap.val().ts : null;
+const tem300  = conq300.exists()  && conq300.val().conquistado  === true;
+const temOuro = conquOuro.exists() && conquOuro.val().conquistado === true;
+const temDia  = conquDia.exists()  && conquDia.val().conquistado  === true;
 
-const nomeAluno    = perfil?.apelido_ativo || alunos[0];
-const dataConquista = tsConquista
-  ? new Date(tsConquista).toLocaleDateString('pt-BR', { day:'numeric', month:'long', year:'numeric' })
-  : null;
-
-const now    = new Date();
-const meses  = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-const dataImpressao = `São Sebastião, DF · ${meses[now.getMonth()]} de ${now.getFullYear()}`;
-
-if (!conquistou) {
-  document.getElementById('diploma-content').innerHTML = `
+if (!tem300) {
+  document.getElementById('dp-content').innerHTML = `
     <div style="text-align:center;padding:48px 20px;background:var(--card);border:1px solid var(--border);border-radius:20px">
       <div style="font-size:48px;margin-bottom:12px">🔒</div>
       <div style="font-size:16px;font-weight:700;margin-bottom:8px">Diploma ainda não disponível</div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:20px">Chegue ao nível 300 da tabuada para desbloquear este diploma.</div>
-      <button onclick="window.location.href='/aluno/jogos.html'"
-              style="background:var(--purple);color:#fff;border:none;border-radius:10px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer">
-        Ir para a Tabuada →
-      </button>
+      <button onclick="window.location.href='/aluno/jogos.html'" style="background:var(--purple);color:#fff;border:none;border-radius:10px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer">Ir para a Tabuada →</button>
     </div>`;
-} else {
-  // ── Tela do site ──
-  document.getElementById('diploma-content').innerHTML = `
-    <div class="diploma-site-card">
-      <div class="diploma-medal-glow">🏆</div>
-      <div class="diploma-site-label">Diploma de Excelência</div>
-      <div class="diploma-site-nome">${nomeAluno}</div>
-      <div class="diploma-site-turma">Turma ${turma}</div>
-      ${dataConquista ? `<div class="diploma-site-data">Conquistado em ${dataConquista}</div>` : ''}
+  return;
+}
 
-      <div class="diploma-ops-grid">
-        <div class="diploma-op-box">
-          <div class="diploma-op-val">300</div>
-          <div class="diploma-op-lbl">🎯 Níveis concluídos</div>
-        </div>
-        <div class="diploma-op-box">
-          <div class="diploma-op-val">+3.100</div>
-          <div class="diploma-op-lbl">➕✖️ Operações resolvidas</div>
-        </div>
-      </div>
+const nomeAluno   = perfil?.apelido_ativo || alunos[0];
+const tsBase      = conq300.val().ts;
+const tsOuro      = temOuro ? conquOuro.val().ts : null;
+const tsDia       = temDia  ? conquDia.val().ts  : null;
+const fmt = ts => ts ? new Date(ts).toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'}) : null;
+const dataBase = fmt(tsBase);
+const dataOuro = fmt(tsOuro);
+const dataDia  = fmt(tsDia);
+const now = new Date();
+const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 
-      <div class="diploma-total-ops">
-        <strong>mais de 3.100 operações matemáticas</strong> resolvidas ao longo dos 300 níveis
-      </div>
+// Contar operações reais
+let totalAcertos = 0, totalErros = 0;
+if (histSnap.exists()) Object.values(histSnap.val()).forEach(e => { totalAcertos += (e.acertos||0); totalErros += (e.erros||0); });
+function fmtNum(n) { return n.toLocaleString('pt-BR'); }
+const opsStr = totalAcertos > 0 ? fmtNum(totalAcertos) : 'mais de 3.100';
 
-      <button class="btn-imprimir" onclick="window.open('/aluno/diploma_print.html','_blank')">
-        🖨️ Imprimir diploma
-      </button>
-      <button class="btn-voltar" onclick="window.history.back()">← Voltar</button>
+// Salvar no sessionStorage para o diploma_print
+function salvarPrint(tier, ts) {
+  sessionStorage.setItem('diploma_tier', tier);
+  sessionStorage.setItem('diploma_acertos', String(totalAcertos));
+  sessionStorage.setItem('diploma_erros', String(totalErros));
+  sessionStorage.setItem('diploma_tsConquista', String(ts || ''));
+}
+
+function cardHtml({ tier, emoji, label, nome, desc, conquistado, dataConq, ops, lockMsg }) {
+  const z = `position:relative;z-index:1`;
+  const conquBadge = conquistado && dataConq
+    ? `<div class="dp-conquista-badge" style="${z}">✅ ${dataConq}</div>` : '';
+  const statsHtml = `
+    <div class="dp-stats">
+      <div class="dp-stat"><div class="dp-stat-val">300</div><div class="dp-stat-lbl">Níveis</div></div>
+      <div class="dp-stat"><div class="dp-stat-val">${ops}</div><div class="dp-stat-lbl">Operações</div></div>
     </div>`;
-
-  // ── Versão para impressão ──
-  document.getElementById('diploma-print-area').innerHTML = `
-    <div class="dp-wrap">
-      <div class="dp-bg"></div>
-      <div class="dp-outer"></div>
-      <div class="dp-inner"></div>
-      <div class="dp-corner tl">❧</div>
-      <div class="dp-corner tr">❧</div>
-      <div class="dp-corner bl">❧</div>
-      <div class="dp-corner br">❧</div>
-
-      <div class="dp-content">
-        <div class="dp-escola">Centro Educacional São Bartolomeu</div>
-        <div class="dp-unidade">São Sebastião · Distrito Federal</div>
-
-        <div class="dp-divider"><span>✦</span></div>
-
-        <div class="dp-titulo">Diploma de Excelência</div>
-        <div class="dp-certifica">Certificamos que o(a) aluno(a)</div>
-
-        <div class="dp-nome">${nomeCompleto}</div>
-        <div class="dp-turma">Turma ${turma} · Ano letivo de ${now.getFullYear()}</div>
-
-        <div class="dp-texto">
-          concluiu com êxito todos os <strong>300 níveis</strong> do programa de
-          Cálculo Mental da disciplina de <strong>Matemática</strong>,
-          demonstrando dedicação, persistência e domínio das operações fundamentais,
-          com a resolução de <strong>mais de 3.100 operações matemáticas</strong>.
-        </div>
-
-        <div class="dp-medal">
-          <div class="dp-medal-circle">🏆</div>
-          <div class="dp-medal-txt">Nível 300 Concluído</div>
-        </div>
-
-        <div class="dp-ops">
-          <div class="dp-op">
-            <div class="dp-op-val">300</div>
-            <div class="dp-op-lbl">Níveis concluídos</div>
-          </div>
-          <div class="dp-op">
-            <div class="dp-op-val">+3.100</div>
-            <div class="dp-op-lbl">Operações resolvidas</div>
-          </div>
-          ${dataConquista ? `<div class="dp-op">
-            <div class="dp-op-val" style="font-size:13px">${dataConquista}</div>
-            <div class="dp-op-lbl">Data da conquista</div>
-          </div>` : ''}
-        </div>
-
-        <div class="dp-divider2"></div>
-
-        <div class="dp-assin">
-          <div class="dp-assin-bloco">
-            <div class="dp-assin-linha"></div>
-            <div class="dp-assin-nome">Vanessa Oliveira</div>
-            <div class="dp-assin-cargo">Professora de Matemática</div>
-          </div>
-        </div>
-
-        <div class="dp-data">${dataImpressao}</div>
-      </div>
+  const btn = conquistado
+    ? `<button class="dp-btn" onclick="salvarEImprimir('${tier}',${JSON.stringify(dataConq)})">🖨️ Imprimir diploma</button>`
+    : `<div class="dp-lock-msg">🔒 ${lockMsg}</div>`;
+  return `
+    <div class="dp-card tier-${tier}${conquistado ? '' : ' locked'}">
+      <div class="dp-medal ${tier}">${emoji}</div>
+      <div class="dp-tier-lbl" style="${z}">${label}</div>
+      <div class="dp-tier-nome" style="${z}">${nome}</div>
+      <div class="dp-tier-desc" style="${z}">${desc}</div>
+      ${conquBadge}
+      ${conquistado ? statsHtml : ''}
+      ${btn}
     </div>`;
 }
+
+window.salvarEImprimir = function(tier, dataConq) {
+  const ts = tier === 'base' ? tsBase : tier === 'ouro' ? tsOuro : tsDia;
+  salvarPrint(tier, ts);
+  window.open('/aluno/diploma_print.html', '_blank');
+};
+
+document.getElementById('dp-content').innerHTML = `
+  <div class="dp-intro">
+    <div style="font-size:36px;margin-bottom:10px">🏆</div>
+    <div class="dp-intro-nome">${nomeAluno}</div>
+    <div class="dp-intro-turma">Turma ${turma}</div>
+    ${dataBase ? `<div class="dp-intro-data">Mestre da Tabuada · ${dataBase}</div>` : ''}
+  </div>
+
+  <div class="dp-grid">
+    ${cardHtml({
+      tier:'base', emoji:'🏆', label:'Diploma de Excelência', nome:'Nível 300',
+      desc:'Concluiu todos os 300 níveis do programa de Cálculo Mental.',
+      conquistado:true, dataConq:dataBase, ops:opsStr,
+    })}
+    ${cardHtml({
+      tier:'ouro', emoji:'🥇', label:'Diploma de Ouro', nome:'Todos com Estrela',
+      desc:'Completou todos os 300 níveis sem cometer erros pelo menos uma vez.',
+      conquistado:temOuro, dataConq:dataOuro, ops:opsStr,
+      lockMsg:'Complete todos os 300 níveis sem erros (pelo menos 1×)',
+    })}
+    ${cardHtml({
+      tier:'diamante', emoji:'💎', label:'Diploma de Maestria', nome:'Maestria Total',
+      desc:'Alcançou 3 completions perfeitas em cada um dos 300 níveis.',
+      conquistado:temDia, dataConq:dataDia, ops:opsStr,
+      lockMsg:'Complete todos os 300 níveis com 3× perfeito',
+    })}
+  </div>
+
+  <button class="btn-voltar" onclick="window.history.back()">← Voltar</button>`;
+
+})();
 </script>
 </body>
 </html>
