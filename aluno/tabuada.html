@@ -59,12 +59,12 @@
     .res-number{font-size:clamp(12px,min(4.5vw,4.6vh),28px);font-weight:800;color:var(--text);line-height:1;}
 
     /* ── Slots ── */
-    .slots-wrap{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
-    .slot{width:128px;height:60px;border:2px dashed var(--border);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--text-muted);background:var(--bg);transition:all .2s;text-align:center;padding:4px;}
+    .slots-wrap{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;flex-wrap:nowrap;width:100%;}
+    .slot{flex:1;max-width:128px;min-width:80px;height:60px;border:2px dashed var(--border);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--text-muted);background:var(--bg);transition:all .2s;text-align:center;padding:4px;}
     .slot.filled{border-style:solid;border-color:var(--blue);background:var(--blue-pale);color:var(--text);cursor:pointer;}
     .slot.filled:hover{border-color:var(--orange);}
     .slot.filled .slot-ph{display:none;}
-    .slot-eq{font-size:24px;font-weight:800;color:var(--text-muted);}
+    .slot-eq{font-size:24px;font-weight:800;color:var(--text-muted);flex-shrink:0;}
 
     /* ── Controls ── */
     .game-controls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
@@ -232,11 +232,11 @@
       .timer-wrap{font-size:26px!important;margin-bottom:2px!important;}
       .timer-wrap svg{width:24px!important;height:24px!important;}
       #leaders-ingame div{font-size:11px!important;}
-      .slot{width:110px!important;height:52px!important;}
+      .slot{max-width:108px!important;height:52px!important;}
       .slots-wrap{gap:8px!important;}
     }
     @media(max-width:360px){
-      .slot{width:94px;height:50px;}
+      .slot{max-width:88px;height:50px;}
       .slot-eq{font-size:20px;}
     }
 
@@ -1632,10 +1632,11 @@ function onCardClick(el, card) {
   }
 }
 
-// ── Detecta maestria (3× perfeito, não precisa ser consecutivo) de um nível ──
-// Conta quantas completions perfeitas o aluno tem neste nível.
-// Recebe errosPartidaAtual para contabilizar a partida recém-salva
-// antes que o Firebase propague a entrada no cache.
+// ── Detecta maestria (3× perfeito consecutivo) de um nível ─────
+// Lê o histórico do nível e conta completions perfeitas consecutivas.
+// Recebe errosPartidaAtual para garantir que a partida recém-salva
+// seja contabilizada mesmo que o Firebase ainda não tenha propagado
+// a entrada no cache — evita falso positivo na 2ª vez perfeita.
 async function _checarMaestria(nivelAlvo, errosPartidaAtual) {
   try {
     const _niveisBase = _isProfMode
@@ -1644,24 +1645,33 @@ async function _checarMaestria(nivelAlvo, errosPartidaAtual) {
         ? `modo_teste_historico/PROFESSOR_TESTE/tabuada_niveis`
         : `tabuada_niveis/${uid}`;
     const snap = await get(ref(db, `${_niveisBase}/historico`));
-    if (!snap.exists()) return false;
+    if (!snap.exists()) {
+      // historico vazio: se esta é a 1ª partida e foi perfeita, consec=1 (longe de 3)
+      return false;
+    }
     const entries = Object.entries(snap.val())
       .map(([ts, v]) => ({ ts: Number(ts), ...v }))
       .sort((a, b) => a.ts - b.ts);
-    let perfeitas = 0;
+    let consec = 0;
     for (const e of entries) {
       if (e.nivel !== nivelAlvo) continue;
-      if (e.resultado === 'completou' && (e.erros || 0) === 0) perfeitas++;
+      if (e.resultado === 'completou') {
+        if ((e.erros || 0) === 0) consec++;
+        else consec = 0;
+      } else {
+        consec = 0;
+      }
     }
-    // Garantia anti-cache: contabiliza a partida atual se ainda não propagou.
+    // Garantia anti-cache: se a partida atual (recém-salva) ainda não apareceu
+    // no snapshot retornado, soma manualmente para não disparar maestria com 2x.
     const _entriesDoNivel = entries.filter(e => e.nivel === nivelAlvo);
     const _ultimaEntry    = _entriesDoNivel.at(-1);
     const _jaInclusa      = _ultimaEntry
       && (Date.now() - _ultimaEntry.ts) < 8000
       && (_ultimaEntry.erros || 0) === (errosPartidaAtual || 0)
       && _ultimaEntry.resultado === 'completou';
-    if (!_jaInclusa && (errosPartidaAtual || 0) === 0) perfeitas++;
-    return perfeitas >= 3;
+    if (!_jaInclusa && (errosPartidaAtual || 0) === 0) consec++;
+    return consec >= 3;
   } catch (e) {
     return false;
   }
@@ -1706,7 +1716,7 @@ async function onGameWin() {
     _registrarSessao(nivelJogado, 'completou');
     nivelAtual = nivelJogado + 1; // avança nível local da sessão de prática
 
-    // Maestria: 3× perfeito → diamante. Calculado ANTES de
+    // Maestria: 3× perfeito consecutivo → diamante. Calculado ANTES de
     // montar a tela para que a estrela não apareça primeiro.
     const _maestriaReplay = (erros === 0)
       ? await _checarMaestria(nivelJogado, erros)
@@ -1717,7 +1727,7 @@ async function onGameWin() {
       document.getElementById("lov-emoji").textContent = '💎';
       document.getElementById("lov-title").textContent = 'Você concluiu esse nível com maestria!';
       document.getElementById("lov-sub").textContent   =
-        `Nível ${nivelJogado} dominado — 3× perfeito! 💎`;
+        `Nível ${nivelJogado} dominado — 3× perfeito consecutivo!`;
     } else {
       document.getElementById("lov-emoji").textContent = erros === 0 ? '⭐' : '✅';
       document.getElementById("lov-title").textContent = erros === 0 ? 'Perfeito!' : 'Nível concluído!';
@@ -1801,7 +1811,7 @@ async function onGameWin() {
     : foiChefao
     ? `Nível ${nivelJogado} conquistado! ${isEstrela ? '⭐ Sem erros!' : ''} ${isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue avançando!'}${_overtimeStr}`
     : (_maestria
-      ? `Nível ${nivelJogado} dominado — 3× perfeito! 💎 ${isNewRecord ? '🌟 Novo recorde pessoal!' : ''}${_overtimeStr}`
+      ? `Nível ${nivelJogado} dominado — 3× perfeito consecutivo! ${isNewRecord ? '🌟 Novo recorde pessoal!' : ''}${_overtimeStr}`
       : (isEstrela
         ? `Perfeito! Sem erros! ${isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue assim!'}${_overtimeStr}`
         : `${erros} erro${erros !== 1 ? 's' : ''} — sem estrela desta vez. ${isNewRecord ? '🌟 Novo recorde!' : 'Continue avançando!'}${_overtimeStr}`));
