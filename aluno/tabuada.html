@@ -240,27 +240,22 @@
       .slot-eq{font-size:20px;}
     }
 
-    /* ── Fullscreen game ── */
+    /* ── Fullscreen game — Flexbox coluna ── */
     html,body{overflow:hidden;height:100%;}
+    /* iOS Safari: dvh descontam a barra do browser; vh não desconta */
     .layout{min-height:100vh;min-height:100dvh;}
     .main{overflow:hidden;min-height:0!important;height:100vh;height:100dvh;}
     #content{flex:1!important;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;padding:0!important;}
-
-    /* tb-wrap: coluna flexível — JS mede e injeta --grid-h via ResizeObserver */
-    .tb-wrap{display:flex;flex-direction:column;height:100%;width:100%;max-width:630px;margin:0 auto;overflow:hidden;padding:6px 16px 4px;box-sizing:border-box;}
+    /* .tb-wrap: flex-column — info | timer/líderes | status | 1fr cards | slots */
+    /* Não usa CSS Grid + 1fr+auto pois browsers antigos (Safari iOS) calculam 1fr   */
+    /* sem reservar o espaço do último auto, empurrando os slots pra fora da tela.   */
+    /* tb-wrap: altura FIXA injetada pelo JS (--tb-h). Sem height:100% em cadeia que falha no Safari/Android */
+    .tb-wrap{display:flex;flex-direction:column;height:var(--tb-h,600px);width:100%;max-width:630px;margin:0 auto;overflow:hidden;padding:6px 16px 4px;box-sizing:border-box;flex-shrink:0;}
+    /* Todos os filhos NÃO encolhem. game-grid recebe --grid-h calculado pelo JS */
     .tb-wrap > *{flex-shrink:0;}
-
-    /* game-grid: altura FIXA calculada pelo JS (não flex:1, que falha em Safari) */
-    .game-grid{
-      flex-shrink:0!important;
-      height:var(--grid-h,200px)!important;
-      min-height:0;overflow:hidden;
-      margin-bottom:0!important;
-      grid-auto-rows:minmax(0,1fr)!important;
-      gap:clamp(3px,.8vw,7px)!important;
-    }
+    /* game-grid: altura FIXA via --grid-h. Sem flex:1 que causa overflow no Safari/Android */
+    .game-grid{flex-shrink:0!important;height:var(--grid-h,200px)!important;min-height:0;overflow:hidden;margin-bottom:0!important;grid-auto-rows:minmax(0,1fr)!important;gap:clamp(3px,.8vw,7px)!important;}
     .game-card{height:auto!important;min-height:0!important;}
-
     /* Margens compactas */
     .timer-wrap{margin-bottom:3px!important;}
     .timer-bar-bg{margin-bottom:4px!important;}
@@ -1339,12 +1334,11 @@ function _buildGameInternal() {
   updateNivelDisplay();
   totalPairs = pairs.length;
 
-  // isCompact: estima altura dos cards com base no espaço total disponível
-  // Usa overhead conservador — o ResizeObserver vai corrigir a altura real depois
+  // isCompact: estimativa inicial; _ajustarLayoutGrid() recalcula com medição real
   const _gridRows  = pairs.length * 2 / cols;
-  const _overhead  = window.innerWidth <= 480 ? 290 : 260; // margens conservadoras
-  const _gridH     = Math.max(60, window.innerHeight - _topbarH - _overhead);
-  const isCompact  = _gridRows > 0 ? ((_gridH - (_gridRows - 1) * 5) / _gridRows) < 56 : false;
+  const _overheadEst = window.innerWidth <= 480 ? 290 : 260;
+  const _gridHEst  = Math.max(60, window.innerHeight - _topbarH - _overheadEst);
+  const isCompact  = _gridRows > 0 ? ((_gridHEst - (_gridRows - 1) * 5) / _gridRows) < 56 : false;
 
   // Pairs dots
   const dotsHtml = Array.from({length: pairs.length}, (_,i) =>
@@ -1445,40 +1439,60 @@ function _buildGameInternal() {
   document.getElementById('slot-op')?.addEventListener('click',  deselectCard);
   document.getElementById('slot-res')?.addEventListener('click', deselectCard);
 
-  // ── Calcula altura do game-grid medindo o espaço REAL disponível ──
-  // Em vez de constante fixa de overhead, mede todos os irmãos do grid
-  // e seta --grid-h; funciona em Safari iOS e qualquer tamanho de tela.
-  if (window._gridRO) window._gridRO.disconnect();
-  function _recalcGridHeight() {
+  // ── Layout adaptativo: mede overhead real e ajusta --tb-h / --grid-h ──────────
+  // Funciona em qualquer tela sem depender de height:100% em cadeia (falha Safari/Android)
+  if (window._layoutRAF) cancelAnimationFrame(window._layoutRAF);
+  if (window._layoutResize) window.removeEventListener('resize', window._layoutResize);
+
+  function _ajustarLayoutGrid() {
+    const topbarEl  = document.querySelector('.topbar');
+    const topbarH   = topbarEl ? topbarEl.getBoundingClientRect().height : 62;
+    // Usa visualViewport quando disponível (desconta teclado virtual e barra do browser)
+    const vvH       = (window.visualViewport ? window.visualViewport.height : 0);
+    const winH      = vvH > 100 ? vvH : window.innerHeight;
+    const availH    = winH - topbarH;
+
+    // Seta altura do tb-wrap
     const wrap = document.querySelector('.tb-wrap');
-    const g    = document.getElementById('game-grid');
-    if (!wrap || !g) return;
-    // Altura interna do wrap (descontando padding top+bottom)
-    const style     = getComputedStyle(wrap);
-    const padTop    = parseFloat(style.paddingTop)    || 0;
-    const padBot    = parseFloat(style.paddingBottom) || 0;
-    const wrapH     = wrap.getBoundingClientRect().height - padTop - padBot;
-    // Soma as alturas de todos os filhos do wrap EXCETO o próprio grid
+    if (!wrap) return;
+    wrap.style.setProperty('--tb-h', availH + 'px');
+
+    // Mede a altura real de todos os irmãos do game-grid
+    const gridEl    = document.getElementById('game-grid');
+    if (!gridEl) return;
     let othersH = 0;
     for (const child of wrap.children) {
-      if (child === g) continue;
-      const cr = child.getBoundingClientRect();
-      if (cr.height > 0) {
-        const cs = getComputedStyle(child);
-        othersH += cr.height
-          + parseFloat(cs.marginTop    || 0)
-          + parseFloat(cs.marginBottom || 0);
-      }
+      if (child === gridEl) continue;
+      const r  = child.getBoundingClientRect();
+      if (r.height <= 0) continue;
+      const cs = getComputedStyle(child);
+      othersH += r.height
+        + (parseFloat(cs.marginTop)    || 0)
+        + (parseFloat(cs.marginBottom) || 0);
     }
-    const gap    = parseFloat(getComputedStyle(g).gap) || 5;
-    const avail  = Math.max(60, wrapH - othersH - gap);
-    wrap.style.setProperty('--grid-h', avail + 'px');
+    // Padding top + bottom do wrap
+    const wcs    = getComputedStyle(wrap);
+    const padV   = (parseFloat(wcs.paddingTop) || 0) + (parseFloat(wcs.paddingBottom) || 0);
+    const gridH  = Math.max(60, availH - padV - othersH - 4);
+    wrap.style.setProperty('--grid-h', gridH + 'px');
   }
-  // Primeira passagem após layout (rAF garante que o DOM foi pintado)
-  requestAnimationFrame(() => { _recalcGridHeight(); });
-  // Observa mudanças de tamanho do conteúdo (rotação, resize, zoom do browser)
-  window._gridRO = new ResizeObserver(() => { _recalcGridHeight(); });
-  window._gridRO.observe(document.querySelector('.tb-wrap') || document.body);
+
+  // Primeira passagem logo após o paint
+  window._layoutRAF = requestAnimationFrame(() => {
+    _ajustarLayoutGrid();
+    // Segunda passagem 120ms depois para pegar renders assíncronos (líderes, etc.)
+    setTimeout(_ajustarLayoutGrid, 120);
+  });
+
+  // Recalcula ao redimensionar / girar / aparecer teclado virtual
+  window._layoutResize = () => {
+    if (window._layoutDebounce) clearTimeout(window._layoutDebounce);
+    window._layoutDebounce = setTimeout(_ajustarLayoutGrid, 80);
+  };
+  window.addEventListener('resize', window._layoutResize);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', window._layoutResize);
+  }
 
   // ── Orientation change: reflow de colunas ao girar a tela ──────
   if (_orientHandler) { window.removeEventListener('resize', _orientHandler); }
@@ -1532,7 +1546,13 @@ function startTimer() {
 }
 function stopTimer() {
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-  if (window._gridRO) { window._gridRO.disconnect(); window._gridRO = null; }
+  // Limpa handlers de layout para não vazar entre níveis
+  if (window._layoutRAF)    { cancelAnimationFrame(window._layoutRAF); window._layoutRAF = null; }
+  if (window._layoutResize) {
+    window.removeEventListener('resize', window._layoutResize);
+    if (window.visualViewport) window.visualViewport.removeEventListener('resize', window._layoutResize);
+    window._layoutResize = null;
+  }
 }
 function updateTimerUI() {
   const isOvertime = timerLeft === 0 && _timerOvertime > 0;
