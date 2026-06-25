@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mapa de Sala — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    :root{--green:#22C55E;--green-pale:rgba(34,197,94,.14);--red-pale:rgba(239,68,68,.12);--blue-pale:rgba(123,0,212,.16)}
+    .map-toolbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+    .map-toolbar .grp{display:flex;align-items:center;gap:7px}
+    .map-toolbar label{font-size:11px;color:var(--text-muted);font-weight:600}
+    .map-toolbar input[type=number]{width:54px;padding:6px 8px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);text-align:center;font-family:inherit;font-weight:700}
+    .map-toolbar select{padding:8px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-weight:600;font-family:inherit;cursor:pointer}
+    .map-status{margin-left:auto;font-size:12px;color:var(--text-muted)}
+    .map-status.saved{color:var(--green)}
+
+    .map-wrap{display:grid;grid-template-columns:1fr 180px;gap:16px;align-items:start}
+    @media(max-width:820px){.map-wrap{grid-template-columns:1fr}}
+
+    .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px}
+    .panel-title{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted);margin-bottom:9px;display:flex;justify-content:space-between;align-items:center}
+    .panel-title .count{background:var(--orange);color:#1a1a2e;font-weight:800;border-radius:20px;padding:1px 8px;font-size:10px}
+
+    .pool{display:flex;flex-wrap:wrap;gap:5px;min-height:36px;padding:7px;border:1.5px dashed var(--border);border-radius:10px;background:var(--bg)}
+    .pool.empty::after{content:"Todos posicionados ✓";font-size:11px;color:var(--green);font-style:italic;width:100%;text-align:center;padding:5px}
+
+    .legend-row{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+    .swatch{width:18px;height:18px;border-radius:5px;flex-shrink:0;cursor:pointer;border:2px solid transparent;transition:transform .1s}
+    .swatch:hover{transform:scale(1.12)}
+    .swatch.active{border-color:var(--text)}
+    .legend-row input.gname{flex:1;min-width:0;background:transparent;border:none;border-bottom:1px solid transparent;color:var(--text);font-size:11.5px;font-family:inherit;padding:2px 0}
+    .legend-row input.gname:focus{outline:none;border-bottom-color:var(--border)}
+
+    .board-scroll{overflow:auto}
+    .board{margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:11px;width:fit-content}
+    .lbl{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--text-muted)}
+    .col-head,.grid{display:grid;gap:6px}
+    .col-head div{font-size:9px;font-weight:700;color:var(--text-muted);text-align:center}
+    .cell{width:88px;height:44px;border:1.5px dashed var(--border);border-radius:9px;background:var(--bg);display:flex;align-items:center;justify-content:center;transition:background .12s,border-color .12s}
+    .cell.over{border-color:var(--orange);border-style:solid;background:var(--orange-pale)}
+    .mesa{margin-top:2px;background:var(--bg);border:1.5px solid var(--border);border-radius:9px;padding:8px 26px;font-size:11px;font-weight:700;letter-spacing:1px;color:var(--text)}
+
+    .box{width:84px;min-height:38px;border-radius:8px;padding:4px 5px;font-size:10.5px;font-weight:600;line-height:1.12;cursor:grab;user-select:none;display:flex;align-items:center;justify-content:center;text-align:center;color:#1a1a2e;background:#e9edf2;border:2px solid #cbd5e1;position:relative}
+    .box:active{cursor:grabbing}
+    .box.dragging{opacity:.4}
+    .box .dot{position:absolute;top:-5px;right:-5px;width:13px;height:13px;border-radius:50%;border:2px solid var(--card);display:none}
+    .box[data-cor]:not([data-cor=""]) .dot{display:block}
+    .box .flag{position:absolute;top:-5px;left:-5px;width:14px;height:14px;border-radius:50%;background:var(--red);border:2px solid var(--card);display:none;align-items:center;justify-content:center;font-size:8px;color:#fff;font-weight:800}
+    .box[data-anot="neg"] .flag{display:flex;background:var(--red)}
+    .box[data-anot="pos"] .flag{display:flex;background:var(--green)}
+    .pool .box{width:auto;min-height:0;padding:4px 9px;font-size:11px}
+
+    /* Modal de anotações */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-start;justify-content:center;padding:40px 16px;z-index:50;overflow:auto}
+    .modal-overlay.open{display:flex}
+    .modal{width:400px;max-width:100%;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+    .modal-head{display:flex;align-items:center;gap:11px;padding:14px 16px;border-bottom:1px solid var(--border)}
+    .modal-avatar{width:38px;height:38px;border-radius:50%;background:var(--blue-pale);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--blue);flex-shrink:0}
+    .modal-head .nm{font-weight:700;font-size:15px}
+    .modal-head .sub{font-size:12px;color:var(--text-muted)}
+    .modal-close{margin-left:auto;width:30px;height:30px;border:none;background:transparent;color:var(--text-muted);font-size:20px;cursor:pointer;border-radius:7px;line-height:1}
+    .modal-close:hover{background:var(--bg)}
+    .modal-body{padding:14px 16px}
+    .modal-sec{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted);margin:0 0 10px}
+    .ocorr-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+    .ocorr-list label{display:flex;align-items:center;gap:9px;font-size:13px;cursor:pointer}
+    .ocorr-list input[type=checkbox]{width:16px;height:16px;accent-color:var(--red)}
+    .ocorr-list label.pos input[type=checkbox]{accent-color:var(--green)}
+    .modal textarea{width:100%;font-size:13px;background:var(--bg);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:inherit;padding:8px;resize:vertical;margin-bottom:10px}
+    .modal input[type=datetime-local]{flex:1;font-size:12.5px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;padding:6px 8px}
+    .dt-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;color:var(--text-muted);font-size:13px}
+    .hist{padding:4px 16px 16px;border-top:1px solid var(--border);max-height:300px;overflow:auto}
+    .hist-item{border-left:2px solid var(--border);padding:2px 0 2px 11px;margin-bottom:12px;position:relative}
+    .hist-item.neg{border-left-color:var(--red)}
+    .hist-item.pos{border-left-color:var(--green)}
+    .hist-item .when{font-size:11.5px;color:var(--text-muted);margin:0 0 5px}
+    .hist-item .tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:5px}
+    .hist-item .tag{background:var(--red-pale);color:var(--red);font-size:11.5px;padding:2px 9px;border-radius:8px}
+    .hist-item .tag.pos{background:var(--green-pale);color:var(--green)}
+    .hist-item .obs{font-size:13px;margin:0;line-height:1.5}
+    .hist-item .del{position:absolute;top:0;right:0;border:none;background:transparent;color:var(--text-muted);cursor:pointer;font-size:13px;opacity:.6}
+    .hist-item .del:hover{opacity:1;color:var(--red)}
+    .hist-empty{font-size:12.5px;color:var(--text-muted);font-style:italic;padding:6px 0}
+
+    @media print{.sidebar,.topbar,.map-toolbar,.panel{display:none!important}.main{margin:0!important}.map-wrap{display:block}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Mapa de Sala</div>
+        <div class="topbar-sub">Arraste os alunos para as carteiras e marque cores para quem deve ficar separado</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="map-toolbar">
+        <div class="grp">
+          <label>Turma</label>
+          <select id="turmaSel"></select>
+        </div>
+        <span style="font-size:12px;color:var(--text-muted)">Sala: 6 fileiras × 7 carteiras</span>
+        <button class="btn btn-ghost" id="btnReset">Devolver todos</button>
+        <button class="btn btn-blue" id="btnSave">
+          <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          Salvar
+        </button>
+        <span class="map-status" id="status"></span>
+      </div>
+
+      <div class="map-wrap">
+        <div class="panel">
+          <div class="board-scroll">
+            <div class="board">
+              <div class="lbl">▲ FUNDO DA SALA</div>
+              <div class="col-head" id="colHead"></div>
+              <div class="grid" id="grid"></div>
+              <div class="lbl">▼ FRENTE</div>
+              <div class="mesa">📕 MESA DA PROFESSORA</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Cores · clique p/ pintar</div>
+          <div id="legendList"></div>
+          <div class="legend-row">
+            <div class="swatch active" data-cor="" style="background:#e9edf2;border-color:#94A3B8"></div>
+            <span style="font-size:12px;color:var(--text-muted)">Sem cor</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:20px">
+        <div class="panel-title">Não posicionados <span class="count" id="poolCount">0</span></div>
+        <div class="pool" id="pool"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-avatar" id="mAvatar">--</div>
+      <div style="flex:1">
+        <div class="nm" id="mNome">Aluno</div>
+        <div class="sub" id="mSub">Turma</div>
+      </div>
+      <button class="modal-close" id="mClose" aria-label="Fechar">×</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-sec">Nova ocorrência</p>
+      <div class="ocorr-list" id="mOcorr">
+        <label class="pos"><input type="checkbox" value="Aluno se comportou" data-pos="1"> Aluno se comportou</label>
+        <label class="pos"><input type="checkbox" value="Aluno foi participativo" data-pos="1"> Aluno foi participativo</label>
+        <label><input type="checkbox" value="Saiu sem permissão"> Saiu sem permissão</label>
+        <label><input type="checkbox" value="Saiu e demorou pra voltar"> Saiu e demorou pra voltar</label>
+        <label><input type="checkbox" value="Faltou com respeito"> Faltou com respeito</label>
+        <label><input type="checkbox" value="Atrapalhou a aula"> Atrapalhou a aula</label>
+      </div>
+      <textarea id="mObs" rows="2" placeholder="Observação (opcional)…"></textarea>
+      <div class="dt-row">
+        <svg viewBox="0 0 24 24" width="15" height="15" style="fill:currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+        <input type="datetime-local" id="mData">
+      </div>
+      <button class="btn btn-blue" id="mAdd" style="width:100%;justify-content:center">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        Adicionar ocorrência
+      </button>
+    </div>
+    <div class="hist">
+      <p class="modal-sec" style="margin:14px 0 10px" id="mHistTitle">Histórico</p>
+      <div id="mHist"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { ALUNOS_POR_TURMA } from "/js/constants.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+requireProfessor();
+renderSidebarProfessor("sidebar", "mapeamento");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+// Paleta padrão (usada quando a turma ainda não tem cores salvas)
+const CORES_PADRAO = [
+  { nome:"Grupo 1", bg:"#fecaca", bd:"#ef4444" },
+  { nome:"Grupo 2", bg:"#bbf7d0", bd:"#22c55e" },
+  { nome:"Grupo 3", bg:"#fde68a", bd:"#f59e0b" },
+  { nome:"Grupo 4", bg:"#bfdbfe", bd:"#3b82f6" },
+  { nome:"Grupo 5", bg:"#e9d5ff", bd:"#a855f7" },
+  { nome:"Grupo 6", bg:"#fbcfe8", bd:"#ec4899" },
+];
+
+const grid = document.getElementById("grid");
+const colHead = document.getElementById("colHead");
+const pool = document.getElementById("pool");
+const poolCount = document.getElementById("poolCount");
+const legendList = document.getElementById("legendList");
+const turmaSel = document.getElementById("turmaSel");
+const statusEl = document.getElementById("status");
+
+const FILEIRAS = 6, CARTEIRAS = 7;
+const POSITIVAS = ["Aluno se comportou", "Aluno foi participativo"];
+
+let chamada = [];           // nomes da turma (de constants.js)
+let cores = [];             // cores da turma atual
+let activeCor = "";         // índice ativo na paleta, "" = sem cor
+let dragged = null;
+let turmaAtual = null;
+let anotacoes = {};         // { nome: [ {ts, ocorrencias:[], obs} ] }
+let modalNome = null;       // aluno aberto no modal
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c]));
+
+function setStatus(txt, saved){ statusEl.textContent = txt; statusEl.classList.toggle("saved", !!saved); }
+
+// ---------- Carregar lista de turmas (de constants.js) ----------
+function carregarTurmas(){
+  const turmas = Object.keys(ALUNOS_POR_TURMA).sort();
+  turmaSel.innerHTML = turmas.map(t => `<option value="${esc(t)}">Turma ${esc(t)}</option>`).join("");
+  return turmas;
+}
+
+// chamada (nomes) de uma turma — fonte: constants.js, oculta alunos de teste
+function carregarChamada(turma){
+  const nomes = (ALUNOS_POR_TURMA[turma] || []).filter(n => !/^teste\d*$/i.test(n));
+  return [...nomes].sort((a,b) => a.localeCompare(b, "pt-BR"));
+}
+
+// mapeamento salvo
+async function carregarMapeamento(turma){
+  const snap = await get(ref(db, `mapeamento_salas/${turma}`));
+  return snap.exists() ? snap.val() : null;
+}
+
+// anotações salvas (normaliza para { nome: [registros] })
+async function carregarAnotacoes(turma){
+  const snap = await get(ref(db, `mapeamento_salas/${turma}/anotacoes`));
+  const out = {};
+  if (snap.exists()) {
+    const raw = snap.val();
+    Object.values(raw).forEach(entry => {
+      if (entry && entry.nome) out[entry.nome] = entry.registros || [];
+    });
+  }
+  return out;
+}
+
+// ---------- UI: paleta ----------
+function buildLegend(){
+  legendList.innerHTML = "";
+  cores.forEach((c, i) => {
+    const row = document.createElement("div");
+    row.className = "legend-row";
+    const sw = document.createElement("div");
+    sw.className = "swatch";
+    sw.style.background = c.bg; sw.style.borderColor = c.bd;
+    sw.dataset.cor = String(i);
+    sw.onclick = () => setActiveCor(String(i), sw);
+    const inp = document.createElement("input");
+    inp.className = "gname"; inp.value = c.nome;
+    inp.oninput = () => { c.nome = inp.value; };
+    row.appendChild(sw); row.appendChild(inp);
+    legendList.appendChild(row);
+  });
+}
+function setActiveCor(val, el){
+  activeCor = val;
+  document.querySelectorAll(".swatch").forEach(s => s.classList.remove("active"));
+  el.classList.add("active");
+}
+document.querySelector('.swatch[data-cor=""]').onclick = function(){ setActiveCor("", this); };
+
+// ---------- UI: caixinhas ----------
+function makeBox(nome, cor){
+  const b = document.createElement("div");
+  b.className = "box"; b.draggable = true;
+  b.dataset.nome = nome; b.dataset.cor = "";
+  b.innerHTML = `<span>${esc(nome)}</span><span class="dot"></span><span class="flag">!</span>`;
+  b.addEventListener("dragstart", () => { b.classList.add("dragging"); dragged = b; });
+  b.addEventListener("dragend", () => b.classList.remove("dragging"));
+  b.addEventListener("click", () => paint(b));
+  b.addEventListener("dblclick", () => abrirModal(nome));
+  if (cor !== undefined && cor !== "" && cores[+cor]) applyCor(b, String(cor));
+  marcarFlag(b, nome);
+  return b;
+}
+function marcarFlag(b, nome){
+  const regs = anotacoes[nome] || [];
+  if (!regs.length) { b.dataset.anot = "0"; return; }
+  // negativa = qualquer ocorrência que não seja positiva → flag vermelha; senão verde
+  const algumaNeg = regs.some(r => (r.ocorrencias || []).some(o => !POSITIVAS.includes(o)));
+  b.dataset.anot = algumaNeg ? "neg" : "pos";
+}
+function applyCor(b, cor){
+  if (cor === "" || !cores[+cor]) {
+    b.dataset.cor = ""; b.style.background = "#e9edf2"; b.style.borderColor = "#cbd5e1";
+    b.querySelector(".dot").style.background = "";
+  } else {
+    const c = cores[+cor];
+    b.dataset.cor = cor; b.style.background = c.bg; b.style.borderColor = c.bd;
+    b.querySelector(".dot").style.background = c.bd;
+  }
+}
+function paint(b){ applyCor(b, activeCor); }
+
+// ---------- UI: pool ----------
+function refreshPool(){
+  const postos = [...grid.querySelectorAll(".box")].map(b => b.dataset.nome);
+  const faltam = chamada.filter(n => !postos.includes(n));
+  // mantém no pool só quem ainda não está posicionado
+  [...pool.querySelectorAll(".box")].forEach(b => {
+    if (postos.includes(b.dataset.nome)) b.remove();
+  });
+  const noPool = [...pool.querySelectorAll(".box")].map(b => b.dataset.nome);
+  faltam.forEach(n => { if (!noPool.includes(n)) pool.appendChild(makeBox(n)); });
+  poolCount.textContent = faltam.length;
+  pool.classList.toggle("empty", faltam.length === 0);
+}
+pool.addEventListener("dragover", e => e.preventDefault());
+pool.addEventListener("drop", e => { e.preventDefault(); if (dragged) { pool.appendChild(dragged); refreshPool(); } });
+
+// ---------- UI: grade ----------
+function buildGrid(cols, rows){
+  const tmpl = `repeat(${cols}, 88px)`;
+  grid.style.gridTemplateColumns = tmpl;
+  colHead.style.gridTemplateColumns = tmpl;
+  colHead.innerHTML = "";
+  for (let c = 0; c < cols; c++){ const d = document.createElement("div"); d.textContent = "Fileira " + (c+1); colHead.appendChild(d); }
+  grid.innerHTML = "";
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++){
+    const cell = document.createElement("div");
+    cell.className = "cell"; cell.dataset.r = r; cell.dataset.c = c;
+    cell.addEventListener("dragover", e => { e.preventDefault(); cell.classList.add("over"); });
+    cell.addEventListener("dragleave", () => cell.classList.remove("over"));
+    cell.addEventListener("drop", e => {
+      e.preventDefault(); cell.classList.remove("over");
+      if (!dragged) return;
+      const ocup = cell.querySelector(".box");
+      if (ocup && ocup !== dragged) pool.appendChild(ocup);
+      cell.appendChild(dragged);
+      refreshPool();
+    });
+    grid.appendChild(cell);
+  }
+}
+
+// ---------- Trocar de turma ----------
+async function selecionarTurma(turma){
+  turmaAtual = turma;
+  setStatus("Carregando…");
+
+  // chamada é local (constants.js) — sempre disponível
+  chamada = carregarChamada(turma);
+
+  // leitura do Firebase é tolerante a falha: se der erro (regras, rede),
+  // a grade e os nomes ainda aparecem, só sem o que estava salvo.
+  let mapa = null;
+  try {
+    mapa = await carregarMapeamento(turma);
+    anotacoes = await carregarAnotacoes(turma);
+  } catch (e) {
+    console.error("Falha ao ler mapeamento_salas:", e);
+    anotacoes = {};
+  }
+
+  cores = (mapa && mapa.grupos) ? Object.keys(mapa.grupos).sort((a,b)=>+a-+b).map(k => mapa.grupos[k])
+                                : CORES_PADRAO.map(c => ({ ...c }));
+  buildLegend();
+  setActiveCor("", document.querySelector('.swatch[data-cor=""]'));
+
+  buildGrid(FILEIRAS, CARTEIRAS);
+
+  // posicionar alunos salvos
+  const posicoes = (mapa && mapa.posicoes) || {};
+  Object.keys(posicoes).forEach(nome => {
+    if (!chamada.includes(nome)) return; // aluno saiu da turma
+    const p = posicoes[nome];
+    const cell = grid.querySelector(`.cell[data-r="${p.r}"][data-c="${p.c}"]`);
+    if (cell && !cell.querySelector(".box")) cell.appendChild(makeBox(nome, p.cor ?? ""));
+  });
+  refreshPool();
+  setStatus(mapa ? "Mapa carregado" : "Pronto — arraste os alunos");
+}
+turmaSel.onchange = () => selecionarTurma(turmaSel.value);
+
+// ---------- Botões ----------
+document.getElementById("btnReset").onclick = () => {
+  grid.querySelectorAll(".box").forEach(b => pool.appendChild(b));
+  refreshPool();
+};
+document.getElementById("btnSave").onclick = async () => {
+  if (!turmaAtual) return;
+  setStatus("Salvando…");
+  const grupos = {};
+  cores.forEach((c, i) => { grupos[i] = { nome: c.nome, bg: c.bg, bd: c.bd }; });
+  const posicoes = {};
+  grid.querySelectorAll(".cell").forEach(cell => {
+    const b = cell.querySelector(".box");
+    if (b) posicoes[b.dataset.nome] = { r: +cell.dataset.r, c: +cell.dataset.c, cor: b.dataset.cor || "" };
+  });
+  const payload = {
+    config: { fileiras: FILEIRAS, cadeiras: CARTEIRAS },
+    grupos,
+    posicoes,
+    atualizado_em: Date.now(),
+  };
+  try {
+    // update (não set) para não apagar o nó "anotacoes"
+    await update(ref(db, `mapeamento_salas/${turmaAtual}`), payload);
+    setStatus("Salvo ✓", true);
+  } catch (e) {
+    setStatus("Erro ao salvar — tente novamente");
+    console.error(e);
+  }
+};
+
+// ---------- Modal de anotações ----------
+const modal = document.getElementById("modal");
+const mNome = document.getElementById("mNome");
+const mSub = document.getElementById("mSub");
+const mAvatar = document.getElementById("mAvatar");
+const mData = document.getElementById("mData");
+const mObs = document.getElementById("mObs");
+const mHist = document.getElementById("mHist");
+const mHistTitle = document.getElementById("mHistTitle");
+
+function iniciais(nome){
+  const p = nome.trim().split(/\s+/);
+  return ((p[0]?.[0] || "") + (p[1]?.[0] || "")).toUpperCase();
+}
+function posicaoDe(nome){
+  const b = [...grid.querySelectorAll(".box")].find(x => x.dataset.nome === nome);
+  if (!b) return "Sem carteira definida";
+  const cell = b.parentElement;
+  return `Fileira ${+cell.dataset.c + 1}, carteira ${+cell.dataset.r + 1}`;
+}
+function agoraLocalInput(){
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+}
+function fmtData(ts){
+  const d = new Date(ts);
+  const p = n => String(n).padStart(2, "0");
+  return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} · ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function renderHist(nome){
+  const lista = (anotacoes[nome] || []).slice().sort((a,b) => b.ts - a.ts);
+  mHistTitle.textContent = `Histórico · ${lista.length} ${lista.length === 1 ? "registro" : "registros"}`;
+  if (!lista.length) { mHist.innerHTML = `<p class="hist-empty">Nenhuma anotação ainda.</p>`; return; }
+  mHist.innerHTML = lista.map(r => {
+    const ocorr = r.ocorrencias || [];
+    const temNeg = ocorr.some(o => !POSITIVAS.includes(o));
+    const cls = ocorr.length ? (temNeg ? " neg" : " pos") : "";
+    const tags = ocorr.map(o => {
+      const p = POSITIVAS.includes(o) ? " pos" : "";
+      return `<span class="tag${p}">${esc(o)}</span>`;
+    }).join("");
+    const obs = r.obs ? `<p class="obs">${esc(r.obs)}</p>` : "";
+    return `<div class="hist-item${cls}">
+      <button class="del" data-ts="${r.ts}" aria-label="Excluir">✕</button>
+      <p class="when">${fmtData(r.ts)}</p>
+      ${tags ? `<div class="tags">${tags}</div>` : ""}
+      ${obs}
+    </div>`;
+  }).join("");
+  mHist.querySelectorAll(".del").forEach(btn => {
+    btn.onclick = () => excluirAnotacao(nome, +btn.dataset.ts);
+  });
+}
+
+function abrirModal(nome){
+  modalNome = nome;
+  mNome.textContent = nome;
+  mSub.textContent = `Turma ${turmaAtual} · ${posicaoDe(nome)}`;
+  mAvatar.textContent = iniciais(nome) || "--";
+  mData.value = agoraLocalInput();
+  mObs.value = "";
+  document.querySelectorAll("#mOcorr input").forEach(c => c.checked = false);
+  renderHist(nome);
+  modal.classList.add("open");
+}
+function fecharModal(){ modal.classList.remove("open"); modalNome = null; }
+document.getElementById("mClose").onclick = fecharModal;
+modal.addEventListener("click", e => { if (e.target === modal) fecharModal(); });
+
+async function persistirAnotacoes(){
+  const obj = {};
+  Object.keys(anotacoes).forEach(nome => {
+    if (anotacoes[nome] && anotacoes[nome].length)
+      obj[btoa(unescape(encodeURIComponent(nome)))] = { nome, registros: anotacoes[nome] };
+  });
+  await set(ref(db, `mapeamento_salas/${turmaAtual}/anotacoes`), obj);
+}
+
+document.getElementById("mAdd").onclick = async () => {
+  if (!modalNome) return;
+  const ocorrencias = [...document.querySelectorAll("#mOcorr input:checked")].map(c => c.value);
+  const obs = mObs.value.trim();
+  if (!ocorrencias.length && !obs) { mObs.focus(); return; }
+  const ts = mData.value ? new Date(mData.value).getTime() : Date.now();
+  if (!anotacoes[modalNome]) anotacoes[modalNome] = [];
+  anotacoes[modalNome].push({ ts, ocorrencias, obs });
+  try {
+    await persistirAnotacoes();
+    renderHist(modalNome);
+    // limpa o formulário
+    document.querySelectorAll("#mOcorr input").forEach(c => c.checked = false);
+    mObs.value = ""; mData.value = agoraLocalInput();
+    // atualiza o marcador na caixinha
+    const b = [...grid.querySelectorAll(".box"), ...pool.querySelectorAll(".box")].find(x => x.dataset.nome === modalNome);
+    if (b) marcarFlag(b, modalNome);
+  } catch (e) { console.error(e); }
+};
+
+async function excluirAnotacao(nome, ts){
+  anotacoes[nome] = (anotacoes[nome] || []).filter(r => r.ts !== ts);
+  try {
+    await persistirAnotacoes();
+    renderHist(nome);
+    const b = [...grid.querySelectorAll(".box"), ...pool.querySelectorAll(".box")].find(x => x.dataset.nome === nome);
+    if (b) marcarFlag(b, nome);
+  } catch (e) { console.error(e); }
+}
+
+// ---------- Init ----------
+(async () => {
+  try {
+    const turmas = carregarTurmas();
+    if (turmas.length) { turmaSel.value = turmas[0]; await selecionarTurma(turmas[0]); }
+    else setStatus("Nenhuma turma encontrada");
+  } catch (e) {
+    console.error("Falha no init:", e);
+    setStatus("Erro ao iniciar — veja o console (F12)");
+  }
+})();
+</script>
+</body>
+</html>

@@ -20,7 +20,7 @@ export const ARQUIVO_QUESTOES = {
 export const ALUNOS_POR_TURMA = {
   "8D": [
     "Alice Tavares", "Alice Paz", "Ana Julia",
-    "Arthur", "Dandara", "Francisco",
+    "Arthur", "Francisco",
     "Isaac", "Izabelly Monik", "João Pedro", "Karolinny",
     "Ketelly", "Leticia", "Lucas Gabriel",
     "Lucas Matheus", "Luis Gabriel", "Luis Miguel",
@@ -69,7 +69,7 @@ export const ALUNOS_POR_TURMA = {
   ],
   "8H": [
     "Ana Beatriz", "Ana Clara", "Ana Gabrieli",
-    "Anderson", "Bruno", "Emanuelle",
+    "Anderson", "Bruno", "Dandara", "Emanuelle",
     "Esllinder", "Honny", "Laryssa",
     "Leonardo", "Levi", "Marcus Vinicius",
     "Maria Fernanda", "Matheus Henrique", "Murillo",
