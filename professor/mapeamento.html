@@ -383,6 +383,9 @@ async function selecionarTurma(turma){
 
   buildGrid(FILEIRAS, CARTEIRAS);
 
+  // limpa o pool antes de repovoar (evita misturar turmas)
+  pool.innerHTML = '';
+
   // posicionar alunos salvos
   const posicoes = (mapa && mapa.posicoes) || {};
   Object.keys(posicoes).forEach(nome => {

@@ -5,7 +5,7 @@
     <link rel="apple-touch-icon" href="/icon-192.png">
     <meta name="theme-color" content="#15102a">
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Fugindo dos Problemas [Professora] — Sistema de Matemática</title>
+  <title>🏃 Runner — Sistema de Matemática</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
@@ -69,6 +69,32 @@
     .ri.pos{border-color:rgba(6,214,160,.4);color:#06d6a0;} .ri.neg{border-color:rgba(239,71,111,.4);color:#ef476f;} .ri.neu{border-color:rgba(126,232,250,.3);color:#7ee8fa;}
     .rdiv{height:1px;background:rgba(255,255,255,.08);margin:12px 0;}
     #btn-fechar-regras{font-family:'Orbitron',sans-serif;font-size:.85rem;font-weight:700;padding:10px 30px;border:none;border-radius:10px;background:linear-gradient(135deg,#7c5cfc,#5a3fcf);color:#fff;cursor:pointer;margin-top:14px;width:100%;}
+
+    /* ── Runner tabs ── */
+    .runner-tab-bar{display:flex;gap:0;border-bottom:1.5px solid rgba(255,255,255,.08);margin:0;padding:0 16px;}
+    .runner-tab{padding:8px 18px;border:none;background:none;font-size:13px;font-weight:600;cursor:pointer;color:rgba(255,255,255,.4);border-bottom:2.5px solid transparent;margin-bottom:-1.5px;font-family:'Inter',sans-serif;transition:color .12s;white-space:nowrap;}
+    .runner-tab:hover{color:rgba(255,255,255,.7);}
+    .runner-tab.active{color:#7ee8fa;border-bottom-color:#7ee8fa;}
+    .runner-tab.active-analise{color:#7c5cfc;border-bottom-color:#7c5cfc;}
+    /* Analise pane */
+    .ra-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px;}
+    .ra-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;}
+    .ra-stat b{display:block;font-size:22px;font-weight:800;color:var(--purple);}
+    .ra-stat span{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;}
+    .ra-table{width:100%;border-collapse:collapse;font-size:13px;}
+    .ra-table th{background:var(--card2);font-weight:700;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);}
+    .ra-table td{padding:8px 12px;border-bottom:0.5px solid var(--border);vertical-align:middle;}
+    .ra-table tr:last-child td{border-bottom:none;}
+    .ra-table tr:hover td{background:rgba(255,255,255,.02);}
+    .tag-turma{font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px;margin-left:6px;}
+    .t8D{background:rgba(127,119,221,.15);color:#a99ff0;}.t8E{background:rgba(34,211,238,.12);color:#67e8f9;}.t8F{background:rgba(34,197,94,.12);color:#6ee7a0;}.t8G{background:rgba(249,115,22,.12);color:#fdba74;}.t8H{background:rgba(236,72,153,.12);color:#f9a8d4;}
+    .erro-bar{height:8px;border-radius:4px;background:var(--border);overflow:hidden;min-width:80px;}
+    .erro-fill{height:100%;border-radius:4px;background:#ef476f;}
+    .filtros{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+    .filtro-btn{padding:5px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;cursor:pointer;transition:all .15s;}
+    .filtro-btn.on{border-color:var(--purple);background:rgba(127,119,221,.12);color:var(--purple);}
+    .badge-rec{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:rgba(34,197,94,.12);color:#22c55e;border:1px solid rgba(34,197,94,.3);}
+    #pane-analise{padding:16px 20px;}
   </style>
 </head>
 <body>
@@ -77,15 +103,22 @@
   <div class="main">
     <div class="topbar">
       <div class="topbar-left">
-        <div class="topbar-title">🏃 Fugindo dos Problemas <span style="font-size:11px;color:var(--text-muted)">[modo professora]</span></div>
+        <div class="topbar-title">🏃 Runner</div>
         <div class="topbar-sub" id="topbar-sub"></div>
       </div>
       <div class="topbar-right">
-        <div class="avatar-wrap" onclick="window.location.href='/aluno/perfil.html'">
-          <div class="avatar" id="topbar-avatar-circle" style="overflow:hidden;padding:0"></div>
-        </div>
+        <button class="btn btn-ghost btn-sm" id="btn-reload-analise" style="display:none" onclick="carregarAnalise()">
+          <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          Atualizar
+        </button>
       </div>
     </div>
+    <!-- Tab bar between topbar and content -->
+    <div class="runner-tab-bar">
+      <button class="runner-tab active" id="rtab-jogar" onclick="setRunnerTab('jogar')">🏃 Jogar</button>
+      <button class="runner-tab" id="rtab-analise" onclick="setRunnerTab('analise')">📊 Análise dos Alunos</button>
+    </div>
+    <div id="pane-jogar">
     <div class="content runner-wrap">
       <div id="game-container">
         <div id="hud">
@@ -451,7 +484,7 @@ function showStartOverlay(){
     <div id="color-picker"></div>
     <button onclick="window.abrirRegras()" style="font-family:'Orbitron',sans-serif;font-size:.8rem;font-weight:700;padding:8px 22px;border:1px solid rgba(126,232,250,.4);border-radius:10px;background:transparent;color:#7ee8fa;cursor:pointer;letter-spacing:1px;margin-bottom:4px;">📋 Ver regras</button>
     <button id="start-btn" onclick="window.startGame()">▶ JOGAR</button>
-    <button class="btn-voltar-jogos" onclick="window.location.href='/professor/runner_analise.html'">← Voltar aos jogos</button>`;
+    <button class="btn-voltar-jogos" onclick="setRunnerTab('analise')">← Voltar aos jogos</button>`;
   ov.style.display='flex';
   document.getElementById('hud').style.visibility='hidden';
   setupColorPicker();
@@ -477,7 +510,7 @@ window.startGame = function(){
 
 window.cancelGame = function(){
   gameRunning=false;stopMusic();cancelAnimationFrame(frameId);
-  window.location.href='/professor/runner_analise.html';
+  setRunnerTab('analise');
 };
 
 window.togglePause = function(){
@@ -655,7 +688,7 @@ async function endGame(){
     <p>Acertos: ${totalCorrect} &nbsp;|&nbsp; Nível: ${level} &nbsp;|&nbsp; Melhor combo: x${bestCombo}</p>
     ${novoRecorde?`<div class="xp-badge">🏆 Novo recorde! +${xpGanho} XP</div>`:`<p style="color:#555;font-size:.8rem">Recorde: ${recordeAtual} pts — supere para ganhar XP!</p>`}
     <button id="restart-btn" onclick="window.startGame()">↺ JOGAR NOVAMENTE</button>
-    <button class="btn-voltar-jogos" onclick="window.location.href='/professor/runner_analise.html'">← Voltar aos jogos</button>`;
+    <button class="btn-voltar-jogos" onclick="setRunnerTab('analise')">← Voltar aos jogos</button>`;
   ov.style.display='flex';
 }
 
@@ -783,6 +816,136 @@ document.getElementById('input-area').style.visibility='hidden';
 document.getElementById('speed-bar-wrap').style.visibility='hidden';
 showStartOverlay();
 resetState();updateHUD();render();
+
+
+// ══════════════════════════════════════════════════════════════
+// RUNNER TABS
+// ══════════════════════════════════════════════════════════════
+let _analiseCarregada = false;
+
+window.setRunnerTab = function(tab) {
+  document.getElementById('pane-jogar').style.display     = tab === 'jogar'   ? '' : 'none';
+  document.getElementById('pane-analise').style.display   = tab === 'analise' ? '' : 'none';
+  document.getElementById('rtab-jogar').className   = 'runner-tab' + (tab === 'jogar'   ? ' active'         : '');
+  document.getElementById('rtab-analise').className = 'runner-tab' + (tab === 'analise' ? ' active-analise' : '');
+  document.getElementById('btn-reload-analise').style.display = tab === 'analise' ? '' : 'none';
+  if (tab === 'analise' && !_analiseCarregada) carregarAnalise();
+};
+
+// ══════════════════════════════════════════════════════════════
+// ANÁLISE DOS ALUNOS (ex runner_analise.html)
+// ══════════════════════════════════════════════════════════════
+const _ref2 = ref; const _get2 = get;
+
+const TURMAS_RA = ['8D','8E','8F','8G','8H'];
+const TIPO_LABEL_RA = {
+  soma:'Adição', sub:'Subtração', mult:'Multiplicação', div:'Divisão',
+  quad:'Quadrado (n²)', raiz:'Raiz quadrada', quad_neg:'(−n)²',
+  cubo:'Cubo (n³)', neg:'Negativo (geral)', dupla_neg:'a − (−b)',
+};
+const UIDs_IGNORAR_RA = ['PROFESSOR_TESTE','8D_teste1','8D_teste2'];
+let _filtroTurmaRA = 'todas';
+let _dadosRA = null;
+
+function _escHRA(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function _tagTurma(t){ return `<span class="tag-turma t${t}">${_escHRA(t)}</span>`; }
+function _tsStr(ts){ return new Date(ts).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+
+window.carregarAnalise = async function() {
+  _analiseCarregada = true;
+  const pane = document.getElementById('pane-analise');
+  pane.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>';
+  try {
+    const perfisSnap = await _get2(_ref2(db, 'perfis'));
+    const perfis = perfisSnap.val() || {};
+    const alunos = [];
+    for (const [uid, p] of Object.entries(perfis)) {
+      if (UIDs_IGNORAR_RA.some(x => uid.includes(x))) continue;
+      if (!p?.turma || !p?.nome) continue;
+      const sessoes = Object.values(p.runner_sessoes || {});
+      if (!sessoes.length) continue;
+      const recorde = p.runner_record || 0;
+      const nivelMax = Math.max(...sessoes.map(s => s.nivel_max || 1));
+      const totalSessoes = sessoes.length;
+      const totalAcertos = sessoes.reduce((a,s)=>a+(s.acertos||0),0);
+      const totalErrosPorTipo = {};
+      sessoes.forEach(s => { Object.entries(s.erros_por_tipo||{}).forEach(([t,n])=>{ totalErrosPorTipo[t]=(totalErrosPorTipo[t]||0)+n; }); });
+      alunos.push({ uid, nome: p.apelido_ativo||p.nome, turma: p.turma, recorde, nivelMax, totalSessoes, totalAcertos, totalErrosPorTipo, ultimaSessao: Math.max(...sessoes.map(s=>s.ts||0)) });
+    }
+    _dadosRA = alunos;
+    _renderizarRA(alunos);
+  } catch(e) {
+    pane.innerHTML = `<p style="color:#ef4444;padding:20px">Erro ao carregar: ${e.message}</p>`;
+  }
+};
+
+function _renderizarRA(alunos) {
+  const pane = document.getElementById('pane-analise');
+  const filtrados = _filtroTurmaRA === 'todas' ? alunos : alunos.filter(a=>a.turma===_filtroTurmaRA);
+  filtrados.sort((a,b)=>b.recorde-a.recorde);
+  const totalJogaram = filtrados.length;
+  const melhorRec = filtrados.length ? Math.max(...filtrados.map(a=>a.recorde)) : 0;
+  const nivelMedMax = filtrados.length ? Math.round(filtrados.reduce((s,a)=>s+a.nivelMax,0)/filtrados.length) : 0;
+  const totalSessoes = filtrados.reduce((s,a)=>s+a.totalSessoes,0);
+  const errosGlobal = {};
+  filtrados.forEach(a=>{ Object.entries(a.totalErrosPorTipo).forEach(([t,n])=>{ errosGlobal[t]=(errosGlobal[t]||0)+n; }); });
+  const totalErros = Object.values(errosGlobal).reduce((a,b)=>a+b,0);
+  const errosOrdenados = Object.entries(errosGlobal).sort((a,b)=>b[1]-a[1]);
+
+  pane.innerHTML = `
+    <div class="filtros">
+      <button class="filtro-btn${_filtroTurmaRA==='todas'?' on':''}" onclick="setFiltroRA('todas')">Todas as turmas</button>
+      ${TURMAS_RA.map(t=>`<button class="filtro-btn${_filtroTurmaRA===t?' on':''}" onclick="setFiltroRA('${t}')">${t}</button>`).join('')}
+    </div>
+    <div class="ra-grid">
+      <div class="ra-stat"><b>${totalJogaram}</b><span>Alunos que jogaram</span></div>
+      <div class="ra-stat"><b>${totalSessoes}</b><span>Partidas totais</span></div>
+      <div class="ra-stat"><b>${melhorRec} pts</b><span>Melhor recorde</span></div>
+      <div class="ra-stat"><b>Nv ${nivelMedMax}</b><span>Nível médio máximo</span></div>
+    </div>
+    ${errosOrdenados.length ? `
+    <div style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;margin:0 0 10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;">Erros por tipo de operação</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;">
+      <table class="ra-table">
+        <thead><tr><th style="width:200px">Operação</th><th>Erros</th><th style="width:180px">Proporção</th><th style="width:80px">%</th></tr></thead>
+        <tbody>${errosOrdenados.map(([tipo,n])=>`
+          <tr><td><div style="font-size:12px;font-weight:700;color:var(--text)">${_escHRA(TIPO_LABEL_RA[tipo]||tipo)}</div></td>
+          <td><b>${n}</b></td>
+          <td><div class="erro-bar"><div class="erro-fill" style="width:${totalErros?Math.round(n/totalErros*100):0}%"></div></div></td>
+          <td style="color:var(--text-muted)">${totalErros?Math.round(n/totalErros*100):0}%</td></tr>`).join('')}
+        </tbody>
+      </table>
+    </div>` : ''}
+    <div style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;margin:0 0 10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;">Alunos — ranking por recorde</div>
+    ${filtrados.length===0 ? `<p style="color:var(--text-muted);font-size:13px">Nenhum aluno jogou ainda${_filtroTurmaRA!=='todas'?' nessa turma':''}.</p>` : `
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <table class="ra-table">
+        <thead><tr><th style="width:30px">#</th><th>Aluno</th><th>Recorde</th><th>Nível máx</th><th>Partidas</th><th>Última partida</th><th>Erros principais</th></tr></thead>
+        <tbody>${filtrados.map((a,i)=>{
+          const topErros = Object.entries(a.totalErrosPorTipo).sort((x,y)=>y[1]-x[1]).slice(0,2);
+          return `<tr>
+            <td style="color:var(--text-muted);font-weight:700">${i+1}</td>
+            <td><b>${_escHRA(a.nome)}</b>${_tagTurma(a.turma)}</td>
+            <td><span class="badge-rec">${a.recorde} pts</span></td>
+            <td style="color:var(--purple);font-weight:700">Nv ${a.nivelMax}</td>
+            <td style="color:var(--text-muted)">${a.totalSessoes}</td>
+            <td style="color:var(--text-muted);font-size:12px">${_tsStr(a.ultimaSessao)}</td>
+            <td style="font-size:11px;color:var(--text-muted)">${topErros.map(([t,n])=>`${_escHRA(TIPO_LABEL_RA[t]||t)} (${n})`).join(' · ')||'—'}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>`}
+  `;
+}
+
+window.setFiltroRA = function(turma) {
+  _filtroTurmaRA = turma;
+  if (_dadosRA) _renderizarRA(_dadosRA);
+};
+
+// Boot: se URL tem #analise, abrir direto
+if (location.hash === '#analise') setRunnerTab('analise');
+
 </script>
 </body>
 </html>

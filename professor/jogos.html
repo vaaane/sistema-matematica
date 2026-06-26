@@ -234,7 +234,11 @@ function _ovrSecsForGroup(g) {
 
 function _renderProgressaoTable() {
   const gs = _gerarGrupos();
-  const YEL = 'background:#FEF9C3;';
+  const YEL_BG = 'background:rgba(250,184,0,.22);outline:1.5px solid rgba(250,184,0,.55);outline-offset:-1px;';
+    // yel(val, flag): wraps val in amber span when flag is truthy
+    const yel = (val, flag) => flag
+      ? `<span style="color:#FAB800;font-weight:700">${val}</span>`
+      : val;
   const rows = gs.map((g, i) => {
     const prev = gs[i - 1];
     const lvlLabel = g.start === g.end ? `${g.start}` : `${g.start}–${g.end}`;
@@ -249,22 +253,22 @@ function _renderProgressaoTable() {
     const gridLabel = `${g.cfg.cols}×${Math.ceil(g.cfg.pairs * 2 / g.cfg.cols)}`;
     const faixaLabel = g.cfg.maxResult ? `1–${g.cfg.maxResult}` : '—';
     const td = s => `style="padding:5px 10px;border-bottom:1px solid var(--border);${s}"`;
-    const cS  = prev && prev.cfg.secs    !== g.cfg.secs    ? YEL : '';
-    const cG  = prev && (prev.cfg.pairs  !== g.cfg.pairs || prev.cfg.cols !== g.cfg.cols) ? YEL : '';
-    const cC  = prev && prev.cfg.pairs   !== g.cfg.pairs   ? YEL : '';
-    const cO  = prev && (prev.cfg.minMul !== g.cfg.minMul  || prev.cfg.minDiv !== g.cfg.minDiv) ? YEL : '';
-    const cF  = prev && (prev.cfg.maxResult||0) !== (g.cfg.maxResult||0) ? YEL : '';
+    const cS  = prev && prev.cfg.secs    !== g.cfg.secs    ? YEL_BG : '';
+    const cG  = prev && (prev.cfg.pairs  !== g.cfg.pairs || prev.cfg.cols !== g.cfg.cols) ? YEL_BG : '';
+    const cC  = prev && prev.cfg.pairs   !== g.cfg.pairs   ? YEL_BG : '';
+    const cO  = prev && (prev.cfg.minMul !== g.cfg.minMul  || prev.cfg.minDiv !== g.cfg.minDiv) ? YEL_BG : '';
+    const cF  = prev && (prev.cfg.maxResult||0) !== (g.cfg.maxResult||0) ? YEL_BG : '';
     const ovrSecs = _ovrSecsForGroup(g);
     const hasOvr  = _tempoOverrides[g.start] != null;
     const ovrValCls = hasOvr ? 'ovr-val changed' : 'ovr-val';
     return `<tr class="prog-tr" style="${rowBg}cursor:pointer" onclick="selecionarNivelParaTeste(${g.start})" title="Testar nível ${g.start}">
       <td ${td('font-weight:700;white-space:nowrap')}>${lvlLabel}</td>
       <td ${td('font-size:11px')}>${tipoLabel}</td>
-      <td ${td('text-align:center;'+cS)}>${g.cfg.secs}s</td>
-      <td ${td('text-align:center;'+cG)}>${gridLabel}</td>
-      <td ${td('text-align:center;'+cC)}>${g.cfg.pairs * 2}</td>
-      <td ${td(cO)}>${_fmtOps(g.cfg)}</td>
-      <td ${td('text-align:center;'+cF)}>${faixaLabel}</td>
+      <td ${td('text-align:center;'+cS)}>${yel(g.cfg.secs+'s', cS)}</td>
+      <td ${td('text-align:center;'+cG)}>${yel(gridLabel, cG)}</td>
+      <td ${td('text-align:center;'+cC)}>${yel(g.cfg.pairs * 2, cC)}</td>
+      <td ${td(cO)}>${cO ? '<span style="color:#FAB800;font-weight:700">' + _fmtOps(g.cfg) + '</span>' : _fmtOps(g.cfg)}</td>
+      <td ${td('text-align:center;'+cF)}>${yel(faixaLabel, cF)}</td>
       <td ${td('white-space:nowrap')} onclick="event.stopPropagation()">
         <div style="display:flex;align-items:center;gap:3px">
           <button class="ovr-btn" onclick="ajustarTempoGrupo(${g.start},${g.end},-5)">−</button>
@@ -459,7 +463,7 @@ async function loadData() {
         <div style="display:flex;align-items:center;gap:14px;font-size:11px;color:var(--text-muted);flex-wrap:wrap">
           <span><span style="display:inline-block;width:10px;height:10px;background:rgba(239,68,68,.25);border-radius:2px;margin-right:4px;vertical-align:middle"></span>👹 Chefão</span>
           <span><span style="display:inline-block;width:10px;height:10px;background:rgba(249,115,22,.2);border-radius:2px;margin-right:4px;vertical-align:middle"></span>Pós-chefão</span>
-          <span><span style="display:inline-block;width:10px;height:10px;background:#FEF9C3;border-radius:2px;border:1px solid #FCD34D;margin-right:4px;vertical-align:middle"></span>Valor mudou</span>
+          <span><span style="display:inline-block;width:10px;height:10px;background:rgba(250,184,0,.35);border-radius:2px;border:1px solid rgba(250,184,0,.7);margin-right:4px;vertical-align:middle"></span>Valor mudou</span>
         </div>
         <button onclick="exportarProgressaoCSV()" class="btn btn-ghost" style="font-size:12px;padding:5px 12px">📥 Exportar CSV</button>
       </div>

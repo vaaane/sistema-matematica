@@ -481,7 +481,6 @@ function getLevelConfig(lvl) {
   // Overrides pontuais por nível
   if (lvl === 240) cfg.secs += 8;
   if (lvl === 250 || lvl === 260) cfg.secs = 35;
-  if (lvl >= 270 && lvl <= 279) cfg.secs -= 5;
   if (lvl === 280) cfg.secs = 35;
   if (lvl >= 281 && lvl <= 289) cfg.secs -= 10;
   if (lvl === 300) cfg.secs -= 15;
@@ -564,7 +563,8 @@ function _getLevelConfigBase(lvl) {
     }
   } else {
     // Pós-chefão: 131 respiro (75s), 132-139 pressão do rápido (55s), demais 65s / 45s / 35s após 300
-    const secs   = (lvl >= 131 && lvl <= 139) ? (lvl === 131 ? TEMPO_BASE_129 + 10 : Math.max(20, TEMPO_BASE_129 - 10)) : (lvl > 300 ? TEMPO_BASE_300 : lvl > 200 ? TEMPO_BASE_200 : TEMPO_BASE_129);
+    const baseS  = (lvl >= 131 && lvl <= 139) ? (lvl === 131 ? TEMPO_BASE_129 + 10 : Math.max(20, TEMPO_BASE_129 - 10)) : (lvl > 300 ? TEMPO_BASE_300 : lvl > 200 ? TEMPO_BASE_200 : TEMPO_BASE_129);
+    const secs   = lvl > 149 ? baseS + 5 : baseS;
     const minMul = Math.min(4 + n, 6);
     const minDiv = Math.min(4 + n, 6);
     // 12p×2=24 ÷ 6cols = 4 linhas (desktop 6×4); 301+: pesado (fatores 4–10)

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🔢 Jogar · Negativos — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .nota-row{padding:10px 0;border-bottom:0.5px solid var(--border);}
+    .nota-row:last-child{border-bottom:none;}
+    .nota-nivel{font-size:12px;font-weight:700;color:var(--blue-dark);}
+    .nota-texto{font-size:13px;color:var(--text);line-height:1.5;margin-top:3px;white-space:pre-wrap;}
+    .nota-ts{font-size:11px;color:var(--text-muted);margin-top:3px;}
+    @media(max-width:560px){.stat-grid{grid-template-columns:repeat(2,1fr)!important;}}
+    .prog-tr:hover td{filter:brightness(.97);}
+
+    /* Fase colors */
+    .fase-1{background:rgba(127,119,221,.07);}
+    .fase-2{background:rgba(34,197,94,.05);}
+    .fase-3{background:rgba(249,115,22,.05);}
+    .fase-4{background:rgba(239,68,68,.05);}
+    .fase-5{background:rgba(250,184,0,.07);}
+    .fase-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;vertical-align:middle;}
+    .fb-1{background:rgba(127,119,221,.15);color:var(--blue-dark);}
+    .fb-2{background:rgba(34,197,94,.12);color:#16a34a;}
+    .fb-3{background:rgba(249,115,22,.12);color:#ea580c;}
+    .fb-4{background:rgba(239,68,68,.12);color:#dc2626;}
+    .fb-5{background:rgba(250,184,0,.15);color:#b45309;}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">🔢 Jogar · Negativos</div>
+        <div class="topbar-sub">Modo professor — progresso salvo separado dos alunos</div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-ghost btn-sm" onclick="loadData()">
+          <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          Atualizar
+        </button>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get, set, remove, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+requireProfessor();
+renderSidebarProfessor("sidebar", "jogos_neg");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const PROF_UID = 'professora';
+const niveisRef = ref(db, `prof_neg_niveis/${PROF_UID}`);
+const notasRef  = ref(db, `prof_neg_notas/${PROF_UID}`);
+
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtDate(ts) {
+  if (!ts) return '—';
+  return new Date(Number(ts)).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+function fmtTempo(sec) {
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+// ── Level config mirror (must match aluno/tabuada_negativos.html) ──
+const FASES = [
+  { range: [1,5],   label: '+ / − simples',        tipo: 'Adição e Subtração', secs: 45, pairs: 4,  cols: 4, faseCls: 'fase-1', badgeCls: 'fb-1' },
+  { range: [6,10],  label: '+ / − duplo neg.',      tipo: 'Adição e Subtração', secs: 50, pairs: 5,  cols: 4, faseCls: 'fase-1', badgeCls: 'fb-1' },
+  { range: [11,15], label: '× um negativo',          tipo: 'Multiplicação',      secs: 50, pairs: 6,  cols: 4, faseCls: 'fase-2', badgeCls: 'fb-2' },
+  { range: [16,20], label: '× dois negativos',       tipo: 'Multiplicação',      secs: 50, pairs: 7,  cols: 4, faseCls: 'fase-2', badgeCls: 'fb-2' },
+  { range: [21,25], label: '÷ um negativo',          tipo: 'Divisão',            secs: 55, pairs: 7,  cols: 5, faseCls: 'fase-3', badgeCls: 'fb-3' },
+  { range: [26,30], label: '÷ / mix neg.',           tipo: 'Divisão',            secs: 55, pairs: 8,  cols: 5, faseCls: 'fase-3', badgeCls: 'fb-3' },
+  { range: [31,35], label: 'Mix completo',           tipo: 'Todas as ops',       secs: 55, pairs: 9,  cols: 5, faseCls: 'fase-4', badgeCls: 'fb-4' },
+  { range: [36,40], label: 'Mix pesado',             tipo: 'Todas as ops',       secs: 50, pairs: 10, cols: 5, faseCls: 'fase-4', badgeCls: 'fb-4' },
+  { range: [41,43], label: '(−n)^exp',               tipo: 'Potências',          secs: 60, pairs: 8,  cols: 4, faseCls: 'fase-5', badgeCls: 'fb-5' },
+  { range: [44,46], label: '−n^exp',                 tipo: 'Potências',          secs: 60, pairs: 9,  cols: 4, faseCls: 'fase-5', badgeCls: 'fb-5' },
+  { range: [47,50], label: 'Potências mix + ops',    tipo: 'Potências',          secs: 55, pairs: 10, cols: 5, faseCls: 'fase-5', badgeCls: 'fb-5' },
+];
+
+function getFaseForLevel(lvl) {
+  return FASES.find(f => lvl >= f.range[0] && lvl <= f.range[1]) || FASES[0];
+}
+
+// ── Histórico de testes ───────────────────────────────────────
+let _ultimoTeste = {};
+
+async function _carregarHistorico() {
+  try {
+    const snap = await get(niveisRef);
+    if (!snap.exists()) return;
+    const v = snap.val();
+    _ultimoTeste = {};
+    if (v?.historico) {
+      Object.entries(v.historico).forEach(([ts, entry]) => {
+        const n = entry.nivel;
+        if (!_ultimoTeste[n] || +ts > _ultimoTeste[n].ts) {
+          _ultimoTeste[n] = { ...entry, ts: +ts };
+        }
+      });
+    }
+  } catch(e) {}
+}
+
+function _ultimoTesteHtml(lvl) {
+  const e = _ultimoTeste[lvl];
+  if (!e) return '<span style="color:var(--text-muted)">—</span>';
+  const t = e.tempo_usado != null ? fmtTempo(e.tempo_usado) : (e.ts ? fmtDate(e.ts) : '?');
+  const ok = e.resultado === 'completou';
+  return `<span style="font-weight:600">${t}</span> ${ok ? '✅' : '⏱'}`;
+}
+
+function _renderProgressaoTable() {
+  const rows = [];
+  for (const fase of FASES) {
+    for (let lvl = fase.range[0]; lvl <= fase.range[1]; lvl++) {
+      const prev = lvl > 1 ? getFaseForLevel(lvl - 1) : null;
+      const secsChanged = prev && prev.secs !== fase.secs;
+      const pairsChanged = prev && prev.pairs !== fase.pairs;
+      const YEL = 'background:rgba(250,184,0,.25);outline:1.5px solid rgba(250,184,0,.6);outline-offset:-1px;';
+      const td = s => `style="padding:5px 10px;border-bottom:1px solid var(--border);${s}"`;
+      rows.push(`
+        <tr class="prog-tr ${fase.faseCls}" style="cursor:pointer" onclick="selecionarNivel(${lvl})" title="Testar nível ${lvl}">
+          <td ${td('font-weight:700')}>${lvl}</td>
+          <td ${td('font-size:11px')}><span class="fase-badge ${fase.badgeCls}">${fase.tipo}</span></td>
+          <td ${td('text-align:center;'+YEL)}>${fase.secs}s</td>
+          <td ${td('text-align:center')}>${fase.cols}×${Math.ceil(fase.pairs * 2 / fase.cols)}</td>
+          <td ${td('text-align:center')}>${fase.pairs * 2}</td>
+          <td ${td('font-size:11px;color:var(--text-muted)')}>${fase.label}</td>
+          <td ${td('white-space:nowrap;font-size:12px')}>${_ultimoTesteHtml(lvl)}</td>
+        </tr>`);
+    }
+  }
+  const body = document.getElementById('prog-table-body');
+  if (body) body.innerHTML = rows.join('');
+}
+
+window.toggleProgressao = async function() {
+  const wrap = document.getElementById('prog-table-wrap');
+  const chev = document.getElementById('prog-chev');
+  if (!wrap) return;
+  const open = wrap.style.display !== 'none';
+  wrap.style.display = open ? 'none' : 'block';
+  if (chev) chev.textContent = open ? '▼' : '▲';
+  if (!open) {
+    await _carregarHistorico();
+    _renderProgressaoTable();
+  }
+};
+
+window.selecionarNivel = function(lvl) {
+  const inp = document.getElementById('inp-nivel');
+  if (!inp) return;
+  inp.value = lvl;
+  inp.closest('.card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  inp.focus();
+};
+
+window.exportarCSV = function() {
+  const linhas = [['Nível', 'Fase', 'Tipo', 'Tempo (s)', 'Grid', 'Cards', 'Descrição']];
+  for (const fase of FASES) {
+    for (let lvl = fase.range[0]; lvl <= fase.range[1]; lvl++) {
+      linhas.push([
+        lvl, `Fase ${FASES.indexOf(fase) + 1}`, fase.tipo, fase.secs,
+        `${fase.cols}x${Math.ceil(fase.pairs * 2 / fase.cols)}`,
+        fase.pairs * 2, fase.label,
+      ]);
+    }
+  }
+  const csv = linhas.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob(['\uFEFF'+csv], { type:'text/csv;charset=utf-8' })),
+    download: 'progressao_tabuada_negativos.csv',
+  });
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+
+// ── Main data load ────────────────────────────────────────────
+async function loadData() {
+  const content = document.getElementById('content');
+
+  const [niveisSnap, notasSnap] = await Promise.all([
+    get(niveisRef).catch(() => null),
+    get(notasRef).catch(() => null),
+  ]);
+
+  const niveis        = niveisSnap?.exists() ? niveisSnap.val() : {};
+  const nivelAtual    = Math.max(1, Math.min(50, niveis.nivel_atual  || 1));
+  const melhorNivel   = Math.max(1, niveis.melhor_nivel || 1);
+  const totalPartidas = niveis.total_partidas || 0;
+
+  // Últimas partidas (até 10, para gráfico)
+  const hist = [];
+  if (niveis.historico) {
+    Object.entries(niveis.historico)
+      .sort(([a], [b]) => Number(b) - Number(a))
+      .slice(0, 10)
+      .forEach(([ts, v]) => hist.push({ ts: Number(ts), ...v }));
+    hist.reverse();
+  }
+
+  // Notas
+  const notas = [];
+  if (notasSnap?.exists()) {
+    notasSnap.forEach(child => notas.push({ nivel: child.key, ...child.val() }));
+    notas.sort((a, b) => Number(a.nivel) - Number(b.nivel));
+  }
+
+  // Gráfico
+  const maxLv = hist.length ? Math.max(...hist.map(x => x.nivel || 1)) : 1;
+  const chartBars = hist.map(h => {
+    const ok   = h.resultado === 'completou';
+    const barH = Math.max(8, Math.round(((h.nivel || 1) / maxLv) * 64));
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px" title="${ok?'Completou':'Tempo esgotado'} · Nível ${h.nivel||1}">
+      <div style="font-size:9px;color:var(--text-muted);font-weight:600">${h.nivel||1}</div>
+      <div style="width:100%;background:${ok?'#22C55E':'#f97316'};border-radius:4px 4px 0 0;height:${barH}px"></div>
+    </div>`;
+  }).join('');
+
+  // Fase do nível atual
+  const faseAtual = getFaseForLevel(nivelAtual);
+
+  content.innerHTML = `
+  <div style="max-width:680px">
+
+  <!-- Stats -->
+  <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px">
+    <div class="stat-grid" style="display:grid;grid-template-columns:repeat(4,1fr)">
+      ${[
+        [nivelAtual,    'Nível atual',   'var(--blue)'],
+        [melhorNivel,   'Melhor nível',  '#22C55E'],
+        [totalPartidas, 'Partidas',      'var(--text)'],
+        [faseAtual.tipo,'Fase atual',    '#FAB800'],
+      ].map(([v, l, c], i) => `
+        <div style="padding:16px 12px;text-align:center;${i<3?'border-right:1px solid var(--border)':''}">
+          <div style="font-size:${i===3?'11px':'24px'};font-weight:800;color:${c};line-height:1;margin-bottom:${i===3?'2px':'0'}">${v}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${l}</div>
+        </div>`).join('')}
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px">
+      <a href="/aluno/tabuada_negativos.html" class="btn btn-blue" style="flex:1;justify-content:center;text-decoration:none">▶ Jogar nível ${nivelAtual}</a>
+      <a href="/aluno/tabuada_negativos.html?nivel=1" class="btn" style="background:rgba(127,119,221,.2);color:var(--blue-dark);border:none;flex:1;justify-content:center;text-decoration:none">↺ Do início</a>
+    </div>
+  </div>
+
+  <!-- Testar nível específico -->
+  <div class="card" style="margin-bottom:16px">
+    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px">Testar nível específico</div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <input type="number" id="inp-nivel" min="1" max="50" value="${nivelAtual}"
+        style="width:76px;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;font-weight:700;text-align:center;background:var(--bg);color:var(--text)">
+      <button onclick="testarNivel()" class="btn btn-blue">▶ Testar este nível</button>
+      <span style="font-size:12px;color:var(--text-muted)">Não altera o progresso salvo</span>
+    </div>
+    <div id="nivel-info" style="margin-top:10px;font-size:12px;color:var(--text-muted)"></div>
+  </div>
+
+  ${hist.length > 0 ? `
+  <!-- Gráfico -->
+  <div class="card" style="margin-bottom:16px">
+    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px">Últimas ${hist.length} partidas</div>
+    <div style="display:flex;align-items:flex-end;gap:4px;height:80px">${chartBars}</div>
+    <div style="display:flex;align-items:center;gap:16px;margin-top:10px;font-size:11px;color:var(--text-muted)">
+      <span><span style="display:inline-block;width:10px;height:10px;background:#22C55E;border-radius:2px;margin-right:4px;vertical-align:middle"></span>Completou</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#f97316;border-radius:2px;margin-right:4px;vertical-align:middle"></span>Tempo esgotado</span>
+      <span style="margin-left:auto">mais antigo → mais recente</span>
+    </div>
+  </div>` : ''}
+
+  <!-- Anotações -->
+  <div class="card" style="margin-bottom:16px">
+    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px">Anotações por nível</div>
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
+        <label style="font-size:11px;color:var(--text-muted)">Nível</label>
+        <input type="number" id="nota-nivel" min="1" max="50" value="${nivelAtual}"
+          style="width:66px;padding:7px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-weight:700;text-align:center;background:var(--bg);color:var(--text)">
+      </div>
+      <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:5px">
+        <label style="font-size:11px;color:var(--text-muted)">Observação</label>
+        <textarea id="nota-texto" rows="2" placeholder="Ex: nível 43 confunde muito a turma 8D…"
+          style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--bg);color:var(--text);resize:vertical;box-sizing:border-box"></textarea>
+      </div>
+      <div style="display:flex;align-items:flex-end">
+        <button onclick="salvarNota()" class="btn btn-blue">Salvar</button>
+      </div>
+    </div>
+    <div id="notas-list">
+      ${notas.length === 0
+        ? `<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:16px">Nenhuma anotação ainda</div>`
+        : notas.map(n => `
+          <div class="nota-row">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="nota-nivel">Nível ${escH(n.nivel)}</span>
+              <span style="font-size:11px;color:var(--text-muted);margin-left:auto">${n.atualizado_em ? fmtDate(n.atualizado_em) : ''}</span>
+              <button onclick="deletarNota('${escH(n.nivel)}')" style="font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:2px 4px">✕</button>
+            </div>
+            <div class="nota-texto">${escH(n.texto || '')}</div>
+          </div>`).join('')}
+    </div>
+  </div>
+
+  <!-- Progressão -->
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;padding:2px 0" onclick="toggleProgressao()">
+      <div style="font-size:13px;font-weight:700;color:var(--text)">📊 Ver progressão completa (níveis 1–50)</div>
+      <span id="prog-chev" style="font-size:12px;color:var(--text-muted)">▼</span>
+    </div>
+    <div id="prog-table-wrap" style="display:none;margin-top:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <!-- Fase legend -->
+        <div style="display:flex;align-items:center;gap:10px;font-size:11px;flex-wrap:wrap">
+          <span><span class="fase-badge fb-1">+ / −</span></span>
+          <span><span class="fase-badge fb-2">× Mul</span></span>
+          <span><span class="fase-badge fb-3">÷ Div</span></span>
+          <span><span class="fase-badge fb-4">Mix</span></span>
+          <span><span class="fase-badge fb-5">⚡ Potências</span></span>
+        </div>
+        <button onclick="exportarCSV()" class="btn btn-ghost" style="font-size:12px;padding:5px 12px">📥 Exportar CSV</button>
+      </div>
+      <div style="overflow-x:auto;max-height:540px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius)">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead style="position:sticky;top:0;z-index:1;background:var(--card)">
+            <tr>
+              ${['Nível','Fase','Tempo','Grid','Cards','Descrição','Último teste'].map((h, i) =>
+                `<th style="padding:7px 10px;text-align:${i>=2&&i<=4?'center':'left'};font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:2px solid var(--border);white-space:nowrap">${h}</th>`
+              ).join('')}
+            </tr>
+          </thead>
+          <tbody id="prog-table-body"></tbody>
+        </table>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:6px;text-align:center">
+        Clique em qualquer linha para preencher "Testar nível específico" ↑
+      </div>
+    </div>
+  </div>
+
+  </div>`;
+
+  // Attach events
+  document.getElementById('inp-nivel')?.addEventListener('input', updateNivelInfo);
+  document.getElementById('inp-nivel')?.addEventListener('keydown', e => { if (e.key === 'Enter') testarNivel(); });
+  updateNivelInfo();
+}
+
+function updateNivelInfo() {
+  const inp = document.getElementById('inp-nivel');
+  const info = document.getElementById('nivel-info');
+  if (!inp || !info) return;
+  const lvl = parseInt(inp.value, 10);
+  if (isNaN(lvl) || lvl < 1 || lvl > 50) { info.textContent = ''; return; }
+  const fase = getFaseForLevel(lvl);
+  info.innerHTML = `<span class="fase-badge ${fase.badgeCls}" style="margin-right:6px">${fase.tipo}</span>${fase.label} · ${fase.secs}s · ${fase.pairs * 2} cards · ${fase.cols} colunas`;
+}
+
+window.testarNivel = function() {
+  const nivel = parseInt(document.getElementById('inp-nivel')?.value, 10);
+  if (isNaN(nivel) || nivel < 1 || nivel > 50) { alert('Digite um nível entre 1 e 50.'); return; }
+  window.location.href = `/aluno/tabuada_negativos.html?nivel=${nivel}`;
+};
+
+window.salvarNota = async function() {
+  const nivel = Math.max(1, Math.min(50, parseInt(document.getElementById('nota-nivel')?.value) || 1));
+  const texto = document.getElementById('nota-texto')?.value?.trim() || '';
+  if (!texto) return;
+  await set(ref(db, `prof_neg_notas/${PROF_UID}/${nivel}`), { texto, atualizado_em: Date.now() });
+  await loadData();
+};
+
+window.deletarNota = async function(nivel) {
+  if (!confirm(`Remover anotação do nível ${nivel}?`)) return;
+  await remove(ref(db, `prof_neg_notas/${PROF_UID}/${nivel}`));
+  await loadData();
+};
+
+loadData();
+</script>
+</body>
+</html>

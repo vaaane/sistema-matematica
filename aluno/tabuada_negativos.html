@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🔢 Negativos — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    /* ── Timer ── */
+    .timer-wrap{display:flex;align-items:center;justify-content:center;gap:8px;font-size:32px;font-weight:800;margin-bottom:10px;color:var(--text);transition:color .3s;}
+    .timer-wrap svg{width:30px;height:30px;fill:currentColor;}
+    .timer-wrap.warn{color:var(--red);}
+    .timer-bar-bg{height:7px;background:var(--border);border-radius:4px;margin-bottom:18px;overflow:hidden;}
+    .timer-bar{height:100%;border-radius:4px;background:var(--blue);transition:width 1s linear,background .4s;}
+    .timer-bar.warn{background:var(--orange);}
+    .timer-bar.danger{background:var(--red);}
+
+    /* ── Level badge ── */
+    .nivel-badge{display:inline-flex;align-items:center;gap:6px;background:var(--blue-pale);border:1.5px solid rgba(127,119,221,0.3);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:700;color:var(--blue-dark);}
+    .nivel-badge svg{width:13px;height:13px;fill:currentColor;}
+    .nivel-badge.fase-pot{background:rgba(250,184,0,.12);border-color:rgba(250,184,0,.4);color:#FAB800;}
+
+    /* ── Game grid ── */
+    .game-grid{display:grid;gap:7px;margin-bottom:18px;position:relative;overflow:hidden;}
+
+    /* ── Game card ── */
+    .game-card{
+      position:static;
+      background:var(--card);border:1.5px solid var(--border);border-radius:11px;
+      padding:6px 4px;cursor:pointer;
+      transition:border-color .14s,background .14s;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      height:var(--game-card-h,68px);min-height:0;overflow:hidden;
+      user-select:none;-webkit-tap-highlight-color:transparent;
+    }
+    .game-card.compact .res-number{font-size:18px;}
+    .game-card.compact .neg-expr{font-size:10px;}
+    .game-card:hover{border-color:var(--blue);background:var(--blue-pale);}
+    .game-card.selected{border:2.5px solid var(--blue);background:var(--blue-pale);box-shadow:inset 0 0 0 2px rgba(47,158,220,.18);}
+    .game-card.error{border-color:var(--red)!important;background:var(--red-pale)!important;animation:shake .4s;}
+    .game-card.matched-flash{border-color:var(--green)!important;background:var(--green-pale)!important;pointer-events:none;}
+    .game-card.removed{pointer-events:none;animation:cardOut .4s forwards;}
+
+    /* ── Negative number display ── */
+    .neg-expr{font-size:clamp(9px,min(2.8vw,2.7vh),14px);font-weight:800;color:var(--text);text-align:center;line-height:1.4;letter-spacing:-.3px;padding:0 3px;}
+    .neg-sign{color:#EF4444;font-weight:900;}
+    .sup{font-size:.65em;vertical-align:super;line-height:0;}
+    .res-number{font-size:clamp(12px,min(4.5vw,4.6vh),28px);font-weight:800;color:var(--text);line-height:1;}
+
+    /* ── Slots ── */
+    .slots-wrap{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;flex-wrap:nowrap;width:100%;}
+    .slot{flex:1;max-width:128px;min-width:80px;height:60px;border:2px dashed var(--border);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--text-muted);background:var(--bg);transition:all .2s;text-align:center;padding:4px;}
+    .slot.filled{border-style:solid;border-color:var(--blue);background:var(--blue-pale);color:var(--text);cursor:pointer;}
+    .slot.filled:hover{border-color:var(--orange);}
+    .slot-eq{font-size:24px;font-weight:800;color:var(--text-muted);flex-shrink:0;}
+
+    /* ── Controls ── */
+    .game-controls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+
+    /* ── Status msg ── */
+    .status-msg{text-align:center;font-size:13px;color:var(--text-muted);margin-bottom:12px;min-height:18px;transition:all .2s;}
+
+    /* ── Animations ── */
+    @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+    @keyframes cardOut{0%{opacity:1}100%{opacity:0;visibility:hidden}}
+    @keyframes levelUpPop{0%{opacity:0;transform:scale(.45) rotate(-8deg)}70%{transform:scale(1.12) rotate(1.5deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+    @keyframes levelDownPop{0%{opacity:0;transform:scale(.88) translateY(8px)}65%{transform:scale(1.02) translateY(-2px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+    @keyframes fadeInUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes combo-float{0%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}60%{opacity:1;transform:translateX(-50%) translateY(-30px) scale(1.15)}100%{opacity:0;transform:translateX(-50%) translateY(-52px) scale(.9)}}
+    .combo-pop{position:fixed;pointer-events:none;z-index:150;font-weight:800;font-size:15px;font-family:'Inter',sans-serif;animation:combo-float .85s ease forwards;white-space:nowrap;text-shadow:0 1px 6px rgba(0,0,0,.35);}
+    .combo-pop.combo-big{font-size:21px;animation-duration:1.05s;}
+    .combo-pop.combo-huge{font-size:28px;animation-duration:1.3s;}
+    @keyframes combo-badge-pop{0%{transform:scale(1.3);opacity:.6}100%{transform:scale(1);opacity:1}}
+    .combo-badge-inner{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:800;padding:3px 12px;border-radius:20px;animation:combo-badge-pop .2s;}
+    .combo-c2{background:rgba(34,197,94,.1);color:#22C55E;border:1px solid rgba(34,197,94,.25);}
+    .combo-c3{background:rgba(249,115,22,.1);color:#f97316;border:1px solid rgba(249,115,22,.25);}
+    .combo-c4{background:rgba(250,184,0,.1);color:#FAB800;border:1px solid rgba(250,184,0,.28);}
+    .combo-c5{background:rgba(250,184,0,.18);color:#FAB800;border:1px solid rgba(250,184,0,.45);font-size:15px;}
+
+    /* ── Level overlay ── */
+    .level-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
+    .level-card{background:var(--card);border-radius:22px;padding:40px 44px;text-align:center;animation:levelUpPop .45s;box-shadow:0 24px 64px rgba(0,0,0,.35);max-width:320px;width:92vw;}
+    .level-emoji{font-size:68px;line-height:1;margin-bottom:14px;}
+    .level-title{font-size:24px;font-weight:800;margin-bottom:6px;}
+    .level-sub{font-size:13px;color:var(--text-muted);margin-bottom:20px;line-height:1.5;}
+    .level-new{font-size:19px;font-weight:700;color:var(--blue);margin-bottom:24px;}
+
+    /* ── Back link ── */
+    .link-back{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--text-muted);text-decoration:none;transition:color .14s;padding:2px 0;}
+    .link-back:hover{color:var(--text);}
+    .link-back svg{width:13px;height:13px;fill:currentColor;flex-shrink:0;}
+
+    /* ── Progress bar (pairs left) ── */
+    .pairs-bar-bg{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap;justify-content:center;}
+    .pair-dot{width:12px;height:12px;border-radius:50%;background:var(--border);transition:background .3s;}
+    .pair-dot.done{background:var(--green);}
+
+    /* ── Confete ── */
+    @keyframes confete-fall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(115vh) rotate(740deg);opacity:0}}
+    .confete-wrap{position:fixed;inset:0;pointer-events:none;z-index:999;overflow:hidden;}
+    .confete-particle{position:absolute;top:-12px;border-radius:3px;animation:confete-fall linear forwards;}
+
+    /* ── Fase badge ── */
+    .fase-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:6px;vertical-align:middle;}
+    .fb-1{background:rgba(127,119,221,.15);color:var(--blue-dark);}
+    .fb-2{background:rgba(34,197,94,.12);color:#16a34a;}
+    .fb-3{background:rgba(249,115,22,.12);color:#ea580c;}
+    .fb-4{background:rgba(239,68,68,.12);color:#dc2626;}
+    .fb-5{background:rgba(250,184,0,.15);color:#b45309;}
+
+    /* ── Combo seguidos ── */
+    .combo-seguidos{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:2px 9px;border-radius:20px;transition:all .2s;}
+    .combo-seguidos.baixo{color:var(--text-muted);background:transparent;}
+    .combo-seguidos.alto{color:#f97316;background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25);}
+    .combo-seguidos.maximo{color:#FAB800;background:rgba(250,184,0,.12);border:1px solid rgba(250,184,0,.35);}
+
+    /* ── Fullscreen game — idêntico ao tabuada.html ── */
+    html,body{overflow:hidden;height:100%;}
+    .layout{min-height:100vh;min-height:100dvh;}
+    .main{overflow:hidden;min-height:0!important;height:100vh;height:100dvh;}
+    #content{flex:1!important;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;padding:0!important;}
+    .tb-wrap{display:flex;flex-direction:column;height:var(--tb-h,600px);width:100%;max-width:630px;margin:0 auto;overflow:hidden;padding:6px 16px 4px;box-sizing:border-box;flex-shrink:0;}
+    .tb-wrap > *{flex-shrink:0;}
+    .game-grid{flex-shrink:0!important;height:var(--grid-h,200px)!important;min-height:0;overflow:hidden;margin-bottom:0!important;grid-auto-rows:minmax(0,1fr)!important;gap:clamp(3px,.8vw,7px)!important;}
+    .game-card{height:auto!important;min-height:0!important;}
+    .timer-wrap{margin-bottom:3px!important;}
+    .timer-bar-bg{margin-bottom:4px!important;}
+    .pairs-bar-bg{margin-bottom:2px!important;}
+    .status-msg{margin-bottom:2px!important;min-height:14px!important;}
+    .slots-wrap{padding:3px 0 2px!important;flex-shrink:0!important;}
+
+    @media(max-width:480px){
+      .topbar{padding:6px 10px!important;min-height:0!important;}
+      .topbar-title{font-size:14px;}
+      .tb-wrap{padding:4px 10px 2px!important;}
+      .timer-wrap{font-size:26px!important;margin-bottom:2px!important;}
+      .timer-wrap svg{width:24px!important;height:24px!important;}
+      .slot{max-width:108px!important;height:52px!important;}
+      .slots-wrap{gap:8px!important;}
+    }
+    @media(max-width:360px){
+      .slot{max-width:88px;height:50px;}
+      .slot-eq{font-size:20px;}
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">🔢 Tabuada · Negativos</div>
+        <div class="topbar-sub">50 níveis com negativos e potências</div>
+      </div>
+      <div class="topbar-right">
+        <button id="btn-reiniciar-hdr" class="btn btn-ghost btn-sm" style="display:none" onclick="buildGame(true)">
+          <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          Reiniciar
+        </button>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+    </div>
+  </div>
+</div>
+
+<!-- Level overlay -->
+<div id="level-overlay" class="level-overlay" style="display:none">
+  <div class="level-card">
+    <div class="level-emoji" id="lov-emoji">🎉</div>
+    <div class="level-title" id="lov-title">Avançou!</div>
+    <div class="level-sub" id="lov-sub"></div>
+    <div class="level-new" id="lov-new"></div>
+    <button class="btn btn-blue btn-lg" id="lov-btn" onclick="fecharOverlay()">Continuar →</button>
+    <button id="lov-btn-repetir" onclick="repetirNivel()" style="display:none;margin-top:8px;width:100%;padding:7px 0;background:transparent;border:1px solid var(--border);color:var(--text-muted);font-size:12px;font-weight:600;border-radius:8px;cursor:pointer">🔁 Repetir este nível</button>
+  </div>
+</div>
+
+<script type="module">
+import { getSession, renderSidebarAluno, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+// ── Auth ──────────────────────────────────────────────────────
+const sess = getSession();
+const _isProfMode = sess?.modo === 'professor';
+if (!_isProfMode && (!sess || sess.modo !== 'aluno')) { window.location.href = '/index.html'; throw new Error(); }
+
+if (_isProfMode) renderSidebarProfessor("sidebar", "jogos_neg");
+else             renderSidebarAluno("sidebar", "jogos_neg");
+
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const _profUid = 'professora';
+const alunos   = _isProfMode ? ['Professora'] : sess.alunos;
+const turma    = _isProfMode ? '' : sess.turma;
+let nomeAluno  = alunos[0];
+function _makeUid(n) { return (turma + '_' + n).replace(/[.#$\[\]/\s]/g, '_'); }
+let uid = _isProfMode ? _profUid : _makeUid(nomeAluno);
+
+const _params    = new URLSearchParams(location.search);
+const _replayN   = _params.has('nivel') ? parseInt(_params.get('nivel'), 10) : null;
+const _isReplay  = !!_replayN;
+
+const niveisRef = ref(db, _isProfMode ? `prof_neg_niveis/${uid}` : `tabuada_negativos_niveis/${uid}`);
+
+// ── Level config (50 níveis) ──────────────────────────────────
+function getLvlCfg(lvl) {
+  if (lvl <= 5)  return { fase:1, tipo:'add_sub_neg',  secs:45, pairs:4,  cols:4, allowDupNeg:false, fbCls:'fb-1', faseLabel:'+ e −' };
+  if (lvl <= 10) return { fase:1, tipo:'add_sub_neg',  secs:50, pairs:5,  cols:4, allowDupNeg:true,  fbCls:'fb-1', faseLabel:'+ e − (duplo neg.)' };
+  if (lvl <= 15) return { fase:2, tipo:'mul_neg_one',  secs:50, pairs:6,  cols:4, fbCls:'fb-2', faseLabel:'× (um neg.)' };
+  if (lvl <= 20) return { fase:2, tipo:'mul_neg_both', secs:50, pairs:7,  cols:4, fbCls:'fb-2', faseLabel:'× (dois neg.)' };
+  if (lvl <= 25) return { fase:3, tipo:'div_neg_one',  secs:55, pairs:7,  cols:5, fbCls:'fb-3', faseLabel:'÷ (um neg.)' };
+  if (lvl <= 30) return { fase:3, tipo:'mix_neg',      secs:55, pairs:8,  cols:5, allowDupNeg:true, fbCls:'fb-3', faseLabel:'÷ + mix' };
+  if (lvl <= 35) return { fase:4, tipo:'mix_neg',      secs:55, pairs:9,  cols:5, allowDupNeg:true, fbCls:'fb-4', faseLabel:'Mix completo' };
+  if (lvl <= 40) return { fase:4, tipo:'mix_neg',      secs:50, pairs:10, cols:5, allowDupNeg:true, fbCls:'fb-4', faseLabel:'Mix pesado' };
+  if (lvl <= 43) return { fase:5, tipo:'pow_paren',    secs:60, pairs:8,  cols:4, fbCls:'fb-5', faseLabel:'(−n)ˣ' };
+  if (lvl <= 46) return { fase:5, tipo:'pow_front',    secs:60, pairs:9,  cols:4, fbCls:'fb-5', faseLabel:'−nˣ' };
+  return            { fase:5, tipo:'pow_mix',      secs:55, pairs:10, cols:5, fbCls:'fb-5', faseLabel:'Potências mix' };
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function rnd(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+function rndNZ(a, b) { let v; do { v = rnd(a, b); } while (!v); return v; }
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── Expression HTML builders ──────────────────────────────────
+// Negative sign in red; uses inline HTML, safe to inject into card innerHTML
+function negNum(n) {
+  // renders a single number with red minus if negative
+  if (n < 0) return `<span class="neg-sign">−</span>${Math.abs(n)}`;
+  return `${n}`;
+}
+function negParens(n) {
+  // renders (−|n|) for negative bases
+  return `(<span class="neg-sign">−</span>${Math.abs(n)})`;
+}
+
+function opHtml(op) {
+  const { type, a, b, exp } = op;
+  if (type === 'add') {
+    // a + (b) — b may be negative → shown as a + (−|b|)
+    if (b < 0) return `<span class="neg-expr">${negNum(a)} + ${negParens(b)}</span>`;
+    return `<span class="neg-expr">${negNum(a)} + ${b}</span>`;
+  }
+  if (type === 'sub') {
+    // a − b — b may be negative → a − (−|b|)
+    if (b < 0) return `<span class="neg-expr">${negNum(a)} − ${negParens(b)}</span>`;
+    return `<span class="neg-expr">${negNum(a)} − ${b}</span>`;
+  }
+  if (type === 'mul') {
+    const sa = a < 0 ? negParens(a) : `${a}`;
+    const sb = b < 0 ? negParens(b) : `${b}`;
+    return `<span class="neg-expr">${sa} × ${sb}</span>`;
+  }
+  if (type === 'div') {
+    const sa = a < 0 ? negParens(a) : `${Math.abs(a) === a ? a : negParens(a)}`;
+    const sb = b < 0 ? negParens(b) : `${b}`;
+    return `<span class="neg-expr">${sa} ÷ ${sb}</span>`;
+  }
+  if (type === 'pow_paren') {
+    // (−base)^exp
+    return `<span class="neg-expr">${negParens(a)}<span class="sup">${exp}</span></span>`;
+  }
+  if (type === 'pow_front') {
+    // −(base^exp): negativo na frente
+    return `<span class="neg-expr"><span class="neg-sign">−</span>${Math.abs(a)}<span class="sup">${exp}</span></span>`;
+  }
+  return `<span class="neg-expr">?</span>`;
+}
+
+function resHtml(result) {
+  if (result < 0) return `<div class="res-number"><span class="neg-sign">−</span>${Math.abs(result)}</div>`;
+  return `<div class="res-number">${result}</div>`;
+}
+
+// ── Op generators ─────────────────────────────────────────────
+function generatePairs(cfg, count) {
+  const used = new Set();
+  const pairs = [];
+  let att = 0;
+  while (pairs.length < count && att < 900) {
+    att++;
+    let op = null;
+    switch (cfg.tipo) {
+      case 'add_sub_neg':  op = _genAddSub(cfg, used); break;
+      case 'mul_neg_one':  op = _genMulOne(used); break;
+      case 'mul_neg_both': op = _genMulBoth(used); break;
+      case 'div_neg_one':  op = _genDivOne(used); break;
+      case 'mix_neg':      op = _genMix(used); break;
+      case 'pow_paren':    op = _genPowParen(used, 2, 3); break;
+      case 'pow_front':    op = _genPowFront(used, 2, 3); break;
+      case 'pow_mix':      op = _genPowMix(used); break;
+    }
+    if (op && !used.has(op.result)) {
+      used.add(op.result);
+      pairs.push(op);
+    }
+  }
+  return pairs;
+}
+
+function _genAddSub(cfg, used) {
+  const isAdd = rnd(0,1)===0;
+  const a = rndNZ(cfg.allowDupNeg ? -10 : -5, 10);
+  const b = cfg.allowDupNeg ? rndNZ(-10,10) : rndNZ(-5,10);
+  const result = isAdd ? a+b : a-b;
+  if (Math.abs(result) > 25 || used.has(result)) return null;
+  return { type: isAdd?'add':'sub', a, b, result };
+}
+
+function _genMulOne(used) {
+  let a = rndNZ(1,10), b = rndNZ(1,10);
+  if (rnd(0,1)===0) a=-a; else b=-b;
+  const result = a*b;
+  if (used.has(result)) return null;
+  return { type:'mul', a, b, result };
+}
+
+function _genMulBoth(used) {
+  const a = rndNZ(-10,-1), b = rndNZ(-10,-1);
+  const result = a*b;
+  if (result>100 || used.has(result)) return null;
+  return { type:'mul', a, b, result };
+}
+
+function _genDivOne(used) {
+  const div = rndNZ(2,10);
+  const res = rndNZ(2,10);
+  const negRes = rnd(0,1)===0 ? -res : res;
+  const negDiv = negRes>0 ? -div : div;
+  const dividend = negDiv * negRes;
+  if (used.has(negRes)) return null;
+  return { type:'div', a:dividend, b:negDiv, result:negRes };
+}
+
+function _genMix(used) {
+  const r = rnd(0,3);
+  if (r<=1) {
+    const isAdd = r===0;
+    const a = rndNZ(-12,12), b = rndNZ(-12,12);
+    const result = isAdd ? a+b : a-b;
+    if (Math.abs(result)>30 || used.has(result)) return null;
+    return { type:isAdd?'add':'sub', a, b, result };
+  }
+  if (r===2) {
+    const a = rndNZ(-10,10), b = rndNZ(-10,10);
+    const result = a*b;
+    if (Math.abs(result)>150 || used.has(result)) return null;
+    return { type:'mul', a, b, result };
+  }
+  const div = rndNZ(-10,10), res = rndNZ(-10,10);
+  const dividend = div*res;
+  if (Math.abs(dividend)>120 || used.has(res)) return null;
+  return { type:'div', a:dividend, b:div, result:res };
+}
+
+function _genPowParen(used, expMin, expMax) {
+  const base = rndNZ(-5,-2);
+  const exp  = rnd(expMin, expMax);
+  const result = Math.pow(base, exp);
+  if (!Number.isInteger(result) || Math.abs(result)>250 || used.has(result)) return null;
+  return { type:'pow_paren', a:base, exp, result };
+}
+
+function _genPowFront(used, expMin, expMax) {
+  const base = rnd(2,5);
+  const exp  = rnd(expMin, expMax);
+  const result = -(Math.pow(base, exp));
+  if (!Number.isInteger(result) || Math.abs(result)>250 || used.has(result)) return null;
+  return { type:'pow_front', a:base, exp, result };
+}
+
+function _genPowMix(used) {
+  const r = rnd(0,2);
+  if (r===0) return _genPowParen(used, 2, 4);
+  if (r===1) return _genPowFront(used, 2, 4);
+  return _genMix(used);
+}
+
+// ── Game state ────────────────────────────────────────────────
+let nivelAtual=1, melhorNivel=1, totalPartidas=0;
+let progresso = {};
+let _nivelEmJogo = 1;
+let gameOver = false;
+let _animating = false;
+let acertos=0, erros=0, comboCount=0, comboSessao=0;
+let timerTotal=60, timerLeft=60, timerInterval=null, _timerOvertime=0;
+let selectedCard = null;
+let removedCount=0, totalPairs=0;
+
+async function carregarProgresso() {
+  try {
+    const snap = await get(niveisRef);
+    if (snap.exists()) return snap.val();
+  } catch(e) {}
+  return { nivel_atual:1, melhor_nivel:1, total_partidas:0 };
+}
+
+async function salvarProgresso(resultado, nivelJogado) {
+  if (_isReplay && !_isProfMode) return;
+  const ts = Date.now();
+  const updates = { nivel_atual:nivelAtual, melhor_nivel:melhorNivel, total_partidas:totalPartidas, ultima_partida:ts };
+  updates[`historico/${ts}`] = { nivel:nivelJogado, resultado, acertos, erros, combo:comboSessao, ts };
+  try { await update(niveisRef, updates); } catch(e) {}
+}
+
+// ── Audio ─────────────────────────────────────────────────────
+let _audioCtx = null;
+function _getCtx() { if (!_audioCtx) { try { _audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e) {} } return _audioCtx; }
+function _beep(freq,dur,type='sine',vol=0.22,delay=0) {
+  const ctx=_getCtx(); if (!ctx) return;
+  try {
+    const t=ctx.currentTime+delay, osc=ctx.createOscillator(), gain=ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type=type; osc.frequency.setValueAtTime(freq,t);
+    gain.gain.setValueAtTime(vol,t); gain.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    osc.start(t); osc.stop(t+dur+.01);
+  } catch(e) {}
+}
+function resumeAudio() { const ctx=_getCtx(); if (ctx?.state==='suspended') ctx.resume(); }
+function somAcerto()  { _beep(660,.1,'sine',.2); _beep(880,.13,'sine',.2,.1); }
+function somErro()    { _beep(180,.2,'sawtooth',.12); }
+function somVitoria() { [523,659,784,1047].forEach((f,i)=>_beep(f,.18,'sine',.28,i*.11)); }
+function somDerrota() { _beep(370,.12,'sine',.18); _beep(270,.12,'sine',.18,.14); _beep(190,.3,'sine',.18,.28); }
+
+// ── Timer ─────────────────────────────────────────────────────
+function startTimer() {
+  updateTimerUI();
+  timerInterval = setInterval(() => {
+    if (gameOver) return;
+    if (timerLeft > 0) {
+      timerLeft--;
+      updateTimerUI();
+      if (timerLeft === 0 && !_isProfMode) { clearInterval(timerInterval); timerInterval=null; onTimerEnd(); }
+    } else if (_isProfMode) {
+      _timerOvertime++;
+      updateTimerUI();
+    }
+  }, 1000);
+}
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval=null; }
+  if (window._layoutRAF) { cancelAnimationFrame(window._layoutRAF); window._layoutRAF=null; }
+  if (window._layoutResize) {
+    window.removeEventListener('resize', window._layoutResize);
+    if (window.visualViewport) window.visualViewport.removeEventListener('resize', window._layoutResize);
+    window._layoutResize=null;
+  }
+}
+function updateTimerUI() {
+  const pct  = timerTotal>0 ? timerLeft/timerTotal : 0;
+  const secs = timerLeft;
+  const m=Math.floor(secs/60), s=secs%60;
+  const txt  = document.getElementById('timer-text');
+  const wrap = document.getElementById('timer-display');
+  const bar  = document.getElementById('timer-bar');
+  if (!txt) return;
+  txt.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  if (wrap) wrap.className = `timer-wrap${timerLeft<=10?' warn':''}`;
+  if (bar) { bar.style.width=`${pct*100}%`; bar.className=`timer-bar${pct<.2?' danger':pct<.4?' warn':''}`; }
+}
+
+// ── Card flight animation ─────────────────────────────────────
+function launchCard(el, card) {
+  const gridRect = el.getBoundingClientRect();
+  const slotId   = card.kind==='op' ? 'slot-op' : 'slot-res';
+  el.style.visibility='hidden'; el.style.pointerEvents='none';
+  const clone = document.createElement('div');
+  clone.className = 'game-card selected fly-clone';
+  clone.innerHTML = el.innerHTML;
+  Object.assign(clone.style, {
+    position:'fixed', left:gridRect.left+'px', top:gridRect.top+'px',
+    width:gridRect.width+'px', height:gridRect.height+'px',
+    minHeight:'0', zIndex:'100', pointerEvents:'none', margin:'0', boxSizing:'border-box',
+  });
+  document.body.appendChild(clone);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    const slot = document.getElementById(slotId);
+    if (!slot) return;
+    const sr = slot.getBoundingClientRect();
+    clone.style.transition='left .28s ease,top .28s ease,width .28s ease,height .28s ease';
+    clone.style.left=sr.left+'px'; clone.style.top=sr.top+'px';
+    clone.style.width=sr.width+'px'; clone.style.height=sr.height+'px';
+  }));
+  return { clone, origRect:{left:gridRect.left,top:gridRect.top,width:gridRect.width,height:gridRect.height} };
+}
+function flyBack(flyInfo, el) {
+  const { clone } = flyInfo;
+  const rect = el.getBoundingClientRect();
+  clone.style.transition='left .28s ease,top .28s ease,width .28s ease,height .28s ease';
+  clone.style.left=rect.left+'px'; clone.style.top=rect.top+'px';
+  clone.style.width=rect.width+'px'; clone.style.height=rect.height+'px';
+  setTimeout(()=>{
+    clone.remove(); el.style.visibility=''; el.style.pointerEvents='';
+    el.classList.add('error'); setTimeout(()=>el.classList.remove('error'),400);
+  }, 280);
+}
+
+// ── Slot helpers ──────────────────────────────────────────────
+function fillSlot(card) {
+  document.getElementById(card.kind==='op'?'slot-op':'slot-res')?.classList.add('filled');
+}
+function clearSlots() {
+  document.getElementById('slot-op')?.classList.remove('filled');
+  document.getElementById('slot-res')?.classList.remove('filled');
+}
+function deselectCard() {
+  if (!selectedCard) return;
+  const { clone, origRect } = selectedCard.flyInfo;
+  const el = selectedCard.el;
+  clone.style.transition='left .28s ease,top .28s ease,width .28s ease,height .28s ease';
+  clone.style.left=origRect.left+'px'; clone.style.top=origRect.top+'px';
+  clone.style.width=origRect.width+'px'; clone.style.height=origRect.height+'px';
+  setTimeout(()=>{ clone.remove(); el.style.visibility=''; el.style.pointerEvents=''; }, 280);
+  selectedCard=null; clearSlots(); setStatus('');
+}
+
+// ── Status + combo ────────────────────────────────────────────
+function setStatus(msg, color) {
+  const el = document.getElementById('status-msg');
+  if (!el) return;
+  el.textContent=msg; el.style.color=color||'var(--text-muted)';
+}
+function showComboPopup(el) {
+  const rect=el.getBoundingClientRect();
+  const pop=document.createElement('div'); pop.className='combo-pop';
+  let text, color, badgeCls;
+  if      (comboCount>=6){ text=`🔥 INCRÍVEL! x${comboCount}`; color='#FAB800'; badgeCls='combo-c5'; pop.classList.add('combo-huge'); }
+  else if (comboCount===5){ text='🔥 x5 COMBO!'; color='#FAB800'; badgeCls='combo-c5'; pop.classList.add('combo-huge'); }
+  else if (comboCount===4){ text='🔥 Combo x4'; color='#f97316'; badgeCls='combo-c4'; pop.classList.add('combo-big'); }
+  else if (comboCount===3){ text='🔥 Combo x3'; color='#f97316'; badgeCls='combo-c3'; pop.classList.add('combo-big'); }
+  else if (comboCount===2){ text='✓ x2'; color='#22C55E'; badgeCls='combo-c2'; }
+  else                    { text='+1'; color='#1D9E75'; badgeCls=null; }
+  pop.style.cssText=`left:${rect.left+rect.width/2}px;top:${rect.top+8}px;color:${color};`;
+  document.body.appendChild(pop);
+  setTimeout(()=>pop.remove(), comboCount>=5?1300:comboCount>=3?1100:900);
+  const badge=document.getElementById('combo-badge');
+  if (badge) badge.innerHTML = badgeCls ? `<span class="combo-badge-inner ${badgeCls}">${text}</span>` : '';
+}
+function updateComboDisplay() {
+  const el=document.getElementById('combo-seguidos'); if (!el) return;
+  if (comboCount<=0){ el.textContent=''; el.className='combo-seguidos baixo'; el.style.display='none'; return; }
+  el.style.display='inline-flex';
+  el.textContent=`🔥 ${comboCount} seguido${comboCount!==1?'s':''}`;
+  el.className=`combo-seguidos ${comboCount>=5?'maximo':comboCount>=3?'alto':'baixo'}`;
+}
+
+// ── Confetti ─────────────────────────────────────────────────
+function lancarConfete(n=80) {
+  const wrap=document.createElement('div'); wrap.className='confete-wrap'; document.body.appendChild(wrap);
+  const colors=['#FAB800','#22C55E','#60A5FA','#A855F7','#F87171','#FDE047','#4ADE80','#FF6B9D'];
+  for (let i=0;i<n;i++){
+    const p=document.createElement('div'); p.className='confete-particle';
+    const w=6+Math.random()*8;
+    p.style.cssText=`left:${Math.random()*100}%;width:${w}px;height:${w*1.6}px;background:${colors[i%colors.length]};animation-duration:${2.5+Math.random()*3}s;animation-delay:${Math.random()*1.5}s;`;
+    wrap.appendChild(p);
+  }
+  setTimeout(()=>wrap.remove(),7000);
+}
+
+// ── Build game ────────────────────────────────────────────────
+window.buildGame = function(skipAnim=false) {
+  stopTimer();
+  document.querySelectorAll('.fly-clone,.confete-wrap').forEach(c=>c.remove());
+
+  const cfg = getLvlCfg(_nivelEmJogo);
+  timerTotal=cfg.secs; timerLeft=cfg.secs; _timerOvertime=0;
+  selectedCard=null; removedCount=0; gameOver=false; _animating=false;
+  acertos=0; erros=0; comboCount=0;
+
+  // Mobile column adjustment (mirror tabuada.html)
+  const _isMobile = window.innerWidth <= 768;
+  const _isNarrow = window.innerWidth <= 420;
+  const _deskCols = cfg.cols;
+  const cols = _isNarrow ? Math.min(4, _deskCols) : _isMobile ? Math.min(4, _deskCols) : _deskCols;
+
+  // Generate pairs ensuring (pairs*2) % cols === 0
+  let pairs = generatePairs(cfg, cfg.pairs);
+  const gridFactor = cols%2===0 ? cols/2 : cols;
+  const validPairs = Math.max(gridFactor, Math.floor(pairs.length/gridFactor)*gridFactor);
+  if (pairs.length > validPairs) pairs.splice(validPairs);
+  // Fallback if too few
+  if (pairs.length < 2) pairs = generatePairs(cfg, Math.max(2, cfg.pairs-2));
+
+  totalPairs = pairs.length;
+
+  // Build cards array (op + result for each pair), shuffled
+  const cards = [];
+  pairs.forEach((pair, i) => {
+    cards.push({ kind:'op',     pairId:i, op:pair, result:pair.result });
+    cards.push({ kind:'result', pairId:i, op:pair, result:pair.result });
+  });
+  shuffle(cards);
+
+  // Phase badge class
+  const isPot = cfg.fase===5;
+  const badgeExtraCls = isPot ? ' fase-pot' : '';
+
+  // Dots
+  const dotsHtml = Array.from({length:pairs.length},(_,i)=>`<div class="pair-dot" id="dot-${i}"></div>`).join('');
+
+  const content = document.getElementById('content');
+  content.innerHTML = `
+<div class="tb-wrap">
+  <!-- L1: nível badge + combo -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="nivel-badge${badgeExtraCls}">
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        Nível ${_nivelEmJogo}
+        <span class="fase-badge ${cfg.fbCls}">${cfg.faseLabel}</span>
+      </div>
+      <span id="combo-seguidos" class="combo-seguidos baixo" style="display:none"></span>
+    </div>
+    <span id="combo-badge" style="min-width:80px;text-align:right"></span>
+  </div>
+
+  <!-- L2: timer -->
+  <div>
+    <div class="timer-wrap" id="timer-display">
+      <svg viewBox="0 0 24 24"><path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61 1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+      <span id="timer-text">${String(Math.floor(timerTotal/60)).padStart(2,'0')}:${String(timerTotal%60).padStart(2,'0')}</span>
+    </div>
+    <div class="timer-bar-bg"><div class="timer-bar" id="timer-bar" style="width:100%"></div></div>
+  </div>
+
+  <!-- L3: dots + status -->
+  <div>
+    <div class="pairs-bar-bg" id="pairs-dots">${dotsHtml}</div>
+    <div class="status-msg" id="status-msg"></div>
+    <div id="combo-badge-wrap" style="text-align:center;min-height:20px;margin-top:-2px"></div>
+  </div>
+
+  <!-- L4: grid (posições fixas — cards somem no lugar, sem reflow) -->
+  <div class="game-grid" id="game-grid" style="grid-template-columns:repeat(${cols},1fr)"></div>
+
+  <!-- L5: slots -->
+  <div class="slots-wrap">
+    <div class="slot" id="slot-op"><span class="slot-ph">operação</span></div>
+    <span class="slot-eq">=</span>
+    <div class="slot" id="slot-res"><span class="slot-ph">resultado</span></div>
+  </div>
+</div>`;
+
+  // Populate grid — each card gets a fixed grid cell; matched cards become invisible but keep space
+  const grid = document.getElementById('game-grid');
+  cards.forEach((card, idx) => {
+    const el = document.createElement('div');
+    el.className = 'game-card' + (card.kind==='op' ? ' type-op' : ' type-result');
+    el.dataset.pairId = card.pairId;
+    el.dataset.kind   = card.kind;
+    el.style.cssText  = skipAnim ? '' : `animation:fadeInUp .28s ease both;animation-delay:${(idx*.025).toFixed(2)}s`;
+    el.innerHTML = card.kind==='op' ? opHtml(card.op) : resHtml(card.result);
+    el.addEventListener('click', ()=>onCardClick(el, card));
+    grid.appendChild(el);
+  });
+
+  // Slot clicks deselect
+  document.getElementById('slot-op')?.addEventListener('click',  deselectCard);
+  document.getElementById('slot-res')?.addEventListener('click', deselectCard);
+
+  // Show reiniciar button
+  const btnR = document.getElementById('btn-reiniciar-hdr');
+  if (btnR) btnR.style.display = 'inline-flex';
+
+  // ── Layout adaptativo (idêntico ao tabuada.html) ──────────────
+  function _ajustarLayoutGrid() {
+    const topbarEl = document.querySelector('.topbar');
+    const topbarH  = topbarEl ? topbarEl.getBoundingClientRect().height : 62;
+    const vvH      = window.visualViewport ? window.visualViewport.height : 0;
+    const winH     = vvH > 100 ? vvH : window.innerHeight;
+    const availH   = winH - topbarH;
+    const wrap = document.querySelector('.tb-wrap'); if (!wrap) return;
+    wrap.style.setProperty('--tb-h', availH+'px');
+    const gridEl = document.getElementById('game-grid'); if (!gridEl) return;
+    let othersH = 0;
+    for (const child of wrap.children) {
+      if (child === gridEl) continue;
+      const r = child.getBoundingClientRect();
+      if (r.height <= 0) continue;
+      const cs = getComputedStyle(child);
+      othersH += r.height + (parseFloat(cs.marginTop)||0) + (parseFloat(cs.marginBottom)||0);
+    }
+    const wcs = getComputedStyle(wrap);
+    const padV = (parseFloat(wcs.paddingTop)||0) + (parseFloat(wcs.paddingBottom)||0);
+    const gridH = Math.max(60, availH - padV - othersH - 4);
+    wrap.style.setProperty('--grid-h', gridH+'px');
+  }
+
+  window._layoutRAF = requestAnimationFrame(()=>{ _ajustarLayoutGrid(); setTimeout(_ajustarLayoutGrid,120); });
+  window._layoutResize = ()=>{ if (window._layoutDebounce) clearTimeout(window._layoutDebounce); window._layoutDebounce=setTimeout(_ajustarLayoutGrid,80); };
+  window.addEventListener('resize', window._layoutResize);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', window._layoutResize);
+
+  startTimer();
+};
+
+// ── Card click ────────────────────────────────────────────────
+function onCardClick(el, card) {
+  if (gameOver || _animating) return;
+  if (el.style.visibility==='hidden') return;
+  resumeAudio();
+
+  // Toggle deselect
+  if (selectedCard && selectedCard.el===el) { deselectCard(); return; }
+
+  // First click
+  if (!selectedCard) {
+    const flyInfo = launchCard(el, card);
+    selectedCard = { el, pairId:card.pairId, kind:card.kind, op:card.op, result:card.result, flyInfo };
+    fillSlot(card);
+    setStatus('Selecione o par →', 'var(--blue-dark)');
+    return;
+  }
+
+  // Second click — same kind: swap selection
+  if (selectedCard.kind === card.kind) {
+    // deselect previous, select new
+    const prev = selectedCard;
+    const { clone, origRect } = prev.flyInfo;
+    clone.style.transition='left .28s ease,top .28s ease,width .28s ease,height .28s ease';
+    clone.style.left=origRect.left+'px'; clone.style.top=origRect.top+'px';
+    clone.style.width=origRect.width+'px'; clone.style.height=origRect.height+'px';
+    setTimeout(()=>{ clone.remove(); prev.el.style.visibility=''; prev.el.style.pointerEvents=''; },280);
+    clearSlots();
+    selectedCard=null;
+    const flyInfo2 = launchCard(el, card);
+    selectedCard = { el, pairId:card.pairId, kind:card.kind, op:card.op, result:card.result, flyInfo:flyInfo2 };
+    fillSlot(card);
+    return;
+  }
+
+  // Second click — different kind: check pair
+  const first = selectedCard;
+  const flyInfo2 = launchCard(el, card);
+  fillSlot(card);
+
+  if (first.pairId === card.pairId) {
+    // ✅ Correto
+    [first.flyInfo.clone, flyInfo2.clone].forEach(c=>c.classList.add('matched-flash'));
+    const dot = document.getElementById(`dot-${card.pairId}`);
+    if (dot) dot.classList.add('done');
+
+    setTimeout(()=>{
+      [first.flyInfo.clone, flyInfo2.clone].forEach(c=>{
+        c.style.transition='opacity .28s,transform .28s';
+        c.style.opacity='0'; c.style.transform='scale(0.5)';
+        setTimeout(()=>c.remove(),300);
+      });
+      // Hide original cells (keep grid space with visibility:hidden)
+      first.el.style.visibility='hidden'; first.el.style.pointerEvents='none'; first.el.style.opacity='0';
+      el.style.visibility='hidden'; el.style.pointerEvents='none'; el.style.opacity='0';
+    }, 200);
+
+    acertos++;
+    comboCount++;
+    comboSessao = Math.max(comboSessao, comboCount);
+    somAcerto();
+    showComboPopup(el);
+    updateComboDisplay();
+    selectedCard=null;
+    removedCount++;
+    setTimeout(()=>{ clearSlots(); setStatus(''); },650);
+    if (removedCount>=totalPairs) setTimeout(onGameWin,500);
+
+  } else {
+    // ❌ Errado
+    erros++;
+    if (comboCount>=5) setStatus(`💔 Sequência de ${comboCount} quebrada! ❌`,'var(--orange)');
+    else               setStatus('Errou! Tente outra combinação. ❌','var(--red)');
+    comboCount=0;
+    updateComboDisplay();
+    somErro();
+    const badge=document.getElementById('combo-badge'); if (badge) badge.innerHTML='';
+    selectedCard=null;
+    _animating=true;
+    flyBack(first.flyInfo, first.el);
+    flyBack(flyInfo2, el);
+    setTimeout(()=>{ _animating=false; clearSlots(); setTimeout(()=>setStatus(''),800); },600);
+  }
+}
+
+// ── Win / Lose ────────────────────────────────────────────────
+async function onGameWin() {
+  gameOver=true; stopTimer(); somVitoria();
+  const nivelJogado = _nivelEmJogo;
+  if (!_isReplay) {
+    totalPartidas++;
+    nivelAtual = Math.min(50, nivelAtual+1);
+    melhorNivel = Math.max(melhorNivel, nivelAtual);
+  }
+  await salvarProgresso('completou', nivelJogado);
+  lancarConfete(80);
+  const isPot = getLvlCfg(nivelJogado).fase===5;
+  document.getElementById('lov-emoji').textContent = nivelJogado>=50 ? '🏆' : isPot ? '⚡' : erros===0 ? '⭐' : '🎉';
+  document.getElementById('lov-title').textContent = nivelJogado>=50 ? '🏆 Tabuada completa!' : 'Nível concluído!';
+  document.getElementById('lov-sub').textContent   = `Acertos: ${acertos} · Erros: ${erros} · Combo: ${comboSessao}×`;
+  document.getElementById('lov-new').textContent   = nivelJogado>=50 ? '🎊 Todos os 50 níveis!' : `Próximo: Nível ${nivelJogado+1}`;
+  document.getElementById('lov-btn-repetir').style.display='block';
+  document.querySelector('.level-card').style.animation='levelUpPop .45s';
+  document.getElementById('level-overlay').style.display='flex';
+}
+
+function onTimerEnd() {
+  gameOver=true; stopTimer(); somDerrota();
+  const nivelJogado = _nivelEmJogo;
+  if (!_isReplay) {
+    totalPartidas++;
+    if (nivelAtual>1) nivelAtual = Math.max(1, nivelAtual-1);
+  }
+  salvarProgresso('timeout', nivelJogado);
+  document.getElementById('lov-emoji').textContent='⏱️';
+  document.getElementById('lov-title').textContent='Tempo esgotado!';
+  document.getElementById('lov-sub').textContent=`Acertos: ${acertos} · Erros: ${erros}`;
+  document.getElementById('lov-new').textContent=`Tente o nível ${nivelAtual} novamente`;
+  document.getElementById('lov-btn-repetir').style.display='block';
+  document.querySelector('.level-card').style.animation='levelDownPop .35s ease';
+  document.getElementById('level-overlay').style.display='flex';
+}
+
+window.fecharOverlay = function() {
+  document.getElementById('level-overlay').style.display='none';
+  _nivelEmJogo = nivelAtual;
+  buildGame();
+};
+window.repetirNivel = function() {
+  document.getElementById('level-overlay').style.display='none';
+  buildGame();
+};
+
+// ── Boot ─────────────────────────────────────────────────────
+(async ()=>{
+  progresso = await carregarProgresso();
+  nivelAtual    = Math.min(50, Math.max(1, progresso.nivel_atual   || 1));
+  melhorNivel   = Math.max(1,  progresso.melhor_nivel || 1);
+  totalPartidas = progresso.total_partidas || 0;
+  _nivelEmJogo  = _replayN ? Math.min(50, Math.max(1, _replayN)) : nivelAtual;
+  buildGame();
+})();
+</script>
+</body>
+</html>
