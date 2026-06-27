@@ -147,6 +147,31 @@
       .slot{max-width:88px;height:50px;}
       .slot-eq{font-size:20px;}
     }
+
+    /* ── Dica de fase ── */
+    .dica-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:210;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+    .dica-card{background:var(--card);border-radius:20px;padding:32px 36px;max-width:340px;width:92vw;text-align:center;animation:levelUpPop .35s;}
+    .dica-emoji{font-size:52px;margin-bottom:12px;line-height:1;}
+    .dica-titulo{font-size:18px;font-weight:800;margin-bottom:8px;color:var(--text);}
+    .dica-regra{font-size:14px;font-weight:700;padding:10px 16px;border-radius:10px;margin:12px 0;line-height:1.5;}
+    .dica-exemplo{display:flex;flex-direction:column;gap:6px;margin:10px 0 16px;}
+    .dica-ex-item{display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;color:var(--text-muted);}
+    .dica-ex-item strong{color:var(--text);font-size:15px;}
+    .dica-ex-item .ex-result{color:#22C55E;font-weight:800;font-size:15px;}
+    .dica-dedo{font-size:11px;color:var(--text-muted);margin-bottom:14px;line-height:1.4;}
+    /* ── Diploma overlay (ao completar nível 50) ── */
+    .diploma-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:220;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+    .diploma-card{background:linear-gradient(135deg,#1a1040,#15102a);border:2px solid rgba(250,184,0,.4);border-radius:24px;padding:36px 40px;max-width:380px;width:94vw;text-align:center;position:relative;overflow:hidden;}
+    .diploma-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top,rgba(250,184,0,.08) 0%,transparent 60%);pointer-events:none;}
+    .diploma-badge{font-size:64px;margin-bottom:8px;filter:drop-shadow(0 0 18px rgba(250,184,0,.5));}
+    .diploma-titulo{font-size:11px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(250,184,0,.7);margin-bottom:6px;}
+    .diploma-nome{font-size:22px;font-weight:800;color:#FAB800;margin-bottom:4px;}
+    .diploma-sub{font-size:13px;color:rgba(255,255,255,.5);margin-bottom:20px;line-height:1.5;}
+    .diploma-stats{display:flex;gap:16px;justify-content:center;margin-bottom:24px;}
+    .diploma-stat{text-align:center;}
+    .diploma-stat-val{font-size:20px;font-weight:800;color:#FAB800;}
+    .diploma-stat-lbl{font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.05em;}
+    .diploma-btns{display:flex;gap:10px;flex-direction:column;}
   </style>
 </head>
 <body>
@@ -180,6 +205,39 @@
     <div class="level-new" id="lov-new"></div>
     <button class="btn btn-blue btn-lg" id="lov-btn" onclick="fecharOverlay()">Continuar →</button>
     <button id="lov-btn-repetir" onclick="repetirNivel()" style="display:none;margin-top:8px;width:100%;padding:7px 0;background:transparent;border:1px solid var(--border);color:var(--text-muted);font-size:12px;font-weight:600;border-radius:8px;cursor:pointer">🔁 Repetir este nível</button>
+  </div>
+</div>
+
+
+<!-- Dica de fase -->
+<div id="dica-overlay" class="dica-overlay" style="display:none">
+  <div class="dica-card">
+    <div class="dica-emoji" id="dica-emoji">💡</div>
+    <div class="dica-titulo" id="dica-titulo">Nova fase!</div>
+    <div class="dica-regra" id="dica-regra"></div>
+    <div class="dica-exemplo" id="dica-exemplos"></div>
+    <div class="dica-dedo" id="dica-dedo"></div>
+    <button class="btn btn-blue btn-lg" style="width:100%" onclick="fecharDica()">Entendi, vamos lá! 🚀</button>
+    <button style="margin-top:8px;width:100%;padding:7px;background:transparent;border:none;color:var(--text-muted);font-size:12px;cursor:pointer" onclick="fecharDica()">Já sei isso, pular →</button>
+  </div>
+</div>
+
+<!-- Diploma nível 50 -->
+<div id="diploma-overlay" class="diploma-overlay" style="display:none">
+  <div class="diploma-card">
+    <div class="diploma-badge">🏆</div>
+    <div class="diploma-titulo">Diploma</div>
+    <div class="diploma-nome" id="dip-nome">Mestre dos Negativos</div>
+    <div class="diploma-sub">Concluiu todos os 50 níveis da<br>Tabuada de Números Negativos</div>
+    <div class="diploma-stats">
+      <div class="diploma-stat"><div class="diploma-stat-val" id="dip-partidas">—</div><div class="diploma-stat-lbl">Partidas</div></div>
+      <div class="diploma-stat"><div class="diploma-stat-val">50</div><div class="diploma-stat-lbl">Níveis</div></div>
+      <div class="diploma-stat"><div class="diploma-stat-val" id="dip-combo">—</div><div class="diploma-stat-lbl">Melhor combo</div></div>
+    </div>
+    <div class="diploma-btns">
+      <a id="dip-link" href="/aluno/diploma_negativos.html" class="btn btn-blue btn-lg" style="text-decoration:none;justify-content:center">🖨️ Ver diploma completo</a>
+      <button class="btn btn-ghost" onclick="document.getElementById('diploma-overlay').style.display='none'">Fechar</button>
+    </div>
   </div>
 </div>
 
@@ -835,7 +893,8 @@ async function onGameWin() {
   await salvarProgresso('completou', nivelJogado);
   lancarConfete(80);
   const isPot = getLvlCfg(nivelJogado).fase===5;
-  document.getElementById('lov-emoji').textContent = nivelJogado>=50 ? '🏆' : isPot ? '⚡' : erros===0 ? '⭐' : '🎉';
+  if (nivelJogado >= 50) { await mostrarDiploma(); return; }
+  document.getElementById('lov-emoji').textContent = isPot ? '⚡' : erros===0 ? '⭐' : '🎉';
   document.getElementById('lov-title').textContent = nivelJogado>=50 ? '🏆 Tabuada completa!' : 'Nível concluído!';
   document.getElementById('lov-sub').textContent   = `Acertos: ${acertos} · Erros: ${erros} · Combo: ${comboSessao}×`;
   document.getElementById('lov-new').textContent   = nivelJogado>=50 ? '🎊 Todos os 50 níveis!' : `Próximo: Nível ${nivelJogado+1}`;
@@ -863,13 +922,134 @@ function onTimerEnd() {
 
 window.fecharOverlay = function() {
   document.getElementById('level-overlay').style.display='none';
+  const nivelAnterior = _nivelEmJogo;
   _nivelEmJogo = nivelAtual;
-  buildGame();
+  // Verificar se mudou de fase → mostrar dica antes do próximo nível
+  if (_devesMostrarDica(_nivelEmJogo, nivelAnterior)) {
+    mostrarDica(getLvlCfg(_nivelEmJogo).fase, () => buildGame());
+  } else {
+    buildGame();
+  }
 };
 window.repetirNivel = function() {
   document.getElementById('level-overlay').style.display='none';
   buildGame();
 };
+
+
+// ── Dicas por fase ──────────────────────────────────────────
+const DICAS = {
+  1: {
+    emoji: '➕➖',
+    titulo: 'Somando e subtraindo negativos',
+    regra: '🔵 Positivo + Negativo = caminha para o lado negativo',
+    exemplos: [
+      { expr: '5 + (−3)', res: '2', dica: 'positivo domina' },
+      { expr: '2 + (−7)', res: '−5', dica: 'negativo domina' },
+      { expr: '−4 − 3', res: '−7', dica: 'mais negativo ainda' },
+    ],
+    dedo: '💡 Pense numa reta numérica: somar negativo é andar para a esquerda!'
+  },
+  2: {
+    emoji: '✖️',
+    titulo: 'Multiplicação com negativos',
+    regra: '🔴 Sinais iguais → positivo
+🔵 Sinais diferentes → negativo',
+    exemplos: [
+      { expr: '3 × (−4)', res: '−12', dica: '+ × − = −' },
+      { expr: '(−2) × 5', res: '−10', dica: '− × + = −' },
+      { expr: '(−3) × (−4)', res: '12', dica: '− × − = +' },
+    ],
+    dedo: '💡 Truque: conte quantos sinais negativos. Par → positivo. Ímpar → negativo!'
+  },
+  3: {
+    emoji: '➗',
+    titulo: 'Divisão com negativos',
+    regra: '🔴 Mesma regra da multiplicação!
+Sinais iguais → positivo · Diferentes → negativo',
+    exemplos: [
+      { expr: '−12 ÷ 3', res: '−4', dica: '− ÷ + = −' },
+      { expr: '−15 ÷ (−5)', res: '3', dica: '− ÷ − = +' },
+    ],
+    dedo: '💡 Se a conta fosse positiva, o resultado também seria. O sinal só muda se um deles é negativo!'
+  },
+  4: {
+    emoji: '🔀',
+    titulo: 'Mix: todas as operações!',
+    regra: '⚡ Agora aparecem +, −, × e ÷
+com números negativos juntos',
+    exemplos: [
+      { expr: '−6 + (−3)', res: '−9', dica: 'adição' },
+      { expr: '(−4) × (−2)', res: '8', dica: 'multiplicação' },
+      { expr: '−10 ÷ (−2)', res: '5', dica: 'divisão' },
+    ],
+    dedo: '💡 Leia o símbolo com calma antes de responder. Sem pressa!'
+  },
+  5: {
+    emoji: '⚡',
+    titulo: 'Potências de negativos!',
+    regra: '(−2)² = 4 → o sinal entra na potência
+−2² = −4 → só o 2 é elevado!',
+    exemplos: [
+      { expr: '(−3)²', res: '9', dica: '(−3)×(−3) = +9' },
+      { expr: '(−2)³', res: '−8', dica: '(−2)×(−2)×(−2) = −8' },
+      { expr: '−3²', res: '−9', dica: '−(3×3) = −9' },
+    ],
+    dedo: '⚠️ ATENÇÃO: (−2)² ≠ −2² . Os parênteses fazem toda a diferença!'
+  }
+};
+
+// Quais fases já mostraram dica nesta sessão
+const _dicasMostradas = new Set();
+
+function _devesMostrarDica(nivelAtual, nivelAnterior) {
+  const faseAtual = getLvlCfg(nivelAtual).fase;
+  const faseAnterior = nivelAnterior > 0 ? getLvlCfg(nivelAnterior).fase : 0;
+  return faseAtual !== faseAnterior && !_dicasMostradas.has(faseAtual) && DICAS[faseAtual];
+}
+
+function mostrarDica(fase, onClose) {
+  _dicasMostradas.add(fase);
+  _pendingOnClose = onClose;
+  const d = DICAS[fase];
+  document.getElementById('dica-emoji').textContent = d.emoji;
+  document.getElementById('dica-titulo').textContent = d.titulo;
+  const regra = document.getElementById('dica-regra');
+  regra.textContent = d.regra;
+  // Cor da regra por fase
+  const cores = {1:'rgba(127,119,221,.15)',2:'rgba(239,68,68,.12)',3:'rgba(249,115,22,.12)',4:'rgba(250,184,0,.12)',5:'rgba(139,92,246,.15)'};
+  regra.style.background = cores[fase] || 'var(--blue-pale)';
+  const exDiv = document.getElementById('dica-exemplos');
+  exDiv.innerHTML = d.exemplos.map(e =>
+    `<div class="dica-ex-item"><strong>${e.expr}</strong><span>=</span><span class="ex-result">${e.res}</span><span style="font-size:11px;color:var(--text-muted)">(${e.dica})</span></div>`
+  ).join('');
+  document.getElementById('dica-dedo').textContent = d.dedo;
+  document.getElementById('dica-overlay').style.display = 'flex';
+}
+
+let _pendingOnClose = null;
+window.fecharDica = function() {
+  document.getElementById('dica-overlay').style.display = 'none';
+  if (_pendingOnClose) { _pendingOnClose(); _pendingOnClose = null; }
+};
+
+// ── Diploma nível 50 ─────────────────────────────────────────
+async function mostrarDiploma() {
+  const snap = await carregarProgresso();
+  const nome = _isProfMode ? 'Professora' : (getSession()?.alunos?.[0] || 'Aluno');
+  document.getElementById('dip-nome').textContent = nome;
+  document.getElementById('dip-partidas').textContent = snap.total_partidas || totalPartidas;
+  document.getElementById('dip-combo').textContent = (snap.maior_combo || comboSessao) + '×';
+  // Link com uid para a página de diploma
+  document.getElementById('dip-link').href = `/aluno/diploma_negativos.html?uid=${encodeURIComponent(uid)}`;
+  document.getElementById('diploma-overlay').style.display = 'flex';
+  // Salvar conquista no Firebase
+  try {
+    const { ref: _ref3, set: _set3 } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+    await _set3(_ref3(db, `tabuada_negativos_niveis/${uid}/concluiu_50_em`), Date.now());
+  } catch(e) {}
+}
+
 
 // ── Boot ─────────────────────────────────────────────────────
 (async ()=>{
@@ -878,7 +1058,13 @@ window.repetirNivel = function() {
   melhorNivel   = Math.max(1,  progresso.melhor_nivel || 1);
   totalPartidas = progresso.total_partidas || 0;
   _nivelEmJogo  = _replayN ? Math.min(50, Math.max(1, _replayN)) : nivelAtual;
-  buildGame();
+  // Mostrar dica da fase atual na primeira vez
+  const faseInicial = getLvlCfg(_nivelEmJogo).fase;
+  if (!_dicasMostradas.has(faseInicial) && DICAS[faseInicial] && totalPartidas === 0) {
+    mostrarDica(faseInicial, () => buildGame());
+  } else {
+    buildGame();
+  }
 })();
 </script>
 </body>

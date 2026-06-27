@@ -19,6 +19,10 @@
     "tabuada_conquistas":      { ".read": true, ".write": true },
     "professor_tabuada_niveis":{ ".read": true, ".write": true },
     "professor_tabuada_config":{ ".read": true, ".write": true },
+    "diplomas_impressos":      { ".read": true, ".write": true },
+    "tabuada_negativos_niveis":{ ".read": true, ".write": true },
+    "prof_neg_niveis":         { ".read": true, ".write": true },
+    "prof_neg_notas":          { ".read": true, ".write": true },
 
     "liberacoes_ativas":    { ".read": true, ".write": true },
     "liberacoes_historico": { ".read": true, ".write": true, ".indexOn": ["criadoEm"] },

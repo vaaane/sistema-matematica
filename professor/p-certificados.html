@@ -105,6 +105,10 @@
         <div class="topbar-title">🎓 Certificados</div>
         <div class="topbar-sub">Controle de impressão e entrega</div>
       </div>
+      <div class="topbar-right" style="gap:8px;display:flex">
+        <a href="/aluno/diploma_print.html?modelo=1" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">🏆 Ver modelo Tabuada</a>
+        <a href="/aluno/diploma_negativos_print.html?modelo=1" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">⚡ Ver modelo Negativos</a>
+      </div>
     </div>
 
     <div class="content">
@@ -147,12 +151,14 @@ function toast(msg) {
 let todosAlunos = [];
 let abaAtiva    = 'pendentes';
 let turmaFiltro = 'todas';
+let tipoFiltro  = 'todos';
 
 async function carregar() {
-  const [perfisSnap, conquSnap, impressosSnap] = await Promise.all([
+  const [perfisSnap, conquSnap, impressosSnap, negSnap] = await Promise.all([
     get(ref(db, 'perfis')),
     get(ref(db, 'conquistas')),
     get(ref(db, 'diplomas_impressos')),
+    get(ref(db, 'tabuada_negativos_niveis')).catch(() => null),
   ]);
 
   if (!conquSnap.exists()) { renderVazio(); return; }
@@ -170,7 +176,20 @@ async function carregar() {
     if (perfil.nome?.includes('TESTE') || perfil.turma === 'TESTE') return;
     const entregue   = impressos[uid]?.tabuada_300?.impresso === true;
     const tsEntrega  = impressos[uid]?.tabuada_300?.ts || null;
-    todosAlunos.push({ uid, nome: perfil.nome, turma: perfil.turma || '', tsConquista: conqus.tabuada_300.ts, entregue, tsEntrega });
+    todosAlunos.push({ uid, nome: perfil.nome, turma: perfil.turma || '', tsConquista: conqus.tabuada_300.ts, entregue, tsEntrega, tipo: 'tabuada' });
+  });
+
+  // Add negativos alunos
+  const negDados = negSnap?.exists() ? negSnap.val() : {};
+  Object.entries(negDados).forEach(([nuid, dados]) => {
+    if (!dados || typeof dados !== 'object') return;
+    if ((dados.melhor_nivel || 0) < 50 && !dados.concluiu_50_em) return;
+    const perfil = perfis[nuid];
+    if (!perfil?.nome) return;
+    if (perfil.nome?.includes('TESTE') || perfil.turma === 'TESTE') return;
+    const entregue  = impressos[nuid]?.negativos_50?.impresso === true;
+    const tsEntrega = impressos[nuid]?.negativos_50?.ts || null;
+    todosAlunos.push({ uid: nuid, nome: perfil.nome, turma: perfil.turma || '', tsConquista: dados.concluiu_50_em || 0, entregue, tsEntrega, tipo: 'negativos' });
   });
 
   todosAlunos.sort((a, b) => a.turma.localeCompare(b.turma) || a.nome.localeCompare(b.nome));
@@ -183,7 +202,8 @@ function render() {
   const turmas    = [...new Set(todosAlunos.map(a => a.turma))].sort();
 
   const lista         = abaAtiva === 'pendentes' ? pendentes : entregues;
-  const listaFiltrada = turmaFiltro === 'todas' ? lista : lista.filter(a => a.turma === turmaFiltro);
+  const listaTipo     = tipoFiltro === 'todos' ? lista : lista.filter(a => a.tipo === tipoFiltro);
+  const listaFiltrada = turmaFiltro === 'todas' ? listaTipo : listaTipo.filter(a => a.turma === turmaFiltro);
 
   document.getElementById('certs-content').innerHTML = `
     <div class="summary-bar">
@@ -210,8 +230,15 @@ function render() {
       </div>
     </div>
 
+    <div class="turma-filter" style="margin-bottom:8px">
+      <span style="font-size:11px;color:var(--muted);font-weight:600;margin-right:4px">Tipo:</span>
+      <div class="turma-chip ${tipoFiltro==='todos'?'active':''}" onclick="filtrarTipo('todos')">Todos</div>
+      <div class="turma-chip ${tipoFiltro==='tabuada'?'active':''}" onclick="filtrarTipo('tabuada')">🏆 Tabuada 300</div>
+      <div class="turma-chip ${tipoFiltro==='negativos'?'active':''}" onclick="filtrarTipo('negativos')">⚡ Negativos 50</div>
+    </div>
     ${turmas.length > 1 ? `
     <div class="turma-filter">
+      <span style="font-size:11px;color:var(--muted);font-weight:600;margin-right:4px">Turma:</span>
       <div class="turma-chip ${turmaFiltro==='todas'?'active':''}" onclick="filtrarTurma('todas')">Todas</div>
       ${turmas.map(t => `<div class="turma-chip ${turmaFiltro===t?'active':''}" onclick="filtrarTurma('${escH(t)}')">${escH(t)}</div>`).join('')}
     </div>` : ''}
@@ -241,7 +268,13 @@ function render() {
                     ${a.entregue && dataEntrega ? ` · Entregue em ${dataEntrega}` : ''}
                   </div>
                 </div>
-                <a href="/aluno/diploma_tabuada.html?uid=${encodeURIComponent(a.uid)}"
+                ${a.tipo === 'negativos'
+                  ? `<span style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:8px;background:rgba(127,119,221,.18);color:#a99ff0;border:1px solid rgba(127,119,221,.3);margin-right:6px">⚡ Negativos</span>`
+                  : `<span style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:8px;background:rgba(201,168,76,.15);color:#c9a84c;border:1px solid rgba(201,168,76,.3);margin-right:6px">🏆 Tabuada 300</span>`
+                }
+                <a href="${a.tipo === 'negativos'
+                    ? `/aluno/diploma_negativos.html?uid=${encodeURIComponent(a.uid)}&nome=${encodeURIComponent(a.nome)}&turma=${encodeURIComponent(a.turma)}`
+                    : `/aluno/diploma_tabuada.html?uid=${encodeURIComponent(a.uid)}&nome=${encodeURIComponent(a.nome)}&turma=${encodeURIComponent(a.turma)}`}"
                    target="_blank" class="btn-action btn-print">
                   🖨️ Ver diploma
                 </a>
@@ -264,12 +297,15 @@ function renderVazio() {
     </div>`;
 }
 
-window.trocarAba = function(aba) { abaAtiva = aba; render(); };
+window.trocarAba    = function(aba)   { abaAtiva    = aba;   render(); };
 window.filtrarTurma = function(turma) { turmaFiltro = turma; render(); };
+window.filtrarTipo  = function(tipo)  { tipoFiltro  = tipo;  render(); };
 
 window.marcarEntregue = async function(uid) {
   try {
-    await set(ref(db, `diplomas_impressos/${uid}/tabuada_300`), { impresso: true, ts: Date.now() });
+    const tipo = todosAlunos.find(a=>a.uid===uid)?.tipo || 'tabuada';
+    const chave = tipo === 'negativos' ? 'negativos_50' : 'tabuada_300';
+    await set(ref(db, `diplomas_impressos/${uid}/${chave}`), { impresso: true, ts: Date.now() });
     const aluno = todosAlunos.find(a => a.uid === uid);
     if (aluno) { aluno.entregue = true; aluno.tsEntrega = Date.now(); }
     toast('✅ Marcado como entregue!');
@@ -280,7 +316,9 @@ window.marcarEntregue = async function(uid) {
 window.desfazerEntrega = async function(uid) {
   if (!confirm('Desfazer marcação de entregue?')) return;
   try {
-    await set(ref(db, `diplomas_impressos/${uid}/tabuada_300`), { impresso: false, ts: null });
+    const tipo2 = todosAlunos.find(a=>a.uid===uid)?.tipo || 'tabuada';
+    const chave2 = tipo2 === 'negativos' ? 'negativos_50' : 'tabuada_300';
+    await set(ref(db, `diplomas_impressos/${uid}/${chave2}`), { impresso: false, ts: null });
     const aluno = todosAlunos.find(a => a.uid === uid);
     if (aluno) { aluno.entregue = false; aluno.tsEntrega = null; }
     toast('↩ Marcação desfeita.');

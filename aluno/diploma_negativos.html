@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Diploma · Negativos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    :root { --bg:#0d0f1a; --card:#151828; --border:rgba(255,255,255,0.07); --text:#e8eaf0; --muted:#6b7280; --purple:#7F77DD; }
+    html,body { background:var(--bg)!important; color:var(--text)!important; }
+    .main { background:var(--bg)!important; }
+    .dp-page { max-width:860px; margin:0 auto; padding:24px 16px 60px; }
+    .dp-intro { background:var(--card); border:1px solid rgba(99,88,210,.2); border-radius:20px; padding:28px 24px; text-align:center; margin-bottom:28px; position:relative; overflow:hidden; }
+    .dp-intro::before { content:''; position:absolute; inset:0; pointer-events:none; background:radial-gradient(ellipse at 50% 0%,rgba(99,88,210,.1) 0%,transparent 65%); }
+    .dp-intro-nome  { font-family:'Cinzel',serif; font-size:26px; font-weight:700; color:var(--text); margin-bottom:4px; }
+    .dp-intro-turma { font-size:13px; color:var(--muted); margin-bottom:6px; }
+    .dp-intro-data  { font-size:11px; color:rgba(127,119,221,.7); }
+    .dp-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:20px; }
+    @media(max-width:700px) { .dp-grid { grid-template-columns:1fr; } }
+    .dp-card { border-radius:18px; padding:28px 20px; text-align:center; position:relative; overflow:hidden; display:flex; flex-direction:column; transition:transform .15s; }
+    .dp-card:hover { transform:translateY(-2px); }
+    .dp-card.locked { opacity:.38; pointer-events:none; }
+    .dp-card.tier-base     { background:var(--card); border:1px solid rgba(99,88,210,.25); }
+    .dp-card.tier-base::before     { content:''; position:absolute; inset:0; pointer-events:none; background:radial-gradient(ellipse at 50% 0%,rgba(99,88,210,.1) 0%,transparent 65%); }
+    .dp-card.tier-ouro     { background:#07050f; border:1.5px solid rgba(127,119,221,.5); box-shadow:0 0 30px rgba(127,119,221,.1); }
+    .dp-card.tier-ouro::before     { content:''; position:absolute; inset:0; pointer-events:none; background:radial-gradient(ellipse at 50% 0%,rgba(127,119,221,.15) 0%,transparent 60%); }
+    .dp-card.tier-diamante { background:#04031a; border:1.5px solid rgba(99,88,210,.6); box-shadow:0 0 30px rgba(99,88,210,.15); }
+    .dp-card.tier-diamante::before { content:''; position:absolute; inset:0; pointer-events:none; background:radial-gradient(ellipse at 50% 0%,rgba(99,88,210,.2) 0%,transparent 60%); }
+    .dp-medal { width:72px; height:72px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:34px; margin:0 auto 16px; position:relative; z-index:1; }
+    .dp-medal.base     { background:linear-gradient(135deg,#c4b5fd,#7F77DD,#c4b5fd); border:2.5px solid #7F77DD; animation:mp-b 2.5s ease-in-out infinite; }
+    .dp-medal.ouro     { background:linear-gradient(135deg,#e0e7ff,#818cf8,#6358D2); border:2.5px solid #818cf8; animation:mp-o 2s ease-in-out infinite; }
+    .dp-medal.diamante { background:linear-gradient(135deg,#1e1b4b,#4c1d95,#7c3aed,#4c1d95,#1e1b4b); border:2.5px solid #7c3aed; animation:mp-d 2s ease-in-out infinite; }
+    @keyframes mp-b { 0%,100%{box-shadow:0 0 0 6px rgba(127,119,221,.1),0 0 24px rgba(127,119,221,.3)} 50%{box-shadow:0 0 0 10px rgba(127,119,221,.06),0 0 44px rgba(127,119,221,.55)} }
+    @keyframes mp-o { 0%,100%{box-shadow:0 0 0 6px rgba(99,88,210,.1),0 0 28px rgba(99,88,210,.4)} 50%{box-shadow:0 0 0 10px rgba(99,88,210,.06),0 0 52px rgba(99,88,210,.7)} }
+    @keyframes mp-d { 0%,100%{box-shadow:0 0 0 6px rgba(124,58,237,.1),0 0 28px rgba(124,58,237,.4)} 50%{box-shadow:0 0 0 10px rgba(124,58,237,.06),0 0 52px rgba(124,58,237,.7)} }
+    .dp-tier-lbl  { font-size:9px; font-weight:700; letter-spacing:3px; text-transform:uppercase; margin-bottom:8px; position:relative; z-index:1; }
+    .tier-base     .dp-tier-lbl { color:#a99ff0; }
+    .tier-ouro     .dp-tier-lbl { color:#818cf8; }
+    .tier-diamante .dp-tier-lbl { color:#c4b5fd; }
+    .dp-tier-nome { font-family:'Cinzel',serif; font-size:15px; font-weight:700; color:var(--text); margin-bottom:6px; position:relative; z-index:1; }
+    .dp-tier-desc { font-size:11px; color:var(--muted); line-height:1.55; margin-bottom:16px; position:relative; z-index:1; flex:1; }
+    .dp-stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px; position:relative; z-index:1; }
+    .dp-stat { border-radius:10px; padding:10px 6px; text-align:center; }
+    .tier-base     .dp-stat { background:rgba(127,119,221,.07); border:1px solid rgba(127,119,221,.18); }
+    .tier-ouro     .dp-stat { background:rgba(99,88,210,.08);  border:1px solid rgba(99,88,210,.25); }
+    .tier-diamante .dp-stat { background:rgba(124,58,237,.08); border:1px solid rgba(124,58,237,.25); }
+    .dp-stat-val { font-family:'Cinzel',serif; font-size:16px; font-weight:700; line-height:1; }
+    .tier-base     .dp-stat-val { color:#a99ff0; }
+    .tier-ouro     .dp-stat-val { color:#818cf8; }
+    .tier-diamante .dp-stat-val { color:#c4b5fd; }
+    .dp-stat-lbl { font-size:8px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; margin-top:3px; }
+    .dp-conquista-badge { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:12px; position:relative; z-index:1; display:inline-flex; align-items:center; gap:4px; border-radius:20px; padding:3px 10px; }
+    .tier-base     .dp-conquista-badge { background:rgba(127,119,221,.12); color:#a99ff0; border:1px solid rgba(127,119,221,.3); }
+    .tier-ouro     .dp-conquista-badge { background:rgba(99,88,210,.12);  color:#818cf8; border:1px solid rgba(99,88,210,.35); }
+    .tier-diamante .dp-conquista-badge { background:rgba(124,58,237,.12); color:#c4b5fd; border:1px solid rgba(124,58,237,.35); }
+    .dp-btn { width:100%; padding:12px; font-size:13px; font-weight:800; border:none; border-radius:10px; cursor:pointer; font-family:'Inter',sans-serif; display:flex; align-items:center; justify-content:center; gap:6px; transition:opacity .15s; position:relative; z-index:1; margin-top:auto; }
+    .tier-base     .dp-btn { background:linear-gradient(135deg,#7F77DD,#a99ff0); color:#fff; }
+    .tier-ouro     .dp-btn { background:linear-gradient(135deg,#4338ca,#818cf8,#c7d2fe); color:#fff; }
+    .tier-diamante .dp-btn { background:linear-gradient(135deg,#4c1d95,#7c3aed,#c4b5fd); color:#fff; }
+    .dp-btn:hover { opacity:.88; }
+    .dp-lock-msg { font-size:11px; color:var(--muted); position:relative; z-index:1; margin-top:auto; padding-top:8px; }
+    .btn-voltar { display:block; text-align:center; margin-top:8px; color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; background:none; border:1px solid var(--border); border-radius:10px; padding:10px; width:100%; font-family:'Inter',sans-serif; }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">⚡ Diploma · Negativos</div>
+        <div class="topbar-sub">Tabuada de Números Negativos · 50 Níveis</div>
+      </div>
+      <div class="topbar-right">
+        <div id="topbar-avatar-circle" class="avatar-circle" style="width:36px;height:36px;cursor:pointer" onclick="window.location.href='/aluno/perfil.html'"></div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="dp-page">
+        <div id="dp-content">
+          <div style="text-align:center;padding:60px;color:var(--muted)">Carregando…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { getSession, requireAluno, renderSidebarAluno, renderSidebarProfessor, clearSession } from '/js/auth.js';
+import { db } from '/js/firebase-config.js';
+import { ref, get } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { getPerfil } from '/js/db.js';
+import { avatarUrl, avatarConfigDefault } from '/js/gamificacao.js';
+import { getNomeCompleto } from '/js/nomes_completos.js';
+
+const sess = getSession();
+const isProfMode = sess?.modo === 'professor';
+
+// Autenticação: aluno OU professor
+if (!isProfMode) requireAluno('/index.html');
+
+const params = new URLSearchParams(location.search);
+
+let alunos, turma, uid, nomeCompleto;
+if (isProfMode) {
+  renderSidebarProfessor('sidebar', 'certificados');
+  // Professor vendo o diploma de um aluno via ?uid=X&nome=Y&turma=Z
+  uid          = params.get('uid') || '';
+  const _nome  = params.get('nome')  || '';
+  const _turma = params.get('turma') || '';
+  alunos = [_nome]; turma = _turma;
+  nomeCompleto = _nome;
+} else {
+  renderSidebarAluno('sidebar', 'certificados');
+  alunos = sess.alunos; turma = sess.turma;
+  uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+  nomeCompleto = getNomeCompleto(turma, alunos[0]);
+}
+
+window.sair = () => { clearSession(); window.location.href = '/index.html'; };
+
+// Avatar
+(async () => { try {
+  const _p = await getPerfil(isProfMode ? uid : uid);
+  const _c = document.getElementById('topbar-avatar-circle');
+  if (_c && !isProfMode) {
+    const url = avatarUrl(_p?.avatar || avatarConfigDefault());
+    const letra = (alunos[0]||'?')[0].toUpperCase();
+    _c.innerHTML = '<div style="width:100%;height:100%;position:relative;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#7F77DD,#00d4ff)"><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;z-index:0">'+letra+'</span><img src="'+url+'" alt="" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:1;border-radius:50%" onerror="this.style.display=\'none\'"></div>';
+  }
+} catch(_) {} })();
+
+(async () => {
+  const [negSnap, perfil, histSnap, conquSnap] = await Promise.all([
+    get(ref(db, 'tabuada_negativos_niveis/' + uid)).catch(() => null),
+    getPerfil(uid).catch(() => null),
+    get(ref(db, 'tabuada_negativos_niveis/' + uid + '/historico')).catch(() => null),
+    get(ref(db, 'conquistas/' + uid)).catch(() => null),
+  ]);
+
+  const negDados = negSnap?.exists() ? negSnap.val() : {};
+  const tem50    = (negDados.melhor_nivel || 0) >= 50 || !!negDados.concluiu_50_em;
+
+  // Tiers
+  const conqus   = conquSnap?.exists() ? conquSnap.val() : {};
+  const temOuro  = conqus?.negativos_ouro?.conquistado  === true;
+  const temDia   = conqus?.negativos_diamante?.conquistado === true;
+
+  if (!tem50) {
+    document.getElementById('dp-content').innerHTML =
+      '<div style="text-align:center;padding:48px 20px;background:var(--card);border:1px solid var(--border);border-radius:20px">' +
+      '<div style="font-size:48px;margin-bottom:12px">🔒</div>' +
+      '<div style="font-size:16px;font-weight:700;margin-bottom:8px">Diploma ainda não disponível</div>' +
+      '<div style="font-size:13px;color:var(--muted);margin-bottom:20px">Complete todos os 50 níveis da Tabuada de Negativos.</div>' +
+      '<div style="font-size:13px;color:#7F77DD;margin-bottom:20px">Progresso: nível ' + (negDados.nivel_atual || 1) + ' de 50</div>' +
+      '<button onclick="window.location.href=\'/aluno/tabuada_negativos.html\'" style="background:#7F77DD;color:#fff;border:none;border-radius:10px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer">Ir para a Tabuada de Negativos →</button>' +
+      '</div>';
+    return;
+  }
+
+  const nomeAluno = perfil?.apelido_ativo || alunos[0];
+
+  // Contar stats
+  let totalAcertos = 0, totalErros = 0;
+  if (histSnap?.exists()) {
+    Object.values(histSnap.val()).forEach(function(e) { totalAcertos += (e.acertos||0); totalErros += (e.erros||0); });
+  }
+  function fmtNum(n) { return n.toLocaleString('pt-BR'); }
+  const opsStr = totalAcertos > 0 ? fmtNum(totalAcertos) : 'diversas';
+
+  const tsBase = negDados.concluiu_50_em || null;
+  const tsOuro = temOuro ? conqus.negativos_ouro.ts : null;
+  const tsDia  = temDia  ? conqus.negativos_diamante.ts : null;
+  function fmt(ts) { return ts ? new Date(ts).toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'}) : null; }
+  const dataBase = fmt(tsBase);
+  const dataOuro = fmt(tsOuro);
+  const dataDia  = fmt(tsDia);
+
+  // sessionStorage helper
+  function salvarSess(tier, ts) {
+    sessionStorage.setItem('diploma_neg_nome',     nomeCompleto);
+    sessionStorage.setItem('diploma_neg_turma',    turma);
+    sessionStorage.setItem('diploma_neg_partidas', String(negDados.total_partidas || 0));
+    sessionStorage.setItem('diploma_neg_acertos',  String(totalAcertos));
+    sessionStorage.setItem('diploma_neg_combo',    String(negDados.maior_combo || 0));
+    sessionStorage.setItem('diploma_neg_ts',       String(ts || ''));
+    sessionStorage.setItem('diploma_neg_tier',     tier);
+  }
+
+  window.salvarEImprimir = function(tier) {
+    var ts = tier === 'base' ? tsBase : tier === 'ouro' ? tsOuro : tsDia;
+    salvarSess(tier, ts);
+    // Passa pela URL: sessionStorage não é herdado por abas abertas com target=_blank
+    var qs = new URLSearchParams({
+      nome: nomeCompleto, turma: turma, tier: tier,
+      partidas: String(negDados.total_partidas || 0),
+      acertos: String(totalAcertos),
+      combo: String(negDados.maior_combo || 0),
+      ts: String(ts || ''),
+    });
+    var a = document.createElement('a');
+    a.href = '/aluno/diploma_negativos_print.html?' + qs.toString();
+    a.target = '_blank'; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  };
+
+  function cardHtml(tier, emoji, label, nome, desc, conquistado, dataConq, lockMsg) {
+    var z = 'position:relative;z-index:1';
+    var badge = conquistado && dataConq ? '<div class="dp-conquista-badge" style="' + z + '">✅ ' + dataConq + '</div>' : '';
+    var stats = '<div class="dp-stats"><div class="dp-stat"><div class="dp-stat-val">50</div><div class="dp-stat-lbl">Níveis</div></div><div class="dp-stat"><div class="dp-stat-val">' + opsStr + '</div><div class="dp-stat-lbl">Operações</div></div></div>';
+    var btn = conquistado
+      ? '<button class="dp-btn" onclick="salvarEImprimir(\'' + tier + '\')">🖨️ Imprimir diploma</button>'
+      : '<div class="dp-lock-msg">🔒 ' + lockMsg + '</div>';
+    return '<div class="dp-card tier-' + tier + (conquistado ? '' : ' locked') + '">' +
+      '<div class="dp-medal ' + tier + '">' + emoji + '</div>' +
+      '<div class="dp-tier-lbl" style="' + z + '">' + label + '</div>' +
+      '<div class="dp-tier-nome" style="' + z + '">' + nome + '</div>' +
+      '<div class="dp-tier-desc" style="' + z + '">' + desc + '</div>' +
+      badge +
+      (conquistado ? stats : '') +
+      btn +
+      '</div>';
+  }
+
+  document.getElementById('dp-content').innerHTML =
+    '<div class="dp-intro">' +
+    '<div style="font-size:36px;margin-bottom:10px">⚡</div>' +
+    '<div class="dp-intro-nome">' + nomeAluno + '</div>' +
+    '<div class="dp-intro-turma">Turma ' + turma + '</div>' +
+    (dataBase ? '<div class="dp-intro-data">Mestre dos Negativos · ' + dataBase + '</div>' : '') +
+    '</div>' +
+    '<div class="dp-grid">' +
+    cardHtml('base',     '⚡', 'Diploma de Conclusão',  'Nível 50',          'Concluiu todos os 50 níveis da Tabuada de Números Negativos.', true,      dataBase, '') +
+    cardHtml('ouro',     '🌟', 'Diploma de Ouro',       'Todos com Estrela', 'Completou todos os 50 níveis sem erros pelo menos uma vez.', temOuro,   dataOuro, 'Complete os 50 níveis sem erros (pelo menos 1×)') +
+    cardHtml('diamante', '💜', 'Diploma de Maestria',   'Maestria Total',    'Alcançou 3 completions perfeitas em cada um dos 50 níveis.', temDia,    dataDia,  'Complete os 50 níveis com 3× perfeito') +
+    '</div>' +
+    '<button class="btn-voltar" onclick="window.history.back()">← Voltar</button>';
+})();
+</script>
+</body>
+</html>

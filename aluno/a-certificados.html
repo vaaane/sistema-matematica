@@ -130,20 +130,31 @@ iniciarNotifDueloGlobal();
   }
 } catch(_) {} })();
 
-const conquSnap = await get(ref(db, `conquistas/${uid}`));
+const [conquSnap, negSnap] = await Promise.all([
+  get(ref(db, `conquistas/${uid}`)).catch(() => null),
+  get(ref(db, `tabuada_negativos_niveis/${uid}`)).catch(() => null),
+]);
 const conqus    = conquSnap.exists() ? conquSnap.val() : {};
 const temBase   = conqus['tabuada_300']?.conquistado === true;
 const tsBase    = conqus['tabuada_300']?.ts;
 const dataBase  = tsBase ? new Date(tsBase).toLocaleDateString('pt-BR', { day:'numeric', month:'long', year:'numeric' }) : null;
 
+const negDados  = negSnap.exists() ? negSnap.val() : {};
+const temNeg    = (negDados.melhor_nivel || 0) >= 50 || !!negDados.concluiu_50_em;
+const tsNeg     = negDados.concluiu_50_em || null;
+const dataNeg   = tsNeg ? new Date(tsNeg).toLocaleDateString('pt-BR', { day:'numeric', month:'long', year:'numeric' }) : null;
+
+const totalConquistados = (temBase ? 1 : 0) + (temNeg ? 1 : 0);
+const totalDisponiveis  = 2;
+
 const el = document.getElementById('certs-content');
 
-if (!temBase) {
+if (!temBase && !temNeg) {
   el.innerHTML = `
     <div class="certs-header">
       <div class="certs-header-icon">🎓</div>
       <div>
-        <div style="font-size:28px;font-weight:900;color:#c9a84c;font-family:'Cinzel',serif;line-height:1">0<span style="font-size:16px;color:#6b7280">/1</span></div>
+        <div style="font-size:28px;font-weight:900;color:#c9a84c;font-family:'Cinzel',serif;line-height:1">0<span style="font-size:16px;color:#6b7280">/${totalDisponiveis}</span></div>
         <div style="font-size:12px;color:#6b7280;margin-top:2px">Nenhum certificado ainda — continue jogando!</div>
       </div>
     </div>
@@ -154,18 +165,27 @@ if (!temBase) {
         <div class="cert-desc">Conclua todos os 300 níveis do programa de Cálculo Mental para desbloquear este diploma.</div>
         <div><div class="cert-lock">🔒 Bloqueado</div><div class="cert-requisito">Chegue ao nível 300 na tabuada</div></div>
       </div>
-    </div>
-    <div style="text-align:center;margin-top:28px;padding:20px;background:#1a1a2e;border:1px dashed rgba(255,255,255,.07);border-radius:14px">
-      <div style="font-size:20px;margin-bottom:6px">✨</div>
-      <div style="font-size:13px;font-weight:700;margin-bottom:4px;color:#e8eaf0">Mais certificados em breve</div>
-      <div style="font-size:11px;color:#6b7280">Novos diplomas serão adicionados ao longo do ano letivo</div>
+      ${temNeg ? `
+      <div class="cert-card desbloqueado" onclick="window.location.href='/aluno/diploma_negativos.html'">
+        <div class="cert-icon">⚡</div>
+        <div class="cert-nome" style="color:#7F77DD">Mestre dos Negativos</div>
+        <div class="cert-desc">Concluiu todos os 50 níveis da Tabuada de Números Negativos, dominando adição, subtração, multiplicação, divisão e potências.</div>
+        ${dataNeg ? `<div class="cert-data" style="color:rgba(127,119,221,.7)">✅ Conquistado em ${dataNeg}</div>` : ''}
+        <a class="cert-btn" href="/aluno/diploma_negativos.html" onclick="event.stopPropagation()" style="background:linear-gradient(135deg,#7F77DD,#a99ff0);color:#fff">⚡ Ver diploma</a>
+      </div>` : `
+      <div class="cert-card bloqueado">
+        <div class="cert-icon" style="background:rgba(127,119,221,.15);border:1px solid rgba(127,119,221,.2)">⚡</div>
+        <div class="cert-nome">Mestre dos Negativos</div>
+        <div class="cert-desc">Complete todos os 50 níveis da Tabuada de Números Negativos para desbloquear este diploma.</div>
+        <div><div class="cert-lock">🔒 Bloqueado</div><div class="cert-requisito">Conclua os 50 níveis da Tabuada de Negativos</div></div>
+      </div>`}
     </div>`;
 } else {
   el.innerHTML = `
     <div class="certs-header">
       <div class="certs-header-icon">🎓</div>
       <div>
-        <div style="font-size:28px;font-weight:900;color:#c9a84c;font-family:'Cinzel',serif;line-height:1">1<span style="font-size:16px;color:#6b7280">/1</span></div>
+        <div style="font-size:28px;font-weight:900;color:#c9a84c;font-family:'Cinzel',serif;line-height:1">${totalConquistados}<span style="font-size:16px;color:#6b7280">/${totalDisponiveis}</span></div>
         <div style="font-size:12px;color:#6b7280;margin-top:2px">🏆 Certificado conquistado!</div>
       </div>
     </div>
@@ -177,11 +197,20 @@ if (!temBase) {
         ${dataBase ? `<div class="cert-data">✅ Conquistado em ${dataBase}</div>` : ''}
         <a class="cert-btn" href="/aluno/diploma_tabuada.html" onclick="event.stopPropagation()">🎓 Ver diploma</a>
       </div>
-    </div>
-    <div style="text-align:center;margin-top:28px;padding:20px;background:#1a1a2e;border:1px dashed rgba(255,255,255,.07);border-radius:14px">
-      <div style="font-size:20px;margin-bottom:6px">✨</div>
-      <div style="font-size:13px;font-weight:700;margin-bottom:4px;color:#e8eaf0">Mais certificados em breve</div>
-      <div style="font-size:11px;color:#6b7280">Novos diplomas serão adicionados ao longo do ano letivo</div>
+      ${temNeg ? `
+      <div class="cert-card desbloqueado" onclick="window.location.href='/aluno/diploma_negativos.html'">
+        <div class="cert-icon">⚡</div>
+        <div class="cert-nome" style="color:#7F77DD">Mestre dos Negativos</div>
+        <div class="cert-desc">Concluiu todos os 50 níveis da Tabuada de Números Negativos, dominando adição, subtração, multiplicação, divisão e potências.</div>
+        ${dataNeg ? `<div class="cert-data" style="color:rgba(127,119,221,.7)">✅ Conquistado em ${dataNeg}</div>` : ''}
+        <a class="cert-btn" href="/aluno/diploma_negativos.html" onclick="event.stopPropagation()" style="background:linear-gradient(135deg,#7F77DD,#a99ff0);color:#fff">⚡ Ver diploma</a>
+      </div>` : `
+      <div class="cert-card bloqueado">
+        <div class="cert-icon" style="background:rgba(127,119,221,.15);border:1px solid rgba(127,119,221,.2)">⚡</div>
+        <div class="cert-nome">Mestre dos Negativos</div>
+        <div class="cert-desc">Complete todos os 50 níveis da Tabuada de Números Negativos para desbloquear este diploma.</div>
+        <div><div class="cert-lock">🔒 Bloqueado</div><div class="cert-requisito">Conclua os 50 níveis da Tabuada de Negativos</div></div>
+      </div>`}
     </div>`;
 }
 </script>

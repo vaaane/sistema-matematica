@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <script>document.documentElement.setAttribute("data-theme","dark");</script>
@@ -162,19 +162,37 @@
 </div>
 
 <script type="module">
-import { requireAluno, renderSidebarAluno, clearSession } from '/js/auth.js';
+import { requireAluno, renderSidebarAluno, clearSession, getSession } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
 import { ref, get } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { getPerfil } from '/js/db.js';
 import { avatarUrl, avatarConfigDefault } from '/js/gamificacao.js';
 import { getNomeCompleto } from '/js/nomes_completos.js';
 
-const sess = requireAluno('/index.html');
-const { alunos, turma } = sess;
-const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+// ── Modo professor: ?uid=8H_Murillo (visualiza o diploma de um aluno) ──
+const _params  = new URLSearchParams(location.search);
+const _uidParam = _params.get('uid');
+const _sessAtual = getSession();
+const _modoProf = !!_uidParam && _sessAtual?.modo === 'professor';
+
+let sess, alunos, turma, uid;
+if (_modoProf) {
+  // Deriva turma e nome do uid (formato "TURMA_Nome")
+  uid = _uidParam;
+  const _i = _uidParam.indexOf('_');
+  turma  = _params.get('turma') || (_i > -1 ? _uidParam.slice(0, _i) : '');
+  const _nome = _params.get('nome') || (_i > -1 ? _uidParam.slice(_i + 1).replace(/_/g, ' ') : _uidParam);
+  alunos = [_nome];
+  sess = { alunos, turma, modo: 'professor' };
+} else {
+  sess = requireAluno('/index.html');
+  ({ alunos, turma } = sess);
+  uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+}
 const nomeCompleto = getNomeCompleto(turma, alunos[0]);
 
-renderSidebarAluno('sidebar', 'jogos');
+if (!_modoProf) renderSidebarAluno('sidebar', 'jogos');
+else { const _sb = document.getElementById('sidebar'); if (_sb) _sb.style.display = 'none'; }
 window.sair = () => { clearSession(); window.location.href = '/index.html'; };
 
 (async () => {
@@ -207,7 +225,7 @@ if (!tem300) {
       <div style="font-size:48px;margin-bottom:12px">🔒</div>
       <div style="font-size:16px;font-weight:700;margin-bottom:8px">Diploma ainda não disponível</div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:20px">Chegue ao nível 300 da tabuada para desbloquear este diploma.</div>
-      <button onclick="window.location.href='/aluno/a-jogos.html'" style="background:var(--purple);color:#fff;border:none;border-radius:10px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer">Ir para a Tabuada →</button>
+      <button onclick="window.location.href='/aluno/jogos.html'" style="background:var(--purple);color:#fff;border:none;border-radius:10px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer">Ir para a Tabuada →</button>
     </div>`;
   return;
 }
@@ -247,7 +265,7 @@ function cardHtml({ tier, emoji, label, nome, desc, conquistado, dataConq, ops, 
       <div class="dp-stat"><div class="dp-stat-val">${ops}</div><div class="dp-stat-lbl">Operações</div></div>
     </div>`;
   const btn = conquistado
-    ? `<button class="dp-btn" onclick="salvarEImprimir('${tier}',${JSON.stringify(dataConq)})">🖨️ Imprimir diploma</button>`
+    ? `<button class="dp-btn" onclick="salvarEImprimir('${tier}')">🖨️ Imprimir diploma</button>`
     : `<div class="dp-lock-msg">🔒 ${lockMsg}</div>`;
   return `
     <div class="dp-card tier-${tier}${conquistado ? '' : ' locked'}">
@@ -261,10 +279,20 @@ function cardHtml({ tier, emoji, label, nome, desc, conquistado, dataConq, ops, 
     </div>`;
 }
 
-window.salvarEImprimir = function(tier, dataConq) {
+window.salvarEImprimir = function(tier) {
   const ts = tier === 'base' ? tsBase : tier === 'ouro' ? tsOuro : tsDia;
   salvarPrint(tier, ts);
-  window.open('/aluno/diploma_print.html', '_blank');
+  // Passa tudo pela URL: sessionStorage não é herdado por abas abertas com target=_blank
+  const qs = new URLSearchParams({
+    uid, turma, nome: alunos[0],
+    tier,
+    acertos: String(totalAcertos),
+    ts: String(ts || ''),
+  });
+  const a = document.createElement('a');
+  a.href = '/aluno/diploma_print.html?' + qs.toString();
+  a.target = '_blank'; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
 };
 
 document.getElementById('dp-content').innerHTML = `

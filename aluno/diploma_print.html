@@ -188,23 +188,45 @@
 </div>
 
 <script type="module">
-import { requireAluno } from '/js/auth.js';
+import { requireAluno, getSession } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
 import { ref, get } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { getNomeCompleto } from '/js/nomes_completos.js';
 
-const sess = requireAluno('/index.html');
-if (!sess) throw new Error('não autenticado');
-const { alunos, turma } = sess;
-const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+const _params   = new URLSearchParams(location.search);
+const _modelo   = _params.get('modelo') === '1';
+const _uidParam = _params.get('uid');
 
-// Dados do sessionStorage (passados por diploma_tabuada.html)
-let tier     = sessionStorage.getItem('diploma_tier') || 'base';
-let acertos  = parseInt(sessionStorage.getItem('diploma_acertos') || '0');
-let tsConq   = parseInt(sessionStorage.getItem('diploma_tsConquista') || '0') || null;
+let alunos, turma, uid;
+if (_modelo) {
+  // Modelo de exemplo (professor visualiza o layout sem aluno real)
+  turma = 'Modelo'; alunos = ['Aluno(a) Exemplo']; uid = '';
+} else if (_uidParam) {
+  // Identidade vem pela URL (aluno OU professor) — sessionStorage não atravessa abas
+  uid = _uidParam;
+  const _i = _uidParam.indexOf('_');
+  turma = _params.get('turma') || (_i > -1 ? _uidParam.slice(0, _i) : '');
+  const _nome = _params.get('nome') || (_i > -1 ? _uidParam.slice(_i + 1).replace(/_/g, ' ') : _uidParam);
+  alunos = [_nome];
+} else {
+  // Último recurso: sessão atual (acesso direto à página)
+  const sess = requireAluno('/index.html');
+  if (!sess) throw new Error('não autenticado');
+  ({ alunos, turma } = sess);
+  uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+}
 
-// Fallback: busca no Firebase se acessado direto
-if (!acertos) {
+// Dados: primeiro da URL, depois sessionStorage (compatibilidade)
+let tier     = _params.get('tier')    || sessionStorage.getItem('diploma_tier') || 'base';
+let acertos  = parseInt(_params.get('acertos') || sessionStorage.getItem('diploma_acertos') || '0');
+let tsConq   = parseInt(_params.get('ts')      || sessionStorage.getItem('diploma_tsConquista') || '0') || null;
+
+if (_modelo) {
+  // Valores de demonstração
+  tier = _params.get('tier') || 'base';
+  acertos = 3403;
+  tsConq = Date.now();
+} else if (!acertos && uid) {
   try {
     const [c300, cO, cD, hist] = await Promise.all([
       get(ref(db, `conquistas/${uid}/tabuada_300`)),
