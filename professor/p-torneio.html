@@ -443,7 +443,7 @@ window.testarTorneio = async function() {
     pausa_inicio: null, pausa_total_ms: 0, criadoEm: Date.now(), modo_teste: true,
   };
   const novoRef = await push(torneiosRef, dadosTeste);
-  window.open(`/aluno/torneio.html?id=${novoRef.key}&modo=teste`, '_blank');
+  window.open(`/aluno/a-torneio.html?id=${novoRef.key}&modo=teste`, '_blank');
 };
 
 window.liberarTorneio = async function() {
@@ -479,7 +479,7 @@ window.liberarTorneio = async function() {
 };
 
 window.jogarTeste = function(torneioId) {
-  window.open(`/aluno/torneio.html?id=${torneioId}&turma=TESTE&modo=teste`, '_blank');
+  window.open(`/aluno/a-torneio.html?id=${torneioId}&turma=TESTE&modo=teste`, '_blank');
 };
 
 // ── Controles por turma ───────────────────────────────────────

@@ -174,12 +174,12 @@ getAlunoPreferencia(turma, alunos[0], 'robotica').then(isRob => {
   localStorage.setItem('sm_pref_robotica', isRob ? '1' : '0');
   if (!isRob) return;
   // Se já foi renderizado pelo auth.js via cache localStorage, não duplica
-  if (document.querySelector('#sidebar a[href="/aluno/robotica.html"]')) return;
+  if (document.querySelector('#sidebar a[href="/aluno/a-robotica.html"]')) return;
   const nav = document.querySelector('#sidebar .sidebar-nav');
   if (!nav) return;
   const div = document.createElement('div'); div.className = 'nav-divider'; nav.appendChild(div);
   const a = document.createElement('a');
-  a.className = 'nav-item'; a.href = '/aluno/robotica.html';
+  a.className = 'nav-item'; a.href = '/aluno/a-robotica.html';
   a.innerHTML = `<svg viewBox="0 0 24 24"><path d="M20 9V7c0-1.1-.9-2-2-2h-3c0-1.66-1.34-3-3-3S9 3.34 9 5H6c-1.1 0-2 .9-2 2v2c-1.66 0-3 1.34-3 3s1.34 3 3 3v4c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4c1.66 0 3-1.34 3-3s-1.34-3-3-3zm-2 10H6V7h12v12zm-9-6c-.83 0-1.5-.67-1.5-1.5S8.17 10 9 10s1.5.67 1.5 1.5S9.83 13 9 13zm6 0c-.83 0-1.5-.67-1.5-1.5S14.17 10 15 10s1.5.67 1.5 1.5S15.83 13 15 13z"/></svg>🤖 Robótica`;
   nav.appendChild(a);
 }).catch(() => {});
@@ -312,7 +312,7 @@ async function carregarCardCertificado() {
     if (!anchor) return;
     anchor.outerHTML = `
       <div class="card" style="margin-bottom:14px;cursor:pointer;border-color:rgba(201,168,76,.3);background:rgba(201,168,76,.04)"
-           onclick="window.location.href='/aluno/certificados.html'">
+           onclick="window.location.href='/aluno/a-certificados.html'">
         <div style="display:flex;align-items:center;gap:12px">
           <div style="width:44px;height:44px;border-radius:50%;
                       background:linear-gradient(135deg,#f7e98e,#c9a84c);
@@ -745,7 +745,7 @@ ${tempoPodioHtml}
           <h3>🏆 ${torneioAtivo.nome || 'Torneio'}</h3>
           <p>${torneioAtivo.status==='liberada' ? '⏳ Aguardando início' : torneioAtivo.status==='pausado' ? '⏸ Pausado' : '▶ Em andamento'} · ⏱ ${Math.round((torneioAtivo.tempo_segundos||300)/60)} min · 🏅 Torneio</p>
         </div>
-        <a href="/aluno/torneio.html?id=${torneioAtivo.id}" class="btn" style="background:#f0a500;color:#fff;border:none">
+        <a href="/aluno/a-torneio.html?id=${torneioAtivo.id}" class="btn" style="background:#f0a500;color:#fff;border:none">
           <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>${torneioAtivo.status==='liberada' ? 'Entrar' : 'Jogar'}
         </a>
       </div>` : ''}
@@ -955,7 +955,7 @@ ${tempoPodioHtml}
       <div class="section-label" style="color:#f0a500">
         <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
         Ranking Tabuada
-        <a href="/aluno/ranking.html" style="margin-left:auto;font-size:12px;font-weight:600;color:var(--blue-dark);text-decoration:none">Ver tudo →</a>
+        <a href="/aluno/a-ranking.html" style="margin-left:auto;font-size:12px;font-weight:600;color:var(--blue-dark);text-decoration:none">Ver tudo →</a>
       </div>
       <div style="font-size:12px;color:var(--text-muted);padding:8px 0">Carregando…</div>
     </div>
@@ -1197,7 +1197,7 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
       <div class="section-label" style="color:#f0a500">
         <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
         Ranking Tabuada
-        <a href="/aluno/ranking.html" style="margin-left:auto;font-size:12px;font-weight:600;color:var(--blue-dark);text-decoration:none">Ver tudo →</a>
+        <a href="/aluno/a-ranking.html" style="margin-left:auto;font-size:12px;font-weight:600;color:var(--blue-dark);text-decoration:none">Ver tudo →</a>
       </div>
       ${hallHtml}
       <div style="overflow:visible">${corridaHtml}</div>

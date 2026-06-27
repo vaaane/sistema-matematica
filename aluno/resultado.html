@@ -79,7 +79,7 @@ getAlunoPreferencia(_avTurma, _avAlunos[0], 'robotica').then(isRob => {
 }).catch(() => {});
 
 const jogo = JSON.parse(sessionStorage.getItem("sm_jogo_resultado") || "null");
-if (!jogo) { window.location.href = "/aluno/atividades.html"; throw new Error(); }
+if (!jogo) { window.location.href = "/aluno/a-atividades.html"; throw new Error(); }
 
 document.getElementById("topbar-sub").textContent = `${jogo.nome} · Turma ${jogo.turma}`;
 
@@ -136,11 +136,11 @@ document.getElementById("content").innerHTML = `
       <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
       Voltar ao menu
     </a>
-    <a href="/aluno/historico.html" class="btn btn-ghost">
+    <a href="/aluno/a-historico.html" class="btn btn-ghost">
       <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21L13 13.04V8h-1z"/></svg>
       Ver histórico
     </a>
-    <a href="/aluno/ranking.html" class="btn btn-ghost">
+    <a href="/aluno/a-ranking.html" class="btn btn-ghost">
       <svg viewBox="0 0 24 24"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg>
       Ver ranking
     </a>

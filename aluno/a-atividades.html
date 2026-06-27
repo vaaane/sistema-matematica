@@ -435,7 +435,7 @@ const cardsHtml = LISTA_ATIVIDADES.map(ativ => {
     ? `<span class="ac-atv-data">📝 ${bloq.tentUsadas}/3 tentativas</span>`
     : '';
 
-  const clickAttr = foiRealizada ? `onclick="location.href='/aluno/historico.html'"` : '';
+  const clickAttr = foiRealizada ? `onclick="location.href='/aluno/a-historico.html'"` : '';
 
   return `<div class="ac-atv-card ${statusCls}" ${clickAttr}>
     <div class="ac-atv-num ${numCls}">${ativNumStr(ativ.nome)}</div>

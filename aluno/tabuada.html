@@ -274,7 +274,7 @@
         <div class="topbar-title">🎮 Tabuada</div>
       </div>
       <div class="topbar-right" style="display:flex;align-items:center;gap:8px">
-        <a href="/aluno/jogos.html" class="btn btn-ghost" id="btn-voltar"
+        <a href="/aluno/a-jogos.html" class="btn btn-ghost" id="btn-voltar"
           style="font-size:12px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px">
           <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
           Voltar
@@ -1849,7 +1849,7 @@ async function onGameWin() {
     document.getElementById("level-overlay").style.display = 'flex';
     { const b = document.getElementById('lov-btn-repetir'); if(b){ b.style.display='block'; b._nv=nivelJogado; } }
     document.getElementById("lov-btn").onclick = () => {
-      window.location.href = '/aluno/ranking.html';
+      window.location.href = '/aluno/a-ranking.html';
     };
     return;
   }
@@ -1959,7 +1959,7 @@ window.endSprint = (manual) => endSprint(manual);
 
 window.fecharOverlay = function() {
   if (_isSprint && _sprintEnded) {
-    window.location.href = _isProfMode ? '/professor/jogos.html' : '/aluno/jogos.html';
+    window.location.href = _isProfMode ? '/professor/p-jogos.html' : '/aluno/a-jogos.html';
     return;
   }
   if (_sprintWinTimeout) { clearTimeout(_sprintWinTimeout); _sprintWinTimeout = null; }

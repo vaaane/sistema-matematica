@@ -478,7 +478,7 @@ function showStartOverlay(){
     <div id="color-picker"></div>
     <button onclick="window.abrirRegras()" style="font-family:'Orbitron',sans-serif;font-size:.8rem;font-weight:700;padding:8px 22px;border:1px solid rgba(126,232,250,.4);border-radius:10px;background:transparent;color:#7ee8fa;cursor:pointer;letter-spacing:1px;margin-bottom:4px;">📋 Ver regras</button>
     <button id="start-btn" onclick="window.startGame()">▶ JOGAR</button>
-    <button class="btn-voltar-jogos" onclick="window.location.href='/aluno/jogos.html'">← Voltar aos jogos</button>`;
+    <button class="btn-voltar-jogos" onclick="window.location.href='/aluno/a-jogos.html'">← Voltar aos jogos</button>`;
   ov.style.display='flex';
   ov.style.flexDirection='column';
   ov.style.alignItems='center';
@@ -507,7 +507,7 @@ window.startGame = function(){
 
 window.cancelGame = function(){
   gameRunning=false;stopMusic();cancelAnimationFrame(frameId);
-  window.location.href='/aluno/jogos.html';
+  window.location.href='/aluno/a-jogos.html';
 };
 
 window.togglePause = function(){
@@ -685,7 +685,7 @@ async function endGame(){
     <p>Acertos: ${totalCorrect} &nbsp;|&nbsp; Nível: ${level} &nbsp;|&nbsp; Melhor combo: x${bestCombo}</p>
     ${novoRecorde?`<div class="xp-badge">🏆 Novo recorde! +${xpGanho} XP</div>`:`<p style="color:#555;font-size:.8rem">Recorde: ${recordeAtual} pts — supere para ganhar XP!</p>`}
     <button id="restart-btn" onclick="window.startGame()">↺ JOGAR NOVAMENTE</button>
-    <button class="btn-voltar-jogos" onclick="window.location.href='/aluno/jogos.html'">← Voltar aos jogos</button>`;
+    <button class="btn-voltar-jogos" onclick="window.location.href='/aluno/a-jogos.html'">← Voltar aos jogos</button>`;
   ov.style.display='flex';
 }
 

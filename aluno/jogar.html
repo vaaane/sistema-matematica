@@ -115,14 +115,14 @@ const { alunos, turma } = sess;
 initAvBanner(turma, alunos[0]);
 
 const nomeAtivParam = new URLSearchParams(window.location.search).get("ativ");
-if (!nomeAtivParam) { window.location.href = "/aluno/atividades.html"; throw new Error(); }
+if (!nomeAtivParam) { window.location.href = "/aluno/a-atividades.html"; throw new Error(); }
 
 // Verifica liberação
 const liberadas = await getLiberadasParaTurma(turma);
 const liberada = liberadas.find(l => l.atividade === nomeAtivParam);
 if (!liberada) {
   alert("Esta atividade não está mais liberada para sua turma.");
-  window.location.href = "/aluno/atividades.html";
+  window.location.href = "/aluno/a-atividades.html";
   throw new Error();
 }
 const nomeAtiv = liberada.atividade;
@@ -130,7 +130,7 @@ for (const al of alunos) {
   const tent = await contarTentativas(al, nomeAtiv);
   if (tent >= MAX_TENTATIVAS_ATIVIDADE) {
     alert(`${al} já usou as ${MAX_TENTATIVAS_ATIVIDADE} tentativas disponíveis para esta atividade.`);
-    window.location.href = "/aluno/atividades.html";
+    window.location.href = "/aluno/a-atividades.html";
     throw new Error();
   }
 }
@@ -139,12 +139,12 @@ for (const al of alunos) {
 const statusInfo = await getAtividadeStatus(turma, nomeAtiv);
 if (statusInfo.status === 'encerrada') {
   alert("Atividade encerrada pela professora.");
-  window.location.href = "/aluno/atividades.html";
+  window.location.href = "/aluno/a-atividades.html";
   throw new Error();
 }
 if (statusInfo.status !== 'ativa') {
   if (!confirm(`Atenção: esta atividade vale ${statusInfo.percentual}% da nota agora. Deseja continuar?`)) {
-    window.location.href = "/aluno/atividades.html";
+    window.location.href = "/aluno/a-atividades.html";
     throw new Error();
   }
 }

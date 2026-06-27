@@ -214,13 +214,13 @@ const niveisRef = ref(db, _isProfMode ? `prof_neg_niveis/${uid}` : `tabuada_nega
 // ── Level config (50 níveis) ──────────────────────────────────
 function getLvlCfg(lvl) {
   if (lvl <= 5)  return { fase:1, tipo:'add_sub_neg',  secs:45, pairs:4,  cols:4, allowDupNeg:false, fbCls:'fb-1', faseLabel:'+ e −' };
-  if (lvl <= 10) return { fase:1, tipo:'add_sub_neg',  secs:50, pairs:5,  cols:4, allowDupNeg:true,  fbCls:'fb-1', faseLabel:'+ e − (duplo neg.)' };
-  if (lvl <= 15) return { fase:2, tipo:'mul_neg_one',  secs:50, pairs:6,  cols:4, fbCls:'fb-2', faseLabel:'× (um neg.)' };
-  if (lvl <= 20) return { fase:2, tipo:'mul_neg_both', secs:50, pairs:7,  cols:4, fbCls:'fb-2', faseLabel:'× (dois neg.)' };
+  if (lvl <= 10) return { fase:1, tipo:'add_sub_neg',  secs:50, pairs:5,  cols:4, allowDupNeg:false, fbCls:'fb-1', faseLabel:'+ e − (neg. simples)' };
+  if (lvl <= 15) return { fase:2, tipo:'mul_neg_one',  secs:55, pairs:5,  cols:4, maxBase:6, fbCls:'fb-2', faseLabel:'× (um neg.)' };
+  if (lvl <= 20) return { fase:2, tipo:'mul_neg_both', secs:55, pairs:6,  cols:4, maxBase:6, fbCls:'fb-2', faseLabel:'× (dois neg.)' };
   if (lvl <= 25) return { fase:3, tipo:'div_neg_one',  secs:55, pairs:7,  cols:5, fbCls:'fb-3', faseLabel:'÷ (um neg.)' };
-  if (lvl <= 30) return { fase:3, tipo:'mix_neg',      secs:55, pairs:8,  cols:5, allowDupNeg:true, fbCls:'fb-3', faseLabel:'÷ + mix' };
+  if (lvl <= 30) return { fase:3, tipo:'mix_neg',      secs:55, pairs:8,  cols:5, allowDupNeg:false, fbCls:'fb-3', faseLabel:'÷ + mix' };
   if (lvl <= 35) return { fase:4, tipo:'mix_neg',      secs:55, pairs:9,  cols:5, allowDupNeg:true, fbCls:'fb-4', faseLabel:'Mix completo' };
-  if (lvl <= 40) return { fase:4, tipo:'mix_neg',      secs:50, pairs:10, cols:5, allowDupNeg:true, fbCls:'fb-4', faseLabel:'Mix pesado' };
+  if (lvl <= 40) return { fase:4, tipo:'mix_neg',      secs:65, pairs:10, cols:5, allowDupNeg:true, fbCls:'fb-4', faseLabel:'Mix pesado' };
   if (lvl <= 43) return { fase:5, tipo:'pow_paren',    secs:60, pairs:8,  cols:4, fbCls:'fb-5', faseLabel:'(−n)ˣ' };
   if (lvl <= 46) return { fase:5, tipo:'pow_front',    secs:60, pairs:9,  cols:4, fbCls:'fb-5', faseLabel:'−nˣ' };
   return            { fase:5, tipo:'pow_mix',      secs:55, pairs:10, cols:5, fbCls:'fb-5', faseLabel:'Potências mix' };
@@ -298,10 +298,10 @@ function generatePairs(cfg, count) {
     let op = null;
     switch (cfg.tipo) {
       case 'add_sub_neg':  op = _genAddSub(cfg, used); break;
-      case 'mul_neg_one':  op = _genMulOne(used); break;
-      case 'mul_neg_both': op = _genMulBoth(used); break;
+      case 'mul_neg_one':  op = _genMulOne(used, cfg.maxBase || 10); break;
+      case 'mul_neg_both': op = _genMulBoth(used, cfg.maxBase || 8); break;
       case 'div_neg_one':  op = _genDivOne(used); break;
-      case 'mix_neg':      op = _genMix(used); break;
+      case 'mix_neg':      op = _genMix(used, cfg); break;
       case 'pow_paren':    op = _genPowParen(used, 2, 3); break;
       case 'pow_front':    op = _genPowFront(used, 2, 3); break;
       case 'pow_mix':      op = _genPowMix(used); break;
@@ -316,54 +316,76 @@ function generatePairs(cfg, count) {
 
 function _genAddSub(cfg, used) {
   const isAdd = rnd(0,1)===0;
-  const a = rndNZ(cfg.allowDupNeg ? -10 : -5, 10);
-  const b = cfg.allowDupNeg ? rndNZ(-10,10) : rndNZ(-5,10);
+  let a, b;
+  if (cfg.allowDupNeg) {
+    // Duplo negativo permitido (nível 31+)
+    a = rndNZ(-10,10);
+    b = rndNZ(-10,10);
+  } else {
+    // Sem duplo negativo: b sempre positivo para evitar a−(−b)
+    a = rndNZ(-8, 10);
+    b = rndNZ(1, 8);   // b sempre positivo
+  }
   const result = isAdd ? a+b : a-b;
-  if (Math.abs(result) > 25 || used.has(result)) return null;
+  if (Math.abs(result) > 20 || used.has(result)) return null;
   return { type: isAdd?'add':'sub', a, b, result };
 }
 
-function _genMulOne(used) {
-  let a = rndNZ(1,10), b = rndNZ(1,10);
+function _genMulOne(used, maxBase=10) {
+  let a = rndNZ(1, maxBase), b = rndNZ(1, maxBase);
   if (rnd(0,1)===0) a=-a; else b=-b;
   const result = a*b;
-  if (used.has(result)) return null;
+  if (Math.abs(result) > maxBase*maxBase || used.has(result)) return null;
   return { type:'mul', a, b, result };
 }
 
-function _genMulBoth(used) {
-  const a = rndNZ(-10,-1), b = rndNZ(-10,-1);
+function _genMulBoth(used, maxBase=8) {
+  const a = rndNZ(-maxBase,-1), b = rndNZ(-maxBase,-1);
   const result = a*b;
-  if (result>100 || used.has(result)) return null;
+  if (result > maxBase*maxBase || used.has(result)) return null;
   return { type:'mul', a, b, result };
 }
 
 function _genDivOne(used) {
-  const div = rndNZ(2,10);
-  const res = rndNZ(2,10);
-  const negRes = rnd(0,1)===0 ? -res : res;
-  const negDiv = negRes>0 ? -div : div;
-  const dividend = negDiv * negRes;
-  if (used.has(negRes)) return null;
-  return { type:'div', a:dividend, b:negDiv, result:negRes };
+  // Sempre: divisor positivo, dividendo negativo → resultado negativo
+  // Garante só UM negativo visível (sem duplo negativo antes do nível 30)
+  const div = rndNZ(2, 8);
+  const res = rndNZ(2, 8);
+  const dividend = -(div * res); // sempre negativo
+  if (used.has(-res)) return null;
+  return { type:'div', a:dividend, b:div, result:-res };
 }
 
-function _genMix(used) {
+function _genMix(used, cfg = {}) {
+  const allowDup = cfg.allowDupNeg === true;
   const r = rnd(0,3);
   if (r<=1) {
     const isAdd = r===0;
-    const a = rndNZ(-12,12), b = rndNZ(-12,12);
+    // Sem duplo negativo: garante que a e b não sejam ambos negativos
+    let a, b;
+    for (let t = 0; t < 20; t++) {
+      a = rndNZ(-12,12); b = rndNZ(-12,12);
+      if (allowDup || !(a < 0 && b < 0)) break;
+    }
     const result = isAdd ? a+b : a-b;
     if (Math.abs(result)>30 || used.has(result)) return null;
     return { type:isAdd?'add':'sub', a, b, result };
   }
   if (r===2) {
-    const a = rndNZ(-10,10), b = rndNZ(-10,10);
+    let a, b;
+    for (let t = 0; t < 20; t++) {
+      a = rndNZ(-10,10); b = rndNZ(-10,10);
+      if (allowDup || !(a < 0 && b < 0)) break;
+    }
     const result = a*b;
     if (Math.abs(result)>150 || used.has(result)) return null;
     return { type:'mul', a, b, result };
   }
-  const div = rndNZ(-10,10), res = rndNZ(-10,10);
+  let div, res;
+  for (let t = 0; t < 20; t++) {
+    div = rndNZ(-10,10); res = rndNZ(-10,10);
+    if (allowDup || !(div < 0 && res < 0)) break;
+  }
   const dividend = div*res;
   if (Math.abs(dividend)>120 || used.has(res)) return null;
   return { type:'div', a:dividend, b:div, result:res };
@@ -386,10 +408,16 @@ function _genPowFront(used, expMin, expMax) {
 }
 
 function _genPowMix(used) {
-  const r = rnd(0,2);
-  if (r===0) return _genPowParen(used, 2, 4);
-  if (r===1) return _genPowFront(used, 2, 4);
-  return _genMix(used);
+  // Nível 47-50: mistura potências com operações simples
+  const r = rnd(0,3);
+  if (r===0) return _genPowParen(used, 2, 3); // (-n)^exp
+  if (r===1) return _genPowFront(used, 2, 3); // -n^exp
+  // fallback: operação simples com negativo (sem duplo negativo)
+  const a = rndNZ(-8,8), b = rndNZ(1,8);
+  const isAdd = rnd(0,1)===0;
+  const result = isAdd ? a+b : a-b;
+  if (Math.abs(result)>20 || used.has(result)) return null;
+  return { type:isAdd?'add':'sub', a, b, result };
 }
 
 // ── Game state ────────────────────────────────────────────────
