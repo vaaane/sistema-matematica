@@ -1,0 +1,397 @@
+[
+  {
+    "id": "POR-01",
+    "dificuldade": 1,
+    "tag": "Desconto",
+    "familia": "preco_desc",
+    "sufixo": "R$",
+    "enunciado": "Uma camiseta custa {P} reais. Na promoção, há um desconto de {D}%. Por quanto a camiseta será vendida?",
+    "variaveis": {
+      "P": [
+        80,
+        120,
+        200,
+        160,
+        240
+      ],
+      "D": [
+        10,
+        20,
+        25,
+        40
+      ]
+    },
+    "resposta_expr": "Math.trunc(P*(100-D)/100)",
+    "extra": {
+      "P": "P",
+      "D": "D"
+    }
+  },
+  {
+    "id": "POR-02",
+    "dificuldade": 2,
+    "tag": "Quanto % (contrário)",
+    "familia": "pct_compl",
+    "sufixo": "%",
+    "enunciado": "Em uma sala de {T} alunos, {A} foram aprovados. Qual a porcentagem de alunos REPROVADOS?",
+    "pares": [
+      [
+        40,
+        30
+      ],
+      [
+        40,
+        10
+      ],
+      [
+        50,
+        30
+      ],
+      [
+        50,
+        40
+      ],
+      [
+        50,
+        45
+      ],
+      [
+        20,
+        15
+      ],
+      [
+        20,
+        12
+      ],
+      [
+        25,
+        20
+      ],
+      [
+        25,
+        15
+      ]
+    ],
+    "resposta_expr": "Math.trunc((T-A)*100/T)",
+    "extra": {
+      "T": "T",
+      "A": "A"
+    }
+  },
+  {
+    "id": "POR-03",
+    "dificuldade": 2,
+    "tag": "Acréscimo",
+    "familia": "preco_acre",
+    "sufixo": "R$",
+    "enunciado": "Um notebook custa {P} reais. Houve um aumento de {D}%. Qual passou a ser o preço do notebook?",
+    "variaveis": {
+      "P": [
+        3000,
+        2000,
+        1500,
+        2500,
+        1200
+      ],
+      "D": [
+        10,
+        15,
+        20,
+        12
+      ]
+    },
+    "resposta_expr": "Math.trunc(P*(100+D)/100)",
+    "extra": {
+      "P": "P",
+      "D": "D"
+    }
+  },
+  {
+    "id": "POR-04",
+    "dificuldade": 1,
+    "tag": "Quanto %",
+    "familia": "pct_direto",
+    "sufixo": "%",
+    "enunciado": "Numa prova de {T} questões, um aluno acertou {A}. Qual foi a porcentagem de ACERTOS?",
+    "pares": [
+      [
+        50,
+        35
+      ],
+      [
+        50,
+        30
+      ],
+      [
+        50,
+        40
+      ],
+      [
+        40,
+        30
+      ],
+      [
+        40,
+        28
+      ],
+      [
+        20,
+        15
+      ],
+      [
+        20,
+        16
+      ],
+      [
+        25,
+        20
+      ],
+      [
+        25,
+        15
+      ]
+    ],
+    "resposta_expr": "Math.trunc(A*100/T)",
+    "extra": {
+      "T": "T",
+      "A": "A"
+    }
+  },
+  {
+    "id": "POR-05",
+    "dificuldade": 1,
+    "tag": "Desconto",
+    "familia": "preco_desc",
+    "sufixo": "R$",
+    "enunciado": "Uma bicicleta custa {P} reais. À vista, o cliente recebe {D}% de desconto. Quanto pagará à vista?",
+    "variaveis": {
+      "P": [
+        1200,
+        800,
+        1000,
+        600,
+        1500
+      ],
+      "D": [
+        10,
+        20,
+        25,
+        40
+      ]
+    },
+    "resposta_expr": "Math.trunc(P*(100-D)/100)",
+    "extra": {
+      "P": "P",
+      "D": "D"
+    }
+  },
+  {
+    "id": "POR-06",
+    "dificuldade": 2,
+    "tag": "Quanto % (contrário)",
+    "familia": "pct_compl",
+    "sufixo": "%",
+    "enunciado": "Em uma fazenda há {T} animais, sendo {A} deles vacas. Qual a porcentagem de animais que NÃO são vacas?",
+    "pares": [
+      [
+        200,
+        90
+      ],
+      [
+        200,
+        80
+      ],
+      [
+        200,
+        110
+      ],
+      [
+        50,
+        20
+      ],
+      [
+        50,
+        30
+      ],
+      [
+        40,
+        10
+      ],
+      [
+        40,
+        18
+      ],
+      [
+        100,
+        45
+      ],
+      [
+        100,
+        60
+      ]
+    ],
+    "resposta_expr": "Math.trunc((T-A)*100/T)",
+    "extra": {
+      "T": "T",
+      "A": "A"
+    }
+  },
+  {
+    "id": "POR-07",
+    "dificuldade": 2,
+    "tag": "Acréscimo",
+    "familia": "preco_acre",
+    "sufixo": "R$",
+    "enunciado": "Um produto custa {P} reais e sofreu um aumento de {D}%. Qual o valor final do produto?",
+    "variaveis": {
+      "P": [
+        600,
+        400,
+        800,
+        500,
+        1000
+      ],
+      "D": [
+        10,
+        20,
+        25,
+        30
+      ]
+    },
+    "resposta_expr": "Math.trunc(P*(100+D)/100)",
+    "extra": {
+      "P": "P",
+      "D": "D"
+    }
+  },
+  {
+    "id": "POR-08",
+    "dificuldade": 2,
+    "tag": "Quanto %",
+    "familia": "pct_direto",
+    "sufixo": "%",
+    "enunciado": "Numa cidade de {T} habitantes, {A} votaram nas eleições. Qual a porcentagem de habitantes que VOTARAM?",
+    "pares": [
+      [
+        2500,
+        1500
+      ],
+      [
+        2500,
+        2000
+      ],
+      [
+        2500,
+        1000
+      ],
+      [
+        500,
+        300
+      ],
+      [
+        500,
+        250
+      ],
+      [
+        200,
+        90
+      ],
+      [
+        200,
+        140
+      ],
+      [
+        1000,
+        600
+      ],
+      [
+        1000,
+        450
+      ]
+    ],
+    "resposta_expr": "Math.trunc(A*100/T)",
+    "extra": {
+      "T": "T",
+      "A": "A"
+    }
+  },
+  {
+    "id": "POR-09",
+    "dificuldade": 1,
+    "tag": "Desconto",
+    "familia": "preco_desc",
+    "sufixo": "R$",
+    "enunciado": "Uma geladeira é vendida por {P} reais. Há um desconto de {D}% para pagamento à vista. Quanto custará à vista?",
+    "variaveis": {
+      "P": [
+        1800,
+        1500,
+        2000,
+        1000,
+        1200
+      ],
+      "D": [
+        5,
+        10,
+        20,
+        25
+      ]
+    },
+    "resposta_expr": "Math.trunc(P*(100-D)/100)",
+    "extra": {
+      "P": "P",
+      "D": "D"
+    }
+  },
+  {
+    "id": "POR-10",
+    "dificuldade": 1,
+    "tag": "Quanto % (contrário)",
+    "familia": "pct_compl",
+    "sufixo": "%",
+    "enunciado": "Em um estoque de {T} peças, {A} estavam com defeito. Qual a porcentagem de peças SEM defeito?",
+    "pares": [
+      [
+        400,
+        60
+      ],
+      [
+        400,
+        100
+      ],
+      [
+        400,
+        80
+      ],
+      [
+        200,
+        30
+      ],
+      [
+        200,
+        50
+      ],
+      [
+        50,
+        10
+      ],
+      [
+        50,
+        20
+      ],
+      [
+        100,
+        15
+      ],
+      [
+        100,
+        40
+      ]
+    ],
+    "resposta_expr": "Math.trunc((T-A)*100/T)",
+    "extra": {
+      "T": "T",
+      "A": "A"
+    }
+  }
+]

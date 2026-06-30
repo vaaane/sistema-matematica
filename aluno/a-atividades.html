@@ -232,7 +232,7 @@ for (const lib of liberadas) liberadasMap[lib.atividade] = lib;
 const classicAtivs = LISTA_ATIVIDADES.filter(ativ => {
   const _lib = liberadasMap[ativ.nome];
   const _modo = _lib?.modo || ativ.modo || 'classico';
-  return _modo !== "competicao" && _modo !== "competicao_plus" && _modo !== "avaliacao_plus";
+  return _modo !== "competicao" && _modo !== "competicao_plus" && _modo !== "avaliacao_plus" && _modo !== "atividade_plus";
 });
 
 const bloqueios = {};
@@ -354,6 +354,8 @@ const bannerHtml = liberadaParaBanner ? (() => {
   const modoEf = lib?.modo || ativ.modo || 'classico';
   const url   = modoEf === 'avaliacao_plus'
     ? `/aluno/avaliacao_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
+    : modoEf === 'atividade_plus'
+    ? `/aluno/atividade_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
     : modoEf === 'competicao_plus'
     ? `/aluno/competicao_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
     : modoEf === 'competicao'
@@ -405,6 +407,8 @@ const cardsHtml = LISTA_ATIVIDADES.map(ativ => {
   const notaStr     = nota != null ? (isAvP ? nota.toFixed(1) : String(nota)) : null;
   const url = modoEf === 'avaliacao_plus'
     ? `/aluno/avaliacao_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
+    : modoEf === 'atividade_plus'
+    ? `/aluno/atividade_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
     : modoEf === 'competicao_plus'
     ? `/aluno/competicao_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
     : modoEf === 'competicao'
@@ -456,24 +460,11 @@ const cardsHtml = LISTA_ATIVIDADES.map(ativ => {
   </div>`;
 }).join('');
 
-// Slot "Em breve" para próxima atividade
-const emBreve = `<div class="ac-atv-card em-breve">
-  <div class="ac-atv-num em-breve">A6</div>
-  <div class="ac-atv-info">
-    <div class="ac-atv-nome">Atividade 6</div>
-    <div class="ac-atv-detalhe"><span class="ac-atv-tag em-breve-t">🕐 Em breve</span></div>
-  </div>
-  <div class="ac-atv-right">
-    <div class="ac-atv-nota muted">—</div>
-    <span class="ac-status-badge bloqueada">🕐 Em breve</span>
-  </div>
-</div>`;
-
 content.innerHTML = `
   ${bannerHtml}
   ${tornAviso}
   <div class="ac-section-title">Todas as atividades</div>
-  <div class="ac-atividades-lista">${cardsHtml}${emBreve}</div>`;
+  <div class="ac-atividades-lista">${cardsHtml}</div>`;
 
 // Restaurar badge de dupla se já estava ativa
 (function() {

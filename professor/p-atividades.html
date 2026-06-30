@@ -19,7 +19,9 @@
     .modal-box-body{padding:0 28px 28px;}
     .modal-field{margin-bottom:20px;}
     .modal-field-label{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;display:block;}
-    .modal-field .input{width:100%;background:#F9FAFB;border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;font-size:14px;font-family:'Inter',sans-serif;color:var(--text);outline:none;transition:border-color .18s,box-shadow .18s;}
+    .modal-field .input{width:100%;background:#F9FAFB;border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;font-size:14px;font-family:'Inter',sans-serif;color:#1f2937;outline:none;transition:border-color .18s,box-shadow .18s;}
+    .modal-field select.input{appearance:none;-webkit-appearance:none;-moz-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px;cursor:pointer;}
+    .modal-field select.input option{color:#1f2937;background:#ffffff;}
     .modal-field .input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,158,220,.12);background:#fff;}
     .modal-field-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
     .modal-btn-bar{display:flex;gap:10px;margin-top:8px;}
@@ -65,13 +67,9 @@
       <div class="modal-field">
         <label class="modal-field-label">Modo</label>
         <div class="modo-picker">
-          <div class="modo-card selected" id="modo-competicao" onclick="selecionarModo('competicao_plus')">
+          <div class="modo-card selected" id="modo-atividade" onclick="selecionarModo('atividade_plus')">
             <div class="modo-radio"></div>
-            <div><div class="modo-nome">⚔️ Competição+</div><div class="modo-desc">Ranking ao vivo · sem limite de tentativas</div></div>
-          </div>
-          <div class="modo-card" id="modo-avaliacao" onclick="selecionarModo('avaliacao_plus')">
-            <div class="modo-radio"></div>
-            <div><div class="modo-nome">📝 Avaliação+</div><div class="modo-desc">Quiz + ranking · 3 tentativas · 25 min por aluno</div></div>
+            <div><div class="modo-nome">🧮 Atividade+</div><div class="modo-desc">Múltipla escolha · mapa de questões · 1 tentativa · 15 min (máx 20)</div></div>
           </div>
         </div>
       </div>
@@ -101,13 +99,9 @@
       <div class="modal-field">
         <label class="modal-field-label">Escolha o modo para testar</label>
         <div class="modo-picker">
-          <div class="modo-card" onclick="abrirTeste('competicao_plus')" style="cursor:pointer">
+          <div class="modo-card" onclick="abrirTeste('atividade_plus')" style="cursor:pointer">
             <div class="modo-radio"></div>
-            <div><div class="modo-nome">⚔️ Competição+</div><div class="modo-desc">Ranking ao vivo · sem limite de tentativas</div></div>
-          </div>
-          <div class="modo-card" onclick="abrirTeste('avaliacao_plus')" style="cursor:pointer">
-            <div class="modo-radio"></div>
-            <div><div class="modo-nome">📝 Avaliação+</div><div class="modo-desc">Quiz + ranking · 3 tentativas · 25 min</div></div>
+            <div><div class="modo-nome">🧮 Atividade+</div><div class="modo-desc">Múltipla escolha · mapa de questões · 1 tentativa · 15 min</div></div>
           </div>
         </div>
       </div>
@@ -422,15 +416,15 @@ async function executarLiberacao(atividade, turma, percentual) {
   await carregarAeH();
 }
 
-const MODO_LABEL = { classico: "Clássico", competicao: "Competição", competicao_plus: "Competição+", avaliacao_plus: "Avaliação+" };
+const MODO_LABEL = { classico: "Clássico", competicao: "Competição", competicao_plus: "Competição+", avaliacao_plus: "Avaliação+", atividade_plus: "Atividade+" };
 
-let _modoSelecionado = 'competicao_plus';
+let _modoSelecionado = 'atividade_plus';
 window.selecionarModo = function(modo) {
   _modoSelecionado = modo;
-  document.getElementById("modo-competicao").classList.toggle("selected", modo === 'competicao_plus');
-  document.getElementById("modo-avaliacao").classList.toggle("selected",  modo === 'avaliacao_plus');
+  const c = document.getElementById("modo-atividade");
+  if (c) c.classList.add("selected");
 };
-window.abrirForm = () => { _modoSelecionado = 'competicao_plus'; selecionarModo('competicao_plus'); document.getElementById("modal-overlay").classList.add("open"); };
+window.abrirForm = () => { _modoSelecionado = 'atividade_plus'; selecionarModo('atividade_plus'); document.getElementById("modal-overlay").classList.add("open"); };
 
 window.liberar = async function() {
   const atividade  = document.getElementById("sel-ativ").value;
@@ -461,7 +455,9 @@ window.fecharTestarModal = function() {
 window.abrirTeste = function(modo) {
   const ativ = document.getElementById('testar-sel-ativ').value;
   if (!ativ) { flash('Selecione uma atividade antes de escolher o modo.', 'error'); return; }
-  const page = modo === 'competicao_plus' ? '/aluno/competicao_plus.html' : '/aluno/avaliacao_plus.html';
+  const page = modo === 'competicao_plus' ? '/aluno/competicao_plus.html'
+             : modo === 'atividade_plus'  ? '/aluno/atividade_plus.html'
+             : '/aluno/avaliacao_plus.html';
   window.open(`${page}?modo=teste&ativ=${encodeURIComponent(ativ)}`, '_blank');
   fecharTestarModal();
 };
