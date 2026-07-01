@@ -908,7 +908,6 @@ function onTimerEnd() {
   const nivelJogado = _nivelEmJogo;
   if (!_isReplay) {
     totalPartidas++;
-    if (nivelAtual>1) nivelAtual = Math.max(1, nivelAtual-1);
   }
   salvarProgresso('timeout', nivelJogado);
   document.getElementById('lov-emoji').textContent='⏱️';
