@@ -61,30 +61,34 @@ export const EXTRA_RANK_ATIV4 = {
 };
 
 // Busca resultados da Atividade 4 pra uma turma, retorna por aluno:
-// { fez: bool, posicao: number (1-based, 0 = não participou), bonusRank: number }
+// buscarAtiv4: ranking GLOBAL (todas as turmas juntas), não por turma separada.
+// A posição reflete onde o aluno está entre TODOS que fizeram a atividade.
 export async function buscarAtiv4(turma, alunos) {
+  // melhorPts usa "nome|turma" como chave pra evitar conflito de nomes entre turmas
   const melhorPts = {};
   try {
-    const q = query(ref(db, "resultados"), orderByChild("turma"), equalTo(turma));
+    const q = query(ref(db, "resultados"), orderByChild("atividade"), equalTo(NOME_ATIV4));
     const snap = await get(q);
     if (snap.exists()) {
       snap.forEach(child => {
         const v = child.val();
-        if (v.atividade !== NOME_ATIV4 || !v.aluno) return;
+        if (!v.aluno || !v.turma) return;
+        const key = `${v.aluno}|${v.turma}`;
         const pts = v.pontuacao ?? 0;
-        if (!(v.aluno in melhorPts) || pts > melhorPts[v.aluno]) melhorPts[v.aluno] = pts;
+        if (!(key in melhorPts) || pts > melhorPts[key]) melhorPts[key] = pts;
       });
     }
   } catch (e) { console.error("Falha ao buscar Atividade 4:", e); }
 
-  // Ranking: ordena quem fez por pontuação (maior primeiro)
-  const fizeram = alunos.filter(n => n in melhorPts);
-  fizeram.sort((a, b) => (melhorPts[b] || 0) - (melhorPts[a] || 0));
+  // Ranking global: ordena todos por pontuação decrescente
+  const todos = Object.keys(melhorPts);
+  todos.sort((a, b) => (melhorPts[b] || 0) - (melhorPts[a] || 0));
 
   const resultado = {};
   alunos.forEach(nome => {
-    const fez = nome in melhorPts;
-    const posicao = fez ? fizeram.indexOf(nome) + 1 : 0;
+    const key = `${nome}|${turma}`;
+    const fez = key in melhorPts;
+    const posicao = fez ? todos.indexOf(key) + 1 : 0;
     resultado[nome] = { fez, posicao, bonusRank: EXTRA_RANK_ATIV4.bonusPorPosicao(posicao) };
   });
   return resultado;
@@ -121,14 +125,17 @@ export function extrasAutoAtivos(progresso) {
 }
 export function calcularBonus(progresso, registro) {
   const auto = extrasAutoAtivos(progresso);
-  const bAuto     = EXTRAS_AUTO.reduce((s, e) => s + (auto[e.key] ? e.valor : 0), 0);
-  const bCadExtra = cadernoExtraAtivo(registro) ? CADERNO_EXTRA.valor : 0;
+  const bAuto      = EXTRAS_AUTO.reduce((s, e) => s + (auto[e.key] ? e.valor : 0), 0);
+  const bCadExtra  = cadernoExtraAtivo(registro) ? CADERNO_EXTRA.valor : 0;
   const bRankAtiv4 = progresso?.rankAtiv4Bonus ?? 0;
-  const bManual   = EXTRAS_MANUAL.reduce((s, e) => s + (registro?.extras?.[e.key] ? e.valor : 0), 0);
+  const bManual    = EXTRAS_MANUAL.reduce((s, e) => s + (registro?.extras?.[e.key] ? e.valor : 0), 0);
   return bAuto + bCadExtra + bRankAtiv4 + bManual;
 }
 export function calcularSubtotal(registro) {
-  return CAMPOS_NOTA.reduce((s, c) => s + (parseFloat(registro[c.key]) || 0), 0);
+  return CAMPOS_NOTA.reduce((s, c) => {
+    const v = registro[c.key];
+    return s + (v == null ? 0 : (parseFloat(v) || 0));
+  }, 0);
 }
 export function calcularTotal(registro, progresso) {
   const subtotalCapado = Math.min(calcularSubtotal(registro), 10);
@@ -146,29 +153,63 @@ export async function definirNotasLiberadas(turma, liberado) {
   await update(ref(db, `notas_liberadas/${BIMESTRE}/${turma}`), { liberado: !!liberado, em: Date.now() });
 }
 
+// Busca a melhor nota da fase 1 da Atividade 5 pra um aluno específico (uso na página do aluno)
+export async function buscarAtiv5Aluno(turma, nome) {
+  let melhor = null;
+  try {
+    const q = query(ref(db, "resultados"), orderByChild("turma"), equalTo(turma));
+    const snap = await get(q);
+    if (snap.exists()) {
+      snap.forEach(child => {
+        const v = child.val();
+        if (v.atividade !== NOME_ATIV5 || v.aluno !== nome) return;
+        const pts = v.pontos_fase1 ?? v.pontuacao ?? null;
+        if (pts != null && (melhor === null || pts > melhor)) melhor = pts;
+      });
+    }
+  } catch (e) { console.error("Falha ao buscar Atividade 5:", e); }
+  return melhor; // null = nunca jogou; number = melhor pontos_fase1 (escala 0-10)
+}
+
 // Monta o boletim completo de um aluno — usado em a-notas.html e no card da home.
-// Retorna null se o professor ainda não lançou nada, OU se ainda não liberou
-// as notas dessa turma pros alunos verem.
+// Retorna null apenas se as notas ainda não foram disponibilizadas pelo professor.
+// Se liberado mas sem nota salva, retorna boletim com dados automáticos + manuais nulos.
 export async function montarBoletim(turma, nome) {
   const liberado = await notasLiberadas(turma);
   if (!liberado) return null;
 
-  const salvo = await buscarNotaSalva(turma, nome);
-  if (!salvo) return null;
-
-  const registro = {
-    provaMulti: salvo.provaMulti || 0, projeto: salvo.projeto || 0, caderno: salvo.caderno || 0,
-    ativ4: salvo.ativ4 || 0,
-    triangulos: salvo.triangulos ?? salvo.area ?? 0, lista: salvo.lista || 0,
-    extras: salvo.extras || {},
-  };
-
-  const [progresso, ativ4Map] = await Promise.all([
+  // Busca tudo em paralelo — não bloqueia em caso de nota manual ainda não salva
+  const [salvo, progresso, ativ4Map, ativ5Pts] = await Promise.all([
+    buscarNotaSalva(turma, nome),
     buscarProgressoTabuada(turma, nome),
     buscarAtiv4(turma, [nome]),
+    buscarAtiv5Aluno(turma, nome),
   ]);
+
   const ativ4Info = ativ4Map[nome] || { fez:false, posicao:0, bonusRank:0 };
-  progresso.rankAtiv4Bonus = ativ4Info.bonusRank;
+  progresso.rankAtiv4Bonus = ativ4Info.bonusRank; // posição global, conta como nota extra
+
+  // Ativ.4 e Triângulos: null = não participou/nunca jogou → conta como 0
+  const ativ4Val      = ativ4Info.fez ? 0.5 : null;
+  const triangulosVal = ativ5Pts != null ? Math.min(1, ativ5Pts / 10) : null;
+
+  const registro = {
+    provaMulti: salvo?.provaMulti ?? null,
+    projeto:    salvo?.projeto    ?? null,
+    caderno:    salvo?.caderno    ?? null,
+    ativ4:      ativ4Val,
+    triangulos: triangulosVal,
+    lista:      salvo?.lista      ?? null,
+    extras:     salvo?.extras || {},
+  };
+
+  // lancados: campos manuais com valor já lançado pelo professor
+  const lancados = {
+    provaMulti: salvo?.provaMulti != null,
+    projeto:    salvo?.projeto    != null,
+    caderno:    salvo?.caderno    != null,
+    lista:      salvo?.lista      != null,
+  };
 
   const subtotal       = calcularSubtotal(registro);
   const subtotalCapado = Math.min(subtotal, 10);
@@ -177,7 +218,8 @@ export async function montarBoletim(turma, nome) {
   const auto             = extrasAutoAtivos(progresso);
   const cadExtraAtivo    = cadernoExtraAtivo(registro);
 
-  return { registro, progresso, subtotal, subtotalCapado, bonus, total, auto, cadExtraAtivo, ativ4Info, atualizadoEm: salvo.atualizadoEm || null };
+  return { registro, lancados, progresso, subtotal, subtotalCapado, bonus, total,
+           auto, cadExtraAtivo, ativ4Info, ativ5Pts, atualizadoEm: salvo?.atualizadoEm || null };
 }
 
 export function mensagemPorNota(total) {

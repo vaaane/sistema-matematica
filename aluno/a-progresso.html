@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Meu Progresso — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    /* resumo topo */
+    .summary-bar{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+    .sum-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;display:flex;align-items:center;gap:14px}
+    .sum-icon{font-size:22px;flex-shrink:0}
+    .sum-label{font-size:10.5px;font-weight:600;color:var(--text-muted);margin-bottom:3px}
+    .sum-val{font-size:22px;font-weight:800;line-height:1}
+    .sum-sub{font-size:10px;color:var(--text-muted);margin-top:3px}
+
+    /* banner potencial */
+    .potencial-banner{background:linear-gradient(135deg,#1c1040 0%,#15102a 100%);border:1.5px solid rgba(240,165,0,.4);border-radius:var(--radius);padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px;position:relative;overflow:hidden}
+    .potencial-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at left,rgba(240,165,0,.08) 0%,transparent 60%);pointer-events:none}
+    .potencial-banner.zero{border-color:rgba(34,197,94,.35);background:linear-gradient(135deg,#0c1f14,#11111f)}
+    .potencial-banner.zero::before{background:radial-gradient(ellipse at left,rgba(34,197,94,.07) 0%,transparent 60%)}
+    .pot-icon{font-size:24px;flex-shrink:0}
+    .pot-body{flex:1;min-width:0}
+    .pot-titulo{font-size:13.5px;font-weight:800;color:var(--gold);margin-bottom:3px}
+    .pot-titulo.green{color:var(--green)}
+    .pot-desc{font-size:11.5px;color:rgba(255,255,255,.65);line-height:1.45}
+    .pot-desc b{color:#fff}
+    .pot-pts{font-size:28px;font-weight:800;color:var(--gold);flex-shrink:0;text-shadow:0 0 16px rgba(240,165,0,.4)}
+    .pot-pts.green{color:var(--green);text-shadow:0 0 16px rgba(34,197,94,.3)}
+    .pot-arrow{font-size:16px;color:rgba(240,165,0,.6);flex-shrink:0}
+
+    /* seções */
+    .sec-label{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted);margin:20px 0 10px;display:flex;align-items:center;gap:8px}
+    .sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+    /* linhas */
+    .prog-list{display:flex;flex-direction:column;gap:8px}
+    .prog-row{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:14px}
+    .prog-row.done{border-color:rgba(34,197,94,.2)}
+    .prog-row.partial{border-color:rgba(240,165,0,.2)}
+    .prog-row.locked{opacity:.6}
+
+    .prog-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+    .prog-icon.green{background:var(--green-pale)}
+    .prog-icon.orange{background:var(--orange-pale)}
+    .prog-icon.purple{background:var(--purple-pale)}
+    .prog-icon.grey{background:rgba(255,255,255,.05)}
+    .prog-icon.gold{background:var(--gold-pale)}
+
+    .prog-body{flex:1;min-width:0}
+    .prog-title{font-size:13px;font-weight:700;margin-bottom:1px}
+    .prog-desc{font-size:11px;color:var(--text-muted);line-height:1.4}
+    .prog-desc b{color:var(--text)}
+
+    .pbar-wrap{margin-top:7px;display:flex;align-items:center;gap:8px}
+    .pbar-bg{flex:1;height:6px;border-radius:5px;background:rgba(255,255,255,.06);overflow:hidden}
+    .pbar-fill{height:100%;border-radius:5px;transition:width .4s ease}
+    .pbar-fill.green{background:linear-gradient(90deg,#16a34a,#22C55E)}
+    .pbar-fill.orange{background:linear-gradient(90deg,#c98900,#f0a500)}
+    .pbar-fill.purple{background:linear-gradient(90deg,var(--purple-dark),var(--purple))}
+    .pbar-label{font-size:10.5px;font-weight:700;white-space:nowrap;color:var(--text-muted)}
+
+    .prog-right{text-align:right;flex-shrink:0;min-width:60px}
+    .pts{font-size:16px;font-weight:800}
+    .pts.green{color:#15803D}
+    .pts.gold{color:var(--gold)}
+    .pts.muted{color:var(--text-muted);font-size:13px;font-weight:600}
+    .pts-sub{font-size:10px;color:var(--text-muted);margin-top:1px}
+    .badge-lock{display:inline-flex;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:20px;padding:3px 9px;font-size:10.5px;font-weight:600;color:var(--text-muted)}
+
+    @media(max-width:600px){.summary-bar{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Meu Progresso — 2º Bimestre</div>
+        <div class="topbar-sub">Acompanhe em tempo real o que você já conquistou e o que ainda dá pra melhorar</div>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div class="empty-state"><p>Carregando…</p></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireAluno, renderSidebarAluno, clearSession, getSession } from "/js/auth.js";
+import {
+  EXTRAS_AUTO, CADERNO_EXTRA, EXTRA_RANK_ATIV4, EXTRAS_MANUAL, CAMPOS_NOTA,
+  BIMESTRE, fmtNota, slugNome,
+  buscarProgressoTabuada, extrasAutoAtivos, cadernoExtraAtivo,
+  buscarAtiv4, buscarAtiv5Aluno, buscarNotaSalva, notasLiberadas,
+} from "/js/notas.js";
+
+requireAluno();
+renderSidebarAluno("sidebar", "progresso");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const sess     = getSession();
+const turma    = sess?.turma || "";
+const nome     = sess?.alunos?.[0] || "";
+
+// Configurações de cada atividade avaliada
+const ATIVIDADES = [
+  { key:"ativ4",      label:"Atividade 4 — Geometria",     tipo:"auto",   max:0.5,  desc:"participação automática" },
+  { key:"triangulos", label:"Atividade 5 — Triângulos",    tipo:"auto",   max:1,    desc:"melhor nota na fase 1" },
+  { key:"provaMulti", label:"Prova Multi",                  tipo:"manual", max:3,    desc:"lançamento pela professora" },
+  { key:"projeto",    label:"Projeto CriaBartô",            tipo:"manual", max:3,    desc:"lançamento pela professora" },
+  { key:"caderno",    label:"Caderno",                      tipo:"manual", max:2,    desc:"lançamento pela professora" },
+  { key:"lista",      label:"Lista de Exercícios",          tipo:"manual", max:1,    desc:"lançamento pela professora" },
+];
+
+async function carregar() {
+  const content = document.getElementById("content");
+  if (!turma || !nome) { content.innerHTML = `<div class="empty-state"><p>Sessão não encontrada. Faça login novamente.</p></div>`; return; }
+
+  const [progresso, ativ4Map, ativ5Pts, liberado] = await Promise.all([
+    buscarProgressoTabuada(turma, nome),
+    buscarAtiv4(turma, [nome]),
+    buscarAtiv5Aluno(turma, nome),
+    notasLiberadas(turma),
+  ]);
+
+  const ativ4Info = ativ4Map[nome] || { fez:false, posicao:0, bonusRank:0 };
+  const auto      = extrasAutoAtivos(progresso);
+
+  // Notas lançadas (só se liberadas)
+  let nota = null;
+  if (liberado) nota = await buscarNotaSalva(turma, nome);
+
+  // ── cálculos de resumo ────────────────────────────────────────
+  const ativ4Pts = ativ4Info.fez ? 0.5 : 0;
+  const triPts   = ativ5Pts != null ? Math.min(1, ativ5Pts / 10) : 0;
+  const lancados = nota?.lancados || {};
+
+  // Máximo possível = somatório dos campos já lançados
+  let maxLancado = 0.5 + (ativ5Pts != null ? 1 : 0); // ativ4 + triangulos sempre visíveis
+  if (nota) {
+    if (lancados.provaMulti) maxLancado += 3;
+    if (lancados.projeto)    maxLancado += 3;
+    if (lancados.caderno)    maxLancado += 2;
+    if (lancados.lista)      maxLancado += 1;
+  }
+  maxLancado = Math.min(maxLancado, 10);
+
+  let baseConfirmada = ativ4Pts + triPts;
+  if (nota) {
+    if (lancados.provaMulti) baseConfirmada += (parseFloat(nota.provaMulti)||0);
+    if (lancados.projeto)    baseConfirmada += (parseFloat(nota.projeto)||0);
+    if (lancados.caderno)    baseConfirmada += (parseFloat(nota.caderno)||0);
+    if (lancados.lista)      baseConfirmada += (parseFloat(nota.lista)||0);
+  }
+  baseConfirmada = Math.min(baseConfirmada, 10);
+
+  // Bônus já conquistados
+  const cadExtra = nota && lancados.caderno ? cadernoExtraAtivo(nota) : false;
+  let bonusConfirmado = 0;
+  bonusConfirmado += auto.t150   ? 0.5 : 0;
+  bonusConfirmado += auto.t300   ? 0.5 : 0;
+  bonusConfirmado += auto.tneg50 ? 0.5 : 0;
+  bonusConfirmado += cadExtra    ? 0.5 : 0;
+  bonusConfirmado += ativ4Info.bonusRank;
+  if (nota?.extras?.particip) bonusConfirmado += 0.5;
+
+  // Potencial ainda disponível
+  let potencial = 0;
+  if (!auto.t300)   potencial += 0.5;
+  if (!auto.tneg50) potencial += 0.5;
+  if (!nota || !nota.extras?.particip) potencial += 0.5;
+
+  // ── render ────────────────────────────────────────────────────
+  const fmt = fmtNota;
+
+  function rowAtiv(a) {
+    if (a.key === "ativ4") {
+      const fez = ativ4Info.fez;
+      const descPos = fez && ativ4Info.posicao > 0
+        ? ` · ${ativ4Info.posicao}º lugar (bônus de ranking nos Extras abaixo)` : "";
+      return `
+        <div class="prog-row ${fez ? "done" : "locked"}">
+          <div class="prog-icon ${fez ? "green" : "grey"}">${fez ? "✅" : "✗"}</div>
+          <div class="prog-body">
+            <div class="prog-title">${a.label}</div>
+            <div class="prog-desc">${fez
+              ? `Você participou${descPos}`
+              : `Você não participou — sua nota é <b>0,0</b>`}</div>
+          </div>
+          <div class="prog-right">
+            <div class="pts ${fez ? "green" : "muted"}">${fez ? fmt(0.5) : "0,0"}</div>
+            <div class="pts-sub">de 0,5</div>
+          </div>
+        </div>`;
+    }
+    if (a.key === "triangulos") {
+      const v = ativ5Pts != null ? Math.min(1, ativ5Pts / 10) : null;
+      return `
+        <div class="prog-row ${v != null ? "done" : "locked"}">
+          <div class="prog-icon ${v != null ? "green" : "grey"}">${v != null ? "✅" : "✗"}</div>
+          <div class="prog-body">
+            <div class="prog-title">${a.label}</div>
+            <div class="prog-desc">${v != null
+              ? "Sua melhor nota na fase 1"
+              : "Você não jogou esta atividade — sua nota é <b>0,0</b>"}</div>
+          </div>
+          <div class="prog-right">
+            <div class="pts ${v != null ? "green" : "muted"}">${v != null ? fmt(v) : "0,0"}</div>
+            <div class="pts-sub">de 1,0</div>
+          </div>
+        </div>`;
+    }
+    // manual — usa lancados[key] pra saber se foi preenchido (mesmo com valor 0)
+    const foiLancado = nota && lancados[a.key];
+    const v = foiLancado ? (parseFloat(nota[a.key]) || 0) : null;
+    if (foiLancado) {
+      const cadExtraRow = a.key === "caderno" && cadExtra
+        ? `<br>Caderno Extra conquistado 🎉` : "";
+      return `
+        <div class="prog-row done">
+          <div class="prog-icon green">✅</div>
+          <div class="prog-body">
+            <div class="prog-title">${a.label}</div>
+            <div class="prog-desc">Nota lançada${cadExtraRow}</div>
+          </div>
+          <div class="prog-right">
+            <div class="pts green">${fmt(v)}${a.key==="caderno"&&cadExtra?`<span style="font-size:10px;color:var(--green)"> +0,5</span>`:""}</div>
+            <div class="pts-sub">de ${fmt(a.max)}</div>
+          </div>
+        </div>`;
+    }
+    return `
+      <div class="prog-row locked">
+        <div class="prog-icon grey">🔒</div>
+        <div class="prog-body">
+          <div class="prog-title">${a.label}</div>
+          <div class="prog-desc">Aguardando lançamento pela professora</div>
+        </div>
+        <div class="prog-right">
+          <div class="badge-lock">até ${fmt(a.max)} pts</div>
+        </div>
+      </div>`;
+  }
+
+  function rowTabuada(ex) {
+    const atingiu = auto[ex.key];
+    const atual   = ex.campo === "melhorTabuada" ? progresso.melhorTabuada : progresso.melhorNeg;
+    const pct     = Math.min(100, Math.round(atual / ex.max * 100));
+    const cor     = atingiu ? "green" : ex.campo === "melhorTabuada" ? "orange" : "purple";
+    const faltam  = Math.max(0, ex.max - atual);
+    return `
+      <div class="prog-row ${atingiu ? "done" : "partial"}">
+        <div class="prog-icon ${cor}">${atingiu ? "⚡" : "🎯"}</div>
+        <div class="prog-body">
+          <div class="prog-title">${ex.label}</div>
+          <div class="prog-desc">${atingiu ? `Meta batida! Você está no nível ${atual}` : `Faltam <b>${faltam} níveis</b> — continue jogando!`}</div>
+          <div class="pbar-wrap">
+            <div class="pbar-bg"><div class="pbar-fill ${cor}" style="width:${pct}%"></div></div>
+            <span class="pbar-label" style="${atingiu ? "color:var(--green)" : ""}">${atual} / ${ex.max}${atingiu ? " ✓" : ""}</span>
+          </div>
+        </div>
+        <div class="prog-right">
+          <div class="pts ${atingiu ? "green" : "muted"}">+${fmt(ex.valor)}</div>
+          <div class="pts-sub">${atingiu ? "conquistado" : "disponível"}</div>
+        </div>
+      </div>`;
+  }
+
+  const cadExtraRow = (() => {
+    if (!nota) return `
+      <div class="prog-row locked">
+        <div class="prog-icon grey">📒</div>
+        <div class="prog-body">
+          <div class="prog-title">Caderno Extra</div>
+          <div class="prog-desc">Calculado quando a professora lançar a nota do caderno (precisa &gt; 1,8)</div>
+        </div>
+        <div class="prog-right"><div class="pts muted">+0,5</div><div class="pts-sub">possível</div></div>
+      </div>`;
+    const on = cadExtra;
+    return `
+      <div class="prog-row ${on ? "done" : "locked"}">
+        <div class="prog-icon ${on ? "green" : "grey"}">📒</div>
+        <div class="prog-body">
+          <div class="prog-title">Caderno Extra</div>
+          <div class="prog-desc">${on ? "Conquistado! Caderno acima de 1,8" : `Nota do caderno: ${fmt(parseFloat(nota.caderno)||0)} (precisa &gt; 1,8)`}</div>
+        </div>
+        <div class="prog-right">
+          <div class="pts ${on ? "green" : "muted"}">+0,5</div>
+          <div class="pts-sub">${on ? "conquistado" : "não atingido"}</div>
+        </div>
+      </div>`;
+  })();
+
+  const participRow = (() => {
+    const on = nota?.extras?.particip;
+    return `
+      <div class="prog-row ${on ? "done" : "locked"}">
+        <div class="prog-icon ${on ? "green" : "grey"}">✋</div>
+        <div class="prog-body">
+          <div class="prog-title">Participação</div>
+          <div class="prog-desc">${on ? "Marcado pela professora ✓" : "A professora ainda não marcou este item"}</div>
+        </div>
+        <div class="prog-right">
+          <div class="pts ${on ? "green" : "muted"}">+0,5</div>
+          <div class="pts-sub">${on ? "conquistado" : "possível"}</div>
+        </div>
+      </div>`;
+  })();
+
+  const rankRow = (() => {
+    if (!ativ4Info.fez) return "";
+    const bonus = ativ4Info.bonusRank;
+    const pos   = ativ4Info.posicao;
+    if (bonus === 0) return "";
+    return `
+      <div class="prog-row done">
+        <div class="prog-icon gold">🏆</div>
+        <div class="prog-body">
+          <div class="prog-title">Atividade 4 — Ranking Geral</div>
+          <div class="prog-desc"><b style="color:var(--gold)">${pos}º lugar</b> entre todas as turmas</div>
+        </div>
+        <div class="prog-right">
+          <div class="pts gold">+${fmt(bonus)}</div>
+          <div class="pts-sub">bônus ranking</div>
+        </div>
+      </div>`;
+  })();
+
+  const bannerHtml = potencial > 0
+    ? `<div class="potencial-banner">
+        <div class="pot-icon">🚀</div>
+        <div class="pot-body">
+          <div class="pot-titulo">Você ainda pode ganhar mais pontos!</div>
+          <div class="pot-desc">${[
+            !auto.t300   ? `<b>Tabuada nv.300</b> (+0,5): ${progresso.melhorTabuada}/${300}` : "",
+            !auto.tneg50 ? `<b>Tabuada Negativa nv.50</b> (+0,5): ${progresso.melhorNeg}/${50}` : "",
+            (!nota || !nota.extras?.particip) ? `<b>Participação</b> (+0,5)` : "",
+          ].filter(Boolean).join(" · ")}</div>
+        </div>
+        <div class="pot-pts">+${fmt(potencial)}</div>
+        <div class="pot-arrow">↓</div>
+      </div>`
+    : `<div class="potencial-banner zero">
+        <div class="pot-icon">🎉</div>
+        <div class="pot-body">
+          <div class="pot-titulo green">Você conquistou todos os bônus disponíveis!</div>
+          <div class="pot-desc">Incrível — tabuada, negativa, caderno extra e participação: tudo certo.</div>
+        </div>
+        <div class="pot-pts green">100%</div>
+      </div>`;
+
+  content.innerHTML = `
+    <div class="summary-bar">
+      <div class="sum-card">
+        <div class="sum-icon">✅</div>
+        <div>
+          <div class="sum-label">Pontos confirmados</div>
+          <div class="sum-val" style="color:var(--green)">${fmt(baseConfirmada)} <span style="font-size:14px;font-weight:600;color:var(--text-muted)">/ ${fmt(maxLancado)}</span></div>
+          <div class="sum-sub">das atividades já lançadas</div>
+        </div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-icon">🎁</div>
+        <div>
+          <div class="sum-label">Bônus conquistados</div>
+          <div class="sum-val" style="color:var(--purple)">+${fmt(bonusConfirmado)}</div>
+          <div class="sum-sub">tabuada + extras</div>
+        </div>
+      </div>
+    </div>
+
+    ${bannerHtml}
+
+    <div class="sec-label">📋 Atividades avaliadas</div>
+    <div class="prog-list">${ATIVIDADES.map(rowAtiv).join("")}</div>
+
+    <div class="sec-label">⚡ Extras — bônus de tabuada e ranking</div>
+    <div class="prog-list">
+      ${EXTRAS_AUTO.map(rowTabuada).join("")}
+      ${rankRow}
+    </div>
+
+    <div class="sec-label">🎁 Extras — caderno e participação</div>
+    <div class="prog-list">
+      ${cadExtraRow}
+      ${participRow}
+    </div>`;
+}
+
+carregar();
+</script>
+</body>
+</html>

@@ -10,12 +10,78 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
+    /* card base */
+    .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;margin-bottom:14px;border:1px solid var(--border)}
+    .card:last-child{margin-bottom:0}
+    .card-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:14px;color:var(--text)}
+    .card-title svg{width:15px;height:15px;fill:currentColor}
+
+    /* bimestre select */
     .bim-select{padding:7px 12px;background:var(--card);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-weight:600;font-family:inherit;cursor:pointer;font-size:12.5px}
 
-    .grid-boletim{display:grid;grid-template-columns:1fr 300px;grid-template-areas:"main total";gap:18px;align-items:start;margin-bottom:22px}
-    .gb-main{grid-area:main;min-width:0}
-    .gb-total{grid-area:total;min-width:0}
-    @media(max-width:760px){.grid-boletim{grid-template-columns:1fr;grid-template-areas:"total" "main"}}
+    /* ── ESTADO 2: Em andamento ── */
+    .summary-bar{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+    .sum-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;display:flex;align-items:center;gap:14px}
+    .sum-icon{font-size:22px;flex-shrink:0}
+    .sum-label{font-size:10.5px;font-weight:600;color:var(--text-muted);margin-bottom:3px}
+    .sum-val{font-size:22px;font-weight:800;line-height:1}
+    .sum-sub{font-size:10px;color:var(--text-muted);margin-top:3px}
+
+    .potencial-banner{background:linear-gradient(135deg,#1c1040,#15102a);border:1.5px solid rgba(240,165,0,.4);border-radius:var(--radius);padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px;position:relative;overflow:hidden}
+    .potencial-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at left,rgba(240,165,0,.08) 0%,transparent 60%);pointer-events:none}
+    .potencial-banner.zero{border-color:rgba(34,197,94,.35);background:linear-gradient(135deg,#0c1f14,#11111f)}
+    .potencial-banner.zero::before{background:radial-gradient(ellipse at left,rgba(34,197,94,.07) 0%,transparent 60%)}
+    .pot-icon{font-size:24px;flex-shrink:0}
+    .pot-body{flex:1;min-width:0}
+    .pot-titulo{font-size:13.5px;font-weight:800;color:var(--gold);margin-bottom:3px}
+    .pot-titulo.green{color:var(--green)}
+    .pot-desc{font-size:11.5px;color:rgba(255,255,255,.65);line-height:1.45}
+    .pot-desc b{color:#fff}
+    .pot-pts{font-size:28px;font-weight:800;color:var(--gold);flex-shrink:0;text-shadow:0 0 16px rgba(240,165,0,.4)}
+    .pot-pts.green{color:var(--green);text-shadow:0 0 16px rgba(34,197,94,.3)}
+    .pot-arrow{font-size:16px;color:rgba(240,165,0,.6);flex-shrink:0}
+
+    .sec-label{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted);margin:20px 0 10px;display:flex;align-items:center;gap:8px}
+    .sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+    .prog-list{display:flex;flex-direction:column;gap:8px}
+    .prog-row{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:14px}
+    .prog-row.done{border-color:rgba(34,197,94,.2)}
+    .prog-row.partial{border-color:rgba(240,165,0,.2)}
+    .prog-row.locked{opacity:.6}
+    .prog-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+    .prog-icon.green{background:var(--green-pale)}
+    .prog-icon.orange{background:var(--orange-pale)}
+    .prog-icon.purple{background:var(--purple-pale)}
+    .prog-icon.gold{background:var(--gold-pale)}
+    .prog-icon.grey{background:rgba(255,255,255,.05)}
+    .prog-body{flex:1;min-width:0}
+    .prog-title{font-size:13px;font-weight:700;margin-bottom:1px}
+    .prog-desc{font-size:11px;color:var(--text-muted);line-height:1.4}
+    .prog-desc b{color:var(--text)}
+    .pbar-wrap{margin-top:7px;display:flex;align-items:center;gap:8px}
+    .pbar-bg{flex:1;height:6px;border-radius:5px;background:rgba(255,255,255,.06);overflow:hidden}
+    .pbar-fill{height:100%;border-radius:5px}
+    .pbar-fill.green{background:linear-gradient(90deg,#16a34a,#22C55E)}
+    .pbar-fill.orange{background:linear-gradient(90deg,#c98900,#f0a500)}
+    .pbar-fill.purple{background:linear-gradient(90deg,var(--purple-dark),var(--purple))}
+    .pbar-label{font-size:10.5px;font-weight:700;white-space:nowrap;color:var(--text-muted)}
+    .prog-right{text-align:right;flex-shrink:0;min-width:60px}
+    .pts{font-size:16px;font-weight:800}
+    .pts.green{color:#15803D}
+    .pts.gold{color:var(--gold)}
+    .pts.muted{color:var(--text-muted);font-size:13px;font-weight:600}
+    .pts-sub{font-size:10px;color:var(--text-muted);margin-top:1px}
+    .badge-lock{display:inline-flex;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:20px;padding:3px 9px;font-size:10.5px;font-weight:600;color:var(--text-muted)}
+
+    /* ── ESTADO 3: Meu Rendimento ── */
+    .rendimento-header{background:linear-gradient(135deg,#1a1040,#15102a);border:2px solid rgba(250,184,0,.35);border-radius:18px;padding:22px 28px;margin-bottom:18px;position:relative;overflow:hidden;display:flex;align-items:center;gap:28px}
+    .rendimento-header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top left,rgba(250,184,0,.12) 0%,transparent 55%);pointer-events:none}
+    .rend-num{font-family:'Playfair Display',serif;font-size:60px;font-weight:800;color:var(--gold);line-height:1;flex-shrink:0;text-shadow:0 0 28px rgba(250,184,0,.4)}
+    .rend-info{flex:1;min-width:0}
+    .rend-eyebrow{font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(250,184,0,.7);margin-bottom:4px}
+    .rend-sub{font-size:12px;color:rgba(255,255,255,.5);margin-top:4px}
+    .rend-msg{margin-top:10px;font-size:13px;font-weight:600;color:#fff;background:rgba(255,255,255,.07);border-radius:10px;padding:8px 12px;line-height:1.45;display:inline-block}
 
     .item-row{padding:10px 0;border-bottom:1px solid var(--border)}
     .item-row:last-child{border-bottom:none}
@@ -41,19 +107,11 @@
     .extra-lbl.off{color:var(--text-muted);font-weight:500}
     .extra-pts{font-size:12px;font-weight:800;color:var(--green)}
     .extra-pts.off{color:var(--text-muted);font-weight:600}
-
-    .total-card{background:linear-gradient(135deg,#1a1040,#15102a);border:2px solid rgba(250,184,0,.35);border-radius:18px;padding:24px 20px;text-align:center;position:relative;overflow:hidden}
-    .total-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top,rgba(250,184,0,.1) 0%,transparent 60%);pointer-events:none}
-    .total-eyebrow{font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(250,184,0,.7);margin-bottom:6px}
-    .total-num{font-family:'Playfair Display',serif;font-size:46px;font-weight:800;color:var(--gold);line-height:1;text-shadow:0 0 20px rgba(250,184,0,.35)}
-    .total-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:4px}
-    .total-msg{margin-top:14px;font-size:12.5px;font-weight:600;color:#fff;background:rgba(255,255,255,.06);border-radius:10px;padding:9px 12px;line-height:1.45}
-
     .bonus-total-row{display:flex;align-items:center;justify-content:space-between;padding-top:10px;margin-top:6px;border-top:1.5px dashed var(--border)}
     .bonus-total-row .lbl{font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
     .bonus-total-row .val{font-size:15px;font-weight:800;color:var(--green)}
 
-    .aluno-label{font-size:12px;font-weight:700;color:var(--text-muted);margin:0 0 8px;display:flex;align-items:center;gap:6px}
+    @media(max-width:600px){.summary-bar{grid-template-columns:1fr}.rendimento-header{flex-direction:column;text-align:center}.rend-num{font-size:52px}}
   </style>
 </head>
 <body>
@@ -62,8 +120,8 @@
   <div class="main">
     <div class="topbar">
       <div class="topbar-left">
-        <div class="topbar-title">Notas</div>
-        <div class="topbar-sub">Seu boletim — acompanhe como está cada atividade</div>
+        <div class="topbar-title" id="page-title">Notas</div>
+        <div class="topbar-sub" id="page-sub">Acompanhe seu desempenho no bimestre</div>
       </div>
       <div class="topbar-right">
         <select class="bim-select" id="bimSel">
@@ -80,143 +138,295 @@
 
 <script type="module">
 import { requireAluno, renderSidebarAluno, clearSession, getSession } from "/js/auth.js";
-import { CAMPOS_NOTA, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, EXTRA_RANK_ATIV4, montarBoletim, fmtNota, mensagemPorNota } from "/js/notas.js";
+import {
+  CAMPOS_NOTA, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, EXTRA_RANK_ATIV4,
+  BIMESTRE, fmtNota, mensagemPorNota, montarBoletim, notasLiberadas,
+} from "/js/notas.js";
 
 requireAluno();
 renderSidebarAluno("sidebar", "notas");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
-const sess = getSession();
-const turma  = sess?.turma || "";
-const alunos = sess?.alunos || [];
+const sess  = getSession();
+const turma = sess?.turma || "";
+const nome  = sess?.alunos?.[0] || "";
+const fmt   = fmtNota;
 
-function barraHtml(boletim) {
-  return CAMPOS_NOTA.map(c => {
-    const v = parseFloat(boletim.registro[c.key]) || 0;
-    const pct = c.max > 0 ? Math.min(100, Math.round(v / c.max * 100)) : 0;
-    const autoTag = c.key === "triangulos" ? `<span class="item-auto-tag">🔄 Atividade 5 fase 1</span>`
-                  : c.key === "ativ4"      ? `<span class="item-auto-tag">🔄 Atividade 4</span>`
-                  : "";
-    return `
-      <div class="item-row">
-        <div class="item-head">
-          <span class="item-label">${c.label} ${autoTag}</span>
-          <span class="item-val">${fmtNota(v)}<span class="max"> / ${c.max}</span></span>
+// ── detecta se todas as notas manuais foram lançadas ──────────
+function todasLancadas(boletim) {
+  return ['provaMulti','projeto','caderno','lista'].every(k => boletim.registro[k] !== null);
+}
+
+// ── ESTADO 2: Em Andamento ────────────────────────────────────
+function renderAndamento(boletim) {
+  document.getElementById("page-title").textContent = "Notas — Em Andamento";
+  document.getElementById("page-sub").textContent   = "Acompanhe o que já foi lançado e o que ainda dá pra melhorar";
+
+  const { registro, lancados, progresso, auto, ativ4Info, ativ5Pts } = boletim;
+
+  const ativ4Pts = ativ4Info.fez ? 0.5 : 0;
+  const triPts   = ativ5Pts != null ? Math.min(1, ativ5Pts / 10) : 0;
+
+  let maxLancado = 0.5 + (ativ5Pts != null ? 1 : 0);
+  if (lancados.provaMulti) maxLancado += 3;
+  if (lancados.projeto)    maxLancado += 3;
+  if (lancados.caderno)    maxLancado += 2;
+  if (lancados.lista)      maxLancado += 1;
+  maxLancado = Math.min(maxLancado, 10);
+
+  let baseConf = ativ4Pts + triPts;
+  if (lancados.provaMulti) baseConf += parseFloat(registro.provaMulti) || 0;
+  if (lancados.projeto)    baseConf += parseFloat(registro.projeto)    || 0;
+  if (lancados.caderno)    baseConf += parseFloat(registro.caderno)    || 0;
+  if (lancados.lista)      baseConf += parseFloat(registro.lista)      || 0;
+  baseConf = Math.min(baseConf, 10);
+
+  const cadExtra = lancados.caderno && (parseFloat(registro.caderno)||0) > CADERNO_EXTRA.limiar;
+  let bonusConf = EXTRAS_AUTO.reduce((s,e) => s + (auto[e.key] ? e.valor : 0), 0)
+                + (cadExtra ? 0.5 : 0)
+                + (ativ4Info.bonusRank || 0)
+                + (registro.extras?.particip ? 0.5 : 0);
+
+  let potencial = 0;
+  if (!auto.t300)   potencial += 0.5;
+  if (!auto.tneg50) potencial += 0.5;
+  if (!registro.extras?.particip) potencial += 0.5;
+
+  const ATIVS = [
+    { key:"ativ4",      label:"Atividade 4 — Geometria",   max:0.5, auto:true },
+    { key:"triangulos", label:"Atividade 5 — Triângulos",  max:1,   auto:true },
+    { key:"provaMulti", label:"Prova Multi",                max:3 },
+    { key:"projeto",    label:"Projeto CriaBartô",          max:3 },
+    { key:"caderno",    label:"Caderno",                    max:2 },
+    { key:"lista",      label:"Lista de Exercícios",        max:1 },
+  ];
+
+  function rowAtiv(a) {
+    if (a.key === "ativ4") {
+      const fez = ativ4Info.fez;
+      return `<div class="prog-row ${fez?"done":"locked"}">
+        <div class="prog-icon ${fez?"green":"grey"}">${fez?"✅":"✗"}</div>
+        <div class="prog-body"><div class="prog-title">${a.label}</div>
+          <div class="prog-desc">${fez?`Você participou${ativ4Info.posicao>0?` · ${ativ4Info.posicao}º lugar no geral`:""}` : "Você não participou — nota 0,0"}</div></div>
+        <div class="prog-right"><div class="pts ${fez?"green":"muted"}">${fez?fmt(0.5):"0,0"}</div><div class="pts-sub">de 0,5</div></div>
+      </div>`;
+    }
+    if (a.key === "triangulos") {
+      const v = ativ5Pts != null ? Math.min(1, ativ5Pts/10) : null;
+      return `<div class="prog-row ${v!=null?"done":"locked"}">
+        <div class="prog-icon ${v!=null?"green":"grey"}">${v!=null?"✅":"✗"}</div>
+        <div class="prog-body"><div class="prog-title">${a.label}</div>
+          <div class="prog-desc">${v!=null?"Sua melhor nota na fase 1":"Você não jogou — nota 0,0"}</div></div>
+        <div class="prog-right"><div class="pts ${v!=null?"green":"muted"}">${v!=null?fmt(v):"0,0"}</div><div class="pts-sub">de 1,0</div></div>
+      </div>`;
+    }
+    const foiLancado = lancados[a.key];
+    const v = foiLancado ? (parseFloat(registro[a.key])||0) : null;
+    if (foiLancado) {
+      const cadExtraTag = a.key==="caderno"&&cadExtra ? ` · Caderno Extra 🎉` : "";
+      return `<div class="prog-row done">
+        <div class="prog-icon green">✅</div>
+        <div class="prog-body"><div class="prog-title">${a.label}</div>
+          <div class="prog-desc">Nota lançada${cadExtraTag}</div></div>
+        <div class="prog-right"><div class="pts green">${fmt(v)}${a.key==="caderno"&&cadExtra?`<span style="font-size:10px"> +0,5</span>`:""}</div><div class="pts-sub">de ${fmt(a.max)}</div></div>
+      </div>`;
+    }
+    return `<div class="prog-row locked">
+      <div class="prog-icon grey">🔒</div>
+      <div class="prog-body"><div class="prog-title">${a.label}</div>
+        <div class="prog-desc">Aguardando lançamento pela professora</div></div>
+      <div class="prog-right"><div class="badge-lock">até ${fmt(a.max)} pts</div></div>
+    </div>`;
+  }
+
+  function rowTabuada(ex) {
+    const on  = auto[ex.key];
+    const atual = ex.campo==="melhorTabuada" ? progresso.melhorTabuada : progresso.melhorNeg;
+    const pct = Math.min(100, Math.round(atual/ex.max*100));
+    const cor = on ? "green" : ex.campo==="melhorTabuada" ? "orange" : "purple";
+    return `<div class="prog-row ${on?"done":"partial"}">
+      <div class="prog-icon ${cor}">${on?"⚡":"🎯"}</div>
+      <div class="prog-body"><div class="prog-title">${ex.label}</div>
+        <div class="prog-desc">${on?`Meta batida! Nível ${atual}`:`Faltam <b>${ex.max-atual} níveis</b> — continue jogando!`}</div>
+        <div class="pbar-wrap"><div class="pbar-bg"><div class="pbar-fill ${cor}" style="width:${pct}%"></div></div>
+        <span class="pbar-label" style="${on?"color:var(--green)":""}">${atual}/${ex.max}${on?" ✓":""}</span></div>
+      </div>
+      <div class="prog-right"><div class="pts ${on?"green":"muted"}">+${fmt(ex.valor)}</div><div class="pts-sub">${on?"conquistado":"disponível"}</div></div>
+    </div>`;
+  }
+
+  const rankRow = (() => {
+    const bonus = ativ4Info.bonusRank || 0;
+    const pos   = ativ4Info.posicao   || 0;
+    if (!ativ4Info.fez || bonus===0) return "";
+    return `<div class="prog-row done">
+      <div class="prog-icon gold">🏆</div>
+      <div class="prog-body"><div class="prog-title">Atividade 4 — Ranking</div>
+        <div class="prog-desc"><b style="color:var(--gold)">${pos}º lugar</b> no geral</div></div>
+      <div class="prog-right"><div class="pts gold">+${fmt(bonus)}</div><div class="pts-sub">bônus ranking</div></div>
+    </div>`;
+  })();
+
+  const cadExtraRow = (() => {
+    if (!lancados.caderno) return `<div class="prog-row locked">
+      <div class="prog-icon grey">📒</div>
+      <div class="prog-body"><div class="prog-title">Caderno Extra</div>
+        <div class="prog-desc">Calculado quando a professora lançar o caderno (precisa &gt; 1,8)</div></div>
+      <div class="prog-right"><div class="pts muted">+0,5</div><div class="pts-sub">possível</div></div>
+    </div>`;
+    const on = cadExtra;
+    return `<div class="prog-row ${on?"done":"locked"}">
+      <div class="prog-icon ${on?"green":"grey"}">📒</div>
+      <div class="prog-body"><div class="prog-title">Caderno Extra</div>
+        <div class="prog-desc">${on?"Conquistado! Caderno acima de 1,8":`Caderno: ${fmt(parseFloat(registro.caderno)||0)} (precisa > 1,8)`}</div></div>
+      <div class="prog-right"><div class="pts ${on?"green":"muted"}">+0,5</div><div class="pts-sub">${on?"conquistado":"não atingido"}</div></div>
+    </div>`;
+  })();
+
+  const participRow = (() => {
+    const on = !!registro.extras?.particip;
+    return `<div class="prog-row ${on?"done":"locked"}">
+      <div class="prog-icon ${on?"green":"grey"}">✋</div>
+      <div class="prog-body"><div class="prog-title">Participação</div>
+        <div class="prog-desc">${on?"Marcado pela professora ✓":"A professora ainda não marcou este item"}</div></div>
+      <div class="prog-right"><div class="pts ${on?"green":"muted"}">+0,5</div><div class="pts-sub">${on?"conquistado":"possível"}</div></div>
+    </div>`;
+  })();
+
+  const banner = potencial > 0
+    ? `<div class="potencial-banner">
+        <div class="pot-icon">🚀</div>
+        <div class="pot-body">
+          <div class="pot-titulo">Você ainda pode ganhar mais pontos!</div>
+          <div class="pot-desc">${[
+            !auto.t300   ? `<b>Tabuada nv.300</b> (+0,5): ${progresso.melhorTabuada}/300` : "",
+            !auto.tneg50 ? `<b>Tabuada Negativa nv.50</b> (+0,5): ${progresso.melhorNeg}/50` : "",
+            !registro.extras?.particip ? `<b>Participação</b> (+0,5)` : "",
+          ].filter(Boolean).join(" · ")}</div>
         </div>
-        <div class="bar-bg"><div class="bar-fill" style="width:${pct}%"></div></div>
+        <div class="pot-pts">+${fmt(potencial)}</div>
+        <div class="pot-arrow">↓</div>
+      </div>`
+    : `<div class="potencial-banner zero">
+        <div class="pot-icon">🎉</div>
+        <div class="pot-body">
+          <div class="pot-titulo green">Você conquistou todos os bônus disponíveis!</div>
+          <div class="pot-desc">Incrível — tabuada, negativa, caderno extra e participação: tudo certo.</div>
+        </div>
+        <div class="pot-pts green">100%</div>
       </div>`;
-  }).join("");
-}
-
-function extrasHtml(boletim) {
-  const autoRows = EXTRAS_AUTO.map(e => {
-    const on = boletim.auto[e.key];
-    return `
-      <div class="extra-item">
-        <span class="extra-dot ${on ? "on" : "off"}">${on ? "✓" : "·"}</span>
-        <span class="extra-lbl${on ? "" : " off"}">${e.label}</span>
-        <span class="extra-pts${on ? "" : " off"}">+${fmtNota(e.valor)}</span>
-      </div>`;
-  }).join("");
-  const cadRow = (() => {
-    const on = boletim.cadExtraAtivo;
-    return `
-      <div class="extra-item">
-        <span class="extra-dot ${on ? "on" : "off"}">${on ? "✓" : "·"}</span>
-        <span class="extra-lbl${on ? "" : " off"}">${CADERNO_EXTRA.label}</span>
-        <span class="extra-pts${on ? "" : " off"}">+${fmtNota(CADERNO_EXTRA.valor)}</span>
-      </div>`;
-  })();
-  const manualRows = EXTRAS_MANUAL.map(e => {
-    const on = !!boletim.registro.extras?.[e.key];
-    return `
-      <div class="extra-item">
-        <span class="extra-dot ${on ? "on" : "off"}">${on ? "✓" : "·"}</span>
-        <span class="extra-lbl${on ? "" : " off"}">${e.label}</span>
-        <span class="extra-pts${on ? "" : " off"}">+${fmtNota(e.valor)}</span>
-      </div>`;
-  }).join("");
-  const ativ4Row = (() => {
-    const pos = boletim.ativ4Info?.posicao ?? 0;
-    const bonus = boletim.ativ4Info?.bonusRank ?? 0;
-    const on = bonus > 0;
-    const descPos = pos > 0 ? `${pos}º lugar` : "sem bônus de ranking";
-    return `
-      <div class="extra-item">
-        <span class="extra-dot ${on ? "on" : "off"}">${on ? "✓" : "·"}</span>
-        <span class="extra-lbl${on ? "" : " off"}">${EXTRA_RANK_ATIV4.label}<br><small style="font-weight:400;color:var(--text-muted)">${descPos}</small></span>
-        <span class="extra-pts${on ? "" : " off"}">${on ? `+${fmtNota(bonus)}` : "—"}</span>
-      </div>`;
-  })();
-  return autoRows + cadRow + ativ4Row + manualRows;
-}
-
-function boletimHtml(nome, boletim) {
-  const mostrarNomeLabel = alunos.length > 1
-    ? `<div class="aluno-label"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>${nome}</div>`
-    : "";
-  const capNote = boletim.subtotal > 10
-    ? `<div class="cap-note">⚠️ passou do máximo — a nota das atividades trava em <b>10</b> (os bônus abaixo somam por fora)</div>`
-    : "";
 
   return `
-    ${mostrarNomeLabel}
-    <div class="grid-boletim">
-      <div class="gb-main">
-        <div class="card">
-          <div class="card-title">
-            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-            Atividades do bimestre
-          </div>
-          ${barraHtml(boletim)}
-          <div class="subtotal-row">
-            <span class="lbl">Subtotal</span>
-            <span class="val">${fmtNota(boletim.subtotal)} / 10</span>
-          </div>
-          ${capNote}
-        </div>
+    <div class="summary-bar">
+      <div class="sum-card"><div class="sum-icon">✅</div><div>
+        <div class="sum-label">Pontos confirmados</div>
+        <div class="sum-val" style="color:var(--green)">${fmt(baseConf)} <span style="font-size:14px;font-weight:600;color:var(--text-muted)">/ ${fmt(maxLancado)}</span></div>
+        <div class="sum-sub">das atividades já lançadas</div>
+      </div></div>
+      <div class="sum-card"><div class="sum-icon">🎁</div><div>
+        <div class="sum-label">Bônus conquistados</div>
+        <div class="sum-val" style="color:var(--purple)">+${fmt(bonusConf)}</div>
+        <div class="sum-sub">tabuada + extras</div>
+      </div></div>
+    </div>
+    ${banner}
+    <div class="sec-label">📋 Atividades avaliadas</div>
+    <div class="prog-list">${ATIVS.map(rowAtiv).join("")}</div>
+    <div class="sec-label">⚡ Extras — tabuada e ranking</div>
+    <div class="prog-list">${EXTRAS_AUTO.map(rowTabuada).join("")}${rankRow}</div>
+    <div class="sec-label">🎁 Extras — caderno e participação</div>
+    <div class="prog-list">${cadExtraRow}${participRow}</div>`;
+}
 
-        <div class="card">
-          <div class="card-title">
-            <svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 0 0-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm6 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1z"/></svg>
-            Pontos extras conquistados
-          </div>
-          ${extrasHtml(boletim)}
-          <div class="bonus-total-row">
-            <span class="lbl">Bônus total</span>
-            <span class="val">+${fmtNota(boletim.bonus)}</span>
-          </div>
-        </div>
-      </div>
+// ── ESTADO 3: Meu Rendimento ──────────────────────────────────
+function renderRendimento(boletim) {
+  document.getElementById("page-title").textContent = "Meu Rendimento";
+  document.getElementById("page-sub").textContent   = "2º Bimestre — notas encerradas";
 
-      <div class="gb-total">
-        <div class="total-card">
-          <div class="total-eyebrow">${document.getElementById("bimSel").selectedOptions[0].textContent}</div>
-          <div class="total-num">${fmtNota(boletim.total)}</div>
-          <div class="total-sub">${fmtNota(boletim.subtotalCapado)} das atividades + ${fmtNota(boletim.bonus)} de bônus</div>
-          <div class="total-msg">${mensagemPorNota(boletim.total)}</div>
-        </div>
+  const { registro, progresso, auto, subtotal, subtotalCapado, bonus, total, ativ4Info } = boletim;
+  const cadExtra = (parseFloat(registro.caderno)||0) > CADERNO_EXTRA.limiar;
+  const capNote  = subtotal > 10
+    ? `<div class="cap-note">⚠️ Soma das atividades chegou a ${fmtNota(subtotal)} — trava em 10 antes dos bônus</div>` : "";
+
+  function barraItem(c) {
+    const raw = registro[c.key];
+    const isAuto = c.key==="ativ4" || c.key==="triangulos";
+    const naoParticipou = isAuto && (raw===null||raw===undefined);
+    const v   = naoParticipou ? 0 : (parseFloat(raw)||0);
+    const pct = naoParticipou ? 0 : Math.min(100, Math.round(v/c.max*100));
+    const tag = c.key==="triangulos" ? `<span class="item-auto-tag">🔄 Ativ.5 fase1</span>`
+              : c.key==="ativ4"      ? `<span class="item-auto-tag">🔄 Ativ.4</span>` : "";
+    let valHtml;
+    if (naoParticipou) valHtml = `<span style="font-size:11px;font-weight:600;color:var(--text-muted)">não participou — 0,0</span>`;
+    else valHtml = `${fmtNota(v)}<span class="max"> / ${c.max}</span>`;
+    const cadExtraTag = c.key==="caderno" && cadExtra ? ` <span style="font-size:10px;color:var(--green)">+0,5</span>` : "";
+    return `<div class="item-row">
+      <div class="item-head">
+        <span class="item-label">${c.label} ${tag}</span>
+        <span class="item-val">${valHtml}${cadExtraTag}</span>
       </div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${pct}%${naoParticipou?";opacity:.2":""}"></div></div>
+    </div>`;
+  }
+
+  function extraItem(label, on, valor, sub) {
+    return `<div class="extra-item">
+      <span class="extra-dot ${on?"on":"off"}">${on?"✓":"·"}</span>
+      <span class="extra-lbl${on?"":" off"}">${label}${sub?`<br><small style="font-weight:400;color:var(--text-muted)">${sub}</small>`:""}</span>
+      <span class="extra-pts${on?"":" off"}">+${fmtNota(valor)}</span>
+    </div>`;
+  }
+
+  const extras = [
+    ...EXTRAS_AUTO.map(e => extraItem(e.label, !!auto[e.key], e.valor)),
+    ...(ativ4Info.bonusRank>0 ? [extraItem(EXTRA_RANK_ATIV4.label, true, ativ4Info.bonusRank, `${ativ4Info.posicao}º lugar no geral`)] : []),
+    extraItem(CADERNO_EXTRA.label, cadExtra, CADERNO_EXTRA.valor),
+    ...EXTRAS_MANUAL.map(e => extraItem(e.label, !!registro.extras?.[e.key], e.valor)),
+  ].join("");
+
+  return `
+    <div class="rendimento-header">
+      <div class="rend-num">${fmtNota(total)}</div>
+      <div class="rend-info">
+        <div class="rend-eyebrow">2º Bimestre · Meu Rendimento</div>
+        <div class="rend-sub">${fmtNota(subtotalCapado)} das atividades + ${fmtNota(bonus)} de bônus</div>
+        <div class="rend-msg">${mensagemPorNota(total)}</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>Atividades do bimestre</div>
+      ${CAMPOS_NOTA.map(barraItem).join("")}
+      <div class="subtotal-row"><span class="lbl">Subtotal</span><span class="val">${fmtNota(subtotal)} / 10</span></div>
+      ${capNote}
+    </div>
+    <div class="card">
+      <div class="card-title"><svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 0 0-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm6 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1z"/></svg>Pontos extras conquistados</div>
+      ${extras}
+      <div class="bonus-total-row"><span class="lbl">Bônus total</span><span class="val">+${fmtNota(bonus)}</span></div>
     </div>`;
 }
 
-function vazioHtml() {
-  return `
-    <div class="empty-state">
-      <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-      <p>Suas notas deste bimestre ainda não foram disponibilizadas pelo professor.<br>Volte aqui mais perto do fim do bimestre.</p>
-    </div>`;
-}
-
+// ── main ──────────────────────────────────────────────────────
 async function carregar() {
   const content = document.getElementById("content");
-  if (!turma || !alunos.length) { content.innerHTML = vazioHtml(); return; }
+  if (!turma || !nome) { content.innerHTML = `<div class="empty-state"><p>Sessão não encontrada.</p></div>`; return; }
 
-  const boletins = await Promise.all(alunos.map(nome => montarBoletim(turma, nome)));
-  const blocos = alunos.map((nome, i) => boletins[i] ? boletimHtml(nome, boletins[i]) : `${alunos.length>1 ? `<div class="aluno-label">${nome}</div>` : ""}${vazioHtml()}`);
+  const liberado = await notasLiberadas(turma);
+  if (!liberado) {
+    content.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      <p>Suas notas deste bimestre ainda não foram disponibilizadas pela professora.<br>Volte aqui mais perto do fim do bimestre.</p></div>`;
+    return;
+  }
 
-  if (boletins.every(b => !b)) { content.innerHTML = vazioHtml(); return; }
-  content.innerHTML = blocos.join("<div style='height:8px'></div>");
+  const boletim = await montarBoletim(turma, nome);
+  if (!boletim) {
+    content.innerHTML = `<div class="empty-state"><p>As notas foram disponibilizadas e serão lançadas em breve.</p></div>`;
+    return;
+  }
+
+  content.innerHTML = todasLancadas(boletim)
+    ? renderRendimento(boletim)
+    : renderAndamento(boletim);
 }
 
 carregar();
