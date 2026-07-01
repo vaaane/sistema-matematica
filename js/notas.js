@@ -19,21 +19,21 @@ export const CAMPOS_NOTA = [
   { key:"caderno",    label:"Caderno",                  max:2 },
   { key:"ativ4",      label:"Atividade 4",              max:0.5, auto:true },
   { key:"triangulos", label:"Atividade - Triângulos",   max:1,   auto:true },
-  { key:"lista",      label:"Lista de Exercícios",      max:1 },
+  { key:"participacao",  label:"Participação",           max:0.5 },
 ];
 
 // Extras automáticos — calculados a partir do progresso real do aluno no banco
 export const EXTRAS_AUTO = [
-  { key:"t150",   label:"Tabuada nível 150",         valor:0.5, max:150, campo:"melhorTabuada" },
-  { key:"t300",   label:"Tabuada nível 300",         valor:0.5, max:300, campo:"melhorTabuada" },
-  { key:"tneg50", label:"Tabuada Negativa nível 50", valor:0.5, max:50,  campo:"melhorNeg" },
+  { key:"t150",    label:"Tabuada nível 150",                valor:0.5, max:150, campo:"melhorTabuada" },
+  { key:"t300",    label:"Tabuada nível 300",                valor:0.5, max:300, campo:"melhorTabuada" },
+  { key:"tneg50",  label:"Tabuada Negativa nível 50",        valor:0.5, max:50,  campo:"melhorNeg" },
+  { key:"tneg150", label:"Tabuada Negativa nível 150",       valor:0.5, max:150, campo:"melhorNeg" },
 ];
 // Caderno Extra — automático, baseado na própria nota de Caderno lançada (não é mais checkbox manual)
 export const CADERNO_EXTRA = { key:"cadExtra", label:"Caderno Extra", valor:0.5, limiar:1.8 };
 // Extras manuais — o professor marca
-export const EXTRAS_MANUAL = [
-  { key:"particip", label:"Participação",  valor:0.5 },
-];
+// Participação agora é coluna de nota (não mais extra manual)
+export const EXTRAS_MANUAL = [];
 
 export function cadernoExtraAtivo(registro) {
   return (parseFloat(registro?.caderno) || 0) > CADERNO_EXTRA.limiar;
@@ -199,7 +199,7 @@ export async function montarBoletim(turma, nome) {
     caderno:    salvo?.caderno    ?? null,
     ativ4:      ativ4Val,
     triangulos: triangulosVal,
-    lista:      salvo?.lista      ?? null,
+    participacao: salvo?.participacao ?? 0.5,  // default 0.5 = todo mundo participou
     extras:     salvo?.extras || {},
   };
 
@@ -208,7 +208,7 @@ export async function montarBoletim(turma, nome) {
     provaMulti: salvo?.provaMulti != null,
     projeto:    salvo?.projeto    != null,
     caderno:    salvo?.caderno    != null,
-    lista:      salvo?.lista      != null,
+    participacao: true, // sempre lançada (default 0.5)
   };
 
   const subtotal       = calcularSubtotal(registro);

@@ -123,8 +123,8 @@
         <span class="legenda-chip auto">🔄 Tabuada nv.150 <b>+0,5</b></span>
         <span class="legenda-chip auto">🔄 Tabuada nv.300 <b>+0,5</b></span>
         <span class="legenda-chip auto">🔄 Tabuada Negativa nv.50 <b>+0,5</b></span>
+        <span class="legenda-chip auto">🔄 Tabuada Negativa nv.150 <b>+0,5</b></span>
         <span class="legenda-chip auto">🔄 Caderno Extra (Caderno &gt; 1,8) <b>+0,5</b></span>
-        <span class="legenda-chip">✓ Participação <b>+0,5</b></span>
       </div>
 
       <div class="tbl-wrap">
@@ -140,7 +140,7 @@
               <th>Caderno<span class="max">máx 2</span></th>
               <th>Ativ.4 🔄<span class="max">máx 0,5</span></th>
               <th>Atividade 5 🔄<span class="max">máx 1</span></th>
-              <th>Lista<span class="max">máx 1</span></th>
+              <th>Participação<span class="max">máx 0,5</span></th>
               <th>Extras</th>
               <th>Total</th>
             </tr>
@@ -174,8 +174,7 @@
     <div class="modal-body">
       <div class="modal-sec-label">🔄 Automático — vem do banco</div>
       <div id="ex-auto"></div>
-      <div class="modal-sec-label">✓ Manual — você marca</div>
-      <div id="ex-manual"></div>
+      
     </div>
     <div class="modal-foot">
       <span class="bonus-total">Bônus total: <b id="ex-bonus">+0,0</b></span>
@@ -211,9 +210,9 @@ function turmaVazia(turma) {
   const obj = {};
   (ALUNOS_POR_TURMA[turma] || []).forEach(nome => {
     obj[nome] = {
-      provaMulti:"", projeto:"", caderno:"", ativ4:"", triangulos:"", lista:"",
+      provaMulti:"", projeto:"", caderno:"", ativ4:"", triangulos:"", participacao:0.5,
       ativ4Auto:false, triangulosAuto:false,
-      extras: { particip:false }
+      extras: {}
     };
   });
   return obj;
@@ -394,22 +393,7 @@ function abrirExtras(slugNome) {
     </div>`;
   })();
 
-  document.getElementById("ex-manual").innerHTML = EXTRAS_MANUAL.map(ex => `
-    <label class="extra-row" for="chk-${ex.key}">
-      <input type="checkbox" id="chk-${ex.key}" data-key="${ex.key}" ${r.extras[ex.key] ? "checked" : ""}>
-      <span class="lbl">${ex.label}</span>
-      <span class="val">+${fmt(ex.valor)}</span>
-    </label>
-  `).join("");
-
-  document.getElementById("ex-manual").querySelectorAll("input[type=checkbox]").forEach(chk => {
-    chk.addEventListener("change", () => {
-      r.extras[chk.dataset.key] = chk.checked;
-      document.getElementById("ex-bonus").textContent = `+${fmt(calcularBonus(nome, r))}`;
-    });
-  });
   document.getElementById("ex-bonus").textContent = `+${fmt(calcularBonus(nome, r))}`;
-
   overlay.classList.add("open");
 }
 
@@ -449,10 +433,10 @@ async function carregarNotasSalvas(turma) {
         projeto:    fromNota(v.projeto),
         caderno:    fromNota(v.caderno),
         ativ4: v.ativ4 ?? "", ativ4Auto: !!v.ativ4Auto,
-        lista:      fromNota(v.lista),
+        participacao: v.participacao ?? v.lista ?? 0.5, // fallback lista (dados antigos), default 0.5
         triangulos: v.triangulos ?? v.area ?? "", triangulosAuto: !!v.triangulosAuto ?? !!v.areaAuto,
       });
-      r.extras.particip = !!v.extras?.particip;
+      r.extras = {};
     });
   } catch (e) { console.error("Falha ao carregar notas salvas:", e); }
 }
@@ -550,8 +534,8 @@ document.getElementById("btnSalvar").addEventListener("click", async () => {
       ativ4Auto:  !!r.ativ4Auto,
       triangulos: r.triangulos != null && r.triangulos !== "" ? parseFloat(r.triangulos) : null, // null = nunca jogou
       triangulosAuto: !!r.triangulosAuto,
-      lista:      toNota(r.lista),
-      extras: { particip: !!r.extras.particip },
+      participacao: parseFloat(r.participacao) ?? 0,
+      extras: {},
       atualizadoEm: Date.now(),
     };
   });

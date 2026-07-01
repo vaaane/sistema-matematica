@@ -903,7 +903,7 @@ ${tempoPodioHtml}
   <div id="col-right">
     ${alunos.some(a => boletins[a]) ? (() => {
       const todasFechadas = alunos.filter(a => boletins[a]).every(a =>
-        ['provaMulti','projeto','caderno','lista'].every(k => boletins[a].lancados?.[k])
+        ['provaMulti','projeto','caderno'].every(k => boletins[a].lancados?.[k])
       );
       const borderColor = todasFechadas ? 'rgba(250,184,0,.3)' : 'rgba(240,165,0,.25)';
       const labelColor  = todasFechadas ? '#f0a500' : '#f0a500';

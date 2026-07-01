@@ -169,7 +169,7 @@ const fmt   = fmtNota;
 
 // ── detecta se todas as notas manuais foram lançadas ──────────
 function todasLancadas(boletim) {
-  return ['provaMulti','projeto','caderno','lista'].every(k => boletim.registro[k] !== null);
+  return ['provaMulti','projeto','caderno'].every(k => boletim.registro[k] !== null);
 }
 
 // ── ESTADO 2: Em Andamento ────────────────────────────────────
@@ -186,26 +186,25 @@ function renderAndamento(boletim) {
   if (lancados.provaMulti) maxLancado += 3;
   if (lancados.projeto)    maxLancado += 3;
   if (lancados.caderno)    maxLancado += 2;
-  if (lancados.lista)      maxLancado += 1;
+  maxLancado += 0.5; // participacao sempre lançada (default 0.5)
   maxLancado = Math.min(maxLancado, 10);
 
   let baseConf = ativ4Pts + triPts;
   if (lancados.provaMulti) baseConf += parseFloat(registro.provaMulti) || 0;
   if (lancados.projeto)    baseConf += parseFloat(registro.projeto)    || 0;
   if (lancados.caderno)    baseConf += parseFloat(registro.caderno)    || 0;
-  if (lancados.lista)      baseConf += parseFloat(registro.lista)      || 0;
+  baseConf += parseFloat(registro.participacao) || 0;
   baseConf = Math.min(baseConf, 10);
 
   const cadExtra = lancados.caderno && (parseFloat(registro.caderno)||0) > CADERNO_EXTRA.limiar;
   let bonusConf = EXTRAS_AUTO.reduce((s,e) => s + (auto[e.key] ? e.valor : 0), 0)
                 + (cadExtra ? 0.5 : 0)
                 + (ativ4Info.bonusRank || 0)
-                + (registro.extras?.particip ? 0.5 : 0);
+;
 
   let potencial = 0;
   if (!auto.t300)   potencial += 0.5;
   if (!auto.tneg50) potencial += 0.5;
-  if (!registro.extras?.particip) potencial += 0.5;
 
   const ATIVS = [
     { key:"ativ4",      label:"Atividade 4 — Geometria",   max:0.5, auto:true },
@@ -213,7 +212,7 @@ function renderAndamento(boletim) {
     { key:"provaMulti", label:"Prova Multi",                max:3 },
     { key:"projeto",    label:"Projeto CriaBartô",          max:3 },
     { key:"caderno",    label:"Caderno",                    max:2 },
-    { key:"lista",      label:"Lista de Exercícios",        max:1 },
+    { key:"participacao", label:"Participação",               max:0.5 },
   ];
 
   function rowAtiv(a) {
@@ -298,16 +297,6 @@ function renderAndamento(boletim) {
     </div>`;
   })();
 
-  const participRow = (() => {
-    const on = !!registro.extras?.particip;
-    return `<div class="prog-row ${on?"done":"locked"}">
-      <div class="prog-icon ${on?"green":"grey"}">✋</div>
-      <div class="prog-body"><div class="prog-title">Participação</div>
-        <div class="prog-desc">${on?"Marcado pela professora ✓":"A professora ainda não marcou este item"}</div></div>
-      <div class="prog-right"><div class="pts ${on?"green":"muted"}">+0,5</div><div class="pts-sub">${on?"conquistado":"possível"}</div></div>
-    </div>`;
-  })();
-
   const banner = potencial > 0
     ? `<div class="potencial-banner">
         <div class="pot-icon">🚀</div>
@@ -316,7 +305,7 @@ function renderAndamento(boletim) {
           <div class="pot-desc">${[
             !auto.t300   ? `<b>Tabuada nv.300</b> (+0,5): ${progresso.melhorTabuada}/300` : "",
             !auto.tneg50 ? `<b>Tabuada Negativa nv.50</b> (+0,5): ${progresso.melhorNeg}/50` : "",
-            !registro.extras?.particip ? `<b>Participação</b> (+0,5)` : "",
+
           ].filter(Boolean).join(" · ")}</div>
         </div>
         <div class="pot-pts">+${fmt(potencial)}</div>
@@ -326,7 +315,7 @@ function renderAndamento(boletim) {
         <div class="pot-icon">🎉</div>
         <div class="pot-body">
           <div class="pot-titulo green">Você conquistou todos os bônus disponíveis!</div>
-          <div class="pot-desc">Incrível — tabuada, negativa, caderno extra e participação: tudo certo.</div>
+          <div class="pot-desc">Incrível — tabuada, negativa e caderno extra: tudo certo.</div>
         </div>
         <div class="pot-pts green">100%</div>
       </div>`;
@@ -353,8 +342,8 @@ function renderAndamento(boletim) {
     <div class="prog-list">${ATIVS.map(rowAtiv).join("")}</div>
     <div class="sec-label">⚡ Extras — tabuada e ranking</div>
     <div class="prog-list">${EXTRAS_AUTO.map(rowTabuada).join("")}${rankRow}</div>
-    <div class="sec-label">🎁 Extras — caderno e participação</div>
-    <div class="prog-list">${cadExtraRow}${participRow}</div>`;
+    <div class="sec-label">🎁 Extras — caderno</div>
+    <div class="prog-list">${cadExtraRow}</div>`;
 }
 
 // ── ESTADO 3: Meu Rendimento ──────────────────────────────────
@@ -400,7 +389,7 @@ function renderRendimento(boletim) {
     ...EXTRAS_AUTO.map(e => extraItem(e.label, !!auto[e.key], e.valor)),
     ...(ativ4Info.bonusRank>0 ? [extraItem(EXTRA_RANK_ATIV4.label, true, ativ4Info.bonusRank, `${ativ4Info.posicao}º lugar no geral`)] : []),
     extraItem(CADERNO_EXTRA.label, cadExtra, CADERNO_EXTRA.valor),
-    ...EXTRAS_MANUAL.map(e => extraItem(e.label, !!registro.extras?.[e.key], e.valor)),
+
   ].join("");
 
   return `
