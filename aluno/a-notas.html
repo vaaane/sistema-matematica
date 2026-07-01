@@ -19,6 +19,21 @@
     /* bimestre select */
     .bim-select{padding:7px 12px;background:var(--card);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-weight:600;font-family:inherit;cursor:pointer;font-size:12.5px}
 
+    /* topbar mobile: select fica abaixo, título não quebra */
+    .topbar-left{min-width:0;flex:1}
+    .topbar-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .topbar-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    @media(max-width:600px){
+      .topbar{flex-wrap:wrap;gap:6px}
+      .topbar-right{width:100%;order:2}
+      .bim-select{width:100%}
+      .topbar-sub{display:none}
+    }
+
+    /* aviso de em andamento */
+    .andamento-aviso{display:flex;align-items:center;gap:10px;background:rgba(240,165,0,.08);border:1.5px solid rgba(240,165,0,.3);border-radius:12px;padding:11px 16px;margin-bottom:16px;font-size:12.5px;color:rgba(255,255,255,.8);font-weight:600}
+    .andamento-aviso svg{width:16px;height:16px;fill:var(--gold);flex-shrink:0}
+
     /* ── ESTADO 2: Em andamento ── */
     .summary-bar{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
     .sum-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;display:flex;align-items:center;gap:14px}
@@ -159,8 +174,8 @@ function todasLancadas(boletim) {
 
 // ── ESTADO 2: Em Andamento ────────────────────────────────────
 function renderAndamento(boletim) {
-  document.getElementById("page-title").textContent = "Notas — Em Andamento";
-  document.getElementById("page-sub").textContent   = "Acompanhe o que já foi lançado e o que ainda dá pra melhorar";
+  document.getElementById("page-title").textContent = "Notas";
+  document.getElementById("page-sub").textContent   = "Em andamento — 2º Bimestre";
 
   const { registro, lancados, progresso, auto, ativ4Info, ativ5Pts } = boletim;
 
@@ -317,6 +332,10 @@ function renderAndamento(boletim) {
       </div>`;
 
   return `
+    <div class="andamento-aviso">
+      <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+      Notas em andamento — esta <b style="color:var(--gold)">não é a nota final</b>, algumas atividades ainda não foram lançadas
+    </div>
     <div class="summary-bar">
       <div class="sum-card"><div class="sum-icon">✅</div><div>
         <div class="sum-label">Pontos confirmados</div>
