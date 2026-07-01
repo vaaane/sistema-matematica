@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Notas — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .notas-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+    .notas-toolbar .grp{display:flex;align-items:center;gap:7px}
+    .notas-toolbar label{font-size:11px;color:var(--text-muted);font-weight:600}
+    .notas-toolbar select{padding:7px 11px;background:var(--bg);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-weight:600;font-family:inherit;cursor:pointer;font-size:12.5px}
+    .notas-status{margin-left:auto;font-size:11.5px;color:var(--text-muted)}
+    .notas-status.saved{color:var(--green)}
+
+    #btnLiberar.liberado{border-color:var(--green);color:#15803D;background:var(--green-pale)}
+
+    .legenda-extras{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+    .legenda-chip{font-size:10.5px;color:var(--text-muted);background:var(--card);border:1px solid var(--border);border-radius:20px;padding:4px 9px;display:inline-flex;align-items:center;gap:4px}
+    .legenda-chip b{color:var(--text)}
+    .legenda-chip.auto{border-color:rgba(108,0,212,.3)}
+
+    .aviso-assumido{font-size:10.5px;color:var(--orange);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+
+    .tbl-wrap{border:1px solid var(--border);border-radius:var(--radius);background:var(--card);overflow:hidden}
+    .tbl-notas{width:100%;table-layout:fixed;border-collapse:collapse;font-size:11.8px}
+    .tbl-notas col.c-aluno{width:15%}
+    .tbl-notas col.c-num{width:9.5%}
+    .tbl-notas col.c-area{width:10%}
+    .tbl-notas col.c-extras{width:14%}
+    .tbl-notas col.c-total{width:9%}
+    .tbl-notas thead th{text-align:center;padding:9px 4px;background:var(--bg);color:var(--text-muted);font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;border-bottom:2px solid var(--border);line-height:1.35}
+    .tbl-notas thead th .max{display:block;font-size:8.5px;font-weight:600;color:rgba(148,163,184,.6);text-transform:none;letter-spacing:0;margin-top:1px}
+    .tbl-notas thead th.col-aluno{text-align:left;padding-left:14px}
+    .tbl-notas tbody td{padding:5px 4px;border-bottom:1px solid var(--border);text-align:center;vertical-align:middle}
+    .tbl-notas tbody td.col-aluno{text-align:left;padding-left:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .tbl-notas tbody tr:last-child td{border-bottom:none}
+    .tbl-notas tbody tr:hover td{background:rgba(255,255,255,.02)}
+
+    .nota-input{width:100%;max-width:46px;padding:5px 2px;text-align:center;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;font-weight:700;font-size:12px;appearance:none;-moz-appearance:textfield}
+    .nota-input::-webkit-outer-spin-button,.nota-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+    .nota-input:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px rgba(108,0,212,.15)}
+
+    .auto-cell{text-align:center;vertical-align:middle}
+    .auto-display{display:inline-flex;align-items:center;gap:4px;padding:5px 8px;border-radius:8px;background:rgba(108,0,212,.1);border:1.5px solid rgba(108,0,212,.25);font-weight:700;font-size:12px;color:var(--text);white-space:nowrap}
+    .auto-display.zero{background:var(--bg);border-color:var(--border);color:var(--text-muted);font-weight:500}
+    .auto-badge{font-size:10px;opacity:.7}
+
+    .extras-btn{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);color:var(--text-muted);font-family:inherit;font-size:10.5px;font-weight:700;cursor:pointer;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+    .extras-btn:hover{border-color:var(--purple);color:var(--text)}
+    .extras-btn.on{border-color:var(--purple);color:var(--purple);background:var(--purple-pale)}
+
+    .total-pill{display:inline-flex;min-width:40px;justify-content:center;padding:5px 3px;border-radius:9px;font-weight:800;font-size:13px}
+    .total-pill.bom{background:var(--green-pale);color:#15803D}
+    .total-pill.medio{background:var(--orange-pale);color:var(--orange-dark)}
+    .total-pill.baixo{background:var(--red-pale);color:#B91C1C}
+
+    .tbl-notas tfoot td{padding:10px 4px;text-align:center;background:var(--bg);font-size:10px;color:var(--text-muted);font-weight:700;border-top:2px solid var(--border)}
+    .tbl-notas tfoot td.col-aluno{text-align:left;padding-left:14px;text-transform:uppercase;letter-spacing:.4px;font-size:9.5px}
+
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:60}
+    .modal-overlay.open{display:flex}
+    .modal{width:380px;max-width:100%;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+    .modal-head{display:flex;align-items:center;gap:11px;padding:16px 18px;border-bottom:1px solid var(--border)}
+    .modal-avatar{width:36px;height:36px;border-radius:50%;background:var(--purple-pale);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;color:var(--purple);flex-shrink:0}
+    .modal-head .nm{font-weight:700;font-size:14.5px}
+    .modal-head .sub{font-size:11px;color:var(--text-muted)}
+    .modal-close{margin-left:auto;width:28px;height:28px;border:none;background:transparent;color:var(--text-muted);font-size:19px;cursor:pointer;border-radius:7px;line-height:1}
+    .modal-close:hover{background:var(--bg)}
+    .modal-body{padding:6px 18px 4px}
+    .modal-sec-label{font-size:9.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted);margin:10px 0 4px}
+    .extra-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+    .extra-row:last-child{border-bottom:none}
+    .extra-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--purple);cursor:pointer;flex-shrink:0}
+    .extra-row .lbl{flex:1;font-size:13px;cursor:pointer}
+    .extra-row .val{font-size:11.5px;font-weight:700;color:var(--green);white-space:nowrap}
+    .extra-row.auto{cursor:default}
+    .extra-row.auto .lbl{cursor:default}
+    .extra-row .status-dot{width:16px;height:16px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px}
+    .extra-row .status-dot.atingiu{background:var(--green-pale);color:#15803D}
+    .extra-row .status-dot.faltando{background:var(--bg);color:var(--text-muted)}
+    .extra-row .nivel-info{font-size:10.5px;color:var(--text-muted)}
+    .modal-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 18px;border-top:1px solid var(--border)}
+    .modal-foot .bonus-total{font-size:12.5px;color:var(--text-muted)}
+    .modal-foot .bonus-total b{color:var(--gold);font-size:14.5px}
+
+    @media print{.sidebar,.topbar,.notas-toolbar,.legenda-extras{display:none!important}.main{margin:0!important}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Notas</div>
+        <div class="topbar-sub">Lance e acompanhe as notas dos alunos por turma</div>
+      </div>
+    </div>
+    <div class="content">
+
+      <div class="notas-toolbar">
+        <div class="grp">
+          <label>Turma</label>
+          <select id="turmaSel"></select>
+        </div>
+        <button class="btn btn-blue" id="btnSalvar">
+          <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          Salvar
+        </button>
+        <button class="btn btn-ghost" id="btnLiberar">
+          <svg viewBox="0 0 24 24"><path d="M14 9V5l7 7-7 7v-4H3V9h11z"/></svg>
+          Disponibilizar notas
+        </button>
+        <span class="notas-status" id="status"></span>
+      </div>
+
+      <div class="legenda-extras">
+        <span class="legenda-chip auto">🔄 Tabuada nv.150 <b>+0,5</b></span>
+        <span class="legenda-chip auto">🔄 Tabuada nv.300 <b>+0,5</b></span>
+        <span class="legenda-chip auto">🔄 Tabuada Negativa nv.50 <b>+0,5</b></span>
+        <span class="legenda-chip auto">🔄 Caderno Extra (Caderno &gt; 1,8) <b>+0,5</b></span>
+        <span class="legenda-chip">✓ Participação <b>+0,5</b></span>
+      </div>
+
+      <div class="tbl-wrap">
+        <table class="tbl-notas">
+          <colgroup>
+            <col class="c-aluno"><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-area"><col class="c-area"><col class="c-num"><col class="c-extras"><col class="c-total">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="col-aluno">Aluno</th>
+              <th>Prova Multi<span class="max">máx 3</span></th>
+              <th>CriaBartô<span class="max">máx 3</span></th>
+              <th>Caderno<span class="max">máx 2</span></th>
+              <th>Ativ.4 🔄<span class="max">máx 0,5</span></th>
+              <th>Atividade 5 🔄<span class="max">máx 1</span></th>
+              <th>Lista<span class="max">máx 1</span></th>
+              <th>Extras</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+          <tfoot>
+            <tr>
+              <td class="col-aluno">Média da turma</td>
+              <td colspan="6"></td>
+              <td></td>
+              <td id="mediaTurma">—</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="extras-overlay" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-avatar" id="ex-avatar">?</div>
+      <div>
+        <div class="nm" id="ex-nome">Aluno</div>
+        <div class="sub">Pontos extras</div>
+      </div>
+      <button class="modal-close" id="ex-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-sec-label">🔄 Automático — vem do banco</div>
+      <div id="ex-auto"></div>
+      <div class="modal-sec-label">✓ Manual — você marca</div>
+      <div id="ex-manual"></div>
+    </div>
+    <div class="modal-foot">
+      <span class="bonus-total">Bônus total: <b id="ex-bonus">+0,0</b></span>
+      <button class="btn btn-blue" id="ex-ok">Concluído</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { ALUNOS_POR_TURMA } from "/js/constants.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get, query, orderByChild, equalTo, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import {
+  BIMESTRE, CAMPOS_NOTA as CAMPOS, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA,
+  EXTRA_RANK_ATIV4, NOME_ATIV5,
+  makeUid, slugNome as slug, fmtNota as fmt,
+  buscarProgressoTabuada, buscarAtiv4,
+  extrasAutoAtivos as extrasAtivosDoProgresso, cadernoExtraAtivo,
+  notasLiberadas, definirNotasLiberadas,
+} from "/js/notas.js";
+
+requireProfessor();
+renderSidebarProfessor("sidebar", "notas");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+let dados = {};
+let autoDados = {}; // autoDados[turma][aluno] = { melhorTabuada, melhorNeg }
+let turmaAtual = "";
+let liberadaAtual = false;
+
+function turmaVazia(turma) {
+  const obj = {};
+  (ALUNOS_POR_TURMA[turma] || []).forEach(nome => {
+    obj[nome] = {
+      provaMulti:"", projeto:"", caderno:"", ativ4:"", triangulos:"", lista:"",
+      ativ4Auto:false, triangulosAuto:false,
+      extras: { particip:false }
+    };
+  });
+  return obj;
+}
+
+function extrasAutoAtivos(nome) {
+  const a = autoDados[turmaAtual]?.[nome] || { melhorTabuada:0, melhorNeg:0 };
+  return extrasAtivosDoProgresso(a);
+}
+function calcularBonus(nome, registro) {
+  const a = autoDados[turmaAtual]?.[nome] || { melhorTabuada:0, melhorNeg:0, rankAtiv4Bonus:0 };
+  const auto = extrasAtivosDoProgresso(a);
+  const bAuto     = EXTRAS_AUTO.reduce((s,e) => s + (auto[e.key] ? e.valor : 0), 0);
+  const bCadExtra = cadernoExtraAtivo(registro) ? CADERNO_EXTRA.valor : 0;
+  const bRankAtiv4 = a.rankAtiv4Bonus ?? 0;
+  const bManual   = EXTRAS_MANUAL.reduce((s,e) => s + (registro.extras[e.key] ? e.valor : 0), 0);
+  return bAuto + bCadExtra + bRankAtiv4 + bManual;
+}
+function calcularTotal(nome, registro) {
+  const base = CAMPOS.reduce((s,c) => s + (parseFloat(registro[c.key]) || 0), 0);
+  const baseCapada = Math.min(base, 10);
+  return baseCapada + calcularBonus(nome, registro);
+}
+function classeTotal(total) {
+  if (total >= 6) return "bom";
+  if (total >= 4) return "medio";
+  return "baixo";
+}
+
+// ── Busca no banco: progresso de tabuada (150/300) e tabuada negativa (50) ──
+async function carregarAutoTabuada(turma) {
+  const alunos = ALUNOS_POR_TURMA[turma] || [];
+  autoDados[turma] = autoDados[turma] || {};
+  await Promise.all(alunos.map(async nome => {
+    autoDados[turma][nome] = await buscarProgressoTabuada(turma, nome);
+  }));
+}
+
+// ── Busca no banco: nota da fase 1 da Atividade 5 → preenche "Ativ. Área" ──
+// Confirmado em 30/06: a nota da fase 1 vem em escala 0–10, então convertemos
+// dividindo por 10 antes de aplicar ao máx de 1 ponto da coluna Área.
+async function carregarAutoArea(turma) {
+  const porAluno = {};
+  try {
+    const q = query(ref(db, "resultados"), orderByChild("turma"), equalTo(turma));
+    const snap = await get(q);
+    if (snap.exists()) {
+      snap.forEach(child => {
+        const v = child.val();
+        if (v.atividade !== NOME_ATIV5 || !v.aluno) return;
+        const bruto = v.pontos_fase1 ?? v.pontuacao ?? null;
+        if (bruto == null) return;
+        if (!(v.aluno in porAluno) || bruto > porAluno[v.aluno]) porAluno[v.aluno] = bruto;
+      });
+    }
+  } catch(e) { console.error("Falha ao buscar nota da Atividade 5:", e); }
+  return porAluno;
+}
+
+// ── Render ──────────────────────────────────────────────────
+function renderTabela() {
+  const alunos = ALUNOS_POR_TURMA[turmaAtual] || [];
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML = alunos.map(nome => {
+    const r = dados[turmaAtual][nome];
+    const total = calcularTotal(nome, r);
+    const bonus = calcularBonus(nome, r);
+    const auto = extrasAutoAtivos(nome);
+    const nExtras = EXTRAS_AUTO.filter(e => auto[e.key]).length + (cadernoExtraAtivo(r) ? 1 : 0) + EXTRAS_MANUAL.filter(e => r.extras[e.key]).length;
+    return `
+      <tr data-aluno="${slug(nome)}">
+        <td class="col-aluno" title="${nome}">${nome}</td>
+        ${CAMPOS.map(c => {
+          if (c.key === "ativ4") {
+            const v = parseFloat(r.ativ4) || 0;
+            return `<td class="auto-cell"><span class="auto-display${v ? "" : " zero"}">${v ? fmt(v) : "—"}</span></td>`;
+          }
+          if (c.key === "triangulos") {
+            const v = parseFloat(r.triangulos) || 0;
+            return `<td class="auto-cell"><span class="auto-display${v ? "" : " zero"}">${v ? fmt(v) : "—"}</span></td>`;
+          }
+          return `<td><input class="nota-input" type="number" step="0.1" min="0" max="${c.max}" inputmode="decimal" data-campo="${c.key}" value="${r[c.key]}"></td>`;
+        }).join("")}
+        <td>
+          <button class="extras-btn${nExtras ? " on" : ""}" data-aluno="${slug(nome)}">
+            🎁 ${nExtras ? `+${fmt(bonus)}` : "Extras"}
+          </button>
+        </td>
+        <td><span class="total-pill ${classeTotal(total)}" id="total-${slug(nome)}">${fmt(total)}</span></td>
+      </tr>`;
+  }).join("");
+
+  tbody.querySelectorAll(".nota-input").forEach(inp => inp.addEventListener("input", onInputChange));
+  tbody.querySelectorAll(".extras-btn").forEach(btn => btn.addEventListener("click", () => abrirExtras(btn.dataset.aluno)));
+
+  atualizarMedia();
+}
+
+function onInputChange(e) {
+  const tr = e.target.closest("tr");
+  const slugNome = tr.dataset.aluno;
+  const nome = (ALUNOS_POR_TURMA[turmaAtual] || []).find(n => slug(n) === slugNome);
+  if (!nome) return;
+  const r = dados[turmaAtual][nome];
+  r[e.target.dataset.campo] = e.target.value;
+  atualizarLinha(nome);
+}
+
+function atualizarLinha(nome) {
+  const r = dados[turmaAtual][nome];
+  const total = calcularTotal(nome, r);
+  const pill = document.getElementById(`total-${slug(nome)}`);
+  if (pill) { pill.textContent = fmt(total); pill.className = `total-pill ${classeTotal(total)}`; }
+  const btn = document.querySelector(`.extras-btn[data-aluno="${slug(nome)}"]`);
+  if (btn) {
+    const auto = extrasAutoAtivos(nome);
+    const bonus = calcularBonus(nome, r);
+    const nExtras = EXTRAS_AUTO.filter(e => auto[e.key]).length + (cadernoExtraAtivo(r) ? 1 : 0) + EXTRAS_MANUAL.filter(e => r.extras[e.key]).length;
+    btn.classList.toggle("on", !!nExtras);
+    btn.innerHTML = `🎁 ${nExtras ? `+${fmt(bonus)}` : "Extras"}`;
+  }
+  atualizarMedia();
+}
+
+function atualizarMedia() {
+  const alunos = ALUNOS_POR_TURMA[turmaAtual] || [];
+  if (!alunos.length) { document.getElementById("mediaTurma").textContent = "—"; return; }
+  const soma = alunos.reduce((s,n) => s + calcularTotal(n, dados[turmaAtual][n]), 0);
+  document.getElementById("mediaTurma").textContent = fmt(soma / alunos.length);
+}
+
+// ── Modal de extras ───────────────────────────────────────────
+let extrasAlunoSlug = null;
+const overlay = document.getElementById("extras-overlay");
+
+function abrirExtras(slugNome) {
+  const nome = (ALUNOS_POR_TURMA[turmaAtual] || []).find(n => slug(n) === slugNome);
+  if (!nome) return;
+  extrasAlunoSlug = slugNome;
+  const r = dados[turmaAtual][nome];
+  const a = autoDados[turmaAtual]?.[nome] || { melhorTabuada:0, melhorNeg:0 };
+  const auto = extrasAutoAtivos(nome);
+
+  document.getElementById("ex-avatar").textContent = nome.trim()[0]?.toUpperCase() || "?";
+  document.getElementById("ex-nome").textContent = nome;
+
+  const a4 = autoDados[turmaAtual]?.[nome] || {};
+  const posAtiv4 = a4.rankAtiv4Posicao ?? 0;
+  const bonusAtiv4 = a4.rankAtiv4Bonus ?? 0;
+
+  document.getElementById("ex-auto").innerHTML = EXTRAS_AUTO.map(ex => {
+    const atingiu = auto[ex.key];
+    const nivelAtual = ex.campo === "melhorTabuada" ? a.melhorTabuada : a.melhorNeg;
+    return `
+    <div class="extra-row auto">
+      <span class="status-dot ${atingiu ? "atingiu" : "faltando"}">${atingiu ? "✓" : "·"}</span>
+      <span class="lbl">${ex.label}<br><span class="nivel-info">nível atual: ${nivelAtual}/${ex.max}</span></span>
+      <span class="val" style="${atingiu ? "" : "color:var(--text-muted)"}">${atingiu ? `+${fmt(ex.valor)}` : "—"}</span>
+    </div>`;
+  }).join("") + (() => {
+    const cadAtivo = cadernoExtraAtivo(r);
+    const cadVal = parseFloat(r.caderno) || 0;
+    return `
+    <div class="extra-row auto">
+      <span class="status-dot ${cadAtivo ? "atingiu" : "faltando"}">${cadAtivo ? "✓" : "·"}</span>
+      <span class="lbl">${CADERNO_EXTRA.label}<br><span class="nivel-info">caderno atual: ${fmt(cadVal)} (precisa &gt; ${fmt(CADERNO_EXTRA.limiar)})</span></span>
+      <span class="val" style="${cadAtivo ? "" : "color:var(--text-muted)"}">${cadAtivo ? `+${fmt(CADERNO_EXTRA.valor)}` : "—"}</span>
+    </div>`;
+  })() + (() => {
+    const fez = posAtiv4 > 0;
+    const tem = bonusAtiv4 > 0;
+    const descPos = fez ? `${posAtiv4}º lugar` : "não participou";
+    return `
+    <div class="extra-row auto">
+      <span class="status-dot ${tem ? "atingiu" : "faltando"}">${tem ? "✓" : "·"}</span>
+      <span class="lbl">${EXTRA_RANK_ATIV4.label}<br><span class="nivel-info">${descPos}</span></span>
+      <span class="val" style="${tem ? "" : "color:var(--text-muted)"}">${tem ? `+${fmt(bonusAtiv4)}` : "—"}</span>
+    </div>`;
+  })();
+
+  document.getElementById("ex-manual").innerHTML = EXTRAS_MANUAL.map(ex => `
+    <label class="extra-row" for="chk-${ex.key}">
+      <input type="checkbox" id="chk-${ex.key}" data-key="${ex.key}" ${r.extras[ex.key] ? "checked" : ""}>
+      <span class="lbl">${ex.label}</span>
+      <span class="val">+${fmt(ex.valor)}</span>
+    </label>
+  `).join("");
+
+  document.getElementById("ex-manual").querySelectorAll("input[type=checkbox]").forEach(chk => {
+    chk.addEventListener("change", () => {
+      r.extras[chk.dataset.key] = chk.checked;
+      document.getElementById("ex-bonus").textContent = `+${fmt(calcularBonus(nome, r))}`;
+    });
+  });
+  document.getElementById("ex-bonus").textContent = `+${fmt(calcularBonus(nome, r))}`;
+
+  overlay.classList.add("open");
+}
+
+function fecharExtras() {
+  overlay.classList.remove("open");
+  if (extrasAlunoSlug) {
+    const nome = (ALUNOS_POR_TURMA[turmaAtual] || []).find(n => slug(n) === extrasAlunoSlug);
+    if (nome) atualizarLinha(nome);
+  }
+  extrasAlunoSlug = null;
+}
+document.getElementById("ex-close").addEventListener("click", fecharExtras);
+document.getElementById("ex-ok").addEventListener("click", fecharExtras);
+overlay.addEventListener("click", e => { if (e.target === overlay) fecharExtras(); });
+
+// ── Turma select ───────────────────────────────────────────────
+const turmaSel = document.getElementById("turmaSel");
+Object.keys(ALUNOS_POR_TURMA).forEach(t => {
+  const opt = document.createElement("option");
+  opt.value = t; opt.textContent = `Turma ${t}`;
+  turmaSel.appendChild(opt);
+});
+
+// ── Busca notas já lançadas neste bimestre (carregadas uma vez por turma) ──
+async function carregarNotasSalvas(turma) {
+  try {
+    const snap = await get(ref(db, `notas_bimestre/${BIMESTRE}/${turma}`));
+    if (!snap.exists()) return;
+    (ALUNOS_POR_TURMA[turma] || []).forEach(nome => {
+      const v = snap.child(slug(nome)).val();
+      if (!v) return;
+      const r = dados[turma][nome];
+      Object.assign(r, {
+        provaMulti: v.provaMulti ?? "", projeto: v.projeto ?? "", caderno: v.caderno ?? "",
+        ativ4: v.ativ4 ?? "", ativ4Auto: !!v.ativ4Auto,
+        lista: v.lista ?? "",
+        triangulos: v.triangulos ?? v.area ?? "", triangulosAuto: !!v.triangulosAuto ?? !!v.areaAuto,
+      });
+      r.extras.particip = !!v.extras?.particip;
+    });
+  } catch (e) { console.error("Falha ao carregar notas salvas:", e); }
+}
+
+async function carregarTurma(turma) {
+  turmaAtual = turma;
+  const primeiraVez = !dados[turma];
+  if (primeiraVez) dados[turma] = turmaVazia(turma);
+  if (!autoDados[turma]) autoDados[turma] = {};
+  renderTabela();
+
+  const status = document.getElementById("status");
+  status.textContent = "Buscando progresso no banco…";
+  status.classList.remove("saved");
+
+  const alunos = ALUNOS_POR_TURMA[turma] || [];
+  const tasks = [carregarAutoTabuada(turma), carregarAutoArea(turma), notasLiberadas(turma), buscarAtiv4(turma, alunos)];
+  if (primeiraVez) tasks.push(carregarNotasSalvas(turma));
+  const [_, areaPorAluno, liberada, ativ4Map] = await Promise.all(tasks);
+  liberadaAtual = liberada;
+  atualizarBotaoLiberar();
+
+  alunos.forEach(nome => {
+    const a4 = ativ4Map[nome] || { fez:false, posicao:0, bonusRank:0 };
+    autoDados[turma][nome] = autoDados[turma][nome] || {};
+    autoDados[turma][nome].rankAtiv4Posicao = a4.posicao;
+    autoDados[turma][nome].rankAtiv4Bonus   = a4.bonusRank;
+
+    const r = dados[turma][nome];
+
+    // Ativ.4 — 0,5 se participou, senão 0 (somente leitura, nunca editável)
+    r.ativ4     = a4.fez ? 0.5 : 0;
+    r.ativ4Auto = true;
+
+    // Triângulos — preenche somente se ainda estiver vazio (respeita valor salvo manualmente)
+    if (areaPorAluno[nome] != null && r.triangulos === "") {
+      r.triangulos     = Math.min(1, areaPorAluno[nome] / 10);
+      r.triangulosAuto = true;
+    }
+  });
+
+  status.textContent = "";
+  renderTabela();
+}
+
+function atualizarBotaoLiberar() {
+  const btn = document.getElementById("btnLiberar");
+  btn.classList.toggle("liberado", liberadaAtual);
+  btn.innerHTML = liberadaAtual
+    ? `<svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 13l-4-4 1.41-1.41L10 11.17l6.59-6.59L18 6l-8 8z"/></svg> Notas disponíveis pros alunos`
+    : `<svg viewBox="0 0 24 24"><path d="M14 9V5l7 7-7 7v-4H3V9h11z"/></svg> Disponibilizar notas`;
+}
+
+turmaSel.addEventListener("change", () => carregarTurma(turmaSel.value));
+
+document.getElementById("btnLiberar").addEventListener("click", async () => {
+  const status = document.getElementById("status");
+  const novoEstado = !liberadaAtual;
+  status.textContent = novoEstado ? "Disponibilizando…" : "Ocultando…";
+  status.classList.remove("saved");
+  try {
+    await definirNotasLiberadas(turmaAtual, novoEstado);
+    liberadaAtual = novoEstado;
+    atualizarBotaoLiberar();
+    status.textContent = novoEstado
+      ? `✓ Alunos da turma ${turmaAtual} já podem ver as notas.`
+      : `🔒 Notas da turma ${turmaAtual} ocultadas dos alunos de novo.`;
+    status.classList.add("saved");
+  } catch (e) {
+    console.error("Falha ao mudar liberação:", e);
+    status.textContent = "❌ Erro ao mudar a disponibilidade — tente de novo.";
+    status.classList.remove("saved");
+  }
+});
+
+document.getElementById("btnSalvar").addEventListener("click", async () => {
+  const status = document.getElementById("status");
+  status.textContent = "Salvando…";
+  status.classList.remove("saved");
+
+  const alunos = ALUNOS_POR_TURMA[turmaAtual] || [];
+  const updates = {};
+  alunos.forEach(nome => {
+    const r = dados[turmaAtual][nome];
+    updates[slug(nome)] = {
+      aluno: nome,
+      provaMulti: parseFloat(r.provaMulti) || 0,
+      projeto:    parseFloat(r.projeto)    || 0,
+      caderno:    parseFloat(r.caderno)    || 0,
+      ativ4:      parseFloat(r.ativ4)      || 0,
+      ativ4Auto:  !!r.ativ4Auto,
+      triangulos: parseFloat(r.triangulos) || 0,
+      triangulosAuto: !!r.triangulosAuto,
+      lista:      parseFloat(r.lista)      || 0,
+      extras: { particip: !!r.extras.particip },
+      atualizadoEm: Date.now(),
+    };
+  });
+
+  try {
+    await update(ref(db, `notas_bimestre/${BIMESTRE}/${turmaAtual}`), updates);
+    status.textContent = `✓ Salvo — ${alunos.length} alunos da turma ${turmaAtual}`;
+    status.classList.add("saved");
+  } catch (e) {
+    console.error("Falha ao salvar notas:", e);
+    status.textContent = "❌ Erro ao salvar — tente de novo (veja o console).";
+    status.classList.remove("saved");
+  }
+});
+
+carregarTurma("8D");
+</script>
+</body>
+</html>

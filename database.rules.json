@@ -57,6 +57,8 @@
     "aquecimento":     { ".read": true, ".write": true },
     "notif_dupla":     { ".read": true, ".write": true },
     "mapeamento_salas":{ ".read": true, ".write": true },
+    "notas_bimestre":  { ".read": true, ".write": true },
+    "notas_liberadas": { ".read": true, ".write": true },
 
     "$outro": {
       ".read": false,

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Recuperação — Notas 8F</title>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    body{padding:24px;max-width:980px;margin:0 auto}
+    h1{font-size:18px;margin-bottom:4px}
+    .sub{color:var(--text-muted);font-size:13px;margin-bottom:20px}
+    table{width:100%;border-collapse:collapse;font-size:13px;background:var(--card);border-radius:var(--radius);overflow:hidden}
+    th,td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:center}
+    th{background:var(--bg);font-size:10.5px;text-transform:uppercase;color:var(--text-muted)}
+    td:first-child,th:first-child{text-align:left}
+    .ok{color:var(--green);font-weight:700}
+    .mismatch{color:var(--red);font-weight:700}
+    .status{margin-top:16px;font-size:13px;font-weight:600}
+    .status.ok{color:var(--green)}
+    .status.err{color:var(--red)}
+    button{margin-top:18px}
+  </style>
+</head>
+<body>
+  <h1>🔧 Recuperação de notas — Turma 8F</h1>
+  <p class="sub">Ferramenta de uso único, reconstruída a partir de prints suas. Confira a coluna "bate?" antes de gravar — ela compara o total recalculado (com a tabuada real do banco) com o total que apareceu na sua tela. Depois de gravar, pode apagar este arquivo.</p>
+
+  <table>
+    <thead>
+      <tr><th>Aluno</th><th>CriaBartô</th><th>Caderno</th><th>Perímetro</th><th>Total esperado</th><th>Total recalculado</th><th>Bate?</th></tr>
+    </thead>
+    <tbody id="tbody"><tr><td colspan="7">Carregando…</td></tr></tbody>
+  </table>
+
+  <button class="btn btn-blue" id="btnGravar" disabled>Gravar no banco</button>
+  <div class="status" id="status"></div>
+
+<script type="module">
+import { db } from "/js/firebase-config.js";
+import { ref, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { BIMESTRE, slugNome, buscarProgressoTabuada, extrasAutoAtivos, EXTRAS_AUTO } from "/js/notas.js";
+
+const TURMA = "8F";
+
+// Reconstruído a partir das duas imagens — validado por aluno contra o total mostrado.
+// provaMulti, perimetro, area e lista ficaram em branco no preenchimento original (0).
+const DADOS = [
+  { nome:"Ana Beatriz",        projeto:3, caderno:1.3, perimetro:0, totalEsperado:4.3 },
+  { nome:"Ana Clara",          projeto:3, caderno:0,   perimetro:0, totalEsperado:4.5 },
+  { nome:"Anna Beatriz",       projeto:0, caderno:0,   perimetro:0, totalEsperado:0.0 },
+  { nome:"Arthur Daniel",      projeto:3, caderno:0.7, perimetro:0, totalEsperado:3.7 },
+  { nome:"Arthur Martins",     projeto:3, caderno:0.9, perimetro:0, totalEsperado:5.4 },
+  { nome:"Carlos",             projeto:3, caderno:0,   perimetro:0, totalEsperado:3.0 },
+  { nome:"Evellyn",            projeto:3, caderno:0.4, perimetro:0, totalEsperado:3.4 },
+  { nome:"Fábio",              projeto:3, caderno:0,   perimetro:0, totalEsperado:3.5 },
+  { nome:"Fellype",            projeto:1, caderno:1.7, perimetro:0, totalEsperado:2.7 },
+  { nome:"Guilherme",          projeto:1, caderno:0,   perimetro:0, totalEsperado:1.0 },
+  { nome:"Heitor",             projeto:3, caderno:0,   perimetro:0, totalEsperado:3.0 },
+  { nome:"Joao Pedro",         projeto:3, caderno:0,   perimetro:0, totalEsperado:3.0 },
+  { nome:"Joaquim",            projeto:3, caderno:0,   perimetro:0, totalEsperado:3.0 },
+  { nome:"Kayla",              projeto:3, caderno:0,   perimetro:0, totalEsperado:3.0 },
+  { nome:"Luana",              projeto:3, caderno:0,   perimetro:0, totalEsperado:3.0 },
+  { nome:"Maria Elisangela",   projeto:3, caderno:0,   perimetro:0, totalEsperado:3.0 },
+  { nome:"Maria Santa",        projeto:3, caderno:0,   perimetro:0, totalEsperado:3.0 },
+  { nome:"Marlon",             projeto:3, caderno:0,   perimetro:1.9, totalEsperado:6.4 },
+  { nome:"Miguel",             projeto:3, caderno:0,   perimetro:0, totalEsperado:3.0 },
+  { nome:"Mycaela",            projeto:3, caderno:0,   perimetro:0, totalEsperado:3.0 },
+  { nome:"Nathalia",           projeto:3, caderno:0,   perimetro:0, totalEsperado:3.0 },
+  { nome:"Pedro Lucas",        projeto:1, caderno:0,   perimetro:0, totalEsperado:1.0 },
+  { nome:"Pedro Lukas",        projeto:3, caderno:0,   perimetro:0, totalEsperado:3.0 },
+  { nome:"Rafael",             projeto:1, caderno:0.7, perimetro:0, totalEsperado:1.7 },
+  { nome:"Renato",             projeto:3, caderno:0,   perimetro:0, totalEsperado:3.0 },
+  { nome:"Ryan",               projeto:3, caderno:0,   perimetro:0, totalEsperado:3.0 },
+  { nome:"Sara",               projeto:3, caderno:0.4, perimetro:0, totalEsperado:3.4 },
+  { nome:"Sofia",              projeto:3, caderno:0,   perimetro:0, totalEsperado:3.0 },
+  { nome:"Victor Conceicao",   projeto:3, caderno:0,   perimetro:0, totalEsperado:3.0 },
+  { nome:"Vitor Hugo",         projeto:0, caderno:0,   perimetro:0, totalEsperado:0.0 },
+  { nome:"Wesley",             projeto:3, caderno:0,   perimetro:0, totalEsperado:3.0 },
+  { nome:"Ycaro",              projeto:3, caderno:0,   perimetro:0, totalEsperado:3.0 },
+];
+
+function fmt(n) { return n.toLocaleString("pt-BR", { minimumFractionDigits:1, maximumFractionDigits:1 }); }
+
+let tudoBate = true;
+
+async function montar() {
+  const tbody = document.getElementById("tbody");
+  const linhas = await Promise.all(DADOS.map(async d => {
+    const progresso = await buscarProgressoTabuada(TURMA, d.nome);
+    const auto = extrasAutoAtivos(progresso);
+    const bonus = EXTRAS_AUTO.reduce((s,e) => s + (auto[e.key] ? e.valor : 0), 0);
+    const subtotal = d.projeto + d.caderno + d.perimetro;
+    const totalRecalc = Math.min(subtotal, 10) + bonus;
+    const bate = Math.abs(totalRecalc - d.totalEsperado) < 0.05;
+    if (!bate) tudoBate = false;
+    return `<tr>
+      <td>${d.nome}</td><td>${fmt(d.projeto)}</td><td>${fmt(d.caderno)}</td><td>${fmt(d.perimetro)}</td>
+      <td>${fmt(d.totalEsperado)}</td><td>${fmt(totalRecalc)}</td>
+      <td class="${bate ? "ok" : "mismatch"}">${bate ? "✓" : "✗"}</td>
+    </tr>`;
+  }));
+  tbody.innerHTML = linhas.join("");
+  const btn = document.getElementById("btnGravar");
+  const status = document.getElementById("status");
+  if (tudoBate) {
+    btn.disabled = false;
+    status.textContent = "✓ Todos os totais bateram. Pode gravar.";
+    status.className = "status ok";
+  } else {
+    status.textContent = "⚠️ Algum total não bateu (marcado em vermelho) — não grave ainda, me avise.";
+    status.className = "status err";
+  }
+}
+
+document.getElementById("btnGravar").addEventListener("click", async () => {
+  const status = document.getElementById("status");
+  status.textContent = "Gravando…";
+  status.className = "status";
+  const updates = {};
+  DADOS.forEach(d => {
+    updates[slugNome(d.nome)] = {
+      aluno: d.nome,
+      provaMulti: 0, projeto: d.projeto, caderno: d.caderno,
+      perimetro: d.perimetro, area: 0, areaAuto: false, lista: 0,
+      extras: { cadExtra: false, particip: false },
+      atualizadoEm: Date.now(),
+    };
+  });
+  try {
+    await update(ref(db, `notas_bimestre/${BIMESTRE}/${TURMA}`), updates);
+    status.textContent = `✓ Gravado! ${DADOS.length} alunos da turma ${TURMA} salvos em notas_bimestre/${BIMESTRE}/${TURMA}. Pode abrir o p-notas.html pra conferir, e depois apagar este arquivo.`;
+    status.className = "status ok";
+    document.getElementById("btnGravar").disabled = true;
+  } catch (e) {
+    console.error("Falha ao gravar:", e);
+    status.textContent = "❌ Erro ao gravar — veja o console (F12). Pode ser a regra do Firebase ainda não publicada.";
+    status.className = "status err";
+  }
+});
+
+montar();
+</script>
+</body>
+</html>
