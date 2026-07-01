@@ -154,7 +154,7 @@
 <script type="module">
 import { requireAluno, renderSidebarAluno, clearSession, getSession } from "/js/auth.js";
 import {
-  CAMPOS_NOTA, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, EXTRA_RANK_ATIV4,
+  CAMPOS_NOTA, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, EXTRA_RANK_ATIV4, EXTRA_NIVEL_PERFIL,
   BIMESTRE, fmtNota, mensagemPorNota, montarBoletim, notasLiberadas,
 } from "/js/notas.js";
 
@@ -197,9 +197,11 @@ function renderAndamento(boletim) {
   baseConf = Math.min(baseConf, 10);
 
   const cadExtra = lancados.caderno && (parseFloat(registro.caderno)||0) > CADERNO_EXTRA.limiar;
+  const bNivelPerfil = (progresso.nivelPerfil || 0) * EXTRA_NIVEL_PERFIL.valorPorNivel;
   let bonusConf = EXTRAS_AUTO.reduce((s,e) => s + (auto[e.key] ? e.valor : 0), 0)
                 + (cadExtra ? 0.5 : 0)
                 + (ativ4Info.bonusRank || 0)
+                + bNivelPerfil
 ;
 
   let potencial = 0;
@@ -342,8 +344,17 @@ function renderAndamento(boletim) {
     <div class="prog-list">${ATIVS.map(rowAtiv).join("")}</div>
     <div class="sec-label">⚡ Extras — tabuada e ranking</div>
     <div class="prog-list">${EXTRAS_AUTO.map(rowTabuada).join("")}${rankRow}</div>
-    <div class="sec-label">🎁 Extras — caderno</div>
-    <div class="prog-list">${cadExtraRow}</div>`;
+    <div class="sec-label">🌟 Extras — perfil e caderno</div>
+    <div class="prog-list">${(() => {
+      const np = progresso.nivelPerfil || 0;
+      const bon = np * EXTRA_NIVEL_PERFIL.valorPorNivel;
+      return `<div class="prog-row ${np>0?"done":"partial"}">
+        <div class="prog-icon ${np>0?"gold":"grey"}">⭐</div>
+        <div class="prog-body"><div class="prog-title">${EXTRA_NIVEL_PERFIL.label}</div>
+          <div class="prog-desc">${np>0?`Nível ${np} — continue jogando para subir!`:"Ainda sem nível de perfil"}</div></div>
+        <div class="prog-right"><div class="pts ${np>0?"gold":"muted"}">+${fmt(bon)}</div><div class="pts-sub">${np>0?`nível ${np} × 0,1`:"disponível"}</div></div>
+      </div>`;
+    })()}${cadExtraRow}</div>`;
 }
 
 // ── ESTADO 3: Meu Rendimento ──────────────────────────────────
@@ -385,11 +396,12 @@ function renderRendimento(boletim) {
     </div>`;
   }
 
+  const npRend = progresso.nivelPerfil || 0;
   const extras = [
     ...EXTRAS_AUTO.map(e => extraItem(e.label, !!auto[e.key], e.valor)),
     ...(ativ4Info.bonusRank>0 ? [extraItem(EXTRA_RANK_ATIV4.label, true, ativ4Info.bonusRank, `${ativ4Info.posicao}º lugar no geral`)] : []),
+    extraItem(EXTRA_NIVEL_PERFIL.label, npRend>0, npRend * EXTRA_NIVEL_PERFIL.valorPorNivel, npRend>0 ? `nível ${npRend} × 0,1` : "nenhum nível ainda"),
     extraItem(CADERNO_EXTRA.label, cadExtra, CADERNO_EXTRA.valor),
-
   ].join("");
 
   return `

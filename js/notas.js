@@ -29,6 +29,8 @@ export const EXTRAS_AUTO = [
   { key:"tneg50",  label:"Tabuada Negativa nível 50",        valor:0.5, max:50,  campo:"melhorNeg" },
   { key:"tneg150", label:"Tabuada Negativa nível 150",       valor:0.5, max:150, campo:"melhorNeg" },
 ];
+// Extra de nível de perfil: +0,1 por nível completo (automático)
+export const EXTRA_NIVEL_PERFIL = { key:"nivelPerfil", label:"Nível de perfil", valorPorNivel:0.1 };
 // Caderno Extra — automático, baseado na própria nota de Caderno lançada (não é mais checkbox manual)
 export const CADERNO_EXTRA = { key:"cadExtra", label:"Caderno Extra", valor:0.5, limiar:1.8 };
 // Extras manuais — o professor marca
@@ -95,7 +97,7 @@ export async function buscarAtiv4(turma, alunos) {
 }
 export async function buscarProgressoTabuada(turma, nome) {
   const uid = makeUid(turma, nome);
-  let melhorTabuada = 0, melhorNeg = 0;
+  let melhorTabuada = 0, melhorNeg = 0, nivelPerfil = 0;
   try {
     const s = await get(ref(db, `tabuada_niveis/${uid}/melhor_nivel`));
     if (s.exists()) melhorTabuada = s.val();
@@ -104,7 +106,11 @@ export async function buscarProgressoTabuada(turma, nome) {
     const s = await get(ref(db, `tabuada_negativos_niveis/${uid}/melhor_nivel`));
     if (s.exists()) melhorNeg = s.val();
   } catch (e) {}
-  return { melhorTabuada, melhorNeg };
+  try {
+    const s = await get(ref(db, `perfis/${uid}/nivel`));
+    if (s.exists()) nivelPerfil = s.val() || 0;
+  } catch (e) {}
+  return { melhorTabuada, melhorNeg, nivelPerfil };
 }
 
 // Nota já lançada pelo professor pra esse aluno neste bimestre (ou null se ainda não lançou)
@@ -125,11 +131,12 @@ export function extrasAutoAtivos(progresso) {
 }
 export function calcularBonus(progresso, registro) {
   const auto = extrasAutoAtivos(progresso);
-  const bAuto      = EXTRAS_AUTO.reduce((s, e) => s + (auto[e.key] ? e.valor : 0), 0);
-  const bCadExtra  = cadernoExtraAtivo(registro) ? CADERNO_EXTRA.valor : 0;
-  const bRankAtiv4 = progresso?.rankAtiv4Bonus ?? 0;
-  const bManual    = EXTRAS_MANUAL.reduce((s, e) => s + (registro?.extras?.[e.key] ? e.valor : 0), 0);
-  return bAuto + bCadExtra + bRankAtiv4 + bManual;
+  const bAuto        = EXTRAS_AUTO.reduce((s, e) => s + (auto[e.key] ? e.valor : 0), 0);
+  const bCadExtra    = cadernoExtraAtivo(registro) ? CADERNO_EXTRA.valor : 0;
+  const bRankAtiv4   = progresso?.rankAtiv4Bonus ?? 0;
+  const bNivelPerfil = (progresso?.nivelPerfil || 0) * EXTRA_NIVEL_PERFIL.valorPorNivel;
+  const bManual      = EXTRAS_MANUAL.reduce((s, e) => s + (registro?.extras?.[e.key] ? e.valor : 0), 0);
+  return bAuto + bCadExtra + bRankAtiv4 + bNivelPerfil + bManual;
 }
 export function calcularSubtotal(registro) {
   return CAMPOS_NOTA.reduce((s, c) => {
