@@ -530,6 +530,11 @@ async function salvarProgresso(resultado, nivelJogado) {
   const updates = { nivel_atual:nivelAtual, melhor_nivel:melhorNivel, total_partidas:totalPartidas, ultima_partida:ts };
   updates[`historico/${ts}`] = { nivel:nivelJogado, resultado, acertos, erros, combo:comboSessao, ts };
   try { await update(niveisRef, updates); } catch(e) {}
+  // ── XP de gamificação (tabuada negativa) ──────────────────────
+  if (resultado === 'completou') try {
+    const { adicionarXP } = await import('/js/db.js');
+    await adicionarXP(uid, 2);
+  } catch(e) { console.warn('[XP] Erro ao adicionar XP tabuada negativa:', e); }
 }
 
 // ── Audio ─────────────────────────────────────────────────────

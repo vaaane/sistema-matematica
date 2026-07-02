@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Diagnóstico de Perfil — Professor</title>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+    .toolbar select{padding:7px 11px;background:var(--bg);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:inherit;font-size:12.5px;font-weight:600}
+    .tbl-wrap{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+    table{width:100%;border-collapse:collapse;font-size:12.5px}
+    th{padding:9px 10px;background:var(--bg);color:var(--text-muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid var(--border);text-align:center;white-space:nowrap;cursor:pointer;user-select:none}
+    th:hover{color:var(--text)}
+    th.sorted{color:var(--purple)}
+    th.asc::after{content:" ▲";font-size:8px}
+    th.desc::after{content:" ▼";font-size:8px}
+    th:first-child{text-align:left;padding-left:14px}
+    td{padding:7px 10px;border-bottom:1px solid var(--border);text-align:center;vertical-align:middle}
+    td:first-child{text-align:left;padding-left:14px;font-weight:600}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:rgba(255,255,255,.02)}
+
+    .nivel-badge{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:3px 10px;font-size:10.5px;font-weight:700}
+    .n1{background:rgba(148,163,184,.12);color:#94A3B8}
+    .n2{background:rgba(34,197,94,.12);color:#22C55E}
+    .n3{background:rgba(34,197,94,.18);color:#16a34a}
+    .n4{background:rgba(108,0,212,.15);color:#9b30ff}
+    .n5{background:rgba(108,0,212,.25);color:#9b30ff}
+    .n6{background:rgba(240,165,0,.15);color:#f0a500}
+    .n7{background:rgba(240,165,0,.25);color:#f0a500}
+    .n8{background:rgba(239,68,68,.15);color:#EF4444}
+    .n9{background:rgba(239,68,68,.25);color:#EF4444}
+    .n10{background:rgba(255,215,0,.25);color:#FFD700}
+
+    .xp-bar-bg{height:5px;border-radius:3px;background:var(--bg);overflow:hidden;min-width:60px}
+    .xp-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--purple-dark),var(--purple))}
+
+    .alerta{color:#F87171;font-weight:700}
+    .ok{color:#4ADE80}
+    .warn{color:#fb923c}
+
+    .resumo-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+    .rcard{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+    .rcard .lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);margin-bottom:6px}
+    .rcard .val{font-size:22px;font-weight:800;line-height:1}
+    .rcard .sub{font-size:10.5px;color:var(--text-muted);margin-top:3px}
+
+    .tag{display:inline-block;background:rgba(239,68,68,.1);color:#F87171;border-radius:5px;padding:1px 6px;font-size:10px;font-weight:700}
+    .tag.ok{background:rgba(34,197,94,.1);color:#4ADE80}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Diagnóstico de Perfil</div>
+        <div class="topbar-sub">Compare nível XP × desempenho real de cada aluno</div>
+      </div>
+    </div>
+    <div class="content">
+
+      <div class="resumo-cards" id="resumo"></div>
+
+      <div class="toolbar">
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);font-weight:600;margin-right:6px">Turma</label>
+          <select id="turmaSel"></select>
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);font-weight:600;margin-right:6px">Problema</label>
+          <select id="filtroSel">
+            <option value="todos">Todos os alunos</option>
+            <option value="desalinhados">⚠️ Nível baixo pra tabuada alta</option>
+            <option value="nivel1">Nível 1 com atividades feitas</option>
+          </select>
+        </div>
+        <button class="btn btn-blue" id="btnExportar" style="margin-left:auto">📋 Copiar CSV</button>
+        <button class="btn" id="btnRetro" style="background:rgba(239,68,68,.15);color:#F87171;border:1.5px solid rgba(239,68,68,.3)">⚡ Corrigir XP retroativo</button>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th data-col="nome">Aluno</th>
+              <th data-col="turma">Turma</th>
+              <th data-col="nivel">Nível</th>
+              <th data-col="xp">XP total</th>
+              <th data-col="xpProximo">XP p/ próx.</th>
+              <th data-col="tab">Tabuada</th>
+              <th data-col="neg">Tab. Negativa</th>
+              <th data-col="ativs">Atividades</th>
+              <th data-col="avaliacao">Diagnóstico</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text-muted)">Carregando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:10px" id="legenda"></div>
+
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { ALUNOS_POR_TURMA } from "/js/constants.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { NIVEIS_PERFIL, calcularNivelPerfil } from "/js/gamificacao.js";
+
+requireProfessor();
+renderSidebarProfessor("sidebar", "diagnostico");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const TURMAS = Object.keys(ALUNOS_POR_TURMA);
+function makeUid(turma, nome) { return (turma + "_" + nome).replace(/[.#$\[\]\/\s]/g, "_"); }
+
+// ── Busca tudo ────────────────────────────────────────────────
+let todos = []; // [{nome, turma, nivel, xp, tab, neg, ativs}]
+
+async function carregarTodos() {
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text-muted)">Buscando dados de todos os alunos…</td></tr>`;
+
+  // Snapshot único de tabuada_niveis, tabuada_negativos_niveis, resultados e perfis
+  const [snapTab, snapNeg, snapPerf, snapRes] = await Promise.all([
+    get(ref(db, "tabuada_niveis")),
+    get(ref(db, "tabuada_negativos_niveis")),
+    get(ref(db, "perfis")),
+    get(ref(db, "resultados")),
+  ]);
+
+  const tabData  = snapTab.val()  || {};
+  const negData  = snapNeg.val()  || {};
+  const perfData = snapPerf.val() || {};
+
+  // Conta atividades por uid (resultados)
+  const ativsCount = {};
+  if (snapRes.exists()) {
+    snapRes.forEach(child => {
+      const v = child.val();
+      if (!v?.aluno || !v?.turma) return;
+      const uid = makeUid(v.turma, v.aluno);
+      ativsCount[uid] = (ativsCount[uid] || new Set());
+      ativsCount[uid].add(v.atividade);
+    });
+  }
+
+  todos = [];
+  for (const turma of TURMAS) {
+    for (const nome of (ALUNOS_POR_TURMA[turma] || [])) {
+      const uid = makeUid(turma, nome);
+      const xp    = perfData[uid]?.xp    || 0;
+      const nivel = perfData[uid]?.nivel  || 1;
+      const tab   = tabData[uid]?.melhor_nivel  || tabData[uid]?.nivel_atual || 0;
+      const neg   = negData[uid]?.melhor_nivel  || negData[uid]?.nivel_atual || 0;
+      const ativs = ativsCount[uid] ? ativsCount[uid].size : 0;
+      const info  = calcularNivelPerfil(xp);
+      todos.push({ nome, turma, nivel: info.n, nomNivel: info.nome, xp, xpProximo: info.xpProximo, progresso: info.progresso, tab, neg, ativs });
+    }
+  }
+
+  atualizarResumo();
+  renderTabela();
+}
+
+function atualizarResumo() {
+  const nivel1comAtivs = todos.filter(a => a.nivel === 1 && a.ativs > 0).length;
+  const desalinhados   = todos.filter(a => a.tab >= 150 && a.nivel <= 2).length;
+  const semXP          = todos.filter(a => a.xp === 0).length;
+  const total          = todos.length;
+  document.getElementById("resumo").innerHTML = `
+    <div class="rcard"><div class="lbl">Total de alunos</div><div class="val">${total}</div></div>
+    <div class="rcard"><div class="lbl">Nível 1 com atividades</div><div class="val" style="color:var(--orange)">${nivel1comAtivs}</div><div class="sub">precisam de XP</div></div>
+    <div class="rcard"><div class="lbl">Tab.300 mas nível ≤ 2</div><div class="val" style="color:var(--red)">${desalinhados}</div><div class="sub">nível não reflete desempenho</div></div>
+    <div class="rcard"><div class="lbl">XP = 0</div><div class="val" style="color:var(--text-muted)">${semXP}</div><div class="sub">nunca receberam XP</div></div>`;
+}
+
+// ── Render ────────────────────────────────────────────────────
+let sortCol = "nivel", sortDir = 1;
+let filtroAtual = "todos", turmaAtual = "todas";
+
+function filtrado() {
+  let lista = [...todos];
+  if (turmaAtual !== "todas") lista = lista.filter(a => a.turma === turmaAtual);
+  if (filtroAtual === "desalinhados") lista = lista.filter(a => a.tab >= 150 && a.nivel <= 2);
+  if (filtroAtual === "nivel1") lista = lista.filter(a => a.nivel === 1 && a.ativs > 0);
+  lista.sort((a,b) => {
+    let va = a[sortCol], vb = b[sortCol];
+    if (typeof va === "string") return sortDir * va.localeCompare(vb);
+    return sortDir * (va - vb);
+  });
+  return lista;
+}
+
+function diagnostico(a) {
+  if (a.xp === 0 && a.ativs > 0) return `<span class="tag">Sem XP</span>`;
+  if (a.tab >= 300 && a.nivel <= 2) return `<span class="tag">Tab.300 nv.${a.nivel}</span>`;
+  if (a.tab >= 150 && a.nivel === 1) return `<span class="tag">Tab.150 nv.1</span>`;
+  if (a.nivel === 1 && a.ativs === 0) return `<span style="color:var(--text-muted);font-size:11px">Sem atividades</span>`;
+  return `<span class="tag ok">OK</span>`;
+}
+
+function renderTabela() {
+  const lista = filtrado();
+  const nivCores = ["n1","n2","n3","n4","n5","n6","n7","n8","n9","n10"];
+
+  // atualiza headers
+  document.querySelectorAll("th[data-col]").forEach(th => {
+    th.className = th.dataset.col === sortCol ? `sorted ${sortDir === 1 ? "asc" : "desc"}` : "";
+  });
+
+  document.getElementById("tbody").innerHTML = lista.map(a => {
+    const pct = a.progresso;
+    const xpFalta = a.xpProximo - a.xp;
+    return `<tr>
+      <td>${a.nome}</td>
+      <td style="color:var(--text-muted)">${a.turma}</td>
+      <td><span class="nivel-badge ${nivCores[a.nivel-1]}">${a.nivel} ${a.nomNivel}</span></td>
+      <td>${a.xp} XP</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="xp-bar-bg"><div class="xp-bar-fill" style="width:${pct}%"></div></div>
+          <span style="font-size:10px;color:var(--text-muted);white-space:nowrap">${xpFalta > 0 ? `-${xpFalta}` : "MAX"}</span>
+        </div>
+      </td>
+      <td class="${a.tab >= 150 && a.nivel <= 2 ? "alerta" : a.tab >= 150 ? "ok" : ""}">${a.tab || "—"}</td>
+      <td class="${a.neg >= 50 && a.nivel <= 2 ? "warn" : ""}">${a.neg || "—"}</td>
+      <td>${a.ativs}</td>
+      <td>${diagnostico(a)}</td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text-muted)">Nenhum aluno com esse filtro</td></tr>`;
+
+  document.getElementById("legenda").textContent =
+    `${lista.length} alunos exibidos · Clique nos cabeçalhos para ordenar · XP para nível 2 = 120`;
+}
+
+// ── Controles ────────────────────────────────────────────────
+const turmaSel = document.getElementById("turmaSel");
+const opt0 = document.createElement("option"); opt0.value="todas"; opt0.textContent="Todas as turmas";
+turmaSel.appendChild(opt0);
+TURMAS.forEach(t => { const o=document.createElement("option"); o.value=t; o.textContent=`Turma ${t}`; turmaSel.appendChild(o); });
+turmaSel.addEventListener("change", () => { turmaAtual = turmaSel.value; renderTabela(); });
+document.getElementById("filtroSel").addEventListener("change", e => { filtroAtual = e.target.value; renderTabela(); });
+
+document.querySelectorAll("th[data-col]").forEach(th => {
+  th.addEventListener("click", () => {
+    const col = th.dataset.col;
+    sortDir = col === sortCol ? -sortDir : 1;
+    sortCol = col;
+    renderTabela();
+  });
+});
+
+document.getElementById("btnRetro").addEventListener("click", async () => {
+  const btn = document.getElementById("btnRetro");
+  const candidatos = todos.filter(a => a.xp < (a.tab * 2 + a.neg * 2));
+  if (!confirm(`Isso vai conceder XP retroativo para ${candidatos.length} alunos com base nos níveis de tabuada (2 XP por nível). Continuar?`)) return;
+  btn.textContent = "Corrigindo…"; btn.disabled = true;
+  const { adicionarXP } = await import('/js/db.js');
+  let ok = 0, erros = 0;
+  for (const a of candidatos) {
+    try {
+      const uid = makeUid(a.turma, a.nome);
+      const xpEsperado = a.tab * 2 + a.neg * 2;
+      const delta = Math.max(0, xpEsperado - a.xp);
+      if (delta > 0) await adicionarXP(uid, delta);
+      ok++;
+    } catch(e) { erros++; }
+  }
+  btn.textContent = `✓ ${ok} corrigidos${erros ? `, ${erros} erros` : ""}`;
+  await carregarTodos();
+});
+
+document.getElementById("btnExportar").addEventListener("click", () => {
+  const lista = filtrado();
+  const csv = ["Turma,Nome,Nível,XP,Tabuada,Tab.Negativa,Atividades",
+    ...lista.map(a => `${a.turma},${a.nome},${a.nivel},${a.xp},${a.tab},${a.neg},${a.ativs}`)
+  ].join("\n");
+  navigator.clipboard.writeText(csv);
+  document.getElementById("btnExportar").textContent = "✓ Copiado!";
+  setTimeout(() => document.getElementById("btnExportar").textContent = "📋 Copiar CSV", 2000);
+});
+
+carregarTodos();
+</script>
+</body>
+</html>
