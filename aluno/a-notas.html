@@ -35,8 +35,8 @@
     .andamento-aviso svg{width:16px;height:16px;fill:var(--gold);flex-shrink:0}
 
     /* ── ESTADO 2: Em andamento ── */
-    .summary-bar{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
-    .sum-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;display:flex;align-items:center;gap:14px}
+    .summary-bar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px}
+    .sum-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;display:flex;flex-direction:column;gap:4px}
     .sum-icon{font-size:22px;flex-shrink:0}
     .sum-label{font-size:10.5px;font-weight:600;color:var(--text-muted);margin-bottom:3px}
     .sum-val{font-size:22px;font-weight:800;line-height:1}
@@ -197,16 +197,18 @@ function renderAndamento(boletim) {
   baseConf = Math.min(baseConf, 10);
 
   const cadExtra = lancados.caderno && (parseFloat(registro.caderno)||0) > CADERNO_EXTRA.limiar;
-  const bNivelPerfil = (progresso.nivelPerfil || 0) * EXTRA_NIVEL_PERFIL.valorPorNivel;
+  const nivelPerf = boletim.nivelPerfil || 1;
   let bonusConf = EXTRAS_AUTO.reduce((s,e) => s + (auto[e.key] ? e.valor : 0), 0)
                 + (cadExtra ? 0.5 : 0)
                 + (ativ4Info.bonusRank || 0)
-                + bNivelPerfil
-;
+                + Math.round((nivelPerf || 1) * 0.1 * 10) / 10;
 
   let potencial = 0;
-  if (!auto.t300)   potencial += 0.5;
-  if (!auto.tneg50) potencial += 0.5;
+  if (!auto.t300)    potencial += 0.5;
+  if (!auto.tneg50)  potencial += 0.5;
+  if (!auto.tneg150) potencial += 0.5;
+
+  const totalAtual = Math.min(baseConf, 10) + bonusConf;
 
   const ATIVS = [
     { key:"ativ4",      label:"Atividade 4 — Geometria",   max:0.5, auto:true },
@@ -271,6 +273,16 @@ function renderAndamento(boletim) {
     </div>`;
   }
 
+  const nivelPerfilRow = (() => {
+    const bonus = Math.round((nivelPerf || 1) * 0.1 * 10) / 10;
+    return `<div class="prog-row done">
+      <div class="prog-icon purple">⭐</div>
+      <div class="prog-body"><div class="prog-title">${EXTRA_NIVEL_PERFIL.label}</div>
+        <div class="prog-desc">Nível ${nivelPerf} × 0,1</div></div>
+      <div class="prog-right"><div class="pts" style="color:var(--purple)">+${fmtNota(bonus)}</div><div class="pts-sub">conquistado</div></div>
+    </div>`;
+  })();
+
   const rankRow = (() => {
     const bonus = ativ4Info.bonusRank || 0;
     const pos   = ativ4Info.posicao   || 0;
@@ -305,19 +317,18 @@ function renderAndamento(boletim) {
         <div class="pot-body">
           <div class="pot-titulo">Você ainda pode ganhar mais pontos!</div>
           <div class="pot-desc">${[
-            !auto.t300   ? `<b>Tabuada nv.300</b> (+0,5): ${progresso.melhorTabuada}/300` : "",
-            !auto.tneg50 ? `<b>Tabuada Negativa nv.50</b> (+0,5): ${progresso.melhorNeg}/50` : "",
-
+            !auto.t300    ? `<b>Tabuada nv.300</b> (+0,5): ${progresso.melhorTabuada}/300` : "",
+            !auto.tneg50  ? `<b>Tab. Negativa nv.50</b> (+0,5): ${progresso.melhorNeg}/50` : "",
+            !auto.tneg150 ? `<b>Tab. Negativa nv.150</b> (+0,5): ${progresso.melhorNeg}/150` : "",
           ].filter(Boolean).join(" · ")}</div>
         </div>
         <div class="pot-pts">+${fmt(potencial)}</div>
-        <div class="pot-arrow">↓</div>
       </div>`
     : `<div class="potencial-banner zero">
         <div class="pot-icon">🎉</div>
         <div class="pot-body">
           <div class="pot-titulo green">Você conquistou todos os bônus disponíveis!</div>
-          <div class="pot-desc">Incrível — tabuada, negativa e caderno extra: tudo certo.</div>
+          <div class="pot-desc">Incrível — tabuada e negativa: tudo certo.</div>
         </div>
         <div class="pot-pts green">100%</div>
       </div>`;
@@ -328,33 +339,32 @@ function renderAndamento(boletim) {
       Notas em andamento — esta <b style="color:var(--gold)">não é a nota final</b>, algumas atividades ainda não foram lançadas
     </div>
     <div class="summary-bar">
-      <div class="sum-card"><div class="sum-icon">✅</div><div>
-        <div class="sum-label">Pontos confirmados</div>
-        <div class="sum-val" style="color:var(--green)">${fmt(baseConf)} <span style="font-size:14px;font-weight:600;color:var(--text-muted)">/ ${fmt(maxLancado)}</span></div>
-        <div class="sum-sub">das atividades já lançadas</div>
-      </div></div>
-      <div class="sum-card"><div class="sum-icon">🎁</div><div>
-        <div class="sum-label">Bônus conquistados</div>
+      <!-- Bloco 1: atividades (base até 10) -->
+      <div class="sum-card">
+        <div class="sum-label">📋 Das atividades</div>
+        <div class="sum-val" style="color:var(--text)">${fmt(baseConf)}<span style="font-size:13px;font-weight:600;color:var(--text-muted)"> / 10</span></div>
+        <div style="font-size:10.5px;color:var(--text-muted)">${fmt(maxLancado)} pts já lançados</div>
+      </div>
+      <!-- Bloco 2: bônus extras -->
+      <div class="sum-card">
+        <div class="sum-label">🎁 Bônus extras</div>
         <div class="sum-val" style="color:var(--purple)">+${fmt(bonusConf)}</div>
-        <div class="sum-sub">tabuada + extras</div>
-      </div></div>
+        <div style="font-size:10.5px;color:var(--text-muted)">${potencial>0?`+${fmt(potencial)} ainda alcançáveis`:"todos conquistados ✓"}</div>
+      </div>
+      <!-- Bloco 3: total -->
+      <div class="sum-card" style="background:linear-gradient(135deg,#1a1040,#15102a);border-color:rgba(108,0,212,.35)">
+        <div class="sum-label" style="color:rgba(200,170,255,.7)">= Nota atual</div>
+        <div style="font-size:32px;font-weight:800;color:var(--purple);line-height:1">${fmt(totalAtual)}</div>
+        <div style="font-size:10.5px;color:rgba(200,170,255,.5)">${fmt(baseConf)} + ${fmt(bonusConf)} bônus</div>
+      </div>
     </div>
     ${banner}
     <div class="sec-label">📋 Atividades avaliadas</div>
     <div class="prog-list">${ATIVS.map(rowAtiv).join("")}</div>
     <div class="sec-label">⚡ Extras — tabuada e ranking</div>
-    <div class="prog-list">${EXTRAS_AUTO.map(rowTabuada).join("")}${rankRow}</div>
-    <div class="sec-label">🌟 Extras — perfil e caderno</div>
-    <div class="prog-list">${(() => {
-      const np = progresso.nivelPerfil || 0;
-      const bon = np * EXTRA_NIVEL_PERFIL.valorPorNivel;
-      return `<div class="prog-row ${np>0?"done":"partial"}">
-        <div class="prog-icon ${np>0?"gold":"grey"}">⭐</div>
-        <div class="prog-body"><div class="prog-title">${EXTRA_NIVEL_PERFIL.label}</div>
-          <div class="prog-desc">${np>0?`Nível ${np} — continue jogando para subir!`:"Ainda sem nível de perfil"}</div></div>
-        <div class="prog-right"><div class="pts ${np>0?"gold":"muted"}">+${fmt(bon)}</div><div class="pts-sub">${np>0?`nível ${np} × 0,1`:"disponível"}</div></div>
-      </div>`;
-    })()}${cadExtraRow}</div>`;
+    <div class="prog-list">${EXTRAS_AUTO.map(rowTabuada).join("")}${nivelPerfilRow}${rankRow}</div>
+    <div class="sec-label">🎁 Extras — caderno</div>
+    <div class="prog-list">${cadExtraRow}</div>`;
 }
 
 // ── ESTADO 3: Meu Rendimento ──────────────────────────────────
@@ -396,12 +406,11 @@ function renderRendimento(boletim) {
     </div>`;
   }
 
-  const npRend = progresso.nivelPerfil || 0;
   const extras = [
     ...EXTRAS_AUTO.map(e => extraItem(e.label, !!auto[e.key], e.valor)),
     ...(ativ4Info.bonusRank>0 ? [extraItem(EXTRA_RANK_ATIV4.label, true, ativ4Info.bonusRank, `${ativ4Info.posicao}º lugar no geral`)] : []),
-    extraItem(EXTRA_NIVEL_PERFIL.label, npRend>0, npRend * EXTRA_NIVEL_PERFIL.valorPorNivel, npRend>0 ? `nível ${npRend} × 0,1` : "nenhum nível ainda"),
     extraItem(CADERNO_EXTRA.label, cadExtra, CADERNO_EXTRA.valor),
+    extraItem(EXTRA_NIVEL_PERFIL.label, true, Math.round(((boletim.nivelPerfil||1) * 0.1) * 10) / 10, `Nível ${boletim.nivelPerfil||1} × 0,1`),
   ].join("");
 
   return `

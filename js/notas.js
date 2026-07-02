@@ -29,8 +29,6 @@ export const EXTRAS_AUTO = [
   { key:"tneg50",  label:"Tabuada Negativa nível 50",        valor:0.5, max:50,  campo:"melhorNeg" },
   { key:"tneg150", label:"Tabuada Negativa nível 150",       valor:0.5, max:150, campo:"melhorNeg" },
 ];
-// Extra de nível de perfil: +0,1 por nível completo (automático)
-export const EXTRA_NIVEL_PERFIL = { key:"nivelPerfil", label:"Nível de perfil", valorPorNivel:0.1 };
 // Caderno Extra — automático, baseado na própria nota de Caderno lançada (não é mais checkbox manual)
 export const CADERNO_EXTRA = { key:"cadExtra", label:"Caderno Extra", valor:0.5, limiar:1.8 };
 // Extras manuais — o professor marca
@@ -63,7 +61,21 @@ export const EXTRA_RANK_ATIV4 = {
 };
 
 // Busca resultados da Atividade 4 pra uma turma, retorna por aluno:
-// buscarAtiv4: ranking GLOBAL (todas as turmas juntas), não por turma separada.
+// Nível de perfil — bonus dinâmico: nivel × 0,1 (ex: nível 5 = +0,5)
+export const EXTRA_NIVEL_PERFIL = {
+  key: "nivelPerfil",
+  label: "Nível de perfil",
+  valorPorNivel: 0.1,
+  calcular: (nivel) => parseFloat(((nivel || 0) * 0.1).toFixed(1)),
+};
+
+export async function buscarNivelPerfil(turma, nome) {
+  try {
+    const uid = makeUid(turma, nome);
+    const snap = await get(ref(db, `perfis/${uid}/nivel`));
+    return snap.exists() ? (snap.val() || 1) : 1;
+  } catch (e) { return 1; }
+}
 // A posição reflete onde o aluno está entre TODOS que fizeram a atividade.
 export async function buscarAtiv4(turma, alunos) {
   // melhorPts usa "nome|turma" como chave pra evitar conflito de nomes entre turmas
@@ -97,7 +109,7 @@ export async function buscarAtiv4(turma, alunos) {
 }
 export async function buscarProgressoTabuada(turma, nome) {
   const uid = makeUid(turma, nome);
-  let melhorTabuada = 0, melhorNeg = 0, nivelPerfil = 0;
+  let melhorTabuada = 0, melhorNeg = 0;
   try {
     const s = await get(ref(db, `tabuada_niveis/${uid}/melhor_nivel`));
     if (s.exists()) melhorTabuada = s.val();
@@ -106,11 +118,7 @@ export async function buscarProgressoTabuada(turma, nome) {
     const s = await get(ref(db, `tabuada_negativos_niveis/${uid}/melhor_nivel`));
     if (s.exists()) melhorNeg = s.val();
   } catch (e) {}
-  try {
-    const s = await get(ref(db, `perfis/${uid}/nivel`));
-    if (s.exists()) nivelPerfil = s.val() || 0;
-  } catch (e) {}
-  return { melhorTabuada, melhorNeg, nivelPerfil };
+  return { melhorTabuada, melhorNeg };
 }
 
 // Nota já lançada pelo professor pra esse aluno neste bimestre (ou null se ainda não lançou)
@@ -131,12 +139,12 @@ export function extrasAutoAtivos(progresso) {
 }
 export function calcularBonus(progresso, registro) {
   const auto = extrasAutoAtivos(progresso);
-  const bAuto        = EXTRAS_AUTO.reduce((s, e) => s + (auto[e.key] ? e.valor : 0), 0);
-  const bCadExtra    = cadernoExtraAtivo(registro) ? CADERNO_EXTRA.valor : 0;
-  const bRankAtiv4   = progresso?.rankAtiv4Bonus ?? 0;
-  const bNivelPerfil = (progresso?.nivelPerfil || 0) * EXTRA_NIVEL_PERFIL.valorPorNivel;
-  const bManual      = EXTRAS_MANUAL.reduce((s, e) => s + (registro?.extras?.[e.key] ? e.valor : 0), 0);
-  return bAuto + bCadExtra + bRankAtiv4 + bNivelPerfil + bManual;
+  const bAuto      = EXTRAS_AUTO.reduce((s, e) => s + (auto[e.key] ? e.valor : 0), 0);
+  const bCadExtra  = cadernoExtraAtivo(registro) ? CADERNO_EXTRA.valor : 0;
+  const bRankAtiv4 = progresso?.rankAtiv4Bonus ?? 0;
+  const bNivelPerf = EXTRA_NIVEL_PERFIL.calcular(progresso?.nivelPerfil ?? 0);
+  const bManual    = EXTRAS_MANUAL.reduce((s, e) => s + (registro?.extras?.[e.key] ? e.valor : 0), 0);
+  return bAuto + bCadExtra + bRankAtiv4 + bNivelPerf + bManual;
 }
 export function calcularSubtotal(registro) {
   return CAMPOS_NOTA.reduce((s, c) => {
@@ -186,15 +194,17 @@ export async function montarBoletim(turma, nome) {
   if (!liberado) return null;
 
   // Busca tudo em paralelo — não bloqueia em caso de nota manual ainda não salva
-  const [salvo, progresso, ativ4Map, ativ5Pts] = await Promise.all([
+  const [salvo, progresso, ativ4Map, ativ5Pts, nivelPerfil] = await Promise.all([
     buscarNotaSalva(turma, nome),
     buscarProgressoTabuada(turma, nome),
     buscarAtiv4(turma, [nome]),
     buscarAtiv5Aluno(turma, nome),
+    buscarNivelPerfil(turma, nome),
   ]);
 
   const ativ4Info = ativ4Map[nome] || { fez:false, posicao:0, bonusRank:0 };
-  progresso.rankAtiv4Bonus = ativ4Info.bonusRank; // posição global, conta como nota extra
+  progresso.rankAtiv4Bonus = ativ4Info.bonusRank;
+  progresso.nivelPerfil    = nivelPerfil;
 
   // Ativ.4 e Triângulos: null = não participou/nunca jogou → conta como 0
   const ativ4Val      = ativ4Info.fez ? 0.5 : null;
@@ -226,7 +236,7 @@ export async function montarBoletim(turma, nome) {
   const cadExtraAtivo    = cadernoExtraAtivo(registro);
 
   return { registro, lancados, progresso, subtotal, subtotalCapado, bonus, total,
-           auto, cadExtraAtivo, ativ4Info, ativ5Pts, atualizadoEm: salvo?.atualizadoEm || null };
+           auto, cadExtraAtivo, ativ4Info, ativ5Pts, nivelPerfil, atualizadoEm: salvo?.atualizadoEm || null };
 }
 
 export function mensagemPorNota(total) {
