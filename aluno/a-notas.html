@@ -422,6 +422,23 @@ function renderRendimento(boletim) {
         <div class="rend-msg">${mensagemPorNota(total)}</div>
       </div>
     </div>
+    <div class="summary-bar" style="margin-bottom:18px">
+      <div class="sum-card">
+        <div class="sum-label">📋 Das atividades</div>
+        <div class="sum-val" style="color:var(--text)">${fmtNota(subtotalCapado)}<span style="font-size:13px;font-weight:600;color:var(--text-muted)"> / 10</span></div>
+        <div style="font-size:10.5px;color:var(--text-muted)">subtotal das atividades</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-label">🎁 Bônus extras</div>
+        <div class="sum-val" style="color:var(--purple)">+${fmtNota(bonus)}</div>
+        <div style="font-size:10.5px;color:var(--text-muted)">tabuada, ranking e perfil</div>
+      </div>
+      <div class="sum-card" style="background:linear-gradient(135deg,#1a1040,#15102a);border-color:rgba(108,0,212,.35)">
+        <div class="sum-label" style="color:rgba(200,170,255,.7)">= Nota final</div>
+        <div style="font-size:32px;font-weight:800;color:var(--purple);line-height:1">${fmtNota(total)}</div>
+        <div style="font-size:10.5px;color:rgba(200,170,255,.5)">${fmtNota(subtotalCapado)} + ${fmtNota(bonus)} bônus</div>
+      </div>
+    </div>
     <div class="card">
       <div class="card-title"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>Atividades do bimestre</div>
       ${CAMPOS_NOTA.map(barraItem).join("")}
