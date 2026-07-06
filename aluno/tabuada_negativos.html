@@ -276,39 +276,39 @@ const niveisRef = ref(db, _isProfMode ? `prof_neg_niveis/${uid}` : `tabuada_nega
 // ── Level config (150 níveis) ──────────────────────────────────
 function getLvlCfg(lvl) {
   // ── Fase 1-5: original (1-50) ──────────────────────────────
-  if (lvl <= 5)  return { fase:1, tipo:'add_sub_neg',  secs:45, pairs:4,  cols:4, allowDupNeg:false, fbCls:'fb-1', faseLabel:'+ e −' };
-  if (lvl <= 10) return { fase:1, tipo:'add_sub_neg',  secs:50, pairs:5,  cols:4, allowDupNeg:false, fbCls:'fb-1', faseLabel:'+ e − (neg. simples)' };
-  if (lvl <= 15) return { fase:2, tipo:'mul_neg_one',  secs:55, pairs:5,  cols:4, maxBase:6, fbCls:'fb-2', faseLabel:'× (um neg.)' };
-  if (lvl <= 20) return { fase:2, tipo:'mul_neg_both', secs:55, pairs:6,  cols:4, maxBase:6, fbCls:'fb-2', faseLabel:'× (dois neg.)' };
-  if (lvl <= 25) return { fase:3, tipo:'div_neg_one',  secs:55, pairs:7,  cols:5, fbCls:'fb-3', faseLabel:'÷ (um neg.)' };
-  if (lvl <= 30) return { fase:3, tipo:'mix_neg',      secs:55, pairs:8,  cols:5, allowDupNeg:false, fbCls:'fb-3', faseLabel:'÷ + mix' };
-  if (lvl <= 35) return { fase:4, tipo:'mix_neg',      secs:55, pairs:9,  cols:5, allowDupNeg:true, fbCls:'fb-4', faseLabel:'Mix completo' };
-  if (lvl <= 40) return { fase:4, tipo:'mix_neg',      secs:65, pairs:10, cols:5, allowDupNeg:true, fbCls:'fb-4', faseLabel:'Mix pesado' };
-  if (lvl <= 43) return { fase:5, tipo:'pow_paren',    secs:60, pairs:8,  cols:4, fbCls:'fb-5', faseLabel:'(−n)ˣ' };
-  if (lvl <= 46) return { fase:5, tipo:'pow_front',    secs:60, pairs:9,  cols:4, fbCls:'fb-5', faseLabel:'−nˣ' };
-  if (lvl <= 50) return { fase:5, tipo:'pow_mix',      secs:55, pairs:10, cols:5, fbCls:'fb-5', faseLabel:'Potências mix' };
+  if (lvl <= 5)  return { fase:1, tipo:'add_sub_neg',  secs:65, pairs:4,  cols:4, allowDupNeg:false, fbCls:'fb-1', faseLabel:'+ e −' };
+  if (lvl <= 10) return { fase:1, tipo:'add_sub_neg',  secs:70, pairs:5,  cols:4, allowDupNeg:false, fbCls:'fb-1', faseLabel:'+ e − (neg. simples)' };
+  if (lvl <= 15) return { fase:2, tipo:'mul_neg_one',  secs:75, pairs:5,  cols:4, maxBase:6, fbCls:'fb-2', faseLabel:'× (um neg.)' };
+  if (lvl <= 20) return { fase:2, tipo:'mul_neg_both', secs:75, pairs:6,  cols:4, maxBase:6, fbCls:'fb-2', faseLabel:'× (dois neg.)' };
+  if (lvl <= 25) return { fase:3, tipo:'div_neg_one',  secs:75, pairs:7,  cols:5, fbCls:'fb-3', faseLabel:'÷ (um neg.)' };
+  if (lvl <= 30) return { fase:3, tipo:'mix_neg',      secs:75, pairs:8,  cols:5, allowDupNeg:false, fbCls:'fb-3', faseLabel:'÷ + mix' };
+  if (lvl <= 35) return { fase:4, tipo:'mix_neg',      secs:75, pairs:9,  cols:5, allowDupNeg:true, fbCls:'fb-4', faseLabel:'Mix completo' };
+  if (lvl <= 40) return { fase:4, tipo:'mix_neg',      secs:85, pairs:10, cols:5, allowDupNeg:true, fbCls:'fb-4', faseLabel:'Mix pesado' };
+  if (lvl <= 43) return { fase:5, tipo:'pow_paren',    secs:80, pairs:8,  cols:4, fbCls:'fb-5', faseLabel:'(−n)ˣ' };
+  if (lvl <= 46) return { fase:5, tipo:'pow_front',    secs:80, pairs:9,  cols:4, fbCls:'fb-5', faseLabel:'−nˣ' };
+  if (lvl <= 50) return { fase:5, tipo:'pow_mix',      secs:75, pairs:10, cols:5, fbCls:'fb-5', faseLabel:'Potências mix' };
 
   // ── Fase 6: Avançado (51-80) ── mesmos tipos, números maiores, levemente mais rápido
-  if (lvl <= 57) return { fase:6, tipo:'mix_neg',      secs:53, pairs:10, cols:5, maxBase:8,  allowDupNeg:true, fbCls:'fb-6', faseLabel:'Avançado I' };
-  if (lvl <= 65) return { fase:6, tipo:'pow_mix',      secs:52, pairs:10, cols:5, maxBase:8,  fbCls:'fb-6', faseLabel:'Avançado I' };
-  if (lvl <= 72) return { fase:6, tipo:'mix_neg',      secs:50, pairs:11, cols:5, maxBase:9,  allowDupNeg:true, fbCls:'fb-6', faseLabel:'Avançado II' };
-  if (lvl <= 80) return { fase:6, tipo:'pow_mix',      secs:49, pairs:11, cols:5, maxBase:9,  fbCls:'fb-6', faseLabel:'Avançado II' };
+  if (lvl <= 57) return { fase:6, tipo:'mix_neg',      secs:73, pairs:10, cols:5, maxBase:8,  allowDupNeg:true, fbCls:'fb-6', faseLabel:'Avançado I' };
+  if (lvl <= 65) return { fase:6, tipo:'pow_mix',      secs:72, pairs:10, cols:5, maxBase:8,  fbCls:'fb-6', faseLabel:'Avançado I' };
+  if (lvl <= 72) return { fase:6, tipo:'mix_neg',      secs:70, pairs:11, cols:5, maxBase:9,  allowDupNeg:true, fbCls:'fb-6', faseLabel:'Avançado II' };
+  if (lvl <= 80) return { fase:6, tipo:'pow_mix',      secs:69, pairs:11, cols:5, maxBase:9,  fbCls:'fb-6', faseLabel:'Avançado II' };
 
   // ── Fase 7: Acelerado (81-110) ── tempo reduzido, mais pares
-  if (lvl <= 87)  return { fase:7, tipo:'pow_mix',     secs:47, pairs:11, cols:5, maxBase:9,  fbCls:'fb-7', faseLabel:'Acelerado I' };
-  if (lvl <= 95)  return { fase:7, tipo:'mix_neg',     secs:46, pairs:12, cols:5, maxBase:10, allowDupNeg:true, fbCls:'fb-7', faseLabel:'Acelerado I' };
-  if (lvl <= 102) return { fase:7, tipo:'pow_mix',     secs:44, pairs:12, cols:5, maxBase:10, fbCls:'fb-7', faseLabel:'Acelerado II' };
-  if (lvl <= 110) return { fase:7, tipo:'mix_neg',     secs:42, pairs:12, cols:5, maxBase:11, allowDupNeg:true, fbCls:'fb-7', faseLabel:'Acelerado II' };
+  if (lvl <= 87)  return { fase:7, tipo:'pow_mix',     secs:67, pairs:11, cols:5, maxBase:9,  fbCls:'fb-7', faseLabel:'Acelerado I' };
+  if (lvl <= 95)  return { fase:7, tipo:'mix_neg',     secs:66, pairs:12, cols:5, maxBase:10, allowDupNeg:true, fbCls:'fb-7', faseLabel:'Acelerado I' };
+  if (lvl <= 102) return { fase:7, tipo:'pow_mix',     secs:64, pairs:12, cols:5, maxBase:10, fbCls:'fb-7', faseLabel:'Acelerado II' };
+  if (lvl <= 110) return { fase:7, tipo:'mix_neg',     secs:62, pairs:12, cols:5, maxBase:11, allowDupNeg:true, fbCls:'fb-7', faseLabel:'Acelerado II' };
 
   // ── Fase 8: Expert (111-135) ── tempo mais curto, 13 pares
-  if (lvl <= 118) return { fase:8, tipo:'pow_mix',     secs:40, pairs:12, cols:5, maxBase:11, fbCls:'fb-8', faseLabel:'Expert I' };
-  if (lvl <= 125) return { fase:8, tipo:'mix_neg',     secs:38, pairs:13, cols:5, maxBase:12, allowDupNeg:true, fbCls:'fb-8', faseLabel:'Expert I' };
-  if (lvl <= 135) return { fase:8, tipo:'pow_mix',     secs:36, pairs:13, cols:5, maxBase:12, fbCls:'fb-8', faseLabel:'Expert II' };
+  if (lvl <= 118) return { fase:8, tipo:'pow_mix',     secs:60, pairs:12, cols:5, maxBase:11, fbCls:'fb-8', faseLabel:'Expert I' };
+  if (lvl <= 125) return { fase:8, tipo:'mix_neg',     secs:58, pairs:13, cols:5, maxBase:12, allowDupNeg:true, fbCls:'fb-8', faseLabel:'Expert I' };
+  if (lvl <= 135) return { fase:8, tipo:'pow_mix',     secs:56, pairs:13, cols:5, maxBase:12, fbCls:'fb-8', faseLabel:'Expert II' };
 
   // ── Fase 9: Elite (136-150) ── desafio final, aumento suave
-  if (lvl <= 142) return { fase:9, tipo:'mix_neg',     secs:34, pairs:13, cols:5, maxBase:12, allowDupNeg:true, fbCls:'fb-9', faseLabel:'Elite' };
-  if (lvl <= 147) return { fase:9, tipo:'pow_mix',     secs:32, pairs:14, cols:5, maxBase:13, fbCls:'fb-9', faseLabel:'Elite' };
-  return             { fase:9, tipo:'mix_neg',     secs:30, pairs:14, cols:5, maxBase:15, allowDupNeg:true, fbCls:'fb-9', faseLabel:'Elite Final' };
+  if (lvl <= 142) return { fase:9, tipo:'mix_neg',     secs:54, pairs:13, cols:5, maxBase:12, allowDupNeg:true, fbCls:'fb-9', faseLabel:'Elite' };
+  if (lvl <= 147) return { fase:9, tipo:'pow_mix',     secs:52, pairs:14, cols:5, maxBase:13, fbCls:'fb-9', faseLabel:'Elite' };
+  return             { fase:9, tipo:'mix_neg',     secs:50, pairs:14, cols:5, maxBase:15, allowDupNeg:true, fbCls:'fb-9', faseLabel:'Elite Final' };
 }
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -940,7 +940,6 @@ function onTimerEnd() {
   const nivelJogado = _nivelEmJogo;
   if (!_isReplay) {
     totalPartidas++;
-    if (nivelAtual>1) nivelAtual = Math.max(1, nivelAtual-1);
   }
   salvarProgresso('timeout', nivelJogado);
   document.getElementById('lov-emoji').textContent='⏱️';
