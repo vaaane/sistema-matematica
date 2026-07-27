@@ -454,6 +454,9 @@ export function renderSidebarProfessor(containerId, activePage) {
     { id:"relatorio",      href:"/professor/relatorio.html",      label:"Relatório",      icon:`<path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/>` },
   ];
   const navExtra = [
+    { id:"vistos",       href:"/professor/p-vistos.html",     label:"Vistos de Caderno", icon:`<path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7.5 12.5l1.4-1.4 1.6 1.6 4.6-4.6 1.4 1.4-6 6-3-3z"/>` },
+    { id:"aulas",        href:"/professor/p-aulas.html",      label:"Diário de Aulas",   icon:`<path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H6V4h5v8l2.5-1.5L16 12V4h2v16z"/>` },
+    { id:"conteudos",    href:"/professor/p-conteudos.html",  label:"Biblioteca",        icon:`<path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/>` },
     { id:"mapeamento",   href:"/professor/mapeamento.html",   label:"Mapa de Sala",    icon:`<path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/>` },
     { id:"historico",    href:"/professor/p-historico.html",    label:"Histórico Geral", icon:`<path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21L13 13.04V8h-1z"/>` },
     { id:"certificados", href:"/professor/p-certificados.html", label:"Certificados",     icon:`<path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 13l-4-4 1.41-1.41L10 11.17l6.59-6.59L18 6l-8 8z"/>` },

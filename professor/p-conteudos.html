@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Biblioteca — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+<style>
+  .filtro{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:700;color:var(--text-muted);cursor:pointer;border:none;background:transparent;font-family:'Inter',sans-serif}
+  .filtro.active{background:var(--purple);color:#fff;box-shadow:0 2px 8px rgba(108,0,212,.4)}
+  .bim-tabs{display:flex;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:11px;padding:4px;flex-wrap:wrap}
+
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:20px}
+  .stat-label{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+  .stat-value{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;margin-top:4px}
+  .stat-value.purple{color:var(--purple)}.stat-value.gold{color:var(--gold)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+  .item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px}
+  .item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+  .item-nome{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;line-height:1.2}
+  .item-arq{font-size:11px;color:var(--text-muted);font-family:'Orbitron',monospace;word-break:break-all;margin-top:3px}
+  .tipo{flex-shrink:0;font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px}
+  .tipo.teorica{background:var(--purple-pale);color:#c98aff;border:1px solid rgba(155,48,255,.3)}
+  .tipo.exercicios{background:var(--gold-pale);color:var(--gold);border:1px solid rgba(240,165,0,.3)}
+  .item-acts{display:flex;gap:8px;margin-top:auto;flex-wrap:wrap}
+
+  .vazio{padding:40px 20px;text-align:center;color:var(--text-muted);font-size:13px;line-height:1.7}
+  .vazio code{background:rgba(255,255,255,.06);padding:2px 6px;border-radius:5px}
+  .banner-info{background:rgba(155,48,255,.08);border:1px solid rgba(155,48,255,.25);color:#c98aff;border-radius:10px;padding:10px 14px;font-size:12px;margin-bottom:16px}
+  .banner-info code{background:rgba(255,255,255,.08);padding:1px 5px;border-radius:4px}
+
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:#141428;border:1px solid var(--border);color:var(--text);padding:10px 18px;border-radius:10px;font-size:13px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:all .25s;z-index:400}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.err{border-color:var(--red);color:#FCA5A5}
+
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center;padding:24px}
+  .modal-overlay.open{display:flex}
+  .modal-box{background:#fff;color:#1f2937;border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow:auto}
+  .modal-box-body{padding:24px 28px}
+  .modal-box-title{font-size:18px;font-weight:800;margin-bottom:18px}
+  .f{margin-bottom:16px}
+  .f-label{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#6b7280;margin-bottom:8px;display:block}
+  .f .input{background:#F9FAFB;border:1.5px solid #d1d5db;color:#1f2937;border-radius:10px;padding:11px 13px;font-size:14px;width:100%;font-family:'Inter',sans-serif}
+  .f .input:focus{border-color:var(--purple);background:#fff;outline:none}
+  .tipo-pick{display:flex;gap:8px}
+  .tipo-opt{flex:1;padding:12px;border:2px solid #d1d5db;border-radius:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:700;color:#6b7280;background:#fafafa}
+  .tipo-opt.on{border-color:var(--purple);background:#f3e8ff;color:#6c00d4}
+  .hint{font-size:11px;color:#9ca3af;margin-top:6px}
+  .hint b{color:#6b7280}
+  .arq-prefix{display:flex;align-items:stretch}
+  .arq-prefix .pfx{display:flex;align-items:center;padding:0 10px;background:#eef2ff;border:1.5px solid #d1d5db;border-right:none;border-radius:10px 0 0 10px;font-size:12px;color:#6b7280;font-family:ui-monospace,monospace}
+  .arq-prefix .input{border-radius:0 10px 10px 0}
+  .btn-bar{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
+  .btn-bar .btn-ghost{color:#6b7280;border-color:#d1d5db}
+  .btn-gray{background:#f3f4f6;color:#1f2937}.btn-gray:hover{background:#e5e7eb}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left"><div class="topbar-title">📚 Biblioteca</div><div class="topbar-sub" id="sub">Carregando…</div></div>
+      <div class="topbar-right"><button class="btn btn-blue" onclick="abrirNovo()">＋ Criar aula</button></div>
+    </div>
+    <div class="content">
+      <div class="banner-info">📁 Cada aula aqui aponta para um arquivo <code>.html</code> que você colou na pasta <code>/conteudos</code> do site. O catálogo (nome, tipo, arquivo) é salvo; o HTML fica na pasta. Depois use estas aulas no <b>Diário</b> e nos <b>Vistos</b>.</div>
+      <div class="stats" id="stats"></div>
+      <div class="card" style="padding:14px 20px">
+        <div class="card-header" style="margin-bottom:0">
+          <div class="bim-tabs" id="filtros"></div>
+          <input class="input" id="busca" placeholder="🔍 Buscar por nome…" style="width:220px">
+        </div>
+      </div>
+      <div id="grid"><div class="card"><div class="vazio">Carregando…</div></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="ov">
+  <div class="modal-box"><div class="modal-box-body">
+    <div class="modal-box-title" id="mTitulo">Criar aula</div>
+    <div class="f"><label class="f-label">Nome da aula</label>
+      <input class="input" id="mNome" placeholder="Ex.: Teoria dos Números Complexos"></div>
+    <div class="f"><label class="f-label">Resumo (1 linha — aparece nos Vistos/Diário)</label>
+      <input class="input" id="mResumo" placeholder="Ex.: Exercícios 1 a 10, pág. 84 — porcentagem"></div>
+    <div class="f"><label class="f-label">Tipo</label>
+      <div class="tipo-pick">
+        <div class="tipo-opt on" id="optTeorica" onclick="setTipo('teorica')">📖 Teórica</div>
+        <div class="tipo-opt" id="optExercicios" onclick="setTipo('exercicios')">✏️ Exercícios</div>
+      </div></div>
+    <div class="f"><label class="f-label">Arquivo HTML (da pasta /conteudos)</label>
+      <div class="arq-prefix"><span class="pfx">/conteudos/</span><input class="input" id="mArq" placeholder="numeros-complexos.html"></div>
+      <div class="hint">Só o nome do arquivo que você colou na pasta. <b>Ex.: numeros-complexos.html</b></div>
+    </div>
+    <div class="f">
+      <button class="btn btn-gray btn-sm" onclick="abrirArquivo()">👁 Abrir arquivo em nova aba</button>
+      <div class="hint" id="testeInfo"></div>
+    </div>
+    <div class="btn-bar">
+      <button class="btn btn-ghost" onclick="fechar()">Cancelar</button>
+      <button class="btn btn-blue" onclick="salvar()">Salvar</button>
+    </div>
+  </div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get, set, update, remove, push }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+requireProfessor();
+renderSidebarProfessor("sidebar", "conteudos");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+let itens = [];
+let filtroTipo = "todos", filtro = "", editId = null, tipoSel = "teorica";
+
+let toastT;
+function toast(msg, err=false){ const el=document.getElementById("toast"); el.textContent=msg; el.className="toast show"+(err?" err":""); clearTimeout(toastT); toastT=setTimeout(()=>el.className="toast",2200); }
+
+async function carregar(){
+  document.getElementById("grid").innerHTML = `<div class="card"><div class="vazio">Carregando…</div></div>`;
+  try{
+    const snap = await get(ref(db, "biblioteca"));
+    itens = snap.exists()
+      ? Object.entries(snap.val()).map(([id,a])=>({id, nome:a.nome||"(sem nome)", tipo:a.tipo||"teorica", arquivo:a.arquivo||"", resumo:a.resumo||"", criadoEm:a.criadoEm||0})).sort((x,y)=>(y.criadoEm-x.criadoEm))
+      : [];
+  }catch(e){ console.error(e); itens=[]; toast("Erro ao carregar (verifique regra 'biblioteca')", true); }
+  render();
+}
+
+function render(){
+  const nT=itens.filter(i=>i.tipo==="teorica").length, nE=itens.filter(i=>i.tipo==="exercicios").length;
+  document.getElementById("sub").textContent=`${itens.length} aula(s) catalogada(s)`;
+  document.getElementById("stats").innerHTML=`
+    <div class="stat-card"><div><div class="stat-label">Total</div><div class="stat-value purple">${itens.length}</div></div></div>
+    <div class="stat-card"><div><div class="stat-label">Teóricas</div><div class="stat-value purple">${nT}</div></div></div>
+    <div class="stat-card"><div><div class="stat-label">Exercícios</div><div class="stat-value gold">${nE}</div></div></div>`;
+  const tipos=[["todos","Todos"],["teorica","Teóricas"],["exercicios","Exercícios"]];
+  document.getElementById("filtros").innerHTML=tipos.map(([v,l])=>`<button class="filtro ${v===filtroTipo?"active":""}" data-v="${v}">${l}</button>`).join("");
+  document.querySelectorAll("#filtros .filtro").forEach(b=>b.onclick=()=>{ filtroTipo=b.dataset.v; render(); });
+
+  const lista=itens.filter(i=>(filtroTipo==="todos"||i.tipo===filtroTipo)&&i.nome.toLowerCase().includes(filtro));
+  const grid=document.getElementById("grid");
+  if(!itens.length){ grid.innerHTML=`<div class="card"><div class="vazio">Nenhuma aula catalogada.<br>Clique em <b>＋ Criar aula</b> para cadastrar a primeira (aponte para um html da pasta <code>/conteudos</code>).</div></div>`; return; }
+  if(!lista.length){ grid.innerHTML=`<div class="card"><div class="vazio">Nada bate com o filtro/busca.</div></div>`; return; }
+  grid.innerHTML=`<div class="grid">`+lista.map(i=>`
+    <div class="item">
+      <div class="item-top">
+        <div><div class="item-nome">${i.nome}</div><div class="item-arq">/conteudos/${i.arquivo}</div></div>
+        <span class="tipo ${i.tipo}">${i.tipo==="teorica"?"teórica":"exercícios"}</span>
+      </div>
+      <div class="item-acts">
+        <a class="btn btn-ghost btn-sm" href="/conteudos/${i.arquivo}" target="_blank">👁 Abrir ↗</a>
+        <button class="btn btn-ghost btn-sm" data-edit="${i.id}">✏️ Editar</button>
+        <button class="btn btn-ghost btn-sm" data-del="${i.id}">🗑️</button>
+      </div>
+    </div>`).join("")+`</div>`;
+  grid.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>editar(b.dataset.edit));
+  grid.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>excluir(b.dataset.del));
+}
+document.getElementById("busca").addEventListener("input",e=>{ filtro=e.target.value.toLowerCase(); render(); });
+
+function setTipo(t){ tipoSel=t; document.getElementById("optTeorica").classList.toggle("on",t==="teorica"); document.getElementById("optExercicios").classList.toggle("on",t==="exercicios"); }
+window.setTipo = setTipo;
+function limpaArq(v){ return v.trim().replace(/^\/?conteudos\//i,""); }
+
+window.abrirNovo = function(){
+  editId=null; setTipo("teorica");
+  document.getElementById("mTitulo").textContent="Criar aula";
+  document.getElementById("mNome").value=""; document.getElementById("mArq").value=""; document.getElementById("mResumo").value="";
+  document.getElementById("testeInfo").textContent="";
+  document.getElementById("ov").classList.add("open");
+};
+function editar(id){
+  const i=itens.find(x=>x.id===id); if(!i) return;
+  editId=id; setTipo(i.tipo);
+  document.getElementById("mTitulo").textContent="Editar aula";
+  document.getElementById("mNome").value=i.nome; document.getElementById("mArq").value=i.arquivo; document.getElementById("mResumo").value=i.resumo||"";
+  document.getElementById("testeInfo").textContent="";
+  document.getElementById("ov").classList.add("open");
+}
+window.abrirArquivo = function(){
+  let arq=limpaArq(document.getElementById("mArq").value);
+  if(!arq){ document.getElementById("testeInfo").textContent="Digite o nome do arquivo primeiro."; return; }
+  if(!/\.html?$/i.test(arq)) arq+=".html";
+  window.open("/conteudos/"+arq, "_blank");
+};
+window.salvar = async function(){
+  const nome=document.getElementById("mNome").value.trim();
+  let arq=limpaArq(document.getElementById("mArq").value);
+  const resumo=document.getElementById("mResumo").value.trim();
+  if(!nome){ toast("Dê um nome", true); return; }
+  if(!arq){ toast("Informe o arquivo html", true); return; }
+  if(!/\.html?$/i.test(arq)) arq+=".html";
+  try{
+    if(editId){
+      await update(ref(db, `biblioteca/${editId}`), {nome, tipo:tipoSel, arquivo:arq, resumo});
+    }else{
+      const novo=push(ref(db, "biblioteca"));
+      await set(novo, {nome, tipo:tipoSel, arquivo:arq, resumo, criadoEm:Date.now()});
+    }
+    fechar(); toast("Salvo"); await carregar();
+  }catch(e){ console.error(e); toast("Erro ao salvar", true); }
+};
+async function excluir(id){
+  if(!confirm("Excluir esta aula do catálogo?\n(O arquivo html na pasta /conteudos NÃO é apagado.)")) return;
+  try{ await remove(ref(db, `biblioteca/${id}`)); toast("Excluída"); await carregar(); }
+  catch(e){ console.error(e); toast("Erro ao excluir", true); }
+}
+window.fechar = ()=>document.getElementById("ov").classList.remove("open");
+document.getElementById("ov").addEventListener("click",e=>{ if(e.target.id==="ov") fechar(); });
+
+carregar();
+</script>
+</body>
+</html>

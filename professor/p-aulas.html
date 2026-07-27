@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Diário de Aulas — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+<style>
+  select.sel-turma{padding:9px 14px;border-radius:9px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+  select.sel-turma option{color:var(--text);background:var(--card)}
+  .bim-tabs{display:flex;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:11px;padding:4px;flex-wrap:wrap}
+  .bim-tab{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:700;color:var(--text-muted);cursor:pointer;border:none;background:transparent;font-family:'Inter',sans-serif}
+  .bim-tab.active{background:var(--purple);color:#fff;box-shadow:0 2px 8px rgba(108,0,212,.4)}
+
+  .banner-info{background:rgba(155,48,255,.08);border:1px solid rgba(155,48,255,.25);color:#c98aff;border-radius:10px;padding:10px 14px;font-size:12px;margin-bottom:16px}
+  .vazio{padding:40px 20px;text-align:center;color:var(--text-muted);font-size:13px}
+
+  .aula{border:1px solid var(--border);border-radius:12px;margin-bottom:12px;overflow:hidden;background:rgba(255,255,255,.015)}
+  .aula-head{display:flex;align-items:center;gap:14px;padding:14px 18px}
+  .aula-num{flex-shrink:0;min-width:74px;text-align:center;font-family:'Orbitron',monospace;font-weight:700;font-size:13px;color:var(--purple);background:var(--purple-pale);border:1px solid rgba(155,48,255,.3);border-radius:9px;padding:8px 6px;line-height:1.15}
+  .aula-num small{display:block;font-family:'Inter',sans-serif;font-size:9px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  .aula-num.dupla{color:var(--gold);background:var(--gold-pale);border-color:rgba(240,165,0,.35)}
+  .aula-info{flex:1;min-width:0}
+  .aula-titulo{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;line-height:1.2;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .tipo{font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px}
+  .tipo.teorica{background:var(--purple-pale);color:#c98aff;border:1px solid rgba(155,48,255,.3)}
+  .tipo.exercicios{background:var(--gold-pale);color:var(--gold);border:1px solid rgba(240,165,0,.3)}
+  .aula-meta{font-size:11px;color:var(--text-muted);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .badge.dupla{background:var(--gold-pale);color:var(--gold);border:1px solid rgba(240,165,0,.3);font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;text-transform:uppercase}
+  .aula-acts{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap}
+
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:#141428;border:1px solid var(--border);color:var(--text);padding:10px 18px;border-radius:10px;font-size:13px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:all .25s;z-index:400}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.err{border-color:var(--red);color:#FCA5A5}
+
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center;padding:24px}
+  .modal-overlay.open{display:flex}
+  .modal-box{background:#fff;color:#1f2937;border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow:auto}
+  .modal-box-body{padding:24px 28px}
+  .modal-box-title{font-size:18px;font-weight:800;margin-bottom:18px}
+  .f{margin-bottom:16px}
+  .f-label{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#6b7280;margin-bottom:8px;display:block}
+  .f .input{background:#F9FAFB;border:1.5px solid #d1d5db;color:#1f2937;border-radius:10px;padding:11px 13px;font-size:14px;width:100%;font-family:'Inter',sans-serif}
+  .f .input:focus{border-color:var(--purple);background:#fff;outline:none}
+  .f-row{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:end}
+  .chk-line{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600;color:#1f2937;cursor:pointer;padding:10px 12px;border:1.5px solid #d1d5db;border-radius:10px;background:#F9FAFB}
+  .chk-line input{width:17px;height:17px;accent-color:var(--purple)}
+  .bib-lista{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow:auto;border:1.5px solid #d1d5db;border-radius:10px;padding:8px;background:#F9FAFB}
+  .bib-opt{display:flex;align-items:center;gap:10px;padding:9px 11px;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer;background:#fff}
+  .bib-opt:hover{border-color:var(--purple);background:#faf5ff}
+  .bib-opt.sel{border-color:var(--purple);background:#f3e8ff}
+  .bib-opt-nome{flex:1;font-size:13px;font-weight:600;color:#1f2937}
+  .bib-opt-arq{font-size:11px;color:#9ca3af;margin-top:2px}
+  .bib-tipo{flex-shrink:0;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;text-transform:uppercase}
+  .bib-tipo.teorica{background:var(--purple-pale);color:#6c00d4}
+  .bib-tipo.exercicios{background:var(--gold-pale);color:#b45309}
+  .bib-vazio{padding:16px;text-align:center;color:#9ca3af;font-size:12px}
+  .btn-bar{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
+  .btn-bar .btn-ghost{color:#6b7280;border-color:#d1d5db}
+  .hint{font-size:11px;color:#9ca3af;margin-top:6px}
+
+  @media(max-width:860px){.content{padding:16px 12px}.f-row{grid-template-columns:1fr}.aula-head{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left"><div class="topbar-title">📅 Diário de Aulas</div><div class="topbar-sub" id="sub">Carregando…</div></div>
+      <div class="topbar-right"><select class="sel-turma" id="selTurma"></select></div>
+    </div>
+    <div class="content">
+      <div class="banner-info">📅 Aqui você registra <b>quando</b> cada aula da Biblioteca foi aplicada nesta turma. Numeração automática (aula dupla ocupa dois números). Cadastre as aulas em <b>Biblioteca</b> primeiro.</div>
+      <div class="card" style="padding:14px 20px">
+        <div class="card-header" style="margin-bottom:0">
+          <div class="bim-tabs" id="bimTabs"></div>
+          <button class="btn btn-blue" onclick="abrirNova()">＋ Nova aula</button>
+        </div>
+      </div>
+      <div id="lista"><div class="vazio">Carregando…</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="ov">
+  <div class="modal-box"><div class="modal-box-body">
+    <div class="modal-box-title" id="mTitulo">Registrar aula</div>
+    <div class="f"><label class="f-label">Aula (da biblioteca)</label>
+      <div class="bib-lista" id="bibLista"></div>
+      <div class="hint">Escolha a aula catalogada que foi aplicada. Não achou? Cadastre em <b>Biblioteca</b>.</div>
+    </div>
+    <div class="f-row">
+      <div class="f" style="margin:0"><label class="f-label">Data aplicada</label>
+        <input class="input" id="mData" type="date"></div>
+      <div class="f" style="margin:0"><label class="chk-line"><input type="checkbox" id="mDupla"> 🕐🕐 Aula dupla</label></div>
+    </div>
+    <div class="btn-bar">
+      <button class="btn btn-ghost" onclick="fechar()">Cancelar</button>
+      <button class="btn btn-blue" onclick="salvar()">Salvar</button>
+    </div>
+  </div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { ALUNOS_POR_TURMA } from "/js/constants.js";
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get, set, update, remove, push }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+requireProfessor();
+renderSidebarProfessor("sidebar", "aulas");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const TURMAS = Object.keys(ALUNOS_POR_TURMA);
+let turma = TURMAS.includes("8F") ? "8F" : TURMAS[0];
+let bimestre = 3;
+let editId = null, bibSel = null;
+
+let aulas = [];       // {id, bibId, data, dupla, ordem}
+let biblioteca = [];  // {id, nome, tipo, arquivo}
+
+const Paulas = (t,b) => `aulas/${t}/${b}`;
+const fmtData = iso => { if(!iso) return ""; const [y,m,d]=iso.split("-"); return `${d}/${m}`; };
+const hoje = () => { const d=new Date(); const o=d.getTimezoneOffset(); return new Date(d.getTime()-o*60000).toISOString().slice(0,10); };
+
+let toastT;
+function toast(msg, err=false){ const el=document.getElementById("toast"); el.textContent=msg; el.className="toast show"+(err?" err":""); clearTimeout(toastT); toastT=setTimeout(()=>el.className="toast",2200); }
+
+function numeros(lista){ let n=1,out=[]; lista.forEach(a=>{ if(a.dupla){out.push(`${n}–${n+1}`);n+=2;} else {out.push(`${n}`);n+=1;} }); return out; }
+function bibDe(id){ return biblioteca.find(b=>b.id===id); }
+
+async function carregar(){
+  document.getElementById("lista").innerHTML = `<div class="vazio">Carregando…</div>`;
+  try{
+    const [snapA, snapB] = await Promise.all([
+      get(ref(db, Paulas(turma,bimestre))),
+      get(ref(db, "biblioteca")),
+    ]);
+    aulas = snapA.exists()
+      ? Object.entries(snapA.val()).map(([id,a])=>({id, bibId:a.bibId||"", data:a.data||"", dupla:!!a.dupla, ordem:a.ordem||0})).sort((x,y)=>(x.ordem-y.ordem)||(x.data<y.data?-1:1))
+      : [];
+    biblioteca = snapB.exists()
+      ? Object.entries(snapB.val()).map(([id,b])=>({id, nome:b.nome||"(sem nome)", tipo:b.tipo||"teorica", arquivo:b.arquivo||""}))
+      : [];
+  }catch(e){ console.error(e); aulas=[]; biblioteca=[]; toast("Erro ao carregar (verifique regra 'aulas')", true); }
+  render();
+}
+
+function render(){
+  document.getElementById("selTurma").innerHTML = TURMAS.map(t=>`<option ${t===turma?"selected":""}>${t}</option>`).join("");
+  document.getElementById("bimTabs").innerHTML = [1,2,3,4].map(b=>`<button class="bim-tab ${b===bimestre?"active":""}" data-b="${b}">${b}º Bim</button>`).join("");
+  document.querySelectorAll(".bim-tab").forEach(el=>el.onclick=()=>{ bimestre=+el.dataset.b; carregar(); });
+  document.getElementById("sub").textContent = `Turma ${turma} · ${bimestre}º bimestre — ${aulas.length} aula(s)`;
+
+  const lista=document.getElementById("lista");
+  if(!aulas.length){ lista.innerHTML=`<div class="card"><div class="vazio">Nenhuma aula registrada no ${bimestre}º bimestre da turma ${turma}.<br>Clique em <b>＋ Nova aula</b>.</div></div>`; return; }
+
+  const nums=numeros(aulas);
+  lista.innerHTML=aulas.map((a,i)=>{
+    const b=bibDe(a.bibId);
+    const nome=b?b.nome:"(aula removida da biblioteca)";
+    const tipo=b?b.tipo:"";
+    const arq=b?b.arquivo:"";
+    return `<div class="aula">
+      <div class="aula-head">
+        <div class="aula-num ${a.dupla?"dupla":""}"><small>Aula</small>${nums[i]}</div>
+        <div class="aula-info">
+          <div class="aula-titulo">${nome} ${tipo?`<span class="tipo ${tipo}">${tipo==="teorica"?"teórica":"exercícios"}</span>`:""}</div>
+          <div class="aula-meta">
+            <span>📅 ${fmtData(a.data)}</span>
+            ${a.dupla?'<span class="badge dupla">dupla</span>':''}
+            ${arq?`<span>📄 ${arq}</span>`:''}
+          </div>
+        </div>
+        <div class="aula-acts">
+          ${arq?`<a class="btn btn-ghost btn-sm" href="/conteudos/${arq}" target="_blank">👁 Abrir</a>`:''}
+          <button class="btn btn-ghost btn-sm" data-edit="${a.id}">✏️ Editar</button>
+          <button class="btn btn-ghost btn-sm" data-del="${a.id}">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+  lista.querySelectorAll("[data-edit]").forEach(el=>el.onclick=()=>editar(el.dataset.edit));
+  lista.querySelectorAll("[data-del]").forEach(el=>el.onclick=()=>excluir(el.dataset.del));
+}
+document.getElementById("selTurma").addEventListener("change",e=>{ turma=e.target.value; carregar(); });
+
+function renderBibLista(){
+  const box=document.getElementById("bibLista");
+  if(!biblioteca.length){ box.innerHTML=`<div class="bib-vazio">Biblioteca vazia. Cadastre aulas em <b>Biblioteca</b> primeiro.</div>`; return; }
+  box.innerHTML=biblioteca.map(b=>`
+    <div class="bib-opt ${bibSel===b.id?'sel':''}" data-id="${b.id}">
+      <div style="flex:1"><div class="bib-opt-nome">${b.nome}</div><div class="bib-opt-arq">/conteudos/${b.arquivo}</div></div>
+      <span class="bib-tipo ${b.tipo}">${b.tipo==="teorica"?"teórica":"exercícios"}</span>
+    </div>`).join("");
+  box.querySelectorAll(".bib-opt").forEach(el=>el.onclick=()=>{ bibSel=el.dataset.id; renderBibLista(); });
+}
+
+window.abrirNova = function(){
+  editId=null; bibSel=null;
+  document.getElementById("mTitulo").textContent="Registrar aula";
+  document.getElementById("mData").value=hoje();
+  document.getElementById("mDupla").checked=false;
+  renderBibLista();
+  document.getElementById("ov").classList.add("open");
+};
+function editar(id){
+  const a=aulas.find(x=>x.id===id); if(!a) return;
+  editId=id; bibSel=a.bibId;
+  document.getElementById("mTitulo").textContent="Editar aula";
+  document.getElementById("mData").value=a.data||hoje();
+  document.getElementById("mDupla").checked=!!a.dupla;
+  renderBibLista();
+  document.getElementById("ov").classList.add("open");
+}
+window.salvar = async function(){
+  if(!bibSel){ toast("Escolha uma aula da biblioteca", true); return; }
+  const data=document.getElementById("mData").value||hoje();
+  const dupla=document.getElementById("mDupla").checked;
+  try{
+    if(editId){
+      await update(ref(db, `${Paulas(turma,bimestre)}/${editId}`), {bibId:bibSel, data, dupla});
+    }else{
+      const novo=push(ref(db, Paulas(turma,bimestre)));
+      const ordem=(aulas.reduce((m,a)=>Math.max(m,a.ordem||0),0))+1;
+      await set(novo, {bibId:bibSel, data, dupla, ordem, criadoEm:Date.now()});
+    }
+    fechar(); toast("Salvo"); await carregar();
+  }catch(e){ console.error(e); toast("Erro ao salvar", true); }
+};
+async function excluir(id){
+  if(!confirm("Excluir este registro de aula? As seguintes serão renumeradas.")) return;
+  try{ await remove(ref(db, `${Paulas(turma,bimestre)}/${id}`)); toast("Excluída"); await carregar(); }
+  catch(e){ console.error(e); toast("Erro ao excluir", true); }
+}
+window.fechar = ()=>document.getElementById("ov").classList.remove("open");
+document.getElementById("ov").addEventListener("click",e=>{ if(e.target.id==="ov") fechar(); });
+
+carregar();
+</script>
+</body>
+</html>

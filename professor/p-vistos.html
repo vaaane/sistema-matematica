@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vistos de Caderno — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+<style>
+  select.sel-turma{padding:9px 14px;border-radius:9px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+  select.sel-turma option{color:var(--text);background:var(--card)}
+
+  .bim-tabs{display:flex;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:11px;padding:4px;flex-wrap:wrap}
+  .bim-tab{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:700;color:var(--text-muted);cursor:pointer;border:none;background:transparent;font-family:'Inter',sans-serif}
+  .bim-tab.active{background:var(--purple);color:#fff;box-shadow:0 2px 8px rgba(108,0,212,.4)}
+
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px}
+  .stat-label{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+  .stat-value{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;margin-top:4px}
+  .stat-value.gold{color:var(--gold)}.stat-value.green{color:var(--green)}.stat-value.purple{color:var(--purple)}
+
+  .grade-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+  table.grade{border-collapse:separate;border-spacing:0;width:100%;min-width:600px;font-size:13px}
+  .grade th,.grade td{border-bottom:1px solid var(--border);padding:0}
+  .grade thead th{background:#141428;position:sticky;top:0;z-index:5}
+  .grade th.col-aluno,.grade td.col-aluno{position:sticky;left:0;z-index:6;background:#141428;min-width:170px;max-width:210px;text-align:left;padding:10px 14px;border-right:1px solid var(--border)}
+  .grade tbody td.col-aluno{background:var(--card);font-weight:600}
+  .grade tbody tr:hover td.col-aluno{background:#20203a}
+  .grade tbody tr:hover td{background:rgba(255,255,255,.02)}
+  .grade th.col-atv{min-width:96px;padding:8px 6px;text-align:center;vertical-align:top;cursor:pointer;user-select:none}
+  .grade th.col-atv:hover{background:#1c1c34}
+  .atv-nome{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--gold);line-height:1.15}
+  .atv-data{font-size:10px;color:var(--text-muted);margin-top:2px}
+  .atv-pct{font-family:'Orbitron',monospace;font-size:10px;margin-top:3px;color:var(--purple)}
+  .grade th.col-tot{min-width:70px;text-align:center;padding:10px 6px;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px}
+  .grade td.cel{text-align:center;padding:4px;cursor:pointer}
+  .aluno-num{display:inline-block;width:22px;color:var(--text-muted);font-size:11px;font-family:'Orbitron',monospace}
+
+  .chk{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;border:1.5px solid var(--border);background:rgba(255,255,255,.03);font-size:14px;font-weight:800;transition:all .12s;user-select:none}
+  .cel:hover .chk{border-color:var(--text-muted)}
+  .chk.v1{background:var(--green-pale);border-color:var(--green);color:var(--green)}
+  .chk.v2{background:var(--gold-pale);border-color:var(--gold);color:var(--gold);font-size:11px}
+  td.tot-cel{text-align:center;font-family:'Orbitron',monospace;font-size:12px;padding:4px 6px}
+  .tot-ok{color:var(--green)}.tot-mid{color:var(--gold)}.tot-low{color:var(--red)}
+
+  .legenda{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--text-muted)}
+  .legenda span{display:inline-flex;align-items:center;gap:6px}
+  .leg-box{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800}
+  .leg-box.g{background:var(--green-pale);border-color:var(--green);color:var(--green)}
+  .leg-box.a{background:var(--gold-pale);border-color:var(--gold);color:var(--gold)}
+
+  .vazio{padding:40px 20px;text-align:center;color:var(--text-muted);font-size:13px}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:#141428;border:1px solid var(--border);color:var(--text);padding:10px 18px;border-radius:10px;font-size:13px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:all .25s;z-index:400}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.err{border-color:var(--red);color:#FCA5A5}
+
+  /* Modais — padrão fundo branco (igual p-atividades) */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:center;justify-content:center;padding:24px}
+  .modal-overlay.open{display:flex}
+  .modal-box{background:#fff;color:#1f2937;border-radius:18px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.35);animation:fadeUp .2s ease}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  .modal-box-body{padding:24px 28px 28px}
+  .modal-box-title{font-size:19px;font-weight:800;margin-bottom:18px;color:#1f2937}
+  .modal-field{margin-bottom:18px}
+  .modal-field-label{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#6b7280;margin-bottom:8px;display:block}
+  .modal-field .input{width:100%;background:#F9FAFB;border:1.5px solid #d1d5db;border-radius:10px;padding:12px 14px;font-size:14px;font-family:'Inter',sans-serif;color:#1f2937;outline:none;transition:border-color .18s}
+  .modal-field .input:focus{border-color:var(--purple);background:#fff}
+  .modal-field textarea.input{resize:vertical;min-height:70px}
+  .modal-btn-bar{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
+  .menu-col{display:flex;flex-direction:column;gap:8px;margin:6px 0 4px}
+  .menu-col .btn{justify-content:flex-start}
+  .btn-gray{background:#f3f4f6;color:#1f2937}.btn-gray:hover{background:#e5e7eb}
+  .btn-red-soft{background:#fee2e2;color:#b91c1c}.btn-red-soft:hover{background:#fecaca}
+  .modal-btn-bar .btn-ghost{color:#6b7280;border-color:#d1d5db}
+  .modal-btn-bar .btn-ghost:hover{color:#1f2937;border-color:#6b7280}
+  .col-info{font-size:12px;color:#6b7280;margin-bottom:6px}
+
+  /* seletor da biblioteca (dentro do modal branco) */
+  .bib-filtro{padding:6px 14px;font-size:12px;font-weight:700;border:1.5px solid #d1d5db;background:#fff;color:#6b7280;border-radius:999px;cursor:pointer;font-family:'Inter',sans-serif}
+  .bib-filtro.on{background:var(--purple);color:#fff;border-color:var(--purple)}
+  .bib-item{display:flex;align-items:center;gap:12px;padding:11px 13px;border:1.5px solid #e5e7eb;border-radius:10px;margin-bottom:8px;cursor:pointer;transition:border-color .12s,background .12s}
+  .bib-item:hover{border-color:var(--purple);background:#faf5ff}
+  .bib-item.sel{border-color:var(--purple);background:#f3e8ff}
+  .bib-nome{flex:1;font-size:13px;font-weight:600;color:#1f2937}
+  .bib-arq{font-size:11px;color:#9ca3af;margin-top:2px}
+  .bib-tipo{flex-shrink:0;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;text-transform:uppercase}
+  .bib-tipo.teoria{background:var(--purple-pale);color:#7a00d4}
+  .bib-tipo.atividade{background:var(--gold-pale);color:#b45309}
+  .bib-tipo.outro{background:#e5e7eb;color:#6b7280}
+  .bib-ver{background:#f3f4f6;color:#374151;border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0}
+  .bib-ver:hover{background:#e5e7eb}
+  .bib-vazio{padding:22px;text-align:center;color:#9ca3af;font-size:13px}
+
+  @media(max-width:860px){
+    .content{padding:16px 12px}
+    .grade th.col-aluno,.grade td.col-aluno{min-width:130px;max-width:150px;font-size:12px}
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">📓 Vistos de Caderno</div>
+        <div class="topbar-sub" id="topbar-sub">Carregando…</div>
+      </div>
+      <div class="topbar-right">
+        <select class="sel-turma" id="selTurma"></select>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="card" style="padding:14px 20px">
+        <div class="card-header" style="margin-bottom:0">
+          <div class="bim-tabs" id="bimTabs"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input class="input" id="busca" placeholder="🔍 Buscar aluno…" style="width:180px">
+            <button class="btn btn-blue" onclick="abrirNovaAtv()">＋ Nova atividade</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats" id="stats"></div>
+
+      <div class="card">
+        <div class="grade-wrap" id="gradeWrap"><div class="vazio">Carregando…</div></div>
+        <div class="legenda">
+          <span><span class="leg-box"></span> não fez / não verificado</span>
+          <span><span class="leg-box g">✓</span> visto dado</span>
+          <span><span class="leg-box a">A</span> entregou atrasado</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal nova/editar atividade -->
+<div class="modal-overlay" id="modalAtv">
+  <div class="modal-box"><div class="modal-box-body">
+    <div class="modal-box-title" id="mAtvTitulo">Nova atividade</div>
+    <div class="modal-field"><label class="modal-field-label">Nome</label>
+      <input class="input" id="mNome" placeholder="Ex.: Lista de exercícios — Porcentagem"></div>
+    <div class="modal-field"><label class="modal-field-label">Data</label>
+      <input class="input" id="mData" type="date"></div>
+    <div class="modal-field"><label class="modal-field-label">Conteúdo</label>
+      <textarea class="input" id="mConteudo" placeholder="Ex.: Exercícios 1 a 10, pág. 84 — porcentagem"></textarea></div>
+    <div class="modal-field"><label class="modal-field-label">Aula vinculada (da biblioteca — opcional)</label>
+      <div id="mMatSel" class="col-info" style="padding:10px 12px;border:1.5px solid #d1d5db;border-radius:10px;background:#F9FAFB;margin-bottom:8px">Nenhum material selecionado.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button type="button" class="btn btn-gray btn-sm" onclick="abrirBiblioteca()">📎 Selecionar da biblioteca</button>
+        <button type="button" class="btn btn-red-soft btn-sm" id="btnLimparMat" onclick="limparMaterialSel()" style="display:none">Remover</button>
+      </div></div>
+    <div class="modal-btn-bar">
+      <button class="btn btn-ghost" onclick="fecharModais()">Cancelar</button>
+      <button class="btn btn-blue" onclick="salvarAtv()">Salvar</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- Modal menu da coluna -->
+<div class="modal-overlay" id="modalCol">
+  <div class="modal-box"><div class="modal-box-body">
+    <div class="modal-box-title" id="mColTitulo">Atividade</div>
+    <div class="col-info" id="mColInfo"></div>
+    <div class="menu-col">
+      <button class="btn btn-gray" id="btnAbrirMat" onclick="abrirMaterial()" style="display:none">📄 Abrir material da aula</button>
+      <button class="btn btn-gray" onclick="marcarTodos(1)">✓ Marcar todos como visto</button>
+      <button class="btn btn-gray" onclick="marcarTodos(0)">▢ Desmarcar todos</button>
+      <button class="btn btn-gray" onclick="editarAtvAtual()">✏️ Editar atividade</button>
+      <button class="btn btn-red-soft" id="btnRemMat" onclick="removerMaterial()" style="display:none">📄 Remover material</button>
+      <button class="btn btn-red-soft" onclick="excluirAtvAtual()">🗑️ Excluir atividade</button>
+    </div>
+    <div class="modal-btn-bar"><button class="btn btn-ghost" onclick="fecharModais()">Fechar</button></div>
+  </div></div>
+</div>
+
+<!-- Modal seletor da biblioteca -->
+<div class="modal-overlay" id="modalBib">
+  <div class="modal-box" style="max-width:600px"><div class="modal-box-body">
+    <div class="modal-box-title">Selecionar aula da biblioteca</div>
+    <div id="bibFiltros" style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap"></div>
+    <input class="input" id="bibBusca" placeholder="🔍 Buscar por nome…" style="margin-bottom:12px">
+    <div id="bibLista" style="max-height:300px;overflow:auto"></div>
+    <div id="bibPrev" style="display:none;border:1.5px solid #d1d5db;border-radius:10px;padding:14px;margin-top:12px;max-height:220px;overflow:auto;font-size:13px;line-height:1.6;color:#1f2937"></div>
+    <div class="modal-btn-bar" style="margin-top:14px">
+      <button class="btn btn-ghost" onclick="document.getElementById('modalBib').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-blue" id="bibUsar" onclick="usarMaterial()" disabled style="opacity:.5">Usar selecionada</button>
+    </div>
+  </div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { ALUNOS_POR_TURMA } from "/js/constants.js";
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get, set, update, remove }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+requireProfessor();
+renderSidebarProfessor("sidebar", "vistos");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const TURMAS = Object.keys(ALUNOS_POR_TURMA);
+let turma = TURMAS.includes("8F") ? "8F" : TURMAS[0];
+let bimestre = 3;
+let filtro = "";
+let atvSel = null, editandoId = null;
+
+// material selecionado no modal de atividade: {ref, titulo, tipo} | null
+let materialSel = null;
+// biblioteca carregada do Firebase (nó "biblioteca")
+let biblioteca = [];
+let bibEscolhido = null, bibFiltro = "todos";
+
+// cache local do bimestre atual: { atividades:[{id,nome,data,conteudo,ordem}], marcas:{ atvId:{ aluno:0|1|2 } } }
+let atual = { atividades: [], marcas: {} };
+
+const P = (t,b) => `vistos/${t}/${b}`;
+const fmtData = iso => { if(!iso) return ""; const [y,m,d]=iso.split("-"); return `${d}/${m}`; };
+const hoje = () => { const d=new Date(); const o=d.getTimezoneOffset(); return new Date(d.getTime()-o*60000).toISOString().slice(0,10); };
+
+let toastT;
+function toast(msg, err=false){
+  const el=document.getElementById("toast");
+  el.textContent=msg; el.className="toast show"+(err?" err":"");
+  clearTimeout(toastT); toastT=setTimeout(()=>el.className="toast",2200);
+}
+
+async function carregar(){
+  document.getElementById("gradeWrap").innerHTML = `<div class="vazio">Carregando…</div>`;
+  try{
+    const snap = await get(ref(db, P(turma,bimestre)));
+    const raw = snap.exists() ? snap.val() : {};
+    const atividades = Object.entries(raw.atividades||{})
+      .map(([id,a])=>({id, nome:a.nome||"(sem nome)", data:a.data||"", conteudo:a.conteudo||"", ordem:a.ordem||0, materialRef:a.materialRef||"", materialTitulo:a.materialTitulo||"", temMaterial:!!a.materialRef}))
+      .sort((x,y)=> (x.ordem-y.ordem) || (x.data<y.data?-1:1));
+    atual = { atividades, marcas: raw.marcas||{} };
+  }catch(e){
+    console.error(e);
+    atual = { atividades: [], marcas: {} };
+    toast("Erro ao carregar (verifique regras do Firebase para 'vistos')", true);
+  }
+  render();
+}
+
+function render(){
+  // topo
+  document.getElementById("selTurma").innerHTML =
+    TURMAS.map(t=>`<option ${t===turma?"selected":""}>${t}</option>`).join("");
+  document.getElementById("bimTabs").innerHTML =
+    [1,2,3,4].map(b=>`<button class="bim-tab ${b===bimestre?"active":""}" data-b="${b}">${b}º Bim</button>`).join("");
+  document.querySelectorAll(".bim-tab").forEach(el=>el.onclick=()=>{ bimestre=+el.dataset.b; carregar(); });
+  document.getElementById("topbar-sub").textContent = `Turma ${turma} · ${bimestre}º bimestre`;
+
+  const alunosTurma = ALUNOS_POR_TURMA[turma];
+  const alunos = alunosTurma.filter(a=>a.toLowerCase().includes(filtro));
+  const nA = atual.atividades.length;
+
+  // stats
+  let feitos=0, atrasados=0;
+  atual.atividades.forEach(atv=>alunosTurma.forEach(al=>{
+    const v=(atual.marcas[atv.id]||{})[al]||0;
+    if(v===1) feitos++; if(v===2) atrasados++;
+  }));
+  const total = nA*alunosTurma.length;
+  const pct = total?Math.round(100*(feitos+atrasados)/total):0;
+  document.getElementById("stats").innerHTML = `
+    <div class="stat-card"><div><div class="stat-label">Atividades</div><div class="stat-value purple">${nA}</div></div></div>
+    <div class="stat-card"><div><div class="stat-label">Vistos dados</div><div class="stat-value green">${feitos}</div></div></div>
+    <div class="stat-card"><div><div class="stat-label">Atrasados</div><div class="stat-value gold">${atrasados}</div></div></div>
+    <div class="stat-card"><div><div class="stat-label">Conclusão da turma</div><div class="stat-value ${pct>=75?'green':pct>=50?'gold':''}">${pct}%</div></div></div>`;
+
+  const wrap = document.getElementById("gradeWrap");
+  if(!nA){
+    wrap.innerHTML = `<div class="vazio">Nenhuma atividade no ${bimestre}º bimestre da turma ${turma}.<br>Clique em <b>＋ Nova atividade</b> para criar a primeira coluna.</div>`;
+    return;
+  }
+
+  let html = `<table class="grade"><thead><tr><th class="col-aluno">Aluno</th>`;
+  atual.atividades.forEach(atv=>{
+    const m = atual.marcas[atv.id]||{};
+    const done = alunosTurma.filter(a=>m[a]>0).length;
+    const mat = atv.temMaterial ? ` 📄` : "";
+    html += `<th class="col-atv" data-id="${atv.id}" title="${(atv.conteudo||"").replace(/"/g,'&quot;')}">
+      <div class="atv-nome">${atv.nome}${mat}</div>
+      <div class="atv-data">${fmtData(atv.data)}</div>
+      <div class="atv-pct">${done}/${alunosTurma.length}</div></th>`;
+  });
+  html += `<th class="col-tot">Total</th></tr></thead><tbody>`;
+
+  alunos.forEach(al=>{
+    const num = String(alunosTurma.indexOf(al)+1).padStart(2,"0");
+    html += `<tr><td class="col-aluno"><span class="aluno-num">${num}</span>${al}</td>`;
+    let tot=0;
+    atual.atividades.forEach(atv=>{
+      const v=(atual.marcas[atv.id]||{})[al]||0;
+      if(v>0) tot++;
+      const cls=v===1?"v1":v===2?"v2":"";
+      const sym=v===1?"✓":v===2?"A":"";
+      html += `<td class="cel" data-id="${atv.id}" data-al="${al.replace(/"/g,'&quot;')}"><span class="chk ${cls}">${sym}</span></td>`;
+    });
+    const cor = tot===nA?"tot-ok":tot>=nA/2?"tot-mid":"tot-low";
+    html += `<td class="tot-cel ${cor}">${tot}/${nA}</td></tr>`;
+  });
+  html += `</tbody></table>`;
+  wrap.innerHTML = html;
+
+  wrap.querySelectorAll(".cel").forEach(td=>td.onclick=()=>ciclar(td.dataset.id, td.dataset.al));
+  wrap.querySelectorAll(".col-atv").forEach(th=>th.onclick=()=>abrirMenuCol(th.dataset.id));
+}
+
+// ── Ações (persistem no Firebase) ──
+async function ciclar(atvId, aluno){
+  const atualV = (atual.marcas[atvId]||{})[aluno]||0;
+  const novo = (atualV+1)%3;
+  atual.marcas[atvId] = atual.marcas[atvId]||{};
+  atual.marcas[atvId][aluno] = novo;
+  render();
+  try{ await set(ref(db, `${P(turma,bimestre)}/marcas/${atvId}/${aluno}`), novo); }
+  catch(e){ console.error(e); toast("Falha ao salvar", true); }
+}
+
+// ── Material da biblioteca (Firebase) ──
+async function carregarBiblioteca(){
+  if(biblioteca.length) return;
+  try{
+    const snap = await get(ref(db, "biblioteca"));
+    biblioteca = snap.exists()
+      ? Object.entries(snap.val()).map(([id,b])=>({id, nome:b.nome||"(sem nome)", tipo:b.tipo||"teorica", arquivo:b.arquivo||"", resumo:b.resumo||"", ref:"/conteudos/"+(b.arquivo||"")}))
+      : [];
+  }catch(e){ console.error("Biblioteca:", e); biblioteca = []; }
+}
+function renderMatSel(){
+  const el=document.getElementById("mMatSel");
+  const btn=document.getElementById("btnLimparMat");
+  if(!materialSel){ el.textContent="Nenhum material selecionado."; btn.style.display="none"; return; }
+  el.innerHTML=`📄 <b>${materialSel.titulo}</b> <span style="color:#9ca3af">${materialSel.ref}</span>`;
+  btn.style.display="";
+}
+window.limparMaterialSel = function(){ materialSel=null; renderMatSel(); };
+
+window.abrirBiblioteca = async function(){
+  await carregarBiblioteca();
+  bibEscolhido = materialSel ? materialSel.ref : null;
+  bibFiltro="todos";
+  document.getElementById("bibBusca").value="";
+  document.getElementById("bibPrev").style.display="none";
+  renderBibFiltros(); renderBibLista(); atualizarBibUsar();
+  document.getElementById("modalBib").classList.add("open");
+};
+function renderBibFiltros(){
+  const tipos=[["todos","Todos"],["teorica","Teóricas"],["exercicios","Exercícios"]];
+  document.getElementById("bibFiltros").innerHTML=tipos.map(([v,l])=>
+    `<button class="bib-filtro ${v===bibFiltro?'on':''}" data-t="${v}">${l}</button>`).join("");
+  document.querySelectorAll("#bibFiltros .bib-filtro").forEach(b=>b.onclick=()=>{ bibFiltro=b.dataset.t; renderBibFiltros(); renderBibLista(); });
+}
+function renderBibLista(){
+  const q=document.getElementById("bibBusca").value.toLowerCase();
+  const itens=biblioteca.filter(i=>(bibFiltro==="todos"||i.tipo===bibFiltro)&&(i.nome||"").toLowerCase().includes(q));
+  const lista=document.getElementById("bibLista");
+  if(!biblioteca.length){ lista.innerHTML=`<div class="bib-vazio">Biblioteca vazia.<br>Cadastre aulas na página <b>Biblioteca</b> primeiro.</div>`; return; }
+  if(!itens.length){ lista.innerHTML=`<div class="bib-vazio">Nenhum conteúdo encontrado.</div>`; return; }
+  lista.innerHTML=itens.map(i=>`
+    <div class="bib-item ${bibEscolhido===i.ref?'sel':''}" data-ref="${i.ref}">
+      <div style="flex:1"><div class="bib-nome">${i.nome}</div><div class="bib-arq">${i.ref}</div></div>
+      <span class="bib-tipo ${i.tipo==='exercicios'?'atividade':'teoria'}">${i.tipo==="teorica"?"teórica":"exercícios"}</span>
+      <button class="bib-ver" data-ver="${i.ref}">👁 Ver</button>
+    </div>`).join("");
+  lista.querySelectorAll(".bib-item").forEach(el=>el.onclick=()=>{ bibEscolhido=el.dataset.ref; renderBibLista(); atualizarBibUsar(); });
+  lista.querySelectorAll(".bib-ver").forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); bibPreview(b.dataset.ver); });
+}
+document.getElementById("bibBusca").addEventListener("input",renderBibLista);
+async function bibPreview(ref_){
+  const p=document.getElementById("bibPrev");
+  p.style.display="block"; p.innerHTML="Carregando…";
+  try{ const r=await fetch(ref_,{cache:"no-cache"}); p.innerHTML = r.ok ? await r.text() : "Não foi possível carregar."; }
+  catch(e){ p.innerHTML="Erro ao carregar pré-visualização."; }
+}
+function atualizarBibUsar(){ const b=document.getElementById("bibUsar"); b.disabled=!bibEscolhido; b.style.opacity=bibEscolhido?"1":".5"; }
+window.usarMaterial = function(){
+  if(!bibEscolhido) return;
+  const item=biblioteca.find(i=>i.ref===bibEscolhido);
+  materialSel={ref:item.ref, titulo:item.nome, tipo:item.tipo};
+  // Puxa as infos da aula — preenche só o que estiver vazio (não apaga o que você digitou)
+  const _n=document.getElementById("mNome"), _c=document.getElementById("mConteudo");
+  if(!_n.value.trim()) _n.value=item.nome;
+  if(!_c.value.trim()) _c.value=item.resumo || item.nome;
+  document.getElementById("modalBib").classList.remove("open");
+  renderMatSel();
+};
+
+window.abrirNovaAtv = function(){
+  editandoId=null; materialSel=null;
+  document.getElementById("mAtvTitulo").textContent="Nova atividade";
+  document.getElementById("mNome").value="";
+  document.getElementById("mData").value=hoje();
+  document.getElementById("mConteudo").value="";
+  renderMatSel();
+  document.getElementById("modalAtv").classList.add("open");
+};
+
+window.salvarAtv = async function(){
+  const nome=document.getElementById("mNome").value.trim();
+  if(!nome){ toast("Dê um nome para a atividade", true); return; }
+  const data=document.getElementById("mData").value||hoje();
+  const conteudo=document.getElementById("mConteudo").value.trim();
+  try{
+    const matRef = materialSel ? materialSel.ref : null;
+    const matTit = materialSel ? materialSel.titulo : null;
+    if(editandoId){
+      await update(ref(db, `${P(turma,bimestre)}/atividades/${editandoId}`), {nome,data,conteudo,materialRef:matRef,materialTitulo:matTit});
+    }else{
+      const id="a"+Date.now();
+      const ordem=(atual.atividades.reduce((m,a)=>Math.max(m,a.ordem||0),0))+1;
+      const obj={nome,data,conteudo,ordem,criadoEm:Date.now()};
+      if(matRef){ obj.materialRef=matRef; obj.materialTitulo=matTit; }
+      await set(ref(db, `${P(turma,bimestre)}/atividades/${id}`), obj);
+    }
+    materialSel=null;
+    fecharModais(); toast("Salvo"); await carregar();
+  }catch(e){ console.error(e); toast("Erro ao salvar", true); }
+};
+
+window.abrirMenuCol = function(id){
+  atvSel=id;
+  const atv=atual.atividades.find(a=>a.id===id);
+  document.getElementById("mColTitulo").textContent=atv.nome;
+  const matTxt = atv.temMaterial ? ` · 📄 ${atv.materialTitulo||atv.materialRef}` : "";
+  document.getElementById("mColInfo").textContent=`${fmtData(atv.data)}${atv.conteudo?" — "+atv.conteudo:""}${matTxt}`;
+  document.getElementById("btnAbrirMat").style.display = atv.temMaterial ? "" : "none";
+  document.getElementById("btnRemMat").style.display  = atv.temMaterial ? "" : "none";
+  document.getElementById("modalCol").classList.add("open");
+};
+
+window.abrirMaterial = function(){
+  const atv=atual.atividades.find(a=>a.id===atvSel);
+  if(!atv || !atv.materialRef){ toast("Sem material", true); return; }
+  window.open(atv.materialRef, "_blank");
+};
+
+window.removerMaterial = async function(){
+  if(!confirm("Remover o vínculo de material desta atividade?")) return;
+  try{
+    await update(ref(db, `${P(turma,bimestre)}/atividades/${atvSel}`), {materialRef:null, materialTitulo:null});
+    fecharModais(); toast("Material removido"); await carregar();
+  }catch(e){ console.error(e); toast("Erro ao remover", true); }
+};
+
+window.marcarTodos = async function(v){
+  const upd={};
+  ALUNOS_POR_TURMA[turma].forEach(al=>{ upd[al]=v; });
+  atual.marcas[atvSel]=upd;
+  try{ await set(ref(db, `${P(turma,bimestre)}/marcas/${atvSel}`), upd); toast("Atualizado"); }
+  catch(e){ console.error(e); toast("Erro ao salvar", true); }
+  fecharModais(); render();
+};
+
+window.editarAtvAtual = function(){
+  const atv=atual.atividades.find(a=>a.id===atvSel);
+  editandoId=atvSel;
+  materialSel = atv.temMaterial ? {ref:atv.materialRef, titulo:atv.materialTitulo||atv.materialRef, tipo:""} : null;
+  document.getElementById("mAtvTitulo").textContent="Editar atividade";
+  document.getElementById("mNome").value=atv.nome;
+  document.getElementById("mData").value=atv.data||hoje();
+  document.getElementById("mConteudo").value=atv.conteudo||"";
+  renderMatSel();
+  document.getElementById("modalCol").classList.remove("open");
+  document.getElementById("modalAtv").classList.add("open");
+};
+
+window.excluirAtvAtual = async function(){
+  if(!confirm("Excluir esta atividade e todos os vistos marcados nela?")) return;
+  try{
+    await remove(ref(db, `${P(turma,bimestre)}/atividades/${atvSel}`));
+    await remove(ref(db, `${P(turma,bimestre)}/marcas/${atvSel}`));
+    fecharModais(); toast("Excluída"); await carregar();
+  }catch(e){ console.error(e); toast("Erro ao excluir", true); }
+};
+
+window.fecharModais = function(){
+  document.querySelectorAll(".modal-overlay").forEach(m=>m.classList.remove("open"));
+};
+document.querySelectorAll(".modal-overlay").forEach(m=>m.addEventListener("click",e=>{ if(e.target===m) fecharModais(); }));
+
+document.getElementById("selTurma").addEventListener("change",e=>{ turma=e.target.value; carregar(); });
+document.getElementById("busca").addEventListener("input",e=>{ filtro=e.target.value.toLowerCase(); render(); });
+
+carregar();
+</script>
+</body>
+</html>

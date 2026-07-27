@@ -59,6 +59,7 @@ export const ALUNOS_POR_TURMA = {
   ],
   "8G": [
     "Ana Clara", "Ana Gabryella", "Ana Maria",
+    "Beatriz",
     "Davi Emanoel", "Davi Francisco", "Davi Lukas",
     "Helena", "Isabela", "Karlos",
     "Ketelen", "Laiza", "Lorran",
