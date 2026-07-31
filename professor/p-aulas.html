@@ -65,6 +65,88 @@
   .hint{font-size:11px;color:#9ca3af;margin-top:6px}
 
   @media(max-width:860px){.content{padding:16px 12px}.f-row{grid-template-columns:1fr}.aula-head{flex-wrap:wrap}}
+
+  /* alternância Lista / Calendário */
+  .view-tabs{display:flex;gap:4px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:11px;padding:4px}
+  .view-tab{padding:7px 14px;border-radius:8px;font-size:13px;font-weight:700;color:var(--text-muted);cursor:pointer;border:none;background:transparent;font-family:'Inter',sans-serif}
+  .view-tab.active{background:var(--purple);color:#fff}
+
+  /* tag de status (usada na lista e no calendário) */
+  .tag-status{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;padding:2px 7px;border-radius:999px}
+  .tag-status.incompleto{background:rgba(240,90,90,.16);color:#ff9d9d;border:1px solid rgba(240,90,90,.45)}
+  .tag-status.cancelada{background:rgba(150,150,170,.16);color:#c4c4d4;border:1px solid rgba(150,150,170,.45)}
+  .tag-status.reposicao{background:rgba(90,190,140,.16);color:#8ee6b6;border:1px solid rgba(90,190,140,.45)}
+  .aula-obs{font-size:12px;color:var(--text-muted);margin-top:8px;background:rgba(255,255,255,.03);padding:7px 11px;border-radius:8px;line-height:1.45}
+
+  /* calendário */
+  .cal-nav{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:11px;padding:4px}
+  .cal-nav button{background:transparent;border:none;color:var(--text);cursor:pointer;font-size:16px;width:32px;height:32px;border-radius:8px}
+  .cal-nav button:hover{background:rgba(255,255,255,.06)}
+  .cal-mes{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;min-width:140px;text-align:center;text-transform:capitalize}
+  .cal-legenda{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--text-muted);align-items:center;margin-left:auto}
+  .cal-legenda .lg{display:flex;align-items:center;gap:5px}
+  .cal-sw{width:12px;height:12px;border-radius:4px;border:1px solid}
+  .cal-sw.aula-dia{background:rgba(120,150,255,.15);border-color:rgba(120,150,255,.6)}
+  .cal-sw.teorica{background:var(--purple-pale);border-color:rgba(155,48,255,.5)}
+  .cal-sw.exercicios{background:var(--gold-pale);border-color:rgba(240,165,0,.5)}
+  .cal-sw.hoje{background:transparent;border:2px solid var(--purple)}
+  .cal{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+  .cal-dow{display:grid;grid-template-columns:repeat(7,1fr);background:rgba(0,0,0,.15)}
+  .cal-dow div{padding:9px 6px;text-align:center;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border)}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
+  .cal-cel{min-height:100px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:6px;display:flex;flex-direction:column;gap:4px;position:relative;cursor:pointer}
+  .cal-cel:nth-child(7n){border-right:none}
+  .cal-cel.fora{background:rgba(0,0,0,.15);cursor:default}
+  .cal-cel.fim{background:rgba(255,255,255,.012)}
+  .cal-cel.aula-dia{background:rgba(120,150,255,.11)}
+  .cal-cel .cal-dia{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:var(--text-muted);align-self:flex-end;line-height:1}
+  .cal-cel.fora .cal-dia{opacity:.35}
+  .cal-cel.hoje{outline:2px solid var(--purple);outline-offset:-2px}
+  .cal-cel.hoje .cal-dia{color:var(--purple)}
+  .cal-blk{border-radius:7px;padding:4px 7px;border:1px solid transparent;line-height:1.15;display:flex;flex-direction:column;gap:1px}
+  .cal-blk.teorica{background:var(--purple-pale);border-color:rgba(155,48,255,.35)}
+  .cal-blk.exercicios{background:var(--gold-pale);border-color:rgba(240,165,0,.35)}
+  .cal-blk .cal-num{font-family:'Orbitron',monospace;font-size:9px;font-weight:700}
+  .cal-blk.teorica .cal-num{color:#c98aff}
+  .cal-blk.exercicios .cal-num{color:var(--gold)}
+  .cal-blk .cal-nm{font-size:11px;font-weight:600;line-height:1.2;word-break:break-word}
+  .cal-tags{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-top:2px}
+  .cal-obs-mark{font-size:10px;color:var(--text-muted)}
+  .cal-sem{font-size:10px;font-style:italic;color:var(--text-muted);opacity:.75;margin-top:2px}
+  .cal-detalhe{margin-top:14px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;font-size:13px;display:none}
+  .cal-detalhe.show{display:block}
+  .cal-dh{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;margin-bottom:8px;text-transform:capitalize}
+  .cal-li{padding:7px 0;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:5px}
+  .cal-li:first-of-type{border-top:none}
+  .chip-num{font-size:10px;font-weight:700;font-family:'Orbitron',monospace;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.06);color:var(--text)}
+  .cal-obs{font-size:12px;color:var(--text);background:rgba(255,255,255,.04);padding:7px 10px;border-radius:8px;white-space:pre-wrap;line-height:1.45}
+  .cal-obs b{color:var(--text-muted)}
+  .cal-rodape{margin-top:10px;font-size:12px;color:var(--text-muted)}
+  .cal-rodape b{color:var(--text)}
+  textarea.input{resize:vertical;min-height:44px;font-family:'Inter',sans-serif}
+  @media(max-width:640px){ .cal-cel{min-height:76px} .cal-legenda{margin-left:0} }
+
+  /* dias não-letivos e de outro bimestre no calendário */
+  .cal-cel.naoletivo{background:rgba(240,90,90,.10)}
+  .cal-nl{font-size:10px;font-weight:700;color:#ff9d9d;background:rgba(240,90,90,.16);border:1px solid rgba(240,90,90,.4);border-radius:6px;padding:2px 6px;align-self:flex-start}
+  .cal-nl-motivo{font-size:10px;color:var(--text-muted);font-style:italic}
+  .cal-cel.outrobim{opacity:.45}
+  .cal-outro{font-size:9px;color:var(--text-muted);align-self:flex-start;background:rgba(255,255,255,.05);border-radius:5px;padding:1px 5px}
+  .cal-sw.naoletivo{background:rgba(240,90,90,.16);border-color:rgba(240,90,90,.5)}
+  .cal-nlbox{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)}
+  .cal-nl-lbl{font-size:12px;color:var(--text-muted);font-weight:600}
+  .cal-nlbox .input{background:rgba(255,255,255,.05);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px}
+  .cal-nlbox .input:focus{border-color:var(--purple);outline:none}
+
+  /* marcador PD1 (verde, só sinalização) */
+  .cal-pd1{position:absolute;top:5px;left:5px;font-size:8px;font-weight:800;letter-spacing:.3px;color:#8ee6b6;background:rgba(90,190,140,.16);border:1px solid rgba(90,190,140,.4);border-radius:5px;padding:1px 4px}
+  .cal-pd1-tag,.tag-pd1{font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#8ee6b6;background:rgba(90,190,140,.16);border:1px solid rgba(90,190,140,.4);border-radius:999px;padding:1px 6px}
+  .cal-sw.pd1{background:rgba(90,190,140,.16);border-color:rgba(90,190,140,.5)}
+
+  .bib-tabs2{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+  .bib-tab{font-size:12px;font-weight:700;padding:6px 11px;border-radius:8px;border:1.5px solid #d1d5db;background:#fff;color:#6b7280;cursor:pointer;font-family:'Inter',sans-serif}
+  .bib-tab.on{background:#f3e8ff;border-color:var(--purple);color:#6c00d4}
+  .bib-aplic-badge{color:#16a34a;font-weight:800;font-size:13px}
 </style>
 </head>
 <body>
@@ -78,12 +160,38 @@
     <div class="content">
       <div class="banner-info">📅 Aqui você registra <b>quando</b> cada aula da Biblioteca foi aplicada nesta turma. Numeração automática (aula dupla ocupa dois números). Cadastre as aulas em <b>Biblioteca</b> primeiro.</div>
       <div class="card" style="padding:14px 20px">
-        <div class="card-header" style="margin-bottom:0">
-          <div class="bim-tabs" id="bimTabs"></div>
+        <div class="card-header" style="margin-bottom:0;gap:12px;flex-wrap:wrap">
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+            <div class="bim-tabs" id="bimTabs"></div>
+            <div class="view-tabs" id="viewTabs">
+              <button class="view-tab active" data-v="lista">📋 Lista</button>
+              <button class="view-tab" data-v="calendario">📅 Calendário</button>
+            </div>
+          </div>
           <button class="btn btn-blue" onclick="abrirNova()">＋ Nova aula</button>
         </div>
       </div>
       <div id="lista"><div class="vazio">Carregando…</div></div>
+
+      <div id="calendario" style="display:none">
+        <div class="card" style="padding:12px 16px;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <div class="cal-nav">
+              <button id="calPrev" title="Mês anterior">‹</button>
+              <span class="cal-mes" id="calMes">—</span>
+              <button id="calNext" title="Próximo mês">›</button>
+            </div>
+            <button class="btn btn-ghost btn-sm" id="calHoje">Hoje</button>
+            <div class="cal-legenda" id="calLegenda"></div>
+          </div>
+        </div>
+        <div class="cal">
+          <div class="cal-dow"><div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div></div>
+          <div class="cal-grid" id="calGrid"></div>
+        </div>
+        <div class="cal-detalhe" id="calDetalhe"></div>
+        <div class="cal-rodape" id="calRodape"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -92,14 +200,27 @@
   <div class="modal-box"><div class="modal-box-body">
     <div class="modal-box-title" id="mTitulo">Registrar aula</div>
     <div class="f"><label class="f-label">Aula (da biblioteca)</label>
+      <div class="bib-tabs2" id="bibTabs"></div>
       <div class="bib-lista" id="bibLista"></div>
       <div class="hint">Escolha a aula catalogada que foi aplicada. Não achou? Cadastre em <b>Biblioteca</b>.</div>
     </div>
     <div class="f-row">
       <div class="f" style="margin:0"><label class="f-label">Data aplicada</label>
         <input class="input" id="mData" type="date"></div>
-      <div class="f" style="margin:0"><label class="chk-line"><input type="checkbox" id="mDupla"> 🕐🕐 Aula dupla</label></div>
+      <div class="f" style="margin:0">
+        <label class="chk-line"><input type="checkbox" id="mDupla"> 🕐🕐 Aula dupla</label>
+        <label class="chk-line" style="margin-top:6px"><input type="checkbox" id="mPD1"> 🧩 PD1 (eletiva)</label>
+      </div>
     </div>
+    <div class="f"><label class="f-label">Status da aula</label>
+      <select class="input" id="mStatus">
+        <option value="completo">✅ Completa</option>
+        <option value="incompleto">⚠️ Incompleta</option>
+        <option value="cancelada">🚫 Cancelada</option>
+        <option value="reposicao">🔁 Reposição</option>
+      </select></div>
+    <div class="f"><label class="f-label">Observação (opcional)</label>
+      <textarea class="input" id="mObs" rows="2" placeholder="Ex.: Não deu tempo de colocar a teoria no quadro; termino na próxima aula."></textarea></div>
     <div class="btn-bar">
       <button class="btn btn-ghost" onclick="fechar()">Cancelar</button>
       <button class="btn btn-blue" onclick="salvar()">Salvar</button>
@@ -110,7 +231,7 @@
 <div class="toast" id="toast"></div>
 
 <script type="module">
-import { ALUNOS_POR_TURMA } from "/js/constants.js";
+import { ALUNOS_POR_TURMA, GRADE_TURMAS, PD1_TURMAS, TIPOS_NAO_LETIVO, BIMESTRES, bimestreDeData, bimestreAtual } from "/js/constants.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update, remove, push }
@@ -122,11 +243,22 @@ window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
 const TURMAS = Object.keys(ALUNOS_POR_TURMA);
 let turma = TURMAS.includes("8F") ? "8F" : TURMAS[0];
-let bimestre = 3;
+let bimestre = bimestreAtual();   // abre no bimestre corrente automaticamente
 let editId = null, bibSel = null;
+let bibAplicados = new Set();  // bibIds já aplicados NESTA turma (qualquer bimestre)
+let bibFiltro = "todas";       // aba ativa: todas | aplicadas | naoaplicadas
 
-let aulas = [];       // {id, bibId, data, dupla, ordem}
+let aulas = [];       // {id, bibId, data, dupla, ordem, status, obs}
 let biblioteca = [];  // {id, nome, tipo, arquivo}
+
+// Grade semanal e dias não-letivos vêm da fundação (Etapa 1) e do Firebase.
+let naoLetivos = {};   // {"YYYY-MM-DD": {tipo, motivo}} — global (escola toda)
+
+const MESES = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+const pad2 = n => String(n).padStart(2,"0");
+const rotuloStatus = s => ({completo:"Completa",incompleto:"Incompleta",cancelada:"Cancelada",reposicao:"Reposição"}[s]||s);
+let view = "lista";
+let calRef = new Date();  // mês visível no calendário
 
 const Paulas = (t,b) => `aulas/${t}/${b}`;
 const fmtData = iso => { if(!iso) return ""; const [y,m,d]=iso.split("-"); return `${d}/${m}`; };
@@ -141,18 +273,34 @@ function bibDe(id){ return biblioteca.find(b=>b.id===id); }
 async function carregar(){
   document.getElementById("lista").innerHTML = `<div class="vazio">Carregando…</div>`;
   try{
-    const [snapA, snapB] = await Promise.all([
+    const [snapA, snapB, snapNL, snapT] = await Promise.all([
       get(ref(db, Paulas(turma,bimestre))),
       get(ref(db, "biblioteca")),
+      get(ref(db, "calendario/naoLetivos")),
+      get(ref(db, "aulas/"+turma)),          // todos os bimestres desta turma
     ]);
+    naoLetivos = snapNL.exists() ? snapNL.val() : {};
+    // conjunto de aulas já aplicadas nesta turma (qualquer bimestre)
+    bibAplicados = new Set();
+    if(snapT.exists()){
+      for(const bim of Object.values(snapT.val())){
+        for(const reg of Object.values(bim||{})){
+          if(reg && reg.bibId) bibAplicados.add(reg.bibId);
+        }
+      }
+    }
     aulas = snapA.exists()
-      ? Object.entries(snapA.val()).map(([id,a])=>({id, bibId:a.bibId||"", data:a.data||"", dupla:!!a.dupla, ordem:a.ordem||0})).sort((x,y)=>(x.ordem-y.ordem)||(x.data<y.data?-1:1))
+      ? Object.entries(snapA.val()).map(([id,a])=>({id, bibId:a.bibId||"", data:a.data||"", dupla:!!a.dupla, ordem:a.ordem||0, status:a.status||"completo", obs:a.obs||"", pd1:!!a.pd1})).sort((x,y)=>(x.ordem-y.ordem)||(x.data<y.data?-1:1))
       : [];
     biblioteca = snapB.exists()
       ? Object.entries(snapB.val()).map(([id,b])=>({id, nome:b.nome||"(sem nome)", tipo:b.tipo||"teorica", arquivo:b.arquivo||""}))
       : [];
+    // posiciona o calendário no mês da aula mais recente do bimestre (ou hoje)
+    if(aulas.length){ const ult=aulas[aulas.length-1].data||hoje(); calRef=new Date(+ult.slice(0,4), +ult.slice(5,7)-1, 1); }
+    else calRef=new Date();
   }catch(e){ console.error(e); aulas=[]; biblioteca=[]; toast("Erro ao carregar (verifique regra 'aulas')", true); }
   render();
+  if(view==="calendario") renderCalendario();
 }
 
 function render(){
@@ -170,16 +318,18 @@ function render(){
     const nome=b?b.nome:"(aula removida da biblioteca)";
     const tipo=b?b.tipo:"";
     const arq=b?b.arquivo:"";
+    const st=(a.status&&a.status!=="completo")?`<span class="tag-status ${a.status}">${rotuloStatus(a.status)}</span>`:"";
     return `<div class="aula">
       <div class="aula-head">
         <div class="aula-num ${a.dupla?"dupla":""}"><small>Aula</small>${nums[i]}</div>
         <div class="aula-info">
-          <div class="aula-titulo">${nome} ${tipo?`<span class="tipo ${tipo}">${tipo==="teorica"?"teórica":"exercícios"}</span>`:""}</div>
+          <div class="aula-titulo">${nome} ${tipo?`<span class="tipo ${tipo}">${tipo==="teorica"?"teórica":"exercícios"}</span>`:""}${st}</div>
           <div class="aula-meta">
             <span>📅 ${fmtData(a.data)}</span>
             ${a.dupla?'<span class="badge dupla">dupla</span>':''}
             ${arq?`<span>📄 ${arq}</span>`:''}
           </div>
+          ${a.obs?`<div class="aula-obs">📝 ${a.obs}</div>`:""}
         </div>
         <div class="aula-acts">
           ${arq?`<a class="btn btn-ghost btn-sm" href="/conteudos/${arq}" target="_blank">👁 Abrir</a>`:''}
@@ -196,29 +346,56 @@ document.getElementById("selTurma").addEventListener("change",e=>{ turma=e.targe
 
 function renderBibLista(){
   const box=document.getElementById("bibLista");
-  if(!biblioteca.length){ box.innerHTML=`<div class="bib-vazio">Biblioteca vazia. Cadastre aulas em <b>Biblioteca</b> primeiro.</div>`; return; }
-  box.innerHTML=biblioteca.map(b=>`
+  const tabsEl=document.getElementById("bibTabs");
+  if(!biblioteca.length){
+    box.innerHTML=`<div class="bib-vazio">Biblioteca vazia. Cadastre aulas em <b>Biblioteca</b> primeiro.</div>`;
+    if(tabsEl) tabsEl.innerHTML=""; return;
+  }
+  // abas com contagem
+  const nAplic=biblioteca.filter(b=>bibAplicados.has(b.id)).length;
+  const nNao=biblioteca.length-nAplic;
+  const tabs=[["todas",`Todas (${biblioteca.length})`],["aplicadas",`Aplicadas (${nAplic})`],["naoaplicadas",`Não aplicadas (${nNao})`]];
+  tabsEl.innerHTML=tabs.map(([v,l])=>`<button type="button" class="bib-tab ${v===bibFiltro?'on':''}" data-f="${v}">${l}</button>`).join("");
+  tabsEl.querySelectorAll(".bib-tab").forEach(bt=>bt.onclick=()=>{ bibFiltro=bt.dataset.f; renderBibLista(); });
+
+  // filtra pela aba ativa
+  const lista=biblioteca.filter(b=>
+    bibFiltro==="aplicadas"    ? bibAplicados.has(b.id) :
+    bibFiltro==="naoaplicadas" ? !bibAplicados.has(b.id) : true
+  );
+  if(!lista.length){
+    box.innerHTML=`<div class="bib-vazio">Nenhuma aula ${bibFiltro==="aplicadas"?"aplicada":"não aplicada"} nesta turma.</div>`;
+    return;
+  }
+  box.innerHTML=lista.map(b=>`
     <div class="bib-opt ${bibSel===b.id?'sel':''}" data-id="${b.id}">
       <div style="flex:1"><div class="bib-opt-nome">${b.nome}</div><div class="bib-opt-arq">/conteudos/${b.arquivo}</div></div>
+      ${bibAplicados.has(b.id)?`<span class="bib-aplic-badge" title="já aplicada nesta turma">✓</span>`:""}
       <span class="bib-tipo ${b.tipo}">${b.tipo==="teorica"?"teórica":"exercícios"}</span>
     </div>`).join("");
   box.querySelectorAll(".bib-opt").forEach(el=>el.onclick=()=>{ bibSel=el.dataset.id; renderBibLista(); });
 }
 
 window.abrirNova = function(){
-  editId=null; bibSel=null;
+  editId=null; bibSel=null; bibFiltro="todas";
   document.getElementById("mTitulo").textContent="Registrar aula";
   document.getElementById("mData").value=hoje();
   document.getElementById("mDupla").checked=false;
+  document.getElementById("mPD1").checked=false;
+  document.getElementById("mStatus").value="completo";
+  document.getElementById("mObs").value="";
   renderBibLista();
   document.getElementById("ov").classList.add("open");
 };
 function editar(id){
   const a=aulas.find(x=>x.id===id); if(!a) return;
-  editId=id; bibSel=a.bibId;
+  editId=id; bibSel=a.bibId; bibFiltro="todas";
   document.getElementById("mTitulo").textContent="Editar aula";
   document.getElementById("mData").value=a.data||hoje();
   document.getElementById("mDupla").checked=!!a.dupla;
+  document.getElementById("mPD1").checked=!!a.pd1;
+  document.getElementById("mStatus").value=a.status||"completo";
+  document.getElementById("mObs").value=a.obs||"";
   renderBibLista();
   document.getElementById("ov").classList.add("open");
 }
@@ -226,13 +403,16 @@ window.salvar = async function(){
   if(!bibSel){ toast("Escolha uma aula da biblioteca", true); return; }
   const data=document.getElementById("mData").value||hoje();
   const dupla=document.getElementById("mDupla").checked;
+  const status=document.getElementById("mStatus").value||"completo";
+  const obs=document.getElementById("mObs").value.trim();
+  const pd1=document.getElementById("mPD1").checked;
   try{
     if(editId){
-      await update(ref(db, `${Paulas(turma,bimestre)}/${editId}`), {bibId:bibSel, data, dupla});
+      await update(ref(db, `${Paulas(turma,bimestre)}/${editId}`), {bibId:bibSel, data, dupla, status, obs, pd1});
     }else{
       const novo=push(ref(db, Paulas(turma,bimestre)));
       const ordem=(aulas.reduce((m,a)=>Math.max(m,a.ordem||0),0))+1;
-      await set(novo, {bibId:bibSel, data, dupla, ordem, criadoEm:Date.now()});
+      await set(novo, {bibId:bibSel, data, dupla, status, obs, pd1, ordem, criadoEm:Date.now()});
     }
     fechar(); toast("Salvo"); await carregar();
   }catch(e){ console.error(e); toast("Erro ao salvar", true); }
@@ -244,6 +424,201 @@ async function excluir(id){
 }
 window.fechar = ()=>document.getElementById("ov").classList.remove("open");
 document.getElementById("ov").addEventListener("click",e=>{ if(e.target.id==="ov") fechar(); });
+
+/* ───────── Alternância Lista / Calendário ───────── */
+function setView(v){
+  view=v;
+  document.querySelectorAll("#viewTabs .view-tab").forEach(b=>b.classList.toggle("active", b.dataset.v===v));
+  document.getElementById("lista").style.display = v==="lista" ? "" : "none";
+  document.getElementById("calendario").style.display = v==="calendario" ? "" : "none";
+  if(v==="calendario") renderCalendario();
+}
+document.querySelectorAll("#viewTabs .view-tab").forEach(b=>b.onclick=()=>setView(b.dataset.v));
+document.getElementById("calPrev").onclick=()=>{ calRef.setMonth(calRef.getMonth()-1); renderCalendario(); };
+document.getElementById("calNext").onclick=()=>{ calRef.setMonth(calRef.getMonth()+1); renderCalendario(); };
+document.getElementById("calHoje").onclick=()=>{ const d=new Date(); calRef=new Date(d.getFullYear(),d.getMonth(),1); renderCalendario(); };
+
+/* ───────── Calendário ───────── */
+// índice data -> aulas (com número calculado igual à lista) para o bimestre atual
+function calIndex(){
+  const nums=numeros(aulas);
+  const porData={};
+  aulas.forEach((a,i)=>{
+    const b=bibDe(a.bibId);
+    (porData[a.data] ||= []).push({num:nums[i], nome:b?b.nome:"(removida)", tipo:b?b.tipo:"", dupla:a.dupla, status:a.status, obs:a.obs, pd1:a.pd1, id:a.id});
+  });
+  return porData;
+}
+
+function renderCalendario(){
+  const ano=calRef.getFullYear(), mes=calRef.getMonth();
+  document.getElementById("calMes").textContent=`${MESES[mes]} ${ano}`;
+  const porData=calIndex();
+  const grade=GRADE_TURMAS[turma]||[];
+  const hj=hoje();
+
+  const primeiro=new Date(ano,mes,1).getDay();
+  const diasNoMes=new Date(ano,mes+1,0).getDate();
+  const diasMesAnt=new Date(ano,mes,0).getDate();
+  const cels=[];
+  for(let i=primeiro-1;i>=0;i--) cels.push({dia:diasMesAnt-i, fora:true});
+  for(let d=1;d<=diasNoMes;d++) cels.push({dia:d, fora:false});
+  while(cels.length%7!==0) cels.push({trailing:true});
+
+  document.getElementById("calGrid").innerHTML=cels.map(c=>{
+    if(c.trailing) return `<div class="cal-cel fora"></div>`;
+    if(c.fora) return `<div class="cal-cel fora"><span class="cal-dia">${c.dia}</span></div>`;
+    const ds=`${ano}-${pad2(mes+1)}-${pad2(c.dia)}`;
+    const dow=new Date(ano,mes,c.dia).getDay();
+    const fim=(dow===0||dow===6)?" fim":"";
+    const bimDia=bimestreDeData(ds);
+    const noBim=(bimDia===bimestre);
+    const nl=naoLetivos[ds]||null;
+    const hojeC=(ds===hj)?" hoje":"";
+    const arr=porData[ds]||[];
+    const pd1Badge=(noBim && (PD1_TURMAS[turma]||[]).includes(dow))?`<span class="cal-pd1">PD1</span>`:"";
+
+    // dia não-letivo
+    if(nl){
+      const info=TIPOS_NAO_LETIVO[nl.tipo]||{rotulo:nl.tipo,emoji:"•"};
+      return `<div class="cal-cel naoletivo${hojeC}${noBim?"":" outrobim"}" data-ds="${ds}">
+        <span class="cal-dia">${c.dia}</span>${pd1Badge}
+        <span class="cal-nl">${info.emoji} ${info.rotulo}</span>
+        ${nl.motivo?`<span class="cal-nl-motivo">${nl.motivo}</span>`:""}
+        ${arr.map(calBloco).join("")}</div>`;
+    }
+    // dia de outro bimestre / recesso (esmaecido)
+    if(!noBim){
+      const rot=bimDia?`${bimDia}º bim`:"recesso";
+      return `<div class="cal-cel outrobim${fim}${hojeC}" data-ds="${ds}">
+        <span class="cal-dia">${c.dia}</span><span class="cal-outro">${rot}</span></div>`;
+    }
+    // dia do bimestre selecionado
+    const ehAula=grade.includes(dow);
+    const blocos=arr.map(calBloco).join("");
+    const sr=(ehAula&&!arr.length)?`<span class="cal-sem">sem registro</span>`:"";
+    return `<div class="cal-cel${fim}${ehAula?" aula-dia":""}${hojeC}" data-ds="${ds}"><span class="cal-dia">${c.dia}</span>${pd1Badge}${blocos}${sr}</div>`;
+  }).join("");
+  document.querySelectorAll("#calGrid .cal-cel[data-ds]").forEach(cel=>cel.onclick=()=>mostrarDetalheCal(cel.dataset.ds, porData));
+
+  document.getElementById("calLegenda").innerHTML=`
+    <div class="lg"><span class="cal-sw aula-dia"></span>Dia de aula</div>
+    <div class="lg"><span class="cal-sw teorica"></span>Teórica</div>
+    <div class="lg"><span class="cal-sw exercicios"></span>Exercícios</div>
+    <div class="lg"><span class="cal-sw naoletivo"></span>Não-letivo</div>
+    <div class="lg"><span class="cal-sw pd1"></span>PD1</div>
+    <div class="lg"><span class="cal-sw hoje"></span>Hoje</div>`;
+
+  // "sem registro" no BIMESTRE inteiro (não no mês), ignorando não-letivos
+  const bim=BIMESTRES.find(b=>b.n===bimestre);
+  let semReg=0;
+  if(bim){
+    const ini=new Date(bim.inicio+"T12:00:00"), fim2=new Date(bim.fim+"T12:00:00");
+    for(let d=new Date(ini); d<=fim2; d.setDate(d.getDate()+1)){
+      const ds=`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+      if(grade.includes(d.getDay()) && !naoLetivos[ds] && !porData[ds]) semReg++;
+    }
+  }
+  const faixa=bim?` (${fmtData(bim.inicio)}–${fmtData(bim.fim)})`:"";
+  document.getElementById("calRodape").innerHTML=`Turma <b>${turma}</b> · ${bimestre}º bim${faixa} — <b>${aulas.length}</b> aula(s) lançada(s)`+
+    (semReg?` · <span style="color:var(--gold)">${semReg} dia(s) de aula sem registro no bimestre</span>`:` · tudo registrado ✓`)+`.`;
+  document.getElementById("calDetalhe").className="cal-detalhe";
+}
+
+// bloco visual de uma aula dentro do dia
+function calBloco(a){
+  const tag=(a.status&&a.status!=="completo")?`<span class="tag-status ${a.status}">${rotuloStatus(a.status)}</span>`:"";
+  const om=a.obs?`<span class="cal-obs-mark" title="tem observação">✎</span>`:"";
+  const pd1=a.pd1?`<span class="cal-pd1-tag">PD1</span>`:"";
+  const tr=(tag||om||pd1)?`<div class="cal-tags">${pd1}${tag}${om}</div>`:"";
+  return `<div class="cal-blk ${a.tipo}" title="Aula ${a.num}: ${a.nome}${a.obs?' — '+a.obs:''}"><span class="cal-num">AULA ${a.num}</span><span class="cal-nm">${a.nome}</span>${tr}</div>`;
+}
+
+function mostrarDetalheCal(ds, porData){
+  const el=document.getElementById("calDetalhe");
+  const arr=porData[ds]||[];
+  const [a,m,d]=ds.split("-");
+  const dow=new Date(+a,+m-1,+d).getDay();
+  const dn=["domingo","segunda","terça","quarta","quinta","sexta","sábado"][dow];
+  const bimDia=bimestreDeData(ds);
+  const nl=naoLetivos[ds]||null;
+  el.className="cal-detalhe show";
+
+  // dia fora do bimestre selecionado: só leitura
+  if(bimDia!==bimestre){
+    el.innerHTML=`<div class="cal-dh">${dn}, ${d}/${m}</div>
+      <div style="color:var(--text-muted)">${bimDia?`Dia do ${bimDia}º bimestre`:"Recesso"} — fora do bimestre selecionado.${nl?` · ${(TIPOS_NAO_LETIVO[nl.tipo]||{}).rotulo||nl.tipo}`:""}</div>`;
+    return;
+  }
+
+  // caixa de marcar/remover não-letivo
+  const blocoNL = nl
+    ? `<div class="cal-nlbox">
+         <div>${(TIPOS_NAO_LETIVO[nl.tipo]||{emoji:"•"}).emoji} <b>${(TIPOS_NAO_LETIVO[nl.tipo]||{}).rotulo||nl.tipo}</b>${nl.motivo?` — ${nl.motivo}`:""}</div>
+         <button class="btn btn-ghost btn-sm" id="nlRemover">Remover marcação</button>
+       </div>`
+    : `<div class="cal-nlbox">
+         <span class="cal-nl-lbl">Sem aula?</span>
+         <select class="input" id="nlTipo" style="max-width:190px">
+           <option value="feriado">🚫 Feriado</option>
+           <option value="paralisacao">✊ Paralisação</option>
+           <option value="movel">🔄 Dia Letivo Móvel</option>
+         </select>
+         <input class="input" id="nlMotivo" placeholder="motivo (opcional)" style="max-width:220px">
+         <button class="btn btn-ghost btn-sm" id="nlMarcar">Marcar não-letivo</button>
+       </div>`;
+
+  let corpo;
+  if(!arr.length){
+    const ehAula=(GRADE_TURMAS[turma]||[]).includes(dow) && !nl;
+    corpo=`<div style="color:var(--text-muted);display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">
+        <span>${nl?"Dia não-letivo.":(ehAula?"Dia de aula sem registro.":"Nenhuma aula neste dia.")}</span>
+        ${!nl?`<button class="btn btn-ghost btn-sm" id="calNovoDia">＋ Registrar aula neste dia</button>`:""}
+      </div>`;
+  }else{
+    corpo=arr.map(x=>{
+      const st=(x.status&&x.status!=="completo")?`<span class="tag-status ${x.status}">${rotuloStatus(x.status)}</span>`:"";
+      const obs=x.obs?`<div class="cal-obs"><b>Obs:</b> ${x.obs}</div>`:"";
+      return `<div class="cal-li">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span class="chip-num">AULA ${x.num}</span>
+          <span class="tipo ${x.tipo}">${x.tipo==="teorica"?"teórica":"exercícios"}</span>
+          ${x.pd1?`<span class="tag-pd1">PD1</span>`:""}
+          ${st}
+          <span style="flex:1;min-width:120px">${x.nome}</span>
+          <button class="btn btn-ghost btn-sm" data-edit-cal="${x.id}">✏️</button>
+        </div>${obs}
+      </div>`;
+    }).join("");
+  }
+
+  el.innerHTML=`<div class="cal-dh">${dn}, ${d}/${m}</div>${corpo}${blocoNL}`;
+
+  const bt=document.getElementById("calNovoDia");
+  if(bt) bt.onclick=()=>{ abrirNova(); document.getElementById("mData").value=ds; };
+  el.querySelectorAll("[data-edit-cal]").forEach(b=>b.onclick=()=>editar(b.dataset.editCal));
+  const btM=document.getElementById("nlMarcar");
+  if(btM) btM.onclick=()=>marcarNaoLetivo(ds, document.getElementById("nlTipo").value, document.getElementById("nlMotivo").value.trim());
+  const btR=document.getElementById("nlRemover");
+  if(btR) btR.onclick=()=>removerNaoLetivo(ds);
+}
+
+async function marcarNaoLetivo(ds, tipo, motivo){
+  try{
+    await set(ref(db, `calendario/naoLetivos/${ds}`), {tipo, motivo:motivo||"", em:Date.now()});
+    naoLetivos[ds]={tipo, motivo:motivo||""};
+    toast("Dia marcado como não-letivo");
+    renderCalendario(); mostrarDetalheCal(ds, calIndex());
+  }catch(e){ console.error(e); toast("Erro ao marcar", true); }
+}
+async function removerNaoLetivo(ds){
+  try{
+    await remove(ref(db, `calendario/naoLetivos/${ds}`));
+    delete naoLetivos[ds];
+    toast("Marcação removida");
+    renderCalendario(); mostrarDetalheCal(ds, calIndex());
+  }catch(e){ console.error(e); toast("Erro ao remover", true); }
+}
 
 carregar();
 </script>
