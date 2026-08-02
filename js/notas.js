@@ -2,13 +2,17 @@
 // Usado por: professor/p-notas.html, aluno/a-notas.html, aluno/menu.html (card resumo)
 
 import { db } from "./firebase-config.js";
-import { ref, get, update, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ref, get, set, update, remove, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 // Bimestre atual — ainda não temos seletor de bimestres anteriores no banco,
 // então isso é fixo por enquanto. Quando criar o 3º bimestre, troque aqui
 // (e nas páginas que usam o seletor visual) e os bimestres antigos continuam
 // intactos em notas_bimestre/1, notas_bimestre/2 etc.
-export const BIMESTRE = "2";
+export let BIMESTRE = "2";
+// Troca o bimestre corrente em memória (o seletor da página de Notas chama isto).
+// Como os imports de ES module são "live bindings", todas as funções deste arquivo
+// e das páginas passam a usar o novo valor automaticamente.
+export function setBimestre(b) { BIMESTRE = String(b); }
 
 // Pesos confirmados em 30/06/2026. Soma das 6 notas pode chegar a 11
 // (Prova Multi 3 + Projeto 3 + Caderno 2 + Perímetro 1 + Área 1 + Lista 1) —
@@ -37,6 +41,25 @@ export const EXTRAS_MANUAL = [];
 
 export function cadernoExtraAtivo(registro) {
   return (parseFloat(registro?.caderno) || 0) > CADERNO_EXTRA.limiar;
+}
+
+// ── Campos e bônus ATIVOS por bimestre ───────────────────────
+// Padrão = tudo ligado. Liste só as EXCEÇÕES por bimestre.
+// Para ativar um campo no 3º depois, é só acrescentar a chave na lista.
+// Chaves possíveis: "provaMulti","projeto","caderno","ativ4","triangulos","participacao"
+export const CAMPOS_POR_BIMESTRE = {
+  "3": ["provaMulti", "caderno"],   // 3º começa só com esses dois
+};
+// Bônus automático (tabuada/negativos/perfil/ranking/caderno-extra) ligado?
+export const BONUS_POR_BIMESTRE = {
+  "3": false,                       // 3º sem bônus por enquanto
+};
+export function camposAtivos() {
+  const chaves = CAMPOS_POR_BIMESTRE[BIMESTRE];
+  return chaves ? CAMPOS_NOTA.filter(c => chaves.includes(c.key)) : CAMPOS_NOTA;
+}
+export function bonusAtivo() {
+  return BONUS_POR_BIMESTRE[BIMESTRE] ?? true;
 }
 
 export const NOME_ATIV4 = "Atividade 4 - Geometria";
@@ -138,6 +161,7 @@ export function extrasAutoAtivos(progresso) {
   return ativos;
 }
 export function calcularBonus(progresso, registro) {
+  if (!bonusAtivo()) return 0;
   const auto = extrasAutoAtivos(progresso);
   const bAuto      = EXTRAS_AUTO.reduce((s, e) => s + (auto[e.key] ? e.valor : 0), 0);
   const bCadExtra  = cadernoExtraAtivo(registro) ? CADERNO_EXTRA.valor : 0;
@@ -147,7 +171,7 @@ export function calcularBonus(progresso, registro) {
   return bAuto + bCadExtra + bRankAtiv4 + bNivelPerf + bManual;
 }
 export function calcularSubtotal(registro) {
-  return CAMPOS_NOTA.reduce((s, c) => {
+  return camposAtivos().reduce((s, c) => {
     const v = registro[c.key];
     return s + (v == null ? 0 : (parseFloat(v) || 0));
   }, 0);
@@ -166,6 +190,24 @@ export async function notasLiberadas(turma) {
 }
 export async function definirNotasLiberadas(turma, liberado) {
   await update(ref(db, `notas_liberadas/${BIMESTRE}/${turma}`), { liberado: !!liberado, em: Date.now() });
+}
+
+// ── Congelamento do bimestre ─────────────────────────────────
+// Guarda uma "foto" dos valores automáticos (que mudam ao vivo) por aluno,
+// para o bimestre não recalcular bônus depois de fechado. Reversível.
+export async function buscarCongelamento(turma) {
+  try {
+    const snap = await get(ref(db, `notas_congelado/${BIMESTRE}/${turma}`));
+    if (!snap.exists()) return { congelado:false, alunos:{}, em:null };
+    const v = snap.val();
+    return { congelado:true, alunos:v.alunos || {}, em:v.em || null };
+  } catch (e) { return { congelado:false, alunos:{}, em:null }; }
+}
+export async function congelarBimestre(turma, alunosSnap) {
+  await set(ref(db, `notas_congelado/${BIMESTRE}/${turma}`), { em: Date.now(), alunos: alunosSnap });
+}
+export async function descongelarBimestre(turma) {
+  await remove(ref(db, `notas_congelado/${BIMESTRE}/${turma}`));
 }
 
 // Busca a melhor nota da fase 1 da Atividade 5 pra um aluno específico (uso na página do aluno)
@@ -207,8 +249,20 @@ export async function montarBoletim(turma, nome) {
   progresso.nivelPerfil    = nivelPerfil;
 
   // Ativ.4 e Triângulos: null = não participou/nunca jogou → conta como 0
-  const ativ4Val      = ativ4Info.fez ? 0.5 : null;
-  const triangulosVal = ativ5Pts != null ? Math.min(1, ativ5Pts / 10) : null;
+  let ativ4Val      = ativ4Info.fez ? 0.5 : null;
+  let triangulosVal = ativ5Pts != null ? Math.min(1, ativ5Pts / 10) : null;
+
+  // Se o bimestre está congelado, usa a FOTO (não os valores ao vivo)
+  const cong = await buscarCongelamento(turma);
+  const foto = cong.congelado ? (cong.alunos[slugNome(nome)] || null) : null;
+  if (foto) {
+    progresso.melhorTabuada  = foto.melhorTabuada  ?? progresso.melhorTabuada;
+    progresso.melhorNeg      = foto.melhorNeg      ?? progresso.melhorNeg;
+    progresso.nivelPerfil    = foto.nivelPerfil    ?? progresso.nivelPerfil;
+    progresso.rankAtiv4Bonus = foto.rankAtiv4Bonus ?? progresso.rankAtiv4Bonus;
+    if (foto.ativ4 !== undefined)      ativ4Val      = foto.ativ4;
+    if (foto.triangulos !== undefined) triangulosVal = foto.triangulos;
+  }
 
   const registro = {
     provaMulti: salvo?.provaMulti ?? null,

@@ -59,6 +59,12 @@
     "mapeamento_salas":{ ".read": true, ".write": true },
     "notas_bimestre":  { ".read": true, ".write": true },
     "notas_liberadas": { ".read": true, ".write": true },
+    "notas_congelado": { ".read": true, ".write": true },
+
+    "vistos":          { ".read": true, ".write": true },
+    "aulas":           { ".read": true, ".write": true },
+    "biblioteca":      { ".read": true, ".write": true },
+    "calendario":      { ".read": true, ".write": true },
 
     "$outro": {
       ".read": false,

@@ -18,6 +18,7 @@
     .notas-status.saved{color:var(--green)}
 
     #btnLiberar.liberado{border-color:var(--green);color:#15803D;background:var(--green-pale)}
+    #btnCongelar.congelado{border-color:var(--gold);color:var(--gold);background:var(--gold-pale)}
 
     .legenda-extras{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
     .legenda-chip{font-size:10.5px;color:var(--text-muted);background:var(--card);border:1px solid var(--border);border-radius:20px;padding:4px 9px;display:inline-flex;align-items:center;gap:4px}
@@ -105,6 +106,10 @@
 
       <div class="notas-toolbar">
         <div class="grp">
+          <label>Bimestre</label>
+          <select id="bimSel"></select>
+        </div>
+        <div class="grp">
           <label>Turma</label>
           <select id="turmaSel"></select>
         </div>
@@ -116,6 +121,7 @@
           <svg viewBox="0 0 24 24"><path d="M14 9V5l7 7-7 7v-4H3V9h11z"/></svg>
           Disponibilizar notas
         </button>
+        <button class="btn btn-ghost" id="btnCongelar">🔒 Fechar bimestre</button>
         <span class="notas-status" id="status"></span>
       </div>
 
@@ -185,16 +191,18 @@
 
 <script type="module">
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
-import { ALUNOS_POR_TURMA } from "/js/constants.js";
+import { ALUNOS_POR_TURMA, BIMESTRES, bimestreAtual } from "/js/constants.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, query, orderByChild, equalTo, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {
-  BIMESTRE, CAMPOS_NOTA as CAMPOS, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA,
+  BIMESTRE, setBimestre, CAMPOS_NOTA as CAMPOS, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA,
   EXTRA_RANK_ATIV4, EXTRA_NIVEL_PERFIL, NOME_ATIV5,
   makeUid, slugNome as slug, fmtNota as fmt,
-  buscarProgressoTabuada, buscarAtiv4,
+  buscarProgressoTabuada, buscarAtiv4, buscarNivelPerfil,
   extrasAutoAtivos as extrasAtivosDoProgresso, cadernoExtraAtivo,
   notasLiberadas, definirNotasLiberadas,
+  buscarCongelamento, congelarBimestre, descongelarBimestre,
+  camposAtivos, bonusAtivo,
 } from "/js/notas.js";
 
 requireProfessor();
@@ -205,6 +213,7 @@ let dados = {};
 let autoDados = {}; // autoDados[turma][aluno] = { melhorTabuada, melhorNeg }
 let turmaAtual = "";
 let liberadaAtual = false;
+let congeladoAtual = false;
 
 function turmaVazia(turma) {
   const obj = {};
@@ -223,6 +232,7 @@ function extrasAutoAtivos(nome) {
   return extrasAtivosDoProgresso(a);
 }
 function calcularBonus(nome, registro) {
+  if (!bonusAtivo()) return 0;
   const a = autoDados[turmaAtual]?.[nome] || { melhorTabuada:0, melhorNeg:0, rankAtiv4Bonus:0, nivelPerfil:0 };
   const auto = extrasAtivosDoProgresso(a);
   const bAuto        = EXTRAS_AUTO.reduce((s,e) => s + (auto[e.key] ? e.valor : 0), 0);
@@ -233,7 +243,7 @@ function calcularBonus(nome, registro) {
   return bAuto + bCadExtra + bRankAtiv4 + bNivelPerfil + bManual;
 }
 function calcularTotal(nome, registro) {
-  const base = CAMPOS.reduce((s,c) => s + (parseFloat(registro[c.key]) || 0), 0);
+  const base = camposAtivos().reduce((s,c) => s + (parseFloat(registro[c.key]) || 0), 0);
   const baseCapada = Math.min(base, 10);
   return baseCapada + calcularBonus(nome, registro);
 }
@@ -248,7 +258,11 @@ async function carregarAutoTabuada(turma) {
   const alunos = ALUNOS_POR_TURMA[turma] || [];
   autoDados[turma] = autoDados[turma] || {};
   await Promise.all(alunos.map(async nome => {
-    autoDados[turma][nome] = await buscarProgressoTabuada(turma, nome);
+    const [prog, nivelPerfil] = await Promise.all([
+      buscarProgressoTabuada(turma, nome),
+      buscarNivelPerfil(turma, nome)
+    ]);
+    autoDados[turma][nome] = { ...prog, nivelPerfil };
   }));
 }
 
@@ -274,7 +288,32 @@ async function carregarAutoArea(turma) {
 }
 
 // ── Render ──────────────────────────────────────────────────
+function renderCabecalho() {
+  const campos = camposAtivos();
+  const comBonus = bonusAtivo();
+  const trHead = document.querySelector(".tbl-notas thead tr");
+  if (trHead) {
+    trHead.innerHTML =
+      `<th class="col-aluno">Aluno</th>` +
+      campos.map(c => `<th>${c.label}${c.auto ? " 🔄" : ""}<span class="max">máx ${Number.isInteger(c.max) ? c.max : fmt(c.max)}</span></th>`).join("") +
+      (comBonus ? `<th>Extras</th>` : ``) +
+      `<th>Total</th>`;
+  }
+  const trFoot = document.querySelector(".tbl-notas tfoot tr");
+  if (trFoot) {
+    trFoot.innerHTML =
+      `<td class="col-aluno">Média da turma</td>` +
+      `<td colspan="${campos.length + (comBonus ? 1 : 0)}"></td>` +
+      `<td id="mediaTurma">—</td>`;
+  }
+  // esconde a legenda de bônus quando não há bônus no bimestre
+  const leg = document.querySelector(".legenda-extras");
+  if (leg) leg.style.display = comBonus ? "" : "none";
+}
 function renderTabela() {
+  renderCabecalho();
+  const campos = camposAtivos();
+  const comBonus = bonusAtivo();
   const alunos = ALUNOS_POR_TURMA[turmaAtual] || [];
   const tbody = document.getElementById("tbody");
   tbody.innerHTML = alunos.map(nome => {
@@ -286,7 +325,7 @@ function renderTabela() {
     return `
       <tr data-aluno="${slug(nome)}">
         <td class="col-aluno" title="${nome}">${nome}</td>
-        ${CAMPOS.map(c => {
+        ${campos.map(c => {
           if (c.key === "ativ4") {
             const v = parseFloat(r.ativ4) || 0;
             return `<td class="auto-cell"><span class="auto-display${v ? "" : " zero"}">${v ? fmt(v) : "—"}</span></td>`;
@@ -297,11 +336,11 @@ function renderTabela() {
           }
           return `<td><input class="nota-input" type="number" step="0.1" min="0" max="${c.max}" inputmode="decimal" data-campo="${c.key}" value="${r[c.key]}"></td>`;
         }).join("")}
-        <td>
+        ${comBonus ? `<td>
           <button class="extras-btn${nExtras ? " on" : ""}" data-aluno="${slug(nome)}">
             🎁 ${nExtras ? `+${fmt(bonus)}` : "Extras"}
           </button>
-        </td>
+        </td>` : ``}
         <td><span class="total-pill ${classeTotal(total)}" id="total-${slug(nome)}">${fmt(total)}</span></td>
       </tr>`;
   }).join("");
@@ -427,6 +466,21 @@ Object.keys(ALUNOS_POR_TURMA).forEach(t => {
   turmaSel.appendChild(opt);
 });
 
+// Seletor de bimestre — abre no bimestre corrente pela data de hoje
+const bimSel = document.getElementById("bimSel");
+BIMESTRES.forEach(b => {
+  const opt = document.createElement("option");
+  opt.value = String(b.n); opt.textContent = `${b.n}º bimestre`;
+  bimSel.appendChild(opt);
+});
+const bimInicial = String(bimestreAtual());
+bimSel.value = bimInicial;
+setBimestre(bimInicial);
+bimSel.addEventListener("change", () => {
+  setBimestre(bimSel.value);
+  carregarTurma(turmaAtual);   // recarrega a turma atual no bimestre escolhido
+});
+
 // ── Busca notas já lançadas neste bimestre (carregadas uma vez por turma) ──
 async function carregarNotasSalvas(turma) {
   try {
@@ -463,11 +517,13 @@ async function carregarTurma(turma) {
   status.classList.remove("saved");
 
   const alunos = ALUNOS_POR_TURMA[turma] || [];
-  const tasks = [carregarAutoTabuada(turma), carregarAutoArea(turma), notasLiberadas(turma), buscarAtiv4(turma, alunos)];
+  const tasks = [carregarAutoTabuada(turma), carregarAutoArea(turma), notasLiberadas(turma), buscarAtiv4(turma, alunos), buscarCongelamento(turma)];
   if (primeiraVez) tasks.push(carregarNotasSalvas(turma));
-  const [_, areaPorAluno, liberada, ativ4Map] = await Promise.all(tasks);
+  const [_, areaPorAluno, liberada, ativ4Map, cong] = await Promise.all(tasks);
   liberadaAtual = liberada;
+  congeladoAtual = cong.congelado;
   atualizarBotaoLiberar();
+  atualizarBotaoCongelar();
 
   alunos.forEach(nome => {
     const a4 = ativ4Map[nome] || { fez:false, posicao:0, bonusRank:0 };
@@ -490,6 +546,21 @@ async function carregarTurma(turma) {
     }
   });
 
+  // Se congelado, sobrepõe os automáticos pela foto (trava o bônus)
+  if (cong.congelado) {
+    alunos.forEach(nome => {
+      const f = cong.alunos[slug(nome)]; if (!f) return;
+      const ad = autoDados[turma][nome] = autoDados[turma][nome] || {};
+      ad.melhorTabuada  = f.melhorTabuada  ?? 0;
+      ad.melhorNeg      = f.melhorNeg      ?? 0;
+      ad.nivelPerfil    = f.nivelPerfil    ?? 0;
+      ad.rankAtiv4Bonus = f.rankAtiv4Bonus ?? 0;
+      const r = dados[turma][nome];
+      if (f.ativ4 !== undefined)      r.ativ4      = f.ativ4;
+      if (f.triangulos !== undefined) r.triangulos = f.triangulos;
+    });
+  }
+
   status.textContent = "";
   renderTabela();
 }
@@ -501,6 +572,53 @@ function atualizarBotaoLiberar() {
     ? `<svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 13l-4-4 1.41-1.41L10 11.17l6.59-6.59L18 6l-8 8z"/></svg> Notas disponíveis pros alunos`
     : `<svg viewBox="0 0 24 24"><path d="M14 9V5l7 7-7 7v-4H3V9h11z"/></svg> Disponibilizar notas`;
 }
+
+function atualizarBotaoCongelar() {
+  const btn = document.getElementById("btnCongelar");
+  if (!btn) return;
+  btn.classList.toggle("congelado", congeladoAtual);
+  btn.innerHTML = congeladoAtual
+    ? `🔓 Reabrir ${BIMESTRE}º bim`
+    : `🔒 Fechar ${BIMESTRE}º bim`;
+}
+
+document.getElementById("btnCongelar").addEventListener("click", async () => {
+  const status = document.getElementById("status");
+  if (!congeladoAtual) {
+    if (!confirm(`Fechar o ${BIMESTRE}º bimestre da turma ${turmaAtual}?\n\nIsto tira uma "foto" do bônus automático (tabuada, perfil, ranking, Ativ.4/Triângulos) de cada aluno. A partir daí esses bônus param de mudar sozinhos neste bimestre. As notas manuais continuam editáveis. Você pode reabrir depois.`)) return;
+    const alunos = ALUNOS_POR_TURMA[turmaAtual] || [];
+    const snapAlunos = {};
+    alunos.forEach(nome => {
+      const ad = autoDados[turmaAtual]?.[nome] || {};
+      const r  = dados[turmaAtual]?.[nome] || {};
+      snapAlunos[slug(nome)] = {
+        melhorTabuada:  ad.melhorTabuada  ?? 0,
+        melhorNeg:      ad.melhorNeg      ?? 0,
+        nivelPerfil:    ad.nivelPerfil    ?? 0,
+        rankAtiv4Bonus: ad.rankAtiv4Bonus ?? 0,
+        ativ4:      r.ativ4      ?? null,
+        triangulos: r.triangulos ?? null,
+      };
+    });
+    status.textContent = "Congelando…"; status.classList.remove("saved");
+    try {
+      await congelarBimestre(turmaAtual, snapAlunos);
+      congeladoAtual = true; atualizarBotaoCongelar();
+      status.textContent = `🔒 ${BIMESTRE}º bim da turma ${turmaAtual} fechado — bônus congelado.`;
+      status.classList.add("saved");
+    } catch (e) { console.error(e); status.textContent = "❌ Erro ao congelar."; status.classList.remove("saved"); }
+  } else {
+    if (!confirm(`Reabrir o ${BIMESTRE}º bimestre da turma ${turmaAtual}?\n\nO bônus volta a ser calculado ao vivo.`)) return;
+    status.textContent = "Reabrindo…"; status.classList.remove("saved");
+    try {
+      await descongelarBimestre(turmaAtual);
+      congeladoAtual = false; atualizarBotaoCongelar();
+      await carregarTurma(turmaAtual);
+      status.textContent = `🔓 ${BIMESTRE}º bim da turma ${turmaAtual} reaberto.`;
+      status.classList.add("saved");
+    } catch (e) { console.error(e); status.textContent = "❌ Erro ao reabrir."; status.classList.remove("saved"); }
+  }
+});
 
 turmaSel.addEventListener("change", () => carregarTurma(turmaSel.value));
 
