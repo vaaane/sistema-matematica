@@ -375,6 +375,7 @@ function atualizarLinha(nome) {
     btn.innerHTML = `🎁 ${nExtras ? `+${fmt(bonus)}` : "Extras"}`;
   }
   atualizarMedia();
+  agendarSalvarNotas();
 }
 
 function atualizarMedia() {
@@ -642,7 +643,7 @@ document.getElementById("btnLiberar").addEventListener("click", async () => {
   }
 });
 
-document.getElementById("btnSalvar").addEventListener("click", async () => {
+async function salvarNotas() {
   const status = document.getElementById("status");
   status.textContent = "Salvando…";
   status.classList.remove("saved");
@@ -677,7 +678,14 @@ document.getElementById("btnSalvar").addEventListener("click", async () => {
     status.textContent = "❌ Erro ao salvar — tente de novo (veja o console).";
     status.classList.remove("saved");
   }
-});
+}
+let notasSaveTimer = null;
+function agendarSalvarNotas() {
+  clearTimeout(notasSaveTimer);
+  notasSaveTimer = setTimeout(salvarNotas, 800);   // salva 0,8s após a última edição
+}
+const _btnSalvar = document.getElementById("btnSalvar");
+if (_btnSalvar) _btnSalvar.style.display = "none";
 
 carregarTurma("8D");
 </script>

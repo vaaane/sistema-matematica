@@ -155,8 +155,9 @@
 import { requireAluno, renderSidebarAluno, clearSession, getSession } from "/js/auth.js";
 import {
   CAMPOS_NOTA, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, EXTRA_RANK_ATIV4, EXTRA_NIVEL_PERFIL,
-  BIMESTRE, fmtNota, mensagemPorNota, montarBoletim, notasLiberadas,
+  BIMESTRE, setBimestre, camposAtivos, bonusAtivo, fmtNota, mensagemPorNota, montarBoletim, notasLiberadas,
 } from "/js/notas.js";
+import { BIMESTRES, bimestreAtual } from "/js/constants.js";
 
 requireAluno();
 renderSidebarAluno("sidebar", "notas");
@@ -169,55 +170,41 @@ const fmt   = fmtNota;
 
 // ── detecta se todas as notas manuais foram lançadas ──────────
 function todasLancadas(boletim) {
-  return ['provaMulti','projeto','caderno'].every(k => boletim.registro[k] !== null);
+  // considera "encerrado" quando os campos MANUAIS ativos do bimestre foram lançados
+  const chaves = camposAtivos().filter(c => !c.auto && c.key !== "participacao").map(c => c.key);
+  return chaves.every(k => {
+    const v = boletim.registro[k];
+    return v !== null && v !== undefined && v !== "";
+  });
 }
 
 // ── ESTADO 2: Em Andamento ────────────────────────────────────
 function renderAndamento(boletim) {
+  const bonusOn = bonusAtivo();
+  const campos  = camposAtivos();
   document.getElementById("page-title").textContent = "Notas";
-  document.getElementById("page-sub").textContent   = "Em andamento — 2º Bimestre";
+  document.getElementById("page-sub").textContent   = `Em andamento — ${BIMESTRE}º Bimestre`;
 
   const { registro, lancados, progresso, auto, ativ4Info, ativ5Pts } = boletim;
 
-  const ativ4Pts = ativ4Info.fez ? 0.5 : 0;
-  const triPts   = ativ5Pts != null ? Math.min(1, ativ5Pts / 10) : 0;
+  // números vêm do montarBoletim (respeitam campos do bimestre e congelamento)
+  const base  = boletim.subtotalCapado;
+  const bonus = boletim.bonus;
+  const total = boletim.total;
 
-  let maxLancado = 0.5 + (ativ5Pts != null ? 1 : 0);
-  if (lancados.provaMulti) maxLancado += 3;
-  if (lancados.projeto)    maxLancado += 3;
-  if (lancados.caderno)    maxLancado += 2;
-  maxLancado += 0.5; // participacao sempre lançada (default 0.5)
+  const temCaderno = campos.some(c => c.key === "caderno");
+  const cadExtra   = temCaderno && lancados.caderno && (parseFloat(registro.caderno)||0) > CADERNO_EXTRA.limiar;
+  const nivelPerf  = boletim.nivelPerfil || 1;
+
+  // pontos já lançados (informativo)
+  let maxLancado = 0;
+  campos.forEach(c => {
+    if (c.key === "ativ4")           maxLancado += 0.5;
+    else if (c.key === "triangulos") maxLancado += (ativ5Pts != null ? 1 : 0);
+    else if (c.key === "participacao") maxLancado += 0.5;
+    else if (lancados[c.key])        maxLancado += c.max;
+  });
   maxLancado = Math.min(maxLancado, 10);
-
-  let baseConf = ativ4Pts + triPts;
-  if (lancados.provaMulti) baseConf += parseFloat(registro.provaMulti) || 0;
-  if (lancados.projeto)    baseConf += parseFloat(registro.projeto)    || 0;
-  if (lancados.caderno)    baseConf += parseFloat(registro.caderno)    || 0;
-  baseConf += parseFloat(registro.participacao) || 0;
-  baseConf = Math.min(baseConf, 10);
-
-  const cadExtra = lancados.caderno && (parseFloat(registro.caderno)||0) > CADERNO_EXTRA.limiar;
-  const nivelPerf = boletim.nivelPerfil || 1;
-  let bonusConf = EXTRAS_AUTO.reduce((s,e) => s + (auto[e.key] ? e.valor : 0), 0)
-                + (cadExtra ? 0.5 : 0)
-                + (ativ4Info.bonusRank || 0)
-                + Math.round((nivelPerf || 1) * 0.1 * 10) / 10;
-
-  let potencial = 0;
-  if (!auto.t300)    potencial += 0.5;
-  if (!auto.tneg50)  potencial += 0.5;
-  if (!auto.tneg150) potencial += 0.5;
-
-  const totalAtual = Math.min(baseConf, 10) + bonusConf;
-
-  const ATIVS = [
-    { key:"ativ4",      label:"Atividade 4 — Geometria",   max:0.5, auto:true },
-    { key:"triangulos", label:"Atividade 5 — Triângulos",  max:1,   auto:true },
-    { key:"provaMulti", label:"Prova Multi",                max:3 },
-    { key:"projeto",    label:"Projeto CriaBartô",          max:3 },
-    { key:"caderno",    label:"Caderno",                    max:2 },
-    { key:"participacao", label:"Participação",               max:0.5 },
-  ];
 
   function rowAtiv(a) {
     if (a.key === "ativ4") {
@@ -257,81 +244,77 @@ function renderAndamento(boletim) {
     </div>`;
   }
 
-  function rowTabuada(ex) {
-    const on  = auto[ex.key];
-    const atual = ex.campo==="melhorTabuada" ? progresso.melhorTabuada : progresso.melhorNeg;
-    const pct = Math.min(100, Math.round(atual/ex.max*100));
-    const cor = on ? "green" : ex.campo==="melhorTabuada" ? "orange" : "purple";
-    return `<div class="prog-row ${on?"done":"partial"}">
-      <div class="prog-icon ${cor}">${on?"⚡":"🎯"}</div>
-      <div class="prog-body"><div class="prog-title">${ex.label}</div>
-        <div class="prog-desc">${on?`Meta batida! Nível ${atual}`:`Faltam <b>${ex.max-atual} níveis</b> — continue jogando!`}</div>
-        <div class="pbar-wrap"><div class="pbar-bg"><div class="pbar-fill ${cor}" style="width:${pct}%"></div></div>
-        <span class="pbar-label" style="${on?"color:var(--green)":""}">${atual}/${ex.max}${on?" ✓":""}</span></div>
-      </div>
-      <div class="prog-right"><div class="pts ${on?"green":"muted"}">+${fmt(ex.valor)}</div><div class="pts-sub">${on?"conquistado":"disponível"}</div></div>
-    </div>`;
-  }
-
-  const nivelPerfilRow = (() => {
-    const bonus = Math.round((nivelPerf || 1) * 0.1 * 10) / 10;
-    return `<div class="prog-row done">
+  // ── blocos de bônus só quando o bimestre tem bônus ativo ──
+  let summaryBonusCard = "", extrasSecoes = "";
+  if (bonusOn) {
+    function rowTabuada(ex) {
+      const on  = auto[ex.key];
+      const atual = ex.campo==="melhorTabuada" ? progresso.melhorTabuada : progresso.melhorNeg;
+      const pct = Math.min(100, Math.round(atual/ex.max*100));
+      const cor = on ? "green" : ex.campo==="melhorTabuada" ? "orange" : "purple";
+      return `<div class="prog-row ${on?"done":"partial"}">
+        <div class="prog-icon ${cor}">${on?"⚡":"🎯"}</div>
+        <div class="prog-body"><div class="prog-title">${ex.label}</div>
+          <div class="prog-desc">${on?`Meta batida! Nível ${atual}`:`Faltam <b>${ex.max-atual} níveis</b> — continue jogando!`}</div>
+          <div class="pbar-wrap"><div class="pbar-bg"><div class="pbar-fill ${cor}" style="width:${pct}%"></div></div>
+          <span class="pbar-label" style="${on?"color:var(--green)":""}">${atual}/${ex.max}${on?" ✓":""}</span></div>
+        </div>
+        <div class="prog-right"><div class="pts ${on?"green":"muted"}">+${fmt(ex.valor)}</div><div class="pts-sub">${on?"conquistado":"disponível"}</div></div>
+      </div>`;
+    }
+    const nivelPerfilRow = `<div class="prog-row done">
       <div class="prog-icon purple">⭐</div>
       <div class="prog-body"><div class="prog-title">${EXTRA_NIVEL_PERFIL.label}</div>
         <div class="prog-desc">Nível ${nivelPerf} × 0,1</div></div>
-      <div class="prog-right"><div class="pts" style="color:var(--purple)">+${fmtNota(bonus)}</div><div class="pts-sub">conquistado</div></div>
+      <div class="prog-right"><div class="pts" style="color:var(--purple)">+${fmtNota(Math.round(nivelPerf*0.1*10)/10)}</div><div class="pts-sub">conquistado</div></div>
     </div>`;
-  })();
-
-  const rankRow = (() => {
-    const bonus = ativ4Info.bonusRank || 0;
-    const pos   = ativ4Info.posicao   || 0;
-    if (!ativ4Info.fez || bonus===0) return "";
-    return `<div class="prog-row done">
+    const rankRow = (!ativ4Info.fez || (ativ4Info.bonusRank||0)===0) ? "" : `<div class="prog-row done">
       <div class="prog-icon gold">🏆</div>
       <div class="prog-body"><div class="prog-title">Atividade 4 — Ranking</div>
-        <div class="prog-desc"><b style="color:var(--gold)">${pos}º lugar</b> no geral</div></div>
-      <div class="prog-right"><div class="pts gold">+${fmt(bonus)}</div><div class="pts-sub">bônus ranking</div></div>
+        <div class="prog-desc"><b style="color:var(--gold)">${ativ4Info.posicao||0}º lugar</b> no geral</div></div>
+      <div class="prog-right"><div class="pts gold">+${fmt(ativ4Info.bonusRank||0)}</div><div class="pts-sub">bônus ranking</div></div>
     </div>`;
-  })();
-
-  const cadExtraRow = (() => {
-    if (!lancados.caderno) return `<div class="prog-row locked">
+    const cadExtraRow = !temCaderno ? "" : (!lancados.caderno ? `<div class="prog-row locked">
       <div class="prog-icon grey">📒</div>
       <div class="prog-body"><div class="prog-title">Caderno Extra</div>
         <div class="prog-desc">Calculado quando a professora lançar o caderno (precisa &gt; 1,8)</div></div>
       <div class="prog-right"><div class="pts muted">+0,5</div><div class="pts-sub">possível</div></div>
-    </div>`;
-    const on = cadExtra;
-    return `<div class="prog-row ${on?"done":"locked"}">
-      <div class="prog-icon ${on?"green":"grey"}">📒</div>
+    </div>` : `<div class="prog-row ${cadExtra?"done":"locked"}">
+      <div class="prog-icon ${cadExtra?"green":"grey"}">📒</div>
       <div class="prog-body"><div class="prog-title">Caderno Extra</div>
-        <div class="prog-desc">${on?"Conquistado! Caderno acima de 1,8":`Caderno: ${fmt(parseFloat(registro.caderno)||0)} (precisa > 1,8)`}</div></div>
-      <div class="prog-right"><div class="pts ${on?"green":"muted"}">+0,5</div><div class="pts-sub">${on?"conquistado":"não atingido"}</div></div>
-    </div>`;
-  })();
+        <div class="prog-desc">${cadExtra?"Conquistado! Caderno acima de 1,8":`Caderno: ${fmt(parseFloat(registro.caderno)||0)} (precisa > 1,8)`}</div></div>
+      <div class="prog-right"><div class="pts ${cadExtra?"green":"muted"}">+0,5</div><div class="pts-sub">${cadExtra?"conquistado":"não atingido"}</div></div>
+    </div>`);
 
-  const banner = potencial > 0
-    ? `<div class="potencial-banner">
-        <div class="pot-icon">🚀</div>
-        <div class="pot-body">
-          <div class="pot-titulo">Você ainda pode ganhar mais pontos!</div>
+    let potencial = 0;
+    if (!auto.t300)    potencial += 0.5;
+    if (!auto.tneg50)  potencial += 0.5;
+    if (!auto.tneg150) potencial += 0.5;
+    const banner = potencial > 0
+      ? `<div class="potencial-banner"><div class="pot-icon">🚀</div>
+          <div class="pot-body"><div class="pot-titulo">Você ainda pode ganhar mais pontos!</div>
           <div class="pot-desc">${[
             !auto.t300    ? `<b>Tabuada nv.300</b> (+0,5): ${progresso.melhorTabuada}/300` : "",
             !auto.tneg50  ? `<b>Tab. Negativa nv.50</b> (+0,5): ${progresso.melhorNeg}/50` : "",
             !auto.tneg150 ? `<b>Tab. Negativa nv.150</b> (+0,5): ${progresso.melhorNeg}/150` : "",
-          ].filter(Boolean).join(" · ")}</div>
-        </div>
-        <div class="pot-pts">+${fmt(potencial)}</div>
-      </div>`
-    : `<div class="potencial-banner zero">
-        <div class="pot-icon">🎉</div>
-        <div class="pot-body">
-          <div class="pot-titulo green">Você conquistou todos os bônus disponíveis!</div>
-          <div class="pot-desc">Incrível — tabuada e negativa: tudo certo.</div>
-        </div>
-        <div class="pot-pts green">100%</div>
+          ].filter(Boolean).join(" · ")}</div></div>
+          <div class="pot-pts">+${fmt(potencial)}</div></div>`
+      : `<div class="potencial-banner zero"><div class="pot-icon">🎉</div>
+          <div class="pot-body"><div class="pot-titulo green">Você conquistou todos os bônus disponíveis!</div>
+          <div class="pot-desc">Incrível — tabuada e negativa: tudo certo.</div></div>
+          <div class="pot-pts green">100%</div></div>`;
+
+    summaryBonusCard = `<div class="sum-card">
+        <div class="sum-label">🎁 Bônus extras</div>
+        <div class="sum-val" style="color:var(--purple)">+${fmt(bonus)}</div>
+        <div style="font-size:10.5px;color:var(--text-muted)">${potencial>0?`+${fmt(potencial)} ainda alcançáveis`:"todos conquistados ✓"}</div>
       </div>`;
+    extrasSecoes = `${banner}
+    <div class="sec-label">⚡ Extras — tabuada e ranking</div>
+    <div class="prog-list">${EXTRAS_AUTO.map(rowTabuada).join("")}${nivelPerfilRow}${rankRow}</div>
+    <div class="sec-label">🎁 Extras — caderno</div>
+    <div class="prog-list">${cadExtraRow}</div>`;
+  }
 
   return `
     <div class="andamento-aviso">
@@ -339,38 +322,28 @@ function renderAndamento(boletim) {
       Notas em andamento — esta <b style="color:var(--gold)">não é a nota final</b>, algumas atividades ainda não foram lançadas
     </div>
     <div class="summary-bar">
-      <!-- Bloco 1: atividades (base até 10) -->
       <div class="sum-card">
         <div class="sum-label">📋 Das atividades</div>
-        <div class="sum-val" style="color:var(--text)">${fmt(baseConf)}<span style="font-size:13px;font-weight:600;color:var(--text-muted)"> / 10</span></div>
+        <div class="sum-val" style="color:var(--text)">${fmt(base)}<span style="font-size:13px;font-weight:600;color:var(--text-muted)"> / 10</span></div>
         <div style="font-size:10.5px;color:var(--text-muted)">${fmt(maxLancado)} pts já lançados</div>
       </div>
-      <!-- Bloco 2: bônus extras -->
-      <div class="sum-card">
-        <div class="sum-label">🎁 Bônus extras</div>
-        <div class="sum-val" style="color:var(--purple)">+${fmt(bonusConf)}</div>
-        <div style="font-size:10.5px;color:var(--text-muted)">${potencial>0?`+${fmt(potencial)} ainda alcançáveis`:"todos conquistados ✓"}</div>
-      </div>
-      <!-- Bloco 3: total -->
+      ${summaryBonusCard}
       <div class="sum-card" style="background:linear-gradient(135deg,#1a1040,#15102a);border-color:rgba(108,0,212,.35)">
         <div class="sum-label" style="color:rgba(200,170,255,.7)">= Nota atual</div>
-        <div style="font-size:32px;font-weight:800;color:var(--purple);line-height:1">${fmt(totalAtual)}</div>
-        <div style="font-size:10.5px;color:rgba(200,170,255,.5)">${fmt(baseConf)} + ${fmt(bonusConf)} bônus</div>
+        <div style="font-size:32px;font-weight:800;color:var(--purple);line-height:1">${fmt(total)}</div>
+        <div style="font-size:10.5px;color:rgba(200,170,255,.5)">${bonusOn?`${fmt(base)} + ${fmt(bonus)} bônus`:"só atividades"}</div>
       </div>
     </div>
-    ${banner}
     <div class="sec-label">📋 Atividades avaliadas</div>
-    <div class="prog-list">${ATIVS.map(rowAtiv).join("")}</div>
-    <div class="sec-label">⚡ Extras — tabuada e ranking</div>
-    <div class="prog-list">${EXTRAS_AUTO.map(rowTabuada).join("")}${nivelPerfilRow}${rankRow}</div>
-    <div class="sec-label">🎁 Extras — caderno</div>
-    <div class="prog-list">${cadExtraRow}</div>`;
+    <div class="prog-list">${campos.map(rowAtiv).join("")}</div>
+    ${extrasSecoes}`;
 }
 
 // ── ESTADO 3: Meu Rendimento ──────────────────────────────────
 function renderRendimento(boletim) {
+  const bonusOn = bonusAtivo();
   document.getElementById("page-title").textContent = "Meu Rendimento";
-  document.getElementById("page-sub").textContent   = "2º Bimestre — notas encerradas";
+  document.getElementById("page-sub").textContent   = `${BIMESTRE}º Bimestre — notas encerradas`;
 
   const { registro, progresso, auto, subtotal, subtotalCapado, bonus, total, ativ4Info } = boletim;
   const cadExtra = (parseFloat(registro.caderno)||0) > CADERNO_EXTRA.limiar;
@@ -417,7 +390,7 @@ function renderRendimento(boletim) {
     <div class="rendimento-header">
       <div class="rend-num">${fmtNota(total)}</div>
       <div class="rend-info">
-        <div class="rend-eyebrow">2º Bimestre · Meu Rendimento</div>
+        <div class="rend-eyebrow">${BIMESTRE}º Bimestre · Meu Rendimento</div>
         <div class="rend-sub">${fmtNota(subtotalCapado)} das atividades + ${fmtNota(bonus)} de bônus</div>
         <div class="rend-msg">${mensagemPorNota(total)}</div>
       </div>
@@ -428,11 +401,11 @@ function renderRendimento(boletim) {
         <div class="sum-val" style="color:var(--text)">${fmtNota(subtotalCapado)}<span style="font-size:13px;font-weight:600;color:var(--text-muted)"> / 10</span></div>
         <div style="font-size:10.5px;color:var(--text-muted)">subtotal das atividades</div>
       </div>
-      <div class="sum-card">
+      ${bonusOn ? `<div class="sum-card">
         <div class="sum-label">🎁 Bônus extras</div>
         <div class="sum-val" style="color:var(--purple)">+${fmtNota(bonus)}</div>
         <div style="font-size:10.5px;color:var(--text-muted)">tabuada, ranking e perfil</div>
-      </div>
+      </div>` : ""}
       <div class="sum-card" style="background:linear-gradient(135deg,#1a1040,#15102a);border-color:rgba(108,0,212,.35)">
         <div class="sum-label" style="color:rgba(200,170,255,.7)">= Nota final</div>
         <div style="font-size:32px;font-weight:800;color:var(--purple);line-height:1">${fmtNota(total)}</div>
@@ -441,38 +414,53 @@ function renderRendimento(boletim) {
     </div>
     <div class="card">
       <div class="card-title"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>Atividades do bimestre</div>
-      ${CAMPOS_NOTA.map(barraItem).join("")}
+      ${camposAtivos().map(barraItem).join("")}
       <div class="subtotal-row"><span class="lbl">Subtotal</span><span class="val">${fmtNota(subtotal)} / 10</span></div>
       ${capNote}
     </div>
-    <div class="card">
+    ${bonusOn ? `<div class="card">
       <div class="card-title"><svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 0 0-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm6 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1z"/></svg>Pontos extras conquistados</div>
       ${extras}
       <div class="bonus-total-row"><span class="lbl">Bônus total</span><span class="val">+${fmtNota(bonus)}</span></div>
-    </div>`;
+    </div>` : ""}`;
 }
 
 // ── main ──────────────────────────────────────────────────────
 async function carregar() {
   const content = document.getElementById("content");
-  if (!turma || !nome) { content.innerHTML = `<div class="empty-state"><p>Sessão não encontrada.</p></div>`; return; }
+  const bimSel  = document.getElementById("bimSel");
+  if (!turma || !nome) { content.innerHTML = `<div class="empty-state"><p>Sessão não encontrada.</p></div>`; if (bimSel) bimSel.style.display = "none"; return; }
 
-  const liberado = await notasLiberadas(turma);
-  if (!liberado) {
+  // descobre quais bimestres já foram liberados para esta turma
+  const liberados = [];
+  for (const b of BIMESTRES) {
+    setBimestre(String(b.n));
+    try { if (await notasLiberadas(turma)) liberados.push(b.n); } catch (e) {}
+  }
+  if (!liberados.length) {
+    if (bimSel) bimSel.style.display = "none";
     content.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-      <p>Suas notas deste bimestre ainda não foram disponibilizadas pela professora.<br>Volte aqui mais perto do fim do bimestre.</p></div>`;
+      <p>Suas notas ainda não foram disponibilizadas pela professora.<br>Volte aqui mais perto do fim do bimestre.</p></div>`;
     return;
   }
 
+  // popula e liga o seletor (só aparece se houver mais de um liberado)
+  bimSel.innerHTML = liberados.map(n => `<option value="${n}">${n}º Bimestre</option>`).join("");
+  bimSel.style.display = liberados.length > 1 ? "" : "none";
+  const corrente  = bimestreAtual();
+  const escolhido = liberados.includes(corrente) ? corrente : liberados[liberados.length - 1];
+  bimSel.value = String(escolhido);
+  bimSel.onchange = () => mostrarBimestre(+bimSel.value);
+  await mostrarBimestre(escolhido);
+}
+
+async function mostrarBimestre(n) {
+  setBimestre(String(n));
+  const content = document.getElementById("content");
+  content.innerHTML = `<div class="empty-state"><p>Carregando…</p></div>`;
   const boletim = await montarBoletim(turma, nome);
-  if (!boletim) {
-    content.innerHTML = `<div class="empty-state"><p>As notas foram disponibilizadas e serão lançadas em breve.</p></div>`;
-    return;
-  }
-
-  content.innerHTML = todasLancadas(boletim)
-    ? renderRendimento(boletim)
-    : renderAndamento(boletim);
+  if (!boletim) { content.innerHTML = `<div class="empty-state"><p>As notas foram disponibilizadas e serão lançadas em breve.</p></div>`; return; }
+  content.innerHTML = todasLancadas(boletim) ? renderRendimento(boletim) : renderAndamento(boletim);
 }
 
 carregar();

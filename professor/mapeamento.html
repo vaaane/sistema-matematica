@@ -165,6 +165,7 @@
         <label><input type="checkbox" value="Saiu e demorou pra voltar"> Saiu e demorou pra voltar</label>
         <label><input type="checkbox" value="Faltou com respeito"> Faltou com respeito</label>
         <label><input type="checkbox" value="Atrapalhou a aula"> Atrapalhou a aula</label>
+        <label><input type="checkbox" value="Uso de celular"> 📱 Uso de celular</label>
       </div>
       <textarea id="mObs" rows="2" placeholder="Observação (opcional)…"></textarea>
       <div class="dt-row">
@@ -221,6 +222,8 @@ let dragged = null;
 let turmaAtual = null;
 let anotacoes = {};         // { nome: [ {ts, ocorrencias:[], obs} ] }
 let modalNome = null;       // aluno aberto no modal
+let carregando = false;   // evita auto-save enquanto o mapa está sendo carregado
+let saveTimer = null;
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c]));
 
@@ -314,7 +317,7 @@ function applyCor(b, cor){
     b.querySelector(".dot").style.background = c.bd;
   }
 }
-function paint(b){ applyCor(b, activeCor); }
+function paint(b){ applyCor(b, activeCor); agendarSalvar(); }
 
 // ---------- UI: pool ----------
 function refreshPool(){
@@ -328,6 +331,7 @@ function refreshPool(){
   faltam.forEach(n => { if (!noPool.includes(n)) pool.appendChild(makeBox(n)); });
   poolCount.textContent = faltam.length;
   pool.classList.toggle("empty", faltam.length === 0);
+  agendarSalvar();
 }
 pool.addEventListener("dragover", e => e.preventDefault());
 pool.addEventListener("drop", e => { e.preventDefault(); if (dragged) { pool.appendChild(dragged); refreshPool(); } });
@@ -360,6 +364,7 @@ function buildGrid(cols, rows){
 // ---------- Trocar de turma ----------
 async function selecionarTurma(turma){
   turmaAtual = turma;
+  carregando = true;
   setStatus("Carregando…");
 
   // chamada é local (constants.js) — sempre disponível
@@ -396,6 +401,7 @@ async function selecionarTurma(turma){
   });
   refreshPool();
   setStatus(mapa ? "Mapa carregado" : "Pronto — arraste os alunos");
+  carregando = false;
 }
 turmaSel.onchange = () => selecionarTurma(turmaSel.value);
 
@@ -404,7 +410,7 @@ document.getElementById("btnReset").onclick = () => {
   grid.querySelectorAll(".box").forEach(b => pool.appendChild(b));
   refreshPool();
 };
-document.getElementById("btnSave").onclick = async () => {
+async function salvarMapa() {
   if (!turmaAtual) return;
   setStatus("Salvando…");
   const grupos = {};
@@ -428,7 +434,15 @@ document.getElementById("btnSave").onclick = async () => {
     setStatus("Erro ao salvar — tente novamente");
     console.error(e);
   }
-};
+}
+function agendarSalvar() {
+  if (carregando) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(salvarMapa, 700);   // salva 0,7s após a última mudança
+}
+// o botão Salvar não é mais necessário
+const _btnSave = document.getElementById("btnSave");
+if (_btnSave) _btnSave.style.display = "none";
 
 // ---------- Modal de anotações ----------
 const modal = document.getElementById("modal");
