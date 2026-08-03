@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<title>Diploma — Grande Melhoria</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  @page{size:A4 landscape;margin:0}
+
+  .diploma{width:100%;height:100%;display:flex;background:#fff}
+
+  /* ═══ SIDEBAR ESQUERDA — barra vertical forte ═══ */
+  .sidebar{
+    width:76px;flex-shrink:0;
+    background:linear-gradient(180deg,#022c22 0%,#064e3b 30%,#059669 60%,#064e3b 85%,#022c22 100%);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    position:relative;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  .sidebar::after{
+    content:'';position:absolute;top:0;right:0;bottom:0;width:4px;
+    background:linear-gradient(180deg,#6ee7b7,#34d399,#10b981,#34d399,#6ee7b7);
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  /* Seta ascendente CSS */
+  .arrow-up{width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;border-bottom:22px solid #6ee7b7;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .arrow-stem{width:10px;height:20px;background:#6ee7b7;margin:0 auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .sidebar-txt{
+    writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);
+    font-family:'Cinzel',serif;font-size:11px;font-weight:700;
+    letter-spacing:6px;text-transform:uppercase;color:rgba(255,255,255,.6);
+    margin-top:18px;
+  }
+  .sidebar-logo{margin-top:16px}
+  .sidebar-logo img{width:36px;height:36px;object-fit:contain;opacity:.7;filter:drop-shadow(0 0 4px rgba(110,231,183,.4))}
+
+  /* ═══ CORPO PRINCIPAL ═══ */
+  .corpo{
+    flex:1;display:flex;flex-direction:column;
+    position:relative;padding:20px 44px 16px;
+  }
+
+  /* Borda interna */
+  .borda{position:absolute;inset:10px;border:2px solid rgba(5,150,105,.2);pointer-events:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .canto{position:absolute;z-index:2;color:#10b981;font-size:18px;line-height:1}
+  .canto.tl{top:12px;left:14px}.canto.tr{top:12px;right:14px;transform:scaleX(-1)}
+  .canto.bl{bottom:12px;left:14px;transform:scaleY(-1)}.canto.br{bottom:12px;right:14px;transform:scale(-1)}
+
+  /* Cabeçalho */
+  .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .escola{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#064e3b}
+  .unidade{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-top:2px}
+  .header-badge{
+    display:flex;align-items:center;gap:8px;
+    background:#ecfdf5;border:2px solid #34d399;border-radius:10px;padding:7px 16px;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  .header-badge-icon{font-size:18px}
+  .header-badge-text{font-family:'Cinzel',serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#059669}
+
+  .line-accent{height:3px;margin:0 0 12px;background:linear-gradient(90deg,#10b981 0%,#10b981 40%,transparent 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+  /* Conteúdo central */
+  .content{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+
+  .titulo-pre{font-family:'Cinzel',serif;font-size:12px;font-weight:600;letter-spacing:4px;text-transform:uppercase;color:#059669;margin-bottom:2px}
+  .titulo{font-family:'Cinzel',serif;font-size:26px;font-weight:900;color:#022c22;letter-spacing:2px;text-transform:uppercase;line-height:1.15;margin-bottom:4px}
+  .titulo em{font-style:normal;color:#059669}
+
+  /* Divider com folha */
+  .div-leaf{display:flex;align-items:center;gap:12px;margin:6px 0 10px;width:100%;max-width:400px}
+  .div-leaf::before,.div-leaf::after{content:'';flex:1;height:2px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .div-leaf::before{background:linear-gradient(90deg,transparent,#10b981)}
+  .div-leaf::after{background:linear-gradient(90deg,#10b981,transparent)}
+  .leaf-diamond{width:16px;height:16px;background:#10b981;transform:rotate(45deg);border-radius:2px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+  .certifica{font-family:'Playfair Display',serif;font-size:12px;color:#059669;font-style:italic;margin-bottom:8px}
+  .nome{font-family:'Cinzel',serif;font-size:28px;font-weight:700;color:#022c22;margin-bottom:3px;line-height:1.2}
+  .turma{font-size:11px;font-family:'Playfair Display',serif;font-style:italic;color:#059669;margin-bottom:12px}
+  .texto{font-family:'Playfair Display',serif;font-size:12.5px;line-height:1.8;color:#374151;margin-bottom:14px;max-width:480px}
+  .texto strong{color:#064e3b}
+
+  /* Frase motivacional com destaque */
+  .frase{
+    display:inline-block;
+    border-left:4px solid #10b981;
+    background:linear-gradient(90deg,#ecfdf5,#fff);
+    padding:10px 22px;border-radius:0 10px 10px 0;
+    margin-bottom:14px;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  .frase p{font-family:'Playfair Display',serif;font-size:12.5px;font-style:italic;color:#064e3b;line-height:1.5;margin:0}
+
+  .div2{height:1.5px;width:100%;max-width:340px;background:linear-gradient(90deg,transparent,rgba(5,150,105,.3),transparent);margin-bottom:8px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+  /* Assinatura com espaço */
+  .assinatura{display:flex;justify-content:center}
+  .assin-bloco{display:flex;flex-direction:column;align-items:center}
+  .assin-espaco{height:42px}
+  .assin-linha{width:220px;height:1.5px;background:linear-gradient(90deg,transparent,#064e3b,transparent);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .assin-nome{font-size:10px;font-weight:700;color:#1f2937;margin-top:3px}
+  .assin-cargo{font-size:9px;color:#6b7280}
+  .data{font-size:10px;margin-top:6px;font-family:'Playfair Display',serif;font-style:italic;color:#6b7280}
+
+  .no-print{display:block}
+  @media print{
+    @page{size:A4 landscape;margin:0}
+    html,body{width:297mm;height:210mm;overflow:hidden;background:#fff!important}
+    .no-print{display:none!important}
+    .diploma{width:297mm!important;height:210mm!important}
+  }
+</style>
+</head>
+<body>
+<div class="no-print" style="position:fixed;top:12px;left:12px;z-index:999;display:flex;gap:8px">
+  <button onclick="window.close()" style="background:#064e3b;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer">← Fechar</button>
+  <button onclick="imprimirLandscape()" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer">🖨️ Imprimir</button>
+</div>
+<div class="no-print" style="position:fixed;top:56px;left:12px;z-index:999;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);color:#064e3b;border-radius:8px;padding:8px 14px;font-size:12px;max-width:340px;line-height:1.5">
+  💡 Impressão em <strong>Paisagem</strong> · Couché Fosco 180-230g · Desative margens do navegador
+</div>
+
+<div class="diploma">
+  <div class="sidebar">
+    <div class="arrow-up"></div>
+    <div class="arrow-stem"></div>
+    <div class="sidebar-txt">Melhoria</div>
+    <div class="sidebar-logo"><img src="/logo_fundotransparente.png" alt=""/></div>
+  </div>
+
+  <div class="corpo">
+    <div class="borda"></div>
+    <div class="canto tl">✦</div><div class="canto tr">✦</div>
+    <div class="canto bl">✦</div><div class="canto br">✦</div>
+
+    <div class="header">
+      <div>
+        <div class="escola">Centro Educacional São Bartolomeu</div>
+        <div class="unidade">São Sebastião · Distrito Federal</div>
+      </div>
+      <div class="header-badge">
+        <span class="header-badge-icon">📈</span>
+        <span class="header-badge-text">Grande Melhoria</span>
+      </div>
+    </div>
+    <div class="line-accent"></div>
+
+    <div class="content">
+      <div class="titulo-pre">Certificado de</div>
+      <div class="titulo">Grande <em>Melhoria</em></div>
+
+      <div class="div-leaf"><div class="leaf-diamond"></div></div>
+
+      <div class="certifica">Certificamos que o(a) aluno(a)</div>
+      <div class="nome" id="dp-nome">—</div>
+      <div class="turma" id="dp-turma">—</div>
+      <div class="texto" id="dp-texto">—</div>
+
+      <div class="frase">
+        <p>O crescimento é a maior prova de que o esforço vale a pena.</p>
+      </div>
+
+      <div class="div2"></div>
+      <div class="assinatura">
+        <div class="assin-bloco">
+          <div class="assin-espaco"></div>
+          <div class="assin-linha"></div>
+          <div class="assin-nome">Vanessa Oliveira</div>
+          <div class="assin-cargo">Professora de Matemática</div>
+        </div>
+      </div>
+      <div class="data" id="dp-data">—</div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { getNomeCompleto } from '/js/nomes_completos.js';
+const p = new URLSearchParams(location.search);
+const modelo = p.get('modelo') === '1';
+const nome  = modelo ? 'Aluno(a) Exemplo' : (p.get('nome') || '—');
+const turma = modelo ? 'Modelo' : (p.get('turma') || '—');
+const now = new Date();
+const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+document.getElementById('dp-nome').textContent = getNomeCompleto(turma, nome);
+document.getElementById('dp-turma').textContent = `Turma ${turma} · Ano letivo de ${now.getFullYear()}`;
+document.getElementById('dp-texto').innerHTML =
+  `demonstrou <strong>expressiva melhoria</strong> no desempenho na disciplina de <strong>Matemática</strong> do 1º para o 2º bimestre letivo. Seu progresso reflete dedicação, esforço e uma postura cada vez mais comprometida com o próprio aprendizado.`;
+document.getElementById('dp-data').textContent =
+  `São Sebastião, DF · ${meses[now.getMonth()]} de ${now.getFullYear()}`;
+</script>
+<script>
+function imprimirLandscape(){const s=document.createElement('style');s.id='__ls';s.textContent=`@page{size:297mm 210mm landscape!important;margin:0!important;}@media print{html,body{width:297mm!important;height:210mm!important;}.diploma{width:297mm!important;height:210mm!important;}}`;document.head.appendChild(s);window.print();setTimeout(()=>{const e=document.getElementById('__ls');if(e)e.remove()},2e3)}
+</script>
+</body></html>

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <link rel="manifest" href="/manifest.json">
@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="/css/main.css"/>
 <style>
   .certs-tabs {
-    display: flex; gap: 8px; margin-bottom: 20px;
+    display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
   }
   .certs-tab {
     padding: 8px 20px; border-radius: 20px; font-size: 13px;
@@ -20,6 +20,23 @@
   .certs-tab.active {
     background: var(--purple); color: #fff; border-color: var(--purple);
   }
+
+  .tipo-tabs {
+    display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap;
+  }
+  .tipo-tab {
+    padding: 6px 14px; border-radius: 20px; font-size: 12px;
+    font-weight: 700; cursor: pointer; border: 1px solid var(--border);
+    background: var(--card2); color: var(--muted); transition: all .15s;
+  }
+  .tipo-tab.active {
+    border-color: rgba(127,119,221,.4);
+  }
+  .tipo-tab[data-tipo="tabuada"].active { background: rgba(201,168,76,.15); color: #c9a84c; border-color: rgba(201,168,76,.4); }
+  .tipo-tab[data-tipo="negativos"].active { background: rgba(99,88,210,.15); color: #a99ff0; border-color: rgba(99,88,210,.4); }
+  .tipo-tab[data-tipo="destaque"].active { background: rgba(155,48,255,.15); color: #c084fc; border-color: rgba(155,48,255,.4); }
+  .tipo-tab[data-tipo="melhoria"].active { background: rgba(16,185,129,.15); color: #34d399; border-color: rgba(16,185,129,.4); }
+  .tipo-tab[data-tipo="todos"].active { background: rgba(127,119,221,.15); color: var(--purple); }
 
   .aluno-row {
     display: flex; align-items: center; gap: 12px;
@@ -34,18 +51,14 @@
   .aluno-nome { font-size: 14px; font-weight: 700; }
   .aluno-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
-  .badge-pendente {
-    font-size: 10px; font-weight: 700; padding: 3px 10px;
-    border-radius: 20px; background: rgba(245,158,11,.15);
-    color: #F59E0B; border: 1px solid rgba(245,158,11,.3);
-    white-space: nowrap;
+  .badge-tipo {
+    font-size: 9px; font-weight: 800; padding: 2px 8px;
+    border-radius: 8px; margin-right: 6px; white-space: nowrap;
   }
-  .badge-entregue {
-    font-size: 10px; font-weight: 700; padding: 3px 10px;
-    border-radius: 20px; background: rgba(34,197,94,.1);
-    color: var(--green); border: 1px solid rgba(34,197,94,.25);
-    white-space: nowrap;
-  }
+  .badge-tabuada { background: rgba(201,168,76,.15); color: #c9a84c; border: 1px solid rgba(201,168,76,.3); }
+  .badge-negativos { background: rgba(127,119,221,.18); color: #a99ff0; border: 1px solid rgba(127,119,221,.3); }
+  .badge-destaque { background: rgba(155,48,255,.15); color: #c084fc; border: 1px solid rgba(155,48,255,.3); }
+  .badge-melhoria { background: rgba(16,185,129,.15); color: #34d399; border: 1px solid rgba(16,185,129,.3); }
 
   .btn-action {
     padding: 7px 14px; border-radius: 8px; font-size: 12px;
@@ -60,6 +73,10 @@
   .btn-desfazer {
     background: transparent; color: var(--muted);
     border: 1px solid var(--border) !important; font-size: 11px;
+  }
+  .btn-remover {
+    background: transparent; color: var(--red);
+    border: 1px solid rgba(239,68,68,.3) !important; font-size: 11px;
   }
 
   .empty-state {
@@ -94,6 +111,45 @@
     background: rgba(127,119,221,.15); color: var(--purple);
     border-color: rgba(127,119,221,.4);
   }
+
+  /* ── Seção de seleção de alunos (destaque/melhoria) ── */
+  .selecao-section {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px; margin-bottom: 20px;
+  }
+  .selecao-title {
+    font-size: 14px; font-weight: 800; margin-bottom: 4px;
+  }
+  .selecao-sub {
+    font-size: 12px; color: var(--muted); margin-bottom: 16px;
+  }
+  .selecao-grid {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;
+  }
+  .selecao-chip {
+    padding: 8px 14px; border-radius: 10px; font-size: 12px;
+    font-weight: 600; cursor: pointer; border: 1px solid var(--border);
+    background: var(--card2); color: var(--muted); transition: all .15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .selecao-chip:hover { border-color: rgba(16,185,129,.4); }
+  .selecao-chip.selected {
+    background: rgba(16,185,129,.15); color: #34d399;
+    border-color: rgba(16,185,129,.5);
+  }
+  .selecao-chip .check { opacity: 0; transition: opacity .1s; }
+  .selecao-chip.selected .check { opacity: 1; }
+  .selecao-turma-sel {
+    padding: 7px 11px; background: var(--bg); border: 1.5px solid var(--border);
+    border-radius: 9px; color: var(--text); font-weight: 600;
+    font-family: inherit; cursor: pointer; font-size: 12.5px; margin-bottom: 12px;
+  }
+  .btn-confirmar {
+    padding: 10px 24px; border-radius: 10px; font-size: 13px;
+    font-weight: 700; cursor: pointer; border: none; color: #fff;
+    background: #10b981; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-confirmar:disabled { opacity: .4; cursor: default; }
 </style>
 </head>
 <body>
@@ -105,14 +161,16 @@
         <div class="topbar-title">🎓 Certificados</div>
         <div class="topbar-sub">Controle de impressão e entrega</div>
       </div>
-      <div class="topbar-right" style="gap:8px;display:flex">
-        <a href="/aluno/diploma_print.html?modelo=1" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">🏆 Ver modelo Tabuada</a>
-        <a href="/aluno/diploma_negativos_print.html?modelo=1" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">⚡ Ver modelo Negativos</a>
+      <div class="topbar-right" style="gap:8px;display:flex;flex-wrap:wrap">
+        <a href="/aluno/diploma_print.html?modelo=1" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">🏆 Modelo Tabuada</a>
+        <a href="/aluno/diploma_negativos_print.html?modelo=1" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">⚡ Modelo Negativos</a>
+        <a href="/aluno/diploma_destaque_print.html?modelo=1" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">⭐ Modelo Destaque</a>
+        <a href="/aluno/diploma_melhoria_print.html?modelo=1" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">📈 Modelo Melhoria</a>
       </div>
     </div>
 
     <div class="content">
-      <div style="max-width:760px;margin:0 auto;padding:24px 16px 60px">
+      <div style="max-width:820px;margin:0 auto;padding:24px 16px 60px">
         <div id="certs-content">
           <div style="text-align:center;padding:60px;color:var(--muted)">Carregando…</div>
         </div>
@@ -124,7 +182,11 @@
 <script type="module">
 import { requireProfessor, renderSidebarProfessor, clearSession } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
-import { ref, get, set } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { ref, get, set, remove as fbRemove, update } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { BIMESTRE, CAMPOS_NOTA, EXTRAS_AUTO, CADERNO_EXTRA, EXTRA_NIVEL_PERFIL, EXTRA_RANK_ATIV4,
+         slugNome, makeUid, calcularSubtotal, calcularBonus, extrasAutoAtivos, cadernoExtraAtivo,
+         buscarProgressoTabuada, buscarAtiv4, buscarNivelPerfil, buscarAtiv5Aluno, fmtNota } from '/js/notas.js';
+import { ALUNOS_POR_TURMA } from '/js/constants.js';
 
 const sess = requireProfessor();
 if (!sess) throw new Error('não autenticado');
@@ -133,6 +195,7 @@ renderSidebarProfessor('sidebar', 'certificados');
 window.sair = () => { clearSession(); window.location.href = '/professor/login.html'; };
 
 const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const TURMAS = Object.keys(ALUNOS_POR_TURMA).sort();
 
 function toast(msg) {
   let t = document.getElementById('_toast');
@@ -153,6 +216,94 @@ let abaAtiva    = 'pendentes';
 let turmaFiltro = 'todas';
 let tipoFiltro  = 'todos';
 
+// ── Destaque: busca alunos com média > 8 no 2º bimestre ──
+async function buscarDestaques() {
+  const destaques = [];
+  const [impressosSnap, perfisSnap] = await Promise.all([
+    get(ref(db, 'diplomas_impressos')),
+    get(ref(db, 'perfis')),
+  ]);
+  const impressos = impressosSnap.exists() ? impressosSnap.val() : {};
+
+  for (const turma of TURMAS) {
+    const alunos = ALUNOS_POR_TURMA[turma] || [];
+    for (const nome of alunos) {
+      try {
+        const slug = slugNome(nome);
+        const snap = await get(ref(db, `notas_bimestre/${BIMESTRE}/${turma}/${slug}`));
+        if (!snap.exists()) continue;
+        const salvo = snap.val();
+
+        // Calcular total do aluno
+        const uid = makeUid(turma, nome);
+        const [progresso, ativ4Map, ativ5Pts, nivelPerfil] = await Promise.all([
+          buscarProgressoTabuada(turma, nome),
+          buscarAtiv4(turma, [nome]),
+          buscarAtiv5Aluno(turma, nome),
+          buscarNivelPerfil(turma, nome),
+        ]);
+        const ativ4Info = ativ4Map[nome] || { fez:false, posicao:0, bonusRank:0 };
+        progresso.rankAtiv4Bonus = ativ4Info.bonusRank;
+        progresso.nivelPerfil    = nivelPerfil;
+
+        const ativ4Val      = ativ4Info.fez ? 0.5 : null;
+        const triangulosVal = ativ5Pts != null ? Math.min(1, ativ5Pts / 10) : null;
+
+        const registro = {
+          provaMulti: salvo?.provaMulti ?? null,
+          projeto:    salvo?.projeto    ?? null,
+          caderno:    salvo?.caderno    ?? null,
+          ativ4:      ativ4Val,
+          triangulos: triangulosVal,
+          participacao: salvo?.participacao ?? 0.5,
+          extras:     salvo?.extras || {},
+        };
+
+        const subtotal = Math.min(calcularSubtotal(registro), 10);
+        const bonus    = calcularBonus(progresso, registro);
+        const total    = subtotal + bonus;
+
+        if (total >= 8) {
+          const entregue  = impressos[uid]?.destaque_b2?.impresso === true;
+          const tsEntrega = impressos[uid]?.destaque_b2?.ts || null;
+          destaques.push({
+            uid, nome, turma, tipo: 'destaque',
+            media: total,
+            entregue, tsEntrega,
+            tsConquista: Date.now(),
+          });
+        }
+      } catch(e) { console.error('Erro destaque', nome, turma, e); }
+    }
+  }
+  return destaques;
+}
+
+// ── Melhoria: busca alunos selecionados manualmente ──
+async function buscarMelhorias() {
+  const melhorias = [];
+  try {
+    const snap = await get(ref(db, `diplomas_melhoria/${BIMESTRE}`));
+    if (!snap.exists()) return melhorias;
+    const dados = snap.val();
+    const impressosSnap = await get(ref(db, 'diplomas_impressos'));
+    const impressos = impressosSnap.exists() ? impressosSnap.val() : {};
+
+    Object.entries(dados).forEach(([key, val]) => {
+      const uid = makeUid(val.turma, val.nome);
+      const entregue  = impressos[uid]?.melhoria_b2?.impresso === true;
+      const tsEntrega = impressos[uid]?.melhoria_b2?.ts || null;
+      melhorias.push({
+        uid, nome: val.nome, turma: val.turma, tipo: 'melhoria',
+        entregue, tsEntrega,
+        tsConquista: val.ts || Date.now(),
+        fbKey: key,
+      });
+    });
+  } catch(e) { console.error('Erro melhoria', e); }
+  return melhorias;
+}
+
 async function carregar() {
   const [perfisSnap, conquSnap, impressosSnap, negSnap] = await Promise.all([
     get(ref(db, 'perfis')),
@@ -161,25 +312,27 @@ async function carregar() {
     get(ref(db, 'tabuada_negativos_niveis')).catch(() => null),
   ]);
 
-  if (!conquSnap.exists()) { renderVazio(); return; }
-
   const perfis    = perfisSnap.exists()    ? perfisSnap.val()    : {};
   const impressos = impressosSnap.exists() ? impressosSnap.val() : {};
 
   todosAlunos = [];
-  conquSnap.forEach(child => {
-    const uid    = child.key;
-    const conqus = child.val();
-    if (!conqus?.tabuada_300?.conquistado) return;
-    const perfil = perfis[uid];
-    if (!perfil?.nome) return;
-    if (perfil.nome?.includes('TESTE') || perfil.turma === 'TESTE') return;
-    const entregue   = impressos[uid]?.tabuada_300?.impresso === true;
-    const tsEntrega  = impressos[uid]?.tabuada_300?.ts || null;
-    todosAlunos.push({ uid, nome: perfil.nome, turma: perfil.turma || '', tsConquista: conqus.tabuada_300.ts, entregue, tsEntrega, tipo: 'tabuada' });
-  });
 
-  // Add negativos alunos
+  // Tabuada 300
+  if (conquSnap.exists()) {
+    conquSnap.forEach(child => {
+      const uid    = child.key;
+      const conqus = child.val();
+      if (!conqus?.tabuada_300?.conquistado) return;
+      const perfil = perfis[uid];
+      if (!perfil?.nome) return;
+      if (perfil.nome?.includes('TESTE') || perfil.turma === 'TESTE') return;
+      const entregue   = impressos[uid]?.tabuada_300?.impresso === true;
+      const tsEntrega  = impressos[uid]?.tabuada_300?.ts || null;
+      todosAlunos.push({ uid, nome: perfil.nome, turma: perfil.turma || '', tsConquista: conqus.tabuada_300.ts, entregue, tsEntrega, tipo: 'tabuada' });
+    });
+  }
+
+  // Negativos 50
   const negDados = negSnap?.exists() ? negSnap.val() : {};
   Object.entries(negDados).forEach(([nuid, dados]) => {
     if (!dados || typeof dados !== 'object') return;
@@ -192,8 +345,44 @@ async function carregar() {
     todosAlunos.push({ uid: nuid, nome: perfil.nome, turma: perfil.turma || '', tsConquista: dados.concluiu_50_em || 0, entregue, tsEntrega, tipo: 'negativos' });
   });
 
+  // Destaque (média > 8)
+  try {
+    const destaques = await buscarDestaques();
+    todosAlunos.push(...destaques);
+  } catch(e) { console.error('Erro ao carregar destaques:', e); }
+
+  // Melhoria (seleção manual)
+  try {
+    const melhorias = await buscarMelhorias();
+    todosAlunos.push(...melhorias);
+  } catch(e) { console.error('Erro ao carregar melhorias:', e); }
+
   todosAlunos.sort((a, b) => a.turma.localeCompare(b.turma) || a.nome.localeCompare(b.nome));
   render();
+}
+
+const TIPO_CFG = {
+  tabuada:   { icon: '🏆', label: 'Tabuada 300',   badgeCls: 'badge-tabuada' },
+  negativos: { icon: '⚡', label: 'Negativos 50',   badgeCls: 'badge-negativos' },
+  destaque:  { icon: '⭐', label: 'Destaque',       badgeCls: 'badge-destaque' },
+  melhoria:  { icon: '📈', label: 'Melhoria',       badgeCls: 'badge-melhoria' },
+};
+
+function diplomaUrl(a) {
+  const p = new URLSearchParams({ nome: a.nome, turma: a.turma });
+  if (a.tipo === 'tabuada')   return `/aluno/diploma_tabuada.html?uid=${encodeURIComponent(a.uid)}&${p}`;
+  if (a.tipo === 'negativos') return `/aluno/diploma_negativos.html?uid=${encodeURIComponent(a.uid)}&${p}`;
+  if (a.tipo === 'destaque')  return `/aluno/diploma_destaque_print.html?${p}&media=${fmtNota(a.media)}`;
+  if (a.tipo === 'melhoria')  return `/aluno/diploma_melhoria_print.html?${p}`;
+  return '#';
+}
+
+function chaveImpressao(tipo) {
+  if (tipo === 'tabuada')   return 'tabuada_300';
+  if (tipo === 'negativos') return 'negativos_50';
+  if (tipo === 'destaque')  return 'destaque_b2';
+  if (tipo === 'melhoria')  return 'melhoria_b2';
+  return tipo;
 }
 
 function render() {
@@ -205,15 +394,18 @@ function render() {
   const listaTipo     = tipoFiltro === 'todos' ? lista : lista.filter(a => a.tipo === tipoFiltro);
   const listaFiltrada = turmaFiltro === 'todas' ? listaTipo : listaTipo.filter(a => a.turma === turmaFiltro);
 
+  const cntPorTipo = {};
+  todosAlunos.forEach(a => { cntPorTipo[a.tipo] = (cntPorTipo[a.tipo]||0) + 1; });
+
   document.getElementById('certs-content').innerHTML = `
     <div class="summary-bar">
       <div class="summary-box">
         <div class="summary-val" style="color:#F59E0B">${todosAlunos.length}</div>
-        <div class="summary-lbl">🏆 Total conquistaram</div>
+        <div class="summary-lbl">🎓 Total de diplomas</div>
       </div>
       <div class="summary-box">
         <div class="summary-val" style="color:#ef4444">${pendentes.length}</div>
-        <div class="summary-lbl">⏳ Pendentes de entrega</div>
+        <div class="summary-lbl">⏳ Pendentes</div>
       </div>
       <div class="summary-box">
         <div class="summary-val" style="color:var(--green)">${entregues.length}</div>
@@ -228,20 +420,27 @@ function render() {
       <div class="certs-tab ${abaAtiva==='entregues'?'active':''}" onclick="trocarAba('entregues')">
         ✅ Entregues ${entregues.length > 0 ? `<span style="background:rgba(255,255,255,.25);padding:1px 7px;border-radius:10px;margin-left:4px">${entregues.length}</span>` : ''}
       </div>
+      <div class="certs-tab" onclick="abrirSelecaoMelhoria()" style="margin-left:auto;background:rgba(16,185,129,.12);color:#34d399;border-color:rgba(16,185,129,.3)">
+        + Selecionar Melhoria
+      </div>
     </div>
 
-    <div class="turma-filter" style="margin-bottom:8px">
-      <span style="font-size:11px;color:var(--muted);font-weight:600;margin-right:4px">Tipo:</span>
-      <div class="turma-chip ${tipoFiltro==='todos'?'active':''}" onclick="filtrarTipo('todos')">Todos</div>
-      <div class="turma-chip ${tipoFiltro==='tabuada'?'active':''}" onclick="filtrarTipo('tabuada')">🏆 Tabuada 300</div>
-      <div class="turma-chip ${tipoFiltro==='negativos'?'active':''}" onclick="filtrarTipo('negativos')">⚡ Negativos 50</div>
+    <div class="tipo-tabs">
+      <div class="tipo-tab ${tipoFiltro==='todos'?'active':''}" data-tipo="todos" onclick="filtrarTipo('todos')">Todos (${lista.length})</div>
+      <div class="tipo-tab ${tipoFiltro==='tabuada'?'active':''}" data-tipo="tabuada" onclick="filtrarTipo('tabuada')">🏆 Tabuada ${cntPorTipo.tabuada||0}</div>
+      <div class="tipo-tab ${tipoFiltro==='negativos'?'active':''}" data-tipo="negativos" onclick="filtrarTipo('negativos')">⚡ Negativos ${cntPorTipo.negativos||0}</div>
+      <div class="tipo-tab ${tipoFiltro==='destaque'?'active':''}" data-tipo="destaque" onclick="filtrarTipo('destaque')">⭐ Destaque ${cntPorTipo.destaque||0}</div>
+      <div class="tipo-tab ${tipoFiltro==='melhoria'?'active':''}" data-tipo="melhoria" onclick="filtrarTipo('melhoria')">📈 Melhoria ${cntPorTipo.melhoria||0}</div>
     </div>
+
     ${turmas.length > 1 ? `
     <div class="turma-filter">
       <span style="font-size:11px;color:var(--muted);font-weight:600;margin-right:4px">Turma:</span>
       <div class="turma-chip ${turmaFiltro==='todas'?'active':''}" onclick="filtrarTurma('todas')">Todas</div>
       ${turmas.map(t => `<div class="turma-chip ${turmaFiltro===t?'active':''}" onclick="filtrarTurma('${escH(t)}')">${escH(t)}</div>`).join('')}
     </div>` : ''}
+
+    <div id="selecao-melhoria-wrap"></div>
 
     <div id="lista-alunos">
       ${listaFiltrada.length === 0
@@ -255,33 +454,27 @@ function render() {
              </div>
            </div>`
         : listaFiltrada.map(a => {
+            const tc = TIPO_CFG[a.tipo] || TIPO_CFG.tabuada;
             const dataConquista = a.tsConquista ? new Date(a.tsConquista).toLocaleDateString('pt-BR') : '';
             const dataEntrega   = a.tsEntrega   ? new Date(a.tsEntrega).toLocaleDateString('pt-BR')   : '';
+            const extraMeta = a.tipo === 'destaque' ? ` · Média: ${fmtNota(a.media)}` : '';
             return `
               <div class="aluno-row ${a.entregue?'entregue':''}">
-                <div style="font-size:24px">🏆</div>
+                <div style="font-size:24px">${tc.icon}</div>
                 <div class="aluno-info">
                   <div class="aluno-nome">${escH(a.nome)}</div>
                   <div class="aluno-meta">
-                    ${escH(a.turma)}
-                    ${dataConquista ? ` · Conquistado em ${dataConquista}` : ''}
+                    ${escH(a.turma)}${extraMeta}
                     ${a.entregue && dataEntrega ? ` · Entregue em ${dataEntrega}` : ''}
                   </div>
                 </div>
-                ${a.tipo === 'negativos'
-                  ? `<span style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:8px;background:rgba(127,119,221,.18);color:#a99ff0;border:1px solid rgba(127,119,221,.3);margin-right:6px">⚡ Negativos</span>`
-                  : `<span style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:8px;background:rgba(201,168,76,.15);color:#c9a84c;border:1px solid rgba(201,168,76,.3);margin-right:6px">🏆 Tabuada 300</span>`
-                }
-                <a href="${a.tipo === 'negativos'
-                    ? `/aluno/diploma_negativos.html?uid=${encodeURIComponent(a.uid)}&nome=${encodeURIComponent(a.nome)}&turma=${encodeURIComponent(a.turma)}`
-                    : `/aluno/diploma_tabuada.html?uid=${encodeURIComponent(a.uid)}&nome=${encodeURIComponent(a.nome)}&turma=${encodeURIComponent(a.turma)}`}"
-                   target="_blank" class="btn-action btn-print">
-                  🖨️ Ver diploma
-                </a>
+                <span class="badge-tipo ${tc.badgeCls}">${tc.icon} ${tc.label}</span>
+                <a href="${diplomaUrl(a)}" target="_blank" class="btn-action btn-print">🖨️ Ver diploma</a>
                 ${!a.entregue
-                  ? `<button class="btn-action btn-entregar" onclick="marcarEntregue('${a.uid}')">✅ Entregue</button>`
-                  : `<button class="btn-action btn-desfazer" onclick="desfazerEntrega('${a.uid}')">↩ Desfazer</button>`
+                  ? `<button class="btn-action btn-entregar" onclick="marcarEntregue('${a.uid}','${a.tipo}')">✅ Entregue</button>`
+                  : `<button class="btn-action btn-desfazer" onclick="desfazerEntrega('${a.uid}','${a.tipo}')">↩ Desfazer</button>`
                 }
+                ${a.tipo === 'melhoria' ? `<button class="btn-action btn-remover" onclick="removerMelhoria('${a.fbKey||''}','${a.uid}')">✕</button>` : ''}
               </div>`;
           }).join('')
       }
@@ -293,7 +486,7 @@ function renderVazio() {
     <div class="empty-state">
       <div class="icon">🎓</div>
       <div style="font-size:14px;font-weight:700;margin-bottom:6px">Nenhum diploma conquistado ainda</div>
-      <div style="font-size:12px">Quando um aluno atingir o nível 300 da tabuada, aparecerá aqui.</div>
+      <div style="font-size:12px">Quando um aluno atingir critérios de diploma, aparecerá aqui.</div>
     </div>`;
 }
 
@@ -301,29 +494,108 @@ window.trocarAba    = function(aba)   { abaAtiva    = aba;   render(); };
 window.filtrarTurma = function(turma) { turmaFiltro = turma; render(); };
 window.filtrarTipo  = function(tipo)  { tipoFiltro  = tipo;  render(); };
 
-window.marcarEntregue = async function(uid) {
+window.marcarEntregue = async function(uid, tipo) {
   try {
-    const tipo = todosAlunos.find(a=>a.uid===uid)?.tipo || 'tabuada';
-    const chave = tipo === 'negativos' ? 'negativos_50' : 'tabuada_300';
+    const chave = chaveImpressao(tipo);
     await set(ref(db, `diplomas_impressos/${uid}/${chave}`), { impresso: true, ts: Date.now() });
-    const aluno = todosAlunos.find(a => a.uid === uid);
+    const aluno = todosAlunos.find(a => a.uid === uid && a.tipo === tipo);
     if (aluno) { aluno.entregue = true; aluno.tsEntrega = Date.now(); }
     toast('✅ Marcado como entregue!');
     render();
   } catch(e) { toast('Erro ao salvar.'); }
 };
 
-window.desfazerEntrega = async function(uid) {
+window.desfazerEntrega = async function(uid, tipo) {
   if (!confirm('Desfazer marcação de entregue?')) return;
   try {
-    const tipo2 = todosAlunos.find(a=>a.uid===uid)?.tipo || 'tabuada';
-    const chave2 = tipo2 === 'negativos' ? 'negativos_50' : 'tabuada_300';
-    await set(ref(db, `diplomas_impressos/${uid}/${chave2}`), { impresso: false, ts: null });
-    const aluno = todosAlunos.find(a => a.uid === uid);
+    const chave = chaveImpressao(tipo);
+    await set(ref(db, `diplomas_impressos/${uid}/${chave}`), { impresso: false, ts: null });
+    const aluno = todosAlunos.find(a => a.uid === uid && a.tipo === tipo);
     if (aluno) { aluno.entregue = false; aluno.tsEntrega = null; }
     toast('↩ Marcação desfeita.');
     render();
   } catch(e) { toast('Erro ao salvar.'); }
+};
+
+// ── Seção de seleção manual de melhoria ──
+let selecaoAberta = false;
+let selecaoTurma  = TURMAS[0] || '8D';
+let selecionados  = new Set();
+
+window.abrirSelecaoMelhoria = function() {
+  selecaoAberta = !selecaoAberta;
+  renderSelecao();
+};
+
+function renderSelecao() {
+  const wrap = document.getElementById('selecao-melhoria-wrap');
+  if (!wrap) return;
+  if (!selecaoAberta) { wrap.innerHTML = ''; return; }
+
+  const alunos = ALUNOS_POR_TURMA[selecaoTurma] || [];
+  // Filtrar quem já tem diploma de melhoria
+  const jaTem = new Set(todosAlunos.filter(a => a.tipo === 'melhoria').map(a => `${a.turma}|${a.nome}`));
+
+  wrap.innerHTML = `
+    <div class="selecao-section">
+      <div class="selecao-title">📈 Selecionar alunos — Grande Melhoria</div>
+      <div class="selecao-sub">Escolha os alunos que tiveram grande progresso do 1º para o 2º bimestre</div>
+      <select class="selecao-turma-sel" onchange="mudarTurmaSelecao(this.value)">
+        ${TURMAS.map(t => `<option value="${t}" ${t===selecaoTurma?'selected':''}>${t}</option>`).join('')}
+      </select>
+      <div class="selecao-grid">
+        ${alunos.map(nome => {
+          const key = `${selecaoTurma}|${nome}`;
+          const jaExiste = jaTem.has(key);
+          const sel = selecionados.has(key);
+          return `<div class="selecao-chip ${sel?'selected':''} ${jaExiste?'entregue':''}"
+                       onclick="${jaExiste ? '' : `toggleSelecao('${escH(key)}')`}"
+                       ${jaExiste ? 'title="Já selecionado"' : ''}>
+            <span class="check">${sel ? '✓' : ''}</span>
+            ${escH(nome)} ${jaExiste ? '✔️' : ''}
+          </div>`;
+        }).join('')}
+      </div>
+      <button class="btn-confirmar" onclick="confirmarMelhorias()" ${selecionados.size===0?'disabled':''}>
+        ✅ Adicionar ${selecionados.size} aluno${selecionados.size!==1?'s':''}
+      </button>
+      <button onclick="abrirSelecaoMelhoria()" style="margin-left:8px;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted)">Cancelar</button>
+    </div>`;
+}
+
+window.mudarTurmaSelecao = function(t) { selecaoTurma = t; renderSelecao(); };
+window.toggleSelecao = function(key) {
+  if (selecionados.has(key)) selecionados.delete(key);
+  else selecionados.add(key);
+  renderSelecao();
+};
+
+window.confirmarMelhorias = async function() {
+  if (selecionados.size === 0) return;
+  try {
+    const updates = {};
+    selecionados.forEach(key => {
+      const [turma, nome] = [key.split('|')[0], key.split('|').slice(1).join('|')];
+      const fbKey = slugNome(nome) + '_' + turma;
+      updates[fbKey] = { nome, turma, ts: Date.now() };
+    });
+    await update(ref(db, `diplomas_melhoria/${BIMESTRE}`), updates);
+    toast(`✅ ${selecionados.size} aluno(s) adicionados!`);
+    selecionados.clear();
+    selecaoAberta = false;
+    await carregar();
+  } catch(e) { toast('Erro ao salvar.'); console.error(e); }
+};
+
+window.removerMelhoria = async function(fbKey, uid) {
+  if (!fbKey) return;
+  if (!confirm('Remover este aluno da lista de Grande Melhoria?')) return;
+  try {
+    await fbRemove(ref(db, `diplomas_melhoria/${BIMESTRE}/${fbKey}`));
+    await fbRemove(ref(db, `diplomas_impressos/${uid}/melhoria_b2`));
+    toast('✕ Aluno removido da lista.');
+    await carregar();
+  } catch(e) { toast('Erro ao remover.'); console.error(e); }
 };
 
 carregar();

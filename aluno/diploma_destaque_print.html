@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<title>Diploma — Aluno Destaque</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  @page{size:A4 landscape;margin:0}
+
+  .diploma{
+    width:100%;height:100%;position:relative;
+    display:flex;flex-direction:column;
+    background:#fff;
+  }
+
+  /* ═══ BANNER TOPO ═══ */
+  .banner{
+    background:linear-gradient(135deg,#1e0a3c 0%,#3b1a7e 50%,#5b21b6 100%);
+    padding:18px 36px 14px;
+    display:flex;align-items:center;justify-content:space-between;
+    position:relative;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  .banner::after{
+    content:'';position:absolute;bottom:0;left:0;right:0;height:4px;
+    background:linear-gradient(90deg,#c9a84c,#fbbf24,#f0a500,#fbbf24,#c9a84c);
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  .banner-left{display:flex;align-items:center;gap:14px}
+  .banner-logo img{width:42px;height:42px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(240,165,0,.5))}
+  .banner-escola{font-family:'Cinzel',serif;font-size:12px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#fff}
+  .banner-unidade{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:2px}
+  .banner-right{
+    display:flex;align-items:center;gap:10px;
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+    border-radius:10px;padding:8px 18px;
+  }
+  .banner-star{font-size:22px}
+  .banner-label{font-family:'Cinzel',serif;font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#fbbf24}
+
+  /* ═══ CORPO ═══ */
+  .corpo{
+    flex:1;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    padding:16px 50px 12px;position:relative;text-align:center;
+  }
+
+  /* Bordas ornamentais — dupla com cantos */
+  .borda-ext{position:absolute;inset:8px 16px;border:2.5px solid #3b1a7e;pointer-events:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .borda-int{position:absolute;inset:13px 21px;border:1px solid rgba(201,168,76,.4);pointer-events:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .canto{position:absolute;z-index:2;font-size:22px;line-height:1}
+  .canto.tl{top:9px;left:18px;color:#c9a84c}
+  .canto.tr{top:9px;right:18px;color:#c9a84c;transform:scaleX(-1)}
+  .canto.bl{bottom:9px;left:18px;color:#c9a84c;transform:scaleY(-1)}
+  .canto.br{bottom:9px;right:18px;color:#c9a84c;transform:scale(-1)}
+
+  .titulo-wrap{margin-bottom:4px}
+  .titulo{font-family:'Cinzel',serif;font-size:28px;font-weight:900;color:#1e0a3c;letter-spacing:3px;text-transform:uppercase;line-height:1.15}
+  .titulo em{font-style:normal;color:#5b21b6}
+  .titulo-sub{font-family:'Playfair Display',serif;font-size:14px;color:#7c3aed;font-style:italic;margin-top:3px}
+
+  /* Divider com estrela CSS */
+  .div-star{display:flex;align-items:center;gap:14px;margin:8px 0 12px;width:100%;max-width:440px}
+  .div-star::before,.div-star::after{content:'';flex:1;height:2px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .div-star::before{background:linear-gradient(90deg,transparent,#c9a84c)}
+  .div-star::after{background:linear-gradient(90deg,#c9a84c,transparent)}
+  .star-center{width:22px;height:22px;background:#c9a84c;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+  .certifica{font-family:'Playfair Display',serif;font-size:12px;color:#7c3aed;font-style:italic;margin-bottom:6px}
+  .nome{font-family:'Cinzel',serif;font-size:30px;font-weight:700;color:#0f0520;margin-bottom:3px;line-height:1.2}
+  .turma{font-size:11px;font-family:'Playfair Display',serif;font-style:italic;color:#7c3aed;margin-bottom:10px}
+  .texto{font-family:'Playfair Display',serif;font-size:12.5px;line-height:1.75;color:#374151;margin-bottom:12px;max-width:480px}
+  .texto strong{color:#1e0a3c}
+
+  /* ═══ BLOCO DE NOTA — elemento principal ═══ */
+  .nota-bloco{
+    display:inline-flex;align-items:center;gap:18px;
+    border:3px solid #5b21b6;border-radius:16px;
+    padding:14px 32px;margin-bottom:14px;
+    position:relative;overflow:hidden;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  .nota-bloco::before{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(135deg,rgba(91,33,182,.06),rgba(201,168,76,.06));
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  .nota-valor{font-family:'Cinzel',serif;font-size:42px;font-weight:900;color:#3b1a7e;line-height:1;position:relative}
+  .nota-info{text-align:left;position:relative}
+  .nota-label{font-family:'Cinzel',serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#5b21b6}
+  .nota-periodo{font-size:10px;color:#6b7280;font-family:'Playfair Display',serif;font-style:italic;margin-top:2px}
+
+  .div2{height:1.5px;width:100%;max-width:380px;background:linear-gradient(90deg,transparent,rgba(59,26,126,.25),transparent);margin-bottom:10px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+  /* ═══ ASSINATURA com espaço real ═══ */
+  .assinatura{display:flex;justify-content:center}
+  .assin-bloco{display:flex;flex-direction:column;align-items:center}
+  .assin-espaco{height:42px}
+  .assin-linha{width:220px;height:1.5px;background:linear-gradient(90deg,transparent,#3b1a7e,transparent);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .assin-nome{font-size:10px;font-weight:700;color:#1f2937;margin-top:3px}
+  .assin-cargo{font-size:9px;color:#6b7280}
+
+  .data{font-size:10px;margin-top:8px;font-family:'Playfair Display',serif;font-style:italic;color:#6b7280}
+
+  /* ═══ RODAPÉ ═══ */
+  .rodape{height:8px;background:linear-gradient(90deg,#1e0a3c,#5b21b6,#7c3aed,#5b21b6,#1e0a3c);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+  .no-print{display:block}
+  @media print{
+    @page{size:A4 landscape;margin:0}
+    html,body{width:297mm;height:210mm;overflow:hidden;background:#fff!important}
+    .no-print{display:none!important}
+    .diploma{width:297mm!important;height:210mm!important}
+  }
+</style>
+</head>
+<body>
+<div class="no-print" style="position:fixed;top:12px;left:12px;z-index:999;display:flex;gap:8px">
+  <button onclick="window.close()" style="background:#1e0a3c;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer">← Fechar</button>
+  <button onclick="imprimirLandscape()" style="background:#5b21b6;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer">🖨️ Imprimir</button>
+</div>
+<div class="no-print" style="position:fixed;top:56px;left:12px;z-index:999;background:rgba(91,33,182,.08);border:1px solid rgba(91,33,182,.2);color:#3b1a7e;border-radius:8px;padding:8px 14px;font-size:12px;max-width:340px;line-height:1.5">
+  💡 Impressão em <strong>Paisagem</strong> · Couché Fosco 180-230g · Desative margens do navegador
+</div>
+
+<div class="diploma">
+  <div class="banner">
+    <div class="banner-left">
+      <div class="banner-logo"><img src="/logo_fundotransparente.png" alt="eMatemática"/></div>
+      <div>
+        <div class="banner-escola">Centro Educacional São Bartolomeu</div>
+        <div class="banner-unidade">São Sebastião · Distrito Federal</div>
+      </div>
+    </div>
+    <div class="banner-right">
+      <span class="banner-star">⭐</span>
+      <span class="banner-label">Aluno Destaque</span>
+    </div>
+  </div>
+
+  <div class="corpo">
+    <div class="borda-ext"></div>
+    <div class="borda-int"></div>
+    <div class="canto tl">❧</div><div class="canto tr">❧</div>
+    <div class="canto bl">❧</div><div class="canto br">❧</div>
+
+    <div class="titulo-wrap">
+      <div class="titulo">Aluno <em>Destaque</em></div>
+      <div class="titulo-sub">em Matemática</div>
+    </div>
+    <div class="div-star"><div class="star-center"></div></div>
+
+    <div class="certifica">Certificamos que o(a) aluno(a)</div>
+    <div class="nome" id="dp-nome">—</div>
+    <div class="turma" id="dp-turma">—</div>
+    <div class="texto" id="dp-texto">—</div>
+
+    <div class="nota-bloco">
+      <div class="nota-valor" id="dp-nota">—</div>
+      <div class="nota-info">
+        <div class="nota-label">Média do Bimestre</div>
+        <div class="nota-periodo">2º Bimestre · <span id="dp-ano">2026</span></div>
+      </div>
+    </div>
+
+    <div class="div2"></div>
+    <div class="assinatura">
+      <div class="assin-bloco">
+        <div class="assin-espaco"></div>
+        <div class="assin-linha"></div>
+        <div class="assin-nome">Vanessa Oliveira</div>
+        <div class="assin-cargo">Professora de Matemática</div>
+      </div>
+    </div>
+    <div class="data" id="dp-data">—</div>
+  </div>
+
+  <div class="rodape"></div>
+</div>
+
+<script type="module">
+import { getNomeCompleto } from '/js/nomes_completos.js';
+const p = new URLSearchParams(location.search);
+const modelo = p.get('modelo') === '1';
+const nome  = modelo ? 'Aluno(a) Exemplo' : (p.get('nome') || '—');
+const turma = modelo ? 'Modelo' : (p.get('turma') || '—');
+const media = modelo ? '9,2'   : (p.get('media') || '—');
+const now = new Date();
+const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+document.getElementById('dp-nome').textContent  = getNomeCompleto(turma, nome);
+document.getElementById('dp-turma').textContent = `Turma ${turma} · Ano letivo de ${now.getFullYear()}`;
+document.getElementById('dp-nota').textContent  = media;
+document.getElementById('dp-ano').textContent   = now.getFullYear();
+document.getElementById('dp-texto').innerHTML   =
+  `alcançou destaque na disciplina de <strong>Matemática</strong> no 2º bimestre letivo, demonstrando excelente desempenho acadêmico, dedicação aos estudos e domínio dos conteúdos trabalhados.`;
+document.getElementById('dp-data').textContent  =
+  `São Sebastião, DF · ${meses[now.getMonth()]} de ${now.getFullYear()}`;
+</script>
+<script>
+function imprimirLandscape(){const s=document.createElement('style');s.id='__ls';s.textContent=`@page{size:297mm 210mm landscape!important;margin:0!important;}@media print{html,body{width:297mm!important;height:210mm!important;}.diploma{width:297mm!important;height:210mm!important;}}`;document.head.appendChild(s);window.print();setTimeout(()=>{const e=document.getElementById('__ls');if(e)e.remove()},2e3)}
+</script>
+</body></html>

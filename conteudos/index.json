@@ -1,0 +1,76 @@
+{
+  "geradoEm": "2026-07-29T11:07:19.767Z",
+  "total": 7,
+  "itens": [
+    {
+      "id": "revisao_inteiros_valornumerico",
+      "arquivo": "/conteudos/revisao_inteiros_valornumerico.html",
+      "titulo": "Revisão — Números Inteiros & Valor Numérico",
+      "resumo": "Revisão de números inteiros e valor numérico.",
+      "tipo": "atividade",
+      "tema": "Números Inteiros e Valor Numérico",
+      "eixo": "numeros",
+      "bimestre": 2
+    },
+    {
+      "id": "expressoes-representacao-teoria",
+      "arquivo": "/conteudos/expressoes-representacao-teoria.html",
+      "titulo": "Teoria — Representação Algébrica",
+      "resumo": "Expressões algébricas: definição, tradução de frases (dobro, metade…) e partes do termo (coeficiente, parte literal).",
+      "tipo": "teoria",
+      "tema": "Expressões Algébricas",
+      "eixo": "algebra",
+      "bimestre": 3
+    },
+    {
+      "id": "expressoes-representacao-lista",
+      "arquivo": "/conteudos/expressoes-representacao-lista.html",
+      "titulo": "Lista de Exercícios — Representação Algébrica",
+      "resumo": "Lista de expressões algébricas: escrever expressões a partir de frases, pegadinha do parêntese e classificação por termos.",
+      "tipo": "atividade",
+      "tema": "Expressões Algébricas",
+      "eixo": "algebra",
+      "bimestre": 3
+    },
+    {
+      "id": "expressoes-simplificacao-teoria",
+      "arquivo": "/conteudos/expressoes-simplificacao-teoria.html",
+      "titulo": "Teoria — Simplificação de Expressões",
+      "resumo": "Simplificação: termos semelhantes, redução de coeficientes e distributiva para eliminar parênteses.",
+      "tipo": "teoria",
+      "tema": "Expressões Algébricas",
+      "eixo": "algebra",
+      "bimestre": 3
+    },
+    {
+      "id": "expressoes-simplificacao-lista",
+      "arquivo": "/conteudos/expressoes-simplificacao-lista.html",
+      "titulo": "Lista de Exercícios — Simplificação de Expressões",
+      "resumo": "Lista de simplificação: reduzir termos semelhantes, expressões mistas e distributiva.",
+      "tipo": "atividade",
+      "tema": "Expressões Algébricas",
+      "eixo": "algebra",
+      "bimestre": 3
+    },
+    {
+      "id": "numeros-complexos-teoria",
+      "arquivo": "/conteudos/numeros-complexos-teoria.html",
+      "titulo": "Teoria — Números Complexos",
+      "resumo": null,
+      "tipo": "teoria",
+      "tema": "Números Complexos",
+      "eixo": "numeros",
+      "bimestre": null
+    },
+    {
+      "id": "porcentagem-lista",
+      "arquivo": "/conteudos/porcentagem-lista.html",
+      "titulo": "Lista de Exercícios — Porcentagem",
+      "resumo": null,
+      "tipo": "atividade",
+      "tema": "Porcentagem",
+      "eixo": "numeros",
+      "bimestre": null
+    }
+  ]
+}

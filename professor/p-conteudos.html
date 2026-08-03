@@ -30,6 +30,11 @@
   .tipo.exercicios{background:var(--gold-pale);color:var(--gold);border:1px solid rgba(240,165,0,.3)}
   .item-acts{display:flex;gap:8px;margin-top:auto;flex-wrap:wrap}
 
+  .aplic{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-top:2px}
+  .aplic-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted)}
+  .turma-chip{font-size:11px;font-weight:700;font-family:'Rajdhani',sans-serif;padding:2px 9px;border-radius:999px;background:var(--purple-pale);color:#c98aff;border:1px solid rgba(155,48,255,.3);cursor:default}
+  .aplic-vazio{font-size:11px;color:var(--text-muted);font-style:italic}
+
   .vazio{padding:40px 20px;text-align:center;color:var(--text-muted);font-size:13px;line-height:1.7}
   .vazio code{background:rgba(255,255,255,.06);padding:2px 6px;border-radius:5px}
   .banner-info{background:rgba(155,48,255,.08);border:1px solid rgba(155,48,255,.25);color:#c98aff;border-radius:10px;padding:10px 14px;font-size:12px;margin-bottom:16px}
@@ -123,7 +128,8 @@ renderSidebarProfessor("sidebar", "conteudos");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
 let itens = [];
-let filtroTipo = "todos", filtro = "", editId = null, tipoSel = "teorica";
+let aplicacoes = {};  // bibId -> [{turma, bimestre, data, dupla}]
+let filtroTipo = "todos", filtro = "", editId = null, tipoSel = "teorica", ultimoArqFicha = "";
 
 let toastT;
 function toast(msg, err=false){ const el=document.getElementById("toast"); el.textContent=msg; el.className="toast show"+(err?" err":""); clearTimeout(toastT); toastT=setTimeout(()=>el.className="toast",2200); }
@@ -131,12 +137,39 @@ function toast(msg, err=false){ const el=document.getElementById("toast"); el.te
 async function carregar(){
   document.getElementById("grid").innerHTML = `<div class="card"><div class="vazio">Carregando…</div></div>`;
   try{
-    const snap = await get(ref(db, "biblioteca"));
+    const [snap, snapAulas] = await Promise.all([
+      get(ref(db, "biblioteca")),
+      get(ref(db, "aulas")),          // aulas/{turma}/{bimestre}/{registro} = {bibId, data, dupla, ...}
+    ]);
     itens = snap.exists()
       ? Object.entries(snap.val()).map(([id,a])=>({id, nome:a.nome||"(sem nome)", tipo:a.tipo||"teorica", arquivo:a.arquivo||"", resumo:a.resumo||"", criadoEm:a.criadoEm||0})).sort((x,y)=>(y.criadoEm-x.criadoEm))
       : [];
-  }catch(e){ console.error(e); itens=[]; toast("Erro ao carregar (verifique regra 'biblioteca')", true); }
+    // índice reverso: para cada aula da biblioteca, onde ela já foi aplicada
+    aplicacoes = {};
+    if(snapAulas.exists()){
+      const porTurma = snapAulas.val();
+      for(const turma of Object.keys(porTurma)){
+        const porBim = porTurma[turma] || {};
+        for(const bim of Object.keys(porBim)){
+          const regs = porBim[bim] || {};
+          for(const r of Object.values(regs)){
+            if(!r || !r.bibId) continue;
+            (aplicacoes[r.bibId] ||= []).push({turma, bimestre:bim, data:r.data||"", dupla:!!r.dupla});
+          }
+        }
+      }
+    }
+  }catch(e){ console.error(e); itens=[]; aplicacoes={}; toast("Erro ao carregar (verifique regras 'biblioteca'/'aulas')", true); }
   render();
+}
+
+// resumo das turmas onde a aula foi aplicada (ordenado, único por turma)
+function turmasDaAula(bibId){
+  const regs = aplicacoes[bibId] || [];
+  const set = new Map(); // turma -> bimestres aplicados
+  for(const r of regs){ (set.get(r.turma) || set.set(r.turma, new Set()).get(r.turma)).add(r.bimestre); }
+  return [...set.entries()].sort((a,b)=>a[0].localeCompare(b[0]))
+    .map(([turma, bims])=>({turma, bimestres:[...bims].sort()}));
 }
 
 function render(){
@@ -154,18 +187,24 @@ function render(){
   const grid=document.getElementById("grid");
   if(!itens.length){ grid.innerHTML=`<div class="card"><div class="vazio">Nenhuma aula catalogada.<br>Clique em <b>＋ Criar aula</b> para cadastrar a primeira (aponte para um html da pasta <code>/conteudos</code>).</div></div>`; return; }
   if(!lista.length){ grid.innerHTML=`<div class="card"><div class="vazio">Nada bate com o filtro/busca.</div></div>`; return; }
-  grid.innerHTML=`<div class="grid">`+lista.map(i=>`
+  grid.innerHTML=`<div class="grid">`+lista.map(i=>{
+    const turmas=turmasDaAula(i.id);
+    const aplicHtml = turmas.length
+      ? `<div class="aplic"><span class="aplic-lbl">Aplicada em</span>${turmas.map(t=>`<span class="turma-chip" title="Bimestre(s): ${t.bimestres.join(", ")}">${t.turma}</span>`).join("")}</div>`
+      : `<div class="aplic aplic-vazio">Ainda não aplicada em nenhuma turma</div>`;
+    return `
     <div class="item">
       <div class="item-top">
         <div><div class="item-nome">${i.nome}</div><div class="item-arq">/conteudos/${i.arquivo}</div></div>
         <span class="tipo ${i.tipo}">${i.tipo==="teorica"?"teórica":"exercícios"}</span>
       </div>
+      ${aplicHtml}
       <div class="item-acts">
         <a class="btn btn-ghost btn-sm" href="/conteudos/${i.arquivo}" target="_blank">👁 Abrir ↗</a>
         <button class="btn btn-ghost btn-sm" data-edit="${i.id}">✏️ Editar</button>
         <button class="btn btn-ghost btn-sm" data-del="${i.id}">🗑️</button>
       </div>
-    </div>`).join("")+`</div>`;
+    </div>`;}).join("")+`</div>`;
   grid.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>editar(b.dataset.edit));
   grid.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>excluir(b.dataset.del));
 }
@@ -175,8 +214,42 @@ function setTipo(t){ tipoSel=t; document.getElementById("optTeorica").classList.
 window.setTipo = setTipo;
 function limpaArq(v){ return v.trim().replace(/^\/?conteudos\//i,""); }
 
+// ── Auto-preenchimento: lê a ficha <meta name="aula:*"> do HTML e preenche o modal ──
+// Traduz o tipo da ficha (teoria/atividade) para o do catálogo (teorica/exercicios).
+function tipoDaFicha(v){
+  v=(v||"").toLowerCase();
+  if(v==="teorica"||v==="teoria") return "teorica";
+  if(["exercicios","atividade","lista","prova","revisao","jogo","gabarito"].includes(v)) return "exercicios";
+  return null;
+}
+async function preencherDaFicha(){
+  let arq=limpaArq(document.getElementById("mArq").value);
+  if(!arq) return;
+  if(!/\.html?$/i.test(arq)) arq+=".html";
+  if(arq===ultimoArqFicha) return;           // já preenchemos este arquivo; respeita edições
+  try{
+    const resp=await fetch("/conteudos/"+arq,{cache:"no-store"});
+    if(!resp.ok) return;                       // arquivo ainda não está na pasta
+    const doc=new DOMParser().parseFromString(await resp.text(),"text/html");
+    const meta=n=>{ const m=doc.querySelector('meta[name="'+n+'"]'); return m?(m.getAttribute("content")||"").trim():""; };
+    const titulo=meta("aula:titulo"), resumo=meta("aula:resumo"), tp=tipoDaFicha(meta("aula:tipo"));
+    if(!titulo && !resumo && !tp) return;      // HTML sem ficha: não mexe em nada
+    const elN=document.getElementById("mNome"), elR=document.getElementById("mResumo");
+    const feito=[];
+    if(titulo && !elN.value.trim()){ elN.value=titulo; feito.push("nome"); }   // só preenche campo vazio
+    if(resumo && !elR.value.trim()){ elR.value=resumo; feito.push("resumo"); }
+    if(tp){ setTipo(tp); feito.push("tipo"); }
+    ultimoArqFicha=arq;
+    document.getElementById("testeInfo").textContent = feito.length
+      ? "✓ Preenchido do arquivo ("+feito.join(", ")+") — você pode editar."
+      : "";
+  }catch(e){ /* silencioso: rede/arquivo indisponível */ }
+}
+document.getElementById("mArq").addEventListener("blur", preencherDaFicha);
+document.getElementById("mArq").addEventListener("change", preencherDaFicha);
+
 window.abrirNovo = function(){
-  editId=null; setTipo("teorica");
+  editId=null; ultimoArqFicha=""; setTipo("teorica");
   document.getElementById("mTitulo").textContent="Criar aula";
   document.getElementById("mNome").value=""; document.getElementById("mArq").value=""; document.getElementById("mResumo").value="";
   document.getElementById("testeInfo").textContent="";
@@ -184,7 +257,7 @@ window.abrirNovo = function(){
 };
 function editar(id){
   const i=itens.find(x=>x.id===id); if(!i) return;
-  editId=id; setTipo(i.tipo);
+  editId=id; ultimoArqFicha=""; setTipo(i.tipo);
   document.getElementById("mTitulo").textContent="Editar aula";
   document.getElementById("mNome").value=i.nome; document.getElementById("mArq").value=i.arquivo; document.getElementById("mResumo").value=i.resumo||"";
   document.getElementById("testeInfo").textContent="";

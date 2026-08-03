@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+  <link rel="manifest" href="/manifest.json"/>
+  <link rel="apple-touch-icon" href="/icon-192.png"/>
+  <meta name="theme-color" content="#15102a"/>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <!-- ═══ FICHA DA AULA (lida pelo gerador do index — não remover) ═══ -->
+  <meta name="aula:id"       content="revisao_inteiros_valornumerico">
+  <meta name="aula:tipo"     content="atividade">
+  <meta name="aula:eixo"     content="numeros">
+  <meta name="aula:bimestre" content="2">
+  <meta name="aula:titulo"   content="Revisão — Números Inteiros & Valor Numérico">
+  <meta name="aula:resumo"   content="Revisão de números inteiros e valor numérico.">
+  <meta name="aula:tema"     content="Números Inteiros e Valor Numérico">
+  <!-- ┌─────────────────────────────────────────────────────────────┐
+       │ MODELO DE PÁGINA DE CONTEÚDO / EXERCÍCIOS · Sistema de Mat.  │
+       │ Preencha:  TÍTULO • TURMA/DATA/TEMA • as SEÇÕES • EXERCÍCIOS │
+       │ Blocos disponíveis estão marcados com comentários abaixo.    │
+       └─────────────────────────────────────────────────────────────┘ -->
+  <title>Revisão: Números Inteiros e Valor Numérico — Sistema de Matemática</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+
+  <style>
+  /* ═══════════════ FALLBACK DO SHELL ═══════════════
+     :where() = especificidade 0 → seu /css/main.css SEMPRE vence no site.
+     Isto só entra em ação quando o main.css não está presente (preview). */
+  :where(body){margin:0;background:var(--bg,#0d0a2e);color:var(--text,#f1eefb);font-family:'Inter',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+  :where(.layout){display:flex;min-height:100vh}
+  :where(.sidebar){width:230px;flex-shrink:0;background:var(--bg2,#15102a);border-right:1px solid var(--border,rgba(255,255,255,.08))}
+  :where(.main){flex:1;min-width:0;display:flex;flex-direction:column}
+  :where(.topbar){display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 22px;border-bottom:1px solid var(--border,rgba(255,255,255,.08));background:var(--bg2,#15102a)}
+  :where(.topbar-title){font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700}
+  :where(.topbar-sub){font-size:12px;color:var(--text-muted,rgba(255,255,255,.55))}
+  :where(.content){flex:1;padding:22px 18px 64px}
+  @media(max-width:820px){:where(.sidebar){display:none}}
+
+  /* fallback da sidebar (só aparece se o auth.js não montar a real) */
+  .sb-fb{padding:18px 16px;display:flex;flex-direction:column;gap:4px}
+  .sb-fb img{width:104px;margin:2px auto 14px;display:block}
+  .sb-fb .sb-h{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted,rgba(255,255,255,.5));margin:10px 6px 4px}
+  .sb-fb a{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:10px;color:var(--text,#f1eefb);text-decoration:none;font-size:13px;font-weight:600}
+  .sb-fb a:hover{background:rgba(255,255,255,.05)}
+
+  /* ═══════════════ SISTEMA DE CONTEÚDO (classes au-* / ex-*) ═══════════════ */
+  .au{max-width:720px;margin:0 auto}
+
+  /* — Cabeçalho da aula — */
+  .au-hero{position:relative;overflow:hidden;text-align:center;padding:26px 22px;margin-bottom:22px;border-radius:18px;border:1px solid var(--border,rgba(255,255,255,.08));background:linear-gradient(135deg,rgba(124,92,252,.16),rgba(47,158,220,.07))}
+  .au-hero::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 78% -10%,rgba(240,165,0,.10),transparent 55%);pointer-events:none}
+  .au-hero-logo{width:52px;height:auto;margin-bottom:10px;filter:drop-shadow(0 3px 10px rgba(124,92,252,.5))}
+  .au-hero-eyebrow{font-size:10.5px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold,#f0a500);margin-bottom:6px}
+  .au-hero-title{font-family:'Rajdhani',sans-serif;font-size:30px;font-weight:700;line-height:1.05;margin:0}
+  .au-hero-meta{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-top:14px}
+  .au-meta{font-size:11px;font-weight:700;padding:4px 11px;border-radius:20px;background:rgba(255,255,255,.06);border:1px solid var(--border,rgba(255,255,255,.1));color:rgba(255,255,255,.8)}
+  .au-meta.gold{color:var(--gold,#f0a500);background:rgba(240,165,0,.1);border-color:rgba(240,165,0,.3)}
+
+  /* — Navegação rápida (opcional) — */
+  .au-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+  .au-nav a{font-size:12px;font-weight:600;text-decoration:none;padding:7px 13px;border-radius:20px;color:var(--text-muted,rgba(255,255,255,.6));background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08))}
+  .au-nav a:hover{color:var(--text,#fff);border-color:rgba(124,92,252,.5)}
+
+  /* — Seção — */
+  .au-sec{margin-bottom:30px;scroll-margin-top:80px}
+  .au-sec-head{display:flex;align-items:center;gap:11px;margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid var(--border,rgba(255,255,255,.08))}
+  .au-sec-num{width:26px;height:26px;flex-shrink:0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(135deg,var(--purple,#7c5cfc),#5a3fd6)}
+  .au-sec-title{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;line-height:1.1}
+  .au-sec-tag{margin-left:auto;font-size:10px;font-weight:800;padding:3px 10px;border-radius:11px;white-space:nowrap;text-transform:uppercase;letter-spacing:.4px}
+  .tag-teoria{background:rgba(124,92,252,.15);border:1px solid rgba(124,92,252,.35);color:#b6a2ff}
+  .tag-pratica{background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.32);color:#3ddc84}
+
+  /* — Texto / prosa — */
+  .au-p{font-size:14px;line-height:1.75;color:rgba(255,255,255,.82);margin:0 0 12px}
+  .au-p b,.au-p strong{color:#fff;font-weight:700}
+
+  /* — Caixa de conceito / definição (roxo) — */
+  .au-def{position:relative;background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-left:4px solid var(--purple,#7c5cfc);border-radius:12px;padding:15px 17px;margin:0 0 14px}
+  .au-def-label{font-size:10.5px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--purple,#a48bff);margin-bottom:7px}
+  .au-def-body{font-size:14px;line-height:1.7;color:rgba(255,255,255,.85)}
+  .au-def-body b{color:#fff}
+
+  /* — Caixa de fórmula (dourado, destaque) — */
+  .au-formula{text-align:center;background:linear-gradient(135deg,#1c1444,#15102e);border:1px solid rgba(240,165,0,.28);border-radius:14px;padding:18px 16px;margin:0 0 12px}
+  .au-formula-main{font-size:24px;font-weight:700;color:#fff;letter-spacing:.3px;line-height:1.4}
+  .au-formula-note{font-size:12px;color:var(--text-muted,rgba(255,255,255,.6));margin-top:8px}
+  .au-formula-note b{color:var(--gold,#f0a500)}
+
+  /* grade de fórmulas menores lado a lado */
+  .au-fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 12px}
+  @media(max-width:560px){.au-fgrid{grid-template-columns:1fr}}
+  .au-fmini{background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:12px;padding:13px 14px}
+  .au-fmini-name{font-size:11px;font-weight:700;color:var(--text-muted,rgba(255,255,255,.6));margin-bottom:6px}
+  .au-fmini-eq{font-size:18px;font-weight:700;color:#fff}
+
+  /* — Exemplo resolvido — */
+  .au-ex{background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:14px;padding:16px 18px;margin:0 0 14px}
+  .au-ex-head{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--green,#3ddc84);margin-bottom:11px}
+  .au-ex-prob{font-size:15px;font-weight:700;color:#fff;margin-bottom:12px;padding-bottom:12px;border-bottom:1px dashed var(--border,rgba(255,255,255,.12))}
+  .au-steps{list-style:none;counter-reset:st;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+  .au-steps li{counter-increment:st;position:relative;padding-left:34px;font-size:14px;line-height:1.6;color:rgba(255,255,255,.82)}
+  .au-steps li::before{content:counter(st);position:absolute;left:0;top:-1px;width:22px;height:22px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--purple,#b6a2ff);background:rgba(124,92,252,.14);border:1px solid rgba(124,92,252,.3)}
+  .au-steps b{color:#fff}
+  .au-res{margin-top:12px;padding:10px 14px;border-radius:10px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.28);font-size:14px;font-weight:700;color:#3ddc84}
+
+  /* — Dica / Atenção — */
+  .au-tip,.au-warn{display:flex;gap:11px;align-items:flex-start;border-radius:12px;padding:14px 16px;margin:0 0 14px;font-size:13px;line-height:1.6}
+  .au-tip{background:rgba(47,158,220,.07);border:1px solid rgba(47,158,220,.28);color:#9dd3f5}
+  .au-warn{background:rgba(240,165,0,.07);border:1px solid rgba(240,165,0,.28);color:#f3c25f}
+  .au-tip b,.au-warn b{color:#fff}
+  .au-tip .ic,.au-warn .ic{font-size:17px;flex-shrink:0;line-height:1.4}
+
+  /* — Figura (foto do quadro / imagem) — */
+  .au-fig{margin:0 0 14px;border-radius:12px;overflow:hidden;border:1px solid var(--border,rgba(255,255,255,.08))}
+  .au-fig img{display:block;width:100%}
+  .au-fig figcaption{font-size:11.5px;color:var(--text-muted,rgba(255,255,255,.55));padding:8px 12px;background:var(--card,#181233)}
+
+  /* ═══════════════ EXERCÍCIOS ═══════════════ */
+  .ex-list{display:flex;flex-direction:column;gap:12px}
+  .ex{background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:14px;padding:16px 17px}
+  .ex-top{display:flex;align-items:center;gap:11px;margin-bottom:11px}
+  .ex-num{width:30px;height:30px;flex-shrink:0;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:16px;color:#fff;background:linear-gradient(135deg,var(--purple,#7c5cfc),#5a3fd6)}
+  .ex-tag{margin-left:auto;font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:3px 9px;border-radius:10px}
+  .lv-facil{background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.3);color:#3ddc84}
+  .lv-medio{background:rgba(240,165,0,.12);border:1px solid rgba(240,165,0,.3);color:#f0a500}
+  .lv-dificil{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.32);color:#f87171}
+  .ex-stmt{font-size:14px;line-height:1.65;color:rgba(255,255,255,.9);margin-bottom:11px}
+  .ex-alts{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
+  .ex-alt{display:flex;align-items:center;gap:10px;font-size:13.5px;color:rgba(255,255,255,.82);padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--border,rgba(255,255,255,.07))}
+  .ex-alt .let{width:20px;height:20px;flex-shrink:0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--purple,#b6a2ff);background:rgba(124,92,252,.14)}
+
+  .ex-toggle{display:inline-flex;align-items:center;gap:7px;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;padding:8px 14px;border-radius:10px;color:var(--gold,#f0a500);background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.28)}
+  .ex-toggle:hover{background:rgba(240,165,0,.14)}
+  .ex-toggle .arw{transition:transform .25s ease}
+  .ex-toggle[aria-expanded="true"] .arw{transform:rotate(180deg)}
+  .ex-answer{max-height:0;overflow:hidden;transition:max-height .32s ease}
+  .ex-answer.open{max-height:640px}
+  .ex-answer-in{margin-top:11px;padding:12px 14px;border-radius:11px;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.25)}
+  .ex-answer-lbl{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--green,#3ddc84);margin-bottom:6px}
+  .ex-answer-in p{margin:0 0 6px;font-size:13.5px;line-height:1.65;color:rgba(255,255,255,.82)}
+  .ex-answer-in .final{font-weight:700;color:#3ddc84}
+
+  /* — Rodapé / chamada — */
+  .au-foot{margin-top:8px;text-align:center;background:linear-gradient(135deg,rgba(124,92,252,.12),rgba(240,165,0,.06));border:1px solid var(--border,rgba(255,255,255,.1));border-radius:16px;padding:22px 20px}
+  .au-foot-title{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;margin-bottom:5px}
+  .au-foot-desc{font-size:12.5px;color:var(--text-muted,rgba(255,255,255,.6));line-height:1.55;margin-bottom:14px}
+  .au-btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:700;font-size:14px;color:#fff;padding:11px 22px;border-radius:12px;background:linear-gradient(135deg,var(--purple,#7c5cfc),#5a3fd6);box-shadow:0 6px 18px rgba(124,92,252,.35)}
+  .au-btn:hover{filter:brightness(1.08)}
+  .au-note{font-size:11px;color:var(--text-muted,rgba(255,255,255,.45));margin-top:14px}
+
+  /* — Helpers de matemática (HTML puro, sem dependência) — */
+  .pot{font-weight:700}
+  .frac{display:inline-flex;flex-direction:column;text-align:center;vertical-align:middle;font-size:.82em;line-height:1.02;margin:0 .18em}
+  .frac>span:first-child{border-bottom:1.6px solid currentColor;padding:0 .32em}
+  .frac>span:last-child{padding:0 .32em}
+  .mono{font-variant-numeric:tabular-nums}
+
+  /* — Grade de "Calcule" (toque para revelar) — */
+  .calc-tools{display:flex;justify-content:flex-end;margin-bottom:10px}
+  .calc-reveal{font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;color:var(--gold,#f0a500);background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.28);border-radius:9px;padding:6px 12px}
+  .calc-reveal:hover{background:rgba(240,165,0,.14)}
+  .calc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:9px;margin-bottom:6px}
+  .calc-item{font-family:inherit;text-align:left;cursor:pointer;background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:11px;padding:11px 13px;color:inherit;transition:border-color .2s,background .2s}
+  .calc-item:hover{border-color:rgba(124,92,252,.45)}
+  .calc-item.on{border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.06)}
+  .calc-q{font-size:14.5px;font-weight:600;color:rgba(255,255,255,.9)}
+  .calc-q .lt{color:var(--purple,#b6a2ff);font-weight:800;margin-right:6px}
+  .calc-a{font-size:14.5px;font-weight:800;color:var(--green,#3ddc84);margin-top:6px;display:none}
+  .calc-item.on .calc-a{display:block}
+  .calc-hint{font-size:11.5px;color:var(--text-muted,rgba(255,255,255,.5));margin-bottom:12px}
+  :focus-visible{outline:2px solid var(--purple,#7c5cfc);outline-offset:2px}
+  @media(prefers-reduced-motion:reduce){.ex-answer,.ex-toggle .arw{transition:none}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <!-- TOPBAR (padrão do site) -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">📚 Material de Aula</div>
+        <div class="topbar-sub">Conteúdo e exercícios para revisar</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="au">
+
+        <!-- ════════ CABEÇALHO DA AULA ════════ -->
+        <header class="au-hero">
+          <div class="au-hero-eyebrow">Matemática · 8º ano · Revisão</div>
+          <h1 class="au-hero-title">Números Inteiros &amp; Valor Numérico</h1>
+          <div class="au-hero-meta">
+            <span class="au-meta gold">Revisão</span>
+            <span class="au-meta">Turmas 8D–8H</span>
+            <span class="au-meta">Aula de 27/07</span>
+          </div>
+        </header>
+
+        <nav class="au-nav">
+          <a href="#s1">① Operações</a>
+          <a href="#s2">② Valor numérico</a>
+        </nav>
+
+        <!-- LEMBRETE (recap de revisão — apague se não quiser) -->
+        <div class="au-def">
+          <div class="au-def-label">Lembrete · Regras de sinais</div>
+          <div class="au-def-body">
+            <b>Somar/subtrair:</b> sinais <b>iguais</b> → soma e mantém o sinal; sinais <b>diferentes</b> → subtrai e fica com o sinal do maior. &nbsp;·&nbsp;
+            <b>Multiplicar/dividir:</b> sinais <b>iguais</b> → resultado <b>+</b>; sinais <b>diferentes</b> → resultado <b>−</b>.
+          </div>
+        </div>
+
+        <!-- ════════ SEÇÃO 1 — OPERAÇÕES ════════ -->
+        <section class="au-sec" id="s1">
+          <div class="au-sec-head">
+            <span class="au-sec-num">1</span>
+            <span class="au-sec-title">Calcule</span>
+            <span class="au-sec-tag tag-pratica">Pratique</span>
+          </div>
+          <p class="calc-hint">Toque em cada item para conferir o resultado.</p>
+          <div class="calc-tools">
+            <button class="calc-reveal" onclick="revelarTodas(this)">Revelar todas</button>
+          </div>
+          <div class="calc-grid" id="calc1">
+            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">a)</span>−5 − 3</div><div class="calc-a">= −8</div></button>
+            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">b)</span>10 − 12</div><div class="calc-a">= −2</div></button>
+            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">c)</span>−2 + 7</div><div class="calc-a">= 5</div></button>
+            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">d)</span>−10 − 15</div><div class="calc-a">= −25</div></button>
+            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">e)</span>7 − 5</div><div class="calc-a">= 2</div></button>
+            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">f)</span>2 · (−5)</div><div class="calc-a">= −10</div></button>
+            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">g)</span>(−7) · (−2)</div><div class="calc-a">= 14</div></button>
+            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">h)</span>10 ÷ (−5)</div><div class="calc-a">= −2</div></button>
+            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">i)</span>(−20) ÷ (−4)</div><div class="calc-a">= 5</div></button>
+            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">j)</span>−1 + (−1)</div><div class="calc-a">= −2</div></button>
+            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">k)</span>−1 − (−1)</div><div class="calc-a">= 0</div></button>
+            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">l)</span>1 − (1)</div><div class="calc-a">= 0</div></button>
+            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">m)</span>1 + (−1)</div><div class="calc-a">= 0</div></button>
+          </div>
+        </section>
+
+        <!-- ════════ SEÇÃO 2 — VALOR NUMÉRICO ════════ -->
+        <section class="au-sec" id="s2">
+          <div class="au-sec-head">
+            <span class="au-sec-num">2</span>
+            <span class="au-sec-title">Valor numérico da expressão</span>
+            <span class="au-sec-tag tag-pratica">Pratique</span>
+          </div>
+          <p class="au-p" style="margin-bottom:8px">Substitua cada letra pelo número indicado e calcule.</p>
+
+          <div class="au-warn" style="margin-bottom:16px">
+            <span class="ic">⚠️</span>
+            <div>Ao substituir um número negativo, <b>use parênteses</b>: em x² com x = −2, faça (−2)² = 4 — e não −2² = −4.</div>
+          </div>
+
+          <div class="ex-list">
+
+            <div class="ex">
+              <div class="ex-top"><span class="ex-num">a</span><span class="ex-tag lv-medio">Médio</span></div>
+              <div class="ex-stmt"><b>x² − y</b>, &nbsp;para x = −2 e y = 7</div>
+              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
+              <div class="ex-answer"><div class="ex-answer-in">
+                <div class="ex-answer-lbl">Resolução</div>
+                <p>Substituindo: (−2)² − 7.</p>
+                <p>(−2)² = 4, então 4 − 7.</p>
+                <p class="final">= −3</p>
+              </div></div>
+            </div>
+
+            <div class="ex">
+              <div class="ex-top"><span class="ex-num">b</span><span class="ex-tag lv-facil">Fácil</span></div>
+              <div class="ex-stmt"><b>−2x + 5</b>, &nbsp;para x = 9</div>
+              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
+              <div class="ex-answer"><div class="ex-answer-in">
+                <div class="ex-answer-lbl">Resolução</div>
+                <p>Substituindo: −2 · 9 + 5 = −18 + 5.</p>
+                <p class="final">= −13</p>
+              </div></div>
+            </div>
+
+            <div class="ex">
+              <div class="ex-top"><span class="ex-num">c</span><span class="ex-tag lv-medio">Médio</span></div>
+              <div class="ex-stmt"><b>2x² + y</b>, &nbsp;para x = 3 e y = 5</div>
+              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
+              <div class="ex-answer"><div class="ex-answer-in">
+                <div class="ex-answer-lbl">Resolução</div>
+                <p>Primeiro a potência: 3² = 9.</p>
+                <p>2 · 9 + 5 = 18 + 5.</p>
+                <p class="final">= 23</p>
+              </div></div>
+            </div>
+
+            <div class="ex">
+              <div class="ex-top"><span class="ex-num">d</span><span class="ex-tag lv-dificil">Desafio</span></div>
+              <div class="ex-stmt"><b>−3x + 2y</b>, &nbsp;para x = −3 e y = −2</div>
+              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
+              <div class="ex-answer"><div class="ex-answer-in">
+                <div class="ex-answer-lbl">Resolução</div>
+                <p>Substituindo: −3 · (−3) + 2 · (−2).</p>
+                <p>−3 · (−3) = 9 &nbsp;e&nbsp; 2 · (−2) = −4.</p>
+                <p>9 + (−4) = 9 − 4.</p>
+                <p class="final">= 5</p>
+              </div></div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ════════ RODAPÉ / CHAMADA ════════ -->
+        <div class="au-foot">
+          <div class="au-foot-title">✅ Revisou tudo?</div>
+          <div class="au-foot-desc">Confira suas respostas e anote as dúvidas para a próxima aula. Este material fica salvo aqui para você estudar quando quiser.</div>
+          <div class="au-note">Material de estudo · Profª Vanessa · CED São Bartolomeu</div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Mostrar/ocultar a resposta de cada exercício
+  function togCalc(el){ el.classList.toggle('on'); }
+  function revelarTodas(btn){
+    const items = document.querySelectorAll('#calc1 .calc-item');
+    const anyOff = [...items].some(i => !i.classList.contains('on'));
+    items.forEach(i => i.classList.toggle('on', anyOff));
+    btn.textContent = anyOff ? 'Ocultar todas' : 'Revelar todas';
+  }
+  function toggleResp(btn){
+    const ans = btn.nextElementSibling;
+    const open = ans.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open);
+    btn.querySelector('.txt').textContent = open ? 'Ocultar resposta' : 'Ver resposta';
+  }
+  // Rolagem suave para os links de navegação
+  document.querySelectorAll('.au-nav a').forEach(a=>{
+    a.addEventListener('click',e=>{
+      const t=document.querySelector(a.getAttribute('href'));
+      if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth',block:'start'});}
+    });
+  });
+</script>
+
+<!-- Sidebar do site: usa o auth.js igual às outras páginas do aluno.
+     Se não estiver disponível (preview), injeta uma sidebar simples. -->
+<script type="module">
+  (async () => {
+    try {
+      const m = await import('/js/auth.js');
+      // Para restringir a página só a alunos logados, descomente:
+      // m.requireAluno && m.requireAluno('/index.html');
+      m.renderSidebarAluno && m.renderSidebarAluno('sidebar', 'conteudos');
+    } catch (_) { /* preview / standalone */ }
+    const sb = document.getElementById('sidebar');
+    if (sb && !sb.children.length) {
+      sb.innerHTML = `<div class="sb-fb">
+        <div class="sb-h">Estudo</div>
+        <a href="/aluno/menu.html">🏠 Menu</a>
+        <a href="/aluno/guia.html">📖 Guia</a>
+        <a href="#" style="color:#b6a2ff">📚 Material de Aula</a>
+        <div class="sb-h">Valer nota</div>
+        <a href="/aluno/a-atividades.html">✏️ Atividades</a>
+        <a href="/aluno/a-jogos.html">🎮 Jogos</a>
+      </div>`;
+    }
+  })();
+</script>
+</body>
+</html>

@@ -1,129 +1,150 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8"/>
-  <title>Diploma · Mestre dos Negativos · Imprimir</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
-  <style>
-    * { box-sizing:border-box; margin:0; padding:0; }
-    html,body { width:100%; height:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact; background:#f4f3ff; }
-    /* tier override applied via JS */
-    @page { size:A4 landscape; margin:1cm; }
+<meta charset="UTF-8"/>
+<title>Diploma · Mestre dos Negativos · Imprimir</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  @page{size:A4 landscape;margin:0}
 
-    /* ── Fundo ── */
-    .diploma {
-      width:100%; height:100%; position:relative;
-      display:flex; align-items:center; justify-content:center;
-      -webkit-print-color-adjust:exact; print-color-adjust:exact;
-      background:#f4f3ff;
-    }
-    .fundo {
-      position:absolute; inset:0; z-index:0;
-      -webkit-print-color-adjust:exact; print-color-adjust:exact;
-      background:
-        repeating-linear-gradient(45deg,transparent,transparent 18px,rgba(99,88,210,.022) 18px,rgba(99,88,210,.022) 19px),
-        radial-gradient(ellipse at 50% 0%,rgba(99,88,210,.07) 0%,transparent 55%);
-    }
+  .diploma{width:100%;height:100%;display:flex;flex-direction:column;background:#fff}
 
-    /* ── Bordas ── */
-    .borda-ext { position:absolute; inset:10px; border:2px solid #6358D2; pointer-events:none; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    .borda-int { position:absolute; inset:14px; border:1px solid rgba(99,88,210,.3); pointer-events:none; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  /* ═══ BANNER TOPO — roxo/elétrico ═══ */
+  .banner{
+    background:linear-gradient(135deg,#1e1b4b 0%,#3730a3 50%,#4f46e5 100%);
+    padding:16px 36px 12px;display:flex;align-items:center;justify-content:space-between;
+    position:relative;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  .banner::after{
+    content:'';position:absolute;bottom:0;left:0;right:0;height:4px;
+    background:linear-gradient(90deg,#6358D2,#a5b4fc,#818cf8,#a5b4fc,#6358D2);
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  .banner-left{display:flex;align-items:center;gap:14px}
+  .banner-logo img{width:40px;height:40px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(99,88,210,.5))}
+  .banner-escola{font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#fff}
+  .banner-unidade{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:2px}
+  .banner-badge{
+    display:flex;align-items:center;gap:8px;
+    background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+    border-radius:10px;padding:7px 16px;
+  }
+  .banner-badge-icon{font-size:20px}
+  .banner-badge-text{font-family:'Cinzel',serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#c4b5fd}
 
-    /* ── Cantos ── */
-    .canto { position:absolute; font-size:20px; line-height:1; z-index:2; color:#6358D2; }
-    .canto.tl { top:7px; left:9px; }
-    .canto.tr { top:7px; right:9px; transform:scaleX(-1); }
-    .canto.bl { bottom:7px; left:9px; transform:scaleY(-1); }
-    .canto.br { bottom:7px; right:9px; transform:scale(-1); }
+  /* ═══ CORPO ═══ */
+  .corpo{
+    flex:1;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    padding:10px 50px 10px;position:relative;text-align:center;
+  }
 
-    /* ── Conteúdo central ── */
-    .conteudo { position:relative; z-index:1; text-align:center; padding:0 56px; width:100%; }
+  .borda-ext{position:absolute;inset:6px 14px;border:2.5px solid #6358D2;pointer-events:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .borda-int{position:absolute;inset:11px 19px;border:1px solid rgba(99,88,210,.25);pointer-events:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 
-    .escola  { font-size:10px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:#3730a3; margin-bottom:2px; }
-    .unidade { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:#4338ca; margin-bottom:14px; }
+  .canto{position:absolute;font-size:22px;line-height:1;z-index:2;color:#6358D2}
+  .canto.tl{top:7px;left:16px}.canto.tr{top:7px;right:16px;transform:scaleX(-1)}
+  .canto.bl{bottom:7px;left:16px;transform:scaleY(-1)}.canto.br{bottom:7px;right:16px;transform:scale(-1)}
 
-    .divider { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
-    .divider::before,.divider::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,transparent,#6358D2,transparent); -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    .divider span { font-size:14px; color:#6358D2; }
+  .titulo{font-family:'Cinzel',serif;font-size:24px;font-weight:900;color:#1e1b4b;letter-spacing:3px;text-transform:uppercase;line-height:1.15;margin-bottom:2px}
+  .titulo em{font-style:normal;color:#4f46e5}
 
-    .titulo    { font-family:'Cinzel',serif; font-size:11px; font-weight:600; letter-spacing:4px; text-transform:uppercase; color:#3730a3; margin-bottom:4px; }
-    .certifica { font-family:'Playfair Display',serif; font-size:13px; color:#4338ca; margin-bottom:10px; font-style:italic; }
-    .nome      { font-family:'Cinzel',serif; font-size:27px; font-weight:700; color:#1e1b4b; margin-bottom:3px; }
-    .turma     { font-size:11px; font-family:'Playfair Display',serif; font-style:italic; color:#4338ca; margin-bottom:14px; }
-    .texto     { font-family:'Playfair Display',serif; font-size:12.5px; line-height:1.7; color:#1e1b4b; margin-bottom:14px; max-width:520px; margin-left:auto; margin-right:auto; }
-    .texto strong { color:#3730a3; }
+  .divider{display:flex;align-items:center;gap:12px;margin:6px 0 8px;width:100%;max-width:400px}
+  .divider::before,.divider::after{content:'';flex:1;height:2px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .divider::before{background:linear-gradient(90deg,transparent,#6358D2)}
+  .divider::after{background:linear-gradient(90deg,#6358D2,transparent)}
+  .divider span{font-size:16px;color:#6358D2}
 
-    /* fases */
-    .fases { display:flex; justify-content:center; gap:14px; margin-bottom:10px; }
-    .fase-item { display:flex; flex-direction:column; align-items:center; gap:2px; }
-    .fase-icon { font-size:13px; }
-    .fase-lbl  { font-size:7px; letter-spacing:.5px; text-transform:uppercase; color:#4338ca; font-family:'Cinzel',serif; }
+  .certifica{font-family:'Playfair Display',serif;font-size:12px;color:#4338ca;font-style:italic;margin-bottom:6px}
+  .nome{font-family:'Cinzel',serif;font-size:28px;font-weight:700;color:#1e1b4b;margin-bottom:3px;line-height:1.2}
+  .turma{font-size:11px;font-family:'Playfair Display',serif;font-style:italic;color:#4338ca;margin-bottom:10px}
+  .texto{font-family:'Playfair Display',serif;font-size:12px;line-height:1.7;color:#1e1b4b;margin-bottom:8px;max-width:500px}
+  .texto strong{color:#3730a3}
 
-    /* medalha */
-    .medalha-wrap { margin-bottom:12px; display:inline-flex; flex-direction:column; align-items:center; }
-    .medalha-circulo {
-      width:52px; height:52px; border-radius:50%;
-      display:flex; align-items:center; justify-content:center; margin-bottom:4px;
-      background:linear-gradient(135deg,#e0e7ff,#818cf8,#6358D2);
-      border:2px solid #6358D2;
-      -webkit-print-color-adjust:exact; print-color-adjust:exact;
-    }
-    .medalha-symbol { font-size:26px; line-height:1; }
-    .medalha-txt   { font-family:'Cinzel',serif; font-size:8px; letter-spacing:2px; text-transform:uppercase; color:#3730a3; }
+  /* Fases */
+  .fases{display:flex;justify-content:center;gap:14px;margin-bottom:8px}
+  .fase-item{display:flex;flex-direction:column;align-items:center;gap:2px}
+  .fase-icon{font-size:13px}
+  .fase-lbl{font-size:7px;letter-spacing:.5px;text-transform:uppercase;color:#4338ca;font-family:'Cinzel',serif}
 
-    /* stats */
-    .stats { display:flex; justify-content:center; margin-bottom:6px; }
-    .stat  { display:flex; flex-direction:column; align-items:center; padding:8px 18px; position:relative; }
-    .stat+.stat::before { content:''; position:absolute; left:0; top:20%; height:60%; width:1px; background:rgba(99,88,210,.3); -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    .stat-val { font-family:'Cinzel',serif; font-size:17px; font-weight:700; color:#3730a3; }
-    .stat-lbl { font-size:8px; letter-spacing:1px; text-transform:uppercase; color:#4338ca; margin-top:2px; }
+  /* Medalha */
+  .medalha-wrap{margin-bottom:8px;display:inline-flex;flex-direction:column;align-items:center}
+  .medalha-circulo{
+    width:56px;height:56px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;margin-bottom:4px;
+    background:linear-gradient(135deg,#c4b5fd,#6358D2);border:3px solid #3730a3;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  .medalha-symbol{font-size:28px;line-height:1}
+  .medalha-txt{font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#3730a3}
 
-    .divider2 { height:1px; margin-bottom:14px; background:linear-gradient(90deg,transparent,#6358D2 30%,#6358D2 70%,transparent); -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  /* Stats */
+  .stats{display:flex;justify-content:center;margin-bottom:4px}
+  .stat{display:flex;flex-direction:column;align-items:center;padding:6px 16px;position:relative}
+  .stat+.stat::before{content:'';position:absolute;left:0;top:20%;height:60%;width:1px;background:rgba(99,88,210,.25);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .stat-val{font-family:'Cinzel',serif;font-size:16px;font-weight:700;color:#3730a3}
+  .stat-lbl{font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#4338ca;margin-top:2px}
 
-    /* assinatura */
-    .assinatura { display:flex; justify-content:center; padding-top:18px; }
-    .assin-bloco { display:flex; flex-direction:column; align-items:center; gap:3px; }
-    .assin-linha { width:200px; height:1px; background:linear-gradient(90deg,transparent,#3730a3,transparent); -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    .assin-nome  { font-size:10px; font-weight:700; color:#1e1b4b; }
-    .assin-cargo { font-size:9px; color:#4338ca; }
+  .divider2{height:1.5px;margin-bottom:8px;background:linear-gradient(90deg,transparent,#6358D2 30%,#6358D2 70%,transparent);-webkit-print-color-adjust:exact;print-color-adjust:exact}
 
-    .data { font-size:10px; margin-top:10px; font-family:'Playfair Display',serif; font-style:italic; color:#4338ca; }
+  .assinatura{display:flex;justify-content:center}
+  .assin-bloco{display:flex;flex-direction:column;align-items:center}
+  .assin-espaco{height:40px}
+  .assin-linha{width:220px;height:1.5px;background:linear-gradient(90deg,transparent,#3730a3,transparent);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .assin-nome{font-size:10px;font-weight:700;color:#1e1b4b;margin-top:3px}
+  .assin-cargo{font-size:9px;color:#4338ca}
 
-    /* botões (somem na impressão) */
-    .no-print { display:block; }
-    @media print {
-      @page { size:A4 landscape; margin:0; }
-      html,body { width:297mm; height:210mm; overflow:hidden; background:#f4f3ff!important; }
-      .no-print { display:none!important; }
-      .diploma { width:297mm!important; height:210mm!important; padding:0!important; }
-      .conteudo { padding:0 44px!important; transform:scale(.88); transform-origin:center center; }
-    }
-  </style>
+  .data{font-size:10px;margin-top:6px;font-family:'Playfair Display',serif;font-style:italic;color:#4338ca}
+
+  /* Rodapé */
+  .rodape{height:8px;background:linear-gradient(90deg,#1e1b4b,#6358D2,#4f46e5,#6358D2,#1e1b4b);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+  .no-print{display:block}
+  @media print{
+    @page{size:A4 landscape;margin:0}
+    html,body{width:297mm;height:210mm;overflow:hidden;background:#fff!important}
+    .no-print{display:none!important}
+    .diploma{width:297mm!important;height:210mm!important}
+  }
+</style>
 </head>
 <body>
 
 <div class="no-print" style="position:fixed;top:12px;left:12px;z-index:999;display:flex;gap:8px">
-  <button onclick="window.close()" style="background:#1e1b4b;color:#fff;border:1px solid rgba(99,88,210,.4);border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer">← Fechar</button>
+  <button onclick="window.close()" style="background:#1e1b4b;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer">← Fechar</button>
   <button onclick="imprimirLandscape()" id="btn-imp" style="background:#6358D2;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer">🖨️ Imprimir</button>
 </div>
-<div class="no-print" style="position:fixed;top:56px;left:12px;z-index:999;background:rgba(99,88,210,.12);border:1px solid rgba(99,88,210,.35);color:#3730a3;border-radius:8px;padding:8px 14px;font-size:12px;max-width:320px;line-height:1.5">
-  💡 <strong>Dica:</strong> No diálogo de impressão, mude <strong>Disposição → Paisagem</strong> para melhor resultado.
+<div class="no-print" style="position:fixed;top:56px;left:12px;z-index:999;background:rgba(99,88,210,.08);border:1px solid rgba(99,88,210,.2);color:#3730a3;border-radius:8px;padding:8px 14px;font-size:12px;max-width:340px;line-height:1.5">
+  💡 Impressão em <strong>Paisagem</strong> · Couché Fosco 180-230g · Desative margens do navegador
 </div>
 
 <div class="diploma">
-  <div class="fundo"></div>
-  <div class="borda-ext"></div>
-  <div class="borda-int"></div>
-  <div class="canto tl">❧</div>
-  <div class="canto tr">❧</div>
-  <div class="canto bl">❧</div>
-  <div class="canto br">❧</div>
+  <div class="banner">
+    <div class="banner-left">
+      <div class="banner-logo"><img src="/logo_fundotransparente.png" alt="eMatemática"/></div>
+      <div>
+        <div class="banner-escola">Centro Educacional São Bartolomeu</div>
+        <div class="banner-unidade">São Sebastião · Distrito Federal</div>
+      </div>
+    </div>
+    <div class="banner-badge">
+      <span class="banner-badge-icon">⚡</span>
+      <span class="banner-badge-text">Números Negativos</span>
+    </div>
+  </div>
 
-  <div class="conteudo">
-    <div class="escola">Centro Educacional São Bartolomeu</div>
-    <div class="unidade">São Sebastião · Distrito Federal</div>
+  <div class="corpo">
+    <div class="borda-ext"></div>
+    <div class="borda-int"></div>
+    <div class="canto tl">❧</div><div class="canto tr">❧</div>
+    <div class="canto bl">❧</div><div class="canto br">❧</div>
+
+    <div class="titulo">Mestre dos <em>Negativos</em></div>
     <div class="divider"><span>⚡</span></div>
-    <div class="titulo">Diploma de Conclusão — Números Negativos</div>
+
     <div class="certifica">Certificamos que o(a) aluno(a)</div>
     <div class="nome" id="dp-nome">—</div>
     <div class="turma" id="dp-turma">—</div>
@@ -147,6 +168,7 @@
 
     <div class="assinatura">
       <div class="assin-bloco">
+        <div class="assin-espaco"></div>
         <div class="assin-linha"></div>
         <div class="assin-nome">Vanessa Oliveira</div>
         <div class="assin-cargo">Professora de Matemática</div>
@@ -154,10 +176,11 @@
     </div>
     <div class="data" id="dp-data">—</div>
   </div>
+
+  <div class="rodape"></div>
 </div>
 
 <script>
-// Dados: URL primeiro (atravessa abas), sessionStorage como fallback
 const _np = new URLSearchParams(location.search);
 const _neModelo = _np.get('modelo') === '1';
 const _get = (k, ssKey, def) => _np.get(k) ?? sessionStorage.getItem(ssKey) ?? def;
@@ -170,11 +193,10 @@ const combo     = _neModelo ? '35'               : _get('combo',    'diploma_neg
 const ts        = _neModelo ? Date.now()         : (parseInt(_get('ts', 'diploma_neg_ts', '0')) || null);
 const tier      = _neModelo ? (_np.get('tier') || 'base') : _get('tier', 'diploma_neg_tier', 'base');
 
-// Adjust visuals per tier
 const tierCfg = {
-  base:     { titulo:'Diploma de Conclusão — Números Negativos', bordaColor:'#6358D2', bgColor:'#f4f3ff', textoColor:'#3730a3', medalTxt:'Mestre dos Negativos · 50 Níveis' },
-  ouro:     { titulo:'Diploma de Ouro — Números Negativos',      bordaColor:'#4338ca', bgColor:'#f0f0ff', textoColor:'#312e81', medalTxt:'Todos com Estrela · 50 Níveis'   },
-  diamante: { titulo:'Diploma de Maestria — Números Negativos',  bordaColor:'#7c3aed', bgColor:'#ede9fe', textoColor:'#4c1d95', medalTxt:'Maestria Total · 50 Níveis'      },
+  base:     { titulo:'Mestre dos Negativos', medalTxt:'Mestre dos Negativos · 50 Níveis' },
+  ouro:     { titulo:'Mestre de Ouro — Negativos', medalTxt:'Todos com Estrela · 50 Níveis' },
+  diamante: { titulo:'Maestria — Negativos',  medalTxt:'Maestria Total · 50 Níveis' },
 };
 const tc = tierCfg[tier] || tierCfg.base;
 
@@ -183,7 +205,6 @@ const now   = new Date();
 const dataConq = ts
   ? new Date(ts).toLocaleDateString('pt-BR', { day:'numeric', month:'long', year:'numeric' })
   : null;
-
 const opsStr = acertos > 0 ? acertos.toLocaleString('pt-BR') : 'diversas';
 
 document.getElementById('dp-nome').textContent  = nome;
@@ -206,14 +227,6 @@ document.getElementById('dp-stats').innerHTML = stats
   .map(([val,lbl]) => `<div class="stat"><div class="stat-val">${val}</div><div class="stat-lbl">${lbl}</div></div>`)
   .join('');
 
-function imprimirLandscape() {
-  const s = document.createElement('style');
-  s.id = '__ls';
-  s.textContent = `@page{size:297mm 210mm landscape!important;margin:0!important;}@media print{html,body{width:297mm!important;height:210mm!important;}.diploma{width:297mm!important;height:210mm!important;}}`;
-  document.head.appendChild(s);
-  window.print();
-  setTimeout(() => { const e = document.getElementById('__ls'); if(e) e.remove(); }, 2000);
-}
+function imprimirLandscape(){const s=document.createElement('style');s.id='__ls';s.textContent=`@page{size:297mm 210mm landscape!important;margin:0!important;}@media print{html,body{width:297mm!important;height:210mm!important;}.diploma{width:297mm!important;height:210mm!important;}}`;document.head.appendChild(s);window.print();setTimeout(()=>{const e=document.getElementById('__ls');if(e)e.remove()},2e3)}
 </script>
-</body>
-</html>
+</body></html>

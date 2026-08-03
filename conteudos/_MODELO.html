@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+  <link rel="manifest" href="/manifest.json"/>
+  <link rel="apple-touch-icon" href="/icon-192.png"/>
+  <meta name="theme-color" content="#15102a"/>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <!-- ═══ FICHA DA AULA · PREENCHA ANTES DE SALVAR ═══
+       id       = MESMO nome do arquivo, sem .html (ex.: simplificacao-teoria)
+       tipo     = teoria | atividade   (atividade cobre lista/revisao/prova/jogo)
+       eixo     = numeros | algebra | geometria | grandezas | probestat
+       bimestre = 1 | 2 | 3 | 4
+       titulo   = texto que aparece na biblioteca
+       tema     = unidade que agrupa as aulas (ex.: Expressões Algébricas)
+       resumo   = 1 linha p/ vistos/diário; preenche o modal automaticamente -->
+  <meta name="aula:id"       content="topico-tipo">
+  <meta name="aula:tipo"     content="teoria">
+  <meta name="aula:eixo"     content="algebra">
+  <meta name="aula:bimestre" content="3">
+  <meta name="aula:titulo"   content="Teoria — Título da Aula">
+  <meta name="aula:resumo"   content="Frase curta que aparece nos vistos/diário">
+  <meta name="aula:tema"     content="Expressões Algébricas">
+  <!-- ┌─────────────────────────────────────────────────────────────┐
+       │ MODELO DE PÁGINA DE CONTEÚDO / EXERCÍCIOS · Sistema de Mat.  │
+       │ Preencha:  TÍTULO • TURMA/DATA/TEMA • as SEÇÕES • EXERCÍCIOS │
+       │ Blocos disponíveis estão marcados com comentários abaixo.    │
+       └─────────────────────────────────────────────────────────────┘ -->
+  <title>Potenciação — Sistema de Matemática</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+
+  <style>
+  /* ═══════════════ FALLBACK DO SHELL ═══════════════
+     :where() = especificidade 0 → seu /css/main.css SEMPRE vence no site.
+     Isto só entra em ação quando o main.css não está presente (preview). */
+  :where(body){margin:0;background:var(--bg,#0d0a2e);color:var(--text,#f1eefb);font-family:'Inter',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+  :where(.layout){display:flex;min-height:100vh}
+  :where(.sidebar){width:230px;flex-shrink:0;background:var(--bg2,#15102a);border-right:1px solid var(--border,rgba(255,255,255,.08))}
+  :where(.main){flex:1;min-width:0;display:flex;flex-direction:column}
+  :where(.topbar){display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 22px;border-bottom:1px solid var(--border,rgba(255,255,255,.08));background:var(--bg2,#15102a)}
+  :where(.topbar-title){font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700}
+  :where(.topbar-sub){font-size:12px;color:var(--text-muted,rgba(255,255,255,.55))}
+  :where(.content){flex:1;padding:22px 18px 64px}
+  @media(max-width:820px){:where(.sidebar){display:none}}
+
+  /* fallback da sidebar (só aparece se o auth.js não montar a real) */
+  .sb-fb{padding:18px 16px;display:flex;flex-direction:column;gap:4px}
+  .sb-fb img{width:104px;margin:2px auto 14px;display:block}
+  .sb-fb .sb-h{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted,rgba(255,255,255,.5));margin:10px 6px 4px}
+  .sb-fb a{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:10px;color:var(--text,#f1eefb);text-decoration:none;font-size:13px;font-weight:600}
+  .sb-fb a:hover{background:rgba(255,255,255,.05)}
+
+  /* ═══════════════ SISTEMA DE CONTEÚDO (classes au-* / ex-*) ═══════════════ */
+  .au{max-width:720px;margin:0 auto}
+
+  /* — Cabeçalho da aula — */
+  .au-hero{position:relative;overflow:hidden;text-align:center;padding:26px 22px;margin-bottom:22px;border-radius:18px;border:1px solid var(--border,rgba(255,255,255,.08));background:linear-gradient(135deg,rgba(124,92,252,.16),rgba(47,158,220,.07))}
+  .au-hero::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 78% -10%,rgba(240,165,0,.10),transparent 55%);pointer-events:none}
+  .au-hero-logo{width:52px;height:auto;margin-bottom:10px;filter:drop-shadow(0 3px 10px rgba(124,92,252,.5))}
+  .au-hero-eyebrow{font-size:10.5px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold,#f0a500);margin-bottom:6px}
+  .au-hero-title{font-family:'Rajdhani',sans-serif;font-size:30px;font-weight:700;line-height:1.05;margin:0}
+  .au-hero-meta{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-top:14px}
+  .au-meta{font-size:11px;font-weight:700;padding:4px 11px;border-radius:20px;background:rgba(255,255,255,.06);border:1px solid var(--border,rgba(255,255,255,.1));color:rgba(255,255,255,.8)}
+  .au-meta.gold{color:var(--gold,#f0a500);background:rgba(240,165,0,.1);border-color:rgba(240,165,0,.3)}
+
+  /* — Navegação rápida (opcional) — */
+  .au-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+  .au-nav a{font-size:12px;font-weight:600;text-decoration:none;padding:7px 13px;border-radius:20px;color:var(--text-muted,rgba(255,255,255,.6));background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08))}
+  .au-nav a:hover{color:var(--text,#fff);border-color:rgba(124,92,252,.5)}
+
+  /* — Seção — */
+  .au-sec{margin-bottom:30px;scroll-margin-top:80px}
+  .au-sec-head{display:flex;align-items:center;gap:11px;margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid var(--border,rgba(255,255,255,.08))}
+  .au-sec-num{width:26px;height:26px;flex-shrink:0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(135deg,var(--purple,#7c5cfc),#5a3fd6)}
+  .au-sec-title{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;line-height:1.1}
+  .au-sec-tag{margin-left:auto;font-size:10px;font-weight:800;padding:3px 10px;border-radius:11px;white-space:nowrap;text-transform:uppercase;letter-spacing:.4px}
+  .tag-teoria{background:rgba(124,92,252,.15);border:1px solid rgba(124,92,252,.35);color:#b6a2ff}
+  .tag-pratica{background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.32);color:#3ddc84}
+
+  /* — Texto / prosa — */
+  .au-p{font-size:14px;line-height:1.75;color:rgba(255,255,255,.82);margin:0 0 12px}
+  .au-p b,.au-p strong{color:#fff;font-weight:700}
+
+  /* — Caixa de conceito / definição (roxo) — */
+  .au-def{position:relative;background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-left:4px solid var(--purple,#7c5cfc);border-radius:12px;padding:15px 17px;margin:0 0 14px}
+  .au-def-label{font-size:10.5px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--purple,#a48bff);margin-bottom:7px}
+  .au-def-body{font-size:14px;line-height:1.7;color:rgba(255,255,255,.85)}
+  .au-def-body b{color:#fff}
+
+  /* — Caixa de fórmula (dourado, destaque) — */
+  .au-formula{text-align:center;background:linear-gradient(135deg,#1c1444,#15102e);border:1px solid rgba(240,165,0,.28);border-radius:14px;padding:18px 16px;margin:0 0 12px}
+  .au-formula-main{font-size:24px;font-weight:700;color:#fff;letter-spacing:.3px;line-height:1.4}
+  .au-formula-note{font-size:12px;color:var(--text-muted,rgba(255,255,255,.6));margin-top:8px}
+  .au-formula-note b{color:var(--gold,#f0a500)}
+
+  /* grade de fórmulas menores lado a lado */
+  .au-fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 12px}
+  @media(max-width:560px){.au-fgrid{grid-template-columns:1fr}}
+  .au-fmini{background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:12px;padding:13px 14px}
+  .au-fmini-name{font-size:11px;font-weight:700;color:var(--text-muted,rgba(255,255,255,.6));margin-bottom:6px}
+  .au-fmini-eq{font-size:18px;font-weight:700;color:#fff}
+
+  /* — Exemplo resolvido — */
+  .au-ex{background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:14px;padding:16px 18px;margin:0 0 14px}
+  .au-ex-head{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--green,#3ddc84);margin-bottom:11px}
+  .au-ex-prob{font-size:15px;font-weight:700;color:#fff;margin-bottom:12px;padding-bottom:12px;border-bottom:1px dashed var(--border,rgba(255,255,255,.12))}
+  .au-steps{list-style:none;counter-reset:st;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+  .au-steps li{counter-increment:st;position:relative;padding-left:34px;font-size:14px;line-height:1.6;color:rgba(255,255,255,.82)}
+  .au-steps li::before{content:counter(st);position:absolute;left:0;top:-1px;width:22px;height:22px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--purple,#b6a2ff);background:rgba(124,92,252,.14);border:1px solid rgba(124,92,252,.3)}
+  .au-steps b{color:#fff}
+  .au-res{margin-top:12px;padding:10px 14px;border-radius:10px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.28);font-size:14px;font-weight:700;color:#3ddc84}
+
+  /* — Dica / Atenção — */
+  .au-tip,.au-warn{display:flex;gap:11px;align-items:flex-start;border-radius:12px;padding:14px 16px;margin:0 0 14px;font-size:13px;line-height:1.6}
+  .au-tip{background:rgba(47,158,220,.07);border:1px solid rgba(47,158,220,.28);color:#9dd3f5}
+  .au-warn{background:rgba(240,165,0,.07);border:1px solid rgba(240,165,0,.28);color:#f3c25f}
+  .au-tip b,.au-warn b{color:#fff}
+  .au-tip .ic,.au-warn .ic{font-size:17px;flex-shrink:0;line-height:1.4}
+
+  /* — Figura (foto do quadro / imagem) — */
+  .au-fig{margin:0 0 14px;border-radius:12px;overflow:hidden;border:1px solid var(--border,rgba(255,255,255,.08))}
+  .au-fig img{display:block;width:100%}
+  .au-fig figcaption{font-size:11.5px;color:var(--text-muted,rgba(255,255,255,.55));padding:8px 12px;background:var(--card,#181233)}
+
+  /* ═══════════════ EXERCÍCIOS ═══════════════ */
+  .ex-list{display:flex;flex-direction:column;gap:12px}
+  .ex{background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:14px;padding:16px 17px}
+  .ex-top{display:flex;align-items:center;gap:11px;margin-bottom:11px}
+  .ex-num{width:30px;height:30px;flex-shrink:0;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:16px;color:#fff;background:linear-gradient(135deg,var(--purple,#7c5cfc),#5a3fd6)}
+  .ex-tag{margin-left:auto;font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:3px 9px;border-radius:10px}
+  .lv-facil{background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.3);color:#3ddc84}
+  .lv-medio{background:rgba(240,165,0,.12);border:1px solid rgba(240,165,0,.3);color:#f0a500}
+  .lv-dificil{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.32);color:#f87171}
+  .ex-stmt{font-size:14px;line-height:1.65;color:rgba(255,255,255,.9);margin-bottom:11px}
+  .ex-alts{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
+  .ex-alt{display:flex;align-items:center;gap:10px;font-size:13.5px;color:rgba(255,255,255,.82);padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--border,rgba(255,255,255,.07))}
+  .ex-alt .let{width:20px;height:20px;flex-shrink:0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--purple,#b6a2ff);background:rgba(124,92,252,.14)}
+
+  .ex-toggle{display:inline-flex;align-items:center;gap:7px;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;padding:8px 14px;border-radius:10px;color:var(--gold,#f0a500);background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.28)}
+  .ex-toggle:hover{background:rgba(240,165,0,.14)}
+  .ex-toggle .arw{transition:transform .25s ease}
+  .ex-toggle[aria-expanded="true"] .arw{transform:rotate(180deg)}
+  .ex-answer{max-height:0;overflow:hidden;transition:max-height .32s ease}
+  .ex-answer.open{max-height:640px}
+  .ex-answer-in{margin-top:11px;padding:12px 14px;border-radius:11px;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.25)}
+  .ex-answer-lbl{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--green,#3ddc84);margin-bottom:6px}
+  .ex-answer-in p{margin:0 0 6px;font-size:13.5px;line-height:1.65;color:rgba(255,255,255,.82)}
+  .ex-answer-in .final{font-weight:700;color:#3ddc84}
+
+  /* — Rodapé / chamada — */
+  .au-foot{margin-top:8px;text-align:center;background:linear-gradient(135deg,rgba(124,92,252,.12),rgba(240,165,0,.06));border:1px solid var(--border,rgba(255,255,255,.1));border-radius:16px;padding:22px 20px}
+  .au-foot-title{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;margin-bottom:5px}
+  .au-foot-desc{font-size:12.5px;color:var(--text-muted,rgba(255,255,255,.6));line-height:1.55;margin-bottom:14px}
+  .au-btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:700;font-size:14px;color:#fff;padding:11px 22px;border-radius:12px;background:linear-gradient(135deg,var(--purple,#7c5cfc),#5a3fd6);box-shadow:0 6px 18px rgba(124,92,252,.35)}
+  .au-btn:hover{filter:brightness(1.08)}
+  .au-note{font-size:11px;color:var(--text-muted,rgba(255,255,255,.45));margin-top:14px}
+
+  /* — Aulas relacionadas (SÓ em aula teórica) — */
+  .au-rel{text-align:left;background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:16px;padding:16px 18px}
+  .au-rel-title{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .au-rel-item{display:flex;align-items:center;justify-content:space-between;gap:10px;text-decoration:none;color:var(--text,#f1eefb);font-size:13.5px;font-weight:600;padding:11px 13px;border-radius:11px;background:rgba(255,255,255,.03);border:1px solid var(--border,rgba(255,255,255,.07));margin-bottom:8px}
+  .au-rel-item:last-child{margin-bottom:0}
+  .au-rel-item:hover{border-color:rgba(124,92,252,.45)}
+  .au-rel-item span{color:var(--purple,#b6a2ff);font-weight:800}
+
+  /* — Helpers de matemática (HTML puro, sem dependência) — */
+  .pot{font-weight:700}
+  .frac{display:inline-flex;flex-direction:column;text-align:center;vertical-align:middle;font-size:.82em;line-height:1.02;margin:0 .18em}
+  .frac>span:first-child{border-bottom:1.6px solid currentColor;padding:0 .32em}
+  .frac>span:last-child{padding:0 .32em}
+  .mono{font-variant-numeric:tabular-nums}
+
+  :focus-visible{outline:2px solid var(--purple,#7c5cfc);outline-offset:2px}
+  @media(prefers-reduced-motion:reduce){.ex-answer,.ex-toggle .arw{transition:none}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <!-- TOPBAR (padrão do site) -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">📚 Material de Aula</div>
+        <div class="topbar-sub">Conteúdo e exercícios para revisar</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="au">
+
+        <!-- ════════ CABEÇALHO DA AULA ════════ -->
+        <header class="au-hero">
+          <div class="au-hero-eyebrow">Matemática · 8º ano</div>
+          <h1 class="au-hero-title">Potenciação</h1>
+          <div class="au-hero-meta">
+            <span class="au-meta gold">Álgebra</span>
+            <span class="au-meta">Turmas 8D–8H</span>
+            <span class="au-meta">Aula de 24/07</span>
+          </div>
+        </header>
+
+        <!-- ════════ NAVEGAÇÃO RÁPIDA (opcional — apague se a aula for curta) ════════ -->
+        <nav class="au-nav">
+          <a href="#s1">① O que é</a>
+          <a href="#s2">② Propriedades</a>
+          <a href="#s3">③ Exemplo resolvido</a>
+          <a href="#exercicios">✏️ Exercícios</a>
+        </nav>
+
+        <!-- ════════ SEÇÃO 1 — CONCEITO ════════ -->
+        <section class="au-sec" id="s1">
+          <div class="au-sec-head">
+            <span class="au-sec-num">1</span>
+            <span class="au-sec-title">O que é potenciação?</span>
+            <span class="au-sec-tag tag-teoria">Teoria</span>
+          </div>
+
+          <p class="au-p">A potenciação é uma forma <b>abreviada de escrever uma multiplicação de fatores iguais</b>. Em vez de repetir o mesmo número várias vezes, usamos uma potência.</p>
+
+          <div class="au-formula">
+            <div class="au-formula-main">2<sup class="pot">5</sup> = 2 × 2 × 2 × 2 × 2 = 32</div>
+            <div class="au-formula-note">o fator <b>2</b> aparece <b>5</b> vezes</div>
+          </div>
+
+          <div class="au-def">
+            <div class="au-def-label">Definição</div>
+            <div class="au-def-body">Em uma potência <b>a<sup>n</sup></b>: o número <b>a</b> é a <b>base</b> (o fator que se repete) e o número <b>n</b> é o <b>expoente</b> (quantas vezes a base se repete). O resultado é chamado de <b>potência</b>.</div>
+          </div>
+
+          <p class="au-p">Lê-se <b>2<sup>5</sup></b> como “dois elevado à quinta potência”. Casos especiais: <b>a<sup>2</sup></b> é “a ao quadrado” e <b>a<sup>3</sup></b> é “a ao cubo”.</p>
+        </section>
+
+        <!-- ════════ SEÇÃO 2 — PROPRIEDADES ════════ -->
+        <section class="au-sec" id="s2">
+          <div class="au-sec-head">
+            <span class="au-sec-num">2</span>
+            <span class="au-sec-title">Propriedades das potências</span>
+            <span class="au-sec-tag tag-teoria">Teoria</span>
+          </div>
+
+          <div class="au-fgrid">
+            <div class="au-fmini">
+              <div class="au-fmini-name">Mesma base — multiplicação</div>
+              <div class="au-fmini-eq">a<sup>m</sup> · a<sup>n</sup> = a<sup>m+n</sup></div>
+            </div>
+            <div class="au-fmini">
+              <div class="au-fmini-name">Mesma base — divisão</div>
+              <div class="au-fmini-eq">a<sup>m</sup> ÷ a<sup>n</sup> = a<sup>m−n</sup></div>
+            </div>
+            <div class="au-fmini">
+              <div class="au-fmini-name">Potência de potência</div>
+              <div class="au-fmini-eq">(a<sup>m</sup>)<sup>n</sup> = a<sup>m·n</sup></div>
+            </div>
+            <div class="au-fmini">
+              <div class="au-fmini-name">Produto elevado</div>
+              <div class="au-fmini-eq">(a · b)<sup>n</sup> = a<sup>n</sup> · b<sup>n</sup></div>
+            </div>
+          </div>
+
+          <div class="au-def">
+            <div class="au-def-label">Casos que caem sempre</div>
+            <div class="au-def-body">
+              <b>Expoente 1:</b> a<sup>1</sup> = a &nbsp;·&nbsp;
+              <b>Expoente 0:</b> a<sup>0</sup> = 1 (qualquer base, exceto zero) &nbsp;·&nbsp;
+              <b>Expoente negativo:</b> a<sup>−n</sup> = <span class="frac"><span>1</span><span>a<sup>n</sup></span></span>
+            </div>
+          </div>
+
+          <div class="au-warn">
+            <span class="ic">⚠️</span>
+            <div><b>Muito cuidado com o sinal.</b> (−2)<sup>2</sup> = 4, mas −2<sup>2</sup> = −4. No primeiro, o parênteses faz a base ser −2; no segundo, só o 2 está elevado e o sinal fica de fora.</div>
+          </div>
+        </section>
+
+        <!-- ════════ SEÇÃO 3 — EXEMPLO RESOLVIDO ════════ -->
+        <section class="au-sec" id="s3">
+          <div class="au-sec-head">
+            <span class="au-sec-num">3</span>
+            <span class="au-sec-title">Exemplo resolvido</span>
+            <span class="au-sec-tag tag-pratica">Prática</span>
+          </div>
+
+          <div class="au-ex">
+            <div class="au-ex-head">🧮 Exemplo</div>
+            <div class="au-ex-prob">Simplifique a expressão: <span class="frac"><span>2<sup>4</sup> · 2<sup>2</sup></span><span>2<sup>3</sup></span></span></div>
+            <ol class="au-steps">
+              <li>No numerador, as bases são iguais → <b>somamos os expoentes</b>: 2<sup>4</sup> · 2<sup>2</sup> = 2<sup>4+2</sup> = 2<sup>6</sup>.</li>
+              <li>Agora temos <span class="frac"><span>2<sup>6</sup></span><span>2<sup>3</sup></span></span>. Na divisão de mesma base, <b>subtraímos os expoentes</b>: 2<sup>6−3</sup> = 2<sup>3</sup>.</li>
+              <li>Por fim, calculamos: 2<sup>3</sup> = 2 × 2 × 2 = <b>8</b>.</li>
+            </ol>
+            <div class="au-res">Resultado: 2<sup>3</sup> = 8</div>
+          </div>
+
+          <div class="au-tip">
+            <span class="ic">💡</span>
+            <div><b>Estratégia:</b> quando as bases forem iguais, resolva tudo com as propriedades <b>antes</b> de calcular o número final. Fica muito mais rápido do que abrir cada potência.</div>
+          </div>
+        </section>
+
+        <!-- ════════ EXERCÍCIOS ════════ -->
+        <section class="au-sec" id="exercicios">
+          <div class="au-sec-head">
+            <span class="au-sec-num">✏️</span>
+            <span class="au-sec-title">Exercícios</span>
+            <span class="au-sec-tag tag-pratica">Pratique</span>
+          </div>
+          <p class="au-p" style="margin-bottom:16px">Tente resolver sozinho no caderno primeiro. Depois clique em <b>“Ver resposta”</b> para conferir a resolução.</p>
+
+          <div class="ex-list">
+
+            <!-- Exercício com múltipla escolha -->
+            <div class="ex">
+              <div class="ex-top"><span class="ex-num">1</span><span class="ex-tag lv-facil">Fácil</span></div>
+              <div class="ex-stmt">Qual é o valor de <b>2<sup>5</sup></b>?</div>
+              <div class="ex-alts">
+                <div class="ex-alt"><span class="let">A</span> 10</div>
+                <div class="ex-alt"><span class="let">B</span> 16</div>
+                <div class="ex-alt"><span class="let">C</span> 32</div>
+                <div class="ex-alt"><span class="let">D</span> 25</div>
+              </div>
+              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)">
+                <span class="txt">Ver resposta</span><span class="arw">▾</span>
+              </button>
+              <div class="ex-answer"><div class="ex-answer-in">
+                <div class="ex-answer-lbl">Resposta</div>
+                <p>2<sup>5</sup> = 2 × 2 × 2 × 2 × 2 = 32.</p>
+                <p class="final">Alternativa C.</p>
+              </div></div>
+            </div>
+
+            <!-- Exercício com múltipla escolha -->
+            <div class="ex">
+              <div class="ex-top"><span class="ex-num">2</span><span class="ex-tag lv-facil">Fácil</span></div>
+              <div class="ex-stmt">Aplicando as propriedades, <b>3<sup>2</sup> · 3<sup>4</sup></b> é igual a:</div>
+              <div class="ex-alts">
+                <div class="ex-alt"><span class="let">A</span> 3<sup>6</sup></div>
+                <div class="ex-alt"><span class="let">B</span> 3<sup>8</sup></div>
+                <div class="ex-alt"><span class="let">C</span> 9<sup>6</sup></div>
+                <div class="ex-alt"><span class="let">D</span> 6<sup>6</sup></div>
+              </div>
+              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)">
+                <span class="txt">Ver resposta</span><span class="arw">▾</span>
+              </button>
+              <div class="ex-answer"><div class="ex-answer-in">
+                <div class="ex-answer-lbl">Resposta</div>
+                <p>Bases iguais na multiplicação → somamos os expoentes: 3<sup>2+4</sup> = 3<sup>6</sup> (que vale 729).</p>
+                <p class="final">Alternativa A.</p>
+              </div></div>
+            </div>
+
+            <!-- Exercício aberto -->
+            <div class="ex">
+              <div class="ex-top"><span class="ex-num">3</span><span class="ex-tag lv-medio">Médio</span></div>
+              <div class="ex-stmt">Calcule o valor de <b>(2<sup>3</sup>)<sup>2</sup></b>.</div>
+              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)">
+                <span class="txt">Ver resposta</span><span class="arw">▾</span>
+              </button>
+              <div class="ex-answer"><div class="ex-answer-in">
+                <div class="ex-answer-lbl">Resolução</div>
+                <p>Potência de potência → multiplicamos os expoentes: (2<sup>3</sup>)<sup>2</sup> = 2<sup>3·2</sup> = 2<sup>6</sup>.</p>
+                <p class="final">2<sup>6</sup> = 64.</p>
+              </div></div>
+            </div>
+
+            <!-- Exercício aberto -->
+            <div class="ex">
+              <div class="ex-top"><span class="ex-num">4</span><span class="ex-tag lv-medio">Médio</span></div>
+              <div class="ex-stmt">Quanto vale <b>5<sup>0</sup> + 5<sup>1</sup></b>?</div>
+              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)">
+                <span class="txt">Ver resposta</span><span class="arw">▾</span>
+              </button>
+              <div class="ex-answer"><div class="ex-answer-in">
+                <div class="ex-answer-lbl">Resolução</div>
+                <p>Todo número (diferente de zero) elevado a 0 vale 1, então 5<sup>0</sup> = 1. E 5<sup>1</sup> = 5.</p>
+                <p class="final">1 + 5 = 6.</p>
+              </div></div>
+            </div>
+
+            <!-- Exercício aberto -->
+            <div class="ex">
+              <div class="ex-top"><span class="ex-num">5</span><span class="ex-tag lv-medio">Médio</span></div>
+              <div class="ex-stmt">Escreva <b>2<sup>−3</sup></b> na forma de fração e calcule seu valor.</div>
+              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)">
+                <span class="txt">Ver resposta</span><span class="arw">▾</span>
+              </button>
+              <div class="ex-answer"><div class="ex-answer-in">
+                <div class="ex-answer-lbl">Resolução</div>
+                <p>Expoente negativo → invertemos a base: 2<sup>−3</sup> = <span class="frac"><span>1</span><span>2<sup>3</sup></span></span> = <span class="frac"><span>1</span><span>8</span></span>.</p>
+                <p class="final">Valor: 1/8 = 0,125.</p>
+              </div></div>
+            </div>
+
+            <!-- Exercício desafio -->
+            <div class="ex">
+              <div class="ex-top"><span class="ex-num">6</span><span class="ex-tag lv-dificil">Desafio</span></div>
+              <div class="ex-stmt">Simplifique e calcule: <span class="frac"><span>2<sup>4</sup> · 2<sup>2</sup></span><span>2<sup>3</sup></span></span></div>
+              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)">
+                <span class="txt">Ver resposta</span><span class="arw">▾</span>
+              </button>
+              <div class="ex-answer"><div class="ex-answer-in">
+                <div class="ex-answer-lbl">Resolução</div>
+                <p>Numerador (mesma base, multiplicação): 2<sup>4+2</sup> = 2<sup>6</sup>.</p>
+                <p>Dividindo (mesma base, subtração): 2<sup>6−3</sup> = 2<sup>3</sup>.</p>
+                <p class="final">2<sup>3</sup> = 8.</p>
+              </div></div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ════════ AULAS RELACIONADAS ════════
+             Aparece SÓ em aula TEÓRICA. Aqui entram as aulas de exercícios
+             que você ligou a esta teórica na biblioteca.
+             Em aula de EXERCÍCIOS, remova este bloco inteiro. -->
+        <div class="au-rel">
+          <div class="au-rel-title">✏️ Exercícios desta aula</div>
+          <a class="au-rel-item" href="/aluno/conteudos/potenciacao-lista1.html">Lista 1 — Potenciação básica <span>→</span></a>
+          <a class="au-rel-item" href="/aluno/conteudos/potenciacao-lista2.html">Lista 2 — Propriedades <span>→</span></a>
+        </div>
+        <div class="au-note" style="text-align:center;margin-top:16px">Material de estudo · Profª Vanessa · CED São Bartolomeu</div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Mostrar/ocultar a resposta de cada exercício
+  function toggleResp(btn){
+    const ans = btn.nextElementSibling;
+    const open = ans.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open);
+    btn.querySelector('.txt').textContent = open ? 'Ocultar resposta' : 'Ver resposta';
+  }
+  // Rolagem suave para os links de navegação
+  document.querySelectorAll('.au-nav a').forEach(a=>{
+    a.addEventListener('click',e=>{
+      const t=document.querySelector(a.getAttribute('href'));
+      if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth',block:'start'});}
+    });
+  });
+</script>
+
+<!-- Sidebar do site: usa o auth.js igual às outras páginas do aluno.
+     Se não estiver disponível (preview), injeta uma sidebar simples. -->
+<script type="module">
+  (async () => {
+    try {
+      const m = await import('/js/auth.js');
+      // Para restringir a página só a alunos logados, descomente:
+      // m.requireAluno && m.requireAluno('/index.html');
+      m.renderSidebarAluno && m.renderSidebarAluno('sidebar', 'conteudos');
+    } catch (_) { /* preview / standalone */ }
+    const sb = document.getElementById('sidebar');
+    if (sb && !sb.children.length) {
+      sb.innerHTML = `<div class="sb-fb">
+        <div class="sb-h">Estudo</div>
+        <a href="/aluno/menu.html">🏠 Menu</a>
+        <a href="/aluno/guia.html">📖 Guia</a>
+        <a href="#" style="color:#b6a2ff">📚 Material de Aula</a>
+        <div class="sb-h">Valer nota</div>
+        <a href="/aluno/a-atividades.html">✏️ Atividades</a>
+        <a href="/aluno/a-jogos.html">🎮 Jogos</a>
+      </div>`;
+    }
+  })();
+</script>
+</body>
+</html>
