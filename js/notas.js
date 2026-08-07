@@ -50,16 +50,22 @@ export function cadernoExtraAtivo(registro) {
 export const CAMPOS_POR_BIMESTRE = {
   "3": ["provaMulti", "caderno"],   // 3º começa só com esses dois
 };
-// Bônus automático (tabuada/negativos/perfil/ranking/caderno-extra) ligado?
-export const BONUS_POR_BIMESTRE = {
-  "3": false,                       // 3º sem bônus por enquanto
+// Config de bônus por bimestre. Ausente = todos os bônus (padrão). null = nenhum.
+// Objeto = escolhe quais partes valem. autoExtras: chaves de EXTRAS_AUTO (null = todas).
+export const BONUS_CONFIG_POR_BIMESTRE = {
+  "3": { autoExtras: ["t150", "t300", "tneg50"], cadExtra: false, rank: false, nivelPerfil: false },
 };
+export function bonusConfig() {
+  const cfg = BONUS_CONFIG_POR_BIMESTRE[BIMESTRE];
+  if (cfg !== undefined) return cfg;                                          // config específica (pode ser null)
+  return { autoExtras: null, cadExtra: true, rank: true, nivelPerfil: true }; // padrão: tudo
+}
 export function camposAtivos() {
   const chaves = CAMPOS_POR_BIMESTRE[BIMESTRE];
   return chaves ? CAMPOS_NOTA.filter(c => chaves.includes(c.key)) : CAMPOS_NOTA;
 }
 export function bonusAtivo() {
-  return BONUS_POR_BIMESTRE[BIMESTRE] ?? true;
+  return bonusConfig() !== null;   // controla se a coluna Extras aparece
 }
 
 export const NOME_ATIV4 = "Atividade 4 - Geometria";
@@ -164,12 +170,16 @@ export function extrasAutoAtivos(progresso) {
   return ativos;
 }
 export function calcularBonus(progresso, registro) {
-  if (!bonusAtivo()) return 0;
+  const cfg = bonusConfig();
+  if (!cfg) return 0;
   const auto = extrasAutoAtivos(progresso);
-  const bAuto      = EXTRAS_AUTO.reduce((s, e) => s + (auto[e.key] ? e.valor : 0), 0);
-  const bCadExtra  = cadernoExtraAtivo(registro) ? CADERNO_EXTRA.valor : 0;
-  const bRankAtiv4 = progresso?.rankAtiv4Bonus ?? 0;
-  const bNivelPerf = EXTRA_NIVEL_PERFIL.calcular(progresso?.nivelPerfil ?? 0);
+  const bAuto = EXTRAS_AUTO.reduce((s, e) => {
+    const incluido = cfg.autoExtras === null || cfg.autoExtras.includes(e.key);
+    return s + (incluido && auto[e.key] ? e.valor : 0);
+  }, 0);
+  const bCadExtra  = (cfg.cadExtra && cadernoExtraAtivo(registro)) ? CADERNO_EXTRA.valor : 0;
+  const bRankAtiv4 = cfg.rank ? (progresso?.rankAtiv4Bonus ?? 0) : 0;
+  const bNivelPerf = cfg.nivelPerfil ? EXTRA_NIVEL_PERFIL.calcular(progresso?.nivelPerfil ?? 0) : 0;
   const bManual    = EXTRAS_MANUAL.reduce((s, e) => s + (registro?.extras?.[e.key] ? e.valor : 0), 0);
   return bAuto + bCadExtra + bRankAtiv4 + bNivelPerf + bManual;
 }

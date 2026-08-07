@@ -206,7 +206,7 @@ import {
   extrasAutoAtivos as extrasAtivosDoProgresso, cadernoExtraAtivo,
   notasLiberadas, definirNotasLiberadas,
   buscarCongelamento, congelarBimestre, descongelarBimestre,
-  camposAtivos, bonusAtivo,
+  camposAtivos, bonusAtivo, bonusConfig,
 } from "/js/notas.js";
 
 requireProfessor();
@@ -237,13 +237,17 @@ function extrasAutoAtivos(nome) {
   return extrasAtivosDoProgresso(a);
 }
 function calcularBonus(nome, registro) {
-  if (!bonusAtivo()) return 0;
+  const cfg = bonusConfig();
+  if (!cfg) return 0;
   const a = autoDados[turmaAtual]?.[nome] || { melhorTabuada:0, melhorNeg:0, rankAtiv4Bonus:0, nivelPerfil:0 };
   const auto = extrasAtivosDoProgresso(a);
-  const bAuto        = EXTRAS_AUTO.reduce((s,e) => s + (auto[e.key] ? e.valor : 0), 0);
-  const bCadExtra    = cadernoExtraAtivo(registro) ? CADERNO_EXTRA.valor : 0;
-  const bRankAtiv4   = a.rankAtiv4Bonus ?? 0;
-  const bNivelPerfil = (a.nivelPerfil || 0) * EXTRA_NIVEL_PERFIL.valorPorNivel;
+  const bAuto = EXTRAS_AUTO.reduce((s,e) => {
+    const incluido = cfg.autoExtras === null || cfg.autoExtras.includes(e.key);
+    return s + (incluido && auto[e.key] ? e.valor : 0);
+  }, 0);
+  const bCadExtra    = (cfg.cadExtra && cadernoExtraAtivo(registro)) ? CADERNO_EXTRA.valor : 0;
+  const bRankAtiv4   = cfg.rank ? (a.rankAtiv4Bonus ?? 0) : 0;
+  const bNivelPerfil = cfg.nivelPerfil ? ((a.nivelPerfil || 0) * EXTRA_NIVEL_PERFIL.valorPorNivel) : 0;
   const bManual      = EXTRAS_MANUAL.reduce((s,e) => s + (registro.extras[e.key] ? e.valor : 0), 0);
   return bAuto + bCadExtra + bRankAtiv4 + bNivelPerfil + bManual;
 }
