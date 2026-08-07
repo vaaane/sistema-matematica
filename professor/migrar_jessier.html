@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Migrar Jessier (8H)</title>
+  <link rel="stylesheet" href="/css/main.css"/>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Migrar dados — Jessier (8H)</div>
+        <div class="topbar-sub">Copia os dados de "Jessier Francisco Avendano Araya" para o nome curto "Jessier", sem apagar o antigo</div>
+      </div>
+      <div class="topbar-right">
+        <a href="/professor/dashboard.html" class="btn btn-ghost">← Painel</a>
+      </div>
+    </div>
+    <div class="content">
+      <div style="max-width:640px">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title" style="margin-bottom:14px">O que este script faz</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.8">
+            Turma: <strong style="color:var(--text)">8H</strong><br>
+            Nome antigo: <strong style="color:var(--text)">Jessier Francisco Avendano Araya</strong><br>
+            Nome novo: <strong style="color:var(--text)">Jessier</strong><br>
+            PIN de login: <strong style="color:var(--text)">1234</strong> (padrão de criação)<br><br>
+            Copia (não apaga o antigo): login, perfil, tabuada, tabuada negativa,
+            notas de todos os bimestres, congelamento de bimestre, vistos de caderno,
+            conquistas, presença online e recordes de torneio. Também corrige o campo
+            "aluno" nos registros de <code>resultados</code> e <code>conquistas</code>
+            (atividades/quiz já feitos por ela).
+          </div>
+          <button class="btn" id="btn-migrar" style="background:var(--purple);color:#fff;width:100%" onclick="migrar()">
+            ✅ Rodar migração
+          </button>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:10px">Log</div>
+          <div id="log" style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:12px;font-family:'Courier New',monospace;max-height:480px;overflow-y:auto;color:var(--text-muted);line-height:1.8">Aguardando…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireProfessor, renderSidebarProfessor, hashSenha } from '/js/auth.js';
+import { setSenhaAluno } from '/js/db.js';
+import { makeUid, slugNome } from '/js/notas.js';
+import { db } from '/js/firebase-config.js';
+import { ref, get, set, update, query, orderByChild, equalTo }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+
+const sess = requireProfessor();
+if (!sess) throw new Error();
+renderSidebarProfessor('sidebar', '');
+
+function log(msg, tipo = 'info') {
+  const el = document.getElementById('log');
+  const ts = new Date().toLocaleTimeString('pt-BR');
+  const cores = { ok:'#16A34A', warn:'#D97706', err:'#DC2626', info:'var(--text-muted)' };
+  el.innerHTML += `<div style="color:${cores[tipo]||cores.info}">[${ts}] ${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+const TURMA   = '8H';
+const ANTIGO  = 'Jessier Francisco Avendano Araya';
+const NOVO    = 'Jessier';
+const PIN     = '1234';
+const BIMESTRES = [1, 2, 3, 4];
+
+// copia um nó inteiro de um path pra outro, sem sobrescrever se o destino já existir.
+// Cada chamada é isolada: um erro (ex.: path sem regra no Firebase) não derruba o resto da migração.
+async function copiarNo(pathOrigem, pathDestino, rotulo) {
+  try {
+    const origem = await get(ref(db, pathOrigem));
+    if (!origem.exists()) { log(`— ${rotulo}: nada em ${pathOrigem}`, 'info'); return; }
+    const destino = await get(ref(db, pathDestino));
+    if (destino.exists()) { log(`⚠️ ${rotulo}: destino já existia, pulei (${pathDestino})`, 'warn'); return; }
+    await set(ref(db, pathDestino), origem.val());
+    log(`✓ ${rotulo}: copiado para ${pathDestino}`, 'ok');
+  } catch (e) {
+    log(`✗ ${rotulo}: falhou — ${e.message}`, 'err');
+  }
+}
+
+window.migrar = async function() {
+  const btn = document.getElementById('btn-migrar');
+  btn.disabled = true;
+  document.getElementById('log').innerHTML = '';
+
+  const uidOld  = makeUid(TURMA, ANTIGO);
+  const uidNew  = makeUid(TURMA, NOVO);
+  const slugOld = slugNome(ANTIGO);
+  const slugNew = slugNome(NOVO);
+
+  try {
+    // 1. Login — hash calculado direto sob o nome novo com o PIN informado
+    const hash = await hashSenha(TURMA, NOVO, PIN);
+    await setSenhaAluno(TURMA, NOVO, hash, btoa(PIN));
+    log(`✓ Login: criado para "${NOVO}" (8H) com PIN ${PIN}`, 'ok');
+
+    // 2. Perfil e progresso (chave = uid = turma_nome)
+    await copiarNo(`perfis/${uidOld}`, `perfis/${uidNew}`, 'Perfil');
+    await copiarNo(`tabuada_niveis/${uidOld}`, `tabuada_niveis/${uidNew}`, 'Tabuada');
+    await copiarNo(`tabuada_negativos_niveis/${uidOld}`, `tabuada_negativos_niveis/${uidNew}`, 'Tabuada Negativa');
+    await copiarNo(`tabuada_ranking/${uidOld}`, `tabuada_ranking/${uidNew}`, 'Ranking Tabuada');
+    await copiarNo(`tabuada_sprint_ranking/${uidOld}`, `tabuada_sprint_ranking/${uidNew}`, 'Ranking Sprint');
+    await copiarNo(`conquistas/${uidOld}`, `conquistas/${uidNew}`, 'Conquistas (nó por aluno)');
+    await copiarNo(`presenca_online/${uidOld}`, `presenca_online/${uidNew}`, 'Presença online');
+    await copiarNo(`torneio_recordes/${uidOld}`, `torneio_recordes/${uidNew}`, 'Recordes de torneio');
+
+    // 3. Notas — chave = slug do nome, uma por bimestre
+    for (const b of BIMESTRES) {
+      await copiarNo(`notas_bimestre/${b}/${TURMA}/${slugOld}`, `notas_bimestre/${b}/${TURMA}/${slugNew}`, `Notas bim ${b}`);
+    }
+
+    // 4. Congelamento de bimestre (foto do bônus) — só o registro dela dentro do nó da turma
+    for (const b of BIMESTRES) {
+      try {
+        const snap = await get(ref(db, `notas_congelado/${b}/${TURMA}/alunos/${slugOld}`));
+        if (!snap.exists()) { log(`— Congelamento bim ${b}: nada`, 'info'); continue; }
+        const destino = await get(ref(db, `notas_congelado/${b}/${TURMA}/alunos/${slugNew}`));
+        if (destino.exists()) { log(`⚠️ Congelamento bim ${b}: destino já existia, pulei`, 'warn'); continue; }
+        await set(ref(db, `notas_congelado/${b}/${TURMA}/alunos/${slugNew}`), snap.val());
+        log(`✓ Congelamento bim ${b}: copiado`, 'ok');
+      } catch (e) { log(`✗ Congelamento bim ${b}: falhou — ${e.message}`, 'err'); }
+    }
+
+    // 5. Vistos de caderno — chave = nome cru, dentro de marcas/{atividadeId}
+    for (const b of BIMESTRES) {
+      try {
+        const snap = await get(ref(db, `vistos/${TURMA}/${b}/marcas`));
+        if (!snap.exists()) { log(`— Vistos bim ${b}: nada`, 'info'); continue; }
+        const marcas = snap.val();
+        let copiados = 0;
+        for (const [atividadeId, porAluno] of Object.entries(marcas)) {
+          if (porAluno && Object.prototype.hasOwnProperty.call(porAluno, ANTIGO) && !Object.prototype.hasOwnProperty.call(porAluno, NOVO)) {
+            await update(ref(db, `vistos/${TURMA}/${b}/marcas/${atividadeId}`), { [NOVO]: porAluno[ANTIGO] });
+            copiados++;
+          }
+        }
+        log(copiados ? `✓ Vistos bim ${b}: ${copiados} marca(s) copiada(s)` : `— Vistos bim ${b}: nada pra copiar`, copiados ? 'ok' : 'info');
+      } catch (e) { log(`✗ Vistos bim ${b}: falhou — ${e.message}`, 'err'); }
+    }
+
+    // 6. resultados — corrige o campo "aluno" nos registros dela (atividades/quiz)
+    try {
+      const q = query(ref(db, 'resultados'), orderByChild('aluno'), equalTo(ANTIGO));
+      const snap = await get(q);
+      let corrigidos = 0;
+      if (snap.exists()) {
+        for (const [id, v] of Object.entries(snap.val())) {
+          if (v.turma !== TURMA) continue;
+          await update(ref(db, `resultados/${id}`), { aluno: NOVO });
+          corrigidos++;
+        }
+      }
+      log(corrigidos ? `✓ Resultados: ${corrigidos} registro(s) corrigido(s)` : '— Resultados: nada pra corrigir', corrigidos ? 'ok' : 'info');
+    } catch (e) { log(`✗ Resultados: falhou — ${e.message}`, 'err'); }
+
+    // 7. conquistas (coleção separada, push-key) — corrige o campo "aluno"
+    try {
+      const q = query(ref(db, 'conquistas'), orderByChild('aluno'), equalTo(ANTIGO));
+      const snap = await get(q);
+      let corrigidos = 0;
+      if (snap.exists()) {
+        for (const [id, v] of Object.entries(snap.val())) {
+          await update(ref(db, `conquistas/${id}`), { aluno: NOVO });
+          corrigidos++;
+        }
+      }
+      log(corrigidos ? `✓ Conquistas: ${corrigidos} registro(s) corrigido(s)` : '— Conquistas: nada pra corrigir', corrigidos ? 'ok' : 'info');
+    } catch (e) { log(`✗ Conquistas: falhou — ${e.message}`, 'err'); }
+
+    log('Concluído. Confira o perfil/notas da Jessier antes de avisar ela da senha nova.', 'ok');
+  } catch (e) {
+    log(`✗ Erro inesperado: ${e.message}`, 'err');
+  }
+
+  btn.disabled = false;
+};
+</script>
+</body>
+</html>

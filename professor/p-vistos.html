@@ -36,6 +36,9 @@
   .atv-nome{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--gold);line-height:1.15}
   .atv-data{font-size:10px;color:var(--text-muted);margin-top:2px}
   .atv-pct{font-family:'Orbitron',monospace;font-size:10px;margin-top:3px;color:var(--purple)}
+  .atv-corr{font-size:9px;font-weight:700;margin-top:4px;padding:1px 5px;border-radius:5px;display:inline-block}
+  .atv-corr.ok{background:var(--green-pale);color:var(--green)}
+  .atv-corr.no{background:rgba(255,255,255,.05);color:var(--text-muted)}
   .grade th.col-tot{min-width:70px;text-align:center;padding:10px 6px;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px}
   .grade td.cel{text-align:center;padding:4px;cursor:pointer}
   .aluno-num{display:inline-block;width:22px;color:var(--text-muted);font-size:11px;font-family:'Orbitron',monospace}
@@ -175,6 +178,7 @@
       <button class="btn btn-gray" onclick="marcarTodos(1)">✓ Marcar todos como visto</button>
       <button class="btn btn-gray" onclick="marcarTodos(0)">▢ Desmarcar todos</button>
       <button class="btn btn-gray" onclick="editarAtvAtual()">✏️ Editar atividade</button>
+      <button class="btn btn-gray" id="btnCorrigido" onclick="alternarCorrigido()">✔️ Marcar como corrigido</button>
       <button class="btn btn-red-soft" id="btnRemMat" onclick="removerMaterial()" style="display:none">📄 Remover material</button>
       <button class="btn btn-red-soft" onclick="excluirAtvAtual()">🗑️ Excluir atividade</button>
     </div>
@@ -200,7 +204,7 @@
 <div class="toast" id="toast"></div>
 
 <script type="module">
-import { ALUNOS_POR_TURMA } from "/js/constants.js";
+import { ALUNOS_POR_TURMA, numeroChamada } from "/js/constants.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update, remove }
@@ -242,7 +246,7 @@ async function carregar(){
     const snap = await get(ref(db, P(turma,bimestre)));
     const raw = snap.exists() ? snap.val() : {};
     const atividades = Object.entries(raw.atividades||{})
-      .map(([id,a])=>({id, nome:a.nome||"(sem nome)", data:a.data||"", conteudo:a.conteudo||"", obs:a.obs||"", ordem:a.ordem||0, materialRef:a.materialRef||"", materialTitulo:a.materialTitulo||"", temMaterial:!!a.materialRef}))
+      .map(([id,a])=>({id, nome:a.nome||"(sem nome)", data:a.data||"", conteudo:a.conteudo||"", obs:a.obs||"", ordem:a.ordem||0, materialRef:a.materialRef||"", materialTitulo:a.materialTitulo||"", temMaterial:!!a.materialRef, corrigido:!!a.corrigido}))
       .sort((x,y)=> (x.ordem-y.ordem) || (x.data<y.data?-1:1));
     atual = { atividades, marcas: raw.marcas||{} };
   }catch(e){
@@ -294,12 +298,13 @@ function render(){
     html += `<th class="col-atv" data-id="${atv.id}" title="${(atv.conteudo||"").replace(/"/g,'&quot;')}">
       <div class="atv-nome">${atv.nome}${mat}</div>
       <div class="atv-data">${fmtData(atv.data)}${atv.obs?` <span title="${atv.obs.replace(/"/g,'&quot;')}">📝</span>`:""}</div>
-      <div class="atv-pct">${done}/${alunosTurma.length}</div></th>`;
+      <div class="atv-pct">${done}/${alunosTurma.length}</div>
+      <div class="atv-corr ${atv.corrigido?"ok":"no"}">${atv.corrigido?"✔ corrigido":"✗ não corrigido"}</div></th>`;
   });
   html += `<th class="col-tot">Total</th></tr></thead><tbody>`;
 
   alunos.forEach(al=>{
-    const num = String(alunosTurma.indexOf(al)+1).padStart(2,"0");
+    const num = numeroChamada(turma, al) || "—";
     html += `<tr><td class="col-aluno"><span class="aluno-num">${num}</span>${al}</td>`;
     let tot=0;
     atual.atividades.forEach(atv=>{
@@ -323,6 +328,13 @@ function render(){
 async function ciclar(atvId, aluno){
   const atualV = (atual.marcas[atvId]||{})[aluno]||0;
   const novo = (atualV+1)%3;
+  // confirma quando "retira" o visto: completo→atraso (1→2) ou atraso→sem visto (2→0)
+  if ((atualV===1 && novo===2) || (atualV===2 && novo===0)) {
+    const msg = novo===2
+      ? "Mudar de ✓ visto completo para A atraso?"
+      : "Retirar o visto (de A atraso para sem visto)?";
+    if (!confirm(msg)) return;
+  }
   atual.marcas[atvId] = atual.marcas[atvId]||{};
   atual.marcas[atvId][aluno] = novo;
   render();
@@ -441,6 +453,8 @@ window.abrirMenuCol = function(id){
   document.getElementById("mColInfo").textContent=`${fmtData(atv.data)}${atv.conteudo?" — "+atv.conteudo:""}${matTxt}${atv.obs?" · 📝 "+atv.obs:""}`;
   document.getElementById("btnAbrirMat").style.display = atv.temMaterial ? "" : "none";
   document.getElementById("btnRemMat").style.display  = atv.temMaterial ? "" : "none";
+  const _bc = document.getElementById("btnCorrigido");
+  if (_bc) _bc.textContent = atv.corrigido ? "↩️ Marcar como NÃO corrigido" : "✔️ Marcar como corrigido";
   document.getElementById("modalCol").classList.add("open");
 };
 
@@ -456,6 +470,19 @@ window.removerMaterial = async function(){
     await update(ref(db, `${P(turma,bimestre)}/atividades/${atvSel}`), {materialRef:null, materialTitulo:null});
     fecharModais(); toast("Material removido"); await carregar();
   }catch(e){ console.error(e); toast("Erro ao remover", true); }
+};
+
+window.alternarCorrigido = async function(){
+  const atv = atual.atividades.find(a=>a.id===atvSel);
+  if(!atv) return;
+  const novo = !atv.corrigido;
+  atv.corrigido = novo;
+  try{
+    await update(ref(db, `${P(turma,bimestre)}/atividades/${atvSel}`), { corrigido: novo });
+    render();
+    document.getElementById("btnCorrigido").textContent = novo ? "↩️ Marcar como NÃO corrigido" : "✔️ Marcar como corrigido";
+    toast(novo ? "Marcada como corrigida" : "Marcada como não corrigida");
+  }catch(e){ console.error(e); atv.corrigido = !novo; toast("Erro ao salvar", true); }
 };
 
 window.marcarTodos = async function(v){

@@ -197,6 +197,22 @@
   .vm-mark.m0{color:#cbd5e1;border-color:#e5e7eb;background:#fff}
   .vm-mark.m1{color:#166534;border-color:#bbf7d0;background:#dcfce7}
   .vm-mark.m2{color:#854d0e;border-color:#fde68a;background:#fef9c3}
+  .cal-chamada{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;flex-wrap:wrap}
+  .cham-resumo{font-size:12px;color:var(--text-muted)}
+  .cham-hint{font-size:12px;color:#6c00d4;background:#f3e8ff;border-radius:8px;padding:8px 11px;margin-bottom:10px;line-height:1.45}
+  .cham-resumo-bar{display:flex;gap:8px;margin-bottom:10px;font-size:12px;font-weight:800}
+  .cham-r{padding:3px 10px;border-radius:999px}
+  .cham-r.pres{background:#dcfce7;color:#166534}
+  .cham-r.aus{background:#fee2e2;color:#991b1b}
+  .cham-list{display:flex;flex-direction:column;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden}
+  .cham-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-top:1px solid #f1f5f9;cursor:pointer;user-select:none}
+  .cham-row:first-child{border-top:none}
+  .cham-row:hover{background:#f8fafc}
+  .cham-n{font-family:'Orbitron',monospace;font-size:10px;color:#9ca3af;width:20px;flex-shrink:0}
+  .cham-nome{flex:1;font-size:13px;color:#1f2937}
+  .cham-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;flex-shrink:0}
+  .cham-badge.pres{background:#dcfce7;color:#166534}
+  .cham-badge.aus{background:#fee2e2;color:#991b1b}
 </style>
 </head>
 <body>
@@ -281,7 +297,7 @@
 <div class="toast" id="toast"></div>
 
 <script type="module">
-import { ALUNOS_POR_TURMA, GRADE_TURMAS, PD1_TURMAS, TIPOS_NAO_LETIVO, BIMESTRES, bimestreDeData, bimestreAtual } from "/js/constants.js";
+import { ALUNOS_POR_TURMA, GRADE_TURMAS, PD1_TURMAS, TIPOS_NAO_LETIVO, BIMESTRES, bimestreDeData, bimestreAtual, numeroChamada } from "/js/constants.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update, remove, push }
@@ -306,6 +322,8 @@ let naoLetivos = {};   // {"YYYY-MM-DD": {tipo, motivo}} — global (escola toda
 let vistosPorData = {};   // "YYYY-MM-DD" -> [{id,bim,nome,conteudo,obs,marcas}]
 let vistoById = {};       // id -> mesmo objeto (para o modal)
 let vmVistoId = null, vmDs = null;   // estado do modal de vistos
+let chamadaPorDia = {};    // { "YYYY-MM-DD": { aluno: true(falta) } }
+let chamDia = null;
 
 const MESES = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
 const pad2 = n => String(n).padStart(2,"0");
@@ -326,13 +344,15 @@ function bibDe(id){ return biblioteca.find(b=>b.id===id); }
 async function carregar(){
   document.getElementById("lista").innerHTML = `<div class="vazio">Carregando…</div>`;
   try{
-    const [snapA, snapB, snapNL, snapT, snapV] = await Promise.all([
+    const [snapA, snapB, snapNL, snapT, snapV, snapC] = await Promise.all([
       get(ref(db, Paulas(turma,bimestre))),
       get(ref(db, "biblioteca")),
       get(ref(db, "calendario/naoLetivos")),
       get(ref(db, "aulas/"+turma)),          // todos os bimestres desta turma
       get(ref(db, "vistos/"+turma)),         // vistos de todos os bimestres da turma
+      get(ref(db, `chamada/${turma}/${bimestre}`)),   // chamada por aula do bimestre
     ]);
+    chamadaPorDia = snapC.exists() ? snapC.val() : {};
     // índice de vistos por data (cruza com o calendário)
     vistosPorData = {}; vistoById = {};
     if (snapV.exists()) {
@@ -628,6 +648,56 @@ function calVistoChips(ds){
   return vs.map(v=>`<div class="cal-visto-chip" title="Visto: ${v.nome.replace(/"/g,'&quot;')}">📋 ${v.nome}</div>`).join("");
 }
 
+function chamadaLinhaHTML(ds){
+  const total = (ALUNOS_POR_TURMA[turma]||[]).length;
+  const aus = chamadaPorDia[ds] ? Object.values(chamadaPorDia[ds]).filter(Boolean).length : 0;
+  return `<div class="cal-chamada">
+    <span class="cham-resumo">✅ ${total-aus} presente(s)${aus?` · <span style="color:#ff9d9d">❌ ${aus} falta(s)</span>`:""}</span>
+    <button class="btn btn-ghost btn-sm" data-chamada="${ds}">📋 Fazer chamada do dia</button>
+  </div>`;
+}
+
+function abrirChamada(ds){
+  chamDia = ds;
+  renderChamadaModal();
+  document.getElementById("chamadaModal").classList.add("open");
+}
+
+function renderChamadaModal(){
+  const alunos = ALUNOS_POR_TURMA[turma]||[];
+  const aus = chamadaPorDia[chamDia]||{};
+  let nAus=0; alunos.forEach(al=>{ if(aus[al]) nAus++; });
+  const p = (chamDia||"").split("-");
+  document.getElementById("chamTitulo").textContent = `Chamada — ${p[2]}/${p[1]}`;
+  document.getElementById("chamSub").textContent = "Presença do dia";
+  document.getElementById("chamResumo").innerHTML =
+    `<span class="cham-r pres">✅ ${alunos.length-nAus} presente(s)</span><span class="cham-r aus">❌ ${nAus} falta(s)</span>`;
+  const body = document.getElementById("chamBody");
+  body.innerHTML = alunos.map((al)=>{
+    const ausente = !!aus[al];
+    return `<div class="cham-row" data-al="${al.replace(/"/g,'&quot;')}">
+      <span class="cham-n">${numeroChamada(turma, al) || "—"}</span>
+      <span class="cham-nome">${al}</span>
+      <span class="cham-badge ${ausente?'aus':'pres'}">${ausente?'❌ Falta':'✅ Presente'}</span>
+    </div>`;
+  }).join("");
+  body.querySelectorAll(".cham-row").forEach(el=>el.onclick=()=>toggleChamada(el.dataset.al));
+}
+
+async function toggleChamada(aluno){
+  const aus = chamadaPorDia[chamDia] = chamadaPorDia[chamDia] || {};
+  const virarFalta = !aus[aluno];
+  if(virarFalta) aus[aluno]=true; else delete aus[aluno];
+  renderChamadaModal();
+  try{ await set(ref(db, `chamada/${turma}/${bimestre}/${chamDia}/${aluno}`), virarFalta ? true : null); }
+  catch(e){ console.error(e); toast("Falha ao salvar a chamada", true); }
+}
+
+function fecharChamada(){
+  document.getElementById("chamadaModal").classList.remove("open");
+  if(chamDia) mostrarDetalheCal(chamDia, calIndex());
+}
+
 function abrirVistoModal(id, ds){
   vmVistoId = id; vmDs = ds || null;
   if (!vistoById[id]) return;
@@ -651,7 +721,7 @@ function renderVistoModal(){
   const body = document.getElementById("vmBody");
   body.innerHTML = alunos.map((al,i)=>{
     const m = v.marcas[al]||0;
-    return `<div class="vm-row" data-al="${al.replace(/"/g,'&quot;')}"><span class="vm-n">${String(i+1).padStart(2,"0")}</span><span class="vm-nome">${al}</span>${marca(m)}</div>`;
+    return `<div class="vm-row" data-al="${al.replace(/"/g,'&quot;')}"><span class="vm-n">${numeroChamada(turma, al) || "—"}</span><span class="vm-nome">${al}</span>${marca(m)}</div>`;
   }).join("");
   body.querySelectorAll(".vm-row").forEach(el=>el.onclick=()=>ciclarMarca(el.dataset.al));
 }
@@ -726,11 +796,12 @@ function mostrarDetalheCal(ds, porData){
     }).join("");
   }
 
-  el.innerHTML=`<div class="cal-dh">${dn}, ${d}/${m}</div>${corpo}${blocoVistosHTML(ds)}${blocoNL}`;
+  el.innerHTML=`<div class="cal-dh">${dn}, ${d}/${m}</div>${corpo}${blocoVistosHTML(ds)}${chamadaLinhaHTML(ds)}${blocoNL}`;
 
   const bt=document.getElementById("calNovoDia");
   if(bt) bt.onclick=()=>{ abrirNova(); document.getElementById("mData").value=ds; };
   el.querySelectorAll("[data-edit-cal]").forEach(b=>b.onclick=()=>editar(b.dataset.editCal));
+  el.querySelectorAll("[data-chamada]").forEach(b=>b.onclick=()=>abrirChamada(b.dataset.chamada));
   el.querySelectorAll("[data-visto]").forEach(b=>b.onclick=()=>abrirVistoModal(b.dataset.visto, ds));
   const btM=document.getElementById("nlMarcar");
   if(btM) btM.onclick=()=>marcarNaoLetivo(ds, document.getElementById("nlTipo").value, document.getElementById("nlMotivo").value.trim());
@@ -764,6 +835,8 @@ function fecharVistoModal(){
 }
 document.getElementById("vmFechar").onclick = fecharVistoModal;
 document.getElementById("vistoModal").addEventListener("click", e => { if (e.target.id === "vistoModal") fecharVistoModal(); });
+document.getElementById("chamFechar").onclick = fecharChamada;
+document.getElementById("chamadaModal").addEventListener("click", e => { if (e.target.id === "chamadaModal") fecharChamada(); });
 </script>
 
 <div class="vm-overlay" id="vistoModal">
@@ -775,6 +848,17 @@ document.getElementById("vistoModal").addEventListener("click", e => { if (e.tar
     <div class="vm-resumo" id="vmResumo"></div>
     <div class="vm-list" id="vmBody"></div>
     <div class="vm-bar"><button class="btn btn-ghost btn-sm" id="vmFechar">Fechar</button></div>
+  </div>
+</div>
+
+<div class="vm-overlay" id="chamadaModal">
+  <div class="vm-box">
+    <div class="vm-h" id="chamTitulo">Chamada</div>
+    <div class="vm-sub" id="chamSub"></div>
+    <div class="cham-hint">Todos começam <b>presentes</b>. Clique num aluno para marcar <b>ausente</b> (clique de novo para voltar). Salva na hora.</div>
+    <div class="cham-resumo-bar" id="chamResumo"></div>
+    <div class="cham-list" id="chamBody"></div>
+    <div class="vm-bar"><button class="btn btn-ghost btn-sm" id="chamFechar">Fechar</button></div>
   </div>
 </div>
 </body>

@@ -122,6 +122,10 @@
           Disponibilizar notas
         </button>
         <button class="btn btn-ghost" id="btnCongelar">🔒 Fechar bimestre</button>
+        <button class="btn btn-ghost" id="btnExportar">
+          <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          Exportar CSV
+        </button>
         <span class="notas-status" id="status"></span>
       </div>
 
@@ -209,7 +213,8 @@ requireProfessor();
 renderSidebarProfessor("sidebar", "notas");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
-let dados = {};
+let dados = {}; // dados[`${turma}|${bimestre}`][aluno] = registro de notas
+const chaveTurma = t => `${t}|${BIMESTRE}`;
 let autoDados = {}; // autoDados[turma][aluno] = { melhorTabuada, melhorNeg }
 let turmaAtual = "";
 let liberadaAtual = false;
@@ -317,7 +322,7 @@ function renderTabela() {
   const alunos = ALUNOS_POR_TURMA[turmaAtual] || [];
   const tbody = document.getElementById("tbody");
   tbody.innerHTML = alunos.map(nome => {
-    const r = dados[turmaAtual][nome];
+    const r = dados[chaveTurma(turmaAtual)][nome];
     const total = calcularTotal(nome, r);
     const bonus = calcularBonus(nome, r);
     const auto = extrasAutoAtivos(nome);
@@ -356,13 +361,13 @@ function onInputChange(e) {
   const slugNome = tr.dataset.aluno;
   const nome = (ALUNOS_POR_TURMA[turmaAtual] || []).find(n => slug(n) === slugNome);
   if (!nome) return;
-  const r = dados[turmaAtual][nome];
+  const r = dados[chaveTurma(turmaAtual)][nome];
   r[e.target.dataset.campo] = e.target.value;
   atualizarLinha(nome);
 }
 
 function atualizarLinha(nome) {
-  const r = dados[turmaAtual][nome];
+  const r = dados[chaveTurma(turmaAtual)][nome];
   const total = calcularTotal(nome, r);
   const pill = document.getElementById(`total-${slug(nome)}`);
   if (pill) { pill.textContent = fmt(total); pill.className = `total-pill ${classeTotal(total)}`; }
@@ -381,7 +386,7 @@ function atualizarLinha(nome) {
 function atualizarMedia() {
   const alunos = ALUNOS_POR_TURMA[turmaAtual] || [];
   if (!alunos.length) { document.getElementById("mediaTurma").textContent = "—"; return; }
-  const soma = alunos.reduce((s,n) => s + calcularTotal(n, dados[turmaAtual][n]), 0);
+  const soma = alunos.reduce((s,n) => s + calcularTotal(n, dados[chaveTurma(turmaAtual)][n]), 0);
   document.getElementById("mediaTurma").textContent = fmt(soma / alunos.length);
 }
 
@@ -393,7 +398,7 @@ function abrirExtras(slugNome) {
   const nome = (ALUNOS_POR_TURMA[turmaAtual] || []).find(n => slug(n) === slugNome);
   if (!nome) return;
   extrasAlunoSlug = slugNome;
-  const r = dados[turmaAtual][nome];
+  const r = dados[chaveTurma(turmaAtual)][nome];
   const a = autoDados[turmaAtual]?.[nome] || { melhorTabuada:0, melhorNeg:0 };
   const auto = extrasAutoAtivos(nome);
 
@@ -490,7 +495,7 @@ async function carregarNotasSalvas(turma) {
     (ALUNOS_POR_TURMA[turma] || []).forEach(nome => {
       const v = snap.child(slug(nome)).val();
       if (!v) return;
-      const r = dados[turma][nome];
+      const r = dados[chaveTurma(turma)][nome];
       // null = ainda não lançado → campo fica vazio; número = nota real (mesmo 0)
       const fromNota = val => (val === null || val === undefined) ? "" : val;
       Object.assign(r, {
@@ -508,8 +513,9 @@ async function carregarNotasSalvas(turma) {
 
 async function carregarTurma(turma) {
   turmaAtual = turma;
-  const primeiraVez = !dados[turma];
-  if (primeiraVez) dados[turma] = turmaVazia(turma);
+  const chave = chaveTurma(turma);
+  const primeiraVez = !dados[chave];
+  if (primeiraVez) dados[chave] = turmaVazia(turma);
   if (!autoDados[turma]) autoDados[turma] = {};
   renderTabela();
 
@@ -532,7 +538,7 @@ async function carregarTurma(turma) {
     autoDados[turma][nome].rankAtiv4Posicao = a4.posicao;
     autoDados[turma][nome].rankAtiv4Bonus   = a4.bonusRank;
 
-    const r = dados[turma][nome];
+    const r = dados[chave][nome];
 
     // Ativ.4 — 0,5 se participou, null se não fez (não conta como zero)
     r.ativ4     = a4.fez ? 0.5 : null;
@@ -556,7 +562,7 @@ async function carregarTurma(turma) {
       ad.melhorNeg      = f.melhorNeg      ?? 0;
       ad.nivelPerfil    = f.nivelPerfil    ?? 0;
       ad.rankAtiv4Bonus = f.rankAtiv4Bonus ?? 0;
-      const r = dados[turma][nome];
+      const r = dados[chave][nome];
       if (f.ativ4 !== undefined)      r.ativ4      = f.ativ4;
       if (f.triangulos !== undefined) r.triangulos = f.triangulos;
     });
@@ -591,7 +597,7 @@ document.getElementById("btnCongelar").addEventListener("click", async () => {
     const snapAlunos = {};
     alunos.forEach(nome => {
       const ad = autoDados[turmaAtual]?.[nome] || {};
-      const r  = dados[turmaAtual]?.[nome] || {};
+      const r  = dados[chaveTurma(turmaAtual)]?.[nome] || {};
       snapAlunos[slug(nome)] = {
         melhorTabuada:  ad.melhorTabuada  ?? 0,
         melhorNeg:      ad.melhorNeg      ?? 0,
@@ -651,7 +657,7 @@ async function salvarNotas() {
   const alunos = ALUNOS_POR_TURMA[turmaAtual] || [];
   const updates = {};
   alunos.forEach(nome => {
-    const r = dados[turmaAtual][nome];
+    const r = dados[chaveTurma(turmaAtual)][nome];
     // Campos manuais: null = ainda não lançado, número = nota real (mesmo zero)
     const toNota = v => (v === "" || v === null || v === undefined) ? null : parseFloat(v);
     updates[slug(nome)] = {
@@ -684,6 +690,40 @@ function agendarSalvarNotas() {
   clearTimeout(notasSaveTimer);
   notasSaveTimer = setTimeout(salvarNotas, 800);   // salva 0,8s após a última edição
 }
+
+function exportarCSV(){
+  const campos = camposAtivos();
+  const alunos = ALUNOS_POR_TURMA[turmaAtual] || [];
+  const sep = ";";                                   // Excel PT-BR: ; separa colunas, , é decimal
+  const esc = s => `"${String(s).replace(/"/g, '""')}"`;
+  const head = ["Nº", "Aluno", ...campos.map(c => c.label), "Bônus", "Total"];
+  const linhas = [head.join(sep)];
+  alunos.forEach((nome, i) => {
+    const r = dados[chaveTurma(turmaAtual)][nome];
+    const vals = campos.map(c => {
+      const v = r[c.key];
+      return (v == null || v === "") ? "" : fmt(parseFloat(v) || 0);
+    });
+    linhas.push([
+      String(i + 1).padStart(2, "0"),
+      esc(nome),
+      ...vals,
+      fmt(calcularBonus(nome, r)),
+      fmt(calcularTotal(nome, r)),
+    ].join(sep));
+  });
+  const csv = "\uFEFF" + linhas.join("\r\n");          // \uFEFF = BOM, faz o Excel ler acentos
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `notas_${turmaAtual}_${BIMESTRE}bim_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+document.getElementById("btnExportar").addEventListener("click", exportarCSV);
 const _btnSalvar = document.getElementById("btnSalvar");
 if (_btnSalvar) _btnSalvar.style.display = "none";
 

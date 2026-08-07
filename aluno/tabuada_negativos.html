@@ -247,6 +247,7 @@
 
 <script type="module">
 import { getSession, renderSidebarAluno, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { bimestreAtual } from "/js/constants.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -266,12 +267,14 @@ const turma    = _isProfMode ? '' : sess.turma;
 let nomeAluno  = alunos[0];
 function _makeUid(n) { return (turma + '_' + n).replace(/[.#$\[\]/\s]/g, '_'); }
 let uid = _isProfMode ? _profUid : _makeUid(nomeAluno);
+const _bimJogo = (n => (n>=1&&n<=4)?n:bimestreAtual())(parseInt(new URLSearchParams(location.search).get('bim'),10));
+const _negPath = _bimJogo <= 2 ? `tabuada_negativos_niveis/${uid}` : `tabuada_negativos_niveis_b/${_bimJogo}/${uid}`;
 
 const _params    = new URLSearchParams(location.search);
 const _replayN   = _params.has('nivel') ? parseInt(_params.get('nivel'), 10) : null;
 const _isReplay  = !!_replayN;
 
-const niveisRef = ref(db, _isProfMode ? `prof_neg_niveis/${uid}` : `tabuada_negativos_niveis/${uid}`);
+const niveisRef = ref(db, _isProfMode ? `prof_neg_niveis/${uid}` : _negPath);
 
 // ── Level config (150 níveis) ──────────────────────────────────
 function getLvlCfg(lvl) {
@@ -1073,7 +1076,7 @@ async function mostrarDiploma() {
   // Salvar conquista no Firebase
   try {
     const { ref: _ref3, set: _set3 } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
-    await _set3(_ref3(db, `tabuada_negativos_niveis/${uid}/concluiu_50_em`), Date.now());
+    await _set3(_ref3(db, `${_negPath}/concluiu_50_em`), Date.now());
   } catch(e) {}
 }
 

@@ -1,34 +1,32 @@
 <!DOCTYPE html>
+
 <html lang="pt-BR">
 <head>
 <script>document.documentElement.setAttribute("data-theme","dark");</script>
-  <link rel="manifest" href="/manifest.json"/>
-  <link rel="apple-touch-icon" href="/icon-192.png"/>
-  <meta name="theme-color" content="#15102a"/>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
-  <!-- ═══ FICHA DA AULA (lida pelo gerador do index — não remover) ═══ -->
-  <meta name="aula:id"       content="expressoes-simplificacao-lista">
-  <meta name="aula:tipo"     content="atividade">
-  <meta name="aula:eixo"     content="algebra">
-  <meta name="aula:bimestre" content="3">
-  <meta name="aula:titulo"   content="Lista de Exercícios — Simplificação de Expressões">
-  <meta name="aula:resumo"   content="Lista de simplificação: reduzir termos semelhantes, expressões mistas e distributiva.">
-  <meta name="aula:tema"     content="Expressões Algébricas">
-  <!-- ┌─────────────────────────────────────────────────────────────┐
+<link href="/manifest.json" rel="manifest"/>
+<link href="/icon-192.png" rel="apple-touch-icon"/>
+<meta content="#15102a" name="theme-color"/>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<!-- ═══ FICHA DA AULA (lida pelo gerador do index — não remover) ═══ -->
+<meta content="expressoes-simplificacao-lista" name="aula:id"/>
+<meta content="atividade" name="aula:tipo"/>
+<meta content="algebra" name="aula:eixo"/>
+<meta content="3" name="aula:bimestre"/>
+<meta content="Lista de Exercícios — Simplificação de Expressões" name="aula:titulo"/>
+<meta content="Lista de simplificação: reduzir termos semelhantes, expressões mistas e distributiva." name="aula:resumo"/>
+<meta content="Expressões Algébricas" name="aula:tema"/>
+<!-- ┌─────────────────────────────────────────────────────────────┐
        │ MODELO DE PÁGINA DE CONTEÚDO / EXERCÍCIOS · Sistema de Mat.  │
        │ Preencha:  TÍTULO • TURMA/DATA/TEMA • as SEÇÕES • EXERCÍCIOS │
        │ Blocos disponíveis estão marcados com comentários abaixo.    │
        └─────────────────────────────────────────────────────────────┘ -->
-  <title>Exercícios: Simplificação de Expressões — Sistema de Matemática</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="/css/main.css"/>
-
-  <style>
+<title>Exercícios: Simplificação de Expressões — Sistema de Matemática</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Rajdhani:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="/css/main.css" rel="stylesheet"/>
+<style>
   /* ═══════════════ FALLBACK DO SHELL ═══════════════
      :where() = especificidade 0 → seu /css/main.css SEMPRE vence no site.
      Isto só entra em ação quando o main.css não está presente (preview). */
@@ -175,137 +173,69 @@
 </head>
 <body>
 <div class="layout">
-  <aside class="sidebar" id="sidebar"></aside>
-  <div class="main">
-
-    <div class="topbar">
-      <div class="topbar-left">
-        <div class="topbar-title">📚 Material de Aula</div>
-        <div class="topbar-sub">Conteúdo e exercícios para revisar</div>
-      </div>
-    </div>
-
-    <div class="content">
-      <div class="au">
-
-        <header class="au-hero">
-          <div class="au-hero-eyebrow">Matemática · 8º ano · 3º bimestre</div>
-          <h1 class="au-hero-title">Simplificação — Lista</h1>
-          <div class="au-hero-meta">
-            <span class="au-meta gold">Exercícios</span>
-            <span class="au-meta">Turmas 8D–8H</span>
-            <span class="au-meta">11 questões</span>
-          </div>
-        </header>
-
-        <section class="au-sec" id="exercicios">
-          <div class="au-sec-head">
-            <span class="au-sec-num">✏️</span>
-            <span class="au-sec-title">Exercícios</span>
-            <span class="au-sec-tag tag-pratica">Pratique</span>
-          </div>
-          <p class="au-p" style="margin-bottom:16px">Simplifique cada expressão no caderno. Depois clique em <b>“Ver resposta”</b> para conferir.</p>
-
-          <div class="ex-list">
-
-            <!-- 1 -->
-            <div class="ex">
-              <div class="ex-top"><span class="ex-num">1</span><span class="ex-tag lv-facil">Fácil</span></div>
-              <div class="ex-stmt">São termos semelhantes? Responda sim ou não: <b>(a)</b> 3x e 7x &nbsp; <b>(b)</b> 2x e 2x<sup>2</sup> &nbsp; <b>(c)</b> 5 e 9 &nbsp; <b>(d)</b> 4a e 4b</div>
-              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
-              <div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resposta</div><p>(a) sim &nbsp;·&nbsp; (b) não (x ≠ x²) &nbsp;·&nbsp; (c) sim (números puros) &nbsp;·&nbsp; (d) não (letras diferentes).</p></div></div>
-            </div>
-
-            <!-- 2 -->
-            <div class="ex">
-              <div class="ex-top"><span class="ex-num">2</span><span class="ex-tag lv-facil">Fácil</span></div>
-              <div class="ex-stmt">Simplifique: <b>4x + 3x</b></div>
-              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
-              <div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resposta</div><p class="final">7x</p></div></div>
-            </div>
-
-            <!-- 3 -->
-            <div class="ex">
-              <div class="ex-top"><span class="ex-num">3</span><span class="ex-tag lv-facil">Fácil</span></div>
-              <div class="ex-stmt">Simplifique: <b>9y − 2y</b></div>
-              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
-              <div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resposta</div><p class="final">7y</p></div></div>
-            </div>
-
-            <!-- 4 -->
-            <div class="ex">
-              <div class="ex-top"><span class="ex-num">4</span><span class="ex-tag lv-medio">Médio</span></div>
-              <div class="ex-stmt">Simplifique: <b>6a + a</b></div>
-              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
-              <div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>O "a" sozinho tem coeficiente 1: 6a + 1a.</p><p class="final">7a</p></div></div>
-            </div>
-
-            <!-- 5 — pegadinha -->
-            <div class="ex">
-              <div class="ex-top"><span class="ex-num">5</span><span class="ex-tag lv-medio">Médio</span></div>
-              <div class="ex-stmt">Simplifique, se for possível: <b>3x + 5</b></div>
-              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
-              <div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>Não são semelhantes (um tem letra, o outro não). Não dá pra juntar.</p><p class="final">Fica 3x + 5 (já está simplificada)</p></div></div>
-            </div>
-
-            <!-- 6 -->
-            <div class="ex">
-              <div class="ex-top"><span class="ex-num">6</span><span class="ex-tag lv-medio">Médio</span></div>
-              <div class="ex-stmt">Simplifique: <b>2x + 5 + 4x + 1</b></div>
-              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
-              <div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>x com x: 2x + 4x = 6x. Números: 5 + 1 = 6.</p><p class="final">6x + 6</p></div></div>
-            </div>
-
-            <!-- 7 -->
-            <div class="ex">
-              <div class="ex-top"><span class="ex-num">7</span><span class="ex-tag lv-medio">Médio</span></div>
-              <div class="ex-stmt">Simplifique: <b>8x − 3 − 2x + 7</b></div>
-              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
-              <div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>x com x: 8x − 2x = 6x. Números: −3 + 7 = 4.</p><p class="final">6x + 4</p></div></div>
-            </div>
-
-            <!-- 8 -->
-            <div class="ex">
-              <div class="ex-top"><span class="ex-num">8</span><span class="ex-tag lv-dificil">Desafio</span></div>
-              <div class="ex-stmt">Simplifique: <b>x<sup>2</sup> + 3x + 2x<sup>2</sup> + x</b></div>
-              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
-              <div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>x² com x²: x² + 2x² = 3x². x com x: 3x + x = 4x. São grupos diferentes e não se misturam.</p><p class="final">3x² + 4x</p></div></div>
-            </div>
-
-            <!-- 9 -->
-            <div class="ex">
-              <div class="ex-top"><span class="ex-num">9</span><span class="ex-tag lv-medio">Médio</span></div>
-              <div class="ex-stmt">Tire o parêntese: <b>3(x + 2)</b></div>
-              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
-              <div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>Multiplica o 3 por cada termo: 3·x + 3·2.</p><p class="final">3x + 6</p></div></div>
-            </div>
-
-            <!-- 10 -->
-            <div class="ex">
-              <div class="ex-top"><span class="ex-num">10</span><span class="ex-tag lv-dificil">Desafio</span></div>
-              <div class="ex-stmt">Tire o parêntese e simplifique: <b>2(x + 4) + 5</b></div>
-              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
-              <div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>Abre: 2x + 8 + 5. Junta os números: 8 + 5 = 13.</p><p class="final">2x + 13</p></div></div>
-            </div>
-
-            <!-- 11 -->
-            <div class="ex">
-              <div class="ex-top"><span class="ex-num">11</span><span class="ex-tag lv-dificil">Desafio</span></div>
-              <div class="ex-stmt">Tire o parêntese e simplifique: <b>5x + 2(x + 3)</b></div>
-              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
-              <div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>Abre o parêntese: 5x + 2x + 6. Junta os x: 5x + 2x = 7x.</p><p class="final">7x + 6</p></div></div>
-            </div>
-
-          </div>
-        </section>
-
-        <div class="au-note" style="text-align:center;margin-top:16px">Material de estudo · Profª Vanessa · CED São Bartolomeu</div>
-
-      </div>
-    </div>
-  </div>
+<aside class="sidebar" id="sidebar"></aside>
+<div class="main">
+<div class="topbar">
+<div class="topbar-left">
+<div class="topbar-title">📚 Material de Aula</div>
+<div class="topbar-sub">Conteúdo e exercícios para revisar</div>
+</div>
+</div>
+<div class="content">
+<div class="au">
+<header class="au-hero">
+<div class="au-hero-eyebrow">Matemática · 8º ano · 3º bimestre</div>
+<h1 class="au-hero-title">Simplificação — Lista</h1>
+<div class="au-hero-meta">
+<span class="au-meta gold">Exercícios</span>
+<span class="au-meta">Turmas 8D–8H</span>
+<span class="au-meta">11 questões</span>
+</div>
+</header>
+<section class="au-sec" id="exercicios">
+<div class="au-sec-head">
+<span class="au-sec-num">✏️</span>
+<span class="au-sec-title">Exercícios</span>
+<span class="au-sec-tag tag-pratica">Pratique</span>
+</div>
+<p class="au-p" style="margin-bottom:16px">Simplifique cada expressão no caderno. Depois clique em <b>“Ver resposta”</b> para conferir.</p>
+<div class="ex-list">
+<div class="ex">
+<div class="ex-top"><span class="ex-num">1</span><span class="ex-tag lv-medio">Simplifique</span></div>
+<div class="ex-stmt"><b>a)</b> 10x - 9y + x - 5</div>
 </div>
 
+<div class="ex">
+<div class="ex-top"><span class="ex-num">2</span><span class="ex-tag lv-medio">Simplifique</span></div>
+<div class="ex-stmt"><b>b)</b> 5ab² + 2a²b + 7 + 2a²b - 3</div>
+</div>
+
+<div class="ex">
+<div class="ex-top"><span class="ex-num">3</span><span class="ex-tag lv-medio">Simplifique</span></div>
+<div class="ex-stmt"><b>c)</b> 12xy - xy - xy + 7</div>
+</div>
+
+<div class="ex">
+<div class="ex-top"><span class="ex-num">4</span><span class="ex-tag lv-medio">Simplifique</span></div>
+<div class="ex-stmt"><b>d)</b> 3x - 7x + 4y - 5</div>
+</div>
+
+<div class="ex">
+<div class="ex-top"><span class="ex-num">5</span><span class="ex-tag lv-medio">Simplifique</span></div>
+<div class="ex-stmt"><b>e)</b> 2ax² + 2a²x + 15 - a²x</div>
+</div>
+
+<div class="ex">
+<div class="ex-top"><span class="ex-num">6</span><span class="ex-tag lv-medio">Simplifique</span></div>
+<div class="ex-stmt"><b>f)</b> 15xy - 10x - 5y - 15xy</div>
+</div>
+</div>
+</section>
+<div class="au-note" style="text-align:center;margin-top:16px">Material de estudo · Profª Vanessa · CED São Bartolomeu</div>
+</div>
+</div>
+</div>
+</div>
 <script>
   function toggleResp(btn){
     const ans = btn.nextElementSibling;

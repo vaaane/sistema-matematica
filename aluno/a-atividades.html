@@ -128,6 +128,9 @@
     .ac-dupla-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(0,212,255,0.12);border:1px solid rgba(0,212,255,0.35);border-radius:10px;padding:7px 12px;font-size:13px;font-weight:600;color:#00d4ff;margin-top:8px;}
     .ac-dupla-remove{background:none;border:none;color:rgba(0,212,255,.6);cursor:pointer;font-size:15px;line-height:1;padding:0 0 0 4px;}
     .ac-dupla-erro{font-size:12px;color:#ff4444;margin-top:4px;display:none;}
+  .bim-tabs{display:flex;gap:5px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:3px}
+  .bim-tab{padding:6px 12px;border-radius:7px;font-size:12px;font-weight:700;color:var(--text-muted,#8a8aa8);cursor:pointer;border:none;background:transparent;font-family:'Inter',sans-serif}
+  .bim-tab.active{background:#7c5cfc;color:#fff}
   </style>
 </head>
 <body>
@@ -140,6 +143,7 @@
         <div class="topbar-sub" id="topbar-sub"></div>
       </div>
       <div class="topbar-right">
+        <div class="bim-tabs" id="bimTabs"></div>
         <div class="avatar-wrap" onclick="window.location.href='/aluno/perfil.html'">
           <div class="avatar" id="topbar-avatar-circle" style="overflow:hidden;padding:0"></div>
         </div>
@@ -151,7 +155,7 @@
   </div>
 </div>
 <script type="module">
-import { LISTA_ATIVIDADES, MAX_TENTATIVAS_ATIVIDADE, ALUNOS_POR_TURMA } from "/js/constants.js";
+import { LISTA_ATIVIDADES, MAX_TENTATIVAS_ATIVIDADE, ALUNOS_POR_TURMA, bimestreAtual } from "/js/constants.js";
 import { contarTentativas, getLiberadasParaTurma, getAlunoPreferencia, getResultados, getSenhaAluno } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, hashSenha, lerDuplaAtiva, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
@@ -162,6 +166,19 @@ import { ref, get, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/fi
 const sess = requireAluno();
 if (!sess) throw new Error();
 renderSidebarAluno("sidebar", "atividades");
+
+// ── Bimestre ativo (via ?bim=N, padrão o corrente) e lista filtrada ──
+const _pbim = parseInt(new URLSearchParams(location.search).get('bim'), 10);
+const bimAtivo = (_pbim >= 1 && _pbim <= 4) ? _pbim : bimestreAtual();
+const ATIVS_BIM = LISTA_ATIVIDADES.filter(a => (a.bim || 2) === bimAtivo);
+(function(){
+  const el = document.getElementById('bimTabs');
+  if (!el) return;
+  el.innerHTML = [1,2,3,4].map(b => `<button class="bim-tab ${b===bimAtivo?'active':''}" data-b="${b}">${b}º</button>`).join('');
+  el.querySelectorAll('.bim-tab').forEach(bt => bt.onclick = () => {
+    const u = new URL(location.href); u.searchParams.set('bim', bt.dataset.b); location.href = u.toString();
+  });
+})();
 injetarFaixaDuelo();
 window.sair = () => { import('/js/presenca.js').then(m => m.encerrarPresenca()); clearSession(); window.location.href = "/index.html"; };
 applyTopRankVisuals();
@@ -172,7 +189,7 @@ initAvBanner(turma, alunos[0]);
 getAlunoPreferencia(turma, alunos[0], 'robotica').then(isRob => {
   localStorage.setItem('sm_pref_robotica', isRob ? '1' : '0');
 }).catch(() => {});
-document.getElementById("topbar-sub").textContent = `Turma ${turma}`;
+document.getElementById("topbar-sub").textContent = `Turma ${turma} · ${bimAtivo}º bimestre`;
 (async () => { try {
   const { getPerfil } = await import('/js/db.js');
   const { avatarUrl: _avUrl, avatarConfigDefault: _avDef } = await import('/js/gamificacao.js');
@@ -223,13 +240,13 @@ const loadTimeout = setTimeout(() => {
 }, 6000);
 
 const liberadas = isModoTeste()
-  ? LISTA_ATIVIDADES.map(a => ({ atividade: a.nome, modo: a.modo || 'classico', percentual: 100, status: 'ativa', criadoEm: null }))
+  ? ATIVS_BIM.map(a => ({ atividade: a.nome, modo: a.modo || 'classico', percentual: 100, status: 'ativa', criadoEm: null }))
   : await getLiberadasParaTurma(turma);
 const liberadasMap = {};
 for (const lib of liberadas) liberadasMap[lib.atividade] = lib;
 
 // Identify classic (attempt-limited) activities
-const classicAtivs = LISTA_ATIVIDADES.filter(ativ => {
+const classicAtivs = ATIVS_BIM.filter(ativ => {
   const _lib = liberadasMap[ativ.nome];
   const _modo = _lib?.modo || ativ.modo || 'classico';
   return _modo !== "competicao" && _modo !== "competicao_plus" && _modo !== "avaliacao_plus" && _modo !== "atividade_plus";
@@ -238,7 +255,7 @@ const classicAtivs = LISTA_ATIVIDADES.filter(ativ => {
 const bloqueios = {};
 
 // Mark competition activities immediately (no limits)
-for (const ativ of LISTA_ATIVIDADES) {
+for (const ativ of ATIVS_BIM) {
   if (!classicAtivs.includes(ativ)) {
     const _m = liberadasMap[ativ.nome]?.modo || ativ.modo || 'classico';
     bloqueios[ativ.nome] = { bloqueado: false, bloqueadoPor: [], minRest: 999, tentativas: {}, competicao: true, avaliacao: _m === 'avaliacao_plus' };
@@ -270,7 +287,7 @@ function avKey(s) {
   return btoa(unescape(encodeURIComponent(s))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
 }
 const controleAv = {};
-const avPlusAtivs = LISTA_ATIVIDADES.filter(a => {
+const avPlusAtivs = ATIVS_BIM.filter(a => {
   const _m = liberadasMap[a.nome]?.modo || a.modo || 'classico';
   return _m === 'avaliacao_plus' && !!liberadasMap[a.nome];
 });
@@ -341,7 +358,7 @@ const tornAviso = torneiosAtivos.length ? `
   </div>` : '';
 
 // ── Banner da atividade liberada ──────────────────────────────
-const liberadaParaBanner = LISTA_ATIVIDADES.find(ativ => {
+const liberadaParaBanner = ATIVS_BIM.find(ativ => {
   const lib = liberadasMap[ativ.nome];
   if (!lib || lib.status === 'encerrada') return false;
   const bloq = bloqueios[ativ.nome];
@@ -394,7 +411,7 @@ const bannerHtml = liberadaParaBanner ? (() => {
 })() : '';
 
 // ── Cards de atividades ───────────────────────────────────────
-const cardsHtml = LISTA_ATIVIDADES.map(ativ => {
+const cardsHtml = ATIVS_BIM.map(ativ => {
   const lib         = liberadasMap[ativ.nome];
   const isLib       = !!lib;
   const isEncerrada = lib?.status === 'encerrada';
@@ -464,7 +481,7 @@ content.innerHTML = `
   ${bannerHtml}
   ${tornAviso}
   <div class="ac-section-title">Todas as atividades</div>
-  <div class="ac-atividades-lista">${cardsHtml}</div>`;
+  <div class="ac-atividades-lista">${cardsHtml || '<div class="card" style="text-align:center;padding:30px;color:var(--text-muted)">Nenhuma atividade no '+bimAtivo+'º bimestre por enquanto.</div>'}</div>`;
 
 // Restaurar badge de dupla se já estava ativa
 (function() {

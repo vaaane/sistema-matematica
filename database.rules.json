@@ -23,6 +23,10 @@
     "tabuada_negativos_niveis":{ ".read": true, ".write": true },
     "prof_neg_niveis":         { ".read": true, ".write": true },
     "prof_neg_notas":          { ".read": true, ".write": true },
+    "tabuada_niveis_b":            { ".read": true, ".write": true },
+    "tabuada_ranking_b":           { ".read": true, ".write": true },
+    "tabuada_sprint_ranking_b":    { ".read": true, ".write": true },
+    "tabuada_negativos_niveis_b":  { ".read": true, ".write": true },
 
     "liberacoes_ativas":    { ".read": true, ".write": true },
     "liberacoes_historico": { ".read": true, ".write": true, ".indexOn": ["criadoEm"] },
@@ -63,8 +67,10 @@
 
     "vistos":          { ".read": true, ".write": true },
     "aulas":           { ".read": true, ".write": true },
+    "chamada":         { ".read": true, ".write": true },
     "biblioteca":      { ".read": true, ".write": true },
     "calendario":      { ".read": true, ".write": true },
+    "tabuada_sprint_ranking": { ".read": true, ".write": true },
 
     "$outro": {
       ".read": false,

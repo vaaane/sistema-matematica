@@ -282,6 +282,9 @@
       background:rgba(255,255,255,.05); color:var(--g-muted);
       border:1px solid var(--g-bdr); letter-spacing:.4px;
     }
+    .bim-tabs{display:flex;gap:5px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:3px}
+    .bim-tab{padding:6px 12px;border-radius:7px;font-size:12px;font-weight:700;color:var(--g-muted,#8a8aa8);cursor:pointer;border:none;background:transparent;font-family:'Inter',sans-serif}
+    .bim-tab.active{background:var(--g-purple,#7c5cfc);color:#fff}
   </style>
 </head>
 <body>
@@ -294,6 +297,7 @@
         <div class="topbar-sub">Mini-jogos educativos</div>
       </div>
       <div class="topbar-right">
+        <div class="bim-tabs" id="bimTabs"></div>
         <div class="avatar-wrap" onclick="window.location.href='/aluno/perfil.html'">
           <div class="avatar" id="topbar-avatar-circle" style="overflow:hidden;padding:0"></div>
         </div>
@@ -305,6 +309,10 @@
       <div class="jogos-hub" style="margin-bottom:20px">
 
         <!-- Tabuada (destaque) -->
+        <div id="bimAviso" style="display:none;align-items:center;gap:10px;background:rgba(240,165,0,.12);border:1px solid rgba(240,165,0,.4);color:#f0c060;border-radius:12px;padding:12px 16px;margin-bottom:14px;font-size:13px;font-weight:600">
+          <span style="font-size:18px">⚠️</span>
+          <span>Você está no <b data-bim>—</b> bimestre. O progresso aqui <b>não afeta a nota do bimestre atual</b> — é só pra praticar.</span>
+        </div>
         <div class="jh-card disponivel destaque" onclick="void(0)">
           <div class="jh-acento jh-ac-tab"></div>
           <div class="jh-body">
@@ -325,7 +333,7 @@
               </div>
             </div>
             <div class="jh-btns">
-              <button class="jh-btn-play" onclick="window.location.href='/aluno/tabuada.html'">▶ Jogar agora</button>
+              <button class="jh-btn-play" onclick="irJogar('tabuada')">▶ Jogar agora</button>
               <button class="jh-btn-ver" id="jh-btn-ver-tab" onclick="
                 const d=document.getElementById('tabuada-detalhes');
                 const btn=document.getElementById('jh-btn-ver-tab');
@@ -348,7 +356,7 @@
               </div>
             </div>
             <div class="jh-btns">
-              <button class="jh-btn-play" onclick="window.location.href='/aluno/tabuada_negativos.html'">▶ Jogar agora</button>
+              <button class="jh-btn-play" onclick="irJogar('tabuada_negativos')">▶ Jogar agora</button>
             </div>
           </div>
         </div>
@@ -387,12 +395,28 @@
 import { requireAluno, renderSidebarAluno, clearSession, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { NIVEL_MAX } from "/js/constants.js";
+import { NIVEL_MAX, bimestreAtual } from "/js/constants.js";
 import { getLiberadasParaTurma, somarPartidasTabuadaTotal } from "/js/db.js";
 
 const sess = requireAluno("/index.html");
 if (!sess) throw new Error("não autenticado");
 renderSidebarAluno("sidebar", "jogos");
+const _bimSel = (n => (n>=1&&n<=4)?n:bimestreAtual())(parseInt(new URLSearchParams(location.search).get('bim'),10));
+window.irJogar = (jogo) => { location.href = `/aluno/${jogo}.html?bim=${_bimSel}`; };
+(function(){
+  const el = document.getElementById('bimTabs');
+  if (el) {
+    el.innerHTML = [1,2,3,4].map(b => `<button class="bim-tab ${b===_bimSel?'active':''}" data-b="${b}">${b}º</button>`).join('');
+    el.querySelectorAll('.bim-tab').forEach(bt => bt.onclick = () => {
+      const u = new URL(location.href); u.searchParams.set('bim', bt.dataset.b); location.href = u.toString();
+    });
+  }
+  const av = document.getElementById('bimAviso');
+  if (av && _bimSel !== bimestreAtual()) {
+    av.style.display = 'flex';
+    const b = av.querySelector('[data-bim]'); if (b) b.textContent = _bimSel + 'º';
+  }
+})();
 injetarFaixaDuelo();
 window.sair = () => { import('/js/presenca.js').then(m => m.encerrarPresenca()); clearSession(); window.location.href = "/index.html"; };
 
@@ -524,7 +548,7 @@ const ontemISO = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
 let niveisSnap, rankSnap, sessoesSnap, allNiveisSnap;
 try {
   [niveisSnap, rankSnap, sessoesSnap, allNiveisSnap] = await Promise.all([
-    get(ref(db, `tabuada_niveis/${uid}`)).catch(e => { console.error('[jogos] tabuada_niveis:', e); return null; }),
+    get(ref(db, _bimSel <= 2 ? `tabuada_niveis/${uid}` : `tabuada_niveis_b/${_bimSel}/${uid}`)).catch(e => { console.error('[jogos] tabuada_niveis:', e); return null; }),
     get(ref(db, 'tabuada_ranking')).catch(e => { console.error('[jogos] tabuada_ranking:', e); return null; }),
     get(ref(db, 'tabuada_sessoes')).catch(e => { console.error('[jogos] tabuada_sessoes:', e); return null; }),
     get(ref(db, 'tabuada_niveis')).catch(() => null),
@@ -1041,13 +1065,13 @@ window.gSetMode = function(mode) {
 
 window.gPlay = function() {
   if (_avStatus?.ativa) return;
-  window.location.href = '/aluno/tabuada.html';
+  window.location.href = `/aluno/tabuada.html?bim=${_bimSel}`;
 };
 
 window.jogarNivel = function(lv) {
   window.location.href = lv === nivelAtual
-    ? '/aluno/tabuada.html'
-    : `/aluno/tabuada.html?nivel=${lv}`;
+    ? `/aluno/tabuada.html?bim=${_bimSel}`
+    : `/aluno/tabuada.html?bim=${_bimSel}&nivel=${lv}`;
 };
 
 

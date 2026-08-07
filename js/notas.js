@@ -133,12 +133,15 @@ export async function buscarAtiv4(turma, alunos) {
 export async function buscarProgressoTabuada(turma, nome) {
   const uid = makeUid(turma, nome);
   let melhorTabuada = 0, melhorNeg = 0;
+  // bim <=2 usa os nós atuais; bim >=3 usa os paralelos (começam do zero)
+  const tPath = (+BIMESTRE <= 2) ? `tabuada_niveis/${uid}`            : `tabuada_niveis_b/${BIMESTRE}/${uid}`;
+  const nPath = (+BIMESTRE <= 2) ? `tabuada_negativos_niveis/${uid}`  : `tabuada_negativos_niveis_b/${BIMESTRE}/${uid}`;
   try {
-    const s = await get(ref(db, `tabuada_niveis/${uid}/melhor_nivel`));
+    const s = await get(ref(db, `${tPath}/melhor_nivel`));
     if (s.exists()) melhorTabuada = s.val();
   } catch (e) {}
   try {
-    const s = await get(ref(db, `tabuada_negativos_niveis/${uid}/melhor_nivel`));
+    const s = await get(ref(db, `${nPath}/melhor_nivel`));
     if (s.exists()) melhorNeg = s.val();
   } catch (e) {}
   return { melhorTabuada, melhorNeg };

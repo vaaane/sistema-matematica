@@ -328,7 +328,7 @@
 
 <script type="module">
 import { getSession, renderSidebarAluno, renderSidebarProfessor, clearSession, isModoTeste, iniciarNotifDueloGlobal } from "/js/auth.js";
-import { NIVEL_MAX } from "/js/constants.js";
+import { NIVEL_MAX, bimestreAtual } from "/js/constants.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -355,6 +355,10 @@ let parceiroDupla = isDupla ? alunos[1] : null;
 
 function _makeUid(nome) { return (turma + '_' + nome).replace(/[.#$\[\]/\s]/g, '_'); }
 let uid = _isProfMode ? _profUid : _makeUid(nomeAluno);
+const _bimJogo = (n => (n>=1&&n<=4)?n:bimestreAtual())(parseInt(new URLSearchParams(location.search).get('bim'),10));
+const _tabNiveisPath = _bimJogo <= 2 ? `tabuada_niveis/${uid}`         : `tabuada_niveis_b/${_bimJogo}/${uid}`;
+const _tabRankPath   = _bimJogo <= 2 ? `tabuada_ranking/${uid}`        : `tabuada_ranking_b/${_bimJogo}/${uid}`;
+const _tabSprintPath = _bimJogo <= 2 ? `tabuada_sprint_ranking/${uid}` : `tabuada_sprint_ranking_b/${_bimJogo}/${uid}`;
 
 if (!_isProfMode) (async () => { try {
   const { getPerfil } = await import('/js/db.js');
@@ -386,9 +390,9 @@ if (!_isProfMode) iniciarNotifDueloGlobal();
 } catch(e) {} })();
 
 // ── Firebase ──────────────────────────────────────────────────
-let niveisRef     = ref(db, _isProfMode ? `professor_tabuada_niveis/${uid}` : _isModoTesteAtivo ? `modo_teste_historico/PROFESSOR_TESTE/tabuada_niveis` : `tabuada_niveis/${uid}`);
-let rankingRef    = (_isProfMode || _isModoTesteAtivo) ? null : ref(db, `tabuada_ranking/${uid}`);
-let sprintRankRef = (_isProfMode || _isModoTesteAtivo) ? null : ref(db, `tabuada_sprint_ranking/${uid}`);
+let niveisRef     = ref(db, _isProfMode ? `professor_tabuada_niveis/${uid}` : _isModoTesteAtivo ? `modo_teste_historico/PROFESSOR_TESTE/tabuada_niveis` : _tabNiveisPath);
+let rankingRef    = (_isProfMode || _isModoTesteAtivo) ? null : ref(db, _tabRankPath);
+let sprintRankRef = (_isProfMode || _isModoTesteAtivo) ? null : ref(db, _tabSprintPath);
 
 // Configurações globais do jogo (lidas do Firebase, aplicadas em getLevelConfig)
 let tabuadaConfig = { tempo_base: 40, dificuldade_multiplicador: 5 };
@@ -455,7 +459,7 @@ async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo
       if (segsRestantes !== null) entry.segundos_restantes = segsRestantes;
       const t = { ...tipoAcertos };
       if (t.add || t.sub || t.mul || t.div) entry.tipos_acertos = t;
-      const _niveisBase = _isProfMode ? `professor_tabuada_niveis/${uid}` : _isModoTesteAtivo ? `modo_teste_historico/PROFESSOR_TESTE/tabuada_niveis` : `tabuada_niveis/${uid}`;
+      const _niveisBase = _isProfMode ? `professor_tabuada_niveis/${uid}` : _isModoTesteAtivo ? `modo_teste_historico/PROFESSOR_TESTE/tabuada_niveis` : _tabNiveisPath;
       await set(ref(db, `${_niveisBase}/historico/${ts}`), entry);
     }
   } catch(e) { console.warn('[Tabuada] Erro ao salvar:', e); }
@@ -773,9 +777,10 @@ function _registrarSessao(nivel, resultado, acertosOverride, errosOverride) {
 // ── Seleção de jogador em dupla ───────────────────────────────
 if (isDupla) {
   const uid2 = _makeUid(alunos[1]);
+  const _tabNiveisPath2 = _bimJogo <= 2 ? `tabuada_niveis/${uid2}` : `tabuada_niveis_b/${_bimJogo}/${uid2}`;
   const [snap1, snap2] = await Promise.all([
-    get(ref(db, `tabuada_niveis/${uid}`)).catch(() => null),
-    get(ref(db, `tabuada_niveis/${uid2}`)).catch(() => null),
+    get(ref(db, _tabNiveisPath)).catch(() => null),
+    get(ref(db, _tabNiveisPath2)).catch(() => null),
   ]);
   const nivel1 = snap1?.exists() ? (snap1.val().nivel_atual || 1) : 1;
   const nivel2 = snap2?.exists() ? (snap2.val().nivel_atual || 1) : 1;
@@ -802,9 +807,9 @@ if (isDupla) {
 
   parceiroDupla = alunos.find(a => a !== nomeAluno);
   uid           = _makeUid(nomeAluno);
-  niveisRef     = ref(db, `tabuada_niveis/${uid}`);
-  rankingRef    = ref(db, `tabuada_ranking/${uid}`);
-  sprintRankRef = ref(db, `tabuada_sprint_ranking/${uid}`);
+  niveisRef     = ref(db, _bimJogo <= 2 ? `tabuada_niveis/${uid}`         : `tabuada_niveis_b/${_bimJogo}/${uid}`);
+  rankingRef    = ref(db, _bimJogo <= 2 ? `tabuada_ranking/${uid}`        : `tabuada_ranking_b/${_bimJogo}/${uid}`);
+  sprintRankRef = ref(db, _bimJogo <= 2 ? `tabuada_sprint_ranking/${uid}` : `tabuada_sprint_ranking_b/${_bimJogo}/${uid}`);
   document.getElementById("avatar-initials").textContent = nomeAluno[0].toUpperCase();
 }
 
@@ -1717,7 +1722,7 @@ async function _checarMaestria(nivelAlvo, errosPartidaAtual) {
       ? `professor_tabuada_niveis/${uid}`
       : _isModoTesteAtivo
         ? `modo_teste_historico/PROFESSOR_TESTE/tabuada_niveis`
-        : `tabuada_niveis/${uid}`;
+        : _tabNiveisPath;
     const snap = await get(ref(db, `${_niveisBase}/historico`));
     if (!snap.exists()) {
       // historico vazio: se esta é a 1ª partida e foi perfeita, consec=1 (longe de 3)

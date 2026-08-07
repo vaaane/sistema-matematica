@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Frequência da Turma — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+<style>
+  :root{
+    --green:#4ade80; --green-pale:rgba(74,222,128,.13);
+    --red:#ff6b6b; --red-pale:rgba(255,107,107,.14);
+  }
+  select.sel-turma{padding:9px 14px;border-radius:9px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+  select.sel-turma option{color:var(--text);background:var(--card)}
+  .bim-tabs{display:flex;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:11px;padding:4px;flex-wrap:wrap}
+  .bim-tab{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:700;color:var(--text-muted);cursor:pointer;border:none;background:transparent;font-family:'Inter',sans-serif}
+  .bim-tab.active{background:var(--purple);color:#fff;box-shadow:0 2px 8px rgba(108,0,212,.4)}
+
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+  .stat{background:var(--card2,#141428);border:1px solid var(--border);border-radius:11px;padding:12px 14px}
+  .stat-l{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+  .stat-v{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;margin-top:4px}
+  .stat-v.purple{color:var(--purple)} .stat-v.gold{color:var(--gold)} .stat-v.green{color:var(--green)}
+
+  .legenda{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;color:var(--text-muted);align-items:center}
+  .lg{display:flex;align-items:center;gap:6px}
+  .cell-demo{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px}
+  .cell-demo.p{background:var(--green-pale);color:var(--green)}
+  .cell-demo.f{background:var(--red-pale);color:var(--red)}
+
+  .tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:auto}
+  table.freq{border-collapse:collapse;width:100%;min-width:640px}
+  table.freq th,table.freq td{padding:0;text-align:center}
+  table.freq thead th{background:var(--card2,#141428);border-bottom:1px solid var(--border);padding:8px 4px;position:sticky;top:0;z-index:2}
+  .col-aluno{position:sticky;left:0;z-index:3;background:var(--card2,#141428);text-align:left;padding:8px 12px;min-width:150px}
+  table.freq thead .col-aluno{z-index:4}
+  .th-aula{min-width:58px;cursor:default}
+  .th-num{font-family:'Orbitron',monospace;font-size:10px;color:var(--purple);font-weight:700}
+  .th-data{font-size:10px;color:var(--text-muted);margin-top:2px}
+  .th-pd1{font-size:8px;color:#8ee6b6;background:rgba(90,190,140,.16);border-radius:4px;padding:0 4px;display:inline-block;margin-top:2px}
+
+  table.freq tbody tr{border-bottom:1px solid rgba(255,255,255,.04)}
+  table.freq tbody tr:hover td{background:rgba(255,255,255,.02)}
+  table.freq tbody .col-aluno{background:var(--card);font-size:13px;font-weight:500;border-right:1px solid var(--border)}
+  table.freq tbody tr:hover .col-aluno{background:#1e1e34}
+  .al-n{font-family:'Orbitron',monospace;font-size:10px;color:var(--text-muted);margin-right:8px}
+  .cell{width:58px;height:38px}
+  .mk{display:inline-flex;width:24px;height:24px;border-radius:6px;align-items:center;justify-content:center;font-weight:800;font-size:12px;cursor:pointer;transition:transform .08s}
+  .mk:hover{transform:scale(1.15);filter:brightness(1.1)}
+  .mk.p{background:var(--green-pale);color:var(--green)}
+  .mk.f{background:var(--red-pale);color:var(--red)}
+  .col-tot{position:sticky;right:0;background:var(--card2,#141428);border-left:1px solid var(--border);min-width:64px}
+  .tot-v{font-family:'Orbitron',monospace;font-weight:700;font-size:15px}
+  .tot-v.zero{color:var(--text-muted)} .tot-v.some{color:var(--gold)} .tot-v.high{color:var(--red)}
+  .tot-sub{font-size:9px;color:var(--text-muted)}
+
+  table.freq tfoot td{border-top:1px solid var(--border);background:var(--card2,#141428);padding:7px 4px;font-size:11px}
+  table.freq tfoot .col-aluno{background:var(--card2,#141428);font-weight:700;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+  .foot-f{font-family:'Orbitron',monospace;font-weight:700;font-size:12px;color:var(--red)}
+  .foot-f.zero{color:var(--text-muted)}
+
+  .freq-rodape{margin-top:10px;font-size:12px;color:var(--text-muted)}
+  .freq-rodape b{color:var(--text)}
+  .vazio{padding:40px 20px;text-align:center;color:var(--text-muted)}
+  @media print{.sidebar,.topbar{display:none!important}.main{margin:0!important}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">📋 Frequência da Turma</div>
+        <div class="topbar-sub" id="topbar-sub">Carregando…</div>
+      </div>
+      <div class="topbar-right">
+        <select class="sel-turma" id="turmaSel"></select>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="card" style="padding:14px 20px;margin-bottom:16px">
+        <div class="card-header" style="margin-bottom:0">
+          <div class="bim-tabs" id="bimTabs"></div>
+          <button class="btn btn-ghost" id="btnExportar">⬇️ Exportar CSV</button>
+        </div>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div class="legenda">
+        <div class="lg"><span class="cell-demo p">P</span> Presente</div>
+        <div class="lg"><span class="cell-demo f">F</span> Falta</div>
+        <div class="lg">Coluna = um dia · clique numa célula para alternar · última coluna = total de faltas</div>
+      </div>
+      <div class="tbl-wrap"><table class="freq" id="tbl"></table></div>
+      <div class="freq-rodape" id="rodape"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { ALUNOS_POR_TURMA, numeroChamada } from "/js/constants.js";
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+requireProfessor();
+renderSidebarProfessor("sidebar", "frequencia");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const TURMAS = Object.keys(ALUNOS_POR_TURMA);
+let turma = TURMAS.includes("8F") ? "8F" : TURMAS[0];
+let bimestre = 3;
+
+let dias = [];       // [{data, pd1}] — um por DIA que teve aula
+let chamada = {};    // { "YYYY-MM-DD": { aluno: true(falta) } }
+
+const fmtData = iso => { if(!iso) return ""; const [,m,d]=iso.split("-"); return `${d}/${m}`; };
+const diaSemana = iso => { try{ return ["dom","seg","ter","qua","qui","sex","sáb"][new Date(iso+"T12:00:00").getDay()]; }catch(e){ return ""; } };
+const faltou = (data, aluno) => !!(chamada[data] && chamada[data][aluno]);
+
+async function carregar(){
+  document.getElementById("topbar-sub").textContent = `Turma ${turma} · ${bimestre}º bimestre`;
+  document.getElementById("tbl").innerHTML = `<tbody><tr><td class="vazio">Carregando…</td></tr></tbody>`;
+  try{
+    const [snapA, snapC] = await Promise.all([
+      get(ref(db, `aulas/${turma}/${bimestre}`)),
+      get(ref(db, `chamada/${turma}/${bimestre}`)),
+    ]);
+    const porData = {};
+    if (snapA.exists()) {
+      for (const a of Object.values(snapA.val())) {
+        if (!a || !a.data) continue;
+        const d = (porData[a.data] ||= { data:a.data, pd1:false });
+        if (a.pd1) d.pd1 = true;
+      }
+    }
+    dias = Object.values(porData).sort((x,y)=> x.data<y.data ? -1 : 1);
+    chamada = {};
+    if (snapC.exists()) {
+      for (const [k,v] of Object.entries(snapC.val())) {
+        if (/^\d{4}-\d{2}-\d{2}$/.test(k)) chamada[k] = v || {};
+      }
+    }
+  }catch(e){ console.error(e); dias=[]; chamada={}; }
+  render();
+}
+
+async function toggleFalta(data, aluno){
+  chamada[data] = chamada[data] || {};
+  const virarFalta = !chamada[data][aluno];
+  if (virarFalta) chamada[data][aluno] = true; else delete chamada[data][aluno];
+  try{ await set(ref(db, `chamada/${turma}/${bimestre}/${data}/${aluno}`), virarFalta ? true : null); }
+  catch(e){ console.error(e); }
+  render();
+}
+
+function render(){
+  const alunos = ALUNOS_POR_TURMA[turma] || [];
+  renderTabsBim();
+
+  if(!dias.length){
+    document.getElementById("stats").innerHTML = "";
+    document.getElementById("tbl").innerHTML = `<tbody><tr><td class="vazio">Nenhuma aula lançada no ${bimestre}º bimestre da turma ${turma}.<br>As colunas (dias) aparecem quando houver aulas no Diário.</td></tr></tbody>`;
+    document.getElementById("rodape").innerHTML = "";
+    return;
+  }
+
+  const nDias = dias.length, nAlunos = alunos.length;
+  const faltasDe = al => dias.filter(d=>faltou(d.data, al)).length;
+  const totalFaltas = alunos.reduce((s,al)=>s+faltasDe(al),0);
+  const mediaPres = nDias*nAlunos ? Math.round((1 - totalFaltas/(nDias*nAlunos))*100) : 100;
+
+  document.getElementById("stats").innerHTML = `
+    <div class="stat"><div class="stat-l">Alunos</div><div class="stat-v purple">${nAlunos}</div></div>
+    <div class="stat"><div class="stat-l">Dias com aula</div><div class="stat-v purple">${nDias}</div></div>
+    <div class="stat"><div class="stat-l">Presença média</div><div class="stat-v green">${mediaPres}%</div></div>
+    <div class="stat"><div class="stat-l">Total de faltas</div><div class="stat-v gold">${totalFaltas}</div></div>`;
+
+  const head = `<thead><tr>
+    <th class="col-aluno">Aluno</th>
+    ${dias.map(d=>`<th class="th-aula"><div class="th-num">${diaSemana(d.data)}</div><div class="th-data">${fmtData(d.data)}</div>${d.pd1?`<div class="th-pd1">PD1</div>`:""}</th>`).join("")}
+    <th class="col-tot">Faltas</th>
+  </tr></thead>`;
+
+  const body = `<tbody>${alunos.map((al)=>{
+    const cells = dias.map(d=>{
+      const f = faltou(d.data, al);
+      return `<td class="cell"><span class="mk ${f?"f":"p"}" data-d="${d.data}" data-al="${al.replace(/"/g,'&quot;')}" title="clique para alternar">${f?"F":"P"}</span></td>`;
+    }).join("");
+    const nf = faltasDe(al);
+    const cls = nf===0?"zero":nf>=3?"high":"some";
+    return `<tr>
+      <td class="col-aluno"><span class="al-n">${(n=>n?String(n).padStart(2,"0"):"—")(numeroChamada(turma,al))}</span>${al}</td>
+      ${cells}
+      <td class="col-tot"><div class="tot-v ${cls}">${nf}</div><div class="tot-sub">de ${nDias}</div></td>
+    </tr>`;
+  }).join("")}</tbody>`;
+
+  const foot = `<tfoot><tr>
+    <td class="col-aluno">Faltas no dia</td>
+    ${dias.map(d=>{
+      const f = alunos.filter(al=>faltou(d.data, al)).length;
+      return `<td><span class="foot-f ${f===0?"zero":""}">${f}</span></td>`;
+    }).join("")}
+    <td class="col-tot"><span class="foot-f">${totalFaltas}</span></td>
+  </tr></tfoot>`;
+
+  const tbl = document.getElementById("tbl");
+  tbl.innerHTML = head + body + foot;
+  tbl.querySelectorAll(".mk[data-d]").forEach(el => el.onclick = () => toggleFalta(el.dataset.d, el.dataset.al));
+  document.getElementById("rodape").innerHTML = `Turma <b>${turma}</b> · ${bimestre}º bim — ${nAlunos} alunos · ${nDias} dias · <b>${totalFaltas}</b> falta(s) no total. <span style="color:var(--text-muted)">Clique numa célula para alternar presença/falta.</span>`;
+}
+
+function renderTabsBim(){
+  document.getElementById("bimTabs").innerHTML =
+    [1,2,3,4].map(b=>`<button class="bim-tab ${b===bimestre?"active":""}" data-b="${b}">${b}º Bim</button>`).join("");
+  document.querySelectorAll(".bim-tab").forEach(el=>el.onclick=()=>{ bimestre=+el.dataset.b; carregar(); });
+}
+
+function exportarCSV(){
+  const alunos = ALUNOS_POR_TURMA[turma] || [];
+  const sep = ";";
+  const esc = s => `"${String(s).replace(/"/g,'""')}"`;
+  const head = ["Nº","Aluno", ...dias.map(d=>fmtData(d.data)), "Total faltas"];
+  const linhas = [head.join(sep)];
+  alunos.forEach((al)=>{
+    const cells = dias.map(d=> faltou(d.data, al) ? "F" : "P");
+    const nf = dias.filter(d=>faltou(d.data, al)).length;
+    linhas.push([numeroChamada(turma,al)||"", esc(al), ...cells, nf].join(sep));
+  });
+  const csv = "\uFEFF" + linhas.join("\r\n");
+  const blob = new Blob([csv], { type:"text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `frequencia_${turma}_${bimestre}bim_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+
+const turmaSel = document.getElementById("turmaSel");
+turmaSel.innerHTML = TURMAS.map(t=>`<option ${t===turma?"selected":""}>${t}</option>`).join("");
+turmaSel.onchange = () => { turma = turmaSel.value; carregar(); };
+document.getElementById("btnExportar").addEventListener("click", exportarCSV);
+
+carregar();
+</script>
+</body>
+</html>
