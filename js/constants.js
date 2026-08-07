@@ -129,6 +129,36 @@ export const GRADE_TURMAS = {
   "8H": [2, 4, 5],  // ter, qui, sex
 };
 
+// ===== Horários dos tempos (para abrir na turma da aula atual) =====
+export const HORARIOS = [
+  { t:1, ini:"07:15", fim:"08:00" },
+  { t:2, ini:"08:00", fim:"08:40" },
+  { t:3, ini:"08:40", fim:"09:20" },
+  { t:4, ini:"10:00", fim:"10:45" },
+  { t:5, ini:"10:45", fim:"11:30" },
+  { t:6, ini:"11:30", fim:"12:15" },
+];
+// Grade por dia da semana (0=dom..6=sáb) → { tempo: turma }. Inclui MAT e PD1.
+export const GRADE_HORARIO = {
+  1: { 1:"8D", 3:"8G", 4:"8E", 6:"8E" },                 // segunda
+  2: { 1:"8E", 2:"8F", 3:"8F", 4:"8F", 5:"8H" },         // terça
+  3: { 1:"8G", 2:"8G", 3:"8F", 4:"8D", 6:"8G" },         // quarta
+  4: { 1:"8H", 2:"8F", 4:"8H", 5:"8G", 6:"8G" },         // quinta
+  5: { 1:"8E", 2:"8E", 3:"8D", 4:"8D", 5:"8H", 6:"8H" }, // sexta
+};
+// Turma da aula acontecendo agora; senão a próxima do dia; senão null (fim de semana / fora de horário).
+export function turmaAgora() {
+  const now = new Date();
+  const grade = GRADE_HORARIO[now.getDay()];
+  if (!grade) return null;
+  const min = now.getHours() * 60 + now.getMinutes();
+  const toMin = s => { const [h,m] = s.split(":").map(Number); return h*60 + m; };
+  const slots = HORARIOS.filter(h => grade[h.t]).map(h => ({ ini:toMin(h.ini), fim:toMin(h.fim), turma:grade[h.t] }));
+  for (const s of slots) if (min >= s.ini && min < s.fim) return s.turma;  // aula agora
+  for (const s of slots) if (min < s.ini) return s.turma;                  // próxima aula do dia
+  return null;                                                             // acabaram as aulas
+}
+
 // Dia da eletiva PD1 por turma (só sinalização; NÃO afeta a contagem de dias).
 export const PD1_TURMAS = {
   "8D": [5],  // sexta

@@ -186,7 +186,7 @@
 
 <script type="module">
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
-import { ALUNOS_POR_TURMA } from "/js/constants.js";
+import { ALUNOS_POR_TURMA, turmaAgora } from "/js/constants.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -558,7 +558,7 @@ async function excluirAnotacao(nome, ts){
 (async () => {
   try {
     const turmas = carregarTurmas();
-    if (turmas.length) { turmaSel.value = turmas[0]; await selecionarTurma(turmas[0]); }
+    if (turmas.length) { const inicial = turmaAgora() || turmas[0]; turmaSel.value = inicial; await selecionarTurma(inicial); }
     else setStatus("Nenhuma turma encontrada");
   } catch (e) {
     console.error("Falha no init:", e);

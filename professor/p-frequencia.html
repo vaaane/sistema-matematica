@@ -105,7 +105,7 @@
 </div>
 
 <script type="module">
-import { ALUNOS_POR_TURMA, numeroChamada } from "/js/constants.js";
+import { ALUNOS_POR_TURMA, numeroChamada, turmaAgora } from "/js/constants.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -115,7 +115,7 @@ renderSidebarProfessor("sidebar", "frequencia");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
 const TURMAS = Object.keys(ALUNOS_POR_TURMA);
-let turma = TURMAS.includes("8F") ? "8F" : TURMAS[0];
+let turma = turmaAgora() || (TURMAS.includes("8F") ? "8F" : TURMAS[0]);
 let bimestre = 3;
 
 let dias = [];       // [{data, pd1}] — um por DIA que teve aula
