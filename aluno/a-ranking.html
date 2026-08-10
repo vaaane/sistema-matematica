@@ -117,7 +117,7 @@
 
 
 <script type="module">
-import { LISTA_ATIVIDADES } from "/js/constants.js";
+import { LISTA_ATIVIDADES, bimestreAtual } from "/js/constants.js";
 import { getResultados, getAlunoPreferencia } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
@@ -199,9 +199,12 @@ function stdPos(lista, scoreFn) {
 
 // ── Load data ─────────────────────────────────────────────────
 const todos = (await getResultados()).filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
+const _bimRk = bimestreAtual();
+const _rkPath = _bimRk <= 2 ? 'tabuada_ranking'  : `tabuada_ranking_b/${_bimRk}`;
+const _nvPath = _bimRk <= 2 ? 'tabuada_niveis'   : `tabuada_niveis_b/${_bimRk}`;
 const [rankSnap, niveisSnap] = await Promise.all([
-  get(ref(db, 'tabuada_ranking')).catch(() => null),
-  get(ref(db, 'tabuada_niveis')).catch(() => null),
+  get(ref(db, _rkPath)).catch(() => null),
+  get(ref(db, _nvPath)).catch(() => null),
 ]);
 
 // ── Tabuada ranking ───────────────────────────────────────────

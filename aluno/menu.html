@@ -152,14 +152,15 @@
 
 
 <script type="module">
-import { LISTA_ATIVIDADES } from "/js/constants.js";
+import { LISTA_ATIVIDADES, bimestreAtual, bimestreDeData } from "/js/constants.js";
 import { getResultados, getLiberadasParaTurma, getAlunoPreferencia } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { saveRankPos, applyTopRankVisuals } from "/js/toprank.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
 import { initTopNotif } from "/js/topnotif.js";
 import { db } from "/js/firebase-config.js";
-import { montarBoletim, fmtNota } from "/js/notas.js";
+import { montarBoletim, fmtNota, setBimestre } from "/js/notas.js";
+setBimestre(String(bimestreAtual()));
 import { ref, get, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const sess = requireAluno("/index.html");
@@ -335,7 +336,7 @@ carregarCardCertificado();
 const [todosRaw, _libRaw, tabuadaSnap, torneioSnap] = await Promise.all([
   getResultados(),
   getLiberadasParaTurma(turma),
-  get(ref(db, `tabuada_niveis/${tabuadaUid}`)).catch(() => null),
+  get(ref(db, (bimestreAtual() <= 2 ? `tabuada_niveis/${tabuadaUid}` : `tabuada_niveis_b/${bimestreAtual()}/${tabuadaUid}`))).catch(() => null),
   isModoTeste() ? Promise.resolve(null) : get(ref(db, 'torneios')).catch(() => null),
 ]);
 const liberadas = isModoTeste()
@@ -343,6 +344,10 @@ const liberadas = isModoTeste()
   : _libRaw;
 const nivelTabuada = tabuadaSnap?.exists() ? (tabuadaSnap.val().melhor_nivel || tabuadaSnap.val().nivel_atual || 1) : 1;
 const todos = todosRaw.filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
+// nomes das atividades do bimestre atual (para filtrar histórico da home)
+const _ativsBimAtual = new Set(
+  LISTA_ATIVIDADES.filter(a => (a.bim || 2) === bimestreAtual()).map(a => a.nome)
+);
 
 // ── Dados extras por aluno (tabuada · duelos · treinos) p/ o Resumo ──
 const _uidDe = (nome) => (turma + '_' + nome).replace(/[.#$[\]/\s]/g, '_');
@@ -350,14 +355,14 @@ const dadosExtra = {};
 await Promise.all(alunos.map(async (nome) => {
   const u = _uidDe(nome);
   const [tabSnap, perfSnap, aqSnap] = await Promise.all([
-    get(ref(db, `tabuada_niveis/${u}`)).catch(() => null),
+    get(ref(db, (bimestreAtual() <= 2 ? `tabuada_niveis/${u}` : `tabuada_niveis_b/${bimestreAtual()}/${u}`))).catch(() => null),
     get(ref(db, `perfis/${u}`)).catch(() => null),
     get(ref(db, `aquecimento/${u}`)).catch(() => null),
   ]);
   dadosExtra[nome] = {
     nivelTab:  tabSnap?.exists() ? (tabSnap.val().melhor_nivel || tabSnap.val().nivel_atual || 1) : 1,
     duelosVit: perfSnap?.exists() ? (perfSnap.val().duelos_vitorias || 0) : 0,
-    treinos:   aqSnap?.exists()   ? Object.keys(aqSnap.val()).length : 0,
+    treinos:   aqSnap?.exists()   ? Object.keys(aqSnap.val()).filter(d => bimestreDeData(d) === bimestreAtual()).length : 0,
   };
 }));
 
@@ -410,7 +415,7 @@ function buildRankingMedia(lista) {
     return { aluno: a.aluno, turma: a.turma, total, media };
   }).sort((a, b) => b.total - a.total);
 }
-const rankAll   = buildRankingMedia(todos);
+const rankAll   = buildRankingMedia(todos.filter(r => _ativsBimAtual.has(r.atividade)));
 const rankTurma = rankAll.filter(r => r.turma === turma);
 const top3Geral = rankAll.slice(0, 9);
 saveRankPos(alunos, rankAll);
@@ -440,6 +445,7 @@ function miniSparkline(nome, atividade) {
 
 // ── Tentativas esgotadas ──────────────────────────────────────
 function tentativasEsgotadas(atividadeNome) {
+  if (!_ativsBimAtual.has(atividadeNome)) return false;
   return alunos.some(nome =>
     todos.filter(r => r.aluno === nome && r.atividade === atividadeNome).length >= 2
   );
@@ -447,7 +453,7 @@ function tentativasEsgotadas(atividadeNome) {
 
 // ── Resumo por aluno ──────────────────────────────────────────
 function resumoAluno(nome) {
-  const regs = todos.filter(r => r.aluno === nome && r.concluido);
+  const regs = todos.filter(r => r.aluno === nome && r.concluido && _ativsBimAtual.has(r.atividade));
   const regsComp = regs.filter(r => r.atividade !== 'Atividade 4 - Geometria');
   const melhor = {};
   regsComp.forEach(r => {
@@ -473,7 +479,7 @@ const _mediaTurmaProps = rankTurma.map(r => notaProp(r.aluno)).filter(v => v !==
 const mediaTurma = _mediaTurmaProps.length > 0 ? _mediaTurmaProps.reduce((s,v)=>s+v,0)/_mediaTurmaProps.length : null;
 
 function ultimasAtividades(nome) {
-  const all = todos.filter(r => r.aluno === nome && r.concluido && r.atividade !== 'Atividade 4 - Geometria');
+  const all = todos.filter(r => r.aluno === nome && r.concluido && r.atividade !== 'Atividade 4 - Geometria' && _ativsBimAtual.has(r.atividade));
   const bestByAtiv = {};
   for (const r of all) {
     const pts = r.pontuacao_bruta || r.pontuacao || 0;
@@ -673,7 +679,7 @@ function getModoEfetivo(r) {
 }
 
 function renderHistSessoes(nome, filtroAtiv) {
-  const all = todos.filter(r => r.aluno === nome && r.concluido);
+  const all = todos.filter(r => r.aluno === nome && r.concluido && _ativsBimAtual.has(r.atividade));
   const makeRow = (r, labelOverride, showNomeAtiv) => {
     const mE = getModoEfetivo(r);
     const isTorneio = r.tipo === 'torneio';
@@ -858,7 +864,7 @@ ${tempoPodioHtml}
           <span style="flex:1;min-width:0;word-break:break-word">🏆 ${torneioAtivo.nome || 'Torneio'}</span>
           <span class="badge" style="margin-left:auto;background:rgba(245,158,11,.15);color:#92400E;border-color:rgba(245,158,11,.4)">▶ Disponível</span>
         </div>` : ''}
-        ${LISTA_ATIVIDADES.map(a => {
+        ${LISTA_ATIVIDADES.filter(a => (a.bim || 2) === bimestreAtual()).map(a => {
           const lib = liberadas.find(l => l.atividade === a.nome);
           const encerrada = lib?.status === 'encerrada';
           const realizadaNoAluno = todos.some(r => alunos.includes(r.aluno) && r.atividade === a.nome && r.concluido);
@@ -884,7 +890,7 @@ ${tempoPodioHtml}
       </div>
       ${alunos.map(a => {
         const uid = a.replace(/\s+/g,'_');
-        const all = todos.filter(r => r.aluno === a && r.concluido);
+        const all = todos.filter(r => r.aluno === a && r.concluido && _ativsBimAtual.has(r.atividade));
         const atividades = [...new Set(all.map(r => r.atividade))];
         const pillsHtml = atividades.length > 1 ? `
           <div id="hist-pills-${uid}" style="display:flex;gap:5px;flex-wrap:wrap;margin:6px 0 10px">
@@ -921,7 +927,7 @@ ${tempoPodioHtml}
           return `<a href="/aluno/a-notas.html" style="display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit;${alunos.length>1?'margin-bottom:8px;':''}">
             <div style="flex-shrink:0;text-align:center;background:rgba(250,184,0,.08);border-radius:12px;padding:8px 12px">
               <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:800;color:#f0a500;line-height:1">${fmtNota(b.total)}</div>
-              <div style="font-size:9px;color:rgba(255,255,255,.45);margin-top:2px">2º Bim.</div>
+              <div style="font-size:9px;color:rgba(255,255,255,.45);margin-top:2px">${bimestreAtual()}º Bim.</div>
             </div>
             <div style="flex:1;min-width:0">
               ${alunos.length>1 ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:1px">${a}</div>` : ''}
@@ -1084,8 +1090,10 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
   const hojeISO = new Date().toISOString().slice(0, 10);
   const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
+  const _bimHome = bimestreAtual();
+  const _rkHomePath = _bimHome <= 2 ? 'tabuada_ranking' : `tabuada_ranking_b/${_bimHome}`;
   const [rankSnap, sessoesSnap] = await Promise.all([
-    get(ref(db, 'tabuada_ranking')).catch(() => null),
+    get(ref(db, _rkHomePath)).catch(() => null),
     get(ref(db, 'tabuada_sessoes')).catch(() => null),
   ]);
 
@@ -1288,7 +1296,7 @@ function _tempoRelativo(ts) {
 }
 
 onValue(
-  query(ref(db, 'feed_global'), orderByChild('ts'), limitToLast(8)),
+  query(ref(db, 'feed_global'), orderByChild('ts'), limitToLast(40)),
   snap => {
     const lista = document.getElementById('feed-lista');
     if (!lista) return;
@@ -1298,11 +1306,25 @@ onValue(
       return;
     }
 
+    // só novidades do bimestre atual:
+    //  - se o evento tem campo `bim`, usa ele (fonte da verdade)
+    //  - se não tem (eventos antigos), NÃO mostra: conquistas/níveis sem bim são de
+    //    bimestres anteriores que vazaram para o feed atual
+    const _bimAgora = bimestreAtual();
     const eventos = [];
-    snap.forEach(c => eventos.push({ id: c.key, ...c.val() }));
+    snap.forEach(c => {
+      const v = c.val();
+      if (v && v.bim === _bimAgora) eventos.push({ id: c.key, ...v });
+    });
     eventos.sort((a, b) => b.ts - a.ts);
+    eventos.length = Math.min(eventos.length, 8);
 
     const icones = { duelo:'⚔️', nivel:'⭐', atividade:'🎯', streak:'🔥' };
+
+    if (!eventos.length) {
+      lista.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px 0">Nenhuma novidade neste bimestre ainda.</div>';
+      return;
+    }
 
     lista.innerHTML = eventos.map(e => {
       const tempo = _tempoRelativo(e.ts);

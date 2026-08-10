@@ -549,9 +549,9 @@ let niveisSnap, rankSnap, sessoesSnap, allNiveisSnap;
 try {
   [niveisSnap, rankSnap, sessoesSnap, allNiveisSnap] = await Promise.all([
     get(ref(db, _bimSel <= 2 ? `tabuada_niveis/${uid}` : `tabuada_niveis_b/${_bimSel}/${uid}`)).catch(e => { console.error('[jogos] tabuada_niveis:', e); return null; }),
-    get(ref(db, 'tabuada_ranking')).catch(e => { console.error('[jogos] tabuada_ranking:', e); return null; }),
+    get(ref(db, _bimSel <= 2 ? 'tabuada_ranking' : `tabuada_ranking_b/${_bimSel}`)).catch(e => { console.error('[jogos] tabuada_ranking:', e); return null; }),
     get(ref(db, 'tabuada_sessoes')).catch(e => { console.error('[jogos] tabuada_sessoes:', e); return null; }),
-    get(ref(db, 'tabuada_niveis')).catch(() => null),
+    get(ref(db, _bimSel <= 2 ? 'tabuada_niveis' : `tabuada_niveis_b/${_bimSel}`)).catch(() => null),
   ]);
 } catch(e) {
   document.getElementById("content").innerHTML =
@@ -1057,6 +1057,11 @@ window.gSetMode = function(mode) {
   if (mode === 'sprint') {
     btn.className = 'g-play-btn sp';
     btn.innerHTML = '<span class="arr">⚡</span> SPRINT';
+  } else if (_bimSel < bimestreAtual()) {
+    btn.className = 'g-play-btn nm';
+    btn.style.opacity = '.55';
+    btn.style.cursor = 'default';
+    btn.innerHTML = '🔒 Somente leitura (bimestre encerrado)';
   } else {
     btn.className = 'g-play-btn nm';
     btn.innerHTML = '<span class="arr">▶</span> JOGAR AGORA';
@@ -1065,10 +1070,12 @@ window.gSetMode = function(mode) {
 
 window.gPlay = function() {
   if (_avStatus?.ativa) return;
+  if (_bimSel < bimestreAtual()) return;   // bimestre passado é só leitura
   window.location.href = `/aluno/tabuada.html?bim=${_bimSel}`;
 };
 
 window.jogarNivel = function(lv) {
+  if (_bimSel < bimestreAtual()) return;   // bimestre passado é só leitura
   window.location.href = lv === nivelAtual
     ? `/aluno/tabuada.html?bim=${_bimSel}`
     : `/aluno/tabuada.html?bim=${_bimSel}&nivel=${lv}`;

@@ -557,12 +557,14 @@ export async function adicionarXP(uid, delta) {
       const { push } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
       const pSnap = await get(ref(db, `perfis/${uid}/nome`));
       const nome  = pSnap.val() || uid;
+      const { bimestreAtual } = await import('/js/constants.js');
       await set(push(ref(db, 'feed_global')), {
         tipo:  'nivel',
         uid,
         nome,
         texto: `⭐ ${nome} subiu para Nível ${nivelDepois} de perfil!`,
         ts:    Date.now(),
+        bim:   bimestreAtual(),
       });
     } catch(e) {}
   }
@@ -635,12 +637,14 @@ export async function registrarAtividadeDia(uid) {
       try {
         const { push } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
         const nome = perf.apelido_ativo || perf.nome || uid;
+        const { bimestreAtual } = await import('/js/constants.js');
         await set(push(ref(db, 'feed_global')), {
           tipo:  'streak',
           uid,
           nome,
           texto: `🔥 ${nome} está ativo há ${novoStreak} semana${novoStreak > 1 ? 's' : ''} seguidas!`,
           ts:    Date.now(),
+          bim:   bimestreAtual(),
         });
       } catch(e) {}
     }

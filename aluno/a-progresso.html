@@ -81,7 +81,7 @@
   <div class="main">
     <div class="topbar">
       <div class="topbar-left">
-        <div class="topbar-title">Meu Progresso — 2º Bimestre</div>
+        <div class="topbar-title" id="prog-titulo">Meu Progresso</div>
         <div class="topbar-sub">Acompanhe em tempo real o que você já conquistou e o que ainda dá pra melhorar</div>
       </div>
     </div>
@@ -93,9 +93,10 @@
 
 <script type="module">
 import { requireAluno, renderSidebarAluno, clearSession, getSession } from "/js/auth.js";
+import { bimestreAtual } from "/js/constants.js";
 import {
   EXTRAS_AUTO, CADERNO_EXTRA, EXTRA_RANK_ATIV4, EXTRAS_MANUAL, CAMPOS_NOTA,
-  BIMESTRE, fmtNota, slugNome,
+  BIMESTRE, fmtNota, slugNome, setBimestre,
   buscarProgressoTabuada, extrasAutoAtivos, cadernoExtraAtivo,
   buscarAtiv4, buscarAtiv5Aluno, buscarNotaSalva, notasLiberadas,
 } from "/js/notas.js";
@@ -103,6 +104,9 @@ import {
 requireAluno();
 renderSidebarAluno("sidebar", "progresso");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+setBimestre(String(bimestreAtual()));
+document.getElementById("prog-titulo").textContent = `Meu Progresso — ${bimestreAtual()}º Bimestre`;
 
 const sess     = getSession();
 const turma    = sess?.turma || "";

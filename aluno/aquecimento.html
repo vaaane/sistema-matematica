@@ -137,6 +137,7 @@ import { db } from '/js/firebase-config.js';
 import { ref, get, set } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { getPerfil, adicionarXP, registrarAtividadeDia } from '/js/db.js';
 import { avatarUrl, avatarConfigDefault } from '/js/gamificacao.js';
+import { bimestreAtual, bimestreDeData } from '/js/constants.js';
 
 const sess = requireAluno('/index.html');
 const { alunos, turma } = sess;
@@ -251,7 +252,8 @@ function renderDots(dots) {
 async function getTotalTreinos() {
   const snap = await get(ref(db, `aquecimento/${uid}`));
   if (!snap.exists()) return 0;
-  return Object.keys(snap.val()).length;
+  // conta só os treinos do bimestre atual (chaves são datas YYYY-MM-DD)
+  return Object.keys(snap.val()).filter(d => bimestreDeData(d) === bimestreAtual()).length;
 }
 
 async function renderLobby() {

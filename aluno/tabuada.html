@@ -816,7 +816,7 @@ if (isDupla) {
 // ── Game state ────────────────────────────────────────────────
 const [progresso, _rankingSnap] = await Promise.all([
   carregarProgresso(),
-  _isProfMode ? Promise.resolve(null) : get(ref(db, 'tabuada_ranking')).catch(() => null),
+  _isProfMode ? Promise.resolve(null) : get(ref(db, (_bimJogo <= 2 ? 'tabuada_ranking' : `tabuada_ranking_b/${_bimJogo}`))).catch(() => null),
 ]);
 
 let melhorNivel = Math.max(1, progresso.melhor_nivel || 1);
@@ -862,7 +862,7 @@ atualizarLeadersLine();
 
 async function reloadRanking() {
   if (_isProfMode) return;
-  _parseRanking(await get(ref(db, 'tabuada_ranking')).catch(() => null));
+  _parseRanking(await get(ref(db, (_bimJogo <= 2 ? 'tabuada_ranking' : `tabuada_ranking_b/${_bimJogo}`))).catch(() => null));
   atualizarLeadersLine();
 }
 

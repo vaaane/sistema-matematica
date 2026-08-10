@@ -126,12 +126,14 @@ export async function verificarConquistas(uid, contexto = {}) {
           const texto = id === 'tabuada_300'
             ? `🏆 ${nome} concluiu os 300 níveis e entrou no Hall da Fama!`
             : `${def.emoji} ${nome} desbloqueou: ${def.nome}!`;
+          const { bimestreAtual } = await import('/js/constants.js');
           await set(push(ref(db, 'feed_global')), {
             tipo:  'conquista',
             uid,
             nome,
             texto,
             ts:    Date.now(),
+            bim:   bimestreAtual(),
           });
         } catch(e) {}
       }
