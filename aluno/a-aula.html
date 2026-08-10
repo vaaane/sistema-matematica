@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Aula — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+<style>
+  /* barra superior da aula */
+  .aula-topo{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .voltar{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);border-radius:10px;padding:9px 15px;font-size:13.5px;font-weight:600;cursor:pointer;transition:.15s;text-decoration:none}
+  .voltar:hover{background:rgba(255,255,255,.08)}
+  .voltar svg{width:15px;height:15px;fill:currentColor}
+  .aula-tag-topo{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:4px 11px;border-radius:7px;background:rgba(255,255,255,.06);color:var(--text-muted)}
+  .aula-tag-topo.teoria{background:rgba(0,150,255,.14);color:#4c96ff}
+  .aula-tag-topo.exerc{background:var(--gold-pale);color:var(--gold)}
+
+  /* corpo do conteúdo injetado */
+  #corpo{max-width:820px;margin:0 auto}
+  #corpo .au{max-width:none}          /* deixa o miolo usar a largura do container */
+  .carregando{text-align:center;color:var(--text-muted);padding:60px 20px}
+  .erro{text-align:center;color:var(--text-muted);padding:50px 24px;background:var(--card);border:1px solid var(--border);border-radius:14px;max-width:560px;margin:20px auto}
+  .erro a{color:var(--purple);font-weight:600}
+
+  /* rodapé de navegação entre aulas */
+  .nav-aulas{max-width:820px;margin:32px auto 0;display:flex;gap:12px;justify-content:space-between}
+  .nav-aulas a{flex:1;display:flex;flex-direction:column;gap:3px;border:1px solid var(--border);background:var(--card);border-radius:13px;padding:14px 18px;text-decoration:none;transition:.15s}
+  .nav-aulas a:hover{border-color:rgba(255,255,255,.16)}
+  .nav-aulas .dir{font-size:11.5px;color:var(--text-muted);font-weight:600}
+  .nav-aulas .tit{font-size:14px;color:var(--text);font-weight:600;line-height:1.3}
+  .nav-aulas .prox{text-align:right}
+  .nav-aulas a.off{opacity:.35;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left aula-topo">
+        <a class="voltar" href="/aluno/a-aulas.html">
+          <svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg>
+          Voltar às aulas
+        </a>
+        <div>
+          <div class="topbar-title" id="tTitulo" style="font-size:19px">Aula</div>
+          <div class="topbar-sub" id="tSub"></div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span class="aula-tag-topo" id="tTag" style="display:none"></span>
+      </div>
+    </div>
+
+    <div class="content">
+      <div id="corpo"><div class="carregando">Carregando conteúdo…</div></div>
+      <div class="nav-aulas" id="navAulas" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { bimestreAtual } from "/js/constants.js";
+import { requireAluno, renderSidebarAluno } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const sess = requireAluno();
+renderSidebarAluno("sidebar", "aulas");
+
+const turma = sess?.turma || "";
+const alunos = Array.isArray(sess?.alunos) ? sess.alunos : [];
+const nome = sess?.nome || alunos[0] || "";
+
+const params = new URLSearchParams(location.search);
+let refConteudo = params.get("ref") || "";       // ex.: /conteudos/xxx.html
+let bimestre = +params.get("bim") || bimestreAtual();
+const idAula = params.get("id") || "";           // id da atividade no vistos (p/ navegação)
+
+const norm = s => (s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+function tipoDe(n){ n=norm(n); if(/(teoria|teorica)/.test(n))return"teorica"; if(/(exerc|lista|problema|atividade|revis|questo)/.test(n))return"exercicios"; return""; }
+
+// Extrai o miolo (.au) + o CSS próprio do arquivo de conteúdo (classes au-*/ex-*),
+// descartando sidebar/topbar/scripts. O <style> do conteúdo é essencial: sem ele
+// o material perde toda a formatação (cards, cores, espaçamento).
+function extrairMiolo(htmlText){
+  const doc = new DOMParser().parseFromString(htmlText, "text/html");
+  const au = doc.querySelector(".au") || doc.querySelector(".content") || doc.body;
+  au.querySelectorAll(".sidebar, .topbar, script").forEach(el=>el.remove());
+
+  // recupera os <style> internos do arquivo (que definem .au-*, .ex-* etc.)
+  let css = "";
+  doc.querySelectorAll("style").forEach(s=>{ css += s.textContent + "\n"; });
+
+  const styleTag = css ? `<style>${css}</style>` : "";
+  return styleTag + au.outerHTML;
+}
+
+async function carregarConteudo(){
+  if(!refConteudo){
+    document.getElementById("corpo").innerHTML =
+      `<div class="erro">Nenhum material foi vinculado a esta aula.<br><a href="/aluno/a-aulas.html">Voltar às aulas</a></div>`;
+    return;
+  }
+  try{
+    const r = await fetch(refConteudo, {cache:"no-cache"});
+    if(!r.ok) throw new Error(r.status);
+    const html = await r.text();
+    document.getElementById("corpo").innerHTML = extrairMiolo(html);
+    // reexecuta o smooth-scroll das âncoras internas (au-nav), caso existam
+    document.querySelectorAll("#corpo .au-nav a").forEach(a=>{
+      a.addEventListener("click",e=>{ const t=document.querySelector(a.getAttribute("href")); if(t){e.preventDefault();t.scrollIntoView({behavior:"smooth",block:"start"});} });
+    });
+  }catch(e){
+    console.error(e);
+    document.getElementById("corpo").innerHTML =
+      `<div class="erro">Não foi possível carregar o material.<br><a href="${refConteudo}" target="_blank">Abrir em nova aba</a> · <a href="/aluno/a-aulas.html">Voltar</a></div>`;
+  }
+}
+
+// Cabeçalho + navegação anterior/próxima (busca a lista do bimestre nos vistos)
+async function montarContexto(){
+  try{
+    const snap = await get(ref(db, `vistos/${turma}/${bimestre}`));
+    if(!snap.exists()) return;
+    const bloco = snap.val();
+    const ativs = Object.entries(bloco.atividades||{}).map(([id,a])=>({
+      id, nome:a.nome||"", data:a.data||"", ordem:a.ordem||0, materialRef:a.materialRef||"",
+    })).sort((x,y)=>(x.ordem-y.ordem)||(x.data<y.data?-1:1));
+
+    // localiza a aula atual: por id, senão pelo materialRef
+    let idx = idAula ? ativs.findIndex(a=>a.id===idAula) : -1;
+    if(idx<0 && refConteudo) idx = ativs.findIndex(a=>a.materialRef===refConteudo);
+    const atual = idx>=0 ? ativs[idx] : null;
+
+    if(atual){
+      document.getElementById("tTitulo").textContent = atual.nome;
+      document.getElementById("tSub").textContent = `Turma ${turma} • ${bimestre}º bimestre`;
+      const tipo = tipoDe(atual.nome);
+      const tagEl = document.getElementById("tTag");
+      if(tipo){ tagEl.style.display=""; tagEl.className="aula-tag-topo "+(tipo==="teorica"?"teoria":"exerc"); tagEl.textContent = tipo==="teorica"?"Teoria":"Exercícios"; }
+      document.title = atual.nome + " — Sistema de Matemática";
+
+      // aulas com material, para navegação
+      const comMat = ativs.filter(a=>a.materialRef);
+      const p = comMat.findIndex(a=>a.id===atual.id);
+      const ant = p>0 ? comMat[p-1] : null;
+      const prox = p>=0 && p<comMat.length-1 ? comMat[p+1] : null;
+      const link = (a)=> a ? `/aluno/a-aula.html?ref=${encodeURIComponent(a.materialRef)}&bim=${bimestre}&id=${a.id}` : "#";
+      document.getElementById("navAulas").style.display = (ant||prox) ? "flex" : "none";
+      document.getElementById("navAulas").innerHTML = `
+        <a class="ant ${ant?"":"off"}" href="${link(ant)}"><span class="dir">‹ Aula anterior</span><span class="tit">${ant?ant.nome:"—"}</span></a>
+        <a class="prox ${prox?"":"off"}" href="${link(prox)}"><span class="dir">Próxima aula ›</span><span class="tit">${prox?prox.nome:"—"}</span></a>`;
+    }
+  }catch(e){ console.error(e); }
+}
+
+carregarConteudo();
+montarContexto();
+</script>
+</body>
+</html>
