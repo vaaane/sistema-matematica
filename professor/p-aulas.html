@@ -276,6 +276,7 @@
       <div class="f" style="margin:0">
         <label class="chk-line"><input type="checkbox" id="mDupla"> 🕐🕐 Aula dupla</label>
         <label class="chk-line" style="margin-top:6px"><input type="checkbox" id="mPD1"> 🧩 PD1 (eletiva)</label>
+        <label class="chk-line" id="linhaCriarVisto" style="margin-top:6px"><input type="checkbox" id="mCriarVisto"> 📋 Criar visto desta aula</label>
       </div>
     </div>
     <div class="f"><label class="f-label">Status da aula</label>
@@ -340,6 +341,21 @@ function toast(msg, err=false){ const el=document.getElementById("toast"); el.te
 
 function numeros(lista){ let n=1,out=[]; lista.forEach(a=>{ if(a.dupla){out.push(`${n}–${n+1}`);n+=2;} else {out.push(`${n}`);n+=1;} }); return out; }
 function bibDe(id){ return biblioteca.find(b=>b.id===id); }
+
+async function criarVistoDaAula(bibId, data){
+  const b = bibDe(bibId);
+  const nome = b ? b.nome : "Visto";
+  const base = `vistos/${turma}/${bimestre}/atividades`;
+  let ordem = 1;
+  try {
+    const snap = await get(ref(db, base));
+    if (snap.exists()) ordem = Object.values(snap.val()).reduce((m,a)=>Math.max(m, a.ordem||0), 0) + 1;
+  } catch(e){}
+  const id = "a" + Date.now();
+  const obj = { nome, data, conteudo: (b && b.resumo) || "", ordem, criadoEm: Date.now() };
+  if (bibId) { obj.materialRef = bibId; obj.materialTitulo = nome; }
+  await set(ref(db, `${base}/${id}`), obj);
+}
 
 async function carregar(){
   document.getElementById("lista").innerHTML = `<div class="vazio">Carregando…</div>`;
@@ -470,6 +486,8 @@ window.abrirNova = function(){
   document.getElementById("mData").value=hoje();
   document.getElementById("mDupla").checked=false;
   document.getElementById("mPD1").checked=false;
+  document.getElementById("mCriarVisto").checked=false;
+  document.getElementById("linhaCriarVisto").style.display="";
   document.getElementById("mStatus").value="completo";
   document.getElementById("mObs").value="";
   renderBibLista();
@@ -482,6 +500,8 @@ function editar(id){
   document.getElementById("mData").value=a.data||hoje();
   document.getElementById("mDupla").checked=!!a.dupla;
   document.getElementById("mPD1").checked=!!a.pd1;
+  document.getElementById("mCriarVisto").checked=false;
+  document.getElementById("linhaCriarVisto").style.display="none";
   document.getElementById("mStatus").value=a.status||"completo";
   document.getElementById("mObs").value=a.obs||"";
   renderBibLista();
@@ -494,6 +514,7 @@ window.salvar = async function(){
   const status=document.getElementById("mStatus").value||"completo";
   const obs=document.getElementById("mObs").value.trim();
   const pd1=document.getElementById("mPD1").checked;
+  const criarVisto=document.getElementById("mCriarVisto").checked;
   try{
     if(editId){
       await update(ref(db, `${Paulas(turma,bimestre)}/${editId}`), {bibId:bibSel, data, dupla, status, obs, pd1});
@@ -501,6 +522,7 @@ window.salvar = async function(){
       const novo=push(ref(db, Paulas(turma,bimestre)));
       const ordem=(aulas.reduce((m,a)=>Math.max(m,a.ordem||0),0))+1;
       await set(novo, {bibId:bibSel, data, dupla, status, obs, pd1, ordem, criadoEm:Date.now()});
+      if(criarVisto){ try{ await criarVistoDaAula(bibSel, data); }catch(e){ console.error("visto:",e); toast("Aula salva, mas falhou ao criar o visto", true); } }
     }
     fechar(); toast("Salvo"); await carregar();
   }catch(e){ console.error(e); toast("Erro ao salvar", true); }
