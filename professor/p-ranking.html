@@ -192,7 +192,7 @@
 <script type="module">
 import { getLiberadas, listenRankingProfessor, getResultados } from "/js/db.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
-import { LISTA_ATIVIDADES, ALUNOS_POR_TURMA } from "/js/constants.js";
+import { LISTA_ATIVIDADES, ALUNOS_POR_TURMA, pathTabuadaRanking, pathTabuadaNiveisRaiz } from "/js/constants.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -226,8 +226,8 @@ async function renderPainelPrincipal() {
 
   // ── Tabuada ───────────────────────────────────────────────────
   const [rankTabSnap, niveisTabSnap] = await Promise.all([
-    get(ref(db, 'tabuada_ranking')).catch(() => null),
-    get(ref(db, 'tabuada_niveis')).catch(() => null),
+    get(ref(db, pathTabuadaRanking())).catch(() => null),
+    get(ref(db, pathTabuadaNiveisRaiz())).catch(() => null),
   ]);
 
   const tabAll = [];

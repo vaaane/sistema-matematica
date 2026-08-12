@@ -111,7 +111,7 @@
 </div>
 
 <script type="module">
-import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES } from "/js/constants.js";
+import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES, pathTabuadaRanking, pathTabuadaNiveisRaiz } from "/js/constants.js";
 import { getResultados, getLiberadas, getAlertas, getAllAtividadeStatus, getDetalhes, contarSessoesTabuadaHoje, somarPartidasTabuadaTotal } from "/js/db.js";
 import { db } from "/js/firebase-config.js";
 import { ref, onValue, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -126,8 +126,8 @@ window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 const [todos, liberadasRaw, alertas, statusMap, tabuadaHoje, tabuadaTotal, rankTabSnap, niveisTabSnap] = await Promise.all([
   getResultados(), getLiberadas(), getAlertas(true), getAllAtividadeStatus(),
   contarSessoesTabuadaHoje(), somarPartidasTabuadaTotal(),
-  get(ref(db, 'tabuada_ranking')).catch(() => null),
-  get(ref(db, 'tabuada_niveis')).catch(() => null),
+  get(ref(db, pathTabuadaRanking())).catch(() => null),
+  get(ref(db, pathTabuadaNiveisRaiz())).catch(() => null),
 ]);
 
 const hoje = new Date().toLocaleDateString('pt-BR');

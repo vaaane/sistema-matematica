@@ -444,7 +444,6 @@ import { requireAluno, renderSidebarAluno, clearSession, injetarFaixaDuelo, inic
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { NIVEL_MAX, bimestreAtual, pathTabuadaRanking, pathTabuadaNiveis, pathTabuadaNiveisRaiz } from "/js/constants.js";
-import { montarSeletorBimestre } from "/js/bimestre-seletor.js";
 import { getLiberadasParaTurma, somarPartidasTabuadaTotal } from "/js/db.js";
 
 const sess = requireAluno("/index.html");
@@ -453,7 +452,13 @@ renderSidebarAluno("sidebar", "jogos");
 const _bimSel = (n => (n>=1&&n<=4)?n:bimestreAtual())(parseInt(new URLSearchParams(location.search).get('bim'),10));
 window.irJogar = (jogo) => { location.href = `/aluno/${jogo}.html?bim=${_bimSel}`; };
 (function(){
-  montarSeletorBimestre('bimTabs', { mostrarTodos:true });  // pílulas 1-4, recarrega ?bim=
+  const el = document.getElementById('bimTabs');
+  if (el) {
+    el.innerHTML = [1,2,3,4].map(b => `<button class="bim-tab ${b===_bimSel?'active':''}" data-b="${b}">${b}º</button>`).join('');
+    el.querySelectorAll('.bim-tab').forEach(bt => bt.onclick = () => {
+      const u = new URL(location.href); u.searchParams.set('bim', bt.dataset.b); location.href = u.toString();
+    });
+  }
   const av = document.getElementById('bimAviso');
   if (av && _bimSel !== bimestreAtual()) {
     av.style.display = 'flex';

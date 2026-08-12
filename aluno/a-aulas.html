@@ -177,6 +177,7 @@
 
 <script type="module">
 import { bimestreAtual } from "/js/constants.js";
+import { montarSeletorBimestre } from "/js/bimestre-seletor.js";
 import { requireAluno, renderSidebarAluno } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -210,9 +211,7 @@ function tipoDe(n){ n=norm(n); if(/(teoria|teorica)/.test(n))return"teorica"; if
 function estadoDe(m){ return m===1?"completo":m===2?"parcial":"sem"; }
 
 function renderTabs(){
-  document.getElementById("bimTabs").innerHTML =
-    [1,2,3,4].map(b=>`<button class="bim-tab ${b===bimestre?"active":""}" data-b="${b}">${b}º</button>`).join("");
-  document.querySelectorAll(".bim-tab").forEach(el=>el.onclick=()=>{ bimestre=+el.dataset.b; carregar(); });
+  montarSeletorBimestre('bimTabs', { mostrarTodos:true, onChange:(b)=>{ bimestre=b; carregar(); } });
 }
 
 async function carregar(){

@@ -64,12 +64,13 @@
     .prog-row.done{border-color:rgba(34,197,94,.2)}
     .prog-row.partial{border-color:rgba(240,165,0,.2)}
     .prog-row.locked{opacity:.6}
-    .prog-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
-    .prog-icon.green{background:var(--green-pale)}
-    .prog-icon.orange{background:var(--orange-pale)}
-    .prog-icon.purple{background:var(--purple-pale)}
-    .prog-icon.gold{background:var(--gold-pale)}
-    .prog-icon.grey{background:rgba(255,255,255,.05)}
+    .prog-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .prog-icon svg{width:19px;height:19px;fill:currentColor}
+    .prog-icon.green{background:var(--green-pale);color:#22C55E}
+    .prog-icon.orange{background:var(--orange-pale);color:var(--orange)}
+    .prog-icon.purple{background:var(--purple-pale);color:#b26bff}
+    .prog-icon.gold{background:var(--gold-pale);color:var(--gold)}
+    .prog-icon.grey{background:rgba(255,255,255,.05);color:var(--text-muted)}
     .prog-body{flex:1;min-width:0}
     .prog-title{font-size:13px;font-weight:700;margin-bottom:1px}
     .prog-desc{font-size:11px;color:var(--text-muted);line-height:1.4}
@@ -89,14 +90,51 @@
     .pts-sub{font-size:10px;color:var(--text-muted);margin-top:1px}
     .badge-lock{display:inline-flex;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:20px;padding:3px 9px;font-size:10.5px;font-weight:600;color:var(--text-muted)}
 
-    /* ── ESTADO 3: Meu Rendimento ── */
-    .rendimento-header{background:linear-gradient(135deg,#1a1040,#15102a);border:2px solid rgba(250,184,0,.35);border-radius:18px;padding:22px 28px;margin-bottom:18px;position:relative;overflow:hidden;display:flex;align-items:center;gap:28px}
-    .rendimento-header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top left,rgba(250,184,0,.12) 0%,transparent 55%);pointer-events:none}
-    .rend-num{font-family:'Playfair Display',serif;font-size:60px;font-weight:800;color:var(--gold);line-height:1;flex-shrink:0;text-shadow:0 0 28px rgba(250,184,0,.4)}
-    .rend-info{flex:1;min-width:0}
-    .rend-eyebrow{font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(250,184,0,.7);margin-bottom:4px}
-    .rend-sub{font-size:12px;color:rgba(255,255,255,.5);margin-top:4px}
-    .rend-msg{margin-top:10px;font-size:13px;font-weight:600;color:#fff;background:rgba(255,255,255,.07);border-radius:10px;padding:8px 12px;line-height:1.45;display:inline-block}
+    /* ── ESTADO 3: Meu Rendimento (layout do print) ── */
+    /* hero */
+    .rend-hero{position:relative;overflow:hidden;display:flex;align-items:center;gap:26px;background:linear-gradient(135deg,#20123f 0%,#181234 55%,#140f28 100%);border:1.5px solid rgba(155,48,255,.28);border-radius:20px;padding:22px 28px;margin-bottom:16px}
+    .rend-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 100% at 10% 45%,rgba(155,48,255,.18),transparent 60%);pointer-events:none}
+    .rh-left{position:relative;z-index:1;flex-shrink:0}
+    .rh-eyebrow{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:2px}
+    .rh-numwrap{display:flex;align-items:center;gap:12px}
+    .rh-num{font-family:'Playfair Display',serif;font-weight:800;font-size:58px;line-height:.92;color:var(--gold);text-shadow:0 0 26px rgba(240,165,0,.35)}
+    .rh-trophy{width:46px;height:46px;fill:none;stroke:rgba(240,165,0,.55);stroke-width:1.5;flex-shrink:0}
+    .rh-divider{width:1px;align-self:stretch;background:rgba(255,255,255,.1);flex-shrink:0;position:relative;z-index:1;margin:2px 0}
+    .rh-mid{position:relative;z-index:1;flex-shrink:0;min-width:0}
+    .rh-bim{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+    .rh-breakdown{font-size:15px;font-weight:600;color:rgba(255,255,255,.92);margin-bottom:13px}
+    .rh-msg{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:#fff;background:rgba(34,197,94,.13);border:1px solid rgba(34,197,94,.3);border-radius:11px;padding:9px 15px}
+    .rh-msg .star{color:var(--gold);font-size:15px;line-height:1}
+    .rh-chart{position:relative;z-index:1;flex:1;min-width:120px;align-self:stretch;min-height:96px}
+    .rh-chart svg{position:absolute;inset:0;width:100%;height:100%}
+
+    /* três cards resumo */
+    .rend-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
+    .rs-card{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 20px}
+    .rs-icon{width:54px;height:54px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .rs-icon svg{width:26px;height:26px}
+    .rs-icon.blue{background:rgba(96,120,255,.14)}  .rs-icon.blue svg{fill:#7c93ff}
+    .rs-icon.green{background:rgba(34,197,94,.14)}   .rs-icon.green svg{fill:#22C55E}
+    .rs-icon.purple{background:rgba(155,48,255,.16)} .rs-icon.purple svg{fill:#b26bff}
+    .rs-body{min-width:0}
+    .rs-label{font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:3px}
+    .rs-val{font-size:30px;font-weight:800;line-height:1;color:var(--text)}
+    .rs-val .rs-max{font-size:15px;font-weight:600;color:var(--text-muted)}
+    .rs-val.green{color:#22C55E}.rs-val.purple{color:var(--purple)}
+    .rs-sub{font-size:11.5px;color:var(--text-muted);margin-top:5px}
+
+    /* duas colunas */
+    .rend-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+    .rend-cols .card{margin-bottom:0}
+    .card-title-lg{font-size:15px;font-weight:800}
+    .card-title-lg svg{width:17px;height:17px;fill:var(--purple)}
+
+    /* tag pill do item */
+    .item-tag{font-size:9.5px;font-weight:800;color:var(--purple);background:rgba(155,48,255,.16);border-radius:6px;padding:2px 7px;white-space:nowrap;text-transform:none;letter-spacing:0}
+
+    /* rodapé */
+    .rend-updated{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:20px;font-size:12px;color:var(--text-muted)}
+    .rend-updated svg{width:14px;height:14px;fill:var(--text-muted)}
 
     .item-row{padding:10px 0;border-bottom:1px solid var(--border)}
     .item-row:last-child{border-bottom:none}
@@ -108,25 +146,33 @@
     .bar-bg{height:7px;border-radius:5px;background:var(--bg);overflow:hidden}
     .bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--purple-dark),var(--purple))}
 
-    .subtotal-row{display:flex;align-items:center;justify-content:space-between;padding-top:12px;margin-top:4px;border-top:1.5px dashed var(--border)}
+    .subtotal-row{display:flex;align-items:center;justify-content:space-between;padding-top:13px;margin-top:6px;border-top:1px solid var(--border)}
     .subtotal-row .lbl{font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
-    .subtotal-row .val{font-size:16px;font-weight:800}
+    .subtotal-row .val{font-size:16px;font-weight:800;color:var(--purple)}
     .cap-note{font-size:11px;color:var(--orange);margin-top:6px;display:flex;align-items:center;gap:5px}
 
-    .extra-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+    .extra-item{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--border)}
     .extra-item:last-child{border-bottom:none}
-    .extra-dot{width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
-    .extra-dot.on{background:var(--green-pale);color:#15803D}
-    .extra-dot.off{background:var(--bg);color:var(--text-muted)}
-    .extra-lbl{flex:1;font-size:12.5px;font-weight:600}
+    .extra-dot{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800}
+    .extra-dot.on{background:#1e9e52;color:#fff}
+    .extra-dot.off{background:transparent;border:1.5px solid var(--border);color:var(--text-muted);font-size:9px}
+    .extra-lbl{flex:1;font-size:13.5px;font-weight:600}
     .extra-lbl.off{color:var(--text-muted);font-weight:500}
-    .extra-pts{font-size:12px;font-weight:800;color:var(--green)}
+    .extra-pts{font-size:13px;font-weight:800;color:var(--green)}
     .extra-pts.off{color:var(--text-muted);font-weight:600}
-    .bonus-total-row{display:flex;align-items:center;justify-content:space-between;padding-top:10px;margin-top:6px;border-top:1.5px dashed var(--border)}
+    .bonus-total-row{display:flex;align-items:center;justify-content:space-between;padding-top:13px;margin-top:6px;border-top:1px solid var(--border)}
     .bonus-total-row .lbl{font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
     .bonus-total-row .val{font-size:15px;font-weight:800;color:var(--green)}
 
-    @media(max-width:600px){.summary-bar{grid-template-columns:1fr}.rendimento-header{flex-direction:column;text-align:center}.rend-num{font-size:52px}}
+    @media(max-width:900px){.rend-cols{grid-template-columns:1fr}}
+    @media(max-width:600px){
+      .summary-bar{grid-template-columns:1fr}
+      .rend-summary{grid-template-columns:1fr}
+      .rend-hero{flex-wrap:wrap;gap:16px}
+      .rh-divider{display:none}
+      .rh-num{font-size:50px}
+      .rh-chart{flex-basis:100%;order:5;min-height:64px}
+    }
   </style>
 </head>
 <body>
@@ -139,8 +185,7 @@
         <div class="topbar-sub" id="page-sub">Acompanhe seu desempenho no bimestre</div>
       </div>
       <div class="topbar-right">
-        <select class="bim-select" id="bimSel">
-        </select>
+        <div id="bimSel"></div>
       </div>
     </div>
     <div class="content" id="content">
@@ -156,6 +201,7 @@ import {
   BIMESTRE, setBimestre, camposAtivos, bonusAtivo, fmtNota, mensagemPorNota, montarBoletim, notasLiberadas,
 } from "/js/notas.js";
 import { BIMESTRES, bimestreAtual } from "/js/constants.js";
+import { montarSeletorBimestre } from "/js/bimestre-seletor.js";
 
 requireAluno();
 renderSidebarAluno("sidebar", "notas");
@@ -174,6 +220,116 @@ function todasLancadas(boletim) {
     const v = boletim.registro[k];
     return v !== null && v !== undefined && v !== "";
   });
+}
+
+// ── Ícones SVG (sem emoji, para renderizar igual em qualquer navegador) ──
+const IC = {
+  grid:    `<svg viewBox="0 0 24 24"><path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z"/></svg>`,          // tabuada
+  negativo:`<svg viewBox="0 0 24 24"><path d="M11 4h2v4h4v2h-4v4h-2v-4H7V8h4zM7 18h10v2H7z"/></svg>`,               // ±
+  estrela: `<svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`,
+  trofeu:  `<svg viewBox="0 0 24 24"><path d="M18 4h3v3a4 4 0 0 1-4 4h-.4A5 5 0 0 1 13 13.9V17h3v2H8v-2h3v-3.1A5 5 0 0 1 7.4 11H7a4 4 0 0 1-4-4V4h3V3h12v1zm0 2v3a2 2 0 0 0 2-2V6h-2zM4 6v1a2 2 0 0 0 2 2V6H4z"/></svg>`,
+  livro:   `<svg viewBox="0 0 24 24"><path d="M6 2h13a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 16a1 1 0 0 0 0 2h12v-2H6z"/></svg>`,
+  prova:   `<svg viewBox="0 0 24 24"><path d="M9 2h6v2h3a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3V2zm2 2v1h2V4h-2zm-.3 13.4l5-5-1.4-1.4-3.6 3.6-1.6-1.6-1.4 1.4 3 3z"/></svg>`,
+  lampada: `<svg viewBox="0 0 24 24"><path d="M9 21h6v-1H9zm3-19a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>`,
+  formas:  `<svg viewBox="0 0 24 24"><path d="M3 4h7v7H3zM17.5 3a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7zM12 13l5 8H7z"/></svg>`,
+  triangulo:`<svg viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/></svg>`,
+  mao:     `<svg viewBox="0 0 24 24"><path d="M13 2a1.5 1.5 0 0 0-1.5 1.5V10h-1V4.5a1.5 1.5 0 0 0-3 0V10h-1V6.5a1.5 1.5 0 0 0-3 0V14a8 8 0 0 0 8 8 6 6 0 0 0 6-6V8.5a1.5 1.5 0 0 0-3 0V10h-1V3.5A1.5 1.5 0 0 0 13 2z"/></svg>`,
+};
+const ICON_ATIV = { provaMulti:IC.prova, projeto:IC.lampada, caderno:IC.livro, ativ4:IC.formas, triangulos:IC.triangulo, participacao:IC.mao };
+const ICON_EXTRA = { t150:IC.grid, t300:IC.grid, tneg50:IC.negativo, tneg150:IC.negativo };
+
+// ── Bloco "Atividades do bimestre" no estilo cartão-com-ícone (DOIS estados) ──
+function blocoAtividadesIcones(boletim, encerrado) {
+  const { registro, lancados, ativ4Info } = boletim;
+  function row(c) {
+    const isAuto = c.key==="ativ4" || c.key==="triangulos";
+    const tag = c.key==="triangulos" ? `<span class="item-tag">Ativ. 5</span><span class="item-tag">Fase 1</span>`
+              : c.key==="ativ4"      ? `<span class="item-tag">Ativ. 4</span>` : "";
+    let v = 0, done = false, valBig, desc;
+    if (isAuto) {
+      const raw = registro[c.key];
+      const naoPart = raw === null || raw === undefined;
+      v = naoPart ? 0 : (parseFloat(raw)||0);
+      done = !naoPart;
+      valBig = naoPart ? "0,0" : fmtNota(v);
+      desc = naoPart ? "não participou"
+                     : (c.key==="ativ4" ? (ativ4Info && ativ4Info.posicao>0 ? `Participou · ${ativ4Info.posicao}º no geral` : "Você participou")
+                                        : "Melhor nota na fase 1");
+    } else {
+      const foi = lancados ? !!lancados[c.key] : true;
+      v = foi ? (parseFloat(registro[c.key])||0) : 0;
+      done = foi;
+      valBig = foi ? fmtNota(v) : "—";
+      desc = foi ? "Nota lançada" : "Aguardando lançamento";
+    }
+    return `<div class="prog-row ${done?"done":"locked"}">
+      <div class="prog-icon ${done?"green":"grey"}">${ICON_ATIV[c.key]||IC.prova}</div>
+      <div class="prog-body"><div class="prog-title">${c.label} ${tag}</div>
+        <div class="prog-desc">${desc}</div>
+      </div>
+      <div class="prog-right"><div class="pts ${done?"":"muted"}">${valBig}</div><div class="pts-sub">de ${fmtNota(c.max)}</div></div>
+    </div>`;
+  }
+  return `<div class="prog-list">${camposAtivos().map(row).join("")}</div>`;
+}
+
+// ── Bloco "Pontos extras" no estilo cartão-com-ícone (DOIS estados) ──
+// encerrado=true → rendimento (notas fechadas); false → em andamento
+function blocoExtrasIcones(boletim, encerrado) {
+  const { auto, progresso, ativ4Info, registro } = boletim;
+  const nivelPerf   = boletim.nivelPerfil || 1;
+  const temCaderno  = camposAtivos().some(c => c.key === "caderno");
+  const cadernoLanc = boletim.lancados ? !!boletim.lancados.caderno : true;   // rendimento sempre lançado
+  const cadExtra    = cadernoLanc && (parseFloat(registro.caderno)||0) > CADERNO_EXTRA.limiar;
+
+  function rowTabuada(ex) {
+    const on    = auto[ex.key];
+    const atual = ex.campo==="melhorTabuada" ? progresso.melhorTabuada : progresso.melhorNeg;
+    const pct   = Math.min(100, Math.round(atual/ex.max*100));
+    const cor   = on ? "green" : ex.campo==="melhorTabuada" ? "orange" : "purple";
+    const desc  = on ? `Meta batida! Nível ${atual}`
+                     : encerrado ? `Chegou ao nível ${atual} de ${ex.max}`
+                                 : `Faltam <b>${ex.max-atual} níveis</b> — continue jogando!`;
+    const subTx = on ? "conquistado" : (encerrado ? "não atingido" : "disponível");
+    return `<div class="prog-row ${on?"done":"partial"}">
+      <div class="prog-icon ${cor}">${ICON_EXTRA[ex.key]||IC.grid}</div>
+      <div class="prog-body"><div class="prog-title">${ex.label}</div>
+        <div class="prog-desc">${desc}</div>
+        <div class="pbar-wrap"><div class="pbar-bg"><div class="pbar-fill ${cor}" style="width:${pct}%"></div></div>
+        <span class="pbar-label" style="${on?"color:var(--green)":""}">${atual}/${ex.max}${on?" ✓":""}</span></div>
+      </div>
+      <div class="prog-right"><div class="pts ${on?"green":"muted"}">+${fmtNota(ex.valor)}</div><div class="pts-sub">${subTx}</div></div>
+    </div>`;
+  }
+  const nivelPerfilRow = `<div class="prog-row done">
+    <div class="prog-icon purple">${IC.estrela}</div>
+    <div class="prog-body"><div class="prog-title">${EXTRA_NIVEL_PERFIL.label}</div>
+      <div class="prog-desc">Nível ${nivelPerf} × 0,1</div></div>
+    <div class="prog-right"><div class="pts" style="color:var(--purple)">+${fmtNota(Math.round(nivelPerf*0.1*10)/10)}</div><div class="pts-sub">conquistado</div></div>
+  </div>`;
+  const rankRow = (!ativ4Info.fez || (ativ4Info.bonusRank||0)===0) ? "" : `<div class="prog-row done">
+    <div class="prog-icon gold">${IC.trofeu}</div>
+    <div class="prog-body"><div class="prog-title">Atividade 4 — Ranking</div>
+      <div class="prog-desc"><b style="color:var(--gold)">${ativ4Info.posicao||0}º lugar</b> no geral</div></div>
+    <div class="prog-right"><div class="pts gold">+${fmtNota(ativ4Info.bonusRank||0)}</div><div class="pts-sub">bônus ranking</div></div>
+  </div>`;
+  const cadExtraRow = !temCaderno ? "" : (!cadernoLanc ? `<div class="prog-row locked">
+    <div class="prog-icon grey">${IC.livro}</div>
+    <div class="prog-body"><div class="prog-title">Caderno Extra</div>
+      <div class="prog-desc">Calculado quando a professora lançar o caderno (precisa &gt; 1,8)</div></div>
+    <div class="prog-right"><div class="pts muted">+0,5</div><div class="pts-sub">possível</div></div>
+  </div>` : `<div class="prog-row ${cadExtra?"done":"locked"}">
+    <div class="prog-icon ${cadExtra?"green":"grey"}">${IC.livro}</div>
+    <div class="prog-body"><div class="prog-title">Caderno Extra</div>
+      <div class="prog-desc">${cadExtra?"Conquistado! Caderno acima de 1,8":`Caderno: ${fmtNota(parseFloat(registro.caderno)||0)} (precisa > 1,8)`}</div></div>
+    <div class="prog-right"><div class="pts ${cadExtra?"green":"muted"}">+0,5</div><div class="pts-sub">${cadExtra?"conquistado":"não atingido"}</div></div>
+  </div>`);
+
+  return `
+    <div class="sec-label">Tabuada e ranking</div>
+    <div class="prog-list">${EXTRAS_AUTO.map(rowTabuada).join("")}${nivelPerfilRow}${rankRow}</div>
+    <div class="sec-label">Caderno</div>
+    <div class="prog-list">${cadExtraRow}</div>`;
 }
 
 // ── ESTADO 2: Em Andamento ────────────────────────────────────
@@ -204,91 +360,17 @@ function renderAndamento(boletim) {
   });
   maxLancado = Math.min(maxLancado, 10);
 
-  function rowAtiv(a) {
-    if (a.key === "ativ4") {
-      const fez = ativ4Info.fez;
-      return `<div class="prog-row ${fez?"done":"locked"}">
-        <div class="prog-icon ${fez?"green":"grey"}">${fez?"✅":"✗"}</div>
-        <div class="prog-body"><div class="prog-title">${a.label}</div>
-          <div class="prog-desc">${fez?`Você participou${ativ4Info.posicao>0?` · ${ativ4Info.posicao}º lugar no geral`:""}` : "Você não participou — nota 0,0"}</div></div>
-        <div class="prog-right"><div class="pts ${fez?"green":"muted"}">${fez?fmt(0.5):"0,0"}</div><div class="pts-sub">de 0,5</div></div>
-      </div>`;
-    }
-    if (a.key === "triangulos") {
-      const v = ativ5Pts != null ? Math.min(1, ativ5Pts/10) : null;
-      return `<div class="prog-row ${v!=null?"done":"locked"}">
-        <div class="prog-icon ${v!=null?"green":"grey"}">${v!=null?"✅":"✗"}</div>
-        <div class="prog-body"><div class="prog-title">${a.label}</div>
-          <div class="prog-desc">${v!=null?"Sua melhor nota na fase 1":"Você não jogou — nota 0,0"}</div></div>
-        <div class="prog-right"><div class="pts ${v!=null?"green":"muted"}">${v!=null?fmt(v):"0,0"}</div><div class="pts-sub">de 1,0</div></div>
-      </div>`;
-    }
-    const foiLancado = lancados[a.key];
-    const v = foiLancado ? (parseFloat(registro[a.key])||0) : null;
-    if (foiLancado) {
-      const cadExtraTag = a.key==="caderno"&&cadExtra ? ` · Caderno Extra 🎉` : "";
-      return `<div class="prog-row done">
-        <div class="prog-icon green">✅</div>
-        <div class="prog-body"><div class="prog-title">${a.label}</div>
-          <div class="prog-desc">Nota lançada${cadExtraTag}</div></div>
-        <div class="prog-right"><div class="pts green">${fmt(v)}${a.key==="caderno"&&cadExtra?`<span style="font-size:10px"> +0,5</span>`:""}</div><div class="pts-sub">de ${fmt(a.max)}</div></div>
-      </div>`;
-    }
-    return `<div class="prog-row locked">
-      <div class="prog-icon grey">🔒</div>
-      <div class="prog-body"><div class="prog-title">${a.label}</div>
-        <div class="prog-desc">Aguardando lançamento pela professora</div></div>
-      <div class="prog-right"><div class="badge-lock">até ${fmt(a.max)} pts</div></div>
-    </div>`;
-  }
-
+  // ── Atividades (mesmo estilo de barra do rendimento) ──
   // ── blocos de bônus só quando o bimestre tem bônus ativo ──
-  let summaryBonusCard = "", extrasSecoes = "";
+  let banner = "", extrasCardInner = "", bonusSub = "", rsBonusCard = "";
   if (bonusOn) {
-    function rowTabuada(ex) {
-      const on  = auto[ex.key];
-      const atual = ex.campo==="melhorTabuada" ? progresso.melhorTabuada : progresso.melhorNeg;
-      const pct = Math.min(100, Math.round(atual/ex.max*100));
-      const cor = on ? "green" : ex.campo==="melhorTabuada" ? "orange" : "purple";
-      return `<div class="prog-row ${on?"done":"partial"}">
-        <div class="prog-icon ${cor}">${on?"⚡":"🎯"}</div>
-        <div class="prog-body"><div class="prog-title">${ex.label}</div>
-          <div class="prog-desc">${on?`Meta batida! Nível ${atual}`:`Faltam <b>${ex.max-atual} níveis</b> — continue jogando!`}</div>
-          <div class="pbar-wrap"><div class="pbar-bg"><div class="pbar-fill ${cor}" style="width:${pct}%"></div></div>
-          <span class="pbar-label" style="${on?"color:var(--green)":""}">${atual}/${ex.max}${on?" ✓":""}</span></div>
-        </div>
-        <div class="prog-right"><div class="pts ${on?"green":"muted"}">+${fmt(ex.valor)}</div><div class="pts-sub">${on?"conquistado":"disponível"}</div></div>
-      </div>`;
-    }
-    const nivelPerfilRow = `<div class="prog-row done">
-      <div class="prog-icon purple">⭐</div>
-      <div class="prog-body"><div class="prog-title">${EXTRA_NIVEL_PERFIL.label}</div>
-        <div class="prog-desc">Nível ${nivelPerf} × 0,1</div></div>
-      <div class="prog-right"><div class="pts" style="color:var(--purple)">+${fmtNota(Math.round(nivelPerf*0.1*10)/10)}</div><div class="pts-sub">conquistado</div></div>
-    </div>`;
-    const rankRow = (!ativ4Info.fez || (ativ4Info.bonusRank||0)===0) ? "" : `<div class="prog-row done">
-      <div class="prog-icon gold">🏆</div>
-      <div class="prog-body"><div class="prog-title">Atividade 4 — Ranking</div>
-        <div class="prog-desc"><b style="color:var(--gold)">${ativ4Info.posicao||0}º lugar</b> no geral</div></div>
-      <div class="prog-right"><div class="pts gold">+${fmt(ativ4Info.bonusRank||0)}</div><div class="pts-sub">bônus ranking</div></div>
-    </div>`;
-    const cadExtraRow = !temCaderno ? "" : (!lancados.caderno ? `<div class="prog-row locked">
-      <div class="prog-icon grey">📒</div>
-      <div class="prog-body"><div class="prog-title">Caderno Extra</div>
-        <div class="prog-desc">Calculado quando a professora lançar o caderno (precisa &gt; 1,8)</div></div>
-      <div class="prog-right"><div class="pts muted">+0,5</div><div class="pts-sub">possível</div></div>
-    </div>` : `<div class="prog-row ${cadExtra?"done":"locked"}">
-      <div class="prog-icon ${cadExtra?"green":"grey"}">📒</div>
-      <div class="prog-body"><div class="prog-title">Caderno Extra</div>
-        <div class="prog-desc">${cadExtra?"Conquistado! Caderno acima de 1,8":`Caderno: ${fmt(parseFloat(registro.caderno)||0)} (precisa > 1,8)`}</div></div>
-      <div class="prog-right"><div class="pts ${cadExtra?"green":"muted"}">+0,5</div><div class="pts-sub">${cadExtra?"conquistado":"não atingido"}</div></div>
-    </div>`);
+    extrasCardInner = blocoExtrasIcones(boletim, false);
 
     let potencial = 0;
     if (!auto.t300)    potencial += 0.5;
     if (!auto.tneg50)  potencial += 0.5;
     if (!auto.tneg150) potencial += 0.5;
-    const banner = potencial > 0
+    banner = potencial > 0
       ? `<div class="potencial-banner"><div class="pot-icon">🚀</div>
           <div class="pot-body"><div class="pot-titulo">Você ainda pode ganhar mais pontos!</div>
           <div class="pot-desc">${[
@@ -302,39 +384,69 @@ function renderAndamento(boletim) {
           <div class="pot-desc">Incrível — tabuada e negativa: tudo certo.</div></div>
           <div class="pot-pts green">100%</div></div>`;
 
-    summaryBonusCard = `<div class="sum-card">
-        <div class="sum-label">🎁 Bônus extras</div>
-        <div class="sum-val" style="color:var(--purple)">+${fmt(bonus)}</div>
-        <div style="font-size:10.5px;color:var(--text-muted)">${potencial>0?`+${fmt(potencial)} ainda alcançáveis`:"todos conquistados ✓"}</div>
+    bonusSub = potencial>0 ? `+${fmt(potencial)} ainda alcançáveis` : "todos conquistados ✓";
+    rsBonusCard = `<div class="rs-card">
+        <div class="rs-icon green"><svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 0 0-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm6 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM4 8h16v3H4V8zm0 12v-7h7v7H4zm16 0h-7v-7h7v7z"/></svg></div>
+        <div class="rs-body">
+          <div class="rs-label">Bônus extras</div>
+          <div class="rs-val green">+${fmt(bonus)}</div>
+          <div class="rs-sub">${bonusSub}</div>
+        </div>
       </div>`;
-    extrasSecoes = `${banner}
-    <div class="sec-label">⚡ Extras — tabuada e ranking</div>
-    <div class="prog-list">${EXTRAS_AUTO.map(rowTabuada).join("")}${nivelPerfilRow}${rankRow}</div>
-    <div class="sec-label">🎁 Extras — caderno</div>
-    <div class="prog-list">${cadExtraRow}</div>`;
   }
 
+  const cardAtividades = `<div class="card">
+      <div class="card-title card-title-lg"><svg viewBox="0 0 24 24"><path d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z"/></svg>Atividades do bimestre</div>
+      ${blocoAtividadesIcones(boletim, false)}
+      <div class="subtotal-row"><span class="lbl">Subtotal das atividades</span><span class="val">${fmt(base)} / 10</span></div>
+    </div>`;
+  const cardExtras = bonusOn ? `<div class="card">
+      <div class="card-title card-title-lg"><svg viewBox="0 0 24 24" style="fill:#e9e7f2"><path d="M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 0 0-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm6 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1z"/></svg>Pontos extras conquistados</div>
+      ${extrasCardInner}
+      <div class="bonus-total-row"><span class="lbl">Bônus total</span><span class="val">+${fmt(bonus)}</span></div>
+    </div>` : "";
+
   return `
-    <div class="andamento-aviso">
-      <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
-      Notas em andamento — esta <b style="color:var(--gold)">não é a nota final</b>, algumas atividades ainda não foram lançadas
-    </div>
-    <div class="summary-bar">
-      <div class="sum-card">
-        <div class="sum-label">📋 Das atividades</div>
-        <div class="sum-val" style="color:var(--text)">${fmt(base)}<span style="font-size:13px;font-weight:600;color:var(--text-muted)"> / 10</span></div>
-        <div style="font-size:10.5px;color:var(--text-muted)">${fmt(maxLancado)} pts já lançados</div>
+    <div class="rend-hero">
+      <div class="rh-left">
+        <div class="rh-eyebrow">Nota atual</div>
+        <div class="rh-numwrap">
+          <span class="rh-num">${fmt(total)}</span>
+          <svg class="rh-trophy" viewBox="0 0 24 24"><path d="M6 3h12M6 21h12M7 3c0 4 4 5 5 9 1-4 5-5 5-9M7 21c0-4 4-5 5-9 1 4 5 5 5 9"/></svg>
+        </div>
       </div>
-      ${summaryBonusCard}
-      <div class="sum-card" style="background:linear-gradient(135deg,#1a1040,#15102a);border-color:rgba(108,0,212,.35)">
-        <div class="sum-label" style="color:rgba(200,170,255,.7)">= Nota atual</div>
-        <div style="font-size:32px;font-weight:800;color:var(--purple);line-height:1">${fmt(total)}</div>
-        <div style="font-size:10.5px;color:rgba(200,170,255,.5)">${bonusOn?`${fmt(base)} + ${fmt(bonus)} bônus`:"só atividades"}</div>
+      <div class="rh-divider"></div>
+      <div class="rh-mid">
+        <div class="rh-bim">${BIMESTRE}º Bimestre</div>
+        <div class="rh-breakdown">${fmt(base)} das atividades${bonusOn?` + ${fmt(bonus)} de bônus`:""}</div>
+        <div class="rh-msg" style="background:rgba(240,165,0,.12);border-color:rgba(240,165,0,.32)"><span class="star">⏳</span> Em andamento — ainda não é a nota final</div>
+      </div>
+      <div class="rh-chart" id="rh-chart"></div>
+    </div>
+
+    <div class="rend-summary">
+      <div class="rs-card">
+        <div class="rs-icon blue"><svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm-1 14l-4-4 1.41-1.41L11 14.17l5.59-5.58L18 10l-7 7z"/></svg></div>
+        <div class="rs-body">
+          <div class="rs-label">Das atividades</div>
+          <div class="rs-val">${fmt(base)}<span class="rs-max"> / 10</span></div>
+          <div class="rs-sub">${fmt(maxLancado)} pts já lançados</div>
+        </div>
+      </div>
+      ${rsBonusCard}
+      <div class="rs-card">
+        <div class="rs-icon purple"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></div>
+        <div class="rs-body">
+          <div class="rs-label">Nota atual</div>
+          <div class="rs-val purple">${fmt(total)}</div>
+          <div class="rs-sub">${bonusOn?`${fmt(base)} + ${fmt(bonus)} bônus`:"só atividades"}</div>
+        </div>
       </div>
     </div>
-    <div class="sec-label">📋 Atividades avaliadas</div>
-    <div class="prog-list">${campos.map(rowAtiv).join("")}</div>
-    ${extrasSecoes}`;
+
+    ${banner}
+
+    ${bonusOn ? `<div class="rend-cols">${cardAtividades}${cardExtras}</div>` : cardAtividades}`;
 }
 
 // ── ESTADO 3: Meu Rendimento ──────────────────────────────────
@@ -348,78 +460,76 @@ function renderRendimento(boletim) {
   const capNote  = subtotal > 10
     ? `<div class="cap-note">⚠️ Soma das atividades chegou a ${fmtNota(subtotal)} — trava em 10 antes dos bônus</div>` : "";
 
-  function barraItem(c) {
-    const raw = registro[c.key];
-    const isAuto = c.key==="ativ4" || c.key==="triangulos";
-    const naoParticipou = isAuto && (raw===null||raw===undefined);
-    const v   = naoParticipou ? 0 : (parseFloat(raw)||0);
-    const pct = naoParticipou ? 0 : Math.min(100, Math.round(v/c.max*100));
-    const tag = c.key==="triangulos" ? `<span class="item-auto-tag">🔄 Ativ.5 fase1</span>`
-              : c.key==="ativ4"      ? `<span class="item-auto-tag">🔄 Ativ.4</span>` : "";
-    let valHtml;
-    if (naoParticipou) valHtml = `<span style="font-size:11px;font-weight:600;color:var(--text-muted)">não participou — 0,0</span>`;
-    else valHtml = `${fmtNota(v)}<span class="max"> / ${c.max}</span>`;
-    const cadExtraTag = c.key==="caderno" && cadExtra ? ` <span style="font-size:10px;color:var(--green)">+0,5</span>` : "";
-    return `<div class="item-row">
-      <div class="item-head">
-        <span class="item-label">${c.label} ${tag}</span>
-        <span class="item-val">${valHtml}${cadExtraTag}</span>
-      </div>
-      <div class="bar-bg"><div class="bar-fill" style="width:${pct}%${naoParticipou?";opacity:.2":""}"></div></div>
-    </div>`;
-  }
+  // mensagem sem o emoji inicial (o ⭐ dourado é renderizado à parte)
+  const msgTxt = mensagemPorNota(total).replace(/^[^\p{L}]+/u, "");
 
-  function extraItem(label, on, valor, sub) {
-    return `<div class="extra-item">
-      <span class="extra-dot ${on?"on":"off"}">${on?"✓":"·"}</span>
-      <span class="extra-lbl${on?"":" off"}">${label}${sub?`<br><small style="font-weight:400;color:var(--text-muted)">${sub}</small>`:""}</span>
-      <span class="extra-pts${on?"":" off"}">+${fmtNota(valor)}</span>
-    </div>`;
-  }
-
-  const extras = [
-    ...EXTRAS_AUTO.map(e => extraItem(e.label, !!auto[e.key], e.valor)),
-    ...(ativ4Info.bonusRank>0 ? [extraItem(EXTRA_RANK_ATIV4.label, true, ativ4Info.bonusRank, `${ativ4Info.posicao}º lugar no geral`)] : []),
-    extraItem(CADERNO_EXTRA.label, cadExtra, CADERNO_EXTRA.valor),
-    extraItem(EXTRA_NIVEL_PERFIL.label, true, Math.round(((boletim.nivelPerfil||1) * 0.1) * 10) / 10, `Nível ${boletim.nivelPerfil||1} × 0,1`),
-  ].join("");
+  // linha de tendência decorativa (sobe até a nota final) — só visual, como no print
+  const dataAtual = boletim.atualizadoEm
+    ? new Date(boletim.atualizadoEm).toLocaleString("pt-BR", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" }).replace(",", " às")
+    : null;
 
   return `
-    <div class="rendimento-header">
-      <div class="rend-num">${fmtNota(total)}</div>
-      <div class="rend-info">
-        <div class="rend-eyebrow">${BIMESTRE}º Bimestre · Meu Rendimento</div>
-        <div class="rend-sub">${fmtNota(subtotalCapado)} das atividades + ${fmtNota(bonus)} de bônus</div>
-        <div class="rend-msg">${mensagemPorNota(total)}</div>
+    <div class="rend-hero">
+      <div class="rh-left">
+        <div class="rh-eyebrow">Nota final</div>
+        <div class="rh-numwrap">
+          <span class="rh-num">${fmtNota(total)}</span>
+          <svg class="rh-trophy" viewBox="0 0 24 24"><path d="M6 4h12v3a6 6 0 0 1-12 0V4z"/><path d="M6 5H3v2a3 3 0 0 0 3 3M18 5h3v2a3 3 0 0 1-3 3"/><path d="M12 13v4M9 21h6M9.5 21c0-1.5 1-2 2.5-2s2.5.5 2.5 2"/></svg>
+        </div>
       </div>
+      <div class="rh-divider"></div>
+      <div class="rh-mid">
+        <div class="rh-bim">${BIMESTRE}º Bimestre</div>
+        <div class="rh-breakdown">${fmtNota(subtotalCapado)} das atividades${bonusOn?` + ${fmtNota(bonus)} de bônus`:""}</div>
+        <div class="rh-msg"><span class="star">★</span> ${msgTxt}</div>
+      </div>
+      <div class="rh-chart" id="rh-chart"></div>
     </div>
-    <div class="summary-bar" style="margin-bottom:18px">
-      <div class="sum-card">
-        <div class="sum-label">📋 Das atividades</div>
-        <div class="sum-val" style="color:var(--text)">${fmtNota(subtotalCapado)}<span style="font-size:13px;font-weight:600;color:var(--text-muted)"> / 10</span></div>
-        <div style="font-size:10.5px;color:var(--text-muted)">subtotal das atividades</div>
+
+    <div class="rend-summary">
+      <div class="rs-card">
+        <div class="rs-icon blue"><svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm-1 14l-4-4 1.41-1.41L11 14.17l5.59-5.58L18 10l-7 7z"/></svg></div>
+        <div class="rs-body">
+          <div class="rs-label">Das atividades</div>
+          <div class="rs-val">${fmtNota(subtotalCapado)}<span class="rs-max"> / 10</span></div>
+          <div class="rs-sub">subtotal das atividades</div>
+        </div>
       </div>
-      ${bonusOn ? `<div class="sum-card">
-        <div class="sum-label">🎁 Bônus extras</div>
-        <div class="sum-val" style="color:var(--purple)">+${fmtNota(bonus)}</div>
-        <div style="font-size:10.5px;color:var(--text-muted)">tabuada, ranking e perfil</div>
+      ${bonusOn ? `<div class="rs-card">
+        <div class="rs-icon green"><svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 0 0-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm6 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM4 8h16v3H4V8zm0 12v-7h7v7H4zm16 0h-7v-7h7v7z"/></svg></div>
+        <div class="rs-body">
+          <div class="rs-label">Bônus extras</div>
+          <div class="rs-val green">+${fmtNota(bonus)}</div>
+          <div class="rs-sub">tabuada, ranking e perfil</div>
+        </div>
       </div>` : ""}
-      <div class="sum-card" style="background:linear-gradient(135deg,#1a1040,#15102a);border-color:rgba(108,0,212,.35)">
-        <div class="sum-label" style="color:rgba(200,170,255,.7)">= Nota final</div>
-        <div style="font-size:32px;font-weight:800;color:var(--purple);line-height:1">${fmtNota(total)}</div>
-        <div style="font-size:10.5px;color:rgba(200,170,255,.5)">${fmtNota(subtotalCapado)} + ${fmtNota(bonus)} bônus</div>
+      <div class="rs-card">
+        <div class="rs-icon purple"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></div>
+        <div class="rs-body">
+          <div class="rs-label">Nota final</div>
+          <div class="rs-val purple">${fmtNota(total)}</div>
+          <div class="rs-sub">${fmtNota(subtotalCapado)}${bonusOn?` + ${fmtNota(bonus)} bônus`:""}</div>
+        </div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-title"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>Atividades do bimestre</div>
-      ${camposAtivos().map(barraItem).join("")}
-      <div class="subtotal-row"><span class="lbl">Subtotal</span><span class="val">${fmtNota(subtotal)} / 10</span></div>
-      ${capNote}
+
+    <div class="rend-cols">
+      <div class="card">
+        <div class="card-title card-title-lg"><svg viewBox="0 0 24 24"><path d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z"/></svg>Atividades do bimestre</div>
+        ${blocoAtividadesIcones(boletim, true)}
+        <div class="subtotal-row"><span class="lbl">Subtotal das atividades</span><span class="val">${fmtNota(subtotalCapado)} / 10</span></div>
+        ${capNote}
+      </div>
+      ${bonusOn ? `<div class="card">
+        <div class="card-title card-title-lg"><svg viewBox="0 0 24 24" style="fill:#e9e7f2"><path d="M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 0 0-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm6 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1z"/></svg>Pontos extras conquistados</div>
+        ${blocoExtrasIcones(boletim, true)}
+        <div class="bonus-total-row"><span class="lbl">Bônus total</span><span class="val">+${fmtNota(bonus)}</span></div>
+      </div>` : ""}
     </div>
-    ${bonusOn ? `<div class="card">
-      <div class="card-title"><svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 0 0-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm6 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1z"/></svg>Pontos extras conquistados</div>
-      ${extras}
-      <div class="bonus-total-row"><span class="lbl">Bônus total</span><span class="val">+${fmtNota(bonus)}</span></div>
+
+    ${dataAtual ? `<div class="rend-updated">
+      <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm.5-13H11v6l5.2 3.1.8-1.3-4.5-2.7V7z"/></svg>
+      Última atualização: ${dataAtual}
     </div>` : ""}`;
 }
 
@@ -435,30 +545,86 @@ async function carregar() {
     setBimestre(String(b.n));
     try { if (await notasLiberadas(turma)) liberados.push(b.n); } catch (e) {}
   }
-  if (!liberados.length) {
-    if (bimSel) bimSel.style.display = "none";
-    content.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-      <p>Suas notas ainda não foram disponibilizadas pela professora.<br>Volte aqui mais perto do fim do bimestre.</p></div>`;
-    return;
-  }
-
-  // popula e liga o seletor (só aparece se houver mais de um liberado)
-  bimSel.innerHTML = liberados.map(n => `<option value="${n}">${n}º Bimestre</option>`).join("");
-  bimSel.style.display = liberados.length > 1 ? "" : "none";
+  // sempre mostra as 4 pílulas (padrão do site); se nada liberado, o bimestre atual
+  // é o selecionado e mostrarBimestre exibe a mensagem apropriada
   const corrente  = bimestreAtual();
-  const escolhido = liberados.includes(corrente) ? corrente : liberados[liberados.length - 1];
-  bimSel.value = String(escolhido);
-  bimSel.onchange = () => mostrarBimestre(+bimSel.value);
+  const escolhido = liberados.includes(corrente) ? corrente : (liberados.length ? liberados[liberados.length - 1] : corrente);
+  if (bimSel) bimSel.style.display = "";
+  montarSeletorBimestre('bimSel', { mostrarTodos:true, selecionado: escolhido, onChange: (n) => mostrarBimestre(n) });
   await mostrarBimestre(escolhido);
 }
 
+let viewToken = 0;
+
 async function mostrarBimestre(n) {
+  const token = ++viewToken;
   setBimestre(String(n));
   const content = document.getElementById("content");
   content.innerHTML = `<div class="empty-state"><p>Carregando…</p></div>`;
   const boletim = await montarBoletim(turma, nome);
   if (!boletim) { content.innerHTML = `<div class="empty-state"><p>As notas foram disponibilizadas e serão lançadas em breve.</p></div>`; return; }
   content.innerHTML = todasLancadas(boletim) ? renderRendimento(boletim) : renderAndamento(boletim);
+  // gráfico de evolução (busca as notas dos outros bimestres em segundo plano)
+  pintarGraficoHistorico(n, token);
+}
+
+// Busca a nota final/atual de cada bimestre liberado para desenhar a evolução.
+// Roda depois do render principal e injeta o SVG no #rh-chart quando pronto.
+async function pintarGraficoHistorico(atual, token) {
+  const historico = [];
+  for (const b of [1, 2, 3, 4]) {
+    setBimestre(String(b));
+    try {
+      const bo = await montarBoletim(turma, nome);   // null se ainda não liberado
+      historico.push({ n: b, total: bo ? bo.total : null });
+    } catch (e) { historico.push({ n: b, total: null }); }
+  }
+  setBimestre(String(atual));                          // restaura o bimestre visualizado
+  if (token !== viewToken) return;                     // usuário já trocou de bimestre
+  const host = document.getElementById("rh-chart");
+  if (host) host.innerHTML = svgEvolucao(historico, atual);
+}
+
+// Desenha o SVG da linha de evolução a partir dos pontos reais.
+function svgEvolucao(historico, atual) {
+  const pontos = historico.filter(p => p.total !== null && p.total !== undefined);
+  const X = b => 10 + ((b - 1) / 3) * (290 - 10);      // 1º→esq, 4º→dir
+  const Y = t => 86 - (Math.max(0, Math.min(10, t)) / 10) * (86 - 12);
+  const glow = `<defs>
+      <linearGradient id="rhFill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#9b30ff" stop-opacity=".28"/><stop offset="1" stop-color="#9b30ff" stop-opacity="0"/>
+      </linearGradient>
+      <filter id="rhGlow" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>`;
+
+  if (pontos.length === 0) {
+    return `<svg viewBox="0 0 300 96" preserveAspectRatio="none" aria-hidden="true">${glow}</svg>`;
+  }
+  if (pontos.length === 1) {
+    const p = pontos[0], x = X(p.n), y = Y(p.total);
+    return `<svg viewBox="0 0 300 96" preserveAspectRatio="none" aria-hidden="true">${glow}
+      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="6" fill="#b26bff" filter="url(#rhGlow)"/>
+      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.6" fill="#fff"/></svg>`;
+  }
+
+  const coords = pontos.map(p => ({ b: p.n, x: X(p.n), y: Y(p.total) }));
+  const linha  = coords.map((c, i) => `${i ? "L" : "M"}${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(" ");
+  const area   = `M${coords[0].x.toFixed(1)},${coords[0].y.toFixed(1)} `
+               + coords.slice(1).map(c => `L${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(" ")
+               + ` L${coords[coords.length-1].x.toFixed(1)},96 L${coords[0].x.toFixed(1)},96 Z`;
+  const dots = coords.map(c => {
+    const cur = c.b === atual;
+    return cur
+      ? `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="6" fill="#b26bff" filter="url(#rhGlow)"/><circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="2.6" fill="#fff"/>`
+      : `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="3.2" fill="#7a4bd0"/>`;
+  }).join("");
+
+  return `<svg viewBox="0 0 300 96" preserveAspectRatio="none" aria-hidden="true">${glow}
+    <path d="${area}" fill="url(#rhFill)"/>
+    <path d="${linha}" fill="none" stroke="#9b30ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#rhGlow)"/>
+    ${dots}</svg>`;
 }
 
 carregar();

@@ -173,10 +173,11 @@
       </div>
     </div>
     <div class="content hc" id="content-wrap">
-      <div class="hc-filters">
+      <div class="hc-filters" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <button class="hc-fbtn on" onclick="setFiltro(this,'tudo')">🗂️ Tudo</button>
         <button class="hc-fbtn"    onclick="setFiltro(this,'atividade')">📝 Atividades</button>
         <button class="hc-fbtn"    onclick="setFiltro(this,'torneio')">🏆 Torneios</button>
+        <div id="bimTabs" style="margin-left:auto"></div>
       </div>
       <div id="entries">
         <div class="hc-sk"></div>
@@ -192,12 +193,17 @@ import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { getResultadosByAluno, getDetalhes, getHistoricoTeste, getAlunoPreferencia } from "/js/db.js";
+import { bimestreAtual, bimestreDeData } from "/js/constants.js";
+import { montarSeletorBimestre, bimestreSelecionado } from "/js/bimestre-seletor.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
 
 
 const sess = requireAluno();
 if (!sess) throw new Error();
 const { alunos, turma } = sess;
+// bimestre selecionado no histórico (via ?bim= ou o atual) + pílulas padrão
+const _bimHist = bimestreSelecionado();
+montarSeletorBimestre('bimTabs', { mostrarTodos:true });   // 1-4 sempre, recarrega ?bim=
 const alunoNome = alunos[0];
   console.log('[historico] alunoNome:', JSON.stringify(alunoNome), '| turma:', turma);
 const sessionUid = (turma + '_' + alunoNome).replace(/[.#$[\]/\s]/g, '_');
@@ -207,7 +213,7 @@ function avKey(s) { return btoa(unescape(encodeURIComponent(s))).replace(/=/g,''
 renderSidebarAluno("sidebar", "historico");
 injetarFaixaDuelo();
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
-document.getElementById("topbar-sub").textContent = isModoTeste() ? '🧪 Modo Teste' : `Turma ${turma}`;
+document.getElementById("topbar-sub").textContent = isModoTeste() ? '🧪 Modo Teste' : `Turma ${turma} · ${_bimHist}º bimestre`;
 (async () => { try {
   const { getPerfil } = await import('/js/db.js');
   const { avatarUrl: _avUrl, avatarConfigDefault: _avDef } = await import('/js/gamificacao.js');
@@ -302,8 +308,14 @@ try {
     ]);
   } else {
     todosRegs = await getResultadosByAluno(alunoNome, turma).catch(() => []);
-    console.log('[historico] todosRegs carregados:', todosRegs.length, todosRegs.slice(0,3));
     todosRegs = todosRegs.filter(r => !r.modo_teste && r.turma === turma);
+    // filtra pelo bimestre selecionado, derivando a data de criadoEm
+    todosRegs = todosRegs.filter(r => {
+      const ts = r.criadoEm || 0;
+      if (!ts) return _bimHist === bimestreAtual(); // sem data: só no bimestre atual
+      const iso = new Date(ts).toISOString().slice(0, 10);
+      return bimestreDeData(iso) === _bimHist;
+    });
   }
 
   // Avaliação+: agrupar por sessão (sem filtro de concluido — inclui T1 parcial)

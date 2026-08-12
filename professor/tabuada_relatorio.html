@@ -61,7 +61,7 @@
 </div>
 
 <script type="module">
-import { ALUNOS_POR_TURMA } from "/js/constants.js";
+import { ALUNOS_POR_TURMA, pathTabuadaRanking, pathTabuadaNiveisRaiz } from "/js/constants.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -102,7 +102,7 @@ async function loadData() {
     const cfgSnap = await get(configRef);
     if (cfgSnap.exists()) tabuadaConfig = { ...tabuadaConfig, ...cfgSnap.val() };
 
-    const snap = await get(ref(db, 'tabuada_ranking'));
+    const snap = await get(ref(db, pathTabuadaRanking()));
     allData = [];
     if (snap.exists()) {
       // Ranking has: nome, turma, nivel_atual, melhor_nivel, ultima_partida
@@ -113,7 +113,7 @@ async function loadData() {
     }
 
     // Also load total_partidas from niveis
-    const niveisSnap = await get(ref(db, 'tabuada_niveis'));
+    const niveisSnap = await get(ref(db, pathTabuadaNiveisRaiz()));
     const niveisMap  = {};
     if (niveisSnap.exists()) {
       niveisSnap.forEach(child => {

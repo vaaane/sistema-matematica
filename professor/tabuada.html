@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <meta name="theme-color" content="#15102a">
@@ -10,46 +11,258 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
-    /* ── Tab bar ── */
-    .page-tabs{display:flex;gap:0;border-bottom:1.5px solid var(--border);margin-bottom:20px;}
-    .page-tab{padding:9px 20px;border:none;background:none;font-size:13px;font-weight:600;cursor:pointer;color:var(--text-muted);border-bottom:2.5px solid transparent;margin-bottom:-1.5px;font-family:'Inter',sans-serif;transition:color .12s;white-space:nowrap;}
-    .page-tab:hover{color:var(--text);}
-    .page-tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+    /* ── Timer ── */
+    .timer-wrap{display:flex;align-items:center;justify-content:center;gap:8px;font-size:32px;font-weight:800;margin-bottom:10px;color:var(--text);transition:color .3s;}
+    .timer-wrap svg{width:30px;height:30px;fill:currentColor;}
+    .timer-wrap.warn{color:var(--red);}
+    .timer-bar-bg{height:7px;background:var(--border);border-radius:4px;margin-bottom:18px;overflow:hidden;}
+    .timer-bar{height:100%;border-radius:4px;background:var(--blue);transition:width 1s linear,background .4s;}
+    .timer-bar.warn{background:var(--orange);}
+    .timer-bar.danger{background:var(--red);}
 
-    /* ── Jogar tab styles ── */
-    .nota-row{padding:10px 0;border-bottom:0.5px solid var(--border);}
-    .nota-row:last-child{border-bottom:none;}
-    .nota-nivel{font-size:12px;font-weight:700;color:var(--blue-dark);}
-    .nota-texto{font-size:13px;color:var(--text);line-height:1.5;margin-top:3px;white-space:pre-wrap;}
-    @media(max-width:560px){.stat-grid{grid-template-columns:repeat(2,1fr)!important;}}
-    .prog-tr:hover td{filter:brightness(.97);}
-    .ovr-btn{padding:1px 7px;border:1px solid var(--border);border-radius:5px;background:var(--bg);color:var(--text);cursor:pointer;font-size:13px;line-height:1.6;font-family:inherit;}
-    .ovr-btn:hover{background:var(--blue-pale);border-color:var(--blue);}
-    .ovr-val{min-width:36px;display:inline-block;text-align:center;font-size:12px;font-weight:700;}
-    .ovr-val.changed{color:var(--blue);}
-    .ovr-rst{padding:1px 6px;border:1px solid rgba(239,68,68,.3);border-radius:5px;background:rgba(239,68,68,.06);color:var(--red);cursor:pointer;font-size:11px;font-family:inherit;}
+    /* ── Level badge ── */
+    .nivel-badge{display:inline-flex;align-items:center;gap:6px;background:var(--blue-pale);border:1.5px solid rgba(127,119,221,0.3);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:700;color:var(--blue-dark);}
+    .nivel-badge svg{width:13px;height:13px;fill:currentColor;}
 
-    /* ── Alunos tab styles (from tabuada_relatorio) ── */
-    .lvl-badge{display:inline-flex;align-items:center;justify-content:center;width:38px;height:24px;border-radius:12px;font-size:12px;font-weight:800;}
-    .lvl-1-5{background:#DCFCE7;color:#15803D;}
-    .lvl-6-10{background:#DBEAFE;color:#1D4ED8;}
-    .lvl-11-15{background:#F5F3FF;color:#5B21B6;}
-    .lvl-16p{background:linear-gradient(135deg,#FEF3C7,#FDE68A);color:#92400E;}
-    .turma-pill{display:inline-flex;align-items:center;padding:4px 11px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .14s;margin-right:6px;margin-bottom:6px;}
-    .turma-pill.on{border-color:var(--blue);background:var(--blue);color:#fff;}
-    .rank-hero{display:flex;align-items:center;gap:10px;padding:14px 16px;background:linear-gradient(135deg,var(--blue-pale),#F0F9FF);border:1.5px solid #BAE6FD;border-radius:var(--radius);margin-bottom:14px;}
-    .spark{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 2px;}
-    .spark.done{background:var(--green);}
-    .spark.todo{background:var(--border);}
-    .no-data{display:flex;flex-direction:column;align-items:center;padding:48px 20px;text-align:center;color:var(--text-muted);gap:10px;}
-    .no-data svg{width:40px;height:40px;fill:var(--border);}
-    .cfg-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-    .cfg-label{font-size:13px;font-weight:600;color:var(--text);min-width:130px;}
-    .cfg-stepper{display:inline-flex;align-items:center;gap:0;border:1.5px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;}
-    .cfg-step-btn{width:32px;height:36px;border:none;background:var(--bg);color:var(--text);font-size:18px;font-weight:700;cursor:pointer;transition:background .12s;display:flex;align-items:center;justify-content:center;}
-    .cfg-step-btn:hover{background:var(--blue-pale);}
-    .cfg-val{width:56px;height:36px;text-align:center;font-size:14px;font-weight:700;color:var(--text);border:none;border-left:1.5px solid var(--border);border-right:1.5px solid var(--border);background:var(--card);font-family:inherit;}
-    .cfg-unit{font-size:12px;color:var(--text-muted);}
+    /* ── Game grid ── */
+    .game-grid{display:grid;gap:7px;margin-bottom:18px;position:relative;overflow:hidden;}
+
+    /* ── Game card ── */
+    .game-card{
+      position:static;
+      background:var(--card);border:1.5px solid var(--border);border-radius:11px;
+      padding:6px 4px;cursor:pointer;
+      transition:border-color .14s,background .14s;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      height:var(--game-card-h,68px);min-height:0;overflow:hidden;
+      user-select:none;-webkit-tap-highlight-color:transparent;
+    }
+    .game-card.compact .res-number{font-size:18px;}
+    .game-card.compact .num-cima,.game-card.compact .num-baixo{font-size:16px;}
+    .game-card.compact .op-compound{font-size:11px;}
+    .game-card.compact .operador{font-size:12px;}
+    .game-card:hover{border-color:var(--blue);background:var(--blue-pale);}
+    .game-card.selected{border:2.5px solid var(--blue);background:var(--blue-pale);box-shadow:inset 0 0 0 2px rgba(47,158,220,.18);}
+    .game-card.error{border-color:var(--red)!important;background:var(--red-pale)!important;animation:shake .4s;}
+    .game-card.matched-flash{border-color:var(--green)!important;background:var(--green-pale)!important;pointer-events:none;}
+    .game-card.removed{pointer-events:none;animation:cardOut .4s forwards;}
+
+    /* ── Operação: operador + fração como unidade centralizada no card ── */
+    .op-wrap{ display:flex;align-items:center;gap:4px; }
+    .operador{ font-size:clamp(8px,min(2.2vw,2.5vh),14px);font-weight:900;color:var(--text);line-height:1;flex-shrink:0; }
+    .fracao{ display:flex;flex-direction:column;align-items:center; }
+    .num-cima,.num-baixo{ font-size:clamp(10px,min(3.5vw,3.6vh),22px);font-weight:800;line-height:1.1;color:var(--text);min-width:16px;text-align:center; }
+    .traco{ width:100%;height:2px;background:var(--text);border-radius:1px;margin:1px 0; }
+    /* Expressão composta (nível 16+) */
+    .op-compound{font-size:clamp(9px,min(2.8vw,2.7vh),13px);font-weight:800;color:var(--text);text-align:center;line-height:1.4;letter-spacing:-.3px;padding:0 3px;}
+    /* Número resultado */
+    .res-number{font-size:clamp(12px,min(4.5vw,4.6vh),28px);font-weight:800;color:var(--text);line-height:1;}
+
+    /* ── Slots ── */
+    .slots-wrap{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;flex-wrap:nowrap;width:100%;}
+    .slot{flex:1;max-width:128px;min-width:80px;height:60px;border:2px dashed var(--border);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--text-muted);background:var(--bg);transition:all .2s;text-align:center;padding:4px;}
+    .slot.filled{border-style:solid;border-color:var(--blue);background:var(--blue-pale);color:var(--text);cursor:pointer;}
+    .slot.filled:hover{border-color:var(--orange);}
+    .slot.filled .slot-ph{display:none;}
+    .slot-eq{font-size:24px;font-weight:800;color:var(--text-muted);flex-shrink:0;}
+
+    /* ── Controls ── */
+    .game-controls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+
+    /* ── Status msg ── */
+    .status-msg{text-align:center;font-size:13px;color:var(--text-muted);margin-bottom:12px;min-height:18px;transition:all .2s;}
+
+    /* ── Animations ── */
+    @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+    @keyframes cardOut{0%{opacity:1}100%{opacity:0;visibility:hidden}}
+    @keyframes levelUpPop{0%{opacity:0;transform:scale(.45) rotate(-8deg)}70%{transform:scale(1.12) rotate(1.5deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+    @keyframes levelDownPop{0%{opacity:0;transform:scale(.88) translateY(8px)}65%{transform:scale(1.02) translateY(-2px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+    @keyframes fadeInUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes slideUp{from{transform:translateY(28px);opacity:0}to{transform:translateY(0);opacity:1}}
+    @keyframes combo-float{0%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}60%{opacity:1;transform:translateX(-50%) translateY(-30px) scale(1.15)}100%{opacity:0;transform:translateX(-50%) translateY(-52px) scale(.9)}}
+    .combo-pop{position:fixed;pointer-events:none;z-index:150;font-weight:800;font-size:15px;font-family:'Inter',sans-serif;animation:combo-float .85s ease forwards;white-space:nowrap;text-shadow:0 1px 6px rgba(0,0,0,.35);}
+    .combo-pop.combo-big{font-size:21px;animation-duration:1.05s;}
+    .combo-pop.combo-huge{font-size:28px;animation-duration:1.3s;}
+    @keyframes combo-badge-pop{0%{transform:scale(1.3);opacity:.6}100%{transform:scale(1);opacity:1}}
+    .combo-badge-inner{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:800;padding:3px 12px;border-radius:20px;animation:combo-badge-pop .2s;}
+    .combo-c2{background:rgba(34,197,94,.1);color:#22C55E;border:1px solid rgba(34,197,94,.25);}
+    .combo-c3{background:rgba(249,115,22,.1);color:#f97316;border:1px solid rgba(249,115,22,.25);}
+    .combo-c4{background:rgba(250,184,0,.1);color:#FAB800;border:1px solid rgba(250,184,0,.28);}
+    .combo-c5{background:rgba(250,184,0,.18);color:#FAB800;border:1px solid rgba(250,184,0,.45);font-size:15px;}
+
+    /* ── Level overlay ── */
+    .level-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
+    .level-card{background:var(--card);border-radius:22px;padding:40px 44px;text-align:center;animation:levelUpPop .45s;box-shadow:0 24px 64px rgba(0,0,0,.35);max-width:320px;width:92vw;}
+    .level-emoji{font-size:68px;line-height:1;margin-bottom:14px;}
+    .level-title{font-size:24px;font-weight:800;margin-bottom:6px;}
+    .level-sub{font-size:13px;color:var(--text-muted);margin-bottom:20px;line-height:1.5;}
+    .level-new{font-size:19px;font-weight:700;color:var(--blue);margin-bottom:24px;}
+
+    /* ── Back link (inside content) ── */
+    .link-back{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--text-muted);text-decoration:none;transition:color .14s;padding:2px 0;}
+    .link-back:hover{color:var(--text);}
+    .link-back svg{width:13px;height:13px;fill:currentColor;flex-shrink:0;}
+
+    /* ── Progress bar (pairs left) ── */
+    .pairs-bar-bg{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap;justify-content:center;}
+    .pair-dot{width:12px;height:12px;border-radius:50%;background:var(--border);transition:background .3s;}
+    .pair-dot.done{background:var(--green);}
+
+    /* ── Confete ── */
+    @keyframes confete-fall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(115vh) rotate(740deg);opacity:0}}
+    .confete-wrap{position:fixed;inset:0;pointer-events:none;z-index:999;overflow:hidden;}
+    .confete-particle{position:absolute;top:-12px;border-radius:3px;animation:confete-fall linear forwards;}
+
+    /* ── Chefão ── */
+    @keyframes chefao-pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
+    @keyframes chefao-badge-pulse{0%,100%{box-shadow:0 0 8px rgba(239,68,68,.5)}50%{box-shadow:0 0 18px rgba(239,68,68,.9),0 0 32px rgba(239,68,68,.3)}}
+    @keyframes chefao-modal-in{from{opacity:0;transform:scale(.8) rotate(-4deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+    .nivel-badge.chefao{background:linear-gradient(135deg,rgba(239,68,68,.18),rgba(249,115,22,.12));border-color:rgba(239,68,68,.5);color:#EF4444;animation:chefao-badge-pulse 1.4s infinite;}
+    .nivel-badge.chefao svg{fill:#EF4444;}
+    .timer-wrap.chefao{color:#EF4444!important;}
+    .timer-wrap.chefao svg{fill:#EF4444!important;}
+    .timer-bar.chefao{background:linear-gradient(90deg,#EF4444,#F97316)!important;}
+    .game-grid.chefao-grid{border:1.5px solid rgba(239,68,68,.3);border-radius:10px;padding:8px;background:rgba(239,68,68,.03);box-shadow:0 0 24px rgba(239,68,68,.12);}
+    .chefao-modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+    .chefao-modal-card{background:linear-gradient(135deg,#1a0505,#2d0a0a);border:2px solid rgba(239,68,68,.5);border-radius:22px;padding:38px 40px;text-align:center;max-width:340px;width:92vw;animation:chefao-modal-in .4s ease both;box-shadow:0 24px 64px rgba(239,68,68,.3);}
+    .chefao-modal-icon{font-size:72px;line-height:1;margin-bottom:10px;filter:drop-shadow(0 0 16px rgba(239,68,68,.6));}
+    .chefao-modal-title{font-size:26px;font-weight:800;color:#EF4444;letter-spacing:1px;margin-bottom:4px;}
+    .chefao-modal-sub{font-size:14px;color:#F87171;margin-bottom:18px;font-weight:600;}
+    .chefao-modal-stats{display:flex;gap:10px;justify-content:center;margin-bottom:20px;}
+    .chefao-modal-stat{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:8px 14px;font-size:12px;color:#FCA5A5;font-weight:700;}
+    .chefao-modal-desc{font-size:12px;color:#7f4444;margin-bottom:22px;line-height:1.6;}
+    .btn-enfrentar{width:100%;padding:14px;background:linear-gradient(135deg,#DC2626,#B91C1C);border:none;border-radius:13px;color:#fff;font-size:17px;font-weight:800;cursor:pointer;letter-spacing:1px;animation:chefao-pulse 1.6s infinite;font-family:'Inter',sans-serif;}
+    .btn-enfrentar:hover{background:linear-gradient(135deg,#EF4444,#DC2626);}
+
+    /* ── Chefão Difícil (roxo) ── */
+    @keyframes chefao-dificil-pulse{0%,100%{box-shadow:0 0 0 0 rgba(139,92,246,.4)}50%{box-shadow:0 0 0 6px rgba(139,92,246,0)}}
+    @keyframes chefao-dificil-badge{0%,100%{box-shadow:0 0 8px rgba(139,92,246,.5)}50%{box-shadow:0 0 18px rgba(139,92,246,.9),0 0 32px rgba(139,92,246,.3)}}
+    .nivel-badge.chefao-dificil{background:linear-gradient(135deg,rgba(139,92,246,.18),rgba(167,139,250,.12));border-color:rgba(139,92,246,.5);color:#A78BFA;animation:chefao-dificil-badge 1.4s infinite;}
+    .nivel-badge.chefao-dificil svg{fill:#A78BFA;}
+    .timer-wrap.chefao-dificil{color:#A78BFA!important;}
+    .timer-wrap.chefao-dificil svg{fill:#A78BFA!important;}
+    .timer-bar.chefao-dificil{background:linear-gradient(90deg,#7C3AED,#A78BFA)!important;}
+    .game-grid.chefao-dificil-grid{border:1.5px solid rgba(139,92,246,.3);border-radius:10px;padding:8px;background:rgba(139,92,246,.03);box-shadow:0 0 24px rgba(139,92,246,.12);}
+    .chefao-modal-card.dificil{background:linear-gradient(135deg,#0d0514,#1a0a2e);border-color:rgba(139,92,246,.5);box-shadow:0 24px 64px rgba(139,92,246,.3);}
+    .chefao-modal-card.dificil .chefao-modal-title{color:#A78BFA;}
+    .chefao-modal-card.dificil .chefao-modal-sub{color:#C4B5FD;}
+    .chefao-modal-card.dificil .chefao-modal-stat{background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3);color:#DDD6FE;}
+    .chefao-modal-card.dificil .chefao-modal-desc{color:#6b4a7f;}
+    .chefao-modal-card.dificil .chefao-modal-icon{filter:drop-shadow(0 0 16px rgba(139,92,246,.6));}
+    .chefao-modal-card.dificil .btn-enfrentar{background:linear-gradient(135deg,#7C3AED,#5B21B6);animation:chefao-dificil-pulse 1.6s infinite;}
+    .chefao-modal-card.dificil .btn-enfrentar:hover{background:linear-gradient(135deg,#8B5CF6,#7C3AED);}
+
+    /* ── Chefão Grande (azul escuro) ── */
+    @keyframes chefao-grande-pulse{0%,100%{box-shadow:0 0 0 0 rgba(30,64,175,.4)}50%{box-shadow:0 0 0 6px rgba(30,64,175,0)}}
+    @keyframes chefao-grande-badge{0%,100%{box-shadow:0 0 8px rgba(59,130,246,.5)}50%{box-shadow:0 0 18px rgba(59,130,246,.9),0 0 32px rgba(59,130,246,.3)}}
+    .nivel-badge.chefao-grande{background:linear-gradient(135deg,rgba(30,64,175,.18),rgba(59,130,246,.12));border-color:rgba(59,130,246,.5);color:#60A5FA;animation:chefao-grande-badge 1.4s infinite;}
+    .nivel-badge.chefao-grande svg{fill:#60A5FA;}
+    .timer-wrap.chefao-grande{color:#60A5FA!important;}
+    .timer-wrap.chefao-grande svg{fill:#60A5FA!important;}
+    .timer-bar.chefao-grande{background:linear-gradient(90deg,#1E40AF,#3B82F6)!important;}
+    .game-grid.chefao-grande-grid{border:1.5px solid rgba(59,130,246,.3);border-radius:10px;padding:8px;background:rgba(59,130,246,.03);box-shadow:0 0 24px rgba(59,130,246,.12);}
+    .chefao-modal-card.grande{background:linear-gradient(135deg,#020d1a,#0a1f3e);border-color:rgba(59,130,246,.5);box-shadow:0 24px 64px rgba(30,64,175,.3);}
+    .chefao-modal-card.grande .chefao-modal-title{color:#60A5FA;}
+    .chefao-modal-card.grande .chefao-modal-sub{color:#93C5FD;}
+    .chefao-modal-card.grande .chefao-modal-stat{background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.3);color:#BFDBFE;}
+    .chefao-modal-card.grande .chefao-modal-desc{color:#3a5275;}
+    .chefao-modal-card.grande .chefao-modal-icon{filter:drop-shadow(0 0 16px rgba(59,130,246,.6));}
+    .chefao-modal-card.grande .btn-enfrentar{background:linear-gradient(135deg,#1D4ED8,#1E40AF);animation:chefao-grande-pulse 1.6s infinite;}
+    .chefao-modal-card.grande .btn-enfrentar:hover{background:linear-gradient(135deg,#3B82F6,#2563EB);}
+
+    /* ── Mini ranking ── */
+    .mini-rank-wrap{margin-bottom:14px;}
+    .mini-rank-leader{display:flex;align-items:center;gap:8px;background:rgba(234,179,8,.07);border:1px solid rgba(234,179,8,.25);border-radius:11px;padding:10px 14px;margin-bottom:6px;}
+    .mini-rank-leader-icon{font-size:22px;line-height:1;flex-shrink:0;}
+    .mini-rank-leader-text{flex:1;min-width:0;}
+    .mini-rank-leader-title{font-size:13px;font-weight:700;color:#eab308;line-height:1.2;}
+    .mini-rank-leader-sub{font-size:11px;color:rgba(234,179,8,.65);margin-top:2px;}
+    .mini-rank-bar{display:flex;gap:6px;flex-wrap:wrap;}
+    .mini-rank-pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 11px;border-radius:20px;}
+    .mini-rank-pill.geral{background:rgba(234,179,8,.08);border:0.5px solid rgba(234,179,8,.2);color:#eab308;}
+    .mini-rank-pill.turma{background:rgba(127,119,221,.08);border:0.5px solid rgba(127,119,221,.2);color:#c4b5fd;}
+
+    /* ── Combo seguidos ── */
+    .combo-seguidos{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:2px 9px;border-radius:20px;transition:all .2s;}
+    .combo-seguidos.baixo{color:var(--text-muted);background:transparent;}
+    .combo-seguidos.alto{color:#f97316;background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25);}
+    .combo-seguidos.maximo{color:#FAB800;background:rgba(250,184,0,.12);border:1px solid rgba(250,184,0,.35);}
+    .combo-record-flash{position:fixed;top:72px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#FAB800,#f97316);color:#fff;font-size:13px;font-weight:800;padding:7px 18px;border-radius:30px;z-index:400;pointer-events:none;box-shadow:0 4px 20px rgba(250,184,0,.45);animation:recordFlash .8s ease forwards;}
+    @keyframes recordFlash{0%{opacity:0;transform:translateX(-50%) translateY(-8px) scale(.9)}20%{opacity:1;transform:translateX(-50%) translateY(0) scale(1.05)}80%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}100%{opacity:0;transform:translateX(-50%) translateY(-6px) scale(.95)}}
+
+    /* ── Sprint ── */
+    .sprint-bar{display:flex;align-items:center;gap:14px;background:rgba(127,119,221,.06);border:0.5px solid rgba(127,119,221,.2);border-radius:11px;padding:12px 16px;margin-bottom:14px;}
+    .sprint-timer{font-size:30px;font-weight:800;color:var(--blue);font-variant-numeric:tabular-nums;min-width:62px;line-height:1;}
+    .sprint-timer.warn{color:var(--orange);}
+    .sprint-timer.danger{color:var(--red);}
+    .sprint-label{font-size:9px;color:var(--text-muted);text-align:center;letter-spacing:.06em;text-transform:uppercase;margin-top:2px;}
+    .sprint-stats{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+    .sprint-stat{text-align:center;padding:6px 4px;background:rgba(255,255,255,.03);border-radius:8px;}
+    .sprint-stat-val{font-size:18px;font-weight:800;color:var(--text);line-height:1;}
+    .sprint-stat-lbl{font-size:9px;color:var(--text-muted);margin-top:3px;text-transform:uppercase;letter-spacing:.04em;}
+
+    /* ── Modal dupla ── */
+    .dupla-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+    .dupla-modal{background:var(--card);border-radius:22px;padding:32px 28px;max-width:360px;width:92vw;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.35);}
+    .dupla-title{font-size:20px;font-weight:800;margin-bottom:4px;}
+    .dupla-sub{font-size:13px;color:var(--text-muted);margin-bottom:22px;}
+    .dupla-btn{width:100%;padding:14px 16px;border:2px solid var(--border);border-radius:13px;background:var(--bg);cursor:pointer;margin-bottom:10px;text-align:left;display:flex;align-items:center;gap:12px;transition:border-color .15s,background .15s;font-family:inherit;}
+    .dupla-btn:last-child{margin-bottom:0;}
+    .dupla-btn:hover{border-color:#7F77DD;background:rgba(127,119,221,.07);}
+    .dupla-btn-avatar{width:40px;height:40px;border-radius:50%;background:#7F77DD;color:#fff;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .dupla-btn-name{font-size:15px;font-weight:700;color:var(--text);line-height:1.2;}
+    .dupla-btn-nivel{font-size:12px;color:var(--text-muted);margin-top:2px;}
+    .dupla-footer{font-size:11px;color:var(--text-muted);margin-top:18px;line-height:1.5;}
+
+    /* ── Desktop compacto ── */
+    @media(min-width:769px){
+      .timer-wrap{font-size:24px;margin-bottom:8px;}
+      .timer-wrap svg{width:22px;height:22px;}
+      .nivel-badge{font-size:11px;padding:4px 10px;}
+    }
+
+    /* ── Responsive ── */
+    @media(max-width:480px){
+      .game-card{padding:5px 3px;}
+      #btn-voltar{font-size:11px!important;padding:3px 7px!important;}
+      #btn-reiniciar-hdr{font-size:11px!important;padding:3px 7px!important;}
+      .topbar{padding:6px 10px!important;min-height:0!important;}
+      .topbar-title{font-size:14px;}
+      .tb-wrap{padding:4px 10px 2px!important;}
+      .timer-wrap{font-size:26px!important;margin-bottom:2px!important;}
+      .timer-wrap svg{width:24px!important;height:24px!important;}
+      #leaders-ingame div{font-size:11px!important;}
+      .slot{max-width:108px!important;height:52px!important;}
+      .slots-wrap{gap:8px!important;}
+    }
+    @media(max-width:360px){
+      .slot{max-width:88px;height:50px;}
+      .slot-eq{font-size:20px;}
+    }
+
+    /* ── Fullscreen game — Flexbox coluna ── */
+    html,body{overflow:hidden;height:100%;}
+    /* iOS Safari: dvh descontam a barra do browser; vh não desconta */
+    .layout{min-height:100vh;min-height:100dvh;}
+    .main{overflow:hidden;min-height:0!important;height:100vh;height:100dvh;}
+    #content{flex:1!important;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;padding:0!important;}
+    /* .tb-wrap: flex-column — info | timer/líderes | status | 1fr cards | slots */
+    /* Não usa CSS Grid + 1fr+auto pois browsers antigos (Safari iOS) calculam 1fr   */
+    /* sem reservar o espaço do último auto, empurrando os slots pra fora da tela.   */
+    /* tb-wrap: altura FIXA injetada pelo JS (--tb-h). Sem height:100% em cadeia que falha no Safari/Android */
+    .tb-wrap{display:flex;flex-direction:column;height:var(--tb-h,600px);width:100%;max-width:630px;margin:0 auto;overflow:hidden;padding:6px 16px 4px;box-sizing:border-box;flex-shrink:0;}
+    /* Todos os filhos NÃO encolhem. game-grid recebe --grid-h calculado pelo JS */
+    .tb-wrap > *{flex-shrink:0;}
+    /* game-grid: altura FIXA via --grid-h. Sem flex:1 que causa overflow no Safari/Android */
+    .game-grid{flex-shrink:0!important;height:var(--grid-h,200px)!important;min-height:0;overflow:hidden;margin-bottom:0!important;grid-auto-rows:minmax(0,1fr)!important;gap:clamp(3px,.8vw,7px)!important;}
+    .game-card{height:auto!important;min-height:0!important;}
+    /* Margens compactas */
+    .timer-wrap{margin-bottom:3px!important;}
+    .timer-bar-bg{margin-bottom:4px!important;}
+    .pairs-bar-bg{margin-bottom:2px!important;}
+    .status-msg{margin-bottom:2px!important;min-height:14px!important;}
+    .slots-wrap{padding:3px 0 2px!important;flex-shrink:0!important;}
+    .sprint-bar{margin-bottom:4px!important;}
   </style>
 </head>
 <body>
@@ -59,707 +272,1758 @@
     <div class="topbar">
       <div class="topbar-left">
         <div class="topbar-title">🎮 Tabuada</div>
-        <div class="topbar-sub" id="topbar-sub">Modo professor</div>
       </div>
-      <div class="topbar-right" style="gap:8px;display:flex">
-        <button class="btn btn-ghost btn-sm" id="btn-csv" style="display:none" onclick="exportarCSV()">
-          <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
-          Exportar CSV
+      <div class="topbar-right" style="display:flex;align-items:center;gap:8px">
+        <a href="/aluno/a-jogos.html" class="btn btn-ghost" id="btn-voltar"
+          style="font-size:12px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px">
+          <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+          Voltar
+        </a>
+        <button onclick="reiniciarNivel()" id="btn-reiniciar-hdr" title="Reiniciar nível"
+          style="font-size:12px;padding:4px 10px;display:none;align-items:center;gap:4px;background:none;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-family:inherit;color:var(--text-muted);transition:border-color .15s,color .15s"
+          onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'"
+          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+          ↺ Reiniciar
         </button>
-        <button class="btn btn-ghost btn-sm" id="btn-reload" onclick="recarregarAba()">
-          <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-          Atualizar
-        </button>
+        <div class="avatar-wrap" onclick="window.location.href='/aluno/perfil.html'">
+          <div class="avatar" id="topbar-avatar-circle" style="overflow:hidden;padding:0"></div>
+        </div>
       </div>
     </div>
-    <div class="content">
-      <!-- Tab bar -->
-      <div class="page-tabs">
-        <button class="page-tab active" id="tab-jogar" onclick="setTab('jogar')">🎮 Jogar</button>
-        <button class="page-tab" id="tab-alunos" onclick="setTab('alunos')">👥 Alunos</button>
-      </div>
-      <!-- Tab contents -->
-      <div id="pane-jogar"><div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div></div>
-      <div id="pane-alunos" style="display:none"><div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div></div>
+    <div id="prof-banner" style="display:none;align-items:center;gap:8px;padding:6px 20px;font-size:12px;font-weight:600;color:#7F77DD;background:rgba(127,119,221,.08);border-bottom:1px solid rgba(127,119,221,.2)">
+      👩‍🏫 Modo professor — progresso salvo separadamente
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
     </div>
   </div>
 </div>
 
+<!-- Modal: seleção de jogador (dupla) -->
+<div id="dupla-modal-bg" class="dupla-modal-bg" style="display:none">
+  <div class="dupla-modal">
+    <div class="dupla-title">👥 Dois jogadores detectados!</div>
+    <div class="dupla-sub">Quem vai jogar agora?</div>
+    <div id="dupla-opcoes"></div>
+    <div class="dupla-footer">O tabuleiro será gerado no nível do aluno selecionado.<br>O progresso será salvo somente para ele.</div>
+  </div>
+</div>
+
+<!-- Level up/down overlay -->
+<div id="level-overlay" class="level-overlay" style="display:none">
+  <div class="level-card">
+    <div class="level-emoji" id="lov-emoji">🎉</div>
+    <div class="level-title" id="lov-title">Avançou de nível!</div>
+    <div class="level-sub" id="lov-sub">Excelente trabalho!</div>
+    <div class="level-new" id="lov-new">Nível 2</div>
+    <button class="btn btn-blue btn-lg" id="lov-btn" onclick="fecharOverlay()">Continuar →</button>
+    <button id="lov-btn-repetir" onclick="repetirNivelAtual()"
+      style="display:none;margin-top:8px;width:100%;padding:7px 0;background:transparent;border:1px solid var(--border);color:var(--text-muted);font-size:12px;font-weight:600;border-radius:8px;cursor:pointer">
+      🔁 Repetir este nível
+    </button>
+  </div>
+</div>
+
+
+
 <script type="module">
-import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
-import { ALUNOS_POR_TURMA } from "/js/constants.js";
+import { getSession, renderSidebarAluno, renderSidebarProfessor, clearSession, isModoTeste, iniciarNotifDueloGlobal } from "/js/auth.js";
+import { NIVEL_MAX, bimestreAtual, pathTabuadaRanking } from "/js/constants.js";
 import { db } from "/js/firebase-config.js";
-import { ref, get, set, remove, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { escH, agruparPorTurma, compilarAlertasTabuada } from "/js/tabuada-alerts.js";
+import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-requireProfessor();
-renderSidebarProfessor("sidebar", "jogos");
-window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+// ── Auth ──────────────────────────────────────────────────────
+const sess = getSession();
+const _isProfMode = sess?.modo === 'professor';
+const _isModoTesteAtivo = !_isProfMode && isModoTeste();
+if (!_isProfMode && (!sess || sess.modo !== 'aluno')) { window.location.href = '/index.html'; throw new Error(); }
 
-// ── Tab state ─────────────────────────────────────────────────
-let _abaAtiva = 'jogar';
-let _alunosCarregado = false;
 
-window.setTab = function(aba) {
-  _abaAtiva = aba;
-  document.getElementById('tab-jogar').classList.toggle('active', aba === 'jogar');
-  document.getElementById('tab-alunos').classList.toggle('active', aba === 'alunos');
-  document.getElementById('pane-jogar').style.display = aba === 'jogar' ? '' : 'none';
-  document.getElementById('pane-alunos').style.display = aba === 'alunos' ? '' : 'none';
-  document.getElementById('btn-csv').style.display = aba === 'alunos' ? '' : 'none';
-  document.getElementById('topbar-sub').textContent = aba === 'jogar'
-    ? 'Modo professor — progresso salvo separado dos alunos'
-    : 'Progresso dos alunos no mini-jogo';
-  if (aba === 'alunos' && !_alunosCarregado) { loadAlunos(); }
-};
+if (_isProfMode) {
+  renderSidebarProfessor("sidebar", "jogos");
+} else {
+  renderSidebarAluno("sidebar", "jogos");
+}
+window.sair = () => { import('/js/presenca.js').then(m => m.encerrarPresenca()); clearSession(); window.location.href = "/index.html"; };
 
-window.recarregarAba = function() {
-  if (_abaAtiva === 'jogar') loadJogar();
-  else { _alunosCarregado = false; loadAlunos(); }
-};
+const _profUid = 'professora';
+const alunos   = _isProfMode ? ['Professora'] : sess.alunos;
+const turma    = _isProfMode ? '' : sess.turma;
+let nomeAluno  = alunos[0];
+const isDupla  = !_isProfMode && alunos.length === 2;
+let parceiroDupla = isDupla ? alunos[1] : null;
 
-// ══════════════════════════════════════════════════════════════
-// ABA JOGAR (ex professor/jogos.html)
-// ══════════════════════════════════════════════════════════════
-const PROF_UID  = 'professora';
-const niveisRef = ref(db, `professor_tabuada_niveis/${PROF_UID}`);
-const notasRef  = ref(db, `professor_jogos_notas/${PROF_UID}`);
+function _makeUid(nome) { return (turma + '_' + nome).replace(/[.#$\[\]/\s]/g, '_'); }
+let uid = _isProfMode ? _profUid : _makeUid(nomeAluno);
+const _bimJogo = (n => (n>=1&&n<=4)?n:bimestreAtual())(parseInt(new URLSearchParams(location.search).get('bim'),10));
+const _tabNiveisPath = _bimJogo <= 2 ? `tabuada_niveis/${uid}`         : `tabuada_niveis_b/${_bimJogo}/${uid}`;
+const _tabRankPath   = _bimJogo <= 2 ? `tabuada_ranking/${uid}`        : `tabuada_ranking_b/${_bimJogo}/${uid}`;
+const _tabSprintPath = _bimJogo <= 2 ? `tabuada_sprint_ranking/${uid}` : `tabuada_sprint_ranking_b/${_bimJogo}/${uid}`;
 
-function fmtDate(ts) {
-  if (!ts) return '—';
-  return new Date(Number(ts)).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+if (!_isProfMode) (async () => { try {
+  const { getPerfil } = await import('/js/db.js');
+  const { avatarHtml, avatarConfigDefault } = await import('/js/gamificacao.js');
+  const _p = await getPerfil(uid);
+  const _c = document.getElementById('topbar-avatar-circle');
+  if (_c) _c.innerHTML = avatarHtml(_p.avatar || avatarConfigDefault(), nomeAluno, '100%');
+} catch(_) {} })();
+
+if (!_isProfMode) (async () => { try {
+  const { iniciarPresenca, encerrarPresenca } = await import('/js/presenca.js');
+  const { getPerfil } = await import('/js/db.js');
+  const _perfil = await getPerfil(uid).catch(() => ({}));
+  await iniciarPresenca(uid, {
+    nome:    nomeAluno,
+    apelido: _perfil?.apelido_ativo || nomeAluno,
+    turma,
+    status:  _perfil?.duelos_disponivel !== false ? 'disponivel' : 'indisponivel',
+    pagina:  'tabuada',
+  });
+  window.addEventListener('beforeunload', () => encerrarPresenca());
+} catch(e) { console.warn('[Presença]', e); } })();
+
+if (!_isProfMode) iniciarNotifDueloGlobal();
+
+(async () => { try {
+  const { initDueloAvail } = await import('/js/duelo_avail.js');
+  await initDueloAvail(uid);
+} catch(e) {} })();
+
+// ── Firebase ──────────────────────────────────────────────────
+let niveisRef     = ref(db, _isProfMode ? `professor_tabuada_niveis/${uid}` : _isModoTesteAtivo ? `modo_teste_historico/PROFESSOR_TESTE/tabuada_niveis` : _tabNiveisPath);
+let rankingRef    = (_isProfMode || _isModoTesteAtivo) ? null : ref(db, _tabRankPath);
+let sprintRankRef = (_isProfMode || _isModoTesteAtivo) ? null : ref(db, _tabSprintPath);
+
+// Configurações globais do jogo (lidas do Firebase, aplicadas em getLevelConfig)
+let tabuadaConfig = { tempo_base: 40, dificuldade_multiplicador: 5 };
+try {
+  const cfgSnap = await get(ref(db, 'tabuada_config/global'));
+  if (cfgSnap.exists()) tabuadaConfig = { ...tabuadaConfig, ...cfgSnap.val() };
+} catch(e) { console.warn('[Tabuada] Config não carregada:', e); }
+
+async function carregarProgresso() {
+  try {
+    const snap = await get(niveisRef);
+    if (snap.exists()) return snap.val();
+  } catch(e) {}
+  return { nivel_atual: 1, melhor_nivel: 1, ultima_partida: 0, total_partidas: 0 };
 }
 
-const _TB129 = 65;
-const _TB200 = 45;
-const _TB300 = 35;
+async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo, isReplay = false, segsRestantes = null) {
+  try {
+    const ts = Date.now();
+    const novoMaiorCombo = Math.max(p.maior_combo || 0, comboSessao);
+    if (isReplay) {
+      await update(niveisRef, { ultima_partida: ts, total_partidas: p.total_partidas });
+    } else {
+      await update(niveisRef, {
+        nivel_atual:    p.nivel_atual,
+        melhor_nivel:   p.melhor_nivel,
+        ultima_partida: ts,
+        total_partidas: p.total_partidas,
+        maior_combo:    novoMaiorCombo,
+        ...(p.concluiu_300_em ? { concluiu_300_em: p.concluiu_300_em } : {}),
+      });
+      if (rankingRef) await set(rankingRef, {
+        nome:           nomeAluno,
+        turma:          turma,
+        nivel_atual:    p.nivel_atual,
+        melhor_nivel:   p.melhor_nivel,
+        ultima_partida: ts,
+        maior_combo:    novoMaiorCombo,
+        total_partidas: p.total_partidas,
+        ...(p.concluiu_300_em ? { concluiu_300_em: p.concluiu_300_em } : {}),
+      });
+      // ── XP de gamificação (tabuada) ───────────────────────────────
+      if (resultado === 'completou') try {
+        const { adicionarXP } = await import('/js/db.js');
+        await adicionarXP(uid, 2);
+      } catch(e) { console.warn('[XP] Erro ao adicionar XP tabuada:', e); }
+      try {
+        const { verificarConquistas } = await import('/js/conquistas.js');
+        await verificarConquistas(uid, { nivelTabuada: p.melhor_nivel || 0 });
+      } catch(e) {}
+      try {
+        const { registrarAtividadeDia } = await import('/js/db.js');
+        await registrarAtividadeDia(uid);
+      } catch(e) {}
+    }
+    if (resultado) {
+      const entry = {
+        nivel:               nivelJogado,
+        resultado:           resultado,
+        acertos:             acertosJogo || 0,
+        erros:               errosJogo   || 0,
+        maior_combo_sessao:  comboSessao,
+      };
+      if (segsRestantes !== null) entry.segundos_restantes = segsRestantes;
+      const t = { ...tipoAcertos };
+      if (t.add || t.sub || t.mul || t.div) entry.tipos_acertos = t;
+      const _niveisBase = _isProfMode ? `professor_tabuada_niveis/${uid}` : _isModoTesteAtivo ? `modo_teste_historico/PROFESSOR_TESTE/tabuada_niveis` : _tabNiveisPath;
+      await set(ref(db, `${_niveisBase}/historico/${ts}`), entry);
+    }
+  } catch(e) { console.warn('[Tabuada] Erro ao salvar:', e); }
+}
 
-function _tipoChefao(lvl) {
-  if (lvl < 130 || lvl % 10 !== 0) return null;
+
+// ── Level config ──────────────────────────────────────────────
+function isChefao(lvl) { return lvl >= 130 && lvl % 10 === 0; }
+
+function getTipoChefao(lvl) {
+  if (!isChefao(lvl)) return null;
   const ciclo = Math.floor((lvl - 130) / 10) % 3;
   return ciclo === 0 ? 'rapido' : ciclo === 1 ? 'dificil' : 'grande';
 }
 
-function _getLvlCfg(lvl) {
-  if (lvl > 80 && lvl <= 120) { const b = _getLvlCfg(80); return { ...b, secs: b.secs + 40 }; }
+function getLevelConfig(lvl) {
+  const cfg = _getLevelConfigBase(lvl);
+  // Override de tempo via URL ?secs= (professor testando nível específico)
+  if (_secsOverride && (_isProfMode || _isModoTesteAtivo)) {
+    cfg.secs = Math.max(5, _secsOverride);
+    return cfg;
+  }
+  // Overrides pontuais por nível
+  if (lvl >= 70 && lvl <= 150) cfg.secs += 10;
+  if (lvl === 240) cfg.secs += 8;
+  if (lvl === 250 || lvl === 260) cfg.secs = 35;
+  if (lvl === 280) cfg.secs = 35;
+  if (lvl >= 281 && lvl <= 289) cfg.secs -= 10;
+  if (lvl === 300) cfg.secs -= 15;
+  if (lvl >= 50 && lvl <= 300) cfg.secs += 10;
+  // Aplicar offset de tempo configurado pela professora (padrão 40 = neutro)
+  const tempoOffset = (tabuadaConfig.tempo_base || 40) - 40;
+  if (tempoOffset !== 0) {
+    cfg.secs = Math.max(15, Math.min(120, cfg.secs + tempoOffset));
+  }
+  return cfg;
+}
+
+function _getLevelConfigBase(lvl) {
+  // Níveis 81-120: dificuldade congelada no nível 80, +40s de tempo
+  if (lvl > 80 && lvl <= 120) { const cfg = _getLevelConfigBase(80); return { ...cfg, secs: cfg.secs + 40 }; }
+  // Níveis 1-54: adição + subtração juntas, resultados crescem de 8 a 25
   if (lvl <= 54) {
-    const t = (lvl - 1) / 53;
-    const pairs = Math.round(2 + t * 6);
-    let secs = Math.round(70 - t * 15);
-    const maxResult = Math.round(8 + t * 17);
-    const cols = pairs <= 2 ? 2 : pairs <= 3 ? 3 : 4;
-    if (lvl <= 30) secs = Math.round(secs / 2);
-    return { pairs, cols, secs, maxResult, minMul: 0, minDiv: 0 };
+    const t         = (lvl - 1) / 53;
+    const pairs     = Math.round(2 + t * 6);   // 2 → 8
+    let   secs      = Math.round(70 - t * 15); // 70 → 55s
+    const maxResult = Math.round(8 + t * 17);  // 8 → 25
+    const cols      = pairs <= 2 ? 2 : pairs <= 3 ? 3 : 4;
+    if (lvl <= 30) secs = Math.round(secs / 2); // primeiras 30 fases com metade do tempo
+    return { type:'mix_as', pairs, cols, secs, maxResult };
   }
+  // Níveis 55-65: add+sub+mul; mínimo garantido de mul cresce de 1 até ~1/3 das questões
   if (lvl <= 65) {
-    const t = (lvl - 55) / 10;
-    const pairs = Math.round(4 + t * 4);
-    const secs = Math.round(65 - t * 10);
-    const cols = pairs <= 4 ? 3 : 4;
+    const t      = (lvl - 55) / 10; // 0 → 1
+    const pairs  = Math.round(4 + t * 4);    // 4 → 8
+    const secs   = Math.round(65 - t * 10);  // 65 → 55s
+    const cols   = pairs <= 4 ? 3 : 4;
     const minMul = Math.max(1, Math.round(1 + t * (Math.floor(pairs / 3) - 1)));
-    return { pairs, cols, secs, maxResult: 0, minMul, minDiv: 0 };
+    return { type:'mix_as', pairs, cols, secs, minMul, minDiv: 0 };
   }
+  // Níveis 66-121: todas as operações; div cresce junto com mul até ~1/4 cada
   if (lvl <= 121) {
-    const t = Math.min(1, (lvl - 66) / 24);
-    const pairs = Math.round(4 + t * 14);
-    const secs = Math.round(60 - t * 15);
-    const cols = pairs <= 6 ? 4 : 6;
-    const perOp = Math.floor(pairs / 4);
+    const t      = Math.min(1, (lvl - 66) / 24); // 0→1 ao longo de 24 níveis, congela em 90+
+    const pairs  = Math.round(4 + t * 14);        // 4 → 18
+    const secs   = Math.round(60 - t * 15);       // 60 → 45s
+    const cols   = pairs <= 6 ? 4 : 6;
+    const perOp  = Math.floor(pairs / 4);
     const minMul = Math.max(1, Math.round(1 + t * (perOp - 1)));
     const minDiv = Math.max(1, Math.round(1 + t * (perOp - 1)));
-    return { pairs, cols, secs, maxResult: 0, minMul, minDiv };
+    return { type:'mix_as', pairs, cols, secs, minMul, minDiv };
   }
-  if (lvl <= 129) return { pairs: 12, cols: 6, secs: _TB129, maxResult: 0, minMul: 4, minDiv: 4 };
+  // Níveis 122-129: mesma dificuldade do 121 mas +20s (respiro antes do chefão)
+  // tempoBase = nível 121 + 20s; calculado dinamicamente para manter coerência
+  const TEMPO_BASE_129 = _getLevelConfigBase(121).secs + 20; // 65s
+  const TEMPO_BASE_200 = TEMPO_BASE_129 - 20;               // 45s — base para níveis 200+
+  const TEMPO_BASE_300 = TEMPO_BASE_200 - 10;               // 35s — base para níveis 301+
+  if (lvl <= 129) {
+    // 12p×2=24 ÷ 6cols = 4 linhas (desktop 6×4); mobile usa 4 cols → 4×6
+    return { type:'mix_as', pairs:12, cols:6, secs:TEMPO_BASE_129, minMul:4, minDiv:4 };
+  }
+  // Níveis 130+: chefões variados em ciclo de 3 tipos (rápido/difícil/grande)
   const n = Math.floor((lvl - 130) / 10);
   if (lvl % 10 === 0) {
-    const tipo = _tipoChefao(lvl);
-    const minMul = Math.min(5 + n, 7), minDiv = Math.min(5 + n, 7);
+    const tipo   = getTipoChefao(lvl);
+    const minMul = Math.min(5 + n, 7);
+    const minDiv = Math.min(5 + n, 7);
     if (tipo === 'rapido') {
-      const secsR = lvl > 300 ? _TB300 - 5 : _TB129 - 20;
-      return { pairs: 12, cols: 6, secs: Math.max(20, secsR), maxResult: 0, minMul, minDiv, ehChefao: true, tipoChefao: 'rapido' };
+      // ⚡ Rápido: 12p×2=24 | desktop 6×4, mobile 4×6; 301+: 30s, antes: 45s
+      const secsR = lvl > 300 ? TEMPO_BASE_300 - 5 : TEMPO_BASE_129 - 20;
+      return { type:'mix_as', pairs:12, cols:6, secs: Math.max(20, secsR), minMul, minDiv, ehChefao:true, tipoChefao:'rapido' };
+    } else if (tipo === 'dificil') {
+      // 🧮 Difícil: 12p×2=24 | desktop 6×4, mobile 4×6, ops pesadas; 301+: 35s
+      const secsD = lvl > 300 ? TEMPO_BASE_300 : lvl >= 200 ? TEMPO_BASE_200 : TEMPO_BASE_129;
+      return { type:'mix_as', pairs:12, cols:6, secs: secsD, minMul: Math.min(6+n,8), minDiv: Math.min(6+n,8), ehChefao:true, tipoChefao:'dificil', pesado:true };
+    } else {
+      // 📦 Grande: 18p×2=36 desktop (6×6) | 12p×2=24 mobile (4×6)
+      // Progressão: grandeIdx 0=normal, ímpar=tempo-10s, par≥2=pesado
+      const grandeIdx         = Math.floor((lvl - 150) / 30);
+      const grandeTempoReduz  = grandeIdx % 2 === 1;
+      const grandePesado      = grandeIdx >= 2 && grandeIdx % 2 === 0;
+      const _tBase            = lvl > 300 ? TEMPO_BASE_300 : lvl > 200 ? TEMPO_BASE_200 : TEMPO_BASE_129;
+      const grandeTime        = lvl === 300 ? 65 : grandeTempoReduz
+        ? Math.max(20, _tBase - 10)   // 55s / 35s / 25s após 300
+        : Math.min(120, _tBase + 5);  // 70s / 50s / 40s após 300
+      return { type:'mix_as', pairs:18, cols:6, secs: grandeTime, minMul, minDiv,
+        pesado: grandePesado, ehChefao:true, tipoChefao:'grande' };
     }
-    if (tipo === 'dificil') {
-      const secsD = lvl > 300 ? _TB300 : lvl >= 200 ? _TB200 : _TB129;
-      return { pairs: 12, cols: 6, secs: secsD, maxResult: 0, minMul: Math.min(6+n,8), minDiv: Math.min(6+n,8), ehChefao: true, tipoChefao: 'dificil' };
+  } else {
+    // Pós-chefão: 131 respiro (75s), 132-139 pressão do rápido (55s), demais 65s / 45s / 35s após 300
+    const baseS  = (lvl >= 131 && lvl <= 139) ? (lvl === 131 ? TEMPO_BASE_129 + 10 : Math.max(20, TEMPO_BASE_129 - 10)) : (lvl > 300 ? TEMPO_BASE_300 : lvl > 200 ? TEMPO_BASE_200 : TEMPO_BASE_129);
+    const secs   = lvl > 149 ? baseS + 5 : baseS;
+    const minMul = Math.min(4 + n, 6);
+    const minDiv = Math.min(4 + n, 6);
+    // 12p×2=24 ÷ 6cols = 4 linhas (desktop 6×4); 301+: pesado (fatores 4–10)
+    return { type:'mix_as', pairs:12, cols:6, secs, minMul, minDiv, pesado: lvl > 300 };
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+function escH(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Op generator ──────────────────────────────────────────────
+function tryGenOp(type, usedR, maxResult = 999, pesado = false) {
+  let a, b, result, sym, label = null;
+  for (let t = 0; t < 60; t++) {
+    label = null;
+    if (type === 'add') {
+      if (maxResult < 50) {
+        // Resultados limitados por maxResult (níveis 1-50)
+        a = rnd(1, Math.min(maxResult - 1, 12));
+        b = rnd(1, Math.min(12, maxResult - a));
+        result = a + b;
+        if (result > maxResult || usedR.has(result)) continue;
+      } else {
+        a = rnd(1, 9); b = rnd(1, 10 - a);
+        result = a + b;
+        if (result > 20 || usedR.has(result)) continue;
+      }
+      sym = '+';
+    } else if (type === 'sub') {
+      if (maxResult < 50) {
+        // minuendo próximo ao resultado para evitar contas complexas nos primeiros níveis
+        a = rnd(2, Math.min(maxResult + 1, 10));
+        b = rnd(1, Math.min(a - 1, 9));
+        result = a - b;
+        if (result < 1 || result > maxResult || usedR.has(result)) continue;
+      } else {
+        a = rnd(4, 18); b = rnd(1, a - 1);
+        result = a - b;
+        if (result < 1 || usedR.has(result)) continue;
+      }
+      sym = '−';
+    } else if (type === 'mul') {
+      if (pesado) { a = rnd(4, 10); b = rnd(4, 10); }
+      else        { a = rnd(2, 9);  b = rnd(2, 9); }
+      result = a * b;
+      if (result > (pesado ? 100 : 81) || usedR.has(result)) continue;
+      sym = '×';
+    } else if (type === 'div') {
+      if (pesado) { b = rnd(4, 10); result = rnd(4, 12); }
+      else        { b = rnd(2, 9);  result = rnd(2, 11); }
+      if (usedR.has(result)) continue;
+      a = b * result;
+      sym = '÷';
+    } else if (type === 'mix_as') {
+      return tryGenOp(rnd(0, 1) === 0 ? 'add' : 'sub', usedR, maxResult, pesado);
+    } else if (type === 'mix_asm_lite') {
+      const r = rnd(0, 4);
+      return tryGenOp(r <= 1 ? 'add' : r <= 3 ? 'sub' : 'mul', usedR, maxResult, pesado);
+    } else if (type === 'mix_asm') {
+      return tryGenOp(['add','sub','mul'][rnd(0, 2)], usedR, maxResult, pesado);
+    } else if (type === 'mix') {
+      const types = ['add','sub','mul','div'];
+      return tryGenOp(types[rnd(0, 3)], usedR, maxResult, pesado);
+    } else {
+      return null;
     }
-    const grandeIdx = Math.floor((lvl - 150) / 30);
-    const _tBase = lvl > 300 ? _TB300 : lvl > 200 ? _TB200 : _TB129;
-    const secsG = lvl === 300 ? 20 : grandeIdx % 2 === 1 ? Math.max(20, _tBase - 10) : Math.min(120, _tBase + 5);
-    return { pairs: 18, cols: 6, secs: secsG, maxResult: 0, minMul, minDiv, ehChefao: true, tipoChefao: 'grande' };
+    usedR.add(result);
+    return { op: { sym, a, b, label }, result };
   }
-  const _tBase = lvl > 300 ? _TB300 : lvl > 200 ? _TB200 : _TB129;
-  const secs = (lvl >= 132 && lvl <= 139) ? Math.max(20, _TB129 - 20) : _tBase;
-  return { pairs: 12, cols: 6, secs, maxResult: 0, minMul: Math.min(4+n,6), minDiv: Math.min(4+n,6), pesado: lvl > 300 };
+  return null;
 }
 
-function _gerarGrupos() {
-  const gs = [];
-  let g = null;
-  for (let lvl = 1; lvl <= 400; lvl++) {
-    const cfg = _getLvlCfg(lvl);
-    const tipo = cfg.ehChefao ? 'chefao' : (lvl >= 130 && lvl % 10 !== 0 ? 'pos' : 'normal');
-    const sig = [cfg.pairs, cfg.cols, cfg.secs, cfg.minMul, cfg.minDiv, cfg.maxResult || 0, tipo, cfg.tipoChefao || ''].join('|');
-    if (g && g.sig === sig) { g.end = lvl; }
-    else { g = { start: lvl, end: lvl, cfg, tipo, sig }; gs.push(g); }
+function generatePairs(type, count, maxResult = 999, minMul = 0, minDiv = 0, pesado = false) {
+  const pairs = [];
+  const usedR = new Set();
+  for (let i = 0; i < minMul && pairs.length < count; i++) {
+    const p = tryGenOp('mul', usedR, maxResult, pesado);
+    if (p) pairs.push(p);
   }
-  return gs;
-}
-
-function _fmtOps(cfg) {
-  let s = '➕ ➖';
-  if (cfg.minMul > 0) s += ' ×';
-  if (cfg.minDiv > 0) s += ' ÷';
-  const m = [];
-  if (cfg.minMul > 0) m.push(`${cfg.minMul}×`);
-  if (cfg.minDiv > 0) m.push(`${cfg.minDiv}÷`);
-  if (m.length) s += ` <span style="font-size:10px;color:var(--text-muted)">(mín ${m.join(' ')})</span>`;
-  return s;
-}
-
-function _rowObs(g) {
-  if (g.end <= 30)                    return '⏱️ Tempo ÷2 (aprendizado)';
-  if (g.start >= 55 && g.end <= 65)  return '× introduzida gradualmente';
-  if (g.start >= 66 && g.end <= 80)  return 'Todas as ops: ➕➖×÷';
-  if (g.start >= 81  && g.end <= 120) return 'Dificuldade = nv80 + 40s';
-  if (g.start === 121)               return 'Pico: 45s · 12 pares';
-  if (g.start >= 122 && g.end <= 129) return 'Respiro pré-chefão (65s)';
-  if (g.tipo === 'chefao') {
-    const t = g.cfg.tipoChefao;
-    return t === 'rapido' ? '⚡ Chefão Rápido (45s)' : t === 'dificil' ? '🧮 Chefão Difícil' : '📦 Chefão Grande';
+  for (let i = 0; i < minDiv && pairs.length < count; i++) {
+    const p = tryGenOp('div', usedR, maxResult, pesado);
+    if (p) pairs.push(p);
   }
-  if (g.start > 200) return 'Base 45s (200+)';
-  return '';
-}
-
-let _tempoOverrides = {};
-let _ultimoTeste = {};
-const _ovrRef  = ref(db, 'professor_tabuada_config/tempo_override');
-const _histRef = ref(db, 'modo_teste_historico/PROFESSOR_TESTE/tabuada');
-
-async function _carregarDadosProgressao() {
-  const [ovrSnap, histSnap, profHistSnap] = await Promise.all([
-    get(_ovrRef).catch(() => null),
-    get(_histRef).catch(() => null),
-    get(ref(db, 'professor_tabuada_niveis/professora/historico')).catch(() => null),
-  ]);
-  _tempoOverrides = {};
-  if (ovrSnap?.exists()) ovrSnap.forEach(c => { _tempoOverrides[+c.key] = c.val(); });
-  _ultimoTeste = {};
-  if (histSnap?.exists()) {
-    histSnap.forEach(c => {
-      const ts = +c.key; const v = c.val();
-      if (!v?.nivel) return;
-      const entry = { ...v, timestamp: ts };
-      const prev = _ultimoTeste[v.nivel];
-      if (!prev || ts > prev.timestamp) _ultimoTeste[v.nivel] = entry;
-    });
+  for (let attempt = 0; attempt < 600 && pairs.length < count; attempt++) {
+    const p = tryGenOp(type, usedR, maxResult, pesado) || tryGenOp('add', usedR, maxResult, pesado);
+    if (p) pairs.push(p);
   }
-  if (profHistSnap?.exists()) {
-    profHistSnap.forEach(c => {
-      const ts = +c.key; const v = c.val();
-      if (!v?.nivel) return;
-      const cfg = _getLvlCfg(v.nivel);
-      const segs = v.segundos_restantes ?? null;
-      const tempo_usado = segs != null ? cfg.secs - segs : cfg.secs;
-      const entry = { ...v, timestamp: ts, tempo_usado };
-      const prev = _ultimoTeste[v.nivel];
-      if (!prev || ts > prev.timestamp) _ultimoTeste[v.nivel] = entry;
-    });
+  return pairs;
+}
+
+// ── Render op HTML ────────────────────────────────────────────
+function opCardHtml(op) {
+  if (op.label) {
+    return `<div class="op-compound">${escH(op.label)}</div>`;
   }
+  const traco = op.sym === '÷' ? '<div class="traco"></div>' : '';
+  return `<div class="op-wrap"><span class="operador">${op.sym}</span><div class="fracao"><span class="num-cima">${op.a}</span>${traco}<span class="num-baixo">${op.b}</span></div></div>`;
 }
 
-function _fmtTempo(seg) {
-  const m = Math.floor(seg / 60), s = seg % 60;
-  return `${m}:${String(s).padStart(2,'0')}`;
-}
+// ── Card flight animation ─────────────────────────────────────
+function launchCard(el, card) {
+  const gridRect = el.getBoundingClientRect();
+  const slotId   = card.kind === 'op' ? 'slot-op' : 'slot-res';
 
-function _ultimoTesteHTML(g) {
-  let best = null;
-  for (let l = g.start; l <= g.end; l++) {
-    const e = _ultimoTeste[l];
-    if (e && (!best || e.timestamp > best.timestamp)) best = e;
-  }
-  if (!best) return '<span style="color:var(--text-muted)">—</span>';
-  const t = best.tempo_usado != null ? _fmtTempo(best.tempo_usado) : '?';
-  const ok = best.resultado === 'completou';
-  return `<span style="font-weight:600">${t}</span> ${ok ? '✅' : '⏱'}`;
-}
+  el.style.visibility = 'hidden';
+  el.style.pointerEvents = 'none';
 
-function _ovrSecsForGroup(g) {
-  return _tempoOverrides[g.start] ?? g.cfg.secs;
-}
-
-function _renderProgressaoTable() {
-  const gs = _gerarGrupos();
-  const YEL_BG = 'background:rgba(250,184,0,.22);outline:1.5px solid rgba(250,184,0,.55);outline-offset:-1px;';
-    // yel(val, flag): wraps val in amber span when flag is truthy
-    const yel = (val, flag) => flag
-      ? `<span style="color:#FAB800;font-weight:700">${val}</span>`
-      : val;
-  const rows = gs.map((g, i) => {
-    const prev = gs[i - 1];
-    const lvlLabel = g.start === g.end ? `${g.start}` : `${g.start}–${g.end}`;
-    const rowBg = g.tipo === 'chefao' ? 'background:rgba(239,68,68,.1);'
-      : g.tipo === 'pos' ? 'background:rgba(249,115,22,.07);'
-      : i % 2 ? 'background:rgba(0,0,0,.018);' : '';
-    const tipoLabel = g.tipo === 'chefao'
-      ? (g.cfg.tipoChefao === 'rapido' ? '⚡ Rápido' : g.cfg.tipoChefao === 'dificil' ? '🧮 Difícil' : g.cfg.tipoChefao === 'grande' ? '📦 Grande' : '👹 Chefão')
-      : g.tipo === 'pos' ? 'Pós-chefão' : '—';
-    const gridLabel = `${g.cfg.cols}×${Math.ceil(g.cfg.pairs * 2 / g.cfg.cols)}`;
-    const faixaLabel = g.cfg.maxResult ? `1–${g.cfg.maxResult}` : '—';
-    const td = s => `style="padding:5px 10px;border-bottom:1px solid var(--border);${s}"`;
-    const cS = prev && prev.cfg.secs !== g.cfg.secs ? YEL_BG : '';
-    const cG = prev && (prev.cfg.pairs !== g.cfg.pairs || prev.cfg.cols !== g.cfg.cols) ? YEL_BG : '';
-    const cC = prev && prev.cfg.pairs !== g.cfg.pairs ? YEL_BG : '';
-    const ovrSecs = _ovrSecsForGroup(g);
-    const hasOvr = _tempoOverrides[g.start] != null;
-    const ovrValCls = hasOvr ? 'ovr-val changed' : 'ovr-val';
-    return `<tr class="prog-tr" style="${rowBg}cursor:pointer" onclick="selecionarNivelParaTeste(${g.start})" title="Testar nível ${g.start}">
-      <td ${td('font-weight:700;white-space:nowrap')}>${lvlLabel}</td>
-      <td ${td('font-size:11px')}>${tipoLabel}</td>
-      <td ${td('text-align:center;'+cS)}>${yel(g.cfg.secs+'s', cS)}</td>
-      <td ${td('text-align:center;'+cG)}>${yel(gridLabel, cG)}</td>
-      <td ${td('text-align:center;'+cC)}>${yel(g.cfg.pairs * 2, cC)}</td>
-      <td ${td('')}>${_fmtOps(g.cfg)}</td>
-      <td ${td('text-align:center')}>${faixaLabel}</td>
-      <td ${td('white-space:nowrap')} onclick="event.stopPropagation()">
-        <div style="display:flex;align-items:center;gap:3px">
-          <button class="ovr-btn" onclick="ajustarTempoGrupo(${g.start},${g.end},-5)">−</button>
-          <span class="${ovrValCls}" id="ovr-${g.start}">${ovrSecs}s</span>
-          <button class="ovr-btn" onclick="ajustarTempoGrupo(${g.start},${g.end},+5)">+</button>
-          ${hasOvr ? `<button class="ovr-rst" onclick="resetarTempoGrupo(${g.start},${g.end})">↩</button>` : ''}
-        </div>
-      </td>
-      <td ${td('white-space:nowrap;font-size:12px')}>${_ultimoTesteHTML(g)}</td>
-      <td ${td('font-size:11px;color:var(--text-muted)')}>${_rowObs(g)}</td>
-    </tr>`;
-  }).join('');
-  const body = document.getElementById('prog-table-body');
-  if (body) body.innerHTML = rows;
-}
-
-window.toggleProgressao = async function() {
-  const wrap = document.getElementById('prog-table-wrap');
-  const chev = document.getElementById('prog-chev');
-  if (!wrap) return;
-  const open = wrap.style.display !== 'none';
-  wrap.style.display = open ? 'none' : 'block';
-  if (chev) chev.textContent = open ? '▼' : '▲';
-  if (!open) {
-    await _carregarDadosProgressao();
-    _renderProgressaoTable();
-  }
-};
-
-window.exportarProgressaoCSV = function() {
-  const gs = _gerarGrupos();
-  const linhas = [['Nível','Tipo','Tempo (s)','Grid','Total cards','Min ×','Min ÷','Faixa números','Observação']];
-  gs.forEach(g => {
-    linhas.push([
-      g.start === g.end ? `${g.start}` : `${g.start}-${g.end}`,
-      g.tipo === 'chefao' ? 'Chefão' : g.tipo === 'pos' ? 'Pós-chefão' : 'Normal',
-      g.cfg.secs, `${g.cfg.cols}x${Math.ceil(g.cfg.pairs * 2 / g.cfg.cols)}`,
-      g.cfg.pairs * 2, g.cfg.minMul || 0, g.cfg.minDiv || 0,
-      g.cfg.maxResult ? `1-${g.cfg.maxResult}` : 'variada', _rowObs(g),
-    ]);
+  const clone = document.createElement('div');
+  clone.className = 'game-card selected fly-clone';
+  clone.innerHTML = el.innerHTML;
+  Object.assign(clone.style, {
+    position: 'fixed',
+    left: gridRect.left + 'px',
+    top: gridRect.top + 'px',
+    width: gridRect.width + 'px',
+    height: gridRect.height + 'px',
+    minHeight: '0',
+    zIndex: '100',
+    pointerEvents: 'none',
+    margin: '0',
+    boxSizing: 'border-box',
   });
-  const csv = linhas.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob(['\uFEFF'+csv], { type:'text/csv;charset=utf-8' })), download:'progressao_niveis_tabuada.csv' });
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-};
-
-window.selecionarNivelParaTeste = function(lvl) {
-  const inp = document.getElementById('inp-nivel');
-  if (!inp) return;
-  inp.value = lvl;
-  inp.closest('.card')?.scrollIntoView({ behavior:'smooth', block:'center' });
-  inp.focus();
-};
-
-async function loadJogar() {
-  const pane = document.getElementById('pane-jogar');
-  pane.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>';
-
-  const [niveisSnap, notasSnap] = await Promise.all([
-    get(niveisRef).catch(() => null),
-    get(notasRef).catch(() => null),
-  ]);
-
-  const niveis        = niveisSnap?.exists() ? niveisSnap.val() : {};
-  const nivelAtual    = Math.max(1, niveis.nivel_atual  || 1);
-  const melhorNivel   = Math.max(1, niveis.melhor_nivel || 1);
-  const totalPartidas = niveis.total_partidas || 0;
-  const maiorCombo    = niveis.maior_combo    || 0;
-
-  const hist = [];
-  if (niveis.historico) {
-    Object.entries(niveis.historico)
-      .sort(([a], [b]) => Number(b) - Number(a))
-      .slice(0, 10)
-      .forEach(([ts, v]) => hist.push({ ts: Number(ts), ...v }));
-    hist.reverse();
-  }
-
-  const notas = [];
-  if (notasSnap?.exists()) {
-    notasSnap.forEach(child => notas.push({ nivel: child.key, ...child.val() }));
-    notas.sort((a, b) => Number(a.nivel) - Number(b.nivel));
-  }
-
-  const maxLv = hist.length ? Math.max(...hist.map(x => x.nivel || 1)) : 1;
-  const chartBars = hist.map(h => {
-    const ok = h.resultado === 'completou';
-    const barH = Math.max(8, Math.round(((h.nivel || 1) / maxLv) * 64));
-    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px" title="${ok?'Completou':'Tempo esgotado'} · Nível ${h.nivel||1}">
-      <div style="font-size:9px;color:var(--text-muted);font-weight:600">${h.nivel||1}</div>
-      <div style="width:100%;background:${ok?'#22C55E':'#f97316'};border-radius:4px 4px 0 0;height:${barH}px"></div>
-    </div>`;
-  }).join('');
-
-  pane.innerHTML = `
-  <div style="max-width:680px">
-  <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px">
-    <div class="stat-grid" style="display:grid;grid-template-columns:repeat(4,1fr)">
-      ${[
-        [nivelAtual,      'Nível atual',    'var(--blue)'],
-        [melhorNivel,     'Melhor nível',   '#22C55E'],
-        [totalPartidas,   'Partidas',       'var(--text)'],
-        [maiorCombo||'—', 'Maior combo 🔥', '#FAB800'],
-      ].map(([v,l,c],i) => `
-        <div style="padding:16px 12px;text-align:center;${i<3?'border-right:1px solid var(--border)':''}">
-          <div style="font-size:24px;font-weight:800;color:${c};line-height:1">${v}</div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${l}</div>
-        </div>`).join('')}
-    </div>
-    <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px">
-      <a href="/aluno/tabuada.html" class="btn btn-blue" style="flex:1;justify-content:center;text-decoration:none">▶ Jogar nível ${nivelAtual}</a>
-      <a href="/aluno/tabuada.html?modo=sprint" class="btn" style="background:#7F77DD;color:#fff;border:none;flex:1;justify-content:center;text-decoration:none">⚡ Sprint</a>
-    </div>
-  </div>
-
-  <div class="card" style="margin-bottom:16px">
-    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px">Testar nível específico</div>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <input type="number" id="inp-nivel" min="1" max="999" value="${nivelAtual}"
-        style="width:76px;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;font-weight:700;text-align:center;background:var(--bg);color:var(--text)">
-      <button onclick="testarNivel()" class="btn btn-blue">▶ Testar este nível</button>
-      <span style="font-size:12px;color:var(--text-muted)">Não altera o nível atual</span>
-    </div>
-  </div>
-
-  ${hist.length ? `
-  <div class="card" style="margin-bottom:16px">
-    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px">Últimas ${hist.length} partidas</div>
-    <div style="display:flex;align-items:flex-end;gap:4px;height:80px">${chartBars}</div>
-    <div style="display:flex;align-items:center;gap:16px;margin-top:10px;font-size:11px;color:var(--text-muted)">
-      <span><span style="display:inline-block;width:10px;height:10px;background:#22C55E;border-radius:2px;margin-right:4px;vertical-align:middle"></span>Completou</span>
-      <span><span style="display:inline-block;width:10px;height:10px;background:#f97316;border-radius:2px;margin-right:4px;vertical-align:middle"></span>Tempo esgotado</span>
-      <span style="margin-left:auto">mais antigo → mais recente</span>
-    </div>
-  </div>` : ''}
-
-  <div class="card" style="margin-bottom:16px">
-    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px">Anotações por nível</div>
-    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-      <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
-        <label style="font-size:11px;color:var(--text-muted)">Nível</label>
-        <input type="number" id="nota-nivel" min="1" max="50" value="${nivelAtual}"
-          style="width:66px;padding:7px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-weight:700;text-align:center;background:var(--bg);color:var(--text)">
-      </div>
-      <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:5px">
-        <label style="font-size:11px;color:var(--text-muted)">Observação</label>
-        <textarea id="nota-texto" rows="2" placeholder="Ex: nível 8 muito difícil para 8D…"
-          style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--bg);color:var(--text);resize:vertical;box-sizing:border-box"></textarea>
-      </div>
-      <div style="display:flex;align-items:flex-end">
-        <button onclick="salvarNota()" class="btn btn-blue">Salvar</button>
-      </div>
-    </div>
-    <div id="notas-list">
-      ${notas.length === 0
-        ? `<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:16px">Nenhuma anotação ainda</div>`
-        : notas.map(n => `
-          <div class="nota-row">
-            <div style="display:flex;align-items:center;gap:8px">
-              <span class="nota-nivel">Nível ${escH(n.nivel)}</span>
-              <span style="font-size:11px;color:var(--text-muted);margin-left:auto">${n.atualizado_em ? fmtDate(n.atualizado_em) : ''}</span>
-              <button onclick="deletarNota('${escH(n.nivel)}')" style="font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:2px 4px">✕</button>
-            </div>
-            <div class="nota-texto">${escH(n.texto || '')}</div>
-          </div>`).join('')}
-    </div>
-  </div>
-
-  <div class="card" style="margin-bottom:16px">
-    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;padding:2px 0" onclick="toggleProgressao()">
-      <div style="font-size:13px;font-weight:700;color:var(--text)">📊 Ver progressão completa dos níveis (1–400)</div>
-      <span id="prog-chev" style="font-size:12px;color:var(--text-muted)">▼</span>
-    </div>
-    <div id="prog-table-wrap" style="display:none;margin-top:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
-        <div style="display:flex;align-items:center;gap:14px;font-size:11px;color:var(--text-muted);flex-wrap:wrap">
-          <span><span style="display:inline-block;width:10px;height:10px;background:rgba(239,68,68,.25);border-radius:2px;margin-right:4px;vertical-align:middle"></span>👹 Chefão</span>
-          <span><span style="display:inline-block;width:10px;height:10px;background:rgba(249,115,22,.2);border-radius:2px;margin-right:4px;vertical-align:middle"></span>Pós-chefão</span>
-          <span><span style="display:inline-block;width:10px;height:10px;background:rgba(250,184,0,.35);border-radius:2px;border:1px solid rgba(250,184,0,.7);margin-right:4px;vertical-align:middle"></span>Valor mudou</span>
-        </div>
-        <button onclick="exportarProgressaoCSV()" class="btn btn-ghost" style="font-size:12px;padding:5px 12px">📥 Exportar CSV</button>
-      </div>
-      <div style="overflow-x:auto;max-height:540px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius)">
-        <table style="width:100%;border-collapse:collapse;font-size:12px">
-          <thead style="position:sticky;top:0;z-index:1;background:var(--card)">
-            <tr>
-              ${['Nível','Tipo','Tempo','Grid','Cards','Operações','Faixa','Tempo teste','Último teste','Obs.'].map((h,i) =>
-                `<th style="padding:7px 10px;text-align:${i>=2&&i<=4?'center':'left'};font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:2px solid var(--border);white-space:nowrap">${h}</th>`
-              ).join('')}
-            </tr>
-          </thead>
-          <tbody id="prog-table-body"></tbody>
-        </table>
-      </div>
-      <div style="font-size:11px;color:var(--text-muted);margin-top:6px;text-align:center">Clique em qualquer linha para preencher "Testar nível específico" ↑</div>
-    </div>
-  </div>
-  </div>`;
-
-  document.getElementById('inp-nivel')?.addEventListener('keydown', e => { if (e.key === 'Enter') testarNivel(); });
+  document.body.appendChild(clone);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    // Relê a posição do slot dentro do rAF para garantir que seja atual
+    const slot     = document.getElementById(slotId);
+    if (!slot) return;
+    const slotRect = slot.getBoundingClientRect();
+    clone.style.transition = 'left .28s ease, top .28s ease, width .28s ease, height .28s ease';
+    clone.style.left   = slotRect.left   + 'px';
+    clone.style.top    = slotRect.top    + 'px';
+    clone.style.width  = slotRect.width  + 'px';
+    clone.style.height = slotRect.height + 'px';
+  }));
+  return { clone, origRect: { left: gridRect.left, top: gridRect.top, width: gridRect.width, height: gridRect.height } };
 }
 
-window.ajustarTempoGrupo = async function(start, end, delta) {
-  const defaultSecs = _getLvlCfg(start).secs;
-  const current = _tempoOverrides[start] ?? defaultSecs;
-  const novo = Math.max(5, Math.min(300, current + delta));
-  const updates = {};
-  for (let l = start; l <= end; l++) updates[l] = novo;
-  try {
-    await update(ref(db, 'professor_tabuada_config/tempo_override'), updates);
-    for (let l = start; l <= end; l++) _tempoOverrides[l] = novo;
-    const el = document.getElementById(`ovr-${start}`);
-    if (el) { el.textContent = `${novo}s`; el.className = 'ovr-val changed'; el.style.color = '#16A34A'; setTimeout(() => { el.style.color = ''; }, 1500); }
-  } catch(e) { alert(`Erro ao salvar override: ${e.message}`); }
-};
-
-window.resetarTempoGrupo = async function(start, end) {
-  const removes = [];
-  for (let l = start; l <= end; l++) { removes.push(remove(ref(db, `professor_tabuada_config/tempo_override/${l}`))); delete _tempoOverrides[l]; }
-  await Promise.all(removes);
-  const el = document.getElementById(`ovr-${start}`);
-  if (el) { el.textContent = `${_getLvlCfg(start).secs}s`; el.className = 'ovr-val'; }
-  await _carregarDadosProgressao();
-  _renderProgressaoTable();
-};
-
-window.testarNivel = function() {
-  const nivel = parseInt(document.getElementById('inp-nivel')?.value, 10);
-  if (isNaN(nivel) || nivel < 1 || nivel > 999) { alert('Digite um nível entre 1 e 999.'); return; }
-  const ovr = _tempoOverrides[nivel];
-  window.location.href = ovr != null ? `/aluno/tabuada.html?nivel=${nivel}&secs=${ovr}` : `/aluno/tabuada.html?nivel=${nivel}`;
-};
-
-window.salvarNota = async function() {
-  const nivel = Math.max(1, Math.min(50, parseInt(document.getElementById('nota-nivel')?.value) || 1));
-  const texto = document.getElementById('nota-texto')?.value?.trim() || '';
-  if (!texto) return;
-  await set(ref(db, `professor_jogos_notas/${PROF_UID}/${nivel}`), { texto, atualizado_em: Date.now() });
-  await loadJogar();
-};
-
-window.deletarNota = async function(nivel) {
-  if (!confirm(`Remover anotação do nível ${nivel}?`)) return;
-  await remove(ref(db, `professor_jogos_notas/${PROF_UID}/${nivel}`));
-  await loadJogar();
-};
-
-// ══════════════════════════════════════════════════════════════
-// ABA ALUNOS (ex professor/tabuada_relatorio.html)
-// ══════════════════════════════════════════════════════════════
-let _allData = [];
-let _filtroTurma = '';
-let _alertasInd = [], _alertasCol = { esgotados: [], quasePerda: [] };
-let _tabuadaConfig = { tempo_base: 40, dificuldade_multiplicador: 5 };
-
-function stdPos(lista, getVal) {
-  let pos = 0, n = 0, last = null;
-  return lista.map(item => { n++; const v = getVal(item); if (v !== last) { pos = n; last = v; } return pos; });
+function flyBack(info, el) {
+  const { clone } = info;
+  // Relê a posição atual do elemento (corrige deslocamento por scroll)
+  const rect = el.getBoundingClientRect();
+  clone.style.transition = 'left .28s ease, top .28s ease, width .28s ease, height .28s ease';
+  clone.style.left   = rect.left   + 'px';
+  clone.style.top    = rect.top    + 'px';
+  clone.style.width  = rect.width  + 'px';
+  clone.style.height = rect.height + 'px';
+  setTimeout(() => {
+    clone.remove();
+    el.style.visibility = '';
+    el.style.pointerEvents = '';
+    el.classList.add('error');
+    setTimeout(() => el.classList.remove('error'), 400);
+  }, 280);
 }
 
-function lvlClass(n) {
-  if (n >= 16) return 'lvl-16p';
-  if (n >= 11) return 'lvl-11-15';
-  if (n >= 6)  return 'lvl-6-10';
-  return 'lvl-1-5';
+// ── Presença / sessões Firebase ──────────────────────────────
+function _atualizarPresenca() {
+  if (_isProfMode || _isModoTesteAtivo) return;
+  set(ref(db, `tabuada_presenca/${uid}`), { nome: nomeAluno, turma, ts: Date.now() }).catch(() => {});
 }
-function fmtDateShort(ts) {
-  if (!ts) return '—';
-  const d = new Date(ts);
-  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
-}
-
-async function loadAlunos() {
-  _alunosCarregado = true;
-  const pane = document.getElementById('pane-alunos');
-  pane.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando dados…</div>';
-
-  try {
-    const cfgSnap = await get(ref(db, 'tabuada_config/global'));
-    if (cfgSnap?.exists()) _tabuadaConfig = { ..._tabuadaConfig, ...cfgSnap.val() };
-
-    const [rankSnap, niveisSnap] = await Promise.all([
-      get(ref(db, 'tabuada_ranking')),
-      get(ref(db, 'tabuada_niveis')),
-    ]);
-
-    _allData = [];
-    if (rankSnap?.exists()) rankSnap.forEach(c => { const v=c.val(); if(v?.nome) _allData.push({...v}); });
-
-    const niveisMap = {};
-    if (niveisSnap?.exists()) niveisSnap.forEach(c => { if(c.val()) niveisMap[c.key]=c.val(); });
-
-    _allData.forEach(d => {
-      const key = (d.turma+'_'+d.nome).replace(/[.#$\[\]/\s]/g,'_');
-      const nd = niveisMap[key];
-      d.total_partidas = nd?.total_partidas || 0;
-      d.maior_combo    = nd?.maior_combo    || 0;
-    });
-    _allData.sort((a,b) => (b.melhor_nivel||0)-(a.melhor_nivel||0));
-
-    const { individuais, coletivos } = compilarAlertasTabuada(niveisSnap, rankSnap);
-    _alertasInd = individuais; _alertasCol = coletivos;
-
-    document.getElementById('btn-csv').disabled = _allData.length === 0;
-  } catch(e) {
-    pane.innerHTML = `<div class="alert alert-error">Erro ao carregar dados. Verifique a conexão.</div>`;
+function _registrarSessao(nivel, resultado, acertosOverride, errosOverride) {
+  if (_isProfMode) return;
+  const ts = Date.now();
+  if (_isModoTesteAtivo) {
+    set(ref(db, `modo_teste_historico/PROFESSOR_TESTE/tabuada/${ts}`), {
+      nivel:       nivel     ?? nivelAtual,
+      resultado:   resultado ?? 'desconhecido',
+      acertos:     acertosOverride ?? acertos,
+      erros:       errosOverride   ?? erros,
+      combo:       comboMax,
+      timestamp:   ts,
+      tempo_usado: timerTotal - timerLeft + _timerOvertime,
+      secs_limite: timerTotal,
+    }).catch(() => {});
     return;
   }
-  renderAlunos();
+  const d  = new Date(ts);
+  set(ref(db, `tabuada_sessoes/${ts}`), {
+    uid,
+    nome:      nomeAluno,
+    turma,
+    data:      d.toISOString().slice(0, 10),
+    hora:      d.getHours(),
+    nivel:     nivel     ?? nivelAtual,
+    resultado: resultado ?? 'desconhecido',
+    acertos:   acertosOverride ?? acertos,
+    erros:     errosOverride   ?? erros,
+    tipos_operacoes: { soma: tipoAcertos.add, subtracao: tipoAcertos.sub, multiplicacao: tipoAcertos.mul, divisao: tipoAcertos.div },
+    tipos_erros:     { soma: tipoErros.add,   subtracao: tipoErros.sub,   multiplicacao: tipoErros.mul,   divisao: tipoErros.div   },
+    ...(isDupla ? { dupla: true, parceiro_nome: parceiroDupla } : {}),
+  }).catch(() => {});
 }
 
-function renderAlunos() {
-  const pane = document.getElementById('pane-alunos');
-  const turmas = Object.keys(ALUNOS_POR_TURMA).sort();
-  const data = _filtroTurma ? _allData.filter(d => d.turma === _filtroTurma) : _allData;
+// ── Seleção de jogador em dupla ───────────────────────────────
+if (isDupla) {
+  const uid2 = _makeUid(alunos[1]);
+  const _tabNiveisPath2 = _bimJogo <= 2 ? `tabuada_niveis/${uid2}` : `tabuada_niveis_b/${_bimJogo}/${uid2}`;
+  const [snap1, snap2] = await Promise.all([
+    get(ref(db, _tabNiveisPath)).catch(() => null),
+    get(ref(db, _tabNiveisPath2)).catch(() => null),
+  ]);
+  const nivel1 = snap1?.exists() ? (snap1.val().nivel_atual || 1) : 1;
+  const nivel2 = snap2?.exists() ? (snap2.val().nivel_atual || 1) : 1;
 
-  const totalJogadores = _allData.length;
-  const maxNivel       = _allData.length ? Math.max(..._allData.map(d => d.melhor_nivel||0)) : 0;
-  const mediaAtual     = _allData.length ? (_allData.reduce((s,d)=>s+(d.nivel_atual||0),0)/_allData.length).toFixed(1) : '—';
-  const totalPartidas  = _allData.reduce((s,d)=>s+(d.total_partidas||0),0);
-  const top3           = _allData.slice(0,3);
-
-  const turmasPillsHtml = [
-    `<span class="turma-pill${!_filtroTurma?' on':''}" onclick="mudarFiltroAlunos('')">Todas</span>`,
-    ...turmas.map(t=>`<span class="turma-pill${_filtroTurma===t?' on':''}" onclick="mudarFiltroAlunos('${t}')">Turma ${t}</span>`)
-  ].join('');
-
-  const turmaSummary = turmas.map(t => {
-    const td = _allData.filter(d=>d.turma===t);
-    const cad = (ALUNOS_POR_TURMA[t]||[]).length;
-    const jog = td.length;
-    const med = jog ? (td.reduce((s,d)=>s+(d.nivel_atual||0),0)/jog).toFixed(1) : '—';
-    const mx  = jog ? Math.max(...td.map(d=>d.melhor_nivel||0)) : '—';
-    return { t, cad, jog, med, mx };
+  nomeAluno = await new Promise(resolve => {
+    const wrap = document.getElementById('dupla-opcoes');
+    [{ nome: alunos[0], nivel: nivel1 }, { nome: alunos[1], nivel: nivel2 }].forEach(p => {
+      const btn = document.createElement('button');
+      btn.className = 'dupla-btn';
+      btn.innerHTML = `
+        <div class="dupla-btn-avatar">${p.nome[0].toUpperCase()}</div>
+        <div>
+          <div class="dupla-btn-name">👤 ${p.nome}</div>
+          <div class="dupla-btn-nivel">Nível ${p.nivel}</div>
+        </div>`;
+      btn.onclick = () => {
+        document.getElementById('dupla-modal-bg').style.display = 'none';
+        resolve(p.nome);
+      };
+      wrap.appendChild(btn);
+    });
+    document.getElementById('dupla-modal-bg').style.display = 'flex';
   });
 
-  pane.innerHTML = `
-<div class="grid-4" style="margin-bottom:20px">
-  <div class="stat-card"><div class="stat-icon blue"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div><div><div class="stat-value blue">${totalJogadores}</div><div class="stat-meta">Alunos jogaram</div></div></div>
-  <div class="stat-card"><div class="stat-icon gold"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div><div><div class="stat-value gold">${maxNivel}</div><div class="stat-meta">Maior nível atingido</div></div></div>
-  <div class="stat-card"><div class="stat-icon orange"><svg viewBox="0 0 24 24"><path d="M13 2.05v2.02c3.95.49 7 3.85 7 7.93 0 3.21-1.81 6-4.72 7.28L13 17v5l5-3-1.22-1.22C19.91 15.69 22 12.58 22 12c0-5.18-3.94-9.45-9-9.95zM11 2.05C5.95 2.55 2 6.82 2 12c0 3.58 2.09 6.69 5.22 8.28L9 22v-5l-2.28-2.28C4.81 13 3 10.21 3 7.93c0-4.08 3.05-7.44 7-7.93v2.05z"/></svg></div><div><div class="stat-value orange">${mediaAtual}</div><div class="stat-meta">Nível médio atual</div></div></div>
-  <div class="stat-card"><div class="stat-icon green"><svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21L13 13.04V8h-1z"/></svg></div><div><div class="stat-value green">${totalPartidas}</div><div class="stat-meta">Partidas totais</div></div></div>
-</div>
-
-${_alertasInd.length ? `
-<div class="card" style="margin-bottom:16px;border:1.5px solid rgba(234,179,8,.35);background:rgba(234,179,8,.04)">
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><span style="font-size:15px">⚠️</span><span style="font-size:13px;font-weight:700;color:#D97706">Alunos com dificuldade recorrente por tempo</span></div>
-  <div style="display:flex;flex-direction:column;gap:6px">
-    ${_alertasInd.map(a=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(234,179,8,.07);border-radius:8px;font-size:13px;flex-wrap:wrap">
-      <span style="font-weight:700;color:var(--text);flex:1;min-width:80px">${escH(a.nome)}</span>
-      <span style="color:var(--text-muted);font-size:12px">${escH(a.turma)}</span>
-      <span style="color:var(--text)">· Nível <strong>${a.nivel}</strong></span>
-      <span style="color:#D97706;font-weight:700">${a.falhas} falhas consecutivas</span>
-    </div>`).join('')}
-  </div>
-</div>` : ''}
-
-${(_alertasCol.esgotados.length||_alertasCol.quasePerda.length) ? `
-<div class="card" style="margin-bottom:16px;border:1.5px solid rgba(220,38,38,.25);background:rgba(220,38,38,.03)">
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><span style="font-size:15px">🚨</span><span style="font-size:13px;font-weight:700;color:#DC2626">Dificuldade coletiva detectada</span><span style="font-size:11px;color:var(--text-muted);margin-left:auto">últimas 48h</span></div>
-  <div style="display:flex;flex-direction:column;gap:8px">
-    ${_alertasCol.esgotados.map(a=>`<div style="padding:10px 12px;background:rgba(220,38,38,.06);border-radius:8px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:13px"><span>🔴</span><span style="font-weight:700">Nível ${a.nivel}</span><span style="color:#DC2626;font-weight:600">— ${a.count} alunos perderam por tempo</span></div><div style="font-size:12px;color:var(--text-muted);padding-left:22px">${agruparPorTurma(a.alunos)}</div></div>`).join('')}
-    ${_alertasCol.quasePerda.map(a=>`<div style="padding:10px 12px;background:rgba(234,179,8,.06);border-radius:8px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:13px"><span>🟡</span><span style="font-weight:700">Nível ${a.nivel}</span><span style="color:#D97706;font-weight:600">— ${a.count} alunos quase não completaram</span></div><div style="font-size:12px;color:var(--text-muted);padding-left:22px">menos de 10s restantes · ${agruparPorTurma(a.alunos)}</div></div>`).join('')}
-  </div>
-</div>` : ''}
-
-${top3.length ? `
-<div class="card" style="margin-bottom:20px">
-  <div class="section-label" style="color:#F59E0B"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18 7 3.12V11c0 4.52-3.05 8.75-7 9.93-3.95-1.18-7-5.41-7-9.93V6.3l7-3.12z"/></svg>Top 3 Geral</div>
-  <div style="display:flex;flex-direction:column;gap:8px">
-    ${top3.map((d,i)=>{
-      const bg=['linear-gradient(135deg,#F59E0B,#D97706)','linear-gradient(135deg,#9CA3AF,#6B7280)','linear-gradient(135deg,#CD853F,#92400E)'][i];
-      const ico=['🥇','🥈','🥉'][i];
-      return `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:11px;background:${bg}">
-        <span style="font-size:28px">${ico}</span>
-        <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800;color:#fff">${d.nome}</div><div style="font-size:11px;color:rgba(255,255,255,.75)">Turma ${d.turma} · ${d.total_partidas} partida(s)</div></div>
-        <div style="text-align:right"><div style="font-size:20px;font-weight:800;color:#fff">Nível ${d.melhor_nivel}</div><div style="font-size:10px;color:rgba(255,255,255,.7)">melhor</div></div>
-      </div>`;
-    }).join('')}
-  </div>
-</div>` : ''}
-
-<div class="card" style="margin-bottom:20px">
-  <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Resumo por Turma</div></div>
-  <div style="overflow-x:auto"><table class="table">
-    <thead><tr><th>Turma</th><th>Cadastrados</th><th>Jogaram</th><th>Participação</th><th>Nível Médio</th><th>Maior Nível</th></tr></thead>
-    <tbody>${turmaSummary.map(ts=>`<tr>
-      <td><strong>Turma ${ts.t}</strong></td><td>${ts.cad}</td><td><strong>${ts.jog}</strong></td>
-      <td><div style="display:flex;align-items:center;gap:6px"><div style="width:80px;height:6px;background:var(--border);border-radius:3px;overflow:hidden"><div style="width:${ts.cad?Math.round(ts.jog/ts.cad*100):0}%;height:100%;background:var(--blue);border-radius:3px"></div></div><span style="font-size:12px;color:var(--text-muted)">${ts.cad?Math.round(ts.jog/ts.cad*100):0}%</span></div></td>
-      <td><span style="font-weight:700;color:var(--blue)">${ts.med}</span></td>
-      <td><span style="font-weight:800;color:var(--gold)">${ts.mx}</span></td>
-    </tr>`).join('')}</tbody>
-  </table></div>
-</div>
-
-<div class="card">
-  <div class="card-header">
-    <div class="card-title"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>Todos os Alunos</div>
-    <div><span style="font-size:11px;color:var(--text-muted);margin-right:8px">Filtrar:</span>${turmasPillsHtml}</div>
-  </div>
-  ${data.length===0
-    ? `<div class="no-data"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg><p>${_filtroTurma?`Nenhum aluno da Turma ${_filtroTurma} jogou ainda.`:'Nenhum aluno jogou ainda.'}</p></div>`
-    : `<div style="overflow-x:auto"><table class="table">
-    <thead><tr><th>#</th><th>Aluno</th><th>Turma</th><th>Nível</th><th>Partidas</th><th>Maior Combo</th><th>Última Partida</th></tr></thead>
-    <tbody>${(()=>{
-      const pos=stdPos(data,d=>Math.max(d.nivel_atual||1,d.melhor_nivel||1));
-      return data.map((d,i)=>{
-        const nMax=Math.max(d.nivel_atual||1,d.melhor_nivel||1);
-        return `<tr>
-          <td style="color:var(--text-muted);font-weight:600">${pos[i]}</td>
-          <td><strong>${d.nome}</strong></td>
-          <td>${d.turma}</td>
-          <td><span class="lvl-badge ${lvlClass(nMax)}">${nMax}</span></td>
-          <td style="color:var(--text-muted);font-size:13px">${d.total_partidas||0}</td>
-          <td style="font-size:13px;color:${d.maior_combo>=5?'#FAB800':d.maior_combo>=3?'#f97316':'var(--text-muted)'};font-weight:${d.maior_combo>=3?'700':'400'}">${d.maior_combo||'—'}</td>
-          <td style="color:var(--text-muted);font-size:12px">${fmtDateShort(d.ultima_partida)}</td>
-        </tr>`;
-      }).join('');
-    })()}</tbody>
-  </table></div>`}
-</div>`;
+  parceiroDupla = alunos.find(a => a !== nomeAluno);
+  uid           = _makeUid(nomeAluno);
+  niveisRef     = ref(db, _bimJogo <= 2 ? `tabuada_niveis/${uid}`         : `tabuada_niveis_b/${_bimJogo}/${uid}`);
+  rankingRef    = ref(db, _bimJogo <= 2 ? `tabuada_ranking/${uid}`        : `tabuada_ranking_b/${_bimJogo}/${uid}`);
+  sprintRankRef = ref(db, _bimJogo <= 2 ? `tabuada_sprint_ranking/${uid}` : `tabuada_sprint_ranking_b/${_bimJogo}/${uid}`);
+  document.getElementById("avatar-initials").textContent = nomeAluno[0].toUpperCase();
 }
 
-window.mudarFiltroAlunos = function(t) { _filtroTurma = t; renderAlunos(); };
+// ── Game state ────────────────────────────────────────────────
+const [progresso, _rankingSnap] = await Promise.all([
+  carregarProgresso(),
+  _isProfMode ? Promise.resolve(null) : get(ref(db, pathTabuadaRanking(_bimJogo))).catch(() => null),
+]);
 
-window.exportarCSV = function() {
-  const data = _filtroTurma ? _allData.filter(d=>d.turma===_filtroTurma) : _allData;
-  const header = ['Nome','Turma','Nível Atual','Melhor Nível','Total Partidas','Maior Combo','Última Partida'];
-  const rows = data.map(d=>[d.nome,d.turma,d.nivel_atual||1,d.melhor_nivel||1,d.total_partidas||0,d.maior_combo||0,d.ultima_partida?new Date(d.ultima_partida).toLocaleString('pt-BR'):'—']);
-  const csv = [header,...rows].map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'})); a.download=`tabuada_alunos_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+let melhorNivel = Math.max(1, progresso.melhor_nivel || 1);
+let nivelAtual  = Math.max(1, progresso.nivel_atual  || 1, melhorNivel);
+const _nivelReal = nivelAtual;
+let _maiorComboSalvo = progresso.maior_combo || 0;
+
+// Replay: ?nivel=X — jogar nível específico sem regredir o progresso real
+const _replayNivel   = new URLSearchParams(location.search).get('nivel');
+const _isReplay      = !!_replayNivel;
+if (_isReplay) nivelAtual = Math.max(1, parseInt(_replayNivel) || 1);
+const _secsOverride  = parseInt(new URLSearchParams(location.search).get('secs'), 10) || null;
+
+// Sprint: ?modo=sprint — sessão contínua de 3 min sem timer por nível
+const _isSprint     = new URLSearchParams(location.search).get('modo') === 'sprint';
+if (_isSprint) nivelAtual = 1; // sprint sempre começa do nível 1
+let _sprintTotal    = 180;
+let _sprintLeft     = 180;
+let _sprintInt      = null;
+let _sprintLevels   = 0;
+let _sprintPairsOk  = 0;
+let _sprintErrTotal = 0;
+let _sprintNivelIni = 0;
+let _sprintStarted   = false;
+let _sprintEnded     = false;
+let _sprintWinTimeout = null;
+
+// Ranking
+let rankingAll          = [];
+let rankingTurma        = [];
+let rankingEmProgresso  = [];
+function _parseRanking(snap) {
+  rankingAll = [];
+  if (snap && snap.exists()) {
+    snap.forEach(c => { const v = c.val(); if (v && v.nome) rankingAll.push({ ...v, _uid: c.key }); });
+    rankingAll.sort((a, b) => (b.melhor_nivel || 0) - (a.melhor_nivel || 0));
+  }
+  rankingEmProgresso = rankingAll.filter(r => (r.melhor_nivel || 0) < 300);
+  rankingTurma = rankingAll.filter(r => r.turma === turma);
+}
+_parseRanking(_rankingSnap);
+atualizarLeadersLine();
+
+async function reloadRanking() {
+  if (_isProfMode) return;
+  _parseRanking(await get(ref(db, pathTabuadaRanking(_bimJogo))).catch(() => null));
+  atualizarLeadersLine();
+}
+
+// ── Mini ranking compacto (1 linha) ──────────────────────────
+function miniRankingHtml() {
+  const g  = rankingEmProgresso[0];
+  const g2 = rankingEmProgresso[1];
+  const t  = rankingTurma[0];
+  if (!g && !t) return '';
+  const isMe = (r) => r && r._uid === uid;
+  const iAmLeader = isMe(g);
+
+  let html = '<div class="mini-rank-wrap">';
+
+  if (iAmLeader) {
+    // Bloco destacado de liderança
+    let sub = '';
+    if (g2) {
+      const dist = (g.melhor_nivel || 0) - (g2.melhor_nivel || 0);
+      sub = dist > 0
+        ? `2º lugar: ${escH(g2.nome)} - ${escH(g2.turma)} · Nível ${g2.melhor_nivel} (vantagem de ${dist} nível${dist > 1 ? 'is' : ''})`
+        : `2º lugar: ${escH(g2.nome)} - ${escH(g2.turma)} · Nível ${g2.melhor_nivel} — empatados!`;
+    }
+    html += `<div class="mini-rank-leader">
+      <div class="mini-rank-leader-icon">🥇</div>
+      <div class="mini-rank-leader-text">
+        <div class="mini-rank-leader-title">Você lidera o ranking geral!</div>
+        ${sub ? `<div class="mini-rank-leader-sub">${sub}</div>` : ''}
+      </div>
+    </div>`;
+  } else if (g) {
+    const dist = (g.melhor_nivel || 0) - melhorNivel;
+    const distText = dist > 0 ? ` · você está ${dist} nível${dist > 1 ? 'is' : ''} atrás` : '';
+    html += '<div class="mini-rank-bar">';
+    html += `<span class="mini-rank-pill geral">🥇 ${escH(g.nome)} - ${escH(g.turma)} · Nível ${g.melhor_nivel}${distText}</span>`;
+    html += '</div>';
+  }
+
+  const tDiff = t && (!g || t.nome !== g.nome || t.turma !== g.turma);
+  if (tDiff) {
+    const label = isMe(t)
+      ? '🏅 Você lidera na turma!'
+      : `🏅 ${escH(t.nome)} - ${escH(t.turma)} · Nível ${t.melhor_nivel}`;
+    if (!iAmLeader) html += '<div class="mini-rank-bar" style="margin-top:6px">';
+    else            html += '<div class="mini-rank-bar">';
+    html += `<span class="mini-rank-pill turma">${label}</span></div>`;
+  }
+
+  return html + '</div>';
+}
+
+// Versão compacta: 1 linha fina usada durante o jogo
+function miniRankingHtmlCompact() {
+  const g = rankingEmProgresso[0];
+  const t = rankingTurma[0];
+  if (!g && !t) return '';
+  const isMe = (r) => r && r._uid === uid;
+  const parts = [];
+  if (g) {
+    parts.push(isMe(g)
+      ? `<span style="color:#eab308;font-weight:700">🥇 Geral: Você lidera!</span>`
+      : `<span><span style="color:var(--text-muted)">🥇 Geral: </span><strong style="color:#eab308;font-size:12px">${escH(g.nome)}</strong><span style="color:var(--text-muted);font-size:10px"> · ${escH(g.turma||'')} · Nv ${g.melhor_nivel}</span></span>`);
+  }
+  if (t && (!g || t.nome !== g.nome || t.turma !== g.turma)) {
+    parts.push(isMe(t)
+      ? `<span style="color:#c4b5fd;font-weight:600">🏅 Turma: Você lidera!</span>`
+      : `<span><span style="color:var(--text-muted)">🏅 Turma: </span><strong style="color:#c4b5fd">${escH(t.nome)}</strong><span style="color:var(--text-muted);font-size:10px"> · Nv ${t.melhor_nivel}</span></span>`);
+  }
+  if (!parts.length) return '';
+  return `<div style="font-size:11px;text-align:center;padding:2px 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${parts.join(' &nbsp;&nbsp;·&nbsp;&nbsp; ')}</div>`;
+}
+
+// ── Layout adaptativo: colunas e altura dos cards ─────────────
+function calcGameLayout(cardCount) {
+  const vw    = window.innerWidth;
+  const GAP   = 5;
+  const MIN_W = 40;
+  const contW = Math.min(vw - 32, 630);
+
+  // Escolher número de colunas que cria grid mais próximo de quadrado
+  let bestC = 4, bestScore = Infinity;
+  for (let c = 2; c <= 10; c++) {
+    const cW = (contW - (c - 1) * GAP) / c;
+    if (cW < MIN_W) continue;
+    const rows = Math.ceil(cardCount / c);
+    const score = Math.abs(c / rows - 1.3); // grid ligeiramente mais largo que alto
+    if (score < bestScore) { bestScore = score; bestC = c; }
+  }
+
+  // Estimar altura dos cards para detectar modo compacto
+  const topbarH = document.querySelector('.topbar')?.getBoundingClientRect().height || 62;
+  const OVERHEAD = 250; // topbar + header-nivel + líderes(3 linhas) + timer + barra + dots + status + combo + slots
+  const gridH = Math.max(60, window.innerHeight - topbarH - OVERHEAD);
+  const rows  = Math.ceil(cardCount / bestC);
+  const estCardH = (gridH - (rows - 1) * GAP) / rows;
+  return { cols: bestC, compact: estCardH < 52 };
+}
+
+// ── Audio (Web Audio API) ─────────────────────────────────────
+let _audioCtx = null;
+function _getCtx() {
+  if (!_audioCtx) {
+    try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  }
+  return _audioCtx;
+}
+function _beep(freq, dur, type = 'sine', vol = 0.22, delay = 0) {
+  const ctx = _getCtx(); if (!ctx) return;
+  try {
+    const t = ctx.currentTime + delay;
+    const osc = ctx.createOscillator(), gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(vol, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    osc.start(t); osc.stop(t + dur + .01);
+  } catch(e) {}
+}
+function resumeAudio() { const ctx = _getCtx(); if (ctx?.state === 'suspended') ctx.resume(); }
+function somAcerto()   { _beep(660, .1,'sine',.2); _beep(880,.13,'sine',.2,.1); }
+function somErro()     { _beep(180,.2,'sawtooth',.12); }
+function somVitoria()  { [523,659,784,1047].forEach((f,i) => _beep(f,.18,'sine',.28,i*.11)); }
+function somDerrota()  { _beep(370,.12,'sine',.18); _beep(270,.12,'sine',.18,.14); _beep(190,.3,'sine',.18,.28); }
+
+// ── Combo popup ───────────────────────────────────────────────
+function showComboPopup(el) {
+  const rect = el.getBoundingClientRect();
+  const pop = document.createElement('div');
+  pop.className = 'combo-pop';
+  let text, color, badgeCls;
+  if      (comboCount >= 6) { text = `🔥 INCRÍVEL! x${comboCount}`; color = '#FAB800'; badgeCls = 'combo-c5'; pop.classList.add('combo-huge'); }
+  else if (comboCount === 5) { text = '🔥 x5 COMBO!';               color = '#FAB800'; badgeCls = 'combo-c5'; pop.classList.add('combo-huge'); }
+  else if (comboCount === 4) { text = '🔥 Combo x4';                color = '#f97316'; badgeCls = 'combo-c4'; pop.classList.add('combo-big'); }
+  else if (comboCount === 3) { text = '🔥 Combo x3';                color = '#f97316'; badgeCls = 'combo-c3'; pop.classList.add('combo-big'); }
+  else if (comboCount === 2) { text = '✓ x2';                       color = '#22C55E'; badgeCls = 'combo-c2'; }
+  else                       { text = '+1';                          color = '#1D9E75'; badgeCls = null; }
+  pop.style.cssText = `left:${rect.left + rect.width/2}px;top:${rect.top + 8}px;color:${color};`;
+  document.body.appendChild(pop);
+  setTimeout(() => pop.remove(), comboCount >= 5 ? 1300 : comboCount >= 3 ? 1100 : 900);
+  // Badge persistente de streak
+  const badge = document.getElementById('combo-badge');
+  if (badge) {
+    if (badgeCls) {
+      badge.innerHTML = `<span class="combo-badge-inner ${badgeCls}">${text}</span>`;
+    } else {
+      badge.innerHTML = '';
+    }
+  }
+}
+
+function updateComboDisplay() {
+  const el = document.getElementById('combo-seguidos');
+  if (!el) return;
+  if (comboCount <= 0) { el.textContent = ''; el.className = 'combo-seguidos baixo'; el.style.display = 'none'; return; }
+  el.style.display = 'inline-flex';
+  el.textContent = `🔥 ${comboCount} seguido${comboCount !== 1 ? 's' : ''}`;
+  el.className = `combo-seguidos ${comboCount >= 5 ? 'maximo' : comboCount >= 3 ? 'alto' : 'baixo'}`;
+}
+
+function flashRecorde() {
+  const f = document.createElement('div');
+  f.className = 'combo-record-flash';
+  f.textContent = '🏆 Novo recorde de combo!';
+  document.body.appendChild(f);
+  setTimeout(() => f.remove(), 2000);
+}
+
+function lancarConfete(n = 80) {
+  const wrap = document.createElement("div");
+  wrap.className = "confete-wrap";
+  document.body.appendChild(wrap);
+  const colors = ['#FAB800','#22C55E','#60A5FA','#A855F7','#F87171','#FDE047','#4ADE80','#FF6B9D'];
+  for (let i = 0; i < n; i++) {
+    const p = document.createElement("div");
+    p.className = "confete-particle";
+    const w = 6 + Math.random() * 8;
+    p.style.cssText = `left:${Math.random()*100}%;width:${w}px;height:${w*1.6}px;`
+      + `background:${colors[Math.floor(Math.random()*colors.length)]};`
+      + `animation-duration:${2.5+Math.random()*3}s;animation-delay:${Math.random()*1.5}s;`;
+    wrap.appendChild(p);
+  }
+  setTimeout(() => wrap.remove(), 7000);
+}
+
+function lancarConfeteChefao(n = 100) {
+  const wrap = document.createElement("div");
+  wrap.className = "confete-wrap";
+  document.body.appendChild(wrap);
+  const colors = ['#EF4444','#F97316','#FAB800','#FDE047','#FCA5A5','#FDBA74','#FEF08A'];
+  for (let i = 0; i < n; i++) {
+    const p = document.createElement("div");
+    p.className = "confete-particle";
+    const w = 7 + Math.random() * 10;
+    p.style.cssText = `left:${Math.random()*100}%;width:${w}px;height:${w*1.6}px;`
+      + `background:${colors[Math.floor(Math.random()*colors.length)]};`
+      + `animation-duration:${2+Math.random()*3}s;animation-delay:${Math.random()*1}s;`;
+    wrap.appendChild(p);
+  }
+  setTimeout(() => wrap.remove(), 7000);
+}
+
+function mostrarModalChefao(nivel, onStart) {
+  const cfg  = getLevelConfig(nivel);
+  const tipo = getTipoChefao(nivel);
+  const typeCls = tipo === 'dificil' ? ' dificil' : tipo === 'grande' ? ' grande' : '';
+
+  let icon, titulo, stat3, desc, strongColor;
+  if (tipo === 'rapido') {
+    icon = '⚡'; titulo = 'CHEFÃO RÁPIDO';
+    stat3 = '⚡ Tempo reduzido';
+    strongColor = '#F87171';
+    desc = `⚡ O tempo está REDUZIDO!<br>Seja rápido — cada segundo conta!`;
+  } else if (tipo === 'dificil') {
+    icon = '🧮'; titulo = 'CHEFÃO DIFÍCIL';
+    stat3 = '🧮 Números maiores';
+    strongColor = '#C4B5FD';
+    desc = `🧮 As contas são mais PESADAS!<br>Concentre-se nas operações!`;
+  } else {
+    icon = '📦'; titulo = 'CHEFÃO GRANDE';
+    stat3 = `📦 ${cfg.cols}×${Math.ceil(cfg.pairs * 2 / cfg.cols)} tabuleiro`;
+    strongColor = '#93C5FD';
+    desc = `📦 O tabuleiro é MAIOR!<br>${cfg.pairs} pares para limpar!`;
+  }
+
+  const ov = document.createElement('div');
+  ov.className = 'chefao-modal-ov';
+  ov.innerHTML = `
+    <div class="chefao-modal-card${typeCls}">
+      <div class="chefao-modal-icon">${icon}</div>
+      <div class="chefao-modal-title">${titulo}</div>
+      <div class="chefao-modal-sub">Nível ${nivel}</div>
+      <div class="chefao-modal-stats">
+        <div class="chefao-modal-stat">🃏 ${cfg.pairs} pares</div>
+        <div class="chefao-modal-stat">⏱ ${cfg.secs}s</div>
+        <div class="chefao-modal-stat">${stat3}</div>
+      </div>
+      <div class="chefao-modal-desc">
+        ${desc}<br><strong style="color:${strongColor}">Derrote o chefão para avançar!</strong>
+      </div>
+      <button class="btn-enfrentar" id="btn-enfrentar-chefao">⚔️ Enfrentar!</button>
+    </div>`;
+  document.body.appendChild(ov);
+  document.getElementById('btn-enfrentar-chefao').addEventListener('click', () => {
+    ov.remove();
+    onStart();
+  });
+}
+
+let timerTotal = 60, timerLeft = 60;
+let timerInterval = null;
+let _timerOvertime = 0;
+let selectedCard = null;  // { el, pairId, kind, op, result }
+let removedCount = 0, totalPairs = 0;
+let gameOver = false;
+let _animating = false;  // bloqueia clicks durante animação de erro
+let acertos = 0, erros = 0, comboCount = 0, comboSessao = 0;
+let ehChefaoAtual = false;  // true quando o nível atual é chefão
+let tipoChefaoAtual = null; // 'rapido' | 'dificil' | 'grande' | null
+let tipoAcertos = { add:0, sub:0, mul:0, div:0 };
+let tipoErros   = { add:0, sub:0, mul:0, div:0 };
+let _orientHandler  = null; // handler de resize para reflow de cols
+let _orientDebounce = null;
+
+function symToTipo(sym) {
+  if (sym === '+') return 'add';
+  if (sym === '−') return 'sub';
+  if (sym === '×') return 'mul';
+  if (sym === '÷') return 'div';
+  return null;
+}
+
+function updateNivelDisplay() {
+  // nivel-display removido do header — nível visível no badge dentro do jogo
+}
+
+function _buildLeadersHtml() {
+  if (_isProfMode) return '';
+  const isMe = r => r && r._uid === uid;
+
+  // Hall da Fama = quem concluiu os 300 níveis. Quem está no Hall não
+  // disputa o ranking "Geral"/"Turma" exibido aos demais; o líder geral
+  // e o líder da turma passam a ser o 1º que AINDA NÃO concluiu os 300.
+  const hall      = rankingAll.filter(r => (r.melhor_nivel || 0) >= 300);
+  const g         = rankingEmProgresso[0];               // 1º geral (não concluiu 300)
+  const turmaProg = rankingEmProgresso.filter(r => r.turma === turma);
+  const t         = turmaProg[0];                        // 1º da turma (não concluiu 300)
+
+  if (!hall.length && !g && !t) return '';
+  const lines = [];
+
+  // ── 🏆 Hall da Fama (concluintes dos 300) ──────────────────────
+  if (hall.length) {
+    const primeiro = hall[0];
+    const nomeLabel = isMe(primeiro)
+      ? `<strong>Você</strong>`
+      : `<strong>${escH(primeiro.nome)}</strong><span style="color:var(--text-muted);font-weight:400"> ${escH(primeiro.turma||'')}</span>`;
+    const resto = hall.length - 1;
+    const extra = resto > 0
+      ? `<span style="color:var(--text-muted);font-weight:400"> + ${resto} aluno${resto > 1 ? 's' : ''} concluíram</span>`
+      : '';
+    lines.push(
+      `<div style="font-size:10px;font-weight:600;color:#FBBF24;margin-bottom:1px;line-height:1.35">` +
+      `🏆 <span style="color:var(--text-muted);font-weight:400">Hall da Fama:</span> ${nomeLabel}${extra}` +
+      `</div>`
+    );
+  }
+
+  // ── 👑 Geral (1º que ainda não concluiu 300) ───────────────────
+  if (g) {
+    lines.push(isMe(g)
+      ? `<div style="font-size:11px;font-weight:700;color:#D97706;line-height:1.35">👑 <span style="color:var(--text-muted);font-weight:600">Geral:</span> <strong>Você lidera! 🥇</strong></div>`
+      : `<div style="font-size:11px;font-weight:600;color:#D97706;line-height:1.35">👑 <span style="color:var(--text-muted);font-weight:400">Geral:</span> <strong>${escH(g.nome)}</strong><span style="color:var(--text-muted);font-weight:400"> · ${escH(g.turma||'')} · Nv ${g.melhor_nivel}</span></div>`);
+  }
+
+  // ── 🏅 Turma (1º da turma que ainda não concluiu 300) ──────────
+  if (t && (!g || t._uid !== g._uid)) {
+    lines.push(isMe(t)
+      ? `<div style="font-size:10px;color:#60A5FA;margin-top:1px;line-height:1.35">🏅 <span style="color:var(--text-muted);font-weight:400">Turma:</span> <strong>Você lidera!</strong></div>`
+      : `<div style="font-size:10px;color:#60A5FA;margin-top:1px;line-height:1.35">🏅 <span style="color:var(--text-muted);font-weight:400">Turma:</span> <strong>${escH(t.nome)}</strong><span style="color:var(--text-muted);font-weight:400"> · Nv ${t.melhor_nivel}</span></div>`);
+  }
+
+  return lines.join('');
+}
+
+function atualizarLeadersLine() {
+  const el = document.getElementById('leaders-ingame');
+  if (!el || _isProfMode) return;
+  const html = _buildLeadersHtml();
+  el.innerHTML = html;
+  el.style.display = html ? '' : 'none';
+}
+updateNivelDisplay();
+
+// ── Sprint functions ──────────────────────────────────────────
+function startSprintTimer() {
+  _sprintLeft = _sprintTotal;
+  updateSprintDisplay();
+  _sprintInt = setInterval(() => {
+    if (_sprintEnded) return;
+    _sprintLeft = Math.max(0, _sprintLeft - 1);
+    updateSprintDisplay();
+    if (_sprintLeft === 0) { clearInterval(_sprintInt); _sprintInt = null; endSprint(false); }
+  }, 1000);
+}
+
+function updateSprintDisplay() {
+  const el = document.getElementById('sprint-timer');
+  if (!el) return;
+  const min = Math.floor(_sprintLeft / 60);
+  const sec = _sprintLeft % 60;
+  el.textContent = `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  el.className   = `sprint-timer${_sprintLeft <= 30 ? ' danger' : _sprintLeft <= 60 ? ' warn' : ''}`;
+  const lvs = document.getElementById('sprint-lvs');
+  const ok  = document.getElementById('sprint-ok');
+  const err = document.getElementById('sprint-err');
+  if (lvs) lvs.textContent = _sprintLevels;
+  if (ok)  ok.textContent  = _sprintPairsOk;
+  if (err) err.textContent = _sprintErrTotal;
+}
+
+async function salvarSprintRanking(acertos) {
+  if (!sprintRankRef) return;
+  try {
+    const snap = await get(sprintRankRef);
+    const atual = snap.exists() ? (snap.val().melhor_acertos || 0) : 0;
+    if (acertos > atual) {
+      await set(sprintRankRef, { nome: nomeAluno, turma, melhor_acertos: acertos, ultima_sprint: Date.now() });
+    }
+  } catch(e) { console.warn('[Sprint] Erro ao salvar ranking:', e); }
+}
+
+async function endSprint(manual = false) {
+  if (_sprintEnded) return;
+  _sprintEnded = true;
+  gameOver = true;
+  stopTimer();
+  if (_sprintInt) { clearInterval(_sprintInt); _sprintInt = null; }
+  if (!manual) somDerrota(); else somVitoria();
+  if (_sprintPairsOk > 0) salvarSprintRanking(_sprintPairsOk);
+  _registrarSessao(nivelAtual, manual ? 'completou' : 'tempo_esgotado', _sprintPairsOk, _sprintErrTotal);
+  const total = _sprintPairsOk + _sprintErrTotal;
+  const acc   = total > 0 ? Math.round(_sprintPairsOk / total * 100) : 100;
+  document.getElementById("lov-emoji").textContent = _sprintLevels >= 5 ? '🏆' : _sprintLevels >= 2 ? '⭐' : '🎮';
+  document.getElementById("lov-title").textContent = manual ? 'Sprint encerrado!' : '⏰ Tempo esgotado!';
+  document.getElementById("lov-sub").textContent   =
+    `${_sprintLevels} nível${_sprintLevels !== 1 ? 'is' : ''} concluído${_sprintLevels !== 1 ? 's' : ''} · ${_sprintPairsOk} acertos · ${acc}% precisão`;
+  document.getElementById("lov-new").textContent   =
+    _sprintPairsOk > 0 ? `${_sprintPairsOk} acerto${_sprintPairsOk !== 1 ? 's' : ''} em ${_sprintLevels} rodada${_sprintLevels !== 1 ? 's' : ''}` : 'Nenhum acerto';
+  document.getElementById("lov-new").style.color   = 'var(--blue)';
+  document.getElementById("lov-btn").textContent   = 'Voltar →';
+  document.querySelector('.level-card').style.animation = manual ? 'levelUpPop .35s' : 'levelDownPop .35s ease';
+  document.getElementById("level-overlay").style.display = 'flex';
+  { const b = document.getElementById('lov-btn-repetir'); if(b){ b.style.display='block'; b._nv=nivelAtual; } }
+}
+
+// ── Build game ────────────────────────────────────────────────
+const _shownBossModals = new Set(); // evita re-exibir modal no mesmo nível
+
+function buildGame(skipBossModal = false) {
+  if (!skipBossModal && isChefao(nivelAtual) && !_isSprint && !_isReplay) {
+    if (!_shownBossModals.has(nivelAtual)) {
+      _shownBossModals.add(nivelAtual);
+      mostrarModalChefao(nivelAtual, () => _buildGameInternal());
+      return;
+    }
+  }
+  _buildGameInternal();
+}
+
+function _buildGameInternal() {
+  stopTimer();
+  _atualizarPresenca();
+  if (!_isProfMode && !_isModoTesteAtivo) (async () => { try {
+    const { atualizarPresenca } = await import('/js/presenca.js');
+    await atualizarPresenca({ status: 'ocupado', pagina: 'tabuada' });
+  } catch(_) {} })();
+  // Limpa clones de voo e confetes de partidas anteriores
+  document.querySelectorAll('.fly-clone, .confete-wrap').forEach(c => c.remove());
+  const cfg = getLevelConfig(nivelAtual);
+  ehChefaoAtual   = !!cfg.ehChefao;
+  tipoChefaoAtual = cfg.tipoChefao || null;
+  timerTotal = cfg.secs;
+  timerLeft  = cfg.secs;
+  _timerOvertime = 0;
+  selectedCard = null;
+  removedCount = 0;
+  gameOver    = false;
+  acertos = 0; erros = 0; comboCount = 0;
+  tipoAcertos = { add:0, sub:0, mul:0, div:0 };
+  tipoErros   = { add:0, sub:0, mul:0, div:0 };
+  _animating  = false;
+
+  // ── 1. Colunas — desktop: cfg.cols (geralmente 6), mobile (≤768px): 4
+  const _topbarEl = document.querySelector('.topbar');
+  const _topbarH  = _topbarEl ? (_topbarEl.offsetHeight || _topbarEl.getBoundingClientRect().height || 62) : 62;
+  const _isMobile      = window.innerWidth <= 768;
+  const _isNarrow      = window.innerWidth <= 420;
+  const _desktopCols   = cfg.cols || 6;
+  // Níveis pequenos (cols 2/3) mantêm seu layout; demais: mobile força 4
+  const cols = _isNarrow
+    ? Math.min(4, _desktopCols)
+    : _isMobile
+      ? Math.min(4, _desktopCols)
+      : _desktopCols;
+
+  // ── 2. Pares: Grande desktop=18p, todos os outros=máx 12p
+  // (24 cards normal/rápido/difícil | 36 cards grande desktop | 24 cards grande mobile)
+  const _targetPairs = (tipoChefaoAtual === 'grande' && !_isMobile)
+    ? cfg.pairs           // 18 pares no desktop grande
+    : Math.min(cfg.pairs, 12); // máx 12 para todos os demais
+  const pairs = generatePairs(cfg.type, _targetPairs, cfg.maxResult, cfg.minMul || 0, cfg.minDiv || 0, cfg.pesado || false);
+  if (pairs.length < _targetPairs) {
+    const usedResults = new Set(pairs.map(p => p.result));
+    for (let i = pairs.length; i < _targetPairs; i++) {
+      const extra = tryGenOp('add', usedResults, cfg.maxResult, cfg.pesado || false);
+      if (extra) pairs.push(extra); else break;
+    }
+  }
+  if (pairs.length > _targetPairs) pairs.splice(_targetPairs);
+
+  // ── 3. Garantir grid sem buracos: (pares × 2) % cols === 0 SEMPRE
+  const _gridFactor = cols % 2 === 0 ? cols / 2 : cols;
+  const _validPares = Math.max(_gridFactor, Math.floor(pairs.length / _gridFactor) * _gridFactor);
+  if (pairs.length > _validPares) pairs.splice(_validPares);
+  console.log(`[Tabuada] Nv${nivelAtual} (${ehChefaoAtual ? tipoChefaoAtual||'chefao' : 'normal'}) ${_isMobile?'mobile':'desktop'}: ${pairs.length}p × 2 = ${pairs.length*2} cards ÷ ${cols} cols = ${pairs.length*2/cols} linhas`);
+
+  // ── 4. Build cards (pares e cols já garantidamente válidos)
+  const cards = [];
+  pairs.forEach((pair, i) => {
+    cards.push({ kind:'op',     pairId:i, op:pair.op, result:pair.result });
+    cards.push({ kind:'result', pairId:i, op:pair.op, result:pair.result });
+  });
+  shuffle(cards);
+
+  updateNivelDisplay();
+  totalPairs = pairs.length;
+
+  // isCompact: estimativa inicial; _ajustarLayoutGrid() recalcula com medição real
+  const _gridRows  = pairs.length * 2 / cols;
+  const _overheadEst = window.innerWidth <= 480 ? 290 : 260;
+  const _gridHEst  = Math.max(60, window.innerHeight - _topbarH - _overheadEst);
+  const isCompact  = _gridRows > 0 ? ((_gridHEst - (_gridRows - 1) * 5) / _gridRows) < 56 : false;
+
+  // Pairs dots
+  const dotsHtml = Array.from({length: pairs.length}, (_,i) =>
+    `<div class="pair-dot" id="dot-${i}"></div>`).join('');
+
+  // Pré-computa badge e grid class baseados no tipo de chefão
+  const _tc = tipoChefaoAtual;
+  const _nivelBadgeHtml = _isSprint
+    ? `<div class="nivel-badge">⚡ Sprint</div>`
+    : ehChefaoAtual
+    ? (()=>{
+        const xCls = _tc === 'dificil' ? ' chefao-dificil' : _tc === 'grande' ? ' chefao-grande' : '';
+        const icon = _tc === 'rapido' ? '⚡' : _tc === 'dificil' ? '🧮' : _tc === 'grande' ? '📦' : '👹';
+        const nome = _tc === 'rapido' ? 'CHEFÃO RÁPIDO' : _tc === 'dificil' ? 'CHEFÃO DIFÍCIL' : _tc === 'grande' ? 'CHEFÃO GRANDE' : 'CHEFÃO';
+        return `<div class="nivel-badge chefao${xCls}">${icon} ${nome} · Nível ${nivelAtual}</div>`;
+      })()
+    : `<div class="nivel-badge"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Nível ${nivelAtual}</div>`;
+  const _gridClass = `game-grid${ehChefaoAtual ? (_tc === 'dificil' ? ' chefao-dificil-grid' : _tc === 'grande' ? ' chefao-grande-grid' : ' chefao-grid') : ''}`;
+
+  // Mostrar botão Reiniciar no header
+  const _hdrRein = document.getElementById('btn-reiniciar-hdr');
+  if (_hdrRein) _hdrRein.style.display = 'inline-flex';
+
+  const content = document.getElementById("content");
+  content.innerHTML = `
+<div class="tb-wrap">
+
+  <!-- L1: badge de nível + combo seguidos -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
+    <div style="display:flex;align-items:center;gap:10px">
+      ${_nivelBadgeHtml}
+      <span id="combo-seguidos" class="combo-seguidos baixo" style="display:none"></span>
+    </div>
+    ${_isSprint ? `<div style="font-size:12px;color:var(--text-muted)">⚡ <strong style="color:var(--blue)">${_sprintPairsOk}</strong> acerto${_sprintPairsOk !== 1 ? 's' : ''}</div>` : ''}
+  </div>
+
+  <!-- L2: líderes + timer (normal) · sprint-bar (sprint) -->
+  <div>
+    ${_isSprint ? `
+    <div class="sprint-bar">
+      <div>
+        <div class="sprint-timer" id="sprint-timer">03:00</div>
+        <div class="sprint-label">Sprint</div>
+      </div>
+      <div class="sprint-stats">
+        <div class="sprint-stat"><div class="sprint-stat-val" id="sprint-lvs">${_sprintLevels}</div><div class="sprint-stat-lbl">Concluídos</div></div>
+        <div class="sprint-stat"><div class="sprint-stat-val" id="sprint-ok">${_sprintPairsOk}</div><div class="sprint-stat-lbl">Acertos</div></div>
+        <div class="sprint-stat"><div class="sprint-stat-val" id="sprint-err">${_sprintErrTotal}</div><div class="sprint-stat-lbl">Erros</div></div>
+      </div>
+    </div>` : `
+    <div id="leaders-ingame" style="margin-bottom:4px;line-height:1.4">${_buildLeadersHtml()}</div>
+    <div class="timer-wrap" id="timer-display">
+      <svg viewBox="0 0 24 24"><path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61 1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+      <span id="timer-text">${String(Math.floor(timerTotal/60)).padStart(2,'0')}:${String(timerTotal%60).padStart(2,'0')}</span>
+    </div>
+    <div class="timer-bar-bg">
+      <div class="timer-bar" id="timer-bar" style="width:100%"></div>
+    </div>`}
+  </div>
+
+  <!-- L3: pontos de pares + status + combo badge -->
+  <div>
+    <div class="pairs-bar-bg" id="pairs-dots">${dotsHtml}</div>
+    <div class="status-msg" id="status-msg"></div>
+    <div id="combo-badge" style="text-align:center;min-height:20px;margin-top:-2px"></div>
+  </div>
+
+  <!-- L4 (1fr): grid de cards — nunca extrapola -->
+  <div class="${_gridClass}" id="game-grid"
+       style="grid-template-columns:repeat(${cols},1fr)"></div>
+
+  <!-- L5 (auto): slots — sempre visíveis, garantidos pelo CSS Grid -->
+  <div class="slots-wrap">
+    <div class="slot" id="slot-op"><span class="slot-ph">operação</span></div>
+    <span class="slot-eq">=</span>
+    <div class="slot" id="slot-res"><span class="slot-ph">resultado</span></div>
+  </div>
+
+  ${_isSprint ? `<div class="game-controls" style="text-align:center;padding:4px 0"><button class="btn btn-ghost" onclick="endSprint(true)" style="color:var(--red);border-color:rgba(226,75,74,.3)">⚡ Encerrar Sprint</button></div>` : ''}
+</div>`;
+
+  // Populate grid
+  const grid = document.getElementById("game-grid");
+  cards.forEach((card, idx) => {
+    const el = document.createElement("div");
+    el.className = `game-card type-${card.kind}${isCompact ? ' compact' : ''}`;
+    el.dataset.pairId = card.pairId;
+    el.dataset.kind   = card.kind;
+    el.style.cssText  = `animation:fadeInUp .28s ease both;animation-delay:${(idx * 0.025).toFixed(2)}s`;
+    el.innerHTML      = card.kind === 'op'
+      ? opCardHtml(card.op)
+      : `<div class="res-number">${card.result}</div>`;
+    el.addEventListener("click", () => onCardClick(el, card));
+    grid.appendChild(el);
+  });
+
+  // Clicar no slot devolve a carta ao lugar de origem
+  document.getElementById('slot-op')?.addEventListener('click',  deselectCard);
+  document.getElementById('slot-res')?.addEventListener('click', deselectCard);
+
+  // ── Layout adaptativo: mede overhead real e ajusta --tb-h / --grid-h ──────────
+  // Funciona em qualquer tela sem depender de height:100% em cadeia (falha Safari/Android)
+  if (window._layoutRAF) cancelAnimationFrame(window._layoutRAF);
+  if (window._layoutResize) window.removeEventListener('resize', window._layoutResize);
+
+  function _ajustarLayoutGrid() {
+    const topbarEl  = document.querySelector('.topbar');
+    const topbarH   = topbarEl ? topbarEl.getBoundingClientRect().height : 62;
+    // Usa visualViewport quando disponível (desconta teclado virtual e barra do browser)
+    const vvH       = (window.visualViewport ? window.visualViewport.height : 0);
+    const winH      = vvH > 100 ? vvH : window.innerHeight;
+    const availH    = winH - topbarH;
+
+    // Seta altura do tb-wrap
+    const wrap = document.querySelector('.tb-wrap');
+    if (!wrap) return;
+    wrap.style.setProperty('--tb-h', availH + 'px');
+
+    // Mede a altura real de todos os irmãos do game-grid
+    const gridEl    = document.getElementById('game-grid');
+    if (!gridEl) return;
+    let othersH = 0;
+    for (const child of wrap.children) {
+      if (child === gridEl) continue;
+      const r  = child.getBoundingClientRect();
+      if (r.height <= 0) continue;
+      const cs = getComputedStyle(child);
+      othersH += r.height
+        + (parseFloat(cs.marginTop)    || 0)
+        + (parseFloat(cs.marginBottom) || 0);
+    }
+    // Padding top + bottom do wrap
+    const wcs    = getComputedStyle(wrap);
+    const padV   = (parseFloat(wcs.paddingTop) || 0) + (parseFloat(wcs.paddingBottom) || 0);
+    const gridH  = Math.max(60, availH - padV - othersH - 4);
+    wrap.style.setProperty('--grid-h', gridH + 'px');
+  }
+
+  // Primeira passagem logo após o paint
+  window._layoutRAF = requestAnimationFrame(() => {
+    _ajustarLayoutGrid();
+    // Segunda passagem 120ms depois para pegar renders assíncronos (líderes, etc.)
+    setTimeout(_ajustarLayoutGrid, 120);
+  });
+
+  // Recalcula ao redimensionar / girar / aparecer teclado virtual
+  window._layoutResize = () => {
+    if (window._layoutDebounce) clearTimeout(window._layoutDebounce);
+    window._layoutDebounce = setTimeout(_ajustarLayoutGrid, 80);
+  };
+  window.addEventListener('resize', window._layoutResize);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', window._layoutResize);
+  }
+
+  // ── Orientation change: reflow de colunas ao girar a tela ──────
+  if (_orientHandler) { window.removeEventListener('resize', _orientHandler); }
+  { // IIFE para capturar _desktopCols no closure sem vazar variável
+    const _dc = _desktopCols;
+    let _cc   = cols;
+    _orientHandler = () => {
+      clearTimeout(_orientDebounce);
+      _orientDebounce = setTimeout(() => {
+        if (gameOver) return;
+        const nowMobile = window.innerWidth <= 768;
+        const newCols   = nowMobile ? Math.min(4, _dc) : _dc;
+        if (newCols === _cc) return;
+        _cc = newCols;
+        const g = document.getElementById('game-grid');
+        if (g) g.style.gridTemplateColumns = `repeat(${newCols}, 1fr)`;
+      }, 200);
+    };
+    window.addEventListener('resize', _orientHandler);
+  }
+
+  if (_isSprint) {
+    if (!_sprintStarted) {
+      _sprintNivelIni = nivelAtual;
+      _sprintStarted = true;
+      startSprintTimer();
+    } else {
+      updateSprintDisplay();
+    }
+  } else {
+    startTimer();
+  }
+}
+
+// ── Timer ─────────────────────────────────────────────────────
+function startTimer() {
+  updateTimerUI();
+  timerInterval = setInterval(() => {
+    if (gameOver) return;
+    if (timerLeft > 0) {
+      timerLeft--;
+      updateTimerUI();
+      if (timerLeft === 0 && !(_isProfMode || _isModoTesteAtivo)) {
+        clearInterval(timerInterval); timerInterval = null; onTimerEnd();
+      }
+    } else if (_isProfMode || _isModoTesteAtivo) {
+      _timerOvertime++;
+      updateTimerUI();
+    }
+  }, 1000);
+}
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  // Limpa handlers de layout para não vazar entre níveis
+  if (window._layoutRAF)    { cancelAnimationFrame(window._layoutRAF); window._layoutRAF = null; }
+  if (window._layoutResize) {
+    window.removeEventListener('resize', window._layoutResize);
+    if (window.visualViewport) window.visualViewport.removeEventListener('resize', window._layoutResize);
+    window._layoutResize = null;
+  }
+}
+function updateTimerUI() {
+  const isOvertime = timerLeft === 0 && _timerOvertime > 0;
+  const pct  = isOvertime ? 0 : (timerTotal > 0 ? timerLeft / timerTotal : 0);
+  const secs = isOvertime ? _timerOvertime : timerLeft;
+  const min  = Math.floor(secs / 60);
+  const sec  = secs % 60;
+  const txt  = document.getElementById("timer-text");
+  const wrap = document.getElementById("timer-display");
+  const bar  = document.getElementById("timer-bar");
+  if (!txt) return;
+  txt.textContent = isOvertime
+    ? `-${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`
+    : `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  const _timerTypeCls = isOvertime ? ' warn'
+    : ehChefaoAtual
+    ? (tipoChefaoAtual === 'dificil' ? ' chefao-dificil' : tipoChefaoAtual === 'grande' ? ' chefao-grande' : ' chefao')
+    : (timerLeft <= 10 ? ' warn' : '');
+  const _barTypeCls = isOvertime ? ' danger'
+    : ehChefaoAtual
+    ? (tipoChefaoAtual === 'dificil' ? ' chefao-dificil' : tipoChefaoAtual === 'grande' ? ' chefao-grande' : ' chefao')
+    : (pct < .2 ? ' danger' : pct < .4 ? ' warn' : '');
+  if (wrap) wrap.className = `timer-wrap${_timerTypeCls}`;
+  if (bar) {
+    bar.style.width = `${pct * 100}%`;
+    bar.className   = `timer-bar${_barTypeCls}`;
+  }
+}
+
+// ── Card click ────────────────────────────────────────────────
+function setStatus(msg, color) {
+  const el = document.getElementById("status-msg");
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = color || 'var(--text-muted)';
+}
+
+function clearSlots() {
+  document.getElementById("slot-op")?.classList.remove("filled");
+  document.getElementById("slot-res")?.classList.remove("filled");
+}
+
+function fillSlot(card) {
+  const slot = document.getElementById(card.kind === 'op' ? 'slot-op' : 'slot-res');
+  slot?.classList.add("filled");
+}
+
+function deselectCard() {
+  if (!selectedCard) return;
+  const { clone, origRect } = selectedCard.flyInfo;
+  const el = selectedCard.el;
+  clone.style.transition = 'left .28s ease, top .28s ease, width .28s ease, height .28s ease';
+  clone.style.left   = origRect.left   + 'px';
+  clone.style.top    = origRect.top    + 'px';
+  clone.style.width  = origRect.width  + 'px';
+  clone.style.height = origRect.height + 'px';
+  setTimeout(() => {
+    clone.remove();
+    el.style.visibility = '';
+    el.style.pointerEvents = '';
+  }, 280);
+  selectedCard = null;
+  clearSlots();
+  setStatus("");
+}
+
+function onCardClick(el, card) {
+  if (gameOver) return;
+  if (_animating) return;
+  if (el.style.visibility === 'hidden') return;
+  resumeAudio();
+
+  // Toggle: clicar no mesmo card deseleciona
+  if (selectedCard && selectedCard.el === el) {
+    deselectCard();
+    return;
+  }
+
+  // Primeiro clique
+  if (!selectedCard) {
+    const flyInfo = launchCard(el, card);
+    selectedCard = { el, pairId: card.pairId, kind: card.kind, op: card.op, result: card.result, flyInfo };
+    fillSlot(card);
+    setStatus("Selecione o par →", 'var(--blue-dark)');
+    return;
+  }
+
+  // Segundo clique: verificar par
+  const first = selectedCard;
+  const flyInfo2 = launchCard(el, card);
+  fillSlot(card);
+
+  if (first.pairId === card.pairId && first.kind !== card.kind) {
+    // ✅ Correto
+    [first.flyInfo.clone, flyInfo2.clone].forEach(c => c.classList.add('matched-flash'));
+
+    const dot = document.getElementById(`dot-${card.pairId}`);
+    if (dot) dot.classList.add('done');
+
+    setTimeout(() => {
+      [first.flyInfo.clone, flyInfo2.clone].forEach(c => {
+        c.style.transition = 'opacity .28s, transform .28s';
+        c.style.opacity = '0';
+        c.style.transform = 'scale(0.5)';
+        setTimeout(() => c.remove(), 300);
+      });
+    }, 200);
+
+    acertos++;
+    comboCount++;
+    comboSessao = Math.max(comboSessao, comboCount);
+    if (comboCount > _maiorComboSalvo && comboCount >= 3) {
+      _maiorComboSalvo = comboCount;
+      flashRecorde();
+    }
+    somAcerto();
+    showComboPopup(el);
+    updateComboDisplay();
+    if (_isSprint) { _sprintPairsOk++; updateSprintDisplay(); }
+    const tipo = symToTipo((first.kind === 'op' ? first.op : card.op)?.sym);
+    if (tipo) tipoAcertos[tipo]++;
+    selectedCard = null;
+    removedCount++;
+    setTimeout(() => { clearSlots(); setStatus(""); }, 650);
+    if (removedCount >= totalPairs) setTimeout(onGameWin, 500);
+
+  } else {
+    // ❌ Errado
+    erros++;
+    const _tipoErr = symToTipo((first.kind === 'op' ? first.op : card.op)?.sym);
+    if (_tipoErr) tipoErros[_tipoErr]++;
+    if (comboCount >= 5) setStatus(`💔 Sequência de ${comboCount} quebrada! ❌`, 'var(--orange)');
+    else setStatus("Errou! Tente outra combinação. ❌", 'var(--red)');
+    comboCount = 0;
+    updateComboDisplay();
+    somErro();
+    const _badge = document.getElementById('combo-badge');
+    if (_badge) _badge.innerHTML = '';
+    if (_isSprint) { _sprintErrTotal++; updateSprintDisplay(); }
+    selectedCard = null;
+    _animating = true;  // bloqueia novos clicks enquanto clones voltam
+    flyBack(first.flyInfo, first.el);
+    flyBack(flyInfo2, el);
+    setTimeout(() => {
+      _animating = false;
+      clearSlots();
+      setTimeout(() => setStatus(""), 800);
+    }, 600);
+  }
+}
+
+// ── Detecta maestria (3× perfeito consecutivo) de um nível ─────
+// Lê o histórico do nível e conta completions perfeitas consecutivas.
+// Recebe errosPartidaAtual para garantir que a partida recém-salva
+// seja contabilizada mesmo que o Firebase ainda não tenha propagado
+// a entrada no cache — evita falso positivo na 2ª vez perfeita.
+async function _checarMaestria(nivelAlvo, errosPartidaAtual) {
+  try {
+    const _niveisBase = _isProfMode
+      ? `professor_tabuada_niveis/${uid}`
+      : _isModoTesteAtivo
+        ? `modo_teste_historico/PROFESSOR_TESTE/tabuada_niveis`
+        : _tabNiveisPath;
+    const snap = await get(ref(db, `${_niveisBase}/historico`));
+    if (!snap.exists()) {
+      // historico vazio: se esta é a 1ª partida e foi perfeita, consec=1 (longe de 3)
+      return false;
+    }
+    const entries = Object.entries(snap.val())
+      .map(([ts, v]) => ({ ts: Number(ts), ...v }))
+      .sort((a, b) => a.ts - b.ts);
+    let consec = 0;
+    for (const e of entries) {
+      if (e.nivel !== nivelAlvo) continue;
+      if (e.resultado === 'completou') {
+        if ((e.erros || 0) === 0) consec++;
+        else consec = 0;
+      } else {
+        consec = 0;
+      }
+    }
+    // Garantia anti-cache: se a partida atual (recém-salva) ainda não apareceu
+    // no snapshot retornado, soma manualmente para não disparar maestria com 2x.
+    const _entriesDoNivel = entries.filter(e => e.nivel === nivelAlvo);
+    const _ultimaEntry    = _entriesDoNivel.at(-1);
+    const _jaInclusa      = _ultimaEntry
+      && (Date.now() - _ultimaEntry.ts) < 8000
+      && (_ultimaEntry.erros || 0) === (errosPartidaAtual || 0)
+      && _ultimaEntry.resultado === 'completou';
+    if (!_jaInclusa && (errosPartidaAtual || 0) === 0) consec++;
+    return consec >= 3;
+  } catch (e) {
+    return false;
+  }
+}
+
+// ── Win ───────────────────────────────────────────────────────
+async function onGameWin() {
+  gameOver = true;
+  stopTimer();
+
+  const nivelJogado = nivelAtual;
+  const _segsWin = _isSprint ? null : (_timerOvertime > 0 ? -_timerOvertime : timerLeft);
+  const _overtimeStr = _timerOvertime > 0 ? ` · ⏱ +${_timerOvertime}s acima do limite` : '';
+  somVitoria();
+
+  if (_isSprint) {
+    _sprintLevels++;
+    nivelAtual++;  // avança dificuldade local apenas — não salva no Firebase
+    progresso.total_partidas = (progresso.total_partidas || 0) + 1;
+    await salvarProgresso(progresso, 'completou', nivelJogado, acertos, erros, true);
+    document.getElementById("lov-emoji").textContent = erros === 0 ? '⭐' : '✅';
+    document.getElementById("lov-title").textContent = `+${acertos} acerto${acertos !== 1 ? 's' : ''}!`;
+    document.getElementById("lov-sub").textContent   = `Total: ${_sprintPairsOk} · próxima rodada em 1s…`;
+    document.getElementById("lov-new").textContent   = '';
+    document.getElementById("lov-new").style.color   = 'var(--blue)';
+    document.getElementById("lov-btn").textContent   = 'Avançar →';
+    document.querySelector('.level-card').style.animation = 'levelUpPop .35s';
+    document.getElementById("level-overlay").style.display = 'flex';
+    { const b = document.getElementById('lov-btn-repetir'); if(b){ b.style.display='block'; b._nv=nivelJogado; } }
+    _sprintWinTimeout = setTimeout(() => {
+      _sprintWinTimeout = null;
+      if (_sprintEnded) return;
+      document.getElementById("level-overlay").style.display = 'none';
+      buildGame();
+    }, 1500);
+    return;
+  }
+
+  if (_isReplay) {
+    progresso.total_partidas = (progresso.total_partidas || 0) + 1;
+    await salvarProgresso(progresso, 'completou', nivelJogado, acertos, erros, true, _segsWin);
+    _registrarSessao(nivelJogado, 'completou');
+    nivelAtual = nivelJogado + 1; // avança nível local da sessão de prática
+
+    // Maestria: 3× perfeito consecutivo → diamante. Calculado ANTES de
+    // montar a tela para que a estrela não apareça primeiro.
+    const _maestriaReplay = (erros === 0)
+      ? await _checarMaestria(nivelJogado, erros)
+      : false;
+
+    if (_maestriaReplay) {
+      lancarConfete(60);
+      document.getElementById("lov-emoji").textContent = '💎';
+      document.getElementById("lov-title").textContent = 'Você concluiu esse nível com maestria!';
+      document.getElementById("lov-sub").textContent   =
+        `Nível ${nivelJogado} dominado — 3× perfeito consecutivo!`;
+    } else {
+      document.getElementById("lov-emoji").textContent = erros === 0 ? '⭐' : '✅';
+      document.getElementById("lov-title").textContent = erros === 0 ? 'Perfeito!' : 'Nível concluído!';
+      document.getElementById("lov-sub").textContent   = `Nível ${nivelJogado} · ${acertos} acerto${acertos !== 1 ? 's' : ''}${erros > 0 ? ` · ${erros} erro${erros > 1 ? 's' : ''}` : ''}${_overtimeStr}`;
+    }
+    document.getElementById("lov-new").textContent   = `→ Nível ${nivelAtual} (prática)`;
+    document.getElementById("lov-new").style.color   = 'var(--blue)';
+    document.getElementById("lov-btn").textContent   = 'Continuar →';
+    document.querySelector('.level-card').style.animation = 'levelUpPop .45s';
+    document.getElementById("level-overlay").style.display = 'flex';
+    { const b = document.getElementById('lov-btn-repetir'); if(b){ b.style.display='block'; b._nv=nivelJogado; } }
+    return;
+  }
+
+  const eraLider    = rankingAll[0]?._uid === uid;
+  const melhorAnterior = melhorNivel;
+  const novoNivel  = nivelAtual + 1;
+  const novoMelhor = Math.max(melhorNivel, novoNivel);
+
+  progresso.nivel_atual    = novoNivel;
+  progresso.melhor_nivel   = novoMelhor;
+  progresso.total_partidas = (progresso.total_partidas || 0) + 1;
+
+  nivelAtual  = novoNivel;
+  melhorNivel = novoMelhor;
+
+  if (nivelJogado >= NIVEL_MAX && !progresso.concluiu_300_em) {
+    progresso.concluiu_300_em = Date.now();
+  }
+
+  await salvarProgresso(progresso, 'completou', nivelJogado, acertos, erros, false, _segsWin);
+  _registrarSessao(nivelJogado, 'completou');
+
+  // ── Nível máximo atingido ──────────────────────────────────────
+  if (nivelJogado >= NIVEL_MAX) {
+    progresso.nivel_atual = NIVEL_MAX;
+    nivelAtual = NIVEL_MAX;
+    lancarConfeteChefao(180);
+    document.getElementById("lov-emoji").textContent = '🏆';
+    document.getElementById("lov-title").textContent = '🎉 Nível máximo atingido!';
+    document.getElementById("lov-sub").textContent   =
+      `Você concluiu o Nível ${NIVEL_MAX} — o último disponível! Aguarde novas liberações. Incrível! 🌟`;
+    document.getElementById("lov-new").textContent   = '🏆 Você chegou ao fim!';
+    document.getElementById("lov-new").style.color   = 'var(--gold)';
+    document.getElementById("lov-btn").textContent   = 'Ver ranking →';
+    document.querySelector('.level-card').style.animation = 'levelUpPop .45s';
+    document.getElementById("level-overlay").style.display = 'flex';
+    { const b = document.getElementById('lov-btn-repetir'); if(b){ b.style.display='block'; b._nv=nivelJogado; } }
+    document.getElementById("lov-btn").onclick = () => {
+      window.location.href = '/aluno/a-ranking.html';
+    };
+    return;
+  }
+
+  const isNewRecord = novoNivel > melhorAnterior;
+
+  // Mostra overlay imediatamente com informações já conhecidas
+  const isEstrela = erros === 0;
+  const foiChefao = isChefao(nivelJogado);
+  // Maestria: 3× perfeito consecutivo → diamante. Calculado ANTES de
+  // montar a tela para que a estrela não apareça primeiro.
+  const _maestria = isEstrela
+    ? await _checarMaestria(nivelJogado, erros)
+    : false;
+  const _tcWin    = foiChefao ? tipoChefaoAtual : null;
+  const _bIco     = _tcWin === 'rapido' ? '⚡' : _tcWin === 'dificil' ? '🧮' : _tcWin === 'grande' ? '📦' : '👹';
+  const _bNome    = _tcWin === 'rapido' ? 'Chefão Rápido' : _tcWin === 'dificil' ? 'Chefão Difícil' : _tcWin === 'grande' ? 'Chefão Grande' : 'Chefão';
+  const _bCor     = _tcWin === 'dificil' ? '#A78BFA' : _tcWin === 'grande' ? '#60A5FA' : '#EF4444';
+  if (foiChefao && _maestria) { lancarConfeteChefao(120); lancarConfete(70); }
+  else if (foiChefao) { lancarConfeteChefao(120); }
+  else if (_maestria) lancarConfete(70);
+  else if (isEstrela) lancarConfete(50);
+  document.getElementById("lov-emoji").textContent = (foiChefao && _maestria) ? '💎' : foiChefao ? _bIco : (_maestria ? '💎' : (isEstrela ? '⭐' : '🎉'));
+  document.getElementById("lov-title").textContent = (foiChefao && _maestria)
+    ? `💎 ${_bNome} derrotado com maestria!`
+    : foiChefao
+    ? `${_bIco} ${_bNome} derrotado!`
+    : (_maestria ? 'Você concluiu esse nível com maestria!' : (isEstrela ? '⭐ Nível com estrela!' : 'Avançou de nível!'));
+  document.getElementById("lov-sub").textContent   = (foiChefao && _maestria)
+    ? `Nível ${nivelJogado} — 3× perfeito consecutivo! ${isNewRecord ? '🌟 Novo recorde pessoal!' : ''}${_overtimeStr}`
+    : foiChefao
+    ? `Nível ${nivelJogado} conquistado! ${isEstrela ? '⭐ Sem erros!' : ''} ${isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue avançando!'}${_overtimeStr}`
+    : (_maestria
+      ? `Nível ${nivelJogado} dominado — 3× perfeito consecutivo! ${isNewRecord ? '🌟 Novo recorde pessoal!' : ''}${_overtimeStr}`
+      : (isEstrela
+        ? `Perfeito! Sem erros! ${isNewRecord ? '🌟 Novo recorde pessoal!' : 'Continue assim!'}${_overtimeStr}`
+        : `${erros} erro${erros !== 1 ? 's' : ''} — sem estrela desta vez. ${isNewRecord ? '🌟 Novo recorde!' : 'Continue avançando!'}${_overtimeStr}`));
+  document.getElementById("lov-new").textContent   = `→ Nível ${novoNivel}`;
+  document.getElementById("lov-new").style.color   = foiChefao ? _bCor : (isEstrela ? 'var(--gold)' : 'var(--blue)');
+  document.getElementById("lov-btn").textContent   = 'Continuar →';
+  document.querySelector('.level-card').style.animation = 'levelUpPop .45s';
+  document.getElementById("level-overlay").style.display = 'flex';
+  { const b = document.getElementById('lov-btn-repetir'); if(b){ b.style.display='block'; b._nv=nivelJogado; } }
+
+  // Atualiza ranking em background — se virou líder, atualiza overlay
+  reloadRanking().then(() => {
+    const eLider = rankingAll[0]?._uid === uid;
+    if (eLider && !eraLider) {
+      if (!isEstrela) lancarConfete(80);
+      // Não sobrescreve a celebração de maestria (💎).
+      if (_maestria) return;
+      document.getElementById("lov-emoji").textContent = '🏆';
+      document.getElementById("lov-title").textContent = '🥇 Você é o novo líder!';
+      document.getElementById("lov-sub").textContent   =
+        `${isEstrela ? '⭐ Com estrela! ' : ''}Primeiro lugar no ranking geral!`;
+    }
+  });
+}
+
+// ── Timer end ─────────────────────────────────────────────────
+async function onTimerEnd() {
+  gameOver   = true;
+  _animating = false;  // cancela qualquer lock de erro pendente
+  somDerrota();
+
+  const nivelJogado = nivelAtual;
+
+  progresso.total_partidas = (progresso.total_partidas || 0) + 1;
+  const isReplayDerrota = _isReplay;
+  await salvarProgresso(progresso, 'tempo_esgotado', nivelJogado, acertos, erros, isReplayDerrota || false);
+  _registrarSessao(nivelJogado, 'tempo_esgotado');
+  if (!isReplayDerrota) reloadRanking();
+
+  const foiChefao = isChefao(nivelJogado);
+  const _tcLose   = foiChefao ? tipoChefaoAtual : null;
+  const _bIcoL    = _tcLose === 'rapido' ? '⚡' : _tcLose === 'dificil' ? '🧮' : _tcLose === 'grande' ? '📦' : '👹';
+  const _bNomeL   = _tcLose === 'rapido' ? 'Chefão Rápido' : _tcLose === 'dificil' ? 'Chefão Difícil' : _tcLose === 'grande' ? 'Chefão Grande' : 'Chefão';
+  const _bCorL    = _tcLose === 'dificil' ? '#A78BFA' : _tcLose === 'grande' ? '#60A5FA' : '#EF4444';
+  const frases = foiChefao
+    ? [`${_bIcoL} O ${_bNomeL} venceu dessa vez... Tente novamente!`,
+       `${_bIcoL} Quase! O ${_bNomeL} ainda está de pé — revanche! ⚔️`,
+       `${_bIcoL} Não desista! Você vai derrotá-lo! 💪`]
+    : [`Você acertou ${acertos} par${acertos !== 1 ? 'es' : ''}. Tente de novo! 💪`,
+       'Quase lá! Mais uma tentativa 🚀',
+       'Na próxima você passa! 🎯',
+       'Continue tentando, você consegue! ⭐',
+       'Não desista — o tempo vai sobrar! ⏱️'];
+  const frase = frases[Math.floor(Math.random() * frases.length)];
+  const nivelExibir = isReplayDerrota ? _nivelReal : nivelAtual;
+
+  document.getElementById("lov-emoji").textContent = foiChefao ? _bIcoL : '⏰';
+  document.getElementById("lov-title").textContent = foiChefao ? `${_bIcoL} O ${_bNomeL} resistiu!` : 'Tempo esgotado!';
+  document.getElementById("lov-sub").textContent   = frase;
+  document.getElementById("lov-new").textContent   = foiChefao
+    ? `${_bNomeL} · Nível ${nivelExibir} — revanche!`
+    : `Nível ${nivelExibir} — tente de novo`;
+  document.getElementById("lov-new").style.color   = foiChefao ? _bCorL : 'var(--orange)';
+  document.getElementById("lov-btn").textContent   = foiChefao ? '⚔️ Revanche! →' : 'Tentar de novo →';
+  document.querySelector('.level-card').style.animation = 'levelDownPop .35s ease';
+  document.getElementById("level-overlay").style.display = 'flex';
+  { const b = document.getElementById('lov-btn-repetir'); if(b){ b.style.display='block'; b._nv=nivelJogado; } }
+}
+
+// ── Public functions ──────────────────────────────────────────
+window.endSprint = (manual) => endSprint(manual);
+
+
+window.fecharOverlay = function() {
+  if (_isSprint && _sprintEnded) {
+    window.location.href = _isProfMode ? '/professor/p-jogos.html' : '/aluno/a-jogos.html';
+    return;
+  }
+  if (_sprintWinTimeout) { clearTimeout(_sprintWinTimeout); _sprintWinTimeout = null; }
+  document.getElementById("level-overlay").style.display = 'none';
+  const _br = document.getElementById('lov-btn-repetir'); if(_br) _br.style.display='none';
+  buildGame();
 };
 
-// ── Boot ──────────────────────────────────────────────────────
-// Abrir aba de alunos direto se URL tiver #alunos
-if (location.hash === '#alunos') setTab('alunos');
-else loadJogar();
+window.repetirNivelAtual = function() {
+  const b = document.getElementById('lov-btn-repetir');
+  const nv = b?._nv;
+  if (!nv) return;
+  b.style.display = 'none';
+  document.getElementById('level-overlay').style.display = 'none';
+  nivelAtual = nv;
+  progresso.nivel_atual = nv;
+  buildGame();
+};
+
+window.reiniciarNivel = function() {
+  if (_sprintEnded) return;
+  stopTimer();
+  buildGame(true); // skipBossModal: já está no nível, não repetir o modal
+};
+
+
+// ── Modo professor ────────────────────────────────────────────
+if (_isProfMode) {
+  document.getElementById('prof-banner').style.display = 'flex';
+  document.getElementById('menu-config')?.style.setProperty('display', 'none');
+  document.getElementById('avatar-initials')?.classList.replace('avatar-orange', 'avatar-blue');
+  const topR = document.querySelector('.topbar-right');
+  if (topR) {
+    const sel = document.createElement('div');
+    sel.style.cssText = 'display:flex;align-items:center;gap:5px;margin-right:6px';
+    sel.innerHTML = `<input type="number" id="prof-nivel-inp" min="1" max="50" value="${nivelAtual}" style="width:52px;padding:4px 6px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;background:var(--bg);color:var(--text);text-align:center"><button onclick="profIr()" style="padding:4px 10px;background:var(--blue-pale);border:1.5px solid rgba(127,119,221,.3);border-radius:8px;font-size:12px;font-weight:700;color:var(--blue-dark);cursor:pointer">Ir</button>`;
+    topR.prepend(sel);
+  }
+}
+window.profIr = function() {
+  const v = Math.max(1, Math.min(50, parseInt(document.getElementById('prof-nivel-inp')?.value) || 1));
+  window.location.href = `/aluno/tabuada.html?nivel=${v}`;
+};
+
+// Restaurar status ao voltar da tabuada
+document.getElementById('btn-voltar')?.addEventListener('click', () => {
+  if (_isProfMode || _isModoTesteAtivo) return;
+  (async () => { try {
+    const { atualizarPresenca } = await import('/js/presenca.js');
+    const { getPerfil } = await import('/js/db.js');
+    const _p = await getPerfil(uid).catch(() => ({}));
+    await atualizarPresenca({ status: _p?.duelos_disponivel !== false ? 'disponivel' : 'indisponivel', pagina: 'menu' });
+  } catch(_) {} })();
+});
+
+// ── Start ─────────────────────────────────────────────────────
+buildGame();
 </script>
 </body>
 </html>

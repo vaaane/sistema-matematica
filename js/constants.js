@@ -119,6 +119,29 @@ export function bimestreAtual(hojeIso) {
   return prox ? prox.n : BIMESTRES[BIMESTRES.length - 1].n;
 }
 
+// ─────────────────────────────────────────────────────────────
+// Paths de dados por bimestre (tabuada e afins)
+// Regra histórica: bimestres 1 e 2 usam o path GLOBAL (dados antigos, sem
+// separação por bimestre); do 3º em diante, cada bimestre tem seu próprio nó
+// `..._b/${bim}`. Estes helpers centralizam a regra para que páginas novas —
+// e os próximos bimestres/anos — "só funcionem" sem repetir o `if`.
+export function pathTabuadaNiveis(uid, bim = bimestreAtual()) {
+  return bim <= 2 ? `tabuada_niveis/${uid}` : `tabuada_niveis_b/${bim}/${uid}`;
+}
+// Nó RAIZ de níveis (sem uid) — para ler todos os alunos de uma vez.
+export function pathTabuadaNiveisRaiz(bim = bimestreAtual()) {
+  return bim <= 2 ? `tabuada_niveis` : `tabuada_niveis_b/${bim}`;
+}
+export function pathTabuadaRanking(bim = bimestreAtual()) {
+  return bim <= 2 ? `tabuada_ranking` : `tabuada_ranking_b/${bim}`;
+}
+export function pathTabuadaNegNiveis(uid, bim = bimestreAtual()) {
+  return bim <= 2 ? `tabuada_negativos_niveis/${uid}` : `tabuada_negativos_niveis_b/${bim}/${uid}`;
+}
+export function pathTabuadaSprintRanking(bim = bimestreAtual()) {
+  return bim <= 2 ? `tabuada_sprint_ranking` : `tabuada_sprint_ranking_b/${bim}`;
+}
+
 // Grade semanal fixa por turma. 0=Dom 1=Seg 2=Ter 3=Qua 4=Qui 5=Sex 6=Sáb.
 // (Centralizado aqui para o Diário e futuras telas usarem o mesmo horário.)
 export const GRADE_TURMAS = {

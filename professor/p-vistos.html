@@ -47,6 +47,7 @@
   .cel:hover .chk{border-color:var(--text-muted)}
   .chk.v1{background:var(--green-pale);border-color:var(--green);color:var(--green)}
   .chk.v2{background:var(--gold-pale);border-color:var(--gold);color:var(--gold);font-size:11px}
+  .chk.v3{background:rgba(239,68,68,.14);border-color:var(--red);color:var(--red)}
   td.tot-cel{text-align:center;font-family:'Orbitron',monospace;font-size:12px;padding:4px 6px}
   .tot-ok{color:var(--green)}.tot-mid{color:var(--gold)}.tot-low{color:var(--red)}
 
@@ -55,6 +56,7 @@
   .leg-box{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800}
   .leg-box.g{background:var(--green-pale);border-color:var(--green);color:var(--green)}
   .leg-box.a{background:var(--gold-pale);border-color:var(--gold);color:var(--gold)}
+  .leg-box.r{background:rgba(239,68,68,.14);border-color:var(--red);color:var(--red)}
 
   .vazio{padding:40px 20px;text-align:center;color:var(--text-muted);font-size:13px}
   .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:#141428;border:1px solid var(--border);color:var(--text);padding:10px 18px;border-radius:10px;font-size:13px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:all .25s;z-index:400}
@@ -137,6 +139,8 @@
           <span><span class="leg-box"></span> não fez / não verificado</span>
           <span><span class="leg-box g">✓</span> visto dado</span>
           <span><span class="leg-box a">A</span> entregou atrasado</span>
+          <span><span class="leg-box r">F</span> falta (automática pela frequência do dia)</span>
+          <span style="margin-left:auto;font-style:italic">clique = visto · faltas vêm da chamada</span>
         </div>
       </div>
     </div>
@@ -228,6 +232,9 @@ let bibEscolhido = null, bibFiltro = "todos";
 
 // cache local do bimestre atual: { atividades:[{id,nome,data,conteudo,ordem}], marcas:{ atvId:{ aluno:0|1|2 } } }
 let atual = { atividades: [], marcas: {} };
+// chamada (frequência) do bimestre: { "YYYY-MM-DD": { aluno: true(falta) } }
+let chamada = {};
+const faltou = (data, aluno) => !!(data && chamada[data] && chamada[data][aluno]);
 
 const P = (t,b) => `vistos/${t}/${b}`;
 const fmtData = iso => { if(!iso) return ""; const [y,m,d]=iso.split("-"); return `${d}/${m}`; };
@@ -243,16 +250,23 @@ function toast(msg, err=false){
 async function carregar(){
   document.getElementById("gradeWrap").innerHTML = `<div class="vazio">Carregando…</div>`;
   try{
-    const snap = await get(ref(db, P(turma,bimestre)));
+    const [snap, snapCh] = await Promise.all([
+      get(ref(db, P(turma,bimestre))),
+      get(ref(db, `chamada/${turma}/${bimestre}`)),
+    ]);
     const raw = snap.exists() ? snap.val() : {};
     const atividades = Object.entries(raw.atividades||{})
       .map(([id,a])=>({id, nome:a.nome||"(sem nome)", data:a.data||"", conteudo:a.conteudo||"", obs:a.obs||"", ordem:a.ordem||0, materialRef:a.materialRef||"", materialTitulo:a.materialTitulo||"", temMaterial:!!a.materialRef, corrigido:!!a.corrigido}))
       .sort((x,y)=> (x.ordem-y.ordem) || (x.data<y.data?-1:1));
     atual = { atividades, marcas: raw.marcas||{} };
+    // chamada: só chaves de data (YYYY-MM-DD); valor {aluno:true} = falta
+    chamada = {};
+    const rc = snapCh.exists() ? snapCh.val() : {};
+    Object.entries(rc).forEach(([k,v])=>{ if(/^\d{4}-\d{2}-\d{2}$/.test(k)) chamada[k] = v || {}; });
   }catch(e){
     console.error(e);
-    atual = { atividades: [], marcas: {} };
-    toast("Erro ao carregar (verifique regras do Firebase para 'vistos')", true);
+    atual = { atividades: [], marcas: {} }; chamada = {};
+    toast("Erro ao carregar (verifique regras do Firebase para 'vistos'/'chamada')", true);
   }
   render();
 }
@@ -270,11 +284,13 @@ function render(){
   const alunos = alunosTurma.filter(a=>a.toLowerCase().includes(filtro));
   const nA = atual.atividades.length;
 
-  // stats
-  let feitos=0, atrasados=0;
+  // stats — falta vem da frequência (chamada) pela data da atividade
+  let feitos=0, atrasados=0, faltas=0;
   atual.atividades.forEach(atv=>alunosTurma.forEach(al=>{
     const v=(atual.marcas[atv.id]||{})[al]||0;
-    if(v===1) feitos++; if(v===2) atrasados++;
+    if(v===1){ feitos++; }
+    else if(v===2){ atrasados++; }
+    else if(faltou(atv.data, al)){ faltas++; }
   }));
   const total = nA*alunosTurma.length;
   const pct = total?Math.round(100*(feitos+atrasados)/total):0;
@@ -282,6 +298,7 @@ function render(){
     <div class="stat-card"><div><div class="stat-label">Atividades</div><div class="stat-value purple">${nA}</div></div></div>
     <div class="stat-card"><div><div class="stat-label">Vistos dados</div><div class="stat-value green">${feitos}</div></div></div>
     <div class="stat-card"><div><div class="stat-label">Atrasados</div><div class="stat-value gold">${atrasados}</div></div></div>
+    <div class="stat-card"><div><div class="stat-label">Faltas</div><div class="stat-value" style="color:var(--red)">${faltas}</div></div></div>
     <div class="stat-card"><div><div class="stat-label">Conclusão da turma</div><div class="stat-value ${pct>=75?'green':pct>=50?'gold':''}">${pct}%</div></div></div>`;
 
   const wrap = document.getElementById("gradeWrap");
@@ -293,7 +310,7 @@ function render(){
   let html = `<table class="grade"><thead><tr><th class="col-aluno">Aluno</th>`;
   atual.atividades.forEach(atv=>{
     const m = atual.marcas[atv.id]||{};
-    const done = alunosTurma.filter(a=>m[a]>0).length;
+    const done = alunosTurma.filter(a=>m[a]===1||m[a]===2).length;
     const mat = atv.temMaterial ? ` 📄` : "";
     html += `<th class="col-atv" data-id="${atv.id}" title="${(atv.conteudo||"").replace(/"/g,'&quot;')}">
       <div class="atv-nome">${atv.nome}${mat}</div>
@@ -309,9 +326,10 @@ function render(){
     let tot=0;
     atual.atividades.forEach(atv=>{
       const v=(atual.marcas[atv.id]||{})[al]||0;
-      if(v>0) tot++;
-      const cls=v===1?"v1":v===2?"v2":"";
-      const sym=v===1?"✓":v===2?"A":"";
+      if(v===1||v===2) tot++;
+      const f = (v!==1 && v!==2) && faltou(atv.data, al);   // falta automática pela frequência
+      const cls = v===1?"v1":v===2?"v2":f?"v3":"";
+      const sym = v===1?"✓":v===2?"A":f?"F":"";
       html += `<td class="cel" data-id="${atv.id}" data-al="${al.replace(/"/g,'&quot;')}"><span class="chk ${cls}">${sym}</span></td>`;
     });
     const cor = tot===nA?"tot-ok":tot>=nA/2?"tot-mid":"tot-low";
@@ -325,9 +343,22 @@ function render(){
 }
 
 // ── Ações (persistem no Firebase) ──
+async function salvarMarca(atvId, aluno, novo){
+  atual.marcas[atvId] = atual.marcas[atvId]||{};
+  atual.marcas[atvId][aluno] = novo;
+  render();
+  try{ await set(ref(db, `${P(turma,bimestre)}/marcas/${atvId}/${aluno}`), novo); }
+  catch(e){ console.error(e); toast("Falha ao salvar", true); }
+}
+
 async function ciclar(atvId, aluno){
   const atualV = (atual.marcas[atvId]||{})[aluno]||0;
-  const novo = (atualV+1)%3;
+  const atv = atual.atividades.find(a=>a.id===atvId);
+  const novo = (atualV+1)%3;           // 0 → ✓ → A → 0
+  // dar visto a quem FALTOU (frequência) → avisa
+  if (atualV===0 && novo===1 && faltou(atv&&atv.data, aluno)) {
+    if (!confirm(`⚠️ ${aluno} faltou em ${fmtData(atv.data)} (frequência).\nDar visto mesmo assim?`)) return;
+  }
   // confirma quando "retira" o visto: completo→atraso (1→2) ou atraso→sem visto (2→0)
   if ((atualV===1 && novo===2) || (atualV===2 && novo===0)) {
     const msg = novo===2
@@ -335,11 +366,7 @@ async function ciclar(atvId, aluno){
       : "Retirar o visto (de A atraso para sem visto)?";
     if (!confirm(msg)) return;
   }
-  atual.marcas[atvId] = atual.marcas[atvId]||{};
-  atual.marcas[atvId][aluno] = novo;
-  render();
-  try{ await set(ref(db, `${P(turma,bimestre)}/marcas/${atvId}/${aluno}`), novo); }
-  catch(e){ console.error(e); toast("Falha ao salvar", true); }
+  salvarMarca(atvId, aluno, novo);
 }
 
 // ── Material da biblioteca (Firebase) ──
@@ -486,10 +513,22 @@ window.alternarCorrigido = async function(){
 };
 
 window.marcarTodos = async function(v){
+  const atv = atual.atividades.find(a=>a.id===atvSel);
+  const atuais = atual.marcas[atvSel] || {};
   const upd={};
-  ALUNOS_POR_TURMA[turma].forEach(al=>{ upd[al]=v; });
+  let pulados=0;
+  ALUNOS_POR_TURMA[turma].forEach(al=>{
+    if(v===1 && faltou(atv&&atv.data, al) && (atuais[al]||0)!==1 && (atuais[al]||0)!==2){
+      upd[al]=0; pulados++;   // faltou na frequência → não recebe visto (fica F)
+    } else {
+      upd[al]=v;
+    }
+  });
   atual.marcas[atvSel]=upd;
-  try{ await set(ref(db, `${P(turma,bimestre)}/marcas/${atvSel}`), upd); toast("Atualizado"); }
+  try{
+    await set(ref(db, `${P(turma,bimestre)}/marcas/${atvSel}`), upd);
+    toast(pulados ? `Atualizado — ${pulados} falta(s) preservada(s)` : "Atualizado");
+  }
   catch(e){ console.error(e); toast("Erro ao salvar", true); }
   fecharModais(); render();
 };

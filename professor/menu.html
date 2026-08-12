@@ -1,0 +1,1409 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Início — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
+  <style>
+    .ativ-liberada{display:flex;align-items:center;gap:16px;padding:18px 20px;background:linear-gradient(135deg,#EBF6FD,#F0F9FF);border:1.5px solid #BAE6FD;border-radius:var(--radius);margin-bottom:8px;}
+    .ativ-icon{width:48px;height:48px;border-radius:12px;background:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .ativ-icon svg{width:26px;height:26px;fill:#fff;}
+    .ativ-info{flex:1;}.ativ-info h3{font-size:15px;font-weight:700;}.ativ-info p{font-size:12px;color:var(--text-muted);margin-top:3px;}
+    .ativ-vazia{display:flex;align-items:center;gap:12px;padding:18px 20px;background:var(--bg);border:1.5px dashed var(--border);border-radius:var(--radius);color:var(--text-muted);font-size:13px;}
+    .ativ-vazia svg{width:22px;height:22px;fill:var(--border);flex-shrink:0;}
+    .resumo-header{display:flex;align-items:center;gap:10px;padding:12px 16px;background:linear-gradient(135deg,var(--orange-pale),transparent);border-bottom:1px solid var(--border);border-radius:var(--radius) var(--radius) 0 0;}
+    .resumo-header svg{width:15px;height:15px;fill:var(--orange);}
+    .resumo-header span{font-size:13px;font-weight:700;}
+    .resumo-wrap{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:14px;}
+    .hist-aluno-label{display:flex;align-items:center;gap:7px;margin:14px 0 8px;font-size:12px;font-weight:700;color:var(--text-muted);}
+    .hist-aluno-label:first-child{margin-top:0;}
+    .hist-aluno-label svg{width:13px;height:13px;fill:currentColor;}
+    .hist-check{width:26px;height:26px;border-radius:50%;background:var(--green-pale);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .hist-check svg{width:13px;height:13px;fill:var(--green);}
+    .ativ-chip{display:flex;align-items:center;gap:7px;padding:9px 12px;border-radius:9px;border:1.5px solid var(--border);background:var(--card);font-size:12px;font-weight:500;color:var(--text-muted);}
+    .ativ-chip svg{width:16px;height:16px;fill:currentColor;flex-shrink:0;}
+    .ativ-chip.liberada{border-color:#BAE6FD;background:var(--blue-pale);color:var(--blue-dark);}
+    .ativ-chip.encerrada{border-color:var(--border);background:var(--bg);color:var(--text-muted);opacity:.6;text-decoration:line-through;}
+    /* Top 3 cards */
+    .top3-card{border-radius:12px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;position:relative;overflow:visible;}
+    .top3-card:last-child{margin-bottom:0;}
+    .top3-nome{font-size:13px;font-weight:800;color:#fff;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .top3-turma{font-size:10px;color:rgba(255,255,255,.75);margin-top:2px;}
+    .top3-pts{font-size:16px;font-weight:800;color:#fff;flex-shrink:0;text-align:right;line-height:1;}
+    .top3-pts-label{font-size:10px;color:rgba(255,255,255,.7);}
+    /* Banner */
+    .banner-top3{border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px;color:#fff;}
+    .conq-tip{position:fixed;background:#1E293B;color:#F1F5F9;padding:8px 12px;border-radius:10px;font-size:12px;pointer-events:none;z-index:9999;max-width:220px;box-shadow:0 4px 16px rgba(0,0,0,.35);opacity:0;transition:opacity .15s;}
+    .conq-tip.show{opacity:1;}
+    .conq-tip-nome{font-weight:700;font-size:13px;margin-bottom:2px;}
+    .conq-tip-desc{font-size:11px;opacity:.8;}
+    @keyframes fadeSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes skPulse{0%,100%{opacity:.55}50%{opacity:.18}}
+    .pill{padding:5px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .15s;}
+    .pill.on{border-color:var(--blue);background:var(--blue);color:#fff;}
+    .game-card-link{transition:background .15s;}
+    .game-card-link:hover{background:rgba(127,119,221,.07)!important;}
+    [data-theme="dark"] .game-card-link:hover{background:rgba(127,119,221,.12)!important;}
+    /* Confete #1 Geral */
+    @keyframes confete-tab-cair{0%{opacity:1;transform:translateY(0) rotate(0deg)}75%{opacity:.9}100%{opacity:0;transform:translateY(110vh) rotate(560deg) scale(.4)}}
+    .confete-tab{position:absolute;top:-10px;width:7px;height:9px;border-radius:2px;opacity:0;pointer-events:none;animation:confete-tab-cair var(--dur,2s) var(--delay,0s) ease-in 1 forwards;}
+    /* Body dourado */
+    /* outline causa overflow horizontal em mobile — usar inset box-shadow */
+    .body-gold-border{box-shadow:inset 0 0 0 3px #FFD700,inset 0 0 30px rgba(255,215,0,.15);}
+    /* Banner #1 full-width */
+    @keyframes shimmer-gold{0%{background-position:200% center}100%{background-position:-200% center}}
+    .banner-no1-wrap{display:flex;align-items:center;gap:14px;padding:13px 20px;color:#fff;font-family:inherit;font-weight:700;font-size:15px;background:linear-gradient(100deg,#D97706,#f0a500,#FBBF24,#f0a500,#D97706);background-size:200% auto;animation:shimmer-gold 3s linear infinite;box-shadow:0 2px 14px rgba(245,158,11,.45);}
+    /* Card ring dourado */
+    .card-gold-ring{border:2px solid #FFD700!important;box-shadow:0 0 0 1px rgba(255,215,0,.3),0 4px 20px rgba(255,215,0,.25)!important;animation:gold-ring-pulse 2s ease-in-out infinite;}
+    @keyframes gold-ring-pulse{0%,100%{box-shadow:0 0 0 1px rgba(255,215,0,.3),0 4px 20px rgba(255,215,0,.25)}50%{box-shadow:0 0 0 2px rgba(255,215,0,.5),0 4px 28px rgba(255,215,0,.4)}}
+    /* Badge no canto do card */
+    .badge-no1-card{display:inline-flex;align-items:center;gap:4px;position:absolute;top:-10px;right:12px;background:linear-gradient(135deg,#f0a500,#D97706);color:#fff;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;z-index:1;white-space:nowrap;box-shadow:0 2px 8px rgba(245,158,11,.4);}
+    @media(max-width:480px){
+      .ativ-liberada{flex-wrap:wrap;gap:10px;padding:14px 14px}
+      .ativ-liberada .ativ-info{width:100%}
+      .ativ-liberada .btn{width:100%;min-height:52px;font-size:15px;justify-content:center}
+      .ativ-liberada>span{margin-left:auto;font-size:12px}
+      .mini-stats{grid-template-columns:repeat(3,1fr)}
+      .mini-stat{padding:10px 4px}
+      .mini-stat-value{font-size:17px}
+      .top3-card{padding:7px 9px;gap:6px;}
+      .top3-nome{font-size:12px;}
+      .badge-no1-card{font-size:9px;padding:2px 7px;right:8px;top:-8px;}
+      #tabuada-game-card{margin-top:14px;}
+      .tabuada-btns{flex-direction:column;}
+    }
+    @media(max-width:768px){
+      /* Resumo de Desempenho: 3 colunas em toda a faixa mobile
+         (sobrepõe a regra de 2 colunas do main.css em 481–768px). */
+      .mini-stats{grid-template-columns:repeat(3,1fr)}
+      .grid-2{display:flex!important;flex-direction:column;}
+      #col-left,#col-right{display:contents;}
+      #card-notas-bimestre{order:1;}
+      #card-resumo{order:2;}
+      #card-liberada{order:3;}
+      #aquecimento-card{order:4;}
+      #tabuada-game-card{order:5;}
+      #card-atividades{order:6;}
+      #feed-card{order:7;}
+      #tab-ranking-card{order:8;}
+      #quiz-top3-card{order:9;}
+      #card-historico{order:10;}
+      /* Conter overflow horizontal — cards com overflow:visible e filhos absolutos estouram a tela */
+      .grid-2{width:100%;max-width:100%;}
+      #card-resumo,#card-notas-bimestre,#tabuada-game-card,#tab-ranking-card,#quiz-top3-card,#card-liberada,#card-atividades,#card-historico,#aquecimento-card,#feed-card{
+        width:100%!important;max-width:100%!important;box-sizing:border-box!important;overflow-x:clip!important;
+      }
+      .badge-no1-card{right:10px!important;max-width:calc(100% - 20px);}
+      .card-gold-ring{box-shadow:0 0 0 1px rgba(255,215,0,.4)!important;}
+      #tabuada-game-card *,#tab-ranking-card *,#quiz-top3-card *{min-width:0;}
+    }
+    /* ── Modal Guia ── */
+    .modal-guia-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9500;display:flex;align-items:center;justify-content:center;padding:16px;}
+    .modal-guia-box{background:var(--card);border:1px solid rgba(255,255,255,.1);border-radius:20px;width:100%;max-width:460px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.7);max-height:90dvh;overflow-y:auto;position:relative;}
+    .mg-close{position:absolute;top:12px;right:14px;width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;transition:background .15s;}
+    .mg-close:hover{background:rgba(255,255,255,.2);color:#fff;}
+    .mg-header{background:linear-gradient(135deg,rgba(108,0,212,.2),rgba(240,165,0,.08));padding:16px 24px 14px;text-align:center;border-bottom:1px solid var(--border);}
+    .mg-icon{font-size:30px;margin-bottom:4px;}
+    .mg-title{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;margin-bottom:3px;}
+    .mg-sub{font-size:12px;color:var(--text-muted);}
+    .mg-body{padding:10px 20px;}
+    .mg-item{display:flex;gap:12px;align-items:flex-start;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+    .mg-item:last-child{border-bottom:none;}
+    .mg-item-icon{font-size:20px;flex-shrink:0;width:30px;text-align:center;margin-top:1px;}
+    .mg-item-title{font-size:13px;font-weight:700;margin-bottom:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+    .mg-item-desc{font-size:12px;color:var(--text-muted);line-height:1.45;}
+    .mg-tag-nota{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#22c55e;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+    .mg-tag-extra{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:#f0a500;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+    .mg-footer{padding:12px 20px 16px;display:flex;flex-direction:column;gap:8px;}
+    .mg-btn-primary{width:100%;padding:12px;background:linear-gradient(135deg,var(--purple,#7c5cfc),#5a3fcf);border:none;border-radius:12px;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:#fff;cursor:pointer;}
+    .mg-btn-ghost{width:100%;padding:9px;background:transparent;border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text-muted);cursor:pointer;}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title" id="topbar-title">Olá!</div>
+        <div class="topbar-sub" id="topbar-sub"></div>
+      </div>
+      <div class="topbar-right">
+        <div id="online-count-menu"
+             style="display:none;align-items:center;gap:5px;margin-right:12px">
+        </div>
+        <div class="avatar-wrap" onclick="window.location.href='/aluno/perfil.html'">
+          <div class="avatar" id="topbar-avatar-circle" style="overflow:hidden;padding:0"></div>
+        </div>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando…</div>
+    </div>
+  </div>
+</div>
+
+
+<script type="module">
+import { LISTA_ATIVIDADES, bimestreAtual, bimestreDeData, pathTabuadaRanking, pathTabuadaNiveis } from "/js/constants.js";
+import { getResultados, getLiberadasParaTurma, getAlunoPreferencia } from "/js/db.js";
+import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
+import { saveRankPos, applyTopRankVisuals } from "/js/toprank.js";
+import { initAvBanner } from "/js/avaliacao_banner.js";
+import { initTopNotif } from "/js/topnotif.js";
+import { db } from "/js/firebase-config.js";
+import { montarBoletim, fmtNota, setBimestre } from "/js/notas.js";
+setBimestre(String(bimestreAtual()));
+import { ref, get, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const sess = requireAluno("/index.html");
+if (!sess) throw new Error("não autenticado");
+
+renderSidebarAluno("sidebar", "inicio");
+injetarFaixaDuelo();
+window.sair = () => { import('/js/presenca.js').then(m => m.encerrarPresenca()); clearSession(); window.location.href = "/index.html"; };
+
+const { alunos, turma } = sess;
+
+// Robótica sidebar item (condicional) — atualiza cache localStorage para todas as páginas
+getAlunoPreferencia(turma, alunos[0], 'robotica').then(isRob => {
+  localStorage.setItem('sm_pref_robotica', isRob ? '1' : '0');
+  if (!isRob) return;
+  // Se já foi renderizado pelo auth.js via cache localStorage, não duplica
+  if (document.querySelector('#sidebar a[href="/aluno/a-robotica.html"]')) return;
+  const nav = document.querySelector('#sidebar .sidebar-nav');
+  if (!nav) return;
+  const div = document.createElement('div'); div.className = 'nav-divider'; nav.appendChild(div);
+  const a = document.createElement('a');
+  a.className = 'nav-item'; a.href = '/aluno/a-robotica.html';
+  a.innerHTML = `<svg viewBox="0 0 24 24"><path d="M20 9V7c0-1.1-.9-2-2-2h-3c0-1.66-1.34-3-3-3S9 3.34 9 5H6c-1.1 0-2 .9-2 2v2c-1.66 0-3 1.34-3 3s1.34 3 3 3v4c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4c1.66 0 3-1.34 3-3s-1.34-3-3-3zm-2 10H6V7h12v12zm-9-6c-.83 0-1.5-.67-1.5-1.5S8.17 10 9 10s1.5.67 1.5 1.5S9.83 13 9 13zm6 0c-.83 0-1.5-.67-1.5-1.5S14.17 10 15 10s1.5.67 1.5 1.5S15.83 13 15 13z"/></svg>🤖 Robótica`;
+  nav.appendChild(a);
+}).catch(() => {});
+
+// Sync tema do Firebase (não-bloqueante)
+getAlunoPreferencia(turma, alunos[0], 'tema').then(t => {
+  if (t && t !== localStorage.getItem('tema')) {
+    localStorage.setItem('tema', t);
+    document.documentElement.setAttribute('data-theme', t === 'escuro' ? 'dark' : '');
+  }
+});
+document.getElementById("topbar-title").textContent = `Olá, ${alunos[0]}${alunos.length>1?' e '+alunos[1]:''}! 👋`;
+document.getElementById("topbar-sub").textContent   = `Turma ${turma} · Bom trabalho hoje!`;
+(async () => { try {
+  const { getPerfil } = await import('/js/db.js');
+  const { avatarUrl, avatarConfigDefault } = await import('/js/gamificacao.js');
+  const _aUid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+  const _p = await getPerfil(_aUid);
+  const _c = document.getElementById('topbar-avatar-circle');
+  if (_c) {
+    const url   = avatarUrl(_p.avatar || avatarConfigDefault());
+    const letra = (alunos[0] || '?')[0].toUpperCase();
+    _c.innerHTML = `
+      <div style="width:100%;height:100%;position:relative;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--purple),var(--cyan,#00d4ff))">
+        <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;z-index:0">${letra}</span>
+        <img src="${url}" alt="avatar"
+             style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:1;border-radius:50%"
+             onerror="this.style.display='none'">
+      </div>`;
+  }
+} catch(_) {} })();
+
+(async () => { try {
+  const _pUid = (turma + '_' + alunos[0]).replace(/[.#$\[\]/\s]/g, '_');
+  const { iniciarPresenca, encerrarPresenca } = await import('/js/presenca.js');
+  const { getPerfil } = await import('/js/db.js');
+  const _perfil = await getPerfil(_pUid).catch(() => ({}));
+  await iniciarPresenca(_pUid, {
+    nome:    alunos[0],
+    apelido: _perfil?.apelido_ativo || alunos[0],
+    turma,
+    status:  _perfil?.duelos_disponivel !== false ? 'disponivel' : 'indisponivel',
+    pagina:  'menu',
+  });
+  window.addEventListener('beforeunload', () => encerrarPresenca());
+} catch(e) { console.warn('[Presença]', e); } })();
+
+const tabuadaUid = (turma + '_' + alunos[0]).replace(/[.#$\[\]/\s]/g, '_');
+
+iniciarNotifDueloGlobal();
+
+(async () => { try {
+  const { initDueloAvail } = await import('/js/duelo_avail.js');
+  await initDueloAvail(tabuadaUid);
+} catch(e) {} })();
+
+// Contador online em tempo real
+(async () => { try {
+  const { filtrarOnline } = await import('/js/presenca.js');
+  onValue(ref(db, 'presenca_online'), snap => {
+    const online = filtrarOnline(snap, tabuadaUid);
+    const el = document.getElementById('online-count-menu');
+    if (!el) return;
+    if (online.length === 0) { el.style.display = 'none'; return; }
+    el.style.display = 'flex';
+    el.innerHTML = `
+      <div style="width:7px;height:7px;border-radius:50%;background:#22c55e;
+                  box-shadow:0 0 5px #22c55e;flex-shrink:0"></div>
+      <a href="/aluno/duelos.html"
+         style="color:var(--green);font-size:11px;font-weight:600;text-decoration:none">
+        ${online.length} colega${online.length > 1 ? 's' : ''} online
+      </a>`;
+  });
+} catch(e) {} })();
+
+// Top 3 duelos
+async function carregarTopDuelos() {
+  try {
+    const snap = await get(ref(db, 'perfis'));
+    if (!snap.exists()) return;
+    const lista = [];
+    snap.forEach(c => {
+      const v = c.val();
+      if ((v?.duelos_vitorias || 0) === 0) return;
+      lista.push({ uid: c.key, nome: v.apelido_ativo || v.nome || '?', turma: v.turma || '', vitorias: v.duelos_vitorias || 0, avatar: v.avatar });
+    });
+    lista.sort((a, b) => b.vitorias - a.vitorias);
+    const top3 = lista.slice(0, 3);
+    if (top3.length === 0) return;
+    const { avatarUrl, avatarConfigDefault } = await import('/js/gamificacao.js');
+    const MEDALHA = ['🥇','🥈','🥉'];
+    const COR     = ['#f0a500','#9CA3AF','#cd7f32'];
+    const html = `
+      <div class="card" style="margin-bottom:14px" id="duelos-top3-card">
+        <div class="section-label" style="color:var(--purple)">⚔️ Top Duelos</div>
+        <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+          ${top3.map((p, i) => {
+            const isMe = p.uid === tabuadaUid;
+            const av   = avatarUrl(p.avatar || avatarConfigDefault());
+            return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:${isMe ? 'rgba(127,119,221,.08)' : 'var(--card2)'};border:1px solid ${isMe ? 'rgba(127,119,221,.3)' : 'var(--border)'};">
+              <div style="font-size:18px;min-width:24px">${MEDALHA[i]}</div>
+              <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;border:2px solid ${COR[i]};background:var(--card2)">
+                <img src="${av}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">
+              </div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12px;font-weight:700;${isMe ? 'color:var(--purpleL)' : ''};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  ${_escH(p.nome)}${isMe ? ' ← você' : ''}
+                </div>
+                <div style="font-size:10px;color:var(--muted)">${_escH(p.turma)}</div>
+              </div>
+              <div style="font-size:13px;font-weight:800;color:var(--green);flex-shrink:0">${p.vitorias}⚔️</div>
+            </div>`;
+          }).join('')}
+          <a href="/aluno/duelos.html" style="font-size:11px;color:var(--purple);text-align:center;display:block;margin-top:4px;text-decoration:none">Ver ranking completo →</a>
+        </div>
+      </div>`;
+    const anchor = document.getElementById('duelos-top3-anchor');
+    if (anchor) anchor.outerHTML = html;
+  } catch(e) { console.warn('[TopDuelos]', e); }
+}
+carregarTopDuelos();
+
+async function carregarCardCertificado() {
+  try {
+    const snap = await get(ref(db, `conquistas/${uidMenu}/tabuada_300`));
+    if (!snap.exists() || !snap.val().conquistado) return;
+    const ts = snap.val().ts;
+    const data = ts ? new Date(ts).toLocaleDateString('pt-BR') : '';
+    const anchor = document.getElementById('certificado-card-anchor');
+    if (!anchor) return;
+    anchor.outerHTML = `
+      <div class="card" style="margin-bottom:14px;cursor:pointer;border-color:rgba(201,168,76,.3);background:rgba(201,168,76,.04)"
+           onclick="window.location.href='/aluno/a-certificados.html'">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:44px;height:44px;border-radius:50%;
+                      background:linear-gradient(135deg,#f7e98e,#c9a84c);
+                      display:flex;align-items:center;justify-content:center;
+                      font-size:22px;flex-shrink:0;
+                      box-shadow:0 0 16px rgba(245,158,11,.35)">🏆</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:800;color:#c9a84c">Diploma desbloqueado!</div>
+            <div style="font-size:11px;color:var(--text-muted)">Nível 300 da Tabuada · ${data}</div>
+          </div>
+          <div style="font-size:18px;color:var(--text-muted)">→</div>
+        </div>
+      </div>`;
+  } catch(e) {}
+}
+carregarCardCertificado();
+
+const [todosRaw, _libRaw, tabuadaSnap, torneioSnap] = await Promise.all([
+  getResultados(),
+  getLiberadasParaTurma(turma),
+  get(ref(db, pathTabuadaNiveis(tabuadaUid))).catch(() => null),
+  isModoTeste() ? Promise.resolve(null) : get(ref(db, 'torneios')).catch(() => null),
+]);
+const liberadas = isModoTeste()
+  ? LISTA_ATIVIDADES.map(a => ({ atividade: a.nome, modo: a.modo || 'classico', percentual: 100, status: 'ativa', criadoEm: null }))
+  : _libRaw;
+const nivelTabuada = tabuadaSnap?.exists() ? (tabuadaSnap.val().melhor_nivel || tabuadaSnap.val().nivel_atual || 1) : 1;
+const todos = todosRaw.filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
+// nomes das atividades do bimestre atual (para filtrar histórico da home)
+const _ativsBimAtual = new Set(
+  LISTA_ATIVIDADES.filter(a => (a.bim || 2) === bimestreAtual()).map(a => a.nome)
+);
+
+// ── Dados extras por aluno (tabuada · duelos · treinos) p/ o Resumo ──
+const _uidDe = (nome) => (turma + '_' + nome).replace(/[.#$[\]/\s]/g, '_');
+const dadosExtra = {};
+await Promise.all(alunos.map(async (nome) => {
+  const u = _uidDe(nome);
+  const [tabSnap, perfSnap, aqSnap] = await Promise.all([
+    get(ref(db, pathTabuadaNiveis(u))).catch(() => null),
+    get(ref(db, `perfis/${u}`)).catch(() => null),
+    get(ref(db, `aquecimento/${u}`)).catch(() => null),
+  ]);
+  dadosExtra[nome] = {
+    nivelTab:  tabSnap?.exists() ? (tabSnap.val().melhor_nivel || tabSnap.val().nivel_atual || 1) : 1,
+    duelosVit: perfSnap?.exists() ? (perfSnap.val().duelos_vitorias || 0) : 0,
+    treinos:   aqSnap?.exists()   ? Object.keys(aqSnap.val()).filter(d => bimestreDeData(d) === bimestreAtual()).length : 0,
+  };
+}));
+
+// ── Boletim do bimestre (card resumido na Home) ───────────────
+const boletins = {};
+await Promise.all(alunos.map(async (nome) => {
+  boletins[nome] = await montarBoletim(turma, nome).catch(() => null);
+}));
+
+initAvBanner(turma, alunos[0], liberadas);
+
+// ── Avaliação+ controle ───────────────────────────────────────
+const DURACAO_GLOBAL_AV  = 25 * 60 * 1000;
+const MIN_TENT_AV_MS     = 8 * 60 * 1000;
+const MAX_TENT_AV        = 3;
+function avKey(s) {
+  return btoa(unescape(encodeURIComponent(s))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+}
+const controleAv = {};
+if (!isModoTeste()) {
+  const avPlusLibs = liberadas.filter(l => l.modo === 'avaliacao_plus' && l.status !== 'encerrada');
+  if (avPlusLibs.length && alunos.length) {
+    await Promise.all(avPlusLibs.map(async l => {
+      try {
+        const k = avKey(turma + '|' + l.atividade);
+        const snap = await get(ref(db, `avaliacao_controle/${k}/${avKey(alunos[0])}`));
+        controleAv[l.atividade] = snap.exists() ? snap.val() : null;
+      } catch(e) {}
+    }));
+  }
+}
+
+// ── Ranking (média por atividade) ─────────────────────────────
+function buildRankingMedia(lista) {
+  const melhor = {};
+  for (const r of lista) {
+    if (!r.concluido || !r.aluno) continue;
+    if (r.atividade === 'Atividade 4 - Geometria') continue;
+    if (!melhor[r.aluno]) melhor[r.aluno] = { aluno: r.aluno, turma: r.turma || '?', porAtiv: {} };
+    const pts = r.nota_quiz != null
+      ? parseFloat(r.nota_quiz.toFixed(2))
+      : parseFloat(((r.pontuacao || 0) / 10).toFixed(2));
+    const prev = melhor[r.aluno].porAtiv[r.atividade] || 0;
+    if (pts > prev) melhor[r.aluno].porAtiv[r.atividade] = pts;
+  }
+  return Object.values(melhor).map(a => {
+    const vals = Object.values(a.porAtiv);
+    const total = vals.reduce((s, v) => s + v, 0);
+    const media = vals.length ? Math.round(total / vals.length) : 0;
+    return { aluno: a.aluno, turma: a.turma, total, media };
+  }).sort((a, b) => b.total - a.total);
+}
+const rankAll   = buildRankingMedia(todos.filter(r => _ativsBimAtual.has(r.atividade)));
+const rankTurma = rankAll.filter(r => r.turma === turma);
+const top3Geral = rankAll.slice(0, 9);
+saveRankPos(alunos, rankAll);
+applyTopRankVisuals();
+initTopNotif({ mode: 'aluno', alunoNome: alunos[0] });
+
+// ── Mini sparkline SVG ────────────────────────────────────────
+function miniSparkline(nome, atividade) {
+  const allSess = todos
+    .filter(r => r.aluno === nome && r.concluido && r.atividade === atividade)
+    .sort((a, b) => (a.criadoEm||0) - (b.criadoEm||0));
+  if (allSess.length < 2) return '';
+  const pts = allSess.map(r => r.pontuacao_bruta || r.pontuacao || 0);
+  const maxV = Math.max(...pts, 1);
+  const W = 56, H = 22, m = 2;
+  const n = pts.length;
+  const xP = i => m + (n > 1 ? (i / (n - 1)) * (W - 2*m) : (W - 2*m) / 2);
+  const yP = v => m + (H - 2*m) - Math.min((v / maxV) * (H - 2*m), H - 2*m);
+  const last = pts[pts.length - 1], first = pts[0];
+  const color = last > first ? '#16A34A' : last < first ? '#DC2626' : '#6B7280';
+  let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:56px;height:22px;flex-shrink:0;overflow:visible">`;
+  if (n > 1) svg += `<polyline points="${pts.map((v,i) => `${xP(i)},${yP(v)}`).join(' ')}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+  pts.forEach((v, i) => { svg += `<circle cx="${xP(i)}" cy="${yP(v)}" r="2.5" fill="${color}"/>`; });
+  svg += '</svg>';
+  return svg;
+}
+
+// ── Tentativas esgotadas ──────────────────────────────────────
+function tentativasEsgotadas(atividadeNome) {
+  if (!_ativsBimAtual.has(atividadeNome)) return false;
+  return alunos.some(nome =>
+    todos.filter(r => r.aluno === nome && r.atividade === atividadeNome).length >= 2
+  );
+}
+
+// ── Resumo por aluno ──────────────────────────────────────────
+function resumoAluno(nome) {
+  const regs = todos.filter(r => r.aluno === nome && r.concluido && _ativsBimAtual.has(r.atividade));
+  const regsComp = regs.filter(r => r.atividade !== 'Atividade 4 - Geometria');
+  const melhor = {};
+  regsComp.forEach(r => {
+    const pts = r.nota_quiz != null
+      ? parseFloat(r.nota_quiz.toFixed(2))
+      : parseFloat(((r.pontuacao || 0) / 10).toFixed(2));
+    melhor[r.atividade] = Math.max(melhor[r.atividade] || 0, pts);
+  });
+  const vals     = Object.values(melhor);
+  const totalPts = vals.reduce((s, v) => s + v, 0);
+  const acertos  = regsComp.reduce((a, r) => a + (r.acertos || 0), 0);
+  const erros    = regsComp.reduce((a, r) => a + (r.erros   || 0), 0);
+  const taxa     = (acertos + erros) > 0 ? Math.round(acertos / (acertos + erros) * 100) : null;
+  const posGeral = (rankAll.findIndex(r => r.aluno === nome) + 1) || '—';
+  const posTurma = (rankTurma.findIndex(r => r.aluno === nome) + 1) || '—';
+  return { totalPts, sessoes: regsComp.length, acertos, taxa, posGeral, posTurma, total_ativ: vals.length };
+}
+function notaProp(nome) {
+  const x = resumoAluno(nome);
+  return x.total_ativ > 0 ? (x.totalPts / (x.total_ativ * 10)) * 3 : null;
+}
+const _mediaTurmaProps = rankTurma.map(r => notaProp(r.aluno)).filter(v => v !== null);
+const mediaTurma = _mediaTurmaProps.length > 0 ? _mediaTurmaProps.reduce((s,v)=>s+v,0)/_mediaTurmaProps.length : null;
+
+function ultimasAtividades(nome) {
+  const all = todos.filter(r => r.aluno === nome && r.concluido && r.atividade !== 'Atividade 4 - Geometria' && _ativsBimAtual.has(r.atividade));
+  const bestByAtiv = {};
+  for (const r of all) {
+    const pts = r.pontuacao_bruta || r.pontuacao || 0;
+    const prev = bestByAtiv[r.atividade];
+    if (!prev || pts > (prev.pontuacao_bruta || prev.pontuacao || 0))
+      bestByAtiv[r.atividade] = r;
+  }
+  return Object.values(bestByAtiv)
+    .sort((a, b) => (b.pontuacao_bruta || b.pontuacao || 0) - (a.pontuacao_bruta || a.pontuacao || 0))
+    .slice(0, 4);
+}
+
+// ── Banner (top 3 geral ou líder de turma) ───────────────────
+const posGerais  = alunos.map(n => rankAll.findIndex(r => r.aluno === n) + 1).filter(p => p > 0);
+const posTurmas  = alunos.map(n => rankTurma.findIndex(r => r.aluno === n) + 1).filter(p => p > 0);
+const posGeralMin  = posGerais.length ? Math.min(...posGerais) : 99;
+const posTurmaMin  = posTurmas.length ? Math.min(...posTurmas) : 99;
+const euSouQuiz1 = posGeralMin === 1;
+
+function bannerParticles() {
+  return ['rgba(255,255,255,.55)','rgba(255,220,70,.55)','rgba(255,255,255,.38)','rgba(255,195,30,.48)','rgba(255,255,255,.45)'].map((c,i) => {
+    const l=7+i*17, t=8+i*13, s=3+(i%3), d=(2.2+i*.55).toFixed(1), dl=(i*.62).toFixed(1);
+    return `<div class="banner-particle" style="background:${c};left:${l}%;top:${t}%;width:${s}px;height:${s}px;--bp-dur:${d}s;--bp-delay:${dl}s"></div>`;
+  }).join('');
+}
+
+const BANNER_BG = ['linear-gradient(135deg,#f0a500,#D97706)','linear-gradient(135deg,#9CA3AF,#6B7280)','linear-gradient(135deg,#CD853F,#92400E)'];
+let bannerHtml = '';
+if (posGeralMin >= 2 && posGeralMin <= 3) {
+  const icone = ['🥇','🥈','🥉'][posGeralMin - 1];
+  bannerHtml = `<div class="banner-top3" style="background:${BANNER_BG[posGeralMin-1]};position:relative;overflow:hidden">
+    ${bannerParticles()}
+    <span class="crown-anim" style="font-size:30px;flex-shrink:0">${icone}</span>
+    <div>
+      <div style="font-size:15px;font-weight:800">Você está em ${posGeralMin}º lugar geral!</div>
+      <div style="font-size:12px;opacity:.85;margin-top:2px;font-weight:400">Continue assim! 🔥</div>
+    </div>
+  </div>`;
+} else if (!euSouQuiz1 && posTurmaMin === 1) {
+  bannerHtml = `<div class="banner-top3" style="background:linear-gradient(135deg,#3B82F6,#1D4ED8)">
+    <span style="font-size:28px;flex-shrink:0">🏫</span>
+    <div>
+      <div style="font-size:15px;font-weight:800">Você lidera sua turma!</div>
+      <div style="font-size:12px;opacity:.85;margin-top:2px;font-weight:400">Ótimo trabalho! 💪</div>
+    </div>
+  </div>`;
+}
+
+// ── Helper compartilhado: linha de ranking ────────────────────
+function renderRankRow({ pos, nome, sub, valor, valorLabel, isMe, hall = false }) {
+  const borderColors = ['#f0a500', '#9CA3AF', '#CD853F'];
+  const bgColors     = ['rgba(245,158,11,.09)', 'rgba(156,163,175,.07)', 'rgba(180,83,9,.07)'];
+  const border = hall ? '#f0a500' : pos <= 3 ? borderColors[pos - 1] : 'var(--border)';
+  const bg     = hall ? 'rgba(245,158,11,.09)' : pos <= 3 ? bgColors[pos - 1] : 'var(--card)';
+  const medals = ['🥇','🥈','🥉'];
+  const medal  = hall ? '🏆' : pos <= 3 ? medals[pos - 1] : `#${pos}`;
+
+  const valueBadge = pos === 1
+    ? `<span class="crown-anim" style="position:absolute;top:-10px;right:0;font-size:22px;filter:drop-shadow(0 2px 8px rgba(250,184,0,.9));pointer-events:none">👑</span>`
+    : pos <= 3
+    ? `<span class="sparkle-p" style="position:absolute;top:-4px;right:2px;font-size:9px;--sd:2s;--delay:${(pos-1)*.4}s;pointer-events:none">⭐</span>`
+    : '';
+
+  return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-left:3px solid ${border};border-radius:0 8px 8px 0;background:${bg};margin-bottom:6px;overflow:visible;position:relative">
+    <span style="font-size:17px;min-width:24px;text-align:center;flex-shrink:0">${medal}</span>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap${hall ? ';color:#f0a500' : isMe ? ';color:var(--orange)' : ''}">${nome}${isMe ? ' ★' : ''}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:1px">${sub}</div>
+    </div>
+    <div style="text-align:right;flex-shrink:0;position:relative;${pos === 1 ? 'padding-top:14px' : pos <= 3 ? 'padding-top:10px' : ''}">
+      ${valueBadge}
+      <div style="font-size:13px;font-weight:700;color:var(--text)">${valor}</div>
+      <div style="font-size:10px;color:var(--text-muted)">${valorLabel}</div>
+    </div>
+  </div>`;
+}
+
+// ── Top 3 Geral ───────────────────────────────────────────────
+const top3Groups = [];
+{ let gPos = 1, gi = 0;
+  while (gi < top3Geral.length && top3Groups.length < 3) {
+    const score = top3Geral[gi].total;
+    let gj = gi + 1;
+    while (gj < top3Geral.length && top3Geral[gj].total === score) gj++;
+    top3Groups.push({ pos: gPos, students: top3Geral.slice(gi, gj), score });
+    gPos += (gj - gi); gi = gj;
+  }
+}
+const top3Html = top3Groups.length ? top3Groups.map(g => {
+  const isMe = g.students.some(p => alunos.includes(p.aluno));
+  const nomes = g.students.map(p => p.aluno + (alunos.includes(p.aluno) ? ' ★' : '')).join(' · ');
+  const turmas = [...new Set(g.students.map(p => p.turma))].map(t => `Turma ${t}`).join(' · ');
+  return renderRankRow({ pos: g.pos, nome: nomes, sub: turmas, valor: `${g.score}`, valorLabel: 'pts', isMe });
+}).join('')
+: '<p style="font-size:13px;color:var(--text-muted);padding:6px 0">Nenhum resultado ainda.</p>';
+
+// ── Helpers ───────────────────────────────────────────────────
+function formatHa(ts) {
+  if (!ts) return '';
+  const t = +ts;
+  if (!t || isNaN(t) || t < 946684800000) return '';
+  const min = Math.floor((Date.now() - t) / 60000);
+  if (isNaN(min) || min < 0) return 'agora mesmo';
+  if (min < 1) return 'agora mesmo';
+  if (min < 60) return `há ${min}min`;
+  const h = Math.floor(min / 60), m = min % 60;
+  if (h < 24) return m > 0 ? `há ${h}h ${m}min` : `há ${h}h`;
+  const d = Math.floor(h / 24);
+  return d === 1 ? 'há 1 dia' : `há ${d} dias`;
+}
+
+function calcTimeSinceTop3(aluno, allResults) {
+  const sessions = [...allResults]
+    .filter(r => r.concluido && r.criadoEm)
+    .sort((a, b) => a.criadoEm - b.criadoEm);
+  const best = {};
+  let firstEntry = null;
+  for (const r of sessions) {
+    if (!r.aluno) continue;
+    if (!best[r.aluno]) best[r.aluno] = {};
+    const pts = r.pontuacao || 0;
+    if ((best[r.aluno][r.atividade] || 0) < pts) best[r.aluno][r.atividade] = pts;
+    const totals = Object.entries(best)
+      .map(([a, byAtiv]) => ({ aluno: a, total: Object.values(byAtiv).reduce((s, v) => s + v, 0) }))
+      .sort((a, b) => b.total - a.total);
+    let pos = 0, lastT = null, curRank = 0;
+    for (const t of totals) {
+      if (t.total !== lastT) { pos++; lastT = t.total; }
+      if (t.aluno === aluno) curRank = pos;
+    }
+    if (curRank >= 1 && curRank <= 3) { if (!firstEntry) firstEntry = r.criadoEm; }
+    else firstEntry = null;
+  }
+  return firstEntry;
+}
+
+function computeProximaMeta(aluno) {
+  const idx = rankAll.findIndex(r => r.aluno === aluno);
+  if (idx < 0) return null;
+  const userTotal = rankAll[idx].total;
+  let dPos = 0, lastT = null, userRank = 0;
+  for (const r of rankAll) {
+    if (r.total !== lastT) { dPos++; lastT = r.total; }
+    if (r.aluno === aluno) userRank = dPos;
+  }
+  if (userRank === 1) {
+    const below = rankAll.find(r => r.total < userTotal);
+    if (!below) return '🏆 Você lidera sem concorrentes!';
+    return `🏆 Você lidera com ${userTotal - below.total}pts de vantagem!`;
+  }
+  let aboveTotal = null;
+  for (let i = idx - 1; i >= 0; i--) {
+    if (rankAll[i].total > userTotal) { aboveTotal = rankAll[i].total; break; }
+  }
+  if (aboveTotal === null) return null;
+  const gap = aboveTotal - userTotal;
+  const below = rankAll.find(r => r.total < userTotal);
+  if (below && (userTotal - below.total) <= 15) {
+    return `Você está a ${gap}pts do ${userRank - 1}º lugar · ⚠️ ${below.aluno} está ${userTotal - below.total}pts atrás`;
+  }
+  return `Você está a ${gap}pts do ${userRank - 1}º lugar!`;
+}
+
+// ── Torneio ativo para esta turma ────────────────────────────
+let torneioAtivo = null;
+if (torneioSnap?.exists()) {
+  torneioSnap.forEach(c => {
+    const v = c.val();
+    if (['liberada','iniciado','pausado'].includes(v.status) && (v.turmas||[]).includes(turma) && !torneioAtivo) {
+      torneioAtivo = { id: c.key, ...v };
+    }
+  });
+}
+
+// ── Sessão lookup para percentual ─────────────────────────────
+const sessMap = {};
+for (const r of todos) sessMap[r.id] = r;
+
+// ── Próxima Meta por aluno ────────────────────────────────────
+const proximaMetaHtml = alunos.map(a => computeProximaMeta(a)).filter(Boolean).join('<br>');
+
+// ── Tempo no Pódio ────────────────────────────────────────────
+let tempoPodioHtml = '';
+if (posGeralMin <= 3) {
+  for (const a of alunos) {
+    const sinceTs = calcTimeSinceTop3(a, todos);
+    if (sinceTs) {
+      tempoPodioHtml = `<div style="text-align:center;font-size:12px;color:var(--text-muted);padding:0 0 10px;margin-top:-4px">⏱ No pódio ${formatHa(sinceTs)}</div>`;
+      break;
+    }
+  }
+}
+
+// ── Histórico helpers ─────────────────────────────────────────
+function getModoEfetivo(r) {
+  return r.modo || (r.nota_quiz != null ? 'avaliacao_plus' : 'competicao_plus');
+}
+
+function renderHistSessoes(nome, filtroAtiv) {
+  const all = todos.filter(r => r.aluno === nome && r.concluido && _ativsBimAtual.has(r.atividade));
+  const makeRow = (r, labelOverride, showNomeAtiv) => {
+    const mE = getModoEfetivo(r);
+    const isTorneio = r.tipo === 'torneio';
+    const isAv = mE === 'avaliacao_plus';
+    const isComp = mE === 'competicao_plus' || mE === 'competicao';
+    const modeTag = isTorneio
+      ? `<span class="badge" style="background:#FFFBEB;color:#92400E;border-color:#FDE68A;font-size:10px">🏆 Torneio${r.posicao ? ' · #'+r.posicao+'º' : ''}</span>`
+      : isAv
+      ? `<span class="badge" style="background:#F5F3FF;color:#7C3AED;font-size:10px">📝 Avaliação+</span>`
+      : isComp
+      ? `<span class="badge badge-gold" style="font-size:10px">⚔️ Competição+</span>`
+      : '';
+    const scoreHtml = isAv
+      ? `<div style="text-align:right;flex-shrink:0">
+          <div style="font-size:13px;font-weight:700;color:var(--gold)">${r.pontuacao || 0} pts</div>
+          <div style="font-size:11px;font-weight:700;color:#7C3AED">${typeof r.nota_quiz === 'number' ? r.nota_quiz.toFixed(1) : '—'}</div>
+        </div>`
+      : `<span style="font-size:13px;font-weight:700;color:var(--gold);flex-shrink:0">${r.pontuacao_bruta || r.pontuacao || 0} pts</span>`;
+    const label = labelOverride || (showNomeAtiv ? r.atividade : r.atividade);
+    return `<div class="list-row" style="align-items:center">
+      <div class="hist-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</div>
+        ${modeTag ? `<div style="margin-top:3px">${modeTag}</div>` : ''}
+      </div>
+      ${filtroAtiv ? miniSparkline(nome, r.atividade) : ''}
+      ${scoreHtml}
+    </div>`;
+  };
+
+  if (filtroAtiv) {
+    const sessoes = all
+      .filter(r => r.atividade === filtroAtiv)
+      .sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0))
+      .slice(0, 10);
+    if (!sessoes.length) return '<p style="font-size:13px;color:var(--text-muted);padding:6px 0 10px">Nenhuma sessão encontrada.</p>';
+    return sessoes.map((r, i) => makeRow(r, i === 0 ? '→ Mais recente' : `Sessão ${sessoes.length - i}`, false)).join('');
+  } else {
+    const bestByAtiv = {};
+    for (const r of all) {
+      const pts = r.pontuacao_bruta || r.pontuacao || 0;
+      const prev = bestByAtiv[r.atividade];
+      if (!prev || pts > (prev.pontuacao_bruta || prev.pontuacao || 0)) bestByAtiv[r.atividade] = r;
+    }
+    const rows = Object.values(bestByAtiv)
+      .sort((a, b) => (b.pontuacao_bruta || b.pontuacao || 0) - (a.pontuacao_bruta || a.pontuacao || 0));
+    if (!rows.length) return '<p style="font-size:13px;color:var(--text-muted);padding:6px 0 10px">Nenhuma atividade realizada ainda.</p>';
+    return rows.map(r => makeRow(r, r.atividade, true)).join('');
+  }
+}
+
+window.filtrarHistAtiv = function(nome, ativNome) {
+  const uid = nome.replace(/\s+/g, '_');
+  const rowsEl = document.getElementById(`hist-rows-${uid}`);
+  const pillsEl = document.getElementById(`hist-pills-${uid}`);
+  if (rowsEl) rowsEl.innerHTML = renderHistSessoes(nome, ativNome);
+  if (pillsEl) pillsEl.querySelectorAll('.pill').forEach(p =>
+    p.classList.toggle('on', p.dataset.ativ === ativNome));
+};
+
+// ── Render ────────────────────────────────────────────────────
+const liberadasAtivas = liberadas.filter(l => l.status !== 'encerrada');
+const conteudo = document.getElementById("content");
+conteudo.innerHTML = `
+${bannerHtml}
+${tempoPodioHtml}
+<div class="grid-2">
+  <div id="col-left">
+    ${(liberadasAtivas.length || torneioAtivo) ? `<div id="card-liberada" class="card card-pulse">
+      <div class="section-label" style="color:#f0a500">
+        <svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
+        Atividade Liberada
+      </div>
+      ${torneioAtivo ? `<div class="ativ-liberada" style="border-color:#FDE68A;background:linear-gradient(135deg,rgba(255,251,235,.9),var(--card))">
+        <div class="ativ-icon" style="background:#f0a500"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+        <div class="ativ-info">
+          <h3>🏆 ${torneioAtivo.nome || 'Torneio'}</h3>
+          <p>${torneioAtivo.status==='liberada' ? '⏳ Aguardando início' : torneioAtivo.status==='pausado' ? '⏸ Pausado' : '▶ Em andamento'} · ⏱ ${Math.round((torneioAtivo.tempo_segundos||300)/60)} min · 🏅 Torneio</p>
+        </div>
+        <a href="/aluno/a-torneio.html?id=${torneioAtivo.id}" class="btn" style="background:#f0a500;color:#fff;border:none">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>${torneioAtivo.status==='liberada' ? 'Entrar' : 'Jogar'}
+        </a>
+      </div>` : ''}
+      ${liberadasAtivas.length ? liberadasAtivas.map(lib => {
+        const ativDef = LISTA_ATIVIDADES.find(a => a.nome === lib.atividade);
+        const modoEfetivo = lib.modo || ativDef?.modo || 'classico';
+        const url = modoEfetivo === 'avaliacao_plus'
+          ? `/aluno/avaliacao_plus.html?ativ=${encodeURIComponent(lib.atividade)}`
+          : modoEfetivo === 'competicao_plus'
+          ? `/aluno/competicao_plus.html?ativ=${encodeURIComponent(lib.atividade)}`
+          : modoEfetivo === 'competicao'
+          ? `/aluno/competicao.html?ativ=${encodeURIComponent(lib.atividade)}`
+          : `/aluno/jogar.html?ativ=${encodeURIComponent(lib.atividade)}`;
+
+        let infoParagraph = '';
+        let botaoHtml = '';
+
+        if (modoEfetivo === 'avaliacao_plus') {
+          const ctrl = controleAv[lib.atividade];
+          const tentUsadas    = ctrl?.tentativas_realizadas || 0;
+          const tentRestantes = MAX_TENT_AV - tentUsadas;
+          const gRestMs       = ctrl ? DURACAO_GLOBAL_AV - (Date.now() - ctrl.inicio_global) : DURACAO_GLOBAL_AV;
+          const esgotada      = tentRestantes <= 0 || (ctrl && gRestMs < MIN_TENT_AV_MS);
+          let timerInfo = '';
+          if (ctrl?.inicio_global) {
+            const ini = new Date(ctrl.inicio_global);
+            const fim = new Date(ctrl.inicio_global + DURACAO_GLOBAL_AV);
+            const fH  = d => d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0');
+            timerInfo = ` · ⏱ ${fH(ini)}–${fH(fim)}`;
+          }
+          infoParagraph = `${Math.round(lib.percentual??100)}% da nota · 📝 Avaliação+ · ${tentUsadas}/${MAX_TENT_AV} tentativas${timerInfo}`;
+          botaoHtml = esgotada
+            ? `<span style="font-size:12px;font-weight:700;color:var(--green);white-space:nowrap">Concluída ✓</span>`
+            : `<a href="${url}" class="btn btn-blue"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Iniciar</a>`;
+        } else if (modoEfetivo === 'competicao' || modoEfetivo === 'competicao_plus') {
+          infoParagraph = `${Math.round(lib.percentual??100)}% da nota · ⚔️ Competição+${lib.criadoEm ? ` · liberada ${formatHa(lib.criadoEm)}` : ''}`;
+          botaoHtml = `<a href="${url}" class="btn btn-blue"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Iniciar</a>`;
+        } else {
+          const esgotado = tentativasEsgotadas(lib.atividade);
+          infoParagraph = `${Math.round(lib.percentual??100)}% da nota · ${lib.tempo_maximo ? Math.round(lib.tempo_maximo/60) : 7} min${lib.criadoEm ? ` · liberada ${formatHa(lib.criadoEm)}` : ''}`;
+          botaoHtml = esgotado
+            ? `<span style="font-size:12px;font-weight:600;color:var(--text-muted);white-space:nowrap">Tentativas<br>esgotadas</span>`
+            : `<a href="${url}" class="btn btn-blue"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Iniciar</a>`;
+        }
+
+        return `<div class="ativ-liberada">
+          <div class="ativ-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+          <div class="ativ-info">
+            <h3>${lib.atividade}</h3>
+            <p>${infoParagraph}</p>
+          </div>
+          ${botaoHtml}
+        </div>`;
+      }).join('') : (!torneioAtivo ? `
+      <div class="ativ-vazia">
+        <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+        Nenhuma atividade liberada para sua turma no momento.
+      </div>` : '')}
+    </div>` : ''}
+
+    <div id="tabuada-game-card" class="card" style="margin-bottom:14px;position:relative;overflow:visible;border:1.5px solid rgba(127,119,221,.35);box-shadow:0 4px 20px rgba(127,119,221,.13),var(--shadow-sm)">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:19px;line-height:1">🎯</span>
+          <span style="font-size:16px;font-weight:800;color:var(--text)">Tabuada</span>
+        </div>
+        ${nivelTabuada >= 300
+          ? `<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(245,158,11,.18);color:#D97706;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">🏆 Nível 300</span>`
+          : `<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(127,119,221,.15);color:#7F77DD;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px"><i class="ti ti-trophy" style="font-size:11px"></i>Nível ${nivelTabuada}</span>`
+        }
+      </div>
+      <!-- Divider -->
+      <div style="height:1px;background:var(--border);margin:11px 0 10px"></div>
+      <!-- Dynamic body: skeleton → dados reais -->
+      <div id="tab-card-body">
+        <div style="height:10px;background:var(--border);border-radius:6px;width:55%;margin-bottom:9px;animation:skPulse 1.4s ease-in-out infinite"></div>
+        <div style="height:10px;background:var(--border);border-radius:6px;width:78%;margin-bottom:9px;animation:skPulse 1.4s ease-in-out infinite;animation-delay:.15s"></div>
+        <div style="height:10px;background:var(--border);border-radius:6px;width:64%;animation:skPulse 1.4s ease-in-out infinite;animation-delay:.30s"></div>
+      </div>
+      <!-- Divider -->
+      <div style="height:1px;background:var(--border);margin:10px 0 11px"></div>
+      <!-- Botões -->
+      <div class="tabuada-btns" style="display:flex;gap:8px" onclick="event.stopPropagation()">
+        <a href="/aluno/tabuada.html" class="btn" style="flex:1;justify-content:center;background:#7F77DD;color:#fff;gap:5px;box-shadow:none;padding:9px 14px;font-size:13px">
+          <i class="ti ti-player-play" style="font-size:13px"></i> Jogar
+        </a>
+        <span class="btn" style="flex:1;justify-content:center;background:rgba(127,119,221,.07);color:rgba(127,119,221,.4);border:1px solid rgba(127,119,221,.18);gap:5px;box-shadow:none;padding:9px 14px;font-size:13px;cursor:not-allowed;pointer-events:none;filter:grayscale(.4)">
+          ⚡ Sprint · Em breve
+        </span>
+      </div>
+    </div>
+
+    <div id="card-atividades" class="card" style="margin-bottom:14px">
+      <div class="section-label">
+        <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/></svg>
+        Atividades
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${torneioAtivo ? `<div class="ativ-chip liberada" style="border-color:rgba(245,158,11,.5)">
+          <svg viewBox="0 0 24 24" style="flex-shrink:0"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <span style="flex:1;min-width:0;word-break:break-word">🏆 ${torneioAtivo.nome || 'Torneio'}</span>
+          <span class="badge" style="margin-left:auto;background:rgba(245,158,11,.15);color:#92400E;border-color:rgba(245,158,11,.4)">▶ Disponível</span>
+        </div>` : ''}
+        ${LISTA_ATIVIDADES.filter(a => (a.bim || 2) === bimestreAtual()).map(a => {
+          const lib = liberadas.find(l => l.atividade === a.nome);
+          const encerrada = lib?.status === 'encerrada';
+          const realizadaNoAluno = todos.some(r => alunos.includes(r.aluno) && r.atividade === a.nome && r.concluido);
+          const chipClass = realizadaNoAluno ? '' : (encerrada && !realizadaNoAluno) ? ' encerrada' : lib ? ' liberada' : '';
+          return `<div class="ativ-chip${chipClass}">
+            <svg viewBox="0 0 24 24" style="flex-shrink:0"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/></svg>
+            <span style="flex:1;min-width:0;word-break:break-word">${a.nome}</span>
+            ${realizadaNoAluno
+              ? `<span class="badge badge-green" style="margin-left:auto">✅ Concluída</span>`
+              : encerrada
+              ? `<span class="badge" style="margin-left:auto;color:#B45309;background:#FEF3C7;border-color:#FDE68A">⏰ Perdeu o prazo</span>`
+              : lib ? `<span class="badge badge-blue" style="margin-left:auto">▶ Disponível</span>`
+              : `<span class="badge" style="margin-left:auto;color:var(--text-muted);background:var(--bg);border-color:var(--border)">🔒 Não liberada</span>`}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div id="card-historico" class="card">
+      <div class="section-label" style="color:var(--orange)">
+        <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21L13 13.04V8h-1z"/></svg>
+        Histórico de Atividades
+      </div>
+      ${alunos.map(a => {
+        const uid = a.replace(/\s+/g,'_');
+        const all = todos.filter(r => r.aluno === a && r.concluido && _ativsBimAtual.has(r.atividade));
+        const atividades = [...new Set(all.map(r => r.atividade))];
+        const pillsHtml = atividades.length > 1 ? `
+          <div id="hist-pills-${uid}" style="display:flex;gap:5px;flex-wrap:wrap;margin:6px 0 10px">
+            <button class="pill on" data-ativ="" onclick="filtrarHistAtiv('${a.replace(/'/g,"\\'")}','')">Todas</button>
+            ${atividades.map(n => `<button class="pill" data-ativ="${n.replace(/"/g,'&quot;')}" onclick="filtrarHistAtiv('${a.replace(/'/g,"\\'")}','${n.replace(/'/g,"\\'")}')">${n}</button>`).join('')}
+          </div>` : '';
+        return `<div class="hist-aluno-label">
+          <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>${a}
+        </div>
+        ${pillsHtml}
+        <div id="hist-rows-${uid}">${renderHistSessoes(a, '')}</div>`;
+      }).join('')}
+    </div>
+  </div>
+
+  <div id="col-right">
+    ${alunos.some(a => boletins[a]) ? (() => {
+      const todasFechadas = alunos.filter(a => boletins[a]).every(a =>
+        ['provaMulti','projeto','caderno'].every(k => boletins[a].lancados?.[k])
+      );
+      const borderColor = todasFechadas ? 'rgba(250,184,0,.3)' : 'rgba(240,165,0,.25)';
+      const labelColor  = todasFechadas ? '#f0a500' : '#f0a500';
+      const labelTxt    = todasFechadas ? 'Nota do Bimestre' : 'Nota do Bimestre';
+      const badge       = todasFechadas ? ''
+        : `<span style="font-size:9.5px;font-weight:700;background:rgba(240,165,0,.15);color:#f0a500;border:1px solid rgba(240,165,0,.3);border-radius:20px;padding:2px 8px;margin-left:6px">em andamento</span>`;
+      return `<div id="card-notas-bimestre" class="card" style="margin-bottom:14px;border-color:${borderColor}">
+        <div class="section-label" style="color:${labelColor}">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          ${labelTxt}${badge}
+        </div>
+        ${!todasFechadas ? `<div style="font-size:10.5px;color:rgba(255,255,255,.45);margin-bottom:10px">⚠️ Nota parcial — nem todas as atividades foram lançadas ainda</div>` : ''}
+        ${alunos.filter(a => boletins[a]).map(a => {
+          const b = boletins[a];
+          return `<a href="/aluno/a-notas.html" style="display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit;${alunos.length>1?'margin-bottom:8px;':''}">
+            <div style="flex-shrink:0;text-align:center;background:rgba(250,184,0,.08);border-radius:12px;padding:8px 12px">
+              <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:800;color:#f0a500;line-height:1">${fmtNota(b.total)}</div>
+              <div style="font-size:9px;color:rgba(255,255,255,.45);margin-top:2px">${bimestreAtual()}º Bim.</div>
+            </div>
+            <div style="flex:1;min-width:0">
+              ${alunos.length>1 ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:1px">${a}</div>` : ''}
+              <div style="font-size:11.5px;color:var(--text-muted);line-height:1.4">${fmtNota(b.subtotalCapado)} das atividades + ${fmtNota(b.bonus)} de bônus</div>
+            </div>
+            <div style="flex-shrink:0;font-size:11.5px;font-weight:700;color:#f0a500;white-space:nowrap">${todasFechadas ? 'Ver boletim →' : 'Ver detalhes →'}</div>
+          </a>`;
+        }).join('')}
+      </div>`;
+    })() : ''}
+    <div id="card-resumo" class="card" style="margin-bottom:14px">
+      <div class="section-label" style="color:var(--blue)">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+        Resumo de Desempenho
+      </div>
+      ${alunos.map(a => {
+        const r = resumoAluno(a);
+        const ex = dadosExtra[a] || { nivelTab: 1, duelosVit: 0, treinos: 0 };
+        const propAluno = notaProp(a);
+        const tooltipAbaixo = propAluno !== null && mediaTurma !== null && propAluno < mediaTurma ? 'title="Você está abaixo da média da turma, mas pode recuperar nas próximas atividades. Fique atento(a)!"' : '';
+        const turmaColor = r.posTurma === 1 ? '#f0a500' : 'var(--orange)';
+        const wrapStyle  = r.posGeral === 1 ? 'border-color:rgba(245,158,11,.4);background:linear-gradient(135deg,rgba(245,158,11,.07),transparent)' : '';
+        const turmaCrown = r.posTurma === 1 ? '<div style="font-size:10px;line-height:1;margin-bottom:1px">👑</div>' : '';
+        return `<div class="resumo-wrap" style="${wrapStyle}" ${tooltipAbaixo}>
+          <div class="resumo-header">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+            <span>${a}</span>
+          </div>
+          <div class="mini-stats">
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--gold);font-size:22px">${r.total_ativ > 0 ? r.totalPts+'/'+r.total_ativ*10 : '—'}</div><div class="mini-stat-label">Nota</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:${turmaColor};font-size:22px">${turmaCrown}${r.posTurma === '—' ? '—' : '#'+r.posTurma}</div><div class="mini-stat-label">🏅 Na Turma</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green);font-size:22px">${r.taxa !== null ? r.taxa + '%' : '—'}</div><div class="mini-stat-label">📊 Taxa</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue);font-size:22px">${ex.nivelTab}</div><div class="mini-stat-label">🔢 Nível tabuada</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:#EF4444;font-size:22px">${ex.duelosVit}</div><div class="mini-stat-label">⚔️ Duelos vencidos</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--orange);font-size:22px">${ex.treinos}</div><div class="mini-stat-label">🔥 Treinos diários</div></div>
+          </div>
+          ${(() => {
+            const meta = computeProximaMeta(a);
+            if (!meta || r.totalPts === 0) return '';
+            return `<div style="margin-top:10px;padding:7px 12px;background:rgba(47,158,220,.07);border:1px solid rgba(47,158,220,.2);border-radius:8px;font-size:12px;color:var(--blue);font-weight:600;line-height:1.5">🎯 ${meta}</div>`;
+          })()}
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div id="aquecimento-card" class="card" style="margin-bottom:14px;cursor:pointer;border-left:3px solid var(--orange)" onclick="window.location.href='/aluno/aquecimento.html'">
+      <div style="display:flex;align-items:center;gap:14px;padding:10px 2px">
+        <div id="aq-card-icon" style="font-size:42px">🔥</div>
+        <div style="flex:1">
+          <div id="aq-card-titulo" style="font-size:17px;font-weight:700">Treino diário</div>
+          <div id="aq-card-sub" style="font-size:13px;color:var(--text-muted);margin-top:2px">Carregando…</div>
+        </div>
+        <div id="aq-card-seta" style="font-size:18px;color:var(--orange)">→</div>
+      </div>
+    </div>
+
+    <div id="feed-card" class="card" style="margin-bottom:14px">
+      <div class="section-label" style="color:var(--purple)">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+        </svg>
+        Novidades
+      </div>
+      <div id="feed-lista" style="margin-top:10px;display:flex;flex-direction:column;gap:6px">
+        <div style="color:var(--text-muted);font-size:12px;padding:8px 0">Carregando...</div>
+      </div>
+    </div>
+
+    <div id="tab-ranking-card" class="card" style="margin-bottom:14px;overflow:visible;position:relative;padding-top:18px">
+      <div class="section-label" style="color:#f0a500">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+        Ranking Tabuada
+        <a href="/aluno/a-ranking.html" style="margin-left:auto;font-size:12px;font-weight:600;color:var(--blue-dark);text-decoration:none">Ver tudo →</a>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);padding:8px 0">Carregando…</div>
+    </div>
+
+    <div id="duelos-top3-anchor"></div>
+    <div id="certificado-card-anchor"></div>
+
+    <div id="quiz-top3-card" class="card" style="margin-bottom:14px;overflow:visible;position:relative">
+      <div class="section-label" style="color:#f0a500">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12V11c0 4.52-3.05 8.75-7 9.93-3.95-1.18-7-5.41-7-9.93V6.3l7-3.12z"/></svg>
+        Top 3 · Atividades
+      </div>
+      <div style="margin-top:10px;overflow:visible">${top3Html}</div>
+    </div>
+
+  </div>
+</div>`;
+
+// ── #1 Geral: efeitos dourados (Tabuada e/ou Quiz) ───────────
+function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
+  if (!isQuiz && !isTabuada) return;
+  document.documentElement.classList.add('body-gold-border');
+  document.querySelector('.banner-top3')?.remove();
+  document.getElementById('no1-banner')?.remove();
+  let mainLine, subLine;
+  const tabuadaCompleta = isTabuada && tabLevel >= 300;
+  const suprimirBanner  = tabuadaCompleta && !isQuiz;
+  if (isQuiz && isTabuada) {
+    mainLine = tabuadaCompleta ? '🏆 Você concluiu a Tabuada e lidera o Quiz!'
+                               : '👑 Você domina tudo! #1 na Tabuada e no Quiz!';
+    subLine  = tabuadaCompleta ? 'Está no Hall da Fama da Tabuada!' : 'Continue subindo!';
+  } else if (isTabuada) {
+    mainLine = tabuadaCompleta ? '🏆 Você concluiu toda a Tabuada! · Nível 300'
+                               : `👑 Você é o #1 Geral na Tabuada! · Nível ${tabLevel}`;
+    subLine  = tabuadaCompleta ? 'Bem-vindo(a) ao Hall da Fama da Tabuada! 🌟'
+                               : 'Continue subindo de nível!';
+  } else {
+    mainLine = '👑 Você é o #1 Geral no Quiz!';
+    subLine  = 'Continue no topo!';
+  }
+  if (!suprimirBanner) {
+    const banner = document.createElement('div');
+    banner.id = 'no1-banner';
+    banner.className = 'banner-no1-wrap';
+    banner.style.marginBottom = '14px';
+    banner.innerHTML = `<span style="font-size:22px;flex-shrink:0">👑</span><div><div>${mainLine}</div><div style="font-size:12px;font-weight:400;opacity:.85;margin-top:2px">${subLine}</div></div>`;
+    document.getElementById('content').insertAdjacentElement('afterbegin', banner);
+  }
+  if (isTabuada) {
+    const tc = document.getElementById('tabuada-game-card');
+    if (tc) {
+      tc.classList.add('card-gold-ring');
+      tc.querySelector('.badge-no1-card')?.remove();
+      const b = document.createElement('div'); b.className = 'badge-no1-card'; b.textContent = '👑 #1 GERAL'; tc.appendChild(b);
+    }
+  }
+  if (isQuiz) {
+    const qc = document.getElementById('quiz-top3-card');
+    if (qc) {
+      qc.classList.add('card-gold-ring');
+      qc.querySelector('.badge-no1-card')?.remove();
+      const b = document.createElement('div'); b.className = 'badge-no1-card'; b.textContent = '👑 #1 GERAL'; qc.appendChild(b);
+    }
+  }
+  const goldColors = ['#FFD700','#f0a500','#F97316','#ffffff','#FBBF24','#FED7AA'];
+  const count = (isQuiz && isTabuada) ? 40 : 20;
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden';
+  for (let i = 0; i < count; i++) {
+    const dur  = (1.5 + (i % 7) * 0.25).toFixed(2);
+    const del  = ((i * 0.17) % 2.4).toFixed(2);
+    const left = Math.round(5 + (i / (count - 1)) * 90);
+    const el   = document.createElement('div');
+    el.className = 'confete-tab';
+    el.style.background = goldColors[i % goldColors.length];
+    el.style.left = left + '%';
+    el.style.setProperty('--dur',   dur  + 's');
+    el.style.setProperty('--delay', del  + 's');
+    wrap.appendChild(el);
+  }
+  document.body.appendChild(wrap);
+  setTimeout(() => wrap.remove(), 5500);
+}
+
+// ── Tabuada: card social + ranking (assíncrono) ───────────────
+(async () => {
+  const hojeISO = new Date().toISOString().slice(0, 10);
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  const _bimHome = bimestreAtual();
+  const _rkHomePath = pathTabuadaRanking(_bimHome);
+  const [rankSnap, sessoesSnap] = await Promise.all([
+    get(ref(db, _rkHomePath)).catch(() => null),
+    get(ref(db, 'tabuada_sessoes')).catch(() => null),
+  ]);
+
+  // Contar sessões hoje (sem deduplicar — cada jogada conta)
+  let jogadoresHoje = 0;
+  if (sessoesSnap?.exists()) {
+    sessoesSnap.forEach(child => {
+      const v = child.val();
+      if (v?.data === hojeISO) jogadoresHoje++;
+    });
+  }
+
+  // Ranking
+  const rankAll = [];
+  let concluintes = [];
+  let liderCorrida = null;
+  if (rankSnap?.exists()) {
+    rankSnap.forEach(child => {
+      const v = child.val();
+      if (v?.nome) rankAll.push({ ...v, _uid: child.key });
+    });
+    rankAll.sort((a, b) => (b.melhor_nivel||0) - (a.melhor_nivel||0) || (b.total_partidas||0) - (a.total_partidas||0));
+    concluintes = rankAll.filter(r => (r.melhor_nivel||0) >= 300)
+      .sort((a,b) => (a.concluiu_300_em || a.ultima_partida || 0) - (b.concluiu_300_em || b.ultima_partida || 0));
+    liderCorrida = rankAll.find(r => (r.melhor_nivel||0) < 300) || null;
+  }
+  const rankTurma  = rankAll.filter(r => r.turma === turma);
+  const liderGeral = rankAll[0] || null;
+  const liderTurma = rankTurma[0] || null;
+
+  // Localiza o aluno por NOME normalizado (acento/maiúsc/espaços), não por UID reconstruído.
+  const norm = s => (s || '')
+    .toString()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .trim().toLowerCase();
+
+  const meusNomes = (alunos || []).map(norm);
+
+  const myGeralIdx = rankAll.findIndex(r => meusNomes.includes(norm(r.nome)));
+  const myTurmaIdx = rankTurma.findIndex(r => meusNomes.includes(norm(r.nome)));
+
+  // Standard ranking: empates → mesma posição, próximo pula
+  // Usa propriedades separadas para não misturar posição geral com posição da turma
+  // (rankAll e rankTurma compartilham os mesmos objetos — sobrescrever _pos no loop da turma
+  //  fazia myGeral ler a posição da turma, não a geral)
+  { let p = 0, n = 0, l = null;
+    rankAll.forEach(r => { n++; const v=r.melhor_nivel||0; if(v!==l){p=n;l=v;} r._pos=p; r._posGeral=p; }); }
+  { let p = 0, n = 0, l = null;
+    rankTurma.forEach(r => { n++; const v=r.melhor_nivel||0; if(v!==l){p=n;l=v;} r._posTurma=p; }); }
+  const myGeral    = myGeralIdx >= 0 ? rankAll[myGeralIdx]._posGeral : null;
+  const myTurma    = myTurmaIdx >= 0 ? rankTurma[myTurmaIdx]._posTurma : null;
+  const meuNivel   = myGeralIdx >= 0 ? (rankAll[myGeralIdx].melhor_nivel || 1) : 0;
+
+  // ── Preencher o body do card Tabuada ──────────────────────
+  const bodyEl = document.getElementById('tab-card-body');
+  if (bodyEl) { try {
+    // Linha condicional de posição do aluno
+    let posHtml = '';
+    if (meuNivel >= 300) {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      posHtml = `<div style="padding:8px 12px;background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(245,158,11,.06));border:1px solid rgba(245,158,11,.45);border-radius:9px;font-size:12px;font-weight:700;color:${isDark ? '#FCD34D' : '#92400E'};line-height:1.5">
+        🏆 <strong>Hall da Fama!</strong> Você concluiu toda a Tabuada (Nível 300) 🌟
+      </div>`;
+    } else if (myGeral === 1) {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      posHtml = `<div style="padding:8px 12px;background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(245,158,11,.06));border:1px solid rgba(245,158,11,.45);border-radius:9px;font-size:12px;font-weight:700;color:${isDark ? '#FCD34D' : '#92400E'};line-height:1.5">
+        👑 <strong>#1 Geral!</strong> Nível ${meuNivel} — Continue subindo!
+      </div>`;
+    } else if (myTurma !== null && myTurma >= 2 && myTurma <= 5) {
+      posHtml = `<div style="padding:7px 11px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:8px;font-size:12px;font-weight:700;color:var(--green)">🎉 Você está em #${myTurma} na turma!</div>`;
+    } else if (myGeral !== null && myGeral <= 20) {
+      posHtml = `<div style="padding:7px 11px;background:rgba(47,158,220,.08);border:1px solid rgba(47,158,220,.25);border-radius:8px;font-size:12px;font-weight:700;color:var(--blue)">⭐ Você está em #${myGeral} geral!</div>`;
+    }
+
+    // Líder turma só aparece se for diferente do líder geral
+    const mostrarLiderTurma = liderTurma && (!liderGeral || liderTurma.nome !== liderGeral.nome || liderTurma.turma !== liderGeral.turma);
+
+    bodyEl.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px">
+          🔥
+          <span><strong style="color:var(--orange);font-size:16px;font-weight:800">${jogadoresHoje}</strong>
+          <span style="color:var(--text-muted)"> partidas hoje</span></span>
+        </div>
+        ${concluintes.length > 0
+          ? (() => {
+              const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+              const cor = isDark ? '#FCD34D' : '#92400E';
+              const txt = concluintes.length === 1
+                ? `🏆 <strong>${esc(concluintes[0].nome)}</strong> (${esc(concluintes[0].turma)}) já concluiu a Tabuada!`
+                : `🏆 <strong>${esc(concluintes[0].nome)}</strong> e mais ${concluintes.length-1} concluíram a Tabuada!`;
+              return `<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:${cor}">${txt}</div>`;
+            })()
+          : liderGeral ? `<div style="display:flex;align-items:center;gap:8px;font-size:13px">
+          👑
+          <span><strong style="color:var(--text)">${esc(liderGeral.nome)}</strong>
+          <span style="color:var(--text-muted)"> · ${esc(liderGeral.turma)}</span>
+          <span style="color:var(--text-muted)"> lidera · </span>
+          <span style="color:#7F77DD;font-weight:700">Nível ${liderGeral.melhor_nivel||1}</span></span>
+        </div>` : ''}
+        ${concluintes.length > 0 && liderCorrida
+          ? `<div style="display:flex;align-items:center;gap:8px;font-size:13px">
+              ⬆️
+              <span><strong style="color:var(--text)">${esc(liderCorrida.nome)}</strong>
+              <span style="color:var(--text-muted)"> lidera a corrida · </span>
+              <span style="color:#60A5FA;font-weight:700">Nível ${liderCorrida.melhor_nivel||1}</span></span>
+             </div>`
+          : ''}
+        ${mostrarLiderTurma ? `<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted)">
+          🏫
+          <span><span style="color:var(--text)">${esc(liderTurma.nome)}</span>
+          lidera sua turma ·
+          <span style="color:rgba(127,119,221,.85);font-weight:600">Nível ${liderTurma.melhor_nivel||1}</span></span>
+        </div>` : ''}
+      </div>
+      ${posHtml ? `<div style="margin-top:9px">${posHtml}</div>` : ''}`;
+  } catch(e) {
+    console.error('Erro ao montar card Tabuada:', e);
+    bodyEl.innerHTML = `<div style="font-size:12px;color:var(--text-muted);padding:8px 0">Não foi possível carregar.</div>`;
+  } }
+
+  // ── Ranking card (coluna direita) ─────────────────────────
+  const cardEl = document.getElementById('tab-ranking-card');
+  if (cardEl) { try {
+    const hallPrincipal = concluintes[0] || null;
+    const hallExtra     = Math.max(0, concluintes.length - 1);
+    const corrida       = rankAll.filter(r => (r.melhor_nivel||0) < 300);
+    const corridaTop3   = corrida.slice(0, 3);
+
+    const hallHtml = hallPrincipal ? `
+      <div style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);border-radius:10px;padding:7px 12px;display:flex;align-items:center;gap:8px;margin:10px 0 12px">
+        <span style="font-size:15px;flex-shrink:0">🏆</span>
+        <span style="font-size:12px;color:var(--gold,#FCD34D);line-height:1.4">
+          <strong>${esc(hallPrincipal.nome)}</strong> concluiu a Tabuada · Hall da Fama${hallExtra > 0 ? ` (+${hallExtra})` : ''}
+        </span>
+      </div>` : '';
+
+    const corridaHtml = corridaTop3.length
+      ? corridaTop3.map((d, i) => {
+          const isMe = meusNomes.includes(norm(d.nome));
+          return renderRankRow({ pos: i + 1, nome: esc(d.nome), sub: `Turma ${esc(d.turma)}`, valor: `Nv ${d.melhor_nivel || 1}`, valorLabel: 'tabuada', isMe });
+        }).join('')
+      : '<p style="font-size:13px;color:var(--text-muted);padding:4px 0">Nenhum aluno na corrida ainda.</p>';
+
+    const posRankHtml = (myGeral || myTurma) ? `
+      <div style="margin-top:8px;padding:7px 10px;background:rgba(127,119,221,.08);border-radius:8px;font-size:12px;font-weight:600;color:#7F77DD;text-align:center">
+        Você: ${myGeral ? `#${myGeral} geral` : '—'} · ${myTurma ? `#${myTurma} na turma ${turma}` : '—'}
+      </div>` : '';
+
+    cardEl.innerHTML = `
+      <div class="section-label" style="color:#f0a500">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+        Ranking Tabuada
+        <a href="/aluno/a-ranking.html" style="margin-left:auto;font-size:12px;font-weight:600;color:var(--blue-dark);text-decoration:none">Ver tudo →</a>
+      </div>
+      ${hallHtml}
+      <div style="overflow:visible">${corridaHtml}</div>
+      ${posRankHtml}`;
+  } catch(e) {
+    console.error('Erro ao montar Ranking Tabuada:', e);
+    cardEl.innerHTML = `<div class="section-label" style="color:#f0a500">Ranking Tabuada</div>
+      <div style="font-size:12px;color:var(--text-muted);padding:8px 0">Não foi possível carregar o ranking agora.</div>`;
+  } }
+  try { applyNo1PageVisuals({ isQuiz: euSouQuiz1, isTabuada: myGeral === 1, tabLevel: meuNivel }); } catch(e) { console.error('applyNo1PageVisuals:', e); }
+})();
+
+// ── Card aquecimento ───────────────────────────────────────────
+(async () => {
+  try {
+    const TEMAS_MENU = {
+      0:'Mix', 1:'Multiplicação', 2:'Divisão', 3:'Adição', 4:'Subtração', 5:'Mix', 6:'Desafio 🔥'
+    };
+    const temaMenu  = TEMAS_MENU[new Date().getDay()];
+    const hojeMenu  = new Date().toISOString().slice(0, 10);
+    const uidMenu   = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+    const snap      = await get(ref(db, `aquecimento/${uidMenu}/${hojeMenu}`));
+    const jaFez     = snap.exists();
+    const dados     = jaFez ? snap.val() : null;
+    document.getElementById('aq-card-icon').textContent  = jaFez ? '✅' : '🔥';
+    document.getElementById('aq-card-titulo').textContent = jaFez ? 'Treino diário feito hoje!' : 'Treino diário';
+    document.getElementById('aq-card-sub').textContent   = jaFez
+      ? `${dados.acertos} acertos · +${dados.xp_ganho} XP`
+      : `Tema: ${temaMenu} · até +35 XP`;
+    document.getElementById('aq-card-seta').textContent  = jaFez ? '✓' : '→';
+    document.getElementById('aq-card-seta').style.color  = jaFez ? 'var(--green)' : 'var(--orange)';
+  } catch(_) {}
+})();
+
+// ── Feed em tempo real ─────────────────────────────────────────
+function _escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function _tempoRelativo(ts) {
+  const diff = Date.now() - ts;
+  const min  = Math.floor(diff / 60000);
+  const h    = Math.floor(diff / 3600000);
+  const d    = Math.floor(diff / 86400000);
+  if (min < 1)  return 'agora';
+  if (min < 60) return `${min} min atrás`;
+  if (h < 24)   return `${h}h atrás`;
+  return `${d}d atrás`;
+}
+
+onValue(
+  query(ref(db, 'feed_global'), orderByChild('ts'), limitToLast(40)),
+  snap => {
+    const lista = document.getElementById('feed-lista');
+    if (!lista) return;
+
+    if (!snap.exists()) {
+      lista.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px 0">Nenhuma novidade ainda.</div>';
+      return;
+    }
+
+    // só novidades do bimestre atual:
+    //  - se o evento tem campo `bim`, usa ele (fonte da verdade)
+    //  - se não tem (eventos antigos), NÃO mostra: conquistas/níveis sem bim são de
+    //    bimestres anteriores que vazaram para o feed atual
+    const _bimAgora = bimestreAtual();
+    const eventos = [];
+    snap.forEach(c => {
+      const v = c.val();
+      if (v && v.bim === _bimAgora) eventos.push({ id: c.key, ...v });
+    });
+    eventos.sort((a, b) => b.ts - a.ts);
+    eventos.length = Math.min(eventos.length, 8);
+
+    const icones = { duelo:'⚔️', nivel:'⭐', atividade:'🎯', streak:'🔥' };
+
+    if (!eventos.length) {
+      lista.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px 0">Nenhuma novidade neste bimestre ainda.</div>';
+      return;
+    }
+
+    lista.innerHTML = eventos.map(e => {
+      const tempo = _tempoRelativo(e.ts);
+      const icone = icones[e.tipo] || '📢';
+      return `
+        <div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;
+                    border-bottom:1px solid var(--border);">
+          <span style="font-size:14px;flex-shrink:0;margin-top:1px">${icone}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;color:var(--text);line-height:1.4">${_escH(e.texto)}</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${tempo}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+);
+
+// Verificar se deve mostrar o modal de guia
+try {
+  const guiaSnap = await get(ref(db, 'config/mostrar_guia'));
+  const jaViu = localStorage.getItem('sm_guia_visto');
+  if (guiaSnap.val() === true && !jaViu) {
+    setTimeout(() => {
+      const modal = document.getElementById('modal-guia');
+      if (modal) modal.style.display = 'flex';
+      localStorage.setItem('sm_guia_visto', '1');
+    }, 600);
+  }
+} catch(e) {
+  console.warn('[Modal guia]', e);
+}
+
+</script>
+
+<!-- Modal Guia -->
+<div class="modal-guia-overlay" id="modal-guia" style="display:none">
+  <div class="modal-guia-box">
+    <button class="mg-close" onclick="document.getElementById('modal-guia').style.display='none'" aria-label="Fechar">✕</button>
+    <div class="mg-header">
+      <div class="mg-icon">⚡</div>
+      <div class="mg-title">Bem-vindo ao Sistema de Matemática!</div>
+      <div class="mg-sub">Veja como tudo funciona antes de começar</div>
+    </div>
+    <div class="mg-body">
+      <div class="mg-item">
+        <div class="mg-item-icon">📚</div>
+        <div>
+          <div class="mg-item-title">Atividades <span class="mg-tag-nota">3 pontos</span></div>
+          <div class="mg-item-desc">Valem <strong>3 pontos na média</strong>. Feitas em sala quando a professora liberar.</div>
+        </div>
+      </div>
+      <div class="mg-item">
+        <div class="mg-item-icon">🔢</div>
+        <div>
+          <div class="mg-item-title">Tabuada <span class="mg-tag-extra">nota extra</span></div>
+          <div class="mg-item-desc">Jogue todo dia para subir de nível. No <strong>nível 300</strong> você ganha um certificado!</div>
+        </div>
+      </div>
+      <div class="mg-item">
+        <div class="mg-item-icon">⚔️</div>
+        <div>
+          <div class="mg-item-title">Duelos <span class="mg-tag-extra">nota extra</span></div>
+          <div class="mg-item-desc">Desafie colegas em tempo real, ganhe XP e suba no ranking.</div>
+        </div>
+      </div>
+      <div class="mg-item">
+        <div class="mg-item-icon">🔥</div>
+        <div>
+          <div class="mg-item-title">Treino Diário <span class="mg-tag-extra">nota extra</span></div>
+          <div class="mg-item-desc">Treine todo dia e mantenha sua sequência: <strong>+10 XP</strong> por dia.</div>
+        </div>
+      </div>
+    </div>
+    <div class="mg-footer">
+      <button class="mg-btn-primary" onclick="document.getElementById('modal-guia').style.display='none'">✅ Entendi, vamos começar!</button>
+      <button class="mg-btn-ghost" onclick="document.getElementById('modal-guia').style.display='none';window.location.href='/aluno/guia.html'">📖 Ver guia completo →</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

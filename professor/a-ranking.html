@@ -118,8 +118,6 @@
 
 <script type="module">
 import { LISTA_ATIVIDADES, bimestreAtual, pathTabuadaRanking, pathTabuadaNiveisRaiz } from "/js/constants.js";
-import { montarSeletorBimestre, bimestreSelecionado } from "/js/bimestre-seletor.js";
-const _bimRk = bimestreSelecionado();
 import { getResultados, getAlunoPreferencia } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
@@ -202,8 +200,8 @@ function stdPos(lista, scoreFn) {
 // ── Load data ─────────────────────────────────────────────────
 const todos = (await getResultados()).filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
 const [rankSnap, niveisSnap] = await Promise.all([
-  get(ref(db, pathTabuadaRanking(_bimRk))).catch(() => null),
-  get(ref(db, pathTabuadaNiveisRaiz(_bimRk))).catch(() => null),
+  get(ref(db, pathTabuadaRanking())).catch(() => null),
+  get(ref(db, pathTabuadaNiveisRaiz())).catch(() => null),
 ]);
 
 // ── Tabuada ranking ───────────────────────────────────────────
@@ -495,16 +493,6 @@ function renderAlunoCard() {
 function render() {
   const data=getActiveData();
   document.querySelectorAll('.rnk-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===activeTab));
-  // seletor de bimestre: só na aba Tabuada (as outras não são por bimestre)
-  const _bt = document.getElementById('bimTabsRanking');
-  if (_bt) {
-    if (activeTab === 'tabuada') {
-      _bt.style.display = 'flex';
-      montarSeletorBimestre('bimTabsRanking', { mostrarTodos:true, selecionado: _bimRk });
-    } else {
-      _bt.style.display = 'none';
-    }
-  }
   document.querySelectorAll('.rnk-scope-btn').forEach(b=>b.classList.toggle('active',b.dataset.scope===activeScope));
   if (activeTab === 'tabuada' && data.concluintes !== undefined) {
     const { concluintes, corrida, corridaPos } = data;
@@ -570,7 +558,6 @@ document.getElementById('content').innerHTML=`
     <button class="rnk-tab" data-tab="tabuada" onclick="mudarTab('tabuada')">🎮 Tabuada</button>
     <button class="rnk-tab" data-tab="f1"      onclick="mudarTab('f1')">📚 Atividades</button>
   </div>
-  <div id="bimTabsRanking" style="display:flex;justify-content:center;margin-bottom:12px"></div>
   <div class="rnk-scope">
     <button class="rnk-scope-btn" data-scope="geral"  onclick="mudarScope('geral')">Geral</button>
     <button class="rnk-scope-btn" data-scope="turma"  onclick="mudarScope('turma')">🏫 ${escH(turma)}</button>
