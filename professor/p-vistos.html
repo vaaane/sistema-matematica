@@ -48,6 +48,7 @@
   .chk.v1{background:var(--green-pale);border-color:var(--green);color:var(--green)}
   .chk.v2{background:var(--gold-pale);border-color:var(--gold);color:var(--gold);font-size:11px}
   .chk.v3{background:rgba(239,68,68,.14);border-color:var(--red);color:var(--red)}
+  .chk.v4{background:var(--gold-pale);border-color:var(--gold);color:var(--gold);border-style:dashed;font-size:10px}
   td.tot-cel{text-align:center;font-family:'Orbitron',monospace;font-size:12px;padding:4px 6px}
   .tot-ok{color:var(--green)}.tot-mid{color:var(--gold)}.tot-low{color:var(--red)}
 
@@ -140,6 +141,7 @@
           <span><span class="leg-box g">✓</span> visto dado</span>
           <span><span class="leg-box a">A</span> entregou atrasado</span>
           <span><span class="leg-box r">F</span> falta (automática pela frequência do dia)</span>
+          <span><span class="leg-box" style="background:var(--gold-pale);border-color:var(--gold);border-style:dashed;color:var(--gold)">FA</span> faltou, entregou depois (vale ½)</span>
           <span style="margin-left:auto;font-style:italic">clique = visto · faltas vêm da chamada</span>
         </div>
       </div>
@@ -285,19 +287,21 @@ function render(){
   const nA = atual.atividades.length;
 
   // stats — falta vem da frequência (chamada) pela data da atividade
-  let feitos=0, atrasados=0, faltas=0;
+  let feitos=0, atrasados=0, fas=0, faltas=0;
   atual.atividades.forEach(atv=>alunosTurma.forEach(al=>{
     const v=(atual.marcas[atv.id]||{})[al]||0;
     if(v===1){ feitos++; }
     else if(v===2){ atrasados++; }
+    else if(v===3){ fas++; }   // faltou, entregou depois (½)
     else if(faltou(atv.data, al)){ faltas++; }
   }));
   const total = nA*alunosTurma.length;
-  const pct = total?Math.round(100*(feitos+atrasados)/total):0;
+  const pct = total?Math.round(100*(feitos+atrasados+fas*0.5)/total):0;
   document.getElementById("stats").innerHTML = `
     <div class="stat-card"><div><div class="stat-label">Atividades</div><div class="stat-value purple">${nA}</div></div></div>
     <div class="stat-card"><div><div class="stat-label">Vistos dados</div><div class="stat-value green">${feitos}</div></div></div>
     <div class="stat-card"><div><div class="stat-label">Atrasados</div><div class="stat-value gold">${atrasados}</div></div></div>
+    <div class="stat-card"><div><div class="stat-label">FA (½)</div><div class="stat-value gold">${fas}</div></div></div>
     <div class="stat-card"><div><div class="stat-label">Faltas</div><div class="stat-value" style="color:var(--red)">${faltas}</div></div></div>
     <div class="stat-card"><div><div class="stat-label">Conclusão da turma</div><div class="stat-value ${pct>=75?'green':pct>=50?'gold':''}">${pct}%</div></div></div>`;
 
@@ -327,13 +331,15 @@ function render(){
     atual.atividades.forEach(atv=>{
       const v=(atual.marcas[atv.id]||{})[al]||0;
       if(v===1||v===2) tot++;
+      else if(v===3) tot+=0.5;   // FA = meia entrega
       const f = (v!==1 && v!==2) && faltou(atv.data, al);   // falta automática pela frequência
-      const cls = v===1?"v1":v===2?"v2":f?"v3":"";
-      const sym = v===1?"✓":v===2?"A":f?"F":"";
+      const cls = v===1?"v1":v===2?"v2":v===3?"v4":f?"v3":"";
+      const sym = v===1?"✓":v===2?"A":v===3?"FA":f?"F":"";
       html += `<td class="cel" data-id="${atv.id}" data-al="${al.replace(/"/g,'&quot;')}"><span class="chk ${cls}">${sym}</span></td>`;
     });
     const cor = tot===nA?"tot-ok":tot>=nA/2?"tot-mid":"tot-low";
-    html += `<td class="tot-cel ${cor}">${tot}/${nA}</td></tr>`;
+    const totTxt = Number.isInteger(tot) ? String(tot) : tot.toFixed(1).replace(".", ",");
+    html += `<td class="tot-cel ${cor}">${totTxt}/${nA}</td></tr>`;
   });
   html += `</tbody></table>`;
   wrap.innerHTML = html;
@@ -354,7 +360,10 @@ async function salvarMarca(atvId, aluno, novo){
 async function ciclar(atvId, aluno){
   const atualV = (atual.marcas[atvId]||{})[aluno]||0;
   const atv = atual.atividades.find(a=>a.id===atvId);
-  const novo = (atualV+1)%3;           // 0 → ✓ → A → 0
+  // Se o aluno FALTOU no dia, o ciclo inclui FA (½): 0(F)→1(✓)→2(A)→3(FA)→0.
+  // Se NÃO faltou, ciclo normal: 0→1(✓)→2(A)→0.
+  const faltouNoDia = faltou(atv&&atv.data, aluno);
+  const novo = faltouNoDia ? (atualV+1)%4 : (atualV+1)%3;   // ✓ → A → (FA se faltou) → 0
   // dar visto a quem FALTOU (frequência) → avisa
   if (atualV===0 && novo===1 && faltou(atv&&atv.data, aluno)) {
     if (!confirm(`⚠️ ${aluno} faltou em ${fmtData(atv.data)} (frequência).\nDar visto mesmo assim?`)) return;
@@ -518,8 +527,10 @@ window.marcarTodos = async function(v){
   const upd={};
   let pulados=0;
   ALUNOS_POR_TURMA[turma].forEach(al=>{
-    if(v===1 && faltou(atv&&atv.data, al) && (atuais[al]||0)!==1 && (atuais[al]||0)!==2){
-      upd[al]=0; pulados++;   // faltou na frequência → não recebe visto (fica F)
+    const marcaAtual = atuais[al]||0;
+    if(v===1 && faltou(atv&&atv.data, al) && marcaAtual!==1 && marcaAtual!==2){
+      upd[al]=marcaAtual===3 ? 3 : 0;   // preserva FA; senão faltou → fica F
+      if(marcaAtual!==3) pulados++;
     } else {
       upd[al]=v;
     }

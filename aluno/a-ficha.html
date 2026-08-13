@@ -50,6 +50,7 @@
   .st.feita{background:var(--green-pale);color:var(--green)}
   .st.atraso{background:var(--gold-pale);color:var(--gold)}
   .st.falta{background:var(--red-pale);color:var(--red)}
+  .st.fa{background:var(--gold-pale);color:var(--gold);border:1.5px dashed var(--gold)}
   .st.nao{background:rgba(255,255,255,.05);color:var(--text-muted)}
   .st svg{width:17px;height:17px;fill:currentColor}
   .ativ-body{flex:1;min-width:0}
@@ -59,6 +60,7 @@
   .badge.feita{background:var(--green-pale);color:var(--green)}
   .badge.atraso{background:var(--gold-pale);color:var(--gold)}
   .badge.falta{background:var(--red-pale);color:var(--red)}
+  .badge.fa{background:var(--gold-pale);color:var(--gold)}
   .badge.nao{background:rgba(255,255,255,.06);color:var(--text-muted)}
 
   .falta-dates{display:flex;flex-wrap:wrap;gap:8px}
@@ -96,7 +98,7 @@
     <div class="content">
       <div class="aviso-pais">
         <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-        <div><b>Para o aluno e a família:</b> aqui você acompanha as atividades entregues, as faltas e as observações da professora ao longo do bimestre. Use as abas para ver cada bimestre.</div>
+        <div><b>Para o aluno e a família:</b> aqui você acompanha as atividades entregues, as faltas e as ocorrências registradas pela professora ao longo do bimestre. Use as abas para ver cada bimestre.</div>
       </div>
 
       <div class="card" style="padding:14px 20px;margin-bottom:16px">
@@ -134,10 +136,11 @@ const iniciais = n => n.split(" ").filter(Boolean).slice(0,2).map(s=>s[0]).join(
 const hhmm = ts => { const d=new Date(ts); return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; };
 const dataDeTs = ts => { const d=new Date(ts); const o=d.getTimezoneOffset(); return new Date(d.getTime()-o*60000).toISOString().slice(0,10); };
 
-const LABEL = { feita:"Feita", atraso:"Atraso", falta:"Falta", nao:"Não feita" };
+const LABEL = { feita:"Feita", atraso:"Atraso", fa:"Falta · entregou depois", falta:"Falta", nao:"Não feita" };
 const ICON = {
   feita:'<svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>',
   atraso:'<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 11H7v-2h4V6h2z"/></svg>',
+  fa:'<span style="font-weight:800;font-size:12px">FA</span>',
   falta:'<svg viewBox="0 0 24 24"><path d="M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z"/></svg>',
   nao:'<svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14z"/></svg>',
 };
@@ -176,7 +179,13 @@ async function carregar(){
     chamada = {};
     const rc = sC.exists()?sC.val():{};
     Object.entries(rc).forEach(([k,v])=>{ if(/^\d{4}-\d{2}-\d{2}$/.test(k)) chamada[k]=v||{}; });
-    anotacoes = sO.exists()?(sO.val()||{}):{};
+    const rawAnot = sO.exists()?(sO.val()||{}):{};
+    // mapeamento.html salva como { base64(nome): { nome, registros:[...] } }.
+    // Reconstrói { nome: [registros] } para achar o aluno pelo nome.
+    anotacoes = {};
+    Object.values(rawAnot).forEach(entry=>{
+      if(entry && entry.nome) anotacoes[entry.nome] = entry.registros || [];
+    });
   }catch(e){
     console.error(e);
     atividades=[]; marcas={}; chamada={}; anotacoes={};
@@ -191,6 +200,7 @@ function statusAtiv(atv){
   const v = (marcas[atv.id]||{})[aluno]||0;
   if (v===1) return "feita";
   if (v===2) return "atraso";
+  if (v===3) return "fa";        // faltou, mas entregou depois (vale metade)
   if (faltou(atv.data, aluno)) return "falta";
   return "nao";
 }
@@ -210,13 +220,16 @@ function ocorrenciasDoAluno(){
 
 function render(){
   const linhas = atividades.map(atv=>({...atv, st:statusAtiv(atv)}));
-  const feitas = linhas.filter(l=>l.st==="feita"||l.st==="atraso").length;
+  const cheias = linhas.filter(l=>l.st==="feita"||l.st==="atraso").length;
+  const meias  = linhas.filter(l=>l.st==="fa").length;   // ½ entrega cada
+  const feitasNum = cheias + meias*0.5;
+  const feitasTxt = Number.isInteger(feitasNum) ? String(feitasNum) : feitasNum.toFixed(1).replace(".", ",");
   const naoF   = linhas.filter(l=>l.st==="nao").length;
   const faltas = faltasDoAluno();
   const oc     = ocorrenciasDoAluno();
 
   const rows = linhas.filter(l=> filtro==="todas" ? true
-    : filtro==="feita" ? (l.st==="feita"||l.st==="atraso")
+    : filtro==="feita" ? (l.st==="feita"||l.st==="atraso"||l.st==="fa")
     : l.st===filtro);
 
   const atvHtml = rows.length ? rows.map(r=>`
@@ -244,7 +257,7 @@ function render(){
       ${tagsHtml?`<div class="oc-tags">${tagsHtml}</div>`:""}
       ${o.obs?`<div class="oc-obs">${o.obs}</div>`:""}
     </div>`;
-  }).join("") : `<div class="vazio">Sem observações neste bimestre.</div>`;
+  }).join("") : `<div class="vazio">Sem ocorrências neste bimestre.</div>`;
 
   document.getElementById("conteudo").innerHTML = `
     <div class="hero">
@@ -254,10 +267,10 @@ function render(){
         <div class="meta">Nº ${numeroChamada(turma,aluno)||"—"} · Turma ${turma} · ${bimestre}º Bimestre</div>
       </div>
       <div class="chips">
-        <div class="chip g"><div class="v">${feitas}/${atividades.length}</div><div class="l">Feitas</div></div>
+        <div class="chip g"><div class="v">${feitasTxt}/${atividades.length}</div><div class="l">Feitas</div></div>
         <div class="chip r"><div class="v">${naoF}</div><div class="l">Não feitas</div></div>
         <div class="chip r"><div class="v">${faltas.length}</div><div class="l">Faltas</div></div>
-        <div class="chip o"><div class="v">${oc.length}</div><div class="l">Observações</div></div>
+        <div class="chip o"><div class="v">${oc.length}</div><div class="l">Ocorrências</div></div>
       </div>
     </div>
 
@@ -271,6 +284,7 @@ function render(){
           <button class="${filtro==="todas"?"on":""}" data-f="todas">Todas</button>
           <button class="${filtro==="feita"?"on":""}" data-f="feita">Feitas</button>
           <button class="${filtro==="nao"?"on":""}" data-f="nao">Não feitas</button>
+          <button class="${filtro==="fa"?"on":""}" data-f="fa">FA (½)</button>
           <button class="${filtro==="falta"?"on":""}" data-f="falta">Faltas</button>
         </div>
         <div>${atvHtml}</div>
@@ -287,7 +301,7 @@ function render(){
         <div class="card">
           <div class="card-title">
             <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-            Observações da professora <span class="count">${oc.length}</span>
+            Ocorrências <span class="count">${oc.length}</span>
           </div>
           <div>${ocHtml}</div>
         </div>

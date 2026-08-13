@@ -185,7 +185,13 @@ async function carregar(){
     chamada = {};
     const rc = sC.exists()?sC.val():{};
     Object.entries(rc).forEach(([k,v])=>{ if(/^\d{4}-\d{2}-\d{2}$/.test(k)) chamada[k]=v||{}; });
-    anotacoes = sO.exists()?(sO.val()||{}):{};
+    const rawAnot = sO.exists()?(sO.val()||{}):{};
+    // mapeamento.html salva como { base64(nome): { nome, registros:[...] } }.
+    // Reconstrói { nome: [registros] } para achar o aluno pelo nome.
+    anotacoes = {};
+    Object.values(rawAnot).forEach(entry=>{
+      if(entry && entry.nome) anotacoes[entry.nome] = entry.registros || [];
+    });
   }catch(e){
     console.error(e);
     atividades=[]; marcas={}; chamada={}; anotacoes={};
