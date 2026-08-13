@@ -16,8 +16,8 @@
  *                 rankings de tabuada, histórico de treinos (aquecimento/) — não tocados.
  * FEED:           remove eventos cujo `bim` != bimestre atual (e os sem `bim`).
  *
- * COMO RODAR (Claude Code ou terminal), na raiz do projeto:
- *   npm install firebase
+ * COMO RODAR (Claude Code ou terminal), dentro de scripts/:
+ *   npm install
  *   node reset-nivel-perfil.mjs           # DRY-RUN: mostra o que faria (não altera)
  *   node reset-nivel-perfil.mjs --apply    # aplica de verdade (faz backup antes)
  *
