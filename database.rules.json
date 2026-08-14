@@ -68,6 +68,7 @@
     "vistos":          { ".read": true, ".write": true },
     "aulas":           { ".read": true, ".write": true },
     "chamada":         { ".read": true, ".write": true },
+    "atestados":       { ".read": true, ".write": true },
     "biblioteca":      { ".read": true, ".write": true },
     "calendario":      { ".read": true, ".write": true },
     "tabuada_sprint_ranking": { ".read": true, ".write": true },

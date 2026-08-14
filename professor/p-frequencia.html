@@ -54,6 +54,7 @@
   .mk:hover{transform:scale(1.15);filter:brightness(1.1)}
   .mk.p{background:var(--green-pale);color:var(--green)}
   .mk.f{background:var(--red-pale);color:var(--red)}
+  .mk.at{background:rgba(59,130,246,.15);color:#60a5fa;font-size:10px}
   .col-tot{position:sticky;right:0;background:var(--card2,#141428);border-left:1px solid var(--border);min-width:64px}
   .tot-v{font-family:'Orbitron',monospace;font-weight:700;font-size:15px}
   .tot-v.zero{color:var(--text-muted)} .tot-v.some{color:var(--gold)} .tot-v.high{color:var(--red)}
@@ -105,7 +106,7 @@
 </div>
 
 <script type="module">
-import { ALUNOS_POR_TURMA, numeroChamada, turmaAgora } from "/js/constants.js";
+import { ALUNOS_POR_TURMA, numeroChamada, turmaAgora, dentroDoAtestado, normalizarAtestados } from "/js/constants.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -120,18 +121,22 @@ let bimestre = 3;
 
 let dias = [];       // [{data, pd1}] — um por DIA que teve aula
 let chamada = {};    // { "YYYY-MM-DD": { aluno: true(falta) } }
+let atestados = {};  // { aluno:[ {inicio,fim,ts,obs} ] }
 
 const fmtData = iso => { if(!iso) return ""; const [,m,d]=iso.split("-"); return `${d}/${m}`; };
 const diaSemana = iso => { try{ return ["dom","seg","ter","qua","qui","sex","sáb"][new Date(iso+"T12:00:00").getDay()]; }catch(e){ return ""; } };
-const faltou = (data, aluno) => !!(chamada[data] && chamada[data][aluno]);
+const temAtestado = (data, aluno) => dentroDoAtestado(data, atestados[aluno]||[]);
+const faltou = (data, aluno) => !!(chamada[data] && chamada[data][aluno]) && !temAtestado(data, aluno);
+const temFaltaAtestada = (data, aluno) => !!(chamada[data] && chamada[data][aluno]) && temAtestado(data, aluno);
 
 async function carregar(){
   document.getElementById("topbar-sub").textContent = `Turma ${turma} · ${bimestre}º bimestre`;
   document.getElementById("tbl").innerHTML = `<tbody><tr><td class="vazio">Carregando…</td></tr></tbody>`;
   try{
-    const [snapA, snapC] = await Promise.all([
+    const [snapA, snapC, snapAt] = await Promise.all([
       get(ref(db, `aulas/${turma}/${bimestre}`)),
       get(ref(db, `chamada/${turma}/${bimestre}`)),
+      get(ref(db, `atestados/${turma}`)),
     ]);
     const porData = {};
     if (snapA.exists()) {
@@ -148,7 +153,8 @@ async function carregar(){
         if (/^\d{4}-\d{2}-\d{2}$/.test(k)) chamada[k] = v || {};
       }
     }
-  }catch(e){ console.error(e); dias=[]; chamada={}; }
+    atestados = normalizarAtestados(snapAt.exists() ? snapAt.val() : {});
+  }catch(e){ console.error(e); dias=[]; chamada={}; atestados={}; }
   render();
 }
 
@@ -191,8 +197,11 @@ function render(){
 
   const body = `<tbody>${alunos.map((al)=>{
     const cells = dias.map(d=>{
+      const at = temFaltaAtestada(d.data, al);
       const f = faltou(d.data, al);
-      return `<td class="cell"><span class="mk ${f?"f":"p"}" data-d="${d.data}" data-al="${al.replace(/"/g,'&quot;')}" title="clique para alternar">${f?"F":"P"}</span></td>`;
+      const st = at?"at":(f?"f":"p"), sym = at?"AT":(f?"F":"P");
+      const tit = at?"atestado médico (justificada)":"clique para alternar";
+      return `<td class="cell"><span class="mk ${st}" data-d="${d.data}" data-al="${al.replace(/"/g,'&quot;')}" ${at?'data-at="1"':""} title="${tit}">${sym}</span></td>`;
     }).join("");
     const nf = faltasDe(al);
     const cls = nf===0?"zero":nf>=3?"high":"some";
@@ -214,7 +223,10 @@ function render(){
 
   const tbl = document.getElementById("tbl");
   tbl.innerHTML = head + body + foot;
-  tbl.querySelectorAll(".mk[data-d]").forEach(el => el.onclick = () => toggleFalta(el.dataset.d, el.dataset.al));
+  tbl.querySelectorAll(".mk[data-d]").forEach(el => el.onclick = () => {
+    if(el.dataset.at){ alert("Este dia está coberto por um atestado médico. Remova o atestado na Ficha do aluno para alterar a frequência."); return; }
+    toggleFalta(el.dataset.d, el.dataset.al);
+  });
   document.getElementById("rodape").innerHTML = `Turma <b>${turma}</b> · ${bimestre}º bim — ${nAlunos} alunos · ${nDias} dias · <b>${totalFaltas}</b> falta(s) no total. <span style="color:var(--text-muted)">Clique numa célula para alternar presença/falta.</span>`;
 }
 
