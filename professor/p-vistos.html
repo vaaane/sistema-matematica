@@ -23,7 +23,14 @@
   .stat-value{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;margin-top:4px}
   .stat-value.gold{color:var(--gold)}.stat-value.green{color:var(--green)}.stat-value.purple{color:var(--purple)}
 
-  .grade-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+  .grade-wrap{
+    overflow-x:auto;border-radius:10px;border:1px solid var(--border);
+    scrollbar-width:thin;scrollbar-color:var(--purple) transparent;
+  }
+  .grade-wrap::-webkit-scrollbar{height:10px}
+  .grade-wrap::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:0 0 10px 10px}
+  .grade-wrap::-webkit-scrollbar-thumb{background:var(--purple);border-radius:6px}
+  .grade-wrap::-webkit-scrollbar-thumb:hover{background:var(--gold)}
   table.grade{border-collapse:separate;border-spacing:0;width:100%;min-width:600px;font-size:13px}
   .grade th,.grade td{border-bottom:1px solid var(--border);padding:0}
   .grade thead th{background:#141428;position:sticky;top:0;z-index:5}
