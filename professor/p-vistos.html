@@ -249,6 +249,7 @@ let bibEscolhido = null, bibFiltro = "todos";
 
 // cache local do bimestre atual: { atividades:[{id,nome,data,conteudo,ordem}], marcas:{ atvId:{ aluno:0|1|2 } } }
 let atual = { atividades: [], marcas: {} };
+let irParaFim = false;
 // chamada (frequência) do bimestre: { "YYYY-MM-DD": { aluno: true(falta) } }
 let chamada = {};
 let atestados = {};   // { aluno:[ {inicio,fim,ts,obs} ] }
@@ -310,6 +311,7 @@ async function carregar(){
     atual = { atividades: [], marcas: {} }; chamada = {};
     toast("Erro ao carregar (verifique regras do Firebase para 'vistos'/'chamada')", true);
   }
+  irParaFim = true;
   render();
 }
 
@@ -349,8 +351,10 @@ function render(){
     <div class="stat-card"><div><div class="stat-label">Conclusão da turma</div><div class="stat-value ${pct>=75?'green':pct>=50?'gold':''}">${pct}%</div></div></div>`;
 
   const wrap = document.getElementById("gradeWrap");
+  const prevScroll = wrap.scrollLeft;
   if(!nA){
     wrap.innerHTML = `<div class="vazio">Nenhuma atividade no ${bimestre}º bimestre da turma ${turma}.<br>Clique em <b>＋ Nova atividade</b> para criar a primeira coluna.</div>`;
+    irParaFim = false;
     return;
   }
 
@@ -387,6 +391,10 @@ function render(){
   });
   html += `</tbody></table>`;
   wrap.innerHTML = html;
+  requestAnimationFrame(() => {
+    wrap.scrollLeft = irParaFim ? wrap.scrollWidth : prevScroll;
+    irParaFim = false;
+  });
 
   wrap.querySelectorAll(".cel").forEach(td=>td.onclick=()=>ciclar(td.dataset.id, td.dataset.al));
   wrap.querySelectorAll(".col-atv").forEach(th=>th.onclick=()=>abrirMenuCol(th.dataset.id));
