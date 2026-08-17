@@ -53,7 +53,7 @@
   .chk{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;border:1.5px solid var(--border);background:rgba(255,255,255,.03);font-size:14px;font-weight:800;transition:all .12s;user-select:none}
   .cel:hover .chk{border-color:var(--text-muted)}
   .chk.v1{background:var(--green-pale);border-color:var(--green);color:var(--green)}
-  .chk.v2{background:var(--gold-pale);border-color:var(--gold);color:var(--gold);font-size:11px}
+  .chk.v2{background:var(--gold-pale);border-color:var(--gold);color:var(--gold);font-size:14px}
   .chk.v3{background:rgba(239,68,68,.14);border-color:var(--red);color:var(--red)}
   .chk.v4{background:var(--gold-pale);border-color:var(--gold);color:var(--gold);border-style:dashed;font-size:10px}
   .chk.v5{background:rgba(59,130,246,.15);border-color:#3b82f6;color:#60a5fa;font-size:10px}
@@ -148,7 +148,7 @@
         <div class="legenda">
           <span><span class="leg-box"></span> não fez / não verificado</span>
           <span><span class="leg-box g">✓</span> visto dado</span>
-          <span><span class="leg-box a">A</span> entregou atrasado</span>
+          <span><span class="leg-box a">½</span> entregou atrasado (meio visto)</span>
           <span><span class="leg-box r">F</span> falta (automática pela frequência do dia)</span>
           <span><span class="leg-box" style="background:var(--gold-pale);border-color:var(--gold);border-style:dashed;color:var(--gold)">FA</span> faltou, entregou depois (vale ½)</span>
           <span><span class="leg-box" style="background:rgba(59,130,246,.15);border-color:#3b82f6;color:#60a5fa">AT</span> atestado médico (justificada)</span>
@@ -338,7 +338,7 @@ function render(){
     else if(faltou(atv.data, al)){ faltas++; }
   }));
   const total = nA*alunosTurma.length;
-  const pct = total?Math.round(100*(feitos+atrasados+atvs+fas*0.5)/total):0;
+  const pct = total?Math.round(100*(feitos+0.5*atrasados+atvs+fas*0.5)/total):0;
   document.getElementById("stats").innerHTML = `
     <div class="stat-card"><div><div class="stat-label">Atividades</div><div class="stat-value purple">${nA}</div></div></div>
     <div class="stat-card"><div><div class="stat-label">Vistos dados</div><div class="stat-value green">${feitos}</div></div></div>
@@ -373,12 +373,12 @@ function render(){
     let tot=0;
     atual.atividades.forEach(atv=>{
       const v=(atual.marcas[atv.id]||{})[al]||0;
-      if(v===1||v===2||v===4) tot++;       // ✓, A e AT✓ contam integral
-      else if(v===3) tot+=0.5;             // FA vale ½
+      if(v===1||v===4) tot++;              // ✓ e AT✓ contam integral
+      else if(v===2||v===3) tot+=0.5;      // atraso (½) e FA (½)
       const at = (v!==1 && v!==2 && v!==3 && v!==4) && temFaltaAtestada(atv.data, al); // atestado sem entrega
       const f  = (v!==1 && v!==2 && v!==3 && v!==4) && faltou(atv.data, al);           // falta automática
       const cls = v===1?"v1":v===2?"v2":v===3?"v4":v===4?"v6":at?"v5":f?"v3":"";
-      const sym = v===1?"✓":v===2?"A":v===3?"FA":v===4?"AT✓":at?"AT":f?"F":"";
+      const sym = v===1?"✓":v===2?"½":v===3?"FA":v===4?"AT✓":at?"AT":f?"F":"";
       html += `<td class="cel" data-id="${atv.id}" data-al="${al.replace(/"/g,'&quot;')}"><span class="chk ${cls}">${sym}</span></td>`;
     });
     const cor = tot===nA?"tot-ok":tot>=nA/2?"tot-mid":"tot-low";
@@ -422,8 +422,8 @@ async function ciclar(atvId, aluno){
   }
   if ((atualV===1 && novo===2) || (atualV===2 && novo===(faltouNoDia?3:0))) {
     const msg = novo===2
-      ? "Mudar de ✓ visto completo para A atraso?"
-      : (faltouNoDia ? "Mudar de A atraso para FA (falta, entregou depois — vale ½)?" : "Retirar o visto (de A atraso para sem visto)?");
+      ? "Mudar de ✓ visto completo para ½ atraso (meio visto)?"
+      : (faltouNoDia ? "Mudar de ½ atraso para FA (falta, entregou depois — vale ½)?" : "Retirar o visto (de ½ atraso para sem visto)?");
     if (!confirm(msg)) return;
   }
   salvarMarca(atvId, aluno, novo);
