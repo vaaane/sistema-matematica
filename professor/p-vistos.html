@@ -234,6 +234,10 @@ let atvSel = null, editandoId = null;
 let materialSel = null;
 // biblioteca carregada do Firebase (nó "biblioteca")
 let biblioteca = [];
+// normaliza nome para casar atividade × material (minúsculas, sem acento, espaços colapsados)
+const normNome = s => (s||"").toString().toLowerCase()
+  .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+  .replace(/\s+/g," ").trim();
 let bibEscolhido = null, bibFiltro = "todos";
 
 // cache local do bimestre atual: { atividades:[{id,nome,data,conteudo,ordem}], marcas:{ atvId:{ aluno:0|1|2 } } }
@@ -269,6 +273,26 @@ async function carregar(){
       .map(([id,a])=>({id, nome:a.nome||"(sem nome)", data:a.data||"", conteudo:a.conteudo||"", obs:a.obs||"", ordem:a.ordem||0, materialRef:a.materialRef||"", materialTitulo:a.materialTitulo||"", temMaterial:!!a.materialRef, corrigido:!!a.corrigido}))
       .sort((x,y)=> (x.ordem-y.ordem) || (x.data<y.data?-1:1));
     atual = { atividades, marcas: raw.marcas||{} };
+
+    // ── Sincronização de material pela BIBLIOTECA (fonte da verdade) ──
+    // Se o nome da atividade casa com um item da biblioteca, o vínculo é sempre
+    // atualizado para o arquivo ATUAL desse item (grava no banco só quando muda).
+    // Atividades cujo nome NÃO casa com nenhum material mantêm o que o professor pôs.
+    try{
+      await carregarBiblioteca();
+      if(biblioteca.length){
+        const porNome = {};
+        biblioteca.forEach(b=>{ if(b.arquivo) porNome[normNome(b.nome)] = b; });
+        for(const a of atividades){
+          const b = porNome[normNome(a.nome)];
+          if(!b) continue;                              // sem correspondência → respeita professor
+          const url = "/conteudos/" + b.arquivo;
+          if(a.materialRef === url && a.materialTitulo === b.nome) continue;  // já está certo
+          a.materialRef = url; a.materialTitulo = b.nome; a.temMaterial = true;
+          await update(ref(db, `${P(turma,bimestre)}/atividades/${a.id}`), { materialRef:url, materialTitulo:b.nome });
+        }
+      }
+    }catch(eV){ console.warn("Sincronização de material:", eV); }
     // chamada: só chaves de data (YYYY-MM-DD); valor {aluno:true} = falta
     chamada = {};
     const rc = snapCh.exists() ? snapCh.val() : {};
@@ -515,9 +539,14 @@ window.abrirMenuCol = function(id){
 };
 
 window.abrirMaterial = function(){
+  // resolve sempre pelo arquivo ATUAL da biblioteca, se o nome casar
   const atv=atual.atividades.find(a=>a.id===atvSel);
-  if(!atv || !atv.materialRef){ toast("Sem material", true); return; }
-  window.open(atv.materialRef, "_blank");
+  if(!atv){ toast("Sem material", true); return; }
+  let url = atv.materialRef;
+  const b = biblioteca.find(x=>x.arquivo && normNome(x.nome)===normNome(atv.nome));
+  if(b) url = "/conteudos/" + b.arquivo;   // biblioteca manda
+  if(!url){ toast("Sem material", true); return; }
+  window.open(url, "_blank");
 };
 
 window.removerMaterial = async function(){
