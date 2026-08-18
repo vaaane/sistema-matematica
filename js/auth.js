@@ -117,7 +117,6 @@ export function renderSidebarAluno(containerId, activePage) {
     { id:"aulas",      href:"/aluno/a-aulas.html",       label:"Minhas Aulas", icon:`<path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/>` },
     { id:"torneios",   href:"/aluno/torneios.html",    label:"Torneios",   icon:`<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>` },
     { id:"historico",  href:"/aluno/a-historico.html",   label:"Histórico",      icon:`<path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21L13 13.04V8h-1z"/>` },
-    { id:"ficha",      href:"/aluno/a-ficha.html",        label:"Minha Ficha",    icon:`<path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2z"/>` },
     { id:"notas",      href:"/aluno/a-notas.html",        label:"Notas",          icon:`<path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>` },
     { id:"ranking",    href:"/aluno/a-ranking.html",     label:"Ranking",    icon:`<path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/>` },
     { id:"jogos",      href:"/aluno/a-jogos.html",       label:"Jogos",      icon:`<path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5S14.67 12 15.5 12s1.5.67 1.5 1.5S16.33 15 15.5 15zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 9 18.5 9s1.5.67 1.5 1.5S19.33 12 18.5 12z"/>` },
@@ -416,21 +415,10 @@ export async function iniciarVerificacaoSessao(uid) {
 }
 
 // ── Timeout de inatividade ──────────────────────────────────
+// DESATIVADO: o logout automático por inatividade foi removido a pedido.
+// A função é mantida (no-op) para não quebrar as chamadas/imports existentes.
 export function iniciarTimeoutInatividade(minutos = 5) {
-  const MS = minutos * 60 * 1000;
-  let _timer = null;
-  const resetar = () => {
-    clearTimeout(_timer);
-    _timer = setTimeout(() => {
-      clearSession();
-      localStorage.removeItem('sm_dupla_duelo');
-      window.location.href = '/index.html?motivo=inatividade';
-    }, MS);
-  };
-  ['mousemove', 'keydown', 'click', 'touchstart', 'scroll'].forEach(ev => {
-    document.addEventListener(ev, resetar, { passive: true });
-  });
-  resetar();
+  return; // não faz nada — sem logout por inatividade
 }
 
 // ── Hash e geração de senha de aluno ─────────────────────────
