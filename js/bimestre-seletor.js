@@ -23,10 +23,11 @@ function injetarCSS() {
   const st = document.createElement('style');
   st.id = 'bim-seletor-css';
   st.textContent = `
-    .bim-tabs{display:flex;gap:5px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:3px}
-    .bim-tab{padding:6px 13px;border-radius:7px;font-size:13px;font-weight:700;color:var(--g-muted,#8a8aa8);cursor:pointer;border:none;background:transparent;font-family:'Inter',sans-serif;transition:.15s}
+    .bim-tabs{display:flex;gap:5px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:3px;flex-wrap:wrap}
+    .bim-tab{padding:6px 13px;border-radius:7px;font-size:13px;font-weight:700;color:var(--text-muted,#8a8aa8);cursor:pointer;border:none;background:transparent;font-family:'Inter',sans-serif;transition:.15s}
     .bim-tab:hover:not(.active){background:rgba(255,255,255,.06);color:var(--text,#e8eaf6)}
-    .bim-tab.active{background:var(--g-purple,#7c5cfc);color:#fff}
+    .bim-tab.active{background:var(--purple,#7c5cfc);color:#fff}
+    @media(max-width:520px){ .bim-tab{padding:6px 11px;font-size:12.5px} }
   `;
   document.head.appendChild(st);
 }
