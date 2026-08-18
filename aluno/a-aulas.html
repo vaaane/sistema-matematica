@@ -11,120 +11,149 @@
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
 <style>
-  /* Seletor de bimestre */
+  :root{
+    --card-sel:#242437;
+    --sheet:#f7f5fc; --sheet-line:#e7e1f4; --ink:#221b3d; --ink-soft:#59527a;
+    --lilac:#efeafc; --lilac-b:#dcd0f5; --mint:#eef8f1; --mint-b:#c9e9d5; --purple2:#7c3aed;
+  }
+  /* seletor de bimestre (mantido) */
   .bim-tabs{display:flex;gap:6px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:5px}
   .bim-tab{width:40px;height:34px;border-radius:9px;font-size:14px;font-weight:700;color:var(--text-muted);cursor:pointer;border:none;background:transparent;display:flex;align-items:center;justify-content:center;transition:.15s}
   .bim-tab:hover:not(.active){background:rgba(255,255,255,.05);color:var(--text)}
   .bim-tab.active{background:var(--purple);color:#fff}
 
-  /* ── Stat-cards ── */
-  .stats-top{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
-  .scard{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 22px;display:flex;align-items:center;gap:16px}
-  .sc-ico{width:52px;height:52px;border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .sc-ico svg{width:24px;height:24px}
-  .sc-ico.roxo{background:rgba(155,48,255,.13)} .sc-ico.roxo svg{fill:var(--purple)}
-  .sc-ico.verde{background:rgba(34,197,94,.13)} .sc-ico.verde svg{fill:var(--green)}
-  .sc-ico.laranja{background:rgba(240,165,0,.13)} .sc-ico.laranja svg{fill:var(--gold)}
-  .sc-num{font-size:34px;font-weight:800;line-height:1;color:var(--text);letter-spacing:-.5px}
-  .sc-lbl{font-size:14px;font-weight:600;color:var(--text);margin-top:6px}
-  .sc-sub{font-size:12.5px;color:var(--text-muted);margin-top:3px}
-  .sc-sub.g{color:var(--green)}.sc-sub.r{color:#f87171}
-  .sc-bar{height:6px;border-radius:999px;background:rgba(255,255,255,.07);margin-top:10px;overflow:hidden;max-width:150px}
-  .sc-bar span{display:block;height:100%;border-radius:999px;background:var(--green)}
-  .scard.prog{gap:18px}
-  .donut{width:70px;height:70px;flex-shrink:0}
+  /* resumo compacto */
+  .stat-compact{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:15px 16px;margin-bottom:20px}
+  .donut{width:60px;height:60px;flex-shrink:0}
   .donut text{font-weight:800;fill:var(--text)}
-  .prog-r .elogio{font-size:13px;color:var(--text-muted);margin-top:4px}
+  .sc-right{flex:1;min-width:0}
+  .sc-big{font-size:16px;font-weight:800}.sc-big b{color:var(--green)}
+  .sc-sub{font-size:12.5px;color:var(--text-muted);margin-top:5px}
+  .sc-sub .p{color:var(--gold);font-weight:700}
 
-  /* ── Barra de filtros ── */
-  .filtros{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:4px;flex-wrap:wrap}
-  .filtro-tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .f-tab{padding:9px 18px;border-radius:10px;font-size:13.5px;font-weight:600;color:var(--text-muted);cursor:pointer;border:none;background:rgba(255,255,255,.035);display:inline-flex;align-items:center;gap:8px;transition:.15s}
-  .f-tab:hover:not(.on){background:rgba(255,255,255,.06);color:var(--text)}
-  .f-tab.on{background:var(--purple);color:#fff}
-  .f-tab .cnt{font-size:11.5px;font-weight:700;min-width:21px;height:21px;padding:0 6px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.09);color:var(--text)}
-  .f-tab.on .cnt{background:rgba(0,0,0,.2);color:#fff}
-  .filtro-right{display:flex;align-items:center;gap:10px}
+  /* filtros neutros */
+  .filtros{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:20px}
+  .filtros::-webkit-scrollbar{display:none}
+  .f-tab{white-space:nowrap;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;color:var(--text-muted);border:1px solid var(--border);background:transparent;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+  .f-tab .cnt{font-size:12px;font-weight:700;color:var(--text-muted);opacity:.65}
+  .f-tab.on{background:rgba(155,48,255,.12);border-color:rgba(155,48,255,.45);color:#c79bff}
+  .f-tab.on .cnt{color:#c79bff;opacity:.9}
   .ord-lbl{font-size:13px;color:var(--text-muted)}
   .ord-sel{padding:9px 13px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer}
   .ord-sel option{background:var(--card);color:var(--text)}
 
-  /* ── Cabeçalho de seção ── */
-  .sec-h{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;margin:24px 0 10px;color:var(--text-muted)}
-  .sec-h svg{width:16px;height:16px;fill:currentColor;opacity:.7}
-  .sec-h .n{font-weight:500;font-size:13px;opacity:.8}
+  /* cabeçalho de seção (discreto) */
+  .sec-h{display:flex;align-items:center;gap:10px;margin:8px 2px 12px}
+  .sec-h .ico{width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+  .sec-h .ico svg{width:19px;height:19px;fill:var(--text-muted)}
+  .sec-h .t{font-size:15px;font-weight:700}
+  .sec-h .t .n{font-size:13px;color:var(--text-muted);font-weight:500}
 
-  /* ── Linha de aula ── */
-  .aulas-bloco{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
-  .aula-item{border-bottom:1px solid rgba(255,255,255,.045)}
-  .aula-item:last-child{border-bottom:none}
-  .aula{padding:14px 20px;display:grid;grid-template-columns:44px 92px minmax(0,1fr) auto;align-items:center;gap:16px;position:relative;transition:background .13s}
-  .aula:hover{background:rgba(255,255,255,.018)}
-  .aula::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--acc);opacity:.7}
-  .aula.completo{--acc:var(--green)}
-  .aula.parcial{--acc:var(--gold)}
-  .aula.sem{--acc:var(--text-muted)}
-  .aula-num{font-size:15px;font-weight:700;color:var(--text-muted);width:44px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:9px;background:rgba(255,255,255,.035)}
-  .aula.completo .aula-num{color:var(--green);background:rgba(34,197,94,.1)}
-  .aula-tag{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:4px 0;border-radius:6px;text-align:center;width:88px;background:rgba(255,255,255,.05);color:var(--text-muted)}
-  .aula-nome{font-weight:500;font-size:14.5px;color:var(--text);line-height:1.35;min-width:0}
-  .aula-meta{display:grid;grid-template-columns:70px 130px 130px;align-items:center;gap:14px}
-  .aula-data{font-size:13px;color:var(--text-muted);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-  .aula-data svg{width:14px;height:14px;fill:var(--text-muted);opacity:.6;flex-shrink:0}
-  .aula-status{font-size:12.5px;font-weight:600;white-space:nowrap;display:inline-flex;align-items:center;gap:7px}
-  .aula-status .dot{width:7px;height:7px;border-radius:999px;flex-shrink:0}
-  .aula-status.completo{color:var(--green)}.aula-status.completo .dot{background:var(--green)}
-  .aula-status.parcial{color:var(--gold)}.aula-status.parcial .dot{background:var(--gold)}
-  .aula-status.sem{color:var(--text-muted)}.aula-status.sem .dot{background:var(--text-muted)}
-  .aula-btn{border:1px solid var(--border);border-radius:9px;padding:8px 15px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:7px;background:rgba(255,255,255,.03);color:var(--text);transition:.15s;width:100%}
+  /* cards de aula (base neutra) */
+  .aulas-bloco{display:flex;flex-direction:column;gap:10px;margin-bottom:6px}
+  .aula-item{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:.15s}
+  .aula{padding:12px 14px;display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:center;cursor:pointer}
+  .ring{position:relative;width:40px;height:40px}
+  .ring svg{position:absolute;inset:0}
+  .ring svg circle{stroke:rgba(255,255,255,.18)}
+  .ring .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--text-muted)}
+  .aula-main{min-width:0}
+  .headline{display:flex;align-items:center;gap:9px;flex-wrap:wrap;row-gap:4px}
+  .aula-tag{font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:3px 8px;border-radius:6px;border:1px solid var(--border);color:var(--text-muted);background:transparent}
+  .aula-nome{font-size:14.5px;font-weight:700;line-height:1.25;flex:1 1 auto;min-width:0;color:var(--text)}
+  .aula-meta{display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap}
+  .aula-data{font-size:11.5px;color:var(--text-muted);display:inline-flex;align-items:center;gap:5px}
+  .aula-data svg{width:12px;height:12px;fill:currentColor;opacity:.65}
+  .aula-status{font-size:11.5px;font-weight:600;color:var(--text-muted);display:inline-flex;align-items:center;gap:5px}
+  .aula-status svg{width:13px;height:13px;fill:currentColor}
+  .aula-status.completo{color:#63c98a} .aula-status.parcial{color:var(--gold)} .aula-status.sem{color:var(--text-muted)}
+  .aula-btn{align-self:center;border:1px solid var(--border);border-radius:9px;padding:8px 12px;font-size:11.5px;font-weight:600;background:transparent;color:var(--text-muted);display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-family:inherit;cursor:pointer}
   .aula-btn svg{width:13px;height:13px;fill:currentColor;opacity:.8;transition:transform .2s}
-  .aula-btn:not(.off):hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18)}
-  .aula-btn.off{color:var(--text-muted);cursor:default;opacity:.6}
-  .aula-item.aberto .aula-btn .chev{transform:rotate(180deg)}
+  .aula-btn.off{opacity:.5;cursor:default}
+  .aula-btn .t-oc{display:none}
 
-  /* ── Painel expansível ── */
-  .painel{display:none;background:#12121f;border-top:2px solid var(--acc,var(--purple));box-shadow:inset 0 8px 14px -10px rgba(0,0,0,.6)}
+  /* aula SELECIONADA (destaque roxo) */
+  .aula-item.aberto{background:var(--card-sel);border-color:rgba(155,48,255,.45);border-left:3px solid var(--purple);box-shadow:0 0 0 1px rgba(155,48,255,.18),0 12px 26px rgba(0,0,0,.4)}
+  .aula-item.aberto .ring svg circle{stroke:var(--purple)}
+  .aula-item.aberto .ring .num{color:#fff}
+  .aula-item.aberto .aula-nome{color:#fff}
+  .aula-item.aberto .aula-btn{border-color:rgba(155,48,255,.55);color:#c79bff}
+  .aula-item.aberto .aula-btn svg{transform:rotate(180deg)}
+  .aula-item.aberto .aula-btn .t-ver{display:none}
+  .aula-item.aberto .aula-btn .t-oc{display:inline}
+
+  /* painel = folha clara */
+  .painel{display:none;padding:10px}
   .aula-item.aberto .painel{display:block}
-  .aula-item.aberto{box-shadow:0 0 0 1px var(--acc);border-radius:12px;background:rgba(255,255,255,.015);position:relative;z-index:1}
-  .aula-item.aberto .aula{background:rgba(255,255,255,.03)}
-  .aula-item.completo{--acc:var(--green)}.aula-item.parcial{--acc:var(--gold)}.aula-item.sem{--acc:var(--text-muted)}
-  .painel-head{display:flex;align-items:center;gap:9px;padding:12px 22px;font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border)}
-  .painel-head svg{width:15px;height:15px;fill:var(--text-muted);opacity:.7}
-  .painel-head .abrir{margin-left:auto;font-size:11.5px;color:#4c96ff;font-weight:600;text-decoration:none;text-transform:none;letter-spacing:0}
-  .painel-inner{padding:26px 24px 30px}
-  .painel .carregando{text-align:center;color:var(--text-muted);padding:44px 20px}
-  .painel .erro{text-align:center;color:var(--text-muted);padding:34px 20px}
+  .sheet{background:var(--sheet);border-radius:12px;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.3)}
+  .sheet-head{display:flex;align-items:center;justify-content:center;gap:9px;padding:12px;background:var(--lilac);font-size:12px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--purple2);border-bottom:1px solid var(--sheet-line);position:relative}
+  .sheet-head svg{width:16px;height:16px;fill:var(--purple2)}
+  .sheet-head .abrir{position:absolute;right:12px;font-size:11px;font-weight:600;color:var(--purple2);text-transform:none;letter-spacing:0;text-decoration:none;opacity:.8}
+  .sheet-body{padding:18px 16px}
+  .painel .carregando,.painel .erro{text-align:center;color:var(--text-muted);padding:34px 20px}
   .painel .erro a{color:var(--purple);font-weight:600}
-  .painel .au{max-width:720px;margin:0 auto}
-  .painel .au-hero{padding:18px 20px;margin-bottom:18px}
-  .painel .au-hero-title{font-size:22px}
-  .painel .au-hero-logo{display:none}
 
-  /* ── Dica ── */
+  /* recolorir o conteúdo injetado para a folha clara */
+  .content-light{color:var(--ink)}
+  .content-light .au{max-width:none;margin:0}
+  .content-light .au-hero{background:transparent;border:0;border-bottom:1px solid var(--sheet-line);border-radius:0;padding:0 0 12px;margin:0 0 14px;text-align:left}
+  .content-light .au-hero::after{display:none}
+  .content-light .au-hero-logo{display:none}
+  .content-light .au-hero-eyebrow{color:#a06a00}
+  .content-light .au-hero-title{color:var(--ink);font-size:22px}
+  .content-light .au-hero-meta{justify-content:flex-start}
+  .content-light .au-nav{display:none}
+  .content-light .au-meta{background:#fff;border-color:#e4dcf5;color:#5a4d7a}
+  .content-light .au-meta.gold{color:#8a5e00;background:#fdf2d6;border-color:#f0cf84}
+  .content-light .au-sec{margin-bottom:20px}
+  .content-light .au-sec-head{border-color:var(--sheet-line)}
+  .content-light .au-sec-num{background:#fff;color:var(--purple2);border:2px solid rgba(124,58,237,.45)}
+  .content-light .au-sec-title{color:var(--ink)}
+  .content-light .au-p{color:#3a3455}
+  .content-light .au-p b,.content-light .au-p strong{color:var(--ink)}
+  .content-light .au-def{background:var(--lilac);border-color:var(--lilac-b);border-left-color:var(--purple)}
+  .content-light .au-def-label{color:var(--purple2)}
+  .content-light .au-def-body{color:#3a3455}
+  .content-light .au-def-body b{color:var(--ink)}
+  .content-light .au-formula{background:var(--lilac);border-color:var(--lilac-b)}
+  .content-light .au-formula-main{color:var(--ink)}
+  .content-light .au-formula-note{color:var(--ink-soft)}
+  .content-light .au-fmini{background:#fff;border-color:#e4dcf5}
+  .content-light .au-fmini-name{color:var(--ink-soft)}
+  .content-light .au-fmini-eq{color:var(--ink)}
+  .content-light .au-ex{background:#fff;border-color:#e4dcf5}
+  .content-light .au-ex-head{color:#137a3e}
+  .content-light .au-ex-prob{color:var(--ink);border-color:#e0d6f7}
+  .content-light .au-steps li{color:#3a3455}
+  .content-light .au-steps li::before{color:var(--purple2);background:var(--lilac);border-color:var(--lilac-b)}
+  .content-light .au-steps b{color:var(--ink)}
+  .content-light .au-res{background:var(--mint);border-color:var(--mint-b);color:#137a3e}
+  .content-light .au-tip{background:#eaf4fb;border-color:#cbe3f3;color:#2b6a92}
+  .content-light .au-warn{background:#fdf6e6;border-color:#f0dcae;color:#8a5e00}
+  .content-light .au-tip b,.content-light .au-warn b{color:var(--ink)}
+  .content-light .au-rel{background:#fff;border-color:#e4dcf5}
+  .content-light .au-rel-title{color:var(--ink)}
+  .content-light .au-rel-item{background:var(--sheet);border-color:#e4dcf5;color:#3a3455}
+  .content-light .au-rel-item span{color:var(--purple2)}
+  .content-light .au-note{color:#8b8398}
+  .content-light .ex{background:#fff;border-color:#e4dcf5}
+  .content-light .ex-stmt{color:#2f2a48}
+  .content-light .ex-alt{background:var(--sheet);border-color:#e4dcf5;color:#3a3455}
+  .content-light .ex-answer-in{background:var(--mint);border-color:var(--mint-b)}
+  .content-light .ex-answer-in p{color:#3a3455}
+
   .dica{margin-top:24px;background:rgba(155,48,255,.055);border:1px solid rgba(155,48,255,.16);border-radius:14px;padding:15px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
   .dica-txt{font-size:13.5px;color:var(--text-muted);display:flex;align-items:center;gap:10px}
-  .dica-txt b{color:var(--purple)}
-  .dica-txt svg{width:18px;height:18px;fill:var(--purple);opacity:.85;flex-shrink:0}
-  .dica .btn-mini{border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);border-radius:9px;padding:8px 15px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:7px;transition:.15s}
-  .dica .btn-mini:hover{background:rgba(255,255,255,.08)}
+  .dica-txt b{color:var(--purple)} .dica-txt svg{width:18px;height:18px;fill:var(--purple);opacity:.85;flex-shrink:0}
+  .dica .btn-mini{border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);border-radius:9px;padding:8px 15px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:7px;text-decoration:none}
   .dica .btn-mini svg{width:14px;height:14px;fill:currentColor;opacity:.8}
 
   .vazio{text-align:center;color:var(--text-muted);padding:40px 20px;background:var(--card);border:1px solid var(--border);border-radius:14px}
 
-  @media(max-width:1200px){
-    .aula{grid-template-columns:44px 92px minmax(0,1fr)}
-    .aula-meta{grid-column:1/-1;grid-template-columns:70px 130px 1fr;margin-top:6px;padding-left:60px}
-  }
-  @media(max-width:1100px){ .stats-top{grid-template-columns:repeat(2,1fr)} }
-  @media(max-width:820px){
-    .stats-top{grid-template-columns:1fr}
-    .aula{grid-template-columns:44px 1fr;padding:14px 16px}
-    .aula-tag{grid-row:1}
-    .aula-nome{grid-column:1/-1}
-    .aula-meta{grid-template-columns:1fr 1fr;padding-left:0;gap:10px}
-    .aula-btn{grid-column:1/-1}
-    .painel{padding:0 16px 16px}
-    .filtro-right .ord-lbl{display:none}
+  @media(max-width:560px){
+    .aula{grid-template-columns:40px minmax(0,1fr);gap:11px}
+    .aula-btn{grid-column:1/-1;margin-top:4px;justify-content:center}
+    .filtro-bar .ord-lbl{display:none}
   }
 </style>
 </head>
@@ -252,42 +281,35 @@ function ordenar(arr){
 }
 
 function render(){
-  const total = aulas.length;
+  const total    = aulas.length;
   const completo = aulas.filter(a=>a.estado==="completo").length;
   const parcial  = aulas.filter(a=>a.estado==="parcial").length;
   const sem      = aulas.filter(a=>a.estado==="sem").length;
-  const pct = total ? Math.round(100*completo/total) : 0;
-  const elogio = pct>=80?"Excelente!":pct>=50?"Muito bom!":pct>=25?"Continue assim!":"Vamos começar!";
+  const comVisto = completo + parcial;
+  const pend     = parcial + sem;
+  const pct      = total ? Math.round(100*completo/total) : 0;
 
-  const R=29, Cc=2*Math.PI*R, off=Cc*(1-pct/100);
+  const R=24, Cc=2*Math.PI*R, off=Cc*(1-pct/100);
+  const partes = [];
+  if(parcial) partes.push(`${parcial} parcial${parcial>1?"is":""}`);
+  if(sem)     partes.push(`${sem} sem visto`);
   document.getElementById("statsTop").innerHTML = `
-    <div class="scard">
-      <div class="sc-ico roxo">${ICO.book}</div>
-      <div><div class="sc-num">${total}</div><div class="sc-lbl">Aulas no bimestre</div><div class="sc-sub">Total disponíveis</div></div>
-    </div>
-    <div class="scard">
-      <div class="sc-ico verde">${ICO.checkSm}</div>
-      <div style="flex:1"><div class="sc-num">${completo}</div><div class="sc-lbl">Vistos completos</div>
-      <div class="sc-sub g">${pct}% do total</div><div class="sc-bar"><span style="width:${pct}%"></span></div></div>
-    </div>
-    <div class="scard">
-      <div class="sc-ico laranja">${ICO.clock}</div>
-      <div><div class="sc-num">${sem+parcial}</div><div class="sc-lbl">Vistos pendentes</div>
-      ${parcial?`<div class="sc-sub r">${parcial} parcial${parcial>1?"is":""}</div>`:`<div class="sc-sub">${sem} sem visto</div>`}</div>
-    </div>
-    <div class="scard prog">
-      <svg class="donut" viewBox="0 0 70 70">
-        <circle cx="35" cy="35" r="${R}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="8"/>
-        <circle cx="35" cy="35" r="${R}" fill="none" stroke="var(--purple)" stroke-width="8" stroke-linecap="round"
-          stroke-dasharray="${Cc.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 35 35)"/>
-        <text x="35" y="40" text-anchor="middle" font-size="16">${pct}%</text>
+    <div class="stat-compact">
+      <svg class="donut" viewBox="0 0 60 60">
+        <circle cx="30" cy="30" r="${R}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="6"/>
+        <circle cx="30" cy="30" r="${R}" fill="none" stroke="var(--green)" stroke-width="6" stroke-linecap="round"
+          stroke-dasharray="${Cc.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 30 30)"/>
+        <text x="30" y="35" text-anchor="middle" font-size="15">${pct}%</text>
       </svg>
-      <div class="prog-r"><div class="sc-lbl">Progresso do bimestre</div><div class="elogio">${elogio}</div></div>
+      <div class="sc-right">
+        <div class="sc-big"><b>${completo}</b> de ${total} vistos completos</div>
+        <div class="sc-sub">${pend?`<span class="p">${pend} pendente${pend>1?"s":""}</span>${partes.length?" · "+partes.join(", "):""}`:"Tudo em dia! 🎉"}</div>
+      </div>
     </div>`;
 
-  const tabs = [["todas","Todas",total],["completo","Visto completo",completo],["parcial","Visto parcial",parcial],["sem","Sem visto",sem]];
+  const tabs = [["todas","Todas",total],["com","Com visto",comVisto],["sem","Sem visto",sem]];
   document.getElementById("filtroTabs").innerHTML = tabs.map(([k,l,c])=>
-    `<button class="f-tab ${k===filtro?"on":""}" data-f="${k}">${l}<span class="cnt">${c}</span></button>`).join("");
+    `<button class="f-tab ${k===filtro?"on":""}" data-f="${k}">${l} <span class="cnt">${c}</span></button>`).join("");
   document.querySelectorAll(".f-tab").forEach(b=>b.onclick=()=>{ filtro=b.dataset.f; render(); });
 
   const lista = document.getElementById("lista");
@@ -296,50 +318,58 @@ function render(){
     return;
   }
 
-  const secoes = [
-    ["completo","Visto completo",ICO.check],
-    ["parcial","Visto parcial",ICO.minus],
-    ["sem","Sem visto",ICO.clock],
+  const grupos = [
+    ["com","Com visto", a=>a.estado!=="sem", ICO.check],
+    ["sem","Sem visto", a=>a.estado==="sem", ICO.clock],
   ];
   let html = "";
-  secoes.forEach(([est,label,ico])=>{
-    if(filtro!=="todas" && filtro!==est) return;
-    const arr = ordenar(aulas.filter(a=>a.estado===est));
+  grupos.forEach(([grp,label,filtroFn,ico])=>{
+    if(filtro!=="todas" && filtro!==grp) return;
+    const arr = ordenar(aulas.filter(filtroFn));
     if(!arr.length) return;
-    html += `<div class="sec-h">${ico}${label} <span class="n">(${arr.length})</span></div><div class="aulas-bloco">${arr.map(linha).join("")}</div>`;
+    html += `<div class="sec-h"><div class="ico">${ico}</div>
+      <div class="t">${label} <span class="n">(${arr.length})</span></div></div>
+      <div class="aulas-bloco">${arr.map(linha).join("")}</div>`;
   });
   if(!html) html = `<div class="vazio">Nenhuma aula nesse filtro.</div>`;
   lista.innerHTML = html;
 
-  lista.querySelectorAll(".aula-btn[data-i]").forEach(btn=>btn.onclick=()=>toggleAula(btn.dataset.i));
+  lista.querySelectorAll(".aula[data-i]").forEach(el=>el.onclick=()=>toggleAula(el.dataset.i));
 }
 
 function tagHTML(a){
   const l = a.tipo==="teorica" ? "Teoria" : a.tipo==="exercicios" ? "Exercícios" : "";
-  return l ? `<span class="aula-tag">${l}</span>` : `<span class="aula-tag" style="visibility:hidden">-</span>`;
+  return l ? `<span class="aula-tag">${l}</span>` : "";
 }
 function statusHTML(a){
-  const map = { completo:["completo","Visto completo"], parcial:["parcial","Visto parcial"], sem:["sem","Sem visto"] };
-  const [cls,txt] = map[a.estado];
-  return `<span class="aula-status ${cls}"><span class="dot"></span>${txt}</span>`;
+  const map = {
+    completo:["completo","Visto completo",ICO.checkSm],
+    parcial :["parcial","Visto parcial",ICO.minus],
+    sem     :["sem","Sem visto",ICO.clock],
+  };
+  const [cls,txt,ic] = map[a.estado];
+  return `<span class="aula-status ${cls}">${ic}${txt}</span>`;
 }
 function btnHTML(a){
-  if(!a.materialRef) return `<button class="aula-btn off">Sem material</button>`;
-  return `<button class="aula-btn" data-i="${a.id}">Ver conteúdo ${ICO.chev}</button>`;
+  if(!a.materialRef) return `<button class="aula-btn off" disabled>Sem material</button>`;
+  return `<button class="aula-btn"><span class="t-ver">Ver conteúdo</span><span class="t-oc">Ocultar conteúdo</span> ${ICO.chev}</button>`;
 }
-
 function linha(a){
   return `
     <div class="aula-item ${a.estado}" id="item-${a.id}">
-      <div class="aula ${a.estado}">
-        <div class="aula-num">${a.num}</div>
-        ${tagHTML(a)}
-        <div class="aula-nome">${a.nome}</div>
-        <div class="aula-meta">
-          <span class="aula-data">${a.data?ICO.cal+fmtData(a.data):""}</span>
-          ${statusHTML(a)}
-          ${btnHTML(a)}
+      <div class="aula" data-i="${a.id}">
+        <div class="ring">
+          <svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17.5" fill="none" stroke-width="2.5"/></svg>
+          <div class="num">${a.num}</div>
         </div>
+        <div class="aula-main">
+          <div class="headline">${tagHTML(a)}<span class="aula-nome">${a.nome}</span></div>
+          <div class="aula-meta">
+            <span class="aula-data">${ICO.cal}${a.data?fmtData(a.data):"—"}</span>
+            ${statusHTML(a)}
+          </div>
+        </div>
+        ${btnHTML(a)}
       </div>
       <div class="painel" id="painel-${a.id}"></div>
     </div>`;
@@ -377,11 +407,11 @@ async function toggleAula(id){
       carregados[a.materialRef] = html;
     }
     painel.innerHTML = `
-      <div class="painel-head">
-        ${ICO.book2}Conteúdo da aula
-        <a class="abrir" href="${a.materialRef}" target="_blank">abrir em nova aba ↗</a>
-      </div>
-      <div class="painel-inner">${extrairMiolo(html)}</div>`;
+      <div class="sheet">
+        <div class="sheet-head">${ICO.book2}Conteúdo da aula
+          <a class="abrir" href="${a.materialRef}" target="_blank">abrir ↗</a></div>
+        <div class="sheet-body content-light">${extrairMiolo(html)}</div>
+      </div>`;
     painel.dataset.loaded = "1";
     painel.querySelectorAll(".au-nav a").forEach(el=>{
       el.addEventListener("click",e=>{ const t=painel.querySelector(el.getAttribute("href")); if(t){e.preventDefault();t.scrollIntoView({behavior:"smooth",block:"start"});} });
