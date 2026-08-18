@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Diagnóstico Vistos</title>
+<style>
+  body{font-family:system-ui,sans-serif;background:#141026;color:#eee;margin:0;padding:24px;line-height:1.5}
+  h1{font-size:18px} h2{font-size:15px;margin-top:22px;color:#c79bff}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+  select,button{background:#241a45;color:#fff;border:1px solid #443;border-radius:8px;padding:8px 12px;font-size:14px;cursor:pointer}
+  table{border-collapse:collapse;width:100%;margin-top:8px;font-size:13px}
+  th,td{border:1px solid #332;padding:6px 9px;text-align:left}
+  th{background:#241a45}
+  .tag{display:inline-block;background:#2a2050;border:1px solid #443;border-radius:6px;padding:1px 7px;font-size:11px}
+  .hi{background:#1e3a2a}
+  code{background:#000;padding:1px 5px;border-radius:4px;font-size:12px}
+  .muted{color:#999}
+</style>
+</head>
+<body>
+<h1>🔍 Diagnóstico de Vistos — o que está gravado no Firebase</h1>
+<p class="muted">Escolha a turma. A tabela mostra <b>todas</b> as atividades de visto, em <b>todos os bimestres</b>, direto do banco.
+A linha destacada em verde é o bimestre atual (3).</p>
+
+<div class="row">
+  <label>Turma: <select id="selTurma"></select></label>
+  <button onclick="rodar()">Recarregar</button>
+  <span id="status" class="muted"></span>
+</div>
+
+<div id="saida"></div>
+
+<script type="module">
+import { db } from "/js/firebase-config.js";
+import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ALUNOS_POR_TURMA, turmaAgora, bimestreAtual } from "/js/constants.js";
+
+const TURMAS = Object.keys(ALUNOS_POR_TURMA);
+const sel = document.getElementById("selTurma");
+sel.innerHTML = TURMAS.map(t=>`<option>${t}</option>`).join("");
+const turmaSugerida = turmaAgora() || TURMAS[0];
+sel.value = TURMAS.includes(turmaSugerida) ? turmaSugerida : TURMAS[0];
+
+const bimAtual = bimestreAtual();
+document.getElementById("status").textContent =
+  `turmaAgora()=${turmaAgora()||"(null → fallback)"} · bimestreAtual()=${bimAtual}`;
+
+window.rodar = async function(){
+  const turma = sel.value;
+  const out = document.getElementById("saida");
+  out.innerHTML = "Carregando…";
+  let snap;
+  try { snap = await get(ref(db, `vistos/${turma}`)); }
+  catch(e){ out.innerHTML = `<b style="color:#f88">Erro ao ler vistos/${turma}:</b> ${e.message}`; return; }
+
+  if (!snap.exists()){
+    out.innerHTML = `<h2>vistos/${turma}</h2><p style="color:#f88">NÃO existe nenhum visto para a turma ${turma} em nenhum bimestre.</p>
+      <p class="muted">Se você criou atividades achando que era ${turma}, verifique se a turma no topo da página de Vistos era outra.</p>`;
+    return;
+  }
+
+  const val = snap.val();
+  let html = `<h2>vistos/${turma}</h2>`;
+  html += `<table><tr><th>Bimestre</th><th>Nº de atividades</th><th>Atividades (nome · data)</th></tr>`;
+  const bims = Object.keys(val).sort();
+  for (const bim of bims){
+    const ativs = (val[bim] && val[bim].atividades) || {};
+    const lista = Object.entries(ativs).map(([id,a])=>`${a.nome||"(sem nome)"} · <code>${a.data||"sem data"}</code>`);
+    const cls = (+bim===bimAtual) ? "hi" : "";
+    html += `<tr class="${cls}"><td><b>${bim}º</b> ${(+bim===bimAtual)?'<span class="tag">atual</span>':""}</td>
+      <td>${lista.length}</td>
+      <td>${lista.length?lista.join("<br>"):'<span class="muted">— vazio —</span>'}</td></tr>`;
+  }
+  html += `</table>`;
+
+  // resumo do que a página de Vistos mostraria
+  const noBimAtual = ((val[bimAtual]||{}).atividades)||{};
+  html += `<h2>👉 O que a página de Vistos (turma ${turma}, bim ${bimAtual}) deveria mostrar</h2>`;
+  const n = Object.keys(noBimAtual).length;
+  html += n
+    ? `<p style="color:#8f8">${n} atividade(s) no bim ${bimAtual}. Se a página de Vistos está vazia com esta MESMA turma e bimestre, o problema é de exibição — me avise.</p>`
+    : `<p style="color:#fc8">0 atividades no bim ${bimAtual} desta turma. Suas atividades estão em OUTRO bimestre (veja a tabela acima) ou em OUTRA turma (troque no seletor). É isso que explica a página vazia.</p>`;
+
+  out.innerHTML = html;
+};
+
+rodar();
+</script>
+</body>
+</html>

@@ -244,9 +244,11 @@ export async function buscarAtiv5Aluno(turma, nome) {
 // Monta o boletim completo de um aluno — usado em a-notas.html e no card da home.
 // Retorna null apenas se as notas ainda não foram disponibilizadas pelo professor.
 // Se liberado mas sem nota salva, retorna boletim com dados automáticos + manuais nulos.
-export async function montarBoletim(turma, nome) {
-  const liberado = await notasLiberadas(turma);
-  if (!liberado) return null;
+export async function montarBoletim(turma, nome, opcoes = {}) {
+  if (!opcoes.ignorarLiberacao) {
+    const liberado = await notasLiberadas(turma);
+    if (!liberado) return null;
+  }
 
   // Busca tudo em paralelo — não bloqueia em caso de nota manual ainda não salva
   const [salvo, progresso, ativ4Map, ativ5Pts, nivelPerfil] = await Promise.all([

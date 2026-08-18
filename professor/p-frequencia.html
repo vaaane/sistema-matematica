@@ -54,7 +54,6 @@
   .mk:hover{transform:scale(1.15);filter:brightness(1.1)}
   .mk.p{background:var(--green-pale);color:var(--green)}
   .mk.f{background:var(--red-pale);color:var(--red)}
-  .mk.at{background:rgba(59,130,246,.15);color:#60a5fa;font-size:10px}
   .col-tot{position:sticky;right:0;background:var(--card2,#141428);border-left:1px solid var(--border);min-width:64px}
   .tot-v{font-family:'Orbitron',monospace;font-weight:700;font-size:15px}
   .tot-v.zero{color:var(--text-muted)} .tot-v.some{color:var(--gold)} .tot-v.high{color:var(--red)}
@@ -106,7 +105,7 @@
 </div>
 
 <script type="module">
-import { ALUNOS_POR_TURMA, numeroChamada, turmaAgora, dentroDoAtestado, normalizarAtestados } from "/js/constants.js";
+import { ALUNOS_POR_TURMA, numeroChamada, turmaAgora, GRADE_TURMAS, BIMESTRES } from "/js/constants.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -121,24 +120,39 @@ let bimestre = 3;
 
 let dias = [];       // [{data, pd1}] — um por DIA que teve aula
 let chamada = {};    // { "YYYY-MM-DD": { aluno: true(falta) } }
-let atestados = {};  // { aluno:[ {inicio,fim,ts,obs} ] }
 
 const fmtData = iso => { if(!iso) return ""; const [,m,d]=iso.split("-"); return `${d}/${m}`; };
 const diaSemana = iso => { try{ return ["dom","seg","ter","qua","qui","sex","sáb"][new Date(iso+"T12:00:00").getDay()]; }catch(e){ return ""; } };
-const temAtestado = (data, aluno) => dentroDoAtestado(data, atestados[aluno]||[]);
-const faltou = (data, aluno) => !!(chamada[data] && chamada[data][aluno]) && !temAtestado(data, aluno);
-const temFaltaAtestada = (data, aluno) => !!(chamada[data] && chamada[data][aluno]) && temAtestado(data, aluno);
+const faltou = (data, aluno) => !!(chamada[data] && chamada[data][aluno]);
 
 async function carregar(){
   document.getElementById("topbar-sub").textContent = `Turma ${turma} · ${bimestre}º bimestre`;
   document.getElementById("tbl").innerHTML = `<tbody><tr><td class="vazio">Carregando…</td></tr></tbody>`;
   try{
-    const [snapA, snapC, snapAt] = await Promise.all([
+    const [snapA, snapC, snapNL] = await Promise.all([
       get(ref(db, `aulas/${turma}/${bimestre}`)),
       get(ref(db, `chamada/${turma}/${bimestre}`)),
-      get(ref(db, `atestados/${turma}`)),
+      get(ref(db, "calendario/naoLetivos")),
     ]);
+    const naoLetivos = snapNL.exists() ? (snapNL.val()||{}) : {};
     const porData = {};
+
+    // (1) TODOS os dias letivos da turma no bimestre, pela grade de horário —
+    // assim a chamada aparece mesmo sem aula lançada no Diário.
+    const grade = GRADE_TURMAS[turma] || [];
+    const bim = BIMESTRES.find(b => b.n === bimestre);
+    if (bim && grade.length) {
+      const ini = new Date(bim.inicio + "T12:00:00");
+      const fim = new Date(bim.fim + "T12:00:00");
+      for (let d = new Date(ini); d <= fim; d.setDate(d.getDate()+1)) {
+        const ds = d.toISOString().slice(0,10);
+        if (grade.includes(d.getDay()) && !naoLetivos[ds]) {
+          porData[ds] = { data: ds, pd1:false };
+        }
+      }
+    }
+
+    // (2) aulas lançadas no Diário: garantem o dia e marcam PD1 (mesmo fora da grade)
     if (snapA.exists()) {
       for (const a of Object.values(snapA.val())) {
         if (!a || !a.data) continue;
@@ -146,15 +160,20 @@ async function carregar(){
         if (a.pd1) d.pd1 = true;
       }
     }
-    dias = Object.values(porData).sort((x,y)=> x.data<y.data ? -1 : 1);
+
     chamada = {};
     if (snapC.exists()) {
       for (const [k,v] of Object.entries(snapC.val())) {
-        if (/^\d{4}-\d{2}-\d{2}$/.test(k)) chamada[k] = v || {};
+        if (/^\d{4}-\d{2}-\d{2}$/.test(k)) {
+          chamada[k] = v || {};
+          // (3) qualquer dia que já tenha chamada aparece, mesmo sem aula/grade
+          porData[k] ||= { data:k, pd1:false };
+        }
       }
     }
-    atestados = normalizarAtestados(snapAt.exists() ? snapAt.val() : {});
-  }catch(e){ console.error(e); dias=[]; chamada={}; atestados={}; }
+
+    dias = Object.values(porData).sort((x,y)=> x.data<y.data ? -1 : 1);
+  }catch(e){ console.error(e); dias=[]; chamada={}; }
   render();
 }
 
@@ -197,11 +216,8 @@ function render(){
 
   const body = `<tbody>${alunos.map((al)=>{
     const cells = dias.map(d=>{
-      const at = temFaltaAtestada(d.data, al);
       const f = faltou(d.data, al);
-      const st = at?"at":(f?"f":"p"), sym = at?"AT":(f?"F":"P");
-      const tit = at?"atestado médico (justificada)":"clique para alternar";
-      return `<td class="cell"><span class="mk ${st}" data-d="${d.data}" data-al="${al.replace(/"/g,'&quot;')}" ${at?'data-at="1"':""} title="${tit}">${sym}</span></td>`;
+      return `<td class="cell"><span class="mk ${f?"f":"p"}" data-d="${d.data}" data-al="${al.replace(/"/g,'&quot;')}" title="clique para alternar">${f?"F":"P"}</span></td>`;
     }).join("");
     const nf = faltasDe(al);
     const cls = nf===0?"zero":nf>=3?"high":"some";
@@ -223,10 +239,7 @@ function render(){
 
   const tbl = document.getElementById("tbl");
   tbl.innerHTML = head + body + foot;
-  tbl.querySelectorAll(".mk[data-d]").forEach(el => el.onclick = () => {
-    if(el.dataset.at){ alert("Este dia está coberto por um atestado médico. Remova o atestado na Ficha do aluno para alterar a frequência."); return; }
-    toggleFalta(el.dataset.d, el.dataset.al);
-  });
+  tbl.querySelectorAll(".mk[data-d]").forEach(el => el.onclick = () => toggleFalta(el.dataset.d, el.dataset.al));
   document.getElementById("rodape").innerHTML = `Turma <b>${turma}</b> · ${bimestre}º bim — ${nAlunos} alunos · ${nDias} dias · <b>${totalFaltas}</b> falta(s) no total. <span style="color:var(--text-muted)">Clique numa célula para alternar presença/falta.</span>`;
 }
 

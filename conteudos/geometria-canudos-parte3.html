@@ -8,20 +8,27 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <!-- ═══ FICHA DA AULA (lida pelo gerador do index — não remover) ═══ -->
-  <meta name="aula:id"       content="revisao_inteiros_valornumerico">
-  <meta name="aula:tipo"     content="atividade">
-  <meta name="aula:eixo"     content="numeros">
-  <meta name="aula:bimestre" content="2">
-  <meta name="aula:titulo"   content="Revisão — Números Inteiros & Valor Numérico">
-  <meta name="aula:resumo"   content="Revisão de números inteiros e valor numérico.">
-  <meta name="aula:tema"     content="Números Inteiros e Valor Numérico">
+  <!-- ═══ FICHA DA AULA · PREENCHA ANTES DE SALVAR ═══
+       id       = MESMO nome do arquivo, sem .html (ex.: simplificacao-teoria)
+       tipo     = teoria | atividade   (atividade cobre lista/revisao/prova/jogo)
+       eixo     = numeros | algebra | geometria | grandezas | probestat
+       bimestre = 1 | 2 | 3 | 4
+       titulo   = texto que aparece na biblioteca
+       tema     = unidade que agrupa as aulas (ex.: Expressões Algébricas)
+       resumo   = 1 linha p/ vistos/diário; preenche o modal automaticamente -->
+  <meta name="aula:id"       content="topico-tipo">
+  <meta name="aula:tipo"     content="teoria">
+  <meta name="aula:eixo"     content="algebra">
+  <meta name="aula:bimestre" content="3">
+  <meta name="aula:titulo"   content="Teoria — Título da Aula">
+  <meta name="aula:resumo"   content="Frase curta que aparece nos vistos/diário">
+  <meta name="aula:tema"     content="Expressões Algébricas">
   <!-- ┌─────────────────────────────────────────────────────────────┐
        │ MODELO DE PÁGINA DE CONTEÚDO / EXERCÍCIOS · Sistema de Mat.  │
        │ Preencha:  TÍTULO • TURMA/DATA/TEMA • as SEÇÕES • EXERCÍCIOS │
        │ Blocos disponíveis estão marcados com comentários abaixo.    │
        └─────────────────────────────────────────────────────────────┘ -->
-  <title>Revisão — Números Inteiros e Valor Numérico — Sistema de Matemática</title>
+  <title>Geometria com Canudos — Parte 3 — Sistema de Matemática</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -154,6 +161,14 @@
   .au-btn:hover{filter:brightness(1.08)}
   .au-note{font-size:11px;color:var(--text-muted,rgba(255,255,255,.45));margin-top:14px}
 
+  /* — Aulas relacionadas (SÓ em aula teórica) — */
+  .au-rel{text-align:left;background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:16px;padding:16px 18px}
+  .au-rel-title{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .au-rel-item{display:flex;align-items:center;justify-content:space-between;gap:10px;text-decoration:none;color:var(--text,#f1eefb);font-size:13.5px;font-weight:600;padding:11px 13px;border-radius:11px;background:rgba(255,255,255,.03);border:1px solid var(--border,rgba(255,255,255,.07));margin-bottom:8px}
+  .au-rel-item:last-child{margin-bottom:0}
+  .au-rel-item:hover{border-color:rgba(124,92,252,.45)}
+  .au-rel-item span{color:var(--purple,#b6a2ff);font-weight:800}
+
   /* — Helpers de matemática (HTML puro, sem dependência) — */
   .pot{font-weight:700}
   .frac{display:inline-flex;flex-direction:column;text-align:center;vertical-align:middle;font-size:.82em;line-height:1.02;margin:0 .18em}
@@ -161,19 +176,6 @@
   .frac>span:last-child{padding:0 .32em}
   .mono{font-variant-numeric:tabular-nums}
 
-  /* — Grade de "Calcule" (toque para revelar) — */
-  .calc-tools{display:flex;justify-content:flex-end;margin-bottom:10px}
-  .calc-reveal{font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;color:var(--gold,#f0a500);background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.28);border-radius:9px;padding:6px 12px}
-  .calc-reveal:hover{background:rgba(240,165,0,.14)}
-  .calc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:9px;margin-bottom:6px}
-  .calc-item{font-family:inherit;text-align:left;cursor:pointer;background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:11px;padding:11px 13px;color:inherit;transition:border-color .2s,background .2s}
-  .calc-item:hover{border-color:rgba(124,92,252,.45)}
-  .calc-item.on{border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.06)}
-  .calc-q{font-size:14.5px;font-weight:600;color:rgba(255,255,255,.9)}
-  .calc-q .lt{color:var(--purple,#b6a2ff);font-weight:800;margin-right:6px}
-  .calc-a{font-size:14.5px;font-weight:800;color:var(--green,#3ddc84);margin-top:6px;display:none}
-  .calc-item.on .calc-a{display:block}
-  .calc-hint{font-size:11.5px;color:var(--text-muted,rgba(255,255,255,.5));margin-bottom:12px}
   :focus-visible{outline:2px solid var(--purple,#7c5cfc);outline-offset:2px}
   @media(prefers-reduced-motion:reduce){.ex-answer,.ex-toggle .arw{transition:none}}
   </style>
@@ -183,138 +185,239 @@
   <aside class="sidebar" id="sidebar"></aside>
   <div class="main">
 
-    <!-- TOPBAR (padrão do site) -->
     <div class="topbar">
       <div class="topbar-left">
-        <div class="topbar-title">📚 Material de Aula</div>
-        <div class="topbar-sub">Conteúdo e exercícios para revisar</div>
+        <div class="topbar-title">📐 Material de Aula</div>
+        <div class="topbar-sub">Geometria com Canudos · Parte 3</div>
       </div>
     </div>
 
     <div class="content">
       <div class="au">
 
-        <!-- ════════ CABEÇALHO DA AULA ════════ -->
         <header class="au-hero">
-          <div class="au-hero-eyebrow">Matemática · 8º ano · Revisão</div>
-          <h1 class="au-hero-title">Números Inteiros &amp; Valor Numérico</h1>
+          <div class="au-hero-eyebrow">Matemática · 8º ano · PD1</div>
+          <h1 class="au-hero-title">Geometria com Canudos — Parte 3</h1>
           <div class="au-hero-meta">
-            <span class="au-meta gold">Revisão</span>
+            <span class="au-meta gold">Geometria</span>
+            <span class="au-meta">O cubo</span>
             <span class="au-meta">Turmas 8D–8H</span>
-            <span class="au-meta">Aula de 27/07</span>
+            <span class="au-meta">Duplas</span>
           </div>
         </header>
 
         <nav class="au-nav">
-          <a href="#s1">① Operações</a>
-          <a href="#s2">② Valor numérico</a>
+          <a href="#s1">① O cubo</a>
+          <a href="#s2">② O cubo deforma?</a>
+          <a href="#s3">③ Diagonais nas faces</a>
+          <a href="#s4">④ Fechando o projeto</a>
+          <a href="#exercicios">✏️ Investigue</a>
         </nav>
 
-        <!-- LEMBRETE (recap de revisão — apague se não quiser) -->
-        <div class="au-def">
-          <div class="au-def-label">Lembrete · Regras de sinais</div>
-          <div class="au-def-body">
-            <b>Somar/subtrair:</b> sinais <b>iguais</b> → soma e mantém o sinal; sinais <b>diferentes</b> → subtrai e fica com o sinal do maior. &nbsp;·&nbsp;
-            <b>Multiplicar/dividir:</b> sinais <b>iguais</b> → resultado <b>+</b>; sinais <b>diferentes</b> → resultado <b>−</b>.
-          </div>
-        </div>
-
-        <!-- ════════ SEÇÃO 1 — OPERAÇÕES ════════ -->
+        <!-- SEÇÃO 1 -->
         <section class="au-sec" id="s1">
           <div class="au-sec-head">
             <span class="au-sec-num">1</span>
-            <span class="au-sec-title">Calcule</span>
-            <span class="au-sec-tag tag-pratica">Pratique</span>
+            <span class="au-sec-title">Construindo o cubo</span>
+            <span class="au-sec-tag tag-pratica">Construir</span>
           </div>
-          <p class="calc-hint">Toque em cada item para conferir o resultado.</p>
-          <div class="calc-tools">
-            <button class="calc-reveal" onclick="revelarTodas(this)">Revelar todas</button>
-          </div>
-          <div class="calc-grid" id="calc1">
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">a)</span>−5 − 3</div><div class="calc-a">= −8</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">b)</span>10 − 12</div><div class="calc-a">= −2</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">c)</span>−2 + 7</div><div class="calc-a">= 5</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">d)</span>−10 − 15</div><div class="calc-a">= −25</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">e)</span>7 − 5</div><div class="calc-a">= 2</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">f)</span>2 · (−5)</div><div class="calc-a">= −10</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">g)</span>(−7) · (−2)</div><div class="calc-a">= 14</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">h)</span>10 ÷ (−5)</div><div class="calc-a">= −2</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">i)</span>(−20) ÷ (−4)</div><div class="calc-a">= 5</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">j)</span>−1 + (−1)</div><div class="calc-a">= −2</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">k)</span>−1 − (−1)</div><div class="calc-a">= 0</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">l)</span>1 − (1)</div><div class="calc-a">= 0</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">m)</span>1 + (−1)</div><div class="calc-a">= 0</div></button>
+
+          <figure class="au-fig">
+            <svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;background:#15102e">
+              <!-- face de trás -->
+              <rect x="110" y="45" width="120" height="120" fill="none" stroke="#8a7fb8" stroke-width="4" stroke-dasharray="6 6"/>
+              <!-- face da frente -->
+              <rect x="70" y="75" width="120" height="120" fill="rgba(240,165,0,.05)" stroke="#f0a500" stroke-width="6" stroke-linejoin="round"/>
+              <!-- arestas de ligação -->
+              <line x1="70" y1="75" x2="110" y2="45" stroke="#f0a500" stroke-width="5" stroke-linecap="round"/>
+              <line x1="190" y1="75" x2="230" y2="45" stroke="#f0a500" stroke-width="5" stroke-linecap="round"/>
+              <line x1="190" y1="195" x2="230" y2="165" stroke="#f0a500" stroke-width="5" stroke-linecap="round"/>
+              <line x1="70" y1="195" x2="110" y2="165" stroke="#8a7fb8" stroke-width="4" stroke-dasharray="6 6"/>
+            </svg>
+            <figcaption>Cubo — 6 faces quadradas, 12 arestas e 8 vértices.</figcaption>
+          </figure>
+
+          <p class="au-p">O <b>cubo</b> tem <b>6 faces</b>, todas <b>quadradas</b> e iguais. Monte primeiro o quadrado de baixo, depois o de cima, e ligue os dois com 4 arestas verticais.</p>
+
+          <div class="au-fgrid">
+            <div class="au-fmini"><div class="au-fmini-name">Faces (quadrados)</div><div class="au-fmini-eq">6</div></div>
+            <div class="au-fmini"><div class="au-fmini-name">Arestas (canudos)</div><div class="au-fmini-eq">12</div></div>
+            <div class="au-fmini"><div class="au-fmini-name">Vértices (bicos)</div><div class="au-fmini-eq">8</div></div>
+            <div class="au-fmini"><div class="au-fmini-name">Formato das faces</div><div class="au-fmini-eq">▢ quadrado</div></div>
           </div>
         </section>
 
-        <!-- ════════ SEÇÃO 2 — VALOR NUMÉRICO ════════ -->
+        <!-- SEÇÃO 2 -->
         <section class="au-sec" id="s2">
           <div class="au-sec-head">
             <span class="au-sec-num">2</span>
-            <span class="au-sec-title">Valor numérico da expressão</span>
-            <span class="au-sec-tag tag-pratica">Pratique</span>
+            <span class="au-sec-title">O cubo deforma?</span>
+            <span class="au-sec-tag tag-pratica">Investigar</span>
           </div>
-          <p class="au-p" style="margin-bottom:8px">Substitua cada letra pelo número indicado e calcule.</p>
 
-          <div class="au-warn" style="margin-bottom:16px">
+          <p class="au-p">Segure o cubo montado e empurre-o de lado, como fizemos com o quadrado na Parte 1. Observe o que acontece.</p>
+
+          <div class="au-warn">
             <span class="ic">⚠️</span>
-            <div>Ao substituir um número negativo, <b>use parênteses</b>: em x² com x = −2, faça (−2)² = 4 — e não −2² = −4.</div>
+            <div><b>O cubo "amassa"!</b> Como todas as suas faces são <b>quadrados</b> — e o quadrado não é rígido —, o cubo inteiro <b>entorta</b> para o lado, virando um sólido inclinado. Sozinho, ele não é firme.</div>
           </div>
+
+          <div class="au-def">
+            <div class="au-def-label">Ligação com a Parte 1</div>
+            <div class="au-def-body">É o mesmo problema do quadrado, agora em <b>3 dimensões</b>. E a solução vai ser a mesma: <b>triangular</b> as faces com diagonais.</div>
+          </div>
+        </section>
+
+        <!-- SEÇÃO 3 -->
+        <section class="au-sec" id="s3">
+          <div class="au-sec-head">
+            <span class="au-sec-num">3</span>
+            <span class="au-sec-title">Diagonais nas faces</span>
+            <span class="au-sec-tag tag-pratica">Construir</span>
+          </div>
+
+          <figure class="au-fig">
+            <svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;background:#15102e">
+              <rect x="110" y="45" width="120" height="120" fill="none" stroke="#8a7fb8" stroke-width="4" stroke-dasharray="6 6"/>
+              <rect x="70" y="75" width="120" height="120" fill="rgba(240,165,0,.05)" stroke="#f0a500" stroke-width="6" stroke-linejoin="round"/>
+              <line x1="70" y1="75" x2="110" y2="45" stroke="#f0a500" stroke-width="5" stroke-linecap="round"/>
+              <line x1="190" y1="75" x2="230" y2="45" stroke="#f0a500" stroke-width="5" stroke-linecap="round"/>
+              <line x1="190" y1="195" x2="230" y2="165" stroke="#f0a500" stroke-width="5" stroke-linecap="round"/>
+              <line x1="70" y1="195" x2="110" y2="165" stroke="#8a7fb8" stroke-width="4" stroke-dasharray="6 6"/>
+              <!-- diagonais coloridas nas faces visíveis -->
+              <line x1="70" y1="195" x2="190" y2="75" stroke="#3ddc84" stroke-width="5" stroke-linecap="round"/>
+              <line x1="190" y1="75" x2="230" y2="165" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+            </svg>
+            <figcaption>Cubo com diagonais (canudos coloridos) nas faces — cada quadrado vira dois triângulos.</figcaption>
+          </figure>
+
+          <p class="au-p">Adicione uma <b>diagonal colorida</b> em cada face do cubo. Cada face quadrada se divide em <b>dois triângulos</b>. Teste a firmeza de novo.</p>
+
+          <div class="au-def">
+            <div class="au-def-label">Triangulação no espaço</div>
+            <div class="au-def-body">Com as diagonais, todas as faces ficam <b>trianguladas</b> e o cubo para de deformar — fica <b>rígido</b>. É o mesmo princípio do quadrado com diagonal, aplicado a um sólido.</div>
+          </div>
+
+          <div class="au-tip">
+            <span class="ic">🏗️</span>
+            <div><b>Engenharia de verdade:</b> galpões, arranha-céus e torres metálicas usam exatamente isso — barras diagonais (chamadas <b>contraventamentos</b>) que triangulam as estruturas e impedem que o vento as incline.</div>
+          </div>
+        </section>
+
+        <!-- SEÇÃO 4 -->
+        <section class="au-sec" id="s4">
+          <div class="au-sec-head">
+            <span class="au-sec-num">4</span>
+            <span class="au-sec-title">Fechando o projeto</span>
+            <span class="au-sec-tag tag-teoria">Conclusão</span>
+          </div>
+
+          <p class="au-p">Reunindo tudo o que descobrimos nas três partes:</p>
+
+          <div class="au-def">
+            <div class="au-def-label">A grande conclusão</div>
+            <div class="au-def-body">Estruturas feitas de <b>quadrados</b> deformam; estruturas feitas de <b>triângulos</b> são rígidas. Para deixar qualquer estrutura firme, nós a <b>trianguladamos</b> com diagonais. O tetraedro já nasce firme porque só tem triângulos; o cubo precisa de ajuda.</div>
+          </div>
+
+          <div class="au-warn">
+            <span class="ic">🔎</span>
+            <div><b>Euler de novo.</b> No cubo: V − A + F = 8 − 12 + 6 = <b>2</b>. A mesma relação do tetraedro — vale para todos esses sólidos!</div>
+          </div>
+        </section>
+
+        <!-- INVESTIGUE -->
+        <section class="au-sec" id="exercicios">
+          <div class="au-sec-head">
+            <span class="au-sec-num">✏️</span>
+            <span class="au-sec-title">Investigue e responda</span>
+            <span class="au-sec-tag tag-pratica">Registro</span>
+          </div>
+          <p class="au-p" style="margin-bottom:16px">Este é o registro final do projeto. Responda no relatório investigativo e confira depois.</p>
 
           <div class="ex-list">
 
             <div class="ex">
-              <div class="ex-top"><span class="ex-num">a</span><span class="ex-tag lv-medio">Médio</span></div>
-              <div class="ex-stmt"><b>x² − y</b>, &nbsp;para x = −2 e y = 7</div>
-              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
+              <div class="ex-top"><span class="ex-num">1</span><span class="ex-tag lv-facil">Fácil</span></div>
+              <div class="ex-stmt">Quantas <b>faces</b>, <b>arestas</b> e <b>vértices</b> tem o cubo?</div>
+              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)">
+                <span class="txt">Ver resposta</span><span class="arw">▾</span>
+              </button>
               <div class="ex-answer"><div class="ex-answer-in">
-                <div class="ex-answer-lbl">Resolução</div>
-                <p>Substituindo: (−2)² − 7.</p>
-                <p>(−2)² = 4, então 4 − 7.</p>
-                <p class="final">= −3</p>
+                <div class="ex-answer-lbl">Resposta</div>
+                <p><b>6 faces</b>, <b>12 arestas</b> e <b>8 vértices</b>.</p>
               </div></div>
             </div>
 
             <div class="ex">
-              <div class="ex-top"><span class="ex-num">b</span><span class="ex-tag lv-facil">Fácil</span></div>
-              <div class="ex-stmt"><b>−2x + 5</b>, &nbsp;para x = 9</div>
-              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
+              <div class="ex-top"><span class="ex-num">2</span><span class="ex-tag lv-facil">Fácil</span></div>
+              <div class="ex-stmt">Sem diagonais, o cubo é firme ou deforma? Por quê?</div>
+              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)">
+                <span class="txt">Ver resposta</span><span class="arw">▾</span>
+              </button>
               <div class="ex-answer"><div class="ex-answer-in">
-                <div class="ex-answer-lbl">Resolução</div>
-                <p>Substituindo: −2 · 9 + 5 = −18 + 5.</p>
-                <p class="final">= −13</p>
+                <div class="ex-answer-lbl">Resposta</div>
+                <p>Ele <b>deforma</b>, porque todas as faces são <b>quadrados</b> — e o quadrado não é rígido.</p>
               </div></div>
             </div>
 
             <div class="ex">
-              <div class="ex-top"><span class="ex-num">c</span><span class="ex-tag lv-medio">Médio</span></div>
-              <div class="ex-stmt"><b>2x² + y</b>, &nbsp;para x = 3 e y = 5</div>
-              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
+              <div class="ex-top"><span class="ex-num">3</span><span class="ex-tag lv-medio">Médio</span></div>
+              <div class="ex-stmt">O que acontece com cada <b>face</b> do cubo quando colocamos uma diagonal nela? Por que isso deixa o cubo firme?</div>
+              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)">
+                <span class="txt">Ver resposta</span><span class="arw">▾</span>
+              </button>
               <div class="ex-answer"><div class="ex-answer-in">
                 <div class="ex-answer-lbl">Resolução</div>
-                <p>Primeiro a potência: 3² = 9.</p>
-                <p>2 · 9 + 5 = 18 + 5.</p>
-                <p class="final">= 23</p>
+                <p>Cada face quadrada vira <b>dois triângulos</b>. Como o triângulo é rígido, todas as faces ficam firmes e o cubo inteiro para de deformar — é a <b>triangulação</b> no espaço.</p>
               </div></div>
             </div>
 
             <div class="ex">
-              <div class="ex-top"><span class="ex-num">d</span><span class="ex-tag lv-dificil">Desafio</span></div>
-              <div class="ex-stmt"><b>−3x + 2y</b>, &nbsp;para x = −3 e y = −2</div>
-              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
+              <div class="ex-top"><span class="ex-num">4</span><span class="ex-tag lv-medio">Médio</span></div>
+              <div class="ex-stmt">Compare o <b>tetraedro</b> (Parte 2) com o <b>cubo</b>: por que um já é firme e o outro não?</div>
+              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)">
+                <span class="txt">Ver resposta</span><span class="arw">▾</span>
+              </button>
               <div class="ex-answer"><div class="ex-answer-in">
                 <div class="ex-answer-lbl">Resolução</div>
-                <p>Substituindo: −3 · (−3) + 2 · (−2).</p>
-                <p>−3 · (−3) = 9 &nbsp;e&nbsp; 2 · (−2) = −4.</p>
-                <p>9 + (−4) = 9 − 4.</p>
-                <p class="final">= 5</p>
+                <p>O tetraedro tem <b>faces triangulares</b> (já rígidas). O cubo tem <b>faces quadradas</b> (que deformam). Por isso o tetraedro é firme sozinho e o cubo só fica firme depois de triangulado com diagonais.</p>
+              </div></div>
+            </div>
+
+            <div class="ex">
+              <div class="ex-top"><span class="ex-num">5</span><span class="ex-tag lv-dificil">Desafio</span></div>
+              <div class="ex-stmt">Confira a relação de Euler no cubo (V − A + F) e diga se dá o mesmo valor do tetraedro.</div>
+              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)">
+                <span class="txt">Ver resposta</span><span class="arw">▾</span>
+              </button>
+              <div class="ex-answer"><div class="ex-answer-in">
+                <div class="ex-answer-lbl">Resolução</div>
+                <p>Cubo: 8 − 12 + 6 = <b>2</b>. Tetraedro: 4 − 6 + 4 = <b>2</b>. <b>Sim</b>, os dois dão 2 — é a relação de Euler.</p>
+              </div></div>
+            </div>
+
+            <div class="ex">
+              <div class="ex-top"><span class="ex-num">6</span><span class="ex-tag lv-dificil">Desafio</span></div>
+              <div class="ex-stmt">Se cada aresta vale <b>meio canudo</b>, quantos <b>canudos inteiros</b> (sem contar as diagonais) a dupla gasta para montar <b>um</b> cubo?</div>
+              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)">
+                <span class="txt">Ver resposta</span><span class="arw">▾</span>
+              </button>
+              <div class="ex-answer"><div class="ex-answer-in">
+                <div class="ex-answer-lbl">Resolução</div>
+                <p>12 arestas × ½ canudo = <b>6 canudos</b> inteiros (as diagonais coloridas entram além desse total).</p>
               </div></div>
             </div>
 
           </div>
         </section>
 
+        <div class="au-rel">
+          <div class="au-rel-title">🔁 Nesta sequência</div>
+          <a class="au-rel-item" href="/conteudos/geometria-canudos-parte1.html">Parte 1 — Figuras planas e triangulação <span>→</span></a>
+          <a class="au-rel-item" href="/conteudos/geometria-canudos-parte2.html">Parte 2 — O tetraedro (primeiro sólido) <span>→</span></a>
+        </div>
         <div class="au-note" style="text-align:center;margin-top:16px">Material de estudo · Profª Vanessa · CED São Bartolomeu</div>
+
       </div>
     </div>
   </div>
@@ -322,13 +425,6 @@
 
 <script>
   // Mostrar/ocultar a resposta de cada exercício
-  function togCalc(el){ el.classList.toggle('on'); }
-  function revelarTodas(btn){
-    const items = document.querySelectorAll('#calc1 .calc-item');
-    const anyOff = [...items].some(i => !i.classList.contains('on'));
-    items.forEach(i => i.classList.toggle('on', anyOff));
-    btn.textContent = anyOff ? 'Ocultar todas' : 'Revelar todas';
-  }
   function toggleResp(btn){
     const ans = btn.nextElementSibling;
     const open = ans.classList.toggle('open');

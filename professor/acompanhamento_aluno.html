@@ -46,6 +46,13 @@
   .card-title svg{width:18px;height:18px;fill:var(--purple)}
   .card-title .count{margin-left:auto;font-size:12px;font-weight:700;color:var(--text-muted)}
 
+  .niveis{display:flex;flex-direction:column;gap:8px}
+  .nivel-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--border,rgba(255,255,255,.08))}
+  .nivel-lbl{font-size:13px;font-weight:600}
+  .nivel-val{font-size:13px;font-weight:800;color:var(--purple,#9b30ff);white-space:nowrap}
+  .nota-big{font-size:34px;font-weight:800;color:var(--gold,#f0a500);line-height:1;text-align:center;padding:6px 0}
+  .nota-msg{font-size:12.5px;color:var(--text-muted,rgba(255,255,255,.6));text-align:center;margin-top:6px}
+
   .filtros{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
   .filtros button{border:1px solid var(--border);background:transparent;color:var(--text-muted);font-weight:700;font-size:11.5px;padding:5px 11px;border-radius:8px;cursor:pointer}
   .filtros button.on{background:var(--purple-pale);border-color:var(--purple);color:#c79bff}
@@ -150,6 +157,7 @@
 
 <script type="module">
 import { ALUNOS_POR_TURMA, numeroChamada, turmaAgora, BIMESTRES, dentroDoAtestado, normalizarAtestados } from "/js/constants.js";
+import { setBimestre, montarBoletim, buscarProgressoTabuada, fmtNota, mensagemPorNota } from "/js/notas.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -193,6 +201,8 @@ let marcas = {};       // { atvId:{ aluno:0|1|2 } }
 let chamada = {};      // { "YYYY-MM-DD": { aluno:true } }
 let anotacoes = {};    // { aluno:[ {ts, ocorrencias:[], obs} ] }
 let atestados = {};    // { aluno:[ {inicio,fim,ts,obs} ] }
+let nivelTab = 0, nivelNeg = 0, boletim = null;   // extras por-aluno (tabuada + nota)
+let extrasToken = 0;                              // guarda anti-corrida ao trocar de aluno
 
 const temAtestado = (data, aluno) => dentroDoAtestado(data, atestados[aluno]||[]);
 const faltou = (data, aluno) => !!(data && chamada[data] && chamada[data][aluno]) && !temAtestado(data, aluno);
@@ -239,9 +249,30 @@ async function carregar(){
   const sel = document.getElementById("selAluno");
   sel.innerHTML = alunos.map((nome,i)=>`<option value="${i}">${numeroChamada(turma,nome)||"—"} · ${nome}</option>`).join("");
   sel.value = idx;
-  render();
+  carregarAlunoExtras();
 }
 
+async function carregarAlunoExtras(){
+  const alunos = ALUNOS_POR_TURMA[turma] || [];
+  const aluno = alunos[idx];
+  nivelTab = 0; nivelNeg = 0; boletim = null;
+  render();                       // desenha o resto na hora; extras chegam depois
+  if (!aluno) return;
+  const tk = ++extrasToken;
+  setBimestre(bimestre);
+  try {
+    const p = await buscarProgressoTabuada(turma, aluno);
+    if (tk !== extrasToken) return;      // trocou de aluno no meio
+    nivelTab = p.melhorTabuada || 0;
+    nivelNeg = p.melhorNeg || 0;
+  } catch (e) {}
+  try {
+    const b = await montarBoletim(turma, aluno, { ignorarLiberacao: true });
+    if (tk !== extrasToken) return;
+    boletim = b;
+  } catch (e) { boletim = null; }
+  if (tk === extrasToken) render();
+}
 function statusAtiv(atv, aluno){
   const v = (marcas[atv.id]||{})[aluno]||0;
   if (v===1) return "feita";
@@ -329,6 +360,29 @@ function render(){
     </div>`;
   }).join("") : `<div class="vazio">Sem ocorrências neste bimestre.</div>`;
 
+  const tabuadaCard = `
+    <div class="card">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24"><path d="M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 2v4h4V5H5zm6 0v4h8V5h-8zM5 11v4h4v-4H5zm6 0v4h8v-4h-8zM5 17v2h4v-2H5zm6 0v2h8v-2h-8z"/></svg>
+        Tabuada
+      </div>
+      <div class="niveis">
+        <div class="nivel-row"><span class="nivel-lbl">Tabuada</span><span class="nivel-val">${nivelTab ? "Nível " + nivelTab : "—"}</span></div>
+        <div class="nivel-row"><span class="nivel-lbl">Tabuada de Negativos</span><span class="nivel-val">${nivelNeg ? "Nível " + nivelNeg : "—"}</span></div>
+      </div>
+    </div>`;
+
+  const temNota = !!boletim && (Object.values(boletim.lancados || {}).some(Boolean) || (boletim.total || 0) > 0);
+  const notaCard = temNota ? `
+    <div class="card">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24"><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm2 5v2h10V8H7zm0 4v2h10v-2H7z"/></svg>
+        Nota do ${bimestre}º bimestre
+      </div>
+      <div class="nota-big">${fmtNota(boletim.total)}</div>
+      <div class="nota-msg">${mensagemPorNota(boletim.total)}</div>
+    </div>` : "";
+
   document.getElementById("conteudo").innerHTML = `
     <div class="hero">
       <div class="avatar">${iniciais(aluno)}</div>
@@ -362,6 +416,8 @@ function render(){
       </div>
 
       <div>
+        ${tabuadaCard}
+        ${notaCard}
         <div class="card">
           <div class="card-title">
             <svg viewBox="0 0 24 24"><path d="M7 2v2H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v9H5v-9h14z"/></svg>
@@ -432,9 +488,9 @@ async function removerAtestado(aluno, inicio, fim, ts){
 
 // eventos
 document.getElementById("selTurma").addEventListener("change", e=>{ turma=e.target.value; idx=0; carregar(); });
-document.getElementById("selAluno").addEventListener("change", e=>{ idx=+e.target.value; render(); });
-document.getElementById("prev").onclick=()=>{ const n=(ALUNOS_POR_TURMA[turma]||[]).length; if(!n)return; idx=(idx-1+n)%n; document.getElementById("selAluno").value=idx; render(); };
-document.getElementById("next").onclick=()=>{ const n=(ALUNOS_POR_TURMA[turma]||[]).length; if(!n)return; idx=(idx+1)%n; document.getElementById("selAluno").value=idx; render(); };
+document.getElementById("selAluno").addEventListener("change", e=>{ idx=+e.target.value; carregarAlunoExtras(); });
+document.getElementById("prev").onclick=()=>{ const n=(ALUNOS_POR_TURMA[turma]||[]).length; if(!n)return; idx=(idx-1+n)%n; document.getElementById("selAluno").value=idx; carregarAlunoExtras(); };
+document.getElementById("next").onclick=()=>{ const n=(ALUNOS_POR_TURMA[turma]||[]).length; if(!n)return; idx=(idx+1)%n; document.getElementById("selAluno").value=idx; carregarAlunoExtras(); };
 
 carregar();
 </script>

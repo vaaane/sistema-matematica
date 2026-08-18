@@ -8,20 +8,27 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <!-- ═══ FICHA DA AULA (lida pelo gerador do index — não remover) ═══ -->
-  <meta name="aula:id"       content="revisao_inteiros_valornumerico">
-  <meta name="aula:tipo"     content="atividade">
-  <meta name="aula:eixo"     content="numeros">
-  <meta name="aula:bimestre" content="2">
-  <meta name="aula:titulo"   content="Revisão — Números Inteiros & Valor Numérico">
-  <meta name="aula:resumo"   content="Revisão de números inteiros e valor numérico.">
-  <meta name="aula:tema"     content="Números Inteiros e Valor Numérico">
+  <!-- ═══ FICHA DA AULA · PREENCHA ANTES DE SALVAR ═══
+       id       = MESMO nome do arquivo, sem .html (ex.: simplificacao-teoria)
+       tipo     = teoria | atividade   (atividade cobre lista/revisao/prova/jogo)
+       eixo     = numeros | algebra | geometria | grandezas | probestat
+       bimestre = 1 | 2 | 3 | 4
+       titulo   = texto que aparece na biblioteca
+       tema     = unidade que agrupa as aulas (ex.: Expressões Algébricas)
+       resumo   = 1 linha p/ vistos/diário; preenche o modal automaticamente -->
+  <meta name="aula:id"       content="topico-tipo">
+  <meta name="aula:tipo"     content="teoria">
+  <meta name="aula:eixo"     content="algebra">
+  <meta name="aula:bimestre" content="3">
+  <meta name="aula:titulo"   content="Teoria — Título da Aula">
+  <meta name="aula:resumo"   content="Frase curta que aparece nos vistos/diário">
+  <meta name="aula:tema"     content="Expressões Algébricas">
   <!-- ┌─────────────────────────────────────────────────────────────┐
        │ MODELO DE PÁGINA DE CONTEÚDO / EXERCÍCIOS · Sistema de Mat.  │
        │ Preencha:  TÍTULO • TURMA/DATA/TEMA • as SEÇÕES • EXERCÍCIOS │
        │ Blocos disponíveis estão marcados com comentários abaixo.    │
        └─────────────────────────────────────────────────────────────┘ -->
-  <title>Revisão — Números Inteiros e Valor Numérico — Sistema de Matemática</title>
+  <title>Geometria com Canudos — Parte 1 — Sistema de Matemática</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -154,6 +161,14 @@
   .au-btn:hover{filter:brightness(1.08)}
   .au-note{font-size:11px;color:var(--text-muted,rgba(255,255,255,.45));margin-top:14px}
 
+  /* — Aulas relacionadas (SÓ em aula teórica) — */
+  .au-rel{text-align:left;background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:16px;padding:16px 18px}
+  .au-rel-title{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .au-rel-item{display:flex;align-items:center;justify-content:space-between;gap:10px;text-decoration:none;color:var(--text,#f1eefb);font-size:13.5px;font-weight:600;padding:11px 13px;border-radius:11px;background:rgba(255,255,255,.03);border:1px solid var(--border,rgba(255,255,255,.07));margin-bottom:8px}
+  .au-rel-item:last-child{margin-bottom:0}
+  .au-rel-item:hover{border-color:rgba(124,92,252,.45)}
+  .au-rel-item span{color:var(--purple,#b6a2ff);font-weight:800}
+
   /* — Helpers de matemática (HTML puro, sem dependência) — */
   .pot{font-weight:700}
   .frac{display:inline-flex;flex-direction:column;text-align:center;vertical-align:middle;font-size:.82em;line-height:1.02;margin:0 .18em}
@@ -161,19 +176,6 @@
   .frac>span:last-child{padding:0 .32em}
   .mono{font-variant-numeric:tabular-nums}
 
-  /* — Grade de "Calcule" (toque para revelar) — */
-  .calc-tools{display:flex;justify-content:flex-end;margin-bottom:10px}
-  .calc-reveal{font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;color:var(--gold,#f0a500);background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.28);border-radius:9px;padding:6px 12px}
-  .calc-reveal:hover{background:rgba(240,165,0,.14)}
-  .calc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:9px;margin-bottom:6px}
-  .calc-item{font-family:inherit;text-align:left;cursor:pointer;background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:11px;padding:11px 13px;color:inherit;transition:border-color .2s,background .2s}
-  .calc-item:hover{border-color:rgba(124,92,252,.45)}
-  .calc-item.on{border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.06)}
-  .calc-q{font-size:14.5px;font-weight:600;color:rgba(255,255,255,.9)}
-  .calc-q .lt{color:var(--purple,#b6a2ff);font-weight:800;margin-right:6px}
-  .calc-a{font-size:14.5px;font-weight:800;color:var(--green,#3ddc84);margin-top:6px;display:none}
-  .calc-item.on .calc-a{display:block}
-  .calc-hint{font-size:11.5px;color:var(--text-muted,rgba(255,255,255,.5));margin-bottom:12px}
   :focus-visible{outline:2px solid var(--purple,#7c5cfc);outline-offset:2px}
   @media(prefers-reduced-motion:reduce){.ex-answer,.ex-toggle .arw{transition:none}}
   </style>
@@ -183,138 +185,225 @@
   <aside class="sidebar" id="sidebar"></aside>
   <div class="main">
 
-    <!-- TOPBAR (padrão do site) -->
     <div class="topbar">
       <div class="topbar-left">
-        <div class="topbar-title">📚 Material de Aula</div>
-        <div class="topbar-sub">Conteúdo e exercícios para revisar</div>
+        <div class="topbar-title">📐 Material de Aula</div>
+        <div class="topbar-sub">Geometria com Canudos · Parte 1</div>
       </div>
     </div>
 
     <div class="content">
       <div class="au">
 
-        <!-- ════════ CABEÇALHO DA AULA ════════ -->
+        <!-- CABEÇALHO -->
         <header class="au-hero">
-          <div class="au-hero-eyebrow">Matemática · 8º ano · Revisão</div>
-          <h1 class="au-hero-title">Números Inteiros &amp; Valor Numérico</h1>
+          <div class="au-hero-eyebrow">Matemática · 8º ano · PD1</div>
+          <h1 class="au-hero-title">Geometria com Canudos — Parte 1</h1>
           <div class="au-hero-meta">
-            <span class="au-meta gold">Revisão</span>
+            <span class="au-meta gold">Geometria</span>
+            <span class="au-meta">Figuras planas</span>
             <span class="au-meta">Turmas 8D–8H</span>
-            <span class="au-meta">Aula de 27/07</span>
+            <span class="au-meta">Duplas</span>
           </div>
         </header>
 
+        <!-- NAV -->
         <nav class="au-nav">
-          <a href="#s1">① Operações</a>
-          <a href="#s2">② Valor numérico</a>
+          <a href="#s1">① O projeto</a>
+          <a href="#s2">② Triângulo</a>
+          <a href="#s3">③ Quadrado</a>
+          <a href="#s4">④ Quadrado com diagonal</a>
+          <a href="#exercicios">✏️ Investigue</a>
         </nav>
 
-        <!-- LEMBRETE (recap de revisão — apague se não quiser) -->
-        <div class="au-def">
-          <div class="au-def-label">Lembrete · Regras de sinais</div>
-          <div class="au-def-body">
-            <b>Somar/subtrair:</b> sinais <b>iguais</b> → soma e mantém o sinal; sinais <b>diferentes</b> → subtrai e fica com o sinal do maior. &nbsp;·&nbsp;
-            <b>Multiplicar/dividir:</b> sinais <b>iguais</b> → resultado <b>+</b>; sinais <b>diferentes</b> → resultado <b>−</b>.
-          </div>
-        </div>
-
-        <!-- ════════ SEÇÃO 1 — OPERAÇÕES ════════ -->
+        <!-- SEÇÃO 1 — O PROJETO -->
         <section class="au-sec" id="s1">
           <div class="au-sec-head">
             <span class="au-sec-num">1</span>
-            <span class="au-sec-title">Calcule</span>
-            <span class="au-sec-tag tag-pratica">Pratique</span>
+            <span class="au-sec-title">O que vamos construir</span>
+            <span class="au-sec-tag tag-teoria">Teoria</span>
           </div>
-          <p class="calc-hint">Toque em cada item para conferir o resultado.</p>
-          <div class="calc-tools">
-            <button class="calc-reveal" onclick="revelarTodas(this)">Revelar todas</button>
+
+          <p class="au-p">Neste projeto vamos investigar a <b>rigidez das estruturas</b> construindo figuras com canudos. Cada <b>aresta</b> vale <b>meio canudo</b>, e as peças são unidas com barbante passado por dentro dos canudos.</p>
+
+          <div class="au-def">
+            <div class="au-def-label">A pergunta do projeto</div>
+            <div class="au-def-body">Por que algumas estruturas <b>entortam</b> quando empurramos e outras ficam <b>firmes</b>? A resposta está numa ideia poderosa: a <b>triangulação</b>.</div>
           </div>
-          <div class="calc-grid" id="calc1">
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">a)</span>−5 − 3</div><div class="calc-a">= −8</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">b)</span>10 − 12</div><div class="calc-a">= −2</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">c)</span>−2 + 7</div><div class="calc-a">= 5</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">d)</span>−10 − 15</div><div class="calc-a">= −25</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">e)</span>7 − 5</div><div class="calc-a">= 2</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">f)</span>2 · (−5)</div><div class="calc-a">= −10</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">g)</span>(−7) · (−2)</div><div class="calc-a">= 14</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">h)</span>10 ÷ (−5)</div><div class="calc-a">= −2</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">i)</span>(−20) ÷ (−4)</div><div class="calc-a">= 5</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">j)</span>−1 + (−1)</div><div class="calc-a">= −2</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">k)</span>−1 − (−1)</div><div class="calc-a">= 0</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">l)</span>1 − (1)</div><div class="calc-a">= 0</div></button>
-            <button class="calc-item" onclick="togCalc(this)"><div class="calc-q"><span class="lt">m)</span>1 + (−1)</div><div class="calc-a">= 0</div></button>
+
+          <div class="au-tip">
+            <span class="ic">🎨</span>
+            <div><b>Cor dos canudos:</b> as arestas da estrutura são feitas com canudos <b>pretos</b>; quando adicionarmos <b>diagonais</b>, elas serão de canudos <b>coloridos</b>. Assim fica fácil enxergar onde a triangulação entra.</div>
           </div>
         </section>
 
-        <!-- ════════ SEÇÃO 2 — VALOR NUMÉRICO ════════ -->
+        <!-- SEÇÃO 2 — TRIÂNGULO -->
         <section class="au-sec" id="s2">
           <div class="au-sec-head">
             <span class="au-sec-num">2</span>
-            <span class="au-sec-title">Valor numérico da expressão</span>
-            <span class="au-sec-tag tag-pratica">Pratique</span>
+            <span class="au-sec-title">O triângulo equilátero</span>
+            <span class="au-sec-tag tag-pratica">Construir</span>
           </div>
-          <p class="au-p" style="margin-bottom:8px">Substitua cada letra pelo número indicado e calcule.</p>
 
-          <div class="au-warn" style="margin-bottom:16px">
-            <span class="ic">⚠️</span>
-            <div>Ao substituir um número negativo, <b>use parênteses</b>: em x² com x = −2, faça (−2)² = 4 — e não −2² = −4.</div>
+          <figure class="au-fig">
+            <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;background:#15102e">
+              <polygon points="160,35 275,165 45,165" fill="none" stroke="#f0a500" stroke-width="6" stroke-linejoin="round"/>
+              <circle cx="160" cy="35" r="6" fill="#b6a2ff"/>
+              <circle cx="275" cy="165" r="6" fill="#b6a2ff"/>
+              <circle cx="45" cy="165" r="6" fill="#b6a2ff"/>
+            </svg>
+            <figcaption>Triângulo equilátero — 3 canudos (arestas) e 3 vértices.</figcaption>
+          </figure>
+
+          <p class="au-p">Monte um triângulo com <b>3 arestas iguais</b>. Agora segure dois vértices e tente <b>deformar</b> a figura, empurrando os lados.</p>
+
+          <div class="au-def">
+            <div class="au-def-label">Descoberta</div>
+            <div class="au-def-body">O triângulo <b>não deforma</b>. Com os três lados fixos, só existe <b>um</b> formato possível. Por isso dizemos que o triângulo é uma figura <b>rígida</b> — ele é a base de toda estrutura firme.</div>
           </div>
+        </section>
+
+        <!-- SEÇÃO 3 — QUADRADO -->
+        <section class="au-sec" id="s3">
+          <div class="au-sec-head">
+            <span class="au-sec-num">3</span>
+            <span class="au-sec-title">O quadrado</span>
+            <span class="au-sec-tag tag-pratica">Construir</span>
+          </div>
+
+          <figure class="au-fig">
+            <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;background:#15102e">
+              <rect x="90" y="40" width="120" height="120" fill="none" stroke="#f0a500" stroke-width="6" stroke-linejoin="round"/>
+              <g opacity="0.5">
+                <path d="M90 40 L60 20 M210 40 L240 20 M210 160 L240 180 M90 160 L60 180" stroke="#f87171" stroke-width="3" stroke-dasharray="5 5"/>
+              </g>
+              <circle cx="90" cy="40" r="6" fill="#b6a2ff"/><circle cx="210" cy="40" r="6" fill="#b6a2ff"/>
+              <circle cx="210" cy="160" r="6" fill="#b6a2ff"/><circle cx="90" cy="160" r="6" fill="#b6a2ff"/>
+            </svg>
+            <figcaption>Quadrado — 4 canudos. As setas mostram como ele "balança" para os lados.</figcaption>
+          </figure>
+
+          <p class="au-p">Monte um quadrado com <b>4 arestas iguais</b>. Empurre um dos vértices para o lado.</p>
+
+          <div class="au-warn">
+            <span class="ic">⚠️</span>
+            <div><b>O quadrado deforma!</b> Com um leve empurrão ele vira um <b>losango</b> (paralelogramo inclinado). Os 4 lados continuam do mesmo tamanho, mas o formato muda — logo, o quadrado <b>não é rígido</b> sozinho.</div>
+          </div>
+        </section>
+
+        <!-- SEÇÃO 4 — QUADRADO COM DIAGONAL -->
+        <section class="au-sec" id="s4">
+          <div class="au-sec-head">
+            <span class="au-sec-num">4</span>
+            <span class="au-sec-title">Quadrado com diagonal</span>
+            <span class="au-sec-tag tag-pratica">Construir</span>
+          </div>
+
+          <figure class="au-fig">
+            <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;background:#15102e">
+              <rect x="90" y="40" width="120" height="120" fill="none" stroke="#f0a500" stroke-width="6" stroke-linejoin="round"/>
+              <line x1="90" y1="160" x2="210" y2="40" stroke="#3ddc84" stroke-width="6" stroke-linecap="round"/>
+              <circle cx="90" cy="40" r="6" fill="#b6a2ff"/><circle cx="210" cy="40" r="6" fill="#b6a2ff"/>
+              <circle cx="210" cy="160" r="6" fill="#b6a2ff"/><circle cx="90" cy="160" r="6" fill="#b6a2ff"/>
+            </svg>
+            <figcaption>Quadrado com uma diagonal (canudo colorido) — vira dois triângulos.</figcaption>
+          </figure>
+
+          <p class="au-p">Adicione <b>uma diagonal</b> ao quadrado, usando um canudo <b>colorido</b>. Tente deformar de novo.</p>
+
+          <div class="au-def">
+            <div class="au-def-label">A grande ideia: triangulação</div>
+            <div class="au-def-body">A diagonal divide o quadrado em <b>dois triângulos</b>. Como o triângulo é rígido, o quadrado inteiro fica firme! Isso se chama <b>triangulação</b>: reforçar uma estrutura transformando-a em triângulos.</div>
+          </div>
+
+          <div class="au-tip">
+            <span class="ic">🌉</span>
+            <div><b>No mundo real:</b> é por isso que <b>pontes</b>, <b>torres</b> e <b>telhados</b> são cheios de triângulos. A Ponte Hercílio Luz, em Florianópolis, é um exemplo clássico de estrutura triangulada (treliça).</div>
+          </div>
+        </section>
+
+        <!-- INVESTIGUE -->
+        <section class="au-sec" id="exercicios">
+          <div class="au-sec-head">
+            <span class="au-sec-num">✏️</span>
+            <span class="au-sec-title">Investigue e responda</span>
+            <span class="au-sec-tag tag-pratica">Registro</span>
+          </div>
+          <p class="au-p" style="margin-bottom:16px">Anote suas hipóteses no relatório <b>antes</b> de conferir. Pense com a dupla e depois clique em <b>“Ver resposta”</b>.</p>
 
           <div class="ex-list">
 
             <div class="ex">
-              <div class="ex-top"><span class="ex-num">a</span><span class="ex-tag lv-medio">Médio</span></div>
-              <div class="ex-stmt"><b>x² − y</b>, &nbsp;para x = −2 e y = 7</div>
-              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
+              <div class="ex-top"><span class="ex-num">1</span><span class="ex-tag lv-facil">Fácil</span></div>
+              <div class="ex-stmt">Quantas <b>arestas</b> (canudos) e quantos <b>vértices</b> tem um triângulo? E um quadrado?</div>
+              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)">
+                <span class="txt">Ver resposta</span><span class="arw">▾</span>
+              </button>
               <div class="ex-answer"><div class="ex-answer-in">
-                <div class="ex-answer-lbl">Resolução</div>
-                <p>Substituindo: (−2)² − 7.</p>
-                <p>(−2)² = 4, então 4 − 7.</p>
-                <p class="final">= −3</p>
+                <div class="ex-answer-lbl">Resposta</div>
+                <p>Triângulo: <b>3 arestas</b> e <b>3 vértices</b>. Quadrado: <b>4 arestas</b> e <b>4 vértices</b>.</p>
               </div></div>
             </div>
 
             <div class="ex">
-              <div class="ex-top"><span class="ex-num">b</span><span class="ex-tag lv-facil">Fácil</span></div>
-              <div class="ex-stmt"><b>−2x + 5</b>, &nbsp;para x = 9</div>
-              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
+              <div class="ex-top"><span class="ex-num">2</span><span class="ex-tag lv-facil">Fácil</span></div>
+              <div class="ex-stmt">Ao empurrar o <b>quadrado</b> pelo canto, o que acontece com o formato dele?</div>
+              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)">
+                <span class="txt">Ver resposta</span><span class="arw">▾</span>
+              </button>
               <div class="ex-answer"><div class="ex-answer-in">
-                <div class="ex-answer-lbl">Resolução</div>
-                <p>Substituindo: −2 · 9 + 5 = −18 + 5.</p>
-                <p class="final">= −13</p>
+                <div class="ex-answer-lbl">Resposta</div>
+                <p>Ele se inclina e vira um <b>losango</b> (paralelogramo). Os lados continuam iguais, mas os ângulos mudam — o quadrado não é rígido.</p>
               </div></div>
             </div>
 
             <div class="ex">
-              <div class="ex-top"><span class="ex-num">c</span><span class="ex-tag lv-medio">Médio</span></div>
-              <div class="ex-stmt"><b>2x² + y</b>, &nbsp;para x = 3 e y = 5</div>
-              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
+              <div class="ex-top"><span class="ex-num">3</span><span class="ex-tag lv-medio">Médio</span></div>
+              <div class="ex-stmt">Por que o quadrado <b>com diagonal</b> para de deformar? Explique com suas palavras.</div>
+              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)">
+                <span class="txt">Ver resposta</span><span class="arw">▾</span>
+              </button>
               <div class="ex-answer"><div class="ex-answer-in">
                 <div class="ex-answer-lbl">Resolução</div>
-                <p>Primeiro a potência: 3² = 9.</p>
-                <p>2 · 9 + 5 = 18 + 5.</p>
-                <p class="final">= 23</p>
+                <p>A diagonal transforma o quadrado em <b>dois triângulos</b>. Como o triângulo é rígido, a figura toda fica firme. Esse reforço se chama <b>triangulação</b>.</p>
               </div></div>
             </div>
 
             <div class="ex">
-              <div class="ex-top"><span class="ex-num">d</span><span class="ex-tag lv-dificil">Desafio</span></div>
-              <div class="ex-stmt"><b>−3x + 2y</b>, &nbsp;para x = −3 e y = −2</div>
-              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
+              <div class="ex-top"><span class="ex-num">4</span><span class="ex-tag lv-medio">Médio</span></div>
+              <div class="ex-stmt">Cite <b>uma estrutura real</b> (ponte, torre, telhado…) onde você reconhece triângulos e explique por que eles estão lá.</div>
+              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)">
+                <span class="txt">Ver resposta</span><span class="arw">▾</span>
+              </button>
+              <div class="ex-answer"><div class="ex-answer-in">
+                <div class="ex-answer-lbl">Resposta esperada</div>
+                <p>Exemplos: pontes treliçadas (Ponte Hercílio Luz), torres de energia, guindastes, estrutura de telhados. Os triângulos estão lá para dar <b>rigidez</b> e impedir que a estrutura deforme com o peso e o vento.</p>
+              </div></div>
+            </div>
+
+            <div class="ex">
+              <div class="ex-top"><span class="ex-num">5</span><span class="ex-tag lv-dificil">Desafio</span></div>
+              <div class="ex-stmt">Um pentágono (5 lados) também deforma. <b>Quantas diagonais</b>, no mínimo, você acha que seriam precisas para deixá-lo rígido? Teste depois com canudos.</div>
+              <button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)">
+                <span class="txt">Ver resposta</span><span class="arw">▾</span>
+              </button>
               <div class="ex-answer"><div class="ex-answer-in">
                 <div class="ex-answer-lbl">Resolução</div>
-                <p>Substituindo: −3 · (−3) + 2 · (−2).</p>
-                <p>−3 · (−3) = 9 &nbsp;e&nbsp; 2 · (−2) = −4.</p>
-                <p>9 + (−4) = 9 − 4.</p>
-                <p class="final">= 5</p>
+                <p>São precisas <b>2 diagonais</b> saindo de um mesmo vértice: elas dividem o pentágono em <b>3 triângulos</b>, deixando tudo rígido. (Regra geral: um polígono de <b>n</b> lados precisa de <b>n − 3</b> diagonais a partir de um vértice.)</p>
               </div></div>
             </div>
 
           </div>
         </section>
 
+        <!-- PRÓXIMA PARTE -->
+        <div class="au-rel">
+          <div class="au-rel-title">➡️ Continua em</div>
+          <a class="au-rel-item" href="/conteudos/geometria-canudos-parte2.html">Parte 2 — O tetraedro (primeiro sólido) <span>→</span></a>
+          <a class="au-rel-item" href="/conteudos/geometria-canudos-parte3.html">Parte 3 — O cubo e as diagonais <span>→</span></a>
+        </div>
         <div class="au-note" style="text-align:center;margin-top:16px">Material de estudo · Profª Vanessa · CED São Bartolomeu</div>
+
       </div>
     </div>
   </div>
@@ -322,13 +411,6 @@
 
 <script>
   // Mostrar/ocultar a resposta de cada exercício
-  function togCalc(el){ el.classList.toggle('on'); }
-  function revelarTodas(btn){
-    const items = document.querySelectorAll('#calc1 .calc-item');
-    const anyOff = [...items].some(i => !i.classList.contains('on'));
-    items.forEach(i => i.classList.toggle('on', anyOff));
-    btn.textContent = anyOff ? 'Ocultar todas' : 'Revelar todas';
-  }
   function toggleResp(btn){
     const ans = btn.nextElementSibling;
     const open = ans.classList.toggle('open');

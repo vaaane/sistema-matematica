@@ -73,6 +73,7 @@
       .mini-stats{grid-template-columns:repeat(3,1fr)}
       .mini-stat{padding:10px 4px}
       .mini-stat-value{font-size:17px}
+      /* .ficha-cta definido em regra global abaixo */
       .top3-card{padding:7px 9px;gap:6px;}
       .top3-nome{font-size:12px;}
       .badge-no1-card{font-size:9px;padding:2px 7px;right:8px;top:-8px;}
@@ -124,6 +125,34 @@
     .mg-footer{padding:12px 20px 16px;display:flex;flex-direction:column;gap:8px;}
     .mg-btn-primary{width:100%;padding:12px;background:linear-gradient(135deg,var(--purple,#7c5cfc),#5a3fcf);border:none;border-radius:12px;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:#fff;cursor:pointer;}
     .mg-btn-ghost{width:100%;padding:9px;background:transparent;border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text-muted);cursor:pointer;}
+
+    /* ══ Faixa "Minha Ficha" — destaque no topo, largura cheia ══ */
+    .ficha-cta{
+      display:flex;align-items:center;gap:16px;
+      background:linear-gradient(135deg, rgba(155,48,255,.22), rgba(240,165,0,.10));
+      border:1.5px solid rgba(155,48,255,.45);border-radius:16px;
+      padding:18px 22px;margin-bottom:16px;text-decoration:none;color:inherit;
+      box-shadow:0 4px 20px rgba(108,0,212,.15);
+      transition:transform .12s, box-shadow .12s, border-color .12s;
+    }
+    .ficha-cta:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(108,0,212,.30);border-color:rgba(155,48,255,.7)}
+    .ficha-cta .ic{
+      width:54px;height:54px;border-radius:14px;flex-shrink:0;
+      background:linear-gradient(135deg, var(--purple,#9b30ff), var(--purple-dark,#6c00d4));
+      display:flex;align-items:center;justify-content:center;font-size:26px;
+      box-shadow:0 4px 14px rgba(108,0,212,.4);
+    }
+    .ficha-cta .txt{flex:1;min-width:0}
+    .ficha-cta .txt .t{font-size:17px;font-weight:800;line-height:1.2;color:var(--text,#fff)}
+    .ficha-cta .txt .s{font-size:13px;color:var(--text-muted);margin-top:3px;line-height:1.35}
+    .ficha-cta .arw{color:#c79bff;font-size:24px;font-weight:700;flex-shrink:0;transition:transform .12s}
+    .ficha-cta:hover .arw{transform:translateX(3px)}
+    @media(max-width:520px){
+      .ficha-cta{padding:14px 16px;gap:12px}
+      .ficha-cta .ic{width:44px;height:44px;font-size:22px}
+      .ficha-cta .txt .t{font-size:15px}
+      .ficha-cta .txt .s{font-size:12px}
+    }
   </style>
 </head>
 <body>
@@ -152,7 +181,7 @@
 
 
 <script type="module">
-import { LISTA_ATIVIDADES, bimestreAtual, bimestreDeData } from "/js/constants.js";
+import { LISTA_ATIVIDADES, bimestreAtual, bimestreDeData, dentroDoAtestado, normalizarAtestados } from "/js/constants.js";
 import { getResultados, getLiberadasParaTurma, getAlunoPreferencia } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { saveRankPos, applyTopRankVisuals } from "/js/toprank.js";
@@ -354,15 +383,44 @@ const _uidDe = (nome) => (turma + '_' + nome).replace(/[.#$[\]/\s]/g, '_');
 const dadosExtra = {};
 await Promise.all(alunos.map(async (nome) => {
   const u = _uidDe(nome);
-  const [tabSnap, perfSnap, aqSnap] = await Promise.all([
-    get(ref(db, (bimestreAtual() <= 2 ? `tabuada_niveis/${u}` : `tabuada_niveis_b/${bimestreAtual()}/${u}`))).catch(() => null),
+  const _bim = bimestreAtual();
+  const [tabSnap, perfSnap, aqSnap, visSnap, chSnap, atSnap] = await Promise.all([
+    get(ref(db, (_bim <= 2 ? `tabuada_niveis/${u}` : `tabuada_niveis_b/${_bim}/${u}`))).catch(() => null),
     get(ref(db, `perfis/${u}`)).catch(() => null),
     get(ref(db, `aquecimento/${u}`)).catch(() => null),
+    get(ref(db, `vistos/${turma}/${_bim}`)).catch(() => null),
+    get(ref(db, `chamada/${turma}/${_bim}`)).catch(() => null),
+    get(ref(db, `atestados/${turma}`)).catch(() => null),
   ]);
+
+  // ── Caderno (vistos feitos) e Faltas do bimestre ──
+  let cadFeitos = 0, cadTotal = 0, faltas = 0;
+  try {
+    const atestadosAl = (normalizarAtestados(atSnap?.exists() ? atSnap.val() : {})[nome]) || [];
+    const temAtestado = (data) => dentroDoAtestado(data, atestadosAl);
+
+    const rv = visSnap?.exists() ? visSnap.val() : {};
+    const ativs = rv.atividades || {};
+    const marcas = rv.marcas || {};
+    cadTotal = Object.keys(ativs).length;
+    for (const id of Object.keys(ativs)) {
+      const v = (marcas[id] || {})[nome] || 0;
+      if (v === 1 || v === 2 || v === 4) cadFeitos += 1;        // ✓, A, AT✓ = entrega cheia
+      else if (v === 3) cadFeitos += 0.5;                       // FA = meia
+    }
+
+    if (chSnap?.exists()) {
+      for (const [k, val] of Object.entries(chSnap.val())) {
+        if (/^\d{4}-\d{2}-\d{2}$/.test(k) && val && val[nome] && !temAtestado(k)) faltas += 1;
+      }
+    }
+  } catch (eC) { console.warn('[Resumo caderno/faltas]', eC); }
+
   dadosExtra[nome] = {
     nivelTab:  tabSnap?.exists() ? (tabSnap.val().melhor_nivel || tabSnap.val().nivel_atual || 1) : 1,
     duelosVit: perfSnap?.exists() ? (perfSnap.val().duelos_vitorias || 0) : 0,
-    treinos:   aqSnap?.exists()   ? Object.keys(aqSnap.val()).filter(d => bimestreDeData(d) === bimestreAtual()).length : 0,
+    treinos:   aqSnap?.exists()   ? Object.keys(aqSnap.val()).filter(d => bimestreDeData(d) === _bim).length : 0,
+    cadFeitos, cadTotal, faltas,
   };
 }));
 
@@ -746,6 +804,14 @@ const conteudo = document.getElementById("content");
 conteudo.innerHTML = `
 ${bannerHtml}
 ${tempoPodioHtml}
+<a href="/aluno/a-ficha.html" class="ficha-cta">
+  <div class="ic">📋</div>
+  <div class="txt">
+    <div class="t">Acompanhe seu desempenho</div>
+    <div class="s">Notas, caderno e frequência na ficha completa — pais e responsáveis também podem acompanhar.</div>
+  </div>
+  <div class="arw" aria-hidden="true">→</div>
+</a>
 <div class="grid-2">
   <div id="col-left">
     ${(liberadasAtivas.length || torneioAtivo) ? `<div id="card-liberada" class="card card-pulse">
@@ -945,7 +1011,7 @@ ${tempoPodioHtml}
       </div>
       ${alunos.map(a => {
         const r = resumoAluno(a);
-        const ex = dadosExtra[a] || { nivelTab: 1, duelosVit: 0, treinos: 0 };
+        const ex = dadosExtra[a] || { nivelTab: 1, duelosVit: 0, treinos: 0, cadFeitos: 0, cadTotal: 0, faltas: 0 };
         const propAluno = notaProp(a);
         const tooltipAbaixo = propAluno !== null && mediaTurma !== null && propAluno < mediaTurma ? 'title="Você está abaixo da média da turma, mas pode recuperar nas próximas atividades. Fique atento(a)!"' : '';
         const turmaColor = r.posTurma === 1 ? '#f0a500' : 'var(--orange)';
@@ -958,8 +1024,8 @@ ${tempoPodioHtml}
           </div>
           <div class="mini-stats">
             <div class="mini-stat"><div class="mini-stat-value" style="color:var(--gold);font-size:22px">${r.total_ativ > 0 ? r.totalPts+'/'+r.total_ativ*10 : '—'}</div><div class="mini-stat-label">Nota</div></div>
-            <div class="mini-stat"><div class="mini-stat-value" style="color:${turmaColor};font-size:22px">${turmaCrown}${r.posTurma === '—' ? '—' : '#'+r.posTurma}</div><div class="mini-stat-label">🏅 Na Turma</div></div>
-            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green);font-size:22px">${r.taxa !== null ? r.taxa + '%' : '—'}</div><div class="mini-stat-label">📊 Taxa</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green);font-size:22px">${ex.cadTotal > 0 ? (Number.isInteger(ex.cadFeitos)?ex.cadFeitos:ex.cadFeitos.toFixed(1).replace('.',','))+'/'+ex.cadTotal : '—'}</div><div class="mini-stat-label">📓 Caderno</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:${ex.faltas>0?'#EF4444':'var(--text-muted)'};font-size:22px">${ex.faltas}</div><div class="mini-stat-label">📅 Faltas</div></div>
             <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue);font-size:22px">${ex.nivelTab}</div><div class="mini-stat-label">🔢 Nível tabuada</div></div>
             <div class="mini-stat"><div class="mini-stat-value" style="color:#EF4444;font-size:22px">${ex.duelosVit}</div><div class="mini-stat-label">⚔️ Duelos vencidos</div></div>
             <div class="mini-stat"><div class="mini-stat-value" style="color:var(--orange);font-size:22px">${ex.treinos}</div><div class="mini-stat-label">🔥 Treinos diários</div></div>

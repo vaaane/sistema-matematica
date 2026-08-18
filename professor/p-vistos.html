@@ -55,6 +55,7 @@
   .chk.v1{background:var(--green-pale);border-color:var(--green);color:var(--green)}
   .chk.v2{background:var(--gold-pale);border-color:var(--gold);color:var(--gold);font-size:14px}
   .chk.v3{background:rgba(239,68,68,.14);border-color:var(--red);color:var(--red)}
+  .chk.vfa{background:rgba(249,115,22,.14);border-color:#f97316;color:#f97316;font-size:11px}
   .chk.v4{background:var(--gold-pale);border-color:var(--gold);color:var(--gold);border-style:dashed;font-size:10px}
   .chk.v5{background:rgba(59,130,246,.15);border-color:#3b82f6;color:#60a5fa;font-size:10px}
   .chk.v6{background:var(--green-pale);border-color:#3b82f6;color:var(--green);font-size:9px;border-width:1.5px}
@@ -67,6 +68,7 @@
   .leg-box.g{background:var(--green-pale);border-color:var(--green);color:var(--green)}
   .leg-box.a{background:var(--gold-pale);border-color:var(--gold);color:var(--gold)}
   .leg-box.r{background:rgba(239,68,68,.14);border-color:var(--red);color:var(--red)}
+  .leg-box.fa{background:rgba(249,115,22,.14);border-color:#f97316;color:#f97316}
 
   .vazio{padding:40px 20px;text-align:center;color:var(--text-muted);font-size:13px}
   .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:#141428;border:1px solid var(--border);color:var(--text);padding:10px 18px;border-radius:10px;font-size:13px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:all .25s;z-index:400}
@@ -150,7 +152,7 @@
           <span><span class="leg-box g">✓</span> visto dado</span>
           <span><span class="leg-box a">½</span> entregou atrasado (meio visto)</span>
           <span><span class="leg-box r">F</span> falta (automática pela frequência do dia)</span>
-          <span><span class="leg-box" style="background:var(--gold-pale);border-color:var(--gold);border-style:dashed;color:var(--gold)">FA</span> faltou, entregou depois (vale ½)</span>
+          <span><span class="leg-box fa">FA</span> faltou, mas entregou depois (meio visto)</span>
           <span><span class="leg-box" style="background:rgba(59,130,246,.15);border-color:#3b82f6;color:#60a5fa">AT</span> atestado médico (justificada)</span>
           <span><span class="leg-box" style="background:var(--green-pale);border-color:#3b82f6;color:var(--green)">AT✓</span> atestado, entregou depois (nota integral)</span>
           <span style="margin-left:auto;font-style:italic">clique = visto · faltas vêm da chamada</span>
@@ -361,7 +363,7 @@ function render(){
   let html = `<table class="grade"><thead><tr><th class="col-aluno">Aluno</th>`;
   atual.atividades.forEach(atv=>{
     const m = atual.marcas[atv.id]||{};
-    const done = alunosTurma.filter(a=>m[a]===1||m[a]===2).length;
+    const done = alunosTurma.filter(a=>m[a]===1||m[a]===2||m[a]===3).length;
     const mat = atv.temMaterial ? ` 📄` : "";
     html += `<th class="col-atv" data-id="${atv.id}" title="${(atv.conteudo||"").replace(/"/g,'&quot;')}">
       <div class="atv-nome">${atv.nome}${mat}</div>
@@ -381,7 +383,7 @@ function render(){
       else if(v===2||v===3) tot+=0.5;      // atraso (½) e FA (½)
       const at = (v!==1 && v!==2 && v!==3 && v!==4) && temFaltaAtestada(atv.data, al); // atestado sem entrega
       const f  = (v!==1 && v!==2 && v!==3 && v!==4) && faltou(atv.data, al);           // falta automática
-      const cls = v===1?"v1":v===2?"v2":v===3?"v4":v===4?"v6":at?"v5":f?"v3":"";
+      const cls = v===1?"v1":v===2?"v2":v===3?"vfa":v===4?"v6":at?"v5":f?"v3":"";
       const sym = v===1?"✓":v===2?"½":v===3?"FA":v===4?"AT✓":at?"AT":f?"F":"";
       html += `<td class="cel" data-id="${atv.id}" data-al="${al.replace(/"/g,'&quot;')}"><span class="chk ${cls}">${sym}</span></td>`;
     });
@@ -420,18 +422,20 @@ async function ciclar(atvId, aluno){
     return;
   }
 
-  // Dia SEM atestado. Se o aluno faltou (frequência), o ciclo inclui FA (½):
-  //   0(F) → 1(✓) → 2(A) → 3(FA) → 0 ; senão 0 → 1 → 2 → 0.
+  // Dia SEM atestado. Célula mostrando F (faltou e sem visto) ou já em FA:
+  // o visto só pode virar FA (faltou, entregou depois = ½). Alterna FA ↔ F.
   const faltouNoDia = faltou(atv&&atv.data, aluno);
-  const novo = faltouNoDia ? (atualV+1)%4 : (atualV+1)%3;
-
-  if (atualV===0 && novo===1 && faltouNoDia) {
-    if (!confirm(`⚠️ ${aluno} faltou em ${fmtData(atv.data)} (frequência).\nDar visto mesmo assim?`)) return;
+  if (faltouNoDia && (atualV===0 || atualV===3)) {
+    salvarMarca(atvId, aluno, atualV===3 ? 0 : 3);
+    return;
   }
-  if ((atualV===1 && novo===2) || (atualV===2 && novo===(faltouNoDia?3:0))) {
+
+  // Fluxo normal (não faltou, ou já tem ✓ / ½): 0 → ✓ → ½ atraso → 0
+  const novo = (atualV+1)%3;
+  if ((atualV===1 && novo===2) || (atualV===2 && novo===0)) {
     const msg = novo===2
       ? "Mudar de ✓ visto completo para ½ atraso (meio visto)?"
-      : (faltouNoDia ? "Mudar de ½ atraso para FA (falta, entregou depois — vale ½)?" : "Retirar o visto (de ½ atraso para sem visto)?");
+      : "Retirar o visto (de ½ atraso para sem visto)?";
     if (!confirm(msg)) return;
   }
   salvarMarca(atvId, aluno, novo);
