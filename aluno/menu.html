@@ -126,32 +126,33 @@
     .mg-btn-primary{width:100%;padding:12px;background:linear-gradient(135deg,var(--purple,#7c5cfc),#5a3fcf);border:none;border-radius:12px;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:#fff;cursor:pointer;}
     .mg-btn-ghost{width:100%;padding:9px;background:transparent;border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text-muted);cursor:pointer;}
 
-    /* ══ Faixa "Minha Ficha" — destaque no topo, largura cheia ══ */
+    /* ══ Faixa da Ficha — chamada para os pais (destaque no topo) ══ */
     .ficha-cta{
-      display:flex;align-items:center;gap:16px;
-      background:linear-gradient(135deg, rgba(155,48,255,.22), rgba(240,165,0,.10));
-      border:1.5px solid rgba(155,48,255,.45);border-radius:16px;
-      padding:18px 22px;margin-bottom:16px;text-decoration:none;color:inherit;
-      box-shadow:0 4px 20px rgba(108,0,212,.15);
+      display:block;position:relative;text-decoration:none;color:inherit;
+      background:linear-gradient(135deg, rgba(155,48,255,.30), rgba(240,165,0,.14) 85%);
+      border:1.5px solid rgba(240,165,0,.55);border-radius:18px;
+      padding:16px 18px 17px;margin-bottom:16px;
+      box-shadow:0 8px 26px rgba(108,0,212,.22);
       transition:transform .12s, box-shadow .12s, border-color .12s;
     }
-    .ficha-cta:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(108,0,212,.30);border-color:rgba(155,48,255,.7)}
-    .ficha-cta .ic{
-      width:54px;height:54px;border-radius:14px;flex-shrink:0;
-      background:linear-gradient(135deg, var(--purple,#9b30ff), var(--purple-dark,#6c00d4));
-      display:flex;align-items:center;justify-content:center;font-size:26px;
-      box-shadow:0 4px 14px rgba(108,0,212,.4);
-    }
+    .ficha-cta:hover{transform:translateY(-2px);box-shadow:0 12px 34px rgba(108,0,212,.32);border-color:rgba(240,165,0,.8)}
+    .ficha-badge{display:inline-flex;align-items:center;gap:6px;background:var(--gold,#f0a500);color:#3a2600;font-size:10.5px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;padding:5px 11px;border-radius:20px;margin-bottom:13px}
+    .ficha-row{display:flex;align-items:center;gap:15px}
+    .ficha-cta .ic{width:54px;height:54px;border-radius:15px;flex-shrink:0;background:linear-gradient(135deg, var(--purple,#9b30ff), var(--purple-dark,#6c00d4));display:flex;align-items:center;justify-content:center;font-size:27px;box-shadow:0 5px 16px rgba(108,0,212,.45)}
     .ficha-cta .txt{flex:1;min-width:0}
-    .ficha-cta .txt .t{font-size:17px;font-weight:800;line-height:1.2;color:var(--text,#fff)}
-    .ficha-cta .txt .s{font-size:13px;color:var(--text-muted);margin-top:3px;line-height:1.35}
-    .ficha-cta .arw{color:#c79bff;font-size:24px;font-weight:700;flex-shrink:0;transition:transform .12s}
-    .ficha-cta:hover .arw{transform:translateX(3px)}
+    .ficha-cta .txt .t{font-size:18px;font-weight:800;line-height:1.15;color:var(--text,#fff)}
+    .ficha-cta .txt .s{font-size:12.5px;color:rgba(255,255,255,.72);margin-top:4px;line-height:1.4}
+    .ficha-foot{display:flex;align-items:center;gap:8px;margin-top:13px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12)}
+    .ficha-foot .tips{font-size:11.5px;color:rgba(255,255,255,.62);line-height:1.3}
+    .ficha-foot .tips b{color:#fff;font-weight:700}
+    .ficha-foot .go{margin-left:auto;display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);color:#fff;font-size:12.5px;font-weight:800;padding:8px 14px;border-radius:11px;white-space:nowrap}
     @media(max-width:520px){
-      .ficha-cta{padding:14px 16px;gap:12px}
-      .ficha-cta .ic{width:44px;height:44px;font-size:22px}
-      .ficha-cta .txt .t{font-size:15px}
+      .ficha-cta{padding:14px 15px}
+      .ficha-cta .ic{width:46px;height:46px;font-size:23px}
+      .ficha-cta .txt .t{font-size:16px}
       .ficha-cta .txt .s{font-size:12px}
+      .ficha-foot{flex-wrap:wrap;gap:10px}
+      .ficha-foot .go{margin-left:0;width:100%;justify-content:center}
     }
   </style>
 </head>
@@ -805,12 +806,18 @@ conteudo.innerHTML = `
 ${bannerHtml}
 ${tempoPodioHtml}
 <a href="/aluno/a-ficha.html" class="ficha-cta">
-  <div class="ic">📋</div>
-  <div class="txt">
-    <div class="t">Acompanhe seu desempenho</div>
-    <div class="s">Notas, caderno e frequência na ficha completa — pais e responsáveis também podem acompanhar.</div>
+  <span class="ficha-badge">👨‍👩‍👧 Para os pais e responsáveis</span>
+  <div class="ficha-row">
+    <div class="ic">📋</div>
+    <div class="txt">
+      <div class="t">Acompanhe seu filho por aqui</div>
+      <div class="s">Esta é a página principal para acompanhar o dia a dia na escola.</div>
+    </div>
   </div>
-  <div class="arw" aria-hidden="true">→</div>
+  <div class="ficha-foot">
+    <div class="tips"><b>Notas</b> · <b>atividades</b> · <b>faltas</b> · <b>ocorrências</b> do bimestre</div>
+    <span class="go">Abrir a ficha →</span>
+  </div>
 </a>
 <div class="grid-2">
   <div id="col-left">
