@@ -76,17 +76,55 @@
   .filtros button{border:1px solid var(--border);background:transparent;color:var(--text-muted);font-weight:700;font-size:11.5px;padding:6px 12px;border-radius:20px;cursor:pointer}
   .filtros button.on{background:var(--purple-pale);border-color:var(--purple);color:#c79bff}
 
-  .ativ{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
-  .ativ:last-child{border-bottom:0}
-  .ativ-row{border-bottom:1px solid var(--border)}
-  .ativ-row:last-child{border-bottom:0}
-  .ativ-row .ativ{border-bottom:0}
-  .ver-cont-btn{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:rgba(155,48,255,.06);color:var(--purple);border-radius:9px;padding:7px 12px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:.15s}
-  .ver-cont-btn:hover{background:rgba(155,48,255,.14);border-color:rgba(155,48,255,.4)}
-  .ver-cont-btn svg{width:15px;height:15px;fill:currentColor}
-  .ver-cont-btn .chev{transition:transform .25s}
-  .ativ-row.aberto .ver-cont-btn .chev{transform:rotate(180deg)}
-  @media(max-width:620px){ .ver-cont-btn{padding:6px 9px;font-size:11.5px} .ver-cont-btn .chev{display:none} }
+  /* linha de atividade — formato "Minhas Aulas" (anel + tag + visto + badge + botão) */
+  .ativ-row{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:10px;transition:.15s}
+  .ativ-row:last-child{margin-bottom:0}
+  .ativ{padding:12px 14px;display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;gap:12px;align-items:center}
+  .ativ-row.tem-mat .ativ{cursor:pointer}
+  /* anel numerado (cor conforme estado de entrega) */
+  .ring{position:relative;width:40px;height:40px;flex-shrink:0}
+  .ring svg{position:absolute;inset:0}
+  .ring svg circle{stroke:rgba(255,255,255,.18)}
+  .ring .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--text-muted)}
+  .ring.feita svg circle,.ring.atv svg circle{stroke:var(--green)} .ring.feita .num,.ring.atv .num{color:#63c98a}
+  .ring.atraso svg circle,.ring.fa svg circle{stroke:var(--gold)} .ring.atraso .num,.ring.fa .num{color:var(--gold)}
+  .ring.at svg circle{stroke:#60a5fa} .ring.at .num{color:#60a5fa}
+  .ring.falta svg circle,.ring.nao svg circle{stroke:rgba(255,255,255,.18)} .ring.falta .num{color:#f88} 
+  .ativ-main{min-width:0}
+  .ativ-headline{display:flex;align-items:center;gap:9px;flex-wrap:wrap;row-gap:5px}
+  .ativ-tag{font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:3px 9px;border-radius:6px;border:1px solid var(--border);color:var(--text-muted);background:transparent}
+  .ativ-tag.teorica{background:rgba(155,48,255,.16);border-color:rgba(155,48,255,.4);color:#c79bff}
+  .ativ-tag.exercicios{background:rgba(96,165,250,.16);border-color:rgba(96,165,250,.4);color:#8ec0ff}
+  .ativ-tag.projeto{background:rgba(240,165,0,.16);border-color:rgba(240,165,0,.4);color:#f5c451}
+  .ativ-nome{font-size:14px;font-weight:700;line-height:1.25;color:var(--text);min-width:0}
+  .ativ-meta{display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap}
+  .ativ-data{font-size:11.5px;color:var(--text-muted);display:inline-flex;align-items:center;gap:5px}
+  .ativ-data svg{width:12px;height:12px;fill:currentColor;opacity:.65}
+  .ativ-visto{font-size:11.5px;font-weight:600;color:var(--text-muted);display:inline-flex;align-items:center;gap:5px}
+  .ativ-visto svg{width:13px;height:13px;fill:currentColor}
+  .ativ-visto.completo{color:#63c98a} .ativ-visto.parcial{color:var(--gold)} .ativ-visto.sem{color:var(--text-muted)}
+  .ativ-btn{align-self:center;border:1px solid var(--border);border-radius:9px;padding:8px 12px;font-size:11.5px;font-weight:600;background:transparent;color:var(--text-muted);display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-family:inherit;cursor:pointer;transition:.15s}
+  .ativ-btn:hover:not(.off){color:#c79bff;border-color:rgba(155,48,255,.4)}
+  .ativ-btn svg{width:13px;height:13px;fill:currentColor;opacity:.8;transition:transform .2s}
+  .ativ-btn.off{opacity:.5;cursor:default}
+  .ativ-btn .t-oc{display:none}
+  .ativ-row.aberto{border-color:rgba(155,48,255,.45);border-left:3px solid var(--purple);box-shadow:0 0 0 1px rgba(155,48,255,.18),0 12px 26px rgba(0,0,0,.4)}
+  .ativ-row.aberto .ring svg circle{stroke:var(--purple)} .ativ-row.aberto .ring .num{color:#fff}
+  .ativ-row.aberto .ativ-nome{color:#fff}
+  .ativ-row.aberto .ativ-btn{border-color:rgba(155,48,255,.55);color:#c79bff}
+  .ativ-row.aberto .ativ-btn .chev{transform:rotate(180deg)}
+  .ativ-row.aberto .ativ-btn .t-ver{display:none}
+  .ativ-row.aberto .ativ-btn .t-oc{display:inline}
+  @media(max-width:720px){
+    .ativ{grid-template-columns:40px minmax(0,1fr) auto;gap:10px}
+    .ativ .badge{grid-column:2;justify-self:start;margin-top:2px}
+    .ativ-btn{grid-column:3;grid-row:1}
+  }
+  @media(max-width:520px){
+    .ativ{grid-template-columns:40px minmax(0,1fr)}
+    .ativ .badge{grid-column:1/-1;justify-self:start}
+    .ativ-btn{grid-column:1/-1;grid-row:auto;justify-content:center;margin-top:2px}
+  }
   .st{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0}
   .st.feita{background:var(--green-pale);color:var(--green)}
   .st.atraso{background:var(--gold-pale);color:var(--gold)}
@@ -132,6 +170,8 @@
   .jogo-prog{padding:2px 0}
   .jp-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
   .jp-nome{font-size:13px;font-weight:700}
+  .jp-bonus{font-size:10px;font-weight:800;color:var(--gold);background:rgba(240,165,0,.14);border:1px solid rgba(240,165,0,.35);border-radius:20px;padding:1px 7px;margin-left:4px;white-space:nowrap}
+  .jp-bonus.on{color:var(--green);background:var(--green-pale);border-color:rgba(34,197,94,.4)}
   .jp-niv{font-size:14px;font-weight:800;color:var(--text)}
   .jp-max{font-size:11px;color:var(--text-muted);font-weight:600}
   .jp-bar{height:9px;background:rgba(255,255,255,.06);border-radius:6px;overflow:hidden}
@@ -185,6 +225,22 @@ const weekday = iso => { try{ return WD[new Date(iso+"T12:00:00").getDay()]; }ca
 const iniciais = n => n.split(" ").filter(Boolean).slice(0,2).map(s=>s[0]).join("").toUpperCase();
 const hhmm = ts => { const d=new Date(ts); return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; };
 const dataDeTs = ts => { const d=new Date(ts); const o=d.getTimezoneOffset(); return new Date(d.getTime()-o*60000).toISOString().slice(0,10); };
+const norm = s => (s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+function tipoDe(n){ n=norm(n);
+  if(/(teoria|teorica)/.test(n)) return "teorica";
+  if(/(projeto|canudos|maquete|estruturas)/.test(n)) return "projeto";
+  if(/(exerc|lista|problema|atividade|revis|questo)/.test(n)) return "exercicios";
+  return ""; }
+const TIPO_LABEL = { teorica:"Teoria", exercicios:"Exercícios", projeto:"Projeto" };
+// estado do visto (marca do caderno) — independente do estado de entrega
+function vistoDe(id){ const m=(marcas[id]||{})[aluno]||0; return m===1?"completo":m===2?"parcial":"sem"; }
+const VISTO = {
+  completo:["completo","Visto completo",'<svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>'],
+  parcial :["parcial","Visto parcial",'<svg viewBox="0 0 24 24"><path d="M5 11h14v2H5z"/></svg>'],
+  sem     :["sem","Sem visto",'<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 11h-1a1 1 0 0 1-1-1V7a1 1 0 0 1 2 0v4h1a1 1 0 0 1 0 2z"/></svg>'],
+};
+const ICO_CAL = '<svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 16H5V9h14v10zM5 7V5h14v2H5z"/></svg>';
+
 
 // Estados de atividade:
 //  feita   ✓ (marca 1)          atraso A (marca 2)
@@ -245,8 +301,9 @@ async function carregar(){
     nivelNeg = sNeg?.exists() ? (sNeg.val().melhor_nivel || sNeg.val().nivel_atual || 0) : 0;
     const rv = sV.exists()?sV.val():{};
     atividades = Object.entries(rv.atividades||{})
-      .map(([id,a])=>({id, nome:a.nome||"(sem nome)", data:a.data||"", ordem:a.ordem||0, materialRef:a.materialRef||"", materialTitulo:a.materialTitulo||""}))
+      .map(([id,a])=>({id, nome:a.nome||"(sem nome)", data:a.data||"", ordem:a.ordem||0, materialRef:a.materialRef||"", materialTitulo:a.materialTitulo||"", tipo:tipoDe(a.nome||"")}))
       .sort((x,y)=> (x.ordem-y.ordem) || (x.data<y.data?-1:1));
+    atividades.forEach((a,i)=>{ a.num = String(a.ordem || (i+1)).padStart(2,"0"); });
     marcas = rv.marcas||{};
     chamada = {};
     const rc = sC.exists()?sC.val():{};
@@ -301,7 +358,7 @@ function render(){
   const meias  = linhas.filter(l=>l.st==="fa").length;
   const feitasNum = cheias + meias*0.5;
   const feitasTxt = Number.isInteger(feitasNum) ? String(feitasNum) : feitasNum.toFixed(1).replace(".", ",");
-  const naoF   = linhas.filter(l=>l.st==="nao").length;
+  const naoF   = linhas.filter(l=>l.st==="nao"||l.st==="falta").length;
   const faltas = faltasDoAluno();
   const atDias = atestadosDoAluno();
   const oc     = ocorrenciasDoAluno();
@@ -314,26 +371,36 @@ function render(){
   const ringOff   = ringLen*(1-pctEntreg);
 
   const rows = linhas.filter(l=> filtro==="todas" ? true
-    : filtro==="feita" ? (l.st==="feita"||l.st==="atraso"||l.st==="fa"||l.st==="atv")
-    : filtro==="at" ? (l.st==="at"||l.st==="atv")
-    : l.st===filtro);
+    : filtro==="feita" ? (l.st==="feita"||l.st==="atraso"||l.st==="fa"||l.st==="atv"||l.st==="at")
+    : filtro==="nao" ? (l.st==="nao"||l.st==="falta")
+    : true);
 
-  const atvHtml = rows.length ? rows.map(r=>`
-    <div class="ativ-row" id="ativ-row-${r.id}">
-      <div class="ativ">
-        <div class="st ${r.st}">${ICON[r.st]}</div>
-        <div class="ativ-body">
-          <div class="ativ-nome">${r.nome}</div>
-          <div class="ativ-data">${r.data?`${fmtDMY(r.data)} · ${weekday(r.data)}`:"sem data"}</div>
+  const atvHtml = rows.length ? rows.map(r=>{
+    const vst = vistoDe(r.id);
+    const [vcls,vtxt,vic] = VISTO[vst];
+    const tagHtml = r.tipo ? `<span class="ativ-tag ${r.tipo}">${TIPO_LABEL[r.tipo]||""}</span>` : "";
+    return `
+    <div class="ativ-row ${r.materialRef?"tem-mat":""}" id="ativ-row-${r.id}">
+      <div class="ativ" ${r.materialRef?`data-i="${r.id}" onclick="toggleConteudo('${r.id}')"`:""}>
+        <div class="ring ${r.st}">
+          <svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17.5" fill="none" stroke-width="2.5"/></svg>
+          <div class="num">${r.num||""}</div>
+        </div>
+        <div class="ativ-main">
+          <div class="ativ-headline">${tagHtml}<span class="ativ-nome">${r.nome}</span></div>
+          <div class="ativ-meta">
+            <span class="ativ-data">${ICO_CAL}${r.data?fmtDM(r.data):"—"}</span>
+            <span class="ativ-visto ${vcls}">${vic}${vtxt}</span>
+          </div>
         </div>
         <span class="badge ${r.st}">${LABEL[r.st]}</span>
-        ${r.materialRef ? `<button class="ver-cont-btn" onclick="toggleConteudo('${r.id}')" id="vcb-${r.id}">
-          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
-          Ver conteúdo <svg class="chev" viewBox="0 0 24 24"><path d="M7.4 8.6 12 13.2l4.6-4.6L18 10l-6 6-6-6z"/></svg>
-        </button>` : ""}
+        ${r.materialRef ? `<button class="ativ-btn" onclick="event.stopPropagation();toggleConteudo('${r.id}')">
+          <span class="t-ver">Ver conteúdo</span><span class="t-oc">Ocultar</span>
+          <svg class="chev" viewBox="0 0 24 24"><path d="M7.4 8.6 12 13.2l4.6-4.6L18 10l-6 6-6-6z"/></svg>
+        </button>` : `<button class="ativ-btn off" disabled>Sem material</button>`}
       </div>
       ${r.materialRef ? `<div class="painel" id="painel-${r.id}" data-ref="${r.materialRef}" data-loaded="0"></div>` : ""}
-    </div>`).join("") : `<div class="vazio">Nada neste filtro.</div>`;
+    </div>`;}).join("") : `<div class="vazio">Nada neste filtro.</div>`;
 
   const faltasHtml = faltas.length ? faltas.map(d=>`
     <div class="falta-pill"><div class="d">${fmtDM(d)}</div><div class="w">${weekday(d)}</div></div>`).join("")
@@ -406,9 +473,6 @@ function render(){
           <button class="${filtro==="todas"?"on":""}" data-f="todas">Todas</button>
           <button class="${filtro==="feita"?"on":""}" data-f="feita">Feitas</button>
           <button class="${filtro==="nao"?"on":""}" data-f="nao">Não feitas</button>
-          <button class="${filtro==="fa"?"on":""}" data-f="fa">FA (½)</button>
-          <button class="${filtro==="falta"?"on":""}" data-f="falta">Faltas</button>
-          <button class="${filtro==="at"?"on":""}" data-f="at">Atestado</button>
         </div>
         <div>${atvHtml}</div>
       </div>
@@ -442,18 +506,18 @@ function render(){
             Jogos de Tabuada
           </div>
           <div class="jogo-prog">
-            <div class="jp-top"><span class="jp-nome">🎯 Tabuada</span><span class="jp-niv">Nível ${nivelTab} <span class="jp-max">/ 300</span></span></div>
+            <div class="jp-top"><span class="jp-nome">🎯 Tabuada <span class="jp-bonus ${nivelTab>=300?"on":""}">+1,0</span></span><span class="jp-niv">Nível ${nivelTab} <span class="jp-max">/ 300</span></span></div>
             <div class="jp-bar"><div class="jp-fill" style="width:${Math.min(100, (nivelTab/300)*100).toFixed(1)}%;background:var(--purple)"></div></div>
             ${nivelTab>=300?'<div class="jp-done">✓ Concluiu toda a tabuada!</div>':''}
           </div>
           <div class="jogo-prog" style="margin-top:12px">
-            <div class="jp-top"><span class="jp-nome">➖ Tabuada Negativa</span><span class="jp-niv">Nível ${nivelNeg} <span class="jp-max">/ 150</span></span></div>
+            <div class="jp-top"><span class="jp-nome">➖ Tabuada Negativa <span class="jp-bonus ${nivelNeg>=150?"on":""}">+0,5</span></span><span class="jp-niv">Nível ${nivelNeg} <span class="jp-max">/ 150</span></span></div>
             <div class="jp-bar"><div class="jp-fill" style="width:${Math.min(100, (nivelNeg/150)*100).toFixed(1)}%;background:var(--gold)"></div></div>
             ${nivelNeg>=150?'<div class="jp-done">✓ Concluiu os negativos!</div>':''}
           </div>
           <div class="ficha-nota ouro">
             <svg viewBox="0 0 24 24"><path d="M12 2 9.2 8.6 2 9.2l5.5 4.7L5.8 21 12 17.3 18.2 21l-1.7-7.1L22 9.2l-7.2-.6z"/></svg>
-            <span><b>Dica para a família:</b> cada tabuada concluída vale <b>nota extra</b>. Incentivar a jogar ajuda na média do bimestre.</span>
+            <span><b>Dica para a família:</b> concluir a <b>Tabuada</b> (nível 300) vale <b>+1,0</b> na média, e concluir a <b>Tabuada Negativa</b> (nível 150) vale <b>+0,5</b>. Incentivar a jogar ajuda na média do bimestre.</span>
           </div>
         </div>
       </div>
