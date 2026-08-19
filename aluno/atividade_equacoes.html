@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Atividade — Equações do 1º Grau — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    /* ── Layout geral ── */
+    .cp-layout{display:grid;grid-template-columns:1fr 260px;gap:18px;align-items:start;}
+    .cp-main{display:flex;flex-direction:column;gap:16px;min-width:0;}
+
+    /* ── Barra de progresso ── */
+    .cp-progress{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);}
+    .cp-prog-label{font-size:12px;color:var(--text-muted);flex-shrink:0;font-weight:600;}
+    .cp-prog-bar{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden;}
+    .cp-prog-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--purple),#c77dff);transition:width .4s;}
+    .cp-prog-count{font-size:13px;font-weight:800;color:var(--purple);flex-shrink:0;font-variant-numeric:tabular-nums;}
+
+    /* ── Card da questão ── */
+    .cp-qcard{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px 28px 22px;}
+    .cp-qhead{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+    .cp-qnum{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--purple);background:rgba(155,48,255,.12);border:1px solid rgba(155,48,255,.3);border-radius:8px;padding:4px 12px;}
+    .cp-qtag{font-size:11px;font-weight:600;color:var(--text-muted);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:4px 10px;}
+    .cp-qtext{font-size:19px;font-weight:700;line-height:1.45;margin-bottom:22px;color:var(--text);}
+
+    /* ── Alternativas ── */
+    .cp-alts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+    .cp-alt{display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg);font-size:15px;font-weight:600;cursor:pointer;text-align:left;transition:all .12s;font-family:'Inter',sans-serif;color:var(--text);width:100%;}
+    .cp-alt:hover{border-color:var(--purple);background:rgba(155,48,255,.08);}
+    .cp-alt.selecionada{border-color:var(--purple);background:rgba(155,48,255,.16);box-shadow:0 0 0 1px var(--purple) inset;}
+    .cp-alt-letra{width:26px;height:26px;flex-shrink:0;border-radius:7px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:var(--text-muted);font-family:'Orbitron',monospace;}
+    .cp-alt.selecionada .cp-alt-letra{background:var(--purple);border-color:var(--purple);color:#fff;}
+
+    /* ── Navegação inferior ── */
+    .cp-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px;}
+    .cp-nav .btn{flex:0 0 auto;}
+    .cp-nav-mid{font-size:12px;color:var(--text-muted);text-align:center;flex:1;}
+
+    /* ── Painel lateral (mapa + timer) ── */
+    .cp-side{display:flex;flex-direction:column;gap:14px;position:sticky;top:14px;}
+    .cp-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+    .cp-panel-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+
+    .cp-timer{font-family:'Orbitron',monospace;font-size:30px;font-weight:700;text-align:center;color:var(--purple);font-variant-numeric:tabular-nums;line-height:1;}
+    .cp-timer.alerta{color:var(--gold);}
+    .cp-timer.critico{color:var(--red);animation:cpPulse 1s infinite;}
+    @keyframes cpPulse{0%,100%{opacity:1}50%{opacity:.45}}
+    .cp-timer-sub{font-size:11px;color:var(--text-muted);text-align:center;margin-top:6px;}
+
+    /* ── Mapa de questões ── */
+    .cp-mapa{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;}
+    .cp-mapa-btn{aspect-ratio:1;border-radius:9px;border:1.5px solid var(--border);background:var(--bg);color:var(--text-muted);font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;font-family:'Inter',sans-serif;}
+    .cp-mapa-btn:hover{border-color:var(--purple);}
+    .cp-mapa-btn.respondida{background:var(--green-pale);border-color:var(--green);color:var(--green);}
+    .cp-mapa-btn.atual{border-color:var(--purple);box-shadow:0 0 0 2px rgba(155,48,255,.35);color:var(--purple);}
+    .cp-mapa-btn.respondida.atual{color:var(--green);}
+
+    .cp-mapa-legenda{display:flex;flex-direction:column;gap:5px;margin-top:12px;}
+    .cp-leg-item{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-muted);}
+    .cp-leg-dot{width:12px;height:12px;border-radius:4px;border:1.5px solid var(--border);}
+    .cp-leg-dot.resp{background:var(--green-pale);border-color:var(--green);}
+    .cp-leg-dot.atual{border-color:var(--purple);box-shadow:0 0 0 1.5px rgba(155,48,255,.4);}
+
+    .cp-btn-finalizar{width:100%;background:linear-gradient(135deg,var(--purple-dark),var(--purple));color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 4px 16px rgba(108,0,212,.3);transition:all .2s;}
+    .cp-btn-finalizar:hover{transform:translateY(-1px);}
+
+    .cp-dupla-chip{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:#00d4ff;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);border-radius:10px;padding:8px 12px;}
+
+    /* ── Aviso de saída ── */
+    .cp-warn{background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.25);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--gold);display:flex;align-items:center;gap:8px;line-height:1.4;}
+
+    /* ── Equação em destaque dentro do enunciado ── */
+    .eq-destaque{display:inline-block;margin-top:12px;font-family:'Orbitron',monospace;font-size:26px;font-weight:700;color:var(--gold);background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.25);border-radius:10px;padding:10px 18px;letter-spacing:1px;}
+
+    /* ── Campo de digitar x (questões numéricas) ── */
+    .cp-num-wrap{display:flex;flex-direction:column;gap:10px;max-width:340px;}
+    .cp-num-label{font-size:13px;font-weight:600;color:var(--text-muted);}
+    .cp-num-row{display:flex;align-items:center;gap:10px;}
+    .cp-num-xis{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;color:var(--purple);}
+    .cp-num-input{flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;font-size:20px;font-weight:700;color:var(--text);font-family:'Orbitron',monospace;text-align:center;outline:none;transition:border-color .12s;}
+    .cp-num-input:focus{border-color:var(--purple);box-shadow:0 0 0 1px var(--purple) inset;}
+    .cp-num-input.preenchido{border-color:var(--green);color:var(--green);}
+    .cp-num-hint{font-size:12px;color:var(--text-muted);line-height:1.4;}
+
+    /* ── Alternativas de texto (equações) podem ser mais largas ── */
+    .cp-alts.uma-coluna{grid-template-columns:1fr;}
+    .cp-alt .eq-opt{font-family:'Orbitron',monospace;font-size:16px;letter-spacing:.5px;}
+
+    /* ── Mobile ── */
+    @media(max-width:820px){
+      .cp-layout{grid-template-columns:1fr;}
+      .cp-side{position:static;flex-direction:column;}
+      .cp-alts{grid-template-columns:1fr;}
+      .cp-qtext{font-size:17px;}
+      .cp-qcard{padding:18px 16px 16px;}
+      .cp-mapa{grid-template-columns:repeat(8,1fr);}
+    }
+    @media(max-width:420px){
+      .cp-mapa{grid-template-columns:repeat(6,1fr);}
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title" id="topbar-title">Carregando…</div>
+        <div class="topbar-sub" id="topbar-sub"></div>
+      </div>
+      <div class="topbar-right">
+        <div class="timer-box" id="timer-mini" style="display:none">--:--</div>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">Iniciando atividade…</div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { intercalarPorDificuldade } from "/js/constants.js";
+import {
+  addResultado, updateResultado, saveDetalhes,
+  getLiberadasParaTurma, getAtividadeStatus, contarTentativas,
+  addConquista, getResultadosByAluno, addAlerta, addHistoricoTeste
+} from "/js/db.js";
+import { requireAluno, getSession, setSession, renderSidebarAluno, clearSession, lerDuplaAtiva, isModoTeste } from "/js/auth.js";
+
+/* ════════════════════════════════════════════════════════════
+   CONFIGURAÇÃO — Atividade: Equações do 1º Grau
+   ════════════════════════════════════════════════════════════ */
+const ARQUIVO_QUESTOES_EQ = "/dados/questoes_equacoes.json";
+const TEMPO_ALVO_SEG  = 15 * 60;   // 15 min — tempo previsto/recomendado
+const TEMPO_MAX_SEG   = 20 * 60;   // 20 min — encerra automaticamente
+const MAX_TENTATIVAS  = 1;         // 1 tentativa por dupla/aluno
+
+/* ── Detecta Modo Teste (professor abriu via botão "Testar") ── */
+const params = new URLSearchParams(location.search);
+const nomeAtivParam = params.get("ativ");
+const ehTeste = params.get("modo") === "teste";
+
+if (ehTeste) {
+  // Ativa modo teste e instala a sessão fake (sobrescreve a sessão atual, que
+  // pode ser a do professor). A função sair() limpa tudo ao final.
+  localStorage.setItem("modoTeste", "true");
+  setSession({
+    modo: "aluno", alunos: ["PROFESSOR_TESTE"], turma: "TESTE",
+    session_token: "teste_" + Date.now(),
+  });
+}
+
+/* ── Sessão ── */
+// No Modo Teste, usa SEMPRE uma sessão fake própria (a sessão existente pode
+// ser a do professor, que não tem o array `alunos` e quebraria o jogo).
+const sess = ehTeste
+  ? { modo: "aluno", alunos: ["PROFESSOR_TESTE"], turma: "TESTE", session_token: "teste_" + Date.now() }
+  : requireAluno();
+if (!sess) throw new Error("sem sessão");
+const alunos = Array.isArray(sess.alunos) ? sess.alunos : [];
+const turma  = sess.turma || "TESTE";
+const dupla = ehTeste ? null : lerDuplaAtiva();
+
+renderSidebarAluno("sidebar", "atividades");
+window.sair = () => {
+  localStorage.removeItem("modoTeste");
+  import('/js/presenca.js').then(m=>m.encerrarPresenca()).catch(()=>{});
+  clearSession();
+  window.location.href = ehTeste ? "/professor/p-atividades.html" : "/index.html";
+};
+
+/* ── Atividade alvo ── */
+if (!nomeAtivParam) { location.href = ehTeste ? "/professor/p-atividades.html" : "/aluno/a-atividades.html"; throw new Error(); }
+
+let nomeAtiv, percentualNota;
+if (ehTeste) {
+  // No modo teste não há liberação/tentativa/status — usa a atividade direto.
+  nomeAtiv = nomeAtivParam;
+  percentualNota = 100;
+} else {
+  /* ── Verificações de liberação / tentativa / status (fluxo aluno) ── */
+  const liberadas = await getLiberadasParaTurma(turma);
+  const liberada = liberadas.find(l => l.atividade === nomeAtivParam);
+  if (!liberada) {
+    alert("Esta atividade não está mais liberada para sua turma.");
+    location.href="/aluno/a-atividades.html"; throw new Error();
+  }
+  nomeAtiv = liberada.atividade;
+
+  // Lista de participantes (dupla = os dois nomes)
+  const _participantes = [...alunos];
+  if (dupla?.nome && !_participantes.includes(dupla.nome)) _participantes.push(dupla.nome);
+
+  // Tentativa única — bloqueia se qualquer participante já fez
+  for (const al of _participantes) {
+    const usadas = await contarTentativas(al, nomeAtiv);
+    if (usadas >= MAX_TENTATIVAS) {
+      alert(`${al} já utilizou a tentativa disponível para esta atividade.`);
+      location.href="/aluno/a-atividades.html"; throw new Error();
+    }
+  }
+
+  // Status manual (encerrada / percentual)
+  const statusInfo = await getAtividadeStatus(turma, nomeAtiv);
+  if (statusInfo.status === "encerrada" || statusInfo.percentual === 0) {
+    alert("Esta atividade foi encerrada pelo professor.");
+    location.href="/aluno/a-atividades.html"; throw new Error();
+  }
+  percentualNota = statusInfo.percentual ?? 100;
+}
+
+/* ── Participantes (dupla = os dois nomes; teste = só PROFESSOR_TESTE) ── */
+const participantes = [...alunos];
+if (dupla?.nome && !participantes.includes(dupla.nome)) participantes.push(dupla.nome);
+
+/* ── Carregar modelos de questão ── */
+const caminho = ARQUIVO_QUESTOES_EQ;
+let modelos = [];
+try {
+  const resp = await fetch(caminho);
+  modelos = await resp.json();
+} catch(e) {
+  document.getElementById("content").innerHTML =
+    `<div class="card" style="text-align:center;padding:40px"><p style="color:var(--red)">Não foi possível carregar as questões.</p></div>`;
+  throw e;
+}
+
+/* ════════════════════════════════════════════════════════════
+   MATERIALIZAÇÃO — sorteia valores por dupla e monta as 4 opções
+   A seed é determinística pela dupla, então os dois aparelhos da
+   mesma dupla veem EXATAMENTE os mesmos números e alternativas.
+   ════════════════════════════════════════════════════════════ */
+// PRNG simples e determinístico (mulberry32) a partir de uma string
+function _hashStr(str){ let h=1779033703^str.length; for(let i=0;i<str.length;i++){ h=Math.imul(h^str.charCodeAt(i),3432918353); h=(h<<13)|(h>>>19);} return h>>>0; }
+function _rng(seedStr){ let a=_hashStr(seedStr); return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function _pick(rng, arr){ return arr[Math.floor(rng()*arr.length)]; }
+
+// Avaliador seguro das expressões (apenas variáveis numéricas no escopo)
+function _evalExpr(expr, ctx){
+  const keys = Object.keys(ctx);
+  const vals = keys.map(k => ctx[k]);
+  // eslint-disable-next-line no-new-func
+  const f = new Function(...keys, `"use strict"; return (${expr});`);
+  return Math.trunc(f(...vals));
+}
+
+// Aplica montar_ctx: deriva um valor a partir dos demais (ex.: "C = A*X + B")
+function _aplicarMontarCtx(modelo, ctx){
+  if (!modelo.montar_ctx) return;
+  const [alvo, expr] = modelo.montar_ctx.split("=").map(s => s.trim());
+  ctx[alvo] = _evalExpr(expr, ctx);
+}
+
+// Substitui {VAR} num texto pelos valores do contexto
+function _subst(txt, ctx){
+  return txt.replace(/\{(\w+)\}/g, (_,k)=> (k in ctx ? ctx[k] : `{${k}}`));
+}
+
+// Distratores numéricos para "encontre x" (erros conceituais comuns em equações)
+function _distratoresX(rng, correta){
+  const cand = [
+    correta + 1, correta - 1, correta + 2, correta - 2,
+    correta + 3, correta - 3, correta + 5, correta * 2,
+  ];
+  const out = [], vistos = new Set([correta]);
+  for (const c of cand){
+    if (c > 0 && !vistos.has(c)){ vistos.add(c); out.push(c); }
+    if (out.length === 3) break;
+  }
+  let k = 4;
+  while (out.length < 3){
+    const c = correta + k;
+    if (c > 0 && !vistos.has(c)){ vistos.add(c); out.push(c); }
+    k++;
+    if (k > 60) break;
+  }
+  return out.slice(0,3);
+}
+
+// Seed da dupla: nomes ordenados + atividade (igual nos dois aparelhos)
+const _nomesDupla = [...new Set([...alunos, ...(dupla?.nome ? [dupla.nome] : [])])].sort();
+const _seedBase = `${nomeAtiv}|${turma}|${_nomesDupla.join("+")}`;
+
+const _letras = ["A","B","C","D"];
+
+function materializar(modelo, idx){
+  const rng = _rng(`${_seedBase}#${modelo.id}#${idx}`);
+
+  // 1) Sorteia as variáveis independentes
+  let ctx = {};
+  if (modelo.variaveis){
+    for (const k of Object.keys(modelo.variaveis)) ctx[k] = _pick(rng, modelo.variaveis[k]);
+  }
+  // 2) Deriva o valor dependente (mantém coeficientes positivos)
+  _aplicarMontarCtx(modelo, ctx);
+
+  // 3) Enunciado com valores substituídos
+  const enun = _subst(modelo.enunciado, ctx);
+
+  // ── TIPO A: digitar o valor de x (numérica) ──
+  if (modelo.tipo === "numerica"){
+    const correta = _evalExpr(modelo.resposta_expr, ctx);
+    return {
+      id: modelo.id, dificuldade: modelo.dificuldade, tag: modelo.tag,
+      tipo: "numerica", enunciado: enun,
+      instrucao: modelo.instrucao || "Digite apenas o número.",
+      respostaNum: correta,          // número esperado
+      opcoes: null, resposta: null,
+    };
+  }
+
+  // ── TIPO B: marcar o valor de x (múltipla escolha numérica) ──
+  if (modelo.tipo === "multipla_num"){
+    const correta = _evalExpr(modelo.resposta_expr, ctx);
+    const dist = _distratoresX(rng, correta);
+    let valores = [correta, ...dist];
+    for (let i=valores.length-1; i>0; i--){ const j=Math.floor(rng()*(i+1)); [valores[i],valores[j]]=[valores[j],valores[i]]; }
+    const idxCorreta = valores.indexOf(correta);
+    const pref = modelo.prefixo_opcao || "";
+    const opcoes = valores.map((v,i)=> `${_letras[i]}) <span class="eq-opt">${pref}${v}</span>`);
+    return {
+      id: modelo.id, dificuldade: modelo.dificuldade, tag: modelo.tag,
+      tipo: "multipla_num", enunciado: enun, umaColuna: false,
+      opcoes, resposta: _letras[idxCorreta],
+    };
+  }
+
+  // ── TIPO C: marcar a equação que representa o problema (texto) ──
+  // (opções são as equações; distratores fixos do modelo)
+  const correan = _subst(modelo.equacao_correta, ctx);
+  const distr = (modelo.distratores || []).map(d => _subst(d, ctx));
+  let itens = [correan, ...distr];
+  for (let i=itens.length-1; i>0; i--){ const j=Math.floor(rng()*(i+1)); [itens[i],itens[j]]=[itens[j],itens[i]]; }
+  const idxCor = itens.indexOf(correan);
+  const opcoes = itens.map((t,i)=> `${_letras[i]}) <span class="eq-opt">${t}</span>`);
+  return {
+    id: modelo.id, dificuldade: modelo.dificuldade, tag: modelo.tag,
+    tipo: "multipla_texto", enunciado: enun, umaColuna: true,
+    opcoes, resposta: _letras[idxCor],
+  };
+}
+
+// Materializa todos os modelos e mistura mantendo equilíbrio de dificuldade
+let questoes = modelos.map((m, i) => materializar(m, i));
+questoes = intercalarPorDificuldade(questoes);
+
+/* ── Estado do jogo ── */
+const jogo = {
+  nome: nomeAtiv,
+  turma,
+  alunos: participantes,
+  questoes,
+  respostas: new Array(questoes.length).fill(null), // letra escolhida por questão
+  indice: 0,
+  inicioTs: Date.now(),
+  finalizado: false,
+  percentual: percentualNota,
+};
+
+/* ── Registro inicial no Firebase: tentativa consumida mesmo se fechar ── */
+const idsRegistro = {};
+for (const al of jogo.alunos) {
+  try {
+    const id = await addResultado({
+      aluno: al, turma: jogo.turma, atividade: jogo.nome,
+      concluido: false, pontuacao: 0, acertos: 0, erros: 0, respondidas: 0,
+      modo: "atividade_plus", ...(isModoTeste() ? { modo_teste:true } : {})
+    });
+    idsRegistro[al] = id;
+  } catch(e) { console.warn("[addResultado inicial]", e); }
+}
+
+/* ── Topbar ── */
+document.getElementById("topbar-title").textContent = jogo.nome;
+const pctLabel = percentualNota < 100 ? ` · ${percentualNota}% da nota` : "";
+document.getElementById("topbar-sub").textContent =
+  `Turma ${turma}${dupla?.nome ? ` · Dupla: ${alunos[0]} + ${dupla.nome}` : ""}${pctLabel} · ${TEMPO_ALVO_SEG/60} min (máx ${TEMPO_MAX_SEG/60})`;
+
+/* ════════════════════════════════════════════════════════════
+   TIMER — alvo 15 min, encerramento automático aos 20 min
+   ════════════════════════════════════════════════════════════ */
+let timerInt = null;
+function tempoDecorrido(){ return Math.floor((Date.now() - jogo.inicioTs)/1000); }
+function fmtMMSS(seg){ const m=Math.floor(seg/60), s=seg%60; return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; }
+
+function iniciarTimer(){
+  const atualizar = () => {
+    const decor = tempoDecorrido();
+    const restanteMax = Math.max(0, TEMPO_MAX_SEG - decor);
+    const el = document.getElementById("timer-display");
+    const mini = document.getElementById("timer-mini");
+    const txt = fmtMMSS(restanteMax);
+    if (el) {
+      el.textContent = txt;
+      el.classList.toggle("alerta", restanteMax <= 5*60 && restanteMax > 2*60);
+      el.classList.toggle("critico", restanteMax <= 2*60);
+    }
+    if (mini){ mini.style.display="block"; mini.textContent = txt; }
+    // Aviso quando passa do tempo alvo (15 min) mas ainda dentro do máximo
+    const sub = document.getElementById("timer-sub");
+    if (sub){
+      if (decor >= TEMPO_ALVO_SEG && restanteMax > 0)
+        sub.textContent = "⏰ Tempo recomendado encerrado — finalize logo!";
+      else
+        sub.textContent = `Tempo recomendado: ${TEMPO_ALVO_SEG/60} min`;
+    }
+    if (restanteMax <= 0 && !jogo.finalizado) {
+      finalizar("tempo");
+    }
+  };
+  atualizar();
+  timerInt = setInterval(atualizar, 1000);
+}
+
+/* ════════════════════════════════════════════════════════════
+   BLOQUEIO DE SAÍDA — sair da página encerra a atividade
+   (desativado no Modo Teste para o professor poder navegar à vontade)
+   ════════════════════════════════════════════════════════════ */
+let saindo = false;
+if (!ehTeste) {
+  // Aviso nativo ao tentar fechar/recarregar
+  window.addEventListener("beforeunload", (e) => {
+    if (jogo.finalizado || saindo) return;
+    e.preventDefault();
+    e.returnValue = "";
+  });
+  // Trocar de aba / minimizar / bloquear tela → encerra
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden" && !jogo.finalizado && !saindo) {
+      finalizar("saiu");
+    }
+  });
+  // Perder o foco da janela → encerra (cobre alt-tab e troca de app)
+  window.addEventListener("blur", () => {
+    // pequeno atraso evita falso-positivo de cliques internos
+    setTimeout(() => {
+      if (!document.hasFocus() && !jogo.finalizado && !saindo) finalizar("saiu");
+    }, 300);
+  });
+}
+
+/* ════════════════════════════════════════════════════════════
+   RENDER — questão atual + alternativas
+   ════════════════════════════════════════════════════════════ */
+function questaoAtual(){ return jogo.questoes[jogo.indice]; }
+
+function render(){
+  const q = questaoAtual();
+  const n = jogo.indice;
+  const total = jogo.questoes.length;
+  const respondidas = jogo.respostas.filter(r => r !== null && r !== "").length;
+  const pct = Math.round((respondidas/total)*100);
+  const letras = ["A","B","C","D"];
+
+  // Corpo da questão: input numérico (digitar x) OU alternativas (marcar)
+  let corpoHtml;
+  if (q.tipo === "numerica"){
+    const val = jogo.respostas[n];
+    const preenchido = (val !== null && val !== "") ? " preenchido" : "";
+    corpoHtml = `
+      <div class="cp-num-wrap">
+        <div class="cp-num-label">Escreva o valor de x:</div>
+        <div class="cp-num-row">
+          <span class="cp-num-xis">x =</span>
+          <input type="number" inputmode="numeric" step="1" class="cp-num-input${preenchido}"
+                 id="cp-num-input" value="${val !== null ? val : ""}"
+                 oninput="digitarNumero(this.value)" placeholder="?" autocomplete="off"/>
+        </div>
+        <div class="cp-num-hint">${q.instrucao || "Digite apenas o número."}</div>
+      </div>`;
+  } else {
+    const alts = q.opcoes.map((opt, i) => {
+      const letra = letras[i];
+      const texto = opt.replace(/^[A-D]\)\s*/, "");
+      const sel = jogo.respostas[n] === letra ? " selecionada" : "";
+      return `<button class="cp-alt${sel}" onclick="selecionar('${letra}')">
+        <span class="cp-alt-letra">${letra}</span><span>${texto}</span>
+      </button>`;
+    }).join("");
+    corpoHtml = `<div class="cp-alts${q.umaColuna ? " uma-coluna" : ""}">${alts}</div>`;
+  }
+
+  const mapaHtml = jogo.questoes.map((_, i) => {
+    const cls = [
+      "cp-mapa-btn",
+      jogo.respostas[i] !== null ? "respondida" : "",
+      i === jogo.indice ? "atual" : ""
+    ].filter(Boolean).join(" ");
+    return `<button class="${cls}" onclick="irPara(${i})">${i+1}</button>`;
+  }).join("");
+
+  document.getElementById("content").innerHTML = `
+    <div class="cp-layout">
+      <div class="cp-main">
+        <div class="cp-progress">
+          <span class="cp-prog-label">Progresso</span>
+          <div class="cp-prog-bar"><div class="cp-prog-fill" style="width:${pct}%"></div></div>
+          <span class="cp-prog-count">${respondidas}/${total}</span>
+        </div>
+
+        <div class="cp-qcard">
+          <div class="cp-qhead">
+            <span class="cp-qnum">Questão ${n+1}</span>
+            ${q.tag ? `<span class="cp-qtag">${q.tag}</span>` : ""}
+          </div>
+          <div class="cp-qtext">${q.enunciado}</div>
+          ${corpoHtml}
+        </div>
+
+        <div class="cp-nav">
+          <button class="btn btn-ghost" onclick="anterior()" ${n===0?"disabled":""}>
+            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+            Anterior
+          </button>
+          <div class="cp-nav-mid">${jogo.respostas[n] !== null && jogo.respostas[n] !== "" ? "✓ Respondida" : (q.tipo === "numerica" ? "Digite o valor de x" : "Selecione uma alternativa")}</div>
+          <button class="btn btn-blue" onclick="proxima()" ${n===total-1?"disabled":""}>
+            Próxima
+            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="cp-side">
+        <div class="cp-panel">
+          <div class="cp-panel-label">⏱ Tempo restante</div>
+          <div class="cp-timer" id="timer-display">--:--</div>
+          <div class="cp-timer-sub" id="timer-sub">Tempo recomendado: ${TEMPO_ALVO_SEG/60} min</div>
+        </div>
+
+        ${dupla?.nome ? `<div class="cp-dupla-chip">👥 Em dupla com ${dupla.nome}</div>` : ""}
+
+        <div class="cp-panel">
+          <div class="cp-panel-label">🗺 Mapa de questões</div>
+          <div class="cp-mapa">${mapaHtml}</div>
+          <div class="cp-mapa-legenda">
+            <div class="cp-leg-item"><span class="cp-leg-dot resp"></span> Respondida</div>
+            <div class="cp-leg-item"><span class="cp-leg-dot atual"></span> Questão atual</div>
+          </div>
+        </div>
+
+        <button class="cp-btn-finalizar" onclick="tentarFinalizar()">✓ Finalizar atividade</button>
+
+        <div class="cp-warn">⚠️ Não saia desta página nem troque de aba — a atividade será encerrada automaticamente.</div>
+      </div>
+    </div>`;
+
+  // re-inicia o tempo na primeira render
+  if (!timerInt) iniciarTimer();
+}
+
+/* ── Ações de navegação ── */
+window.selecionar = (letra) => {
+  if (jogo.finalizado) return;
+  jogo.respostas[jogo.indice] = letra;
+  render();
+};
+
+// Questões de digitar x: grava sem re-renderizar (mantém o foco no input);
+// atualiza só o mapa, o contador e o status visualmente.
+window.digitarNumero = (valor) => {
+  if (jogo.finalizado) return;
+  const v = (valor ?? "").trim();
+  jogo.respostas[jogo.indice] = v === "" ? null : v;
+  // atualiza input, mapa e progresso sem perder o foco
+  const inp = document.getElementById("cp-num-input");
+  if (inp) inp.classList.toggle("preenchido", v !== "");
+  const respondidas = jogo.respostas.filter(r => r !== null && r !== "").length;
+  const total = jogo.questoes.length;
+  const cont = document.querySelector(".cp-prog-count");
+  if (cont) cont.textContent = `${respondidas}/${total}`;
+  const fill = document.querySelector(".cp-prog-fill");
+  if (fill) fill.style.width = `${Math.round((respondidas/total)*100)}%`;
+  const mid = document.querySelector(".cp-nav-mid");
+  if (mid) mid.textContent = v !== "" ? "✓ Respondida" : "Digite o valor de x";
+  const btnMapa = document.querySelectorAll(".cp-mapa-btn")[jogo.indice];
+  if (btnMapa) btnMapa.classList.toggle("respondida", v !== "");
+};
+window.irPara = (i) => { if (jogo.finalizado) return; jogo.indice = i; render(); };
+window.anterior = () => { if (jogo.indice > 0) { jogo.indice--; render(); } };
+window.proxima = () => { if (jogo.indice < jogo.questoes.length-1) { jogo.indice++; render(); } };
+
+window.tentarFinalizar = () => {
+  const respondidas = jogo.respostas.filter(r => r !== null && r !== "").length;
+  const faltam = jogo.questoes.length - respondidas;
+  let msg = "Deseja finalizar a atividade?";
+  if (faltam > 0) msg = `Você deixou ${faltam} questão(ões) em branco (contam como erro). Finalizar mesmo assim?`;
+  if (!confirm(msg)) return;
+  finalizar("manual");
+};
+
+/* ════════════════════════════════════════════════════════════
+   FINALIZAÇÃO — corrige, pontua e salva
+   ════════════════════════════════════════════════════════════ */
+async function finalizar(motivo){
+  if (jogo.finalizado) return;
+  jogo.finalizado = true;
+  saindo = true;
+  if (timerInt) clearInterval(timerInt);
+
+  // Correção: todas as questões valem o mesmo (1 ponto bruto cada)
+  const total = jogo.questoes.length;
+  let acertos = 0;
+  const historico = [];
+  const letras = ["A","B","C","D"];
+  // remove prefixo "A) " e quaisquer tags HTML das opções, p/ a tela de resultado
+  const _limpa = (s) => s ? s.replace(/^[A-D]\)\s*/, "").replace(/<[^>]+>/g, "").trim() : s;
+  const _limpaEnun = (s) => s ? s.replace(/<br\s*\/?>/gi, " ").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim() : s;
+  jogo.questoes.forEach((q, i) => {
+    const esc = jogo.respostas[i];
+    let acertou, textoEsc, textoCor;
+    if (q.tipo === "numerica"){
+      // compara numericamente (aceita "07", " 7 ", etc.)
+      const alunoNum = (esc === null || esc === "") ? null : Number(esc);
+      acertou = alunoNum !== null && Number.isFinite(alunoNum) && alunoNum === q.respostaNum;
+      textoEsc = (esc === null || esc === "") ? "(em branco)" : `x = ${esc}`;
+      textoCor = `x = ${q.respostaNum}`;
+    } else {
+      acertou = esc === q.resposta;
+      textoEsc = esc ? _limpa(q.opcoes[letras.indexOf(esc)]) : "(em branco)";
+      textoCor = _limpa(q.opcoes[letras.indexOf(q.resposta)]);
+    }
+    if (acertou) acertos++;
+    historico.push({
+      pergunta: _limpaEnun(q.enunciado),
+      enunciado: _limpaEnun(q.enunciado),
+      resposta_aluno: textoEsc,
+      resposta_correta: textoCor,
+      acertou,
+      tentativas: 1,
+      pontos: acertou ? 1 : 0,
+    });
+  });
+  const erros = total - acertos;
+  const respondidas = jogo.respostas.filter(r => r !== null && r !== "").length;
+
+  // Pontuação: nota de 0 a 10 proporcional aos acertos, aplicando % da atividade
+  const notaBruta = total > 0 ? (acertos/total) * 10 : 0;
+  const notaFinal = Math.round(notaBruta * (jogo.percentual/100) * 100) / 100;
+  const pontosBruto = Math.round(notaBruta * 100) / 100;
+  const tempoSeg = tempoDecorrido();
+
+  // Salvar no Firebase
+  let salvoFirebase = true, erroSalvar = "";
+  const novasConquistas = [];
+  for (const al of jogo.alunos) {
+    const dadosFinais = {
+      aluno: al, turma: jogo.turma, atividade: jogo.nome,
+      concluido: true,
+      pontuacao: notaFinal,
+      pontuacao_bruta: pontosBruto,
+      acertos, erros, respondidas, total,
+      tempo_segundos: tempoSeg,
+      motivo_fim: motivo,
+      modo: "atividade_plus",
+      ...(isModoTeste() ? { modo_teste:true } : {})
+    };
+    try {
+      const id = idsRegistro[al];
+      if (id) {
+        await updateResultado(id, dadosFinais);
+        await saveDetalhes(id, historico).catch(e=>console.warn("[saveDetalhes]",e));
+      } else {
+        const novoId = await addResultado(dadosFinais);
+        await saveDetalhes(novoId, historico).catch(()=>{});
+      }
+    } catch(e) {
+      salvoFirebase = false; erroSalvar = e.message || String(e);
+      console.warn("[updateResultado]", e);
+    }
+
+    // Conquista simples: primeira atividade concluída
+    try {
+      const hist = await getResultadosByAluno(al, jogo.turma);
+      const conc = hist.filter(r => r.concluido);
+      if (conc.length <= 1) {
+        await addConquista({ aluno: al, turma: jogo.turma, atividade: jogo.nome,
+          tipo: "primeira_atividade", descricao: "Primeira atividade! 🎉", data: Date.now() });
+        novasConquistas.push("Primeira atividade! 🎉");
+      }
+      if (acertos === total && total > 0) {
+        await addConquista({ aluno: al, turma: jogo.turma, atividade: jogo.nome,
+          tipo: "gabaritou", descricao: "Gabaritou! 💯", data: Date.now() });
+        novasConquistas.push("Gabaritou! 💯");
+      }
+    } catch(e) { console.warn("[conquista]", e); }
+
+    if (isModoTeste()) {
+      try {
+        await addHistoricoTeste("atividades", {
+          aluno: "PROFESSOR_TESTE", turma: "TESTE", atividade: jogo.nome,
+          modo: "atividade_plus", pontuacao: notaFinal, pontuacao_bruta: pontosBruto,
+          acertos, erros, respondidas, total,
+        });
+      } catch(_){}
+    }
+  }
+
+  // Passa resultado para a tela de resultado
+  const resultado = {
+    nome: jogo.nome, turma: jogo.turma,
+    pontuacaoFinal: notaFinal, pontuacaoBruta: pontosBruto,
+    tempoSegundos: tempoSeg,
+    acertos, erros, respondidas, total,
+    percentual: jogo.percentual,
+    historico, novasConquistas,
+    salvoFirebase, erroSalvar,
+    motivoFim: motivo,
+  };
+  sessionStorage.setItem("sm_jogo_resultado", JSON.stringify(resultado));
+  window.location.href = "/aluno/resultado.html";
+}
+
+/* ── Start ── */
+render();
+</script>
+</body>
+</html>

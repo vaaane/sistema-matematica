@@ -72,6 +72,8 @@
     "biblioteca":      { ".read": true, ".write": true },
     "calendario":      { ".read": true, ".write": true },
     "tabuada_sprint_ranking": { ".read": true, ".write": true },
+    "provas_catalogo": { ".read": true, ".write": true },
+    "provas":          { ".read": true, ".write": true },
 
     "$outro": {
       ".read": false,

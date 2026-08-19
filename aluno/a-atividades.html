@@ -373,6 +373,8 @@ const bannerHtml = liberadaParaBanner ? (() => {
     ? `/aluno/avaliacao_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
     : modoEf === 'atividade_plus'
     ? `/aluno/atividade_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
+    : modoEf === 'equacoes'
+    ? `/aluno/atividade_equacoes.html?ativ=${encodeURIComponent(ativ.nome)}`
     : modoEf === 'competicao_plus'
     ? `/aluno/competicao_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
     : modoEf === 'competicao'
@@ -426,6 +428,8 @@ const cardsHtml = ATIVS_BIM.map(ativ => {
     ? `/aluno/avaliacao_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
     : modoEf === 'atividade_plus'
     ? `/aluno/atividade_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
+    : modoEf === 'equacoes'
+    ? `/aluno/atividade_equacoes.html?ativ=${encodeURIComponent(ativ.nome)}`
     : modoEf === 'competicao_plus'
     ? `/aluno/competicao_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
     : modoEf === 'competicao'

@@ -1,0 +1,297 @@
+[
+  {
+    "id": "EQ-DIG-1T",
+    "dificuldade": 1,
+    "tipo": "numerica",
+    "tag": "Encontre x · escreva o resultado",
+    "enunciado": "Resolva a equação e escreva o valor de <b>x</b>:<br><span class='eq-destaque'>{A}x + {B} = {C}</span>",
+    "variaveis": {
+      "A": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "X": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "B": [
+        4,
+        6,
+        8,
+        10,
+        12
+      ]
+    },
+    "resposta_expr": "X",
+    "montar_ctx": "C = A*X + B",
+    "instrucao": "Digite apenas o número (ex.: 7)."
+  },
+  {
+    "id": "EQ-DIG-2T",
+    "dificuldade": 2,
+    "tipo": "numerica",
+    "tag": "Encontre x · escreva o resultado",
+    "enunciado": "Resolva a equação e escreva o valor de <b>x</b>:<br><span class='eq-destaque'>{A}x + {B} = {D}x + {E}</span>",
+    "variaveis": {
+      "A": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "D": [
+        2,
+        3
+      ],
+      "X": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "B": [
+        4,
+        6,
+        8,
+        10
+      ]
+    },
+    "resposta_expr": "X",
+    "montar_ctx": "E = (A - D)*X + B",
+    "instrucao": "Junte as letras de um lado e os números do outro. Digite apenas o número."
+  },
+  {
+    "id": "EQ-MUL-1T",
+    "dificuldade": 1,
+    "tipo": "multipla_num",
+    "tag": "Encontre x · marque a alternativa",
+    "enunciado": "Qual é o valor de <b>x</b> na equação abaixo?<br><span class='eq-destaque'>{A}x − {B} = {C}</span>",
+    "variaveis": {
+      "A": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "X": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "B": [
+        3,
+        5,
+        6
+      ]
+    },
+    "resposta_expr": "X",
+    "montar_ctx": "C = A*X - B",
+    "prefixo_opcao": "x = "
+  },
+  {
+    "id": "EQ-MUL-2T",
+    "dificuldade": 2,
+    "tipo": "multipla_num",
+    "tag": "Encontre x · marque a alternativa",
+    "enunciado": "Qual é o valor de <b>x</b> na equação abaixo?<br><span class='eq-destaque'>{A}x + {B} = {D}x + {E}</span>",
+    "variaveis": {
+      "A": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "D": [
+        2,
+        3
+      ],
+      "X": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "B": [
+        3,
+        5,
+        7,
+        9
+      ]
+    },
+    "resposta_expr": "X",
+    "montar_ctx": "E = (A - D)*X + B",
+    "prefixo_opcao": "x = "
+  },
+  {
+    "id": "EQ-PROB-1",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Problema · escolha a equação",
+    "enunciado": "Pedro pensou em um número, somou <b>{B}</b> e encontrou <b>{C}</b>. Qual equação representa esse problema?",
+    "variaveis": {
+      "B": [
+        7,
+        9,
+        12,
+        15
+      ],
+      "X": [
+        8,
+        10,
+        13,
+        16,
+        20
+      ]
+    },
+    "montar_ctx": "C = X + B",
+    "equacao_correta": "x + {B} = {C}",
+    "distratores": [
+      "x − {B} = {C}",
+      "{B}x = {C}",
+      "x + {C} = {B}"
+    ]
+  },
+  {
+    "id": "EQ-PROB-2",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Problema · escolha a equação",
+    "enunciado": "O dobro de um número é <b>{C}</b>. Qual equação representa esse problema?",
+    "variaveis": {
+      "X": [
+        7,
+        9,
+        11,
+        13,
+        15
+      ]
+    },
+    "montar_ctx": "C = 2*X",
+    "equacao_correta": "2x = {C}",
+    "distratores": [
+      "x + 2 = {C}",
+      "x − 2 = {C}",
+      "x ÷ 2 = {C}"
+    ]
+  },
+  {
+    "id": "EQ-PROB-3",
+    "dificuldade": 2,
+    "tipo": "multipla_texto",
+    "tag": "Problema · escolha a equação",
+    "enunciado": "Ana comprou um caderno por <b>R${B}</b> e ainda ficou com <b>R${R}</b>. Chamando de <b>x</b> o que ela tinha antes, qual equação representa o problema?",
+    "variaveis": {
+      "B": [
+        12,
+        15,
+        18,
+        20
+      ],
+      "R": [
+        20,
+        25,
+        30,
+        32
+      ]
+    },
+    "montar_ctx": "X = B + R",
+    "equacao_correta": "x − {B} = {R}",
+    "distratores": [
+      "x + {B} = {R}",
+      "{B}x = {R}",
+      "x − {R} = {B}"
+    ]
+  },
+  {
+    "id": "EQ-PROB-4",
+    "dificuldade": 2,
+    "tipo": "multipla_texto",
+    "tag": "Problema · escolha a equação",
+    "enunciado": "Maria comprou <b>{N}</b> canetas iguais e pagou <b>R${C}</b> no total. Chamando de <b>x</b> o preço de cada caneta, qual equação representa o problema?",
+    "variaveis": {
+      "N": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "X": [
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "montar_ctx": "C = N*X",
+    "equacao_correta": "{N}x = {C}",
+    "distratores": [
+      "x + {N} = {C}",
+      "x ÷ {N} = {C}",
+      "x − {N} = {C}"
+    ]
+  },
+  {
+    "id": "EQ-PROB-5",
+    "dificuldade": 2,
+    "tipo": "multipla_texto",
+    "tag": "Problema · escolha a equação",
+    "enunciado": "O triplo de um número, <b>menos {B}</b>, é igual a <b>{C}</b>. Qual equação representa esse problema?",
+    "variaveis": {
+      "B": [
+        5,
+        6,
+        8,
+        9
+      ],
+      "X": [
+        5,
+        6,
+        7,
+        8,
+        10
+      ]
+    },
+    "montar_ctx": "C = 3*X - B",
+    "equacao_correta": "3x − {B} = {C}",
+    "distratores": [
+      "3x + {B} = {C}",
+      "x − {B} = {C}",
+      "3(x − {B}) = {C}"
+    ]
+  },
+  {
+    "id": "EQ-PROB-6",
+    "dificuldade": 3,
+    "tipo": "multipla_texto",
+    "tag": "Problema · escolha a equação",
+    "enunciado": "Um número somado ao seu <b>dobro</b> resulta em <b>{C}</b>. Qual equação representa esse problema?",
+    "variaveis": {
+      "X": [
+        7,
+        9,
+        11,
+        12,
+        14
+      ]
+    },
+    "montar_ctx": "C = 3*X",
+    "equacao_correta": "x + 2x = {C}",
+    "distratores": [
+      "2x = {C}",
+      "x + 2 = {C}",
+      "x × 2x = {C}"
+    ]
+  }
+]

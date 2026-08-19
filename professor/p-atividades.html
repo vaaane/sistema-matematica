@@ -103,6 +103,10 @@
             <div class="modo-radio"></div>
             <div><div class="modo-nome">🧮 Atividade+</div><div class="modo-desc">Múltipla escolha · mapa de questões · 1 tentativa · 15 min</div></div>
           </div>
+          <div class="modo-card" onclick="abrirTeste('equacoes')" style="cursor:pointer">
+            <div class="modo-radio"></div>
+            <div><div class="modo-nome">➗ Equações</div><div class="modo-desc">Digitar-x, marcar-x e marcar-equação</div></div>
+          </div>
         </div>
       </div>
       <p style="font-size:11px;color:var(--text-muted);margin-top:4px">
@@ -457,6 +461,7 @@ window.abrirTeste = function(modo) {
   if (!ativ) { flash('Selecione uma atividade antes de escolher o modo.', 'error'); return; }
   const page = modo === 'competicao_plus' ? '/aluno/competicao_plus.html'
              : modo === 'atividade_plus'  ? '/aluno/atividade_plus.html'
+             : modo === 'equacoes'        ? '/aluno/atividade_equacoes.html'
              : '/aluno/avaliacao_plus.html';
   window.open(`${page}?modo=teste&ativ=${encodeURIComponent(ativ)}`, '_blank');
   fecharTestarModal();
