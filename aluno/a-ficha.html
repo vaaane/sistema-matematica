@@ -15,9 +15,11 @@
   .bim-tab{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:700;color:var(--text-muted);cursor:pointer;border:none;background:transparent;font-family:'Inter',sans-serif}
   .bim-tab.active{background:var(--purple);color:#fff;box-shadow:0 2px 8px rgba(108,0,212,.4)}
 
-  .aviso-pais{display:flex;gap:10px;align-items:flex-start;background:rgba(155,48,255,.08);border:1px solid rgba(155,48,255,.25);border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:12.5px;line-height:1.4;color:var(--text)}
+  .aviso-pais{display:flex;gap:10px;align-items:center;background:rgba(155,48,255,.08);border:1px solid rgba(155,48,255,.25);border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:12.5px;line-height:1.4;color:var(--text)}
   .aviso-pais svg{width:18px;height:18px;fill:var(--purple);flex-shrink:0;margin-top:1px}
   .aviso-pais b{color:#c79bff}
+  .aviso-ilus{flex-shrink:0;margin-left:auto}
+  @media(max-width:768px){ .aviso-ilus{display:none} }
 
   /* ===== Resumo (cabeçalho da ficha) ===== */
   .resumo{background:linear-gradient(135deg,#20153f 0%,#181233 55%,#141026 100%);border:1.5px solid rgba(155,48,255,.28);border-radius:18px;padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow)}
@@ -34,11 +36,18 @@
   .ring .lbl .n{font-size:18px;font-weight:900;line-height:1}
   .ring .lbl .t{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
   .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px;border-top:1px solid var(--border);padding-top:14px}
-  .stat{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:10px 12px;cursor:pointer;transition:.15s;text-align:left}
+  .stat{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:10px 12px;cursor:pointer;transition:.15s;text-align:left;display:flex;align-items:center;gap:12px}
   .stat:hover{border-color:rgba(155,48,255,.4);background:rgba(155,48,255,.06)}
   .stat .v{font-size:20px;font-weight:900;line-height:1}
   .stat .l{font-size:10.5px;color:var(--text-muted);margin-top:4px}
   .stat.r .v{color:var(--red)} .stat.o .v{color:var(--gold)} .stat.b .v{color:#60a5fa} .stat.m .v{color:var(--text-muted)}
+  .stat-ic{width:44px;height:44px;flex-shrink:0;border-radius:12px;display:flex;align-items:center;justify-content:center}
+  .stat-ic svg{width:24px;height:24px;fill:currentColor}
+  .stat-ic.roxo{background:rgba(155,48,255,.14);color:#c79bff}
+  .stat-ic.vermelho{background:rgba(239,68,68,.14);color:#f87171}
+  .stat-ic.azul{background:rgba(96,165,250,.14);color:#8ec0ff}
+  .stat-ic.dourado{background:rgba(240,165,0,.14);color:#f5c451}
+  @media(max-width:768px){ .stat-ic{width:38px;height:38px;border-radius:10px} .stat-ic svg{width:20px;height:20px} }
   /* ===== Presença (faltas + atestado no mesmo card) ===== */
   .pres-sec+.pres-sec{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
   .pres-h{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;margin-bottom:10px}
@@ -135,6 +144,18 @@
       <div class="aviso-pais">
         <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
         <div><b>Para o aluno e a família:</b> aqui você acompanha as atividades entregues, as faltas, os dias com atestado médico e as ocorrências registradas pela professora ao longo do bimestre. Use as abas para ver cada bimestre.</div>
+        <div class="aviso-ilus" aria-hidden="true">
+          <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:96px;height:auto">
+            <rect x="34" y="20" width="60" height="80" rx="8" fill="#2a1a54"/>
+            <rect x="34" y="20" width="60" height="80" rx="8" fill="rgba(255,255,255,.06)"/>
+            <rect x="50" y="14" width="28" height="12" rx="4" fill="#9b30ff"/>
+            <circle cx="47" cy="42" r="4" fill="#22C55E"/><rect x="55" y="40" width="30" height="4" rx="2" fill="#c79bff" opacity=".7"/>
+            <circle cx="47" cy="58" r="4" fill="#22C55E"/><rect x="55" y="56" width="30" height="4" rx="2" fill="#c79bff" opacity=".7"/>
+            <circle cx="47" cy="74" r="4" fill="#f0a500"/><rect x="55" y="72" width="22" height="4" rx="2" fill="#c79bff" opacity=".5"/>
+            <rect x="86" y="52" width="7" height="34" rx="3" fill="#f0a500" transform="rotate(32 86 52)"/>
+            <path d="M99 79l-5 6 1-7z" fill="#11111f"/>
+          </svg>
+        </div>
       </div>
 
       <div class="card" style="padding:14px 20px;margin-bottom:16px">
@@ -351,10 +372,22 @@ function render(){
         </div>
       </div>
       <div class="stats">
-        <div class="stat m" data-goto="c-ativ"><div class="v">${naoF}</div><div class="l">Não feitas</div></div>
-        <div class="stat r" data-goto="c-pres"><div class="v">${faltas.length}</div><div class="l">Faltas</div></div>
-        <div class="stat b" data-goto="c-pres"><div class="v">${atDias.length}</div><div class="l">Atestado</div></div>
-        <div class="stat o" data-goto="c-oc"><div class="v">${oc.length}</div><div class="l">Ocorrências</div></div>
+        <div class="stat m" data-goto="c-ativ">
+          <div class="stat-ic roxo"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></div>
+          <div class="stat-txt"><div class="v">${naoF}</div><div class="l">Não feitas</div></div>
+        </div>
+        <div class="stat r" data-goto="c-pres">
+          <div class="stat-ic vermelho"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
+          <div class="stat-txt"><div class="v">${faltas.length}</div><div class="l">Faltas</div></div>
+        </div>
+        <div class="stat b" data-goto="c-pres">
+          <div class="stat-ic azul"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 15l-4-4 1.41-1.41L10 13.17l6.59-6.59L18 8l-8 8z"/></svg></div>
+          <div class="stat-txt"><div class="v">${atDias.length}</div><div class="l">Atestado</div></div>
+        </div>
+        <div class="stat o" data-goto="c-oc">
+          <div class="stat-ic dourado"><svg viewBox="0 0 24 24"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg></div>
+          <div class="stat-txt"><div class="v">${oc.length}</div><div class="l">Ocorrências</div></div>
+        </div>
       </div>
     </div>
 

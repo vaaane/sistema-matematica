@@ -36,6 +36,9 @@
 html { scroll-behavior: smooth; }
 html, body { height: 100%; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 body { background: radial-gradient(ellipse at 20% 50%, #1e1535 0%, #11111f 100%) fixed; }
+
+/* Zoom padrão no desktop ≈ 80% (no celular fica normal) */
+@media (min-width: 769px) { body { zoom: 0.8; } }
 a { text-decoration: none; color: inherit; }
 
 /* ── Layout ── */

@@ -113,6 +113,7 @@ export function renderSidebarAluno(containerId, activePage) {
   const turma  = s.turma || "";
   const nav = [
     { id:"inicio",     href:"/aluno/menu.html",       label:"Início",     icon:`<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>` },
+    { id:"ficha",      href:"/aluno/a-ficha.html",    label:"Minha Ficha", icon:`<path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-5 5h10v2H7V8zm0 4h10v2H7v-2zm0 4h7v2H7v-2z"/>` },
     { id:"atividades", href:"/aluno/a-atividades.html",  label:"Atividades", icon:`<path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/>` },
     { id:"aulas",      href:"/aluno/a-aulas.html",       label:"Minhas Aulas", icon:`<path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/>` },
     { id:"torneios",   href:"/aluno/torneios.html",    label:"Torneios",   icon:`<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>` },

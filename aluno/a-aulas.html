@@ -11,6 +11,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
 <style>
+  /* Página de vistos: zoom padrão no desktop ≈ 67% */
+  @media (min-width: 769px) { body { zoom: 0.67; } }
   :root{
     --card-sel:#242437;
     --sheet:#f7f5fc; --sheet-line:#e7e1f4; --ink:#221b3d; --ink-soft:#59527a;
@@ -26,6 +28,9 @@
   .sc-big{font-size:16px;font-weight:800}.sc-big b{color:var(--green)}
   .sc-sub{font-size:12.5px;color:var(--text-muted);margin-top:5px}
   .sc-sub .p{color:var(--gold);font-weight:700}
+  .stat-book{flex-shrink:0;width:150px;display:flex;justify-content:flex-end;align-items:center}
+  .stat-book svg{width:100%;height:auto;max-height:100px}
+  @media(max-width:768px){ .stat-book{display:none} }
 
   /* filtros: as 3 abas em 1 linha; "Ordenar por" na linha de baixo */
   .filtros{display:flex;flex-direction:column;gap:12px;margin-bottom:20px}
@@ -57,7 +62,10 @@
   .ring .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--text-muted)}
   .aula-main{min-width:0}
   .headline{display:flex;align-items:center;gap:9px;flex-wrap:wrap;row-gap:4px}
-  .aula-tag{font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:3px 8px;border-radius:6px;border:1px solid var(--border);color:var(--text-muted);background:transparent}
+  .aula-tag{font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:3px 9px;border-radius:6px;border:1px solid var(--border);color:var(--text-muted);background:transparent}
+  .aula-tag.teoria{background:rgba(155,48,255,.16);border-color:rgba(155,48,255,.4);color:#c79bff}
+  .aula-tag.exercicios{background:rgba(96,165,250,.16);border-color:rgba(96,165,250,.4);color:#8ec0ff}
+  .aula-tag.projeto{background:rgba(240,165,0,.16);border-color:rgba(240,165,0,.4);color:#f5c451}
   .aula-nome{font-size:14.5px;font-weight:700;line-height:1.25;flex:1 1 auto;min-width:0;color:var(--text)}
   .aula-meta{display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap}
   .aula-data{font-size:11.5px;color:var(--text-muted);display:inline-flex;align-items:center;gap:5px}
@@ -234,7 +242,11 @@ const ICO = {
 
 const fmtData = iso => { if(!iso) return ""; const [,m,d]=iso.split("-"); return `${d}/${m}`; };
 const norm = s => (s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-function tipoDe(n){ n=norm(n); if(/(teoria|teorica)/.test(n))return"teorica"; if(/(exerc|lista|problema|atividade|revis|questo)/.test(n))return"exercicios"; return""; }
+function tipoDe(n){ n=norm(n);
+  if(/(teoria|teorica)/.test(n)) return"teorica";
+  if(/(projeto|canudos|maquete|estruturas)/.test(n)) return"projeto";
+  if(/(exerc|lista|problema|atividade|revis|questo)/.test(n)) return"exercicios";
+  return""; }
 function estadoDe(m){ return m===1?"completo":m===2?"parcial":"sem"; }
 
 function renderTabs(){
@@ -303,6 +315,25 @@ function render(){
         <div class="sc-big"><b>${completo}</b> de ${total} vistos completos</div>
         <div class="sc-sub">${pend?`<span class="p">${pend} pendente${pend>1?"s":""}</span>${partes.length?" · "+partes.join(", "):""}`:"Tudo em dia! 🎉"}</div>
       </div>
+      <div class="stat-book" aria-hidden="true">
+        <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="122" cy="30" rx="16" ry="7" fill="#6c00d4" opacity=".25" transform="rotate(-25 122 30)"/>
+          <ellipse cx="142" cy="42" rx="13" ry="6" fill="#9b30ff" opacity=".22" transform="rotate(20 142 42)"/>
+          <rect x="30" y="86" width="104" height="20" rx="4" fill="url(#bkg)"/>
+          <rect x="38" y="90" width="88" height="3" rx="1.5" fill="#c79bff" opacity=".5"/>
+          <rect x="40" y="66" width="94" height="20" rx="4" fill="#6c2bd0"/>
+          <rect x="48" y="70" width="78" height="3" rx="1.5" fill="#e0ccff" opacity=".5"/>
+          <g transform="rotate(-8 92 54)">
+            <rect x="52" y="44" width="86" height="20" rx="4" fill="#9b30ff"/>
+            <rect x="60" y="48" width="70" height="3" rx="1.5" fill="#ffffff" opacity=".45"/>
+            <rect x="118" y="44" width="8" height="26" fill="#f0a500"/>
+            <path d="M118 70l4-4 4 4z" fill="#11111f"/>
+          </g>
+          <defs><linearGradient id="bkg" x1="30" y1="86" x2="134" y2="106" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#5a1fa8"/><stop offset="1" stop-color="#3a1270"/>
+          </linearGradient></defs>
+        </svg>
+      </div>
     </div>`;
 
   const tabs = [["todas","Todas",total],["com","Com visto",comVisto],["sem","Sem visto",sem]];
@@ -336,8 +367,9 @@ function render(){
 }
 
 function tagHTML(a){
-  const l = a.tipo==="teorica" ? "Teoria" : a.tipo==="exercicios" ? "Exercícios" : "";
-  return l ? `<span class="aula-tag">${l}</span>` : "";
+  const map = { teorica:["teoria","Teoria"], exercicios:["exercicios","Exercícios"], projeto:["projeto","Projeto"] };
+  const t = map[a.tipo];
+  return t ? `<span class="aula-tag ${t[0]}">${t[1]}</span>` : "";
 }
 function statusHTML(a){
   const map = {
