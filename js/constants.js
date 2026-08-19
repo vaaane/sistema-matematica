@@ -10,15 +10,13 @@ export const MAX_TENTATIVAS_ATIVIDADE = 2;
 export const LISTA_ATIVIDADES = [
   { nome: "Atividade 4 - Geometria",              cor: "purple", modo: "competicao_plus", bim: 2 },
   { nome: "Atividade 5 - Geometria: Triângulos",  cor: "blue",   modo: "competicao_plus", bim: 2 },
-  { nome: "Atividade 6 - Porcentagem",            cor: "purple", modo: "atividade_plus",  bim: 3 },
-  { nome: "Atividade 7 - Equações do 1º Grau",    cor: "purple", modo: "equacoes",        bim: 3 },
+  { nome: "Atividade 1 - Equações do 1º Grau",    cor: "purple", modo: "equacoes_plus",   bim: 3 },
 ];
 
 export const ARQUIVO_QUESTOES = {
   "Atividade 4 - Geometria":             "/dados/questoes_competicao.json",
   "Atividade 5 - Geometria: Triângulos": "/dados/questoes_atividade5.json",
-  "Atividade 6 - Porcentagem":           "/dados/questoes_atividade6.json",
-  "Atividade 7 - Equações do 1º Grau":   "/dados/questoes_equacoes.json",
+  "Atividade 1 - Equações do 1º Grau":   "/dados/questoes_equacoes.json",
 };
 
 // ===== ALUNOS_POR_TURMA (ordem oficial SEDF, ativos) =====

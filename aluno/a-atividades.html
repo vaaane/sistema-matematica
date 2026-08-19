@@ -369,12 +369,12 @@ const bannerHtml = liberadaParaBanner ? (() => {
   const ativ  = liberadaParaBanner;
   const lib   = liberadasMap[ativ.nome];
   const modoEf = lib?.modo || ativ.modo || 'classico';
-  const url   = modoEf === 'avaliacao_plus'
+  const url   = modoEf === 'equacoes_plus'
+    ? `/aluno/atividade_equacoes.html?ativ=${encodeURIComponent(ativ.nome)}`
+    : modoEf === 'avaliacao_plus'
     ? `/aluno/avaliacao_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
     : modoEf === 'atividade_plus'
     ? `/aluno/atividade_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
-    : modoEf === 'equacoes'
-    ? `/aluno/atividade_equacoes.html?ativ=${encodeURIComponent(ativ.nome)}`
     : modoEf === 'competicao_plus'
     ? `/aluno/competicao_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
     : modoEf === 'competicao'
@@ -424,12 +424,12 @@ const cardsHtml = ATIVS_BIM.map(ativ => {
   const isAvP       = modoEf === 'avaliacao_plus';
   const nota        = isAvP ? (melhorNota[ativ.nome] ?? null) : (melhorPts[ativ.nome] ?? null);
   const notaStr     = nota != null ? (isAvP ? nota.toFixed(1) : String(nota)) : null;
-  const url = modoEf === 'avaliacao_plus'
+  const url = modoEf === 'equacoes_plus'
+    ? `/aluno/atividade_equacoes.html?ativ=${encodeURIComponent(ativ.nome)}`
+    : modoEf === 'avaliacao_plus'
     ? `/aluno/avaliacao_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
     : modoEf === 'atividade_plus'
     ? `/aluno/atividade_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
-    : modoEf === 'equacoes'
-    ? `/aluno/atividade_equacoes.html?ativ=${encodeURIComponent(ativ.nome)}`
     : modoEf === 'competicao_plus'
     ? `/aluno/competicao_plus.html?ativ=${encodeURIComponent(ativ.nome)}`
     : modoEf === 'competicao'

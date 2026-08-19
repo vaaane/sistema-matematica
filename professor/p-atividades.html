@@ -65,11 +65,15 @@
         <input type="number" class="input" id="inp-percentual" value="100" min="0" max="100" placeholder="0 – 100"/>
       </div>
       <div class="modal-field">
+        <label class="modal-field-label">Data de aplicação (opcional)</label>
+        <input type="date" class="input" id="inp-data-aplicacao"/>
+      </div>
+      <div class="modal-field">
         <label class="modal-field-label">Modo</label>
         <div class="modo-picker">
-          <div class="modo-card selected" id="modo-atividade" onclick="selecionarModo('atividade_plus')">
+          <div class="modo-card selected" id="modo-equacoes" onclick="selecionarModo('equacoes_plus')">
             <div class="modo-radio"></div>
-            <div><div class="modo-nome">🧮 Atividade+</div><div class="modo-desc">Múltipla escolha · mapa de questões · 1 tentativa · 15 min (máx 20)</div></div>
+            <div><div class="modo-nome">🧮 Equações 1º Grau</div><div class="modo-desc">Digitar x + múltipla escolha · mapa de questões · 1 tentativa · 15 min (máx 20)</div></div>
           </div>
         </div>
       </div>
@@ -99,13 +103,9 @@
       <div class="modal-field">
         <label class="modal-field-label">Escolha o modo para testar</label>
         <div class="modo-picker">
-          <div class="modo-card" onclick="abrirTeste('atividade_plus')" style="cursor:pointer">
+          <div class="modo-card" onclick="abrirTeste('equacoes_plus')" style="cursor:pointer">
             <div class="modo-radio"></div>
-            <div><div class="modo-nome">🧮 Atividade+</div><div class="modo-desc">Múltipla escolha · mapa de questões · 1 tentativa · 15 min</div></div>
-          </div>
-          <div class="modo-card" onclick="abrirTeste('equacoes')" style="cursor:pointer">
-            <div class="modo-radio"></div>
-            <div><div class="modo-nome">➗ Equações</div><div class="modo-desc">Digitar-x, marcar-x e marcar-equação</div></div>
+            <div><div class="modo-nome">🧮 Equações 1º Grau</div><div class="modo-desc">Digitar x + múltipla escolha · mapa de questões · 1 tentativa · 15 min</div></div>
           </div>
         </div>
       </div>
@@ -409,26 +409,26 @@ async function carregarAeH() {
   renderHistLib();
 }
 
-async function executarLiberacao(atividade, turma, percentual) {
+async function executarLiberacao(atividade, turma, percentual, dataAplicacao = "") {
   const modo = _modoSelecionado;
   const agora = dataAgora();
   await setAtividadeStatus(turma, atividade, 'ativa', percentual);
   const histId = await addLiberacaoHistorico({ atividade, turma, percentual, modo, liberado_em: agora });
-  await addLiberada({ atividade, turma, percentual, modo, liberado_em: agora, historico_id: histId, criadoEm: Date.now() });
+  await addLiberada({ atividade, turma, percentual, modo, liberado_em: agora, historico_id: histId, criadoEm: Date.now(), data_aplicacao: dataAplicacao });
   fecharForm();
   flash(`✅ ${atividade} — Turma ${turma} liberada (${percentual}% da nota)!`);
   await carregarAeH();
 }
 
-const MODO_LABEL = { classico: "Clássico", competicao: "Competição", competicao_plus: "Competição+", avaliacao_plus: "Avaliação+", atividade_plus: "Atividade+" };
+const MODO_LABEL = { classico: "Clássico", competicao: "Competição", competicao_plus: "Competição+", avaliacao_plus: "Avaliação+", atividade_plus: "Atividade+", equacoes_plus: "Equações 1º Grau" };
 
-let _modoSelecionado = 'atividade_plus';
+let _modoSelecionado = 'equacoes_plus';
 window.selecionarModo = function(modo) {
   _modoSelecionado = modo;
-  const c = document.getElementById("modo-atividade");
+  const c = document.getElementById("modo-equacoes");
   if (c) c.classList.add("selected");
 };
-window.abrirForm = () => { _modoSelecionado = 'atividade_plus'; selecionarModo('atividade_plus'); document.getElementById("modal-overlay").classList.add("open"); };
+window.abrirForm = () => { _modoSelecionado = 'equacoes_plus'; selecionarModo('equacoes_plus'); document.getElementById("modal-overlay").classList.add("open"); };
 
 window.liberar = async function() {
   const atividade  = document.getElementById("sel-ativ").value;
@@ -443,7 +443,8 @@ window.liberar = async function() {
     return;
   }
 
-  await executarLiberacao(atividade, turma, percentual);
+  const dataAplicacao = document.getElementById("inp-data-aplicacao")?.value || "";
+  await executarLiberacao(atividade, turma, percentual, dataAplicacao);
 };
 
 
@@ -461,7 +462,7 @@ window.abrirTeste = function(modo) {
   if (!ativ) { flash('Selecione uma atividade antes de escolher o modo.', 'error'); return; }
   const page = modo === 'competicao_plus' ? '/aluno/competicao_plus.html'
              : modo === 'atividade_plus'  ? '/aluno/atividade_plus.html'
-             : modo === 'equacoes'        ? '/aluno/atividade_equacoes.html'
+             : modo === 'equacoes_plus'   ? '/aluno/atividade_equacoes.html'
              : '/aluno/avaliacao_plus.html';
   window.open(`${page}?modo=teste&ativ=${encodeURIComponent(ativ)}`, '_blank');
   fecharTestarModal();

@@ -199,8 +199,8 @@ function calcAtivStats(tentativas) {
   return { melhorPts, comboMax, difMax, taxa, totalAc, totalErr, modos, isPlus, rapMax, rapTotal, ajudasTotal, semPenCount };
 }
 
-const MODO_LABEL = { classico: 'Clássico', competicao: 'Competição', competicao_plus: 'Competição+', avaliacao_plus: 'Avaliação+' };
-const MODO_BADGE = { classico: 'badge-blue', competicao: 'badge-orange', competicao_plus: 'badge-gold', avaliacao_plus: '' };
+const MODO_LABEL = { classico: 'Clássico', competicao: 'Competição', competicao_plus: 'Competição+', avaliacao_plus: 'Avaliação+', equacoes_plus: 'Equações 1º Grau' };
+const MODO_BADGE = { classico: 'badge-blue', competicao: 'badge-orange', competicao_plus: 'badge-gold', avaliacao_plus: '', equacoes_plus: 'badge-blue' };
 
 const modoAtivoAcomp = {};
 
@@ -706,7 +706,7 @@ window.verMeusTestes = function() {
   const testes = todos.filter(r => r.modo_teste && r.concluido)
     .sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
 
-  const MODO_L = { competicao_plus: 'Competição+', avaliacao_plus: 'Avaliação+', competicao: 'Competição', classico: 'Clássico' };
+  const MODO_L = { competicao_plus: 'Competição+', avaliacao_plus: 'Avaliação+', competicao: 'Competição', classico: 'Clássico', equacoes_plus: 'Equações 1º Grau' };
   const rows = testes.length
     ? testes.map(r => {
         const total = (r.acertos || 0) + (r.erros || 0);

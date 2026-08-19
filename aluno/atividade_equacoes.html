@@ -371,7 +371,7 @@ for (const al of jogo.alunos) {
     const id = await addResultado({
       aluno: al, turma: jogo.turma, atividade: jogo.nome,
       concluido: false, pontuacao: 0, acertos: 0, erros: 0, respondidas: 0,
-      modo: "atividade_plus", ...(isModoTeste() ? { modo_teste:true } : {})
+      modo: "equacoes_plus", ...(isModoTeste() ? { modo_teste:true } : {})
     });
     idsRegistro[al] = id;
   } catch(e) { console.warn("[addResultado inicial]", e); }
@@ -658,7 +658,7 @@ async function finalizar(motivo){
       acertos, erros, respondidas, total,
       tempo_segundos: tempoSeg,
       motivo_fim: motivo,
-      modo: "atividade_plus",
+      modo: "equacoes_plus",
       ...(isModoTeste() ? { modo_teste:true } : {})
     };
     try {
@@ -695,7 +695,7 @@ async function finalizar(motivo){
       try {
         await addHistoricoTeste("atividades", {
           aluno: "PROFESSOR_TESTE", turma: "TESTE", atividade: jogo.nome,
-          modo: "atividade_plus", pontuacao: notaFinal, pontuacao_bruta: pontosBruto,
+          modo: "equacoes_plus", pontuacao: notaFinal, pontuacao_bruta: pontosBruto,
           acertos, erros, respondidas, total,
         });
       } catch(_){}
