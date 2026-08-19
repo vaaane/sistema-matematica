@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Agenda de Atividades — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+<style>
+  .barra{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .turma-sel{padding:9px 13px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
+  .turma-sel option{background:var(--card);color:var(--text)}
+  .sec-titulo{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:800;margin:22px 2px 12px}
+  .sec-titulo svg{width:19px;height:19px;fill:var(--purple)}
+  .sec-titulo .btn{margin-left:auto}
+
+  .tag{font-size:9.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:3px 9px;border-radius:6px;flex-shrink:0}
+  .tag.atividade{background:rgba(155,48,255,.16);color:#c79bff;border:1px solid rgba(155,48,255,.4)}
+
+  .ag-row{display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border)}
+  .ag-row:last-child{border-bottom:0}
+  .ag-main{flex:1;min-width:0}
+  .ag-top{display:flex;align-items:center;gap:9px;margin-bottom:5px;flex-wrap:wrap}
+  .ag-nome{font-size:14.5px;font-weight:800}
+  .ag-quando{font-size:12.5px;color:var(--text-muted);margin-top:3px}
+  .ag-quando b{color:var(--gold)}
+  .ag-estudar{font-size:12.5px;color:var(--text-muted);margin-top:5px;line-height:1.45}
+  .ag-mats{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+  .ag-mat{font-size:11px;font-weight:700;color:#c79bff;background:rgba(155,48,255,.1);border:1px solid rgba(155,48,255,.28);border-radius:7px;padding:3px 9px;text-decoration:none}
+  .ag-acoes{display:flex;gap:7px;flex-shrink:0}
+  .icon-btn{border:1px solid var(--border);background:transparent;color:var(--text-muted);border-radius:8px;padding:7px 10px;font-size:12px;font-weight:700;cursor:pointer}
+  .icon-btn:hover{color:var(--text);border-color:rgba(155,48,255,.5)}
+  .icon-btn.del:hover{color:#f87171;border-color:rgba(239,68,68,.5)}
+
+  .vazio{color:var(--text-muted);text-align:center;padding:28px 16px;font-size:14px}
+  .banner-info{background:rgba(155,48,255,.06);border:1px solid rgba(155,48,255,.2);border-radius:12px;padding:12px 16px;font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.5}
+  .banner-info b{color:#c79bff}
+
+  .f{margin-bottom:14px}
+  .f-label{display:block;font-size:12.5px;font-weight:700;color:var(--text-muted);margin-bottom:6px}
+  .row2{display:flex;gap:10px}
+  .row2 .f{flex:1}
+  input[type=date],input[type=time]{width:100%;padding:9px 11px;border-radius:9px;border:1px solid var(--border);background:var(--card);color:var(--text);font-family:inherit;font-size:14px;color-scheme:dark}
+  select.input option{background:var(--card);color:var(--text)}
+  textarea.input{min-height:70px;resize:vertical;font-family:inherit}
+
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:200;padding:16px}
+  .modal-overlay.on{display:flex}
+  .modal-box{background:var(--card);border:1px solid var(--border);border-radius:16px;max-width:480px;width:100%;box-shadow:var(--shadow);max-height:90vh;overflow:auto}
+  .modal-box-body{padding:20px 22px}
+  .modal-box-title{font-size:17px;font-weight:800;margin-bottom:16px}
+  .modal-acoes{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
+
+  /* materiais escolhidos no modal */
+  .mat-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:9px}
+  .mat-chip{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:#c79bff;background:rgba(155,48,255,.12);border:1px solid rgba(155,48,255,.32);border-radius:8px;padding:5px 10px}
+  .mat-chip button{background:none;border:0;color:#f79a9a;font-weight:900;cursor:pointer;font-size:14px;line-height:1;padding:0}
+  .mat-vazio{font-size:12px;color:var(--text-muted);margin-bottom:9px}
+
+  /* seletor da biblioteca */
+  .bib-lista{display:flex;flex-direction:column;gap:7px;max-height:300px;overflow:auto;margin-top:12px}
+  .bib-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;cursor:pointer;background:rgba(255,255,255,.02)}
+  .bib-item:hover{border-color:rgba(155,48,255,.5)}
+  .bib-item.on{border-color:var(--purple);background:rgba(155,48,255,.12)}
+  .bib-item .bi-nome{flex:1;min-width:0;font-size:13px;font-weight:700}
+  .bib-item .bi-tipo{font-size:10px;font-weight:800;text-transform:uppercase;color:var(--text-muted)}
+  .bib-busca{width:100%;padding:9px 11px;border-radius:9px;border:1px solid var(--border);background:var(--card);color:var(--text);font-family:inherit;font-size:14px}
+  .bib-vazio{color:var(--text-muted);text-align:center;padding:22px;font-size:13px}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left"><div class="topbar-title">📅 Agenda de Atividades</div><div class="topbar-sub" id="sub">Carregando…</div></div>
+      <div class="topbar-right"><div class="bim-tabs" id="bimTabs"></div></div>
+    </div>
+    <div class="content">
+
+      <div class="banner-info">
+        Informe <b>data</b>, <b>hora</b> e <b>o que estudar</b> de cada atividade para a turma. O aluno vê o aviso na <b>página inicial</b> e pode estudar antes. <b>Isto não libera a atividade</b> — a liberação continua sendo feita na hora, na página de Atividades. O aviso fica visível até você liberar a atividade.
+      </div>
+
+      <div class="barra">
+        <div class="sec-titulo" style="margin:0">
+          <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V9h14v11z"/></svg>
+          Agenda da turma
+        </div>
+        <select class="turma-sel" id="turmaSel"></select>
+        <button class="btn btn-blue" style="margin-left:auto" onclick="abrirNova()">＋ Agendar atividade</button>
+      </div>
+      <div class="card" style="padding:0"><div id="agenda"><div class="vazio">Carregando…</div></div></div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal cadastro -->
+<div class="modal-overlay" id="ov">
+  <div class="modal-box"><div class="modal-box-body">
+    <div class="modal-box-title" id="mTitulo">Agendar atividade</div>
+
+    <div class="f">
+      <label class="f-label">Atividade</label>
+      <select class="input" id="mAtiv"></select>
+    </div>
+
+    <div class="row2">
+      <div class="f">
+        <label class="f-label">Data</label>
+        <input type="date" id="mData">
+      </div>
+      <div class="f">
+        <label class="f-label">Hora (opcional)</label>
+        <input type="time" id="mHora">
+      </div>
+    </div>
+
+    <div class="f">
+      <label class="f-label">O que estudar</label>
+      <textarea class="input" id="mEstudar" placeholder="Ex.: Revise simplificação de expressões e a distributiva. Traga régua."></textarea>
+    </div>
+
+    <div class="f">
+      <label class="f-label">Materiais da biblioteca (opcional)</label>
+      <div class="mat-chips" id="matChips"></div>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="abrirBiblioteca()">📎 Adicionar material</button>
+    </div>
+
+    <div class="modal-acoes">
+      <button class="btn" onclick="fechar()">Cancelar</button>
+      <button class="btn btn-blue" onclick="salvar()">Salvar</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- Modal seletor da biblioteca -->
+<div class="modal-overlay" id="ovBib">
+  <div class="modal-box"><div class="modal-box-body">
+    <div class="modal-box-title">Selecionar material da biblioteca</div>
+    <input class="bib-busca" id="bibBusca" placeholder="Buscar por nome…" oninput="renderBiblioteca()">
+    <div class="bib-lista" id="bibLista"><div class="bib-vazio">Carregando…</div></div>
+    <div class="modal-acoes" style="margin-top:14px">
+      <button class="btn" onclick="fecharBiblioteca()">Fechar</button>
+    </div>
+  </div></div>
+</div>
+
+<script type="module">
+import { requireProfessor, renderSidebarProfessor } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES } from "/js/constants.js";
+import { montarSeletorBimestre } from "/js/bimestre-seletor.js";
+import { ref, get, set, update, remove, push }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+requireProfessor();
+renderSidebarProfessor("sidebar", "provas");
+
+let bimestre = 1, turma = "", agenda = {}, editId = null;
+let biblioteca = [];            // [{nome,tipo,arquivo,ref}]
+let materiaisSel = [];          // [{titulo, ref}]
+
+const TURMAS = Object.keys(ALUNOS_POR_TURMA).sort();
+const selT = document.getElementById("turmaSel");
+selT.innerHTML = TURMAS.map(t=>`<option value="${t}">${t}</option>`).join("");
+turma = TURMAS[0] || "";
+selT.value = turma;
+selT.addEventListener("change", ()=>{ turma = selT.value; carregarAgenda(); });
+
+bimestre = montarSeletorBimestre("bimTabs", { onChange: (b)=>{ bimestre = b; carregarAgenda(); } });
+
+const meses = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+const WD = ["dom","seg","ter","qua","qui","sex","sáb"];
+const esc = s => String(s??"").replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function fmtQuando(data, hora){
+  if(!data) return "sem data";
+  const [ , m, d] = data.split("-");
+  let wd = ""; try{ wd = WD[new Date(data+"T12:00:00").getDay()]; }catch(e){}
+  return `${wd} · ${d}/${m}` + (hora ? ` · ${hora}` : "");
+}
+
+// ── Atividades disponíveis para o bimestre (para o <select>) ──
+function ativsBim(){
+  return LISTA_ATIVIDADES.filter(a => (a.bim || 2) === bimestre);
+}
+
+async function carregarAgenda(){
+  document.getElementById("sub").textContent = `Turma ${turma} · ${bimestre}º bimestre`;
+  try{
+    const snap = await get(ref(db, `atividades_agenda/${turma}/${bimestre}`));
+    agenda = snap.exists() ? snap.val() : {};
+  }catch(e){ console.error(e); agenda = {}; }
+  renderAgenda();
+}
+
+function renderAgenda(){
+  const ids = Object.keys(agenda);
+  const el = document.getElementById("agenda");
+  if(!ids.length){ el.innerHTML = `<div class="vazio">Nenhuma atividade agendada para esta turma. Clique em “Agendar atividade”.</div>`; return; }
+  ids.sort((a,b)=>{
+    const da = agenda[a].data||"", dbb = agenda[b].data||"";
+    return da < dbb ? -1 : da > dbb ? 1 : 0;
+  });
+  el.innerHTML = ids.map(id=>{
+    const a = agenda[id];
+    const mats = (a.materiais||[]).map(m=>
+      `<a class="ag-mat" href="${esc(m.ref)}" target="_blank" rel="noopener">📄 ${esc(m.titulo)}</a>`
+    ).join("");
+    return `<div class="ag-row">
+      <div class="ag-main">
+        <div class="ag-top"><span class="tag atividade">Atividade</span><span class="ag-nome">${esc(a.atividade)}</span></div>
+        <div class="ag-quando">🗓️ <b>${fmtQuando(a.data, a.hora)}</b></div>
+        ${a.estudar ? `<div class="ag-estudar">📖 ${esc(a.estudar)}</div>` : ""}
+        ${mats ? `<div class="ag-mats">${mats}</div>` : ""}
+      </div>
+      <div class="ag-acoes">
+        <button class="icon-btn" onclick="editar('${id}')">Editar</button>
+        <button class="icon-btn del" onclick="excluir('${id}')">Excluir</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// ── Materiais escolhidos (chips no modal) ──
+function renderChips(){
+  const el = document.getElementById("matChips");
+  if(!materiaisSel.length){ el.innerHTML = `<div class="mat-vazio">Nenhum material adicionado.</div>`; return; }
+  el.innerHTML = materiaisSel.map((m,i)=>
+    `<span class="mat-chip">📄 ${esc(m.titulo)} <button onclick="removerMat(${i})" title="Remover">✕</button></span>`
+  ).join("");
+}
+window.removerMat = function(i){ materiaisSel.splice(i,1); renderChips(); };
+
+// ── Modal cadastro ──
+function preencherSelectAtiv(sel){
+  const opts = ativsBim();
+  const s = document.getElementById("mAtiv");
+  if(!opts.length){ s.innerHTML = `<option value="">(nenhuma atividade neste bimestre)</option>`; return; }
+  s.innerHTML = opts.map(a=>`<option value="${esc(a.nome)}"${a.nome===sel?" selected":""}>${esc(a.nome)}</option>`).join("");
+}
+
+window.abrirNova = function(){
+  editId = null;
+  materiaisSel = [];
+  document.getElementById("mTitulo").textContent = "Agendar atividade";
+  preencherSelectAtiv("");
+  document.getElementById("mData").value = "";
+  document.getElementById("mHora").value = "";
+  document.getElementById("mEstudar").value = "";
+  renderChips();
+  document.getElementById("ov").classList.add("on");
+};
+
+window.editar = function(id){
+  const a = agenda[id]; if(!a) return;
+  editId = id;
+  materiaisSel = (a.materiais||[]).map(m=>({titulo:m.titulo, ref:m.ref}));
+  document.getElementById("mTitulo").textContent = "Editar atividade agendada";
+  preencherSelectAtiv(a.atividade||"");
+  document.getElementById("mData").value = a.data||"";
+  document.getElementById("mHora").value = a.hora||"";
+  document.getElementById("mEstudar").value = a.estudar||"";
+  renderChips();
+  document.getElementById("ov").classList.add("on");
+};
+
+window.fechar = function(){ document.getElementById("ov").classList.remove("on"); };
+
+window.salvar = async function(){
+  const atividade = document.getElementById("mAtiv").value;
+  const data = document.getElementById("mData").value;
+  const hora = document.getElementById("mHora").value;
+  const estudar = document.getElementById("mEstudar").value.trim();
+  if(!atividade){ alert("Escolha a atividade."); return; }
+  if(!data){ alert("Informe a data de aplicação."); return; }
+  const obj = { atividade, data, hora: hora||"", estudar, materiais: materiaisSel.map(m=>({titulo:m.titulo, ref:m.ref})) };
+  try{
+    if(editId){
+      obj.criadoEm = agenda[editId]?.criadoEm || Date.now();
+      await set(ref(db, `atividades_agenda/${turma}/${bimestre}/${editId}`), obj);
+    }else{
+      obj.criadoEm = Date.now();
+      const novo = push(ref(db, `atividades_agenda/${turma}/${bimestre}`));
+      await set(novo, obj);
+    }
+    fechar(); await carregarAgenda();
+  }catch(e){ console.error(e); alert("Erro ao salvar."); }
+};
+
+window.excluir = async function(id){
+  if(!confirm("Remover este aviso da página inicial dos alunos?")) return;
+  try{
+    await remove(ref(db, `atividades_agenda/${turma}/${bimestre}/${id}`));
+    await carregarAgenda();
+  }catch(e){ console.error(e); alert("Erro ao remover."); }
+};
+
+// ── Biblioteca (Firebase, mesmo padrão do p-vistos) ──
+async function carregarBiblioteca(){
+  if(biblioteca.length) return;
+  try{
+    const snap = await get(ref(db, "biblioteca"));
+    biblioteca = snap.exists()
+      ? Object.entries(snap.val()).map(([id,b])=>({
+          id, nome:b.nome||"(sem nome)", tipo:b.tipo||"teorica",
+          arquivo:b.arquivo||"", ref:"/conteudos/"+(b.arquivo||"")
+        }))
+      : [];
+  }catch(e){ console.error("Biblioteca:", e); biblioteca = []; }
+}
+
+window.abrirBiblioteca = async function(){
+  document.getElementById("ovBib").classList.add("on");
+  document.getElementById("bibBusca").value = "";
+  document.getElementById("bibLista").innerHTML = `<div class="bib-vazio">Carregando…</div>`;
+  await carregarBiblioteca();
+  renderBiblioteca();
+};
+window.fecharBiblioteca = function(){ document.getElementById("ovBib").classList.remove("on"); };
+
+window.renderBiblioteca = function(){
+  const q = (document.getElementById("bibBusca").value||"").toLowerCase();
+  const lista = document.getElementById("bibLista");
+  if(!biblioteca.length){ lista.innerHTML = `<div class="bib-vazio">Biblioteca vazia.<br>Cadastre materiais na página <b>Biblioteca</b> primeiro.</div>`; return; }
+  const itens = biblioteca.filter(i=>(i.nome||"").toLowerCase().includes(q));
+  if(!itens.length){ lista.innerHTML = `<div class="bib-vazio">Nenhum material encontrado.</div>`; return; }
+  lista.innerHTML = itens.map(i=>{
+    const on = materiaisSel.some(m=>m.ref===i.ref);
+    return `<div class="bib-item ${on?"on":""}" onclick="toggleMat('${esc(i.ref)}')">
+      <span class="bi-nome">${esc(i.nome)}</span>
+      <span class="bi-tipo">${esc(i.tipo)}</span>
+    </div>`;
+  }).join("");
+};
+
+window.toggleMat = function(ref_){
+  const item = biblioteca.find(i=>i.ref===ref_);
+  if(!item) return;
+  const idx = materiaisSel.findIndex(m=>m.ref===ref_);
+  if(idx>=0) materiaisSel.splice(idx,1);
+  else materiaisSel.push({ titulo:item.nome, ref:item.ref });
+  renderChips();
+  renderBiblioteca();
+};
+
+carregarAgenda();
+</script>
+</body>
+</html>

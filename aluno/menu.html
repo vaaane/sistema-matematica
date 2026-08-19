@@ -177,6 +177,10 @@
     .pav-val{flex-shrink:0;text-align:right}
     .pav-val .v{font-size:15px;font-weight:900;color:var(--gold)}
     .pav-val .l{font-size:10px;color:var(--text-muted)}
+    .pav-tag.atividade{background:rgba(155,48,255,.16);color:#c79bff;border:1px solid rgba(155,48,255,.4)}
+    .pav-estudar{font-size:12px;color:var(--text-muted);margin-top:5px;line-height:1.45}
+    .pav-mats{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+    .pav-mat{font-size:11px;font-weight:700;color:#c79bff;background:rgba(155,48,255,.1);border:1px solid rgba(155,48,255,.28);border-radius:7px;padding:3px 9px;text-decoration:none}
   </style>
 </head>
 <body>
@@ -456,48 +460,57 @@ await Promise.all(alunos.map(async (nome) => {
 
 initAvBanner(turma, alunos[0], liberadas);
 
-// ── Card "Próximas avaliações" (agenda de provas/testes) ──
-(async function renderProximasAvaliacoes(){
+// ── Card "Próximas atividades" (agenda de atividades) ──
+(async function renderProximasAtividades(){
   try{
     const bim = bimestreAtual();
-    const [snapAg, snapCat] = await Promise.all([
-      get(ref(db, `provas/${turma}/${bim}`)),
-      get(ref(db, "provas_catalogo")),
-    ]);
-    if(!snapAg.exists()) return;
-    const cat = snapCat.exists() ? snapCat.val() : {};
-    const hoje = new Date().toISOString().slice(0,10);
-    const itens = Object.entries(snapAg.val())
-      .map(([id, data]) => ({ id, data, ...(cat[id] || {}) }))
-      .filter(x => x.data && x.data >= hoje)
-      .sort((a,b)=> a.data < b.data ? -1 : 1);
+    const snap = await get(ref(db, `atividades_agenda/${turma}/${bim}`));
+    if(!snap.exists()) return;
+
+    // Atividades já liberadas não aparecem mais como "vem aí".
+    // `liberadas` já está no escopo (array com .atividade e .status).
+    const liberadasNomes = new Set(
+      (liberadas || [])
+        .filter(l => l.status !== 'encerrada')
+        .map(l => l.atividade)
+    );
+
+    const itens = Object.entries(snap.val())
+      .map(([id, data]) => ({ id, ...data }))
+      .filter(x => x.atividade && x.data && !liberadasNomes.has(x.atividade))
+      .sort((a,b)=> (a.data < b.data ? -1 : a.data > b.data ? 1 : 0));
     if(!itens.length) return;
 
     const meses = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
     const WD = ["dom","seg","ter","qua","qui","sex","sáb"];
     const diasAte = (iso)=> Math.round((new Date(iso+"T12:00:00") - new Date())/86400000);
-    const fmtVal = v => (Number(v)||0).toFixed(1).replace(".", ",");
+    const esc = s => String(s??"").replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
     const rows = itens.map(x=>{
       const [ , m, d] = x.data.split("-");
-      const dd = diasAte(x.data), perto = dd <= 3;
+      const dd = diasAte(x.data), perto = dd <= 3 && dd >= 0;
       let wd = ""; try{ wd = WD[new Date(x.data+"T12:00:00").getDay()]; }catch(e){}
-      const quando = dd===0 ? "hoje" : dd===1 ? "amanhã" : dd<=3 ? `em ${dd} dias` : `${wd} · ${d}/${m}`;
-      const tipo = x.tipo === "teste" ? "teste" : "prova";
+      const quando = dd===0 ? "hoje" : dd===1 ? "amanhã" : dd>1 && dd<=3 ? `em ${dd} dias`
+                   : dd<0 ? `${wd} · ${d}/${m}` : `${wd} · ${d}/${m}`;
+      const horaTxt = x.hora ? ` · ${esc(x.hora)}` : "";
+      const mats = (x.materiais||[]).map(mt=>
+        `<a class="pav-mat" href="${esc(mt.ref)}" target="_blank" rel="noopener">📄 ${esc(mt.titulo)}</a>`
+      ).join("");
       return `<div class="pav-item ${perto?"perto":""}">
         <div class="pav-date"><div class="d">${d}</div><div class="m">${meses[(+m)-1]||""}</div></div>
         <div class="pav-body">
-          <div class="pav-top"><span class="pav-tag ${tipo}">${tipo==="teste"?"Teste":"Prova"}</span><span class="pav-quando ${perto?"perto":""}">${quando}</span></div>
-          <div class="pav-nome">${x.conteudo || "Avaliação"}</div>
+          <div class="pav-top"><span class="pav-tag atividade">Atividade</span><span class="pav-quando ${perto?"perto":""}">${quando}${horaTxt}</span></div>
+          <div class="pav-nome">${esc(x.atividade)}</div>
+          ${x.estudar ? `<div class="pav-estudar">📖 ${esc(x.estudar)}</div>` : ""}
+          ${mats ? `<div class="pav-mats">${mats}</div>` : ""}
         </div>
-        ${x.valor!=null ? `<div class="pav-val"><div class="v">${fmtVal(x.valor)}</div><div class="l">pontos</div></div>` : ""}
       </div>`;
     }).join("");
 
     const html = `<div class="pav-card">
       <div class="pav-h">
         <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V9h14v11zM7 11h5v5H7z"/></svg>
-        Próximas avaliações
+        Próximas atividades
         <span class="cnt">${itens.length}</span>
       </div>
       <div class="pav-list">${rows}</div>
@@ -506,7 +519,7 @@ initAvBanner(turma, alunos[0], liberadas);
     const cta = document.querySelector(".ficha-cta");
     if(cta) cta.insertAdjacentHTML("afterend", html);
     else document.getElementById("content")?.insertAdjacentHTML("afterbegin", html);
-  }catch(e){ console.error("Próximas avaliações:", e); }
+  }catch(e){ console.error("Próximas atividades:", e); }
 })();
 
 // ── Avaliação+ controle ───────────────────────────────────────

@@ -11,15 +11,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
 <style>
-  .bim-tabs{display:flex;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:11px;padding:4px;flex-wrap:wrap}
-  .bim-tab{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:700;color:var(--text-muted);cursor:pointer;border:none;background:transparent;font-family:'Inter',sans-serif}
+  .bim-tabs{display:flex;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:11px;padding:4px;flex-wrap:nowrap}
+  .bim-tab{flex:1;text-align:center;padding:7px 6px;border-radius:8px;font-size:13px;font-weight:700;color:var(--text-muted);cursor:pointer;border:none;background:transparent;font-family:'Inter',sans-serif;white-space:nowrap}
   .bim-tab.active{background:var(--purple);color:#fff;box-shadow:0 2px 8px rgba(108,0,212,.4)}
 
-  .aviso-pais{display:flex;gap:10px;align-items:center;background:rgba(155,48,255,.08);border:1px solid rgba(155,48,255,.25);border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:12.5px;line-height:1.4;color:var(--text)}
-  .aviso-pais svg{width:18px;height:18px;fill:var(--purple);flex-shrink:0;margin-top:1px}
-  .aviso-pais b{color:#c79bff}
-  .aviso-ilus{flex-shrink:0;margin-left:auto}
-  @media(max-width:768px){ .aviso-ilus{display:none} }
 
   /* ===== Resumo (cabeçalho da ficha) ===== */
   .resumo{background:linear-gradient(135deg,#20153f 0%,#181233 55%,#141026 100%);border:1.5px solid rgba(155,48,255,.28);border-radius:18px;padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow)}
@@ -147,23 +142,6 @@
     </div>
 
     <div class="content">
-      <div class="aviso-pais">
-        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-        <div><b>Para o aluno e a família:</b> aqui você acompanha as atividades entregues, as faltas, os dias com atestado médico e as ocorrências registradas pela professora ao longo do bimestre. Use as abas para ver cada bimestre.</div>
-        <div class="aviso-ilus" aria-hidden="true">
-          <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:96px;height:auto">
-            <rect x="34" y="20" width="60" height="80" rx="8" fill="#2a1a54"/>
-            <rect x="34" y="20" width="60" height="80" rx="8" fill="rgba(255,255,255,.06)"/>
-            <rect x="50" y="14" width="28" height="12" rx="4" fill="#9b30ff"/>
-            <circle cx="47" cy="42" r="4" fill="#22C55E"/><rect x="55" y="40" width="30" height="4" rx="2" fill="#c79bff" opacity=".7"/>
-            <circle cx="47" cy="58" r="4" fill="#22C55E"/><rect x="55" y="56" width="30" height="4" rx="2" fill="#c79bff" opacity=".7"/>
-            <circle cx="47" cy="74" r="4" fill="#f0a500"/><rect x="55" y="72" width="22" height="4" rx="2" fill="#c79bff" opacity=".5"/>
-            <rect x="86" y="52" width="7" height="34" rx="3" fill="#f0a500" transform="rotate(32 86 52)"/>
-            <path d="M99 79l-5 6 1-7z" fill="#11111f"/>
-          </svg>
-        </div>
-      </div>
-
       <div class="card" style="padding:14px 20px;margin-bottom:16px">
         <div class="bim-tabs" id="bimTabs"></div>
       </div>

@@ -18,7 +18,9 @@
     --sheet:#f7f5fc; --sheet-line:#e7e1f4; --ink:#221b3d; --ink-soft:#59527a;
     --lilac:#efeafc; --lilac-b:#dcd0f5; --mint:#eef8f1; --mint-b:#c9e9d5; --purple2:#7c3aed;
   }
-  /* seletor de bimestre: estilo vem do componente /js/bimestre-seletor.js (padrão do site) */
+  /* seletor de bimestre: estilo-base vem de /js/bimestre-seletor.js; aqui ele fica em bloco, linha única e largura total (padrão da Ficha) */
+  .content > .card > .bim-tabs{flex-wrap:nowrap}
+  .content > .card > .bim-tabs .bim-tab{flex:1;text-align:center;padding:7px 6px;white-space:nowrap}
 
   /* resumo compacto */
   .stat-compact{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:15px 16px;margin-bottom:20px}
@@ -106,7 +108,11 @@
   .sheet-head{display:flex;align-items:center;justify-content:center;gap:9px;padding:12px;background:var(--lilac);font-size:12px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--purple2);border-bottom:1px solid var(--sheet-line);position:relative}
   .sheet-head svg{width:16px;height:16px;fill:var(--purple2)}
   .sheet-head .abrir{position:absolute;right:12px;font-size:11px;font-weight:600;color:var(--purple2);text-transform:none;letter-spacing:0;text-decoration:none;opacity:.8}
-  .sheet-body{padding:18px 16px}
+  .sheet-body{padding:18px 20px}
+  /* respiro lateral garantido: o CSS injetado do material não pode encostar o conteúdo nas bordas */
+  .sheet-body.content-light .au{padding-left:2px;padding-right:2px;box-sizing:border-box}
+  .sheet-body.content-light > *{max-width:100%}
+  @media(max-width:560px){ .sheet-body{padding:16px 16px} }
   .painel .carregando,.painel .erro{text-align:center;color:var(--text-muted);padding:34px 20px}
   .painel .erro a{color:var(--purple);font-weight:600}
 
@@ -179,21 +185,18 @@
   <aside class="sidebar" id="sidebar"></aside>
   <div class="main">
     <div class="topbar">
-      <div class="topbar-left" style="display:flex;align-items:center;gap:14px">
-        <div class="sc-ico roxo" style="width:48px;height:48px;border-radius:13px">
-          <svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:var(--purple)"><path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1z"/></svg>
-        </div>
-        <div>
-          <div class="topbar-title">Minhas Aulas</div>
-          <div class="topbar-sub" id="topbar-sub">Carregando…</div>
-        </div>
+      <div class="topbar-left">
+        <div class="topbar-title">📖 Minhas Aulas</div>
+        <div class="topbar-sub" id="topbar-sub">Carregando…</div>
       </div>
-      <div class="topbar-right">
-        <div class="bim-tabs" id="bimTabs"></div>
-      </div>
+      <div class="topbar-right"></div>
     </div>
 
     <div class="content">
+      <div class="card" style="padding:14px 20px;margin-bottom:16px">
+        <div class="bim-tabs" id="bimTabs"></div>
+      </div>
+
       <div class="stats-top" id="statsTop"></div>
 
       <div class="filtros">
@@ -452,8 +455,7 @@ async function toggleAula(id){
     }
     painel.innerHTML = `
       <div class="sheet">
-        <div class="sheet-head">${ICO.book2}Conteúdo da aula
-          <a class="abrir" href="${a.materialRef}" target="_blank">abrir ↗</a></div>
+        <div class="sheet-head">${ICO.book2}Conteúdo da aula</div>
         <div class="sheet-body content-light">${extrairMiolo(html)}</div>
       </div>`;
     painel.dataset.loaded = "1";
@@ -463,7 +465,7 @@ async function toggleAula(id){
     item.scrollIntoView({behavior:"smooth", block:"nearest"});
   }catch(e){
     console.error(e);
-    painel.innerHTML = `<div class="painel-inner"><div class="erro">Não foi possível carregar o material.<br><a href="${a.materialRef}" target="_blank">Abrir em nova aba</a></div></div>`;
+    painel.innerHTML = `<div class="painel-inner"><div class="erro">Não foi possível carregar o material. Tente novamente mais tarde.</div></div>`;
   }
 }
 
