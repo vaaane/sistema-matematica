@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
+  <link rel="stylesheet" href="/css/conteudo-aula.css"/>
 <style>
   .bim-tabs{display:flex;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:11px;padding:4px;flex-wrap:nowrap}
   .bim-tab{flex:1;text-align:center;padding:7px 6px;border-radius:8px;font-size:13px;font-weight:700;color:var(--text-muted);cursor:pointer;border:none;background:transparent;font-family:'Inter',sans-serif;white-space:nowrap}
@@ -77,6 +78,15 @@
 
   .ativ{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
   .ativ:last-child{border-bottom:0}
+  .ativ-row{border-bottom:1px solid var(--border)}
+  .ativ-row:last-child{border-bottom:0}
+  .ativ-row .ativ{border-bottom:0}
+  .ver-cont-btn{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:rgba(155,48,255,.06);color:var(--purple);border-radius:9px;padding:7px 12px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:.15s}
+  .ver-cont-btn:hover{background:rgba(155,48,255,.14);border-color:rgba(155,48,255,.4)}
+  .ver-cont-btn svg{width:15px;height:15px;fill:currentColor}
+  .ver-cont-btn .chev{transition:transform .25s}
+  .ativ-row.aberto .ver-cont-btn .chev{transform:rotate(180deg)}
+  @media(max-width:620px){ .ver-cont-btn{padding:6px 9px;font-size:11.5px} .ver-cont-btn .chev{display:none} }
   .st{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0}
   .st.feita{background:var(--green-pale);color:var(--green)}
   .st.atraso{background:var(--gold-pale);color:var(--gold)}
@@ -235,7 +245,7 @@ async function carregar(){
     nivelNeg = sNeg?.exists() ? (sNeg.val().melhor_nivel || sNeg.val().nivel_atual || 0) : 0;
     const rv = sV.exists()?sV.val():{};
     atividades = Object.entries(rv.atividades||{})
-      .map(([id,a])=>({id, nome:a.nome||"(sem nome)", data:a.data||"", ordem:a.ordem||0}))
+      .map(([id,a])=>({id, nome:a.nome||"(sem nome)", data:a.data||"", ordem:a.ordem||0, materialRef:a.materialRef||"", materialTitulo:a.materialTitulo||""}))
       .sort((x,y)=> (x.ordem-y.ordem) || (x.data<y.data?-1:1));
     marcas = rv.marcas||{};
     chamada = {};
@@ -309,13 +319,20 @@ function render(){
     : l.st===filtro);
 
   const atvHtml = rows.length ? rows.map(r=>`
-    <div class="ativ">
-      <div class="st ${r.st}">${ICON[r.st]}</div>
-      <div class="ativ-body">
-        <div class="ativ-nome">${r.nome}</div>
-        <div class="ativ-data">${r.data?`${fmtDMY(r.data)} · ${weekday(r.data)}`:"sem data"}</div>
+    <div class="ativ-row" id="ativ-row-${r.id}">
+      <div class="ativ">
+        <div class="st ${r.st}">${ICON[r.st]}</div>
+        <div class="ativ-body">
+          <div class="ativ-nome">${r.nome}</div>
+          <div class="ativ-data">${r.data?`${fmtDMY(r.data)} · ${weekday(r.data)}`:"sem data"}</div>
+        </div>
+        <span class="badge ${r.st}">${LABEL[r.st]}</span>
+        ${r.materialRef ? `<button class="ver-cont-btn" onclick="toggleConteudo('${r.id}')" id="vcb-${r.id}">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+          Ver conteúdo <svg class="chev" viewBox="0 0 24 24"><path d="M7.4 8.6 12 13.2l4.6-4.6L18 10l-6 6-6-6z"/></svg>
+        </button>` : ""}
       </div>
-      <span class="badge ${r.st}">${LABEL[r.st]}</span>
+      ${r.materialRef ? `<div class="painel" id="painel-${r.id}" data-ref="${r.materialRef}" data-loaded="0"></div>` : ""}
     </div>`).join("") : `<div class="vazio">Nada neste filtro.</div>`;
 
   const faltasHtml = faltas.length ? faltas.map(d=>`
@@ -448,6 +465,50 @@ function render(){
     if (t) t.scrollIntoView({ behavior:"smooth", block:"start" });
   });
 }
+
+// ── Conteúdo da aula embutido (accordion) ──
+const _conteudoCache = {};
+function extrairMiolo(htmlText){
+  const doc = new DOMParser().parseFromString(htmlText, "text/html");
+  const au = doc.querySelector(".au") || doc.querySelector(".content") || doc.body;
+  au.querySelectorAll(".sidebar, .topbar, script").forEach(el=>el.remove());
+  let css = "";
+  doc.querySelectorAll("style").forEach(s=>{ css += s.textContent + "\n"; });
+  return (css?`<style>${css}</style>`:"") + au.outerHTML;
+}
+
+window.toggleConteudo = async function(id){
+  const row = document.getElementById("ativ-row-"+id);
+  const painel = document.getElementById("painel-"+id);
+  if(!row || !painel) return;
+
+  const abrindo = !row.classList.contains("aberto");
+  document.querySelectorAll(".ativ-row.aberto").forEach(el=>{ if(el!==row) el.classList.remove("aberto"); });
+  row.classList.toggle("aberto", abrindo);
+  if(!abrindo) return;
+
+  if(painel.dataset.loaded === "1") return;
+  const refUrl = painel.dataset.ref;
+  painel.innerHTML = `<div class="carregando">Carregando conteúdo…</div>`;
+  try{
+    let html = _conteudoCache[refUrl];
+    if(html === undefined){
+      const r = await fetch(refUrl, {cache:"no-cache"});
+      if(!r.ok) throw new Error(r.status);
+      html = await r.text();
+      _conteudoCache[refUrl] = html;
+    }
+    painel.innerHTML = `<div class="sheet"><div class="sheet-body content-light">${extrairMiolo(html)}</div></div>`;
+    painel.dataset.loaded = "1";
+    painel.querySelectorAll(".au-nav a").forEach(el=>{
+      el.addEventListener("click", e=>{ const t=painel.querySelector(el.getAttribute("href")); if(t){e.preventDefault();t.scrollIntoView({behavior:"smooth",block:"start"});} });
+    });
+    row.scrollIntoView({behavior:"smooth", block:"nearest"});
+  }catch(e){
+    console.error(e);
+    painel.innerHTML = `<div class="erro">Não foi possível carregar o material. Tente novamente mais tarde.</div>`;
+  }
+};
 
 carregar();
 </script>

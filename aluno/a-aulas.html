@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
+  <link rel="stylesheet" href="/css/conteudo-aula.css"/>
 <style>
   /* Página de vistos: zoom padrão no desktop ≈ 67% */
   @media (min-width: 769px) { body { zoom: 0.67; } }
@@ -101,69 +102,6 @@
   .aula-item.aberto .aula-btn .t-ver{display:none}
   .aula-item.aberto .aula-btn .t-oc{display:inline}
 
-  /* painel = folha clara */
-  .painel{display:none;padding:10px}
-  .aula-item.aberto .painel{display:block}
-  .sheet{background:var(--sheet);border-radius:12px;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.3)}
-  .sheet-head{display:flex;align-items:center;justify-content:center;gap:9px;padding:12px;background:var(--lilac);font-size:12px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--purple2);border-bottom:1px solid var(--sheet-line);position:relative}
-  .sheet-head svg{width:16px;height:16px;fill:var(--purple2)}
-  .sheet-head .abrir{position:absolute;right:12px;font-size:11px;font-weight:600;color:var(--purple2);text-transform:none;letter-spacing:0;text-decoration:none;opacity:.8}
-  .sheet-body{padding:18px 20px}
-  /* respiro lateral garantido: o CSS injetado do material não pode encostar o conteúdo nas bordas */
-  .sheet-body.content-light .au{padding-left:2px;padding-right:2px;box-sizing:border-box}
-  .sheet-body.content-light > *{max-width:100%}
-  @media(max-width:560px){ .sheet-body{padding:16px 16px} }
-  .painel .carregando,.painel .erro{text-align:center;color:var(--text-muted);padding:34px 20px}
-  .painel .erro a{color:var(--purple);font-weight:600}
-
-  /* recolorir o conteúdo injetado para a folha clara */
-  .content-light{color:var(--ink)}
-  .content-light .au{max-width:none;margin:0}
-  .content-light .au-hero{background:transparent;border:0;border-bottom:1px solid var(--sheet-line);border-radius:0;padding:0 0 12px;margin:0 0 14px;text-align:left}
-  .content-light .au-hero::after{display:none}
-  .content-light .au-hero-logo{display:none}
-  .content-light .au-hero-eyebrow{color:#a06a00}
-  .content-light .au-hero-title{color:var(--ink);font-size:22px}
-  .content-light .au-hero-meta{justify-content:flex-start}
-  .content-light .au-nav{display:none}
-  .content-light .au-meta{background:#fff;border-color:#e4dcf5;color:#5a4d7a}
-  .content-light .au-meta.gold{color:#8a5e00;background:#fdf2d6;border-color:#f0cf84}
-  .content-light .au-sec{margin-bottom:20px}
-  .content-light .au-sec-head{border-color:var(--sheet-line)}
-  .content-light .au-sec-num{background:#fff;color:var(--purple2);border:2px solid rgba(124,58,237,.45)}
-  .content-light .au-sec-title{color:var(--ink)}
-  .content-light .au-p{color:#3a3455}
-  .content-light .au-p b,.content-light .au-p strong{color:var(--ink)}
-  .content-light .au-def{background:var(--lilac);border-color:var(--lilac-b);border-left-color:var(--purple)}
-  .content-light .au-def-label{color:var(--purple2)}
-  .content-light .au-def-body{color:#3a3455}
-  .content-light .au-def-body b{color:var(--ink)}
-  .content-light .au-formula{background:var(--lilac);border-color:var(--lilac-b)}
-  .content-light .au-formula-main{color:var(--ink)}
-  .content-light .au-formula-note{color:var(--ink-soft)}
-  .content-light .au-fmini{background:#fff;border-color:#e4dcf5}
-  .content-light .au-fmini-name{color:var(--ink-soft)}
-  .content-light .au-fmini-eq{color:var(--ink)}
-  .content-light .au-ex{background:#fff;border-color:#e4dcf5}
-  .content-light .au-ex-head{color:#137a3e}
-  .content-light .au-ex-prob{color:var(--ink);border-color:#e0d6f7}
-  .content-light .au-steps li{color:#3a3455}
-  .content-light .au-steps li::before{color:var(--purple2);background:var(--lilac);border-color:var(--lilac-b)}
-  .content-light .au-steps b{color:var(--ink)}
-  .content-light .au-res{background:var(--mint);border-color:var(--mint-b);color:#137a3e}
-  .content-light .au-tip{background:#eaf4fb;border-color:#cbe3f3;color:#2b6a92}
-  .content-light .au-warn{background:#fdf6e6;border-color:#f0dcae;color:#8a5e00}
-  .content-light .au-tip b,.content-light .au-warn b{color:var(--ink)}
-  .content-light .au-rel{background:#fff;border-color:#e4dcf5}
-  .content-light .au-rel-title{color:var(--ink)}
-  .content-light .au-rel-item{background:var(--sheet);border-color:#e4dcf5;color:#3a3455}
-  .content-light .au-rel-item span{color:var(--purple2)}
-  .content-light .au-note{color:#8b8398}
-  .content-light .ex{background:#fff;border-color:#e4dcf5}
-  .content-light .ex-stmt{color:#2f2a48}
-  .content-light .ex-alt{background:var(--sheet);border-color:#e4dcf5;color:#3a3455}
-  .content-light .ex-answer-in{background:var(--mint);border-color:var(--mint-b)}
-  .content-light .ex-answer-in p{color:#3a3455}
 
   .dica{margin-top:24px;background:rgba(155,48,255,.055);border:1px solid rgba(155,48,255,.16);border-radius:14px;padding:15px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
   .dica-txt{font-size:13.5px;color:var(--text-muted);display:flex;align-items:center;gap:10px}

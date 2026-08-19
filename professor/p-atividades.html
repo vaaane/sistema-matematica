@@ -38,6 +38,26 @@
     .modo-nome{font-size:14px;font-weight:700;margin-bottom:2px;}
     .modo-desc{font-size:12px;color:var(--text-muted);line-height:1.4;}
     @media(max-width:480px){.modal-field-row{grid-template-columns:1fr}.modal-box-body{padding:0 16px 20px}.modal-box-header{padding:18px 16px 0}}
+
+    /* Agendamento: chips de aulas + itens da biblioteca (dentro do modal branco) */
+    .ag-chip{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:#6b21a8;background:#f3e8ff;border:1px solid #e2c9f7;border-radius:8px;padding:5px 10px}
+    .ag-chip button{background:none;border:0;color:#c026d3;font-weight:900;cursor:pointer;font-size:14px;line-height:1;padding:0}
+    .ag-mat-vazio{font-size:12px;color:var(--text-muted)}
+    .ag-bib-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;background:#F9FAFB;color:#1f2937}
+    .ag-bib-item:hover{border-color:var(--blue)}
+    .ag-bib-item.on{border-color:#9b30ff;background:#f3e8ff}
+    .ag-bib-item .abi-nome{flex:1;min-width:0;font-size:13px;font-weight:700}
+    .ag-bib-item .abi-tipo{font-size:10px;font-weight:800;text-transform:uppercase;color:#6b7280}
+    /* linhas da lista de agendados (tema escuro do content) */
+    .ag-row{display:flex;align-items:flex-start;gap:14px;padding:13px 4px;border-bottom:1px solid var(--border)}
+    .ag-row:last-child{border-bottom:0}
+    .ag-row-main{flex:1;min-width:0}
+    .ag-row-nome{font-size:14px;font-weight:800}
+    .ag-row-meta{font-size:12.5px;color:var(--text-muted);margin-top:3px}
+    .ag-row-meta b{color:var(--gold,#f0a500)}
+    .ag-row-mats{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+    .ag-row-mat{font-size:11px;font-weight:700;color:#c79bff;background:rgba(155,48,255,.1);border:1px solid rgba(155,48,255,.28);border-radius:7px;padding:2px 8px;text-decoration:none}
+    .ag-row-acoes{display:flex;gap:6px;flex-shrink:0}
     @media(max-width:640px){.topbar{flex-wrap:wrap;gap:8px}.topbar-left{flex:1;min-width:0}.topbar-right{width:100%;display:flex;gap:8px}.topbar-right .btn{flex:1;justify-content:center}}
     .pill{padding:5px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .15s;}
     .pill.on{border-color:var(--blue);background:var(--blue);color:#fff;}
@@ -83,6 +103,69 @@
           Confirmar liberação
         </button>
         <button class="btn btn-ghost" onclick="fecharForm()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal AGENDAR atividade -->
+<div class="modal-overlay" id="ag-ov" onclick="if(event.target===this)fecharAgendar()">
+  <div class="modal-box" style="position:relative">
+    <button class="modal-close-btn" onclick="fecharAgendar()">✕</button>
+    <div class="modal-box-header">
+      <div class="modal-box-title" id="ag-titulo">Agendar atividade</div>
+    </div>
+    <div class="modal-box-body">
+      <div class="modal-field">
+        <label class="modal-field-label">Atividade</label>
+        <div class="select-wrap"><select class="input" id="ag-ativ"><option value="">Selecionar…</option></select></div>
+      </div>
+      <div class="modal-field-row">
+        <div class="modal-field">
+          <label class="modal-field-label">Data de aplicação</label>
+          <input type="date" class="input" id="ag-data"/>
+        </div>
+        <div class="modal-field">
+          <label class="modal-field-label">Hora (opcional)</label>
+          <input type="time" class="input" id="ag-hora"/>
+        </div>
+      </div>
+      <div class="modal-field">
+        <label class="modal-field-label">Nota (valor em pontos)</label>
+        <input type="number" step="0.5" min="0" class="input" id="ag-nota" placeholder="Ex.: 10"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-field-label">Aulas de estudo (biblioteca)</label>
+        <div id="ag-mat-chips" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:9px"></div>
+        <button type="button" class="btn btn-sm btn-ghost" onclick="abrirBibliotecaAg()">📎 Adicionar aula</button>
+      </div>
+      <div class="modal-btn-bar">
+        <button class="btn btn-blue" style="flex:1;justify-content:center" onclick="salvarAgendamento()">
+          <svg viewBox="0 0 24 24"><path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zm-5 16a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm3-10H5V5h10v4z"/></svg>
+          Salvar agendamento
+        </button>
+        <button class="btn btn-ghost" onclick="fecharAgendar()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal seletor da BIBLIOTECA (para agendamento) -->
+<div class="modal-overlay" id="ag-bib-ov" onclick="if(event.target===this)fecharBibliotecaAg()">
+  <div class="modal-box" style="position:relative;max-width:460px">
+    <button class="modal-close-btn" onclick="fecharBibliotecaAg()">✕</button>
+    <div class="modal-box-header">
+      <div class="modal-box-title">Selecionar aula da biblioteca</div>
+    </div>
+    <div class="modal-box-body">
+      <div class="modal-field">
+        <input class="input" id="ag-bib-busca" placeholder="Buscar por nome…" oninput="renderBibliotecaAg()"/>
+      </div>
+      <div id="ag-bib-lista" style="display:flex;flex-direction:column;gap:7px;max-height:320px;overflow:auto">
+        <p style="font-size:13px;color:var(--text-muted)">Carregando…</p>
+      </div>
+      <div class="modal-btn-bar" style="margin-top:14px">
+        <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="fecharBibliotecaAg()">Fechar</button>
       </div>
     </div>
   </div>
@@ -137,6 +220,21 @@
     </div>
     <div class="content">
       <div id="flash-wrap"></div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-header">
+          <div class="card-title"><svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V9h14v11z"/></svg>📅 Agendamento de atividades</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="select-wrap"><select class="input" id="ag-turma-sel" style="padding:7px 12px"></select></div>
+            <button class="btn btn-sm btn-blue" onclick="abrirAgendar()">＋ Agendar</button>
+          </div>
+        </div>
+        <p style="font-size:12.5px;color:var(--text-muted);margin:2px 0 12px;line-height:1.5">
+          Informe <b>data</b>, <b>hora</b>, <b>nota</b> e as <b>aulas de estudo</b> (da biblioteca). O aluno vê o aviso na página inicial e pode estudar antes. <b>Isto não libera a atividade</b> — a liberação continua sendo feita acima. O aviso some quando você liberar a atividade.
+        </p>
+        <div id="ag-lista"><p style="font-size:13px;color:var(--text-muted)">Carregando…</p></div>
+      </div>
+
       <div class="grid-2">
         <div>
           <div class="card">
@@ -176,9 +274,12 @@
 </div>
 
 <script type="module">
-import { LISTA_ATIVIDADES, ALUNOS_POR_TURMA, dataAgora } from "/js/constants.js";
+import { LISTA_ATIVIDADES, ALUNOS_POR_TURMA, dataAgora, bimestreAtual } from "/js/constants.js";
 import { getLiberadas, addLiberada, deleteLiberada, addLiberacaoHistorico, getLiberacoesHistorico, updateLiberacaoHistorico, getAllAtividadeStatus, setAtividadeStatus, addStatusAlteracao, updateLiberadasPercentual } from "/js/db.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ref as _ref, get as _get, set as _set, remove as _remove, push as _push }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 requireProfessor();
 renderSidebarProfessor("sidebar", "atividades");
@@ -475,6 +576,190 @@ window.toggleEncerradas = function() {
   wrap.style.display = isOpen ? 'none' : 'block';
   chev.style.transform = isOpen ? '' : 'rotate(180deg)';
 };
+
+// ═══════════════════════════════════════════════════════════
+//  AGENDAMENTO DE ATIVIDADES (aparece na home do aluno)
+//  Grava em: atividades_agenda/${turma}/${bim}/${pushId}
+//  Não mexe em liberações — só informa data/hora/nota/materiais.
+// ═══════════════════════════════════════════════════════════
+const AG_TURMAS = Object.keys(ALUNOS_POR_TURMA).sort();
+let agTurma = AG_TURMAS[0] || "";
+let agBim = bimestreAtual();
+let agEditId = null;
+let agBiblioteca = [];        // [{nome,tipo,arquivo,ref}]
+let agMateriais = [];         // [{titulo, ref}]
+let agenda = {};
+
+const agEsc = s => String(s??"").replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const agWD = ["dom","seg","ter","qua","qui","sex","sáb"];
+const agFmtNota = v => (Number(v)||0).toFixed(1).replace(".", ",");
+function agFmtQuando(data, hora){
+  if(!data) return "sem data";
+  const [ , m, d] = data.split("-");
+  let wd = ""; try{ wd = agWD[new Date(data+"T12:00:00").getDay()]; }catch(e){}
+  return `${wd} · ${d}/${m}` + (hora ? ` · ${hora}` : "");
+}
+
+(function initAgendamento(){
+  const selT = document.getElementById("ag-turma-sel");
+  if(selT){
+    selT.innerHTML = AG_TURMAS.map(t=>`<option value="${t}">Turma ${t}</option>`).join("");
+    selT.value = agTurma;
+    selT.addEventListener("change", ()=>{ agTurma = selT.value; carregarAgenda(); });
+  }
+  const selA = document.getElementById("ag-ativ");
+  if(selA){
+    selA.innerHTML = `<option value="">Selecionar…</option>` +
+      LISTA_ATIVIDADES.filter(a=>a.modo!=='torneio').map(a=>`<option value="${agEsc(a.nome)}">${agEsc(a.nome)}</option>`).join("");
+  }
+})();
+
+async function carregarAgenda(){
+  const el = document.getElementById("ag-lista");
+  if(!el) return;
+  try{
+    const snap = await _get(_ref(db, `atividades_agenda/${agTurma}/${agBim}`));
+    agenda = snap.exists() ? snap.val() : {};
+  }catch(e){ console.error("agenda:", e); agenda = {}; }
+  const ids = Object.keys(agenda);
+  if(!ids.length){ el.innerHTML = `<p style="font-size:13px;color:var(--text-muted)">Nenhuma atividade agendada para a Turma ${agTurma}.</p>`; return; }
+  ids.sort((a,b)=>{ const da=agenda[a].data||"", dbb=agenda[b].data||""; return da<dbb?-1:da>dbb?1:0; });
+  el.innerHTML = ids.map(id=>{
+    const a = agenda[id];
+    const mats = (a.materiais||[]).map(m=>`<a class="ag-row-mat" href="${agEsc(m.ref)}" target="_blank" rel="noopener">📄 ${agEsc(m.titulo)}</a>`).join("");
+    return `<div class="ag-row">
+      <div class="ag-row-main">
+        <div class="ag-row-nome">${agEsc(a.atividade)}</div>
+        <div class="ag-row-meta">🗓️ <b>${agFmtQuando(a.data, a.hora)}</b> · 📝 ${agFmtNota(a.nota)} pts</div>
+        ${mats ? `<div class="ag-row-mats">${mats}</div>` : ""}
+      </div>
+      <div class="ag-row-acoes">
+        <button class="btn btn-sm btn-ghost" onclick="editarAgendamento('${id}')">Editar</button>
+        <button class="btn btn-sm btn-ghost" onclick="excluirAgendamento('${id}')">Excluir</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function agRenderChips(){
+  const el = document.getElementById("ag-mat-chips");
+  if(!agMateriais.length){ el.innerHTML = `<span class="ag-mat-vazio">Nenhuma aula adicionada.</span>`; return; }
+  el.innerHTML = agMateriais.map((m,i)=>`<span class="ag-chip">📄 ${agEsc(m.titulo)} <button onclick="removerMatAg(${i})" title="Remover">✕</button></span>`).join("");
+}
+window.removerMatAg = function(i){ agMateriais.splice(i,1); agRenderChips(); };
+
+window.abrirAgendar = function(){
+  agEditId = null;
+  agMateriais = [];
+  document.getElementById("ag-titulo").textContent = `Agendar atividade · Turma ${agTurma}`;
+  document.getElementById("ag-ativ").value = "";
+  document.getElementById("ag-data").value = "";
+  document.getElementById("ag-hora").value = "";
+  document.getElementById("ag-nota").value = "";
+  agRenderChips();
+  document.getElementById("ag-ov").classList.add("open");
+};
+
+window.editarAgendamento = function(id){
+  const a = agenda[id]; if(!a) return;
+  agEditId = id;
+  agMateriais = (a.materiais||[]).map(m=>({titulo:m.titulo, ref:m.ref}));
+  document.getElementById("ag-titulo").textContent = `Editar agendamento · Turma ${agTurma}`;
+  document.getElementById("ag-ativ").value = a.atividade||"";
+  document.getElementById("ag-data").value = a.data||"";
+  document.getElementById("ag-hora").value = a.hora||"";
+  document.getElementById("ag-nota").value = a.nota!=null ? a.nota : "";
+  agRenderChips();
+  document.getElementById("ag-ov").classList.add("open");
+};
+
+window.fecharAgendar = function(){ document.getElementById("ag-ov").classList.remove("open"); };
+
+window.salvarAgendamento = async function(){
+  const atividade = document.getElementById("ag-ativ").value;
+  const data = document.getElementById("ag-data").value;
+  const hora = document.getElementById("ag-hora").value;
+  const notaRaw = (document.getElementById("ag-nota").value||"").replace(",", ".");
+  if(!atividade){ flash("Escolha a atividade.", "error"); return; }
+  if(!data){ flash("Informe a data de aplicação.", "error"); return; }
+  if(notaRaw === "" || isNaN(parseFloat(notaRaw))){ flash("Informe a nota (valor em pontos).", "error"); return; }
+  const obj = {
+    atividade, data, hora: hora||"",
+    nota: parseFloat(notaRaw),
+    materiais: agMateriais.map(m=>({titulo:m.titulo, ref:m.ref})),
+  };
+  try{
+    if(agEditId){
+      obj.criadoEm = agenda[agEditId]?.criadoEm || Date.now();
+      await _set(_ref(db, `atividades_agenda/${agTurma}/${agBim}/${agEditId}`), obj);
+    }else{
+      obj.criadoEm = Date.now();
+      const novo = _push(_ref(db, `atividades_agenda/${agTurma}/${agBim}`));
+      await _set(novo, obj);
+    }
+    fecharAgendar();
+    flash("Agendamento salvo. O aluno já vê na página inicial.", "success");
+    await carregarAgenda();
+  }catch(e){ console.error(e); flash("Erro ao salvar o agendamento.", "error"); }
+};
+
+window.excluirAgendamento = async function(id){
+  if(!confirm("Remover este aviso da página inicial dos alunos?")) return;
+  try{
+    await _remove(_ref(db, `atividades_agenda/${agTurma}/${agBim}/${id}`));
+    flash("Agendamento removido.", "info");
+    await carregarAgenda();
+  }catch(e){ console.error(e); flash("Erro ao remover.", "error"); }
+};
+
+async function agCarregarBiblioteca(){
+  if(agBiblioteca.length) return;
+  try{
+    const snap = await _get(_ref(db, "biblioteca"));
+    agBiblioteca = snap.exists()
+      ? Object.entries(snap.val()).map(([id,b])=>({
+          id, nome:b.nome||"(sem nome)", tipo:b.tipo||"teorica",
+          arquivo:b.arquivo||"", ref:"/conteudos/"+(b.arquivo||"")
+        }))
+      : [];
+  }catch(e){ console.error("Biblioteca:", e); agBiblioteca = []; }
+}
+
+window.abrirBibliotecaAg = async function(){
+  document.getElementById("ag-bib-ov").classList.add("open");
+  document.getElementById("ag-bib-busca").value = "";
+  document.getElementById("ag-bib-lista").innerHTML = `<p style="font-size:13px;color:var(--text-muted)">Carregando…</p>`;
+  await agCarregarBiblioteca();
+  renderBibliotecaAg();
+};
+window.fecharBibliotecaAg = function(){ document.getElementById("ag-bib-ov").classList.remove("open"); };
+
+window.renderBibliotecaAg = function(){
+  const q = (document.getElementById("ag-bib-busca").value||"").toLowerCase();
+  const lista = document.getElementById("ag-bib-lista");
+  if(!agBiblioteca.length){ lista.innerHTML = `<p style="font-size:13px;color:var(--text-muted)">Biblioteca vazia. Cadastre aulas na página <b>Biblioteca</b> primeiro.</p>`; return; }
+  const itens = agBiblioteca.filter(i=>(i.nome||"").toLowerCase().includes(q));
+  if(!itens.length){ lista.innerHTML = `<p style="font-size:13px;color:var(--text-muted)">Nenhuma aula encontrada.</p>`; return; }
+  lista.innerHTML = itens.map(i=>{
+    const on = agMateriais.some(m=>m.ref===i.ref);
+    return `<div class="ag-bib-item ${on?"on":""}" onclick="toggleMatAg('${agEsc(i.ref)}')">
+      <span class="abi-nome">${agEsc(i.nome)}</span>
+      <span class="abi-tipo">${agEsc(i.tipo)}</span>
+    </div>`;
+  }).join("");
+};
+
+window.toggleMatAg = function(ref_){
+  const item = agBiblioteca.find(i=>i.ref===ref_);
+  if(!item) return;
+  const idx = agMateriais.findIndex(m=>m.ref===ref_);
+  if(idx>=0) agMateriais.splice(idx,1);
+  else agMateriais.push({ titulo:item.nome, ref:item.ref });
+  agRenderChips();
+  renderBibliotecaAg();
+};
+
+await carregarAgenda();
 
 await carregarAeH();
 </script>

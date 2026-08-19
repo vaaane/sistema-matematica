@@ -177,10 +177,25 @@
     .pav-val{flex-shrink:0;text-align:right}
     .pav-val .v{font-size:15px;font-weight:900;color:var(--gold)}
     .pav-val .l{font-size:10px;color:var(--text-muted)}
+    /* card lista: variante atividade + materiais */
     .pav-tag.atividade{background:rgba(155,48,255,.16);color:#c79bff;border:1px solid rgba(155,48,255,.4)}
-    .pav-estudar{font-size:12px;color:var(--text-muted);margin-top:5px;line-height:1.45}
     .pav-mats{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
     .pav-mat{font-size:11px;font-weight:700;color:#c79bff;background:rgba(155,48,255,.1);border:1px solid rgba(155,48,255,.28);border-radius:7px;padding:3px 9px;text-decoration:none}
+    /* BANNER de destaque da próxima atividade */
+    .pxd-banner{position:relative;overflow:hidden;display:flex;gap:16px;align-items:flex-start;background:linear-gradient(135deg,rgba(124,92,252,.20),rgba(240,165,0,.10));border:1.5px solid rgba(124,92,252,.5);border-radius:18px;padding:18px 20px;margin-bottom:14px;box-shadow:0 8px 28px rgba(108,0,212,.22)}
+    .pxd-glow{position:absolute;top:-40px;right:-40px;width:160px;height:160px;pointer-events:none;background:radial-gradient(circle,rgba(240,165,0,.22),transparent 70%)}
+    .pxd-date{flex-shrink:0;width:60px;text-align:center;border-radius:14px;background:rgba(155,48,255,.22);border:1px solid rgba(155,48,255,.4);padding:10px 6px}
+    .pxd-date .d{font-size:26px;font-weight:900;line-height:1;color:#fff}
+    .pxd-date .m{font-size:11px;font-weight:800;text-transform:uppercase;color:#d9c2ff;margin-top:3px}
+    .pxd-info{flex:1;min-width:0;position:relative;z-index:1}
+    .pxd-eyebrow{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.4px;color:#f5c451;background:rgba(240,165,0,.14);border:1px solid rgba(240,165,0,.4);border-radius:20px;padding:3px 11px;margin-bottom:8px}
+    .pxd-nome{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;line-height:1.15;color:#fff;margin-bottom:5px}
+    .pxd-meta{font-size:12.5px;color:var(--text-muted)}
+    .pxd-meta b{color:var(--gold,#f0a500)}
+    .pxd-mats{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+    .pxd-mat{font-size:11.5px;font-weight:700;color:#e9dcff;background:rgba(124,92,252,.24);border:1px solid rgba(124,92,252,.5);border-radius:8px;padding:4px 10px;text-decoration:none}
+    .pxd-mat:hover{background:rgba(124,92,252,.38)}
+    @media(max-width:560px){ .pxd-banner{padding:15px} .pxd-nome{font-size:19px} .pxd-date{width:52px} .pxd-date .d{font-size:22px} }
   </style>
 </head>
 <body>
@@ -460,19 +475,15 @@ await Promise.all(alunos.map(async (nome) => {
 
 initAvBanner(turma, alunos[0], liberadas);
 
-// ── Card "Próximas atividades" (agenda de atividades) ──
+// ── Banner de destaque + lista "Próximas atividades" ──
 (async function renderProximasAtividades(){
   try{
     const bim = bimestreAtual();
     const snap = await get(ref(db, `atividades_agenda/${turma}/${bim}`));
     if(!snap.exists()) return;
 
-    // Atividades já liberadas não aparecem mais como "vem aí".
-    // `liberadas` já está no escopo (array com .atividade e .status).
     const liberadasNomes = new Set(
-      (liberadas || [])
-        .filter(l => l.status !== 'encerrada')
-        .map(l => l.atividade)
+      (liberadas || []).filter(l => l.status !== 'encerrada').map(l => l.atividade)
     );
 
     const itens = Object.entries(snap.val())
@@ -485,37 +496,65 @@ initAvBanner(turma, alunos[0], liberadas);
     const WD = ["dom","seg","ter","qua","qui","sex","sáb"];
     const diasAte = (iso)=> Math.round((new Date(iso+"T12:00:00") - new Date())/86400000);
     const esc = s => String(s??"").replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const fmtNota = v => (Number(v)||0).toFixed(1).replace(".", ",");
+    const quandoTxt = (iso)=>{
+      const dd = diasAte(iso);
+      const [ , m, d] = iso.split("-");
+      let wd=""; try{ wd = WD[new Date(iso+"T12:00:00").getDay()]; }catch(e){}
+      if(dd===0) return "é hoje!";
+      if(dd===1) return "é amanhã";
+      if(dd>1 && dd<=6) return `em ${dd} dias · ${wd} ${d}/${m}`;
+      return `${wd} · ${d}/${m}`;
+    };
+    const matsHtml = (x, cls)=> (x.materiais||[]).map(mt=>
+      `<a class="${cls}" href="${esc(mt.ref)}" target="_blank" rel="noopener">📄 ${esc(mt.titulo)}</a>`
+    ).join("");
 
-    const rows = itens.map(x=>{
-      const [ , m, d] = x.data.split("-");
-      const dd = diasAte(x.data), perto = dd <= 3 && dd >= 0;
-      let wd = ""; try{ wd = WD[new Date(x.data+"T12:00:00").getDay()]; }catch(e){}
-      const quando = dd===0 ? "hoje" : dd===1 ? "amanhã" : dd>1 && dd<=3 ? `em ${dd} dias`
-                   : dd<0 ? `${wd} · ${d}/${m}` : `${wd} · ${d}/${m}`;
-      const horaTxt = x.hora ? ` · ${esc(x.hora)}` : "";
-      const mats = (x.materiais||[]).map(mt=>
-        `<a class="pav-mat" href="${esc(mt.ref)}" target="_blank" rel="noopener">📄 ${esc(mt.titulo)}</a>`
-      ).join("");
-      return `<div class="pav-item ${perto?"perto":""}">
-        <div class="pav-date"><div class="d">${d}</div><div class="m">${meses[(+m)-1]||""}</div></div>
-        <div class="pav-body">
-          <div class="pav-top"><span class="pav-tag atividade">Atividade</span><span class="pav-quando ${perto?"perto":""}">${quando}${horaTxt}</span></div>
-          <div class="pav-nome">${esc(x.atividade)}</div>
-          ${x.estudar ? `<div class="pav-estudar">📖 ${esc(x.estudar)}</div>` : ""}
-          ${mats ? `<div class="pav-mats">${mats}</div>` : ""}
-        </div>
-      </div>`;
-    }).join("");
-
-    const html = `<div class="pav-card">
-      <div class="pav-h">
-        <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V9h14v11zM7 11h5v5H7z"/></svg>
-        Próximas atividades
-        <span class="cnt">${itens.length}</span>
+    const top = itens[0];
+    const [ , tm, td] = top.data.split("-");
+    const bannerMats = matsHtml(top, "pxd-mat");
+    const bannerHtml = `<div class="pxd-banner">
+      <div class="pxd-glow"></div>
+      <div class="pxd-date"><div class="d">${td}</div><div class="m">${meses[(+tm)-1]||""}</div></div>
+      <div class="pxd-info">
+        <div class="pxd-eyebrow">⭐ PRÓXIMA ATIVIDADE · ${esc(quandoTxt(top.data))}${top.hora?` · ${esc(top.hora)}`:""}</div>
+        <div class="pxd-nome">${esc(top.atividade)}</div>
+        <div class="pxd-meta">📝 Vale <b>${fmtNota(top.nota)} pts</b> · estude antes pelos materiais abaixo</div>
+        ${bannerMats ? `<div class="pxd-mats">${bannerMats}</div>` : ""}
       </div>
-      <div class="pav-list">${rows}</div>
     </div>`;
 
+    const resto = itens.slice(1);
+    let listaHtml = "";
+    if(resto.length){
+      const rows = resto.map(x=>{
+        const [ , m, d] = x.data.split("-");
+        const dd = diasAte(x.data), perto = dd <= 3 && dd >= 0;
+        let wd=""; try{ wd = WD[new Date(x.data+"T12:00:00").getDay()]; }catch(e){}
+        const quando = dd===0 ? "hoje" : dd===1 ? "amanhã" : (dd>1 && dd<=3) ? `em ${dd} dias` : `${wd} · ${d}/${m}`;
+        const horaTxt = x.hora ? ` · ${esc(x.hora)}` : "";
+        const notaTxt = (x.nota!=null && x.nota!=="") ? ` · 📝 ${fmtNota(x.nota)} pts` : "";
+        const mats = matsHtml(x, "pav-mat");
+        return `<div class="pav-item ${perto?"perto":""}">
+          <div class="pav-date"><div class="d">${d}</div><div class="m">${meses[(+m)-1]||""}</div></div>
+          <div class="pav-body">
+            <div class="pav-top"><span class="pav-tag atividade">Atividade</span><span class="pav-quando ${perto?"perto":""}">${quando}${horaTxt}${notaTxt}</span></div>
+            <div class="pav-nome">${esc(x.atividade)}</div>
+            ${mats ? `<div class="pav-mats">${mats}</div>` : ""}
+          </div>
+        </div>`;
+      }).join("");
+      listaHtml = `<div class="pav-card">
+        <div class="pav-h">
+          <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V9h14v11zM7 11h5v5H7z"/></svg>
+          Também vem por aí
+          <span class="cnt">${resto.length}</span>
+        </div>
+        <div class="pav-list">${rows}</div>
+      </div>`;
+    }
+
+    const html = bannerHtml + listaHtml;
     const cta = document.querySelector(".ficha-cta");
     if(cta) cta.insertAdjacentHTML("afterend", html);
     else document.getElementById("content")?.insertAdjacentHTML("afterbegin", html);
