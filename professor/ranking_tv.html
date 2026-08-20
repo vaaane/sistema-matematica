@@ -489,7 +489,7 @@ async function showView(nome) {
 
   if (nome === null) {
     // Geral: usa getResultados() — mesma query e lógica do ranking.html
-    const todos = (await getResultados()).filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
+    const todos = (await getResultados()).filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE' && r.modo !== 'treino');
     const ranking = buildRankingMedia(todos);
     geralTop3Key = getGroups(ranking).map(g => g.students.map(r => r.aluno).sort().join(',')).join('|');
     const changes = detectChanges(ranking);

@@ -73,7 +73,7 @@ const [todosRaw, conquistas, torneiosSnap] = await Promise.all([
   getConquistas(),
   get(ref(db, 'torneios')).catch(() => null),
 ]);
-const todos = todosRaw.filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
+const todos = todosRaw.filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE' && r.modo !== 'treino');
 
 // ── Carregar sessões dos torneios encerrados ──────────────────
 const torneiosMeta   = []; // { id, nome, encerrado_em }

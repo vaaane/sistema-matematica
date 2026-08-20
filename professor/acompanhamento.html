@@ -109,7 +109,7 @@ const selT = document.getElementById("sel-turma");
 const selA = document.getElementById("sel-aluno");
 Object.keys(ALUNOS_POR_TURMA).forEach(t => { selT.innerHTML += `<option value="${t}">Turma ${t}</option>`; });
 
-const todos = await getResultados();
+const todos = (await getResultados()).filter(r => r.modo !== 'treino');
 
 window.mudarTurma = function() {
   const turma = selT.value;

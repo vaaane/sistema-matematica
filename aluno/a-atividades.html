@@ -357,6 +357,17 @@ const tornAviso = torneiosAtivos.length ? `
     <span class="ac-torneio-arrow">›</span>
   </div>` : '';
 
+// ── Aviso de treino livre (sempre visível) ────────────────────
+const treinoAviso = `
+  <div class="ac-torneio-aviso" onclick="location.href='/aluno/treino-equacoes.html'">
+    <span class="ac-torneio-icon">🎯</span>
+    <div class="ac-torneio-text">
+      <strong>Treino de Equações</strong>
+      <span>Livre, não vale nota · refaça quantas vezes quiser →</span>
+    </div>
+    <span class="ac-torneio-arrow">›</span>
+  </div>`;
+
 // ── Banner da atividade liberada ──────────────────────────────
 const liberadaParaBanner = ATIVS_BIM.find(ativ => {
   const lib = liberadasMap[ativ.nome];
@@ -484,6 +495,7 @@ const cardsHtml = ATIVS_BIM.map(ativ => {
 content.innerHTML = `
   ${bannerHtml}
   ${tornAviso}
+  ${treinoAviso}
   <div class="ac-section-title">Todas as atividades</div>
   <div class="ac-atividades-lista">${cardsHtml || '<div class="card" style="text-align:center;padding:30px;color:var(--text-muted)">Nenhuma atividade no '+bimAtivo+'º bimestre por enquanto.</div>'}</div>`;
 

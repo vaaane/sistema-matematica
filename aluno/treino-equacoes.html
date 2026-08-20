@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Treino de Equações — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+<style>
+  /* --- estilos locais, todos ancorados nas variáveis do main.css --- */
+  .treino-banner{
+    background:rgba(240,165,0,.08);
+    border:1px solid rgba(240,165,0,.25);
+    color:var(--gold);
+    border-radius:var(--radius);
+    padding:14px 18px;
+    display:flex;gap:12px;align-items:flex-start;
+    font-weight:600;margin-bottom:18px;
+  }
+  .treino-banner .icone{font-size:1.3rem;line-height:1}
+  .treino-banner small{display:block;color:var(--text-muted);font-weight:500;margin-top:2px}
+
+  .eq-destaque{
+    display:inline-block;margin-top:10px;
+    font-family:'Orbitron',monospace;font-size:1.5rem;
+    color:var(--gold);letter-spacing:1px;
+  }
+  .q-tag{
+    display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.5px;
+    text-transform:uppercase;color:var(--purple);
+    background:rgba(155,48,255,.12);border:1px solid rgba(155,48,255,.25);
+    padding:3px 10px;border-radius:999px;margin-bottom:12px;
+  }
+  .q-enunciado{font-size:1.12rem;line-height:1.5;color:var(--text)}
+  .q-instrucao{color:var(--text-muted);font-size:.9rem;margin-top:8px}
+
+  .opcoes{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+  .opcao{
+    display:flex;align-items:center;gap:12px;
+    background:var(--card);border:1.5px solid var(--border);
+    border-radius:12px;padding:14px 16px;cursor:pointer;
+    font-size:1.05rem;color:var(--text);transition:.12s;text-align:left;
+  }
+  .opcao:hover{border-color:var(--purple)}
+  .opcao .letra{
+    width:30px;height:30px;flex:none;border-radius:8px;
+    display:grid;place-items:center;font-weight:700;
+    background:rgba(155,48,255,.15);color:var(--purple);
+  }
+  .opcao.sel{border-color:var(--purple);background:rgba(155,48,255,.10)}
+  .opcao.certa{border-color:var(--green);background:rgba(34,197,94,.12)}
+  .opcao.errada{border-color:var(--red);background:rgba(239,68,68,.12)}
+  .opcao.disabled{cursor:default;opacity:.85}
+
+  .resp-input{max-width:220px;font-family:'Orbitron',monospace;font-size:1.2rem;text-align:center}
+
+  .barra-prog{height:8px;background:var(--card);border-radius:999px;overflow:hidden;margin-bottom:22px}
+  .barra-prog span{display:block;height:100%;background:linear-gradient(90deg,var(--purple),var(--gold));transition:width .3s}
+  .prog-txt{color:var(--text-muted);font-size:.85rem;margin-bottom:8px;display:flex;justify-content:space-between}
+
+  .feedback{margin-top:16px;font-weight:600;display:none}
+  .feedback.ok{color:var(--green)}
+  .feedback.no{color:var(--red)}
+  .feedback.show{display:block}
+
+  .acoes{display:flex;gap:12px;margin-top:22px;flex-wrap:wrap}
+
+  /* resultado */
+  .resultado-nota{
+    font-family:'Orbitron',monospace;font-size:3.2rem;color:var(--gold);
+    text-align:center;line-height:1;margin:6px 0 2px;
+  }
+  .resultado-sub{text-align:center;color:var(--text-muted);margin-bottom:22px}
+  .mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
+  .rev-item{
+    background:var(--card);border:1px solid var(--border);border-radius:12px;
+    padding:12px 14px;margin-bottom:10px;
+  }
+  .rev-item .rev-top{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:6px}
+  .rev-badge{font-size:.75rem;font-weight:700;padding:2px 9px;border-radius:999px}
+  .rev-badge.ok{background:rgba(34,197,94,.15);color:var(--green)}
+  .rev-badge.no{background:rgba(239,68,68,.15);color:var(--red)}
+  .rev-item .rev-enun{color:var(--text);font-size:.95rem}
+  .rev-item .rev-resp{color:var(--text-muted);font-size:.85rem;margin-top:4px}
+  .rev-item .rev-resp b{color:var(--text)}
+
+  .salvo-info{font-size:.85rem;color:var(--text-muted);text-align:center;margin-top:14px}
+
+  @media(max-width:520px){
+    .eq-destaque{font-size:1.25rem}
+    .mini-stats{grid-template-columns:1fr}
+    .resultado-nota{font-size:2.6rem}
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title" id="topbar-title">Treino de Equações</div>
+        <div class="topbar-sub" id="topbar-sub">Equações do 1º grau · atividade livre</div>
+      </div>
+      <div class="topbar-right"></div>
+    </div>
+    <div class="content" id="content">
+      <div class="card" style="max-width:760px;margin:0 auto">
+        <div class="treino-banner">
+          <span class="icone">🎯</span>
+          <div>
+            Atividade de treino — <b>não vale nota</b>.
+            <small>Faça quantas vezes quiser para praticar. As questões mudam a cada tentativa e seu rendimento fica salvo no seu histórico.</small>
+          </div>
+        </div>
+        <div id="tela"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireAluno, renderSidebarAluno } from "/js/auth.js";
+import { addResultado, updateResultado } from "/js/db.js";
+
+renderSidebarAluno("sidebar", "atividades");
+const sess = requireAluno();
+
+const TOTAL = 10;
+const ATIVIDADE = "treino-equacoes";
+
+/* ================== BANCO DE QUESTÕES ================== */
+const BANCO = [
+  {"id":"EQ-DIG-1T","dificuldade":1,"tipo":"numerica","tag":"Encontre x · escreva o resultado","enunciado":"Resolva a equação e escreva o valor de <b>x</b>:<br><span class='eq-destaque'>{A}x + {B} = {C}</span>","variaveis":{"A":[2,3,4,5],"X":[3,4,5,6,7,8],"B":[4,6,8,10,12]},"resposta_expr":"X","montar_ctx":"C = A*X + B","instrucao":"Digite apenas o número (ex.: 7)."},
+  {"id":"EQ-DIG-2T","dificuldade":2,"tipo":"numerica","tag":"Encontre x · escreva o resultado","enunciado":"Resolva a equação e escreva o valor de <b>x</b>:<br><span class='eq-destaque'>{A}x + {B} = {D}x + {E}</span>","variaveis":{"A":[5,6,7,8],"D":[2,3],"X":[3,4,5,6,7],"B":[4,6,8,10]},"resposta_expr":"X","montar_ctx":"E = (A - D)*X + B","instrucao":"Junte as letras de um lado e os números do outro. Digite apenas o número."},
+  {"id":"EQ-MUL-1T","dificuldade":1,"tipo":"multipla_num","tag":"Encontre x · marque a alternativa","enunciado":"Qual é o valor de <b>x</b> na equação abaixo?<br><span class='eq-destaque'>{A}x − {B} = {C}</span>","variaveis":{"A":[2,3,4,5],"X":[4,5,6,7,8,9],"B":[3,5,6]},"resposta_expr":"X","montar_ctx":"C = A*X - B","prefixo_opcao":"x = "},
+  {"id":"EQ-MUL-2T","dificuldade":2,"tipo":"multipla_num","tag":"Encontre x · marque a alternativa","enunciado":"Qual é o valor de <b>x</b> na equação abaixo?<br><span class='eq-destaque'>{A}x + {B} = {D}x + {E}</span>","variaveis":{"A":[6,7,8,9],"D":[2,3],"X":[3,4,5,6,7,8],"B":[3,5,7,9]},"resposta_expr":"X","montar_ctx":"E = (A - D)*X + B","prefixo_opcao":"x = "},
+  {"id":"EQ-PROB-1","dificuldade":1,"tipo":"multipla_texto","tag":"Problema · escolha a equação","enunciado":"Pedro pensou em um número, somou <b>{B}</b> e encontrou <b>{C}</b>. Qual equação representa esse problema?","variaveis":{"B":[7,9,12,15],"X":[8,10,13,16,20]},"montar_ctx":"C = X + B","equacao_correta":"x + {B} = {C}","distratores":["x − {B} = {C}","{B}x = {C}","x + {C} = {B}"]},
+  {"id":"EQ-PROB-2","dificuldade":1,"tipo":"multipla_texto","tag":"Problema · escolha a equação","enunciado":"O dobro de um número é <b>{C}</b>. Qual equação representa esse problema?","variaveis":{"X":[7,9,11,13,15]},"montar_ctx":"C = 2*X","equacao_correta":"2x = {C}","distratores":["x + 2 = {C}","x − 2 = {C}","x ÷ 2 = {C}"]},
+  {"id":"EQ-PROB-3","dificuldade":2,"tipo":"multipla_texto","tag":"Problema · escolha a equação","enunciado":"Ana comprou um caderno por <b>R${B}</b> e ainda ficou com <b>R${R}</b>. Chamando de <b>x</b> o que ela tinha antes, qual equação representa o problema?","variaveis":{"B":[12,15,18,20],"R":[20,25,30,32]},"montar_ctx":"X = B + R","equacao_correta":"x − {B} = {R}","distratores":["x + {B} = {R}","{B}x = {R}","x − {R} = {B}"]},
+  {"id":"EQ-PROB-4","dificuldade":2,"tipo":"multipla_texto","tag":"Problema · escolha a equação","enunciado":"Maria comprou <b>{N}</b> canetas iguais e pagou <b>R${C}</b> no total. Chamando de <b>x</b> o preço de cada caneta, qual equação representa o problema?","variaveis":{"N":[4,5,6,7],"X":[3,4,5,6]},"montar_ctx":"C = N*X","equacao_correta":"{N}x = {C}","distratores":["x + {N} = {C}","x ÷ {N} = {C}","x − {N} = {C}"]},
+  {"id":"EQ-PROB-5","dificuldade":2,"tipo":"multipla_texto","tag":"Problema · escolha a equação","enunciado":"O triplo de um número, <b>menos {B}</b>, é igual a <b>{C}</b>. Qual equação representa esse problema?","variaveis":{"B":[5,6,8,9],"X":[5,6,7,8,10]},"montar_ctx":"C = 3*X - B","equacao_correta":"3x − {B} = {C}","distratores":["3x + {B} = {C}","x − {B} = {C}","3(x − {B}) = {C}"]},
+  {"id":"EQ-PROB-6","dificuldade":3,"tipo":"multipla_texto","tag":"Problema · escolha a equação","enunciado":"Um número somado ao seu <b>dobro</b> resulta em <b>{C}</b>. Qual equação representa esse problema?","variaveis":{"X":[7,9,11,12,14]},"montar_ctx":"C = 3*X","equacao_correta":"x + 2x = {C}","distratores":["2x = {C}","x + 2 = {C}","x × 2x = {C}"]}
+];
+
+/* ================== MOTOR DE GERAÇÃO ================== */
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const subst = (s,ctx)=> s.replace(/\{(\w+)\}/g,(_,k)=> (k in ctx? ctx[k] : "{"+k+"}"));
+const evalExpr = (expr,ctx)=>{ const n=Object.keys(ctx); return new Function(...n,"return ("+expr+");")(...n.map(k=>ctx[k])); };
+function evalCtx(expr,ctx){ const [alvo,f]=expr.split("=").map(s=>s.trim()); ctx[alvo]=evalExpr(f,ctx); }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+function gerarInstancia(q){
+  const ctx={}; for(const k in q.variaveis) ctx[k]=pick(q.variaveis[k]);
+  if(q.montar_ctx) evalCtx(q.montar_ctx,ctx);
+  const inst={id:q.id,tipo:q.tipo,tag:q.tag,instrucao:q.instrucao||""};
+  inst.enunciado=subst(q.enunciado,ctx);
+  if(q.tipo==="numerica"){
+    inst.resposta=String(evalExpr(q.resposta_expr,ctx));
+  }else if(q.tipo==="multipla_num"){
+    const correta=evalExpr(q.resposta_expr,ctx), pref=q.prefixo_opcao||"";
+    const set=new Set([correta]);
+    for(const d of [correta+1,correta-1,correta+2,correta-2,correta+3,correta-3]){ if(set.size>=4)break; if(d>0) set.add(d); }
+    inst.opcoes=shuffle([...set].slice(0,4).map(v=>pref+v));
+    inst.resposta=pref+correta;
+  }else{ // multipla_texto
+    const correta=subst(q.equacao_correta,ctx);
+    const opcoes=[correta];
+    for(const d of q.distratores){ const s=subst(d,ctx); if(!opcoes.includes(s)) opcoes.push(s); }
+    let g=0;
+    while(opcoes.length<4 && g++<20){
+      const alt=correta.replace(/(\d+)/, m=>(+m+g));
+      if(!opcoes.includes(alt)) opcoes.push(alt);
+    }
+    inst.opcoes=shuffle(opcoes.slice(0,4));
+    inst.resposta=correta;
+  }
+  return inst;
+}
+
+function montarProva(){
+  // sorteia 1 instância de cada questão do banco; se banco > TOTAL, embaralha e corta
+  const base=shuffle([...BANCO]).slice(0, Math.min(TOTAL,BANCO.length));
+  const provas=base.map(gerarInstancia);
+  // se o banco tiver menos que TOTAL, completa repetindo questões (nova instância)
+  while(provas.length<TOTAL) provas.push(gerarInstancia(pick(BANCO)));
+  return provas;
+}
+
+/* ================== ESTADO ================== */
+let prova=[], idx=0, acertos=0, historico=[], resultadoId=null, iniciou=Date.now();
+
+/* ================== RENDER ================== */
+const tela=document.getElementById("tela");
+const LETRAS=["A","B","C","D"];
+
+function normaliza(v){ return String(v).trim().replace(",",".").replace(/\s+/g,""); }
+
+async function iniciar(){
+  prova=montarProva(); idx=0; acertos=0; historico=[]; iniciou=Date.now();
+  // registra resultado "em andamento" (histórico do aluno). Não vale nota.
+  try{
+    resultadoId = await addResultado({
+      aluno: (sess.alunos||[]).join(" & ") || "ALUNO",
+      turma: sess.turma || "",
+      atividade: ATIVIDADE,
+      concluido: false,
+      modo: "treino",
+      total: TOTAL, acertos:0, erros:0, respondidas:0,
+      pontuacao:0, pontuacao_bruta:0
+    });
+  }catch(e){ resultadoId=null; }
+  renderQuestao();
+}
+
+function renderQuestao(){
+  const q=prova[idx];
+  const pct=Math.round((idx)/TOTAL*100);
+  let opcoesHTML="";
+  if(q.tipo==="numerica"){
+    opcoesHTML=`
+      <input id="resp" class="input resp-input" type="text" inputmode="numeric" autocomplete="off" placeholder="?" />
+      <div class="q-instrucao">${q.instrucao||"Digite apenas o número."}</div>`;
+  }else{
+    opcoesHTML=`<div class="opcoes">`+q.opcoes.map((o,i)=>
+      `<button class="opcao" data-val="${o.replace(/"/g,'&quot;')}">
+         <span class="letra">${LETRAS[i]}</span><span>${o}</span>
+       </button>`).join("")+`</div>`;
+  }
+  tela.innerHTML=`
+    <div class="prog-txt"><span>Questão ${idx+1} de ${TOTAL}</span><span>${acertos} ✔</span></div>
+    <div class="barra-prog"><span style="width:${pct}%"></span></div>
+    <span class="q-tag">${q.tag||""}</span>
+    <div class="q-enunciado">${q.enunciado}</div>
+    ${opcoesHTML}
+    <div class="feedback" id="fb"></div>
+    <div class="acoes">
+      <button class="btn btn-blue" id="btn-conf">Confirmar</button>
+    </div>`;
+
+  const btn=document.getElementById("btn-conf");
+  if(q.tipo==="numerica"){
+    const inp=document.getElementById("resp");
+    inp.focus();
+    inp.addEventListener("keydown",e=>{ if(e.key==="Enter") btn.click(); });
+    btn.onclick=()=>{ const v=inp.value.trim(); if(v==="")return; corrigir(normaliza(v)===normaliza(q.resposta), v, inp); };
+  }else{
+    let sel=null;
+    tela.querySelectorAll(".opcao").forEach(el=>{
+      el.onclick=()=>{ tela.querySelectorAll(".opcao").forEach(o=>o.classList.remove("sel")); el.classList.add("sel"); sel=el; };
+    });
+    btn.onclick=()=>{ if(!sel)return; corrigir(sel.dataset.val===q.resposta, sel.dataset.val, sel); };
+  }
+}
+
+function corrigir(acertou, respAluno, alvo){
+  const q=prova[idx];
+  if(acertou) acertos++;
+  historico.push({ enunciado:q.enunciado.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim(), resposta_aluno:respAluno, resposta_correta:q.resposta, acertou });
+
+  // trava a questão e mostra feedback visual
+  document.getElementById("btn-conf").disabled=true;
+  if(q.tipo!=="numerica"){
+    tela.querySelectorAll(".opcao").forEach(el=>{
+      el.classList.add("disabled"); el.onclick=null;
+      if(el.dataset.val===q.resposta) el.classList.add("certa");
+    });
+    if(!acertou) alvo.classList.add("errada");
+  }else{
+    alvo.disabled=true; alvo.classList.add(acertou?"certa":"errada");
+  }
+  const fb=document.getElementById("fb");
+  fb.className="feedback show "+(acertou?"ok":"no");
+  fb.textContent=acertou?"✔ Correto!":("✗ Resposta certa: "+q.resposta);
+
+  const btn=document.getElementById("btn-conf");
+  btn.disabled=false;
+  btn.textContent = (idx+1<TOTAL)?"Próxima":"Ver resultado";
+  btn.onclick=()=>{ idx++; (idx<TOTAL)?renderQuestao():finalizar(); };
+}
+
+async function finalizar(){
+  const erros=TOTAL-acertos;
+  const nota=Math.round((acertos/TOTAL)*100)/10; // 0–10, uma casa
+  const tempo=Math.round((Date.now()-iniciou)/1000);
+
+  if(resultadoId!=null){
+    try{
+      await updateResultado(resultadoId,{
+        concluido:true, modo:"treino",
+        acertos, erros, respondidas:TOTAL, total:TOTAL,
+        pontuacao:nota, pontuacao_bruta:acertos, tempo_segundos:tempo
+      });
+    }catch(e){}
+  }
+  renderResultado(nota, acertos, erros, tempo, resultadoId!=null);
+}
+
+function renderResultado(nota, acertos, erros, tempo, salvou){
+  const min=Math.floor(tempo/60), seg=tempo%60;
+  const msg = acertos===TOTAL ? "Perfeito! 🎉" : acertos>=7 ? "Muito bem! 👏" : acertos>=5 ? "Continue treinando 💪" : "Vamos revisar juntos 📘";
+  tela.innerHTML=`
+    <div class="resultado-nota">${nota.toString().replace(".",",")} / 10</div>
+    <div class="resultado-sub">${msg} &nbsp;·&nbsp; ${acertos} de ${TOTAL} corretas</div>
+    <div class="mini-stats">
+      <div class="stat-card"><div class="stat-value green">${acertos}</div><div>acertos</div></div>
+      <div class="stat-card"><div class="stat-value red">${erros}</div><div>erros</div></div>
+      <div class="stat-card"><div class="stat-value gold">${min}:${String(seg).padStart(2,"0")}</div><div>tempo</div></div>
+    </div>
+    <div class="card-title" style="margin-top:6px">Revisão</div>
+    <div id="revisao"></div>
+    <p class="salvo-info">${salvou?"✔ Seu rendimento foi salvo no histórico (treino, não vale nota).":"⚠ Não foi possível salvar o histórico agora, mas o treino valeu como prática."}</p>
+    <div class="acoes" style="justify-content:center">
+      <button class="btn btn-blue" id="btn-novo">Treinar de novo</button>
+      <button class="btn btn-ghost" onclick="location.href='/aluno/atividades.html'">Voltar às atividades</button>
+    </div>`;
+  const rev=document.getElementById("revisao");
+  rev.innerHTML=historico.map((h,i)=>`
+    <div class="rev-item">
+      <div class="rev-top">
+        <span style="color:var(--text-muted);font-size:.8rem">Questão ${i+1}</span>
+        <span class="rev-badge ${h.acertou?'ok':'no'}">${h.acertou?'acertou':'errou'}</span>
+      </div>
+      <div class="rev-enun">${h.enunciado}</div>
+      <div class="rev-resp">Sua resposta: <b>${h.resposta_aluno}</b>${h.acertou?"":` · Correta: <b>${h.resposta_correta}</b>`}</div>
+    </div>`).join("");
+  document.getElementById("btn-novo").onclick=iniciar;
+}
+
+iniciar();
+</script>
+</body>
+</html>

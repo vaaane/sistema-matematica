@@ -221,7 +221,7 @@ async function renderPainelPrincipal() {
   document.getElementById('topbar-right').innerHTML =
     `<button class="btn btn-ghost" style="font-size:12px" onclick="window.open('/professor/ranking_tv.html','_blank')">📺 Modo TV</button>`;
   const todosRaw = await getResultados();
-  const todos = todosRaw.filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE');
+  const todos = todosRaw.filter(r => !r.modo_teste && r.aluno !== 'PROFESSOR_TESTE' && r.modo !== 'treino');
   let filtroTurma = '';
 
   // ── Tabuada ───────────────────────────────────────────────────
@@ -708,7 +708,8 @@ function iniciarModoProjecao(atividade, modo) {
 // ══════════════════════════════════════════════════════════════
 async function iniciarTVMode() {
   // NOTE: requires Firebase index: "resultados": { ".indexOn": ["atividade"] }
-  const [todos, liberadas] = await Promise.all([getResultados(), getLiberadas()]);
+  const [todosRawTv, liberadas] = await Promise.all([getResultados(), getLiberadas()]);
+  const todos = todosRawTv.filter(r => r.modo !== 'treino');
 
   document.body.classList.add('tv-mode');
   setTimeout(() => { document.documentElement.requestFullscreen().catch(() => {}); }, 800);
