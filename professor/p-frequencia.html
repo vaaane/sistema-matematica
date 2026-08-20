@@ -151,15 +151,17 @@ async function carregar(){
     const naoLetivos = snapNL.exists() ? (snapNL.val()||{}) : {};
     const porData = {};
 
-    // (1) TODOS os dias letivos da turma no bimestre, pela grade de horário —
-    // assim a chamada aparece mesmo sem aula lançada no Diário.
+    // (1) dias letivos da turma no bimestre, pela grade de horário — SÓ até hoje
+    // (dias futuros não entram; a chamada aparece mesmo sem aula no Diário).
     const grade = GRADE_TURMAS[turma] || [];
     const bim = BIMESTRES.find(b => b.n === bimestre);
+    const hojeIso = (()=>{ const n=new Date(); const o=n.getTimezoneOffset(); return new Date(n.getTime()-o*60000).toISOString().slice(0,10); })();
     if (bim && grade.length) {
       const ini = new Date(bim.inicio + "T12:00:00");
       const fim = new Date(bim.fim + "T12:00:00");
       for (let d = new Date(ini); d <= fim; d.setDate(d.getDate()+1)) {
         const ds = d.toISOString().slice(0,10);
+        if (ds > hojeIso) break;                       // não mostra dias futuros
         if (grade.includes(d.getDay()) && !naoLetivos[ds]) {
           porData[ds] = { data: ds, pd1:false };
         }
@@ -186,8 +188,7 @@ async function carregar(){
       }
     }
 
-    const hojeISO = new Date().toISOString().slice(0,10);
-    dias = Object.values(porData).filter(d => d.data <= hojeISO).sort((x,y)=> x.data<y.data ? -1 : 1);
+    dias = Object.values(porData).sort((x,y)=> x.data<y.data ? -1 : 1);
   }catch(e){ console.error(e); dias=[]; chamada={}; }
   render();
 }
