@@ -186,7 +186,8 @@ async function carregar(){
       }
     }
 
-    dias = Object.values(porData).sort((x,y)=> x.data<y.data ? -1 : 1);
+    const hojeISO = new Date().toISOString().slice(0,10);
+    dias = Object.values(porData).filter(d => d.data <= hojeISO).sort((x,y)=> x.data<y.data ? -1 : 1);
   }catch(e){ console.error(e); dias=[]; chamada={}; }
   render();
 }
