@@ -252,12 +252,16 @@ let bibEscolhido = null, bibFiltro = "todos";
 // cache local do bimestre atual: { atividades:[{id,nome,data,conteudo,ordem}], marcas:{ atvId:{ aluno:0|1|2 } } }
 let atual = { atividades: [], marcas: {} };
 let irParaFim = false;
-// chamada (frequência) do bimestre: { "YYYY-MM-DD": { aluno: true(falta) } }
+// chamada (frequência) do bimestre: { "YYYY-MM-DD": { aluno: "falta"|"atraso" } }
 let chamada = {};
 let atestados = {};   // { aluno:[ {inicio,fim,ts,obs} ] }
 const temAtestado = (data, aluno) => dentroDoAtestado(data, atestados[aluno]||[]);
-const faltou = (data, aluno) => !!(data && chamada[data] && chamada[data][aluno]) && !temAtestado(data, aluno);
-const temFaltaAtestada = (data, aluno) => !!(data && chamada[data] && chamada[data][aluno]) && temAtestado(data, aluno);
+// estado bruto: "falta" | "atraso" | "" (compat: true antigo => "falta")
+const estadoCham = (data, aluno) => { const v=(chamada[data]||{})[aluno]; return v===true?"falta":(v||""); };
+// Falta "pura" na atividade: só FALTA (não atraso) e sem atestado no dia.
+const faltou = (data, aluno) => estadoCham(data, aluno)==="falta" && !temAtestado(data, aluno);
+// Marca (falta) coberta por atestado — atraso não é ausência justificada da atividade.
+const temFaltaAtestada = (data, aluno) => estadoCham(data, aluno)==="falta" && temAtestado(data, aluno);
 
 const P = (t,b) => `vistos/${t}/${b}`;
 const fmtData = iso => { if(!iso) return ""; const [y,m,d]=iso.split("-"); return `${d}/${m}`; };

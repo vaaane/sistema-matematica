@@ -672,9 +672,12 @@ function calVistoChips(ds){
 
 function chamadaLinhaHTML(ds){
   const total = (ALUNOS_POR_TURMA[turma]||[]).length;
-  const aus = chamadaPorDia[ds] ? Object.values(chamadaPorDia[ds]).filter(Boolean).length : 0;
+  const _m = chamadaPorDia[ds] || {};
+  let nFalta=0, nAtraso=0;
+  Object.values(_m).forEach(v=>{ const e=v===true?"falta":(v||""); if(e==="falta")nFalta++; else if(e==="atraso")nAtraso++; });
+  const aus = nFalta + nAtraso;
   return `<div class="cal-chamada">
-    <span class="cham-resumo">✅ ${total-aus} presente(s)${aus?` · <span style="color:#ff9d9d">❌ ${aus} falta(s)</span>`:""}</span>
+    <span class="cham-resumo">✅ ${total-aus} presente(s)${nFalta?` · <span style="color:#ff9d9d">❌ ${nFalta} falta(s)</span>`:""}${nAtraso?` · <span style="color:var(--gold)">🕐 ${nAtraso} atraso(s)</span>`:""}</span>
     <button class="btn btn-ghost btn-sm" data-chamada="${ds}">📋 Fazer chamada do dia</button>
   </div>`;
 }
@@ -687,31 +690,36 @@ function abrirChamada(ds){
 
 function renderChamadaModal(){
   const alunos = ALUNOS_POR_TURMA[turma]||[];
-  const aus = chamadaPorDia[chamDia]||{};
-  let nAus=0; alunos.forEach(al=>{ if(aus[al]) nAus++; });
+  const marcas = chamadaPorDia[chamDia]||{};
+  const estOf = al => { const v=marcas[al]; return v===true?"falta":(v||""); };
+  let nFalta=0, nAtraso=0; alunos.forEach(al=>{ const e=estOf(al); if(e==="falta")nFalta++; else if(e==="atraso")nAtraso++; });
   const p = (chamDia||"").split("-");
   document.getElementById("chamTitulo").textContent = `Chamada — ${p[2]}/${p[1]}`;
-  document.getElementById("chamSub").textContent = "Presença do dia";
+  document.getElementById("chamSub").textContent = "Presença do dia · toque para alternar";
   document.getElementById("chamResumo").innerHTML =
-    `<span class="cham-r pres">✅ ${alunos.length-nAus} presente(s)</span><span class="cham-r aus">❌ ${nAus} falta(s)</span>`;
+    `<span class="cham-r pres">✅ ${alunos.length-nFalta-nAtraso} presente(s)</span><span class="cham-r aus">❌ ${nFalta} falta(s)</span>${nAtraso?`<span class="cham-r" style="color:var(--gold)">🕐 ${nAtraso} atraso(s)</span>`:""}`;
   const body = document.getElementById("chamBody");
   body.innerHTML = alunos.map((al)=>{
-    const ausente = !!aus[al];
+    const e = estOf(al);
+    const badge = e==="falta" ? `<span class="cham-badge aus">❌ Falta</span>`
+                : e==="atraso" ? `<span class="cham-badge" style="background:var(--gold-pale);color:var(--gold)">🕐 Atraso</span>`
+                : `<span class="cham-badge pres">✅ Presente</span>`;
     return `<div class="cham-row" data-al="${al.replace(/"/g,'&quot;')}">
       <span class="cham-n">${numeroChamada(turma, al) || "—"}</span>
       <span class="cham-nome">${al}</span>
-      <span class="cham-badge ${ausente?'aus':'pres'}">${ausente?'❌ Falta':'✅ Presente'}</span>
+      ${badge}
     </div>`;
   }).join("");
   body.querySelectorAll(".cham-row").forEach(el=>el.onclick=()=>toggleChamada(el.dataset.al));
 }
 
 async function toggleChamada(aluno){
-  const aus = chamadaPorDia[chamDia] = chamadaPorDia[chamDia] || {};
-  const virarFalta = !aus[aluno];
-  if(virarFalta) aus[aluno]=true; else delete aus[aluno];
+  const marcas = chamadaPorDia[chamDia] = chamadaPorDia[chamDia] || {};
+  const atual = marcas[aluno]===true ? "falta" : (marcas[aluno]||"");
+  const prox  = atual==="" ? "falta" : atual==="falta" ? "atraso" : "";
+  if(prox==="") delete marcas[aluno]; else marcas[aluno]=prox;
   renderChamadaModal();
-  try{ await set(ref(db, `chamada/${turma}/${bimestre}/${chamDia}/${aluno}`), virarFalta ? true : null); }
+  try{ await set(ref(db, `chamada/${turma}/${bimestre}/${chamDia}/${aluno}`), prox || null); }
   catch(e){ console.error(e); toast("Falha ao salvar a chamada", true); }
 }
 

@@ -32,6 +32,7 @@
   .cell-demo{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px}
   .cell-demo.p{background:var(--green-pale);color:var(--green)}
   .cell-demo.f{background:var(--red-pale);color:var(--red)}
+  .cell-demo.a{background:var(--gold-pale);color:var(--gold)}
 
   .tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:auto}
   table.freq{border-collapse:collapse;width:100%;min-width:640px}
@@ -42,6 +43,7 @@
   .th-aula{min-width:58px;cursor:default}
   .th-num{font-family:'Orbitron',monospace;font-size:10px;color:var(--purple);font-weight:700}
   .th-data{font-size:10px;color:var(--text-muted);margin-top:2px}
+  .th-aulas{font-size:8px;color:var(--gold);background:var(--gold-pale);border-radius:4px;padding:0 4px;display:inline-block;margin-top:2px;font-weight:700}
   .th-pd1{font-size:8px;color:#8ee6b6;background:rgba(90,190,140,.16);border-radius:4px;padding:0 4px;display:inline-block;margin-top:2px}
 
   table.freq tbody tr{border-bottom:1px solid rgba(255,255,255,.04)}
@@ -54,6 +56,7 @@
   .mk:hover{transform:scale(1.15);filter:brightness(1.1)}
   .mk.p{background:var(--green-pale);color:var(--green)}
   .mk.f{background:var(--red-pale);color:var(--red)}
+  .mk.a{background:var(--gold-pale);color:var(--gold)}
   .col-tot{position:sticky;right:0;background:var(--card2,#141428);border-left:1px solid var(--border);min-width:64px}
   .tot-v{font-family:'Orbitron',monospace;font-weight:700;font-size:15px}
   .tot-v.zero{color:var(--text-muted)} .tot-v.some{color:var(--gold)} .tot-v.high{color:var(--red)}
@@ -96,6 +99,7 @@
       <div class="legenda">
         <div class="lg"><span class="cell-demo p">P</span> Presente</div>
         <div class="lg"><span class="cell-demo f">F</span> Falta</div>
+        <div class="lg"><span class="cell-demo a">A</span> Atraso</div>
         <div class="lg">Coluna = um dia · clique numa célula para alternar · última coluna = total de faltas</div>
       </div>
       <div class="tbl-wrap"><table class="freq" id="tbl"></table></div>
@@ -105,7 +109,7 @@
 </div>
 
 <script type="module">
-import { ALUNOS_POR_TURMA, numeroChamada, turmaAgora, GRADE_TURMAS, BIMESTRES } from "/js/constants.js";
+import { ALUNOS_POR_TURMA, numeroChamada, turmaAgora, GRADE_TURMAS, BIMESTRES, aulasNoDia } from "/js/constants.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -119,11 +123,21 @@ let turma = turmaAgora() || (TURMAS.includes("8F") ? "8F" : TURMAS[0]);
 let bimestre = 3;
 
 let dias = [];       // [{data, pd1}] — um por DIA que teve aula
-let chamada = {};    // { "YYYY-MM-DD": { aluno: true(falta) } }
+let chamada = {};    // { "YYYY-MM-DD": { aluno: "falta" | "atraso" } }  (presente = sem marca)
 
 const fmtData = iso => { if(!iso) return ""; const [,m,d]=iso.split("-"); return `${d}/${m}`; };
 const diaSemana = iso => { try{ return ["dom","seg","ter","qua","qui","sex","sáb"][new Date(iso+"T12:00:00").getDay()]; }catch(e){ return ""; } };
-const faltou = (data, aluno) => !!(chamada[data] && chamada[data][aluno]);
+// estado bruto: "falta" | "atraso" | "" (presente). Compat: true antigo => "falta".
+const estadoDe = (data, aluno) => { const v=(chamada[data]||{})[aluno]; return v===true?"falta":(v||""); };
+const faltou   = (data, aluno) => estadoDe(data, aluno) === "falta";
+const atrasou  = (data, aluno) => estadoDe(data, aluno) === "atraso";
+// aulas perdidas por um aluno num dia: falta = todas; atraso = 1 (a 1ª); presente = 0
+function aulasPerdidas(data, aluno){
+  const est = estadoDe(data, aluno);
+  if(est === "falta")  return aulasNoDia(turma, data) || 1;
+  if(est === "atraso") return 1;
+  return 0;
+}
 
 async function carregar(){
   document.getElementById("topbar-sub").textContent = `Turma ${turma} · ${bimestre}º bimestre`;
@@ -179,9 +193,10 @@ async function carregar(){
 
 async function toggleFalta(data, aluno){
   chamada[data] = chamada[data] || {};
-  const virarFalta = !chamada[data][aluno];
-  if (virarFalta) chamada[data][aluno] = true; else delete chamada[data][aluno];
-  try{ await set(ref(db, `chamada/${turma}/${bimestre}/${data}/${aluno}`), virarFalta ? true : null); }
+  const atual = estadoDe(data, aluno);            // "", "falta", "atraso"
+  const prox  = atual === "" ? "falta" : atual === "falta" ? "atraso" : "";
+  if(prox === "") delete chamada[data][aluno]; else chamada[data][aluno] = prox;
+  try{ await set(ref(db, `chamada/${turma}/${bimestre}/${data}/${aluno}`), prox || null); }
   catch(e){ console.error(e); }
   render();
 }
@@ -198,49 +213,56 @@ function render(){
   }
 
   const nDias = dias.length, nAlunos = alunos.length;
-  const faltasDe = al => dias.filter(d=>faltou(d.data, al)).length;
-  const totalFaltas = alunos.reduce((s,al)=>s+faltasDe(al),0);
-  const mediaPres = nDias*nAlunos ? Math.round((1 - totalFaltas/(nDias*nAlunos))*100) : 100;
+  const totalAulas = dias.reduce((s,d)=> s + (aulasNoDia(turma, d.data) || 1), 0);
+  const aulasPerdidasDe = al => dias.reduce((s,d)=> s + aulasPerdidas(d.data, al), 0);
+  const faltasDiasDe = al => dias.filter(d=>faltou(d.data, al)).length;
+  const atrasosDe    = al => dias.filter(d=>atrasou(d.data, al)).length;
+  const totalAulasPerdidas = alunos.reduce((s,al)=>s+aulasPerdidasDe(al),0);
+  const denom = totalAulas*nAlunos;
+  const mediaPres = denom ? Math.round((1 - totalAulasPerdidas/denom)*100) : 100;
 
   document.getElementById("stats").innerHTML = `
     <div class="stat"><div class="stat-l">Alunos</div><div class="stat-v purple">${nAlunos}</div></div>
-    <div class="stat"><div class="stat-l">Dias com aula</div><div class="stat-v purple">${nDias}</div></div>
+    <div class="stat"><div class="stat-l">Dias · Aulas</div><div class="stat-v purple">${nDias} · ${totalAulas}</div></div>
     <div class="stat"><div class="stat-l">Presença média</div><div class="stat-v green">${mediaPres}%</div></div>
-    <div class="stat"><div class="stat-l">Total de faltas</div><div class="stat-v gold">${totalFaltas}</div></div>`;
+    <div class="stat"><div class="stat-l">Faltas (aulas)</div><div class="stat-v gold">${totalAulasPerdidas}</div></div>`;
 
   const head = `<thead><tr>
     <th class="col-aluno">Aluno</th>
-    ${dias.map(d=>`<th class="th-aula"><div class="th-num">${diaSemana(d.data)}</div><div class="th-data">${fmtData(d.data)}</div>${d.pd1?`<div class="th-pd1">PD1</div>`:""}</th>`).join("")}
+    ${dias.map(d=>{ const na=aulasNoDia(turma,d.data)||1; return `<th class="th-aula"><div class="th-num">${diaSemana(d.data)}</div><div class="th-data">${fmtData(d.data)}</div><div class="th-aulas">${na} aula${na>1?"s":""}</div>${d.pd1?`<div class="th-pd1">PD1</div>`:""}</th>`; }).join("")}
     <th class="col-tot">Faltas</th>
   </tr></thead>`;
 
   const body = `<tbody>${alunos.map((al)=>{
     const cells = dias.map(d=>{
-      const f = faltou(d.data, al);
-      return `<td class="cell"><span class="mk ${f?"f":"p"}" data-d="${d.data}" data-al="${al.replace(/"/g,'&quot;')}" title="clique para alternar">${f?"F":"P"}</span></td>`;
+      const est = estadoDe(d.data, al);                 // "", "falta", "atraso"
+      const cls = est==="falta"?"f":est==="atraso"?"a":"p";
+      const txt = est==="falta"?"F":est==="atraso"?"A":"P";
+      return `<td class="cell"><span class="mk ${cls}" data-d="${d.data}" data-al="${al.replace(/"/g,'&quot;')}" title="clique: Presente → Falta → Atraso">${txt}</span></td>`;
     }).join("");
-    const nf = faltasDe(al);
-    const cls = nf===0?"zero":nf>=3?"high":"some";
+    const ap = aulasPerdidasDe(al), fd = faltasDiasDe(al), at = atrasosDe(al);
+    const cls = ap===0?"zero":ap>=3?"high":"some";
+    const sub = at>0 ? `${fd}F · ${at}A` : `de ${totalAulas}`;
     return `<tr>
       <td class="col-aluno"><span class="al-n">${(n=>n?String(n).padStart(2,"0"):"—")(numeroChamada(turma,al))}</span>${al}</td>
       ${cells}
-      <td class="col-tot"><div class="tot-v ${cls}">${nf}</div><div class="tot-sub">de ${nDias}</div></td>
+      <td class="col-tot"><div class="tot-v ${cls}">${ap}</div><div class="tot-sub">${sub}</div></td>
     </tr>`;
   }).join("")}</tbody>`;
 
   const foot = `<tfoot><tr>
-    <td class="col-aluno">Faltas no dia</td>
+    <td class="col-aluno">Aulas perdidas no dia</td>
     ${dias.map(d=>{
-      const f = alunos.filter(al=>faltou(d.data, al)).length;
-      return `<td><span class="foot-f ${f===0?"zero":""}">${f}</span></td>`;
+      const s = alunos.reduce((acc,al)=>acc+aulasPerdidas(d.data, al),0);
+      return `<td><span class="foot-f ${s===0?"zero":""}">${s}</span></td>`;
     }).join("")}
-    <td class="col-tot"><span class="foot-f">${totalFaltas}</span></td>
+    <td class="col-tot"><span class="foot-f">${totalAulasPerdidas}</span></td>
   </tr></tfoot>`;
 
   const tbl = document.getElementById("tbl");
   tbl.innerHTML = head + body + foot;
   tbl.querySelectorAll(".mk[data-d]").forEach(el => el.onclick = () => toggleFalta(el.dataset.d, el.dataset.al));
-  document.getElementById("rodape").innerHTML = `Turma <b>${turma}</b> · ${bimestre}º bim — ${nAlunos} alunos · ${nDias} dias · <b>${totalFaltas}</b> falta(s) no total. <span style="color:var(--text-muted)">Clique numa célula para alternar presença/falta.</span>`;
+  document.getElementById("rodape").innerHTML = `Turma <b>${turma}</b> · ${bimestre}º bim — ${nAlunos} alunos · ${nDias} dias (${totalAulas} aulas) · <b>${totalAulasPerdidas}</b> falta(s) em aulas. <span style="color:var(--text-muted)">Clique numa célula: Presente → Falta → Atraso.</span>`;
 }
 
 function renderTabsBim(){
@@ -253,12 +275,14 @@ function exportarCSV(){
   const alunos = ALUNOS_POR_TURMA[turma] || [];
   const sep = ";";
   const esc = s => `"${String(s).replace(/"/g,'""')}"`;
-  const head = ["Nº","Aluno", ...dias.map(d=>fmtData(d.data)), "Total faltas"];
+  const head = ["Nº","Aluno", ...dias.map(d=>`${fmtData(d.data)} (${aulasNoDia(turma,d.data)||1}a)`), "Faltas (aulas)", "Faltas (dias)", "Atrasos"];
   const linhas = [head.join(sep)];
   alunos.forEach((al)=>{
-    const cells = dias.map(d=> faltou(d.data, al) ? "F" : "P");
-    const nf = dias.filter(d=>faltou(d.data, al)).length;
-    linhas.push([numeroChamada(turma,al)||"", esc(al), ...cells, nf].join(sep));
+    const cells = dias.map(d=>{ const e=estadoDe(d.data,al); return e==="falta"?"F":e==="atraso"?"A":"P"; });
+    const ap = dias.reduce((s,d)=>s+aulasPerdidas(d.data,al),0);
+    const fd = dias.filter(d=>faltou(d.data,al)).length;
+    const at = dias.filter(d=>atrasou(d.data,al)).length;
+    linhas.push([numeroChamada(turma,al)||"", esc(al), ...cells, ap, fd, at].join(sep));
   });
   const csv = "\uFEFF" + linhas.join("\r\n");
   const blob = new Blob([csv], { type:"text/csv;charset=utf-8;" });

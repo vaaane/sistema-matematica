@@ -153,6 +153,9 @@
   .at-pill{display:flex;flex-direction:column;align-items:center;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.35);border-radius:10px;padding:7px 12px;min-width:60px}
   .at-pill .d{font-size:15px;font-weight:800;color:#60a5fa;line-height:1}
   .at-pill .w{font-size:10px;color:var(--text-muted);margin-top:2px;text-transform:uppercase;letter-spacing:.04em}
+  .atraso-pill{display:flex;flex-direction:column;align-items:center;background:var(--gold-pale);border:1px solid rgba(240,165,0,.35);border-radius:10px;padding:7px 12px;min-width:60px}
+  .atraso-pill .d{font-size:15px;font-weight:800;color:var(--gold);line-height:1}
+  .atraso-pill .w{font-size:10px;color:var(--text-muted);margin-top:2px;text-transform:uppercase;letter-spacing:.04em}
   .vazio{font-size:12.5px;color:var(--text-muted);padding:6px 0}
 
   .oc{position:relative;padding:0 0 14px 22px;border-left:2px solid var(--border);margin-left:5px}
@@ -202,7 +205,7 @@
 </div>
 
 <script type="module">
-import { numeroChamada, BIMESTRES, bimestreAtual, dentroDoAtestado, normalizarAtestados } from "/js/constants.js";
+import { numeroChamada, BIMESTRES, bimestreAtual, dentroDoAtestado, normalizarAtestados, aulasNoDia } from "/js/constants.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -271,8 +274,12 @@ let atestados = [];    // [ {inicio,fim,ts,obs} ] do aluno logado
 let nivelTab = 0, nivelNeg = 0;   // progresso nos jogos de tabuada
 
 const temAtestado = data => dentroDoAtestado(data, atestados);
+// estado bruto da chamada: "falta" | "atraso" | "" (compat: true antigo => "falta")
+const estadoCham = (data, al) => { const v=(chamada[data]||{})[al]; return v===true?"falta":(v||""); };
 // Falta "pura": faltou na chamada E não há atestado cobrindo o dia.
-const faltou = (data, al) => !!(data && chamada[data] && chamada[data][al]) && !temAtestado(data);
+const faltou  = (data, al) => estadoCham(data, al)==="falta" && !temAtestado(data);
+const atrasou = (data, al) => estadoCham(data, al)==="atraso" && !temAtestado(data);
+const aulasDia = data => aulasNoDia(turma, data) || 1;
 
 async function carregar(){
   document.getElementById("conteudo").innerHTML = `<div class="vazio">Carregando…</div>`;
@@ -329,17 +336,20 @@ function statusAtiv(atv){
   if (v===2) return "atraso";
   if (v===3) return "fa";        // faltou, entregou depois (½)
   if (v===4) return "atv";       // atestado, entregou depois (integral)
-  const faltouDia = atv.data && chamada[atv.data] && chamada[atv.data][aluno];
+  const faltouDia = atv.data && estadoCham(atv.data, aluno)==="falta";   // atraso NÃO conta como ausência
   if (faltouDia && temAtestado(atv.data)) return "at";   // atestado sem entrega
   if (faltou(atv.data, aluno)) return "falta";
   return "nao";
 }
 
 function faltasDoAluno(){
-  return Object.keys(chamada).filter(d=>chamada[d] && chamada[d][aluno] && !temAtestado(d)).sort();
+  return Object.keys(chamada).filter(d=>faltou(d, aluno)).sort();
+}
+function atrasosDoAluno(){
+  return Object.keys(chamada).filter(d=>atrasou(d, aluno)).sort();
 }
 function atestadosDoAluno(){
-  return Object.keys(chamada).filter(d=>chamada[d] && chamada[d][aluno] && temAtestado(d)).sort();
+  return Object.keys(chamada).filter(d=>estadoCham(d, aluno) && temAtestado(d)).sort();
 }
 
 function ocorrenciasDoAluno(){
@@ -360,8 +370,12 @@ function render(){
   const feitasTxt = Number.isInteger(feitasNum) ? String(feitasNum) : feitasNum.toFixed(1).replace(".", ",");
   const naoF   = linhas.filter(l=>l.st==="nao"||l.st==="falta").length;
   const faltas = faltasDoAluno();
+  const atrasos = atrasosDoAluno();
   const atDias = atestadosDoAluno();
   const oc     = ocorrenciasDoAluno();
+  // faltas em AULAS: cada dia de falta = todas as aulas do dia; cada atraso = 1 aula
+  const faltasAulas = faltas.reduce((s,d)=>s+aulasDia(d),0);
+  const atrasosAulas = atrasos.length; // 1 aula por atraso
 
   // anel de progresso das entregas (usa feitasNum/atividades já calculados acima)
   const totalAtv  = atividades.length;
@@ -403,8 +417,12 @@ function render(){
     </div>`;}).join("") : `<div class="vazio">Nada neste filtro.</div>`;
 
   const faltasHtml = faltas.length ? faltas.map(d=>`
-    <div class="falta-pill"><div class="d">${fmtDM(d)}</div><div class="w">${weekday(d)}</div></div>`).join("")
+    <div class="falta-pill"><div class="d">${fmtDM(d)}</div><div class="w">${weekday(d)} · ${aulasDia(d)}a</div></div>`).join("")
     : `<div class="vazio">Sem faltas no bimestre. 🎉</div>`;
+
+  const atrasosHtml = atrasos.length ? atrasos.map(d=>`
+    <div class="atraso-pill"><div class="d">${fmtDM(d)}</div><div class="w">${weekday(d)}</div></div>`).join("")
+    : `<div class="vazio">Sem atrasos no bimestre.</div>`;
 
   const atHtml = atDias.length ? atDias.map(d=>`
     <div class="at-pill"><div class="d">${fmtDM(d)}</div><div class="w">${weekday(d)}</div></div>`).join("")
@@ -446,7 +464,7 @@ function render(){
         </div>
         <div class="stat r" data-goto="c-pres">
           <div class="stat-ic vermelho"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
-          <div class="stat-txt"><div class="v">${faltas.length}</div><div class="l">Faltas</div></div>
+          <div class="stat-txt"><div class="v">${faltasAulas}</div><div class="l">Faltas (aulas)</div></div>
         </div>
         <div class="stat b" data-goto="c-pres">
           <div class="stat-ic azul"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 15l-4-4 1.41-1.41L10 13.17l6.59-6.59L18 8l-8 8z"/></svg></div>
@@ -484,8 +502,12 @@ function render(){
             Presença
           </div>
           <div class="pres-sec">
-            <div class="pres-h"><span class="dot" style="background:var(--red)"></span>Faltas<span class="c">${faltas.length} dia(s)</span></div>
+            <div class="pres-h"><span class="dot" style="background:var(--red)"></span>Faltas<span class="c">${faltas.length} dia(s) · ${faltasAulas} aula(s)</span></div>
             <div class="falta-dates">${faltasHtml}</div>
+          </div>
+          <div class="pres-sec">
+            <div class="pres-h"><span class="dot" style="background:var(--gold)"></span>Atrasos<span class="c">${atrasos.length} dia(s) · ${atrasosAulas} aula(s)</span></div>
+            <div class="falta-dates">${atrasosHtml}</div>
           </div>
           <div class="pres-sec">
             <div class="pres-h"><span class="dot" style="background:#60a5fa"></span>Atestado médico<span class="c">${atDias.length} dia(s)</span></div>

@@ -224,7 +224,7 @@
 
 
 <script type="module">
-import { LISTA_ATIVIDADES, bimestreAtual, bimestreDeData, dentroDoAtestado, normalizarAtestados } from "/js/constants.js";
+import { LISTA_ATIVIDADES, bimestreAtual, bimestreDeData, dentroDoAtestado, normalizarAtestados, aulasNoDia } from "/js/constants.js";
 import { getResultados, getLiberadasParaTurma, getAlunoPreferencia } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { saveRankPos, applyTopRankVisuals } from "/js/toprank.js";
@@ -454,7 +454,10 @@ await Promise.all(alunos.map(async (nome) => {
 
     if (chSnap?.exists()) {
       for (const [k, val] of Object.entries(chSnap.val())) {
-        if (/^\d{4}-\d{2}-\d{2}$/.test(k) && val && val[nome] && !temAtestado(k)) faltas += 1;
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(k) || !val) continue;
+        const raw = val[nome];
+        const est = raw === true ? "falta" : (raw || "");   // compat: true antigo = falta
+        if (est === "falta" && !temAtestado(k)) faltas += (aulasNoDia(turma, k) || 1);  // falta = todas as aulas do dia; atraso não conta
       }
     }
   } catch (eC) { console.warn('[Resumo caderno/faltas]', eC); }
@@ -1160,7 +1163,7 @@ ${tempoPodioHtml}
           <div class="mini-stats">
             <div class="mini-stat"><div class="mini-stat-value" style="color:var(--gold);font-size:22px">${r.total_ativ > 0 ? r.totalPts+'/'+r.total_ativ*10 : '—'}</div><div class="mini-stat-label">Nota</div></div>
             <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green);font-size:22px">${ex.cadTotal > 0 ? (Number.isInteger(ex.cadFeitos)?ex.cadFeitos:ex.cadFeitos.toFixed(1).replace('.',','))+'/'+ex.cadTotal : '—'}</div><div class="mini-stat-label">📓 Caderno</div></div>
-            <div class="mini-stat"><div class="mini-stat-value" style="color:${ex.faltas>0?'#EF4444':'var(--text-muted)'};font-size:22px">${ex.faltas}</div><div class="mini-stat-label">📅 Faltas</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:${ex.faltas>0?'#EF4444':'var(--text-muted)'};font-size:22px">${ex.faltas}</div><div class="mini-stat-label">📅 Faltas (aulas)</div></div>
             <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue);font-size:22px">${ex.nivelTab}</div><div class="mini-stat-label">🔢 Nível tabuada</div></div>
             <div class="mini-stat"><div class="mini-stat-value" style="color:#EF4444;font-size:22px">${ex.duelosVit}</div><div class="mini-stat-label">⚔️ Duelos vencidos</div></div>
             <div class="mini-stat"><div class="mini-stat-value" style="color:var(--orange);font-size:22px">${ex.treinos}</div><div class="mini-stat-label">🔥 Treinos diários</div></div>

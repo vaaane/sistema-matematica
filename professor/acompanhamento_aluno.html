@@ -102,6 +102,9 @@
   .at-pill{display:flex;flex-direction:column;align-items:center;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.35);border-radius:10px;padding:7px 12px;min-width:60px}
   .at-pill .d{font-size:15px;font-weight:800;color:#60a5fa;line-height:1}
   .at-pill .w{font-size:10px;color:var(--text-muted);margin-top:2px;text-transform:uppercase;letter-spacing:.04em}
+  .atraso-pill{display:flex;flex-direction:column;align-items:center;background:var(--gold-pale);border:1px solid rgba(240,165,0,.35);border-radius:10px;padding:7px 12px;min-width:60px}
+  .atraso-pill .d{font-size:15px;font-weight:800;color:var(--gold);line-height:1}
+  .atraso-pill .w{font-size:10px;color:var(--text-muted);margin-top:2px;text-transform:uppercase;letter-spacing:.04em}
   .at-dias{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
   .at-form{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
   .at-form .at-row{display:flex;gap:8px}
@@ -156,7 +159,7 @@
 </div>
 
 <script type="module">
-import { ALUNOS_POR_TURMA, numeroChamada, turmaAgora, BIMESTRES, dentroDoAtestado, normalizarAtestados } from "/js/constants.js";
+import { ALUNOS_POR_TURMA, numeroChamada, turmaAgora, BIMESTRES, dentroDoAtestado, normalizarAtestados, aulasNoDia } from "/js/constants.js";
 import { setBimestre, montarBoletim, buscarProgressoTabuada, fmtNota, mensagemPorNota } from "/js/notas.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
@@ -205,7 +208,10 @@ let nivelTab = 0, nivelNeg = 0, boletim = null;   // extras por-aluno (tabuada +
 let extrasToken = 0;                              // guarda anti-corrida ao trocar de aluno
 
 const temAtestado = (data, aluno) => dentroDoAtestado(data, atestados[aluno]||[]);
-const faltou = (data, aluno) => !!(data && chamada[data] && chamada[data][aluno]) && !temAtestado(data, aluno);
+const estadoCham = (data, aluno) => { const v=(chamada[data]||{})[aluno]; return v===true?"falta":(v||""); };
+const faltou  = (data, aluno) => estadoCham(data, aluno)==="falta" && !temAtestado(data, aluno);
+const atrasou = (data, aluno) => estadoCham(data, aluno)==="atraso" && !temAtestado(data, aluno);
+const aulasDia = data => aulasNoDia(turma, data) || 1;
 
 async function carregar(){
   document.getElementById("conteudo").innerHTML = `<div class="vazio">Carregando…</div>`;
@@ -279,17 +285,20 @@ function statusAtiv(atv, aluno){
   if (v===2) return "atraso";
   if (v===3) return "fa";
   if (v===4) return "atv";
-  const faltouDia = atv.data && chamada[atv.data] && chamada[atv.data][aluno];
+  const faltouDia = atv.data && estadoCham(atv.data, aluno)==="falta";   // atraso NÃO conta
   if (faltouDia && temAtestado(atv.data, aluno)) return "at";
   if (faltou(atv.data, aluno)) return "falta";
   return "nao";
 }
 
 function faltasDoAluno(aluno){
-  return Object.keys(chamada).filter(d=>chamada[d] && chamada[d][aluno] && !temAtestado(d, aluno)).sort();
+  return Object.keys(chamada).filter(d=>faltou(d, aluno)).sort();
+}
+function atrasosDoAluno(aluno){
+  return Object.keys(chamada).filter(d=>atrasou(d, aluno)).sort();
 }
 function atestadoDiasDoAluno(aluno){
-  return Object.keys(chamada).filter(d=>chamada[d] && chamada[d][aluno] && temAtestado(d, aluno)).sort();
+  return Object.keys(chamada).filter(d=>estadoCham(d, aluno) && temAtestado(d, aluno)).sort();
 }
 
 function ocorrenciasDoAluno(aluno){
@@ -313,7 +322,10 @@ function render(){
   const feitasTxt = Number.isInteger(feitasNum) ? String(feitasNum) : feitasNum.toFixed(1).replace(".", ",");
   const naoF   = linhas.filter(l=>l.st==="nao").length;
   const faltas = faltasDoAluno(aluno);
+  const atrasos = atrasosDoAluno(aluno);
   const atDias = atestadoDiasDoAluno(aluno);
+  const faltasAulas = faltas.reduce((s,d)=>s+aulasDia(d),0);
+  const atrasosAulas = atrasos.length;
   const periodos = (atestados[aluno]||[]).slice().sort((a,b)=> (a.inicio<b.inicio?1:-1));
   const oc     = ocorrenciasDoAluno(aluno);
 
@@ -333,8 +345,12 @@ function render(){
     </div>`).join("") : `<div class="vazio">Nada neste filtro.</div>`;
 
   const faltasHtml = faltas.length ? faltas.map(d=>`
-    <div class="falta-pill"><div class="d">${fmtDM(d)}</div><div class="w">${weekday(d)}</div></div>`).join("")
+    <div class="falta-pill"><div class="d">${fmtDM(d)}</div><div class="w">${weekday(d)} · ${aulasDia(d)}a</div></div>`).join("")
     : `<div class="vazio">Sem faltas no bimestre. 🎉</div>`;
+
+  const atrasosHtml = atrasos.length ? atrasos.map(d=>`
+    <div class="atraso-pill"><div class="d">${fmtDM(d)}</div><div class="w">${weekday(d)}</div></div>`).join("")
+    : `<div class="vazio">Sem atrasos no bimestre.</div>`;
 
   const atDiasHtml = atDias.length ? atDias.map(d=>`
     <div class="at-pill"><div class="d">${fmtDM(d)}</div><div class="w">${weekday(d)}</div></div>`).join("")
@@ -393,7 +409,8 @@ function render(){
       <div class="chips">
         <div class="chip g"><div class="v">${feitasTxt}/${atividades.length}</div><div class="l">Feitas</div></div>
         <div class="chip r"><div class="v">${naoF}</div><div class="l">Não feitas</div></div>
-        <div class="chip r"><div class="v">${faltas.length}</div><div class="l">Faltas</div></div>
+        <div class="chip r"><div class="v">${faltasAulas}</div><div class="l">Faltas (aulas)</div></div>
+        <div class="chip o"><div class="v">${atrasos.length}</div><div class="l">Atrasos</div></div>
         <div class="chip b"><div class="v">${atDias.length}</div><div class="l">Atestado</div></div>
         <div class="chip o"><div class="v">${oc.length}</div><div class="l">Ocorrências</div></div>
       </div>
@@ -421,9 +438,16 @@ function render(){
         <div class="card">
           <div class="card-title">
             <svg viewBox="0 0 24 24"><path d="M7 2v2H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v9H5v-9h14z"/></svg>
-            Faltas <span class="count">${faltas.length} dia(s)</span>
+            Faltas <span class="count">${faltas.length} dia(s) · ${faltasAulas} aula(s)</span>
           </div>
           <div class="falta-dates">${faltasHtml}</div>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 11h-1a1 1 0 0 1-1-1V7a1 1 0 0 1 2 0v4h1a1 1 0 0 1 0 2z"/></svg>
+            Atrasos <span class="count">${atrasos.length} dia(s) · ${atrasosAulas} aula(s)</span>
+          </div>
+          <div class="falta-dates">${atrasosHtml}</div>
         </div>
         <div class="card">
           <div class="card-title">
