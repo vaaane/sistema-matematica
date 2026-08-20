@@ -1,5 +1,5 @@
 {
-  "geradoEm": "2026-08-19T15:08:27.658Z",
+  "geradoEm": "2026-08-20T12:37:53.933Z",
   "total": 15,
   "itens": [
     {
@@ -23,20 +23,10 @@
       "bimestre": 3
     },
     {
-      "id": "equacoes-primeiro-grau-lista",
-      "arquivo": "/conteudos/equacoes-primeiro-grau-lista.html",
-      "titulo": "Equações do 1º Grau",
-      "resumo": "Lista introdutória com poucas equações do 1º grau.",
-      "tipo": "atividade",
-      "tema": "Equações do 1º Grau",
-      "eixo": "algebra",
-      "bimestre": 3
-    },
-    {
       "id": "equacoes-primeiro-grau-atividade-parte-1",
       "arquivo": "/conteudos/equacoes-primeiro-grau-atividade-parte-1.html",
       "titulo": "Equações do 1º Grau (Parte 1)",
-      "resumo": "Parte 1: 14 equações para encontrar o valor de x.",
+      "resumo": "Lista introdutória com poucas equações do 1º grau.",
       "tipo": "atividade",
       "tema": "Equações do 1º Grau",
       "eixo": "algebra",
@@ -46,6 +36,16 @@
       "id": "equacoes-primeiro-grau-atividade-parte-2",
       "arquivo": "/conteudos/equacoes-primeiro-grau-atividade-parte-2.html",
       "titulo": "Equações do 1º Grau (Parte 2)",
+      "resumo": "Parte 1: 14 equações para encontrar o valor de x.",
+      "tipo": "atividade",
+      "tema": "Equações do 1º Grau",
+      "eixo": "algebra",
+      "bimestre": 3
+    },
+    {
+      "id": "equacoes-primeiro-grau-atividade-parte-3",
+      "arquivo": "/conteudos/equacoes-primeiro-grau-atividade-parte-3.html",
+      "titulo": "Equações do 1º Grau (Parte 3)",
       "resumo": "Parte 2: 10 situações-problema, incluindo desafios.",
       "tipo": "atividade",
       "tema": "Equações do 1º Grau",
@@ -85,7 +85,7 @@
     {
       "id": "expressoes-representacao-lista",
       "arquivo": "/conteudos/expressoes-representacao-lista.html",
-      "titulo": "Representação Algébrica",
+      "titulo": "Representação Algébrica (Parte 1)",
       "resumo": "Lista de expressões algébricas: escrever a expressão a partir de frases (dobro, metade, subtraído de, quadrado…) e provar a diferença que o parêntese faz.",
       "tipo": "atividade",
       "tema": "Expressões Algébricas",
@@ -95,7 +95,7 @@
     {
       "id": "expressoes-representacao-problemas",
       "arquivo": "/conteudos/expressoes-representacao-problemas.html",
-      "titulo": "Representação Algébrica",
+      "titulo": "Representação Algébrica (Parte 2)",
       "resumo": "Problemas contextualizados de expressões algébricas: escrever a expressão a partir de situações do dia a dia e calcular o valor pedido.",
       "tipo": "atividade",
       "tema": "Expressões Algébricas",
@@ -123,33 +123,33 @@
       "bimestre": 3
     },
     {
-      "id": "topico-tipo",
+      "id": "geometria-canudos-parte1",
       "arquivo": "/conteudos/geometria-canudos-parte1.html",
       "titulo": "Geometria com Canudos — Parte 1",
-      "resumo": "Frase curta que aparece nos vistos/diário",
+      "resumo": "Projeto com canudos: rigidez das figuras planas e o papel da triangulação (triângulo x quadrado).",
       "tipo": "teoria",
-      "tema": "Expressões Algébricas",
-      "eixo": "algebra",
+      "tema": "Geometria com Canudos",
+      "eixo": "geometria",
       "bimestre": 3
     },
     {
-      "id": "topico-tipo",
+      "id": "geometria-canudos-parte2",
       "arquivo": "/conteudos/geometria-canudos-parte2.html",
       "titulo": "Geometria com Canudos — Parte 2",
-      "resumo": "Frase curta que aparece nos vistos/diário",
+      "resumo": "Projeto com canudos: das figuras planas aos sólidos geométricos — construção do tetraedro (faces, arestas, vértices).",
       "tipo": "teoria",
-      "tema": "Expressões Algébricas",
-      "eixo": "algebra",
+      "tema": "Geometria com Canudos",
+      "eixo": "geometria",
       "bimestre": 3
     },
     {
-      "id": "topico-tipo",
+      "id": "geometria-canudos-parte3",
       "arquivo": "/conteudos/geometria-canudos-parte3.html",
       "titulo": "Geometria com Canudos — Parte 3",
-      "resumo": "Frase curta que aparece nos vistos/diário",
+      "resumo": "Projeto com canudos: construção do cubo e comparação de rigidez entre os sólidos.",
       "tipo": "teoria",
-      "tema": "Expressões Algébricas",
-      "eixo": "algebra",
+      "tema": "Geometria com Canudos",
+      "eixo": "geometria",
       "bimestre": 3
     }
   ]

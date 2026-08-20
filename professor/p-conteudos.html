@@ -213,14 +213,6 @@ document.getElementById("busca").addEventListener("input",e=>{ filtro=e.target.v
 function setTipo(t){ tipoSel=t; document.getElementById("optTeorica").classList.toggle("on",t==="teorica"); document.getElementById("optExercicios").classList.toggle("on",t==="exercicios"); }
 window.setTipo = setTipo;
 function limpaArq(v){ return v.trim().replace(/^\/?conteudos\//i,""); }
-// Remove prefixo de TIPO redundante do nome (ele já aparece na tag).
-// Ex.: "Teoria — Representação Algébrica" -> "Representação Algébrica"
-function semPrefixoTipo(nome){
-  const s=(nome||"").trim();
-  const re=/^\s*(?:Lista de Exerc[íi]cios|Lista|Exerc[íi]cios|Teoria|Atividade|Revis[ãa]o|Projeto|Problemas)\s*[—–-]\s*/i;
-  const novo=s.replace(re,"").trim();
-  return novo || s;
-}
 
 // ── Auto-preenchimento: lê a ficha <meta name="aula:*"> do HTML e preenche o modal ──
 // Traduz o tipo da ficha (teoria/atividade) para o do catálogo (teorica/exercicios).
@@ -244,7 +236,7 @@ async function preencherDaFicha(){
     if(!titulo && !resumo && !tp) return;      // HTML sem ficha: não mexe em nada
     const elN=document.getElementById("mNome"), elR=document.getElementById("mResumo");
     const feito=[];
-    if(titulo && !elN.value.trim()){ elN.value=semPrefixoTipo(titulo); feito.push("nome"); }   // só preenche campo vazio
+    if(titulo && !elN.value.trim()){ elN.value=titulo; feito.push("nome"); }   // só preenche campo vazio
     if(resumo && !elR.value.trim()){ elR.value=resumo; feito.push("resumo"); }
     if(tp){ setTipo(tp); feito.push("tipo"); }
     ultimoArqFicha=arq;
@@ -278,7 +270,7 @@ window.abrirArquivo = function(){
   window.open("/conteudos/"+arq, "_blank");
 };
 window.salvar = async function(){
-  const nome=semPrefixoTipo(document.getElementById("mNome").value.trim());
+  const nome=document.getElementById("mNome").value.trim();
   let arq=limpaArq(document.getElementById("mArq").value);
   const resumo=document.getElementById("mResumo").value.trim();
   if(!nome){ toast("Dê um nome", true); return; }

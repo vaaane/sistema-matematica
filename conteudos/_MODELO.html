@@ -13,8 +13,11 @@
        tipo     = teoria | atividade   (atividade cobre lista/revisao/prova/jogo)
        eixo     = numeros | algebra | geometria | grandezas | probestat
        bimestre = 1 | 2 | 3 | 4
-       titulo   = SÓ O ASSUNTO, sem o tipo na frente (o tipo já vira tag).
+       titulo   = SÓ O ASSUNTO, sem o tipo na frente (o tipo já vira tag nas telas).
                   ✔ "Representação Algébrica"   ✘ "Teoria — Representação Algébrica"
+                  Se houver 2+ do MESMO assunto, use "(Parte 1)", "(Parte 2)"…
+       DENTRO da página (não na biblioteca): o eyebrow começa com o TIPO por extenso —
+                  "TEORIA · …" ou "LISTA DE EXERCÍCIOS · …" — e o <h1> fica só o assunto.
        tema     = unidade que agrupa as aulas (ex.: Expressões Algébricas)
        resumo   = 1 linha p/ vistos/diário; preenche o modal automaticamente -->
   <meta name="aula:id"       content="topico-tipo">
@@ -199,7 +202,7 @@
 
         <!-- ════════ CABEÇALHO DA AULA ════════ -->
         <header class="au-hero">
-          <div class="au-hero-eyebrow">Matemática · 8º ano</div>
+          <div class="au-hero-eyebrow">TEORIA · Matemática · 8º ano · 3º bimestre</div>
           <h1 class="au-hero-title">Potenciação</h1>
           <div class="au-hero-meta">
             <span class="au-meta gold">Álgebra</span>
