@@ -21,6 +21,15 @@
     display:flex;gap:12px;align-items:flex-start;
     font-weight:600;margin-bottom:18px;
   }
+  .btn-voltar-treino{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:13px;font-weight:600;color:var(--text-muted);
+    background:var(--card);border:1px solid var(--border);
+    border-radius:10px;padding:8px 15px;text-decoration:none;
+    transition:.14s;white-space:nowrap;
+  }
+  .btn-voltar-treino:hover{color:var(--text);border-color:var(--purple);background:rgba(155,48,255,.08)}
+
   .treino-banner .icone{font-size:1.3rem;line-height:1}
   .treino-banner small{display:block;color:var(--text-muted);font-weight:500;margin-top:2px}
 
@@ -106,7 +115,9 @@
         <div class="topbar-title" id="topbar-title">Treino de Equações</div>
         <div class="topbar-sub" id="topbar-sub">Equações do 1º grau · atividade livre</div>
       </div>
-      <div class="topbar-right"></div>
+      <div class="topbar-right">
+        <a href="/aluno/a-atividades.html" class="btn-voltar-treino">← Voltar</a>
+      </div>
     </div>
     <div class="content" id="content">
       <div class="card" style="max-width:760px;margin:0 auto">

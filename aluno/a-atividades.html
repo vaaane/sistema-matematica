@@ -90,6 +90,8 @@
     .ac-status-badge.bloqueada{background:rgba(255,255,255,0.05);color:var(--ac-muted);}
     .ac-btn-disponivel{display:inline-flex;align-items:center;gap:6px;background:rgba(124,92,252,0.2);border:1px solid rgba(124,92,252,0.4);color:var(--ac-pl);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;text-decoration:none;transition:all .2s;font-family:'Inter',sans-serif;}
     .ac-btn-disponivel:hover{background:rgba(124,92,252,0.35);}
+    .ac-btn-treino{display:inline-flex;align-items:center;gap:6px;background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.4);color:var(--ac-gold);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;text-decoration:none;transition:all .2s;font-family:'Inter',sans-serif;white-space:nowrap;}
+    .ac-btn-treino:hover{background:rgba(255,215,0,0.22);}
 
     @keyframes acFadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
     .ac-liberada-banner{animation:acFadeUp .3s ease both;}
@@ -357,16 +359,8 @@ const tornAviso = torneiosAtivos.length ? `
     <span class="ac-torneio-arrow">›</span>
   </div>` : '';
 
-// ── Aviso de treino livre (sempre visível) ────────────────────
-const treinoAviso = `
-  <div class="ac-torneio-aviso" onclick="location.href='/aluno/treino-equacoes.html'">
-    <span class="ac-torneio-icon">🎯</span>
-    <div class="ac-torneio-text">
-      <strong>Treino de Equações</strong>
-      <span>Livre, não vale nota · refaça quantas vezes quiser →</span>
-    </div>
-    <span class="ac-torneio-arrow">›</span>
-  </div>`;
+// Treino agora vive dentro do card da atividade (ver _btnTreino abaixo)
+const treinoAviso = '';
 
 // ── Banner da atividade liberada ──────────────────────────────
 const liberadaParaBanner = ATIVS_BIM.find(ativ => {
@@ -447,6 +441,10 @@ const cardsHtml = ATIVS_BIM.map(ativ => {
     ? `/aluno/competicao.html?ativ=${encodeURIComponent(ativ.nome)}`
     : `/aluno/jogar.html?ativ=${encodeURIComponent(ativ.nome)}`;
 
+  const _temTreino = modoEf === 'equacoes_plus';
+  const _btnTreino = (_temTreino && !(isLib && !bloq?.esgotada && !bloq?.bloqueado && !isEncerrada && !foiRealizada))
+    ? `<a href="/aluno/treino-equacoes.html" class="ac-btn-treino" onclick="event.stopPropagation()">🎯 Treinar</a>`
+    : '';
   let statusCls, numCls, statusBadge;
   if (foiRealizada) {
     statusCls = 'concluida clicavel'; numCls = 'concluida';
@@ -487,6 +485,7 @@ const cardsHtml = ATIVS_BIM.map(ativ => {
         <div class="ac-atv-nota ${notaColorCls(nota)}">${notaStr}</div>
         <div class="ac-atv-nota-label">${isAvP ? 'F1 / 10 pts' : 'pts'}</div>
       </div>` : ''}
+      ${_btnTreino}
       ${statusBadge}
     </div>
   </div>`;
