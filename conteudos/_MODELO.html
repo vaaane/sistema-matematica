@@ -13,14 +13,15 @@
        tipo     = teoria | atividade   (atividade cobre lista/revisao/prova/jogo)
        eixo     = numeros | algebra | geometria | grandezas | probestat
        bimestre = 1 | 2 | 3 | 4
-       titulo   = texto que aparece na biblioteca
+       titulo   = SÓ O ASSUNTO, sem o tipo na frente (o tipo já vira tag).
+                  ✔ "Representação Algébrica"   ✘ "Teoria — Representação Algébrica"
        tema     = unidade que agrupa as aulas (ex.: Expressões Algébricas)
        resumo   = 1 linha p/ vistos/diário; preenche o modal automaticamente -->
   <meta name="aula:id"       content="topico-tipo">
   <meta name="aula:tipo"     content="teoria">
   <meta name="aula:eixo"     content="algebra">
   <meta name="aula:bimestre" content="3">
-  <meta name="aula:titulo"   content="Teoria — Título da Aula">
+  <meta name="aula:titulo"   content="Título da Aula (só o assunto)">
   <meta name="aula:resumo"   content="Frase curta que aparece nos vistos/diário">
   <meta name="aula:tema"     content="Expressões Algébricas">
   <!-- ┌─────────────────────────────────────────────────────────────┐

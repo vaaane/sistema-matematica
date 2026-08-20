@@ -1,11 +1,11 @@
 {
-  "geradoEm": "2026-07-29T11:07:19.767Z",
-  "total": 7,
+  "geradoEm": "2026-08-19T15:08:27.658Z",
+  "total": 15,
   "itens": [
     {
       "id": "revisao_inteiros_valornumerico",
       "arquivo": "/conteudos/revisao_inteiros_valornumerico.html",
-      "titulo": "Revisão — Números Inteiros & Valor Numérico",
+      "titulo": "Números Inteiros & Valor Numérico",
       "resumo": "Revisão de números inteiros e valor numérico.",
       "tipo": "atividade",
       "tema": "Números Inteiros e Valor Numérico",
@@ -13,10 +13,70 @@
       "bimestre": 2
     },
     {
+      "id": "equacoes-primeiro-grau-teoria",
+      "arquivo": "/conteudos/equacoes-primeiro-grau-teoria.html",
+      "titulo": "Equações do 1º Grau",
+      "resumo": "Introdução às equações, igualdade, incógnita e resolução.",
+      "tipo": "teoria",
+      "tema": "Equações do 1º Grau",
+      "eixo": "algebra",
+      "bimestre": 3
+    },
+    {
+      "id": "equacoes-primeiro-grau-lista",
+      "arquivo": "/conteudos/equacoes-primeiro-grau-lista.html",
+      "titulo": "Equações do 1º Grau",
+      "resumo": "Lista introdutória com poucas equações do 1º grau.",
+      "tipo": "atividade",
+      "tema": "Equações do 1º Grau",
+      "eixo": "algebra",
+      "bimestre": 3
+    },
+    {
+      "id": "equacoes-primeiro-grau-atividade-parte-1",
+      "arquivo": "/conteudos/equacoes-primeiro-grau-atividade-parte-1.html",
+      "titulo": "Equações do 1º Grau (Parte 1)",
+      "resumo": "Parte 1: 14 equações para encontrar o valor de x.",
+      "tipo": "atividade",
+      "tema": "Equações do 1º Grau",
+      "eixo": "algebra",
+      "bimestre": 3
+    },
+    {
+      "id": "equacoes-primeiro-grau-atividade-parte-2",
+      "arquivo": "/conteudos/equacoes-primeiro-grau-atividade-parte-2.html",
+      "titulo": "Equações do 1º Grau (Parte 2)",
+      "resumo": "Parte 2: 10 situações-problema, incluindo desafios.",
+      "tipo": "atividade",
+      "tema": "Equações do 1º Grau",
+      "eixo": "algebra",
+      "bimestre": 3
+    },
+    {
+      "id": "expressoes-multiplicacao-divisao-teoria",
+      "arquivo": "/conteudos/expressoes-multiplicacao-divisao-teoria.html",
+      "titulo": "Multiplicação e Divisão de Termos Algébricos",
+      "resumo": "Multiplicação e divisão de monômios, coeficientes, parte literal e preparação para equações.",
+      "tipo": "teoria",
+      "tema": "Expressões Algébricas",
+      "eixo": "algebra",
+      "bimestre": 3
+    },
+    {
+      "id": "expressoes-multiplicacao-divisao-lista",
+      "arquivo": "/conteudos/expressoes-multiplicacao-divisao-lista.html",
+      "titulo": "Multiplicação e Divisão de Termos Algébricos",
+      "resumo": "Exercícios de multiplicação e divisão de monômios.",
+      "tipo": "atividade",
+      "tema": "Expressões Algébricas",
+      "eixo": "algebra",
+      "bimestre": 3
+    },
+    {
       "id": "expressoes-representacao-teoria",
       "arquivo": "/conteudos/expressoes-representacao-teoria.html",
-      "titulo": "Teoria — Representação Algébrica",
-      "resumo": "Expressões algébricas: definição, tradução de frases (dobro, metade…) e partes do termo (coeficiente, parte literal).",
+      "titulo": "Representação Algébrica",
+      "resumo": "Expressões algébricas: definição, tradução de frases (dobro, metade…), partes do termo (coeficiente, parte literal) e termos semelhantes.",
       "tipo": "teoria",
       "tema": "Expressões Algébricas",
       "eixo": "algebra",
@@ -25,8 +85,18 @@
     {
       "id": "expressoes-representacao-lista",
       "arquivo": "/conteudos/expressoes-representacao-lista.html",
-      "titulo": "Lista de Exercícios — Representação Algébrica",
-      "resumo": "Lista de expressões algébricas: escrever expressões a partir de frases, pegadinha do parêntese e classificação por termos.",
+      "titulo": "Representação Algébrica",
+      "resumo": "Lista de expressões algébricas: escrever a expressão a partir de frases (dobro, metade, subtraído de, quadrado…) e provar a diferença que o parêntese faz.",
+      "tipo": "atividade",
+      "tema": "Expressões Algébricas",
+      "eixo": "algebra",
+      "bimestre": 3
+    },
+    {
+      "id": "expressoes-representacao-problemas",
+      "arquivo": "/conteudos/expressoes-representacao-problemas.html",
+      "titulo": "Representação Algébrica",
+      "resumo": "Problemas contextualizados de expressões algébricas: escrever a expressão a partir de situações do dia a dia e calcular o valor pedido.",
       "tipo": "atividade",
       "tema": "Expressões Algébricas",
       "eixo": "algebra",
@@ -35,7 +105,7 @@
     {
       "id": "expressoes-simplificacao-teoria",
       "arquivo": "/conteudos/expressoes-simplificacao-teoria.html",
-      "titulo": "Teoria — Simplificação de Expressões",
+      "titulo": "Simplificação de Expressões",
       "resumo": "Simplificação: termos semelhantes, redução de coeficientes e distributiva para eliminar parênteses.",
       "tipo": "teoria",
       "tema": "Expressões Algébricas",
@@ -45,7 +115,7 @@
     {
       "id": "expressoes-simplificacao-lista",
       "arquivo": "/conteudos/expressoes-simplificacao-lista.html",
-      "titulo": "Lista de Exercícios — Simplificação de Expressões",
+      "titulo": "Simplificação de Expressões",
       "resumo": "Lista de simplificação: reduzir termos semelhantes, expressões mistas e distributiva.",
       "tipo": "atividade",
       "tema": "Expressões Algébricas",
@@ -53,24 +123,34 @@
       "bimestre": 3
     },
     {
-      "id": "numeros-complexos-teoria",
-      "arquivo": "/conteudos/numeros-complexos-teoria.html",
-      "titulo": "Teoria — Números Complexos",
-      "resumo": null,
+      "id": "topico-tipo",
+      "arquivo": "/conteudos/geometria-canudos-parte1.html",
+      "titulo": "Geometria com Canudos — Parte 1",
+      "resumo": "Frase curta que aparece nos vistos/diário",
       "tipo": "teoria",
-      "tema": "Números Complexos",
-      "eixo": "numeros",
-      "bimestre": null
+      "tema": "Expressões Algébricas",
+      "eixo": "algebra",
+      "bimestre": 3
     },
     {
-      "id": "porcentagem-lista",
-      "arquivo": "/conteudos/porcentagem-lista.html",
-      "titulo": "Lista de Exercícios — Porcentagem",
-      "resumo": null,
-      "tipo": "atividade",
-      "tema": "Porcentagem",
-      "eixo": "numeros",
-      "bimestre": null
+      "id": "topico-tipo",
+      "arquivo": "/conteudos/geometria-canudos-parte2.html",
+      "titulo": "Geometria com Canudos — Parte 2",
+      "resumo": "Frase curta que aparece nos vistos/diário",
+      "tipo": "teoria",
+      "tema": "Expressões Algébricas",
+      "eixo": "algebra",
+      "bimestre": 3
+    },
+    {
+      "id": "topico-tipo",
+      "arquivo": "/conteudos/geometria-canudos-parte3.html",
+      "titulo": "Geometria com Canudos — Parte 3",
+      "resumo": "Frase curta que aparece nos vistos/diário",
+      "tipo": "teoria",
+      "tema": "Expressões Algébricas",
+      "eixo": "algebra",
+      "bimestre": 3
     }
   ]
 }
