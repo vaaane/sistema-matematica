@@ -29,6 +29,13 @@
     transition:.14s;white-space:nowrap;
   }
   .btn-voltar-treino:hover{color:var(--text);border-color:var(--purple);background:rgba(155,48,255,.08)}
+  .cronometro-treino{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:'Orbitron',monospace;font-size:14px;font-weight:700;
+    color:var(--gold);background:rgba(240,165,0,.10);
+    border:1px solid rgba(240,165,0,.35);border-radius:10px;
+    padding:7px 13px;white-space:nowrap;min-width:78px;justify-content:center;
+  }
 
   .treino-banner .icone{font-size:1.3rem;line-height:1}
   .treino-banner small{display:block;color:var(--text-muted);font-weight:500;margin-top:2px}
@@ -85,6 +92,7 @@
   }
   .resultado-sub{text-align:center;color:var(--text-muted);margin-bottom:22px}
   .mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
+  .mini-stats-4{grid-template-columns:repeat(4,1fr)}
   .rev-item{
     background:var(--card);border:1px solid var(--border);border-radius:12px;
     padding:12px 14px;margin-bottom:10px;
@@ -102,6 +110,7 @@
   @media(max-width:520px){
     .eq-destaque{font-size:1.25rem}
     .mini-stats{grid-template-columns:1fr}
+    .mini-stats-4{grid-template-columns:repeat(2,1fr)}
     .resultado-nota{font-size:2.6rem}
   }
 </style>
@@ -116,6 +125,7 @@
         <div class="topbar-sub" id="topbar-sub">Equações do 1º grau · atividade livre</div>
       </div>
       <div class="topbar-right">
+        <div class="cronometro-treino" id="cronometro" title="Tempo decorrido">⏱ 0:00</div>
         <a href="/aluno/a-atividades.html" class="btn-voltar-treino">← Voltar</a>
       </div>
     </div>
@@ -141,7 +151,7 @@ import { addResultado, updateResultado } from "/js/db.js";
 renderSidebarAluno("sidebar", "atividades");
 const sess = requireAluno();
 
-const TOTAL = 10;
+const TOTAL = 15;
 const ATIVIDADE = "treino-equacoes";
 
 /* ================== BANCO DE QUESTÕES ================== */
@@ -1571,37 +1581,53 @@ const BANCO = [
       {
         "variaveis": {
           "N": [
-            3,
-            4,
-            5
+            3
+          ],
+          "X": [
+            12,
+            15,
+            18,
+            21,
+            24,
+            30
+          ]
+        },
+        "montar_ctx": "C = X / N",
+        "enunciado": "Reparti <b>x</b> balas igualmente entre <b>3</b> amigos e cada um recebeu <b>{C}</b>. Qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "N": [
+            4
           ],
           "X": [
             12,
             16,
             20,
             24,
-            30
+            28,
+            32
           ]
         },
         "montar_ctx": "C = X / N",
-        "enunciado": "Reparti <b>x</b> balas igualmente entre <b>{N}</b> amigos e cada um recebeu <b>{C}</b>. Qual equação representa o problema?"
+        "enunciado": "Um bolo foi cortado em <b>4</b> fatias iguais; cada fatia tem <b>{C}</b> g. Chamando de <b>x</b> o peso do bolo, qual equação representa o problema?"
       },
       {
         "variaveis": {
           "N": [
-            2,
-            4,
-            6
+            5
           ],
           "X": [
-            12,
-            24,
-            36,
-            48
+            15,
+            20,
+            25,
+            30,
+            35,
+            40
           ]
         },
         "montar_ctx": "C = X / N",
-        "enunciado": "Um bolo foi cortado em <b>{N}</b> fatias iguais; cada fatia tem <b>{C}</b> g. Chamando de <b>x</b> o peso do bolo, qual equação representa o problema?"
+        "enunciado": "Distribuí <b>x</b> figurinhas igualmente para <b>5</b> colegas e cada um ficou com <b>{C}</b>. Qual equação representa o problema?"
       }
     ]
   },
@@ -1923,6 +1949,136 @@ const BANCO = [
         "enunciado": "A <b>metade</b> de uma quantia <b>mais R${B}</b> resulta em <b>R${C}</b>. Chamando de <b>x</b> a quantia, qual equação representa o problema?"
       }
     ]
+  },
+  {
+    "id": "EQ-DIG-3T",
+    "dificuldade": 3,
+    "tipo": "numerica",
+    "tag": "Encontre x · escreva o resultado",
+    "enunciado": "Resolva a equação e escreva o valor de <b>x</b>:<br><span class='eq-destaque'>{A}x − {B} = {D}x + {E}</span>",
+    "variaveis": {
+      "A": [
+        7,
+        8,
+        9
+      ],
+      "D": [
+        2,
+        3
+      ],
+      "X": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "B": [
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "resposta_expr": "X",
+    "montar_ctx": "E = (A - D)*X - B",
+    "instrucao": "Junte as letras de um lado e os números do outro. Digite apenas o número."
+  },
+  {
+    "id": "EQ-DIG-4T",
+    "dificuldade": 2,
+    "tipo": "numerica",
+    "tag": "Encontre x · escreva o resultado",
+    "enunciado": "Resolva a equação e escreva o valor de <b>x</b>:<br><span class='eq-destaque'>{A}(x + {B}) = {C}</span>",
+    "variaveis": {
+      "A": [
+        2,
+        3,
+        4
+      ],
+      "X": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "B": [
+        1,
+        2,
+        3
+      ]
+    },
+    "resposta_expr": "X",
+    "montar_ctx": "C = A*(X + B)",
+    "instrucao": "Primeiro resolva o parêntese (distributiva). Digite apenas o número."
+  },
+  {
+    "id": "EQ-MUL-3T",
+    "dificuldade": 3,
+    "tipo": "multipla_num",
+    "tag": "Encontre x · marque a alternativa",
+    "enunciado": "Qual é o valor de <b>x</b> na equação abaixo?<br><span class='eq-destaque'>{A}x + {B} = {D}x + {E}</span>",
+    "variaveis": {
+      "A": [
+        7,
+        8,
+        9,
+        10
+      ],
+      "D": [
+        2,
+        3,
+        4
+      ],
+      "X": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "B": [
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "resposta_expr": "X",
+    "montar_ctx": "E = (A - D)*X + B",
+    "prefixo_opcao": "x = "
+  },
+  {
+    "id": "EQ-MUL-4T",
+    "dificuldade": 2,
+    "tipo": "multipla_num",
+    "tag": "Encontre x · marque a alternativa",
+    "enunciado": "Qual é o valor de <b>x</b> na equação abaixo?<br><span class='eq-destaque'>{A}x = {B}x + {C}</span>",
+    "variaveis": {
+      "A": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "B": [
+        2,
+        3,
+        4
+      ],
+      "X": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "dummy": [
+        0
+      ]
+    },
+    "resposta_expr": "X",
+    "montar_ctx": "C = (A - B)*X",
+    "prefixo_opcao": "x = "
   }
 ];
 
@@ -1971,12 +2127,17 @@ function gerarInstancia(q){
 }
 
 function _sorteiaN(arr, n){ const p=shuffle([...arr]); return p.slice(0, Math.min(n, p.length)); }
+function _grupoQ(q){ return (q.tipo==="numerica"||q.tipo==="multipla_num") ? "resolver" : "montar"; }
+// Por prova: 11 de MONTAR equação (4 fáceis, 4 médias, 3 difíceis) + 4 de RESOLVER (2 fáceis, 1 média, 1 difícil)
+const COTAS_PROVA = { montar:{1:4,2:4,3:3}, resolver:{1:2,2:1,3:1} };
 function montarProva(){
-  // sorteia TOTAL questões do banco mantendo proporção de dificuldade (4 fáceis, 3 médias, 3 difíceis)
-  const porDif={1:[],2:[],3:[]};
-  for(const q of BANCO){ (porDif[q.dificuldade]||porDif[2]).push(q); }
-  let escolhidos=[ ..._sorteiaN(porDif[1],4), ..._sorteiaN(porDif[2],3), ..._sorteiaN(porDif[3],3) ];
-  // completa se alguma faixa não tiver o suficiente
+  const bucket={};
+  for(const q of BANCO){ const g=_grupoQ(q); (bucket[g]=bucket[g]||{}); (bucket[g][q.dificuldade]=bucket[g][q.dificuldade]||[]).push(q); }
+  let escolhidos=[];
+  for(const g of Object.keys(COTAS_PROVA)) for(const dif of Object.keys(COTAS_PROVA[g])){
+    escolhidos.push(..._sorteiaN(((bucket[g]||{})[dif]||[]), COTAS_PROVA[g][dif]));
+  }
+  // completa se faltar em alguma célula (fallback)
   if(escolhidos.length<TOTAL){
     const resto=shuffle(BANCO.filter(q=>!escolhidos.includes(q)));
     escolhidos.push(...resto.slice(0, TOTAL-escolhidos.length));
@@ -1989,6 +2150,20 @@ function montarProva(){
 
 /* ================== ESTADO ================== */
 let prova=[], idx=0, acertos=0, historico=[], resultadoId=null, iniciou=Date.now();
+let cronoTimer=null, tQuestaoIni=0;
+
+function fmtTempo(seg){ const m=Math.floor(seg/60), s=seg%60; return m+":"+String(s).padStart(2,"0"); }
+function tickCronometro(){
+  const el=document.getElementById("cronometro");
+  if(el) el.textContent="⏱ "+fmtTempo(Math.round((Date.now()-iniciou)/1000));
+}
+function iniciarCronometro(){
+  iniciou=Date.now();
+  if(cronoTimer) clearInterval(cronoTimer);
+  tickCronometro();
+  cronoTimer=setInterval(tickCronometro, 1000);
+}
+function pararCronometro(){ if(cronoTimer){ clearInterval(cronoTimer); cronoTimer=null; } }
 
 /* ================== RENDER ================== */
 const tela=document.getElementById("tela");
@@ -1998,6 +2173,7 @@ function normaliza(v){ return String(v).trim().replace(",",".").replace(/\s+/g,"
 
 async function iniciar(){
   prova=montarProva(); idx=0; acertos=0; historico=[]; iniciou=Date.now();
+  iniciarCronometro();
   // registra resultado "em andamento" (histórico do aluno). Não vale nota.
   try{
     resultadoId = await addResultado({
@@ -2015,6 +2191,7 @@ async function iniciar(){
 
 function renderQuestao(){
   const q=prova[idx];
+  tQuestaoIni=Date.now();
   const pct=Math.round((idx)/TOTAL*100);
   let opcoesHTML="";
   if(q.tipo==="numerica"){
@@ -2055,8 +2232,9 @@ function renderQuestao(){
 
 function corrigir(acertou, respAluno, alvo){
   const q=prova[idx];
+  const tGasto=Math.max(0, Math.round((Date.now()-tQuestaoIni)/1000));
   if(acertou) acertos++;
-  historico.push({ enunciado:q.enunciado.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim(), resposta_aluno:respAluno, resposta_correta:q.resposta, acertou });
+  historico.push({ enunciado:q.enunciado.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim(), resposta_aluno:respAluno, resposta_correta:q.resposta, acertou, tempo_seg:tGasto });
 
   // trava a questão e mostra feedback visual
   document.getElementById("btn-conf").disabled=true;
@@ -2080,32 +2258,38 @@ function corrigir(acertou, respAluno, alvo){
 }
 
 async function finalizar(){
+  pararCronometro();
   const erros=TOTAL-acertos;
   const nota=Math.round((acertos/TOTAL)*100)/10; // 0–10, uma casa
   const tempo=Math.round((Date.now()-iniciou)/1000);
+  const tempoMedio=TOTAL>0 ? Math.round(tempo/TOTAL) : 0;
+  const temposPorQuestao=historico.map(h=>h.tempo_seg||0);
 
   if(resultadoId!=null){
     try{
       await updateResultado(resultadoId,{
         concluido:true, modo:"treino",
         acertos, erros, respondidas:TOTAL, total:TOTAL,
-        pontuacao:nota, pontuacao_bruta:acertos, tempo_segundos:tempo
+        pontuacao:nota, pontuacao_bruta:acertos,
+        tempo_segundos:tempo, tempo_medio_seg:tempoMedio, tempos_por_questao:temposPorQuestao
       });
     }catch(e){}
   }
-  renderResultado(nota, acertos, erros, tempo, resultadoId!=null);
+  renderResultado(nota, acertos, erros, tempo, resultadoId!=null, tempoMedio);
 }
 
-function renderResultado(nota, acertos, erros, tempo, salvou){
+function renderResultado(nota, acertos, erros, tempo, salvou, tempoMedio){
   const min=Math.floor(tempo/60), seg=tempo%60;
+  const media = (tempoMedio!=null?tempoMedio:(TOTAL>0?Math.round(tempo/TOTAL):0));
   const msg = acertos===TOTAL ? "Perfeito! 🎉" : acertos>=7 ? "Muito bem! 👏" : acertos>=5 ? "Continue treinando 💪" : "Vamos revisar juntos 📘";
   tela.innerHTML=`
     <div class="resultado-nota">${nota.toString().replace(".",",")} / 10</div>
     <div class="resultado-sub">${msg} &nbsp;·&nbsp; ${acertos} de ${TOTAL} corretas</div>
-    <div class="mini-stats">
+    <div class="mini-stats mini-stats-4">
       <div class="stat-card"><div class="stat-value green">${acertos}</div><div>acertos</div></div>
       <div class="stat-card"><div class="stat-value red">${erros}</div><div>erros</div></div>
-      <div class="stat-card"><div class="stat-value gold">${min}:${String(seg).padStart(2,"0")}</div><div>tempo</div></div>
+      <div class="stat-card"><div class="stat-value gold">${min}:${String(seg).padStart(2,"0")}</div><div>tempo total</div></div>
+      <div class="stat-card"><div class="stat-value gold">${media}s</div><div>média/questão</div></div>
     </div>
     <div class="card-title" style="margin-top:6px">Revisão</div>
     <div id="revisao"></div>
@@ -2119,7 +2303,10 @@ function renderResultado(nota, acertos, erros, tempo, salvou){
     <div class="rev-item">
       <div class="rev-top">
         <span style="color:var(--text-muted);font-size:.8rem">Questão ${i+1}</span>
-        <span class="rev-badge ${h.acertou?'ok':'no'}">${h.acertou?'acertou':'errou'}</span>
+        <span style="display:flex;gap:8px;align-items:center">
+          ${h.tempo_seg!=null?`<span style="color:var(--text-muted);font-size:.78rem">⏱ ${h.tempo_seg}s</span>`:""}
+          <span class="rev-badge ${h.acertou?'ok':'no'}">${h.acertou?'acertou':'errou'}</span>
+        </span>
       </div>
       <div class="rev-enun">${h.enunciado}</div>
       <div class="rev-resp">Sua resposta: <b>${h.resposta_aluno}</b>${h.acertou?"":` · Correta: <b>${h.resposta_correta}</b>`}</div>

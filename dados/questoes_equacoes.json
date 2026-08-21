@@ -1424,37 +1424,53 @@
       {
         "variaveis": {
           "N": [
-            3,
-            4,
-            5
+            3
+          ],
+          "X": [
+            12,
+            15,
+            18,
+            21,
+            24,
+            30
+          ]
+        },
+        "montar_ctx": "C = X / N",
+        "enunciado": "Reparti <b>x</b> balas igualmente entre <b>3</b> amigos e cada um recebeu <b>{C}</b>. Qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "N": [
+            4
           ],
           "X": [
             12,
             16,
             20,
             24,
-            30
+            28,
+            32
           ]
         },
         "montar_ctx": "C = X / N",
-        "enunciado": "Reparti <b>x</b> balas igualmente entre <b>{N}</b> amigos e cada um recebeu <b>{C}</b>. Qual equação representa o problema?"
+        "enunciado": "Um bolo foi cortado em <b>4</b> fatias iguais; cada fatia tem <b>{C}</b> g. Chamando de <b>x</b> o peso do bolo, qual equação representa o problema?"
       },
       {
         "variaveis": {
           "N": [
-            2,
-            4,
-            6
+            5
           ],
           "X": [
-            12,
-            24,
-            36,
-            48
+            15,
+            20,
+            25,
+            30,
+            35,
+            40
           ]
         },
         "montar_ctx": "C = X / N",
-        "enunciado": "Um bolo foi cortado em <b>{N}</b> fatias iguais; cada fatia tem <b>{C}</b> g. Chamando de <b>x</b> o peso do bolo, qual equação representa o problema?"
+        "enunciado": "Distribuí <b>x</b> figurinhas igualmente para <b>5</b> colegas e cada um ficou com <b>{C}</b>. Qual equação representa o problema?"
       }
     ]
   },

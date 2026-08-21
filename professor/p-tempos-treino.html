@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tempos do Treino — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .filtros{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;align-items:center}
+    .filtros select{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:9px 13px;font-size:14px;font-family:'Inter',sans-serif}
+    .resumo-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+    .rc{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px}
+    .rc .v{font-family:'Orbitron',monospace;font-size:1.6rem;color:var(--gold);line-height:1}
+    .rc .l{color:var(--text-muted);font-size:.82rem;margin-top:6px}
+    table.tempos{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+    table.tempos th,table.tempos td{padding:11px 14px;text-align:left;font-size:14px;border-bottom:1px solid var(--border)}
+    table.tempos th{color:var(--text-muted);font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;user-select:none}
+    table.tempos th:hover{color:var(--text)}
+    table.tempos tr:last-child td{border-bottom:none}
+    table.tempos td.num{font-family:'Orbitron',monospace;color:var(--text)}
+    .medalha{font-size:.75rem;color:var(--text-muted)}
+    .empty{text-align:center;padding:50px;color:var(--text-muted)}
+    .badge-t{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:999px;background:rgba(155,48,255,.15);color:var(--purple)}
+    .taxa-alta{color:var(--green)} .taxa-media{color:var(--gold)} .taxa-baixa{color:var(--red)}
+    @media(max-width:720px){ .resumo-cards{grid-template-columns:repeat(2,1fr)} table.tempos th:nth-child(5),table.tempos td:nth-child(5){display:none} }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Tempos do Treino</div>
+        <div class="topbar-sub">Referência de tempo por aluno · treino de equações (não vale nota)</div>
+      </div>
+      <div class="topbar-right"></div>
+    </div>
+    <div class="content">
+      <div class="filtros">
+        <select id="f-turma"><option value="">Todas as turmas</option></select>
+        <select id="f-ordem">
+          <option value="media">Ordenar: tempo médio</option>
+          <option value="melhor">Ordenar: melhor tempo</option>
+          <option value="tentativas">Ordenar: nº de tentativas</option>
+          <option value="taxa">Ordenar: acertos</option>
+          <option value="nome">Ordenar: nome</option>
+        </select>
+      </div>
+
+      <div class="resumo-cards" id="resumo"></div>
+
+      <div id="tabela-wrap">
+        <div class="empty" id="carregando">Carregando tempos…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireProfessor, renderSidebarProfessor } from "/js/auth.js";
+import { getResultados } from "/js/db.js";
+
+requireProfessor();
+renderSidebarProfessor("sidebar", "");   // sem item ativo (página extra)
+
+const ATIVIDADE = "treino-equacoes";
+let registros = [];   // resultados de treino concluídos
+let porAluno = [];    // agregados
+
+function fmt(seg){ if(seg==null||isNaN(seg)) return "—"; const m=Math.floor(seg/60), s=Math.round(seg%60); return m>0? (m+":"+String(s).padStart(2,"0")) : (s+"s"); }
+
+async function carregar(){
+  let todos=[];
+  try{ todos = await getResultados(); }catch(e){ document.getElementById("carregando").textContent="Erro ao carregar."; return; }
+  registros = todos.filter(r => r.modo==="treino" && r.atividade===ATIVIDADE && r.concluido && (r.tempo_segundos!=null));
+
+  // popular turmas
+  const turmas=[...new Set(registros.map(r=>r.turma).filter(Boolean))].sort();
+  const selT=document.getElementById("f-turma");
+  for(const t of turmas){ const o=document.createElement("option"); o.value=t; o.textContent=t; selT.appendChild(o); }
+
+  agregar();
+  render();
+}
+
+function agregar(){
+  const turmaSel=document.getElementById("f-turma").value;
+  const filt = registros.filter(r=> !turmaSel || r.turma===turmaSel);
+  const mapa={};
+  for(const r of filt){
+    const chave=(r.turma||"")+"|"+(r.aluno||"—");
+    if(!mapa[chave]) mapa[chave]={ aluno:r.aluno||"—", turma:r.turma||"", tentativas:0, tempos:[], medias:[], acertos:0, total:0, melhor:Infinity, ultima:0 };
+    const a=mapa[chave];
+    a.tentativas++;
+    a.tempos.push(r.tempo_segundos);
+    if(r.tempo_medio_seg!=null) a.medias.push(r.tempo_medio_seg);
+    a.acertos += (r.acertos||0);
+    a.total   += (r.total||0);
+    if(r.tempo_segundos < a.melhor) a.melhor=r.tempo_segundos;
+    if((r.criadoEm||0) > a.ultima) a.ultima=r.criadoEm||0;
+  }
+  porAluno = Object.values(mapa).map(a=>{
+    const mediaTotal = a.tempos.reduce((s,x)=>s+x,0)/a.tempos.length;
+    const mediaQuestao = a.medias.length ? (a.medias.reduce((s,x)=>s+x,0)/a.medias.length) : (mediaTotal/15);
+    const taxa = a.total? Math.round(a.acertos/a.total*100) : 0;
+    return { ...a, mediaTotal, mediaQuestao, taxa };
+  });
+}
+
+function ordenar(lista){
+  const modo=document.getElementById("f-ordem").value;
+  const c=[...lista];
+  if(modo==="media") c.sort((x,y)=>x.mediaQuestao-y.mediaQuestao);
+  else if(modo==="melhor") c.sort((x,y)=>x.melhor-y.melhor);
+  else if(modo==="tentativas") c.sort((x,y)=>y.tentativas-x.tentativas);
+  else if(modo==="taxa") c.sort((x,y)=>y.taxa-x.taxa);
+  else c.sort((x,y)=> (x.aluno||"").localeCompare(y.aluno||""));
+  return c;
+}
+
+function classeTaxa(t){ return t>=70?"taxa-alta":t>=40?"taxa-media":"taxa-baixa"; }
+
+function render(){
+  const wrap=document.getElementById("tabela-wrap");
+  const resumo=document.getElementById("resumo");
+  if(!porAluno.length){
+    resumo.innerHTML="";
+    wrap.innerHTML=`<div class="empty">Nenhum treino registrado ainda${document.getElementById("f-turma").value?" nesta turma":""}.<br><small>Os tempos aparecem aqui conforme os alunos fazem o treino.</small></div>`;
+    return;
+  }
+  // resumo geral (da seleção)
+  const nAlunos=porAluno.length;
+  const nTent=porAluno.reduce((s,a)=>s+a.tentativas,0);
+  const mediaGeralQ = porAluno.reduce((s,a)=>s+a.mediaQuestao,0)/nAlunos;
+  const taxaGeral = Math.round(porAluno.reduce((s,a)=>s+a.taxa,0)/nAlunos);
+  resumo.innerHTML=`
+    <div class="rc"><div class="v">${nAlunos}</div><div class="l">alunos com treino</div></div>
+    <div class="rc"><div class="v">${nTent}</div><div class="l">tentativas no total</div></div>
+    <div class="rc"><div class="v">${Math.round(mediaGeralQ)}s</div><div class="l">média por questão</div></div>
+    <div class="rc"><div class="v">${taxaGeral}%</div><div class="l">acertos médios</div></div>`;
+
+  const linhas=ordenar(porAluno).map((a,i)=>`
+    <tr>
+      <td>${i+1}. <b>${a.aluno}</b> ${a.turma?`<span class="badge-t">${a.turma}</span>`:""}</td>
+      <td class="num">${Math.round(a.mediaQuestao)}s</td>
+      <td class="num">${fmt(a.mediaTotal)}</td>
+      <td class="num">${fmt(a.melhor)}</td>
+      <td class="num">${a.tentativas}</td>
+      <td class="${classeTaxa(a.taxa)}">${a.taxa}%</td>
+    </tr>`).join("");
+  wrap.innerHTML=`
+    <table class="tempos">
+      <thead><tr>
+        <th data-o="nome">Aluno</th>
+        <th data-o="media">Média/questão</th>
+        <th data-o="melhor">Tempo médio</th>
+        <th data-o="melhor">Melhor tempo</th>
+        <th data-o="tentativas">Tentativas</th>
+        <th data-o="taxa">Acertos</th>
+      </tr></thead>
+      <tbody>${linhas}</tbody>
+    </table>`;
+  // clique no cabeçalho ordena
+  wrap.querySelectorAll("th[data-o]").forEach(th=>{
+    th.onclick=()=>{ document.getElementById("f-ordem").value=th.dataset.o; render(); };
+  });
+}
+
+document.getElementById("f-turma").addEventListener("change", ()=>{ agregar(); render(); });
+document.getElementById("f-ordem").addEventListener("change", render);
+
+carregar();
+</script>
+</body>
+</html>
