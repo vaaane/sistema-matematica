@@ -5,6 +5,11 @@
 Isso inclui: commit automático após mudanças, push após commit, amend, stash push, ou qualquer variação.
 Se precisar salvar trabalho: apenas informar "alterações prontas para commit quando você quiser".
 
+**Exceção — cadastro/edição de aluno:** sempre que um aluno for adicionado, corrigido ou removido
+(via skill `/criar-aluno` ou correção manual em `js/constants.js` / `aluno_senhas`), fazer commit
+e push automaticamente ao final, sem perguntar. Motivo: o dropdown de login só reflete o que está
+no deploy, então um aluno cadastrado fica sem conseguir entrar até o push acontecer.
+
 ---
 
 ## Instruções gerais
