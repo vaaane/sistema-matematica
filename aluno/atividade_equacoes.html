@@ -293,16 +293,29 @@ const _letras = ["A","B","C","D"];
 function materializar(modelo, idx){
   const rng = _rng(`${_seedBase}#${modelo.id}#${idx}`);
 
-  // 1) Sorteia as variáveis independentes
-  let ctx = {};
-  if (modelo.variaveis){
-    for (const k of Object.keys(modelo.variaveis)) ctx[k] = _pick(rng, modelo.variaveis[k]);
+  // 0) Se o modelo tem contextos, sorteia um (cenário + redação + faixas próprias)
+  let _enunTemplate = modelo.enunciado;
+  let _variaveis = modelo.variaveis;
+  let _montarCtx = modelo.montar_ctx;
+  let _ctxTexto = {};
+  if (Array.isArray(modelo.contextos) && modelo.contextos.length){
+    const c = _pick(rng, modelo.contextos);
+    if (c.enunciado)  _enunTemplate = c.enunciado;
+    if (c.variaveis)  _variaveis = c.variaveis;
+    if (c.montar_ctx) _montarCtx = c.montar_ctx;
+    if (c.textos)     _ctxTexto = c.textos;
+  }
+
+  // 1) Sorteia as variáveis independentes (do contexto, se houver)
+  let ctx = { ..._ctxTexto };
+  if (_variaveis){
+    for (const k of Object.keys(_variaveis)) ctx[k] = _pick(rng, _variaveis[k]);
   }
   // 2) Deriva o valor dependente (mantém coeficientes positivos)
-  _aplicarMontarCtx(modelo, ctx);
+  if (_montarCtx){ const [_al,_ex] = _montarCtx.split("=").map(s=>s.trim()); ctx[_al] = _evalExpr(_ex, ctx); }
 
   // 3) Enunciado com valores substituídos
-  const enun = _subst(modelo.enunciado, ctx);
+  const enun = _subst(_enunTemplate, ctx);
 
   // ── TIPO A: digitar o valor de x (numérica) ──
   if (modelo.tipo === "numerica"){
@@ -336,7 +349,8 @@ function materializar(modelo, idx){
   // (opções são as equações; distratores fixos do modelo)
   const correan = _subst(modelo.equacao_correta, ctx);
   const distr = (modelo.distratores || []).map(d => _subst(d, ctx));
-  let itens = [correan, ...distr];
+  let itens = [correan];
+  for (const d of distr){ if (!itens.includes(d)) itens.push(d); }
   for (let i=itens.length-1; i>0; i--){ const j=Math.floor(rng()*(i+1)); [itens[i],itens[j]]=[itens[j],itens[i]]; }
   const idxCor = itens.indexOf(correan);
   const opcoes = itens.map((t,i)=> `${_letras[i]}) <span class="eq-opt">${t}</span>`);
@@ -347,8 +361,22 @@ function materializar(modelo, idx){
   };
 }
 
-// Materializa todos os modelos e mistura mantendo equilíbrio de dificuldade
-let questoes = modelos.map((m, i) => materializar(m, i));
+// Sorteia 15 modelos do banco (5 por dificuldade) de forma ESTÁVEL por dupla (mesma seed)
+function _rngSeed(str){ let a=1779033703^str.length; for(let i=0;i<str.length;i++){a=Math.imul(a^str.charCodeAt(i),3432918353);a=(a<<13)|(a>>>19);} return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function _sortearModelosSeed(lista, cotas, seed){
+  const rng=_rngSeed(seed);
+  const porDif={}; for (const m of lista){ (porDif[m.dificuldade]=porDif[m.dificuldade]||[]).push(m); }
+  const escolhidos=[];
+  for (const dif of Object.keys(cotas)){
+    const pool=[...(porDif[dif]||[])];
+    for (let i=pool.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+    escolhidos.push(...pool.slice(0, cotas[dif]));
+  }
+  return escolhidos;
+}
+const COTAS = { 1: 5, 2: 5, 3: 5 };
+const _selecionados = (modelos.length > 15) ? _sortearModelosSeed(modelos, COTAS, `${_seedBase}#sel`) : modelos;
+let questoes = _selecionados.map((m, i) => materializar(m, i));
 questoes = intercalarPorDificuldade(questoes);
 
 /* ── Estado do jogo ── */

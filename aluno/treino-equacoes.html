@@ -146,16 +146,1784 @@ const ATIVIDADE = "treino-equacoes";
 
 /* ================== BANCO DE QUESTÕES ================== */
 const BANCO = [
-  {"id":"EQ-DIG-1T","dificuldade":1,"tipo":"numerica","tag":"Encontre x · escreva o resultado","enunciado":"Resolva a equação e escreva o valor de <b>x</b>:<br><span class='eq-destaque'>{A}x + {B} = {C}</span>","variaveis":{"A":[2,3,4,5],"X":[3,4,5,6,7,8],"B":[4,6,8,10,12]},"resposta_expr":"X","montar_ctx":"C = A*X + B","instrucao":"Digite apenas o número (ex.: 7)."},
-  {"id":"EQ-DIG-2T","dificuldade":2,"tipo":"numerica","tag":"Encontre x · escreva o resultado","enunciado":"Resolva a equação e escreva o valor de <b>x</b>:<br><span class='eq-destaque'>{A}x + {B} = {D}x + {E}</span>","variaveis":{"A":[5,6,7,8],"D":[2,3],"X":[3,4,5,6,7],"B":[4,6,8,10]},"resposta_expr":"X","montar_ctx":"E = (A - D)*X + B","instrucao":"Junte as letras de um lado e os números do outro. Digite apenas o número."},
-  {"id":"EQ-MUL-1T","dificuldade":1,"tipo":"multipla_num","tag":"Encontre x · marque a alternativa","enunciado":"Qual é o valor de <b>x</b> na equação abaixo?<br><span class='eq-destaque'>{A}x − {B} = {C}</span>","variaveis":{"A":[2,3,4,5],"X":[4,5,6,7,8,9],"B":[3,5,6]},"resposta_expr":"X","montar_ctx":"C = A*X - B","prefixo_opcao":"x = "},
-  {"id":"EQ-MUL-2T","dificuldade":2,"tipo":"multipla_num","tag":"Encontre x · marque a alternativa","enunciado":"Qual é o valor de <b>x</b> na equação abaixo?<br><span class='eq-destaque'>{A}x + {B} = {D}x + {E}</span>","variaveis":{"A":[6,7,8,9],"D":[2,3],"X":[3,4,5,6,7,8],"B":[3,5,7,9]},"resposta_expr":"X","montar_ctx":"E = (A - D)*X + B","prefixo_opcao":"x = "},
-  {"id":"EQ-PROB-1","dificuldade":1,"tipo":"multipla_texto","tag":"Problema · escolha a equação","enunciado":"Pedro pensou em um número, somou <b>{B}</b> e encontrou <b>{C}</b>. Qual equação representa esse problema?","variaveis":{"B":[7,9,12,15],"X":[8,10,13,16,20]},"montar_ctx":"C = X + B","equacao_correta":"x + {B} = {C}","distratores":["x − {B} = {C}","{B}x = {C}","x + {C} = {B}"]},
-  {"id":"EQ-PROB-2","dificuldade":1,"tipo":"multipla_texto","tag":"Problema · escolha a equação","enunciado":"O dobro de um número é <b>{C}</b>. Qual equação representa esse problema?","variaveis":{"X":[7,9,11,13,15]},"montar_ctx":"C = 2*X","equacao_correta":"2x = {C}","distratores":["x + 2 = {C}","x − 2 = {C}","x ÷ 2 = {C}"]},
-  {"id":"EQ-PROB-3","dificuldade":2,"tipo":"multipla_texto","tag":"Problema · escolha a equação","enunciado":"Ana comprou um caderno por <b>R${B}</b> e ainda ficou com <b>R${R}</b>. Chamando de <b>x</b> o que ela tinha antes, qual equação representa o problema?","variaveis":{"B":[12,15,18,20],"R":[20,25,30,32]},"montar_ctx":"X = B + R","equacao_correta":"x − {B} = {R}","distratores":["x + {B} = {R}","{B}x = {R}","x − {R} = {B}"]},
-  {"id":"EQ-PROB-4","dificuldade":2,"tipo":"multipla_texto","tag":"Problema · escolha a equação","enunciado":"Maria comprou <b>{N}</b> canetas iguais e pagou <b>R${C}</b> no total. Chamando de <b>x</b> o preço de cada caneta, qual equação representa o problema?","variaveis":{"N":[4,5,6,7],"X":[3,4,5,6]},"montar_ctx":"C = N*X","equacao_correta":"{N}x = {C}","distratores":["x + {N} = {C}","x ÷ {N} = {C}","x − {N} = {C}"]},
-  {"id":"EQ-PROB-5","dificuldade":2,"tipo":"multipla_texto","tag":"Problema · escolha a equação","enunciado":"O triplo de um número, <b>menos {B}</b>, é igual a <b>{C}</b>. Qual equação representa esse problema?","variaveis":{"B":[5,6,8,9],"X":[5,6,7,8,10]},"montar_ctx":"C = 3*X - B","equacao_correta":"3x − {B} = {C}","distratores":["3x + {B} = {C}","x − {B} = {C}","3(x − {B}) = {C}"]},
-  {"id":"EQ-PROB-6","dificuldade":3,"tipo":"multipla_texto","tag":"Problema · escolha a equação","enunciado":"Um número somado ao seu <b>dobro</b> resulta em <b>{C}</b>. Qual equação representa esse problema?","variaveis":{"X":[7,9,11,12,14]},"montar_ctx":"C = 3*X","equacao_correta":"x + 2x = {C}","distratores":["2x = {C}","x + 2 = {C}","x × 2x = {C}"]}
+  {
+    "id": "EQ-DIG-1T",
+    "dificuldade": 1,
+    "tipo": "numerica",
+    "tag": "Encontre x · escreva o resultado",
+    "enunciado": "Resolva a equação e escreva o valor de <b>x</b>:<br><span class='eq-destaque'>{A}x + {B} = {C}</span>",
+    "variaveis": {
+      "A": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "X": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "B": [
+        4,
+        6,
+        8,
+        10,
+        12
+      ]
+    },
+    "resposta_expr": "X",
+    "montar_ctx": "C = A*X + B",
+    "instrucao": "Digite apenas o número (ex.: 7)."
+  },
+  {
+    "id": "EQ-DIG-2T",
+    "dificuldade": 2,
+    "tipo": "numerica",
+    "tag": "Encontre x · escreva o resultado",
+    "enunciado": "Resolva a equação e escreva o valor de <b>x</b>:<br><span class='eq-destaque'>{A}x + {B} = {D}x + {E}</span>",
+    "variaveis": {
+      "A": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "D": [
+        2,
+        3
+      ],
+      "X": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "B": [
+        4,
+        6,
+        8,
+        10
+      ]
+    },
+    "resposta_expr": "X",
+    "montar_ctx": "E = (A - D)*X + B",
+    "instrucao": "Junte as letras de um lado e os números do outro. Digite apenas o número."
+  },
+  {
+    "id": "EQ-MUL-1T",
+    "dificuldade": 1,
+    "tipo": "multipla_num",
+    "tag": "Encontre x · marque a alternativa",
+    "enunciado": "Qual é o valor de <b>x</b> na equação abaixo?<br><span class='eq-destaque'>{A}x − {B} = {C}</span>",
+    "variaveis": {
+      "A": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "X": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "B": [
+        3,
+        5,
+        6
+      ]
+    },
+    "resposta_expr": "X",
+    "montar_ctx": "C = A*X - B",
+    "prefixo_opcao": "x = "
+  },
+  {
+    "id": "EQ-MUL-2T",
+    "dificuldade": 2,
+    "tipo": "multipla_num",
+    "tag": "Encontre x · marque a alternativa",
+    "enunciado": "Qual é o valor de <b>x</b> na equação abaixo?<br><span class='eq-destaque'>{A}x + {B} = {D}x + {E}</span>",
+    "variaveis": {
+      "A": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "D": [
+        2,
+        3
+      ],
+      "X": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "B": [
+        3,
+        5,
+        7,
+        9
+      ]
+    },
+    "resposta_expr": "X",
+    "montar_ctx": "E = (A - D)*X + B",
+    "prefixo_opcao": "x = "
+  },
+  {
+    "id": "EQ-PROB-3",
+    "dificuldade": 2,
+    "tipo": "multipla_texto",
+    "tag": "Problema · escolha a equação",
+    "enunciado": "Ana comprou um caderno por <b>R${B}</b> e ainda ficou com <b>R${R}</b>. Chamando de <b>x</b> o que ela tinha antes, qual equação representa o problema?",
+    "variaveis": {
+      "B": [
+        12,
+        15,
+        18,
+        22
+      ],
+      "R": [
+        25,
+        30,
+        35,
+        40
+      ]
+    },
+    "montar_ctx": "X = B + R",
+    "equacao_correta": "x − {B} = {R}",
+    "distratores": [
+      "x + {B} = {R}",
+      "{B}x = {R}",
+      "x − {R} = {B}"
+    ]
+  },
+  {
+    "id": "EQ-PROB-4",
+    "dificuldade": 2,
+    "tipo": "multipla_texto",
+    "tag": "Problema · escolha a equação",
+    "enunciado": "Maria comprou <b>{N}</b> canetas iguais e pagou <b>R${C}</b> no total. Chamando de <b>x</b> o preço de cada caneta, qual equação representa o problema?",
+    "variaveis": {
+      "N": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "X": [
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "montar_ctx": "C = N*X",
+    "equacao_correta": "{N}x = {C}",
+    "distratores": [
+      "x + {N} = {C}",
+      "x ÷ {N} = {C}",
+      "x − {N} = {C}"
+    ]
+  },
+  {
+    "id": "EQ-PROB-5",
+    "dificuldade": 2,
+    "tipo": "multipla_texto",
+    "tag": "Problema · escolha a equação",
+    "enunciado": "O triplo de um número, <b>menos {B}</b>, é igual a <b>{C}</b>. Qual equação representa esse problema?",
+    "variaveis": {
+      "B": [
+        5,
+        6,
+        8,
+        9
+      ],
+      "X": [
+        5,
+        6,
+        7,
+        8,
+        10
+      ]
+    },
+    "montar_ctx": "C = 3*X - B",
+    "equacao_correta": "3x − {B} = {C}",
+    "distratores": [
+      "3x + {B} = {C}",
+      "x − {B} = {C}",
+      "3(x − {B}) = {C}"
+    ]
+  },
+  {
+    "id": "EQ-DES-CONSEC",
+    "dificuldade": 3,
+    "tipo": "multipla_texto",
+    "tag": "Desafio · escolha a equação",
+    "equacao_correta": "x + (x + 1) = {S}",
+    "distratores": [
+      "x + (x + 2) = {S}",
+      "2x = {S}",
+      "x + 1 = {S}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "X": [
+            12,
+            18,
+            24,
+            27,
+            30,
+            33,
+            41
+          ]
+        },
+        "montar_ctx": "S = 2*X + 1",
+        "enunciado": "A soma de dois números <b>consecutivos</b> é <b>{S}</b>. Chamando de <b>x</b> o menor deles, qual equação representa esse problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            8,
+            10,
+            14,
+            19,
+            22,
+            25
+          ]
+        },
+        "montar_ctx": "S = 2*X + 1",
+        "enunciado": "Dois irmãos têm idades <b>consecutivas</b> e, juntas, somam <b>{S}</b> anos. Chamando de <b>x</b> a idade do mais novo, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            15,
+            20,
+            28,
+            34,
+            40,
+            50
+          ]
+        },
+        "montar_ctx": "S = 2*X + 1",
+        "enunciado": "Duas páginas <b>seguidas</b> de um livro têm, somadas, o número <b>{S}</b>. Chamando de <b>x</b> a página de menor número, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            9,
+            13,
+            17,
+            23,
+            29,
+            31
+          ]
+        },
+        "montar_ctx": "S = 2*X + 1",
+        "enunciado": "Duas casas <b>vizinhas</b> de uma rua têm números <b>consecutivos</b> que somam <b>{S}</b>. Chamando de <b>x</b> o menor número, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            11,
+            16,
+            21,
+            26,
+            35,
+            44
+          ]
+        },
+        "montar_ctx": "S = 2*X + 1",
+        "enunciado": "Numa fila, duas senhas <b>seguidas</b> somam <b>{S}</b>. Chamando de <b>x</b> a senha de menor número, qual equação representa o problema?"
+      }
+    ]
+  },
+  {
+    "id": "EQ-DES-2LADOS",
+    "dificuldade": 3,
+    "tipo": "multipla_texto",
+    "tag": "Desafio · escolha a equação",
+    "equacao_correta": "2x − {B} = x + {D}",
+    "distratores": [
+      "2x + {B} = x + {D}",
+      "2x − {B} = {D}",
+      "x − {B} = 2x + {D}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "X": [
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ],
+          "B": [
+            5,
+            7,
+            9,
+            11
+          ],
+          "D": [
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        "montar_ctx": "Z = 2*X - B",
+        "enunciado": "O <b>dobro</b> de um número, <b>menos {B}</b>, é igual ao <b>próprio número mais {D}</b>. Qual equação representa esse problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            8,
+            9,
+            10,
+            12,
+            14
+          ],
+          "B": [
+            6,
+            8,
+            10,
+            12
+          ],
+          "D": [
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        "montar_ctx": "Z = 2*X - B",
+        "enunciado": "Pensei num número. O seu <b>dobro</b> tirando <b>{B}</b> dá o <b>mesmo</b> que o número somado a <b>{D}</b>. Qual equação representa isso?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            7,
+            8,
+            9,
+            10,
+            11,
+            13
+          ],
+          "B": [
+            4,
+            6,
+            8,
+            10
+          ],
+          "D": [
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        "montar_ctx": "Z = 2*X - B",
+        "enunciado": "Dobrando a quantia de figurinhas de João e tirando <b>{B}</b>, obtém-se a <b>mesma</b> quantidade de quando ele soma <b>{D}</b> ao que tem. Chamando de <b>x</b> as figurinhas de João, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            9,
+            10,
+            11,
+            12,
+            15
+          ],
+          "B": [
+            7,
+            9,
+            11,
+            13
+          ],
+          "D": [
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        "montar_ctx": "Z = 2*X - B",
+        "enunciado": "O <b>dobro</b> da idade de Ana <b>menos {B}</b> anos é igual à <b>idade dela mais {D}</b> anos. Chamando de <b>x</b> a idade de Ana, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            6,
+            8,
+            10,
+            11,
+            14
+          ],
+          "B": [
+            5,
+            8,
+            10,
+            12
+          ],
+          "D": [
+            2,
+            4,
+            5,
+            6
+          ]
+        },
+        "montar_ctx": "Z = 2*X - B",
+        "enunciado": "Duas vezes o preço de um lanche, <b>descontados R${B}</b>, resulta no <b>mesmo</b> valor do preço do lanche <b>mais R${D}</b>. Chamando de <b>x</b> o preço do lanche, qual equação representa o problema?"
+      }
+    ]
+  },
+  {
+    "id": "EQ-DES-RAZAO",
+    "dificuldade": 3,
+    "tipo": "multipla_texto",
+    "tag": "Desafio · escolha a equação",
+    "equacao_correta": "x + {K}x = {T}",
+    "distratores": [
+      "{K}x = {T}",
+      "x + {K} = {T}",
+      "{K}x − x = {T}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "X": [
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "K": [
+            2,
+            3,
+            4
+          ]
+        },
+        "montar_ctx": "T = X + K*X",
+        "enunciado": "Numa turma, o número de meninas é <b>{K} vezes</b> o número de meninos. Ao todo são <b>{T}</b> alunos. Chamando de <b>x</b> o número de meninos, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "K": [
+            2,
+            3,
+            4
+          ]
+        },
+        "montar_ctx": "T = X + K*X",
+        "enunciado": "Num pote há bolas azuis e vermelhas. As vermelhas são <b>{K} vezes</b> as azuis, e ao todo são <b>{T}</b> bolas. Chamando de <b>x</b> o número de bolas azuis, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            4,
+            5,
+            6,
+            7,
+            8
+          ],
+          "K": [
+            2,
+            3,
+            5
+          ]
+        },
+        "montar_ctx": "T = X + K*X",
+        "enunciado": "Pedro tem <b>{K} vezes</b> mais figurinhas que Bruno. Juntos têm <b>{T}</b> figurinhas. Chamando de <b>x</b> as figurinhas de Bruno, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            6,
+            7,
+            8,
+            9,
+            12
+          ],
+          "K": [
+            2,
+            3,
+            4
+          ]
+        },
+        "montar_ctx": "T = X + K*X",
+        "enunciado": "Num estacionamento, o número de carros é <b>{K} vezes</b> o de motos, num total de <b>{T}</b> veículos. Chamando de <b>x</b> o número de motos, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            5,
+            6,
+            8,
+            10,
+            11
+          ],
+          "K": [
+            2,
+            3,
+            4
+          ]
+        },
+        "montar_ctx": "T = X + K*X",
+        "enunciado": "Uma quantia foi dividida entre Ana e Léo. Ana recebeu <b>{K} vezes</b> o que Léo recebeu, e ao todo foram <b>R${T}</b>. Chamando de <b>x</b> o valor de Léo, qual equação representa o problema?"
+      }
+    ]
+  },
+  {
+    "id": "EQ-PROB-A",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Problema · escolha a equação",
+    "equacao_correta": "x − {B} = {C}",
+    "distratores": [
+      "x + {B} = {C}",
+      "{B}x = {C}",
+      "x − {C} = {B}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "X": [
+            18,
+            20,
+            25,
+            30
+          ],
+          "B": [
+            4,
+            5,
+            7,
+            9
+          ]
+        },
+        "montar_ctx": "C = X - B",
+        "enunciado": "Lucas tinha algumas figurinhas, <b>perdeu {B}</b> e ficou com <b>{C}</b>. Chamando de <b>x</b> quantas ele tinha, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            20,
+            25,
+            30,
+            40,
+            50
+          ],
+          "B": [
+            6,
+            8,
+            10,
+            12
+          ]
+        },
+        "montar_ctx": "C = X - B",
+        "enunciado": "De uma caixa com <b>x</b> bombons, foram <b>comidos {B}</b> e sobraram <b>{C}</b>. Qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            16,
+            18,
+            22,
+            28
+          ],
+          "B": [
+            3,
+            5,
+            7,
+            8
+          ]
+        },
+        "montar_ctx": "C = X - B",
+        "enunciado": "Um ônibus saiu com <b>x</b> passageiros. <b>Desceram {B}</b> e continuaram <b>{C}</b>. Qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            30,
+            35,
+            40,
+            45,
+            50
+          ],
+          "B": [
+            10,
+            12,
+            15,
+            18
+          ]
+        },
+        "montar_ctx": "C = X - B",
+        "enunciado": "Tinha <b>R$x</b> na carteira. <b>Gastei R${B}</b> e fiquei com <b>R${C}</b>. Qual equação representa o problema?"
+      }
+    ]
+  },
+  {
+    "id": "EQ-PROB-B",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Problema · escolha a equação",
+    "equacao_correta": "x + {B} = {C}",
+    "distratores": [
+      "x − {B} = {C}",
+      "{B}x = {C}",
+      "x + {C} = {B}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "X": [
+            8,
+            10,
+            12,
+            15,
+            20
+          ],
+          "B": [
+            5,
+            7,
+            9,
+            11
+          ]
+        },
+        "montar_ctx": "C = X + B",
+        "enunciado": "Bia tinha <b>x</b> adesivos e <b>ganhou {B}</b>, ficando com <b>{C}</b>. Qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            10,
+            14,
+            18,
+            22,
+            25
+          ],
+          "B": [
+            6,
+            8,
+            10,
+            12
+          ]
+        },
+        "montar_ctx": "C = X + B",
+        "enunciado": "Num aquário havia <b>x</b> peixes. <b>Colocaram mais {B}</b> e passou a ter <b>{C}</b>. Qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            20,
+            24,
+            30,
+            35,
+            40
+          ],
+          "B": [
+            5,
+            10,
+            12,
+            15
+          ]
+        },
+        "montar_ctx": "C = X + B",
+        "enunciado": "Uma estante tinha <b>x</b> livros. Depois de <b>acrescentar {B}</b>, ficou com <b>{C}</b>. Qual equação representa o problema?"
+      }
+    ]
+  },
+  {
+    "id": "EQ-PROB-C",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Problema · escolha a equação",
+    "equacao_correta": "x ÷ 2 = {C}",
+    "distratores": [
+      "2x = {C}",
+      "x − 2 = {C}",
+      "x + 2 = {C}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "X": [
+            8,
+            12,
+            16,
+            20,
+            24,
+            30
+          ]
+        },
+        "montar_ctx": "C = X / 2",
+        "enunciado": "A <b>metade</b> de um número é <b>{C}</b>. Qual equação representa esse problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            10,
+            14,
+            18,
+            22,
+            26
+          ]
+        },
+        "montar_ctx": "C = X / 2",
+        "enunciado": "Dividi minhas <b>x</b> balas <b>ao meio</b> com um amigo e cada um ficou com <b>{C}</b>. Qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            12,
+            16,
+            24,
+            28,
+            36
+          ]
+        },
+        "montar_ctx": "C = X / 2",
+        "enunciado": "A <b>metade</b> dos <b>x</b> alunos de uma sala foi ao pátio: <b>{C}</b> alunos. Qual equação representa o problema?"
+      }
+    ]
+  },
+  {
+    "id": "EQ-DES-REPARTE",
+    "dificuldade": 3,
+    "tipo": "multipla_texto",
+    "tag": "Desafio · escolha a equação",
+    "equacao_correta": "{N}x + {R} = {C}",
+    "distratores": [
+      "{N}x − {R} = {C}",
+      "{N}x = {C}",
+      "x + {N} = {C}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "X": [
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "N": [
+            3,
+            4,
+            5
+          ],
+          "R": [
+            2,
+            3,
+            4
+          ]
+        },
+        "montar_ctx": "C = N*X + R",
+        "enunciado": "<b>{C}</b> balas foram divididas igualmente entre <b>{N}</b> crianças e <b>sobraram {R}</b>. Chamando de <b>x</b> quantas cada uma recebeu, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            4,
+            5,
+            6,
+            8,
+            10
+          ],
+          "N": [
+            3,
+            4,
+            6
+          ],
+          "R": [
+            2,
+            3,
+            4
+          ]
+        },
+        "montar_ctx": "C = N*X + R",
+        "enunciado": "Um total de <b>{C}</b> reais foi repartido igualmente entre <b>{N}</b> amigos, <b>restando R${R}</b>. Chamando de <b>x</b> quanto cada um recebeu, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "N": [
+            4,
+            5,
+            6
+          ],
+          "R": [
+            2,
+            3,
+            4
+          ]
+        },
+        "montar_ctx": "C = N*X + R",
+        "enunciado": "<b>{C}</b> livros foram colocados em <b>{N}</b> caixas com a mesma quantidade, e <b>sobraram {R}</b> livros. Chamando de <b>x</b> quantos couberam em cada caixa, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            4,
+            5,
+            6,
+            7,
+            8
+          ],
+          "N": [
+            3,
+            5,
+            6
+          ],
+          "R": [
+            2,
+            3,
+            4
+          ]
+        },
+        "montar_ctx": "C = N*X + R",
+        "enunciado": "Numa oficina, <b>{C}</b> parafusos foram distribuídos igualmente em <b>{N}</b> potes, <b>sobrando {R}</b>. Chamando de <b>x</b> quantos em cada pote, qual equação representa o problema?"
+      }
+    ]
+  },
+  {
+    "id": "EQ-DES-PARES",
+    "dificuldade": 3,
+    "tipo": "multipla_texto",
+    "tag": "Desafio · escolha a equação",
+    "equacao_correta": "x + (x + 2) = {S}",
+    "distratores": [
+      "x + (x + 1) = {S}",
+      "2x = {S}",
+      "x + 2 = {S}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "X": [
+            10,
+            14,
+            18,
+            22,
+            26,
+            30
+          ]
+        },
+        "montar_ctx": "S = 2*X + 2",
+        "enunciado": "A soma de dois números <b>pares consecutivos</b> é <b>{S}</b>. Chamando de <b>x</b> o menor deles, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            9,
+            13,
+            17,
+            21,
+            25,
+            29
+          ]
+        },
+        "montar_ctx": "S = 2*X + 2",
+        "enunciado": "Dois números <b>ímpares consecutivos</b> somam <b>{S}</b>. Chamando de <b>x</b> o menor deles, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            10,
+            14,
+            18,
+            22,
+            26,
+            30
+          ]
+        },
+        "montar_ctx": "S = 2*X + 2",
+        "enunciado": "Em um prédio, dois apartamentos de <b>numeração par seguida</b> somam <b>{S}</b>. Chamando de <b>x</b> o menor número, qual equação representa o problema?"
+      }
+    ]
+  },
+  {
+    "id": "EQ-PROB-D",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Problema · escolha a equação",
+    "equacao_correta": "{N}x = {C}",
+    "distratores": [
+      "x + {N} = {C}",
+      "x − {N} = {C}",
+      "x ÷ {N} = {C}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "N": [
+            3,
+            4,
+            5,
+            6
+          ],
+          "X": [
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        },
+        "montar_ctx": "C = N*X",
+        "enunciado": "<b>{N}</b> caixas iguais têm juntas <b>{C}</b> laranjas. Chamando de <b>x</b> quantas laranjas há em cada caixa, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "N": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "X": [
+            4,
+            5,
+            6,
+            7,
+            8
+          ]
+        },
+        "montar_ctx": "C = N*X",
+        "enunciado": "<b>{N}</b> times têm o mesmo número de jogadores, num total de <b>{C}</b>. Chamando de <b>x</b> o número de jogadores por time, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "N": [
+            3,
+            4,
+            6,
+            8
+          ],
+          "X": [
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        "montar_ctx": "C = N*X",
+        "enunciado": "Numa coleção, <b>{N}</b> pacotes iguais somam <b>{C}</b> figurinhas. Chamando de <b>x</b> as figurinhas por pacote, qual equação representa o problema?"
+      }
+    ]
+  },
+  {
+    "id": "EQ-PROB-E",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Problema · escolha a equação",
+    "equacao_correta": "x + {B} = {C}",
+    "distratores": [
+      "x − {B} = {C}",
+      "{B}x = {C}",
+      "x + {C} = {B}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "X": [
+            10,
+            12,
+            15,
+            18,
+            20
+          ],
+          "B": [
+            4,
+            6,
+            8,
+            10
+          ]
+        },
+        "montar_ctx": "C = X + B",
+        "enunciado": "A idade de Rafa hoje mais <b>{B}</b> anos será <b>{C}</b>. Chamando de <b>x</b> a idade dele hoje, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            20,
+            25,
+            30,
+            35
+          ],
+          "B": [
+            5,
+            10,
+            15
+          ]
+        },
+        "montar_ctx": "C = X + B",
+        "enunciado": "Faltavam <b>{B}</b> páginas para o livro ter <b>{C}</b>. Chamando de <b>x</b> quantas já estavam escritas, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            8,
+            10,
+            14,
+            16
+          ],
+          "B": [
+            3,
+            5,
+            7
+          ]
+        },
+        "montar_ctx": "C = X + B",
+        "enunciado": "Se eu ganhar mais <b>{B}</b> bolinhas, terei <b>{C}</b>. Chamando de <b>x</b> quantas tenho agora, qual equação representa o problema?"
+      }
+    ]
+  },
+  {
+    "id": "EQ-PROB-F",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Problema · escolha a equação",
+    "equacao_correta": "x − {B} = {C}",
+    "distratores": [
+      "x + {B} = {C}",
+      "{B} − x = {C}",
+      "{B}x = {C}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "X": [
+            20,
+            24,
+            30,
+            36
+          ],
+          "B": [
+            6,
+            8,
+            12
+          ]
+        },
+        "montar_ctx": "C = X - B",
+        "enunciado": "Depois de <b>doar {B}</b> brinquedos, restaram <b>{C}</b>. Chamando de <b>x</b> quantos havia, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            15,
+            18,
+            22,
+            28
+          ],
+          "B": [
+            5,
+            7,
+            9
+          ]
+        },
+        "montar_ctx": "C = X - B",
+        "enunciado": "Um copo tinha água. Após <b>beber {B} goles</b> (em ml), sobraram <b>{C}</b> ml. Chamando de <b>x</b> o total inicial, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            40,
+            45,
+            50,
+            60
+          ],
+          "B": [
+            10,
+            15,
+            20
+          ]
+        },
+        "montar_ctx": "C = X - B",
+        "enunciado": "De <b>x</b> lugares no ônibus, <b>{B}</b> estão ocupados e <b>{C}</b> estão livres. Qual equação representa o problema?"
+      }
+    ]
+  },
+  {
+    "id": "EQ-PROB-G",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Problema · escolha a equação",
+    "equacao_correta": "2x = {C}",
+    "distratores": [
+      "x + 2 = {C}",
+      "x − 2 = {C}",
+      "x ÷ 2 = {C}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "X": [
+            6,
+            8,
+            9,
+            11,
+            13
+          ]
+        },
+        "montar_ctx": "C = 2*X",
+        "enunciado": "O <b>dobro</b> da quantidade de gols de um jogador é <b>{C}</b>. Chamando de <b>x</b> os gols dele, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            7,
+            10,
+            12,
+            14
+          ]
+        },
+        "montar_ctx": "C = 2*X",
+        "enunciado": "O <b>dobro</b> de um número é <b>{C}</b>. Qual equação representa esse problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            5,
+            8,
+            11,
+            15
+          ]
+        },
+        "montar_ctx": "C = 2*X",
+        "enunciado": "Duas sacolas iguais pesam juntas <b>{C}</b> kg. Chamando de <b>x</b> o peso de uma sacola, qual equação representa o problema?"
+      }
+    ]
+  },
+  {
+    "id": "EQ-PROB-H",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Problema · escolha a equação",
+    "equacao_correta": "x + {B} = {C}",
+    "distratores": [
+      "{C} + {B} = x",
+      "x − {B} = {C}",
+      "{B}x = {C}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "X": [
+            12,
+            15,
+            18,
+            20
+          ],
+          "B": [
+            8,
+            10,
+            12
+          ]
+        },
+        "montar_ctx": "C = X + B",
+        "enunciado": "Numa prova de <b>{C}</b> pontos, já garanti <b>{B}</b>. Chamando de <b>x</b> quantos ainda faltam, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            10,
+            14,
+            16,
+            20
+          ],
+          "B": [
+            6,
+            9,
+            12
+          ]
+        },
+        "montar_ctx": "C = X + B",
+        "enunciado": "Para completar um álbum de <b>{C}</b> figurinhas, já colei <b>{B}</b>. Chamando de <b>x</b> as que faltam, qual equação representa o problema?"
+      }
+    ]
+  },
+  {
+    "id": "EQ-PROB-I",
+    "dificuldade": 2,
+    "tipo": "multipla_texto",
+    "tag": "Problema · escolha a equação",
+    "equacao_correta": "{N}x + {B} = {C}",
+    "distratores": [
+      "{N}x − {B} = {C}",
+      "{N}x = {C}",
+      "x + {N} = {C}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "N": [
+            2,
+            3,
+            4
+          ],
+          "X": [
+            3,
+            4,
+            5,
+            6
+          ],
+          "B": [
+            2,
+            3,
+            5
+          ]
+        },
+        "montar_ctx": "C = N*X + B",
+        "enunciado": "Comprei <b>{N}</b> cadernos iguais e uma caneta de <b>R${B}</b>, gastando <b>R${C}</b>. Chamando de <b>x</b> o preço de cada caderno, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "N": [
+            2,
+            3,
+            5
+          ],
+          "X": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "B": [
+            3,
+            4,
+            6
+          ]
+        },
+        "montar_ctx": "C = N*X + B",
+        "enunciado": "Um táxi cobra <b>R${B}</b> fixos mais <b>R$x por km</b>. Numa corrida de <b>{N}</b> km paguei <b>R${C}</b>. Qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "N": [
+            3,
+            4,
+            6
+          ],
+          "X": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "B": [
+            4,
+            5,
+            7
+          ]
+        },
+        "montar_ctx": "C = N*X + B",
+        "enunciado": "<b>{N}</b> ingressos iguais mais <b>R${B}</b> de lanche custaram <b>R${C}</b>. Chamando de <b>x</b> o preço do ingresso, qual equação representa o problema?"
+      }
+    ]
+  },
+  {
+    "id": "EQ-PROB-J",
+    "dificuldade": 2,
+    "tipo": "multipla_texto",
+    "tag": "Problema · escolha a equação",
+    "equacao_correta": "{N}x − {B} = {C}",
+    "distratores": [
+      "{N}x + {B} = {C}",
+      "{N}x = {C}",
+      "x − {N} = {C}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "N": [
+            2,
+            3,
+            4
+          ],
+          "X": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "B": [
+            2,
+            3,
+            4
+          ]
+        },
+        "montar_ctx": "C = N*X - B",
+        "enunciado": "O <b>{N}×</b> de um número, <b>menos {B}</b>, dá <b>{C}</b>. Qual equação representa esse problema?"
+      },
+      {
+        "variaveis": {
+          "N": [
+            3,
+            4,
+            5
+          ],
+          "X": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "B": [
+            3,
+            5,
+            6
+          ]
+        },
+        "montar_ctx": "C = N*X - B",
+        "enunciado": "O <b>{N}× </b>de um número, <b>menos {B}</b>, resulta em <b>{C}</b>. Qual equação representa esse problema?"
+      }
+    ]
+  },
+  {
+    "id": "EQ-PROB-K",
+    "dificuldade": 2,
+    "tipo": "multipla_texto",
+    "tag": "Problema · escolha a equação",
+    "equacao_correta": "x + {B} = {D}x",
+    "distratores": [
+      "x − {B} = {D}x",
+      "{D}x + {B} = x",
+      "x + {B} = {D}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "X": [
+            3,
+            4,
+            5,
+            6
+          ],
+          "D": [
+            2,
+            3
+          ]
+        },
+        "montar_ctx": "B = (D-1)*X",
+        "enunciado": "Um número mais <b>{B}</b> é igual ao seu <b>{D}× </b>. Chamando de <b>x</b> o número, qual equação representa esse problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            4,
+            5,
+            6,
+            8
+          ],
+          "D": [
+            2,
+            3
+          ]
+        },
+        "montar_ctx": "B = (D-1)*X",
+        "enunciado": "A quantia de Léo mais <b>R${B}</b> ficaria igual ao <b>{D}× </b> do que ele tem. Chamando de <b>x</b> a quantia, qual equação representa o problema?"
+      }
+    ]
+  },
+  {
+    "id": "EQ-PROB-L",
+    "dificuldade": 2,
+    "tipo": "multipla_texto",
+    "tag": "Problema · escolha a equação",
+    "equacao_correta": "x ÷ {N} = {C}",
+    "distratores": [
+      "{N}x = {C}",
+      "x − {N} = {C}",
+      "x + {N} = {C}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "N": [
+            3,
+            4,
+            5
+          ],
+          "X": [
+            12,
+            16,
+            20,
+            24,
+            30
+          ]
+        },
+        "montar_ctx": "C = X / N",
+        "enunciado": "Reparti <b>x</b> balas igualmente entre <b>{N}</b> amigos e cada um recebeu <b>{C}</b>. Qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "N": [
+            2,
+            4,
+            6
+          ],
+          "X": [
+            12,
+            24,
+            36,
+            48
+          ]
+        },
+        "montar_ctx": "C = X / N",
+        "enunciado": "Um bolo foi cortado em <b>{N}</b> fatias iguais; cada fatia tem <b>{C}</b> g. Chamando de <b>x</b> o peso do bolo, qual equação representa o problema?"
+      }
+    ]
+  },
+  {
+    "id": "EQ-PROB-M",
+    "dificuldade": 2,
+    "tipo": "multipla_texto",
+    "tag": "Problema · escolha a equação",
+    "equacao_correta": "{A}x = {C}",
+    "distratores": [
+      "x + {A} = {C}",
+      "{A} + x = {C}",
+      "x ÷ {A} = {C}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "A": [
+            4,
+            5,
+            6,
+            8
+          ],
+          "X": [
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        "montar_ctx": "C = A*X",
+        "enunciado": "Um retângulo tem <b>{A}</b> fileiras com o mesmo número de azulejos, num total de <b>{C}</b>. Chamando de <b>x</b> os azulejos por fileira, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "A": [
+            3,
+            5,
+            7
+          ],
+          "X": [
+            4,
+            5,
+            6,
+            7
+          ]
+        },
+        "montar_ctx": "C = A*X",
+        "enunciado": "<b>{A}</b> semanas de mesada iguais somam <b>R${C}</b>. Chamando de <b>x</b> a mesada semanal, qual equação representa o problema?"
+      }
+    ]
+  },
+  {
+    "id": "EQ-DES-IDADES",
+    "dificuldade": 3,
+    "tipo": "multipla_texto",
+    "tag": "Desafio · escolha a equação",
+    "equacao_correta": "x + (x + {K}) = {S}",
+    "distratores": [
+      "x + {K} = {S}",
+      "x + {K}x = {S}",
+      "x − (x + {K}) = {S}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "X": [
+            8,
+            10,
+            12,
+            14
+          ],
+          "K": [
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        "montar_ctx": "S = 2*X + K",
+        "enunciado": "Dois irmãos têm idades que <b>diferem em {K}</b> anos e somam <b>{S}</b>. Chamando de <b>x</b> a idade do mais novo, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            15,
+            18,
+            20,
+            25
+          ],
+          "K": [
+            2,
+            4,
+            6
+          ]
+        },
+        "montar_ctx": "S = 2*X + K",
+        "enunciado": "Duas prateleiras têm livros; a segunda tem <b>{K} a mais</b> que a primeira e juntas somam <b>{S}</b>. Chamando de <b>x</b> os livros da primeira, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            10,
+            12,
+            16,
+            20
+          ],
+          "K": [
+            5,
+            7,
+            9
+          ]
+        },
+        "montar_ctx": "S = 2*X + K",
+        "enunciado": "Ana e Bia juntam figurinhas; Bia tem <b>{K} a mais</b> que Ana e no total são <b>{S}</b>. Chamando de <b>x</b> as de Ana, qual equação representa o problema?"
+      }
+    ]
+  },
+  {
+    "id": "EQ-DES-SUBTRAI",
+    "dificuldade": 3,
+    "tipo": "multipla_texto",
+    "tag": "Desafio · escolha a equação",
+    "equacao_correta": "{D}x = x + {B}",
+    "distratores": [
+      "{D}x = x − {B}",
+      "{D}x + {B} = x",
+      "x = {D}x + {B}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "X": [
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "D": [
+            2,
+            3,
+            4
+          ]
+        },
+        "montar_ctx": "B = (D-1)*X",
+        "enunciado": "O <b>{D}× </b> de um número é igual a esse número <b>mais {B}</b>. Qual equação representa esse problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            4,
+            5,
+            6,
+            8
+          ],
+          "D": [
+            2,
+            3
+          ]
+        },
+        "montar_ctx": "B = (D-1)*X",
+        "enunciado": "O <b>{D}× </b> das figurinhas de Téo é o mesmo que ele tem <b>mais {B}</b>. Chamando de <b>x</b> as figurinhas de Téo, qual equação representa o problema?"
+      }
+    ]
+  },
+  {
+    "id": "EQ-DES-TROCO",
+    "dificuldade": 3,
+    "tipo": "multipla_texto",
+    "tag": "Desafio · escolha a equação",
+    "equacao_correta": "{P} − {N}x = {T}",
+    "distratores": [
+      "{N}x − {P} = {T}",
+      "{N}x + {T} = {P}",
+      "{P} + {N}x = {T}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "P": [
+            50
+          ],
+          "N": [
+            2,
+            3,
+            4
+          ],
+          "X": [
+            6,
+            7,
+            8,
+            9
+          ]
+        },
+        "montar_ctx": "T = P - N*X",
+        "enunciado": "Paguei com <b>R$50</b> por <b>{N}</b> itens iguais e recebi <b>R${T}</b> de troco. Chamando de <b>x</b> o preço de cada item, qual equação representa o problema?"
+      },
+      {
+        "variaveis": {
+          "P": [
+            100
+          ],
+          "N": [
+            3,
+            4,
+            5
+          ],
+          "X": [
+            10,
+            12,
+            14,
+            16
+          ]
+        },
+        "montar_ctx": "T = P - N*X",
+        "enunciado": "Tinha <b>R$100</b>. Depois de comprar <b>{N}</b> lanches iguais, sobraram <b>R${T}</b>. Chamando de <b>x</b> o preço do lanche, qual equação representa o problema?"
+      }
+    ]
+  },
+  {
+    "id": "EQ-DES-PERIM",
+    "dificuldade": 3,
+    "tipo": "multipla_texto",
+    "tag": "Desafio · escolha a equação",
+    "equacao_correta": "2x + 2×{L} = {P}",
+    "distratores": [
+      "x + {L} = {P}",
+      "2x + {L} = {P}",
+      "2×(x + {L}) = {P}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "L": [
+            3,
+            4,
+            5,
+            6
+          ],
+          "X": [
+            4,
+            5,
+            6,
+            7,
+            8
+          ]
+        },
+        "montar_ctx": "P = 2*X + 2*L",
+        "enunciado": "Um retângulo tem largura <b>{L}</b> e perímetro <b>{P}</b>. Chamando de <b>x</b> o comprimento, qual equação representa o problema?",
+        "textos": {}
+      },
+      {
+        "variaveis": {
+          "L": [
+            5,
+            6,
+            8,
+            10
+          ],
+          "X": [
+            6,
+            7,
+            8,
+            9
+          ]
+        },
+        "montar_ctx": "P = 2*X + 2*L",
+        "enunciado": "Cercar um terreno retangular de <b>{P}</b> m de cerca, sendo um lado <b>{L}</b> m. Chamando de <b>x</b> o outro lado, qual equação representa o problema?",
+        "textos": {}
+      }
+    ]
+  },
+  {
+    "id": "EQ-DES-METADE",
+    "dificuldade": 3,
+    "tipo": "multipla_texto",
+    "tag": "Desafio · escolha a equação",
+    "equacao_correta": "x ÷ 2 + {B} = {C}",
+    "distratores": [
+      "2x + {B} = {C}",
+      "x ÷ 2 − {B} = {C}",
+      "x + {B} = {C}"
+    ],
+    "contextos": [
+      {
+        "variaveis": {
+          "X": [
+            10,
+            12,
+            16,
+            20,
+            24
+          ],
+          "B": [
+            3,
+            4,
+            5
+          ]
+        },
+        "montar_ctx": "C = X/2 + B",
+        "enunciado": "A <b>metade</b> de um número, <b>mais {B}</b>, é igual a <b>{C}</b>. Qual equação representa esse problema?"
+      },
+      {
+        "variaveis": {
+          "X": [
+            12,
+            16,
+            20,
+            28
+          ],
+          "B": [
+            5,
+            6,
+            7
+          ]
+        },
+        "montar_ctx": "C = X/2 + B",
+        "enunciado": "A <b>metade</b> de uma quantia <b>mais R${B}</b> resulta em <b>R${C}</b>. Chamando de <b>x</b> a quantia, qual equação representa o problema?"
+      }
+    ]
+  }
 ];
 
 /* ================== MOTOR DE GERAÇÃO ================== */
@@ -166,10 +1934,19 @@ function evalCtx(expr,ctx){ const [alvo,f]=expr.split("=").map(s=>s.trim()); ctx
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 
 function gerarInstancia(q){
-  const ctx={}; for(const k in q.variaveis) ctx[k]=pick(q.variaveis[k]);
-  if(q.montar_ctx) evalCtx(q.montar_ctx,ctx);
+  // suporte a contextos: sorteia um cenário textual (enunciado/variaveis/montar próprios)
+  let enunTemplate=q.enunciado, variaveis=q.variaveis||{}, montar=q.montar_ctx, ctxTexto={};
+  if(Array.isArray(q.contextos) && q.contextos.length){
+    const c=pick(q.contextos);
+    if(c.enunciado) enunTemplate=c.enunciado;
+    if(c.variaveis) variaveis=c.variaveis;
+    if(c.montar_ctx) montar=c.montar_ctx;
+    if(c.textos) ctxTexto=c.textos;
+  }
+  const ctx={...ctxTexto}; for(const k in variaveis) ctx[k]=pick(variaveis[k]);
+  if(montar) evalCtx(montar,ctx);
   const inst={id:q.id,tipo:q.tipo,tag:q.tag,instrucao:q.instrucao||""};
-  inst.enunciado=subst(q.enunciado,ctx);
+  inst.enunciado=subst(enunTemplate,ctx);
   if(q.tipo==="numerica"){
     inst.resposta=String(evalExpr(q.resposta_expr,ctx));
   }else if(q.tipo==="multipla_num"){
@@ -193,11 +1970,19 @@ function gerarInstancia(q){
   return inst;
 }
 
+function _sorteiaN(arr, n){ const p=shuffle([...arr]); return p.slice(0, Math.min(n, p.length)); }
 function montarProva(){
-  // sorteia 1 instância de cada questão do banco; se banco > TOTAL, embaralha e corta
-  const base=shuffle([...BANCO]).slice(0, Math.min(TOTAL,BANCO.length));
-  const provas=base.map(gerarInstancia);
-  // se o banco tiver menos que TOTAL, completa repetindo questões (nova instância)
+  // sorteia TOTAL questões do banco mantendo proporção de dificuldade (4 fáceis, 3 médias, 3 difíceis)
+  const porDif={1:[],2:[],3:[]};
+  for(const q of BANCO){ (porDif[q.dificuldade]||porDif[2]).push(q); }
+  let escolhidos=[ ..._sorteiaN(porDif[1],4), ..._sorteiaN(porDif[2],3), ..._sorteiaN(porDif[3],3) ];
+  // completa se alguma faixa não tiver o suficiente
+  if(escolhidos.length<TOTAL){
+    const resto=shuffle(BANCO.filter(q=>!escolhidos.includes(q)));
+    escolhidos.push(...resto.slice(0, TOTAL-escolhidos.length));
+  }
+  escolhidos=shuffle(escolhidos).slice(0,TOTAL);
+  const provas=escolhidos.map(gerarInstancia);
   while(provas.length<TOTAL) provas.push(gerarInstancia(pick(BANCO)));
   return provas;
 }
@@ -327,7 +2112,7 @@ function renderResultado(nota, acertos, erros, tempo, salvou){
     <p class="salvo-info">${salvou?"✔ Seu rendimento foi salvo no histórico (treino, não vale nota).":"⚠ Não foi possível salvar o histórico agora, mas o treino valeu como prática."}</p>
     <div class="acoes" style="justify-content:center">
       <button class="btn btn-blue" id="btn-novo">Treinar de novo</button>
-      <button class="btn btn-ghost" onclick="location.href='/aluno/atividades.html'">Voltar às atividades</button>
+      <button class="btn btn-ghost" onclick="location.href='/aluno/a-atividades.html'">Voltar às atividades</button>
     </div>`;
   const rev=document.getElementById("revisao");
   rev.innerHTML=historico.map((h,i)=>`
