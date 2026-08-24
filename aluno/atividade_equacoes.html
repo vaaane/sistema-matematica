@@ -419,8 +419,8 @@ const _seedBase = `${nomeAtiv}|${turma}|${_nomesDupla.join("+")}`;
 
 const _letras = ["A","B","C","D"];
 
-function materializar(modelo, idx){
-  const rng = _rng(`${_seedBase}#${modelo.id}#${idx}`);
+function materializar(modelo, idx, _tent = 0){
+  const rng = _rng(`${_seedBase}#${modelo.id}#${idx}${_tent ? `#r${_tent}` : ""}`);
 
   // 0) Se o modelo tem contextos, sorteia um (cenário + redação + faixas próprias)
   let _enunTemplate = modelo.enunciado;
@@ -505,7 +505,19 @@ function _sortearModelosSeed(lista, cotas, seed){
 }
 const COTAS = { 1: 5, 2: 5, 3: 5 };
 const _selecionados = (modelos.length > 15) ? _sortearModelosSeed(modelos, COTAS, `${_seedBase}#sel`) : modelos;
-let questoes = _selecionados.map((m, i) => materializar(m, i));
+// Materializa garantindo que os valores de x das questões numéricas não se repitam
+// na mesma prova (mantém a seed estável por dupla; só desempata quando há colisão).
+const _xUsados = new Set();
+let questoes = _selecionados.map((m, i) => {
+  let q = materializar(m, i), _tent = 0;
+  // só numéricas têm respostaNum; questões de "montar equação" não entram na regra
+  while (q.respostaNum != null && _xUsados.has(q.respostaNum) && _tent < 40) {
+    _tent++;
+    q = materializar(m, i, _tent);
+  }
+  if (q.respostaNum != null) _xUsados.add(q.respostaNum);
+  return q;
+});
 questoes = intercalarPorDificuldade(questoes);
 
 /* ── Estado do jogo ── */
