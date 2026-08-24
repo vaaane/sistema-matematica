@@ -78,8 +78,8 @@
   .headline{display:flex;align-items:center;gap:9px;flex-wrap:wrap;row-gap:4px}
   .aula-tag{font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:3px 9px;border-radius:6px;border:1px solid var(--border);color:var(--text-muted);background:transparent}
   .aula-tag.teoria{background:rgba(155,48,255,.16);border-color:rgba(155,48,255,.4);color:#c79bff}
-  .aula-tag.exercicios{background:rgba(96,165,250,.16);border-color:rgba(96,165,250,.4);color:#8ec0ff}
-  .aula-tag.projeto{background:rgba(240,165,0,.16);border-color:rgba(240,165,0,.4);color:#f5c451}
+  .aula-tag.exercicios{background:rgba(240,165,0,.16);border-color:rgba(240,165,0,.4);color:#f0a500}
+  .aula-tag.projeto{background:rgba(45,212,191,.16);border-color:rgba(45,212,191,.4);color:#5eead4}
   .aula-nome{font-size:14.5px;font-weight:700;line-height:1.25;flex:1 1 auto;min-width:0;color:var(--text)}
   .aula-meta{display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap}
   .aula-data{font-size:11.5px;color:var(--text-muted);display:inline-flex;align-items:center;gap:5px}
@@ -166,6 +166,7 @@
 import { bimestreAtual } from "/js/constants.js";
 import { montarSeletorBimestre } from "/js/bimestre-seletor.js";
 import { requireAluno, renderSidebarAluno } from "/js/auth.js";
+import { indexarBiblioteca, resolverAula } from "/js/biblioteca.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -211,9 +212,17 @@ async function carregar(){
   document.getElementById("lista").innerHTML = `<div class="vazio">Carregando…</div>`;
   document.getElementById("statsTop").innerHTML = "";
 
+  // (resolvedor de material/tipo centralizado em /js/biblioteca.js)
+
   aulas = [];
   try{
-    const snap = await get(ref(db, `vistos/${turma}/${bimestre}`));
+    const [snap, snapBib] = await Promise.all([
+      get(ref(db, `vistos/${turma}/${bimestre}`)),
+      get(ref(db, "biblioteca")),
+    ]);
+    const _bibMap = {};
+    if (snapBib && snapBib.exists()) { const _bv=snapBib.val(); for(const k in _bv){ _bibMap[k]={nome:_bv[k].nome||"", arquivo:_bv[k].arquivo||"", tipo:_bv[k].tipo||""}; } }
+    const _bibIdx = indexarBiblioteca(_bibMap);
     if (snap.exists()) {
       const bloco = snap.val();
       const ativs = bloco.atividades || {};
@@ -221,9 +230,9 @@ async function carregar(){
       aulas = Object.entries(ativs).map(([id,a])=>{
         const marca = (marcas[id] && marcas[id][nome]) || 0;
         return {
-          id, nome:a.nome||"(aula)", data:a.data||"", conteudo:a.conteudo||"", obs:a.obs||"",
-          ordem:a.ordem||0, materialRef:a.materialRef||"", materialTitulo:a.materialTitulo||"",
-          tipo:tipoDe(a.nome||""), marca, estado:estadoDe(marca),
+          id, ...(function(){ const _r=resolverAula({materialRef:a.materialRef||"", materialTitulo:a.materialTitulo||"", nome:a.nome||""}, _bibIdx); return { nome:_r.nome||a.nome||"(aula)", materialRef:_r.url, materialTitulo:_r.nome, tipo:_r.tipo }; })(),
+          data:a.data||"", conteudo:a.conteudo||"", obs:a.obs||"",
+          ordem:a.ordem||0, marca, estado:estadoDe(marca),
         };
       }).sort((x,y)=>(x.ordem-y.ordem)||(x.data<y.data?-1:1));
       aulas.forEach((a,i)=>{ a.num = String(a.ordem || (i+1)).padStart(2,"0"); });

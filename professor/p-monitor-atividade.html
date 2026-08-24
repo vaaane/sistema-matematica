@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Monitor da Atividade — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .mon-filtros{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:16px}
+    .mon-filtro-item{display:flex;flex-direction:column;gap:6px}
+    .mon-filtro-item label{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted)}
+    .mon-live{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--green);margin-left:auto}
+    .mon-live .dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:monpulse 1.6s infinite}
+    @keyframes monpulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.6)}70%{box-shadow:0 0 0 8px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+
+    .mon-resumo{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+    .mon-stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
+    .mon-stat .n{font-family:'Orbitron',monospace;font-size:30px;font-weight:700;line-height:1}
+    .mon-stat .l{font-size:12px;color:var(--text-muted);margin-top:6px;font-weight:600}
+    .mon-stat.fazendo .n{color:var(--gold)}
+    .mon-stat.pronto  .n{color:var(--green)}
+    .mon-stat.falta   .n{color:var(--text-muted)}
+
+    .mon-sec-title{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+                   color:var(--text);margin:0 0 10px;display:flex;align-items:center;gap:8px}
+    .mon-sec-title .cnt{font-family:'Inter',sans-serif;font-size:12px;font-weight:700;color:var(--text-muted);
+                        background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:2px 10px;text-transform:none;letter-spacing:0}
+
+    .mon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-bottom:24px}
+
+    /* cartão de aluno fazendo agora */
+    .mon-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;position:relative;overflow:hidden}
+    .mon-card .barra{position:absolute;left:0;bottom:0;height:4px;background:var(--gold);transition:width 1s linear}
+    .mon-card.crit .barra{background:var(--red)}
+    .mon-card .topo{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+    .mon-card .nome{font-size:15px;font-weight:800;color:var(--text);line-height:1.2}
+    .mon-card .num{font-size:11px;font-weight:700;color:var(--text-muted)}
+    .mon-card .tempo{font-family:'Orbitron',monospace;font-size:26px;font-weight:700;color:var(--gold);line-height:1}
+    .mon-card.crit .tempo{color:var(--red)}
+    .mon-card .tempo-l{font-size:11px;color:var(--text-muted);margin-top:2px}
+    .mon-card .prog{font-size:12px;color:var(--text-muted);margin-top:8px}
+    .mon-card .prog b{color:var(--text)}
+
+    /* linhas simples (terminaram / faltam) */
+    .mon-list{display:flex;flex-wrap:wrap;gap:8px}
+    .mon-pill{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);
+              border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600;color:var(--text)}
+    .mon-pill .num{font-size:11px;color:var(--text-muted);font-weight:700}
+    .mon-pill.ok{border-color:rgba(34,197,94,.35)}
+    .mon-pill.ok .chk{color:var(--green);font-weight:900}
+    .mon-pill .nota{font-family:'Orbitron',monospace;font-size:12px;color:var(--green);font-weight:700}
+    .mon-pill.miss{opacity:.85}
+
+    .mon-vazio{color:var(--text-muted);font-size:13px;padding:10px 2px}
+
+    @media(max-width:640px){
+      .mon-resumo{grid-template-columns:1fr 1fr 1fr;gap:8px}
+      .mon-stat .n{font-size:24px}
+      .mon-grid{grid-template-columns:1fr 1fr}
+    }
+    @media(max-width:420px){ .mon-grid{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Monitor da Atividade</div>
+        <div class="topbar-sub">Quem está fazendo agora, quanto tempo falta e quem ainda não fez</div>
+      </div>
+    </div>
+    <div class="content">
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="mon-filtros">
+          <div class="mon-filtro-item">
+            <label for="sel-turma">Turma</label>
+            <div class="select-wrap"><select class="input" id="sel-turma"></select></div>
+          </div>
+          <div class="mon-filtro-item">
+            <label for="sel-ativ">Atividade</label>
+            <div class="select-wrap"><select class="input" id="sel-ativ"></select></div>
+          </div>
+          <div class="mon-live"><span class="dot"></span> Ao vivo</div>
+        </div>
+      </div>
+
+      <div class="mon-resumo">
+        <div class="mon-stat fazendo"><div class="n" id="st-fazendo">0</div><div class="l">Fazendo agora</div></div>
+        <div class="mon-stat pronto"><div class="n" id="st-pronto">0</div><div class="l">Já entregaram</div></div>
+        <div class="mon-stat falta"><div class="n" id="st-falta">0</div><div class="l">Ainda faltam</div></div>
+      </div>
+
+      <div id="sec-fazendo" style="margin-bottom:8px">
+        <div class="mon-sec-title">⏳ Fazendo agora <span class="cnt" id="cnt-fazendo">0</span></div>
+        <div class="mon-grid" id="grid-fazendo"></div>
+      </div>
+
+      <div style="margin-bottom:8px">
+        <div class="mon-sec-title">✅ Já entregaram <span class="cnt" id="cnt-pronto">0</span></div>
+        <div class="mon-list" id="list-pronto"></div>
+      </div>
+
+      <div>
+        <div class="mon-sec-title">🕓 Ainda não fizeram <span class="cnt" id="cnt-falta">0</span></div>
+        <div class="mon-list" id="list-falta"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES, numeroChamada } from "/js/constants.js";
+import { db } from "/js/firebase-config.js";
+import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+requireProfessor();
+renderSidebarProfessor("sidebar", "atividades");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const DURACAO_PADRAO_SEG = 15 * 60; // fallback se um registro antigo não tiver duracaoSeg
+
+/* ── Filtros ── */
+const selTurma = document.getElementById("sel-turma");
+const selAtiv  = document.getElementById("sel-ativ");
+
+const TURMAS = Object.keys(ALUNOS_POR_TURMA).sort();
+selTurma.innerHTML = TURMAS.map(t => `<option value="${t}">Turma ${t}</option>`).join("");
+
+// Atividades disponíveis (exclui torneios). Padrão: a de equações do bimestre atual.
+const ATIVS = LISTA_ATIVIDADES.filter(a => a.modo !== "torneio");
+selAtiv.innerHTML = ATIVS.map(a => `<option value="${a.nome}">${a.nome}</option>`).join("");
+// pré-seleciona a atividade de equações, se existir
+const _eq = ATIVS.find(a => a.modo === "equacoes_plus");
+if (_eq) selAtiv.value = _eq.nome;
+
+let turmaSel = selTurma.value;
+let ativSel  = selAtiv.value;
+
+selTurma.addEventListener("change", () => { turmaSel = selTurma.value; renderTudo(); });
+selAtiv.addEventListener("change",  () => { ativSel  = selAtiv.value;  renderTudo(); });
+
+/* ── Dados em tempo real ── */
+// Guardamos o snapshot bruto de "resultados" e re-renderizamos a cada segundo
+// (para o cronômetro correr) e a cada mudança no Firebase.
+let resultadosRaw = [];
+
+onValue(ref(db, "resultados"), (snap) => {
+  const arr = [];
+  if (snap.exists()) snap.forEach(ch => { arr.push({ id: ch.key, ...ch.val() }); });
+  resultadosRaw = arr;
+  renderTudo();
+}, (err) => {
+  console.warn("[monitor onValue]", err);
+  document.getElementById("grid-fazendo").innerHTML =
+    `<div class="mon-vazio">Não foi possível carregar os dados em tempo real.</div>`;
+});
+
+/* ── Helpers ── */
+function fmtMMSS(seg){
+  seg = Math.max(0, Math.floor(seg));
+  const m = Math.floor(seg/60), s = seg%60;
+  return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+}
+
+// Para a atividade/turma selecionadas, monta o estado de cada aluno.
+function calcularEstado(){
+  const agora = Date.now();
+  const registros = resultadosRaw.filter(r =>
+    r.turma === turmaSel &&
+    r.atividade === ativSel &&
+    !r.modo_teste
+  );
+
+  // Agrupa por aluno; fica com o registro mais relevante (concluído tem prioridade).
+  const porAluno = {};
+  for (const r of registros){
+    const nome = r.aluno;
+    if (!nome) continue;
+    const atual = porAluno[nome];
+    if (!atual){ porAluno[nome] = r; continue; }
+    // prioridade: concluído > mais recente
+    const rConc = !!r.concluido, aConc = !!atual.concluido;
+    if (rConc && !aConc){ porAluno[nome] = r; continue; }
+    if (rConc === aConc){
+      const rt = r.fimTs || r.inicioTs || 0;
+      const at = atual.fimTs || atual.inicioTs || 0;
+      if (rt >= at) porAluno[nome] = r;
+    }
+  }
+
+  const fazendo = [];  // { nome, num, restanteSeg, respondidas, total, estourou }
+  const pronto  = [];  // { nome, num, nota, motivo }
+
+  for (const nome of Object.keys(porAluno)){
+    const r = porAluno[nome];
+    const num = numeroChamada(turmaSel, nome);
+    if (r.concluido){
+      pronto.push({ nome, num, nota: (r.pontuacao ?? null), motivo: r.motivo_fim || "" });
+    } else {
+      const dur = (r.duracaoSeg || DURACAO_PADRAO_SEG);
+      const ini = r.inicioTs || (r.criadoEm && typeof r.criadoEm === "number" ? r.criadoEm : agora);
+      const decor = (agora - ini) / 1000;
+      const restante = dur - decor;
+      fazendo.push({
+        nome, num,
+        restanteSeg: restante,
+        dur,
+        respondidas: r.respondidas ?? null,
+        total: r.total ?? null,
+        estourou: restante <= 0,
+      });
+    }
+  }
+
+  // Ordena: fazendo por menor tempo restante; pronto por nº de chamada; falta idem.
+  fazendo.sort((a,b) => a.restanteSeg - b.restanteSeg);
+  pronto.sort((a,b) => (a.num||999) - (b.num||999));
+
+  const feitos = new Set([...fazendo, ...pronto].map(x => x.nome));
+  const todos = ALUNOS_POR_TURMA[turmaSel] || [];
+  const falta = todos
+    .filter(n => !feitos.has(n))
+    .map(n => ({ nome:n, num: numeroChamada(turmaSel, n) }))
+    .sort((a,b) => (a.num||999) - (b.num||999));
+
+  return { fazendo, pronto, falta };
+}
+
+/* ── Render ── */
+function renderTudo(){
+  const { fazendo, pronto, falta } = calcularEstado();
+
+  document.getElementById("st-fazendo").textContent = fazendo.length;
+  document.getElementById("st-pronto").textContent  = pronto.length;
+  document.getElementById("st-falta").textContent   = falta.length;
+  document.getElementById("cnt-fazendo").textContent = fazendo.length;
+  document.getElementById("cnt-pronto").textContent  = pronto.length;
+  document.getElementById("cnt-falta").textContent   = falta.length;
+
+  // Fazendo agora (cartões com cronômetro)
+  const gf = document.getElementById("grid-fazendo");
+  if (!fazendo.length){
+    gf.innerHTML = `<div class="mon-vazio">Ninguém está fazendo esta atividade agora.</div>`;
+  } else {
+    gf.innerHTML = fazendo.map(a => {
+      const crit = a.restanteSeg <= 120; // últimos 2 min
+      const pct = Math.max(0, Math.min(100, (a.restanteSeg / a.dur) * 100));
+      const numTxt = a.num ? `Nº ${a.num}` : "";
+      const progTxt = (a.respondidas != null && a.total != null)
+        ? `<div class="prog">Respondidas: <b>${a.respondidas}/${a.total}</b></div>` : "";
+      const tempoTxt = a.estourou ? "Encerrando…" : fmtMMSS(a.restanteSeg);
+      return `
+        <div class="mon-card ${crit ? "crit" : ""}">
+          <div class="topo">
+            <div class="nome">${a.nome}</div>
+            <div class="num">${numTxt}</div>
+          </div>
+          <div class="tempo">${tempoTxt}</div>
+          <div class="tempo-l">tempo restante</div>
+          ${progTxt}
+          <div class="barra" style="width:${pct}%"></div>
+        </div>`;
+    }).join("");
+  }
+
+  // Já entregaram
+  const lp = document.getElementById("list-pronto");
+  if (!pronto.length){
+    lp.innerHTML = `<div class="mon-vazio">Ninguém entregou ainda.</div>`;
+  } else {
+    lp.innerHTML = pronto.map(a => {
+      const numTxt = a.num ? `<span class="num">${a.num}</span>` : "";
+      const notaTxt = (a.nota != null) ? `<span class="nota">${Number(a.nota).toFixed(1).replace(".",",")}</span>` : "";
+      return `<span class="mon-pill ok">${numTxt}<span class="chk">✓</span> ${a.nome} ${notaTxt}</span>`;
+    }).join("");
+  }
+
+  // Ainda não fizeram
+  const lf = document.getElementById("list-falta");
+  if (!falta.length){
+    lf.innerHTML = `<div class="mon-vazio">Todos os alunos da turma já começaram ou entregaram. 🎉</div>`;
+  } else {
+    lf.innerHTML = falta.map(a => {
+      const numTxt = a.num ? `<span class="num">${a.num}</span>` : "";
+      return `<span class="mon-pill miss">${numTxt} ${a.nome}</span>`;
+    }).join("");
+  }
+}
+
+// Faz o cronômetro correr: re-renderiza a cada segundo.
+setInterval(renderTudo, 1000);
+renderTudo();
+</script>
+</body>
+</html>

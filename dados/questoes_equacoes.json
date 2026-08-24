@@ -1792,5 +1792,143 @@
         "enunciado": "A <b>metade</b> de uma quantia <b>mais R${B}</b> resulta em <b>R${C}</b>. Chamando de <b>x</b> a quantia, qual equação representa o problema?"
       }
     ]
+  },
+  {
+    "id": "EQ-DIG-3T",
+    "dificuldade": 3,
+    "tipo": "numerica",
+    "tag": "Encontre x · escreva o resultado",
+    "enunciado": "Resolva a equação e escreva o valor de <b>x</b>:<br><span class='eq-destaque'>{A}x − {B} = {D}x + {E}</span>",
+    "variaveis": {
+      "A": [
+        7,
+        8,
+        9
+      ],
+      "D": [
+        2,
+        3
+      ],
+      "X": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "B": [
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "resposta_expr": "X",
+    "montar_ctx": "E = (A - D)*X - B",
+    "instrucao": "Junte as letras de um lado e os números do outro. Digite apenas o número."
+  },
+  {
+    "id": "EQ-DIG-4T",
+    "dificuldade": 2,
+    "tipo": "numerica",
+    "tag": "Encontre x · escreva o resultado",
+    "enunciado": "Resolva a equação e escreva o valor de <b>x</b>:<br><span class='eq-destaque'>{A}x − {B} = {D}x − {E}</span>",
+    "variaveis": {
+      "A": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "D": [
+        2,
+        3,
+        4
+      ],
+      "X": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "E": [
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "resposta_expr": "X",
+    "montar_ctx": "B = (A - D)*X + E",
+    "instrucao": "Junte as letras de um lado e os números do outro. Digite apenas o número."
+  },
+  {
+    "id": "EQ-MUL-3T",
+    "dificuldade": 3,
+    "tipo": "multipla_num",
+    "tag": "Encontre x · marque a alternativa",
+    "enunciado": "Qual é o valor de <b>x</b> na equação abaixo?<br><span class='eq-destaque'>{A}x + {B} = {D}x + {E}</span>",
+    "variaveis": {
+      "A": [
+        7,
+        8,
+        9,
+        10
+      ],
+      "D": [
+        2,
+        3,
+        4
+      ],
+      "X": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "B": [
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "resposta_expr": "X",
+    "montar_ctx": "E = (A - D)*X + B",
+    "prefixo_opcao": "x = "
+  },
+  {
+    "id": "EQ-MUL-4T",
+    "dificuldade": 2,
+    "tipo": "multipla_num",
+    "tag": "Encontre x · marque a alternativa",
+    "enunciado": "Qual é o valor de <b>x</b> na equação abaixo?<br><span class='eq-destaque'>{A}x = {B}x + {C}</span>",
+    "variaveis": {
+      "A": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "B": [
+        2,
+        3,
+        4
+      ],
+      "X": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "dummy": [
+        0
+      ]
+    },
+    "resposta_expr": "X",
+    "montar_ctx": "C = (A - B)*X",
+    "prefixo_opcao": "x = "
   }
 ]

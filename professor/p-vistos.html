@@ -46,6 +46,7 @@
   .atv-corr{font-size:9px;font-weight:700;margin-top:4px;padding:1px 5px;border-radius:5px;display:inline-block}
   .atv-corr.ok{background:var(--green-pale);color:var(--green)}
   .atv-corr.no{background:rgba(255,255,255,.05);color:var(--text-muted)}
+  .atv-corr.teoria{background:var(--green-pale);color:var(--green)}
   .grade th.col-tot{min-width:70px;text-align:center;padding:10px 6px;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px}
   .grade td.cel{text-align:center;padding:4px;cursor:pointer}
   .aluno-num{display:inline-block;width:22px;color:var(--text-muted);font-size:11px;font-family:'Orbitron',monospace}
@@ -288,25 +289,13 @@ async function carregar(){
       .sort((x,y)=> (x.ordem-y.ordem) || (x.data<y.data?-1:1));
     atual = { atividades, marcas: raw.marcas||{} };
 
-    // ── Sincronização de material pela BIBLIOTECA (fonte da verdade) ──
-    // Se o nome da atividade casa com um item da biblioteca, o vínculo é sempre
-    // atualizado para o arquivo ATUAL desse item (grava no banco só quando muda).
-    // Atividades cujo nome NÃO casa com nenhum material mantêm o que o professor pôs.
-    try{
-      await carregarBiblioteca();
-      if(biblioteca.length){
-        const porNome = {};
-        biblioteca.forEach(b=>{ if(b.arquivo) porNome[normNome(b.nome)] = b; });
-        for(const a of atividades){
-          const b = porNome[normNome(a.nome)];
-          if(!b) continue;                              // sem correspondência → respeita professor
-          const url = "/conteudos/" + b.arquivo;
-          if(a.materialRef === url && a.materialTitulo === b.nome) continue;  // já está certo
-          a.materialRef = url; a.materialTitulo = b.nome; a.temMaterial = true;
-          await update(ref(db, `${P(turma,bimestre)}/atividades/${a.id}`), { materialRef:url, materialTitulo:b.nome });
-        }
-      }
-    }catch(eV){ console.warn("Sincronização de material:", eV); }
+// Biblioteca disponível para consulta (abrir material, seletor etc.).
+    // IMPORTANTE: NÃO sincronizamos/sobrescrevemos o material por nome aqui.
+    // Isso apagava a escolha manual do professor ao salvar (o vínculo voltava
+    // para o arquivo de mesmo nome). A escolha do professor é a fonte da verdade;
+    // a atualização por renomeação de arquivo é feita na leitura do aluno
+    // (a-ficha/a-aulas) e na ferramenta "Sincronizar nomes/links".
+    try{ await carregarBiblioteca(); }catch(eV){ console.warn("Biblioteca:", eV); }
     // chamada: só chaves de data (YYYY-MM-DD); valor {aluno:true} = falta
     chamada = {};
     const rc = snapCh.exists() ? snapCh.val() : {};
@@ -321,6 +310,19 @@ async function carregar(){
   render();
 }
 
+// Tipo da aula ("teorica"/"exercicios") a partir do material vinculado na Biblioteca.
+function _refBase(r){ return (r||"").toString().trim().replace(/[?#].*$/,"").toLowerCase(); }
+function tipoDaAtividade(atv){
+  const rp = _refBase(atv.materialRef);
+  let b = null;
+  if(rp) b = biblioteca.find(x=> _refBase(x.ref)===rp);
+  if(!b) b = biblioteca.find(x=> x.arquivo && normNome(x.nome)===normNome(atv.nome));
+  if(!b && atv.materialTitulo) b = biblioteca.find(x=> x.arquivo && normNome(x.nome)===normNome(atv.materialTitulo));
+  if(b) return b.tipo || "";
+  const n = normNome(atv.nome);
+  if(/teorica|teoria/.test(n)) return "teorica";
+  return "";
+}
 function render(){
   // topo
   document.getElementById("selTurma").innerHTML =
@@ -373,7 +375,7 @@ function render(){
       <div class="atv-nome">${atv.nome}${mat}</div>
       <div class="atv-data">${fmtData(atv.data)}${atv.obs?` <span title="${atv.obs.replace(/"/g,'&quot;')}">📝</span>`:""}</div>
       <div class="atv-pct">${done}/${alunosTurma.length}</div>
-      <div class="atv-corr ${atv.corrigido?"ok":"no"}">${atv.corrigido?"✔ corrigido":"✗ não corrigido"}</div></th>`;
+      ${tipoDaAtividade(atv)==="teorica" ? `<div class="atv-corr teoria">📘 teoria</div>` : `<div class="atv-corr ${atv.corrigido?"ok":"no"}">${atv.corrigido?"✔ corrigido":"✗ não corrigido"}</div>`}</th>`;
   });
   html += `<th class="col-tot">Total</th></tr></thead><tbody>`;
 
@@ -557,7 +559,7 @@ window.abrirMenuCol = function(id){
   document.getElementById("btnAbrirMat").style.display = atv.temMaterial ? "" : "none";
   document.getElementById("btnRemMat").style.display  = atv.temMaterial ? "" : "none";
   const _bc = document.getElementById("btnCorrigido");
-  if (_bc) _bc.textContent = atv.corrigido ? "↩️ Marcar como NÃO corrigido" : "✔️ Marcar como corrigido";
+  if (_bc){ _bc.style.display = tipoDaAtividade(atv)==="teorica" ? "none" : ""; _bc.textContent = atv.corrigido ? "↩️ Marcar como NÃO corrigido" : "✔️ Marcar como corrigido"; }
   document.getElementById("modalCol").classList.add("open");
 };
 
@@ -566,8 +568,10 @@ window.abrirMaterial = function(){
   const atv=atual.atividades.find(a=>a.id===atvSel);
   if(!atv){ toast("Sem material", true); return; }
   let url = atv.materialRef;
-  const b = biblioteca.find(x=>x.arquivo && normNome(x.nome)===normNome(atv.nome));
-  if(b) url = "/conteudos/" + b.arquivo;   // biblioteca manda
+  if(!url){
+    const b = biblioteca.find(x=>x.arquivo && normNome(x.nome)===normNome(atv.nome));
+    if(b) url = "/conteudos/" + b.arquivo;   // só se não houver vínculo do professor
+  }
   if(!url){ toast("Sem material", true); return; }
   window.open(url, "_blank");
 };

@@ -162,6 +162,15 @@ export function renderSidebarAluno(containerId, activePage) {
       </button>
     </div>`;
   setupMobileNav(containerId);
+  // Garante que o botão "Sair" da sidebar funcione em TODAS as páginas do aluno,
+  // mesmo que a página não defina seu próprio window.sair (ou falhe antes disso).
+  // Páginas que definem seu próprio window.sair depois desta chamada continuam
+  // sobrescrevendo este padrão normalmente.
+  window.sair = () => {
+    try { import('/js/presenca.js').then(m => m.encerrarPresenca && m.encerrarPresenca()).catch(() => {}); } catch (_) {}
+    clearSession();
+    window.location.href = "/index.html";
+  };
   injetarFaixaDupla();
   if (!isMT && alunos.length > 0) {
     const _sessUid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
@@ -450,6 +459,7 @@ export function renderSidebarProfessor(containerId, activePage) {
     { id:"aulas",        href:"/professor/p-aulas.html",      label:"Diário de Aulas",   icon:`<path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H6V4h5v8l2.5-1.5L16 12V4h2v16z"/>` },
     { id:"tempos_treino", href:"/professor/p-tempos-treino.html", label:"Tempos do Treino", icon:`<path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>` },
     { id:"frequencia",   href:"/professor/p-frequencia.html", label:"Frequência",        icon:`<path d="M22 7h-9v2h9V7zm0 8h-9v2h9v-2zM5.54 11L2 7.46l1.41-1.41 2.12 2.12 4.24-4.24 1.41 1.41L5.54 11zm0 8L2 15.46l1.41-1.41 2.12 2.12 4.24-4.24 1.41 1.41L5.54 19z"/>` },
+    { id:"monitor_ativ", href:"/professor/p-monitor-atividade.html", label:"Monitor da Atividade", icon:`<path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>` },
     { id:"conteudos",    href:"/professor/p-conteudos.html",  label:"Biblioteca",        icon:`<path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/>` },
     { id:"mapeamento",   href:"/professor/mapeamento.html",   label:"Mapa de Sala",    icon:`<path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/>` },
     { id:"historico",    href:"/professor/p-historico.html",    label:"Histórico Geral", icon:`<path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21L13 13.04V8h-1z"/>` },
@@ -491,4 +501,11 @@ export function renderSidebarProfessor(containerId, activePage) {
       </button>
     </div>`;
   setupMobileNav(containerId);
+  // Rede de segurança: botão "Sair" funciona mesmo se a página não definir window.sair.
+  // Páginas que definem o seu próprio window.sair depois desta chamada o sobrescrevem.
+  window.sair = () => {
+    try { import('/js/presenca.js').then(m => m.encerrarPresenca && m.encerrarPresenca()).catch(() => {}); } catch (_) {}
+    clearSession();
+    window.location.href = "/index.html";
+  };
 }

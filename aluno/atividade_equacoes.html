@@ -138,8 +138,8 @@ import { requireAluno, getSession, setSession, renderSidebarAluno, clearSession,
    CONFIGURAÇÃO — Atividade: Equações do 1º Grau
    ════════════════════════════════════════════════════════════ */
 const ARQUIVO_QUESTOES_EQ = "/dados/questoes_equacoes.json";
-const TEMPO_ALVO_SEG  = 15 * 60;   // 15 min — tempo previsto/recomendado
-const TEMPO_MAX_SEG   = 20 * 60;   // 20 min — encerra automaticamente
+const TEMPO_ALVO_SEG  = 15 * 60;   // 15 min — tempo total da atividade
+const TEMPO_MAX_SEG   = 15 * 60;   // 15 min — encerra automaticamente
 const MAX_TENTATIVAS  = 1;         // 1 tentativa por dupla/aluno
 
 /* ── Detecta Modo Teste (professor abriu via botão "Testar") ── */
@@ -169,12 +169,77 @@ const turma  = sess.turma || "TESTE";
 const dupla = ehTeste ? null : lerDuplaAtiva();
 
 renderSidebarAluno("sidebar", "atividades");
-window.sair = () => {
+
+// Executa a saída de fato (limpa sessão e navega ao destino).
+function _executarSaida(destino){
+  saindo = true; // evita o beforeunload nativo e o interceptor de links
   localStorage.removeItem("modoTeste");
   import('/js/presenca.js').then(m=>m.encerrarPresenca()).catch(()=>{});
   clearSession();
-  window.location.href = ehTeste ? "/professor/p-atividades.html" : "/index.html";
+  window.location.href = destino || (ehTeste ? "/professor/p-atividades.html" : "/index.html");
+}
+
+window.sair = () => {
+  const destino = ehTeste ? "/professor/p-atividades.html" : "/index.html";
+  // Se a atividade está em andamento, pede confirmação antes de encerrar.
+  if (!ehTeste && typeof jogo !== "undefined" && jogo && !jogo.finalizado) {
+    mostrarConfirmSaida(destino);
+    return;
+  }
+  _executarSaida(destino);
 };
+
+// Modal de confirmação de saída (com botão). `destino` = para onde ir se confirmar.
+function mostrarConfirmSaida(destino){
+  if (document.getElementById("_confirm-saida")) return; // já aberto
+  const ov = document.createElement("div");
+  ov.id = "_confirm-saida";
+  ov.style.cssText =
+    "position:fixed;inset:0;z-index:10000;background:rgba(10,6,20,.82);" +
+    "display:flex;align-items:center;justify-content:center;padding:20px;" +
+    "backdrop-filter:blur(3px);font-family:'Inter',sans-serif;";
+  ov.innerHTML = `
+    <div class="card" style="max-width:390px;width:100%;text-align:center;padding:26px 22px;
+         border:1.5px solid var(--red);">
+      <div style="font-size:36px;margin-bottom:8px">🚪</div>
+      <h2 style="margin:0 0 8px;font-size:19px;color:var(--red)">Sair da atividade?</h2>
+      <p style="margin:0 0 20px;font-size:14px;line-height:1.5;color:var(--text)">
+        Se você sair agora, a tentativa será <b>finalizada</b> e contará como sua
+        <b>única tentativa</b>. Você <b>não poderá tentar de novo</b>.
+      </p>
+      <div style="display:flex;gap:10px">
+        <button id="_cs-cancelar"
+          style="flex:1;background:var(--bg);color:var(--text);border:1.5px solid var(--border);
+                 border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;
+                 font-family:'Inter',sans-serif;">
+          Continuar na prova
+        </button>
+        <button id="_cs-sair"
+          style="flex:1;background:var(--red);color:#fff;border:none;border-radius:12px;
+                 padding:13px;font-size:15px;font-weight:700;cursor:pointer;
+                 font-family:'Inter',sans-serif;box-shadow:0 4px 16px rgba(220,38,38,.3);">
+          Sair e finalizar
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  const btnCancelar = ov.querySelector("#_cs-cancelar");
+  const btnSair     = ov.querySelector("#_cs-sair");
+  setTimeout(() => btnCancelar.focus(), 50);
+  btnCancelar.addEventListener("click", () => ov.remove());
+  btnSair.addEventListener("click", () => {
+    ov.remove();
+    if (typeof finalizar === "function" && !jogo.finalizado) {
+      // registra o resultado como finalizado por saída e então navega
+      saindo = true;
+      Promise.resolve(finalizar("saiu")).finally(() => _executarSaida(destino));
+      // fallback caso finalizar não navegue sozinho
+      setTimeout(() => _executarSaida(destino), 1500);
+    } else {
+      _executarSaida(destino);
+    }
+  });
+}
 
 /* ── Atividade alvo ── */
 if (!nomeAtivParam) { location.href = ehTeste ? "/professor/p-atividades.html" : "/aluno/a-atividades.html"; throw new Error(); }
@@ -219,6 +284,70 @@ if (ehTeste) {
 /* ── Participantes (dupla = os dois nomes; teste = só PROFESSOR_TESTE) ── */
 const participantes = [...alunos];
 if (dupla?.nome && !participantes.includes(dupla.nome)) participantes.push(dupla.nome);
+
+/* ── Trava de senha (professor libera na hora) ──
+   Pedida ANTES de carregar/registrar, para senha errada não consumir tentativa.
+   Desativada no Modo Teste. */
+if (!ehTeste) {
+  const SENHA_ATIV = "242624";
+  const ok = await pedirSenhaAtividade(SENHA_ATIV);
+  if (!ok) {
+    location.href = "/aluno/a-atividades.html";
+    throw new Error("senha não informada");
+  }
+}
+
+function pedirSenhaAtividade(senhaCorreta){
+  return new Promise((resolve) => {
+    const ov = document.createElement("div");
+    ov.style.cssText =
+      "position:fixed;inset:0;z-index:9999;background:rgba(10,6,20,.82);" +
+      "display:flex;align-items:center;justify-content:center;padding:20px;" +
+      "backdrop-filter:blur(3px);font-family:'Inter',sans-serif;";
+    ov.innerHTML = `
+      <div class="card" style="max-width:360px;width:100%;text-align:center;padding:26px 22px;">
+        <div style="font-size:34px;margin-bottom:6px">🔒</div>
+        <h2 style="margin:0 0 4px;font-size:19px;color:var(--text)">Senha da atividade</h2>
+        <p style="margin:0 0 16px;font-size:13px;color:var(--text-muted)">
+          O professor vai informar a senha para iniciar.
+        </p>
+        <input id="_senha-inp" type="tel" inputmode="numeric" autocomplete="off"
+          placeholder="• • • • • •" maxlength="12"
+          style="width:100%;box-sizing:border-box;text-align:center;letter-spacing:6px;
+                 font-size:22px;font-weight:700;padding:12px;border-radius:12px;
+                 border:1.5px solid var(--border);background:var(--bg);color:var(--text);
+                 font-family:'Inter',sans-serif;outline:none;">
+        <div id="_senha-erro" style="min-height:18px;margin-top:8px;font-size:13px;
+             font-weight:600;color:var(--red);"></div>
+        <button id="_senha-ok"
+          style="width:100%;margin-top:6px;background:linear-gradient(135deg,var(--purple-dark),var(--purple));
+                 color:#fff;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;
+                 cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 4px 16px rgba(108,0,212,.3);">
+          Entrar
+        </button>
+      </div>`;
+    document.body.appendChild(ov);
+
+    const inp  = ov.querySelector("#_senha-inp");
+    const erro = ov.querySelector("#_senha-erro");
+    const btn  = ov.querySelector("#_senha-ok");
+    setTimeout(() => inp.focus(), 50);
+
+    const tentar = () => {
+      if (inp.value.trim() === senhaCorreta) {
+        ov.remove();
+        resolve(true);
+      } else {
+        erro.textContent = "Senha incorreta.";
+        inp.value = "";
+        inp.focus();
+      }
+    };
+    btn.addEventListener("click", tentar);
+    inp.addEventListener("keydown", (e) => { if (e.key === "Enter") tentar(); });
+    inp.addEventListener("input", () => { erro.textContent = ""; });
+  });
+}
 
 /* ── Carregar modelos de questão ── */
 const caminho = ARQUIVO_QUESTOES_EQ;
@@ -399,7 +528,11 @@ for (const al of jogo.alunos) {
     const id = await addResultado({
       aluno: al, turma: jogo.turma, atividade: jogo.nome,
       concluido: false, pontuacao: 0, acertos: 0, erros: 0, respondidas: 0,
-      modo: "equacoes_plus", ...(isModoTeste() ? { modo_teste:true } : {})
+      modo: "equacoes_plus",
+      inicioTs: jogo.inicioTs,            // ms — quando o aluno começou (p/ monitor)
+      duracaoSeg: TEMPO_MAX_SEG,          // duração total da prova (p/ monitor)
+      emAndamento: true,                  // flag p/ a página de acompanhamento
+      ...(isModoTeste() ? { modo_teste:true } : {})
     });
     idsRegistro[al] = id;
   } catch(e) { console.warn("[addResultado inicial]", e); }
@@ -409,7 +542,7 @@ for (const al of jogo.alunos) {
 document.getElementById("topbar-title").textContent = jogo.nome;
 const pctLabel = percentualNota < 100 ? ` · ${percentualNota}% da nota` : "";
 document.getElementById("topbar-sub").textContent =
-  `Turma ${turma}${dupla?.nome ? ` · Dupla: ${alunos[0]} + ${dupla.nome}` : ""}${pctLabel} · ${TEMPO_ALVO_SEG/60} min (máx ${TEMPO_MAX_SEG/60})`;
+  `Turma ${turma}${dupla?.nome ? ` · Dupla: ${alunos[0]} + ${dupla.nome}` : ""}${pctLabel} · ${TEMPO_MAX_SEG/60} min · 1 tentativa`;
 
 /* ════════════════════════════════════════════════════════════
    TIMER — alvo 15 min, encerramento automático aos 20 min
@@ -431,13 +564,12 @@ function iniciarTimer(){
       el.classList.toggle("critico", restanteMax <= 2*60);
     }
     if (mini){ mini.style.display="block"; mini.textContent = txt; }
-    // Aviso quando passa do tempo alvo (15 min) mas ainda dentro do máximo
     const sub = document.getElementById("timer-sub");
     if (sub){
-      if (decor >= TEMPO_ALVO_SEG && restanteMax > 0)
-        sub.textContent = "⏰ Tempo recomendado encerrado — finalize logo!";
+      if (restanteMax <= 2*60 && restanteMax > 0)
+        sub.textContent = "⏰ Últimos minutos — finalize logo!";
       else
-        sub.textContent = `Tempo recomendado: ${TEMPO_ALVO_SEG/60} min`;
+        sub.textContent = `Tempo total: ${TEMPO_MAX_SEG/60} min`;
     }
     if (restanteMax <= 0 && !jogo.finalizado) {
       finalizar("tempo");
@@ -448,30 +580,112 @@ function iniciarTimer(){
 }
 
 /* ════════════════════════════════════════════════════════════
-   BLOQUEIO DE SAÍDA — sair da página encerra a atividade
+   BLOQUEIO DE SAÍDA — sistema de avisos
+   A 1ª saída (trocar de aba / minimizar / alt-tab) apenas AVISA.
+   A 2ª saída ENCERRA a atividade. O tempo segue correndo normalmente.
    (desativado no Modo Teste para o professor poder navegar à vontade)
    ════════════════════════════════════════════════════════════ */
 let saindo = false;
+let saidasDetectadas = 0;
+const MAX_SAIDAS = 1;              // nº de saídas permitidas antes de encerrar
+let _saidaEmCurso = false;         // trava p/ não contar visibilitychange + blur juntos
+
+function registrarSaida(){
+  if (jogo.finalizado || saindo || _saidaEmCurso) return;
+  _saidaEmCurso = true;
+  saidasDetectadas++;
+
+  if (saidasDetectadas > MAX_SAIDAS) {
+    finalizar("saiu");
+    return;
+  }
+  // Ainda tem chance: mostra modal com botão ao voltar o foco
+  const avisar = () => {
+    if (jogo.finalizado) return;
+    mostrarAvisoSaida(() => { _saidaEmCurso = false; });
+  };
+  // mostra o aviso quando o aluno retorna à aba
+  if (document.visibilityState === "visible") {
+    setTimeout(avisar, 50);
+  } else {
+    document.addEventListener("visibilitychange", function _once(){
+      if (document.visibilityState === "visible"){
+        document.removeEventListener("visibilitychange", _once);
+        setTimeout(avisar, 50);
+      }
+    });
+  }
+}
+
+// Modal de aviso de saída (com botão "Entendi, continuar")
+function mostrarAvisoSaida(onFechar){
+  if (document.getElementById("_aviso-saida")) return; // já aberto
+  const ov = document.createElement("div");
+  ov.id = "_aviso-saida";
+  ov.style.cssText =
+    "position:fixed;inset:0;z-index:9999;background:rgba(10,6,20,.82);" +
+    "display:flex;align-items:center;justify-content:center;padding:20px;" +
+    "backdrop-filter:blur(3px);font-family:'Inter',sans-serif;";
+  ov.innerHTML = `
+    <div class="card" style="max-width:380px;width:100%;text-align:center;padding:26px 22px;
+         border:1.5px solid var(--red);">
+      <div style="font-size:36px;margin-bottom:8px">⚠️</div>
+      <h2 style="margin:0 0 8px;font-size:19px;color:var(--red)">Cuidado ao sair!</h2>
+      <p style="margin:0 0 18px;font-size:14px;line-height:1.5;color:var(--text)">
+        Você saiu da atividade. Se sair de novo — trocar de aba, minimizar ou abrir
+        outro app — a tentativa será <b>finalizada automaticamente</b> e você
+        <b>não poderá tentar de novo</b>.<br><br>
+        Fique nesta tela até terminar.
+      </p>
+      <button id="_aviso-ok"
+        style="width:100%;background:linear-gradient(135deg,var(--purple-dark),var(--purple));
+               color:#fff;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;
+               cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 4px 16px rgba(108,0,212,.3);">
+        Entendi, continuar
+      </button>
+    </div>`;
+  document.body.appendChild(ov);
+  const btn = ov.querySelector("#_aviso-ok");
+  setTimeout(() => btn.focus(), 50);
+  btn.addEventListener("click", () => {
+    ov.remove();
+    if (typeof onFechar === "function") onFechar();
+  });
+}
+
 if (!ehTeste) {
-  // Aviso nativo ao tentar fechar/recarregar
+  // Aviso nativo ao tentar fechar/recarregar (rede de segurança)
   window.addEventListener("beforeunload", (e) => {
     if (jogo.finalizado || saindo) return;
     e.preventDefault();
     e.returnValue = "";
   });
-  // Trocar de aba / minimizar / bloquear tela → encerra
+  // Trocar de aba / minimizar / bloquear tela
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden" && !jogo.finalizado && !saindo) {
-      finalizar("saiu");
-    }
+    if (document.visibilityState === "hidden") registrarSaida();
   });
-  // Perder o foco da janela → encerra (cobre alt-tab e troca de app)
+  // Perder o foco da janela (cobre alt-tab e troca de app)
   window.addEventListener("blur", () => {
     // pequeno atraso evita falso-positivo de cliques internos
     setTimeout(() => {
-      if (!document.hasFocus() && !jogo.finalizado && !saindo) finalizar("saiu");
+      if (!document.hasFocus()) registrarSaida();
     }, 300);
   });
+
+  // Clique em QUALQUER link de navegação interno (sidebar, etc.) → confirma saída.
+  document.addEventListener("click", (e) => {
+    if (jogo.finalizado || saindo) return;
+    const a = e.target.closest("a[href]");
+    if (!a) return;
+    const href = a.getAttribute("href");
+    // ignora âncoras, javascript:, abrir em nova aba e alvos externos
+    if (!href || href.startsWith("#") || href.startsWith("javascript:")) return;
+    if (a.target === "_blank") return;
+    // intercepta e pede confirmação
+    e.preventDefault();
+    e.stopPropagation();
+    mostrarConfirmSaida(a.href);
+  }, true); // capture: pega antes de qualquer handler do link
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -559,7 +773,7 @@ function render(){
         <div class="cp-panel">
           <div class="cp-panel-label">⏱ Tempo restante</div>
           <div class="cp-timer" id="timer-display">--:--</div>
-          <div class="cp-timer-sub" id="timer-sub">Tempo recomendado: ${TEMPO_ALVO_SEG/60} min</div>
+          <div class="cp-timer-sub" id="timer-sub">Tempo total: ${TEMPO_MAX_SEG/60} min</div>
         </div>
 
         ${dupla?.nome ? `<div class="cp-dupla-chip">👥 Em dupla com ${dupla.nome}</div>` : ""}
@@ -681,6 +895,8 @@ async function finalizar(motivo){
     const dadosFinais = {
       aluno: al, turma: jogo.turma, atividade: jogo.nome,
       concluido: true,
+      emAndamento: false,
+      fimTs: Date.now(),
       pontuacao: notaFinal,
       pontuacao_bruta: pontosBruto,
       acertos, erros, respondidas, total,

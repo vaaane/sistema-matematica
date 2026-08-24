@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sincronizar nomes/links com a Biblioteca</title>
+<style>
+  body{font-family:system-ui,sans-serif;background:#141026;color:#eee;margin:0;padding:24px;line-height:1.5}
+  h1{font-size:19px} h2{font-size:15px;margin-top:22px;color:#c79bff}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  select,button{background:#241a45;color:#fff;border:1px solid #443;border-radius:8px;padding:8px 12px;font-size:14px;cursor:pointer}
+  button.primary{background:#6c2bd0;border-color:#8b5cf6}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  label.chk{display:flex;gap:6px;align-items:center;font-size:13px;background:#1d1636;border:1px solid #332;border-radius:8px;padding:6px 10px;cursor:pointer}
+  table{border-collapse:collapse;width:100%;margin-top:8px;font-size:12.5px}
+  th,td{border:1px solid #332;padding:6px 9px;text-align:left;vertical-align:top}
+  th{background:#241a45}
+  code{background:#000;padding:1px 5px;border-radius:4px;font-size:11.5px;word-break:break-all}
+  .muted{color:#999}.small{font-size:11px}
+  select.map{min-width:280px;max-width:420px}
+  select.map.vazio{border-color:#b8465f}
+  .tag{display:inline-block;border-radius:6px;padding:1px 8px;font-size:11px;font-weight:700;white-space:nowrap}
+  .t-mud{background:#3a2a10;border:1px solid #b8862b;color:#ffcf7a}
+  .t-ok{background:#12331f;border:1px solid #2f8f52;color:#8ef0b0}
+  .t-sem{background:#3a1420;border:1px solid #b8465f;color:#ff9db3}
+  .resumo{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0}
+  .card{background:#1d1636;border:1px solid #332;border-radius:10px;padding:10px 14px;min-width:130px}
+  .card b{font-size:20px;display:block}
+  .banner{background:#1d1636;border:1px solid #4a3a7a;border-radius:10px;padding:12px 14px;font-size:13px;margin-bottom:16px}
+  .turmas{color:#9bb;font-size:11px}
+</style>
+</head>
+<body>
+<h1>🔗 Sincronizar nomes e links com a Biblioteca</h1>
+<div class="banner">
+  Cada aula de visto vira uma linha. Você escolhe, no <b>menu</b>, a qual item da <b>Biblioteca</b> ela corresponde.
+  Ao aplicar, o <b>nome</b>, o <b>título do material</b> e o <b>link (.html)</b> gravados passam a ser os da Biblioteca.
+  As aulas são <b>agrupadas por nome</b> — você mapeia uma vez e vale para <b>todas as turmas</b>. Nada é apagado; presenças/marcas não são tocadas.
+  <br><b>1)</b> Analisar &nbsp;<b>2)</b> conferir e escolher no menu &nbsp;<b>3)</b> Aplicar.
+</div>
+
+<div class="row">
+  <label>Turma: <select id="selTurma"></select></label>
+  <button onclick="analisar()">🔎 Analisar</button>
+  <button id="btnAplicar" class="primary" onclick="aplicar()" disabled>💾 Aplicar mapeamento</button>
+  <span id="status" class="muted"></span>
+</div>
+<div class="row">
+  <label class="chk"><input type="checkbox" id="optNome" checked> Atualizar também o <b>nome</b> da atividade (não só o material)</label>
+</div>
+
+<div id="resumo"></div>
+<div id="saida"></div>
+
+<script type="module">
+import { db } from "/js/firebase-config.js";
+import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ALUNOS_POR_TURMA, turmaAgora } from "/js/constants.js";
+
+const TURMAS = Object.keys(ALUNOS_POR_TURMA);
+const sel = document.getElementById("selTurma");
+sel.innerHTML = `<option value="__all__">Todas as turmas</option>` + TURMAS.map(t=>`<option value="${t}">${t}</option>`).join("");
+sel.value = "__all__";
+
+const $ = id => document.getElementById(id);
+const setStatus = t => { $("status").textContent = t; };
+const esc = s => (s||"").toString().replace(/[&<>"]/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+const base = p => (p||"").toString().split("/").pop();
+
+const normNome = s => (s||"").toString().toLowerCase()
+  .normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim();
+const bibUrl  = arq => { arq = arq||""; return arq ? (arq.startsWith("/") ? arq : "/conteudos/"+arq) : ""; };
+const normPath = p => { p=(p||"").toString().trim().replace(/[?#].*$/,""); if(!p) return ""; if(!p.startsWith("/")) p="/conteudos/"+p; return p.toLowerCase(); };
+const ehPath = r => typeof r==="string" && (r.startsWith("/") || /\.html?($|[?#])/i.test(r));
+
+let BIB = { porId:{}, porPath:{}, porNome:{}, lista:[], total:0 };
+async function carregarBiblioteca(){
+  const snap = await get(ref(db, "biblioteca"));
+  const porId={}, porPath={}, porNome={}, lista=[]; let total=0;
+  if(snap.exists()){
+    const v = snap.val();
+    for(const id in v){
+      const b = v[id]; if(!b) continue;
+      const url = bibUrl(b.arquivo);
+      const item = { id, nome:b.nome||"(sem nome)", arquivo:url };
+      porId[id]=item; lista.push(item); total++;
+      if(url) porPath[normPath(url)]=item;
+      if(b.nome) porNome[normNome(b.nome)]=item;
+    }
+  }
+  lista.sort((a,b)=> a.nome.localeCompare(b.nome,"pt"));
+  BIB = { porId, porPath, porNome, lista, total };
+}
+
+// palpite automático (só sugestão pré-selecionada; você decide no menu)
+function palpite(a){
+  const r0=a.materialRef||"";
+  if(ehPath(r0)){ const m=BIB.porPath[normPath(r0)]; if(m) return m.id; }
+  if(r0 && BIB.porId[r0]) return r0;
+  const m=BIB.porNome[normNome(a.materialTitulo)]||BIB.porNome[normNome(a.nome)];
+  return m ? m.id : "";
+}
+
+let GRUPOS = []; // { nome, membros:[{turma,bim,id,atual}], links:[], guessId }
+
+async function analisar(){
+  $("btnAplicar").disabled = true; GRUPOS=[];
+  setStatus("Carregando biblioteca…");
+  try{ await carregarBiblioteca(); }
+  catch(e){ setStatus("Erro ao ler a biblioteca: "+e.message); return; }
+  if(!BIB.total){ setStatus("Biblioteca vazia — cadastre aulas na página Biblioteca primeiro."); $("resumo").innerHTML=""; $("saida").innerHTML=""; return; }
+
+  const alvo = sel.value;
+  const turmas = alvo==="__all__" ? TURMAS : [alvo];
+
+  const mapa = new Map(); // key normNome -> grupo
+  let nAtiv=0;
+  for(const turma of turmas){
+    setStatus(`Lendo vistos/${turma}…`);
+    let snap; try{ snap = await get(ref(db, `vistos/${turma}`)); }catch(e){ console.warn(turma,e); continue; }
+    if(!snap.exists()) continue;
+    const porBim = snap.val();
+    for(const bim in porBim){
+      const ativs=(porBim[bim]&&porBim[bim].atividades)||{};
+      for(const id in ativs){
+        const a=ativs[id]||{}; nAtiv++;
+        const atual={ nome:a.nome||"", materialRef:a.materialRef||"", materialTitulo:a.materialTitulo||"" };
+        const key=normNome(atual.nome)||("__id__"+id);
+        if(!mapa.has(key)) mapa.set(key,{ nome:atual.nome||"(sem nome)", membros:[], links:new Set(), guessId:"" });
+        const g=mapa.get(key); g.membros.push({turma,bim,id,atual}); if(atual.materialRef) g.links.add(atual.materialRef);
+      }
+    }
+  }
+  GRUPOS = [...mapa.values()].map(g=>({ ...g, links:[...g.links] }));
+  GRUPOS.forEach(g=>{ g.guessId = palpite(g.membros[0].atual); });
+  GRUPOS.sort((a,b)=> a.nome.localeCompare(b.nome,"pt"));
+
+  setStatus(`${nAtiv} atividade(s) em ${GRUPOS.length} nome(s) distinto(s).`);
+  render();
+  $("btnAplicar").disabled = false;
+  atualizarContagem();
+}
+
+function optionsHTML(selId){
+  return `<option value="">— não alterar —</option>` +
+    BIB.lista.map(i=>`<option value="${i.id}"${i.id===selId?" selected":""}>${esc(i.nome)} · ${esc(base(i.arquivo))}</option>`).join("");
+}
+
+function render(){
+  if(!GRUPOS.length){ $("saida").innerHTML=`<p class="muted">Nenhuma atividade encontrada.</p>`; $("resumo").innerHTML=""; return; }
+  let html=`<table><tr>
+    <th style="width:90px">Situação</th>
+    <th>Nome atual (no banco)</th>
+    <th>Link atual</th>
+    <th>Item da Biblioteca (escolha)</th>
+    <th style="width:120px">Aparece em</th></tr>`;
+  GRUPOS.forEach((g,idx)=>{
+    const turmasTxt = [...new Set(g.membros.map(m=>m.turma))].sort().join(", ");
+    const linksTxt = g.links.length ? g.links.map(l=>`<code>${esc(l)}</code>`).join("<br>") : `<span class="muted">— sem link —</span>`;
+    const sit = g.guessId
+      ? `<span class="tag t-ok" id="sit-${idx}">sugerido</span>`
+      : `<span class="tag t-sem" id="sit-${idx}">escolher</span>`;
+    html+=`<tr>
+      <td>${sit}</td>
+      <td>${esc(g.nome)} <span class="small muted">(${g.membros.length})</span></td>
+      <td>${linksTxt}</td>
+      <td><select class="map${g.guessId?"":" vazio"}" id="sel-g${idx}" onchange="onMap(${idx})">${optionsHTML(g.guessId)}</select></td>
+      <td class="turmas">${esc(turmasTxt)}</td>
+    </tr>`;
+  });
+  html+=`</table>`;
+  $("saida").innerHTML=html;
+}
+
+function calcGrupo(idx){
+  const v=$("sel-g"+idx).value; if(!v) return {mapeado:false, mudar:0};
+  const target=BIB.porId[v]; if(!target) return {mapeado:false, mudar:0};
+  const optNome=$("optNome").checked;
+  let mudar=0;
+  GRUPOS[idx].membros.forEach(m=>{
+    const nNome=optNome?target.nome:m.atual.nome;
+    if(nNome!==m.atual.nome || target.nome!==m.atual.materialTitulo || target.arquivo!==m.atual.materialRef) mudar++;
+  });
+  return {mapeado:true, mudar};
+}
+
+window.onMap = function(idx){
+  const s=$("sel-g"+idx); s.classList.toggle("vazio", !s.value);
+  const sit=$("sit-"+idx);
+  if(sit){
+    const {mapeado,mudar}=calcGrupo(idx);
+    if(!mapeado){ sit.className="tag t-sem"; sit.textContent="escolher"; }
+    else if(mudar){ sit.className="tag t-mud"; sit.textContent=`altera ${mudar}`; }
+    else { sit.className="tag t-ok"; sit.textContent="já ok"; }
+  }
+  atualizarContagem();
+};
+
+function atualizarContagem(){
+  let grupos=0, ativs=0;
+  GRUPOS.forEach((g,idx)=>{ const c=calcGrupo(idx); if(c.mapeado && c.mudar){ grupos++; ativs+=c.mudar; } });
+  $("resumo").innerHTML=`<div class="resumo">
+    <div class="card"><b>${GRUPOS.length}</b> nomes distintos</div>
+    <div class="card"><b>${grupos}</b> mapeamentos que alteram</div>
+    <div class="card"><b>${ativs}</b> atividades serão alteradas</div>
+    <div class="card"><b>${BIB.total}</b> itens na biblioteca</div>
+  </div>`;
+}
+
+async function aplicar(){
+  const tarefas=[];
+  const optNome=$("optNome").checked;
+  GRUPOS.forEach((g,idx)=>{
+    const v=$("sel-g"+idx).value; if(!v) return;
+    const target=BIB.porId[v]; if(!target) return;
+    g.membros.forEach(m=>{
+      const nNome=optNome?target.nome:m.atual.nome;
+      const muda = nNome!==m.atual.nome || target.nome!==m.atual.materialTitulo || target.arquivo!==m.atual.materialRef;
+      if(muda) tarefas.push({ turma:m.turma, bim:m.bim, id:m.id, nome:nNome, materialTitulo:target.nome, materialRef:target.arquivo });
+    });
+  });
+  if(!tarefas.length){ setStatus("Nada para aplicar — escolha itens no menu."); return; }
+  if(!confirm(`Confirmar? ${tarefas.length} atividade(s) terão nome/material regravados conforme a Biblioteca.\n\nGrava no banco. Presenças e marcas NÃO são alteradas.`)) return;
+
+  $("btnAplicar").disabled=true;
+  let ok=0, erro=0;
+  for(let i=0;i<tarefas.length;i++){
+    const t=tarefas[i]; setStatus(`Aplicando ${i+1}/${tarefas.length}…`);
+    try{ await update(ref(db, `vistos/${t.turma}/${t.bim}/atividades/${t.id}`), { nome:t.nome, materialTitulo:t.materialTitulo, materialRef:t.materialRef }); ok++; }
+    catch(e){ console.error("Falha", t, e); erro++; }
+  }
+  setStatus(`Concluído: ${ok} atualizada(s)${erro?`, ${erro} com erro`:""}. Reanalisando…`);
+  await analisar();
+}
+
+window.analisar = analisar;
+window.aplicar = aplicar;
+</script>
+</body>
+</html>

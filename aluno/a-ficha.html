@@ -94,8 +94,8 @@
   .ativ-headline{display:flex;align-items:center;gap:9px;flex-wrap:wrap;row-gap:5px}
   .ativ-tag{font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:3px 9px;border-radius:6px;border:1px solid var(--border);color:var(--text-muted);background:transparent}
   .ativ-tag.teorica{background:rgba(155,48,255,.16);border-color:rgba(155,48,255,.4);color:#c79bff}
-  .ativ-tag.exercicios{background:rgba(96,165,250,.16);border-color:rgba(96,165,250,.4);color:#8ec0ff}
-  .ativ-tag.projeto{background:rgba(240,165,0,.16);border-color:rgba(240,165,0,.4);color:#f5c451}
+  .ativ-tag.exercicios{background:rgba(240,165,0,.16);border-color:rgba(240,165,0,.4);color:#f0a500}
+  .ativ-tag.projeto{background:rgba(45,212,191,.16);border-color:rgba(45,212,191,.4);color:#5eead4}
   .ativ-nome{font-size:14px;font-weight:700;line-height:1.25;color:var(--text);min-width:0}
   .ativ-meta{display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap}
   .ativ-data{font-size:11.5px;color:var(--text-muted);display:inline-flex;align-items:center;gap:5px}
@@ -207,6 +207,7 @@
 <script type="module">
 import { numeroChamada, BIMESTRES, bimestreAtual, dentroDoAtestado, normalizarAtestados, aulasNoDia } from "/js/constants.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+import { indexarBiblioteca, resolverAula, tipoInfo } from "/js/biblioteca.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -293,22 +294,28 @@ async function carregar(){
     return;
   }
 
+  // (resolvedor de material/tipo centralizado em /js/biblioteca.js)
+
   try{
     const _uid = (turma + '_' + aluno).replace(/[.#$[\]/\s]/g, '_');
     const _bimN = bimestreAtual();
-    const [sV, sC, sO, sA, sTab, sNeg] = await Promise.all([
+    const [sV, sC, sO, sA, sTab, sNeg, sBib] = await Promise.all([
       get(ref(db, `vistos/${turma}/${bimestre}`)),
       get(ref(db, `chamada/${turma}/${bimestre}`)),
       get(ref(db, `mapeamento_salas/${turma}/anotacoes`)),
       get(ref(db, `atestados/${turma}`)),
       get(ref(db, (_bimN <= 2 ? `tabuada_niveis/${_uid}` : `tabuada_niveis_b/${_bimN}/${_uid}`))).catch(()=>null),
       get(ref(db, (_bimN <= 2 ? `tabuada_negativos_niveis/${_uid}` : `tabuada_negativos_niveis_b/${_bimN}/${_uid}`))).catch(()=>null),
+      get(ref(db, "biblioteca")),
     ]);
+    const _bibMap = {};
+    if (sBib && sBib.exists()) { const _bv=sBib.val(); for(const k in _bv){ _bibMap[k]={nome:_bv[k].nome||"", arquivo:_bv[k].arquivo||"", tipo:_bv[k].tipo||""}; } }
+    const _bibIdx = indexarBiblioteca(_bibMap);
     nivelTab = sTab?.exists() ? (sTab.val().melhor_nivel || sTab.val().nivel_atual || 0) : 0;
     nivelNeg = sNeg?.exists() ? (sNeg.val().melhor_nivel || sNeg.val().nivel_atual || 0) : 0;
     const rv = sV.exists()?sV.val():{};
     atividades = Object.entries(rv.atividades||{})
-      .map(([id,a])=>({id, nome:a.nome||"(sem nome)", data:a.data||"", ordem:a.ordem||0, materialRef:a.materialRef||"", materialTitulo:a.materialTitulo||"", tipo:tipoDe(a.nome||"")}))
+      .map(([id,a])=>{ const _r=resolverAula({materialRef:a.materialRef||"", materialTitulo:a.materialTitulo||"", nome:a.nome||""}, _bibIdx); return {id, nome:_r.nome||a.nome||"(sem nome)", data:a.data||"", ordem:a.ordem||0, materialRef:_r.url, materialTitulo:_r.nome, tipo:_r.tipo}; })
       .sort((x,y)=> (x.ordem-y.ordem) || (x.data<y.data?-1:1));
     atividades.forEach((a,i)=>{ a.num = String(a.ordem || (i+1)).padStart(2,"0"); });
     marcas = rv.marcas||{};

@@ -1988,9 +1988,15 @@ const BANCO = [
     "dificuldade": 2,
     "tipo": "numerica",
     "tag": "Encontre x · escreva o resultado",
-    "enunciado": "Resolva a equação e escreva o valor de <b>x</b>:<br><span class='eq-destaque'>{A}(x + {B}) = {C}</span>",
+    "enunciado": "Resolva a equação e escreva o valor de <b>x</b>:<br><span class='eq-destaque'>{A}x − {B} = {D}x − {E}</span>",
     "variaveis": {
       "A": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "D": [
         2,
         3,
         4
@@ -1999,17 +2005,19 @@ const BANCO = [
         3,
         4,
         5,
-        6
+        6,
+        7
       ],
-      "B": [
-        1,
+      "E": [
         2,
-        3
+        3,
+        4,
+        5
       ]
     },
     "resposta_expr": "X",
-    "montar_ctx": "C = A*(X + B)",
-    "instrucao": "Primeiro resolva o parêntese (distributiva). Digite apenas o número."
+    "montar_ctx": "B = (A - D)*X + E",
+    "instrucao": "Junte as letras de um lado e os números do outro. Digite apenas o número."
   },
   {
     "id": "EQ-MUL-3T",
