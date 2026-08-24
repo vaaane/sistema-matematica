@@ -208,6 +208,7 @@ async function toggleFalta(data, aluno){
   try{ await set(ref(db, `chamada/${turma}/${bimestre}/${data}/${aluno}`), prox || null); }
   catch(e){ console.error(e); }
   if(prox === "matando") { registrarOcorrenciaMatando(data, aluno).catch(e=>console.error(e)); }
+  else if(atual === "matando") { removerOcorrenciaMatando(data, aluno).catch(e=>console.error(e)); }
   render();
 }
 
@@ -229,6 +230,26 @@ async function registrarOcorrenciaMatando(data, aluno){
   if(jaTem) return;
   registros.push({ ts, ocorrencias:["Matando aula"], obs:`Matando aula em ${fmtData(data)}` });
   await update(nodeRef, { nome: aluno, registros });
+}
+
+// Remove a ocorrência de "Matando aula" daquele dia quando o aluno sai do estado M.
+// Só apaga registros cuja única ocorrência é "Matando aula" (não mexe em anotações
+// manuais que por acaso tenham outras tags/obs junto).
+async function removerOcorrenciaMatando(data, aluno){
+  const key = btoa(unescape(encodeURIComponent(aluno)));
+  const nodeRef = ref(db, `mapeamento_salas/${turma}/anotacoes/${key}`);
+  const snap = await get(nodeRef);
+  if(!snap.exists()) return;
+  const entry = snap.val() || {};
+  const registros = Array.isArray(entry.registros) ? entry.registros : [];
+  const filtrados = registros.filter(r => {
+    const tags = r.ocorrencias || [];
+    const ehDoDia = new Date(r.ts||0).toISOString().slice(0,10) === data;
+    const soMatando = tags.length === 1 && tags[0] === "Matando aula";
+    return !(ehDoDia && soMatando);   // remove o registro auto de "Matando aula" deste dia
+  });
+  if(filtrados.length === registros.length) return;   // nada a remover
+  await update(nodeRef, { nome: aluno, registros: filtrados });
 }
 
 function render(){
