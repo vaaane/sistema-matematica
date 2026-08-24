@@ -312,16 +312,25 @@ async function carregar(){
 
 // Tipo da aula ("teorica"/"exercicios") a partir do material vinculado na Biblioteca.
 function _refBase(r){ return (r||"").toString().trim().replace(/[?#].*$/,"").toLowerCase(); }
-function tipoDaAtividade(atv){
+function bibDaAtividade(atv){
   const rp = _refBase(atv.materialRef);
   let b = null;
   if(rp) b = biblioteca.find(x=> _refBase(x.ref)===rp);
   if(!b) b = biblioteca.find(x=> x.arquivo && normNome(x.nome)===normNome(atv.nome));
   if(!b && atv.materialTitulo) b = biblioteca.find(x=> x.arquivo && normNome(x.nome)===normNome(atv.materialTitulo));
+  return b || null;
+}
+// Nome e tipo SEMPRE derivam da biblioteca quando há material vinculado (biblioteca é o centro).
+function tipoDaAtividade(atv){
+  const b = bibDaAtividade(atv);
   if(b) return b.tipo || "";
   const n = normNome(atv.nome);
   if(/teorica|teoria/.test(n)) return "teorica";
   return "";
+}
+function nomeDaAtividade(atv){
+  const b = bibDaAtividade(atv);
+  return (b && b.nome) || atv.nome || "";
 }
 function render(){
   // topo
@@ -372,7 +381,7 @@ function render(){
     const done = alunosTurma.filter(a=>m[a]===1||m[a]===2||m[a]===3).length;
     const mat = atv.temMaterial ? ` 📄` : "";
     html += `<th class="col-atv" data-id="${atv.id}" title="${(atv.conteudo||"").replace(/"/g,'&quot;')}">
-      <div class="atv-nome">${atv.nome}${mat}</div>
+      <div class="atv-nome">${nomeDaAtividade(atv)}${mat}</div>
       <div class="atv-data">${fmtData(atv.data)}${atv.obs?` <span title="${atv.obs.replace(/"/g,'&quot;')}">📝</span>`:""}</div>
       <div class="atv-pct">${done}/${alunosTurma.length}</div>
       ${tipoDaAtividade(atv)==="teorica" ? `<div class="atv-corr teoria">📘 teoria</div>` : `<div class="atv-corr ${atv.corrigido?"ok":"no"}">${atv.corrigido?"✔ corrigido":"✗ não corrigido"}</div>`}</th>`;
@@ -510,7 +519,7 @@ window.usarMaterial = function(){
   materialSel={ref:item.ref, titulo:item.nome, tipo:item.tipo};
   // Puxa as infos da aula — preenche só o que estiver vazio (não apaga o que você digitou)
   const _n=document.getElementById("mNome"), _c=document.getElementById("mConteudo");
-  if(!_n.value.trim()) _n.value=item.nome;
+  _n.value=item.nome;   // nome acompanha o material vinculado (biblioteca manda)
   if(!_c.value.trim()) _c.value=item.resumo || item.nome;
   document.getElementById("modalBib").classList.remove("open");
   renderMatSel();
@@ -536,12 +545,13 @@ window.salvarAtv = async function(){
   try{
     const matRef = materialSel ? materialSel.ref : null;
     const matTit = materialSel ? materialSel.titulo : null;
+    const nomeFinal = matRef ? (matTit || nome) : nome;   // com vínculo, o nome é o da biblioteca
     if(editandoId){
-      await update(ref(db, `${P(turma,bimestre)}/atividades/${editandoId}`), {nome,data,conteudo,obs,materialRef:matRef,materialTitulo:matTit});
+      await update(ref(db, `${P(turma,bimestre)}/atividades/${editandoId}`), {nome:nomeFinal,data,conteudo,obs,materialRef:matRef,materialTitulo:matTit});
     }else{
       const id="a"+Date.now();
       const ordem=(atual.atividades.reduce((m,a)=>Math.max(m,a.ordem||0),0))+1;
-      const obj={nome,data,conteudo,obs,ordem,criadoEm:Date.now()};
+      const obj={nome:nomeFinal,data,conteudo,obs,ordem,criadoEm:Date.now()};
       if(matRef){ obj.materialRef=matRef; obj.materialTitulo=matTit; }
       await set(ref(db, `${P(turma,bimestre)}/atividades/${id}`), obj);
     }

@@ -123,16 +123,16 @@ async function analisar(){
       const ativs=(porBim[bim]&&porBim[bim].atividades)||{};
       for(const id in ativs){
         const a=ativs[id]||{}; nAtiv++;
-        const atual={ nome:a.nome||"", materialRef:a.materialRef||"", materialTitulo:a.materialTitulo||"" };
-        const key=normNome(atual.nome)||("__id__"+id);
-        if(!mapa.has(key)) mapa.set(key,{ nome:atual.nome||"(sem nome)", membros:[], links:new Set(), guessId:"" });
+        const atual={ nome:a.nome||"", data:a.data||"", materialRef:a.materialRef||"", materialTitulo:a.materialTitulo||"" };
+        const key=(normNome(atual.nome)||("__id__"+id))+"|"+(atual.data||"");
+        if(!mapa.has(key)) mapa.set(key,{ nome:atual.nome||"(sem nome)", data:atual.data||"", membros:[], links:new Set(), guessId:"" });
         const g=mapa.get(key); g.membros.push({turma,bim,id,atual}); if(atual.materialRef) g.links.add(atual.materialRef);
       }
     }
   }
   GRUPOS = [...mapa.values()].map(g=>({ ...g, links:[...g.links] }));
   GRUPOS.forEach(g=>{ g.guessId = palpite(g.membros[0].atual); });
-  GRUPOS.sort((a,b)=> a.nome.localeCompare(b.nome,"pt"));
+  GRUPOS.sort((a,b)=> a.nome.localeCompare(b.nome,"pt") || String(a.data).localeCompare(String(b.data)));
 
   setStatus(`${nAtiv} atividade(s) em ${GRUPOS.length} nome(s) distinto(s).`);
   render();
@@ -161,7 +161,7 @@ function render(){
       : `<span class="tag t-sem" id="sit-${idx}">escolher</span>`;
     html+=`<tr>
       <td>${sit}</td>
-      <td>${esc(g.nome)} <span class="small muted">(${g.membros.length})</span></td>
+      <td>${esc(g.nome)}${g.data?` <span class="small muted">· ${esc(g.data)}</span>`:""} <span class="small muted">(${g.membros.length})</span></td>
       <td>${linksTxt}</td>
       <td><select class="map${g.guessId?"":" vazio"}" id="sel-g${idx}" onchange="onMap(${idx})">${optionsHTML(g.guessId)}</select></td>
       <td class="turmas">${esc(turmasTxt)}</td>
