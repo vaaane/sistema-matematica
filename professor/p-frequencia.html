@@ -33,6 +33,7 @@
   .cell-demo.p{background:var(--green-pale);color:var(--green)}
   .cell-demo.f{background:var(--red-pale);color:var(--red)}
   .cell-demo.a{background:var(--gold-pale);color:var(--gold)}
+  .cell-demo.m{background:rgba(155,48,255,.16);color:var(--purple)}
 
   .tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:auto}
   table.freq{border-collapse:collapse;width:100%;min-width:640px}
@@ -57,6 +58,7 @@
   .mk.p{background:var(--green-pale);color:var(--green)}
   .mk.f{background:var(--red-pale);color:var(--red)}
   .mk.a{background:var(--gold-pale);color:var(--gold)}
+  .mk.m{background:rgba(155,48,255,.16);color:var(--purple)}
   .col-tot{position:sticky;right:0;background:var(--card2,#141428);border-left:1px solid var(--border);min-width:64px}
   .tot-v{font-family:'Orbitron',monospace;font-weight:700;font-size:15px}
   .tot-v.zero{color:var(--text-muted)} .tot-v.some{color:var(--gold)} .tot-v.high{color:var(--red)}
@@ -100,6 +102,7 @@
         <div class="lg"><span class="cell-demo p">P</span> Presente</div>
         <div class="lg"><span class="cell-demo f">F</span> Falta</div>
         <div class="lg"><span class="cell-demo a">A</span> Atraso</div>
+        <div class="lg"><span class="cell-demo m">M</span> Matando aula</div>
         <div class="lg">Coluna = um dia · clique numa célula para alternar · última coluna = total de faltas</div>
       </div>
       <div class="tbl-wrap"><table class="freq" id="tbl"></table></div>
@@ -112,7 +115,7 @@
 import { ALUNOS_POR_TURMA, numeroChamada, turmaAgora, GRADE_TURMAS, BIMESTRES, aulasNoDia } from "/js/constants.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
-import { ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 requireProfessor();
 renderSidebarProfessor("sidebar", "frequencia");
@@ -127,14 +130,15 @@ let chamada = {};    // { "YYYY-MM-DD": { aluno: "falta" | "atraso" } }  (presen
 
 const fmtData = iso => { if(!iso) return ""; const [,m,d]=iso.split("-"); return `${d}/${m}`; };
 const diaSemana = iso => { try{ return ["dom","seg","ter","qua","qui","sex","sáb"][new Date(iso+"T12:00:00").getDay()]; }catch(e){ return ""; } };
-// estado bruto: "falta" | "atraso" | "" (presente). Compat: true antigo => "falta".
+// estado bruto: "falta" | "atraso" | "matando" | "" (presente). Compat: true antigo => "falta".
 const estadoDe = (data, aluno) => { const v=(chamada[data]||{})[aluno]; return v===true?"falta":(v||""); };
-const faltou   = (data, aluno) => estadoDe(data, aluno) === "falta";
+const faltou   = (data, aluno) => { const e=estadoDe(data, aluno); return e==="falta" || e==="matando"; };
 const atrasou  = (data, aluno) => estadoDe(data, aluno) === "atraso";
-// aulas perdidas por um aluno num dia: falta = todas; atraso = 1 (a 1ª); presente = 0
+const matou    = (data, aluno) => estadoDe(data, aluno) === "matando";
+// aulas perdidas por um aluno num dia: falta/matando = todas; atraso = 1 (a 1ª); presente = 0
 function aulasPerdidas(data, aluno){
   const est = estadoDe(data, aluno);
-  if(est === "falta")  return aulasNoDia(turma, data) || 1;
+  if(est === "falta" || est === "matando") return aulasNoDia(turma, data) || 1;
   if(est === "atraso") return 1;
   return 0;
 }
@@ -195,12 +199,36 @@ async function carregar(){
 
 async function toggleFalta(data, aluno){
   chamada[data] = chamada[data] || {};
-  const atual = estadoDe(data, aluno);            // "", "falta", "atraso"
-  const prox  = atual === "" ? "falta" : atual === "falta" ? "atraso" : "";
+  const atual = estadoDe(data, aluno);            // "", "falta", "atraso", "matando"
+  const prox  = atual === "" ? "falta"
+              : atual === "falta" ? "atraso"
+              : atual === "atraso" ? "matando"
+              : "";                                // matando -> presente
   if(prox === "") delete chamada[data][aluno]; else chamada[data][aluno] = prox;
   try{ await set(ref(db, `chamada/${turma}/${bimestre}/${data}/${aluno}`), prox || null); }
   catch(e){ console.error(e); }
+  if(prox === "matando") { registrarOcorrenciaMatando(data, aluno).catch(e=>console.error(e)); }
   render();
+}
+
+// Gera uma ocorrência de "Matando aula" para o aluno no dia,
+// na mesma estrutura do mapeamento de sala: mapeamento_salas/${turma}/anotacoes/${key}
+// Registro: { ts, ocorrencias:["Matando aula"], obs }. ts = meio-dia do dia da chamada.
+// Não duplica se já houver uma ocorrência "Matando aula" para o mesmo dia.
+async function registrarOcorrenciaMatando(data, aluno){
+  const key = btoa(unescape(encodeURIComponent(aluno)));
+  const nodeRef = ref(db, `mapeamento_salas/${turma}/anotacoes/${key}`);
+  const snap = await get(nodeRef);
+  const entry = snap.exists() ? (snap.val()||{}) : {};
+  const registros = Array.isArray(entry.registros) ? entry.registros.slice() : [];
+  const ts = new Date(data + "T12:00:00").getTime();
+  const jaTem = registros.some(r =>
+    (r.ocorrencias||[]).includes("Matando aula") &&
+    new Date(r.ts||0).toISOString().slice(0,10) === data
+  );
+  if(jaTem) return;
+  registros.push({ ts, ocorrencias:["Matando aula"], obs:`Matando aula em ${fmtData(data)}` });
+  await update(nodeRef, { nome: aluno, registros });
 }
 
 function render(){
@@ -237,10 +265,10 @@ function render(){
 
   const body = `<tbody>${alunos.map((al)=>{
     const cells = dias.map(d=>{
-      const est = estadoDe(d.data, al);                 // "", "falta", "atraso"
-      const cls = est==="falta"?"f":est==="atraso"?"a":"p";
-      const txt = est==="falta"?"F":est==="atraso"?"A":"P";
-      return `<td class="cell"><span class="mk ${cls}" data-d="${d.data}" data-al="${al.replace(/"/g,'&quot;')}" title="clique: Presente → Falta → Atraso">${txt}</span></td>`;
+      const est = estadoDe(d.data, al);                 // "", "falta", "atraso", "matando"
+      const cls = est==="falta"?"f":est==="atraso"?"a":est==="matando"?"m":"p";
+      const txt = est==="falta"?"F":est==="atraso"?"A":est==="matando"?"M":"P";
+      return `<td class="cell"><span class="mk ${cls}" data-d="${d.data}" data-al="${al.replace(/"/g,'&quot;')}" title="clique: Presente → Falta → Atraso → Matando">${txt}</span></td>`;
     }).join("");
     const ap = aulasPerdidasDe(al), fd = faltasDiasDe(al), at = atrasosDe(al);
     const cls = ap===0?"zero":ap>=3?"high":"some";
@@ -264,7 +292,7 @@ function render(){
   const tbl = document.getElementById("tbl");
   tbl.innerHTML = head + body + foot;
   tbl.querySelectorAll(".mk[data-d]").forEach(el => el.onclick = () => toggleFalta(el.dataset.d, el.dataset.al));
-  document.getElementById("rodape").innerHTML = `Turma <b>${turma}</b> · ${bimestre}º bim — ${nAlunos} alunos · ${nDias} dias (${totalAulas} aulas) · <b>${totalAulasPerdidas}</b> falta(s) em aulas. <span style="color:var(--text-muted)">Clique numa célula: Presente → Falta → Atraso.</span>`;
+  document.getElementById("rodape").innerHTML = `Turma <b>${turma}</b> · ${bimestre}º bim — ${nAlunos} alunos · ${nDias} dias (${totalAulas} aulas) · <b>${totalAulasPerdidas}</b> falta(s) em aulas. <span style="color:var(--text-muted)">Clique numa célula: Presente → Falta → Atraso → Matando.</span>`;
 }
 
 function renderTabsBim(){
@@ -280,7 +308,7 @@ function exportarCSV(){
   const head = ["Nº","Aluno", ...dias.map(d=>`${fmtData(d.data)} (${aulasNoDia(turma,d.data)||1}a)`), "Faltas (aulas)", "Faltas (dias)", "Atrasos"];
   const linhas = [head.join(sep)];
   alunos.forEach((al)=>{
-    const cells = dias.map(d=>{ const e=estadoDe(d.data,al); return e==="falta"?"F":e==="atraso"?"A":"P"; });
+    const cells = dias.map(d=>{ const e=estadoDe(d.data,al); return e==="falta"?"F":e==="atraso"?"A":e==="matando"?"M":"P"; });
     const ap = dias.reduce((s,d)=>s+aulasPerdidas(d.data,al),0);
     const fd = dias.filter(d=>faltou(d.data,al)).length;
     const at = dias.filter(d=>atrasou(d.data,al)).length;
