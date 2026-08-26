@@ -60,6 +60,16 @@
     .cp-mapa-btn.respondida{background:var(--green-pale);border-color:var(--green);color:var(--green);}
     .cp-mapa-btn.atual{border-color:var(--purple);box-shadow:0 0 0 2px rgba(155,48,255,.35);color:var(--purple);}
     .cp-mapa-btn.respondida.atual{color:var(--green);}
+    .cp-mapa-btn.certa{background:var(--green-pale);border-color:var(--green);color:var(--green);}
+    .cp-mapa-btn.errada{background:rgba(255,60,80,.14);border-color:var(--red);color:var(--red);}
+    .cp-mapa-btn.atual{border-color:var(--blue);box-shadow:0 0 0 2px rgba(0,150,255,.4);color:var(--blue);}
+    .cp-mapa-btn[disabled]{cursor:default;}
+    .cp-alt.correta{border-color:var(--green)!important;background:rgba(0,230,118,.14)!important;}
+    .cp-alt.incorreta{border-color:var(--red)!important;background:rgba(255,60,80,.12)!important;}
+    .cp-alt[disabled]{cursor:default;opacity:1;}
+    .cp-fb{margin-top:14px;padding:12px 14px;border-radius:12px;font-weight:700;font-size:14px;}
+    .cp-fb.ok{background:rgba(0,230,118,.12);border:1px solid var(--green);color:var(--green);}
+    .cp-fb.no{background:rgba(255,60,80,.10);border:1px solid var(--red);color:var(--red);}
 
     .cp-mapa-legenda{display:flex;flex-direction:column;gap:5px;margin-top:12px;}
     .cp-leg-item{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-muted);}
@@ -528,6 +538,7 @@ const jogo = {
   alunos: participantes,
   questoes,
   respostas: new Array(questoes.length).fill(null), // letra escolhida por questão
+  confirmadas: new Array(questoes.length).fill(null), // null=não confirmada, true=acertou, false=errou
   indice: 0,
   inicioTs: Date.now(),
   finalizado: false,
@@ -702,11 +713,12 @@ function render(){
   const q = questaoAtual();
   const n = jogo.indice;
   const total = jogo.questoes.length;
-  const respondidas = jogo.respostas.filter(r => r !== null && r !== "").length;
+  const respondidas = jogo.confirmadas.filter(c => c !== null).length;
   const pct = Math.round((respondidas/total)*100);
   const letras = ["A","B","C","D"];
+  const confirmado = jogo.confirmadas[n] !== null;
 
-  // Corpo da questão: input numérico (digitar x) OU alternativas (marcar)
+  // Corpo da questão
   let corpoHtml;
   if (q.tipo === "numerica"){
     const val = jogo.respostas[n];
@@ -718,7 +730,7 @@ function render(){
           <span class="cp-num-xis">x =</span>
           <input type="number" inputmode="numeric" step="1" class="cp-num-input${preenchido}"
                  id="cp-num-input" value="${val !== null ? val : ""}"
-                 oninput="digitarNumero(this.value)" placeholder="?" autocomplete="off"/>
+                 oninput="digitarNumero(this.value)" placeholder="?" autocomplete="off" ${confirmado ? "readonly" : ""}/>
         </div>
         <div class="cp-num-hint">${q.instrucao || "Digite apenas o número."}</div>
       </div>`;
@@ -726,22 +738,50 @@ function render(){
     const alts = q.opcoes.map((opt, i) => {
       const letra = letras[i];
       const texto = opt.replace(/^[A-D]\)\s*/, "");
-      const sel = jogo.respostas[n] === letra ? " selecionada" : "";
-      return `<button class="cp-alt${sel}" onclick="selecionar('${letra}')">
+      const escolhida = jogo.respostas[n] === letra;
+      let extra = escolhida ? " selecionada" : "";
+      if (confirmado){
+        if (letra === q.resposta) extra += " correta";
+        else if (escolhida) extra += " incorreta";
+      }
+      return `<button class="cp-alt${extra}" ${confirmado ? "disabled" : `onclick="selecionar('${letra}')"`}>
         <span class="cp-alt-letra">${letra}</span><span>${texto}</span>
       </button>`;
     }).join("");
     corpoHtml = `<div class="cp-alts${q.umaColuna ? " uma-coluna" : ""}">${alts}</div>`;
   }
 
+  // Feedback imediato (após confirmar)
+  let fbHtml = "";
+  if (confirmado){
+    const ok = jogo.confirmadas[n] === true;
+    const corr = q.tipo === "numerica"
+      ? `x = ${q.respostaNum}`
+      : q.opcoes[letras.indexOf(q.resposta)].replace(/^[A-D]\)\s*/, "").replace(/<[^>]+>/g,"").trim();
+    fbHtml = `<div class="cp-fb ${ok?'ok':'no'}">${ok ? '✅ Correto!' : `❌ Errado — resposta certa: <b>${corr}</b>`}</div>`;
+  }
+
   const mapaHtml = jogo.questoes.map((_, i) => {
-    const cls = [
-      "cp-mapa-btn",
-      jogo.respostas[i] !== null ? "respondida" : "",
-      i === jogo.indice ? "atual" : ""
-    ].filter(Boolean).join(" ");
-    return `<button class="${cls}" onclick="irPara(${i})">${i+1}</button>`;
+    const st = jogo.confirmadas[i];
+    const cls = ["cp-mapa-btn", st === true ? "certa" : st === false ? "errada" : "", i === n ? "atual" : ""]
+      .filter(Boolean).join(" ");
+    return `<button class="${cls}" disabled>${i+1}</button>`;
   }).join("");
+
+  // Botão principal: Confirmar → (Próxima | Finalizar)
+  let btnHtml;
+  if (!confirmado){
+    btnHtml = `<button class="btn btn-blue" onclick="confirmar()">Confirmar
+      <svg viewBox="0 0 24 24" width="18" height="18"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg></button>`;
+  } else if (n === total-1){
+    btnHtml = `<button class="btn btn-blue" onclick="tentarFinalizar()">✓ Finalizar atividade</button>`;
+  } else {
+    btnHtml = `<button class="btn btn-blue" onclick="proxima()">Próxima
+      <svg viewBox="0 0 24 24" width="18" height="18"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg></button>`;
+  }
+  const midTxt = confirmado
+    ? (jogo.confirmadas[n] ? "✅ Você acertou" : "❌ Você errou")
+    : (q.tipo === "numerica" ? "Digite o valor de x e confirme" : "Selecione uma alternativa e confirme");
 
   document.getElementById("content").innerHTML = `
     <div class="cp-layout">
@@ -759,18 +799,12 @@ function render(){
           </div>
           <div class="cp-qtext">${q.enunciado}</div>
           ${corpoHtml}
+          ${fbHtml}
         </div>
 
         <div class="cp-nav">
-          <button class="btn btn-ghost" onclick="anterior()" ${n===0?"disabled":""}>
-            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
-            Anterior
-          </button>
-          <div class="cp-nav-mid">${jogo.respostas[n] !== null && jogo.respostas[n] !== "" ? "✓ Respondida" : (q.tipo === "numerica" ? "Digite o valor de x" : "Selecione uma alternativa")}</div>
-          <button class="btn btn-blue" onclick="proxima()" ${n===total-1?"disabled":""}>
-            Próxima
-            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
-          </button>
+          <div class="cp-nav-mid">${midTxt}</div>
+          ${btnHtml}
         </div>
       </div>
 
@@ -787,51 +821,71 @@ function render(){
           <div class="cp-panel-label">🗺 Mapa de questões</div>
           <div class="cp-mapa">${mapaHtml}</div>
           <div class="cp-mapa-legenda">
-            <div class="cp-leg-item"><span class="cp-leg-dot resp"></span> Respondida</div>
-            <div class="cp-leg-item"><span class="cp-leg-dot atual"></span> Questão atual</div>
+            <div class="cp-leg-item"><span class="cp-leg-dot" style="background:var(--green)"></span> Acertou</div>
+            <div class="cp-leg-item"><span class="cp-leg-dot" style="background:var(--red)"></span> Errou</div>
+            <div class="cp-leg-item"><span class="cp-leg-dot" style="background:var(--blue)"></span> Questão atual</div>
           </div>
         </div>
 
         <button class="cp-btn-finalizar" onclick="tentarFinalizar()">✓ Finalizar atividade</button>
 
-        <div class="cp-warn">⚠️ Não saia desta página nem troque de aba — a atividade será encerrada automaticamente.</div>
+        <div class="cp-warn">⚠️ Responda com atenção: após confirmar, não é possível voltar.</div>
       </div>
     </div>`;
 
-  // re-inicia o tempo na primeira render
   if (!timerInt) iniciarTimer();
 }
 
-/* ── Ações de navegação ── */
+/* ── Ações de navegação (correção na hora, sem voltar) ── */
+function checar(q, resp){
+  if (q.tipo === "numerica"){
+    const num = (resp === null || resp === "") ? null : Number(resp);
+    return num !== null && Number.isFinite(num) && num === q.respostaNum;
+  }
+  return resp === q.resposta;
+}
+
 window.selecionar = (letra) => {
   if (jogo.finalizado) return;
+  if (jogo.confirmadas[jogo.indice] !== null) return; // travada após confirmar
   jogo.respostas[jogo.indice] = letra;
   render();
 };
 
-// Questões de digitar x: grava sem re-renderizar (mantém o foco no input);
-// atualiza só o mapa, o contador e o status visualmente.
+// Digitar x: grava sem re-render (mantém foco); trava após confirmar
 window.digitarNumero = (valor) => {
   if (jogo.finalizado) return;
+  if (jogo.confirmadas[jogo.indice] !== null) return;
   const v = (valor ?? "").trim();
   jogo.respostas[jogo.indice] = v === "" ? null : v;
-  // atualiza input, mapa e progresso sem perder o foco
   const inp = document.getElementById("cp-num-input");
   if (inp) inp.classList.toggle("preenchido", v !== "");
-  const respondidas = jogo.respostas.filter(r => r !== null && r !== "").length;
-  const total = jogo.questoes.length;
-  const cont = document.querySelector(".cp-prog-count");
-  if (cont) cont.textContent = `${respondidas}/${total}`;
-  const fill = document.querySelector(".cp-prog-fill");
-  if (fill) fill.style.width = `${Math.round((respondidas/total)*100)}%`;
   const mid = document.querySelector(".cp-nav-mid");
-  if (mid) mid.textContent = v !== "" ? "✓ Respondida" : "Digite o valor de x";
-  const btnMapa = document.querySelectorAll(".cp-mapa-btn")[jogo.indice];
-  if (btnMapa) btnMapa.classList.toggle("respondida", v !== "");
+  if (mid) mid.textContent = v !== "" ? "Pronto — confirme a resposta" : "Digite o valor de x e confirme";
 };
-window.irPara = (i) => { if (jogo.finalizado) return; jogo.indice = i; render(); };
-window.anterior = () => { if (jogo.indice > 0) { jogo.indice--; render(); } };
-window.proxima = () => { if (jogo.indice < jogo.questoes.length-1) { jogo.indice++; render(); } };
+
+window.confirmar = () => {
+  if (jogo.finalizado) return;
+  const n = jogo.indice;
+  if (jogo.confirmadas[n] !== null) return;
+  const resp = jogo.respostas[n];
+  if (resp === null || resp === ""){
+    alert(questaoAtual().tipo === "numerica" ? "Digite o valor de x." : "Selecione uma alternativa.");
+    return;
+  }
+  jogo.confirmadas[n] = checar(questaoAtual(), resp);
+  render();
+};
+
+window.proxima = () => {
+  if (jogo.finalizado) return;
+  if (jogo.confirmadas[jogo.indice] === null) return; // precisa confirmar antes
+  if (jogo.indice < jogo.questoes.length - 1){ jogo.indice++; render(); }
+};
+
+// Sem voltar: "anterior" e "irPara" ficam desativados
+window.anterior = () => {};
+window.irPara   = () => {};
 
 window.tentarFinalizar = () => {
   const respondidas = jogo.respostas.filter(r => r !== null && r !== "").length;

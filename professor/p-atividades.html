@@ -401,6 +401,23 @@ async function carregarAeH() {
   const gen = ++_loadGen;
   const [ativas, hist, statusMap] = await Promise.all([getLiberadas(), getLiberacoesHistorico(), getAllAtividadeStatus()]);
   if (gen !== _loadGen) return;
+
+  // Limpeza: mantém só a liberação mais recente por turma|atividade e apaga as sobras
+  // (que faziam atividades encerradas reaparecerem ao liberar/reativar de novo).
+  const _grupos = {};
+  for (const lib of ativas) {
+    const k = `${lib.turma}|${lib.atividade}`;
+    (_grupos[k] = _grupos[k] || []).push(lib);
+  }
+  const _sobras = [];
+  for (const k in _grupos) {
+    _grupos[k].sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0)).slice(1).forEach(x => _sobras.push(x.id));
+  }
+  if (_sobras.length) {
+    await Promise.all(_sobras.map(id => deleteLiberada(id)));
+    return carregarAeH(); // recarrega já sem as duplicatas
+  }
+
   _statusMapCache = statusMap;
 
   // ── Diagnóstico 8F / 8H ─────────────────────────────────────
@@ -514,6 +531,9 @@ async function executarLiberacao(atividade, turma, percentual, dataAplicacao = "
   const modo = _modoSelecionado;
   const agora = dataAgora();
   await setAtividadeStatus(turma, atividade, 'ativa', percentual);
+  // Evita duplicatas: remove liberações ativas anteriores desta mesma atividade+turma
+  const _antigas = (await getLiberadas()).filter(l => l.turma === turma && l.atividade === atividade);
+  await Promise.all(_antigas.map(l => deleteLiberada(l.id)));
   const histId = await addLiberacaoHistorico({ atividade, turma, percentual, modo, liberado_em: agora });
   await addLiberada({ atividade, turma, percentual, modo, liberado_em: agora, historico_id: histId, criadoEm: Date.now(), data_aplicacao: dataAplicacao });
   fecharForm();

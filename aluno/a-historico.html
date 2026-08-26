@@ -55,6 +55,18 @@
     .score-main.red{color:var(--hc-red);}
     .score-main.gold{color:var(--hc-gold);}
     .score-label{font-size:10px;color:var(--hc-muted);}
+    .hc-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px;}
+    .hc-stat{background:var(--hc-bg);border:1px solid var(--hc-border);border-radius:12px;padding:12px 8px;text-align:center;}
+    .hc-stat .v{font-family:'Orbitron',monospace;font-size:20px;font-weight:700;color:var(--hc-text);line-height:1;}
+    .hc-stat .l{font-size:10px;color:var(--hc-muted);margin-top:5px;text-transform:uppercase;letter-spacing:.5px;}
+    .hc-rec{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+    .hc-rec-item{display:flex;align-items:center;gap:10px;background:rgba(255,215,0,.07);border:1px solid rgba(255,215,0,.22);border-radius:12px;padding:10px 12px;}
+    .hc-rec-ic{font-size:18px;flex-shrink:0;}
+    .hc-rec-lbl{font-size:11px;color:var(--hc-muted);text-transform:uppercase;letter-spacing:.5px;}
+    .hc-rec-val{font-size:13px;color:var(--hc-text);font-weight:600;margin-top:2px;}
+    .hc-rev-title{font-size:12px;font-weight:700;color:var(--hc-muted);text-transform:uppercase;letter-spacing:1px;margin:4px 0 10px;}
+    @media(max-width:560px){.hc-stats{grid-template-columns:repeat(3,1fr);}}
+    @media(max-width:380px){.hc-stats{grid-template-columns:repeat(2,1fr);}}
     .chevron{color:var(--hc-muted);font-size:12px;margin-left:4px;transition:transform .2s;flex-shrink:0;}
     .entry.open .chevron{transform:rotate(180deg);}
 
@@ -192,7 +204,7 @@
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
-import { getResultadosByAluno, getDetalhes, getHistoricoTeste, getAlunoPreferencia } from "/js/db.js";
+import { getResultadosByAluno, getResultados, getDetalhes, getHistoricoTeste, getAlunoPreferencia } from "/js/db.js";
 import { bimestreAtual, bimestreDeData } from "/js/constants.js";
 import { montarSeletorBimestre, bimestreSelecionado } from "/js/bimestre-seletor.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
@@ -297,6 +309,7 @@ function agruparAvP(regs) {
 // ── Carregar dados ───────────────────────────────────────────
 let avpSessoes = [], ativSimples = [], tornItems = [], tentativasOficiais = {};
 let testeHistSnap = null;
+let _recordes = {}; // atividade -> { turmaMax, turmaNomes[], geralMax, geralNomes[] }
 
 try {
   let todosRegs = [];
@@ -346,6 +359,9 @@ try {
     !ATIVIDADES_OCULTAS.has(r.atividade) &&
     !MODOS_IGNORAR.has(r.modo)
   );
+
+  // Recordes por atividade (maior nota da turma e de todas as salas, com nomes)
+  if (!isModoTeste()) { try { _recordes = await construirRecordes(turma); } catch(_) { _recordes = {}; } }
 
   // Torneios
   if (!isModoTeste()) {
@@ -527,26 +543,65 @@ function renderAvP(sessao) {
   </div>`;
 }
 
+// ── Recordes por atividade (turma atual + todas as salas) ──────
+async function construirRecordes(turmaAtual){
+  const todos = await getResultados().catch(() => []);
+  const rec = {};
+  for (const r of todos){
+    if (!r.concluido || r.modo_teste || !r.atividade) continue;
+    const p = r.pontuacao_bruta || r.pontuacao || 0;
+    const e = rec[r.atividade] = rec[r.atividade] || { turmaMax:-1, turmaNomes:[], geralMax:-1, geralNomes:[] };
+    if (p > e.geralMax){ e.geralMax = p; e.geralNomes = [{ nome:r.aluno, turma:r.turma }]; }
+    else if (p === e.geralMax && !e.geralNomes.some(x => x.nome === r.aluno)) e.geralNomes.push({ nome:r.aluno, turma:r.turma });
+    if (r.turma === turmaAtual){
+      if (p > e.turmaMax){ e.turmaMax = p; e.turmaNomes = [r.aluno]; }
+      else if (p === e.turmaMax && !e.turmaNomes.includes(r.aluno)) e.turmaNomes.push(r.aluno);
+    }
+  }
+  return rec;
+}
+
 // ── Render: card atividade simples ────────────────────────────
 function renderAtivSimples(r) {
   const modo  = r.modo || 'classico';
-  const isAv  = modo === 'avaliacao_plus';
+  const isEq  = modo === 'equacoes_plus';
   const isC   = modo === 'competicao_plus';
   const pts   = r.pontuacao_bruta || r.pontuacao || 0;
-  const isEq     = modo === 'equacoes_plus';   // atividade que vale 1,5
+  const acertos = r.acertos || 0, erros = r.erros || 0;
+  const totalQ  = r.total || (acertos + erros) || 0;
+  const taxa    = totalQ > 0 ? Math.round(acertos / totalQ * 100) : 0;
   const NOTA_MAX = 1.5;
-  const nota15   = Math.round((pts/10)*NOTA_MAX*100)/100;
-  const fmt15    = n => n.toFixed(2).replace('.', ',');
-  const tot   = (r.acertos||0) + (r.erros||0);
-  const taxa  = tot > 0 ? Math.round((r.acertos||0)/tot*100) + '%' : '—';
+  const fmt2   = n => n.toFixed(2).replace('.', ',');
+  const nota15 = Math.round((pts / 10) * NOTA_MAX * 100) / 100;
+  const notaVal = isEq ? fmt2(nota15) : String(pts);
+  const notaLbl = isEq ? 'de 1,5' : 'pts';
+  const escalar = v => isEq ? `${fmt2(Math.round((Math.max(0,v) / 10) * NOTA_MAX * 100) / 100)} de 1,5` : `${Math.max(0,v)} pts`;
   const entryId = `ativ-${r.id}`;
-  const tag   = isC
-    ? `<span class="hc-tag cls">⚔️ Competição+</span>`
-    : `<span class="hc-tag cls">📝 ${modo}</span>`;
+  const tag = isC ? `<span class="hc-tag cls">⚔️ Competição+</span>` : `<span class="hc-tag cls">📝 ${escH(modo)}</span>`;
   const parceiro = r.alunos?.[1] || r.parceiro_nome || r.dupla_de || '';
-  const parceiroTag = parceiro
-    ? `<span style="opacity:.5;font-size:10px">👥 + ${escH(parceiro)}</span>`
-    : '';
+  const parceiroTag = parceiro ? `<span style="opacity:.5;font-size:10px">👥 + ${escH(parceiro)}</span>` : '';
+
+  const nomes = (arr, comTurma) => {
+    if (!arr || !arr.length) return '—';
+    const show = arr.slice(0,5).map(x => comTurma
+      ? `${escH(x.nome)} <span style="opacity:.6">(${escH(x.turma||'?')})</span>`
+      : escH(x)).join(', ');
+    return show + (arr.length > 5 ? ` <span style="opacity:.6">+${arr.length-5}</span>` : '');
+  };
+  const rec = (_recordes || {})[r.atividade];
+  const recHtml = rec ? `
+    <div class="hc-rec">
+      <div class="hc-rec-item">
+        <span class="hc-rec-ic">🏆</span>
+        <div><div class="hc-rec-lbl">Maior nota da turma ${escH(r.turma || '')}</div>
+        <div class="hc-rec-val">${escalar(rec.turmaMax)} · ${nomes(rec.turmaNomes, false)}</div></div>
+      </div>
+      <div class="hc-rec-item">
+        <span class="hc-rec-ic">🌎</span>
+        <div><div class="hc-rec-lbl">Maior nota de todas as salas</div>
+        <div class="hc-rec-val">${escalar(rec.geralMax)} · ${nomes(rec.geralNomes, true)}</div></div>
+      </div>
+    </div>` : '';
 
   return `<div class="entry" data-tipo="atividade" id="${entryId}">
     <div class="entry-header" data-entry="${entryId}" data-tipo-entry="ativ" data-ids="${r.id}" data-tent-esc="">
@@ -557,18 +612,26 @@ function renderAtivSimples(r) {
           ${tag}
           ${parceiroTag}
           <span class="entry-date">${r.data || fmtTs(r.criadoEm)}</span>
-          <span class="entry-date">${pts} pts · ✅${r.acertos||0} ❌${r.erros||0} · ${taxa}</span>
+          <span class="entry-date">✅${acertos} ❌${erros} · ${taxa}%</span>
         </div>
       </div>
       <div class="entry-score">
-        ${isEq
-          ? `<span class="score-main ${pts > 0 ? 'green' : ''}">${fmt15(nota15)}</span><span class="score-label">de 1,5</span>`
-          : `<span class="score-main ${pts > 0 ? 'orange' : ''}">${pts}</span><span class="score-label">pts</span>`}
+        <span class="score-main ${pts > 0 ? (isEq ? 'green' : 'orange') : ''}">${notaVal}</span>
+        <span class="score-label">${notaLbl}</span>
       </div>
       <span class="chevron">▼</span>
     </div>
     <div class="entry-body">
       <div style="padding:14px 18px;">
+        <div class="hc-stats">
+          <div class="hc-stat"><div class="v">${totalQ}</div><div class="l">Questões</div></div>
+          <div class="hc-stat"><div class="v" style="color:var(--hc-green)">${acertos}</div><div class="l">Acertos</div></div>
+          <div class="hc-stat"><div class="v" style="color:var(--hc-red)">${erros}</div><div class="l">Erros</div></div>
+          <div class="hc-stat"><div class="v" style="color:var(--hc-cyan)">${taxa}%</div><div class="l">Aproveitamento</div></div>
+          <div class="hc-stat"><div class="v" style="color:var(--hc-gold)">${notaVal}</div><div class="l">Nota ${isEq ? '/ 1,5' : '(pts)'}</div></div>
+        </div>
+        ${recHtml}
+        <div class="hc-rev-title">Revisão das questões</div>
         <div id="q-${entryId}" class="q-list">
           <p style="font-size:12px;color:var(--hc-muted)">Abrindo…</p>
         </div>
