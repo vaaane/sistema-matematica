@@ -92,6 +92,8 @@
     .ac-btn-disponivel:hover{background:rgba(124,92,252,0.35);}
     .ac-btn-treino{display:inline-flex;align-items:center;gap:6px;background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.4);color:var(--ac-gold);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;text-decoration:none;transition:all .2s;font-family:'Inter',sans-serif;white-space:nowrap;}
     .ac-btn-treino:hover{background:rgba(255,215,0,0.22);}
+    .ac-btn-treino.suave{background:transparent;border-color:rgba(255,215,0,0.22);color:rgba(240,165,0,0.65);font-weight:600;box-shadow:none;}
+    .ac-btn-treino.suave:hover{background:rgba(255,215,0,0.10);color:var(--ac-gold);}
 
     @keyframes acFadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
     .ac-liberada-banner{animation:acFadeUp .3s ease both;}
@@ -344,7 +346,7 @@ function faltouNaData(ymd){
 }
 
 const todosResultados = await getResultados();
-const realizadaMap = {}, melhorNota = {}, melhorPts = {};
+const realizadaMap = {}, melhorNota = {}, melhorPts = {}, valorNotaMap = {};
 for (const r of todosResultados) {
   if (!alunos.includes(r.aluno) || !r.concluido || r.modo_teste) continue;
   const prev = realizadaMap[r.atividade];
@@ -353,6 +355,7 @@ for (const r of todosResultados) {
   if (nq != null && (melhorNota[r.atividade] ?? -1) < nq) melhorNota[r.atividade] = nq;
   const pts = r.pontuacao || 0;
   if (pts > (melhorPts[r.atividade] ?? -1)) melhorPts[r.atividade] = pts;
+  if (r.valor_nota != null) valorNotaMap[r.atividade] = Number(r.valor_nota);
 }
 function formatTs(ts) {
   if (!ts) return '';
@@ -444,8 +447,12 @@ const cardsHtml = ATIVS_BIM.map(ativ => {
   const lastTs       = realizadaMap[ativ.nome]?.ts;
   const modoEf      = lib?.modo || ativ.modo || 'classico';
   const isAvP       = modoEf === 'avaliacao_plus';
-  const nota        = isAvP ? (melhorNota[ativ.nome] ?? null) : (melhorPts[ativ.nome] ?? null);
-  const notaStr     = nota != null ? (isAvP ? nota.toFixed(1) : String(nota)) : null;
+  const _valAtiv    = valorNotaMap[ativ.nome] ?? 1.5;
+  const _ptsAtiv    = melhorPts[ativ.nome] ?? null;        // 0–10 (bruto)
+  const _notaReal   = _ptsAtiv != null ? Math.round((_ptsAtiv / 10) * _valAtiv * 100) / 100 : null;
+  const nota        = isAvP ? (melhorNota[ativ.nome] ?? null) : _notaReal;
+  const _fmtN       = n => n.toFixed(2).replace('.', ',');
+  const notaStr     = nota != null ? (isAvP ? nota.toFixed(1) : _fmtN(nota)) : null;
   const url = modoEf === 'equacoes_plus'
     ? `/aluno/atividade_equacoes.html?ativ=${encodeURIComponent(ativ.nome)}`
     : modoEf === 'avaliacao_plus'
@@ -460,7 +467,7 @@ const cardsHtml = ATIVS_BIM.map(ativ => {
 
   const _temTreino = modoEf === 'equacoes_plus';
   const _btnTreino = (_temTreino && !(isLib && !bloq?.esgotada && !bloq?.bloqueado && !isEncerrada && !foiRealizada))
-    ? `<a href="/aluno/treino-equacoes.html" class="ac-btn-treino" onclick="event.stopPropagation()">🎯 Treinar</a>`
+    ? `<a href="/aluno/treino-equacoes.html" class="ac-btn-treino${foiRealizada ? ' suave' : ''}" onclick="event.stopPropagation()">🎯 Treinar</a>`
     : '';
   // Faltou = marcado falta na data em que a atividade foi liberada, e ainda não fez.
   const _libDate = lib?.criadoEm ? ymdLocal(lib.criadoEm) : null;
@@ -507,8 +514,8 @@ const cardsHtml = ATIVS_BIM.map(ativ => {
     </div>
     <div class="ac-atv-right">
       ${notaStr ? `<div>
-        <div class="ac-atv-nota ${notaColorCls(nota)}">${notaStr}</div>
-        <div class="ac-atv-nota-label">${isAvP ? 'F1 / 10 pts' : 'pts'}</div>
+        <div class="ac-atv-nota ${notaColorCls(_ptsAtiv)}">${notaStr}</div>
+        <div class="ac-atv-nota-label">${isAvP ? 'F1 / 10 pts' : 'de ' + _fmtN(_valAtiv)}</div>
       </div>` : ''}
       ${_btnTreino}
       ${statusBadge}

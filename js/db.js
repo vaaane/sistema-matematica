@@ -453,10 +453,10 @@ export async function getAtividadeStatus(turma, atividade) {
   return snap.exists() ? snap.val() : { status: 'ativa', percentual: 100 };
 }
 
-export async function setAtividadeStatus(turma, atividade, status, percentualOverride) {
+export async function setAtividadeStatus(turma, atividade, status, percentualOverride, valorNota) {
   const percentual = percentualOverride ?? { ativa: 100, '75': 75, '50': 50, encerrada: 0 }[status] ?? 100;
   await set(ref(db, `config/atividade_status/${atividadeStatusKey(turma, atividade)}`),
-    { turma, atividade, status, percentual, updatedAt: serverTimestamp() });
+    { turma, atividade, status, percentual, ...(valorNota != null ? { valor_nota: valorNota } : {}), updatedAt: serverTimestamp() });
 }
 
 export async function updateLiberada(id, data) {

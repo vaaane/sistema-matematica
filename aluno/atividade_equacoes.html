@@ -255,7 +255,7 @@ function mostrarConfirmSaida(destino){
 /* ── Atividade alvo ── */
 if (!nomeAtivParam) { location.href = ehTeste ? "/professor/p-atividades.html" : "/aluno/a-atividades.html"; throw new Error(); }
 
-let nomeAtiv, percentualNota;
+let nomeAtiv, percentualNota, valorNota = 1.5;
 if (ehTeste) {
   // No modo teste não há liberação/tentativa/status — usa a atividade direto.
   nomeAtiv = nomeAtivParam;
@@ -269,6 +269,7 @@ if (ehTeste) {
     location.href="/aluno/a-atividades.html"; throw new Error();
   }
   nomeAtiv = liberada.atividade;
+  if (liberada.valor_nota != null) valorNota = Number(liberada.valor_nota);
 
   // Lista de participantes (dupla = os dois nomes)
   const _participantes = [...alunos];
@@ -290,6 +291,7 @@ if (ehTeste) {
     location.href="/aluno/a-atividades.html"; throw new Error();
   }
   percentualNota = statusInfo.percentual ?? 100;
+  if (statusInfo.valor_nota != null) valorNota = Number(statusInfo.valor_nota);
 }
 
 /* ── Participantes (dupla = os dois nomes; teste = só PROFESSOR_TESTE) ── */
@@ -543,6 +545,7 @@ const jogo = {
   inicioTs: Date.now(),
   finalizado: false,
   percentual: percentualNota,
+  valor_nota: valorNota,
 };
 
 /* ── Registro inicial no Firebase: tentativa consumida mesmo se fechar ── */
@@ -976,6 +979,7 @@ async function finalizar(motivo){
       tempo_segundos: tempoSeg,
       motivo_fim: motivo,
       modo: "equacoes_plus",
+      valor_nota: jogo.valor_nota,
       ...(isModoTeste() ? { modo_teste:true } : {})
     };
     try {
@@ -1026,6 +1030,7 @@ async function finalizar(motivo){
     tempoSegundos: tempoSeg,
     acertos, erros, respondidas, total,
     percentual: jogo.percentual,
+    valor_nota: jogo.valor_nota,
     historico, novasConquistas,
     salvoFirebase, erroSalvar,
     motivoFim: motivo,

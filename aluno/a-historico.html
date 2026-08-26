@@ -553,10 +553,11 @@ async function construirRecordes(turmaAtual){
   for (const r of todos){
     if (!r.concluido || r.modo_teste || !r.atividade) continue;
     const p = r.pontuacao_bruta || r.pontuacao || 0;
-    const e = rec[r.atividade] = rec[r.atividade] || { turmaMax:-1, turmaNomes:[], geralMax:-1, geralNomes:[] };
+    const e = rec[r.atividade] = rec[r.atividade] || { turmaMax:-1, turmaNomes:[], geralMax:-1, geralNomes:[], turmaNotas:[] };
     if (p > e.geralMax){ e.geralMax = p; e.geralNomes = [{ nome:r.aluno, turma:r.turma }]; }
     else if (p === e.geralMax && !e.geralNomes.some(x => x.nome === r.aluno)) e.geralNomes.push({ nome:r.aluno, turma:r.turma });
     if (r.turma === turmaAtual){
+      e.turmaNotas.push({ nome:r.aluno, p });
       if (p > e.turmaMax){ e.turmaMax = p; e.turmaNomes = [r.aluno]; }
       else if (p === e.turmaMax && !e.turmaNomes.includes(r.aluno)) e.turmaNomes.push(r.aluno);
     }
@@ -573,12 +574,12 @@ function renderAtivSimples(r) {
   const acertos = r.acertos || 0, erros = r.erros || 0;
   const totalQ  = r.total || (acertos + erros) || 0;
   const taxa    = totalQ > 0 ? Math.round(acertos / totalQ * 100) : 0;
-  const NOTA_MAX = 1.5;
+  const NOTA_MAX = (r.valor_nota != null ? Number(r.valor_nota) : 1.5);
   const fmt2   = n => n.toFixed(2).replace('.', ',');
   const nota15 = Math.round((pts / 10) * NOTA_MAX * 100) / 100;
   const notaVal = isEq ? fmt2(nota15) : String(pts);
-  const notaLbl = isEq ? 'de 1,5' : 'pts';
-  const escalar = v => isEq ? `${fmt2(Math.round((Math.max(0,v) / 10) * NOTA_MAX * 100) / 100)} de 1,5` : `${Math.max(0,v)} pts`;
+  const notaLbl = isEq ? `de ${fmt2(NOTA_MAX)}` : 'pts';
+  const escalar = v => isEq ? `${fmt2(Math.round((Math.max(0,v) / 10) * NOTA_MAX * 100) / 100)} de ${fmt2(NOTA_MAX)}` : `${Math.max(0,v)} pts`;
   const entryId = `ativ-${r.id}`;
   const tag = isC ? `<span class="hc-tag cls">⚔️ Competição+</span>` : `<span class="hc-tag cls">📝 ${escH(modo)}</span>`;
   const parceiro = r.alunos?.[1] || r.parceiro_nome || r.dupla_de || '';
@@ -592,8 +593,28 @@ function renderAtivSimples(r) {
     return show + (arr.length > 5 ? ` <span style="opacity:.6">+${arr.length-5}</span>` : '');
   };
   const rec = (_recordes || {})[r.atividade];
+
+  let extraHtml = '';
+  if (rec && rec.turmaNotas && rec.turmaNotas.length){
+    const ordenadas = [...rec.turmaNotas].sort((a,b) => b.p - a.p);
+    const media = ordenadas.reduce((s,x) => s + x.p, 0) / ordenadas.length;
+    const posic = ordenadas.filter(x => x.p > pts).length + 1;
+    const souRecorde = rec.turmaNomes.includes(alunoNome);
+    const coroa = souRecorde
+      ? `<div class="hc-rec-item"><span class="hc-rec-ic">👑</span>
+           <div><div class="hc-rec-val" style="color:var(--hc-gold)">Você tem a maior nota da turma!</div></div></div>`
+      : `<div class="hc-rec-item"><span class="hc-rec-ic">📊</span>
+           <div><div class="hc-rec-lbl">Sua posição na turma</div>
+           <div class="hc-rec-val">${posic}º de ${ordenadas.length}</div></div></div>`;
+    extraHtml = `${coroa}
+      <div class="hc-rec-item"><span class="hc-rec-ic">📈</span>
+        <div><div class="hc-rec-lbl">Média da turma</div>
+        <div class="hc-rec-val">${escalar(media)}</div></div></div>`;
+  }
+
   const recHtml = rec ? `
     <div class="hc-rec">
+      ${extraHtml}
       <div class="hc-rec-item">
         <span class="hc-rec-ic">🏆</span>
         <div><div class="hc-rec-lbl">Maior nota da turma ${escH(r.turma || '')}</div>
@@ -631,7 +652,7 @@ function renderAtivSimples(r) {
           <div class="hc-stat"><div class="v" style="color:var(--hc-green)">${acertos}</div><div class="l">Acertos</div></div>
           <div class="hc-stat"><div class="v" style="color:var(--hc-red)">${erros}</div><div class="l">Erros</div></div>
           <div class="hc-stat"><div class="v" style="color:var(--hc-cyan)">${taxa}%</div><div class="l">Aproveitamento</div></div>
-          <div class="hc-stat"><div class="v" style="color:var(--hc-gold)">${notaVal}</div><div class="l">Nota ${isEq ? '/ 1,5' : '(pts)'}</div></div>
+          <div class="hc-stat"><div class="v" style="color:var(--hc-gold)">${notaVal}</div><div class="l">Nota ${isEq ? '/ ' + fmt2(NOTA_MAX) : '(pts)'}</div></div>
         </div>
         ${recHtml}
         <div class="hc-rev-title">Revisão das questões</div>

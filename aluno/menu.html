@@ -492,9 +492,13 @@ initAvBanner(turma, alunos[0], liberadas);
       (liberadas || []).filter(l => l.status !== 'encerrada').map(l => l.atividade)
     );
 
+    const _hojeISO = (() => {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    })();
     const itens = Object.entries(snap.val())
       .map(([id, data]) => ({ id, ...data }))
-      .filter(x => x.atividade && x.data && !liberadasNomes.has(x.atividade))
+      .filter(x => x.atividade && x.data && x.data >= _hojeISO && !liberadasNomes.has(x.atividade))
       .sort((a,b)=> (a.data < b.data ? -1 : a.data > b.data ? 1 : 0));
     if(!itens.length) return;
 

@@ -43,6 +43,14 @@
   .stat-ic.vermelho{background:rgba(239,68,68,.14);color:#f87171}
   .stat-ic.azul{background:rgba(96,165,250,.14);color:#8ec0ff}
   .stat-ic.dourado{background:rgba(240,165,0,.14);color:#f5c451}
+  .stat-cap{font-size:9.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;margin-bottom:3px;color:var(--text-muted)}
+  .stat-cap.vermelho{color:#f87171} .stat-cap.azul{color:#8ec0ff}
+  .stat-de{font-size:12px;font-weight:700;color:var(--text-muted)}
+  .stat-sub{font-size:10px;color:var(--text-muted);margin-top:4px;line-height:1.3}
+  .stat.destaque{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.4)}
+  .stat-selo{margin-left:auto;align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(239,68,68,.16);border:1px solid rgba(239,68,68,.4);border-radius:10px;padding:6px 12px;min-width:74px}
+  .stat-selo{font-family:'Orbitron',monospace;font-size:19px;font-weight:700;color:#f87171;line-height:1}
+  .stat-selo small{font-family:'Inter',sans-serif;font-size:9px;font-weight:600;color:#f0a0a0;margin-top:3px;letter-spacing:.3px}
   @media(max-width:768px){ .stat-ic{width:38px;height:38px;border-radius:10px} .stat-ic svg{width:20px;height:20px} }
   .ficha-nota{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;line-height:1.5;border-radius:11px;padding:11px 14px;margin-top:12px}
   .ficha-nota svg{width:17px;height:17px;flex-shrink:0;margin-top:1px}
@@ -50,6 +58,24 @@
   .ficha-nota.ouro svg{fill:var(--gold)} .ficha-nota.ouro b{color:#f5c451}
   .ficha-nota.verde{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.28);color:#a7d8ba}
   .ficha-nota.verde svg{fill:#22C55E} .ficha-nota.verde b{color:#63c98a}
+  .nota-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 2px;border-bottom:1px solid var(--border)}
+  .nota-row:last-of-type{border-bottom:none}
+  .nota-nome{font-size:13px;color:var(--text);line-height:1.3}
+  .nota-val{font-family:'Orbitron',monospace;font-size:15px;font-weight:700;white-space:nowrap}
+  .nota-val small{font-size:11px;opacity:.65;font-weight:400}
+  .nota-val.verde{color:#63c98a} .nota-val.ouro{color:#f5c451} .nota-val.vermelho{color:#f0837f}
+  .nota-total{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding:11px 14px;border-radius:11px;background:rgba(155,48,255,.08);border:1px solid rgba(155,48,255,.25);font-size:13px;color:var(--text-muted)}
+  .nota-total b{font-family:'Orbitron',monospace;font-size:15px;color:var(--text)}
+  .nota-total small{font-size:11px;opacity:.65;font-weight:400}
+  .nota-vazia{font-size:12.5px;color:var(--text-muted);padding:8px 2px}
+  /* Mini-cards de frequência (sem barra/percentuais) */
+  .freq-mini{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+  .freq-mcard{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:9px 11px}
+  .freq-mcard .fm-v{font-size:13px;font-weight:800;color:var(--text);line-height:1.2}
+  .freq-mcard .fm-l{font-size:10.5px;color:var(--text-muted);margin-top:2px;line-height:1.25}
+  .freq-mcard.alerta{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.32)}
+  .freq-mcard.alerta .fm-v{color:#f0837f}
+  @media(max-width:640px){.freq-mini{grid-template-columns:1fr}}
   /* ===== Presença (faltas + atestado no mesmo card) ===== */
   .pres-sec+.pres-sec{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
   .pres-h{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;margin-bottom:10px}
@@ -208,12 +234,15 @@
 import { numeroChamada, BIMESTRES, bimestreAtual, dentroDoAtestado, normalizarAtestados, aulasNoDia } from "/js/constants.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 import { indexarBiblioteca, resolverAula, tipoInfo } from "/js/biblioteca.js";
+import { getResultadosByAluno } from "/js/db.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const sess = requireAluno();
 renderSidebarAluno("sidebar", "ficha");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+const escapeHtml = s => String(s??"").replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 const aluno = (sess.alunos && sess.alunos[0]) || "";
 const turma = sess.turma || "";
@@ -271,6 +300,7 @@ let atividades = [];   // [{id,nome,data,ordem}]
 let marcas = {};       // { atvId:{ aluno:0|1|2|3|4 } }
 let chamada = {};      // { "YYYY-MM-DD": { aluno:true } }
 let anotacoes = {};    // { aluno:[ {ts, ocorrencias:[], obs} ] }
+let resultadosAluno = [];  // resultados de quiz do aluno (notas de atividade)
 let atestados = [];    // [ {inicio,fim,ts,obs} ] do aluno logado
 let nivelTab = 0, nivelNeg = 0;   // progresso nos jogos de tabuada
 
@@ -327,9 +357,11 @@ async function carregar(){
     anotacoes = {};
     Object.values(rawAnot).forEach(entry=>{ if(entry && entry.nome) anotacoes[entry.nome] = entry.registros || []; });
     atestados = (normalizarAtestados(sA.exists()?sA.val():{})[aluno]) || [];
+    try { resultadosAluno = await getResultadosByAluno(aluno, turma); }
+    catch(_) { resultadosAluno = []; }
   }catch(e){
     console.error(e);
-    atividades=[]; marcas={}; chamada={}; anotacoes={}; atestados=[]; nivelTab=0; nivelNeg=0;
+    atividades=[]; marcas={}; chamada={}; anotacoes={}; atestados=[]; nivelTab=0; nivelNeg=0; resultadosAluno=[];
     document.getElementById("conteudo").innerHTML = `<div class="vazio">Não foi possível carregar os dados agora. Tente novamente mais tarde.</div>`;
     return;
   }
@@ -394,6 +426,54 @@ function render(){
   const ringCor   = pctEntreg>=.8 ? "var(--green)" : pctEntreg>=.5 ? "var(--gold)" : "var(--red)";
   const ringLen   = 2*Math.PI*42;
   const ringOff   = ringLen*(1-pctEntreg);
+
+  // ── Card "Notas" (notas de atividade / quiz) ──
+  const _fmt2 = n => n.toFixed(2).replace('.', ',');
+  const notasAtiv = {};
+  for (const r of resultadosAluno){
+    if (!r.concluido || r.modo_teste || !r.atividade) continue;
+    const _pts  = r.pontuacao_bruta ?? r.pontuacao ?? 0;      // 0–10
+    const _vmax = r.valor_nota != null ? Number(r.valor_nota) : 1.5;
+    const _real = Math.round((_pts/10)*_vmax*100)/100;
+    const cur = notasAtiv[r.atividade];
+    if (!cur || _real > cur.real) notasAtiv[r.atividade] = { real:_real, vmax:_vmax, pts:_pts, ts:r.criadoEm||0 };
+  }
+  const _linhasNota = Object.entries(notasAtiv).sort((a,b)=>(a[1].ts-b[1].ts));
+  const _corNota = p => p>=7 ? 'verde' : p>=4 ? 'ouro' : 'vermelho';
+  const _somaReal = _linhasNota.reduce((s,[,v])=>s+v.real,0);
+  const _somaMax  = _linhasNota.reduce((s,[,v])=>s+v.vmax,0);
+  const notasHtml = `
+    <div class="card" id="c-notas">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+        Notas <span class="count">${_linhasNota.length}</span>
+      </div>
+      ${_linhasNota.length
+        ? _linhasNota.map(([nome,v])=>`
+          <div class="nota-row">
+            <span class="nota-nome">${escapeHtml(nome)}</span>
+            <span class="nota-val ${_corNota(v.pts)}">${_fmt2(v.real)} <small>/ ${_fmt2(v.vmax)}</small></span>
+          </div>`).join("")
+        : `<div class="nota-vazia">Nenhuma atividade com nota ainda.</div>`}
+      ${_linhasNota.length ? `
+        <div class="nota-total">
+          <span>Total em atividades</span>
+          <b>${_fmt2(_somaReal)} <small>/ ${_fmt2(_somaMax)}</small></b>
+        </div>` : ""}
+    </div>`;
+
+  // ── Frequência: só mini-cards (sem barra, sem %, sem "aulas presentes") ──
+  const presAulas = Math.max(0, totalAulas - faltasAulas);
+  const pctPres   = totalAulas ? Math.round((presAulas/totalAulas)*100) : 0;
+  const abaixoMin = totalAulas > 0 && pctPres < 75;
+  const resumoFreqHtml = totalAulas ? `
+    <div class="freq-mini">
+      <div class="freq-mcard"><div class="fm-v">${faltas.length} de ${totalDias} dias</div><div class="fm-l">com falta</div></div>
+      <div class="freq-mcard"><div class="fm-v">${faltasAulas} de ${totalAulas} aulas</div><div class="fm-l">perdidas</div></div>
+      <div class="freq-mcard ${abaixoMin?'alerta':''}">${abaixoMin
+        ? `<div class="fm-v">⚠️ Atenção</div><div class="fm-l">Frequência abaixo do mínimo · 75%</div>`
+        : `<div class="fm-v">✓ Em dia</div><div class="fm-l">Dentro do mínimo · 75%</div>`}</div>
+    </div>` : "";
 
   const rows = linhas.filter(l=> filtro==="todas" ? true
     : filtro==="feita" ? (l.st==="feita"||l.st==="atraso"||l.st==="fa"||l.st==="atv"||l.st==="at")
@@ -473,13 +553,18 @@ function render(){
           <div class="stat-ic roxo"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></div>
           <div class="stat-txt"><div class="v">${naoF}</div><div class="l">Atividades não feitas</div></div>
         </div>
-        <div class="stat r" data-goto="c-pres">
+        <div class="stat r${totalAulas ? ' destaque' : ''}" data-goto="c-pres">
           <div class="stat-ic vermelho"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
-          <div class="stat-txt"><div class="v">${faltasAulas}</div><div class="l">Faltas · ${pctFaltas}% do bimestre</div></div>
+          <div class="stat-txt">
+            <div class="stat-cap vermelho">Faltas</div>
+            <div class="v">${faltasAulas} <span class="stat-de">/ ${totalAulas} aulas</span></div>
+            ${totalAulas ? `<div class="stat-sub">${Math.max(0, totalAulas - faltasAulas)} aulas presentes · ${totalAulas ? Math.round(((totalAulas - faltasAulas)/totalAulas)*100) : 0}% de presença</div>` : ""}
+          </div>
+          ${totalAulas ? `<div class="stat-selo">${pctFaltas}%<small>de ausência</small></div>` : ""}
         </div>
         <div class="stat b" data-goto="c-pres">
           <div class="stat-ic azul"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 15l-4-4 1.41-1.41L10 13.17l6.59-6.59L18 8l-8 8z"/></svg></div>
-          <div class="stat-txt"><div class="v">${atDias.length}</div><div class="l">Atestado</div></div>
+          <div class="stat-txt"><div class="stat-cap azul">Atestado</div><div class="v">${atDias.length}</div><div class="l">dia(s)</div></div>
         </div>
         <div class="stat o" data-goto="c-oc">
           <div class="stat-ic dourado"><svg viewBox="0 0 24 24"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg></div>
@@ -507,11 +592,13 @@ function render(){
       </div>
 
       <div>
+        ${notasHtml}
         <div class="card" id="c-pres">
           <div class="card-title">
-            <svg viewBox="0 0 24 24"><path d="M7 2v2H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v9H5v-9h14z"/></svg>
-            Presença
+            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            Frequência no bimestre
           </div>
+          ${resumoFreqHtml}
           <div class="pres-sec">
             <div class="pres-h"><span class="dot" style="background:var(--red)"></span>Faltas<span class="c">${faltas.length} de ${totalDias} dia(s) · ${faltasAulas}/${totalAulas} aula(s) · <b style="color:var(--red)">${pctFaltas}%</b></span></div>
             <div class="falta-dates">${faltasHtml}</div>

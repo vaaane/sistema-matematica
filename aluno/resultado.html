@@ -143,7 +143,7 @@ const total = jogo.total || (jogo.historico?.length || 0);
 const gabaritou = total > 0 && jogo.acertos === total;
 
 // ── Nota na escala de 1,5 pontos ──
-const NOTA_MAX = 1.5;
+const NOTA_MAX = (jogo.valor_nota != null ? Number(jogo.valor_nota) : 1.5);
 const nota15 = Math.round((pf / 10) * NOTA_MAX * 100) / 100;
 const fmt15  = (n) => n.toFixed(2).replace('.', ',');       // 0,10   1,50 …
 
