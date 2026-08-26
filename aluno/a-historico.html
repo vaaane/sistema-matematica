@@ -847,6 +847,26 @@ try {
   </div>`;
 }
 
+// ── Vindo da ficha (clique numa nota): filtrar + rolar + destacar ──
+(function () {
+  const alvo = new URLSearchParams(location.search).get('atividade');
+  if (!alvo) return;
+  const norm = s => (s || '').trim().toLowerCase();
+  // filtra para "Atividades" (2º botão de filtro)
+  const btnAtiv = document.querySelector('.hc-fbtn[onclick*="\'atividade\'"]');
+  if (btnAtiv) window.setFiltro(btnAtiv, 'atividade');
+  // acha o card cujo título bate com o nome da atividade
+  const cards = [...document.querySelectorAll('#entries .entry[data-tipo="atividade"]')];
+  const alvoN = norm(alvo);
+  const hit = cards.find(c => norm(c.querySelector('.entry-title')?.textContent) === alvoN)
+           || cards.find(c => norm(c.querySelector('.entry-title')?.textContent).includes(alvoN));
+  if (!hit) return;
+  hit.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  hit.style.transition = 'box-shadow .3s, border-color .3s';
+  hit.style.boxShadow = '0 0 0 2px rgba(155,48,255,.55), 0 10px 30px rgba(0,0,0,.4)';
+  setTimeout(() => { hit.style.boxShadow = ''; }, 2600);
+})();
+
 </script>
 </body>
 </html>
