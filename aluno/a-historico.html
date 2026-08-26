@@ -123,7 +123,10 @@
 
     /* Questões */
     .q-list{display:flex;flex-direction:column;gap:6px;}
-    .q-item{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;}
+    .q-item{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:3px solid transparent;}
+    .q-item.ok{background:rgba(0,230,118,0.08);border-left-color:var(--hc-green);}
+    .q-item.no{background:rgba(255,68,68,0.08);border-left-color:var(--hc-red);}
+    .q-item.nr{background:rgba(255,215,0,0.06);border-left-color:var(--hc-gold);}
     .q-num{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:var(--hc-muted);min-width:22px;padding-top:1px;flex-shrink:0;}
     .q-text{font-size:12px;color:var(--hc-text);flex:1;line-height:1.5;}
     .q-resp{font-size:11px;color:var(--hc-muted);margin-top:2px;}
@@ -404,7 +407,7 @@ function renderQuestaoItem(q, i) {
   const nr   = q.resultado === 'nao_respondida';
   const rA   = q.resposta_aluno || '—';
   const rC   = q.resposta_correta && q.resposta_correta !== 'undefined' ? q.resposta_correta : null;
-  return `<div class="q-item">
+  return `<div class="q-item ${nr ? 'nr' : ok ? 'ok' : 'no'}">
     <span class="q-num">Q${i+1}</span>
     <div class="q-text">
       ${enun}
