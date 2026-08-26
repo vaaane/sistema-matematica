@@ -533,6 +533,10 @@ function renderAtivSimples(r) {
   const isAv  = modo === 'avaliacao_plus';
   const isC   = modo === 'competicao_plus';
   const pts   = r.pontuacao_bruta || r.pontuacao || 0;
+  const isEq     = modo === 'equacoes_plus';   // atividade que vale 1,5
+  const NOTA_MAX = 1.5;
+  const nota15   = Math.round((pts/10)*NOTA_MAX*100)/100;
+  const fmt15    = n => n.toFixed(2).replace('.', ',');
   const tot   = (r.acertos||0) + (r.erros||0);
   const taxa  = tot > 0 ? Math.round((r.acertos||0)/tot*100) + '%' : '—';
   const entryId = `ativ-${r.id}`;
@@ -557,8 +561,9 @@ function renderAtivSimples(r) {
         </div>
       </div>
       <div class="entry-score">
-        <span class="score-main ${pts > 0 ? 'orange' : ''}">${pts}</span>
-        <span class="score-label">pts</span>
+        ${isEq
+          ? `<span class="score-main ${pts > 0 ? 'green' : ''}">${fmt15(nota15)}</span><span class="score-label">de 1,5</span>`
+          : `<span class="score-main ${pts > 0 ? 'orange' : ''}">${pts}</span><span class="score-label">pts</span>`}
       </div>
       <span class="chevron">▼</span>
     </div>

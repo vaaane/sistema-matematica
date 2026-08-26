@@ -383,6 +383,10 @@ function render(){
   // faltas em AULAS: cada dia de falta = todas as aulas do dia; cada atraso = 1 aula
   const faltasAulas = faltas.reduce((s,d)=>s+aulasDia(d),0);
   const atrasosAulas = atrasos.length; // 1 aula por atraso
+  // Totais do bimestre até agora (dias/aulas com chamada lançada) e % de faltas
+  const totalDias  = Object.keys(chamada).length;
+  const totalAulas = Object.keys(chamada).reduce((s,d)=>s+aulasDia(d),0);
+  const pctFaltas  = totalAulas ? Math.round((faltasAulas/totalAulas)*100) : 0;
 
   // anel de progresso das entregas (usa feitasNum/atividades já calculados acima)
   const totalAtv  = atividades.length;
@@ -471,7 +475,7 @@ function render(){
         </div>
         <div class="stat r" data-goto="c-pres">
           <div class="stat-ic vermelho"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
-          <div class="stat-txt"><div class="v">${faltasAulas}</div><div class="l">Faltas (aulas)</div></div>
+          <div class="stat-txt"><div class="v">${faltasAulas}</div><div class="l">Faltas · ${pctFaltas}% do bimestre</div></div>
         </div>
         <div class="stat b" data-goto="c-pres">
           <div class="stat-ic azul"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 15l-4-4 1.41-1.41L10 13.17l6.59-6.59L18 8l-8 8z"/></svg></div>
@@ -509,7 +513,7 @@ function render(){
             Presença
           </div>
           <div class="pres-sec">
-            <div class="pres-h"><span class="dot" style="background:var(--red)"></span>Faltas<span class="c">${faltas.length} dia(s) · ${faltasAulas} aula(s)</span></div>
+            <div class="pres-h"><span class="dot" style="background:var(--red)"></span>Faltas<span class="c">${faltas.length} de ${totalDias} dia(s) · ${faltasAulas}/${totalAulas} aula(s) · <b style="color:var(--red)">${pctFaltas}%</b></span></div>
             <div class="falta-dates">${faltasHtml}</div>
           </div>
           <div class="pres-sec">

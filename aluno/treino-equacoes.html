@@ -597,6 +597,10 @@ function renderResultado(nota, acertos, erros, tempoSeg, total, historico){
       <div style="font-size:15px;font-weight:700;color:var(--gold);margin-bottom:2px">🎯 Treino — não vale nota</div>
       <div class="tr-res-nota">${notaTxt} / 10</div>
       <div class="tr-res-sub">${msg} &nbsp;·&nbsp; ${acertos} de ${total} corretas</div>
+      <div style="text-align:center;margin:-6px 0 20px;font-size:1rem;color:var(--gold,#ffd700);font-weight:700">
+        🎯 Na atividade real (vale 1,5), você teria tirado
+        <b>${(Math.round((acertos/total)*1.5*100)/100).toFixed(2).replace(".",",")} de 1,5</b>
+      </div>
       <div class="tr-stats-grid">
         <div class="tr-stat"><div class="v" style="color:var(--green)">${acertos}</div><div class="l">Acertos</div></div>
         <div class="tr-stat"><div class="v" style="color:var(--red)">${erros}</div><div class="l">Erros</div></div>
