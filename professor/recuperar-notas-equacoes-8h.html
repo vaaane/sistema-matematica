@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Recuperar notas — Equações 8H</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .rn-filtros{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:16px}
+    .rn-filtro{display:flex;flex-direction:column;gap:6px}
+    .rn-filtro label{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted)}
+    .rn-caso{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
+    .rn-caso .linha{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+    .rn-caso .seta{align-self:center;color:var(--purple);font-size:22px;font-weight:800;padding:0 4px}
+    .rn-caso select{min-width:170px}
+    .rn-achado{margin-top:12px;font-size:13px;color:var(--text-muted);background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+    .rn-achado b{color:var(--text)}
+    .rn-achado .nota{font-family:'Orbitron',monospace;color:var(--gold);font-weight:700}
+    .rn-acoes{display:flex;gap:12px;flex-wrap:wrap;margin:8px 0 18px}
+    .rn-opts{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);margin-bottom:14px}
+    .rn-log{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;font-size:13px;line-height:1.7;white-space:pre-wrap}
+    .rn-log .ok{color:var(--green)} .rn-log .err{color:var(--red)} .rn-log .warn{color:var(--gold)}
+    .rn-aviso{background:rgba(255,123,46,.1);border:1px solid rgba(255,123,46,.35);color:var(--orange);
+      border-radius:12px;padding:12px 14px;font-size:13px;margin-bottom:16px}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Recuperar notas — Equações</div>
+        <div class="topbar-sub">Move a nota que caiu no login de um ausente para os alunos que realmente fizeram</div>
+      </div>
+    </div>
+    <div class="content">
+
+      <div class="rn-aviso">
+        Use quando uma dupla jogou pelo login de um colega que faltou. A nota foi salva no nome
+        do ausente — aqui ela é <b>copiada</b> para os alunos corretos e o registro do ausente é
+        <b>removido</b> (ele passa a contar como falta / 0). Sempre <b>Analisar</b> antes de aplicar.
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="rn-filtros">
+          <div class="rn-filtro">
+            <label for="sel-turma">Turma</label>
+            <div class="select-wrap"><select class="input" id="sel-turma"></select></div>
+          </div>
+          <div class="rn-filtro" style="flex:1;min-width:240px">
+            <label for="sel-ativ">Atividade</label>
+            <div class="select-wrap"><select class="input" id="sel-ativ"></select></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="casos"></div>
+      <button class="btn btn-ghost" id="btn-add" style="margin-bottom:16px">+ Adicionar caso</button>
+
+      <div class="rn-opts">
+        <input type="checkbox" id="opt-zerar" checked>
+        <label for="opt-zerar">Remover o registro do aluno ausente (conta como falta / 0)</label>
+      </div>
+
+      <div class="rn-acoes">
+        <button class="btn btn-blue" id="btn-analisar">🔍 1. Analisar</button>
+        <button class="btn" id="btn-aplicar" style="background:var(--green);color:#06210f;border:none" disabled>✔ 2. Aplicar correção</button>
+      </div>
+
+      <div class="rn-log" id="log" style="display:none"></div>
+
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
+import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES } from "/js/constants.js";
+import {
+  getResultadosByAluno, getDetalhes, saveDetalhes,
+  addResultado, updateResultado, deletarRegistro
+} from "/js/db.js";
+
+requireProfessor();
+renderSidebarProfessor("sidebar", "atividades");
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+/* ── Configuração inicial (pré-preenchida para a 8H de hoje) ── */
+const TURMA_PADRAO = "8H";
+const ATIV_PADRAO  = "Atividade 1 - Equações do 1º Grau";
+// Casos conhecidos: [ausente, destino1, destino2]. Deixe um destino vazio se não souber.
+const CASOS_PADRAO = [
+  { ausente: "Nicolly", destinos: ["Pedro Jorge", ""] },     // Victor: escolha qual na lista
+  { ausente: "Jessier", destinos: ["Ana Gabrieli", "Honny"] },
+];
+
+const selTurma = document.getElementById("sel-turma");
+const selAtiv  = document.getElementById("sel-ativ");
+const casosEl  = document.getElementById("casos");
+const logEl    = document.getElementById("log");
+const btnAplicar = document.getElementById("btn-aplicar");
+
+const TURMAS = Object.keys(ALUNOS_POR_TURMA).sort();
+selTurma.innerHTML = TURMAS.map(t => `<option value="${t}" ${t===TURMA_PADRAO?"selected":""}>Turma ${t}</option>`).join("");
+selAtiv.innerHTML = LISTA_ATIVIDADES.map(a => `<option value="${a.nome}" ${a.nome===ATIV_PADRAO?"selected":""}>${a.nome}</option>`).join("");
+
+let analise = null; // resultado do "Analisar"
+
+function opcoesAlunos(turma, selecionado){
+  const alunos = ALUNOS_POR_TURMA[turma] || [];
+  return `<option value="">—</option>` +
+    alunos.map(n => `<option value="${n}" ${n===selecionado?"selected":""}>${n}</option>`).join("");
+}
+
+function linhaCaso(caso = { ausente:"", destinos:["",""] }){
+  const turma = selTurma.value;
+  const div = document.createElement("div");
+  div.className = "rn-caso";
+  div.innerHTML = `
+    <div class="linha">
+      <div class="rn-filtro">
+        <label>Aluno ausente (login usado)</label>
+        <div class="select-wrap"><select class="input js-ausente">${opcoesAlunos(turma, caso.ausente)}</select></div>
+      </div>
+      <div class="seta">→</div>
+      <div class="rn-filtro">
+        <label>Recebe a nota (1)</label>
+        <div class="select-wrap"><select class="input js-dest">${opcoesAlunos(turma, caso.destinos[0])}</select></div>
+      </div>
+      <div class="rn-filtro">
+        <label>Recebe a nota (2)</label>
+        <div class="select-wrap"><select class="input js-dest">${opcoesAlunos(turma, caso.destinos[1])}</select></div>
+      </div>
+      <button class="btn btn-ghost js-rm" title="Remover">✕</button>
+    </div>
+    <div class="rn-achado" style="display:none"></div>`;
+  div.querySelector(".js-rm").addEventListener("click", () => { div.remove(); resetAnalise(); });
+  div.querySelectorAll("select").forEach(s => s.addEventListener("change", resetAnalise));
+  casosEl.appendChild(div);
+}
+
+function resetAnalise(){ analise = null; btnAplicar.disabled = true; }
+
+function renderCasos(){
+  casosEl.innerHTML = "";
+  CASOS_PADRAO.forEach(c => linhaCaso(c));
+}
+renderCasos();
+
+selTurma.addEventListener("change", () => { renderCasos(); resetAnalise(); });
+selAtiv.addEventListener("change", resetAnalise);
+document.getElementById("btn-add").addEventListener("click", () => linhaCaso());
+
+function lerCasos(){
+  const turma = selTurma.value, atividade = selAtiv.value;
+  const casos = [];
+  casosEl.querySelectorAll(".rn-caso").forEach(div => {
+    const ausente = div.querySelector(".js-ausente").value;
+    const destinos = [...div.querySelectorAll(".js-dest")].map(s => s.value).filter(Boolean);
+    casos.push({ div, ausente, destinos });
+  });
+  return { turma, atividade, casos };
+}
+
+// Melhor registro concluído do aluno para a atividade
+async function registroConcluido(aluno, turma, atividade){
+  const regs = (await getResultadosByAluno(aluno, turma))
+    .filter(r => r.atividade === atividade && r.concluido && !r.modo_teste)
+    .sort((a,b) => (b.criadoEm||0) - (a.criadoEm||0));
+  return regs[0] || null;
+}
+async function registrosTodos(aluno, turma, atividade){
+  return (await getResultadosByAluno(aluno, turma))
+    .filter(r => r.atividade === atividade && !r.modo_teste);
+}
+
+function fmtNota(n){ return (n==null) ? "—" : Number(n).toFixed(2).replace(".",","); }
+
+document.getElementById("btn-analisar").addEventListener("click", async () => {
+  const { turma, atividade, casos } = lerCasos();
+  logEl.style.display = "block";
+  logEl.textContent = "Analisando…";
+  let texto = "", tudoOk = true;
+  const plano = [];
+
+  for (const c of casos){
+    const achadoEl = c.div.querySelector(".rn-achado");
+    if (!c.ausente || !c.destinos.length){
+      achadoEl.style.display = "block";
+      achadoEl.innerHTML = `<span style="color:var(--red)">Selecione o ausente e ao menos um destino.</span>`;
+      tudoOk = false; continue;
+    }
+    const reg = await registroConcluido(c.ausente, turma, atividade);
+    if (!reg){
+      achadoEl.style.display = "block";
+      achadoEl.innerHTML = `<span style="color:var(--red)">Nenhum registro concluído encontrado em <b>${c.ausente}</b> para esta atividade.</span>`;
+      tudoOk = false; continue;
+    }
+    const det = await getDetalhes(reg.id).catch(() => []);
+    achadoEl.style.display = "block";
+    achadoEl.innerHTML =
+      `Encontrado em <b>${c.ausente}</b>: nota <span class="nota">${fmtNota(reg.pontuacao)}</span> /10 · `
+      + `${reg.acertos||0} acertos · ${(det?.length)||0} questões · `
+      + `→ vai para <b>${c.destinos.join("</b> e <b>")}</b>`;
+    plano.push({ ...c, reg, det });
+    texto += `• ${c.ausente} (${fmtNota(reg.pontuacao)}) → ${c.destinos.join(", ")}\n`;
+  }
+
+  if (tudoOk && plano.length){
+    analise = { turma, atividade, plano };
+    btnAplicar.disabled = false;
+    logEl.innerHTML = `<span class="ok">Análise concluída.</span> Confira acima e clique em “Aplicar correção”.\n\n${texto}`;
+  } else {
+    analise = null; btnAplicar.disabled = true;
+    logEl.innerHTML = `<span class="warn">Ajuste os casos marcados em vermelho antes de aplicar.</span>`;
+  }
+});
+
+document.getElementById("btn-aplicar").addEventListener("click", async () => {
+  if (!analise){ return; }
+  const zerar = document.getElementById("opt-zerar").checked;
+  if (!confirm("Aplicar a correção agora? Isto grava notas no Firebase.")) return;
+  btnAplicar.disabled = true;
+  logEl.style.display = "block";
+  let out = "";
+
+  for (const c of analise.plano){
+    const { reg, det } = c;
+    // 1) copiar para cada destino
+    for (const destino of c.destinos){
+      try {
+        const existentes = await registrosTodos(destino, analise.turma, analise.atividade);
+        const concl = existentes.find(r => r.concluido);
+        const dados = {
+          aluno: destino, turma: analise.turma, atividade: analise.atividade,
+          concluido: true, emAndamento: false,
+          pontuacao: reg.pontuacao ?? 0, pontuacao_bruta: reg.pontuacao_bruta ?? reg.pontuacao ?? 0,
+          acertos: reg.acertos ?? 0, erros: reg.erros ?? 0,
+          respondidas: reg.respondidas ?? 0, total: reg.total ?? (det?.length || 0),
+          tempo_segundos: reg.tempo_segundos ?? 0,
+          motivo_fim: "recuperacao_dupla", modo: reg.modo || "equacoes_plus",
+          recuperado_de: c.ausente, lancado_manual: true, fimTs: Date.now(),
+        };
+        let destId;
+        if (concl){ await updateResultado(concl.id, dados); destId = concl.id; }
+        else { destId = await addResultado(dados); }
+        if (det?.length) await saveDetalhes(destId, det).catch(()=>{});
+        out += `<span class="ok">✔</span> ${destino} recebeu ${fmtNota(reg.pontuacao)} (de ${c.ausente})\n`;
+      } catch(e){
+        out += `<span class="err">✕</span> Erro ao gravar ${destino}: ${e.message||e}\n`;
+      }
+    }
+    // 2) zerar/remover o ausente
+    if (zerar){
+      try {
+        const todos = await registrosTodos(c.ausente, analise.turma, analise.atividade);
+        for (const r of todos){ await deletarRegistro("resultados", r.id); }
+        out += `<span class="warn">–</span> ${c.ausente}: registro removido (falta / 0)\n`;
+      } catch(e){
+        out += `<span class="err">✕</span> Erro ao zerar ${c.ausente}: ${e.message||e}\n`;
+      }
+    }
+    out += "\n";
+  }
+
+  out += `<span class="ok">Concluído.</span> Recarregue o Monitor / Notas para conferir.`;
+  logEl.innerHTML = out;
+  analise = null;
+});
+</script>
+</body>
+</html>

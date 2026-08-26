@@ -12,7 +12,8 @@
   <link rel="stylesheet" href="/css/main.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
   <style>
-    .ativ-liberada{display:flex;align-items:center;gap:16px;padding:18px 20px;background:linear-gradient(135deg,#EBF6FD,#F0F9FF);border:1.5px solid #BAE6FD;border-radius:var(--radius);margin-bottom:8px;}
+    .ativ-liberada{display:flex;align-items:center;gap:16px;padding:18px 20px;background:radial-gradient(120% 140% at 0% 0%, rgba(124,92,252,.14), transparent 60%),var(--card);border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:8px;cursor:pointer;transition:transform .15s,border-color .15s;text-decoration:none;color:inherit;}
+    .ativ-liberada:hover{transform:translateY(-2px);border-color:var(--purple);}
     .ativ-icon{width:48px;height:48px;border-radius:12px;background:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
     .ativ-icon svg{width:26px;height:26px;fill:#fff;}
     .ativ-info{flex:1;}.ativ-info h3{font-size:15px;font-weight:700;}.ativ-info p{font-size:12px;color:var(--text-muted);margin-top:3px;}
@@ -970,57 +971,16 @@ ${tempoPodioHtml}
           <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>${torneioAtivo.status==='liberada' ? 'Entrar' : 'Jogar'}
         </a>
       </div>` : ''}
-      ${liberadasAtivas.length ? liberadasAtivas.map(lib => {
-        const ativDef = LISTA_ATIVIDADES.find(a => a.nome === lib.atividade);
-        const modoEfetivo = lib.modo || ativDef?.modo || 'classico';
-        const url = modoEfetivo === 'avaliacao_plus'
-          ? `/aluno/avaliacao_plus.html?ativ=${encodeURIComponent(lib.atividade)}`
-          : modoEfetivo === 'competicao_plus'
-          ? `/aluno/competicao_plus.html?ativ=${encodeURIComponent(lib.atividade)}`
-          : modoEfetivo === 'competicao'
-          ? `/aluno/competicao.html?ativ=${encodeURIComponent(lib.atividade)}`
-          : `/aluno/jogar.html?ativ=${encodeURIComponent(lib.atividade)}`;
-
-        let infoParagraph = '';
-        let botaoHtml = '';
-
-        if (modoEfetivo === 'avaliacao_plus') {
-          const ctrl = controleAv[lib.atividade];
-          const tentUsadas    = ctrl?.tentativas_realizadas || 0;
-          const tentRestantes = MAX_TENT_AV - tentUsadas;
-          const gRestMs       = ctrl ? DURACAO_GLOBAL_AV - (Date.now() - ctrl.inicio_global) : DURACAO_GLOBAL_AV;
-          const esgotada      = tentRestantes <= 0 || (ctrl && gRestMs < MIN_TENT_AV_MS);
-          let timerInfo = '';
-          if (ctrl?.inicio_global) {
-            const ini = new Date(ctrl.inicio_global);
-            const fim = new Date(ctrl.inicio_global + DURACAO_GLOBAL_AV);
-            const fH  = d => d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0');
-            timerInfo = ` · ⏱ ${fH(ini)}–${fH(fim)}`;
-          }
-          infoParagraph = `${Math.round(lib.percentual??100)}% da nota · 📝 Avaliação+ · ${tentUsadas}/${MAX_TENT_AV} tentativas${timerInfo}`;
-          botaoHtml = esgotada
-            ? `<span style="font-size:12px;font-weight:700;color:var(--green);white-space:nowrap">Concluída ✓</span>`
-            : `<a href="${url}" class="btn btn-blue"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Iniciar</a>`;
-        } else if (modoEfetivo === 'competicao' || modoEfetivo === 'competicao_plus') {
-          infoParagraph = `${Math.round(lib.percentual??100)}% da nota · ⚔️ Competição+${lib.criadoEm ? ` · liberada ${formatHa(lib.criadoEm)}` : ''}`;
-          botaoHtml = `<a href="${url}" class="btn btn-blue"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Iniciar</a>`;
-        } else {
-          const esgotado = tentativasEsgotadas(lib.atividade);
-          infoParagraph = `${Math.round(lib.percentual??100)}% da nota · ${lib.tempo_maximo ? Math.round(lib.tempo_maximo/60) : 7} min${lib.criadoEm ? ` · liberada ${formatHa(lib.criadoEm)}` : ''}`;
-          botaoHtml = esgotado
-            ? `<span style="font-size:12px;font-weight:600;color:var(--text-muted);white-space:nowrap">Tentativas<br>esgotadas</span>`
-            : `<a href="${url}" class="btn btn-blue"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Iniciar</a>`;
-        }
-
-        return `<div class="ativ-liberada">
+      ${liberadasAtivas.length ? `
+        <a href="/aluno/a-atividades.html" class="ativ-liberada">
           <div class="ativ-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
           <div class="ativ-info">
-            <h3>${lib.atividade}</h3>
-            <p>${infoParagraph}</p>
+            <h3>${liberadasAtivas.length === 1 ? liberadasAtivas[0].atividade : `${liberadasAtivas.length} atividades liberadas`}</h3>
+            <p>Toque para abrir suas atividades</p>
           </div>
-          ${botaoHtml}
-        </div>`;
-      }).join('') : (!torneioAtivo ? `
+          <span class="btn btn-blue"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Ver atividades</span>
+        </a>
+      ` : (!torneioAtivo ? `
       <div class="ativ-vazia">
         <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
         Nenhuma atividade liberada para sua turma no momento.

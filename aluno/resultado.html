@@ -11,31 +11,82 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <style>
-    .banner-conquistas{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 20px;border-radius:var(--radius);background:linear-gradient(135deg,#FFFBEB,#fff);border:1.5px solid var(--gold);margin-bottom:20px;animation:fadeIn .5s ease;}
+    /* ══ HERO da nota (destaque 1,5) ══ */
+    .nota-hero{
+      position:relative;overflow:hidden;border-radius:20px;padding:30px 24px;margin-bottom:20px;
+      text-align:center;border:1.5px solid var(--border);
+      background:radial-gradient(120% 140% at 50% -10%, rgba(124,92,252,.22), transparent 60%), var(--card);
+      animation:heroIn .55s cubic-bezier(.2,.8,.2,1);
+    }
+    .nota-hero.tier-bom{border-color:rgba(0,230,118,.5);
+      background:radial-gradient(120% 140% at 50% -10%, rgba(0,230,118,.20), transparent 60%), var(--card);}
+    .nota-hero.tier-perfeito{border-color:var(--gold);
+      background:radial-gradient(130% 150% at 50% -10%, rgba(255,215,0,.28), rgba(124,92,252,.14) 55%, transparent 75%), var(--card);
+      box-shadow:0 0 0 1px rgba(255,215,0,.25), 0 12px 40px rgba(255,215,0,.15);}
+    .nota-hero-msg{font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;}
+    .nota-hero.tier-bom .nota-hero-msg{color:var(--green);}
+    .nota-hero.tier-perfeito .nota-hero-msg{color:var(--gold);}
+    .nota-hero-num{font-size:64px;line-height:1;font-weight:800;
+      background:linear-gradient(135deg,var(--purple),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent;}
+    .nota-hero.tier-bom  .nota-hero-num{background:linear-gradient(135deg,var(--green),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent;}
+    .nota-hero.tier-perfeito .nota-hero-num{background:linear-gradient(135deg,var(--gold),#ff7b2e);-webkit-background-clip:text;background-clip:text;color:transparent;}
+    .nota-hero-de{font-size:20px;font-weight:700;color:var(--text-muted);}
+    .nota-hero-sub{margin-top:12px;font-size:14px;color:var(--text-muted);}
+    .nota-hero-emoji{font-size:40px;margin-bottom:4px;display:none;}
+    .nota-hero.tier-bom .nota-hero-emoji,.nota-hero.tier-perfeito .nota-hero-emoji{display:block;animation:clap .6s ease infinite alternate;}
+    @keyframes heroIn{from{opacity:0;transform:translateY(-14px) scale(.97)}to{opacity:1;transform:none}}
+    @keyframes clap{from{transform:rotate(-8deg) scale(1)}to{transform:rotate(8deg) scale(1.12)}}
+
+    /* palmas flutuantes */
+    #palmas{position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden;}
+    #palmas span{position:absolute;font-size:30px;animation:palmaUp linear forwards;}
+    @keyframes palmaUp{
+      0%{transform:translateY(20px) scale(.6);opacity:0}
+      15%{opacity:1}
+      100%{transform:translateY(-120px) scale(1.1);opacity:0}
+    }
+    #confetti{position:fixed;inset:0;pointer-events:none;z-index:55;}
+
+    /* ══ conquistas ══ */
+    .banner-conquistas{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 18px;border-radius:14px;
+      background:linear-gradient(135deg,rgba(255,215,0,.14),rgba(124,92,252,.10));border:1.5px solid var(--gold);margin-bottom:20px;animation:heroIn .5s ease;}
     .banner-titulo{font-size:15px;font-weight:800;color:var(--gold);}
-    .conquista-chip{padding:4px 12px;border-radius:20px;background:#FEF9C3;color:#854D0E;font-size:12px;font-weight:700;}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+    .conquista-chip{padding:5px 13px;border-radius:20px;background:rgba(255,215,0,.16);color:var(--gold);font-size:12px;font-weight:700;border:1px solid rgba(255,215,0,.3);}
+
+    /* ══ stats ══ */
     .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
-    .stat-res{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 12px;text-align:center;}
+    .stat-res{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 12px;text-align:center;transition:transform .15s;}
+    .stat-res:hover{transform:translateY(-2px);}
     .stat-val{font-size:26px;font-weight:800;line-height:1;}
-    .stat-lbl{font-size:10px;color:var(--text-muted);margin-top:5px;text-transform:uppercase;letter-spacing:.4px;}
-    .atraso-banner{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;background:#FFF7ED;border:1px solid #FED7AA;font-size:13px;color:var(--orange-dark);font-weight:600;margin-bottom:20px;}
-    .q-rev{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:8px;border:1px solid var(--border);margin-bottom:8px;font-size:13px;}
-    .q-rev.ok{background:#F0FDF4;border-color:#BBF7D0;}
-    .q-rev.err{background:#FEF2F2;border-color:#FECACA;}
-    .q-num{font-size:11px;font-weight:700;color:var(--text-muted);width:28px;flex-shrink:0;}
-    .q-perg{flex:1;font-weight:500;}
+    .stat-lbl{font-size:10px;color:var(--text-muted);margin-top:6px;text-transform:uppercase;letter-spacing:.5px;}
+
+    /* ══ banner de % ══ */
+    .atraso-banner{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;
+      background:rgba(255,123,46,.12);border:1px solid rgba(255,123,46,.35);font-size:13px;color:var(--orange);font-weight:600;margin-bottom:20px;}
+
+    /* ══ revisão (DARK, legível) ══ */
+    .rev-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;}
+    .rev-title{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;color:var(--text);margin-bottom:16px;}
+    .rev-title svg{width:20px;height:20px;fill:var(--purple);}
+    .q-rev{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;
+      border:1px solid var(--border);margin-bottom:8px;font-size:13px;background:rgba(255,255,255,.02);}
+    .q-rev.ok{border-color:rgba(0,230,118,.35);background:rgba(0,230,118,.07);}
+    .q-rev.err{border-color:rgba(255,60,80,.30);background:rgba(255,60,80,.06);}
+    .q-num{font-size:11px;font-weight:800;color:var(--text-muted);width:30px;flex-shrink:0;}
+    .q-rev.ok .q-num{color:var(--green);} .q-rev.err .q-num{color:var(--red);}
+    .q-perg{flex:1;font-weight:500;color:var(--text);}
     .q-resp-ok{color:var(--green);font-weight:700;font-size:12px;}
-    .q-resp-err{color:var(--red);font-weight:700;font-size:12px;}
-    .q-correta{font-size:11px;color:var(--text-muted);}
+    .q-resp-err{color:var(--red);font-weight:700;font-size:12px;text-decoration:line-through;opacity:.85;}
+    .q-correta{font-size:11px;color:var(--green);font-weight:600;}
+    .q-tent{font-size:11px;color:var(--text-muted);width:26px;text-align:right;}
     .resultado-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;}
     @media(max-width:600px){
+      .nota-hero-num{font-size:52px} .nota-hero-de{font-size:17px}
       .stats-grid{grid-template-columns:repeat(3,1fr)}
-      .q-rev{flex-wrap:wrap;gap:6px 8px;padding:8px 10px}
+      .q-rev{flex-wrap:wrap;gap:6px 8px;padding:10px 12px}
       .q-perg{flex-basis:100%;order:0}
       .q-num{order:-1;align-self:flex-start}
       .q-resp-ok,.q-resp-err{font-size:11px}
-      .q-correta{font-size:10px}
       .resultado-actions{flex-direction:column}
       .resultado-actions .btn{justify-content:center}
     }
@@ -58,6 +109,8 @@
   </div>
 </div>
 
+<canvas id="confetti"></canvas>
+<div id="palmas"></div>
 
 <script type="module">
 import { formatarTempo } from "/js/constants.js";
@@ -83,16 +136,47 @@ if (!jogo) { window.location.href = "/aluno/a-atividades.html"; throw new Error(
 
 document.getElementById("topbar-sub").textContent = `${jogo.nome} · Turma ${jogo.turma}`;
 
-const pf  = jogo.pontuacaoFinal || 0;
-const pb  = jogo.pontuacaoBruta || 0;
+const pf  = jogo.pontuacaoFinal || 0;              // nota final /10 (já com % aplicada)
+const pb  = jogo.pontuacaoBruta || 0;              // nota bruta /10 (desempenho puro)
 const tt  = jogo.tempoSegundos  || 0;
+const total = jogo.total || (jogo.historico?.length || 0);
+const gabaritou = total > 0 && jogo.acertos === total;
+
+// ── Nota na escala de 1,5 pontos ──
+const NOTA_MAX = 1.5;
+const nota15 = Math.round((pf / 10) * NOTA_MAX * 100) / 100;
+const fmt15  = (n) => n.toFixed(2).replace('.', ',');       // 0,10   1,50 …
+
+// ── Faixa de desempenho (usa nota bruta /10, como a professora enxerga) ──
+let tier = "normal", tierMsg = "Atividade concluída", tierEmoji = "", tierSub = "Confira sua revisão abaixo.";
+if (gabaritou) {
+  tier = "perfeito"; tierMsg = "PERFEITO! Você gabaritou!"; tierEmoji = "👑";
+  tierSub = "Nota máxima — acertou todas as questões. Excelente! 🎉";
+} else if (pb >= 8) {
+  tier = "bom"; tierMsg = "Parabéns!"; tierEmoji = "👏";
+  tierSub = "Ótimo desempenho — continue assim!";
+} else if (pb >= 6) {
+  tierMsg = "Bom trabalho!"; tierSub = "Você foi bem — revise os erros para melhorar ainda mais.";
+} else {
+  tierMsg = "Atividade concluída"; tierSub = "Revise as questões abaixo e treine no modo de treino.";
+}
+
+const pctExib = jogo.percentual != null ? jogo.percentual : Math.round((jogo.fatorAtraso||1)*100);
 
 document.getElementById("content").innerHTML = `
   ${!jogo.salvoFirebase ? `
-  <div class="alert" style="background:#FEF2F2;border:1.5px solid #FECACA;color:#B91C1C;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px">
+  <div class="alert" style="background:rgba(255,60,80,.10);border:1.5px solid rgba(255,60,80,.4);color:var(--red);margin-bottom:16px;display:flex;align-items:flex-start;gap:10px;border-radius:12px;padding:12px 14px">
     <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;flex-shrink:0;margin-top:1px"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
     <div><strong>Erro ao salvar no servidor.</strong> Resultado exibido localmente, mas pode não aparecer no histórico.${jogo.erroSalvar ? `<br><span style="font-size:11px;opacity:.7">${jogo.erroSalvar}</span>` : ''}</div>
   </div>` : ''}
+
+  <div class="nota-hero tier-${tier}">
+    <div class="nota-hero-emoji">${tierEmoji}</div>
+    <div class="nota-hero-msg">${tierMsg}</div>
+    <div><span class="nota-hero-num">${fmt15(nota15)}</span> <span class="nota-hero-de">de ${fmt15(NOTA_MAX)}</span></div>
+    <div class="nota-hero-sub">${tierSub}</div>
+  </div>
+
   ${jogo.novasConquistas?.length ? `
   <div class="banner-conquistas">
     <span class="banner-titulo">🏆 Conquistas desbloqueadas!</span>
@@ -100,22 +184,21 @@ document.getElementById("content").innerHTML = `
   </div>` : ''}
 
   <div class="stats-grid">
-    <div class="stat-res"><div class="stat-val" style="color:var(--gold)">${pf}</div><div class="stat-lbl">Pontuação</div></div>
+    <div class="stat-res"><div class="stat-val" style="color:var(--gold)">${pb}</div><div class="stat-lbl">Nota /10</div></div>
     <div class="stat-res"><div class="stat-val" style="color:var(--green)">${jogo.acertos||0}</div><div class="stat-lbl">Acertos</div></div>
     <div class="stat-res"><div class="stat-val" style="color:var(--red)">${jogo.erros||0}</div><div class="stat-lbl">Erros</div></div>
     <div class="stat-res"><div class="stat-val" style="color:var(--blue);font-size:20px">${formatarTempo(tt)}</div><div class="stat-lbl">Tempo</div></div>
     <div class="stat-res"><div class="stat-val">${jogo.respondidas||0}</div><div class="stat-lbl">Respondidas</div></div>
   </div>
 
-  ${(jogo.percentual != null ? jogo.percentual : Math.round((jogo.fatorAtraso||1)*100)) < 100 ? `
+  ${pctExib < 100 ? `
   <div class="atraso-banner">
     <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;flex-shrink:0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-    Atividade com ${jogo.percentual != null ? jogo.percentual : Math.round((jogo.fatorAtraso||1)*100)}% da nota
-    &nbsp;·&nbsp; Pontuação bruta: ${pb} → Final: ${pf} pts
+    Atividade com ${pctExib}% da nota &nbsp;·&nbsp; Nota bruta: ${pb} → Final: ${pf} pts
   </div>` : ''}
 
-  <div class="card">
-    <div class="card-title" style="margin-bottom:16px">
+  <div class="rev-card">
+    <div class="rev-title">
       <svg viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
       Revisão das questões
     </div>
@@ -125,7 +208,7 @@ document.getElementById("content").innerHTML = `
       <div class="q-perg">${h.pergunta}</div>
       <div class="${h.acertou?'q-resp-ok':'q-resp-err'}">${h.resposta_aluno}</div>
       ${!h.acertou ? `<div class="q-correta">✓ ${h.resposta_correta}</div>` : ''}
-      <div style="font-size:11px;color:var(--text-muted);width:26px;text-align:right">${h.tentativas}×</div>
+      <div class="q-tent">${h.tentativas}×</div>
       <div>${h.acertou?'✅':'❌'}</div>
     </div>`).join('')}
     ${!(jogo.historico?.length) ? '<p style="color:var(--text-muted);font-size:13px">Nenhuma questão respondida.</p>' : ''}
@@ -145,6 +228,68 @@ document.getElementById("content").innerHTML = `
       Ver ranking
     </a>
   </div>`;
+
+/* ════════ CELEBRAÇÃO: confetes + palmas ════════ */
+function palmasBurst(qtd, emojis){
+  const wrap = document.getElementById("palmas");
+  for (let i=0;i<qtd;i++){
+    const s = document.createElement("span");
+    s.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    s.style.left = (Math.random()*100) + "vw";
+    s.style.bottom = (Math.random()*30) + "vh";
+    s.style.fontSize = (22 + Math.random()*22) + "px";
+    s.style.animationDuration = (1.6 + Math.random()*1.4) + "s";
+    s.style.animationDelay = (Math.random()*1.2) + "s";
+    wrap.appendChild(s);
+    setTimeout(()=>s.remove(), 3200);
+  }
+}
+
+function confettiBurst({ duracao=3500, densidade=1, cores }){
+  const cv = document.getElementById("confetti");
+  const ctx = cv.getContext("2d");
+  const DPR = Math.min(window.devicePixelRatio||1, 2);
+  function resize(){ cv.width=innerWidth*DPR; cv.height=innerHeight*DPR; }
+  resize(); window.addEventListener("resize", resize);
+  const N = Math.round(140*densidade);
+  const parts = Array.from({length:N}, () => ({
+    x: Math.random()*cv.width,
+    y: -Math.random()*cv.height*0.5,
+    r: (5+Math.random()*7)*DPR,
+    c: cores[Math.floor(Math.random()*cores.length)],
+    vx: (-1+Math.random()*2)*DPR,
+    vy: (2+Math.random()*3.5)*DPR,
+    rot: Math.random()*Math.PI,
+    vr: (-.15+Math.random()*.3),
+    shape: Math.random()<.5?"rect":"circ"
+  }));
+  const inicio = performance.now();
+  (function frame(t){
+    const passado = t - inicio;
+    ctx.clearRect(0,0,cv.width,cv.height);
+    const fade = Math.max(0, 1 - Math.max(0, passado-(duracao-800))/800);
+    parts.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.03*DPR; p.rot+=p.vr;
+      if (p.y>cv.height+20){ p.y=-20; p.x=Math.random()*cv.width; p.vy=(2+Math.random()*3.5)*DPR; }
+      ctx.save(); ctx.globalAlpha=fade; ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.fillStyle=p.c;
+      if (p.shape==="rect") ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*.6);
+      else { ctx.beginPath(); ctx.arc(0,0,p.r/2,0,Math.PI*2); ctx.fill(); }
+      ctx.restore();
+    });
+    if (passado<duracao) requestAnimationFrame(frame);
+    else ctx.clearRect(0,0,cv.width,cv.height);
+  })(inicio);
+}
+
+const PALETA = ["#7c5cfc","#00d4ff","#ff7b2e","#ffd700","#00e676"];
+if (tier === "perfeito"){
+  confettiBurst({ duracao:6000, densidade:1.8, cores:["#ffd700","#ff7b2e","#fff3b0",...PALETA] });
+  palmasBurst(26, ["👏","🎉","👑","💯","⭐","🏆"]);
+  setTimeout(()=>palmasBurst(18, ["👏","🎉","⭐"]), 1800);
+} else if (tier === "bom"){
+  confettiBurst({ duracao:3800, densidade:1, cores:PALETA });
+  palmasBurst(16, ["👏","🎉","👏"]);
+}
 </script>
 </body>
 </html>

@@ -10,110 +10,129 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
-<style>
-  /* --- estilos locais, todos ancorados nas variáveis do main.css --- */
-  .treino-banner{
-    background:rgba(240,165,0,.08);
-    border:1px solid rgba(240,165,0,.25);
-    color:var(--gold);
-    border-radius:var(--radius);
-    padding:14px 18px;
-    display:flex;gap:12px;align-items:flex-start;
-    font-weight:600;margin-bottom:18px;
-  }
-  .btn-voltar-treino{
-    display:inline-flex;align-items:center;gap:6px;
-    font-size:13px;font-weight:600;color:var(--text-muted);
-    background:var(--card);border:1px solid var(--border);
-    border-radius:10px;padding:8px 15px;text-decoration:none;
-    transition:.14s;white-space:nowrap;
-  }
-  .btn-voltar-treino:hover{color:var(--text);border-color:var(--purple);background:rgba(155,48,255,.08)}
-  .cronometro-treino{
-    display:inline-flex;align-items:center;gap:6px;
-    font-family:'Orbitron',monospace;font-size:14px;font-weight:700;
-    color:var(--gold);background:rgba(240,165,0,.10);
-    border:1px solid rgba(240,165,0,.35);border-radius:10px;
-    padding:7px 13px;white-space:nowrap;min-width:78px;justify-content:center;
-  }
+  <style>
+    /* ── Layout geral (idêntico à atividade valendo nota) ── */
+    .cp-layout{display:grid;grid-template-columns:1fr 260px;gap:18px;align-items:start;}
+    .cp-main{display:flex;flex-direction:column;gap:16px;min-width:0;}
 
-  .treino-banner .icone{font-size:1.3rem;line-height:1}
-  .treino-banner small{display:block;color:var(--text-muted);font-weight:500;margin-top:2px}
+    /* ── Barra de progresso ── */
+    .cp-progress{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);}
+    .cp-prog-label{font-size:12px;color:var(--text-muted);flex-shrink:0;font-weight:600;}
+    .cp-prog-bar{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden;}
+    .cp-prog-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--purple),#c77dff);transition:width .4s;}
+    .cp-prog-count{font-size:13px;font-weight:800;color:var(--purple);flex-shrink:0;font-variant-numeric:tabular-nums;}
 
-  .eq-destaque{
-    display:inline-block;margin-top:10px;
-    font-family:'Orbitron',monospace;font-size:1.5rem;
-    color:var(--gold);letter-spacing:1px;
-  }
-  .q-tag{
-    display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.5px;
-    text-transform:uppercase;color:var(--purple);
-    background:rgba(155,48,255,.12);border:1px solid rgba(155,48,255,.25);
-    padding:3px 10px;border-radius:999px;margin-bottom:12px;
-  }
-  .q-enunciado{font-size:1.12rem;line-height:1.5;color:var(--text)}
-  .q-instrucao{color:var(--text-muted);font-size:.9rem;margin-top:8px}
+    /* ── Card da questão ── */
+    .cp-qcard{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px 28px 22px;}
+    .cp-qhead{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+    .cp-qnum{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--purple);background:rgba(155,48,255,.12);border:1px solid rgba(155,48,255,.3);border-radius:8px;padding:4px 12px;}
+    .cp-qtag{font-size:11px;font-weight:600;color:var(--text-muted);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:4px 10px;}
+    .cp-qtext{font-size:19px;font-weight:700;line-height:1.45;margin-bottom:22px;color:var(--text);}
 
-  .opcoes{display:flex;flex-direction:column;gap:10px;margin-top:18px}
-  .opcao{
-    display:flex;align-items:center;gap:12px;
-    background:var(--card);border:1.5px solid var(--border);
-    border-radius:12px;padding:14px 16px;cursor:pointer;
-    font-size:1.05rem;color:var(--text);transition:.12s;text-align:left;
-  }
-  .opcao:hover{border-color:var(--purple)}
-  .opcao .letra{
-    width:30px;height:30px;flex:none;border-radius:8px;
-    display:grid;place-items:center;font-weight:700;
-    background:rgba(155,48,255,.15);color:var(--purple);
-  }
-  .opcao.sel{border-color:var(--purple);background:rgba(155,48,255,.10)}
-  .opcao.certa{border-color:var(--green);background:rgba(34,197,94,.12)}
-  .opcao.errada{border-color:var(--red);background:rgba(239,68,68,.12)}
-  .opcao.disabled{cursor:default;opacity:.85}
+    /* ── Alternativas ── */
+    .cp-alts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+    .cp-alt{display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg);font-size:15px;font-weight:600;cursor:pointer;text-align:left;transition:all .12s;font-family:'Inter',sans-serif;color:var(--text);width:100%;}
+    .cp-alt:hover{border-color:var(--purple);background:rgba(155,48,255,.08);}
+    .cp-alt.selecionada{border-color:var(--purple);background:rgba(155,48,255,.16);box-shadow:0 0 0 1px var(--purple) inset;}
+    .cp-alt-letra{width:26px;height:26px;flex-shrink:0;border-radius:7px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:var(--text-muted);font-family:'Orbitron',monospace;}
+    .cp-alt.selecionada .cp-alt-letra{background:var(--purple);border-color:var(--purple);color:#fff;}
 
-  .resp-input{max-width:220px;font-family:'Orbitron',monospace;font-size:1.2rem;text-align:center}
+    /* ── Navegação inferior ── */
+    .cp-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px;}
+    .cp-nav .btn{flex:0 0 auto;}
+    .cp-nav-mid{font-size:12px;color:var(--text-muted);text-align:center;flex:1;}
 
-  .barra-prog{height:8px;background:var(--card);border-radius:999px;overflow:hidden;margin-bottom:22px}
-  .barra-prog span{display:block;height:100%;background:linear-gradient(90deg,var(--purple),var(--gold));transition:width .3s}
-  .prog-txt{color:var(--text-muted);font-size:.85rem;margin-bottom:8px;display:flex;justify-content:space-between}
+    /* ── Painel lateral (mapa + timer) ── */
+    .cp-side{display:flex;flex-direction:column;gap:14px;position:sticky;top:14px;}
+    .cp-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+    .cp-panel-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
 
-  .feedback{margin-top:16px;font-weight:600;display:none}
-  .feedback.ok{color:var(--green)}
-  .feedback.no{color:var(--red)}
-  .feedback.show{display:block}
+    .cp-timer{font-family:'Orbitron',monospace;font-size:30px;font-weight:700;text-align:center;color:var(--purple);font-variant-numeric:tabular-nums;line-height:1;}
+    .cp-timer.alerta{color:var(--gold);}
+    .cp-timer.critico{color:var(--red);animation:cpPulse 1s infinite;}
+    @keyframes cpPulse{0%,100%{opacity:1}50%{opacity:.45}}
+    .cp-timer-sub{font-size:11px;color:var(--text-muted);text-align:center;margin-top:6px;}
 
-  .acoes{display:flex;gap:12px;margin-top:22px;flex-wrap:wrap}
+    /* ── Mapa de questões ── */
+    .cp-mapa{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;}
+    .cp-mapa-btn{aspect-ratio:1;border-radius:9px;border:1.5px solid var(--border);background:var(--bg);color:var(--text-muted);font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;font-family:'Inter',sans-serif;}
+    .cp-mapa-btn:hover{border-color:var(--purple);}
+    .cp-mapa-btn.respondida{background:var(--green-pale);border-color:var(--green);color:var(--green);}
+    .cp-mapa-btn.atual{border-color:var(--purple);box-shadow:0 0 0 2px rgba(155,48,255,.35);color:var(--purple);}
+    .cp-mapa-btn.respondida.atual{color:var(--green);}
 
-  /* resultado */
-  .resultado-nota{
-    font-family:'Orbitron',monospace;font-size:3.2rem;color:var(--gold);
-    text-align:center;line-height:1;margin:6px 0 2px;
-  }
-  .resultado-sub{text-align:center;color:var(--text-muted);margin-bottom:22px}
-  .mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
-  .mini-stats-4{grid-template-columns:repeat(4,1fr)}
-  .rev-item{
-    background:var(--card);border:1px solid var(--border);border-radius:12px;
-    padding:12px 14px;margin-bottom:10px;
-  }
-  .rev-item .rev-top{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:6px}
-  .rev-badge{font-size:.75rem;font-weight:700;padding:2px 9px;border-radius:999px}
-  .rev-badge.ok{background:rgba(34,197,94,.15);color:var(--green)}
-  .rev-badge.no{background:rgba(239,68,68,.15);color:var(--red)}
-  .rev-item .rev-enun{color:var(--text);font-size:.95rem}
-  .rev-item .rev-resp{color:var(--text-muted);font-size:.85rem;margin-top:4px}
-  .rev-item .rev-resp b{color:var(--text)}
+    .cp-mapa-legenda{display:flex;flex-direction:column;gap:5px;margin-top:12px;}
+    .cp-leg-item{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-muted);}
+    .cp-leg-dot{width:12px;height:12px;border-radius:4px;border:1.5px solid var(--border);}
+    .cp-leg-dot.resp{background:var(--green-pale);border-color:var(--green);}
+    .cp-leg-dot.atual{border-color:var(--purple);box-shadow:0 0 0 1.5px rgba(155,48,255,.4);}
 
-  .salvo-info{font-size:.85rem;color:var(--text-muted);text-align:center;margin-top:14px}
+    .cp-btn-finalizar{width:100%;background:linear-gradient(135deg,var(--purple-dark),var(--purple));color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 4px 16px rgba(108,0,212,.3);transition:all .2s;}
+    .cp-btn-finalizar:hover{transform:translateY(-1px);}
 
-  @media(max-width:520px){
-    .eq-destaque{font-size:1.25rem}
-    .mini-stats{grid-template-columns:1fr}
-    .mini-stats-4{grid-template-columns:repeat(2,1fr)}
-    .resultado-nota{font-size:2.6rem}
-  }
-</style>
+    /* ── Equação em destaque dentro do enunciado ── */
+    .eq-destaque{display:inline-block;margin-top:12px;font-family:'Orbitron',monospace;font-size:26px;font-weight:700;color:var(--gold);background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.25);border-radius:10px;padding:10px 18px;letter-spacing:1px;}
+
+    /* ── Campo de digitar x (questões numéricas) ── */
+    .cp-num-wrap{display:flex;flex-direction:column;gap:10px;max-width:340px;}
+    .cp-num-label{font-size:13px;font-weight:600;color:var(--text-muted);}
+    .cp-num-row{display:flex;align-items:center;gap:10px;}
+    .cp-num-xis{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;color:var(--purple);}
+    .cp-num-input{flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;font-size:20px;font-weight:700;color:var(--text);font-family:'Orbitron',monospace;text-align:center;outline:none;transition:border-color .12s;}
+    .cp-num-input:focus{border-color:var(--purple);box-shadow:0 0 0 1px var(--purple) inset;}
+    .cp-num-input.preenchido{border-color:var(--green);color:var(--green);}
+    .cp-num-hint{font-size:12px;color:var(--text-muted);line-height:1.4;}
+
+    /* ── Alternativas de texto (equações) podem ser mais largas ── */
+    .cp-alts.uma-coluna{grid-template-columns:1fr;}
+    .cp-alt .eq-opt{font-family:'Orbitron',monospace;font-size:16px;letter-spacing:.5px;}
+
+    /* ── Banner "não vale nota" e botão voltar (treino) ── */
+    .treino-banner{
+      background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.25);color:var(--gold);
+      border-radius:var(--radius);padding:14px 18px;display:flex;gap:12px;align-items:flex-start;
+      font-weight:600;margin-bottom:18px;
+    }
+    .treino-banner .icone{font-size:1.3rem;line-height:1}
+    .treino-banner small{display:block;color:var(--text-muted);font-weight:500;margin-top:2px}
+    .btn-voltar-treino{
+      display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--text-muted);
+      background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 15px;
+      text-decoration:none;transition:.14s;white-space:nowrap;
+    }
+    .btn-voltar-treino:hover{color:var(--text);border-color:var(--purple);background:rgba(155,48,255,.08)}
+
+    /* ── Tela de resultado do treino ── */
+    .tr-res-nota{font-family:'Orbitron',monospace;font-size:42px;font-weight:700;color:var(--gold);margin:6px 0 2px;}
+    .tr-res-sub{font-size:14px;color:var(--text-muted);margin-bottom:18px;}
+    .tr-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:460px;margin:0 auto;}
+    .tr-stat{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;}
+    .tr-stat .v{font-size:22px;font-weight:800;line-height:1;}
+    .tr-stat .l{font-size:10px;color:var(--text-muted);margin-top:5px;text-transform:uppercase;letter-spacing:.4px;}
+    .tr-rev-item{padding:12px 14px;border-radius:10px;border:1px solid var(--border);margin-bottom:8px;font-size:13px;background:rgba(255,255,255,.02);}
+    .tr-rev-item.ok{border-color:rgba(0,230,118,.35);background:rgba(0,230,118,.07);}
+    .tr-rev-item.err{border-color:rgba(255,60,80,.30);background:rgba(255,60,80,.06);}
+    .tr-rev-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-size:11px;color:var(--text-muted);}
+    .tr-rev-badge{font-weight:700;font-size:11px;}
+    .tr-rev-item.ok .tr-rev-badge{color:var(--green);}
+    .tr-rev-item.err .tr-rev-badge{color:var(--red);}
+    .tr-rev-enun{color:var(--text);margin-bottom:4px;}
+    .tr-rev-resp{color:var(--text-muted);font-size:12px;}
+
+    /* ── Mobile ── */
+    @media(max-width:820px){
+      .cp-layout{grid-template-columns:1fr;}
+      .cp-side{position:static;flex-direction:column;}
+      .cp-alts{grid-template-columns:1fr;}
+      .cp-qtext{font-size:17px;}
+      .cp-qcard{padding:18px 16px 16px;}
+      .cp-mapa{grid-template-columns:repeat(8,1fr);}
+    }
+    @media(max-width:420px){
+      .cp-mapa{grid-template-columns:repeat(6,1fr);}
+      .tr-stats-grid{grid-template-columns:1fr 1fr 1fr;gap:8px;}
+    }
+  </style>
 </head>
 <body>
 <div class="layout">
@@ -121,2208 +140,483 @@
   <div class="main">
     <div class="topbar">
       <div class="topbar-left">
-        <div class="topbar-title" id="topbar-title">Treino de Equações</div>
-        <div class="topbar-sub" id="topbar-sub">Equações do 1º grau · atividade livre</div>
+        <div class="topbar-title">Treino de Equações</div>
+        <div class="topbar-sub">Equações do 1º grau · não vale nota · treine quantas vezes quiser</div>
       </div>
-      <div class="topbar-right">
-        <div class="cronometro-treino" id="cronometro" title="Tempo decorrido">⏱ 0:00</div>
+      <div class="topbar-right" style="display:flex;gap:10px;align-items:center">
+        <div class="timer-box" id="timer-mini" style="display:none">--:--</div>
         <a href="/aluno/a-atividades.html" class="btn-voltar-treino">← Voltar</a>
       </div>
     </div>
     <div class="content" id="content">
-      <div class="card" style="max-width:760px;margin:0 auto">
-        <div class="treino-banner">
-          <span class="icone">🎯</span>
-          <div>
-            Atividade de treino — <b>não vale nota</b>.
-            <small>Faça quantas vezes quiser para praticar. As questões mudam a cada tentativa e seu rendimento fica salvo no seu histórico.</small>
-          </div>
+      <div class="treino-banner">
+        <span class="icone">🎯</span>
+        <div>
+          Atividade de treino — <b>não vale nota</b>.
+          <small>Faça quantas vezes quiser para praticar. As questões mudam a cada tentativa e seu rendimento fica salvo no seu histórico de treino.</small>
         </div>
-        <div id="tela"></div>
+      </div>
+      <div id="area-jogo">
+        <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando treino…</div>
       </div>
     </div>
   </div>
 </div>
 
 <script type="module">
+import { intercalarPorDificuldade } from "/js/constants.js";
+import { addResultado } from "/js/db.js";
 import { requireAluno, renderSidebarAluno } from "/js/auth.js";
-import { addResultado, updateResultado } from "/js/db.js";
 
 renderSidebarAluno("sidebar", "atividades");
+
 const sess = requireAluno();
+if (!sess) throw new Error("sem sessão");
+const alunoNome = (Array.isArray(sess.alunos) && sess.alunos.length) ? sess.alunos.join(" & ") : "ALUNO";
+const turma = sess.turma || "";
 
-const TOTAL = 15;
-const ATIVIDADE = "treino-equacoes";
+/* ════════════════════════════════════════════════════════════
+   CONFIGURAÇÃO — Treino de Equações do 1º Grau
+   (mesmo banco de questões e motor da atividade valendo nota;
+   sem senha, sem trava de tentativa, sem gravar nota)
+   ════════════════════════════════════════════════════════════ */
+const ARQUIVO_QUESTOES_EQ = "/dados/questoes_equacoes.json";
+const TEMPO_MAX_SEG = 15 * 60;   // mesma duração da prova, só de referência
+const NOME_ATIV = "treino-equacoes";
 
-/* ================== BANCO DE QUESTÕES ================== */
-const BANCO = [
-  {
-    "id": "EQ-DIG-1T",
-    "dificuldade": 1,
-    "tipo": "numerica",
-    "tag": "Encontre x · escreva o resultado",
-    "enunciado": "Resolva a equação e escreva o valor de <b>x</b>:<br><span class='eq-destaque'>{A}x + {B} = {C}</span>",
-    "variaveis": {
-      "A": [
-        2,
-        3,
-        4,
-        5
-      ],
-      "X": [
-        3,
-        4,
-        5,
-        6,
-        7,
-        8
-      ],
-      "B": [
-        4,
-        6,
-        8,
-        10,
-        12
-      ]
-    },
-    "resposta_expr": "X",
-    "montar_ctx": "C = A*X + B",
-    "instrucao": "Digite apenas o número (ex.: 7)."
-  },
-  {
-    "id": "EQ-DIG-2T",
-    "dificuldade": 2,
-    "tipo": "numerica",
-    "tag": "Encontre x · escreva o resultado",
-    "enunciado": "Resolva a equação e escreva o valor de <b>x</b>:<br><span class='eq-destaque'>{A}x + {B} = {D}x + {E}</span>",
-    "variaveis": {
-      "A": [
-        5,
-        6,
-        7,
-        8
-      ],
-      "D": [
-        2,
-        3
-      ],
-      "X": [
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "B": [
-        4,
-        6,
-        8,
-        10
-      ]
-    },
-    "resposta_expr": "X",
-    "montar_ctx": "E = (A - D)*X + B",
-    "instrucao": "Junte as letras de um lado e os números do outro. Digite apenas o número."
-  },
-  {
-    "id": "EQ-MUL-1T",
-    "dificuldade": 1,
-    "tipo": "multipla_num",
-    "tag": "Encontre x · marque a alternativa",
-    "enunciado": "Qual é o valor de <b>x</b> na equação abaixo?<br><span class='eq-destaque'>{A}x − {B} = {C}</span>",
-    "variaveis": {
-      "A": [
-        2,
-        3,
-        4,
-        5
-      ],
-      "X": [
-        4,
-        5,
-        6,
-        7,
-        8,
-        9
-      ],
-      "B": [
-        3,
-        5,
-        6
-      ]
-    },
-    "resposta_expr": "X",
-    "montar_ctx": "C = A*X - B",
-    "prefixo_opcao": "x = "
-  },
-  {
-    "id": "EQ-MUL-2T",
-    "dificuldade": 2,
-    "tipo": "multipla_num",
-    "tag": "Encontre x · marque a alternativa",
-    "enunciado": "Qual é o valor de <b>x</b> na equação abaixo?<br><span class='eq-destaque'>{A}x + {B} = {D}x + {E}</span>",
-    "variaveis": {
-      "A": [
-        6,
-        7,
-        8,
-        9
-      ],
-      "D": [
-        2,
-        3
-      ],
-      "X": [
-        3,
-        4,
-        5,
-        6,
-        7,
-        8
-      ],
-      "B": [
-        3,
-        5,
-        7,
-        9
-      ]
-    },
-    "resposta_expr": "X",
-    "montar_ctx": "E = (A - D)*X + B",
-    "prefixo_opcao": "x = "
-  },
-  {
-    "id": "EQ-PROB-3",
-    "dificuldade": 2,
-    "tipo": "multipla_texto",
-    "tag": "Problema · escolha a equação",
-    "enunciado": "Ana comprou um caderno por <b>R${B}</b> e ainda ficou com <b>R${R}</b>. Chamando de <b>x</b> o que ela tinha antes, qual equação representa o problema?",
-    "variaveis": {
-      "B": [
-        12,
-        15,
-        18,
-        22
-      ],
-      "R": [
-        25,
-        30,
-        35,
-        40
-      ]
-    },
-    "montar_ctx": "X = B + R",
-    "equacao_correta": "x − {B} = {R}",
-    "distratores": [
-      "x + {B} = {R}",
-      "{B}x = {R}",
-      "x − {R} = {B}"
-    ]
-  },
-  {
-    "id": "EQ-PROB-4",
-    "dificuldade": 2,
-    "tipo": "multipla_texto",
-    "tag": "Problema · escolha a equação",
-    "enunciado": "Maria comprou <b>{N}</b> canetas iguais e pagou <b>R${C}</b> no total. Chamando de <b>x</b> o preço de cada caneta, qual equação representa o problema?",
-    "variaveis": {
-      "N": [
-        4,
-        5,
-        6,
-        7
-      ],
-      "X": [
-        3,
-        4,
-        5,
-        6
-      ]
-    },
-    "montar_ctx": "C = N*X",
-    "equacao_correta": "{N}x = {C}",
-    "distratores": [
-      "x + {N} = {C}",
-      "x ÷ {N} = {C}",
-      "x − {N} = {C}"
-    ]
-  },
-  {
-    "id": "EQ-PROB-5",
-    "dificuldade": 2,
-    "tipo": "multipla_texto",
-    "tag": "Problema · escolha a equação",
-    "enunciado": "O triplo de um número, <b>menos {B}</b>, é igual a <b>{C}</b>. Qual equação representa esse problema?",
-    "variaveis": {
-      "B": [
-        5,
-        6,
-        8,
-        9
-      ],
-      "X": [
-        5,
-        6,
-        7,
-        8,
-        10
-      ]
-    },
-    "montar_ctx": "C = 3*X - B",
-    "equacao_correta": "3x − {B} = {C}",
-    "distratores": [
-      "3x + {B} = {C}",
-      "x − {B} = {C}",
-      "3(x − {B}) = {C}"
-    ]
-  },
-  {
-    "id": "EQ-DES-CONSEC",
-    "dificuldade": 3,
-    "tipo": "multipla_texto",
-    "tag": "Desafio · escolha a equação",
-    "equacao_correta": "x + (x + 1) = {S}",
-    "distratores": [
-      "x + (x + 2) = {S}",
-      "2x = {S}",
-      "x + 1 = {S}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "X": [
-            12,
-            18,
-            24,
-            27,
-            30,
-            33,
-            41
-          ]
-        },
-        "montar_ctx": "S = 2*X + 1",
-        "enunciado": "A soma de dois números <b>consecutivos</b> é <b>{S}</b>. Chamando de <b>x</b> o menor deles, qual equação representa esse problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            8,
-            10,
-            14,
-            19,
-            22,
-            25
-          ]
-        },
-        "montar_ctx": "S = 2*X + 1",
-        "enunciado": "Dois irmãos têm idades <b>consecutivas</b> e, juntas, somam <b>{S}</b> anos. Chamando de <b>x</b> a idade do mais novo, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            15,
-            20,
-            28,
-            34,
-            40,
-            50
-          ]
-        },
-        "montar_ctx": "S = 2*X + 1",
-        "enunciado": "Duas páginas <b>seguidas</b> de um livro têm, somadas, o número <b>{S}</b>. Chamando de <b>x</b> a página de menor número, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            9,
-            13,
-            17,
-            23,
-            29,
-            31
-          ]
-        },
-        "montar_ctx": "S = 2*X + 1",
-        "enunciado": "Duas casas <b>vizinhas</b> de uma rua têm números <b>consecutivos</b> que somam <b>{S}</b>. Chamando de <b>x</b> o menor número, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            11,
-            16,
-            21,
-            26,
-            35,
-            44
-          ]
-        },
-        "montar_ctx": "S = 2*X + 1",
-        "enunciado": "Numa fila, duas senhas <b>seguidas</b> somam <b>{S}</b>. Chamando de <b>x</b> a senha de menor número, qual equação representa o problema?"
-      }
-    ]
-  },
-  {
-    "id": "EQ-DES-2LADOS",
-    "dificuldade": 3,
-    "tipo": "multipla_texto",
-    "tag": "Desafio · escolha a equação",
-    "equacao_correta": "2x − {B} = x + {D}",
-    "distratores": [
-      "2x + {B} = x + {D}",
-      "2x − {B} = {D}",
-      "x − {B} = 2x + {D}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "X": [
-            6,
-            7,
-            8,
-            9,
-            10,
-            11
-          ],
-          "B": [
-            5,
-            7,
-            9,
-            11
-          ],
-          "D": [
-            2,
-            3,
-            4,
-            5
-          ]
-        },
-        "montar_ctx": "Z = 2*X - B",
-        "enunciado": "O <b>dobro</b> de um número, <b>menos {B}</b>, é igual ao <b>próprio número mais {D}</b>. Qual equação representa esse problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            8,
-            9,
-            10,
-            12,
-            14
-          ],
-          "B": [
-            6,
-            8,
-            10,
-            12
-          ],
-          "D": [
-            3,
-            4,
-            5,
-            6
-          ]
-        },
-        "montar_ctx": "Z = 2*X - B",
-        "enunciado": "Pensei num número. O seu <b>dobro</b> tirando <b>{B}</b> dá o <b>mesmo</b> que o número somado a <b>{D}</b>. Qual equação representa isso?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            7,
-            8,
-            9,
-            10,
-            11,
-            13
-          ],
-          "B": [
-            4,
-            6,
-            8,
-            10
-          ],
-          "D": [
-            2,
-            3,
-            4,
-            5
-          ]
-        },
-        "montar_ctx": "Z = 2*X - B",
-        "enunciado": "Dobrando a quantia de figurinhas de João e tirando <b>{B}</b>, obtém-se a <b>mesma</b> quantidade de quando ele soma <b>{D}</b> ao que tem. Chamando de <b>x</b> as figurinhas de João, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            9,
-            10,
-            11,
-            12,
-            15
-          ],
-          "B": [
-            7,
-            9,
-            11,
-            13
-          ],
-          "D": [
-            3,
-            4,
-            5,
-            6
-          ]
-        },
-        "montar_ctx": "Z = 2*X - B",
-        "enunciado": "O <b>dobro</b> da idade de Ana <b>menos {B}</b> anos é igual à <b>idade dela mais {D}</b> anos. Chamando de <b>x</b> a idade de Ana, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            6,
-            8,
-            10,
-            11,
-            14
-          ],
-          "B": [
-            5,
-            8,
-            10,
-            12
-          ],
-          "D": [
-            2,
-            4,
-            5,
-            6
-          ]
-        },
-        "montar_ctx": "Z = 2*X - B",
-        "enunciado": "Duas vezes o preço de um lanche, <b>descontados R${B}</b>, resulta no <b>mesmo</b> valor do preço do lanche <b>mais R${D}</b>. Chamando de <b>x</b> o preço do lanche, qual equação representa o problema?"
-      }
-    ]
-  },
-  {
-    "id": "EQ-DES-RAZAO",
-    "dificuldade": 3,
-    "tipo": "multipla_texto",
-    "tag": "Desafio · escolha a equação",
-    "equacao_correta": "x + {K}x = {T}",
-    "distratores": [
-      "{K}x = {T}",
-      "x + {K} = {T}",
-      "{K}x − x = {T}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "X": [
-            6,
-            7,
-            8,
-            9,
-            10
-          ],
-          "K": [
-            2,
-            3,
-            4
-          ]
-        },
-        "montar_ctx": "T = X + K*X",
-        "enunciado": "Numa turma, o número de meninas é <b>{K} vezes</b> o número de meninos. Ao todo são <b>{T}</b> alunos. Chamando de <b>x</b> o número de meninos, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            5,
-            6,
-            7,
-            8,
-            9
-          ],
-          "K": [
-            2,
-            3,
-            4
-          ]
-        },
-        "montar_ctx": "T = X + K*X",
-        "enunciado": "Num pote há bolas azuis e vermelhas. As vermelhas são <b>{K} vezes</b> as azuis, e ao todo são <b>{T}</b> bolas. Chamando de <b>x</b> o número de bolas azuis, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            4,
-            5,
-            6,
-            7,
-            8
-          ],
-          "K": [
-            2,
-            3,
-            5
-          ]
-        },
-        "montar_ctx": "T = X + K*X",
-        "enunciado": "Pedro tem <b>{K} vezes</b> mais figurinhas que Bruno. Juntos têm <b>{T}</b> figurinhas. Chamando de <b>x</b> as figurinhas de Bruno, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            6,
-            7,
-            8,
-            9,
-            12
-          ],
-          "K": [
-            2,
-            3,
-            4
-          ]
-        },
-        "montar_ctx": "T = X + K*X",
-        "enunciado": "Num estacionamento, o número de carros é <b>{K} vezes</b> o de motos, num total de <b>{T}</b> veículos. Chamando de <b>x</b> o número de motos, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            5,
-            6,
-            8,
-            10,
-            11
-          ],
-          "K": [
-            2,
-            3,
-            4
-          ]
-        },
-        "montar_ctx": "T = X + K*X",
-        "enunciado": "Uma quantia foi dividida entre Ana e Léo. Ana recebeu <b>{K} vezes</b> o que Léo recebeu, e ao todo foram <b>R${T}</b>. Chamando de <b>x</b> o valor de Léo, qual equação representa o problema?"
-      }
-    ]
-  },
-  {
-    "id": "EQ-PROB-A",
-    "dificuldade": 1,
-    "tipo": "multipla_texto",
-    "tag": "Problema · escolha a equação",
-    "equacao_correta": "x − {B} = {C}",
-    "distratores": [
-      "x + {B} = {C}",
-      "{B}x = {C}",
-      "x − {C} = {B}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "X": [
-            18,
-            20,
-            25,
-            30
-          ],
-          "B": [
-            4,
-            5,
-            7,
-            9
-          ]
-        },
-        "montar_ctx": "C = X - B",
-        "enunciado": "Lucas tinha algumas figurinhas, <b>perdeu {B}</b> e ficou com <b>{C}</b>. Chamando de <b>x</b> quantas ele tinha, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            20,
-            25,
-            30,
-            40,
-            50
-          ],
-          "B": [
-            6,
-            8,
-            10,
-            12
-          ]
-        },
-        "montar_ctx": "C = X - B",
-        "enunciado": "De uma caixa com <b>x</b> bombons, foram <b>comidos {B}</b> e sobraram <b>{C}</b>. Qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            16,
-            18,
-            22,
-            28
-          ],
-          "B": [
-            3,
-            5,
-            7,
-            8
-          ]
-        },
-        "montar_ctx": "C = X - B",
-        "enunciado": "Um ônibus saiu com <b>x</b> passageiros. <b>Desceram {B}</b> e continuaram <b>{C}</b>. Qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            30,
-            35,
-            40,
-            45,
-            50
-          ],
-          "B": [
-            10,
-            12,
-            15,
-            18
-          ]
-        },
-        "montar_ctx": "C = X - B",
-        "enunciado": "Tinha <b>R$x</b> na carteira. <b>Gastei R${B}</b> e fiquei com <b>R${C}</b>. Qual equação representa o problema?"
-      }
-    ]
-  },
-  {
-    "id": "EQ-PROB-B",
-    "dificuldade": 1,
-    "tipo": "multipla_texto",
-    "tag": "Problema · escolha a equação",
-    "equacao_correta": "x + {B} = {C}",
-    "distratores": [
-      "x − {B} = {C}",
-      "{B}x = {C}",
-      "x + {C} = {B}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "X": [
-            8,
-            10,
-            12,
-            15,
-            20
-          ],
-          "B": [
-            5,
-            7,
-            9,
-            11
-          ]
-        },
-        "montar_ctx": "C = X + B",
-        "enunciado": "Bia tinha <b>x</b> adesivos e <b>ganhou {B}</b>, ficando com <b>{C}</b>. Qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            10,
-            14,
-            18,
-            22,
-            25
-          ],
-          "B": [
-            6,
-            8,
-            10,
-            12
-          ]
-        },
-        "montar_ctx": "C = X + B",
-        "enunciado": "Num aquário havia <b>x</b> peixes. <b>Colocaram mais {B}</b> e passou a ter <b>{C}</b>. Qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            20,
-            24,
-            30,
-            35,
-            40
-          ],
-          "B": [
-            5,
-            10,
-            12,
-            15
-          ]
-        },
-        "montar_ctx": "C = X + B",
-        "enunciado": "Uma estante tinha <b>x</b> livros. Depois de <b>acrescentar {B}</b>, ficou com <b>{C}</b>. Qual equação representa o problema?"
-      }
-    ]
-  },
-  {
-    "id": "EQ-PROB-C",
-    "dificuldade": 1,
-    "tipo": "multipla_texto",
-    "tag": "Problema · escolha a equação",
-    "equacao_correta": "x ÷ 2 = {C}",
-    "distratores": [
-      "2x = {C}",
-      "x − 2 = {C}",
-      "x + 2 = {C}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "X": [
-            8,
-            12,
-            16,
-            20,
-            24,
-            30
-          ]
-        },
-        "montar_ctx": "C = X / 2",
-        "enunciado": "A <b>metade</b> de um número é <b>{C}</b>. Qual equação representa esse problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            10,
-            14,
-            18,
-            22,
-            26
-          ]
-        },
-        "montar_ctx": "C = X / 2",
-        "enunciado": "Dividi minhas <b>x</b> balas <b>ao meio</b> com um amigo e cada um ficou com <b>{C}</b>. Qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            12,
-            16,
-            24,
-            28,
-            36
-          ]
-        },
-        "montar_ctx": "C = X / 2",
-        "enunciado": "A <b>metade</b> dos <b>x</b> alunos de uma sala foi ao pátio: <b>{C}</b> alunos. Qual equação representa o problema?"
-      }
-    ]
-  },
-  {
-    "id": "EQ-DES-REPARTE",
-    "dificuldade": 3,
-    "tipo": "multipla_texto",
-    "tag": "Desafio · escolha a equação",
-    "equacao_correta": "{N}x + {R} = {C}",
-    "distratores": [
-      "{N}x − {R} = {C}",
-      "{N}x = {C}",
-      "x + {N} = {C}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "X": [
-            3,
-            4,
-            5,
-            6,
-            7
-          ],
-          "N": [
-            3,
-            4,
-            5
-          ],
-          "R": [
-            2,
-            3,
-            4
-          ]
-        },
-        "montar_ctx": "C = N*X + R",
-        "enunciado": "<b>{C}</b> balas foram divididas igualmente entre <b>{N}</b> crianças e <b>sobraram {R}</b>. Chamando de <b>x</b> quantas cada uma recebeu, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            4,
-            5,
-            6,
-            8,
-            10
-          ],
-          "N": [
-            3,
-            4,
-            6
-          ],
-          "R": [
-            2,
-            3,
-            4
-          ]
-        },
-        "montar_ctx": "C = N*X + R",
-        "enunciado": "Um total de <b>{C}</b> reais foi repartido igualmente entre <b>{N}</b> amigos, <b>restando R${R}</b>. Chamando de <b>x</b> quanto cada um recebeu, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            5,
-            6,
-            7,
-            8,
-            9
-          ],
-          "N": [
-            4,
-            5,
-            6
-          ],
-          "R": [
-            2,
-            3,
-            4
-          ]
-        },
-        "montar_ctx": "C = N*X + R",
-        "enunciado": "<b>{C}</b> livros foram colocados em <b>{N}</b> caixas com a mesma quantidade, e <b>sobraram {R}</b> livros. Chamando de <b>x</b> quantos couberam em cada caixa, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            4,
-            5,
-            6,
-            7,
-            8
-          ],
-          "N": [
-            3,
-            5,
-            6
-          ],
-          "R": [
-            2,
-            3,
-            4
-          ]
-        },
-        "montar_ctx": "C = N*X + R",
-        "enunciado": "Numa oficina, <b>{C}</b> parafusos foram distribuídos igualmente em <b>{N}</b> potes, <b>sobrando {R}</b>. Chamando de <b>x</b> quantos em cada pote, qual equação representa o problema?"
-      }
-    ]
-  },
-  {
-    "id": "EQ-DES-PARES",
-    "dificuldade": 3,
-    "tipo": "multipla_texto",
-    "tag": "Desafio · escolha a equação",
-    "equacao_correta": "x + (x + 2) = {S}",
-    "distratores": [
-      "x + (x + 1) = {S}",
-      "2x = {S}",
-      "x + 2 = {S}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "X": [
-            10,
-            14,
-            18,
-            22,
-            26,
-            30
-          ]
-        },
-        "montar_ctx": "S = 2*X + 2",
-        "enunciado": "A soma de dois números <b>pares consecutivos</b> é <b>{S}</b>. Chamando de <b>x</b> o menor deles, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            9,
-            13,
-            17,
-            21,
-            25,
-            29
-          ]
-        },
-        "montar_ctx": "S = 2*X + 2",
-        "enunciado": "Dois números <b>ímpares consecutivos</b> somam <b>{S}</b>. Chamando de <b>x</b> o menor deles, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            10,
-            14,
-            18,
-            22,
-            26,
-            30
-          ]
-        },
-        "montar_ctx": "S = 2*X + 2",
-        "enunciado": "Em um prédio, dois apartamentos de <b>numeração par seguida</b> somam <b>{S}</b>. Chamando de <b>x</b> o menor número, qual equação representa o problema?"
-      }
-    ]
-  },
-  {
-    "id": "EQ-PROB-D",
-    "dificuldade": 1,
-    "tipo": "multipla_texto",
-    "tag": "Problema · escolha a equação",
-    "equacao_correta": "{N}x = {C}",
-    "distratores": [
-      "x + {N} = {C}",
-      "x − {N} = {C}",
-      "x ÷ {N} = {C}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "N": [
-            3,
-            4,
-            5,
-            6
-          ],
-          "X": [
-            3,
-            4,
-            5,
-            6,
-            7
-          ]
-        },
-        "montar_ctx": "C = N*X",
-        "enunciado": "<b>{N}</b> caixas iguais têm juntas <b>{C}</b> laranjas. Chamando de <b>x</b> quantas laranjas há em cada caixa, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "N": [
-            2,
-            3,
-            4,
-            5
-          ],
-          "X": [
-            4,
-            5,
-            6,
-            7,
-            8
-          ]
-        },
-        "montar_ctx": "C = N*X",
-        "enunciado": "<b>{N}</b> times têm o mesmo número de jogadores, num total de <b>{C}</b>. Chamando de <b>x</b> o número de jogadores por time, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "N": [
-            3,
-            4,
-            6,
-            8
-          ],
-          "X": [
-            2,
-            3,
-            4,
-            5
-          ]
-        },
-        "montar_ctx": "C = N*X",
-        "enunciado": "Numa coleção, <b>{N}</b> pacotes iguais somam <b>{C}</b> figurinhas. Chamando de <b>x</b> as figurinhas por pacote, qual equação representa o problema?"
-      }
-    ]
-  },
-  {
-    "id": "EQ-PROB-E",
-    "dificuldade": 1,
-    "tipo": "multipla_texto",
-    "tag": "Problema · escolha a equação",
-    "equacao_correta": "x + {B} = {C}",
-    "distratores": [
-      "x − {B} = {C}",
-      "{B}x = {C}",
-      "x + {C} = {B}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "X": [
-            10,
-            12,
-            15,
-            18,
-            20
-          ],
-          "B": [
-            4,
-            6,
-            8,
-            10
-          ]
-        },
-        "montar_ctx": "C = X + B",
-        "enunciado": "A idade de Rafa hoje mais <b>{B}</b> anos será <b>{C}</b>. Chamando de <b>x</b> a idade dele hoje, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            20,
-            25,
-            30,
-            35
-          ],
-          "B": [
-            5,
-            10,
-            15
-          ]
-        },
-        "montar_ctx": "C = X + B",
-        "enunciado": "Faltavam <b>{B}</b> páginas para o livro ter <b>{C}</b>. Chamando de <b>x</b> quantas já estavam escritas, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            8,
-            10,
-            14,
-            16
-          ],
-          "B": [
-            3,
-            5,
-            7
-          ]
-        },
-        "montar_ctx": "C = X + B",
-        "enunciado": "Se eu ganhar mais <b>{B}</b> bolinhas, terei <b>{C}</b>. Chamando de <b>x</b> quantas tenho agora, qual equação representa o problema?"
-      }
-    ]
-  },
-  {
-    "id": "EQ-PROB-F",
-    "dificuldade": 1,
-    "tipo": "multipla_texto",
-    "tag": "Problema · escolha a equação",
-    "equacao_correta": "x − {B} = {C}",
-    "distratores": [
-      "x + {B} = {C}",
-      "{B} − x = {C}",
-      "{B}x = {C}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "X": [
-            20,
-            24,
-            30,
-            36
-          ],
-          "B": [
-            6,
-            8,
-            12
-          ]
-        },
-        "montar_ctx": "C = X - B",
-        "enunciado": "Depois de <b>doar {B}</b> brinquedos, restaram <b>{C}</b>. Chamando de <b>x</b> quantos havia, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            15,
-            18,
-            22,
-            28
-          ],
-          "B": [
-            5,
-            7,
-            9
-          ]
-        },
-        "montar_ctx": "C = X - B",
-        "enunciado": "Um copo tinha água. Após <b>beber {B} goles</b> (em ml), sobraram <b>{C}</b> ml. Chamando de <b>x</b> o total inicial, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            40,
-            45,
-            50,
-            60
-          ],
-          "B": [
-            10,
-            15,
-            20
-          ]
-        },
-        "montar_ctx": "C = X - B",
-        "enunciado": "De <b>x</b> lugares no ônibus, <b>{B}</b> estão ocupados e <b>{C}</b> estão livres. Qual equação representa o problema?"
-      }
-    ]
-  },
-  {
-    "id": "EQ-PROB-G",
-    "dificuldade": 1,
-    "tipo": "multipla_texto",
-    "tag": "Problema · escolha a equação",
-    "equacao_correta": "2x = {C}",
-    "distratores": [
-      "x + 2 = {C}",
-      "x − 2 = {C}",
-      "x ÷ 2 = {C}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "X": [
-            6,
-            8,
-            9,
-            11,
-            13
-          ]
-        },
-        "montar_ctx": "C = 2*X",
-        "enunciado": "O <b>dobro</b> da quantidade de gols de um jogador é <b>{C}</b>. Chamando de <b>x</b> os gols dele, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            7,
-            10,
-            12,
-            14
-          ]
-        },
-        "montar_ctx": "C = 2*X",
-        "enunciado": "O <b>dobro</b> de um número é <b>{C}</b>. Qual equação representa esse problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            5,
-            8,
-            11,
-            15
-          ]
-        },
-        "montar_ctx": "C = 2*X",
-        "enunciado": "Duas sacolas iguais pesam juntas <b>{C}</b> kg. Chamando de <b>x</b> o peso de uma sacola, qual equação representa o problema?"
-      }
-    ]
-  },
-  {
-    "id": "EQ-PROB-H",
-    "dificuldade": 1,
-    "tipo": "multipla_texto",
-    "tag": "Problema · escolha a equação",
-    "equacao_correta": "x + {B} = {C}",
-    "distratores": [
-      "{C} + {B} = x",
-      "x − {B} = {C}",
-      "{B}x = {C}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "X": [
-            12,
-            15,
-            18,
-            20
-          ],
-          "B": [
-            8,
-            10,
-            12
-          ]
-        },
-        "montar_ctx": "C = X + B",
-        "enunciado": "Numa prova de <b>{C}</b> pontos, já garanti <b>{B}</b>. Chamando de <b>x</b> quantos ainda faltam, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            10,
-            14,
-            16,
-            20
-          ],
-          "B": [
-            6,
-            9,
-            12
-          ]
-        },
-        "montar_ctx": "C = X + B",
-        "enunciado": "Para completar um álbum de <b>{C}</b> figurinhas, já colei <b>{B}</b>. Chamando de <b>x</b> as que faltam, qual equação representa o problema?"
-      }
-    ]
-  },
-  {
-    "id": "EQ-PROB-I",
-    "dificuldade": 2,
-    "tipo": "multipla_texto",
-    "tag": "Problema · escolha a equação",
-    "equacao_correta": "{N}x + {B} = {C}",
-    "distratores": [
-      "{N}x − {B} = {C}",
-      "{N}x = {C}",
-      "x + {N} = {C}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "N": [
-            2,
-            3,
-            4
-          ],
-          "X": [
-            3,
-            4,
-            5,
-            6
-          ],
-          "B": [
-            2,
-            3,
-            5
-          ]
-        },
-        "montar_ctx": "C = N*X + B",
-        "enunciado": "Comprei <b>{N}</b> cadernos iguais e uma caneta de <b>R${B}</b>, gastando <b>R${C}</b>. Chamando de <b>x</b> o preço de cada caderno, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "N": [
-            2,
-            3,
-            5
-          ],
-          "X": [
-            4,
-            5,
-            6,
-            7
-          ],
-          "B": [
-            3,
-            4,
-            6
-          ]
-        },
-        "montar_ctx": "C = N*X + B",
-        "enunciado": "Um táxi cobra <b>R${B}</b> fixos mais <b>R$x por km</b>. Numa corrida de <b>{N}</b> km paguei <b>R${C}</b>. Qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "N": [
-            3,
-            4,
-            6
-          ],
-          "X": [
-            2,
-            3,
-            4,
-            5
-          ],
-          "B": [
-            4,
-            5,
-            7
-          ]
-        },
-        "montar_ctx": "C = N*X + B",
-        "enunciado": "<b>{N}</b> ingressos iguais mais <b>R${B}</b> de lanche custaram <b>R${C}</b>. Chamando de <b>x</b> o preço do ingresso, qual equação representa o problema?"
-      }
-    ]
-  },
-  {
-    "id": "EQ-PROB-J",
-    "dificuldade": 2,
-    "tipo": "multipla_texto",
-    "tag": "Problema · escolha a equação",
-    "equacao_correta": "{N}x − {B} = {C}",
-    "distratores": [
-      "{N}x + {B} = {C}",
-      "{N}x = {C}",
-      "x − {N} = {C}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "N": [
-            2,
-            3,
-            4
-          ],
-          "X": [
-            5,
-            6,
-            7,
-            8
-          ],
-          "B": [
-            2,
-            3,
-            4
-          ]
-        },
-        "montar_ctx": "C = N*X - B",
-        "enunciado": "O <b>{N}×</b> de um número, <b>menos {B}</b>, dá <b>{C}</b>. Qual equação representa esse problema?"
-      },
-      {
-        "variaveis": {
-          "N": [
-            3,
-            4,
-            5
-          ],
-          "X": [
-            4,
-            5,
-            6,
-            7
-          ],
-          "B": [
-            3,
-            5,
-            6
-          ]
-        },
-        "montar_ctx": "C = N*X - B",
-        "enunciado": "O <b>{N}× </b>de um número, <b>menos {B}</b>, resulta em <b>{C}</b>. Qual equação representa esse problema?"
-      }
-    ]
-  },
-  {
-    "id": "EQ-PROB-K",
-    "dificuldade": 2,
-    "tipo": "multipla_texto",
-    "tag": "Problema · escolha a equação",
-    "equacao_correta": "x + {B} = {D}x",
-    "distratores": [
-      "x − {B} = {D}x",
-      "{D}x + {B} = x",
-      "x + {B} = {D}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "X": [
-            3,
-            4,
-            5,
-            6
-          ],
-          "D": [
-            2,
-            3
-          ]
-        },
-        "montar_ctx": "B = (D-1)*X",
-        "enunciado": "Um número mais <b>{B}</b> é igual ao seu <b>{D}× </b>. Chamando de <b>x</b> o número, qual equação representa esse problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            4,
-            5,
-            6,
-            8
-          ],
-          "D": [
-            2,
-            3
-          ]
-        },
-        "montar_ctx": "B = (D-1)*X",
-        "enunciado": "A quantia de Léo mais <b>R${B}</b> ficaria igual ao <b>{D}× </b> do que ele tem. Chamando de <b>x</b> a quantia, qual equação representa o problema?"
-      }
-    ]
-  },
-  {
-    "id": "EQ-PROB-L",
-    "dificuldade": 2,
-    "tipo": "multipla_texto",
-    "tag": "Problema · escolha a equação",
-    "equacao_correta": "x ÷ {N} = {C}",
-    "distratores": [
-      "{N}x = {C}",
-      "x − {N} = {C}",
-      "x + {N} = {C}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "N": [
-            3
-          ],
-          "X": [
-            12,
-            15,
-            18,
-            21,
-            24,
-            30
-          ]
-        },
-        "montar_ctx": "C = X / N",
-        "enunciado": "Reparti <b>x</b> balas igualmente entre <b>3</b> amigos e cada um recebeu <b>{C}</b>. Qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "N": [
-            4
-          ],
-          "X": [
-            12,
-            16,
-            20,
-            24,
-            28,
-            32
-          ]
-        },
-        "montar_ctx": "C = X / N",
-        "enunciado": "Um bolo foi cortado em <b>4</b> fatias iguais; cada fatia tem <b>{C}</b> g. Chamando de <b>x</b> o peso do bolo, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "N": [
-            5
-          ],
-          "X": [
-            15,
-            20,
-            25,
-            30,
-            35,
-            40
-          ]
-        },
-        "montar_ctx": "C = X / N",
-        "enunciado": "Distribuí <b>x</b> figurinhas igualmente para <b>5</b> colegas e cada um ficou com <b>{C}</b>. Qual equação representa o problema?"
-      }
-    ]
-  },
-  {
-    "id": "EQ-PROB-M",
-    "dificuldade": 2,
-    "tipo": "multipla_texto",
-    "tag": "Problema · escolha a equação",
-    "equacao_correta": "{A}x = {C}",
-    "distratores": [
-      "x + {A} = {C}",
-      "{A} + x = {C}",
-      "x ÷ {A} = {C}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "A": [
-            4,
-            5,
-            6,
-            8
-          ],
-          "X": [
-            3,
-            4,
-            5,
-            6
-          ]
-        },
-        "montar_ctx": "C = A*X",
-        "enunciado": "Um retângulo tem <b>{A}</b> fileiras com o mesmo número de azulejos, num total de <b>{C}</b>. Chamando de <b>x</b> os azulejos por fileira, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "A": [
-            3,
-            5,
-            7
-          ],
-          "X": [
-            4,
-            5,
-            6,
-            7
-          ]
-        },
-        "montar_ctx": "C = A*X",
-        "enunciado": "<b>{A}</b> semanas de mesada iguais somam <b>R${C}</b>. Chamando de <b>x</b> a mesada semanal, qual equação representa o problema?"
-      }
-    ]
-  },
-  {
-    "id": "EQ-DES-IDADES",
-    "dificuldade": 3,
-    "tipo": "multipla_texto",
-    "tag": "Desafio · escolha a equação",
-    "equacao_correta": "x + (x + {K}) = {S}",
-    "distratores": [
-      "x + {K} = {S}",
-      "x + {K}x = {S}",
-      "x − (x + {K}) = {S}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "X": [
-            8,
-            10,
-            12,
-            14
-          ],
-          "K": [
-            3,
-            4,
-            5,
-            6
-          ]
-        },
-        "montar_ctx": "S = 2*X + K",
-        "enunciado": "Dois irmãos têm idades que <b>diferem em {K}</b> anos e somam <b>{S}</b>. Chamando de <b>x</b> a idade do mais novo, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            15,
-            18,
-            20,
-            25
-          ],
-          "K": [
-            2,
-            4,
-            6
-          ]
-        },
-        "montar_ctx": "S = 2*X + K",
-        "enunciado": "Duas prateleiras têm livros; a segunda tem <b>{K} a mais</b> que a primeira e juntas somam <b>{S}</b>. Chamando de <b>x</b> os livros da primeira, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            10,
-            12,
-            16,
-            20
-          ],
-          "K": [
-            5,
-            7,
-            9
-          ]
-        },
-        "montar_ctx": "S = 2*X + K",
-        "enunciado": "Ana e Bia juntam figurinhas; Bia tem <b>{K} a mais</b> que Ana e no total são <b>{S}</b>. Chamando de <b>x</b> as de Ana, qual equação representa o problema?"
-      }
-    ]
-  },
-  {
-    "id": "EQ-DES-SUBTRAI",
-    "dificuldade": 3,
-    "tipo": "multipla_texto",
-    "tag": "Desafio · escolha a equação",
-    "equacao_correta": "{D}x = x + {B}",
-    "distratores": [
-      "{D}x = x − {B}",
-      "{D}x + {B} = x",
-      "x = {D}x + {B}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "X": [
-            3,
-            4,
-            5,
-            6,
-            7
-          ],
-          "D": [
-            2,
-            3,
-            4
-          ]
-        },
-        "montar_ctx": "B = (D-1)*X",
-        "enunciado": "O <b>{D}× </b> de um número é igual a esse número <b>mais {B}</b>. Qual equação representa esse problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            4,
-            5,
-            6,
-            8
-          ],
-          "D": [
-            2,
-            3
-          ]
-        },
-        "montar_ctx": "B = (D-1)*X",
-        "enunciado": "O <b>{D}× </b> das figurinhas de Téo é o mesmo que ele tem <b>mais {B}</b>. Chamando de <b>x</b> as figurinhas de Téo, qual equação representa o problema?"
-      }
-    ]
-  },
-  {
-    "id": "EQ-DES-TROCO",
-    "dificuldade": 3,
-    "tipo": "multipla_texto",
-    "tag": "Desafio · escolha a equação",
-    "equacao_correta": "{P} − {N}x = {T}",
-    "distratores": [
-      "{N}x − {P} = {T}",
-      "{N}x + {T} = {P}",
-      "{P} + {N}x = {T}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "P": [
-            50
-          ],
-          "N": [
-            2,
-            3,
-            4
-          ],
-          "X": [
-            6,
-            7,
-            8,
-            9
-          ]
-        },
-        "montar_ctx": "T = P - N*X",
-        "enunciado": "Paguei com <b>R$50</b> por <b>{N}</b> itens iguais e recebi <b>R${T}</b> de troco. Chamando de <b>x</b> o preço de cada item, qual equação representa o problema?"
-      },
-      {
-        "variaveis": {
-          "P": [
-            100
-          ],
-          "N": [
-            3,
-            4,
-            5
-          ],
-          "X": [
-            10,
-            12,
-            14,
-            16
-          ]
-        },
-        "montar_ctx": "T = P - N*X",
-        "enunciado": "Tinha <b>R$100</b>. Depois de comprar <b>{N}</b> lanches iguais, sobraram <b>R${T}</b>. Chamando de <b>x</b> o preço do lanche, qual equação representa o problema?"
-      }
-    ]
-  },
-  {
-    "id": "EQ-DES-PERIM",
-    "dificuldade": 3,
-    "tipo": "multipla_texto",
-    "tag": "Desafio · escolha a equação",
-    "equacao_correta": "2x + 2×{L} = {P}",
-    "distratores": [
-      "x + {L} = {P}",
-      "2x + {L} = {P}",
-      "2×(x + {L}) = {P}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "L": [
-            3,
-            4,
-            5,
-            6
-          ],
-          "X": [
-            4,
-            5,
-            6,
-            7,
-            8
-          ]
-        },
-        "montar_ctx": "P = 2*X + 2*L",
-        "enunciado": "Um retângulo tem largura <b>{L}</b> e perímetro <b>{P}</b>. Chamando de <b>x</b> o comprimento, qual equação representa o problema?",
-        "textos": {}
-      },
-      {
-        "variaveis": {
-          "L": [
-            5,
-            6,
-            8,
-            10
-          ],
-          "X": [
-            6,
-            7,
-            8,
-            9
-          ]
-        },
-        "montar_ctx": "P = 2*X + 2*L",
-        "enunciado": "Cercar um terreno retangular de <b>{P}</b> m de cerca, sendo um lado <b>{L}</b> m. Chamando de <b>x</b> o outro lado, qual equação representa o problema?",
-        "textos": {}
-      }
-    ]
-  },
-  {
-    "id": "EQ-DES-METADE",
-    "dificuldade": 3,
-    "tipo": "multipla_texto",
-    "tag": "Desafio · escolha a equação",
-    "equacao_correta": "x ÷ 2 + {B} = {C}",
-    "distratores": [
-      "2x + {B} = {C}",
-      "x ÷ 2 − {B} = {C}",
-      "x + {B} = {C}"
-    ],
-    "contextos": [
-      {
-        "variaveis": {
-          "X": [
-            10,
-            12,
-            16,
-            20,
-            24
-          ],
-          "B": [
-            3,
-            4,
-            5
-          ]
-        },
-        "montar_ctx": "C = X/2 + B",
-        "enunciado": "A <b>metade</b> de um número, <b>mais {B}</b>, é igual a <b>{C}</b>. Qual equação representa esse problema?"
-      },
-      {
-        "variaveis": {
-          "X": [
-            12,
-            16,
-            20,
-            28
-          ],
-          "B": [
-            5,
-            6,
-            7
-          ]
-        },
-        "montar_ctx": "C = X/2 + B",
-        "enunciado": "A <b>metade</b> de uma quantia <b>mais R${B}</b> resulta em <b>R${C}</b>. Chamando de <b>x</b> a quantia, qual equação representa o problema?"
-      }
-    ]
-  },
-  {
-    "id": "EQ-DIG-3T",
-    "dificuldade": 3,
-    "tipo": "numerica",
-    "tag": "Encontre x · escreva o resultado",
-    "enunciado": "Resolva a equação e escreva o valor de <b>x</b>:<br><span class='eq-destaque'>{A}x − {B} = {D}x + {E}</span>",
-    "variaveis": {
-      "A": [
-        7,
-        8,
-        9
-      ],
-      "D": [
-        2,
-        3
-      ],
-      "X": [
-        4,
-        5,
-        6,
-        7
-      ],
-      "B": [
-        2,
-        3,
-        4,
-        5
-      ]
-    },
-    "resposta_expr": "X",
-    "montar_ctx": "E = (A - D)*X - B",
-    "instrucao": "Junte as letras de um lado e os números do outro. Digite apenas o número."
-  },
-  {
-    "id": "EQ-DIG-4T",
-    "dificuldade": 2,
-    "tipo": "numerica",
-    "tag": "Encontre x · escreva o resultado",
-    "enunciado": "Resolva a equação e escreva o valor de <b>x</b>:<br><span class='eq-destaque'>{A}x − {B} = {D}x − {E}</span>",
-    "variaveis": {
-      "A": [
-        6,
-        7,
-        8,
-        9
-      ],
-      "D": [
-        2,
-        3,
-        4
-      ],
-      "X": [
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "E": [
-        2,
-        3,
-        4,
-        5
-      ]
-    },
-    "resposta_expr": "X",
-    "montar_ctx": "B = (A - D)*X + E",
-    "instrucao": "Junte as letras de um lado e os números do outro. Digite apenas o número."
-  },
-  {
-    "id": "EQ-MUL-3T",
-    "dificuldade": 3,
-    "tipo": "multipla_num",
-    "tag": "Encontre x · marque a alternativa",
-    "enunciado": "Qual é o valor de <b>x</b> na equação abaixo?<br><span class='eq-destaque'>{A}x + {B} = {D}x + {E}</span>",
-    "variaveis": {
-      "A": [
-        7,
-        8,
-        9,
-        10
-      ],
-      "D": [
-        2,
-        3,
-        4
-      ],
-      "X": [
-        4,
-        5,
-        6,
-        7,
-        8
-      ],
-      "B": [
-        2,
-        3,
-        4,
-        5
-      ]
-    },
-    "resposta_expr": "X",
-    "montar_ctx": "E = (A - D)*X + B",
-    "prefixo_opcao": "x = "
-  },
-  {
-    "id": "EQ-MUL-4T",
-    "dificuldade": 2,
-    "tipo": "multipla_num",
-    "tag": "Encontre x · marque a alternativa",
-    "enunciado": "Qual é o valor de <b>x</b> na equação abaixo?<br><span class='eq-destaque'>{A}x = {B}x + {C}</span>",
-    "variaveis": {
-      "A": [
-        5,
-        6,
-        7,
-        8
-      ],
-      "B": [
-        2,
-        3,
-        4
-      ],
-      "X": [
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "dummy": [
-        0
-      ]
-    },
-    "resposta_expr": "X",
-    "montar_ctx": "C = (A - B)*X",
-    "prefixo_opcao": "x = "
+/* ── Carregar modelos de questão ── */
+let modelos = [];
+try {
+  const resp = await fetch(ARQUIVO_QUESTOES_EQ);
+  modelos = await resp.json();
+} catch(e) {
+  document.getElementById("area-jogo").innerHTML =
+    `<div class="card" style="text-align:center;padding:40px"><p style="color:var(--red)">Não foi possível carregar as questões.</p></div>`;
+  throw e;
+}
+
+/* ════════════════════════════════════════════════════════════
+   MATERIALIZAÇÃO — mesmo motor da atividade, mas com seed
+   aleatória a cada início (o treino varia a cada tentativa).
+   ════════════════════════════════════════════════════════════ */
+function _hashStr(str){ let h=1779033703^str.length; for(let i=0;i<str.length;i++){ h=Math.imul(h^str.charCodeAt(i),3432918353); h=(h<<13)|(h>>>19);} return h>>>0; }
+function _rng(seedStr){ let a=_hashStr(seedStr); return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function _pick(rng, arr){ return arr[Math.floor(rng()*arr.length)]; }
+
+function _evalExpr(expr, ctx){
+  const keys = Object.keys(ctx);
+  const vals = keys.map(k => ctx[k]);
+  // eslint-disable-next-line no-new-func
+  const f = new Function(...keys, `"use strict"; return (${expr});`);
+  return Math.trunc(f(...vals));
+}
+
+function _subst(txt, ctx){
+  return txt.replace(/\{(\w+)\}/g, (_,k)=> (k in ctx ? ctx[k] : `{${k}}`));
+}
+
+function _distratoresX(rng, correta){
+  const cand = [
+    correta + 1, correta - 1, correta + 2, correta - 2,
+    correta + 3, correta - 3, correta + 5, correta * 2,
+  ];
+  const out = [], vistos = new Set([correta]);
+  for (const c of cand){
+    if (c > 0 && !vistos.has(c)){ vistos.add(c); out.push(c); }
+    if (out.length === 3) break;
   }
-];
-
-/* ================== MOTOR DE GERAÇÃO ================== */
-const pick = a => a[Math.floor(Math.random()*a.length)];
-const subst = (s,ctx)=> s.replace(/\{(\w+)\}/g,(_,k)=> (k in ctx? ctx[k] : "{"+k+"}"));
-const evalExpr = (expr,ctx)=>{ const n=Object.keys(ctx); return new Function(...n,"return ("+expr+");")(...n.map(k=>ctx[k])); };
-function evalCtx(expr,ctx){ const [alvo,f]=expr.split("=").map(s=>s.trim()); ctx[alvo]=evalExpr(f,ctx); }
-function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
-
-function gerarInstancia(q){
-  // suporte a contextos: sorteia um cenário textual (enunciado/variaveis/montar próprios)
-  let enunTemplate=q.enunciado, variaveis=q.variaveis||{}, montar=q.montar_ctx, ctxTexto={};
-  if(Array.isArray(q.contextos) && q.contextos.length){
-    const c=pick(q.contextos);
-    if(c.enunciado) enunTemplate=c.enunciado;
-    if(c.variaveis) variaveis=c.variaveis;
-    if(c.montar_ctx) montar=c.montar_ctx;
-    if(c.textos) ctxTexto=c.textos;
+  let k = 4;
+  while (out.length < 3){
+    const c = correta + k;
+    if (c > 0 && !vistos.has(c)){ vistos.add(c); out.push(c); }
+    k++;
+    if (k > 60) break;
   }
-  const ctx={...ctxTexto}; for(const k in variaveis) ctx[k]=pick(variaveis[k]);
-  if(montar) evalCtx(montar,ctx);
-  const inst={id:q.id,tipo:q.tipo,tag:q.tag,instrucao:q.instrucao||""};
-  inst.enunciado=subst(enunTemplate,ctx);
-  if(q.tipo==="numerica"){
-    inst.resposta=String(evalExpr(q.resposta_expr,ctx));
-  }else if(q.tipo==="multipla_num"){
-    const correta=evalExpr(q.resposta_expr,ctx), pref=q.prefixo_opcao||"";
-    const set=new Set([correta]);
-    for(const d of [correta+1,correta-1,correta+2,correta-2,correta+3,correta-3]){ if(set.size>=4)break; if(d>0) set.add(d); }
-    inst.opcoes=shuffle([...set].slice(0,4).map(v=>pref+v));
-    inst.resposta=pref+correta;
-  }else{ // multipla_texto
-    const correta=subst(q.equacao_correta,ctx);
-    const opcoes=[correta];
-    for(const d of q.distratores){ const s=subst(d,ctx); if(!opcoes.includes(s)) opcoes.push(s); }
-    let g=0;
-    while(opcoes.length<4 && g++<20){
-      const alt=correta.replace(/(\d+)/, m=>(+m+g));
-      if(!opcoes.includes(alt)) opcoes.push(alt);
+  return out.slice(0,3);
+}
+
+const _letras = ["A","B","C","D"];
+
+function materializar(seedBase, modelo, idx, _tent = 0){
+  const rng = _rng(`${seedBase}#${modelo.id}#${idx}${_tent ? `#r${_tent}` : ""}`);
+
+  let _enunTemplate = modelo.enunciado;
+  let _variaveis = modelo.variaveis;
+  let _montarCtx = modelo.montar_ctx;
+  let _ctxTexto = {};
+  if (Array.isArray(modelo.contextos) && modelo.contextos.length){
+    const c = _pick(rng, modelo.contextos);
+    if (c.enunciado)  _enunTemplate = c.enunciado;
+    if (c.variaveis)  _variaveis = c.variaveis;
+    if (c.montar_ctx) _montarCtx = c.montar_ctx;
+    if (c.textos)     _ctxTexto = c.textos;
+  }
+
+  let ctx = { ..._ctxTexto };
+  if (_variaveis){
+    for (const k of Object.keys(_variaveis)) ctx[k] = _pick(rng, _variaveis[k]);
+  }
+  if (_montarCtx){ const [_al,_ex] = _montarCtx.split("=").map(s=>s.trim()); ctx[_al] = _evalExpr(_ex, ctx); }
+
+  const enun = _subst(_enunTemplate, ctx);
+
+  if (modelo.tipo === "numerica"){
+    const correta = _evalExpr(modelo.resposta_expr, ctx);
+    return {
+      id: modelo.id, dificuldade: modelo.dificuldade, tag: modelo.tag,
+      tipo: "numerica", enunciado: enun,
+      instrucao: modelo.instrucao || "Digite apenas o número.",
+      respostaNum: correta,
+      opcoes: null, resposta: null,
+    };
+  }
+
+  if (modelo.tipo === "multipla_num"){
+    const correta = _evalExpr(modelo.resposta_expr, ctx);
+    const dist = _distratoresX(rng, correta);
+    let valores = [correta, ...dist];
+    for (let i=valores.length-1; i>0; i--){ const j=Math.floor(rng()*(i+1)); [valores[i],valores[j]]=[valores[j],valores[i]]; }
+    const idxCorreta = valores.indexOf(correta);
+    const pref = modelo.prefixo_opcao || "";
+    const opcoes = valores.map((v,i)=> `${_letras[i]}) <span class="eq-opt">${pref}${v}</span>`);
+    return {
+      id: modelo.id, dificuldade: modelo.dificuldade, tag: modelo.tag,
+      tipo: "multipla_num", enunciado: enun, umaColuna: false,
+      opcoes, resposta: _letras[idxCorreta],
+    };
+  }
+
+  const correan = _subst(modelo.equacao_correta, ctx);
+  const distr = (modelo.distratores || []).map(d => _subst(d, ctx));
+  let itens = [correan];
+  for (const d of distr){ if (!itens.includes(d)) itens.push(d); }
+  for (let i=itens.length-1; i>0; i--){ const j=Math.floor(rng()*(i+1)); [itens[i],itens[j]]=[itens[j],itens[i]]; }
+  const idxCor = itens.indexOf(correan);
+  const opcoes = itens.map((t,i)=> `${_letras[i]}) <span class="eq-opt">${t}</span>`);
+  return {
+    id: modelo.id, dificuldade: modelo.dificuldade, tag: modelo.tag,
+    tipo: "multipla_texto", enunciado: enun, umaColuna: true,
+    opcoes, resposta: _letras[idxCor],
+  };
+}
+
+function _rngSeed(str){ let a=1779033703^str.length; for(let i=0;i<str.length;i++){a=Math.imul(a^str.charCodeAt(i),3432918353);a=(a<<13)|(a>>>19);} return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function _sortearModelosSeed(lista, cotas, seed){
+  const rng=_rngSeed(seed);
+  const porDif={}; for (const m of lista){ (porDif[m.dificuldade]=porDif[m.dificuldade]||[]).push(m); }
+  const escolhidos=[];
+  for (const dif of Object.keys(cotas)){
+    const pool=[...(porDif[dif]||[])];
+    for (let i=pool.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+    escolhidos.push(...pool.slice(0, cotas[dif]));
+  }
+  return escolhidos;
+}
+const COTAS = { 1: 5, 2: 5, 3: 5 };
+
+function novaSeed(){ return `treino|${Date.now()}|${Math.random().toString(36).slice(2)}`; }
+
+function montarQuestoes(){
+  const seedBase = novaSeed();
+  const _selecionados = (modelos.length > 15) ? _sortearModelosSeed(modelos, COTAS, `${seedBase}#sel`) : modelos;
+  const _xUsados = new Set();
+  let questoes = _selecionados.map((m, i) => {
+    let q = materializar(seedBase, m, i), _tent = 0;
+    while (q.respostaNum != null && _xUsados.has(q.respostaNum) && _tent < 40) {
+      _tent++;
+      q = materializar(seedBase, m, i, _tent);
     }
-    inst.opcoes=shuffle(opcoes.slice(0,4));
-    inst.resposta=correta;
+    if (q.respostaNum != null) _xUsados.add(q.respostaNum);
+    return q;
+  });
+  return intercalarPorDificuldade(questoes);
+}
+
+/* ── Estado do treino ── */
+let jogo = null;
+let timerInt = null;
+
+function iniciarTreino(){
+  if (timerInt) { clearInterval(timerInt); timerInt = null; }
+  const questoes = montarQuestoes();
+  jogo = {
+    questoes,
+    respostas: new Array(questoes.length).fill(null),
+    indice: 0,
+    inicioTs: Date.now(),
+    finalizado: false,
+  };
+  render();
+}
+
+/* ════════════════════════════════════════════════════════════
+   TIMER — mesma referência de 15 min da prova (não bloqueia;
+   ao zerar, apenas finaliza o treino automaticamente).
+   ════════════════════════════════════════════════════════════ */
+function tempoDecorrido(){ return Math.floor((Date.now() - jogo.inicioTs)/1000); }
+function fmtMMSS(seg){ seg = Math.max(0, Math.floor(seg)); const m=Math.floor(seg/60), s=seg%60; return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; }
+
+function iniciarTimer(){
+  const atualizar = () => {
+    const decor = tempoDecorrido();
+    const restanteMax = Math.max(0, TEMPO_MAX_SEG - decor);
+    const el = document.getElementById("timer-display");
+    const mini = document.getElementById("timer-mini");
+    const txt = fmtMMSS(restanteMax);
+    if (el) {
+      el.textContent = txt;
+      el.classList.toggle("alerta", restanteMax <= 5*60 && restanteMax > 2*60);
+      el.classList.toggle("critico", restanteMax <= 2*60);
+    }
+    if (mini){ mini.style.display="block"; mini.textContent = txt; }
+    const sub = document.getElementById("timer-sub");
+    if (sub){
+      if (restanteMax <= 2*60 && restanteMax > 0)
+        sub.textContent = "⏰ Últimos minutos!";
+      else
+        sub.textContent = `Tempo de referência: ${TEMPO_MAX_SEG/60} min`;
+    }
+    if (restanteMax <= 0 && jogo && !jogo.finalizado) {
+      finalizarTreino("tempo");
+    }
+  };
+  atualizar();
+  timerInt = setInterval(atualizar, 1000);
+}
+
+/* ════════════════════════════════════════════════════════════
+   RENDER — questão atual + alternativas (idêntico à atividade)
+   ════════════════════════════════════════════════════════════ */
+function questaoAtual(){ return jogo.questoes[jogo.indice]; }
+
+function render(){
+  const q = questaoAtual();
+  const n = jogo.indice;
+  const total = jogo.questoes.length;
+  const respondidas = jogo.respostas.filter(r => r !== null && r !== "").length;
+  const pct = Math.round((respondidas/total)*100);
+  const letras = ["A","B","C","D"];
+
+  let corpoHtml;
+  if (q.tipo === "numerica"){
+    const val = jogo.respostas[n];
+    const preenchido = (val !== null && val !== "") ? " preenchido" : "";
+    corpoHtml = `
+      <div class="cp-num-wrap">
+        <div class="cp-num-label">Escreva o valor de x:</div>
+        <div class="cp-num-row">
+          <span class="cp-num-xis">x =</span>
+          <input type="number" inputmode="numeric" step="1" class="cp-num-input${preenchido}"
+                 id="cp-num-input" value="${val !== null ? val : ""}"
+                 oninput="digitarNumero(this.value)" placeholder="?" autocomplete="off"/>
+        </div>
+        <div class="cp-num-hint">${q.instrucao || "Digite apenas o número."}</div>
+      </div>`;
+  } else {
+    const alts = q.opcoes.map((opt, i) => {
+      const letra = letras[i];
+      const texto = opt.replace(/^[A-D]\)\s*/, "");
+      const sel = jogo.respostas[n] === letra ? " selecionada" : "";
+      return `<button class="cp-alt${sel}" onclick="selecionar('${letra}')">
+        <span class="cp-alt-letra">${letra}</span><span>${texto}</span>
+      </button>`;
+    }).join("");
+    corpoHtml = `<div class="cp-alts${q.umaColuna ? " uma-coluna" : ""}">${alts}</div>`;
   }
-  return inst;
-}
 
-function _sorteiaN(arr, n){ const p=shuffle([...arr]); return p.slice(0, Math.min(n, p.length)); }
-function _grupoQ(q){ return (q.tipo==="numerica"||q.tipo==="multipla_num") ? "resolver" : "montar"; }
-// Por prova: 11 de MONTAR equação (4 fáceis, 4 médias, 3 difíceis) + 4 de RESOLVER (2 fáceis, 1 média, 1 difícil)
-const COTAS_PROVA = { montar:{1:4,2:4,3:3}, resolver:{1:2,2:1,3:1} };
-function montarProva(){
-  const bucket={};
-  for(const q of BANCO){ const g=_grupoQ(q); (bucket[g]=bucket[g]||{}); (bucket[g][q.dificuldade]=bucket[g][q.dificuldade]||[]).push(q); }
-  let escolhidos=[];
-  for(const g of Object.keys(COTAS_PROVA)) for(const dif of Object.keys(COTAS_PROVA[g])){
-    escolhidos.push(..._sorteiaN(((bucket[g]||{})[dif]||[]), COTAS_PROVA[g][dif]));
-  }
-  // completa se faltar em alguma célula (fallback)
-  if(escolhidos.length<TOTAL){
-    const resto=shuffle(BANCO.filter(q=>!escolhidos.includes(q)));
-    escolhidos.push(...resto.slice(0, TOTAL-escolhidos.length));
-  }
-  escolhidos=shuffle(escolhidos).slice(0,TOTAL);
-  const provas=escolhidos.map(gerarInstancia);
-  while(provas.length<TOTAL) provas.push(gerarInstancia(pick(BANCO)));
-  return provas;
-}
+  const mapaHtml = jogo.questoes.map((_, i) => {
+    const cls = [
+      "cp-mapa-btn",
+      jogo.respostas[i] !== null ? "respondida" : "",
+      i === jogo.indice ? "atual" : ""
+    ].filter(Boolean).join(" ");
+    return `<button class="${cls}" onclick="irPara(${i})">${i+1}</button>`;
+  }).join("");
 
-/* ================== ESTADO ================== */
-let prova=[], idx=0, acertos=0, historico=[], resultadoId=null, iniciou=Date.now();
-let cronoTimer=null, tQuestaoIni=0;
+  document.getElementById("area-jogo").innerHTML = `
+    <div class="cp-layout">
+      <div class="cp-main">
+        <div class="cp-progress">
+          <span class="cp-prog-label">Progresso</span>
+          <div class="cp-prog-bar"><div class="cp-prog-fill" style="width:${pct}%"></div></div>
+          <span class="cp-prog-count">${respondidas}/${total}</span>
+        </div>
 
-function fmtTempo(seg){ const m=Math.floor(seg/60), s=seg%60; return m+":"+String(s).padStart(2,"0"); }
-function tickCronometro(){
-  const el=document.getElementById("cronometro");
-  if(el) el.textContent="⏱ "+fmtTempo(Math.round((Date.now()-iniciou)/1000));
-}
-function iniciarCronometro(){
-  iniciou=Date.now();
-  if(cronoTimer) clearInterval(cronoTimer);
-  tickCronometro();
-  cronoTimer=setInterval(tickCronometro, 1000);
-}
-function pararCronometro(){ if(cronoTimer){ clearInterval(cronoTimer); cronoTimer=null; } }
+        <div class="cp-qcard">
+          <div class="cp-qhead">
+            <span class="cp-qnum">Questão ${n+1}</span>
+            ${q.tag ? `<span class="cp-qtag">${q.tag}</span>` : ""}
+          </div>
+          <div class="cp-qtext">${q.enunciado}</div>
+          ${corpoHtml}
+        </div>
 
-/* ================== RENDER ================== */
-const tela=document.getElementById("tela");
-const LETRAS=["A","B","C","D"];
-
-function normaliza(v){ return String(v).trim().replace(",",".").replace(/\s+/g,""); }
-
-async function iniciar(){
-  prova=montarProva(); idx=0; acertos=0; historico=[]; iniciou=Date.now();
-  iniciarCronometro();
-  // registra resultado "em andamento" (histórico do aluno). Não vale nota.
-  try{
-    resultadoId = await addResultado({
-      aluno: (sess.alunos||[]).join(" & ") || "ALUNO",
-      turma: sess.turma || "",
-      atividade: ATIVIDADE,
-      concluido: false,
-      modo: "treino",
-      total: TOTAL, acertos:0, erros:0, respondidas:0,
-      pontuacao:0, pontuacao_bruta:0
-    });
-  }catch(e){ resultadoId=null; }
-  renderQuestao();
-}
-
-function renderQuestao(){
-  const q=prova[idx];
-  tQuestaoIni=Date.now();
-  const pct=Math.round((idx)/TOTAL*100);
-  let opcoesHTML="";
-  if(q.tipo==="numerica"){
-    opcoesHTML=`
-      <input id="resp" class="input resp-input" type="text" inputmode="numeric" autocomplete="off" placeholder="?" />
-      <div class="q-instrucao">${q.instrucao||"Digite apenas o número."}</div>`;
-  }else{
-    opcoesHTML=`<div class="opcoes">`+q.opcoes.map((o,i)=>
-      `<button class="opcao" data-val="${o.replace(/"/g,'&quot;')}">
-         <span class="letra">${LETRAS[i]}</span><span>${o}</span>
-       </button>`).join("")+`</div>`;
-  }
-  tela.innerHTML=`
-    <div class="prog-txt"><span>Questão ${idx+1} de ${TOTAL}</span><span>${acertos} ✔</span></div>
-    <div class="barra-prog"><span style="width:${pct}%"></span></div>
-    <span class="q-tag">${q.tag||""}</span>
-    <div class="q-enunciado">${q.enunciado}</div>
-    ${opcoesHTML}
-    <div class="feedback" id="fb"></div>
-    <div class="acoes">
-      <button class="btn btn-blue" id="btn-conf">Confirmar</button>
-    </div>`;
-
-  const btn=document.getElementById("btn-conf");
-  if(q.tipo==="numerica"){
-    const inp=document.getElementById("resp");
-    inp.focus();
-    inp.addEventListener("keydown",e=>{ if(e.key==="Enter") btn.click(); });
-    btn.onclick=()=>{ const v=inp.value.trim(); if(v==="")return; corrigir(normaliza(v)===normaliza(q.resposta), v, inp); };
-  }else{
-    let sel=null;
-    tela.querySelectorAll(".opcao").forEach(el=>{
-      el.onclick=()=>{ tela.querySelectorAll(".opcao").forEach(o=>o.classList.remove("sel")); el.classList.add("sel"); sel=el; };
-    });
-    btn.onclick=()=>{ if(!sel)return; corrigir(sel.dataset.val===q.resposta, sel.dataset.val, sel); };
-  }
-}
-
-function corrigir(acertou, respAluno, alvo){
-  const q=prova[idx];
-  const tGasto=Math.max(0, Math.round((Date.now()-tQuestaoIni)/1000));
-  if(acertou) acertos++;
-  historico.push({ enunciado:q.enunciado.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim(), resposta_aluno:respAluno, resposta_correta:q.resposta, acertou, tempo_seg:tGasto });
-
-  // trava a questão e mostra feedback visual
-  document.getElementById("btn-conf").disabled=true;
-  if(q.tipo!=="numerica"){
-    tela.querySelectorAll(".opcao").forEach(el=>{
-      el.classList.add("disabled"); el.onclick=null;
-      if(el.dataset.val===q.resposta) el.classList.add("certa");
-    });
-    if(!acertou) alvo.classList.add("errada");
-  }else{
-    alvo.disabled=true; alvo.classList.add(acertou?"certa":"errada");
-  }
-  const fb=document.getElementById("fb");
-  fb.className="feedback show "+(acertou?"ok":"no");
-  fb.textContent=acertou?"✔ Correto!":("✗ Resposta certa: "+q.resposta);
-
-  const btn=document.getElementById("btn-conf");
-  btn.disabled=false;
-  btn.textContent = (idx+1<TOTAL)?"Próxima":"Ver resultado";
-  btn.onclick=()=>{ idx++; (idx<TOTAL)?renderQuestao():finalizar(); };
-}
-
-async function finalizar(){
-  pararCronometro();
-  const erros=TOTAL-acertos;
-  const nota=Math.round((acertos/TOTAL)*100)/10; // 0–10, uma casa
-  const tempo=Math.round((Date.now()-iniciou)/1000);
-  const tempoMedio=TOTAL>0 ? Math.round(tempo/TOTAL) : 0;
-  const temposPorQuestao=historico.map(h=>h.tempo_seg||0);
-
-  if(resultadoId!=null){
-    try{
-      await updateResultado(resultadoId,{
-        concluido:true, modo:"treino",
-        acertos, erros, respondidas:TOTAL, total:TOTAL,
-        pontuacao:nota, pontuacao_bruta:acertos,
-        tempo_segundos:tempo, tempo_medio_seg:tempoMedio, tempos_por_questao:temposPorQuestao
-      });
-    }catch(e){}
-  }
-  renderResultado(nota, acertos, erros, tempo, resultadoId!=null, tempoMedio);
-}
-
-function renderResultado(nota, acertos, erros, tempo, salvou, tempoMedio){
-  const min=Math.floor(tempo/60), seg=tempo%60;
-  const media = (tempoMedio!=null?tempoMedio:(TOTAL>0?Math.round(tempo/TOTAL):0));
-  const msg = acertos===TOTAL ? "Perfeito! 🎉" : acertos>=7 ? "Muito bem! 👏" : acertos>=5 ? "Continue treinando 💪" : "Vamos revisar juntos 📘";
-  tela.innerHTML=`
-    <div class="resultado-nota">${nota.toString().replace(".",",")} / 10</div>
-    <div class="resultado-sub">${msg} &nbsp;·&nbsp; ${acertos} de ${TOTAL} corretas</div>
-    <div class="mini-stats mini-stats-4">
-      <div class="stat-card"><div class="stat-value green">${acertos}</div><div>acertos</div></div>
-      <div class="stat-card"><div class="stat-value red">${erros}</div><div>erros</div></div>
-      <div class="stat-card"><div class="stat-value gold">${min}:${String(seg).padStart(2,"0")}</div><div>tempo total</div></div>
-      <div class="stat-card"><div class="stat-value gold">${media}s</div><div>média/questão</div></div>
-    </div>
-    <div class="card-title" style="margin-top:6px">Revisão</div>
-    <div id="revisao"></div>
-    <p class="salvo-info">${salvou?"✔ Seu rendimento foi salvo no histórico (treino, não vale nota).":"⚠ Não foi possível salvar o histórico agora, mas o treino valeu como prática."}</p>
-    <div class="acoes" style="justify-content:center">
-      <button class="btn btn-blue" id="btn-novo">Treinar de novo</button>
-      <button class="btn btn-ghost" onclick="location.href='/aluno/a-atividades.html'">Voltar às atividades</button>
-    </div>`;
-  const rev=document.getElementById("revisao");
-  rev.innerHTML=historico.map((h,i)=>`
-    <div class="rev-item">
-      <div class="rev-top">
-        <span style="color:var(--text-muted);font-size:.8rem">Questão ${i+1}</span>
-        <span style="display:flex;gap:8px;align-items:center">
-          ${h.tempo_seg!=null?`<span style="color:var(--text-muted);font-size:.78rem">⏱ ${h.tempo_seg}s</span>`:""}
-          <span class="rev-badge ${h.acertou?'ok':'no'}">${h.acertou?'acertou':'errou'}</span>
-        </span>
+        <div class="cp-nav">
+          <button class="btn btn-ghost" onclick="anterior()" ${n===0?"disabled":""}>
+            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+            Anterior
+          </button>
+          <div class="cp-nav-mid">${jogo.respostas[n] !== null && jogo.respostas[n] !== "" ? "✓ Respondida" : (q.tipo === "numerica" ? "Digite o valor de x" : "Selecione uma alternativa")}</div>
+          <button class="btn btn-blue" onclick="proxima()" ${n===total-1?"disabled":""}>
+            Próxima
+            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+          </button>
+        </div>
       </div>
-      <div class="rev-enun">${h.enunciado}</div>
-      <div class="rev-resp">Sua resposta: <b>${h.resposta_aluno}</b>${h.acertou?"":` · Correta: <b>${h.resposta_correta}</b>`}</div>
-    </div>`).join("");
-  document.getElementById("btn-novo").onclick=iniciar;
+
+      <div class="cp-side">
+        <div class="cp-panel">
+          <div class="cp-panel-label">⏱ Tempo restante</div>
+          <div class="cp-timer" id="timer-display">--:--</div>
+          <div class="cp-timer-sub" id="timer-sub">Tempo de referência: ${TEMPO_MAX_SEG/60} min</div>
+        </div>
+
+        <div class="cp-panel">
+          <div class="cp-panel-label">🗺 Mapa de questões</div>
+          <div class="cp-mapa">${mapaHtml}</div>
+          <div class="cp-mapa-legenda">
+            <div class="cp-leg-item"><span class="cp-leg-dot resp"></span> Respondida</div>
+            <div class="cp-leg-item"><span class="cp-leg-dot atual"></span> Questão atual</div>
+          </div>
+        </div>
+
+        <button class="cp-btn-finalizar" onclick="tentarFinalizarTreino()">✓ Finalizar treino</button>
+      </div>
+    </div>`;
+
+  if (!timerInt) iniciarTimer();
 }
 
-iniciar();
+/* ── Ações de navegação ── */
+window.selecionar = (letra) => {
+  if (jogo.finalizado) return;
+  jogo.respostas[jogo.indice] = letra;
+  render();
+};
+
+window.digitarNumero = (valor) => {
+  if (jogo.finalizado) return;
+  const v = (valor ?? "").trim();
+  jogo.respostas[jogo.indice] = v === "" ? null : v;
+  const inp = document.getElementById("cp-num-input");
+  if (inp) inp.classList.toggle("preenchido", v !== "");
+  const respondidas = jogo.respostas.filter(r => r !== null && r !== "").length;
+  const total = jogo.questoes.length;
+  const cont = document.querySelector(".cp-prog-count");
+  if (cont) cont.textContent = `${respondidas}/${total}`;
+  const fill = document.querySelector(".cp-prog-fill");
+  if (fill) fill.style.width = `${Math.round((respondidas/total)*100)}%`;
+  const mid = document.querySelector(".cp-nav-mid");
+  if (mid) mid.textContent = v !== "" ? "✓ Respondida" : "Digite o valor de x";
+  const btnMapa = document.querySelectorAll(".cp-mapa-btn")[jogo.indice];
+  if (btnMapa) btnMapa.classList.toggle("respondida", v !== "");
+};
+window.irPara = (i) => { if (jogo.finalizado) return; jogo.indice = i; render(); };
+window.anterior = () => { if (jogo.indice > 0) { jogo.indice--; render(); } };
+window.proxima = () => { if (jogo.indice < jogo.questoes.length-1) { jogo.indice++; render(); } };
+
+window.tentarFinalizarTreino = () => {
+  const respondidas = jogo.respostas.filter(r => r !== null && r !== "").length;
+  const faltam = jogo.questoes.length - respondidas;
+  let msg = "Deseja finalizar o treino?";
+  if (faltam > 0) msg = `Você deixou ${faltam} questão(ões) em branco (contam como erro). Finalizar mesmo assim?`;
+  if (!confirm(msg)) return;
+  finalizarTreino("manual");
+};
+
+/* ════════════════════════════════════════════════════════════
+   FINALIZAÇÃO — corrige e mostra resultado.
+   Não bloqueia, não consome tentativa. Salva só um registro leve
+   (modo:"treino") para o relatório de tempos do professor — não
+   entra em nota, ranking nem histórico geral de atividades.
+   ════════════════════════════════════════════════════════════ */
+function finalizarTreino(motivo){
+  if (jogo.finalizado) return;
+  jogo.finalizado = true;
+  if (timerInt) { clearInterval(timerInt); timerInt = null; }
+
+  const total = jogo.questoes.length;
+  let acertos = 0;
+  const historico = [];
+  const letras = ["A","B","C","D"];
+  const _limpa = (s) => s ? s.replace(/^[A-D]\)\s*/, "").replace(/<[^>]+>/g, "").trim() : s;
+  const _limpaEnun = (s) => s ? s.replace(/<br\s*\/?>/gi, " ").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim() : s;
+  jogo.questoes.forEach((q, i) => {
+    const esc = jogo.respostas[i];
+    let acertou, textoEsc, textoCor;
+    if (q.tipo === "numerica"){
+      const alunoNum = (esc === null || esc === "") ? null : Number(esc);
+      acertou = alunoNum !== null && Number.isFinite(alunoNum) && alunoNum === q.respostaNum;
+      textoEsc = (esc === null || esc === "") ? "(em branco)" : `x = ${esc}`;
+      textoCor = `x = ${q.respostaNum}`;
+    } else {
+      acertou = esc === q.resposta;
+      textoEsc = esc ? _limpa(q.opcoes[letras.indexOf(esc)]) : "(em branco)";
+      textoCor = _limpa(q.opcoes[letras.indexOf(q.resposta)]);
+    }
+    if (acertou) acertos++;
+    historico.push({
+      enunciado: _limpaEnun(q.enunciado),
+      resposta_aluno: textoEsc,
+      resposta_correta: textoCor,
+      acertou,
+    });
+  });
+  const erros = total - acertos;
+  const respondidas = jogo.respostas.filter(r => r !== null && r !== "").length;
+  const nota = total > 0 ? Math.round((acertos/total)*10*100)/100 : 0;
+  const tempoSeg = tempoDecorrido();
+
+  addResultado({
+    aluno: alunoNome, turma, atividade: NOME_ATIV,
+    concluido: true, modo: "treino",
+    acertos, erros, respondidas, total,
+    pontuacao: nota, pontuacao_bruta: nota,
+    tempo_segundos: tempoSeg, motivo_fim: motivo,
+  }).catch(e => console.warn("[treino addResultado]", e));
+
+  renderResultado(nota, acertos, erros, tempoSeg, total, historico);
+}
+
+function renderResultado(nota, acertos, erros, tempoSeg, total, historico){
+  const msg = acertos===total ? "Perfeito! 🎉" : acertos>=Math.round(total*0.7) ? "Muito bem! 👏" : acertos>=Math.round(total*0.5) ? "Continue treinando 💪" : "Vamos revisar juntos 📘";
+  const notaTxt = nota.toFixed(2).replace(/\.?0+$/,"").replace(".", ",") || "0";
+
+  const revisaoHtml = historico.map((h,i)=>`
+    <div class="tr-rev-item ${h.acertou?'ok':'err'}">
+      <div class="tr-rev-top">
+        <span>Questão ${i+1}</span>
+        <span class="tr-rev-badge">${h.acertou?'✅ acertou':'❌ errou'}</span>
+      </div>
+      <div class="tr-rev-enun">${h.enunciado}</div>
+      <div class="tr-rev-resp">Sua resposta: <b>${h.resposta_aluno}</b>${h.acertou?"":` · Correta: <b>${h.resposta_correta}</b>`}</div>
+    </div>`).join("");
+
+  document.getElementById("area-jogo").innerHTML = `
+    <div class="cp-qcard" style="max-width:760px;margin:0 auto;text-align:center">
+      <div style="font-size:15px;font-weight:700;color:var(--gold);margin-bottom:2px">🎯 Treino — não vale nota</div>
+      <div class="tr-res-nota">${notaTxt} / 10</div>
+      <div class="tr-res-sub">${msg} &nbsp;·&nbsp; ${acertos} de ${total} corretas</div>
+      <div class="tr-stats-grid">
+        <div class="tr-stat"><div class="v" style="color:var(--green)">${acertos}</div><div class="l">Acertos</div></div>
+        <div class="tr-stat"><div class="v" style="color:var(--red)">${erros}</div><div class="l">Erros</div></div>
+        <div class="tr-stat"><div class="v" style="color:var(--gold)">${fmtMMSS(tempoSeg)}</div><div class="l">Tempo</div></div>
+      </div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap">
+        <button class="btn btn-blue" id="btn-treinar-novo">🔄 Treinar de novo</button>
+        <a href="/aluno/a-atividades.html" class="btn btn-ghost">← Voltar às atividades</a>
+      </div>
+    </div>
+    <div class="cp-qcard" style="max-width:760px;margin:16px auto 0">
+      <div class="card-title" style="margin-bottom:14px">Revisão das questões</div>
+      ${revisaoHtml}
+    </div>`;
+
+  document.getElementById("btn-treinar-novo").addEventListener("click", iniciarTreino);
+}
+
+/* ── Start ── */
+iniciarTreino();
 </script>
 </body>
 </html>

@@ -327,6 +327,22 @@ if (!isModoTeste()) {
   }
 }
 
+// Chamada da turma no bimestre ativo (para marcar "Faltou")
+let chamadaTurma = {};
+try {
+  const _cs = await get(ref(db, `chamada/${turma}/${bimAtivo}`));
+  chamadaTurma = _cs.exists() ? (_cs.val() || {}) : {};
+} catch(_) { chamadaTurma = {}; }
+function ymdLocal(ts){
+  const d = new Date(ts);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function faltouNaData(ymd){
+  if (!ymd) return false;
+  const v = (chamadaTurma[ymd] || {})[alunos[0]];
+  return v === 'falta' || v === true;
+}
+
 const todosResultados = await getResultados();
 const realizadaMap = {}, melhorNota = {}, melhorPts = {};
 for (const r of todosResultados) {
@@ -366,6 +382,7 @@ const treinoAviso = '';
 const liberadaParaBanner = ATIVS_BIM.find(ativ => {
   const lib = liberadasMap[ativ.nome];
   if (!lib || lib.status === 'encerrada') return false;
+  if (realizadaMap[ativ.nome]) return false;          // já concluída → não é "disponível agora"
   const bloq = bloqueios[ativ.nome];
   return !bloq?.bloqueado && !bloq?.esgotada;
 });
@@ -445,10 +462,18 @@ const cardsHtml = ATIVS_BIM.map(ativ => {
   const _btnTreino = (_temTreino && !(isLib && !bloq?.esgotada && !bloq?.bloqueado && !isEncerrada && !foiRealizada))
     ? `<a href="/aluno/treino-equacoes.html" class="ac-btn-treino" onclick="event.stopPropagation()">🎯 Treinar</a>`
     : '';
+  // Faltou = marcado falta na data em que a atividade foi liberada, e ainda não fez.
+  const _libDate = lib?.criadoEm ? ymdLocal(lib.criadoEm) : null;
+  const faltou   = !foiRealizada && faltouNaData(_libDate);
+  const _indisponivel = isEncerrada || !isLib || bloq?.bloqueado || bloq?.esgotada;
+
   let statusCls, numCls, statusBadge;
   if (foiRealizada) {
     statusCls = 'concluida clicavel'; numCls = 'concluida';
     statusBadge = `<span class="ac-status-badge concluida">✅ Concluída</span>`;
+  } else if (faltou && _indisponivel) {
+    statusCls = 'bloqueada'; numCls = 'bloqueada';
+    statusBadge = `<span class="ac-status-badge bloqueada">🚫 Faltou</span>`;
   } else if (isEncerrada) {
     statusCls = 'bloqueada'; numCls = 'bloqueada';
     statusBadge = `<span class="ac-status-badge bloqueada">⏰ Perdeu prazo</span>`;

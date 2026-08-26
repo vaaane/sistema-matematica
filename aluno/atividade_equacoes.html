@@ -130,7 +130,8 @@ import { intercalarPorDificuldade } from "/js/constants.js";
 import {
   addResultado, updateResultado, saveDetalhes,
   getLiberadasParaTurma, getAtividadeStatus, contarTentativas,
-  addConquista, getResultadosByAluno, addAlerta, addHistoricoTeste
+  addConquista, getResultadosByAluno, addAlerta, addHistoricoTeste,
+  deletarRegistro
 } from "/js/db.js";
 import { requireAluno, getSession, setSession, renderSidebarAluno, clearSession, lerDuplaAtiva, isModoTeste } from "/js/auth.js";
 
@@ -311,7 +312,7 @@ function pedirSenhaAtividade(senhaCorreta){
         <p style="margin:0 0 16px;font-size:13px;color:var(--text-muted)">
           O professor vai informar a senha para iniciar.
         </p>
-        <input id="_senha-inp" type="tel" inputmode="numeric" autocomplete="off"
+        <input id="_senha-inp" type="password" inputmode="numeric" autocomplete="off"
           placeholder="• • • • • •" maxlength="12"
           style="width:100%;box-sizing:border-box;text-align:center;letter-spacing:6px;
                  font-size:22px;font-weight:700;padding:12px;border-radius:12px;
@@ -672,17 +673,9 @@ if (!ehTeste) {
     e.preventDefault();
     e.returnValue = "";
   });
-  // Trocar de aba / minimizar / bloquear tela
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") registrarSaida();
-  });
-  // Perder o foco da janela (cobre alt-tab e troca de app)
-  window.addEventListener("blur", () => {
-    // pequeno atraso evita falso-positivo de cliques internos
-    setTimeout(() => {
-      if (!document.hasFocus()) registrarSaida();
-    }, 300);
-  });
+  // (Removido) Trocar de aba, minimizar ou perder o foco NÃO finaliza mais a
+  // tentativa. A atividade só é finalizada ao mudar de página dentro do site,
+  // tratado pelo interceptor de cliques em links abaixo.
 
   // Clique em QUALQUER link de navegação interno (sidebar, etc.) → confirma saída.
   document.addEventListener("click", (e) => {
@@ -857,6 +850,20 @@ async function finalizar(motivo){
   jogo.finalizado = true;
   saindo = true;
   if (timerInt) clearInterval(timerInt);
+
+  // ── Item 6: abandono em menos de 10s não consome a tentativa ──
+  // Se o aluno sair da página nos primeiros 10 segundos, apaga o registro
+  // inicial (emAndamento) para que a tentativa "volte" (contarTentativas cai a 0).
+  if (motivo === "saiu" && tempoDecorrido() < 10) {
+    for (const al of jogo.alunos) {
+      const id = idsRegistro[al];
+      if (id) {
+        try { await deletarRegistro("resultados", id); }
+        catch (e) { console.warn("[rollback <10s]", e); }
+      }
+    }
+    return; // não salva nota nem navega para o resultado
+  }
 
   // Correção: todas as questões valem o mesmo (1 ponto bruto cada)
   const total = jogo.questoes.length;

@@ -64,6 +64,24 @@
       .mon-grid{grid-template-columns:1fr 1fr}
     }
     @media(max-width:420px){ .mon-grid{grid-template-columns:1fr} }
+
+    .mon-pill,.mon-card{cursor:pointer}
+    .mon-modal-bg{position:fixed;inset:0;z-index:9999;background:rgba(8,6,18,.78);backdrop-filter:blur(3px);
+      display:flex;align-items:center;justify-content:center;padding:20px}
+    .mon-modal{background:var(--card);border:1.5px solid var(--border);border-radius:16px;max-width:400px;width:100%;
+      padding:22px;font-family:'Inter',sans-serif}
+    .mon-modal h3{margin:0 0 2px;font-size:18px;color:var(--text)}
+    .mon-modal .sub{font-size:12px;color:var(--text-muted);margin-bottom:14px}
+    .mon-modal .reg{font-size:12px;color:var(--text-muted);background:var(--bg);border:1px solid var(--border);
+      border-radius:10px;padding:8px 10px;margin-bottom:12px}
+    .mon-modal .reg b{color:var(--text)}
+    .mon-acts{display:flex;flex-direction:column;gap:10px}
+    .mon-acts .btn{justify-content:center}
+    .mon-nota-row{display:flex;gap:8px}
+    .mon-nota-row input{flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;
+      padding:10px;color:var(--text);font-size:16px;font-family:'Inter',sans-serif;text-align:center}
+    .mon-close{margin-top:14px;width:100%;background:none;border:none;color:var(--text-muted);
+      font-size:13px;cursor:pointer;font-family:'Inter',sans-serif}
   </style>
 </head>
 <body>
@@ -122,6 +140,7 @@ import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth
 import { ALUNOS_POR_TURMA, LISTA_ATIVIDADES, numeroChamada } from "/js/constants.js";
 import { db } from "/js/firebase-config.js";
 import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { addResultado, updateResultado, deletarRegistro } from "/js/db.js";
 
 requireProfessor();
 renderSidebarProfessor("sidebar", "atividades");
@@ -260,7 +279,7 @@ function renderTudo(){
         ? `<div class="prog">Respondidas: <b>${a.respondidas}/${a.total}</b></div>` : "";
       const tempoTxt = a.estourou ? "Encerrando…" : fmtMMSS(a.restanteSeg);
       return `
-        <div class="mon-card ${crit ? "crit" : ""}">
+        <div class="mon-card ${crit ? "crit" : ""}" data-aluno="${a.nome}">
           <div class="topo">
             <div class="nome">${a.nome}</div>
             <div class="num">${numTxt}</div>
@@ -281,7 +300,7 @@ function renderTudo(){
     lp.innerHTML = pronto.map(a => {
       const numTxt = a.num ? `<span class="num">${a.num}</span>` : "";
       const notaTxt = (a.nota != null) ? `<span class="nota">${Number(a.nota).toFixed(1).replace(".",",")}</span>` : "";
-      return `<span class="mon-pill ok">${numTxt}<span class="chk">✓</span> ${a.nome} ${notaTxt}</span>`;
+      return `<span class="mon-pill ok" data-aluno="${a.nome}">${numTxt}<span class="chk">✓</span> ${a.nome} ${notaTxt}</span>`;
     }).join("");
   }
 
@@ -292,7 +311,7 @@ function renderTudo(){
   } else {
     lf.innerHTML = falta.map(a => {
       const numTxt = a.num ? `<span class="num">${a.num}</span>` : "";
-      return `<span class="mon-pill miss">${numTxt} ${a.nome}</span>`;
+      return `<span class="mon-pill miss" data-aluno="${a.nome}">${numTxt} ${a.nome}</span>`;
     }).join("");
   }
 }
@@ -300,6 +319,86 @@ function renderTudo(){
 // Faz o cronômetro correr: re-renderiza a cada segundo.
 setInterval(renderTudo, 1000);
 renderTudo();
+
+/* ── Item 2: ações por aluno (liberar tentativa / lançar nota) ── */
+document.querySelector(".content").addEventListener("click", (e) => {
+  const el = e.target.closest("[data-aluno]");
+  if (!el) return;
+  abrirAcoesAluno(el.getAttribute("data-aluno"));
+});
+
+function registrosDoAluno(nome){
+  return resultadosRaw
+    .filter(r => r.aluno === nome && r.turma === turmaSel && r.atividade === ativSel && !r.modo_teste)
+    .sort((a,b) => (a.criadoEm||0) - (b.criadoEm||0));
+}
+
+function abrirAcoesAluno(nome){
+  const regs = registrosDoAluno(nome);
+  const resumo = regs.length
+    ? regs.map(r => {
+        const estado = r.concluido ? "entregue" : "em andamento";
+        const nota = (r.pontuacao != null) ? ` · nota ${Number(r.pontuacao).toFixed(1).replace(".",",")}` : "";
+        return `<div class="reg"><b>${estado}</b>${nota}</div>`;
+      }).join("")
+    : `<div class="reg">Nenhum registro nesta atividade.</div>`;
+
+  const bg = document.createElement("div");
+  bg.className = "mon-modal-bg";
+  bg.innerHTML = `
+    <div class="mon-modal">
+      <h3>${nome}</h3>
+      <div class="sub">Turma ${turmaSel} · ${ativSel}</div>
+      ${resumo}
+      <div class="mon-acts">
+        <div class="mon-nota-row">
+          <input id="mon-nota-inp" type="number" min="0" max="10" step="0.1" placeholder="Nota (0–10)">
+          <button class="btn btn-blue" id="mon-lancar">✍ Lançar nota</button>
+        </div>
+        ${regs.length ? `<button class="btn btn-ghost" id="mon-liberar">🔓 Liberar nova tentativa</button>` : ""}
+      </div>
+      <button class="mon-close" id="mon-close">Fechar</button>
+    </div>`;
+  document.body.appendChild(bg);
+
+  const fechar = () => bg.remove();
+  bg.addEventListener("click", (ev) => { if (ev.target === bg) fechar(); });
+  bg.querySelector("#mon-close").addEventListener("click", fechar);
+
+  bg.querySelector("#mon-lancar").addEventListener("click", async () => {
+    const v = parseFloat(bg.querySelector("#mon-nota-inp").value.replace(",", "."));
+    if (isNaN(v) || v < 0 || v > 10) { alert("Digite uma nota entre 0 e 10."); return; }
+    const concluidos = regs.filter(r => r.concluido);
+    try {
+      if (concluidos.length) {
+        await updateResultado(concluidos[concluidos.length-1].id, {
+          concluido: true, emAndamento: false,
+          pontuacao: v, pontuacao_bruta: v,
+          motivo_fim: "correcao_manual", lancado_manual: true, fimTs: Date.now(),
+        });
+      } else {
+        await addResultado({
+          aluno: nome, turma: turmaSel, atividade: ativSel,
+          concluido: true, emAndamento: false,
+          pontuacao: v, pontuacao_bruta: v,
+          acertos: 0, erros: 0, respondidas: 0, total: 0,
+          tempo_segundos: 0, motivo_fim: "lancamento_manual",
+          modo: "equacoes_plus", lancado_manual: true, fimTs: Date.now(),
+        });
+      }
+      fechar();
+    } catch (err) { alert("Erro ao salvar a nota: " + (err.message || err)); }
+  });
+
+  const btnLib = bg.querySelector("#mon-liberar");
+  if (btnLib) btnLib.addEventListener("click", async () => {
+    if (!confirm(`Liberar nova tentativa para ${nome}? Isso remove o(s) registro(s) atuais desta atividade.`)) return;
+    try {
+      for (const r of regs) await deletarRegistro("resultados", r.id);
+      fechar();
+    } catch (err) { alert("Erro ao liberar: " + (err.message || err)); }
+  });
+}
 </script>
 </body>
 </html>
