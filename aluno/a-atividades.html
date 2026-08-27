@@ -160,7 +160,7 @@
 </div>
 <script type="module">
 import { LISTA_ATIVIDADES, MAX_TENTATIVAS_ATIVIDADE, ALUNOS_POR_TURMA, bimestreAtual } from "/js/constants.js";
-import { contarTentativas, getLiberadasParaTurma, getAlunoPreferencia, getResultados, getSenhaAluno } from "/js/db.js";
+import { contarTentativas, getLiberadasParaTurma, liberacaoParaAluno, getAlunoPreferencia, getResultados, getSenhaAluno } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, hashSenha, lerDuplaAtiva, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
@@ -246,8 +246,17 @@ const loadTimeout = setTimeout(() => {
 const liberadas = isModoTeste()
   ? ATIVS_BIM.map(a => ({ atividade: a.nome, modo: a.modo || 'classico', percentual: 100, status: 'ativa', criadoEm: null }))
   : await getLiberadasParaTurma(turma);
+// Para cada atividade, escolhe a liberação que vale para ESTE aluno
+// (2ª chamada dele > turma). Atividade cuja única liberação é 2ª chamada de
+// OUTROS alunos não entra no mapa (não aparece para quem não é elegível).
 const liberadasMap = {};
-for (const lib of liberadas) liberadasMap[lib.atividade] = lib;
+{
+  const _nomes = [...new Set(liberadas.map(l => l.atividade))];
+  for (const nome of _nomes) {
+    const _lib = liberacaoParaAluno(liberadas, nome, alunos[0]);
+    if (_lib) liberadasMap[nome] = _lib;
+  }
+}
 
 // Identify classic (attempt-limited) activities
 const classicAtivs = ATIVS_BIM.filter(ativ => {

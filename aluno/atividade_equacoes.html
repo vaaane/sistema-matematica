@@ -139,7 +139,7 @@
 import { intercalarPorDificuldade } from "/js/constants.js";
 import {
   addResultado, updateResultado, saveDetalhes,
-  getLiberadasParaTurma, getAtividadeStatus, contarTentativas,
+  getLiberadasParaTurma, liberacaoParaAluno, getAtividadeStatus, contarTentativas,
   addConquista, getResultadosByAluno, addAlerta, addHistoricoTeste,
   deletarRegistro
 } from "/js/db.js";
@@ -263,12 +263,14 @@ if (ehTeste) {
 } else {
   /* ── Verificações de liberação / tentativa / status (fluxo aluno) ── */
   const liberadas = await getLiberadasParaTurma(turma);
-  const liberada = liberadas.find(l => l.atividade === nomeAtivParam);
+  const liberada = liberacaoParaAluno(liberadas, nomeAtivParam, alunos[0]);
   if (!liberada) {
-    alert("Esta atividade não está mais liberada para sua turma.");
+    alert("Esta atividade não está liberada para você.");
     location.href="/aluno/a-atividades.html"; throw new Error();
   }
   nomeAtiv = liberada.atividade;
+  // marca de qual liberação o aluno entrou (usado na ficha/histórico)
+  window.__libAtual = liberada;
   if (liberada.valor_nota != null) valorNota = Number(liberada.valor_nota);
 
   // Lista de participantes (dupla = os dois nomes)

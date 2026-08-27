@@ -12,25 +12,25 @@
   <style>
     .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:center;justify-content:center;padding:24px;}
     .modal-overlay.open{display:flex;}
-    .modal-box{background:#fff;border-radius:18px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.25);animation:fadeUp .2s ease;}
+    .modal-box{background:var(--card);border-radius:18px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.25);animation:fadeUp .2s ease;}
     @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-    .modal-box-header{position:sticky;top:0;background:#fff;padding:24px 28px 0;z-index:1;}
+    .modal-box-header{position:sticky;top:0;background:var(--card);padding:24px 28px 0;z-index:1;}
     .modal-box-title{font-size:20px;font-weight:800;margin-bottom:20px;}
     .modal-box-body{padding:0 28px 28px;}
     .modal-field{margin-bottom:20px;}
     .modal-field-label{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;display:block;}
-    .modal-field .input{width:100%;background:#F9FAFB;border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;font-size:14px;font-family:'Inter',sans-serif;color:#1f2937;outline:none;transition:border-color .18s,box-shadow .18s;}
+    .modal-field .input{width:100%;background:rgba(255,255,255,.05);border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;font-size:14px;font-family:'Inter',sans-serif;color:var(--text);outline:none;transition:border-color .18s,box-shadow .18s;}
     .modal-field select.input{appearance:none;-webkit-appearance:none;-moz-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px;cursor:pointer;}
-    .modal-field select.input option{color:#1f2937;background:#ffffff;}
-    .modal-field .input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,158,220,.12);background:#fff;}
+    .modal-field select.input option{color:#F1F5F9;background:#1a1a2e;}
+    .modal-field .input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,158,220,.12);}
     .modal-field-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
     .modal-btn-bar{display:flex;gap:10px;margin-top:8px;}
     .modal-close-btn{position:absolute;top:20px;right:20px;background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:22px;line-height:1;padding:4px 8px;border-radius:8px;}
     .modal-close-btn:hover{background:var(--bg);}
     .modo-picker{display:flex;flex-direction:column;gap:8px;}
-    .modo-card{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s;background:#FAFAFA;}
-    .modo-card:hover{border-color:#93C5FD;background:#F0F9FF;}
-    .modo-card.selected{border-color:var(--blue);background:#EFF6FF;}
+    .modo-card{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s;background:rgba(255,255,255,.05);}
+    .modo-card:hover{border-color:#93C5FD;background:var(--blue-pale);}
+    .modo-card.selected{border-color:var(--blue);background:var(--blue-pale);}
     .modo-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:border-color .15s;}
     .modo-card.selected .modo-radio{border-color:var(--blue);}
     .modo-radio::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--blue);opacity:0;transition:opacity .15s;}
@@ -43,11 +43,11 @@
     .ag-chip{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:#6b21a8;background:#f3e8ff;border:1px solid #e2c9f7;border-radius:8px;padding:5px 10px}
     .ag-chip button{background:none;border:0;color:#c026d3;font-weight:900;cursor:pointer;font-size:14px;line-height:1;padding:0}
     .ag-mat-vazio{font-size:12px;color:var(--text-muted)}
-    .ag-bib-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;background:#F9FAFB;color:#1f2937}
+    .ag-bib-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;background:rgba(255,255,255,.05);color:var(--text)}
     .ag-bib-item:hover{border-color:var(--blue)}
     .ag-bib-item.on{border-color:#9b30ff;background:#f3e8ff}
     .ag-bib-item .abi-nome{flex:1;min-width:0;font-size:13px;font-weight:700}
-    .ag-bib-item .abi-tipo{font-size:10px;font-weight:800;text-transform:uppercase;color:#6b7280}
+    .ag-bib-item .abi-tipo{font-size:10px;font-weight:800;text-transform:uppercase;color:var(--text-muted)}
     /* linhas da lista de agendados (tema escuro do content) */
     .ag-row{display:flex;align-items:flex-start;gap:14px;padding:13px 4px;border-bottom:1px solid var(--border)}
     .ag-row:last-child{border-bottom:0}
@@ -89,8 +89,22 @@
         <input type="number" step="0.5" min="0" class="input" id="inp-valor-nota" value="1.5" placeholder="Ex.: 1,5"/>
       </div>
       <div class="modal-field">
-        <label class="modal-field-label">Data de aplicação (opcional)</label>
-        <input type="date" class="input" id="inp-data-aplicacao"/>
+        <label class="modal-field-label">Data de aplicação <span style="color:#f0837f">*</span></label>
+        <input type="date" class="input" id="inp-data-aplicacao" required/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-field-label">Tipo de liberação</label>
+        <div class="select-wrap">
+          <select class="input" id="sel-tipo-lib" onchange="onTipoLibChange()">
+            <option value="turma">Turma inteira (data oficial)</option>
+            <option value="segunda_chamada">Segunda chamada (alunos específicos)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-field" id="wrap-alunos-2a" style="display:none">
+        <label class="modal-field-label">Alunos da 2ª chamada</label>
+        <div id="lista-alunos-2a" style="max-height:220px;overflow:auto;border:1px solid var(--border,rgba(255,255,255,.12));border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:6px"></div>
+        <div style="font-size:11px;color:#9a90b0;margin-top:6px">Marque quem pode fazer a 2ª chamada. A data acima é a data da 2ª chamada.</div>
       </div>
       <div class="modal-field">
         <label class="modal-field-label">Modo</label>
@@ -101,6 +115,7 @@
           </div>
         </div>
       </div>
+      <div id="modal-erro" style="display:none;margin-top:6px;padding:10px 12px;border-radius:10px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);color:#f0837f;font-size:13px;font-weight:600"></div>
       <div class="modal-btn-bar" id="modal-btn-bar">
         <button class="btn btn-blue" style="flex:1;justify-content:center" onclick="liberar()">
           <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -294,6 +309,9 @@ const selAtiv = document.getElementById("sel-ativ");
 LISTA_ATIVIDADES.filter(a => a.modo !== 'torneio').forEach(a => { selAtiv.innerHTML += `<option value="${a.nome}">${a.nome}</option>`; });
 const selTurma = document.getElementById("sel-turma");
 Object.keys(ALUNOS_POR_TURMA).forEach(t => { selTurma.innerHTML += `<option value="${t}">Turma ${t}</option>`; });
+selTurma.addEventListener("change", () => {
+  if ((document.getElementById("sel-tipo-lib")?.value) === "segunda_chamada") renderAlunos2a();
+});
 
 window.fecharForm = () => document.getElementById("modal-overlay").classList.remove("open");
 
@@ -301,6 +319,18 @@ function flash(msg, tipo="success") {
   const w = document.getElementById("flash-wrap");
   w.innerHTML = `<div class="alert alert-${tipo}">${msg}</div>`;
   setTimeout(() => w.innerHTML="", 4000);
+}
+
+// Erro exibido DENTRO do modal de liberação (fica por cima, visível)
+function flashModal(msg, tipo="error") {
+  const el = document.getElementById("modal-erro");
+  if (!el) { flash(msg, tipo); return; }
+  el.textContent = msg;
+  el.style.display = "";
+}
+function limparErroModal() {
+  const el = document.getElementById("modal-erro");
+  if (el) { el.textContent = ""; el.style.display = "none"; }
 }
 
 const STATUS_OPTS = [
@@ -531,15 +561,22 @@ async function carregarAeH() {
   renderHistLib();
 }
 
-async function executarLiberacao(atividade, turma, percentual, valorNota, dataAplicacao = "") {
+async function executarLiberacao(atividade, turma, percentual, valorNota, dataAplicacao = "", tipoLib = "turma", alunos2a = []) {
   const modo = _modoSelecionado;
   const agora = dataAgora();
-  await setAtividadeStatus(turma, atividade, 'ativa', percentual, valorNota);
-  // Evita duplicatas: remove liberações ativas anteriores desta mesma atividade+turma
-  const _antigas = (await getLiberadas()).filter(l => l.turma === turma && l.atividade === atividade);
-  await Promise.all(_antigas.map(l => deleteLiberada(l.id)));
-  const histId = await addLiberacaoHistorico({ atividade, turma, percentual, valor_nota: valorNota, modo, liberado_em: agora });
-  await addLiberada({ atividade, turma, percentual, valor_nota: valorNota, modo, liberado_em: agora, historico_id: histId, criadoEm: Date.now(), data_aplicacao: dataAplicacao });
+  if (tipoLib === "turma") {
+    await setAtividadeStatus(turma, atividade, 'ativa', percentual, valorNota);
+    // Só a liberação de TURMA remove as ativas anteriores (uma oficial por vez).
+    // A 2ª chamada NÃO apaga a liberação de turma (coexistem).
+    const _antigas = (await getLiberadas()).filter(l => l.turma === turma && l.atividade === atividade && (l.tipo || "turma") === "turma");
+    await Promise.all(_antigas.map(l => deleteLiberada(l.id)));
+  } else {
+    // 2ª chamada: remove só 2ª chamadas anteriores da mesma atividade+turma (evita duplicar)
+    const _antigas2a = (await getLiberadas()).filter(l => l.turma === turma && l.atividade === atividade && l.tipo === "segunda_chamada");
+    await Promise.all(_antigas2a.map(l => deleteLiberada(l.id)));
+  }
+  const histId = await addLiberacaoHistorico({ atividade, turma, percentual, valor_nota: valorNota, modo, liberado_em: agora, data_aplicacao: dataAplicacao, tipo: tipoLib, alunos: alunos2a });
+  await addLiberada({ atividade, turma, percentual, valor_nota: valorNota, modo, liberado_em: agora, historico_id: histId, criadoEm: Date.now(), data_aplicacao: dataAplicacao, tipo: tipoLib, alunos: alunos2a });
   fecharForm();
   flash(`✅ ${atividade} — Turma ${turma} liberada (${percentual}% da nota · ${String(valorNota).replace('.', ',')} pts)!`);
   await carregarAeH();
@@ -553,24 +590,65 @@ window.selecionarModo = function(modo) {
   const c = document.getElementById("modo-equacoes");
   if (c) c.classList.add("selected");
 };
-window.abrirForm = () => { _modoSelecionado = 'equacoes_plus'; selecionarModo('equacoes_plus'); document.getElementById("modal-overlay").classList.add("open"); };
+window.abrirForm = () => {
+  _modoSelecionado = 'equacoes_plus'; selecionarModo('equacoes_plus');
+  const st = document.getElementById("sel-tipo-lib"); if (st) st.value = "turma";
+  const w = document.getElementById("wrap-alunos-2a"); if (w) w.style.display = "none";
+  document.getElementById("modal-overlay").classList.add("open");
+  limparErroModal();
+};
+
+// Reset do tipo ao abrir o form
+const _selTipoLib = () => document.getElementById("sel-tipo-lib");
+window.onTipoLibChange = function() {
+  const tipo = _selTipoLib()?.value || "turma";
+  const wrap = document.getElementById("wrap-alunos-2a");
+  if (tipo === "segunda_chamada") {
+    renderAlunos2a();
+    wrap.style.display = "";
+  } else {
+    wrap.style.display = "none";
+  }
+};
+function renderAlunos2a() {
+  const turma = document.getElementById("sel-turma").value;
+  const box = document.getElementById("lista-alunos-2a");
+  if (!turma) { box.innerHTML = '<div style="font-size:12px;color:#f0837f">Selecione a turma primeiro.</div>'; return; }
+  const alunos = (ALUNOS_POR_TURMA[turma] || []);
+  box.innerHTML = alunos.map(nome => `
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+      <input type="checkbox" class="chk-aluno-2a" value="${nome.replace(/"/g,'&quot;')}"/> ${nome}
+    </label>`).join("") || '<div style="font-size:12px;color:#9a90b0">Sem alunos nesta turma.</div>';
+}
 
 window.liberar = async function() {
   const atividade  = document.getElementById("sel-ativ").value;
   const turma      = document.getElementById("sel-turma").value;
   const percentual = Math.min(100, Math.max(0, parseInt(document.getElementById("inp-percentual").value) || 100));
   const valorNota  = Math.max(0, parseFloat((document.getElementById("inp-valor-nota")?.value || "").replace(",", ".")) || 1.5);
-  if (!atividade || !turma) { flash("Selecione a atividade e a turma.", "error"); return; }
+  if (!atividade || !turma) { flashModal("Selecione a atividade e a turma.", "error"); return; }
 
-  const stAtual = _statusMapCache[`${turma}|${atividade}`];
-  if (stAtual && stAtual.status !== 'encerrada') {
-    fecharForm();
-    flash(`⚠️ "${atividade}" já está ativa para a Turma ${turma}. Encerre-a primeiro (botão ⛔ Encerrar) antes de liberar novamente.`, "error");
-    return;
+  const dataAplic = document.getElementById("inp-data-aplicacao")?.value || "";
+  if (!dataAplic) { flashModal("Informe a data de aplicação da atividade.", "error"); return; }
+
+  const tipoLib = document.getElementById("sel-tipo-lib")?.value || "turma";
+  let alunos2a = [];
+  if (tipoLib === "segunda_chamada") {
+    alunos2a = [...document.querySelectorAll(".chk-aluno-2a:checked")].map(c => c.value);
+    if (!alunos2a.length) { flashModal("Selecione ao menos um aluno para a 2ª chamada.", "error"); return; }
   }
 
-  const dataAplicacao = document.getElementById("inp-data-aplicacao")?.value || "";
-  await executarLiberacao(atividade, turma, percentual, valorNota, dataAplicacao);
+  // Bloqueio "já ativa" só vale para liberação de TURMA (2ª chamada coexiste).
+  if (tipoLib === "turma") {
+    const stAtual = _statusMapCache[`${turma}|${atividade}`];
+    if (stAtual && stAtual.status !== 'encerrada') {
+      fecharForm();
+      flash(`⚠️ "${atividade}" já está ativa para a Turma ${turma}. Encerre-a primeiro (botão ⛔ Encerrar) antes de liberar novamente.`, "error");
+      return;
+    }
+  }
+
+  await executarLiberacao(atividade, turma, percentual, valorNota, dataAplic, tipoLib, alunos2a);
 };
 
 

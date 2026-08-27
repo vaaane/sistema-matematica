@@ -241,6 +241,16 @@ export async function getLiberadasParaTurma(turma) {
   return result;
 }
 
+// Escolhe, entre as liberações ativas, a que vale para ESTE aluno numa atividade.
+// Prioridade: 2ª chamada em que o aluno está listado > liberação de turma > nenhuma.
+export function liberacaoParaAluno(liberadas, atividade, aluno) {
+  const daAtiv = (liberadas || []).filter(l => l.atividade === atividade);
+  const seg = daAtiv.find(l => l.tipo === "segunda_chamada"
+                 && Array.isArray(l.alunos) && l.alunos.includes(aluno));
+  if (seg) return seg;
+  return daAtiv.find(l => (l.tipo || "turma") === "turma") || null;
+}
+
 // ── Histórico de liberações ─────────────────────────────────
 export async function addLiberacaoHistorico(data) {
   const newRef = await push(ref(db, "liberacoes_historico"), { ...data, criadoEm: serverTimestamp() });
