@@ -847,24 +847,48 @@ try {
   </div>`;
 }
 
-// ── Vindo da ficha (clique numa nota): filtrar + rolar + destacar ──
-(function () {
-  const alvo = new URLSearchParams(location.search).get('atividade');
-  if (!alvo) return;
+// ── Deep-link vindo da ficha: abrir a atividade já expandida ──
+(function abrirDaFicha() {
+  const qs      = new URLSearchParams(location.search);
+  const resId   = qs.get('resultado');   // id do resultado (preferido)
+  const nomeAtv = qs.get('atividade');   // fallback pelo nome
+  if (!resId && !nomeAtv) return;
+
+  // 1) garante o filtro em "Atividades" (senão o card pode não estar no DOM)
+  const btnAtiv = [...document.querySelectorAll('.hc-fbtn')]
+    .find(b => /atividade/i.test(b.getAttribute('onclick') || '') || /atividade/i.test(b.textContent));
+  if (btnAtiv && typeof window.setFiltro === 'function') window.setFiltro(btnAtiv, 'atividade');
+
+  // 2) acha o HEADER do card certo
   const norm = s => (s || '').trim().toLowerCase();
-  // filtra para "Atividades" (2º botão de filtro)
-  const btnAtiv = document.querySelector('.hc-fbtn[onclick*="\'atividade\'"]');
-  if (btnAtiv) window.setFiltro(btnAtiv, 'atividade');
-  // acha o card cujo título bate com o nome da atividade
-  const cards = [...document.querySelectorAll('#entries .entry[data-tipo="atividade"]')];
-  const alvoN = norm(alvo);
-  const hit = cards.find(c => norm(c.querySelector('.entry-title')?.textContent) === alvoN)
-           || cards.find(c => norm(c.querySelector('.entry-title')?.textContent).includes(alvoN));
-  if (!hit) return;
-  hit.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  hit.style.transition = 'box-shadow .3s, border-color .3s';
-  hit.style.boxShadow = '0 0 0 2px rgba(155,48,255,.55), 0 10px 30px rgba(0,0,0,.4)';
-  setTimeout(() => { hit.style.boxShadow = ''; }, 2600);
+  let header = null;
+
+  if (resId) {
+    // data-ids pode conter 1+ ids separados por vírgula
+    header = [...document.querySelectorAll('.entry-header[data-tipo-entry="ativ"][data-ids]')]
+      .find(h => (h.dataset.ids || '').split(',').map(x => x.trim()).includes(resId));
+  }
+  if (!header && nomeAtv) {
+    header = [...document.querySelectorAll('.entry .entry-header')]
+      .find(h => {
+        const t = h.parentElement?.querySelector('.entry-title');
+        return t && (norm(t.textContent) === norm(nomeAtv) || norm(t.textContent).includes(norm(nomeAtv)));
+      });
+  }
+  if (!header) return;
+
+  const card = header.closest('.entry');
+
+  // 3) abre (dispara o MESMO handler do clique manual -> carrega detalhes lazy)
+  if (!card.classList.contains('open')) header.click();
+
+  // 4) rola ate ele e destaca
+  requestAnimationFrame(() => {
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.style.transition = 'box-shadow .3s, border-color .3s';
+    card.style.boxShadow  = '0 0 0 2px rgba(124,92,252,.6), 0 10px 30px rgba(0,0,0,.45)';
+    setTimeout(() => { card.style.boxShadow = ''; }, 2800);
+  });
 })();
 
 </script>

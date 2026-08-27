@@ -8,7 +8,7 @@
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Minha Ficha — Sistema de Matemática</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/main.css"/>
   <link rel="stylesheet" href="/css/conteudo-aula.css"/>
 <style>
@@ -49,10 +49,22 @@
   .stat-sub{font-size:10px;color:var(--text-muted);margin-top:4px;line-height:1.3}
   .stat.destaque{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.4)}
   .stat-selo{margin-left:auto;align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(239,68,68,.16);border:1px solid rgba(239,68,68,.4);border-radius:10px;padding:6px 12px;min-width:74px}
-  .stat-selo{font-family:'Orbitron',monospace;font-size:19px;font-weight:700;color:#f87171;line-height:1}
+  /* números em Rajdhani (zero redondo, sem o "0" cortado do Orbitron) */
+  .stat-selo{font-family:'Rajdhani','Inter',sans-serif;font-size:20px;font-weight:700;color:#f87171;line-height:1}
   .stat-selo small{font-family:'Inter',sans-serif;font-size:9px;font-weight:600;color:#f0a0a0;margin-top:3px;letter-spacing:.3px}
   .stat-selo.neutro{background:rgba(255,255,255,.05);border-color:var(--border);color:var(--text-muted)}
   .stat-selo.neutro small{color:var(--text-muted)}
+  /* Faltas ocupa a linha inteira (selo cabe dentro, não estoura) */
+  .stat.r.wide{grid-column:1 / -1}
+  /* Card avaliativas do quiz */
+  .stat.q .v{font-family:'Rajdhani','Inter',sans-serif;font-variant-numeric:tabular-nums}
+  .stat.q .qt{font-size:13px;font-weight:700;color:var(--text-muted);margin-left:1px}
+  .stat.q.pend{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.32)}
+  .stat.q.pend .qv{color:var(--red)}
+  .stat.q.pend .stat-ic{background:rgba(239,68,68,.14);color:#f87171}
+  .stat.q.ok{background:rgba(34,197,94,.07);border-color:rgba(34,197,94,.3)}
+  .stat.q.ok .qv{color:#63c98a}
+  .stat.q.ok .stat-ic{background:rgba(34,197,94,.14);color:#63c98a}
   @media(max-width:768px){ .stat-ic{width:38px;height:38px;border-radius:10px} .stat-ic svg{width:20px;height:20px} }
   .ficha-nota{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;line-height:1.5;border-radius:11px;padding:11px 14px;margin-top:12px}
   .ficha-nota svg{width:17px;height:17px;flex-shrink:0;margin-top:1px}
@@ -61,6 +73,8 @@
   .ficha-nota.verde{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.28);color:#a7d8ba}
   .ficha-nota.verde svg{fill:#22C55E} .ficha-nota.verde b{color:#63c98a}
   .nota-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 8px;margin:0 -8px;border-bottom:1px solid var(--border);border-radius:9px;text-decoration:none;color:inherit;cursor:pointer;transition:.13s}
+  .nota-hint{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);margin:-2px 0 10px}
+  .nota-hint svg{width:13px;height:13px;fill:var(--text-muted);flex-shrink:0;opacity:.8}
   .nota-row:last-of-type{border-bottom:none}
   .nota-row:hover{background:rgba(155,48,255,.07)}
   .nota-row:hover .nota-nome{color:#c79bff}
@@ -68,27 +82,40 @@
   .nota-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
   .nota-chev{width:15px;height:15px;fill:none;stroke:var(--text-muted);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;opacity:.4;transition:.15s}
   .nota-nome{font-size:13px;color:var(--text);line-height:1.3;transition:.13s;font-weight:500}
-  .nota-val{font-family:'Orbitron',monospace;font-size:15px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .nota-val{font-family:'Rajdhani','Inter',sans-serif;font-size:17px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
   .nota-val small{font-family:'Inter',sans-serif;font-size:10.5px;opacity:.55;font-weight:500;letter-spacing:0}
   .nota-val.verde{color:#63c98a} .nota-val.ouro{color:#f5c451} .nota-val.vermelho{color:#f0837f}
   .nota-total{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding:12px 14px;border-radius:12px;background:rgba(155,48,255,.1);border:1px solid rgba(155,48,255,.28);font-size:12px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:#c79bff}
-  .nota-total b{font-family:'Orbitron',monospace;font-size:17px;font-weight:700;color:#fff;letter-spacing:-.02em;font-variant-numeric:tabular-nums;text-transform:none}
+  .nota-total b{font-family:'Rajdhani','Inter',sans-serif;font-size:19px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;text-transform:none}
   .nota-total small{font-family:'Inter',sans-serif;font-size:11px;opacity:.6;font-weight:500}
   .nota-vazia{font-size:12.5px;color:var(--text-muted);padding:10px 2px;text-align:center}
   /* Mini-cards de frequência (sem barra/percentuais) */
   .freq-mini{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
-  .freq-mcard{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:9px 11px}
+  .freq-mcard{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
   .freq-mcard .fm-v{font-size:13px;font-weight:800;color:var(--text);line-height:1.2}
-  .freq-mcard .fm-l{font-size:10.5px;color:var(--text-muted);margin-top:2px;line-height:1.25}
+  .freq-mcard .fm-l{font-size:11px;color:var(--text-muted);line-height:1.25}
+  .freq-mcard .fm-warn{font-size:10px;color:var(--text-muted);line-height:1.2;width:100%}
   .freq-mcard.alerta{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.32)}
-  .freq-mcard.alerta .fm-v{color:#f0837f}
-  @media(max-width:640px){.freq-mini{grid-template-columns:1fr}}
+  .freq-mcard.alerta .fm-v{color:#f0837f} .freq-mcard.alerta .fm-warn{color:#e59a97}
+  .freq-mcard.ok .fm-v{color:#63c98a}
+  @media(max-width:640px){.freq-mini{grid-template-columns:1fr}.freq-mcard .fm-warn{width:auto}}
   /* ===== Presença (faltas + atestado no mesmo card) ===== */
   .pres-sec+.pres-sec{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
   .pres-h{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;margin-bottom:10px}
   .pres-h .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
   .pres-h .c{margin-left:auto;font-size:11px;color:var(--text-muted);font-weight:700}
-  @media(max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:520px){
+    .stats{grid-template-columns:1fr}
+    .stat.r.wide{grid-column:auto}
+    /* cards simples (valor + rótulo): lado a lado */
+    .stat.m .stat-txt,.stat.o .stat-txt{display:flex;align-items:baseline;gap:9px}
+    .stat.m .stat-txt .l,.stat.o .stat-txt .l{margin-top:0}
+    /* Atestado e Quiz: cap+valor+rótulo numa linha horizontal */
+    .stat.b .stat-txt,.stat.q .stat-txt{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+    .stat.b .stat-cap,.stat.q .stat-cap{order:2;margin-bottom:0}
+    .stat.b .v,.stat.q .v{order:1}
+    .stat.b .l,.stat.q .l{order:3;margin-top:0}
+  }
   @media(max-width:400px){
     .resumo{padding:15px 15px}
     .resumo-top{gap:11px}
@@ -99,7 +126,11 @@
   }
 
   .grid{display:grid;grid-template-columns:1.55fr 1fr;gap:14px;align-items:start}
-  @media(max-width:900px){.grid{grid-template-columns:1fr}}
+  @media(max-width:900px){
+    .grid{display:flex;flex-direction:column}
+    .grid > #c-ativ{order:2}
+    .grid > .grid-side{order:1}
+  }
   .card + .card{margin-top:14px}
   .card-title{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:800;margin-bottom:14px}
   .card-title svg{width:18px;height:18px;fill:var(--purple)}
@@ -108,11 +139,13 @@
   .filtros{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 12px}
   .filtros button{border:1px solid var(--border);background:transparent;color:var(--text-muted);font-weight:700;font-size:11.5px;padding:6px 12px;border-radius:20px;cursor:pointer}
   .filtros button.on{background:var(--purple-pale);border-color:var(--purple);color:#c79bff}
+  .filtros button .fct{display:inline-block;font-size:10.5px;font-weight:800;opacity:.7;margin-left:2px}
+  .filtros button.on .fct{opacity:1}
 
   /* linha de atividade — formato "Minhas Aulas" (anel + tag + visto + badge + botão) */
   .ativ-row{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:10px;transition:.15s}
   .ativ-row:last-child{margin-bottom:0}
-  .ativ{padding:12px 14px;display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;gap:12px;align-items:center}
+  .ativ{padding:12px 14px;display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:center}
   .ativ-row.tem-mat .ativ{cursor:pointer}
   /* anel numerado (cor conforme estado de entrega) */
   .ring{position:relative;width:40px;height:40px;flex-shrink:0}
@@ -150,13 +183,10 @@
   .ativ-row.aberto .ativ-btn .t-oc{display:inline}
   @media(max-width:720px){
     .ativ{grid-template-columns:40px minmax(0,1fr) auto;gap:10px}
-    .ativ .badge{grid-column:2;justify-self:start;margin-top:2px}
-    .ativ-btn{grid-column:3;grid-row:1}
   }
   @media(max-width:520px){
     .ativ{grid-template-columns:40px minmax(0,1fr)}
-    .ativ .badge{grid-column:1/-1;justify-self:start}
-    .ativ-btn{grid-column:1/-1;grid-row:auto;justify-content:center;margin-top:2px}
+    .ativ-btn{grid-column:1/-1;grid-row:auto;justify-content:center;margin-top:6px}
   }
   .st{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0}
   .st.feita{background:var(--green-pale);color:var(--green)}
@@ -170,7 +200,8 @@
   .ativ-body{flex:1;min-width:0}
   .ativ-nome{font-size:13.5px;font-weight:700}
   .ativ-data{font-size:11.5px;color:var(--text-muted);margin-top:1px}
-  .badge{font-size:10.5px;font-weight:800;padding:4px 10px;border-radius:20px;white-space:nowrap}
+  .badge{font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:7px;white-space:nowrap}
+  .ativ-meta .badge{margin-left:2px}
   .badge.feita{background:var(--green-pale);color:var(--green)}
   .badge.atraso{background:var(--gold-pale);color:var(--gold)}
   .badge.fa{background:var(--gold-pale);color:var(--gold)}
@@ -283,6 +314,7 @@ const VISTO = {
   sem     :["sem","Sem visto",'<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 11h-1a1 1 0 0 1-1-1V7a1 1 0 0 1 2 0v4h1a1 1 0 0 1 0 2z"/></svg>'],
 };
 const ICO_CAL = '<svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 16H5V9h14v10zM5 7V5h14v2H5z"/></svg>';
+const ICO_TOQUE = '<svg viewBox="0 0 24 24"><path d="M9 11.24V7.5a1.5 1.5 0 0 1 3 0v3.74a4 4 0 1 0-3 0zM10.5 4a3.5 3.5 0 0 0-1.5 6.66V7.5a1.5 1.5 0 0 1 3 0v3.16A3.5 3.5 0 0 0 10.5 4zm5.94 8.35-3.5-1.17V7.5a2.5 2.5 0 0 0-5 0v9.09l-2.03-.43a1.3 1.3 0 0 0-1.24 2.16l3.3 3.55c.47.5 1.13.79 1.82.79h5.66a2 2 0 0 0 1.98-1.7l.53-3.48a2 2 0 0 0-1.35-2.2z"/></svg>';
 
 
 // Estados de atividade:
@@ -461,15 +493,22 @@ function render(){
   const _corNota = p => p>=7 ? 'verde' : p>=4 ? 'ouro' : 'vermelho';
   const _somaReal = _linhasNota.reduce((s,[,v])=>s+v.real,0);
   const _somaMax  = _linhasNota.reduce((s,[,v])=>s+v.vmax,0);
+
+  // ── Avaliativas do quiz do bimestre: total esperado vs realizadas ──
+  const avalDoBim   = (LISTA_ATIVIDADES||[]).filter(a=>a && a.bim===bimestre);
+  const avalTotal   = avalDoBim.length;
+  const avalFeitas  = avalDoBim.filter(a=>notasAtiv[a.nome]).length;
+  const avalPend    = Math.max(0, avalTotal - avalFeitas);
   const notasHtml = `
     <div class="card" id="c-notas">
       <div class="card-title">
         <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
         Notas <span class="count">${_linhasNota.length}</span>
       </div>
+      ${_linhasNota.length ? `<div class="nota-hint">${ICO_TOQUE}Toque numa nota para ver como foi feita</div>` : ""}
       ${_linhasNota.length
         ? _linhasNota.map(([nome,v])=>`
-          <a class="nota-row" href="/aluno/a-historico.html?atividade=${encodeURIComponent(nome)}#ativ" title="Ver histórico desta atividade">
+          <a class="nota-row" href="/aluno/a-historico.html?resultado=${encodeURIComponent(v.id||"")}&atividade=${encodeURIComponent(nome)}#ativ" title="Ver histórico desta atividade">
             <span class="nota-nome">${escapeHtml(nome)}</span>
             <span class="nota-right">
               <span class="nota-val ${_corNota(v.pts)}">${_fmt2(v.real)} <small>/ ${_fmt2(v.vmax)}</small></span>
@@ -490,17 +529,21 @@ function render(){
   const abaixoMin = totalAulas > 0 && pctPres < 75;
   const resumoFreqHtml = totalAulas ? `
     <div class="freq-mini">
-      <div class="freq-mcard"><div class="fm-v">${faltas.length} de ${totalDias} dias</div><div class="fm-l">com falta</div></div>
-      <div class="freq-mcard"><div class="fm-v">${faltasAulas} de ${totalAulas} aulas</div><div class="fm-l">perdidas</div></div>
-      <div class="freq-mcard ${abaixoMin?'alerta':''}">${abaixoMin
-        ? `<div class="fm-v">⚠️ Atenção</div><div class="fm-l">Frequência abaixo do mínimo · 75%</div>`
-        : `<div class="fm-v">✓ Em dia</div><div class="fm-l">Dentro do mínimo · 75%</div>`}</div>
+      <div class="freq-mcard"><span class="fm-v">${faltas.length} de ${totalDias} dias</span><span class="fm-l">com falta</span></div>
+      <div class="freq-mcard"><span class="fm-v">${faltasAulas} de ${totalAulas} aulas</span><span class="fm-l">perdidas</span></div>
+      <div class="freq-mcard ${abaixoMin?'alerta':'ok'}">${abaixoMin
+        ? `<span class="fm-v">⚠️ ${pctFaltas}% de ausência</span><span class="fm-warn">abaixo do mínimo (75% de presença)</span>`
+        : `<span class="fm-v">✓ ${pctPres}% de presença</span><span class="fm-warn">dentro do mínimo</span>`}</div>
     </div>` : "";
 
   const rows = linhas.filter(l=> filtro==="todas" ? true
     : filtro==="feita" ? (l.st==="feita"||l.st==="atraso"||l.st==="fa"||l.st==="atv"||l.st==="at")
     : filtro==="nao" ? (l.st==="nao"||l.st==="falta")
     : true);
+  // contadores por filtro (para os botões)
+  const cntTodas = linhas.length;
+  const cntFeita = linhas.filter(l=>l.st==="feita"||l.st==="atraso"||l.st==="fa"||l.st==="atv"||l.st==="at").length;
+  const cntNao   = linhas.filter(l=>l.st==="nao"||l.st==="falta").length;
 
   const atvHtml = rows.length ? rows.map(r=>{
     const vst = vistoDe(r.id);
@@ -518,9 +561,9 @@ function render(){
           <div class="ativ-meta">
             <span class="ativ-data">${ICO_CAL}${r.data?fmtDM(r.data):"—"}</span>
             <span class="ativ-visto ${vcls}">${vic}${vtxt}</span>
+            <span class="badge ${r.st}">${LABEL[r.st]}</span>
           </div>
         </div>
-        <span class="badge ${r.st}">${LABEL[r.st]}</span>
         ${r.materialRef ? `<button class="ativ-btn" onclick="event.stopPropagation();toggleConteudo('${r.id}')">
           <span class="t-ver">Ver conteúdo</span><span class="t-oc">Ocultar</span>
           <svg class="chev" viewBox="0 0 24 24"><path d="M7.4 8.6 12 13.2l4.6-4.6L18 10l-6 6-6-6z"/></svg>
@@ -573,9 +616,9 @@ function render(){
       <div class="stats">
         <div class="stat m" data-goto="c-ativ">
           <div class="stat-ic roxo"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></div>
-          <div class="stat-txt"><div class="v">${naoF}</div><div class="l">Atividades não feitas</div></div>
+          <div class="stat-txt"><div class="v">${naoF}</div><div class="l">Atividades do caderno não feitas</div></div>
         </div>
-        <div class="stat r${pctFaltas > 25 ? ' destaque' : ''}" data-goto="c-pres">
+        <div class="stat r wide${pctFaltas > 25 ? ' destaque' : ''}" data-goto="c-pres">
           <div class="stat-ic ${pctFaltas > 25 ? 'vermelho' : 'roxo'}"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
           <div class="stat-txt">
             <div class="stat-cap${pctFaltas > 25 ? ' vermelho' : ''}">Faltas</div>
@@ -592,6 +635,11 @@ function render(){
           <div class="stat-ic dourado"><svg viewBox="0 0 24 24"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg></div>
           <div class="stat-txt"><div class="v">${oc.length}</div><div class="l">Ocorrências</div></div>
         </div>
+        ${avalTotal ? `
+        <div class="stat q ${avalPend ? 'pend' : 'ok'}" data-goto="c-notas">
+          <div class="stat-ic"><svg viewBox="0 0 24 24"><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>
+          <div class="stat-txt"><div class="v"><span class="qv">${avalFeitas}</span><span class="qt">/${avalTotal}</span></div><div class="l">${avalPend ? `Avaliativa${avalPend>1?"s":""} do quiz não realizada${avalPend>1?"s":""}` : "Avaliativas do quiz · em dia"}</div></div>
+        </div>` : ""}
       </div>
     </div>
 
@@ -599,21 +647,21 @@ function render(){
       <div class="card" id="c-ativ">
         <div class="card-title">
           <svg viewBox="0 0 24 24"><path d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z"/></svg>
-          Atividades do bimestre <span class="count">${rows.length} de ${atividades.length}</span>
+          Atividades no Caderno <span class="count">${rows.length} de ${atividades.length}</span>
         </div>
         <div class="ficha-nota verde">
           <svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>
           <span>Tendo <b>todos os vistos</b> do bimestre (completos ou meio, ½), o aluno ganha <b>+0,5 na média</b>. Os vistos podem ser mostrados à professora <b>ao longo de todo o bimestre</b>.</span>
         </div>
         <div class="filtros" id="filtros">
-          <button class="${filtro==="todas"?"on":""}" data-f="todas">Todas</button>
-          <button class="${filtro==="feita"?"on":""}" data-f="feita">Feitas</button>
-          <button class="${filtro==="nao"?"on":""}" data-f="nao">Não feitas</button>
+          <button class="${filtro==="todas"?"on":""}" data-f="todas">Todas <span class="fct">${cntTodas}</span></button>
+          <button class="${filtro==="feita"?"on":""}" data-f="feita">Feitas <span class="fct">${cntFeita}</span></button>
+          <button class="${filtro==="nao"?"on":""}" data-f="nao">Não feitas <span class="fct">${cntNao}</span></button>
         </div>
         <div>${atvHtml}</div>
       </div>
 
-      <div>
+      <div class="grid-side">
         ${notasHtml}
         <div class="card" id="c-pres">
           <div class="card-title">
@@ -622,17 +670,17 @@ function render(){
           </div>
           ${resumoFreqHtml}
           <div class="pres-sec">
-            <div class="pres-h"><span class="dot" style="background:var(--red)"></span>Faltas<span class="c">${faltas.length} de ${totalDias} dia(s) · ${faltasAulas}/${totalAulas} aula(s) · <b style="color:var(--red)">${pctFaltas}%</b></span></div>
+            <div class="pres-h"><span class="dot" style="background:var(--red)"></span>Faltas<span class="c">${faltas.length} dia(s) · ${faltasAulas} aula(s)</span></div>
             <div class="falta-dates">${faltasHtml}</div>
           </div>
-          <div class="pres-sec">
+          ${atrasos.length ? `<div class="pres-sec">
             <div class="pres-h"><span class="dot" style="background:var(--gold)"></span>Atrasos<span class="c">${atrasos.length} dia(s) · ${atrasosAulas} aula(s)</span></div>
             <div class="falta-dates">${atrasosHtml}</div>
-          </div>
-          <div class="pres-sec">
+          </div>` : ""}
+          ${atDias.length ? `<div class="pres-sec">
             <div class="pres-h"><span class="dot" style="background:#60a5fa"></span>Atestado médico<span class="c">${atDias.length} dia(s)</span></div>
             <div class="falta-dates">${atHtml}</div>
-          </div>
+          </div>` : ""}
         </div>
         <div class="card" id="c-oc">
           <div class="card-title">
