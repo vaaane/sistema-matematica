@@ -12,7 +12,7 @@
   <style>
     .hist-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
     .hist-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background .15s;}
-    .hist-header:hover{background:#FAFAFA;}
+    .hist-header:hover{background:rgba(255,255,255,.05);}
     .hist-body{padding:0 16px 14px;border-top:1px solid var(--border);}
     .hist-data{font-size:11px;color:var(--text-muted);white-space:nowrap;}
     .q-rev{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);margin-top:6px;font-size:12px;}
@@ -197,7 +197,7 @@ function renderTorneioItem(e) {
         <div style="font-size:12px;color:var(--text-muted);margin-top:2px">${e.aluno}</div>
         <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">
           <span class="badge badge-gold">${e.pontuacao} pts</span>
-          <span class="badge" style="background:#FFFBEB;color:#92400E;border-color:#FDE68A">${posLabel} de ${e.total_turma}</span>
+          <span class="badge" style="background:var(--gold-pale);color:var(--gold);border-color:var(--border)">${posLabel} de ${e.total_turma}</span>
           <span class="badge badge-green">${e.acertos} ✓</span>
           <span class="badge badge-red">${e.erros} ✗</span>
           <span class="badge badge-blue">${taxa}</span>
@@ -232,7 +232,7 @@ window.filtrar = function() {
         <div style="flex:1">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <span style="font-size:14px;font-weight:700">${r.atividade}</span>
-            ${r.turma === 'TESTE' ? '<span class="badge" style="background:#FEF9C3;color:#854D0E;border:1px solid #FDE68A">👩‍🏫 TESTE</span>' : `<span class="badge badge-blue">T${r.turma}</span>`}
+            ${r.turma === 'TESTE' ? '<span class="badge" style="background:var(--gold-pale);color:var(--gold);border:1px solid var(--border)">👩‍🏫 TESTE</span>' : `<span class="badge badge-blue">T${r.turma}</span>`}
           </div>
           <div style="font-size:12px;color:var(--text-muted);margin-top:2px">${r.aluno}</div>
           <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">

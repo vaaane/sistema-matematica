@@ -79,39 +79,39 @@
   /* Modais — padrão fundo branco (igual p-atividades) */
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:center;justify-content:center;padding:24px}
   .modal-overlay.open{display:flex}
-  .modal-box{background:#fff;color:#1f2937;border-radius:18px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.35);animation:fadeUp .2s ease}
+  .modal-box{background:var(--card);color:var(--text);border-radius:18px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.35);animation:fadeUp .2s ease}
   @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
   .modal-box-body{padding:24px 28px 28px}
-  .modal-box-title{font-size:19px;font-weight:800;margin-bottom:18px;color:#1f2937}
+  .modal-box-title{font-size:19px;font-weight:800;margin-bottom:18px;color:var(--text)}
   .modal-field{margin-bottom:18px}
-  .modal-field-label{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#6b7280;margin-bottom:8px;display:block}
-  .modal-field .input{width:100%;background:#F9FAFB;border:1.5px solid #d1d5db;border-radius:10px;padding:12px 14px;font-size:14px;font-family:'Inter',sans-serif;color:#1f2937;outline:none;transition:border-color .18s}
-  .modal-field .input:focus{border-color:var(--purple);background:#fff}
+  .modal-field-label{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;display:block}
+  .modal-field .input{width:100%;background:rgba(255,255,255,.05);border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;font-size:14px;font-family:'Inter',sans-serif;color:var(--text);outline:none;transition:border-color .18s}
+  .modal-field .input:focus{border-color:var(--purple)}
   .modal-field textarea.input{resize:vertical;min-height:70px}
   .modal-btn-bar{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
   .menu-col{display:flex;flex-direction:column;gap:8px;margin:6px 0 4px}
   .menu-col .btn{justify-content:flex-start}
-  .btn-gray{background:#f3f4f6;color:#1f2937}.btn-gray:hover{background:#e5e7eb}
+  .btn-gray{background:rgba(255,255,255,.08);color:var(--text)}.btn-gray:hover{background:rgba(255,255,255,.14)}
   .btn-red-soft{background:#fee2e2;color:#b91c1c}.btn-red-soft:hover{background:#fecaca}
-  .modal-btn-bar .btn-ghost{color:#6b7280;border-color:#d1d5db}
-  .modal-btn-bar .btn-ghost:hover{color:#1f2937;border-color:#6b7280}
-  .col-info{font-size:12px;color:#6b7280;margin-bottom:6px}
+  .modal-btn-bar .btn-ghost{color:var(--text-muted);border-color:var(--border)}
+  .modal-btn-bar .btn-ghost:hover{color:var(--text);border-color:var(--text-muted)}
+  .col-info{font-size:12px;color:var(--text-muted);margin-bottom:6px}
 
-  /* seletor da biblioteca (dentro do modal branco) */
-  .bib-filtro{padding:6px 14px;font-size:12px;font-weight:700;border:1.5px solid #d1d5db;background:#fff;color:#6b7280;border-radius:999px;cursor:pointer;font-family:'Inter',sans-serif}
+  /* seletor da biblioteca (dentro do modal) */
+  .bib-filtro{padding:6px 14px;font-size:12px;font-weight:700;border:1.5px solid var(--border);background:rgba(255,255,255,.05);color:var(--text-muted);border-radius:999px;cursor:pointer;font-family:'Inter',sans-serif}
   .bib-filtro.on{background:var(--purple);color:#fff;border-color:var(--purple)}
-  .bib-item{display:flex;align-items:center;gap:12px;padding:11px 13px;border:1.5px solid #e5e7eb;border-radius:10px;margin-bottom:8px;cursor:pointer;transition:border-color .12s,background .12s}
+  .bib-item{display:flex;align-items:center;gap:12px;padding:11px 13px;border:1.5px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;transition:border-color .12s,background .12s}
   .bib-item:hover{border-color:var(--purple);background:#faf5ff}
   .bib-item.sel{border-color:var(--purple);background:#f3e8ff}
-  .bib-nome{flex:1;font-size:13px;font-weight:600;color:#1f2937}
-  .bib-arq{font-size:11px;color:#9ca3af;margin-top:2px}
+  .bib-nome{flex:1;font-size:13px;font-weight:600;color:var(--text)}
+  .bib-arq{font-size:11px;color:var(--text-muted);margin-top:2px}
   .bib-tipo{flex-shrink:0;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;text-transform:uppercase}
   .bib-tipo.teoria{background:var(--purple-pale);color:#7a00d4}
   .bib-tipo.atividade{background:var(--gold-pale);color:#b45309}
-  .bib-tipo.outro{background:#e5e7eb;color:#6b7280}
-  .bib-ver{background:#f3f4f6;color:#374151;border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0}
-  .bib-ver:hover{background:#e5e7eb}
-  .bib-vazio{padding:22px;text-align:center;color:#9ca3af;font-size:13px}
+  .bib-tipo.outro{background:rgba(255,255,255,.08);color:var(--text-muted)}
+  .bib-ver{background:rgba(255,255,255,.08);color:var(--text);border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0}
+  .bib-ver:hover{background:rgba(255,255,255,.14)}
+  .bib-vazio{padding:22px;text-align:center;color:var(--text-muted);font-size:13px}
 
   @media(max-width:860px){
     .content{padding:16px 12px}
@@ -176,7 +176,7 @@
     <div class="modal-field"><label class="modal-field-label">Observação (opcional)</label>
       <textarea class="input" id="mObs" placeholder="Ex.: O visto ainda vale completo na próxima aula."></textarea></div>
     <div class="modal-field"><label class="modal-field-label">Aula vinculada (da biblioteca — opcional)</label>
-      <div id="mMatSel" class="col-info" style="padding:10px 12px;border:1.5px solid #d1d5db;border-radius:10px;background:#F9FAFB;margin-bottom:8px">Nenhum material selecionado.</div>
+      <div id="mMatSel" class="col-info" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;background:rgba(255,255,255,.05);margin-bottom:8px">Nenhum material selecionado.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button type="button" class="btn btn-gray btn-sm" onclick="abrirBiblioteca()">📎 Selecionar da biblioteca</button>
         <button type="button" class="btn btn-red-soft btn-sm" id="btnLimparMat" onclick="limparMaterialSel()" style="display:none">Remover</button>
@@ -213,7 +213,7 @@
     <div id="bibFiltros" style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap"></div>
     <input class="input" id="bibBusca" placeholder="🔍 Buscar por nome…" style="margin-bottom:12px">
     <div id="bibLista" style="max-height:300px;overflow:auto"></div>
-    <div id="bibPrev" style="display:none;border:1.5px solid #d1d5db;border-radius:10px;padding:14px;margin-top:12px;max-height:220px;overflow:auto;font-size:13px;line-height:1.6;color:#1f2937"></div>
+    <div id="bibPrev" style="display:none;border:1.5px solid var(--border);border-radius:10px;padding:14px;margin-top:12px;max-height:220px;overflow:auto;font-size:13px;line-height:1.6;color:var(--text)"></div>
     <div class="modal-btn-bar" style="margin-top:14px">
       <button class="btn btn-ghost" onclick="document.getElementById('modalBib').classList.remove('open')">Cancelar</button>
       <button class="btn btn-blue" id="bibUsar" onclick="usarMaterial()" disabled style="opacity:.5">Usar selecionada</button>
@@ -470,7 +470,7 @@ function renderMatSel(){
   const el=document.getElementById("mMatSel");
   const btn=document.getElementById("btnLimparMat");
   if(!materialSel){ el.textContent="Nenhum material selecionado."; btn.style.display="none"; return; }
-  el.innerHTML=`📄 <b>${materialSel.titulo}</b> <span style="color:#9ca3af">${materialSel.ref}</span>`;
+  el.innerHTML=`📄 <b>${materialSel.titulo}</b> <span style="color:var(--text-muted)">${materialSel.ref}</span>`;
   btn.style.display="";
 }
 window.limparMaterialSel = function(){ materialSel=null; renderMatSel(); };

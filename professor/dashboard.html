@@ -37,16 +37,16 @@
     @media(max-width:560px){.dash-stats-grid{grid-template-columns:repeat(2,1fr)!important;}}
     .alert-row{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:8px;margin-bottom:5px;border-left:3px solid transparent}
     .alert-row:last-child{margin-bottom:0}
-    .alert-row.sev-high{background:#FEF2F2;border-color:#EF4444}
-    .alert-row.sev-med{background:#FFFBEB;border-color:#F59E0B}
-    .alert-row.sev-low{background:#FFFBEB;border-color:#FCD34D;opacity:.85}
+    .alert-row.sev-high{background:var(--red-pale);border-color:var(--red)}
+    .alert-row.sev-med{background:var(--gold-pale);border-color:var(--gold)}
+    .alert-row.sev-low{background:var(--gold-pale);border-color:var(--border);opacity:.85}
     .alert-info{flex:1;min-width:0;background:transparent;border:none;color:inherit}
     .alert-nome{font-size:13px;font-weight:700;color:var(--text);line-height:1.3}
     .alert-sub{font-size:11px;color:var(--text-muted);margin-top:2px}
     .alert-falhas{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;flex-shrink:0;margin-top:1px}
-    .sev-high .alert-falhas{background:#FEE2E2;color:#DC2626}
-    .sev-med .alert-falhas{background:#FEF3C7;color:#92400E}
-    .sev-low .alert-falhas{background:#FEF9C3;color:#A16207}
+    .sev-high .alert-falhas{background:var(--red-pale);color:#F87171}
+    .sev-med .alert-falhas{background:var(--gold-pale);color:var(--gold)}
+    .sev-low .alert-falhas{background:var(--gold-pale);color:var(--gold)}
     .stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;display:flex;align-items:center;gap:10px}
     .stat-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
     .stat-icon svg{width:18px;height:18px}
@@ -309,7 +309,7 @@ document.getElementById("content").innerHTML = `
         <div class="card-header"><div class="card-title"><svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21L13 13.04V8h-1z"/></svg>Últimos Resultados</div></div>
         ${ultimos.map(r => {
           const modoChip = r.modo === 'avaliacao_plus'
-            ? `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:#FEF3C7;color:#92400E;flex-shrink:0">📝 Avaliação+</span>`
+            ? `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--gold-pale);color:var(--gold);flex-shrink:0">📝 Avaliação+</span>`
             : r.modo === 'competicao_plus'
             ? `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:#EDE9FE;color:#6D28D9;flex-shrink:0">⚔️ Competição+</span>`
             : '';

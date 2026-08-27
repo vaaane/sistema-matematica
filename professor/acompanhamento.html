@@ -29,14 +29,14 @@
 
     /* ── Histórico de tentativas ─────────────────────────────── */
     .tent-row { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:8px; border:1px solid var(--border); margin-bottom:6px; background:var(--card); cursor:pointer; transition:background .15s; }
-    .tent-row:hover { background:#fafafa; }
+    .tent-row:hover { background:rgba(255,255,255,.05); }
     .tent-info-wrap { flex:1; }
     .tent-date { font-size:11px; color:var(--text-muted); }
     .tent-badges { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
-    .tent-detail-body { padding:8px 12px 12px; border:1px solid var(--border); border-top:none; border-radius:0 0 8px 8px; background:#FAFAFA; margin-top:-6px; margin-bottom:6px; }
+    .tent-detail-body { padding:8px 12px 12px; border:1px solid var(--border); border-top:none; border-radius:0 0 8px 8px; background:rgba(255,255,255,.05); margin-top:-6px; margin-bottom:6px; }
 
     /* ── Análise de erros ────────────────────────────────────── */
-    .erro-item { display:flex; align-items:flex-start; gap:10px; padding:9px 12px; border-radius:7px; border:1px solid #FECACA; background:#FEF2F2; margin-bottom:6px; font-size:12px; }
+    .erro-item { display:flex; align-items:flex-start; gap:10px; padding:9px 12px; border-radius:7px; border:1px solid var(--red); background:var(--red-pale); margin-bottom:6px; font-size:12px; }
     .erro-freq { font-size:15px; font-weight:800; color:var(--red); flex-shrink:0; min-width:24px; text-align:center; }
     .erro-txt { flex:1; color:var(--text); }
     .erro-resposta { font-size:11px; color:var(--text-muted); margin-top:2px; }
@@ -318,7 +318,7 @@ function renderAluno(aluno, turma, hist, tentativasOficiais = {}, sessoesTorneio
             </div>` : ''}
           </div>
           <span class="badge badge-gold">${r.pontuacao||0} pts</span>
-          <span class="badge" style="background:#FFFBEB;color:#92400E;border-color:#FDE68A">${pos}${totalTurma ? ' de '+totalTurma : ''}</span>
+          <span class="badge" style="background:var(--gold-pale);color:var(--gold);border-color:var(--border)">${pos}${totalTurma ? ' de '+totalTurma : ''}</span>
           <span class="badge badge-green">${r.acertos||0} ✓</span>
           <span class="badge badge-red">${r.erros||0} ✗</span>
           ${tx !== null ? `<span class="badge badge-blue">${tx}%</span>` : ''}
@@ -327,10 +327,10 @@ function renderAluno(aluno, turma, hist, tentativasOficiais = {}, sessoesTorneio
       return `<div class="ativ-summary">
         <div class="ativ-summary-head" onclick="toggleAtiv('${uid}')">
           <div class="ativ-nome">🏆 ${ativNome}</div>
-          <span class="badge" style="background:#FFFBEB;color:#92400E;border-color:#FDE68A">Torneio</span>
+          <span class="badge" style="background:var(--gold-pale);color:var(--gold);border-color:var(--border)">Torneio</span>
           <span class="badge badge-gold">${melhorPts} pts</span>
           <span class="badge badge-blue">${regs.length} torneios</span>
-          <span class="badge" style="background:#FEF3C7;color:#92400E;border-color:#FDE68A">${posLabel}</span>
+          <span class="badge" style="background:var(--gold-pale);color:var(--gold);border-color:var(--border)">${posLabel}</span>
           <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:var(--text-muted)" id="chev-${uid}"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
         </div>
         <div class="ativ-summary-body" id="body-${uid}" style="display:none">
@@ -423,8 +423,8 @@ function renderAluno(aluno, turma, hist, tentativasOficiais = {}, sessoesTorneio
             </div>
             <div style="font-size:11px;color:var(--text-muted);font-weight:600">${tScores}</div>
           </div>
-          <div style="background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:10px;padding:10px 12px">
-            <div style="font-size:11px;font-weight:700;color:#1D4ED8;margin-bottom:8px">🎮 Fase 2 — Livre</div>
+          <div style="background:var(--blue-pale);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px">
+            <div style="font-size:11px;font-weight:700;color:var(--blue-dark);margin-bottom:8px">🎮 Fase 2 — Livre</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
               <div class="metric-box-plus"><div class="metric-val" style="color:var(--gold);font-size:16px">${stAv.melhorPts}</div><div class="metric-lbl">Pts total</div></div>
               <div class="metric-box-plus"><div class="metric-val" style="color:var(--green);font-size:16px">${stAv.taxa !== null ? stAv.taxa + '%' : '—'}</div><div class="metric-lbl">Taxa acerto</div></div>
@@ -490,10 +490,10 @@ function renderTentativas(tentativas, isPlus, ativNome, turma, isAvPlus = false,
     const isNaoSel  = tentEscolhida !== null && !isOficial;
     const badgeOficialHtml = isAvPlus
       ? (isOficial
-          ? `<span class="badge" style="background:linear-gradient(90deg,#FEF9C3,#FDE68A);border:1px solid #FCD34D;color:#854D0E;font-weight:800;margin-right:4px">🏆 Nota oficial</span>`
+          ? `<span class="badge" style="background:var(--gold-pale);border:1px solid var(--border);color:var(--gold);font-weight:800;margin-right:4px">🏆 Nota oficial</span>`
           : (isNaoSel
               ? `<span class="badge" style="background:var(--bg);color:var(--text-muted);font-size:10px;margin-right:4px">Não selecionada</span>`
-              : `<span class="badge" style="background:#FEF3C7;border:1px solid #FCD34D;color:#D97706;font-size:10px;margin-right:4px">⏳ Aguardando escolha</span>`))
+              : `<span class="badge" style="background:var(--gold-pale);border:1px solid var(--border);color:var(--gold);font-size:10px;margin-right:4px">⏳ Aguardando escolha</span>`))
       : '';
 
     return `<div>
@@ -514,17 +514,17 @@ function renderTentativas(tentativas, isPlus, ativNome, turma, isAvPlus = false,
               <span class="badge badge-gold">${r.pontuacao || 0} pts</span>
               <span class="badge badge-green">${r.acertos || 0} ✓</span>
               <span class="badge badge-red">${r.erros || 0} ✗</span>
-              ${(r.nao_respondidas || 0) > 0 ? `<span class="badge" style="background:#F3F4F6;color:#6B7280">⏸ ${r.nao_respondidas}</span>` : ''}
+              ${(r.nao_respondidas || 0) > 0 ? `<span class="badge" style="background:rgba(255,255,255,.08);color:var(--text-muted)">⏸ ${r.nao_respondidas}</span>` : ''}
               <span class="badge badge-blue">${taxa !== null ? taxa + '%' : '—'}</span>
               ${isPlus ? `
-                ${(r.acertos_rapidos || 0) > 0 ? `<span class="badge" style="background:#EFF6FF;color:#1D4ED8">⚡${r.acertos_rapidos}</span>` : ''}
+                ${(r.acertos_rapidos || 0) > 0 ? `<span class="badge badge-blue">⚡${r.acertos_rapidos}</span>` : ''}
                 ${(r.acertos_dificeis || 0) > 0 ? `<span class="badge badge-gold">🏆${r.acertos_dificeis}</span>` : ''}
-                ${(r.ajudas_usadas || 0) > 0 ? `<span class="badge" style="background:#F5F3FF;color:#6D28D9">🎯${r.ajudas_usadas}</span>` : ''}
-                ${r.sem_penalidade ? `<span class="badge" style="background:#F0FDF4;color:#16A34A">🔥 Limpo</span>` : ''}
-                ${tempoS > 0 ? `<span class="badge" style="background:#F0F9FF;color:#0369A1">⏱ ${tempoS}s/q</span>` : ''}
+                ${(r.ajudas_usadas || 0) > 0 ? `<span class="badge badge-purple">🎯${r.ajudas_usadas}</span>` : ''}
+                ${r.sem_penalidade ? `<span class="badge badge-green">🔥 Limpo</span>` : ''}
+                ${tempoS > 0 ? `<span class="badge badge-blue">⏱ ${tempoS}s/q</span>` : ''}
               ` : `
                 ${(r.combo_max || 0) > 1 ? `<span class="badge badge-orange">🔥×${r.combo_max}</span>` : ''}
-                ${(r.acertos_dificeis || 0) > 0 ? `<span class="badge" style="background:#EDE9FE;color:#6D28D9">💀${r.acertos_dificeis}</span>` : ''}
+                ${(r.acertos_dificeis || 0) > 0 ? `<span class="badge badge-purple">💀${r.acertos_dificeis}</span>` : ''}
                 ${(() => { const mE = r.modo || (r.nota_quiz != null ? 'avaliacao_plus' : 'competicao_plus'); return mE !== 'classico' ? `<span class="badge ${MODO_BADGE[mE] || 'badge-blue'}" style="font-size:10px">${MODO_LABEL[mE]}</span>` : ''; })()}
               `}
             `}
@@ -629,14 +629,14 @@ window.toggleTent = async function(uid, resultadoId, isPlus, isAvPlus = false) {
         <div style="flex:1;height:1px;background:var(--border)"></div>
       </div>
       <div>
-        <div style="font-size:11px;font-weight:700;color:#1D4ED8;background:#EFF6FF;padding:5px 10px;border-radius:7px;margin-bottom:6px;display:inline-block">⚔️ Fase 2 — Ranking</div>
+        <div style="font-size:11px;font-weight:700;color:var(--blue-dark);background:var(--blue-pale);padding:5px 10px;border-radius:7px;margin-bottom:6px;display:inline-block">⚔️ Fase 2 — Ranking</div>
         <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px">
           <span class="badge badge-green">✅ ${f2ac}</span>
           <span class="badge badge-red">❌ ${f2err}</span>
-          ${f2nr > 0 ? `<span class="badge" style="background:#F3F4F6;color:#6B7280">⏸ ${f2nr}</span>` : ''}
-          ${f2rap > 0 ? `<span class="badge" style="background:#EFF6FF;color:#1D4ED8">⚡ ${f2rap} rápidos</span>` : ''}
+          ${f2nr > 0 ? `<span class="badge" style="background:rgba(255,255,255,.08);color:var(--text-muted)">⏸ ${f2nr}</span>` : ''}
+          ${f2rap > 0 ? `<span class="badge badge-blue">⚡ ${f2rap} rápidos</span>` : ''}
           ${f2combo > 1 ? `<span class="badge badge-orange">🔥 combo ×${f2combo}</span>` : ''}
-          ${f2aj > 0 ? `<span class="badge" style="background:#F5F3FF;color:#6D28D9">🎯 ${f2aj} ajudas</span>` : ''}
+          ${f2aj > 0 ? `<span class="badge badge-purple">🎯 ${f2aj} ajudas</span>` : ''}
         </div>
         ${f2Qs.length ? f2Qs.map((q,i) => renderQuestaoPlus(q,i)).join('') : '<p style="font-size:11px;color:var(--text-muted)">Detalhes F2 não disponíveis.</p>'}
       </div>`;
@@ -720,7 +720,7 @@ window.verMeusTestes = function() {
           <span class="badge badge-green">${r.acertos || 0} ✅</span>
           <span class="badge badge-red">${r.erros || 0} ❌</span>
           <span class="badge badge-blue">${taxa !== null ? taxa + '%' : '—'}</span>
-          ${r.tempo ? `<span class="badge" style="background:#f3f4f6;color:#6b7280">${r.tempo}</span>` : ''}
+          ${r.tempo ? `<span class="badge" style="background:rgba(255,255,255,.08);color:var(--text-muted)">${r.tempo}</span>` : ''}
         </div>`;
       }).join('')
     : '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">Nenhuma sessão de teste registrada ainda.</div>';
@@ -729,7 +729,7 @@ window.verMeusTestes = function() {
   ov.id = 'modal-testes';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
   ov.innerHTML = `
-    <div style="background:#fff;border-radius:14px;width:100%;max-width:640px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.18)">
+    <div style="background:var(--card);border-radius:14px;width:100%;max-width:640px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.18)">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)">
         <div>
           <div style="font-size:16px;font-weight:800">👩‍🏫 Meus testes</div>

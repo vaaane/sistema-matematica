@@ -194,7 +194,7 @@ a { text-decoration: none; color: inherit; }
 .table th { text-align: left; padding: 10px 14px; background: var(--bg); color: var(--text-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; border-bottom: 2px solid var(--border); }
 .table td { padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 .table tr:last-child td { border-bottom: none; }
-.table tbody tr:hover td { background: #FAFAFA; }
+.table tbody tr:hover td { background: rgba(255,255,255,.04); }
 
 /* ── List rows ── */
 .list-row { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 9px; border: 1px solid var(--border); background: var(--card); margin-bottom: 8px; transition: border-color .15s; }

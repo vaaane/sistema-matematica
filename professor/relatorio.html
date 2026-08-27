@@ -31,7 +31,7 @@
     .pf.md{background:#FEF9C3;color:#854D0E;}
     .pf.lo{background:#FEE2E2;color:#B91C1C;}
     .sth{cursor:pointer;user-select:none;white-space:nowrap;}
-    .sth:hover{background:#F9FAFB;}
+    .sth:hover{background:rgba(255,255,255,.04);}
     .sth::after{content:" ⇅";font-size:9px;color:var(--border);}
     .sth.asc::after{content:" ↑";color:var(--blue);}
     .sth.desc::after{content:" ↓";color:var(--blue);}
@@ -39,10 +39,10 @@
     .table th{font-size:10px;}
     .enun-col{max-width:260px;font-size:11px;line-height:1.4;}
     .tr-turma{cursor:pointer;}
-    .tr-turma:hover td{background:#F9FAFB;}
+    .tr-turma:hover td{background:rgba(255,255,255,.04);}
     .tr-turma td:first-child{font-size:14px;font-weight:800;}
     .expand-row>td{padding:0;}
-    .expand-inner{padding:16px 18px;background:#F8FAFC;border-top:2px solid var(--border);}
+    .expand-inner{padding:16px 18px;background:rgba(255,255,255,.03);border-top:2px solid var(--border);}
     .exp-icon{font-size:11px;color:var(--text-muted);display:inline-block;transition:transform .2s;}
     .exp-icon.open{transform:rotate(180deg);}
     .best-cell{background:rgba(253,224,71,.22)!important;}
@@ -814,7 +814,7 @@ function fillExpand(turma, stats, questoes) {
 
   inner.innerHTML = `
     <div style="overflow:auto">
-      <table class="table sub-table" style="min-width:760px;background:white;border-radius:8px">
+      <table class="table sub-table" style="min-width:760px;background:var(--card);border-radius:8px">
         <thead><tr>
           <th>#</th><th>Aluno</th><th>Melhor</th>
           <th style="text-align:center;font-size:9px">1ª</th>
