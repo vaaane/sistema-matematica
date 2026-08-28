@@ -584,6 +584,8 @@ async function finalizar(motivo){
       tempo_segundos: tempoSeg,
       motivo_fim: motivo,
       modo: "atividade_plus",
+      liberacao_tipo: window.__libAtual?.tipo || "turma",
+      liberacao_data: window.__libAtual?.data_aplicacao || "",
       ...(isModoTeste() ? { modo_teste:true } : {})
     };
     try {

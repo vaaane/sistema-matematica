@@ -982,6 +982,8 @@ async function finalizar(motivo){
       motivo_fim: motivo,
       modo: "equacoes_plus",
       valor_nota: jogo.valor_nota,
+      liberacao_tipo: window.__libAtual?.tipo || "turma",
+      liberacao_data: window.__libAtual?.data_aplicacao || "",
       ...(isModoTeste() ? { modo_teste:true } : {})
     };
     try {

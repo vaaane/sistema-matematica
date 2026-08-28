@@ -72,7 +72,13 @@
   .ficha-nota.ouro svg{fill:var(--gold)} .ficha-nota.ouro b{color:#f5c451}
   .ficha-nota.verde{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.28);color:#a7d8ba}
   .ficha-nota.verde svg{fill:#22C55E} .ficha-nota.verde b{color:#63c98a}
-  .nota-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 8px;margin:0 -8px;border-bottom:1px solid var(--border);border-radius:9px;text-decoration:none;color:inherit;cursor:pointer;transition:.13s}
+  .nota-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:10px 8px;margin:0 -8px;border-bottom:1px solid var(--border);border-radius:9px;text-decoration:none;color:inherit;cursor:pointer;transition:.13s}
+  .nota-left{flex:1;min-width:0}
+  .nota-right{padding-top:1px}
+  .nota-sub, .nsub{display:block;font-size:11px;line-height:1.35;margin-top:4px}
+  .nsub.verde{color:var(--green)} .nsub.vermelho{color:var(--red)} .nsub.azul{color:#8ec0ff} .nsub.of{color:var(--text-muted)}
+  .nota-val.cinza{color:var(--text-muted)}
+  .tag2a{display:inline-flex;align-items:center;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:#8ec0ff;background:rgba(96,165,250,.14);border:1px solid rgba(96,165,250,.3);border-radius:5px;padding:1px 6px;margin-left:4px;vertical-align:middle}
   .nota-hint{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);margin:-2px 0 10px}
   .nota-hint svg{width:13px;height:13px;fill:var(--text-muted);flex-shrink:0;opacity:.8}
   .nota-row:last-of-type{border-bottom:none}
@@ -275,7 +281,7 @@
 import { numeroChamada, BIMESTRES, bimestreAtual, dentroDoAtestado, normalizarAtestados, aulasNoDia, LISTA_ATIVIDADES } from "/js/constants.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 import { indexarBiblioteca, resolverAula, tipoInfo } from "/js/biblioteca.js";
-import { getResultadosByAluno } from "/js/db.js";
+import { getResultadosByAluno, getLiberacoesHistoricoTodas } from "/js/db.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -343,6 +349,7 @@ let marcas = {};       // { atvId:{ aluno:0|1|2|3|4 } }
 let chamada = {};      // { "YYYY-MM-DD": { aluno:true } }
 let anotacoes = {};    // { aluno:[ {ts, ocorrencias:[], obs} ] }
 let resultadosAluno = [];  // resultados de quiz do aluno (notas de atividade)
+let libHistorico = [];     // liberacoes_historico (datas oficiais + 2ª chamada)
 let atestados = [];    // [ {inicio,fim,ts,obs} ] do aluno logado
 let nivelTab = 0, nivelNeg = 0;   // progresso nos jogos de tabuada
 
@@ -401,9 +408,11 @@ async function carregar(){
     atestados = (normalizarAtestados(sA.exists()?sA.val():{})[aluno]) || [];
     try { resultadosAluno = await getResultadosByAluno(aluno, turma); }
     catch(_) { resultadosAluno = []; }
+    try { libHistorico = await getLiberacoesHistoricoTodas(); }
+    catch(_) { libHistorico = []; }
   }catch(e){
     console.error(e);
-    atividades=[]; marcas={}; chamada={}; anotacoes={}; atestados=[]; nivelTab=0; nivelNeg=0; resultadosAluno=[];
+    atividades=[]; marcas={}; chamada={}; anotacoes={}; atestados=[]; nivelTab=0; nivelNeg=0; resultadosAluno=[]; libHistorico=[];
     document.getElementById("conteudo").innerHTML = `<div class="vazio">Não foi possível carregar os dados agora. Tente novamente mais tarde.</div>`;
     return;
   }
@@ -469,54 +478,114 @@ function render(){
   const ringLen   = 2*Math.PI*42;
   const ringOff   = ringLen*(1-pctEntreg);
 
-  // ── Card "Notas" (notas de atividade / quiz) ──
+  // ── Card "Notas" — todas as avaliativas do bimestre, com estado por aluno ──
   const _fmt2 = n => n.toFixed(2).replace('.', ',');
+  const _corNota = p => p>=7 ? 'verde' : p>=4 ? 'ouro' : 'vermelho';
+
+  // melhor resultado (nota) por atividade, só do bimestre selecionado
   const notasAtiv = {};
-  // Bimestre oficial de cada atividade avaliada (fonte: LISTA_ATIVIDADES).
-  // Só entram notas de atividades LISTADAS e do bimestre selecionado —
-  // isso exclui treinos (não listados) e atividades de outros bimestres,
-  // mesmo quando o resultado antigo não gravou o campo "bim".
-  const _bimPorAtiv = {};
-  for (const a of (LISTA_ATIVIDADES||[])) { if (a && a.nome) _bimPorAtiv[a.nome] = a.bim; }
   for (const r of resultadosAluno){
     if (!r.concluido || r.modo_teste || !r.atividade) continue;
-    const _bimAtiv = _bimPorAtiv[r.atividade];
-    if (_bimAtiv === undefined) continue;          // não é atividade avaliada (ex.: treino)
-    if (_bimAtiv !== bimestre) continue;           // atividade de outro bimestre
-    const _pts  = r.pontuacao_bruta ?? r.pontuacao ?? 0;      // 0–10
+    const a = (LISTA_ATIVIDADES||[]).find(x=>x.nome===r.atividade);
+    if (!a || a.bim !== bimestre) continue;   // só avaliativas listadas do bimestre
+    const _pts  = r.pontuacao_bruta ?? r.pontuacao ?? 0;
     const _vmax = r.valor_nota != null ? Number(r.valor_nota) : 1.5;
     const _real = Math.round((_pts/10)*_vmax*100)/100;
     const cur = notasAtiv[r.atividade];
-    if (!cur || _real > cur.real) notasAtiv[r.atividade] = { real:_real, vmax:_vmax, pts:_pts, ts:r.criadoEm||0, id:r.id };
+    if (!cur || _real > cur.real) notasAtiv[r.atividade] = {
+      real:_real, vmax:_vmax, pts:_pts, ts:r.criadoEm||0, id:r.id,
+      libTipo: r.liberacao_tipo || "turma", libData: r.liberacao_data || ""
+    };
   }
-  const _linhasNota = Object.entries(notasAtiv).sort((a,b)=>(a[1].ts-b[1].ts));
-  const _corNota = p => p>=7 ? 'verde' : p>=4 ? 'ouro' : 'vermelho';
-  const _somaReal = _linhasNota.reduce((s,[,v])=>s+v.real,0);
-  const _somaMax  = _linhasNota.reduce((s,[,v])=>s+v.vmax,0);
 
-  // ── Avaliativas do quiz do bimestre: total esperado vs realizadas ──
-  const avalDoBim   = (LISTA_ATIVIDADES||[]).filter(a=>a && a.bim===bimestre);
-  const avalTotal   = avalDoBim.length;
-  const avalFeitas  = avalDoBim.filter(a=>notasAtiv[a.nome]).length;
-  const avalPend    = Math.max(0, avalTotal - avalFeitas);
+  // datas oficiais (liberações de turma) e 2ª chamada, a partir do histórico
+  const _datasOficiais = (ativ) => [...new Set(
+    (libHistorico||[])
+      .filter(l => l.atividade===ativ && l.turma===turma && (l.tipo||"turma")==="turma" && l.data_aplicacao)
+      .map(l => l.data_aplicacao)
+  )].sort();
+  const _seg2a = (ativ) => (libHistorico||[]).find(l =>
+      l.atividade===ativ && l.turma===turma && l.tipo==="segunda_chamada"
+      && Array.isArray(l.alunos) && l.alunos.includes(aluno));
+
+  // classifica cada avaliativa do bimestre
+  const avalDoBim = (LISTA_ATIVIDADES||[]).filter(a=>a && a.bim===bimestre);
+  const _linhasAval = avalDoBim.map(a=>{
+    const nome = a.nome;
+    const nota = notasAtiv[nome] || null;
+    const oficiais = _datasOficiais(nome);
+    const seg = _seg2a(nome);
+    const vmax = nota?.vmax ?? 1.5;
+    if (nota){
+      if (nota.libTipo === "segunda_chamada"){
+        return {nome, estado:"feito_2a", real:nota.real, vmax, pts:nota.pts, id:nota.id,
+                dataSeg: nota.libData || seg?.data_aplicacao || "", oficiais};
+      }
+      return {nome, estado:"feito", real:nota.real, vmax, pts:nota.pts, id:nota.id, oficiais};
+    }
+    const presenteEm = oficiais.find(d=>{ const e=estadoCham(d,aluno); return e==="presente"||e==="atraso"||e===""; });
+    if (presenteEm) return {nome, estado:"presente", vmax, dataRef:presenteEm, oficiais};
+    const atestEm = oficiais.find(d=> estadoCham(d,aluno)==="falta" && temAtestado(d));
+    if (atestEm) return {nome, estado:"elegivel", vmax, dataRef:atestEm, oficiais};
+    return {nome, estado:"faltou", vmax, dataRef:oficiais[0]||"", oficiais};
+  });
+
+  // total: só quem tem nota (feito/feito_2a). Elegível NÃO conta.
+  const _somaReal = _linhasAval.filter(l=>l.estado==="feito"||l.estado==="feito_2a").reduce((s,l)=>s+l.real,0);
+  const _somaMax  = _linhasAval.reduce((s,l)=>s+l.vmax,0);
+
+  // avaliativas feitas / total (card do topo)
+  const avalTotal  = avalDoBim.length;
+  const avalFeitas = _linhasAval.filter(l=>l.estado==="feito"||l.estado==="feito_2a").length;
+  const avalPend   = Math.max(0, avalTotal - avalFeitas);
+
+  // helper para a linha de nota (data, sublinha, valor)
+  const _ofLbl = (ofs) => ofs.length ? ofs.map(fmtDM).join(", ") : "";
+  const _linhaHtml = (l) => {
+    let sub = "", val = "", tag = "";
+    if (l.estado === "feito"){
+      sub = `<span class="nsub verde">✓ Realizada${l.oficiais.length?` em ${_ofLbl(l.oficiais)}`:""}</span>`;
+      val = `<span class="nota-val ${_corNota(l.pts)}">${_fmt2(l.real)} <small>/ ${_fmt2(l.vmax)}</small></span>`;
+    } else if (l.estado === "feito_2a"){
+      tag = `<span class="tag2a">2ª chamada</span>`;
+      sub = `<span class="nsub verde">✓ Feita em 2ª chamada${l.dataSeg?` (${fmtDM(l.dataSeg)})`:""}</span>`
+          + (l.oficiais.length?`<span class="nsub of">Aplicação oficial: ${_ofLbl(l.oficiais)}</span>`:"");
+      val = `<span class="nota-val ${_corNota(l.pts)}">${_fmt2(l.real)} <small>/ ${_fmt2(l.vmax)}</small></span>`;
+    } else if (l.estado === "presente"){
+      sub = `<span class="nsub vermelho">✕ Não realizada — presente no dia${l.dataRef?` (${fmtDM(l.dataRef)})`:""}</span>`;
+      val = `<span class="nota-val vermelho">0,00 <small>/ ${_fmt2(l.vmax)}</small></span>`;
+    } else if (l.estado === "faltou"){
+      sub = `<span class="nsub vermelho">✕ Não realizada — faltou no dia${l.dataRef?` (${fmtDM(l.dataRef)})`:""}</span>`;
+      val = `<span class="nota-val vermelho">0,00 <small>/ ${_fmt2(l.vmax)}</small></span>`;
+    } else { // elegivel
+      sub = `<span class="nsub azul">Elegível a 2ª chamada — faltou com atestado${l.dataRef?` (${fmtDM(l.dataRef)})`:""}. Procure o professor(a).</span>`;
+      val = `<span class="nota-val cinza">— <small>/ ${_fmt2(l.vmax)}</small></span>`;
+    }
+    const href = `/aluno/a-historico.html?resultado=${encodeURIComponent(l.id||"")}&atividade=${encodeURIComponent(l.nome)}#ativ`;
+    return `
+      <a class="nota-row" href="${href}" title="Ver histórico desta atividade">
+        <span class="nota-left">
+          <span class="nota-nome">${escapeHtml(l.nome)} ${tag}</span>
+          ${sub}
+        </span>
+        <span class="nota-right">
+          ${val}
+          <svg class="nota-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+        </span>
+      </a>`;
+  };
+
   const notasHtml = `
     <div class="card" id="c-notas">
       <div class="card-title">
         <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
-        Notas <span class="count">${_linhasNota.length}</span>
+        Notas <span class="count">${_linhasAval.length}</span>
       </div>
-      ${_linhasNota.length ? `<div class="nota-hint">${ICO_TOQUE}Toque numa nota para ver como foi feita</div>` : ""}
-      ${_linhasNota.length
-        ? _linhasNota.map(([nome,v])=>`
-          <a class="nota-row" href="/aluno/a-historico.html?resultado=${encodeURIComponent(v.id||"")}&atividade=${encodeURIComponent(nome)}#ativ" title="Ver histórico desta atividade">
-            <span class="nota-nome">${escapeHtml(nome)}</span>
-            <span class="nota-right">
-              <span class="nota-val ${_corNota(v.pts)}">${_fmt2(v.real)} <small>/ ${_fmt2(v.vmax)}</small></span>
-              <svg class="nota-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
-            </span>
-          </a>`).join("")
-        : `<div class="nota-vazia">Nenhuma atividade com nota ainda.</div>`}
-      ${_linhasNota.length ? `
+      ${_linhasAval.length ? `<div class="nota-hint">${ICO_TOQUE}Toque numa nota para ver como foi feita</div>` : ""}
+      ${_linhasAval.length
+        ? _linhasAval.map(_linhaHtml).join("")
+        : `<div class="nota-vazia">Nenhuma atividade avaliativa neste bimestre ainda.</div>`}
+      ${_linhasAval.length ? `
         <div class="nota-total">
           <span>Total em atividades</span>
           <b>${_fmt2(_somaReal)} <small>/ ${_fmt2(_somaMax)}</small></b>

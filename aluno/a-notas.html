@@ -198,7 +198,7 @@
 import { requireAluno, renderSidebarAluno, clearSession, getSession } from "/js/auth.js";
 import {
   CAMPOS_NOTA, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, EXTRA_RANK_ATIV4, EXTRA_NIVEL_PERFIL,
-  BIMESTRE, setBimestre, camposAtivos, bonusAtivo, fmtNota, mensagemPorNota, montarBoletim, notasLiberadas,
+  BIMESTRE, setBimestre, camposAtivos, bonusAtivo, bonusConfig, fmtNota, mensagemPorNota, montarBoletim, notasLiberadas,
 } from "/js/notas.js";
 import { BIMESTRES, bimestreAtual } from "/js/constants.js";
 import { montarSeletorBimestre } from "/js/bimestre-seletor.js";
@@ -242,9 +242,10 @@ const ICON_EXTRA = { t150:IC.grid, t300:IC.grid, tneg50:IC.negativo, tneg150:IC.
 function blocoAtividadesIcones(boletim, encerrado) {
   const { registro, lancados, ativ4Info } = boletim;
   function row(c) {
-    const isAuto = c.key==="ativ4" || c.key==="triangulos";
+    const isAuto = !!c.auto;
     const tag = c.key==="triangulos" ? `<span class="item-tag">Ativ. 5</span><span class="item-tag">Fase 1</span>`
-              : c.key==="ativ4"      ? `<span class="item-tag">Ativ. 4</span>` : "";
+              : c.key==="ativ4"      ? `<span class="item-tag">Ativ. 4</span>`
+              : c.key==="equacoes"   ? `<span class="item-tag">Ativ. 1</span>` : "";
     let v = 0, done = false, valBig, desc;
     if (isAuto) {
       const raw = registro[c.key];
@@ -253,8 +254,9 @@ function blocoAtividadesIcones(boletim, encerrado) {
       done = !naoPart;
       valBig = naoPart ? "0,0" : fmtNota(v);
       desc = naoPart ? "não participou"
-                     : (c.key==="ativ4" ? (ativ4Info && ativ4Info.posicao>0 ? `Participou · ${ativ4Info.posicao}º no geral` : "Você participou")
-                                        : "Melhor nota na fase 1");
+                     : c.key==="ativ4"    ? (ativ4Info && ativ4Info.posicao>0 ? `Participou · ${ativ4Info.posicao}º no geral` : "Você participou")
+                     : c.key==="equacoes" ? "Nota da atividade"
+                     :                      "Melhor nota na fase 1";
     } else {
       const foi = lancados ? !!lancados[c.key] : true;
       v = foi ? (parseFloat(registro[c.key])||0) : 0;
@@ -277,6 +279,7 @@ function blocoAtividadesIcones(boletim, encerrado) {
 // encerrado=true → rendimento (notas fechadas); false → em andamento
 function blocoExtrasIcones(boletim, encerrado) {
   const { auto, progresso, ativ4Info, registro } = boletim;
+  const cfg = bonusConfig() || {};   // só mostra os extras que valem neste bimestre
   const nivelPerf   = boletim.nivelPerfil || 1;
   const temCaderno  = camposAtivos().some(c => c.key === "caderno");
   const cadernoLanc = boletim.lancados ? !!boletim.lancados.caderno : true;   // rendimento sempre lançado
@@ -325,11 +328,18 @@ function blocoExtrasIcones(boletim, encerrado) {
     <div class="prog-right"><div class="pts ${cadExtra?"green":"muted"}">+0,5</div><div class="pts-sub">${cadExtra?"conquistado":"não atingido"}</div></div>
   </div>`);
 
+  const autoRows = EXTRAS_AUTO
+    .filter(ex => cfg.autoExtras == null || cfg.autoExtras.includes(ex.key))
+    .map(rowTabuada).join("");
+  const perfilRowVis = cfg.nivelPerfil ? nivelPerfilRow : "";
+  const rankRowVis   = cfg.rank        ? rankRow        : "";
+  const secCaderno   = cfg.cadExtra
+    ? `<div class="sec-label">Caderno</div><div class="prog-list">${cadExtraRow}</div>`
+    : "";
   return `
     <div class="sec-label">Tabuada e ranking</div>
-    <div class="prog-list">${EXTRAS_AUTO.map(rowTabuada).join("")}${nivelPerfilRow}${rankRow}</div>
-    <div class="sec-label">Caderno</div>
-    <div class="prog-list">${cadExtraRow}</div>`;
+    <div class="prog-list">${autoRows}${perfilRowVis}${rankRowVis}</div>
+    ${secCaderno}`;
 }
 
 // ── ESTADO 2: Em Andamento ────────────────────────────────────
@@ -539,16 +549,10 @@ async function carregar() {
   const bimSel  = document.getElementById("bimSel");
   if (!turma || !nome) { content.innerHTML = `<div class="empty-state"><p>Sessão não encontrada.</p></div>`; if (bimSel) bimSel.style.display = "none"; return; }
 
-  // descobre quais bimestres já foram liberados para esta turma
-  const liberados = [];
-  for (const b of BIMESTRES) {
-    setBimestre(String(b.n));
-    try { if (await notasLiberadas(turma)) liberados.push(b.n); } catch (e) {}
-  }
-  // sempre mostra as 4 pílulas (padrão do site); se nada liberado, o bimestre atual
-  // é o selecionado e mostrarBimestre exibe a mensagem apropriada
-  const corrente  = bimestreAtual();
-  const escolhido = liberados.includes(corrente) ? corrente : (liberados.length ? liberados[liberados.length - 1] : corrente);
+  // Abre sempre no bimestre atual (pela data de hoje). As 4 pílulas continuam
+  // disponíveis para o aluno navegar nos bimestres anteriores; se o atual ainda
+  // não foi liberado, mostrarBimestre exibe a mensagem apropriada.
+  const escolhido = bimestreAtual();
   if (bimSel) bimSel.style.display = "";
   montarSeletorBimestre('bimSel', { mostrarTodos:true, selecionado: escolhido, onChange: (n) => mostrarBimestre(n) });
   await mostrarBimestre(escolhido);

@@ -21,6 +21,7 @@ export const CAMPOS_NOTA = [
   { key:"provaMulti", label:"Prova Multi",              max:3 },
   { key:"projeto",    label:"Projeto CriaBartô",        max:3 },
   { key:"caderno",    label:"Caderno",                  max:2 },
+  { key:"equacoes",   label:"Atividade 1 - Equações",   max:1.5, auto:true },
   { key:"ativ4",      label:"Atividade 4",              max:0.5, auto:true },
   { key:"triangulos", label:"Atividade - Triângulos",   max:1,   auto:true },
   { key:"participacao",  label:"Participação",           max:0.5 },
@@ -48,7 +49,9 @@ export function cadernoExtraAtivo(registro) {
 // Para ativar um campo no 3º depois, é só acrescentar a chave na lista.
 // Chaves possíveis: "provaMulti","projeto","caderno","ativ4","triangulos","participacao"
 export const CAMPOS_POR_BIMESTRE = {
-  "3": ["provaMulti", "caderno"],   // 3º começa só com esses dois
+  "1": ["provaMulti", "projeto", "caderno", "ativ4", "triangulos", "participacao"], // como sempre foram
+  "2": ["provaMulti", "projeto", "caderno", "ativ4", "triangulos", "participacao"], // como sempre foram
+  "3": ["provaMulti", "caderno", "equacoes"],   // 3º: Prova Multi + Caderno + Atividade 1 (Equações, auto 0–1,5)
 };
 // Config de bônus por bimestre. Ausente = todos os bônus (padrão). null = nenhum.
 // Objeto = escolhe quais partes valem. autoExtras: chaves de EXTRAS_AUTO (null = todas).
@@ -70,6 +73,7 @@ export function bonusAtivo() {
 
 export const NOME_ATIV4 = "Atividade 4 - Geometria";
 export const NOME_ATIV5 = "Atividade 5 - Geometria: Triângulos";
+export const NOME_ATIV1_EQ = "Atividade 1 - Equações do 1º Grau";
 
 export function makeUid(turma, nome) {
   return (turma + "_" + nome).replace(/[.#$\[\]\/\s]/g, "_");
@@ -241,6 +245,26 @@ export async function buscarAtiv5Aluno(turma, nome) {
   return melhor; // null = nunca jogou; number = melhor pontos_fase1 (escala 0-10)
 }
 
+// Busca a melhor pontuação concluída da Atividade 1 - Equações pra um aluno (uso na página do aluno)
+// Escala 0-10 (pontuacao_bruta = proporção de acertos × 10). Ignora testes e registros não concluídos.
+export async function buscarEquacoesAluno(turma, nome) {
+  let melhor = null;
+  try {
+    const q = query(ref(db, "resultados"), orderByChild("turma"), equalTo(turma));
+    const snap = await get(q);
+    if (snap.exists()) {
+      snap.forEach(child => {
+        const v = child.val();
+        if (v.atividade !== NOME_ATIV1_EQ || v.aluno !== nome) return;
+        if (v.concluido !== true || v.modo_teste) return;
+        const pts = v.pontuacao_bruta ?? v.pontuacao ?? null;
+        if (pts != null && (melhor === null || pts > melhor)) melhor = pts;
+      });
+    }
+  } catch (e) { console.error("Falha ao buscar Atividade 1 - Equações:", e); }
+  return melhor; // null = nunca fez; number = melhor pontuação (escala 0-10)
+}
+
 // Monta o boletim completo de um aluno — usado em a-notas.html e no card da home.
 // Retorna null apenas se as notas ainda não foram disponibilizadas pelo professor.
 // Se liberado mas sem nota salva, retorna boletim com dados automáticos + manuais nulos.
@@ -251,11 +275,12 @@ export async function montarBoletim(turma, nome, opcoes = {}) {
   }
 
   // Busca tudo em paralelo — não bloqueia em caso de nota manual ainda não salva
-  const [salvo, progresso, ativ4Map, ativ5Pts, nivelPerfil] = await Promise.all([
+  const [salvo, progresso, ativ4Map, ativ5Pts, eqPts, nivelPerfil] = await Promise.all([
     buscarNotaSalva(turma, nome),
     buscarProgressoTabuada(turma, nome),
     buscarAtiv4(turma, [nome]),
     buscarAtiv5Aluno(turma, nome),
+    buscarEquacoesAluno(turma, nome),
     buscarNivelPerfil(turma, nome),
   ]);
 
@@ -266,6 +291,8 @@ export async function montarBoletim(turma, nome, opcoes = {}) {
   // Ativ.4 e Triângulos: null = não participou/nunca jogou → conta como 0
   let ativ4Val      = ativ4Info.fez ? 0.5 : null;
   let triangulosVal = ativ5Pts != null ? Math.min(1, ativ5Pts / 10) : null;
+  // Atividade 1 - Equações: pontuação 0-10 → nota de 0 a 1,5 (null = nunca fez)
+  let equacoesVal   = eqPts != null ? Math.min(1.5, (eqPts / 10) * 1.5) : null;
 
   // Se o bimestre está congelado, usa a FOTO (não os valores ao vivo)
   const cong = await buscarCongelamento(turma);
@@ -277,12 +304,14 @@ export async function montarBoletim(turma, nome, opcoes = {}) {
     progresso.rankAtiv4Bonus = foto.rankAtiv4Bonus ?? progresso.rankAtiv4Bonus;
     if (foto.ativ4 !== undefined)      ativ4Val      = foto.ativ4;
     if (foto.triangulos !== undefined) triangulosVal = foto.triangulos;
+    if (foto.equacoes !== undefined)   equacoesVal   = foto.equacoes;
   }
 
   const registro = {
     provaMulti: salvo?.provaMulti ?? null,
     projeto:    salvo?.projeto    ?? null,
     caderno:    salvo?.caderno    ?? null,
+    equacoes:   equacoesVal,
     ativ4:      ativ4Val,
     triangulos: triangulosVal,
     participacao: salvo?.participacao ?? 0.5,  // default 0.5 = todo mundo participou

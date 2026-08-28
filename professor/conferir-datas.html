@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Conferir datas de aplicação</title>
+<style>
+  body{font-family:system-ui,sans-serif;background:#0f0a1a;color:#ece7f5;margin:0;padding:24px;max-width:820px;margin:0 auto}
+  h1{font-size:20px}
+  .muted{color:#9a90b0;font-size:13px;line-height:1.5}
+  table{width:100%;border-collapse:collapse;margin-top:16px;font-size:14px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.1)}
+  th{color:#c79bff;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+  .sem{color:#f0837f;font-weight:700}
+  .ok{color:#63c98a;font-weight:700}
+  .box{background:#17102a;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:16px;margin-top:16px}
+  #status{margin-top:12px;font-size:14px}
+</style>
+</head>
+<body>
+  <h1>Conferir datas de aplicação das avaliativas</h1>
+  <p class="muted">
+    Esta página só LÊ os dados (não altera nada). Lista todas as liberações em
+    <code>liberacoes_ativas</code> e mostra quais estão <span class="sem">SEM data</span>
+    de aplicação — que são as que você precisaria corrigir para o aviso de
+    "faltou / presente" funcionar na ficha do aluno.<br><br>
+    <b>Como usar:</b> salve este arquivo dentro da pasta do projeto (junto das
+    outras páginas, mesmo nível que a pasta <code>/js</code>), e abra pelo
+    servidor local (ex.: <code>localhost:8080/conferir-datas.html</code>).
+    Faça login antes se as regras do Firebase exigirem.
+  </p>
+  <div id="status" class="muted">Carregando…</div>
+  <div id="resumo" class="box" style="display:none"></div>
+  <table id="tab" style="display:none">
+    <thead><tr><th>Turma</th><th>Atividade</th><th>Data de aplicação</th><th>Liberada em</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+<script type="module">
+  import { db } from "/js/firebase-config.js";
+  import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+  const statusEl = document.getElementById("status");
+  const fmt = (v) => {
+    if (!v) return "";
+    // aceita "2026-08-22" ou timestamp
+    if (typeof v === "number") { const d=new Date(v); return d.toLocaleDateString("pt-BR"); }
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v);
+    return m ? `${m[3]}/${m[2]}/${m[1]}` : String(v);
+  };
+
+  try {
+    const snap = await get(ref(db, "liberacoes_ativas"));
+    if (!snap.exists()) { statusEl.textContent = "Nenhuma liberação encontrada."; }
+    else {
+      const linhas = [];
+      snap.forEach(ch => { const v = ch.val(); linhas.push(v); });
+      linhas.sort((a,b)=> (a.turma||"").localeCompare(b.turma||"") || (a.atividade||"").localeCompare(b.atividade||""));
+      const semData = linhas.filter(l => !l.data_aplicacao);
+      const tb = document.querySelector("#tab tbody");
+      tb.innerHTML = linhas.map(l => `
+        <tr>
+          <td>${l.turma||"—"}</td>
+          <td>${l.atividade||"—"}</td>
+          <td class="${l.data_aplicacao?'ok':'sem'}">${l.data_aplicacao?fmt(l.data_aplicacao):"SEM DATA"}</td>
+          <td>${fmt(l.liberado_em||l.criadoEm)}</td>
+        </tr>`).join("");
+      document.getElementById("tab").style.display = "";
+      const resumo = document.getElementById("resumo");
+      resumo.style.display = "";
+      resumo.innerHTML = semData.length
+        ? `<b class="sem">${semData.length} liberação(ões) sem data de aplicação.</b><br>
+           <span class="muted">Reabra essas atividades no painel e informe a data (ou encerre e libere de novo com a data). As demais ${linhas.length-semData.length} estão OK.</span>`
+        : `<b class="ok">✓ Todas as ${linhas.length} liberações têm data de aplicação.</b>
+           <span class="muted"> Nada a corrigir.</span>`;
+      statusEl.style.display = "none";
+    }
+  } catch (e) {
+    statusEl.innerHTML = `<span class="sem">Erro ao ler:</span> ${e?.message||e}.<br>
+      <span class="muted">Provavelmente as regras do Firebase exigem login — faça login no sistema primeiro (noutra aba) e recarregue.</span>`;
+  }
+</script>
+</body>
+</html>

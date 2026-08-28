@@ -200,7 +200,7 @@ import { db } from "/js/firebase-config.js";
 import { ref, get, query, orderByChild, equalTo, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {
   BIMESTRE, setBimestre, CAMPOS_NOTA as CAMPOS, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA,
-  EXTRA_RANK_ATIV4, EXTRA_NIVEL_PERFIL, NOME_ATIV5,
+  EXTRA_RANK_ATIV4, EXTRA_NIVEL_PERFIL, NOME_ATIV5, NOME_ATIV1_EQ,
   makeUid, slugNome as slug, fmtNota as fmt,
   buscarProgressoTabuada, buscarAtiv4, buscarNivelPerfil,
   extrasAutoAtivos as extrasAtivosDoProgresso, cadernoExtraAtivo,
@@ -224,8 +224,8 @@ function turmaVazia(turma) {
   const obj = {};
   (ALUNOS_POR_TURMA[turma] || []).forEach(nome => {
     obj[nome] = {
-      provaMulti:"", projeto:"", caderno:"", ativ4:"", triangulos:"", participacao:0.5,
-      ativ4Auto:false, triangulosAuto:false,
+      provaMulti:"", projeto:"", caderno:"", equacoes:"", ativ4:"", triangulos:"", participacao:0.5,
+      ativ4Auto:false, triangulosAuto:false, equacoesAuto:false,
       extras: {}
     };
   });
@@ -296,6 +296,27 @@ async function carregarAutoArea(turma) {
   return porAluno;
 }
 
+// ── Busca no banco: melhor pontuação da Atividade 1 - Equações → coluna "Equações" ──
+// Resultado vem em escala 0–10 (pontuacao_bruta); convertemos para o máx de 1,5 na hora de aplicar.
+async function carregarAutoEquacoes(turma) {
+  const porAluno = {};
+  try {
+    const q = query(ref(db, "resultados"), orderByChild("turma"), equalTo(turma));
+    const snap = await get(q);
+    if (snap.exists()) {
+      snap.forEach(child => {
+        const v = child.val();
+        if (v.atividade !== NOME_ATIV1_EQ || !v.aluno) return;
+        if (v.concluido !== true || v.modo_teste) return;
+        const bruto = v.pontuacao_bruta ?? v.pontuacao ?? null;
+        if (bruto == null) return;
+        if (!(v.aluno in porAluno) || bruto > porAluno[v.aluno]) porAluno[v.aluno] = bruto;
+      });
+    }
+  } catch(e) { console.error("Falha ao buscar Atividade 1 - Equações:", e); }
+  return porAluno;
+}
+
 // ── Render ──────────────────────────────────────────────────
 function renderCabecalho() {
   const campos = camposAtivos();
@@ -315,9 +336,20 @@ function renderCabecalho() {
       `<td colspan="${campos.length + (comBonus ? 1 : 0)}"></td>` +
       `<td id="mediaTurma">—</td>`;
   }
-  // esconde a legenda de bônus quando não há bônus no bimestre
+  // Legenda de bônus — mostra só os extras que valem NESTE bimestre
   const leg = document.querySelector(".legenda-extras");
-  if (leg) leg.style.display = comBonus ? "" : "none";
+  if (leg) {
+    if (!comBonus) { leg.style.display = "none"; leg.innerHTML = ""; }
+    else {
+      const cfg = bonusConfig() || {};
+      const chips = EXTRAS_AUTO
+        .filter(e => cfg.autoExtras == null || cfg.autoExtras.includes(e.key))
+        .map(e => `<span class="legenda-chip auto">🔄 ${e.label} <b>+${fmt(e.valor)}</b></span>`);
+      if (cfg.cadExtra) chips.push(`<span class="legenda-chip auto">🔄 ${CADERNO_EXTRA.label} (Caderno &gt; ${fmt(CADERNO_EXTRA.limiar)}) <b>+${fmt(CADERNO_EXTRA.valor)}</b></span>`);
+      leg.innerHTML = chips.join("");
+      leg.style.display = "";
+    }
+  }
 }
 function renderTabela() {
   renderCabecalho();
@@ -335,12 +367,8 @@ function renderTabela() {
       <tr data-aluno="${slug(nome)}">
         <td class="col-aluno" title="${nome}">${nome}</td>
         ${campos.map(c => {
-          if (c.key === "ativ4") {
-            const v = parseFloat(r.ativ4) || 0;
-            return `<td class="auto-cell"><span class="auto-display${v ? "" : " zero"}">${v ? fmt(v) : "—"}</span></td>`;
-          }
-          if (c.key === "triangulos") {
-            const v = parseFloat(r.triangulos) || 0;
+          if (c.auto) {
+            const v = parseFloat(r[c.key]) || 0;
             return `<td class="auto-cell"><span class="auto-display${v ? "" : " zero"}">${v ? fmt(v) : "—"}</span></td>`;
           }
           return `<td><input class="nota-input" type="number" step="0.1" min="0" max="${c.max}" inputmode="decimal" data-campo="${c.key}" value="${r[c.key]}"></td>`;
@@ -415,7 +443,10 @@ function abrirExtras(slugNome) {
 
   const nivelPerfil = a.nivelPerfil || 0;
   const bNivelPerfil = nivelPerfil * EXTRA_NIVEL_PERFIL.valorPorNivel;
-  document.getElementById("ex-auto").innerHTML = EXTRAS_AUTO.map(ex => {
+  // Só mostra os extras que valem NESTE bimestre (respeita BONUS_CONFIG_POR_BIMESTRE).
+  const cfg = bonusConfig() || {};
+  const autoExtrasVisiveis = EXTRAS_AUTO.filter(ex => cfg.autoExtras == null || cfg.autoExtras.includes(ex.key));
+  document.getElementById("ex-auto").innerHTML = autoExtrasVisiveis.map(ex => {
     const atingiu = auto[ex.key];
     const nivelAtual = ex.campo === "melhorTabuada" ? a.melhorTabuada : a.melhorNeg;
     return `
@@ -425,6 +456,7 @@ function abrirExtras(slugNome) {
       <span class="val" style="${atingiu ? "" : "color:var(--text-muted)"}">${atingiu ? `+${fmt(ex.valor)}` : "—"}</span>
     </div>`;
   }).join("") + (() => {
+    if (!cfg.nivelPerfil) return "";
     return `
     <div class="extra-row auto">
       <span class="status-dot ${nivelPerfil > 0 ? "atingiu" : "faltando"}">${nivelPerfil > 0 ? "✓" : "·"}</span>
@@ -432,6 +464,7 @@ function abrirExtras(slugNome) {
       <span class="val" style="${nivelPerfil > 0 ? "" : "color:var(--text-muted)"}">${nivelPerfil > 0 ? `+${fmt(bNivelPerfil)}` : "—"}</span>
     </div>`;
   })() + (() => {
+    if (!cfg.cadExtra) return "";
     const cadAtivo = cadernoExtraAtivo(r);
     const cadVal = parseFloat(r.caderno) || 0;
     return `
@@ -441,6 +474,7 @@ function abrirExtras(slugNome) {
       <span class="val" style="${cadAtivo ? "" : "color:var(--text-muted)"}">${cadAtivo ? `+${fmt(CADERNO_EXTRA.valor)}` : "—"}</span>
     </div>`;
   })() + (() => {
+    if (!cfg.rank) return "";
     const fez = posAtiv4 > 0;
     const tem = bonusAtiv4 > 0;
     const descPos = fez ? `${posAtiv4}º lugar (geral)` : "não participou";
@@ -506,6 +540,7 @@ async function carregarNotasSalvas(turma) {
         provaMulti: fromNota(v.provaMulti),
         projeto:    fromNota(v.projeto),
         caderno:    fromNota(v.caderno),
+        equacoes:   v.equacoes ?? "", equacoesAuto: !!v.equacoesAuto,
         ativ4: v.ativ4 ?? "", ativ4Auto: !!v.ativ4Auto,
         participacao: v.participacao ?? v.lista ?? 0.5, // fallback lista (dados antigos), default 0.5
         triangulos: v.triangulos ?? v.area ?? "", triangulosAuto: !!v.triangulosAuto ?? !!v.areaAuto,
@@ -528,9 +563,9 @@ async function carregarTurma(turma) {
   status.classList.remove("saved");
 
   const alunos = ALUNOS_POR_TURMA[turma] || [];
-  const tasks = [carregarAutoTabuada(turma), carregarAutoArea(turma), notasLiberadas(turma), buscarAtiv4(turma, alunos), buscarCongelamento(turma)];
+  const tasks = [carregarAutoTabuada(turma), carregarAutoArea(turma), carregarAutoEquacoes(turma), notasLiberadas(turma), buscarAtiv4(turma, alunos), buscarCongelamento(turma)];
   if (primeiraVez) tasks.push(carregarNotasSalvas(turma));
-  const [_, areaPorAluno, liberada, ativ4Map, cong] = await Promise.all(tasks);
+  const [_, areaPorAluno, eqPorAluno, liberada, ativ4Map, cong] = await Promise.all(tasks);
   liberadaAtual = liberada;
   congeladoAtual = cong.congelado;
   atualizarBotaoLiberar();
@@ -555,6 +590,14 @@ async function carregarTurma(turma) {
     } else if (!r.triangulos) {
       r.triangulos = null;
     }
+
+    // Atividade 1 - Equações — auto: pontuação 0–10 → nota de 0 a 1,5 (null = nunca fez)
+    if (eqPorAluno[nome] != null) {
+      r.equacoes     = Math.min(1.5, (eqPorAluno[nome] / 10) * 1.5);
+      r.equacoesAuto = true;
+    } else if (!r.equacoes) {
+      r.equacoes = null;
+    }
   });
 
   // Se congelado, sobrepõe os automáticos pela foto (trava o bônus)
@@ -569,6 +612,7 @@ async function carregarTurma(turma) {
       const r = dados[chave][nome];
       if (f.ativ4 !== undefined)      r.ativ4      = f.ativ4;
       if (f.triangulos !== undefined) r.triangulos = f.triangulos;
+      if (f.equacoes !== undefined)   r.equacoes   = f.equacoes;
     });
   }
 
@@ -609,6 +653,7 @@ document.getElementById("btnCongelar").addEventListener("click", async () => {
         rankAtiv4Bonus: ad.rankAtiv4Bonus ?? 0,
         ativ4:      r.ativ4      ?? null,
         triangulos: r.triangulos ?? null,
+        equacoes:   r.equacoes   ?? null,
       };
     });
     status.textContent = "Congelando…"; status.classList.remove("saved");
@@ -669,6 +714,8 @@ async function salvarNotas() {
       provaMulti: toNota(r.provaMulti),
       projeto:    toNota(r.projeto),
       caderno:    toNota(r.caderno),
+      equacoes:   r.equacoes != null && r.equacoes !== "" ? parseFloat(r.equacoes) : null,
+      equacoesAuto: !!r.equacoesAuto,
       ativ4:      r.ativ4 ?? null,           // null = não participou
       ativ4Auto:  !!r.ativ4Auto,
       triangulos: r.triangulos != null && r.triangulos !== "" ? parseFloat(r.triangulos) : null, // null = nunca jogou
