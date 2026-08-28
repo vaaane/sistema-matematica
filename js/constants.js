@@ -142,6 +142,22 @@ export function pathTabuadaSprintRanking(bim = bimestreAtual()) {
   return bim <= 2 ? `tabuada_sprint_ranking` : `tabuada_sprint_ranking_b/${bim}`;
 }
 
+// ── Escalada Algébrica ──────────────────────────────────────
+export function pathEscaladaNiveis(uid, bim = bimestreAtual()) {
+  return bim <= 2 ? `escalada_niveis/${uid}` : `escalada_niveis_b/${bim}/${uid}`;
+}
+export function pathEscaladaNiveisRaiz(bim = bimestreAtual()) {
+  return bim <= 2 ? `escalada_niveis` : `escalada_niveis_b/${bim}`;
+}
+export function pathEscaladaRanking(bim = bimestreAtual()) {
+  return bim <= 2 ? `escalada_ranking` : `escalada_ranking_b/${bim}`;
+}
+// Marcos de bônus (nota extra): nível 100 = +0,5 · nível 200 = +1,0
+export const ESCALADA_MAX = 200;
+export function bonusEscalada(melhorNivel = 0) {
+  return melhorNivel >= 200 ? 1.0 : melhorNivel >= 100 ? 0.5 : 0;
+}
+
 // Grade semanal fixa por turma. 0=Dom 1=Seg 2=Ter 3=Qua 4=Qui 5=Sex 6=Sáb.
 // (Centralizado aqui para o Diário e futuras telas usarem o mesmo horário.)
 export const GRADE_TURMAS = {

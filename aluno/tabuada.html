@@ -219,6 +219,20 @@
       .timer-wrap{font-size:24px;margin-bottom:8px;}
       .timer-wrap svg{width:22px;height:22px;}
       .nivel-badge{font-size:11px;padding:4px 10px;}
+
+      /* Desktop: sem layout fullscreen com altura fixa + overflow:hidden.
+         O grid segue o fluxo natural (não corta a última linha de cards).
+         Sobrescreve as regras "fullscreen" que valem para todas as larguras. */
+      html,body{overflow:auto;height:auto;}
+      .main{overflow:visible!important;height:auto!important;}
+      #content{overflow:visible!important;display:block!important;padding:16px!important;}
+      .tb-wrap{height:auto!important;overflow:visible!important;}
+      .game-grid{
+        height:auto!important;overflow:visible!important;
+        grid-auto-rows:minmax(96px,auto)!important;   /* linhas com altura mínima confortável */
+        margin-bottom:16px!important;
+      }
+      .game-card{height:auto!important;min-height:96px!important;}
     }
 
     /* ── Responsive ── */

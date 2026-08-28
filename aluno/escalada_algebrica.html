@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="theme-color" content="#15102a">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>🧗 Escalada Algébrica — Sistema de Matemática</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/css/main.css"/>
+<style>
+/* ── Tema (espelha /css/main.css) ── */
+:root{
+  --orange:#f0a500; --blue:#9b30ff; --green:#22C55E; --green-pale:rgba(34,197,94,.12);
+  --red:#EF4444; --red-pale:rgba(239,68,68,.12); --gold:#f0a500; --purple:#9b30ff;
+  --cyan:#00d4ff;
+  --bg:#11111f; --card:#1a1a2e; --text:#F1F5F9; --text-muted:#94A3B8;
+  --border:rgba(255,255,255,.07); --radius:14px;
+  --shadow:0 1px 3px rgba(0,0,0,.45), 0 4px 16px rgba(0,0,0,.55);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100dvh;
+  display:flex;flex-direction:column;align-items:center;padding:14px;}
+.wrap{width:100%;max-width:540px;display:flex;flex-direction:column;gap:14px;}
+
+/* topbar */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.title{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:22px;letter-spacing:.3px;display:flex;align-items:center;gap:8px;}
+
+/* topo centralizado (formato da Tabuada): badge de nível + líderes */
+.head-center{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;}
+.nivel-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(155,48,255,.12);
+  border:1.5px solid rgba(155,48,255,.35);border-radius:20px;padding:5px 16px;
+  font-size:13px;font-weight:700;color:#c79bff;}
+.badge-fase{font-weight:600;color:var(--text-muted);font-size:12px;}
+.badge-fase:empty{display:none;}
+.leaders{font-size:12px;line-height:1.5;color:var(--text-muted);}
+.leaders .lead-ic{margin-right:4px;}
+.leaders b{color:var(--gold);}          /* nome do líder geral */
+.leaders .turma b{color:#c4b5fd;}       /* nome do líder da turma */
+.leaders .me{color:#60a5fa;font-weight:700;}
+.leaders .row{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+
+/* barra de progresso */
+.prog{display:flex;align-items:center;gap:10px;}
+.prog-bar{flex:1;height:9px;background:rgba(255,255,255,.06);border-radius:5px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:5px;transition:width .45s cubic-bezier(.4,0,.2,1);}
+.prog-num{font-family:'Orbitron',monospace;font-weight:700;font-size:13px;color:var(--text-muted);flex-shrink:0;}
+.prog-num b{color:var(--text);}
+
+/* card da questão */
+.qcard{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:26px 22px 22px;text-align:center;position:relative;overflow:hidden;}
+.qlabel{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px;}
+.qexpr{font-family:'Orbitron',monospace;font-weight:700;font-size:clamp(30px,9vw,46px);line-height:1.1;
+  color:var(--text);letter-spacing:1px;}
+.qexpr sup{font-size:.62em;}
+.qexpr .op{color:var(--purple);margin:0 .12em;}
+/* coeficiente (número) x parte literal (letras) */
+.coef{color:var(--gold);}
+.lit{color:var(--cyan);letter-spacing:.5px;}
+.qhint{font-size:12.5px;color:var(--text-muted);margin-top:12px;min-height:16px;}
+
+/* alternativas */
+.alts{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.alt{background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:16px 10px;
+  cursor:pointer;font-family:'Orbitron',monospace;font-weight:700;font-size:20px;color:var(--text);
+  transition:border-color .12s,background .12s,transform .08s;user-select:none;
+  display:flex;align-items:center;justify-content:center;min-height:60px;text-align:center;}
+.alt sup{font-size:.62em;}
+.alt.nao{font-family:'Inter',sans-serif;font-weight:700;font-size:14px;line-height:1.25;}
+.alt:hover:not(.locked){border-color:var(--purple);background:rgba(155,48,255,.08);}
+.alt:active:not(.locked){transform:scale(.97);}
+.alt.locked{cursor:default;}
+.alt.right{border-color:var(--green)!important;background:var(--green-pale)!important;color:var(--green);}
+.alt.right .coef,.alt.right .lit{color:var(--green);}
+.alt.wrong{border-color:var(--red)!important;background:var(--red-pale)!important;color:var(--red);animation:shake .35s;}
+.alt.wrong .coef,.alt.wrong .lit{color:var(--red);}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* feedback de erro */
+.feedback{border-radius:12px;padding:14px 16px;font-size:13.5px;line-height:1.5;display:none;}
+.feedback.show{display:block;animation:fadeUp .25s;}
+.feedback.err{background:var(--red-pale);border:1px solid rgba(239,68,68,.3);}
+.feedback .fb-ans{font-weight:800;color:var(--text);}
+.feedback .fb-ans .val{font-family:'Orbitron',monospace;}
+.feedback .fb-tip{color:var(--text-muted);margin-top:6px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.btn{padding:14px;border-radius:12px;border:none;font-family:'Rajdhani',sans-serif;font-weight:700;
+  font-size:17px;letter-spacing:.5px;cursor:pointer;width:100%;transition:filter .12s,transform .08s;}
+.btn:active{transform:scale(.98);}
+.btn-purple{background:var(--purple);color:#fff;}
+.btn-purple:hover{filter:brightness(1.1);}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text-muted);font-size:12px;padding:8px;font-family:'Inter';font-weight:600;}
+
+/* level-up flash */
+.flash{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:50;
+  background:rgba(17,17,31,.72);backdrop-filter:blur(2px);}
+.flash.show{display:flex;}
+.flash-card{text-align:center;animation:pop .4s cubic-bezier(.2,1.3,.4,1);}
+.flash-emoji{font-size:64px;}
+.flash-title{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:26px;margin-top:4px;}
+.flash-lv{font-family:'Orbitron',monospace;font-weight:800;font-size:40px;color:var(--green);margin-top:6px;}
+@keyframes pop{0%{opacity:0;transform:scale(.5)}70%{transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
+
+/* tag beta + banner de nota extra */
+.beta-tag{font-family:'Inter',sans-serif;font-size:11px;font-weight:700;vertical-align:middle;
+  padding:2px 8px;border-radius:999px;background:rgba(0,230,118,.13);color:var(--green);
+  border:1px solid rgba(0,230,118,.35);letter-spacing:.02em;}
+.extra-banner{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:var(--radius);
+  background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.25);color:#d9c48a;font-size:12.5px;line-height:1.45;}
+.extra-banner svg{width:18px;height:18px;flex-shrink:0;fill:var(--gold);}
+.extra-banner b{color:#f5c451;}
+
+/* vitória final */
+.win{text-align:center;padding:20px;}
+.win-emoji{font-size:70px;}
+.win h2{font-family:'Rajdhani';font-size:28px;margin:8px 0;}
+.win p{color:var(--text-muted);font-size:14px;margin-bottom:16px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="title">🧗 Escalada Algébrica <span class="beta-tag">Beta</span></div>
+  </div>
+
+  <!-- Topo no formato da Tabuada: badge de nível + líderes -->
+  <div class="head-center">
+    <div class="nivel-badge"><span id="badge-nivel">Nível 1</span> <span class="badge-fase" id="badge-fase"></span></div>
+    <div class="leaders" id="leaders"></div>
+  </div>
+
+  <div class="extra-banner">
+    <svg viewBox="0 0 24 24"><path d="M12 2 9.2 8.6 2 9.2l5.5 4.7L5.8 21 12 17.3 18.2 21l-1.7-7.1L22 9.2l-7.2-.6z"/></svg>
+    <span>Este jogo vale nota extra: <b>+0,5</b> ao chegar ao <b>nível 100</b> e mais <b>+0,5</b> ao chegar ao <b>nível 200</b>.</span>
+  </div>
+
+  <div class="prog">
+    <div class="prog-num">Nv <b id="prog-cur">1</b></div>
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="prog-num" id="prog-max">200</div>
+  </div>
+
+  <div id="game">
+    <div class="qcard">
+      <div class="qlabel" id="q-label">Simplifique</div>
+      <div class="qexpr" id="q-expr"></div>
+      <div class="qhint" id="q-hint"></div>
+    </div>
+    <div class="alts" id="alts" style="margin-top:14px"></div>
+    <div class="feedback err" id="feedback" style="margin-top:14px"></div>
+    <button class="btn btn-purple" id="next-btn" style="display:none;margin-top:14px"></button>
+    <button class="btn-ghost" id="reset-btn" style="margin-top:16px">↺ Reiniciar do nível 1</button>
+  </div>
+</div>
+
+<div class="flash" id="flash">
+  <div class="flash-card">
+    <div class="flash-emoji" id="flash-emoji">🎉</div>
+    <div class="flash-title" id="flash-title">Nível concluído!</div>
+    <div class="flash-lv" id="flash-lv">Nível 2</div>
+  </div>
+</div>
+
+<script type="module">
+import { requireAluno, clearSession, setSession, isModoTeste } from "/js/auth.js";
+import { bimestreAtual } from "/js/constants.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+/* ═══════════════════════════════════════════════════════════════
+   NÚCLEO GERADOR — 200 níveis, 7 fases.
+   ═══════════════════════════════════════════════════════════════ */
+function rngFrom(seedStr){let a=1779033703^seedStr.length;for(let i=0;i<seedStr.length;i++){a=Math.imul(a^seedStr.charCodeAt(i),3432918353);a=(a<<13)|(a>>>19);}return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const pick=(r,arr)=>arr[Math.floor(r()*arr.length)];
+const ri=(r,a,b)=>a+Math.floor(r()*(b-a+1));
+
+function termStr(t){
+  if(t==null)return '';
+  const c=t.c; const varsEmpty=Object.keys(t.v).length===0;
+  if(varsEmpty)return String(c);
+  let s = c===1?'':c===-1?'-':String(c);
+  s+=Object.keys(t.v).sort().map(k=>k+(t.v[k]>1?('^'+t.v[k]):'')).join('');
+  return s;
+}
+const addTerms=(a,b)=>({c:a.c+b.c,v:{...a.v}});
+const subTerms=(a,b)=>({c:a.c-b.c,v:{...a.v}});
+function mulTerms(a,b){const v={...a.v};for(const k in b.v)v[k]=(v[k]||0)+b.v[k];return {c:a.c*b.c,v};}
+function divTerms(a,b){const v={...a.v};for(const k in b.v){v[k]=(v[k]||0)-b.v[k];if(v[k]===0)delete v[k];else if(v[k]<0)return null;}if(a.c%b.c!==0)return null;return {c:a.c/b.c,v};}
+function monoVarParts(r,allowPow){const opts=[{x:1},{a:1},{y:1}];if(allowPow)opts.push({x:2},{y:2});opts.push({a:1,b:1});return pick(r,opts);}
+const doubleExp=v=>{const o={};for(const k in v)o[k]=v[k]+1;return Object.keys(o).length?o:{x:2};};
+const sumExpPlus=v=>{const o={...v};const k=Object.keys(o)[0]||'x';o[k]=(o[k]||1)+1;return o;};
+const keepExp=v=>({...v});
+
+function genQuestion(level, salt){
+  const r=rngFrom('L'+level+'#'+salt);
+  // bandas de dificuldade: 5 é o teto (tudo + negativos), usado de 101 a 200.
+  const band=level<=20?1:level<=50?2:level<=80?3:level<=100?4:5;
+  const allowNegResult=band>=2, allowNegOperand=band>=5;
+
+  let ops=['+','-'];
+  if(band>=3)ops.push('*');
+  if(band>=4)ops.push('/');
+  if(band===5)ops=['+','-','*','/'];
+  let op;
+  if(band===3 && r()<0.55) op='*';
+  else if(band===4 && r()<0.55) op='/';
+  else op=pick(r,ops);
+
+  const unlikeChance=band<=2?0.28:band<=4?0.15:0.12;
+  const doUnlike=(op==='+'||op==='-') && r()<unlikeChance;
+  const coef=(mn,mx)=>ri(r,mn,mx);
+  let a,b,correct,ruleTip;
+
+  if(op==='+'||op==='-'){
+    const vp=monoVarParts(r,true);
+    if(doUnlike){
+      let vp2=monoVarParts(r,true),g=0;
+      while(JSON.stringify(vp2)===JSON.stringify(vp)&&g++<8)vp2=monoVarParts(r,true);
+      a={c:coef(1,9),v:vp}; b={c:coef(1,9),v:vp2};
+      correct={kind:'nao',a,b,op};
+      ruleTip='Só somamos/subtraímos termos <b>semelhantes</b> (mesma parte literal). Aqui a expressão já está na forma mais simples.';
+    }else{
+      let ca=coef(1,10),cb=coef(1,10);
+      if(op==='-'&&!allowNegResult){if(cb>ca){const t=ca;ca=cb;cb=t;}if(ca===cb)ca+=1;}
+      a={c:ca,v:vp}; b={c:cb,v:vp};
+      correct={kind:'term',term:op==='+'?addTerms(a,b):subTerms(a,b)};
+      ruleTip='Na <b>soma e subtração</b> de termos semelhantes, opere só os <b>coeficientes</b> e mantenha a parte literal. (Somente na multiplicação e divisão que os expoentes também mudam.)';
+    }
+  }else if(op==='*'){
+    const vpA=monoVarParts(r,true), vpB=r()<0.5?monoVarParts(r,true):vpA;
+    let ca=coef(2,6),cb=coef(2,6);
+    if(allowNegOperand&&r()<0.5)ca=-ca;
+    if(allowNegOperand&&r()<0.5)cb=-cb;
+    a={c:ca,v:vpA}; b={c:cb,v:vpB};
+    correct={kind:'term',term:mulTerms(a,b)};
+    ruleTip='Multiplicação: multiplique os <b>coeficientes</b> e <b>some os expoentes</b> de variáveis iguais.';
+  }else{
+    const vpQ=monoVarParts(r,true), vpB=monoVarParts(r,true);
+    let cq=coef(2,6),cb=coef(2,6);
+    if(allowNegOperand&&r()<0.5)cb=-cb;
+    if(allowNegOperand&&r()<0.5)cq=-cq;
+    const q={c:cq,v:vpQ}; b={c:cb,v:vpB};
+    a=mulTerms(q,b);
+    correct={kind:'term',term:divTerms(a,b)};
+    ruleTip='Divisão: divida os <b>coeficientes</b> e <b>subtraia os expoentes</b> de variáveis iguais.';
+  }
+
+  const opts=new Set();
+  const key=o=>o.kind==='nao'?'NAO':(o.term?o.term.c+'|'+JSON.stringify(o.term.v):'?');
+  const correctKey=key(correct);
+  const addOpt=o=>{if(o&&key(o)!==correctKey)opts.add(JSON.stringify(o));};
+
+  // Em TODA soma/subtração, "não dá pra simplificar" precisa ser uma opção.
+  // (Quando a resposta já é "nao", ela é a correta; senão, entra como distrator
+  //  garantido — o aluno tem de decidir se dá ou não pra simplificar.)
+  const somaOuSub = (op==='+'||op==='-');
+  const forcarNao = somaOuSub && correct.kind!=='nao';
+
+  if(correct.kind==='nao'){
+    addOpt({kind:'term',term:{c:a.c+b.c,v:{...a.v,...b.v}}});
+    addOpt({kind:'term',term:{c:a.c+b.c,v:a.v}});
+    addOpt({kind:'term',term:{c:a.c*b.c,v:{...a.v,...b.v}}});
+  }else{
+    const T=correct.term;
+    if(op==='+'||op==='-'){
+      addOpt({kind:'term',term:{c:T.c,v:doubleExp(T.v)}});
+      addOpt({kind:'term',term:{c:op==='+'?a.c*b.c:(Math.abs(a.c-b.c)||1),v:T.v}});
+      addOpt({kind:'term',term:{c:T.c,v:{}}});
+      addOpt({kind:'nao'});
+    }else if(op==='*'){
+      addOpt({kind:'term',term:{c:T.c,v:a.v}});
+      addOpt({kind:'term',term:{c:a.c+b.c,v:T.v}});
+      addOpt({kind:'term',term:{c:T.c,v:sumExpPlus(T.v)}});
+      if(a.c*b.c<0)addOpt({kind:'term',term:{c:-T.c,v:T.v}});
+    }else{
+      addOpt({kind:'term',term:{c:T.c,v:keepExp(a.v)}});
+      addOpt({kind:'term',term:{c:Math.max(1,Math.abs(a.c-b.c)),v:T.v}});
+      addOpt({kind:'term',term:{c:T.c,v:a.v}});
+      if(a.c*b.c<0||T.c<0)addOpt({kind:'term',term:{c:-T.c,v:T.v}});
+    }
+  }
+  let g=0;
+  while(opts.size<3&&g++<40){
+    const base=correct.term||{c:1,v:a.v};
+    let nc=(base.c||1)+ri(r,1,4); if(nc===0)nc=base.c+2;
+    addOpt({kind:'term',term:{c:nc,v:base.v||{}}});
+  }
+  // Reserva 1 vaga para o "não dá" nas somas/subtrações simplificáveis,
+  // para que ele sobreviva ao corte de 3 distratores.
+  let distrArr=[...opts];
+  const NAO=JSON.stringify({kind:'nao'});
+  if(forcarNao){
+    distrArr=distrArr.filter(s=>s!==NAO);       // remove se já entrou, p/ reinserir na frente
+    distrArr=[NAO,...distrArr];
+  }
+  const distr=distrArr.slice(0,3).map(s=>JSON.parse(s));
+  const all=[correct,...distr];
+  for(let i=all.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[all[i],all[j]]=[all[j],all[i]];}
+  return {level,band,op,a,b,correct,options:all,ruleTip};
+}
+
+/* ═══ RENDER ═══
+   termHTML separa visualmente coeficiente (dourado) e parte literal (ciano). */
+function termHTML(t){
+  if(t==null)return '';
+  const varsEmpty=Object.keys(t.v).length===0;
+  const lit=Object.keys(t.v).sort().map(k=>k+(t.v[k]>1?('<sup>'+t.v[k]+'</sup>'):'')).join('');
+  if(varsEmpty)return `<span class="coef">${t.c}</span>`;          // constante pura
+  let coefTxt = t.c===1?'' : t.c===-1?'−' : String(t.c);           // esconde o 1
+  const coefSpan = coefTxt?`<span class="coef">${coefTxt}</span>`:'';
+  return coefSpan+`<span class="lit">${lit}</span>`;
+}
+const optHTML=o=>o.kind==='nao'
+  ?'Não dá pra somar<br><span style="font-size:11px;opacity:.75">(já está simplificado)</span>'
+  :termHTML(o.term);
+function exprHTML(q){
+  const A=termHTML(q.a), B=termHTML(q.b);
+  const sym=q.op==='*'?'·':q.op==='/'?'÷':q.op;
+  if(q.op==='*')return `(${A}) <span class="op">·</span> (${B})`;
+  return `${A} <span class="op">${sym}</span> ${B}`;
+}
+const PHASES=[
+  {dot:'#22C55E',curto:'Soma e subtração',name:'Fase 1 · Soma e subtração',sub:'Termos semelhantes, resultados positivos',lo:1,hi:20},
+  {dot:'#9b30ff',curto:'Resultados negativos',name:'Fase 2 · Resultados negativos',sub:'Soma e subtração podendo dar negativo',lo:21,hi:50},
+  {dot:'#f0a500',curto:'Multiplicação',name:'Fase 3 · Multiplicação',sub:'Multiplicação de monômios entra em cena',lo:51,hi:80},
+  {dot:'#00d4ff',curto:'Divisão',name:'Fase 4 · Divisão',sub:'Divisão de monômios entra em cena',lo:81,hi:100},
+  {dot:'#EF4444',curto:'Tudo + negativos',name:'Fase 5 · Tudo + negativos',sub:'Todas as operações, positivos e negativos',lo:101,hi:150},
+  {dot:'#ff7b2e',curto:'Treino de mestre',name:'Fase 6 · Treino de mestre',sub:'Mistura intensa de tudo — sem descanso',lo:151,hi:180},
+  {dot:'#00e676',curto:'Topo da escalada',name:'Fase 7 · Topo da escalada',sub:'Os níveis finais rumo ao 200',lo:181,hi:200},
+];
+function phaseFor(lv){return PHASES.find(p=>lv>=p.lo&&lv<=p.hi);}
+
+/* ═══ ESTADO + PERSISTÊNCIA (Firebase, no padrão da Tabuada) ═══
+   Nós no Realtime Database:
+     escalada_niveis/{uid}   (bim<=2)  |  escalada_niveis_b/{bim}/{uid}   (bim 3–4)
+       → { nome, turma, nivel_atual, melhor_nivel, bonus, ultima_partida }
+     escalada_ranking/{uid}  (bim<=2)  |  escalada_ranking_b/{bim}/{uid}  (bim 3–4)
+       → { nome, turma, nivel_atual, melhor_nivel, bonus, ultima_partida }
+   'bonus' é o valor extra já conquistado: 0 / 0.5 (nível 100) / 1.0 (nível 200).
+   A ficha do aluno lerá 'melhor_nivel' desses nós para mostrar/contabilizar
+   o bônus — igual faz hoje com tabuada/tabuada negativa. */
+const MAX=200;
+const MARCO_1=100, MARCO_2=200;           // níveis que valem 0,5 cada
+const bonusPorNivel = lv => (lv>=MARCO_2?1.0 : lv>=MARCO_1?0.5 : 0);
+
+const $=id=>document.getElementById(id);
+
+// ── Sessão do aluno (ou modo teste do professor via ?modo=teste) ──
+const _params = new URLSearchParams(location.search);
+if (_params.get("modo") === "teste") {
+  localStorage.setItem("modoTeste", "true");
+  setSession({ modo:"aluno", alunos:["PROFESSOR_TESTE"], turma:"TESTE", session_token:"teste_"+Date.now() });
+}
+const _modoTeste = isModoTeste();
+const sess = requireAluno("/index.html");
+
+const nomeAluno = (sess.alunos && sess.alunos[0]) || "";
+const turma     = sess.turma || "";
+const uid       = (turma + '_' + nomeAluno).replace(/[.#$\[\]/\s]/g, '_');
+const _bimJogo  = (n => (n>=1&&n<=4)?n:bimestreAtual())(parseInt(_params.get('bim'),10));
+const _niveisPath  = _bimJogo <= 2 ? `escalada_niveis/${uid}`  : `escalada_niveis_b/${_bimJogo}/${uid}`;
+const _rankingPath = _bimJogo <= 2 ? `escalada_ranking/${uid}` : `escalada_ranking_b/${_bimJogo}/${uid}`;
+// No modo teste, não gravamos nos nós reais (isola o professor do ranking).
+const niveisRef  = _modoTeste ? null : ref(db, _niveisPath);
+const rankingRef = _modoTeste ? null : ref(db, _rankingPath);
+
+async function loadProg(){
+  if (niveisRef) {
+    try { const s = await get(niveisRef); if (s.exists()) return s.val(); } catch(e){}
+  }
+  return { nivel_atual:1, melhor_nivel:1, bonus:0 };
+}
+async function saveProg(p){
+  const payload = {
+    nome: nomeAluno, turma,
+    nivel_atual:  p.nivel_atual,
+    melhor_nivel: p.melhor_nivel,
+    bonus:        bonusPorNivel(p.melhor_nivel),
+    ultima_partida: Date.now(),
+  };
+  try { if (niveisRef)  await update(niveisRef,  payload); } catch(e){ console.warn('[Escalada] save niveis', e); }
+  try { if (rankingRef) await set(rankingRef, payload); }    catch(e){ console.warn('[Escalada] save ranking', e); }
+}
+
+let prog = { nivel_atual:1, melhor_nivel:1, bonus:0 };
+let nivelAtual = 1, melhorNivel = 1;
+let salt=0, current=null, locked=false;
+
+function render(){
+  if(nivelAtual>MAX){renderWin();return;}
+  const ph=phaseFor(nivelAtual);
+  $('badge-nivel').textContent='Nível '+nivelAtual;
+  $('badge-fase').textContent=ph?('· '+ph.curto):'';
+  $('prog-cur').textContent=nivelAtual;
+  const pct=((nivelAtual-1)/MAX)*100;
+  $('prog-fill').style.width=pct+'%';
+  $('prog-fill').style.background=ph.dot;
+
+  current=genQuestion(nivelAtual,salt);
+  $('q-label').textContent=current.op==='*'?'Multiplique':current.op==='/'?'Divida':'Simplifique';
+  $('q-expr').innerHTML=exprHTML(current);
+  $('q-hint').textContent='';
+  $('feedback').classList.remove('show');
+  $('next-btn').style.display='none';
+  locked=false;
+
+  const box=$('alts'); box.innerHTML='';
+  current.options.forEach((o,i)=>{
+    const el=document.createElement('div');
+    el.className='alt'+(o.kind==='nao'?' nao':'');
+    el.innerHTML=optHTML(o);
+    el.onclick=()=>choose(i,el);
+    box.appendChild(el);
+  });
+}
+
+function isCorrect(o){return JSON.stringify(o)===JSON.stringify(current.correct);}
+
+function choose(i,el){
+  if(locked)return; locked=true;
+  const chosen=current.options[i];
+  const els=[...document.querySelectorAll('.alt')];
+  els.forEach(e=>e.classList.add('locked'));
+  if(isCorrect(chosen)){
+    el.classList.add('right');
+    setTimeout(()=>advance(),480);
+  }else{
+    el.classList.add('wrong');
+    els[current.options.findIndex(isCorrect)].classList.add('right');
+    // mostra resposta correta + regra
+    const corr=current.correct.kind==='nao'?'já está simplificado':termHTML(current.correct.term);
+    $('feedback').innerHTML=
+      `<div class="fb-ans">Resposta certa: <span class="val">${corr}</span></div>`+
+      `<div class="fb-tip">${current.ruleTip}</div>`;
+    $('feedback').classList.add('show');
+    const nb=$('next-btn');
+    nb.textContent='Tentar uma questão parecida →';
+    nb.style.display='block';
+    nb.onclick=()=>{ salt++; render(); }; // nova questão SIMILAR no MESMO nível
+  }
+}
+
+function advance(){
+  const concluido=nivelAtual;
+  const bonusAntes=bonusPorNivel(melhorNivel);
+  nivelAtual++; salt=0;
+  melhorNivel=Math.max(melhorNivel,nivelAtual);
+  const bonusDepois=bonusPorNivel(melhorNivel);
+  saveProg({nivel_atual:nivelAtual,melhor_nivel:melhorNivel});
+  // flash a cada nível; comemoração maior ao trocar de fase ou bater marco de bônus
+  const ph=phaseFor(concluido), nph=phaseFor(nivelAtual);
+  const trocaFase = nivelAtual<=MAX && nph && ph && nph.name!==ph.name;
+  const marcoBonus = bonusDepois>bonusAntes ? bonusDepois : 0;   // 0,5 ou 1,0 recém-conquistado
+  showFlash(trocaFase, nivelAtual, marcoBonus);
+}
+
+function showFlash(trocaFase,lv,marcoBonus){
+  const f=$('flash');
+  if(marcoBonus){
+    $('flash-emoji').textContent='🌟';
+    $('flash-title').textContent = marcoBonus>=1.0 ? 'Nota extra máxima!' : 'Nota extra garantida!';
+    $('flash-lv').textContent = '+'+marcoBonus.toFixed(1).replace('.',',')+' na média';
+  } else {
+    $('flash-emoji').textContent = lv>MAX?'🏆': trocaFase?'⭐':'✅';
+    $('flash-title').textContent = lv>MAX?'Você chegou ao topo!': trocaFase?'Nova fase desbloqueada!':'Nível concluído!';
+    $('flash-lv').textContent = lv>MAX?'200 / 200':('Nível '+lv);
+  }
+  f.classList.add('show');
+  setTimeout(()=>{ f.classList.remove('show'); render(); }, (trocaFase||marcoBonus)?1100:650);
+}
+
+function renderWin(){
+  $('game').innerHTML=
+    `<div class="win"><div class="win-emoji">🏆</div>
+     <h2>Escalada completa!</h2>
+     <p>Você venceu os 200 níveis — soma, subtração, multiplicação e divisão de termos algébricos, com positivos e negativos.</p>
+     <button class="btn btn-purple" onclick="resetAll()">Escalar de novo</button></div>`;
+  $('prog-fill').style.width='100%';
+  $('prog-cur').textContent='200';
+  $('badge-nivel').textContent='Concluído';
+  $('badge-fase').textContent='· 200 / 200';
+}
+
+async function resetAll(){
+  nivelAtual=1; melhorNivel=Math.max(1,melhorNivel); salt=0;
+  await saveProg({nivel_atual:1,melhor_nivel:melhorNivel});
+  location.reload();
+}
+window.resetAll = resetAll;   // usado pelo botão da tela de vitória (onclick inline)
+$('reset-btn').onclick=()=>{ if(confirm('Reiniciar do nível 1? Seu recorde é mantido.'))resetAll(); };
+
+window.sair = () => { clearSession(); window.location.href = "/index.html"; };
+
+// ── Líderes (formato do print: Geral + Turma), lendo escalada_ranking ──
+const _escH = s => String(s??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function renderLeaders(){
+  const el=$('leaders'); if(!el) return;
+  if(_modoTeste){ el.innerHTML=''; return; }
+  const raizPath=_bimJogo<=2?'escalada_ranking':`escalada_ranking_b/${_bimJogo}`;
+  let lista=[];
+  try{
+    const s=await get(ref(db,raizPath));
+    if(s.exists()) s.forEach(ch=>{ const v=ch.val(); if(v&&v.nome) lista.push({_uid:ch.key,...v}); });
+  }catch(e){ el.innerHTML=''; return; }
+  if(!lista.length){ el.innerHTML=''; return; }
+  const nivel=r=>r.melhor_nivel||r.nivel_atual||0;
+  lista.sort((a,b)=>nivel(b)-nivel(a));
+  const geral=lista[0];
+  const daTurma=lista.filter(r=>r.turma===turma).sort((a,b)=>nivel(b)-nivel(a))[0];
+  const souEu=r=>r&&r._uid===uid;
+  const linhas=[];
+  if(geral){
+    linhas.push(souEu(geral)
+      ? `<div class="row"><span class="lead-ic">👑</span>Geral: <span class="me">Você lidera!</span></div>`
+      : `<div class="row"><span class="lead-ic">👑</span>Geral: <b>${_escH(geral.nome)}</b> · ${_escH(geral.turma||'')} · Nv ${nivel(geral)}</div>`);
+  }
+  if(daTurma && (!geral || daTurma._uid!==geral._uid)){
+    linhas.push(souEu(daTurma)
+      ? `<div class="row turma"><span class="lead-ic">🏅</span>Turma: <span class="me">Você lidera!</span></div>`
+      : `<div class="row turma"><span class="lead-ic">🏅</span>Turma: <b>${_escH(daTurma.nome)}</b> · Nv ${nivel(daTurma)}</div>`);
+  }
+  el.innerHTML=linhas.join('');
+}
+
+// ── Boot: carrega progresso do Firebase e inicia ──
+(async () => {
+  prog = await loadProg();
+  nivelAtual  = Math.max(1, prog.nivel_atual  || 1);
+  melhorNivel = Math.max(nivelAtual, prog.melhor_nivel || 1);
+  render();
+  renderLeaders();   // assíncrono, não bloqueia o jogo
+})();
+</script>
+</body>
+</html>

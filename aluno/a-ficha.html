@@ -498,12 +498,22 @@ function render(){
     };
   }
 
-  // datas oficiais (liberações de turma) e 2ª chamada, a partir do histórico
-  const _datasOficiais = (ativ) => [...new Set(
-    (libHistorico||[])
-      .filter(l => l.atividade===ativ && l.turma===turma && (l.tipo||"turma")==="turma" && l.data_aplicacao)
-      .map(l => l.data_aplicacao)
-  )].sort();
+  // data da atividade a partir do próprio registro (mapeamento_salas/turma/atividades)
+  // — usada como fallback quando o liberacoes_historico não tem data_aplicacao.
+  const _dataAtivReg = {};
+  for (const a of atividades){ if (a && a.nome && a.data) _dataAtivReg[a.nome] = a.data; }
+
+  // datas oficiais (liberações de turma) e 2ª chamada, a partir do histórico.
+  // Se o histórico não trouxe data, cai para a data do registro da atividade.
+  const _datasOficiais = (ativ) => {
+    const doHist = [...new Set(
+      (libHistorico||[])
+        .filter(l => l.atividade===ativ && l.turma===turma && (l.tipo||"turma")==="turma" && l.data_aplicacao)
+        .map(l => l.data_aplicacao)
+    )].sort();
+    if (doHist.length) return doHist;
+    return _dataAtivReg[ativ] ? [_dataAtivReg[ativ]] : [];
+  };
   const _seg2a = (ativ) => (libHistorico||[]).find(l =>
       l.atividade===ativ && l.turma===turma && l.tipo==="segunda_chamada"
       && Array.isArray(l.alunos) && l.alunos.includes(aluno));
@@ -524,7 +534,8 @@ function render(){
       return {nome, estado:"feito", real:nota.real, vmax, pts:nota.pts, id:nota.id, oficiais};
     }
     const presenteEm = oficiais.find(d=>{ const e=estadoCham(d,aluno); return e==="presente"||e==="atraso"||e===""; });
-    if (presenteEm) return {nome, estado:"presente", vmax, dataRef:presenteEm, oficiais};
+    if (presenteEm) return {nome, estado:"presente", vmax, dataRef:presenteEm, oficiais,
+                            atraso: estadoCham(presenteEm,aluno)==="atraso"};
     const atestEm = oficiais.find(d=> estadoCham(d,aluno)==="falta" && temAtestado(d));
     if (atestEm) return {nome, estado:"elegivel", vmax, dataRef:atestEm, oficiais};
     return {nome, estado:"faltou", vmax, dataRef:oficiais[0]||"", oficiais};
@@ -552,7 +563,8 @@ function render(){
           + (l.oficiais.length?`<span class="nsub of">Aplicação oficial: ${_ofLbl(l.oficiais)}</span>`:"");
       val = `<span class="nota-val ${_corNota(l.pts)}">${_fmt2(l.real)} <small>/ ${_fmt2(l.vmax)}</small></span>`;
     } else if (l.estado === "presente"){
-      sub = `<span class="nsub vermelho">✕ Não realizada — presente no dia${l.dataRef?` (${fmtDM(l.dataRef)})`:""}</span>`;
+      const _diaTxt = l.atraso ? "chegou atrasado(a) no dia" : "presente no dia";
+      sub = `<span class="nsub vermelho">✕ Não realizada — ${_diaTxt}${l.dataRef?` (${fmtDM(l.dataRef)})`:""}</span>`;
       val = `<span class="nota-val vermelho">0,00 <small>/ ${_fmt2(l.vmax)}</small></span>`;
     } else if (l.estado === "faltou"){
       sub = `<span class="nsub vermelho">✕ Não realizada — faltou no dia${l.dataRef?` (${fmtDM(l.dataRef)})`:""}</span>`;
