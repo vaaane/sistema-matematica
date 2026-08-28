@@ -21,6 +21,7 @@ export const NOMES_COMPLETOS = {
   "Luis Miguel":      "Luis Miguel dos Santos Freitas",
   "Miguel Henrique":  "Miguel Henrique Martins Ferreira",
   "Miguel Nascimento":"Miguel Nascimento de Jesus Pereira",
+  "Pedro Riquelme":   "Pedro Riquelme Costa Santos",
   "Thayna":           "Thayna Pereira Araujo",
   "Wanderson":        "Wanderson Bruno da Silva Santos",
 
@@ -124,7 +125,6 @@ export const NOMES_COMPLETOS = {
   "Nicolle":          "Nicolle Kristine Lopes Sobrinho",
   "Nicolly":          "Nicolly Moreira dos Santos",
   "Pedro Jorge":      "Pedro Jorge Souza Freitas",
-  "Pedro Riquelme":   "Pedro Riquelme Costa Santos",
   "Pedro Willian":    "Pedro Willian Hiert da Costa",
   "Rana":             "Rana Melícia Alves Nunes",
   "Riquelme":         "Riquelme Silva Souza",
