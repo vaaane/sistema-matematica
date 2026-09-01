@@ -157,21 +157,9 @@
   .ex-answer-in p{margin:0 0 6px;font-size:13.5px;line-height:1.65;color:rgba(255,255,255,.82)}
   .ex-answer-in .final{font-weight:700;color:#3ddc84}
 
-  /* — Rodapé / chamada — */
-  .au-foot{margin-top:8px;text-align:center;background:linear-gradient(135deg,rgba(124,92,252,.12),rgba(240,165,0,.06));border:1px solid var(--border,rgba(255,255,255,.1));border-radius:16px;padding:22px 20px}
-  .au-foot-title{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;margin-bottom:5px}
-  .au-foot-desc{font-size:12.5px;color:var(--text-muted,rgba(255,255,255,.6));line-height:1.55;margin-bottom:14px}
-  .au-btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:700;font-size:14px;color:#fff;padding:11px 22px;border-radius:12px;background:linear-gradient(135deg,var(--purple,#7c5cfc),#5a3fd6);box-shadow:0 6px 18px rgba(124,92,252,.35)}
-  .au-btn:hover{filter:brightness(1.08)}
-  .au-note{font-size:11px;color:var(--text-muted,rgba(255,255,255,.45));margin-top:14px}
-
-  /* — Aulas relacionadas (SÓ em aula teórica) — */
-  .au-rel{text-align:left;background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:16px;padding:16px 18px}
-  .au-rel-title{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
-  .au-rel-item{display:flex;align-items:center;justify-content:space-between;gap:10px;text-decoration:none;color:var(--text,#f1eefb);font-size:13.5px;font-weight:600;padding:11px 13px;border-radius:11px;background:rgba(255,255,255,.03);border:1px solid var(--border,rgba(255,255,255,.07));margin-bottom:8px}
-  .au-rel-item:last-child{margin-bottom:0}
-  .au-rel-item:hover{border-color:rgba(124,92,252,.45)}
-  .au-rel-item span{color:var(--purple,#b6a2ff);font-weight:800}
+  /* — REGRA DO PADRÃO — as páginas de conteúdo NÃO levam blocos de link para
+     outras páginas (sem "Aulas relacionadas"/"Continue na unidade"). Navegação
+     só pela sidebar do site. Por isso os estilos .au-foot/.au-rel foram removidos. */
 
   /* — Helpers de matemática (HTML puro, sem dependência) — */
   .pot{font-weight:700}
@@ -302,6 +290,8 @@
         </section>
 
         <!-- ════════ EXERCÍCIOS ════════ -->
+        <!-- REGRA: toda questão SEMPRE traz o bloco "Ver resposta" (.ex-toggle + .ex-answer).
+             A resposta fica sempre disponível ao aluno — não criar lista sem resolução. -->
         <section class="au-sec" id="exercicios">
           <div class="au-sec-head">
             <span class="au-sec-num">✏️</span>

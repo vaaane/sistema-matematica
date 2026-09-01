@@ -169,7 +169,16 @@
 
   :focus-visible{outline:2px solid var(--purple,#7c5cfc);outline-offset:2px}
   @media(prefers-reduced-motion:reduce){.ex-answer,.ex-toggle .arw{transition:none}}
-  </style>
+  
+  /* ═══ GATE DE RESOLUÇÃO (liberado só quando a atividade está "corrigido") ═══ */
+  .res-gate{display:none}
+  html.res-liberado .res-gate{display:block}
+  html.res-liberado li .res-gate{margin-top:8px}
+  .res-gate .ex-toggle{margin-top:2px}
+  .res-aviso{display:flex;gap:11px;align-items:flex-start;border-radius:12px;padding:14px 16px;margin:0 0 18px;font-size:13px;line-height:1.6;background:rgba(240,165,0,.07);border:1px solid rgba(240,165,0,.28);color:#f3c25f}
+  .res-aviso b{color:#fff}
+  .res-aviso-ic{font-size:17px;flex-shrink:0;line-height:1.4}
+</style>
 </head>
 <body>
 <div class="layout">
@@ -193,7 +202,7 @@
 </div>
 </header>
 
-<section class="au-sec"><div class="au-sec-head"><div class="au-sec-num">1</div><div class="au-sec-title">Situações-problema</div><div class="au-sec-tag tag-pratica">FIXAÇÃO</div></div><ol class="ex-list"><li>Pedro pensou em um número. Somou 12 e encontrou 27. Qual foi o número pensado?</li><li>Ana comprou um caderno por R$18 e ainda ficou com R$32. Quanto ela tinha antes da compra?</li><li>O dobro da idade de Lucas é 26 anos. Qual é a idade de Lucas?</li><li>Um número multiplicado por 7 resulta em 56. Qual é esse número?</li><li>Um número dividido por 8 é igual a 9. Qual é esse número?</li><li>Maria comprou 5 canetas iguais e pagou R$35,00. Qual era o preço de cada caneta?</li><li>O triplo de um número menos 6 é igual a 30. Qual é esse número?</li></ol></section><section class="au-sec"><div class="au-sec-head"><div class="au-sec-num">2</div><div class="au-sec-title">Desafios</div><div class="au-sec-tag tag-teoria">DESAFIO</div></div><ol class="ex-list" start="8"><li>A soma de dois números consecutivos é 57. Quais são esses números?</li><li>O dobro de um número, menos 9, é igual ao próprio número mais 4. Qual é esse número?</li><li>Em uma turma, o número de meninas é o triplo do número de meninos. Ao todo são 32 alunos. Quantos meninos há?</li></ol></section></div>
+<section class="au-sec"><div class="au-sec-head"><div class="au-sec-num">1</div><div class="au-sec-title">Situações-problema</div><div class="au-sec-tag tag-pratica">FIXAÇÃO</div></div><ol class="ex-list"><li>Pedro pensou em um número. Somou 12 e encontrou 27. Qual foi o número pensado?<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>x + 12 = 27 → x = 27 − 12.</p><p class="final">O número é 15</p></div></div></div></li><li>Ana comprou um caderno por R$18 e ainda ficou com R$32. Quanto ela tinha antes da compra?<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>x − 18 = 32 → x = 32 + 18.</p><p class="final">Ela tinha R$ 50</p></div></div></div></li><li>O dobro da idade de Lucas é 26 anos. Qual é a idade de Lucas?<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>2x = 26 → x = 26 ÷ 2.</p><p class="final">Lucas tem 13 anos</p></div></div></div></li><li>Um número multiplicado por 7 resulta em 56. Qual é esse número?<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>7x = 56 → x = 56 ÷ 7.</p><p class="final">O número é 8</p></div></div></div></li><li>Um número dividido por 8 é igual a 9. Qual é esse número?<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p><span class="frac"><span>x</span><span>8</span></span> = 9 → x = 9 · 8.</p><p class="final">O número é 72</p></div></div></div></li><li>Maria comprou 5 canetas iguais e pagou R$35,00. Qual era o preço de cada caneta?<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>5x = 35 → x = 35 ÷ 5.</p><p class="final">Cada caneta custou R$ 7,00</p></div></div></div></li><li>O triplo de um número menos 6 é igual a 30. Qual é esse número?<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>3x − 6 = 30 → 3x = 36; x = 36 ÷ 3.</p><p class="final">O número é 12</p></div></div></div></li></ol></section><section class="au-sec"><div class="au-sec-head"><div class="au-sec-num">2</div><div class="au-sec-title">Desafios</div><div class="au-sec-tag tag-teoria">DESAFIO</div></div><ol class="ex-list" start="8"><li>A soma de dois números consecutivos é 57. Quais são esses números?<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>x + (x + 1) = 57 → 2x + 1 = 57 → 2x = 56; x = 28.</p><p class="final">Os números são 28 e 29</p></div></div></div></li><li>O dobro de um número, menos 9, é igual ao próprio número mais 4. Qual é esse número?<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>2x − 9 = x + 4 → 2x − x = 4 + 9 → x = 13.</p><p class="final">O número é 13</p></div></div></div></li><li>Em uma turma, o número de meninas é o triplo do número de meninos. Ao todo são 32 alunos. Quantos meninos há?<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>Meninos = x, meninas = 3x. x + 3x = 32 → 4x = 32; x = 8.</p><p class="final">Há 8 meninos (e 24 meninas)</p></div></div></div></li></ol></section></div>
 </div>
 </div>
 </div>
@@ -221,6 +230,10 @@
       </div>`;
     }
   })();
+</script>
+<script type="module">
+  import { gateResolucao } from "/js/gate-resolucao.js";
+  gateResolucao();
 </script>
 </body>
 </html>

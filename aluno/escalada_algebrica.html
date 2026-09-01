@@ -24,20 +24,20 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100dvh;
   display:flex;flex-direction:column;align-items:center;padding:14px;}
-.wrap{width:100%;max-width:540px;display:flex;flex-direction:column;gap:14px;}
+.wrap{width:100%;max-width:540px;display:flex;flex-direction:column;gap:12px;}
 
 /* topbar */
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;}
 .title{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:22px;letter-spacing:.3px;display:flex;align-items:center;gap:8px;}
 
 /* topo centralizado (formato da Tabuada): badge de nível + líderes */
-.head-center{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;}
+.head-center{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;}
 .nivel-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(155,48,255,.12);
   border:1.5px solid rgba(155,48,255,.35);border-radius:20px;padding:5px 16px;
   font-size:13px;font-weight:700;color:#c79bff;}
 .badge-fase{font-weight:600;color:var(--text-muted);font-size:12px;}
 .badge-fase:empty{display:none;}
-.leaders{font-size:12px;line-height:1.5;color:var(--text-muted);}
+.leaders{font-size:12px;line-height:1.45;color:var(--text-muted);}
 .leaders .lead-ic{margin-right:4px;}
 .leaders b{color:var(--gold);}          /* nome do líder geral */
 .leaders .turma b{color:#c4b5fd;}       /* nome do líder da turma */
@@ -53,23 +53,22 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 
 /* card da questão */
 .qcard{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);
-  box-shadow:var(--shadow);padding:26px 22px 22px;text-align:center;position:relative;overflow:hidden;}
-.qlabel{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px;}
-.qexpr{font-family:'Orbitron',monospace;font-weight:700;font-size:clamp(30px,9vw,46px);line-height:1.1;
+  box-shadow:var(--shadow);padding:22px 22px 20px;text-align:center;position:relative;overflow:hidden;}
+.qlabel{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;}
+.qexpr{font-family:'Orbitron',monospace;font-weight:700;font-size:clamp(28px,8.5vw,44px);line-height:1.1;
   color:var(--text);letter-spacing:1px;}
 .qexpr sup{font-size:.62em;}
 .qexpr .op{color:var(--purple);margin:0 .12em;}
 /* coeficiente (número) x parte literal (letras) */
 .coef{color:var(--gold);}
 .lit{color:var(--cyan);letter-spacing:.5px;}
-.qhint{font-size:12.5px;color:var(--text-muted);margin-top:12px;min-height:16px;}
 
 /* alternativas */
 .alts{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.alt{background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:16px 10px;
+.alt{background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:15px 10px;
   cursor:pointer;font-family:'Orbitron',monospace;font-weight:700;font-size:20px;color:var(--text);
   transition:border-color .12s,background .12s,transform .08s;user-select:none;
-  display:flex;align-items:center;justify-content:center;min-height:60px;text-align:center;}
+  display:flex;align-items:center;justify-content:center;min-height:58px;text-align:center;}
 .alt sup{font-size:.62em;}
 .alt.nao{font-family:'Inter',sans-serif;font-weight:700;font-size:14px;line-height:1.25;}
 .alt:hover:not(.locked){border-color:var(--purple);background:rgba(155,48,255,.08);}
@@ -81,46 +80,87 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 .alt.wrong .coef,.alt.wrong .lit{color:var(--red);}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 
-/* feedback de erro */
-.feedback{border-radius:12px;padding:14px 16px;font-size:13.5px;line-height:1.5;display:none;}
-.feedback.show{display:block;animation:fadeUp .25s;}
-.feedback.err{background:var(--red-pale);border:1px solid rgba(239,68,68,.3);}
-.feedback .fb-ans{font-weight:800;color:var(--text);}
-.feedback .fb-ans .val{font-family:'Orbitron',monospace;}
-.feedback .fb-tip{color:var(--text-muted);margin-top:6px;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-
-.btn{padding:14px;border-radius:12px;border:none;font-family:'Rajdhani',sans-serif;font-weight:700;
-  font-size:17px;letter-spacing:.5px;cursor:pointer;width:100%;transition:filter .12s,transform .08s;}
-.btn:active{transform:scale(.98);}
-.btn-purple{background:var(--purple);color:#fff;}
-.btn-purple:hover{filter:brightness(1.1);}
-.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text-muted);font-size:12px;padding:8px;font-family:'Inter';font-weight:600;}
-
-/* level-up flash */
-.flash{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:50;
-  background:rgba(17,17,31,.72);backdrop-filter:blur(2px);}
-.flash.show{display:flex;}
-.flash-card{text-align:center;animation:pop .4s cubic-bezier(.2,1.3,.4,1);}
-.flash-emoji{font-size:64px;}
-.flash-title{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:26px;margin-top:4px;}
-.flash-lv{font-family:'Orbitron',monospace;font-weight:800;font-size:40px;color:var(--green);margin-top:6px;}
-@keyframes pop{0%{opacity:0;transform:scale(.5)}70%{transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text-muted);
+  font-size:12px;padding:8px;font-family:'Inter';font-weight:600;border-radius:10px;
+  width:100%;cursor:pointer;transition:color .12s,border-color .12s;}
+.btn-ghost:hover{color:var(--text);border-color:rgba(255,255,255,.18);}
 
 /* tag beta + banner de nota extra */
 .beta-tag{font-family:'Inter',sans-serif;font-size:11px;font-weight:700;vertical-align:middle;
   padding:2px 8px;border-radius:999px;background:rgba(0,230,118,.13);color:var(--green);
   border:1px solid rgba(0,230,118,.35);letter-spacing:.02em;}
-.extra-banner{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:var(--radius);
-  background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.25);color:#d9c48a;font-size:12.5px;line-height:1.45;}
+.extra-banner{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius);
+  background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.25);color:#d9c48a;font-size:12.5px;line-height:1.4;}
 .extra-banner svg{width:18px;height:18px;flex-shrink:0;fill:var(--gold);}
 .extra-banner b{color:#f5c451;}
+
+/* ═══ MODAL (mesmo padrão da Tabuada: .level-overlay/.level-card) ═══ */
+.level-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:none;
+  align-items:center;justify-content:center;backdrop-filter:blur(2px);padding:16px;}
+.level-overlay.show{display:flex;}
+.level-card{background:var(--card);border:1.5px solid var(--border);border-radius:22px;
+  padding:34px 34px 28px;text-align:center;animation:levelUpPop .42s cubic-bezier(.2,1.3,.4,1);
+  box-shadow:0 24px 64px rgba(0,0,0,.4);max-width:360px;width:94vw;}
+@keyframes levelUpPop{0%{opacity:0;transform:scale(.6)}70%{transform:scale(1.06)}100%{opacity:1;transform:scale(1)}}
+.level-emoji{font-size:66px;line-height:1;margin-bottom:12px;}
+.level-title{font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;margin-bottom:6px;}
+.level-sub{font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.5;}
+.level-new{font-family:'Orbitron',monospace;font-size:20px;font-weight:800;color:var(--green);margin-bottom:22px;}
+
+/* corpo do modal de ERRO: mostra a questão, resposta certa e a regra */
+.mod-err-expr{font-family:'Orbitron',monospace;font-weight:700;font-size:clamp(22px,6vw,30px);
+  color:var(--text);letter-spacing:1px;margin-bottom:14px;}
+.mod-err-expr .op{color:var(--purple);margin:0 .12em;}
+.mod-ans{background:var(--red-pale);border:1px solid rgba(239,68,68,.3);border-radius:12px;
+  padding:12px 14px;font-size:13.5px;line-height:1.5;text-align:left;margin-bottom:18px;}
+.mod-ans .fb-ans{font-weight:800;color:var(--text);}
+.mod-ans .fb-ans .val{font-family:'Orbitron',monospace;color:var(--green);}
+.mod-ans .fb-tip{color:var(--text-muted);margin-top:6px;}
+
+.modal-btn{padding:14px;border-radius:12px;border:none;font-family:'Rajdhani',sans-serif;font-weight:700;
+  font-size:17px;letter-spacing:.5px;cursor:pointer;width:100%;transition:filter .12s,transform .08s;}
+.modal-btn:active{transform:scale(.98);}
+.modal-btn.ok{background:var(--purple);color:#fff;}
+.modal-btn.ok:hover{filter:brightness(1.1);}
+.modal-btn.repeat{background:var(--red);color:#fff;}
+.modal-btn.repeat:hover{filter:brightness(1.1);}
+.modal-sub-link{margin-top:8px;background:transparent;border:1px solid var(--border);
+  color:var(--text-muted);font-size:12px;font-family:'Inter';font-weight:600;
+  padding:8px;border-radius:10px;width:100%;cursor:pointer;}
+.modal-sub-link:hover{color:var(--text);}
 
 /* vitória final */
 .win{text-align:center;padding:20px;}
 .win-emoji{font-size:70px;}
 .win h2{font-family:'Rajdhani';font-size:28px;margin:8px 0;}
 .win p{color:var(--text-muted);font-size:14px;margin-bottom:16px;}
+.win .modal-btn{max-width:280px;margin:0 auto;}
+
+/* ═══ MOBILE: questão + alternativas + botão juntos sem rolar ═══ */
+@media(max-width:480px){
+  body{padding:10px;justify-content:flex-start;}
+  .wrap{gap:9px;max-width:100%;}
+  .title{font-size:19px;}
+  .extra-banner{padding:8px 12px;font-size:11.5px;gap:8px;}
+  .extra-banner svg{width:16px;height:16px;}
+  .head-center{gap:4px;}
+  .leaders{font-size:11px;line-height:1.35;}
+  .qcard{padding:16px 16px 14px;}
+  .qlabel{margin-bottom:8px;}
+  .qexpr{font-size:clamp(26px,10vw,38px);}
+  .alts{gap:8px;}
+  .alt{min-height:52px;padding:12px 8px;font-size:18px;}
+  .alt.nao{font-size:13px;}
+}
+/* telas bem baixas: enxuga banner e progresso pra caber tudo */
+@media(max-width:480px) and (max-height:720px){
+  .extra-banner{display:none;}
+  .prog{gap:8px;}
+}
+@media(max-width:360px){
+  .qexpr{font-size:clamp(24px,11vw,34px);}
+  .alt{min-height:48px;font-size:17px;}
+}
 </style>
 </head>
 <body>
@@ -135,7 +175,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
     <div class="leaders" id="leaders"></div>
   </div>
 
-  <div class="extra-banner">
+  <div class="extra-banner" id="extra-banner">
     <svg viewBox="0 0 24 24"><path d="M12 2 9.2 8.6 2 9.2l5.5 4.7L5.8 21 12 17.3 18.2 21l-1.7-7.1L22 9.2l-7.2-.6z"/></svg>
     <span>Este jogo vale nota extra: <b>+0,5</b> ao chegar ao <b>nível 100</b> e mais <b>+0,5</b> ao chegar ao <b>nível 200</b>.</span>
   </div>
@@ -150,20 +190,28 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
     <div class="qcard">
       <div class="qlabel" id="q-label">Simplifique</div>
       <div class="qexpr" id="q-expr"></div>
-      <div class="qhint" id="q-hint"></div>
     </div>
-    <div class="alts" id="alts" style="margin-top:14px"></div>
-    <div class="feedback err" id="feedback" style="margin-top:14px"></div>
-    <button class="btn btn-purple" id="next-btn" style="display:none;margin-top:14px"></button>
-    <button class="btn-ghost" id="reset-btn" style="margin-top:16px">↺ Reiniciar do nível 1</button>
+    <div class="alts" id="alts" style="margin-top:12px"></div>
+    <button class="btn-ghost" id="reset-btn" style="margin-top:14px">↺ Reiniciar do nível 1</button>
   </div>
 </div>
 
-<div class="flash" id="flash">
-  <div class="flash-card">
-    <div class="flash-emoji" id="flash-emoji">🎉</div>
-    <div class="flash-title" id="flash-title">Nível concluído!</div>
-    <div class="flash-lv" id="flash-lv">Nível 2</div>
+<!-- ═══ MODAL único: serve p/ ACERTO (avançar) e ERRO (repetir) ═══ -->
+<div class="level-overlay" id="modal">
+  <div class="level-card">
+    <div class="level-emoji" id="mod-emoji">🎉</div>
+    <div class="level-title" id="mod-title">Nível concluído!</div>
+    <div class="level-sub" id="mod-sub"></div>
+    <div class="level-new" id="mod-new"></div>
+
+    <!-- corpo exclusivo do modal de erro (escondido no acerto) -->
+    <div id="mod-err-body" style="display:none">
+      <div class="mod-err-expr" id="mod-err-expr"></div>
+      <div class="mod-ans" id="mod-ans"></div>
+    </div>
+
+    <button class="modal-btn ok" id="mod-btn-main"></button>
+    <button class="modal-sub-link" id="mod-btn-sub" style="display:none"></button>
   </div>
 </div>
 
@@ -174,7 +222,7 @@ import { db } from "/js/firebase-config.js";
 import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 /* ═══════════════════════════════════════════════════════════════
-   NÚCLEO GERADOR — 200 níveis, 7 fases.
+   NÚCLEO GERADOR — 200 níveis, 7 fases. (inalterado)
    ═══════════════════════════════════════════════════════════════ */
 function rngFrom(seedStr){let a=1779033703^seedStr.length;for(let i=0;i<seedStr.length;i++){a=Math.imul(a^seedStr.charCodeAt(i),3432918353);a=(a<<13)|(a>>>19);}return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 const pick=(r,arr)=>arr[Math.floor(r()*arr.length)];
@@ -392,6 +440,11 @@ let prog = { nivel_atual:1, melhor_nivel:1, bonus:0 };
 let nivelAtual = 1, melhorNivel = 1;
 let salt=0, current=null, locked=false;
 
+/* ═══ MODAL (mesmo padrão da Tabuada) ═══
+   Um só overlay serve para ACERTO (avançar) e ERRO (repetir). */
+function abrirModal(){ $('modal').classList.add('show'); }
+function fecharModal(){ $('modal').classList.remove('show'); }
+
 function render(){
   if(nivelAtual>MAX){renderWin();return;}
   const ph=phaseFor(nivelAtual);
@@ -405,9 +458,6 @@ function render(){
   current=genQuestion(nivelAtual,salt);
   $('q-label').textContent=current.op==='*'?'Multiplique':current.op==='/'?'Divida':'Simplifique';
   $('q-expr').innerHTML=exprHTML(current);
-  $('q-hint').textContent='';
-  $('feedback').classList.remove('show');
-  $('next-btn').style.display='none';
   locked=false;
 
   const box=$('alts'); box.innerHTML='';
@@ -433,17 +483,28 @@ function choose(i,el){
   }else{
     el.classList.add('wrong');
     els[current.options.findIndex(isCorrect)].classList.add('right');
-    // mostra resposta correta + regra
-    const corr=current.correct.kind==='nao'?'já está simplificado':termHTML(current.correct.term);
-    $('feedback').innerHTML=
-      `<div class="fb-ans">Resposta certa: <span class="val">${corr}</span></div>`+
-      `<div class="fb-tip">${current.ruleTip}</div>`;
-    $('feedback').classList.add('show');
-    const nb=$('next-btn');
-    nb.textContent='Tentar uma questão parecida →';
-    nb.style.display='block';
-    nb.onclick=()=>{ salt++; render(); }; // nova questão SIMILAR no MESMO nível
+    setTimeout(()=>modalErro(),520);   // deixa o aluno ver verde/vermelho, então abre modal
   }
+}
+
+/* ─── Modal de ERRO: questão + resposta certa + regra + "Repetir nível" ─── */
+function modalErro(){
+  const corr=current.correct.kind==='nao'?'já está simplificado':termHTML(current.correct.term);
+  $('mod-emoji').textContent='❌';
+  $('mod-title').textContent='Ops, não foi dessa vez';
+  $('mod-sub').textContent='Nível '+nivelAtual+' · confira a regra e tente de novo';
+  $('mod-new').textContent='';
+  $('mod-err-body').style.display='block';
+  $('mod-err-expr').innerHTML=exprHTML(current);
+  $('mod-ans').innerHTML=
+    `<div class="fb-ans">Resposta certa: <span class="val">${corr}</span></div>`+
+    `<div class="fb-tip">${current.ruleTip}</div>`;
+  const main=$('mod-btn-main');
+  main.className='modal-btn repeat';
+  main.textContent='🔁 Repetir nível';
+  main.onclick=()=>{ fecharModal(); salt++; render(); };  // nova questão do MESMO nível
+  $('mod-btn-sub').style.display='none';
+  abrirModal();
 }
 
 function advance(){
@@ -453,34 +514,48 @@ function advance(){
   melhorNivel=Math.max(melhorNivel,nivelAtual);
   const bonusDepois=bonusPorNivel(melhorNivel);
   saveProg({nivel_atual:nivelAtual,melhor_nivel:melhorNivel});
-  // flash a cada nível; comemoração maior ao trocar de fase ou bater marco de bônus
   const ph=phaseFor(concluido), nph=phaseFor(nivelAtual);
   const trocaFase = nivelAtual<=MAX && nph && ph && nph.name!==ph.name;
   const marcoBonus = bonusDepois>bonusAntes ? bonusDepois : 0;   // 0,5 ou 1,0 recém-conquistado
-  showFlash(trocaFase, nivelAtual, marcoBonus);
+  modalAcerto(trocaFase, nivelAtual, marcoBonus, nph);
 }
 
-function showFlash(trocaFase,lv,marcoBonus){
-  const f=$('flash');
+/* ─── Modal de ACERTO: passou de nível (igual Tabuada) ─── */
+function modalAcerto(trocaFase, lv, marcoBonus, nph){
+  $('mod-err-body').style.display='none';
+  if(lv>MAX){ renderWin(); return; }
+
   if(marcoBonus){
-    $('flash-emoji').textContent='🌟';
-    $('flash-title').textContent = marcoBonus>=1.0 ? 'Nota extra máxima!' : 'Nota extra garantida!';
-    $('flash-lv').textContent = '+'+marcoBonus.toFixed(1).replace('.',',')+' na média';
+    $('mod-emoji').textContent='🌟';
+    $('mod-title').textContent = marcoBonus>=1.0 ? 'Nota extra máxima!' : 'Nota extra garantida!';
+    $('mod-sub').textContent   = 'Você conquistou +'+marcoBonus.toFixed(1).replace('.',',')+' na média. Continue subindo!';
+    $('mod-new').textContent   = 'Nível '+lv;
+  } else if(trocaFase){
+    $('mod-emoji').textContent='⭐';
+    $('mod-title').textContent='Nova fase desbloqueada!';
+    $('mod-sub').textContent   = nph ? nph.name : '';
+    $('mod-new').textContent   = 'Nível '+lv;
   } else {
-    $('flash-emoji').textContent = lv>MAX?'🏆': trocaFase?'⭐':'✅';
-    $('flash-title').textContent = lv>MAX?'Você chegou ao topo!': trocaFase?'Nova fase desbloqueada!':'Nível concluído!';
-    $('flash-lv').textContent = lv>MAX?'200 / 200':('Nível '+lv);
+    $('mod-emoji').textContent='✅';
+    $('mod-title').textContent='Nível concluído!';
+    $('mod-sub').textContent   = 'Mandou bem — bora pro próximo.';
+    $('mod-new').textContent   = 'Nível '+lv;
   }
-  f.classList.add('show');
-  setTimeout(()=>{ f.classList.remove('show'); render(); }, (trocaFase||marcoBonus)?1100:650);
+  const main=$('mod-btn-main');
+  main.className='modal-btn ok';
+  main.textContent='Continuar →';
+  main.onclick=()=>{ fecharModal(); render(); };
+  $('mod-btn-sub').style.display='none';
+  abrirModal();
 }
 
 function renderWin(){
+  fecharModal();
   $('game').innerHTML=
     `<div class="win"><div class="win-emoji">🏆</div>
      <h2>Escalada completa!</h2>
      <p>Você venceu os 200 níveis — soma, subtração, multiplicação e divisão de termos algébricos, com positivos e negativos.</p>
-     <button class="btn btn-purple" onclick="resetAll()">Escalar de novo</button></div>`;
+     <button class="modal-btn ok" onclick="resetAll()">Escalar de novo</button></div>`;
   $('prog-fill').style.width='100%';
   $('prog-cur').textContent='200';
   $('badge-nivel').textContent='Concluído';

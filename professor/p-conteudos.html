@@ -28,6 +28,7 @@
   .tipo{flex-shrink:0;font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px}
   .tipo.teorica{background:var(--purple-pale);color:#c98aff;border:1px solid rgba(155,48,255,.3)}
   .tipo.exercicios{background:var(--gold-pale);color:var(--gold);border:1px solid rgba(240,165,0,.3)}
+  .tipo.projeto{background:rgba(47,158,220,.14);color:#5fb0e6;border:1px solid rgba(47,158,220,.35)}
   .item-acts{display:flex;gap:8px;margin-top:auto;flex-wrap:wrap}
 
   .aplic{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-top:2px}
@@ -99,6 +100,7 @@
       <div class="tipo-pick">
         <div class="tipo-opt on" id="optTeorica" onclick="setTipo('teorica')">📖 Teórica</div>
         <div class="tipo-opt" id="optExercicios" onclick="setTipo('exercicios')">✏️ Exercícios</div>
+        <div class="tipo-opt" id="optProjeto" onclick="setTipo('projeto')">📐 Projeto</div>
       </div></div>
     <div class="f"><label class="f-label">Arquivo HTML (da pasta /conteudos)</label>
       <div class="arq-prefix"><span class="pfx">/conteudos/</span><input class="input" id="mArq" placeholder="numeros-complexos.html"></div>
@@ -173,13 +175,14 @@ function turmasDaAula(bibId){
 }
 
 function render(){
-  const nT=itens.filter(i=>i.tipo==="teorica").length, nE=itens.filter(i=>i.tipo==="exercicios").length;
+  const nT=itens.filter(i=>i.tipo==="teorica").length, nE=itens.filter(i=>i.tipo==="exercicios").length, nP=itens.filter(i=>i.tipo==="projeto").length;
   document.getElementById("sub").textContent=`${itens.length} aula(s) catalogada(s)`;
   document.getElementById("stats").innerHTML=`
     <div class="stat-card"><div><div class="stat-label">Total</div><div class="stat-value purple">${itens.length}</div></div></div>
     <div class="stat-card"><div><div class="stat-label">Teóricas</div><div class="stat-value purple">${nT}</div></div></div>
-    <div class="stat-card"><div><div class="stat-label">Exercícios</div><div class="stat-value gold">${nE}</div></div></div>`;
-  const tipos=[["todos","Todos"],["teorica","Teóricas"],["exercicios","Exercícios"]];
+    <div class="stat-card"><div><div class="stat-label">Exercícios</div><div class="stat-value gold">${nE}</div></div></div>
+    <div class="stat-card"><div><div class="stat-label">Projetos</div><div class="stat-value" style="color:#5fb0e6">${nP}</div></div></div>`;
+  const tipos=[["todos","Todos"],["teorica","Teóricas"],["exercicios","Exercícios"],["projeto","Projetos"]];
   document.getElementById("filtros").innerHTML=tipos.map(([v,l])=>`<button class="filtro ${v===filtroTipo?"active":""}" data-v="${v}">${l}</button>`).join("");
   document.querySelectorAll("#filtros .filtro").forEach(b=>b.onclick=()=>{ filtroTipo=b.dataset.v; render(); });
 
@@ -196,7 +199,7 @@ function render(){
     <div class="item">
       <div class="item-top">
         <div><div class="item-nome">${i.nome}</div><div class="item-arq">/conteudos/${i.arquivo}</div></div>
-        <span class="tipo ${i.tipo}">${i.tipo==="teorica"?"teórica":"exercícios"}</span>
+        <span class="tipo ${i.tipo}">${i.tipo==="teorica"?"teórica":i.tipo==="projeto"?"projeto":"exercícios"}</span>
       </div>
       ${aplicHtml}
       <div class="item-acts">
@@ -210,7 +213,7 @@ function render(){
 }
 document.getElementById("busca").addEventListener("input",e=>{ filtro=e.target.value.toLowerCase(); render(); });
 
-function setTipo(t){ tipoSel=t; document.getElementById("optTeorica").classList.toggle("on",t==="teorica"); document.getElementById("optExercicios").classList.toggle("on",t==="exercicios"); }
+function setTipo(t){ tipoSel=t; document.getElementById("optTeorica").classList.toggle("on",t==="teorica"); document.getElementById("optExercicios").classList.toggle("on",t==="exercicios"); document.getElementById("optProjeto").classList.toggle("on",t==="projeto"); }
 window.setTipo = setTipo;
 function limpaArq(v){ return v.trim().replace(/^\/?conteudos\//i,""); }
 
@@ -219,6 +222,7 @@ function limpaArq(v){ return v.trim().replace(/^\/?conteudos\//i,""); }
 function tipoDaFicha(v){
   v=(v||"").toLowerCase();
   if(v==="teorica"||v==="teoria") return "teorica";
+  if(v==="projeto") return "projeto";
   if(["exercicios","atividade","lista","prova","revisao","jogo","gabarito"].includes(v)) return "exercicios";
   return null;
 }

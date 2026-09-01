@@ -9,19 +9,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
   <!-- ═══ FICHA DA AULA (lida pelo gerador do index — não remover) ═══ -->
-  <meta name="aula:id"       content="expressoes-representacao-lista">
-  <meta name="aula:tipo"     content="atividade">
-  <meta name="aula:eixo"     content="algebra">
-  <meta name="aula:bimestre" content="3">
-  <meta name="aula:titulo"   content="Representação Algébrica (Parte 1)">
-  <meta name="aula:resumo"   content="Lista de expressões algébricas: escrever a expressão a partir de frases (dobro, metade, subtraído de, quadrado…) e provar a diferença que o parêntese faz.">
-  <meta name="aula:tema"     content="Expressões Algébricas">
-  <!-- ┌─────────────────────────────────────────────────────────────┐
-       │ MODELO DE PÁGINA DE CONTEÚDO / EXERCÍCIOS · Sistema de Mat.  │
-       │ Preencha:  TÍTULO • TURMA/DATA/TEMA • as SEÇÕES • EXERCÍCIOS │
-       │ Blocos disponíveis estão marcados com comentários abaixo.    │
-       └─────────────────────────────────────────────────────────────┘ -->
-  <title>Lista — Representação Algébrica — Sistema de Matemática</title>
+  <meta name="aula:id"       content="razao-e-proporcao-teoria">
+  <meta name="aula:tipo"     content="teoria">
+  <meta name="aula:eixo"     content="grandezas">
+  <meta name="aula:bimestre" content="4">
+  <meta name="aula:titulo"   content="Razão e Proporção">
+  <meta name="aula:resumo"   content="Razão como comparação, proporção e a propriedade fundamental (meios e extremos).">
+  <meta name="aula:tema"     content="Razão e Proporção">
+  <title>Teoria — Razão e Proporção — Sistema de Matemática</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -29,9 +24,7 @@
   <link rel="stylesheet" href="/css/main.css"/>
 
   <style>
-  /* ═══════════════ FALLBACK DO SHELL ═══════════════
-     :where() = especificidade 0 → seu /css/main.css SEMPRE vence no site.
-     Isto só entra em ação quando o main.css não está presente (preview). */
+  /* ═══ FALLBACK DO SHELL (só entra se o main.css não estiver presente) ═══ */
   :where(body){margin:0;background:var(--bg,#0d0a2e);color:var(--text,#f1eefb);font-family:'Inter',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
   :where(.layout){display:flex;min-height:100vh}
   :where(.sidebar){width:230px;flex-shrink:0;background:var(--bg2,#15102a);border-right:1px solid var(--border,rgba(255,255,255,.08))}
@@ -42,32 +35,26 @@
   :where(.content){flex:1;padding:22px 18px 64px}
   @media(max-width:820px){:where(.sidebar){display:none}}
 
-  /* fallback da sidebar (só aparece se o auth.js não montar a real) */
   .sb-fb{padding:18px 16px;display:flex;flex-direction:column;gap:4px}
-  .sb-fb img{width:104px;margin:2px auto 14px;display:block}
   .sb-fb .sb-h{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted,rgba(255,255,255,.5));margin:10px 6px 4px}
   .sb-fb a{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:10px;color:var(--text,#f1eefb);text-decoration:none;font-size:13px;font-weight:600}
   .sb-fb a:hover{background:rgba(255,255,255,.05)}
 
-  /* ═══════════════ SISTEMA DE CONTEÚDO (classes au-* / ex-*) ═══════════════ */
+  /* ═══ SISTEMA DE CONTEÚDO (classes au-* / ex-*) ═══ */
   .au{max-width:720px;margin:0 auto}
 
-  /* — Cabeçalho da aula — */
   .au-hero{position:relative;overflow:hidden;text-align:center;padding:26px 22px;margin-bottom:22px;border-radius:18px;border:1px solid var(--border,rgba(255,255,255,.08));background:linear-gradient(135deg,rgba(124,92,252,.16),rgba(47,158,220,.07))}
   .au-hero::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 78% -10%,rgba(240,165,0,.10),transparent 55%);pointer-events:none}
-  .au-hero-logo{width:52px;height:auto;margin-bottom:10px;filter:drop-shadow(0 3px 10px rgba(124,92,252,.5))}
   .au-hero-eyebrow{font-size:10.5px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold,#f0a500);margin-bottom:6px}
   .au-hero-title{font-family:'Rajdhani',sans-serif;font-size:30px;font-weight:700;line-height:1.05;margin:0}
   .au-hero-meta{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-top:14px}
   .au-meta{font-size:11px;font-weight:700;padding:4px 11px;border-radius:20px;background:rgba(255,255,255,.06);border:1px solid var(--border,rgba(255,255,255,.1));color:rgba(255,255,255,.8)}
   .au-meta.gold{color:var(--gold,#f0a500);background:rgba(240,165,0,.1);border-color:rgba(240,165,0,.3)}
 
-  /* — Navegação rápida (opcional) — */
   .au-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
   .au-nav a{font-size:12px;font-weight:600;text-decoration:none;padding:7px 13px;border-radius:20px;color:var(--text-muted,rgba(255,255,255,.6));background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08))}
   .au-nav a:hover{color:var(--text,#fff);border-color:rgba(124,92,252,.5)}
 
-  /* — Seção — */
   .au-sec{margin-bottom:30px;scroll-margin-top:80px}
   .au-sec-head{display:flex;align-items:center;gap:11px;margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid var(--border,rgba(255,255,255,.08))}
   .au-sec-num{width:26px;height:26px;flex-shrink:0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(135deg,var(--purple,#7c5cfc),#5a3fd6)}
@@ -76,30 +63,25 @@
   .tag-teoria{background:rgba(124,92,252,.15);border:1px solid rgba(124,92,252,.35);color:#b6a2ff}
   .tag-pratica{background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.32);color:#3ddc84}
 
-  /* — Texto / prosa — */
   .au-p{font-size:14px;line-height:1.75;color:rgba(255,255,255,.82);margin:0 0 12px}
   .au-p b,.au-p strong{color:#fff;font-weight:700}
 
-  /* — Caixa de conceito / definição (roxo) — */
   .au-def{position:relative;background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-left:4px solid var(--purple,#7c5cfc);border-radius:12px;padding:15px 17px;margin:0 0 14px}
   .au-def-label{font-size:10.5px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--purple,#a48bff);margin-bottom:7px}
   .au-def-body{font-size:14px;line-height:1.7;color:rgba(255,255,255,.85)}
   .au-def-body b{color:#fff}
 
-  /* — Caixa de fórmula (dourado, destaque) — */
   .au-formula{text-align:center;background:linear-gradient(135deg,#1c1444,#15102e);border:1px solid rgba(240,165,0,.28);border-radius:14px;padding:18px 16px;margin:0 0 12px}
   .au-formula-main{font-size:24px;font-weight:700;color:#fff;letter-spacing:.3px;line-height:1.4}
   .au-formula-note{font-size:12px;color:var(--text-muted,rgba(255,255,255,.6));margin-top:8px}
   .au-formula-note b{color:var(--gold,#f0a500)}
 
-  /* grade de fórmulas menores lado a lado */
   .au-fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 12px}
   @media(max-width:560px){.au-fgrid{grid-template-columns:1fr}}
   .au-fmini{background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:12px;padding:13px 14px}
   .au-fmini-name{font-size:11px;font-weight:700;color:var(--text-muted,rgba(255,255,255,.6));margin-bottom:6px}
   .au-fmini-eq{font-size:18px;font-weight:700;color:#fff}
 
-  /* — Exemplo resolvido — */
   .au-ex{background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:14px;padding:16px 18px;margin:0 0 14px}
   .au-ex-head{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--green,#3ddc84);margin-bottom:11px}
   .au-ex-prob{font-size:15px;font-weight:700;color:#fff;margin-bottom:12px;padding-bottom:12px;border-bottom:1px dashed var(--border,rgba(255,255,255,.12))}
@@ -109,19 +91,13 @@
   .au-steps b{color:#fff}
   .au-res{margin-top:12px;padding:10px 14px;border-radius:10px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.28);font-size:14px;font-weight:700;color:#3ddc84}
 
-  /* — Dica / Atenção — */
   .au-tip,.au-warn{display:flex;gap:11px;align-items:flex-start;border-radius:12px;padding:14px 16px;margin:0 0 14px;font-size:13px;line-height:1.6}
   .au-tip{background:rgba(47,158,220,.07);border:1px solid rgba(47,158,220,.28);color:#9dd3f5}
   .au-warn{background:rgba(240,165,0,.07);border:1px solid rgba(240,165,0,.28);color:#f3c25f}
   .au-tip b,.au-warn b{color:#fff}
   .au-tip .ic,.au-warn .ic{font-size:17px;flex-shrink:0;line-height:1.4}
 
-  /* — Figura (foto do quadro / imagem) — */
-  .au-fig{margin:0 0 14px;border-radius:12px;overflow:hidden;border:1px solid var(--border,rgba(255,255,255,.08))}
-  .au-fig img{display:block;width:100%}
-  .au-fig figcaption{font-size:11.5px;color:var(--text-muted,rgba(255,255,255,.55));padding:8px 12px;background:var(--card,#181233)}
-
-  /* ═══════════════ EXERCÍCIOS ═══════════════ */
+  /* ═══ EXERCÍCIOS ═══ */
   .ex-list{display:flex;flex-direction:column;gap:12px}
   .ex{background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:14px;padding:16px 17px}
   .ex-top{display:flex;align-items:center;gap:11px;margin-bottom:11px}
@@ -146,24 +122,8 @@
   .ex-answer-in p{margin:0 0 6px;font-size:13.5px;line-height:1.65;color:rgba(255,255,255,.82)}
   .ex-answer-in .final{font-weight:700;color:#3ddc84}
 
-  /* — Rodapé / chamada — */
-  .au-foot{margin-top:8px;text-align:center;background:linear-gradient(135deg,rgba(124,92,252,.12),rgba(240,165,0,.06));border:1px solid var(--border,rgba(255,255,255,.1));border-radius:16px;padding:22px 20px}
-  .au-foot-title{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;margin-bottom:5px}
-  .au-foot-desc{font-size:12.5px;color:var(--text-muted,rgba(255,255,255,.6));line-height:1.55;margin-bottom:14px}
-  .au-btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:700;font-size:14px;color:#fff;padding:11px 22px;border-radius:12px;background:linear-gradient(135deg,var(--purple,#7c5cfc),#5a3fd6);box-shadow:0 6px 18px rgba(124,92,252,.35)}
-  .au-btn:hover{filter:brightness(1.08)}
-  .au-note{font-size:11px;color:var(--text-muted,rgba(255,255,255,.45));margin-top:14px}
 
-  /* — Aulas relacionadas (SÓ em aula teórica) — */
-  .au-rel{text-align:left;background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:16px;padding:16px 18px}
-  .au-rel-title{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
-  .au-rel-item{display:flex;align-items:center;justify-content:space-between;gap:10px;text-decoration:none;color:var(--text,#f1eefb);font-size:13.5px;font-weight:600;padding:11px 13px;border-radius:11px;background:rgba(255,255,255,.03);border:1px solid var(--border,rgba(255,255,255,.07));margin-bottom:8px}
-  .au-rel-item:last-child{margin-bottom:0}
-  .au-rel-item:hover{border-color:rgba(124,92,252,.45)}
-  .au-rel-item span{color:var(--purple,#b6a2ff);font-weight:800}
-
-  /* — Helpers de matemática (HTML puro, sem dependência) — */
-  .pot{font-weight:700}
+  /* — Helpers de matemática — */
   .frac{display:inline-flex;flex-direction:column;text-align:center;vertical-align:middle;font-size:.82em;line-height:1.02;margin:0 .18em}
   .frac>span:first-child{border-bottom:1.6px solid currentColor;padding:0 .32em}
   .frac>span:last-child{padding:0 .32em}
@@ -171,16 +131,7 @@
 
   :focus-visible{outline:2px solid var(--purple,#7c5cfc);outline-offset:2px}
   @media(prefers-reduced-motion:reduce){.ex-answer,.ex-toggle .arw{transition:none}}
-  
-  /* ═══ GATE DE RESOLUÇÃO (liberado só quando a atividade está "corrigido") ═══ */
-  .res-gate{display:none}
-  html.res-liberado .res-gate{display:block}
-  html.res-liberado li .res-gate{margin-top:8px}
-  .res-gate .ex-toggle{margin-top:2px}
-  .res-aviso{display:flex;gap:11px;align-items:flex-start;border-radius:12px;padding:14px 16px;margin:0 0 18px;font-size:13px;line-height:1.6;background:rgba(240,165,0,.07);border:1px solid rgba(240,165,0,.28);color:#f3c25f}
-  .res-aviso b{color:#fff}
-  .res-aviso-ic{font-size:17px;flex-shrink:0;line-height:1.4}
-</style>
+  </style>
 </head>
 <body>
 <div class="layout">
@@ -199,82 +150,144 @@
 
         <!-- ════════ CABEÇALHO ════════ -->
         <header class="au-hero">
-          <div class="au-hero-eyebrow">LISTA DE EXERCÍCIOS · Matemática · 8º ano · 3º bimestre</div>
-          <h1 class="au-hero-title">Representação Algébrica (Parte 1)</h1>
+          <div class="au-hero-eyebrow">TEORIA · Matemática · 8º ano · 4º bimestre</div>
+          <h1 class="au-hero-title">Razão e Proporção</h1>
           <div class="au-hero-meta">
-            <span class="au-meta gold">Escrever expressões</span>
+            <span class="au-meta gold">Grandezas</span>
             <span class="au-meta">Turmas 8D–8H</span>
-            <span class="au-meta">7 itens (a–g)</span>
+            <span class="au-meta">Aula 1 da unidade</span>
           </div>
         </header>
 
-        <!-- ════════ EXERCÍCIOS ════════ -->
-        <section class="au-sec" id="exercicios">
+        <!-- Navegação rápida -->
+        <nav class="au-nav">
+          <a href="#s1">1 · Razão</a>
+          <a href="#s2">2 · Proporção</a>
+          <a href="#s3">3 · Exemplo</a>
+          <a href="#s4">4 · Comparando festas</a>
+        </nav>
+
+        <!-- ════════ SEÇÃO 1 — RAZÃO ════════ -->
+        <section class="au-sec" id="s1">
           <div class="au-sec-head">
-            <span class="au-sec-num">✏️</span>
-            <span class="au-sec-title">Exercícios</span>
-            <span class="au-sec-tag tag-pratica">Pratique</span>
+            <span class="au-sec-num">1</span>
+            <span class="au-sec-title">O que é razão?</span>
+            <span class="au-sec-tag tag-teoria">Teoria</span>
           </div>
-          <p class="au-p" style="margin-bottom:16px">Resolva no caderno primeiro. Depois clique em <b>“Ver resposta”</b> para conferir. Chame o número de <b>x</b> — e, quando aparecer um <b>segundo número</b>, chame de <b>y</b>.</p>
 
-          <div class="ex-list">
+          <p class="au-p">A razão <b>compara duas grandezas</b> por meio de uma divisão. Escrevemos a razão de <b>a</b> para <b>b</b> como uma fração:</p>
 
-            <!-- a -->
-            <div class="ex">
-              <div class="ex-top"><span class="ex-num">a</span><span class="ex-tag lv-facil">Fácil</span></div>
-              <div class="ex-stmt">O <b>dobro</b> de um número, <b>mais 5</b>.</div>
-              <div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
-              <div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resposta</div><p>Dobro de x → 2x; mais 5 → soma 5.</p><p class="final">2x + 5</p></div></div></div>
-            </div>
+          <div class="au-formula">
+            <div class="au-formula-main"><span class="frac"><span>a</span><span>b</span></span></div>
+          </div>
 
-            <!-- b -->
-            <div class="ex">
-              <div class="ex-top"><span class="ex-num">b</span><span class="ex-tag lv-medio">Médio</span></div>
-              <div class="ex-stmt"><b>Dois</b> menos a <b>metade</b> de um número.</div>
-              <div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
-              <div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resposta</div><p>Começa no 2 e tira a metade do número (<span class="frac"><span>x</span><span>2</span></span>).</p><p class="final">2 − <span class="frac"><span>x</span><span>2</span></span></p></div></div></div>
-            </div>
+          <div class="au-def">
+            <div class="au-def-label">Antecedente e consequente</div>
+            <div class="au-def-body">Chamamos <b>a</b> de <b>antecedente</b> e <b>b</b> de <b>consequente</b>.</div>
+          </div>
 
-            <!-- c -->
-            <div class="ex">
-              <div class="ex-top"><span class="ex-num">c</span><span class="ex-tag lv-medio">Médio</span></div>
-              <div class="ex-stmt">Um número <b>subtraído de 9</b>.</div>
-              <div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
-              <div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resposta · atenção à ordem</div><p>“Subtraído de 9” significa tirar o número <b>de dentro do 9</b> → 9 − x. Cuidado: <b>não</b> é x − 9.</p><p class="final">9 − x</p></div></div></div>
-            </div>
+          <p class="au-p">Exemplo: em uma turma com <b>2 meninos</b> para cada <b>3 meninas</b>, a razão de meninos para meninas é <b><span class="frac"><span>2</span><span>3</span></span></b>. Porém, a razão de meninas para meninos é <b><span class="frac"><span>3</span><span>2</span></span></b>.</p>
 
-            <!-- d -->
-            <div class="ex">
-              <div class="ex-top"><span class="ex-num">d</span><span class="ex-tag lv-facil">Fácil</span></div>
-              <div class="ex-stmt">Um número <b>vezes ele mesmo</b>.</div>
-              <div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
-              <div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resposta</div><p>x multiplicado por x → x · x, que escrevemos como potência.</p><p class="final">x<sup>2</sup></p></div></div></div>
-            </div>
+          <div class="au-warn">
+            <span class="ic">⚠️</span>
+            <div>Ou seja, a <b>ORDEM IMPORTA!</b> Além disso, <b>SEMPRE SIMPLIFIQUE</b>.</div>
+          </div>
 
-            <!-- e -->
-            <div class="ex">
-              <div class="ex-top"><span class="ex-num">e</span><span class="ex-tag lv-medio">Médio</span></div>
-              <div class="ex-stmt">O <b>quadrado</b> de um número, <b>aumentado em 5</b>.</div>
-              <div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
-              <div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resposta</div><p>Primeiro o quadrado (x²), depois soma 5. É diferente de (x + 5)², que elevaria a soma inteira ao quadrado.</p><p class="final">x<sup>2</sup> + 5</p></div></div></div>
-            </div>
+          <div class="au-def">
+            <div class="au-def-label">Fração irredutível</div>
+            <div class="au-def-body">Simplificar é dividir os dois termos da razão por um mesmo número. Quando não for mais possível, chegamos à <b>fração irredutível</b>.</div>
+          </div>
 
-            <!-- f -->
-            <div class="ex">
-              <div class="ex-top"><span class="ex-num">f</span><span class="ex-tag lv-medio">Médio</span></div>
-              <div class="ex-stmt"><b>Duas vezes</b> um número <b>menos cinco vezes</b> outro número.</div>
-              <div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
-              <div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resposta</div><p>São dois números diferentes → duas letras (x e y). Duas vezes x → 2x; menos cinco vezes y → − 5y.</p><p class="final">2x − 5y</p></div></div></div>
-            </div>
+          <div class="au-formula">
+            <div class="au-formula-main"><span class="frac"><span>18</span><span>12</span></span> = <span class="frac"><span>9</span><span>6</span></span> = <span class="frac"><span>3</span><span>2</span></span></div>
+            <div class="au-formula-note">dividindo por <b>2</b> e depois por <b>3</b> — <b>3/2</b> é a fração irredutível</div>
+          </div>
+        </section>
 
-            <!-- g -->
-            <div class="ex">
-              <div class="ex-top"><span class="ex-num">g</span><span class="ex-tag lv-dificil">Desafio</span></div>
-              <div class="ex-stmt"><b>Prove</b> que “o <b>triplo</b> de um número, <b>mais 1</b>” é <b>diferente</b> de “o triplo <b>de (um número mais 1)</b>”.</div>
-              <div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button>
-              <div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>As duas expressões: <b>3x + 1</b> e <b>3(x + 1)</b>.</p><p>Testando com x = 2 → 3·2 + 1 = <b>7</b>; &nbsp; 3(2 + 1) = 3·3 = <b>9</b>.</p><p class="final">7 ≠ 9 → são diferentes. O parêntese obriga a somar antes de multiplicar.</p></div></div></div>
-            </div>
+        <!-- ════════ SEÇÃO 2 — PROPORÇÃO ════════ -->
+        <section class="au-sec" id="s2">
+          <div class="au-sec-head">
+            <span class="au-sec-num">2</span>
+            <span class="au-sec-title">O que é proporção?</span>
+            <span class="au-sec-tag tag-teoria">Teoria</span>
+          </div>
 
+          <p class="au-p"><b>Proporção</b> é a <b>igualdade entre duas razões</b>. Ela diz que duas comparações possuem o mesmo “tamanho”, mesmo com números diferentes.</p>
+
+          <div class="au-formula">
+            <div class="au-formula-main"><span class="frac"><span>a</span><span>b</span></span> = <span class="frac"><span>c</span><span>d</span></span></div>
+            <div class="au-formula-note">lê-se “<b>a</b> está para <b>b</b> como <b>c</b> está para <b>d</b>”</div>
+          </div>
+
+          <div class="au-def">
+            <div class="au-def-label">Propriedade fundamental</div>
+            <div class="au-def-body">Em uma proporção, o <b>produto dos meios</b> é igual ao <b>produto dos extremos</b>. Em <span class="frac"><span>a</span><span>b</span></span> = <span class="frac"><span>c</span><span>d</span></span>, os <b>extremos</b> são <b>a</b> e <b>d</b>, e os <b>meios</b> são <b>b</b> e <b>c</b>:</div>
+          </div>
+
+          <div class="au-formula">
+            <div class="au-formula-main">a · d = b · c</div>
+          </div>
+
+          <div class="au-warn">
+            <span class="ic">⚠️</span>
+            <div><b>OBS — cuidado com a ordem:</b> as duas razões precisam comparar as grandezas na mesma sequência.</div>
+          </div>
+        </section>
+
+        <!-- ════════ SEÇÃO 3 — EXEMPLO RESOLVIDO ════════ -->
+        <section class="au-sec" id="s3">
+          <div class="au-sec-head">
+            <span class="au-sec-num">3</span>
+            <span class="au-sec-title">Exemplo resolvido</span>
+            <span class="au-sec-tag tag-pratica">Prática</span>
+          </div>
+
+          <div class="au-ex">
+            <div class="au-ex-head">🧮 Exemplo</div>
+            <div class="au-ex-prob">Uma receita leva 2 xícaras de farinha para cada 3 ovos. Mantendo a proporção, quantas xícaras de farinha são necessárias para 9 ovos?</div>
+            <ol class="au-steps">
+              <li><b>Passo 1</b> — montar a proporção, farinha → ovos dos dois lados: <span class="frac"><span>2</span><span>3</span></span> = <span class="frac"><span>x</span><span>9</span></span>.</li>
+              <li><b>Passo 2</b> — utilizar a propriedade fundamental e multiplicar cruzado: 3 · x = 2 · 9 → <b>3x = 18</b>.</li>
+              <li><b>Passo 3</b> — resolver a equação: x = <span class="frac"><span>18</span><span>3</span></span> → <b>x = 6</b>.</li>
+            </ol>
+            <div class="au-res">Logo, serão necessárias 6 xícaras de farinha.</div>
+          </div>
+        </section>
+
+        <!-- ════════ SEÇÃO 4 — COMPARANDO COM RAZÃO ════════ -->
+        <section class="au-sec" id="s4">
+          <div class="au-sec-head">
+            <span class="au-sec-num">4</span>
+            <span class="au-sec-title">Comparando situações com a razão</span>
+            <span class="au-sec-tag tag-pratica">Prática</span>
+          </div>
+
+          <p class="au-p">A razão também serve para <b>comparar de forma justa</b> situações com números diferentes. Um número absoluto maior nem sempre significa um resultado melhor — o que vale é a <b>proporção</b>.</p>
+
+          <div class="au-ex">
+            <div class="au-ex-head">🎉 Exemplo 2 — qual festa foi mais bem-sucedida?</div>
+            <div class="au-ex-prob">Na festa do <b>Lucas</b>, foram convidadas 40 pessoas e apenas 30 compareceram. Na festa da <b>Mariana</b>, foram convidadas 50 pessoas e apenas 35 compareceram. Qual festa teve mais sucesso em presença?</div>
+            <ol class="au-steps">
+              <li><b>Passo 1</b> — montar a razão <span class="frac"><span>presentes</span><span>convidados</span></span> de cada festa.</li>
+              <li><b>Lucas:</b> <span class="frac"><span>30</span><span>40</span></span>, simplificando por 10 → <span class="frac"><span>3</span><span>4</span></span> = 0,75 = <b>75% de presença</b>.</li>
+              <li><b>Mariana:</b> <span class="frac"><span>35</span><span>50</span></span>, simplificando por 5 → <span class="frac"><span>7</span><span>10</span></span> = 0,7 = <b>70% de presença</b>.</li>
+            </ol>
+            <div class="au-res">Mesmo Mariana tendo mais pessoas em número absoluto, a festa de Lucas teve proporção maior de presentes (75% &gt; 70%).</div>
+          </div>
+
+          <div class="au-tip">
+            <span class="ic">💡</span>
+            <div>Com a <b>proporção</b> também dá para prever cenários. Mantendo os <b>75% de presença</b> do Lucas, quantas pessoas teriam ido se ele convidasse <b>200</b>?</div>
+          </div>
+
+          <div class="au-ex">
+            <div class="au-ex-head">🧮 Usando a proporção para prever</div>
+            <ol class="au-steps">
+              <li><b>Passo 1</b> — montar a proporção com a razão do Lucas: <span class="frac"><span>3</span><span>4</span></span> = <span class="frac"><span>x</span><span>200</span></span>.</li>
+              <li><b>Passo 2</b> — multiplicar cruzado (propriedade fundamental): 4 · x = 3 · 200 → <b>4x = 600</b>.</li>
+              <li><b>Passo 3</b> — resolver: x = <span class="frac"><span>600</span><span>4</span></span> → <b>x = 150</b>.</li>
+            </ol>
+            <div class="au-res">Convidando 200 pessoas com os mesmos 75%, teriam comparecido 150 pessoas.</div>
           </div>
         </section>
 
@@ -290,6 +303,12 @@
     btn.setAttribute('aria-expanded', open);
     btn.querySelector('.txt').textContent = open ? 'Ocultar resposta' : 'Ver resposta';
   }
+  document.querySelectorAll('.au-nav a').forEach(a=>{
+    a.addEventListener('click',e=>{
+      const t=document.querySelector(a.getAttribute('href'));
+      if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth',block:'start'});}
+    });
+  });
 </script>
 
 <script type="module">
@@ -297,7 +316,7 @@
     try {
       const m = await import('/js/auth.js');
       m.renderSidebarAluno && m.renderSidebarAluno('sidebar', 'conteudos');
-    } catch (_) {}
+    } catch (_) { /* preview / standalone */ }
     const sb = document.getElementById('sidebar');
     if (sb && !sb.children.length) {
       sb.innerHTML = `<div class="sb-fb">
@@ -311,10 +330,6 @@
       </div>`;
     }
   })();
-</script>
-<script type="module">
-  import { gateResolucao } from "/js/gate-resolucao.js";
-  gateResolucao();
 </script>
 </body>
 </html>

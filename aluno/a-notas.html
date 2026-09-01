@@ -71,6 +71,7 @@
     .prog-icon.purple{background:var(--purple-pale);color:#b26bff}
     .prog-icon.gold{background:var(--gold-pale);color:var(--gold)}
     .prog-icon.grey{background:rgba(255,255,255,.05);color:var(--text-muted)}
+    .prog-icon.cyan{background:rgba(0,212,255,.12);color:#00d4ff}
     .prog-body{flex:1;min-width:0}
     .prog-title{font-size:13px;font-weight:700;margin-bottom:1px}
     .prog-desc{font-size:11px;color:var(--text-muted);line-height:1.4}
@@ -81,6 +82,7 @@
     .pbar-fill.green{background:linear-gradient(90deg,#16a34a,#22C55E)}
     .pbar-fill.orange{background:linear-gradient(90deg,#c98900,#f0a500)}
     .pbar-fill.purple{background:linear-gradient(90deg,var(--purple-dark),var(--purple))}
+    .pbar-fill.cyan{background:linear-gradient(90deg,#0097c4,#00d4ff)}
     .pbar-label{font-size:10.5px;font-weight:700;white-space:nowrap;color:var(--text-muted)}
     .prog-right{text-align:right;flex-shrink:0;min-width:60px}
     .pts{font-size:16px;font-weight:800}
@@ -198,7 +200,7 @@
 import { requireAluno, renderSidebarAluno, clearSession, getSession } from "/js/auth.js";
 import {
   CAMPOS_NOTA, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, EXTRA_RANK_ATIV4, EXTRA_NIVEL_PERFIL,
-  BIMESTRE, setBimestre, camposAtivos, bonusAtivo, bonusConfig, fmtNota, mensagemPorNota, montarBoletim, notasLiberadas,
+  BIMESTRE, setBimestre, camposAtivos, bonusAtivo, bonusConfig, fmtNota, mensagemPorNota, montarBoletim, notasLiberadas, campoPendente, campoDiferido,
 } from "/js/notas.js";
 import { BIMESTRES, bimestreAtual } from "/js/constants.js";
 import { montarSeletorBimestre } from "/js/bimestre-seletor.js";
@@ -235,17 +237,32 @@ const IC = {
   triangulo:`<svg viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/></svg>`,
   mao:     `<svg viewBox="0 0 24 24"><path d="M13 2a1.5 1.5 0 0 0-1.5 1.5V10h-1V4.5a1.5 1.5 0 0 0-3 0V10h-1V6.5a1.5 1.5 0 0 0-3 0V14a8 8 0 0 0 8 8 6 6 0 0 0 6-6V8.5a1.5 1.5 0 0 0-3 0V10h-1V3.5A1.5 1.5 0 0 0 13 2z"/></svg>`,
 };
-const ICON_ATIV = { provaMulti:IC.prova, projeto:IC.lampada, caderno:IC.livro, ativ4:IC.formas, triangulos:IC.triangulo, participacao:IC.mao };
-const ICON_EXTRA = { t150:IC.grid, t300:IC.grid, tneg50:IC.negativo, tneg150:IC.negativo };
+const ICON_ATIV = { provaMulti:IC.prova, projeto:IC.lampada, caderno:IC.livro, ativ4:IC.formas, triangulos:IC.triangulo, participacao:IC.mao, equacoes:IC.prova, cadernoVistos:IC.livro, razaoProp:IC.prova, conselheiro:IC.mao, pd:IC.formas };
+const ICON_EXTRA = { t150:IC.grid, t300:IC.grid, tneg50:IC.negativo, tneg150:IC.negativo, esc100:IC.estrela, esc200:IC.estrela };
 
 // ── Bloco "Atividades do bimestre" no estilo cartão-com-ícone (DOIS estados) ──
 function blocoAtividadesIcones(boletim, encerrado) {
   const { registro, lancados, ativ4Info } = boletim;
+  const congelado = !!boletim.congelado;
   function row(c) {
     const isAuto = !!c.auto;
     const tag = c.key==="triangulos" ? `<span class="item-tag">Ativ. 5</span><span class="item-tag">Fase 1</span>`
               : c.key==="ativ4"      ? `<span class="item-tag">Ativ. 4</span>`
-              : c.key==="equacoes"   ? `<span class="item-tag">Ativ. 1</span>` : "";
+              : c.key==="equacoes"   ? `<span class="item-tag">Ativ. 1</span>`
+              : c.key==="razaoProp"  ? `<span class="item-tag">Ativ. 2</span>` : "";
+    // Indisponível: componente pendente (sem fonte) ou diferido (só ao fechar o bimestre)
+    const pend = campoPendente(c.key);
+    const dif  = campoDiferido(c.key) && !congelado;
+    if (pend || dif) {
+      const msg = pend ? "Ainda não disponibilizada" : "Disponível ao fechar o bimestre";
+      return `<div class="prog-row locked">
+        <div class="prog-icon grey">${ICON_ATIV[c.key]||IC.prova}</div>
+        <div class="prog-body"><div class="prog-title">${c.label} ${tag}</div>
+          <div class="prog-desc">${msg}</div>
+        </div>
+        <div class="prog-right"><div class="pts muted">—</div><div class="pts-sub">de ${fmtNota(c.max)}</div></div>
+      </div>`;
+    }
     let v = 0, done = false, valBig, desc;
     if (isAuto) {
       const raw = registro[c.key];
@@ -253,10 +270,13 @@ function blocoAtividadesIcones(boletim, encerrado) {
       v = naoPart ? 0 : (parseFloat(raw)||0);
       done = !naoPart;
       valBig = naoPart ? "0,0" : fmtNota(v);
-      desc = naoPart ? "não participou"
-                     : c.key==="ativ4"    ? (ativ4Info && ativ4Info.posicao>0 ? `Participou · ${ativ4Info.posicao}º no geral` : "Você participou")
-                     : c.key==="equacoes" ? "Nota da atividade"
-                     :                      "Melhor nota na fase 1";
+      desc = naoPart ? (c.key==="cadernoVistos" ? "Aguardando vistos" : "não participou")
+                     : c.key==="ativ4"         ? (ativ4Info && ativ4Info.posicao>0 ? `Participou · ${ativ4Info.posicao}º no geral` : "Você participou")
+                     : c.key==="equacoes"      ? "Nota da atividade"
+                     : c.key==="razaoProp"     ? "Nota da atividade"
+                     : c.key==="cadernoVistos" ? "Proporção de vistos"
+                     : c.key==="conselheiro"   ? "Base 1,0 · −0,3 por ocorrência"
+                     :                            "Melhor nota na fase 1";
     } else {
       const foi = lancados ? !!lancados[c.key] : true;
       v = foi ? (parseFloat(registro[c.key])||0) : 0;
@@ -287,9 +307,9 @@ function blocoExtrasIcones(boletim, encerrado) {
 
   function rowTabuada(ex) {
     const on    = auto[ex.key];
-    const atual = ex.campo==="melhorTabuada" ? progresso.melhorTabuada : progresso.melhorNeg;
+    const atual = progresso[ex.campo] || 0;
     const pct   = Math.min(100, Math.round(atual/ex.max*100));
-    const cor   = on ? "green" : ex.campo==="melhorTabuada" ? "orange" : "purple";
+    const cor   = on ? "green" : ex.campo==="melhorTabuada" ? "orange" : ex.campo==="melhorEscalada" ? "cyan" : "purple";
     const desc  = on ? `Meta batida! Nível ${atual}`
                      : encerrado ? `Chegou ao nível ${atual} de ${ex.max}`
                                  : `Faltam <b>${ex.max-atual} níveis</b> — continue jogando!`;
@@ -337,7 +357,7 @@ function blocoExtrasIcones(boletim, encerrado) {
     ? `<div class="sec-label">Caderno</div><div class="prog-list">${cadExtraRow}</div>`
     : "";
   return `
-    <div class="sec-label">Tabuada e ranking</div>
+    <div class="sec-label">Jogos e bônus</div>
     <div class="prog-list">${autoRows}${perfilRowVis}${rankRowVis}</div>
     ${secCaderno}`;
 }
@@ -360,13 +380,13 @@ function renderAndamento(boletim) {
   const cadExtra   = temCaderno && lancados.caderno && (parseFloat(registro.caderno)||0) > CADERNO_EXTRA.limiar;
   const nivelPerf  = boletim.nivelPerfil || 1;
 
-  // pontos já lançados (informativo)
+  // pontos já disponibilizados (informativo): peso cheio de cada componente já resolvido
   let maxLancado = 0;
   campos.forEach(c => {
-    if (c.key === "ativ4")           maxLancado += 0.5;
-    else if (c.key === "triangulos") maxLancado += (ativ5Pts != null ? 1 : 0);
-    else if (c.key === "participacao") maxLancado += 0.5;
-    else if (lancados[c.key])        maxLancado += c.max;
+    const v = registro[c.key];
+    const disp = v !== null && v !== undefined && v !== "";
+    if (c.auto)               maxLancado += disp ? c.max : 0;   // auto disponível conta o peso cheio
+    else if (lancados[c.key]) maxLancado += c.max;             // manual conta quando lançado
   });
   maxLancado = Math.min(maxLancado, 10);
 
@@ -376,22 +396,21 @@ function renderAndamento(boletim) {
   if (bonusOn) {
     extrasCardInner = blocoExtrasIcones(boletim, false);
 
-    let potencial = 0;
-    if (!auto.t300)    potencial += 0.5;
-    if (!auto.tneg50)  potencial += 0.5;
-    if (!auto.tneg150) potencial += 0.5;
+    // Potencial = soma dos extras ativos ainda NÃO conquistados (3 jogos × +1 = até +3,0)
+    const extrasAtivos = EXTRAS_AUTO.filter(ex => cfg.autoExtras == null || cfg.autoExtras.includes(ex.key));
+    const faltantes = extrasAtivos.filter(ex => !auto[ex.key]);
+    let potencial = faltantes.reduce((s, ex) => s + ex.valor, 0);
+    const faltantesDesc = faltantes
+      .map(ex => `<b>${ex.label}</b> (+${fmt(ex.valor)}): ${progresso[ex.campo] || 0}/${ex.max}`)
+      .join(" · ");
     banner = potencial > 0
       ? `<div class="potencial-banner"><div class="pot-icon">🚀</div>
           <div class="pot-body"><div class="pot-titulo">Você ainda pode ganhar mais pontos!</div>
-          <div class="pot-desc">${[
-            !auto.t300    ? `<b>Tabuada nv.300</b> (+0,5): ${progresso.melhorTabuada}/300` : "",
-            !auto.tneg50  ? `<b>Tab. Negativa nv.50</b> (+0,5): ${progresso.melhorNeg}/50` : "",
-            !auto.tneg150 ? `<b>Tab. Negativa nv.150</b> (+0,5): ${progresso.melhorNeg}/150` : "",
-          ].filter(Boolean).join(" · ")}</div></div>
+          <div class="pot-desc">${faltantesDesc}</div></div>
           <div class="pot-pts">+${fmt(potencial)}</div></div>`
       : `<div class="potencial-banner zero"><div class="pot-icon">🎉</div>
           <div class="pot-body"><div class="pot-titulo green">Você conquistou todos os bônus disponíveis!</div>
-          <div class="pot-desc">Incrível — tabuada e negativa: tudo certo.</div></div>
+          <div class="pot-desc">Incrível — todos os jogos concluídos.</div></div>
           <div class="pot-pts green">100%</div></div>`;
 
     bonusSub = potencial>0 ? `+${fmt(potencial)} ainda alcançáveis` : "todos conquistados ✓";
@@ -440,7 +459,7 @@ function renderAndamento(boletim) {
         <div class="rs-body">
           <div class="rs-label">Das atividades</div>
           <div class="rs-val">${fmt(base)}<span class="rs-max"> / 10</span></div>
-          <div class="rs-sub">${fmt(maxLancado)} pts já lançados</div>
+          <div class="rs-sub">${fmt(maxLancado)} pts disponíveis</div>
         </div>
       </div>
       ${rsBonusCard}

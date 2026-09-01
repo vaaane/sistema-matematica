@@ -47,6 +47,9 @@
   .atv-corr.ok{background:var(--green-pale);color:var(--green)}
   .atv-corr.no{background:rgba(255,255,255,.05);color:var(--text-muted)}
   .atv-corr.teoria{background:var(--green-pale);color:var(--green)}
+  .atv-corr.projeto{background:rgba(47,158,220,.16);color:#5fb0e6}
+  .atv-idx{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:#fff;background:var(--purple);border-radius:6px;min-width:20px;height:20px;line-height:20px;margin:0 auto 4px;display:block;padding:0 4px}
+  .atv-idx.proj{background:rgba(47,158,220,.2);color:#5fb0e6;border-radius:999px;font-size:9px;letter-spacing:.3px;padding:0 8px;text-transform:uppercase}
   .grade th.col-tot{min-width:70px;text-align:center;padding:10px 6px;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px}
   .grade td.cel{text-align:center;padding:4px;cursor:pointer}
   .aluno-num{display:inline-block;width:22px;color:var(--text-muted);font-size:11px;font-family:'Orbitron',monospace}
@@ -108,6 +111,7 @@
   .bib-tipo{flex-shrink:0;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;text-transform:uppercase}
   .bib-tipo.teoria{background:var(--purple-pale);color:#7a00d4}
   .bib-tipo.atividade{background:var(--gold-pale);color:#b45309}
+  .bib-tipo.projeto{background:rgba(47,158,220,.14);color:#2f9edc}
   .bib-tipo.outro{background:rgba(255,255,255,.08);color:var(--text-muted)}
   .bib-ver{background:rgba(255,255,255,.08);color:var(--text);border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0}
   .bib-ver:hover{background:rgba(255,255,255,.14)}
@@ -328,6 +332,7 @@ function tipoDaAtividade(atv){
   if(/teorica|teoria/.test(n)) return "teorica";
   return "";
 }
+function ehProjeto(atv){ return tipoDaAtividade(atv)==="projeto"; }
 function nomeDaAtividade(atv){
   const b = bibDaAtividade(atv);
   return (b && b.nome) || atv.nome || "";
@@ -344,10 +349,11 @@ function render(){
   const alunosTurma = ALUNOS_POR_TURMA[turma];
   const alunos = alunosTurma.filter(a=>a.toLowerCase().includes(filtro));
   const nA = atual.atividades.length;
+  const nVistos = atual.atividades.filter(a=>!ehProjeto(a)).length;   // projetos não entram na contagem de vistos
 
   // stats — falta vem da frequência (chamada) pela data da atividade
   let feitos=0, atrasados=0, fas=0, atvs=0, faltas=0, ates=0;
-  atual.atividades.forEach(atv=>alunosTurma.forEach(al=>{
+  atual.atividades.forEach(atv=>{ if(ehProjeto(atv)) return; alunosTurma.forEach(al=>{
     const v=(atual.marcas[atv.id]||{})[al]||0;
     if(v===1){ feitos++; }
     else if(v===2){ atrasados++; }
@@ -355,8 +361,8 @@ function render(){
     else if(v===4){ atvs++; }
     else if(temFaltaAtestada(atv.data, al)){ ates++; }
     else if(faltou(atv.data, al)){ faltas++; }
-  }));
-  const total = nA*alunosTurma.length;
+  }); });
+  const total = nVistos*alunosTurma.length;
   const pct = total?Math.round(100*(feitos+0.5*atrasados+atvs+fas*0.5)/total):0;
   document.getElementById("stats").innerHTML = `
     <div class="stat-card"><div><div class="stat-label">Atividades</div><div class="stat-value purple">${nA}</div></div></div>
@@ -376,15 +382,24 @@ function render(){
   }
 
   let html = `<table class="grade"><thead><tr><th class="col-aluno">Aluno</th>`;
+  let idxVisto = 0;
   atual.atividades.forEach(atv=>{
     const m = atual.marcas[atv.id]||{};
     const done = alunosTurma.filter(a=>m[a]===1||m[a]===2||m[a]===3).length;
     const mat = atv.temMaterial ? ` 📄` : "";
+    const tp = tipoDaAtividade(atv);
+    const numBadge = tp==="projeto"
+      ? `<span class="atv-idx proj" title="Projeto — não entra na contagem de vistos">projeto</span>`
+      : `<span class="atv-idx" title="Visto nº ${++idxVisto}">${idxVisto}</span>`;
+    const corr = tp==="teorica" ? `<div class="atv-corr teoria">📘 teoria</div>`
+               : tp==="projeto" ? `<div class="atv-corr projeto">📐 projeto</div>`
+               : `<div class="atv-corr ${atv.corrigido?"ok":"no"}">${atv.corrigido?"✔ corrigido":"✗ não corrigido"}</div>`;
     html += `<th class="col-atv" data-id="${atv.id}" title="${(atv.conteudo||"").replace(/"/g,'&quot;')}">
+      ${numBadge}
       <div class="atv-nome">${nomeDaAtividade(atv)}${mat}</div>
       <div class="atv-data">${fmtData(atv.data)}${atv.obs?` <span title="${atv.obs.replace(/"/g,'&quot;')}">📝</span>`:""}</div>
       <div class="atv-pct">${done}/${alunosTurma.length}</div>
-      ${tipoDaAtividade(atv)==="teorica" ? `<div class="atv-corr teoria">📘 teoria</div>` : `<div class="atv-corr ${atv.corrigido?"ok":"no"}">${atv.corrigido?"✔ corrigido":"✗ não corrigido"}</div>`}</th>`;
+      ${corr}</th>`;
   });
   html += `<th class="col-tot">Total</th></tr></thead><tbody>`;
 
@@ -394,17 +409,19 @@ function render(){
     let tot=0;
     atual.atividades.forEach(atv=>{
       const v=(atual.marcas[atv.id]||{})[al]||0;
-      if(v===1||v===4) tot++;              // ✓ e AT✓ contam integral
-      else if(v===2||v===3) tot+=0.5;      // atraso (½) e FA (½)
+      if(!ehProjeto(atv)){
+        if(v===1||v===4) tot++;              // ✓ e AT✓ contam integral
+        else if(v===2||v===3) tot+=0.5;      // atraso (½) e FA (½)
+      }
       const at = (v!==1 && v!==2 && v!==3 && v!==4) && temFaltaAtestada(atv.data, al); // atestado sem entrega
       const f  = (v!==1 && v!==2 && v!==3 && v!==4) && faltou(atv.data, al);           // falta automática
       const cls = v===1?"v1":v===2?"v2":v===3?"vfa":v===4?"v6":at?"v5":f?"v3":"";
       const sym = v===1?"✓":v===2?"½":v===3?"FA":v===4?"AT✓":at?"AT":f?"F":"";
       html += `<td class="cel" data-id="${atv.id}" data-al="${al.replace(/"/g,'&quot;')}"><span class="chk ${cls}">${sym}</span></td>`;
     });
-    const cor = tot===nA?"tot-ok":tot>=nA/2?"tot-mid":"tot-low";
+    const cor = tot===nVistos?"tot-ok":tot>=nVistos/2?"tot-mid":"tot-low";
     const totTxt = Number.isInteger(tot) ? String(tot) : tot.toFixed(1).replace(".", ",");
-    html += `<td class="tot-cel ${cor}">${totTxt}/${nA}</td></tr>`;
+    html += `<td class="tot-cel ${cor}">${totTxt}/${nVistos}</td></tr>`;
   });
   html += `</tbody></table>`;
   wrap.innerHTML = html;
@@ -485,7 +502,7 @@ window.abrirBiblioteca = async function(){
   document.getElementById("modalBib").classList.add("open");
 };
 function renderBibFiltros(){
-  const tipos=[["todos","Todos"],["teorica","Teóricas"],["exercicios","Exercícios"]];
+  const tipos=[["todos","Todos"],["teorica","Teóricas"],["exercicios","Exercícios"],["projeto","Projetos"]];
   document.getElementById("bibFiltros").innerHTML=tipos.map(([v,l])=>
     `<button class="bib-filtro ${v===bibFiltro?'on':''}" data-t="${v}">${l}</button>`).join("");
   document.querySelectorAll("#bibFiltros .bib-filtro").forEach(b=>b.onclick=()=>{ bibFiltro=b.dataset.t; renderBibFiltros(); renderBibLista(); });
@@ -499,7 +516,7 @@ function renderBibLista(){
   lista.innerHTML=itens.map(i=>`
     <div class="bib-item ${bibEscolhido===i.ref?'sel':''}" data-ref="${i.ref}">
       <div style="flex:1"><div class="bib-nome">${i.nome}</div><div class="bib-arq">${i.ref}</div></div>
-      <span class="bib-tipo ${i.tipo==='exercicios'?'atividade':'teoria'}">${i.tipo==="teorica"?"teórica":"exercícios"}</span>
+      <span class="bib-tipo ${i.tipo==='exercicios'?'atividade':i.tipo==='projeto'?'projeto':'teoria'}">${i.tipo==="teorica"?"teórica":i.tipo==="projeto"?"projeto":"exercícios"}</span>
       <button class="bib-ver" data-ver="${i.ref}">👁 Ver</button>
     </div>`).join("");
   lista.querySelectorAll(".bib-item").forEach(el=>el.onclick=()=>{ bibEscolhido=el.dataset.ref; renderBibLista(); atualizarBibUsar(); });

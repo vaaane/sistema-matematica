@@ -23,6 +23,16 @@
   .content > .card > .bim-tabs{flex-wrap:nowrap}
   .content > .card > .bim-tabs .bim-tab{flex:1;text-align:center;padding:7px 6px;white-space:nowrap}
 
+  /* aviso: conteúdo do quadro é resumo */
+  .aviso-estudo{display:flex;align-items:flex-start;gap:12px;background:rgba(155,48,255,.08);border:1px solid rgba(155,48,255,.25);border-radius:14px;padding:13px 16px;margin-bottom:20px}
+  .aviso-estudo .ae-ic{width:34px;height:34px;flex-shrink:0;border-radius:10px;background:rgba(155,48,255,.16);display:flex;align-items:center;justify-content:center}
+  .aviso-estudo .ae-ic svg{width:19px;height:19px;fill:#c79bff}
+  .aviso-estudo .ae-txt{font-size:13px;line-height:1.5;color:var(--text-muted)}
+  .aviso-estudo .ae-txt b{color:#c79bff;font-weight:700}
+
+  /* selo neutro para projeto (não conta como visto) */
+  .aula-status.naoconta{color:var(--text-muted);opacity:.75}
+
   /* resumo compacto */
   .stat-compact{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:15px 16px;margin-bottom:20px}
   .donut{width:60px;height:60px;flex-shrink:0}
@@ -235,7 +245,9 @@ async function carregar(){
           ordem:a.ordem||0, marca, estado:estadoDe(marca),
         };
       }).sort((x,y)=>(x.ordem-y.ordem)||(x.data<y.data?-1:1));
-      aulas.forEach((a,i)=>{ a.num = String(a.ordem || (i+1)).padStart(2,"0"); });
+      // número reflete a posição do VISTO na turma (projetos não entram na contagem)
+      let _nv = 0;
+      aulas.forEach(a=>{ a.num = a.tipo==="projeto" ? null : String(++_nv).padStart(2,"0"); });
     }
   }catch(e){ console.error(e); }
   render();
@@ -252,10 +264,12 @@ function ordenar(arr){
 }
 
 function render(){
-  const total    = aulas.length;
-  const completo = aulas.filter(a=>a.estado==="completo").length;
-  const parcial  = aulas.filter(a=>a.estado==="parcial").length;
-  const sem      = aulas.filter(a=>a.estado==="sem").length;
+  // projetos não entram na contagem de vistos
+  const aulasVisto = aulas.filter(a=>a.tipo!=="projeto");
+  const total    = aulasVisto.length;
+  const completo = aulasVisto.filter(a=>a.estado==="completo").length;
+  const parcial  = aulasVisto.filter(a=>a.estado==="parcial").length;
+  const sem      = aulasVisto.filter(a=>a.estado==="sem").length;
   const comVisto = completo + parcial;
   const pend     = parcial + sem;
   const pct      = total ? Math.round(100*completo/total) : 0;
@@ -307,22 +321,26 @@ function render(){
          <div class="ic"><svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg></div>
          <div class="mb-body"><div class="mb-txt">🎉 <b>Vistos em dia!</b> Mantenha assim para garantir o <b>+0,5 na média</b>.</div></div>
        </div>`;
-  document.getElementById("statsTop").insertAdjacentHTML("beforeend", metaBar);
+  const avisoEstudo = `<div class="aviso-estudo">
+         <div class="ae-ic"><svg viewBox="0 0 24 24"><path d="M12 3 1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/></svg></div>
+         <div class="ae-txt">O conteúdo que passo no quadro é um <b>resumo</b>. Para aprender de verdade, estude também <b>por fora</b>: livros, videoaulas e exercícios extras aprofundam o que vemos em sala.</div>
+       </div>`;
+  document.getElementById("statsTop").insertAdjacentHTML("beforeend", metaBar + avisoEstudo);
 
-  const tabs = [["todas","Todas",total],["com","Com visto",comVisto],["sem","Sem visto",sem]];
+  const tabs = [["todas","Todas",aulas.length],["com","Com visto",comVisto],["sem","Sem visto",sem]];
   document.getElementById("filtroTabs").innerHTML = tabs.map(([k,l,c])=>
     `<button class="f-tab ${k===filtro?"on":""}" data-f="${k}">${l} <span class="cnt">${c}</span></button>`).join("");
   document.querySelectorAll(".f-tab").forEach(b=>b.onclick=()=>{ filtro=b.dataset.f; render(); });
 
   const lista = document.getElementById("lista");
-  if(!total){
+  if(!aulas.length){
     lista.innerHTML = `<div class="vazio">Nenhuma aula registrada neste bimestre ainda.<br>Quando a professora lançar aulas nos vistos, elas aparecem aqui.</div>`;
     return;
   }
 
   const arr = filtro==="todas"
     ? ordenar(aulas)
-    : ordenar(aulas.filter(filtro==="com" ? (a=>a.estado!=="sem") : (a=>a.estado==="sem")));
+    : ordenar(aulas.filter(a=>a.tipo!=="projeto").filter(filtro==="com" ? (a=>a.estado!=="sem") : (a=>a.estado==="sem")));
   lista.innerHTML = arr.length
     ? `<div class="aulas-bloco">${arr.map(linha).join("")}</div>`
     : `<div class="vazio">Nenhuma aula ${filtro==="todas"?"neste bimestre":"nesse filtro"}.</div>`;
@@ -336,6 +354,8 @@ function tagHTML(a){
   return t ? `<span class="aula-tag ${t[0]}">${t[1]}</span>` : "";
 }
 function statusHTML(a){
+  if(a.tipo==="projeto")
+    return `<span class="aula-status naoconta">${ICO.book}Não conta como visto</span>`;
   const map = {
     completo:["completo","Visto completo",ICO.checkSm],
     parcial :["parcial","Visto parcial",ICO.minus],
@@ -354,7 +374,7 @@ function linha(a){
       <div class="aula" data-i="${a.id}">
         <div class="ring">
           <svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17.5" fill="none" stroke-width="2.5"/></svg>
-          <div class="num">${a.num}</div>
+          <div class="num">${a.num ?? "–"}</div>
         </div>
         <div class="aula-main">
           <div class="headline">${tagHTML(a)}<span class="aula-nome">${a.nome}</span></div>

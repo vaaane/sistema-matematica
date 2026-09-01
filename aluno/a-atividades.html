@@ -76,6 +76,14 @@
     .ac-atv-tag.avaliacao{background:rgba(255,123,46,0.12);color:var(--ac-orange);}
     .ac-atv-tag.em-breve-t{background:rgba(255,255,255,0.06);color:var(--ac-muted);}
     .ac-atv-data{font-size:11px;color:var(--ac-muted);}
+    /* Selo: dia de aplicação + presença do aluno */
+    .ac-atv-aplic{font-size:11px;color:var(--ac-muted);display:inline-flex;align-items:center;gap:4px;}
+    .ac-atv-pres{font-size:11px;font-weight:600;padding:2px 8px;border-radius:8px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
+    .ac-atv-pres.pres{background:rgba(0,230,118,0.12);color:var(--ac-green);}
+    .ac-atv-pres.atraso{background:rgba(255,215,0,0.12);color:var(--ac-gold);}
+    .ac-atv-pres.falta{background:rgba(255,68,68,0.12);color:var(--ac-red);}
+    .ac-atv-pres.atest{background:rgba(96,165,250,0.14);color:#8ec0ff;}
+    .ac-atv-pres.semreg{background:rgba(255,255,255,0.05);color:var(--ac-muted);}
 
     .ac-atv-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
     .ac-atv-nota{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;text-align:right;line-height:1;}
@@ -159,7 +167,7 @@
   </div>
 </div>
 <script type="module">
-import { LISTA_ATIVIDADES, MAX_TENTATIVAS_ATIVIDADE, ALUNOS_POR_TURMA, bimestreAtual } from "/js/constants.js";
+import { LISTA_ATIVIDADES, MAX_TENTATIVAS_ATIVIDADE, ALUNOS_POR_TURMA, bimestreAtual, dentroDoAtestado, normalizarAtestados } from "/js/constants.js";
 import { contarTentativas, getLiberadasParaTurma, liberacaoParaAluno, getAlunoPreferencia, getResultados, getSenhaAluno } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, hashSenha, lerDuplaAtiva, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
@@ -354,6 +362,27 @@ function faltouNaData(ymd){
   return v === 'falta' || v === true;
 }
 
+// Atestados do aluno (para distinguir falta pura de falta com atestado)
+let atestadosAluno = [];
+try {
+  const _as = await get(ref(db, `atestados/${turma}`));
+  atestadosAluno = (normalizarAtestados(_as.exists() ? _as.val() : {})[alunos[0]]) || [];
+} catch(_) { atestadosAluno = []; }
+const temAtestadoNa = ymd => dentroDoAtestado(ymd, atestadosAluno);
+
+// Estado de presença do aluno na data de aplicação da atividade.
+// Retorna: 'presente' | 'atraso' | 'falta' | 'atestado' | 'sem-registro'
+function presencaNaData(ymd){
+  if (!ymd) return 'sem-registro';
+  const temChamada = Object.prototype.hasOwnProperty.call(chamadaTurma, ymd);
+  if (!temChamada) return 'sem-registro';
+  const v = (chamadaTurma[ymd] || {})[alunos[0]];
+  const faltou = v === 'falta' || v === true;
+  if (faltou) return temAtestadoNa(ymd) ? 'atestado' : 'falta';
+  if (v === 'atraso') return 'atraso';
+  return 'presente';   // 'presente', '' ou ausente do registro do dia = presente
+}
+
 const todosResultados = await getResultados();
 const realizadaMap = {}, melhorNota = {}, melhorPts = {}, valorNotaMap = {};
 for (const r of todosResultados) {
@@ -481,6 +510,23 @@ const cardsHtml = ATIVS_BIM.map(ativ => {
   // Faltou = marcado falta na data em que a atividade foi liberada, e ainda não fez.
   const _libDate = lib?.criadoEm ? ymdLocal(lib.criadoEm) : null;
   const faltou   = !foiRealizada && faltouNaData(_libDate);
+
+  // Selo: dia da aplicação na turma + presença do aluno nesse dia
+  const _libDM = _libDate ? _libDate.slice(8,10) + '/' + _libDate.slice(5,7) : '';
+  const _pres  = presencaNaData(_libDate);
+  const _presMap = {
+    'presente':     ['pres',  '✓ Presente no dia'],
+    'atraso':       ['atraso','⏱ Chegou atrasado(a) no dia'],
+    'falta':        ['falta', '✕ Faltou no dia'],
+    'atestado':     ['atest', '🩺 Faltou com atestado'],
+    'sem-registro': ['semreg','Sem registro'],
+  };
+  const [_presCls, _presTxt] = _presMap[_pres];
+  const aplicacaoSelo = isLib
+    ? `<span class="ac-atv-aplic">📅 Aplicada ${_libDM ? 'em '+_libDM : '(data não registrada)'}</span>
+       <span class="ac-atv-pres ${_presCls}">${_presTxt}${_libDM && _pres!=='sem-registro' ? ' ('+_libDM+')' : ''}</span>`
+    : '';
+
   const _indisponivel = isEncerrada || !isLib || bloq?.bloqueado || bloq?.esgotada;
 
   let statusCls, numCls, statusBadge;
@@ -518,6 +564,7 @@ const cardsHtml = ATIVS_BIM.map(ativ => {
       <div class="ac-atv-nome">${escH(ativ.nome)}</div>
       <div class="ac-atv-detalhe">
         ${isAvP ? `<span class="ac-atv-tag avaliacao">📋 Avaliação+</span>` : ''}
+        ${aplicacaoSelo}
         ${detalhe}
       </div>
     </div>

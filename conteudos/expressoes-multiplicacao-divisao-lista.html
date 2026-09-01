@@ -169,7 +169,16 @@
 
   :focus-visible{outline:2px solid var(--purple,#7c5cfc);outline-offset:2px}
   @media(prefers-reduced-motion:reduce){.ex-answer,.ex-toggle .arw{transition:none}}
-  </style>
+  
+  /* ═══ GATE DE RESOLUÇÃO (liberado só quando a atividade está "corrigido") ═══ */
+  .res-gate{display:none}
+  html.res-liberado .res-gate{display:block}
+  html.res-liberado li .res-gate{margin-top:8px}
+  .res-gate .ex-toggle{margin-top:2px}
+  .res-aviso{display:flex;gap:11px;align-items:flex-start;border-radius:12px;padding:14px 16px;margin:0 0 18px;font-size:13px;line-height:1.6;background:rgba(240,165,0,.07);border:1px solid rgba(240,165,0,.28);color:#f3c25f}
+  .res-aviso b{color:#fff}
+  .res-aviso-ic{font-size:17px;flex-shrink:0;line-height:1.4}
+</style>
 </head>
 <body>
 <div class="layout">
@@ -197,28 +206,28 @@
 <section class="au-sec">
 <div class="au-sec-head"><div class="au-sec-num">1</div><div class="au-sec-title">Multiplicação</div><div class="au-sec-tag tag-pratica">PRÁTICA</div></div>
 <ol class="ex-list">
-<li>3x · 4x</li>
-<li>2a · 5a²</li>
-<li>6m² · 3m</li>
-<li>7xy · 2x</li>
+<li>3x · 4x<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>Coeficientes: 3·4 = 12. Parte literal: x·x = x².</p><p class="final">12x²</p></div></div></div></li>
+<li>2a · 5a²<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>2·5 = 10. a·a² = a³.</p><p class="final">10a³</p></div></div></div></li>
+<li>6m² · 3m<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>6·3 = 18. m²·m = m³.</p><p class="final">18m³</p></div></div></div></li>
+<li>7xy · 2x<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>7·2 = 14. xy·x = x²y.</p><p class="final">14x²y</p></div></div></div></li>
 </ol>
 </section>
 <section class="au-sec">
 <div class="au-sec-head"><div class="au-sec-num">2</div><div class="au-sec-title">Divisão</div><div class="au-sec-tag tag-pratica">PRÁTICA</div></div>
 <ol class="ex-list" start="5">
-<li>12x² ÷ 3x</li>
-<li>20a³ ÷ 5a</li>
-<li>18m² ÷ 6m</li>
-<li>24xy ÷ 6x</li>
+<li>12x² ÷ 3x<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>12 ÷ 3 = 4. x² ÷ x = x.</p><p class="final">4x</p></div></div></div></li>
+<li>20a³ ÷ 5a<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>20 ÷ 5 = 4. a³ ÷ a = a².</p><p class="final">4a²</p></div></div></div></li>
+<li>18m² ÷ 6m<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>18 ÷ 6 = 3. m² ÷ m = m.</p><p class="final">3m</p></div></div></div></li>
+<li>24xy ÷ 6x<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>24 ÷ 6 = 4. xy ÷ x = y.</p><p class="final">4y</p></div></div></div></li>
 </ol>
 </section>
 <section class="au-sec">
 <div class="au-sec-head"><div class="au-sec-num">3</div><div class="au-sec-title">Mistos</div><div class="au-sec-tag tag-pratica">PRÁTICA</div></div>
 <ol class="ex-list" start="9">
-<li>(2x)(5x)+x²</li>
-<li>18a²÷3a+2a</li>
-<li>4m·3m−5m²</li>
-<li>(6xy÷2x)+y</li>
+<li>(2x)(5x)+x²<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>(2x)(5x) = 10x²; somando x²: 10x² + x².</p><p class="final">11x²</p></div></div></div></li>
+<li>18a²÷3a+2a<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>18a² ÷ 3a = 6a; somando 2a: 6a + 2a.</p><p class="final">8a</p></div></div></div></li>
+<li>4m·3m−5m²<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>4m·3m = 12m²; menos 5m²: 12m² − 5m².</p><p class="final">7m²</p></div></div></div></li>
+<li>(6xy÷2x)+y<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>6xy ÷ 2x = 3y; mais y: 3y + y.</p><p class="final">4y</p></div></div></div></li>
 </ol>
 </section>
 </div>
@@ -249,6 +258,10 @@
       </div>`;
     }
   })();
+</script>
+<script type="module">
+  import { gateResolucao } from "/js/gate-resolucao.js";
+  gateResolucao();
 </script>
 </body>
 </html>

@@ -169,7 +169,16 @@
 
   :focus-visible{outline:2px solid var(--purple,#7c5cfc);outline-offset:2px}
   @media(prefers-reduced-motion:reduce){.ex-answer,.ex-toggle .arw{transition:none}}
-  </style>
+  
+  /* ═══ GATE DE RESOLUÇÃO (liberado só quando a atividade está "corrigido") ═══ */
+  .res-gate{display:none}
+  html.res-liberado .res-gate{display:block}
+  html.res-liberado li .res-gate{margin-top:8px}
+  .res-gate .ex-toggle{margin-top:2px}
+  .res-aviso{display:flex;gap:11px;align-items:flex-start;border-radius:12px;padding:14px 16px;margin:0 0 18px;font-size:13px;line-height:1.6;background:rgba(240,165,0,.07);border:1px solid rgba(240,165,0,.28);color:#f3c25f}
+  .res-aviso b{color:#fff}
+  .res-aviso-ic{font-size:17px;flex-shrink:0;line-height:1.4}
+</style>
 </head>
 <body>
 <div class="layout">
@@ -193,7 +202,7 @@
 </div>
 </header>
 
-<section class="au-sec"><div class="au-sec-head"><div class="au-sec-num">1</div><div class="au-sec-title">Encontre o valor de x</div><div class="au-sec-tag tag-pratica">FIXAÇÃO</div></div><ol class="ex-list" type="a"><li>x + 7 = 18</li><li>x - 9 = 15</li><li>3x = 24</li><li>5x = 45</li><li>x ÷ 4 = 8</li><li>x ÷ 6 = 7</li><li>2x + 5 = 19</li><li>4x - 8 = 20</li><li>3x + 6 = 21</li><li>5x - 10 = 25</li><li>5x = 10 + 2x</li><li>-8 + 2x = 10 - 7x</li><li>3x - 12 = -3x</li><li>20 - 4 = 8x</li></ol></section></div>
+<section class="au-sec"><div class="au-sec-head"><div class="au-sec-num">1</div><div class="au-sec-title">Encontre o valor de x</div><div class="au-sec-tag tag-pratica">FIXAÇÃO</div></div><ol class="ex-list" type="a"><li>x + 7 = 18<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>x = 18 − 7.</p><p class="final">x = 11</p></div></div></div></li><li>x - 9 = 15<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>x = 15 + 9.</p><p class="final">x = 24</p></div></div></div></li><li>3x = 24<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>x = 24 ÷ 3.</p><p class="final">x = 8</p></div></div></div></li><li>5x = 45<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>x = 45 ÷ 5.</p><p class="final">x = 9</p></div></div></div></li><li>x ÷ 4 = 8<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>x = 8 · 4.</p><p class="final">x = 32</p></div></div></div></li><li>x ÷ 6 = 7<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>x = 7 · 6.</p><p class="final">x = 42</p></div></div></div></li><li>2x + 5 = 19<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>2x = 19 − 5 = 14; x = 14 ÷ 2.</p><p class="final">x = 7</p></div></div></div></li><li>4x - 8 = 20<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>4x = 20 + 8 = 28; x = 28 ÷ 4.</p><p class="final">x = 7</p></div></div></div></li><li>3x + 6 = 21<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>3x = 21 − 6 = 15; x = 15 ÷ 3.</p><p class="final">x = 5</p></div></div></div></li><li>5x - 10 = 25<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>5x = 25 + 10 = 35; x = 35 ÷ 5.</p><p class="final">x = 7</p></div></div></div></li><li>5x = 10 + 2x<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>5x − 2x = 10 → 3x = 10.</p><p class="final">x = <span class="frac"><span>10</span><span>3</span></span></p></div></div></div></li><li>-8 + 2x = 10 - 7x<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>2x + 7x = 10 + 8 → 9x = 18; x = 18 ÷ 9.</p><p class="final">x = 2</p></div></div></div></li><li>3x - 12 = -3x<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>3x + 3x = 12 → 6x = 12; x = 12 ÷ 6.</p><p class="final">x = 2</p></div></div></div></li><li>20 - 4 = 8x<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>16 = 8x → x = 16 ÷ 8.</p><p class="final">x = 2</p></div></div></div></li></ol></section></div>
 </div>
 </div>
 </div>
@@ -221,6 +230,10 @@
       </div>`;
     }
   })();
+</script>
+<script type="module">
+  import { gateResolucao } from "/js/gate-resolucao.js";
+  gateResolucao();
 </script>
 </body>
 </html>

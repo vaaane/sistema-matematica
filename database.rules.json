@@ -28,6 +28,11 @@
     "tabuada_sprint_ranking_b":    { ".read": true, ".write": true },
     "tabuada_negativos_niveis_b":  { ".read": true, ".write": true },
 
+    "escalada_niveis":             { ".read": true, ".write": true },
+    "escalada_ranking":            { ".read": true, ".write": true },
+    "escalada_niveis_b":           { ".read": true, ".write": true },
+    "escalada_ranking_b":          { ".read": true, ".write": true },
+
     "liberacoes_ativas":    { ".read": true, ".write": true },
     "liberacoes_historico": { ".read": true, ".write": true, ".indexOn": ["criadoEm"] },
     "config":               { ".read": true, ".write": true },

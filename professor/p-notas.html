@@ -203,6 +203,7 @@ import {
   EXTRA_RANK_ATIV4, EXTRA_NIVEL_PERFIL, NOME_ATIV5, NOME_ATIV1_EQ,
   makeUid, slugNome as slug, fmtNota as fmt,
   buscarProgressoTabuada, buscarAtiv4, buscarNivelPerfil,
+  buscarCadernoVistos, buscarConselheiro,
   extrasAutoAtivos as extrasAtivosDoProgresso, cadernoExtraAtivo,
   notasLiberadas, definirNotasLiberadas,
   buscarCongelamento, congelarBimestre, descongelarBimestre,
@@ -225,6 +226,7 @@ function turmaVazia(turma) {
   (ALUNOS_POR_TURMA[turma] || []).forEach(nome => {
     obj[nome] = {
       provaMulti:"", projeto:"", caderno:"", equacoes:"", ativ4:"", triangulos:"", participacao:0.5,
+      cadernoVistos:null, razaoProp:null, conselheiro:null, pd:null,
       ativ4Auto:false, triangulosAuto:false, equacoesAuto:false,
       extras: {}
     };
@@ -315,6 +317,20 @@ async function carregarAutoEquacoes(turma) {
     }
   } catch(e) { console.error("Falha ao buscar Atividade 1 - Equações:", e); }
   return porAluno;
+}
+
+// ── 3º bim: Caderno automático (proporção de vistos) e Professor Conselheiro (ocorrências) ──
+async function carregarAutoCadernoConselheiro(turma) {
+  const alunos = ALUNOS_POR_TURMA[turma] || [];
+  const out = {};
+  await Promise.all(alunos.map(async nome => {
+    const [caderno, conselheiro] = await Promise.all([
+      buscarCadernoVistos(turma, nome),
+      buscarConselheiro(turma, nome),
+    ]);
+    out[nome] = { caderno, conselheiro };
+  }));
+  return out;
 }
 
 // ── Render ──────────────────────────────────────────────────
@@ -448,7 +464,7 @@ function abrirExtras(slugNome) {
   const autoExtrasVisiveis = EXTRAS_AUTO.filter(ex => cfg.autoExtras == null || cfg.autoExtras.includes(ex.key));
   document.getElementById("ex-auto").innerHTML = autoExtrasVisiveis.map(ex => {
     const atingiu = auto[ex.key];
-    const nivelAtual = ex.campo === "melhorTabuada" ? a.melhorTabuada : a.melhorNeg;
+    const nivelAtual = a[ex.campo] || 0;
     return `
     <div class="extra-row auto">
       <span class="status-dot ${atingiu ? "atingiu" : "faltando"}">${atingiu ? "✓" : "·"}</span>
@@ -563,9 +579,11 @@ async function carregarTurma(turma) {
   status.classList.remove("saved");
 
   const alunos = ALUNOS_POR_TURMA[turma] || [];
-  const tasks = [carregarAutoTabuada(turma), carregarAutoArea(turma), carregarAutoEquacoes(turma), notasLiberadas(turma), buscarAtiv4(turma, alunos), buscarCongelamento(turma)];
+  const temAutoNovos = camposAtivos().some(c => c.key === "cadernoVistos" || c.key === "conselheiro");
+  const tasks = [carregarAutoTabuada(turma), carregarAutoArea(turma), carregarAutoEquacoes(turma), notasLiberadas(turma), buscarAtiv4(turma, alunos), buscarCongelamento(turma),
+                 temAutoNovos ? carregarAutoCadernoConselheiro(turma) : Promise.resolve({})];
   if (primeiraVez) tasks.push(carregarNotasSalvas(turma));
-  const [_, areaPorAluno, eqPorAluno, liberada, ativ4Map, cong] = await Promise.all(tasks);
+  const [_, areaPorAluno, eqPorAluno, liberada, ativ4Map, cong, ccPorAluno] = await Promise.all(tasks);
   liberadaAtual = liberada;
   congeladoAtual = cong.congelado;
   atualizarBotaoLiberar();
@@ -598,6 +616,11 @@ async function carregarTurma(turma) {
     } else if (!r.equacoes) {
       r.equacoes = null;
     }
+
+    // 3º bim — Caderno (proporção de vistos × 2) e Professor Conselheiro (1,0 − 0,3/ocorrência)
+    const cc = ccPorAluno[nome] || {};
+    r.cadernoVistos = cc.caderno ?? null;      // null = nenhum visto aplicado ainda
+    r.conselheiro   = cc.conselheiro ?? null;  // null só quando o campo não é deste bimestre
   });
 
   // Se congelado, sobrepõe os automáticos pela foto (trava o bônus)
@@ -607,12 +630,16 @@ async function carregarTurma(turma) {
       const ad = autoDados[turma][nome] = autoDados[turma][nome] || {};
       ad.melhorTabuada  = f.melhorTabuada  ?? 0;
       ad.melhorNeg      = f.melhorNeg      ?? 0;
+      ad.melhorEscalada = f.melhorEscalada ?? 0;
       ad.nivelPerfil    = f.nivelPerfil    ?? 0;
       ad.rankAtiv4Bonus = f.rankAtiv4Bonus ?? 0;
       const r = dados[chave][nome];
-      if (f.ativ4 !== undefined)      r.ativ4      = f.ativ4;
-      if (f.triangulos !== undefined) r.triangulos = f.triangulos;
-      if (f.equacoes !== undefined)   r.equacoes   = f.equacoes;
+      if (f.ativ4 !== undefined)         r.ativ4         = f.ativ4;
+      if (f.triangulos !== undefined)    r.triangulos    = f.triangulos;
+      if (f.equacoes !== undefined)      r.equacoes      = f.equacoes;
+      if (f.cadernoVistos !== undefined) r.cadernoVistos = f.cadernoVistos;
+      if (f.conselheiro !== undefined)   r.conselheiro   = f.conselheiro;
+      if (f.razaoProp !== undefined)     r.razaoProp     = f.razaoProp;
     });
   }
 
@@ -640,7 +667,7 @@ function atualizarBotaoCongelar() {
 document.getElementById("btnCongelar").addEventListener("click", async () => {
   const status = document.getElementById("status");
   if (!congeladoAtual) {
-    if (!confirm(`Fechar o ${BIMESTRE}º bimestre da turma ${turmaAtual}?\n\nIsto tira uma "foto" do bônus automático (tabuada, perfil, ranking, Ativ.4/Triângulos) de cada aluno. A partir daí esses bônus param de mudar sozinhos neste bimestre. As notas manuais continuam editáveis. Você pode reabrir depois.`)) return;
+    if (!confirm(`Fechar o ${BIMESTRE}º bimestre da turma ${turmaAtual}?\n\nIsto tira uma "foto" dos itens automáticos (tabuada, escalada, perfil, ranking, Ativ.4/Triângulos, Caderno por vistos e Professor Conselheiro) de cada aluno. A partir daí eles param de mudar sozinhos neste bimestre e passam a aparecer para os alunos. As notas manuais continuam editáveis. Você pode reabrir depois.`)) return;
     const alunos = ALUNOS_POR_TURMA[turmaAtual] || [];
     const snapAlunos = {};
     alunos.forEach(nome => {
@@ -649,11 +676,15 @@ document.getElementById("btnCongelar").addEventListener("click", async () => {
       snapAlunos[slug(nome)] = {
         melhorTabuada:  ad.melhorTabuada  ?? 0,
         melhorNeg:      ad.melhorNeg      ?? 0,
+        melhorEscalada: ad.melhorEscalada ?? 0,
         nivelPerfil:    ad.nivelPerfil    ?? 0,
         rankAtiv4Bonus: ad.rankAtiv4Bonus ?? 0,
         ativ4:      r.ativ4      ?? null,
         triangulos: r.triangulos ?? null,
         equacoes:   r.equacoes   ?? null,
+        cadernoVistos: r.cadernoVistos ?? null,
+        conselheiro:   r.conselheiro   ?? null,
+        razaoProp:     r.razaoProp     ?? null,
       };
     });
     status.textContent = "Congelando…"; status.classList.remove("saved");

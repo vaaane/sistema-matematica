@@ -31,7 +31,7 @@
   .resumo .ring .lbl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
   .resumo .ring .lbl .n{font-size:18px;font-weight:900;line-height:1}
   .resumo .ring .lbl .t{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px;border-top:1px solid var(--border);padding-top:14px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px;border-top:1px solid var(--border);padding-top:14px}
   .stat{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:10px 12px;cursor:pointer;transition:.15s;text-align:left;display:flex;align-items:center;gap:12px}
   .stat:hover{border-color:rgba(155,48,255,.4);background:rgba(155,48,255,.06)}
   .stat .v{font-size:20px;font-weight:900;line-height:1}
@@ -56,6 +56,9 @@
   .stat-selo.neutro small{color:var(--text-muted)}
   /* Faltas ocupa a linha inteira (selo cabe dentro, não estoura) */
   .stat.r.wide{grid-column:1 / -1}
+  .stat.m.wide{grid-column:1 / -1}
+  .stat.m.wide .stat-txt{display:flex;align-items:baseline;gap:11px}
+  .stat.m.wide .stat-txt .l{margin-top:0}
   /* Card avaliativas do quiz */
   .stat.q .v{font-family:'Rajdhani','Inter',sans-serif;font-variant-numeric:tabular-nums}
   .stat.q .qt{font-size:13px;font-weight:700;color:var(--text-muted);margin-left:1px}
@@ -113,6 +116,7 @@
   @media(max-width:520px){
     .stats{grid-template-columns:1fr}
     .stat.r.wide{grid-column:auto}
+    .stat.m.wide{grid-column:auto}
     /* cards simples (valor + rótulo): lado a lado */
     .stat.m .stat-txt,.stat.o .stat-txt{display:flex;align-items:baseline;gap:9px}
     .stat.m .stat-txt .l,.stat.o .stat-txt .l{margin-top:0}
@@ -175,6 +179,7 @@
   .ativ-visto{font-size:11.5px;font-weight:600;color:var(--text-muted);display:inline-flex;align-items:center;gap:5px}
   .ativ-visto svg{width:13px;height:13px;fill:currentColor}
   .ativ-visto.completo{color:#63c98a} .ativ-visto.parcial{color:var(--gold)} .ativ-visto.sem{color:var(--text-muted)}
+  .ativ-visto.naoconta{color:var(--text-muted);opacity:.7}
   .ativ-btn{align-self:center;border:1px solid var(--border);border-radius:9px;padding:8px 12px;font-size:11.5px;font-weight:600;background:transparent;color:var(--text-muted);display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-family:inherit;cursor:pointer;transition:.15s}
   .ativ-btn:hover:not(.off){color:#c79bff;border-color:rgba(155,48,255,.4)}
   .ativ-btn svg{width:13px;height:13px;fill:currentColor;opacity:.8;transition:transform .2s}
@@ -351,7 +356,7 @@ let anotacoes = {};    // { aluno:[ {ts, ocorrencias:[], obs} ] }
 let resultadosAluno = [];  // resultados de quiz do aluno (notas de atividade)
 let libHistorico = [];     // liberacoes_historico (datas oficiais + 2ª chamada)
 let atestados = [];    // [ {inicio,fim,ts,obs} ] do aluno logado
-let nivelTab = 0, nivelNeg = 0;   // progresso nos jogos de tabuada
+let nivelTab = 0, nivelNeg = 0, nivelEsc = 0;   // progresso nos jogos (tabuada e escalada)
 
 const temAtestado = data => dentroDoAtestado(data, atestados);
 // estado bruto da chamada: "falta" | "atraso" | "" (compat: true antigo => "falta")
@@ -378,13 +383,14 @@ async function carregar(){
   try{
     const _uid = (turma + '_' + aluno).replace(/[.#$[\]/\s]/g, '_');
     const _bimN = bimestreAtual();
-    const [sV, sC, sO, sA, sTab, sNeg, sBib] = await Promise.all([
+    const [sV, sC, sO, sA, sTab, sNeg, sEsc, sBib] = await Promise.all([
       get(ref(db, `vistos/${turma}/${bimestre}`)),
       get(ref(db, `chamada/${turma}/${bimestre}`)),
       get(ref(db, `mapeamento_salas/${turma}/anotacoes`)),
       get(ref(db, `atestados/${turma}`)),
       get(ref(db, (_bimN <= 2 ? `tabuada_niveis/${_uid}` : `tabuada_niveis_b/${_bimN}/${_uid}`))).catch(()=>null),
       get(ref(db, (_bimN <= 2 ? `tabuada_negativos_niveis/${_uid}` : `tabuada_negativos_niveis_b/${_bimN}/${_uid}`))).catch(()=>null),
+      get(ref(db, (_bimN <= 2 ? `escalada_niveis/${_uid}` : `escalada_niveis_b/${_bimN}/${_uid}`))).catch(()=>null),
       get(ref(db, "biblioteca")),
     ]);
     const _bibMap = {};
@@ -392,11 +398,14 @@ async function carregar(){
     const _bibIdx = indexarBiblioteca(_bibMap);
     nivelTab = sTab?.exists() ? (sTab.val().melhor_nivel || sTab.val().nivel_atual || 0) : 0;
     nivelNeg = sNeg?.exists() ? (sNeg.val().melhor_nivel || sNeg.val().nivel_atual || 0) : 0;
+    nivelEsc = sEsc?.exists() ? (sEsc.val().melhor_nivel || sEsc.val().nivel_atual || 0) : 0;
     const rv = sV.exists()?sV.val():{};
     atividades = Object.entries(rv.atividades||{})
       .map(([id,a])=>{ const _r=resolverAula({materialRef:a.materialRef||"", materialTitulo:a.materialTitulo||"", nome:a.nome||""}, _bibIdx); return {id, nome:_r.nome||a.nome||"(sem nome)", data:a.data||"", ordem:a.ordem||0, materialRef:_r.url, materialTitulo:_r.nome, tipo:_r.tipo}; })
       .sort((x,y)=> (x.ordem-y.ordem) || (x.data<y.data?-1:1));
-    atividades.forEach((a,i)=>{ a.num = String(a.ordem || (i+1)).padStart(2,"0"); });
+    // número reflete a posição do VISTO na turma (projetos não entram na contagem)
+    let _nv = 0;
+    atividades.forEach(a=>{ a.num = a.tipo==="projeto" ? null : String(++_nv).padStart(2,"0"); });
     marcas = rv.marcas||{};
     chamada = {};
     const rc = sC.exists()?sC.val():{};
@@ -412,7 +421,7 @@ async function carregar(){
     catch(_) { libHistorico = []; }
   }catch(e){
     console.error(e);
-    atividades=[]; marcas={}; chamada={}; anotacoes={}; atestados=[]; nivelTab=0; nivelNeg=0; resultadosAluno=[]; libHistorico=[];
+    atividades=[]; marcas={}; chamada={}; anotacoes={}; atestados=[]; nivelTab=0; nivelNeg=0; nivelEsc=0; resultadosAluno=[]; libHistorico=[];
     document.getElementById("conteudo").innerHTML = `<div class="vazio">Não foi possível carregar os dados agora. Tente novamente mais tarde.</div>`;
     return;
   }
@@ -627,15 +636,18 @@ function render(){
   const cntNao   = linhas.filter(l=>l.st==="nao"||l.st==="falta").length;
 
   const atvHtml = rows.length ? rows.map(r=>{
+    const ehProj = r.tipo==="projeto";
     const vst = vistoDe(r.id);
-    const [vcls,vtxt,vic] = VISTO[vst];
+    const [vcls,vtxt,vic] = ehProj
+      ? ["naoconta","Não conta como visto",'<svg viewBox="0 0 24 24"><path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1z"/></svg>']
+      : VISTO[vst];
     const tagHtml = r.tipo ? `<span class="ativ-tag ${r.tipo}">${TIPO_LABEL[r.tipo]||""}</span>` : "";
     return `
     <div class="ativ-row ${r.materialRef?"tem-mat":""}" id="ativ-row-${r.id}">
       <div class="ativ" ${r.materialRef?`data-i="${r.id}" onclick="toggleConteudo('${r.id}')"`:""}>
         <div class="ring ${r.st}">
           <svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17.5" fill="none" stroke-width="2.5"/></svg>
-          <div class="num">${r.num||""}</div>
+          <div class="num">${r.num ?? "–"}</div>
         </div>
         <div class="ativ-main">
           <div class="ativ-headline">${tagHtml}<span class="ativ-nome">${r.nome}</span></div>
@@ -695,7 +707,7 @@ function render(){
         </div>
       </div>
       <div class="stats">
-        <div class="stat m" data-goto="c-ativ">
+        <div class="stat m wide" data-goto="c-ativ">
           <div class="stat-ic roxo"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></div>
           <div class="stat-txt"><div class="v">${naoF}</div><div class="l">Atividades do caderno não feitas</div></div>
         </div>
@@ -732,7 +744,7 @@ function render(){
         </div>
         <div class="ficha-nota verde">
           <svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>
-          <span>Tendo <b>todos os vistos</b> do bimestre (completos ou meio, ½), o aluno ganha <b>+0,5 na média</b>. Os vistos podem ser mostrados à professora <b>ao longo de todo o bimestre</b>.</span>
+          <span>Tendo <b>todos os vistos</b> do bimestre (completos ou meio, ½), o aluno ganha <b>+0,5 na média</b>. Os vistos podem ser mostrados à professora <b>ao longo de todo o bimestre</b>. <b>Projetos não contam</b> como visto.</span>
         </div>
         <div class="filtros" id="filtros">
           <button class="${filtro==="todas"?"on":""}" data-f="todas">Todas <span class="fct">${cntTodas}</span></button>
@@ -768,6 +780,10 @@ function render(){
             <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
             Ocorrências <span class="count">${oc.length}</span>
           </div>
+          <div class="ficha-nota" style="margin-bottom:12px;margin-top:0;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text-muted)">
+            <svg viewBox="0 0 24 24" style="fill:var(--text-muted)"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            <span>A nota do <b style="color:var(--text)">professor conselheiro</b> começa em <b style="color:var(--text)">1,0</b> e cada ocorrência registrada retira <b style="color:var(--text)">0,3</b> ponto.</span>
+          </div>
           <div>${ocHtml}</div>
         </div>
 
@@ -779,7 +795,11 @@ function render(){
           <div class="jogo-prog">
             <div class="jp-top"><span class="jp-nome">🎯 Tabuada <span class="jp-bonus ${nivelTab>=300?"on":""}">+1,0</span></span><span class="jp-niv">Nível ${nivelTab} <span class="jp-max">/ 300</span></span></div>
             <div class="jp-bar"><div class="jp-fill" style="width:${Math.min(100, (nivelTab/300)*100).toFixed(1)}%;background:var(--purple)"></div></div>
-            ${nivelTab>=300?'<div class="jp-done">✓ Concluiu toda a tabuada!</div>':''}
+            ${nivelTab>=300
+              ? '<div class="jp-done">✓ Concluiu toda a tabuada!</div>'
+              : nivelTab>=150
+                ? '<div class="jp-done" style="color:var(--purple)">✓ +0,5 garantido · chegue ao 300 para +1,0</div>'
+                : '<div class="jp-note">Nível 150 vale +0,5 · nível 300 vale +1,0</div>'}
           </div>
           <div class="jogo-prog" style="margin-top:12px">
             <div class="jp-top"><span class="jp-nome">➖ Tabuada Negativa <span class="jp-bonus ${nivelNeg>=50?"on":""}">${nivelNeg>=150?"+1,0":"+0,5"}</span></span><span class="jp-niv">Nível ${nivelNeg} <span class="jp-max">/ 150</span></span></div>
@@ -790,9 +810,18 @@ function render(){
                 ? '<div class="jp-done" style="color:var(--gold)">✓ +0,5 garantido · chegue ao 150 para +1,0</div>'
                 : '<div class="jp-note">Nível 50 vale +0,5 · nível 150 vale +1,0</div>'}
           </div>
+          <div class="jogo-prog" style="margin-top:12px">
+            <div class="jp-top"><span class="jp-nome">🧗 Escalada Algébrica <span class="jp-bonus ${nivelEsc>=100?"on":""}">${nivelEsc>=200?"+1,0":"+0,5"}</span></span><span class="jp-niv">Nível ${nivelEsc} <span class="jp-max">/ 200</span></span></div>
+            <div class="jp-bar jp-bar-marco" style="--marco:${(100/200*100).toFixed(1)}%"><div class="jp-fill" style="width:${Math.min(100, (nivelEsc/200)*100).toFixed(1)}%;background:#00d4ff"></div></div>
+            ${nivelEsc>=200
+              ? '<div class="jp-done">✓ Chegou ao topo! +1,0 na média</div>'
+              : nivelEsc>=100
+                ? '<div class="jp-done" style="color:#00d4ff">✓ +0,5 garantido · chegue ao 200 para +1,0</div>'
+                : '<div class="jp-note">Nível 100 vale +0,5 · nível 200 vale +1,0</div>'}
+          </div>
           <div class="ficha-nota ouro">
             <svg viewBox="0 0 24 24"><path d="M12 2 9.2 8.6 2 9.2l5.5 4.7L5.8 21 12 17.3 18.2 21l-1.7-7.1L22 9.2l-7.2-.6z"/></svg>
-            <span><b>Dica para a família:</b> concluir a <b>Tabuada</b> (nível 300) vale <b>+1,0</b> na média. Na <b>Tabuada Negativa</b>, chegar ao <b>nível 50</b> vale <b>+0,5</b> e ao <b>nível 150</b> vale <b>+1,0</b>. Incentivar a jogar ajuda na média do bimestre.</span>
+            <span><b>Dica para a família:</b> incentivar a jogar ajuda na média do bimestre.</span>
           </div>
         </div>
       </div>

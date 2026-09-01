@@ -169,7 +169,16 @@
 
   :focus-visible{outline:2px solid var(--purple,#7c5cfc);outline-offset:2px}
   @media(prefers-reduced-motion:reduce){.ex-answer,.ex-toggle .arw{transition:none}}
-  </style>
+  
+  /* ═══ GATE DE RESOLUÇÃO (liberado só quando a atividade está "corrigido") ═══ */
+  .res-gate{display:none}
+  html.res-liberado .res-gate{display:block}
+  html.res-liberado li .res-gate{margin-top:8px}
+  .res-gate .ex-toggle{margin-top:2px}
+  .res-aviso{display:flex;gap:11px;align-items:flex-start;border-radius:12px;padding:14px 16px;margin:0 0 18px;font-size:13px;line-height:1.6;background:rgba(240,165,0,.07);border:1px solid rgba(240,165,0,.28);color:#f3c25f}
+  .res-aviso b{color:#fff}
+  .res-aviso-ic{font-size:17px;flex-shrink:0;line-height:1.4}
+</style>
 </head>
 <body>
 <div class="layout">
@@ -199,14 +208,14 @@
 <div class="au-sec-tag tag-pratica">ATIVIDADE</div>
 </div>
 <ol class="ex-list" type="a">
-<li>Na cantina, cada salgado custa R$ 5,00 e cada suco custa R$ 4,00. Escreva a expressão do gasto de quem compra <b>s</b> salgados e <b>r</b> sucos.</li><br/>
-<li>A mesada de Bruno é de <b>m</b> reais. Neste mês ele ganhou R$ 15,00 a mais por ajudar em casa. Escreva quanto ele recebeu.</li><br/>
-<li>No jogo da Tabuada, Pedro tinha <b>p</b> pontos e perdeu 8 numa rodada. Escreva quantos pontos ficaram.</li><br/>
-<li>Meu primo tem <b>c</b> anos. Eu tenho o dobro da idade dele. Escreva a minha idade.</li><br/>
-<li>Lúcia tem <b>L</b> anos. A mãe dela tem 3 anos a menos que o triplo da idade de Lúcia. Escreva a idade da mãe.</li><br/>
-<li>Uma corrida de aplicativo cobra R$ 6,00 fixos mais R$ 2,00 por quilômetro. Escreva o preço de uma corrida de <b>k</b> quilômetros.</li><br/>
-<li>O plano do celular tem 10 GB por mês. Você já usou <b>g</b> GB. Escreva quantos GB ainda restam.</li><br/>
-<li>A escola vai cercar uma horta retangular de base <b>b</b> metros e altura <b>a</b> metros. Escreva o perímetro (a soma dos quatro lados).</li>
+<li>Na cantina, cada salgado custa R$ 5,00 e cada suco custa R$ 4,00. Escreva a expressão do gasto de quem compra <b>s</b> salgados e <b>r</b> sucos.<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>s salgados a R$ 5 = 5s; r sucos a R$ 4 = 4r; some.</p><p class="final">5s + 4r</p></div></div></div></li><br/>
+<li>A mesada de Bruno é de <b>m</b> reais. Neste mês ele ganhou R$ 15,00 a mais por ajudar em casa. Escreva quanto ele recebeu.<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>Mesada m mais R$ 15.</p><p class="final">m + 15</p></div></div></div></li><br/>
+<li>No jogo da Tabuada, Pedro tinha <b>p</b> pontos e perdeu 8 numa rodada. Escreva quantos pontos ficaram.<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>p pontos menos 8 perdidos.</p><p class="final">p − 8</p></div></div></div></li><br/>
+<li>Meu primo tem <b>c</b> anos. Eu tenho o dobro da idade dele. Escreva a minha idade.<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>Dobro da idade c do primo.</p><p class="final">2c</p></div></div></div></li><br/>
+<li>Lúcia tem <b>L</b> anos. A mãe dela tem 3 anos a menos que o triplo da idade de Lúcia. Escreva a idade da mãe.<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>Triplo de L é 3L; "3 anos a menos" tira 3.</p><p class="final">3L − 3</p></div></div></div></li><br/>
+<li>Uma corrida de aplicativo cobra R$ 6,00 fixos mais R$ 2,00 por quilômetro. Escreva o preço de uma corrida de <b>k</b> quilômetros.<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>R$ 6 fixos mais R$ 2 por km (2k).</p><p class="final">6 + 2k</p></div></div></div></li><br/>
+<li>O plano do celular tem 10 GB por mês. Você já usou <b>g</b> GB. Escreva quantos GB ainda restam.<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>Total 10 GB menos g usados.</p><p class="final">10 − g</p></div></div></div></li><br/>
+<li>A escola vai cercar uma horta retangular de base <b>b</b> metros e altura <b>a</b> metros. Escreva o perímetro (a soma dos quatro lados).<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>Perímetro do retângulo: 2 bases + 2 alturas = 2b + 2a.</p><p class="final">2b + 2a</p></div></div></div></li>
 </ol>
 </section>
 <section class="au-sec">
@@ -253,6 +262,10 @@
       </div>`;
     }
   })();
+</script>
+<script type="module">
+  import { gateResolucao } from "/js/gate-resolucao.js";
+  gateResolucao();
 </script>
 </body>
 </html>

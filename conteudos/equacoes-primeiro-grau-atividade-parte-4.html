@@ -54,7 +54,16 @@
   .ex-list li{background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:14px;padding:14px 17px;font-size:14px;line-height:1.65;color:rgba(255,255,255,.9)}
   .eq-destaque{display:inline-block;margin-top:4px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:18px;color:var(--gold,#f0a500);letter-spacing:.4px}
   :focus-visible{outline:2px solid var(--purple,#7c5cfc);outline-offset:2px}
-  </style>
+  
+  /* ═══ GATE DE RESOLUÇÃO (liberado só quando a atividade está "corrigido") ═══ */
+  .res-gate{display:none}
+  html.res-liberado .res-gate{display:block}
+  html.res-liberado li .res-gate{margin-top:8px}
+  .res-gate .ex-toggle{margin-top:2px}
+  .res-aviso{display:flex;gap:11px;align-items:flex-start;border-radius:12px;padding:14px 16px;margin:0 0 18px;font-size:13px;line-height:1.6;background:rgba(240,165,0,.07);border:1px solid rgba(240,165,0,.28);color:#f3c25f}
+  .res-aviso b{color:#fff}
+  .res-aviso-ic{font-size:17px;flex-shrink:0;line-height:1.4}
+</style>
 </head>
 <body>
 <div class="layout">
@@ -78,7 +87,7 @@
 </div>
 </header>
 
-<section class="au-sec"><div class="au-sec-head"><div class="au-sec-num">1</div><div class="au-sec-title">Escreva a equação que representa cada situação</div><div class="au-sec-tag tag-pratica">MONTAR</div></div><ol class="ex-list"><li>O triplo de um número menos 7 é igual ao próprio número mais 5.</li><li>Uma estante tinha <b>x</b> livros. Depois de acrescentar 15, ficou com 39.</li><li>Em uma prova com 28 pontos, você já garantiu 10. Chame de <b>x</b> quantos pontos ainda faltam.</li><li>De uma caixa de bombons, foram comidos 6 e sobraram 14.</li><li>Você repartiu igualmente <b>x</b> balas entre 3 amigos. Cada um recebeu 7.</li><li>Você tinha R$ 100. Depois de comprar 4 lanches iguais, sobraram R$ 52. Chame de <b>x</b> o preço do lanche.</li></ol></section><section class="au-sec"><div class="au-sec-head"><div class="au-sec-num">2</div><div class="au-sec-title">Resolva a equação</div><div class="au-sec-tag tag-teoria">RESOLVER</div></div><ol class="ex-list" start="7"><li>Qual é o valor de <b>x</b>?<br><span class="eq-destaque">4x − 3 = 33</span></li><li>Qual é o valor de <b>x</b>?<br><span class="eq-destaque">6x = 3x + 9</span></li></ol></section></div>
+<section class="au-sec"><div class="au-sec-head"><div class="au-sec-num">1</div><div class="au-sec-title">Escreva a equação que representa cada situação</div><div class="au-sec-tag tag-pratica">MONTAR</div></div><ol class="ex-list"><li>O triplo de um número menos 7 é igual ao próprio número mais 5.<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>"Triplo de um número menos 7" = 3x − 7; "o próprio número mais 5" = x + 5.</p><p>Equação: 3x − 7 = x + 5 → 2x = 12 → x = 6.</p><p class="final">3x − 7 = x + 5  ·  x = 6</p></div></div></div></li><li>Uma estante tinha <b>x</b> livros. Depois de acrescentar 15, ficou com 39.<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>Equação: x + 15 = 39 → x = 39 − 15.</p><p class="final">x + 15 = 39  ·  x = 24 livros</p></div></div></div></li><li>Em uma prova com 28 pontos, você já garantiu 10. Chame de <b>x</b> quantos pontos ainda faltam.<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>Já garantidos + faltam = total: 10 + x = 28 → x = 28 − 10.</p><p class="final">10 + x = 28  ·  x = 18 pontos</p></div></div></div></li><li>De uma caixa de bombons, foram comidos 6 e sobraram 14.<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>Comidos + sobra = total: 6 + 14 = 20, então x − 6 = 14 → x = 20.</p><p class="final">x − 6 = 14  ·  x = 20 bombons</p></div></div></div></li><li>Você repartiu igualmente <b>x</b> balas entre 3 amigos. Cada um recebeu 7.<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>Repartir x entre 3 e dar 7 a cada um: <span class="frac"><span>x</span><span>3</span></span> = 7 → x = 7 · 3.</p><p class="final"><span class="frac"><span>x</span><span>3</span></span> = 7  ·  x = 21 balas</p></div></div></div></li><li>Você tinha R$ 100. Depois de comprar 4 lanches iguais, sobraram R$ 52. Chame de <b>x</b> o preço do lanche.<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>Gasto = 4x; sobra: 100 − 4x = 52 → 4x = 48 → x = 12.</p><p class="final">100 − 4x = 52  ·  x = R$ 12</p></div></div></div></li></ol></section><section class="au-sec"><div class="au-sec-head"><div class="au-sec-num">2</div><div class="au-sec-title">Resolva a equação</div><div class="au-sec-tag tag-teoria">RESOLVER</div></div><ol class="ex-list" start="7"><li>Qual é o valor de <b>x</b>?<br><span class="eq-destaque">4x − 3 = 33</span><div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>4x − 3 = 33 → 4x = 36 → x = 36 ÷ 4.</p><p class="final">x = 9</p></div></div></div></li><li>Qual é o valor de <b>x</b>?<br><span class="eq-destaque">6x = 3x + 9</span><div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>6x = 3x + 9 → 6x − 3x = 9 → 3x = 9 → x = 9 ÷ 3.</p><p class="final">x = 3</p></div></div></div></li></ol></section></div>
 </div>
 </div>
 </div>
@@ -98,6 +107,10 @@
       </div>`;
     }
   })();
+</script>
+<script>function toggleResp(btn){const ans=btn.nextElementSibling;const open=ans.classList.toggle('open');btn.setAttribute('aria-expanded',open);btn.querySelector('.txt').textContent=open?'Ocultar resposta':'Ver resposta';}</script><script type="module">
+  import { gateResolucao } from "/js/gate-resolucao.js";
+  gateResolucao();
 </script>
 </body>
 </html>

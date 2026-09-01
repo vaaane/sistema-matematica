@@ -169,7 +169,16 @@
 
   :focus-visible{outline:2px solid var(--purple,#7c5cfc);outline-offset:2px}
   @media(prefers-reduced-motion:reduce){.ex-answer,.ex-toggle .arw{transition:none}}
-  </style>
+  
+  /* ═══ GATE DE RESOLUÇÃO (liberado só quando a atividade está "corrigido") ═══ */
+  .res-gate{display:none}
+  html.res-liberado .res-gate{display:block}
+  html.res-liberado li .res-gate{margin-top:8px}
+  .res-gate .ex-toggle{margin-top:2px}
+  .res-aviso{display:flex;gap:11px;align-items:flex-start;border-radius:12px;padding:14px 16px;margin:0 0 18px;font-size:13px;line-height:1.6;background:rgba(240,165,0,.07);border:1px solid rgba(240,165,0,.28);color:#f3c25f}
+  .res-aviso b{color:#fff}
+  .res-aviso-ic{font-size:17px;flex-shrink:0;line-height:1.4}
+</style>
 </head>
 <body>
 <div class="layout">
@@ -202,32 +211,32 @@
 <div class="ex-list">
 <div class="ex">
 <div class="ex-top"><span class="ex-num">1</span><span class="ex-tag lv-medio">Simplifique</span></div>
-<div class="ex-stmt"><b>a)</b> 10x - 9y + x - 5</div>
+<div class="ex-stmt"><b>a)</b> 10x - 9y + x - 5</div><div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>Junte os termos em x: 10x + x = 11x. Constante: −5. O −9y não tem semelhante.</p><p class="final">11x − 9y − 5</p></div></div></div>
 </div>
 
 <div class="ex">
 <div class="ex-top"><span class="ex-num">2</span><span class="ex-tag lv-medio">Simplifique</span></div>
-<div class="ex-stmt"><b>b)</b> 5ab² + 2a²b + 7 + 2a²b - 3</div>
+<div class="ex-stmt"><b>b)</b> 5ab² + 2a²b + 7 + 2a²b - 3</div><div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>a²b: 2a²b + 2a²b = 4a²b. Constantes: 7 − 3 = 4. O 5ab² fica sozinho.</p><p class="final">5ab² + 4a²b + 4</p></div></div></div>
 </div>
 
 <div class="ex">
 <div class="ex-top"><span class="ex-num">3</span><span class="ex-tag lv-medio">Simplifique</span></div>
-<div class="ex-stmt"><b>c)</b> 12xy - xy - xy + 7</div>
+<div class="ex-stmt"><b>c)</b> 12xy - xy - xy + 7</div><div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>xy: 12xy − xy − xy = 10xy. Constante: +7.</p><p class="final">10xy + 7</p></div></div></div>
 </div>
 
 <div class="ex">
 <div class="ex-top"><span class="ex-num">4</span><span class="ex-tag lv-medio">Simplifique</span></div>
-<div class="ex-stmt"><b>d)</b> 3x - 7x + 4y - 5</div>
+<div class="ex-stmt"><b>d)</b> 3x - 7x + 4y - 5</div><div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>x: 3x − 7x = −4x. Os termos 4y e −5 ficam.</p><p class="final">−4x + 4y − 5</p></div></div></div>
 </div>
 
 <div class="ex">
 <div class="ex-top"><span class="ex-num">5</span><span class="ex-tag lv-medio">Simplifique</span></div>
-<div class="ex-stmt"><b>e)</b> 2ax² + 2a²x + 15 - a²x</div>
+<div class="ex-stmt"><b>e)</b> 2ax² + 2a²x + 15 - a²x</div><div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>a²x: 2a²x − a²x = a²x. Ficam 2ax² e +15.</p><p class="final">2ax² + a²x + 15</p></div></div></div>
 </div>
 
 <div class="ex">
 <div class="ex-top"><span class="ex-num">6</span><span class="ex-tag lv-medio">Simplifique</span></div>
-<div class="ex-stmt"><b>f)</b> 15xy - 10x - 5y - 15xy</div>
+<div class="ex-stmt"><b>f)</b> 15xy - 10x - 5y - 15xy</div><div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>xy: 15xy − 15xy = 0. Sobram −10x e −5y.</p><p class="final">−10x − 5y</p></div></div></div>
 </div>
 </div>
 </section>
@@ -259,6 +268,10 @@
       </div>`;
     }
   })();
+</script>
+<script type="module">
+  import { gateResolucao } from "/js/gate-resolucao.js";
+  gateResolucao();
 </script>
 </body>
 </html>

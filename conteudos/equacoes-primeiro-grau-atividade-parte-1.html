@@ -169,7 +169,16 @@
 
   :focus-visible{outline:2px solid var(--purple,#7c5cfc);outline-offset:2px}
   @media(prefers-reduced-motion:reduce){.ex-answer,.ex-toggle .arw{transition:none}}
-  </style>
+  
+  /* ═══ GATE DE RESOLUÇÃO (liberado só quando a atividade está "corrigido") ═══ */
+  .res-gate{display:none}
+  html.res-liberado .res-gate{display:block}
+  html.res-liberado li .res-gate{margin-top:8px}
+  .res-gate .ex-toggle{margin-top:2px}
+  .res-aviso{display:flex;gap:11px;align-items:flex-start;border-radius:12px;padding:14px 16px;margin:0 0 18px;font-size:13px;line-height:1.6;background:rgba(240,165,0,.07);border:1px solid rgba(240,165,0,.28);color:#f3c25f}
+  .res-aviso b{color:#fff}
+  .res-aviso-ic{font-size:17px;flex-shrink:0;line-height:1.4}
+</style>
 </head>
 <body>
 <div class="layout">
@@ -202,14 +211,14 @@
 </div>
 <p class="au-p">Resolva cada equação e confira substituindo o valor encontrado.</p>
 <ol class="ex-list">
-<li>x + 8 = 15</li>
-<li>x - 6 = 11</li>
-<li>3x = 27</li>
-<li>x ÷ 5 = 9</li>
-<li>2x + 4 = 18</li>
-<li>4x - 8 = 20</li>
-<li>5 + x = 19</li>
-<li>30 = 6x</li>
+<li>x + 8 = 15<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>x = 15 − 8.</p><p class="final">x = 7</p></div></div></div></li>
+<li>x - 6 = 11<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>x = 11 + 6.</p><p class="final">x = 17</p></div></div></div></li>
+<li>3x = 27<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>x = 27 ÷ 3.</p><p class="final">x = 9</p></div></div></div></li>
+<li>x ÷ 5 = 9<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>x = 9 · 5.</p><p class="final">x = 45</p></div></div></div></li>
+<li>2x + 4 = 18<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>2x = 18 − 4 = 14; x = 14 ÷ 2.</p><p class="final">x = 7</p></div></div></div></li>
+<li>4x - 8 = 20<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>4x = 20 + 8 = 28; x = 28 ÷ 4.</p><p class="final">x = 7</p></div></div></div></li>
+<li>5 + x = 19<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>x = 19 − 5.</p><p class="final">x = 14</p></div></div></div></li>
+<li>30 = 6x<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>6x = 30; x = 30 ÷ 6.</p><p class="final">x = 5</p></div></div></div></li>
 </ol>
 </section>
 <section class="au-sec">
@@ -219,8 +228,8 @@
 <div class="au-sec-tag tag-pratica">DESAFIO</div>
 </div>
 <ol class="ex-list" start="9">
-<li>Pedro pensou em um número. Somou 9 e encontrou 21. Qual era o número?</li>
-<li>O triplo de um número é 42. Qual é esse número?</li>
+<li>Pedro pensou em um número. Somou 9 e encontrou 21. Qual era o número?<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>Equação: x + 9 = 21 → x = 21 − 9.</p><p class="final">O número é 12</p></div></div></div></li>
+<li>O triplo de um número é 42. Qual é esse número?<div class="res-gate"><button class="ex-toggle" aria-expanded="false" onclick="toggleResp(this)"><span class="txt">Ver resposta</span><span class="arw">▾</span></button><div class="ex-answer"><div class="ex-answer-in"><div class="ex-answer-lbl">Resolução</div><p>Equação: 3x = 42 → x = 42 ÷ 3.</p><p class="final">O número é 14</p></div></div></div></li>
 </ol>
 </section>
 </div>
@@ -251,6 +260,10 @@
       </div>`;
     }
   })();
+</script>
+<script type="module">
+  import { gateResolucao } from "/js/gate-resolucao.js";
+  gateResolucao();
 </script>
 </body>
 </html>

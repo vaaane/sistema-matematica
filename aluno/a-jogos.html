@@ -405,12 +405,23 @@
             </div>
             <div class="jh-aside">
               <div class="jh-stats">
-                <div class="jh-stat"><div class="l">Melhor pontuação</div><div class="v gold">🏆 --</div></div>
+                <div class="jh-stat"><div class="l">Melhor nível</div><div class="v gold" id="neg-melhor">🏆 --</div></div>
                 <div class="jh-stat"><div class="l">Nível máximo</div><div class="v">150</div></div>
               </div>
+              <button class="jh-verbtn" id="jh-btn-ver-neg" onclick="
+                const d=document.getElementById('negativa-detalhes');
+                const btn=document.getElementById('jh-btn-ver-neg');
+                if(d.style.display==='none'||d.style.display===''){d.style.display='block';btn.textContent='Recolher detalhes ↑';setTimeout(()=>d.scrollIntoView({behavior:'smooth',block:'nearest'}),60);}
+                else{d.style.display='none';btn.textContent='ⓘ Ver detalhes';}
+              ">ⓘ Ver detalhes</button>
               <div class="jh-btns"><button class="jh-btn-play" onclick="irJogar('tabuada_negativos')">▶ Jogar agora</button></div>
             </div>
           </div>
+        </div>
+
+        <!-- Detalhes da Tabuada Negativa -->
+        <div id="negativa-detalhes" class="jh-detalhes" style="display:none">
+          <div id="neg-content"></div>
         </div>
 
         <!-- Labirinto Matemático -->
@@ -451,9 +462,20 @@
                 <div class="jh-stat"><div class="l">Seu nível</div><div class="v" id="esc-nivel">—</div></div>
                 <div class="jh-stat"><div class="l">Meta</div><div class="v dif">200</div></div>
               </div>
+              <button class="jh-verbtn" id="jh-btn-ver-esc" onclick="
+                const d=document.getElementById('escalada-detalhes');
+                const btn=document.getElementById('jh-btn-ver-esc');
+                if(d.style.display==='none'||d.style.display===''){d.style.display='block';btn.textContent='Recolher detalhes ↑';setTimeout(()=>d.scrollIntoView({behavior:'smooth',block:'nearest'}),60);}
+                else{d.style.display='none';btn.textContent='ⓘ Ver detalhes';}
+              ">ⓘ Ver detalhes</button>
               <div class="jh-btns"><button class="jh-btn-play" onclick="irJogar('escalada_algebrica')">▶ Jogar agora</button></div>
             </div>
           </div>
+        </div>
+
+        <!-- Detalhes da Escalada Algébrica -->
+        <div id="escalada-detalhes" class="jh-detalhes" style="display:none">
+          <div id="esc-content"></div>
         </div>
 
       </div><!-- /jogos-hub -->
@@ -1184,6 +1206,111 @@ window.jogarNivel = function(lv) {
     if (page) page.insertBefore(badgeEl, page.firstChild);
   } catch(e) {}
 })();
+</script>
+
+<!-- ── Painéis de detalhes: Tabuada Negativa e Escalada Algébrica ── -->
+<script type="module">
+import { getSession } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { bimestreAtual, pathTabuadaNegNiveis, pathEscaladaNiveis, pathEscaladaRanking } from "/js/constants.js";
+
+const _sess = getSession();
+if (_sess && _sess.alunos && _sess.alunos.length) {
+  const _bim  = (n => (n>=1&&n<=4)?n:bimestreAtual())(parseInt(new URLSearchParams(location.search).get('bim'),10));
+  const turma = _sess.turma;
+  const nome  = _sess.alunos[0];
+  const uid   = (turma + '_' + nome).replace(/[.#$\[\]/\s]/g, '_');
+  const fmt   = x => (Math.round(x*10)/10).toString().replace('.', ',');
+  const nivelDe = v => v ? Math.max(v.nivel_atual||0, v.melhor_nivel||0) : 0;
+
+  function painel({ icon, titulo, cor, nivel, melhor, max, partidas, marcos, extraHtml }) {
+    const pct = Math.max(0.5, Math.min(100, (nivel/max)*100)).toFixed(1);
+    const marcosHtml = marcos.map(m => {
+      const ok = melhor >= m.nivel;
+      return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:11px;background:${ok?'rgba(34,197,94,.10)':'rgba(255,255,255,.03)'};border:1px solid ${ok?'rgba(34,197,94,.25)':'var(--g-border,rgba(255,255,255,.08))'}">
+        <span style="font-size:15px">${ok?'✅':'⬜'}</span>
+        <span style="flex:1;font-size:12.5px;color:var(--g-text)">Nível <b>${m.nivel}</b></span>
+        <span style="font-weight:800;color:${ok?'var(--g-green,#22c55e)':'var(--g-muted)'}">+${fmt(m.bonus)}</span>
+      </div>`;
+    }).join('');
+    return `<div class="g-card" style="border:1px solid ${cor}55;border-radius:18px;overflow:hidden">
+      <div class="g-card-top">
+        <div class="g-title"><div class="g-icon">${icon}</div><div><h2>${titulo}</h2><p>Seu progresso neste bimestre</p></div></div>
+        <div class="g-lv-badge"><span class="lbl">${nivel>=max?'🏆 Meta atingida':'Nível'}</span><span class="val">${nivel}<span style="font-size:11px;font-weight:500;opacity:.5;margin-left:2px">/ ${max}</span></span></div>
+      </div>
+      <div class="g-stats">
+        <div class="g-stat g-stat-nivel"><div class="v" style="color:${cor}">${melhor}</div><div class="l">Melhor nível</div></div>
+        <div class="g-stat"><div class="v" style="color:var(--g-cyan,#22d3ee)">${partidas ?? '—'}</div><div class="l">Partidas</div></div>
+        <div class="g-stat"><div class="v" style="color:var(--g-orange,#f97316)">${max}</div><div class="l">Meta</div></div>
+      </div>
+      <div class="g-dist">
+        <div class="g-dist-lbl">Progresso até o nível máximo</div>
+        <div class="g-dist-row"><span class="g-dist-you">Nv ${nivel}</span><div class="g-dist-bw"><div class="g-dist-bf" style="width:${pct}%;background:${cor}"></div></div><span class="g-dist-top">Nv ${max}</span></div>
+      </div>
+      <div style="padding:12px 14px;display:grid;gap:8px">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--g-muted);font-weight:700">⭐ Bônus na média</div>
+        ${marcosHtml}
+      </div>
+      ${extraHtml||''}
+    </div>`;
+  }
+
+  // ── Tabuada Negativa ──
+  (async () => {
+    const box = document.getElementById('neg-content'); if (!box) return;
+    try {
+      const raizPath = _bim <= 2 ? 'tabuada_negativos_niveis' : `tabuada_negativos_niveis_b/${_bim}`;
+      const [meuSnap, raizSnap] = await Promise.all([
+        get(ref(db, pathTabuadaNegNiveis(uid, _bim))).catch(()=>null),
+        get(ref(db, raizPath)).catch(()=>null),
+      ]);
+      const meu = meuSnap?.exists() ? meuSnap.val() : {};
+      const nivel = nivelDe(meu), melhor = meu.melhor_nivel || nivel;
+      const mv = document.getElementById('neg-melhor'); if (mv) mv.textContent = '🏆 ' + (melhor || '--');
+      let pos = 1, total = 0;
+      if (raizSnap?.exists()) raizSnap.forEach(c => { total++; if ((c.val()?.melhor_nivel||0) > melhor) pos++; });
+      const rankHtml = total ? `<div style="padding:0 14px 14px"><div style="background:rgba(255,255,255,.03);border:1px solid var(--g-border,rgba(255,255,255,.08));border-radius:12px;padding:12px;text-align:center">
+        <div style="font-size:22px;font-weight:800;color:#f97316">${pos}º <span style="font-size:12px;color:var(--g-muted);font-weight:600">de ${total} jogadores</span></div>
+        <div style="font-size:11px;color:var(--g-muted);margin-top:2px">sua posição pela melhor pontuação</div></div></div>` : '';
+      box.innerHTML = painel({ icon:'➖', titulo:'Tabuada Negativa', cor:'#f97316', nivel, melhor, max:150,
+        partidas: meu.total_partidas ?? 0, marcos:[{nivel:50,bonus:0.5},{nivel:150,bonus:1.0}], extraHtml: rankHtml });
+    } catch(e){ console.error('[jogos] detalhes negativa', e); box.innerHTML = '<div style="padding:16px;color:var(--g-muted);font-size:12px">Não foi possível carregar os detalhes.</div>'; }
+  })();
+
+  // ── Escalada Algébrica ──
+  (async () => {
+    const box = document.getElementById('esc-content'); if (!box) return;
+    try {
+      const [meuSnap, rankSnap] = await Promise.all([
+        get(ref(db, pathEscaladaNiveis(uid, _bim))).catch(()=>null),
+        get(ref(db, pathEscaladaRanking(_bim))).catch(()=>null),
+      ]);
+      const meu = meuSnap?.exists() ? meuSnap.val() : {};
+      const nivel = nivelDe(meu), melhor = meu.melhor_nivel || nivel;
+      const lista = [];
+      if (rankSnap?.exists()) rankSnap.forEach(c => { const v = c.val(); if (v?.nome) lista.push({ ...v, _uid:c.key }); });
+      lista.sort((a,b)=>(b.melhor_nivel||0)-(a.melhor_nivel||0));
+      const meuIdx = lista.findIndex(r => r._uid === uid);
+      const top = lista.slice(0,5);
+      if (meuIdx >= 5) top.push(lista[meuIdx]);
+      const rankRows = top.map(r => {
+        const p  = lista.findIndex(x=>x._uid===r._uid)+1;
+        const eu = r._uid === uid;
+        const medal = p===1?'🥇':p===2?'🥈':p===3?'🥉':`${p}º`;
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;${eu?'background:rgba(155,48,255,.14);border:1px solid rgba(155,48,255,.3)':''}">
+          <span style="width:30px;font-weight:800;color:${eu?'#b06bff':'var(--g-muted)'}">${medal}</span>
+          <span style="flex:1;font-size:12.5px;color:var(--g-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eu?'<b>':''}${r.nome}${eu?' (você)</b>':''}</span>
+          <span style="font-weight:700;color:#00d4ff">Nv ${r.melhor_nivel||0}</span>
+        </div>`;
+      }).join('');
+      const rankHtml = lista.length ? `<div style="padding:0 14px 14px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--g-muted);font-weight:700;margin-bottom:8px">🏆 Ranking</div><div style="display:grid;gap:4px">${rankRows}</div></div>` : '';
+      const mv = document.getElementById('esc-nivel'); if (mv) mv.textContent = nivel || '—';
+      box.innerHTML = painel({ icon:'🧗', titulo:'Escalada Algébrica', cor:'#9b30ff', nivel, melhor, max:200,
+        partidas: null, marcos:[{nivel:100,bonus:0.5},{nivel:200,bonus:1.0}], extraHtml: rankHtml });
+    } catch(e){ console.error('[jogos] detalhes escalada', e); box.innerHTML = '<div style="padding:16px;color:var(--g-muted);font-size:12px">Não foi possível carregar os detalhes.</div>'; }
+  })();
+}
 </script>
 </body>
 </html>
