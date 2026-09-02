@@ -10,7 +10,6 @@ export const NOMES_COMPLETOS = {
   "Arthur":           "Arthur Souza Linhares",
   "Dandara":          "Dandara Morena Freitas Silva",
   "Francisco":        "Francisco Wallison Carvalho dos Santos",
-  "Isaac":            "Isaac Carvalho Amorim",
   "João Pedro":       "João Pedro Candido Martins Nunes",
   "Karolinny":        "Karolinny Brandao Fernandes",
   "Ketelly":          "Ketelly Emanuelly Magalhaes de Souza",
