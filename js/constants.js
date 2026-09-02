@@ -42,6 +42,39 @@ export function numeroChamada(turma, nome) {
   return (NUM_CHAMADA[turma] || {})[nome] ?? "";
 }
 
+// ===== Nº no caderno físico (Diário de Bordo do colégio) — DIFERENTE do NUM_CHAMADA (SEDF) =====
+// Numeração própria do caderno de papel, sem relação com a numeração oficial do site/SEDF.
+// Preenchido conforme fotos do caderno são recebidas (turma a turma).
+export const NUM_CADERNO = {
+  "8G": { // caderno "Projeto Diário de Bordo" — foto de 14/08/2026
+    "Ana Clara":1, "Ana Gabryella":2, "Ana Maria":3, "Beatriz":4, "Davi Emanoel":5, "Davi Francisco":6,
+    "Erik":7, "Helena":8, "Isabela":9, "Karlos":10, "Ketelen":11, "Letícia":12, "Lorran":13,
+    "Maria Clara":14, "Maria Eduarda":15, "Maria Laura":16, "Maria Sophia":17, "Natalya":18,
+    "Pablo":19, "Paulo Henrique":20, "Pedro Gabriel":21, "Pedro Vaz":22, "Pedro Henryque":23,
+    "Pietro":24, "Pyetro":25, "Renan":26, "Sophia":28, "Thays":29, "Victor":30,
+  },
+  "8E": { // caderno "Projeto Diário de Bordo" — foto de 14/08/2026
+    "Ana Beatriz":1, "Arthur":2, "Caio":3, "Davi Felipe":4, "Davi Francisco":5, "Davi Henrique":6,
+    "Gabriel":7, "Gustavo":8, "Isaque":9, "João Gabriel":10, "Jonathan":11, "Kauã":12, "Lívia":13,
+    "Luiz Felipe":14, "Manuella":15, "Maria Clara":16, "Maria Eduarda":17, "Maria Luisa":18,
+    "Mateus":19, "Matheus":20, "Natanael":21, "Natielle":22, "Nicollas":23, "Paulo":24, "Rafael":25,
+    "Rafaela":26, "Raissa":27, "Rebeca":28, "Sofia":29, "Sophie":30, "Talysson":31, "Vicktor":32,
+    "Victor Bernardo":33, "William":34, "Victor Manuel":35, "Yago":36, "Yasmin":37,
+  },
+  "8F": { // caderno "Projeto Diário de Bordo" — foto de 14/08/2026
+    "Ana Beatriz":1, "Ana Clara":2, "Arthur Daniel":3, "Arthur Martins":4, "Carlos":5, "Evellyn":6,
+    "Fábio":7, "Fellype":8, "Guilherme":9, "Heitor":10, "Joao Pedro":11, "Joaquim":12, "Kayla":13,
+    "Luana":14, "Maria Elisangela":15, "Maria Santa":16, "Marlon":17, "Miguel":18, "Mycaela":19,
+    "Nathalia":20, "Pedro Lucas":21, "Pedro Lukas":22, "Rafael":23, "Renato":24, "Ryan":25, "Sara":26,
+    "Sofia":27, "Victor Conceicao":28, "Victor Hugo":29, "Wesley":30, "Ycaro":31,
+  },
+};
+
+// Nº do caderno físico de um aluno (string vazia se não encontrado/turma sem dados ainda)
+export function numeroCaderno(turma, nome) {
+  return (NUM_CADERNO[turma] || {})[nome] ?? "";
+}
+
 export function intercalarPorDificuldade(perguntas) {
   const faceis   = perguntas.filter(p => p.dificuldade === 1);
   const medias   = perguntas.filter(p => p.dificuldade === 2);
