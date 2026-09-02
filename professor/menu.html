@@ -88,7 +88,6 @@
       #card-notas-bimestre{order:1;}
       #card-resumo{order:2;}
       #card-liberada{order:3;}
-      #aquecimento-card{order:4;}
       #tabuada-game-card{order:5;}
       #card-atividades{order:6;}
       #feed-card{order:7;}
@@ -97,7 +96,7 @@
       #card-historico{order:10;}
       /* Conter overflow horizontal — cards com overflow:visible e filhos absolutos estouram a tela */
       .grid-2{width:100%;max-width:100%;}
-      #card-resumo,#card-notas-bimestre,#tabuada-game-card,#tab-ranking-card,#quiz-top3-card,#card-liberada,#card-atividades,#card-historico,#aquecimento-card,#feed-card{
+      #card-resumo,#card-notas-bimestre,#tabuada-game-card,#tab-ranking-card,#quiz-top3-card,#card-liberada,#card-atividades,#card-historico,#feed-card{
         width:100%!important;max-width:100%!important;box-sizing:border-box!important;overflow-x:clip!important;
       }
       .badge-no1-card{right:10px!important;max-width:calc(100% - 20px);}
@@ -354,15 +353,13 @@ const _uidDe = (nome) => (turma + '_' + nome).replace(/[.#$[\]/\s]/g, '_');
 const dadosExtra = {};
 await Promise.all(alunos.map(async (nome) => {
   const u = _uidDe(nome);
-  const [tabSnap, perfSnap, aqSnap] = await Promise.all([
+  const [tabSnap, perfSnap] = await Promise.all([
     get(ref(db, pathTabuadaNiveis(u))).catch(() => null),
     get(ref(db, `perfis/${u}`)).catch(() => null),
-    get(ref(db, `aquecimento/${u}`)).catch(() => null),
   ]);
   dadosExtra[nome] = {
     nivelTab:  tabSnap?.exists() ? (tabSnap.val().melhor_nivel || tabSnap.val().nivel_atual || 1) : 1,
     duelosVit: perfSnap?.exists() ? (perfSnap.val().duelos_vitorias || 0) : 0,
-    treinos:   aqSnap?.exists()   ? Object.keys(aqSnap.val()).filter(d => bimestreDeData(d) === bimestreAtual()).length : 0,
   };
 }));
 
@@ -973,17 +970,6 @@ ${tempoPodioHtml}
       }).join('')}
     </div>
 
-    <div id="aquecimento-card" class="card" style="margin-bottom:14px;cursor:pointer;border-left:3px solid var(--orange)" onclick="window.location.href='/aluno/aquecimento.html'">
-      <div style="display:flex;align-items:center;gap:14px;padding:10px 2px">
-        <div id="aq-card-icon" style="font-size:42px">🔥</div>
-        <div style="flex:1">
-          <div id="aq-card-titulo" style="font-size:17px;font-weight:700">Treino diário</div>
-          <div id="aq-card-sub" style="font-size:13px;color:var(--text-muted);margin-top:2px">Carregando…</div>
-        </div>
-        <div id="aq-card-seta" style="font-size:18px;color:var(--orange)">→</div>
-      </div>
-    </div>
-
     <div id="feed-card" class="card" style="margin-bottom:14px">
       <div class="section-label" style="color:var(--purple)">
         <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor">
@@ -1260,28 +1246,6 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
   try { applyNo1PageVisuals({ isQuiz: euSouQuiz1, isTabuada: myGeral === 1, tabLevel: meuNivel }); } catch(e) { console.error('applyNo1PageVisuals:', e); }
 })();
 
-// ── Card aquecimento ───────────────────────────────────────────
-(async () => {
-  try {
-    const TEMAS_MENU = {
-      0:'Mix', 1:'Multiplicação', 2:'Divisão', 3:'Adição', 4:'Subtração', 5:'Mix', 6:'Desafio 🔥'
-    };
-    const temaMenu  = TEMAS_MENU[new Date().getDay()];
-    const hojeMenu  = new Date().toISOString().slice(0, 10);
-    const uidMenu   = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
-    const snap      = await get(ref(db, `aquecimento/${uidMenu}/${hojeMenu}`));
-    const jaFez     = snap.exists();
-    const dados     = jaFez ? snap.val() : null;
-    document.getElementById('aq-card-icon').textContent  = jaFez ? '✅' : '🔥';
-    document.getElementById('aq-card-titulo').textContent = jaFez ? 'Treino diário feito hoje!' : 'Treino diário';
-    document.getElementById('aq-card-sub').textContent   = jaFez
-      ? `${dados.acertos} acertos · +${dados.xp_ganho} XP`
-      : `Tema: ${temaMenu} · até +35 XP`;
-    document.getElementById('aq-card-seta').textContent  = jaFez ? '✓' : '→';
-    document.getElementById('aq-card-seta').style.color  = jaFez ? 'var(--green)' : 'var(--orange)';
-  } catch(_) {}
-})();
-
 // ── Feed em tempo real ─────────────────────────────────────────
 function _escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function _tempoRelativo(ts) {
@@ -1389,13 +1353,6 @@ try {
         <div>
           <div class="mg-item-title">Duelos <span class="mg-tag-extra">nota extra</span></div>
           <div class="mg-item-desc">Desafie colegas em tempo real, ganhe XP e suba no ranking.</div>
-        </div>
-      </div>
-      <div class="mg-item">
-        <div class="mg-item-icon">🔥</div>
-        <div>
-          <div class="mg-item-title">Treino Diário <span class="mg-tag-extra">nota extra</span></div>
-          <div class="mg-item-desc">Treine todo dia e mantenha sua sequência: <strong>+10 XP</strong> por dia.</div>
         </div>
       </div>
     </div>

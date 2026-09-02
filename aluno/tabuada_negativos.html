@@ -515,6 +515,7 @@ let _nivelEmJogo = 1;
 let gameOver = false;
 let _animating = false;
 let acertos=0, erros=0, comboCount=0, comboSessao=0;
+let tipoAcertos = { add:0, sub:0, mul:0, div:0 };  // acertos por operação (p/ card "Operações praticadas")
 let timerTotal=60, timerLeft=60, timerInterval=null, _timerOvertime=0;
 let selectedCard = null;
 let removedCount=0, totalPairs=0;
@@ -530,8 +531,19 @@ async function carregarProgresso() {
 async function salvarProgresso(resultado, nivelJogado) {
   if (_isReplay && !_isProfMode) return;
   const ts = Date.now();
-  const updates = { nivel_atual:nivelAtual, melhor_nivel:melhorNivel, total_partidas:totalPartidas, ultima_partida:ts };
-  updates[`historico/${ts}`] = { nivel:nivelJogado, resultado, acertos, erros, combo:comboSessao, ts };
+  const novoMaiorCombo = Math.max(progresso.maior_combo || 0, comboSessao);
+  // 1ª vez que conclui todos os 150 níveis → guarda o instante (p/ Hall da Fama)
+  if (melhorNivel >= 150 && !progresso.concluiu_150_em) progresso.concluiu_150_em = ts;
+  const updates = {
+    nome: nomeAluno, turma,
+    nivel_atual:nivelAtual, melhor_nivel:melhorNivel, total_partidas:totalPartidas,
+    maior_combo: novoMaiorCombo, ultima_partida:ts,
+    ...(progresso.concluiu_150_em ? { concluiu_150_em: progresso.concluiu_150_em } : {}),
+  };
+  const _histEntry = { nivel:nivelJogado, resultado, acertos, erros, combo:comboSessao, ts };
+  if (tipoAcertos.add||tipoAcertos.sub||tipoAcertos.mul||tipoAcertos.div) _histEntry.tipos_acertos = { ...tipoAcertos };
+  updates[`historico/${ts}`] = _histEntry;
+  progresso.maior_combo = novoMaiorCombo;
   try { await update(niveisRef, updates); } catch(e) {}
   // ── XP de gamificação (tabuada negativa) ──────────────────────
   if (resultado === 'completou') try {
@@ -703,6 +715,7 @@ window.buildGame = function(skipAnim=false) {
   timerTotal=cfg.secs; timerLeft=cfg.secs; _timerOvertime=0;
   selectedCard=null; removedCount=0; gameOver=false; _animating=false;
   acertos=0; erros=0; comboCount=0;
+  tipoAcertos = { add:0, sub:0, mul:0, div:0 };
 
   // Mobile column adjustment (mirror tabuada.html)
   const _isMobile = window.innerWidth <= 768;
@@ -889,6 +902,10 @@ function onCardClick(el, card) {
     }, 200);
 
     acertos++;
+    // classifica a operação acertada (potências contam como multiplicação)
+    { const _t = (first.op && first.op.type) || (card.op && card.op.type);
+      const _cat = _t==='add'?'add':_t==='sub'?'sub':_t==='div'?'div':'mul';
+      tipoAcertos[_cat] = (tipoAcertos[_cat]||0) + 1; }
     comboCount++;
     comboSessao = Math.max(comboSessao, comboCount);
     somAcerto();

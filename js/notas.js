@@ -104,6 +104,16 @@ export const NOME_ATIV1_EQ = "Atividade 1 - Equações do 1º Grau";
 // ⚠️ Confirmar o nome EXATO em `resultados` quando a Atividade 2 for lançada (hoje o campo fica pendente).
 export const NOME_ATIV2_RP = "Atividade 2 - Razão e Proporção";
 
+// Valor real (na escala do boletim) de cada atividade avaliativa por quiz.
+// Usado no Top 3 · Atividades da Home para ranquear pela NOTA real (x/1,5),
+// e não pela pontuação bruta 0–10. Nomes conforme aparecem em `resultados`.
+export const MAX_POR_ATIVIDADE = {
+  [NOME_ATIV1_EQ]: 1.5,
+  [NOME_ATIV2_RP]: 1.5,
+  [NOME_ATIV5]:    1.0,
+  [NOME_ATIV4]:    0.5,
+};
+
 export function makeUid(turma, nome) {
   return (turma + "_" + nome).replace(/[.#$\[\]\/\s]/g, "_");
 }
@@ -372,6 +382,79 @@ export async function buscarRazaoPropAluno(turma, nome) {
     }
   } catch (e) { console.error("Falha ao buscar Atividade 2 - Razão e Proporção:", e); }
   return melhor; // 0-10 ou null
+}
+
+// ── Total das ATIVIDADES disponibilizadas no bimestre (card da Home) ──
+// "Atividades" = as avaliativas por quiz com nota real (Ativ. 1 e Ativ. 2),
+// não Caderno/Prova/Conselheiro/PD. O denominador é a soma dos máximos das
+// atividades ATIVAS e NÃO pendentes — então cresce sozinho quando você tira
+// uma atividade de CAMPOS_PENDENTES. Cada busca devolve 0–10; converte p/ o
+// valor real multiplicando por (max/10).
+const ATIVIDADES_QUIZ = {
+  equacoes:   (t, n) => buscarEquacoesAluno(t, n),
+  razaoProp:  (t, n) => buscarRazaoPropAluno(t, n),
+};
+export async function totalAtividadesAluno(turma, nome) {
+  const ativos = new Set(camposAtivos().map(c => c.key));
+  const pend   = camposPendentes();
+  // só as atividades-quiz que o bimestre usa e que já foram disponibilizadas
+  const chaves = CAMPOS_NOTA.filter(c => ATIVIDADES_QUIZ[c.key] && ativos.has(c.key) && !pend.has(c.key));
+  if (!chaves.length) return { obtido: 0, maximo: 0, nAtivs: 0, disponivel: false };
+  let obtido = 0, maximo = 0;
+  await Promise.all(chaves.map(async (c) => {
+    maximo += c.max;
+    const bruto = await ATIVIDADES_QUIZ[c.key](turma, nome).catch(() => null); // 0–10 ou null
+    if (bruto != null) obtido += (bruto / 10) * c.max;
+  }));
+  return {
+    obtido: parseFloat(obtido.toFixed(2)),
+    maximo: parseFloat(maximo.toFixed(2)),
+    nAtivs: chaves.length,
+    disponivel: true,
+  };
+}
+
+// ── Pontos EXTRAS já conquistados nos JOGOS (card da Home) ──
+// Soma os extras automáticos de jogos que o aluno já bateu (tabuada normal,
+// negativa e escalada), respeitando o bonusConfig do bimestre. maximo = soma
+// dos valores desses extras (3,0 quando os 6 marcos de jogo estão ativos).
+const CHAVES_EXTRAS_JOGOS = ["t150", "t300", "tneg50", "tneg150", "esc100", "esc200"];
+export async function extrasJogosAluno(turma, nome) {
+  const cfg = bonusConfig();
+  const permitido = (k) => cfg && (cfg.autoExtras === null || cfg.autoExtras.includes(k));
+  const doJogo = EXTRAS_AUTO.filter(e => CHAVES_EXTRAS_JOGOS.includes(e.key) && permitido(e.key));
+  const maximo = doJogo.reduce((s, e) => s + e.valor, 0);
+  const progresso = await buscarProgressoTabuada(turma, nome).catch(() => ({}));
+  const obtido = doJogo.reduce((s, e) => s + (((progresso[e.campo] || 0) >= e.max) ? e.valor : 0), 0);
+  return { obtido: parseFloat(obtido.toFixed(1)), maximo: parseFloat(maximo.toFixed(1)) };
+}
+
+// ── Nº de OCORRÊNCIAS do aluno no bimestre (card da Home) ──
+// Conta os registros COM tag em mapeamento_salas/{turma}/anotacoes, dentro do
+// bimestre atual — mesma fonte usada pelo Professor Conselheiro. Sem tag = nota
+// neutra e não conta. Devolve { total, pos, neg }.
+export async function contarOcorrenciasAluno(turma, nome) {
+  try {
+    const snap = await get(ref(db, `mapeamento_salas/${turma}/anotacoes`));
+    if (!snap.exists()) return { total: 0, pos: 0, neg: 0 };
+    const bim = BIMESTRES.find(b => String(b.n) === String(BIMESTRE));
+    const ini = bim ? new Date(bim.inicio + "T00:00:00").getTime() : -Infinity;
+    const fim = bim ? new Date(bim.fim    + "T23:59:59").getTime() :  Infinity;
+    let pos = 0, neg = 0;
+    snap.forEach(child => {
+      const entry = child.val();
+      if (!entry || entry.nome !== nome) return;
+      (entry.registros || []).forEach(r => {
+        const ts = r?.ts;
+        if (typeof ts === "number" && (ts < ini || ts > fim)) return;
+        const tags = r?.ocorrencias || [];
+        if (!tags.length) return;
+        const negativa = tags.some(t => !POSITIVAS_OCORRENCIA.includes(t));
+        if (negativa) neg++; else pos++;
+      });
+    });
+    return { total: pos + neg, pos, neg };
+  } catch (e) { console.error("Falha ao contar ocorrências:", e); return { total: 0, pos: 0, neg: 0 }; }
 }
 
 // Monta o boletim completo de um aluno — usado em a-notas.html e no card da home.

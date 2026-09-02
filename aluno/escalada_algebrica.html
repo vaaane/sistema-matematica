@@ -424,13 +424,21 @@ async function loadProg(){
   }
   return { nivel_atual:1, melhor_nivel:1, bonus:0 };
 }
+// acertos por operação, ACUMULADOS entre sessões (p/ card "Operações praticadas")
+let tiposAcertos = { add:0, sub:0, mul:0, div:0 };
+const OP2CAT = { '+':'add', '-':'sub', '*':'mul', '/':'div' };
 async function saveProg(p){
+  const _ts = Date.now();
+  // 1ª vez que conclui todos os 200 níveis → guarda o instante (p/ Hall da Fama)
+  if ((p.melhor_nivel||0) >= MAX && !prog.concluiu_200_em) prog.concluiu_200_em = _ts;
   const payload = {
     nome: nomeAluno, turma,
     nivel_atual:  p.nivel_atual,
     melhor_nivel: p.melhor_nivel,
     bonus:        bonusPorNivel(p.melhor_nivel),
-    ultima_partida: Date.now(),
+    tipos_acertos: { ...tiposAcertos },
+    ...(prog.concluiu_200_em ? { concluiu_200_em: prog.concluiu_200_em } : {}),
+    ultima_partida: _ts,
   };
   try { if (niveisRef)  await update(niveisRef,  payload); } catch(e){ console.warn('[Escalada] save niveis', e); }
   try { if (rankingRef) await set(rankingRef, payload); }    catch(e){ console.warn('[Escalada] save ranking', e); }
@@ -479,6 +487,8 @@ function choose(i,el){
   els.forEach(e=>e.classList.add('locked'));
   if(isCorrect(chosen)){
     el.classList.add('right');
+    const _cat = OP2CAT[current.op] || 'mul';
+    tiposAcertos[_cat] = (tiposAcertos[_cat]||0) + 1;   // acumula p/ "Operações praticadas"
     setTimeout(()=>advance(),480);
   }else{
     el.classList.add('wrong');
@@ -608,6 +618,7 @@ async function renderLeaders(){
   prog = await loadProg();
   nivelAtual  = Math.max(1, prog.nivel_atual  || 1);
   melhorNivel = Math.max(nivelAtual, prog.melhor_nivel || 1);
+  if (prog.tipos_acertos) tiposAcertos = { add:0, sub:0, mul:0, div:0, ...prog.tipos_acertos };
   render();
   renderLeaders();   // assíncrono, não bloqueia o jogo
 })();

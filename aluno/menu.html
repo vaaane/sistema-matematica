@@ -90,16 +90,15 @@
       #card-notas-bimestre{order:1;}
       #card-resumo{order:2;}
       #card-liberada{order:3;}
-      #aquecimento-card{order:4;}
       #tabuada-game-card{order:5;}
       #card-atividades{order:6;}
-      #feed-card{order:7;}
       #tab-ranking-card{order:8;}
       #quiz-top3-card{order:9;}
       #card-historico{order:10;}
+      #feed-card{order:11;}
       /* Conter overflow horizontal — cards com overflow:visible e filhos absolutos estouram a tela */
       .grid-2{width:100%;max-width:100%;}
-      #card-resumo,#card-notas-bimestre,#tabuada-game-card,#tab-ranking-card,#quiz-top3-card,#card-liberada,#card-atividades,#card-historico,#aquecimento-card,#feed-card{
+      #card-resumo,#card-notas-bimestre,#tabuada-game-card,#tab-ranking-card,#quiz-top3-card,#card-liberada,#card-atividades,#card-historico,#feed-card{
         width:100%!important;max-width:100%!important;box-sizing:border-box!important;overflow-x:clip!important;
       }
       .badge-no1-card{right:10px!important;max-width:calc(100% - 20px);}
@@ -227,14 +226,14 @@
 
 
 <script type="module">
-import { LISTA_ATIVIDADES, bimestreAtual, bimestreDeData, dentroDoAtestado, normalizarAtestados, aulasNoDia } from "/js/constants.js";
+import { LISTA_ATIVIDADES, bimestreAtual, dentroDoAtestado, normalizarAtestados, aulasNoDia } from "/js/constants.js";
 import { getResultados, getLiberadasParaTurma, getAlunoPreferencia } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { saveRankPos, applyTopRankVisuals } from "/js/toprank.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
 import { initTopNotif } from "/js/topnotif.js";
 import { db } from "/js/firebase-config.js";
-import { montarBoletim, fmtNota, setBimestre } from "/js/notas.js";
+import { montarBoletim, fmtNota, setBimestre, totalAtividadesAluno, extrasJogosAluno, contarOcorrenciasAluno, MAX_POR_ATIVIDADE } from "/js/notas.js";
 setBimestre(String(bimestreAtual()));
 import { ref, get, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -424,16 +423,15 @@ const _ativsBimAtual = new Set(
   LISTA_ATIVIDADES.filter(a => (a.bim || 2) === bimestreAtual()).map(a => a.nome)
 );
 
-// ── Dados extras por aluno (tabuada · duelos · treinos) p/ o Resumo ──
+// ── Dados extras por aluno (tabuada · ocorrências · atividades) p/ o Resumo ──
 const _uidDe = (nome) => (turma + '_' + nome).replace(/[.#$[\]/\s]/g, '_');
 const dadosExtra = {};
 await Promise.all(alunos.map(async (nome) => {
   const u = _uidDe(nome);
   const _bim = bimestreAtual();
-  const [tabSnap, perfSnap, aqSnap, visSnap, chSnap, atSnap] = await Promise.all([
+  const [tabSnap, perfSnap, visSnap, chSnap, atSnap] = await Promise.all([
     get(ref(db, (_bim <= 2 ? `tabuada_niveis/${u}` : `tabuada_niveis_b/${_bim}/${u}`))).catch(() => null),
     get(ref(db, `perfis/${u}`)).catch(() => null),
-    get(ref(db, `aquecimento/${u}`)).catch(() => null),
     get(ref(db, `vistos/${turma}/${_bim}`)).catch(() => null),
     get(ref(db, `chamada/${turma}/${_bim}`)).catch(() => null),
     get(ref(db, `atestados/${turma}`)).catch(() => null),
@@ -465,11 +463,18 @@ await Promise.all(alunos.map(async (nome) => {
     }
   } catch (eC) { console.warn('[Resumo caderno/faltas]', eC); }
 
+  // Nota = total das atividades disponibilizadas; Notas extras = pontos de jogos (máx. 3,0)
+  const [atividades, extrasJogos, ocorrencias] = await Promise.all([
+    totalAtividadesAluno(turma, nome).catch(() => ({ obtido: 0, maximo: 0, disponivel: false })),
+    extrasJogosAluno(turma, nome).catch(() => ({ obtido: 0, maximo: 0 })),
+    contarOcorrenciasAluno(turma, nome).catch(() => ({ total: 0, pos: 0, neg: 0 })),
+  ]);
+
   dadosExtra[nome] = {
     nivelTab:  tabSnap?.exists() ? (tabSnap.val().melhor_nivel || tabSnap.val().nivel_atual || 1) : 1,
     duelosVit: perfSnap?.exists() ? (perfSnap.val().duelos_vitorias || 0) : 0,
-    treinos:   aqSnap?.exists()   ? Object.keys(aqSnap.val()).filter(d => bimestreDeData(d) === _bim).length : 0,
     cadFeitos, cadTotal, faltas,
+    atividades, extrasJogos, ocorrencias,
   };
 }));
 
@@ -600,16 +605,21 @@ function buildRankingMedia(lista) {
     if (!r.concluido || !r.aluno) continue;
     if (r.atividade === 'Atividade 4 - Geometria') continue;
     if (!melhor[r.aluno]) melhor[r.aluno] = { aluno: r.aluno, turma: r.turma || '?', porAtiv: {} };
-    const pts = r.nota_quiz != null
-      ? parseFloat(r.nota_quiz.toFixed(2))
-      : parseFloat(((r.pontuacao || 0) / 10).toFixed(2));
+    // escala 0–10 (mesma base do Resumo/boletim): melhor pontuação bruta da atividade
+    const bruto = parseFloat((r.pontuacao_bruta ?? r.pontuacao ?? 0).toFixed(2));
     const prev = melhor[r.aluno].porAtiv[r.atividade] || 0;
-    if (pts > prev) melhor[r.aluno].porAtiv[r.atividade] = pts;
+    if (bruto > prev) melhor[r.aluno].porAtiv[r.atividade] = bruto;
   }
   return Object.values(melhor).map(a => {
+    // total = NOTA REAL somada = Σ (bruto/10 × valor da atividade). Igual ao "x/1,5" do Resumo.
+    let total = 0;
+    for (const [nomeAtiv, bruto] of Object.entries(a.porAtiv)) {
+      const max = MAX_POR_ATIVIDADE[nomeAtiv];
+      total += max != null ? (bruto / 10) * max : (bruto / 10) * 1; // fallback: trata como valer 1,0
+    }
+    total = parseFloat(total.toFixed(2));
     const vals = Object.values(a.porAtiv);
-    const total = vals.reduce((s, v) => s + v, 0);
-    const media = vals.length ? Math.round(total / vals.length) : 0;
+    const media = vals.length ? Math.round(vals.reduce((s,v)=>s+v,0) / vals.length) : 0;
     return { aluno: a.aluno, turma: a.turma, total, media };
   }).sort((a, b) => b.total - a.total);
 }
@@ -770,7 +780,7 @@ const top3Html = top3Groups.length ? top3Groups.map(g => {
   const isMe = g.students.some(p => alunos.includes(p.aluno));
   const nomes = g.students.map(p => p.aluno + (alunos.includes(p.aluno) ? ' ★' : '')).join(' · ');
   const turmas = [...new Set(g.students.map(p => p.turma))].map(t => `Turma ${t}`).join(' · ');
-  return renderRankRow({ pos: g.pos, nome: nomes, sub: turmas, valor: `${g.score}`, valorLabel: 'pts', isMe });
+  return renderRankRow({ pos: g.pos, nome: nomes, sub: turmas, valor: `${fmtNota(g.score)}`, valorLabel: 'pts', isMe });
 }).join('')
 : '<p style="font-size:13px;color:var(--text-muted);padding:6px 0">Nenhum resultado ainda.</p>';
 
@@ -814,33 +824,6 @@ function calcTimeSinceTop3(aluno, allResults) {
   return firstEntry;
 }
 
-function computeProximaMeta(aluno) {
-  const idx = rankAll.findIndex(r => r.aluno === aluno);
-  if (idx < 0) return null;
-  const userTotal = rankAll[idx].total;
-  let dPos = 0, lastT = null, userRank = 0;
-  for (const r of rankAll) {
-    if (r.total !== lastT) { dPos++; lastT = r.total; }
-    if (r.aluno === aluno) userRank = dPos;
-  }
-  if (userRank === 1) {
-    const below = rankAll.find(r => r.total < userTotal);
-    if (!below) return '🏆 Você lidera sem concorrentes!';
-    return `🏆 Você lidera com ${userTotal - below.total}pts de vantagem!`;
-  }
-  let aboveTotal = null;
-  for (let i = idx - 1; i >= 0; i--) {
-    if (rankAll[i].total > userTotal) { aboveTotal = rankAll[i].total; break; }
-  }
-  if (aboveTotal === null) return null;
-  const gap = aboveTotal - userTotal;
-  const below = rankAll.find(r => r.total < userTotal);
-  if (below && (userTotal - below.total) <= 15) {
-    return `Você está a ${gap}pts do ${userRank - 1}º lugar · ⚠️ ${below.aluno} está ${userTotal - below.total}pts atrás`;
-  }
-  return `Você está a ${gap}pts do ${userRank - 1}º lugar!`;
-}
-
 // ── Torneio ativo para esta turma ────────────────────────────
 let torneioAtivo = null;
 if (torneioSnap?.exists()) {
@@ -855,9 +838,6 @@ if (torneioSnap?.exists()) {
 // ── Sessão lookup para percentual ─────────────────────────────
 const sessMap = {};
 for (const r of todos) sessMap[r.id] = r;
-
-// ── Próxima Meta por aluno ────────────────────────────────────
-const proximaMetaHtml = alunos.map(a => computeProximaMeta(a)).filter(Boolean).join('<br>');
 
 // ── Tempo no Pódio ────────────────────────────────────────────
 let tempoPodioHtml = '';
@@ -1116,7 +1096,7 @@ ${tempoPodioHtml}
       </div>
       ${alunos.map(a => {
         const r = resumoAluno(a);
-        const ex = dadosExtra[a] || { nivelTab: 1, duelosVit: 0, treinos: 0, cadFeitos: 0, cadTotal: 0, faltas: 0 };
+        const ex = dadosExtra[a] || { nivelTab: 1, duelosVit: 0, cadFeitos: 0, cadTotal: 0, faltas: 0 };
         const propAluno = notaProp(a);
         const tooltipAbaixo = propAluno !== null && mediaTurma !== null && propAluno < mediaTurma ? 'title="Você está abaixo da média da turma, mas pode recuperar nas próximas atividades. Fique atento(a)!"' : '';
         const turmaColor = r.posTurma === 1 ? '#f0a500' : 'var(--orange)';
@@ -1128,43 +1108,15 @@ ${tempoPodioHtml}
             <span>${a}</span>
           </div>
           <div class="mini-stats">
-            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--gold);font-size:22px">${r.total_ativ > 0 ? r.totalPts+'/'+r.total_ativ*10 : '—'}</div><div class="mini-stat-label">Nota</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--gold);font-size:22px">${ex.atividades && ex.atividades.disponivel ? fmtNota(ex.atividades.obtido)+'/'+fmtNota(ex.atividades.maximo) : '—'}</div><div class="mini-stat-label">Atividades</div></div>
             <div class="mini-stat"><div class="mini-stat-value" style="color:var(--green);font-size:22px">${ex.cadTotal > 0 ? (Number.isInteger(ex.cadFeitos)?ex.cadFeitos:ex.cadFeitos.toFixed(1).replace('.',','))+'/'+ex.cadTotal : '—'}</div><div class="mini-stat-label">📓 Caderno</div></div>
             <div class="mini-stat"><div class="mini-stat-value" style="color:${ex.faltas>0?'#EF4444':'var(--text-muted)'};font-size:22px">${ex.faltas}</div><div class="mini-stat-label">📅 Faltas (aulas)</div></div>
             <div class="mini-stat"><div class="mini-stat-value" style="color:var(--blue);font-size:22px">${ex.nivelTab}</div><div class="mini-stat-label">🔢 Nível tabuada</div></div>
-            <div class="mini-stat"><div class="mini-stat-value" style="color:#EF4444;font-size:22px">${ex.duelosVit}</div><div class="mini-stat-label">⚔️ Duelos vencidos</div></div>
-            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--orange);font-size:22px">${ex.treinos}</div><div class="mini-stat-label">🔥 Treinos diários</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:#EF4444;font-size:22px">${ex.ocorrencias ? ex.ocorrencias.total : 0}</div><div class="mini-stat-label">📋 Ocorrências</div></div>
+            <div class="mini-stat"><div class="mini-stat-value" style="color:var(--orange);font-size:22px">${ex.extrasJogos ? fmtNota(ex.extrasJogos.obtido)+'/'+fmtNota(ex.extrasJogos.maximo) : '—'}</div><div class="mini-stat-label">⭐ Notas extras</div></div>
           </div>
-          ${(() => {
-            const meta = computeProximaMeta(a);
-            if (!meta || r.totalPts === 0) return '';
-            return `<div style="margin-top:10px;padding:7px 12px;background:rgba(47,158,220,.07);border:1px solid rgba(47,158,220,.2);border-radius:8px;font-size:12px;color:var(--blue);font-weight:600;line-height:1.5">🎯 ${meta}</div>`;
-          })()}
         </div>`;
       }).join('')}
-    </div>
-
-    <div id="aquecimento-card" class="card" style="margin-bottom:14px;cursor:pointer;border-left:3px solid var(--orange)" onclick="window.location.href='/aluno/aquecimento.html'">
-      <div style="display:flex;align-items:center;gap:14px;padding:10px 2px">
-        <div id="aq-card-icon" style="font-size:42px">🔥</div>
-        <div style="flex:1">
-          <div id="aq-card-titulo" style="font-size:17px;font-weight:700">Treino diário</div>
-          <div id="aq-card-sub" style="font-size:13px;color:var(--text-muted);margin-top:2px">Carregando…</div>
-        </div>
-        <div id="aq-card-seta" style="font-size:18px;color:var(--orange)">→</div>
-      </div>
-    </div>
-
-    <div id="feed-card" class="card" style="margin-bottom:14px">
-      <div class="section-label" style="color:var(--purple)">
-        <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
-        </svg>
-        Novidades
-      </div>
-      <div id="feed-lista" style="margin-top:10px;display:flex;flex-direction:column;gap:6px">
-        <div style="color:var(--text-muted);font-size:12px;padding:8px 0">Carregando...</div>
-      </div>
     </div>
 
     <div id="tab-ranking-card" class="card" style="margin-bottom:14px;overflow:visible;position:relative;padding-top:18px">
@@ -1185,6 +1137,18 @@ ${tempoPodioHtml}
         Top 3 · Atividades
       </div>
       <div style="margin-top:10px;overflow:visible">${top3Html}</div>
+    </div>
+
+    <div id="feed-card" class="card" style="margin-bottom:14px">
+      <div class="section-label" style="color:var(--purple)">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+        </svg>
+        Novidades
+      </div>
+      <div id="feed-lista" style="margin-top:10px;display:flex;flex-direction:column;gap:6px">
+        <div style="color:var(--text-muted);font-size:12px;padding:8px 0">Carregando...</div>
+      </div>
     </div>
 
   </div>
@@ -1431,28 +1395,6 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
   try { applyNo1PageVisuals({ isQuiz: euSouQuiz1, isTabuada: myGeral === 1, tabLevel: meuNivel }); } catch(e) { console.error('applyNo1PageVisuals:', e); }
 })();
 
-// ── Card aquecimento ───────────────────────────────────────────
-(async () => {
-  try {
-    const TEMAS_MENU = {
-      0:'Mix', 1:'Multiplicação', 2:'Divisão', 3:'Adição', 4:'Subtração', 5:'Mix', 6:'Desafio 🔥'
-    };
-    const temaMenu  = TEMAS_MENU[new Date().getDay()];
-    const hojeMenu  = new Date().toISOString().slice(0, 10);
-    const uidMenu   = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
-    const snap      = await get(ref(db, `aquecimento/${uidMenu}/${hojeMenu}`));
-    const jaFez     = snap.exists();
-    const dados     = jaFez ? snap.val() : null;
-    document.getElementById('aq-card-icon').textContent  = jaFez ? '✅' : '🔥';
-    document.getElementById('aq-card-titulo').textContent = jaFez ? 'Treino diário feito hoje!' : 'Treino diário';
-    document.getElementById('aq-card-sub').textContent   = jaFez
-      ? `${dados.acertos} acertos · +${dados.xp_ganho} XP`
-      : `Tema: ${temaMenu} · até +35 XP`;
-    document.getElementById('aq-card-seta').textContent  = jaFez ? '✓' : '→';
-    document.getElementById('aq-card-seta').style.color  = jaFez ? 'var(--green)' : 'var(--orange)';
-  } catch(_) {}
-})();
-
 // ── Feed em tempo real ─────────────────────────────────────────
 function _escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function _tempoRelativo(ts) {
@@ -1560,13 +1502,6 @@ try {
         <div>
           <div class="mg-item-title">Duelos <span class="mg-tag-extra">nota extra</span></div>
           <div class="mg-item-desc">Desafie colegas em tempo real, ganhe XP e suba no ranking.</div>
-        </div>
-      </div>
-      <div class="mg-item">
-        <div class="mg-item-icon">🔥</div>
-        <div>
-          <div class="mg-item-title">Treino Diário <span class="mg-tag-extra">nota extra</span></div>
-          <div class="mg-item-desc">Treine todo dia e mantenha sua sequência: <strong>+10 XP</strong> por dia.</div>
         </div>
       </div>
     </div>

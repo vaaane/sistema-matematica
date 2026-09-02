@@ -99,6 +99,15 @@
   .modal-btn-bar .btn-ghost{color:var(--text-muted);border-color:var(--border)}
   .modal-btn-bar .btn-ghost:hover{color:var(--text);border-color:var(--text-muted)}
   .col-info{font-size:12px;color:var(--text-muted);margin-bottom:6px}
+  .col-obs{font-size:13px;color:var(--text);background:rgba(255,255,255,.04);border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:8px;padding:9px 11px;margin-bottom:14px;display:flex;gap:8px;align-items:flex-start;line-height:1.45}
+  .col-obs b{color:var(--purple);flex-shrink:0}
+  .atv-note-mark{opacity:.85}
+  /* tooltip flutuante da observação no cabeçalho da coluna */
+  .atv-tip{position:fixed;z-index:400;max-width:300px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;box-shadow:0 12px 40px rgba(0,0,0,.45);font-size:12.5px;line-height:1.45;color:var(--text);pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .13s ease,transform .13s ease}
+  .atv-tip.show{opacity:1;transform:translateY(0)}
+  .atv-tip .tip-cont{color:var(--text-muted);font-size:11px;margin-bottom:5px}
+  .atv-tip .tip-obs{display:flex;gap:6px;align-items:flex-start}
+  .atv-tip .tip-obs b{color:var(--purple);flex-shrink:0}
 
   /* seletor da biblioteca (dentro do modal) */
   .bib-filtro{padding:6px 14px;font-size:12px;font-weight:700;border:1.5px solid var(--border);background:rgba(255,255,255,.05);color:var(--text-muted);border-radius:999px;cursor:pointer;font-family:'Inter',sans-serif}
@@ -197,6 +206,7 @@
   <div class="modal-box"><div class="modal-box-body">
     <div class="modal-box-title" id="mColTitulo">Atividade</div>
     <div class="col-info" id="mColInfo"></div>
+    <div class="col-obs" id="mColObs" style="display:none"></div>
     <div class="menu-col">
       <button class="btn btn-gray" id="btnAbrirMat" onclick="abrirMaterial()" style="display:none">📄 Abrir material da aula</button>
       <button class="btn btn-gray" onclick="marcarTodos(1)">✓ Marcar todos como visto</button>
@@ -394,10 +404,11 @@ function render(){
     const corr = tp==="teorica" ? `<div class="atv-corr teoria">📘 teoria</div>`
                : tp==="projeto" ? `<div class="atv-corr projeto">📐 projeto</div>`
                : `<div class="atv-corr ${atv.corrigido?"ok":"no"}">${atv.corrigido?"✔ corrigido":"✗ não corrigido"}</div>`;
-    html += `<th class="col-atv" data-id="${atv.id}" title="${(atv.conteudo||"").replace(/"/g,'&quot;')}">
+    const _escA = s => String(s||"").replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    html += `<th class="col-atv" data-id="${atv.id}" data-cont="${_escA(atv.conteudo)}" data-obs="${_escA(atv.obs)}">
       ${numBadge}
       <div class="atv-nome">${nomeDaAtividade(atv)}${mat}</div>
-      <div class="atv-data">${fmtData(atv.data)}${atv.obs?` <span title="${atv.obs.replace(/"/g,'&quot;')}">📝</span>`:""}</div>
+      <div class="atv-data">${fmtData(atv.data)}${atv.obs?` <span class="atv-note-mark">📝</span>`:""}</div>
       <div class="atv-pct">${done}/${alunosTurma.length}</div>
       ${corr}</th>`;
   });
@@ -432,6 +443,46 @@ function render(){
 
   wrap.querySelectorAll(".cel").forEach(td=>td.onclick=()=>ciclar(td.dataset.id, td.dataset.al));
   wrap.querySelectorAll(".col-atv").forEach(th=>th.onclick=()=>abrirMenuCol(th.dataset.id));
+
+  // tooltip da observação ao passar o mouse no cabeçalho
+  ensureAtvTip();
+  wrap.querySelectorAll(".col-atv").forEach(th=>{
+    th.addEventListener("mouseenter", ()=>mostrarTip(th));
+    th.addEventListener("mouseleave", esconderTip);
+  });
+  wrap.onscroll = esconderTip;
+}
+
+function ensureAtvTip(){
+  if(document.getElementById("atvTip")) return;
+  const t=document.createElement("div");
+  t.id="atvTip"; t.className="atv-tip";
+  document.body.appendChild(t);
+}
+function mostrarTip(th){
+  const obs=th.dataset.obs||"", cont=th.dataset.cont||"";
+  if(!obs && !cont) return;
+  const t=document.getElementById("atvTip"); if(!t) return;
+  t.innerHTML="";
+  if(cont){ const c=document.createElement("div"); c.className="tip-cont"; c.textContent=cont; t.appendChild(c); }
+  if(obs){
+    const o=document.createElement("div"); o.className="tip-obs";
+    const b=document.createElement("b"); b.textContent="📝";
+    const s=document.createElement("span"); s.textContent=obs;
+    o.appendChild(b); o.appendChild(s); t.appendChild(o);
+  }
+  t.classList.add("show");
+  const r=th.getBoundingClientRect();
+  t.style.left="0px"; t.style.top="-9999px";           // mede fora da tela
+  const tw=t.offsetWidth, thh=t.offsetHeight;
+  let left=r.left + r.width/2 - tw/2;
+  left=Math.max(8, Math.min(left, window.innerWidth - tw - 8));
+  let top=r.bottom + 8;
+  if(top + thh > window.innerHeight - 8) top=r.top - thh - 8; // sobe se não couber embaixo
+  t.style.left=left+"px"; t.style.top=Math.max(8,top)+"px";
+}
+function esconderTip(){
+  const t=document.getElementById("atvTip"); if(t) t.classList.remove("show");
 }
 
 // ── Ações (persistem no Firebase) ──
@@ -582,7 +633,10 @@ window.abrirMenuCol = function(id){
   const atv=atual.atividades.find(a=>a.id===id);
   document.getElementById("mColTitulo").textContent=atv.nome;
   const matTxt = atv.temMaterial ? ` · 📄 ${atv.materialTitulo||atv.materialRef}` : "";
-  document.getElementById("mColInfo").textContent=`${fmtData(atv.data)}${atv.conteudo?" — "+atv.conteudo:""}${matTxt}${atv.obs?" · 📝 "+atv.obs:""}`;
+  document.getElementById("mColInfo").textContent=`${fmtData(atv.data)}${atv.conteudo?" — "+atv.conteudo:""}${matTxt}`;
+  const _obsEl=document.getElementById("mColObs");
+  if(atv.obs){ _obsEl.innerHTML=`<b>📝</b><span></span>`; _obsEl.querySelector("span").textContent=atv.obs; _obsEl.style.display="flex"; }
+  else{ _obsEl.style.display="none"; _obsEl.textContent=""; }
   document.getElementById("btnAbrirMat").style.display = atv.temMaterial ? "" : "none";
   document.getElementById("btnRemMat").style.display  = atv.temMaterial ? "" : "none";
   const _bc = document.getElementById("btnCorrigido");

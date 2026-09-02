@@ -25,8 +25,6 @@ export const CONQUISTAS_DEF = [
   { id: 'streak_3',          emoji: '🔥',   nome: 'Constante',            desc: 'Faça atividades por 3 semanas seguidas',     meta: 3     },
   { id: 'streak_7',          emoji: '🔥🔥', nome: 'Dedicado',             desc: 'Faça atividades por 7 semanas seguidas',     meta: 7     },
   { id: 'streak_30',         emoji: '💥',  nome: 'Imparável',            desc: 'Faça atividades por 30 semanas seguidas',    meta: 30    },
-  // Treino diário
-  { id: 'treinos_30',        emoji: '🏅',  nome: 'Maratonista',          desc: 'Complete 30 treinos diários',               meta: 30    },
   // Perfil
   { id: 'nivel_perfil_5',    emoji: '⭐',  nome: 'Estrategista',         desc: 'Chegue ao nível 5 de perfil',               meta: null  },
   { id: 'nivel_perfil_10',   emoji: '🌠',  nome: 'Lenda',                desc: 'Chegue ao nível máximo de perfil',          meta: null  },
@@ -102,10 +100,6 @@ export async function verificarConquistas(uid, contexto = {}) {
     if (!tem('streak_3')  && streak >= 3)  novas.push('streak_3');
     if (!tem('streak_7')  && streak >= 7)  novas.push('streak_7');
     if (!tem('streak_30') && streak >= 30) novas.push('streak_30');
-
-    // ── Treino diário ────────────────────────────────────────
-    const totalTreinos = contexto.totalTreinos || 0;
-    if (!tem('treinos_30') && totalTreinos >= 30) novas.push('treinos_30');
 
     // ── Nível de perfil ──────────────────────────────────────
     const nivelPerf = perf.nivel || 1;
