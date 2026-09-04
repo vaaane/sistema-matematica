@@ -192,7 +192,6 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
       <div class="qexpr" id="q-expr"></div>
     </div>
     <div class="alts" id="alts" style="margin-top:12px"></div>
-    <button class="btn-ghost" id="reset-btn" style="margin-top:14px">↺ Reiniciar do nível 1</button>
   </div>
 </div>
 
@@ -578,7 +577,6 @@ async function resetAll(){
   location.reload();
 }
 window.resetAll = resetAll;   // usado pelo botão da tela de vitória (onclick inline)
-$('reset-btn').onclick=()=>{ if(confirm('Reiniciar do nível 1? Seu recorde é mantido.'))resetAll(); };
 
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
