@@ -407,9 +407,8 @@ async function carregar(){
     biblioteca = snapB.exists()
       ? Object.entries(snapB.val()).map(([id,b])=>({id, nome:b.nome||"(sem nome)", tipo:b.tipo||"teorica", arquivo:b.arquivo||""}))
       : [];
-    // posiciona o calendário no mês da aula mais recente do bimestre (ou hoje)
-    if(aulas.length){ const ult=aulas[aulas.length-1].data||hoje(); calRef=new Date(+ult.slice(0,4), +ult.slice(5,7)-1, 1); }
-    else calRef=new Date();
+    // padrão: sempre abre no mês do dia atual
+    calRef=new Date();
   }catch(e){ console.error(e); aulas=[]; biblioteca=[]; toast("Erro ao carregar (verifique regra 'aulas')", true); }
   render();
   if(view==="calendario") renderCalendario();
