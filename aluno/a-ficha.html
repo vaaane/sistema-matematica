@@ -355,6 +355,7 @@ let chamada = {};      // { "YYYY-MM-DD": { aluno:true } }
 let anotacoes = {};    // { aluno:[ {ts, ocorrencias:[], obs} ] }
 let resultadosAluno = [];  // resultados de quiz do aluno (notas de atividade)
 let libHistorico = [];     // liberacoes_historico (datas oficiais + 2ª chamada)
+let _dataAgendaReg = {};   // data agendada por atividade (atividades_agenda)
 let atestados = [];    // [ {inicio,fim,ts,obs} ] do aluno logado
 let nivelTab = 0, nivelNeg = 0, nivelEsc = 0;   // progresso nos jogos (tabuada e escalada)
 
@@ -383,7 +384,7 @@ async function carregar(){
   try{
     const _uid = (turma + '_' + aluno).replace(/[.#$[\]/\s]/g, '_');
     const _bimN = bimestreAtual();
-    const [sV, sC, sO, sA, sTab, sNeg, sEsc, sBib] = await Promise.all([
+    const [sV, sC, sO, sA, sTab, sNeg, sEsc, sBib, sAgenda] = await Promise.all([
       get(ref(db, `vistos/${turma}/${bimestre}`)),
       get(ref(db, `chamada/${turma}/${bimestre}`)),
       get(ref(db, `mapeamento_salas/${turma}/anotacoes`)),
@@ -392,7 +393,16 @@ async function carregar(){
       get(ref(db, (_bimN <= 2 ? `tabuada_negativos_niveis/${_uid}` : `tabuada_negativos_niveis_b/${_bimN}/${_uid}`))).catch(()=>null),
       get(ref(db, (_bimN <= 2 ? `escalada_niveis/${_uid}` : `escalada_niveis_b/${_bimN}/${_uid}`))).catch(()=>null),
       get(ref(db, "biblioteca")),
+      get(ref(db, `atividades_agenda/${turma}/${bimestre}`)).catch(()=>null),
     ]);
+    // data agendada por atividade — usada só para EXIBIR a data quando a atividade
+    // ainda não foi aplicada (estado "agendada"). Não conta como presença/falta.
+    _dataAgendaReg = {};
+    if (sAgenda && sAgenda.exists()) {
+      for (const a of Object.values(sAgenda.val()||{})) {
+        if (a && a.atividade && a.data && !_dataAgendaReg[a.atividade]) _dataAgendaReg[a.atividade] = a.data;
+      }
+    }
     const _bibMap = {};
     if (sBib && sBib.exists()) { const _bv=sBib.val(); for(const k in _bv){ _bibMap[k]={nome:_bv[k].nome||"", arquivo:_bv[k].arquivo||"", tipo:_bv[k].tipo||""}; } }
     const _bibIdx = indexarBiblioteca(_bibMap);
@@ -542,6 +552,10 @@ function render(){
       }
       return {nome, estado:"feito", real:nota.real, vmax, pts:nota.pts, id:nota.id, oficiais};
     }
+    // Sem data oficial (histórico/visto) mas com data agendada → ainda não aplicada.
+    if (!oficiais.length && _dataAgendaReg[nome]) {
+      return {nome, estado:"agendada", vmax, dataRef:_dataAgendaReg[nome], oficiais};
+    }
     const presenteEm = oficiais.find(d=>{ const e=estadoCham(d,aluno); return e==="presente"||e==="atraso"||e===""; });
     if (presenteEm) return {nome, estado:"presente", vmax, dataRef:presenteEm, oficiais,
                             atraso: estadoCham(presenteEm,aluno)==="atraso"};
@@ -578,6 +592,9 @@ function render(){
     } else if (l.estado === "faltou"){
       sub = `<span class="nsub vermelho">✕ Não realizada — faltou no dia${l.dataRef?` (${fmtDM(l.dataRef)})`:""}</span>`;
       val = `<span class="nota-val vermelho">0,00 <small>/ ${_fmt2(l.vmax)}</small></span>`;
+    } else if (l.estado === "agendada"){
+      sub = `<span class="nsub azul">📅 Agendada${l.dataRef?` para ${fmtDM(l.dataRef)}`:""} — ainda não aplicada</span>`;
+      val = `<span class="nota-val cinza">— <small>/ ${_fmt2(l.vmax)}</small></span>`;
     } else { // elegivel
       sub = `<span class="nsub azul">Elegível a 2ª chamada — faltou com atestado${l.dataRef?` (${fmtDM(l.dataRef)})`:""}. Procure o professor(a).</span>`;
       val = `<span class="nota-val cinza">— <small>/ ${_fmt2(l.vmax)}</small></span>`;
