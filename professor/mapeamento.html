@@ -520,8 +520,10 @@ modal.addEventListener("click", e => { if (e.target === modal) fecharModal(); })
 async function persistirAnotacoes(){
   const obj = {};
   Object.keys(anotacoes).forEach(nome => {
-    if (anotacoes[nome] && anotacoes[nome].length)
-      obj[btoa(unescape(encodeURIComponent(nome)))] = { nome, registros: anotacoes[nome] };
+    if (anotacoes[nome] && anotacoes[nome].length){
+      const chave = btoa(unescape(encodeURIComponent(nome))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+      obj[chave] = { nome, registros: anotacoes[nome] };
+    }
   });
   await set(ref(db, `mapeamento_salas/${turmaAtual}/anotacoes`), obj);
 }
