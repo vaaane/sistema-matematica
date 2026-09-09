@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+<link href="/manifest.json" rel="manifest"/>
+<link href="/icon-192.png" rel="apple-touch-icon"/>
+<meta content="#15102a" name="theme-color"/>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<!-- ═══ FICHA DA AULA (lida pelo gerador do index — não remover) ═══ -->
+<meta content="regra-de-tres-teoria" name="aula:id"/>
+<meta content="teoria" name="aula:tipo"/>
+<meta content="grandezas" name="aula:eixo"/>
+<meta content="4" name="aula:bimestre"/>
+<meta content="Regra de Três" name="aula:titulo"/>
+<meta content="Regra de três simples: o que é, grandezas diretamente e inversamente proporcionais e resolução passo a passo (direta e inversa) com exemplos resolvidos." name="aula:resumo"/>
+<meta content="Regra de Três" name="aula:tema"/>
+<title>Regra de Três — Sistema de Matemática</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet"/>
+<link href="/css/main.css" rel="stylesheet"/>
+<style>
+  :where(body){margin:0;background:var(--bg,#0d0a2e);color:var(--text,#f1eefb);font-family:'Inter',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+  :where(.layout){display:flex;min-height:100vh}
+  :where(.sidebar){width:230px;flex-shrink:0;background:var(--bg2,#15102a);border-right:1px solid var(--border,rgba(255,255,255,.08))}
+  :where(.main){flex:1;min-width:0;display:flex;flex-direction:column}
+  :where(.topbar){display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 22px;border-bottom:1px solid var(--border,rgba(255,255,255,.08));background:var(--bg2,#15102a)}
+  :where(.topbar-title){font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700}
+  :where(.topbar-sub){font-size:12px;color:var(--text-muted,rgba(255,255,255,.55))}
+  :where(.content){flex:1;padding:22px 18px 64px}
+  @media(max-width:820px){:where(.sidebar){display:none}}
+  .sb-fb{padding:18px 16px;display:flex;flex-direction:column;gap:4px}
+  .sb-fb .sb-h{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted,rgba(255,255,255,.5));margin:10px 6px 4px}
+  .sb-fb a{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:10px;color:var(--text,#f1eefb);text-decoration:none;font-size:13px;font-weight:600}
+  .sb-fb a:hover{background:rgba(255,255,255,.05)}
+  .au{max-width:720px;margin:0 auto}
+  .au-hero{position:relative;overflow:hidden;text-align:center;padding:26px 22px;margin-bottom:22px;border-radius:18px;border:1px solid var(--border,rgba(255,255,255,.08));background:linear-gradient(135deg,rgba(124,92,252,.16),rgba(47,158,220,.07))}
+  .au-hero::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 78% -10%,rgba(240,165,0,.10),transparent 55%);pointer-events:none}
+  .au-hero-eyebrow{font-size:10.5px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold,#f0a500);margin-bottom:6px}
+  .au-hero-title{font-family:'Rajdhani',sans-serif;font-size:30px;font-weight:700;line-height:1.05;margin:0}
+  .au-hero-meta{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-top:14px}
+  .au-meta{font-size:11px;font-weight:700;padding:4px 11px;border-radius:20px;background:rgba(255,255,255,.06);border:1px solid var(--border,rgba(255,255,255,.1));color:rgba(255,255,255,.8)}
+  .au-meta.gold{color:var(--gold,#f0a500);background:rgba(240,165,0,.1);border-color:rgba(240,165,0,.3)}
+  .au-p{font-size:14px;line-height:1.75;color:rgba(255,255,255,.82);margin:0 0 12px}
+  .au-p b{color:#fff;font-weight:700}
+  .au-sec{margin-bottom:30px;scroll-margin-top:80px}
+  .au-sec-head{display:flex;align-items:center;gap:11px;margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid var(--border,rgba(255,255,255,.08))}
+  .au-sec-num{width:26px;height:26px;flex-shrink:0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(135deg,var(--purple,#7c5cfc),#5a3fd6)}
+  .au-sec-title{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;line-height:1.1}
+  .au-sec-tag{margin-left:auto;font-size:10px;font-weight:800;padding:3px 10px;border-radius:11px;white-space:nowrap;text-transform:uppercase;letter-spacing:.4px}
+  .tag-teoria{background:rgba(124,92,252,.15);border:1px solid rgba(124,92,252,.35);color:#b6a2ff}
+  .tag-pratica{background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.32);color:#3ddc84}
+  /* — Caixa de enunciado principal (contexto do problema) — */
+  .au-def{position:relative;background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-left:4px solid var(--purple,#7c5cfc);border-radius:12px;padding:15px 17px;margin:0 0 16px}
+  .au-def-label{font-size:10.5px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--purple,#a48bff);margin-bottom:7px}
+  .au-def-body{font-size:14px;line-height:1.7;color:rgba(255,255,255,.85)}
+  .au-def-body b{color:#fff}
+  .au-dados{display:flex;flex-wrap:wrap;gap:10px;margin-top:11px}
+  .au-dado{flex:1;min-width:180px;background:rgba(255,255,255,.03);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:10px;padding:11px 13px;font-size:13.5px;line-height:1.5;color:rgba(255,255,255,.85)}
+  .au-dado b{color:#fff}
+  /* ═══ EXERCÍCIOS (cards com resposta sempre disponível) ═══ */
+  .ex-list{display:flex;flex-direction:column;gap:12px}
+  .ex{background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:14px;padding:16px 17px}
+  .ex-top{display:flex;align-items:center;gap:11px;margin-bottom:11px}
+  .ex-num{min-width:30px;height:30px;flex-shrink:0;padding:0 8px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(135deg,var(--purple,#7c5cfc),#5a3fd6)}
+  .ex-tag{margin-left:auto;font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:3px 9px;border-radius:10px}
+  .lv-facil{background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.3);color:#3ddc84}
+  .lv-medio{background:rgba(240,165,0,.12);border:1px solid rgba(240,165,0,.3);color:#f0a500}
+  .lv-dificil{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.32);color:#f87171}
+  .ex-stmt{font-size:14px;line-height:1.65;color:rgba(255,255,255,.9);margin-bottom:11px}
+  .ex-toggle{display:inline-flex;align-items:center;gap:7px;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;padding:8px 14px;border-radius:10px;color:var(--gold,#f0a500);background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.28)}
+  .ex-toggle:hover{background:rgba(240,165,0,.14)}
+  .ex-toggle .arw{transition:transform .25s ease}
+  .ex-toggle[aria-expanded="true"] .arw{transform:rotate(180deg)}
+  .ex-answer{max-height:0;overflow:hidden;transition:max-height .4s ease}
+  .ex-answer.open{max-height:900px}
+  .ex-answer-in{margin-top:11px;padding:12px 14px;border-radius:11px;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.25)}
+  .ex-answer-lbl{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--green,#3ddc84);margin-bottom:6px}
+  .ex-answer-in p{margin:0 0 6px;font-size:13.5px;line-height:1.65;color:rgba(255,255,255,.82)}
+  .ex-answer-in .final{font-weight:700;color:#3ddc84}
+  .eq-destaque{display:inline-block;margin-top:4px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:18px;color:var(--gold,#f0a500);letter-spacing:.4px}
+  .frac{display:inline-flex;flex-direction:column;text-align:center;vertical-align:middle;font-size:.82em;line-height:1.02;margin:0 .18em}
+  .frac>span:first-child{border-bottom:1.6px solid currentColor;padding:0 .32em}
+  .frac>span:last-child{padding:0 .32em}
+  :focus-visible{outline:2px solid var(--purple,#7c5cfc);outline-offset:2px}
+  @media(prefers-reduced-motion:reduce){.ex-answer,.ex-toggle .arw{transition:none}}
+  /* — setinha de sentido das grandezas (usa só o que já existe + este util) — */
+  .seta{font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--gold,#f0a500)}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar" id="sidebar"></aside>
+<div class="main">
+<div class="topbar">
+<div class="topbar-left">
+<div class="topbar-title">📚 Material de Aula</div>
+<div class="topbar-sub">Conteúdo para estudar</div>
+</div>
+</div>
+<div class="content">
+<div class="au">
+<header class="au-hero">
+<div class="au-hero-eyebrow">TEORIA · Matemática · 8º ano · 4º bimestre</div>
+<h1 class="au-hero-title">Regra de Três</h1>
+<div class="au-hero-meta">
+<span class="au-meta gold">Simples · direta e inversa</span>
+<span class="au-meta">Turmas 8D–8H</span>
+<span class="au-meta">Só teoria</span>
+</div>
+</header>
+
+<p class="au-p" style="margin-bottom:18px">Leia a teoria com calma e acompanhe os <b>exemplos resolvidos</b> passo a passo. Depois, treine na <b>lista de exercícios (Parte 1)</b>.</p>
+
+<!-- ══════════════ TEORIA 1 — o que é ══════════════ -->
+<section class="au-sec"><div class="au-sec-head"><div class="au-sec-num">1</div><div class="au-sec-title">O que é regra de três?</div><div class="au-sec-tag tag-teoria">TEORIA</div></div>
+
+<div class="au-def">
+<div class="au-def-label">A ideia</div>
+<div class="au-def-body">A <b>regra de três</b> é um jeito de descobrir um valor <b>desconhecido</b> em uma <b>proporção</b> entre duas grandezas. Ela funciona porque, quando duas grandezas são proporcionais, as razões entre seus valores se mantêm.</div>
+</div>
+
+<p class="au-p">Sempre seguimos <b>três passos</b>:</p>
+<div class="au-dados">
+<div class="au-dado"><b>1. Organizar</b><br>montar as duas grandezas em colunas, colocando o <b>x</b> no que você quer achar.</div>
+<div class="au-dado"><b>2. Identificar</b><br>ver se as grandezas são <b>diretamente</b> ou <b>inversamente</b> proporcionais.</div>
+<div class="au-dado"><b>3. Resolver</b><br>montar a proporção certa e usar a <b>multiplicação em cruz</b>.</div>
+</div>
+</section>
+
+<!-- ══════════════ TEORIA 2 — direta x inversa ══════════════ -->
+<section class="au-sec"><div class="au-sec-head"><div class="au-sec-num">2</div><div class="au-sec-title">Diretamente ou inversamente proporcional?</div><div class="au-sec-tag tag-teoria">TEORIA</div></div>
+
+<p class="au-p">Antes de calcular, descubra <b>como uma grandeza reage quando a outra muda</b>. Use o método das <b>setas</b>:</p>
+
+<div class="au-dados">
+<div class="au-dado"><b>Diretamente proporcional</b><br>uma <b>aumenta</b> e a outra <b>também aumenta</b> (na mesma proporção).<br><span class="seta">↑ ↑</span> setas no <b>mesmo</b> sentido.<br><br><i>Ex.: mais litros de combustível → mais quilômetros rodados.</i></div>
+<div class="au-dado"><b>Inversamente proporcional</b><br>uma <b>aumenta</b> e a outra <b>diminui</b>.<br><span class="seta">↑ ↓</span> setas em sentidos <b>opostos</b>.<br><br><i>Ex.: mais operários → menos dias para terminar a obra.</i></div>
+</div>
+</section>
+
+<!-- ══════════════ TEORIA 3 — direta passo a passo ══════════════ -->
+<section class="au-sec"><div class="au-sec-head"><div class="au-sec-num">3</div><div class="au-sec-title">Regra de três simples DIRETA</div><div class="au-sec-tag tag-teoria">TEORIA</div></div>
+
+<div class="au-def">
+<div class="au-def-label">Exemplo resolvido</div>
+<div class="au-def-body">Um carro rende <b>14 km por litro</b>. Quantos quilômetros ele faz com <b>5 litros</b>?</div>
+</div>
+
+<p class="au-p"><b>Passo 1 — organizar.</b> Duas grandezas: litros e quilômetros.</p>
+<div class="au-dados">
+<div class="au-dado"><b>Litros</b><br>1<br>5</div>
+<div class="au-dado"><b>Quilômetros</b><br>14<br>x</div>
+</div>
+<p class="au-p" style="margin-top:12px"><b>Passo 2 — identificar.</b> Mais litros → mais quilômetros: setas no mesmo sentido, então é <b>direta</b>.</p>
+<p class="au-p"><b>Passo 3 — resolver.</b> Na direta, montamos a proporção e multiplicamos <b>em cruz</b>:</p>
+<p><span class="eq-destaque"><span class="frac"><span>1</span><span>5</span></span> = <span class="frac"><span>14</span><span>x</span></span></span></p>
+<p class="au-p">1 · x = 5 · 14 &nbsp;→&nbsp; x = 70.</p>
+<div class="au-def" style="border-left-color:#3ddc84">
+<div class="au-def-label" style="color:#3ddc84">Resposta</div>
+<div class="au-def-body"><b>Com 5 litros o carro faz 70 km.</b></div>
+</div>
+</section>
+
+<!-- ══════════════ TEORIA 4 — inversa passo a passo ══════════════ -->
+<section class="au-sec"><div class="au-sec-head"><div class="au-sec-num">4</div><div class="au-sec-title">Regra de três simples INVERSA</div><div class="au-sec-tag tag-teoria">TEORIA</div></div>
+
+<div class="au-def">
+<div class="au-def-label">Exemplo resolvido</div>
+<div class="au-def-body"><b>6 operários</b> levantam um muro em <b>12 dias</b>. Mantendo o mesmo ritmo, quantos dias levam <b>8 operários</b>?</div>
+</div>
+
+<p class="au-p"><b>Passo 1 — organizar.</b></p>
+<div class="au-dados">
+<div class="au-dado"><b>Operários</b><br>6<br>8</div>
+<div class="au-dado"><b>Dias</b><br>12<br>x</div>
+</div>
+<p class="au-p" style="margin-top:12px"><b>Passo 2 — identificar.</b> Mais operários → menos dias: setas em sentidos opostos, então é <b>inversa</b>.</p>
+<p class="au-p"><b>Passo 3 — resolver.</b> Na inversa, os <b>produtos se igualam</b> (é como se invertêssemos uma das razões):</p>
+<p><span class="eq-destaque">6 · 12 = 8 · x</span></p>
+<p class="au-p">72 = 8x &nbsp;→&nbsp; x = <span class="frac"><span>72</span><span>8</span></span> = 9.</p>
+<div class="au-def" style="border-left-color:#3ddc84">
+<div class="au-def-label" style="color:#3ddc84">Resposta</div>
+<div class="au-def-body"><b>8 operários levantam o muro em 9 dias.</b></div>
+</div>
+</section>
+
+
+</div>
+</div>
+</div>
+</div>
+<script type="module">
+  (async () => {
+    try { const m = await import('/js/auth.js'); m.renderSidebarAluno && m.renderSidebarAluno('sidebar', 'conteudos'); } catch (_) {}
+    const sb = document.getElementById('sidebar');
+    if (sb && !sb.children.length) {
+      sb.innerHTML = `<div class="sb-fb">
+        <div class="sb-h">Estudo</div>
+        <a href="/aluno/menu.html">🏠 Menu</a>
+        <a href="/aluno/guia.html">📖 Guia</a>
+        <a href="#" style="color:#b6a2ff">📚 Material de Aula</a>
+        <div class="sb-h">Valer nota</div>
+        <a href="/aluno/a-atividades.html">✏️ Atividades</a>
+        <a href="/aluno/a-jogos.html">🎮 Jogos</a>
+      </div>`;
+    }
+  })();
+</script>
+</body>
+</html>
