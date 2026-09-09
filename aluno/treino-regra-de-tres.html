@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Treino de Regra de Três — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    /* ── Layout geral (idêntico à atividade valendo nota) ── */
+    .cp-layout{display:grid;grid-template-columns:1fr 260px;gap:18px;align-items:start;}
+    .cp-main{display:flex;flex-direction:column;gap:16px;min-width:0;}
+
+    /* ── Barra de progresso ── */
+    .cp-progress{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);}
+    .cp-prog-label{font-size:12px;color:var(--text-muted);flex-shrink:0;font-weight:600;}
+    .cp-prog-bar{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden;}
+    .cp-prog-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--purple),#c77dff);transition:width .4s;}
+    .cp-prog-count{font-size:13px;font-weight:800;color:var(--purple);flex-shrink:0;font-variant-numeric:tabular-nums;}
+
+    /* ── Card da questão ── */
+    .cp-qcard{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px 28px 22px;}
+    .cp-qhead{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+    .cp-qnum{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--purple);background:rgba(155,48,255,.12);border:1px solid rgba(155,48,255,.3);border-radius:8px;padding:4px 12px;}
+    .cp-qtag{font-size:11px;font-weight:600;color:var(--text-muted);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:4px 10px;}
+    .cp-qtext{font-size:19px;font-weight:700;line-height:1.45;margin-bottom:22px;color:var(--text);}
+
+    /* ── Alternativas ── */
+    .cp-alts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+    .cp-alt{display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg);font-size:15px;font-weight:600;cursor:pointer;text-align:left;transition:all .12s;font-family:'Inter',sans-serif;color:var(--text);width:100%;}
+    .cp-alt:hover{border-color:var(--purple);background:rgba(155,48,255,.08);}
+    .cp-alt.selecionada{border-color:var(--purple);background:rgba(155,48,255,.16);box-shadow:0 0 0 1px var(--purple) inset;}
+    .cp-alt-letra{width:26px;height:26px;flex-shrink:0;border-radius:7px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:var(--text-muted);font-family:'Orbitron',monospace;}
+    .cp-alt.selecionada .cp-alt-letra{background:var(--purple);border-color:var(--purple);color:#fff;}
+
+    /* ── Navegação inferior ── */
+    .cp-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px;}
+    .cp-nav .btn{flex:0 0 auto;}
+    .cp-nav-mid{font-size:12px;color:var(--text-muted);text-align:center;flex:1;}
+
+    /* ── Painel lateral (mapa + timer) ── */
+    .cp-side{display:flex;flex-direction:column;gap:14px;position:sticky;top:14px;}
+    .cp-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+    .cp-panel-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+
+    .cp-timer{font-family:'Orbitron',monospace;font-size:30px;font-weight:700;text-align:center;color:var(--purple);font-variant-numeric:tabular-nums;line-height:1;}
+    .cp-timer.alerta{color:var(--gold);}
+    .cp-timer.critico{color:var(--red);animation:cpPulse 1s infinite;}
+    @keyframes cpPulse{0%,100%{opacity:1}50%{opacity:.45}}
+    .cp-timer-sub{font-size:11px;color:var(--text-muted);text-align:center;margin-top:6px;}
+
+    /* ── Mapa de questões ── */
+    .cp-mapa{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;}
+    .cp-mapa-btn{aspect-ratio:1;border-radius:9px;border:1.5px solid var(--border);background:var(--bg);color:var(--text-muted);font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;font-family:'Inter',sans-serif;}
+    .cp-mapa-btn:hover{border-color:var(--purple);}
+    .cp-mapa-btn.respondida{background:var(--green-pale);border-color:var(--green);color:var(--green);}
+    .cp-mapa-btn.atual{border-color:var(--purple);box-shadow:0 0 0 2px rgba(155,48,255,.35);color:var(--purple);}
+    .cp-mapa-btn.respondida.atual{color:var(--green);}
+
+    .cp-mapa-legenda{display:flex;flex-direction:column;gap:5px;margin-top:12px;}
+    .cp-leg-item{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-muted);}
+    .cp-leg-dot{width:12px;height:12px;border-radius:4px;border:1.5px solid var(--border);}
+    .cp-leg-dot.resp{background:var(--green-pale);border-color:var(--green);}
+    .cp-leg-dot.atual{border-color:var(--purple);box-shadow:0 0 0 1.5px rgba(155,48,255,.4);}
+
+    .cp-btn-finalizar{width:100%;background:linear-gradient(135deg,var(--purple-dark),var(--purple));color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 4px 16px rgba(108,0,212,.3);transition:all .2s;}
+    .cp-btn-finalizar:hover{transform:translateY(-1px);}
+
+    /* ── Equação em destaque dentro do enunciado ── */
+    .eq-destaque{display:inline-block;margin-top:12px;font-family:'Orbitron',monospace;font-size:26px;font-weight:700;color:var(--gold);background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.25);border-radius:10px;padding:10px 18px;letter-spacing:1px;}
+
+    /* ── Campo de digitar x (questões numéricas) ── */
+    .cp-num-wrap{display:flex;flex-direction:column;gap:10px;max-width:340px;}
+    .cp-num-label{font-size:13px;font-weight:600;color:var(--text-muted);}
+    .cp-num-row{display:flex;align-items:center;gap:10px;}
+    .cp-num-xis{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;color:var(--purple);}
+    .cp-num-input{flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;font-size:20px;font-weight:700;color:var(--text);font-family:'Orbitron',monospace;text-align:center;outline:none;transition:border-color .12s;}
+    .cp-num-input:focus{border-color:var(--purple);box-shadow:0 0 0 1px var(--purple) inset;}
+    .cp-num-input.preenchido{border-color:var(--green);color:var(--green);}
+    .cp-num-hint{font-size:12px;color:var(--text-muted);line-height:1.4;}
+
+    /* ── Alternativas de texto (equações) podem ser mais largas ── */
+    .cp-alts.uma-coluna{grid-template-columns:1fr;}
+    .cp-alt .eq-opt{font-family:'Orbitron',monospace;font-size:16px;letter-spacing:.5px;}
+
+    /* ── Banner "não vale nota" e botão voltar (treino) ── */
+    .treino-banner{
+      background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.25);color:var(--gold);
+      border-radius:var(--radius);padding:14px 18px;display:flex;gap:12px;align-items:flex-start;
+      font-weight:600;margin-bottom:18px;
+    }
+    .treino-banner .icone{font-size:1.3rem;line-height:1}
+    .treino-banner small{display:block;color:var(--text-muted);font-weight:500;margin-top:2px}
+    .btn-voltar-treino{
+      display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--text-muted);
+      background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 15px;
+      text-decoration:none;transition:.14s;white-space:nowrap;
+    }
+    .btn-voltar-treino:hover{color:var(--text);border-color:var(--purple);background:rgba(155,48,255,.08)}
+
+    /* ── Tela de resultado do treino ── */
+    .tr-res-nota{font-family:'Orbitron',monospace;font-size:42px;font-weight:700;color:var(--gold);margin:6px 0 2px;}
+    .tr-res-sub{font-size:14px;color:var(--text-muted);margin-bottom:18px;}
+    .tr-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:460px;margin:0 auto;}
+    .tr-stat{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;}
+    .tr-stat .v{font-size:22px;font-weight:800;line-height:1;}
+    .tr-stat .l{font-size:10px;color:var(--text-muted);margin-top:5px;text-transform:uppercase;letter-spacing:.4px;}
+    .tr-rev-item{padding:12px 14px;border-radius:10px;border:1px solid var(--border);margin-bottom:8px;font-size:13px;background:rgba(255,255,255,.02);}
+    .tr-rev-item.ok{border-color:rgba(0,230,118,.35);background:rgba(0,230,118,.07);}
+    .tr-rev-item.err{border-color:rgba(255,60,80,.30);background:rgba(255,60,80,.06);}
+    .tr-rev-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-size:11px;color:var(--text-muted);}
+    .tr-rev-badge{font-weight:700;font-size:11px;}
+    .tr-rev-item.ok .tr-rev-badge{color:var(--green);}
+    .tr-rev-item.err .tr-rev-badge{color:var(--red);}
+    .tr-rev-enun{color:var(--text);margin-bottom:4px;}
+    .tr-rev-resp{color:var(--text-muted);font-size:12px;}
+
+    /* ── Mobile ── */
+    @media(max-width:820px){
+      .cp-layout{grid-template-columns:1fr;}
+      .cp-side{position:static;flex-direction:column;}
+      .cp-alts{grid-template-columns:1fr;}
+      .cp-qtext{font-size:17px;}
+      .cp-qcard{padding:18px 16px 16px;}
+      .cp-mapa{grid-template-columns:repeat(8,1fr);}
+    }
+    @media(max-width:420px){
+      .cp-mapa{grid-template-columns:repeat(6,1fr);}
+      .tr-stats-grid{grid-template-columns:1fr 1fr 1fr;gap:8px;}
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Treino de Regra de Três</div>
+        <div class="topbar-sub">Regra de três simples · não vale nota · treine quantas vezes quiser</div>
+      </div>
+      <div class="topbar-right" style="display:flex;gap:10px;align-items:center">
+        <div class="timer-box" id="timer-mini" style="display:none">--:--</div>
+        <a href="/aluno/a-atividades.html" class="btn-voltar-treino">← Voltar</a>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div class="treino-banner">
+        <span class="icone">🎯</span>
+        <div>
+          Atividade de treino — <b>não vale nota</b>.
+          <small>Faça quantas vezes quiser para praticar. As questões mudam a cada tentativa e seu rendimento fica salvo no seu histórico de treino.</small>
+        </div>
+      </div>
+      <div id="area-jogo">
+        <div style="text-align:center;padding:60px;color:var(--text-muted)">Carregando treino…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { intercalarPorDificuldade } from "/js/constants.js";
+import { addResultado } from "/js/db.js";
+import { requireAluno, renderSidebarAluno } from "/js/auth.js";
+
+renderSidebarAluno("sidebar", "atividades");
+
+const sess = requireAluno();
+if (!sess) throw new Error("sem sessão");
+const alunoNome = (Array.isArray(sess.alunos) && sess.alunos.length) ? sess.alunos.join(" & ") : "ALUNO";
+const turma = sess.turma || "";
+
+/* ════════════════════════════════════════════════════════════
+   CONFIGURAÇÃO — Treino de Regra de Três (simples)
+   (mesmo banco de questões e motor da atividade valendo nota;
+   sem senha, sem trava de tentativa, sem gravar nota)
+   ════════════════════════════════════════════════════════════ */
+const ARQUIVO_QUESTOES_EQ = "/dados/questoes_regra_de_tres.json";
+const TEMPO_MAX_SEG = 15 * 60;   // mesma duração da prova, só de referência
+const NOME_ATIV = "treino-regra-de-tres";
+
+/* ── Carregar modelos de questão ── */
+let modelos = [];
+try {
+  const resp = await fetch(ARQUIVO_QUESTOES_EQ);
+  modelos = await resp.json();
+} catch(e) {
+  document.getElementById("area-jogo").innerHTML =
+    `<div class="card" style="text-align:center;padding:40px"><p style="color:var(--red)">Não foi possível carregar as questões.</p></div>`;
+  throw e;
+}
+
+/* ════════════════════════════════════════════════════════════
+   MATERIALIZAÇÃO — mesmo motor da atividade, mas com seed
+   aleatória a cada início (o treino varia a cada tentativa).
+   ════════════════════════════════════════════════════════════ */
+function _hashStr(str){ let h=1779033703^str.length; for(let i=0;i<str.length;i++){ h=Math.imul(h^str.charCodeAt(i),3432918353); h=(h<<13)|(h>>>19);} return h>>>0; }
+function _rng(seedStr){ let a=_hashStr(seedStr); return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function _pick(rng, arr){ return arr[Math.floor(rng()*arr.length)]; }
+
+function _evalExpr(expr, ctx){
+  const keys = Object.keys(ctx);
+  const vals = keys.map(k => ctx[k]);
+  // eslint-disable-next-line no-new-func
+  const f = new Function(...keys, `"use strict"; return (${expr});`);
+  return Math.trunc(f(...vals));
+}
+
+function _subst(txt, ctx){
+  return txt.replace(/\{(\w+)\}/g, (_,k)=> (k in ctx ? ctx[k] : `{${k}}`));
+}
+
+function _distratoresX(rng, correta){
+  const cand = [
+    correta + 1, correta - 1, correta + 2, correta - 2,
+    correta + 3, correta - 3, correta + 5, correta * 2,
+  ];
+  const out = [], vistos = new Set([correta]);
+  for (const c of cand){
+    if (c > 0 && !vistos.has(c)){ vistos.add(c); out.push(c); }
+    if (out.length === 3) break;
+  }
+  let k = 4;
+  while (out.length < 3){
+    const c = correta + k;
+    if (c > 0 && !vistos.has(c)){ vistos.add(c); out.push(c); }
+    k++;
+    if (k > 60) break;
+  }
+  return out.slice(0,3);
+}
+
+const _letras = ["A","B","C","D"];
+
+function materializar(seedBase, modelo, idx, _tent = 0){
+  const rng = _rng(`${seedBase}#${modelo.id}#${idx}${_tent ? `#r${_tent}` : ""}`);
+
+  let _enunTemplate = modelo.enunciado;
+  let _variaveis = modelo.variaveis;
+  let _montarCtx = modelo.montar_ctx;
+  let _ctxTexto = {};
+  if (Array.isArray(modelo.contextos) && modelo.contextos.length){
+    const c = _pick(rng, modelo.contextos);
+    if (c.enunciado)  _enunTemplate = c.enunciado;
+    if (c.variaveis)  _variaveis = c.variaveis;
+    if (c.montar_ctx) _montarCtx = c.montar_ctx;
+    if (c.textos)     _ctxTexto = c.textos;
+  }
+
+  let ctx = { ..._ctxTexto };
+  if (_variaveis){
+    for (const k of Object.keys(_variaveis)) ctx[k] = _pick(rng, _variaveis[k]);
+  }
+  if (_montarCtx){ const [_al,_ex] = _montarCtx.split("=").map(s=>s.trim()); ctx[_al] = _evalExpr(_ex, ctx); }
+
+  const enun = _subst(_enunTemplate, ctx);
+
+  if (modelo.tipo === "numerica"){
+    const correta = _evalExpr(modelo.resposta_expr, ctx);
+    return {
+      id: modelo.id, dificuldade: modelo.dificuldade, tag: modelo.tag,
+      tipo: "numerica", enunciado: enun,
+      instrucao: modelo.instrucao || "Digite apenas o número.",
+      respostaNum: correta,
+      opcoes: null, resposta: null,
+    };
+  }
+
+  if (modelo.tipo === "multipla_num"){
+    const correta = _evalExpr(modelo.resposta_expr, ctx);
+    const dist = _distratoresX(rng, correta);
+    let valores = [correta, ...dist];
+    for (let i=valores.length-1; i>0; i--){ const j=Math.floor(rng()*(i+1)); [valores[i],valores[j]]=[valores[j],valores[i]]; }
+    const idxCorreta = valores.indexOf(correta);
+    const pref = modelo.prefixo_opcao || "";
+    const opcoes = valores.map((v,i)=> `${_letras[i]}) <span class="eq-opt">${pref}${v}</span>`);
+    return {
+      id: modelo.id, dificuldade: modelo.dificuldade, tag: modelo.tag,
+      tipo: "multipla_num", enunciado: enun, umaColuna: false,
+      opcoes, resposta: _letras[idxCorreta],
+    };
+  }
+
+  const correan = _subst(modelo.equacao_correta, ctx);
+  const distr = (modelo.distratores || []).map(d => _subst(d, ctx));
+  let itens = [correan];
+  for (const d of distr){ if (!itens.includes(d)) itens.push(d); }
+  for (let i=itens.length-1; i>0; i--){ const j=Math.floor(rng()*(i+1)); [itens[i],itens[j]]=[itens[j],itens[i]]; }
+  const idxCor = itens.indexOf(correan);
+  const opcoes = itens.map((t,i)=> `${_letras[i]}) <span class="eq-opt">${t}</span>`);
+  return {
+    id: modelo.id, dificuldade: modelo.dificuldade, tag: modelo.tag,
+    tipo: "multipla_texto", enunciado: enun, umaColuna: true,
+    opcoes, resposta: _letras[idxCor],
+  };
+}
+
+function _rngSeed(str){ let a=1779033703^str.length; for(let i=0;i<str.length;i++){a=Math.imul(a^str.charCodeAt(i),3432918353);a=(a<<13)|(a>>>19);} return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function _sortearModelosSeed(lista, cotas, seed){
+  const rng=_rngSeed(seed);
+  const porDif={}; for (const m of lista){ (porDif[m.dificuldade]=porDif[m.dificuldade]||[]).push(m); }
+  const escolhidos=[];
+  for (const dif of Object.keys(cotas)){
+    const pool=[...(porDif[dif]||[])];
+    for (let i=pool.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+    escolhidos.push(...pool.slice(0, cotas[dif]));
+  }
+  return escolhidos;
+}
+const COTAS = { 1: 5, 2: 5, 3: 5 };
+
+function novaSeed(){ return `treino|${Date.now()}|${Math.random().toString(36).slice(2)}`; }
+
+function montarQuestoes(){
+  const seedBase = novaSeed();
+  const _selecionados = (modelos.length > 15) ? _sortearModelosSeed(modelos, COTAS, `${seedBase}#sel`) : modelos;
+  const _xUsados = new Set();
+  let questoes = _selecionados.map((m, i) => {
+    let q = materializar(seedBase, m, i), _tent = 0;
+    while (q.respostaNum != null && _xUsados.has(q.respostaNum) && _tent < 40) {
+      _tent++;
+      q = materializar(seedBase, m, i, _tent);
+    }
+    if (q.respostaNum != null) _xUsados.add(q.respostaNum);
+    return q;
+  });
+  return intercalarPorDificuldade(questoes);
+}
+
+/* ── Estado do treino ── */
+let jogo = null;
+let timerInt = null;
+
+function iniciarTreino(){
+  if (timerInt) { clearInterval(timerInt); timerInt = null; }
+  const questoes = montarQuestoes();
+  jogo = {
+    questoes,
+    respostas: new Array(questoes.length).fill(null),
+    indice: 0,
+    inicioTs: Date.now(),
+    finalizado: false,
+  };
+  render();
+}
+
+/* ════════════════════════════════════════════════════════════
+   TIMER — mesma referência de 15 min da prova (não bloqueia;
+   ao zerar, apenas finaliza o treino automaticamente).
+   ════════════════════════════════════════════════════════════ */
+function tempoDecorrido(){ return Math.floor((Date.now() - jogo.inicioTs)/1000); }
+function fmtMMSS(seg){ seg = Math.max(0, Math.floor(seg)); const m=Math.floor(seg/60), s=seg%60; return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; }
+
+function iniciarTimer(){
+  const atualizar = () => {
+    const decor = tempoDecorrido();
+    const restanteMax = Math.max(0, TEMPO_MAX_SEG - decor);
+    const el = document.getElementById("timer-display");
+    const mini = document.getElementById("timer-mini");
+    const txt = fmtMMSS(restanteMax);
+    if (el) {
+      el.textContent = txt;
+      el.classList.toggle("alerta", restanteMax <= 5*60 && restanteMax > 2*60);
+      el.classList.toggle("critico", restanteMax <= 2*60);
+    }
+    if (mini){ mini.style.display="block"; mini.textContent = txt; }
+    const sub = document.getElementById("timer-sub");
+    if (sub){
+      if (restanteMax <= 2*60 && restanteMax > 0)
+        sub.textContent = "⏰ Últimos minutos!";
+      else
+        sub.textContent = `Tempo de referência: ${TEMPO_MAX_SEG/60} min`;
+    }
+    if (restanteMax <= 0 && jogo && !jogo.finalizado) {
+      finalizarTreino("tempo");
+    }
+  };
+  atualizar();
+  timerInt = setInterval(atualizar, 1000);
+}
+
+/* ════════════════════════════════════════════════════════════
+   RENDER — questão atual + alternativas (idêntico à atividade)
+   ════════════════════════════════════════════════════════════ */
+function questaoAtual(){ return jogo.questoes[jogo.indice]; }
+
+function render(){
+  const q = questaoAtual();
+  const n = jogo.indice;
+  const total = jogo.questoes.length;
+  const respondidas = jogo.respostas.filter(r => r !== null && r !== "").length;
+  const pct = Math.round((respondidas/total)*100);
+  const letras = ["A","B","C","D"];
+
+  let corpoHtml;
+  if (q.tipo === "numerica"){
+    const val = jogo.respostas[n];
+    const preenchido = (val !== null && val !== "") ? " preenchido" : "";
+    corpoHtml = `
+      <div class="cp-num-wrap">
+        <div class="cp-num-label">Escreva o valor de x:</div>
+        <div class="cp-num-row">
+          <span class="cp-num-xis">x =</span>
+          <input type="number" inputmode="numeric" step="1" class="cp-num-input${preenchido}"
+                 id="cp-num-input" value="${val !== null ? val : ""}"
+                 oninput="digitarNumero(this.value)" placeholder="?" autocomplete="off"/>
+        </div>
+        <div class="cp-num-hint">${q.instrucao || "Digite apenas o número."}</div>
+      </div>`;
+  } else {
+    const alts = q.opcoes.map((opt, i) => {
+      const letra = letras[i];
+      const texto = opt.replace(/^[A-D]\)\s*/, "");
+      const sel = jogo.respostas[n] === letra ? " selecionada" : "";
+      return `<button class="cp-alt${sel}" onclick="selecionar('${letra}')">
+        <span class="cp-alt-letra">${letra}</span><span>${texto}</span>
+      </button>`;
+    }).join("");
+    corpoHtml = `<div class="cp-alts${q.umaColuna ? " uma-coluna" : ""}">${alts}</div>`;
+  }
+
+  const mapaHtml = jogo.questoes.map((_, i) => {
+    const cls = [
+      "cp-mapa-btn",
+      jogo.respostas[i] !== null ? "respondida" : "",
+      i === jogo.indice ? "atual" : ""
+    ].filter(Boolean).join(" ");
+    return `<button class="${cls}" onclick="irPara(${i})">${i+1}</button>`;
+  }).join("");
+
+  document.getElementById("area-jogo").innerHTML = `
+    <div class="cp-layout">
+      <div class="cp-main">
+        <div class="cp-progress">
+          <span class="cp-prog-label">Progresso</span>
+          <div class="cp-prog-bar"><div class="cp-prog-fill" style="width:${pct}%"></div></div>
+          <span class="cp-prog-count">${respondidas}/${total}</span>
+        </div>
+
+        <div class="cp-qcard">
+          <div class="cp-qhead">
+            <span class="cp-qnum">Questão ${n+1}</span>
+            ${q.tag ? `<span class="cp-qtag">${q.tag}</span>` : ""}
+          </div>
+          <div class="cp-qtext">${q.enunciado}</div>
+          ${corpoHtml}
+        </div>
+
+        <div class="cp-nav">
+          <button class="btn btn-ghost" onclick="anterior()" ${n===0?"disabled":""}>
+            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+            Anterior
+          </button>
+          <div class="cp-nav-mid">${jogo.respostas[n] !== null && jogo.respostas[n] !== "" ? "✓ Respondida" : (q.tipo === "numerica" ? "Digite o valor de x" : "Selecione uma alternativa")}</div>
+          <button class="btn btn-blue" onclick="proxima()" ${n===total-1?"disabled":""}>
+            Próxima
+            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="cp-side">
+        <div class="cp-panel">
+          <div class="cp-panel-label">⏱ Tempo restante</div>
+          <div class="cp-timer" id="timer-display">--:--</div>
+          <div class="cp-timer-sub" id="timer-sub">Tempo de referência: ${TEMPO_MAX_SEG/60} min</div>
+        </div>
+
+        <div class="cp-panel">
+          <div class="cp-panel-label">🗺 Mapa de questões</div>
+          <div class="cp-mapa">${mapaHtml}</div>
+          <div class="cp-mapa-legenda">
+            <div class="cp-leg-item"><span class="cp-leg-dot resp"></span> Respondida</div>
+            <div class="cp-leg-item"><span class="cp-leg-dot atual"></span> Questão atual</div>
+          </div>
+        </div>
+
+        <button class="cp-btn-finalizar" onclick="tentarFinalizarTreino()">✓ Finalizar treino</button>
+      </div>
+    </div>`;
+
+  if (!timerInt) iniciarTimer();
+}
+
+/* ── Ações de navegação ── */
+window.selecionar = (letra) => {
+  if (jogo.finalizado) return;
+  jogo.respostas[jogo.indice] = letra;
+  render();
+};
+
+window.digitarNumero = (valor) => {
+  if (jogo.finalizado) return;
+  const v = (valor ?? "").trim();
+  jogo.respostas[jogo.indice] = v === "" ? null : v;
+  const inp = document.getElementById("cp-num-input");
+  if (inp) inp.classList.toggle("preenchido", v !== "");
+  const respondidas = jogo.respostas.filter(r => r !== null && r !== "").length;
+  const total = jogo.questoes.length;
+  const cont = document.querySelector(".cp-prog-count");
+  if (cont) cont.textContent = `${respondidas}/${total}`;
+  const fill = document.querySelector(".cp-prog-fill");
+  if (fill) fill.style.width = `${Math.round((respondidas/total)*100)}%`;
+  const mid = document.querySelector(".cp-nav-mid");
+  if (mid) mid.textContent = v !== "" ? "✓ Respondida" : "Digite o valor de x";
+  const btnMapa = document.querySelectorAll(".cp-mapa-btn")[jogo.indice];
+  if (btnMapa) btnMapa.classList.toggle("respondida", v !== "");
+};
+window.irPara = (i) => { if (jogo.finalizado) return; jogo.indice = i; render(); };
+window.anterior = () => { if (jogo.indice > 0) { jogo.indice--; render(); } };
+window.proxima = () => { if (jogo.indice < jogo.questoes.length-1) { jogo.indice++; render(); } };
+
+window.tentarFinalizarTreino = () => {
+  const respondidas = jogo.respostas.filter(r => r !== null && r !== "").length;
+  const faltam = jogo.questoes.length - respondidas;
+  let msg = "Deseja finalizar o treino?";
+  if (faltam > 0) msg = `Você deixou ${faltam} questão(ões) em branco (contam como erro). Finalizar mesmo assim?`;
+  if (!confirm(msg)) return;
+  finalizarTreino("manual");
+};
+
+/* ════════════════════════════════════════════════════════════
+   FINALIZAÇÃO — corrige e mostra resultado.
+   Não bloqueia, não consome tentativa. Salva só um registro leve
+   (modo:"treino") para o relatório de tempos do professor — não
+   entra em nota, ranking nem histórico geral de atividades.
+   ════════════════════════════════════════════════════════════ */
+function finalizarTreino(motivo){
+  if (jogo.finalizado) return;
+  jogo.finalizado = true;
+  if (timerInt) { clearInterval(timerInt); timerInt = null; }
+
+  const total = jogo.questoes.length;
+  let acertos = 0;
+  const historico = [];
+  const letras = ["A","B","C","D"];
+  const _limpa = (s) => s ? s.replace(/^[A-D]\)\s*/, "").replace(/<[^>]+>/g, "").trim() : s;
+  const _limpaEnun = (s) => s ? s.replace(/<br\s*\/?>/gi, " ").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim() : s;
+  jogo.questoes.forEach((q, i) => {
+    const esc = jogo.respostas[i];
+    let acertou, textoEsc, textoCor;
+    if (q.tipo === "numerica"){
+      const alunoNum = (esc === null || esc === "") ? null : Number(esc);
+      acertou = alunoNum !== null && Number.isFinite(alunoNum) && alunoNum === q.respostaNum;
+      textoEsc = (esc === null || esc === "") ? "(em branco)" : `x = ${esc}`;
+      textoCor = `x = ${q.respostaNum}`;
+    } else {
+      acertou = esc === q.resposta;
+      textoEsc = esc ? _limpa(q.opcoes[letras.indexOf(esc)]) : "(em branco)";
+      textoCor = _limpa(q.opcoes[letras.indexOf(q.resposta)]);
+    }
+    if (acertou) acertos++;
+    historico.push({
+      enunciado: _limpaEnun(q.enunciado),
+      resposta_aluno: textoEsc,
+      resposta_correta: textoCor,
+      acertou,
+    });
+  });
+  const erros = total - acertos;
+  const respondidas = jogo.respostas.filter(r => r !== null && r !== "").length;
+  const nota = total > 0 ? Math.round((acertos/total)*10*100)/100 : 0;
+  const tempoSeg = tempoDecorrido();
+
+  addResultado({
+    aluno: alunoNome, turma, atividade: NOME_ATIV,
+    concluido: true, modo: "treino",
+    acertos, erros, respondidas, total,
+    pontuacao: nota, pontuacao_bruta: nota,
+    tempo_segundos: tempoSeg, motivo_fim: motivo,
+  }).catch(e => console.warn("[treino addResultado]", e));
+
+  renderResultado(nota, acertos, erros, tempoSeg, total, historico);
+}
+
+function renderResultado(nota, acertos, erros, tempoSeg, total, historico){
+  const msg = acertos===total ? "Perfeito! 🎉" : acertos>=Math.round(total*0.7) ? "Muito bem! 👏" : acertos>=Math.round(total*0.5) ? "Continue treinando 💪" : "Vamos revisar juntos 📘";
+  const notaTxt = nota.toFixed(2).replace(/\.?0+$/,"").replace(".", ",") || "0";
+
+  const revisaoHtml = historico.map((h,i)=>`
+    <div class="tr-rev-item ${h.acertou?'ok':'err'}">
+      <div class="tr-rev-top">
+        <span>Questão ${i+1}</span>
+        <span class="tr-rev-badge">${h.acertou?'✅ acertou':'❌ errou'}</span>
+      </div>
+      <div class="tr-rev-enun">${h.enunciado}</div>
+      <div class="tr-rev-resp">Sua resposta: <b>${h.resposta_aluno}</b>${h.acertou?"":` · Correta: <b>${h.resposta_correta}</b>`}</div>
+    </div>`).join("");
+
+  document.getElementById("area-jogo").innerHTML = `
+    <div class="cp-qcard" style="max-width:760px;margin:0 auto;text-align:center">
+      <div style="font-size:15px;font-weight:700;color:var(--gold);margin-bottom:2px">🎯 Treino — não vale nota</div>
+      <div class="tr-res-nota">${notaTxt} / 10</div>
+      <div class="tr-res-sub">${msg} &nbsp;·&nbsp; ${acertos} de ${total} corretas</div>
+      <div style="text-align:center;margin:-6px 0 20px;font-size:1rem;color:var(--gold,#ffd700);font-weight:700">
+        🎯 Na atividade real (vale 1,5), você teria tirado
+        <b>${(Math.round((acertos/total)*1.5*100)/100).toFixed(2).replace(".",",")} de 1,5</b>
+      </div>
+      <div class="tr-stats-grid">
+        <div class="tr-stat"><div class="v" style="color:var(--green)">${acertos}</div><div class="l">Acertos</div></div>
+        <div class="tr-stat"><div class="v" style="color:var(--red)">${erros}</div><div class="l">Erros</div></div>
+        <div class="tr-stat"><div class="v" style="color:var(--gold)">${fmtMMSS(tempoSeg)}</div><div class="l">Tempo</div></div>
+      </div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap">
+        <button class="btn btn-blue" id="btn-treinar-novo">🔄 Treinar de novo</button>
+        <a href="/aluno/a-atividades.html" class="btn btn-ghost">← Voltar às atividades</a>
+      </div>
+    </div>
+    <div class="cp-qcard" style="max-width:760px;margin:16px auto 0">
+      <div class="card-title" style="margin-bottom:14px">Revisão das questões</div>
+      ${revisaoHtml}
+    </div>`;
+
+  document.getElementById("btn-treinar-novo").addEventListener("click", iniciarTreino);
+}
+
+/* ── Start ── */
+iniciarTreino();
+</script>
+</body>
+</html>

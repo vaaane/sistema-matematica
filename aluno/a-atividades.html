@@ -503,9 +503,17 @@ const cardsHtml = ATIVS_BIM.map(ativ => {
     ? `/aluno/competicao.html?ativ=${encodeURIComponent(ativ.nome)}`
     : `/aluno/jogar.html?ativ=${encodeURIComponent(ativ.nome)}`;
 
-  const _temTreino = modoEf === 'equacoes_plus';
+  // ── Treino (não vale nota) por atividade ──────────────────────
+  // Chave = "<bimestre>|<nome EXATO da atividade>" (como na grade/liberação).
+  // Adicione uma linha por atividade que tiver treino próprio.
+  const TREINOS = {
+    '3|Atividade 2 - Regra de três': '/aluno/treino-regra-de-tres.html',   // Regra de três (3º bim.)
+  };
+  const _treinoUrl = TREINOS[`${bimAtivo}|${ativ.nome}`]
+    || (modoEf === 'equacoes_plus' ? '/aluno/treino-equacoes.html' : null);   // fallback: equações
+  const _temTreino = !!_treinoUrl;
   const _btnTreino = (_temTreino && !(isLib && !bloq?.esgotada && !bloq?.bloqueado && !isEncerrada && !foiRealizada))
-    ? `<a href="/aluno/treino-equacoes.html" class="ac-btn-treino${foiRealizada ? ' suave' : ''}" onclick="event.stopPropagation()">🎯 Treinar</a>`
+    ? `<a href="${_treinoUrl}" class="ac-btn-treino${foiRealizada ? ' suave' : ''}" onclick="event.stopPropagation()">🎯 Treinar</a>`
     : '';
   // Faltou = marcado falta na data em que a atividade foi liberada, e ainda não fez.
   const _libDate = lib?.criadoEm ? ymdLocal(lib.criadoEm) : null;

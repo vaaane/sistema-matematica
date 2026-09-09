@@ -1,0 +1,890 @@
+[
+  {
+    "id": "RT-C-D1",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Classifique",
+    "enunciado": "Numa papelaria, todos os cadernos têm o mesmo preço. Relacionando a <b>quantidade de cadernos</b> comprados e o <b>preço total</b> pago, essas grandezas são:",
+    "equacao_correta": "Diretamente proporcionais",
+    "distratores": [
+      "Inversamente proporcionais",
+      "Não são proporcionais",
+      "Proporcionais — mas o tipo depende dos valores"
+    ]
+  },
+  {
+    "id": "RT-C-D2",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Classifique",
+    "enunciado": "Um carro mantém o mesmo consumo. Relacionando a <b>quantidade de combustível</b> gasto e a <b>distância percorrida</b>, essas grandezas são:",
+    "equacao_correta": "Diretamente proporcionais",
+    "distratores": [
+      "Inversamente proporcionais",
+      "Não são proporcionais",
+      "Proporcionais — mas o tipo depende dos valores"
+    ]
+  },
+  {
+    "id": "RT-C-D3",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Classifique",
+    "enunciado": "Um funcionário ganha um valor fixo por hora. Relacionando as <b>horas trabalhadas</b> e o <b>salário recebido</b>, essas grandezas são:",
+    "equacao_correta": "Diretamente proporcionais",
+    "distratores": [
+      "Inversamente proporcionais",
+      "Não são proporcionais",
+      "Proporcionais — mas o tipo depende dos valores"
+    ]
+  },
+  {
+    "id": "RT-C-D4",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Classifique",
+    "enunciado": "No mercado, o queijo é vendido a preço fixo por quilo. Relacionando a <b>massa de queijo</b> e o <b>preço pago</b>, essas grandezas são:",
+    "equacao_correta": "Diretamente proporcionais",
+    "distratores": [
+      "Inversamente proporcionais",
+      "Não são proporcionais",
+      "Proporcionais — mas o tipo depende dos valores"
+    ]
+  },
+  {
+    "id": "RT-C-D5",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Classifique",
+    "enunciado": "Numa festa, cada convidado consome, em média, a mesma quantidade de comida. Relacionando o <b>número de convidados</b> e a <b>quantidade de comida</b> necessária, essas grandezas são:",
+    "equacao_correta": "Diretamente proporcionais",
+    "distratores": [
+      "Inversamente proporcionais",
+      "Não são proporcionais",
+      "Proporcionais — mas o tipo depende dos valores"
+    ]
+  },
+  {
+    "id": "RT-C-D6",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Classifique",
+    "enunciado": "Uma torneira despeja água com vazão constante. Relacionando o <b>tempo</b> que ela fica aberta e a <b>quantidade de água</b> que sai, essas grandezas são:",
+    "equacao_correta": "Diretamente proporcionais",
+    "distratores": [
+      "Inversamente proporcionais",
+      "Não são proporcionais",
+      "Proporcionais — mas o tipo depende dos valores"
+    ]
+  },
+  {
+    "id": "RT-C-D7",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Classifique",
+    "enunciado": "Numa pista de tamanho fixo, relacionando o <b>número de voltas</b> completas e a <b>distância total</b> percorrida, essas grandezas são:",
+    "equacao_correta": "Diretamente proporcionais",
+    "distratores": [
+      "Inversamente proporcionais",
+      "Não são proporcionais",
+      "Proporcionais — mas o tipo depende dos valores"
+    ]
+  },
+  {
+    "id": "RT-C-D8",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Classifique",
+    "enunciado": "Numa parede, cada fileira de tijolos tem a mesma altura. Relacionando o <b>número de fileiras</b> e a <b>altura</b> da parede, essas grandezas são:",
+    "equacao_correta": "Diretamente proporcionais",
+    "distratores": [
+      "Inversamente proporcionais",
+      "Não são proporcionais",
+      "Proporcionais — mas o tipo depende dos valores"
+    ]
+  },
+  {
+    "id": "RT-C-I1",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Classifique",
+    "enunciado": "Numa obra, mantendo o mesmo ritmo de trabalho, relacionando o <b>número de operários</b> e o <b>tempo</b> para terminar, essas grandezas são:",
+    "equacao_correta": "Inversamente proporcionais",
+    "distratores": [
+      "Diretamente proporcionais",
+      "Não são proporcionais",
+      "Proporcionais — mas o tipo depende dos valores"
+    ]
+  },
+  {
+    "id": "RT-C-I2",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Classifique",
+    "enunciado": "Para percorrer a mesma distância, relacionando a <b>velocidade</b> do veículo e o <b>tempo</b> de viagem, essas grandezas são:",
+    "equacao_correta": "Inversamente proporcionais",
+    "distratores": [
+      "Diretamente proporcionais",
+      "Não são proporcionais",
+      "Proporcionais — mas o tipo depende dos valores"
+    ]
+  },
+  {
+    "id": "RT-C-I3",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Classifique",
+    "enunciado": "Para encher o mesmo tanque, relacionando o <b>número de torneiras</b> iguais abertas e o <b>tempo</b> gasto, essas grandezas são:",
+    "equacao_correta": "Inversamente proporcionais",
+    "distratores": [
+      "Diretamente proporcionais",
+      "Não são proporcionais",
+      "Proporcionais — mas o tipo depende dos valores"
+    ]
+  },
+  {
+    "id": "RT-C-I4",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Classifique",
+    "enunciado": "Para produzir a mesma quantidade de peças, relacionando o <b>número de máquinas</b> iguais e o <b>tempo</b> de produção, essas grandezas são:",
+    "equacao_correta": "Inversamente proporcionais",
+    "distratores": [
+      "Diretamente proporcionais",
+      "Não são proporcionais",
+      "Proporcionais — mas o tipo depende dos valores"
+    ]
+  },
+  {
+    "id": "RT-C-I5",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Classifique",
+    "enunciado": "Uma pizza é dividida igualmente. Relacionando o <b>número de pessoas</b> e a <b>quantidade de pedaços</b> que cada uma recebe, essas grandezas são:",
+    "equacao_correta": "Inversamente proporcionais",
+    "distratores": [
+      "Diretamente proporcionais",
+      "Não são proporcionais",
+      "Proporcionais — mas o tipo depende dos valores"
+    ]
+  },
+  {
+    "id": "RT-C-I6",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Classifique",
+    "enunciado": "Com um orçamento fixo para a viagem, relacionando o <b>número de dias</b> de viagem e o <b>gasto possível por dia</b>, essas grandezas são:",
+    "equacao_correta": "Inversamente proporcionais",
+    "distratores": [
+      "Diretamente proporcionais",
+      "Não são proporcionais",
+      "Proporcionais — mas o tipo depende dos valores"
+    ]
+  },
+  {
+    "id": "RT-C-I7",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Classifique",
+    "enunciado": "Um grupo fixo de excursionistas será transportado. Relacionando o <b>número de ônibus</b> usados e a <b>quantidade de passageiros por ônibus</b>, essas grandezas são:",
+    "equacao_correta": "Inversamente proporcionais",
+    "distratores": [
+      "Diretamente proporcionais",
+      "Não são proporcionais",
+      "Proporcionais — mas o tipo depende dos valores"
+    ]
+  },
+  {
+    "id": "RT-C-I8",
+    "dificuldade": 1,
+    "tipo": "multipla_texto",
+    "tag": "Classifique",
+    "enunciado": "Para pintar a mesma casa, mantendo o ritmo, relacionando o <b>número de pintores</b> e o <b>tempo</b> gasto, essas grandezas são:",
+    "equacao_correta": "Inversamente proporcionais",
+    "distratores": [
+      "Diretamente proporcionais",
+      "Não são proporcionais",
+      "Proporcionais — mas o tipo depende dos valores"
+    ]
+  },
+  {
+    "id": "RT-M-D1",
+    "dificuldade": 2,
+    "tipo": "multipla_num",
+    "tag": "Regra de três",
+    "variaveis": {
+      "U": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "A": [
+        2,
+        3,
+        4
+      ],
+      "B": [
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    "montar_ctx": "C = U*A",
+    "resposta_expr": "U*B",
+    "enunciado": "<b>{A} kg</b> de laranja custam <b>R$ {C}</b>. Nesse mesmo preço, quanto custam <b>{B} kg</b>?",
+    "prefixo_opcao": "R$ "
+  },
+  {
+    "id": "RT-M-D2",
+    "dificuldade": 2,
+    "tipo": "multipla_num",
+    "tag": "Regra de três",
+    "variaveis": {
+      "R": [
+        8,
+        9,
+        10,
+        12
+      ],
+      "L": [
+        3,
+        4,
+        5
+      ],
+      "M": [
+        6,
+        7,
+        8
+      ]
+    },
+    "montar_ctx": "K = R*L",
+    "resposta_expr": "R*M",
+    "enunciado": "Com <b>{L} litros</b> de combustível um carro percorre <b>{K} km</b>. Quantos <b>km</b> ele percorre com <b>{M} litros</b>?"
+  },
+  {
+    "id": "RT-M-D3",
+    "dificuldade": 2,
+    "tipo": "multipla_num",
+    "tag": "Regra de três",
+    "variaveis": {
+      "P": [
+        30,
+        40,
+        50
+      ],
+      "A": [
+        2,
+        3,
+        4
+      ],
+      "B": [
+        6,
+        8,
+        10
+      ]
+    },
+    "montar_ctx": "C = P*A",
+    "resposta_expr": "P*B",
+    "enunciado": "Uma receita para <b>{A} pessoas</b> leva <b>{C} g</b> de açúcar. Mantendo a proporção, quantos <b>gramas</b> para <b>{B} pessoas</b>?"
+  },
+  {
+    "id": "RT-M-D4",
+    "dificuldade": 2,
+    "tipo": "multipla_num",
+    "tag": "Regra de três",
+    "variaveis": {
+      "W": [
+        12,
+        15,
+        18,
+        20
+      ],
+      "A": [
+        3,
+        4,
+        5
+      ],
+      "B": [
+        7,
+        8,
+        9
+      ]
+    },
+    "montar_ctx": "C = W*A",
+    "resposta_expr": "W*B",
+    "enunciado": "Trabalhando <b>{A} horas</b>, um ajudante recebe <b>R$ {C}</b>. Quanto receberá por <b>{B} horas</b>?",
+    "prefixo_opcao": "R$ "
+  },
+  {
+    "id": "RT-M-D5",
+    "dificuldade": 2,
+    "tipo": "multipla_num",
+    "tag": "Regra de três",
+    "variaveis": {
+      "r": [
+        2,
+        3
+      ],
+      "A": [
+        8,
+        10,
+        12
+      ],
+      "B": [
+        20,
+        24,
+        30
+      ]
+    },
+    "montar_ctx": "C = r*A",
+    "resposta_expr": "r*B",
+    "enunciado": "Lendo num ritmo constante, uma pessoa lê <b>{A} páginas</b> em <b>{C} minutos</b>. Quantos <b>minutos</b> para <b>{B} páginas</b>?"
+  },
+  {
+    "id": "RT-M-D6",
+    "dificuldade": 2,
+    "tipo": "multipla_num",
+    "tag": "Regra de três",
+    "variaveis": {
+      "U": [
+        15,
+        20,
+        25
+      ],
+      "A": [
+        2,
+        3
+      ],
+      "B": [
+        5,
+        6,
+        7
+      ]
+    },
+    "montar_ctx": "C = U*A",
+    "resposta_expr": "U*B",
+    "enunciado": "<b>{A} camisetas</b> iguais custam <b>R$ {C}</b>. Quanto custam <b>{B} camisetas</b>?",
+    "prefixo_opcao": "R$ "
+  },
+  {
+    "id": "RT-M-D7",
+    "dificuldade": 2,
+    "tipo": "multipla_num",
+    "tag": "Regra de três",
+    "variaveis": {
+      "c": [
+        6,
+        8,
+        10
+      ],
+      "A": [
+        2,
+        3
+      ],
+      "B": [
+        5,
+        7,
+        9
+      ]
+    },
+    "montar_ctx": "C = c*A",
+    "resposta_expr": "c*B",
+    "enunciado": "<b>{A} garrafas</b> de suco enchem <b>{C} copos</b>. Quantos <b>copos</b> com <b>{B} garrafas</b>?"
+  },
+  {
+    "id": "RT-M-I1",
+    "dificuldade": 2,
+    "tipo": "multipla_num",
+    "tag": "Regra de três",
+    "resposta_expr": "A*D/B",
+    "contextos": [
+      {
+        "variaveis": {
+          "A": [
+            6
+          ],
+          "D": [
+            12
+          ],
+          "B": [
+            3,
+            4,
+            8,
+            9
+          ]
+        },
+        "enunciado": "<b>{A} operários</b> levantam um muro em <b>{D} dias</b>. No mesmo ritmo, quantos <b>dias</b> levam <b>{B} operários</b>?"
+      },
+      {
+        "variaveis": {
+          "A": [
+            8
+          ],
+          "D": [
+            9
+          ],
+          "B": [
+            3,
+            4,
+            6,
+            12
+          ]
+        },
+        "enunciado": "<b>{A} operários</b> constroem uma laje em <b>{D} dias</b>. Quantos <b>dias</b> levam <b>{B} operários</b> no mesmo ritmo?"
+      }
+    ]
+  },
+  {
+    "id": "RT-M-I2",
+    "dificuldade": 2,
+    "tipo": "multipla_num",
+    "tag": "Regra de três",
+    "resposta_expr": "A*D/B",
+    "contextos": [
+      {
+        "variaveis": {
+          "A": [
+            4
+          ],
+          "D": [
+            90
+          ],
+          "B": [
+            5,
+            6,
+            9,
+            10,
+            12
+          ]
+        },
+        "enunciado": "<b>{A} torneiras</b> iguais enchem um tanque em <b>{D} minutos</b>. Com <b>{B} torneiras</b>, em quantos <b>minutos</b> enche?"
+      },
+      {
+        "variaveis": {
+          "A": [
+            3
+          ],
+          "D": [
+            40
+          ],
+          "B": [
+            4,
+            5,
+            6,
+            8,
+            10
+          ]
+        },
+        "enunciado": "<b>{A} torneiras</b> iguais enchem uma caixa em <b>{D} minutos</b>. Com <b>{B} torneiras</b>, em quantos <b>minutos</b> enche?"
+      }
+    ]
+  },
+  {
+    "id": "RT-M-I3",
+    "dificuldade": 2,
+    "tipo": "multipla_num",
+    "tag": "Regra de três",
+    "resposta_expr": "A*D/B",
+    "contextos": [
+      {
+        "variaveis": {
+          "A": [
+            60
+          ],
+          "D": [
+            6
+          ],
+          "B": [
+            40,
+            45,
+            72,
+            90
+          ]
+        },
+        "enunciado": "A <b>{A} km/h</b>, um ônibus faz um trajeto em <b>{D} horas</b>. A <b>{B} km/h</b>, em quantas <b>horas</b> faz o mesmo trajeto?"
+      }
+    ]
+  },
+  {
+    "id": "RT-M-I4",
+    "dificuldade": 2,
+    "tipo": "multipla_num",
+    "tag": "Regra de três",
+    "resposta_expr": "A*D/B",
+    "contextos": [
+      {
+        "variaveis": {
+          "A": [
+            6
+          ],
+          "D": [
+            8
+          ],
+          "B": [
+            2,
+            3,
+            4,
+            12,
+            16
+          ]
+        },
+        "enunciado": "<b>{A} máquinas</b> iguais fazem um serviço em <b>{D} horas</b>. Com <b>{B} máquinas</b>, em quantas <b>horas</b> fazem o mesmo serviço?"
+      }
+    ]
+  },
+  {
+    "id": "RT-M-I5",
+    "dificuldade": 2,
+    "tipo": "multipla_num",
+    "tag": "Regra de três",
+    "resposta_expr": "A*D/B",
+    "contextos": [
+      {
+        "variaveis": {
+          "A": [
+            3
+          ],
+          "D": [
+            8
+          ],
+          "B": [
+            2,
+            4,
+            6,
+            12
+          ]
+        },
+        "enunciado": "<b>{A} pintores</b> pintam uma casa em <b>{D} dias</b>. No mesmo ritmo, quantos <b>dias</b> levam <b>{B} pintores</b>?"
+      }
+    ]
+  },
+  {
+    "id": "RT-D-D1",
+    "dificuldade": 3,
+    "tipo": "multipla_num",
+    "tag": "Desafio",
+    "variaveis": {
+      "U": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "A": [
+        3,
+        4
+      ],
+      "B": [
+        11,
+        12,
+        13,
+        15
+      ]
+    },
+    "montar_ctx": "C = U*A",
+    "resposta_expr": "U*B",
+    "enunciado": "<b>{A} kg</b> de café custam <b>R$ {C}</b>. Quanto custam <b>{B} kg</b>?",
+    "prefixo_opcao": "R$ "
+  },
+  {
+    "id": "RT-D-D2",
+    "dificuldade": 3,
+    "tipo": "multipla_num",
+    "tag": "Desafio",
+    "variaveis": {
+      "P": [
+        35,
+        45,
+        60
+      ],
+      "A": [
+        3,
+        5
+      ],
+      "B": [
+        12,
+        15,
+        20
+      ]
+    },
+    "montar_ctx": "C = P*A",
+    "resposta_expr": "P*B",
+    "enunciado": "Uma fábrica usa <b>{C} g</b> de corante para <b>{A} litros</b> de tinta. Quantos <b>gramas</b> para <b>{B} litros</b>?"
+  },
+  {
+    "id": "RT-D-D3",
+    "dificuldade": 3,
+    "tipo": "multipla_num",
+    "tag": "Desafio",
+    "variaveis": {
+      "s": [
+        5,
+        8,
+        10,
+        12
+      ],
+      "A": [
+        2,
+        3
+      ],
+      "B": [
+        7,
+        9,
+        11
+      ]
+    },
+    "montar_ctx": "C = s*A",
+    "resposta_expr": "s*B",
+    "enunciado": "Num mapa, <b>{A} cm</b> representam <b>{C} km</b>. Quantos <b>km</b> representam <b>{B} cm</b>?"
+  },
+  {
+    "id": "RT-D-D4",
+    "dificuldade": 3,
+    "tipo": "multipla_num",
+    "tag": "Desafio",
+    "variaveis": {
+      "R": [
+        11,
+        13,
+        14
+      ],
+      "L": [
+        4,
+        5
+      ],
+      "M": [
+        12,
+        15,
+        18
+      ]
+    },
+    "montar_ctx": "K = R*L",
+    "resposta_expr": "R*M",
+    "enunciado": "Com <b>{L} litros</b> um carro percorre <b>{K} km</b>. Quantos <b>km</b> com <b>{M} litros</b>?"
+  },
+  {
+    "id": "RT-D-D5",
+    "dificuldade": 3,
+    "tipo": "multipla_num",
+    "tag": "Desafio",
+    "variaveis": {
+      "s": [
+        7,
+        9,
+        11
+      ],
+      "A": [
+        3,
+        4
+      ],
+      "B": [
+        13,
+        15,
+        20
+      ]
+    },
+    "montar_ctx": "C = s*A",
+    "resposta_expr": "s*B",
+    "enunciado": "<b>{A} metros</b> de um fio pesam <b>{C} g</b>. Quanto pesam <b>{B} metros</b> do mesmo fio? <small>(em g)</small>"
+  },
+  {
+    "id": "RT-D-I1",
+    "dificuldade": 3,
+    "tipo": "multipla_num",
+    "tag": "Desafio",
+    "resposta_expr": "A*D/T",
+    "contextos": [
+      {
+        "variaveis": {
+          "A": [
+            2
+          ],
+          "D": [
+            6
+          ],
+          "T": [
+            3,
+            4
+          ]
+        },
+        "enunciado": "<b>{A} impressoras</b> imprimem todos os panfletos em <b>{D} horas</b>. Quantas <b>impressoras</b> para imprimir tudo em <b>{T} horas</b>?"
+      },
+      {
+        "variaveis": {
+          "A": [
+            4
+          ],
+          "D": [
+            9
+          ],
+          "T": [
+            6,
+            12,
+            18
+          ]
+        },
+        "enunciado": "<b>{A} impressoras</b> imprimem um lote em <b>{D} horas</b>. Quantas <b>impressoras</b> para terminar em <b>{T} horas</b>?"
+      }
+    ]
+  },
+  {
+    "id": "RT-D-I2",
+    "dificuldade": 3,
+    "tipo": "multipla_num",
+    "tag": "Desafio",
+    "resposta_expr": "A*D/B",
+    "contextos": [
+      {
+        "variaveis": {
+          "A": [
+            8
+          ],
+          "D": [
+            15
+          ],
+          "B": [
+            10,
+            12,
+            20,
+            24
+          ]
+        },
+        "enunciado": "<b>{A} bombas</b> iguais esvaziam um reservatório em <b>{D} horas</b>. Com <b>{B} bombas</b>, em quantas <b>horas</b> esvaziam?"
+      }
+    ]
+  },
+  {
+    "id": "RT-D-I3",
+    "dificuldade": 3,
+    "tipo": "multipla_num",
+    "tag": "Desafio",
+    "resposta_expr": "A*D/B",
+    "contextos": [
+      {
+        "variaveis": {
+          "A": [
+            12
+          ],
+          "D": [
+            20
+          ],
+          "B": [
+            8,
+            15,
+            16,
+            24,
+            30
+          ]
+        },
+        "enunciado": "Uma ração alimenta <b>{A} animais</b> por <b>{D} dias</b>. A mesma ração alimenta <b>{B} animais</b> por quantos <b>dias</b>?"
+      }
+    ]
+  },
+  {
+    "id": "RT-D-I4",
+    "dificuldade": 3,
+    "tipo": "multipla_num",
+    "tag": "Desafio",
+    "resposta_expr": "A*D/B",
+    "contextos": [
+      {
+        "variaveis": {
+          "A": [
+            5
+          ],
+          "D": [
+            18
+          ],
+          "B": [
+            6,
+            9,
+            10,
+            15
+          ]
+        },
+        "enunciado": "<b>{A} costureiras</b> terminam um lote em <b>{D} dias</b>. Quantos <b>dias</b> levam <b>{B} costureiras</b> no mesmo ritmo?"
+      }
+    ]
+  },
+  {
+    "id": "RT-D-I5",
+    "dificuldade": 3,
+    "tipo": "multipla_num",
+    "tag": "Desafio",
+    "resposta_expr": "A*D/B",
+    "contextos": [
+      {
+        "variaveis": {
+          "A": [
+            6
+          ],
+          "D": [
+            50
+          ],
+          "B": [
+            10,
+            15,
+            20,
+            25
+          ]
+        },
+        "enunciado": "<b>{A} torneiras</b> enchem uma piscina em <b>{D} horas</b>. Com <b>{B} torneiras</b> iguais, em quantas <b>horas</b> enche?"
+      }
+    ]
+  },
+  {
+    "id": "RT-D-I6",
+    "dificuldade": 3,
+    "tipo": "multipla_num",
+    "tag": "Desafio",
+    "resposta_expr": "A*D/B",
+    "contextos": [
+      {
+        "variaveis": {
+          "A": [
+            90
+          ],
+          "D": [
+            8
+          ],
+          "B": [
+            40,
+            48,
+            60,
+            72,
+            80
+          ]
+        },
+        "enunciado": "A <b>{A} km/h</b> um trem faz o percurso em <b>{D} horas</b>. A <b>{B} km/h</b>, em quantas <b>horas</b> faz o mesmo percurso?"
+      }
+    ]
+  },
+  {
+    "id": "RT-D-I7",
+    "dificuldade": 3,
+    "tipo": "multipla_num",
+    "tag": "Desafio",
+    "resposta_expr": "A*D/T",
+    "contextos": [
+      {
+        "variaveis": {
+          "A": [
+            9
+          ],
+          "D": [
+            16
+          ],
+          "T": [
+            8,
+            12,
+            18,
+            24
+          ]
+        },
+        "enunciado": "<b>{A} operários</b> terminam uma obra em <b>{D} dias</b>. Quantos <b>operários</b> para terminar em <b>{T} dias</b>?"
+      }
+    ]
+  }
+]
