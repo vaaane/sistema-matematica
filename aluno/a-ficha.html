@@ -552,9 +552,11 @@ function render(){
       }
       return {nome, estado:"feito", real:nota.real, vmax, pts:nota.pts, id:nota.id, oficiais};
     }
-    // Sem data oficial (histórico/visto) mas com data agendada → ainda não aplicada.
-    if (!oficiais.length && _dataAgendaReg[nome]) {
-      return {nome, estado:"agendada", vmax, dataRef:_dataAgendaReg[nome], oficiais};
+    // Sem data oficial (histórico/visto): a atividade ainda não foi aplicada.
+    if (!oficiais.length) {
+      if (_dataAgendaReg[nome])
+        return {nome, estado:"agendada", vmax, dataRef:_dataAgendaReg[nome], oficiais};
+      return {nome, estado:"a_agendar", vmax, dataRef:"", oficiais};
     }
     const presenteEm = oficiais.find(d=>{ const e=estadoCham(d,aluno); return e==="presente"||e==="atraso"||e===""; });
     if (presenteEm) return {nome, estado:"presente", vmax, dataRef:presenteEm, oficiais,
@@ -594,6 +596,9 @@ function render(){
       val = `<span class="nota-val vermelho">0,00 <small>/ ${_fmt2(l.vmax)}</small></span>`;
     } else if (l.estado === "agendada"){
       sub = `<span class="nsub azul">📅 Agendada${l.dataRef?` para ${fmtDM(l.dataRef)}`:""} — ainda não aplicada</span>`;
+      val = `<span class="nota-val cinza">— <small>/ ${_fmt2(l.vmax)}</small></span>`;
+    } else if (l.estado === "a_agendar"){
+      sub = `<span class="nsub of">🗓️ A ser agendada</span>`;
       val = `<span class="nota-val cinza">— <small>/ ${_fmt2(l.vmax)}</small></span>`;
     } else { // elegivel
       sub = `<span class="nsub azul">Elegível a 2ª chamada — faltou com atestado${l.dataRef?` (${fmtDM(l.dataRef)})`:""}. Procure o professor(a).</span>`;
