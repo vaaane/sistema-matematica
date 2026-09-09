@@ -29,6 +29,12 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 /* topbar */
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;}
 .title{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:22px;letter-spacing:.3px;display:flex;align-items:center;gap:8px;}
+.btn-voltar{display:inline-flex;align-items:center;gap:4px;flex-shrink:0;
+  font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--text-muted);
+  background:none;border:1.5px solid var(--border);border-radius:8px;padding:4px 10px;
+  text-decoration:none;transition:border-color .15s,color .15s;}
+.btn-voltar:hover{border-color:var(--purple);color:var(--purple);}
+.btn-voltar svg{width:13px;height:13px;fill:currentColor;flex-shrink:0;}
 
 /* topo centralizado (formato da Tabuada): badge de nível + líderes */
 .head-center{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;}
@@ -167,6 +173,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 <div class="wrap">
   <div class="topbar">
     <div class="title">🧗 Escalada Algébrica <span class="beta-tag">Beta</span></div>
+    <a href="/aluno/a-jogos.html" class="btn-voltar">
+      <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      Voltar
+    </a>
   </div>
 
   <!-- Topo no formato da Tabuada: badge de nível + líderes -->
@@ -423,8 +433,10 @@ async function loadProg(){
   }
   return { nivel_atual:1, melhor_nivel:1, bonus:0 };
 }
-// acertos por operação, ACUMULADOS entre sessões (p/ card "Operações praticadas")
+// acertos/erros por operação, ACUMULADOS entre sessões (p/ card "Operações praticadas" e análise da professora)
 let tiposAcertos = { add:0, sub:0, mul:0, div:0 };
+let tiposErros   = { add:0, sub:0, mul:0, div:0 };
+let totalErros = 0;
 const OP2CAT = { '+':'add', '-':'sub', '*':'mul', '/':'div' };
 async function saveProg(p){
   const _ts = Date.now();
@@ -436,6 +448,8 @@ async function saveProg(p){
     melhor_nivel: p.melhor_nivel,
     bonus:        bonusPorNivel(p.melhor_nivel),
     tipos_acertos: { ...tiposAcertos },
+    erros: totalErros,
+    tipos_erros: { ...tiposErros },
     ...(prog.concluiu_200_em ? { concluiu_200_em: prog.concluiu_200_em } : {}),
     ultima_partida: _ts,
   };
@@ -492,6 +506,10 @@ function choose(i,el){
   }else{
     el.classList.add('wrong');
     els[current.options.findIndex(isCorrect)].classList.add('right');
+    const _cat = OP2CAT[current.op] || 'mul';
+    totalErros++;
+    tiposErros[_cat] = (tiposErros[_cat]||0) + 1;
+    saveProg({nivel_atual:nivelAtual, melhor_nivel:melhorNivel});   // persiste o erro na hora (não só no acerto)
     setTimeout(()=>modalErro(),520);   // deixa o aluno ver verde/vermelho, então abre modal
   }
 }
@@ -617,6 +635,8 @@ async function renderLeaders(){
   nivelAtual  = Math.max(1, prog.nivel_atual  || 1);
   melhorNivel = Math.max(nivelAtual, prog.melhor_nivel || 1);
   if (prog.tipos_acertos) tiposAcertos = { add:0, sub:0, mul:0, div:0, ...prog.tipos_acertos };
+  if (prog.tipos_erros)   tiposErros   = { add:0, sub:0, mul:0, div:0, ...prog.tipos_erros };
+  totalErros = prog.erros || 0;
   render();
   renderLeaders();   // assíncrono, não bloqueia o jogo
 })();
