@@ -715,7 +715,10 @@ function renderChamadaModal(){
     cadItens.map(x => `<span class="cham-cad-chip ${x.e}">${x.num}${x.e==="atraso"?"<sup>A</sup>":""}</span>`).join("") +
     `</div>`;
   const body = document.getElementById("chamBody");
-  body.innerHTML = alunos.map((al)=>{
+  const alunosOrd = alunos.slice().sort((a,b)=>
+    ((numeroChamada(turma,a)||9999) - (numeroChamada(turma,b)||9999)) || a.localeCompare(b,"pt")
+  );
+  body.innerHTML = alunosOrd.map((al)=>{
     const e = estOf(al);
     const badge = e==="falta" ? `<span class="cham-badge aus">❌ Falta</span>`
                 : e==="atraso" ? `<span class="cham-badge" style="background:var(--gold-pale);color:var(--gold)">🕐 Atraso</span>`
