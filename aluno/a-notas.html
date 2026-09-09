@@ -397,6 +397,7 @@ function renderAndamento(boletim) {
     extrasCardInner = blocoExtrasIcones(boletim, false);
 
     // Potencial = soma dos extras ativos ainda NÃO conquistados (3 jogos × +1 = até +3,0)
+    const cfg = bonusConfig() || {};
     const extrasAtivos = EXTRAS_AUTO.filter(ex => cfg.autoExtras == null || cfg.autoExtras.includes(ex.key));
     const faltantes = extrasAtivos.filter(ex => !auto[ex.key]);
     let potencial = faltantes.reduce((s, ex) => s + ex.valor, 0);
