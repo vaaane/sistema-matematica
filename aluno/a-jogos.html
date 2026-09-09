@@ -1049,7 +1049,7 @@ document.getElementById("content").innerHTML = `
     }).join('');
   }
   hallCard.innerHTML = `<div style="font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#f0a500;display:flex;align-items:center;gap:6px;margin-bottom:12px">🏆 Hall da Fama — 300 níveis</div>${corpo}`;
-  document.querySelector('.g-rank-wrap').insertAdjacentElement('beforebegin', hallCard);
+  document.querySelector('#content .g-rank-wrap')?.insertAdjacentElement('beforebegin', hallCard);
 }
 
 // ── Avaliação ativa: aviso no topo do painel da Tabuada ──────
