@@ -528,6 +528,12 @@ initAvBanner(turma, alunos[0], liberadas);
     const top = itens[0];
     const [ , tm, td] = top.data.split("-");
     const bannerMats = matsHtml(top, "pxd-mat");
+    // Treino (não vale nota) por atividade. Chave = nome EXATO da atividade.
+    const TREINOS_BANNER = {
+      "Atividade 2 - Regra de três": "/aluno/treino-regra-de-tres.html",
+    };
+    const treinoUrlBanner = TREINOS_BANNER[top.atividade]
+      || (/equa[cç]/i.test(top.atividade || "") ? "/aluno/treino-equacoes.html" : null);
     const bannerHtml = `<div class="pxd-banner">
       <div class="pxd-glow"></div>
       <div class="pxd-date"><div class="d">${td}</div><div class="m">${meses[(+tm)-1]||""}</div></div>
@@ -536,7 +542,7 @@ initAvBanner(turma, alunos[0], liberadas);
         <div class="pxd-nome">${esc(top.atividade)}</div>
         <div class="pxd-meta">📝 Vale <b>${fmtNota(top.nota)} pts</b> · estude antes pelos materiais abaixo</div>
         ${bannerMats ? `<div class="pxd-mats">${bannerMats}</div>` : ""}
-        ${/equa[cç]/i.test(top.atividade||"") ? `<a class="pxd-treino" href="/aluno/treino-equacoes.html">🎯 Treinar antes · não vale nota</a>` : ""}
+        ${treinoUrlBanner ? `<a class="pxd-treino" href="${treinoUrlBanner}">🎯 Treinar antes · não vale nota</a>` : ""}
       </div>
     </div>`;
 
