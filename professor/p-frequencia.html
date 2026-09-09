@@ -71,6 +71,20 @@
 
   .freq-rodape{margin-top:10px;font-size:12px;color:var(--text-muted)}
   .freq-rodape b{color:var(--text)}
+
+  .resumo-gov{margin-top:18px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px}
+  .resumo-gov h3{font-size:13px;font-weight:800;letter-spacing:.3px;margin:0 0 4px;color:var(--text);display:flex;align-items:center;gap:7px}
+  .resumo-gov .rg-hint{font-size:11px;color:var(--text-muted);margin-bottom:12px}
+  .rg-dia{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;padding:9px 0;border-top:1px solid rgba(255,255,255,.05)}
+  .rg-dia:first-of-type{border-top:none}
+  .rg-data{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--purple);min-width:70px}
+  .rg-data small{display:block;font-family:'Inter',sans-serif;font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-top:1px}
+  .rg-grp{font-size:12px;color:var(--text-muted)}
+  .rg-grp b{font-weight:700;color:var(--text)}
+  .rg-nums{font-family:'Orbitron',monospace;font-weight:700;letter-spacing:.6px}
+  .rg-nums.f{color:var(--red)} .rg-nums.a{color:var(--gold)}
+  .rg-none{color:var(--text-muted)}
+  .rg-ok{color:var(--green);font-size:12px;font-weight:600}
   .vazio{padding:40px 20px;text-align:center;color:var(--text-muted)}
   @media print{.sidebar,.topbar{display:none!important}.main{margin:0!important}}
 </style>
@@ -107,6 +121,7 @@
       </div>
       <div class="tbl-wrap"><table class="freq" id="tbl"></table></div>
       <div class="freq-rodape" id="rodape"></div>
+      <div class="resumo-gov" id="resumoDias"></div>
     </div>
   </div>
 </div>
@@ -260,6 +275,7 @@ function render(){
     document.getElementById("stats").innerHTML = "";
     document.getElementById("tbl").innerHTML = `<tbody><tr><td class="vazio">Nenhuma aula lançada no ${bimestre}º bimestre da turma ${turma}.<br>As colunas (dias) aparecem quando houver aulas no Diário.</td></tr></tbody>`;
     document.getElementById("rodape").innerHTML = "";
+    document.getElementById("resumoDias").innerHTML = "";
     return;
   }
 
@@ -314,6 +330,31 @@ function render(){
   tbl.innerHTML = head + body + foot;
   tbl.querySelectorAll(".mk[data-d]").forEach(el => el.onclick = () => toggleFalta(el.dataset.d, el.dataset.al));
   document.getElementById("rodape").innerHTML = `Turma <b>${turma}</b> · ${bimestre}º bim — ${nAlunos} alunos · ${nDias} dias (${totalAulas} aulas) · <b>${totalAulasPerdidas}</b> falta(s) em aulas. <span style="color:var(--text-muted)">Clique numa célula: Presente → Falta → Atraso → Matando.</span>`;
+
+  // Resumo por dia — para lançar no sistema do governo
+  const coletar = (data, pred) => alunos
+    .filter(al => pred(data, al))
+    .map(al => ({ n: numeroChamada(turma, al), al }))
+    .sort((x,y) => (x.n||9999) - (y.n||9999))
+    .map(x => x.n ? String(x.n).padStart(2,"0") : x.al);
+  const diasDesc = dias.slice().reverse();   // mais recente primeiro
+  const resumoHtml = diasDesc.map(d => {
+    const faltas  = coletar(d.data, faltou);   // inclui "matando aula"
+    const atrasos = coletar(d.data, atrasou);
+    const tudoOk = !faltas.length && !atrasos.length;
+    const fStr = faltas.length  ? `<span class="rg-nums f">${faltas.join(", ")}</span>`  : `<span class="rg-none">nenhuma</span>`;
+    const aStr = atrasos.length ? `<span class="rg-nums a">${atrasos.join(", ")}</span>` : `<span class="rg-none">nenhum</span>`;
+    return `<div class="rg-dia">
+      <span class="rg-data">${fmtData(d.data)}<small>${diaSemana(d.data)}</small></span>
+      ${tudoOk
+        ? `<span class="rg-ok">✓ todos presentes</span>`
+        : `<span class="rg-grp"><b>Faltas:</b> ${fStr}</span><span class="rg-grp"><b>Atrasos:</b> ${aStr}</span>`}
+    </div>`;
+  }).join("");
+  document.getElementById("resumoDias").innerHTML = `
+    <h3>📋 Resumo por dia — para lançar no sistema do governo</h3>
+    <div class="rg-hint">Números da chamada de quem faltou ou atrasou em cada dia (faltas incluem quem estava matando aula). Do dia mais recente para o mais antigo.</div>
+    ${resumoHtml}`;
 }
 
 function renderTabsBim(){
