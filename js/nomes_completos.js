@@ -106,6 +106,7 @@ export const NOMES_COMPLETOS = {
   "Sandra":           "Sandra Soares de Almeida",
   "Santiago":         "Santiago Josue Ulacio Pulgar",
   "Thays":            "Thays Oliveira Costa",
+  "Yanny":            "Yanny Myrellah Bogea Silva Santos",
 
   // 8H
   "Anderson":         "Anderson Maranhão Araújo",
