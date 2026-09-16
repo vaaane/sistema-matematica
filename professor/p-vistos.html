@@ -24,10 +24,12 @@
   .stat-value.gold{color:var(--gold)}.stat-value.green{color:var(--green)}.stat-value.purple{color:var(--purple)}
 
   .grade-wrap{
-    overflow-x:auto;border-radius:10px;border:1px solid var(--border);
+    overflow:auto;max-height:78vh;border-radius:10px;border:1px solid var(--border);
     scrollbar-width:thin;scrollbar-color:var(--purple) transparent;
   }
-  .grade-wrap::-webkit-scrollbar{height:10px}
+  /* canto "Aluno": sólido e acima das linhas ao rolar */
+  .grade thead th.col-aluno{z-index:7}
+  .grade-wrap::-webkit-scrollbar{height:10px;width:10px}
   .grade-wrap::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:0 0 10px 10px}
   .grade-wrap::-webkit-scrollbar-thumb{background:var(--purple);border-radius:6px}
   .grade-wrap::-webkit-scrollbar-thumb:hover{background:var(--gold)}
@@ -347,6 +349,18 @@ function nomeDaAtividade(atv){
   const b = bibDaAtividade(atv);
   return (b && b.nome) || atv.nome || "";
 }
+const LINHAS_VISIVEIS = 13;
+function ajustarAlturaTabela(){
+  const wrap = document.getElementById("gradeWrap");
+  if(!wrap) return;
+  const thead = wrap.querySelector("thead");
+  const linha = wrap.querySelector("tbody tr");
+  if(!thead || !linha) return;
+  const alturaCabecalho = thead.offsetHeight;
+  const alturaLinha = linha.offsetHeight;
+  wrap.style.maxHeight = (alturaCabecalho + alturaLinha * LINHAS_VISIVEIS + 2) + "px";
+}
+window.addEventListener("resize", ajustarAlturaTabela);
 function render(){
   // topo
   document.getElementById("selTurma").innerHTML =
@@ -439,6 +453,7 @@ function render(){
   requestAnimationFrame(() => {
     wrap.scrollLeft = irParaFim ? wrap.scrollWidth : prevScroll;
     irParaFim = false;
+    ajustarAlturaTabela();
   });
 
   wrap.querySelectorAll(".cel").forEach(td=>td.onclick=()=>ciclar(td.dataset.id, td.dataset.al));
