@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+<link href="/manifest.json" rel="manifest"/>
+<link href="/icon-192.png" rel="apple-touch-icon"/>
+<meta content="#15102a" name="theme-color"/>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<!-- ═══ FICHA DA AULA (lida pelo gerador do index — não remover) ═══ -->
+<meta content="regra-de-tres-composta-teoria" name="aula:id"/>
+<meta content="teoria" name="aula:tipo"/>
+<meta content="grandezas" name="aula:eixo"/>
+<meta content="4" name="aula:bimestre"/>
+<meta content="Regra de Três Composta" name="aula:titulo"/>
+<meta content="Regra de três composta: três ou mais grandezas, análise de cada grandeza contra a incógnita (direta ou inversa), inversão das razões inversas e resolução passo a passo com exemplos resolvidos." name="aula:resumo"/>
+<meta content="Regra de Três" name="aula:tema"/>
+<title>Regra de Três Composta — Sistema de Matemática</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet"/>
+<link href="/css/main.css" rel="stylesheet"/>
+<style>
+  :where(body){margin:0;background:var(--bg,#0d0a2e);color:var(--text,#f1eefb);font-family:'Inter',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+  :where(.layout){display:flex;min-height:100vh}
+  :where(.sidebar){width:230px;flex-shrink:0;background:var(--bg2,#15102a);border-right:1px solid var(--border,rgba(255,255,255,.08))}
+  :where(.main){flex:1;min-width:0;display:flex;flex-direction:column}
+  :where(.topbar){display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 22px;border-bottom:1px solid var(--border,rgba(255,255,255,.08));background:var(--bg2,#15102a)}
+  :where(.topbar-title){font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700}
+  :where(.topbar-sub){font-size:12px;color:var(--text-muted,rgba(255,255,255,.55))}
+  :where(.content){flex:1;padding:22px 18px 64px}
+  @media(max-width:820px){:where(.sidebar){display:none}}
+  .sb-fb{padding:18px 16px;display:flex;flex-direction:column;gap:4px}
+  .sb-fb .sb-h{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted,rgba(255,255,255,.5));margin:10px 6px 4px}
+  .sb-fb a{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:10px;color:var(--text,#f1eefb);text-decoration:none;font-size:13px;font-weight:600}
+  .sb-fb a:hover{background:rgba(255,255,255,.05)}
+  .au{max-width:720px;margin:0 auto}
+  .au-hero{position:relative;overflow:hidden;text-align:center;padding:26px 22px;margin-bottom:22px;border-radius:18px;border:1px solid var(--border,rgba(255,255,255,.08));background:linear-gradient(135deg,rgba(124,92,252,.16),rgba(47,158,220,.07))}
+  .au-hero::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 78% -10%,rgba(240,165,0,.10),transparent 55%);pointer-events:none}
+  .au-hero-eyebrow{font-size:10.5px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold,#f0a500);margin-bottom:6px}
+  .au-hero-title{font-family:'Rajdhani',sans-serif;font-size:30px;font-weight:700;line-height:1.05;margin:0}
+  .au-hero-meta{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-top:14px}
+  .au-meta{font-size:11px;font-weight:700;padding:4px 11px;border-radius:20px;background:rgba(255,255,255,.06);border:1px solid var(--border,rgba(255,255,255,.1));color:rgba(255,255,255,.8)}
+  .au-meta.gold{color:var(--gold,#f0a500);background:rgba(240,165,0,.1);border-color:rgba(240,165,0,.3)}
+  .au-p{font-size:14px;line-height:1.75;color:rgba(255,255,255,.82);margin:0 0 12px}
+  .au-p b{color:#fff;font-weight:700}
+  .au-sec{margin-bottom:30px;scroll-margin-top:80px}
+  .au-sec-head{display:flex;align-items:center;gap:11px;margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid var(--border,rgba(255,255,255,.08))}
+  .au-sec-num{width:26px;height:26px;flex-shrink:0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(135deg,var(--purple,#7c5cfc),#5a3fd6)}
+  .au-sec-title{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;line-height:1.1}
+  .au-sec-tag{margin-left:auto;font-size:10px;font-weight:800;padding:3px 10px;border-radius:11px;white-space:nowrap;text-transform:uppercase;letter-spacing:.4px}
+  .tag-teoria{background:rgba(124,92,252,.15);border:1px solid rgba(124,92,252,.35);color:#b6a2ff}
+  .tag-pratica{background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.32);color:#3ddc84}
+  /* — Caixa de enunciado principal (contexto do problema) — */
+  .au-def{position:relative;background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-left:4px solid var(--purple,#7c5cfc);border-radius:12px;padding:15px 17px;margin:0 0 16px}
+  .au-def-label{font-size:10.5px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--purple,#a48bff);margin-bottom:7px}
+  .au-def-body{font-size:14px;line-height:1.7;color:rgba(255,255,255,.85)}
+  .au-def-body b{color:#fff}
+  .au-dados{display:flex;flex-wrap:wrap;gap:10px;margin-top:11px}
+  .au-dado{flex:1;min-width:150px;background:rgba(255,255,255,.03);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:10px;padding:11px 13px;font-size:13.5px;line-height:1.5;color:rgba(255,255,255,.85)}
+  .au-dado b{color:#fff}
+  /* ═══ EXERCÍCIOS (cards com resposta sempre disponível) ═══ */
+  .ex-list{display:flex;flex-direction:column;gap:12px}
+  .ex{background:var(--card,#181233);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:14px;padding:16px 17px}
+  .ex-top{display:flex;align-items:center;gap:11px;margin-bottom:11px}
+  .ex-num{min-width:30px;height:30px;flex-shrink:0;padding:0 8px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(135deg,var(--purple,#7c5cfc),#5a3fd6)}
+  .ex-tag{margin-left:auto;font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:3px 9px;border-radius:10px}
+  .lv-facil{background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.3);color:#3ddc84}
+  .lv-medio{background:rgba(240,165,0,.12);border:1px solid rgba(240,165,0,.3);color:#f0a500}
+  .lv-dificil{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.32);color:#f87171}
+  .ex-stmt{font-size:14px;line-height:1.65;color:rgba(255,255,255,.9);margin-bottom:11px}
+  .eq-destaque{display:inline-block;margin-top:4px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:18px;color:var(--gold,#f0a500);letter-spacing:.4px}
+  .frac{display:inline-flex;flex-direction:column;text-align:center;vertical-align:middle;font-size:.82em;line-height:1.02;margin:0 .18em}
+  .frac>span:first-child{border-bottom:1.6px solid currentColor;padding:0 .32em}
+  .frac>span:last-child{padding:0 .32em}
+  :focus-visible{outline:2px solid var(--purple,#7c5cfc);outline-offset:2px}
+  /* — setinhas de sentido das grandezas — */
+  .seta{font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--gold,#f0a500)}
+  .seta-x{font-family:'Rajdhani',sans-serif;font-weight:700;color:#b6a2ff}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar" id="sidebar"></aside>
+<div class="main">
+<div class="topbar">
+<div class="topbar-left">
+<div class="topbar-title">📚 Material de Aula</div>
+<div class="topbar-sub">Conteúdo para estudar</div>
+</div>
+</div>
+<div class="content">
+<div class="au">
+<header class="au-hero">
+<div class="au-hero-eyebrow">TEORIA · Matemática · 8º ano · 4º bimestre</div>
+<h1 class="au-hero-title">Regra de Três Composta</h1>
+<div class="au-hero-meta">
+<span class="au-meta gold">Três ou mais grandezas</span>
+<span class="au-meta">Turmas 8D–8H</span>
+<span class="au-meta">Só teoria</span>
+</div>
+</header>
+
+<p class="au-p" style="margin-bottom:18px">Você já sabe resolver a regra de três <b>simples</b> (duas grandezas). Aqui aparece uma <b>terceira grandeza</b> (às vezes mais). A ideia é a mesma — só que agora comparamos <b>cada</b> grandeza com a incógnita, uma de cada vez. Leia com calma e acompanhe os <b>exemplos resolvidos</b>.</p>
+
+<!-- ══════════════ TEORIA 1 — o que é ══════════════ -->
+<section class="au-sec"><div class="au-sec-head"><div class="au-sec-num">1</div><div class="au-sec-title">O que muda em relação à simples?</div><div class="au-sec-tag tag-teoria">TEORIA</div></div>
+
+<div class="au-def">
+<div class="au-def-label">A ideia</div>
+<div class="au-def-body">Na regra de três <b>composta</b>, a grandeza que queremos descobrir depende de <b>duas ou mais</b> grandezas ao mesmo tempo. Ex.: o <b>tempo</b> de uma obra depende do <b>número de operários</b> <u>e</u> do <b>tamanho do muro</b>.</div>
+</div>
+
+<p class="au-p">O segredo é <b>não misturar tudo de uma vez</b>. Comparamos a incógnita com <b>uma grandeza de cada vez</b>, mantendo as outras "congeladas", e perguntamos: <i>se só esta grandeza mudasse, a incógnita aumentaria ou diminuiria?</i></p>
+</section>
+
+<!-- ══════════════ TEORIA 2 — analisar cada grandeza ══════════════ -->
+<section class="au-sec"><div class="au-sec-head"><div class="au-sec-num">2</div><div class="au-sec-title">Analisar cada grandeza contra a incógnita</div><div class="au-sec-tag tag-teoria">TEORIA</div></div>
+
+<p class="au-p">Escolha a coluna do <b>x</b> como referência. Compare-a com cada outra coluna, separadamente:</p>
+
+<div class="au-dados">
+<div class="au-dado"><b>Direta com o x</b> <span class="seta">↑ ↑</span><br>se essa grandeza aumenta e o <b>x</b> também aumentaria → <b>mantém</b> a razão como está.</div>
+<div class="au-dado"><b>Inversa com o x</b> <span class="seta">↑ ↓</span><br>se essa grandeza aumenta e o <b>x</b> diminuiria → <b>inverte</b> essa razão (vira de cabeça para baixo).</div>
+</div>
+
+<p class="au-p" style="margin-top:12px"><b>Regra de ouro:</b> a razão da coluna do <b>x</b> é igual ao <b>produto</b> das outras razões — cada uma já corrigida (as inversas invertidas). É como resolver várias regras de três simples ao mesmo tempo.</p>
+</section>
+
+<!-- ══════════════ TEORIA 3 — exemplo só com diretas ══════════════ -->
+<section class="au-sec"><div class="au-sec-head"><div class="au-sec-num">3</div><div class="au-sec-title">Exemplo 1 — todas diretas</div><div class="au-sec-tag tag-teoria">TEORIA</div></div>
+
+<div class="au-def">
+<div class="au-def-label">Exemplo resolvido</div>
+<div class="au-def-body"><b>3 pedreiros</b> assentam <b>60 m²</b> de piso em <b>2 dias</b>. Trabalhando no mesmo ritmo, quantos <b>m²</b> conseguem assentar <b>5 pedreiros</b> em <b>4 dias</b>?</div>
+</div>
+
+<p class="au-p"><b>Passo 1 — organizar.</b> Três grandezas; o <b>x</b> é a área (m²).</p>
+<div class="au-dados">
+<div class="au-dado"><b>Pedreiros</b><br>3<br>5</div>
+<div class="au-dado"><b>Dias</b><br>2<br>4</div>
+<div class="au-dado" style="border-color:rgba(124,92,252,.4)"><b>Área (m²)</b><br>60<br><b style="color:#b6a2ff">x</b></div>
+</div>
+
+<p class="au-p" style="margin-top:12px"><b>Passo 2 — comparar cada uma com o x.</b></p>
+<div class="au-dados">
+<div class="au-dado">Mais <b>pedreiros</b> → mais m². <span class="seta">↑ ↑</span> <b>direta</b> → mantém <span class="frac"><span>3</span><span>5</span></span>.</div>
+<div class="au-dado">Mais <b>dias</b> → mais m². <span class="seta">↑ ↑</span> <b>direta</b> → mantém <span class="frac"><span>2</span><span>4</span></span>.</div>
+</div>
+
+<p class="au-p" style="margin-top:12px"><b>Passo 3 — montar e resolver.</b> A razão do x é igual ao produto das outras:</p>
+<p><span class="eq-destaque"><span class="frac"><span>60</span><span>x</span></span> = <span class="frac"><span>3</span><span>5</span></span> · <span class="frac"><span>2</span><span>4</span></span></span></p>
+<p class="au-p"><span class="frac"><span>60</span><span>x</span></span> = <span class="frac"><span>6</span><span>20</span></span> &nbsp;→&nbsp; 6 · x = 60 · 20 &nbsp;→&nbsp; 6x = 1200.</p>
+<div class="au-def" style="border-left-color:#3ddc84">
+<div class="au-def-label" style="color:#3ddc84">Resposta</div>
+<div class="au-def-body"><b>x = 200 m².</b> (Confere: cada pedreiro assenta 10 m²/dia; 5 · 4 · 10 = 200.)</div>
+</div>
+</section>
+
+<!-- ══════════════ TEORIA 4 — exemplo misto ══════════════ -->
+<section class="au-sec"><div class="au-sec-head"><div class="au-sec-num">4</div><div class="au-sec-title">Exemplo 2 — direta e inversa juntas</div><div class="au-sec-tag tag-teoria">TEORIA</div></div>
+
+<div class="au-def">
+<div class="au-def-label">Exemplo resolvido</div>
+<div class="au-def-body"><b>5 operários</b> constroem <b>100 m</b> de muro em <b>8 dias</b>. Quantos <b>dias</b> serão necessários para <b>8 operários</b> construírem <b>200 m</b> de muro?</div>
+</div>
+
+<p class="au-p"><b>Passo 1 — organizar.</b> O <b>x</b> é o número de dias.</p>
+<div class="au-dados">
+<div class="au-dado"><b>Operários</b><br>5<br>8</div>
+<div class="au-dado"><b>Muro (m)</b><br>100<br>200</div>
+<div class="au-dado" style="border-color:rgba(124,92,252,.4)"><b>Dias</b><br>8<br><b style="color:#b6a2ff">x</b></div>
+</div>
+
+<p class="au-p" style="margin-top:12px"><b>Passo 2 — comparar cada uma com o x (dias).</b></p>
+<div class="au-dados">
+<div class="au-dado">Mais <b>operários</b> → <b>menos</b> dias. <span class="seta">↑ ↓</span> <b>inversa</b> → inverte <span class="frac"><span>5</span><span>8</span></span> para <span class="frac"><span>8</span><span>5</span></span>.</div>
+<div class="au-dado">Mais <b>muro</b> → <b>mais</b> dias. <span class="seta">↑ ↑</span> <b>direta</b> → mantém <span class="frac"><span>100</span><span>200</span></span>.</div>
+</div>
+
+<p class="au-p" style="margin-top:12px"><b>Passo 3 — montar e resolver.</b> Só a razão dos operários entra invertida:</p>
+<p><span class="eq-destaque"><span class="frac"><span>8</span><span>x</span></span> = <span class="frac"><span>8</span><span>5</span></span> · <span class="frac"><span>100</span><span>200</span></span></span></p>
+<p class="au-p"><span class="frac"><span>8</span><span>x</span></span> = <span class="frac"><span>800</span><span>1000</span></span> = <span class="frac"><span>4</span><span>5</span></span> &nbsp;→&nbsp; 4 · x = 8 · 5 &nbsp;→&nbsp; 4x = 40.</p>
+<div class="au-def" style="border-left-color:#3ddc84">
+<div class="au-def-label" style="color:#3ddc84">Resposta</div>
+<div class="au-def-body"><b>x = 10 dias.</b> (Confere: cada operário faz 2,5 m/dia; 200 ÷ (8 · 2,5) = 10.)</div>
+</div>
+
+<div class="au-def" style="border-left-color:var(--gold,#f0a500);background:rgba(240,165,0,.05)">
+<div class="au-def-label" style="color:var(--gold,#f0a500)">Não esqueça</div>
+<div class="au-def-body">Compare sempre <b>uma grandeza de cada vez</b> com a coluna do x. Inverta <b>só</b> as razões que forem <b>inversas</b>; as diretas ficam como estão. Depois, é só multiplicar tudo e resolver em cruz.</div>
+</div>
+</section>
+
+</div>
+</div>
+</div>
+</div>
+<script type="module">
+  (async () => {
+    try { const m = await import('/js/auth.js'); m.renderSidebarAluno && m.renderSidebarAluno('sidebar', 'conteudos'); } catch (_) {}
+    const sb = document.getElementById('sidebar');
+    if (sb && !sb.children.length) {
+      sb.innerHTML = `<div class="sb-fb">
+        <div class="sb-h">Estudo</div>
+        <a href="/aluno/menu.html">🏠 Menu</a>
+        <a href="/aluno/guia.html">📖 Guia</a>
+        <a href="#" style="color:#b6a2ff">📚 Material de Aula</a>
+        <div class="sb-h">Valer nota</div>
+        <a href="/aluno/a-atividades.html">✏️ Atividades</a>
+        <a href="/aluno/a-jogos.html">🎮 Jogos</a>
+      </div>`;
+    }
+  })();
+</script>
+</body>
+</html>
