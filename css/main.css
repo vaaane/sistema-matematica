@@ -30,6 +30,9 @@
   --radius:     14px;
   --shadow:     0 1px 3px rgba(0,0,0,.45), 0 4px 16px rgba(0,0,0,.55);
   --shadow-sm:  0 1px 3px rgba(0,0,0,.45);
+
+  /* Tema dark fixo — controles nativos (select, scrollbar etc.) seguem o dark do SO/navegador */
+  color-scheme: dark;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -214,6 +217,14 @@ a { text-decoration: none; color: inherit; }
 .input:disabled { background: rgba(255,255,255,.03); color: var(--text-muted); cursor: not-allowed; }
 .select-wrap { position: relative; }
 .select-wrap::after { content: ""; pointer-events: none; position: absolute; right: 13px; top: 50%; transform: translateY(-50%); border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid var(--text-muted); }
+
+/* ── Dropdowns nativos (select/option) no tema dark ──
+   Global para cobrir todo <select> do site, mesmo sem classe .input —
+   qualquer CSS de página com background próprio continua tendo prioridade. */
+select { background-color: var(--card); color: var(--text); border: 1.5px solid var(--border); border-radius: 9px; }
+select:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(108,0,212,.15); outline: none; }
+select option { background-color: var(--bg); color: var(--text); }
+select option:checked { background-color: var(--purple); color: #fff; }
 
 .divider { height: 1px; background: var(--border); margin: 18px 0; }
 .medal-1 { color: #F59E0B; }
