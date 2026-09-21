@@ -198,14 +198,21 @@ export async function addTentativaExtra({ turma, atividade, aluno }) {
 }
 
 export async function contarTentativasExtra(aluno, atividade, turma) {
-  const snap = await get(query(ref(db, "tentativas_extra"), orderByChild("aluno"), equalTo(aluno)));
-  if (!snap.exists()) return 0;
-  let count = 0;
-  snap.forEach(child => {
-    const v = child.val();
-    if (v.atividade === atividade && v.turma === turma) count++;
-  });
-  return count;
+  try {
+    const snap = await get(query(ref(db, "tentativas_extra"), orderByChild("aluno"), equalTo(aluno)));
+    if (!snap.exists()) return 0;
+    let count = 0;
+    snap.forEach(child => {
+      const v = child.val();
+      if (v.atividade === atividade && v.turma === turma) count++;
+    });
+    return count;
+  } catch (e) {
+    // Se as regras do Firebase ainda não liberaram este path, não pode travar
+    // a atividade inteira — trata como "sem tentativa extra" e segue.
+    console.warn("[contarTentativasExtra]", e);
+    return 0;
+  }
 }
 
 export async function verificarTentativasSuspeitas(aluno, atividade) {
