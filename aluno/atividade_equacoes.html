@@ -136,7 +136,7 @@
 </div>
 
 <script type="module">
-import { intercalarPorDificuldade } from "/js/constants.js";
+import { intercalarPorDificuldade, ARQUIVO_QUESTOES } from "/js/constants.js";
 import {
   addResultado, updateResultado, saveDetalhes,
   getLiberadasParaTurma, liberacaoParaAluno, getAtividadeStatus, contarTentativas,
@@ -148,7 +148,7 @@ import { requireAluno, getSession, setSession, renderSidebarAluno, clearSession,
 /* ════════════════════════════════════════════════════════════
    CONFIGURAÇÃO — Atividade: Equações do 1º Grau
    ════════════════════════════════════════════════════════════ */
-const ARQUIVO_QUESTOES_EQ = "/dados/questoes_equacoes.json";
+const ARQUIVO_QUESTOES_PADRAO = "/dados/questoes_equacoes.json";
 const TEMPO_ALVO_SEG  = 15 * 60;   // 15 min — tempo total da atividade
 const TEMPO_MAX_SEG   = 15 * 60;   // 15 min — encerra automaticamente
 const MAX_TENTATIVAS  = 1;         // 1 tentativa por dupla/aluno
@@ -364,8 +364,8 @@ function pedirSenhaAtividade(senhaCorreta){
   });
 }
 
-/* ── Carregar modelos de questão ── */
-const caminho = ARQUIVO_QUESTOES_EQ;
+/* ── Carregar modelos de questão (banco específico da atividade, se houver) ── */
+const caminho = ARQUIVO_QUESTOES[nomeAtiv] || ARQUIVO_QUESTOES_PADRAO;
 let modelos = [];
 try {
   const resp = await fetch(caminho);
@@ -518,8 +518,15 @@ function _sortearModelosSeed(lista, cotas, seed){
   }
   return escolhidos;
 }
-const COTAS = { 1: 5, 2: 5, 3: 5 };
-const _selecionados = (modelos.length > 15) ? _sortearModelosSeed(modelos, COTAS, `${_seedBase}#sel`) : modelos;
+// Cota padrão: 15 questões (5 por dificuldade). Regra de três: 10 questões —
+// 4 conceituais (dificuldade 1, "diretamente/inversamente proporcionais")
+// + 6 de cálculo (3 de dificuldade 2 + 3 de dificuldade 3).
+const COTAS_POR_ATIV = {
+  "Atividade 2 - Regra de três": { 1: 4, 2: 3, 3: 3 },
+};
+const COTAS = COTAS_POR_ATIV[nomeAtiv] || { 1: 5, 2: 5, 3: 5 };
+const _totalAtiv = Object.values(COTAS).reduce((a,b) => a+b, 0);
+const _selecionados = (modelos.length > _totalAtiv) ? _sortearModelosSeed(modelos, COTAS, `${_seedBase}#sel`) : modelos;
 // Materializa garantindo que os valores de x das questões numéricas não se repitam
 // na mesma prova (mantém a seed estável por dupla; só desempata quando há colisão).
 const _xUsados = new Set();
