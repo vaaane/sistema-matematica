@@ -185,6 +185,29 @@ export async function contarTentativas(aluno, atividade) {
   return count;
 }
 
+// ── Tentativas extras concedidas individualmente (professor) ──
+// Coleção "tentativas_extra": cada push = +1 tentativa liberada para um
+// aluno específico numa atividade/turma. Não afeta os demais alunos —
+// o motor da atividade soma isso ao limite padrão (MAX_TENTATIVAS) na hora
+// de checar se o aluno já esgotou as tentativas.
+export async function addTentativaExtra({ turma, atividade, aluno }) {
+  const newRef = await push(ref(db, "tentativas_extra"), {
+    turma, atividade, aluno, criadoEm: serverTimestamp(),
+  });
+  return newRef.key;
+}
+
+export async function contarTentativasExtra(aluno, atividade, turma) {
+  const snap = await get(query(ref(db, "tentativas_extra"), orderByChild("aluno"), equalTo(aluno)));
+  if (!snap.exists()) return 0;
+  let count = 0;
+  snap.forEach(child => {
+    const v = child.val();
+    if (v.atividade === atividade && v.turma === turma) count++;
+  });
+  return count;
+}
+
 export async function verificarTentativasSuspeitas(aluno, atividade) {
   const dez = Date.now() - 10 * 60 * 1000;
   const snap = await get(query(ref(db, "resultados"), orderByChild("aluno"), equalTo(aluno)));

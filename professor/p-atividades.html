@@ -58,7 +58,7 @@
     .ag-row-mats{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
     .ag-row-mat{font-size:11px;font-weight:700;color:#c79bff;background:rgba(155,48,255,.1);border:1px solid rgba(155,48,255,.28);border-radius:7px;padding:2px 8px;text-decoration:none}
     .ag-row-acoes{display:flex;gap:6px;flex-shrink:0}
-    @media(max-width:640px){.topbar{flex-wrap:wrap;gap:8px}.topbar-left{flex:1;min-width:0}.topbar-right{width:100%;display:flex;gap:8px}.topbar-right .btn{flex:1;justify-content:center}}
+    @media(max-width:640px){.topbar{flex-wrap:wrap;gap:8px}.topbar-left{flex:1;min-width:0}.topbar-right{width:100%;display:flex;gap:8px}.topbar-right .btn{flex:1;justify-content:center}#consulta-grid{grid-template-columns:1fr!important}}
     .pill{padding:5px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .15s;}
     .pill.on{border-color:var(--blue);background:var(--blue);color:#fff;}
   </style>
@@ -254,6 +254,31 @@
         <div id="ag-lista"><p style="font-size:13px;color:var(--text-muted)">Carregando…</p></div>
       </div>
 
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-header">
+          <div class="card-title"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>🔎 Consultar aluno</div>
+        </div>
+        <p style="font-size:12.5px;color:var(--text-muted);margin:2px 0 12px;line-height:1.5">
+          Veja se um aluno específico já fez uma atividade. Se não fez (ou esgotou as tentativas), dá pra liberar +1 tentativa só para ele, sem afetar a turma.
+        </p>
+        <div id="consulta-grid" style="display:grid;grid-template-columns:1fr 1.3fr 1.3fr auto;gap:10px;align-items:end">
+          <div>
+            <label class="modal-field-label">Turma</label>
+            <div class="select-wrap"><select class="input" id="cons-turma" onchange="consultaTurmaMudou()"><option value="">Selecionar…</option></select></div>
+          </div>
+          <div>
+            <label class="modal-field-label">Aluno</label>
+            <div class="select-wrap"><select class="input" id="cons-aluno"><option value="">Selecione a turma primeiro…</option></select></div>
+          </div>
+          <div>
+            <label class="modal-field-label">Atividade</label>
+            <div class="select-wrap"><select class="input" id="cons-ativ"><option value="">Selecionar…</option></select></div>
+          </div>
+          <button class="btn btn-blue" onclick="consultarAluno()">Consultar</button>
+        </div>
+        <div id="cons-resultado" style="margin-top:14px"></div>
+      </div>
+
       <div class="grid-2">
         <div>
           <div class="card">
@@ -294,7 +319,7 @@
 
 <script type="module">
 import { LISTA_ATIVIDADES, ALUNOS_POR_TURMA, dataAgora, bimestreAtual } from "/js/constants.js";
-import { getLiberadas, addLiberada, deleteLiberada, addLiberacaoHistorico, getLiberacoesHistorico, updateLiberacaoHistorico, getAllAtividadeStatus, setAtividadeStatus, addStatusAlteracao, updateLiberadasPercentual } from "/js/db.js";
+import { getLiberadas, addLiberada, deleteLiberada, addLiberacaoHistorico, getLiberacoesHistorico, updateLiberacaoHistorico, getAllAtividadeStatus, setAtividadeStatus, addStatusAlteracao, updateLiberadasPercentual, getResultadosByAluno, contarTentativasExtra, addTentativaExtra } from "/js/db.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref as _ref, get as _get, set as _set, remove as _remove, push as _push }
@@ -314,6 +339,85 @@ selTurma.addEventListener("change", () => {
 });
 
 window.fecharForm = () => document.getElementById("modal-overlay").classList.remove("open");
+
+// ═══════════════════════════════════════════════════════════
+//  CONSULTA INDIVIDUAL — fez/não fez + liberar +1 tentativa
+// ═══════════════════════════════════════════════════════════
+const consTurmaSel  = document.getElementById("cons-turma");
+const consAlunoSel  = document.getElementById("cons-aluno");
+const consAtivSel   = document.getElementById("cons-ativ");
+Object.keys(ALUNOS_POR_TURMA).sort().forEach(t => { consTurmaSel.innerHTML += `<option value="${t}">Turma ${t}</option>`; });
+LISTA_ATIVIDADES.filter(a => a.modo !== 'torneio').forEach(a => { consAtivSel.innerHTML += `<option value="${a.nome}">${a.nome}</option>`; });
+
+window.consultaTurmaMudou = function(){
+  const turma = consTurmaSel.value;
+  const alunosTurma = (ALUNOS_POR_TURMA[turma] || []);
+  consAlunoSel.innerHTML = '<option value="">Selecionar…</option>' +
+    alunosTurma.map(n => `<option value="${n.replace(/"/g,'&quot;')}">${n}</option>`).join("");
+  document.getElementById("cons-resultado").innerHTML = "";
+};
+
+window.consultarAluno = async function(){
+  const turma = consTurmaSel.value;
+  const aluno = consAlunoSel.value;
+  const ativNome = consAtivSel.value;
+  const box = document.getElementById("cons-resultado");
+  if (!turma || !aluno || !ativNome) {
+    box.innerHTML = '<div style="font-size:12.5px;color:#f0837f">Selecione turma, aluno e atividade.</div>';
+    return;
+  }
+  box.innerHTML = '<div style="font-size:13px;color:var(--text-muted)">Consultando…</div>';
+
+  const ativDef = LISTA_ATIVIDADES.find(a => a.nome === ativNome);
+  const todos = await getResultadosByAluno(aluno, turma);
+  const resultados = todos.filter(r => r.atividade === ativNome && r.turma === turma);
+  const concluidos = resultados.filter(r => r.concluido === true);
+  const usadas = resultados.length; // mesma contagem que trava novas tentativas (contarTentativas)
+  const extra = await contarTentativasExtra(aluno, ativNome, turma);
+  const fez = concluidos.length > 0;
+
+  let melhorTxt = "";
+  if (fez) {
+    const melhor = concluidos.reduce((m, r) => {
+      const p = r.pontuacao_bruta ?? r.pontuacao ?? 0;
+      return (m === null || p > m) ? p : m;
+    }, null);
+    melhorTxt = melhor != null
+      ? `<div style="font-size:13px;color:var(--text-muted);margin-top:4px">Melhor nota: <b style="color:var(--gold,#f0a500)">${melhor.toFixed(2).replace('.', ',')}</b> / 10 · ${usadas} tentativa(s) usada(s)${extra ? ` (+${extra} extra concedida${extra>1?'s':''})` : ''}</div>`
+      : "";
+  }
+
+  const podeDar = ativDef?.modo === 'equacoes_plus';
+  const btnExtra = (!fez && podeDar)
+    ? `<button class="btn btn-sm btn-blue" style="margin-top:10px" onclick="darTentativaExtra('${aluno.replace(/'/g,"\\'")}','${turma}','${ativNome.replace(/'/g,"\\'")}')">➕ Dar mais uma tentativa</button>`
+    : (!fez && !podeDar)
+    ? '<div style="font-size:11.5px;color:var(--text-muted);margin-top:8px">Liberação individual de tentativa só está disponível para atividades no modo "Equações 1º Grau".</div>'
+    : '';
+
+  box.innerHTML = `
+    <div class="card" style="background:var(--bg);padding:14px 16px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:20px">${fez ? '✅' : '❌'}</span>
+        <div>
+          <div style="font-weight:800;font-size:14px">${aluno} — ${fez ? 'Fez' : 'Não fez'}</div>
+          <div style="font-size:12px;color:var(--text-muted)">${ativNome} · Turma ${turma}</div>
+        </div>
+      </div>
+      ${melhorTxt}
+      ${btnExtra}
+    </div>`;
+};
+
+window.darTentativaExtra = async function(aluno, turma, ativNome){
+  if (!confirm(`Dar +1 tentativa de "${ativNome}" só para ${aluno} (Turma ${turma})?`)) return;
+  try {
+    await addTentativaExtra({ turma, atividade: ativNome, aluno });
+    flash(`✅ +1 tentativa liberada para ${aluno}.`);
+    consultarAluno();
+  } catch(e) {
+    flash(`Erro ao liberar tentativa: ${e.message || e}`, "error");
+  }
+};
 
 function flash(msg, tipo="success") {
   const w = document.getElementById("flash-wrap");

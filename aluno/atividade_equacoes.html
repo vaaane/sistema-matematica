@@ -140,8 +140,7 @@ import { intercalarPorDificuldade, ARQUIVO_QUESTOES } from "/js/constants.js";
 import {
   addResultado, updateResultado, saveDetalhes,
   getLiberadasParaTurma, liberacaoParaAluno, getAtividadeStatus, contarTentativas,
-  addConquista, getResultadosByAluno, addAlerta, addHistoricoTeste,
-  deletarRegistro
+  contarTentativasExtra, addConquista, getResultadosByAluno, addAlerta, addHistoricoTeste
 } from "/js/db.js";
 import { requireAluno, getSession, setSession, renderSidebarAluno, clearSession, lerDuplaAtiva, isModoTeste } from "/js/auth.js";
 
@@ -277,10 +276,12 @@ if (ehTeste) {
   const _participantes = [...alunos];
   if (dupla?.nome && !_participantes.includes(dupla.nome)) _participantes.push(dupla.nome);
 
-  // Tentativa única — bloqueia se qualquer participante já fez
+  // Tentativa única — bloqueia se qualquer participante já esgotou o limite
+  // (padrão + tentativas extras concedidas individualmente pelo professor)
   for (const al of _participantes) {
     const usadas = await contarTentativas(al, nomeAtiv);
-    if (usadas >= MAX_TENTATIVAS) {
+    const extra = await contarTentativasExtra(al, nomeAtiv, turma);
+    if (usadas >= MAX_TENTATIVAS + extra) {
       alert(`${al} já utilizou a tentativa disponível para esta atividade.`);
       location.href="/aluno/a-atividades.html"; throw new Error();
     }
@@ -557,22 +558,28 @@ const jogo = {
   valor_nota: valorNota,
 };
 
-/* ── Registro inicial no Firebase: tentativa consumida mesmo se fechar ── */
+/* ── Registro da tentativa: adiado até 10s OU até a 1ª resposta confirmada
+   (o que vier primeiro) — abandono antes disso não consome a tentativa,
+   independente de como o aluno saiu (fechar aba, voltar, trocar de link). ── */
 const idsRegistro = {};
-for (const al of jogo.alunos) {
-  try {
-    const id = await addResultado({
-      aluno: al, turma: jogo.turma, atividade: jogo.nome,
-      concluido: false, pontuacao: 0, acertos: 0, erros: 0, respondidas: 0,
-      modo: "equacoes_plus",
-      inicioTs: jogo.inicioTs,            // ms — quando o aluno começou (p/ monitor)
-      duracaoSeg: TEMPO_MAX_SEG,          // duração total da prova (p/ monitor)
-      emAndamento: true,                  // flag p/ a página de acompanhamento
-      ...(isModoTeste() ? { modo_teste:true } : {})
-    });
-    idsRegistro[al] = id;
-  } catch(e) { console.warn("[addResultado inicial]", e); }
+async function registrarTentativaInicial(){
+  if (Object.keys(idsRegistro).length) return; // já registrado
+  for (const al of jogo.alunos) {
+    try {
+      const id = await addResultado({
+        aluno: al, turma: jogo.turma, atividade: jogo.nome,
+        concluido: false, pontuacao: 0, acertos: 0, erros: 0, respondidas: 0,
+        modo: "equacoes_plus",
+        inicioTs: jogo.inicioTs,            // ms — quando o aluno começou (p/ monitor)
+        duracaoSeg: TEMPO_MAX_SEG,          // duração total da prova (p/ monitor)
+        emAndamento: true,                  // flag p/ a página de acompanhamento
+        ...(isModoTeste() ? { modo_teste:true } : {})
+      });
+      idsRegistro[al] = id;
+    } catch(e) { console.warn("[addResultado inicial]", e); }
+  }
 }
+let _timerRegistroInicial = setTimeout(registrarTentativaInicial, 10000);
 
 /* ── Topbar ── */
 document.getElementById("topbar-title").textContent = jogo.nome;
@@ -876,7 +883,7 @@ window.digitarNumero = (valor) => {
   if (mid) mid.textContent = v !== "" ? "Pronto — confirme a resposta" : "Digite o valor de x e confirme";
 };
 
-window.confirmar = () => {
+window.confirmar = async () => {
   if (jogo.finalizado) return;
   const n = jogo.indice;
   if (jogo.confirmadas[n] !== null) return;
@@ -884,6 +891,10 @@ window.confirmar = () => {
   if (resp === null || resp === ""){
     alert(questaoAtual().tipo === "numerica" ? "Digite o valor de x." : "Selecione uma alternativa.");
     return;
+  }
+  if (!Object.keys(idsRegistro).length) {
+    clearTimeout(_timerRegistroInicial);
+    await registrarTentativaInicial();
   }
   jogo.confirmadas[n] = checar(questaoAtual(), resp);
   render();
@@ -916,20 +927,11 @@ async function finalizar(motivo){
   jogo.finalizado = true;
   saindo = true;
   if (timerInt) clearInterval(timerInt);
+  clearTimeout(_timerRegistroInicial);
 
-  // ── Item 6: abandono em menos de 10s não consome a tentativa ──
-  // Se o aluno sair da página nos primeiros 10 segundos, apaga o registro
-  // inicial (emAndamento) para que a tentativa "volte" (contarTentativas cai a 0).
-  if (motivo === "saiu" && tempoDecorrido() < 10) {
-    for (const al of jogo.alunos) {
-      const id = idsRegistro[al];
-      if (id) {
-        try { await deletarRegistro("resultados", id); }
-        catch (e) { console.warn("[rollback <10s]", e); }
-      }
-    }
-    return; // não salva nota nem navega para o resultado
-  }
+  // Abandono precoce: nem 10s se passaram, nem a 1ª questão foi confirmada —
+  // a tentativa nunca chegou a ser registrada, então não conta (não salva nada).
+  if (!Object.keys(idsRegistro).length) return;
 
   // Correção: todas as questões valem o mesmo (1 ponto bruto cada)
   const total = jogo.questoes.length;
