@@ -34,7 +34,7 @@ export const CAMPOS_NOTA = [
   { key:"cadernoVistos", label:"Caderno",                         max:2,   auto:true }, // proporção de vistos × 2
   { key:"razaoProp",     label:"Atividade 2 - Razão e Proporção", max:1.5, auto:true },
   { key:"conselheiro",   label:"Professor Conselheiro",           max:1,   auto:true }, // começa em 1,0
-  { key:"pd",            label:"PD - Geometria",                  max:1,   auto:true }, // Geo 1+2 (0,3) + Geo 3 (0,4)
+  { key:"pd",            label:"PD - Geometria",                  max:1,   auto:true }, // Geo Canudos Parte 1 (0,5) + Parte 2 (0,5). Parte 3 fica pro 4º bim.
 ];
 
 // Extras automáticos — calculados a partir do progresso real do aluno no banco
@@ -48,6 +48,10 @@ export const EXTRAS_AUTO = [
 ];
 // Caderno Extra — automático, baseado na própria nota de Caderno lançada (não é mais checkbox manual)
 export const CADERNO_EXTRA = { key:"cadExtra", label:"Caderno Extra", valor:0.5, limiar:1.8 };
+// Bônus caderno (3º bim): % de vistos "feitos" (✓, ½, FA e AT✓ contam; F/vazio
+// não) no bimestre — ≥ 90% dá +0,5. Diferente do Caderno Extra acima (1º/2º
+// bim, baseado na nota manual de Caderno > 1,8).
+export const BONUS_CADERNO_VISTOS = { key:"bonusCadernoVistos", label:"Bônus caderno", valor:0.5, limiarPct:90 };
 // Extras manuais — o professor marca
 // Participação agora é coluna de nota (não mais extra manual)
 export const EXTRAS_MANUAL = [];
@@ -69,7 +73,7 @@ export const CAMPOS_POR_BIMESTRE = {
 // Componentes que ainda NÃO têm fonte de dados pronta neste bimestre.
 // Aparecem na composição como "Ainda não disponibilizada" até a atividade existir.
 export const CAMPOS_PENDENTES_POR_BIMESTRE = {
-  "3": ["razaoProp", "pd"],   // Atividade 2 ainda será lançada; PD (geometria) ainda não finalizada
+  "3": ["razaoProp"],   // Atividade 2 ainda será lançada
 };
 export function camposPendentes() { return new Set(CAMPOS_PENDENTES_POR_BIMESTRE[BIMESTRE] || []); }
 export function campoPendente(key) { return camposPendentes().has(key); }
@@ -83,12 +87,12 @@ export function campoDiferido(key) { return camposDiferidos().has(key); }
 // Config de bônus por bimestre. Ausente = todos os bônus (padrão). null = nenhum.
 // Objeto = escolhe quais partes valem. autoExtras: chaves de EXTRAS_AUTO (null = todas).
 export const BONUS_CONFIG_POR_BIMESTRE = {
-  "3": { autoExtras: ["t150", "t300", "tneg50", "tneg150", "esc100", "esc200"], cadExtra: false, rank: false, nivelPerfil: false },
+  "3": { autoExtras: ["t150", "t300", "tneg50", "tneg150", "esc100", "esc200"], cadExtra: false, rank: false, nivelPerfil: false, bonusCadernoVistos: true },
 };
 export function bonusConfig() {
   const cfg = BONUS_CONFIG_POR_BIMESTRE[BIMESTRE];
   if (cfg !== undefined) return cfg;                                          // config específica (pode ser null)
-  return { autoExtras: null, cadExtra: true, rank: true, nivelPerfil: true }; // padrão: tudo
+  return { autoExtras: null, cadExtra: true, rank: true, nivelPerfil: true, bonusCadernoVistos: false }; // padrão: tudo (menos o bônus 3º bim)
 }
 export function camposAtivos() {
   const chaves = CAMPOS_POR_BIMESTRE[BIMESTRE];
@@ -226,10 +230,11 @@ export function calcularBonus(progresso, registro) {
     return s + (incluido && auto[e.key] ? e.valor : 0);
   }, 0);
   const bCadExtra  = (cfg.cadExtra && cadernoExtraAtivo(registro)) ? CADERNO_EXTRA.valor : 0;
+  const bBonusCad  = (cfg.bonusCadernoVistos && bonusCadernoVistosAtivo(progresso?.pctCaderno)) ? BONUS_CADERNO_VISTOS.valor : 0;
   const bRankAtiv4 = cfg.rank ? (progresso?.rankAtiv4Bonus ?? 0) : 0;
   const bNivelPerf = cfg.nivelPerfil ? EXTRA_NIVEL_PERFIL.calcular(progresso?.nivelPerfil ?? 0) : 0;
   const bManual    = EXTRAS_MANUAL.reduce((s, e) => s + (registro?.extras?.[e.key] ? e.valor : 0), 0);
-  return bAuto + bCadExtra + bRankAtiv4 + bNivelPerf + bManual;
+  return bAuto + bCadExtra + bBonusCad + bRankAtiv4 + bNivelPerf + bManual;
 }
 export function calcularSubtotal(registro) {
   return camposAtivos().reduce((s, c) => {
@@ -333,6 +338,63 @@ export async function buscarCadernoVistos(turma, nome) {
     });
     return parseFloat(((tot / nVistos) * 2).toFixed(2));
   } catch (e) { console.error("Falha ao calcular Caderno (vistos):", e); return null; }
+}
+
+// ── % do Caderno feito (3º bim): mesmas atividades de vistos de
+// buscarCadernoVistos acima (exclui "projeto"), mas aqui é CONTAGEM, não
+// média: ✓, ½, FA e AT✓ contam como "feito" (peso 1 cada); só F/vazio não
+// conta. Usado só pelo Bônus caderno (≥ 90% → +0,5). null = nada aplicado ainda.
+export async function buscarPctCaderno(turma, nome) {
+  try {
+    const [snap, idx] = await Promise.all([
+      get(ref(db, `vistos/${turma}/${BIMESTRE}`)),
+      carregarBibliotecaMapa(),
+    ]);
+    if (!snap.exists()) return null;
+    const dados   = snap.val() || {};
+    const ativs   = Object.entries(dados.atividades || {}).map(([id, a]) => ({ id, ...(a || {}) }));
+    const marcas  = dados.marcas || {};
+    const naoProj = ativs.filter(a => resolverAula(a, idx).tipo !== "projeto");
+    const nVistos = naoProj.length;
+    if (!nVistos) return null;
+    let feitos = 0;
+    naoProj.forEach(a => {
+      const v = (marcas[a.id] || {})[nome] || 0;
+      if (v === 1 || v === 2 || v === 3 || v === 4) feitos++;   // ✓, ½, FA, AT✓
+    });
+    return Math.round((feitos / nVistos) * 100);
+  } catch (e) { console.error("Falha ao calcular % Caderno:", e); return null; }
+}
+export function bonusCadernoVistosAtivo(pct) {
+  return pct != null && pct >= BONUS_CADERNO_VISTOS.limiarPct;
+}
+
+// ── PD - Geometria (3º bim): Geometria com Canudos Parte 1 (0,5) + Parte 2
+// (0,5). Casa cada parte pelo arquivo do material (materialRef), igual ao
+// gate-resolucao.js. Regra especial SÓ AQUI: FA conta nota integral, igual
+// ao ✓ (no resto do sistema — ex. Caderno acima — FA conta meio visto;
+// confirmado com a professora que aqui é diferente de propósito).
+// null = nenhuma das duas partes foi aplicada ainda (Ainda não disponibilizada).
+const ARQUIVOS_PD_GEOMETRIA = ["geometria-canudos-parte1.html", "geometria-canudos-parte2.html"];
+export async function buscarPDGeometria(turma, nome) {
+  try {
+    const snap = await get(ref(db, `vistos/${turma}/${BIMESTRE}`));
+    if (!snap.exists()) return null;
+    const dados  = snap.val() || {};
+    const ativs  = Object.entries(dados.atividades || {}).map(([id, a]) => ({ id, ...(a || {}) }));
+    const marcas = dados.marcas || {};
+    const arqDe  = ref_ => (ref_ || "").split("/").pop();
+    const achadas = ARQUIVOS_PD_GEOMETRIA.map(arq => ativs.find(a => arqDe(a.materialRef) === arq));
+    if (!achadas.some(Boolean)) return null;    // nenhuma das duas partes aplicada ainda
+    let tot = 0;
+    achadas.forEach(a => {
+      if (!a) return;
+      const v = (marcas[a.id] || {})[nome] || 0;
+      if (v === 1 || v === 3 || v === 4) tot += 0.5;   // ✓, FA (regra especial) e AT✓ contam integral
+      else if (v === 2)                  tot += 0.25;  // ½ conta metade
+    });
+    return parseFloat(tot.toFixed(2));
+  } catch (e) { console.error("Falha ao calcular PD - Geometria:", e); return null; }
 }
 
 // ── Professor Conselheiro (3º bim): base 1,0; +0,3 por ocorrência positiva,
@@ -471,7 +533,7 @@ export async function montarBoletim(turma, nome, opcoes = {}) {
   const pend   = camposPendentes();
   const querer = k => ativos.has(k) && !pend.has(k);   // só busca o que o bimestre usa e não está pendente
 
-  const [salvo, progresso, ativ4Map, ativ5Pts, eqPts, nivelPerfil, cadVistosRaw, conselheiroRaw, razaoPts] = await Promise.all([
+  const [salvo, progresso, ativ4Map, ativ5Pts, eqPts, nivelPerfil, cadVistosRaw, conselheiroRaw, razaoPts, pdRaw, pctCadernoRaw] = await Promise.all([
     buscarNotaSalva(turma, nome),
     buscarProgressoTabuada(turma, nome),
     buscarAtiv4(turma, [nome]),
@@ -481,11 +543,14 @@ export async function montarBoletim(turma, nome, opcoes = {}) {
     querer("cadernoVistos") ? buscarCadernoVistos(turma, nome) : Promise.resolve(null),
     querer("conselheiro")   ? buscarConselheiro(turma, nome)   : Promise.resolve(null),
     querer("razaoProp")     ? buscarRazaoPropAluno(turma, nome): Promise.resolve(null),
+    querer("pd")            ? buscarPDGeometria(turma, nome)   : Promise.resolve(null),
+    (bonusConfig()||{}).bonusCadernoVistos ? buscarPctCaderno(turma, nome) : Promise.resolve(null),
   ]);
 
   const ativ4Info = ativ4Map[nome] || { fez:false, posicao:0, bonusRank:0 };
   progresso.rankAtiv4Bonus = ativ4Info.bonusRank;
   progresso.nivelPerfil    = nivelPerfil;
+  progresso.pctCaderno     = pctCadernoRaw;
 
   // Ativ.4 e Triângulos: null = não participou/nunca jogou → conta como 0
   let ativ4Val      = ativ4Info.fez ? 0.5 : null;
@@ -496,6 +561,7 @@ export async function montarBoletim(turma, nome, opcoes = {}) {
   let cadernoVal     = cadVistosRaw;
   let conselheiroVal = conselheiroRaw;   // null só quando o campo não é deste bimestre
   let razaoVal       = razaoPts != null ? Math.min(1.5, (razaoPts / 10) * 1.5) : null;
+  let pdVal          = pdRaw;
 
   // Se o bimestre está congelado, usa a FOTO (não os valores ao vivo)
   const cong = await buscarCongelamento(turma);
@@ -512,12 +578,15 @@ export async function montarBoletim(turma, nome, opcoes = {}) {
     if (foto.cadernoVistos !== undefined) cadernoVal     = foto.cadernoVistos;
     if (foto.conselheiro   !== undefined) conselheiroVal = foto.conselheiro;
     if (foto.razaoProp     !== undefined) razaoVal       = foto.razaoProp;
+    if (foto.pd            !== undefined) pdVal          = foto.pd;
+    if (foto.pctCaderno    !== undefined) progresso.pctCaderno = foto.pctCaderno;
   }
 
   // Campos diferidos: só liberados ao aluno quando o bimestre está congelado.
+  // O Bônus caderno segue a mesma trava do cadernoVistos (mesma fonte de dados).
   if (!cong.congelado) {
     const dif = camposDiferidos();
-    if (dif.has("cadernoVistos")) cadernoVal     = null;
+    if (dif.has("cadernoVistos")) { cadernoVal = null; progresso.pctCaderno = null; }
     if (dif.has("conselheiro"))   conselheiroVal = null;
   }
 
@@ -533,7 +602,7 @@ export async function montarBoletim(turma, nome, opcoes = {}) {
     cadernoVistos: cadernoVal,
     razaoProp:     razaoVal,
     conselheiro:   conselheiroVal,
-    pd:            null,            // pendente até a atividade de Geometria ser finalizada
+    pd:            pdVal,
     extras:     salvo?.extras || {},
   };
 

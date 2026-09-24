@@ -199,11 +199,11 @@ import { ALUNOS_POR_TURMA, BIMESTRES, bimestreAtual } from "/js/constants.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, query, orderByChild, equalTo, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {
-  BIMESTRE, setBimestre, CAMPOS_NOTA as CAMPOS, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA,
+  BIMESTRE, setBimestre, CAMPOS_NOTA as CAMPOS, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, BONUS_CADERNO_VISTOS,
   EXTRA_RANK_ATIV4, EXTRA_NIVEL_PERFIL, NOME_ATIV5, NOME_ATIV1_EQ,
   makeUid, slugNome as slug, fmtNota as fmt,
   buscarProgressoTabuada, buscarAtiv4, buscarNivelPerfil,
-  buscarCadernoVistos, buscarConselheiro,
+  buscarCadernoVistos, buscarConselheiro, buscarPDGeometria, buscarPctCaderno, bonusCadernoVistosAtivo,
   extrasAutoAtivos as extrasAtivosDoProgresso, cadernoExtraAtivo,
   notasLiberadas, definirNotasLiberadas,
   buscarCongelamento, congelarBimestre, descongelarBimestre,
@@ -248,10 +248,11 @@ function calcularBonus(nome, registro) {
     return s + (incluido && auto[e.key] ? e.valor : 0);
   }, 0);
   const bCadExtra    = (cfg.cadExtra && cadernoExtraAtivo(registro)) ? CADERNO_EXTRA.valor : 0;
+  const bBonusCad    = (cfg.bonusCadernoVistos && bonusCadernoVistosAtivo(a.pctCaderno)) ? BONUS_CADERNO_VISTOS.valor : 0;
   const bRankAtiv4   = cfg.rank ? (a.rankAtiv4Bonus ?? 0) : 0;
   const bNivelPerfil = cfg.nivelPerfil ? ((a.nivelPerfil || 0) * EXTRA_NIVEL_PERFIL.valorPorNivel) : 0;
   const bManual      = EXTRAS_MANUAL.reduce((s,e) => s + (registro.extras[e.key] ? e.valor : 0), 0);
-  return bAuto + bCadExtra + bRankAtiv4 + bNivelPerfil + bManual;
+  return bAuto + bCadExtra + bBonusCad + bRankAtiv4 + bNivelPerfil + bManual;
 }
 function calcularTotal(nome, registro) {
   const base = camposAtivos().reduce((s,c) => s + (parseFloat(registro[c.key]) || 0), 0);
@@ -319,16 +320,18 @@ async function carregarAutoEquacoes(turma) {
   return porAluno;
 }
 
-// ── 3º bim: Caderno automático (proporção de vistos) e Professor Conselheiro (ocorrências) ──
+// ── 3º bim: Caderno automático (proporção de vistos), Professor Conselheiro (ocorrências) e PD - Geometria (vistos Canudos Parte 1+2) ──
 async function carregarAutoCadernoConselheiro(turma) {
   const alunos = ALUNOS_POR_TURMA[turma] || [];
   const out = {};
   await Promise.all(alunos.map(async nome => {
-    const [caderno, conselheiro] = await Promise.all([
+    const [caderno, conselheiro, pd, pctCaderno] = await Promise.all([
       buscarCadernoVistos(turma, nome),
       buscarConselheiro(turma, nome),
+      buscarPDGeometria(turma, nome),
+      bonusConfig()?.bonusCadernoVistos ? buscarPctCaderno(turma, nome) : Promise.resolve(null),
     ]);
-    out[nome] = { caderno, conselheiro };
+    out[nome] = { caderno, conselheiro, pd, pctCaderno };
   }));
   return out;
 }
@@ -362,6 +365,7 @@ function renderCabecalho() {
         .filter(e => cfg.autoExtras == null || cfg.autoExtras.includes(e.key))
         .map(e => `<span class="legenda-chip auto">🔄 ${e.label} <b>+${fmt(e.valor)}</b></span>`);
       if (cfg.cadExtra) chips.push(`<span class="legenda-chip auto">🔄 ${CADERNO_EXTRA.label} (Caderno &gt; ${fmt(CADERNO_EXTRA.limiar)}) <b>+${fmt(CADERNO_EXTRA.valor)}</b></span>`);
+      if (cfg.bonusCadernoVistos) chips.push(`<span class="legenda-chip auto">🔄 ${BONUS_CADERNO_VISTOS.label} (≥ ${BONUS_CADERNO_VISTOS.limiarPct}% do caderno) <b>+${fmt(BONUS_CADERNO_VISTOS.valor)}</b></span>`);
       leg.innerHTML = chips.join("");
       leg.style.display = "";
     }
@@ -378,7 +382,7 @@ function renderTabela() {
     const total = calcularTotal(nome, r);
     const bonus = calcularBonus(nome, r);
     const auto = extrasAutoAtivos(nome);
-    const nExtras = EXTRAS_AUTO.filter(e => auto[e.key]).length + (cadernoExtraAtivo(r) ? 1 : 0) + EXTRAS_MANUAL.filter(e => r.extras[e.key]).length;
+    const nExtras = EXTRAS_AUTO.filter(e => auto[e.key]).length + (cadernoExtraAtivo(r) ? 1 : 0) + (bonusCadernoVistosAtivo(autoDados[turmaAtual]?.[nome]?.pctCaderno) ? 1 : 0) + EXTRAS_MANUAL.filter(e => r.extras[e.key]).length;
     return `
       <tr data-aluno="${slug(nome)}">
         <td class="col-aluno" title="${nome}">${nome}</td>
@@ -423,7 +427,7 @@ function atualizarLinha(nome) {
   if (btn) {
     const auto = extrasAutoAtivos(nome);
     const bonus = calcularBonus(nome, r);
-    const nExtras = EXTRAS_AUTO.filter(e => auto[e.key]).length + (cadernoExtraAtivo(r) ? 1 : 0) + EXTRAS_MANUAL.filter(e => r.extras[e.key]).length;
+    const nExtras = EXTRAS_AUTO.filter(e => auto[e.key]).length + (cadernoExtraAtivo(r) ? 1 : 0) + (bonusCadernoVistosAtivo(autoDados[turmaAtual]?.[nome]?.pctCaderno) ? 1 : 0) + EXTRAS_MANUAL.filter(e => r.extras[e.key]).length;
     btn.classList.toggle("on", !!nExtras);
     btn.innerHTML = `🎁 ${nExtras ? `+${fmt(bonus)}` : "Extras"}`;
   }
@@ -488,6 +492,17 @@ function abrirExtras(slugNome) {
       <span class="status-dot ${cadAtivo ? "atingiu" : "faltando"}">${cadAtivo ? "✓" : "·"}</span>
       <span class="lbl">${CADERNO_EXTRA.label}<br><span class="nivel-info">caderno atual: ${fmt(cadVal)} (precisa &gt; ${fmt(CADERNO_EXTRA.limiar)})</span></span>
       <span class="val" style="${cadAtivo ? "" : "color:var(--text-muted)"}">${cadAtivo ? `+${fmt(CADERNO_EXTRA.valor)}` : "—"}</span>
+    </div>`;
+  })() + (() => {
+    if (!cfg.bonusCadernoVistos) return "";
+    const pct = a.pctCaderno;
+    const bcAtivo = bonusCadernoVistosAtivo(pct);
+    const pctTxt = pct == null ? "aguardando vistos" : `${pct}%`;
+    return `
+    <div class="extra-row auto">
+      <span class="status-dot ${bcAtivo ? "atingiu" : "faltando"}">${bcAtivo ? "✓" : "·"}</span>
+      <span class="lbl">${BONUS_CADERNO_VISTOS.label}<br><span class="nivel-info">caderno: ${pctTxt} (precisa ≥ ${BONUS_CADERNO_VISTOS.limiarPct}%)</span></span>
+      <span class="val" style="${bcAtivo ? "" : "color:var(--text-muted)"}">${bcAtivo ? `+${fmt(BONUS_CADERNO_VISTOS.valor)}` : "—"}</span>
     </div>`;
   })() + (() => {
     if (!cfg.rank) return "";
@@ -579,7 +594,7 @@ async function carregarTurma(turma) {
   status.classList.remove("saved");
 
   const alunos = ALUNOS_POR_TURMA[turma] || [];
-  const temAutoNovos = camposAtivos().some(c => c.key === "cadernoVistos" || c.key === "conselheiro");
+  const temAutoNovos = camposAtivos().some(c => c.key === "cadernoVistos" || c.key === "conselheiro" || c.key === "pd");
   const tasks = [carregarAutoTabuada(turma), carregarAutoArea(turma), carregarAutoEquacoes(turma), notasLiberadas(turma), buscarAtiv4(turma, alunos), buscarCongelamento(turma),
                  temAutoNovos ? carregarAutoCadernoConselheiro(turma) : Promise.resolve({})];
   if (primeiraVez) tasks.push(carregarNotasSalvas(turma));
@@ -621,6 +636,8 @@ async function carregarTurma(turma) {
     const cc = ccPorAluno[nome] || {};
     r.cadernoVistos = cc.caderno ?? null;      // null = nenhum visto aplicado ainda
     r.conselheiro   = cc.conselheiro ?? null;  // null só quando o campo não é deste bimestre
+    r.pd            = cc.pd ?? null;           // null = nenhuma das duas partes de Geometria aplicada ainda
+    autoDados[turma][nome].pctCaderno = cc.pctCaderno ?? null;   // % de vistos feitos (Bônus caderno)
   });
 
   // Se congelado, sobrepõe os automáticos pela foto (trava o bônus)
@@ -633,6 +650,7 @@ async function carregarTurma(turma) {
       ad.melhorEscalada = f.melhorEscalada ?? 0;
       ad.nivelPerfil    = f.nivelPerfil    ?? 0;
       ad.rankAtiv4Bonus = f.rankAtiv4Bonus ?? 0;
+      ad.pctCaderno     = f.pctCaderno     ?? null;
       const r = dados[chave][nome];
       if (f.ativ4 !== undefined)         r.ativ4         = f.ativ4;
       if (f.triangulos !== undefined)    r.triangulos    = f.triangulos;
@@ -640,6 +658,7 @@ async function carregarTurma(turma) {
       if (f.cadernoVistos !== undefined) r.cadernoVistos = f.cadernoVistos;
       if (f.conselheiro !== undefined)   r.conselheiro   = f.conselheiro;
       if (f.razaoProp !== undefined)     r.razaoProp     = f.razaoProp;
+      if (f.pd !== undefined)            r.pd            = f.pd;
     });
   }
 
@@ -679,12 +698,14 @@ document.getElementById("btnCongelar").addEventListener("click", async () => {
         melhorEscalada: ad.melhorEscalada ?? 0,
         nivelPerfil:    ad.nivelPerfil    ?? 0,
         rankAtiv4Bonus: ad.rankAtiv4Bonus ?? 0,
+        pctCaderno:     ad.pctCaderno     ?? null,
         ativ4:      r.ativ4      ?? null,
         triangulos: r.triangulos ?? null,
         equacoes:   r.equacoes   ?? null,
         cadernoVistos: r.cadernoVistos ?? null,
         conselheiro:   r.conselheiro   ?? null,
         razaoProp:     r.razaoProp     ?? null,
+        pd:            r.pd            ?? null,
       };
     });
     status.textContent = "Congelando…"; status.classList.remove("saved");

@@ -199,8 +199,9 @@
 <script type="module">
 import { requireAluno, renderSidebarAluno, clearSession, getSession } from "/js/auth.js";
 import {
-  CAMPOS_NOTA, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, EXTRA_RANK_ATIV4, EXTRA_NIVEL_PERFIL,
+  CAMPOS_NOTA, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, BONUS_CADERNO_VISTOS, EXTRA_RANK_ATIV4, EXTRA_NIVEL_PERFIL,
   BIMESTRE, setBimestre, camposAtivos, bonusAtivo, bonusConfig, fmtNota, mensagemPorNota, montarBoletim, notasLiberadas, campoPendente, campoDiferido,
+  bonusCadernoVistosAtivo,
 } from "/js/notas.js";
 import { BIMESTRES, bimestreAtual } from "/js/constants.js";
 import { montarSeletorBimestre } from "/js/bimestre-seletor.js";
@@ -348,13 +349,27 @@ function blocoExtrasIcones(boletim, encerrado) {
     <div class="prog-right"><div class="pts ${cadExtra?"green":"muted"}">+0,5</div><div class="pts-sub">${cadExtra?"conquistado":"não atingido"}</div></div>
   </div>`);
 
+  const pctCaderno = progresso.pctCaderno;
+  const bcAtivo = bonusCadernoVistosAtivo(pctCaderno);
+  const bonusCadRow = pctCaderno == null ? `<div class="prog-row locked">
+    <div class="prog-icon grey">${IC.livro}</div>
+    <div class="prog-body"><div class="prog-title">${BONUS_CADERNO_VISTOS.label}</div>
+      <div class="prog-desc">Calculado quando os vistos do caderno estiverem disponíveis (precisa &gt;= ${BONUS_CADERNO_VISTOS.limiarPct}%)</div></div>
+    <div class="prog-right"><div class="pts muted">+${fmtNota(BONUS_CADERNO_VISTOS.valor)}</div><div class="pts-sub">possível</div></div>
+  </div>` : `<div class="prog-row ${bcAtivo?"done":"locked"}">
+    <div class="prog-icon ${bcAtivo?"green":"grey"}">${IC.livro}</div>
+    <div class="prog-body"><div class="prog-title">${BONUS_CADERNO_VISTOS.label}</div>
+      <div class="prog-desc">${bcAtivo?`Conquistado! Caderno ${pctCaderno}% feito`:`Caderno: ${pctCaderno}% (precisa &gt;= ${BONUS_CADERNO_VISTOS.limiarPct}%)`}</div></div>
+    <div class="prog-right"><div class="pts ${bcAtivo?"green":"muted"}">+${fmtNota(BONUS_CADERNO_VISTOS.valor)}</div><div class="pts-sub">${bcAtivo?"conquistado":"não atingido"}</div></div>
+  </div>`;
+
   const autoRows = EXTRAS_AUTO
     .filter(ex => cfg.autoExtras == null || cfg.autoExtras.includes(ex.key))
     .map(rowTabuada).join("");
   const perfilRowVis = cfg.nivelPerfil ? nivelPerfilRow : "";
   const rankRowVis   = cfg.rank        ? rankRow        : "";
-  const secCaderno   = cfg.cadExtra
-    ? `<div class="sec-label">Caderno</div><div class="prog-list">${cadExtraRow}</div>`
+  const secCaderno   = (cfg.cadExtra || cfg.bonusCadernoVistos)
+    ? `<div class="sec-label">Caderno</div><div class="prog-list">${cfg.cadExtra?cadExtraRow:""}${cfg.bonusCadernoVistos?bonusCadRow:""}</div>`
     : "";
   return `
     <div class="sec-label">Jogos e bônus</div>
