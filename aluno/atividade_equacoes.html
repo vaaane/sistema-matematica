@@ -136,7 +136,7 @@
 </div>
 
 <script type="module">
-import { intercalarPorDificuldade, ARQUIVO_QUESTOES } from "/js/constants.js";
+import { intercalarPorDificuldade, ARQUIVO_QUESTOES, COTAS_PADRAO, COTAS_POR_ATIVIDADE } from "/js/constants.js";
 import {
   addResultado, updateResultado, saveDetalhes,
   getLiberadasParaTurma, liberacaoParaAluno, getAtividadeStatus, contarTentativas,
@@ -519,13 +519,7 @@ function _sortearModelosSeed(lista, cotas, seed){
   }
   return escolhidos;
 }
-// Cota padrão: 15 questões (5 por dificuldade). Regra de três: 10 questões —
-// 4 conceituais (dificuldade 1, "diretamente/inversamente proporcionais")
-// + 6 de cálculo (3 de dificuldade 2 + 3 de dificuldade 3).
-const COTAS_POR_ATIV = {
-  "Atividade 2 - Regra de três": { 1: 4, 2: 3, 3: 3 },
-};
-const COTAS = COTAS_POR_ATIV[nomeAtiv] || { 1: 5, 2: 5, 3: 5 };
+const COTAS = COTAS_POR_ATIVIDADE[nomeAtiv] || COTAS_PADRAO;
 const _totalAtiv = Object.values(COTAS).reduce((a,b) => a+b, 0);
 const _selecionados = (modelos.length > _totalAtiv) ? _sortearModelosSeed(modelos, COTAS, `${_seedBase}#sel`) : modelos;
 // Materializa garantindo que os valores de x das questões numéricas não se repitam

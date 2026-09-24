@@ -281,6 +281,17 @@ export function liberacaoParaAluno(liberadas, atividade, aluno) {
   return daAtiv.find(l => (l.tipo || "turma") === "turma") || null;
 }
 
+// Treino de uma atividade fica disponível a partir do momento em que a
+// atividade foi marcada/liberada para a turma (lib.criadoEm) e nunca mais
+// expira — independe de a atividade estar ao vivo, encerrada, esgotada,
+// bloqueada ou já concluída. Liberações antigas sem criadoEm são tratadas
+// como já disponíveis (não esconder treino de atividade já existente).
+export function treinoDisponivel(lib, agora = Date.now()) {
+  if (!lib) return false;
+  if (lib.criadoEm == null) return true;
+  return agora >= lib.criadoEm;
+}
+
 // ── Histórico de liberações ─────────────────────────────────
 export async function addLiberacaoHistorico(data) {
   const newRef = await push(ref(db, "liberacoes_historico"), { ...data, criadoEm: serverTimestamp() });

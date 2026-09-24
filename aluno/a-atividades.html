@@ -168,7 +168,7 @@
 </div>
 <script type="module">
 import { LISTA_ATIVIDADES, MAX_TENTATIVAS_ATIVIDADE, ALUNOS_POR_TURMA, bimestreAtual, dentroDoAtestado, normalizarAtestados } from "/js/constants.js";
-import { contarTentativas, getLiberadasParaTurma, liberacaoParaAluno, getAlunoPreferencia, getResultados, getSenhaAluno } from "/js/db.js";
+import { contarTentativas, getLiberadasParaTurma, liberacaoParaAluno, getAlunoPreferencia, getResultados, getSenhaAluno, treinoDisponivel } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, hashSenha, lerDuplaAtiva, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { applyTopRankVisuals } from "/js/toprank.js";
 import { initAvBanner } from "/js/avaliacao_banner.js";
@@ -512,7 +512,7 @@ const cardsHtml = ATIVS_BIM.map(ativ => {
   const _treinoUrl = TREINOS[`${bimAtivo}|${ativ.nome}`]
     || (modoEf === 'equacoes_plus' ? '/aluno/treino-equacoes.html' : null);   // fallback: equações
   const _temTreino = !!_treinoUrl;
-  const _btnTreino = (_temTreino && !(isLib && !bloq?.esgotada && !bloq?.bloqueado && !isEncerrada && !foiRealizada))
+  const _btnTreino = (_temTreino && treinoDisponivel(lib))
     ? `<a href="${_treinoUrl}" class="ac-btn-treino${foiRealizada ? ' suave' : ''}" onclick="event.stopPropagation()">🎯 Treinar</a>`
     : '';
   // Faltou = marcado falta na data em que a atividade foi liberada, e ainda não fez.

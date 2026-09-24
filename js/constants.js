@@ -21,6 +21,14 @@ export const ARQUIVO_QUESTOES = {
   "Atividade 2 - Regra de três":         "/dados/questoes_regra_de_tres.json",
 };
 
+// Cotas de questões por dificuldade (1=fácil, 2=médio, 3=difícil).
+// Fonte única para a atividade avaliativa E o treino correspondente —
+// o treino de uma atividade sempre usa a mesma cota da atividade real.
+export const COTAS_PADRAO = { 1: 5, 2: 5, 3: 5 };
+export const COTAS_POR_ATIVIDADE = {
+  "Atividade 2 - Regra de três": { 1: 4, 2: 3, 3: 3 },
+};
+
 // ===== ALUNOS_POR_TURMA (ordem oficial SEDF, ativos) =====
 export const ALUNOS_POR_TURMA = {
   "8D": ["Alice Tavares", "Alice Paz", "Ana Julia", "Arthur", "Francisco", "João Pedro", "Karolinny", "Ketelly", "Keyvison", "Leticia", "Lucas Gabriel", "Lucas Matheus", "Luis Gabriel", "Luis Miguel", "Miguel Henrique", "Miguel Nascimento", "Wanderson", "Izabelly Monik", "Nixmarys", "Thalles Davi", "Pedro Riquelme", "Sandra"],
