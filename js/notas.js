@@ -44,7 +44,8 @@ export const EXTRAS_AUTO = [
   { key:"tneg50",  label:"Tabuada Negativa nível 50",        valor:0.5, max:50,  campo:"melhorNeg" },
   { key:"tneg150", label:"Tabuada Negativa nível 150",       valor:0.5, max:150, campo:"melhorNeg" },
   { key:"esc100",  label:"Escalada Algébrica nível 100",     valor:0.5, max:100, campo:"melhorEscalada" },
-  { key:"esc200",  label:"Escalada Algébrica nível 200",     valor:0.5, max:200, campo:"melhorEscalada" },
+  // A partir do 3º bim vale +1,0 (antes +0,5) — getter pra não alterar o total dos bimestres anteriores.
+  { key:"esc200",  label:"Escalada Algébrica nível 200",     get valor() { return +BIMESTRE >= 3 ? 1 : 0.5; }, max:200, campo:"melhorEscalada" },
 ];
 // Caderno Extra — automático, baseado na própria nota de Caderno lançada (não é mais checkbox manual)
 export const CADERNO_EXTRA = { key:"cadExtra", label:"Caderno Extra", valor:0.5, limiar:1.8 };
@@ -79,7 +80,8 @@ export function campoPendente(key) { return camposPendentes().has(key); }
 // Componentes automáticos que só são liberados AO ALUNO depois que o bimestre é
 // fechado (congelado). Antes disso mostram "—". O professor continua vendo ao vivo.
 export const CAMPOS_DIFERIDOS_POR_BIMESTRE = {
-  "3": ["cadernoVistos", "conselheiro"],
+  // 3º bim: Caderno e Conselheiro passaram a aparecer ao vivo pro aluno (25/09/2026),
+  // pra nota dele bater com a do professor sem precisar congelar.
 };
 export function camposDiferidos() { return new Set(CAMPOS_DIFERIDOS_POR_BIMESTRE[BIMESTRE] || []); }
 export function campoDiferido(key) { return camposDiferidos().has(key); }
@@ -489,7 +491,7 @@ export async function totalAtividadesAluno(turma, nome) {
 // ── Pontos EXTRAS já conquistados nos JOGOS (card da Home) ──
 // Soma os extras automáticos de jogos que o aluno já bateu (tabuada normal,
 // negativa e escalada), respeitando o bonusConfig do bimestre. maximo = soma
-// dos valores desses extras (3,0 quando os 6 marcos de jogo estão ativos).
+// dos valores desses extras (3,5 no 3º bim: 5 marcos × 0,5 + Escalada 200 × 1,0).
 const CHAVES_EXTRAS_JOGOS = ["t150", "t300", "tneg50", "tneg150", "esc100", "esc200"];
 export async function extrasJogosAluno(turma, nome) {
   const cfg = bonusConfig();
