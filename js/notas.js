@@ -32,7 +32,7 @@ export const CAMPOS_NOTA = [
   { key:"participacao",  label:"Participação",           max:0.5 },
   // ── campos do 3º bimestre ──
   { key:"cadernoVistos", label:"Caderno",                         max:2,   auto:true }, // proporção de vistos × 2
-  { key:"razaoProp",     label:"Atividade 2 - Razão e Proporção", max:1.5, auto:true },
+  { key:"razaoProp",     label:"Atividade 2 - Regra de três",     max:1.5, auto:true },
   { key:"conselheiro",   label:"Professor Conselheiro",           max:1,   auto:true }, // começa em 1,0
   { key:"pd",            label:"PD - Geometria",                  max:1,   auto:true }, // Geo Canudos Parte 1 (0,5) + Parte 2 (0,5). Parte 3 fica pro 4º bim.
 ];
@@ -73,7 +73,6 @@ export const CAMPOS_POR_BIMESTRE = {
 // Componentes que ainda NÃO têm fonte de dados pronta neste bimestre.
 // Aparecem na composição como "Ainda não disponibilizada" até a atividade existir.
 export const CAMPOS_PENDENTES_POR_BIMESTRE = {
-  "3": ["razaoProp"],   // Atividade 2 ainda será lançada
 };
 export function camposPendentes() { return new Set(CAMPOS_PENDENTES_POR_BIMESTRE[BIMESTRE] || []); }
 export function campoPendente(key) { return camposPendentes().has(key); }
@@ -102,11 +101,23 @@ export function bonusAtivo() {
   return bonusConfig() !== null;   // controla se a coluna Extras aparece
 }
 
+// Atividade 2 - Regra de três: só a 8E tem lançamento automático pela nota do
+// quiz. Nas demais turmas a professora lança a nota manualmente (confirmado
+// em 24/09/2026), mesmo fluxo de Prova Multi/Caderno/Projeto.
+export const TURMAS_RAZAO_PROP_AUTO = new Set(["8E"]);
+export function razaoPropEhAuto(turma) { return TURMAS_RAZAO_PROP_AUTO.has(turma); }
+// Se um campo é "automático" (somente leitura) OU "manual" (input) NESTA
+// turma. Igual a c.auto pra todo campo, exceto razaoProp, que depende da turma.
+export function campoAuto(c, turma) {
+  return c.key === "razaoProp" ? razaoPropEhAuto(turma) : !!c.auto;
+}
+
 export const NOME_ATIV4 = "Atividade 4 - Geometria";
 export const NOME_ATIV5 = "Atividade 5 - Geometria: Triângulos";
 export const NOME_ATIV1_EQ = "Atividade 1 - Equações do 1º Grau";
-// ⚠️ Confirmar o nome EXATO em `resultados` quando a Atividade 2 for lançada (hoje o campo fica pendente).
-export const NOME_ATIV2_RP = "Atividade 2 - Razão e Proporção";
+// A Atividade 2 foi lançada como "Regra de três" (não "Razão e Proporção" —
+// nome do plano original, nunca usado em `resultados`). Confirmado em 24/09/2026.
+export const NOME_ATIV2_RP = "Atividade 2 - Regra de três";
 
 // Valor real (na escala do boletim) de cada atividade avaliativa por quiz.
 // Usado no Top 3 · Atividades da Home para ranquear pela NOTA real (x/1,5),
@@ -425,9 +436,8 @@ export async function buscarConselheiro(turma, nome) {
   } catch (e) { console.error("Falha ao calcular Professor Conselheiro:", e); return BASE; }
 }
 
-// ── Atividade 2 - Razão e Proporção (3º bim, auto 0–1,5) ──────
-// Espelha a Atividade 1 (Equações). Fica pendente até a atividade ser lançada
-// (ver CAMPOS_PENDENTES_POR_BIMESTRE) — por isso montarBoletim ainda não a chama.
+// ── Atividade 2 - Regra de três (3º bim, auto 0–1,5) ──────────
+// Espelha a Atividade 1 (Equações). NOME_ATIV2_RP é o nome real lançado.
 export async function buscarRazaoPropAluno(turma, nome) {
   let melhor = null;
   try {
@@ -442,7 +452,7 @@ export async function buscarRazaoPropAluno(turma, nome) {
         if (pts != null && (melhor === null || pts > melhor)) melhor = pts;
       });
     }
-  } catch (e) { console.error("Falha ao buscar Atividade 2 - Razão e Proporção:", e); }
+  } catch (e) { console.error("Falha ao buscar Atividade 2 - Regra de três:", e); }
   return melhor; // 0-10 ou null
 }
 
@@ -542,7 +552,7 @@ export async function montarBoletim(turma, nome, opcoes = {}) {
     buscarNivelPerfil(turma, nome),
     querer("cadernoVistos") ? buscarCadernoVistos(turma, nome) : Promise.resolve(null),
     querer("conselheiro")   ? buscarConselheiro(turma, nome)   : Promise.resolve(null),
-    querer("razaoProp")     ? buscarRazaoPropAluno(turma, nome): Promise.resolve(null),
+    querer("razaoProp") && razaoPropEhAuto(turma) ? buscarRazaoPropAluno(turma, nome): Promise.resolve(null),
     querer("pd")            ? buscarPDGeometria(turma, nome)   : Promise.resolve(null),
     (bonusConfig()||{}).bonusCadernoVistos ? buscarPctCaderno(turma, nome) : Promise.resolve(null),
   ]);
@@ -560,7 +570,9 @@ export async function montarBoletim(turma, nome, opcoes = {}) {
   // 3º bimestre (auto). null = ainda não disponível / não participou.
   let cadernoVal     = cadVistosRaw;
   let conselheiroVal = conselheiroRaw;   // null só quando o campo não é deste bimestre
-  let razaoVal       = razaoPts != null ? Math.min(1.5, (razaoPts / 10) * 1.5) : null;
+  let razaoVal       = razaoPropEhAuto(turma)
+    ? (razaoPts != null ? Math.min(1.5, (razaoPts / 10) * 1.5) : null)
+    : (salvo?.razaoProp ?? null);   // turmas fora da 8E: lançamento manual
   let pdVal          = pdRaw;
 
   // Se o bimestre está congelado, usa a FOTO (não os valores ao vivo)
@@ -612,6 +624,7 @@ export async function montarBoletim(turma, nome, opcoes = {}) {
     projeto:    salvo?.projeto    != null,
     caderno:    salvo?.caderno    != null,
     participacao: true, // sempre lançada (default 0.5)
+    razaoProp:  salvo?.razaoProp  != null,   // só importa nas turmas fora da 8E (manual)
   };
 
   const subtotal       = calcularSubtotal(registro);

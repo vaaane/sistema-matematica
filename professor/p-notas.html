@@ -200,14 +200,14 @@ import { db } from "/js/firebase-config.js";
 import { ref, get, query, orderByChild, equalTo, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {
   BIMESTRE, setBimestre, CAMPOS_NOTA as CAMPOS, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, BONUS_CADERNO_VISTOS,
-  EXTRA_RANK_ATIV4, EXTRA_NIVEL_PERFIL, NOME_ATIV5, NOME_ATIV1_EQ,
+  EXTRA_RANK_ATIV4, EXTRA_NIVEL_PERFIL, NOME_ATIV5, NOME_ATIV1_EQ, NOME_ATIV2_RP,
   makeUid, slugNome as slug, fmtNota as fmt,
   buscarProgressoTabuada, buscarAtiv4, buscarNivelPerfil,
   buscarCadernoVistos, buscarConselheiro, buscarPDGeometria, buscarPctCaderno, bonusCadernoVistosAtivo,
   extrasAutoAtivos as extrasAtivosDoProgresso, cadernoExtraAtivo,
   notasLiberadas, definirNotasLiberadas,
   buscarCongelamento, congelarBimestre, descongelarBimestre,
-  camposAtivos, bonusAtivo, bonusConfig,
+  camposAtivos, bonusAtivo, bonusConfig, campoAuto, razaoPropEhAuto,
 } from "/js/notas.js";
 
 requireProfessor();
@@ -320,6 +320,27 @@ async function carregarAutoEquacoes(turma) {
   return porAluno;
 }
 
+// ── Busca no banco: melhor pontuação da Atividade 2 - Regra de três → coluna "Atividade 2" ──
+// Mesmo padrão de carregarAutoEquacoes acima (escala 0–10 → máx 1,5).
+async function carregarAutoRazaoProp(turma) {
+  const porAluno = {};
+  try {
+    const q = query(ref(db, "resultados"), orderByChild("turma"), equalTo(turma));
+    const snap = await get(q);
+    if (snap.exists()) {
+      snap.forEach(child => {
+        const v = child.val();
+        if (v.atividade !== NOME_ATIV2_RP || !v.aluno) return;
+        if (v.concluido !== true || v.modo_teste) return;
+        const bruto = v.pontuacao_bruta ?? v.pontuacao ?? null;
+        if (bruto == null) return;
+        if (!(v.aluno in porAluno) || bruto > porAluno[v.aluno]) porAluno[v.aluno] = bruto;
+      });
+    }
+  } catch(e) { console.error("Falha ao buscar Atividade 2 - Regra de três:", e); }
+  return porAluno;
+}
+
 // ── 3º bim: Caderno automático (proporção de vistos), Professor Conselheiro (ocorrências) e PD - Geometria (vistos Canudos Parte 1+2) ──
 async function carregarAutoCadernoConselheiro(turma) {
   const alunos = ALUNOS_POR_TURMA[turma] || [];
@@ -344,7 +365,7 @@ function renderCabecalho() {
   if (trHead) {
     trHead.innerHTML =
       `<th class="col-aluno">Aluno</th>` +
-      campos.map(c => `<th>${c.label}${c.auto ? " 🔄" : ""}<span class="max">máx ${Number.isInteger(c.max) ? c.max : fmt(c.max)}</span></th>`).join("") +
+      campos.map(c => `<th>${c.label}${campoAuto(c, turmaAtual) ? " 🔄" : ""}<span class="max">máx ${Number.isInteger(c.max) ? c.max : fmt(c.max)}</span></th>`).join("") +
       (comBonus ? `<th>Extras</th>` : ``) +
       `<th>Total</th>`;
   }
@@ -387,11 +408,11 @@ function renderTabela() {
       <tr data-aluno="${slug(nome)}">
         <td class="col-aluno" title="${nome}">${nome}</td>
         ${campos.map(c => {
-          if (c.auto) {
+          if (campoAuto(c, turmaAtual)) {
             const v = parseFloat(r[c.key]) || 0;
             return `<td class="auto-cell"><span class="auto-display${v ? "" : " zero"}">${v ? fmt(v) : "—"}</span></td>`;
           }
-          return `<td><input class="nota-input" type="number" step="0.1" min="0" max="${c.max}" inputmode="decimal" data-campo="${c.key}" value="${r[c.key]}"></td>`;
+          return `<td><input class="nota-input" type="number" step="0.1" min="0" max="${c.max}" inputmode="decimal" data-campo="${c.key}" value="${r[c.key] ?? ""}"></td>`;
         }).join("")}
         ${comBonus ? `<td>
           <button class="extras-btn${nExtras ? " on" : ""}" data-aluno="${slug(nome)}">
@@ -575,6 +596,7 @@ async function carregarNotasSalvas(turma) {
         ativ4: v.ativ4 ?? "", ativ4Auto: !!v.ativ4Auto,
         participacao: v.participacao ?? v.lista ?? 0.5, // fallback lista (dados antigos), default 0.5
         triangulos: v.triangulos ?? v.area ?? "", triangulosAuto: !!v.triangulosAuto ?? !!v.areaAuto,
+        razaoProp: fromNota(v.razaoProp),   // só usado nas turmas fora da 8E (manual)
       });
       r.extras = {};
     });
@@ -595,10 +617,10 @@ async function carregarTurma(turma) {
 
   const alunos = ALUNOS_POR_TURMA[turma] || [];
   const temAutoNovos = camposAtivos().some(c => c.key === "cadernoVistos" || c.key === "conselheiro" || c.key === "pd");
-  const tasks = [carregarAutoTabuada(turma), carregarAutoArea(turma), carregarAutoEquacoes(turma), notasLiberadas(turma), buscarAtiv4(turma, alunos), buscarCongelamento(turma),
+  const tasks = [carregarAutoTabuada(turma), carregarAutoArea(turma), carregarAutoEquacoes(turma), carregarAutoRazaoProp(turma), notasLiberadas(turma), buscarAtiv4(turma, alunos), buscarCongelamento(turma),
                  temAutoNovos ? carregarAutoCadernoConselheiro(turma) : Promise.resolve({})];
   if (primeiraVez) tasks.push(carregarNotasSalvas(turma));
-  const [_, areaPorAluno, eqPorAluno, liberada, ativ4Map, cong, ccPorAluno] = await Promise.all(tasks);
+  const [_, areaPorAluno, eqPorAluno, rpPorAluno, liberada, ativ4Map, cong, ccPorAluno] = await Promise.all(tasks);
   liberadaAtual = liberada;
   congeladoAtual = cong.congelado;
   atualizarBotaoLiberar();
@@ -630,6 +652,12 @@ async function carregarTurma(turma) {
       r.equacoesAuto = true;
     } else if (!r.equacoes) {
       r.equacoes = null;
+    }
+
+    // Atividade 2 - Regra de três — só 8E é automática (pontuação 0–10 → nota 0–1,5).
+    // Nas demais turmas é manual: não sobrescreve o que carregarNotasSalvas já pôs em r.razaoProp.
+    if (razaoPropEhAuto(turma)) {
+      r.razaoProp = rpPorAluno[nome] != null ? Math.min(1.5, (rpPorAluno[nome] / 10) * 1.5) : null;
     }
 
     // 3º bim — Caderno (proporção de vistos × 2) e Professor Conselheiro (1,0 − 0,3/ocorrência)
@@ -773,6 +801,7 @@ async function salvarNotas() {
       triangulos: r.triangulos != null && r.triangulos !== "" ? parseFloat(r.triangulos) : null, // null = nunca jogou
       triangulosAuto: !!r.triangulosAuto,
       participacao: parseFloat(r.participacao) ?? 0,
+      razaoProp:  toNota(r.razaoProp),   // manual fora da 8E; ignorado no cálculo pra 8E
       extras: {},
       atualizadoEm: Date.now(),
     };

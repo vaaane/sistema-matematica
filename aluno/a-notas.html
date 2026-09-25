@@ -201,7 +201,7 @@ import { requireAluno, renderSidebarAluno, clearSession, getSession } from "/js/
 import {
   CAMPOS_NOTA, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, BONUS_CADERNO_VISTOS, EXTRA_RANK_ATIV4, EXTRA_NIVEL_PERFIL,
   BIMESTRE, setBimestre, camposAtivos, bonusAtivo, bonusConfig, fmtNota, mensagemPorNota, montarBoletim, notasLiberadas, campoPendente, campoDiferido,
-  bonusCadernoVistosAtivo,
+  bonusCadernoVistosAtivo, campoAuto,
 } from "/js/notas.js";
 import { BIMESTRES, bimestreAtual } from "/js/constants.js";
 import { montarSeletorBimestre } from "/js/bimestre-seletor.js";
@@ -218,7 +218,7 @@ const fmt   = fmtNota;
 // ── detecta se todas as notas manuais foram lançadas ──────────
 function todasLancadas(boletim) {
   // considera "encerrado" quando os campos MANUAIS ativos do bimestre foram lançados
-  const chaves = camposAtivos().filter(c => !c.auto && c.key !== "participacao").map(c => c.key);
+  const chaves = camposAtivos().filter(c => !campoAuto(c, turma) && c.key !== "participacao").map(c => c.key);
   return chaves.every(k => {
     const v = boletim.registro[k];
     return v !== null && v !== undefined && v !== "";
@@ -246,7 +246,7 @@ function blocoAtividadesIcones(boletim, encerrado) {
   const { registro, lancados, ativ4Info } = boletim;
   const congelado = !!boletim.congelado;
   function row(c) {
-    const isAuto = !!c.auto;
+    const isAuto = campoAuto(c, turma);
     const tag = c.key==="triangulos" ? `<span class="item-tag">Ativ. 5</span><span class="item-tag">Fase 1</span>`
               : c.key==="ativ4"      ? `<span class="item-tag">Ativ. 4</span>`
               : c.key==="equacoes"   ? `<span class="item-tag">Ativ. 1</span>`
@@ -400,7 +400,7 @@ function renderAndamento(boletim) {
   campos.forEach(c => {
     const v = registro[c.key];
     const disp = v !== null && v !== undefined && v !== "";
-    if (c.auto)               maxLancado += disp ? c.max : 0;   // auto disponível conta o peso cheio
+    if (campoAuto(c, turma))  maxLancado += disp ? c.max : 0;   // auto disponível conta o peso cheio
     else if (lancados[c.key]) maxLancado += c.max;             // manual conta quando lançado
   });
   maxLancado = Math.min(maxLancado, 10);
