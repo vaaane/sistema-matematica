@@ -195,6 +195,29 @@ export function pathEscaladaNiveisRaiz(bim = bimestreAtual()) {
 export function pathEscaladaRanking(bim = bimestreAtual()) {
   return bim <= 2 ? `escalada_ranking` : `escalada_ranking_b/${bim}`;
 }
+// ── Jogos encerrados por bimestre ───────────────────────────
+// Por jogo: bimestres em que o aluno NÃO pode mais jogar (a nota do bimestre
+// já foi fechada). Vale também para ?bim= na URL. Modo professor e modo teste
+// continuam liberados. Lista vazia = jogo liberado.
+export const JOGOS_ENCERRADOS_BIM = {
+  tabuada:           [],    // reaberta no 3º bim (28/09/2026)
+  tabuada_negativos: [3],
+  escalada:          [3],
+};
+export function jogosEncerrados(jogo, bim) { return (JOGOS_ENCERRADOS_BIM[jogo] || []).includes(+bim); }
+// Troca o conteúdo da página por um aviso e interrompe o script do jogo.
+export function bloquearJogoEncerrado(bim, voltar = "/aluno/a-jogos.html") {
+  const main = document.querySelector(".main") || document.querySelector("main") || document.body;
+  main.innerHTML = `<div style="min-height:70dvh;display:flex;align-items:center;justify-content:center;padding:24px">
+    <div style="max-width:420px;text-align:center;background:var(--card,#161a2e);border:1px solid var(--border,#2a2f4a);border-radius:16px;padding:28px 22px">
+      <div style="font-size:40px;margin-bottom:8px">🔒</div>
+      <h2 style="font-family:Rajdhani,sans-serif;margin:0 0 8px">Jogos do ${bim}º bimestre encerrados</h2>
+      <p style="color:var(--text-muted,#9aa0b8);margin:0 0 18px;line-height:1.5">As notas deste bimestre já foram fechadas, então não é mais possível jogar para o ${bim}º bimestre. Os jogos voltam no próximo bimestre.</p>
+      <a href="${voltar}" style="display:inline-block;background:#7c5cfc;color:#fff;text-decoration:none;font-weight:700;border-radius:10px;padding:10px 20px">Voltar</a>
+    </div></div>`;
+  throw new Error("Jogos do " + bim + "º bimestre encerrados");
+}
+
 // Marcos de bônus (nota extra): nível 100 = +0,5 · nível 200 = +1,0
 export const ESCALADA_MAX = 200;
 export function bonusEscalada(melhorNivel = 0) {

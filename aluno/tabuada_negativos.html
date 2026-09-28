@@ -247,7 +247,7 @@
 
 <script type="module">
 import { getSession, renderSidebarAluno, renderSidebarProfessor, clearSession } from "/js/auth.js";
-import { bimestreAtual } from "/js/constants.js";
+import { bimestreAtual, jogosEncerrados, bloquearJogoEncerrado } from "/js/constants.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -268,6 +268,7 @@ let nomeAluno  = alunos[0];
 function _makeUid(n) { return (turma + '_' + n).replace(/[.#$\[\]/\s]/g, '_'); }
 let uid = _isProfMode ? _profUid : _makeUid(nomeAluno);
 const _bimJogo = (n => (n>=1&&n<=4)?n:bimestreAtual())(parseInt(new URLSearchParams(location.search).get('bim'),10));
+if (!_isProfMode && localStorage.getItem('modoTeste') !== 'true' && jogosEncerrados('tabuada_negativos', _bimJogo)) bloquearJogoEncerrado(_bimJogo);
 const _negPath = _bimJogo <= 2 ? `tabuada_negativos_niveis/${uid}` : `tabuada_negativos_niveis_b/${_bimJogo}/${uid}`;
 
 const _params    = new URLSearchParams(location.search);
