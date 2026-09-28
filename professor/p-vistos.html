@@ -40,6 +40,9 @@
   .grade tbody td.col-aluno{background:var(--card);font-weight:600}
   .grade tbody tr:hover td.col-aluno{background:#20203a}
   .grade tbody tr:hover td{background:rgba(255,255,255,.02)}
+  .grade tbody td.col-aluno{cursor:pointer}
+  .grade tbody tr.linha-sel td{background:rgba(124,92,252,.16)}
+  .grade tbody tr.linha-sel td.col-aluno{background:#2a2250;box-shadow:inset 3px 0 0 var(--purple)}
   .grade th.col-atv{min-width:96px;padding:8px 6px;text-align:center;vertical-align:top;cursor:pointer;user-select:none}
   .grade th.col-atv:hover{background:#1c1c34}
   .atv-nome{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;color:var(--gold);line-height:1.15}
@@ -267,6 +270,7 @@ const normNome = s => (s||"").toString().toLowerCase()
 let bibEscolhido = null, bibFiltro = "todos";
 
 // cache local do bimestre atual: { atividades:[{id,nome,data,conteudo,ordem}], marcas:{ atvId:{ aluno:0|1|2 } } }
+let alunoSel = null;   // aluno com a linha destacada na grade
 let atual = { atividades: [], marcas: {} };
 let irParaFim = false;
 // chamada (frequência) do bimestre: { "YYYY-MM-DD": { aluno: "falta"|"atraso" } }
@@ -430,7 +434,7 @@ function render(){
 
   alunos.forEach(al=>{
     const num = numeroChamada(turma, al) || "—";
-    html += `<tr><td class="col-aluno"><span class="aluno-num">${num}</span>${al}</td>`;
+    html += `<tr class="${al===alunoSel?"linha-sel":""}"><td class="col-aluno" data-al="${al.replace(/"/g,'&quot;')}"><span class="aluno-num">${num}</span>${al}</td>`;
     let tot=0;
     atual.atividades.forEach(atv=>{
       const v=(atual.marcas[atv.id]||{})[al]||0;
@@ -458,6 +462,11 @@ function render(){
 
   wrap.querySelectorAll(".cel").forEach(td=>td.onclick=()=>ciclar(td.dataset.id, td.dataset.al));
   wrap.querySelectorAll(".col-atv").forEach(th=>th.onclick=()=>abrirMenuCol(th.dataset.id));
+  // clicar no nome destaca a linha inteira (clicar de novo desmarca)
+  wrap.querySelectorAll("tbody td.col-aluno").forEach(td=>td.onclick=()=>{
+    alunoSel = alunoSel===td.dataset.al ? null : td.dataset.al;
+    wrap.querySelectorAll("tbody tr").forEach(tr=>tr.classList.toggle("linha-sel", tr.querySelector("td.col-aluno")?.dataset.al===alunoSel));
+  });
 
   // tooltip da observação ao passar o mouse no cabeçalho
   ensureAtvTip();
