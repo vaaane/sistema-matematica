@@ -201,8 +201,8 @@ export function pathEscaladaRanking(bim = bimestreAtual()) {
 // continuam liberados. Lista vazia = jogo liberado.
 export const JOGOS_ENCERRADOS_BIM = {
   tabuada:           [],    // reaberta no 3º bim (28/09/2026)
-  tabuada_negativos: [3],
-  escalada:          [3],
+  tabuada_negativos: [],    // reaberta no 3º bim (29/09/2026)
+  escalada:          [],    // reaberta no 3º bim (29/09/2026)
 };
 export function jogosEncerrados(jogo, bim) { return (JOGOS_ENCERRADOS_BIM[jogo] || []).includes(+bim); }
 // Troca o conteúdo da página por um aviso e interrompe o script do jogo.
