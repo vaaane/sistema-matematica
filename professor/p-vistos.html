@@ -254,6 +254,9 @@ renderSidebarProfessor("sidebar", "vistos");
 window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
 const TURMAS = Object.keys(ALUNOS_POR_TURMA);
+// alunos que existem SÓ na página de vistos (não estão no login nem no Firebase)
+const EXTRAS_VISTOS = { "8E": ["_Kaua"] };
+const alunosDaTurma = t => [...(ALUNOS_POR_TURMA[t] || []), ...(EXTRAS_VISTOS[t] || [])];
 let turma = turmaAgora() || (TURMAS.includes("8F") ? "8F" : TURMAS[0]);
 let bimestre = 3;
 let filtro = "";
@@ -374,7 +377,7 @@ function render(){
   document.querySelectorAll(".bim-tab").forEach(el=>el.onclick=()=>{ bimestre=+el.dataset.b; carregar(); });
   document.getElementById("topbar-sub").textContent = `Turma ${turma} · ${bimestre}º bimestre`;
 
-  const alunosTurma = ALUNOS_POR_TURMA[turma];
+  const alunosTurma = alunosDaTurma(turma);
   const alunos = alunosTurma.filter(a=>a.toLowerCase().includes(filtro));
   const nA = atual.atividades.length;
   const nVistos = atual.atividades.filter(a=>!ehProjeto(a)).length;   // projetos não entram na contagem de vistos
@@ -707,7 +710,7 @@ window.marcarTodos = async function(v){
   const atuais = atual.marcas[atvSel] || {};
   const upd={};
   let pulados=0;
-  ALUNOS_POR_TURMA[turma].forEach(al=>{
+  alunosDaTurma(turma).forEach(al=>{
     const marcaAtual = atuais[al]||0;
     if(v===1 && temFaltaAtestada(atv&&atv.data, al) && marcaAtual!==1 && marcaAtual!==2){
       upd[al]=marcaAtual===4 ? 4 : 0;   // dia de atestado: preserva AT✓; senão fica AT
