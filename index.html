@@ -1,6 +1,11 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <script>
+    // login usa crypto.subtle (hash da senha), que só existe em HTTPS — força https fora do localhost
+    if (location.protocol === 'http:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname))
+      location.replace('https://' + location.host + location.pathname + location.search + location.hash);
+    </script>
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <meta name="theme-color" content="#15102a">
