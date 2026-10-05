@@ -443,13 +443,13 @@
 import { requireAluno, renderSidebarAluno, clearSession, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { NIVEL_MAX, bimestreAtual, pathTabuadaRanking, pathTabuadaNiveis, pathTabuadaNiveisRaiz } from "/js/constants.js";
+import { NIVEL_MAX, bimestreJogos, pathTabuadaRanking, pathTabuadaNiveis, pathTabuadaNiveisRaiz } from "/js/constants.js";
 import { getLiberadasParaTurma, somarPartidasTabuadaTotal } from "/js/db.js";
 
 const sess = requireAluno("/index.html");
 if (!sess) throw new Error("não autenticado");
 renderSidebarAluno("sidebar", "jogos");
-const _bimSel = (n => (n>=1&&n<=4)?n:bimestreAtual())(parseInt(new URLSearchParams(location.search).get('bim'),10));
+const _bimSel = (n => (n>=1&&n<=4)?n:bimestreJogos())(parseInt(new URLSearchParams(location.search).get('bim'),10));
 window.irJogar = (jogo) => { location.href = `/aluno/${jogo}.html?bim=${_bimSel}`; };
 (function(){
   const el = document.getElementById('bimTabs');
@@ -460,7 +460,7 @@ window.irJogar = (jogo) => { location.href = `/aluno/${jogo}.html?bim=${_bimSel}
     });
   }
   const av = document.getElementById('bimAviso');
-  if (av && _bimSel !== bimestreAtual()) {
+  if (av && _bimSel !== bimestreJogos()) {
     av.style.display = 'flex';
     const b = av.querySelector('[data-bim]'); if (b) b.textContent = _bimSel + 'º';
   }
@@ -1107,7 +1107,7 @@ window.gSetMode = function(mode) {
   if (mode === 'sprint') {
     btn.className = 'g-play-btn sp';
     btn.innerHTML = '<span class="arr">⚡</span> SPRINT';
-  } else if (_bimSel < bimestreAtual()) {
+  } else if (_bimSel < bimestreJogos()) {
     btn.className = 'g-play-btn nm';
     btn.style.opacity = '.55';
     btn.style.cursor = 'default';
@@ -1120,12 +1120,12 @@ window.gSetMode = function(mode) {
 
 window.gPlay = function() {
   if (_avStatus?.ativa) return;
-  if (_bimSel < bimestreAtual()) return;   // bimestre passado é só leitura
+  if (_bimSel < bimestreJogos()) return;   // bimestre passado é só leitura
   window.location.href = `/aluno/tabuada.html?bim=${_bimSel}`;
 };
 
 window.jogarNivel = function(lv) {
-  if (_bimSel < bimestreAtual()) return;   // bimestre passado é só leitura
+  if (_bimSel < bimestreJogos()) return;   // bimestre passado é só leitura
   window.location.href = lv === nivelAtual
     ? `/aluno/tabuada.html?bim=${_bimSel}`
     : `/aluno/tabuada.html?bim=${_bimSel}&nivel=${lv}`;

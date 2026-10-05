@@ -328,7 +328,7 @@
 
 <script type="module">
 import { getSession, renderSidebarAluno, renderSidebarProfessor, clearSession, isModoTeste, iniciarNotifDueloGlobal } from "/js/auth.js";
-import { NIVEL_MAX, bimestreAtual, pathTabuadaRanking } from "/js/constants.js";
+import { NIVEL_MAX, bimestreJogos, pathTabuadaRanking } from "/js/constants.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -355,7 +355,7 @@ let parceiroDupla = isDupla ? alunos[1] : null;
 
 function _makeUid(nome) { return (turma + '_' + nome).replace(/[.#$\[\]/\s]/g, '_'); }
 let uid = _isProfMode ? _profUid : _makeUid(nomeAluno);
-const _bimJogo = (n => (n>=1&&n<=4)?n:bimestreAtual())(parseInt(new URLSearchParams(location.search).get('bim'),10));
+const _bimJogo = (n => (n>=1&&n<=4)?n:bimestreJogos())(parseInt(new URLSearchParams(location.search).get('bim'),10));
 const _tabNiveisPath = _bimJogo <= 2 ? `tabuada_niveis/${uid}`         : `tabuada_niveis_b/${_bimJogo}/${uid}`;
 const _tabRankPath   = _bimJogo <= 2 ? `tabuada_ranking/${uid}`        : `tabuada_ranking_b/${_bimJogo}/${uid}`;
 const _tabSprintPath = _bimJogo <= 2 ? `tabuada_sprint_ranking/${uid}` : `tabuada_sprint_ranking_b/${_bimJogo}/${uid}`;

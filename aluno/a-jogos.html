@@ -470,19 +470,19 @@
 import { requireAluno, renderSidebarAluno, clearSession, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { NIVEL_MAX, bimestreAtual, pathTabuadaRanking, pathTabuadaNiveis, pathTabuadaNiveisRaiz, pathEscaladaNiveis } from "/js/constants.js";
+import { NIVEL_MAX, bimestreJogos, pathTabuadaRanking, pathTabuadaNiveis, pathTabuadaNiveisRaiz, pathEscaladaNiveis } from "/js/constants.js";
 import { montarSeletorBimestre } from "/js/bimestre-seletor.js";
 import { getLiberadasParaTurma, somarPartidasTabuadaTotal } from "/js/db.js";
 
 const sess = requireAluno("/index.html");
 if (!sess) throw new Error("não autenticado");
 renderSidebarAluno("sidebar", "jogos");
-const _bimSel = (n => (n>=1&&n<=4)?n:bimestreAtual())(parseInt(new URLSearchParams(location.search).get('bim'),10));
+const _bimSel = (n => (n>=1&&n<=4)?n:bimestreJogos())(parseInt(new URLSearchParams(location.search).get('bim'),10));
 window.irJogar = (jogo) => { location.href = `/aluno/${jogo}.html?bim=${_bimSel}`; };
 (function(){
   montarSeletorBimestre('bimTabs', { mostrarTodos:true });  // pílulas 1-4, recarrega ?bim=
   const av = document.getElementById('bimAviso');
-  if (av && _bimSel !== bimestreAtual()) {
+  if (av && _bimSel !== bimestreJogos()) {
     av.style.display = 'flex';
     const b = av.querySelector('[data-bim]'); if (b) b.textContent = _bimSel + 'º';
   }
@@ -1073,7 +1073,7 @@ if (_avStatus.ativa) {
 }
 
 window.jogarNivel = function(lv) {
-  if (_bimSel < bimestreAtual()) return;   // bimestre passado é só leitura
+  if (_bimSel < bimestreJogos()) return;   // bimestre passado é só leitura
   window.location.href = lv === nivelAtual
     ? `/aluno/tabuada.html?bim=${_bimSel}`
     : `/aluno/tabuada.html?bim=${_bimSel}&nivel=${lv}`;
@@ -1113,11 +1113,11 @@ window.jogarNivel = function(lv) {
 import { getSession } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { bimestreAtual, pathTabuadaNegNiveis, pathEscaladaNiveis, pathEscaladaRanking } from "/js/constants.js";
+import { bimestreJogos, pathTabuadaNegNiveis, pathEscaladaNiveis, pathEscaladaRanking } from "/js/constants.js";
 
 const _sess = getSession();
 if (_sess && _sess.alunos && _sess.alunos.length) {
-  const _bim  = (n => (n>=1&&n<=4)?n:bimestreAtual())(parseInt(new URLSearchParams(location.search).get('bim'),10));
+  const _bim  = (n => (n>=1&&n<=4)?n:bimestreJogos())(parseInt(new URLSearchParams(location.search).get('bim'),10));
   const turma = _sess.turma;
   const nome  = _sess.alunos[0];
   const uid   = (turma + '_' + nome).replace(/[.#$\[\]/\s]/g, '_');

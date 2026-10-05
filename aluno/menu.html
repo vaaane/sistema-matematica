@@ -226,7 +226,7 @@
 
 
 <script type="module">
-import { LISTA_ATIVIDADES, bimestreAtual, dentroDoAtestado, normalizarAtestados, aulasNoDia } from "/js/constants.js";
+import { LISTA_ATIVIDADES, bimestreAtual, bimestreJogos, dentroDoAtestado, normalizarAtestados, aulasNoDia } from "/js/constants.js";
 import { getResultados, getLiberadasParaTurma, getAlunoPreferencia } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { saveRankPos, applyTopRankVisuals } from "/js/toprank.js";
@@ -410,7 +410,7 @@ carregarCardCertificado();
 const [todosRaw, _libRaw, tabuadaSnap, torneioSnap] = await Promise.all([
   getResultados(),
   getLiberadasParaTurma(turma),
-  get(ref(db, (bimestreAtual() <= 2 ? `tabuada_niveis/${tabuadaUid}` : `tabuada_niveis_b/${bimestreAtual()}/${tabuadaUid}`))).catch(() => null),
+  get(ref(db, (bimestreJogos() <= 2 ? `tabuada_niveis/${tabuadaUid}` : `tabuada_niveis_b/${bimestreJogos()}/${tabuadaUid}`))).catch(() => null),
   isModoTeste() ? Promise.resolve(null) : get(ref(db, 'torneios')).catch(() => null),
 ]);
 const liberadas = isModoTeste()

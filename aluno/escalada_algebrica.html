@@ -226,7 +226,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 
 <script type="module">
 import { requireAluno, clearSession, setSession, isModoTeste } from "/js/auth.js";
-import { bimestreAtual, jogosEncerrados, bloquearJogoEncerrado } from "/js/constants.js";
+import { bimestreJogos, jogosEncerrados, bloquearJogoEncerrado } from "/js/constants.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -420,7 +420,7 @@ const sess = requireAluno("/index.html");
 const nomeAluno = (sess.alunos && sess.alunos[0]) || "";
 const turma     = sess.turma || "";
 const uid       = (turma + '_' + nomeAluno).replace(/[.#$\[\]/\s]/g, '_');
-const _bimJogo  = (n => (n>=1&&n<=4)?n:bimestreAtual())(parseInt(_params.get('bim'),10));
+const _bimJogo  = (n => (n>=1&&n<=4)?n:bimestreJogos())(parseInt(_params.get('bim'),10));
 if (!_modoTeste && jogosEncerrados('escalada', _bimJogo)) bloquearJogoEncerrado(_bimJogo);
 const _niveisPath  = _bimJogo <= 2 ? `escalada_niveis/${uid}`  : `escalada_niveis_b/${_bimJogo}/${uid}`;
 const _rankingPath = _bimJogo <= 2 ? `escalada_ranking/${uid}` : `escalada_ranking_b/${_bimJogo}/${uid}`;

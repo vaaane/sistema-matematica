@@ -142,8 +142,8 @@ export function dataAgora() {
 export const BIMESTRES = [
   { n: 1, inicio: "2026-02-12", fim: "2026-04-29" },
   { n: 2, inicio: "2026-04-30", fim: "2026-07-10" },
-  { n: 3, inicio: "2026-07-27", fim: "2026-10-04" },
-  { n: 4, inicio: "2026-10-05", fim: "2026-12-21" },  // antecipado 1 dia: 4º bim começou em 05/10
+  { n: 3, inicio: "2026-07-27", fim: "2026-10-05" },
+  { n: 4, inicio: "2026-10-06", fim: "2026-12-21" },
 ];
 
 // Número do bimestre de uma data ISO, ou null se cair em recesso/fora do ano.
@@ -162,37 +162,48 @@ export function bimestreAtual(hojeIso) {
   return prox ? prox.n : BIMESTRES[BIMESTRES.length - 1].n;
 }
 
+// Bimestre dos JOGOS (tabuada, negativos, escalada). Normalmente igual ao
+// bimestreAtual(), mas os jogos podem virar antes do calendário oficial —
+// sem mexer em BIMESTRES (que guia Diário, chamada e notas).
+export const JOGOS_INICIO_BIM = { 4: "2026-10-05" };  // 4º bim dos jogos abriu 1 dia antes
+export function bimestreJogos(hojeIso) {
+  const hoje = hojeIso || new Date().toISOString().slice(0, 10);
+  let bim = bimestreAtual(hoje);
+  for (const [n, ini] of Object.entries(JOGOS_INICIO_BIM)) if (hoje >= ini && +n > bim) bim = +n;
+  return bim;
+}
+
 // ─────────────────────────────────────────────────────────────
 // Paths de dados por bimestre (tabuada e afins)
 // Regra histórica: bimestres 1 e 2 usam o path GLOBAL (dados antigos, sem
 // separação por bimestre); do 3º em diante, cada bimestre tem seu próprio nó
 // `..._b/${bim}`. Estes helpers centralizam a regra para que páginas novas —
 // e os próximos bimestres/anos — "só funcionem" sem repetir o `if`.
-export function pathTabuadaNiveis(uid, bim = bimestreAtual()) {
+export function pathTabuadaNiveis(uid, bim = bimestreJogos()) {
   return bim <= 2 ? `tabuada_niveis/${uid}` : `tabuada_niveis_b/${bim}/${uid}`;
 }
 // Nó RAIZ de níveis (sem uid) — para ler todos os alunos de uma vez.
-export function pathTabuadaNiveisRaiz(bim = bimestreAtual()) {
+export function pathTabuadaNiveisRaiz(bim = bimestreJogos()) {
   return bim <= 2 ? `tabuada_niveis` : `tabuada_niveis_b/${bim}`;
 }
-export function pathTabuadaRanking(bim = bimestreAtual()) {
+export function pathTabuadaRanking(bim = bimestreJogos()) {
   return bim <= 2 ? `tabuada_ranking` : `tabuada_ranking_b/${bim}`;
 }
-export function pathTabuadaNegNiveis(uid, bim = bimestreAtual()) {
+export function pathTabuadaNegNiveis(uid, bim = bimestreJogos()) {
   return bim <= 2 ? `tabuada_negativos_niveis/${uid}` : `tabuada_negativos_niveis_b/${bim}/${uid}`;
 }
-export function pathTabuadaSprintRanking(bim = bimestreAtual()) {
+export function pathTabuadaSprintRanking(bim = bimestreJogos()) {
   return bim <= 2 ? `tabuada_sprint_ranking` : `tabuada_sprint_ranking_b/${bim}`;
 }
 
 // ── Escalada Algébrica ──────────────────────────────────────
-export function pathEscaladaNiveis(uid, bim = bimestreAtual()) {
+export function pathEscaladaNiveis(uid, bim = bimestreJogos()) {
   return bim <= 2 ? `escalada_niveis/${uid}` : `escalada_niveis_b/${bim}/${uid}`;
 }
-export function pathEscaladaNiveisRaiz(bim = bimestreAtual()) {
+export function pathEscaladaNiveisRaiz(bim = bimestreJogos()) {
   return bim <= 2 ? `escalada_niveis` : `escalada_niveis_b/${bim}`;
 }
-export function pathEscaladaRanking(bim = bimestreAtual()) {
+export function pathEscaladaRanking(bim = bimestreJogos()) {
   return bim <= 2 ? `escalada_ranking` : `escalada_ranking_b/${bim}`;
 }
 // ── Jogos encerrados por bimestre ───────────────────────────
