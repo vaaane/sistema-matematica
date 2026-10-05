@@ -142,8 +142,8 @@ export function dataAgora() {
 export const BIMESTRES = [
   { n: 1, inicio: "2026-02-12", fim: "2026-04-29" },
   { n: 2, inicio: "2026-04-30", fim: "2026-07-10" },
-  { n: 3, inicio: "2026-07-27", fim: "2026-10-05" },
-  { n: 4, inicio: "2026-10-06", fim: "2026-12-21" },
+  { n: 3, inicio: "2026-07-27", fim: "2026-10-04" },
+  { n: 4, inicio: "2026-10-05", fim: "2026-12-21" },  // antecipado 1 dia: 4º bim começou em 05/10
 ];
 
 // Número do bimestre de uma data ISO, ou null se cair em recesso/fora do ano.
@@ -200,9 +200,9 @@ export function pathEscaladaRanking(bim = bimestreAtual()) {
 // já foi fechada). Vale também para ?bim= na URL. Modo professor e modo teste
 // continuam liberados. Lista vazia = jogo liberado.
 export const JOGOS_ENCERRADOS_BIM = {
-  tabuada:           [],    // reaberta no 3º bim (28/09/2026)
-  tabuada_negativos: [],    // reaberta no 3º bim (29/09/2026)
-  escalada:          [],    // reaberta no 3º bim (29/09/2026)
+  tabuada:           [3],   // 3º bim encerrado (05/10/2026)
+  tabuada_negativos: [3],   // 3º bim encerrado (05/10/2026)
+  escalada:          [3],   // 3º bim encerrado (05/10/2026)
 };
 export function jogosEncerrados(jogo, bim) { return (JOGOS_ENCERRADOS_BIM[jogo] || []).includes(+bim); }
 // Troca o conteúdo da página por um aviso e interrompe o script do jogo.
