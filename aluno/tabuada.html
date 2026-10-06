@@ -342,7 +342,7 @@
 
 <script type="module">
 import { getSession, renderSidebarAluno, renderSidebarProfessor, clearSession, isModoTeste, iniciarNotifDueloGlobal } from "/js/auth.js";
-import { NIVEL_MAX, bimestreJogos, jogosEncerrados, bloquearJogoEncerrado } from "/js/constants.js";
+import { NIVEL_MAX, bimestreJogos, jogosEncerrados, bloquearJogoEncerrado, regrasJogo, campoHallJogo } from "/js/constants.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -371,6 +371,9 @@ function _makeUid(nome) { return (turma + '_' + nome).replace(/[.#$\[\]/\s]/g, '
 let uid = _isProfMode ? _profUid : _makeUid(nomeAluno);
 const _bimJogo = (n => (n>=1&&n<=4)?n:bimestreJogos())(parseInt(new URLSearchParams(location.search).get('bim'),10));
 if (!_isProfMode && !_isModoTesteAtivo && jogosEncerrados('tabuada', _bimJogo)) bloquearJogoEncerrado(_bimJogo);
+// Hall da Fama: nível 300 até o 3º bim; nível 150 do 4º em diante (o jogo continua até o 300).
+const _hallNivel = regrasJogo('tabuada', _bimJogo).hall;
+const _hallKey   = campoHallJogo('tabuada', _bimJogo);   // concluiu_300_em | concluiu_150_em
 const _tabNiveisPath = _bimJogo <= 2 ? `tabuada_niveis/${uid}`         : `tabuada_niveis_b/${_bimJogo}/${uid}`;
 const _tabRankPath   = _bimJogo <= 2 ? `tabuada_ranking/${uid}`        : `tabuada_ranking_b/${_bimJogo}/${uid}`;
 const _tabSprintPath = _bimJogo <= 2 ? `tabuada_sprint_ranking/${uid}` : `tabuada_sprint_ranking_b/${_bimJogo}/${uid}`;
@@ -438,6 +441,7 @@ async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo
         total_partidas: p.total_partidas,
         maior_combo:    novoMaiorCombo,
         ...(p.concluiu_300_em ? { concluiu_300_em: p.concluiu_300_em } : {}),
+        ...(p.concluiu_150_em ? { concluiu_150_em: p.concluiu_150_em } : {}),
       });
       if (rankingRef) await set(rankingRef, {
         nome:           nomeAluno,
@@ -448,6 +452,7 @@ async function salvarProgresso(p, resultado, nivelJogado, acertosJogo, errosJogo
         maior_combo:    novoMaiorCombo,
         total_partidas: p.total_partidas,
         ...(p.concluiu_300_em ? { concluiu_300_em: p.concluiu_300_em } : {}),
+        ...(p.concluiu_150_em ? { concluiu_150_em: p.concluiu_150_em } : {}),
       });
       // ── XP de gamificação (tabuada) ───────────────────────────────
       if (resultado === 'completou') try {
@@ -869,7 +874,7 @@ function _parseRanking(snap) {
     snap.forEach(c => { const v = c.val(); if (v && v.nome) rankingAll.push({ ...v, _uid: c.key }); });
     rankingAll.sort((a, b) => (b.melhor_nivel || 0) - (a.melhor_nivel || 0));
   }
-  rankingEmProgresso = rankingAll.filter(r => (r.melhor_nivel || 0) < 300);
+  rankingEmProgresso = rankingAll.filter(r => (r.melhor_nivel || 0) < _hallNivel);
   rankingTurma = rankingAll.filter(r => r.turma === turma);
 }
 _parseRanking(_rankingSnap);
@@ -1158,18 +1163,19 @@ function _buildLeadersHtml() {
   if (_isProfMode) return '';
   const isMe = r => r && r._uid === uid;
 
-  // Hall da Fama = quem concluiu os 300 níveis. Quem está no Hall não
-  // disputa o ranking "Geral"/"Turma" exibido aos demais; o líder geral
-  // e o líder da turma passam a ser o 1º que AINDA NÃO concluiu os 300.
-  const hall      = rankingAll.filter(r => (r.melhor_nivel || 0) >= 300);
-  const g         = rankingEmProgresso[0];               // 1º geral (não concluiu 300)
+  // Hall da Fama = quem chegou ao nível do Hall (300 até o 3º bim; 150 do 4º).
+  // Quem está no Hall não disputa o ranking "Geral"/"Turma" exibido aos demais;
+  // o líder geral e o da turma passam a ser o 1º que AINDA NÃO chegou lá.
+  const hall      = rankingAll.filter(r => (r.melhor_nivel || 0) >= _hallNivel);
+  if (_bimJogo >= 4) hall.sort((a, b) => (a[_hallKey] || Infinity) - (b[_hallKey] || Infinity)); // por ordem de chegada
+  const g         = rankingEmProgresso[0];               // 1º geral (fora do Hall)
   const turmaProg = rankingEmProgresso.filter(r => r.turma === turma);
-  const t         = turmaProg[0];                        // 1º da turma (não concluiu 300)
+  const t         = turmaProg[0];                        // 1º da turma (fora do Hall)
 
   if (!hall.length && !g && !t) return '';
   const lines = [];
 
-  // ── 🏆 Hall da Fama (concluintes dos 300) ──────────────────────
+  // ── 🏆 Hall da Fama ────────────────────────────────────────────
   if (hall.length) {
     const primeiro = hall[0];
     const nomeLabel = isMe(primeiro)
@@ -1186,14 +1192,14 @@ function _buildLeadersHtml() {
     );
   }
 
-  // ── 👑 Geral (1º que ainda não concluiu 300) ───────────────────
+  // ── 👑 Geral (1º que ainda não está no Hall) ───────────────────
   if (g) {
     lines.push(isMe(g)
       ? `<div style="font-size:11px;font-weight:700;color:#D97706;line-height:1.35">👑 <span style="color:var(--text-muted);font-weight:600">Geral:</span> <strong>Você lidera! 🥇</strong></div>`
       : `<div style="font-size:11px;font-weight:600;color:#D97706;line-height:1.35">👑 <span style="color:var(--text-muted);font-weight:400">Geral:</span> <strong>${escH(g.nome)}</strong><span style="color:var(--text-muted);font-weight:400"> · ${escH(g.turma||'')} · Nv ${g.melhor_nivel}</span></div>`);
   }
 
-  // ── 🏅 Turma (1º da turma que ainda não concluiu 300) ──────────
+  // ── 🏅 Turma (1º da turma que ainda não está no Hall) ──────────
   if (t && (!g || t._uid !== g._uid)) {
     lines.push(isMe(t)
       ? `<div style="font-size:10px;color:#60A5FA;margin-top:1px;line-height:1.35">🏅 <span style="color:var(--text-muted);font-weight:400">Turma:</span> <strong>Você lidera!</strong></div>`
@@ -1850,6 +1856,10 @@ async function onGameWin() {
 
   if (nivelJogado >= NIVEL_MAX && !progresso.concluiu_300_em) {
     progresso.concluiu_300_em = Date.now();
+  }
+  // 4º bim+: Hall da Fama no 150 → guarda o instante em que chegou lá
+  if (_hallNivel < NIVEL_MAX && novoMelhor >= _hallNivel && !progresso[_hallKey]) {
+    progresso[_hallKey] = Date.now();
   }
 
   await salvarProgresso(progresso, 'completou', nivelJogado, acertos, erros, false, _segsWin);

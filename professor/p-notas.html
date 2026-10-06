@@ -130,11 +130,15 @@
       </div>
 
       <div class="legenda-extras">
+        <!-- placeholder: o render troca pelos extras do bimestre selecionado (EXTRAS_AUTO + bonusConfig) -->
+        <span class="legenda-chip auto">🔄 Tabuada nv.50 <b>+1,0</b></span>
+        <span class="legenda-chip auto">🔄 Tabuada nv.100 <b>+0,5</b></span>
         <span class="legenda-chip auto">🔄 Tabuada nv.150 <b>+0,5</b></span>
-        <span class="legenda-chip auto">🔄 Tabuada nv.300 <b>+0,5</b></span>
-        <span class="legenda-chip auto">🔄 Tabuada Negativa nv.50 <b>+0,5</b></span>
+        <span class="legenda-chip auto">🔄 Tabuada Negativa nv.50 <b>+1,0</b></span>
+        <span class="legenda-chip auto">🔄 Tabuada Negativa nv.100 <b>+0,5</b></span>
         <span class="legenda-chip auto">🔄 Tabuada Negativa nv.150 <b>+0,5</b></span>
-        <span class="legenda-chip auto">🔄 Caderno Extra (Caderno &gt; 1,8) <b>+0,5</b></span>
+        <span class="legenda-chip auto">🔄 Escalada Algébrica nv.50 <b>+1,0</b></span>
+        <span class="legenda-chip auto">🔄 Escalada Algébrica nv.100 <b>+1,0</b></span>
       </div>
 
       <div class="tbl-wrap">
@@ -199,7 +203,7 @@ import { ALUNOS_POR_TURMA, BIMESTRES, bimestreAtual } from "/js/constants.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, query, orderByChild, equalTo, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {
-  BIMESTRE, setBimestre, CAMPOS_NOTA as CAMPOS, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, BONUS_CADERNO_VISTOS,
+  BIMESTRE, setBimestre, CAMPOS_NOTA as CAMPOS, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, BONUS_CADERNO_VISTOS, BONUS_FIXO,
   EXTRA_RANK_ATIV4, EXTRA_NIVEL_PERFIL, NOME_ATIV5, NOME_ATIV1_EQ, NOME_ATIV2_RP,
   makeUid, slugNome as slug, fmtNota as fmt,
   buscarProgressoTabuada, buscarAtiv4, buscarNivelPerfil,
@@ -249,10 +253,11 @@ function calcularBonus(nome, registro) {
   }, 0);
   const bCadExtra    = (cfg.cadExtra && cadernoExtraAtivo(registro)) ? CADERNO_EXTRA.valor : 0;
   const bBonusCad    = (cfg.bonusCadernoVistos && bonusCadernoVistosAtivo(a.pctCaderno)) ? BONUS_CADERNO_VISTOS.valor : 0;
+  const bFixo        = cfg.bonusFixo ? BONUS_FIXO.valor : 0;
   const bRankAtiv4   = cfg.rank ? (a.rankAtiv4Bonus ?? 0) : 0;
   const bNivelPerfil = cfg.nivelPerfil ? ((a.nivelPerfil || 0) * EXTRA_NIVEL_PERFIL.valorPorNivel) : 0;
   const bManual      = EXTRAS_MANUAL.reduce((s,e) => s + (registro.extras[e.key] ? e.valor : 0), 0);
-  return bAuto + bCadExtra + bBonusCad + bRankAtiv4 + bNivelPerfil + bManual;
+  return bAuto + bCadExtra + bBonusCad + bFixo + bRankAtiv4 + bNivelPerfil + bManual;
 }
 function calcularTotal(nome, registro) {
   const base = camposAtivos().reduce((s,c) => s + (parseFloat(registro[c.key]) || 0), 0);
@@ -387,6 +392,7 @@ function renderCabecalho() {
         .map(e => `<span class="legenda-chip auto">🔄 ${e.label} <b>+${fmt(e.valor)}</b></span>`);
       if (cfg.cadExtra) chips.push(`<span class="legenda-chip auto">🔄 ${CADERNO_EXTRA.label} (Caderno &gt; ${fmt(CADERNO_EXTRA.limiar)}) <b>+${fmt(CADERNO_EXTRA.valor)}</b></span>`);
       if (cfg.bonusCadernoVistos) chips.push(`<span class="legenda-chip auto">🔄 ${BONUS_CADERNO_VISTOS.label} (≥ ${BONUS_CADERNO_VISTOS.limiarPct}% do caderno) <b>+${fmt(BONUS_CADERNO_VISTOS.valor)}</b></span>`);
+      if (cfg.bonusFixo) chips.push(`<span class="legenda-chip auto">🎁 ${BONUS_FIXO.label} (todos os alunos) <b>+${fmt(BONUS_FIXO.valor)}</b></span>`);
       leg.innerHTML = chips.join("");
       leg.style.display = "";
     }
@@ -403,7 +409,7 @@ function renderTabela() {
     const total = calcularTotal(nome, r);
     const bonus = calcularBonus(nome, r);
     const auto = extrasAutoAtivos(nome);
-    const nExtras = EXTRAS_AUTO.filter(e => auto[e.key]).length + (cadernoExtraAtivo(r) ? 1 : 0) + (bonusCadernoVistosAtivo(autoDados[turmaAtual]?.[nome]?.pctCaderno) ? 1 : 0) + EXTRAS_MANUAL.filter(e => r.extras[e.key]).length;
+    const nExtras = EXTRAS_AUTO.filter(e => auto[e.key]).length + (cadernoExtraAtivo(r) ? 1 : 0) + (bonusCadernoVistosAtivo(autoDados[turmaAtual]?.[nome]?.pctCaderno) ? 1 : 0) + (bonusConfig()?.bonusFixo ? 1 : 0) + EXTRAS_MANUAL.filter(e => r.extras[e.key]).length;
     return `
       <tr data-aluno="${slug(nome)}">
         <td class="col-aluno" title="${nome}">${nome}</td>
@@ -448,7 +454,7 @@ function atualizarLinha(nome) {
   if (btn) {
     const auto = extrasAutoAtivos(nome);
     const bonus = calcularBonus(nome, r);
-    const nExtras = EXTRAS_AUTO.filter(e => auto[e.key]).length + (cadernoExtraAtivo(r) ? 1 : 0) + (bonusCadernoVistosAtivo(autoDados[turmaAtual]?.[nome]?.pctCaderno) ? 1 : 0) + EXTRAS_MANUAL.filter(e => r.extras[e.key]).length;
+    const nExtras = EXTRAS_AUTO.filter(e => auto[e.key]).length + (cadernoExtraAtivo(r) ? 1 : 0) + (bonusCadernoVistosAtivo(autoDados[turmaAtual]?.[nome]?.pctCaderno) ? 1 : 0) + (bonusConfig()?.bonusFixo ? 1 : 0) + EXTRAS_MANUAL.filter(e => r.extras[e.key]).length;
     btn.classList.toggle("on", !!nExtras);
     btn.innerHTML = `🎁 ${nExtras ? `+${fmt(bonus)}` : "Extras"}`;
   }
@@ -524,6 +530,14 @@ function abrirExtras(slugNome) {
       <span class="status-dot ${bcAtivo ? "atingiu" : "faltando"}">${bcAtivo ? "✓" : "·"}</span>
       <span class="lbl">${BONUS_CADERNO_VISTOS.label}<br><span class="nivel-info">caderno: ${pctTxt} (precisa ≥ ${BONUS_CADERNO_VISTOS.limiarPct}%)</span></span>
       <span class="val" style="${bcAtivo ? "" : "color:var(--text-muted)"}">${bcAtivo ? `+${fmt(BONUS_CADERNO_VISTOS.valor)}` : "—"}</span>
+    </div>`;
+  })() + (() => {
+    if (!cfg.bonusFixo) return "";
+    return `
+    <div class="extra-row auto">
+      <span class="status-dot atingiu">✓</span>
+      <span class="lbl">${BONUS_FIXO.label}<br><span class="nivel-info">para todos os alunos</span></span>
+      <span class="val">+${fmt(BONUS_FIXO.valor)}</span>
     </div>`;
   })() + (() => {
     if (!cfg.rank) return "";

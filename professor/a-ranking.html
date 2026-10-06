@@ -117,7 +117,9 @@
 
 
 <script type="module">
-import { LISTA_ATIVIDADES, bimestreAtual, pathTabuadaRanking, pathTabuadaNiveisRaiz } from "/js/constants.js";
+import { LISTA_ATIVIDADES, bimestreAtual, pathTabuadaRanking, pathTabuadaNiveisRaiz, regrasJogo, campoHallJogo } from "/js/constants.js";
+// Hall da Fama da Tabuada: nível 300 até o 3º bim; nível 150 do 4º em diante.
+const _hallTab = regrasJogo('tabuada').hall, _hallTabKey = campoHallJogo('tabuada');
 import { getResultados, getAlunoPreferencia } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
@@ -326,9 +328,9 @@ function getActiveData() {
   switch(activeTab) {
     case 'tabuada': {
       const base = activeScope==='geral' ? tabAll : tabTurma;
-      const concl = base.filter(r=>(r.melhor_nivel||0)>=300)
-        .sort((a,b)=>(a.concluiu_300_em||a.ultima_partida||0)-(b.concluiu_300_em||b.ultima_partida||0));
-      const corr  = base.filter(r=>(r.melhor_nivel||0)<300);
+      const concl = base.filter(r=>(r.melhor_nivel||0) >= _hallTab)
+        .sort((a,b)=>(a[_hallTabKey]||a.ultima_partida||0)-(b[_hallTabKey]||b.ultima_partida||0));
+      const corr  = base.filter(r=>(r.melhor_nivel||0) < _hallTab);
       const corrPos = stdPos(corr, r=>r.melhor_nivel||0);
       return { list: base, pos: activeScope==='geral'?tabAllPos:tabTurmaPos, concluintes: concl, corrida: corr, corridaPos: corrPos };
     }
@@ -512,14 +514,14 @@ function render() {
           <span class="hall-ordem">${emoji}</span>
           <div style="flex:1;min-width:0">
             <div class="hall-nome">${escH(r.nome||'?')}${isMe?' ⭐':''}</div>
-            <div class="hall-sub">Turma ${escH(r.turma||'?')} · ${ordem}º a concluir</div>
+            <div class="hall-sub">Turma ${escH(r.turma||'?')} · ${ordem}º a ${_hallTab >= 300 ? 'concluir' : 'chegar'}</div>
           </div>
-          <span class="hall-badge">Nível 300 🏆</span>
+          <span class="hall-badge">Nível ${_hallTab} 🏆</span>
         </div>`;
       }).join('');
       hallHtml = `
         <div class="hall-wrap">
-          <div class="hall-title">🏆 Hall da Fama — Nível 300 · Ordem de chegada</div>
+          <div class="hall-title">🏆 Hall da Fama — Nível ${_hallTab} · Ordem de chegada</div>
           ${hallRows(visiveis)}
           ${restantes.length > 0 ? `
             <div id="hall-extra" style="display:none">${hallRows(restantes)}</div>

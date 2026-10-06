@@ -199,7 +199,7 @@
 <script type="module">
 import { requireAluno, renderSidebarAluno, clearSession, getSession } from "/js/auth.js";
 import {
-  CAMPOS_NOTA, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, BONUS_CADERNO_VISTOS, EXTRA_RANK_ATIV4, EXTRA_NIVEL_PERFIL,
+  CAMPOS_NOTA, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, BONUS_CADERNO_VISTOS, BONUS_FIXO, EXTRA_RANK_ATIV4, EXTRA_NIVEL_PERFIL,
   BIMESTRE, setBimestre, camposAtivos, bonusAtivo, bonusConfig, fmtNota, mensagemPorNota, montarBoletim, notasLiberadas, campoPendente, campoDiferido,
   bonusCadernoVistosAtivo, campoAuto,
 } from "/js/notas.js";
@@ -239,7 +239,8 @@ const IC = {
   mao:     `<svg viewBox="0 0 24 24"><path d="M13 2a1.5 1.5 0 0 0-1.5 1.5V10h-1V4.5a1.5 1.5 0 0 0-3 0V10h-1V6.5a1.5 1.5 0 0 0-3 0V14a8 8 0 0 0 8 8 6 6 0 0 0 6-6V8.5a1.5 1.5 0 0 0-3 0V10h-1V3.5A1.5 1.5 0 0 0 13 2z"/></svg>`,
 };
 const ICON_ATIV = { provaMulti:IC.prova, projeto:IC.lampada, caderno:IC.livro, ativ4:IC.formas, triangulos:IC.triangulo, participacao:IC.mao, equacoes:IC.prova, cadernoVistos:IC.livro, razaoProp:IC.prova, conselheiro:IC.mao, pd:IC.formas };
-const ICON_EXTRA = { t150:IC.grid, t300:IC.grid, tneg50:IC.negativo, tneg150:IC.negativo, esc100:IC.estrela, esc200:IC.estrela };
+const ICON_EXTRA = { t150:IC.grid, t300:IC.grid, tneg50:IC.negativo, tneg150:IC.negativo, esc100:IC.estrela, esc200:IC.estrela,
+                     t50:IC.grid, t100:IC.grid, t150b:IC.grid, tneg50b:IC.negativo, tneg100:IC.negativo, tneg150b:IC.negativo, esc50:IC.estrela, esc100b:IC.estrela };
 
 // ── Bloco "Atividades do bimestre" no estilo cartão-com-ícone (DOIS estados) ──
 function blocoAtividadesIcones(boletim, encerrado) {
@@ -367,13 +368,19 @@ function blocoExtrasIcones(boletim, encerrado) {
     .filter(ex => cfg.autoExtras == null || cfg.autoExtras.includes(ex.key))
     .map(rowTabuada).join("");
   const perfilRowVis = cfg.nivelPerfil ? nivelPerfilRow : "";
+  const fixoRowVis   = !cfg.bonusFixo ? "" : `<div class="prog-row done">
+    <div class="prog-icon gold">${IC.estrela}</div>
+    <div class="prog-body"><div class="prog-title">${BONUS_FIXO.label}</div>
+      <div class="prog-desc">Para todos os alunos</div></div>
+    <div class="prog-right"><div class="pts gold">+${fmtNota(BONUS_FIXO.valor)}</div><div class="pts-sub">conquistado</div></div>
+  </div>`;
   const rankRowVis   = cfg.rank        ? rankRow        : "";
   const secCaderno   = (cfg.cadExtra || cfg.bonusCadernoVistos)
     ? `<div class="sec-label">Caderno</div><div class="prog-list">${cfg.cadExtra?cadExtraRow:""}${cfg.bonusCadernoVistos?bonusCadRow:""}</div>`
     : "";
   return `
     <div class="sec-label">Jogos e bônus</div>
-    <div class="prog-list">${autoRows}${perfilRowVis}${rankRowVis}</div>
+    <div class="prog-list">${fixoRowVis}${autoRows}${perfilRowVis}${rankRowVis}</div>
     ${secCaderno}`;
 }
 
@@ -411,7 +418,7 @@ function renderAndamento(boletim) {
   if (bonusOn) {
     extrasCardInner = blocoExtrasIcones(boletim, false);
 
-    // Potencial = soma dos extras ativos ainda NÃO conquistados (3 jogos × +1 = até +3,0)
+    // Potencial = soma dos extras ativos ainda NÃO conquistados (4º bim: 3 jogos × +2 = até +6,0)
     const cfg = bonusConfig() || {};
     const extrasAtivos = EXTRAS_AUTO.filter(ex => cfg.autoExtras == null || cfg.autoExtras.includes(ex.key));
     const faltantes = extrasAtivos.filter(ex => !auto[ex.key]);

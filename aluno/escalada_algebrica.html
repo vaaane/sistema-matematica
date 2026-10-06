@@ -187,7 +187,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 
   <div class="extra-banner" id="extra-banner">
     <svg viewBox="0 0 24 24"><path d="M12 2 9.2 8.6 2 9.2l5.5 4.7L5.8 21 12 17.3 18.2 21l-1.7-7.1L22 9.2l-7.2-.6z"/></svg>
-    <span>Este jogo vale nota extra: <b>+0,5</b> ao chegar ao <b>nível 100</b> e mais <b>+0,5</b> ao chegar ao <b>nível 200</b>.</span>
+    <span id="extra-banner-txt">Este jogo vale nota extra: <b>+0,5</b> ao chegar ao <b>nível 100</b> e mais <b>+0,5</b> ao chegar ao <b>nível 200</b>.</span>
   </div>
 
   <div class="prog">
@@ -226,7 +226,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 
 <script type="module">
 import { requireAluno, clearSession, setSession, isModoTeste } from "/js/auth.js";
-import { bimestreJogos, jogosEncerrados, bloquearJogoEncerrado } from "/js/constants.js";
+import { bimestreJogos, jogosEncerrados, bloquearJogoEncerrado, bonusEscalada, regrasJogo, campoHallJogo } from "/js/constants.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -399,12 +399,13 @@ function phaseFor(lv){return PHASES.find(p=>lv>=p.lo&&lv<=p.hi);}
        → { nome, turma, nivel_atual, melhor_nivel, bonus, ultima_partida }
      escalada_ranking/{uid}  (bim<=2)  |  escalada_ranking_b/{bim}/{uid}  (bim 3–4)
        → { nome, turma, nivel_atual, melhor_nivel, bonus, ultima_partida }
-   'bonus' é o valor extra já conquistado: 0 / 0.5 (nível 100) / 1.0 (nível 200).
+   'bonus' é o valor extra já conquistado (acumulado) — ver bonusEscalada() em
+   js/constants.js: até o 3º bim 0 / 0.5 (nível 100) / 1.0 (nível 200); do 4º
+   bim 0 / 1.0 (nível 50) / 2.0 (nível 100).
    A ficha do aluno lerá 'melhor_nivel' desses nós para mostrar/contabilizar
    o bônus — igual faz hoje com tabuada/tabuada negativa. */
-const MAX=200;
-const MARCO_1=100, MARCO_2=200;           // níveis que valem 0,5 cada
-const bonusPorNivel = lv => (lv>=MARCO_2?1.0 : lv>=MARCO_1?0.5 : 0);
+const MAX=200;                            // nível máximo do jogo (não muda com a pontuação)
+const bonusPorNivel = lv => bonusEscalada(lv, _bimJogo);
 
 const $=id=>document.getElementById(id);
 
@@ -422,6 +423,14 @@ const turma     = sess.turma || "";
 const uid       = (turma + '_' + nomeAluno).replace(/[.#$\[\]/\s]/g, '_');
 const _bimJogo  = (n => (n>=1&&n<=4)?n:bimestreJogos())(parseInt(_params.get('bim'),10));
 if (!_modoTeste && jogosEncerrados('escalada', _bimJogo)) bloquearJogoEncerrado(_bimJogo);
+// Hall da Fama: nível 200 até o 3º bim; nível 100 do 4º em diante (o jogo continua até o 200).
+const _hallNivel = regrasJogo('escalada', _bimJogo).hall;
+const _hallKey   = campoHallJogo('escalada', _bimJogo);   // concluiu_200_em | concluiu_100_em
+const BONUS_MAX  = bonusPorNivel(MAX);                    // 1,0 até o 3º bim · 2,0 do 4º
+if (_bimJogo >= 4) {
+  const el = document.getElementById('extra-banner-txt');
+  if (el) el.innerHTML = 'Este jogo vale nota extra: <b>+1,0</b> ao chegar ao <b>nível 50</b> e <b>+2,0</b> no total ao chegar ao <b>nível 100</b>.';
+}
 const _niveisPath  = _bimJogo <= 2 ? `escalada_niveis/${uid}`  : `escalada_niveis_b/${_bimJogo}/${uid}`;
 const _rankingPath = _bimJogo <= 2 ? `escalada_ranking/${uid}` : `escalada_ranking_b/${_bimJogo}/${uid}`;
 // No modo teste, não gravamos nos nós reais (isola o professor do ranking).
@@ -441,8 +450,10 @@ let totalErros = 0;
 const OP2CAT = { '+':'add', '-':'sub', '*':'mul', '/':'div' };
 async function saveProg(p){
   const _ts = Date.now();
-  // 1ª vez que conclui todos os 200 níveis → guarda o instante (p/ Hall da Fama)
+  // 1ª vez que conclui todos os 200 níveis → guarda o instante
   if ((p.melhor_nivel||0) >= MAX && !prog.concluiu_200_em) prog.concluiu_200_em = _ts;
+  // 1ª vez que chega ao nível do Hall da Fama (4º bim+: 100) → guarda o instante
+  if ((p.melhor_nivel||0) >= _hallNivel && !prog[_hallKey]) prog[_hallKey] = _ts;
   const payload = {
     nome: nomeAluno, turma,
     nivel_atual:  p.nivel_atual,
@@ -452,6 +463,7 @@ async function saveProg(p){
     erros: totalErros,
     tipos_erros: { ...tiposErros },
     ...(prog.concluiu_200_em ? { concluiu_200_em: prog.concluiu_200_em } : {}),
+    ...(prog.concluiu_100_em ? { concluiu_100_em: prog.concluiu_100_em } : {}),
     ultima_partida: _ts,
   };
   try { if (niveisRef)  await update(niveisRef,  payload); } catch(e){ console.warn('[Escalada] save niveis', e); }
@@ -544,7 +556,7 @@ function advance(){
   saveProg({nivel_atual:nivelAtual,melhor_nivel:melhorNivel});
   const ph=phaseFor(concluido), nph=phaseFor(nivelAtual);
   const trocaFase = nivelAtual<=MAX && nph && ph && nph.name!==ph.name;
-  const marcoBonus = bonusDepois>bonusAntes ? bonusDepois : 0;   // 0,5 ou 1,0 recém-conquistado
+  const marcoBonus = bonusDepois>bonusAntes ? bonusDepois : 0;   // total recém-conquistado (ex.: 1,0 ou 2,0 no 4º bim)
   modalAcerto(trocaFase, nivelAtual, marcoBonus, nph);
 }
 
@@ -555,7 +567,7 @@ function modalAcerto(trocaFase, lv, marcoBonus, nph){
 
   if(marcoBonus){
     $('mod-emoji').textContent='🌟';
-    $('mod-title').textContent = marcoBonus>=1.0 ? 'Nota extra máxima!' : 'Nota extra garantida!';
+    $('mod-title').textContent = marcoBonus>=BONUS_MAX ? 'Nota extra máxima!' : 'Nota extra garantida!';
     $('mod-sub').textContent   = 'Você conquistou +'+marcoBonus.toFixed(1).replace('.',',')+' na média. Continue subindo!';
     $('mod-new').textContent   = 'Nível '+lv;
   } else if(trocaFase){

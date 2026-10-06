@@ -151,7 +151,7 @@
 
 
 <script type="module">
-import { LISTA_ATIVIDADES, bimestreAtual, bimestreDeData, pathTabuadaRanking, pathTabuadaNiveis } from "/js/constants.js";
+import { LISTA_ATIVIDADES, bimestreAtual, bimestreDeData, pathTabuadaRanking, pathTabuadaNiveis, regrasJogo, campoHallJogo } from "/js/constants.js";
 import { getResultados, getLiberadasParaTurma, getAlunoPreferencia } from "/js/db.js";
 import { requireAluno, renderSidebarAluno, clearSession, isModoTeste, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { saveRankPos, applyTopRankVisuals } from "/js/toprank.js";
@@ -1077,6 +1077,8 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
   const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
   const _bimHome = bimestreAtual();
+  // Hall da Fama da Tabuada: nível 300 até o 3º bim; nível 150 do 4º em diante.
+  const _hallTab = regrasJogo('tabuada', _bimHome).hall, _hallTabKey = campoHallJogo('tabuada', _bimHome);
   const _rkHomePath = pathTabuadaRanking(_bimHome);
   const [rankSnap, sessoesSnap] = await Promise.all([
     get(ref(db, _rkHomePath)).catch(() => null),
@@ -1102,9 +1104,9 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
       if (v?.nome) rankAll.push({ ...v, _uid: child.key });
     });
     rankAll.sort((a, b) => (b.melhor_nivel||0) - (a.melhor_nivel||0) || (b.total_partidas||0) - (a.total_partidas||0));
-    concluintes = rankAll.filter(r => (r.melhor_nivel||0) >= 300)
-      .sort((a,b) => (a.concluiu_300_em || a.ultima_partida || 0) - (b.concluiu_300_em || b.ultima_partida || 0));
-    liderCorrida = rankAll.find(r => (r.melhor_nivel||0) < 300) || null;
+    concluintes = rankAll.filter(r => (r.melhor_nivel||0) >= _hallTab)
+      .sort((a,b) => (a[_hallTabKey] || a.ultima_partida || 0) - (b[_hallTabKey] || b.ultima_partida || 0));
+    liderCorrida = rankAll.find(r => (r.melhor_nivel||0) < _hallTab) || null;
   }
   const rankTurma  = rankAll.filter(r => r.turma === turma);
   const liderGeral = rankAll[0] || null;
@@ -1138,10 +1140,10 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
   if (bodyEl) { try {
     // Linha condicional de posição do aluno
     let posHtml = '';
-    if (meuNivel >= 300) {
+    if (meuNivel >= _hallTab) {
       const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
       posHtml = `<div style="padding:8px 12px;background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(245,158,11,.06));border:1px solid rgba(245,158,11,.45);border-radius:9px;font-size:12px;font-weight:700;color:${isDark ? '#FCD34D' : '#92400E'};line-height:1.5">
-        🏆 <strong>Hall da Fama!</strong> Você concluiu toda a Tabuada (Nível 300) 🌟
+        🏆 <strong>Hall da Fama!</strong> ${_hallTab >= 300 ? 'Você concluiu toda a Tabuada (Nível 300)' : `Você chegou ao Nível ${_hallTab} da Tabuada`} 🌟
       </div>`;
     } else if (myGeral === 1) {
       const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -1206,7 +1208,7 @@ function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
   if (cardEl) { try {
     const hallPrincipal = concluintes[0] || null;
     const hallExtra     = Math.max(0, concluintes.length - 1);
-    const corrida       = rankAll.filter(r => (r.melhor_nivel||0) < 300);
+    const corrida       = rankAll.filter(r => (r.melhor_nivel||0) < _hallTab);
     const corridaTop3   = corrida.slice(0, 3);
 
     const hallHtml = hallPrincipal ? `

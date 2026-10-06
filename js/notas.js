@@ -46,13 +46,30 @@ export const EXTRAS_AUTO = [
   { key:"esc100",  label:"Escalada Algébrica nível 100",     valor:0.5, max:100, campo:"melhorEscalada" },
   // A partir do 3º bim vale +1,0 (antes +0,5) — getter pra não alterar o total dos bimestres anteriores.
   { key:"esc200",  label:"Escalada Algébrica nível 200",     get valor() { return +BIMESTRE >= 3 ? 1 : 0.5; }, max:200, campo:"melhorEscalada" },
+  // ── 4º bim em diante (chaves NOVAS — não reaproveitar as de cima, que valem
+  // para os bimestres já fechados). Acumulado: Tabuada/Negativa 1,0 → 1,5 → 2,0;
+  // Escalada 1,0 → 2,0. Mesmos marcos de regrasJogo() em js/constants.js.
+  { key:"t50",      label:"Tabuada nível 50",                 valor:1.0, max:50,  campo:"melhorTabuada" },
+  { key:"t100",     label:"Tabuada nível 100",                valor:0.5, max:100, campo:"melhorTabuada" },
+  { key:"t150b",    label:"Tabuada nível 150",                valor:0.5, max:150, campo:"melhorTabuada" },
+  { key:"tneg50b",  label:"Tabuada Negativa nível 50",        valor:1.0, max:50,  campo:"melhorNeg" },
+  { key:"tneg100",  label:"Tabuada Negativa nível 100",       valor:0.5, max:100, campo:"melhorNeg" },
+  { key:"tneg150b", label:"Tabuada Negativa nível 150",       valor:0.5, max:150, campo:"melhorNeg" },
+  { key:"esc50",    label:"Escalada Algébrica nível 50",      valor:1.0, max:50,  campo:"melhorEscalada" },
+  { key:"esc100b",  label:"Escalada Algébrica nível 100",     valor:1.0, max:100, campo:"melhorEscalada" },
 ];
+// Chaves de EXTRAS_AUTO que valem em cada regra de pontuação dos jogos.
+const EXTRAS_JOGOS_ANTIGOS = ["t150", "t300", "tneg50", "tneg150", "esc100", "esc200"];          // 1º–3º bim
+const EXTRAS_JOGOS_B4      = ["t50", "t100", "t150b", "tneg50b", "tneg100", "tneg150b", "esc50", "esc100b"]; // 4º bim+
 // Caderno Extra — automático, baseado na própria nota de Caderno lançada (não é mais checkbox manual)
 export const CADERNO_EXTRA = { key:"cadExtra", label:"Caderno Extra", valor:0.5, limiar:1.8 };
 // Bônus caderno (3º bim): % de vistos "feitos" (✓, ½, FA e AT✓ contam; F/vazio
 // não) no bimestre — ≥ 90% dá +0,5. Diferente do Caderno Extra acima (1º/2º
 // bim, baseado na nota manual de Caderno > 1,8).
 export const BONUS_CADERNO_VISTOS = { key:"bonusCadernoVistos", label:"Bônus caderno", valor:0.5, limiarPct:90 };
+// Ponto extra fixo para TODOS os alunos do bimestre (flag bonusFixo no bonusConfig).
+// 3º bim: +1,0 para todos (06/10/2026). Entra junto com os demais bônus, depois do teto de 10.
+export const BONUS_FIXO = { key:"bonusFixo", label:"Ponto extra do bimestre", valor:1 };
 // Extras manuais — o professor marca
 // Participação agora é coluna de nota (não mais extra manual)
 export const EXTRAS_MANUAL = [];
@@ -86,14 +103,19 @@ export const CAMPOS_DIFERIDOS_POR_BIMESTRE = {
 export function camposDiferidos() { return new Set(CAMPOS_DIFERIDOS_POR_BIMESTRE[BIMESTRE] || []); }
 export function campoDiferido(key) { return camposDiferidos().has(key); }
 // Config de bônus por bimestre. Ausente = todos os bônus (padrão). null = nenhum.
-// Objeto = escolhe quais partes valem. autoExtras: chaves de EXTRAS_AUTO (null = todas).
+// Objeto = escolhe quais partes valem. autoExtras: chaves de EXTRAS_AUTO (null = todas — evitar:
+// incluiria as chaves de todos os bimestres).
 export const BONUS_CONFIG_POR_BIMESTRE = {
-  "3": { autoExtras: ["t150", "t300", "tneg50", "tneg150", "esc100", "esc200"], cadExtra: false, rank: false, nivelPerfil: false, bonusCadernoVistos: true },
+  "3": { autoExtras: EXTRAS_JOGOS_ANTIGOS, cadExtra: false, rank: false, nivelPerfil: false, bonusCadernoVistos: true, bonusFixo: true },
+  // 4º bim: nova pontuação dos jogos; demais flags iguais ao 3º.
+  "4": { autoExtras: EXTRAS_JOGOS_B4,      cadExtra: false, rank: false, nivelPerfil: false, bonusCadernoVistos: true },
 };
 export function bonusConfig() {
   const cfg = BONUS_CONFIG_POR_BIMESTRE[BIMESTRE];
   if (cfg !== undefined) return cfg;                                          // config específica (pode ser null)
-  return { autoExtras: null, cadExtra: true, rank: true, nivelPerfil: true, bonusCadernoVistos: false }; // padrão: tudo (menos o bônus 3º bim)
+  // padrão (1º/2º bim): tudo (menos o bônus 3º bim). Jogos = só as chaves antigas,
+  // que eram TODAS as de EXTRAS_AUTO antes das chaves do 4º bim existirem.
+  return { autoExtras: EXTRAS_JOGOS_ANTIGOS, cadExtra: true, rank: true, nivelPerfil: true, bonusCadernoVistos: false };
 }
 export function camposAtivos() {
   const chaves = CAMPOS_POR_BIMESTRE[BIMESTRE];
@@ -229,9 +251,15 @@ export async function buscarNotaSalva(turma, nome) {
   }
 }
 
+// Só marca como ativos os extras que valem no bimestre corrente — assim as
+// chaves de outro bimestre nunca entram em somas/contagens que percorrem EXTRAS_AUTO.
 export function extrasAutoAtivos(progresso) {
+  const cfg = bonusConfig();
   const ativos = {};
-  EXTRAS_AUTO.forEach(e => { ativos[e.key] = (progresso[e.campo] || 0) >= e.max; });
+  EXTRAS_AUTO.forEach(e => {
+    const vale = !!cfg && (cfg.autoExtras === null || cfg.autoExtras.includes(e.key));
+    ativos[e.key] = vale && (progresso[e.campo] || 0) >= e.max;
+  });
   return ativos;
 }
 export function calcularBonus(progresso, registro) {
@@ -244,10 +272,11 @@ export function calcularBonus(progresso, registro) {
   }, 0);
   const bCadExtra  = (cfg.cadExtra && cadernoExtraAtivo(registro)) ? CADERNO_EXTRA.valor : 0;
   const bBonusCad  = (cfg.bonusCadernoVistos && bonusCadernoVistosAtivo(progresso?.pctCaderno)) ? BONUS_CADERNO_VISTOS.valor : 0;
+  const bFixo      = cfg.bonusFixo ? BONUS_FIXO.valor : 0;
   const bRankAtiv4 = cfg.rank ? (progresso?.rankAtiv4Bonus ?? 0) : 0;
   const bNivelPerf = cfg.nivelPerfil ? EXTRA_NIVEL_PERFIL.calcular(progresso?.nivelPerfil ?? 0) : 0;
   const bManual    = EXTRAS_MANUAL.reduce((s, e) => s + (registro?.extras?.[e.key] ? e.valor : 0), 0);
-  return bAuto + bCadExtra + bBonusCad + bRankAtiv4 + bNivelPerf + bManual;
+  return bAuto + bCadExtra + bBonusCad + bFixo + bRankAtiv4 + bNivelPerf + bManual;
 }
 export function calcularSubtotal(registro) {
   return camposAtivos().reduce((s, c) => {
@@ -491,8 +520,9 @@ export async function totalAtividadesAluno(turma, nome) {
 // ── Pontos EXTRAS já conquistados nos JOGOS (card da Home) ──
 // Soma os extras automáticos de jogos que o aluno já bateu (tabuada normal,
 // negativa e escalada), respeitando o bonusConfig do bimestre. maximo = soma
-// dos valores desses extras (3,5 no 3º bim: 5 marcos × 0,5 + Escalada 200 × 1,0).
-const CHAVES_EXTRAS_JOGOS = ["t150", "t300", "tneg50", "tneg150", "esc100", "esc200"];
+// dos valores desses extras (3,5 no 3º bim: 5 marcos × 0,5 + Escalada 200 × 1,0;
+// 6,0 no 4º bim: Tabuada 2,0 + Negativa 2,0 + Escalada 2,0).
+const CHAVES_EXTRAS_JOGOS = [...EXTRAS_JOGOS_ANTIGOS, ...EXTRAS_JOGOS_B4];
 export async function extrasJogosAluno(turma, nome) {
   const cfg = bonusConfig();
   const permitido = (k) => cfg && (cfg.autoExtras === null || cfg.autoExtras.includes(k));

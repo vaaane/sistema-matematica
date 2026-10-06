@@ -192,7 +192,9 @@
 <script type="module">
 import { getLiberadas, listenRankingProfessor, getResultados } from "/js/db.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
-import { LISTA_ATIVIDADES, ALUNOS_POR_TURMA, pathTabuadaRanking, pathTabuadaNiveisRaiz } from "/js/constants.js";
+import { LISTA_ATIVIDADES, ALUNOS_POR_TURMA, pathTabuadaRanking, pathTabuadaNiveisRaiz, regrasJogo, campoHallJogo } from "/js/constants.js";
+// Hall da Fama da Tabuada: nível 300 até o 3º bim; nível 150 do 4º em diante.
+const _hallTab = regrasJogo('tabuada').hall, _hallTabKey = campoHallJogo('tabuada');
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -262,9 +264,9 @@ async function renderPainelPrincipal() {
 
   // Hall da Fama e corrida
   const tabConcluintes = tabAll
-    .filter(r => (r.melhor_nivel||0) >= 300)
-    .sort((a,b) => (a.concluiu_300_em||a.ultima_partida||0)-(b.concluiu_300_em||b.ultima_partida||0));
-  const tabCorrida = tabAll.filter(r => (r.melhor_nivel||0) < 300);
+    .filter(r => (r.melhor_nivel||0) >= _hallTab)
+    .sort((a,b) => (a[_hallTabKey]||a.ultima_partida||0)-(b[_hallTabKey]||b.ultima_partida||0));
+  const tabCorrida = tabAll.filter(r => (r.melhor_nivel||0) < _hallTab);
 
   function tabStdPos(lista) {
     let p=0,n=0,last=null;
@@ -499,9 +501,9 @@ async function renderPainelPrincipal() {
           <span style="font-size:18px;min-width:26px;text-align:center">${emoji}</span>
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:700;color:#F59E0B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(r.nome||'?')}</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:1px">Turma ${escH(r.turma||'?')} · ${ordem}º a concluir</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:1px">Turma ${escH(r.turma||'?')} · ${ordem}º a ${_hallTab >= 300 ? 'concluir' : 'chegar'}</div>
           </div>
-          <span style="font-size:12px;font-weight:700;color:#F59E0B;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:3px 10px;flex-shrink:0">Nível 300 🏆</span>
+          <span style="font-size:12px;font-weight:700;color:#F59E0B;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:3px 10px;flex-shrink:0">Nível ${_hallTab} 🏆</span>
         </div>`;
       }).join('');
 
@@ -510,7 +512,7 @@ async function renderPainelPrincipal() {
       hallHtml = `
         <div style="background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(245,158,11,.05));border:1.5px solid rgba(245,158,11,.5);border-radius:14px;padding:14px 16px;margin-bottom:20px;box-shadow:0 0 20px rgba(245,158,11,.1)">
           <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#F59E0B;display:flex;align-items:center;gap:6px;margin-bottom:12px">
-            🏆 Hall da Fama — Nível 300 · Ordem de chegada
+            🏆 Hall da Fama — Nível ${_hallTab} · Ordem de chegada
             <span style="background:rgba(245,158,11,.2);color:#D97706;font-size:10px;padding:2px 8px;border-radius:10px;margin-left:auto">${concl.length} aluno${concl.length !== 1 ? 's' : ''}</span>
           </div>
           ${hallRows(visiveis)}

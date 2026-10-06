@@ -283,7 +283,7 @@
 </div>
 
 <script type="module">
-import { numeroChamada, BIMESTRES, bimestreAtual, dentroDoAtestado, normalizarAtestados, aulasNoDia, LISTA_ATIVIDADES } from "/js/constants.js";
+import { numeroChamada, BIMESTRES, bimestreAtual, dentroDoAtestado, normalizarAtestados, aulasNoDia, LISTA_ATIVIDADES, regrasJogo } from "/js/constants.js";
 import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
 import { indexarBiblioteca, resolverAula, tipoInfo } from "/js/biblioteca.js";
 import { getResultadosByAluno, getLiberacoesHistoricoTodas } from "/js/db.js";
@@ -358,6 +358,30 @@ let libHistorico = [];     // liberacoes_historico (datas oficiais + 2ª chamada
 let _dataAgendaReg = {};   // data agendada por atividade (atividades_agenda)
 let atestados = [];    // [ {inicio,fim,ts,obs} ] do aluno logado
 let nivelTab = 0, nivelNeg = 0, nivelEsc = 0;   // progresso nos jogos (tabuada e escalada)
+
+// Barra de um jogo na regra de pontuação do 4º bim em diante (marcos de
+// regrasJogo em js/constants.js). Valores exibidos são ACUMULADOS.
+function jogoProgB4(rotulo, jogo, nivel, max, cor, bim, estilo = "") {
+  const { marcos } = regrasJogo(jogo, bim);
+  const f = x => x.toFixed(1).replace('.', ',');
+  let acum = 0;
+  const marcosAcum = marcos.map(m => ({ nivel: m.nivel, total: (acum += m.bonus) }));
+  const ganhos = marcosAcum.filter(m => nivel >= m.nivel);
+  const ganho  = ganhos.length ? ganhos[ganhos.length - 1].total : 0;
+  const prox   = marcosAcum.find(m => nivel < m.nivel);
+  const marco  = prox && prox.nivel < max ? prox.nivel : null;   // risquinho no próximo marco
+  const fim    = marcosAcum[marcosAcum.length - 1];
+  const frase = !prox
+    ? `<div class="jp-done">✓ Chegou ao nível ${fim.nivel}! +${f(fim.total)} na média</div>`
+    : ganho > 0
+      ? `<div class="jp-done" style="color:${cor}">✓ +${f(ganho)} garantido · chegue ao ${prox.nivel} para +${f(prox.total)}</div>`
+      : `<div class="jp-note">${marcosAcum.map(m => `Nível ${m.nivel} vale +${f(m.total)}`).join(' · ')}</div>`;
+  return `<div class="jogo-prog"${estilo ? ` style="${estilo}"` : ""}>
+            <div class="jp-top"><span class="jp-nome">${rotulo} <span class="jp-bonus ${ganho>0?"on":""}">+${f(ganho || marcosAcum[0].total)}</span></span><span class="jp-niv">Nível ${nivel} <span class="jp-max">/ ${max}</span></span></div>
+            <div class="jp-bar${marco ? " jp-bar-marco" : ""}"${marco ? ` style="--marco:${(marco/max*100).toFixed(1)}%"` : ""}><div class="jp-fill" style="width:${Math.min(100, (nivel/max)*100).toFixed(1)}%;background:${cor}"></div></div>
+            ${frase}
+          </div>`;
+}
 
 const temAtestado = data => dentroDoAtestado(data, atestados);
 // estado bruto da chamada: "falta" | "atraso" | "" (compat: true antigo => "falta")
@@ -814,6 +838,11 @@ function render(){
             <svg viewBox="0 0 24 24"><path d="M17 4a7 7 0 0 0-5 2.1A7 7 0 0 0 2 11a7 7 0 0 0 7 7h6a7 7 0 0 0 0-14zM8 13H6v2H4v-2H2v-2h2V9h2v2h2v2zm5.5 1a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-3a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg>
             Jogos de Tabuada
           </div>
+          ${bimestreAtual() >= 4 ? [
+            jogoProgB4('🎯 Tabuada',            'tabuada',  nivelTab, 300, 'var(--purple)', bimestreAtual()),
+            jogoProgB4('➖ Tabuada Negativa',   'negativa', nivelNeg, 150, 'var(--gold)',   bimestreAtual(), 'margin-top:12px'),
+            jogoProgB4('🧗 Escalada Algébrica', 'escalada', nivelEsc, 200, '#00d4ff',       bimestreAtual(), 'margin-top:12px'),
+          ].join('') : `
           <div class="jogo-prog">
             <div class="jp-top"><span class="jp-nome">🎯 Tabuada <span class="jp-bonus ${nivelTab>=300?"on":""}">+1,0</span></span><span class="jp-niv">Nível ${nivelTab} <span class="jp-max">/ 300</span></span></div>
             <div class="jp-bar"><div class="jp-fill" style="width:${Math.min(100, (nivelTab/300)*100).toFixed(1)}%;background:var(--purple)"></div></div>
@@ -841,6 +870,7 @@ function render(){
                 ? '<div class="jp-done" style="color:#00d4ff">✓ +0,5 garantido · chegue ao 200 para +1,0</div>'
                 : '<div class="jp-note">Nível 100 vale +0,5 · nível 200 vale +1,0</div>'}
           </div>
+          `}
           <div class="ficha-nota ouro">
             <svg viewBox="0 0 24 24"><path d="M12 2 9.2 8.6 2 9.2l5.5 4.7L5.8 21 12 17.3 18.2 21l-1.7-7.1L22 9.2l-7.2-.6z"/></svg>
             <span><b>Dica para a família:</b> incentivar a jogar ajuda na média do bimestre.</span>

@@ -345,7 +345,7 @@
               <div class="jh-txt">
                 <div class="jh-nome">Escalada Algébrica <span class="jh-status beta">Beta</span></div>
                 <div class="jh-desc">Simplifique expressões algébricas subindo de nível — soma, subtração, multiplicação e divisão de termos.</div>
-                <div class="jh-tro"><span class="ic">⭐</span> Vale nota extra: +0,5 no nível 100 e mais +0,5 no nível 200</div>
+                <div class="jh-tro"><span class="ic">⭐</span> <span id="esc-tro-txt">Vale nota extra: +0,5 no nível 100 e mais +0,5 no nível 200</span></div>
               </div>
             </div>
             <div class="jh-aside">
@@ -470,7 +470,7 @@
 import { requireAluno, renderSidebarAluno, clearSession, injetarFaixaDuelo, iniciarNotifDueloGlobal } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { NIVEL_MAX, bimestreJogos, pathTabuadaRanking, pathTabuadaNiveis, pathTabuadaNiveisRaiz, pathEscaladaNiveis } from "/js/constants.js";
+import { NIVEL_MAX, bimestreJogos, pathTabuadaRanking, pathTabuadaNiveis, pathTabuadaNiveisRaiz, pathEscaladaNiveis, regrasJogo, campoHallJogo } from "/js/constants.js";
 import { montarSeletorBimestre } from "/js/bimestre-seletor.js";
 import { getLiberadasParaTurma, somarPartidasTabuadaTotal } from "/js/db.js";
 
@@ -479,6 +479,16 @@ if (!sess) throw new Error("não autenticado");
 renderSidebarAluno("sidebar", "jogos");
 const _bimSel = (n => (n>=1&&n<=4)?n:bimestreJogos())(parseInt(new URLSearchParams(location.search).get('bim'),10));
 window.irJogar = (jogo) => { location.href = `/aluno/${jogo}.html?bim=${_bimSel}`; };
+// Pontuação/Hall da Fama da Tabuada no bimestre selecionado (Hall: 300 até o 3º bim, 150 do 4º)
+const _regrasTab  = regrasJogo('tabuada', _bimSel);
+const _hallTab    = _regrasTab.hall;
+const _hallTabKey = campoHallJogo('tabuada', _bimSel);
+const _fmtBonus   = x => (Math.round(x*10)/10).toFixed(1).replace('.', ',');
+if (_bimSel >= 4) {
+  const r = regrasJogo('escalada', _bimSel), m0 = r.marcos[0], mN = r.marcos[r.marcos.length-1];
+  const el = document.getElementById('esc-tro-txt');
+  if (el) el.textContent = `Vale nota extra: +${_fmtBonus(m0.bonus)} no nível ${m0.nivel} e +${_fmtBonus(r.total)} no total no nível ${mN.nivel}`;
+}
 (function(){
   montarSeletorBimestre('bimTabs', { mostrarTodos:true });  // pílulas 1-4, recarrega ?bim=
   const av = document.getElementById('bimAviso');
@@ -668,8 +678,8 @@ if (rankSnap?.exists()) {
   console.warn('[jogos] tabuada_ranking vazio ou inacessível. rankSnap:', rankSnap);
 }
 console.log('[jogos] ranking:', rankAll.length, 'entradas totais');
-const concluintes      = rankAll.filter(r => (r.melhor_nivel || 0) >= 300);
-const rankEmProgresso  = rankAll.filter(r => (r.melhor_nivel || 0) < 300);
+const concluintes      = rankAll.filter(r => (r.melhor_nivel || 0) >= _hallTab);
+const rankEmProgresso  = rankAll.filter(r => (r.melhor_nivel || 0) < _hallTab);
 const rankTurma = rankEmProgresso.filter(r => r.turma === turma);
 
 const liderGeral     = rankEmProgresso[0] || null;
@@ -970,7 +980,7 @@ document.getElementById("content").innerHTML = `
 
     <div class="g-mini bonus">
       <h3>⭐ Bônus na média</h3>
-      ${[{nivel:150,bonus:0.5},{nivel:300,bonus:0.5}].map(m => {
+      ${_regrasTab.marcos.map(m => {
         const ok = melhorNivel >= m.nivel;
         return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:11px;margin-bottom:7px;background:${ok?'rgba(34,197,94,.10)':'rgba(255,255,255,.03)'};border:1px solid ${ok?'rgba(34,197,94,.25)':'var(--g-bdr,rgba(255,255,255,.08))'}">
           <span style="font-size:15px">${ok?'✅':'⬜'}</span>
@@ -978,7 +988,7 @@ document.getElementById("content").innerHTML = `
           <span style="font-weight:800;color:${ok?'var(--g-green,#22c55e)':'var(--g-muted)'}">+${m.bonus.toFixed(1).replace('.',',')}</span>
         </div>`;
       }).join('')}
-      <div style="font-size:11px;color:var(--g-muted);line-height:1.4;margin-top:2px">Chegue ao 150 e ao 300 para garantir +1,0 no total.</div>
+      <div style="font-size:11px;color:var(--g-muted);line-height:1.4;margin-top:2px">${_bimSel >= 4 ? `Chegue ao 50, ao 100 e ao 150 para garantir +${_fmtBonus(_regrasTab.total)} no total.` : 'Chegue ao 150 e ao 300 para garantir +1,0 no total.'}</div>
     </div>
   </div>
 
@@ -1021,19 +1031,21 @@ document.getElementById("content").innerHTML = `
 
 </div>`;
 
-// ── Hall da Fama ── quem concluiu os 300 níveis, por ordem de conclusão ──
+// ── Hall da Fama ── quem chegou ao nível do Hall (300 até o 3º bim; 150 do 4º), por ordem de chegada ──
 {
+  const hallCompleto = _hallTab >= NIVEL_MAX;   // Hall = concluir o jogo todo (regra antiga)
+  const premioHall   = hallCompleto ? '1,0' : _fmtBonus(_regrasTab.total);
   const concluintes = rankAll
-    .filter(r => (r.melhor_nivel || 0) >= 300)
-    .sort((a,b) => (a.concluiu_300_em||Infinity) - (b.concluiu_300_em||Infinity));
+    .filter(r => (r.melhor_nivel || 0) >= _hallTab)
+    .sort((a,b) => (a[_hallTabKey]||Infinity) - (b[_hallTabKey]||Infinity));
   const hallCard = document.createElement('div');
   hallCard.style.cssText = `background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(245,158,11,.05));border:1.5px solid rgba(245,158,11,.5);border-radius:14px;padding:14px 16px;margin-bottom:16px;box-shadow:0 0 20px rgba(245,158,11,.1);`;
   const emojis = ['🥇','🥈','🥉'];
   let corpo;
   if (!concluintes.length) {
     corpo = `<div style="padding:14px 4px;text-align:center;color:var(--g-muted);font-size:12px;line-height:1.5">
-      Ninguém concluiu todos os 300 níveis ainda.<br>
-      <span style="color:#f0a500;font-weight:600">Seja o primeiro a ganhar o +1,0 na média! 🏆</span>
+      ${hallCompleto ? `Ninguém concluiu todos os ${_hallTab} níveis ainda.` : `Ninguém chegou ao nível ${_hallTab} ainda.`}<br>
+      <span style="color:#f0a500;font-weight:600">Seja o primeiro a ganhar o +${premioHall} na média! 🏆</span>
     </div>`;
   } else {
     corpo = concluintes.map((r, i) => {
@@ -1042,13 +1054,13 @@ document.getElementById("content").innerHTML = `
         <span style="font-size:17px;min-width:26px;text-align:center">${emojis[i] || `${i+1}º`}</span>
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:700;color:#f0a500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(r.nome||'?')}${isMe?' ⭐':''}</div>
-          <div style="font-size:11px;color:var(--g-muted);margin-top:1px">Turma ${escH(r.turma||'?')} · ${i+1}º a concluir</div>
+          <div style="font-size:11px;color:var(--g-muted);margin-top:1px">Turma ${escH(r.turma||'?')} · ${i+1}º a ${hallCompleto ? 'concluir' : 'chegar'}</div>
         </div>
-        <span style="font-size:11px;font-weight:700;color:#f0a500;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:3px 9px;flex-shrink:0">+1,0 🏆</span>
+        <span style="font-size:11px;font-weight:700;color:#f0a500;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:3px 9px;flex-shrink:0">+${premioHall} 🏆</span>
       </div>`;
     }).join('');
   }
-  hallCard.innerHTML = `<div style="font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#f0a500;display:flex;align-items:center;gap:6px;margin-bottom:12px">🏆 Hall da Fama — 300 níveis</div>${corpo}`;
+  hallCard.innerHTML = `<div style="font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#f0a500;display:flex;align-items:center;gap:6px;margin-bottom:12px">🏆 Hall da Fama — ${hallCompleto ? `${_hallTab} níveis` : `nível ${_hallTab}`}</div>${corpo}`;
   document.querySelector('#content .g-rank-wrap')?.insertAdjacentElement('beforebegin', hallCard);
 }
 
@@ -1113,7 +1125,7 @@ window.jogarNivel = function(lv) {
 import { getSession } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { bimestreJogos, pathTabuadaNegNiveis, pathEscaladaNiveis, pathEscaladaRanking } from "/js/constants.js";
+import { bimestreJogos, pathTabuadaNegNiveis, pathEscaladaNiveis, pathEscaladaRanking, regrasJogo, campoHallJogo } from "/js/constants.js";
 
 const _sess = getSession();
 if (_sess && _sess.alunos && _sess.alunos.length) {
@@ -1121,7 +1133,7 @@ if (_sess && _sess.alunos && _sess.alunos.length) {
   const turma = _sess.turma;
   const nome  = _sess.alunos[0];
   const uid   = (turma + '_' + nome).replace(/[.#$\[\]/\s]/g, '_');
-  const fmt   = x => (Math.round(x*10)/10).toString().replace('.', ',');
+  const fmt   = x => (Math.round(x*10)/10).toFixed(1).replace('.', ',');   // 1 → "1,0"
   const escH  = s => String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const nivelDe = v => v ? Math.max(v.nivel_atual||0, v.melhor_nivel||0) : 0;
 
@@ -1157,18 +1169,21 @@ if (_sess && _sess.alunos && _sess.alunos.length) {
     return top.map(r => rankRow(r, lista.findIndex(x=>x._uid===r._uid)+1, r._uid===meUid, cor)).join('');
   }
 
-  // ── Hall da Fama: quem CONCLUIU todos os níveis (ganhou +1), por ordem de conclusão ──
-  // Sempre renderiza um espaço; se ninguém concluiu, mostra placeholder.
-  function hallDaFama(lista, maxNivel, concluidoKey, cor) {
+  // ── Hall da Fama: quem chegou ao nível do Hall, por ordem de chegada ──
+  // hallNivel = corte do Hall, que pode ser menor que o nível máximo do jogo
+  // (ex.: Escalada no 4º bim = 100 de 200). Sempre renderiza um espaço; se
+  // ninguém chegou, mostra placeholder.
+  function hallDaFama(lista, hallNivel, maxNivel, concluidoKey, premio) {
     const emojis = ['🥇','🥈','🥉'];
+    const completo = hallNivel >= maxNivel;   // Hall = concluir o jogo todo
     const feitos = lista
-      .filter(r => (r.melhor_nivel||0) >= maxNivel)
-      .sort((a,b) => (a[concluidoKey]||Infinity) - (b[concluidoKey]||Infinity)); // quem concluiu primeiro
+      .filter(r => (r.melhor_nivel||0) >= hallNivel)
+      .sort((a,b) => (a[concluidoKey]||Infinity) - (b[concluidoKey]||Infinity)); // quem chegou primeiro
     let corpo;
     if (!feitos.length) {
       corpo = `<div style="padding:14px 4px;text-align:center;color:var(--g-muted);font-size:12px;line-height:1.5">
-        Ninguém concluiu todos os ${maxNivel} níveis ainda.<br>
-        <span style="color:#f0a500;font-weight:600">Seja o primeiro a ganhar o +1,0 na média! 🏆</span>
+        ${completo ? `Ninguém concluiu todos os ${hallNivel} níveis ainda.` : `Ninguém chegou ao nível ${hallNivel} ainda.`}<br>
+        <span style="color:#f0a500;font-weight:600">Seja o primeiro a ganhar o +${premio} na média! 🏆</span>
       </div>`;
     } else {
       corpo = feitos.map((r, i) => {
@@ -1177,20 +1192,20 @@ if (_sess && _sess.alunos && _sess.alunos.length) {
           <span style="font-size:17px;min-width:26px;text-align:center">${emojis[i] || `${i+1}º`}</span>
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:700;color:#f0a500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(r.nome||'?')}${isMe?' ⭐':''}</div>
-            <div style="font-size:11px;color:var(--g-muted);margin-top:1px">Turma ${escH(r.turma||'?')} · ${i+1}º a concluir</div>
+            <div style="font-size:11px;color:var(--g-muted);margin-top:1px">Turma ${escH(r.turma||'?')} · ${i+1}º a ${completo ? 'concluir' : 'chegar'}</div>
           </div>
-          <span style="font-size:11px;font-weight:700;color:#f0a500;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:3px 9px;flex-shrink:0">+1,0 🏆</span>
+          <span style="font-size:11px;font-weight:700;color:#f0a500;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:3px 9px;flex-shrink:0">+${premio} 🏆</span>
         </div>`;
       }).join('');
     }
     return `<div style="background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(245,158,11,.05));border:1.5px solid rgba(245,158,11,.5);border-radius:14px;padding:14px 16px;margin-bottom:16px;box-shadow:0 0 20px rgba(245,158,11,.1)">
-      <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#f0a500;display:flex;align-items:center;gap:6px;margin-bottom:12px">🏆 Hall da Fama — ${maxNivel} níveis</div>
+      <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#f0a500;display:flex;align-items:center;gap:6px;margin-bottom:12px">🏆 Hall da Fama — ${completo ? `${hallNivel} níveis` : `nível ${hallNivel}`}</div>
       ${corpo}
     </div>`;
   }
 
   // ── Painel no LAYOUT COMPLETO da Tabuada (sem modos, sem "Últimas partidas") ──
-  function painelCompleto({ icon, titulo, subtitulo, cor, nivel, melhor, max, partidas, maiorCombo, marcos, listaGeral, listaTurma, ops, concluidoKey, totais }) {
+  function painelCompleto({ icon, titulo, subtitulo, cor, nivel, melhor, max, hall, premio, partidas, maiorCombo, marcos, listaGeral, listaTurma, ops, concluidoKey, totais }) {
     const pct = Math.max(0.5, Math.min(100, (nivel/max)*100)).toFixed(1);
     // Linha "Total de partidas / Hoje" — só quando o jogo tem partidas discretas (ex.: Negativa)
     const totaisHtml = totais ? `
@@ -1271,7 +1286,7 @@ if (_sess && _sess.alunos && _sess.alunos.length) {
 
       ${bottomHtml}
 
-      ${hallDaFama(listaGeral, max, concluidoKey, cor)}
+      ${hallDaFama(listaGeral, hall ?? max, max, concluidoKey, premio ?? '1,0')}
 
       <div class="g-rank-wrap">
         <div class="g-rb geral">
@@ -1320,10 +1335,12 @@ if (_sess && _sess.alunos && _sess.alunos.length) {
         const _ts = meu.historico[k]?.ts; if (!_ts) continue;
         if (new Date(_ts).toISOString().slice(0,10) === _hojeISO) partidasHoje++;
       }
+      const regras = regrasJogo('negativa', _bim);
       box.innerHTML = painelCompleto({ icon:'➖', titulo:'Tabuada Negativa', subtitulo:'A tabuada com números negativos',
-        cor:'#f97316', nivel, melhor, max:150, partidas: meu.total_partidas ?? 0, maiorCombo, ops, concluidoKey:'concluiu_150_em',
+        cor:'#f97316', nivel, melhor, max:150, hall: regras.hall, premio: _bim >= 4 ? fmt(regras.total) : '1,0',
+        partidas: meu.total_partidas ?? 0, maiorCombo, ops, concluidoKey: campoHallJogo('negativa', _bim),
         totais:{ total: totalPartidas, hoje: partidasHoje },
-        marcos:[{nivel:50,bonus:0.5},{nivel:150,bonus:1.0}], listaGeral: lista, listaTurma });
+        marcos: regras.marcos, listaGeral: lista, listaTurma });
     } catch(e){ console.error('[jogos] detalhes negativa', e); box.innerHTML = '<div style="padding:16px;color:var(--g-muted);font-size:12px">Não foi possível carregar os detalhes.</div>'; }
   })();
 
@@ -1343,9 +1360,12 @@ if (_sess && _sess.alunos && _sess.alunos.length) {
       const listaTurma = lista.filter(r => r.turma === turma);
       const mv = document.getElementById('esc-nivel'); if (mv) mv.textContent = nivel || '—';
       const ops = { add:0, sub:0, mul:0, div:0, ...(meu.tipos_acertos||{}) };
+      // Barra/nível máximo continuam 200; o Hall da Fama corta no 100 a partir do 4º bim.
+      const regras = regrasJogo('escalada', _bim);
       box.innerHTML = painelCompleto({ icon:'🧗', titulo:'Escalada Algébrica', subtitulo:'Simplifique expressões subindo de nível',
-        cor:'#9b30ff', nivel, melhor, max:200, partidas: null, maiorCombo: null, ops, concluidoKey:'concluiu_200_em',
-        marcos:[{nivel:100,bonus:0.5},{nivel:200,bonus:1.0}], listaGeral: lista, listaTurma });
+        cor:'#9b30ff', nivel, melhor, max:200, hall: regras.hall, premio: _bim >= 4 ? fmt(regras.total) : '1,0',
+        partidas: null, maiorCombo: null, ops, concluidoKey: campoHallJogo('escalada', _bim),
+        marcos: regras.marcos, listaGeral: lista, listaTurma });
     } catch(e){ console.error('[jogos] detalhes escalada', e); box.innerHTML = '<div style="padding:16px;color:var(--g-muted);font-size:12px">Não foi possível carregar os detalhes.</div>'; }
   })();
 }
