@@ -89,6 +89,11 @@ const mapasAbertos = new Set();  // jogo_revisao_config/global/mapas_abertos (co
 
 const raiz = () => teste ? `modo_teste_historico/${sessao.uid}/jogo_revisao` : `jogo_revisao/${sessao.uid}`;
 
+// Meta da turma e placar entre as turmas (jogo_revisao_turmas/{turma}: { insignias, douradas })
+const TURMAS_PLACAR = ['8D', '8E', '8F', '8G', '8H'];   // TESTE e outras nunca aparecem
+let placarTurmas = {};
+let metaTurma = 100;   // jogo_revisao_config/global/meta_turma (padrão 100)
+
 // Um único get do progresso, preenchendo o `estado` da Parte A
 async function carregarEstado() {
   teste = isModoTeste();
@@ -121,9 +126,64 @@ async function carregarEstado() {
     avisoConexao('Não foi possível carregar seu progresso. Verifique a internet e recarregue a página.', true);
   }
   try {
-    const cfg = await get(ref(db, 'jogo_revisao_config/global/mapas_abertos'));
-    if (cfg.exists()) for (const n of Object.values(cfg.val() || {})) mapasAbertos.add(Number(n));
-  } catch (e) { /* sem config: vale só a regra padrão */ }
+    const cfg = await get(ref(db, 'jogo_revisao_config/global'));
+    const c = cfg.exists() ? cfg.val() || {} : {};
+    for (const n of Object.values(c.mapas_abertos || {})) mapasAbertos.add(Number(n));
+    if (Number(c.meta_turma) > 0) metaTurma = Number(c.meta_turma);
+  } catch (e) { /* sem config: vale só a regra padrão e meta 100 */ }
+  try {
+    const t = await get(ref(db, 'jogo_revisao_turmas'));   // pequeno: um nó por turma
+    placarTurmas = t.exists() ? t.val() || {} : {};
+  } catch (e) { placarTurmas = {}; }
+}
+
+// Soma +1 no contador da turma (fora do nó do aluno, sem fila). Nunca para TESTE ou turma vazia.
+async function somarTurma(turma, campo) {
+  if (!turma || turma === 'TESTE') return;
+  try {
+    await update(ref(db, `jogo_revisao_turmas/${turma}`), { [campo]: increment(1) });
+  } catch (e) { console.error('[jogo-revisao] erro ao somar na turma', turma, e); }
+}
+
+const turmaNoPlacar = () => TURMAS_PLACAR.includes(sessao?.turma);
+const insigniasDaTurma = (t) => Number(placarTurmas[t]?.insignias) || 0;
+
+// Faixa "🏆 Meta da 8E: 37 / 100 insígnias" no mapa geral
+function atualizarFaixaMeta() {
+  const el = $('faixa-meta');
+  if (!el) return;
+  el.hidden = !turmaNoPlacar();
+  if (el.hidden) return;
+  const n = insigniasDaTurma(sessao.turma);
+  el.querySelector('.jr-meta-txt').textContent = `🏆 Meta da ${sessao.turma}: ${n} / ${metaTurma} insígnias`;
+  el.querySelector('.jr-meta-fill').style.width = Math.min(100, n / metaTurma * 100) + '%';
+}
+
+// Placar das 5 turmas, no estojo
+function renderPlacar() {
+  const el = $('estojo-placar');
+  const linhas = TURMAS_PLACAR
+    .map(t => ({ t, ins: insigniasDaTurma(t), dour: Number(placarTurmas[t]?.douradas) || 0 }))
+    .sort((a, b) => (b.ins - a.ins) || (b.dour - a.dour) || a.t.localeCompare(b.t));
+  el.innerHTML = `<div class="jr-placar-titulo">🏆 Placar das turmas <small>meta: ${metaTurma} insígnias</small></div>` +
+    linhas.map(({ t, ins, dour }) => `
+      <div class="jr-placar-linha${t === sessao.turma ? ' minha' : ''}">
+        <span class="jr-placar-turma">${t}</span>
+        <span class="jr-placar-barra"><span style="width:${Math.min(100, ins / metaTurma * 100)}%"></span></span>
+        <span class="jr-placar-num">${ins}<small> · ${dour} dourada${dour === 1 ? '' : 's'}</small></span>
+      </div>`).join('');
+}
+
+// Aviso comemorativo, uma vez por aluno, quando a turma passa da meta
+function avisarMetaBatida() {
+  if (!turmaNoPlacar() || insigniasDaTurma(sessao.turma) < metaTurma) return;
+  const chave = `jr_meta_${sessao.turma}_${metaTurma}`;
+  try { if (localStorage.getItem(chave)) return; localStorage.setItem(chave, '1'); } catch (_) { return; }
+  const el = document.createElement('div');
+  el.className = 'jr-aviso-seq jr-aviso-meta';
+  el.textContent = `🎉 A ${sessao.turma} bateu a meta de ${metaTurma} insígnias!`;
+  $('jr-app').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
 }
 
 // ── Gravações pequenas com update, com fila para quando estiver sem conexão ──
@@ -256,6 +316,8 @@ const mapaDisponivel = (n) => modoDev || n === 1 || mapasAbertos.has(n) || mapaC
 export async function iniciarJogo(sess) {
   sessao = sess;
   modoDev = new URLSearchParams(location.search).get('dev') === '1' && isModoTeste();
+  // só para a professora testar pelo console (?dev=1 no modo teste): jogoRevisaoDev.somarTurma('ZZ_DEV', 'insignias')
+  if (modoDev) window.jogoRevisaoDev = { somarTurma };
 
   try {
     const pegar = (p) => fetch(`${DADOS}/${p}`).then(r => { if (!r.ok) throw new Error(p); return r.json(); });
@@ -507,6 +569,8 @@ function concluirRevisao() {
 
 function abrirMapaGeral() {
   atualizarSelo();
+  atualizarFaixaMeta();
+  avisarMetaBatida();
   atualizarBotaoRevisao();
   cena = null;
   esconderBalao();
@@ -1639,6 +1703,13 @@ function vencer() {
   }
   if (ganhou === 'normal') publicarNoFeed('insignia', chave);
   if (ganhou === 'dourada') publicarNoFeed('insignia_dourada', chave);
+  // meta da turma: nunca no modo teste (somarTurma também recusa TESTE e turma vazia)
+  if (ganhou && !teste && carregouProgresso && sessao.turma) {
+    const campo = ganhou === 'normal' ? 'insignias' : 'douradas';
+    somarTurma(sessao.turma, campo);
+    const p0 = placarTurmas[sessao.turma] || {};
+    placarTurmas[sessao.turma] = { ...p0, [campo]: (Number(p0[campo]) || 0) + 1 };   // barra atualiza na hora
+  }
 
   // fala própria de cada personagem vencido (o líder continua com falas.vitoria)
   falar(p === 'lider' ? pers.falas.vitoria
@@ -1693,6 +1764,7 @@ function fecharPergunta() {
 //  3.5 ESTOJO DE INSÍGNIAS
 // ============================================================
 function abrirEstojo() {
+  renderPlacar();
   const b = D.bandeja;
   const BW = b.tamanho.w, BH = b.tamanho.h;
   let conquistadas = 0, douradas = 0;
@@ -1758,6 +1830,10 @@ function ligarEventos() {
 
   $('btn-sair-jogo').addEventListener('click', () => { window.location.href = '/aluno/a-jogos.html'; });
   $('btn-insignias').addEventListener('click', abrirEstojo);
+  $('faixa-meta').addEventListener('click', () => {
+    abrirEstojo();
+    requestAnimationFrame(() => $('estojo-placar').scrollIntoView({ block: 'start' }));
+  });
   $('selo-seq').addEventListener('click', (e) => { e.stopPropagation(); mostrarBalaoSequencia(); });
   $('btn-revisao').addEventListener('click', (e) => { e.stopPropagation(); tocarBotaoRevisao(); });
   // imagem do botão (opcional): se existir, troca o emoji por ela

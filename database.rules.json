@@ -34,6 +34,7 @@
     "escalada_ranking_b":          { ".read": true, ".write": true },
     "jogo_revisao":                { ".read": true, ".write": true },
     "jogo_revisao_config":         { ".read": true, ".write": true },
+    "jogo_revisao_turmas":         { ".read": true, ".write": true },
 
     "liberacoes_ativas":    { ".read": true, ".write": true },
     "liberacoes_historico": { ".read": true, ".write": true, ".indexOn": ["criadoEm"] },

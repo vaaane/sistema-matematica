@@ -226,6 +226,35 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
   0% { opacity: 0; transform: translate(-50%, -10px); } 10%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; }
 }
 
+/* ── Meta da turma: faixa no mapa geral (embaixo do HUD) ── */
+.jr-faixa-meta {
+  position: absolute; z-index: 20; left: 12px; right: 118px; top: calc(max(10px, env(safe-area-inset-top)) + 62px);
+  max-width: 340px; display: flex; flex-direction: column; gap: 4px; padding: 6px 10px; border-radius: 10px; cursor: pointer; text-align: left;
+  background: rgba(13,15,26,.72); border: 1px solid rgba(0,230,118,.35); color: #e7fbef;
+  font-family: 'Inter', sans-serif !important; font-size: 12.5px; font-weight: 600; line-height: 1.2;
+}
+.jr-meta-barra { display: block; height: 5px; border-radius: 3px; background: rgba(255,255,255,.12); overflow: hidden; }
+.jr-meta-fill { display: block; height: 100%; width: 0; background: #00e676; transition: width .6s; }
+
+/* ── Placar das turmas, no estojo ── */
+.jr-placar {
+  width: 100%; max-width: 640px; margin: 0 auto 18px; padding: 12px 14px; border-radius: 14px;
+  background: rgba(13,15,26,.82); border: 1px solid rgba(255,215,0,.3); scroll-margin-top: 12px;
+}
+.jr-placar-titulo { font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: #ffe69a; margin-bottom: 8px; }
+.jr-placar-titulo small { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; color: #b9bdd0; margin-left: 6px; }
+.jr-placar-linha {
+  display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 10px;
+  padding: 6px 8px; border-radius: 10px; border: 1px solid transparent;
+}
+.jr-placar-linha.minha { border-color: #00d4ff; background: rgba(0,212,255,.08); }
+.jr-placar-turma { font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 800; color: #fff; }
+.jr-placar-barra { height: 8px; border-radius: 4px; background: rgba(255,255,255,.1); overflow: hidden; }
+.jr-placar-barra span { display: block; height: 100%; background: #00e676; }
+.jr-placar-num { font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 800; color: #fff; white-space: nowrap; }
+.jr-placar-num small { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500; color: #b9bdd0; }
+.jr-aviso-meta { animation-duration: 4s; border-color: #00e676; color: #c9ffe0; }
+
 /* ── Revisão da semana: botão no mapa geral (abaixo do estojo) ── */
 .jr-btn-revisao {
   position: fixed; z-index: 21; right: 10px; top: calc(max(10px, env(safe-area-inset-top)) + 64px);
