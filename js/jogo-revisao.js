@@ -30,6 +30,7 @@ const GW = 344, GH = 192, CEL = 4;  // grade da trilha (cada pixel = 4×4 do map
 const VEL = 180;                    // px/s em coordenadas da imagem
 const T_QUADRO = 120;               // ms por quadro de caminhada
 const ALT_JOGADOR = 110, ALT_TREINADOR = 120, ALT_LIDER = 135;
+const ALT_JOGADOR_MAPA = 55;   // nos mapas da cidade o personagem tem metade do tamanho (nos ginásios continua 110)
 const DIST_PORTA = 30;               // encostar na porta/saída andando pelas setas ou joystick
 const DIST_TOQUE = 60;               // toque a até 60 px de uma porta/saída vira destino especial
 const DIST_PERTO = 90;               // nome do ginásio / "Saída" aparece; Enter e OK funcionam
@@ -696,7 +697,7 @@ function desenharJogador() {
   if (el.dataset.src !== src) { el.src = src; el.dataset.src = src; }
   el.style.left = jog.x + 'px';
   el.style.top = jog.y + 'px';
-  el.style.height = ALT_JOGADOR + 'px';
+  el.style.height = (cena?.tipo === 'mapa' ? ALT_JOGADOR_MAPA : ALT_JOGADOR) + 'px';
   el.style.zIndex = Math.round(jog.y);
 }
 
