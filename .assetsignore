@@ -1,0 +1,16 @@
+# Arquivos que a Cloudflare NÃO deve publicar no site (o deploy usa a pasta inteira do repositório).
+# Sem isto, a pasta .git é publicada e o deploy falha quando um arquivo dela passa de 25 MiB.
+.git
+.gitignore
+.assetsignore
+.claude
+node_modules
+scripts
+CLAUDE.md
+CONTEXTO_GERAL.md
+COMO_PUBLICAR.txt
+database.rules.json
+iniciar_servidor.bat
+gerar-index.js
+gerar-index-conteudos.js
+backup-*.json
