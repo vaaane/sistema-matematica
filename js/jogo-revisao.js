@@ -538,7 +538,7 @@ function abrirRevisao(qs) {
   };
   perguntaAberta = true;
   $('perg-confirma').querySelector('p').textContent = 'Sair da revisão? Você pode tentar de novo depois.';
-  falar('Revisão da semana! São as perguntas que mais te deram trabalho. Vamos ver se agora vai!');
+  falar('Revisão da semana! Vamos ver se agora vai!');
   $('perg-desistir').hidden = false;
   $('perg-confirma').hidden = true;
   $('pergunta').hidden = false;
