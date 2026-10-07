@@ -1,9 +1,20 @@
 // ============================================================
-//  Jogo de Revisão — Parte A (motor do jogo)
-//  Tudo em memória nesta parte. Firebase / XP / insígnias salvas: Parte B.
+//  Jogo de Revisão — motor do jogo (Parte A) + progresso no Firebase (Parte B)
+//  Real: jogo_revisao/{uid}   ·   Modo teste: modo_teste_historico/{uid}/jogo_revisao
 // ============================================================
 import { isModoTeste } from '/js/auth.js';
+import { db } from '/js/firebase-config.js';
+import { ref, get, update, push, set, increment } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { adicionarXP } from '/js/db.js';
+import { bimestreAtual } from '/js/constants.js';
 import { gerarQuestoes, gerarUma } from '/js/jogo-revisao/geradores.js';
+
+// XP (só na primeira vez que cada personagem é vencido; nunca no modo teste)
+const XP_TREINADOR      = 5;
+const XP_LIDER          = 20;
+const XP_LIDER_PERFEITO = 10;      // bônus: líder vencido com as 5 de primeira
+const XP_REVANCHE       = 15;
+const RETENTAR_MS       = 15000;   // gravação recusada: tenta de novo a cada 15 s
 
 const IMG   = '/img/jogo';
 const DADOS = '/dados/jogo';
@@ -47,7 +58,7 @@ let estado = null;
 let sessao = null;
 let modoDev = false;
 
-function progressoVazio() { return { vencido: false, acertosPrimeira: 0, total: 0 }; }
+function progressoVazio() { return { vencido: false, acertosPrimeira: 0, total: 0, data: null }; }
 
 function estadoVazio() {
   const ginasios = {};
@@ -63,17 +74,174 @@ function estadoVazio() {
   return { ginasios };
 }
 
+// ============================================================
+//  PROGRESSO NO FIREBASE (Parte B)
+// ============================================================
+let teste = false;               // modo teste: grava em modo_teste_historico, sem XP e sem feed
+let carregouProgresso = false;   // se a leitura falhar, não grava nem dá XP (evita XP repetido)
+const mapasAbertos = new Set();  // jogo_revisao_config/global/mapas_abertos (controle da professora)
+
+const raiz = () => teste ? `modo_teste_historico/${sessao.uid}/jogo_revisao` : `jogo_revisao/${sessao.uid}`;
+
+// Um único get do progresso, preenchendo o `estado` da Parte A
 async function carregarEstado() {
-  // TODO Parte B: ler o progresso do aluno no Firebase (sessao.uid) e mesclar com estadoVazio().
+  teste = isModoTeste();
   estado = estadoVazio();
+  try {
+    const snap = await get(ref(db, raiz()));
+    const v = snap.exists() ? snap.val() : {};
+    for (const [chave, gs] of Object.entries(v.ginasios || {})) {
+      const g = estado.ginasios[chave];
+      if (!g) continue;
+      for (const p of ['treinador1', 'treinador2', 'treinador3', 'lider', 'revanche']) {
+        const x = gs?.[p];
+        if (x?.vencido) g[p] = { vencido: true, acertosPrimeira: x.acertos_primeira || 0, total: x.total || 0, data: x.data || null };
+      }
+    }
+    for (const [chave, ins] of Object.entries(v.insignias || {})) {
+      const g = estado.ginasios[chave];
+      if (!g || !ins) continue;
+      g.insignia = true;
+      g.dourada = !!ins.dourada;
+      g.dataInsignia = ins.data || null;
+    }
+    carregouProgresso = true;
+    gravar({ ultimo_acesso: Date.now() });
+  } catch (e) {
+    console.error('[jogo-revisao] erro ao carregar progresso', e);
+    avisoConexao('Não foi possível carregar seu progresso. Verifique a internet e recarregue a página.', true);
+  }
+  try {
+    const cfg = await get(ref(db, 'jogo_revisao_config/global/mapas_abertos'));
+    if (cfg.exists()) for (const n of Object.values(cfg.val() || {})) mapasAbertos.add(Number(n));
+  } catch (e) { /* sem config: vale só a regra padrão */ }
 }
 
-async function salvarEstado() {
-  // TODO Parte B: gravar `estado` no Firebase. Nesta parte o progresso fica só em memória.
+// ── Gravações pequenas com update, com fila para quando estiver sem conexão ──
+const fila = { patch: {}, erros: {} };   // patch: caminho → valor; erros: questaoId → quanto somar
+let enviando = false, timerRetentar = 0, timerAvisoLento = 0;
+
+// Junta um caminho na fila sem deixar "pai" e "filho" no mesmo update (o Firebase recusa)
+function juntarNaFila(caminho, valor) {
+  for (const k of Object.keys(fila.patch)) {
+    if (k.startsWith(caminho + '/')) delete fila.patch[k];        // o valor novo substitui os filhos
+    else if (caminho.startsWith(k + '/')) {                        // cabe dentro de um pai já na fila
+      let o = fila.patch[k] = structuredClone(fila.patch[k] ?? {});
+      const partes = caminho.slice(k.length + 1).split('/');
+      for (const parte of partes.slice(0, -1)) o = o[parte] = (o[parte] && typeof o[parte] === 'object') ? o[parte] : {};
+      o[partes.at(-1)] = valor;
+      return;
+    }
+  }
+  fila.patch[caminho] = valor;
+}
+
+function gravar(patch, errouId) {
+  if (!carregouProgresso) return;
+  for (const [k, v] of Object.entries(patch)) juntarNaFila(k, v);
+  if (errouId) fila.erros[errouId] = (fila.erros[errouId] || 0) + 1;
+  enviarFila();
+}
+
+const filaVazia = () => !Object.keys(fila.patch).length && !Object.keys(fila.erros).length;
+
+async function enviarFila() {
+  if (enviando || filaVazia()) return;
+  const patch = fila.patch, erros = fila.erros;
+  fila.patch = {}; fila.erros = {};
+  const corpo = { ...patch };
+  for (const [id, n] of Object.entries(erros)) corpo[`respostas/${id}/erros`] = increment(n);   // acumula entre tentativas
+  enviando = true;
+  // Sem internet o Firebase segura a gravação e envia sozinho quando voltar: só avisamos se demorar
+  clearTimeout(timerAvisoLento);
+  timerAvisoLento = setTimeout(() => avisoConexao('Sem conexão — seu progresso será salvo quando voltar'), 4000);
+  let falhou = false;
+  try {
+    await update(ref(db, raiz()), corpo);
+  } catch (e) {
+    // recusada (ex.: sem permissão): volta para a fila e tenta de novo depois
+    console.error('[jogo-revisao] erro ao salvar progresso', e);
+    falhou = true;
+    for (const [k, v] of Object.entries(patch)) if (!(k in fila.patch)) juntarNaFila(k, v);
+    for (const [id, n] of Object.entries(erros)) fila.erros[id] = (fila.erros[id] || 0) + n;
+  } finally {
+    enviando = false;
+    clearTimeout(timerAvisoLento);
+  }
+  if (falhou) {
+    avisoConexao('Sem conexão — seu progresso será salvo quando voltar');
+    clearTimeout(timerRetentar);
+    timerRetentar = setTimeout(() => { timerRetentar = 0; enviarFila(); }, RETENTAR_MS);
+    return;
+  }
+  avisoConexao(null);
+  if (!filaVazia()) enviarFila();
+}
+addEventListener('online', () => { clearTimeout(timerRetentar); timerRetentar = 0; enviarFila(); });
+
+function avisoConexao(texto, fixo) {
+  let el = $('jr-aviso-conexao');
+  if (!texto) { if (el && !el.dataset.fixo) el.hidden = true; return; }
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'jr-aviso-conexao';
+    el.className = 'jr-aviso-conexao';
+    el.setAttribute('role', 'status');
+    $('jr-app').appendChild(el);
+  }
+  el.textContent = texto;
+  if (fixo) el.dataset.fixo = '1';
+  el.hidden = false;
+}
+
+// Vitória: grava o personagem e, se for o caso, a insígnia
+function gravarVitoria(chave, p) {
+  const g = estado.ginasios[chave];
+  const x = g[p];
+  const patch = { [`ginasios/${chave}/${p}`]: { vencido: true, acertos_primeira: x.acertosPrimeira, total: x.total, data: x.data } };
+  if (p === 'lider' && g.insignia) {
+    // insígnia = soma dos três treinadores e do líder (20 questões)
+    const soma = ['treinador1', 'treinador2', 'treinador3', 'lider'].reduce(
+      (a, k) => ({ acertos: a.acertos + g[k].acertosPrimeira, total: a.total + g[k].total }), { acertos: 0, total: 0 });
+    patch[`insignias/${chave}`] = { data: g.dataInsignia, dourada: g.dourada, acertos_primeira: soma.acertos, total: soma.total };
+  }
+  if (p === 'revanche' && g.dourada) patch[`insignias/${chave}/dourada`] = true;
+  gravar(patch);
+}
+
+function darXP(delta) {
+  if (!delta) return;
+  mostrarXP(delta);
+  if (teste || !carregouProgresso) return;
+  adicionarXP(sessao.uid, delta).catch(e => console.error('[jogo-revisao] erro ao dar XP', e));
+}
+
+async function publicarNoFeed(tipo, chave) {
+  if (teste || !carregouProgresso) return;
+  try {
+    const [mapaStr, G] = chave.replace('mapa', '').split('-');
+    const gin = D.questoes[Number(mapaStr)].ginasios[G].nome;
+    let nome = sessao.nome;
+    try { const s = await get(ref(db, `perfis/${sessao.uid}/nome`)); if (s.exists()) nome = s.val(); } catch (_) {}
+    const texto = tipo === 'insignia'
+      ? `🏅 ${nome} conquistou a insígnia: ${gin}!`
+      : `🌟 ${nome} venceu a revanche: ${gin}!`;
+    await set(push(ref(db, 'feed_global')), { tipo, uid: sessao.uid, nome, texto, ts: Date.now(), bim: bimestreAtual() });
+  } catch (e) { console.error('[jogo-revisao] erro no feed', e); }
+}
+
+// "+5 XP" subindo na tela
+function mostrarXP(delta) {
+  const el = document.createElement('div');
+  el.className = 'jr-xp';
+  el.textContent = `+${delta} XP`;
+  $('jr-app').appendChild(el);
+  el.addEventListener('animationend', () => el.remove());
+  setTimeout(() => el.remove(), 3000);
 }
 
 const mapaConcluido  = (n) => estado.ginasios[chaveGinasio(n, 'A')].lider.vencido && estado.ginasios[chaveGinasio(n, 'B')].lider.vencido;
-const mapaDisponivel = (n) => modoDev || n === 1 || mapaConcluido(n - 1);
+const mapaDisponivel = (n) => modoDev || n === 1 || mapasAbertos.has(n) || mapaConcluido(n - 1);
 
 // ── Inicialização ───────────────────────────────────────────
 export async function iniciarJogo(sess) {
@@ -1118,6 +1286,7 @@ function responder(btn) {
   botoes.forEach(b => { b.disabled = true; });
   if (btn.dataset.v === certa) {
     btn.classList.add('certa');
+    gravar({ [`respostas/${q.id}/acertou`]: true, [`respostas/${q.id}/ultima`]: Date.now() });
     pg.fila.shift();
     pg.acertos++;
     falar(sortear(D.falas.acerto));
@@ -1126,6 +1295,7 @@ function responder(btn) {
     btn.classList.add('errada');
     botoes.find(b => b.dataset.v === certa)?.classList.add('certa');
     pg.errouIds.add(q.id);
+    gravar({ [`respostas/${q.id}/ultima`]: Date.now() }, q.id);   // erros += 1
     // volta para o fim da fila com outros números (no Mapa 13 B, gerarUma dá null: repete a mesma)
     pg.fila.shift();
     const nova = gerarUma(pg.mapa, pg.G, pg.p, q.indice);
@@ -1143,15 +1313,25 @@ function vencer() {
   const g = estado.ginasios[chave];
   const acertosPrimeira = total - pg.errouIds.size;
   const antes = g[p];
+  const primeiraVez = !antes.vencido;
   g[p] = {
     vencido: true,
     acertosPrimeira: antes.vencido ? Math.max(antes.acertosPrimeira, acertosPrimeira) : acertosPrimeira,
     total,
+    data: antes.data || Date.now(),
   };
   let ganhou = null;
   if (p === 'lider' && !g.insignia) { g.insignia = true; g.dataInsignia = Date.now(); ganhou = 'normal'; }
   if (p === 'revanche' && !g.dourada) { g.dourada = true; ganhou = 'dourada'; }
-  salvarEstado();
+  gravarVitoria(chave, p);
+  // XP só na primeira vitória de cada personagem (conferido no estado carregado do Firebase)
+  if (primeiraVez) {
+    if (p === 'lider') darXP(XP_LIDER + (pg.errouIds.size === 0 ? XP_LIDER_PERFEITO : 0));
+    else if (p === 'revanche') darXP(XP_REVANCHE);
+    else darXP(XP_TREINADOR);
+  }
+  if (ganhou === 'normal') publicarNoFeed('insignia', chave);
+  if (ganhou === 'dourada') publicarNoFeed('insignia_dourada', chave);
 
   falar(p === 'lider' ? pers.falas.vitoria
       : p === 'revanche' ? 'Você venceu a revanche! Sua insígnia agora é dourada!'

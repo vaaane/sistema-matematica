@@ -233,6 +233,7 @@
     .jh-card.c-neg { --jh-acc:#ff7b2e; --jh-glow:rgba(255,123,46,.12); }
     .jh-card.c-run { --jh-acc:#00e676; --jh-glow:rgba(0,230,118,.12); }
     .jh-card.c-esc { --jh-acc:#9b30ff; --jh-glow:rgba(155,48,255,.14); }
+    .jh-card.c-rev { --jh-acc:#f0a500; --jh-glow:rgba(240,165,0,.14); }
     .jh-acento { display:none; }
 
     .jh-body { padding:22px 24px; display:flex; align-items:center; gap:22px; }
@@ -242,6 +243,7 @@
     .jh-card.c-neg .jh-icon { background:linear-gradient(135deg,#7c5cfc,#5a3fcf); }
     .jh-card.c-run .jh-icon { background:linear-gradient(135deg,#8ee04e,#4caf20); }
     .jh-card.c-esc .jh-icon { background:linear-gradient(135deg,#9b30ff,#00d4ff); }
+    .jh-card.c-rev .jh-icon { background:linear-gradient(135deg,#f0a500,#9b30ff); }
     .jh-txt { min-width:0; }
     .jh-nome { font-family:'Rajdhani',sans-serif; font-size:23px; font-weight:700; line-height:1.05; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
     .jh-status { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.6px; padding:3px 10px; border-radius:20px; white-space:nowrap; }
@@ -273,6 +275,7 @@
     .jh-card.c-neg .jh-btn-play { background:linear-gradient(135deg,#ff7b2e,#e05a1a); box-shadow:0 4px 16px rgba(255,123,46,.4); }
     .jh-card.c-run .jh-btn-play { background:linear-gradient(135deg,#22c55e,#16a34a); box-shadow:0 4px 16px rgba(34,197,94,.4); }
     .jh-card.c-esc .jh-btn-play { background:linear-gradient(135deg,#9b30ff,#6c00d4); box-shadow:0 4px 16px rgba(155,48,255,.4); }
+    .jh-card.c-rev .jh-btn-play { background:linear-gradient(135deg,#f0a500,#c77d00); box-shadow:0 4px 16px rgba(240,165,0,.4); }
     .jh-btn-play:hover { transform:translateY(-2px); filter:brightness(1.06); }
     .jh-btn-play::after { content:''; position:absolute; top:0; left:-100%; width:60%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent); animation:g-shine 3s infinite; }
 
@@ -436,6 +439,28 @@
           <div id="neg-content"></div>
         </div>
 
+        <!-- Jogo de Revisão -->
+        <div class="jh-card disponivel c-rev">
+          <div class="jh-acento"></div>
+          <div class="jh-body">
+            <div class="jh-main">
+              <div class="jh-icon">🗺️</div>
+              <div class="jh-txt">
+                <div class="jh-nome">Jogo de Revisão <span class="jh-status beta">Novo</span></div>
+                <div class="jh-desc">Explore 13 regiões, vença os treinadores dos ginásios e revise os conteúdos do ano.</div>
+                <div class="jh-tro"><span class="ic">🏅</span> Conquiste as 26 insígnias e deixe todas douradas</div>
+              </div>
+            </div>
+            <div class="jh-aside">
+              <div class="jh-stats">
+                <div class="jh-stat"><div class="l">Insígnias</div><div class="v gold" id="rev-insignias">— de 26</div></div>
+                <div class="jh-stat"><div class="l">Douradas</div><div class="v" id="rev-douradas">—</div></div>
+              </div>
+              <div class="jh-btns"><button class="jh-btn-play" onclick="window.location.href='/aluno/jogo-revisao.html'">▶ Jogar agora</button></div>
+            </div>
+          </div>
+        </div>
+
         <!-- Labirinto Matemático -->
         <div class="jh-card disponivel c-run">
           <div class="jh-acento jh-ac-run"></div>
@@ -504,6 +529,19 @@ const { alunos, turma } = sess;
 const nomeAluno = alunos[0];
 const isDupla   = alunos.length > 1;
 const uid = (turma + '_' + nomeAluno).replace(/[.#$\[\]/\s]/g, '_');
+
+// Jogo de Revisão: "X de 26 insígnias" (modo teste lê do histórico de teste)
+(async () => { try {
+  const { isModoTeste } = await import('/js/auth.js');
+  const base = isModoTeste() ? `modo_teste_historico/${uid}/jogo_revisao` : `jogo_revisao/${uid}`;
+  const s = await get(ref(db, `${base}/insignias`));
+  const ins = s.exists() ? Object.values(s.val() || {}) : [];
+  document.getElementById('rev-insignias').textContent = `${ins.length} de 26`;
+  document.getElementById('rev-douradas').textContent = String(ins.filter(i => i && i.dourada).length);
+} catch (e) {
+  console.error('[jogos] insígnias do Jogo de Revisão', e);
+  document.getElementById('rev-insignias').textContent = '— de 26';
+} })();
 
 (async () => { try {
   const { getPerfil } = await import('/js/db.js');
