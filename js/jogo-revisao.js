@@ -20,6 +20,7 @@ const RETENTAR_MS       = 15000;   // gravação recusada: tenta de novo a cada 
 // Sequência de dias (🔥): XP quando a sequência CHEGA a estes dias
 const XP_SEQUENCIA = { 3: 10, 5: 15, 7: 25 };   // dias → XP
 const XP_SEQUENCIA_SEMANAL = 25;                // a cada 7 dias depois do 7º (14, 21, 28…)
+const XP_REVISAO = 15;                          // revisão da semana concluída
 
 const IMG   = '/img/jogo';
 const DADOS = '/dados/jogo';
@@ -111,6 +112,8 @@ async function carregarEstado() {
       g.dataInsignia = ins.data || null;
     }
     estado.sequencia = v.sequencia || null;
+    estado.respostas = v.respostas || {};
+    estado.revisaoSemanal = v.revisao_semanal || {};
     carregouProgresso = true;
     gravar({ ultimo_acesso: Date.now() });
   } catch (e) {
@@ -367,8 +370,144 @@ function mostrarBalaoSequencia() {
   if (!b.hidden) b._t = setTimeout(() => { b.hidden = true; }, 5000);
 }
 
+// ============================================================
+//  REVISÃO DA SEMANA — 5 perguntas do tipo que o aluno mais errou
+// ============================================================
+const RE_ID = /^m(\d+)([AB])-(treinador[123]|lider|revanche)-(\d+)$/;
+const DIAS_REVISAO_OK = 21;
+
+// chave da posição para o modo guiado: na revisão cada pergunta é de um tipo diferente
+const chavePosicao = (q) => pg?.modo === 'revisao' ? q.id : q.indice;
+
+// mantém estado.respostas em dia na sessão (para a escolha da revisão não depender de recarregar)
+function lembrarResposta(id, campos, errosMais = 0) {
+  if (!estado.respostas) estado.respostas = {};
+  const r = estado.respostas[id] = { ...(estado.respostas[id] || {}), ...campos };
+  if (errosMais) r.erros = (r.erros || 0) + errosMais;
+}
+
+// Semana ISO (segunda a domingo), data local: "2026-W41"
+function semanaISO(d = new Date()) {
+  const t = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12);
+  const diaSemana = (t.getDay() + 6) % 7;            // segunda = 0
+  t.setDate(t.getDate() - diaSemana + 3);              // quinta-feira desta semana
+  const ano = t.getFullYear();
+  const primeiraQuinta = new Date(ano, 0, 4, 12);
+  const semana = 1 + Math.round(((t - primeiraQuinta) / 864e5 - 3 + ((primeiraQuinta.getDay() + 6) % 7)) / 7);
+  return `${ano}-W${String(semana).padStart(2, '0')}`;
+}
+
+// Função pura: escolhe até 5 tipos de pergunta { id, mapa, lado, personagem, indice }
+function escolherRevisao(respostas, ginasios, agora = Date.now(), sortear01 = Math.random) {
+  const tipo = (id) => { const m = RE_ID.exec(id); return m && { id, mapa: +m[1], lado: m[2], personagem: m[3], indice: +m[4] - 1 }; };
+  const valido = (t) => t && !(t.mapa === 13 && t.lado === 'B');   // 13 B: perguntas de tabela, não regeneram
+  const porGinasio = {};
+  const cabe = (t) => (porGinasio[t.mapa + t.lado] || 0) < 2;
+  const escolhidos = [];
+  const pegar = (t) => { escolhidos.push(t); porGinasio[t.mapa + t.lado] = (porGinasio[t.mapa + t.lado] || 0) + 1; };
+
+  // 1–3: mais erros primeiro; empate → o mais antigo; até 2 por ginásio; fora os acertados na revisão há < 21 dias
+  const candidatos = Object.entries(respostas || {})
+    .filter(([id, r]) => (r?.erros || 0) > 0 && !(r.revisao_ok && agora - r.revisao_ok < DIAS_REVISAO_OK * 864e5))
+    .map(([id, r]) => ({ ...tipo(id), erros: r.erros, ultima: r.ultima || 0 }))
+    .filter(t => valido(t))
+    .sort((a, b) => (b.erros - a.erros) || (a.ultima - b.ultima));
+  for (const t of candidatos) { if (escolhidos.length >= 5) break; if (cabe(t)) pegar(t); }
+
+  // 4: completa com tipos sorteados de ginásios com insígnia
+  const comInsignia = Object.keys(ginasios || {}).filter(k => ginasios[k].insignia)
+    .map(k => { const m = /^mapa(\d+)-([AB])$/.exec(k); return { mapa: +m[1], lado: m[2] }; })
+    .filter(g => !(g.mapa === 13 && g.lado === 'B'));
+  const pers = ['treinador1', 'treinador2', 'treinador3', 'lider', 'revanche'];
+  for (let tent = 0; escolhidos.length < 5 && comInsignia.length && tent < 300; tent++) {
+    const g = comInsignia[Math.floor(sortear01() * comInsignia.length)];
+    const personagem = pers[Math.floor(sortear01() * pers.length)];
+    const indice = Math.floor(sortear01() * (personagem === 'revanche' ? 3 : 5));
+    const t = { id: `m${g.mapa}${g.lado}-${personagem}-${indice + 1}`, mapa: g.mapa, lado: g.lado, personagem, indice };
+    if (escolhidos.some(e => e.id === t.id)) continue;
+    if (!cabe(t) && tent < 200) continue;   // tenta variar; no fim aceita repetir ginásio
+    pegar(t);
+  }
+  return escolhidos;
+}
+
+// o botão só existe para quem tem insígnia ou algum erro registrado
+function revisaoVisivel() {
+  if (!estado) return false;
+  if (Object.values(estado.ginasios).some(g => g.insignia)) return true;
+  return Object.values(estado.respostas || {}).some(r => (r?.erros || 0) > 0);
+}
+
+function atualizarBotaoRevisao() {
+  const b = $('btn-revisao');
+  if (!b || !estado) return;
+  b.hidden = !carregouProgresso || !revisaoVisivel();
+  if (b.hidden) return;
+  const feita = !!estado.revisaoSemanal?.[semanaISO()];
+  const disponivel = !feita && escolherRevisao(estado.respostas, estado.ginasios).length > 0;
+  b.classList.toggle('concluida', feita);
+  b.classList.toggle('disponivel', disponivel);
+  b.classList.toggle('indisponivel', !feita && !disponivel);
+}
+
+function avisoTopo(texto) {
+  const b = $('seq-balao');
+  b.textContent = texto;
+  b.hidden = false;
+  clearTimeout(b._t);
+  b._t = setTimeout(() => { b.hidden = true; }, 4000);
+}
+
+function tocarBotaoRevisao() {
+  if (estado.revisaoSemanal?.[semanaISO()]) { avisoTopo('Revisão desta semana concluída! Volte na segunda-feira.'); return; }
+  const tipos = escolherRevisao(estado.respostas, estado.ginasios);
+  const qs = tipos.map(t => { const q = gerarUma(t.mapa, t.lado, t.personagem, t.indice); return q && { ...q, mapa: t.mapa, lado: t.lado, personagem: t.personagem, indice: t.indice }; }).filter(Boolean);
+  if (!qs.length) { avisoTopo('Vença um ginásio para liberar a revisão.'); return; }
+  abrirRevisao(qs);
+}
+
+function abrirRevisao(qs) {
+  pg = {
+    modo: 'revisao', semana: semanaISO(),
+    fila: qs, total: qs.length, acertos: 0,
+    errouIds: new Set(), errosPorIndice: {},
+    travado: false, fim: false,
+  };
+  perguntaAberta = true;
+  $('perg-confirma').querySelector('p').textContent = 'Sair da revisão? Você pode tentar de novo depois.';
+  falar('Revisão da semana! São as perguntas que mais te deram trabalho. Vamos ver se agora vai!');
+  $('perg-desistir').hidden = false;
+  $('perg-confirma').hidden = true;
+  $('pergunta').hidden = false;
+  renderPergunta();
+  $('pergunta').querySelector('.jr-perg-caixa').scrollTop = 0;
+}
+
+function concluirRevisao() {
+  pg.fim = true;
+  const { total, semana } = pg;
+  const acertosPrimeira = total - pg.errouIds.size;
+  const reg = { data: Date.now(), acertos_primeira: acertosPrimeira, total };
+  estado.revisaoSemanal = { ...(estado.revisaoSemanal || {}), [semana]: reg };
+  gravar({ [`revisao_semanal/${semana}`]: reg });
+  tocar('vitoria');
+  darXP(XP_REVISAO);
+  falar(`Revisão concluída! Você acertou ${acertosPrimeira} de ${total} de primeira.`);
+  $('perg-contador').textContent = `Acertou ${acertosPrimeira} de ${total} de primeira`;
+  $('perg-enunciado').hidden = true;
+  $('perg-alternativas').hidden = true;
+  $('perg-origem').hidden = true;
+  $('perg-explica').hidden = true; $('perg-guiado').hidden = true; $('perg-corpo').classList.remove('guiado');
+  $('perg-tabela').innerHTML = '';
+  $('perg-desistir').hidden = true;
+  $('perg-continuar').textContent = 'Continuar';
+  $('perg-continuar').hidden = false;
+  pg.aoContinuar = fecharPergunta;
+}
+
 function abrirMapaGeral() {
   atualizarSelo();
+  atualizarBotaoRevisao();
   cena = null;
   esconderBalao();
   mostrarTela('tela-geral');
@@ -1350,6 +1489,7 @@ function abrirPergunta(chave, p) {
   soltarJoystick();
   $('tela-cena').classList.add('jr-com-pergunta');   // esconde o joystick (ver CSS)
   $('perg-busto').src = `${IMG}/bustos/${pers.sprite}.webp`;
+  $('perg-confirma').querySelector('p').textContent = 'Fugir da batalha? Você vai recomeçar este treinador.';
   falar(p === 'lider' ? pers.falas.abertura : pers.fala);
   $('perg-desistir').hidden = false;
   $('perg-confirma').hidden = true;
@@ -1382,8 +1522,16 @@ function renderPergunta() {
   $('perg-tabela').innerHTML = renderTabela(q.tabela);   // Mapa 13 B: tabela sorteada junto com a pergunta
   $('perg-enunciado').textContent = q.enunciado;
   $('perg-explica').hidden = true;
+  // Revisão da semana: busto do líder e nome do ginásio de onde veio a pergunta
+  const origem = $('perg-origem');
+  origem.hidden = pg.modo !== 'revisao';
+  if (pg.modo === 'revisao') {
+    const gin = D.questoes[q.mapa].ginasios[q.lado];
+    $('perg-busto').src = `${IMG}/bustos/${gin.personagens.lider.sprite}.webp`;
+    origem.textContent = `${gin.nome} · ${gin.conteudo}`;
+  }
   // Modo guiado: a posição já teve 2+ erros nesta sessão → dica do ginásio e uma alternativa errada a menos
-  const guiado = (pg.errosPorIndice[q.indice] || 0) >= 2;
+  const guiado = (pg.errosPorIndice[chavePosicao(q)] || 0) >= 2;
   $('perg-corpo').classList.toggle('guiado', guiado);
   const g = $('perg-guiado');
   g.hidden = !guiado;
@@ -1429,7 +1577,12 @@ function responder(btn) {
   if (btn.dataset.v === certa) {
     btn.classList.add('certa');
     tocar('acerto');
-    gravar({ [`respostas/${q.id}/acertou`]: true, [`respostas/${q.id}/ultima`]: Date.now() });
+    const agora = Date.now();
+    const patch = { [`respostas/${q.id}/acertou`]: true, [`respostas/${q.id}/ultima`]: agora };
+    // revisão: acertou de primeira → sai da lista de revisão por 3 semanas
+    if (pg.modo === 'revisao' && !pg.errouIds.has(q.id)) patch[`respostas/${q.id}/revisao_ok`] = agora;
+    gravar(patch);
+    lembrarResposta(q.id, { acertou: true, ultima: agora, ...(patch[`respostas/${q.id}/revisao_ok`] ? { revisao_ok: agora } : {}) });
     pg.fila.shift();
     pg.acertos++;
     falar(sortear(D.falas.acerto));
@@ -1440,13 +1593,16 @@ function responder(btn) {
     botoes.find(b => b.dataset.v === certa)?.classList.add('certa');
     // as outras alternativas somem para dar espaço ao "Como resolver"
     botoes.forEach(b => { if (b !== btn && b.dataset.v !== certa) b.hidden = true; });
-    pg.errosPorIndice[q.indice] = (pg.errosPorIndice[q.indice] || 0) + 1;
+    pg.errosPorIndice[chavePosicao(q)] = (pg.errosPorIndice[chavePosicao(q)] || 0) + 1;
     pg.errouIds.add(q.id);
     gravar({ [`respostas/${q.id}/ultima`]: Date.now() }, q.id);   // erros += 1
+    lembrarResposta(q.id, { ultima: Date.now() }, 1);
     // volta para o fim da fila com outros números (no Mapa 13 B, gerarUma dá null: repete a mesma)
     pg.fila.shift();
-    const nova = gerarUma(pg.mapa, pg.G, pg.p, q.indice);
-    pg.fila.push(nova ? { ...nova, indice: q.indice } : q);
+    const nova = pg.modo === 'revisao'
+      ? gerarUma(q.mapa, q.lado, q.personagem, q.indice)
+      : gerarUma(pg.mapa, pg.G, pg.p, q.indice);
+    pg.fila.push(nova ? { ...nova, indice: q.indice, mapa: q.mapa, lado: q.lado, personagem: q.personagem } : q);
     falar(sortear(D.falas.erro).replace('{resposta}', certa));
     mostrarExplicacao(q, !!nova);   // explicação da pergunta que o aluno ERROU, não da nova
     $('perg-continuar').textContent = 'Continuar';
@@ -1456,6 +1612,7 @@ function responder(btn) {
 }
 
 function vencer() {
+  if (pg.modo === 'revisao') { concluirRevisao(); return; }
   const { chave, p, pers, total } = pg;
   pg.fim = true;
   const g = estado.ginasios[chave];
@@ -1529,6 +1686,7 @@ function fecharPergunta() {
   $('tela-cena').classList.remove('jr-com-pergunta');
   ultimoT = 0;
   if (cena?.tipo === 'interior') atualizarNpcs();
+  else if (!$('tela-geral').hidden) atualizarBotaoRevisao();
 }
 
 // ============================================================
@@ -1601,7 +1759,13 @@ function ligarEventos() {
   $('btn-sair-jogo').addEventListener('click', () => { window.location.href = '/aluno/a-jogos.html'; });
   $('btn-insignias').addEventListener('click', abrirEstojo);
   $('selo-seq').addEventListener('click', (e) => { e.stopPropagation(); mostrarBalaoSequencia(); });
-  document.addEventListener('click', (e) => { if (!e.target.closest('#selo-seq')) $('seq-balao').hidden = true; });
+  $('btn-revisao').addEventListener('click', (e) => { e.stopPropagation(); tocarBotaoRevisao(); });
+  // imagem do botão (opcional): se existir, troca o emoji por ela
+  const imgRev = $('btn-revisao').querySelector('img');
+  imgRev.addEventListener('load', () => $('btn-revisao').classList.add('com-img'));
+  imgRev.addEventListener('error', () => imgRev.remove());
+  imgRev.src = `${IMG}/ui/botao-revisao.webp`;
+  document.addEventListener('click', (e) => { if (!e.target.closest('#selo-seq, #btn-revisao')) $('seq-balao').hidden = true; });
   // botão de som (🔊 / 🔇), lembrado em localStorage
   const pintarSom = () => document.querySelectorAll('[data-som]').forEach(b => {
     const on = somLigado();
