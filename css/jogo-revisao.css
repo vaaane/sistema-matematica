@@ -195,6 +195,37 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
   pointer-events: none;
 }
 
+/* ── Sequência de dias (🔥), só no mapa geral ── */
+.jr-selo-seq {
+  flex: none; min-height: 34px; padding: 4px 10px; border-radius: 17px; cursor: pointer; white-space: nowrap;
+  background: rgba(13,15,26,.7); border: 1px solid rgba(255,123,46,.55);
+  font-family: 'Orbitron', sans-serif !important; font-size: 14px; font-weight: 800; color: #ff7b2e;
+}
+.jr-selo-seq.apagado { color: #8b90a3; border-color: rgba(255,255,255,.2); }
+/* celular estreito: título e selo um pouco menores para o título não ser cortado */
+@media (max-width: 430px) {
+  #tela-geral .jr-hud-titulo { font-size: 15px; }
+  #tela-geral .jr-hud { gap: 6px; padding-left: 8px; padding-right: 8px; }
+  #tela-geral #btn-sair-jogo { padding: 8px 10px; }
+  .jr-selo-seq { padding: 4px 7px; font-size: 13px !important; }
+}
+.jr-seq-balao {
+  position: fixed; z-index: 25; top: calc(max(10px, env(safe-area-inset-top)) + 54px); left: 50%; transform: translateX(-50%);
+  width: min(320px, calc(100% - 32px)); padding: 10px 14px; border-radius: 12px;
+  background: rgba(13,15,26,.92); border: 1px solid rgba(255,123,46,.5); color: #f1f2f8;
+  font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.4; box-shadow: 0 6px 18px rgba(0,0,0,.5);
+}
+.jr-aviso-seq {
+  position: fixed; z-index: 70; left: 50%; top: calc(max(10px, env(safe-area-inset-top)) + 60px); transform: translateX(-50%);
+  padding: 10px 18px; border-radius: 14px; pointer-events: none; white-space: nowrap;
+  background: rgba(13,15,26,.9); border: 2px solid #ff7b2e; color: #ffd0b0;
+  font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; box-shadow: 0 6px 18px rgba(0,0,0,.5);
+  animation: jr-aviso-seq 2.5s ease-out forwards;
+}
+@keyframes jr-aviso-seq {
+  0% { opacity: 0; transform: translate(-50%, -10px); } 10%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; }
+}
+
 /* ── Botão de som (🔊 / 🔇) ── */
 .jr-btn-som {
   position: relative; flex: none; width: 40px; height: 40px; margin-left: auto; padding: 0; border-radius: 50%;
@@ -485,7 +516,7 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .jr-marcador.disponivel, .jr-encaixe.dourada img, .jr-balao-acao, .jr-rotulo-porta span, .jr-ig-raios, .jr-ig-centro img, .jr-btn-estojo img, .jr-estojo-cont, .jr-seta, .jr-revanche.pulsa, .jr-alt.errada, .jr-fala.nova {
+  .jr-marcador.disponivel, .jr-encaixe.dourada img, .jr-balao-acao, .jr-rotulo-porta span, .jr-ig-raios, .jr-ig-centro img, .jr-btn-estojo img, .jr-estojo-cont, .jr-seta, .jr-aviso-seq, .jr-revanche.pulsa, .jr-alt.errada, .jr-fala.nova {
     animation: none !important;
   }
   .jr-encaixe.dourada img { filter: drop-shadow(0 0 10px var(--jr-ouro)) saturate(1.3); }

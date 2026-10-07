@@ -17,6 +17,9 @@ const XP_LIDER          = 20;
 const XP_LIDER_PERFEITO = 10;      // bônus: líder vencido com as 5 de primeira
 const XP_REVANCHE       = 15;
 const RETENTAR_MS       = 15000;   // gravação recusada: tenta de novo a cada 15 s
+// Sequência de dias (🔥): XP quando a sequência CHEGA a estes dias
+const XP_SEQUENCIA = { 3: 10, 5: 15, 7: 25 };   // dias → XP
+const XP_SEQUENCIA_SEMANAL = 25;                // a cada 7 dias depois do 7º (14, 21, 28…)
 
 const IMG   = '/img/jogo';
 const DADOS = '/dados/jogo';
@@ -107,6 +110,7 @@ async function carregarEstado() {
       g.dourada = !!ins.dourada;
       g.dataInsignia = ins.data || null;
     }
+    estado.sequencia = v.sequencia || null;
     carregouProgresso = true;
     gravar({ ultimo_acesso: Date.now() });
   } catch (e) {
@@ -211,9 +215,9 @@ function gravarVitoria(chave, p) {
   gravar(patch);
 }
 
-function darXP(delta) {
+function darXP(delta, mostrar = true) {
   if (!delta) return;
-  mostrarXP(delta);
+  if (mostrar) mostrarXP(delta);
   if (teste || !carregouProgresso) return;
   adicionarXP(sessao.uid, delta).catch(e => console.error('[jogo-revisao] erro ao dar XP', e));
 }
@@ -286,7 +290,85 @@ function mostrarTela(id) {
 // ============================================================
 //  3.1 MAPA GERAL
 // ============================================================
+// ============================================================
+//  SEQUÊNCIA DE DIAS (🔥) — conta o dia em que o aluno vence ao menos 1 personagem
+// ============================================================
+const diaLocal = (d = new Date()) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const paraData = (s) => { const [a, m, d] = s.split('-').map(Number); return new Date(a, m - 1, d, 12); };   // meio-dia: sem problema de horário de verão
+
+// true se de `ultimo` até `hoje` a sequência continua: dia seguinte, ou só sábado/domingo no meio
+function sequenciaContinua(ultimo, hoje) {
+  const a = paraData(ultimo), b = paraData(hoje);
+  if (b <= a) return false;
+  for (const d = new Date(a.getTime() + 864e5); d < b; d.setDate(d.getDate() + 1)) {
+    const dia = d.getDay();
+    if (dia !== 0 && dia !== 6) return false;   // faltou um dia útil
+  }
+  return true;
+}
+
+// Função pura: próximo estado da sequência ao contar o dia `hoje`
+function proximaSequencia(seq, hoje) {
+  const atual = seq?.atual || 0, max = seq?.max || 0, ultimo = seq?.ultimo_dia || null;
+  if (ultimo === hoje) return { atual, max, ultimo_dia: ultimo, subiu: false };   // no máximo 1 vez por dia
+  const novo = ultimo && sequenciaContinua(ultimo, hoje) ? atual + 1 : 1;
+  return { atual: novo, max: Math.max(max, novo), ultimo_dia: hoje, subiu: true };
+}
+
+// Valor mostrado no HUD: 0 se a sequência já quebrou (sem gravar nada)
+function sequenciaVigente(seq, hoje = diaLocal()) {
+  if (!seq?.ultimo_dia) return 0;
+  return seq.ultimo_dia === hoje || sequenciaContinua(seq.ultimo_dia, hoje) ? (seq.atual || 0) : 0;
+}
+
+const xpDaSequencia = (n) => XP_SEQUENCIA[n] || (n > 7 && (n - 7) % 7 === 0 ? XP_SEQUENCIA_SEMANAL : 0);
+
+let avisoSequencia = null;   // { atual, xp } — mostrado depois de fechar a vitória/insígnia
+
+function registrarDiaJogado() {
+  if (!carregouProgresso) return;
+  const r = proximaSequencia(estado.sequencia, diaLocal());
+  if (!r.subiu) return;
+  estado.sequencia = { atual: r.atual, max: r.max, ultimo_dia: r.ultimo_dia };
+  gravar({ sequencia: estado.sequencia });
+  const xp = xpDaSequencia(r.atual);
+  darXP(xp, false);   // grava já; o "+XP" aparece junto do aviso
+  avisoSequencia = { atual: r.atual, xp };
+}
+
+function mostrarAvisoSequencia() {
+  if (!avisoSequencia || animInsignia) return;
+  const { atual, xp } = avisoSequencia;
+  avisoSequencia = null;
+  const el = document.createElement('div');
+  el.className = 'jr-aviso-seq';
+  el.textContent = `🔥 Sequência de ${atual} dia${atual === 1 ? '' : 's'}!`;
+  $('jr-app').appendChild(el);
+  setTimeout(() => el.remove(), 2500);
+  if (xp) mostrarXP(xp);
+  atualizarSelo();
+}
+
+function atualizarSelo() {
+  const el = $('selo-seq');
+  if (!el || !estado) return;
+  const n = sequenciaVigente(estado.sequencia);
+  el.textContent = `🔥 ${n}`;
+  el.classList.toggle('apagado', n === 0);
+}
+
+function mostrarBalaoSequencia() {
+  const b = $('seq-balao');
+  const max = estado?.sequencia?.max || 0;
+  b.textContent = `Vença pelo menos 1 personagem por dia para manter a sequência. Sábado e domingo não quebram. Recorde: ${max} dia${max === 1 ? '' : 's'}.`;
+  b.hidden = !b.hidden;
+  clearTimeout(b._t);
+  if (!b.hidden) b._t = setTimeout(() => { b.hidden = true; }, 5000);
+}
+
 function abrirMapaGeral() {
+  atualizarSelo();
   cena = null;
   esconderBalao();
   mostrarTela('tela-geral');
@@ -1198,6 +1280,7 @@ function mostrarInsigniaGanha(chave, dourada) {
     box.classList.remove('voando');
     img.getAnimations().forEach(a => a.cancel());
     if (animInsignia === anim) animInsignia = null;
+    mostrarAvisoSequencia();
   };
 
   anim.voar = () => {
@@ -1389,6 +1472,7 @@ function vencer() {
   if (p === 'lider' && !g.insignia) { g.insignia = true; g.dataInsignia = Date.now(); ganhou = 'normal'; }
   if (p === 'revanche' && !g.dourada) { g.dourada = true; ganhou = 'dourada'; }
   gravarVitoria(chave, p);
+  registrarDiaJogado();
   tocar('vitoria');
   // XP só na primeira vitória de cada personagem (conferido no estado carregado do Firebase)
   if (primeiraVez) {
@@ -1414,6 +1498,7 @@ function vencer() {
   pg.aoContinuar = () => {
     fecharPergunta();
     if (ganhou) mostrarInsigniaGanha(chave, ganhou === 'dourada');
+    else mostrarAvisoSequencia();
   };
 }
 
@@ -1515,6 +1600,8 @@ function ligarEventos() {
 
   $('btn-sair-jogo').addEventListener('click', () => { window.location.href = '/aluno/a-jogos.html'; });
   $('btn-insignias').addEventListener('click', abrirEstojo);
+  $('selo-seq').addEventListener('click', (e) => { e.stopPropagation(); mostrarBalaoSequencia(); });
+  document.addEventListener('click', (e) => { if (!e.target.closest('#selo-seq')) $('seq-balao').hidden = true; });
   // botão de som (🔊 / 🔇), lembrado em localStorage
   const pintarSom = () => document.querySelectorAll('[data-som]').forEach(b => {
     const on = somLigado();

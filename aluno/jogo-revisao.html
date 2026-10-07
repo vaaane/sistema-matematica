@@ -29,6 +29,7 @@
     <div class="jr-hud jr-hud-topo">
       <button class="jr-btn jr-btn-sec" id="btn-sair-jogo">⟵ Sair</button>
       <div class="jr-hud-titulo">Jogo de Revisão</div>
+      <button class="jr-selo-seq apagado" id="selo-seq" aria-label="Sequência de dias">🔥 0</button>
       <button class="jr-btn-som" data-som aria-label="Desligar o som">🔊</button>
       <button class="jr-btn-estojo" id="btn-insignias" aria-label="Minhas insígnias">
         <img src="/img/jogo/ui/botao-insignias.webp" alt="" draggable="false"/>
@@ -37,6 +38,8 @@
       </button>
     </div>
   </section>
+
+  <div class="jr-seq-balao" id="seq-balao" hidden></div>
 
   <!-- 3.2 / 3.3 Cena (mapa da região ou interior do ginásio) -->
   <section id="tela-cena" class="jr-tela" hidden>
