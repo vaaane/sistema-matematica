@@ -368,6 +368,11 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
   text-shadow: 0 3px 0 #3a2400, 0 4px 12px rgba(0,0,0,.7);
 }
 .jr-estojo-resumo { font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 600; color: #fff; margin: 6px 0 10px; text-shadow: 0 1px 4px #000; }
+.jr-estojo-nota {
+  margin-top: 10px; font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: #fff; text-shadow: 0 1px 4px #000;
+}
+.jr-estojo-nota b { font-family: 'Orbitron', sans-serif; font-size: 20px; color: var(--jr-ouro); }
+.jr-estojo-nota small { display: block; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; color: #d8dbe8; }
 .jr-barra { height: 12px; border-radius: 6px; background: rgba(0,0,0,.55); border: 1px solid rgba(255,215,0,.4); overflow: hidden; }
 .jr-barra-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--jr-ouro), var(--jr-laranja)); transition: width .6s; }
 

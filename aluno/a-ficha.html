@@ -284,7 +284,8 @@
 
 <script type="module">
 import { numeroChamada, BIMESTRES, bimestreAtual, dentroDoAtestado, normalizarAtestados, aulasNoDia, LISTA_ATIVIDADES, regrasJogo } from "/js/constants.js";
-import { requireAluno, renderSidebarAluno, clearSession } from "/js/auth.js";
+import { requireAluno, renderSidebarAluno, clearSession, isModoTeste } from "/js/auth.js";
+import { notaJogoRevisao, formatarNota, NOTA_MAX, PESO_INSIGNIAS, PESO_DOURADAS, TOTAL_INSIGNIAS } from "/js/jogo-revisao/nota.js";
 import { indexarBiblioteca, resolverAula, tipoInfo } from "/js/biblioteca.js";
 import { getResultadosByAluno, getLiberacoesHistoricoTodas } from "/js/db.js";
 import { db } from "/js/firebase-config.js";
@@ -358,6 +359,7 @@ let libHistorico = [];     // liberacoes_historico (datas oficiais + 2ª chamada
 let _dataAgendaReg = {};   // data agendada por atividade (atividades_agenda)
 let atestados = [];    // [ {inicio,fim,ts,obs} ] do aluno logado
 let nivelTab = 0, nivelNeg = 0, nivelEsc = 0;   // progresso nos jogos (tabuada e escalada)
+let revIns = 0, revDour = 0;   // Jogo de Revisão: insígnias e douradas
 
 // Barra de um jogo na regra de pontuação do 4º bim em diante (marcos de
 // regrasJogo em js/constants.js). Valores exibidos são ACUMULADOS.
@@ -419,6 +421,13 @@ async function carregar(){
       get(ref(db, "biblioteca")),
       get(ref(db, `atividades_agenda/${turma}/${bimestre}`)).catch(()=>null),
     ]);
+    // Jogo de Revisão (modo teste lê do histórico de teste); falha não derruba a ficha
+    try {
+      const _base = isModoTeste() ? `modo_teste_historico/${_uid}/jogo_revisao` : `jogo_revisao/${_uid}`;
+      const sRev = await get(ref(db, `${_base}/insignias`));
+      const _ins = sRev.exists() ? Object.values(sRev.val() || {}).filter(Boolean) : [];
+      revIns = _ins.length; revDour = _ins.filter(i => i.dourada).length;
+    } catch (_) { revIns = 0; revDour = 0; }
     // data agendada por atividade — usada só para EXIBIR a data quando a atividade
     // ainda não foi aplicada (estado "agendada"). Não conta como presença/falta.
     _dataAgendaReg = {};
@@ -874,6 +883,22 @@ function render(){
           <div class="ficha-nota ouro">
             <svg viewBox="0 0 24 24"><path d="M12 2 9.2 8.6 2 9.2l5.5 4.7L5.8 21 12 17.3 18.2 21l-1.7-7.1L22 9.2l-7.2-.6z"/></svg>
             <span><b>Dica para a família:</b> incentivar a jogar ajuda na média do bimestre.</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+            Jogo de Revisão
+          </div>
+          <div class="jogo-prog">
+            <div class="jp-top"><span class="jp-nome">🏅 Insígnias <span class="jp-bonus ${revIns>0?"on":""}">Nota ${formatarNota(notaJogoRevisao(revIns, revDour))} / ${NOTA_MAX}</span></span><span class="jp-niv">${revIns} <span class="jp-max">/ ${TOTAL_INSIGNIAS}</span></span></div>
+            <div class="jp-bar"><div class="jp-fill" style="width:${(revIns/TOTAL_INSIGNIAS*100).toFixed(1)}%;background:var(--gold)"></div></div>
+            <div class="jp-note">🌟 Douradas: ${revDour} de ${TOTAL_INSIGNIAS}</div>
+          </div>
+          <div class="ficha-nota ouro">
+            <svg viewBox="0 0 24 24"><path d="M12 2 9.2 8.6 2 9.2l5.5 4.7L5.8 21 12 17.3 18.2 21l-1.7-7.1L22 9.2l-7.2-.6z"/></svg>
+            <span>O jogo completo vale <b>${NOTA_MAX} pontos</b>: as ${TOTAL_INSIGNIAS} insígnias valem <b>${PESO_INSIGNIAS},0</b> e deixar todas douradas (revanches) vale mais <b>${PESO_DOURADAS},0</b>.</span>
           </div>
         </div>
       </div>

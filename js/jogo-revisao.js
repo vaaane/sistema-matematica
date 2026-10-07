@@ -8,6 +8,7 @@ import { ref, get, update, push, set, increment } from 'https://www.gstatic.com/
 import { adicionarXP } from '/js/db.js';
 import { bimestreAtual } from '/js/constants.js';
 import { gerarQuestoes, gerarUma } from '/js/jogo-revisao/geradores.js';
+import { notaJogoRevisao, formatarNota, NOTA_MAX, PESO_INSIGNIAS, PESO_DOURADAS } from '/js/jogo-revisao/nota.js';
 
 // XP (só na primeira vez que cada personagem é vencido; nunca no modo teste)
 const XP_TREINADOR      = 5;
@@ -1414,6 +1415,8 @@ function abrirEstojo() {
   $('estojo-bandejas').innerHTML = html.join('');
   $('estojo-resumo').textContent = `${conquistadas} de 26 · ${douradas} dourada${douradas === 1 ? '' : 's'}`;
   $('estojo-barra').style.width = (conquistadas / 26 * 100) + '%';
+  $('estojo-nota').innerHTML = `Nota do jogo: <b>${formatarNota(notaJogoRevisao(conquistadas, douradas))}</b> / ${NOTA_MAX}` +
+    `<small>Insígnias valem ${PESO_INSIGNIAS},0 · douradas valem mais ${PESO_DOURADAS},0</small>`;
   $('estojo').hidden = false;
   $('estojo').scrollTop = 0;
 }
