@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Jogo de Revisão — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .filtros{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;align-items:center}
+    .filtros select{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:9px 13px;font-size:14px;font-family:'Inter',sans-serif}
+    .btn-sec{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:9px 14px;font-size:14px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer}
+    .btn-sec:hover{border-color:var(--purple)}
+    .btn-pri{background:linear-gradient(135deg,var(--purple),var(--purple-dark));color:#fff;border:0;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer}
+    .btn-pri:disabled{opacity:.5;cursor:default}
+    .resumo-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+    .rc{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px}
+    .rc .v{font-family:'Orbitron',monospace;font-size:1.5rem;color:var(--gold);line-height:1}
+    .rc .v small{font-size:.8rem;color:var(--text-muted)}
+    .rc .l{color:var(--text-muted);font-size:.82rem;margin-top:6px}
+
+    /* abas: no celular viram uma linha com rolagem horizontal */
+    .abas{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+    .abas::-webkit-scrollbar{display:none}
+    .aba{flex:none;background:var(--card);color:var(--text-muted);border:1px solid var(--border);border-radius:999px;padding:8px 16px;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;white-space:nowrap}
+    .aba.ativa{color:#fff;border-color:var(--purple);background:rgba(155,48,255,.18)}
+    .painel[hidden]{display:none}
+
+    .tabela-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:14px;background:var(--card)}
+    table.jr{width:100%;border-collapse:collapse;min-width:760px}
+    table.jr th,table.jr td{padding:10px 12px;text-align:left;font-size:14px;border-bottom:1px solid var(--border);white-space:nowrap}
+    table.jr th{color:var(--text-muted);font-weight:600;font-size:.76rem;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;user-select:none;position:sticky;top:0;background:var(--card)}
+    table.jr th:hover{color:var(--text)}
+    table.jr th.ord::after{content:' ▼';font-size:.7em}
+    table.jr th.ord.asc::after{content:' ▲'}
+    table.jr td.num{font-family:'Orbitron',monospace;font-size:13px}
+    table.jr td.aluno{position:sticky;left:0;background:var(--card);z-index:1;font-weight:600}
+    table.jr tbody tr.linha{cursor:pointer}
+    table.jr tbody tr.linha:hover td{background:rgba(155,48,255,.07)}
+    table.jr tr.nunca td{color:var(--text-muted)}
+    .ouro{color:#ffd700} .laranja{color:#ff7b2e} .muted{color:var(--text-muted)}
+    .nota-chip{display:inline-block;font-family:'Orbitron',monospace;font-size:12px;padding:2px 8px;border-radius:8px;background:rgba(240,165,0,.12);border:1px solid rgba(240,165,0,.35);color:var(--gold)}
+
+    /* grade 13 × 2 do aluno */
+    tr.detalhe td{background:rgba(5,5,15,.45);white-space:normal}
+    /* a grade fica presa à esquerda da área visível, mesmo com a tabela rolada para os lados */
+    .grade-wrap{position:sticky;left:12px;width:min(540px,calc(100vw - 56px))}
+    .grade{display:grid;grid-template-columns:auto repeat(2,minmax(56px,1fr));gap:6px}
+    .grade .g-cab{font-size:11px;color:var(--text-muted);font-weight:700;text-align:center}
+    .grade .g-mapa{font-size:12px;color:var(--text-muted);padding-right:6px;align-self:center;white-space:nowrap}
+    .cel{border:1px solid var(--border);border-radius:9px;padding:6px 4px;text-align:center;font-size:14px;letter-spacing:1px;background:rgba(255,255,255,.02)}
+    .cel.ins{border-color:rgba(255,215,0,.5);background:rgba(255,215,0,.08)}
+    .cel.dou{border-color:#ffd700;background:rgba(255,215,0,.16);box-shadow:0 0 10px rgba(255,215,0,.35)}
+    .cel .pts{color:var(--gold)}
+    .legenda{font-size:12px;color:var(--text-muted);margin-top:10px}
+
+    /* dificuldades */
+    .bloco{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px}
+    .bloco h3{font-family:'Rajdhani',sans-serif;font-size:1.15rem;margin:0 0 4px}
+    .bloco .sub{font-size:.82rem;color:var(--text-muted);margin-bottom:12px}
+    .conteudo{margin-bottom:12px}
+    .conteudo .t{font-size:13.5px;line-height:1.35}
+    .conteudo .t b{color:var(--text)}
+    .conteudo .t span{color:var(--text-muted)}
+    .barra{height:8px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden;margin-top:5px}
+    .barra i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),#ff7b2e)}
+    .tipo{display:grid;grid-template-columns:1fr auto;gap:6px 12px;padding:12px 0;border-bottom:1px solid var(--border)}
+    .tipo:last-child{border-bottom:none}
+    .tipo .cab{font-size:13px;color:var(--text-muted)}
+    .tipo .cab b{color:var(--text)}
+    .tipo .nums{font-family:'Orbitron',monospace;font-size:12px;color:var(--gold);text-align:right;white-space:nowrap}
+    .exemplo{grid-column:1 / -1;display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:rgba(155,48,255,.08);border:1px solid rgba(155,48,255,.25);border-radius:10px;padding:8px 10px;font-size:14px}
+    .exemplo .enun{font-weight:700}
+    .exemplo .resp{color:var(--green);font-weight:700}
+    .exemplo .tag{font-size:11px;color:var(--text-muted)}
+    .exemplo button{margin-left:auto;font-size:12px;padding:5px 10px}
+
+    /* configurar */
+    .chaves{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;margin:12px 0}
+    .chave{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border);border-radius:10px;font-size:14px;cursor:pointer}
+    .chave input{width:18px;height:18px;accent-color:var(--purple)}
+    .chave.travada{opacity:.7;cursor:default}
+    .linha-acao{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .ok-msg{color:var(--green);font-weight:700;font-size:14px}
+    .erro-msg{color:var(--red);font-weight:600;font-size:14px}
+    .meta-input{width:110px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'Orbitron',monospace;font-size:14px}
+
+    .empty{text-align:center;padding:40px 16px;color:var(--text-muted)}
+    .skel{height:16px;border-radius:6px;background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.09),rgba(255,255,255,.04));background-size:200% 100%;animation:skel 1.2s infinite;margin:10px 0}
+    @keyframes skel{to{background-position:-200% 0}}
+    @media(max-width:720px){ .resumo-cards{grid-template-columns:repeat(2,1fr)} .rc .v{font-size:1.25rem} .grade .g-mapa{font-size:11px;white-space:normal} }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Jogo de Revisão</div>
+        <div class="topbar-sub">Progresso das turmas no jogo</div>
+      </div>
+      <div class="topbar-right"></div>
+    </div>
+    <div class="content">
+      <div class="filtros">
+        <select id="f-turma"></select>
+        <button class="btn-sec" id="btn-atualizar">↻ Atualizar</button>
+        <span class="muted" id="atualizado" style="font-size:12px"></span>
+      </div>
+
+      <div class="resumo-cards" id="resumo">
+        <div class="rc"><div class="skel"></div></div><div class="rc"><div class="skel"></div></div>
+        <div class="rc"><div class="skel"></div></div><div class="rc"><div class="skel"></div></div>
+      </div>
+
+      <div class="abas" role="tablist">
+        <button class="aba ativa" data-aba="alunos">👥 Alunos</button>
+        <button class="aba" data-aba="dificuldades">📉 Dificuldades da turma</button>
+        <button class="aba" data-aba="config">⚙️ Configurar o jogo</button>
+      </div>
+
+      <!-- Aba 1 — Alunos -->
+      <section class="painel" id="aba-alunos">
+        <div class="linha-acao" style="margin-bottom:10px">
+          <button class="btn-sec" id="btn-copiar">📋 Copiar tabela</button>
+          <span class="muted" id="copiado" style="font-size:13px"></span>
+        </div>
+        <div class="tabela-wrap" id="tabela-alunos"><div class="empty">Carregando…</div></div>
+        <div class="legenda">Clique no aluno para ver os 26 ginásios. Nota do jogo: insígnias valem 8,0 e douradas mais 2,0 (total 10).</div>
+      </section>
+
+      <!-- Aba 2 — Dificuldades -->
+      <section class="painel" id="aba-dificuldades" hidden>
+        <div id="dificuldades"><div class="empty">Carregando…</div></div>
+      </section>
+
+      <!-- Aba 3 — Configurar -->
+      <section class="painel" id="aba-config" hidden>
+        <div class="bloco">
+          <h3>🔓 Liberar mapas</h3>
+          <div class="sub">Regra normal: o próximo mapa abre quando o aluno vence os dois líderes do mapa anterior. Mapas ligados aqui ficam abertos para todos os alunos (de todas as turmas).</div>
+          <div class="chaves" id="chaves-mapas"></div>
+          <div class="linha-acao"><button class="btn-pri" id="btn-salvar-mapas">Salvar</button><span id="msg-mapas"></span></div>
+        </div>
+        <div class="bloco">
+          <h3>🏆 Meta da turma</h3>
+          <div class="sub">Quantas insígnias cada turma precisa juntar. Aparece para os alunos no mapa geral e no placar do estojo.</div>
+          <div class="linha-acao"><input type="number" min="1" step="1" class="meta-input" id="meta-turma" value="100"/> <button class="btn-pri" id="btn-salvar-meta">Salvar</button><span id="msg-meta"></span></div>
+        </div>
+        <div class="bloco">
+          <h3>🔁 Recalcular placar das turmas</h3>
+          <div class="sub">Conta de novo as insígnias e douradas de cada turma (8D a 8H) a partir do progresso dos alunos e substitui os contadores do placar. Use para incluir as insígnias conquistadas antes do placar existir.</div>
+          <div class="linha-acao"><button class="btn-pri" id="btn-recalcular">Recalcular placar</button><span id="msg-recalcular"></span></div>
+          <div id="resultado-recalcular" class="legenda"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireProfessor, renderSidebarProfessor } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ALUNOS_POR_TURMA } from "/js/constants.js";
+import { notaJogoRevisao, formatarNota, TOTAL_INSIGNIAS } from "/js/jogo-revisao/nota.js";
+import { gerarUma } from "/js/jogo-revisao/geradores.js";
+
+if (!requireProfessor()) throw new Error("sem sessão de professor");
+renderSidebarProfessor("sidebar", "jogo_revisao");
+
+const TURMAS = ["8D", "8E", "8F", "8G", "8H"];
+const NUM_MAPAS = 13;
+const PERS = ["treinador1", "treinador2", "treinador3", "lider", "revanche"];
+const NOME_PERS = { treinador1: "Treinador 1", treinador2: "Treinador 2", treinador3: "Treinador 3", lider: "Líder", revanche: "Revanche" };
+const RE_ID = /^m(\d+)([AB])-(treinador[123]|lider|revanche)-(\d+)$/;
+const DIA = 864e5;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const ehTeste = (s) => /PROFESSOR|TESTE/i.test(s || "");
+const uidDe = (turma, nome) => (turma + "_" + nome).replace(/[.#$\[\]/\s]/g, "_");
+const fmtData = (ms) => { const d = new Date(ms); return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`; };
+const pct = (a, b) => b ? Math.round(a / b * 100) : null;
+
+let Q = {};             // questoes/mapaN.json (nomes dos ginásios, regiões e conteúdos)
+let dados = {};         // jogo_revisao inteiro
+let config = {};        // jogo_revisao_config/global
+let linhas = [];        // alunos da turma, já calculados
+let ordem = { col: "insignias", asc: false };
+
+// turma inicial: lembrada no localStorage
+const sel = $("f-turma");
+sel.innerHTML = TURMAS.map(t => `<option value="${t}">${t}</option>`).join("");
+try { const t = localStorage.getItem("p_jr_turma"); if (TURMAS.includes(t)) sel.value = t; } catch (_) {}
+
+async function carregarJson() {
+  const qs = await Promise.all(Array.from({ length: NUM_MAPAS }, (_, i) => fetch(`/dados/jogo/questoes/mapa${i + 1}.json`).then(r => r.json())));
+  qs.forEach(q => { Q[q.mapa] = q; });
+}
+
+async function carregarDados() {
+  $("tabela-alunos").innerHTML = `<div style="padding:12px 16px">${'<div class="skel"></div>'.repeat(6)}</div>`;
+  try {
+    const [s, c] = await Promise.all([get(ref(db, "jogo_revisao")), get(ref(db, "jogo_revisao_config/global")).catch(() => null)]);
+    dados = s.exists() ? s.val() || {} : {};
+    config = c && c.exists() ? c.val() || {} : {};
+    $("atualizado").textContent = "Atualizado às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  } catch (e) {
+    console.error("[p-jogo-revisao] erro ao ler", e);
+    $("tabela-alunos").innerHTML = `<div class="empty">Não foi possível carregar os dados agora. Tente "Atualizar".</div>`;
+    return false;
+  }
+  return true;
+}
+
+// ── cálculo por aluno ───────────────────────────────────────
+function calcularAluno(turma, nome) {
+  const uid = uidDe(turma, nome);
+  const n = dados[uid] || null;
+  const ins = n?.insignias ? Object.values(n.insignias).filter(Boolean) : [];
+  const insignias = ins.length, douradas = ins.filter(i => i.dourada).length;
+  let mapaAtual = 0, acertos = 0, total = 0;
+  for (const [chave, g] of Object.entries(n?.ginasios || {})) {
+    const m = /^mapa(\d+)-/.exec(chave);
+    for (const p of PERS) {
+      const x = g?.[p];
+      if (!x?.vencido) continue;
+      if (m) mapaAtual = Math.max(mapaAtual, +m[1]);
+      acertos += x.acertos_primeira || 0;
+      total += x.total || 0;
+    }
+  }
+  const ultimo = n?.ultimo_acesso || null;
+  const jogou = !!(n && (ultimo || n.ginasios || n.respostas));
+  return {
+    uid, nome, n, jogou, insignias, douradas,
+    nota: notaJogoRevisao(insignias, douradas),
+    mapaAtual, acertos, total, pctPrimeira: pct(acertos, total),
+    seq: n?.sequencia?.atual ?? null,
+    ultimo,
+  };
+}
+
+function montarTurma() {
+  const turma = sel.value;
+  const nomes = (ALUNOS_POR_TURMA[turma] || []).filter(nm => !ehTeste(nm));
+  linhas = nomes.map(nm => calcularAluno(turma, nm));
+  renderResumo();
+  renderAlunos();
+  renderDificuldades();
+}
+
+function renderResumo() {
+  const total = linhas.length;
+  const jogaram = linhas.filter(l => l.jogou);
+  const insTurma = linhas.reduce((a, l) => a + l.insignias, 0);
+  const media = jogaram.length ? jogaram.reduce((a, l) => a + l.nota, 0) / jogaram.length : null;
+  const semana = linhas.filter(l => l.ultimo && Date.now() - l.ultimo <= 7 * DIA).length;
+  $("resumo").innerHTML = `
+    <div class="rc"><div class="v">${jogaram.length}<small> de ${total}</small></div><div class="l">alunos já jogaram</div></div>
+    <div class="rc"><div class="v">${insTurma}</div><div class="l">insígnias da turma</div></div>
+    <div class="rc"><div class="v">${media == null ? "—" : formatarNota(Math.round(media * 10) / 10)}</div><div class="l">média da nota do jogo (de quem jogou)</div></div>
+    <div class="rc"><div class="v">${semana}</div><div class="l">jogaram nos últimos 7 dias</div></div>`;
+}
+
+// ── Aba 1 — Alunos ──────────────────────────────────────────
+const COLS = [
+  { k: "nome", t: "Aluno" }, { k: "insignias", t: "Insígnias" }, { k: "douradas", t: "Douradas" },
+  { k: "nota", t: "Nota do jogo" }, { k: "mapaAtual", t: "Mapa atual" }, { k: "pctPrimeira", t: "Acertos de 1ª" },
+  { k: "seq", t: "🔥" }, { k: "ultimo", t: "Último acesso" },
+];
+
+function ordenar() {
+  const { col, asc } = ordem;
+  const v = (l) => l[col] ?? (col === "nome" ? "" : -1);
+  linhas.sort((a, b) => {
+    const x = v(a), y = v(b);
+    const c = col === "nome" ? String(x).localeCompare(String(y), "pt-BR") : (x - y);
+    return (asc ? c : -c) || a.nome.localeCompare(b.nome, "pt-BR");
+  });
+}
+
+function renderAlunos() {
+  const wrap = $("tabela-alunos");
+  if (!linhas.length) { wrap.innerHTML = `<div class="empty">Nenhum aluno cadastrado nesta turma.</div>`; return; }
+  ordenar();
+  const algum = linhas.some(l => l.jogou);
+  const cab = COLS.map(c => `<th data-col="${c.k}" class="${ordem.col === c.k ? "ord" + (ordem.asc ? " asc" : "") : ""}">${c.t}</th>`).join("");
+  const corpo = linhas.map((l, i) => {
+    const velho = l.ultimo && Date.now() - l.ultimo > 7 * DIA;
+    return `<tr class="linha${l.jogou ? "" : " nunca"}" data-i="${i}">
+      <td class="aluno">${esc(l.nome)}</td>
+      <td class="num ${l.insignias ? "ouro" : ""}">${l.insignias}<span class="muted"> / ${TOTAL_INSIGNIAS}</span></td>
+      <td class="num">${l.douradas || (l.jogou ? 0 : "—")}</td>
+      <td>${l.jogou ? `<span class="nota-chip">${formatarNota(l.nota)}</span>` : "—"}</td>
+      <td>${l.mapaAtual ? `Mapa ${l.mapaAtual}` : "—"}</td>
+      <td class="num">${l.pctPrimeira == null ? "—" : l.pctPrimeira + "%"}</td>
+      <td class="num">${l.seq ?? ""}</td>
+      <td class="${velho ? "laranja" : ""}">${l.ultimo ? fmtData(l.ultimo) : "nunca jogou"}</td>
+    </tr>`;
+  }).join("");
+  wrap.innerHTML = (algum ? "" : `<div class="empty" style="padding:18px">Ninguém desta turma jogou ainda. A lista mostra todos os alunos.</div>`) +
+    `<table class="jr"><thead><tr>${cab}</tr></thead><tbody>${corpo}</tbody></table>`;
+}
+
+function gradeAluno(l) {
+  const cab = `<div></div><div class="g-cab">A</div><div class="g-cab">B</div>`;
+  let html = "";
+  for (let m = 1; m <= NUM_MAPAS; m++) {
+    html += `<div class="g-mapa">${m}. ${esc(Q[m]?.nome || "")}</div>`;
+    for (const G of ["A", "B"]) {
+      const chave = `mapa${m}-${G}`;
+      const g = l.n?.ginasios?.[chave] || {};
+      const ins = l.n?.insignias?.[chave];
+      const tr = ["treinador1", "treinador2", "treinador3"].map(p => g[p]?.vencido ? "●" : "○").join("");
+      const vencidos = ["treinador1", "treinador2", "treinador3", "lider"].filter(p => g[p]?.vencido).length;
+      const nomeG = Q[m]?.ginasios?.[G]?.nome || chave;
+      let conteudo, cls = "";
+      if (ins?.dourada) { conteudo = "🌟"; cls = "dou"; }
+      else if (ins) { conteudo = "🏅"; cls = "ins"; }
+      else if (vencidos) conteudo = `<span class="pts">${tr}${g.lider?.vencido ? "●" : "○"}</span>`;
+      else conteudo = "🔒";
+      html += `<div class="cel ${cls}" title="${esc(nomeG)} — ${esc(Q[m]?.ginasios?.[G]?.conteudo || "")}">${conteudo}</div>`;
+    }
+  }
+  return `<div class="grade-wrap"><div class="grade">${cab}${html}</div>
+    <div class="legenda">🔒 nada · ●○○○ treinadores e líder vencidos · 🏅 insígnia · 🌟 dourada — passe o mouse (ou toque) para ver o ginásio</div></div>`;
+}
+
+$("tabela-alunos").addEventListener("click", (e) => {
+  const th = e.target.closest("th[data-col]");
+  if (th) {
+    const col = th.dataset.col;
+    ordem = { col, asc: ordem.col === col ? !ordem.asc : col === "nome" };
+    renderAlunos();
+    return;
+  }
+  const tr = e.target.closest("tr.linha");
+  if (!tr) return;
+  const prox = tr.nextElementSibling;
+  if (prox?.classList.contains("detalhe")) { prox.remove(); return; }
+  document.querySelectorAll("tr.detalhe").forEach(x => x.remove());
+  const l = linhas[+tr.dataset.i];
+  tr.insertAdjacentHTML("afterend", `<tr class="detalhe"><td colspan="${COLS.length}">${l.jogou ? gradeAluno(l) : '<span class="muted">Este aluno ainda não jogou.</span>'}</td></tr>`);
+});
+
+$("btn-copiar").addEventListener("click", async () => {
+  const cab = ["Aluno", "Insígnias", "Douradas", "Nota do jogo", "Mapa atual", "Acertos de 1ª (%)", "Sequência", "Último acesso"];
+  const rows = linhas.map(l => [l.nome, l.insignias, l.douradas, l.jogou ? formatarNota(l.nota) : "",
+    l.mapaAtual || "", l.pctPrimeira ?? "", l.seq ?? "", l.ultimo ? fmtData(l.ultimo) : "nunca jogou"]);
+  const tsv = [cab, ...rows].map(r => r.join("\t")).join("\n");
+  try { await navigator.clipboard.writeText(tsv); $("copiado").textContent = "Copiado ✓ — cole na planilha"; }
+  catch (_) { $("copiado").textContent = "Não foi possível copiar automaticamente."; }
+  setTimeout(() => { $("copiado").textContent = ""; }, 3500);
+});
+
+// ── Aba 2 — Dificuldades ───────────────────────────────────
+function renderDificuldades() {
+  const el = $("dificuldades");
+  const porTipo = {};    // id → { erros, alunos }
+  const porGin = {};     // mapaN-G → { erros, jogaram:Set }
+  for (const l of linhas) {
+    if (!l.n) continue;
+    for (const chave of Object.keys(l.n.ginasios || {})) (porGin[chave] ||= { erros: 0, jogaram: new Set() }).jogaram.add(l.uid);
+    for (const [id, r] of Object.entries(l.n.respostas || {})) {
+      const m = RE_ID.exec(id);
+      if (!m) continue;
+      const chave = `mapa${m[1]}-${m[2]}`;
+      (porGin[chave] ||= { erros: 0, jogaram: new Set() }).jogaram.add(l.uid);
+      const e = r?.erros || 0;
+      if (!e) continue;
+      const t = porTipo[id] ||= { id, mapa: +m[1], lado: m[2], personagem: m[3], indice: +m[4] - 1, erros: 0, alunos: 0 };
+      t.erros += e; t.alunos++;
+      porGin[chave].erros += e;
+    }
+  }
+  const gins = Object.entries(porGin).filter(([, g]) => g.erros > 0)
+    .map(([chave, g]) => { const m = /^mapa(\d+)-([AB])$/.exec(chave); return { chave, mapa: +m[1], lado: m[2], erros: g.erros, alunos: g.jogaram.size, taxa: g.erros / Math.max(1, g.jogaram.size) }; })
+    .sort((a, b) => b.taxa - a.taxa);
+  if (!gins.length) { el.innerHTML = `<div class="empty">Ainda não há erros registrados nesta turma.</div>`; return; }
+  const maxTaxa = gins[0].taxa;
+  const tipos = Object.values(porTipo).sort((a, b) => (b.erros - a.erros) || (b.alunos - a.alunos)).slice(0, 15);
+  el.innerHTML = `
+    <div class="bloco">
+      <h3>Por conteúdo (ginásio)</h3>
+      <div class="sub">Ordenado por erros por aluno que jogou aquele ginásio.</div>
+      ${gins.map(g => { const gin = Q[g.mapa]?.ginasios?.[g.lado] || {};
+        return `<div class="conteudo"><div class="t"><b>${esc(gin.nome)}</b> — ${esc(gin.conteudo)} <span>· ${g.erros} erros · ${g.alunos} aluno${g.alunos === 1 ? "" : "s"}</span></div>
+          <div class="barra"><i style="width:${(g.taxa / maxTaxa * 100).toFixed(1)}%"></i></div></div>`; }).join("")}
+    </div>
+    <div class="bloco">
+      <h3>Top ${tipos.length} tipos de pergunta</h3>
+      <div class="sub">Os tipos que a turma mais errou. O exemplo é gerado na hora: os números mudam a cada vez.</div>
+      ${tipos.map((t, i) => { const gin = Q[t.mapa]?.ginasios?.[t.lado] || {};
+        return `<div class="tipo" data-id="${t.id}">
+          <div class="cab"><b>${i + 1}. ${esc(gin.nome)}</b> · ${NOME_PERS[t.personagem]} · pergunta ${t.indice + 1}</div>
+          <div class="nums">${t.erros} erros · ${t.alunos} aluno${t.alunos === 1 ? "" : "s"}</div>
+          <div class="exemplo">${exemploHtml(t)}</div>
+        </div>`; }).join("")}
+    </div>`;
+  el._tipos = Object.fromEntries(tipos.map(t => [t.id, t]));
+}
+
+function exemploHtml(t) {
+  const q = gerarUma(t.mapa, t.lado, t.personagem, t.indice);
+  if (!q) return `<span class="tag">pergunta sobre tabela (Mapa 13 B) — o exemplo não é gerado</span>`;
+  return `<span class="enun">${esc(q.enunciado)}</span> → <span class="resp">${esc(q.resposta)}</span>
+    <span class="tag">exemplo — os números mudam a cada vez</span>
+    <button class="btn-sec" data-outro>🔀 Outro exemplo</button>`;
+}
+
+$("dificuldades").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-outro]");
+  if (!b) return;
+  const box = b.closest(".tipo");
+  const t = $("dificuldades")._tipos?.[box.dataset.id];
+  if (t) box.querySelector(".exemplo").innerHTML = exemploHtml(t);
+});
+
+// ── Aba 3 — Configurar ─────────────────────────────────────
+function renderConfig() {
+  const abertos = new Set(Object.values(config.mapas_abertos || {}).map(Number));
+  $("chaves-mapas").innerHTML = Array.from({ length: NUM_MAPAS }, (_, i) => {
+    const m = i + 1, trava = m === 1;
+    return `<label class="chave${trava ? " travada" : ""}"><input type="checkbox" data-mapa="${m}" ${trava || abertos.has(m) ? "checked" : ""} ${trava ? "disabled" : ""}/> Mapa ${m} — ${esc(Q[m]?.nome || "")}${trava ? ' <span class="muted" style="font-size:12px">(sempre aberto)</span>' : ""}</label>`;
+  }).join("");
+  $("meta-turma").value = Number(config.meta_turma) > 0 ? Number(config.meta_turma) : 100;
+}
+
+const msg = (id, texto, erro) => { $(id).className = erro ? "erro-msg" : "ok-msg"; $(id).textContent = texto; if (!erro) setTimeout(() => { $(id).textContent = ""; }, 3500); };
+
+$("btn-salvar-mapas").addEventListener("click", async () => {
+  const lista = [...document.querySelectorAll("#chaves-mapas input[data-mapa]")].filter(i => i.checked && !i.disabled).map(i => +i.dataset.mapa).sort((a, b) => a - b);
+  try { await set(ref(db, "jogo_revisao_config/global/mapas_abertos"), lista); config.mapas_abertos = lista; msg("msg-mapas", "Salvo ✓"); }
+  catch (e) { console.error(e); msg("msg-mapas", "Não foi possível salvar.", true); }
+});
+
+$("btn-salvar-meta").addEventListener("click", async () => {
+  const v = Math.round(Number($("meta-turma").value));
+  if (!(v > 0)) { msg("msg-meta", "Digite um número maior que zero.", true); return; }
+  try { await set(ref(db, "jogo_revisao_config/global/meta_turma"), v); config.meta_turma = v; msg("msg-meta", "Salvo ✓"); }
+  catch (e) { console.error(e); msg("msg-meta", "Não foi possível salvar.", true); }
+});
+
+$("btn-recalcular").addEventListener("click", async () => {
+  if (!confirm("Isso substitui os contadores atuais. Continuar?")) return;
+  const b = $("btn-recalcular"); b.disabled = true;
+  try {
+    const s = await get(ref(db, "jogo_revisao"));
+    const todos = s.exists() ? s.val() || {} : {};
+    const cont = Object.fromEntries(TURMAS.map(t => [t, { insignias: 0, douradas: 0 }]));
+    for (const [uid, n] of Object.entries(todos)) {
+      if (ehTeste(uid)) continue;
+      const turma = TURMAS.find(t => uid.startsWith(t + "_"));
+      if (!turma) continue;
+      for (const ins of Object.values(n?.insignias || {})) {
+        if (!ins) continue;
+        cont[turma].insignias++;
+        if (ins.dourada) cont[turma].douradas++;
+      }
+    }
+    await update(ref(db, "jogo_revisao_turmas"), cont);   // cada turma é substituída inteira
+    $("resultado-recalcular").innerHTML = TURMAS.map(t => `<b>${t}</b>: ${cont[t].insignias} insígnias · ${cont[t].douradas} douradas`).join(" &nbsp;|&nbsp; ");
+    msg("msg-recalcular", "Placar recalculado ✓");
+  } catch (e) { console.error(e); msg("msg-recalcular", "Não foi possível recalcular (confira as regras do banco).", true); }
+  b.disabled = false;
+});
+
+// ── abas, turma e atualizar ─────────────────────────────────
+document.querySelectorAll(".aba").forEach(a => a.addEventListener("click", () => {
+  document.querySelectorAll(".aba").forEach(x => x.classList.toggle("ativa", x === a));
+  document.querySelectorAll(".painel").forEach(p => { p.hidden = p.id !== "aba-" + a.dataset.aba; });
+}));
+sel.addEventListener("change", () => { try { localStorage.setItem("p_jr_turma", sel.value); } catch (_) {} montarTurma(); });
+$("btn-atualizar").addEventListener("click", async () => { if (await carregarDados()) { montarTurma(); renderConfig(); } });
+
+(async () => {
+  try { await carregarJson(); } catch (e) { console.error(e); }
+  if (await carregarDados()) { montarTurma(); renderConfig(); }
+})();
+</script>
+</body>
+</html>
