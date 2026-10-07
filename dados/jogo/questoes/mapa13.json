@@ -1,0 +1,687 @@
+{
+ "mapa": 13,
+ "nome": "Feira dos Dados",
+ "ginasios": {
+  "A": {
+   "nome": "Pavilhão de Exposições",
+   "conteudo": "Média, moda e mediana",
+   "insignia": "insignia-mapa13-A",
+   "interior": "mapa13-A",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa13-A-treinador1",
+     "questoes": [
+      {
+       "id": "m13A-treinador1-1",
+       "enunciado": "Qual é a média de 4 e 6?",
+       "resposta": "5",
+       "erradas": [
+        "10",
+        "24",
+        "2"
+       ]
+      },
+      {
+       "id": "m13A-treinador1-2",
+       "enunciado": "Qual é a média de 2, 4 e 6?",
+       "resposta": "4",
+       "erradas": [
+        "6",
+        "8",
+        "2"
+       ]
+      },
+      {
+       "id": "m13A-treinador1-3",
+       "enunciado": "Qual é a média de 10 e 20?",
+       "resposta": "15",
+       "erradas": [
+        "30",
+        "10",
+        "16"
+       ]
+      },
+      {
+       "id": "m13A-treinador1-4",
+       "enunciado": "Qual é a média de 3, 3 e 3?",
+       "resposta": "3",
+       "erradas": [
+        "6",
+        "9",
+        "0"
+       ]
+      },
+      {
+       "id": "m13A-treinador1-5",
+       "enunciado": "Qual é a média de 1, 5 e 9?",
+       "resposta": "5",
+       "erradas": [
+        "6",
+        "4",
+        "10"
+       ]
+      }
+     ],
+     "fala": "Média: some tudo e divida pela quantidade!"
+    },
+    "treinador2": {
+     "sprite": "mapa13-A-treinador2",
+     "questoes": [
+      {
+       "id": "m13A-treinador2-1",
+       "enunciado": "Qual é a moda de 3, 5, 5, 7?",
+       "resposta": "5",
+       "erradas": [
+        "8",
+        "15",
+        "2"
+       ]
+      },
+      {
+       "id": "m13A-treinador2-2",
+       "enunciado": "Qual é a moda de 1, 2, 2, 2, 8?",
+       "resposta": "2",
+       "erradas": [
+        "3",
+        "1",
+        "4"
+       ]
+      },
+      {
+       "id": "m13A-treinador2-3",
+       "enunciado": "Qual é a moda de 4, 4, 6, 9?",
+       "resposta": "4",
+       "erradas": [
+        "8",
+        "16",
+        "0"
+       ]
+      },
+      {
+       "id": "m13A-treinador2-4",
+       "enunciado": "Qual é a moda de 7, 1, 7, 3?",
+       "resposta": "7",
+       "erradas": [
+        "8",
+        "6",
+        "14"
+       ]
+      },
+      {
+       "id": "m13A-treinador2-5",
+       "enunciado": "Qual é a moda de 10, 20, 20, 30?",
+       "resposta": "20",
+       "erradas": [
+        "30",
+        "200",
+        "10"
+       ]
+      }
+     ],
+     "fala": "Moda é o valor que mais aparece!"
+    },
+    "treinador3": {
+     "sprite": "mapa13-A-treinador3",
+     "questoes": [
+      {
+       "id": "m13A-treinador3-1",
+       "enunciado": "Qual é a mediana de 1, 3, 9?",
+       "resposta": "3",
+       "erradas": [
+        "4",
+        "2",
+        "6"
+       ]
+      },
+      {
+       "id": "m13A-treinador3-2",
+       "enunciado": "Qual é a mediana de 2, 5, 8?",
+       "resposta": "5",
+       "erradas": [
+        "7",
+        "10",
+        "3"
+       ]
+      },
+      {
+       "id": "m13A-treinador3-3",
+       "enunciado": "Qual é a mediana de 4, 6, 7, 10, 12?",
+       "resposta": "7",
+       "erradas": [
+        "10",
+        "24",
+        "2"
+       ]
+      },
+      {
+       "id": "m13A-treinador3-4",
+       "enunciado": "Qual é a mediana de 1, 1, 2?",
+       "resposta": "1",
+       "erradas": [
+        "2",
+        "0",
+        "3"
+       ]
+      },
+      {
+       "id": "m13A-treinador3-5",
+       "enunciado": "Qual é a mediana de 3, 8, 20?",
+       "resposta": "8",
+       "erradas": [
+        "11",
+        "24",
+        "5"
+       ]
+      }
+     ],
+     "fala": "Mediana é o valor do meio, com tudo em ordem!"
+    },
+    "lider": {
+     "sprite": "mapa13-A-lider",
+     "questoes": [
+      {
+       "id": "m13A-lider-1",
+       "enunciado": "Qual é a média de 5 e 9?",
+       "resposta": "7",
+       "erradas": [
+        "14",
+        "45",
+        "4"
+       ]
+      },
+      {
+       "id": "m13A-lider-2",
+       "enunciado": "Qual é a moda de 2, 6, 6, 8, 6?",
+       "resposta": "6",
+       "erradas": [
+        "8",
+        "12",
+        "4"
+       ]
+      },
+      {
+       "id": "m13A-lider-3",
+       "enunciado": "Qual é a mediana de 5, 1, 3? (organize antes)",
+       "resposta": "3",
+       "erradas": [
+        "6",
+        "5",
+        "4"
+       ]
+      },
+      {
+       "id": "m13A-lider-4",
+       "enunciado": "Qual é a média de 6, 8 e 10?",
+       "resposta": "8",
+       "erradas": [
+        "14",
+        "48",
+        "2"
+       ]
+      },
+      {
+       "id": "m13A-lider-5",
+       "enunciado": "Tirei 7 e 9 em duas provas. Qual a minha média?",
+       "resposta": "8",
+       "erradas": [
+        "16",
+        "63",
+        "2"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "Na exposição, os números contam histórias!",
+      "vitoria": "Análise perfeita! Leve a Insígnia do Gráfico!",
+      "derrota": "Os dados te confundiram. Tente de novo!"
+     }
+    },
+    "revanche": {
+     "sprite": "mapa13-A-lider",
+     "questoes": [
+      {
+       "id": "m13A-revanche-1",
+       "enunciado": "Qual é a média das notas 6, 7, 8 e 9?",
+       "resposta": "7,5",
+       "erradas": [
+        "13",
+        "42",
+        "1"
+       ]
+      },
+      {
+       "id": "m13A-revanche-2",
+       "enunciado": "Qual é a mediana de 2, 8, 4, 6, 10?",
+       "resposta": "6",
+       "erradas": [
+        "10",
+        "16",
+        "7"
+       ]
+      },
+      {
+       "id": "m13A-revanche-3",
+       "enunciado": "A média de 3 provas foi 7. Duas notas foram 5 e 8. Qual foi a terceira?",
+       "resposta": "8",
+       "erradas": [
+        "10",
+        "21",
+        "4"
+       ]
+      }
+     ],
+     "fala": "Médias com decimais e notas que faltam!"
+    }
+   }
+  },
+  "B": {
+   "nome": "Laboratório",
+   "conteudo": "Tabelas",
+   "insignia": "insignia-mapa13-B",
+   "interior": "mapa13-B",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa13-B-treinador1",
+     "questoes": [
+      {
+       "id": "m13B-treinador1-1",
+       "enunciado": "Qual fruta vendeu mais?",
+       "resposta": "Banana",
+       "erradas": [
+        "Maçã",
+        "Uva",
+        "Laranja"
+       ]
+      },
+      {
+       "id": "m13B-treinador1-2",
+       "enunciado": "Qual fruta vendeu menos?",
+       "resposta": "Uva",
+       "erradas": [
+        "Maçã",
+        "Banana",
+        "Laranja"
+       ]
+      },
+      {
+       "id": "m13B-treinador1-3",
+       "enunciado": "Quantas laranjas foram vendidas?",
+       "resposta": "6",
+       "erradas": [
+        "7",
+        "5",
+        "12"
+       ]
+      },
+      {
+       "id": "m13B-treinador1-4",
+       "enunciado": "Quantas frutas foram vendidas no total?",
+       "resposta": "22",
+       "erradas": [
+        "23",
+        "21",
+        "44"
+       ]
+      },
+      {
+       "id": "m13B-treinador1-5",
+       "enunciado": "Quantas bananas foram vendidas a mais que uvas?",
+       "resposta": "5",
+       "erradas": [
+        "6",
+        "4",
+        "10"
+       ]
+      }
+     ],
+     "fala": "Leia a tabela das frutas com atenção!",
+     "tabela": {
+      "titulo": "Vendas da barraca de frutas",
+      "colunas": [
+       "Fruta",
+       "Vendas"
+      ],
+      "linhas": [
+       [
+        "Maçã",
+        5
+       ],
+       [
+        "Banana",
+        8
+       ],
+       [
+        "Uva",
+        3
+       ],
+       [
+        "Laranja",
+        6
+       ]
+      ]
+     }
+    },
+    "treinador2": {
+     "sprite": "mapa13-B-treinador2",
+     "questoes": [
+      {
+       "id": "m13B-treinador2-1",
+       "enunciado": "Qual esporte teve mais votos?",
+       "resposta": "Futebol",
+       "erradas": [
+        "Vôlei",
+        "Basquete",
+        "Natação"
+       ]
+      },
+      {
+       "id": "m13B-treinador2-2",
+       "enunciado": "Quantos votos teve o vôlei?",
+       "resposta": "7",
+       "erradas": [
+        "8",
+        "6",
+        "14"
+       ]
+      },
+      {
+       "id": "m13B-treinador2-3",
+       "enunciado": "Quantos alunos votaram ao todo?",
+       "resposta": "28",
+       "erradas": [
+        "29",
+        "27",
+        "56"
+       ]
+      },
+      {
+       "id": "m13B-treinador2-4",
+       "enunciado": "Futebol teve quantos votos a mais que basquete?",
+       "resposta": "7",
+       "erradas": [
+        "8",
+        "6",
+        "14"
+       ]
+      },
+      {
+       "id": "m13B-treinador2-5",
+       "enunciado": "Qual esporte teve menos votos?",
+       "resposta": "Natação",
+       "erradas": [
+        "Futebol",
+        "Vôlei",
+        "Basquete"
+       ]
+      }
+     ],
+     "fala": "A turma votou no esporte preferido. Olhe a tabela!",
+     "tabela": {
+      "titulo": "Esporte preferido da turma",
+      "colunas": [
+       "Esporte",
+       "Votos"
+      ],
+      "linhas": [
+       [
+        "Futebol",
+        12
+       ],
+       [
+        "Vôlei",
+        7
+       ],
+       [
+        "Basquete",
+        5
+       ],
+       [
+        "Natação",
+        4
+       ]
+      ]
+     }
+    },
+    "treinador3": {
+     "sprite": "mapa13-B-treinador3",
+     "questoes": [
+      {
+       "id": "m13B-treinador3-1",
+       "enunciado": "Em que dia saíram mais gols?",
+       "resposta": "Sexta",
+       "erradas": [
+        "Segunda",
+        "Quarta",
+        "Terça"
+       ]
+      },
+      {
+       "id": "m13B-treinador3-2",
+       "enunciado": "Em que dia não saiu gol?",
+       "resposta": "Terça",
+       "erradas": [
+        "Segunda",
+        "Quinta",
+        "Sexta"
+       ]
+      },
+      {
+       "id": "m13B-treinador3-3",
+       "enunciado": "Quantos gols saíram na semana?",
+       "resposta": "10",
+       "erradas": [
+        "11",
+        "9",
+        "20"
+       ]
+      },
+      {
+       "id": "m13B-treinador3-4",
+       "enunciado": "Qual foi a média de gols por dia?",
+       "resposta": "2",
+       "erradas": [
+        "3",
+        "1",
+        "4"
+       ]
+      },
+      {
+       "id": "m13B-treinador3-5",
+       "enunciado": "Quantos gols saíram na quarta e na quinta juntas?",
+       "resposta": "4",
+       "erradas": [
+        "5",
+        "3",
+        "8"
+       ]
+      }
+     ],
+     "fala": "Quantos gols por dia? A tabela responde!",
+     "tabela": {
+      "titulo": "Gols marcados na semana",
+      "colunas": [
+       "Dia",
+       "Gols"
+      ],
+      "linhas": [
+       [
+        "Segunda",
+        2
+       ],
+       [
+        "Terça",
+        0
+       ],
+       [
+        "Quarta",
+        3
+       ],
+       [
+        "Quinta",
+        1
+       ],
+       [
+        "Sexta",
+        4
+       ]
+      ]
+     }
+    },
+    "lider": {
+     "sprite": "mapa13-B-lider",
+     "questoes": [
+      {
+       "id": "m13B-lider-1",
+       "enunciado": "Quem leu mais livros?",
+       "resposta": "Bia e Davi",
+       "erradas": [
+        "Só a Bia",
+        "Eva",
+        "Ana e Caio"
+       ]
+      },
+      {
+       "id": "m13B-lider-2",
+       "enunciado": "Quantos livros foram lidos ao todo?",
+       "resposta": "19",
+       "erradas": [
+        "20",
+        "18",
+        "38"
+       ]
+      },
+      {
+       "id": "m13B-lider-3",
+       "enunciado": "Qual é a moda dos livros lidos?",
+       "resposta": "5",
+       "erradas": [
+        "6",
+        "4",
+        "10"
+       ]
+      },
+      {
+       "id": "m13B-lider-4",
+       "enunciado": "Quem leu menos livros?",
+       "resposta": "Caio",
+       "erradas": [
+        "Ana",
+        "Eva",
+        "Davi"
+       ]
+      },
+      {
+       "id": "m13B-lider-5",
+       "enunciado": "Bia leu quantos livros a mais que Caio?",
+       "resposta": "3",
+       "erradas": [
+        "4",
+        "2",
+        "6"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "No laboratório, toda conclusão vem dos dados!",
+      "vitoria": "Você é um cientista de dados! Tome a Insígnia do Troféu!",
+      "derrota": "Os dados não bateram. Volte e leia de novo!"
+     },
+     "tabela": {
+      "titulo": "Livros lidos no mês",
+      "colunas": [
+       "Aluno",
+       "Livros"
+      ],
+      "linhas": [
+       [
+        "Ana",
+        3
+       ],
+       [
+        "Bia",
+        5
+       ],
+       [
+        "Caio",
+        2
+       ],
+       [
+        "Davi",
+        5
+       ],
+       [
+        "Eva",
+        4
+       ]
+      ]
+     }
+    },
+    "revanche": {
+     "sprite": "mapa13-B-lider",
+     "questoes": [
+      {
+       "id": "m13B-revanche-1",
+       "enunciado": "Qual é a média de livros lidos por aluno?",
+       "resposta": "3,8",
+       "erradas": [
+        "4,8",
+        "2,8",
+        "7,6"
+       ]
+      },
+      {
+       "id": "m13B-revanche-2",
+       "enunciado": "Qual é a mediana dos livros lidos?",
+       "resposta": "4",
+       "erradas": [
+        "5",
+        "3",
+        "8"
+       ]
+      },
+      {
+       "id": "m13B-revanche-3",
+       "enunciado": "Se Caio ler mais 3 livros, qual será o novo total da turma?",
+       "resposta": "22",
+       "erradas": [
+        "23",
+        "21",
+        "44"
+       ]
+      }
+     ],
+     "fala": "Média e mediana direto da tabela!",
+     "tabela": {
+      "titulo": "Livros lidos no mês",
+      "colunas": [
+       "Aluno",
+       "Livros"
+      ],
+      "linhas": [
+       [
+        "Ana",
+        3
+       ],
+       [
+        "Bia",
+        5
+       ],
+       [
+        "Caio",
+        2
+       ],
+       [
+        "Davi",
+        5
+       ],
+       [
+        "Eva",
+        4
+       ]
+      ]
+     }
+    }
+   }
+  }
+ }
+}

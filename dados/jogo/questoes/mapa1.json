@@ -1,0 +1,550 @@
+{
+ "mapa": 1,
+ "nome": "Vila Inicial",
+ "ginasios": {
+  "A": {
+   "nome": "Escolinha",
+   "conteudo": "Expressões numéricas sem parênteses",
+   "insignia": "insignia-mapa1-A",
+   "interior": "mapa1-A",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa1-A-treinador1",
+     "questoes": [
+      {
+       "id": "m1A-treinador1-1",
+       "enunciado": "5 + 2 × 3",
+       "resposta": "11",
+       "erradas": [
+        "21",
+        "12",
+        "10"
+       ]
+      },
+      {
+       "id": "m1A-treinador1-2",
+       "enunciado": "10 + 4 × 2",
+       "resposta": "18",
+       "erradas": [
+        "28",
+        "19",
+        "17"
+       ]
+      },
+      {
+       "id": "m1A-treinador1-3",
+       "enunciado": "3 × 3 + 1",
+       "resposta": "10",
+       "erradas": [
+        "11",
+        "9",
+        "12"
+       ]
+      },
+      {
+       "id": "m1A-treinador1-4",
+       "enunciado": "2 + 3 × 4",
+       "resposta": "14",
+       "erradas": [
+        "20",
+        "15",
+        "13"
+       ]
+      },
+      {
+       "id": "m1A-treinador1-5",
+       "enunciado": "6 × 2 + 5",
+       "resposta": "17",
+       "erradas": [
+        "18",
+        "16",
+        "19"
+       ]
+      }
+     ],
+     "fala": "Primeiro a multiplicação, depois a soma. Vamos ver se você lembra!"
+    },
+    "treinador2": {
+     "sprite": "mapa1-A-treinador2",
+     "questoes": [
+      {
+       "id": "m1A-treinador2-1",
+       "enunciado": "20 − 6 ÷ 2",
+       "resposta": "17",
+       "erradas": [
+        "7",
+        "18",
+        "16"
+       ]
+      },
+      {
+       "id": "m1A-treinador2-2",
+       "enunciado": "8 + 10 ÷ 2",
+       "resposta": "13",
+       "erradas": [
+        "9",
+        "14",
+        "12"
+       ]
+      },
+      {
+       "id": "m1A-treinador2-3",
+       "enunciado": "18 ÷ 3 + 4",
+       "resposta": "10",
+       "erradas": [
+        "11",
+        "9",
+        "12"
+       ]
+      },
+      {
+       "id": "m1A-treinador2-4",
+       "enunciado": "12 ÷ 4 + 7",
+       "resposta": "10",
+       "erradas": [
+        "11",
+        "9",
+        "12"
+       ]
+      },
+      {
+       "id": "m1A-treinador2-5",
+       "enunciado": "15 − 9 ÷ 3",
+       "resposta": "12",
+       "erradas": [
+        "2",
+        "13",
+        "11"
+       ]
+      }
+     ],
+     "fala": "Agora é a vez da divisão. Ela também vem antes!"
+    },
+    "treinador3": {
+     "sprite": "mapa1-A-treinador3",
+     "questoes": [
+      {
+       "id": "m1A-treinador3-1",
+       "enunciado": "3 × 5 − 7",
+       "resposta": "8",
+       "erradas": [
+        "9",
+        "7",
+        "10"
+       ]
+      },
+      {
+       "id": "m1A-treinador3-2",
+       "enunciado": "20 − 2 × 5",
+       "resposta": "10",
+       "erradas": [
+        "90",
+        "11",
+        "9"
+       ]
+      },
+      {
+       "id": "m1A-treinador3-3",
+       "enunciado": "4 × 4 − 6",
+       "resposta": "10",
+       "erradas": [
+        "11",
+        "9",
+        "12"
+       ]
+      },
+      {
+       "id": "m1A-treinador3-4",
+       "enunciado": "30 − 3 × 4",
+       "resposta": "18",
+       "erradas": [
+        "108",
+        "19",
+        "17"
+       ]
+      },
+      {
+       "id": "m1A-treinador3-5",
+       "enunciado": "7 × 2 − 9",
+       "resposta": "5",
+       "erradas": [
+        "6",
+        "4",
+        "7"
+       ]
+      }
+     ],
+     "fala": "Multiplicar e depois subtrair. Atenção na ordem!"
+    },
+    "lider": {
+     "sprite": "mapa1-A-lider",
+     "questoes": [
+      {
+       "id": "m1A-lider-1",
+       "enunciado": "2 × 3 + 4 × 2",
+       "resposta": "14",
+       "erradas": [
+        "20",
+        "15",
+        "13"
+       ]
+      },
+      {
+       "id": "m1A-lider-2",
+       "enunciado": "20 ÷ 4 + 3 × 2",
+       "resposta": "11",
+       "erradas": [
+        "16",
+        "12",
+        "10"
+       ]
+      },
+      {
+       "id": "m1A-lider-3",
+       "enunciado": "10 − 2 × 3 + 1",
+       "resposta": "5",
+       "erradas": [
+        "25",
+        "6",
+        "4"
+       ]
+      },
+      {
+       "id": "m1A-lider-4",
+       "enunciado": "4 + 12 ÷ 3 − 2",
+       "resposta": "6",
+       "erradas": [
+        "7",
+        "5",
+        "8"
+       ]
+      },
+      {
+       "id": "m1A-lider-5",
+       "enunciado": "5 × 2 − 8 ÷ 4",
+       "resposta": "8",
+       "erradas": [
+        "9",
+        "7",
+        "10"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "Bem-vindo à Escolinha! Aqui quem manda é a ordem das operações.",
+      "vitoria": "Excelente! Você respeitou a ordem certinho. Leve a Insígnia do Giz!",
+      "derrota": "Quase! Revise a ordem das operações e volte para tentar de novo."
+     }
+    },
+    "revanche": {
+     "sprite": "mapa1-A-lider",
+     "questoes": [
+      {
+       "id": "m1A-revanche-1",
+       "enunciado": "3 × 4 + 18 ÷ 6 − 5",
+       "resposta": "10",
+       "erradas": [
+        "0",
+        "11",
+        "9"
+       ]
+      },
+      {
+       "id": "m1A-revanche-2",
+       "enunciado": "50 − 4 × 5 − 10 ÷ 2",
+       "resposta": "25",
+       "erradas": [
+        "110",
+        "26",
+        "24"
+       ]
+      },
+      {
+       "id": "m1A-revanche-3",
+       "enunciado": "2 × 2 × 3 + 6 ÷ 3",
+       "resposta": "14",
+       "erradas": [
+        "6",
+        "15",
+        "13"
+       ]
+      }
+     ],
+     "fala": "Achou fácil? Agora as contas ficam mais compridas!"
+    }
+   }
+  },
+  "B": {
+   "nome": "Prefeitura",
+   "conteudo": "Expressões com parênteses e problemas",
+   "insignia": "insignia-mapa1-B",
+   "interior": "mapa1-B",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa1-B-treinador1",
+     "questoes": [
+      {
+       "id": "m1B-treinador1-1",
+       "enunciado": "(5 + 3) × 2",
+       "resposta": "16",
+       "erradas": [
+        "17",
+        "15",
+        "18"
+       ]
+      },
+      {
+       "id": "m1B-treinador1-2",
+       "enunciado": "10 − (4 + 2)",
+       "resposta": "4",
+       "erradas": [
+        "8",
+        "5",
+        "3"
+       ]
+      },
+      {
+       "id": "m1B-treinador1-3",
+       "enunciado": "4 × (6 − 1)",
+       "resposta": "20",
+       "erradas": [
+        "23",
+        "21",
+        "19"
+       ]
+      },
+      {
+       "id": "m1B-treinador1-4",
+       "enunciado": "(12 − 2) ÷ 5",
+       "resposta": "2",
+       "erradas": [
+        "3",
+        "1",
+        "4"
+       ]
+      },
+      {
+       "id": "m1B-treinador1-5",
+       "enunciado": "(3 + 7) × 3",
+       "resposta": "30",
+       "erradas": [
+        "31",
+        "29",
+        "32"
+       ]
+      }
+     ],
+     "fala": "Parênteses primeiro! Essa é a lei da cidade."
+    },
+    "treinador2": {
+     "sprite": "mapa1-B-treinador2",
+     "questoes": [
+      {
+       "id": "m1B-treinador2-1",
+       "enunciado": "[10 − (2 + 3)] × 2",
+       "resposta": "10",
+       "erradas": [
+        "22",
+        "11",
+        "9"
+       ]
+      },
+      {
+       "id": "m1B-treinador2-2",
+       "enunciado": "[20 − (3 + 5)] ÷ 4",
+       "resposta": "3",
+       "erradas": [
+        "4",
+        "2",
+        "5"
+       ]
+      },
+      {
+       "id": "m1B-treinador2-3",
+       "enunciado": "2 × [5 + (6 − 4)]",
+       "resposta": "14",
+       "erradas": [
+        "12",
+        "15",
+        "13"
+       ]
+      },
+      {
+       "id": "m1B-treinador2-4",
+       "enunciado": "[(8 + 2) × 3] − 5",
+       "resposta": "25",
+       "erradas": [
+        "26",
+        "24",
+        "27"
+       ]
+      },
+      {
+       "id": "m1B-treinador2-5",
+       "enunciado": "[18 ÷ (4 + 2)] + 7",
+       "resposta": "10",
+       "erradas": [
+        "11",
+        "9",
+        "12"
+       ]
+      }
+     ],
+     "fala": "Colchetes por fora, parênteses por dentro. Resolva de dentro para fora!"
+    },
+    "treinador3": {
+     "sprite": "mapa1-B-treinador3",
+     "questoes": [
+      {
+       "id": "m1B-treinador3-1",
+       "enunciado": "Comprei 3 picolés de R$ 2 e 1 suco de R$ 5. Quanto gastei?",
+       "resposta": "R$ 11",
+       "erradas": [
+        "R$ 3",
+        "R$ 12",
+        "R$ 10"
+       ]
+      },
+      {
+       "id": "m1B-treinador3-2",
+       "enunciado": "Tinha R$ 20 e comprei 2 cadernos de R$ 6. Quanto sobrou?",
+       "resposta": "R$ 8",
+       "erradas": [
+        "R$ 9",
+        "R$ 7",
+        "R$ 10"
+       ]
+      },
+      {
+       "id": "m1B-treinador3-3",
+       "enunciado": "São 4 caixas com 6 lápis cada e mais 3 lápis soltos. Quantos lápis ao todo?",
+       "resposta": "27",
+       "erradas": [
+        "28",
+        "26",
+        "29"
+       ]
+      },
+      {
+       "id": "m1B-treinador3-4",
+       "enunciado": "30 balas foram divididas entre 5 amigos e cada um ganhou mais 2. Com quantas cada um ficou?",
+       "resposta": "8",
+       "erradas": [
+        "15",
+        "9",
+        "7"
+       ]
+      },
+      {
+       "id": "m1B-treinador3-5",
+       "enunciado": "Comprei 2 pacotes de R$ 4 e paguei com R$ 10. Qual o troco?",
+       "resposta": "R$ 2",
+       "erradas": [
+        "R$ 3",
+        "R$ 1",
+        "R$ 4"
+       ]
+      }
+     ],
+     "fala": "Os moradores trouxeram problemas de compras. Me ajuda?"
+    },
+    "lider": {
+     "sprite": "mapa1-B-lider",
+     "questoes": [
+      {
+       "id": "m1B-lider-1",
+       "enunciado": "(6 + 4) × 2 − 5",
+       "resposta": "15",
+       "erradas": [
+        "16",
+        "14",
+        "17"
+       ]
+      },
+      {
+       "id": "m1B-lider-2",
+       "enunciado": "3 × (8 − 5) + 4",
+       "resposta": "13",
+       "erradas": [
+        "23",
+        "14",
+        "12"
+       ]
+      },
+      {
+       "id": "m1B-lider-3",
+       "enunciado": "[12 − (2 × 3)] ÷ 2",
+       "resposta": "3",
+       "erradas": [
+        "15",
+        "4",
+        "2"
+       ]
+      },
+      {
+       "id": "m1B-lider-4",
+       "enunciado": "Ganhei R$ 5 por dia durante 4 dias e gastei R$ 7. Quanto tenho?",
+       "resposta": "R$ 13",
+       "erradas": [
+        "R$ 14",
+        "R$ 12",
+        "R$ 15"
+       ]
+      },
+      {
+       "id": "m1B-lider-5",
+       "enunciado": "40 ÷ (3 + 5) × 2",
+       "resposta": "10",
+       "erradas": [
+        "11",
+        "9",
+        "12"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "Sou o prefeito da Vila Inicial. Só passa quem resolve as contas da cidade!",
+      "vitoria": "Parabéns! A cidade está em boas mãos. Tome a Insígnia do Sino!",
+      "derrota": "Os parênteses te pegaram. Treine um pouco e volte!"
+     }
+    },
+    "revanche": {
+     "sprite": "mapa1-B-lider",
+     "questoes": [
+      {
+       "id": "m1B-revanche-1",
+       "enunciado": "2 × [10 − (6 − 2)] + 5",
+       "resposta": "17",
+       "erradas": [
+        "18",
+        "16",
+        "19"
+       ]
+      },
+      {
+       "id": "m1B-revanche-2",
+       "enunciado": "{30 − [4 × (2 + 3)]} ÷ 2",
+       "resposta": "5",
+       "erradas": [
+        "6",
+        "4",
+        "7"
+       ]
+      },
+      {
+       "id": "m1B-revanche-3",
+       "enunciado": "3 adultos compraram ingressos de R$ 12 cada e ganharam R$ 5 de desconto no total. Quanto pagaram?",
+       "resposta": "R$ 31",
+       "erradas": [
+        "R$ 32",
+        "R$ 30",
+        "R$ 33"
+       ]
+      }
+     ],
+     "fala": "Vamos ver se você aguenta chaves, colchetes e parênteses juntos!"
+    }
+   }
+  }
+ }
+}

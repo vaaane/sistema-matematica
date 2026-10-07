@@ -1,0 +1,542 @@
+{
+ "mapa": 4,
+ "nome": "Vale das Frações",
+ "ginasios": {
+  "A": {
+   "nome": "Celeiro",
+   "conteudo": "Frações",
+   "insignia": "insignia-mapa4-A",
+   "interior": "mapa4-A",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa4-A-treinador1",
+     "questoes": [
+      {
+       "id": "m4A-treinador1-1",
+       "enunciado": "Qual fração é igual a 1/2?",
+       "resposta": "2/4",
+       "erradas": [
+        "1/3",
+        "3/4"
+       ]
+      },
+      {
+       "id": "m4A-treinador1-2",
+       "enunciado": "Simplifique 4/8",
+       "resposta": "1/2",
+       "erradas": [
+        "2/8",
+        "2/2",
+        "1/3"
+       ]
+      },
+      {
+       "id": "m4A-treinador1-3",
+       "enunciado": "Simplifique 2/6",
+       "resposta": "1/3",
+       "erradas": [
+        "1/6",
+        "2/3",
+        "1/4"
+       ]
+      },
+      {
+       "id": "m4A-treinador1-4",
+       "enunciado": "Qual fração é igual a 1/3?",
+       "resposta": "2/6",
+       "erradas": [
+        "2/3",
+        "3/1"
+       ]
+      },
+      {
+       "id": "m4A-treinador1-5",
+       "enunciado": "Simplifique 5/10",
+       "resposta": "1/2",
+       "erradas": [
+        "2/2",
+        "1/3",
+        "2/1"
+       ]
+      }
+     ],
+     "fala": "Frações equivalentes são pedaços do mesmo tamanho!"
+    },
+    "treinador2": {
+     "sprite": "mapa4-A-treinador2",
+     "questoes": [
+      {
+       "id": "m4A-treinador2-1",
+       "enunciado": "1/5 + 2/5",
+       "resposta": "3/5",
+       "erradas": [
+        "3/10",
+        "4/5",
+        "3/6"
+       ]
+      },
+      {
+       "id": "m4A-treinador2-2",
+       "enunciado": "7/9 − 3/9",
+       "resposta": "4/9",
+       "erradas": [
+        "4/1",
+        "5/9",
+        "4/10"
+       ]
+      },
+      {
+       "id": "m4A-treinador2-3",
+       "enunciado": "2/7 + 3/7",
+       "resposta": "5/7",
+       "erradas": [
+        "5/14",
+        "6/7",
+        "5/8"
+       ]
+      },
+      {
+       "id": "m4A-treinador2-4",
+       "enunciado": "5/6 − 1/6",
+       "resposta": "2/3",
+       "erradas": [
+        "4/12",
+        "1/6",
+        "6/6"
+       ]
+      },
+      {
+       "id": "m4A-treinador2-5",
+       "enunciado": "1/4 + 2/4",
+       "resposta": "3/4",
+       "erradas": [
+        "3/8",
+        "4/4",
+        "3/5"
+       ]
+      }
+     ],
+     "fala": "Mesmo denominador? É só somar os de cima!"
+    },
+    "treinador3": {
+     "sprite": "mapa4-A-treinador3",
+     "questoes": [
+      {
+       "id": "m4A-treinador3-1",
+       "enunciado": "Quanto é a metade de 20?",
+       "resposta": "10",
+       "erradas": [
+        "20",
+        "11",
+        "9"
+       ]
+      },
+      {
+       "id": "m4A-treinador3-2",
+       "enunciado": "Quanto é 1/4 de 12?",
+       "resposta": "3",
+       "erradas": [
+        "6",
+        "4",
+        "2"
+       ]
+      },
+      {
+       "id": "m4A-treinador3-3",
+       "enunciado": "Quanto é 1/3 de 9?",
+       "resposta": "3",
+       "erradas": [
+        "6",
+        "4",
+        "2"
+       ]
+      },
+      {
+       "id": "m4A-treinador3-4",
+       "enunciado": "Quanto é 1/2 de 50?",
+       "resposta": "25",
+       "erradas": [
+        "50",
+        "26",
+        "24"
+       ]
+      },
+      {
+       "id": "m4A-treinador3-5",
+       "enunciado": "Quanto é 1/5 de 10?",
+       "resposta": "2",
+       "erradas": [
+        "4",
+        "3",
+        "1"
+       ]
+      }
+     ],
+     "fala": "Quanto é um pedaço de uma quantidade?"
+    },
+    "lider": {
+     "sprite": "mapa4-A-lider",
+     "questoes": [
+      {
+       "id": "m4A-lider-1",
+       "enunciado": "Qual é maior?",
+       "resposta": "1/2",
+       "erradas": [
+        "1/4"
+       ]
+      },
+      {
+       "id": "m4A-lider-2",
+       "enunciado": "3/8 + 4/8",
+       "resposta": "7/8",
+       "erradas": [
+        "7/16",
+        "8/8",
+        "7/9"
+       ]
+      },
+      {
+       "id": "m4A-lider-3",
+       "enunciado": "Quanto é 1/10 de 70?",
+       "resposta": "7",
+       "erradas": [
+        "14",
+        "8",
+        "6"
+       ]
+      },
+      {
+       "id": "m4A-lider-4",
+       "enunciado": "Uma pizza tem 8 pedaços e comi 3. Que fração da pizza comi?",
+       "resposta": "3/8",
+       "erradas": [
+        "4/8",
+        "3/9",
+        "8/3"
+       ]
+      },
+      {
+       "id": "m4A-lider-5",
+       "enunciado": "Simplifique 6/9",
+       "resposta": "2/3",
+       "erradas": [
+        "3/9",
+        "3/3",
+        "2/4"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "No meu celeiro, tudo é dividido em partes iguais!",
+      "vitoria": "Repartiu tudo certinho! Leve a Insígnia da Pizza!",
+      "derrota": "Os pedaços ficaram desiguais. Tente de novo!"
+     }
+    },
+    "revanche": {
+     "sprite": "mapa4-A-lider",
+     "questoes": [
+      {
+       "id": "m4A-revanche-1",
+       "enunciado": "1/2 + 1/4",
+       "resposta": "3/4",
+       "erradas": [
+        "2/6",
+        "4/4",
+        "3/5"
+       ]
+      },
+      {
+       "id": "m4A-revanche-2",
+       "enunciado": "Quanto é 2/3 de 30?",
+       "resposta": "20",
+       "erradas": [
+        "40",
+        "21",
+        "19"
+       ]
+      },
+      {
+       "id": "m4A-revanche-3",
+       "enunciado": "Quanto é 3/4 de 20?",
+       "resposta": "15",
+       "erradas": [
+        "30",
+        "16",
+        "14"
+       ]
+      }
+     ],
+     "fala": "Agora com denominadores diferentes!"
+    }
+   }
+  },
+  "B": {
+   "nome": "Feira Coberta",
+   "conteudo": "Decimais",
+   "insignia": "insignia-mapa4-B",
+   "interior": "mapa4-B",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa4-B-treinador1",
+     "questoes": [
+      {
+       "id": "m4B-treinador1-1",
+       "enunciado": "0,5 + 0,3",
+       "resposta": "0,8",
+       "erradas": [
+        "8",
+        "0,08",
+        "0,9"
+       ]
+      },
+      {
+       "id": "m4B-treinador1-2",
+       "enunciado": "1,2 + 0,4",
+       "resposta": "1,6",
+       "erradas": [
+        "16",
+        "0,16",
+        "1,7"
+       ]
+      },
+      {
+       "id": "m4B-treinador1-3",
+       "enunciado": "2,5 + 2,5",
+       "resposta": "5",
+       "erradas": [
+        "10",
+        "6",
+        "4"
+       ]
+      },
+      {
+       "id": "m4B-treinador1-4",
+       "enunciado": "0,1 + 0,9",
+       "resposta": "1",
+       "erradas": [
+        "2",
+        "0",
+        "3"
+       ]
+      },
+      {
+       "id": "m4B-treinador1-5",
+       "enunciado": "3,4 + 1,1",
+       "resposta": "4,5",
+       "erradas": [
+        "45",
+        "0,45",
+        "4,6"
+       ]
+      }
+     ],
+     "fala": "Some os decimais alinhando as vírgulas!"
+    },
+    "treinador2": {
+     "sprite": "mapa4-B-treinador2",
+     "questoes": [
+      {
+       "id": "m4B-treinador2-1",
+       "enunciado": "1,5 − 0,5",
+       "resposta": "1",
+       "erradas": [
+        "2",
+        "0",
+        "3"
+       ]
+      },
+      {
+       "id": "m4B-treinador2-2",
+       "enunciado": "2,8 − 1,3",
+       "resposta": "1,5",
+       "erradas": [
+        "15",
+        "0,15",
+        "1,6"
+       ]
+      },
+      {
+       "id": "m4B-treinador2-3",
+       "enunciado": "5 − 0,5",
+       "resposta": "4,5",
+       "erradas": [
+        "45",
+        "0,45",
+        "4,6"
+       ]
+      },
+      {
+       "id": "m4B-treinador2-4",
+       "enunciado": "0,9 − 0,4",
+       "resposta": "0,5",
+       "erradas": [
+        "5",
+        "0,05",
+        "0,6"
+       ]
+      },
+      {
+       "id": "m4B-treinador2-5",
+       "enunciado": "10 − 2,5",
+       "resposta": "7,5",
+       "erradas": [
+        "75",
+        "0,75",
+        "7,6"
+       ]
+      }
+     ],
+     "fala": "Subtrair decimais é igual: vírgula embaixo de vírgula."
+    },
+    "treinador3": {
+     "sprite": "mapa4-B-treinador3",
+     "questoes": [
+      {
+       "id": "m4B-treinador3-1",
+       "enunciado": "1/2 em número decimal",
+       "resposta": "0,5",
+       "erradas": [
+        "5",
+        "0,05",
+        "0,6"
+       ]
+      },
+      {
+       "id": "m4B-treinador3-2",
+       "enunciado": "1/10 em número decimal",
+       "resposta": "0,1",
+       "erradas": [
+        "1",
+        "0,01",
+        "0,2"
+       ]
+      },
+      {
+       "id": "m4B-treinador3-3",
+       "enunciado": "1/4 em número decimal",
+       "resposta": "0,25",
+       "erradas": [
+        "2,5",
+        "0,35",
+        "0,15"
+       ]
+      },
+      {
+       "id": "m4B-treinador3-4",
+       "enunciado": "3/10 em número decimal",
+       "resposta": "0,3",
+       "erradas": [
+        "3",
+        "0,03",
+        "0,4"
+       ]
+      },
+      {
+       "id": "m4B-treinador3-5",
+       "enunciado": "0,5 em fração",
+       "resposta": "1/2",
+       "erradas": [
+        "1/5",
+        "5/1"
+       ]
+      }
+     ],
+     "fala": "Fração ou decimal? Os dois podem ser iguais!"
+    },
+    "lider": {
+     "sprite": "mapa4-B-lider",
+     "questoes": [
+      {
+       "id": "m4B-lider-1",
+       "enunciado": "Qual é maior?",
+       "resposta": "0,5",
+       "erradas": [
+        "0,25"
+       ]
+      },
+      {
+       "id": "m4B-lider-2",
+       "enunciado": "R$ 2,50 + R$ 1,50",
+       "resposta": "R$ 4,00",
+       "erradas": [
+        "R$ 40,00",
+        "R$ 0,40",
+        "R$ 4,10"
+       ]
+      },
+      {
+       "id": "m4B-lider-3",
+       "enunciado": "2 × 1,5",
+       "resposta": "3",
+       "erradas": [
+        "6",
+        "4",
+        "2"
+       ]
+      },
+      {
+       "id": "m4B-lider-4",
+       "enunciado": "0,7 em fração",
+       "resposta": "7/10",
+       "erradas": [
+        "7/100",
+        "1/7"
+       ]
+      },
+      {
+       "id": "m4B-lider-5",
+       "enunciado": "Paguei R$ 5 por um lanche de R$ 3,50. Qual o troco?",
+       "resposta": "R$ 1,50",
+       "erradas": [
+        "R$ 15,00",
+        "R$ 0,15",
+        "R$ 1,60"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "Na feira, o troco sempre tem vírgula!",
+      "vitoria": "Contas de feira resolvidas! Tome a Insígnia da Balança!",
+      "derrota": "O troco não bateu. Confira as vírgulas e volte!"
+     }
+    },
+    "revanche": {
+     "sprite": "mapa4-B-lider",
+     "questoes": [
+      {
+       "id": "m4B-revanche-1",
+       "enunciado": "3/4 em número decimal",
+       "resposta": "0,75",
+       "erradas": [
+        "7,5",
+        "0,85",
+        "0,65"
+       ]
+      },
+      {
+       "id": "m4B-revanche-2",
+       "enunciado": "2,5 × 4",
+       "resposta": "10",
+       "erradas": [
+        "20",
+        "11",
+        "9"
+       ]
+      },
+      {
+       "id": "m4B-revanche-3",
+       "enunciado": "1,2 + 2,35",
+       "resposta": "3,55",
+       "erradas": [
+        "35,5",
+        "3,65",
+        "3,45"
+       ]
+      }
+     ],
+     "fala": "Preços com centavos difíceis. Topa?"
+    }
+   }
+  }
+ }
+}

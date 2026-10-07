@@ -1,0 +1,546 @@
+{
+ "mapa": 5,
+ "nome": "Montanha das Potências",
+ "ginasios": {
+  "A": {
+   "nome": "Mina",
+   "conteudo": "Potências",
+   "insignia": "insignia-mapa5-A",
+   "interior": "mapa5-A",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa5-A-treinador1",
+     "questoes": [
+      {
+       "id": "m5A-treinador1-1",
+       "enunciado": "2²",
+       "resposta": "4",
+       "erradas": [
+        "−4",
+        "8",
+        "5"
+       ]
+      },
+      {
+       "id": "m5A-treinador1-2",
+       "enunciado": "3²",
+       "resposta": "9",
+       "erradas": [
+        "6",
+        "5",
+        "−9"
+       ]
+      },
+      {
+       "id": "m5A-treinador1-3",
+       "enunciado": "4²",
+       "resposta": "16",
+       "erradas": [
+        "8",
+        "6",
+        "−16"
+       ]
+      },
+      {
+       "id": "m5A-treinador1-4",
+       "enunciado": "5²",
+       "resposta": "25",
+       "erradas": [
+        "10",
+        "7",
+        "−25"
+       ]
+      },
+      {
+       "id": "m5A-treinador1-5",
+       "enunciado": "10²",
+       "resposta": "100",
+       "erradas": [
+        "20",
+        "12",
+        "−100"
+       ]
+      }
+     ],
+     "fala": "O quadrado de um número é ele vezes ele mesmo!"
+    },
+    "treinador2": {
+     "sprite": "mapa5-A-treinador2",
+     "questoes": [
+      {
+       "id": "m5A-treinador2-1",
+       "enunciado": "2³",
+       "resposta": "8",
+       "erradas": [
+        "6",
+        "5",
+        "−8"
+       ]
+      },
+      {
+       "id": "m5A-treinador2-2",
+       "enunciado": "3³",
+       "resposta": "27",
+       "erradas": [
+        "9",
+        "6",
+        "−27"
+       ]
+      },
+      {
+       "id": "m5A-treinador2-3",
+       "enunciado": "1⁵",
+       "resposta": "1",
+       "erradas": [
+        "5",
+        "6",
+        "−1"
+       ]
+      },
+      {
+       "id": "m5A-treinador2-4",
+       "enunciado": "10³",
+       "resposta": "1000",
+       "erradas": [
+        "30",
+        "13",
+        "−1000"
+       ]
+      },
+      {
+       "id": "m5A-treinador2-5",
+       "enunciado": "2⁴",
+       "resposta": "16",
+       "erradas": [
+        "8",
+        "6",
+        "−16"
+       ]
+      }
+     ],
+     "fala": "O cubo é três vezes o mesmo número!"
+    },
+    "treinador3": {
+     "sprite": "mapa5-A-treinador3",
+     "questoes": [
+      {
+       "id": "m5A-treinador3-1",
+       "enunciado": "3² é o mesmo que:",
+       "resposta": "3 × 3",
+       "erradas": [
+        "3 × 2",
+        "3 + 3"
+       ]
+      },
+      {
+       "id": "m5A-treinador3-2",
+       "enunciado": "5³ é o mesmo que:",
+       "resposta": "5 × 5 × 5",
+       "erradas": [
+        "5 × 3",
+        "5 + 5 + 5"
+       ]
+      },
+      {
+       "id": "m5A-treinador3-3",
+       "enunciado": "2 × 2 × 2 × 2 em forma de potência:",
+       "resposta": "2⁴",
+       "erradas": [
+        "2³",
+        "8²"
+       ]
+      },
+      {
+       "id": "m5A-treinador3-4",
+       "enunciado": "7 × 7 em forma de potência:",
+       "resposta": "7²",
+       "erradas": [
+        "2⁷",
+        "7 × 2"
+       ]
+      },
+      {
+       "id": "m5A-treinador3-5",
+       "enunciado": "Na potência 6², qual número é a base?",
+       "resposta": "6",
+       "erradas": [
+        "7",
+        "5",
+        "12"
+       ]
+      }
+     ],
+     "fala": "Uma potência é uma multiplicação repetida!"
+    },
+    "lider": {
+     "sprite": "mapa5-A-lider",
+     "questoes": [
+      {
+       "id": "m5A-lider-1",
+       "enunciado": "6²",
+       "resposta": "36",
+       "erradas": [
+        "12",
+        "8",
+        "−36"
+       ]
+      },
+      {
+       "id": "m5A-lider-2",
+       "enunciado": "2⁵",
+       "resposta": "32",
+       "erradas": [
+        "10",
+        "7",
+        "−32"
+       ]
+      },
+      {
+       "id": "m5A-lider-3",
+       "enunciado": "9²",
+       "resposta": "81",
+       "erradas": [
+        "18",
+        "11",
+        "−81"
+       ]
+      },
+      {
+       "id": "m5A-lider-4",
+       "enunciado": "4³",
+       "resposta": "64",
+       "erradas": [
+        "12",
+        "7",
+        "−64"
+       ]
+      },
+      {
+       "id": "m5A-lider-5",
+       "enunciado": "1¹⁰",
+       "resposta": "1",
+       "erradas": [
+        "10",
+        "11",
+        "−1"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "Nesta mina, os cristais se multiplicam em potências!",
+      "vitoria": "Você minerou todas as potências! Leve a Insígnia do Cristal!",
+      "derrota": "A potência ficou fraca. Volte com mais força!"
+     }
+    },
+    "revanche": {
+     "sprite": "mapa5-A-lider",
+     "questoes": [
+      {
+       "id": "m5A-revanche-1",
+       "enunciado": "2³ + 3²",
+       "resposta": "17",
+       "erradas": [
+        "18",
+        "16",
+        "34"
+       ]
+      },
+      {
+       "id": "m5A-revanche-2",
+       "enunciado": "10⁴",
+       "resposta": "10000",
+       "erradas": [
+        "40",
+        "14",
+        "−10000"
+       ]
+      },
+      {
+       "id": "m5A-revanche-3",
+       "enunciado": "5² − 2⁴",
+       "resposta": "9",
+       "erradas": [
+        "10",
+        "8",
+        "18"
+       ]
+      }
+     ],
+     "fala": "Somar e subtrair potências. Encara?"
+    }
+   }
+  },
+  "B": {
+   "nome": "Torre de Pedra",
+   "conteudo": "Raízes e casos especiais",
+   "insignia": "insignia-mapa5-B",
+   "interior": "mapa5-B",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa5-B-treinador1",
+     "questoes": [
+      {
+       "id": "m5B-treinador1-1",
+       "enunciado": "√16",
+       "resposta": "4",
+       "erradas": [
+        "8",
+        "5",
+        "3"
+       ]
+      },
+      {
+       "id": "m5B-treinador1-2",
+       "enunciado": "√25",
+       "resposta": "5",
+       "erradas": [
+        "6",
+        "10",
+        "4"
+       ]
+      },
+      {
+       "id": "m5B-treinador1-3",
+       "enunciado": "√9",
+       "resposta": "3",
+       "erradas": [
+        "4",
+        "6",
+        "2"
+       ]
+      },
+      {
+       "id": "m5B-treinador1-4",
+       "enunciado": "√100",
+       "resposta": "10",
+       "erradas": [
+        "50",
+        "11",
+        "20"
+       ]
+      },
+      {
+       "id": "m5B-treinador1-5",
+       "enunciado": "√1",
+       "resposta": "1",
+       "erradas": [
+        "2",
+        "0",
+        "3"
+       ]
+      }
+     ],
+     "fala": "A raiz quadrada desfaz o quadrado!"
+    },
+    "treinador2": {
+     "sprite": "mapa5-B-treinador2",
+     "questoes": [
+      {
+       "id": "m5B-treinador2-1",
+       "enunciado": "5¹",
+       "resposta": "5",
+       "erradas": [
+        "6",
+        "−5",
+        "10"
+       ]
+      },
+      {
+       "id": "m5B-treinador2-2",
+       "enunciado": "7⁰",
+       "resposta": "1",
+       "erradas": [
+        "0",
+        "7",
+        "−1"
+       ]
+      },
+      {
+       "id": "m5B-treinador2-3",
+       "enunciado": "100¹",
+       "resposta": "100",
+       "erradas": [
+        "101",
+        "−100",
+        "200"
+       ]
+      },
+      {
+       "id": "m5B-treinador2-4",
+       "enunciado": "25⁰",
+       "resposta": "1",
+       "erradas": [
+        "0",
+        "−1",
+        "2"
+       ]
+      },
+      {
+       "id": "m5B-treinador2-5",
+       "enunciado": "3¹",
+       "resposta": "3",
+       "erradas": [
+        "4",
+        "−3",
+        "6"
+       ]
+      }
+     ],
+     "fala": "Expoente 0 e expoente 1 têm regras especiais!"
+    },
+    "treinador3": {
+     "sprite": "mapa5-B-treinador3",
+     "questoes": [
+      {
+       "id": "m5B-treinador3-1",
+       "enunciado": "(−1)²",
+       "resposta": "1",
+       "erradas": [
+        "−2",
+        "−1",
+        "2"
+       ]
+      },
+      {
+       "id": "m5B-treinador3-2",
+       "enunciado": "(−2)²",
+       "resposta": "4",
+       "erradas": [
+        "−4",
+        "0",
+        "8"
+       ]
+      },
+      {
+       "id": "m5B-treinador3-3",
+       "enunciado": "(−3)²",
+       "resposta": "9",
+       "erradas": [
+        "−6",
+        "−1",
+        "−9"
+       ]
+      },
+      {
+       "id": "m5B-treinador3-4",
+       "enunciado": "(−1)³",
+       "resposta": "−1",
+       "erradas": [
+        "−3",
+        "2",
+        "1"
+       ]
+      },
+      {
+       "id": "m5B-treinador3-5",
+       "enunciado": "(−2)³",
+       "resposta": "−8",
+       "erradas": [
+        "−6",
+        "1",
+        "8"
+       ]
+      }
+     ],
+     "fala": "Base negativa com expoente par fica positiva!"
+    },
+    "lider": {
+     "sprite": "mapa5-B-lider",
+     "questoes": [
+      {
+       "id": "m5B-lider-1",
+       "enunciado": "√49",
+       "resposta": "7",
+       "erradas": [
+        "8",
+        "14",
+        "6"
+       ]
+      },
+      {
+       "id": "m5B-lider-2",
+       "enunciado": "√36",
+       "resposta": "6",
+       "erradas": [
+        "18",
+        "7",
+        "12"
+       ]
+      },
+      {
+       "id": "m5B-lider-3",
+       "enunciado": "8⁰",
+       "resposta": "1",
+       "erradas": [
+        "0",
+        "8",
+        "−1"
+       ]
+      },
+      {
+       "id": "m5B-lider-4",
+       "enunciado": "(−4)²",
+       "resposta": "16",
+       "erradas": [
+        "−8",
+        "−2",
+        "−16"
+       ]
+      },
+      {
+       "id": "m5B-lider-5",
+       "enunciado": "√64",
+       "resposta": "8",
+       "erradas": [
+        "32",
+        "9",
+        "16"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "Do alto da torre eu vejo todas as raízes!",
+      "vitoria": "Chegou ao topo da torre! Tome a Insígnia da Árvore!",
+      "derrota": "Caiu da escada! Tente subir de novo."
+     }
+    },
+    "revanche": {
+     "sprite": "mapa5-B-lider",
+     "questoes": [
+      {
+       "id": "m5B-revanche-1",
+       "enunciado": "√49 + 3²",
+       "resposta": "16",
+       "erradas": [
+        "17",
+        "15",
+        "32"
+       ]
+      },
+      {
+       "id": "m5B-revanche-2",
+       "enunciado": "(−2)⁴",
+       "resposta": "16",
+       "erradas": [
+        "−8",
+        "2",
+        "−16"
+       ]
+      },
+      {
+       "id": "m5B-revanche-3",
+       "enunciado": "√81 − 2³",
+       "resposta": "1",
+       "erradas": [
+        "2",
+        "0",
+        "3"
+       ]
+      }
+     ],
+     "fala": "Raízes e potências misturadas. Vamos lá?"
+    }
+   }
+  }
+ }
+}

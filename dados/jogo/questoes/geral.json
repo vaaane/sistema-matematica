@@ -1,0 +1,29 @@
+{
+ "falas": {
+  "acerto": [
+   "Isso mesmo!",
+   "Acertou!",
+   "Muito bem!",
+   "Mandou bem!",
+   "Perfeito!"
+  ],
+  "erro": [
+   "Quase! A resposta certa era {resposta}.",
+   "Não foi dessa vez. A resposta é {resposta}.",
+   "Errou, mas tudo bem! Era {resposta}."
+  ],
+  "treinador_vencido": [
+   "Você me venceu! Pode seguir em frente.",
+   "Muito bem! O próximo te espera.",
+   "Ganhou! Siga pelo tapete."
+  ],
+  "repetir": "Essa pergunta volta daqui a pouco. Você consegue!"
+ },
+ "regras": {
+  "questoes_por_personagem": 5,
+  "revanche": 3,
+  "embaralhar_alternativas": true,
+  "modo": "repetir_ate_acertar",
+  "descricao": "Errou: mostra a resposta certa e a pergunta volta para o fim da fila daquele personagem. O personagem é vencido quando todas as perguntas forem acertadas. Guarda quantas foram acertadas de primeira."
+ }
+}

@@ -1,0 +1,546 @@
+{
+ "mapa": 11,
+ "nome": "Canteiro de Obras",
+ "ginasios": {
+  "A": {
+   "nome": "Obra",
+   "conteudo": "Perímetro e medidas",
+   "insignia": "insignia-mapa11-A",
+   "interior": "mapa11-A",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa11-A-treinador1",
+     "questoes": [
+      {
+       "id": "m11A-treinador1-1",
+       "enunciado": "Perímetro de um quadrado de lado 5 cm",
+       "resposta": "20 cm",
+       "erradas": [
+        "21 cm",
+        "19 cm",
+        "40 cm"
+       ]
+      },
+      {
+       "id": "m11A-treinador1-2",
+       "enunciado": "Perímetro de um quadrado de lado 3 cm",
+       "resposta": "12 cm",
+       "erradas": [
+        "13 cm",
+        "11 cm",
+        "24 cm"
+       ]
+      },
+      {
+       "id": "m11A-treinador1-3",
+       "enunciado": "Perímetro de um retângulo de 6 cm por 2 cm",
+       "resposta": "16 cm",
+       "erradas": [
+        "12 cm",
+        "8 cm",
+        "14 cm"
+       ]
+      },
+      {
+       "id": "m11A-treinador1-4",
+       "enunciado": "Perímetro de um retângulo de 4 cm por 3 cm",
+       "resposta": "14 cm",
+       "erradas": [
+        "12 cm",
+        "7 cm",
+        "11 cm"
+       ]
+      },
+      {
+       "id": "m11A-treinador1-5",
+       "enunciado": "Perímetro de um quadrado de lado 10 cm",
+       "resposta": "40 cm",
+       "erradas": [
+        "41 cm",
+        "39 cm",
+        "80 cm"
+       ]
+      }
+     ],
+     "fala": "O perímetro é a volta inteira. Some todos os lados!"
+    },
+    "treinador2": {
+     "sprite": "mapa11-A-treinador2",
+     "questoes": [
+      {
+       "id": "m11A-treinador2-1",
+       "enunciado": "Perímetro de um triângulo de lados 3 cm, 4 cm e 5 cm",
+       "resposta": "12 cm",
+       "erradas": [
+        "7 cm",
+        "10 cm",
+        "1 cm"
+       ]
+      },
+      {
+       "id": "m11A-treinador2-2",
+       "enunciado": "Perímetro de um triângulo com 3 lados iguais de 6 cm",
+       "resposta": "18 cm",
+       "erradas": [
+        "9 cm",
+        "12 cm",
+        "3 cm"
+       ]
+      },
+      {
+       "id": "m11A-treinador2-3",
+       "enunciado": "Perímetro de um pentágono com 5 lados iguais de 2 cm",
+       "resposta": "10 cm",
+       "erradas": [
+        "7 cm",
+        "12 cm",
+        "3 cm"
+       ]
+      },
+      {
+       "id": "m11A-treinador2-4",
+       "enunciado": "Perímetro de um hexágono com 6 lados iguais de 1 cm",
+       "resposta": "6 cm",
+       "erradas": [
+        "7 cm",
+        "13 cm",
+        "5 cm"
+       ]
+      },
+      {
+       "id": "m11A-treinador2-5",
+       "enunciado": "Perímetro de um triângulo de lados 5 cm, 5 cm e 4 cm",
+       "resposta": "14 cm",
+       "erradas": [
+        "25 cm",
+        "10 cm",
+        "15 cm"
+       ]
+      }
+     ],
+     "fala": "Triângulos e polígonos também têm perímetro!"
+    },
+    "treinador3": {
+     "sprite": "mapa11-A-treinador3",
+     "questoes": [
+      {
+       "id": "m11A-treinador3-1",
+       "enunciado": "1 metro tem quantos centímetros?",
+       "resposta": "100 cm",
+       "erradas": [
+        "101 cm",
+        "99 cm",
+        "200 cm"
+       ]
+      },
+      {
+       "id": "m11A-treinador3-2",
+       "enunciado": "Quantos lados tem um pentágono?",
+       "resposta": "5",
+       "erradas": [
+        "6",
+        "4",
+        "10"
+       ]
+      },
+      {
+       "id": "m11A-treinador3-3",
+       "enunciado": "Um ângulo reto mede quantos graus?",
+       "resposta": "90°",
+       "erradas": [
+        "91°",
+        "89°",
+        "180°"
+       ]
+      },
+      {
+       "id": "m11A-treinador3-4",
+       "enunciado": "Quantos lados tem um hexágono?",
+       "resposta": "6",
+       "erradas": [
+        "7",
+        "5",
+        "12"
+       ]
+      },
+      {
+       "id": "m11A-treinador3-5",
+       "enunciado": "1 quilômetro tem quantos metros?",
+       "resposta": "1000 m",
+       "erradas": [
+        "1001 m",
+        "999 m",
+        "2000 m"
+       ]
+      }
+     ],
+     "fala": "Medidas de obra: metros, centímetros e graus!"
+    },
+    "lider": {
+     "sprite": "mapa11-A-lider",
+     "questoes": [
+      {
+       "id": "m11A-lider-1",
+       "enunciado": "Um terreno retangular tem 10 m por 5 m. Quantos metros de cerca para cercar tudo?",
+       "resposta": "30 m",
+       "erradas": [
+        "50 m",
+        "15 m",
+        "25 m"
+       ]
+      },
+      {
+       "id": "m11A-lider-2",
+       "enunciado": "Um quadrado tem perímetro 16 cm. Quanto mede cada lado?",
+       "resposta": "4 cm",
+       "erradas": [
+        "5 cm",
+        "3 cm",
+        "8 cm"
+       ]
+      },
+      {
+       "id": "m11A-lider-3",
+       "enunciado": "300 cm são quantos metros?",
+       "resposta": "3 m",
+       "erradas": [
+        "4 m",
+        "2 m",
+        "6 m"
+       ]
+      },
+      {
+       "id": "m11A-lider-4",
+       "enunciado": "Dei uma volta numa quadra quadrada de lado 20 m. Quanto andei?",
+       "resposta": "80 m",
+       "erradas": [
+        "81 m",
+        "79 m",
+        "160 m"
+       ]
+      },
+      {
+       "id": "m11A-lider-5",
+       "enunciado": "Perímetro de um retângulo de 7 cm por 3 cm",
+       "resposta": "20 cm",
+       "erradas": [
+        "21 cm",
+        "10 cm",
+        "17 cm"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "Antes de construir, preciso medir a volta do terreno!",
+      "vitoria": "Medidas perfeitas! Leve a Insígnia da Trena!",
+      "derrota": "A cerca ficou curta! Meça de novo."
+     }
+    },
+    "revanche": {
+     "sprite": "mapa11-A-lider",
+     "questoes": [
+      {
+       "id": "m11A-revanche-1",
+       "enunciado": "Um triângulo tem ângulos de 50° e 60°. Quanto mede o terceiro?",
+       "resposta": "70°",
+       "erradas": [
+        "110°",
+        "160°",
+        "10°"
+       ]
+      },
+      {
+       "id": "m11A-revanche-2",
+       "enunciado": "Um retângulo tem perímetro 20 cm e um dos lados mede 6 cm. Quanto mede o outro?",
+       "resposta": "4 cm",
+       "erradas": [
+        "26 cm",
+        "46 cm",
+        "14 cm"
+       ]
+      },
+      {
+       "id": "m11A-revanche-3",
+       "enunciado": "Perímetro de um quadrado de lado 2,5 cm",
+       "resposta": "10 cm",
+       "erradas": [
+        "11 cm",
+        "9 cm",
+        "20 cm"
+       ]
+      }
+     ],
+     "fala": "Lados que faltam e ângulos escondidos!"
+    }
+   }
+  },
+  "B": {
+   "nome": "Escritório de Arquitetura",
+   "conteudo": "Área",
+   "insignia": "insignia-mapa11-B",
+   "interior": "mapa11-B",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa11-B-treinador1",
+     "questoes": [
+      {
+       "id": "m11B-treinador1-1",
+       "enunciado": "Área de um quadrado de lado 3 cm",
+       "resposta": "9 cm²",
+       "erradas": [
+        "10 cm²",
+        "8 cm²",
+        "18 cm²"
+       ]
+      },
+      {
+       "id": "m11B-treinador1-2",
+       "enunciado": "Área de um quadrado de lado 5 cm",
+       "resposta": "25 cm²",
+       "erradas": [
+        "26 cm²",
+        "24 cm²",
+        "50 cm²"
+       ]
+      },
+      {
+       "id": "m11B-treinador1-3",
+       "enunciado": "Área de um quadrado de lado 2 cm",
+       "resposta": "4 cm²",
+       "erradas": [
+        "5 cm²",
+        "3 cm²",
+        "8 cm²"
+       ]
+      },
+      {
+       "id": "m11B-treinador1-4",
+       "enunciado": "Área de um quadrado de lado 10 cm",
+       "resposta": "100 cm²",
+       "erradas": [
+        "101 cm²",
+        "99 cm²",
+        "200 cm²"
+       ]
+      },
+      {
+       "id": "m11B-treinador1-5",
+       "enunciado": "Área de um quadrado de lado 1 cm",
+       "resposta": "1 cm²",
+       "erradas": [
+        "2 cm²",
+        "0 cm²",
+        "3 cm²"
+       ]
+      }
+     ],
+     "fala": "Área do quadrado: lado vezes lado!"
+    },
+    "treinador2": {
+     "sprite": "mapa11-B-treinador2",
+     "questoes": [
+      {
+       "id": "m11B-treinador2-1",
+       "enunciado": "Área de um retângulo de 5 cm por 4 cm",
+       "resposta": "20 cm²",
+       "erradas": [
+        "18 cm²",
+        "9 cm²",
+        "40 cm²"
+       ]
+      },
+      {
+       "id": "m11B-treinador2-2",
+       "enunciado": "Área de um retângulo de 6 cm por 2 cm",
+       "resposta": "12 cm²",
+       "erradas": [
+        "16 cm²",
+        "8 cm²",
+        "24 cm²"
+       ]
+      },
+      {
+       "id": "m11B-treinador2-3",
+       "enunciado": "Área de um retângulo de 3 cm por 7 cm",
+       "resposta": "21 cm²",
+       "erradas": [
+        "20 cm²",
+        "10 cm²",
+        "42 cm²"
+       ]
+      },
+      {
+       "id": "m11B-treinador2-4",
+       "enunciado": "Área de um retângulo de 10 cm por 3 cm",
+       "resposta": "30 cm²",
+       "erradas": [
+        "26 cm²",
+        "13 cm²",
+        "60 cm²"
+       ]
+      },
+      {
+       "id": "m11B-treinador2-5",
+       "enunciado": "Área de um retângulo de 8 cm por 1 cm",
+       "resposta": "8 cm²",
+       "erradas": [
+        "18 cm²",
+        "9 cm²",
+        "16 cm²"
+       ]
+      }
+     ],
+     "fala": "Área do retângulo: base vezes altura!"
+    },
+    "treinador3": {
+     "sprite": "mapa11-B-treinador3",
+     "questoes": [
+      {
+       "id": "m11B-treinador3-1",
+       "enunciado": "Uma figura é formada por 6 quadradinhos de 1 cm². Qual a área?",
+       "resposta": "6 cm²",
+       "erradas": [
+        "14 cm²",
+        "7 cm²",
+        "12 cm²"
+       ]
+      },
+      {
+       "id": "m11B-treinador3-2",
+       "enunciado": "Área é medida em:",
+       "resposta": "cm²",
+       "erradas": [
+        "cm",
+        "kg"
+       ]
+      },
+      {
+       "id": "m11B-treinador3-3",
+       "enunciado": "Perímetro é medido em:",
+       "resposta": "cm",
+       "erradas": [
+        "cm²",
+        "L"
+       ]
+      },
+      {
+       "id": "m11B-treinador3-4",
+       "enunciado": "Um piso tem 4 fileiras com 5 lajotas cada. Quantas lajotas ao todo?",
+       "resposta": "20",
+       "erradas": [
+        "9",
+        "13",
+        "1"
+       ]
+      },
+      {
+       "id": "m11B-treinador3-5",
+       "enunciado": "Qual tem área maior?",
+       "resposta": "quadrado de lado 4 cm",
+       "erradas": [
+        "retângulo de 5 cm por 3 cm"
+       ]
+      }
+     ],
+     "fala": "Área é medida em quadradinhos!"
+    },
+    "lider": {
+     "sprite": "mapa11-B-lider",
+     "questoes": [
+      {
+       "id": "m11B-lider-1",
+       "enunciado": "Uma sala retangular tem 4 m por 3 m. Qual a área?",
+       "resposta": "12 m²",
+       "erradas": [
+        "14 m²",
+        "7 m²",
+        "24 m²"
+       ]
+      },
+      {
+       "id": "m11B-lider-2",
+       "enunciado": "Área de um quadrado de lado 6 cm",
+       "resposta": "36 cm²",
+       "erradas": [
+        "37 cm²",
+        "35 cm²",
+        "72 cm²"
+       ]
+      },
+      {
+       "id": "m11B-lider-3",
+       "enunciado": "Área de um triângulo de base 6 cm e altura 4 cm",
+       "resposta": "12 cm²",
+       "erradas": [
+        "20 cm²",
+        "10 cm²",
+        "48 cm²"
+       ]
+      },
+      {
+       "id": "m11B-lider-4",
+       "enunciado": "Área de um retângulo de 9 cm por 2 cm",
+       "resposta": "18 cm²",
+       "erradas": [
+        "22 cm²",
+        "11 cm²",
+        "36 cm²"
+       ]
+      },
+      {
+       "id": "m11B-lider-5",
+       "enunciado": "Um quadrado tem área 49 cm². Quanto mede o lado?",
+       "resposta": "7 cm",
+       "erradas": [
+        "8 cm",
+        "6 cm",
+        "14 cm"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "Projeto bom é aquele que sabe a área de cada cômodo!",
+      "vitoria": "Projeto aprovado! Tome a Insígnia do Esquadro!",
+      "derrota": "O piso não coube! Revise e volte."
+     }
+    },
+    "revanche": {
+     "sprite": "mapa11-B-lider",
+     "questoes": [
+      {
+       "id": "m11B-revanche-1",
+       "enunciado": "Área de um paralelogramo de base 8 cm e altura 3 cm",
+       "resposta": "24 cm²",
+       "erradas": [
+        "22 cm²",
+        "11 cm²",
+        "48 cm²"
+       ]
+      },
+      {
+       "id": "m11B-revanche-2",
+       "enunciado": "Área de um triângulo de base 10 cm e altura 5 cm",
+       "resposta": "25 cm²",
+       "erradas": [
+        "30 cm²",
+        "15 cm²",
+        "100 cm²"
+       ]
+      },
+      {
+       "id": "m11B-revanche-3",
+       "enunciado": "Um terreno de 10 m por 8 m tem grama em metade dele. Qual a área com grama?",
+       "resposta": "40 m²",
+       "erradas": [
+        "36 m²",
+        "18 m²",
+        "160 m²"
+       ]
+      }
+     ],
+     "fala": "Triângulos e paralelogramos!"
+    }
+   }
+  }
+ }
+}

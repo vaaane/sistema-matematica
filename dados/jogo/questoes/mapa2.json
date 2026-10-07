@@ -1,0 +1,550 @@
+{
+ "mapa": 2,
+ "nome": "Porto das Dezenas",
+ "ginasios": {
+  "A": {
+   "nome": "Armazém do Porto",
+   "conteudo": "× e ÷ por 10, 100 e 1000",
+   "insignia": "insignia-mapa2-A",
+   "interior": "mapa2-A",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa2-A-treinador1",
+     "questoes": [
+      {
+       "id": "m2A-treinador1-1",
+       "enunciado": "7 × 10",
+       "resposta": "70",
+       "erradas": [
+        "700",
+        "7",
+        "0,7"
+       ]
+      },
+      {
+       "id": "m2A-treinador1-2",
+       "enunciado": "12 × 10",
+       "resposta": "120",
+       "erradas": [
+        "1200",
+        "12",
+        "1,2"
+       ]
+      },
+      {
+       "id": "m2A-treinador1-3",
+       "enunciado": "45 × 10",
+       "resposta": "450",
+       "erradas": [
+        "4500",
+        "45",
+        "4,5"
+       ]
+      },
+      {
+       "id": "m2A-treinador1-4",
+       "enunciado": "100 × 10",
+       "resposta": "1000",
+       "erradas": [
+        "10000",
+        "100",
+        "10"
+       ]
+      },
+      {
+       "id": "m2A-treinador1-5",
+       "enunciado": "9 × 10",
+       "resposta": "90",
+       "erradas": [
+        "900",
+        "9",
+        "0,9"
+       ]
+      }
+     ],
+     "fala": "Cada caixa tem 10 peixes. Quantos peixes tenho?"
+    },
+    "treinador2": {
+     "sprite": "mapa2-A-treinador2",
+     "questoes": [
+      {
+       "id": "m2A-treinador2-1",
+       "enunciado": "25 × 100",
+       "resposta": "2500",
+       "erradas": [
+        "25000",
+        "250",
+        "25"
+       ]
+      },
+      {
+       "id": "m2A-treinador2-2",
+       "enunciado": "3 × 100",
+       "resposta": "300",
+       "erradas": [
+        "3000",
+        "30",
+        "3"
+       ]
+      },
+      {
+       "id": "m2A-treinador2-3",
+       "enunciado": "4 × 1000",
+       "resposta": "4000",
+       "erradas": [
+        "40000",
+        "400",
+        "40"
+       ]
+      },
+      {
+       "id": "m2A-treinador2-4",
+       "enunciado": "15 × 1000",
+       "resposta": "15000",
+       "erradas": [
+        "150000",
+        "1500",
+        "150"
+       ]
+      },
+      {
+       "id": "m2A-treinador2-5",
+       "enunciado": "60 × 100",
+       "resposta": "6000",
+       "erradas": [
+        "60000",
+        "600",
+        "60"
+       ]
+      }
+     ],
+     "fala": "Agora com 100 e 1000! Conte os zeros."
+    },
+    "treinador3": {
+     "sprite": "mapa2-A-treinador3",
+     "questoes": [
+      {
+       "id": "m2A-treinador3-1",
+       "enunciado": "300 ÷ 10",
+       "resposta": "30",
+       "erradas": [
+        "300",
+        "3",
+        "0,3"
+       ]
+      },
+      {
+       "id": "m2A-treinador3-2",
+       "enunciado": "5000 ÷ 100",
+       "resposta": "50",
+       "erradas": [
+        "500",
+        "5",
+        "0,5"
+       ]
+      },
+      {
+       "id": "m2A-treinador3-3",
+       "enunciado": "8000 ÷ 1000",
+       "resposta": "8",
+       "erradas": [
+        "80",
+        "0,8",
+        "0,08"
+       ]
+      },
+      {
+       "id": "m2A-treinador3-4",
+       "enunciado": "450 ÷ 10",
+       "resposta": "45",
+       "erradas": [
+        "450",
+        "4,5",
+        "0,45"
+       ]
+      },
+      {
+       "id": "m2A-treinador3-5",
+       "enunciado": "1200 ÷ 100",
+       "resposta": "12",
+       "erradas": [
+        "120",
+        "1,2",
+        "0,12"
+       ]
+      }
+     ],
+     "fala": "Dividir também é fácil: é só tirar zeros!"
+    },
+    "lider": {
+     "sprite": "mapa2-A-lider",
+     "questoes": [
+      {
+       "id": "m2A-lider-1",
+       "enunciado": "32 × 100",
+       "resposta": "3200",
+       "erradas": [
+        "32000",
+        "320",
+        "32"
+       ]
+      },
+      {
+       "id": "m2A-lider-2",
+       "enunciado": "90 ÷ 10",
+       "resposta": "9",
+       "erradas": [
+        "90",
+        "0,9",
+        "0,09"
+       ]
+      },
+      {
+       "id": "m2A-lider-3",
+       "enunciado": "7 × 1000",
+       "resposta": "7000",
+       "erradas": [
+        "70000",
+        "700",
+        "70"
+       ]
+      },
+      {
+       "id": "m2A-lider-4",
+       "enunciado": "40000 ÷ 1000",
+       "resposta": "40",
+       "erradas": [
+        "400",
+        "4",
+        "0,4"
+       ]
+      },
+      {
+       "id": "m2A-lider-5",
+       "enunciado": "56 × 10",
+       "resposta": "560",
+       "erradas": [
+        "5600",
+        "56",
+        "5,6"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "No meu armazém tudo vem em caixas de 10, 100 e 1000!",
+      "vitoria": "Contou os zeros como um verdadeiro marinheiro! Leve a Insígnia da Âncora!",
+      "derrota": "Os zeros escaparam! Volte quando estiver pronto."
+     }
+    },
+    "revanche": {
+     "sprite": "mapa2-A-lider",
+     "questoes": [
+      {
+       "id": "m2A-revanche-1",
+       "enunciado": "23 × 10 × 10",
+       "resposta": "2300",
+       "erradas": [
+        "23000",
+        "230",
+        "23"
+       ]
+      },
+      {
+       "id": "m2A-revanche-2",
+       "enunciado": "600 ÷ 10 ÷ 10",
+       "resposta": "6",
+       "erradas": [
+        "60",
+        "0,6",
+        "0,06"
+       ]
+      },
+      {
+       "id": "m2A-revanche-3",
+       "enunciado": "5 × 100 + 3 × 10",
+       "resposta": "530",
+       "erradas": [
+        "5300",
+        "53",
+        "5,3"
+       ]
+      }
+     ],
+     "fala": "Agora com duas contas seguidas. Preparado?"
+    }
+   }
+  },
+  "B": {
+   "nome": "Farol",
+   "conteudo": "Decimais e medidas",
+   "insignia": "insignia-mapa2-B",
+   "interior": "mapa2-B",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa2-B-treinador1",
+     "questoes": [
+      {
+       "id": "m2B-treinador1-1",
+       "enunciado": "3,5 × 10",
+       "resposta": "35",
+       "erradas": [
+        "350",
+        "3,5",
+        "0,35"
+       ]
+      },
+      {
+       "id": "m2B-treinador1-2",
+       "enunciado": "1,2 × 10",
+       "resposta": "12",
+       "erradas": [
+        "120",
+        "1,2",
+        "0,12"
+       ]
+      },
+      {
+       "id": "m2B-treinador1-3",
+       "enunciado": "0,7 × 100",
+       "resposta": "70",
+       "erradas": [
+        "700",
+        "7",
+        "0,7"
+       ]
+      },
+      {
+       "id": "m2B-treinador1-4",
+       "enunciado": "4,25 × 100",
+       "resposta": "425",
+       "erradas": [
+        "4250",
+        "42,5",
+        "4,25"
+       ]
+      },
+      {
+       "id": "m2B-treinador1-5",
+       "enunciado": "0,8 × 1000",
+       "resposta": "800",
+       "erradas": [
+        "8000",
+        "80",
+        "8"
+       ]
+      }
+     ],
+     "fala": "Multiplicando por 10, a vírgula anda para a direita!"
+    },
+    "treinador2": {
+     "sprite": "mapa2-B-treinador2",
+     "questoes": [
+      {
+       "id": "m2B-treinador2-1",
+       "enunciado": "37 ÷ 10",
+       "resposta": "3,7",
+       "erradas": [
+        "37",
+        "0,37",
+        "0,037"
+       ]
+      },
+      {
+       "id": "m2B-treinador2-2",
+       "enunciado": "5 ÷ 10",
+       "resposta": "0,5",
+       "erradas": [
+        "5",
+        "0,05",
+        "0,005"
+       ]
+      },
+      {
+       "id": "m2B-treinador2-3",
+       "enunciado": "37 ÷ 100",
+       "resposta": "0,37",
+       "erradas": [
+        "3,7",
+        "0,037",
+        "1,37"
+       ]
+      },
+      {
+       "id": "m2B-treinador2-4",
+       "enunciado": "250 ÷ 100",
+       "resposta": "2,5",
+       "erradas": [
+        "25",
+        "0,25",
+        "0,025"
+       ]
+      },
+      {
+       "id": "m2B-treinador2-5",
+       "enunciado": "45 ÷ 100",
+       "resposta": "0,45",
+       "erradas": [
+        "4,5",
+        "0,045",
+        "1,45"
+       ]
+      }
+     ],
+     "fala": "Dividindo, a vírgula anda para a esquerda."
+    },
+    "treinador3": {
+     "sprite": "mapa2-B-treinador3",
+     "questoes": [
+      {
+       "id": "m2B-treinador3-1",
+       "enunciado": "2 metros são quantos centímetros?",
+       "resposta": "200 cm",
+       "erradas": [
+        "2000 cm",
+        "20 cm",
+        "2 cm"
+       ]
+      },
+      {
+       "id": "m2B-treinador3-2",
+       "enunciado": "3 quilos são quantos gramas?",
+       "resposta": "3000 g",
+       "erradas": [
+        "30000 g",
+        "300 g",
+        "30 g"
+       ]
+      },
+      {
+       "id": "m2B-treinador3-3",
+       "enunciado": "5 litros são quantos mililitros?",
+       "resposta": "5000 mL",
+       "erradas": [
+        "50000 mL",
+        "500 mL",
+        "50 mL"
+       ]
+      },
+      {
+       "id": "m2B-treinador3-4",
+       "enunciado": "400 centímetros são quantos metros?",
+       "resposta": "4 m",
+       "erradas": [
+        "40 m",
+        "0,4 m",
+        "0,04 m"
+       ]
+      },
+      {
+       "id": "m2B-treinador3-5",
+       "enunciado": "2000 gramas são quantos quilos?",
+       "resposta": "2 kg",
+       "erradas": [
+        "20 kg",
+        "0,2 kg",
+        "0,02 kg"
+       ]
+      }
+     ],
+     "fala": "Metros, gramas e litros: vamos converter!"
+    },
+    "lider": {
+     "sprite": "mapa2-B-lider",
+     "questoes": [
+      {
+       "id": "m2B-lider-1",
+       "enunciado": "Um pacote custa R$ 3. Quanto custam 100 pacotes?",
+       "resposta": "R$ 300",
+       "erradas": [
+        "R$ 3000",
+        "R$ 30",
+        "R$ 3"
+       ]
+      },
+      {
+       "id": "m2B-lider-2",
+       "enunciado": "1,5 metro são quantos centímetros?",
+       "resposta": "150 cm",
+       "erradas": [
+        "1500 cm",
+        "15 cm",
+        "1,5 cm"
+       ]
+      },
+      {
+       "id": "m2B-lider-3",
+       "enunciado": "6,2 × 10",
+       "resposta": "62",
+       "erradas": [
+        "620",
+        "6,2",
+        "0,62"
+       ]
+      },
+      {
+       "id": "m2B-lider-4",
+       "enunciado": "80 ÷ 100",
+       "resposta": "0,8",
+       "erradas": [
+        "8",
+        "0,08",
+        "0,008"
+       ]
+      },
+      {
+       "id": "m2B-lider-5",
+       "enunciado": "Uma bala custa R$ 0,25. Quanto custam 10 balas?",
+       "resposta": "R$ 2,50",
+       "erradas": [
+        "R$ 25,00",
+        "R$ 0,25",
+        "R$ 10,25"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "A luz do farol mostra o caminho da vírgula. Você consegue segui-la?",
+      "vitoria": "Navegou entre vírgulas sem afundar! Tome a Insígnia do Farol!",
+      "derrota": "A vírgula foi parar no lugar errado. Tente de novo!"
+     }
+    },
+    "revanche": {
+     "sprite": "mapa2-B-lider",
+     "questoes": [
+      {
+       "id": "m2B-revanche-1",
+       "enunciado": "2,5 kg são quantos gramas?",
+       "resposta": "2500 g",
+       "erradas": [
+        "25000 g",
+        "250 g",
+        "25 g"
+       ]
+      },
+      {
+       "id": "m2B-revanche-2",
+       "enunciado": "0,06 × 1000",
+       "resposta": "60",
+       "erradas": [
+        "600",
+        "6",
+        "0,6"
+       ]
+      },
+      {
+       "id": "m2B-revanche-3",
+       "enunciado": "750 mL são quantos litros?",
+       "resposta": "0,75 L",
+       "erradas": [
+        "7,5 L",
+        "0,075 L",
+        "1,75 L"
+       ]
+      }
+     ],
+     "fala": "Medidas mais difíceis te esperam no alto do farol!"
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,399 @@
+/* ============================================================
+   Jogo de Revisão — tela cheia, tema dark, mobile-first
+   ============================================================ */
+:root {
+  --jr-bg:     #0d0f1a;
+  --jr-roxo:   #7c5cfc;
+  --jr-cyan:   #00d4ff;
+  --jr-laranja:#ff7b2e;
+  --jr-ouro:   #ffd700;
+  --jr-verde:  #00e676;
+  --jr-verm:   #ff4d5e;
+  --jr-card:   #161a2e;
+  --jr-borda:  rgba(255,255,255,.12);
+}
+
+/* main.css aplica zoom .8 no desktop — o jogo precisa de 1 para as coordenadas baterem */
+body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; height: 100dvh; }
+
+#jr-app { position: fixed; inset: 0; background: var(--jr-bg); overflow: hidden; }
+#jr-app img { image-rendering: pixelated; -webkit-user-select: none; user-select: none; }
+#jr-app button { touch-action: manipulation; font-family: inherit; }
+[hidden] { display: none !important; }
+
+.jr-carregando {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 600; color: var(--jr-cyan);
+  padding: 24px; text-align: center;
+}
+
+.jr-tela { position: absolute; inset: 0; }
+
+/* ── Botões ───────────────────────────────────────────────── */
+.jr-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 44px; padding: 8px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,.18);
+  background: linear-gradient(135deg, var(--jr-roxo), #5b3fe0); color: #fff;
+  font-family: 'Rajdhani', sans-serif !important; font-size: 17px; font-weight: 700; letter-spacing: .3px;
+  cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.45); white-space: nowrap;
+  transition: transform .1s, filter .15s;
+}
+.jr-btn:hover { filter: brightness(1.12); }
+.jr-btn:active { transform: scale(.96); }
+.jr-btn-sec { background: rgba(13,15,26,.82); border-color: var(--jr-borda); }
+.jr-btn-ouro { background: linear-gradient(135deg, #ffb300, var(--jr-ouro)); color: #2a1a00; border-color: rgba(255,215,0,.6); }
+
+/* ── HUD ──────────────────────────────────────────────────── */
+.jr-hud {
+  position: absolute; left: 0; right: 0; z-index: 20; pointer-events: none;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: max(10px, env(safe-area-inset-top)) 12px 10px;
+}
+.jr-hud > * { pointer-events: auto; }
+.jr-hud-topo { top: 0; background: linear-gradient(180deg, rgba(13,15,26,.85), rgba(13,15,26,0)); }
+.jr-hud-titulo {
+  flex: 1; min-width: 0; text-align: center; pointer-events: none;
+  font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 18px; color: #fff;
+  text-shadow: 0 2px 6px #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* No ginásio: sem botão de sair; nome centralizado e discreto */
+.jr-no-ginasio .jr-hud-titulo {
+  position: absolute; left: 50%; top: max(14px, calc(env(safe-area-inset-top) + 4px)); transform: translateX(-50%);
+  flex: none; max-width: calc(100% - 150px); font-size: 15px !important; padding: 4px 12px; border-radius: 10px;
+  background: rgba(13,15,26,.6); text-shadow: none;
+}
+.jr-no-ginasio .jr-hud-topo { justify-content: flex-end; background: none; }
+
+/* ============================================================
+   3.1 Mapa geral
+   ============================================================ */
+.jr-geral-scroll {
+  position: absolute; inset: 0; overflow: auto; overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none; cursor: grab;
+}
+.jr-geral-scroll::-webkit-scrollbar { display: none; }
+.jr-geral-palco { position: relative; margin: auto; }
+.jr-geral-img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+
+.jr-marcador {
+  position: absolute; transform: translate(-50%, -50%); z-index: 2;
+  width: 44px; height: 44px; border-radius: 50%; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 3px solid #fff; cursor: pointer;
+  font-family: 'Orbitron', sans-serif; font-weight: 800; font-size: 17px; color: #fff;
+  box-shadow: 0 3px 10px rgba(0,0,0,.6);
+}
+.jr-marc-num { pointer-events: none; text-shadow: 0 1px 2px #000; }
+.jr-marc-nome {
+  position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 4px;
+  font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700; white-space: nowrap;
+  background: rgba(13,15,26,.82); padding: 1px 8px; border-radius: 8px; pointer-events: none;
+}
+.jr-marcador.bloqueado { background: #4a4f60; border-color: #8a8fa0; cursor: not-allowed; font-size: 16px; }
+.jr-marcador.bloqueado .jr-marc-nome { color: #9aa0b4; }
+.jr-marcador.disponivel {
+  background: radial-gradient(circle at 35% 30%, #a68bff, var(--jr-roxo));
+  border-color: var(--jr-cyan);
+  animation: jr-pulso 2.2s ease-in-out infinite;
+}
+.jr-marcador.concluido { background: radial-gradient(circle at 35% 30%, #5cf5a5, #0a9e55); border-color: var(--jr-ouro); }
+.jr-marc-ins {
+  position: absolute; left: 100%; top: 50%; transform: translateY(-50%); margin-left: 4px;
+  display: flex; gap: 2px; pointer-events: none;
+}
+.jr-marc-ins img { width: 26px; height: 26px; filter: drop-shadow(0 1px 2px #000); }
+.jr-marc-ins img.dourada { filter: drop-shadow(0 0 4px var(--jr-ouro)); }
+
+@keyframes jr-pulso {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0,212,255,.65), 0 3px 10px rgba(0,0,0,.6); transform: translate(-50%,-50%) scale(1); }
+  50%      { box-shadow: 0 0 0 12px rgba(0,212,255,0), 0 3px 10px rgba(0,0,0,.6); transform: translate(-50%,-50%) scale(1.08); }
+}
+
+/* ============================================================
+   3.2 / 3.3 Cena
+   ============================================================ */
+.jr-cena-vp { position: absolute; inset: 0; overflow: hidden; cursor: pointer; touch-action: manipulation; }
+.jr-palco { position: absolute; left: 0; top: 0; width: 1376px; height: 768px; transform-origin: 0 0; will-change: transform; }
+.jr-fundo { position: absolute; inset: 0; width: 1376px; height: 768px; display: block; pointer-events: none; }
+.jr-ator { position: absolute; width: auto; transform: translate(-50%, -100%); pointer-events: none; }
+.jr-jogador { filter: drop-shadow(0 3px 2px rgba(0,0,0,.45)); }
+.jr-npc { pointer-events: auto; cursor: pointer; filter: drop-shadow(0 3px 2px rgba(0,0,0,.45)); transition: opacity .3s; }
+.jr-npc.vencido { opacity: .5; }
+
+.jr-balao-acao, .jr-balao-aviso, .jr-revanche {
+  position: absolute; z-index: 15; transform: translate(-50%, -100%);
+}
+.jr-balao-acao {
+  min-width: 48px; min-height: 48px; padding: 12px 18px; border-radius: 14px; border: 2px solid #fff;
+  background: var(--jr-laranja); color: #fff; cursor: pointer;
+  font-family: 'Rajdhani', sans-serif; font-size: 17px; font-weight: 700; white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(0,0,0,.5); animation: jr-flutua 1.4s ease-in-out infinite;
+}
+.jr-balao-acao::after, .jr-balao-aviso::after {
+  content: ''; position: absolute; left: 50%; top: 100%; transform: translateX(-50%);
+  border: 8px solid transparent; border-top-color: #fff;
+}
+.jr-balao-aviso {
+  padding: 8px 14px; border-radius: 12px; background: #fff; color: #1a1d2e; pointer-events: none;
+  font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 700; max-width: 260px; text-align: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,.5);
+}
+@keyframes jr-flutua { 0%,100% { margin-top: 0; } 50% { margin-top: -5px; } }
+
+/* Nome do ginásio acima da porta (coordenadas do palco, não clicável) */
+.jr-rotulo-porta {
+  position: absolute; z-index: 1000; transform: translate(-50%, -100%); pointer-events: none;
+}
+.jr-rotulo-porta[hidden] { display: none; }
+.jr-rotulo-porta span {
+  display: block; padding: 6px 14px; border-radius: 12px; white-space: nowrap;
+  background: rgba(13, 15, 26, .78); border: 2px solid var(--jr-roxo); color: var(--jr-ouro);
+  font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700;
+  box-shadow: 0 4px 14px rgba(0,0,0,.5); animation: jr-flutua 1.4s ease-in-out infinite;
+}
+
+/* Escurece a tela ao entrar/sair por porta ou saída */
+.jr-veu {
+  position: fixed; inset: 0; z-index: 30; background: #000; opacity: 0;
+  pointer-events: none; transition: opacity .25s ease;
+}
+.jr-veu.on { opacity: 1; pointer-events: auto; }
+
+/* ── Joystick + botão de ação (só em tela de toque) ───────── */
+/* Fica fora do #cena-vp: tocar no joystick não conta como "tocar no mapa para andar" */
+.jr-joy { display: none; }
+@media (hover: none) and (pointer: coarse) {
+  .jr-joy {
+    display: block; position: absolute; z-index: 16;
+    right: max(22px, env(safe-area-inset-right)); bottom: max(40px, calc(env(safe-area-inset-bottom) + 18px));
+  }
+  .jr-com-pergunta .jr-joy { display: none; }
+}
+.jr-joy-base {
+  position: relative; width: 124px; height: 124px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(13,15,26,.35) 0%, rgba(13,15,26,.6) 100%);
+  border: 2px solid rgba(255,255,255,.35); box-shadow: 0 4px 16px rgba(0,0,0,.4);
+  touch-action: none; -webkit-user-select: none; user-select: none;
+}
+.jr-joy-bola {
+  position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #a68bff, var(--jr-roxo));
+  border: 2px solid rgba(255,255,255,.8); box-shadow: 0 3px 10px rgba(0,0,0,.5);
+  pointer-events: none;
+}
+
+/* Insígnia ganha */
+.jr-insignia-ganha {
+  position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center;
+  background: rgba(5,6,15,.75); padding: 16px;
+}
+.jr-ig-caixa {
+  position: relative; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px;
+  animation: jr-ig-entra .7s cubic-bezier(.2,1.4,.4,1) both;
+}
+.jr-ig-caixa img { position: relative; width: min(60vw, 240px); height: auto; filter: drop-shadow(0 0 22px rgba(124,92,252,.8)); }
+.jr-ig-raios {
+  position: absolute; left: 50%; top: min(30vw, 120px); width: 420px; height: 420px; transform: translate(-50%,-50%);
+  background: repeating-conic-gradient(rgba(255,215,0,.16) 0 10deg, transparent 10deg 20deg);
+  border-radius: 50%; mask: radial-gradient(circle, #000 30%, transparent 70%);
+  -webkit-mask: radial-gradient(circle, #000 30%, transparent 70%);
+  animation: jr-gira 12s linear infinite; pointer-events: none;
+}
+.jr-ig-titulo { position: relative; font-family: 'Rajdhani', sans-serif; font-size: 28px; font-weight: 700; color: var(--jr-ouro); text-shadow: 0 2px 8px #000; }
+.jr-ig-sub { position: relative; font-size: 16px; color: #fff; margin-bottom: 6px; }
+.jr-insignia-ganha.dourada .jr-ig-caixa img, img.dourada { filter: drop-shadow(0 0 16px var(--jr-ouro)) saturate(1.3) brightness(1.08); }
+@keyframes jr-ig-entra { from { transform: scale(.2) rotate(-20deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes jr-gira { to { transform: translate(-50%,-50%) rotate(360deg); } }
+
+/* ============================================================
+   3.4 Pergunta
+   ============================================================ */
+.jr-pergunta {
+  position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
+  background: rgba(5,6,15,.82); overflow: hidden;
+}
+@supports ((backdrop-filter: blur(3px)) or (-webkit-backdrop-filter: blur(3px))) {
+  .jr-pergunta { background: rgba(5,6,15,.6); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+}
+/* O cartão cabe numa tela só; rolagem só dentro dele, como último recurso */
+.jr-perg-caixa {
+  position: relative; width: 100%; max-width: 760px; max-height: 100dvh; overflow-y: auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; gap: 10px;
+  padding: max(10px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+}
+.jr-perg-topo { display: flex; align-items: center; gap: 10px; }
+.jr-busto {
+  width: 72px; height: 72px; flex-shrink: 0; border-radius: 12px; border: 3px solid var(--jr-cyan);
+  background: #1d2240; box-shadow: 0 4px 14px rgba(0,0,0,.5);
+}
+.jr-fala {
+  position: relative; flex: 1; min-width: 0; background: #fff; color: #1a1d2e; border-radius: 12px; padding: 8px 12px;
+  font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; line-height: 1.35;
+  box-shadow: 0 4px 14px rgba(0,0,0,.45);
+}
+/* no máximo 2 linhas durante a batalha (corta com reticências) */
+.jr-fala:not(.completa) {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden;
+  /* margem vertical como borda branca: o corte do overflow fica exatamente na 2ª linha */
+  padding-top: 0; padding-bottom: 0; border-top: 8px solid #fff; border-bottom: 8px solid #fff;
+}
+.jr-fala::before {
+  content: ''; position: absolute; left: -10px; top: 50%; margin-top: -8px;
+  border: 8px solid transparent; border-right: 10px solid #fff; border-left: 0;
+}
+.jr-fala:not(.completa)::before { display: none; }
+
+/* "Fugir": pequeno e discreto no canto do cartão */
+.jr-fugir {
+  flex-shrink: 0; align-self: flex-start; min-width: 44px; min-height: 44px; padding: 0 10px; border-radius: 10px;
+  background: rgba(13,15,26,.7); border: 1px solid rgba(255,255,255,.25); color: rgba(255,255,255,.85);
+  font-family: 'Inter', sans-serif !important; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.jr-fugir:active { transform: scale(.95); }
+.jr-confirma {
+  position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center;
+  background: rgba(5,6,15,.78); padding: 16px;
+}
+.jr-confirma-caixa {
+  max-width: 340px; text-align: center; background: var(--jr-card); border: 2px solid var(--jr-roxo);
+  border-radius: 16px; padding: 18px 16px; box-shadow: 0 10px 30px rgba(0,0,0,.6);
+}
+.jr-confirma-caixa p { margin: 0 0 14px; color: #fff; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; line-height: 1.4; }
+.jr-confirma-botoes { display: flex; gap: 10px; justify-content: center; }
+.jr-confirma-botoes .jr-btn { flex: 1; min-height: 48px; }
+.jr-fala.nova { animation: jr-fala-in .25s ease-out; }
+@keyframes jr-fala-in { from { transform: translateY(4px); opacity: .3; } to { transform: none; opacity: 1; } }
+
+.jr-perg-corpo {
+  background: rgba(22,26,46,.94); border: 1px solid var(--jr-borda); border-radius: 16px;
+  padding: 12px; display: flex; flex-direction: column; gap: 10px;
+}
+.jr-perg-contador {
+  font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 1.5px;
+  color: var(--jr-cyan); text-transform: uppercase;
+}
+.jr-perg-enunciado {
+  font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.3; color: #fff;
+  white-space: pre-line;
+}
+.jr-alternativas { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.jr-alternativas.curtas { grid-template-columns: 1fr 1fr; }
+.jr-alt {
+  min-height: 52px; padding: 8px 12px; border-radius: 14px; cursor: pointer;
+  border: 2px solid rgba(124,92,252,.55); background: rgba(124,92,252,.14); color: #fff;
+  font-family: 'Inter', sans-serif !important; font-size: 18px; font-weight: 700; text-align: center; line-height: 1.3;
+  transition: background .15s, border-color .15s, transform .1s;
+}
+.jr-alt:hover:not(:disabled) { background: rgba(124,92,252,.3); }
+.jr-alt:active:not(:disabled) { transform: scale(.98); }
+.jr-alt:disabled { cursor: default; opacity: .55; }
+.jr-alt.certa { background: rgba(0,230,118,.25); border-color: var(--jr-verde); opacity: 1; }
+.jr-alt.errada { background: rgba(255,77,94,.25); border-color: var(--jr-verm); opacity: 1; animation: jr-treme .35s; }
+@keyframes jr-treme { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+.jr-perg-rodape { display: flex; justify-content: flex-end; gap: 10px; }
+.jr-perg-rodape:not(:has(:not([hidden]))) { display: none; }
+.jr-perg-rodape .jr-btn { min-height: 52px; flex: 1; max-width: 260px; }
+#perg-continuar { margin-left: auto; }
+
+.jr-tabela-wrap { overflow-x: auto; }
+.jr-tabela { width: 100%; border-collapse: collapse; font-size: 14px; background: rgba(255,255,255,.04); border-radius: 10px; overflow: hidden; }
+.jr-tabela caption { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 16px; color: var(--jr-ouro); padding-bottom: 4px; text-align: left; }
+.jr-tabela th, .jr-tabela td { height: 28px; padding: 0 10px; border: 1px solid var(--jr-borda); text-align: center; line-height: 1.1; }
+.jr-tabela th { background: rgba(0,212,255,.14); color: var(--jr-cyan); font-weight: 700; }
+.jr-tabela td { font-family: 'Inter', sans-serif; font-weight: 600; }
+
+/* ============================================================
+   3.5 Estojo de insígnias
+   ============================================================ */
+.jr-estojo { position: fixed; inset: 0; z-index: 40; overflow-y: auto; overscroll-behavior: contain; background: var(--jr-bg); }
+.jr-estojo-fundo {
+  min-height: 100%;
+  background-image: url('/img/jogo/ui/fundo-insignias-topo.webp'), url('/img/jogo/ui/fundo-insignias-repete.webp');
+  background-size: 100% auto, 100% auto;
+  background-repeat: no-repeat, repeat-y;
+  background-position: top center, top center;
+  image-rendering: pixelated;
+  padding: 0 16px 40px;
+}
+.jr-estojo-topo {
+  position: relative; max-width: 640px; margin: 0 auto; text-align: center;
+  padding: max(64px, calc(env(safe-area-inset-top) + 56px)) 0 18px;
+}
+.jr-estojo-fechar { position: absolute; top: max(12px, env(safe-area-inset-top)); right: 0; }
+.jr-estojo-titulo {
+  font-family: 'Rajdhani', sans-serif; font-size: 34px; font-weight: 700; color: var(--jr-ouro);
+  text-shadow: 0 3px 0 #3a2400, 0 4px 12px rgba(0,0,0,.7);
+}
+.jr-estojo-resumo { font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 600; color: #fff; margin: 6px 0 10px; text-shadow: 0 1px 4px #000; }
+.jr-barra { height: 12px; border-radius: 6px; background: rgba(0,0,0,.55); border: 1px solid rgba(255,215,0,.4); overflow: hidden; }
+.jr-barra-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--jr-ouro), var(--jr-laranja)); transition: width .6s; }
+
+.jr-bandejas { display: flex; flex-direction: column; align-items: center; gap: 22px; }
+.jr-bandeja-bloco { width: 100%; max-width: 640px; }
+.jr-bandeja-titulo {
+  font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; color: #fff;
+  text-shadow: 0 2px 6px #000; margin: 0 0 6px 4px;
+}
+.jr-bandeja {
+  position: relative; width: 100%;
+  background: url('/img/jogo/ui/bandeja-insignias.webp') center / 100% 100% no-repeat;
+  image-rendering: pixelated;
+}
+.jr-bandeja-num {
+  position: absolute; display: flex; align-items: center; justify-content: center;
+  font-family: 'Orbitron', sans-serif; font-weight: 800; font-size: clamp(22px, 7vw, 44px); color: #3a2400;
+  pointer-events: none;
+}
+.jr-encaixe {
+  position: absolute; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.jr-encaixe img { width: 90%; height: 90%; object-fit: contain; transition: transform .15s; }
+.jr-encaixe:hover img { transform: scale(1.05); }
+.jr-encaixe.bloqueada img { filter: grayscale(1) brightness(.35); }
+.jr-encaixe.dourada img { animation: jr-ouro-pulsa 2.4s ease-in-out infinite; }
+.jr-cadeado { position: absolute; font-size: clamp(18px, 5vw, 30px); pointer-events: none; filter: drop-shadow(0 2px 3px #000); }
+.jr-estrela {
+  position: absolute; top: 2%; right: 4%; font-size: clamp(16px, 4.5vw, 26px); color: var(--jr-ouro);
+  text-shadow: 0 0 6px #fff, 0 0 10px var(--jr-ouro); pointer-events: none;
+}
+@keyframes jr-ouro-pulsa {
+  0%, 100% { filter: drop-shadow(0 0 4px var(--jr-ouro)) saturate(1.2); }
+  50%      { filter: drop-shadow(0 0 14px var(--jr-ouro)) saturate(1.4) brightness(1.12); }
+}
+
+/* Cartão da insígnia */
+.jr-cartao-fundo {
+  position: fixed; inset: 0; z-index: 70; display: flex; align-items: center; justify-content: center;
+  background: rgba(5,6,15,.78); padding: 16px;
+}
+.jr-cartao {
+  width: 100%; max-width: 360px; background: var(--jr-card); border: 1px solid rgba(255,215,0,.35);
+  border-radius: 20px; padding: 22px 18px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 8px; box-shadow: 0 10px 40px rgba(0,0,0,.6);
+}
+.jr-cartao img { width: 180px; height: 180px; margin-bottom: 4px; }
+.jr-cartao img.bloqueada { filter: grayscale(1) brightness(.35); }
+.jr-cartao-nome { font-family: 'Rajdhani', sans-serif; font-size: 24px; font-weight: 700; color: var(--jr-ouro); }
+.jr-cartao-regiao { font-size: 13px; color: var(--jr-cyan); font-weight: 600; }
+.jr-cartao-conteudo { font-size: 15px; color: #e6e8f2; line-height: 1.4; }
+.jr-cartao-info { font-size: 14px; color: #b9bdd0; margin: 4px 0 10px; line-height: 1.4; }
+
+/* ── Computador ───────────────────────────────────────────── */
+@media (min-width: 768px) {
+  .jr-perg-caixa { gap: 14px; padding: 16px; }
+  .jr-busto { width: 96px; height: 96px; }
+  .jr-fala { font-size: 15px; }
+  .jr-perg-enunciado { font-size: 22px; }
+  .jr-marcador { width: 50px; height: 50px; font-size: 19px; }
+  .jr-hud-titulo { font-size: 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jr-marcador.disponivel, .jr-encaixe.dourada img, .jr-balao-acao, .jr-rotulo-porta span, .jr-ig-raios, .jr-ig-caixa, .jr-alt.errada, .jr-fala.nova {
+    animation: none !important;
+  }
+  .jr-encaixe.dourada img { filter: drop-shadow(0 0 10px var(--jr-ouro)) saturate(1.3); }
+}

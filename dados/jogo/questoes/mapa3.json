@@ -1,0 +1,532 @@
+{
+ "mapa": 3,
+ "nome": "Ilha Gelada",
+ "ginasios": {
+  "A": {
+   "nome": "Ginásio de Gelo",
+   "conteudo": "Negativos: comparar, somar e subtrair",
+   "insignia": "insignia-mapa3-A",
+   "interior": "mapa3-A",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa3-A-treinador1",
+     "questoes": [
+      {
+       "id": "m3A-treinador1-1",
+       "enunciado": "Qual é maior?",
+       "resposta": "−3",
+       "erradas": [
+        "−8"
+       ]
+      },
+      {
+       "id": "m3A-treinador1-2",
+       "enunciado": "Qual é maior?",
+       "resposta": "2",
+       "erradas": [
+        "−5"
+       ]
+      },
+      {
+       "id": "m3A-treinador1-3",
+       "enunciado": "Qual é maior?",
+       "resposta": "0",
+       "erradas": [
+        "−1"
+       ]
+      },
+      {
+       "id": "m3A-treinador1-4",
+       "enunciado": "Qual é maior?",
+       "resposta": "−2",
+       "erradas": [
+        "−10"
+       ]
+      },
+      {
+       "id": "m3A-treinador1-5",
+       "enunciado": "Qual é menor?",
+       "resposta": "−4",
+       "erradas": [
+        "1"
+       ]
+      }
+     ],
+     "fala": "Na reta numérica, quanto mais à esquerda, menor!"
+    },
+    "treinador2": {
+     "sprite": "mapa3-A-treinador2",
+     "questoes": [
+      {
+       "id": "m3A-treinador2-1",
+       "enunciado": "−5 + 8",
+       "resposta": "3",
+       "erradas": [
+        "−3",
+        "4",
+        "2"
+       ]
+      },
+      {
+       "id": "m3A-treinador2-2",
+       "enunciado": "−2 + (−3)",
+       "resposta": "−5",
+       "erradas": [
+        "5",
+        "−4",
+        "−6"
+       ]
+      },
+      {
+       "id": "m3A-treinador2-3",
+       "enunciado": "4 + (−6)",
+       "resposta": "−2",
+       "erradas": [
+        "2",
+        "−1",
+        "−3"
+       ]
+      },
+      {
+       "id": "m3A-treinador2-4",
+       "enunciado": "−7 + 7",
+       "resposta": "0",
+       "erradas": [
+        "1",
+        "−1",
+        "2"
+       ]
+      },
+      {
+       "id": "m3A-treinador2-5",
+       "enunciado": "−1 + 5",
+       "resposta": "4",
+       "erradas": [
+        "−4",
+        "5",
+        "3"
+       ]
+      }
+     ],
+     "fala": "Somar com negativos é como subir e descer a temperatura."
+    },
+    "treinador3": {
+     "sprite": "mapa3-A-treinador3",
+     "questoes": [
+      {
+       "id": "m3A-treinador3-1",
+       "enunciado": "−4 − 3",
+       "resposta": "−7",
+       "erradas": [
+        "7",
+        "−6",
+        "−8"
+       ]
+      },
+      {
+       "id": "m3A-treinador3-2",
+       "enunciado": "6 − 10",
+       "resposta": "−4",
+       "erradas": [
+        "4",
+        "−3",
+        "−5"
+       ]
+      },
+      {
+       "id": "m3A-treinador3-3",
+       "enunciado": "2 − 5",
+       "resposta": "−3",
+       "erradas": [
+        "3",
+        "−2",
+        "−4"
+       ]
+      },
+      {
+       "id": "m3A-treinador3-4",
+       "enunciado": "−1 − 1",
+       "resposta": "−2",
+       "erradas": [
+        "2",
+        "−1",
+        "−3"
+       ]
+      },
+      {
+       "id": "m3A-treinador3-5",
+       "enunciado": "0 − 8",
+       "resposta": "−8",
+       "erradas": [
+        "8",
+        "−7",
+        "−9"
+       ]
+      }
+     ],
+     "fala": "Subtrair pode levar abaixo de zero. Brrr!"
+    },
+    "lider": {
+     "sprite": "mapa3-A-lider",
+     "questoes": [
+      {
+       "id": "m3A-lider-1",
+       "enunciado": "A temperatura era −2 °C e subiu 5 graus. Quanto está agora?",
+       "resposta": "3 °C",
+       "erradas": [
+        "−3 °C",
+        "4 °C",
+        "2 °C"
+       ]
+      },
+      {
+       "id": "m3A-lider-2",
+       "enunciado": "Tinha R$ 10 na conta e gastei R$ 15. Qual o saldo?",
+       "resposta": "−R$ 5",
+       "erradas": [
+        "R$ 5",
+        "−R$ 4",
+        "−R$ 6"
+       ]
+      },
+      {
+       "id": "m3A-lider-3",
+       "enunciado": "−3 + 3 − 4",
+       "resposta": "−4",
+       "erradas": [
+        "4",
+        "−3",
+        "−5"
+       ]
+      },
+      {
+       "id": "m3A-lider-4",
+       "enunciado": "Estou no andar −1 (garagem) e subo 4 andares. Em que andar estou?",
+       "resposta": "3",
+       "erradas": [
+        "−3",
+        "4",
+        "2"
+       ]
+      },
+      {
+       "id": "m3A-lider-5",
+       "enunciado": "−6 + 2",
+       "resposta": "−4",
+       "erradas": [
+        "4",
+        "−3",
+        "−5"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "Aqui faz tanto frio que os números ficam negativos!",
+      "vitoria": "Você não congelou nas contas! Leve a Insígnia do Floco de Neve!",
+      "derrota": "Escorregou no gelo! Volte e tente de novo."
+     }
+    },
+    "revanche": {
+     "sprite": "mapa3-A-lider",
+     "questoes": [
+      {
+       "id": "m3A-revanche-1",
+       "enunciado": "−8 + (−6) − (−4)",
+       "resposta": "−10",
+       "erradas": [
+        "10",
+        "−9",
+        "−11"
+       ]
+      },
+      {
+       "id": "m3A-revanche-2",
+       "enunciado": "5 − (−3)",
+       "resposta": "8",
+       "erradas": [
+        "−8",
+        "9",
+        "7"
+       ]
+      },
+      {
+       "id": "m3A-revanche-3",
+       "enunciado": "−2 − (−7)",
+       "resposta": "5",
+       "erradas": [
+        "−5",
+        "6",
+        "4"
+       ]
+      }
+     ],
+     "fala": "Agora com menos de menos. Cuidado com o sinal!"
+    }
+   }
+  },
+  "B": {
+   "nome": "Cabana da Neve",
+   "conteudo": "Negativos: multiplicar e dividir",
+   "insignia": "insignia-mapa3-B",
+   "interior": "mapa3-B",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa3-B-treinador1",
+     "questoes": [
+      {
+       "id": "m3B-treinador1-1",
+       "enunciado": "(−2) × 3",
+       "resposta": "−6",
+       "erradas": [
+        "6",
+        "−5",
+        "−7"
+       ]
+      },
+      {
+       "id": "m3B-treinador1-2",
+       "enunciado": "(−4) × (−5)",
+       "resposta": "20",
+       "erradas": [
+        "−20",
+        "21",
+        "19"
+       ]
+      },
+      {
+       "id": "m3B-treinador1-3",
+       "enunciado": "5 × (−2)",
+       "resposta": "−10",
+       "erradas": [
+        "10",
+        "−9",
+        "−11"
+       ]
+      },
+      {
+       "id": "m3B-treinador1-4",
+       "enunciado": "(−3) × (−3)",
+       "resposta": "9",
+       "erradas": [
+        "−9",
+        "10",
+        "8"
+       ]
+      },
+      {
+       "id": "m3B-treinador1-5",
+       "enunciado": "(−1) × 7",
+       "resposta": "−7",
+       "erradas": [
+        "7",
+        "−6",
+        "−8"
+       ]
+      }
+     ],
+     "fala": "Sinais diferentes dão negativo. Vamos treinar?"
+    },
+    "treinador2": {
+     "sprite": "mapa3-B-treinador2",
+     "questoes": [
+      {
+       "id": "m3B-treinador2-1",
+       "enunciado": "(−12) ÷ 3",
+       "resposta": "−4",
+       "erradas": [
+        "4",
+        "−3",
+        "−5"
+       ]
+      },
+      {
+       "id": "m3B-treinador2-2",
+       "enunciado": "(−10) ÷ (−2)",
+       "resposta": "5",
+       "erradas": [
+        "−5",
+        "6",
+        "4"
+       ]
+      },
+      {
+       "id": "m3B-treinador2-3",
+       "enunciado": "20 ÷ (−4)",
+       "resposta": "−5",
+       "erradas": [
+        "5",
+        "−4",
+        "−6"
+       ]
+      },
+      {
+       "id": "m3B-treinador2-4",
+       "enunciado": "(−8) ÷ (−8)",
+       "resposta": "1",
+       "erradas": [
+        "−1",
+        "2",
+        "0"
+       ]
+      },
+      {
+       "id": "m3B-treinador2-5",
+       "enunciado": "(−15) ÷ 5",
+       "resposta": "−3",
+       "erradas": [
+        "3",
+        "−2",
+        "−4"
+       ]
+      }
+     ],
+     "fala": "Dividir com sinais segue a mesma regra!"
+    },
+    "treinador3": {
+     "sprite": "mapa3-B-treinador3",
+     "questoes": [
+      {
+       "id": "m3B-treinador3-1",
+       "enunciado": "Negativo × negativo dá:",
+       "resposta": "positivo",
+       "erradas": [
+        "negativo"
+       ]
+      },
+      {
+       "id": "m3B-treinador3-2",
+       "enunciado": "Positivo × negativo dá:",
+       "resposta": "negativo",
+       "erradas": [
+        "positivo"
+       ]
+      },
+      {
+       "id": "m3B-treinador3-3",
+       "enunciado": "Negativo ÷ positivo dá:",
+       "resposta": "negativo",
+       "erradas": [
+        "positivo"
+       ]
+      },
+      {
+       "id": "m3B-treinador3-4",
+       "enunciado": "Negativo ÷ negativo dá:",
+       "resposta": "positivo",
+       "erradas": [
+        "negativo"
+       ]
+      },
+      {
+       "id": "m3B-treinador3-5",
+       "enunciado": "(−6) × 0",
+       "resposta": "0",
+       "erradas": [
+        "1",
+        "−1",
+        "2"
+       ]
+      }
+     ],
+     "fala": "Me diga as regras dos sinais!"
+    },
+    "lider": {
+     "sprite": "mapa3-B-lider",
+     "questoes": [
+      {
+       "id": "m3B-lider-1",
+       "enunciado": "(−2) × (−3)",
+       "resposta": "6",
+       "erradas": [
+        "−6",
+        "7",
+        "5"
+       ]
+      },
+      {
+       "id": "m3B-lider-2",
+       "enunciado": "(−18) ÷ 6",
+       "resposta": "−3",
+       "erradas": [
+        "3",
+        "−2",
+        "−4"
+       ]
+      },
+      {
+       "id": "m3B-lider-3",
+       "enunciado": "4 × (−3)",
+       "resposta": "−12",
+       "erradas": [
+        "12",
+        "−11",
+        "−13"
+       ]
+      },
+      {
+       "id": "m3B-lider-4",
+       "enunciado": "(−20) ÷ (−5)",
+       "resposta": "4",
+       "erradas": [
+        "−4",
+        "5",
+        "3"
+       ]
+      },
+      {
+       "id": "m3B-lider-5",
+       "enunciado": "(−7) × 2",
+       "resposta": "−14",
+       "erradas": [
+        "14",
+        "−13",
+        "−15"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "Na minha cabana, a regra dos sinais esquenta tudo!",
+      "vitoria": "Dominou a regra dos sinais! Tome a Insígnia do Termômetro!",
+      "derrota": "Os sinais se embaralharam. Volte para a lareira e tente de novo!"
+     }
+    },
+    "revanche": {
+     "sprite": "mapa3-B-lider",
+     "questoes": [
+      {
+       "id": "m3B-revanche-1",
+       "enunciado": "(−3) × (−2) × (−1)",
+       "resposta": "−6",
+       "erradas": [
+        "6",
+        "−5",
+        "−7"
+       ]
+      },
+      {
+       "id": "m3B-revanche-2",
+       "enunciado": "(−20) ÷ (−5) + (−7)",
+       "resposta": "−3",
+       "erradas": [
+        "3",
+        "−2",
+        "−4"
+       ]
+      },
+      {
+       "id": "m3B-revanche-3",
+       "enunciado": "(−2) × 5 + 4",
+       "resposta": "−6",
+       "erradas": [
+        "6",
+        "−5",
+        "−7"
+       ]
+      }
+     ],
+     "fala": "Três números negativos de uma vez. Aguenta?"
+    }
+   }
+  }
+ }
+}

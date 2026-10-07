@@ -1,0 +1,527 @@
+{
+ "mapa": 9,
+ "nome": "Floresta das Balanças",
+ "ginasios": {
+  "A": {
+   "nome": "Templo Antigo",
+   "conteudo": "Equações: resolver",
+   "insignia": "insignia-mapa9-A",
+   "interior": "mapa9-A",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa9-A-treinador1",
+     "questoes": [
+      {
+       "id": "m9A-treinador1-1",
+       "enunciado": "x + 5 = 12",
+       "resposta": "x = 7",
+       "erradas": [
+        "x = 17",
+        "x = 8",
+        "x = 6"
+       ]
+      },
+      {
+       "id": "m9A-treinador1-2",
+       "enunciado": "x − 3 = 10",
+       "resposta": "x = 13",
+       "erradas": [
+        "x = 7",
+        "x = 14",
+        "x = 12"
+       ]
+      },
+      {
+       "id": "m9A-treinador1-3",
+       "enunciado": "x + 8 = 20",
+       "resposta": "x = 12",
+       "erradas": [
+        "x = 28",
+        "x = 13",
+        "x = 11"
+       ]
+      },
+      {
+       "id": "m9A-treinador1-4",
+       "enunciado": "x − 6 = 4",
+       "resposta": "x = 10",
+       "erradas": [
+        "x = −2",
+        "x = 11",
+        "x = 9"
+       ]
+      },
+      {
+       "id": "m9A-treinador1-5",
+       "enunciado": "x + 9 = 9",
+       "resposta": "x = 0",
+       "erradas": [
+        "x = 1",
+        "x = −1",
+        "x = 2"
+       ]
+      }
+     ],
+     "fala": "Faça a operação inversa e descubra o x!"
+    },
+    "treinador2": {
+     "sprite": "mapa9-A-treinador2",
+     "questoes": [
+      {
+       "id": "m9A-treinador2-1",
+       "enunciado": "2x = 14",
+       "resposta": "x = 7",
+       "erradas": [
+        "x = 16",
+        "x = 12",
+        "x = 8"
+       ]
+      },
+      {
+       "id": "m9A-treinador2-2",
+       "enunciado": "3x = 15",
+       "resposta": "x = 5",
+       "erradas": [
+        "x = 18",
+        "x = 12",
+        "x = 6"
+       ]
+      },
+      {
+       "id": "m9A-treinador2-3",
+       "enunciado": "x ÷ 4 = 3",
+       "resposta": "x = 12",
+       "erradas": [
+        "x = 7",
+        "x = −1",
+        "x = 13"
+       ]
+      },
+      {
+       "id": "m9A-treinador2-4",
+       "enunciado": "5x = 30",
+       "resposta": "x = 6",
+       "erradas": [
+        "x = 35",
+        "x = 25",
+        "x = 7"
+       ]
+      },
+      {
+       "id": "m9A-treinador2-5",
+       "enunciado": "x ÷ 2 = 8",
+       "resposta": "x = 16",
+       "erradas": [
+        "x = 10",
+        "x = 6",
+        "x = 17"
+       ]
+      }
+     ],
+     "fala": "Se 2x é 14, quanto vale x?"
+    },
+    "treinador3": {
+     "sprite": "mapa9-A-treinador3",
+     "questoes": [
+      {
+       "id": "m9A-treinador3-1",
+       "enunciado": "2x + 1 = 11",
+       "resposta": "x = 5",
+       "erradas": [
+        "x = 12",
+        "x = 10",
+        "x = 6"
+       ]
+      },
+      {
+       "id": "m9A-treinador3-2",
+       "enunciado": "3x − 2 = 7",
+       "resposta": "x = 3",
+       "erradas": [
+        "x = 9",
+        "x = 5",
+        "x = 4"
+       ]
+      },
+      {
+       "id": "m9A-treinador3-3",
+       "enunciado": "2x + 4 = 10",
+       "resposta": "x = 3",
+       "erradas": [
+        "x = 14",
+        "x = 6",
+        "x = 4"
+       ]
+      },
+      {
+       "id": "m9A-treinador3-4",
+       "enunciado": "4x − 1 = 15",
+       "resposta": "x = 4",
+       "erradas": [
+        "x = 16",
+        "x = 14",
+        "x = 5"
+       ]
+      },
+      {
+       "id": "m9A-treinador3-5",
+       "enunciado": "5x + 5 = 25",
+       "resposta": "x = 4",
+       "erradas": [
+        "x = 30",
+        "x = 20",
+        "x = 5"
+       ]
+      }
+     ],
+     "fala": "Duas operações: desfaça uma de cada vez!"
+    },
+    "lider": {
+     "sprite": "mapa9-A-lider",
+     "questoes": [
+      {
+       "id": "m9A-lider-1",
+       "enunciado": "Pensei num número, somei 6 e deu 15. Que número pensei?",
+       "resposta": "9",
+       "erradas": [
+        "21",
+        "10",
+        "8"
+       ]
+      },
+      {
+       "id": "m9A-lider-2",
+       "enunciado": "O dobro de um número é 18. Que número é esse?",
+       "resposta": "9",
+       "erradas": [
+        "10",
+        "8",
+        "−9"
+       ]
+      },
+      {
+       "id": "m9A-lider-3",
+       "enunciado": "3x + 3 = 12",
+       "resposta": "x = 3",
+       "erradas": [
+        "x = 15",
+        "x = 9",
+        "x = 4"
+       ]
+      },
+      {
+       "id": "m9A-lider-4",
+       "enunciado": "x − 10 = −2",
+       "resposta": "x = 8",
+       "erradas": [
+        "x = −12",
+        "x = 9",
+        "x = 7"
+       ]
+      },
+      {
+       "id": "m9A-lider-5",
+       "enunciado": "Comprei 4 cadernos iguais e gastei R$ 20. Quanto custou cada um?",
+       "resposta": "R$ 5",
+       "erradas": [
+        "R$ 24",
+        "R$ 16",
+        "R$ 6"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "A balança do templo só se equilibra com o x certo.",
+      "vitoria": "A balança se equilibrou! Leve a Insígnia da Gangorra!",
+      "derrota": "A balança tombou! Volte e equilibre de novo."
+     }
+    },
+    "revanche": {
+     "sprite": "mapa9-A-lider",
+     "questoes": [
+      {
+       "id": "m9A-revanche-1",
+       "enunciado": "3x + 4 = 19",
+       "resposta": "x = 5",
+       "erradas": [
+        "x = 23",
+        "x = 15",
+        "x = 6"
+       ]
+      },
+      {
+       "id": "m9A-revanche-2",
+       "enunciado": "5x − 2 = 3x + 8",
+       "resposta": "x = 5",
+       "erradas": [
+        "x = 11",
+        "x = 6",
+        "x = 4"
+       ]
+      },
+      {
+       "id": "m9A-revanche-3",
+       "enunciado": "2(x + 3) = 18",
+       "resposta": "x = 6",
+       "erradas": [
+        "x = 21",
+        "x = 15",
+        "x = 7"
+       ]
+      }
+     ],
+     "fala": "Agora com x dos dois lados!"
+    }
+   }
+  },
+  "B": {
+   "nome": "Torre do Mago",
+   "conteudo": "Equações: qual é a equação?",
+   "insignia": "insignia-mapa9-B",
+   "interior": "mapa9-B",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa9-B-treinador1",
+     "questoes": [
+      {
+       "id": "m9B-treinador1-1",
+       "enunciado": "\"Um número mais 4 é igual a 10\"",
+       "resposta": "x + 4 = 10",
+       "erradas": [
+        "4x = 10",
+        "x − 4 = 10"
+       ]
+      },
+      {
+       "id": "m9B-treinador1-2",
+       "enunciado": "\"O dobro de um número é 18\"",
+       "resposta": "2x = 18",
+       "erradas": [
+        "x + 2 = 18",
+        "x² = 18"
+       ]
+      },
+      {
+       "id": "m9B-treinador1-3",
+       "enunciado": "\"Um número menos 7 é igual a 3\"",
+       "resposta": "x − 7 = 3",
+       "erradas": [
+        "7 − x = 3",
+        "x + 7 = 3"
+       ]
+      },
+      {
+       "id": "m9B-treinador1-4",
+       "enunciado": "\"O triplo de um número é 12\"",
+       "resposta": "3x = 12",
+       "erradas": [
+        "x + 3 = 12",
+        "x ÷ 3 = 12"
+       ]
+      },
+      {
+       "id": "m9B-treinador1-5",
+       "enunciado": "\"A metade de um número é 5\"",
+       "resposta": "x ÷ 2 = 5",
+       "erradas": [
+        "2x = 5",
+        "x − 2 = 5"
+       ]
+      }
+     ],
+     "fala": "Transforme a frase em equação!"
+    },
+    "treinador2": {
+     "sprite": "mapa9-B-treinador2",
+     "questoes": [
+      {
+       "id": "m9B-treinador2-1",
+       "enunciado": "Tinha x figurinhas, ganhei 5 e fiquei com 20.",
+       "resposta": "x + 5 = 20",
+       "erradas": [
+        "5x = 20",
+        "x − 5 = 20"
+       ]
+      },
+      {
+       "id": "m9B-treinador2-2",
+       "enunciado": "Cada caderno custa x reais. 3 cadernos custaram R$ 15.",
+       "resposta": "3x = 15",
+       "erradas": [
+        "x + 3 = 15",
+        "x ÷ 3 = 15"
+       ]
+      },
+      {
+       "id": "m9B-treinador2-3",
+       "enunciado": "Tinha x reais, gastei 8 e sobraram 12.",
+       "resposta": "x − 8 = 12",
+       "erradas": [
+        "x + 8 = 12",
+        "8x = 12"
+       ]
+      },
+      {
+       "id": "m9B-treinador2-4",
+       "enunciado": "Dividi x balas entre 4 amigos e cada um ganhou 6.",
+       "resposta": "x ÷ 4 = 6",
+       "erradas": [
+        "4x = 6",
+        "x − 4 = 6"
+       ]
+      },
+      {
+       "id": "m9B-treinador2-5",
+       "enunciado": "Tinha x reais, ganhei 10 e fiquei com 25.",
+       "resposta": "x + 10 = 25",
+       "erradas": [
+        "10x = 25",
+        "x − 10 = 25"
+       ]
+      }
+     ],
+     "fala": "Cada história esconde uma equação!"
+    },
+    "treinador3": {
+     "sprite": "mapa9-B-treinador3",
+     "questoes": [
+      {
+       "id": "m9B-treinador3-1",
+       "enunciado": "Numa balança, 1 caixa de peso x e mais 3 kg equilibram 8 kg.",
+       "resposta": "x + 3 = 8",
+       "erradas": [
+        "3x = 8",
+        "x = 8 + 3"
+       ]
+      },
+      {
+       "id": "m9B-treinador3-2",
+       "enunciado": "Numa balança, 2 caixas de peso x equilibram 10 kg.",
+       "resposta": "2x = 10",
+       "erradas": [
+        "x + 2 = 10",
+        "x = 10 + 2"
+       ]
+      },
+      {
+       "id": "m9B-treinador3-3",
+       "enunciado": "Numa balança, 3 caixas de peso x equilibram 12 kg.",
+       "resposta": "3x = 12",
+       "erradas": [
+        "x + 3 = 12",
+        "12x = 3"
+       ]
+      },
+      {
+       "id": "m9B-treinador3-4",
+       "enunciado": "Numa balança, 1 caixa de peso x equilibra um peso de 5 kg e outro de 2 kg.",
+       "resposta": "x = 5 + 2",
+       "erradas": [
+        "x = 5 × 2",
+        "x + 2 = 5"
+       ]
+      },
+      {
+       "id": "m9B-treinador3-5",
+       "enunciado": "Numa balança, 1 caixa de peso x e mais 1 kg equilibram 6 kg.",
+       "resposta": "x + 1 = 6",
+       "erradas": [
+        "x = 6 + 1",
+        "6x = 1"
+       ]
+      }
+     ],
+     "fala": "Monte a equação da balança!"
+    },
+    "lider": {
+     "sprite": "mapa9-B-lider",
+     "questoes": [
+      {
+       "id": "m9B-lider-1",
+       "enunciado": "\"Um número mais 12 é igual a 30\"",
+       "resposta": "x + 12 = 30",
+       "erradas": [
+        "12x = 30",
+        "x − 12 = 30"
+       ]
+      },
+      {
+       "id": "m9B-lider-2",
+       "enunciado": "\"O quádruplo de um número é 20\"",
+       "resposta": "4x = 20",
+       "erradas": [
+        "x + 4 = 20",
+        "x ÷ 4 = 20"
+       ]
+      },
+      {
+       "id": "m9B-lider-3",
+       "enunciado": "Pedro tem x anos. Daqui a 5 anos terá 18.",
+       "resposta": "x + 5 = 18",
+       "erradas": [
+        "x − 5 = 18",
+        "5x = 18"
+       ]
+      },
+      {
+       "id": "m9B-lider-4",
+       "enunciado": "Cada ingresso custa x reais. 3 ingressos custaram R$ 45.",
+       "resposta": "3x = 45",
+       "erradas": [
+        "x + 3 = 45",
+        "x ÷ 3 = 45"
+       ]
+      },
+      {
+       "id": "m9B-lider-5",
+       "enunciado": "Tinha x reais, gastei a metade e fiquei com 10.",
+       "resposta": "x ÷ 2 = 10",
+       "erradas": [
+        "2x = 10",
+        "x − 2 = 10"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "Minhas magias são frases que viram equações!",
+      "vitoria": "Que magia! Tome a Insígnia do Pergaminho!",
+      "derrota": "O feitiço falhou! Tente de novo."
+     }
+    },
+    "revanche": {
+     "sprite": "mapa9-B-lider",
+     "questoes": [
+      {
+       "id": "m9B-revanche-1",
+       "enunciado": "\"O dobro de um número mais 3 é igual a 11\"",
+       "resposta": "2x + 3 = 11",
+       "erradas": [
+        "2(x + 3) = 11",
+        "x + 2 + 3 = 11"
+       ]
+      },
+      {
+       "id": "m9B-revanche-2",
+       "enunciado": "Ana tem x anos e o pai tem o triplo da idade dela. Juntos somam 48 anos.",
+       "resposta": "x + 3x = 48",
+       "erradas": [
+        "3x = 48",
+        "x + 3 = 48"
+       ]
+      },
+      {
+       "id": "m9B-revanche-3",
+       "enunciado": "Numa balança, 2 caixas de peso x e mais 4 kg equilibram 10 kg.",
+       "resposta": "2x + 4 = 10",
+       "erradas": [
+        "x + 4 = 10",
+        "2x = 10 + 4"
+       ]
+      }
+     ],
+     "fala": "Feitiços com duas operações!"
+    }
+   }
+  }
+ }
+}

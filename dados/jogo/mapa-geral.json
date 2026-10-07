@@ -1,0 +1,86 @@
+{
+ "tamanho": {
+  "w": 1376,
+  "h": 768
+ },
+ "regioes": [
+  {
+   "mapa": 1,
+   "nome": "Vila Inicial",
+   "x": 685,
+   "y": 538
+  },
+  {
+   "mapa": 2,
+   "nome": "Porto das Dezenas",
+   "x": 255,
+   "y": 531
+  },
+  {
+   "mapa": 3,
+   "nome": "Ilha Gelada",
+   "x": 1189,
+   "y": 585
+  },
+  {
+   "mapa": 4,
+   "nome": "Vale das Frações",
+   "x": 1115,
+   "y": 370
+  },
+  {
+   "mapa": 5,
+   "nome": "Montanha das Potências",
+   "x": 860,
+   "y": 336
+  },
+  {
+   "mapa": 6,
+   "nome": "Bosque dos Múltiplos",
+   "x": 632,
+   "y": 329
+  },
+  {
+   "mapa": 7,
+   "nome": "Mercado Central",
+   "x": 417,
+   "y": 343
+  },
+  {
+   "mapa": 8,
+   "nome": "Cidade das Letras",
+   "x": 155,
+   "y": 336
+  },
+  {
+   "mapa": 9,
+   "nome": "Floresta das Balanças",
+   "x": 242,
+   "y": 94
+  },
+  {
+   "mapa": 10,
+   "nome": "Vila da Padaria",
+   "x": 658,
+   "y": 81
+  },
+  {
+   "mapa": 11,
+   "nome": "Canteiro de Obras",
+   "x": 847,
+   "y": 94
+  },
+  {
+   "mapa": 12,
+   "nome": "Arquipélago das Coordenadas",
+   "x": 1062,
+   "y": 128
+  },
+  {
+   "mapa": 13,
+   "nome": "Feira dos Dados",
+   "x": 1250,
+   "y": 94
+  }
+ ]
+}

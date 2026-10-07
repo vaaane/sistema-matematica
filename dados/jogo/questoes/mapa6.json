@@ -1,0 +1,480 @@
+{
+ "mapa": 6,
+ "nome": "Bosque dos Múltiplos",
+ "ginasios": {
+  "A": {
+   "nome": "Casa na Árvore",
+   "conteudo": "Múltiplos",
+   "insignia": "insignia-mapa6-A",
+   "interior": "mapa6-A",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa6-A-treinador1",
+     "questoes": [
+      {
+       "id": "m6A-treinador1-1",
+       "enunciado": "8 é múltiplo de 2?",
+       "resposta": "Sim",
+       "erradas": [
+        "Não"
+       ]
+      },
+      {
+       "id": "m6A-treinador1-2",
+       "enunciado": "7 é múltiplo de 2?",
+       "resposta": "Não",
+       "erradas": [
+        "Sim"
+       ]
+      },
+      {
+       "id": "m6A-treinador1-3",
+       "enunciado": "10 é múltiplo de 2?",
+       "resposta": "Sim",
+       "erradas": [
+        "Não"
+       ]
+      },
+      {
+       "id": "m6A-treinador1-4",
+       "enunciado": "13 é múltiplo de 2?",
+       "resposta": "Não",
+       "erradas": [
+        "Sim"
+       ]
+      },
+      {
+       "id": "m6A-treinador1-5",
+       "enunciado": "20 é múltiplo de 2?",
+       "resposta": "Sim",
+       "erradas": [
+        "Não"
+       ]
+      }
+     ],
+     "fala": "Múltiplos de 2 são os números pares!"
+    },
+    "treinador2": {
+     "sprite": "mapa6-A-treinador2",
+     "questoes": [
+      {
+       "id": "m6A-treinador2-1",
+       "enunciado": "10 é múltiplo de 5?",
+       "resposta": "Sim",
+       "erradas": [
+        "Não"
+       ]
+      },
+      {
+       "id": "m6A-treinador2-2",
+       "enunciado": "12 é múltiplo de 5?",
+       "resposta": "Não",
+       "erradas": [
+        "Sim"
+       ]
+      },
+      {
+       "id": "m6A-treinador2-3",
+       "enunciado": "30 é múltiplo de 10?",
+       "resposta": "Sim",
+       "erradas": [
+        "Não"
+       ]
+      },
+      {
+       "id": "m6A-treinador2-4",
+       "enunciado": "25 é múltiplo de 10?",
+       "resposta": "Não",
+       "erradas": [
+        "Sim"
+       ]
+      },
+      {
+       "id": "m6A-treinador2-5",
+       "enunciado": "15 é múltiplo de 5?",
+       "resposta": "Sim",
+       "erradas": [
+        "Não"
+       ]
+      }
+     ],
+     "fala": "Múltiplos de 5 e de 10 terminam em 0 ou 5!"
+    },
+    "treinador3": {
+     "sprite": "mapa6-A-treinador3",
+     "questoes": [
+      {
+       "id": "m6A-treinador3-1",
+       "enunciado": "9 é múltiplo de 3?",
+       "resposta": "Sim",
+       "erradas": [
+        "Não"
+       ]
+      },
+      {
+       "id": "m6A-treinador3-2",
+       "enunciado": "18 é múltiplo de 3?",
+       "resposta": "Sim",
+       "erradas": [
+        "Não"
+       ]
+      },
+      {
+       "id": "m6A-treinador3-3",
+       "enunciado": "10 é múltiplo de 3?",
+       "resposta": "Não",
+       "erradas": [
+        "Sim"
+       ]
+      },
+      {
+       "id": "m6A-treinador3-4",
+       "enunciado": "12 é múltiplo de 3?",
+       "resposta": "Sim",
+       "erradas": [
+        "Não"
+       ]
+      },
+      {
+       "id": "m6A-treinador3-5",
+       "enunciado": "14 é múltiplo de 3?",
+       "resposta": "Não",
+       "erradas": [
+        "Sim"
+       ]
+      }
+     ],
+     "fala": "Múltiplos de 3 aparecem contando de 3 em 3!"
+    },
+    "lider": {
+     "sprite": "mapa6-A-lider",
+     "questoes": [
+      {
+       "id": "m6A-lider-1",
+       "enunciado": "Qual é múltiplo de 2?",
+       "resposta": "8",
+       "erradas": [
+        "7",
+        "9"
+       ]
+      },
+      {
+       "id": "m6A-lider-2",
+       "enunciado": "Qual é múltiplo de 5?",
+       "resposta": "20",
+       "erradas": [
+        "12",
+        "22"
+       ]
+      },
+      {
+       "id": "m6A-lider-3",
+       "enunciado": "Qual é múltiplo de 3?",
+       "resposta": "15",
+       "erradas": [
+        "11",
+        "14"
+       ]
+      },
+      {
+       "id": "m6A-lider-4",
+       "enunciado": "Qual é múltiplo de 4?",
+       "resposta": "12",
+       "erradas": [
+        "10",
+        "14"
+       ]
+      },
+      {
+       "id": "m6A-lider-5",
+       "enunciado": "Qual é múltiplo de 6?",
+       "resposta": "18",
+       "erradas": [
+        "16",
+        "20"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "As abelhas daqui contam favos de 2 em 2, de 3 em 3...",
+      "vitoria": "Você conhece os múltiplos como uma abelha! Leve a Insígnia do Favo!",
+      "derrota": "Os múltiplos voaram! Volte e conte de novo."
+     }
+    },
+    "revanche": {
+     "sprite": "mapa6-A-lider",
+     "questoes": [
+      {
+       "id": "m6A-revanche-1",
+       "enunciado": "Quais são os 4 primeiros múltiplos de 6 (sem o zero)?",
+       "resposta": "6, 12, 18, 24",
+       "erradas": [
+        "6, 8, 10, 12",
+        "1, 2, 3, 6",
+        "12, 18, 24, 30"
+       ]
+      },
+      {
+       "id": "m6A-revanche-2",
+       "enunciado": "Qual é múltiplo de 3 e de 4 ao mesmo tempo?",
+       "resposta": "12",
+       "erradas": [
+        "8",
+        "15"
+       ]
+      },
+      {
+       "id": "m6A-revanche-3",
+       "enunciado": "Qual é múltiplo de 2 e de 5 ao mesmo tempo?",
+       "resposta": "20",
+       "erradas": [
+        "15",
+        "25"
+       ]
+      }
+     ],
+     "fala": "Múltiplos de dois números ao mesmo tempo!"
+    }
+   }
+  },
+  "B": {
+   "nome": "Cabana do Lenhador",
+   "conteudo": "Divisores",
+   "insignia": "insignia-mapa6-B",
+   "interior": "mapa6-B",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa6-B-treinador1",
+     "questoes": [
+      {
+       "id": "m6B-treinador1-1",
+       "enunciado": "3 é divisor de 9?",
+       "resposta": "Sim",
+       "erradas": [
+        "Não"
+       ]
+      },
+      {
+       "id": "m6B-treinador1-2",
+       "enunciado": "4 é divisor de 10?",
+       "resposta": "Não",
+       "erradas": [
+        "Sim"
+       ]
+      },
+      {
+       "id": "m6B-treinador1-3",
+       "enunciado": "2 é divisor de 8?",
+       "resposta": "Sim",
+       "erradas": [
+        "Não"
+       ]
+      },
+      {
+       "id": "m6B-treinador1-4",
+       "enunciado": "5 é divisor de 12?",
+       "resposta": "Não",
+       "erradas": [
+        "Sim"
+       ]
+      },
+      {
+       "id": "m6B-treinador1-5",
+       "enunciado": "6 é divisor de 12?",
+       "resposta": "Sim",
+       "erradas": [
+        "Não"
+       ]
+      }
+     ],
+     "fala": "Um divisor corta o número em partes iguais, sem sobrar!"
+    },
+    "treinador2": {
+     "sprite": "mapa6-B-treinador2",
+     "questoes": [
+      {
+       "id": "m6B-treinador2-1",
+       "enunciado": "Qual é divisor de 15?",
+       "resposta": "5",
+       "erradas": [
+        "2",
+        "4"
+       ]
+      },
+      {
+       "id": "m6B-treinador2-2",
+       "enunciado": "Qual é divisor de 10?",
+       "resposta": "5",
+       "erradas": [
+        "3",
+        "4"
+       ]
+      },
+      {
+       "id": "m6B-treinador2-3",
+       "enunciado": "Qual é divisor de 8?",
+       "resposta": "4",
+       "erradas": [
+        "3",
+        "6"
+       ]
+      },
+      {
+       "id": "m6B-treinador2-4",
+       "enunciado": "Qual é divisor de 9?",
+       "resposta": "3",
+       "erradas": [
+        "2",
+        "4"
+       ]
+      },
+      {
+       "id": "m6B-treinador2-5",
+       "enunciado": "Qual é divisor de 20?",
+       "resposta": "10",
+       "erradas": [
+        "3",
+        "6"
+       ]
+      }
+     ],
+     "fala": "Escolha o divisor certo!"
+    },
+    "treinador3": {
+     "sprite": "mapa6-B-treinador3",
+     "questoes": [
+      {
+       "id": "m6B-treinador3-1",
+       "enunciado": "6 é divisor de 20?",
+       "resposta": "Não",
+       "erradas": [
+        "Sim"
+       ]
+      },
+      {
+       "id": "m6B-treinador3-2",
+       "enunciado": "7 é divisor de 14?",
+       "resposta": "Sim",
+       "erradas": [
+        "Não"
+       ]
+      },
+      {
+       "id": "m6B-treinador3-3",
+       "enunciado": "1 é divisor de qualquer número?",
+       "resposta": "Sim",
+       "erradas": [
+        "Não"
+       ]
+      },
+      {
+       "id": "m6B-treinador3-4",
+       "enunciado": "3 é divisor de 10?",
+       "resposta": "Não",
+       "erradas": [
+        "Sim"
+       ]
+      },
+      {
+       "id": "m6B-treinador3-5",
+       "enunciado": "5 é divisor de 25?",
+       "resposta": "Sim",
+       "erradas": [
+        "Não"
+       ]
+      }
+     ],
+     "fala": "Divide sem sobrar? Então é divisor!"
+    },
+    "lider": {
+     "sprite": "mapa6-B-lider",
+     "questoes": [
+      {
+       "id": "m6B-lider-1",
+       "enunciado": "4 é divisor de 12?",
+       "resposta": "Sim",
+       "erradas": [
+        "Não"
+       ]
+      },
+      {
+       "id": "m6B-lider-2",
+       "enunciado": "9 é divisor de 18?",
+       "resposta": "Sim",
+       "erradas": [
+        "Não"
+       ]
+      },
+      {
+       "id": "m6B-lider-3",
+       "enunciado": "2 é divisor de 15?",
+       "resposta": "Não",
+       "erradas": [
+        "Sim"
+       ]
+      },
+      {
+       "id": "m6B-lider-4",
+       "enunciado": "Qual NÃO é divisor de 12?",
+       "resposta": "5",
+       "erradas": [
+        "2",
+        "6"
+       ]
+      },
+      {
+       "id": "m6B-lider-5",
+       "enunciado": "Qual é divisor de 7?",
+       "resposta": "7",
+       "erradas": [
+        "2",
+        "3"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "Corto toras em partes iguais. Só serve divisor exato!",
+      "vitoria": "Cortes perfeitos! Tome a Insígnia da Tora!",
+      "derrota": "Sobrou um pedaço! Tente de novo."
+     }
+    },
+    "revanche": {
+     "sprite": "mapa6-B-lider",
+     "questoes": [
+      {
+       "id": "m6B-revanche-1",
+       "enunciado": "Quais são todos os divisores de 12?",
+       "resposta": "1, 2, 3, 4, 6, 12",
+       "erradas": [
+        "2, 3, 4, 6",
+        "1, 2, 4, 8, 12",
+        "12, 24, 36"
+       ]
+      },
+      {
+       "id": "m6B-revanche-2",
+       "enunciado": "Quais são todos os divisores de 10?",
+       "resposta": "1, 2, 5, 10",
+       "erradas": [
+        "2, 5",
+        "1, 2, 4, 5, 10",
+        "10, 20, 30"
+       ]
+      },
+      {
+       "id": "m6B-revanche-3",
+       "enunciado": "Quantos divisores tem o número 7?",
+       "resposta": "2",
+       "erradas": [
+        "1",
+        "7",
+        "3"
+       ]
+      }
+     ],
+     "fala": "Encontre todos os divisores!"
+    }
+   }
+  }
+ }
+}

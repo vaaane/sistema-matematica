@@ -1,0 +1,517 @@
+{
+ "mapa": 10,
+ "nome": "Vila da Padaria",
+ "ginasios": {
+  "A": {
+   "nome": "Padaria",
+   "conteudo": "Regra de três: calcular",
+   "insignia": "insignia-mapa10-A",
+   "interior": "mapa10-A",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa10-A-treinador1",
+     "questoes": [
+      {
+       "id": "m10A-treinador1-1",
+       "enunciado": "1 pão custa R$ 2. Quanto custam 5 pães?",
+       "resposta": "R$ 10",
+       "erradas": [
+        "R$ 3",
+        "R$ 2",
+        "R$ 1"
+       ]
+      },
+      {
+       "id": "m10A-treinador1-2",
+       "enunciado": "1 caneta custa R$ 3. Quanto custam 4 canetas?",
+       "resposta": "R$ 12",
+       "erradas": [
+        "R$ 4",
+        "R$ 3",
+        "R$ 2"
+       ]
+      },
+      {
+       "id": "m10A-treinador1-3",
+       "enunciado": "Um carro anda 60 km em 1 hora. Quantos km anda em 3 horas?",
+       "resposta": "180 km",
+       "erradas": [
+        "61 km",
+        "60 km",
+        "59 km"
+       ]
+      },
+      {
+       "id": "m10A-treinador1-4",
+       "enunciado": "Uma receita usa 2 ovos por bolo. Quantos ovos para 3 bolos?",
+       "resposta": "6 ovos",
+       "erradas": [
+        "5 ovos",
+        "1 ovos",
+        "7 ovos"
+       ]
+      },
+      {
+       "id": "m10A-treinador1-5",
+       "enunciado": "1 pacote tem 8 biscoitos. Quantos biscoitos há em 5 pacotes?",
+       "resposta": "40",
+       "erradas": [
+        "9",
+        "8",
+        "7"
+       ]
+      }
+     ],
+     "fala": "Se um pão custa 2, quanto custam 5?"
+    },
+    "treinador2": {
+     "sprite": "mapa10-A-treinador2",
+     "questoes": [
+      {
+       "id": "m10A-treinador2-1",
+       "enunciado": "3 kg de arroz custam R$ 15. Quanto custa 1 kg?",
+       "resposta": "R$ 5",
+       "erradas": [
+        "R$ 18",
+        "R$ 45",
+        "R$ 12"
+       ]
+      },
+      {
+       "id": "m10A-treinador2-2",
+       "enunciado": "4 lápis custam R$ 8. Quanto custa 1 lápis?",
+       "resposta": "R$ 2",
+       "erradas": [
+        "R$ 12",
+        "R$ 4",
+        "R$ 3"
+       ]
+      },
+      {
+       "id": "m10A-treinador2-3",
+       "enunciado": "5 cadernos custam R$ 20. Quanto custa 1 caderno?",
+       "resposta": "R$ 4",
+       "erradas": [
+        "R$ 25",
+        "R$ 15",
+        "R$ 5"
+       ]
+      },
+      {
+       "id": "m10A-treinador2-4",
+       "enunciado": "6 balas custam R$ 3. Quanto custa 1 bala?",
+       "resposta": "R$ 0,50",
+       "erradas": [
+        "R$ 9,00",
+        "R$ 3,00",
+        "R$ 2,00"
+       ]
+      },
+      {
+       "id": "m10A-treinador2-5",
+       "enunciado": "10 figurinhas custam R$ 5. Quanto custa 1 figurinha?",
+       "resposta": "R$ 0,50",
+       "erradas": [
+        "R$ 5,00",
+        "R$ 2,00",
+        "R$ 1,50"
+       ]
+      }
+     ],
+     "fala": "Descubra o preço de um só!"
+    },
+    "treinador3": {
+     "sprite": "mapa10-A-treinador3",
+     "questoes": [
+      {
+       "id": "m10A-treinador3-1",
+       "enunciado": "Mais trabalhadores, menos tempo de obra. São grandezas:",
+       "resposta": "Inversas",
+       "erradas": [
+        "Diretas"
+       ]
+      },
+      {
+       "id": "m10A-treinador3-2",
+       "enunciado": "Mais produtos, preço total maior. São grandezas:",
+       "resposta": "Diretas",
+       "erradas": [
+        "Inversas"
+       ]
+      },
+      {
+       "id": "m10A-treinador3-3",
+       "enunciado": "Mais velocidade, menos tempo de viagem. São grandezas:",
+       "resposta": "Inversas",
+       "erradas": [
+        "Diretas"
+       ]
+      },
+      {
+       "id": "m10A-treinador3-4",
+       "enunciado": "Mais ingredientes, mais bolos. São grandezas:",
+       "resposta": "Diretas",
+       "erradas": [
+        "Inversas"
+       ]
+      },
+      {
+       "id": "m10A-treinador3-5",
+       "enunciado": "Mais horas trabalhadas, maior salário. São grandezas:",
+       "resposta": "Diretas",
+       "erradas": [
+        "Inversas"
+       ]
+      }
+     ],
+     "fala": "Diretas ou inversas? Pense bem!"
+    },
+    "lider": {
+     "sprite": "mapa10-A-lider",
+     "questoes": [
+      {
+       "id": "m10A-lider-1",
+       "enunciado": "2 cadernos custam R$ 12. Quanto custam 4 cadernos?",
+       "resposta": "R$ 24",
+       "erradas": [
+        "R$ 14",
+        "R$ 10",
+        "R$ 25"
+       ]
+      },
+      {
+       "id": "m10A-lider-2",
+       "enunciado": "4 canetas custam R$ 8. Quanto custam 10 canetas?",
+       "resposta": "R$ 20",
+       "erradas": [
+        "R$ 12",
+        "R$ 32",
+        "R$ 4"
+       ]
+      },
+      {
+       "id": "m10A-lider-3",
+       "enunciado": "3 camisetas custam R$ 30. Quanto custam 6 camisetas?",
+       "resposta": "R$ 60",
+       "erradas": [
+        "R$ 33",
+        "R$ 90",
+        "R$ 27"
+       ]
+      },
+      {
+       "id": "m10A-lider-4",
+       "enunciado": "1 pessoa pinta um muro em 6 dias. Em quantos dias 2 pessoas pintam?",
+       "resposta": "3 dias",
+       "erradas": [
+        "7 dias",
+        "6 dias",
+        "5 dias"
+       ]
+      },
+      {
+       "id": "m10A-lider-5",
+       "enunciado": "2 litros de suco enchem 8 copos. Quantos copos 4 litros enchem?",
+       "resposta": "16 copos",
+       "erradas": [
+        "10 copos",
+        "6 copos",
+        "17 copos"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "Minha receita cresce na proporção certa!",
+      "vitoria": "A massa cresceu no ponto! Leve a Insígnia do Pão!",
+      "derrota": "A receita desandou! Volte e tente de novo."
+     }
+    },
+    "revanche": {
+     "sprite": "mapa10-A-lider",
+     "questoes": [
+      {
+       "id": "m10A-revanche-1",
+       "enunciado": "2 pedreiros levam 6 dias para fazer um muro. Quantos dias levam 4 pedreiros?",
+       "resposta": "3 dias",
+       "erradas": [
+        "8 dias",
+        "12 dias",
+        "4 dias"
+       ]
+      },
+      {
+       "id": "m10A-revanche-2",
+       "enunciado": "5 kg de carne custam R$ 35. Quanto custam 8 kg?",
+       "resposta": "R$ 56",
+       "erradas": [
+        "R$ 40",
+        "R$ 175",
+        "R$ 30"
+       ]
+      },
+      {
+       "id": "m10A-revanche-3",
+       "enunciado": "2 máquinas fazem 100 peças em 2 horas. Quantas peças 4 máquinas fazem em 3 horas?",
+       "resposta": "300 peças",
+       "erradas": [
+        "102 peças",
+        "200 peças",
+        "98 peças"
+       ]
+      }
+     ],
+     "fala": "Proporções inversas e compostas!"
+    }
+   }
+  },
+  "B": {
+   "nome": "Confeitaria",
+   "conteudo": "Regra de três: qual é a conta?",
+   "insignia": "insignia-mapa10-B",
+   "interior": "mapa10-B",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa10-B-treinador1",
+     "questoes": [
+      {
+       "id": "m10B-treinador1-1",
+       "enunciado": "2 cadernos custam R$ 12. Para achar o preço de 1 caderno, faço:",
+       "resposta": "12 ÷ 2",
+       "erradas": [
+        "12 × 2",
+        "12 + 2"
+       ]
+      },
+      {
+       "id": "m10B-treinador1-2",
+       "enunciado": "1 bala custa R$ 0,50. Para achar o preço de 6 balas, faço:",
+       "resposta": "0,50 × 6",
+       "erradas": [
+        "0,50 ÷ 6",
+        "0,50 + 6"
+       ]
+      },
+      {
+       "id": "m10B-treinador1-3",
+       "enunciado": "3 kg custam R$ 15. Para achar o preço de 6 kg, faço:",
+       "resposta": "15 × 2",
+       "erradas": [
+        "15 ÷ 2",
+        "15 + 3"
+       ]
+      },
+      {
+       "id": "m10B-treinador1-4",
+       "enunciado": "Uma receita usa 3 xícaras de farinha por bolo. Para 4 bolos, faço:",
+       "resposta": "3 × 4",
+       "erradas": [
+        "3 + 4",
+        "4 ÷ 3"
+       ]
+      },
+      {
+       "id": "m10B-treinador1-5",
+       "enunciado": "Um carro anda 80 km em 1 hora. Para saber quanto anda em 2 horas, faço:",
+       "resposta": "80 × 2",
+       "erradas": [
+        "80 ÷ 2",
+        "80 + 2"
+       ]
+      }
+     ],
+     "fala": "Qual conta dá o preço de um?"
+    },
+    "treinador2": {
+     "sprite": "mapa10-B-treinador2",
+     "questoes": [
+      {
+       "id": "m10B-treinador2-1",
+       "enunciado": "4 lápis custam R$ 8. Para achar o preço de 1 lápis, faço:",
+       "resposta": "8 ÷ 4",
+       "erradas": [
+        "8 × 4",
+        "8 − 4"
+       ]
+      },
+      {
+       "id": "m10B-treinador2-2",
+       "enunciado": "5 cadernos custam R$ 20. Para achar o preço de 1 caderno, faço:",
+       "resposta": "20 ÷ 5",
+       "erradas": [
+        "20 × 5",
+        "20 − 5"
+       ]
+      },
+      {
+       "id": "m10B-treinador2-3",
+       "enunciado": "1 garrafa enche 4 copos. Para saber quantos copos 7 garrafas enchem, faço:",
+       "resposta": "4 × 7",
+       "erradas": [
+        "4 + 7",
+        "7 ÷ 4"
+       ]
+      },
+      {
+       "id": "m10B-treinador2-4",
+       "enunciado": "3 sorvetes custam R$ 18. Para achar o preço de 1 sorvete, faço:",
+       "resposta": "18 ÷ 3",
+       "erradas": [
+        "18 × 3",
+        "18 − 3"
+       ]
+      },
+      {
+       "id": "m10B-treinador2-5",
+       "enunciado": "Escrevo 20 palavras por minuto. Para saber quantas escrevo em 5 minutos, faço:",
+       "resposta": "20 × 5",
+       "erradas": [
+        "20 ÷ 5",
+        "20 + 5"
+       ]
+      }
+     ],
+     "fala": "Qual conta dá o total?"
+    },
+    "treinador3": {
+     "sprite": "mapa10-B-treinador3",
+     "questoes": [
+      {
+       "id": "m10B-treinador3-1",
+       "enunciado": "1 pessoa pinta um muro em 6 dias. Para saber o tempo de 2 pessoas, faço:",
+       "resposta": "6 ÷ 2",
+       "erradas": [
+        "6 × 2",
+        "6 + 2"
+       ]
+      },
+      {
+       "id": "m10B-treinador3-2",
+       "enunciado": "1 torneira enche um tanque em 8 horas. Para saber o tempo de 2 torneiras, faço:",
+       "resposta": "8 ÷ 2",
+       "erradas": [
+        "8 × 2",
+        "8 + 2"
+       ]
+      },
+      {
+       "id": "m10B-treinador3-3",
+       "enunciado": "Se a velocidade dobra, o tempo de viagem:",
+       "resposta": "cai pela metade",
+       "erradas": [
+        "dobra",
+        "fica igual"
+       ]
+      },
+      {
+       "id": "m10B-treinador3-4",
+       "enunciado": "4 amigos dividem uma pizza e cada um come 2 pedaços. Se forem 8 amigos, cada um come:",
+       "resposta": "2 ÷ 2",
+       "erradas": [
+        "2 × 2",
+        "2 + 2"
+       ]
+      },
+      {
+       "id": "m10B-treinador3-5",
+       "enunciado": "3 pintores levam 4 dias. Para saber o tempo de 1 pintor sozinho, faço:",
+       "resposta": "4 × 3",
+       "erradas": [
+        "4 ÷ 3",
+        "4 + 3"
+       ]
+      }
+     ],
+     "fala": "Mais pessoas, menos tempo: qual conta?"
+    },
+    "lider": {
+     "sprite": "mapa10-B-lider",
+     "questoes": [
+      {
+       "id": "m10B-lider-1",
+       "enunciado": "6 laranjas custam R$ 3. Para achar o preço de 1 laranja, faço:",
+       "resposta": "3 ÷ 6",
+       "erradas": [
+        "6 ÷ 3",
+        "3 × 6"
+       ]
+      },
+      {
+       "id": "m10B-lider-2",
+       "enunciado": "1 caixa tem 12 ovos. Para saber quantos ovos há em 3 caixas, faço:",
+       "resposta": "12 × 3",
+       "erradas": [
+        "12 ÷ 3",
+        "12 + 3"
+       ]
+      },
+      {
+       "id": "m10B-lider-3",
+       "enunciado": "2 torneiras enchem uma piscina em 10 horas. Para saber o tempo de 4 torneiras, faço:",
+       "resposta": "10 ÷ 2",
+       "erradas": [
+        "10 × 2",
+        "10 + 2"
+       ]
+      },
+      {
+       "id": "m10B-lider-4",
+       "enunciado": "Uma receita para 4 pessoas usa 2 xícaras. Para 8 pessoas, faço:",
+       "resposta": "2 × 2",
+       "erradas": [
+        "2 ÷ 2",
+        "2 + 4"
+       ]
+      },
+      {
+       "id": "m10B-lider-5",
+       "enunciado": "No mapa, 1 cm vale 10 km. Para saber quanto valem 6 cm, faço:",
+       "resposta": "10 × 6",
+       "erradas": [
+        "10 ÷ 6",
+        "10 + 6"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "Na confeitaria, primeiro escolhemos a receita: a conta certa!",
+      "vitoria": "Doce vitória! Tome a Insígnia do Bolo!",
+      "derrota": "A cobertura escorreu! Tente de novo."
+     }
+    },
+    "revanche": {
+     "sprite": "mapa10-B-lider",
+     "questoes": [
+      {
+       "id": "m10B-revanche-1",
+       "enunciado": "4 canetas custam R$ 12. Qual conta dá o preço de 7 canetas?",
+       "resposta": "12 ÷ 4 × 7",
+       "erradas": [
+        "12 × 4 ÷ 7",
+        "12 + 7"
+       ]
+      },
+      {
+       "id": "m10B-revanche-2",
+       "enunciado": "3 pedreiros fazem um muro em 8 dias. Qual conta dá o tempo com 6 pedreiros?",
+       "resposta": "8 × 3 ÷ 6",
+       "erradas": [
+        "8 × 6 ÷ 3",
+        "8 + 3"
+       ]
+      },
+      {
+       "id": "m10B-revanche-3",
+       "enunciado": "No mapa, 2 cm valem 30 km. Qual conta dá quantos km valem 5 cm?",
+       "resposta": "30 ÷ 2 × 5",
+       "erradas": [
+        "30 × 2 ÷ 5",
+        "30 + 5"
+       ]
+      }
+     ],
+     "fala": "Contas em duas etapas. Vamos confeitar?"
+    }
+   }
+  }
+ }
+}

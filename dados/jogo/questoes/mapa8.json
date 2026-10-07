@@ -1,0 +1,532 @@
+{
+ "mapa": 8,
+ "nome": "Cidade das Letras",
+ "ginasios": {
+  "A": {
+   "nome": "Escritório do Detetive",
+   "conteudo": "Linguagem algébrica e valor numérico",
+   "insignia": "insignia-mapa8-A",
+   "interior": "mapa8-A",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa8-A-treinador1",
+     "questoes": [
+      {
+       "id": "m8A-treinador1-1",
+       "enunciado": "\"O dobro de um número\"",
+       "resposta": "2x",
+       "erradas": [
+        "x + 2",
+        "x²"
+       ]
+      },
+      {
+       "id": "m8A-treinador1-2",
+       "enunciado": "\"Um número mais 5\"",
+       "resposta": "x + 5",
+       "erradas": [
+        "5x",
+        "x − 5"
+       ]
+      },
+      {
+       "id": "m8A-treinador1-3",
+       "enunciado": "\"O triplo de um número\"",
+       "resposta": "3x",
+       "erradas": [
+        "x + 3",
+        "x³"
+       ]
+      },
+      {
+       "id": "m8A-treinador1-4",
+       "enunciado": "\"Um número menos 4\"",
+       "resposta": "x − 4",
+       "erradas": [
+        "4 − x",
+        "4x"
+       ]
+      },
+      {
+       "id": "m8A-treinador1-5",
+       "enunciado": "\"A metade de um número\"",
+       "resposta": "x ÷ 2",
+       "erradas": [
+        "2x",
+        "x − 2"
+       ]
+      }
+     ],
+     "fala": "Transforme a pista em linguagem algébrica!"
+    },
+    "treinador2": {
+     "sprite": "mapa8-A-treinador2",
+     "questoes": [
+      {
+       "id": "m8A-treinador2-1",
+       "enunciado": "Valor de x + 3 quando x = 4",
+       "resposta": "7",
+       "erradas": [
+        "12",
+        "1",
+        "8"
+       ]
+      },
+      {
+       "id": "m8A-treinador2-2",
+       "enunciado": "Valor de x − 2 quando x = 10",
+       "resposta": "8",
+       "erradas": [
+        "12",
+        "20",
+        "9"
+       ]
+      },
+      {
+       "id": "m8A-treinador2-3",
+       "enunciado": "Valor de x + 7 quando x = 1",
+       "resposta": "8",
+       "erradas": [
+        "7",
+        "6",
+        "9"
+       ]
+      },
+      {
+       "id": "m8A-treinador2-4",
+       "enunciado": "Valor de 10 − x quando x = 3",
+       "resposta": "7",
+       "erradas": [
+        "13",
+        "30",
+        "8"
+       ]
+      },
+      {
+       "id": "m8A-treinador2-5",
+       "enunciado": "Valor de x + x quando x = 5",
+       "resposta": "10",
+       "erradas": [
+        "11",
+        "9",
+        "20"
+       ]
+      }
+     ],
+     "fala": "Troque x pelo número e descubra o valor!"
+    },
+    "treinador3": {
+     "sprite": "mapa8-A-treinador3",
+     "questoes": [
+      {
+       "id": "m8A-treinador3-1",
+       "enunciado": "Valor de 2x quando x = 6",
+       "resposta": "12",
+       "erradas": [
+        "8",
+        "4",
+        "13"
+       ]
+      },
+      {
+       "id": "m8A-treinador3-2",
+       "enunciado": "Valor de 3x quando x = 2",
+       "resposta": "6",
+       "erradas": [
+        "5",
+        "1",
+        "7"
+       ]
+      },
+      {
+       "id": "m8A-treinador3-3",
+       "enunciado": "Valor de 5x quando x = 4",
+       "resposta": "20",
+       "erradas": [
+        "9",
+        "1",
+        "21"
+       ]
+      },
+      {
+       "id": "m8A-treinador3-4",
+       "enunciado": "Valor de 2x + 1 quando x = 3",
+       "resposta": "7",
+       "erradas": [
+        "3",
+        "2",
+        "1"
+       ]
+      },
+      {
+       "id": "m8A-treinador3-5",
+       "enunciado": "Valor de 4x − 2 quando x = 5",
+       "resposta": "18",
+       "erradas": [
+        "6",
+        "8",
+        "2"
+       ]
+      }
+     ],
+     "fala": "Multiplicação escondida: 2x é 2 vezes x!"
+    },
+    "lider": {
+     "sprite": "mapa8-A-lider",
+     "questoes": [
+      {
+       "id": "m8A-lider-1",
+       "enunciado": "\"O dobro de um número mais 1\"",
+       "resposta": "2x + 1",
+       "erradas": [
+        "2(x + 1)",
+        "x + 2 + 1"
+       ]
+      },
+      {
+       "id": "m8A-lider-2",
+       "enunciado": "\"Um número ao quadrado\"",
+       "resposta": "x²",
+       "erradas": [
+        "2x",
+        "x + 2"
+       ]
+      },
+      {
+       "id": "m8A-lider-3",
+       "enunciado": "Valor de 3x quando x = 10",
+       "resposta": "30",
+       "erradas": [
+        "13",
+        "7",
+        "31"
+       ]
+      },
+      {
+       "id": "m8A-lider-4",
+       "enunciado": "Valor de x + 8 quando x = 2",
+       "resposta": "10",
+       "erradas": [
+        "16",
+        "6",
+        "4"
+       ]
+      },
+      {
+       "id": "m8A-lider-5",
+       "enunciado": "Cada caneta custa x reais. Quanto custam 4 canetas?",
+       "resposta": "4x",
+       "erradas": [
+        "x + 4",
+        "x ÷ 4"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "Toda pista vira uma expressão. Elementar!",
+      "vitoria": "Caso resolvido! Leve a Insígnia da Lupa!",
+      "derrota": "Pista perdida! Volte e investigue de novo."
+     }
+    },
+    "revanche": {
+     "sprite": "mapa8-A-lider",
+     "questoes": [
+      {
+       "id": "m8A-revanche-1",
+       "enunciado": "Valor de 2x − 3 quando x = −1",
+       "resposta": "−5",
+       "erradas": [
+        "5",
+        "6",
+        "1"
+       ]
+      },
+      {
+       "id": "m8A-revanche-2",
+       "enunciado": "Valor de x² + 1 quando x = 3",
+       "resposta": "10",
+       "erradas": [
+        "4",
+        "3",
+        "2"
+       ]
+      },
+      {
+       "id": "m8A-revanche-3",
+       "enunciado": "Valor de 3a + 2b quando a = 2 e b = 5",
+       "resposta": "16",
+       "erradas": [
+        "5",
+        "6",
+        "1"
+       ]
+      }
+     ],
+     "fala": "Valores negativos e duas letras. Encara o caso?"
+    }
+   }
+  },
+  "B": {
+   "nome": "Biblioteca",
+   "conteudo": "Termos semelhantes",
+   "insignia": "insignia-mapa8-B",
+   "interior": "mapa8-B",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa8-B-treinador1",
+     "questoes": [
+      {
+       "id": "m8B-treinador1-1",
+       "enunciado": "3x + 2x",
+       "resposta": "5x",
+       "erradas": [
+        "6x",
+        "4x",
+        "5x²"
+       ]
+      },
+      {
+       "id": "m8B-treinador1-2",
+       "enunciado": "x + x + x",
+       "resposta": "3x",
+       "erradas": [
+        "4x",
+        "2x",
+        "3x²"
+       ]
+      },
+      {
+       "id": "m8B-treinador1-3",
+       "enunciado": "4a + a",
+       "resposta": "5a",
+       "erradas": [
+        "6a",
+        "4a",
+        "5a²"
+       ]
+      },
+      {
+       "id": "m8B-treinador1-4",
+       "enunciado": "2y + 6y",
+       "resposta": "8y",
+       "erradas": [
+        "9y",
+        "7y",
+        "8y²"
+       ]
+      },
+      {
+       "id": "m8B-treinador1-5",
+       "enunciado": "5x + 5x",
+       "resposta": "10x",
+       "erradas": [
+        "11x",
+        "9x",
+        "10x²"
+       ]
+      }
+     ],
+     "fala": "Some só os termos com a mesma letra!"
+    },
+    "treinador2": {
+     "sprite": "mapa8-B-treinador2",
+     "questoes": [
+      {
+       "id": "m8B-treinador2-1",
+       "enunciado": "7a − 3a",
+       "resposta": "4a",
+       "erradas": [
+        "5a",
+        "3a",
+        "4a²"
+       ]
+      },
+      {
+       "id": "m8B-treinador2-2",
+       "enunciado": "9x − 2x",
+       "resposta": "7x",
+       "erradas": [
+        "8x",
+        "6x",
+        "7x²"
+       ]
+      },
+      {
+       "id": "m8B-treinador2-3",
+       "enunciado": "5y − y",
+       "resposta": "4y",
+       "erradas": [
+        "5y",
+        "3y",
+        "4y²"
+       ]
+      },
+      {
+       "id": "m8B-treinador2-4",
+       "enunciado": "8m − 8m",
+       "resposta": "0",
+       "erradas": [
+        "1",
+        "−1",
+        "2"
+       ]
+      },
+      {
+       "id": "m8B-treinador2-5",
+       "enunciado": "6x − 4x",
+       "resposta": "2x",
+       "erradas": [
+        "3x",
+        "4x",
+        "2x²"
+       ]
+      }
+     ],
+     "fala": "Subtrair termos semelhantes também vale!"
+    },
+    "treinador3": {
+     "sprite": "mapa8-B-treinador3",
+     "questoes": [
+      {
+       "id": "m8B-treinador3-1",
+       "enunciado": "3x e 5x são termos semelhantes?",
+       "resposta": "Sim",
+       "erradas": [
+        "Não"
+       ]
+      },
+      {
+       "id": "m8B-treinador3-2",
+       "enunciado": "2x e 2y são termos semelhantes?",
+       "resposta": "Não",
+       "erradas": [
+        "Sim"
+       ]
+      },
+      {
+       "id": "m8B-treinador3-3",
+       "enunciado": "4a e a são termos semelhantes?",
+       "resposta": "Sim",
+       "erradas": [
+        "Não"
+       ]
+      },
+      {
+       "id": "m8B-treinador3-4",
+       "enunciado": "x e x² são termos semelhantes?",
+       "resposta": "Não",
+       "erradas": [
+        "Sim"
+       ]
+      },
+      {
+       "id": "m8B-treinador3-5",
+       "enunciado": "7m e −2m são termos semelhantes?",
+       "resposta": "Sim",
+       "erradas": [
+        "Não"
+       ]
+      }
+     ],
+     "fala": "Mesma letra, mesmo expoente: termos semelhantes!"
+    },
+    "lider": {
+     "sprite": "mapa8-B-lider",
+     "questoes": [
+      {
+       "id": "m8B-lider-1",
+       "enunciado": "Perímetro de um quadrado de lado x",
+       "resposta": "4x",
+       "erradas": [
+        "5x",
+        "3x",
+        "4x²"
+       ]
+      },
+      {
+       "id": "m8B-lider-2",
+       "enunciado": "Perímetro de um retângulo de lados x e 3",
+       "resposta": "2x + 6",
+       "erradas": [
+        "8x",
+        "2x + 8",
+        "3x + 6"
+       ]
+      },
+      {
+       "id": "m8B-lider-3",
+       "enunciado": "2x + 3x + x",
+       "resposta": "6x",
+       "erradas": [
+        "7x",
+        "5x",
+        "6x²"
+       ]
+      },
+      {
+       "id": "m8B-lider-4",
+       "enunciado": "10a − 4a + a",
+       "resposta": "7a",
+       "erradas": [
+        "8a",
+        "6a",
+        "7a²"
+       ]
+      },
+      {
+       "id": "m8B-lider-5",
+       "enunciado": "Simplifique x + 2 + x",
+       "resposta": "2x + 2",
+       "erradas": [
+        "4x",
+        "2x + 4",
+        "3x + 2"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "Na biblioteca, cada termo fica na sua prateleira.",
+      "vitoria": "Tudo organizado! Tome a Insígnia do Livro!",
+      "derrota": "Alguns termos ficaram na prateleira errada. Tente de novo!"
+     }
+    },
+    "revanche": {
+     "sprite": "mapa8-B-lider",
+     "questoes": [
+      {
+       "id": "m8B-revanche-1",
+       "enunciado": "Simplifique 3x + 2 − x + 5",
+       "resposta": "2x + 7",
+       "erradas": [
+        "9x",
+        "2x + 9",
+        "3x + 7"
+       ]
+      },
+      {
+       "id": "m8B-revanche-2",
+       "enunciado": "Simplifique 2a + 3b + 4a − b",
+       "resposta": "6a + 2b",
+       "erradas": [
+        "6a + 4b",
+        "8ab",
+        "4a + 2b"
+       ]
+      },
+      {
+       "id": "m8B-revanche-3",
+       "enunciado": "Simplifique 5y − 2 + 3y + 6",
+       "resposta": "8y + 4",
+       "erradas": [
+        "12y",
+        "8y + 6",
+        "9y + 4"
+       ]
+      }
+     ],
+     "fala": "Simplifique expressões com duas letras!"
+    }
+   }
+  }
+ }
+}

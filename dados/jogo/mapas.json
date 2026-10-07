@@ -1,0 +1,378 @@
+{
+ "celula": 4,
+ "tamanho": {
+  "w": 1376,
+  "h": 768
+ },
+ "mapas": {
+  "mapa1": {
+   "trilha": "trilha-mapa1.png",
+   "entrada": [
+    1340,
+    368
+   ],
+   "saidas": [
+    [
+     1365,
+     368
+    ]
+   ],
+   "portas": {
+    "A": {
+     "x": 1100,
+     "y": 345,
+     "interior": "mapa1-A"
+    },
+    "B": {
+     "x": 255,
+     "y": 385,
+     "interior": "mapa1-B"
+    }
+   }
+  },
+  "mapa2": {
+   "trilha": "trilha-mapa2.png",
+   "entrada": [
+    30,
+    335
+   ],
+   "saidas": [
+    [
+     10,
+     335
+    ],
+    [
+     1365,
+     680
+    ]
+   ],
+   "portas": {
+    "A": {
+     "x": 366,
+     "y": 620,
+     "interior": "mapa2-A"
+    },
+    "B": {
+     "x": 1156,
+     "y": 620,
+     "interior": "mapa2-B"
+    }
+   }
+  },
+  "mapa3": {
+   "trilha": "trilha-mapa3.png",
+   "entrada": [
+    30,
+    444
+   ],
+   "saidas": [
+    [
+     10,
+     444
+    ],
+    [
+     756,
+     10
+    ]
+   ],
+   "portas": {
+    "A": {
+     "x": 428,
+     "y": 492,
+     "interior": "mapa3-A"
+    },
+    "B": {
+     "x": 1148,
+     "y": 495,
+     "interior": "mapa3-B"
+    }
+   }
+  },
+  "mapa4": {
+   "trilha": "trilha-mapa4.png",
+   "entrada": [
+    700,
+    750
+   ],
+   "saidas": [
+    [
+     700,
+     760
+    ],
+    [
+     10,
+     410
+    ]
+   ],
+   "portas": {
+    "A": {
+     "x": 250,
+     "y": 375,
+     "interior": "mapa4-A"
+    },
+    "B": {
+     "x": 1150,
+     "y": 650,
+     "interior": "mapa4-B"
+    }
+   }
+  },
+  "mapa5": {
+   "trilha": "trilha-mapa5.png",
+   "entrada": [
+    15,
+    412
+   ],
+   "saidas": [
+    [
+     8,
+     412
+    ],
+    [
+     1368,
+     385
+    ]
+   ],
+   "portas": {
+    "A": {
+     "x": 925,
+     "y": 345,
+     "interior": "mapa5-A"
+    },
+    "B": {
+     "x": 1150,
+     "y": 645,
+     "interior": "mapa5-B"
+    }
+   }
+  },
+  "mapa6": {
+   "trilha": "trilha-mapa6.png",
+   "entrada": [
+    15,
+    412
+   ],
+   "saidas": [
+    [
+     8,
+     412
+    ],
+    [
+     1368,
+     372
+    ]
+   ],
+   "portas": {
+    "A": {
+     "x": 412,
+     "y": 475,
+     "interior": "mapa6-A"
+    },
+    "B": {
+     "x": 1150,
+     "y": 650,
+     "interior": "mapa6-B"
+    }
+   }
+  },
+  "mapa7": {
+   "trilha": "trilha-mapa7.png",
+   "entrada": [
+    20,
+    418
+   ],
+   "saidas": [
+    [
+     8,
+     418
+    ],
+    [
+     1368,
+     356
+    ]
+   ],
+   "portas": {
+    "A": {
+     "x": 700,
+     "y": 280,
+     "interior": "mapa7-A"
+    },
+    "B": {
+     "x": 1150,
+     "y": 615,
+     "interior": "mapa7-B"
+    }
+   }
+  },
+  "mapa8": {
+   "trilha": "trilha-mapa8.png",
+   "entrada": [
+    1350,
+    388
+   ],
+   "saidas": [
+    [
+     1368,
+     388
+    ],
+    [
+     8,
+     62
+    ]
+   ],
+   "portas": {
+    "A": {
+     "x": 406,
+     "y": 300,
+     "interior": "mapa8-A"
+    },
+    "B": {
+     "x": 887,
+     "y": 235,
+     "interior": "mapa8-B"
+    }
+   }
+  },
+  "mapa9": {
+   "trilha": "trilha-mapa9.png",
+   "entrada": [
+    15,
+    612
+   ],
+   "saidas": [
+    [
+     8,
+     612
+    ],
+    [
+     1368,
+     440
+    ]
+   ],
+   "portas": {
+    "A": {
+     "x": 325,
+     "y": 450,
+     "interior": "mapa9-A"
+    },
+    "B": {
+     "x": 1037,
+     "y": 345,
+     "interior": "mapa9-B"
+    }
+   }
+  },
+  "mapa10": {
+   "trilha": "trilha-mapa10.png",
+   "entrada": [
+    15,
+    432
+   ],
+   "saidas": [
+    [
+     8,
+     432
+    ],
+    [
+     1368,
+     430
+    ]
+   ],
+   "portas": {
+    "A": {
+     "x": 484,
+     "y": 295,
+     "interior": "mapa10-A"
+    },
+    "B": {
+     "x": 925,
+     "y": 300,
+     "interior": "mapa10-B"
+    }
+   }
+  },
+  "mapa11": {
+   "trilha": "trilha-mapa11.png",
+   "entrada": [
+    20,
+    440
+   ],
+   "saidas": [
+    [
+     8,
+     440
+    ],
+    [
+     1368,
+     440
+    ]
+   ],
+   "portas": {
+    "A": {
+     "x": 400,
+     "y": 330,
+     "interior": "mapa11-A"
+    },
+    "B": {
+     "x": 1037,
+     "y": 330,
+     "interior": "mapa11-B"
+    }
+   }
+  },
+  "mapa12": {
+   "trilha": "trilha-mapa12.png",
+   "entrada": [
+    20,
+    444
+   ],
+   "saidas": [
+    [
+     8,
+     444
+    ],
+    [
+     1368,
+     444
+    ]
+   ],
+   "portas": {
+    "A": {
+     "x": 506,
+     "y": 370,
+     "interior": "mapa12-A"
+    },
+    "B": {
+     "x": 900,
+     "y": 372,
+     "interior": "mapa12-B"
+    }
+   }
+  },
+  "mapa13": {
+   "trilha": "trilha-mapa13.png",
+   "entrada": [
+    15,
+    440
+   ],
+   "saidas": [
+    [
+     8,
+     440
+    ]
+   ],
+   "portas": {
+    "A": {
+     "x": 409,
+     "y": 325,
+     "interior": "mapa13-A"
+    },
+    "B": {
+     "x": 875,
+     "y": 325,
+     "interior": "mapa13-B"
+    }
+   }
+  }
+ }
+}

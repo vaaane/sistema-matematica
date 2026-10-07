@@ -1,0 +1,525 @@
+{
+ "mapa": 7,
+ "nome": "Mercado Central",
+ "ginasios": {
+  "A": {
+   "nome": "Loja de Departamentos",
+   "conteudo": "Porcentagem: calcular",
+   "insignia": "insignia-mapa7-A",
+   "interior": "mapa7-A",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa7-A-treinador1",
+     "questoes": [
+      {
+       "id": "m7A-treinador1-1",
+       "enunciado": "Quanto é 50% de 40?",
+       "resposta": "20",
+       "erradas": [
+        "200",
+        "40",
+        "10"
+       ]
+      },
+      {
+       "id": "m7A-treinador1-2",
+       "enunciado": "Quanto é 50% de 100?",
+       "resposta": "50",
+       "erradas": [
+        "500",
+        "100",
+        "25"
+       ]
+      },
+      {
+       "id": "m7A-treinador1-3",
+       "enunciado": "Quanto é 10% de 80?",
+       "resposta": "8",
+       "erradas": [
+        "80",
+        "16",
+        "4"
+       ]
+      },
+      {
+       "id": "m7A-treinador1-4",
+       "enunciado": "Quanto é 10% de 200?",
+       "resposta": "20",
+       "erradas": [
+        "200",
+        "40",
+        "10"
+       ]
+      },
+      {
+       "id": "m7A-treinador1-5",
+       "enunciado": "Quanto é 10% de 50?",
+       "resposta": "5",
+       "erradas": [
+        "50",
+        "10",
+        "2,5"
+       ]
+      }
+     ],
+     "fala": "50% é a metade e 10% é dividir por 10!"
+    },
+    "treinador2": {
+     "sprite": "mapa7-A-treinador2",
+     "questoes": [
+      {
+       "id": "m7A-treinador2-1",
+       "enunciado": "Quanto é 25% de 100?",
+       "resposta": "25",
+       "erradas": [
+        "250",
+        "50",
+        "12,5"
+       ]
+      },
+      {
+       "id": "m7A-treinador2-2",
+       "enunciado": "Quanto é 25% de 40?",
+       "resposta": "10",
+       "erradas": [
+        "100",
+        "20",
+        "5"
+       ]
+      },
+      {
+       "id": "m7A-treinador2-3",
+       "enunciado": "Quanto é 100% de 35?",
+       "resposta": "35",
+       "erradas": [
+        "350",
+        "70",
+        "17,5"
+       ]
+      },
+      {
+       "id": "m7A-treinador2-4",
+       "enunciado": "Quanto é 20% de 50?",
+       "resposta": "10",
+       "erradas": [
+        "100",
+        "20",
+        "5"
+       ]
+      },
+      {
+       "id": "m7A-treinador2-5",
+       "enunciado": "Quanto é 1% de 300?",
+       "resposta": "3",
+       "erradas": [
+        "30",
+        "6",
+        "1,5"
+       ]
+      }
+     ],
+     "fala": "25% é um quarto!"
+    },
+    "treinador3": {
+     "sprite": "mapa7-A-treinador3",
+     "questoes": [
+      {
+       "id": "m7A-treinador3-1",
+       "enunciado": "50% é igual a qual fração?",
+       "resposta": "1/2",
+       "erradas": [
+        "1/4",
+        "1/5"
+       ]
+      },
+      {
+       "id": "m7A-treinador3-2",
+       "enunciado": "1/4 é igual a quantos por cento?",
+       "resposta": "25%",
+       "erradas": [
+        "250%",
+        "50%",
+        "12,5%"
+       ]
+      },
+      {
+       "id": "m7A-treinador3-3",
+       "enunciado": "1/10 é igual a quantos por cento?",
+       "resposta": "10%",
+       "erradas": [
+        "100%",
+        "20%",
+        "5%"
+       ]
+      },
+      {
+       "id": "m7A-treinador3-4",
+       "enunciado": "100% de algo significa:",
+       "resposta": "o todo",
+       "erradas": [
+        "a metade",
+        "nada"
+       ]
+      },
+      {
+       "id": "m7A-treinador3-5",
+       "enunciado": "3/4 é igual a quantos por cento?",
+       "resposta": "75%",
+       "erradas": [
+        "750%",
+        "150%",
+        "37,5%"
+       ]
+      }
+     ],
+     "fala": "Porcentagem também é fração!"
+    },
+    "lider": {
+     "sprite": "mapa7-A-lider",
+     "questoes": [
+      {
+       "id": "m7A-lider-1",
+       "enunciado": "Uma camiseta de R$ 50 tem 10% de desconto. Quanto é o desconto?",
+       "resposta": "R$ 5",
+       "erradas": [
+        "R$ 50",
+        "R$ 10",
+        "R$ 2,50"
+       ]
+      },
+      {
+       "id": "m7A-lider-2",
+       "enunciado": "Quanto é 50% de 60?",
+       "resposta": "30",
+       "erradas": [
+        "300",
+        "60",
+        "15"
+       ]
+      },
+      {
+       "id": "m7A-lider-3",
+       "enunciado": "Numa turma de 20 alunos, 50% são meninas. Quantas meninas?",
+       "resposta": "10",
+       "erradas": [
+        "100",
+        "20",
+        "5"
+       ]
+      },
+      {
+       "id": "m7A-lider-4",
+       "enunciado": "Quanto é 10% de 120?",
+       "resposta": "12",
+       "erradas": [
+        "120",
+        "24",
+        "6"
+       ]
+      },
+      {
+       "id": "m7A-lider-5",
+       "enunciado": "Quanto é 25% de 200?",
+       "resposta": "50",
+       "erradas": [
+        "500",
+        "100",
+        "25"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "Liquidação! Mas só compra quem sabe calcular o desconto.",
+      "vitoria": "Compras perfeitas! Leve a Insígnia da Etiqueta!",
+      "derrota": "Pagou caro demais! Volte e confira o desconto."
+     }
+    },
+    "revanche": {
+     "sprite": "mapa7-A-lider",
+     "questoes": [
+      {
+       "id": "m7A-revanche-1",
+       "enunciado": "Um tênis de R$ 80 tem 25% de desconto. Qual o preço final?",
+       "resposta": "R$ 60",
+       "erradas": [
+        "R$ 600",
+        "R$ 120",
+        "R$ 30"
+       ]
+      },
+      {
+       "id": "m7A-revanche-2",
+       "enunciado": "Quanto é 20% de 150?",
+       "resposta": "30",
+       "erradas": [
+        "300",
+        "60",
+        "15"
+       ]
+      },
+      {
+       "id": "m7A-revanche-3",
+       "enunciado": "Numa turma de 40 alunos, 10 faltaram. Qual porcentagem faltou?",
+       "resposta": "25%",
+       "erradas": [
+        "250%",
+        "50%",
+        "12,5%"
+       ]
+      }
+     ],
+     "fala": "Preço final com desconto. Calcula?"
+    }
+   }
+  },
+  "B": {
+   "nome": "Supermercado",
+   "conteudo": "Porcentagem: qual é a conta?",
+   "insignia": "insignia-mapa7-B",
+   "interior": "mapa7-B",
+   "personagens": {
+    "treinador1": {
+     "sprite": "mapa7-B-treinador1",
+     "questoes": [
+      {
+       "id": "m7B-treinador1-1",
+       "enunciado": "\"25% de 60\" é o mesmo que:",
+       "resposta": "60 × 0,25",
+       "erradas": [
+        "60 × 25",
+        "60 + 25"
+       ]
+      },
+      {
+       "id": "m7B-treinador1-2",
+       "enunciado": "\"10% de 90\" é o mesmo que:",
+       "resposta": "90 × 0,1",
+       "erradas": [
+        "90 ÷ 0,1",
+        "90 × 10"
+       ]
+      },
+      {
+       "id": "m7B-treinador1-3",
+       "enunciado": "\"50% de 30\" é o mesmo que:",
+       "resposta": "30 ÷ 2",
+       "erradas": [
+        "30 × 2",
+        "30 − 50"
+       ]
+      },
+      {
+       "id": "m7B-treinador1-4",
+       "enunciado": "\"75% de 80\" é o mesmo que:",
+       "resposta": "80 × 0,75",
+       "erradas": [
+        "80 × 7,5",
+        "80 ÷ 75"
+       ]
+      },
+      {
+       "id": "m7B-treinador1-5",
+       "enunciado": "\"20% de 40\" é o mesmo que:",
+       "resposta": "40 × 0,2",
+       "erradas": [
+        "40 × 20",
+        "40 ÷ 0,2"
+       ]
+      }
+     ],
+     "fala": "Qual conta calcula a porcentagem?"
+    },
+    "treinador2": {
+     "sprite": "mapa7-B-treinador2",
+     "questoes": [
+      {
+       "id": "m7B-treinador2-1",
+       "enunciado": "20% em número decimal:",
+       "resposta": "0,2",
+       "erradas": [
+        "2,0",
+        "0,02"
+       ]
+      },
+      {
+       "id": "m7B-treinador2-2",
+       "enunciado": "5% em número decimal:",
+       "resposta": "0,05",
+       "erradas": [
+        "0,5",
+        "5,0"
+       ]
+      },
+      {
+       "id": "m7B-treinador2-3",
+       "enunciado": "50% em número decimal:",
+       "resposta": "0,5",
+       "erradas": [
+        "5,0",
+        "0,05"
+       ]
+      },
+      {
+       "id": "m7B-treinador2-4",
+       "enunciado": "30% em número decimal:",
+       "resposta": "0,3",
+       "erradas": [
+        "0,03",
+        "3,0"
+       ]
+      },
+      {
+       "id": "m7B-treinador2-5",
+       "enunciado": "100% em número decimal:",
+       "resposta": "1",
+       "erradas": [
+        "10",
+        "0,1"
+       ]
+      }
+     ],
+     "fala": "Porcentagem vira decimal: 20% é 0,2!"
+    },
+    "treinador3": {
+     "sprite": "mapa7-B-treinador3",
+     "questoes": [
+      {
+       "id": "m7B-treinador3-1",
+       "enunciado": "Uma bola de R$ 40 tem 10% de desconto. Qual conta dá o desconto?",
+       "resposta": "40 × 0,1",
+       "erradas": [
+        "40 × 10",
+        "40 − 10"
+       ]
+      },
+      {
+       "id": "m7B-treinador3-2",
+       "enunciado": "Numa turma de 30 alunos, 40% são meninas. Qual conta dá o número de meninas?",
+       "resposta": "30 × 0,4",
+       "erradas": [
+        "30 × 40",
+        "30 + 0,4"
+       ]
+      },
+      {
+       "id": "m7B-treinador3-3",
+       "enunciado": "Comi 50% de uma pizza de 8 pedaços. Qual conta dá quantos pedaços comi?",
+       "resposta": "8 × 0,5",
+       "erradas": [
+        "8 × 50",
+        "8 + 0,5"
+       ]
+      },
+      {
+       "id": "m7B-treinador3-4",
+       "enunciado": "Um produto de R$ 60 tem 5% de desconto. Qual conta dá o desconto?",
+       "resposta": "60 × 0,05",
+       "erradas": [
+        "60 × 5",
+        "60 − 5"
+       ]
+      },
+      {
+       "id": "m7B-treinador3-5",
+       "enunciado": "Acertei 25% de 20 questões. Qual conta dá quantas acertei?",
+       "resposta": "20 × 0,25",
+       "erradas": [
+        "20 × 25",
+        "20 ÷ 25"
+       ]
+      }
+     ],
+     "fala": "Escolha a conta certa para o desconto!"
+    },
+    "lider": {
+     "sprite": "mapa7-B-lider",
+     "questoes": [
+      {
+       "id": "m7B-lider-1",
+       "enunciado": "\"10% de 70\" é o mesmo que:",
+       "resposta": "70 × 0,1",
+       "erradas": [
+        "70 × 10",
+        "70 + 10"
+       ]
+      },
+      {
+       "id": "m7B-lider-2",
+       "enunciado": "15% em número decimal:",
+       "resposta": "0,15",
+       "erradas": [
+        "1,5",
+        "0,015"
+       ]
+      },
+      {
+       "id": "m7B-lider-3",
+       "enunciado": "Num show com 200 pessoas, 50% eram crianças. Qual conta dá o número de crianças?",
+       "resposta": "200 × 0,5",
+       "erradas": [
+        "200 × 50",
+        "200 − 50"
+       ]
+      },
+      {
+       "id": "m7B-lider-4",
+       "enunciado": "Um livro de R$ 30 tem 20% de desconto. Qual conta dá o desconto?",
+       "resposta": "30 × 0,2",
+       "erradas": [
+        "30 × 20",
+        "30 − 20"
+       ]
+      },
+      {
+       "id": "m7B-lider-5",
+       "enunciado": "A conta 60 × 0,25 calcula:",
+       "resposta": "25% de 60",
+       "erradas": [
+        "2,5% de 60",
+        "60 − 25"
+       ]
+      }
+     ],
+     "falas": {
+      "abertura": "No meu caixa, primeiro você monta a conta!",
+      "vitoria": "Montou todas as contas! Tome a Insígnia do Carrinho!",
+      "derrota": "A conta não fechou. Tente de novo!"
+     }
+    },
+    "revanche": {
+     "sprite": "mapa7-B-lider",
+     "questoes": [
+      {
+       "id": "m7B-revanche-1",
+       "enunciado": "Um produto de R$ 200 tem 10% de desconto. Qual conta dá o preço final?",
+       "resposta": "200 − 200 × 0,1",
+       "erradas": [
+        "200 × 0,1",
+        "200 − 10"
+       ]
+      },
+      {
+       "id": "m7B-revanche-2",
+       "enunciado": "A mesada de R$ 50 teve aumento de 10%. Qual conta dá a nova mesada?",
+       "resposta": "50 + 50 × 0,1",
+       "erradas": [
+        "50 × 0,1",
+        "50 + 10"
+       ]
+      },
+      {
+       "id": "m7B-revanche-3",
+       "enunciado": "Uma camiseta de R$ 60 tem 25% de desconto. Qual conta dá direto o preço final?",
+       "resposta": "60 × 0,75",
+       "erradas": [
+        "60 × 0,25",
+        "60 − 25"
+       ]
+      }
+     ],
+     "fala": "Aumentos e descontos completos. Vamos?"
+    }
+   }
+  }
+ }
+}

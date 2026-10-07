@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <meta name="theme-color" content="#0d0f1a">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Jogo de Revisão</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/css/main.css"/>
+<link rel="stylesheet" href="/css/jogo-revisao.css"/>
+</head>
+<body class="jr-body">
+<div id="jr-app">
+
+  <!-- Carregando -->
+  <div id="jr-carregando" class="jr-carregando">Carregando o jogo…</div>
+
+  <!-- 3.1 Mapa geral -->
+  <section id="tela-geral" class="jr-tela" hidden>
+    <div id="geral-scroll" class="jr-geral-scroll">
+      <div id="geral-palco" class="jr-geral-palco">
+        <img src="/img/jogo/mapa-geral/mapa-geral.webp" alt="Mapa geral" class="jr-geral-img" draggable="false"/>
+        <div id="geral-marcadores"></div>
+      </div>
+    </div>
+    <div class="jr-hud jr-hud-topo">
+      <button class="jr-btn jr-btn-sec" id="btn-sair-jogo">⟵ Sair</button>
+      <div class="jr-hud-titulo">Jogo de Revisão</div>
+      <button class="jr-btn" id="btn-insignias">🏅 Insígnias</button>
+    </div>
+  </section>
+
+  <!-- 3.2 / 3.3 Cena (mapa da região ou interior do ginásio) -->
+  <section id="tela-cena" class="jr-tela" hidden>
+    <div id="cena-vp" class="jr-cena-vp">
+      <div id="cena-palco" class="jr-palco">
+        <img id="cena-fundo" class="jr-fundo" alt="" draggable="false"/>
+        <div id="cena-atores"></div>
+        <img id="jogador" class="jr-ator jr-jogador" alt="" draggable="false"/>
+      </div>
+    </div>
+    <div class="jr-hud jr-hud-topo">
+      <button class="jr-btn jr-btn-sec" id="btn-cena-voltar">⟵ Mapa geral</button>
+      <div class="jr-hud-titulo" id="cena-titulo"></div>
+      <button class="jr-btn" id="btn-insignias-2">🏅</button>
+    </div>
+    <button id="cena-balao" class="jr-balao-acao" hidden></button>
+    <div id="cena-aviso" class="jr-balao-aviso" hidden></div>
+    <button id="btn-revanche" class="jr-btn jr-btn-ouro jr-revanche" hidden>⚔ Revanche</button>
+    <!-- Joystick (só em tela de toque) -->
+    <div class="jr-joy" aria-hidden="true">
+      <div id="joy-base" class="jr-joy-base"><div id="joy-bola" class="jr-joy-bola"></div></div>
+    </div>
+  </section>
+
+  <!-- Insígnia ganha -->
+  <div id="insignia-ganha" class="jr-insignia-ganha" hidden>
+    <div class="jr-ig-caixa">
+      <div class="jr-ig-raios"></div>
+      <img id="ig-img" alt=""/>
+      <div class="jr-ig-titulo" id="ig-titulo"></div>
+      <div class="jr-ig-sub" id="ig-sub"></div>
+      <button class="jr-btn" id="ig-ok">Continuar</button>
+    </div>
+  </div>
+
+  <!-- 3.4 Pergunta -->
+  <div id="pergunta" class="jr-pergunta" hidden>
+    <div class="jr-perg-caixa">
+      <div class="jr-perg-topo">
+        <img id="perg-busto" class="jr-busto" alt=""/>
+        <div class="jr-fala" id="perg-fala"></div>
+        <button class="jr-fugir" id="perg-desistir" aria-label="Fugir da batalha">🏳️ Fugir</button>
+      </div>
+      <div class="jr-perg-corpo">
+        <div class="jr-perg-contador" id="perg-contador"></div>
+        <div class="jr-perg-enunciado" id="perg-enunciado"></div>
+        <div id="perg-tabela"></div>
+        <div class="jr-alternativas" id="perg-alternativas"></div>
+      </div>
+      <div class="jr-perg-rodape">
+        <button class="jr-btn" id="perg-continuar" hidden>Continuar</button>
+      </div>
+      <!-- Confirmação de fuga (dentro do cartão) -->
+      <div class="jr-confirma" id="perg-confirma" hidden>
+        <div class="jr-confirma-caixa">
+          <p>Fugir da batalha? Você vai recomeçar este treinador.</p>
+          <div class="jr-confirma-botoes">
+            <button class="jr-btn" id="confirma-continuar">Continuar</button>
+            <button class="jr-btn jr-btn-sec" id="confirma-fugir">Fugir</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3.5 Estojo de insígnias -->
+  <div id="estojo" class="jr-estojo" hidden>
+    <div class="jr-estojo-fundo">
+      <div class="jr-estojo-topo">
+        <button class="jr-btn jr-btn-sec jr-estojo-fechar" id="estojo-fechar">✕ Fechar</button>
+        <h1 class="jr-estojo-titulo">Minhas Insígnias</h1>
+        <div class="jr-estojo-resumo" id="estojo-resumo"></div>
+        <div class="jr-barra"><div class="jr-barra-fill" id="estojo-barra"></div></div>
+      </div>
+      <div id="estojo-bandejas" class="jr-bandejas"></div>
+    </div>
+  </div>
+
+  <!-- Cartão da insígnia -->
+  <div id="cartao" class="jr-cartao-fundo" hidden>
+    <div class="jr-cartao">
+      <img id="cartao-img" alt=""/>
+      <div class="jr-cartao-nome" id="cartao-nome"></div>
+      <div class="jr-cartao-regiao" id="cartao-regiao"></div>
+      <div class="jr-cartao-conteudo" id="cartao-conteudo"></div>
+      <div class="jr-cartao-info" id="cartao-info"></div>
+      <button class="jr-btn" id="cartao-fechar">Fechar</button>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+import { requireAluno, iniciarNotifDueloGlobal } from '/js/auth.js';
+import { db } from '/js/firebase-config.js';
+import { ref, get } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { iniciarJogo } from '/js/jogo-revisao.js';
+
+const sess = requireAluno('/index.html');
+if (sess) {
+  const { alunos, turma } = sess;
+  const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
+
+  (async () => { try {
+    const { iniciarPresenca, encerrarPresenca } = await import('/js/presenca.js');
+    const _dispSnap = await get(ref(db, `perfis/${uid}/duelos_disponivel`));
+    const _disp = _dispSnap.val() !== false;
+    await iniciarPresenca(uid, { nome: alunos[0], turma, status: _disp ? 'disponivel' : 'indisponivel', pagina: 'navegando' });
+    window.addEventListener('beforeunload', () => encerrarPresenca());
+    const { initDueloAvail } = await import('/js/duelo_avail.js');
+    await initDueloAvail(uid);
+  } catch(e) {} })();
+  iniciarNotifDueloGlobal();
+
+  iniciarJogo({ uid, turma, nome: alunos[0] });
+}
+</script>
+</body>
+</html>
