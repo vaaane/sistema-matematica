@@ -120,6 +120,18 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
 .jr-jogador { filter: drop-shadow(0 3px 2px rgba(0,0,0,.45)); }
 .jr-npc { pointer-events: auto; cursor: pointer; filter: drop-shadow(0 3px 2px rgba(0,0,0,.45)); transition: opacity .3s; }
 .jr-npc.vencido { opacity: .5; }
+/* próximo desafio: brilho dourado somado à sombra; os que vêm depois ficam um pouco mais escuros */
+.jr-npc.proximo { filter: drop-shadow(0 3px 2px rgba(0,0,0,.45)) drop-shadow(0 0 8px rgba(255,215,0,.75)); }
+.jr-npc.bloqueado { filter: drop-shadow(0 3px 2px rgba(0,0,0,.45)) brightness(.8); }
+.jr-seta {
+  position: absolute; z-index: 999; transform: translate(-50%, -100%); pointer-events: none;
+  font-family: 'Orbitron', sans-serif; font-size: 26px; line-height: 1; color: #ffd700;
+  text-shadow: 0 2px 0 #1a1a2e; animation: jr-seta-pula 1s ease-in-out infinite;
+}
+@keyframes jr-seta-pula { 0%, 100% { margin-top: 0; } 50% { margin-top: -6px; } }
+.jr-com-pergunta .jr-seta { display: none; }
+.jr-revanche.pulsa { animation: jr-revanche-pulsa 1.6s ease-in-out infinite; }
+@keyframes jr-revanche-pulsa { 0%, 100% { transform: translate(-50%, -100%) scale(1); } 50% { transform: translate(-50%, -100%) scale(1.06); } }
 
 .jr-balao-acao, .jr-balao-aviso, .jr-revanche {
   position: absolute; z-index: 15; transform: translate(-50%, -100%);
@@ -461,7 +473,7 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .jr-marcador.disponivel, .jr-encaixe.dourada img, .jr-balao-acao, .jr-rotulo-porta span, .jr-ig-raios, .jr-ig-centro img, .jr-btn-estojo img, .jr-estojo-cont, .jr-alt.errada, .jr-fala.nova {
+  .jr-marcador.disponivel, .jr-encaixe.dourada img, .jr-balao-acao, .jr-rotulo-porta span, .jr-ig-raios, .jr-ig-centro img, .jr-btn-estojo img, .jr-estojo-cont, .jr-seta, .jr-revanche.pulsa, .jr-alt.errada, .jr-fala.nova {
     animation: none !important;
   }
   .jr-encaixe.dourada img { filter: drop-shadow(0 0 10px var(--jr-ouro)) saturate(1.3); }

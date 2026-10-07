@@ -1023,12 +1023,39 @@ async function entrarGinasio(n, G) {
   $('cena-palco').style.visibility = '';
 }
 
+// Próximo desafio: o 1º não vencido na ordem; depois do líder, a revanche (se ainda não é dourada)
+function proximoDesafio(g) {
+  const p = PERSONAGENS.find(k => !g[k].vencido);
+  if (p) return p;
+  return g.dourada ? null : 'revanche';
+}
+
 function atualizarNpcs() {
   const g = estado.ginasios[cena.chave];
+  const prox = proximoDesafio(g);
+  const iProx = prox ? PERSONAGENS.indexOf(prox) : -1;
   for (const el of document.querySelectorAll('#cena-atores .jr-npc')) {
-    el.classList.toggle('vencido', g[el.dataset.p].vencido);
+    const p = el.dataset.p, i = PERSONAGENS.indexOf(p);
+    el.classList.toggle('vencido', g[p].vencido);
+    el.classList.toggle('proximo', p === prox);
+    el.classList.toggle('bloqueado', !g[p].vencido && iProx >= 0 && i > iProx);   // vem depois do próximo
   }
   $('btn-revanche').hidden = !g.lider.vencido;
+  $('btn-revanche').classList.toggle('pulsa', prox === 'revanche');
+  // setinha dourada acima do próximo personagem (mesmas coordenadas da imagem dos .jr-npc)
+  let seta = document.querySelector('#cena-atores .jr-seta');
+  if (!prox || prox === 'revanche') { seta?.remove(); return; }
+  if (!seta) {
+    seta = document.createElement('div');
+    seta.className = 'jr-seta';
+    seta.textContent = '▼';
+    seta.setAttribute('aria-hidden', 'true');
+    $('cena-atores').appendChild(seta);
+  }
+  const pos = cena.cfg[prox];
+  const alt = prox === 'lider' ? ALT_LIDER : ALT_TREINADOR;
+  seta.style.left = pos.x + 'px';
+  seta.style.top = (pos.y - alt - 10) + 'px';
 }
 
 function posicionarRevanche() {
@@ -1364,9 +1391,10 @@ function vencer() {
   if (ganhou === 'normal') publicarNoFeed('insignia', chave);
   if (ganhou === 'dourada') publicarNoFeed('insignia_dourada', chave);
 
+  // fala própria de cada personagem vencido (o líder continua com falas.vitoria)
   falar(p === 'lider' ? pers.falas.vitoria
-      : p === 'revanche' ? 'Você venceu a revanche! Sua insígnia agora é dourada!'
-      : sortear(D.falas.treinador_vencido));
+      : p === 'revanche' ? (pers.fala_vencido || 'Você venceu a revanche! Sua insígnia agora é dourada!')
+      : (pers.fala_vencido || sortear(D.falas.treinador_vencido)));
   $('perg-contador').textContent = `Acertou ${acertosPrimeira} de ${total} de primeira`;
   $('perg-enunciado').hidden = true;
   $('perg-alternativas').hidden = true;
