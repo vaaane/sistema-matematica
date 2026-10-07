@@ -8,6 +8,7 @@ import { ref, get, update, push, set, increment } from 'https://www.gstatic.com/
 import { adicionarXP } from '/js/db.js';
 import { bimestreAtual } from '/js/constants.js';
 import { gerarQuestoes, gerarUma } from '/js/jogo-revisao/geradores.js';
+import { tocar, somLigado, alternarSom } from '/js/jogo-revisao/sons.js';
 import { notaJogoRevisao, formatarNota, NOTA_MAX, PESO_INSIGNIAS, PESO_DOURADAS } from '/js/jogo-revisao/nota.js';
 
 // XP (só na primeira vez que cada personagem é vencido; nunca no modo teste)
@@ -359,6 +360,7 @@ function ligarArrasteGeral() {
     if (!b) return;
     const n = Number(b.dataset.mapa);
     if (!mapaDisponivel(n)) return;
+    tocar('porta');
     abrirMapa(n, 'entrada');
   });
 }
@@ -927,6 +929,7 @@ function atualizarMapa() {
 async function transicao(fn) {
   if (transicionando) return;
   transicionando = true;
+  tocar('porta');
   let veu = $('jr-veu');
   if (!veu) {
     veu = document.createElement('div');
@@ -1182,6 +1185,7 @@ function mostrarInsigniaGanha(chave, dourada) {
   box.classList.toggle('dourada', !!dourada);
   box.classList.remove('voando');
   box.hidden = false;
+  tocar(dourada ? 'dourada' : 'insignia');
   img.style.animation = 'none'; void img.offsetWidth; img.style.animation = '';   // reinicia a entrada
 
   const reduzido = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1338,8 +1342,10 @@ function responder(btn) {
   const certa = String(q.resposta);
   const botoes = [...$('perg-alternativas').querySelectorAll('.jr-alt')];
   botoes.forEach(b => { b.disabled = true; });
+  tocar('clique');
   if (btn.dataset.v === certa) {
     btn.classList.add('certa');
+    tocar('acerto');
     gravar({ [`respostas/${q.id}/acertou`]: true, [`respostas/${q.id}/ultima`]: Date.now() });
     pg.fila.shift();
     pg.acertos++;
@@ -1347,6 +1353,7 @@ function responder(btn) {
     setTimeout(() => { if (!pg) return; pg.fila.length ? renderPergunta() : vencer(); }, 1100);
   } else {
     btn.classList.add('errada');
+    tocar('erro');
     botoes.find(b => b.dataset.v === certa)?.classList.add('certa');
     // as outras alternativas somem para dar espaço ao "Como resolver"
     botoes.forEach(b => { if (b !== btn && b.dataset.v !== certa) b.hidden = true; });
@@ -1382,6 +1389,7 @@ function vencer() {
   if (p === 'lider' && !g.insignia) { g.insignia = true; g.dataInsignia = Date.now(); ganhou = 'normal'; }
   if (p === 'revanche' && !g.dourada) { g.dourada = true; ganhou = 'dourada'; }
   gravarVitoria(chave, p);
+  tocar('vitoria');
   // XP só na primeira vitória de cada personagem (conferido no estado carregado do Firebase)
   if (primeiraVez) {
     if (p === 'lider') darXP(XP_LIDER + (pg.errouIds.size === 0 ? XP_LIDER_PERFEITO : 0));
@@ -1507,6 +1515,15 @@ function ligarEventos() {
 
   $('btn-sair-jogo').addEventListener('click', () => { window.location.href = '/aluno/a-jogos.html'; });
   $('btn-insignias').addEventListener('click', abrirEstojo);
+  // botão de som (🔊 / 🔇), lembrado em localStorage
+  const pintarSom = () => document.querySelectorAll('[data-som]').forEach(b => {
+    const on = somLigado();
+    b.textContent = on ? '🔊' : '🔇';
+    b.setAttribute('aria-label', on ? 'Desligar o som' : 'Ligar o som');
+    b.classList.toggle('mudo', !on);
+  });
+  document.querySelectorAll('[data-som]').forEach(b => b.addEventListener('click', () => { alternarSom(); pintarSom(); tocar('clique'); }));
+  pintarSom();
   $('btn-insignias-2').addEventListener('click', abrirEstojo);
   $('btn-cena-voltar').addEventListener('click', sairDaCena);
 
