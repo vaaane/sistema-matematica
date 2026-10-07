@@ -62,7 +62,8 @@
        ]
       }
      ],
-     "fala": "O perímetro é a volta inteira. Some todos os lados!"
+     "fala": "O perímetro é a volta inteira. Some todos os lados!",
+     "fala_vencido": "Contornou o quadrado sem errar! Pode passar."
     },
     "treinador2": {
      "sprite": "mapa11-A-treinador2",
@@ -118,7 +119,8 @@
        ]
       }
      ],
-     "fala": "Triângulos e polígonos também têm perímetro!"
+     "fala": "Triângulos e polígonos também têm perímetro!",
+     "fala_vencido": "Somou todos os lados! Siga na obra."
     },
     "treinador3": {
      "sprite": "mapa11-A-treinador3",
@@ -174,7 +176,8 @@
        ]
       }
      ],
-     "fala": "Medidas de obra: metros, centímetros e graus!"
+     "fala": "Medidas de obra: metros, centímetros e graus!",
+     "fala_vencido": "Medidas e ângulos na ponta da trena! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa11-A-lider",
@@ -270,7 +273,8 @@
        ]
       }
      ],
-     "fala": "Lados que faltam e ângulos escondidos!"
+     "fala": "Lados que faltam e ângulos escondidos!",
+     "fala_vencido": "Até o ângulo que faltava! Ouro para você."
     }
    }
   },
@@ -334,7 +338,8 @@
        ]
       }
      ],
-     "fala": "Área do quadrado: lado vezes lado!"
+     "fala": "Área do quadrado: lado vezes lado!",
+     "fala_vencido": "Lado vezes lado, perfeito! Pode passar."
     },
     "treinador2": {
      "sprite": "mapa11-B-treinador2",
@@ -390,7 +395,8 @@
        ]
       }
      ],
-     "fala": "Área do retângulo: base vezes altura!"
+     "fala": "Área do retângulo: base vezes altura!",
+     "fala_vencido": "Área do retângulo calculada! Siga."
     },
     "treinador3": {
      "sprite": "mapa11-B-treinador3",
@@ -442,7 +448,8 @@
        ]
       }
      ],
-     "fala": "Área é medida em quadradinhos!"
+     "fala": "Área é medida em quadradinhos!",
+     "fala_vencido": "Área e perímetro, você não confunde! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa11-B-lider",
@@ -538,7 +545,8 @@
        ]
       }
      ],
-     "fala": "Triângulos e paralelogramos!"
+     "fala": "Triângulos e paralelogramos!",
+     "fala_vencido": "Triângulo e paralelogramo aprovados! Insígnia dourada."
     }
    }
   }

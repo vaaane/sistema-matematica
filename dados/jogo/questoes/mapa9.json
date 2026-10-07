@@ -62,7 +62,8 @@
        ]
       }
      ],
-     "fala": "Faça a operação inversa e descubra o x!"
+     "fala": "Faça a operação inversa e descubra o x!",
+     "fala_vencido": "A balança equilibrou! Pode passar."
     },
     "treinador2": {
      "sprite": "mapa9-A-treinador2",
@@ -118,7 +119,8 @@
        ]
       }
      ],
-     "fala": "Se 2x é 14, quanto vale x?"
+     "fala": "Se 2x é 14, quanto vale x?",
+     "fala_vencido": "Passou dividindo, passou multiplicando. Perfeito! Siga."
     },
     "treinador3": {
      "sprite": "mapa9-A-treinador3",
@@ -174,7 +176,8 @@
        ]
       }
      ],
-     "fala": "Duas operações: desfaça uma de cada vez!"
+     "fala": "Duas operações: desfaça uma de cada vez!",
+     "fala_vencido": "Duas etapas, nenhum erro! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa9-A-lider",
@@ -270,7 +273,8 @@
        ]
       }
      ],
-     "fala": "Agora com x dos dois lados!"
+     "fala": "Agora com x dos dois lados!",
+     "fala_vencido": "Equações com x dos dois lados! Ouro para você."
     }
    }
   },
@@ -329,7 +333,8 @@
        ]
       }
      ],
-     "fala": "Transforme a frase em equação!"
+     "fala": "Transforme a frase em equação!",
+     "fala_vencido": "Transformou palavras em equação! Pode passar."
     },
     "treinador2": {
      "sprite": "mapa9-B-treinador2",
@@ -380,7 +385,8 @@
        ]
       }
      ],
-     "fala": "Cada história esconde uma equação!"
+     "fala": "Cada história esconde uma equação!",
+     "fala_vencido": "Histórias viraram contas na sua mão! Siga."
     },
     "treinador3": {
      "sprite": "mapa9-B-treinador3",
@@ -431,7 +437,8 @@
        ]
       }
      ],
-     "fala": "Monte a equação da balança!"
+     "fala": "Monte a equação da balança!",
+     "fala_vencido": "Montou a balança certinha! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa9-B-lider",
@@ -519,7 +526,8 @@
        ]
       }
      ],
-     "fala": "Feitiços com duas operações!"
+     "fala": "Feitiços com duas operações!",
+     "fala_vencido": "Equações mágicas resolvidas! A insígnia ficou dourada."
     }
    }
   }

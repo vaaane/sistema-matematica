@@ -52,7 +52,8 @@
        ]
       }
      ],
-     "fala": "Múltiplos de 2 são os números pares!"
+     "fala": "Múltiplos de 2 são os números pares!",
+     "fala_vencido": "Você reconhece os pares de longe! Pode subir."
     },
     "treinador2": {
      "sprite": "mapa6-A-treinador2",
@@ -98,7 +99,8 @@
        ]
       }
      ],
-     "fala": "Múltiplos de 5 e de 10 terminam em 0 ou 5!"
+     "fala": "Múltiplos de 5 e de 10 terminam em 0 ou 5!",
+     "fala_vencido": "Terminou em 0 ou 5? Você já sabe! Siga."
     },
     "treinador3": {
      "sprite": "mapa6-A-treinador3",
@@ -144,7 +146,8 @@
        ]
       }
      ],
-     "fala": "Múltiplos de 3 aparecem contando de 3 em 3!"
+     "fala": "Múltiplos de 3 aparecem contando de 3 em 3!",
+     "fala_vencido": "Múltiplos de 3 encontrados! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa6-A-lider",
@@ -233,7 +236,8 @@
        ]
       }
      ],
-     "fala": "Múltiplos de dois números ao mesmo tempo!"
+     "fala": "Múltiplos de dois números ao mesmo tempo!",
+     "fala_vencido": "Múltiplos de dois números ao mesmo tempo! Insígnia dourada."
     }
    }
   },
@@ -287,7 +291,8 @@
        ]
       }
      ],
-     "fala": "Um divisor corta o número em partes iguais, sem sobrar!"
+     "fala": "Um divisor corta o número em partes iguais, sem sobrar!",
+     "fala_vencido": "Divisores cortados certinho! Pode passar."
     },
     "treinador2": {
      "sprite": "mapa6-B-treinador2",
@@ -338,7 +343,8 @@
        ]
       }
      ],
-     "fala": "Escolha o divisor certo!"
+     "fala": "Escolha o divisor certo!",
+     "fala_vencido": "Você achou os divisores sem sobrar lasca! Siga."
     },
     "treinador3": {
      "sprite": "mapa6-B-treinador3",
@@ -384,7 +390,8 @@
        ]
       }
      ],
-     "fala": "Divide sem sobrar? Então é divisor!"
+     "fala": "Divide sem sobrar? Então é divisor!",
+     "fala_vencido": "Nem o 1 te enganou! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa6-B-lider",
@@ -472,7 +479,8 @@
        ]
       }
      ],
-     "fala": "Encontre todos os divisores!"
+     "fala": "Encontre todos os divisores!",
+     "fala_vencido": "Todos os divisores na ponta do machado! Ouro para você."
     }
    }
   }

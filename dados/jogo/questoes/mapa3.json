@@ -52,7 +52,8 @@
        ]
       }
      ],
-     "fala": "Na reta numérica, quanto mais à esquerda, menor!"
+     "fala": "Na reta numérica, quanto mais à esquerda, menor!",
+     "fala_vencido": "Você sabe quem é maior, até abaixo de zero! Siga."
     },
     "treinador2": {
      "sprite": "mapa3-A-treinador2",
@@ -108,7 +109,8 @@
        ]
       }
      ],
-     "fala": "Somar com negativos é como subir e descer a temperatura."
+     "fala": "Somar com negativos é como subir e descer a temperatura.",
+     "fala_vencido": "Somar negativos não te congelou! Pode passar."
     },
     "treinador3": {
      "sprite": "mapa3-A-treinador3",
@@ -164,7 +166,8 @@
        ]
       }
      ],
-     "fala": "Subtrair pode levar abaixo de zero. Brrr!"
+     "fala": "Subtrair pode levar abaixo de zero. Brrr!",
+     "fala_vencido": "Subtraiu sem escorregar no gelo. Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa3-A-lider",
@@ -260,7 +263,8 @@
        ]
       }
      ],
-     "fala": "Agora com menos de menos. Cuidado com o sinal!"
+     "fala": "Agora com menos de menos. Cuidado com o sinal!",
+     "fala_vencido": "Nem o frio dos negativos te parou! Insígnia dourada."
     }
    }
   },
@@ -324,7 +328,8 @@
        ]
       }
      ],
-     "fala": "Sinais diferentes dão negativo. Vamos treinar?"
+     "fala": "Sinais diferentes dão negativo. Vamos treinar?",
+     "fala_vencido": "Sinais iguais, positivo; diferentes, negativo. Você sabe!"
     },
     "treinador2": {
      "sprite": "mapa3-B-treinador2",
@@ -380,7 +385,8 @@
        ]
       }
      ],
-     "fala": "Dividir com sinais segue a mesma regra!"
+     "fala": "Dividir com sinais segue a mesma regra!",
+     "fala_vencido": "Dividiu com sinais sem esquentar a cabeça! Siga."
     },
     "treinador3": {
      "sprite": "mapa3-B-treinador3",
@@ -428,7 +434,8 @@
        ]
       }
      ],
-     "fala": "Me diga as regras dos sinais!"
+     "fala": "Me diga as regras dos sinais!",
+     "fala_vencido": "A regra dos sinais é sua! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa3-B-lider",
@@ -524,7 +531,8 @@
        ]
       }
      ],
-     "fala": "Três números negativos de uma vez. Aguenta?"
+     "fala": "Três números negativos de uma vez. Aguenta?",
+     "fala_vencido": "Multiplicou três negativos sem errar! Ouro para você."
     }
    }
   }

@@ -62,7 +62,8 @@
        ]
       }
      ],
-     "fala": "O quadrado de um número é ele vezes ele mesmo!"
+     "fala": "O quadrado de um número é ele vezes ele mesmo!",
+     "fala_vencido": "Você cavou fundo nos quadrados! Pode passar."
     },
     "treinador2": {
      "sprite": "mapa5-A-treinador2",
@@ -118,7 +119,8 @@
        ]
       }
      ],
-     "fala": "O cubo é três vezes o mesmo número!"
+     "fala": "O cubo é três vezes o mesmo número!",
+     "fala_vencido": "Cubos minerados! Siga para o fundo da mina."
     },
     "treinador3": {
      "sprite": "mapa5-A-treinador3",
@@ -170,7 +172,8 @@
        ]
       }
      ],
-     "fala": "Uma potência é uma multiplicação repetida!"
+     "fala": "Uma potência é uma multiplicação repetida!",
+     "fala_vencido": "Base e expoente não têm segredo para você! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa5-A-lider",
@@ -266,7 +269,8 @@
        ]
       }
      ],
-     "fala": "Somar e subtrair potências. Encara?"
+     "fala": "Somar e subtrair potências. Encara?",
+     "fala_vencido": "Potências gigantes e você nem suou! Insígnia dourada."
     }
    }
   },
@@ -330,7 +334,8 @@
        ]
       }
      ],
-     "fala": "A raiz quadrada desfaz o quadrado!"
+     "fala": "A raiz quadrada desfaz o quadrado!",
+     "fala_vencido": "Raízes encontradas! Pode subir a torre."
     },
     "treinador2": {
      "sprite": "mapa5-B-treinador2",
@@ -386,7 +391,8 @@
        ]
       }
      ],
-     "fala": "Expoente 0 e expoente 1 têm regras especiais!"
+     "fala": "Expoente 0 e expoente 1 têm regras especiais!",
+     "fala_vencido": "Elevado a zero dá um, elevado a um dá o próprio número. Você sabe!"
     },
     "treinador3": {
      "sprite": "mapa5-B-treinador3",
@@ -442,7 +448,8 @@
        ]
       }
      ],
-     "fala": "Base negativa com expoente par fica positiva!"
+     "fala": "Base negativa com expoente par fica positiva!",
+     "fala_vencido": "Negativos com expoente não te derrubaram! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa5-B-lider",
@@ -538,7 +545,8 @@
        ]
       }
      ],
-     "fala": "Raízes e potências misturadas. Vamos lá?"
+     "fala": "Raízes e potências misturadas. Vamos lá?",
+     "fala_vencido": "Raiz e potência juntas, sem erro! Ouro para você."
     }
    }
   }

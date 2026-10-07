@@ -62,7 +62,8 @@
        ]
       }
      ],
-     "fala": "Média: some tudo e divida pela quantidade!"
+     "fala": "Média: some tudo e divida pela quantidade!",
+     "fala_vencido": "Média calculada! Pode passar."
     },
     "treinador2": {
      "sprite": "mapa13-A-treinador2",
@@ -118,7 +119,8 @@
        ]
       }
      ],
-     "fala": "Moda é o valor que mais aparece!"
+     "fala": "Moda é o valor que mais aparece!",
+     "fala_vencido": "Você achou a moda de primeira! Siga."
     },
     "treinador3": {
      "sprite": "mapa13-A-treinador3",
@@ -174,7 +176,8 @@
        ]
       }
      ],
-     "fala": "Mediana é o valor do meio, com tudo em ordem!"
+     "fala": "Mediana é o valor do meio, com tudo em ordem!",
+     "fala_vencido": "Mediana: em ordem e o do meio. Perfeito! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa13-A-lider",
@@ -270,7 +273,8 @@
        ]
       }
      ],
-     "fala": "Médias com decimais e notas que faltam!"
+     "fala": "Médias com decimais e notas que faltam!",
+     "fala_vencido": "Até a nota que faltava! A insígnia ficou dourada."
     }
    }
   },
@@ -359,7 +363,8 @@
         6
        ]
       ]
-     }
+     },
+     "fala_vencido": "Leu a tabela de frutas sem errar! Pode passar."
     },
     "treinador2": {
      "sprite": "mapa13-B-treinador2",
@@ -440,7 +445,8 @@
         4
        ]
       ]
-     }
+     },
+     "fala_vencido": "Votos contados! Siga."
     },
     "treinador3": {
      "sprite": "mapa13-B-treinador3",
@@ -525,7 +531,8 @@
         4
        ]
       ]
-     }
+     },
+     "fala_vencido": "Gols da semana analisados! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa13-B-lider",
@@ -679,7 +686,8 @@
         4
        ]
       ]
-     }
+     },
+     "fala_vencido": "Tabela dominada! Ouro para você, cientista."
     }
    }
   }

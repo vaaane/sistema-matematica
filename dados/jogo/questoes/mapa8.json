@@ -57,7 +57,8 @@
        ]
       }
      ],
-     "fala": "Transforme a pista em linguagem algébrica!"
+     "fala": "Transforme a pista em linguagem algébrica!",
+     "fala_vencido": "Pista decifrada: palavras viraram letras! Pode passar."
     },
     "treinador2": {
      "sprite": "mapa8-A-treinador2",
@@ -113,7 +114,8 @@
        ]
       }
      ],
-     "fala": "Troque x pelo número e descubra o valor!"
+     "fala": "Troque x pelo número e descubra o valor!",
+     "fala_vencido": "Trocou a letra pelo número como um detetive! Siga."
     },
     "treinador3": {
      "sprite": "mapa8-A-treinador3",
@@ -169,7 +171,8 @@
        ]
       }
      ],
-     "fala": "Multiplicação escondida: 2x é 2 vezes x!"
+     "fala": "Multiplicação escondida: 2x é 2 vezes x!",
+     "fala_vencido": "3x é 3 vezes x, e você não esqueceu! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa8-A-lider",
@@ -262,7 +265,8 @@
        ]
       }
      ],
-     "fala": "Valores negativos e duas letras. Encara o caso?"
+     "fala": "Valores negativos e duas letras. Encara o caso?",
+     "fala_vencido": "Até com negativos e quadrados! Caso encerrado em ouro."
     }
    }
   },
@@ -326,7 +330,8 @@
        ]
       }
      ],
-     "fala": "Some só os termos com a mesma letra!"
+     "fala": "Some só os termos com a mesma letra!",
+     "fala_vencido": "Termos semelhantes juntos, tudo arrumado! Pode passar."
     },
     "treinador2": {
      "sprite": "mapa8-B-treinador2",
@@ -382,7 +387,8 @@
        ]
       }
      ],
-     "fala": "Subtrair termos semelhantes também vale!"
+     "fala": "Subtrair termos semelhantes também vale!",
+     "fala_vencido": "Subtraiu termos sem bagunçar a estante! Siga."
     },
     "treinador3": {
      "sprite": "mapa8-B-treinador3",
@@ -428,7 +434,8 @@
        ]
       }
      ],
-     "fala": "Mesma letra, mesmo expoente: termos semelhantes!"
+     "fala": "Mesma letra, mesmo expoente: termos semelhantes!",
+     "fala_vencido": "Você sabe quem é semelhante! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa8-B-lider",
@@ -524,7 +531,8 @@
        ]
       }
      ],
-     "fala": "Simplifique expressões com duas letras!"
+     "fala": "Simplifique expressões com duas letras!",
+     "fala_vencido": "Simplificou tudo! A insígnia agora é dourada."
     }
    }
   }

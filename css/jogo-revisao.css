@@ -320,6 +320,29 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
 }
 .jr-alternativas { display: grid; grid-template-columns: 1fr; gap: 10px; }
 .jr-alternativas.curtas { grid-template-columns: 1fr 1fr; }
+
+/* "Como resolver" quando o aluno erra */
+.jr-explica {
+  background: rgba(124,92,252,.12); border-left: 3px solid #7c5cfc; border-radius: 10px; padding: 12px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.jr-explica-titulo { font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700; color: #c9b8ff; letter-spacing: .3px; }
+.jr-explica-texto {
+  font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; line-height: 1.4; color: #eef0fa;
+  max-height: calc(4 * 1.4em); overflow-y: auto;   /* até 4 linhas; mais que isso rola só aqui dentro */
+}
+.jr-explica-dica { font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.35; color: #00d4ff; opacity: .85; }
+.jr-explica-rodape { font-family: 'Inter', sans-serif; font-size: 11.5px; color: rgba(255,255,255,.55); }
+@media (max-height: 700px) { .jr-explica-texto { font-size: 14px; } }
+
+/* Modo guiado (2+ erros na mesma posição) */
+.jr-perg-corpo.guiado { border-color: #00d4ff; }
+.jr-guiado {
+  display: flex; flex-direction: column; gap: 3px; padding: 8px 10px; border-radius: 10px;
+  background: rgba(0,212,255,.1); border: 1px solid rgba(0,212,255,.35);
+}
+.jr-guiado b { font-family: 'Rajdhani', sans-serif; font-size: 15px; color: #00d4ff; }
+.jr-guiado span { font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.35; color: #d7f6ff; }
 .jr-alt {
   min-height: 52px; padding: 8px 12px; border-radius: 14px; cursor: pointer;
   border: 2px solid rgba(124,92,252,.55); background: rgba(124,92,252,.14); color: #fff;

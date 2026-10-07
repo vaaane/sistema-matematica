@@ -62,7 +62,8 @@
        ]
       }
      ],
-     "fala": "50% é a metade e 10% é dividir por 10!"
+     "fala": "50% é a metade e 10% é dividir por 10!",
+     "fala_vencido": "Metade e décima parte, fácil para você! Pode passar."
     },
     "treinador2": {
      "sprite": "mapa7-A-treinador2",
@@ -118,7 +119,8 @@
        ]
       }
      ],
-     "fala": "25% é um quarto!"
+     "fala": "25% é um quarto!",
+     "fala_vencido": "25%, 20%, 1%... você calcula de cabeça! Siga."
     },
     "treinador3": {
      "sprite": "mapa7-A-treinador3",
@@ -172,7 +174,8 @@
        ]
       }
      ],
-     "fala": "Porcentagem também é fração!"
+     "fala": "Porcentagem também é fração!",
+     "fala_vencido": "Porcentagem e fração, você troca fácil! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa7-A-lider",
@@ -268,7 +271,8 @@
        ]
       }
      ],
-     "fala": "Preço final com desconto. Calcula?"
+     "fala": "Preço final com desconto. Calcula?",
+     "fala_vencido": "Desconto calculado sem errar! A insígnia ficou dourada."
     }
    }
   },
@@ -327,7 +331,8 @@
        ]
       }
      ],
-     "fala": "Qual conta calcula a porcentagem?"
+     "fala": "Qual conta calcula a porcentagem?",
+     "fala_vencido": "Você sabe montar a conta! Pode passar."
     },
     "treinador2": {
      "sprite": "mapa7-B-treinador2",
@@ -378,7 +383,8 @@
        ]
       }
      ],
-     "fala": "Porcentagem vira decimal: 20% é 0,2!"
+     "fala": "Porcentagem vira decimal: 20% é 0,2!",
+     "fala_vencido": "Porcentagem em decimal, sem erro! Siga."
     },
     "treinador3": {
      "sprite": "mapa7-B-treinador3",
@@ -429,7 +435,8 @@
        ]
       }
      ],
-     "fala": "Escolha a conta certa para o desconto!"
+     "fala": "Escolha a conta certa para o desconto!",
+     "fala_vencido": "Montou a conta certa em cada situação! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa7-B-lider",
@@ -517,7 +524,8 @@
        ]
       }
      ],
-     "fala": "Aumentos e descontos completos. Vamos?"
+     "fala": "Aumentos e descontos completos. Vamos?",
+     "fala_vencido": "Preço final e aumento, tudo certo! Ouro para você."
     }
    }
   }

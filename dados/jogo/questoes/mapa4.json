@@ -60,7 +60,8 @@
        ]
       }
      ],
-     "fala": "Frações equivalentes são pedaços do mesmo tamanho!"
+     "fala": "Frações equivalentes são pedaços do mesmo tamanho!",
+     "fala_vencido": "Frações equivalentes não te enganam! Pode passar."
     },
     "treinador2": {
      "sprite": "mapa4-A-treinador2",
@@ -116,7 +117,8 @@
        ]
       }
      ],
-     "fala": "Mesmo denominador? É só somar os de cima!"
+     "fala": "Mesmo denominador? É só somar os de cima!",
+     "fala_vencido": "Somou frações como quem divide pão! Siga em frente."
     },
     "treinador3": {
      "sprite": "mapa4-A-treinador3",
@@ -172,7 +174,8 @@
        ]
       }
      ],
-     "fala": "Quanto é um pedaço de uma quantidade?"
+     "fala": "Quanto é um pedaço de uma quantidade?",
+     "fala_vencido": "Repartiu certinho! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa4-A-lider",
@@ -266,7 +269,8 @@
        ]
       }
      ],
-     "fala": "Agora com denominadores diferentes!"
+     "fala": "Agora com denominadores diferentes!",
+     "fala_vencido": "Até denominadores diferentes! A insígnia ficou dourada."
     }
    }
   },
@@ -330,7 +334,8 @@
        ]
       }
      ],
-     "fala": "Some os decimais alinhando as vírgulas!"
+     "fala": "Some os decimais alinhando as vírgulas!",
+     "fala_vencido": "Somou decimais como um feirante! Pode passar."
     },
     "treinador2": {
      "sprite": "mapa4-B-treinador2",
@@ -386,7 +391,8 @@
        ]
       }
      ],
-     "fala": "Subtrair decimais é igual: vírgula embaixo de vírgula."
+     "fala": "Subtrair decimais é igual: vírgula embaixo de vírgula.",
+     "fala_vencido": "Subtraiu com a vírgula no lugar! Siga."
     },
     "treinador3": {
      "sprite": "mapa4-B-treinador3",
@@ -441,7 +447,8 @@
        ]
       }
      ],
-     "fala": "Fração ou decimal? Os dois podem ser iguais!"
+     "fala": "Fração ou decimal? Os dois podem ser iguais!",
+     "fala_vencido": "Fração e decimal, você troca fácil! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa4-B-lider",
@@ -534,7 +541,8 @@
        ]
       }
      ],
-     "fala": "Preços com centavos difíceis. Topa?"
+     "fala": "Preços com centavos difíceis. Topa?",
+     "fala_vencido": "Feira completa sem errar um centavo! Ouro para você."
     }
    }
   }

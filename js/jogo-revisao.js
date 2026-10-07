@@ -1228,6 +1228,7 @@ function abrirPergunta(chave, p) {
     total: qs.length,
     acertos: 0,
     errouIds: new Set(),
+    errosPorIndice: {},   // erros por posição (0 a 4) nesta sessão → modo guiado a partir de 2
     travado: false,
     fim: false,
   };
@@ -1266,7 +1267,19 @@ function renderPergunta() {
   $('perg-contador').textContent = `Pergunta ${pg.acertos + 1} de ${pg.total}`;
   $('perg-tabela').innerHTML = renderTabela(q.tabela);   // Mapa 13 B: tabela sorteada junto com a pergunta
   $('perg-enunciado').textContent = q.enunciado;
-  const alts = [q.resposta, ...q.erradas].map(String);
+  $('perg-explica').hidden = true;
+  // Modo guiado: a posição já teve 2+ erros nesta sessão → dica do ginásio e uma alternativa errada a menos
+  const guiado = (pg.errosPorIndice[q.indice] || 0) >= 2;
+  $('perg-corpo').classList.toggle('guiado', guiado);
+  const g = $('perg-guiado');
+  g.hidden = !guiado;
+  if (guiado) {
+    g.innerHTML = `<b>🧭 Modo guiado</b>${q.dica ? `<span>${esc(q.dica)}</span>` : ''}`;
+    falar('Vamos com calma. Leia a dica e tente de novo!');
+  }
+  let erradas = q.erradas.map(String);
+  if (guiado && erradas.length >= 2) erradas.splice(Math.floor(Math.random() * erradas.length), 1);   // nunca menos de 2 alternativas
+  const alts = [String(q.resposta), ...erradas];
   const ordem = D.regras?.embaralhar_alternativas === false ? alts : embaralhar(alts);
   // 2 × 2 quando todas são curtas; senão uma coluna
   $('perg-alternativas').classList.toggle('curtas', alts.every(a => a.length <= 14));
@@ -1276,6 +1289,19 @@ function renderPergunta() {
   $('perg-enunciado').hidden = false;
   $('perg-contador').hidden = false;
   $('perg-continuar').hidden = true;
+}
+
+// Quadro "Como resolver" (só quando erra)
+function mostrarExplicacao(q, comOutrosNumeros) {
+  const el = $('perg-explica');
+  const exp = (q.explicacao || '').trim(), dica = (q.dica || '').trim();
+  if (!exp && !dica) { el.hidden = true; return; }
+  el.innerHTML =
+    `<div class="jr-explica-titulo">Como resolver</div>` +
+    (exp ? `<div class="jr-explica-texto">${esc(exp)}</div>` : '') +
+    (dica && dica !== exp ? `<div class="jr-explica-dica">💡 ${esc(dica)}</div>` : '') +
+    `<div class="jr-explica-rodape">${comOutrosNumeros ? 'Essa pergunta volta daqui a pouco, com outros números.' : 'Essa pergunta volta daqui a pouco.'}</div>`;
+  el.hidden = false;
 }
 
 function responder(btn) {
@@ -1295,13 +1321,17 @@ function responder(btn) {
   } else {
     btn.classList.add('errada');
     botoes.find(b => b.dataset.v === certa)?.classList.add('certa');
+    // as outras alternativas somem para dar espaço ao "Como resolver"
+    botoes.forEach(b => { if (b !== btn && b.dataset.v !== certa) b.hidden = true; });
+    pg.errosPorIndice[q.indice] = (pg.errosPorIndice[q.indice] || 0) + 1;
     pg.errouIds.add(q.id);
     gravar({ [`respostas/${q.id}/ultima`]: Date.now() }, q.id);   // erros += 1
     // volta para o fim da fila com outros números (no Mapa 13 B, gerarUma dá null: repete a mesma)
     pg.fila.shift();
     const nova = gerarUma(pg.mapa, pg.G, pg.p, q.indice);
     pg.fila.push(nova ? { ...nova, indice: q.indice } : q);
-    falar(sortear(D.falas.erro).replace('{resposta}', certa) + ' ' + D.falas.repetir);
+    falar(sortear(D.falas.erro).replace('{resposta}', certa));
+    mostrarExplicacao(q, !!nova);   // explicação da pergunta que o aluno ERROU, não da nova
     $('perg-continuar').textContent = 'Continuar';
     $('perg-continuar').hidden = false;
     pg.aoContinuar = renderPergunta;
@@ -1340,6 +1370,7 @@ function vencer() {
   $('perg-contador').textContent = `Acertou ${acertosPrimeira} de ${total} de primeira`;
   $('perg-enunciado').hidden = true;
   $('perg-alternativas').hidden = true;
+  $('perg-explica').hidden = true; $('perg-guiado').hidden = true; $('perg-corpo').classList.remove('guiado');
   $('perg-tabela').innerHTML = '';
   $('perg-desistir').hidden = true;
   $('perg-continuar').textContent = 'Continuar';
@@ -1357,6 +1388,7 @@ function desistir() {
     falar(pg.pers.falas.derrota);
     $('perg-enunciado').hidden = true;
     $('perg-alternativas').hidden = true;
+    $('perg-explica').hidden = true; $('perg-guiado').hidden = true; $('perg-corpo').classList.remove('guiado');
     $('perg-contador').hidden = true;
     $('perg-tabela').innerHTML = '';
     $('perg-desistir').hidden = true;

@@ -62,7 +62,8 @@
        ]
       }
      ],
-     "fala": "Primeiro a multiplicação, depois a soma. Vamos ver se você lembra!"
+     "fala": "Primeiro a multiplicação, depois a soma. Vamos ver se você lembra!",
+     "fala_vencido": "Ufa! Você multiplicou antes de somar. Pode passar!"
     },
     "treinador2": {
      "sprite": "mapa1-A-treinador2",
@@ -118,7 +119,8 @@
        ]
       }
      ],
-     "fala": "Agora é a vez da divisão. Ela também vem antes!"
+     "fala": "Agora é a vez da divisão. Ela também vem antes!",
+     "fala_vencido": "Dividiu primeiro, como manda a regra. Muito bem!"
     },
     "treinador3": {
      "sprite": "mapa1-A-treinador3",
@@ -174,7 +176,8 @@
        ]
       }
      ],
-     "fala": "Multiplicar e depois subtrair. Atenção na ordem!"
+     "fala": "Multiplicar e depois subtrair. Atenção na ordem!",
+     "fala_vencido": "Nem a subtração te enganou. Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa1-A-lider",
@@ -270,7 +273,8 @@
        ]
       }
      ],
-     "fala": "Achou fácil? Agora as contas ficam mais compridas!"
+     "fala": "Achou fácil? Agora as contas ficam mais compridas!",
+     "fala_vencido": "Contas compridas não te assustam! A insígnia agora brilha em ouro."
     }
    }
   },
@@ -334,7 +338,8 @@
        ]
       }
      ],
-     "fala": "Parênteses primeiro! Essa é a lei da cidade."
+     "fala": "Parênteses primeiro! Essa é a lei da cidade.",
+     "fala_vencido": "Parênteses primeiro, sempre! Você aprendeu."
     },
     "treinador2": {
      "sprite": "mapa1-B-treinador2",
@@ -390,7 +395,8 @@
        ]
       }
      ],
-     "fala": "Colchetes por fora, parênteses por dentro. Resolva de dentro para fora!"
+     "fala": "Colchetes por fora, parênteses por dentro. Resolva de dentro para fora!",
+     "fala_vencido": "Colchetes e chaves resolvidos de dentro para fora. Siga!"
     },
     "treinador3": {
      "sprite": "mapa1-B-treinador3",
@@ -446,7 +452,8 @@
        ]
       }
      ],
-     "fala": "Os moradores trouxeram problemas de compras. Me ajuda?"
+     "fala": "Os moradores trouxeram problemas de compras. Me ajuda?",
+     "fala_vencido": "Fez as compras sem errar o troco! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa1-B-lider",
@@ -542,7 +549,8 @@
        ]
       }
      ],
-     "fala": "Vamos ver se você aguenta chaves, colchetes e parênteses juntos!"
+     "fala": "Vamos ver se você aguenta chaves, colchetes e parênteses juntos!",
+     "fala_vencido": "Até as chaves se abriram para você! Insígnia dourada merecida."
     }
    }
   }

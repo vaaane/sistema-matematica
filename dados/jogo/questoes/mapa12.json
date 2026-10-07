@@ -62,7 +62,8 @@
        ]
       }
      ],
-     "fala": "O primeiro número é o x, o horizontal!"
+     "fala": "O primeiro número é o x, o horizontal!",
+     "fala_vencido": "Primeiro o x! Você sabe ler o mapa. Pode passar."
     },
     "treinador2": {
      "sprite": "mapa12-A-treinador2",
@@ -118,7 +119,8 @@
        ]
       }
      ],
-     "fala": "O segundo número é o y, o vertical!"
+     "fala": "O segundo número é o y, o vertical!",
+     "fala_vencido": "Agora o y também! Siga, marujo."
     },
     "treinador3": {
      "sprite": "mapa12-A-treinador3",
@@ -165,7 +167,8 @@
        ]
       }
      ],
-     "fala": "Origem e eixos: onde fica cada ponto?"
+     "fala": "Origem e eixos: onde fica cada ponto?",
+     "fala_vencido": "Origem e eixos encontrados! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa12-A-lider",
@@ -255,7 +258,8 @@
        ]
       }
      ],
-     "fala": "Quadrantes do mapa do tesouro!"
+     "fala": "Quadrantes do mapa do tesouro!",
+     "fala_vencido": "Os quatro quadrantes são seus! Tesouro dourado."
     }
    }
   },
@@ -319,7 +323,8 @@
        ]
       }
      ],
-     "fala": "Saindo da origem, para onde você vai?"
+     "fala": "Saindo da origem, para onde você vai?",
+     "fala_vencido": "Andou certinho pelo plano! Pode passar."
     },
     "treinador2": {
      "sprite": "mapa12-B-treinador2",
@@ -375,7 +380,8 @@
        ]
       }
      ],
-     "fala": "Ande pelas linhas da grade!"
+     "fala": "Ande pelas linhas da grade!",
+     "fala_vencido": "Saiu de qualquer ponto e chegou certo! Siga."
     },
     "treinador3": {
      "sprite": "mapa12-B-treinador3",
@@ -431,7 +437,8 @@
        ]
       }
      ],
-     "fala": "Esquerda e baixo levam aos negativos!"
+     "fala": "Esquerda e baixo levam aos negativos!",
+     "fala_vencido": "Nem os negativos te tiraram do rumo! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa12-B-lider",
@@ -523,7 +530,8 @@
        ]
       }
      ],
-     "fala": "Rotas que cruzam os negativos!"
+     "fala": "Rotas que cruzam os negativos!",
+     "fala_vencido": "Navegou pelos quatro cantos do plano! Ouro para você."
     }
    }
   }

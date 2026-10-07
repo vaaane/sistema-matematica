@@ -127,3 +127,53 @@ export function erradasPonto(x, y, n = 3) {
   const c = [[y, x], [-x, y], [x, -y], [x + 1, y], [x, y + 1], [x - 1, y - 1]];
   return erradasTexto(ponto(x, y), c.filter(([a, b]) => !(a === x && b === y)).map(([a, b]) => ponto(a, b)), n);
 }
+
+// ---- passo a passo de uma expressão: "2 + 3 × 4 = 2 + 12 = 14"
+function tokU(s) {
+  const t = []; let i = 0;
+  while (i < s.length) {
+    const c = s[i];
+    if (c === ' ') { i++; continue; }
+    if (/[0-9]/.test(c)) { let j = i; while (j < s.length && /[0-9,]/.test(s[j])) j++; t.push(parseFloat(s.slice(i, j).replace(',', '.'))); i = j; continue; }
+    const prev = t[t.length - 1];
+    if ((c === '−' || c === '-') && (prev === undefined || typeof prev === 'string' && !')]}'.includes(prev))) {
+      // menos unário: junta com o número seguinte
+      let j = i + 1; while (s[j] === ' ') j++;
+      let k = j; while (k < s.length && /[0-9,]/.test(s[k])) k++;
+      if (k > j) { t.push(-parseFloat(s.slice(j, k).replace(',', '.'))); i = k; continue; }
+    }
+    t.push(c === '-' ? '−' : c); i++;
+  }
+  return t;
+}
+function mostra(t, abre) {
+  let s = '';
+  t.forEach((x, i) => {
+    if (typeof x === 'number') {
+      const p = t[i - 1];
+      const n = num(x);
+      s += x < 0 && p !== undefined && !'([{'.includes(p) ? `(${n})` : n;
+    } else if ('([{)]}'.includes(x)) s += x;
+    else s += ` ${x} `;
+  });
+  return s.replace(/([(\[{])\s+/g, '$1').replace(/\s+([)\]}])/g, '$1').trim();
+}
+export function passos(expr) {
+  let t = tokU(expr); const out = [expr]; let guarda = 0;
+  while (t.length > 1 && guarda++ < 30) {
+    // grupo mais interno
+    let a = 0, b = t.length;
+    const fechar = t.findIndex(x => typeof x === 'string' && ')]}'.includes(x));
+    if (fechar >= 0) { b = fechar; a = fechar; while (a > 0 && !'([{'.includes(t[a - 1])) a--; }
+    const seg = t.slice(a, b);
+    if (seg.length === 1) { t.splice(a - 1, 3, seg[0]); continue; }  // tira parênteses de um número só
+    let k = seg.findIndex(x => x === '×' || x === '÷');
+    if (k < 0) k = seg.findIndex(x => x === '+' || x === '−');
+    const x = seg[k - 1], o = seg[k], y = seg[k + 1];
+    const v = arred(o === '+' ? x + y : o === '−' ? x - y : o === '×' ? x * y : x / y);
+    t.splice(a + k - 1, 3, v);
+    for (let i = 1; i < t.length - 1; i++) if (typeof t[i - 1] === 'string' && '([{'.includes(t[i - 1]) && typeof t[i] === 'number' && typeof t[i + 1] === 'string' && ')]}'.includes(t[i + 1])) { t.splice(i - 1, 3, t[i]); i = 0; }
+    const s = mostra(t); if (s !== out[out.length - 1]) out.push(s);
+  }
+  return out.join(' = ');
+}

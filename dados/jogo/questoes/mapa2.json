@@ -62,7 +62,8 @@
        ]
       }
      ],
-     "fala": "Cada caixa tem 10 peixes. Quantos peixes tenho?"
+     "fala": "Cada caixa tem 10 peixes. Quantos peixes tenho?",
+     "fala_vencido": "Você contou os zeros direitinho, marujo! Pode subir a bordo."
     },
     "treinador2": {
      "sprite": "mapa2-A-treinador2",
@@ -118,7 +119,8 @@
        ]
       }
      ],
-     "fala": "Agora com 100 e 1000! Conte os zeros."
+     "fala": "Agora com 100 e 1000! Conte os zeros.",
+     "fala_vencido": "Cem, mil... nada te afunda! Siga em frente."
     },
     "treinador3": {
      "sprite": "mapa2-A-treinador3",
@@ -174,7 +176,8 @@
        ]
       }
      ],
-     "fala": "Dividir também é fácil: é só tirar zeros!"
+     "fala": "Dividir também é fácil: é só tirar zeros!",
+     "fala_vencido": "Dividiu sem se perder na vírgula. Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa2-A-lider",
@@ -270,7 +273,8 @@
        ]
       }
      ],
-     "fala": "Agora com duas contas seguidas. Preparado?"
+     "fala": "Agora com duas contas seguidas. Preparado?",
+     "fala_vencido": "Zeros para todo lado e você não errou nenhum! Ouro para você."
     }
    }
   },
@@ -334,7 +338,8 @@
        ]
       }
      ],
-     "fala": "Multiplicando por 10, a vírgula anda para a direita!"
+     "fala": "Multiplicando por 10, a vírgula anda para a direita!",
+     "fala_vencido": "A vírgula andou certinho! Pode passar."
     },
     "treinador2": {
      "sprite": "mapa2-B-treinador2",
@@ -390,7 +395,8 @@
        ]
       }
      ],
-     "fala": "Dividindo, a vírgula anda para a esquerda."
+     "fala": "Dividindo, a vírgula anda para a esquerda.",
+     "fala_vencido": "Dividir decimais não te assustou! Continue subindo."
     },
     "treinador3": {
      "sprite": "mapa2-B-treinador3",
@@ -446,7 +452,8 @@
        ]
       }
      ],
-     "fala": "Metros, gramas e litros: vamos converter!"
+     "fala": "Metros, gramas e litros: vamos converter!",
+     "fala_vencido": "Metros, gramas e litros: você converteu tudo! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa2-B-lider",
@@ -542,7 +549,8 @@
        ]
       }
      ],
-     "fala": "Medidas mais difíceis te esperam no alto do farol!"
+     "fala": "Medidas mais difíceis te esperam no alto do farol!",
+     "fala_vencido": "Brilhou mais que o farol! A insígnia agora é dourada."
     }
    }
   }

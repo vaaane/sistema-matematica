@@ -62,7 +62,8 @@
        ]
       }
      ],
-     "fala": "Se um pão custa 2, quanto custam 5?"
+     "fala": "Se um pão custa 2, quanto custam 5?",
+     "fala_vencido": "Preço de um, preço de vários: você sabe! Pode passar."
     },
     "treinador2": {
      "sprite": "mapa10-A-treinador2",
@@ -118,7 +119,8 @@
        ]
       }
      ],
-     "fala": "Descubra o preço de um só!"
+     "fala": "Descubra o preço de um só!",
+     "fala_vencido": "Achou o valor de 1 direitinho! Siga."
     },
     "treinador3": {
      "sprite": "mapa10-A-treinador3",
@@ -164,7 +166,8 @@
        ]
       }
      ],
-     "fala": "Diretas ou inversas? Pense bem!"
+     "fala": "Diretas ou inversas? Pense bem!",
+     "fala_vencido": "Diretas ou inversas, você reconhece! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa10-A-lider",
@@ -260,7 +263,8 @@
        ]
       }
      ],
-     "fala": "Proporções inversas e compostas!"
+     "fala": "Proporções inversas e compostas!",
+     "fala_vencido": "Até a regra de três composta! Ouro para você."
     }
    }
   },
@@ -319,7 +323,8 @@
        ]
       }
      ],
-     "fala": "Qual conta dá o preço de um?"
+     "fala": "Qual conta dá o preço de um?",
+     "fala_vencido": "Multiplica ou divide? Você acertou! Pode passar."
     },
     "treinador2": {
      "sprite": "mapa10-B-treinador2",
@@ -370,7 +375,8 @@
        ]
       }
      ],
-     "fala": "Qual conta dá o total?"
+     "fala": "Qual conta dá o total?",
+     "fala_vencido": "Montou a conta certa como uma receita! Siga."
     },
     "treinador3": {
      "sprite": "mapa10-B-treinador3",
@@ -421,7 +427,8 @@
        ]
       }
      ],
-     "fala": "Mais pessoas, menos tempo: qual conta?"
+     "fala": "Mais pessoas, menos tempo: qual conta?",
+     "fala_vencido": "Inversas não te enganam! Agora, o desafio final do ginásio!"
     },
     "lider": {
      "sprite": "mapa10-B-lider",
@@ -509,7 +516,8 @@
        ]
       }
      ],
-     "fala": "Contas em duas etapas. Vamos confeitar?"
+     "fala": "Contas em duas etapas. Vamos confeitar?",
+     "fala_vencido": "Regra de três completa! A insígnia ficou dourada."
     }
    }
   }
