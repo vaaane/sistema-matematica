@@ -29,7 +29,11 @@
     <div class="jr-hud jr-hud-topo">
       <button class="jr-btn jr-btn-sec" id="btn-sair-jogo">⟵ Sair</button>
       <div class="jr-hud-titulo">Jogo de Revisão</div>
-      <button class="jr-btn" id="btn-insignias">🏅 Insígnias</button>
+      <button class="jr-btn-estojo" id="btn-insignias" aria-label="Minhas insígnias">
+        <img src="/img/jogo/ui/botao-insignias.webp" alt="" draggable="false"/>
+        <span class="jr-estojo-estrela" hidden>★</span>
+        <span class="jr-estojo-cont">0/26</span>
+      </button>
     </div>
   </section>
 
@@ -45,7 +49,11 @@
     <div class="jr-hud jr-hud-topo">
       <button class="jr-btn jr-btn-sec" id="btn-cena-voltar">⟵ Mapa geral</button>
       <div class="jr-hud-titulo" id="cena-titulo"></div>
-      <button class="jr-btn" id="btn-insignias-2">🏅</button>
+      <button class="jr-btn-estojo" id="btn-insignias-2" aria-label="Minhas insígnias">
+        <img src="/img/jogo/ui/botao-insignias.webp" alt="" draggable="false"/>
+        <span class="jr-estojo-estrela" hidden>★</span>
+        <span class="jr-estojo-cont">0/26</span>
+      </button>
     </div>
     <button id="cena-balao" class="jr-balao-acao" hidden></button>
     <div id="cena-aviso" class="jr-balao-aviso" hidden></div>
@@ -59,11 +67,11 @@
   <!-- Insígnia ganha -->
   <div id="insignia-ganha" class="jr-insignia-ganha" hidden>
     <div class="jr-ig-caixa">
-      <div class="jr-ig-raios"></div>
-      <img id="ig-img" alt=""/>
+      <div class="jr-ig-centro">
+        <div class="jr-ig-raios"></div>
+        <img id="ig-img" alt=""/>
+      </div>
       <div class="jr-ig-titulo" id="ig-titulo"></div>
-      <div class="jr-ig-sub" id="ig-sub"></div>
-      <button class="jr-btn" id="ig-ok">Continuar</button>
     </div>
   </div>
 

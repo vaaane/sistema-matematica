@@ -98,6 +98,7 @@ export async function iniciarJogo(sess) {
   await carregarEstado();
   preCarregarQuadros();
   ligarEventos();
+  atualizarContador();
   requestAnimationFrame(loop);
   abrirMapaGeral();
   $('jr-carregando').hidden = true;
@@ -320,7 +321,7 @@ function moverDireto(dt, vx, vy) {
 }
 
 function acionar() {
-  if (!$('insignia-ganha').hidden) { $('ig-ok').click(); return; }
+  if (!$('insignia-ganha').hidden) { acelerarInsignia(); return; }
   if (sobreposicaoAberta() || !cena || transicionando) return;
   if (cena.tipo === 'mapa') { if (alvoMapa) irAoDestino(alvoMapa); }
   else if (balaoAcao) $('cena-balao').click();
@@ -944,20 +945,101 @@ function avisar(texto, p) {
   avisoTimer = setTimeout(() => { el.hidden = true; }, 2200);
 }
 
+// ── Contador no ícone do estojo (lê o mesmo estado do estojo) ──
+function contarInsignias() {
+  let conquistadas = 0, douradas = 0;
+  for (const g of Object.values(estado.ginasios)) {
+    if (g.insignia) conquistadas++;
+    if (g.dourada) douradas++;
+  }
+  return { conquistadas, douradas, total: Object.keys(estado.ginasios).length };
+}
+
+function atualizarContador(efeito) {
+  const { conquistadas, douradas, total } = contarInsignias();
+  for (const id of ['btn-insignias', 'btn-insignias-2']) {
+    const b = $(id);
+    b.querySelector('.jr-estojo-cont').textContent = `${conquistadas}/${total}`;
+    b.querySelector('.jr-estojo-estrela').hidden = !douradas;
+    b.setAttribute('aria-label', `Minhas insígnias: ${conquistadas} de ${total}`);
+    if (efeito) {
+      b.classList.remove('pulo'); void b.offsetWidth; b.classList.add('pulo');
+    }
+  }
+}
+
+// O ícone do estojo que está na tela agora (mapa geral ou cena)
+const iconeEstojo = () => $($('tela-cena').hidden ? 'btn-insignias' : 'btn-insignias-2');
+
+// ── Insígnia nova: aparece grande no centro e voa até o ícone do estojo ──
+let animInsignia = null;
+
 function mostrarInsigniaGanha(chave, dourada) {
   const [mapaStr, G] = chave.replace('mapa', '').split('-');
   const gin = D.questoes[Number(mapaStr)].ginasios[G];
+  const box = $('insignia-ganha');
   const img = $('ig-img');
+  img.getAnimations().forEach(a => a.cancel());
   img.src = `${IMG}/insignias/insignia-${chave}.webp`;
   img.className = dourada ? 'dourada' : '';
-  $('ig-titulo').textContent = dourada ? 'Insígnia dourada!' : 'Insígnia conquistada!';
-  $('ig-sub').textContent = gin.nome;
-  const box = $('insignia-ganha');
+  $('ig-titulo').textContent = dourada ? 'Insígnia dourada!' : `Insígnia: ${gin.nome}!`;
   box.classList.toggle('dourada', !!dourada);
+  box.classList.remove('voando');
   box.hidden = false;
-  box.querySelector('.jr-ig-caixa').style.animation = 'none';
-  void box.offsetWidth;
-  box.querySelector('.jr-ig-caixa').style.animation = '';
+  img.style.animation = 'none'; void img.offsetWidth; img.style.animation = '';   // reinicia a entrada
+
+  const reduzido = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const anim = { voando: false, timer: 0 };
+  animInsignia = anim;
+
+  const terminar = () => {
+    clearTimeout(anim.timer);
+    box.hidden = true;
+    box.classList.remove('voando');
+    img.getAnimations().forEach(a => a.cancel());
+    if (animInsignia === anim) animInsignia = null;
+  };
+
+  anim.voar = () => {
+    if (anim.voando) return;
+    anim.voando = true;
+    clearTimeout(anim.timer);
+    const alvo = iconeEstojo();
+    const alvoImg = alvo.querySelector('img');
+    if (reduzido || !alvoImg.offsetWidth || !img.animate) {
+      // sem voo: só atualiza o contador
+      atualizarContador(false);
+      terminar();
+      return;
+    }
+    box.classList.add('voando');
+    const a = img.getBoundingClientRect(), b = alvoImg.getBoundingClientRect();
+    const dx = (b.left + b.width / 2) - (a.left + a.width / 2);
+    const dy = (b.top + b.height / 2) - (a.top + a.height / 2);
+    const esc = b.width / a.width;
+    // trajetória curva: Bézier quadrática com o ponto de controle puxado para o lado e para cima
+    const cx = dx * 0.15 - Math.min(160, Math.abs(dx) * 0.4), cy = dy * 0.15 - 140;
+    const quadros = [];
+    for (let k = 0; k <= 12; k++) {
+      const t = k / 12, u = 1 - t;
+      const x = 2 * u * t * cx + t * t * dx, y = 2 * u * t * cy + t * t * dy;
+      const sc = 1 + (esc - 1) * (t * t);
+      quadros.push({ transform: `translate(${x}px, ${y}px) scale(${sc})`, opacity: k === 12 ? 0.9 : 1, offset: t });
+    }
+    img.style.animation = 'none';
+    const voo = img.animate(quadros, { duration: 700, easing: 'cubic-bezier(.45,0,.55,1)', fill: 'forwards' });
+    voo.onfinish = () => {
+      atualizarContador(true);   // pulinho do ícone + contador com brilho
+      terminar();
+    };
+  };
+
+  // fica 1,4 s no centro (1,2 s sem animação) e então voa; tocar acelera
+  anim.timer = setTimeout(anim.voar, reduzido ? 1200 : 1400);
+}
+
+function acelerarInsignia() {
+  if (animInsignia && !animInsignia.voando) animInsignia.voar();
 }
 
 // ============================================================
@@ -1215,7 +1297,7 @@ function ligarEventos() {
   $('confirma-continuar').addEventListener('click', () => { $('perg-confirma').hidden = true; });
   $('confirma-fugir').addEventListener('click', () => { $('perg-confirma').hidden = true; desistir(); });
 
-  $('ig-ok').addEventListener('click', () => { $('insignia-ganha').hidden = true; });
+  $('insignia-ganha').addEventListener('click', acelerarInsignia);   // tocar acelera (vai direto ao voo)
 
   $('estojo-fechar').addEventListener('click', () => {
     $('estojo').hidden = true;
