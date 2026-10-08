@@ -21,8 +21,17 @@ export function clearSession() {
   sessionStorage.removeItem("sm_jogo");
 }
 
+// Modo teste só vale se a marca existir E a sessão for a de teste (turma TESTE).
+// A marca fica em localStorage e sobrevive ao fechar o navegador; se um aluno real
+// entrar depois de um modo teste esquecido, a marca é apagada aqui.
 export function isModoTeste() {
-  return localStorage.getItem('modoTeste') === 'true';
+  if (localStorage.getItem('modoTeste') !== 'true') return false;
+  const s = getSession();
+  if (s && s.turma && s.turma !== 'TESTE') {        // sessão de aluno real: marca esquecida
+    localStorage.removeItem('modoTeste');
+    return false;
+  }
+  return true;
 }
 
 export function lerDuplaAtiva() {

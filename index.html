@@ -715,6 +715,7 @@ window.entrarAluno = async function(e) {
       }
     } catch(_) {}
     localStorage.removeItem('sm_dupla_duelo');
+    localStorage.removeItem('modoTeste');   // login real: apaga marca de modo teste esquecida
     setSession({ modo: 'aluno', turma, alunos, session_token: sessionToken });
     // Inicializar perfil de gamificação (só cria se não existir)
     try {
@@ -740,6 +741,7 @@ window.entrarProf = async function(e) {
   try {
     const cfg = await getConfig();
     if (senha === cfg.senha) {
+      localStorage.removeItem('modoTeste');   // apaga marca de modo teste esquecida
       setSession({ modo: 'professor' });
       window.location.href = '/professor/dashboard.html';
     } else {
@@ -747,7 +749,7 @@ window.entrarProf = async function(e) {
       showError('errorProf', null);
     }
   } catch(err) {
-    if (senha === '123') { setSession({ modo: 'professor' }); window.location.href = '/professor/dashboard.html'; }
+    if (senha === '123') { localStorage.removeItem('modoTeste'); setSession({ modo: 'professor' }); window.location.href = '/professor/dashboard.html'; }
     else showError('errorProf', null);
   } finally {
     setLoading('btnProf', false);

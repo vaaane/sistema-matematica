@@ -60,11 +60,11 @@
 </div>
 
 <script type="module">
-import { setSession, getSession } from "/js/auth.js";
+import { setSession, getSession, isModoTeste } from "/js/auth.js";
 
 // Se já estiver logado como modo teste → redirecionar direto
 const sess = getSession();
-if (sess?.modo === 'aluno' && localStorage.getItem('modoTeste') === 'true') {
+if (sess?.modo === 'aluno' && isModoTeste()) {
   location.href = '/aluno/menu.html';
 }
 
