@@ -314,8 +314,67 @@ const mapaConcluido  = (n) => estado.ginasios[chaveGinasio(n, 'A')].lider.vencid
 const mapaDisponivel = (n) => modoDev || n === 1 || mapasAbertos.has(n) || mapaConcluido(n - 1);
 
 // ── Inicialização ───────────────────────────────────────────
+// ============================================================
+//  Celular/tablet: o jogo só funciona deitado (no computador nada muda)
+// ============================================================
+const mqToque = matchMedia('(hover: none) and (pointer: coarse)');
+const mqRetrato = matchMedia('(orientation: portrait)');
+let pausado = false;            // aviso "Gire o celular" aberto: o jogo espera, sem perder nada
+let tentouTravar = false;       // tela cheia + travar na horizontal: só uma tentativa
+const deitadoNoToque = () => mqToque.matches && !mqRetrato.matches;
+
+function atualizarOrientacao() {
+  const girar = mqToque.matches && mqRetrato.matches;
+  $('jr-gire').hidden = !girar;
+  if (girar && !pausado) {
+    pausado = true;
+    soltarJoystick();
+    teclas.clear();
+  } else if (!girar && pausado) {
+    pausado = false;
+    ultimoT = 0;   // o personagem não "pula" ao voltar
+  }
+  posicionarContador();
+  if (!$('tela-geral').hidden) dimensionarGeral();
+  if (cena) ajustarCamera();
+}
+
+// Deitado no celular, a pergunta tem 2 colunas e o contador vai para a coluna da esquerda
+function posicionarContador() {
+  const c = $('perg-contador');
+  if (deitadoNoToque()) {
+    if (c.parentElement !== document.querySelector('.jr-perg-topo')) $('perg-desistir').before(c);
+  } else if (c.parentElement !== $('perg-corpo')) {
+    $('perg-guiado').after(c);
+  }
+}
+
+// No primeiro toque: tela cheia e travar na horizontal (Chrome do Android; no iPhone não existe)
+async function travarHorizontal() {
+  if (tentouTravar || !mqToque.matches) return;
+  tentouTravar = true;
+  try {
+    await document.documentElement.requestFullscreen?.({ navigationUI: 'hide' });
+    await screen.orientation?.lock?.('landscape');
+  } catch (_) { /* o aviso "Gire o celular" resolve */ }
+}
+
+async function sairDoJogo() {
+  if (document.fullscreenElement) { try { await document.exitFullscreen(); } catch (_) {} }
+  window.location.href = '/aluno/a-jogos.html';
+}
+
+function ligarOrientacao() {
+  mqToque.addEventListener('change', atualizarOrientacao);
+  mqRetrato.addEventListener('change', atualizarOrientacao);
+  addEventListener('pointerdown', travarHorizontal, { capture: true, passive: true });
+  $('gire-sair').addEventListener('click', sairDoJogo);
+  atualizarOrientacao();
+}
+
 export async function iniciarJogo(sess) {
   sessao = sess;
+  ligarOrientacao();   // o aviso "Gire o celular" já vale na tela "Carregando o jogo…"
   modoDev = new URLSearchParams(location.search).get('dev') === '1' && isModoTeste();
   // só para a professora testar pelo console (?dev=1 no modo teste): jogoRevisaoDev.somarTurma('ZZ_DEV', 'insignias')
   if (modoDev) window.jogoRevisaoDev = { somarTurma };
@@ -662,7 +721,13 @@ let perguntaAberta = false;
 function ajustarCamera() {
   const vp = $('cena-vp');
   const vw = vp.clientWidth, vh = vp.clientHeight;
-  if (vh > vw) {
+  if (deitadoNoToque()) {
+    // Celular/tablet deitado: preenche a largura e segue o jogador nos dois eixos
+    // (um pouco abaixo do centro, para o personagem não ficar atrás do HUD do topo)
+    cam.s = Math.max(vw / W, vh / H);
+    cam.tx = clamp(vw / 2 - jog.x * cam.s, vw - W * cam.s, 0);
+    cam.ty = clamp(vh * 0.55 - jog.y * cam.s, vh - H * cam.s, 0);
+  } else if (vh > vw) {
     // Em pé: mapa na altura da tela, rola na horizontal seguindo o jogador
     cam.s = vh / H;
     cam.ty = 0;
@@ -835,7 +900,7 @@ let ultimoT = 0;
 function loop(t) {
   const dt = Math.min(0.05, (t - (ultimoT || t)) / 1000);
   ultimoT = t;
-  if (cena && !perguntaAberta && !transicionando) {
+  if (cena && !perguntaAberta && !transicionando && !pausado) {
     const [vx, vy] = vetorEntrada();
     if (!vx && !vy) soltouDesdeTroca = true;
     const direto = (vx || vy) && moverDireto(dt, vx, vy);
@@ -1489,6 +1554,7 @@ function mostrarInsigniaGanha(chave, dourada) {
 
   anim.voar = () => {
     if (anim.voando) return;
+    if (pausado) { clearTimeout(anim.timer); anim.timer = setTimeout(anim.voar, 400); return; }   // espera o celular deitar
     anim.voando = true;
     clearTimeout(anim.timer);
     const alvo = iconeEstojo();
@@ -1829,7 +1895,7 @@ function ligarEventos() {
   ligarArrasteGeral();
   ligarControles();
 
-  $('btn-sair-jogo').addEventListener('click', () => { window.location.href = '/aluno/a-jogos.html'; });
+  $('btn-sair-jogo').addEventListener('click', sairDoJogo);   // sai da tela cheia antes, se tiver entrado
   $('btn-insignias').addEventListener('click', abrirEstojo);
   $('faixa-meta').addEventListener('click', () => {
     abrirEstojo();

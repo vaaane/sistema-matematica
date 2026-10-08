@@ -605,3 +605,84 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
   .jr-xp { animation: jr-xp-fixo 1.4s linear forwards; }
   @keyframes jr-xp-fixo { 0%, 80% { transform: translate(-50%, 0); opacity: 1; } 100% { opacity: 0; } }
 }
+
+/* ============================================================
+   Celular/tablet: só deitado
+   ============================================================ */
+/* Aviso "Gire o celular" (aparelho de toque em pé) — cobre tudo e pausa o jogo */
+.jr-gire {
+  position: fixed; inset: 0; z-index: 200; background: #0d0f1a;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  padding: 24px; text-align: center;
+}
+.jr-gire-sair { position: absolute; top: max(12px, env(safe-area-inset-top)); left: max(12px, env(safe-area-inset-left)); }
+.jr-gire-cel {
+  width: 52px; height: 88px; border: 4px solid var(--jr-roxo); border-radius: 12px; position: relative;
+  box-shadow: 0 0 18px rgba(124,92,252,.45); animation: jr-gire 1.6s ease-in-out infinite; margin-bottom: 10px;
+}
+.jr-gire-cel span { position: absolute; left: 50%; bottom: 6px; width: 14px; height: 4px; margin-left: -7px; border-radius: 2px; background: var(--jr-roxo); }
+@keyframes jr-gire { 0%, 15% { transform: rotate(0); } 55%, 85% { transform: rotate(90deg); } 100% { transform: rotate(0); } }
+.jr-gire-titulo { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; color: #fff; }
+.jr-gire-sub { font-family: 'Inter', sans-serif; font-size: 14px; color: #a9aec4; max-width: 300px; line-height: 1.4; }
+@media (prefers-reduced-motion: reduce) { .jr-gire-cel { animation: none; transform: rotate(90deg); } }
+
+/* Aparelho de toque deitado: altura pequena (≈ 360–430 px) */
+@media (hover: none) and (pointer: coarse) and (orientation: landscape) {
+  /* HUD do topo: no máximo 44 px */
+  .jr-hud {
+    height: calc(44px + env(safe-area-inset-top)); gap: 8px;
+    padding: env(safe-area-inset-top) max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left));
+  }
+  .jr-hud .jr-btn { min-height: 34px; padding: 4px 12px; font-size: 15px; }
+  .jr-hud-titulo, #tela-geral .jr-hud-titulo { font-size: 15px; }
+  .jr-btn-estojo, .jr-btn-estojo img { width: 44px; height: 44px; }
+  .jr-estojo-cont { font-size: 10px; right: -6px; bottom: -4px; }
+  .jr-btn-som { width: 34px; height: 34px; font-size: 16px; }
+  .jr-selo-seq { min-height: 30px; padding: 2px 8px; font-size: 13px !important; }
+  .jr-no-ginasio .jr-hud-titulo { top: max(10px, calc(env(safe-area-inset-top) + 4px)); }
+  .jr-faixa-meta { top: calc(max(4px, env(safe-area-inset-top)) + 46px); left: max(10px, env(safe-area-inset-left)); padding: 4px 10px; }
+  .jr-btn-revisao { top: calc(max(4px, env(safe-area-inset-top)) + 48px); right: max(10px, env(safe-area-inset-right)); min-height: 38px; padding: 4px 10px; }
+  .jr-seq-balao { top: calc(max(4px, env(safe-area-inset-top)) + 46px); }
+
+  /* Joystick: 110 px no canto inferior direito, longe da borda e do entalhe */
+  .jr-joy { right: max(18px, calc(env(safe-area-inset-right) + 10px)); bottom: max(14px, calc(env(safe-area-inset-bottom) + 10px)); }
+  .jr-joy-base { width: 110px; height: 110px; }
+  .jr-joy-bola { width: 48px; height: 48px; margin: -24px 0 0 -24px; }
+
+  /* Pergunta em duas colunas, sem rolar a página */
+  .jr-perg-caixa {
+    max-width: none; height: 100dvh; max-height: 100dvh; overflow: hidden;
+    display: grid; grid-template-columns: 32% 1fr; grid-template-rows: minmax(0, 1fr) auto; gap: 8px 12px;
+    padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  }
+  .jr-perg-topo { grid-column: 1; grid-row: 1 / span 2; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 8px; min-height: 0; }
+  .jr-busto { width: 64px; height: 64px; align-self: center; }
+  .jr-fala { flex: none; font-size: 14px; }
+  .jr-fala:not(.completa) { -webkit-line-clamp: 3; line-clamp: 3; }
+  .jr-perg-topo .jr-perg-contador { text-align: center; }
+  .jr-fugir { align-self: center; margin-top: auto; }
+  .jr-perg-corpo { grid-column: 2; grid-row: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 10px; gap: 8px; }
+  .jr-perg-rodape { grid-column: 2; grid-row: 2; }
+  .jr-perg-rodape .jr-btn { min-height: 44px; }
+  .jr-perg-enunciado { font-size: 19px; }
+  .jr-alt { min-height: 44px; padding: 6px 10px; font-size: 16px; }
+  .jr-tabela { font-size: 13px; }
+  .jr-tabela caption { font-size: 14px; padding-bottom: 2px; }
+  .jr-tabela th, .jr-tabela td { height: 24px; padding: 0 8px; }
+  .jr-explica { padding: 8px 10px; gap: 4px; }
+  .jr-explica-texto { font-size: 14px; }
+  .jr-guiado { padding: 6px 10px; }
+
+  /* Animação da insígnia: título não pode ficar cortado embaixo */
+  .jr-ig-caixa { gap: 8px; }
+  .jr-ig-centro { width: min(45vmin, calc(100dvh - 110px)); height: min(45vmin, calc(100dvh - 110px)); }
+  .jr-ig-titulo { font-size: 24px; }
+
+  /* Estojo: cabeçalho mais baixo e bandejas em 2 colunas (3 se couber) */
+  .jr-estojo-topo { padding-top: calc(max(8px, env(safe-area-inset-top)) + 44px); padding-bottom: 10px; }
+  .jr-estojo-titulo { font-size: 26px; }
+  .jr-estojo-fundo { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+  .jr-bandejas { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 16px 20px; align-items: start; }
+  .jr-bandeja-bloco { max-width: none; }
+  .jr-bandeja-num { font-size: clamp(18px, 3.4vw, 34px); }
+}
