@@ -6,7 +6,7 @@ import { isModoTeste } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
 import { ref, get, update, push, set, increment } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { adicionarXP } from '/js/db.js';
-import { bimestreAtual } from '/js/constants.js';
+import { bimestreAtual, ALUNOS_TESTE } from '/js/constants.js';
 import { gerarQuestoes, gerarUma } from '/js/jogo-revisao/geradores.js';
 import { tocar, somLigado, alternarSom } from '/js/jogo-revisao/sons.js';
 import { notaJogoRevisao, formatarNota, NOTA_MAX, PESO_INSIGNIAS, PESO_DOURADAS } from '/js/jogo-revisao/nota.js';
@@ -1704,8 +1704,8 @@ function vencer() {
   }
   if (ganhou === 'normal') publicarNoFeed('insignia', chave);
   if (ganhou === 'dourada') publicarNoFeed('insignia_dourada', chave);
-  // meta da turma: nunca no modo teste (somarTurma também recusa TESTE e turma vazia)
-  if (ganhou && !teste && carregouProgresso && sessao.turma) {
+  // meta da turma: nunca no modo teste nem para alunos de teste (somarTurma também recusa TESTE e turma vazia)
+  if (ganhou && !teste && carregouProgresso && sessao.turma && !ALUNOS_TESTE.includes(sessao.uid)) {
     const campo = ganhou === 'normal' ? 'insignias' : 'douradas';
     somarTurma(sessao.turma, campo);
     const p0 = placarTurmas[sessao.turma] || {};

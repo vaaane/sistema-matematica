@@ -29,6 +29,10 @@ export const COTAS_POR_ATIVIDADE = {
   "Atividade 2 - Regra de três": { 1: 4, 2: 3, 3: 3 },
 };
 
+// ===== Alunos de teste (uid = turma_nome) =====
+// Logam como aluno comum, mas não contam no placar das turmas nem no painel do Jogo de Revisão.
+export const ALUNOS_TESTE = ["8H_Ricardo"];
+
 // ===== ALUNOS_POR_TURMA (ordem oficial SEDF, ativos) =====
 export const ALUNOS_POR_TURMA = {
   "8D": ["Alice Tavares", "Alice Paz", "Ana Julia", "Arthur", "Francisco", "João Pedro", "Karolinny", "Ketelly", "Keyvison", "Leticia", "Lucas Gabriel", "Lucas Matheus", "Luis Gabriel", "Luis Miguel", "Miguel Henrique", "Miguel Nascimento", "Wanderson", "Izabelly Monik", "Nixmarys", "Thalles Davi", "Pedro Riquelme", "Sandra"],

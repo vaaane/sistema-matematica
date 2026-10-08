@@ -167,7 +167,7 @@
 import { requireProfessor, renderSidebarProfessor } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { ALUNOS_POR_TURMA } from "/js/constants.js";
+import { ALUNOS_POR_TURMA, ALUNOS_TESTE } from "/js/constants.js";
 import { notaJogoRevisao, formatarNota, TOTAL_INSIGNIAS } from "/js/jogo-revisao/nota.js";
 import { gerarUma } from "/js/jogo-revisao/geradores.js";
 
@@ -248,7 +248,7 @@ function calcularAluno(turma, nome) {
 
 function montarTurma() {
   const turma = sel.value;
-  const nomes = (ALUNOS_POR_TURMA[turma] || []).filter(nm => !ehTeste(nm));
+  const nomes = (ALUNOS_POR_TURMA[turma] || []).filter(nm => !ehTeste(nm) && !ALUNOS_TESTE.includes(uidDe(turma, nm)));
   linhas = nomes.map(nm => calcularAluno(turma, nm));
   renderResumo();
   renderAlunos();
@@ -455,7 +455,7 @@ $("btn-recalcular").addEventListener("click", async () => {
     const todos = s.exists() ? s.val() || {} : {};
     const cont = Object.fromEntries(TURMAS.map(t => [t, { insignias: 0, douradas: 0 }]));
     for (const [uid, n] of Object.entries(todos)) {
-      if (ehTeste(uid)) continue;
+      if (ehTeste(uid) || ALUNOS_TESTE.includes(uid)) continue;
       const turma = TURMAS.find(t => uid.startsWith(t + "_"));
       if (!turma) continue;
       for (const ins of Object.values(n?.insignias || {})) {
