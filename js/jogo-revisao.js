@@ -315,25 +315,33 @@ const mapaDisponivel = (n) => modoDev || n === 1 || mapasAbertos.has(n) || mapaC
 
 // ── Inicialização ───────────────────────────────────────────
 // ============================================================
-//  Celular/tablet: o jogo só funciona deitado (no computador nada muda)
+//  Celular/tablet: o jogo é sempre desenhado deitado (no computador nada muda)
+//  Em pé, o jogo inteiro gira 90° (classe jr-girado) e o aluno só vira o celular.
 // ============================================================
 const mqToque = matchMedia('(hover: none) and (pointer: coarse)');
 const mqRetrato = matchMedia('(orientation: portrait)');
-let pausado = false;            // aviso "Gire o celular" aberto: o jogo espera, sem perder nada
 let tentouTravar = false;       // tela cheia + travar na horizontal: só uma tentativa
-const deitadoNoToque = () => mqToque.matches && !mqRetrato.matches;
+const deitado = () => mqToque.matches;                        // layout deitado (real ou girado)
+const girado  = () => mqToque.matches && mqRetrato.matches;   // celular em pé: jogo girado 90°
+
+// Ponto da tela (clientX/Y) → coordenadas do jogo (iguais quando não está girado)
+function pontoNoJogo(cx, cy) {
+  return girado() ? { x: cy, y: innerWidth - cx } : { x: cx, y: cy };
+}
+// Deslocamento na tela → deslocamento no jogo
+function deltaNoJogo(dx, dy) {
+  return girado() ? { x: dy, y: -dx } : { x: dx, y: dy };
+}
 
 function atualizarOrientacao() {
-  const girar = mqToque.matches && mqRetrato.matches;
-  $('jr-gire').hidden = !girar;
-  if (girar && !pausado) {
-    pausado = true;
-    soltarJoystick();
-    teclas.clear();
-  } else if (!girar && pausado) {
-    pausado = false;
-    ultimoT = 0;   // o personagem não "pula" ao voltar
-  }
+  const raiz = document.documentElement;
+  raiz.classList.toggle('jr-deitado', deitado());
+  raiz.classList.toggle('jr-girado', girado());
+  // altura da área do jogo (girado, é a largura da tela)
+  raiz.style.setProperty('--jr-alt', (girado() ? innerWidth : innerHeight) + 'px');
+  soltarJoystick();
+  teclas.clear();
+  ultimoT = 0;
   posicionarContador();
   if (!$('tela-geral').hidden) dimensionarGeral();
   if (cena) ajustarCamera();
@@ -342,7 +350,7 @@ function atualizarOrientacao() {
 // Deitado no celular, a pergunta tem 2 colunas e o contador vai para a coluna da esquerda
 function posicionarContador() {
   const c = $('perg-contador');
-  if (deitadoNoToque()) {
+  if (deitado()) {
     if (c.parentElement !== document.querySelector('.jr-perg-topo')) $('perg-desistir').before(c);
   } else if (c.parentElement !== $('perg-corpo')) {
     $('perg-guiado').after(c);
@@ -356,7 +364,7 @@ async function travarHorizontal() {
   try {
     await document.documentElement.requestFullscreen?.({ navigationUI: 'hide' });
     await screen.orientation?.lock?.('landscape');
-  } catch (_) { /* o aviso "Gire o celular" resolve */ }
+  } catch (_) { /* sem trava: o jogo continua desenhado deitado mesmo assim */ }
 }
 
 async function sairDoJogo() {
@@ -367,14 +375,14 @@ async function sairDoJogo() {
 function ligarOrientacao() {
   mqToque.addEventListener('change', atualizarOrientacao);
   mqRetrato.addEventListener('change', atualizarOrientacao);
+  addEventListener('resize', () => document.documentElement.style.setProperty('--jr-alt', (girado() ? innerWidth : innerHeight) + 'px'));
   addEventListener('pointerdown', travarHorizontal, { capture: true, passive: true });
-  $('gire-sair').addEventListener('click', sairDoJogo);
   atualizarOrientacao();
 }
 
 export async function iniciarJogo(sess) {
   sessao = sess;
-  ligarOrientacao();   // o aviso "Gire o celular" já vale na tela "Carregando o jogo…"
+  ligarOrientacao();   // já desenha deitado na tela "Carregando o jogo…"
   modoDev = new URLSearchParams(location.search).get('dev') === '1' && isModoTeste();
   // só para a professora testar pelo console (?dev=1 no modo teste): jogoRevisaoDev.somarTurma('ZZ_DEV', 'insignias')
   if (modoDev) window.jogoRevisaoDev = { somarTurma };
@@ -721,8 +729,8 @@ let perguntaAberta = false;
 function ajustarCamera() {
   const vp = $('cena-vp');
   const vw = vp.clientWidth, vh = vp.clientHeight;
-  if (deitadoNoToque()) {
-    // Celular/tablet deitado: preenche a largura e segue o jogador nos dois eixos
+  if (deitado()) {
+    // Celular/tablet (deitado ou girado): preenche a largura e segue o jogador nos dois eixos
     // (um pouco abaixo do centro, para o personagem não ficar atrás do HUD do topo)
     cam.s = Math.max(vw / W, vh / H);
     cam.tx = clamp(vw / 2 - jog.x * cam.s, vw - W * cam.s, 0);
@@ -742,6 +750,10 @@ function ajustarCamera() {
 }
 
 function telaParaImagem(cx, cy) {
+  if (girado()) {   // o #cena-vp ocupa todo o jogo girado: basta converter o ponto
+    const p = pontoNoJogo(cx, cy);
+    return { x: (p.x - cam.tx) / cam.s, y: (p.y - cam.ty) / cam.s };
+  }
   const r = $('cena-vp').getBoundingClientRect();
   return { x: (cx - r.left - cam.tx) / cam.s, y: (cy - r.top - cam.ty) / cam.s };
 }
@@ -874,7 +886,8 @@ function ligarControles() {
   const mover = (e) => {
     const r = base.getBoundingClientRect();
     const raio = r.width / 2;
-    let x = (e.clientX - (r.left + raio)) / raio, y = (e.clientY - (r.top + raio)) / raio;
+    const d = deltaNoJogo(e.clientX - (r.left + raio), e.clientY - (r.top + raio));   // girado: gira o deslocamento
+    let x = d.x / raio, y = d.y / raio;
     const m = Math.hypot(x, y);
     if (m > 1) { x /= m; y /= m; }
     bola.style.transform = `translate(${x * raio * 0.6}px, ${y * raio * 0.6}px)`;
@@ -900,7 +913,7 @@ let ultimoT = 0;
 function loop(t) {
   const dt = Math.min(0.05, (t - (ultimoT || t)) / 1000);
   ultimoT = t;
-  if (cena && !perguntaAberta && !transicionando && !pausado) {
+  if (cena && !perguntaAberta && !transicionando) {
     const [vx, vy] = vetorEntrada();
     if (!vx && !vy) soltouDesdeTroca = true;
     const direto = (vx || vy) && moverDireto(dt, vx, vy);
@@ -1554,7 +1567,6 @@ function mostrarInsigniaGanha(chave, dourada) {
 
   anim.voar = () => {
     if (anim.voando) return;
-    if (pausado) { clearTimeout(anim.timer); anim.timer = setTimeout(anim.voar, 400); return; }   // espera o celular deitar
     anim.voando = true;
     clearTimeout(anim.timer);
     const alvo = iconeEstojo();
@@ -1567,8 +1579,7 @@ function mostrarInsigniaGanha(chave, dourada) {
     }
     box.classList.add('voando');
     const a = img.getBoundingClientRect(), b = alvoImg.getBoundingClientRect();
-    const dx = (b.left + b.width / 2) - (a.left + a.width / 2);
-    const dy = (b.top + b.height / 2) - (a.top + a.height / 2);
+    const { x: dx, y: dy } = deltaNoJogo((b.left + b.width / 2) - (a.left + a.width / 2), (b.top + b.height / 2) - (a.top + a.height / 2));
     const esc = b.width / a.width;
     // trajetória curva: Bézier quadrática com o ponto de controle puxado para o lado e para cima
     const cx = dx * 0.15 - Math.min(160, Math.abs(dx) * 0.4), cy = dy * 0.15 - 140;

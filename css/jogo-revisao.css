@@ -47,7 +47,7 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
 .jr-hud {
   position: absolute; left: 0; right: 0; z-index: 20; pointer-events: none;
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  padding: max(10px, env(safe-area-inset-top)) 12px 10px;
+  padding: max(10px, var(--sa-t)) 12px 10px;
 }
 .jr-hud > * { pointer-events: auto; }
 .jr-hud-topo { top: 0; background: linear-gradient(180deg, rgba(13,15,26,.85), rgba(13,15,26,0)); }
@@ -59,7 +59,7 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
 
 /* No ginásio: sem botão de sair; nome centralizado e discreto */
 .jr-no-ginasio .jr-hud-titulo {
-  position: absolute; left: 50%; top: max(14px, calc(env(safe-area-inset-top) + 4px)); transform: translateX(-50%);
+  position: absolute; left: 50%; top: max(14px, calc(var(--sa-t) + 4px)); transform: translateX(-50%);
   flex: none; max-width: calc(100% - 150px); font-size: 15px !important; padding: 4px 12px; border-radius: 10px;
   background: rgba(13,15,26,.6); text-shadow: none;
 }
@@ -178,7 +178,7 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
 @media (hover: none) and (pointer: coarse) {
   .jr-joy {
     display: block; position: absolute; z-index: 16;
-    right: max(22px, env(safe-area-inset-right)); bottom: max(40px, calc(env(safe-area-inset-bottom) + 18px));
+    right: max(22px, var(--sa-r)); bottom: max(40px, calc(var(--sa-b) + 18px));
   }
   .jr-com-pergunta .jr-joy { display: none; }
 }
@@ -203,20 +203,20 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
 }
 .jr-selo-seq.apagado { color: #8b90a3; border-color: rgba(255,255,255,.2); }
 /* celular estreito: título e selo um pouco menores para o título não ser cortado */
-@media (max-width: 430px) {
-  #tela-geral .jr-hud-titulo { font-size: 15px; }
-  #tela-geral .jr-hud { gap: 6px; padding-left: 8px; padding-right: 8px; }
-  #tela-geral #btn-sair-jogo { padding: 8px 10px; }
-  .jr-selo-seq { padding: 4px 7px; font-size: 13px !important; }
+@media (max-width: 430px) {   /* janela estreita no computador (no celular o jogo é sempre deitado) */
+  html:not(.jr-deitado) #tela-geral .jr-hud-titulo { font-size: 15px; }
+  html:not(.jr-deitado) #tela-geral .jr-hud { gap: 6px; padding-left: 8px; padding-right: 8px; }
+  html:not(.jr-deitado) #tela-geral #btn-sair-jogo { padding: 8px 10px; }
+  html:not(.jr-deitado) .jr-selo-seq { padding: 4px 7px; font-size: 13px !important; }
 }
 .jr-seq-balao {
-  position: fixed; z-index: 25; top: calc(max(10px, env(safe-area-inset-top)) + 54px); left: 50%; transform: translateX(-50%);
+  position: fixed; z-index: 25; top: calc(max(10px, var(--sa-t)) + 54px); left: 50%; transform: translateX(-50%);
   width: min(320px, calc(100% - 32px)); padding: 10px 14px; border-radius: 12px;
   background: rgba(13,15,26,.92); border: 1px solid rgba(255,123,46,.5); color: #f1f2f8;
   font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.4; box-shadow: 0 6px 18px rgba(0,0,0,.5);
 }
 .jr-aviso-seq {
-  position: fixed; z-index: 70; left: 50%; top: calc(max(10px, env(safe-area-inset-top)) + 60px); transform: translateX(-50%);
+  position: fixed; z-index: 70; left: 50%; top: calc(max(10px, var(--sa-t)) + 60px); transform: translateX(-50%);
   padding: 10px 18px; border-radius: 14px; pointer-events: none; white-space: nowrap;
   background: rgba(13,15,26,.9); border: 2px solid #ff7b2e; color: #ffd0b0;
   font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; box-shadow: 0 6px 18px rgba(0,0,0,.5);
@@ -228,7 +228,7 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
 
 /* ── Meta da turma: faixa no mapa geral (embaixo do HUD) ── */
 .jr-faixa-meta {
-  position: absolute; z-index: 20; left: 12px; right: 118px; top: calc(max(10px, env(safe-area-inset-top)) + 62px);
+  position: absolute; z-index: 20; left: 12px; right: 118px; top: calc(max(10px, var(--sa-t)) + 62px);
   max-width: 340px; display: flex; flex-direction: column; gap: 4px; padding: 6px 10px; border-radius: 10px; cursor: pointer; text-align: left;
   background: rgba(13,15,26,.72); border: 1px solid rgba(0,230,118,.35); color: #e7fbef;
   font-family: 'Inter', sans-serif !important; font-size: 12.5px; font-weight: 600; line-height: 1.2;
@@ -257,7 +257,7 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
 
 /* ── Revisão da semana: botão no mapa geral (abaixo do estojo) ── */
 .jr-btn-revisao {
-  position: fixed; z-index: 21; right: 10px; top: calc(max(10px, env(safe-area-inset-top)) + 64px);
+  position: fixed; z-index: 21; right: 10px; top: calc(max(10px, var(--sa-t)) + 64px);
   min-width: 48px; min-height: 44px; padding: 6px 12px; border-radius: 14px; cursor: pointer;
   background: rgba(13,15,26,.82); border: 1px solid rgba(255,215,0,.5); color: #ffe69a;
   font-family: 'Rajdhani', sans-serif !important; font-size: 15px; font-weight: 700; white-space: nowrap;
@@ -373,9 +373,9 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
 }
 /* O cartão cabe numa tela só; rolagem só dentro dele, como último recurso */
 .jr-perg-caixa {
-  position: relative; width: 100%; max-width: 760px; max-height: 100dvh; overflow-y: auto; overscroll-behavior: contain;
+  position: relative; width: 100%; max-width: 760px; max-height: 100%; overflow-y: auto; overscroll-behavior: contain;
   display: flex; flex-direction: column; gap: 10px;
-  padding: max(10px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+  padding: max(10px, var(--sa-t)) 12px max(12px, var(--sa-b));
 }
 .jr-perg-topo { display: flex; align-items: center; gap: 10px; }
 .jr-busto {
@@ -497,9 +497,9 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
 }
 .jr-estojo-topo {
   position: relative; max-width: 640px; margin: 0 auto; text-align: center;
-  padding: max(64px, calc(env(safe-area-inset-top) + 56px)) 0 18px;
+  padding: max(64px, calc(var(--sa-t) + 56px)) 0 18px;
 }
-.jr-estojo-fechar { position: absolute; top: max(12px, env(safe-area-inset-top)); right: 0; }
+.jr-estojo-fechar { position: absolute; top: max(12px, var(--sa-t)); right: 0; }
 .jr-estojo-titulo {
   font-family: 'Rajdhani', sans-serif; font-size: 34px; font-weight: 700; color: var(--jr-ouro);
   text-shadow: 0 3px 0 #3a2400, 0 4px 12px rgba(0,0,0,.7);
@@ -595,7 +595,7 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
   100% { transform: translate(-50%, -90px) scale(1); opacity: 0; }
 }
 .jr-aviso-conexao {
-  position: fixed; left: 50%; bottom: max(14px, env(safe-area-inset-bottom)); transform: translateX(-50%);
+  position: fixed; left: 50%; bottom: max(14px, var(--sa-b)); transform: translateX(-50%);
   z-index: 80; max-width: calc(100% - 32px); padding: 8px 14px; border-radius: 12px; text-align: center;
   background: rgba(240,165,0,.12); border: 1px solid rgba(240,165,0,.4); color: #f0c060;
   font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
@@ -607,82 +607,78 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
 }
 
 /* ============================================================
-   Celular/tablet: só deitado
+   Celular/tablet: o jogo é sempre desenhado deitado
    ============================================================ */
-/* Aviso "Gire o celular" (aparelho de toque em pé) — cobre tudo e pausa o jogo */
-.jr-gire {
-  position: fixed; inset: 0; z-index: 200; background: #0d0f1a;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
-  padding: 24px; text-align: center;
+/* Margens do entalhe/câmera. Com o jogo girado, o "topo" do jogo é a lateral direita da tela, etc. */
+:root {
+  --sa-t: env(safe-area-inset-top, 0px); --sa-r: env(safe-area-inset-right, 0px);
+  --sa-b: env(safe-area-inset-bottom, 0px); --sa-l: env(safe-area-inset-left, 0px);
 }
-.jr-gire-sair { position: absolute; top: max(12px, env(safe-area-inset-top)); left: max(12px, env(safe-area-inset-left)); }
-.jr-gire-cel {
-  width: 52px; height: 88px; border: 4px solid var(--jr-roxo); border-radius: 12px; position: relative;
-  box-shadow: 0 0 18px rgba(124,92,252,.45); animation: jr-gire 1.6s ease-in-out infinite; margin-bottom: 10px;
+html.jr-girado {
+  --sa-t: env(safe-area-inset-right, 0px); --sa-r: env(safe-area-inset-bottom, 0px);
+  --sa-b: env(safe-area-inset-left, 0px); --sa-l: env(safe-area-inset-top, 0px);
 }
-.jr-gire-cel span { position: absolute; left: 50%; bottom: 6px; width: 14px; height: 4px; margin-left: -7px; border-radius: 2px; background: var(--jr-roxo); }
-@keyframes jr-gire { 0%, 15% { transform: rotate(0); } 55%, 85% { transform: rotate(90deg); } 100% { transform: rotate(0); } }
-.jr-gire-titulo { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; color: #fff; }
-.jr-gire-sub { font-family: 'Inter', sans-serif; font-size: 14px; color: #a9aec4; max-width: 300px; line-height: 1.4; }
-@media (prefers-reduced-motion: reduce) { .jr-gire-cel { animation: none; transform: rotate(90deg); } }
-
-/* Aparelho de toque deitado: altura pequena (≈ 360–430 px) */
-@media (hover: none) and (pointer: coarse) and (orientation: landscape) {
-  /* HUD do topo: no máximo 44 px */
-  .jr-hud {
-    height: calc(44px + env(safe-area-inset-top)); gap: 8px;
-    padding: env(safe-area-inset-top) max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left));
-  }
-  .jr-hud .jr-btn { min-height: 34px; padding: 4px 12px; font-size: 15px; }
-  .jr-hud-titulo, #tela-geral .jr-hud-titulo { font-size: 15px; }
-  .jr-btn-estojo, .jr-btn-estojo img { width: 44px; height: 44px; }
-  .jr-estojo-cont { font-size: 10px; right: -6px; bottom: -4px; }
-  .jr-btn-som { width: 34px; height: 34px; font-size: 16px; }
-  .jr-selo-seq { min-height: 30px; padding: 2px 8px; font-size: 13px !important; }
-  .jr-no-ginasio .jr-hud-titulo { top: max(10px, calc(env(safe-area-inset-top) + 4px)); }
-  .jr-faixa-meta { top: calc(max(4px, env(safe-area-inset-top)) + 46px); left: max(10px, env(safe-area-inset-left)); padding: 4px 10px; }
-  .jr-btn-revisao { top: calc(max(4px, env(safe-area-inset-top)) + 48px); right: max(10px, env(safe-area-inset-right)); min-height: 38px; padding: 4px 10px; }
-  .jr-seq-balao { top: calc(max(4px, env(safe-area-inset-top)) + 46px); }
-
-  /* Joystick: 110 px no canto inferior direito, longe da borda e do entalhe */
-  .jr-joy { right: max(18px, calc(env(safe-area-inset-right) + 10px)); bottom: max(14px, calc(env(safe-area-inset-bottom) + 10px)); }
-  .jr-joy-base { width: 110px; height: 110px; }
-  .jr-joy-bola { width: 48px; height: 48px; margin: -24px 0 0 -24px; }
-
-  /* Pergunta em duas colunas, sem rolar a página */
-  .jr-perg-caixa {
-    max-width: none; height: 100dvh; max-height: 100dvh; overflow: hidden;
-    display: grid; grid-template-columns: 32% 1fr; grid-template-rows: minmax(0, 1fr) auto; gap: 8px 12px;
-    padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
-  }
-  .jr-perg-topo { grid-column: 1; grid-row: 1 / span 2; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 8px; min-height: 0; }
-  .jr-busto { width: 64px; height: 64px; align-self: center; }
-  .jr-fala { flex: none; font-size: 14px; }
-  .jr-fala:not(.completa) { -webkit-line-clamp: 3; line-clamp: 3; }
-  .jr-perg-topo .jr-perg-contador { text-align: center; }
-  .jr-fugir { align-self: center; margin-top: auto; }
-  .jr-perg-corpo { grid-column: 2; grid-row: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 10px; gap: 8px; }
-  .jr-perg-rodape { grid-column: 2; grid-row: 2; }
-  .jr-perg-rodape .jr-btn { min-height: 44px; }
-  .jr-perg-enunciado { font-size: 19px; }
-  .jr-alt { min-height: 44px; padding: 6px 10px; font-size: 16px; }
-  .jr-tabela { font-size: 13px; }
-  .jr-tabela caption { font-size: 14px; padding-bottom: 2px; }
-  .jr-tabela th, .jr-tabela td { height: 24px; padding: 0 8px; }
-  .jr-explica { padding: 8px 10px; gap: 4px; }
-  .jr-explica-texto { font-size: 14px; }
-  .jr-guiado { padding: 6px 10px; }
-
-  /* Animação da insígnia: título não pode ficar cortado embaixo */
-  .jr-ig-caixa { gap: 8px; }
-  .jr-ig-centro { width: min(45vmin, calc(100dvh - 110px)); height: min(45vmin, calc(100dvh - 110px)); }
-  .jr-ig-titulo { font-size: 24px; }
-
-  /* Estojo: cabeçalho mais baixo e bandejas em 2 colunas (3 se couber) */
-  .jr-estojo-topo { padding-top: calc(max(8px, env(safe-area-inset-top)) + 44px); padding-bottom: 10px; }
-  .jr-estojo-titulo { font-size: 26px; }
-  .jr-estojo-fundo { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
-  .jr-bandejas { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 16px 20px; align-items: start; }
-  .jr-bandeja-bloco { max-width: none; }
-  .jr-bandeja-num { font-size: clamp(18px, 3.4vw, 34px); }
+/* Aparelho de toque em pé: o jogo inteiro gira 90° — o aluno só vira o celular de lado */
+html.jr-girado #jr-app {
+  inset: auto; top: 0; left: 0; width: 100dvh; height: 100vw;
+  transform-origin: 0 0; transform: translateX(100vw) rotate(90deg);
 }
+
+/* Aparelho de toque (deitado de verdade ou girado): altura pequena (≈ 360–430 px) */
+/* HUD do topo: no máximo 44 px */
+html.jr-deitado .jr-hud {
+  height: calc(44px + var(--sa-t)); gap: 8px;
+  padding: var(--sa-t) max(10px, var(--sa-r)) 0 max(10px, var(--sa-l));
+}
+html.jr-deitado .jr-hud .jr-btn { min-height: 34px; padding: 4px 12px; font-size: 15px; }
+html.jr-deitado .jr-hud-titulo, html.jr-deitado #tela-geral .jr-hud-titulo { font-size: 15px; }
+html.jr-deitado .jr-btn-estojo, html.jr-deitado .jr-btn-estojo img { width: 44px; height: 44px; }
+html.jr-deitado .jr-estojo-cont { font-size: 10px; right: -6px; bottom: -4px; }
+html.jr-deitado .jr-btn-som { width: 34px; height: 34px; font-size: 16px; }
+html.jr-deitado .jr-selo-seq { min-height: 30px; padding: 2px 8px; font-size: 13px !important; }
+html.jr-deitado .jr-no-ginasio .jr-hud-titulo { top: max(10px, calc(var(--sa-t) + 4px)); }
+html.jr-deitado .jr-faixa-meta { top: calc(max(4px, var(--sa-t)) + 46px); left: max(10px, var(--sa-l)); padding: 4px 10px; }
+html.jr-deitado .jr-btn-revisao { top: calc(max(4px, var(--sa-t)) + 48px); right: max(10px, var(--sa-r)); min-height: 38px; padding: 4px 10px; }
+html.jr-deitado .jr-seq-balao { top: calc(max(4px, var(--sa-t)) + 46px); }
+
+/* Joystick: 110 px no canto inferior direito, longe da borda e do entalhe */
+html.jr-deitado .jr-joy { right: max(18px, calc(var(--sa-r) + 10px)); bottom: max(14px, calc(var(--sa-b) + 10px)); }
+html.jr-deitado .jr-joy-base { width: 110px; height: 110px; }
+html.jr-deitado .jr-joy-bola { width: 48px; height: 48px; margin: -24px 0 0 -24px; }
+
+/* Pergunta em duas colunas, sem rolar a página */
+html.jr-deitado .jr-perg-caixa {
+  max-width: none; height: 100%; max-height: 100%; overflow: hidden;
+  display: grid; grid-template-columns: 32% 1fr; grid-template-rows: minmax(0, 1fr) auto; gap: 8px 12px;
+  padding: max(8px, var(--sa-t)) max(12px, var(--sa-r)) max(8px, var(--sa-b)) max(12px, var(--sa-l));
+}
+html.jr-deitado .jr-perg-topo { grid-column: 1; grid-row: 1 / span 2; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 8px; min-height: 0; }
+html.jr-deitado .jr-busto { width: 64px; height: 64px; align-self: center; }
+html.jr-deitado .jr-fala { flex: none; font-size: 14px; }
+html.jr-deitado .jr-fala:not(.completa) { -webkit-line-clamp: 3; line-clamp: 3; }
+html.jr-deitado .jr-perg-topo .jr-perg-contador { text-align: center; }
+html.jr-deitado .jr-fugir { align-self: center; margin-top: auto; }
+html.jr-deitado .jr-perg-corpo { grid-column: 2; grid-row: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 10px; gap: 8px; }
+html.jr-deitado .jr-perg-rodape { grid-column: 2; grid-row: 2; }
+html.jr-deitado .jr-perg-rodape .jr-btn { min-height: 44px; }
+html.jr-deitado .jr-perg-enunciado { font-size: 19px; }
+html.jr-deitado .jr-alt { min-height: 44px; padding: 6px 10px; font-size: 16px; }
+html.jr-deitado .jr-tabela { font-size: 13px; }
+html.jr-deitado .jr-tabela caption { font-size: 14px; padding-bottom: 2px; }
+html.jr-deitado .jr-tabela th, html.jr-deitado .jr-tabela td { height: 24px; padding: 0 8px; }
+html.jr-deitado .jr-explica { padding: 8px 10px; gap: 4px; }
+html.jr-deitado .jr-explica-texto { font-size: 14px; }
+html.jr-deitado .jr-guiado { padding: 6px 10px; }
+
+/* Animação da insígnia: título não pode ficar cortado embaixo */
+html.jr-deitado .jr-ig-caixa { gap: 8px; }
+html.jr-deitado .jr-ig-centro { width: min(45vmin, calc(var(--jr-alt, 100dvh) - 110px)); height: min(45vmin, calc(var(--jr-alt, 100dvh) - 110px)); }
+html.jr-deitado .jr-ig-titulo { font-size: 24px; }
+
+/* Estojo: cabeçalho mais baixo e bandejas em 2 colunas (3 se couber) */
+html.jr-deitado .jr-estojo-topo { padding-top: calc(max(8px, var(--sa-t)) + 44px); padding-bottom: 10px; }
+html.jr-deitado .jr-estojo-titulo { font-size: 26px; }
+html.jr-deitado .jr-estojo-fundo { padding-left: max(16px, var(--sa-l)); padding-right: max(16px, var(--sa-r)); }
+html.jr-deitado .jr-bandejas { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 16px 20px; align-items: start; }
+html.jr-deitado .jr-bandeja-bloco { max-width: none; }
+html.jr-deitado .jr-bandeja-num { font-size: clamp(18px, 3.4vw, 34px); }
