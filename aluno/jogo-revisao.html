@@ -96,24 +96,43 @@
 
   <!-- 3.4 Pergunta -->
   <div id="pergunta" class="jr-pergunta" hidden>
-    <div class="jr-perg-caixa">
-      <div class="jr-perg-topo">
-        <img id="perg-busto" class="jr-busto" alt=""/>
-        <div class="jr-fala" id="perg-fala"></div>
-        <div class="jr-moedas" id="perg-moedas" hidden aria-label="Moedas">🪙 <span>0</span></div>
+    <div class="jr-perg-caixa" id="perg-caixa">
+      <!-- barra do topo: fugir, moedas, adversário e progresso -->
+      <div class="jr-perg-barra">
         <button class="jr-fugir" id="perg-desistir" aria-label="Fugir da batalha">🏳️ Fugir</button>
+        <div class="jr-moedas" id="perg-moedas" hidden aria-label="Moedas">🪙 <span>0</span></div>
+        <div class="jr-perg-placa">
+          <span class="jr-perg-adv-nome" id="perg-adv-nome"></span>
+          <div class="jr-perg-bolinhas" id="perg-bolinhas" aria-label="Progresso"></div>
+        </div>
       </div>
+      <!-- arena: personagem + pet à esquerda, adversário à direita -->
+      <div class="jr-perg-arena" id="perg-arena">
+        <div class="jr-arena-sombra eu"></div>
+        <img class="jr-arena-jog" id="perg-jog" alt="" draggable="false"/>
+        <div class="jr-arena-sombra pet"></div>
+        <img class="jr-arena-pet" id="perg-pet" alt="" draggable="false"/>
+        <div class="jr-arena-sombra adv"></div>
+        <img class="jr-arena-adv" id="perg-adv" alt="" draggable="false"/>
+        <div class="jr-fala" id="perg-fala"></div>
+        <img id="perg-busto" class="jr-busto" alt="" hidden/>
+      </div>
+      <!-- pergunta -->
       <div class="jr-perg-corpo" id="perg-corpo">
         <div class="jr-guiado" id="perg-guiado" hidden></div>
         <div class="jr-perg-contador" id="perg-contador"></div>
-        <div class="jr-perg-origem" id="perg-origem" hidden></div>
-        <div class="jr-perg-enunciado" id="perg-enunciado"></div>
-        <div id="perg-tabela"></div>
+        <div class="jr-perg-q">
+          <div class="jr-perg-origem" id="perg-origem" hidden></div>
+          <div class="jr-perg-enunciado" id="perg-enunciado"></div>
+          <div id="perg-tabela"></div>
+        </div>
         <div class="jr-alternativas" id="perg-alternativas"></div>
-        <div class="jr-explica" id="perg-explica" hidden></div>
-      </div>
-      <div class="jr-perg-rodape">
-        <button class="jr-btn" id="perg-continuar" hidden>Continuar</button>
+        <div class="jr-perg-faixa">
+          <div class="jr-explica" id="perg-explica" hidden></div>
+          <div class="jr-perg-rodape">
+            <button class="jr-btn" id="perg-continuar" hidden>Continuar</button>
+          </div>
+        </div>
       </div>
       <!-- Confirmação de fuga (dentro do cartão) -->
       <div class="jr-confirma" id="perg-confirma" hidden>

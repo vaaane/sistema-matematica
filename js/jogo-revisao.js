@@ -373,19 +373,8 @@ function atualizarOrientacao() {
   soltarJoystick();
   teclas.clear();
   ultimoT = 0;
-  posicionarContador();
   if (!$('tela-geral').hidden) dimensionarGeral();
   if (cena) ajustarCamera();
-}
-
-// Deitado no celular, a pergunta tem 2 colunas e o contador vai para a coluna da esquerda
-function posicionarContador() {
-  const c = $('perg-contador');
-  if (deitado()) {
-    if (c.parentElement !== document.querySelector('.jr-perg-topo')) $('perg-desistir').before(c);
-  } else if (c.parentElement !== $('perg-corpo')) {
-    $('perg-guiado').after(c);
-  }
 }
 
 // No primeiro toque: tela cheia e travar na horizontal (Chrome do Android; no iPhone não existe)
@@ -734,6 +723,7 @@ function ganharMoeda() {
   gravar({ 'pets/moedas': estado.pets.moedas });
   const el = $('perg-moedas');
   atualizarMoedasPergunta();
+  el.classList.remove('pulsa'); void el.offsetWidth; el.classList.add('pulsa');
   const mais = document.createElement('span');
   mais.className = 'jr-moeda-mais';
   mais.textContent = '+1 🪙';
@@ -1516,7 +1506,7 @@ function tocarBotaoRevisao() {
 function abrirRevisao(qs) {
   pg = {
     modo: 'revisao', semana: semanaISO(),
-    fila: qs, total: qs.length, acertos: 0,
+    fila: qs.map((q, pos) => ({ ...q, pos })), total: qs.length, acertos: 0,
     errouIds: new Set(), errosPorIndice: {},
     travado: false, fim: false,
   };
@@ -1526,6 +1516,7 @@ function abrirRevisao(qs) {
   $('perg-desistir').hidden = false;
   $('perg-confirma').hidden = true;
   $('pergunta').hidden = false;
+  montarArena();
   atualizarMoedasPergunta();
   renderPergunta();
   $('pergunta').querySelector('.jr-perg-caixa').scrollTop = 0;
@@ -1542,6 +1533,8 @@ function concluirRevisao() {
   darXP(XP_REVISAO);
   falar(`Revisão concluída! Você acertou ${acertosPrimeira} de ${total} de primeira.`);
   $('perg-contador').textContent = `Acertou ${acertosPrimeira} de ${total} de primeira`;
+  $('perg-contador').hidden = false;
+  desenharBolinhas();
   $('perg-enunciado').hidden = true;
   $('perg-alternativas').hidden = true;
   $('perg-origem').hidden = true;
@@ -1840,6 +1833,7 @@ function loop(t) {
   const dt = Math.min(0.05, (t - (ultimoT || t)) / 1000);
   ultimoT = t;
   atualizarMeuPet(dt);
+  pgPet?.atualizar(dt);
   if ((fomeT += dt) > 10) { fomeT = 0; atualizarFomeSeguidor(); }   // a barriga cai devagar: confere a cada 10 s
   if (cena && !perguntaAberta && !transicionando) {
     const [vx, vy] = vetorEntrada();
@@ -2563,6 +2557,46 @@ function acelerarInsignia() {
 // ============================================================
 let pg = null;   // sessão de perguntas em andamento
 
+// ── Arena do duelo (só apresentação): personagem + pet à esquerda, adversário à direita ──
+let pgPet = null;   // PetParado do pet na arena
+const NOME_DESAFIO = { treinador1: 'Treinador 1', treinador2: 'Treinador 2', treinador3: 'Treinador 3', lider: 'Líder', revanche: 'Revanche' };
+
+function montarArena() {
+  const rev = pg.modo === 'revisao';
+  pg.status = {};   // posição da pergunta → 'certa' (de primeira) | 'errada'
+  $('perg-caixa').classList.toggle('revisao', rev);
+  $('perg-jog').src = urlQuadro('direita', 0);
+  const pet = petsOk && petValido(estado?.pets?.ativo) ? estado.pets.ativo : null;
+  $('perg-pet').hidden = !pet;
+  document.querySelector('.jr-arena-sombra.pet').hidden = !pet;
+  pgPet = null;
+  if (pet) { pgPet = new PetParado($('perg-pet')); pgPet.definir(pet); }
+  if (!rev) $('perg-adv').src = `${IMG}/personagens/${pg.pers.sprite}.webp`;
+  $('perg-adv-nome').textContent = rev ? 'Revisão da semana' : `${NOME_DESAFIO[pg.p] || ''} · ${D.questoes[pg.mapa].ginasios[pg.G].nome}`;
+}
+
+const posDe = (q) => q.pos ?? q.indice;
+
+// Uma bolinha por pergunta: verde (de primeira), vermelha (errou), dourada (atual), apagada (não feita)
+function desenharBolinhas() {
+  if (!pg) return;
+  const atual = pg.fim ? null : pg.fila[0] && posDe(pg.fila[0]);
+  $('perg-bolinhas').innerHTML = Array.from({ length: pg.total }, (_, i) =>
+    `<span class="jr-bolinha${pg.status[i] ? ' ' + pg.status[i] : ''}${i === atual ? ' atual' : ''}"></span>`).join('');
+}
+
+// Acerto: pet feliz e adversário treme; erro: pet triste uma vez
+function reagirArena(certo) {
+  if (pgPet) {
+    if (certo) pgPet.tocar('feliz');
+    else { pgPet.tocar('triste_fome'); setTimeout(() => { if (pgPet?.anim === 'triste_fome') pgPet.tocar('sentado_girando'); }, 1400); }
+  }
+  if (certo && pg?.modo !== 'revisao' && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    $('perg-adv').animate([{ transform: 'translateX(-50%)' }, { transform: 'translateX(calc(-50% - 6px))' }, { transform: 'translateX(calc(-50% + 6px))' }, { transform: 'translateX(-50%)' }],
+      { duration: 320, easing: 'ease-in-out' });
+  }
+}
+
 function abrirPergunta(chave, p) {
   const [mapaStr, G] = chave.replace('mapa', '').split('-');
   const mapa = Number(mapaStr);
@@ -2588,6 +2622,7 @@ function abrirPergunta(chave, p) {
   $('perg-desistir').hidden = false;
   $('perg-confirma').hidden = true;
   $('pergunta').hidden = false;
+  montarArena();
   atualizarMoedasPergunta();
   renderPergunta();
   $('pergunta').querySelector('.jr-perg-caixa').scrollTop = 0;
@@ -2613,9 +2648,13 @@ function renderTabela(t) {
 function renderPergunta() {
   const q = pg.fila[0];
   pg.travado = false;
-  $('perg-contador').textContent = `Pergunta ${pg.acertos + 1} de ${pg.total}`;
+  $('perg-contador').hidden = true;   // o progresso aparece nas bolinhas da placa
+  desenharBolinhas();
+  $('perg-corpo').classList.remove('com-explica');
+  $('perg-corpo').classList.toggle('com-tabela', !!q.tabela);
   $('perg-tabela').innerHTML = renderTabela(q.tabela);   // Mapa 13 B: tabela sorteada junto com a pergunta
   $('perg-enunciado').textContent = q.enunciado;
+  $('perg-enunciado').classList.toggle('longo', String(q.enunciado).length > 28);   // problemas: Inter, até 2 linhas
   $('perg-explica').hidden = true;
   // Revisão da semana: busto do líder e nome do ginásio de onde veio a pergunta
   const origem = $('perg-origem');
@@ -2638,13 +2677,14 @@ function renderPergunta() {
   if (guiado && erradas.length >= 2) erradas.splice(Math.floor(Math.random() * erradas.length), 1);   // nunca menos de 2 alternativas
   const alts = [String(q.resposta), ...erradas];
   const ordem = D.regras?.embaralhar_alternativas === false ? alts : embaralhar(alts);
-  // 2 × 2 quando todas são curtas; senão uma coluna
-  $('perg-alternativas').classList.toggle('curtas', alts.every(a => a.length <= 14));
+  // curtas (até ~8 caracteres): todas numa fileira; longas: grade 2 × 2. Números em Orbitron.
+  $('perg-alternativas').classList.toggle('curtas', alts.every(a => a.length <= 8));
+  $('perg-alternativas').classList.toggle('numeros', alts.every(a => /^[-−+]?[\d.,/\s()]+$/.test(a)));
+  $('perg-alternativas').style.setProperty('--n', alts.length);
   $('perg-alternativas').innerHTML = ordem.map(a =>
     `<button class="jr-alt" data-v="${esc(a)}">${esc(a)}</button>`).join('');
   $('perg-alternativas').hidden = false;
   $('perg-enunciado').hidden = false;
-  $('perg-contador').hidden = false;
   $('perg-continuar').hidden = true;
 }
 
@@ -2678,6 +2718,8 @@ function responder(btn) {
     if (pg.modo === 'revisao' && !pg.errouIds.has(q.id)) patch[`respostas/${q.id}/revisao_ok`] = agora;
     gravar(patch);
     lembrarResposta(q.id, { acertou: true, ultima: agora, ...(patch[`respostas/${q.id}/revisao_ok`] ? { revisao_ok: agora } : {}) });
+    if (pg.status[posDe(q)] !== 'errada') pg.status[posDe(q)] = 'certa';
+    reagirArena(true);
     pg.fila.shift();
     pg.acertos++;
     ganharMoeda();
@@ -2691,6 +2733,9 @@ function responder(btn) {
     botoes.forEach(b => { if (b !== btn && b.dataset.v !== certa) b.hidden = true; });
     pg.errosPorIndice[chavePosicao(q)] = (pg.errosPorIndice[chavePosicao(q)] || 0) + 1;
     pg.errouIds.add(q.id);
+    pg.status[posDe(q)] = 'errada';
+    reagirArena(false);
+    desenharBolinhas();
     gravar({ [`respostas/${q.id}/ultima`]: Date.now() }, q.id);   // erros += 1
     lembrarResposta(q.id, { ultima: Date.now() }, 1);
     // volta para o fim da fila com outros números (no Mapa 13 B, gerarUma dá null: repete a mesma)
@@ -2698,12 +2743,15 @@ function responder(btn) {
     const nova = pg.modo === 'revisao'
       ? gerarUma(q.mapa, q.lado, q.personagem, q.indice)
       : gerarUma(pg.mapa, pg.G, pg.p, q.indice);
-    pg.fila.push(nova ? { ...nova, indice: q.indice, mapa: q.mapa, lado: q.lado, personagem: q.personagem } : q);
+    pg.fila.push(nova ? { ...nova, indice: q.indice, mapa: q.mapa, lado: q.lado, personagem: q.personagem, pos: q.pos } : q);
     falar(sortear(D.falas.erro).replace('{resposta}', certa));
     mostrarExplicacao(q, !!nova);   // explicação da pergunta que o aluno ERROU, não da nova
     $('perg-continuar').textContent = 'Continuar';
     $('perg-continuar').hidden = false;
     pg.aoContinuar = renderPergunta;
+    // depois de ver a certa, a explicação toma o lugar das alternativas (Continuar ao lado)
+    const pgErro = pg;
+    setTimeout(() => { if (pg === pgErro && !$('perg-explica').hidden && !$('perg-continuar').hidden) $('perg-corpo').classList.add('com-explica'); }, 900);
   }
 }
 
@@ -2750,6 +2798,8 @@ function vencer() {
       : p === 'revanche' ? (pers.fala_vencido || 'Você venceu a revanche! Sua insígnia agora é dourada!')
       : (pers.fala_vencido || sortear(D.falas.treinador_vencido)));
   $('perg-contador').textContent = `Acertou ${acertosPrimeira} de ${total} de primeira`;
+  $('perg-contador').hidden = false;
+  desenharBolinhas();
   $('perg-enunciado').hidden = true;
   $('perg-alternativas').hidden = true;
   $('perg-explica').hidden = true; $('perg-guiado').hidden = true; $('perg-corpo').classList.remove('guiado');
@@ -2788,6 +2838,7 @@ function desistir() {
 
 function fecharPergunta() {
   $('pergunta').hidden = true;
+  pgPet = null;
   $('perg-confirma').hidden = true;
   pg = null;
   perguntaAberta = false;
@@ -2912,6 +2963,13 @@ function ligarEventos() {
     });
   });
 
+  window.addEventListener('keydown', (e) => {
+    if (!perguntaAberta || !pg || pg.travado || pg.fim || !$('perg-confirma').hidden || e.ctrlKey || e.metaKey || e.altKey) return;
+    const m = /^(?:Digit|Numpad)([1-4])$/.exec(e.code);
+    if (!m) return;
+    const b = [...$('perg-alternativas').querySelectorAll('.jr-alt')].filter(x => !x.hidden && !x.disabled)[Number(m[1]) - 1];
+    if (b) { e.preventDefault(); b.click(); }
+  });
   $('perg-alternativas').addEventListener('click', (e) => {
     const b = e.target.closest('.jr-alt');
     if (b) responder(b);

@@ -369,48 +369,6 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
 /* ============================================================
    3.4 Pergunta
    ============================================================ */
-.jr-pergunta {
-  position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
-  background: rgba(5,6,15,.82); overflow: hidden;
-}
-@supports ((backdrop-filter: blur(3px)) or (-webkit-backdrop-filter: blur(3px))) {
-  .jr-pergunta { background: rgba(5,6,15,.6); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
-}
-/* O cartão cabe numa tela só; rolagem só dentro dele, como último recurso */
-.jr-perg-caixa {
-  position: relative; width: 100%; max-width: 760px; max-height: 100%; overflow-y: auto; overscroll-behavior: contain;
-  display: flex; flex-direction: column; gap: 10px;
-  padding: max(10px, var(--sa-t)) 12px max(12px, var(--sa-b));
-}
-.jr-perg-topo { display: flex; align-items: center; gap: 10px; }
-.jr-busto {
-  width: 72px; height: 72px; flex-shrink: 0; border-radius: 12px; border: 3px solid var(--jr-cyan);
-  background: #1d2240; box-shadow: 0 4px 14px rgba(0,0,0,.5);
-}
-.jr-fala {
-  position: relative; flex: 1; min-width: 0; background: #fff; color: #1a1d2e; border-radius: 12px; padding: 8px 12px;
-  font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; line-height: 1.35;
-  box-shadow: 0 4px 14px rgba(0,0,0,.45);
-}
-/* no máximo 2 linhas durante a batalha (corta com reticências) */
-.jr-fala:not(.completa) {
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden;
-  /* margem vertical como borda branca: o corte do overflow fica exatamente na 2ª linha */
-  padding-top: 0; padding-bottom: 0; border-top: 8px solid #fff; border-bottom: 8px solid #fff;
-}
-.jr-fala::before {
-  content: ''; position: absolute; left: -10px; top: 50%; margin-top: -8px;
-  border: 8px solid transparent; border-right: 10px solid #fff; border-left: 0;
-}
-.jr-fala:not(.completa)::before { display: none; }
-
-/* "Fugir": pequeno e discreto no canto do cartão */
-.jr-fugir {
-  flex-shrink: 0; align-self: flex-start; min-width: 44px; min-height: 44px; padding: 0 10px; border-radius: 10px;
-  background: rgba(13,15,26,.7); border: 1px solid rgba(255,255,255,.25); color: rgba(255,255,255,.85);
-  font-family: 'Inter', sans-serif !important; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
-}
-.jr-fugir:active { transform: scale(.95); }
 .jr-confirma {
   position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center;
   background: rgba(5,6,15,.78); padding: 16px;
@@ -422,37 +380,10 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
 .jr-confirma-caixa p { margin: 0 0 14px; color: #fff; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; line-height: 1.4; }
 .jr-confirma-botoes { display: flex; gap: 10px; justify-content: center; }
 .jr-confirma-botoes .jr-btn { flex: 1; min-height: 48px; }
-.jr-fala.nova { animation: jr-fala-in .25s ease-out; }
-@keyframes jr-fala-in { from { transform: translateY(4px); opacity: .3; } to { transform: none; opacity: 1; } }
-
-.jr-perg-corpo {
-  background: rgba(22,26,46,.94); border: 1px solid var(--jr-borda); border-radius: 16px;
-  padding: 12px; display: flex; flex-direction: column; gap: 10px;
-}
-.jr-perg-contador {
-  font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 1.5px;
-  color: var(--jr-cyan); text-transform: uppercase;
-}
-.jr-perg-enunciado {
-  font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.3; color: #fff;
-  white-space: pre-line;
-}
-.jr-alternativas { display: grid; grid-template-columns: 1fr; gap: 10px; }
-.jr-alternativas.curtas { grid-template-columns: 1fr 1fr; }
-
 /* "Como resolver" quando o aluno erra */
-.jr-explica {
-  background: rgba(124,92,252,.12); border-left: 3px solid #7c5cfc; border-radius: 10px; padding: 12px;
-  display: flex; flex-direction: column; gap: 6px;
-}
 .jr-explica-titulo { font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700; color: #c9b8ff; letter-spacing: .3px; }
-.jr-explica-texto {
-  font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; line-height: 1.4; color: #eef0fa;
-  max-height: calc(4 * 1.4em); overflow-y: auto;   /* até 4 linhas; mais que isso rola só aqui dentro */
-}
 .jr-explica-dica { font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.35; color: #00d4ff; opacity: .85; }
 .jr-explica-rodape { font-family: 'Inter', sans-serif; font-size: 11.5px; color: rgba(255,255,255,.55); }
-@media (max-height: 700px) { .jr-explica-texto { font-size: 14px; } }
 
 /* Modo guiado (2+ erros na mesma posição) */
 .jr-perg-corpo.guiado { border-color: #00d4ff; }
@@ -462,23 +393,6 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
 }
 .jr-guiado b { font-family: 'Rajdhani', sans-serif; font-size: 15px; color: #00d4ff; }
 .jr-guiado span { font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.35; color: #d7f6ff; }
-.jr-alt {
-  min-height: 52px; padding: 8px 12px; border-radius: 14px; cursor: pointer;
-  border: 2px solid rgba(124,92,252,.55); background: rgba(124,92,252,.14); color: #fff;
-  font-family: 'Inter', sans-serif !important; font-size: 18px; font-weight: 700; text-align: center; line-height: 1.3;
-  transition: background .15s, border-color .15s, transform .1s;
-}
-.jr-alt:hover:not(:disabled) { background: rgba(124,92,252,.3); }
-.jr-alt:active:not(:disabled) { transform: scale(.98); }
-.jr-alt:disabled { cursor: default; opacity: .55; }
-.jr-alt.certa { background: rgba(0,230,118,.25); border-color: var(--jr-verde); opacity: 1; }
-.jr-alt.errada { background: rgba(255,77,94,.25); border-color: var(--jr-verm); opacity: 1; animation: jr-treme .35s; }
-@keyframes jr-treme { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-
-.jr-perg-rodape { display: flex; justify-content: flex-end; gap: 10px; }
-.jr-perg-rodape:not(:has(:not([hidden]))) { display: none; }
-.jr-perg-rodape .jr-btn { min-height: 52px; flex: 1; max-width: 260px; }
-#perg-continuar { margin-left: auto; }
 
 .jr-tabela-wrap { overflow-x: auto; }
 .jr-tabela { width: 100%; border-collapse: collapse; font-size: 14px; background: rgba(255,255,255,.04); border-radius: 10px; overflow: hidden; }
@@ -571,10 +485,6 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
 
 /* ── Computador ───────────────────────────────────────────── */
 @media (min-width: 768px) {
-  .jr-perg-caixa { gap: 14px; padding: 16px; }
-  .jr-busto { width: 96px; height: 96px; }
-  .jr-fala { font-size: 15px; }
-  .jr-perg-enunciado { font-size: 22px; }
   .jr-marcador { width: 50px; height: 50px; font-size: 19px; }
   .jr-hud-titulo { font-size: 22px; }
 }
@@ -651,29 +561,6 @@ html.jr-deitado .jr-joy { right: max(18px, calc(var(--sa-r) + 10px)); bottom: ma
 html.jr-deitado .jr-joy-base { width: 110px; height: 110px; }
 html.jr-deitado .jr-joy-bola { width: 48px; height: 48px; margin: -24px 0 0 -24px; }
 
-/* Pergunta em duas colunas, sem rolar a página */
-html.jr-deitado .jr-perg-caixa {
-  max-width: none; height: 100%; max-height: 100%; overflow: hidden;
-  display: grid; grid-template-columns: 32% 1fr; grid-template-rows: minmax(0, 1fr) auto; gap: 8px 12px;
-  padding: max(8px, var(--sa-t)) max(12px, var(--sa-r)) max(8px, var(--sa-b)) max(12px, var(--sa-l));
-}
-html.jr-deitado .jr-perg-topo { grid-column: 1; grid-row: 1 / span 2; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 8px; min-height: 0; }
-html.jr-deitado .jr-busto { width: 64px; height: 64px; align-self: center; }
-html.jr-deitado .jr-fala { flex: none; font-size: 14px; }
-html.jr-deitado .jr-fala:not(.completa) { -webkit-line-clamp: 3; line-clamp: 3; }
-html.jr-deitado .jr-perg-topo .jr-perg-contador { text-align: center; }
-html.jr-deitado .jr-fugir { align-self: center; margin-top: auto; }
-html.jr-deitado .jr-perg-corpo { grid-column: 2; grid-row: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 10px; gap: 8px; }
-html.jr-deitado .jr-perg-rodape { grid-column: 2; grid-row: 2; }
-html.jr-deitado .jr-perg-rodape .jr-btn { min-height: 44px; }
-html.jr-deitado .jr-perg-enunciado { font-size: 19px; }
-html.jr-deitado .jr-alt { min-height: 44px; padding: 6px 10px; font-size: 16px; }
-html.jr-deitado .jr-tabela { font-size: 13px; }
-html.jr-deitado .jr-tabela caption { font-size: 14px; padding-bottom: 2px; }
-html.jr-deitado .jr-tabela th, html.jr-deitado .jr-tabela td { height: 24px; padding: 0 8px; }
-html.jr-deitado .jr-explica { padding: 8px 10px; gap: 4px; }
-html.jr-deitado .jr-explica-texto { font-size: 14px; }
-html.jr-deitado .jr-guiado { padding: 6px 10px; }
 
 /* Animação da insígnia: título não pode ficar cortado embaixo */
 html.jr-deitado .jr-ig-caixa { gap: 8px; }
@@ -937,3 +824,143 @@ html.jr-deitado .jr-btn-hud span { display: none; }
 @media (prefers-reduced-motion: reduce) { .jr-pet-fala.pop { animation: none; } }
 #mp-calado.ativo { border-color: rgba(255,215,0,.5); color: #ffe69a; }
 html.jr-deitado .jr-mp-botoes #mp-calado { font-size: 13px; padding: 4px 6px; }
+
+/* ============================================================
+   Pergunta em estilo duelo: cenário visível, arena em cima, pergunta embaixo
+   ============================================================ */
+.jr-pergunta {
+  position: fixed; inset: 0; z-index: 50; display: flex; align-items: stretch; justify-content: center; overflow: hidden;
+  /* véu leve: transparente no topo, escuro embaixo (onde ficam as respostas) */
+  background: linear-gradient(180deg, rgba(13,15,26,.08) 0%, rgba(13,15,26,.25) 38%, rgba(13,15,26,.88) 58%, rgba(13,15,26,.95) 100%);
+}
+.jr-perg-caixa {
+  position: relative; width: 100%; max-width: 960px; height: 100%; overflow: hidden;
+  display: flex; flex-direction: column; gap: 6px;
+  padding: max(8px, var(--sa-t)) max(12px, var(--sa-r)) max(8px, var(--sa-b)) max(12px, var(--sa-l));
+}
+
+/* ── barra do topo ── */
+.jr-perg-barra { flex: none; display: flex; align-items: center; gap: 8px; min-height: 36px; }
+.jr-fugir {
+  flex: none; min-width: 44px; min-height: 36px; padding: 0 10px; border-radius: 10px; cursor: pointer; white-space: nowrap;
+  background: rgba(13,15,26,.6); border: 1px solid rgba(255,255,255,.22); color: rgba(255,255,255,.8);
+  font-family: 'Inter', sans-serif !important; font-size: 12px; font-weight: 600;
+}
+.jr-fugir:active { transform: scale(.95); }
+.jr-perg-barra .jr-moedas { align-self: center; }
+.jr-moedas.pulsa { animation: jr-moeda-pulsa .45s ease-out; }
+@keyframes jr-moeda-pulsa { 40% { transform: scale(1.18); box-shadow: 0 0 12px rgba(255,215,0,.7); } }
+.jr-perg-placa {
+  margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; padding: 5px 10px; border-radius: 12px;
+  background: rgba(13,15,26,.72); border: 1px solid rgba(255,255,255,.15); min-width: 0;
+}
+.jr-perg-adv-nome { font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 46vw; }
+.jr-perg-bolinhas { display: flex; gap: 5px; }
+.jr-bolinha { width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3); }
+.jr-bolinha.certa { background: var(--jr-verde); border-color: var(--jr-verde); }
+.jr-bolinha.errada { background: var(--jr-verm); border-color: var(--jr-verm); }
+.jr-bolinha.atual { border: 2px solid var(--jr-ouro); box-shadow: 0 0 6px 1px rgba(255,215,0,.75); }
+.jr-bolinha.atual:not(.errada) { background: rgba(255,215,0,.55); }
+
+/* ── arena ── */
+.jr-perg-arena { position: relative; flex: 1 1 0; min-height: 0; }   /* a arena cede espaço; a pergunta nunca é cortada */
+.jr-arena-jog, .jr-arena-pet, .jr-arena-adv { position: absolute; bottom: 7%; width: auto; transform: translateX(-50%); transform-origin: 50% 100%; pointer-events: none; }
+#jr-app img.jr-arena-pet { image-rendering: auto; }
+.jr-arena-jog { left: 17%; height: 60%; filter: drop-shadow(0 3px 2px rgba(0,0,0,.4)); }
+.jr-arena-pet { left: 30%; height: 25%; filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
+.jr-arena-adv { left: 80%; height: 65%; filter: drop-shadow(0 3px 2px rgba(0,0,0,.4)); }
+.jr-arena-sombra { position: absolute; bottom: 4.5%; height: 5%; transform: translateX(-50%); border-radius: 50%; pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,.5) 0%, rgba(0,0,0,.2) 50%, rgba(0,0,0,0) 72%); }
+.jr-arena-sombra.eu { left: 17%; width: 16%; }
+.jr-arena-sombra.pet { left: 30%; width: 10%; }
+.jr-arena-sombra.adv { left: 80%; width: 17%; }
+/* balão de fala ao lado da cabeça do adversário, bico apontando para ele */
+.jr-fala {
+  position: absolute; right: 29%; top: 20%; max-width: 34%;   /* ao lado da cabeça do adversário */ padding: 8px 12px; border-radius: 14px;
+  background: #fff; color: #1a1d2e; box-shadow: 0 4px 14px rgba(0,0,0,.45);
+  font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; line-height: 1.35;
+}
+.jr-fala::after { content: ''; position: absolute; right: -10px; top: 18px; border: 8px solid transparent; border-left: 10px solid #fff; border-right: 0; }
+/* durante a batalha, no máximo 3 linhas (corta com reticências); no fim aparece inteira */
+.jr-fala:not(.completa) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
+.jr-fala:not(.completa)::after { display: none; }
+.jr-fala.nova { animation: jr-fala-in .25s ease-out; }
+@keyframes jr-fala-in { from { transform: translateY(4px); opacity: .3; } to { transform: none; opacity: 1; } }
+/* revisão da semana: sem adversário; o pet grande fica ao lado do personagem e o balão sai dele */
+.revisao .jr-arena-adv, .revisao .jr-arena-sombra.adv { display: none; }
+.revisao .jr-arena-pet { left: 36%; height: 45%; }
+.revisao .jr-arena-sombra.pet { left: 36%; width: 18%; }
+.revisao .jr-fala { right: auto; left: 47%; max-width: 40%; }
+.revisao .jr-fala::after { right: auto; left: -10px; border-left: 0; border-right: 10px solid #fff; }
+
+/* ── pergunta ── */
+.jr-perg-corpo { flex: none; display: flex; flex-direction: column; gap: 8px; }
+.jr-perg-contador { text-align: center; font-family: 'Rajdhani', sans-serif; font-size: 17px; font-weight: 700; color: var(--jr-cyan); }
+.jr-perg-q { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+.jr-perg-origem { align-self: center; }
+.jr-perg-enunciado {
+  align-self: center; max-width: 100%; padding: 6px 22px; border-radius: 999px; text-align: center; white-space: pre-line;
+  background: rgba(13,15,26,.85); border: 1px solid rgba(124,92,252,.5); box-shadow: 0 4px 14px rgba(0,0,0,.4);
+  font-family: 'Orbitron', sans-serif; font-size: clamp(22px, 4.2vmin, 32px); font-weight: 700; color: #fff; line-height: 1.25;
+}
+/* problemas (enunciado longo): Inter, até duas linhas */
+.jr-perg-enunciado.longo { border-radius: 14px; padding: 6px 14px; font-family: 'Inter', sans-serif; font-size: clamp(15px, 2.6vmin, 18px); font-weight: 700; line-height: 1.35; }
+.jr-alternativas { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.jr-alternativas.curtas { grid-template-columns: repeat(var(--n, 4), 1fr); }
+.jr-alt {
+  min-height: 48px; padding: 6px 10px; border-radius: 14px; cursor: pointer; color: #fff; text-align: center; line-height: 1.25;
+  background: linear-gradient(180deg, #3a2f78 0%, #241d50 100%);
+  border: 2px solid rgba(124,92,252,.75); border-bottom-width: 5px;   /* borda de baixo mais grossa: botão "físico" */
+  font-family: 'Inter', sans-serif !important; font-size: 16px; font-weight: 700;
+  transition: transform .08s, border-bottom-width .08s, background .15s, filter .15s;
+}
+.jr-alternativas.numeros .jr-alt { font-family: 'Orbitron', sans-serif !important; font-size: clamp(17px, 3.2vmin, 24px); }
+.jr-alt:hover:not(:disabled) { filter: brightness(1.15); }
+.jr-alt:active:not(:disabled) { transform: translateY(3px); border-bottom-width: 2px; }   /* afunda ao tocar */
+.jr-alt:disabled { cursor: default; opacity: .55; }
+.jr-alt.certa { background: linear-gradient(180deg, #13a85c, #0b6e3c); border-color: var(--jr-verde); opacity: 1; }
+.jr-alt.errada { background: linear-gradient(180deg, #c7334a, #861f30); border-color: var(--jr-verm); opacity: 1; animation: jr-treme .35s; }
+@keyframes jr-treme { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+/* pergunta com tabela: enunciado e tabela à esquerda, alternativas 2 × 2 à direita */
+.jr-perg-corpo.com-tabela { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: center; column-gap: 12px; }
+.jr-perg-corpo.com-tabela > :not(.jr-perg-q):not(.jr-alternativas) { grid-column: 1 / -1; }
+.jr-perg-corpo.com-tabela .jr-alternativas, .jr-perg-corpo.com-tabela .jr-alternativas.curtas { grid-template-columns: 1fr 1fr; }
+/* erro: a faixa de explicação toma o lugar das alternativas, com Continuar ao lado */
+.jr-perg-faixa { display: flex; align-items: stretch; gap: 10px; }
+.jr-perg-faixa:not(:has(:not([hidden]):not(.jr-perg-rodape), .jr-perg-rodape :not([hidden]))) { display: none; }
+.jr-perg-faixa .jr-explica { flex: 1; min-width: 0; }
+.jr-perg-rodape { flex: none; display: flex; align-items: center; margin-left: auto; }
+.jr-perg-rodape .jr-btn { min-height: 48px; min-width: 150px; }
+.jr-perg-corpo.com-explica .jr-alternativas { display: none; }
+.jr-explica { background: rgba(124,92,252,.16); border-left: 3px solid #7c5cfc; border-radius: 10px; padding: 8px 12px; display: flex; flex-direction: column; gap: 4px; }
+.jr-explica-texto { font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; line-height: 1.35; color: #eef0fa; max-height: calc(3 * 1.35em); overflow-y: auto; }
+.jr-guiado { flex: none; }
+
+/* celular deitado (altura útil ~340–420 px): arena ~55%, pergunta ~45% */
+html.jr-deitado .jr-perg-caixa { gap: 4px; }
+html.jr-deitado .jr-perg-barra { min-height: 32px; }
+html.jr-deitado .jr-fala { font-size: 13px; padding: 6px 10px; }
+html.jr-deitado .jr-perg-corpo { gap: 6px; }
+html.jr-deitado .jr-perg-enunciado { font-size: clamp(20px, calc(var(--jr-alt, 100dvh) * .065), 28px); padding: 4px 18px; }
+html.jr-deitado .jr-perg-enunciado.longo { font-size: 15px; }
+html.jr-deitado .jr-alt { min-height: 46px; }
+html.jr-deitado .jr-tabela { font-size: 12px; }
+html.jr-deitado .jr-tabela caption { font-size: 13px; padding-bottom: 2px; }
+html.jr-deitado .jr-tabela th, html.jr-deitado .jr-tabela td { height: 21px; padding: 0 6px; }
+html.jr-deitado .jr-guiado { padding: 4px 10px; }
+html.jr-deitado .jr-guiado span { font-size: 12px; }
+html.jr-deitado .jr-perg-rodape .jr-btn { min-height: 44px; min-width: 130px; }
+@media (prefers-reduced-motion: reduce) { .jr-moedas.pulsa, .jr-alt.errada, .jr-fala.nova { animation: none !important; } .jr-alt:active:not(:disabled) { transform: none; } }
+/* durante a pergunta, o cenário continua visível, mas sem os atores e o HUD do ginásio (a arena desenha os seus) */
+.jr-com-pergunta #cena-atores, .jr-com-pergunta #jogador, .jr-com-pergunta #pet, .jr-com-pergunta #pet-sombra, .jr-com-pergunta .jr-colega,
+.jr-com-pergunta .jr-balao-acao, .jr-com-pergunta .jr-revanche, .jr-com-pergunta #pet-fala, .jr-com-pergunta #minha-reacao,
+.jr-com-pergunta .jr-hud-topo, .jr-com-pergunta .jr-balao-aviso { visibility: hidden; }
+html.jr-deitado .jr-explica { padding: 5px 10px; gap: 2px; }
+html.jr-deitado .jr-explica-titulo { font-size: 13px; }
+html.jr-deitado .jr-explica-texto { font-size: 13px; }
+html.jr-deitado .jr-explica-dica { font-size: 12px; }
+html.jr-deitado .jr-explica-rodape { font-size: 10.5px; }
+/* revisão da semana (abre sobre o mapa geral): o mapa fica de fundo, sem botões, marcadores nem selos */
+#jr-app:has(#pergunta:not([hidden])) #tela-geral .jr-hud-topo, #jr-app:has(#pergunta:not([hidden])) #geral-marcadores,
+#jr-app:has(#pergunta:not([hidden])) .jr-btn-revisao, #jr-app:has(#pergunta:not([hidden])) .jr-faixa-meta,
+#jr-app:has(#pergunta:not([hidden])) #seq-balao { visibility: hidden; }
