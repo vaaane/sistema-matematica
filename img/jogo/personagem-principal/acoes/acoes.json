@@ -1,0 +1,56 @@
+{
+ "pescando": [
+  "pescando-costas-1.webp",
+  "pescando-costas-2.webp",
+  "pescando-costas-3.webp",
+  "pescando-lado_a-1.webp",
+  "pescando-lado_a-2.webp",
+  "pescando-lado_a-3.webp",
+  "pescando-lado_b-1.webp",
+  "pescando-lado_b-2.webp",
+  "pescando-lado_b-3.webp",
+  "pescando-frente-1.webp",
+  "pescando-frente-2.webp",
+  "pescando-frente-3.webp"
+ ],
+ "regando": [
+  "regando-costas-1.webp",
+  "regando-costas-2.webp",
+  "regando-costas-3.webp",
+  "regando-lado_a-1.webp",
+  "regando-lado_a-2.webp",
+  "regando-lado_a-3.webp",
+  "regando-lado_b-1.webp",
+  "regando-lado_b-2.webp",
+  "regando-lado_b-3.webp",
+  "regando-frente-1.webp",
+  "regando-frente-2.webp",
+  "regando-frente-3.webp"
+ ],
+ "cavando": [
+  "cavando-costas-1.webp",
+  "cavando-costas-2.webp",
+  "cavando-costas-3.webp",
+  "cavando-lado_a-2.webp",
+  "cavando-lado_a-3.webp",
+  "cavando-lado_b-1.webp",
+  "cavando-lado_b-2.webp",
+  "cavando-lado_b-3.webp",
+  "cavando-frente-1.webp",
+  "cavando-frente-2.webp",
+  "cavando-frente-3.webp"
+ ],
+ "carregando": [
+  "carregando-costas-1.webp",
+  "carregando-costas-2.webp",
+  "carregando-costas-3.webp",
+  "carregando-lado_a-1.webp",
+  "carregando-lado_a-2.webp",
+  "carregando-lado_a-3.webp",
+  "carregando-lado_b-1.webp",
+  "carregando-lado_b-3.webp",
+  "carregando-frente-1.webp",
+  "carregando-frente-2.webp",
+  "carregando-frente-3.webp"
+ ]
+}
