@@ -997,7 +997,7 @@ function criarColega(uid, r) {
   const nome = mk('div', 'jr-colega-nome jr-colega');
   nome.textContent = r.apelido || '';
   const c = { uid, reg: r, el, nome, petImg, sombra, x: Number(r.x) || 0, y: Number(r.y) || 0, de: null, alvo: null, t0: 0,
-    dir: r.dir || 'frente', quadro: 0, tQuadro: 0, reacaoT: Number(r.reacao?.t) || 0, pet: null, seg: new PetSeguidor(petImg, sombra) };
+    dir: r.dir || 'frente', quadro: -1, tQuadro: 0, reacaoT: Number(r.reacao?.t) || 0, pet: null, seg: new PetSeguidor(petImg, sombra) };
   sombra.hidden = petImg.hidden = true;
   colegas.set(uid, c);
   definirPetColega(c, r.pet);
@@ -1044,9 +1044,10 @@ function atualizarColegas(dt) {
     }
     // continua o passo um pouco depois do último ponto (os envios chegam a cada 250 ms)
     if (andando || agora - c.t0 < TEMPO_INTERP + 120) {
+      if (c.quadro < 0) { c.quadro = 0; c.tQuadro = 0; }
       c.tQuadro += dt * 1000;
       if (c.tQuadro >= T_QUADRO) { c.tQuadro = 0; c.quadro = (c.quadro + 1) % 4; }
-    } else c.quadro = 0;
+    } else c.quadro = -1;   // colega parado: pernas juntas
     const src = urlQuadro(DIRECOES.includes(c.dir) ? c.dir : 'frente', c.quadro);
     if (c.el.dataset.src !== src) { c.el.src = src; c.el.dataset.src = src; }
     c.el.hidden = c.nome.hidden = false;
@@ -1318,9 +1319,10 @@ function atualizarBotaoCalado() {
 }
 
 function preCarregarQuadros() {
-  for (const d of DIRECOES) for (let i = 1; i <= 4; i++) { const im = new Image(); im.src = urlQuadro(d, i - 1); }
+  for (const d of DIRECOES) for (let i = 0; i <= 4; i++) { const im = new Image(); im.src = urlQuadro(d, i - 1); }   // parado + 4 de andar
 }
-const urlQuadro = (dir, q) => `${IMG}/personagem-principal/${dir}-${q + 1}.webp`;
+// quadro −1 = parado (pernas juntas); 0..3 = ciclo de andar
+const urlQuadro = (dir, q) => `${IMG}/personagem-principal/${dir}-${q < 0 ? 'parado' : q + 1}.webp`;
 
 function mostrarTela(id) {
   for (const t of document.querySelectorAll('.jr-tela')) t.hidden = t.id !== id;
@@ -1639,7 +1641,7 @@ function ligarArrasteGeral() {
 // ============================================================
 let cena = null;   // { tipo:'mapa'|'interior', ... }
 const cam = { s: 1, tx: 0, ty: 0 };
-const jog = { x: 0, y: 0, dir: 'frente', quadro: 0, tQuadro: 0, caminho: [], aoChegar: null };
+const jog = { x: 0, y: 0, dir: 'frente', quadro: -1, tQuadro: 0, caminho: [], aoChegar: null };
 let perguntaAberta = false;
 
 function ajustarCamera() {
@@ -1680,7 +1682,7 @@ function imagemParaTela(x, y) {
 function posicionarJogador(x, y, dir) {
   jog.x = x; jog.y = y;
   if (dir) jog.dir = dir;
-  jog.caminho = []; jog.aoChegar = null; jog.quadro = 0;
+  jog.caminho = []; jog.aoChegar = null; jog.quadro = -1;
   desenharJogador();
   seguidor?.colocar(x, y);
 }
@@ -1726,6 +1728,7 @@ function vetorEntrada() {
 }
 
 function animarPasso(dt) {
+  if (jog.quadro < 0) { jog.quadro = 0; jog.tQuadro = 0; return; }   // começou a andar: quadro 1 na hora
   jog.tQuadro += dt * 1000;
   if (jog.tQuadro >= T_QUADRO) { jog.tQuadro = 0; jog.quadro = (jog.quadro + 1) % 4; }
 }
@@ -1767,7 +1770,7 @@ function moverDireto(dt, vx, vy) {
   }
   jog.dir = Math.abs(vy) > Math.abs(vx) ? (vy > 0 ? 'frente' : 'costas') : (vx > 0 ? 'direita' : 'esquerda');
   if (jog.x !== x0 || jog.y !== y0) animarPasso(dt);
-  else jog.quadro = 0;
+  else jog.quadro = -1;
   desenharJogador();
   return true;
 }
@@ -1861,7 +1864,7 @@ function loop(t) {
 
 function passo(dt) {
   if (!jog.caminho.length) {
-    if (jog.quadro !== 0) { jog.quadro = 0; desenharJogador(); }
+    if (jog.quadro !== -1) { jog.quadro = -1; desenharJogador(); }
     return;
   }
   let resta = VEL * dt;
@@ -1881,7 +1884,7 @@ function passo(dt) {
   }
   animarPasso(dt);
   if (!jog.caminho.length) {
-    jog.quadro = 0;
+    jog.quadro = -1;
     const cb = jog.aoChegar; jog.aoChegar = null;
     desenharJogador();
     if (cb) cb();
@@ -2565,7 +2568,7 @@ function montarArena() {
   const rev = pg.modo === 'revisao';
   pg.status = {};   // posição da pergunta → 'certa' (de primeira) | 'errada'
   $('perg-caixa').classList.toggle('revisao', rev);
-  $('perg-jog').src = urlQuadro('direita', 0);
+  $('perg-jog').src = urlQuadro('direita', -1);   // no duelo, de pé virado para o adversário
   const pet = petsOk && petValido(estado?.pets?.ativo) ? estado.pets.ativo : null;
   $('perg-pet').hidden = !pet;
   document.querySelector('.jr-arena-sombra.pet').hidden = !pet;
