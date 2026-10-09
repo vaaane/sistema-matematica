@@ -71,6 +71,7 @@ export class PetSeguidor {
     this.ultJog = null;             // posição do personagem no quadro anterior
     this.esperar = false;           // personagem parou: ao voltar a andar, o pet espera antes de seguir
     this.alcancando = false;        // ficou para trás: anda 1,3× até voltar à distância normal
+    this.fome = false;              // barriga abaixo de 40: parado, fica triste (triste_fome)
     this.proxOcioso = 8000;         // quando fazer a variação do ocioso (sentado_2)
     this.espelhar = false; this.altura = 60;
     this.esquerda = false;          // último lado para onde andou (para frente/costas que caem em andar_direita)
@@ -171,6 +172,8 @@ export class PetSeguidor {
         this.proxOcioso = 6000 + Math.random() * 6000;
       } else if (this.paradoMs >= 30000) {
         this.trocar('dormindo');
+      } else if (this.fome) {
+        this.trocar('triste_fome');
       } else if (this.anim !== 'sentado_2') {
         this.trocar('sentado_girando');
         this.proxOcioso -= dt * 1000;
@@ -209,13 +212,13 @@ export class PetSeguidor {
 
 // Pet parado num lugar (o que espera ao lado do líder): só anima, não segue ninguém
 export class PetParado {
-  constructor(img) { this.img = img; this.pet = null; this.anim = ''; this.q = 0; this.t = 0; this.lista = []; this.aoAcabar = null; }
+  constructor(img) { this.img = img; this.pet = null; this.anim = ''; this.q = 0; this.t = 0; this.lista = []; this.aoAcabar = null; this.ciclos = 0; }
 
   definir(pet) { this.pet = pet; this.tocar('sentado_girando'); }
 
   // Animação sem loop volta para sentado_girando no fim (e chama aoAcabar)
   tocar(anim, aoAcabar = null) {
-    this.anim = anim; this.q = 0; this.t = 0; this.aoAcabar = aoAcabar;
+    this.anim = anim; this.q = 0; this.t = 0; this.aoAcabar = aoAcabar; this.ciclos = 0;
     this.lista = quadrosDe(this.pet, anim);
     this.desenhar();
   }
@@ -228,7 +231,7 @@ export class PetParado {
     if (this.t < (ultimo && r.ultimo ? r.ultimo : r.ms)) return;
     this.t = 0;
     if (!ultimo) this.q++;
-    else if (r.loop) this.q = 0;
+    else if (r.loop) { this.q = 0; this.ciclos++; }   // ciclos completos da animação em loop
     else { const f = this.aoAcabar; this.tocar('sentado_girando'); f?.(); return; }
     this.desenhar();
   }

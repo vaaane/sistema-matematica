@@ -9,7 +9,11 @@ import { adicionarXP } from '/js/db.js';
 import { bimestreAtual, ALUNOS_TESTE } from '/js/constants.js';
 import { gerarQuestoes, gerarUma } from '/js/jogo-revisao/geradores.js';
 import { tocar, somLigado, alternarSom } from '/js/jogo-revisao/sons.js';
+import { definirPausas, barriga, faixaBarriga, rotuloLealdade, lealdadeComQueda, doDia, PRECO_REFEICAO, REFEICOES_POR_DIA,
+  CARINHOS_POR_DIA, LEALDADE_INICIAL, LEALDADE_DIA, LEALDADE_CAMBALHOTA } from '/js/jogo-revisao/cuidados.js';
 import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, tamanhoBusto, temBusto, bustoPet, preCarregarPet, PetSeguidor, PetParado } from '/js/jogo-revisao/pets.js';
+import { iniciarOnline, enviarOnline, sairOnline, ouvirMapa, ouvirTodos, onlineAtivo, VALIDADE_MS } from '/js/jogo-revisao/online.js';
+import { definirFalas, falasProntas, configFalas, dicaDe, montarFala, duracaoBalao } from '/js/jogo-revisao/conversa.js';
 import { notaJogoRevisao, formatarNota, NOTA_MAX, PESO_INSIGNIAS, PESO_DOURADAS } from '/js/jogo-revisao/nota.js';
 
 // XP (só na primeira vez que cada personagem é vencido; nunca no modo teste)
@@ -142,6 +146,7 @@ async function carregarEstado() {
       g.dataInsignia = ins.data || null;
     }
     estado.sequencia = v.sequencia || null;
+    { const u = estado.sequencia?.ultimo_dia; conversa.voltou = !!u && u !== diaLocal() && (paraData(diaLocal()) - paraData(u)) / 86400000 >= 3; }
     estado.respostas = v.respostas || {};
     estado.pets = lerPets(v);   // validado depois de ler o sprites.json (cachorro/porco antigos são ignorados)
     estado.revisaoSemanal = v.revisao_semanal || {};
@@ -156,6 +161,7 @@ async function carregarEstado() {
     const c = cfg.exists() ? cfg.val() || {} : {};
     for (const n of Object.values(c.mapas_abertos || {})) mapasAbertos.add(Number(n));
     if (Number(c.meta_turma) > 0) metaTurma = Number(c.meta_turma);
+    definirPausas(c.pausas);   // feriados/férias: não contam para a fome nem para a lealdade
   } catch (e) { /* sem config: vale só a regra padrão e meta 100 */ }
   try {
     const t = await get(ref(db, 'jogo_revisao_turmas'));   // pequeno: um nó por turma
@@ -393,6 +399,7 @@ async function travarHorizontal() {
 }
 
 async function sairDoJogo() {
+  await sairOnline();
   if (document.fullscreenElement) { try { await document.exitFullscreen(); } catch (_) {} }
   window.location.href = '/aluno/a-jogos.html';
 }
@@ -428,6 +435,8 @@ export async function iniciarJogo(sess) {
   }
 
   await carregarEstado();
+  try { definirFalas(await fetch(`${DADOS}/falas-pets.json`).then(r => { if (!r.ok) throw new Error('falas-pets.json'); return r.json(); })); }
+  catch (e) { console.warn('[jogo-revisao] falas dos pets indisponíveis', e); }
   try { await carregarSprites(); petsOk = true; } catch (e) { console.error('[jogo-revisao] pets indisponíveis', e); }
   preCarregarQuadros();
   ligarEventos();
@@ -436,6 +445,7 @@ export async function iniciarJogo(sess) {
   abrirMapaGeral();
   $('jr-carregando').hidden = true;
   iniciarPet();
+  entrarOnline();
 }
 
 // ============================================================
@@ -469,7 +479,7 @@ function lerPets(v) {
     ativo = ativo || v.pet;
     migrou = true;
   }
-  return { ativo, conquistados, migrou };
+  return { ativo, conquistados, migrou, moedas: Number(v.pets?.moedas) || 0 };
 }
 
 const temPet = (p) => !!(p && estado.pets.conquistados[p]);
@@ -486,7 +496,9 @@ function iniciarPet() {
   if (!temPet(ps.ativo)) ps.ativo = Object.keys(ps.conquistados)[0] || null;
   if (ps.migrou && ps.ativo) gravar({ pets: { ativo: ps.ativo, conquistados: ps.conquistados } });
   delete ps.migrou;
+  normalizarCuidados();
   if (ps.ativo) { preCarregarPet(ps.ativo); seguidor.definir(ps.ativo); }
+  atualizarFomeSeguidor();
 }
 
 // Ainda sem nenhum pet: pede a escolha do inicial ao entrar num mapa da região
@@ -525,7 +537,7 @@ function abrirEscolhaPet() {
 
 function escolherPet(pet) {
   if (!INICIAIS.includes(pet) || !petValido(pet) || Object.keys(estado.pets.conquistados).length) return;
-  const c = { data: Date.now(), origem: 'inicial' };
+  const c = { data: Date.now(), origem: 'inicial', ...cuidadosNovos() };
   estado.pets.conquistados[pet] = c;
   estado.pets.ativo = pet;
   gravar({ [`pets/conquistados/${pet}`]: c, 'pets/ativo': pet });
@@ -540,6 +552,8 @@ function usarPet(pet, x = jog.x, y = jog.y) {
   seguidor.definir(pet);
   if (cena) seguidor.colocar(x, y);
   atualizarBotaoPet();
+  atualizarFomeSeguidor();
+  enviarOnline({ pet });
 }
 
 // Onde cada pet ainda não conquistado aparece: { pet: chaveGinasio }
@@ -582,14 +596,18 @@ function abrirColecao() {
   animarPainelPet($('colecao-opcoes'));
 }
 
+let colecaoDoMeuPet = false;   // coleção aberta pelo "Trocar pet" da tela Meu Pet: volta para ela
+
 function trocarPetAtivo(pet) {
   if (!temPet(pet)) return;
   $('pet-colecao').hidden = true;
-  if (estado.pets.ativo === pet) return;
-  estado.pets.ativo = pet;
-  gravar({ 'pets/ativo': pet });
-  usarPet(pet);
-  tocar('vitoria');
+  if (estado.pets.ativo !== pet) {
+    estado.pets.ativo = pet;
+    gravar({ 'pets/ativo': pet });
+    usarPet(pet);
+    tocar('vitoria');
+  }
+  if (colecaoDoMeuPet) { colecaoDoMeuPet = false; abrirMeuPet(); }
 }
 
 // Botão do HUD no mapa da região: ícone do pet ativo
@@ -662,7 +680,7 @@ function conquistarPet(usarAgora) {
   $('pet-levar').hidden = true;
   if (!petGin || petGin.levado) return;
   const { pet, chave, x, y, anim } = petGin;
-  const c = { data: Date.now(), origem: chave };
+  const c = { data: Date.now(), origem: chave, ...cuidadosNovos() };
   estado.pets.conquistados[pet] = c;
   const patch = { [`pets/conquistados/${pet}`]: c };
   if (usarAgora || !estado.pets.ativo) { estado.pets.ativo = pet; patch['pets/ativo'] = pet; }
@@ -675,6 +693,638 @@ function conquistarPet(usarAgora) {
     removerPetGinasio();
     if (usar && cena?.chave === chave) usarPet(pet, x, y);
   });
+}
+
+// ============================================================
+//  CUIDADOS — moedas (do aluno), barriga e lealdade (de cada pet)
+// ============================================================
+// Pet novo (ou conquistado antes dos cuidados): barriga cheia agora, lealdade 20
+const cuidadosNovos = () => ({ ultima_refeicao: Date.now(), lealdade: LEALDADE_INICIAL, ultimo_dia_jogado: diaLocal() });
+
+// Ao carregar: completa campos que faltam e aplica a queda de lealdade dos dias úteis sem jogar
+function normalizarCuidados() {
+  const hoje = diaLocal();
+  const patch = {};
+  for (const [pet, c] of Object.entries(estado.pets.conquistados)) {
+    const base = `pets/conquistados/${pet}`;
+    if (!(Number(c.ultima_refeicao) > 0)) { c.ultima_refeicao = Date.now(); patch[`${base}/ultima_refeicao`] = c.ultima_refeicao; }
+    if (!Number.isFinite(c.lealdade)) { c.lealdade = LEALDADE_INICIAL; patch[`${base}/lealdade`] = c.lealdade; }
+    if (!c.ultimo_dia_jogado) { c.ultimo_dia_jogado = hoje; patch[`${base}/ultimo_dia_jogado`] = hoje; }
+    const nova = lealdadeComQueda(c, hoje);
+    if (nova !== null) {
+      c.lealdade = nova; c.lealdade_dia = hoje;
+      patch[`${base}/lealdade`] = nova; patch[`${base}/lealdade_dia`] = hoje;
+    }
+  }
+  if (Object.keys(patch).length) gravar(patch);
+}
+
+const cuidadosDe = (pet) => estado.pets.conquistados[pet];
+const barrigaDe = (pet) => { const c = cuidadosDe(pet); return c ? barriga(Number(c.ultima_refeicao) || Date.now()) : 100; };
+
+// Pet ativo com fome (barriga < 40) fica triste quando parado no mapa
+function atualizarFomeSeguidor() {
+  if (seguidor) seguidor.fome = !!estado.pets.ativo && barrigaDe(estado.pets.ativo) < 40;
+}
+
+// +1 moeda por resposta certa (não é XP)
+function ganharMoeda() {
+  if (!estado?.pets) return;
+  estado.pets.moedas = (Number(estado.pets.moedas) || 0) + 1;
+  gravar({ 'pets/moedas': estado.pets.moedas });
+  const el = $('perg-moedas');
+  atualizarMoedasPergunta();
+  const mais = document.createElement('span');
+  mais.className = 'jr-moeda-mais';
+  mais.textContent = '+1 🪙';
+  el.appendChild(mais);
+  setTimeout(() => mais.remove(), 1100);
+}
+
+function atualizarMoedasPergunta() {
+  const el = $('perg-moedas');
+  if (!el) return;
+  el.hidden = !petsOk;
+  el.querySelector('span').textContent = Number(estado?.pets?.moedas) || 0;
+}
+
+// +5 de lealdade no 1º dia de jogo de cada dia, para o pet ativo (junto de registrarDiaJogado)
+function lealdadeDoDia() {
+  const pet = estado?.pets?.ativo;
+  const c = pet && cuidadosDe(pet);
+  const hoje = diaLocal();
+  if (!c || c.ultimo_dia_jogado === hoje) return;
+  c.lealdade = Math.min(100, (Number(c.lealdade) || LEALDADE_INICIAL) + LEALDADE_DIA);
+  c.ultimo_dia_jogado = hoje; c.lealdade_dia = hoje;
+  const base = `pets/conquistados/${pet}`;
+  gravar({ [`${base}/lealdade`]: c.lealdade, [`${base}/ultimo_dia_jogado`]: hoje, [`${base}/lealdade_dia`]: hoje });
+}
+
+// ── Tela "Meu Pet" ──────────────────────────────────────────
+const COMIDA_PET = { capivara: '🌿', gato: '🐟', gaviao: '🍖', axolote: '🦐', tigre: '🍖', unicornio: '🍎', dragao_azul: '🍖', dragao_vermelho: '🍖' };
+const semMovimento = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const ehNoite = () => { const f = window.jogoRevisaoDev?.noite; if (f !== undefined) return f; const h = new Date().getHours(); return h >= 22 || h < 6; };
+
+let mp = null;   // { pet, anim (PetParado), estado, corpoAnim, noite, timerBalao }
+
+function abrirMeuPet() {
+  const pet = estado.pets.ativo;
+  if (!pet) return;
+  preCarregarPet(pet);
+  $('meu-pet').hidden = false;
+  const img = $('mp-img');
+  mp = { pet, anim: new PetParado(img), estado: '', corpoAnim: null, noite: null, ocupado: false };
+  img.dataset.src = '';
+  const palco = $('mp-palco');
+  // pet grande: até ~78% da altura do palco, nunca maior que o quadro original
+  img.style.height = Math.min(palco.clientHeight * 0.78, tamanhoQuadro()[1]) + 'px';
+  mp.anim.definir(pet);
+  renderMeuPet();
+  voltarAoNormal();
+}
+
+function fecharMeuPet() {
+  $('meu-pet').hidden = true;
+  mp?.corpoAnim?.cancel();
+  mp = null;
+}
+
+function renderMeuPet() {
+  if (!mp) return;
+  const pet = mp.pet, c = cuidadosDe(pet);
+  const b = Math.round(barrigaDe(pet)), fb = faixaBarriga(b);
+  const l = Math.round(Number(c.lealdade) || 0);
+  $('mp-nome').textContent = NOME_PET[pet];
+  $('mp-origem').textContent = c.origem && c.origem !== 'inicial' && PETS_GINASIO[c.origem] ? `Conquistado: ${nomeDoLugar(c.origem)}` : 'Seu primeiro pet';
+  $('mp-moedas').textContent = Number(estado.pets.moedas) || 0;
+  $('mp-barriga-fill').style.width = b + '%';
+  $('mp-barriga-fill').dataset.cor = fb.cor;
+  $('mp-barriga-rot').textContent = fb.rotulo;
+  $('mp-lealdade-fill').style.width = l + '%';
+  $('mp-lealdade-rot').textContent = `${rotuloLealdade(l)} · ${l}`;
+  $('mp-dica').textContent = l >= LEALDADE_CAMBALHOTA ? 'Ele já sabe dar cambalhota! Faça um carinho.' : `Com ${LEALDADE_CAMBALHOTA} de lealdade ele aprende a cambalhota`;
+  const noite = ehNoite();
+  $('mp-palco').classList.toggle('noite', noite);
+  $('mp-alimentar').disabled = $('mp-carinho').disabled = noite;
+  $('mp-alimentar').innerHTML = noite ? 'Dormindo…' : `Alimentar (${PRECO_REFEICAO} 🪙)`;
+  $('mp-carinho').textContent = noite ? 'Dormindo…' : 'Carinho';
+}
+
+// Movimento por código no corpo do pet (respira, balança a cabeça, fica tristinho)
+function movimentoCorpo(tipo) {
+  mp.corpoAnim?.cancel();
+  mp.corpoAnim = null;
+  if (semMovimento()) return;
+  const corpo = $('mp-corpo');
+  const K = {
+    respira:  [[{ transform: 'scaleY(1)' }, { transform: 'scaleY(1.03)' }], { duration: 1400, direction: 'alternate', iterations: Infinity, easing: 'ease-in-out' }],
+    dorme:    [[{ transform: 'scaleY(1)' }, { transform: 'scaleY(1.03)' }], { duration: 2400, direction: 'alternate', iterations: Infinity, easing: 'ease-in-out' }],
+    come:     [[{ transform: 'translate(0, 0) rotate(0deg)' }, { transform: 'translate(3px, 1px) rotate(1.5deg)' }], { duration: 175, direction: 'alternate', iterations: Infinity }],
+    triste:   [[{ transform: 'rotate(0deg)' }, { transform: 'rotate(-1.6deg)' }], { duration: 1600, direction: 'alternate', iterations: Infinity, easing: 'ease-in-out' }],
+  }[tipo];
+  if (K) mp.corpoAnim = corpo.animate(...K);
+}
+
+// Pulo em arco: amassa na decolagem, sobe, amassa no pouso; a sombra encolhe no alto
+function arcoDePulo() {
+  if (semMovimento()) return;
+  const h = parseFloat($('mp-img').style.height) || 150;
+  const alto = Math.round(h * 0.2);
+  $('mp-pulo').animate([
+    { transform: 'translateY(0) scale(1, 1)', offset: 0 },
+    { transform: 'translateY(0) scale(1.08, .9)', offset: 0.12 },
+    { transform: `translateY(-${alto}px) scale(.96, 1.05)`, offset: 0.48 },
+    { transform: 'translateY(0) scale(1.07, .92)', offset: 0.84 },
+    { transform: 'translateY(0) scale(1, 1)', offset: 1 },
+  ], { duration: 650, easing: 'ease-out' });
+  $('mp-sombra').animate([{ transform: 'translateX(-50%) scale(1)' }, { transform: 'translateX(-50%) scale(.6)', offset: 0.48 }, { transform: 'translateX(-50%) scale(1)' }],
+    { duration: 650, easing: 'ease-out' });
+}
+
+// Volta ao estado de descanso: dormindo (noite), triste (fome) ou sentado
+function voltarAoNormal() {
+  if (!mp) return;
+  mp.ocupado = false;
+  mp.noite = ehNoite();
+  if (mp.noite) { mp.estado = 'dormindo'; mp.anim.tocar('dormindo'); movimentoCorpo('dorme'); }
+  else if (barrigaDe(mp.pet) < 40) { mp.estado = 'triste'; mp.anim.tocar('triste_fome'); movimentoCorpo('triste'); }
+  else { mp.estado = 'parado'; mp.anim.tocar('sentado_girando'); movimentoCorpo('respira'); }
+  $('mp-zz').hidden = !mp.noite;
+  renderMeuPet();
+}
+
+// A cada quadro (dentro do loop do jogo)
+function atualizarMeuPet(dt) {
+  if (!mp) return;
+  mp.anim.atualizar(dt);
+  if (mp.estado === 'parado' && mp.anim.anim === 'sentado_girando' && mp.anim.ciclos >= 3)
+    mp.anim.tocar('sentado_2', () => { if (mp?.estado === 'parado') voltarAoNormal(); });   // a cada 3 ciclos, sentado_2
+  if (mp.estado === 'comendo' && mp.anim.ciclos >= 2) comemorar('feliz');                 // comendo 2 vezes, depois feliz
+  if (!mp.ocupado && ehNoite() !== mp.noite) voltarAoNormal();                            // virou noite/dia com a tela aberta
+}
+
+function comemorar(anim) {
+  mp.estado = anim; mp.ocupado = true;
+  movimentoCorpo(null);
+  mp.anim.tocar(anim, () => voltarAoNormal());
+  arcoDePulo();
+}
+
+function falarPet(texto) {
+  const b = $('mp-balao');
+  b.textContent = texto;
+  b.hidden = false;
+  clearTimeout(mp.timerBalao);
+  mp.timerBalao = setTimeout(() => { b.hidden = true; }, 1800);
+}
+
+function particulas(simbolos, n) {
+  const caixa = $('mp-particulas');
+  for (let i = 0; i < n; i++) {
+    const s = document.createElement('span');
+    s.className = 'jr-mp-part';
+    s.textContent = simbolos[i % simbolos.length];
+    s.style.left = 30 + Math.random() * 40 + '%';
+    s.style.animationDelay = i * 90 + 'ms';
+    caixa.appendChild(s);
+    setTimeout(() => s.remove(), 1400 + i * 90);
+  }
+}
+
+function alimentarPet() {
+  if (!mp || mp.ocupado || ehNoite()) return;
+  const pet = mp.pet, c = cuidadosDe(pet), hoje = diaLocal();
+  if (barrigaDe(pet) >= 90) { falarPet('Estou cheio!'); return; }
+  if (doDia(c.refeicoes_dia, hoje) >= REFEICOES_POR_DIA) { falarPet('Já comi duas vezes hoje!'); return; }
+  if ((Number(estado.pets.moedas) || 0) < PRECO_REFEICAO) { falarPet(`Faltam moedas… acerte perguntas para ganhar 🪙`); return; }
+  estado.pets.moedas -= PRECO_REFEICAO;
+  c.ultima_refeicao = Date.now();
+  c.refeicoes_dia = { dia: hoje, n: doDia(c.refeicoes_dia, hoje) + 1 };
+  const base = `pets/conquistados/${pet}`;
+  gravar({ 'pets/moedas': estado.pets.moedas, [`${base}/ultima_refeicao`]: c.ultima_refeicao, [`${base}/refeicoes_dia`]: c.refeicoes_dia });
+  atualizarFomeSeguidor();
+  renderMeuPet();
+  mp.estado = 'comendo'; mp.ocupado = true;
+  mp.anim.tocar('comendo');
+  movimentoCorpo('come');
+  particulas([COMIDA_PET[pet] || '🍖', '✨', COMIDA_PET[pet] || '🍖', '✨'], 6);
+  falarPet('Hmm, que delícia!');
+  tocar('acerto');
+}
+
+function carinhoPet() {
+  if (!mp || mp.ocupado || ehNoite()) return;
+  const pet = mp.pet, c = cuidadosDe(pet), hoje = diaLocal();
+  if (doDia(c.carinhos_dia, hoje) < CARINHOS_POR_DIA) {
+    c.lealdade = Math.min(100, (Number(c.lealdade) || 0) + 1);
+    c.carinhos_dia = { dia: hoje, n: doDia(c.carinhos_dia, hoje) + 1 };
+    const base = `pets/conquistados/${pet}`;
+    gravar({ [`${base}/lealdade`]: c.lealdade, [`${base}/carinhos_dia`]: c.carinhos_dia });
+    renderMeuPet();
+  }
+  particulas(['💜', '💛', '💜', '💛'], 5);
+  const fc = barrigaDe(pet) >= 40 && falasProntas() && c.lealdade >= (configFalas().lealdade_minima ?? 60) ? montarFala(contextoFalaDe(pet), 'carinho') : null;
+  falarPet(barrigaDe(pet) < 40 ? 'Obrigado… mas tô com fome' : fc?.baloes[0]?.texto || 'Gostei!');
+  comemorar(c.lealdade >= LEALDADE_CAMBALHOTA ? 'pulo_cambalhota' : 'feliz');
+}
+
+// ============================================================
+//  JOGAR JUNTO — colegas no mapa, quem está online no mapa geral e reações (sem chat)
+// ============================================================
+const REACOES = ['👋', '😄', '😂', '😮', '😢', '😡', '🔥', '⭐', '👍', '❤️', '🎉', '💤'];
+const INTERVALO_REACAO = 2000;
+const TEMPO_INTERP = 250;            // ms para ir até a posição nova de um colega
+const ENVIO_MIN_MS = 250;            // no máximo 4 envios de posição por segundo
+let pararOuvirMapa = () => {}, pararOuvirTodos = () => {};
+const colegas = new Map();           // uid → { reg, el, nome, pet, petImg, sombra, x, y, de, alvo, t0, dir, quadro, tQuadro, reacaoT }
+let onlineGeral = {};                // uid → registro (mapa geral)
+const envio = { x: null, y: null, t: 0, parado: true };
+let ultimaReacao = 0;
+const KEY_COLEGAS = 'jr_colegas_ocultos';
+let colegasOcultos = false;
+try { colegasOcultos = localStorage.getItem(KEY_COLEGAS) === '1'; } catch (_) {}
+
+// Professor, turma TESTE e alunos de teste nunca aparecem para os alunos (no modo teste, todos são de teste)
+const colegaVisivel = (uid, r) => !!r && Date.now() - (Number(r.ts) || 0) < VALIDADE_MS &&
+  (teste || (!ALUNOS_TESTE.includes(uid) && !/PROFESSOR|TESTE/i.test(uid) && r.turma !== 'TESTE' && !/PROFESSOR|TESTE/i.test(r.apelido || '')));
+
+async function entrarOnline() {
+  let apelido = sessao.nome;
+  try {
+    const s = await get(ref(db, `perfis/${sessao.uid}/apelido_ativo`));
+    if (s.exists() && s.val()) { apelido = String(s.val()); apelidoAluno = apelido; }
+  } catch (_) {}
+  await iniciarOnline({ uid: sessao.uid, teste, dados: {
+    apelido, turma: sessao.turma || '', pet: estado.pets?.ativo || null, mapa: 'geral', local: 'geral', x: 0, y: 0, dir: 'frente',
+  } });
+  if (!$('tela-geral').hidden) ouvirGeral();
+}
+
+// ── Mapa da região ──────────────────────────────────────────
+function entrarNoMapaOnline(n) {
+  pararOuvirTodos(); pararOuvirTodos = () => {};
+  limparColegas();
+  envio.x = jog.x; envio.y = jog.y; envio.t = performance.now(); envio.parado = true;
+  enviarOnline({ mapa: n, local: 'mapa', x: Math.round(jog.x), y: Math.round(jog.y), dir: jog.dir });
+  pararOuvirMapa();
+  pararOuvirMapa = ouvirMapa(n, (regs) => receberColegas(n, regs));
+  $('btn-colegas').hidden = $('btn-reacao').hidden = !onlineAtivo();   // sem online (sem regra/sem internet): sem botões
+  $('btn-colegas').classList.toggle('desligado', colegasOcultos);
+  $('cena-palco').classList.toggle('sem-colegas', colegasOcultos);
+}
+
+function sairDoMapaOnline() {
+  pararOuvirMapa(); pararOuvirMapa = () => {};
+  limparColegas();
+  $('btn-colegas').hidden = $('btn-reacao').hidden = true;
+  fecharReacoes();
+}
+
+function limparColegas() {
+  for (const c of colegas.values()) { c.el.remove(); c.nome.remove(); c.petImg.remove(); c.sombra.remove(); c.balao?.remove(); }
+  colegas.clear();
+}
+
+function receberColegas(n, regs) {
+  if (cena?.tipo !== 'mapa' || cena.n !== n) return;
+  const vistos = new Set();
+  for (const [uid, r] of Object.entries(regs)) {
+    if (r.local !== 'mapa' || !colegaVisivel(uid, r)) continue;
+    vistos.add(uid);
+    let c = colegas.get(uid);
+    if (!c) c = criarColega(uid, r);
+    atualizarColega(c, r);
+  }
+  for (const [uid, c] of colegas) if (!vistos.has(uid)) { c.el.remove(); c.nome.remove(); c.petImg.remove(); c.sombra.remove(); c.balao?.remove(); colegas.delete(uid); }
+}
+
+function criarColega(uid, r) {
+  const palco = $('cena-palco');
+  const mk = (tag, cls) => { const e = document.createElement(tag); e.className = cls; if (tag === 'img') { e.alt = ''; e.draggable = false; } palco.appendChild(e); return e; };
+  const sombra = mk('div', 'jr-pet-sombra jr-colega');
+  const petImg = mk('img', 'jr-ator jr-pet jr-colega');
+  const el = mk('img', 'jr-ator jr-colega jr-colega-jog');
+  const nome = mk('div', 'jr-colega-nome jr-colega');
+  nome.textContent = r.apelido || '';
+  const c = { uid, reg: r, el, nome, petImg, sombra, x: Number(r.x) || 0, y: Number(r.y) || 0, de: null, alvo: null, t0: 0,
+    dir: r.dir || 'frente', quadro: 0, tQuadro: 0, reacaoT: Number(r.reacao?.t) || 0, pet: null, seg: new PetSeguidor(petImg, sombra) };
+  sombra.hidden = petImg.hidden = true;
+  colegas.set(uid, c);
+  definirPetColega(c, r.pet);
+  c.seg.colocar(c.x, c.y);
+  return c;
+}
+
+function definirPetColega(c, pet) {
+  pet = petValido(pet) ? pet : null;
+  if (c.pet === pet) return;
+  c.pet = pet;
+  if (pet) preCarregarPet(pet);
+  c.seg.definir(pet);
+  if (pet) c.seg.colocar(c.x, c.y);
+}
+
+function atualizarColega(c, r) {
+  c.reg = r;
+  c.nome.textContent = r.apelido || '';
+  definirPetColega(c, r.pet);
+  if (r.dir) c.dir = r.dir;
+  const nx = Number(r.x) || 0, ny = Number(r.y) || 0;
+  if (Math.hypot(nx - c.x, ny - c.y) > 300) { c.x = nx; c.y = ny; c.alvo = null; c.seg.colocar(nx, ny); }   // entrou agora / pulou: sem deslizar
+  else if (nx !== c.x || ny !== c.y) { c.de = [c.x, c.y]; c.alvo = [nx, ny]; c.t0 = performance.now(); }
+  // reação recente (menos de 3 s) aparece sobre a cabeça
+  const t = Number(r.reacao?.t) || 0;
+  if (r.reacao?.e && t > c.reacaoT && Date.now() - t < 3000) { c.reacaoT = t; mostrarBalaoReacao(c, r.reacao.e); }
+}
+
+// A cada quadro: desliza até a posição recebida, anima o andar, pet segue pelo rastro
+function atualizarColegas(dt) {
+  if (!colegas.size) return;
+  const agora = performance.now();
+  const escala = 1 / (cam.s || 1);
+  for (const c of colegas.values()) {
+    if (Date.now() - (Number(c.reg.ts) || 0) > VALIDADE_MS) { c.el.hidden = c.nome.hidden = true; continue; }
+    let andando = false;
+    if (c.alvo) {
+      const k = Math.min(1, (agora - c.t0) / TEMPO_INTERP);
+      c.x = c.de[0] + (c.alvo[0] - c.de[0]) * k;
+      c.y = c.de[1] + (c.alvo[1] - c.de[1]) * k;
+      andando = true;
+      if (k >= 1) c.alvo = null;
+    }
+    // continua o passo um pouco depois do último ponto (os envios chegam a cada 250 ms)
+    if (andando || agora - c.t0 < TEMPO_INTERP + 120) {
+      c.tQuadro += dt * 1000;
+      if (c.tQuadro >= T_QUADRO) { c.tQuadro = 0; c.quadro = (c.quadro + 1) % 4; }
+    } else c.quadro = 0;
+    const src = urlQuadro(DIRECOES.includes(c.dir) ? c.dir : 'frente', c.quadro);
+    if (c.el.dataset.src !== src) { c.el.src = src; c.el.dataset.src = src; }
+    c.el.hidden = c.nome.hidden = false;
+    Object.assign(c.el.style, { left: c.x + 'px', top: c.y + 'px', height: ALT_JOGADOR_MAPA + 'px', zIndex: Math.round(c.y) });
+    // etiqueta com o apelido: 11 px na tela, qualquer que seja o zoom da câmera
+    Object.assign(c.nome.style, { left: c.x + 'px', top: (c.y - ALT_JOGADOR_MAPA - 2) + 'px', fontSize: 11 * escala + 'px', zIndex: 9000 });
+    if (c.balao) Object.assign(c.balao.style, { left: c.x + 'px', top: (c.y - ALT_JOGADOR_MAPA - 16 * escala) + 'px', fontSize: 22 * escala + 'px' });
+    if (c.pet) c.seg.atualizar(dt, c.x, c.y, VEL, altImagemPet(c.pet), distPet(c.pet));
+  }
+}
+
+// Envia a própria posição: até 4×/s quando anda mais de 2 px; ao parar, a posição final uma vez
+function enviarPosicao() {
+  if (cena?.tipo !== 'mapa') return;
+  const agora = performance.now();
+  const moveu = envio.x === null || Math.hypot(jog.x - envio.x, jog.y - envio.y) > 2;
+  const parado = !jog.caminho.length && !vetorEntrada().some(Boolean);
+  if (moveu && agora - envio.t >= ENVIO_MIN_MS) {
+    envio.x = jog.x; envio.y = jog.y; envio.t = agora; envio.parado = false;
+    enviarOnline({ x: Math.round(jog.x), y: Math.round(jog.y), dir: jog.dir });
+  } else if (parado && !envio.parado && agora - envio.t >= ENVIO_MIN_MS) {
+    envio.parado = true;
+    if (jog.x !== envio.x || jog.y !== envio.y) { envio.x = jog.x; envio.y = jog.y; envio.t = agora; enviarOnline({ x: Math.round(jog.x), y: Math.round(jog.y), dir: jog.dir }); }
+  }
+}
+
+function alternarColegas() {
+  colegasOcultos = !colegasOcultos;
+  try { localStorage.setItem(KEY_COLEGAS, colegasOcultos ? '1' : '0'); } catch (_) {}
+  $('cena-palco').classList.toggle('sem-colegas', colegasOcultos);
+  $('btn-colegas').classList.toggle('desligado', colegasOcultos);
+  $('btn-colegas').setAttribute('aria-pressed', String(!colegasOcultos));
+}
+
+// ── Reações ─────────────────────────────────────────────────
+function abrirReacoes() {
+  if (performance.now() - ultimaReacao < INTERVALO_REACAO) return;
+  $('reacoes').hidden = false;
+}
+function fecharReacoes() { $('reacoes').hidden = true; }
+
+function reagirCom(e) {
+  fecharReacoes();
+  if (!REACOES.includes(e) || performance.now() - ultimaReacao < INTERVALO_REACAO) return;
+  ultimaReacao = performance.now();
+  enviarOnline({ reacao: { e, t: Date.now() } });
+  // balão sobre a minha cabeça por 2 s
+  const b = $('minha-reacao');
+  b.textContent = e;
+  b.hidden = false;
+  clearTimeout(b._t);
+  b._t = setTimeout(() => { b.hidden = true; }, 2000);
+  // botão cinza durante o intervalo
+  const btn = $('btn-reacao');
+  btn.classList.add('espera');
+  setTimeout(() => btn.classList.remove('espera'), INTERVALO_REACAO);
+}
+
+function posicionarMinhaReacao() {
+  const b = $('minha-reacao');
+  if (b.hidden || !cena) return;
+  const escala = 1 / (cam.s || 1);
+  Object.assign(b.style, { left: jog.x + 'px', top: (jog.y - ALT_JOGADOR_MAPA - 16 * escala) + 'px', fontSize: 22 * escala + 'px' });
+}
+
+function mostrarBalaoReacao(c, e) {
+  if (!c.balao) { c.balao = document.createElement('div'); c.balao.className = 'jr-reacao-balao jr-colega'; $('cena-palco').appendChild(c.balao); }
+  c.balao.textContent = e;
+  c.balao.hidden = false;
+  clearTimeout(c.balaoT);
+  c.balaoT = setTimeout(() => { if (c.balao) c.balao.hidden = true; }, 2000);
+}
+
+// ── Mapa geral: quem está onde ──────────────────────────────
+function ouvirGeral() {
+  pararOuvirMapa(); pararOuvirMapa = () => {};
+  pararOuvirTodos();
+  pararOuvirTodos = ouvirTodos((regs) => { onlineGeral = regs; desenharOnlineGeral(); });
+  desenharOnlineGeral();
+}
+
+function onlinePorMapa() {
+  const por = {};
+  for (const [uid, r] of Object.entries(onlineGeral)) {
+    if (!colegaVisivel(uid, r) || r.local === 'geral' || !(Number(r.mapa) > 0)) continue;
+    (por[Number(r.mapa)] ||= []).push({ uid, ...r });
+  }
+  return por;
+}
+
+const rostoPet = (pet) => petValido(pet) ? `<img src="${quadrosDe(pet, 'sentado_girando')[0]}" alt=""/>` : '<span>🙂</span>';
+
+function desenharOnlineGeral() {
+  const cont = $('geral-marcadores');
+  cont.querySelectorAll('.jr-marc-online').forEach(e => e.remove());
+  const por = onlinePorMapa();
+  const total = Object.entries(onlineGeral).filter(([uid, r]) => colegaVisivel(uid, r)).length;
+  $('selo-online').hidden = !onlineAtivo();
+  $('selo-online').textContent = `🟢 ${total} online`;
+  for (const [n, lista] of Object.entries(por)) {
+    const reg = D.geral.regioes.find(r => r.mapa === Number(n));
+    if (!reg) continue;
+    const b = document.createElement('button');
+    b.className = 'jr-marc-online';
+    b.dataset.mapa = n;
+    b.style.left = reg.x / W * 100 + '%';
+    b.style.top = reg.y / H * 100 + '%';
+    b.setAttribute('aria-label', `${lista.length} colega${lista.length > 1 ? 's' : ''} online no mapa ${n}`);
+    b.innerHTML = lista.slice(0, 3).map(r => `<span class="jr-rosto${r.local === 'ginasio' ? ' no-ginasio' : ''}">${rostoPet(r.pet)}</span>`).join('') +
+      (lista.length > 3 ? `<span class="jr-rosto-mais">+${lista.length - 3}</span>` : '');
+    cont.appendChild(b);
+  }
+}
+
+function abrirListaOnline(n) {
+  const lista = onlinePorMapa()[n] || [];
+  const reg = D.geral.regioes.find(r => r.mapa === n);
+  $('online-titulo').textContent = `${n}. ${reg?.nome || ''}`;
+  $('online-itens').innerHTML = lista.map(r => `
+    <li><span class="jr-rosto${r.local === 'ginasio' ? ' no-ginasio' : ''}">${rostoPet(r.pet)}</span>
+      <span class="jr-online-nome">${esc(r.apelido || '')}</span>
+      <span class="jr-online-det">${esc(r.turma || '')}${petValido(r.pet) ? ' · ' + NOME_PET[r.pet] : ''} · ${r.local === 'ginasio' ? 'no ginásio' : 'no mapa'}</span></li>`).join('')
+    || '<li class="jr-online-vazio">Ninguém aqui agora.</li>';
+  const pode = mapaDisponivel(n);
+  $('online-ir').hidden = !pode;
+  $('online-ir').dataset.mapa = n;
+  $('online-bloqueado').hidden = pode;
+  $('online-lista').hidden = false;
+}
+
+// ============================================================
+//  O PET CONVERSA — com lealdade ≥ 60, fala no mapa (texto todo em dados/jogo/falas-pets.json)
+// ============================================================
+const KEY_CALADO = 'jr_pet_calado';
+let petCalado = false;
+try { petCalado = localStorage.getItem(KEY_CALADO) === '1'; } catch (_) {}
+let apelidoAluno = null;   // apelido_ativo do perfil (lido ao entrar no online); senão, o primeiro nome
+const conversa = { proximaT: 0, toqueT: 0, falando: false, timer: 0, evento: null, voltou: false, voltouDito: false };
+
+const lealdadeDoAtivo = () => Number(cuidadosDe(estado?.pets?.ativo)?.lealdade) || 0;
+const petPodeFalar = () => falasProntas() && !!seguidor?.pet && lealdadeDoAtivo() >= (configFalas().lealdade_minima ?? 60);
+
+// Próximo ginásio: o 1º com líder ainda não vencido, em ordem de mapa, entre os mapas disponíveis
+function proximoGinasio() {
+  for (let n = 1; n <= NUM_MAPAS; n++) {
+    if (!mapaDisponivel(n)) continue;
+    for (const G of ['A', 'B']) if (!estado.ginasios[chaveGinasio(n, G)].lider.vencido) return chaveGinasio(n, G);
+  }
+  return null;
+}
+
+// Ginásio já vencido em que o aluno mais errou (ids das respostas: m{mapa}{lado}-…)
+function ginasioMaisErrado() {
+  const erros = {};
+  for (const [id, r] of Object.entries(estado.respostas || {})) {
+    const m = /^m(\d+)([AB])-/.exec(id);
+    if (!m || !(r?.erros > 0)) continue;
+    const chave = chaveGinasio(Number(m[1]), m[2]);
+    if (estado.ginasios[chave]?.lider.vencido) erros[chave] = (erros[chave] || 0) + r.erros;
+  }
+  const top = Object.entries(erros).sort((a, b) => b[1] - a[1])[0];
+  return top ? top[0] : null;
+}
+
+const contextoFala = () => contextoFalaDe(estado.pets.ativo);
+function contextoFalaDe(pet) {
+  const prox = proximoGinasio(), errado = ginasioMaisErrado();
+  let est = null;
+  if (barrigaDe(pet) < 40) est = 'fome';
+  else if (conversa.voltou && !conversa.voltouDito) est = 'voltou';
+  return {
+    pet, nomePet: NOME_PET[pet], apelido: apelidoAluno || String(sessao.nome || '').split(' ')[0],
+    proximo: prox ? { chave: prox, dica: dicaDe(prox) } : null,
+    errado: errado ? { chave: errado, dica: dicaDe(errado) } : null,
+    sequencia: Number(estado.sequencia?.atual) || 0, agora: new Date(), estado: est,
+  };
+}
+
+function petFalar(tipoForcado = null) {
+  const ctx = contextoFala();
+  const fala = montarFala(ctx, tipoForcado);
+  if (!fala) return false;
+  if (!tipoForcado && ctx.estado === 'voltou') conversa.voltouDito = true;
+  mostrarFalaPet(fala.baloes, fala.tipo === 'fome' || tipoForcado === 'fome');
+  conversa.proximaT = performance.now() + (configFalas().intervalo_min_s ?? 120) * 1000;
+  return true;
+}
+
+// Mostra os balões um depois do outro (piada: pergunta → 2,5 s → resposta → risada)
+function mostrarFalaPet(baloes, fome = false) {
+  pararFalaPet();
+  conversa.falando = true;
+  let i = 0;
+  const el = $('pet-fala');
+  const passo = () => {
+    const b = baloes[i];
+    if (!b || cena?.tipo !== 'mapa') { pararFalaPet(); return; }
+    el.textContent = b.texto;
+    el.hidden = false;
+    el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+    posicionarFalaPet();
+    if (i === 0) seguidor?.reagir(fome ? 'triste_fome' : 'feliz', fome ? 2000 : 0);
+    conversa.timer = setTimeout(() => {
+      i++;
+      el.hidden = true;
+      if (baloes[i]) conversa.timer = setTimeout(passo, baloes[i].espera || 0);
+      else pararFalaPet();
+    }, b.fixo || duracaoBalao(b.texto));
+  };
+  passo();
+}
+
+function pararFalaPet() {
+  clearTimeout(conversa.timer);
+  conversa.falando = false;
+  $('pet-fala').hidden = true;
+}
+
+// Balão sobre a cabeça do pet; se encostar na borda da tela, entra para dentro
+function posicionarFalaPet() {
+  const el = $('pet-fala');
+  if (el.hidden || !seguidor) return;
+  posicionarNaTela(el, seguidor.x, seguidor.y - seguidor.altura - 2);
+}
+
+// Toque no pet (no mapa): fala na hora; abaixo da lealdade mínima, só "…" ou um coração
+function tocouNoPet(p) {
+  if (!seguidor?.pet || $('pet').hidden) return false;
+  const folga = 14 / (cam.s || 1);   // área de toque um pouco maior que o pet
+  const larg = seguidor.altura * 0.45 + folga;
+  return Math.abs(p.x - seguidor.x) < larg && p.y > seguidor.y - seguidor.altura - folga && p.y < seguidor.y + folga;
+}
+
+function falarPorToque() {
+  const agora = performance.now();
+  if (agora - conversa.toqueT < 5000) return;
+  conversa.toqueT = agora;
+  if (petPodeFalar()) { petFalar(); return; }
+  mostrarFalaPet([{ texto: Math.random() < 0.5 ? '…' : '💜', espera: 0, fixo: 1500 }]);
+}
+
+// A cada quadro no mapa
+function atualizarConversa() {
+  if (conversa.falando) posicionarFalaPet();
+  if (perguntaAberta || transicionando || sobreposicaoAberta()) return;
+  if (conversa.evento) {
+    // momento-chave (saiu do ginásio): independe do intervalo, mas respeita a lealdade
+    const ev = conversa.evento;
+    conversa.evento = null;
+    if (petPodeFalar()) petFalar(ev);
+    return;
+  }
+  if (petCalado || conversa.falando || !petPodeFalar()) return;
+  if (performance.now() < conversa.proximaT) return;
+  if ((seguidor.paradoMs || 0) < (configFalas().parado_min_s ?? 3) * 1000) return;
+  petFalar();
+}
+
+function alternarPetCalado() {
+  petCalado = !petCalado;
+  try { localStorage.setItem(KEY_CALADO, petCalado ? '1' : '0'); } catch (_) {}
+  atualizarBotaoCalado();
+}
+function atualizarBotaoCalado() {
+  const b = $('mp-calado');
+  b.textContent = petCalado ? '🔇 Pet calado' : '💬 Pet falando';
+  b.setAttribute('aria-pressed', String(petCalado));
+  b.classList.toggle('ativo', petCalado);
 }
 
 function preCarregarQuadros() {
@@ -727,6 +1377,7 @@ let avisoSequencia = null;   // { atual, xp } — mostrado depois de fechar a vi
 
 function registrarDiaJogado() {
   if (!carregouProgresso) return;
+  lealdadeDoDia();
   const r = proximaSequencia(estado.sequencia, diaLocal());
   if (!r.subiu) return;
   estado.sequencia = { atual: r.atual, max: r.max, ultimo_dia: r.ultimo_dia };
@@ -875,6 +1526,7 @@ function abrirRevisao(qs) {
   $('perg-desistir').hidden = false;
   $('perg-confirma').hidden = true;
   $('pergunta').hidden = false;
+  atualizarMoedasPergunta();
   renderPergunta();
   $('pergunta').querySelector('.jr-perg-caixa').scrollTop = 0;
 }
@@ -908,6 +1560,10 @@ function abrirMapaGeral() {
   atualizarBotaoRevisao();
   cena = null;
   esconderBalao();
+  sairDoMapaOnline();
+  pararFalaPet();
+  enviarOnline({ mapa: 'geral', local: 'geral' });
+  if (onlineAtivo()) ouvirGeral();
   mostrarTela('tela-geral');
   dimensionarGeral();
   desenharMarcadores();
@@ -952,6 +1608,7 @@ function desenharMarcadores() {
               <span class="jr-marc-nome">${esc(r.nome)}</span>${ins}
             </button>`;
   }).join('');
+  desenharOnlineGeral();
 }
 
 // Arrastar com o mouse (no toque o rolamento nativo já resolve)
@@ -1061,7 +1718,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden;
+  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden;
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -1178,9 +1835,12 @@ function ligarControles() {
 }
 
 let ultimoT = 0;
+let fomeT = 0;
 function loop(t) {
   const dt = Math.min(0.05, (t - (ultimoT || t)) / 1000);
   ultimoT = t;
+  atualizarMeuPet(dt);
+  if ((fomeT += dt) > 10) { fomeT = 0; atualizarFomeSeguidor(); }   // a barriga cai devagar: confere a cada 10 s
   if (cena && !perguntaAberta && !transicionando) {
     const [vx, vy] = vetorEntrada();
     if (!vx && !vy) soltouDesdeTroca = true;
@@ -1190,6 +1850,7 @@ function loop(t) {
     const pet = seguidor?.pet;
     seguidor?.atualizar(dt, jog.x, jog.y, VEL, altImagemPet(pet) * e, distPet(pet) * e, e);
     petGin?.anim.atualizar(dt);
+    if (cena.tipo === 'mapa') { atualizarColegas(dt); enviarPosicao(); posicionarMinhaReacao(); atualizarConversa(); }
     ajustarCamera();
     if (cena?.tipo === 'mapa') {
       atualizarMapa();
@@ -1446,6 +2107,8 @@ async function abrirMapa(n, onde) {
   ajustarCamera();
   $('cena-palco').style.visibility = '';
   atualizarBotaoPet();
+  entrarNoMapaOnline(n);
+  conversa.proximaT = performance.now() + 8000;   // 1ª fala no mapa pode vir depois de 8 s
   pedirPetSeFaltar();
 }
 
@@ -1495,6 +2158,7 @@ const distAoDestino = (d) => Math.min(dist(jog.x, jog.y, d.x, d.y), dist(jog.x, 
 
 function tocarNoMapa(e) {
   const p = telaParaImagem(e.clientX, e.clientY);
+  if (tocouNoPet(p)) { falarPorToque(); return; }   // tocar no pet: ele fala (não anda até lá)
   // Tocou a até 60 px de uma porta ou saída → esse ponto vira o destino especial
   let perto = null, melhor = DIST_TOQUE;
   for (const d of destinosDoMapa()) {
@@ -1638,6 +2302,9 @@ async function entrarGinasio(n, G) {
   // no ginásio não há botão de sair: sai andando pela porta de entrada
   $('btn-cena-voltar').hidden = true;
   $('tela-cena').classList.add('jr-no-ginasio');
+  sairDoMapaOnline();
+  pararFalaPet();
+  enviarOnline({ mapa: n, local: 'ginasio' });   // no ginásio os colegas não veem você
   petGin = null;
   $('cena-atores').innerHTML = '';
   $('cena-palco').style.visibility = 'hidden';
@@ -1921,6 +2588,7 @@ function abrirPergunta(chave, p) {
   $('perg-desistir').hidden = false;
   $('perg-confirma').hidden = true;
   $('pergunta').hidden = false;
+  atualizarMoedasPergunta();
   renderPergunta();
   $('pergunta').querySelector('.jr-perg-caixa').scrollTop = 0;
 }
@@ -2012,6 +2680,7 @@ function responder(btn) {
     lembrarResposta(q.id, { acertou: true, ultima: agora, ...(patch[`respostas/${q.id}/revisao_ok`] ? { revisao_ok: agora } : {}) });
     pg.fila.shift();
     pg.acertos++;
+    ganharMoeda();
     falar(sortear(D.falas.acerto));
     setTimeout(() => { if (!pg) return; pg.fila.length ? renderPergunta() : vencer(); }, 1100);
   } else {
@@ -2056,6 +2725,7 @@ function vencer() {
   if (p === 'lider' && !g.insignia) { g.insignia = true; g.dataInsignia = Date.now(); ganhou = 'normal'; }
   if (p === 'revanche' && !g.dourada) { g.dourada = true; ganhou = 'dourada'; }
   gravarVitoria(chave, p);
+  if (p === 'lider' || p === 'revanche') conversa.evento = 'venceu';   // o pet comenta ao sair do ginásio
   if (p === 'lider' && primeiraVez && petDoGinasio(chave)) petSurgir = chave;
   registrarDiaJogado();
   tocar('vitoria');
@@ -2108,11 +2778,12 @@ function desistir() {
     $('perg-continuar').textContent = 'Sair';
     $('perg-continuar').hidden = false;
     pg.aoContinuar = () => { fecharPergunta(); seguidor?.reagir('triste_fome', 2000); };
+    if (conversa.evento !== 'venceu') conversa.evento = 'perdeu';
     return;
   }
   const fugiuDeBatalha = pg.modo !== 'revisao';
   fecharPergunta();
-  if (fugiuDeBatalha) seguidor?.reagir('triste_fome', 2000);
+  if (fugiuDeBatalha) { seguidor?.reagir('triste_fome', 2000); if (conversa.evento !== 'venceu') conversa.evento = 'perdeu'; }
 }
 
 function fecharPergunta() {
@@ -2254,9 +2925,25 @@ function ligarEventos() {
 
   $('pet-opcoes').addEventListener('click', (e) => { const b = e.target.closest('[data-pet]'); if (b) escolherPet(b.dataset.pet); });
   $('btn-trocar-pet').addEventListener('click', () => { $('estojo').hidden = true; abrirColecao(); });
-  $('btn-pet').addEventListener('click', abrirColecao);
+  $('btn-pet').addEventListener('click', abrirMeuPet);
+  $('btn-colegas').addEventListener('click', alternarColegas);
+  $('btn-reacao').addEventListener('click', abrirReacoes);
+  $('reacoes').addEventListener('click', (e) => { const b = e.target.closest('[data-e]'); if (b) reagirCom(b.dataset.e); else if (!e.target.closest('.jr-reacoes-roda')) fecharReacoes(); });
+  $('reacoes-roda').innerHTML = REACOES.map((e, i) => `<button class="jr-reacao" data-e="${e}" style="--i:${i}" aria-label="Reação ${e}">${e}</button>`).join('');
+  window.addEventListener('keydown', (e) => { if (e.code === 'Escape') { if (!$('reacoes').hidden) fecharReacoes(); else if (!$('online-lista').hidden) $('online-lista').hidden = true; } });
+  $('geral-marcadores').addEventListener('click', (e) => { const b = e.target.closest('.jr-marc-online'); if (b) { e.stopPropagation(); abrirListaOnline(Number(b.dataset.mapa)); } }, true);
+  $('online-fechar').addEventListener('click', () => { $('online-lista').hidden = true; });
+  $('online-ir').addEventListener('click', () => { const n = Number($('online-ir').dataset.mapa); $('online-lista').hidden = true; if (mapaDisponivel(n)) { tocar('porta'); abrirMapa(n, 'entrada'); } });
+  $('mp-fechar').addEventListener('click', fecharMeuPet);
+  $('mp-trocar').addEventListener('click', () => { fecharMeuPet(); colecaoDoMeuPet = true; abrirColecao(); });
+  $('mp-alimentar').addEventListener('click', alimentarPet);
+  $('mp-carinho').addEventListener('click', carinhoPet);
+  $('mp-calado').addEventListener('click', alternarPetCalado);
+  $('pet-fala').addEventListener('click', pararFalaPet);   // tocar no balão fecha
+  atualizarBotaoCalado();
+  $('mp-palco').addEventListener('click', carinhoPet);   // tocar no pet = carinho
   $('colecao-opcoes').addEventListener('click', (e) => { const b = e.target.closest('[data-pet]'); if (b) trocarPetAtivo(b.dataset.pet); });
-  $('colecao-fechar').addEventListener('click', () => { $('pet-colecao').hidden = true; });
+  $('colecao-fechar').addEventListener('click', () => { $('pet-colecao').hidden = true; if (colecaoDoMeuPet) { colecaoDoMeuPet = false; abrirMeuPet(); } });
   $('levar-usar').addEventListener('click', () => conquistarPet(true));
   $('levar-guardar').addEventListener('click', () => conquistarPet(false));
   $('estojo-fechar').addEventListener('click', () => {

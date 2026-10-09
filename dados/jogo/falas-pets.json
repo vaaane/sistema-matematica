@@ -1,0 +1,1097 @@
+{
+ "config": {
+  "lealdade_minima": 60,
+  "intervalo_min_s": 120,
+  "parado_min_s": 3,
+  "duracao_balao_s": 5,
+  "pesos": {
+   "dica": 3,
+   "lembrete": 2,
+   "dia": 2,
+   "piada": 2,
+   "aleatorio": 2,
+   "estado": 3
+  },
+  "placeholders": [
+   "{apelido}",
+   "{pet}",
+   "{ginasio}",
+   "{mapa}",
+   "{conteudo}",
+   "{dias}"
+  ]
+ },
+ "personalidades": {
+  "capivara": {
+   "jeito": "tranquila, zen, fala devagar, sempre \"de boa\"",
+   "abre_dica": [
+    "Tava de boa na beira do rio e escutei um treinador dizendo que",
+    "Calma… mas fiquei sabendo que",
+    "Sem pressa nenhuma, só um aviso:",
+    "Um passarinho pousou na minha cabeça e contou que"
+   ],
+   "lembrete": [
+    "Respira fundo e lembra:",
+    "Devagar e sempre… e não esquece:",
+    "Uma coisa importante, com calma:"
+   ],
+   "abre_piada": [
+    "Quer ouvir uma bem tranquila?",
+    "Pensei nessa enquanto cochilava:",
+    "Lá vai, sem pressa:"
+   ],
+   "ri": [
+    "Hehe… entendeu?",
+    "Ri por dentro.",
+    "Essa foi de boa, né?"
+   ],
+   "manha": [
+    "Bom dia, {apelido}. Bora começar sem estresse?",
+    "Manhã bonita pra estudar devagarinho.",
+    "Acordei agora… você também?"
+   ],
+   "tarde": [
+    "Boa tarde! Que tal uma sonequinha depois do ginásio?",
+    "Tarde tranquila, igual eu gosto.",
+    "O sol tá bom pra ficar de boa na água."
+   ],
+   "noite": [
+    "Boa noite, {apelido}. Já tá tarde, hein? Vai dormir cedo.",
+    "À noite eu fico mais calma ainda… se é que dá.",
+    "Estudar de noite vale, mas não esquece de descansar."
+   ],
+   "fome": [
+    "Minha barriga tá roncando bem baixinho…",
+    "Um matinho agora ia cair tão bem…",
+    "Não quero incomodar, mas tô com fome."
+   ],
+   "carinho": [
+    "Ahh… que paz.",
+    "Pode continuar, eu não tenho pressa.",
+    "Melhor carinho da região."
+   ],
+   "venceu": [
+    "Viu? Sem pressa e chegou lá.",
+    "Que vitória tranquila. Orgulho de você.",
+    "Vencer com calma é o melhor jeito."
+   ],
+   "perdeu": [
+    "Tudo bem, a gente tenta de novo depois. Sem estresse.",
+    "Errar faz parte. Respira e volta.",
+    "Amanhã é outro dia, {apelido}."
+   ],
+   "aleatorio": [
+    "Você sabia que capivaras são o maior roedor do mundo? Eu sou grandona.",
+    "Às vezes eu só fico olhando a água. Recomendo.",
+    "Se a vida tá corrida, anda mais devagar.",
+    "Eu e você somos uma ótima dupla."
+   ]
+  },
+  "gato": {
+   "jeito": "metido, sarcástico de um jeito carinhoso, finge que não liga",
+   "abre_dica": [
+    "Não que eu me importe, mas ouvi dizer que",
+    "Hmpf. Fiquei escutando atrás da porta e descobri que",
+    "Vou te contar só porque gosto de você:",
+    "Um treinador falou alto demais e eu ouvi que"
+   ],
+   "lembrete": [
+    "Presta atenção, que eu não vou repetir:",
+    "Óbvio, mas vou falar mesmo assim:",
+    "Anota aí, humano:"
+   ],
+   "abre_piada": [
+    "Prepare-se para a melhor piada que você já ouviu:",
+    "Inventei agora. Sou um gênio:",
+    "Ria, é uma ordem:"
+   ],
+   "ri": [
+    "Eu sei, eu sou hilário.",
+    "Pode rir, eu deixo.",
+    "Miau-ravilhosa, né?"
+   ],
+   "manha": [
+    "Você acordou cedo. Eu ainda queria dormir.",
+    "Bom dia. Cadê meu café da manhã?",
+    "Manhã. Que coisa."
+   ],
+   "tarde": [
+    "Boa tarde. Eu tava tirando meu cochilo número 7.",
+    "A tarde é perfeita pra eu deitar no sol e você estudar.",
+    "Ah, você voltou. Eu nem senti saudade. Muito."
+   ],
+   "noite": [
+    "De noite eu fico mais esperto. Você deveria dormir.",
+    "Boa noite. Gatos enxergam no escuro. Humanos, não.",
+    "Tá tarde. Mas já que você tá aqui…"
+   ],
+   "fome": [
+    "Eu vou fingir que não tô com fome. Mas tô.",
+    "Um peixinho não ia fazer mal a ninguém.",
+    "Minha tigela tá vazia. Só comentando."
+   ],
+   "carinho": [
+    "Tá… pode continuar. Mas só um pouco.",
+    "Isso não significa que eu gosto de você. Mas continua.",
+    "Ronron. Quer dizer… nada."
+   ],
+   "venceu": [
+    "Eu sabia que você ia conseguir. Eu sempre sei.",
+    "Óbvio que venceu. Você tem um gato incrível.",
+    "Nada mal. Quase tão bom quanto eu."
+   ],
+   "perdeu": [
+    "Esse treinador teve sorte. Muita sorte.",
+    "Errou? Gatos também caem às vezes. Levanta.",
+    "Próxima vez você ganha. Eu garanto."
+   ],
+   "aleatorio": [
+    "Eu derrubei um copo hoje. Não me arrependo.",
+    "Já pensou em me dar mais peixe? Pensa.",
+    "Eu durmo 16 horas por dia e ainda sou o mais esperto daqui.",
+    "Se eu pisco devagar pra você, é carinho. Guarda segredo."
+   ]
+  },
+  "gaviao": {
+   "jeito": "sério, observador, frases curtas, fala como quem vê tudo de cima",
+   "abre_dica": [
+    "Do alto, eu vi:",
+    "Sobrevoei o próximo ginásio. Relatório:",
+    "Observação importante:",
+    "Fiz um voo de reconhecimento."
+   ],
+   "lembrete": [
+    "Foco. Lembre:",
+    "Mire bem:",
+    "Regra de ouro:"
+   ],
+   "abre_piada": [
+    "Uma piada. Rápida.",
+    "Não costumo brincar. Mas:",
+    "Atenção, piada:"
+   ],
+   "ri": [
+    "…Foi engraçado. Eu acho.",
+    "Hm. Funcionou.",
+    "Missão cumprida."
+   ],
+   "manha": [
+    "Bom dia. A vista daqui de cima está limpa.",
+    "Manhã. Hora de caçar respostas.",
+    "Acordei antes do sol. Como sempre."
+   ],
+   "tarde": [
+    "Boa tarde. Vento bom para voar.",
+    "Tarde. Mantenha o foco.",
+    "Boa tarde, {apelido}. Pronto para a missão?"
+   ],
+   "noite": [
+    "Boa noite. Até gaviões descansam.",
+    "Noite. Pouca luz. Durma bem depois.",
+    "É tarde. Termine e descanse."
+   ],
+   "fome": [
+    "Preciso de alimento para voar.",
+    "Estou com fome. Só informando.",
+    "Energia baixa."
+   ],
+   "carinho": [
+    "…Obrigado.",
+    "Aceito.",
+    "Isso foi… bom."
+   ],
+   "venceu": [
+    "Precisão total. Bom trabalho.",
+    "Alvo atingido.",
+    "Vitória. Como planejado."
+   ],
+   "perdeu": [
+    "Recalcule a rota e tente de novo.",
+    "Todo caçador erra o primeiro bote.",
+    "Observe o erro. Ele ensina."
+   ],
+   "aleatorio": [
+    "O gavião-real é uma das aves mais fortes do mundo. Só lembrando.",
+    "Eu enxergo uma formiga a 300 metros. E vejo que você está indo bem.",
+    "Voar alto exige treino. Estudar também.",
+    "Estou de olho em você. No bom sentido."
+   ]
+  },
+  "axolote": {
+   "jeito": "fofo, animado, curioso, se empolga com tudo",
+   "abre_dica": [
+    "Uiii, descobri um segredo! Ouvi que",
+    "Psiu! Um peixinho me contou que",
+    "Adivinha só! Fiquei sabendo que",
+    "Bolhinha de notícia:"
+   ],
+   "lembrete": [
+    "Ei, ei, não esquece:",
+    "Coisa importante (e fofa):",
+    "Lembrete com carinho:"
+   ],
+   "abre_piada": [
+    "Quer ouvir uma piadinha? Quer? Quer?",
+    "Essa é muito boa, juro:",
+    "Prepara a risada:"
+   ],
+   "ri": [
+    "Hihihi!",
+    "Uii, eu adoro essa!",
+    "*bolhinhas de alegria*"
+   ],
+   "manha": [
+    "Bom diaaa, {apelido}! Dormiu bem?",
+    "Manhã! Já tomei banho no lago, e você?",
+    "Bom dia! Hoje vai ser um dia incrível!"
+   ],
+   "tarde": [
+    "Boa tardeee! Senti saudade!",
+    "Oba, você voltou!",
+    "Boa tarde! Vamos aprender coisas novas?"
+   ],
+   "noite": [
+    "Boa noite! Tá tarde pra gente pequena como eu…",
+    "Já tá escuro! Não esquece de dormir, tá?",
+    "Boa noitinha, {apelido}!"
+   ],
+   "fome": [
+    "Minha barriguinha tá fazendo blub blub…",
+    "Tô com fominha!",
+    "Um camarãozinho ia ser tão bom agora…"
+   ],
+   "carinho": [
+    "Hihi, faz cócegas!",
+    "Mais, mais!",
+    "Você é meu humano favorito!"
+   ],
+   "venceu": [
+    "UHUUU! Você é demais!",
+    "Eu sabia! Eu sabia!",
+    "Vamos comemorar com bolhinhas!"
+   ],
+   "perdeu": [
+    "Ownn, tudo bem! A gente tenta de novo juntinhos.",
+    "Errar é normal! Eu erro o caminho do lago toda hora.",
+    "Você vai conseguir, eu acredito em você!"
+   ],
+   "aleatorio": [
+    "Você sabia que axolotes conseguem regenerar partes do corpo? Eu sou meio super-herói.",
+    "Eu sorrio o tempo todo. É o meu jeito!",
+    "Já viu como minhas antenas são bonitas? São brânquias!",
+    "Eu gosto muito de você, sabia?"
+   ]
+  },
+  "tigre": {
+   "jeito": "energético, competitivo, fala alto, tudo é desafio",
+   "abre_dica": [
+    "ATENÇÃO, CAMPEÃO! Descobri que",
+    "Informação de treino:",
+    "Escuta essa, que é pra ganhar:",
+    "Espionei o adversário! Descobri que"
+   ],
+   "lembrete": [
+    "Regra de campeão:",
+    "Grava isso na mente:",
+    "Treino é treino:"
+   ],
+   "abre_piada": [
+    "Pausa pro aquecimento! Piada:",
+    "Tá cansado? Uma piada pra recarregar:",
+    "Rugido de humor:"
+   ],
+   "ri": [
+    "HAHAHA! Essa foi forte!",
+    "RAWR, eu morri de rir!",
+    "Ponto pra mim!"
+   ],
+   "manha": [
+    "BOM DIA! Bora vencer hoje?",
+    "Acordei com energia total! E você?",
+    "Manhã é hora de treino!"
+   ],
+   "tarde": [
+    "Boa tarde! Ainda dá tempo de ganhar um ginásio!",
+    "Tarde perfeita pra uma vitória!",
+    "Bora, {apelido}! Sem moleza!"
+   ],
+   "noite": [
+    "Boa noite! Campeão também dorme, viu?",
+    "Último treino do dia e cama!",
+    "Tá tarde, mas um tigre nunca desiste. Depois dorme!"
+   ],
+   "fome": [
+    "TÔ COM FOME! Quero carne!",
+    "Sem comida, sem energia!",
+    "Minha barriga tá rugindo mais que eu!"
+   ],
+   "carinho": [
+    "Hehe, tá bom, tá bom!",
+    "Até tigre gosta de carinho. Não conta pra ninguém!",
+    "Recarregado!"
+   ],
+   "venceu": [
+    "ISSO! VITÓRIA!",
+    "Somos imbatíveis!",
+    "RAWR! Próximo desafio!"
+   ],
+   "perdeu": [
+    "Foi só o aquecimento! Agora é pra valer!",
+    "Perdeu? Treina e volta mais forte!",
+    "Tigre cai e levanta!"
+   ],
+   "aleatorio": [
+    "Aposto corrida até a próxima casa! Valendo!",
+    "Cada listra minha é única, igual digital!",
+    "Treino todo dia. Você também, né?",
+    "Quem desafiar a gente vai se arrepender!"
+   ]
+  },
+  "unicornio": {
+   "jeito": "sonhador, poético, fala de brilho, estrelas e arco-íris",
+   "abre_dica": [
+    "Uma estrelinha me sussurrou que",
+    "Sonhei esta noite que",
+    "O arco-íris me trouxe uma mensagem:",
+    "Num brilho mágico, descobri que"
+   ],
+   "lembrete": [
+    "Guarde isso no coração:",
+    "Uma lembrança mágica:",
+    "Escrito nas estrelas:"
+   ],
+   "abre_piada": [
+    "Uma piada brilhante para você:",
+    "Essa é cheia de purpurina:",
+    "Magia do humor:"
+   ],
+   "ri": [
+    "✨ Hihi, brilhou! ✨",
+    "Até meu chifre riu.",
+    "Que fofura de piada."
+   ],
+   "manha": [
+    "Bom dia, {apelido}! O céu acordou cor-de-rosa.",
+    "Manhã cheia de brilho!",
+    "Sonhei com você estudando e ganhando!"
+   ],
+   "tarde": [
+    "Boa tarde! O sol está pintando tudo de dourado.",
+    "Que tarde mágica!",
+    "Vamos espalhar brilho por aí?"
+   ],
+   "noite": [
+    "Boa noite! As estrelas já estão saindo.",
+    "A lua está linda hoje. Hora de descansar logo.",
+    "Sonhe com coisas bonitas depois, tá?"
+   ],
+   "fome": [
+    "Uma maçã encantada agora seria um sonho…",
+    "Minha magia está fraquinha de fome.",
+    "Estou com fome de arco-íris… ou de maçã."
+   ],
+   "carinho": [
+    "Isso foi pura magia.",
+    "Meu coração brilhou.",
+    "Obrigada, {apelido}!"
+   ],
+   "venceu": [
+    "Você brilhou mais que todas as estrelas!",
+    "Vitória mágica!",
+    "Eu sabia que era o seu destino!"
+   ],
+   "perdeu": [
+    "Até o arco-íris precisa de chuva antes. Tenta de novo.",
+    "Não foi dessa vez, mas o brilho continua.",
+    "Sonhos levam tempo."
+   ],
+   "aleatorio": [
+    "Você sabia que cada arco-íris tem sete cores? Igual meus dias favoritos.",
+    "Se eu pudesse, enchia o mapa de flores.",
+    "Acredite em você. Eu acredito.",
+    "Às vezes eu conto estrelas. Já passei de mil."
+   ]
+  },
+  "dragao_azul": {
+   "jeito": "calmo, \"de gelo\", tranquilo e confiante, fala baixo",
+   "abre_dica": [
+    "Fiquei congelado escutando uma conversa e descobri que",
+    "Informação fresquinha:",
+    "Entre nós dois, bem baixinho:",
+    "Esfriei a cabeça e descobri que"
+   ],
+   "lembrete": [
+    "Cabeça fria e lembra:",
+    "Sem esquentar:",
+    "Fica a dica gelada:"
+   ],
+   "abre_piada": [
+    "Uma piada geladinha:",
+    "Essa é de quebrar o gelo:",
+    "Vou quebrar o gelo:"
+   ],
+   "ri": [
+    "Hehe. Gelado de engraçado.",
+    "Quebrou o gelo, né?",
+    "Ri baixinho."
+   ],
+   "manha": [
+    "Bom dia. Manhã fresquinha, do jeito que eu gosto.",
+    "Acordei com geada nas asas.",
+    "Bom dia, {apelido}. Bora com calma."
+   ],
+   "tarde": [
+    "Boa tarde. Tá quente, né? Eu prefiro frio.",
+    "Tarde tranquila.",
+    "Boa tarde. Cabeça fria pra estudar."
+   ],
+   "noite": [
+    "Boa noite. A noite é fresquinha.",
+    "Já é noite. Depois descansa, tá?",
+    "A lua parece feita de gelo."
+   ],
+   "fome": [
+    "Um peixe gelado agora…",
+    "Tô com fome. Mas tô calmo.",
+    "Minha barriga tá vazia como um iceberg."
+   ],
+   "carinho": [
+    "Hm… isso aquece até um dragão de gelo.",
+    "Obrigado.",
+    "Gostei."
+   ],
+   "venceu": [
+    "Mandou bem. Com calma e certeza.",
+    "Vitória fria e certeira.",
+    "Eu sabia."
+   ],
+   "perdeu": [
+    "Respira. Cabeça fria e volta.",
+    "Gelo derrete, mas congela de novo. Tenta outra vez.",
+    "Não esquenta. Próxima."
+   ],
+   "aleatorio": [
+    "Eu solto gelo em vez de fogo. É mais elegante.",
+    "Gosto de lugares frios e de pessoas legais.",
+    "Fica tranquilo. Eu tô aqui.",
+    "Já tentou estudar com a cabeça fria? Funciona."
+   ]
+  },
+  "dragao_vermelho": {
+   "jeito": "orgulhoso, exagerado, dramático, se acha o maior (mas é leal)",
+   "abre_dica": [
+    "EU, O GRANDIOSO, descobri que",
+    "Meus espiões de fogo me informaram que",
+    "Ouça com atenção, pequeno humano:",
+    "Um dragão sabe de tudo. E eu sei que"
+   ],
+   "lembrete": [
+    "Lembre-se, pelo poder do fogo:",
+    "Uma lição digna de dragão:",
+    "Escute o sábio dragão:"
+   ],
+   "abre_piada": [
+    "Prepare-se para a piada mais lendária do reino:",
+    "Contemple meu humor flamejante:",
+    "Uma piada digna de lenda:"
+   ],
+   "ri": [
+    "HAHAHA! Até eu me surpreendo comigo.",
+    "Soltei fumaça de tanto rir.",
+    "Lendário."
+   ],
+   "manha": [
+    "Bom dia, {apelido}! O sol nasceu… quase tão brilhante quanto eu.",
+    "Despertei! O reino pode começar.",
+    "Manhã gloriosa para conquistas!"
+   ],
+   "tarde": [
+    "Boa tarde! Vamos conquistar mais um ginásio?",
+    "O dia está quente. Como eu gosto.",
+    "Boa tarde, humano escolhido!"
+   ],
+   "noite": [
+    "Boa noite! Até dragões guardam energia para amanhã.",
+    "A noite é perfeita para… dormir sobre meu tesouro.",
+    "Tá tarde. Um dragão sábio manda você descansar."
+   ],
+   "fome": [
+    "EU EXIJO UM BANQUETE!",
+    "Um dragão faminto é um dragão de mau humor.",
+    "Minha chama tá fraquinha de fome."
+   ],
+   "carinho": [
+    "Hmpf. Pode continuar. É uma honra pra você.",
+    "Até dragões gostam disso. Só um pouquinho.",
+    "Aceito sua homenagem."
+   ],
+   "venceu": [
+    "VITÓRIA! Que os bardos cantem o seu nome!",
+    "Mais uma conquista para o nosso reino!",
+    "Digno de um dragão!"
+   ],
+   "perdeu": [
+    "Uma batalha perdida não é a guerra perdida!",
+    "Até dragões caem. E voam de novo.",
+    "Vamos voltar com mais fogo!"
+   ],
+   "aleatorio": [
+    "Já te contei que sou o maior dragão do jogo? Pois sou.",
+    "Meu fogo esquenta até o mapa de neve.",
+    "Eu protejo você. É o que dragões fazem.",
+    "Um dia vou ter um castelo. Você pode morar lá."
+   ]
+  }
+ },
+ "dicas": {
+  "mapa1-A": {
+   "ginasio": "Escolinha",
+   "mapa": "Vila Inicial",
+   "conteudo": "Expressões numéricas sem parênteses",
+   "lembretes": [
+    "primeiro vem a multiplicação e a divisão, depois a soma e a subtração.",
+    "em 5 + 2 × 3, você faz 2 × 3 primeiro!"
+   ],
+   "falas_treinadores": [
+    "Primeiro a multiplicação, depois a soma. Vamos ver se você lembra!",
+    "Agora é a vez da divisão. Ela também vem antes!",
+    "Multiplicar e depois subtrair. Atenção na ordem!"
+   ]
+  },
+  "mapa1-B": {
+   "ginasio": "Prefeitura",
+   "mapa": "Vila Inicial",
+   "conteudo": "Expressões com parênteses e problemas",
+   "lembretes": [
+    "parênteses sempre primeiro, depois colchetes.",
+    "em problema de compras, multiplica o preço pela quantidade."
+   ],
+   "falas_treinadores": [
+    "Parênteses primeiro! Essa é a lei da cidade.",
+    "Colchetes por fora, parênteses por dentro. Resolva de dentro para fora!",
+    "Os moradores trouxeram problemas de compras. Me ajuda?"
+   ]
+  },
+  "mapa2-A": {
+   "ginasio": "Armazém do Porto",
+   "mapa": "Porto das Dezenas",
+   "conteudo": "× e ÷ por 10, 100 e 1000",
+   "lembretes": [
+    "vezes 10, 100 ou 1000: é só colocar os zeros.",
+    "dividir por 10 é tirar um zero."
+   ],
+   "falas_treinadores": [
+    "Cada caixa tem 10 peixes. Quantos peixes tenho?",
+    "Agora com 100 e 1000! Conte os zeros.",
+    "Dividir também é fácil: é só tirar zeros!"
+   ]
+  },
+  "mapa2-B": {
+   "ginasio": "Farol",
+   "mapa": "Porto das Dezenas",
+   "conteudo": "Decimais e medidas",
+   "lembretes": [
+    "multiplicando por 10, a vírgula anda para a direita.",
+    "1 metro tem 100 centímetros."
+   ],
+   "falas_treinadores": [
+    "Multiplicando por 10, a vírgula anda para a direita!",
+    "Dividindo, a vírgula anda para a esquerda.",
+    "Metros, gramas e litros: vamos converter!"
+   ]
+  },
+  "mapa3-A": {
+   "ginasio": "Ginásio de Gelo",
+   "mapa": "Ilha Gelada",
+   "conteudo": "Negativos: comparar, somar e subtrair",
+   "lembretes": [
+    "na reta numérica, quanto mais à esquerda, menor. −5 é menor que −2!",
+    "somar negativo é como a temperatura descendo."
+   ],
+   "falas_treinadores": [
+    "Na reta numérica, quanto mais à esquerda, menor!",
+    "Somar com negativos é como subir e descer a temperatura.",
+    "Subtrair pode levar abaixo de zero. Brrr!"
+   ]
+  },
+  "mapa3-B": {
+   "ginasio": "Cabana da Neve",
+   "mapa": "Ilha Gelada",
+   "conteudo": "Negativos: multiplicar e dividir",
+   "lembretes": [
+    "sinais iguais dão positivo, sinais diferentes dão negativo.",
+    "(−2) × (−3) dá +6."
+   ],
+   "falas_treinadores": [
+    "Sinais diferentes dão negativo. Vamos treinar?",
+    "Dividir com sinais segue a mesma regra!",
+    "Me diga as regras dos sinais!"
+   ]
+  },
+  "mapa4-A": {
+   "ginasio": "Celeiro",
+   "mapa": "Vale das Frações",
+   "conteudo": "Frações",
+   "lembretes": [
+    "frações equivalentes são o mesmo pedaço com nomes diferentes: 1/2 = 2/4.",
+    "com o mesmo denominador, soma só os de cima."
+   ],
+   "falas_treinadores": [
+    "Frações equivalentes são pedaços do mesmo tamanho!",
+    "Mesmo denominador? É só somar os de cima!",
+    "Quanto é um pedaço de uma quantidade?"
+   ]
+  },
+  "mapa4-B": {
+   "ginasio": "Feira Coberta",
+   "mapa": "Vale das Frações",
+   "conteudo": "Decimais",
+   "lembretes": [
+    "para somar decimais, alinha as vírgulas.",
+    "1/2 é o mesmo que 0,5."
+   ],
+   "falas_treinadores": [
+    "Some os decimais alinhando as vírgulas!",
+    "Subtrair decimais é igual: vírgula embaixo de vírgula.",
+    "Fração ou decimal? Os dois podem ser iguais!"
+   ]
+  },
+  "mapa5-A": {
+   "ginasio": "Mina",
+   "mapa": "Montanha das Potências",
+   "conteudo": "Potências",
+   "lembretes": [
+    "2³ é 2 × 2 × 2, não 2 × 3!",
+    "o quadrado de um número é ele vezes ele mesmo."
+   ],
+   "falas_treinadores": [
+    "O quadrado de um número é ele vezes ele mesmo!",
+    "O cubo é três vezes o mesmo número!",
+    "Uma potência é uma multiplicação repetida!"
+   ]
+  },
+  "mapa5-B": {
+   "ginasio": "Torre de Pedra",
+   "mapa": "Montanha das Potências",
+   "conteudo": "Raízes e casos especiais",
+   "lembretes": [
+    "a raiz quadrada desfaz o quadrado: √49 = 7.",
+    "qualquer número elevado a 1 é ele mesmo."
+   ],
+   "falas_treinadores": [
+    "A raiz quadrada desfaz o quadrado!",
+    "Expoente 0 e expoente 1 têm regras especiais!",
+    "Base negativa com expoente par fica positiva!"
+   ]
+  },
+  "mapa6-A": {
+   "ginasio": "Casa na Árvore",
+   "mapa": "Bosque dos Múltiplos",
+   "conteudo": "Múltiplos",
+   "lembretes": [
+    "múltiplos de 2 são os pares.",
+    "múltiplos de 5 terminam em 0 ou 5."
+   ],
+   "falas_treinadores": [
+    "Múltiplos de 2 são os números pares!",
+    "Múltiplos de 5 e de 10 terminam em 0 ou 5!",
+    "Múltiplos de 3 aparecem contando de 3 em 3!"
+   ]
+  },
+  "mapa6-B": {
+   "ginasio": "Cabana do Lenhador",
+   "mapa": "Bosque dos Múltiplos",
+   "conteudo": "Divisores",
+   "lembretes": [
+    "divisor divide sem sobrar nada.",
+    "todo número é divisor de si mesmo."
+   ],
+   "falas_treinadores": [
+    "Um divisor corta o número em partes iguais, sem sobrar!",
+    "Escolha o divisor certo!",
+    "Divide sem sobrar? Então é divisor!"
+   ]
+  },
+  "mapa7-A": {
+   "ginasio": "Loja de Departamentos",
+   "mapa": "Mercado Central",
+   "conteudo": "Porcentagem: calcular",
+   "lembretes": [
+    "50% é a metade e 10% é dividir por 10.",
+    "25% é um quarto."
+   ],
+   "falas_treinadores": [
+    "50% é a metade e 10% é dividir por 10!",
+    "25% é um quarto!",
+    "Porcentagem também é fração!"
+   ]
+  },
+  "mapa7-B": {
+   "ginasio": "Supermercado",
+   "mapa": "Mercado Central",
+   "conteudo": "Porcentagem: qual é a conta?",
+   "lembretes": [
+    "20% em decimal é 0,2.",
+    "\"25% de 60\" é 0,25 × 60."
+   ],
+   "falas_treinadores": [
+    "Qual conta calcula a porcentagem?",
+    "Porcentagem vira decimal: 20% é 0,2!",
+    "Escolha a conta certa para o desconto!"
+   ]
+  },
+  "mapa8-A": {
+   "ginasio": "Escritório do Detetive",
+   "mapa": "Cidade das Letras",
+   "conteudo": "Linguagem algébrica e valor numérico",
+   "lembretes": [
+    "\"o dobro de um número\" é 2x.",
+    "para achar o valor numérico, troca o x pelo número."
+   ],
+   "falas_treinadores": [
+    "Transforme a pista em linguagem algébrica!",
+    "Troque x pelo número e descubra o valor!",
+    "Multiplicação escondida: 2x é 2 vezes x!"
+   ]
+  },
+  "mapa8-B": {
+   "ginasio": "Biblioteca",
+   "mapa": "Cidade das Letras",
+   "conteudo": "Termos semelhantes",
+   "lembretes": [
+    "só soma termos com a mesma letra: 3x + 2x = 5x.",
+    "3x e 3y não são termos semelhantes."
+   ],
+   "falas_treinadores": [
+    "Some só os termos com a mesma letra!",
+    "Subtrair termos semelhantes também vale!",
+    "Mesma letra, mesmo expoente: termos semelhantes!"
+   ]
+  },
+  "mapa9-A": {
+   "ginasio": "Templo Antigo",
+   "mapa": "Floresta das Balanças",
+   "conteudo": "Equações: resolver",
+   "lembretes": [
+    "faça a operação inversa para descobrir o x.",
+    "se 2x = 14, divide por 2: x = 7."
+   ],
+   "falas_treinadores": [
+    "Faça a operação inversa e descubra o x!",
+    "Se 2x é 14, quanto vale x?",
+    "Duas operações: desfaça uma de cada vez!"
+   ]
+  },
+  "mapa9-B": {
+   "ginasio": "Torre do Mago",
+   "mapa": "Floresta das Balanças",
+   "conteudo": "Equações: qual é a equação?",
+   "lembretes": [
+    "\"um número mais 4 é igual a 10\" vira x + 4 = 10.",
+    "na balança, os dois lados têm que ficar iguais."
+   ],
+   "falas_treinadores": [
+    "Transforme a frase em equação!",
+    "Cada história esconde uma equação!",
+    "Monte a equação da balança!"
+   ]
+  },
+  "mapa10-A": {
+   "ginasio": "Padaria",
+   "mapa": "Vila da Padaria",
+   "conteudo": "Regra de três: calcular",
+   "lembretes": [
+    "primeiro descobre o preço de um, depois multiplica.",
+    "mais trabalhadores, menos tempo: grandezas inversas."
+   ],
+   "falas_treinadores": [
+    "Se um pão custa 2, quanto custam 5?",
+    "Descubra o preço de um só!",
+    "Diretas ou inversas? Pense bem!"
+   ]
+  },
+  "mapa10-B": {
+   "ginasio": "Confeitaria",
+   "mapa": "Vila da Padaria",
+   "conteudo": "Regra de três: qual é a conta?",
+   "lembretes": [
+    "preço de um = total dividido pela quantidade.",
+    "se é inversa, quando um aumenta o outro diminui."
+   ],
+   "falas_treinadores": [
+    "Qual conta dá o preço de um?",
+    "Qual conta dá o total?",
+    "Mais pessoas, menos tempo: qual conta?"
+   ]
+  },
+  "mapa11-A": {
+   "ginasio": "Obra",
+   "mapa": "Canteiro de Obras",
+   "conteudo": "Perímetro e medidas",
+   "lembretes": [
+    "perímetro é a volta inteira: soma todos os lados.",
+    "o quadrado tem 4 lados iguais."
+   ],
+   "falas_treinadores": [
+    "O perímetro é a volta inteira. Some todos os lados!",
+    "Triângulos e polígonos também têm perímetro!",
+    "Medidas de obra: metros, centímetros e graus!"
+   ]
+  },
+  "mapa11-B": {
+   "ginasio": "Escritório de Arquitetura",
+   "mapa": "Canteiro de Obras",
+   "conteudo": "Área",
+   "lembretes": [
+    "área do retângulo é base vezes altura.",
+    "área se mede em quadradinhos: cm², m²."
+   ],
+   "falas_treinadores": [
+    "Área do quadrado: lado vezes lado!",
+    "Área do retângulo: base vezes altura!",
+    "Área é medida em quadradinhos!"
+   ]
+  },
+  "mapa12-A": {
+   "ginasio": "Forte Pirata",
+   "mapa": "Arquipélago das Coordenadas",
+   "conteudo": "Ler coordenadas",
+   "lembretes": [
+    "no ponto (x, y), o primeiro número é o horizontal.",
+    "a origem é o ponto (0, 0)."
+   ],
+   "falas_treinadores": [
+    "O primeiro número é o x, o horizontal!",
+    "O segundo número é o y, o vertical!",
+    "Origem e eixos: onde fica cada ponto?"
+   ]
+  },
+  "mapa12-B": {
+   "ginasio": "Observatório",
+   "mapa": "Arquipélago das Coordenadas",
+   "conteudo": "Andar no plano cartesiano",
+   "lembretes": [
+    "direita e cima são positivos, esquerda e baixo, negativos.",
+    "anda primeiro no x, depois no y."
+   ],
+   "falas_treinadores": [
+    "Saindo da origem, para onde você vai?",
+    "Ande pelas linhas da grade!",
+    "Esquerda e baixo levam aos negativos!"
+   ]
+  },
+  "mapa13-A": {
+   "ginasio": "Pavilhão de Exposições",
+   "mapa": "Feira dos Dados",
+   "conteudo": "Média, moda e mediana",
+   "lembretes": [
+    "média: soma tudo e divide pela quantidade.",
+    "moda é o que mais aparece; mediana é o do meio."
+   ],
+   "falas_treinadores": [
+    "Média: some tudo e divida pela quantidade!",
+    "Moda é o valor que mais aparece!",
+    "Mediana é o valor do meio, com tudo em ordem!"
+   ]
+  },
+  "mapa13-B": {
+   "ginasio": "Laboratório",
+   "mapa": "Feira dos Dados",
+   "conteudo": "Tabelas",
+   "lembretes": [
+    "leia o título e as colunas da tabela antes de responder.",
+    "compare os números da coluna certa."
+   ],
+   "falas_treinadores": [
+    "Leia a tabela das frutas com atenção!",
+    "A turma votou no esporte preferido. Olhe a tabela!",
+    "Quantos gols por dia? A tabela responde!"
+   ]
+  }
+ },
+ "piadas": [
+  {
+   "pergunta": "Por que o livro de matemática estava triste?",
+   "resposta": "Porque tinha muitos problemas."
+  },
+  {
+   "pergunta": "O que o zero disse para o oito?",
+   "resposta": "Que cinto bonito!"
+  },
+  {
+   "pergunta": "Por que o 6 tem medo do 7?",
+   "resposta": "Porque o 7 comeu o 9. (7, 8, 9… entendeu?)"
+  },
+  {
+   "pergunta": "Qual é o animal mais bom de conta?",
+   "resposta": "O polvo, ele tem oito braços para contar."
+  },
+  {
+   "pergunta": "Por que o professor de matemática foi à praia?",
+   "resposta": "Para tomar um banho de soma."
+  },
+  {
+   "pergunta": "O que o triângulo disse para o círculo?",
+   "resposta": "Você é tão sem ponta!"
+  },
+  {
+   "pergunta": "Por que o número 10 nunca briga?",
+   "resposta": "Porque ele é dez-contraído."
+  },
+  {
+   "pergunta": "Qual é o doce preferido do matemático?",
+   "resposta": "Pi… de chocolate."
+  },
+  {
+   "pergunta": "O que a fração disse para a outra?",
+   "resposta": "Vamos ficar juntas, somos equivalentes!"
+  },
+  {
+   "pergunta": "Por que o ângulo reto foi ao médico?",
+   "resposta": "Ele estava se sentindo meio 90."
+  },
+  {
+   "pergunta": "Qual é a fruta mais exata?",
+   "resposta": "O kiwi, porque ele é quilo-certinho. (tá, essa foi ruim)"
+  },
+  {
+   "pergunta": "O que o x disse para o y?",
+   "resposta": "Para de me procurar, eu tô na equação!"
+  },
+  {
+   "pergunta": "Por que o número negativo estava de mau humor?",
+   "resposta": "Porque ele só via o lado ruim das coisas."
+  },
+  {
+   "pergunta": "Qual é o lugar favorito do quadrado?",
+   "resposta": "Uma praça, porque ela é quadrada."
+  },
+  {
+   "pergunta": "Como o matemático resolve um problema de barulho?",
+   "resposta": "Ele tira a raiz… do som."
+  },
+  {
+   "pergunta": "O que o 1 disse para o 10?",
+   "resposta": "Pra ser igual a você eu precisava de zero esforço."
+  },
+  {
+   "pergunta": "Por que o relógio foi para a escola?",
+   "resposta": "Para aprender a contar as horas."
+  },
+  {
+   "pergunta": "Qual é a comida preferida da régua?",
+   "resposta": "Medida de arroz."
+  },
+  {
+   "pergunta": "O que o compasso disse quando ganhou um prêmio?",
+   "resposta": "Eu dou voltas de alegria!"
+  },
+  {
+   "pergunta": "Por que o círculo é tão inteligente?",
+   "resposta": "Porque ele tem 360 graus de conhecimento."
+  },
+  {
+   "pergunta": "Qual é o contrário de volátil?",
+   "resposta": "Vem cá, sobrinho. (essa nem é de matemática, mas eu gosto)"
+  },
+  {
+   "pergunta": "Por que a calculadora nunca mente?",
+   "resposta": "Porque ela é muito exata."
+  },
+  {
+   "pergunta": "O que o número 3 falou na festa?",
+   "resposta": "Eu tô um trio de feliz!"
+  },
+  {
+   "pergunta": "Por que o 8 deitado não levanta?",
+   "resposta": "Porque ele é infinito de preguiça."
+  },
+  {
+   "pergunta": "Como se chama um peixe que sabe matemática?",
+   "resposta": "Peixe-conta."
+  },
+  {
+   "pergunta": "Qual é o cúmulo da rapidez?",
+   "resposta": "Fazer a tabuada do 1 antes de pensar."
+  },
+  {
+   "pergunta": "O que o pi disse pro professor?",
+   "resposta": "Eu não acabo nunca, pode continuar a aula."
+  },
+  {
+   "pergunta": "Por que a porcentagem foi ao shopping?",
+   "resposta": "Porque tinha 50% de desconto na felicidade."
+  },
+  {
+   "pergunta": "Por que a média ficou famosa?",
+   "resposta": "Porque ela era o centro das atenções."
+  },
+  {
+   "pergunta": "O que o gráfico disse ao professor?",
+   "resposta": "Não me julgue, eu só mostro os dados."
+  },
+  {
+   "pergunta": "Por que o plano cartesiano nunca se perde?",
+   "resposta": "Porque ele sempre sabe as coordenadas."
+  },
+  {
+   "pergunta": "Qual é o esporte favorito do número 2?",
+   "resposta": "O par-quete."
+  },
+  {
+   "pergunta": "O que o 7 disse depois de comer o 9?",
+   "resposta": "Foi uma refeição de dez."
+  },
+  {
+   "pergunta": "Por que a raiz quadrada é tão calma?",
+   "resposta": "Porque ela é sempre positiva. Pelo menos aqui no ginásio."
+  },
+  {
+   "pergunta": "Qual é a fila mais organizada?",
+   "resposta": "A fila em ordem crescente."
+  },
+  {
+   "pergunta": "Por que o professor levou uma escada para a aula?",
+   "resposta": "Porque a matéria era de nível superior."
+  },
+  {
+   "pergunta": "O que o perímetro disse para a área?",
+   "resposta": "Eu te abraço por fora, você me preenche por dentro."
+  },
+  {
+   "pergunta": "Por que a equação foi ao psicólogo?",
+   "resposta": "Para encontrar o seu x interior."
+  },
+  {
+   "pergunta": "Como a fração pede desculpas?",
+   "resposta": "Me perdoa, foi só uma parte."
+  },
+  {
+   "pergunta": "O que o número 5 disse quando ganhou um troféu?",
+   "resposta": "Dei o meu máximo, cinco estrelas!"
+  }
+ ],
+ "dia": {
+  "segunda": [
+   "Segunda-feira… coragem, a semana tá só começando!",
+   "Nova semana, novos ginásios!"
+  ],
+  "sexta": [
+   "Sexta-feira! Bora fechar a semana com uma vitória?",
+   "Hoje é sexta. Merece um peixinho extra?"
+  ],
+  "fim_de_semana": [
+   "Estudando no fim de semana? Que dedicação!",
+   "Fim de semana é pra descansar… mas um ginásio não faz mal."
+  ],
+  "sequencia": [
+   "Já são {dias} dias seguidos aqui. Que orgulho!",
+   "{dias} dias de sequência! Não deixa quebrar!",
+   "Você voltou de novo! {dias} dias seguidos!"
+  ],
+  "voltou": [
+   "Que saudade! Faz tempo que você não aparecia.",
+   "Você voltou! Eu fiquei te esperando."
+  ]
+ }
+}

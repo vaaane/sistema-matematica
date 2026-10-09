@@ -35,6 +35,8 @@
     "jogo_revisao":                { ".read": true, ".write": true },
     "jogo_revisao_config":         { ".read": true, ".write": true },
     "jogo_revisao_turmas":         { ".read": true, ".write": true },
+    "jogo_revisao_online":         { ".read": true, ".write": true, ".indexOn": ["mapa"] },
+    "jogo_revisao_online_teste":   { ".read": true, ".write": true, ".indexOn": ["mapa"] },
 
     "liberacoes_ativas":    { ".read": true, ".write": true },
     "liberacoes_historico": { ".read": true, ".write": true, ".indexOn": ["criadoEm"] },

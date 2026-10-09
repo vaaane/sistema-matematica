@@ -776,3 +776,164 @@ html.jr-deitado #colecao-fechar { min-height: 32px; padding: 3px 16px; }
 /* coleção (8 pets, 4 × 2) no celular deitado: um pouco mais compacta para caber sem rolar */
 html.jr-deitado #pet-colecao .jr-pet-opcao img { height: min(var(--jr-pet-escolha), calc(var(--jr-alt, 100dvh) * .12)); }
 html.jr-deitado #pet-colecao .jr-pet-escolha-caixa { gap: 3px; }
+
+/* ============================================================
+   Moedas e tela "Meu Pet"
+   ============================================================ */
+.jr-moedas {
+  position: relative; flex: none; align-self: center; display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 999px; background: rgba(255,215,0,.12); border: 1px solid rgba(255,215,0,.4);
+  font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 700; color: var(--jr-ouro); white-space: nowrap;
+}
+/* "+1 🪙" sobe do contador e some */
+.jr-moeda-mais {
+  position: absolute; left: 50%; top: -4px; transform: translateX(-50%); pointer-events: none;
+  font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700; color: var(--jr-ouro); text-shadow: 0 1px 3px rgba(0,0,0,.7);
+  animation: jr-moeda-sobe 1.1s ease-out forwards;
+}
+@keyframes jr-moeda-sobe { from { opacity: 1; translate: 0 0; } to { opacity: 0; translate: 0 -26px; } }
+
+.jr-mp-caixa { flex-direction: row; align-items: stretch; gap: 14px; max-width: 760px; height: min(420px, 100%); padding: 12px; text-align: left; overflow: hidden; }
+/* palco do pet: brilho roxo suave atrás e sombra no chão; tocar = carinho */
+.jr-mp-palco {
+  position: relative; flex: 0 0 44%; min-height: 0; border-radius: 14px; overflow: hidden; cursor: pointer;
+  background: linear-gradient(180deg, rgba(124,92,252,.10), rgba(13,15,26,.55)); border: 1px solid rgba(124,92,252,.35);
+  transition: filter .6s;
+}
+.jr-mp-palco.noite { filter: brightness(.55) saturate(.8); }
+.jr-mp-brilho { position: absolute; left: 50%; bottom: 8%; width: 90%; aspect-ratio: 1; transform: translate(-50%, 18%); border-radius: 50%;
+  background: radial-gradient(circle, rgba(124,92,252,.42) 0%, rgba(124,92,252,.14) 45%, rgba(124,92,252,0) 70%); pointer-events: none; }
+.jr-mp-sombra { position: absolute; left: 50%; bottom: 9%; width: 46%; height: 7%; transform: translateX(-50%); border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,.5) 0%, rgba(0,0,0,.2) 50%, rgba(0,0,0,0) 72%); pointer-events: none; }
+.jr-mp-pulo { position: absolute; left: 0; right: 0; bottom: 10%; display: flex; justify-content: center; transform-origin: 50% 100%; pointer-events: none; }
+.jr-mp-corpo { transform-origin: 50% 100%; line-height: 0; }
+#jr-app img#mp-img { image-rendering: auto; width: auto; display: block; }
+.jr-mp-zz { position: absolute; left: 58%; top: 16%; pointer-events: none; font: 700 20px 'Rajdhani', sans-serif; color: #c9b8ff; }
+.jr-mp-zz span { position: absolute; opacity: 0; animation: jr-zz 2.4s ease-out infinite; }
+.jr-mp-zz span:nth-child(2) { animation-delay: 1.2s; font-size: 15px; }
+@keyframes jr-zz { 0% { opacity: 0; transform: translate(0, 10px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(14px, -34px); } }
+.jr-mp-particulas { position: absolute; inset: 0; pointer-events: none; }
+.jr-mp-part { position: absolute; bottom: 40%; font-size: 20px; opacity: 0; animation: jr-part 1.3s ease-out forwards; }
+@keyframes jr-part { 0% { opacity: 0; transform: translateY(0) scale(.6); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateY(-90px) scale(1.15); } }
+.jr-mp-balao {
+  position: absolute; left: 50%; top: 8%; transform: translateX(-50%); max-width: 90%; padding: 6px 12px; border-radius: 12px;
+  background: #fff; color: #1f2937; font: 600 14px/1.25 'Inter', sans-serif; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,.4); pointer-events: none;
+}
+.jr-mp-balao::after { content: ''; position: absolute; left: 50%; bottom: -6px; margin-left: -6px; border: 6px solid transparent; border-bottom: 0; border-top-color: #fff; }
+
+.jr-mp-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; justify-content: center; }
+.jr-mp-cab { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.jr-mp-nome { font-family: 'Rajdhani', sans-serif; font-size: 26px; font-weight: 700; line-height: 1; color: var(--jr-ouro); }
+.jr-mp-origem { font-family: 'Inter', sans-serif; font-size: 12px; color: #c9cde0; margin-top: 3px; }
+.jr-mp-barra-topo { display: flex; justify-content: space-between; font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700; color: #fff; }
+.jr-mp-barra-topo span:last-child { color: #c9cde0; font-weight: 600; }
+.jr-mp-trilho { height: 12px; border-radius: 999px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); overflow: hidden; margin-top: 3px; }
+.jr-mp-fill { height: 100%; border-radius: inherit; transition: width .5s ease; background: #00e676; }
+.jr-mp-fill[data-cor="amarelo"] { background: #ffd700; }
+.jr-mp-fill[data-cor="laranja"] { background: #ff7b2e; }
+.jr-mp-fill[data-cor="vermelho"] { background: #ff4d4d; }
+.jr-mp-fill.lealdade { background: linear-gradient(90deg, var(--jr-roxo), #b18cff); }
+.jr-mp-dica { font-family: 'Inter', sans-serif; font-size: 12px; color: #c9cde0; }
+.jr-mp-botoes { display: flex; gap: 8px; }
+.jr-mp-botoes .jr-btn { flex: 1; min-width: 0; }
+.jr-mp-botoes .jr-btn:disabled { opacity: .55; cursor: default; filter: grayscale(.4); }
+html.jr-deitado .jr-mp-caixa { height: 100%; max-height: calc(var(--jr-alt, 100dvh) - 16px); padding: 10px; gap: 10px; }
+html.jr-deitado .jr-mp-info { gap: 5px; }
+html.jr-deitado .jr-mp-nome { font-size: 22px; }
+html.jr-deitado .jr-mp-botoes .jr-btn { min-height: 36px; padding: 4px 10px; font-size: 15px; }
+html.jr-deitado .jr-mp-barra-topo { font-size: 14px; }
+@media (prefers-reduced-motion: reduce) { .jr-moeda-mais, .jr-mp-zz span, .jr-mp-part { animation-duration: 1ms; } .jr-mp-zz span { opacity: .8; animation: none; } }
+
+/* ============================================================
+   Jogar junto: colegas, online no mapa geral e reações
+   ============================================================ */
+/* botões pequenos do HUD do mapa (👁 Colegas, 😊) */
+.jr-btn-hud {
+  position: relative; flex: none; height: 40px; min-width: 40px; padding: 0 10px; border-radius: 999px; margin-left: 6px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer;
+  background: rgba(13,15,26,.6); border: 1px solid rgba(255,255,255,.25); color: #fff;
+  font-family: 'Rajdhani', sans-serif !important; font-size: 15px; font-weight: 700; line-height: 1;
+}
+#btn-colegas { margin-left: auto; }
+#btn-colegas:not([hidden]) ~ .jr-btn-pet { margin-left: 6px; }
+.jr-btn-hud.desligado { opacity: .55; text-decoration: line-through; }
+.jr-btn-hud.espera { filter: grayscale(1); opacity: .5; pointer-events: none; }
+.jr-btn-hud:active { transform: scale(.94); }
+html.jr-deitado .jr-btn-hud span { display: none; }
+
+/* colega no mapa: etiqueta com o apelido acima da cabeça (tamanho de fonte ajustado ao zoom no JS) */
+.jr-colega-jog { filter: drop-shadow(0 2px 2px rgba(0,0,0,.4)); }
+.jr-colega-nome {
+  position: absolute; transform: translate(-50%, -100%); padding: .1em .5em; border-radius: .6em; white-space: nowrap; pointer-events: none;
+  background: rgba(13,15,26,.62); color: #fff; font-family: 'Inter', sans-serif; font-weight: 600; line-height: 1.3;
+}
+.jr-cena-vp .sem-colegas .jr-colega { display: none !important; }
+.jr-reacao-balao {
+  position: absolute; transform: translate(-50%, -100%); z-index: 9500; pointer-events: none; line-height: 1;
+  padding: .12em .2em; border-radius: .5em; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.35);
+  animation: jr-reacao-entra .25s ease-out;
+}
+@keyframes jr-reacao-entra { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
+
+/* rodinha de reações */
+.jr-reacoes { position: fixed; inset: 0; z-index: 66; display: flex; align-items: center; justify-content: center; background: rgba(5,6,15,.45); }
+.jr-reacoes-roda {
+  --tam: min(230px, calc(var(--jr-alt, 100dvh) * .7));
+  position: relative; width: var(--tam); height: var(--tam); border-radius: 50%;
+  background: radial-gradient(circle, rgba(124,92,252,.35), rgba(26,22,48,.95) 70%); border: 2px solid var(--jr-roxo); box-shadow: 0 10px 30px rgba(0,0,0,.6);
+}
+.jr-reacao {
+  position: absolute; left: 50%; top: 50%; width: calc(var(--tam) * .2); height: calc(var(--tam) * .2);
+  margin: calc(var(--tam) * -.1) 0 0 calc(var(--tam) * -.1); border-radius: 50%;
+  /* 12 reações em volta do círculo (raio = 36% do tamanho da roda) */
+  transform: rotate(calc(var(--i) * 30deg)) translateY(calc(var(--tam) * -.36)) rotate(calc(var(--i) * -30deg));
+  display: flex; align-items: center; justify-content: center; font-size: clamp(18px, 6vmin, 26px); line-height: 1;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); cursor: pointer;
+}
+.jr-reacao:hover, .jr-reacao:focus-visible { background: rgba(255,215,0,.22); }
+
+/* mapa geral: selo de online e rostinhos ao lado dos marcadores */
+.jr-selo-online {
+  flex: none; padding: 4px 10px; border-radius: 999px; background: rgba(13,15,26,.75); border: 1px solid rgba(0,230,118,.45);
+  color: #b9f6ca; font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700; white-space: nowrap;
+}
+.jr-marc-online {
+  position: absolute; z-index: 3; transform: translate(14px, -46px); display: flex; align-items: center; padding: 2px 4px 2px 2px;
+  border-radius: 999px; background: rgba(13,15,26,.82); border: 1px solid rgba(0,230,118,.55); cursor: pointer;
+}
+.jr-rosto {
+  position: relative; width: 22px; height: 22px; border-radius: 50%; overflow: hidden; flex: none; margin-left: -6px;
+  background: radial-gradient(circle at 50% 40%, rgba(124,92,252,.6), rgba(13,15,26,.9)); border: 1.5px solid #fff;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 13px;
+}
+.jr-marc-online .jr-rosto:first-child { margin-left: 0; }
+.jr-rosto img { position: absolute; left: 50%; top: 58%; width: 165%; height: auto; transform: translate(-50%, -50%); image-rendering: auto !important; }
+.jr-rosto.no-ginasio::after { content: ''; position: absolute; right: 0; bottom: 0; width: 7px; height: 7px; border-radius: 50%; background: var(--jr-ouro); box-shadow: 0 0 0 1px #0d0f1a; }
+.jr-rosto-mais { margin-left: 3px; font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 700; color: #fff; }
+
+/* lista de quem está numa região */
+.jr-online-caixa { max-width: 420px; align-items: stretch; text-align: left; }
+.jr-online-itens { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: calc(var(--jr-alt, 100dvh) * .5); overflow-y: auto; }
+.jr-online-itens li { display: grid; grid-template-columns: 30px 1fr; grid-template-rows: auto auto; column-gap: 8px; align-items: center; padding: 5px 8px; border-radius: 10px; background: rgba(124,92,252,.12); }
+.jr-online-itens .jr-rosto { grid-row: 1 / 3; width: 30px; height: 30px; margin: 0; }
+.jr-online-nome { font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700; color: #fff; }
+.jr-online-det { font-family: 'Inter', sans-serif; font-size: 12px; color: #c9cde0; }
+.jr-online-vazio { display: block !important; color: #c9cde0; font-family: 'Inter', sans-serif; font-size: 13px; }
+.jr-online-bloq { font-family: 'Inter', sans-serif; font-size: 13px; color: #ffcf6e; text-align: center; }
+
+/* ── Fala do pet no mapa: balão branco com bico, sobre o pet ── */
+.jr-pet-fala {
+  position: absolute; z-index: 16; transform: translate(-50%, -100%); transform-origin: 50% 100%;
+  max-width: min(220px, 70vw); width: max-content; padding: 7px 12px; border-radius: 12px; border: 0;
+  background: #fff; color: #1a1d2e; box-shadow: 0 4px 14px rgba(0,0,0,.45); cursor: pointer;
+  font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 600; line-height: 1.3; text-align: center; white-space: normal;
+}
+.jr-pet-fala::after {
+  content: ''; position: absolute; left: 50%; top: 100%; transform: translateX(-50%);
+  border: 7px solid transparent; border-top-color: #fff;
+}
+.jr-pet-fala.pop { animation: jr-fala-pop .22s ease-out; }
+@keyframes jr-fala-pop { from { opacity: 0; transform: translate(-50%, -100%) scale(.85); } to { opacity: 1; transform: translate(-50%, -100%) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .jr-pet-fala.pop { animation: none; } }
+#mp-calado.ativo { border-color: rgba(255,215,0,.5); color: #ffe69a; }
+html.jr-deitado .jr-mp-botoes #mp-calado { font-size: 13px; padding: 4px 6px; }
