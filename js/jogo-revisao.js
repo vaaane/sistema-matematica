@@ -34,9 +34,25 @@ const ALT_JOGADOR = 110, ALT_TREINADOR = 120, ALT_LIDER = 135;
 const ALT_JOGADOR_MAPA = 55;   // nos mapas da cidade o personagem tem metade do tamanho (nos ginásios continua 110)
 // Tamanho do pet na cena (altura do quadro, em px do cenário 1376×768; a largura segue a proporção do sprites.json).
 // Não depende do tamanho do arquivo: trocar a resolução das imagens não muda o tamanho na tela.
-const ALT_PET_MAPA = 40;
-const PET_ATRAS_MAPA = 28;    // distância que o pet mantém atrás do personagem (ao longo do rastro)
-const PET_CORRER_MAPA = 90;   // ficou mais longe que isso: corre para alcançar
+// Altura do pet SENTADO no mapa, em px na escala do mapa (personagem = ALT_JOGADOR_MAPA = 55)
+const ALT_PET = {
+  capivara: 30, gato: 30, gaviao: 30, axolote: 30, tigre: 30,
+  unicornio: 40, dragao_azul: 40,
+  dragao_vermelho: 50,
+};
+const ALT_PET_PADRAO = 30;   // pet que não estiver na tabela
+const altPet = (pet) => ALT_PET[pet] ?? ALT_PET_PADRAO;
+// O quadro (449 × 352) tem folga em cima para os pulos: sentado, o pet ocupa ~302 dos 352 px.
+// Altura da IMAGEM para o pet sentado ficar com a altura da tabela:
+const altImagemPet = (pet) => altPet(pet) * 352 / 302;
+// Distância normal do pet atrás do personagem (ao longo do rastro), em px na escala do mapa.
+// Parado, o pet chega a 55% disso; acima de +10 anda 1,3× mais rápido; acima de +62 corre (pets.js).
+const DIST_PET = {
+  capivara: 36, gato: 36, gaviao: 36, axolote: 36, tigre: 36,
+  unicornio: 55, dragao_azul: 55, dragao_vermelho: 55,
+};
+const DIST_PET_PADRAO = 36;
+const distPet = (pet) => DIST_PET[pet] ?? DIST_PET_PADRAO;
 // no ginásio tudo é o dobro (o personagem tem ALT_JOGADOR em vez de ALT_JOGADOR_MAPA)
 const ESCALA_GINASIO = ALT_JOGADOR / ALT_JOGADOR_MAPA;
 const DIST_PORTA = 30;               // encostar na porta/saída andando pelas setas ou joystick
@@ -437,7 +453,8 @@ const PETS_GINASIO = {
   'mapa11-B': 'dragao_vermelho',  // Escritório de Arquitetura (Canteiro de Obras)
 };
 const INICIAIS = ['capivara', 'gato', 'gaviao'];
-const ALT_PET_GINASIO = Math.round(ALT_LIDER * 0.7);   // pet esperando ao lado do líder
+// pet esperando ao lado do líder: ~70% do líder para um pet de 40, na mesma proporção entre os pets
+const altImagemPetGinasio = (pet) => ALT_LIDER * 0.7 * (altPet(pet) / 40) * 352 / 302;
 
 let petsOk = false;
 let seguidor = null;
@@ -609,7 +626,8 @@ function mostrarPetGinasio(surgindo = false) {
   img.className = 'jr-ator jr-pet-gin';
   img.alt = NOME_PET[pet];
   img.draggable = false;
-  img.style.cssText = `left:${x}px;top:${y}px;height:${ALT_PET_GINASIO}px;z-index:${Math.round(y)}`;
+  const alt = altImagemPetGinasio(pet);
+  img.style.cssText = `left:${x}px;top:${y}px;height:${alt}px;z-index:${Math.round(y)}`;
   $('cena-atores').appendChild(img);
   preCarregarPet(pet);
   const anim = new PetParado(img);
@@ -618,7 +636,7 @@ function mostrarPetGinasio(surgindo = false) {
   petGin = { pet, chave: cena.chave, x, y, xParada: clamp(x - 60, cena.xMin, cena.xMax), img, anim };
   if (surgindo) {
     anim.tocar('feliz');
-    avisarEm('Um pet quer te seguir!', x, y - ALT_PET_GINASIO - 6);
+    avisarEm('Um pet quer te seguir!', x, y - alt - 6);
   }
 }
 
@@ -1169,7 +1187,8 @@ function loop(t) {
     const direto = (vx || vy) && moverDireto(dt, vx, vy);
     if (!direto) passo(dt);
     const e = cena.tipo === 'mapa' ? 1 : ESCALA_GINASIO;
-    seguidor?.atualizar(dt, jog.x, jog.y, VEL, ALT_PET_MAPA * e, PET_ATRAS_MAPA * e, PET_CORRER_MAPA * e);
+    const pet = seguidor?.pet;
+    seguidor?.atualizar(dt, jog.x, jog.y, VEL, altImagemPet(pet) * e, distPet(pet) * e, e);
     petGin?.anim.atualizar(dt);
     ajustarCamera();
     if (cena?.tipo === 'mapa') {

@@ -67,6 +67,10 @@ export class PetSeguidor {
     this.rastro = [];               // pontos por onde o personagem passou (mais antigo primeiro)
     this.reacao = null;             // { anim, ate } — animação especial em andamento
     this.paradoMs = 0;              // há quanto tempo o personagem está parado
+    this.andandoMs = 0;             // há quanto tempo o personagem está andando
+    this.ultJog = null;             // posição do personagem no quadro anterior
+    this.esperar = false;           // personagem parou: ao voltar a andar, o pet espera antes de seguir
+    this.alcancando = false;        // ficou para trás: anda 1,3× até voltar à distância normal
     this.proxOcioso = 8000;         // quando fazer a variação do ocioso (sentado_2)
     this.espelhar = false; this.altura = 60;
     this.esquerda = false;          // último lado para onde andou (para frente/costas que caem em andar_direita)
@@ -82,7 +86,7 @@ export class PetSeguidor {
   colocar(x, y) {
     this.x = x; this.y = y;
     this.rastro = [[x, y]];
-    this.paradoMs = 0;
+    this.paradoMs = 0; this.andandoMs = 0; this.ultJog = null; this.esperar = false; this.alcancando = false;
     if (this.pet) { this.reacao = null; this.trocar('sentado_girando', true); this.desenhar(); }
   }
 
@@ -106,19 +110,27 @@ export class PetSeguidor {
   }
 
   // dt em segundos; (jx, jy) = pés do personagem; vel = velocidade dele (px/s);
-  // altPet = altura do pet na cena (constante do jogo, não o tamanho do arquivo);
-  // atras = distância que o pet mantém, medida ao longo do rastro; correr = acima disso ele corre 1,6× mais rápido
-  atualizar(dt, jx, jy, vel, altPet, atras, correr) {
+  // altPet = altura da imagem do pet na cena (constante do jogo, não o tamanho do arquivo);
+  // distPet = distância normal atrás do personagem, medida ao longo do rastro; esc = escala da cena (2 no ginásio)
+  atualizar(dt, jx, jy, vel, altPet, distPet, esc = 1) {
     if (!this.pet) return;
     this.altura = altPet;
     const [qw, qh] = tamanhoQuadro();
     const largura = this.altura * (qw / qh);
+    const ms = dt * 1000;
 
-    // rastro do personagem
+    // rastro do personagem (um ponto a cada 2 px andados)
     const u = this.rastro[this.rastro.length - 1];
-    const andou = !u || dist(u[0], u[1], jx, jy) > 2;
-    if (andou) { this.rastro.push([jx, jy]); if (this.rastro.length > MAX_RASTRO) this.rastro.splice(0, this.rastro.length - MAX_RASTRO); }
-    this.paradoMs = andou ? 0 : this.paradoMs + dt * 1000;
+    if (!u || dist(u[0], u[1], jx, jy) > 2) { this.rastro.push([jx, jy]); if (this.rastro.length > MAX_RASTRO) this.rastro.splice(0, this.rastro.length - MAX_RASTRO); }
+    // dois contadores: tempo andando e tempo parado do personagem (comparando com o quadro anterior)
+    const mexeu = !!this.ultJog && dist(this.ultJog[0], this.ultJog[1], jx, jy) > 0.01;
+    this.ultJog = [jx, jy];
+    if (mexeu) { this.andandoMs += ms; this.paradoMs = 0; }
+    else { this.paradoMs += ms; this.andandoMs = 0; }
+    const jogParado = this.paradoMs > 250;
+    if (jogParado) this.esperar = true;                                  // ao voltar a andar, espera 0,5 s
+    if (this.esperar && this.andandoMs >= 500) this.esperar = false;
+    const esperando = this.esperar && mexeu;
 
     // Caminho que falta até o personagem, seguindo o rastro na ordem: pet → rastro[0] → … → personagem.
     // O pet só anda enquanto esse caminho for maior que `atras`,
@@ -127,9 +139,14 @@ export class PetSeguidor {
     for (const [qx, qy] of this.rastro) { falta += dist(px, py, qx, qy); px = qx; py = qy; }
     falta += dist(px, py, jx, jy);
 
-    const longe = falta > correr;
+    // parado: chega mais perto e senta; andando: distância normal, 1,3× quando fica para trás, corre se ficar longe
+    const atras = jogParado ? Math.round(distPet * 0.55) : distPet;
+    if (falta > distPet + 10 * esc) this.alcancando = true;
+    else if (falta <= distPet) this.alcancando = false;
+    const longe = !jogParado && falta > distPet + 62 * esc;
+    const mult = jogParado ? 1 : longe ? 1.6 : this.alcancando ? 1.3 : 1;
     const x0 = this.x, y0 = this.y;
-    let anda = Math.min(falta - atras, vel * (longe ? 1.6 : 1) * dt);
+    let anda = esperando ? 0 : Math.min(falta - atras, vel * mult * dt);
     while (anda > 0.01 && this.rastro.length) {
       const [qx, qy] = this.rastro[0];
       const d = dist(this.x, this.y, qx, qy);
