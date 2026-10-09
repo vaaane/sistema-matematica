@@ -9,6 +9,7 @@ import { adicionarXP } from '/js/db.js';
 import { bimestreAtual, ALUNOS_TESTE } from '/js/constants.js';
 import { gerarQuestoes, gerarUma } from '/js/jogo-revisao/geradores.js';
 import { tocar, somLigado, alternarSom } from '/js/jogo-revisao/sons.js';
+import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, tamanhoBusto, temBusto, bustoPet, preCarregarPet, PetSeguidor, PetParado } from '/js/jogo-revisao/pets.js';
 import { notaJogoRevisao, formatarNota, NOTA_MAX, PESO_INSIGNIAS, PESO_DOURADAS } from '/js/jogo-revisao/nota.js';
 
 // XP (só na primeira vez que cada personagem é vencido; nunca no modo teste)
@@ -31,6 +32,13 @@ const VEL = 180;                    // px/s em coordenadas da imagem
 const T_QUADRO = 120;               // ms por quadro de caminhada
 const ALT_JOGADOR = 110, ALT_TREINADOR = 120, ALT_LIDER = 135;
 const ALT_JOGADOR_MAPA = 55;   // nos mapas da cidade o personagem tem metade do tamanho (nos ginásios continua 110)
+// Tamanho do pet na cena (altura do quadro, em px do cenário 1376×768; a largura segue a proporção do sprites.json).
+// Não depende do tamanho do arquivo: trocar a resolução das imagens não muda o tamanho na tela.
+const ALT_PET_MAPA = 40;
+const PET_ATRAS_MAPA = 28;    // distância que o pet mantém atrás do personagem (ao longo do rastro)
+const PET_CORRER_MAPA = 90;   // ficou mais longe que isso: corre para alcançar
+// no ginásio tudo é o dobro (o personagem tem ALT_JOGADOR em vez de ALT_JOGADOR_MAPA)
+const ESCALA_GINASIO = ALT_JOGADOR / ALT_JOGADOR_MAPA;
 const DIST_PORTA = 30;               // encostar na porta/saída andando pelas setas ou joystick
 const DIST_TOQUE = 60;               // toque a até 60 px de uma porta/saída vira destino especial
 const DIST_PERTO = 90;               // nome do ginásio / "Saída" aparece; Enter e OK funcionam
@@ -119,6 +127,7 @@ async function carregarEstado() {
     }
     estado.sequencia = v.sequencia || null;
     estado.respostas = v.respostas || {};
+    estado.pets = lerPets(v);   // validado depois de ler o sprites.json (cachorro/porco antigos são ignorados)
     estado.revisaoSemanal = v.revisao_semanal || {};
     carregouProgresso = true;
     gravar({ ultimo_acesso: Date.now() });
@@ -403,12 +412,251 @@ export async function iniciarJogo(sess) {
   }
 
   await carregarEstado();
+  try { await carregarSprites(); petsOk = true; } catch (e) { console.error('[jogo-revisao] pets indisponíveis', e); }
   preCarregarQuadros();
   ligarEventos();
   atualizarContador();
   requestAnimationFrame(loop);
   abrirMapaGeral();
   $('jr-carregando').hidden = true;
+  iniciarPet();
+}
+
+// ============================================================
+//  PETS — o aluno escolhe 1 inicial e conquista os outros vencendo líderes de ginásio
+// ============================================================
+// Ginásio → pet que aparece ao lado do líder depois de vencido.
+// 'inicial' = o 1º de INICIAIS (nessa ordem) que o aluno ainda não tem.
+const PETS_GINASIO = {
+  'mapa1-B':  'inicial',          // Prefeitura (Vila Inicial)
+  'mapa2-B':  'inicial',          // Farol (Porto das Dezenas)
+  'mapa3-B':  'axolote',          // Cabana da Neve (Ilha Gelada)
+  'mapa5-B':  'tigre',            // Torre de Pedra (Montanha das Potências)
+  'mapa7-B':  'dragao_azul',      // Supermercado (Mercado Central)
+  'mapa9-B':  'unicornio',        // Torre do Mago (Floresta das Balanças)
+  'mapa11-B': 'dragao_vermelho',  // Escritório de Arquitetura (Canteiro de Obras)
+};
+const INICIAIS = ['capivara', 'gato', 'gaviao'];
+const ALT_PET_GINASIO = Math.round(ALT_LIDER * 0.7);   // pet esperando ao lado do líder
+
+let petsOk = false;
+let seguidor = null;
+
+// pets: { ativo, conquistados: { pet: { data, origem } } }; o campo antigo `pet` (string) vira o inicial
+function lerPets(v) {
+  const conquistados = { ...(v.pets?.conquistados || {}) };
+  let ativo = v.pets?.ativo || null;
+  let migrou = false;
+  if (typeof v.pet === 'string' && !Object.keys(conquistados).length) {
+    conquistados[v.pet] = { data: Date.now(), origem: 'inicial' };
+    ativo = ativo || v.pet;
+    migrou = true;
+  }
+  return { ativo, conquistados, migrou };
+}
+
+const temPet = (p) => !!(p && estado.pets.conquistados[p]);
+const conquistadoEm = (chave) => Object.values(estado.pets.conquistados).some(c => c?.origem === chave);
+
+function iniciarPet() {
+  if (!petsOk) return;
+  seguidor = new PetSeguidor($('pet'), $('pet-sombra'));
+  if (window.jogoRevisaoDev) window.jogoRevisaoDev.seguidor = seguidor;   // só no modo dev (?dev=1 no modo teste)
+  $('btn-trocar-pet').hidden = false;
+  // pet que não existe no sprites.json (ex.: cachorro, porco de testes antigos) é ignorado
+  const ps = estado.pets;
+  for (const p of Object.keys(ps.conquistados)) if (!petValido(p)) delete ps.conquistados[p];
+  if (!temPet(ps.ativo)) ps.ativo = Object.keys(ps.conquistados)[0] || null;
+  if (ps.migrou && ps.ativo) gravar({ pets: { ativo: ps.ativo, conquistados: ps.conquistados } });
+  delete ps.migrou;
+  if (ps.ativo) { preCarregarPet(ps.ativo); seguidor.definir(ps.ativo); }
+}
+
+// Ainda sem nenhum pet: pede a escolha do inicial ao entrar num mapa da região
+function pedirPetSeFaltar() {
+  if (seguidor && !Object.keys(estado.pets.conquistados).length && $('pet-escolha').hidden) abrirEscolhaPet();
+}
+
+// Quadros sentado_girando rodando nos painéis de pet (escolha e coleção)
+let timerPainelPet = 0;
+function animarPainelPet(raizEl) {
+  clearInterval(timerPainelPet);
+  let q = 0;
+  timerPainelPet = setInterval(() => {
+    if (raizEl.closest('[hidden]')) { clearInterval(timerPainelPet); return; }
+    q++;
+    for (const im of raizEl.querySelectorAll('img[data-anim]')) {
+      const l = quadrosDe(im.dataset.anim, 'sentado_girando');
+      im.src = l[q % l.length];
+    }
+  }, 400);
+}
+
+const imgPet = (p, animar = true) =>
+  `<img src="${quadrosDe(p, 'sentado_girando')[0]}" width="${tamanhoQuadro()[0]}" height="${tamanhoQuadro()[1]}"${animar ? ` data-anim="${p}"` : ''} alt="" draggable="false"/>`;
+
+function abrirEscolhaPet() {
+  $('pet-opcoes').innerHTML = INICIAIS.filter(petValido).map(p => `
+    <div class="jr-pet-opcao" data-pet="${p}">
+      ${imgPet(p)}
+      <span>${NOME_PET[p]}</span>
+      <button class="jr-btn jr-pet-escolher" data-pet="${p}">Escolher</button>
+    </div>`).join('');
+  $('pet-escolha').hidden = false;
+  animarPainelPet($('pet-opcoes'));
+}
+
+function escolherPet(pet) {
+  if (!INICIAIS.includes(pet) || !petValido(pet) || Object.keys(estado.pets.conquistados).length) return;
+  const c = { data: Date.now(), origem: 'inicial' };
+  estado.pets.conquistados[pet] = c;
+  estado.pets.ativo = pet;
+  gravar({ [`pets/conquistados/${pet}`]: c, 'pets/ativo': pet });
+  usarPet(pet);
+  $('pet-escolha').hidden = true;
+  tocar('vitoria');
+}
+
+// Troca o pet que segue o personagem (aparece em x, y — por padrão junto do personagem)
+function usarPet(pet, x = jog.x, y = jog.y) {
+  preCarregarPet(pet);
+  seguidor.definir(pet);
+  if (cena) seguidor.colocar(x, y);
+  atualizarBotaoPet();
+}
+
+// Onde cada pet ainda não conquistado aparece: { pet: chaveGinasio }
+function ondeAparecem() {
+  const out = {};
+  const vagas = Object.keys(PETS_GINASIO).filter(k => PETS_GINASIO[k] === 'inicial' && !conquistadoEm(k));
+  INICIAIS.filter(p => !temPet(p)).forEach((p, i) => { if (vagas[i]) out[p] = vagas[i]; });
+  for (const [k, p] of Object.entries(PETS_GINASIO)) if (p !== 'inicial' && !temPet(p)) out[p] = k;
+  return out;
+}
+
+// Pet que espera neste ginásio (null se não tem, ou se já foi levado)
+function petDoGinasio(chave) {
+  if (!petsOk || !PETS_GINASIO[chave] || conquistadoEm(chave)) return null;
+  const pet = Object.entries(ondeAparecem()).find(([, k]) => k === chave)?.[0];
+  return pet && petValido(pet) ? pet : null;
+}
+
+function nomeDoLugar(chave) {
+  const [n, G] = chave.replace('mapa', '').split('-');
+  const q = D.questoes[Number(n)];
+  return `${q.ginasios[G].nome} — ${q.nome}`;
+}
+
+// ── Coleção: conquistados (escolher o ativo) e silhuetas dos que faltam ──
+function abrirColecao() {
+  const onde = ondeAparecem();
+  const ordem = PETS.filter(petValido).sort((a, b) => temPet(b) - temPet(a));
+  $('colecao-opcoes').innerHTML = ordem.map(p => temPet(p) ? `
+    <div class="jr-pet-opcao${estado.pets.ativo === p ? ' atual' : ''}" data-pet="${p}">
+      ${imgPet(p)}
+      <span>${NOME_PET[p]}</span>
+      <button class="jr-btn jr-pet-escolher" data-pet="${p}">${estado.pets.ativo === p ? 'Com você' : 'Usar'}</button>
+    </div>` : `
+    <div class="jr-pet-opcao bloqueado">
+      ${imgPet(p, false)}
+      <span class="jr-pet-lugar">${onde[p] ? nomeDoLugar(onde[p]) : '???'}</span>
+    </div>`).join('');
+  $('pet-colecao').hidden = false;
+  animarPainelPet($('colecao-opcoes'));
+}
+
+function trocarPetAtivo(pet) {
+  if (!temPet(pet)) return;
+  $('pet-colecao').hidden = true;
+  if (estado.pets.ativo === pet) return;
+  estado.pets.ativo = pet;
+  gravar({ 'pets/ativo': pet });
+  usarPet(pet);
+  tocar('vitoria');
+}
+
+// Botão do HUD no mapa da região: ícone do pet ativo
+function atualizarBotaoPet() {
+  const b = $('btn-pet');
+  const ativo = estado?.pets?.ativo;
+  b.hidden = !(seguidor && ativo && cena?.tipo === 'mapa');
+  if (b.hidden) return;
+  const src = quadrosDe(ativo, 'sentado_girando')[0];
+  const img = b.querySelector('img');
+  if (img.getAttribute('src') !== src) img.src = src;
+  b.setAttribute('aria-label', `Meus pets (${NOME_PET[ativo]})`);
+}
+
+// ── Pet esperando ao lado do líder ──────────────────────────
+let petGin = null;      // { pet, chave, x, y, xParada, img, anim }
+let petSurgir = null;   // ginásio cujo líder acabou de ser vencido: o pet surge depois do aviso
+
+function removerPetGinasio() {
+  petGin?.img.remove();
+  petGin = null;
+}
+
+function mostrarPetGinasio(surgindo = false) {
+  removerPetGinasio();
+  if (cena?.tipo !== 'interior') return;
+  const pet = petDoGinasio(cena.chave);
+  if (!pet || !(estado.ginasios[cena.chave].lider.vencido || modoDev)) return;   // modo dev: sem vencer o líder
+  const l = cena.cfg.lider;
+  // um pouco atrás (y menor) e à esquerda do líder, sem cobri-lo; fora do lugar onde o
+  // personagem para diante do líder (xDoPersonagem = líder − 90), para não ficar escondido atrás dele
+  const x = l.x - 145, y = l.y - 18;
+  const img = document.createElement('img');
+  img.className = 'jr-ator jr-pet-gin';
+  img.alt = NOME_PET[pet];
+  img.draggable = false;
+  img.style.cssText = `left:${x}px;top:${y}px;height:${ALT_PET_GINASIO}px;z-index:${Math.round(y)}`;
+  $('cena-atores').appendChild(img);
+  preCarregarPet(pet);
+  const anim = new PetParado(img);
+  anim.definir(pet);
+  // o jogador para à esquerda do pet (longe o bastante da parada do líder)
+  petGin = { pet, chave: cena.chave, x, y, xParada: clamp(x - 60, cena.xMin, cena.xMax), img, anim };
+  if (surgindo) {
+    anim.tocar('feliz');
+    avisarEm('Um pet quer te seguir!', x, y - ALT_PET_GINASIO - 6);
+  }
+}
+
+function surgirPetSePendente() {
+  if (!petSurgir) return;
+  const chave = petSurgir;
+  petSurgir = null;
+  if (cena?.tipo === 'interior' && cena.chave === chave) mostrarPetGinasio(true);
+}
+
+function abrirLevarPet() {
+  if (!petGin || petGin.levado) return;
+  const p = petGin.pet;
+  const img = $('levar-img');
+  const [w, h] = temBusto(p) ? tamanhoBusto() : tamanhoQuadro();   // sem busto: sentado_girando_1 (mapa `reserva`)
+  img.width = w; img.height = h;
+  img.src = bustoPet(p);
+  $('levar-nome').textContent = NOME_PET[p];
+  $('pet-levar').hidden = false;
+}
+
+function conquistarPet(usarAgora) {
+  $('pet-levar').hidden = true;
+  if (!petGin || petGin.levado) return;
+  const { pet, chave, x, y, anim } = petGin;
+  const c = { data: Date.now(), origem: chave };
+  estado.pets.conquistados[pet] = c;
+  const patch = { [`pets/conquistados/${pet}`]: c };
+  if (usarAgora || !estado.pets.ativo) { estado.pets.ativo = pet; patch['pets/ativo'] = pet; }
+  gravar(patch);
+  tocar('vitoria');
+  const usar = estado.pets.ativo === pet;
+  // pulinho de alegria e sai do lugar; se for usar agora, já começa a seguir dali
+  petGin.levado = true;
+  anim.tocar('feliz', () => {
+    removerPetGinasio();
+    if (usar && cena?.chave === chave) usarPet(pet, x, y);
+  });
 }
 
 function preCarregarQuadros() {
@@ -766,6 +1014,7 @@ function posicionarJogador(x, y, dir) {
   if (dir) jog.dir = dir;
   jog.caminho = []; jog.aoChegar = null; jog.quadro = 0;
   desenharJogador();
+  seguidor?.colocar(x, y);
 }
 
 function desenharJogador() {
@@ -794,7 +1043,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden;
+  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden;
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -919,6 +1168,9 @@ function loop(t) {
     if (!vx && !vy) soltouDesdeTroca = true;
     const direto = (vx || vy) && moverDireto(dt, vx, vy);
     if (!direto) passo(dt);
+    const e = cena.tipo === 'mapa' ? 1 : ESCALA_GINASIO;
+    seguidor?.atualizar(dt, jog.x, jog.y, VEL, ALT_PET_MAPA * e, PET_ATRAS_MAPA * e, PET_CORRER_MAPA * e);
+    petGin?.anim.atualizar(dt);
     ajustarCamera();
     if (cena?.tipo === 'mapa') {
       atualizarMapa();
@@ -1174,6 +1426,8 @@ async function abrirMapa(n, onde) {
   soltouDesdeTroca = false;
   ajustarCamera();
   $('cena-palco').style.visibility = '';
+  atualizarBotaoPet();
+  pedirPetSeFaltar();
 }
 
 // Ponto ~60 px antes da porta, contando ao longo do caminho A* que vem da entrada do mapa
@@ -1332,6 +1586,7 @@ function atualizarBalao() {
 // No ginásio: parado na frente de um personagem → balão "Desafiar" (ou "Revanche" no líder vencido)
 function alvoNoInterior() {
   if (jog.caminho.length) return null;
+  if (petGin && !petGin.levado && Math.abs(jog.x - petGin.xParada) < 30) return { id: 'pet-gin', texto: '🐾 Levar comigo', acao: abrirLevarPet };
   const g = estado.ginasios[cena.chave];
   for (const p of PERSONAGENS) {
     if (Math.abs(jog.x - xDoPersonagem(p)) >= 30) continue;
@@ -1364,6 +1619,7 @@ async function entrarGinasio(n, G) {
   // no ginásio não há botão de sair: sai andando pela porta de entrada
   $('btn-cena-voltar').hidden = true;
   $('tela-cena').classList.add('jr-no-ginasio');
+  petGin = null;
   $('cena-atores').innerHTML = '';
   $('cena-palco').style.visibility = 'hidden';
   await trocarFundo(`${IMG}/interiores/${chave}.webp`);
@@ -1387,6 +1643,8 @@ async function entrarGinasio(n, G) {
   alvoMapa = null;
   soltouDesdeTroca = false;
   atualizarNpcs();
+  mostrarPetGinasio();
+  atualizarBotaoPet();
   ajustarCamera();
   $('cena-palco').style.visibility = '';
 }
@@ -1447,6 +1705,7 @@ function andarNoTapete(x, aoChegar) {
 }
 
 function tocarNoInterior(e) {
+  if (petGin && !petGin.levado && e.target === petGin.img) { destinoEspecial = null; andarNoTapete(petGin.xParada); return; }
   const npc = e.target.closest('.jr-npc');
   if (npc) { desafiar(npc.dataset.p); return; }
   const p = telaParaImagem(e.clientX, e.clientY);
@@ -1500,11 +1759,15 @@ function desafiar(p) {
 
 let avisoTimer = null;
 function avisar(texto, p) {
+  const pos = cena.cfg[p];
+  avisarEm(texto, pos.x, pos.y - (p === 'lider' ? ALT_LIDER : ALT_TREINADOR) - 6);
+}
+
+function avisarEm(texto, x, y) {
   const el = $('cena-aviso');
   el.textContent = texto;
   el.hidden = false;
-  const pos = cena.cfg[p];
-  posicionarNaTela(el, pos.x, pos.y - (p === 'lider' ? ALT_LIDER : ALT_TREINADOR) - 6);
+  posicionarNaTela(el, x, y);
   clearTimeout(avisoTimer);
   avisoTimer = setTimeout(() => { el.hidden = true; }, 2200);
 }
@@ -1563,7 +1826,9 @@ function mostrarInsigniaGanha(chave, dourada) {
     box.classList.remove('voando');
     img.getAnimations().forEach(a => a.cancel());
     if (animInsignia === anim) animInsignia = null;
+    seguidor?.reagir('pulo_cambalhota');
     mostrarAvisoSequencia();
+    surgirPetSePendente();
   };
 
   anim.voar = () => {
@@ -1772,6 +2037,7 @@ function vencer() {
   if (p === 'lider' && !g.insignia) { g.insignia = true; g.dataInsignia = Date.now(); ganhou = 'normal'; }
   if (p === 'revanche' && !g.dourada) { g.dourada = true; ganhou = 'dourada'; }
   gravarVitoria(chave, p);
+  if (p === 'lider' && primeiraVez && petDoGinasio(chave)) petSurgir = chave;
   registrarDiaJogado();
   tocar('vitoria');
   // XP só na primeira vitória de cada personagem (conferido no estado carregado do Firebase)
@@ -1805,7 +2071,7 @@ function vencer() {
   pg.aoContinuar = () => {
     fecharPergunta();
     if (ganhou) mostrarInsigniaGanha(chave, ganhou === 'dourada');
-    else mostrarAvisoSequencia();
+    else { seguidor?.reagir('feliz'); mostrarAvisoSequencia(); surgirPetSePendente(); }
   };
 }
 
@@ -1822,10 +2088,12 @@ function desistir() {
     $('perg-desistir').hidden = true;
     $('perg-continuar').textContent = 'Sair';
     $('perg-continuar').hidden = false;
-    pg.aoContinuar = fecharPergunta;
+    pg.aoContinuar = () => { fecharPergunta(); seguidor?.reagir('triste_fome', 2000); };
     return;
   }
+  const fugiuDeBatalha = pg.modo !== 'revisao';
   fecharPergunta();
+  if (fugiuDeBatalha) seguidor?.reagir('triste_fome', 2000);
 }
 
 function fecharPergunta() {
@@ -1965,6 +2233,13 @@ function ligarEventos() {
 
   $('insignia-ganha').addEventListener('click', acelerarInsignia);   // tocar acelera (vai direto ao voo)
 
+  $('pet-opcoes').addEventListener('click', (e) => { const b = e.target.closest('[data-pet]'); if (b) escolherPet(b.dataset.pet); });
+  $('btn-trocar-pet').addEventListener('click', () => { $('estojo').hidden = true; abrirColecao(); });
+  $('btn-pet').addEventListener('click', abrirColecao);
+  $('colecao-opcoes').addEventListener('click', (e) => { const b = e.target.closest('[data-pet]'); if (b) trocarPetAtivo(b.dataset.pet); });
+  $('colecao-fechar').addEventListener('click', () => { $('pet-colecao').hidden = true; });
+  $('levar-usar').addEventListener('click', () => conquistarPet(true));
+  $('levar-guardar').addEventListener('click', () => conquistarPet(false));
   $('estojo-fechar').addEventListener('click', () => {
     $('estojo').hidden = true;
     if (!$('tela-geral').hidden) desenharMarcadores();

@@ -53,12 +53,15 @@
       <div id="cena-palco" class="jr-palco">
         <img id="cena-fundo" class="jr-fundo" alt="" draggable="false"/>
         <div id="cena-atores"></div>
+        <div id="pet-sombra" class="jr-pet-sombra" hidden></div>
+        <img id="pet" class="jr-ator jr-pet" alt="" draggable="false" hidden/>
         <img id="jogador" class="jr-ator jr-jogador" alt="" draggable="false"/>
       </div>
     </div>
     <div class="jr-hud jr-hud-topo">
       <button class="jr-btn jr-btn-sec" id="btn-cena-voltar">⟵ Mapa geral</button>
       <div class="jr-hud-titulo" id="cena-titulo"></div>
+      <button class="jr-btn-pet" id="btn-pet" hidden aria-label="Meus pets"><img alt="" draggable="false"/></button>
       <button class="jr-btn-som" data-som aria-label="Desligar o som">🔊</button>
       <button class="jr-btn-estojo" id="btn-insignias-2" aria-label="Minhas insígnias">
         <img src="/img/jogo/ui/botao-insignias.webp" alt="" draggable="false"/>
@@ -128,6 +131,7 @@
         <div class="jr-estojo-resumo" id="estojo-resumo"></div>
         <div class="jr-barra"><div class="jr-barra-fill" id="estojo-barra"></div></div>
         <div class="jr-estojo-nota" id="estojo-nota"></div>
+        <button class="jr-btn jr-btn-sec jr-trocar-pet" id="btn-trocar-pet" hidden>🐾 Meus pets</button>
       </div>
       <div id="estojo-placar" class="jr-placar"></div>
       <div id="estojo-bandejas" class="jr-bandejas"></div>
@@ -143,6 +147,38 @@
       <div class="jr-cartao-conteudo" id="cartao-conteudo"></div>
       <div class="jr-cartao-info" id="cartao-info"></div>
       <button class="jr-btn" id="cartao-fechar">Fechar</button>
+    </div>
+  </div>
+
+  <!-- Escolha do pet (1ª vez, ou "Trocar pet" no estojo) -->
+  <div id="pet-escolha" class="jr-pet-escolha" hidden role="dialog" aria-label="Escolha seu pet">
+    <div class="jr-pet-escolha-caixa">
+      <div class="jr-pet-escolha-titulo">Escolha seu pet</div>
+      <div class="jr-pet-escolha-sub">Ele vai te acompanhar pelos mapas e ginásios. Vencendo líderes você ganha outros!</div>
+      <div class="jr-pet-opcoes" id="pet-opcoes"></div>
+    </div>
+  </div>
+
+  <!-- Coleção de pets: conquistados (trocar o ativo) e silhuetas dos que faltam -->
+  <div id="pet-colecao" class="jr-pet-escolha" hidden role="dialog" aria-label="Meus pets">
+    <div class="jr-pet-escolha-caixa">
+      <div class="jr-pet-escolha-titulo">Meus pets</div>
+      <div class="jr-pet-escolha-sub">Toque num pet para ele te acompanhar. Os escuros esperam por você nos ginásios.</div>
+      <div class="jr-pet-opcoes" id="colecao-opcoes"></div>
+      <button class="jr-btn jr-btn-sec" id="colecao-fechar">Fechar</button>
+    </div>
+  </div>
+
+  <!-- Pet conquistado no ginásio -->
+  <div id="pet-levar" class="jr-pet-escolha" hidden role="dialog" aria-label="Novo pet">
+    <div class="jr-pet-escolha-caixa jr-pet-levar-caixa">
+      <img id="levar-img" class="jr-pet-levar-img" alt="" draggable="false"/>
+      <div class="jr-pet-levar-info">
+        <div class="jr-pet-escolha-titulo">Novo pet!</div>
+        <div class="jr-pet-levar-nome" id="levar-nome"></div>
+        <button class="jr-btn" id="levar-usar">Usar agora</button>
+        <button class="jr-btn jr-btn-sec" id="levar-guardar">Guardar na coleção</button>
+      </div>
     </div>
   </div>
 
