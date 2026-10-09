@@ -834,10 +834,11 @@ function moverDireto(dt, vx, vy) {
       jog.x += ax; jog.y += ay; return true;
     };
     if (!tenta(dx, dy) && !(dx && tenta(dx, 0)) && !(dy && tenta(0, dy))) {
-      // Borda da trilha é em degraus de 4 px: desvia um pouco na perpendicular para não enroscar
+      // Bordas (trilha e quinas de casas, árvores…) são em degraus de 4 px: desvia até 16 px
+      // na perpendicular para contornar a quina em vez de enroscar
       const horiz = Math.abs(dx) >= Math.abs(dy);
       const p = horiz ? dx : dy;
-      fora: for (let k = 2; k <= 10; k += 2) {
+      fora: for (let k = 2; k <= 16; k += 2) {
         for (const s of [1, -1]) {
           const livreAdiante = horiz ? pode(jog.x + p, jog.y + s * k) : pode(jog.x + s * k, jog.y + p);
           if (!livreAdiante) continue;
