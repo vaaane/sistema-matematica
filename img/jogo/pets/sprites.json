@@ -293,31 +293,15 @@
       ]
     },
     "dragao_vermelho": {
-      "andar_frente": [
-        "pets/dragao_vermelho/andar_frente_1.webp",
-        "pets/dragao_vermelho/andar_frente_2.webp"
-      ],
-      "andar_costas": [
-        "pets/dragao_vermelho/andar_costas_1.webp",
-        "pets/dragao_vermelho/andar_costas_2.webp"
-      ],
-      "costas_parado": [
-        "pets/dragao_vermelho/costas_parado_1.webp",
-        "pets/dragao_vermelho/costas_parado_2.webp",
-        "pets/dragao_vermelho/costas_parado_3.webp",
-        "pets/dragao_vermelho/costas_parado_4.webp"
-      ],
       "andar_direita": [
         "pets/dragao_vermelho/andar_direita_1.webp",
         "pets/dragao_vermelho/andar_direita_2.webp",
-        "pets/dragao_vermelho/andar_direita_3.webp",
-        "pets/dragao_vermelho/andar_direita_4.webp"
+        "pets/dragao_vermelho/andar_direita_3.webp"
       ],
       "andar_esquerda": [
         "pets/dragao_vermelho/andar_esquerda_1.webp",
         "pets/dragao_vermelho/andar_esquerda_2.webp",
-        "pets/dragao_vermelho/andar_esquerda_3.webp",
-        "pets/dragao_vermelho/andar_esquerda_4.webp"
+        "pets/dragao_vermelho/andar_esquerda_3.webp"
       ],
       "sentado_girando": [
         "pets/dragao_vermelho/sentado_girando_1.webp",
@@ -334,14 +318,33 @@
         "pets/dragao_vermelho/feliz_2.webp",
         "pets/dragao_vermelho/feliz_3.webp"
       ],
+      "comendo": [
+        "pets/dragao_vermelho/comendo_1.webp",
+        "pets/dragao_vermelho/comendo_2.webp",
+        "pets/dragao_vermelho/comendo_3.webp"
+      ],
+      "pulo_cambalhota": [
+        "pets/dragao_vermelho/pulo_cambalhota_1.webp",
+        "pets/dragao_vermelho/pulo_cambalhota_2.webp",
+        "pets/dragao_vermelho/pulo_cambalhota_3.webp"
+      ],
+      "triste_fome": [
+        "pets/dragao_vermelho/triste_fome_1.webp",
+        "pets/dragao_vermelho/triste_fome_2.webp",
+        "pets/dragao_vermelho/triste_fome_3.webp"
+      ],
+      "salto_pouso": [
+        "pets/dragao_vermelho/salto_pouso_1.webp",
+        "pets/dragao_vermelho/salto_pouso_2.webp",
+        "pets/dragao_vermelho/salto_pouso_3.webp"
+      ],
       "dormindo": [
-        "pets/dragao_vermelho/dormindo_1.webp",
-        "pets/dragao_vermelho/dormindo_2.webp",
-        "pets/dragao_vermelho/dormindo_3.webp"
+        "pets/dragao_vermelho/dormindo_1.webp"
       ],
       "correndo": [
         "pets/dragao_vermelho/correndo_1.webp",
-        "pets/dragao_vermelho/correndo_2.webp"
+        "pets/dragao_vermelho/correndo_2.webp",
+        "pets/dragao_vermelho/correndo_3.webp"
       ]
     },
     "dragao_azul": {
