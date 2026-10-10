@@ -23,7 +23,7 @@ function pegar(cat, lista) {
 }
 
 function trocar(texto, v) {
-  return texto.replace(/\{(apelido|pet|ginasio|mapa|conteudo|dias)\}/g, (m, k) => (v[k] ?? m));
+  return texto.replace(/\{(apelido|pet|ginasio|mapa|conteudo|dias|valor)\}/g, (m, k) => (v[k] ?? m));
 }
 
 const juntar = (a, b) => `${a.trim()} ${b.trim()}`;
@@ -101,6 +101,14 @@ export function montarFala(ctx, tipoForcado = null) {
   }
   return um('aleatorio', P.aleatorio);
 }
+
+// Uma frase de uma lista da personalidade (ajuda_dica, ajuda_elimina, ajuda_acabou, sem_lealdade…),
+// com os placeholders trocados. v: { apelido, pet, valor, … }. Sem a lista no JSON: null.
+export function fraseDe(pet, cat, v = {}) {
+  const f = pegar(cat, F?.personalidades?.[pet]?.[cat]);
+  return f ? trocar(f, v) : null;
+}
+export const configAjuda = () => F?.config?.ajuda_ginasio || {};
 
 // Duração do balão: duracao_balao_s + 1 s a cada 60 caracteres
 export const duracaoBalao = (texto) => ((F?.config?.duracao_balao_s || 5) + Math.floor(texto.length / 60)) * 1000;

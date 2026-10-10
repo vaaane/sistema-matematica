@@ -111,7 +111,9 @@
         <div class="jr-arena-sombra eu"></div>
         <img class="jr-arena-jog" id="perg-jog" alt="" draggable="false"/>
         <div class="jr-arena-sombra pet"></div>
-        <img class="jr-arena-pet" id="perg-pet" alt="" draggable="false"/>
+        <img class="jr-arena-pet" id="perg-pet" alt="Pedir ajuda ao pet" draggable="false"/>
+        <button class="jr-perg-ajuda" id="perg-ajuda" hidden>💡 Pedir ajuda</button>
+        <div class="jr-pet-fala-arena" id="perg-pet-fala" hidden></div>
         <div class="jr-arena-sombra adv"></div>
         <img class="jr-arena-adv" id="perg-adv" alt="" draggable="false"/>
         <div class="jr-fala" id="perg-fala"></div>
@@ -156,7 +158,10 @@
         <div class="jr-estojo-resumo" id="estojo-resumo"></div>
         <div class="jr-barra"><div class="jr-barra-fill" id="estojo-barra"></div></div>
         <div class="jr-estojo-nota" id="estojo-nota"></div>
-        <button class="jr-btn jr-btn-sec jr-trocar-pet" id="btn-trocar-pet" hidden>🐾 Meus pets</button>
+        <div class="jr-estojo-acoes">
+          <button class="jr-btn jr-btn-sec jr-trocar-pet" id="btn-trocar-pet" hidden>🐾 Meus pets</button>
+          <button class="jr-btn jr-btn-sec jr-trocar-pet" id="btn-personagem">👤 Personagem</button>
+        </div>
       </div>
       <div id="estojo-placar" class="jr-placar"></div>
       <div id="estojo-bandejas" class="jr-bandejas"></div>
@@ -184,6 +189,25 @@
     </div>
   </div>
 
+  <!-- Escolha do personagem (aluno novo, ou "👤 Personagem" no Meu Pet / estojo) -->
+  <div id="pers-escolha" class="jr-pet-escolha" hidden role="dialog" aria-label="Escolha seu personagem">
+    <div class="jr-pet-escolha-caixa jr-pers-caixa">
+      <div class="jr-pet-escolha-titulo">Escolha seu personagem</div>
+      <div class="jr-pers-corpo">
+        <div class="jr-pers-palco" id="pers-palco" aria-label="Ver andando">
+          <div class="jr-pers-sombra"></div>
+          <img id="pers-img" alt="" draggable="false"/>
+          <div class="jr-pers-nome" id="pers-nome"></div>
+        </div>
+        <div class="jr-pers-grade" id="pers-grade"></div>
+      </div>
+      <div class="jr-mp-botoes">
+        <button class="jr-btn" id="pers-confirmar">Confirmar</button>
+        <button class="jr-btn jr-btn-sec" id="pers-cancelar">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Coleção de pets: conquistados (trocar o ativo) e silhuetas dos que faltam -->
   <div id="pet-colecao" class="jr-pet-escolha" hidden role="dialog" aria-label="Meus pets">
     <div class="jr-pet-escolha-caixa">
@@ -191,6 +215,28 @@
       <div class="jr-pet-escolha-sub">Toque num pet para ele te acompanhar. Os escuros esperam por você nos ginásios.</div>
       <div class="jr-pet-opcoes" id="colecao-opcoes"></div>
       <button class="jr-btn jr-btn-sec" id="colecao-fechar">Fechar</button>
+    </div>
+  </div>
+
+  <!-- Pet que falta: silhueta grande e onde conquistar -->
+  <div id="pet-silhueta" class="jr-pet-escolha" hidden role="dialog" aria-label="Pet escondido">
+    <div class="jr-pet-escolha-caixa jr-silhueta-caixa">
+      <div class="jr-pet-escolha-titulo">???</div>
+      <img id="silhueta-img" class="jr-silhueta-img" alt="" draggable="false"/>
+      <div class="jr-pet-escolha-sub" id="silhueta-onde"></div>
+      <button class="jr-btn jr-btn-sec" id="silhueta-fechar">Fechar</button>
+    </div>
+  </div>
+
+  <!-- Ginásio fechado (fora de ordem) -->
+  <div id="gin-fechado" class="jr-pet-escolha" hidden role="dialog" aria-label="Ginásio fechado">
+    <div class="jr-pet-escolha-caixa jr-online-caixa">
+      <div class="jr-pet-escolha-titulo">🔒 Ginásio fechado</div>
+      <div class="jr-pet-escolha-sub" id="gin-fechado-txt"></div>
+      <div class="jr-mp-botoes">
+        <button class="jr-btn" id="gin-fechado-ir">Ir até lá</button>
+        <button class="jr-btn jr-btn-sec" id="gin-fechado-fechar">Fechar</button>
+      </div>
     </div>
   </div>
 
@@ -229,7 +275,14 @@
           <div class="jr-moedas jr-mp-moedas">🪙 <span id="mp-moedas">0</span></div>
         </div>
         <div class="jr-mp-barra"><div class="jr-mp-barra-topo"><span>Barriga</span><span id="mp-barriga-rot"></span></div><div class="jr-mp-trilho"><div class="jr-mp-fill" id="mp-barriga-fill"></div></div></div>
-        <div class="jr-mp-barra"><div class="jr-mp-barra-topo"><span>Lealdade</span><span id="mp-lealdade-rot"></span></div><div class="jr-mp-trilho"><div class="jr-mp-fill lealdade" id="mp-lealdade-fill"></div></div></div>
+        <div class="jr-mp-barra"><div class="jr-mp-barra-topo"><span>Lealdade</span><span id="mp-lealdade-rot"></span></div>
+          <div class="jr-mp-trilho-marcado">
+            <div class="jr-mp-trilho"><div class="jr-mp-fill lealdade" id="mp-lealdade-fill"></div></div>
+            <span class="jr-mp-marca" id="mp-marca-conversa" title="Conversa">💬</span>
+            <span class="jr-mp-marca" id="mp-marca-ajuda" title="Ajuda nos ginásios">💡</span>
+          </div>
+          <div class="jr-mp-legenda" id="mp-legenda"></div>
+        </div>
         <div class="jr-mp-dica" id="mp-dica"></div>
         <div class="jr-mp-botoes">
           <button class="jr-btn" id="mp-alimentar">Alimentar</button>
@@ -237,6 +290,7 @@
         </div>
         <div class="jr-mp-botoes">
           <button class="jr-btn jr-btn-sec" id="mp-trocar">🐾 Trocar pet</button>
+          <button class="jr-btn jr-btn-sec" id="mp-personagem">👤 Personagem</button>
           <button class="jr-btn jr-btn-sec" id="mp-calado" aria-pressed="false">💬 Pet falando</button>
           <button class="jr-btn jr-btn-sec" id="mp-fechar">Fechar</button>
         </div>
