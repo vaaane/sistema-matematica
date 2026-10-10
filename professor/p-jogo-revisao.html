@@ -146,6 +146,7 @@
         <button class="aba" data-aba="dificuldades">📉 Dificuldades da turma</button>
         <button class="aba" data-aba="batalhas">⚔️ Batalhas</button>
         <button class="aba" data-aba="pedidos">🙋 Pedidos de ajuda</button>
+        <button class="aba" data-aba="nomes">🐾 Nomes dos pets</button>
         <button class="aba" data-aba="config">⚙️ Configurar o jogo</button>
       </div>
 
@@ -172,6 +173,11 @@
       <!-- Aba — Pedidos de ajuda (problemas das pessoas dos mapas) -->
       <section class="painel" id="aba-pedidos" hidden>
         <div id="pedidos"><div class="empty">Carregando…</div></div>
+      </section>
+
+      <!-- Aba — Nomes que os alunos deram aos pets -->
+      <section class="painel" id="aba-nomes" hidden>
+        <div id="nomes-pets"><div class="empty">Carregando…</div></div>
       </section>
 
       <!-- Aba 3 — Configurar -->
@@ -205,6 +211,7 @@ import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.
 import { ALUNOS_POR_TURMA, ALUNOS_TESTE } from "/js/constants.js";
 import { notaJogoRevisao, formatarNota, TOTAL_INSIGNIAS } from "/js/jogo-revisao/nota.js";
 import { gerarUma } from "/js/jogo-revisao/geradores.js";
+import { NOME_PET } from "/js/jogo-revisao/pets.js";
 
 if (!requireProfessor()) throw new Error("sem sessão de professor");
 renderSidebarProfessor("sidebar", "jogo_revisao");
@@ -294,6 +301,7 @@ function montarTurma() {
   renderDificuldades();
   renderBatalhas();
   renderPedidos();
+  renderNomesPets();
 }
 
 function renderResumo() {
@@ -561,6 +569,33 @@ $("pedidos").addEventListener("click", (e) => {
       return `<div class="pd-item"><div class="tx">${esc(d.texto)} → <b>${esc(resp(d))}</b> <span class="muted">· ${p.erros} erro${p.erros === 1 ? "" : "s"}</span></div>
         <div class="nm">Erraram: ${Object.entries(p.alunos).sort((a, b) => b[1] - a[1]).map(([n, k]) => `${esc(n)}${k > 1 ? ` <span>×${k}</span>` : ""}`).join(", ")}</div></div>`; }).join("")}</div>`
       : '<span class="muted">Ninguém errou pedidos deste mapa.</span>'}</div></td></tr>`);
+});
+
+// ── Aba — Nomes dos pets: a professora pode voltar ao nome da espécie ──
+function renderNomesPets() {
+  const el = $("nomes-pets");
+  const lista = [];
+  for (const l of linhas) for (const [pet, c] of Object.entries(l.n?.pets?.conquistados || {})) if (c?.nome) lista.push({ uid: l.uid, aluno: l.nome, pet, nome: c.nome });
+  if (!lista.length) { el.innerHTML = `<div class="empty">Nenhum aluno desta turma deu nome ao pet ainda.</div>`; return; }
+  lista.sort((a, b) => a.aluno.localeCompare(b.aluno, "pt-BR"));
+  el.innerHTML = `<div class="tabela-wrap"><table class="jr bt"><thead><tr><th>Aluno</th><th>Pet</th><th>Nome dado</th><th></th></tr></thead><tbody>
+    ${lista.map(x => `<tr><td class="aluno">${esc(x.aluno)}</td><td>${esc(NOME_PET[x.pet] || x.pet)}</td><td><b>${esc(x.nome)}</b></td>
+      <td><button class="btn-sec" data-uid="${esc(x.uid)}" data-pet="${esc(x.pet)}">↺ Voltar para "${esc(NOME_PET[x.pet] || x.pet)}"</button></td></tr>`).join("")}
+  </tbody></table></div>
+  <div class="legenda">O nome aparece para o aluno e para os colegas online. Voltar ao padrão troca pelo nome da espécie (o aluno pode escolher outro).</div>`;
+}
+
+$("nomes-pets").addEventListener("click", async (e) => {
+  const b = e.target.closest("button[data-uid]");
+  if (!b) return;
+  const { uid, pet } = b.dataset;
+  if (!confirm(`Voltar o nome deste pet para "${NOME_PET[pet] || pet}"?`)) return;
+  b.disabled = true;
+  try {
+    await update(ref(db, `jogo_revisao/${uid}/pets/conquistados/${pet}`), { nome: null });
+    if (dados[uid]?.pets?.conquistados?.[pet]) delete dados[uid].pets.conquistados[pet].nome;
+    montarTurma();
+  } catch (err) { console.error(err); b.disabled = false; alert("Não foi possível salvar (confira as regras do banco)."); }
 });
 
 // ── Aba 3 — Configurar ─────────────────────────────────────

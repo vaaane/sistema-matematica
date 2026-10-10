@@ -78,6 +78,14 @@
     <button id="pet-fala" class="jr-pet-fala" hidden aria-live="polite"></button>
     <div id="pessoa-balao" class="jr-pessoa-balao" hidden aria-live="polite"></div>
     <div id="colega-cartao" class="jr-colega-cartao" hidden></div>
+    <!-- Pesca: conta rápida, peixe pescado e botão de levantar -->
+    <div id="pesca-conta" class="jr-pesca-conta" hidden>
+      <div class="pc-tbar"><i id="pc-tempo"></i></div>
+      <div class="pc-conta" id="pc-conta"></div>
+      <div class="pc-ops" id="pc-ops"></div>
+    </div>
+    <div id="pesca-cartao" class="jr-pesca-cartao" hidden aria-live="polite"></div>
+    <button id="btn-levantar" class="jr-btn jr-btn-sec jr-btn-levantar" hidden>🧍 Levantar</button>
     <div id="cena-aviso" class="jr-balao-aviso" hidden></div>
     <button id="btn-revanche" class="jr-btn jr-btn-ouro jr-revanche" hidden>⚔ Revanche</button>
     <!-- Joystick (só em tela de toque) -->
@@ -380,7 +388,7 @@
       </div>
       <div class="jr-mp-info">
         <div class="jr-mp-cab">
-          <div><div class="jr-mp-nome" id="mp-nome"></div><div class="jr-mp-origem" id="mp-origem"></div></div>
+          <div><div class="jr-mp-nome"><span id="mp-nome"></span><button class="jr-mp-editar" id="mp-editar" aria-label="Dar um nome">✏️</button></div><div class="jr-mp-origem" id="mp-origem"></div></div>
           <div class="jr-moedas jr-mp-moedas">🪙 <span id="mp-moedas">0</span></div>
         </div>
         <div class="jr-mp-barra"><div class="jr-mp-barra-topo"><span>Barriga</span><span id="mp-barriga-rot"></span></div><div class="jr-mp-trilho"><div class="jr-mp-fill" id="mp-barriga-fill"></div></div></div>
@@ -394,17 +402,55 @@
         </div>
         <div class="jr-mp-dica" id="mp-dica"></div>
         <div class="jr-mp-botoes">
-          <button class="jr-btn" id="mp-alimentar">Alimentar</button>
+          <button class="jr-btn" id="mp-bolsa">🎒 Bolsa</button>
           <button class="jr-btn" id="mp-carinho">Carinho</button>
           <button class="jr-btn jr-btn-ouro" id="mp-batalhar">⚔️ Treinadores</button>
         </div>
         <div class="jr-mp-botoes">
           <button class="jr-btn jr-btn-sec" id="mp-trocar">🐾 Trocar pet</button>
+          <button class="jr-btn jr-btn-sec" id="mp-visual">🎨 Visual</button>
           <button class="jr-btn jr-btn-sec" id="mp-personagem">👤 Personagem</button>
           <button class="jr-btn jr-btn-sec" id="mp-calado" aria-pressed="false">💬 Pet falando</button>
           <button class="jr-btn jr-btn-sec" id="mp-fechar">Fechar</button>
         </div>
       </div>
+      <!-- Bolsa: comidas e peixes guardados -->
+      <div class="mp-sub" id="mp-bolsa-painel" hidden>
+        <div class="mp-sub-topo"><b>🎒 Bolsa</b><span>Toque numa comida para dar ao seu pet</span><button class="bt-lista-x" id="mp-bolsa-fechar" aria-label="Fechar">✕</button></div>
+        <div class="mp-bolsa-itens" id="mp-bolsa-itens"></div>
+      </div>
+      <!-- Tinta e efeito do pet ativo -->
+      <div class="mp-sub" id="mp-visual-painel" hidden>
+        <div class="mp-sub-topo"><b>🎨 Visual</b><span>Tinta e efeito deste pet</span><button class="bt-lista-x" id="mp-visual-fechar" aria-label="Fechar">✕</button></div>
+        <div class="mp-visual-rot">Tinta</div><div class="mp-chips" id="mp-visual-tintas"></div>
+        <div class="mp-visual-rot">Efeito ao andar</div><div class="mp-chips" id="mp-visual-efeitos"></div>
+        <div class="mp-visual-dica" id="mp-visual-dica"></div>
+      </div>
+      <!-- Nome do pet -->
+      <div class="mp-sub mp-nomear" id="mp-nomear" hidden>
+        <div class="mp-sub-topo"><b>✏️ Nome do pet</b><span>De 2 a 12 letras</span></div>
+        <input type="text" id="mp-nome-input" maxlength="12" autocomplete="off" spellcheck="false"/>
+        <div class="mp-nome-erro" id="mp-nome-erro"></div>
+        <div class="jr-mp-botoes">
+          <button class="jr-btn jr-btn-ouro" id="mp-nome-salvar">Salvar</button>
+          <button class="jr-btn jr-btn-sec" id="mp-nome-padrao" hidden></button>
+          <button class="jr-btn jr-btn-sec" id="mp-nome-cancelar">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loja da Dona Cida -->
+  <div id="loja" class="jr-pet-escolha" hidden role="dialog" aria-label="Loja">
+    <div class="jr-pet-escolha-caixa lj-caixa">
+      <div class="lj-topo">
+        <div class="jr-pet-escolha-titulo">🛒 Loja da Dona Cida</div>
+        <span class="jr-moedas" id="lj-moedas">🪙 <span>0</span></span>
+        <button class="bt-lista-x" id="lj-fechar" aria-label="Fechar">✕</button>
+      </div>
+      <div class="lj-abas" id="lj-abas"><button data-aba="comidas">🍎 Comidas</button><button data-aba="tintas">🎨 Tintas</button><button data-aba="efeitos">✨ Efeitos</button></div>
+      <div class="lj-itens" id="lj-itens"></div>
+      <div class="lj-msg" id="lj-msg" aria-live="polite"></div>
     </div>
   </div>
 

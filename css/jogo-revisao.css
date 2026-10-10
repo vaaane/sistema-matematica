@@ -1336,3 +1336,142 @@ html.jr-deitado .pd-teclado .pd-ok { font-size: 14px; }
 @media (max-width: 600px) { html:not(.jr-deitado) .pd-corpo { flex-direction: column; } html:not(.jr-deitado) .pd-pessoa { width: auto; flex-direction: row; }
   html:not(.jr-deitado) .pd-busto { width: 56px; height: 64px; } html:not(.jr-deitado) .pd-entrada { flex-direction: column; } html:not(.jr-deitado) .pd-caixa { height: 100%; } }
 @media (prefers-reduced-motion: reduce) { .jr-pedido-exc, .pd-moedas.pulsa, .pd-num.vazio::after { animation: none; } }
+
+/* ── PROMPT-18: cuidados, loja da Dona Cida, bolsa, visual do pet e pesca ── */
+/* tinta arco-íris (as outras tintas são o `filtro` do loja.json, inline) */
+/* mesma base das outras tintas (cinza → sépia → cor), girando a cor */
+@keyframes jr-arco { from { filter: grayscale(1) sepia(1) saturate(3.2) hue-rotate(0deg) brightness(1.1); } to { filter: grayscale(1) sepia(1) saturate(3.2) hue-rotate(360deg) brightness(1.1); } }
+@keyframes jr-arco-sombra { from { filter: grayscale(1) sepia(1) saturate(3.2) hue-rotate(0deg) brightness(1.1) drop-shadow(0 1px 1px rgba(0,0,0,.35)); } to { filter: grayscale(1) sepia(1) saturate(3.2) hue-rotate(360deg) brightness(1.1) drop-shadow(0 1px 1px rgba(0,0,0,.35)); } }
+#jr-app .jr-arco-iris { animation: jr-arco 3s linear infinite; }
+#jr-app .jr-pet.jr-arco-iris { animation-name: jr-arco-sombra; }
+@media (prefers-reduced-motion: reduce) { #jr-app .jr-arco-iris { animation: none; filter: grayscale(1) sepia(1) saturate(3.2) hue-rotate(120deg) brightness(1.1); } }
+
+/* efeitos atrás do pet quando ele anda */
+.jr-efx { position: absolute; transform: translate(-50%, -50%); pointer-events: none; line-height: 1; animation: jr-efx 0.9s ease-out forwards; }
+.jr-efx-bolhas, .jr-efx-coracoes { animation-name: jr-efx-sobe; }
+.jr-efx-folhas { animation-name: jr-efx-cai; }
+@keyframes jr-efx { from { opacity: .95; transform: translate(-50%, -50%) scale(.6); } to { opacity: 0; transform: translate(-50%, -90%) scale(1.1); } }
+@keyframes jr-efx-sobe { from { opacity: .9; transform: translate(-50%, -50%) scale(.6); } to { opacity: 0; transform: translate(-50%, -260%) scale(1); } }
+@keyframes jr-efx-cai { from { opacity: .95; transform: translate(-50%, -50%) rotate(0); } to { opacity: 0; transform: translate(-20%, 40%) rotate(140deg); } }
+
+/* Meu Pet: nome editável, nível de amizade, molduras, painéis (bolsa, visual, nome) */
+.jr-mp-caixa { position: relative; }
+.jr-mp-nome { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.jr-mp-editar { background: none; border: 1px solid rgba(255,255,255,.2); border-radius: 8px; font-size: 13px; padding: 1px 5px; cursor: pointer; line-height: 1.2; }
+.mp-nivel { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 800; color: #ff9ec4; background: rgba(255,92,138,.14); border: 1px solid rgba(255,92,138,.4); border-radius: 999px; padding: 1px 7px; }
+.mp-coroa { font-size: .8em; }
+.jr-mp-palco.moldura-prata { box-shadow: inset 0 0 0 3px #cfd6e4, 0 0 10px rgba(207,214,228,.45); }
+.jr-mp-palco.moldura-ouro { box-shadow: inset 0 0 0 3px var(--jr-ouro), 0 0 14px rgba(255,215,0,.55); }
+.mp-sub { position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: inherit; background: rgba(17,15,38,.97); overflow: hidden; }
+.mp-sub[hidden] { display: none; }
+.mp-sub-topo { display: flex; align-items: center; gap: 10px; }
+.mp-sub-topo b { font-family: 'Rajdhani', sans-serif; font-size: 21px; color: var(--jr-ouro); white-space: nowrap; }
+.mp-sub-topo span { flex: 1; min-width: 0; font: 600 12.5px 'Inter', sans-serif; color: #c9cde0; }
+.mp-bolsa-itens { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); grid-auto-rows: min-content; gap: 6px; overflow-y: auto; }
+.mp-bolsa-item { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto auto; column-gap: 8px; align-items: center; text-align: left; padding: 6px 8px; cursor: pointer;
+  border-radius: 12px; background: rgba(124,92,252,.12); border: 1px solid rgba(124,92,252,.4); color: #fff; }
+.mp-bolsa-item:hover { background: rgba(124,92,252,.25); }
+.mp-bolsa-emoji { grid-row: 1 / 4; font-size: 28px; position: relative; }
+.mp-bolsa-emoji i { position: absolute; right: -6px; top: -6px; font-size: 13px; font-style: normal; }
+.mp-bolsa-item b { font: 700 13.5px 'Inter', sans-serif; }
+.mp-bolsa-item span { font: 600 11.5px 'Inter', sans-serif; color: #c9cde0; }
+.mp-bolsa-item em { font: 700 10.5px 'Inter', sans-serif; font-style: normal; color: #7ee2a8; }
+.mp-bolsa-vazia { grid-column: 1 / -1; font: 600 13.5px 'Inter', sans-serif; color: #c9cde0; padding: 14px 4px; line-height: 1.4; }
+.mp-visual-rot { font: 800 12px 'Inter', sans-serif; color: #c9cde0; text-transform: uppercase; letter-spacing: .05em; }
+.mp-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.mp-chip { display: inline-flex; align-items: center; gap: 4px; min-height: 34px; padding: 3px 10px 3px 6px; border-radius: 999px; cursor: pointer;
+  background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.18); color: #fff; font: 700 12.5px 'Inter', sans-serif; }
+.mp-chip.sel { border-color: var(--jr-ouro); background: rgba(255,215,0,.12); }
+#jr-app .mp-chip img { height: 26px; width: auto; image-rendering: auto; }
+.mp-visual-dica { font: 600 12.5px 'Inter', sans-serif; color: #ffe9a8; }
+.mp-visual-dica[hidden] { display: none; }
+.mp-nomear input { font: 700 20px 'Inter', sans-serif; padding: 8px 12px; border-radius: 12px; border: 2px solid #7c5cfc; background: #0d0d1c; color: #fff; max-width: 340px; }
+.mp-nome-erro { min-height: 1.2em; font: 700 13px 'Inter', sans-serif; color: #ff8fa3; }
+.mp-nomear .jr-btn[hidden] { display: none; }
+html.jr-deitado .mp-sub { padding: 8px 10px; gap: 6px; }
+
+/* Loja da Dona Cida: 3 abas, cartões em 3 colunas × 2 linhas, sem rolar */
+.lj-caixa { max-width: 920px; width: 100%; height: min(470px, 100%); overflow: hidden; gap: 6px; text-align: left; }
+.lj-topo { width: 100%; display: flex; align-items: center; gap: 10px; }
+.lj-topo .jr-pet-escolha-titulo { flex: 1; min-width: 0; white-space: nowrap; }
+.lj-abas { width: 100%; display: flex; gap: 6px; }
+.lj-abas button { flex: 1; min-height: 32px; border-radius: 999px; border: 1px solid rgba(124,92,252,.45); background: rgba(124,92,252,.1); color: #c9cde0; font: 800 13px 'Inter', sans-serif; cursor: pointer; }
+.lj-abas button.ativa { color: #2a1a00; background: linear-gradient(135deg, #ffb300, var(--jr-ouro)); border-color: #c48a00; }
+.lj-itens { flex: 1; min-height: 0; width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: 6px; }
+.lj-item { min-width: 0; min-height: 0; display: grid; grid-template-columns: auto 1fr; grid-template-rows: 1fr auto auto; column-gap: 8px; row-gap: 4px; align-items: center; padding: 6px 8px;
+  border-radius: 14px; background: rgba(124,92,252,.1); border: 1px solid rgba(124,92,252,.35); overflow: hidden; }
+.lj-emoji { font-size: 30px; line-height: 1; }
+.lj-info { min-width: 0; display: flex; flex-direction: column; gap: 1px; font: 600 11.5px 'Inter', sans-serif; color: #c9cde0; line-height: 1.25; }
+.lj-info b { font: 700 14px 'Inter', sans-serif; color: #fff; }
+.lj-selo { color: #7ee2a8; font-weight: 800; }
+.lj-fav { color: #ff9ec4; font-weight: 800; }
+.lj-sub { color: #a3a1c9; }
+.lj-qtd { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.lj-qtd button { width: 30px; height: 26px; border-radius: 8px; border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.06); color: #fff; font: 800 16px 'Inter', sans-serif; cursor: pointer; }
+.lj-qtd span { font: 700 15px 'Orbitron', sans-serif; color: #fff; min-width: 2ch; text-align: center; }
+.lj-qtd em { margin-left: auto; font: 700 11.5px 'Inter', sans-serif; font-style: normal; color: #a3a1c9; white-space: nowrap; }
+.lj-comprar { grid-column: 1 / -1; min-height: 30px; border-radius: 10px; border: 1px solid #c48a00; background: linear-gradient(135deg, #ffb300, var(--jr-ouro)); color: #2a1a00;
+  font: 800 12.5px 'Inter', sans-serif; cursor: pointer; white-space: nowrap; }
+.lj-comprar:disabled { background: #3a3852; border-color: #4b4868; color: #a3a1c9; cursor: default; }
+.lj-comprar.ok { background: rgba(62,207,142,.15); border-color: #2b6b55; color: #7ee2a8; }
+.lj-tinta, .lj-efeito { grid-template-rows: 1fr auto; }
+.lj-previa { width: 64px; height: 56px; display: flex; align-items: center; justify-content: center; }
+#jr-app .lj-previa img { max-height: 100%; max-width: 100%; image-rendering: auto; }
+.lj-efx-amostra { display: flex; gap: 2px; font-size: 18px; }
+.lj-efx-amostra span { animation: jr-efx-amostra 1.2s ease-in-out infinite alternate; }
+.lj-efx-amostra span:nth-child(2) { animation-delay: .3s; } .lj-efx-amostra span:nth-child(3) { animation-delay: .6s; }
+@keyframes jr-efx-amostra { from { transform: translateY(3px); opacity: .5; } to { transform: translateY(-3px); opacity: 1; } }
+.lj-msg { min-height: 1.2em; width: 100%; font: 700 12.5px 'Inter', sans-serif; color: #7ee2a8; text-align: center; }
+html.jr-deitado .lj-caixa { height: 100%; max-height: calc(var(--jr-alt, 100dvh) - 16px); padding: 8px 10px; gap: 5px; }
+html.jr-deitado .lj-topo .jr-pet-escolha-titulo { font-size: 19px; }
+html.jr-deitado .lj-emoji { font-size: 24px; }
+html.jr-deitado .lj-info { font-size: 10.5px; }
+html.jr-deitado .lj-info b { font-size: 13px; }
+html.jr-deitado .lj-comprar { min-height: 26px; font-size: 11.5px; }
+html.jr-deitado .lj-qtd button { height: 22px; }
+@media (max-width: 600px) { html:not(.jr-deitado) .lj-itens { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: min-content; overflow-y: auto; } }
+@media (prefers-reduced-motion: reduce) { .lj-efx-amostra span { animation: none; } }
+
+/* Pesca: caixote no mapa, pose sentada, linha + boia (SVG), ❗, conta rápida e cartão do peixe */
+.jr-caixote { position: absolute; width: 2.2em; height: 1.5em; transform: translate(-50%, -100%); pointer-events: none; border-radius: .2em;
+  background: repeating-linear-gradient(90deg, #8a5a2b 0 .5em, #7a4c22 .5em .55em), #8a5a2b; border: .12em solid #4e2f12; box-shadow: 0 .15em .2em rgba(0,0,0,.35); }
+.jr-caixote-vara { position: absolute; left: 50%; bottom: 95%; transform: translateX(-50%); font-size: 1.3em; line-height: 1; animation: jr-flutua 1.6s ease-in-out infinite; }
+#jr-app img.jr-pesca-img { position: absolute; pointer-events: none; image-rendering: auto; max-width: none; }
+.jr-pesca-linha { position: absolute; left: 0; top: 0; width: 1376px; height: 768px; pointer-events: none; overflow: visible; }
+.jr-pesca-linha .linha { stroke: rgba(255,255,255,.85); stroke-width: .7; }
+.jr-pesca-linha.sem-linha .linha, .jr-pesca-linha.sem-linha .boia { display: none; }
+.jr-pesca-linha .onda { fill: none; stroke: rgba(255,255,255,.7); stroke-width: .5; transform-box: fill-box; transform-origin: center; animation: jr-onda 1.8s ease-out infinite; }
+.jr-pesca-linha .onda.o2 { animation-delay: .9s; }
+@keyframes jr-onda { from { transform: scale(.4); opacity: .9; } to { transform: scale(1.8); opacity: 0; } }
+.jr-pesca-linha .corpo { transition: transform .25s, opacity .25s; }
+.jr-pesca-linha.mexe .corpo { animation: jr-boia-mexe .22s ease-in-out 3 alternate; }
+.jr-pesca-linha.afunda .corpo { transform: translateY(2.2px); opacity: .55; }
+@keyframes jr-boia-mexe { from { transform: translateY(0); } to { transform: translateY(1.4px); } }
+.jr-pesca-exc { position: absolute; z-index: 9002; transform: translate(-50%, -100%); width: 1.3em; height: 1.3em; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: #ffd700; color: #3a2400; font: 900 1em 'Inter', sans-serif; box-shadow: 0 0 0 .1em #3a2400, 0 0 .6em rgba(255,215,0,.9); pointer-events: none; animation: jr-exc-pulsa .3s ease-in-out infinite alternate; }
+@keyframes jr-exc-pulsa { from { scale: .9; } to { scale: 1.15; } }
+.jr-pesca-exc[hidden] { display: none; }
+.jr-btn-levantar { position: absolute; z-index: 17; left: 50%; bottom: max(14px, var(--sa-b)); transform: translateX(-50%); min-height: 38px; padding: 4px 18px; }
+.jr-btn-levantar[hidden] { display: none; }
+.jr-pesca-conta { position: absolute; z-index: 18; left: 50%; bottom: max(10px, var(--sa-b)); transform: translateX(-50%); width: min(640px, calc(100% - 24px)); display: flex; flex-direction: column; gap: 6px;
+  padding: 8px 10px 10px; border-radius: 16px; background: rgba(17,15,38,.94); border: 1px solid rgba(124,92,252,.5); box-shadow: 0 6px 18px rgba(0,0,0,.5); }
+.jr-pesca-conta[hidden] { display: none; }
+.pc-tbar { height: 6px; border-radius: 999px; background: #0d0d1c; overflow: hidden; }
+.pc-tbar i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #7c5cfc, #c77dff); }
+.pc-conta { font: 700 22px 'Orbitron', sans-serif; color: #fff; text-align: center; line-height: 1.2; }
+.pc-conta.longa { font: 800 16px 'Inter', sans-serif; }
+.pc-ops { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.pc-op { min-height: 42px; border-radius: 12px; border: 1px solid rgba(124,92,252,.6); border-bottom-width: 3px; background: #24204a; color: #fff; font: 700 18px 'Orbitron', sans-serif; cursor: pointer; }
+.pc-ops.longas .pc-op { font: 800 14px 'Inter', sans-serif; }
+.pc-op.certa { background: linear-gradient(180deg, #13a85c, #0b6e3c); border-color: #3ecf8e; }
+.pc-op.errada { background: linear-gradient(180deg, #c7334a, #861f30); border-color: #ff5c7a; }
+.jr-pesca-cartao { position: absolute; z-index: 19; left: 50%; top: 22%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 16px;
+  background: #fff; color: #1a1d2e; box-shadow: 0 8px 22px rgba(0,0,0,.45); font: 600 15px 'Inter', sans-serif; max-width: min(420px, 86vw); }
+.jr-pesca-cartao[hidden] { display: none; }
+.jr-pesca-cartao b { color: #6c3fe0; }
+.jr-pesca-cartao small { display: block; font-size: 11.5px; color: #6b6f86; margin-top: 2px; }
+.jr-pesca-cartao .pc-peixe { font-size: 34px; }
+.jr-pesca-cartao.raro { background: linear-gradient(135deg, #fff8d6, #ffffff 45%, #fff3b0); box-shadow: 0 0 0 2px #ffd700, 0 0 22px rgba(255,215,0,.8); }
+.jr-pesca-cartao.pop { animation: jr-cartao-pop .25s ease-out; }
+@keyframes jr-cartao-pop { from { opacity: 0; transform: translateX(-50%) scale(.85); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .jr-caixote-vara, .jr-pesca-exc, .jr-pesca-linha .onda, .jr-pesca-linha.mexe .corpo { animation: none; } }

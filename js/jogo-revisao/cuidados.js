@@ -2,9 +2,7 @@
 // Só contas, sem tela nem Firebase. Sábado, domingo e as datas de `pausas`
 // (jogo_revisao_config/global/pausas: feriados, férias) não contam.
 
-export const HORAS_BARRIGA = 72;      // de 100 a 0 em 72 horas úteis
-export const PRECO_REFEICAO = 5;      // moedas
-export const REFEICOES_POR_DIA = 2;   // por pet
+export const HORAS_BARRIGA_ANTIGA = 72;   // só para migrar quem já tinha pet (antes: de 100 a 0 em 72 h úteis)
 export const CARINHOS_POR_DIA = 3;    // que contam lealdade, por pet
 export const LEALDADE_INICIAL = 20;
 export const LEALDADE_MIN = 10;
@@ -38,9 +36,18 @@ export function horasUteis(desde, ate = Date.now()) {
   return ms / 3600000;
 }
 
-// Barriga de 0 a 100, calculada na hora (nunca salva)
-export const barriga = (ultimaRefeicao, agora = Date.now()) =>
-  Math.max(0, Math.min(100, 100 - 100 * horasUteis(ultimaRefeicao, agora) / HORAS_BARRIGA));
+// Barriga (loja.json → barriga.esvazia_horas_uteis): cada pet guarda { barriga, barriga_t }.
+// Só o pet ATIVO esvazia (desde barriga_t); os outros ficam congelados como estavam.
+let horasBarriga = 48;
+export function definirBarriga(cfg) { if (Number(cfg?.esvazia_horas_uteis) > 0) horasBarriga = Number(cfg.esvazia_horas_uteis); }
+export function barrigaDoPet(c, ativo, agora = Date.now()) {
+  const b = Number.isFinite(Number(c?.barriga)) ? Number(c.barriga) : 100;
+  if (!ativo) return Math.max(0, Math.min(100, b));
+  return Math.max(0, Math.min(100, b - 100 * horasUteis(Number(c.barriga_t) || agora, agora) / horasBarriga));
+}
+// Como era antes (pela última refeição): só para migrar o pet ativo mantendo o valor de hoje
+export const barrigaAntiga = (ultimaRefeicao, agora = Date.now()) =>
+  Math.max(0, Math.min(100, 100 - 100 * horasUteis(ultimaRefeicao, agora) / HORAS_BARRIGA_ANTIGA));
 
 export function faixaBarriga(b) {
   if (b >= 70) return { rotulo: 'Satisfeito', cor: 'verde' };
