@@ -13,7 +13,8 @@ import { definirPausas, barriga, faixaBarriga, rotuloLealdade, lealdadeComQueda,
   CARINHOS_POR_DIA, LEALDADE_INICIAL, LEALDADE_DIA, LEALDADE_CAMBALHOTA } from '/js/jogo-revisao/cuidados.js';
 import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, tamanhoBusto, temBusto, bustoPet, preCarregarPet, PetSeguidor, PetParado } from '/js/jogo-revisao/pets.js';
 import { iniciarOnline, enviarOnline, sairOnline, ouvirMapa, ouvirTodos, onlineAtivo, VALIDADE_MS } from '/js/jogo-revisao/online.js';
-import { definirBatalhas, batalhasProntas, cfgBatalha, treinadores, treinador, gerarConta, mostrarNumero, desafioDe, situacao, forca, dano, premios, depoisDaBatalha } from '/js/jogo-revisao/batalha.js';
+import { definirPedidos, pedidosProntos, cfgPedidos, pedidoDisponivel, moedasDoPedido, limiteDoDiaAtingido, dicaPedido, lerResposta } from '/js/jogo-revisao/pedidos.js';
+import { definirBatalhas, batalhasProntas, cfgBatalha, treinadores, treinador, tiposDeConta, gerarConta, vidaExtraLealdade, desafioDe, situacao, forca, dano, premios, depoisDaBatalha } from '/js/jogo-revisao/batalha.js';
 import { definirFalas, falasProntas, configFalas, dicaDe, montarFala, duracaoBalao, fraseDe, configAjuda } from '/js/jogo-revisao/conversa.js';
 import { notaJogoRevisao, formatarNota, NOTA_MAX, PESO_INSIGNIAS, PESO_DOURADAS } from '/js/jogo-revisao/nota.js';
 
@@ -36,10 +37,13 @@ const GW = 344, GH = 192, CEL = 4;  // grade da trilha (cada pixel = 4×4 do map
 const VEL = 180;                    // px/s em coordenadas da imagem
 const T_QUADRO = 120;               // ms por quadro de caminhada
 const ALT_JOGADOR = 110, ALT_TREINADOR = 120, ALT_LIDER = 135;
-const ALT_JOGADOR_MAPA = 55;   // nos mapas da cidade o personagem tem metade do tamanho (nos ginásios continua 110)
+// Atores nos mapas da região (personagem, colegas, pessoas e pets): × ESCALA_ATORES sobre o tamanho base (personagem 55).
+// Distâncias do pet, toque nas pessoas, balões e ícones acompanham. Andar e trilhas não mudam; ginásios têm tamanhos próprios.
+const ESCALA_ATORES = 1.25;
+const ALT_JOGADOR_MAPA = 55 * ESCALA_ATORES;   // nos mapas da cidade o personagem é menor (nos ginásios continua 110)
 // Tamanho do pet na cena (altura do quadro, em px do cenário 1376×768; a largura segue a proporção do sprites.json).
 // Não depende do tamanho do arquivo: trocar a resolução das imagens não muda o tamanho na tela.
-// Altura do pet SENTADO no mapa, em px na escala do mapa (personagem = ALT_JOGADOR_MAPA = 55)
+// Altura do pet SENTADO no mapa, em px na escala base (personagem = 55; no mapa tudo × ESCALA_ATORES)
 const ALT_PET = {
   capivara: 30, gato: 30, gaviao: 30, axolote: 30, tigre: 30,
   unicornio: 40, dragao_azul: 40,
@@ -50,7 +54,7 @@ const altPet = (pet) => ALT_PET[pet] ?? ALT_PET_PADRAO;
 // O quadro (449 × 352) tem folga em cima para os pulos: sentado, o pet ocupa ~302 dos 352 px.
 // Altura da IMAGEM para o pet sentado ficar com a altura da tabela:
 const altImagemPet = (pet) => altPet(pet) * 352 / 302;
-// Distância normal do pet atrás do personagem (ao longo do rastro), em px na escala do mapa.
+// Distância normal do pet atrás do personagem (ao longo do rastro), em px na escala base (× ESCALA_ATORES no mapa).
 // Parado, o pet chega a 55% disso; acima de +10 anda 1,3× mais rápido; acima de +62 corre (pets.js).
 const DIST_PET = {
   capivara: 36, gato: 36, gaviao: 36, axolote: 36, tigre: 36,
@@ -58,8 +62,8 @@ const DIST_PET = {
 };
 const DIST_PET_PADRAO = 36;
 const distPet = (pet) => DIST_PET[pet] ?? DIST_PET_PADRAO;
-// no ginásio tudo é o dobro (o personagem tem ALT_JOGADOR em vez de ALT_JOGADOR_MAPA)
-const ESCALA_GINASIO = ALT_JOGADOR / ALT_JOGADOR_MAPA;
+// no ginásio tudo é o dobro da escala base (o personagem tem ALT_JOGADOR = 110 em vez de 55)
+const ESCALA_GINASIO = ALT_JOGADOR / 55;
 const DIST_PORTA = 30;               // encostar na porta/saída andando pelas setas ou joystick
 const DIST_TOQUE = 60;               // toque a até 60 px de uma porta/saída vira destino especial
 const DIST_PERTO = 90;               // nome do ginásio / "Saída" aparece; Enter e OK funcionam
@@ -77,6 +81,11 @@ const FATOR_IMG_PERSONAGEM = 664 / 630;
 const NUM_MAPAS = 13;
 
 const $ = (id) => document.getElementById(id);
+// Busto: só a parte de cima da imagem. frac = fração da altura que aparece; topo = onde começa (as imagens do
+// personagem têm folga em cima; as das pessoas começam na cabeça). espelhar: olha para o outro lado.
+const BUSTO_PERS = { frac: 0.46, topo: 0.04 }, BUSTO_NPC = { frac: 0.4, topo: 0 }, ROSTO_NPC = { frac: 0.24, topo: 0 };
+const bustoHtml = (src, cls, { frac, topo }, espelhar = false, id = '') =>
+  `<span class="jr-busto ${cls}"${id ? ` id="${id}"` : ''} style="--frac:${frac};--topo:${topo}"><img src="${src}" alt="" draggable="false"${espelhar ? ' class="espelho"' : ''}/></span>`;
 const sortear = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
@@ -114,7 +123,7 @@ function estadoVazio() {
       };
     }
   }
-  return { ginasios, avisosPet: {}, batalhas: {}, batalhasDia: null };
+  return { ginasios, avisosPet: {}, batalhas: {}, batalhasDia: null, pedidos: {}, pedidosDia: null };
 }
 
 // ============================================================
@@ -159,7 +168,9 @@ async function carregarEstado() {
     estado.pets = lerPets(v);   // validado depois de ler o sprites.json (cachorro/porco antigos são ignorados)
     estado.revisaoSemanal = v.revisao_semanal || {};
     estado.batalhas = v.batalhas && typeof v.batalhas === 'object' ? { ...v.batalhas } : {};   // { treinadorId: { nivel, vitorias, derrotas, estado, descansa_ate } }
-    estado.batalhasDia = v.batalhas_dia || null;   // { data, moedas, lealdade, xp } — zera quando muda o dia
+    estado.batalhasDia = v.batalhas_dia || null;
+    estado.pedidos = v.pedidos && typeof v.pedidos === 'object' ? { ...v.pedidos } : {};   // { id: { fim: 'acertou'|'errou', tentativas, dica, data } }
+    estado.pedidosDia = v.pedidos_dia || null;   // { data, moedas, pessoas: { npc: n } } — zera quando muda o dia   // { data, moedas, lealdade, xp } — zera quando muda o dia
     estado.avisosPet = v.avisos_pet && typeof v.avisos_pet === 'object' ? { ...v.avisos_pet } : {};   // { pet: { conversa, ajuda }, toques_sem_lealdade }
     estado.personagem = persValido(v.personagem) ? v.personagem : null;   // sem campo: usa o padrão
     // aluno novo = nada salvo ainda (sem ginásio, insígnia, pet nem dia jogado)
@@ -436,7 +447,7 @@ export async function iniciarJogo(sess) {
   ligarOrientacao();   // já desenha deitado na tela "Carregando o jogo…"
   modoDev = new URLSearchParams(location.search).get('dev') === '1' && isModoTeste();
   // só para a professora testar pelo console (?dev=1 no modo teste): jogoRevisaoDev.somarTurma('ZZ_DEV', 'insignias')
-  if (modoDev) window.jogoRevisaoDev = { somarTurma };
+  if (modoDev) window.jogoRevisaoDev = { somarTurma, batalha: () => bt };   // batalha: a luta em andamento (testes)
 
   try {
     const pegar = (p) => fetch(`${DADOS}/${p}`).then(r => { if (!r.ok) throw new Error(p); return r.json(); });
@@ -463,6 +474,8 @@ export async function iniciarJogo(sess) {
   editarNpcs = teste && new URLSearchParams(location.search).get('editarNpcs') === '1';   // nunca para alunos
   try { definirBatalhas(await fetch(`${DADOS}/batalhas.json`).then(r => { if (!r.ok) throw new Error('batalhas.json'); return r.json(); })); }
   catch (e) { console.warn('[jogo-revisao] batalha de pets indisponível', e); }
+  try { definirPedidos(await fetch(`${DADOS}/pedidos.json`).then(r => { if (!r.ok) throw new Error('pedidos.json'); return r.json(); })); }
+  catch (e) { console.warn('[jogo-revisao] pedidos de ajuda indisponíveis', e); }
   try { await carregarSprites(); petsOk = true; } catch (e) { console.error('[jogo-revisao] pets indisponíveis', e); }
   preCarregarQuadros(meuPersonagem());
   ligarEventos();
@@ -493,10 +506,9 @@ const pers = { primeira: false, sel: null, giro: 0, timer: 0, andarAte: 0, quadr
 function abrirEscolhaPersonagem(primeira = false) {
   pers.primeira = primeira;
   pers.sel = meuPersonagem();
-  $('pers-grade').innerHTML = PERS.lista.map(p => `
-    <button class="jr-pers-cartao" data-pers="${esc(p.id)}" aria-label="${esc(p.nome)}">
+  $('pers-grade').innerHTML = PERS.lista.map((p, i) => `
+    <button class="jr-pers-cartao" data-pers="${esc(p.id)}" aria-label="Personagem ${i + 1}">
       <img src="${urlQuadro('frente', -1, p.id)}" alt="" draggable="false"/>
-      <span>${esc(p.nome)}</span>
     </button>`).join('');
   $('pers-cancelar').hidden = primeira;
   $('pers-escolha').hidden = false;
@@ -519,7 +531,6 @@ function selecionarPersonagem(id) {
   pers.sel = id;
   preCarregarQuadros(id);
   for (const c of $('pers-grade').children) c.classList.toggle('atual', c.dataset.pers === id);
-  $('pers-nome').textContent = PERS.lista.find(p => p.id === id).nome;
   $('pers-img').src = urlQuadro(['frente', 'direita', 'costas', 'esquerda'][pers.giro % 4], -1, id);
 }
 
@@ -1105,7 +1116,7 @@ const colegaVisivel = (uid, r) => !!r && Date.now() - (Number(r.ts) || 0) < VALI
   (teste || (!ALUNOS_TESTE.includes(uid) && !/PROFESSOR|TESTE/i.test(uid) && r.turma !== 'TESTE' && !/PROFESSOR|TESTE/i.test(r.apelido || '')));
 
 async function entrarOnline() {
-  let apelido = sessao.nome;
+  let apelido = String(sessao.nome || '').split(' ')[0];   // sem apelido: o primeiro nome
   try {
     const s = await get(ref(db, `perfis/${sessao.uid}/apelido_ativo`));
     if (s.exists() && s.val()) { apelido = String(s.val()); apelidoAluno = apelido; }
@@ -1137,6 +1148,7 @@ function sairDoMapaOnline() {
 }
 
 function limparColegas() {
+  fecharCartaoColega();
   for (const c of colegas.values()) { c.el.remove(); c.nome.remove(); c.petImg.remove(); c.sombra.remove(); c.balao?.remove(); }
   colegas.clear();
 }
@@ -1231,7 +1243,7 @@ function atualizarColegas(dt) {
     // etiqueta com o apelido: 11 px na tela, qualquer que seja o zoom da câmera
     Object.assign(c.nome.style, { left: c.x + 'px', top: (c.y - ALT_JOGADOR_MAPA - 2) + 'px', fontSize: 11 * escala + 'px', zIndex: 9000 });
     if (c.balao) Object.assign(c.balao.style, { left: c.x + 'px', top: (c.y - ALT_JOGADOR_MAPA - 16 * escala) + 'px', fontSize: 22 * escala + 'px' });
-    if (c.pet) c.seg.atualizar(dt, c.x, c.y, VEL, altImagemPet(c.pet), distPet(c.pet));
+    if (c.pet) c.seg.atualizar(dt, c.x, c.y, VEL, altImagemPet(c.pet) * ESCALA_ATORES, distPet(c.pet) * ESCALA_ATORES, ESCALA_ATORES);
   }
 }
 
@@ -1248,6 +1260,55 @@ function enviarPosicao() {
     envio.parado = true;
     if (jog.x !== envio.x || jog.y !== envio.y) { envio.x = jog.x; envio.y = jog.y; envio.t = agora; enviarOnline({ x: Math.round(jog.x), y: Math.round(jog.y), dir: jog.dir }); }
   }
+}
+
+// ── Cartão do colega (toque nele): busto, nome · turma, pet e 👋. Fecha ao tocar fora ou em 4 s ──
+let cartaoColega = null;   // { c, timer }
+const nomeVisivel = (s) => (/PROFESSOR|TESTE/i.test(String(s || '')) ? '' : String(s || ''));
+
+function colegaEm(pt) {
+  if (colegasOcultos) return null;
+  let melhor = null, md = Infinity;
+  const h = ALT_JOGADOR_MAPA, folga = 6 * ESCALA_ATORES;
+  for (const c of colegas.values()) {
+    if (c.el.hidden || Math.abs(pt.x - c.x) > h * 0.3 + folga || pt.y < c.y - h - folga || pt.y > c.y + folga) continue;
+    const d = Math.abs(pt.x - c.x) + Math.abs(pt.y - c.y);
+    if (d < md) { md = d; melhor = c; }
+  }
+  return melhor;
+}
+
+function abrirCartaoColega(c) {
+  fecharCartaoColega();
+  pararFalaPet();   // o balão do meu pet não fica por cima do cartão
+  const r = c.reg || {}, el = $('colega-cartao');
+  const nome = nomeVisivel(r.apelido) || 'Colega', turma = nomeVisivel(r.turma);
+  const pet = petValido(r.pet) ? r.pet : null;
+  el.innerHTML = `
+    ${bustoHtml(urlQuadro('frente', -1, c.pers || PERS.padrao), 'jr-busto-colega', BUSTO_PERS)}
+    <span class="jr-colega-info">
+      <b>${esc(nome)}${turma ? ` <small>· ${esc(turma)}</small>` : ''}</b>
+      ${pet ? `<span class="jr-colega-pet"><img src="${quadrosDe(pet, 'sentado_girando')[0]}" alt="" draggable="false"/>${esc(NOME_PET[pet])}</span>` : ''}
+    </span>
+    <button class="jr-colega-oi" data-oi aria-label="Acenar">👋</button>`;
+  el.hidden = false;
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+  cartaoColega = { c, timer: setTimeout(fecharCartaoColega, 4000) };
+  posicionarCartaoColega();
+}
+
+function posicionarCartaoColega() {
+  if (!cartaoColega) return;
+  const { c } = cartaoColega;
+  if (!colegas.has(c.uid) || c.el.hidden) { fecharCartaoColega(); return; }
+  posicionarNaTela($('colega-cartao'), c.x, c.y - ALT_JOGADOR_MAPA - 4 * ESCALA_ATORES);
+}
+
+function fecharCartaoColega() {
+  if (cartaoColega) clearTimeout(cartaoColega.timer);
+  cartaoColega = null;
+  const el = $('colega-cartao');
+  if (el) el.hidden = true;
 }
 
 function alternarColegas() {
@@ -1900,7 +1961,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden;
+  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden;
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -2030,11 +2091,11 @@ function loop(t) {
     if (!vx && !vy) soltouDesdeTroca = true;
     const direto = (vx || vy) && moverDireto(dt, vx, vy);
     if (!direto) passo(dt);
-    const e = cena.tipo === 'mapa' ? 1 : ESCALA_GINASIO;
+    const e = cena.tipo === 'mapa' ? ESCALA_ATORES : ESCALA_GINASIO;
     const pet = seguidor?.pet;
     seguidor?.atualizar(dt, jog.x, jog.y, VEL, altImagemPet(pet) * e, distPet(pet) * e, e);
     petGin?.anim.atualizar(dt);
-    if (cena.tipo === 'mapa') { atualizarColegas(dt); enviarPosicao(); posicionarMinhaReacao(); atualizarConversa(); }
+    if (cena.tipo === 'mapa') { atualizarColegas(dt); enviarPosicao(); posicionarMinhaReacao(); posicionarCartaoColega(); atualizarConversa(); }
     ajustarCamera();
     if (cena?.tipo === 'mapa') {
       atualizarMapa();
@@ -2347,11 +2408,16 @@ const distAoDestino = (d) => Math.min(dist(jog.x, jog.y, d.x, d.y), dist(jog.x, 
 function tocarNoMapa(e) {
   const p = telaParaImagem(e.clientX, e.clientY);
   if (balaoPessoa) fecharBalaoPessoa();   // tocar fora fecha o balão da pessoa
+  if (cartaoColega) fecharCartaoColega();
   // pet e pessoa podem estar lado a lado: vale o que estiver mais perto do toque
   const pessoa = pessoaEm(p);
   const noPet = tocouNoPet(p);
   if (noPet && (!pessoa || dist(p.x, p.y, seguidor.x, seguidor.y - seguidor.altura / 2) < dist(p.x, p.y, pessoa.p.x, pessoa.p.y - pessoa.alt / 2))) {
     falarPorToque(); return;   // tocar no pet: ele fala (não anda até lá)
+  }
+  const colega = colegaEm(p);
+  if (colega && (!pessoa || dist(p.x, p.y, colega.x, colega.y - ALT_JOGADOR_MAPA / 2) < dist(p.x, p.y, pessoa.p.x, pessoa.p.y - pessoa.alt / 2))) {
+    abrirCartaoColega(colega); return;   // tocar num colega: cartão com nome · turma e o pet dele
   }
   if (pessoa) { if (!editarNpcs) irFalarCom(pessoa); return; }   // tocar numa pessoa: vai até ela e conversa
   // Tocou a até 60 px de uma porta ou saída → esse ponto vira o destino especial
@@ -2686,10 +2752,11 @@ function avisarEm(texto, x, y) {
 const ELEM_PET = { capivara: ['🍃', '🌿'], gato: ['🐾', '✦'], gaviao: ['🪶', '💨'], unicornio: ['🌈', '✨', '💖'], axolote: ['🫧', '💧'],
   tigre: ['⚡', '🐾'], dragao_vermelho: ['🔥', '💥'], dragao_azul: ['❄️', '💎'] };
 const FALAS_VOLTOU_FORTE = ['Treinei muito desde a última vez!', 'Voltei mais forte. Preparado?', 'Andei treinando… agora é sério!'];
-const POR_PAGINA_BT = 10;
 let bt = null;            // batalha em andamento
-let btPagina = 0, btTimerLista = 0;
+let btSel = null, btTimerLista = 0;   // treinador selecionado na lista
 
+// nome do aluno na batalha: apelido ativo ou o primeiro nome (professor/teste: "Você")
+const nomeAluno = () => nomeVisivel(apelidoAluno || String(sessao?.nome || '').split(' ')[0]) || 'Você';
 const podeBatalhar = () => petsOk && batalhasProntas() && carregouProgresso && !!estado?.pets?.ativo;
 const desafioCom = (id) => desafioDe(estado.batalhas?.[id]);
 
@@ -2723,7 +2790,9 @@ function petComFomeParaBatalha() {
 function abrirListaBatalha() {
   if (!podeBatalhar()) return;
   if (mp) fecharMeuPet();
-  btPagina = 0;
+  // abre no primeiro treinador ainda não vencido
+  const ts = treinadores();
+  btSel = (ts.find(t => !desafioCom(t.id).vitorias) || ts[0])?.id || null;
   $('bt-lista').hidden = false;
   renderListaBatalha();
   clearInterval(btTimerLista);
@@ -2732,32 +2801,50 @@ function abrirListaBatalha() {
 
 function renderListaBatalha() {
   const dia = diaBatalhas(), lim = cfgBatalha().limites_dia || {};
-  $('bt-lista-dia').textContent = `${NOME_PET[estado.pets.ativo]} luta com você · prêmios de hoje: ${dia.moedas} / ${lim.moedas ?? '∞'} 🪙`;
-  const todos = treinadores();
-  const paginas = Math.ceil(todos.length / POR_PAGINA_BT);
-  const lista = todos.slice(btPagina * POR_PAGINA_BT, (btPagina + 1) * POR_PAGINA_BT);
-  const agora = Date.now();
-  $('bt-cards').innerHTML = lista.map(t => {
-    const d = desafioCom(t.id), sit = situacao(d, agora), f = forca(t, d);
-    const estadoTxt = sit === 'descansando' ? `😴 Descansando · volta em ${faltaTexto(d.descansa_ate - agora)}`
-      : sit === 'revanche' ? '🔁 Revanche' : '';
-    const m = mapaDoTreinador(t.id);
-    return `
-      <div class="bt-card ${sit}">
-        <span class="bt-card-img"><img src="${IMG}/npcs/${esc(t.id)}.webp" alt="" draggable="false" onerror="this.remove()"/>
-          <img class="bt-card-pet" src="${quadrosDe(t.pet, 'sentado_girando')[0]}" alt="" draggable="false"/></span>
-        <span class="bt-card-txt">
-          <span class="bt-card-nome">${esc(t.nome)}${d.vitorias > 0 ? ' <span class="bt-trofeu" title="Já venceu">🏆</span>' : ''}</span>
-          <span class="bt-card-quem">${esc(t.quem)} · ${NOME_PET[t.pet] || ''}</span>
-          <span class="bt-card-dif">${'⭐'.repeat(t.nivel)}<small>Nível ${d.nivel} · acerta ${Math.round(f.acerto * 100)}%</small></span>
-          ${estadoTxt ? `<span class="bt-card-estado">${estadoTxt}</span>` : ''}
-          <span class="bt-card-mapa">📍 ${m ? `${m}. ${esc(D.questoes[m].nome)}` : '—'}</span>
-          <button class="bt-card-ir" data-ir="${esc(t.id)}"${m ? '' : ' disabled'}>Ir até lá</button>
-        </span>
-      </div>`;
+  $('bt-lista-dia').textContent = `prêmios de hoje ${dia.moedas}/${lim.moedas ?? '∞'} 🪙`;
+  const agora = Date.now(), ts = treinadores();
+  if (!ts.some(t => t.id === btSel)) btSel = ts[0]?.id || null;
+  $('bt-cards').innerHTML = ts.map(t => {
+    const d = desafioCom(t.id), sit = situacao(d, agora);
+    const icone = sit === 'descansando' ? `😴<small>${horasFalta(d.descansa_ate - agora)}</small>` : sit === 'revanche' ? '🔁' : d.vitorias > 0 ? '🏆' : '';
+    return `<button class="bt-linha ${sit}${t.id === btSel ? ' sel' : ''}" data-sel="${esc(t.id)}" aria-pressed="${t.id === btSel}">
+      ${bustoHtml(`${IMG}/npcs/${esc(t.id)}.webp`, 'bt-rosto', ROSTO_NPC)}
+      <span class="bt-linha-nome">${esc(t.nome)}</span>
+      <span class="bt-linha-est">${'⭐'.repeat(t.nivel)}</span>
+      <span class="bt-linha-ic">${icone}</span>
+    </button>`;
   }).join('');
-  $('bt-pag').hidden = paginas < 2;
-  $('bt-pag').textContent = btPagina < paginas - 1 ? 'Mais treinadores ▶' : '◀ Voltar ao início';
+  renderDetalheTreinador();
+}
+
+const horasFalta = (ms) => { const h = Math.ceil(ms / 3600e3); return h > 1 ? `${h} h` : `${Math.max(1, Math.ceil(ms / 60000))} min`; };
+
+function renderDetalheTreinador() {
+  const t = treinador(btSel), el = $('bt-det');
+  if (!t) { el.innerHTML = ''; return; }
+  const agora = Date.now(), d = desafioCom(t.id), sit = situacao(d, agora), f = forca(t, d), m = mapaDoTreinador(t.id);
+  const tipos = tiposDeConta(), contas = (t.contas || []).map(k => tipos[k]?.nome).filter(Boolean);
+  const estado = sit === 'descansando' ? `😴 descansando · volta em ${faltaTexto(d.descansa_ate - agora)}`
+    : sit === 'revanche' ? '🔁 revanche: você perdeu da última vez' : d.vitorias > 0 ? '🏆 já venceu · pronto para outro desafio' : '⚔️ pronto para o desafio';
+  const botao = sit === 'descansando'
+    ? `<button class="jr-btn bt-det-ir" disabled>😴 volta em ${horasFalta(d.descansa_ate - agora)}</button>`
+    : `<button class="jr-btn jr-btn-ouro bt-det-ir" data-ir="${esc(t.id)}"${m ? '' : ' disabled'}>📍 Ir até lá</button>`;
+  el.innerHTML = `
+    <div class="bt-det-topo">
+      ${bustoHtml(`${IMG}/npcs/${esc(t.id)}.webp`, 'bt-det-busto', BUSTO_NPC)}
+      <div class="bt-det-quem">
+        <div class="bt-det-nome">${esc(t.nome)}</div>
+        <div class="bt-det-sub">${esc(t.quem)}</div>
+        <div class="bt-det-pet"><img src="${quadrosDe(t.pet, 'sentado_girando')[0]}" alt="" draggable="false"/>${esc(NOME_PET[t.pet] || '')} <span>${'⭐'.repeat(t.nivel)}</span></div>
+      </div>
+    </div>
+    <div class="bt-det-linhas">
+      <div>Nível ${d.nivel} · acerta ${Math.round(f.acerto * 100)}%</div>
+      <div>📍 ${m ? `${m}. ${esc(D.questoes[m].nome)}` : '—'}</div>
+      ${contas.length ? `<div>Contas: ${contas.map(esc).join(', ')}</div>` : ''}
+      <div class="bt-det-estado ${sit}">${estado}</div>
+    </div>
+    ${botao}`;
 }
 
 // ── A luta ──────────────────────────────────────────────────
@@ -2775,17 +2862,22 @@ function iniciarBatalha(id, origem = 'lista') {
   limparBatalha();
   const c = cfgBatalha();
   const f = forca(t, d);
-  bt = { t, d, f, origem, pet: estado.pets.ativo, rod: 0, hp: { L: c.vida || 100, R: c.vida || 100 }, tempoTot: { L: 0, R: 0 }, timers: [], anim: { L: 0, R: 0 },
-    contas: [], fechou: true, fim: false, raf: 0 };
+  const vida = c.vida || 100, extra = vidaExtraLealdade(cuidadosDe(estado.pets.ativo)?.lealdade);   // lealdade alta: vida extra
+  bt = { t, d, f, origem, pet: estado.pets.ativo, rod: 0, hp: { L: vida + extra, R: vida }, max: { L: vida + extra, R: vida }, extra, seq: 0,
+    tempoTot: { L: 0, R: 0 }, timers: [], anim: { L: 0, R: 0 }, contas: [], revisao: [], fechou: true, fim: false, raf: 0 };
   soltarJoystick();
   pararFalaPet();
   preCarregarPet(bt.pet); preCarregarPet(t.pet);
   $('batalha').hidden = false;
-  $('bt-nomeL').innerHTML = `Você<small>· ${NOME_PET[bt.pet]}</small>`;
+  $('bt-nomeL').innerHTML = `${esc(nomeAluno())}<small>· ${NOME_PET[bt.pet]}</small>`;
   $('bt-nomeR').innerHTML = `<small>${NOME_PET[t.pet]} ·</small>${esc(t.nome)}`;
+  $('bt-bustoL').outerHTML = bustoHtml(urlQuadro('direita', -1), 'bt-busto L', BUSTO_PERS, false, 'bt-bustoL');
+  $('bt-bustoR').outerHTML = bustoHtml(`${IMG}/npcs/${t.id}.webp`, 'bt-busto R', BUSTO_NPC, true, 'bt-bustoR');
+  if (NPCS.find(p => p.id === t.id)?.piscar) {   // o busto do treinador pisca como a pessoa no mapa
+    bt.pisca = { p: { id: t.id }, img: $('bt-bustoR').querySelector('img'), timer: 0 };
+    agendarPiscar(bt.pisca);
+  }
   $('bt-tRnome').textContent = `Tempo de ${t.nome}`;
-  $('bt-npc').src = `${IMG}/npcs/${t.id}.webp`;
-  $('bt-npc').onerror = () => { $('bt-npc').removeAttribute('src'); };
   $('bt-fim').hidden = true;
   $('bt-ops').hidden = $('bt-conta').hidden = false;
   $('bt-ops').innerHTML = ''; $('bt-conta').textContent = 'Prepare-se…'; $('bt-msg').textContent = '';
@@ -2793,8 +2885,10 @@ function iniciarBatalha(id, origem = 'lista') {
   $('bt-rodada').innerHTML = `<small>Rodada</small>0 / ${c.rodadas || 7}`;
   for (const l of ['L', 'R']) { $('bt-st' + l).className = 'bt-status'; btHp(l); btParado(l); btTempoBarra(l, 1, ''); }
   $('bt-sair').style.visibility = '';
+  $('bt-revisao').hidden = true;
+  btSeq();
   // fala de início (nível > 1: "Treinei muito…") e "Batalha!"
-  const fala = d.nivel > 1 ? sortear(FALAS_VOLTOU_FORTE) : t.fala_inicio;
+  const fala = d.nivel > 1 ? (t.fala_nivel_alto || sortear(FALAS_VOLTOU_FORTE)) : t.fala_inicio;
   btFala(fala, 2300);
   btLater(() => { btBanner('Batalha!', '#f0a500'); btLater(btRodada, 1200); }, 2400);
 }
@@ -2803,6 +2897,7 @@ function limparBatalha() {
   if (!bt) return;
   bt.timers.forEach(clearTimeout);
   clearTimeout(bt.anim.L); clearTimeout(bt.anim.R);
+  if (bt.pisca) { clearTimeout(bt.pisca.timer); bt.pisca.img = { isConnected: false }; }   // para de piscar
   cancelAnimationFrame(bt.raf);
 }
 
@@ -2813,6 +2908,7 @@ function fecharBatalha(voltarLista = true) {
   atualizarIconesPessoas();
   $('batalha').hidden = true;
   $('bt-fala').hidden = true;
+  $('bt-revisao').hidden = true;
   if (voltarLista) { $('bt-lista').hidden = false; renderListaBatalha(); }
 }
 
@@ -2849,19 +2945,19 @@ function btParticula(txt, x, y, { dx = 0, dy = -60, dur = 900, size = 22, delay 
     { transform: `translate(calc(-50% + ${dx * 0.3}px),calc(-50% + ${dy * 0.3}px)) scale(1.15)`, opacity: 1, offset: 0.2 },
     { transform: `translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(.7)`, opacity: 0 }], { duration: dur, delay, easing: 'ease-out', fill: 'backwards' }).onfinish = () => s.remove();
 }
-function btProjetil(de, para, pet, crit) {
+function btProjetil(de, para, pet, crit, especial = false) {
   return new Promise(ok => {
     if (btReduz()) { ok(); return; }
     const a = btCentro($('bt-' + de)), b = btCentro($('bt-' + para)), e = ELEM_PET[pet] || ['✨'];
     const s = document.createElement('span');
-    s.className = 'bt-p'; s.textContent = e[0]; s.style.fontSize = (crit ? 44 : 34) + 'px'; s.style.left = a.x + 'px'; s.style.top = a.y + 'px';
+    s.className = 'bt-p'; s.textContent = e[0]; s.style.fontSize = (especial ? 64 : crit ? 44 : 34) + 'px'; s.style.left = a.x + 'px'; s.style.top = a.y + 'px';
     $('bt-fx').appendChild(s);
     const dx = b.x - a.x, dy = b.y - a.y, dur = 420;
     const an = s.animate([{ transform: 'translate(-50%,-50%) scale(.6) rotate(0)' },
       { transform: `translate(calc(-50% + ${dx / 2}px),calc(-50% + ${dy / 2 - 50}px)) scale(1.2) rotate(180deg)` },
       { transform: `translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(1) rotate(360deg)` }], { duration: dur, easing: 'ease-in' });
     const t0 = performance.now();
-    const rastro = () => { const k = (performance.now() - t0) / dur; if (k < 1 && bt) { btParticula(e[1] || e[0], a.x + dx * k, a.y + dy * k - 50 * Math.sin(Math.PI * k), { dx: (Math.random() - 0.5) * 20, dy: 10 + Math.random() * 20, dur: 420, size: 16 }); requestAnimationFrame(rastro); } };
+    const rastro = () => { const k = (performance.now() - t0) / dur; if (k < 1 && bt) { btParticula(e[1] || e[0], a.x + dx * k, a.y + dy * k - 50 * Math.sin(Math.PI * k), { dx: (Math.random() - 0.5) * 20, dy: 10 + Math.random() * 20, dur: 420, size: especial ? 24 : 16 }); requestAnimationFrame(rastro); } };
     btLater(rastro, 40);
     an.onfinish = () => { s.remove(); ok(); };
   });
@@ -2872,23 +2968,65 @@ function btBote(lado) {
   return el.animate([{ transform: `translateX(0) ${flip}` }, { transform: `translateX(${-14 * dir}px) ${flip}`, offset: 0.25 },
     { transform: `translateX(${46 * dir}px) ${flip}`, offset: 0.55 }, { transform: `translateX(0) ${flip}` }], { duration: 520, easing: 'ease-out' }).finished.catch(() => {});
 }
-function btLevarDano(lado, n, crit, pet) {
+function btLevarDano(lado, n, crit, pet, especial = false) {
   const el = $('bt-' + lado), c = btCentro(el), flip = el.style.transform || '', dir = lado === 'L' ? -1 : 1;
   if (!btReduz()) {
     el.animate([{ transform: `translateX(0) ${flip}` }, { transform: `translateX(${10 * dir}px) ${flip}` }, { transform: `translateX(${-8 * dir}px) ${flip}` },
       { transform: `translateX(${6 * dir}px) ${flip}` }, { transform: `translateX(0) ${flip}` }], { duration: 380 });
     $('bt-img' + lado).animate([{ filter: 'none' }, { filter: 'brightness(1.8) sepia(1) hue-rotate(-30deg) saturate(6)' }, { filter: 'none' }], { duration: 380 });
     const e = ELEM_PET[pet] || ['✨'];
-    for (let i = 0; i < (crit ? 10 : 6); i++) btParticula(e[i % e.length], c.x, c.y, { dx: (Math.random() - 0.5) * 150, dy: -(30 + Math.random() * 80), dur: 700 + Math.random() * 300, size: crit ? 24 : 20 });
-    if (crit) $('bt-arena').animate([{ transform: 'translate(0,0)' }, { transform: 'translate(4px,-3px)' }, { transform: 'translate(-4px,3px)' }, { transform: 'translate(0,0)' }], { duration: 260 });
+    for (let i = 0; i < (especial ? 16 : crit ? 10 : 6); i++) btParticula(e[i % e.length], c.x, c.y, { dx: (Math.random() - 0.5) * (especial ? 240 : 150), dy: -(30 + Math.random() * 80), dur: 700 + Math.random() * 300, size: especial || crit ? 24 : 20 });
+    if (especial) $('batalha').animate([{ transform: 'translate(0,0)' }, { transform: 'translate(9px,-6px)' }, { transform: 'translate(-9px,6px)' }, { transform: 'translate(7px,4px)' }, { transform: 'translate(-6px,-4px)' }, { transform: 'translate(0,0)' }], { duration: 480 });
+    else if (crit) $('bt-arena').animate([{ transform: 'translate(0,0)' }, { transform: 'translate(4px,-3px)' }, { transform: 'translate(-4px,3px)' }, { transform: 'translate(0,0)' }], { duration: 260 });
   }
   const d = document.createElement('div');
-  d.className = 'bt-dano' + (crit ? ' crit' : ''); d.textContent = (crit ? '⭐ ' : '') + '−' + n;
+  d.className = 'bt-dano' + (crit || especial ? ' crit' : '') + (especial ? ' especial' : ''); d.textContent = (especial ? '💥 ' : crit ? '⭐ ' : '') + '−' + n;
   d.style.left = c.x + 'px'; d.style.top = (c.y - 40) + 'px';
   $('bt-fx').appendChild(d);
   d.animate([{ transform: 'translate(-50%,0) scale(.6)', opacity: 0 }, { transform: 'translate(-50%,-14px) scale(1.15)', opacity: 1, offset: 0.2 },
     { transform: 'translate(-50%,-60px) scale(1)', opacity: 0 }], { duration: 1100, easing: 'ease-out' }).onfinish = () => d.remove();
 }
+// Errou: o pet fica tonto (balança, ⭐ girando 0,6 s) e perde vida
+function btTonto(lado, n) {
+  const el = $('bt-' + lado), c = btCentro(el), flip = el.style.transform || '';
+  if (!btReduz()) {
+    el.animate([{ transform: `rotate(0) ${flip}` }, { transform: `rotate(-9deg) ${flip}` }, { transform: `rotate(8deg) ${flip}` }, { transform: `rotate(-6deg) ${flip}` },
+      { transform: `rotate(4deg) ${flip}` }, { transform: `rotate(0) ${flip}` }], { duration: 600, easing: 'ease-in-out' });
+    const st = document.createElement('div');
+    st.className = 'bt-tonto'; st.innerHTML = '<span>⭐</span><span>⭐</span>';
+    st.style.left = c.x + 'px'; st.style.top = (c.y - el.getBoundingClientRect().height * 0.42) + 'px';
+    $('bt-fx').appendChild(st);
+    st.animate([{ transform: 'translate(-50%,-50%) rotate(0)', opacity: 1 }, { transform: 'translate(-50%,-50%) rotate(720deg)', opacity: 1, offset: 0.85 },
+      { transform: 'translate(-50%,-50%) rotate(800deg)', opacity: 0 }], { duration: 600, easing: 'linear' }).onfinish = () => st.remove();
+  }
+  const d = document.createElement('div');
+  d.className = 'bt-dano tonto'; d.textContent = '−' + n;
+  d.style.left = c.x + 'px'; d.style.top = (c.y - 40) + 'px';
+  $('bt-fx').appendChild(d);
+  d.animate([{ transform: 'translate(-50%,0) scale(.6)', opacity: 0 }, { transform: 'translate(-50%,-10px) scale(1)', opacity: 1, offset: 0.25 },
+    { transform: 'translate(-50%,-44px) scale(.9)', opacity: 0 }], { duration: 1000, easing: 'ease-out' }).onfinish = () => d.remove();
+}
+
+// 🔥 acertos seguidos do aluno (com N seguidos o próximo ataque é especial)
+function btSeq() {
+  const n = bt?.seq || 0, meta = cfgBatalha().sequencia?.acertos ?? 3, el = $('bt-seq');
+  el.textContent = `🔥 ${n}`;
+  el.classList.toggle('on', n > 0);
+  el.classList.toggle('cheio', n >= meta);
+  el.title = n >= meta ? 'Ataque especial pronto!' : `Acertos seguidos (${meta} = ataque especial)`;
+}
+
+// O treinador comenta a rodada (balão curto, no máximo uma vez por rodada)
+function btReagir(R) {
+  const t = bt.t;
+  let lista = null;
+  if (R.L.ok) lista = t.reage_acerto_aluno;
+  else if (R.R.ok && R.L.v !== null) lista = Math.random() < 0.5 ? t.reage_ele_acertou : t.reage_erro_aluno;   // os dois valem: alterna
+  else if (R.R.ok) lista = t.reage_ele_acertou;
+  else if (R.L.v !== null) lista = t.reage_erro_aluno;
+  if (lista?.length) btFala(sortear(lista), 1500);
+}
+
 function btBanner(txt, cor = '#fff') {
   const b = $('bt-banner');
   b.textContent = txt; b.style.color = cor;
@@ -2906,11 +3044,11 @@ function btFala(texto, ms = 3000) {
 }
 
 function btHp(lado) {
-  const vida = cfgBatalha().vida || 100, v = bt.hp[lado], pct = v / vida * 100, el = $('bt-hp' + lado);
+  const vida = bt.max[lado], v = bt.hp[lado], pct = v / vida * 100, el = $('bt-hp' + lado);
   el.style.width = pct + '%';
   el.style.background = pct > 50 ? 'var(--bt-hp)' : pct > 25 ? 'var(--bt-hp-mid)' : 'var(--bt-hp-low)';
   $('bt-hp' + lado + 'b').style.width = pct + '%';
-  $('bt-hp' + lado + 't').textContent = `${v} / ${vida}`;
+  $('bt-hp' + lado + 't').innerHTML = `${v} / ${vida}` + (lado === 'L' && bt.extra ? ` <span class="bt-leal" title="Vida extra pela lealdade">💛 lealdade +${bt.extra}</span>` : '');
 }
 function btTempoBarra(lado, frac, txt) { $('bt-t' + lado).style.width = Math.max(0, frac) * 100 + '%'; $('bt-t' + lado + 'txt').textContent = txt; }
 
@@ -2919,12 +3057,14 @@ function btRodada() {
   const c = cfgBatalha(), T = c.tempo_s || 15;
   bt.rod++;
   $('bt-rodada').innerHTML = `<small>Rodada</small>${bt.rod} / ${c.rodadas || 7}`;
-  const p = gerarConta(bt.f.contas);
+  const p = gerarConta(bt.t.contas, bt.f.contas);
   Object.assign(bt, { p, resp: { L: null, R: null }, lim: { L: T, R: T }, t0: performance.now(), fechou: false });
   for (const l of ['L', 'R']) $('bt-st' + l).className = 'bt-status';
   $('bt-conta').textContent = p.conta;
+  $('bt-conta').classList.toggle('longa', p.longa);
   $('bt-msg').textContent = '';
-  $('bt-ops').innerHTML = p.opcoes.map(v => `<button class="bt-op" data-v="${v}">${mostrarNumero(v)}</button>`).join('');
+  $('bt-ops').innerHTML = p.opcoes.map((v, i) => `<button class="bt-op" data-i="${i}">${esc(v)}</button>`).join('');
+  $('bt-ops').classList.toggle('longas', p.opcoes.some(v => v.length > 7));
   // treinador simulado: acerta com a chance dele, no tempo dele; errando, escolhe uma errada
   const tR = bt.f.tempo[0] + Math.random() * (bt.f.tempo[1] - bt.f.tempo[0]);
   const certo = Math.random() < bt.f.acerto;
@@ -2955,7 +3095,7 @@ function btResponder(l, v) {
     tocar('clique');
     for (const b of $('bt-ops').querySelectorAll('.bt-op')) {
       b.disabled = true;
-      if (Number(b.dataset.v) === v) b.classList.add(bt.resp.L.ok ? 'certa' : 'errada'); else b.classList.add('esmaecida');
+      if (bt.p.opcoes[b.dataset.i] === v) b.classList.add(bt.resp.L.ok ? 'certa' : 'errada'); else b.classList.add('esmaecida');
     }
     $('bt-msg').textContent = bt.resp.R === null ? `Esperando ${bt.t.nome}… (no máximo ${Math.ceil(bt.lim.R - t)} s)` : '';
   }
@@ -2967,25 +3107,57 @@ async function btFechar() {
   bt.fechou = true;
   cancelAnimationFrame(bt.raf);
   const R = bt.resp, p = bt.p;
-  for (const b of $('bt-ops').querySelectorAll('.bt-op')) { b.disabled = true; if (Number(b.dataset.v) === p.resposta) b.classList.add('certa'); }
+  for (const b of $('bt-ops').querySelectorAll('.bt-op')) { b.disabled = true; if (p.opcoes[b.dataset.i] === p.resposta) b.classList.add('certa'); }
   for (const l of ['L', 'R']) btStatus(l, R[l].v === null ? '⏱ sem resposta' : R[l].ok ? `✔ ${R[l].t.toFixed(1)} s` : '✘ errou', R[l].ok ? 'ok' : 'bad');
   $('bt-msg').textContent = '';
   tocar(R.L.ok ? 'acerto' : 'erro');
-  bt.contas.push({ conta: p.conta, certa: p.resposta, resposta: R.L.v, acertou: R.L.ok, tempo_s: R.L.v === null ? null : +R.L.t.toFixed(1) });
+  const c = cfgBatalha();
+  // cada rodada vai para o painel da professora (acertou: null = o tempo acabou)
+  bt.contas.push({ treinador: bt.t.id, tipo: p.tipo, dificuldade: p.dificuldade, conta: p.conta, certa: p.resposta, resposta: R.L.v,
+    acertou: R.L.v === null ? null : R.L.ok, tempo_s: R.L.v === null ? null : +R.L.t.toFixed(1), data: Date.now() });
+  if (!R.L.ok) bt.revisao.push({ conta: p.conta, resposta: R.L.v, certa: p.resposta, explica: p.explica });
+  // sequência: errar ou deixar o tempo acabar zera
+  bt.seq = R.L.ok ? bt.seq + 1 : 0;
+  btSeq();
+  btReagir(R);
+  // errou: fica tonto e perde vida (tempo esgotado não pune: só não ataca)
+  let tontos = 0;
+  for (const l of ['L', 'R']) {
+    if (R[l].ok) continue;
+    const n = R[l].v === null ? (c.erro?.tempo_esgotado_perde_vida ?? 0) : (c.erro?.perde_vida ?? 5);
+    if (n <= 0) continue;
+    bt.hp[l] = Math.max(0, bt.hp[l] - n);
+    btHp(l);
+    btTonto(l, n);
+    tontos++;
+  }
+  if (tontos) { await btEsperar(750); if (!bt) return; }
+  if (bt.hp.L <= 0 || bt.hp.R <= 0) return btFim();
   // quem acertou mais rápido ataca primeiro
   const ordem = ['L', 'R'].filter(l => R[l].ok).sort((a, b) => R[a].t - R[b].t);
   if (!ordem.length) { btBanner('Ninguém acertou', '#a3a1c9'); await btEsperar(1300); }
   for (const l of ordem) {
     if (!bt || bt.hp.L <= 0 || bt.hp.R <= 0) break;
-    const o = l === 'L' ? 'R' : 'L', pet = l === 'L' ? bt.pet : bt.t.pet, { n, critico } = dano(R[l].t);
+    const o = l === 'L' ? 'R' : 'L', pet = l === 'L' ? bt.pet : bt.t.pet;
+    let { n, critico } = dano(R[l].t);
+    const especial = l === 'L' && bt.seq >= (c.sequencia?.acertos ?? 3);
     bt.tempoTot[l] += R[l].t;
+    if (especial) {   // ATAQUE ESPECIAL: cambalhota antes, projétil maior, tela treme
+      n = Math.round(n * (c.sequencia?.multiplicador_dano ?? 1.5));
+      bt.seq = 0;
+      btBanner('ATAQUE ESPECIAL!', '#ffd700');
+      btTocar('L', 'pulo_cambalhota', { loop: false, ms: 90 });
+      await btEsperar(Math.max(700, quadrosDe(bt.pet, 'pulo_cambalhota').length * 90 + 120));
+      if (!bt) return;
+      btSeq();
+    }
     btTocar(l, 'correndo', { loop: false, ms: 110 });
     await btBote(l);
-    await btProjetil(l, o, pet, critico);
+    await btProjetil(l, o, pet, critico, especial);
     if (!bt) return;
     bt.hp[o] = Math.max(0, bt.hp[o] - n);
     btHp(o);
-    btLevarDano(o, n, critico, pet);
+    btLevarDano(o, n, critico, pet, especial);
     await btEsperar(650);
     btParado(l);
   }
@@ -3021,8 +3193,34 @@ function btFim() {
   $('bt-fim-dia').innerHTML = (pr.cortado ? '<b>Limite de prêmios de hoje atingido — amanhã tem mais!</b>' : '') +
     `<span>Prêmios de batalha hoje: ${dia.moedas} / ${lim.moedas ?? '∞'} moedas</span>`;
   $('bt-revanche').hidden = venceu;
+  // revisão das contas erradas (ou "Perfeito!"); os botões só aparecem depois do "Entendi!"
+  const comRevisao = cfgBatalha().revisao_no_fim !== false, revisar = comRevisao && bt.revisao.length > 0;
+  $('bt-fim-perfeito').hidden = !(comRevisao && !bt.revisao.length && bt.contas.length);
+  $('bt-fim-botoes').hidden = revisar;
   $('bt-fim').hidden = false;
+  if (revisar) btLater(abrirRevisaoBatalha, 1600);
   if (pr.xp) darXP(pr.xp);
+}
+
+function abrirRevisaoBatalha() {
+  if (!bt) return;
+  $('bt-rev-lista').innerHTML = bt.revisao.map(x => `
+    <div class="bt-rev-item">
+      <div class="bt-rev-conta">${esc(x.conta)}</div>
+      <div class="bt-rev-resps">
+        <span class="bt-rev-sua">Sua resposta: <b>${x.resposta === null ? 'não respondeu (tempo)' : esc(x.resposta)}</b></span>
+        <span class="bt-rev-certa">Certa: <b>${esc(x.certa)}</b></span>
+      </div>
+      <div class="bt-rev-explica">${esc(x.explica)}</div>
+    </div>`).join('');
+  $('bt-revisao').hidden = false;
+  $('bt-rev-lista').scrollTop = 0;
+  $('bt-rev-ok').focus({ preventScroll: true });
+}
+
+function fecharRevisaoBatalha() {
+  $('bt-revisao').hidden = true;
+  $('bt-fim-botoes').hidden = false;
 }
 
 // Salva o resultado: desafio do treinador, prêmios (dentro do limite do dia) e as contas, para a professora
@@ -3064,7 +3262,7 @@ function sairDaBatalha() {
 //  PESSOAS NOS MAPAS (dados/jogo/npcs.json) — paradas, piscam, conversam; 10 são treinadoras da batalha
 // ============================================================
 let NPCS = [];                       // lista do JSON
-const PESSOA_PERTO = 70;             // px: perto assim, conversa sem andar
+const PESSOA_PERTO = 70 * ESCALA_ATORES;   // px: perto assim, conversa sem andar
 let pessoasMapa = [];                // { p, img, sombra, icone, alt, larg, timer }
 let balaoPessoa = null;              // { o, timer }
 const ultimaFalaPessoa = {};         // id → índice da última fala (não repete seguida)
@@ -3094,12 +3292,9 @@ function montarPessoas(n) {
     img.alt = p.nome; img.draggable = false;
     img.src = `${IMG}/npcs/${p.id}.webp`;
     img.style.setProperty('--d', `${-(i * 0.7) % 2.4}s`);   // respiração defasada
-    const o = { p, img, sombra, icone: null, alt, larg, timer: 0 };
-    if (p.treinador && treinador(p.id)) {
-      o.icone = document.createElement('div');
-      o.icone.className = 'jr-pessoa-icone';
-    }
-    palco.append(sombra, img, ...(o.icone ? [o.icone] : []));
+    const o = { p, img, sombra, icone: document.createElement('div'), treinador: !!(p.treinador && treinador(p.id)), temIcone: false, alt, larg, timer: 0 };
+    o.icone.className = 'jr-pessoa-icone';
+    palco.append(sombra, img, o.icone);
     posicionarPessoa(o);
     if (p.piscar) { const pre = new Image(); pre.src = `${IMG}/npcs/${p.id}-piscando.webp`; agendarPiscar(o); }
     pessoasMapa.push(o);
@@ -3129,7 +3324,7 @@ function destacarPessoa(id) {
   const el = document.createElement('div');
   el.className = 'jr-pessoa-destaque';
   el.textContent = '⬇';
-  Object.assign(el.style, { left: o.p.x + 'px', top: (o.p.y - o.alt - (o.icone ? 20 : 4)) + 'px' });
+  Object.assign(el.style, { left: o.p.x + 'px', top: (o.p.y - o.alt - (o.temIcone ? 20 : 4) * ESCALA_ATORES) + 'px', fontSize: 20 * ESCALA_ATORES + 'px' });
   $('cena-atores').appendChild(el);
   destaque = { id, el, timer: setTimeout(tirarDestaque, 8000) };
 }
@@ -3145,7 +3340,7 @@ function posicionarPessoa(o) {
   const { p, img, sombra, icone, alt, larg } = o;
   Object.assign(img.style, { left: p.x + 'px', top: p.y + 'px', height: alt + 'px', zIndex: Math.round(p.y) });
   Object.assign(sombra.style, { left: p.x + 'px', top: p.y + 'px', width: larg * 1.1 + 'px', height: larg * 0.32 + 'px', zIndex: Math.round(p.y) - 1 });
-  if (icone) Object.assign(icone.style, { left: p.x + 'px', top: (p.y - alt - 2) + 'px' });
+  if (icone) Object.assign(icone.style, { left: p.x + 'px', top: (p.y - alt - 2 * ESCALA_ATORES) + 'px', fontSize: 18 * ESCALA_ATORES + 'px' });
 }
 
 // Pisca 150 ms a cada 3–6 s (às vezes duas vezes seguidas)
@@ -3164,20 +3359,22 @@ function agendarPiscar(o) {
   o.timer = setTimeout(() => piscar(1), 1000 + Math.random() * 5000);
 }
 
-// Treinadoras: ⚔️ acima da cabeça; descansando (venceu há menos de 24 h): 😴
+// Acima da cabeça: treinadora ⚔️ (descansando: 😴) e ❗ quando a pessoa tem pedido de ajuda
 function atualizarIconesPessoas() {
   for (const o of pessoasMapa) {
-    if (!o.icone) continue;
-    const descansa = situacao(desafioCom(o.p.id)) === 'descansando';
-    o.icone.textContent = descansa ? '😴' : '⚔️';
-    o.icone.classList.toggle('descansa', descansa);
+    const descansa = o.treinador && situacao(desafioCom(o.p.id)) === 'descansando';
+    const ped = !!pedidoDe(o.p.id);
+    o.icone.innerHTML = (o.treinador ? `<span>${descansa ? '😴' : '⚔️'}</span>` : '') + (ped ? '<span class="jr-pedido-exc" aria-label="Pedido de ajuda">!</span>' : '');
+    o.icone.classList.toggle('descansa', descansa && !ped);
+    o.temIcone = !!o.icone.innerHTML;
+    o.icone.hidden = !o.temIcone;
   }
 }
 
 function pessoaEm(pt) {
   let melhor = null, md = Infinity;
   for (const o of pessoasMapa) {
-    const folga = 8;
+    const folga = 8 * ESCALA_ATORES;
     if (Math.abs(pt.x - o.p.x) > o.larg / 2 + folga || pt.y < o.p.y - o.alt - folga || pt.y > o.p.y + folga) continue;
     const d = Math.abs(pt.x - o.p.x) + Math.abs(pt.y - o.p.y);
     if (d < md) { md = d; melhor = o; }
@@ -3192,7 +3389,7 @@ function irFalarCom(o) {
   if (dist(jog.x, jog.y, o.p.x, o.p.y) <= PESSOA_PERTO) { falarCom(o); return; }
   const lado = jog.x < o.p.x ? -1 : 1;
   destinoEspecial = null;
-  caminharNaTrilha(o.p.x + lado * (o.larg / 2 + 16), o.p.y, () => falarCom(o));
+  caminharNaTrilha(o.p.x + lado * (o.larg / 2 + 16 * ESCALA_ATORES), o.p.y, () => falarCom(o));
   if (!jog.caminho.length && !jog.aoChegar) falarCom(o);   // sem caminho (não deveria acontecer): fala mesmo assim
 }
 
@@ -3206,13 +3403,18 @@ function falarCom(o) {
   ultimaFalaPessoa[o.p.id] = i;
   if (destaque?.id === o.p.id) tirarDestaque();
   const el = $('pessoa-balao');
-  let extra = '';
-  if (o.icone) {
+  // pedido de ajuda: "🙋 Ajudar"; treinadora: "⚔️ Batalhar" (ou o aviso de descanso/fome); com botão, também "Agora não"
+  const ped = pedidoDe(o.p.id), botoes = [];
+  let aviso = '';
+  if (ped) botoes.push('<button class="jr-btn jr-btn-ouro" data-acao="ajudar">🙋 Ajudar</button>');
+  if (o.treinador) {
     const d = desafioCom(o.p.id);
-    if (situacao(d) === 'descansando') extra = `<div class="jr-pessoa-descansa">Estou descansando. Volta em ${Math.max(1, Math.ceil((d.descansa_ate - Date.now()) / 3600e3))} h!</div>`;
-    else if (podeBatalhar() && barrigaDe(estado.pets.ativo) < (cfgBatalha().barriga_minima ?? 25)) { seguidor?.reagir('triste_fome', 2000); extra = `<div class="jr-pessoa-descansa">${NOME_PET[estado.pets.ativo]} está com fome. Dê comida antes de batalhar.</div>`; }
-    else if (podeBatalhar()) extra = `<div class="jr-pessoa-botoes"><button class="jr-btn jr-btn-ouro" data-acao="batalhar">⚔️ Batalhar</button><button class="jr-btn jr-btn-sec" data-acao="nao">Agora não</button></div>`;
+    if (situacao(d) === 'descansando') aviso = `<div class="jr-pessoa-descansa">Estou descansando. Volta em ${Math.max(1, Math.ceil((d.descansa_ate - Date.now()) / 3600e3))} h!</div>`;
+    else if (podeBatalhar() && barrigaDe(estado.pets.ativo) < (cfgBatalha().barriga_minima ?? 25)) { seguidor?.reagir('triste_fome', 2000); aviso = `<div class="jr-pessoa-descansa">${NOME_PET[estado.pets.ativo]} está com fome. Dê comida antes de batalhar.</div>`; }
+    else if (podeBatalhar()) botoes.push(`<button class="jr-btn ${ped ? '' : 'jr-btn-ouro'}" data-acao="batalhar">⚔️ Batalhar</button>`);
   }
+  if (botoes.length) botoes.push('<button class="jr-btn jr-btn-sec" data-acao="nao">Agora não</button>');
+  const extra = aviso + (botoes.length ? `<div class="jr-pessoa-botoes">${botoes.join('')}</div>` : '');
   el.innerHTML = `<b>${esc(o.p.nome)}</b><span>${esc(falas[i] || '')}</span>${extra}`;
   el.hidden = false;
   el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
@@ -3224,10 +3426,11 @@ function posicionarBalaoPessoa() {
   if (!balaoPessoa) return;
   const { o } = balaoPessoa;
   const el = $('pessoa-balao');
-  const cabeca = imagemParaTela(o.p.x, o.p.y - o.alt - (o.icone ? 18 : 4));
+  const topo = o.p.y - o.alt - (o.temIcone ? 18 : 4) * ESCALA_ATORES;
+  const cabeca = imagemParaTela(o.p.x, topo);
   const embaixo = cabeca.y < el.offsetHeight + 64;   // perto do topo (HUD): abre embaixo da pessoa, bico para cima
   el.classList.toggle('embaixo', embaixo);
-  if (!embaixo) { posicionarNaTela(el, o.p.x, o.p.y - o.alt - (o.icone ? 18 : 4)); return; }
+  if (!embaixo) { posicionarNaTela(el, o.p.x, topo); return; }
   const pe = imagemParaTela(o.p.x, o.p.y + 6), meia = el.offsetWidth / 2, vw = $('cena-vp').clientWidth;
   el.style.left = clamp(pe.x, meia + 8, vw - meia - 8) + 'px';
   el.style.top = pe.y + el.offsetHeight + 8 + 'px';
@@ -3244,9 +3447,177 @@ function acaoBalaoPessoa(e) {
   e.stopPropagation();
   const b = e.target.closest('[data-acao]');
   if (!b || !balaoPessoa) return;
-  const id = balaoPessoa.o.p.id;
+  const o = balaoPessoa.o, id = o.p.id;
   fecharBalaoPessoa();
   if (b.dataset.acao === 'batalhar') iniciarBatalha(id, 'pessoa');   // revanche/descanso/fome conferidos lá
+  if (b.dataset.acao === 'ajudar') abrirPedido(o);
+}
+
+// ============================================================
+//  PEDIDOS DE AJUDA — as pessoas dos mapas pedem ajuda com um problema (dados/jogo/pedidos.json;
+//  regras em js/jogo-revisao/pedidos.js). Só depois de vencer o ginásio do problema; 1 por pessoa por dia.
+// ============================================================
+let pd = null;   // pedido aberto: { p, o, tentativa, num, dica, fim }
+
+function diaPedidos() {
+  const hoje = diaLocal();
+  if (estado.pedidosDia?.data !== hoje) estado.pedidosDia = { data: hoje, moedas: 0, pessoas: {} };
+  estado.pedidosDia.pessoas ||= {};
+  return estado.pedidosDia;
+}
+
+const pedidoDe = (npc) => (carregouProgresso && pedidosProntos()
+  ? pedidoDisponivel(npc, { venceu: (k) => !!estado.ginasios[k]?.lider.vencido, resolvidos: estado.pedidos, dia: diaPedidos() }) : null);
+
+function abrirPedido(o) {
+  const p = pedidoDe(o.p.id);
+  if (!p || perguntaAberta || transicionando) return;
+  const salvo = estado.pedidos[p.id] || {};
+  pd = { p, o, tentativa: (Number(salvo.tentativas) || 0) + 1, num: '', dica: !!salvo.dica, fim: false };
+  soltarJoystick();
+  pararFalaPet();
+  $('pd-busto').outerHTML = bustoHtml(`${IMG}/npcs/${p.npc}.webp`, 'pd-busto', BUSTO_NPC, false, 'pd-busto');
+  $('pd-nome').textContent = o.p.nome;
+  $('pd-texto').textContent = p.texto;
+  $('pd-fala').hidden = true;
+  $('pd-unid').textContent = p.unidade || '';
+  $('pd-teclado').hidden = $('pd-resp').hidden = false;
+  $('pd-fechar').hidden = true;
+  $('pd-depois').hidden = false;
+  const pet = estado.pets?.ativo, leal = Number(pet && cuidadosDe(pet)?.lealdade) || 0;
+  $('pd-dica').hidden = !pet || pd.dica || leal < (cfgPedidos().lealdade_dica ?? 60);
+  if (pet) $('pd-dica').textContent = `💡 Pedir dica ao ${NOME_PET[pet]}`;
+  $('pd-pet').hidden = true;
+  if (pd.dica && pet) mostrarDicaPedido();   // já pediu antes (fechou com "Depois"): a dica continua ali
+  atualizarPremioPedido();
+  atualizarMoedasPedido();
+  renderNumPedido();
+  $('pedido').hidden = false;
+}
+
+function atualizarPremioPedido() {
+  const dia = diaPedidos();
+  $('pd-premio').textContent = limiteDoDiaAtingido(dia)
+    ? 'Hoje você já ganhou o máximo de moedas com pedidos: esta ajuda vale um "obrigado"!'
+    : pd.tentativa === 1 ? `Acertando de primeira: +${moedasDoPedido(1, dia)} 🪙 · na 2ª tentativa: +${moedasDoPedido(2, dia)} 🪙`
+      : `Última tentativa: +${moedasDoPedido(2, dia)} 🪙`;
+}
+function atualizarMoedasPedido() { $('pd-moedas').querySelector('span').textContent = Number(estado.pets?.moedas) || 0; }
+function renderNumPedido() {
+  const el = $('pd-num');
+  el.textContent = pd.num.replace('-', '−');
+  el.classList.toggle('vazio', !pd.num || pd.num === '-');
+}
+
+function teclaPedido(k) {
+  if (!pd) return;
+  if (k === 'depois' || k === 'fechar') { fecharPedido(); return; }
+  if (pd.fim) return;
+  if (/^\d$/.test(k)) { const sem = pd.num.replace('-', ''); if (sem.length < 7) pd.num = (pd.num.startsWith('-') ? '-' : '') + (sem === '0' ? k : sem + k); }
+  else if (k === '±') pd.num = pd.num.startsWith('-') ? pd.num.slice(1) : '-' + pd.num;
+  else if (k === '⌫') pd.num = pd.num.slice(0, -1) === '-' ? '-' : pd.num.slice(0, -1);
+  else if (k === 'ok') { responderPedido(); return; }
+  tocar('clique');
+  renderNumPedido();
+}
+
+// a pessoa fala no balão, embaixo do problema
+function falaPedido(html, tipo = '') {
+  const el = $('pd-fala');
+  el.innerHTML = html;
+  el.className = 'pd-fala ' + tipo;
+  el.hidden = false;
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+}
+
+function responderPedido() {
+  const v = lerResposta(pd.num);
+  if (v === null) { $('pd-resp').animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(0)' }], { duration: 240 }); return; }
+  const { p } = pd, ok = v === p.resposta, agora = Date.now();
+  const patch = { [`respostas/pedido-${agora}`]: { tipo: 'pedido', id: p.id, npc: p.npc, mapa: p.mapa, tentativa: pd.tentativa, resposta_aluno: v, acertou: ok, usou_dica: pd.dica, data: agora } };
+  const max = cfgPedidos().tentativas ?? 2;
+  const certa = `${mostrarInteiro(p.resposta)}${p.unidade ? ' ' + esc(p.unidade) : ''}`;
+  if (ok) {
+    const moedas = moedasDoPedido(pd.tentativa, diaPedidos());
+    finalizarPedido('acertou', moedas, patch);
+    tocar('acerto');
+    falaPedido(`Isso mesmo, <b class="verde">${certa}</b>! Você me salvou, valeu pela ajuda!${moedas ? ` <b class="ouro">+${moedas} 🪙</b>` : ''}`, 'ok');
+    if (moedas) voarMoedasPedido(moedas);
+  } else if (pd.tentativa < max) {
+    pd.tentativa++;
+    estado.pedidos[p.id] = { ...(estado.pedidos[p.id] || {}), tentativas: pd.tentativa - 1, dica: pd.dica };
+    patch[`pedidos/${p.id}`] = estado.pedidos[p.id];
+    gravar(patch);
+    tocar('erro');
+    falaPedido('Hmm, acho que não é isso… confere de novo?', 'erro');
+    pd.num = '';
+    renderNumPedido();
+    atualizarPremioPedido();
+  } else {
+    finalizarPedido('errou', 0, patch);
+    tocar('erro');
+    falaPedido(`Olha, eu fiz assim: ${esc(p.resolucao)}<br>Resposta: <b class="verde">${certa}</b>. Valeu pela ajuda mesmo assim!`, 'resolucao');
+  }
+}
+const mostrarInteiro = (n) => (n < 0 ? '−' + Math.abs(n) : String(n));
+
+// Resolvido (certo ou não): não volta; a pessoa só traz o próximo amanhã
+function finalizarPedido(fim, moedas, patch) {
+  const { p } = pd, dia = diaPedidos();
+  dia.pessoas[p.npc] = (Number(dia.pessoas[p.npc]) || 0) + 1;
+  dia.moedas = (Number(dia.moedas) || 0) + moedas;
+  estado.pedidos[p.id] = { fim, tentativas: pd.tentativa, dica: pd.dica, data: Date.now() };
+  patch[`pedidos/${p.id}`] = estado.pedidos[p.id];
+  patch.pedidos_dia = { ...dia, pessoas: { ...dia.pessoas } };
+  if (moedas) { estado.pets.moedas = (Number(estado.pets.moedas) || 0) + moedas; patch['pets/moedas'] = estado.pets.moedas; }
+  gravar(patch);
+  pd.fim = true;
+  $('pd-teclado').hidden = $('pd-dica').hidden = $('pd-depois').hidden = true;
+  $('pd-resp').hidden = fim !== 'acertou';
+  $('pd-fechar').hidden = false;
+  atualizarIconesPessoas();
+}
+
+function pedirDicaPedido() {
+  if (!pd || pd.dica || pd.fim) return;
+  pd.dica = true;   // não muda o prêmio, mas fica registrado
+  estado.pedidos[pd.p.id] = { ...(estado.pedidos[pd.p.id] || {}), dica: true };
+  gravar({ [`pedidos/${pd.p.id}/dica`]: true });
+  $('pd-dica').hidden = true;
+  mostrarDicaPedido();
+}
+function mostrarDicaPedido() {
+  const pet = estado.pets.ativo;
+  $('pd-pet').innerHTML = `<img src="${quadrosDe(pet, 'sentado_girando')[0]}" alt="" draggable="false"/><span><b>${esc(NOME_PET[pet])}:</b> Acho que começa assim: ${esc(dicaPedido(pd.p))}</span>`;
+  $('pd-pet').hidden = false;
+}
+
+// moedas voam do busto até o contador (posições dentro da caixa: funciona com o jogo girado)
+function voarMoedasPedido(n) {
+  const caixa = document.querySelector('.pd-caixa');
+  const pos = (el) => { let x = 0, y = 0; for (let e = el; e && e !== caixa; e = e.offsetParent) { x += e.offsetLeft; y += e.offsetTop; } return { x: x + el.offsetWidth / 2, y: y + el.offsetHeight / 2 }; };
+  const de = pos($('pd-busto')), para = pos($('pd-moedas'));
+  const antes = (Number(estado.pets.moedas) || 0) - n;
+  $('pd-moedas').querySelector('span').textContent = antes;
+  for (let i = 0; i < n; i++) {
+    const s = document.createElement('span');
+    s.className = 'pd-moeda-voa'; s.textContent = '🪙';
+    s.style.left = de.x + 'px'; s.style.top = de.y + 'px';
+    caixa.appendChild(s);
+    const a = s.animate([{ transform: 'translate(-50%,-50%) scale(.6)', opacity: 0 }, { transform: `translate(calc(-50% + ${(para.x - de.x) * 0.4}px), calc(-50% + ${(para.y - de.y) * 0.4 - 50}px)) scale(1.2)`, opacity: 1, offset: 0.35 },
+      { transform: `translate(calc(-50% + ${para.x - de.x}px), calc(-50% + ${para.y - de.y}px)) scale(.8)`, opacity: 1 }], { duration: 750, delay: i * 120, easing: 'ease-in', fill: 'backwards' });
+    a.onfinish = () => {
+      s.remove();
+      const el = $('pd-moedas');
+      el.querySelector('span').textContent = antes + i + 1;
+      el.classList.remove('pulsa'); void el.offsetWidth; el.classList.add('pulsa');
+    };
+  }
+}
+
+function fecharPedido() {
+  pd = null;
+  $('pedido').hidden = true;
 }
 
 // ── Modo de ajuste (só a professora, no modo teste, com ?editarNpcs=1): arrastar e copiar posições ──
@@ -3934,9 +4305,26 @@ function ligarEventos() {
   $('btn-batalhar').addEventListener('click', abrirListaBatalha);
   $('mp-batalhar').addEventListener('click', abrirListaBatalha);
   $('bt-lista-fechar').addEventListener('click', () => { $('bt-lista').hidden = true; });
-  $('bt-pag').addEventListener('click', () => { const n = Math.ceil(treinadores().length / POR_PAGINA_BT); btPagina = (btPagina + 1) % n; renderListaBatalha(); });
-  $('bt-cards').addEventListener('click', (e) => { const b = e.target.closest('[data-ir]'); if (b && !b.disabled) irAteTreinador(b.dataset.ir); });
-  $('bt-ops').addEventListener('click', (e) => { const b = e.target.closest('.bt-op'); if (b && !b.disabled) btResponder('L', Number(b.dataset.v)); });
+  $('bt-cards').addEventListener('click', (e) => { const b = e.target.closest('[data-sel]'); if (b) { btSel = b.dataset.sel; renderListaBatalha(); } });
+  $('bt-det').addEventListener('click', (e) => { const b = e.target.closest('[data-ir]'); if (b && !b.disabled) irAteTreinador(b.dataset.ir); });
+  $('colega-cartao').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (e.target.closest('[data-oi]')) { fecharCartaoColega(); reagirCom('👋'); }
+  });
+  $('bt-ops').addEventListener('click', (e) => { const b = e.target.closest('.bt-op'); if (b && !b.disabled && bt?.p) btResponder('L', bt.p.opcoes[b.dataset.i]); });
+  $('bt-rev-ok').addEventListener('click', fecharRevisaoBatalha);
+  $('pd-teclado').addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (b) teclaPedido(b.dataset.k); });
+  $('pd-depois').addEventListener('click', () => teclaPedido('depois'));
+  $('pd-fechar').addEventListener('click', () => teclaPedido('fechar'));
+  $('pd-dica').addEventListener('click', pedirDicaPedido);
+  window.addEventListener('keydown', (e) => {   // no computador: digitar, − troca o sinal, ⌫, Enter, Esc
+    if (!pd || $('pedido').hidden || e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = /^\d$/.test(e.key) ? e.key : (e.key === '-' || e.key === '+') ? '±' : e.key === 'Backspace' ? '⌫'
+      : e.key === 'Enter' ? (pd.fim ? 'fechar' : 'ok') : e.key === 'Escape' ? 'depois' : null;
+    if (!k) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    teclaPedido(k);
+  }, true);
   $('bt-sair').addEventListener('click', sairDaBatalha);
   $('bt-voltar').addEventListener('click', () => fecharBatalha(true));
   $('bt-revanche').addEventListener('click', () => { const id = bt?.t.id, origem = bt?.origem; fecharBatalha(false); if (id) iniciarBatalha(id, origem); });

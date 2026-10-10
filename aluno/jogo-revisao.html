@@ -77,6 +77,7 @@
     <button id="cena-balao" class="jr-balao-acao" hidden></button>
     <button id="pet-fala" class="jr-pet-fala" hidden aria-live="polite"></button>
     <div id="pessoa-balao" class="jr-pessoa-balao" hidden aria-live="polite"></div>
+    <div id="colega-cartao" class="jr-colega-cartao" hidden></div>
     <div id="cena-aviso" class="jr-balao-aviso" hidden></div>
     <button id="btn-revanche" class="jr-btn jr-btn-ouro jr-revanche" hidden>⚔ Revanche</button>
     <!-- Joystick (só em tela de toque) -->
@@ -199,7 +200,6 @@
         <div class="jr-pers-palco" id="pers-palco" aria-label="Ver andando">
           <div class="jr-pers-sombra"></div>
           <img id="pers-img" alt="" draggable="false"/>
-          <div class="jr-pers-nome" id="pers-nome"></div>
         </div>
         <div class="jr-pers-grade" id="pers-grade"></div>
       </div>
@@ -220,17 +220,50 @@
     </div>
   </div>
 
+  <!-- Pedido de ajuda de uma pessoa do mapa: problema, teclado numérico do jogo -->
+  <div id="pedido" class="jr-pet-escolha" hidden role="dialog" aria-label="Pedido de ajuda">
+    <div class="jr-pet-escolha-caixa pd-caixa">
+      <div class="pd-topo">
+        <span class="pd-premio" id="pd-premio"></span>
+        <span class="jr-moedas pd-moedas" id="pd-moedas" aria-label="Moedas">🪙 <span>0</span></span>
+        <button class="pd-depois" id="pd-depois">Depois</button>
+      </div>
+      <div class="pd-corpo">
+        <div class="pd-pessoa">
+          <span class="jr-busto pd-busto" id="pd-busto"></span>
+          <b id="pd-nome"></b>
+          <button class="pd-dica" id="pd-dica" hidden></button>
+        </div>
+        <div class="pd-direita">
+          <div class="pd-balao">
+            <div class="pd-texto" id="pd-texto"></div>
+            <div class="pd-fala" id="pd-fala" hidden></div>
+          </div>
+          <div class="pd-pet" id="pd-pet" hidden></div>
+          <div class="pd-entrada">
+            <div class="pd-resp" id="pd-resp"><span class="pd-num vazio" id="pd-num"></span><span class="pd-unid" id="pd-unid"></span></div>
+            <div class="pd-teclado" id="pd-teclado">
+              <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button data-k="7">7</button>
+              <button data-k="8">8</button><button data-k="9">9</button><button data-k="0">0</button><button data-k="±" aria-label="Trocar o sinal">±</button><button data-k="⌫" aria-label="Apagar">⌫</button><button data-k="ok" class="pd-ok">Responder</button>
+            </div>
+            <button class="jr-btn jr-btn-ouro pd-fechar" id="pd-fechar" hidden>Fechar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Batalha de Pets: lista dos treinadores -->
-  <div id="bt-lista" class="jr-pet-escolha" hidden role="dialog" aria-label="Batalha de pets">
+  <div id="bt-lista" class="jr-pet-escolha" hidden role="dialog" aria-label="Treinadores">
     <div class="jr-pet-escolha-caixa bt-lista-caixa">
       <div class="bt-lista-topo">
         <div class="jr-pet-escolha-titulo">⚔️ Treinadores</div>
         <div class="bt-lista-dia" id="bt-lista-dia"></div>
+        <button class="bt-lista-x" id="bt-lista-fechar" aria-label="Fechar">✕</button>
       </div>
-      <div class="bt-cards" id="bt-cards"></div>
-      <div class="jr-mp-botoes bt-lista-botoes">
-        <button class="jr-btn jr-btn-sec" id="bt-pag" hidden>Mais treinadores ▶</button>
-        <button class="jr-btn jr-btn-sec" id="bt-lista-fechar">Fechar</button>
+      <div class="bt-lista-corpo">
+        <div class="bt-cards" id="bt-cards"></div>
+        <div class="bt-det" id="bt-det"></div>
       </div>
     </div>
   </div>
@@ -240,23 +273,28 @@
     <div class="bt-hud">
       <button class="jr-fugir" id="bt-sair" aria-label="Sair da batalha">🏳️ Sair</button>
       <div class="bt-lado">
-        <div class="bt-nome" id="bt-nomeL"></div>
-        <div class="bt-hp"><b id="bt-hpLb"></b><i id="bt-hpL"></i></div>
-        <div class="bt-hptxt" id="bt-hpLt"></div>
+        <span class="jr-busto bt-busto L" id="bt-bustoL"></span>
+        <div class="bt-lado-txt">
+          <div class="bt-nome" id="bt-nomeL"></div>
+          <div class="bt-hp"><b id="bt-hpLb"></b><i id="bt-hpL"></i></div>
+          <div class="bt-hplinha"><span class="bt-hptxt" id="bt-hpLt"></span><span class="bt-seq" id="bt-seq" title="Acertos seguidos">🔥 0</span></div>
+        </div>
       </div>
       <div class="bt-rodada" id="bt-rodada"></div>
       <div class="bt-lado dir">
-        <div class="bt-nome" id="bt-nomeR"></div>
-        <div class="bt-hp"><b id="bt-hpRb"></b><i id="bt-hpR"></i></div>
-        <div class="bt-hptxt" id="bt-hpRt"></div>
+        <div class="bt-lado-txt">
+          <div class="bt-nome" id="bt-nomeR"></div>
+          <div class="bt-hp"><b id="bt-hpRb"></b><i id="bt-hpR"></i></div>
+          <div class="bt-hptxt" id="bt-hpRt"></div>
+        </div>
+        <span class="jr-busto bt-busto R" id="bt-bustoR"></span>
+        <div class="bt-fala" id="bt-fala" hidden></div>
       </div>
     </div>
     <div class="bt-arena" id="bt-arena">
       <div class="bt-status" id="bt-stL"></div><div class="bt-status" id="bt-stR"></div>
       <div class="bt-lutador" id="bt-L"><div class="bt-sombra"></div><img id="bt-imgL" alt="" draggable="false"/></div>
-      <img class="bt-treinador" id="bt-npc" alt="" draggable="false"/>
       <div class="bt-lutador" id="bt-R"><div class="bt-sombra"></div><img id="bt-imgR" alt="" draggable="false"/></div>
-      <div class="bt-fala" id="bt-fala" hidden></div>
       <div class="bt-fx" id="bt-fx" aria-hidden="true"></div>
       <div class="bt-banner" id="bt-banner"></div>
     </div>
@@ -270,12 +308,21 @@
       <div class="bt-msg" id="bt-msg" aria-live="polite"></div>
       <div class="bt-fim" id="bt-fim" hidden>
         <div class="bt-fim-tit" id="bt-fim-tit"></div>
+        <div class="bt-fim-perfeito" id="bt-fim-perfeito" hidden>Perfeito! Nenhum erro 🎉</div>
         <div class="bt-premios" id="bt-premios"></div>
         <div class="bt-fim-dia" id="bt-fim-dia"></div>
-        <div class="jr-mp-botoes">
+        <div class="jr-mp-botoes" id="bt-fim-botoes">
           <button class="jr-btn jr-btn-ouro" id="bt-revanche">🔁 Revanche</button>
           <button class="jr-btn jr-btn-sec" id="bt-voltar">Voltar</button>
         </div>
+      </div>
+    </div>
+    <!-- Revisão das contas erradas, depois do resultado -->
+    <div class="bt-revisao" id="bt-revisao" hidden role="dialog" aria-label="Revisão das contas">
+      <div class="bt-rev-caixa">
+        <div class="bt-rev-tit">📖 Vamos revisar?</div>
+        <div class="bt-rev-lista" id="bt-rev-lista"></div>
+        <button class="jr-btn jr-btn-ouro" id="bt-rev-ok">Entendi!</button>
       </div>
     </div>
   </section>

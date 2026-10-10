@@ -89,10 +89,33 @@
     .erro-msg{color:var(--red);font-weight:600;font-size:14px}
     .meta-input{width:110px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'Orbitron',monospace;font-size:14px}
 
+    /* batalhas */
+    .bt-top{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+    .bt-top .rc{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.06)}
+    .bt-top .rc .v{color:var(--red);font-size:1.25rem}
+    .bt-top .rc .n{font-weight:700;font-size:14px;margin-top:6px}
+    table.jr.bt{min-width:620px}
+    table.jr.bt th{cursor:default}
+    table.jr.bt tr.destaque td{background:rgba(239,68,68,.06)}
+    table.jr.bt tr.destaque td:first-child{box-shadow:inset 3px 0 0 var(--red)}
+    .pct-chip{display:inline-block;font-family:'Orbitron',monospace;font-size:12px;padding:2px 8px;border-radius:8px}
+    .pct-chip.baixo{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);color:var(--red)}
+    .pct-chip.medio{background:rgba(240,165,0,.12);border:1px solid rgba(240,165,0,.35);color:var(--gold)}
+    .pct-chip.alto{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.35);color:var(--green)}
+    .alunos-erros{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+    .alunos-erros span{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:999px;padding:3px 10px;font-size:13px}
+    .alunos-erros b{color:var(--red);font-family:'Orbitron',monospace;font-size:11px;margin-left:4px}
+    /* pedidos de ajuda */
+    .pd-lista{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+    .pd-item{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:8px 10px;white-space:normal}
+    .pd-item .tx{font-size:13.5px;line-height:1.35}
+    .pd-item .tx b{color:var(--green)}
+    .pd-item .nm{font-size:12px;color:var(--text-muted);margin-top:4px}
+    .pd-item .nm span{color:var(--red);font-weight:700}
     .empty{text-align:center;padding:40px 16px;color:var(--text-muted)}
     .skel{height:16px;border-radius:6px;background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.09),rgba(255,255,255,.04));background-size:200% 100%;animation:skel 1.2s infinite;margin:10px 0}
     @keyframes skel{to{background-position:-200% 0}}
-    @media(max-width:720px){ .resumo-cards{grid-template-columns:repeat(2,1fr)} .rc .v{font-size:1.25rem} .grade .g-mapa{font-size:11px;white-space:normal} }
+    @media(max-width:720px){ .bt-top{grid-template-columns:1fr} .resumo-cards{grid-template-columns:repeat(2,1fr)} .rc .v{font-size:1.25rem} .grade .g-mapa{font-size:11px;white-space:normal} }
   </style>
 </head>
 <body>
@@ -121,6 +144,8 @@
       <div class="abas" role="tablist">
         <button class="aba ativa" data-aba="alunos">👥 Alunos</button>
         <button class="aba" data-aba="dificuldades">📉 Dificuldades da turma</button>
+        <button class="aba" data-aba="batalhas">⚔️ Batalhas</button>
+        <button class="aba" data-aba="pedidos">🙋 Pedidos de ajuda</button>
         <button class="aba" data-aba="config">⚙️ Configurar o jogo</button>
       </div>
 
@@ -137,6 +162,16 @@
       <!-- Aba 2 — Dificuldades -->
       <section class="painel" id="aba-dificuldades" hidden>
         <div id="dificuldades"><div class="empty">Carregando…</div></div>
+      </section>
+
+      <!-- Aba — Batalhas (contas rápidas contra os treinadores) -->
+      <section class="painel" id="aba-batalhas" hidden>
+        <div id="batalhas"><div class="empty">Carregando…</div></div>
+      </section>
+
+      <!-- Aba — Pedidos de ajuda (problemas das pessoas dos mapas) -->
+      <section class="painel" id="aba-pedidos" hidden>
+        <div id="pedidos"><div class="empty">Carregando…</div></div>
       </section>
 
       <!-- Aba 3 — Configurar -->
@@ -188,6 +223,8 @@ const fmtData = (ms) => { const d = new Date(ms); return `${String(d.getDate()).
 const pct = (a, b) => b ? Math.round(a / b * 100) : null;
 
 let Q = {};             // questoes/mapaN.json (nomes dos ginásios, regiões e conteúdos)
+let TIPOS_BT = {};      // batalhas.json → tipos_contas (nome, exemplo de cada tipo de conta)
+let PEDIDOS = {};       // pedidos.json → id: { texto, resposta, unidade, mapa }
 let dados = {};         // jogo_revisao inteiro
 let config = {};        // jogo_revisao_config/global
 let linhas = [];        // alunos da turma, já calculados
@@ -201,6 +238,8 @@ try { const t = localStorage.getItem("p_jr_turma"); if (TURMAS.includes(t)) sel.
 async function carregarJson() {
   const qs = await Promise.all(Array.from({ length: NUM_MAPAS }, (_, i) => fetch(`/dados/jogo/questoes/mapa${i + 1}.json`).then(r => r.json())));
   qs.forEach(q => { Q[q.mapa] = q; });
+  try { TIPOS_BT = (await fetch("/dados/jogo/batalhas.json").then(r => r.json())).tipos_contas || {}; } catch (e) { console.warn("[p-jogo-revisao] batalhas.json", e); }
+  try { PEDIDOS = Object.fromEntries(((await fetch("/dados/jogo/pedidos.json").then(r => r.json())).pedidos || []).map(x => [x.id, x])); } catch (e) { console.warn("[p-jogo-revisao] pedidos.json", e); }
 }
 
 async function carregarDados() {
@@ -253,6 +292,8 @@ function montarTurma() {
   renderResumo();
   renderAlunos();
   renderDificuldades();
+  renderBatalhas();
+  renderPedidos();
 }
 
 function renderResumo() {
@@ -420,6 +461,106 @@ $("dificuldades").addEventListener("click", (e) => {
   const box = b.closest(".tipo");
   const t = $("dificuldades")._tipos?.[box.dataset.id];
   if (t) box.querySelector(".exemplo").innerHTML = exemploHtml(t);
+});
+
+// ── Aba — Batalhas: por tipo de conta (só rodadas com tipo; acertou null = o tempo acabou) ──
+function renderBatalhas() {
+  const el = $("batalhas");
+  const porTipo = {};
+  for (const l of linhas) {
+    for (const r of Object.values(l.n?.respostas || {})) {
+      if (r?.tipo !== "batalha" || !r.contas) continue;
+      for (const c of Object.values(r.contas)) {
+        if (!c?.tipo || !TIPOS_BT[c.tipo]) continue;
+        const t = porTipo[c.tipo] ||= { tipo: c.tipo, tent: 0, acertos: 0, erros: 0, tempo: 0, semResp: 0, nTempo: 0, alunos: {} };
+        t.tent++;
+        if (c.acertou === true) t.acertos++;
+        else { t.erros++; if (c.acertou == null) t.semResp++; (t.alunos[l.nome] ||= { erros: 0, tent: 0 }).erros++; }
+        (t.alunos[l.nome] ||= { erros: 0, tent: 0 }).tent++;
+        if (typeof c.tempo_s === "number") { t.tempo += c.tempo_s; t.nTempo++; }
+      }
+    }
+  }
+  const tipos = Object.values(porTipo).map(t => ({ ...t, pct: t.acertos / t.tent }))
+    .sort((a, b) => (a.pct - b.pct) || (b.erros - a.erros));
+  if (!tipos.length) { el.innerHTML = `<div class="empty">Ninguém desta turma batalhou com as contas novas ainda.</div>`; return; }
+  const top = [...tipos].filter(t => t.erros > 0).sort((a, b) => (b.erros - a.erros) || (a.pct - b.pct)).slice(0, 3);
+  const destaque = new Set(top.map(t => t.tipo));
+  const nome = (t) => esc(TIPOS_BT[t]?.nome || t);
+  const chip = (p) => `<span class="pct-chip ${p < 0.5 ? "baixo" : p < 0.75 ? "medio" : "alto"}">${Math.round(p * 100)}%</span>`;
+  el.innerHTML = `
+    ${top.length ? `<div class="bt-top">${top.map((t, i) => `<div class="rc"><div class="v">${t.erros} <small>erro${t.erros === 1 ? "" : "s"}</small></div>
+      <div class="n">${i + 1}. ${nome(t.tipo)}</div><div class="l">${t.tent} tentativas · ${Math.round(t.pct * 100)}% de acerto</div></div>`).join("")}</div>` : ""}
+    <div class="tabela-wrap"><table class="jr bt"><thead><tr><th>Tipo de conta</th><th>Tentativas</th><th>Acerto</th><th>Erros</th><th>Tempo médio</th></tr></thead><tbody>
+      ${tipos.map(t => `<tr class="linha${destaque.has(t.tipo) ? " destaque" : ""}" data-tipo="${esc(t.tipo)}">
+        <td class="aluno">${nome(t.tipo)} <span class="muted" style="font-weight:400;font-size:12px">· ex.: ${esc(TIPOS_BT[t.tipo]?.exemplo || "")}</span></td>
+        <td class="num">${t.tent}</td><td>${chip(t.pct)}</td>
+        <td class="num">${t.erros}${t.semResp ? ` <span class="muted" title="O tempo acabou sem resposta">(${t.semResp} ⏱)</span>` : ""}</td>
+        <td class="num">${t.nTempo ? (t.tempo / t.nTempo).toFixed(1).replace(".", ",") + " s" : "—"}</td></tr>`).join("")}
+    </tbody></table></div>
+    <div class="legenda">Ordenado do menor acerto para o maior. Em vermelho, os 3 tipos com mais erros. Clique num tipo para ver quem mais errou. ⏱ = o tempo acabou sem resposta.</div>`;
+  el._tipos = porTipo;
+}
+
+$("batalhas").addEventListener("click", (e) => {
+  const tr = e.target.closest("tr.linha");
+  if (!tr) return;
+  const prox = tr.nextElementSibling;
+  if (prox?.classList.contains("detalhe")) { prox.remove(); return; }
+  $("batalhas").querySelectorAll("tr.detalhe").forEach(x => x.remove());
+  const t = $("batalhas")._tipos?.[tr.dataset.tipo];
+  if (!t) return;
+  const alunos = Object.entries(t.alunos).filter(([, a]) => a.erros > 0).sort((a, b) => (b[1].erros - a[1].erros) || a[0].localeCompare(b[0], "pt-BR"));
+  tr.insertAdjacentHTML("afterend", `<tr class="detalhe"><td colspan="5"><div class="grade-wrap">
+    ${alunos.length ? `<div class="muted" style="font-size:12px">Alunos com mais erros em <b>${esc(TIPOS_BT[t.tipo]?.nome || t.tipo)}</b> (erros de tentativas):</div>
+      <div class="alunos-erros">${alunos.map(([n, a]) => `<span>${esc(n)}<b>${a.erros}/${a.tent}</b></span>`).join("")}</div>`
+      : '<span class="muted">Ninguém errou este tipo.</span>'}</div></td></tr>`);
+});
+
+// ── Aba — Pedidos de ajuda: por mapa, como cada aluno terminou cada pedido (1ª, 2ª ou sem acerto) ──
+function renderPedidos() {
+  const el = $("pedidos");
+  const porMapa = {};   // mapa → { feitos, a1, a2, nao, pedidos: { id: { erros, alunos:Set } } }
+  for (const l of linhas) {
+    const tentativas = Object.values(l.n?.respostas || {}).filter(r => r?.tipo === "pedido" && PEDIDOS[r.id]).sort((a, b) => (a.data || 0) - (b.data || 0));
+    const porPedido = {};
+    for (const r of tentativas) (porPedido[r.id] ||= []).push(r);
+    for (const [id, ts] of Object.entries(porPedido)) {
+      const mapa = PEDIDOS[id].mapa, m = porMapa[mapa] ||= { feitos: 0, a1: 0, a2: 0, nao: 0, pedidos: {} };
+      const certo = ts.find(t => t.acertou);
+      const erros = ts.filter(t => !t.acertou).length;
+      const fim = certo ? (certo.tentativa === 1 ? "a1" : "a2") : ts.some(t => t.tentativa >= 2) ? "nao" : null;   // 1 erro só: ainda em andamento
+      if (fim) { m.feitos++; m[fim]++; }
+      if (erros) { const p = m.pedidos[id] ||= { id, erros: 0, alunos: {} }; p.erros += erros; p.alunos[l.nome] = (p.alunos[l.nome] || 0) + erros; }
+    }
+  }
+  const mapas = Object.keys(porMapa).map(Number).sort((a, b) => a - b);
+  if (!mapas.length) { el.innerHTML = `<div class="empty">Ninguém desta turma ajudou as pessoas dos mapas ainda.</div>`; return; }
+  const pc = (a, b) => b ? Math.round(a / b * 100) + "%" : "—";
+  el.innerHTML = `<div class="tabela-wrap"><table class="jr bt"><thead><tr><th>Mapa</th><th>Pedidos feitos</th><th>Acerto na 1ª</th><th>Acerto na 2ª</th><th>Sem acerto</th></tr></thead><tbody>
+    ${mapas.map(n => { const m = porMapa[n];
+      return `<tr class="linha" data-mapa="${n}"><td class="aluno">${n}. ${esc(Q[n]?.nome || "")}</td><td class="num">${m.feitos}</td>
+        <td class="num">${pc(m.a1, m.feitos)}</td><td class="num">${pc(m.a2, m.feitos)}</td><td class="num ${m.feitos && m.nao / m.feitos >= 0.3 ? "laranja" : ""}">${pc(m.nao, m.feitos)}</td></tr>`; }).join("")}
+  </tbody></table></div>
+  <div class="legenda">Cada pedido conta uma vez por aluno, quando termina (acertou ou errou as 2 tentativas). Clique num mapa para ver os pedidos com mais erros e quem errou.</div>`;
+  el._mapas = porMapa;
+}
+
+$("pedidos").addEventListener("click", (e) => {
+  const tr = e.target.closest("tr.linha");
+  if (!tr) return;
+  const prox = tr.nextElementSibling;
+  if (prox?.classList.contains("detalhe")) { prox.remove(); return; }
+  $("pedidos").querySelectorAll("tr.detalhe").forEach(x => x.remove());
+  const m = $("pedidos")._mapas?.[tr.dataset.mapa];
+  if (!m) return;
+  const ps = Object.values(m.pedidos).sort((a, b) => b.erros - a.erros).slice(0, 8);
+  const resp = (p) => `${p.resposta < 0 ? "−" + Math.abs(p.resposta) : p.resposta}${p.unidade ? " " + p.unidade : ""}`;
+  tr.insertAdjacentHTML("afterend", `<tr class="detalhe"><td colspan="5"><div class="grade-wrap">
+    ${ps.length ? `<div class="muted" style="font-size:12px">Pedidos com mais erros (tentativas erradas):</div><div class="pd-lista">${ps.map(p => { const d = PEDIDOS[p.id];
+      return `<div class="pd-item"><div class="tx">${esc(d.texto)} → <b>${esc(resp(d))}</b> <span class="muted">· ${p.erros} erro${p.erros === 1 ? "" : "s"}</span></div>
+        <div class="nm">Erraram: ${Object.entries(p.alunos).sort((a, b) => b[1] - a[1]).map(([n, k]) => `${esc(n)}${k > 1 ? ` <span>×${k}</span>` : ""}`).join(", ")}</div></div>`; }).join("")}</div>`
+      : '<span class="muted">Ninguém errou pedidos deste mapa.</span>'}</div></td></tr>`);
 });
 
 // ── Aba 3 — Configurar ─────────────────────────────────────
