@@ -1041,3 +1041,151 @@ html.jr-deitado .jr-explica-rodape { font-size: 10.5px; }
 #jr-app:has(#pergunta:not([hidden])) #tela-geral .jr-hud-topo, #jr-app:has(#pergunta:not([hidden])) #geral-marcadores,
 #jr-app:has(#pergunta:not([hidden])) .jr-btn-revisao, #jr-app:has(#pergunta:not([hidden])) .jr-faixa-meta,
 #jr-app:has(#pergunta:not([hidden])) #seq-balao { visibility: hidden; }
+
+/* ============================================================
+   Batalha de Pets: lista dos treinadores e a luta (visual do protótipo aprovado)
+   ============================================================ */
+.jr-btn-batalhar { margin-left: 6px; }
+#mp-batalhar[hidden] { display: none; }
+/* lista: 5 × 2 cartões, sem rolar */
+.bt-lista-caixa { max-width: 980px; height: min(560px, 100%); overflow: hidden; gap: 8px; }
+.bt-lista-topo { width: 100%; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.bt-lista-dia { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; color: #c9cde0; }
+.bt-cards { flex: 1; min-height: 0; width: 100%; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.bt-card {
+  min-width: 0; min-height: 0; display: flex; align-items: stretch; gap: 6px; padding: 6px; cursor: pointer; text-align: left; overflow: hidden;
+  background: rgba(124,92,252,.10); border: 2px solid rgba(124,92,252,.35); border-radius: 12px; color: #fff;
+}
+.bt-card:hover { background: rgba(124,92,252,.22); }
+.bt-card.revanche { border-color: rgba(255,123,46,.7); }
+.bt-card.descansando { cursor: default; opacity: .62; filter: grayscale(.6); }
+.bt-card-img { position: relative; flex: 0 0 34%; min-width: 0; display: flex; align-items: flex-end; justify-content: center; }
+.bt-card-img img:first-child { max-height: 100%; max-width: 100%; width: auto; height: 100%; object-fit: contain; object-position: bottom; }
+#jr-app img.bt-card-pet { position: absolute; right: -10%; bottom: 0; width: 70%; height: auto; image-rendering: auto; filter: drop-shadow(0 1px 1px rgba(0,0,0,.5)); }
+.bt-card-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+.bt-card-nome { font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700; line-height: 1.05; color: var(--jr-ouro); }
+.bt-card-quem { font-family: 'Inter', sans-serif; font-size: 10.5px; font-weight: 600; line-height: 1.2; color: #c9cde0; }
+.bt-card-dif { font-size: 10px; line-height: 1.2; display: flex; flex-direction: column; }
+.bt-card-dif small { font-family: 'Inter', sans-serif; font-size: 10.5px; font-weight: 700; color: #e4dcff; }
+.bt-card-estado { margin-top: 2px; align-self: flex-start; padding: 2px 7px; border-radius: 999px; background: rgba(13,15,26,.6); border: 1px solid rgba(255,255,255,.18);
+  font-family: 'Inter', sans-serif; font-size: 10.5px; font-weight: 700; line-height: 1.25; }
+.bt-card.revanche .bt-card-estado { border-color: #ff7b2e; color: #ffd0b0; }
+.bt-card.disponivel .bt-card-estado { border-color: var(--jr-ouro); color: #ffe9a8; }
+.bt-lista-botoes { width: 100%; justify-content: center; }
+.bt-lista-botoes .jr-btn { flex: 0 1 220px; }
+html.jr-deitado .bt-lista-caixa { height: 100%; max-height: calc(var(--jr-alt, 100dvh) - 16px); padding: 8px 10px; gap: 6px; }
+html.jr-deitado .bt-cards { gap: 6px; }
+html.jr-deitado .bt-card { padding: 4px; }
+html.jr-deitado .bt-card-nome { font-size: 14px; }
+html.jr-deitado .bt-card-quem, html.jr-deitado .bt-card-dif small, html.jr-deitado .bt-card-estado { font-size: 9.5px; }
+html.jr-deitado .bt-lista-botoes .jr-btn { min-height: 34px; padding: 3px 12px; font-size: 14px; }
+@media (max-width: 600px) { html:not(.jr-deitado) .bt-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; overflow-y: auto; } }
+
+/* a luta: HUD, arena com fundo, painel com a conta e 4 alternativas */
+.bt-tela {
+  --bt-hp: #3ecf8e; --bt-hp-mid: #f0a500; --bt-hp-low: #ff5c7a; --bt-linha: #2e2e52; --bt-card2: #222240; --bt-muted: #a3a1c9;
+  position: fixed; inset: 0; z-index: 55; display: flex; flex-direction: column; background: #11111f;
+  padding: max(6px, var(--sa-t)) max(10px, var(--sa-r)) max(6px, var(--sa-b)) max(10px, var(--sa-l));
+}
+.bt-tela[hidden] { display: none; }
+.bt-hud { flex: none; display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 10px; align-items: center; padding: 2px 4px 6px; }
+.bt-lado { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.bt-lado.dir { align-items: flex-end; text-align: right; }
+.bt-nome { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 18px; line-height: 1.05; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.bt-nome small { font-family: 'Inter', sans-serif; font-size: 11.5px; color: var(--bt-muted); font-weight: 700; margin: 0 5px; }
+.bt-hp { width: 100%; height: 12px; background: #0d0d1c; border: 1px solid var(--bt-linha); border-radius: 999px; overflow: hidden; position: relative; }
+.bt-hp i { position: absolute; inset: 0 auto 0 0; border-radius: 999px; transition: width .45s ease, background .45s; }
+.bt-hp b { position: absolute; inset: 0 auto 0 0; background: #fff6; border-radius: 999px; transition: width .9s ease .35s; }
+.bt-lado.dir .bt-hp i, .bt-lado.dir .bt-hp b { left: auto; right: 0; }
+.bt-hptxt { font-family: 'Orbitron', sans-serif; font-size: 10px; color: var(--bt-muted); }
+.bt-rodada { font-family: 'Rajdhani', sans-serif; font-weight: 700; color: var(--jr-ouro); font-size: 16px; text-align: center; white-space: nowrap; line-height: 1.1; }
+.bt-rodada small { display: block; color: var(--bt-muted); font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.bt-arena { position: relative; flex: 1 1 auto; min-height: 0; border-radius: 16px; overflow: hidden; background: #2d4a2a url(/img/jogo/batalha/arena.webp) center 62% / cover no-repeat; }
+.bt-lutador { position: absolute; bottom: 9%; height: 52%; aspect-ratio: 449 / 352; transition: filter .2s; }
+#jr-app .bt-lutador img { width: 100%; height: 100%; display: block; image-rendering: auto; }
+#bt-L { left: 12%; } #bt-R { right: 12%; }
+.bt-sombra { position: absolute; bottom: 2px; left: 50%; width: 56%; height: 12%; transform: translateX(-50%); background: radial-gradient(ellipse, rgba(0,0,0,.5), transparent 70%); z-index: -1; }
+.bt-treinador { position: absolute; right: 3%; bottom: 9%; height: 66%; width: auto; filter: drop-shadow(0 3px 2px rgba(0,0,0,.4)); }
+.bt-treinador:not([src]) { display: none; }
+.bt-status { position: absolute; top: 8px; z-index: 3; box-shadow: 0 2px 8px #0006; font-family: 'Inter', sans-serif; font-weight: 800; font-size: 12px; padding: 3px 10px; border-radius: 999px;
+  background: var(--bt-card2); border: 1px solid var(--bt-linha); color: #fff; opacity: 0; transition: opacity .2s; }
+.bt-status.on { opacity: 1; }
+#bt-stL { left: 8%; } #bt-stR { right: 8%; }
+.bt-status.ok { color: #3ecf8e; border-color: #2b6b55; } .bt-status.bad { color: #ff5c7a; border-color: #6b2b3c; }
+.bt-fala { position: absolute; z-index: 4; right: 22%; top: 12%; max-width: 40%; padding: 7px 11px; border-radius: 14px; background: #fff; color: #1a1d2e;
+  box-shadow: 0 4px 14px rgba(0,0,0,.45); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; line-height: 1.3; }
+.bt-fala::after { content: ''; position: absolute; right: -10px; top: 14px; border: 8px solid transparent; border-left: 10px solid #fff; border-right: 0; }
+.bt-fala.nova { animation: jr-fala-in .25s ease-out; }
+.bt-fx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 5; }
+.bt-p { position: absolute; line-height: 1; will-change: transform, opacity; pointer-events: none; }
+.bt-dano { position: absolute; font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 30px; color: #ff6b81; text-shadow: 0 2px 0 #0008, 0 0 12px #ff5c7a88; pointer-events: none; }
+.bt-dano.crit { color: var(--jr-ouro); font-size: 36px; text-shadow: 0 2px 0 #0008, 0 0 14px #f0a50099; }
+.bt-banner { position: absolute; inset: 0; z-index: 6; display: flex; align-items: center; justify-content: center; font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 42px;
+  color: #fff; text-shadow: 0 3px 0 #0009; pointer-events: none; opacity: 0; }
+.bt-painel { flex: none; padding: 8px 4px 2px; display: flex; flex-direction: column; gap: 7px; }
+.bt-timers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.bt-tm { display: flex; flex-direction: column; gap: 3px; }
+.bt-tm span { font-family: 'Inter', sans-serif; font-size: 11px; color: var(--bt-muted); font-weight: 700; display: flex; justify-content: space-between; }
+.bt-tm em { font-style: normal; }
+.bt-tbar { height: 7px; border-radius: 999px; background: #0d0d1c; border: 1px solid var(--bt-linha); overflow: hidden; }
+.bt-tbar i { display: block; height: 100%; background: linear-gradient(90deg, #7c5cfc, #c77dff); width: 100%; }
+.bt-conta { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 24px; text-align: center; color: #fff; line-height: 1.2; }
+.bt-conta[hidden], .bt-ops[hidden] { display: none; }
+.bt-ops { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.bt-op { min-height: 48px; font-family: 'Orbitron', sans-serif !important; font-weight: 700; font-size: 20px; color: #fff; cursor: pointer; border-radius: 14px; padding: 8px 6px;
+  background: linear-gradient(180deg, #3a2f78 0%, #241d50 100%); border: 2px solid rgba(124,92,252,.75); border-bottom-width: 5px; transition: transform .08s, border-color .15s, background .15s; }
+.bt-op:hover:not(:disabled) { filter: brightness(1.15); }
+.bt-op:active:not(:disabled) { transform: translateY(3px); border-bottom-width: 2px; }
+.bt-op:disabled { cursor: default; }
+.bt-op.certa { background: linear-gradient(180deg, #13a85c, #0b6e3c); border-color: var(--jr-verde); }
+.bt-op.errada { background: linear-gradient(180deg, #c7334a, #861f30); border-color: var(--jr-verm); }
+.bt-op.esmaecida { opacity: .4; }
+.bt-msg { text-align: center; font-family: 'Inter', sans-serif; font-weight: 700; color: var(--bt-muted); min-height: 1.3em; font-size: 13px; }
+.bt-fim { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.bt-fim[hidden] { display: none; }
+.bt-fim-tit { font-family: 'Rajdhani', sans-serif; font-size: 26px; font-weight: 700; color: #fff; line-height: 1.1; }
+.bt-fim-tit.venceu { color: var(--jr-ouro); }
+.bt-premios { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.bt-premio { background: var(--bt-card2); border: 1px solid var(--bt-linha); border-radius: 999px; padding: 4px 12px; font-family: 'Inter', sans-serif; font-weight: 800; font-size: 13px; color: #fff; }
+.bt-premio.xp { color: #c77dff; } .bt-premio.mo { color: var(--jr-ouro); } .bt-premio.le { color: #ff7aa8; }
+.bt-fim-dia { display: flex; flex-direction: column; gap: 2px; font-family: 'Inter', sans-serif; font-size: 12px; color: var(--bt-muted); font-weight: 600; }
+.bt-fim-dia b { color: #ffd0b0; }
+.bt-fim .jr-mp-botoes { width: min(420px, 100%); }
+.bt-fim .jr-btn[hidden] { display: none; }
+html.jr-deitado .bt-hud { padding: 0 2px 4px; gap: 8px; }
+html.jr-deitado .bt-nome { font-size: 15px; }
+html.jr-deitado .bt-painel { gap: 5px; padding-top: 5px; }
+html.jr-deitado .bt-conta { font-size: 20px; }
+html.jr-deitado .bt-op { min-height: 44px; font-size: 18px; padding: 4px; }
+html.jr-deitado .bt-fim-tit { font-size: 21px; }
+html.jr-deitado .bt-fim .jr-btn { min-height: 38px; padding: 4px 12px; }
+@media (prefers-reduced-motion: reduce) { .bt-tela *, .bt-lista-caixa * { transition: none !important; } .bt-fala.nova { animation: none; } }
+
+/* ============================================================
+   Pessoas nos mapas: paradas, respirando de leve, piscando; balão com o nome
+   ============================================================ */
+#jr-app img.jr-pessoa { image-rendering: auto; width: auto; transform-origin: 0 0; filter: drop-shadow(0 1px 1px rgba(0,0,0,.35));
+  animation: jr-respira-pessoa 1.2s ease-in-out var(--d, 0s) infinite alternate; }
+@keyframes jr-respira-pessoa { from { scale: 1 1; } to { scale: 1 1.015; } }   /* 2,4 s por ciclo, a partir do pé */
+#jr-app img.jr-pessoa.editavel { pointer-events: auto; cursor: grab; outline: 1px dashed rgba(255,215,0,.8); }
+.jr-pessoa-icone { position: absolute; z-index: 8999; transform: translate(-50%, -100%); pointer-events: none; font-size: 18px; line-height: 1;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,.6)); animation: jr-flutua 1.6s ease-in-out infinite; }
+.jr-pessoa-icone.descansa { animation: none; opacity: .9; }
+.jr-pessoa-balao {
+  position: absolute; z-index: 16; transform: translate(-50%, -100%); transform-origin: 50% 100%;
+  max-width: min(250px, 72vw); width: max-content; padding: 7px 12px 8px; border-radius: 12px;
+  background: #fff; color: #1a1d2e; box-shadow: 0 4px 14px rgba(0,0,0,.45);
+  font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 600; line-height: 1.3; text-align: left;
+  display: flex; flex-direction: column; gap: 3px;
+}
+.jr-pessoa-balao[hidden] { display: none; }
+.jr-pessoa-balao b { font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700; color: #6c3fe0; line-height: 1.1; }
+.jr-pessoa-balao::after { content: ''; position: absolute; left: 50%; top: 100%; transform: translateX(-50%); border: 7px solid transparent; border-top-color: #fff; }
+.jr-pessoa-balao.pop { animation: jr-fala-pop .22s ease-out; }
+.jr-pessoa-balao.embaixo::after { top: auto; bottom: 100%; border-top-color: transparent; border-bottom-color: #fff; }
+.jr-pessoa-botoes { display: flex; gap: 6px; margin-top: 4px; }
+.jr-pessoa-botoes .jr-btn { flex: 1; min-height: 34px; padding: 3px 8px; font-size: 13px; white-space: nowrap; }
+.jr-pessoa-descansa { margin-top: 2px; font-size: 12.5px; color: #6b6f86; font-weight: 700; }
+.jr-npc-editar { position: absolute; z-index: 30; left: 50%; bottom: max(10px, var(--sa-b)); transform: translateX(-50%); display: flex; gap: 8px; align-items: center;
+  padding: 6px 10px; border-radius: 12px; background: rgba(13,15,26,.9); border: 1px dashed var(--jr-ouro); color: #ffe9a8; font: 600 12px 'Inter', sans-serif; }
+@media (prefers-reduced-motion: reduce) { #jr-app img.jr-pessoa, .jr-pessoa-icone { animation: none; } .jr-pessoa-balao.pop { animation: none; } }

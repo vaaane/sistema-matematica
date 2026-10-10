@@ -66,6 +66,7 @@
       <button class="jr-btn-hud" id="btn-colegas" hidden aria-label="Mostrar ou esconder os colegas" aria-pressed="true">👁<span>Colegas</span></button>
       <button class="jr-btn-hud" id="btn-reacao" hidden aria-label="Mandar uma reação">😊</button>
       <button class="jr-btn-pet" id="btn-pet" hidden aria-label="Meus pets"><img alt="" draggable="false"/></button>
+      <button class="jr-btn-hud jr-btn-batalhar" id="btn-batalhar" hidden aria-label="Batalhar">⚔️<span>Batalhar</span></button>
       <button class="jr-btn-som" data-som aria-label="Desligar o som">🔊</button>
       <button class="jr-btn-estojo" id="btn-insignias-2" aria-label="Minhas insígnias">
         <img src="/img/jogo/ui/botao-insignias.webp" alt="" draggable="false"/>
@@ -75,6 +76,7 @@
     </div>
     <button id="cena-balao" class="jr-balao-acao" hidden></button>
     <button id="pet-fala" class="jr-pet-fala" hidden aria-live="polite"></button>
+    <div id="pessoa-balao" class="jr-pessoa-balao" hidden aria-live="polite"></div>
     <div id="cena-aviso" class="jr-balao-aviso" hidden></div>
     <button id="btn-revanche" class="jr-btn jr-btn-ouro jr-revanche" hidden>⚔ Revanche</button>
     <!-- Joystick (só em tela de toque) -->
@@ -218,6 +220,66 @@
     </div>
   </div>
 
+  <!-- Batalha de Pets: lista dos treinadores -->
+  <div id="bt-lista" class="jr-pet-escolha" hidden role="dialog" aria-label="Batalha de pets">
+    <div class="jr-pet-escolha-caixa bt-lista-caixa">
+      <div class="bt-lista-topo">
+        <div class="jr-pet-escolha-titulo">⚔️ Batalha de Pets</div>
+        <div class="bt-lista-dia" id="bt-lista-dia"></div>
+      </div>
+      <div class="bt-cards" id="bt-cards"></div>
+      <div class="jr-mp-botoes bt-lista-botoes">
+        <button class="jr-btn jr-btn-sec" id="bt-pag" hidden>Mais treinadores ▶</button>
+        <button class="jr-btn jr-btn-sec" id="bt-lista-fechar">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Batalha de Pets: a luta -->
+  <section id="batalha" class="bt-tela" hidden aria-label="Batalha">
+    <div class="bt-hud">
+      <button class="jr-fugir" id="bt-sair" aria-label="Sair da batalha">🏳️ Sair</button>
+      <div class="bt-lado">
+        <div class="bt-nome" id="bt-nomeL"></div>
+        <div class="bt-hp"><b id="bt-hpLb"></b><i id="bt-hpL"></i></div>
+        <div class="bt-hptxt" id="bt-hpLt"></div>
+      </div>
+      <div class="bt-rodada" id="bt-rodada"></div>
+      <div class="bt-lado dir">
+        <div class="bt-nome" id="bt-nomeR"></div>
+        <div class="bt-hp"><b id="bt-hpRb"></b><i id="bt-hpR"></i></div>
+        <div class="bt-hptxt" id="bt-hpRt"></div>
+      </div>
+    </div>
+    <div class="bt-arena" id="bt-arena">
+      <div class="bt-status" id="bt-stL"></div><div class="bt-status" id="bt-stR"></div>
+      <div class="bt-lutador" id="bt-L"><div class="bt-sombra"></div><img id="bt-imgL" alt="" draggable="false"/></div>
+      <img class="bt-treinador" id="bt-npc" alt="" draggable="false"/>
+      <div class="bt-lutador" id="bt-R"><div class="bt-sombra"></div><img id="bt-imgR" alt="" draggable="false"/></div>
+      <div class="bt-fala" id="bt-fala" hidden></div>
+      <div class="bt-fx" id="bt-fx" aria-hidden="true"></div>
+      <div class="bt-banner" id="bt-banner"></div>
+    </div>
+    <div class="bt-painel">
+      <div class="bt-timers">
+        <div class="bt-tm"><span><em>Seu tempo</em><b id="bt-tLtxt"></b></span><div class="bt-tbar"><i id="bt-tL"></i></div></div>
+        <div class="bt-tm"><span><em id="bt-tRnome"></em><b id="bt-tRtxt"></b></span><div class="bt-tbar"><i id="bt-tR"></i></div></div>
+      </div>
+      <div class="bt-conta" id="bt-conta"></div>
+      <div class="bt-ops" id="bt-ops"></div>
+      <div class="bt-msg" id="bt-msg" aria-live="polite"></div>
+      <div class="bt-fim" id="bt-fim" hidden>
+        <div class="bt-fim-tit" id="bt-fim-tit"></div>
+        <div class="bt-premios" id="bt-premios"></div>
+        <div class="bt-fim-dia" id="bt-fim-dia"></div>
+        <div class="jr-mp-botoes">
+          <button class="jr-btn jr-btn-ouro" id="bt-revanche">🔁 Revanche</button>
+          <button class="jr-btn jr-btn-sec" id="bt-voltar">Voltar</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Pet que falta: silhueta grande e onde conquistar -->
   <div id="pet-silhueta" class="jr-pet-escolha" hidden role="dialog" aria-label="Pet escondido">
     <div class="jr-pet-escolha-caixa jr-silhueta-caixa">
@@ -287,6 +349,7 @@
         <div class="jr-mp-botoes">
           <button class="jr-btn" id="mp-alimentar">Alimentar</button>
           <button class="jr-btn" id="mp-carinho">Carinho</button>
+          <button class="jr-btn jr-btn-ouro" id="mp-batalhar">⚔️ Batalhar</button>
         </div>
         <div class="jr-mp-botoes">
           <button class="jr-btn jr-btn-sec" id="mp-trocar">🐾 Trocar pet</button>

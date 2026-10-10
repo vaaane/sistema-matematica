@@ -13,6 +13,7 @@ import { definirPausas, barriga, faixaBarriga, rotuloLealdade, lealdadeComQueda,
   CARINHOS_POR_DIA, LEALDADE_INICIAL, LEALDADE_DIA, LEALDADE_CAMBALHOTA } from '/js/jogo-revisao/cuidados.js';
 import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, tamanhoBusto, temBusto, bustoPet, preCarregarPet, PetSeguidor, PetParado } from '/js/jogo-revisao/pets.js';
 import { iniciarOnline, enviarOnline, sairOnline, ouvirMapa, ouvirTodos, onlineAtivo, VALIDADE_MS } from '/js/jogo-revisao/online.js';
+import { definirBatalhas, batalhasProntas, cfgBatalha, treinadores, treinador, gerarConta, mostrarNumero, desafioDe, situacao, forca, dano, premios, depoisDaBatalha } from '/js/jogo-revisao/batalha.js';
 import { definirFalas, falasProntas, configFalas, dicaDe, montarFala, duracaoBalao, fraseDe, configAjuda } from '/js/jogo-revisao/conversa.js';
 import { notaJogoRevisao, formatarNota, NOTA_MAX, PESO_INSIGNIAS, PESO_DOURADAS } from '/js/jogo-revisao/nota.js';
 
@@ -113,7 +114,7 @@ function estadoVazio() {
       };
     }
   }
-  return { ginasios, avisosPet: {} };
+  return { ginasios, avisosPet: {}, batalhas: {}, batalhasDia: null };
 }
 
 // ============================================================
@@ -157,6 +158,8 @@ async function carregarEstado() {
     estado.respostas = v.respostas || {};
     estado.pets = lerPets(v);   // validado depois de ler o sprites.json (cachorro/porco antigos são ignorados)
     estado.revisaoSemanal = v.revisao_semanal || {};
+    estado.batalhas = v.batalhas && typeof v.batalhas === 'object' ? { ...v.batalhas } : {};   // { treinadorId: { nivel, vitorias, derrotas, estado, descansa_ate } }
+    estado.batalhasDia = v.batalhas_dia || null;   // { data, moedas, lealdade, xp } — zera quando muda o dia
     estado.avisosPet = v.avisos_pet && typeof v.avisos_pet === 'object' ? { ...v.avisos_pet } : {};   // { pet: { conversa, ajuda }, toques_sem_lealdade }
     estado.personagem = persValido(v.personagem) ? v.personagem : null;   // sem campo: usa o padrão
     // aluno novo = nada salvo ainda (sem ginásio, insígnia, pet nem dia jogado)
@@ -454,6 +457,11 @@ export async function iniciarJogo(sess) {
   await carregarEstado();
   try { definirFalas(await fetch(`${DADOS}/falas-pets.json`).then(r => { if (!r.ok) throw new Error('falas-pets.json'); return r.json(); })); }
   catch (e) { console.warn('[jogo-revisao] falas dos pets indisponíveis', e); }
+  try { NPCS = (await fetch(`${DADOS}/npcs.json`).then(r => { if (!r.ok) throw new Error('npcs.json'); return r.json(); })).npcs || []; }
+  catch (e) { console.warn('[jogo-revisao] pessoas dos mapas indisponíveis', e); }
+  editarNpcs = teste && new URLSearchParams(location.search).get('editarNpcs') === '1';   // nunca para alunos
+  try { definirBatalhas(await fetch(`${DADOS}/batalhas.json`).then(r => { if (!r.ok) throw new Error('batalhas.json'); return r.json(); })); }
+  catch (e) { console.warn('[jogo-revisao] batalha de pets indisponível', e); }
   try { await carregarSprites(); petsOk = true; } catch (e) { console.error('[jogo-revisao] pets indisponíveis', e); }
   preCarregarQuadros(meuPersonagem());
   ligarEventos();
@@ -718,6 +726,7 @@ function atualizarBotaoPet() {
   const b = $('btn-pet');
   const ativo = estado?.pets?.ativo;
   b.hidden = !(seguidor && ativo && cena?.tipo === 'mapa');
+  atualizarBotaoBatalhar();
   if (b.hidden) return;
   const src = quadrosDe(ativo, 'sentado_girando')[0];
   const img = b.querySelector('img');
@@ -917,6 +926,7 @@ function abrirMeuPet() {
   // pet grande: até ~78% da altura do palco, nunca maior que o quadro original
   img.style.height = Math.min(palco.clientHeight * 0.78, tamanhoQuadro()[1]) + 'px';
   mp.anim.definir(pet);
+  atualizarBotaoBatalhar();
   renderMeuPet();
   voltarAoNormal();
 }
@@ -1731,6 +1741,7 @@ function abrirMapaGeral() {
   atualizarBotaoRevisao();
   cena = null;
   esconderBalao();
+  limparPessoas();
   sairDoMapaOnline();
   pararFalaPet();
   enviarOnline({ mapa: 'geral', local: 'geral' });
@@ -1888,7 +1899,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden;
+  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden;
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -2271,6 +2282,7 @@ async function abrirMapa(n, onde) {
     return `<div class="jr-rotulo-porta${fechado ? ' fechado' : ''}" data-g="${G}" style="left:${portas[G].x}px;top:${portas[G].y - ALT_JOGADOR - 24}px"${fechado ? '' : ' hidden'}>` +
       `<span>${fechado ? '🔒 ' : ''}${portas[G].nome}</span></div>`;
   }).join('');
+  montarPessoas(n);
 
   if (onde === 'A' || onde === 'B') {
     const [x, y] = pontoAntesDaPorta(n, onde);
@@ -2333,7 +2345,14 @@ const distAoDestino = (d) => Math.min(dist(jog.x, jog.y, d.x, d.y), dist(jog.x, 
 
 function tocarNoMapa(e) {
   const p = telaParaImagem(e.clientX, e.clientY);
-  if (tocouNoPet(p)) { falarPorToque(); return; }   // tocar no pet: ele fala (não anda até lá)
+  if (balaoPessoa) fecharBalaoPessoa();   // tocar fora fecha o balão da pessoa
+  // pet e pessoa podem estar lado a lado: vale o que estiver mais perto do toque
+  const pessoa = pessoaEm(p);
+  const noPet = tocouNoPet(p);
+  if (noPet && (!pessoa || dist(p.x, p.y, seguidor.x, seguidor.y - seguidor.altura / 2) < dist(p.x, p.y, pessoa.p.x, pessoa.p.y - pessoa.alt / 2))) {
+    falarPorToque(); return;   // tocar no pet: ele fala (não anda até lá)
+  }
+  if (pessoa) { if (!editarNpcs) irFalarCom(pessoa); return; }   // tocar numa pessoa: vai até ela e conversa
   // Tocou a até 60 px de uma porta ou saída → esse ponto vira o destino especial
   let perto = null, melhor = DIST_TOQUE;
   for (const d of destinosDoMapa()) {
@@ -2389,6 +2408,7 @@ function verificarEncostou(vx, vy) {
 // A cada quadro no mapa: mostra o nome do ginásio, acende o botão OK
 function atualizarMapa() {
   if (!$('cena-balao').hidden) esconderBalao();
+  posicionarBalaoPessoa();
   const ds = destinosDoMapa();
   alvoMapa = null;
   for (const d of ds) {
@@ -2478,6 +2498,7 @@ async function entrarGinasio(n, G) {
   // no ginásio não há botão de sair: sai andando pela porta de entrada
   $('btn-cena-voltar').hidden = true;
   $('tela-cena').classList.add('jr-no-ginasio');
+  limparPessoas();
   sairDoMapaOnline();
   pararFalaPet();
   enviarOnline({ mapa: n, local: 'ginasio' });   // no ginásio os colegas não veem você
@@ -2655,6 +2676,568 @@ function avisarEm(texto, x, y) {
   posicionarNaTela(el, x, y);
   clearTimeout(avisoTimer);
   avisoTimer = setTimeout(() => { el.hidden = true; }, 2200);
+}
+
+// ============================================================
+//  BATALHA DE PETS — contas rápidas contra os treinadores de dados/jogo/batalhas.json
+//  (regras puras em js/jogo-revisao/batalha.js; aqui a lista, a luta e os prêmios)
+// ============================================================
+const ELEM_PET = { capivara: ['🍃', '🌿'], gato: ['🐾', '✦'], gaviao: ['🪶', '💨'], unicornio: ['🌈', '✨', '💖'], axolote: ['🫧', '💧'],
+  tigre: ['⚡', '🐾'], dragao_vermelho: ['🔥', '💥'], dragao_azul: ['❄️', '💎'] };
+const FALAS_VOLTOU_FORTE = ['Treinei muito desde a última vez!', 'Voltei mais forte. Preparado?', 'Andei treinando… agora é sério!'];
+const POR_PAGINA_BT = 10;
+let bt = null;            // batalha em andamento
+let btPagina = 0, btTimerLista = 0;
+
+const podeBatalhar = () => petsOk && batalhasProntas() && carregouProgresso && !!estado?.pets?.ativo;
+const desafioCom = (id) => desafioDe(estado.batalhas?.[id]);
+
+// Prêmios de batalha de hoje (zera quando muda o dia)
+function diaBatalhas() {
+  const hoje = diaLocal();
+  if (estado.batalhasDia?.data !== hoje) estado.batalhasDia = { data: hoje, moedas: 0, lealdade: 0, xp: 0 };
+  return estado.batalhasDia;
+}
+
+function atualizarBotaoBatalhar() {
+  $('btn-batalhar').hidden = !(podeBatalhar() && cena?.tipo === 'mapa');
+  $('mp-batalhar').hidden = !podeBatalhar();
+}
+
+const faltaTexto = (ms) => {
+  const min = Math.max(1, Math.ceil(ms / 60000)), h = Math.floor(min / 60), m = min % 60;
+  return h ? `${h} h ${String(m).padStart(2, '0')} min` : `${m} min`;
+};
+
+// Com fome não batalha: o pet fica triste e aparece o aviso
+function petComFomeParaBatalha() {
+  const pet = estado.pets.ativo;
+  if (barrigaDe(pet) >= (cfgBatalha().barriga_minima ?? 25)) return false;
+  if (mp) { mp.anim.tocar('triste_fome'); setTimeout(() => { if (mp && !mp.ocupado) voltarAoNormal(); }, 1800); }
+  else seguidor?.reagir('triste_fome', 2000);
+  avisoPet(`${NOME_PET[pet]} está com fome. Dê comida antes de batalhar.`);
+  return true;
+}
+
+function abrirListaBatalha() {
+  if (!podeBatalhar() || petComFomeParaBatalha()) return;
+  if (mp) fecharMeuPet();
+  btPagina = 0;
+  $('bt-lista').hidden = false;
+  renderListaBatalha();
+  clearInterval(btTimerLista);
+  btTimerLista = setInterval(() => { if ($('bt-lista').hidden) clearInterval(btTimerLista); else renderListaBatalha(); }, 20000);   // contador do descanso
+}
+
+function renderListaBatalha() {
+  const dia = diaBatalhas(), lim = cfgBatalha().limites_dia || {};
+  $('bt-lista-dia').textContent = `${NOME_PET[estado.pets.ativo]} luta com você · prêmios de hoje: ${dia.moedas} / ${lim.moedas ?? '∞'} 🪙`;
+  const todos = treinadores();
+  const paginas = Math.ceil(todos.length / POR_PAGINA_BT);
+  const lista = todos.slice(btPagina * POR_PAGINA_BT, (btPagina + 1) * POR_PAGINA_BT);
+  const agora = Date.now();
+  $('bt-cards').innerHTML = lista.map(t => {
+    const d = desafioCom(t.id), sit = situacao(d, agora), f = forca(t, d);
+    const estadoTxt = sit === 'descansando' ? `😴 Descansando · volta em ${faltaTexto(d.descansa_ate - agora)}`
+      : sit === 'revanche' ? '🔁 Revanche' : '⚔️ Desafiar';
+    return `
+      <button class="bt-card ${sit}" data-bt="${esc(t.id)}"${sit === 'descansando' ? ' aria-disabled="true"' : ''}>
+        <span class="bt-card-img"><img src="${IMG}/npcs/${esc(t.id)}.webp" alt="" draggable="false" onerror="this.remove()"/>
+          <img class="bt-card-pet" src="${quadrosDe(t.pet, 'sentado_girando')[0]}" alt="" draggable="false"/></span>
+        <span class="bt-card-txt">
+          <span class="bt-card-nome">${esc(t.nome)}${d.vitorias > 0 ? ' <span class="bt-trofeu" title="Já venceu">🏆</span>' : ''}</span>
+          <span class="bt-card-quem">${esc(t.quem)} · ${NOME_PET[t.pet] || ''}</span>
+          <span class="bt-card-dif">${'⭐'.repeat(t.nivel)}<small>Nível ${d.nivel} · acerta ${Math.round(f.acerto * 100)}%</small></span>
+          <span class="bt-card-estado">${estadoTxt}</span>
+        </span>
+      </button>`;
+  }).join('');
+  $('bt-pag').hidden = paginas < 2;
+  $('bt-pag').textContent = btPagina < paginas - 1 ? 'Mais treinadores ▶' : '◀ Voltar ao início';
+}
+
+// ── A luta ──────────────────────────────────────────────────
+const btLater = (fn, ms) => { const t = setTimeout(fn, ms); bt?.timers.push(t); return t; };
+const btEsperar = (ms) => new Promise(ok => btLater(ok, ms));
+const btReduz = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function iniciarBatalha(id, origem = 'lista') {
+  const t = treinador(id);
+  if (!t || !podeBatalhar() || petComFomeParaBatalha()) return;
+  const d = desafioCom(id);
+  if (situacao(d) === 'descansando') return;
+  $('bt-lista').hidden = true;
+  if (mp) fecharMeuPet();
+  limparBatalha();
+  const c = cfgBatalha();
+  const f = forca(t, d);
+  bt = { t, d, f, origem, pet: estado.pets.ativo, rod: 0, hp: { L: c.vida || 100, R: c.vida || 100 }, tempoTot: { L: 0, R: 0 }, timers: [], anim: { L: 0, R: 0 },
+    contas: [], fechou: true, fim: false, raf: 0 };
+  soltarJoystick();
+  pararFalaPet();
+  preCarregarPet(bt.pet); preCarregarPet(t.pet);
+  $('batalha').hidden = false;
+  $('bt-nomeL').innerHTML = `Você<small>· ${NOME_PET[bt.pet]}</small>`;
+  $('bt-nomeR').innerHTML = `<small>${NOME_PET[t.pet]} ·</small>${esc(t.nome)}`;
+  $('bt-tRnome').textContent = `Tempo de ${t.nome}`;
+  $('bt-npc').src = `${IMG}/npcs/${t.id}.webp`;
+  $('bt-npc').onerror = () => { $('bt-npc').removeAttribute('src'); };
+  $('bt-fim').hidden = true;
+  $('bt-ops').hidden = $('bt-conta').hidden = false;
+  $('bt-ops').innerHTML = ''; $('bt-conta').textContent = 'Prepare-se…'; $('bt-msg').textContent = '';
+  $('bt-fx').innerHTML = '';
+  $('bt-rodada').innerHTML = `<small>Rodada</small>0 / ${c.rodadas || 7}`;
+  for (const l of ['L', 'R']) { $('bt-st' + l).className = 'bt-status'; btHp(l); btParado(l); btTempoBarra(l, 1, ''); }
+  $('bt-sair').style.visibility = '';
+  // fala de início (nível > 1: "Treinei muito…") e "Batalha!"
+  const fala = d.nivel > 1 ? sortear(FALAS_VOLTOU_FORTE) : t.fala_inicio;
+  btFala(fala, 2300);
+  btLater(() => { btBanner('Batalha!', '#f0a500'); btLater(btRodada, 1200); }, 2400);
+}
+
+function limparBatalha() {
+  if (!bt) return;
+  bt.timers.forEach(clearTimeout);
+  clearTimeout(bt.anim.L); clearTimeout(bt.anim.R);
+  cancelAnimationFrame(bt.raf);
+}
+
+function fecharBatalha(voltarLista = true) {
+  limparBatalha();
+  if (bt?.origem !== 'lista') voltarLista = false;
+  bt = null;
+  atualizarIconesPessoas();
+  $('batalha').hidden = true;
+  $('bt-fala').hidden = true;
+  if (voltarLista) { $('bt-lista').hidden = false; renderListaBatalha(); }
+}
+
+// sprites: lado L = pet do aluno; R = pet do treinador, espelhado
+function btTocar(lado, nome, { loop = true, ms = 160, depois } = {}) {
+  if (!bt) return;
+  clearTimeout(bt.anim[lado]);
+  const pet = lado === 'L' ? bt.pet : bt.t.pet;
+  const nomeReal = lado === 'R' && nome === 'andar_direita' ? 'andar_esquerda' : nome;
+  const fs = quadrosDe(pet, nomeReal);
+  const img = $('bt-img' + lado), el = $('bt-' + lado);
+  el.style.transform = lado === 'R' && nomeReal !== 'andar_esquerda' ? 'scaleX(-1)' : '';
+  let i = 0;
+  const passo = () => {
+    if (!bt) return;
+    img.src = fs[i]; i++;
+    if (i >= fs.length) {
+      if (!loop) { bt.anim[lado] = setTimeout(() => { depois ? depois() : btParado(lado); }, ms); return; }
+      i = 0;
+    }
+    bt.anim[lado] = setTimeout(passo, ms);
+  };
+  passo();
+}
+const btParado = (lado) => btTocar(lado, 'andar_direita', { ms: 420 });
+
+function btCentro(el) { const a = $('bt-arena').getBoundingClientRect(), r = el.getBoundingClientRect(); return { x: r.left - a.left + r.width / 2, y: r.top - a.top + r.height * 0.5 }; }
+function btParticula(txt, x, y, { dx = 0, dy = -60, dur = 900, size = 22, delay = 0 } = {}) {
+  if (btReduz()) return;
+  const s = document.createElement('span');
+  s.className = 'bt-p'; s.textContent = txt; s.style.fontSize = size + 'px'; s.style.left = x + 'px'; s.style.top = y + 'px';
+  $('bt-fx').appendChild(s);
+  s.animate([{ transform: 'translate(-50%,-50%) scale(.5)', opacity: 0 },
+    { transform: `translate(calc(-50% + ${dx * 0.3}px),calc(-50% + ${dy * 0.3}px)) scale(1.15)`, opacity: 1, offset: 0.2 },
+    { transform: `translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(.7)`, opacity: 0 }], { duration: dur, delay, easing: 'ease-out', fill: 'backwards' }).onfinish = () => s.remove();
+}
+function btProjetil(de, para, pet, crit) {
+  return new Promise(ok => {
+    if (btReduz()) { ok(); return; }
+    const a = btCentro($('bt-' + de)), b = btCentro($('bt-' + para)), e = ELEM_PET[pet] || ['✨'];
+    const s = document.createElement('span');
+    s.className = 'bt-p'; s.textContent = e[0]; s.style.fontSize = (crit ? 44 : 34) + 'px'; s.style.left = a.x + 'px'; s.style.top = a.y + 'px';
+    $('bt-fx').appendChild(s);
+    const dx = b.x - a.x, dy = b.y - a.y, dur = 420;
+    const an = s.animate([{ transform: 'translate(-50%,-50%) scale(.6) rotate(0)' },
+      { transform: `translate(calc(-50% + ${dx / 2}px),calc(-50% + ${dy / 2 - 50}px)) scale(1.2) rotate(180deg)` },
+      { transform: `translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(1) rotate(360deg)` }], { duration: dur, easing: 'ease-in' });
+    const t0 = performance.now();
+    const rastro = () => { const k = (performance.now() - t0) / dur; if (k < 1 && bt) { btParticula(e[1] || e[0], a.x + dx * k, a.y + dy * k - 50 * Math.sin(Math.PI * k), { dx: (Math.random() - 0.5) * 20, dy: 10 + Math.random() * 20, dur: 420, size: 16 }); requestAnimationFrame(rastro); } };
+    btLater(rastro, 40);
+    an.onfinish = () => { s.remove(); ok(); };
+  });
+}
+function btBote(lado) {
+  if (btReduz()) return Promise.resolve();
+  const dir = lado === 'L' ? 1 : -1, el = $('bt-' + lado), flip = el.style.transform || '';
+  return el.animate([{ transform: `translateX(0) ${flip}` }, { transform: `translateX(${-14 * dir}px) ${flip}`, offset: 0.25 },
+    { transform: `translateX(${46 * dir}px) ${flip}`, offset: 0.55 }, { transform: `translateX(0) ${flip}` }], { duration: 520, easing: 'ease-out' }).finished.catch(() => {});
+}
+function btLevarDano(lado, n, crit, pet) {
+  const el = $('bt-' + lado), c = btCentro(el), flip = el.style.transform || '', dir = lado === 'L' ? -1 : 1;
+  if (!btReduz()) {
+    el.animate([{ transform: `translateX(0) ${flip}` }, { transform: `translateX(${10 * dir}px) ${flip}` }, { transform: `translateX(${-8 * dir}px) ${flip}` },
+      { transform: `translateX(${6 * dir}px) ${flip}` }, { transform: `translateX(0) ${flip}` }], { duration: 380 });
+    $('bt-img' + lado).animate([{ filter: 'none' }, { filter: 'brightness(1.8) sepia(1) hue-rotate(-30deg) saturate(6)' }, { filter: 'none' }], { duration: 380 });
+    const e = ELEM_PET[pet] || ['✨'];
+    for (let i = 0; i < (crit ? 10 : 6); i++) btParticula(e[i % e.length], c.x, c.y, { dx: (Math.random() - 0.5) * 150, dy: -(30 + Math.random() * 80), dur: 700 + Math.random() * 300, size: crit ? 24 : 20 });
+    if (crit) $('bt-arena').animate([{ transform: 'translate(0,0)' }, { transform: 'translate(4px,-3px)' }, { transform: 'translate(-4px,3px)' }, { transform: 'translate(0,0)' }], { duration: 260 });
+  }
+  const d = document.createElement('div');
+  d.className = 'bt-dano' + (crit ? ' crit' : ''); d.textContent = (crit ? '⭐ ' : '') + '−' + n;
+  d.style.left = c.x + 'px'; d.style.top = (c.y - 40) + 'px';
+  $('bt-fx').appendChild(d);
+  d.animate([{ transform: 'translate(-50%,0) scale(.6)', opacity: 0 }, { transform: 'translate(-50%,-14px) scale(1.15)', opacity: 1, offset: 0.2 },
+    { transform: 'translate(-50%,-60px) scale(1)', opacity: 0 }], { duration: 1100, easing: 'ease-out' }).onfinish = () => d.remove();
+}
+function btBanner(txt, cor = '#fff') {
+  const b = $('bt-banner');
+  b.textContent = txt; b.style.color = cor;
+  b.animate([{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'scale(1.08)', offset: 0.25 }, { opacity: 1, transform: 'scale(1)', offset: 0.75 }, { opacity: 0, transform: 'scale(1)' }],
+    { duration: btReduz() ? 900 : 1100, easing: 'ease-out' });
+}
+function btStatus(lado, txt, tipo) { const s = $('bt-st' + lado); s.textContent = txt; s.className = 'bt-status on ' + (tipo || ''); }
+function btConfete(lado) { const c = btCentro($('bt-' + lado)); for (let i = 0; i < 18; i++) btParticula(['🎉', '⭐', '✨', '🎊'][i % 4], c.x, c.y - 30, { dx: (Math.random() - 0.5) * 260, dy: -(40 + Math.random() * 120), dur: 1200 + Math.random() * 500, size: 22, delay: i * 40 }); }
+function btFala(texto, ms = 3000) {
+  const el = $('bt-fala');
+  el.textContent = texto; el.hidden = false;
+  el.classList.remove('nova'); void el.offsetWidth; el.classList.add('nova');
+  clearTimeout(btFala.t);
+  if (ms) btFala.t = setTimeout(() => { el.hidden = true; }, ms);
+}
+
+function btHp(lado) {
+  const vida = cfgBatalha().vida || 100, v = bt.hp[lado], pct = v / vida * 100, el = $('bt-hp' + lado);
+  el.style.width = pct + '%';
+  el.style.background = pct > 50 ? 'var(--bt-hp)' : pct > 25 ? 'var(--bt-hp-mid)' : 'var(--bt-hp-low)';
+  $('bt-hp' + lado + 'b').style.width = pct + '%';
+  $('bt-hp' + lado + 't').textContent = `${v} / ${vida}`;
+}
+function btTempoBarra(lado, frac, txt) { $('bt-t' + lado).style.width = Math.max(0, frac) * 100 + '%'; $('bt-t' + lado + 'txt').textContent = txt; }
+
+function btRodada() {
+  if (!bt) return;
+  const c = cfgBatalha(), T = c.tempo_s || 15;
+  bt.rod++;
+  $('bt-rodada').innerHTML = `<small>Rodada</small>${bt.rod} / ${c.rodadas || 7}`;
+  const p = gerarConta(bt.f.contas);
+  Object.assign(bt, { p, resp: { L: null, R: null }, lim: { L: T, R: T }, t0: performance.now(), fechou: false });
+  for (const l of ['L', 'R']) $('bt-st' + l).className = 'bt-status';
+  $('bt-conta').textContent = p.conta;
+  $('bt-msg').textContent = '';
+  $('bt-ops').innerHTML = p.opcoes.map(v => `<button class="bt-op" data-v="${v}">${mostrarNumero(v)}</button>`).join('');
+  // treinador simulado: acerta com a chance dele, no tempo dele; errando, escolhe uma errada
+  const tR = bt.f.tempo[0] + Math.random() * (bt.f.tempo[1] - bt.f.tempo[0]);
+  const certo = Math.random() < bt.f.acerto;
+  const erradas = p.opcoes.filter(v => v !== p.resposta);
+  btLater(() => { if (bt && !bt.fechou && bt.resp.R === null) btResponder('R', certo ? p.resposta : sortear(erradas)); }, tR * 1000);
+  btTick();
+}
+
+const btAgora = () => (performance.now() - bt.t0) / 1000;
+function btTick() {
+  if (!bt || bt.fechou) return;
+  const t = btAgora(), T = cfgBatalha().tempo_s || 15;
+  for (const l of ['L', 'R']) {
+    const resp = bt.resp[l] !== null, rest = resp ? 0 : Math.max(0, bt.lim[l] - t);
+    btTempoBarra(l, rest / T, resp ? 'respondeu' : Math.ceil(rest) + ' s');
+  }
+  for (const l of ['L', 'R']) if (bt.resp[l] === null && t >= bt.lim[l]) btResponder(l, null);
+  if (bt && !bt.fechou) bt.raf = requestAnimationFrame(btTick);
+}
+
+function btResponder(l, v) {
+  if (!bt || bt.fechou || bt.resp[l] !== null) return;
+  const t = btAgora();
+  bt.resp[l] = { v, t, ok: v === bt.p.resposta };
+  const o = l === 'L' ? 'R' : 'L';
+  if (bt.resp[o] === null) bt.lim[o] = Math.min(bt.lim[o], t + (cfgBatalha().depois_s ?? 6));
+  if (l === 'L') {
+    tocar('clique');
+    for (const b of $('bt-ops').querySelectorAll('.bt-op')) {
+      b.disabled = true;
+      if (Number(b.dataset.v) === v) b.classList.add(bt.resp.L.ok ? 'certa' : 'errada'); else b.classList.add('esmaecida');
+    }
+    $('bt-msg').textContent = bt.resp.R === null ? `Esperando ${bt.t.nome}… (no máximo ${Math.ceil(bt.lim.R - t)} s)` : '';
+  }
+  btStatus(l, v === null ? '⏱ tempo!' : '✔ respondeu', '');
+  if (bt.resp.L !== null && bt.resp.R !== null) btFechar();
+}
+
+async function btFechar() {
+  bt.fechou = true;
+  cancelAnimationFrame(bt.raf);
+  const R = bt.resp, p = bt.p;
+  for (const b of $('bt-ops').querySelectorAll('.bt-op')) { b.disabled = true; if (Number(b.dataset.v) === p.resposta) b.classList.add('certa'); }
+  for (const l of ['L', 'R']) btStatus(l, R[l].v === null ? '⏱ sem resposta' : R[l].ok ? `✔ ${R[l].t.toFixed(1)} s` : '✘ errou', R[l].ok ? 'ok' : 'bad');
+  $('bt-msg').textContent = '';
+  tocar(R.L.ok ? 'acerto' : 'erro');
+  bt.contas.push({ conta: p.conta, certa: p.resposta, resposta: R.L.v, acertou: R.L.ok, tempo_s: R.L.v === null ? null : +R.L.t.toFixed(1) });
+  // quem acertou mais rápido ataca primeiro
+  const ordem = ['L', 'R'].filter(l => R[l].ok).sort((a, b) => R[a].t - R[b].t);
+  if (!ordem.length) { btBanner('Ninguém acertou', '#a3a1c9'); await btEsperar(1300); }
+  for (const l of ordem) {
+    if (!bt || bt.hp.L <= 0 || bt.hp.R <= 0) break;
+    const o = l === 'L' ? 'R' : 'L', pet = l === 'L' ? bt.pet : bt.t.pet, { n, critico } = dano(R[l].t);
+    bt.tempoTot[l] += R[l].t;
+    btTocar(l, 'correndo', { loop: false, ms: 110 });
+    await btBote(l);
+    await btProjetil(l, o, pet, critico);
+    if (!bt) return;
+    bt.hp[o] = Math.max(0, bt.hp[o] - n);
+    btHp(o);
+    btLevarDano(o, n, critico, pet);
+    await btEsperar(650);
+    btParado(l);
+  }
+  if (!bt) return;
+  await btEsperar(500);
+  if (!bt) return;
+  if (bt.hp.L <= 0 || bt.hp.R <= 0 || bt.rod >= (cfgBatalha().rodadas || 7)) return btFim();
+  btRodada();
+}
+
+function btFim() {
+  const { hp, tempoTot } = bt;
+  const venceu = hp.L > hp.R || (hp.L === hp.R && tempoTot.L <= tempoTot.R);
+  const v = venceu ? 'L' : 'R', q = venceu ? 'R' : 'L';
+  bt.fim = true;
+  btTocar(v, 'feliz', { ms: 130 }); btTocar(q, 'triste_fome', { ms: 420 }); btConfete(v);
+  btFala(venceu ? bt.t.fala_perdeu : bt.t.fala_venceu, 0);
+  tocar(venceu ? 'vitoria' : 'erro');
+  const pr = registrarBatalha(venceu ? 'venceu' : 'perdeu');
+  $('bt-ops').hidden = $('bt-conta').hidden = true;
+  $('bt-msg').textContent = '';
+  $('bt-sair').style.visibility = 'hidden';   // some sem mudar a largura do HUD
+  for (const l of ['L', 'R']) btTempoBarra(l, 0, '');
+  $('bt-fim-tit').textContent = venceu ? 'Você venceu! 🎉' : `${bt.t.nome} venceu desta vez`;
+  $('bt-fim-tit').classList.toggle('venceu', venceu);
+  const chips = [];
+  if (pr.xp) chips.push(`<span class="bt-premio xp">+${pr.xp} XP</span>`);
+  if (pr.moedas) chips.push(`<span class="bt-premio mo">+${pr.moedas} 🪙</span>`);
+  if (pr.lealdade) chips.push(`<span class="bt-premio le">+${Math.round(pr.lealdade * 10) / 10} lealdade</span>`);
+  if (pr.bonusPrimeira) chips.push(`<span class="bt-premio mo">🏆 1ª vitória: +${pr.bonusPrimeira} 🪙</span>`);
+  $('bt-premios').innerHTML = chips.join('') || '<span class="bt-premio">Sem prêmios</span>';
+  const dia = diaBatalhas(), lim = cfgBatalha().limites_dia || {};
+  $('bt-fim-dia').innerHTML = (pr.cortado ? '<b>Limite de prêmios de hoje atingido — amanhã tem mais!</b>' : '') +
+    `<span>Prêmios de batalha hoje: ${dia.moedas} / ${lim.moedas ?? '∞'} moedas</span>`;
+  $('bt-revanche').hidden = venceu;
+  $('bt-fim').hidden = false;
+  if (pr.xp) darXP(pr.xp);
+}
+
+// Salva o resultado: desafio do treinador, prêmios (dentro do limite do dia) e as contas, para a professora
+function registrarBatalha(resultado) {
+  const { t, d, pet } = bt;
+  const dia = diaBatalhas();
+  const c = cuidadosDe(pet);
+  const pr = premios(resultado, d, dia, c?.lealdade);
+  const novo = depoisDaBatalha(d, resultado);
+  (estado.batalhas ||= {})[t.id] = novo;
+  dia.moedas += pr.moedas; dia.lealdade += pr.lealdade; dia.xp += pr.xp;
+  const patch = { [`batalhas/${t.id}`]: novo, batalhas_dia: { ...dia } };
+  if (pr.moedas || pr.bonusPrimeira) {
+    estado.pets.moedas = (Number(estado.pets.moedas) || 0) + pr.moedas + pr.bonusPrimeira;
+    patch['pets/moedas'] = estado.pets.moedas;
+  }
+  if (pr.lealdade && c) {
+    c.lealdade = Math.min(100, (Number(c.lealdade) || 0) + pr.lealdade);
+    patch[`pets/conquistados/${pet}/lealdade`] = c.lealdade;
+  }
+  const agora = Date.now();
+  patch[`respostas/batalha-${agora}`] = {
+    tipo: 'batalha', treinador: t.id, nivel: d.nivel, pet, resultado, data: agora,
+    acertos: bt.contas.filter(x => x.acertou).length, erradas: bt.contas.filter(x => !x.acertou).length, contas: bt.contas,
+  };
+  gravar(patch);
+  if (pr.lealdade) verificarMarcosLealdade(pet);
+  return pr;
+}
+
+// Sair no meio: conta como derrota, sem prêmio (o treinador fica disponível para revanche)
+function sairDaBatalha() {
+  if (!bt || bt.fim) return;
+  registrarBatalha('saiu');
+  fecharBatalha(true);
+}
+
+// ============================================================
+//  PESSOAS NOS MAPAS (dados/jogo/npcs.json) — paradas, piscam, conversam; 10 são treinadoras da batalha
+// ============================================================
+let NPCS = [];                       // lista do JSON
+const PESSOA_PERTO = 70;             // px: perto assim, conversa sem andar
+let pessoasMapa = [];                // { p, img, sombra, icone, alt, larg, timer }
+let balaoPessoa = null;              // { o, timer }
+const ultimaFalaPessoa = {};         // id → índice da última fala (não repete seguida)
+let editarNpcs = false;              // ?editarNpcs=1 no modo teste (professora): arrastar e copiar posições
+
+// Altura na tela: o canvas de 664 px do personagem é desenhado com ALT_JOGADOR_MAPA × FATOR_IMG_PERSONAGEM,
+// então a pessoa (h na mesma escala) tem ALT_JOGADOR_MAPA × FATOR × h / 664
+const altPessoa = (p) => ALT_JOGADOR_MAPA * FATOR_IMG_PERSONAGEM * p.h / 664;
+
+function limparPessoas() {
+  for (const o of pessoasMapa) clearTimeout(o.timer);
+  pessoasMapa = [];
+  fecharBalaoPessoa();
+  $('npc-editar')?.remove();
+}
+
+function montarPessoas(n) {
+  limparPessoas();
+  const palco = $('cena-atores');
+  NPCS.filter(p => p.mapa === n).slice(0, 9).forEach((p, i) => {
+    const alt = altPessoa(p), larg = alt * p.w / p.h;
+    const sombra = document.createElement('div');
+    sombra.className = 'jr-pet-sombra jr-pessoa-sombra';
+    const img = document.createElement('img');
+    img.className = 'jr-ator jr-pessoa';
+    img.alt = p.nome; img.draggable = false;
+    img.src = `${IMG}/npcs/${p.id}.webp`;
+    img.style.setProperty('--d', `${-(i * 0.7) % 2.4}s`);   // respiração defasada
+    const o = { p, img, sombra, icone: null, alt, larg, timer: 0 };
+    if (p.treinador && treinador(p.id)) {
+      o.icone = document.createElement('div');
+      o.icone.className = 'jr-pessoa-icone';
+    }
+    palco.append(sombra, img, ...(o.icone ? [o.icone] : []));
+    posicionarPessoa(o);
+    if (p.piscar) { const pre = new Image(); pre.src = `${IMG}/npcs/${p.id}-piscando.webp`; agendarPiscar(o); }
+    pessoasMapa.push(o);
+  });
+  atualizarIconesPessoas();
+  if (editarNpcs) ligarEdicaoPessoas();
+}
+
+function posicionarPessoa(o) {
+  const { p, img, sombra, icone, alt, larg } = o;
+  Object.assign(img.style, { left: p.x + 'px', top: p.y + 'px', height: alt + 'px', zIndex: Math.round(p.y) });
+  Object.assign(sombra.style, { left: p.x + 'px', top: p.y + 'px', width: larg * 1.1 + 'px', height: larg * 0.32 + 'px', zIndex: Math.round(p.y) - 1 });
+  if (icone) Object.assign(icone.style, { left: p.x + 'px', top: (p.y - alt - 2) + 'px' });
+}
+
+// Pisca 150 ms a cada 3–6 s (às vezes duas vezes seguidas)
+function agendarPiscar(o) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const normal = `${IMG}/npcs/${o.p.id}.webp`, fechado = `${IMG}/npcs/${o.p.id}-piscando.webp`;
+  const piscar = (vezes) => {
+    if (!o.img.isConnected) return;
+    o.img.src = fechado;
+    o.timer = setTimeout(() => {
+      if (!o.img.isConnected) return;
+      o.img.src = normal;
+      o.timer = vezes > 1 ? setTimeout(() => piscar(vezes - 1), 140) : setTimeout(() => piscar(Math.random() < 0.25 ? 2 : 1), 3000 + Math.random() * 3000);
+    }, 150);
+  };
+  o.timer = setTimeout(() => piscar(1), 1000 + Math.random() * 5000);
+}
+
+// Treinadoras: ⚔️ acima da cabeça; descansando (venceu há menos de 24 h): 😴
+function atualizarIconesPessoas() {
+  for (const o of pessoasMapa) {
+    if (!o.icone) continue;
+    const descansa = situacao(desafioCom(o.p.id)) === 'descansando';
+    o.icone.textContent = descansa ? '😴' : '⚔️';
+    o.icone.classList.toggle('descansa', descansa);
+  }
+}
+
+function pessoaEm(pt) {
+  let melhor = null, md = Infinity;
+  for (const o of pessoasMapa) {
+    const folga = 8;
+    if (Math.abs(pt.x - o.p.x) > o.larg / 2 + folga || pt.y < o.p.y - o.alt - folga || pt.y > o.p.y + folga) continue;
+    const d = Math.abs(pt.x - o.p.x) + Math.abs(pt.y - o.p.y);
+    if (d < md) { md = d; melhor = o; }
+  }
+  return melhor;
+}
+
+// Tocou na pessoa: anda até o lado dela pela trilha e ela fala
+function irFalarCom(o) {
+  if (perguntaAberta || transicionando || sobreposicaoAberta()) return;
+  fecharBalaoPessoa();
+  if (dist(jog.x, jog.y, o.p.x, o.p.y) <= PESSOA_PERTO) { falarCom(o); return; }
+  const lado = jog.x < o.p.x ? -1 : 1;
+  destinoEspecial = null;
+  caminharNaTrilha(o.p.x + lado * (o.larg / 2 + 16), o.p.y, () => falarCom(o));
+  if (!jog.caminho.length && !jog.aoChegar) falarCom(o);   // sem caminho (não deveria acontecer): fala mesmo assim
+}
+
+function falarCom(o) {
+  if (perguntaAberta || transicionando || cena?.tipo !== 'mapa' || !o.img.isConnected) return;
+  jog.dir = o.p.x < jog.x ? 'esquerda' : 'direita';
+  desenharJogador();
+  const falas = o.p.falas || [];
+  let i = Math.floor(Math.random() * falas.length);
+  if (falas.length > 1 && i === ultimaFalaPessoa[o.p.id]) i = (i + 1 + Math.floor(Math.random() * (falas.length - 1))) % falas.length;
+  ultimaFalaPessoa[o.p.id] = i;
+  const el = $('pessoa-balao');
+  let extra = '';
+  if (o.icone) {
+    const d = desafioCom(o.p.id);
+    if (situacao(d) === 'descansando') extra = `<div class="jr-pessoa-descansa">Estou descansando. Volta em ${Math.max(1, Math.ceil((d.descansa_ate - Date.now()) / 3600e3))} h!</div>`;
+    else if (podeBatalhar()) extra = `<div class="jr-pessoa-botoes"><button class="jr-btn jr-btn-ouro" data-acao="batalhar">⚔️ Batalhar</button><button class="jr-btn jr-btn-sec" data-acao="nao">Agora não</button></div>`;
+  }
+  el.innerHTML = `<b>${esc(o.p.nome)}</b><span>${esc(falas[i] || '')}</span>${extra}`;
+  el.hidden = false;
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+  balaoPessoa = { o, timer: setTimeout(fecharBalaoPessoa, extra.includes('data-acao') ? 9000 : 5000) };
+  posicionarBalaoPessoa();
+}
+
+function posicionarBalaoPessoa() {
+  if (!balaoPessoa) return;
+  const { o } = balaoPessoa;
+  const el = $('pessoa-balao');
+  const cabeca = imagemParaTela(o.p.x, o.p.y - o.alt - (o.icone ? 18 : 4));
+  const embaixo = cabeca.y < el.offsetHeight + 64;   // perto do topo (HUD): abre embaixo da pessoa, bico para cima
+  el.classList.toggle('embaixo', embaixo);
+  if (!embaixo) { posicionarNaTela(el, o.p.x, o.p.y - o.alt - (o.icone ? 18 : 4)); return; }
+  const pe = imagemParaTela(o.p.x, o.p.y + 6), meia = el.offsetWidth / 2, vw = $('cena-vp').clientWidth;
+  el.style.left = clamp(pe.x, meia + 8, vw - meia - 8) + 'px';
+  el.style.top = pe.y + el.offsetHeight + 8 + 'px';
+}
+
+function fecharBalaoPessoa() {
+  if (balaoPessoa) clearTimeout(balaoPessoa.timer);
+  balaoPessoa = null;
+  const el = $('pessoa-balao');
+  if (el) el.hidden = true;
+}
+
+function acaoBalaoPessoa(e) {
+  e.stopPropagation();
+  const b = e.target.closest('[data-acao]');
+  if (!b || !balaoPessoa) return;
+  const id = balaoPessoa.o.p.id;
+  fecharBalaoPessoa();
+  if (b.dataset.acao === 'batalhar') iniciarBatalha(id, 'pessoa');   // revanche/descanso/fome conferidos lá
+}
+
+// ── Modo de ajuste (só a professora, no modo teste, com ?editarNpcs=1): arrastar e copiar posições ──
+function ligarEdicaoPessoas() {
+  for (const o of pessoasMapa) {
+    o.img.classList.add('editavel');
+    o.img.addEventListener('pointerdown', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      o.img.setPointerCapture(e.pointerId);
+      const mover = (ev) => {
+        const q = telaParaImagem(ev.clientX, ev.clientY);
+        o.p.x = Math.round(clamp(q.x, 0, W)); o.p.y = Math.round(clamp(q.y + o.alt * 0.1, 0, H));
+        posicionarPessoa(o);
+        $('npc-editar-pos').textContent = `${o.p.nome}: x ${o.p.x}, y ${o.p.y}`;
+      };
+      const soltar = () => { o.img.removeEventListener('pointermove', mover); o.img.removeEventListener('pointerup', soltar); o.img.removeEventListener('pointercancel', soltar); };
+      o.img.addEventListener('pointermove', mover);
+      o.img.addEventListener('pointerup', soltar);
+      o.img.addEventListener('pointercancel', soltar);
+    });
+  }
+  const caixa = document.createElement('div');
+  caixa.id = 'npc-editar';
+  caixa.className = 'jr-npc-editar';
+  caixa.innerHTML = `<span id="npc-editar-pos">Arraste as pessoas</span><button class="jr-btn" id="npc-copiar">📋 Copiar posições</button>`;
+  $('tela-cena').appendChild(caixa);
+  $('npc-copiar').addEventListener('click', async () => {
+    const txt = JSON.stringify(NPCS.map(p => ({ id: p.id, x: p.x, y: p.y })), null, 1);
+    try { await navigator.clipboard.writeText(txt); $('npc-editar-pos').textContent = 'Copiado! Cole no npcs.json.'; }
+    catch (_) { console.log(txt); $('npc-editar-pos').textContent = 'Não deu para copiar: o JSON está no console (F12).'; }
+  });
 }
 
 // ── Contador no ícone do estojo (lê o mesmo estado do estojo) ──
@@ -3308,6 +3891,22 @@ function ligarEventos() {
   $('gin-fechado-ir').addEventListener('click', irAoGinasioPendente);
   $('gin-fechado-fechar').addEventListener('click', () => { $('gin-fechado').hidden = true; });
   $('perg-ajuda').addEventListener('click', pedirAjuda);
+  $('btn-batalhar').addEventListener('click', abrirListaBatalha);
+  $('mp-batalhar').addEventListener('click', abrirListaBatalha);
+  $('bt-lista-fechar').addEventListener('click', () => { $('bt-lista').hidden = true; });
+  $('bt-pag').addEventListener('click', () => { const n = Math.ceil(treinadores().length / POR_PAGINA_BT); btPagina = (btPagina + 1) % n; renderListaBatalha(); });
+  $('bt-cards').addEventListener('click', (e) => { const c = e.target.closest('[data-bt]'); if (c && !c.classList.contains('descansando')) iniciarBatalha(c.dataset.bt); });
+  $('bt-ops').addEventListener('click', (e) => { const b = e.target.closest('.bt-op'); if (b && !b.disabled) btResponder('L', Number(b.dataset.v)); });
+  $('bt-sair').addEventListener('click', sairDaBatalha);
+  $('bt-voltar').addEventListener('click', () => fecharBatalha(true));
+  $('bt-revanche').addEventListener('click', () => { const id = bt?.t.id, origem = bt?.origem; fecharBatalha(false); if (id) iniciarBatalha(id, origem); });
+  $('pessoa-balao').addEventListener('click', acaoBalaoPessoa);
+  window.addEventListener('keydown', (e) => {   // teclas 1–4 na batalha
+    if (!bt || bt.fechou || $('batalha').hidden || e.ctrlKey || e.metaKey || e.altKey) return;
+    const m = /^(?:Digit|Numpad)([1-4])$/.exec(e.code);
+    const b = m && $('bt-ops').querySelectorAll('.bt-op')[Number(m[1]) - 1];
+    if (b && !b.disabled) { e.preventDefault(); b.click(); }
+  });
   $('perg-pet').addEventListener('click', pedirAjuda);   // tocar no pet também pede
   $('perg-pet-fala').addEventListener('click', fecharFalaAjuda);
   $('colecao-fechar').addEventListener('click', () => { $('pet-colecao').hidden = true; if (colecaoDoMeuPet) { colecaoDoMeuPet = false; abrirMeuPet(); } });
