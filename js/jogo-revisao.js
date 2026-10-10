@@ -70,7 +70,7 @@ const DIRECOES = ['frente', 'costas', 'direita', 'esquerda'];
 // Personagens (dados/jogo/personagens.json): {pasta_base}/{id}/{dir}-1..N.webp + {dir}-parado.webp (416 × 664).
 // N por direção vem de `quadros` do JSON (os valores abaixo valem só se o JSON não carregar).
 let QUADROS_PERSONAGEM = { frente: 2, costas: 4, direita: 4, esquerda: 4 };
-const PERS = { pasta: `${IMG}/personagens-principais`, padrao: 'menino_atual', lista: [{ id: 'menino_atual', nome: 'Menino' }] };
+const PERS = { pasta: `${IMG}/personagens-principais`, padrao: 'menino_cabelo_preto', lista: [{ id: 'menino_cabelo_preto', nome: 'Menino de cabelo preto' }] };
 // As imagens têm 664 de altura (eram 630) com o corpo na mesma escala: a imagem é desenhada
 // ALT × 664/630 para o corpo ficar do tamanho de antes. Balões, apelidos e pet seguem usando ALT.
 const FATOR_IMG_PERSONAGEM = 664 / 630;
@@ -166,6 +166,7 @@ async function carregarEstado() {
     estado.novo = !v.ginasios && !v.insignias && !v.pet && !v.pets && !v.sequencia;
     carregouProgresso = true;
     gravar({ ultimo_acesso: Date.now() });
+    if (!estado.personagem && !estado.novo) { estado.personagem = PERS.padrao; gravar({ personagem: PERS.padrao }); }   // menino_atual saiu do jogo
   } catch (e) {
     console.error('[jogo-revisao] erro ao carregar progresso', e);
     avisoConexao('Não foi possível carregar seu progresso. Verifique a internet e recarregue a página.', true);
@@ -2720,7 +2721,7 @@ function petComFomeParaBatalha() {
 }
 
 function abrirListaBatalha() {
-  if (!podeBatalhar() || petComFomeParaBatalha()) return;
+  if (!podeBatalhar()) return;
   if (mp) fecharMeuPet();
   btPagina = 0;
   $('bt-lista').hidden = false;
@@ -2739,18 +2740,21 @@ function renderListaBatalha() {
   $('bt-cards').innerHTML = lista.map(t => {
     const d = desafioCom(t.id), sit = situacao(d, agora), f = forca(t, d);
     const estadoTxt = sit === 'descansando' ? `😴 Descansando · volta em ${faltaTexto(d.descansa_ate - agora)}`
-      : sit === 'revanche' ? '🔁 Revanche' : '⚔️ Desafiar';
+      : sit === 'revanche' ? '🔁 Revanche' : '';
+    const m = mapaDoTreinador(t.id);
     return `
-      <button class="bt-card ${sit}" data-bt="${esc(t.id)}"${sit === 'descansando' ? ' aria-disabled="true"' : ''}>
+      <div class="bt-card ${sit}">
         <span class="bt-card-img"><img src="${IMG}/npcs/${esc(t.id)}.webp" alt="" draggable="false" onerror="this.remove()"/>
           <img class="bt-card-pet" src="${quadrosDe(t.pet, 'sentado_girando')[0]}" alt="" draggable="false"/></span>
         <span class="bt-card-txt">
           <span class="bt-card-nome">${esc(t.nome)}${d.vitorias > 0 ? ' <span class="bt-trofeu" title="Já venceu">🏆</span>' : ''}</span>
           <span class="bt-card-quem">${esc(t.quem)} · ${NOME_PET[t.pet] || ''}</span>
           <span class="bt-card-dif">${'⭐'.repeat(t.nivel)}<small>Nível ${d.nivel} · acerta ${Math.round(f.acerto * 100)}%</small></span>
-          <span class="bt-card-estado">${estadoTxt}</span>
+          ${estadoTxt ? `<span class="bt-card-estado">${estadoTxt}</span>` : ''}
+          <span class="bt-card-mapa">📍 ${m ? `${m}. ${esc(D.questoes[m].nome)}` : '—'}</span>
+          <button class="bt-card-ir" data-ir="${esc(t.id)}"${m ? '' : ' disabled'}>Ir até lá</button>
         </span>
-      </button>`;
+      </div>`;
   }).join('');
   $('bt-pag').hidden = paginas < 2;
   $('bt-pag').textContent = btPagina < paginas - 1 ? 'Mais treinadores ▶' : '◀ Voltar ao início';
@@ -3071,6 +3075,7 @@ let editarNpcs = false;              // ?editarNpcs=1 no modo teste (professora)
 const altPessoa = (p) => ALT_JOGADOR_MAPA * FATOR_IMG_PERSONAGEM * p.h / 664;
 
 function limparPessoas() {
+  tirarDestaque();
   for (const o of pessoasMapa) clearTimeout(o.timer);
   pessoasMapa = [];
   fecharBalaoPessoa();
@@ -3101,6 +3106,39 @@ function montarPessoas(n) {
   });
   atualizarIconesPessoas();
   if (editarNpcs) ligarEdicaoPessoas();
+  if (destaquePendente) { const id = destaquePendente; destaquePendente = null; destacarPessoa(id); }
+}
+
+// ── "Ir até lá" (lista de treinadores): abre o mapa da pessoa e marca a cabeça dela por 8 s ──
+let destaquePendente = null, destaque = null;   // destaque: { id, el, timer }
+const mapaDoTreinador = (id) => NPCS.find(p => p.id === id)?.mapa || null;
+
+function irAteTreinador(id) {
+  const m = mapaDoTreinador(id);
+  if (!m) return;
+  $('bt-lista').hidden = true;
+  if (cena?.tipo === 'mapa' && cena.n === m) { destacarPessoa(id); return; }
+  destaquePendente = id;
+  transicao(() => abrirMapa(m, 'entrada'));
+}
+
+function destacarPessoa(id) {
+  tirarDestaque();
+  const o = pessoasMapa.find(x => x.p.id === id);
+  if (!o) return;
+  const el = document.createElement('div');
+  el.className = 'jr-pessoa-destaque';
+  el.textContent = '⬇';
+  Object.assign(el.style, { left: o.p.x + 'px', top: (o.p.y - o.alt - (o.icone ? 20 : 4)) + 'px' });
+  $('cena-atores').appendChild(el);
+  destaque = { id, el, timer: setTimeout(tirarDestaque, 8000) };
+}
+
+function tirarDestaque() {
+  if (!destaque) return;
+  clearTimeout(destaque.timer);
+  destaque.el.remove();
+  destaque = null;
 }
 
 function posicionarPessoa(o) {
@@ -3166,11 +3204,13 @@ function falarCom(o) {
   let i = Math.floor(Math.random() * falas.length);
   if (falas.length > 1 && i === ultimaFalaPessoa[o.p.id]) i = (i + 1 + Math.floor(Math.random() * (falas.length - 1))) % falas.length;
   ultimaFalaPessoa[o.p.id] = i;
+  if (destaque?.id === o.p.id) tirarDestaque();
   const el = $('pessoa-balao');
   let extra = '';
   if (o.icone) {
     const d = desafioCom(o.p.id);
     if (situacao(d) === 'descansando') extra = `<div class="jr-pessoa-descansa">Estou descansando. Volta em ${Math.max(1, Math.ceil((d.descansa_ate - Date.now()) / 3600e3))} h!</div>`;
+    else if (podeBatalhar() && barrigaDe(estado.pets.ativo) < (cfgBatalha().barriga_minima ?? 25)) { seguidor?.reagir('triste_fome', 2000); extra = `<div class="jr-pessoa-descansa">${NOME_PET[estado.pets.ativo]} está com fome. Dê comida antes de batalhar.</div>`; }
     else if (podeBatalhar()) extra = `<div class="jr-pessoa-botoes"><button class="jr-btn jr-btn-ouro" data-acao="batalhar">⚔️ Batalhar</button><button class="jr-btn jr-btn-sec" data-acao="nao">Agora não</button></div>`;
   }
   el.innerHTML = `<b>${esc(o.p.nome)}</b><span>${esc(falas[i] || '')}</span>${extra}`;
@@ -3895,7 +3935,7 @@ function ligarEventos() {
   $('mp-batalhar').addEventListener('click', abrirListaBatalha);
   $('bt-lista-fechar').addEventListener('click', () => { $('bt-lista').hidden = true; });
   $('bt-pag').addEventListener('click', () => { const n = Math.ceil(treinadores().length / POR_PAGINA_BT); btPagina = (btPagina + 1) % n; renderListaBatalha(); });
-  $('bt-cards').addEventListener('click', (e) => { const c = e.target.closest('[data-bt]'); if (c && !c.classList.contains('descansando')) iniciarBatalha(c.dataset.bt); });
+  $('bt-cards').addEventListener('click', (e) => { const b = e.target.closest('[data-ir]'); if (b && !b.disabled) irAteTreinador(b.dataset.ir); });
   $('bt-ops').addEventListener('click', (e) => { const b = e.target.closest('.bt-op'); if (b && !b.disabled) btResponder('L', Number(b.dataset.v)); });
   $('bt-sair').addEventListener('click', sairDaBatalha);
   $('bt-voltar').addEventListener('click', () => fecharBatalha(true));
