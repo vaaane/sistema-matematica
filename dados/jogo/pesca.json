@@ -1,0 +1,123 @@
+{
+ "config": {
+  "limite_peixes_dia": 5,
+  "espera_s": [
+   3,
+   8
+  ],
+  "beliscadas_falsas": [
+   0,
+   2
+  ],
+  "tempo_fisgar_s": 1.2,
+  "tempo_conta_s": 12,
+  "libera_apos_ginasio": "A"
+ },
+ "pontos": [
+  {
+   "id": "porto",
+   "mapa": 2,
+   "x": 935,
+   "y": 405,
+   "lado": "dir",
+   "nome": "Cais do Porto",
+   "contas": [
+    "vezes_10_100_1000",
+    "medidas"
+   ],
+   "peixes": [
+    {
+     "id": "sardinha",
+     "nome": "Sardinha",
+     "chance": 60,
+     "lealdade": 4,
+     "raro": false
+    },
+    {
+     "id": "tainha",
+     "nome": "Tainha",
+     "chance": 30,
+     "lealdade": 6,
+     "raro": false
+    },
+    {
+     "id": "dourado",
+     "nome": "Dourado",
+     "chance": 10,
+     "lealdade": 10,
+     "raro": true
+    }
+   ]
+  },
+  {
+   "id": "gelo",
+   "mapa": 3,
+   "x": 598,
+   "y": 386,
+   "lado": "dir",
+   "nome": "Lago congelado",
+   "contas": [
+    "negativos_soma",
+    "negativos_mult"
+   ],
+   "peixes": [
+    {
+     "id": "bacalhau",
+     "nome": "Bacalhau",
+     "chance": 60,
+     "lealdade": 4,
+     "raro": false
+    },
+    {
+     "id": "salmao",
+     "nome": "Salmão",
+     "chance": 30,
+     "lealdade": 6,
+     "raro": false
+    },
+    {
+     "id": "peixe_gelo",
+     "nome": "Peixe-gelo",
+     "chance": 10,
+     "lealdade": 10,
+     "raro": true
+    }
+   ]
+  },
+  {
+   "id": "rio",
+   "mapa": 4,
+   "x": 418,
+   "y": 610,
+   "lado": "dir",
+   "nome": "Margem do rio",
+   "contas": [
+    "fracoes",
+    "decimais"
+   ],
+   "peixes": [
+    {
+     "id": "lambari",
+     "nome": "Lambari",
+     "chance": 60,
+     "lealdade": 4,
+     "raro": false
+    },
+    {
+     "id": "tilapia",
+     "nome": "Tilápia",
+     "chance": 30,
+     "lealdade": 6,
+     "raro": false
+    },
+    {
+     "id": "tucunare",
+     "nome": "Tucunaré",
+     "chance": 10,
+     "lealdade": 10,
+     "raro": true
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,141 @@
+{
+ "largura": 658,
+ "altura": 686,
+ "caixote_esq_base": [
+  43,
+  663
+ ],
+ "ponta_vara": {
+  "menino_cabelo_preto": {
+   "esperando": [
+    641,
+    296
+   ],
+   "beliscando": [
+    471,
+    365
+   ],
+   "atento": [
+    650,
+    376
+   ],
+   "puxando": [
+    572,
+    16
+   ]
+  },
+  "menino_bone": {
+   "esperando": [
+    642,
+    297
+   ],
+   "beliscando": [
+    470,
+    366
+   ],
+   "atento": [
+    555,
+    300
+   ],
+   "puxando": [
+    574,
+    16
+   ]
+  },
+  "menino_cabelo_raspado": {
+   "esperando": [
+    641,
+    297
+   ],
+   "beliscando": [
+    470,
+    366
+   ],
+   "atento": [
+    553,
+    302
+   ],
+   "puxando": [
+    571,
+    17
+   ]
+  },
+  "menina_trancas": {
+   "esperando": [
+    641,
+    295
+   ],
+   "beliscando": [
+    608,
+    364
+   ],
+   "atento": [
+    587,
+    300
+   ],
+   "puxando": [
+    575,
+    17
+   ]
+  },
+  "menina_tiara": {
+   "esperando": [
+    643,
+    296
+   ],
+   "beliscando": [
+    612,
+    393
+   ],
+   "atento": [
+    554,
+    303
+   ],
+   "puxando": [
+    573,
+    17
+   ]
+  },
+  "menina_rabo_cavalo": {
+   "esperando": [
+    640,
+    297
+   ],
+   "beliscando": [
+    626,
+    391
+   ],
+   "atento": [
+    557,
+    304
+   ],
+   "puxando": [
+    575,
+    17
+   ]
+  },
+  "menina_cabelo_castanho": {
+   "esperando": [
+    653,
+    289
+   ],
+   "beliscando": [
+    477,
+    360
+   ],
+   "atento": [
+    562,
+    294
+   ],
+   "puxando": [
+    583,
+    4
+   ]
+  }
+ },
+ "ancora": [
+  113,
+  663
+ ],
+ "nota": "Imagens pesca-{pose}.webp de cada personagem: todas do mesmo tamanho, viradas para a DIREITA, alinhadas pelo caixote. 'ancora' = ponto do canvas que fica no ponto de pesca do mapa (base do caixote). 'ponta_vara' = onde sai a linha, por personagem e pose. Mesma escala das imagens de andar (canvas 664 px de altura)."
+}

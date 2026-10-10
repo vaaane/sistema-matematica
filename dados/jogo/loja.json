@@ -1,0 +1,174 @@
+{
+ "vendedor": "dona_cida",
+ "barriga": {
+  "esvazia_horas_uteis": 48,
+  "fome_abaixo": 40,
+  "comum_ate": 60,
+  "cada_comida_enche": 20,
+  "cheia": 100
+ },
+ "comidas": [
+  {
+   "id": "racao",
+   "nome": "Ração",
+   "emoji": "🥣",
+   "preco": 5,
+   "lealdade": 1,
+   "especial": false
+  },
+  {
+   "id": "fruta",
+   "nome": "Fruta",
+   "emoji": "🍎",
+   "preco": 8,
+   "lealdade": 2,
+   "especial": false
+  },
+  {
+   "id": "biscoito",
+   "nome": "Biscoito",
+   "emoji": "🍪",
+   "preco": 12,
+   "lealdade": 3,
+   "especial": false
+  },
+  {
+   "id": "petisco",
+   "nome": "Petisco premium",
+   "emoji": "🍖",
+   "preco": 20,
+   "lealdade": 5,
+   "especial": true
+  },
+  {
+   "id": "peixe_fresco",
+   "nome": "Peixe fresco",
+   "emoji": "🐟",
+   "preco": 35,
+   "lealdade": 6,
+   "especial": true
+  },
+  {
+   "id": "bolo",
+   "nome": "Bolo especial",
+   "emoji": "🎂",
+   "preco": 40,
+   "lealdade": 10,
+   "especial": true,
+   "limite_semana": 1
+  }
+ ],
+ "favoritas": {
+  "capivara": "fruta",
+  "gato": "peixe",
+  "gaviao": "peixe",
+  "axolote": "biscoito",
+  "tigre": "petisco",
+  "unicornio": "fruta",
+  "dragao_azul": "peixe",
+  "dragao_vermelho": "bolo"
+ },
+ "bonus_favorita": 1,
+ "tintas": [
+  {
+   "id": "azul",
+   "nome": "Azul",
+   "preco": 40,
+   "filtro": "grayscale(1) sepia(1) saturate(3.2) hue-rotate(175deg) brightness(1.1)"
+  },
+  {
+   "id": "rosa",
+   "nome": "Rosa",
+   "preco": 40,
+   "filtro": "grayscale(1) sepia(1) saturate(3.2) hue-rotate(280deg) brightness(1.1)"
+  },
+  {
+   "id": "verde",
+   "nome": "Verde",
+   "preco": 40,
+   "filtro": "grayscale(1) sepia(1) saturate(3) hue-rotate(65deg) brightness(1.05)"
+  },
+  {
+   "id": "dourado",
+   "nome": "Dourado",
+   "preco": 60,
+   "filtro": "grayscale(1) sepia(1) saturate(3.4) hue-rotate(5deg) brightness(1.2)"
+  },
+  {
+   "id": "noite",
+   "nome": "Noite",
+   "preco": 60,
+   "filtro": "grayscale(1) sepia(1) saturate(2.6) hue-rotate(210deg) brightness(.8)"
+  },
+  {
+   "id": "arco_iris",
+   "nome": "Arco-íris",
+   "preco": 100,
+   "filtro": "animado"
+  }
+ ],
+ "efeitos": [
+  {
+   "id": "estrelas",
+   "nome": "Rastro de estrelas",
+   "emoji": "✨",
+   "preco": 50
+  },
+  {
+   "id": "coracoes",
+   "nome": "Coraçõezinhos",
+   "emoji": "💖",
+   "preco": 50
+  },
+  {
+   "id": "bolhas",
+   "nome": "Bolhas",
+   "emoji": "🫧",
+   "preco": 50
+  },
+  {
+   "id": "folhas",
+   "nome": "Folhinhas",
+   "emoji": "🍃",
+   "preco": 50
+  },
+  {
+   "id": "faiscas",
+   "nome": "Faíscas",
+   "emoji": "⚡",
+   "preco": 70
+  }
+ ],
+ "lealdade_pet_novo": 20,
+ "amizade": {
+  "pontos_por_nivel": 100,
+  "recompensas": {
+   "2": "moldura de prata no Meu Pet",
+   "3": "coraçõezinhos de vez em quando ao seguir",
+   "5": "moldura dourada",
+   "10": "coroa ✨ ao lado do nome"
+  }
+ },
+ "nome_pet": {
+  "min": 2,
+  "max": 12,
+  "proibidas": [
+   "bobo",
+   "idiota",
+   "burro",
+   "otario",
+   "otário",
+   "merda",
+   "porra",
+   "caralho",
+   "puta",
+   "fdp",
+   "vsf",
+   "bosta",
+   "cu",
+   "pinto",
+   "viado",
+   "macaco"
+  ]
+ }
+}
