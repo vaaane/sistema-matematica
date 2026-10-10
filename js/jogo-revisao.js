@@ -66,6 +66,10 @@ const RECUO_PORTA = 60;              // ao sair do ginásio, aparece 60 px antes
 const FADE_MS = 250;
 const PERSONAGENS = ['treinador1', 'treinador2', 'treinador3', 'lider'];
 const DIRECOES = ['frente', 'costas', 'direita', 'esquerda'];
+// Sprites do personagem: img/jogo/{PASTA_PERSONAGEM}/{dir}-1..N.webp + {dir}-parado.webp (314 × 630).
+// N por direção — outro personagem (a menina) usa a mesma estrutura de pastas e esta tabela.
+const PASTA_PERSONAGEM = 'personagem-principal';
+const QUADROS_PERSONAGEM = { frente: 2, costas: 4, direita: 4, esquerda: 4 };
 const NUM_MAPAS = 13;
 
 const $ = (id) => document.getElementById(id);
@@ -1046,7 +1050,7 @@ function atualizarColegas(dt) {
     if (andando || agora - c.t0 < TEMPO_INTERP + 120) {
       if (c.quadro < 0) { c.quadro = 0; c.tQuadro = 0; }
       c.tQuadro += dt * 1000;
-      if (c.tQuadro >= T_QUADRO) { c.tQuadro = 0; c.quadro = (c.quadro + 1) % 4; }
+      if (c.tQuadro >= T_QUADRO) { c.tQuadro = 0; c.quadro = (c.quadro + 1) % (QUADROS_PERSONAGEM[c.dir] || 4); }
     } else c.quadro = -1;   // colega parado: pernas juntas
     const src = urlQuadro(DIRECOES.includes(c.dir) ? c.dir : 'frente', c.quadro);
     if (c.el.dataset.src !== src) { c.el.src = src; c.el.dataset.src = src; }
@@ -1319,10 +1323,10 @@ function atualizarBotaoCalado() {
 }
 
 function preCarregarQuadros() {
-  for (const d of DIRECOES) for (let i = 0; i <= 4; i++) { const im = new Image(); im.src = urlQuadro(d, i - 1); }   // parado + 4 de andar
+  for (const d of DIRECOES) for (let i = -1; i < QUADROS_PERSONAGEM[d]; i++) { const im = new Image(); im.src = urlQuadro(d, i); }   // parado + quadros de andar
 }
-// quadro −1 = parado (pernas juntas); 0..3 = ciclo de andar
-const urlQuadro = (dir, q) => `${IMG}/personagem-principal/${dir}-${q < 0 ? 'parado' : q + 1}.webp`;
+// quadro −1 = parado (pernas juntas); 0..N−1 = ciclo de andar (o % cobre a troca de direção no meio do passo)
+const urlQuadro = (dir, q) => `${IMG}/${PASTA_PERSONAGEM}/${dir}-${q < 0 ? 'parado' : q % (QUADROS_PERSONAGEM[dir] || 1) + 1}.webp`;
 
 function mostrarTela(id) {
   for (const t of document.querySelectorAll('.jr-tela')) t.hidden = t.id !== id;
@@ -1730,7 +1734,7 @@ function vetorEntrada() {
 function animarPasso(dt) {
   if (jog.quadro < 0) { jog.quadro = 0; jog.tQuadro = 0; return; }   // começou a andar: quadro 1 na hora
   jog.tQuadro += dt * 1000;
-  if (jog.tQuadro >= T_QUADRO) { jog.tQuadro = 0; jog.quadro = (jog.quadro + 1) % 4; }
+  if (jog.tQuadro >= T_QUADRO) { jog.tQuadro = 0; jog.quadro = (jog.quadro + 1) % QUADROS_PERSONAGEM[jog.dir]; }
 }
 
 // Anda na direção (vx, vy); na trilha, desliza pela borda em vez de travar
