@@ -1,0 +1,46 @@
+{
+  "pasta_base": "img/jogo/personagens-principais",
+  "largura": 416,
+  "altura": 664,
+  "padrao": "menino_atual",
+  "quadros": {
+    "frente": 2,
+    "costas": 4,
+    "direita": 4,
+    "esquerda": 4
+  },
+  "personagens": [
+    {
+      "id": "menino_atual",
+      "nome": "Menino (atual)"
+    },
+    {
+      "id": "menino_cabelo_preto",
+      "nome": "Menino de cabelo preto"
+    },
+    {
+      "id": "menino_bone",
+      "nome": "Menino de boné"
+    },
+    {
+      "id": "menino_cabelo_raspado",
+      "nome": "Menino de cabelo raspado"
+    },
+    {
+      "id": "menina_cabelo_castanho",
+      "nome": "Menina de cabelo castanho"
+    },
+    {
+      "id": "menina_rabo_cavalo",
+      "nome": "Menina de rabo de cavalo"
+    },
+    {
+      "id": "menina_tiara",
+      "nome": "Menina de tiara"
+    },
+    {
+      "id": "menina_trancas",
+      "nome": "Menina de tranças"
+    }
+  ]
+}
