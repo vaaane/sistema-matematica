@@ -1,0 +1,1012 @@
+{
+ "config": {
+  "moedas_primeira": 5,
+  "moedas_segunda": 2,
+  "tentativas": 2,
+  "limite_moedas_dia": 20,
+  "pedidos_por_pessoa_dia": 1,
+  "lealdade_dica": 60
+ },
+ "pedidos": [
+  {
+   "id": "m1-1",
+   "npc": "duda",
+   "mapa": 1,
+   "libera_apos": "mapa1-A",
+   "texto": "Ganhei 4 adesivos por dia durante 6 dias. Depois dei 9 para minha prima e ganhei mais 3 do meu tio. Com quantos adesivos eu fiquei?",
+   "resposta": 18,
+   "unidade": "adesivos",
+   "resolucao": "4 × 6 − 9 + 3 = 24 − 9 + 3 = 18."
+  },
+  {
+   "id": "m1-2",
+   "npc": "duda",
+   "mapa": 1,
+   "libera_apos": "mapa1-A",
+   "texto": "Meu patinete roda 3 voltas na praça em 1 minuto. Andei 5 minutos, parei 1 minuto e depois andei mais 2 minutos. Quantas voltas eu dei?",
+   "resposta": 21,
+   "unidade": "voltas",
+   "resolucao": "3 × 5 + 3 × 2 = 15 + 6 = 21 (o minuto parado não conta)."
+  },
+  {
+   "id": "m1-3",
+   "npc": "lucas",
+   "mapa": 1,
+   "libera_apos": "mapa1-B",
+   "texto": "Comprei 3 rodinhas de skate a R$ 12 cada e um parafuso de R$ 5. Paguei com uma nota de R$ 50. Quanto recebi de troco?",
+   "resposta": 9,
+   "unidade": "reais",
+   "resolucao": "50 − (3 × 12 + 5) = 50 − 41 = 9."
+  },
+  {
+   "id": "m1-4",
+   "npc": "lucas",
+   "mapa": 1,
+   "libera_apos": "mapa1-B",
+   "texto": "Eu e mais 3 amigos dividimos igualmente uma pizza de R$ 36 e um refrigerante de R$ 8. Quanto cada um pagou?",
+   "resposta": 11,
+   "unidade": "reais",
+   "resolucao": "(36 + 8) ÷ 4 = 44 ÷ 4 = 11."
+  },
+  {
+   "id": "m1-5",
+   "npc": "marcos",
+   "mapa": 1,
+   "libera_apos": "mapa1-A",
+   "texto": "Corro 2 km por dia de segunda a sexta e 5 km no sábado. Domingo eu descanso. Quantos km corro na semana?",
+   "resposta": 15,
+   "unidade": "km",
+   "resolucao": "2 × 5 + 5 = 10 + 5 = 15."
+  },
+  {
+   "id": "m1-6",
+   "npc": "marcos",
+   "mapa": 1,
+   "libera_apos": "mapa1-B",
+   "texto": "Na corrida da escola, cada volta tem 400 m. Dei 6 voltas, mas as 2 primeiras foram só aquecimento e não contam. Quantos metros valeram na prova?",
+   "resposta": 1600,
+   "unidade": "m",
+   "resolucao": "400 × (6 − 2) = 400 × 4 = 1600."
+  },
+  {
+   "id": "m2-1",
+   "npc": "seu_ze",
+   "mapa": 2,
+   "libera_apos": "mapa2-A",
+   "texto": "Pesquei 3 caixas com 100 sardinhas cada e vendi tudo a R$ 2 cada sardinha. Quanto ganhei?",
+   "resposta": 600,
+   "unidade": "reais",
+   "resolucao": "3 × 100 = 300 sardinhas; 300 × 2 = 600."
+  },
+  {
+   "id": "m2-2",
+   "npc": "seu_ze",
+   "mapa": 2,
+   "libera_apos": "mapa2-A",
+   "texto": "Tenho 4500 anzóis e quero guardar em caixinhas de 100. Quantas caixinhas eu encho?",
+   "resposta": 45,
+   "unidade": "caixinhas",
+   "resolucao": "4500 ÷ 100 = 45 (a vírgula anda 2 casas para a esquerda)."
+  },
+  {
+   "id": "m2-3",
+   "npc": "seu_ze",
+   "mapa": 2,
+   "libera_apos": "mapa2-B",
+   "texto": "Minha rede tem 12,5 m de comprimento. Preciso cortar pedaços de 50 cm para consertar as boias. Quantos pedaços saem?",
+   "resposta": 25,
+   "unidade": "pedaços",
+   "resolucao": "12,5 m = 1250 cm; 1250 ÷ 50 = 25."
+  },
+  {
+   "id": "m2-4",
+   "npc": "seu_ze",
+   "mapa": 2,
+   "libera_apos": "mapa2-B",
+   "texto": "O barco aguenta 2 toneladas. Já coloquei 1,2 tonelada de peixe. Quantos quilos ainda cabem?",
+   "resposta": 800,
+   "unidade": "kg",
+   "resolucao": "2 t − 1,2 t = 0,8 t = 0,8 × 1000 = 800 kg."
+  },
+  {
+   "id": "m3-1",
+   "npc": "lena",
+   "mapa": 3,
+   "libera_apos": "mapa3-A",
+   "texto": "Às 6h o termômetro marcava −14 °C. Até o meio-dia subiu 3 °C por hora. Que temperatura marcou ao meio-dia?",
+   "resposta": 4,
+   "unidade": "°C",
+   "resolucao": "De 6h a 12h são 6 horas: 6 × 3 = 18. −14 + 18 = 4."
+  },
+  {
+   "id": "m3-2",
+   "npc": "lena",
+   "mapa": 3,
+   "libera_apos": "mapa3-B",
+   "texto": "Durante a noite a temperatura caiu 2 °C por hora, durante 7 horas. Qual foi a variação total da temperatura?",
+   "resposta": -14,
+   "unidade": "°C",
+   "resolucao": "7 × (−2) = −14."
+  },
+  {
+   "id": "m3-3",
+   "npc": "naira",
+   "mapa": 3,
+   "libera_apos": "mapa3-A",
+   "texto": "Ontem fez −8 °C de manhã e 5 °C à tarde. Quantos graus a temperatura subiu?",
+   "resposta": 13,
+   "unidade": "°C",
+   "resolucao": "5 − (−8) = 5 + 8 = 13."
+  },
+  {
+   "id": "m3-4",
+   "npc": "naira",
+   "mapa": 3,
+   "libera_apos": "mapa3-B",
+   "texto": "Em 4 dias seguidos a temperatura da ilha ficou −6 °C, −2 °C, −9 °C e −3 °C. Qual a média dessas temperaturas?",
+   "resposta": -5,
+   "unidade": "°C",
+   "resolucao": "(−6 − 2 − 9 − 3) ÷ 4 = −20 ÷ 4 = −5."
+  },
+  {
+   "id": "m3-5",
+   "npc": "seu_tomas",
+   "mapa": 3,
+   "libera_apos": "mapa3-A",
+   "texto": "Eu estava mergulhando a 12 m abaixo do nível do mar (−12 m). Subi 7 m e depois desci 4 m. Em que profundidade estou agora?",
+   "resposta": -9,
+   "unidade": "m",
+   "resolucao": "−12 + 7 − 4 = −9."
+  },
+  {
+   "id": "m3-6",
+   "npc": "seu_tomas",
+   "mapa": 3,
+   "libera_apos": "mapa3-B",
+   "texto": "Um peixe congelado está a −18 °C. Para descongelar, a temperatura sobe sempre a mesma coisa por hora e chega a 0 °C em 6 horas. Quantos graus sobe por hora?",
+   "resposta": 3,
+   "unidade": "°C",
+   "resolucao": "Subiu 0 − (−18) = 18 graus em 6 horas: 18 ÷ 6 = 3."
+  },
+  {
+   "id": "m3-7",
+   "npc": "kaue",
+   "mapa": 3,
+   "libera_apos": "mapa3-A",
+   "texto": "No morro, a trilha começa a −3 °C. Lá no topo está 11 °C mais frio. Que temperatura faz no topo?",
+   "resposta": -14,
+   "unidade": "°C",
+   "resolucao": "−3 − 11 = −14."
+  },
+  {
+   "id": "m3-8",
+   "npc": "kaue",
+   "mapa": 3,
+   "libera_apos": "mapa3-B",
+   "texto": "Num jogo de trenó, cada queda vale −4 pontos. Caí 5 vezes e ganhei 30 pontos nas descidas. Qual meu placar?",
+   "resposta": 10,
+   "unidade": "pontos",
+   "resolucao": "30 + 5 × (−4) = 30 − 20 = 10."
+  },
+  {
+   "id": "m3-9",
+   "npc": "davi",
+   "mapa": 3,
+   "libera_apos": "mapa3-A",
+   "texto": "O porto de gelo fica no andar 0. O depósito está no andar −3 e a torre de rádio no andar 5. Quantos andares separam o depósito da torre?",
+   "resposta": 8,
+   "unidade": "andares",
+   "resolucao": "5 − (−3) = 8."
+  },
+  {
+   "id": "m3-10",
+   "npc": "davi",
+   "mapa": 3,
+   "libera_apos": "mapa3-B",
+   "texto": "O freezer do barco baixa a temperatura 3 °C a cada 10 minutos. Começou em 0 °C. Qual a temperatura depois de 40 minutos?",
+   "resposta": -12,
+   "unidade": "°C",
+   "resolucao": "40 ÷ 10 = 4 vezes; 4 × (−3) = −12."
+  },
+  {
+   "id": "m3-11",
+   "npc": "rui",
+   "mapa": 3,
+   "libera_apos": "mapa3-A",
+   "texto": "O gelo do lago está a −7 °C na superfície e a −19 °C no fundo do buraco que fiz. Qual a diferença entre essas temperaturas?",
+   "resposta": 12,
+   "unidade": "°C",
+   "resolucao": "−7 − (−19) = −7 + 19 = 12."
+  },
+  {
+   "id": "m3-12",
+   "npc": "rui",
+   "mapa": 3,
+   "libera_apos": "mapa3-B",
+   "texto": "Medi a temperatura 6 vezes e a soma deu −42 °C. Qual foi a média?",
+   "resposta": -7,
+   "unidade": "°C",
+   "resolucao": "−42 ÷ 6 = −7."
+  },
+  {
+   "id": "m4-1",
+   "npc": "seu_antonio",
+   "mapa": 4,
+   "libera_apos": "mapa4-A",
+   "texto": "Colhi 48 tomates. Vendi 3/4 na feira e o resto usei em casa. Quantos tomates usei em casa?",
+   "resposta": 12,
+   "unidade": "tomates",
+   "resolucao": "3/4 de 48 = 36 vendidos; 48 − 36 = 12 (ou 1/4 de 48 = 12)."
+  },
+  {
+   "id": "m4-2",
+   "npc": "seu_antonio",
+   "mapa": 4,
+   "libera_apos": "mapa4-A",
+   "texto": "Meu canteiro tem 60 mudas. 2/5 são de alface e 1/3 são de couve. O resto é cebolinha. Quantas mudas de cebolinha?",
+   "resposta": 16,
+   "unidade": "mudas",
+   "resolucao": "2/5 de 60 = 24; 1/3 de 60 = 20; 60 − 24 − 20 = 16."
+  },
+  {
+   "id": "m4-3",
+   "npc": "seu_antonio",
+   "mapa": 4,
+   "libera_apos": "mapa4-B",
+   "texto": "Comprei 3 sacos de adubo de 2,5 kg cada e já usei 4,5 kg. Quantos quilos sobraram?",
+   "resposta": 3,
+   "unidade": "kg",
+   "resolucao": "3 × 2,5 = 7,5; 7,5 − 4,5 = 3."
+  },
+  {
+   "id": "m4-4",
+   "npc": "joana",
+   "mapa": 4,
+   "libera_apos": "mapa4-A",
+   "texto": "Levei 30 morangos para o piquenique. Meus amigos comeram 2/3 deles. Quantos morangos sobraram?",
+   "resposta": 10,
+   "unidade": "morangos",
+   "resolucao": "2/3 de 30 = 20 comidos; 30 − 20 = 10."
+  },
+  {
+   "id": "m4-5",
+   "npc": "joana",
+   "mapa": 4,
+   "libera_apos": "mapa4-B",
+   "texto": "Comprei 4 sucos de R$ 3,50 e 2 sanduíches de R$ 6,50. Paguei com R$ 50. Quanto recebi de troco?",
+   "resposta": 23,
+   "unidade": "reais",
+   "resolucao": "4 × 3,50 = 14; 2 × 6,50 = 13; 14 + 13 = 27; 50 − 27 = 23."
+  },
+  {
+   "id": "m4-6",
+   "npc": "joana",
+   "mapa": 4,
+   "libera_apos": "mapa4-A",
+   "texto": "Minha toalha de piquenique foi dividida em 8 quadrados iguais. 3/8 estão com comida e 1/4 com bebidas. Quantos quadrados ficaram livres?",
+   "resposta": 3,
+   "unidade": "quadrados",
+   "resolucao": "1/4 = 2/8. Ocupados: 3 + 2 = 5. Livres: 8 − 5 = 3."
+  },
+  {
+   "id": "m5-1",
+   "npc": "nina",
+   "mapa": 5,
+   "libera_apos": "mapa5-A",
+   "texto": "Numa caverna há 3 salas. Em cada sala há 3 baús, e em cada baú há 3 cristais. Quantos cristais há ao todo?",
+   "resposta": 27,
+   "unidade": "cristais",
+   "resolucao": "3 × 3 × 3 = 3³ = 27."
+  },
+  {
+   "id": "m5-2",
+   "npc": "nina",
+   "mapa": 5,
+   "libera_apos": "mapa5-B",
+   "texto": "O acampamento tem formato de quadrado com 144 m² de área. Quanto mede cada lado?",
+   "resposta": 12,
+   "unidade": "m",
+   "resolucao": "√144 = 12, porque 12 × 12 = 144."
+  },
+  {
+   "id": "m5-3",
+   "npc": "nina",
+   "mapa": 5,
+   "libera_apos": "mapa5-A",
+   "texto": "Uma bactéria da gruta dobra a cada hora. Começou com 1. Quantas existem depois de 6 horas?",
+   "resposta": 64,
+   "unidade": "bactérias",
+   "resolucao": "2⁶ = 2 × 2 × 2 × 2 × 2 × 2 = 64."
+  },
+  {
+   "id": "m5-4",
+   "npc": "hugo",
+   "mapa": 5,
+   "libera_apos": "mapa5-B",
+   "texto": "Vou montar um mural quadrado com 81 fotos iguais, sem sobrar nenhuma. Quantas fotos ficam em cada linha?",
+   "resposta": 9,
+   "unidade": "fotos",
+   "resolucao": "√81 = 9 (9 linhas de 9)."
+  },
+  {
+   "id": "m5-5",
+   "npc": "hugo",
+   "mapa": 5,
+   "libera_apos": "mapa5-A",
+   "texto": "Minha câmera guarda fotos em 10² pastas, cada uma com 10 fotos. Quantas fotos cabem?",
+   "resposta": 1000,
+   "unidade": "fotos",
+   "resolucao": "10² × 10 = 100 × 10 = 1000 = 10³."
+  },
+  {
+   "id": "m5-6",
+   "npc": "hugo",
+   "mapa": 5,
+   "libera_apos": "mapa5-B",
+   "texto": "Fotografei dois jardins quadrados: um com 25 m² e outro com 49 m². Quanto dá o lado de um mais o lado do outro?",
+   "resposta": 12,
+   "unidade": "m",
+   "resolucao": "√25 = 5 e √49 = 7; 5 + 7 = 12."
+  },
+  {
+   "id": "m6-1",
+   "npc": "seu_lauro",
+   "mapa": 6,
+   "libera_apos": "mapa6-A",
+   "texto": "Eu passeio com o Pipoca a cada 4 dias no parque grande e a cada 6 dias no lago. Hoje fui aos dois. Daqui a quantos dias vou aos dois de novo no mesmo dia?",
+   "resposta": 12,
+   "unidade": "dias",
+   "resolucao": "Múltiplos de 4: 4, 8, 12… Múltiplos de 6: 6, 12… O primeiro comum é 12 (MMC)."
+  },
+  {
+   "id": "m6-2",
+   "npc": "seu_lauro",
+   "mapa": 6,
+   "libera_apos": "mapa6-B",
+   "texto": "Tenho 24 biscoitos de cachorro e quero dividir em saquinhos iguais, com mais de 1 e menos de 24 biscoitos, sem sobrar. Quantos jeitos diferentes de tamanho de saquinho existem?",
+   "resposta": 6,
+   "unidade": "jeitos",
+   "resolucao": "Divisores de 24: 1, 2, 3, 4, 6, 8, 12, 24. Tirando 1 e 24: 2, 3, 4, 6, 8, 12 = 6 jeitos."
+  },
+  {
+   "id": "m6-3",
+   "npc": "seu_lauro",
+   "mapa": 6,
+   "libera_apos": "mapa6-A",
+   "texto": "O Pipoca late a cada 3 minutos e o gato do vizinho mia a cada 5 minutos. Eles fizeram barulho juntos agora. Em 1 hora, quantas vezes eles vão fazer barulho juntos de novo?",
+   "resposta": 4,
+   "unidade": "vezes",
+   "resolucao": "MMC(3, 5) = 15. Em 60 minutos: 60 ÷ 15 = 4 vezes."
+  },
+  {
+   "id": "m6-4",
+   "npc": "dra_ana",
+   "mapa": 6,
+   "libera_apos": "mapa6-B",
+   "texto": "Tenho 18 vacinas de cachorro e 12 de gato. Quero montar kits iguais com as duas, sem sobrar nada, com o maior número de kits possível. Quantos kits?",
+   "resposta": 6,
+   "unidade": "kits",
+   "resolucao": "MDC(18, 12) = 6. Cada kit: 3 de cachorro e 2 de gato."
+  },
+  {
+   "id": "m6-5",
+   "npc": "dra_ana",
+   "mapa": 6,
+   "libera_apos": "mapa6-A",
+   "texto": "Um remédio é dado a cada 8 horas e outro a cada 12 horas. Dei os dois à meia-noite. Depois de quantas horas dou os dois juntos de novo?",
+   "resposta": 24,
+   "unidade": "horas",
+   "resolucao": "MMC(8, 12) = 24."
+  },
+  {
+   "id": "m6-6",
+   "npc": "dra_ana",
+   "mapa": 6,
+   "libera_apos": "mapa6-B",
+   "texto": "Tenho 40 coleiras e 30 guias. Quero fazer pacotes iguais com as duas coisas, o maior número possível, sem sobrar. Quantas coleiras vão em cada pacote?",
+   "resposta": 4,
+   "unidade": "coleiras",
+   "resolucao": "MDC(40, 30) = 10 pacotes; 40 ÷ 10 = 4 coleiras em cada."
+  },
+  {
+   "id": "m7-1",
+   "npc": "dona_cida",
+   "mapa": 7,
+   "libera_apos": "mapa7-A",
+   "texto": "Ontem vendi 80 mangas. Hoje vendi 25% a mais. Quantas mangas vendi hoje?",
+   "resposta": 100,
+   "unidade": "mangas",
+   "resolucao": "25% de 80 = 20; 80 + 20 = 100."
+  },
+  {
+   "id": "m7-2",
+   "npc": "dona_cida",
+   "mapa": 7,
+   "libera_apos": "mapa7-A",
+   "texto": "A caixa de laranja custava R$ 40 e dei 15% de desconto para uma freguesa. Quanto ela pagou?",
+   "resposta": 34,
+   "unidade": "reais",
+   "resolucao": "15% de 40 = 6; 40 − 6 = 34."
+  },
+  {
+   "id": "m7-3",
+   "npc": "dona_cida",
+   "mapa": 7,
+   "libera_apos": "mapa7-B",
+   "texto": "Das 200 frutas da banca, 30% eram bananas e 45% eram maçãs. Quantas frutas não eram nem banana nem maçã?",
+   "resposta": 50,
+   "unidade": "frutas",
+   "resolucao": "30% + 45% = 75%; sobram 25%; 25% de 200 = 50."
+  },
+  {
+   "id": "m7-4",
+   "npc": "marta",
+   "mapa": 7,
+   "libera_apos": "mapa7-A",
+   "texto": "Um tênis de R$ 120 está com 30% de desconto. Quanto custa agora?",
+   "resposta": 84,
+   "unidade": "reais",
+   "resolucao": "30% de 120 = 36; 120 − 36 = 84."
+  },
+  {
+   "id": "m7-5",
+   "npc": "marta",
+   "mapa": 7,
+   "libera_apos": "mapa7-B",
+   "texto": "A loja vendeu 180 camisetas este mês, 20% a mais que no mês passado. Quantas vendeu no mês passado?",
+   "resposta": 150,
+   "unidade": "camisetas",
+   "resolucao": "Este mês = 120% do passado. 180 ÷ 120 × 100 = 150 (ou 180 ÷ 1,2 = 150)."
+  },
+  {
+   "id": "m7-6",
+   "npc": "marta",
+   "mapa": 7,
+   "libera_apos": "mapa7-B",
+   "texto": "Uma jaqueta de R$ 200 aumentou 10% e depois teve 10% de desconto sobre o preço novo. Quanto custa agora?",
+   "resposta": 198,
+   "unidade": "reais",
+   "resolucao": "200 + 10% = 220; 220 − 10% (22) = 198. Não volta para 200!"
+  },
+  {
+   "id": "m7-7",
+   "npc": "caio",
+   "mapa": 7,
+   "libera_apos": "mapa7-A",
+   "texto": "O caminhão de bombeiros leva 8000 litros de água. Usamos 35% num incêndio. Quantos litros sobraram?",
+   "resposta": 5200,
+   "unidade": "litros",
+   "resolucao": "35% de 8000 = 2800; 8000 − 2800 = 5200."
+  },
+  {
+   "id": "m7-8",
+   "npc": "caio",
+   "mapa": 7,
+   "libera_apos": "mapa7-B",
+   "texto": "Dos 50 alarmes de incêndio do mercado, 6 estão com defeito. Qual a porcentagem com defeito?",
+   "resposta": 12,
+   "unidade": "%",
+   "resolucao": "6 ÷ 50 = 0,12 = 12%."
+  },
+  {
+   "id": "m7-9",
+   "npc": "caio",
+   "mapa": 7,
+   "libera_apos": "mapa7-A",
+   "texto": "No treino, acertei 85% dos 40 exercícios. Quantos exercícios acertei?",
+   "resposta": 34,
+   "unidade": "exercícios",
+   "resolucao": "10% de 40 = 4; 80% = 32; 5% = 2; 32 + 2 = 34."
+  },
+  {
+   "id": "m8-1",
+   "npc": "jorge",
+   "mapa": 8,
+   "libera_apos": "mapa8-A",
+   "texto": "Cobro R$ 3 por carta mais R$ 5 de taxa por entrega. Para x cartas, o preço é 3x + 5. Quanto custa entregar 12 cartas?",
+   "resposta": 41,
+   "unidade": "reais",
+   "resolucao": "3 × 12 + 5 = 36 + 5 = 41."
+  },
+  {
+   "id": "m8-2",
+   "npc": "jorge",
+   "mapa": 8,
+   "libera_apos": "mapa8-A",
+   "texto": "A rua das Flores recebeu o dobro de cartas da rua do Sol, mais 3. A rua do Sol recebeu 15. Quantas cartas recebeu a rua das Flores?",
+   "resposta": 33,
+   "unidade": "cartas",
+   "resolucao": "2 × 15 + 3 = 33."
+  },
+  {
+   "id": "m8-3",
+   "npc": "jorge",
+   "mapa": 8,
+   "libera_apos": "mapa8-B",
+   "texto": "Na segunda entreguei 2x + 4 cartas, na terça 3x − 1 e na quarta x + 7. Se x = 10, quantas cartas entreguei nos três dias?",
+   "resposta": 70,
+   "unidade": "cartas",
+   "resolucao": "Junta os termos: 2x + 3x + x = 6x e 4 − 1 + 7 = 10 → 6x + 10. Com x = 10: 60 + 10 = 70."
+  },
+  {
+   "id": "m8-4",
+   "npc": "clara",
+   "mapa": 8,
+   "libera_apos": "mapa8-A",
+   "texto": "Leio p páginas por dia, de segunda a domingo, e no domingo leio mais 15 extras. Isso dá 7p + 15. Se p = 20, quantas páginas leio na semana?",
+   "resposta": 155,
+   "unidade": "páginas",
+   "resolucao": "7 × 20 + 15 = 140 + 15 = 155."
+  },
+  {
+   "id": "m8-5",
+   "npc": "clara",
+   "mapa": 8,
+   "libera_apos": "mapa8-A",
+   "texto": "A estante tem n prateleiras com 25 livros cada e mais 12 livros soltos em cima. Se n = 6, quantos livros há na estante?",
+   "resposta": 162,
+   "unidade": "livros",
+   "resolucao": "25n + 12 = 25 × 6 + 12 = 150 + 12 = 162."
+  },
+  {
+   "id": "m8-6",
+   "npc": "clara",
+   "mapa": 8,
+   "libera_apos": "mapa8-B",
+   "texto": "Meu livro tem 3 partes: 4x páginas, 2x + 30 páginas e 5x − 10 páginas. Se x = 20, quantas páginas tem o livro?",
+   "resposta": 240,
+   "unidade": "páginas",
+   "resolucao": "4x + 2x + 5x = 11x e 30 − 10 = 20 → 11x + 20. Com x = 20: 220 + 20 = 240."
+  },
+  {
+   "id": "m8-7",
+   "npc": "lia",
+   "mapa": 8,
+   "libera_apos": "mapa8-A",
+   "texto": "Cada quadro meu custa 4 vezes o preço da moldura, mais R$ 10. Se a moldura custa R$ 15, quanto custa o quadro?",
+   "resposta": 70,
+   "unidade": "reais",
+   "resolucao": "4 × 15 + 10 = 60 + 10 = 70."
+  },
+  {
+   "id": "m8-8",
+   "npc": "lia",
+   "mapa": 8,
+   "libera_apos": "mapa8-B",
+   "texto": "Comprei 3 tubos de tinta azul e 5 de amarela, todos com o mesmo preço a, e devolvi 2. Gastei 3a + 5a − 2a. Se cada tubo custa R$ 7, quanto gastei?",
+   "resposta": 42,
+   "unidade": "reais",
+   "resolucao": "3a + 5a − 2a = 6a. Com a = 7: 6 × 7 = 42."
+  },
+  {
+   "id": "m8-9",
+   "npc": "lia",
+   "mapa": 8,
+   "libera_apos": "mapa8-B",
+   "texto": "O perímetro do meu quadro é x + 2x + x + 2x. Se x = 15 cm, quanto mede o perímetro?",
+   "resposta": 90,
+   "unidade": "cm",
+   "resolucao": "x + 2x + x + 2x = 6x = 6 × 15 = 90."
+  },
+  {
+   "id": "m9-1",
+   "npc": "mago_elias",
+   "mapa": 9,
+   "libera_apos": "mapa9-A",
+   "texto": "Pensei num número, multipliquei por 3 e somei 7. Deu 34. Em que número pensei?",
+   "resposta": 9,
+   "unidade": "",
+   "resolucao": "3x + 7 = 34 → 3x = 27 → x = 9."
+  },
+  {
+   "id": "m9-2",
+   "npc": "mago_elias",
+   "mapa": 9,
+   "libera_apos": "mapa9-B",
+   "texto": "Na minha balança, de um lado tem 2 sacos iguais de pó mágico e um peso de 5 kg. Do outro, 17 kg. Quanto pesa cada saco?",
+   "resposta": 6,
+   "unidade": "kg",
+   "resolucao": "2x + 5 = 17 → 2x = 12 → x = 6."
+  },
+  {
+   "id": "m9-3",
+   "npc": "druida_bento",
+   "mapa": 9,
+   "libera_apos": "mapa9-A",
+   "texto": "Eu tenho 9 vezes a idade do Uivo, mais 3 anos. Tenho 75 anos. Quantos anos tem o Uivo?",
+   "resposta": 8,
+   "unidade": "anos",
+   "resolucao": "9x + 3 = 75 → 9x = 72 → x = 8."
+  },
+  {
+   "id": "m9-4",
+   "npc": "druida_bento",
+   "mapa": 9,
+   "libera_apos": "mapa9-B",
+   "texto": "Plantei árvores em 4 fileiras iguais e sobraram 6 mudas. Eram 50 mudas ao todo. Quantas árvores ficaram em cada fileira?",
+   "resposta": 11,
+   "unidade": "árvores",
+   "resolucao": "4x + 6 = 50 → 4x = 44 → x = 11."
+  },
+  {
+   "id": "m9-5",
+   "npc": "bruxa_iris",
+   "mapa": 9,
+   "libera_apos": "mapa9-A",
+   "texto": "Minha poção leva algumas gotas de sapo e o triplo disso de orvalho. No total são 48 gotas. Quantas gotas de sapo?",
+   "resposta": 12,
+   "unidade": "gotas",
+   "resolucao": "x + 3x = 48 → 4x = 48 → x = 12."
+  },
+  {
+   "id": "m9-6",
+   "npc": "bruxa_iris",
+   "mapa": 9,
+   "libera_apos": "mapa9-B",
+   "texto": "Comprei 5 frascos iguais e paguei com R$ 100. Recebi R$ 35 de troco. Quanto custou cada frasco?",
+   "resposta": 13,
+   "unidade": "reais",
+   "resolucao": "100 − 5x = 35 → 5x = 65 → x = 13."
+  },
+  {
+   "id": "m9-7",
+   "npc": "fada_lume",
+   "mapa": 9,
+   "libera_apos": "mapa9-A",
+   "texto": "Se eu ganhar mais 15 estrelas, fico com o dobro das que tenho agora. Quantas estrelas eu tenho?",
+   "resposta": 15,
+   "unidade": "estrelas",
+   "resolucao": "x + 15 = 2x → x = 15."
+  },
+  {
+   "id": "m9-8",
+   "npc": "fada_lume",
+   "mapa": 9,
+   "libera_apos": "mapa9-B",
+   "texto": "Dividi minhas pétalas igualmente entre 6 flores: cada uma ficou com 7 e sobraram 4. Quantas pétalas eu tinha?",
+   "resposta": 46,
+   "unidade": "pétalas",
+   "resolucao": "(x − 4) ÷ 6 = 7 → x − 4 = 42 → x = 46."
+  },
+  {
+   "id": "m9-9",
+   "npc": "zara",
+   "mapa": 9,
+   "libera_apos": "mapa9-A",
+   "texto": "Minha bola de cristal diz: o dobro de um número, menos 9, é igual a 31. Que número é esse?",
+   "resposta": 20,
+   "unidade": "",
+   "resolucao": "2x − 9 = 31 → 2x = 40 → x = 20."
+  },
+  {
+   "id": "m9-10",
+   "npc": "zara",
+   "mapa": 9,
+   "libera_apos": "mapa9-B",
+   "texto": "Daqui a 5 anos terei o triplo da idade que meu irmão tem hoje. Ele tem 12. Quantos anos eu tenho hoje?",
+   "resposta": 31,
+   "unidade": "anos",
+   "resolucao": "x + 5 = 3 × 12 → x + 5 = 36 → x = 31."
+  },
+  {
+   "id": "m10-1",
+   "npc": "chef_paulo",
+   "mapa": 10,
+   "libera_apos": "mapa10-A",
+   "texto": "Minha receita usa 500 g de polvilho para 40 pães de queijo. Chegou uma encomenda de 140 pães e eu só tenho 1,5 kg de polvilho. Quantos gramas vão faltar?",
+   "resposta": 250,
+   "unidade": "g",
+   "resolucao": "40 pães → 500 g; 140 pães → 500 × 140 ÷ 40 = 1750 g. Tenho 1500 g: falta 1750 − 1500 = 250."
+  },
+  {
+   "id": "m10-2",
+   "npc": "chef_paulo",
+   "mapa": 10,
+   "libera_apos": "mapa10-A",
+   "texto": "Para 6 pessoas uso 4 ovos no bolo. Vou fazer bolo para 15 pessoas. Quantos ovos preciso?",
+   "resposta": 10,
+   "unidade": "ovos",
+   "resolucao": "4 × 15 ÷ 6 = 60 ÷ 6 = 10."
+  },
+  {
+   "id": "m10-3",
+   "npc": "chef_paulo",
+   "mapa": 10,
+   "libera_apos": "mapa10-B",
+   "texto": "Meu forno assa 24 pães em 30 minutos. No mesmo ritmo, quanto tempo leva para assar 60 pães?",
+   "resposta": 75,
+   "unidade": "minutos",
+   "resolucao": "24 → 30; 60 → 30 × 60 ÷ 24 = 1800 ÷ 24 = 75."
+  },
+  {
+   "id": "m10-4",
+   "npc": "vovo_lurdes",
+   "mapa": 10,
+   "libera_apos": "mapa10-A",
+   "texto": "Tricoto 3 cachecóis em 2 semanas. Quantas semanas levo para tricotar 12 cachecóis?",
+   "resposta": 8,
+   "unidade": "semanas",
+   "resolucao": "3 → 2; 12 → 2 × 12 ÷ 3 = 8."
+  },
+  {
+   "id": "m10-5",
+   "npc": "vovo_lurdes",
+   "mapa": 10,
+   "libera_apos": "mapa10-A",
+   "texto": "Com 2 novelos faço 15 fileiras do cachecol. O cachecol tem 45 fileiras. Quantos novelos preciso?",
+   "resposta": 6,
+   "unidade": "novelos",
+   "resolucao": "15 → 2; 45 → 2 × 45 ÷ 15 = 6."
+  },
+  {
+   "id": "m10-6",
+   "npc": "vovo_lurdes",
+   "mapa": 10,
+   "libera_apos": "mapa10-B",
+   "texto": "Com 4 netos ajudando, enrolamos toda a lã em 6 horas. Se vierem 8 netos, trabalhando no mesmo ritmo, em quantas horas terminamos?",
+   "resposta": 3,
+   "unidade": "horas",
+   "resolucao": "Mais netos, menos tempo (inversa): 4 × 6 = 24; 24 ÷ 8 = 3."
+  },
+  {
+   "id": "m11-1",
+   "npc": "seu_raimundo",
+   "mapa": 11,
+   "libera_apos": "mapa11-A",
+   "texto": "Vou cercar um terreno retangular de 25 m por 18 m, deixando 4 m livres para o portão. Quantos metros de cerca preciso?",
+   "resposta": 82,
+   "unidade": "m",
+   "resolucao": "Perímetro: 25 + 18 + 25 + 18 = 86; sem o portão: 86 − 4 = 82."
+  },
+  {
+   "id": "m11-2",
+   "npc": "seu_raimundo",
+   "mapa": 11,
+   "libera_apos": "mapa11-B",
+   "texto": "Vou trocar o piso de uma sala de 6 m por 4,5 m. Cada caixa de piso cobre 2,5 m². Quantas caixas preciso comprar?",
+   "resposta": 11,
+   "unidade": "caixas",
+   "resolucao": "Área: 6 × 4,5 = 27 m². 27 ÷ 2,5 = 10,8 → preciso de 11 caixas (não dá para comprar caixa quebrada)."
+  },
+  {
+   "id": "m11-3",
+   "npc": "tiago",
+   "mapa": 11,
+   "libera_apos": "mapa11-A",
+   "texto": "O muro tem 12 m de comprimento e cada tijolo tem 20 cm. Quantos tijolos cabem numa fileira?",
+   "resposta": 60,
+   "unidade": "tijolos",
+   "resolucao": "12 m = 1200 cm; 1200 ÷ 20 = 60."
+  },
+  {
+   "id": "m11-4",
+   "npc": "tiago",
+   "mapa": 11,
+   "libera_apos": "mapa11-B",
+   "texto": "Vou rebocar uma parede de 5 m por 3 m que tem uma janela de 2 m por 1 m. Quantos m² de reboco?",
+   "resposta": 13,
+   "unidade": "m²",
+   "resolucao": "Parede: 5 × 3 = 15; janela: 2 × 1 = 2; 15 − 2 = 13."
+  },
+  {
+   "id": "m11-5",
+   "npc": "eng_carla",
+   "mapa": 11,
+   "libera_apos": "mapa11-A",
+   "texto": "Na planta, 1 cm vale 2 m. A sala mede 4 cm por 3 cm na planta. Qual é o perímetro real da sala?",
+   "resposta": 28,
+   "unidade": "m",
+   "resolucao": "Real: 8 m por 6 m. Perímetro: 8 + 6 + 8 + 6 = 28."
+  },
+  {
+   "id": "m11-6",
+   "npc": "eng_carla",
+   "mapa": 11,
+   "libera_apos": "mapa11-B",
+   "texto": "O terreno tem formato de L: um retângulo de 10 m por 6 m grudado em outro de 4 m por 5 m. Qual a área total?",
+   "resposta": 80,
+   "unidade": "m²",
+   "resolucao": "10 × 6 = 60; 4 × 5 = 20; 60 + 20 = 80."
+  },
+  {
+   "id": "m11-7",
+   "npc": "seu_beto",
+   "mapa": 11,
+   "libera_apos": "mapa11-A",
+   "texto": "Vou fazer a moldura de um quadro de 60 cm por 40 cm. Quantos centímetros de ripa vou usar?",
+   "resposta": 200,
+   "unidade": "cm",
+   "resolucao": "60 + 40 + 60 + 40 = 200."
+  },
+  {
+   "id": "m11-8",
+   "npc": "seu_beto",
+   "mapa": 11,
+   "libera_apos": "mapa11-B",
+   "texto": "Quero cobrir uma mesa de 2 m por 1 m com placas de 50 cm por 50 cm. Quantas placas?",
+   "resposta": 8,
+   "unidade": "placas",
+   "resolucao": "Cabem 4 placas no comprimento (200 ÷ 50) e 2 na largura (100 ÷ 50): 4 × 2 = 8."
+  },
+  {
+   "id": "m11-9",
+   "npc": "rosa",
+   "mapa": 11,
+   "libera_apos": "mapa11-A",
+   "texto": "Vou passar fio em volta de uma sala quadrada de 5 m de lado e mais 3 m até o quadro de luz. Quantos metros de fio?",
+   "resposta": 23,
+   "unidade": "m",
+   "resolucao": "Perímetro: 4 × 5 = 20; 20 + 3 = 23."
+  },
+  {
+   "id": "m11-10",
+   "npc": "rosa",
+   "mapa": 11,
+   "libera_apos": "mapa11-B",
+   "texto": "Cada painel solar tem 2 m por 1 m e gera 150 watts por m². Quantos watts geram 3 painéis?",
+   "resposta": 900,
+   "unidade": "watts",
+   "resolucao": "Área de 1 painel: 2 × 1 = 2 m² → 300 W. 3 painéis: 900 W."
+  },
+  {
+   "id": "m11-11",
+   "npc": "wesley",
+   "mapa": 11,
+   "libera_apos": "mapa11-A",
+   "texto": "A esteira da máquina dá a volta num retângulo de 3 m por 1 m e faz 25 voltas por minuto. Quantos metros ela anda em 1 minuto?",
+   "resposta": 200,
+   "unidade": "m",
+   "resolucao": "Uma volta: 3 + 1 + 3 + 1 = 8 m; 8 × 25 = 200."
+  },
+  {
+   "id": "m11-12",
+   "npc": "wesley",
+   "mapa": 11,
+   "libera_apos": "mapa11-B",
+   "texto": "Vou pintar o chão da garagem, de 7 m por 4 m. Cada lata pinta 14 m². Quantas latas preciso?",
+   "resposta": 2,
+   "unidade": "latas",
+   "resolucao": "7 × 4 = 28 m²; 28 ÷ 14 = 2."
+  },
+  {
+   "id": "m11-13",
+   "npc": "fabio",
+   "mapa": 11,
+   "libera_apos": "mapa11-A",
+   "texto": "Preciso de 4 pedaços de cano de 1,5 m e 2 pedaços de 75 cm. Quantos centímetros de cano ao todo?",
+   "resposta": 750,
+   "unidade": "cm",
+   "resolucao": "4 × 150 = 600; 2 × 75 = 150; 600 + 150 = 750."
+  },
+  {
+   "id": "m11-14",
+   "npc": "fabio",
+   "mapa": 11,
+   "libera_apos": "mapa11-B",
+   "texto": "O chão do banheiro tem 3 m por 2 m. Cada azulejo tem 20 cm por 20 cm. Quantos azulejos preciso?",
+   "resposta": 150,
+   "unidade": "azulejos",
+   "resolucao": "300 ÷ 20 = 15 no comprimento e 200 ÷ 20 = 10 na largura: 15 × 10 = 150."
+  },
+  {
+   "id": "m11-15",
+   "npc": "jorginho",
+   "mapa": 11,
+   "libera_apos": "mapa11-A",
+   "texto": "Vou colar uma faixa decorativa em volta de uma sala de 6 m por 4 m, mas ela não passa pela porta de 1 m. Quantos metros de faixa?",
+   "resposta": 19,
+   "unidade": "m",
+   "resolucao": "6 + 4 + 6 + 4 = 20; 20 − 1 = 19."
+  },
+  {
+   "id": "m11-16",
+   "npc": "jorginho",
+   "mapa": 11,
+   "libera_apos": "mapa11-B",
+   "texto": "A parede tem 6 m por 3 m e vou dar duas demãos de tinta. Cada lata pinta 12 m². Quantas latas preciso?",
+   "resposta": 3,
+   "unidade": "latas",
+   "resolucao": "6 × 3 = 18 m²; duas demãos: 36 m²; 36 ÷ 12 = 3."
+  },
+  {
+   "id": "m11-17",
+   "npc": "dandara",
+   "mapa": 11,
+   "libera_apos": "mapa11-A",
+   "texto": "Vou isolar uma área retangular de 15 m por 8 m com fita, dando 2 voltas. Quantos metros de fita?",
+   "resposta": 92,
+   "unidade": "m",
+   "resolucao": "Uma volta: 15 + 8 + 15 + 8 = 46; duas voltas: 92."
+  },
+  {
+   "id": "m11-18",
+   "npc": "dandara",
+   "mapa": 11,
+   "libera_apos": "mapa11-B",
+   "texto": "Cada trabalhador precisa de 4 m² livres na área de descanso, que mede 9 m por 4 m. Quantos trabalhadores cabem?",
+   "resposta": 9,
+   "unidade": "trabalhadores",
+   "resolucao": "9 × 4 = 36 m²; 36 ÷ 4 = 9."
+  },
+  {
+   "id": "m12-1",
+   "npc": "orion",
+   "mapa": 12,
+   "libera_apos": "mapa12-A",
+   "texto": "A estrela Alfa está no ponto (2, 3) e a estrela Beta no ponto (7, 3). Quantas unidades separam as duas?",
+   "resposta": 5,
+   "unidade": "unidades",
+   "resolucao": "Mesmo y; a distância é a diferença dos x: 7 − 2 = 5."
+  },
+  {
+   "id": "m12-2",
+   "npc": "orion",
+   "mapa": 12,
+   "libera_apos": "mapa12-A",
+   "texto": "Um cometa está no ponto (−4, 1). Ele anda 6 unidades para a direita. Qual passa a ser a coordenada x dele?",
+   "resposta": 2,
+   "unidade": "",
+   "resolucao": "Para a direita soma no x: −4 + 6 = 2. Novo ponto: (2, 1)."
+  },
+  {
+   "id": "m12-3",
+   "npc": "orion",
+   "mapa": 12,
+   "libera_apos": "mapa12-B",
+   "texto": "Meu barquinho sai de (1, 2), anda 4 para cima e depois 3 para a esquerda. Qual é a coordenada x do ponto de chegada?",
+   "resposta": -2,
+   "unidade": "",
+   "resolucao": "Para cima mexe no y (2 + 4 = 6); para a esquerda tira do x (1 − 3 = −2). Chegada: (−2, 6)."
+  },
+  {
+   "id": "m12-4",
+   "npc": "orion",
+   "mapa": 12,
+   "libera_apos": "mapa12-B",
+   "texto": "As estrelas (1, 1), (6, 1), (6, 4) e (1, 4) formam um retângulo. Qual a área desse retângulo?",
+   "resposta": 15,
+   "unidade": "unidades²",
+   "resolucao": "Base: 6 − 1 = 5; altura: 4 − 1 = 3; área: 5 × 3 = 15."
+  },
+  {
+   "id": "m13-1",
+   "npc": "dra_helena",
+   "mapa": 13,
+   "libera_apos": "mapa13-A",
+   "texto": "Medi a altura de 5 plantas do laboratório: 12, 15, 9, 18 e 16 cm. Qual a altura média?",
+   "resposta": 14,
+   "unidade": "cm",
+   "resolucao": "12 + 15 + 9 + 18 + 16 = 70; 70 ÷ 5 = 14."
+  },
+  {
+   "id": "m13-2",
+   "npc": "dra_helena",
+   "mapa": 13,
+   "libera_apos": "mapa13-A",
+   "texto": "Os tempos do experimento foram 3, 9, 4, 12 e 7 segundos. Qual é a mediana?",
+   "resposta": 7,
+   "unidade": "s",
+   "resolucao": "Em ordem: 3, 4, 7, 9, 12. O do meio é 7."
+  },
+  {
+   "id": "m13-3",
+   "npc": "dra_helena",
+   "mapa": 13,
+   "libera_apos": "mapa13-B",
+   "texto": "Na tabela da feira: sexta 120 visitantes, sábado 250, domingo 170. Quantos visitantes o sábado teve a mais que a média dos três dias?",
+   "resposta": 70,
+   "unidade": "visitantes",
+   "resolucao": "Média: (120 + 250 + 170) ÷ 3 = 540 ÷ 3 = 180. 250 − 180 = 70."
+  },
+  {
+   "id": "m13-4",
+   "npc": "dra_helena",
+   "mapa": 13,
+   "libera_apos": "mapa13-B",
+   "texto": "A tabela da barraca de ciências mostra: 12 sucos vendidos a R$ 4 e 8 bolos a R$ 6. Quanto a barraca arrecadou?",
+   "resposta": 96,
+   "unidade": "reais",
+   "resolucao": "12 × 4 = 48; 8 × 6 = 48; 48 + 48 = 96."
+  }
+ ]
+}

@@ -35,34 +35,26 @@
       "tempo_min_s": 1.5,
       "sobe_nivel_contas_a_cada_vitorias": 2,
       "nivel_contas_max": 5
-    }
-  },
-  "niveis_contas": {
-    "1": [
-      "tabuada"
+    },
+    "erro": {
+      "perde_vida": 5,
+      "tempo_esgotado_perde_vida": 0
+    },
+    "sequencia": {
+      "acertos": 3,
+      "multiplicador_dano": 1.5
+    },
+    "lealdade_vida_extra": [
+      {
+        "min": 80,
+        "vida": 10
+      },
+      {
+        "min": 60,
+        "vida": 5
+      }
     ],
-    "2": [
-      "tabuada",
-      "soma_inteiros"
-    ],
-    "3": [
-      "soma_inteiros",
-      "mult_inteiros",
-      "tabuada"
-    ],
-    "4": [
-      "soma_inteiros",
-      "mult_inteiros",
-      "potencia",
-      "raiz"
-    ],
-    "5": [
-      "soma_inteiros",
-      "mult_inteiros",
-      "potencia",
-      "raiz",
-      "expressao_curta"
-    ]
+    "revisao_no_fim": true
   },
   "treinadores": [
     {
@@ -78,7 +70,23 @@
       ],
       "fala_inicio": "Bora? Eu tô só treinando, hein!",
       "fala_perdeu": "Foi mal, eu tava distraído com o skate!",
-      "fala_venceu": "Na próxima eu ganho!"
+      "fala_venceu": "Na próxima eu ganho!",
+      "contas": [
+        "tabuada",
+        "expressao_sem_parenteses"
+      ],
+      "reage_acerto_aluno": [
+        "Opa, foi rápido!",
+        "Essa você mandou bem!"
+      ],
+      "reage_erro_aluno": [
+        "Hehe, escorregou no skate!",
+        "Quase! Presta atenção."
+      ],
+      "reage_ele_acertou": [
+        "Acertei! Toma essa!"
+      ],
+      "fala_nivel_alto": "Treinei muito desde a última vez!"
     },
     {
       "id": "dona_cida",
@@ -93,7 +101,23 @@
       ],
       "fala_inicio": "Fruta fresquinha e conta rápida, meu bem!",
       "fala_perdeu": "Ah, você é boa de conta!",
-      "fala_venceu": "Leva uma banana pra recuperar as forças!"
+      "fala_venceu": "Leva uma banana pra recuperar as forças!",
+      "contas": [
+        "porcentagem",
+        "tabuada"
+      ],
+      "reage_acerto_aluno": [
+        "Isso, meu bem! Troco certinho!",
+        "Ô, sabe fazer conta!"
+      ],
+      "reage_erro_aluno": [
+        "Ih, errou o troco!",
+        "Calma, confere de novo!"
+      ],
+      "reage_ele_acertou": [
+        "Na feira a gente calcula rápido!"
+      ],
+      "fala_nivel_alto": "Treinei muito desde a última vez!"
     },
     {
       "id": "seu_ze",
@@ -108,7 +132,23 @@
       ],
       "fala_inicio": "Paciência de pescador… mas conta rápida!",
       "fala_perdeu": "Ô, peixe grande você é!",
-      "fala_venceu": "Hoje o peixe não mordeu pra você."
+      "fala_venceu": "Hoje o peixe não mordeu pra você.",
+      "contas": [
+        "vezes_10_100_1000",
+        "medidas"
+      ],
+      "reage_acerto_aluno": [
+        "Boa! Fisgou essa!",
+        "Peixe grande, hein?"
+      ],
+      "reage_erro_aluno": [
+        "Escapou o peixe!",
+        "Paciência, filho, pensa de novo."
+      ],
+      "reage_ele_acertou": [
+        "Essa eu pesquei primeiro!"
+      ],
+      "fala_nivel_alto": "Treinei muito desde a última vez!"
     },
     {
       "id": "clara",
@@ -123,7 +163,23 @@
       ],
       "fala_inicio": "Li um livro inteiro sobre contas rápidas. Vamos?",
       "fala_perdeu": "Vou reler o capítulo… você mandou bem!",
-      "fala_venceu": "Ponto final: eu venci!"
+      "fala_venceu": "Ponto final: eu venci!",
+      "contas": [
+        "valor_numerico",
+        "termos_semelhantes"
+      ],
+      "reage_acerto_aluno": [
+        "Leu direitinho o enunciado!",
+        "Perfeito, como num livro!"
+      ],
+      "reage_erro_aluno": [
+        "Releia com calma…",
+        "Faltou atenção no x!"
+      ],
+      "reage_ele_acertou": [
+        "Capítulo meu!"
+      ],
+      "fala_nivel_alto": "Treinei muito desde a última vez!"
     },
     {
       "id": "jorge",
@@ -138,7 +194,23 @@
       ],
       "fala_inicio": "Entrega expressa de contas!",
       "fala_perdeu": "Essa você entregou rapidinho!",
-      "fala_venceu": "Carta pra você: perdeu! Hehe."
+      "fala_venceu": "Carta pra você: perdeu! Hehe.",
+      "contas": [
+        "valor_numerico",
+        "expressao_com_parenteses"
+      ],
+      "reage_acerto_aluno": [
+        "Entrega rápida! Gostei!",
+        "Chegou certinho no endereço!"
+      ],
+      "reage_erro_aluno": [
+        "Endereço errado!",
+        "Essa carta voltou!"
+      ],
+      "reage_ele_acertou": [
+        "Entregue! Ponto meu!"
+      ],
+      "fala_nivel_alto": "Treinei muito desde a última vez!"
     },
     {
       "id": "marcos",
@@ -153,7 +225,23 @@
       ],
       "fala_inicio": "Aquecido? Vamos ver quem é mais rápido!",
       "fala_perdeu": "Você correu mais que eu nas contas!",
-      "fala_venceu": "Cheguei primeiro! Treina e volta."
+      "fala_venceu": "Cheguei primeiro! Treina e volta.",
+      "contas": [
+        "expressao_com_parenteses",
+        "tabuada"
+      ],
+      "reage_acerto_aluno": [
+        "Que ritmo!",
+        "Você tá voando!"
+      ],
+      "reage_erro_aluno": [
+        "Tropeçou!",
+        "Respira e vai de novo!"
+      ],
+      "reage_ele_acertou": [
+        "Cheguei na frente nessa!"
+      ],
+      "fala_nivel_alto": "Treinei muito desde a última vez!"
     },
     {
       "id": "seu_antonio",
@@ -168,7 +256,23 @@
       ],
       "fala_inicio": "Quem planta treino, colhe vitória.",
       "fala_perdeu": "Bonita colheita a sua!",
-      "fala_venceu": "Rega mais um pouco e volta."
+      "fala_venceu": "Rega mais um pouco e volta.",
+      "contas": [
+        "fracoes",
+        "decimais"
+      ],
+      "reage_acerto_aluno": [
+        "Colheita boa!",
+        "Plantou e colheu certinho!"
+      ],
+      "reage_erro_aluno": [
+        "Essa semente não brotou…",
+        "Rega o raciocínio e tenta de novo."
+      ],
+      "reage_ele_acertou": [
+        "Essa fração é minha!"
+      ],
+      "fala_nivel_alto": "Treinei muito desde a última vez!"
     },
     {
       "id": "dra_helena",
@@ -183,7 +287,23 @@
       ],
       "fala_inicio": "Hipótese: eu venço. Vamos testar.",
       "fala_perdeu": "Hipótese refutada. Parabéns!",
-      "fala_venceu": "Experimento concluído: vitória minha."
+      "fala_venceu": "Experimento concluído: vitória minha.",
+      "contas": [
+        "media",
+        "porcentagem"
+      ],
+      "reage_acerto_aluno": [
+        "Hipótese confirmada!",
+        "Dados perfeitos!"
+      ],
+      "reage_erro_aluno": [
+        "Erro experimental!",
+        "Refaça o cálculo com calma."
+      ],
+      "reage_ele_acertou": [
+        "Resultado: ponto meu!"
+      ],
+      "fala_nivel_alto": "Treinei muito desde a última vez!"
     },
     {
       "id": "nina",
@@ -198,7 +318,23 @@
       ],
       "fala_inicio": "Já explorei todas as contas do mundo!",
       "fala_perdeu": "Uau! Você é uma descoberta!",
-      "fala_venceu": "Volte quando tiver mais mapa no bolso."
+      "fala_venceu": "Volte quando tiver mais mapa no bolso.",
+      "contas": [
+        "potencia",
+        "raiz"
+      ],
+      "reage_acerto_aluno": [
+        "Subiu a montanha rapidinho!",
+        "Exploradora aprova!"
+      ],
+      "reage_erro_aluno": [
+        "Escorregou na trilha!",
+        "Volta e olha o mapa de novo!"
+      ],
+      "reage_ele_acertou": [
+        "Cheguei ao topo primeiro!"
+      ],
+      "fala_nivel_alto": "Treinei muito desde a última vez!"
     },
     {
       "id": "vovo_lurdes",
@@ -213,7 +349,127 @@
       ],
       "fala_inicio": "Ponto, ponto, conta… tricoto e calculo ao mesmo tempo, querido.",
       "fala_perdeu": "Ora, ora! Ganhou um cachecol de presente!",
-      "fala_venceu": "A vovó ainda tá em forma, hein?"
+      "fala_venceu": "A vovó ainda tá em forma, hein?",
+      "contas": [
+        "regra_de_tres",
+        "equacao",
+        "negativos_soma",
+        "negativos_mult"
+      ],
+      "reage_acerto_aluno": [
+        "Ora, ora, que esperto!",
+        "Muito bem, querido!"
+      ],
+      "reage_erro_aluno": [
+        "Ai, ai, errou o ponto!",
+        "No meu tempo a gente conferia duas vezes!"
+      ],
+      "reage_ele_acertou": [
+        "A vovó ainda é rápida, hein?"
+      ],
+      "fala_nivel_alto": "Treinei muito desde a última vez!"
     }
-  ]
+  ],
+  "tipos_contas": {
+    "tabuada": {
+      "nome": "Tabuada",
+      "exemplo": "7 × 8",
+      "explica": "7 × 8 = 56 (7 × 8 é o mesmo que 8 + 8 + 8 + 8 + 8 + 8 + 8)."
+    },
+    "expressao_sem_parenteses": {
+      "nome": "Expressões sem parênteses",
+      "exemplo": "5 + 2 × 3",
+      "explica": "Primeiro a multiplicação: 2 × 3 = 6. Depois a soma: 5 + 6 = 11."
+    },
+    "expressao_com_parenteses": {
+      "nome": "Expressões com parênteses",
+      "exemplo": "(5 + 2) × 3",
+      "explica": "Primeiro os parênteses: 5 + 2 = 7. Depois 7 × 3 = 21."
+    },
+    "vezes_10_100_1000": {
+      "nome": "× e ÷ por 10, 100, 1000",
+      "exemplo": "3,4 × 100",
+      "explica": "Multiplicar por 100 anda a vírgula 2 casas para a direita: 3,4 → 340."
+    },
+    "medidas": {
+      "nome": "Medidas",
+      "exemplo": "2,5 m = ? cm",
+      "explica": "1 m = 100 cm, então 2,5 × 100 = 250 cm."
+    },
+    "negativos_soma": {
+      "nome": "Negativos: somar e subtrair",
+      "exemplo": "(−7) + 3",
+      "explica": "Sinais diferentes: subtrai 7 − 3 = 4 e fica o sinal do maior (−): −4."
+    },
+    "negativos_mult": {
+      "nome": "Negativos: multiplicar e dividir",
+      "exemplo": "(−4) × (−3)",
+      "explica": "Sinais iguais dão positivo: 4 × 3 = 12, então +12."
+    },
+    "fracoes": {
+      "nome": "Frações",
+      "exemplo": "1/4 de 20",
+      "explica": "Divide 20 em 4 partes: 20 ÷ 4 = 5."
+    },
+    "decimais": {
+      "nome": "Decimais",
+      "exemplo": "1,5 + 2,75",
+      "explica": "Alinha as vírgulas: 1,50 + 2,75 = 4,25."
+    },
+    "potencia": {
+      "nome": "Potências",
+      "exemplo": "2⁵",
+      "explica": "2⁵ = 2 × 2 × 2 × 2 × 2 = 32."
+    },
+    "raiz": {
+      "nome": "Raízes",
+      "exemplo": "√81",
+      "explica": "Que número vezes ele mesmo dá 81? 9 × 9 = 81, então √81 = 9."
+    },
+    "multiplos_divisores": {
+      "nome": "Múltiplos e divisores",
+      "exemplo": "Qual é múltiplo de 6?",
+      "explica": "Múltiplo de 6 está na tabuada do 6: 6, 12, 18, 24… → 18."
+    },
+    "porcentagem": {
+      "nome": "Porcentagem",
+      "exemplo": "25% de 80",
+      "explica": "25% é 1/4: 80 ÷ 4 = 20."
+    },
+    "valor_numerico": {
+      "nome": "Valor numérico",
+      "exemplo": "2x + 1, x = 4",
+      "explica": "Troca x por 4: 2 × 4 + 1 = 8 + 1 = 9."
+    },
+    "termos_semelhantes": {
+      "nome": "Termos semelhantes",
+      "exemplo": "3x + 5x",
+      "explica": "Mesma letra: soma os números da frente: 3 + 5 = 8 → 8x."
+    },
+    "equacao": {
+      "nome": "Equações",
+      "exemplo": "x + 7 = 12",
+      "explica": "O que faz de um lado faz do outro: x = 12 − 7 = 5."
+    },
+    "regra_de_tres": {
+      "nome": "Regra de três",
+      "exemplo": "3 pães custam 6 reais. 5 pães?",
+      "explica": "1 pão custa 6 ÷ 3 = 2 reais; 5 pães: 5 × 2 = 10 reais."
+    },
+    "perimetro_area": {
+      "nome": "Perímetro e área",
+      "exemplo": "Área do retângulo 4 × 6",
+      "explica": "Área = base × altura = 4 × 6 = 24."
+    },
+    "coordenadas": {
+      "nome": "Coordenadas",
+      "exemplo": "Ponto 3 para a direita e 2 para cima",
+      "explica": "Primeiro o x (direita/esquerda), depois o y (cima/baixo): (3, 2)."
+    },
+    "media": {
+      "nome": "Média, moda e mediana",
+      "exemplo": "Média de 4, 6 e 8",
+      "explica": "Soma 4 + 6 + 8 = 18 e divide por 3: 18 ÷ 3 = 6."
+    }
+  }
 }
