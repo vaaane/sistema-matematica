@@ -1,0 +1,688 @@
+{
+ "pasta": "img/jogo/npcs",
+ "escala_ref_altura": 664,
+ "nota": "w/h = tamanho da imagem em px na MESMA escala dos personagens principais (canvas de 664 px de altura).",
+ "npcs": [
+  {
+   "id": "seu_ze",
+   "nome": "Seu Zé",
+   "quem": "Pescador",
+   "mapa": 2,
+   "w": 279,
+   "h": 715,
+   "falas": [
+    "Pescar é igual estudar: paciência e um pouco todo dia.",
+    "Hoje peguei 12 peixes e soltei metade. Quantos levei pra casa?",
+    "O mar sobe e desce, igual número inteiro: tem positivo e negativo!"
+   ],
+   "x": 906,
+   "y": 370,
+   "olha": "frente",
+   "treinador": true,
+   "piscar": true
+  },
+  {
+   "id": "dona_cida",
+   "nome": "Dona Cida",
+   "quem": "Vendedora de frutas",
+   "mapa": 7,
+   "w": 291,
+   "h": 697,
+   "falas": [
+    "Três laranjas por 2 reais! Quanto custam nove, meu bem?",
+    "Na minha banca, quem sabe fazer troco ganha uma banana.",
+    "Fração é igual fruta: meia melancia é 1/2, viu?"
+   ],
+   "x": 298,
+   "y": 350,
+   "olha": "frente",
+   "treinador": true,
+   "piscar": true
+  },
+  {
+   "id": "seu_antonio",
+   "nome": "Seu Antônio",
+   "quem": "Jardineiro",
+   "mapa": 4,
+   "w": 295,
+   "h": 715,
+   "falas": [
+    "Cada canteiro tem 4 metros. Quantos metros têm 5 canteiros?",
+    "Planta cresce devagar. Conhecimento também.",
+    "Rego as plantas de 3 em 3 dias. Hoje é dia de regar?"
+   ],
+   "x": 454,
+   "y": 142,
+   "olha": "frente",
+   "treinador": true,
+   "piscar": true
+  },
+  {
+   "id": "dra_helena",
+   "nome": "Dra. Helena",
+   "quem": "Cientista",
+   "mapa": 13,
+   "w": 239,
+   "h": 708,
+   "falas": [
+    "Dado não tem memória: cada jogada é uma nova chance.",
+    "Na ciência, a gente anota tudo. Tabela organiza o pensamento!",
+    "Média é somar tudo e dividir pela quantidade. Simples assim."
+   ],
+   "x": 698,
+   "y": 478,
+   "olha": "frente",
+   "treinador": true,
+   "piscar": true
+  },
+  {
+   "id": "lucas",
+   "nome": "Lucas",
+   "quem": "Menino do skate",
+   "mapa": 1,
+   "w": 258,
+   "h": 620,
+   "falas": [
+    "Bora andar de skate? Mas antes, quanto é 7 × 8?",
+    "Eu dei 3 voltas na praça. Cada volta tem 200 metros!",
+    "Caí do skate três vezes hoje. Mas levantei quatro!"
+   ],
+   "x": 686,
+   "y": 230,
+   "olha": "frente",
+   "treinador": true,
+   "piscar": true
+  },
+  {
+   "id": "vovo_lurdes",
+   "nome": "Vovó Lurdes",
+   "quem": "Vovó do tricô",
+   "mapa": 10,
+   "w": 239,
+   "h": 687,
+   "falas": [
+    "Um cachecol tem 120 pontos por fileira, querido. Conta comigo?",
+    "No meu tempo, a gente fazia conta de cabeça!",
+    "Senta aqui, toma um bolinho. Estudou hoje?"
+   ],
+   "x": 630,
+   "y": 558,
+   "olha": "frente",
+   "treinador": true,
+   "piscar": true
+  },
+  {
+   "id": "jorge",
+   "nome": "Jorge",
+   "quem": "Carteiro",
+   "mapa": 8,
+   "w": 259,
+   "h": 696,
+   "falas": [
+    "Cada carta tem um número de casa. Endereço também é matemática!",
+    "Entreguei 48 cartas em 6 ruas. Quantas por rua?",
+    "Chuva, sol ou prova: o carteiro sempre chega!"
+   ],
+   "x": 170,
+   "y": 486,
+   "olha": "frente",
+   "treinador": true,
+   "piscar": true
+  },
+  {
+   "id": "nina",
+   "nome": "Nina",
+   "quem": "Exploradora",
+   "mapa": 5,
+   "w": 254,
+   "h": 682,
+   "falas": [
+    "Já subi essa montanha 2³ vezes. Quantas foram?",
+    "Mapa sem coordenada é mapa perdido!",
+    "Exploradora de verdade nunca desiste de um problema."
+   ],
+   "x": 622,
+   "y": 398,
+   "olha": "frente",
+   "treinador": true,
+   "piscar": true
+  },
+  {
+   "id": "marcos",
+   "nome": "Marcos",
+   "quem": "Corredor",
+   "mapa": 1,
+   "w": 269,
+   "h": 668,
+   "falas": [
+    "Corri 5 km hoje. Quantos metros são?",
+    "Treino todo dia um pouquinho. Igual tabuada!",
+    "Meu ritmo é 6 minutos por km. Faz a conta de 10 km!"
+   ],
+   "x": 678,
+   "y": 490,
+   "olha": "frente",
+   "treinador": true,
+   "piscar": true
+  },
+  {
+   "id": "seu_lauro",
+   "nome": "Seu Lauro",
+   "quem": "Passeador de cachorro",
+   "mapa": 6,
+   "w": 397,
+   "h": 688,
+   "falas": [
+    "O Pipoca anda o dobro de mim, porque vai e volta!",
+    "Passeio de 30 minutos, duas vezes por dia. Quantas horas na semana?",
+    "Pode fazer carinho, ele não morde. Só lambe!"
+   ],
+   "x": 602,
+   "y": 242,
+   "olha": "frente",
+   "piscar": true
+  },
+  {
+   "id": "clara",
+   "nome": "Clara",
+   "quem": "Leitora",
+   "mapa": 8,
+   "w": 245,
+   "h": 690,
+   "falas": [
+    "Esse livro tem 240 páginas. Leio 20 por dia. Termino quando?",
+    "Ler o enunciado com calma resolve metade do problema.",
+    "A biblioteca é o lugar mais silencioso do mapa. Shhh!"
+   ],
+   "x": 942,
+   "y": 366,
+   "olha": "frente",
+   "treinador": true
+  },
+  {
+   "id": "duda",
+   "nome": "Duda",
+   "quem": "Menina do patinete",
+   "mapa": 1,
+   "w": 288,
+   "h": 620,
+   "falas": [
+    "Meu patinete é mais rápido que seu pet! Brincadeira…",
+    "Eu sei a tabuada do 9 de trás pra frente!",
+    "Quando crescer, quero ser engenheira!"
+   ],
+   "x": 918,
+   "y": 590,
+   "olha": "frente",
+   "piscar": true
+  },
+  {
+   "id": "joana",
+   "nome": "Joana",
+   "quem": "Piquenique",
+   "mapa": 4,
+   "w": 297,
+   "h": 682,
+   "falas": [
+    "Trouxe 12 sanduíches pra dividir com 4 amigos. Quantos cada um?",
+    "Piquenique bom tem fruta cortada em frações!",
+    "Senta aí! Só não deixa a formiga levar meu bolo."
+   ],
+   "x": 514,
+   "y": 478,
+   "olha": "frente",
+   "piscar": true
+  },
+  {
+   "id": "hugo",
+   "nome": "Hugo",
+   "quem": "Fotógrafo",
+   "mapa": 5,
+   "w": 258,
+   "h": 660,
+   "falas": [
+    "Uma boa foto tem proporção. A matemática também!",
+    "Daqui de cima, os caminhos parecem um gráfico.",
+    "Sorria! Click! Ficou ótima."
+   ],
+   "x": 282,
+   "y": 550,
+   "olha": "frente",
+   "piscar": true
+  },
+  {
+   "id": "chef_paulo",
+   "nome": "Chef Paulo",
+   "quem": "Cozinheiro",
+   "mapa": 10,
+   "w": 273,
+   "h": 737,
+   "falas": [
+    "Receita é matemática: 2 xícaras pra 4 pessoas. E pra 8?",
+    "Meio quilo de farinha são quantos gramas?",
+    "Cozinhar é medir com carinho."
+   ],
+   "x": 362,
+   "y": 570,
+   "olha": "frente",
+   "piscar": true
+  },
+  {
+   "id": "lia",
+   "nome": "Lia",
+   "quem": "Pintora",
+   "mapa": 8,
+   "w": 302,
+   "h": 681,
+   "falas": [
+    "Misturo azul e amarelo e sai verde. Misturo números e sai conta!",
+    "Meu quadro tem 60 cm por 40 cm. Qual a área?",
+    "Arte e matemática andam juntas: simetria, formas, proporção…"
+   ],
+   "x": 1134,
+   "y": 598,
+   "olha": "frente",
+   "piscar": true
+  },
+  {
+   "id": "marta",
+   "nome": "Marta",
+   "quem": "Gerente da loja",
+   "mapa": 7,
+   "w": 257,
+   "h": 677,
+   "falas": [
+    "Promoção: 20% de desconto! Sabe calcular?",
+    "Leve 3, pague 2. Vale a pena?",
+    "Confere sempre o troco, viu?"
+   ],
+   "x": 810,
+   "y": 298,
+   "olha": "frente",
+   "piscar": true
+  },
+  {
+   "id": "caio",
+   "nome": "Caio",
+   "quem": "Bombeiro",
+   "mapa": 7,
+   "w": 269,
+   "h": 669,
+   "falas": [
+    "Bombeiro precisa calcular rápido: quantos litros cabem no caminhão?",
+    "Segurança em primeiro lugar. E a tabuada em segundo!",
+    "Se vir fumaça, avisa um adulto!"
+   ],
+   "x": 682,
+   "y": 606,
+   "olha": "frente",
+   "piscar": true
+  },
+  {
+   "id": "dra_ana",
+   "nome": "Dra. Ana",
+   "quem": "Veterinária",
+   "mapa": 6,
+   "w": 234,
+   "h": 636,
+   "falas": [
+    "Esse cachorro pesa 12 kg. O remédio é 1 comprimido a cada 4 kg. Quantos?",
+    "Pet bem cuidado é pet feliz. Seu pet tá comendo direitinho?",
+    "Carinho também é remédio!"
+   ],
+   "x": 1074,
+   "y": 286,
+   "olha": "frente",
+   "piscar": true
+  },
+  {
+   "id": "naira",
+   "nome": "Naira",
+   "quem": "Moradora da ilha",
+   "mapa": 3,
+   "w": 286,
+   "h": 694,
+   "falas": [
+    "Aqui na ilha a temperatura chega a −20 °C!",
+    "Do 0 °C até −15 °C, quanto caiu?",
+    "Bem-vindo à Ilha Gelada! Agasalha seu pet!"
+   ],
+   "x": 654,
+   "y": 294,
+   "olha": "frente",
+   "piscar": true
+  },
+  {
+   "id": "seu_tomas",
+   "nome": "Seu Tomás",
+   "quem": "Morador da ilha",
+   "mapa": 3,
+   "w": 332,
+   "h": 734,
+   "falas": [
+    "Hoje fez −8 °C de manhã e 2 °C à tarde. Esquentou quanto?",
+    "Gelo fino é perigoso. Conta errada também!",
+    "Já vi muito inverno nessa ilha."
+   ],
+   "x": 830,
+   "y": 490,
+   "olha": "frente",
+   "piscar": true
+  },
+  {
+   "id": "kaue",
+   "nome": "Kauê",
+   "quem": "Guia da neve",
+   "mapa": 3,
+   "w": 276,
+   "h": 690,
+   "falas": [
+    "Sou guia da neve. Siga as pegadas!",
+    "Abaixo de zero é negativo. Acima, positivo. Fácil!",
+    "Quer descer o morro de trenó? Primeiro, uma conta!"
+   ],
+   "x": 238,
+   "y": 402,
+   "olha": "frente",
+   "piscar": true
+  },
+  {
+   "id": "lena",
+   "nome": "Lena",
+   "quem": "Pesquisadora polar",
+   "mapa": 3,
+   "w": 291,
+   "h": 689,
+   "falas": [
+    "Anoto a temperatura todo dia. Ontem −12, hoje −9. Subiu ou desceu?",
+    "Pesquisador não chuta: confere!",
+    "Os pinguins daqui adoram números negativos."
+   ],
+   "x": 1042,
+   "y": 638,
+   "olha": "frente"
+  },
+  {
+   "id": "davi",
+   "nome": "Davi",
+   "quem": "Operador do porto de gelo",
+   "mapa": 3,
+   "w": 291,
+   "h": 699,
+   "falas": [
+    "Rádio aqui: o barco chega em 45 minutos!",
+    "Cuidado no gelo, anda devagar!",
+    "Câmbio, desligo. Quer dizer… pode perguntar!"
+   ],
+   "x": 646,
+   "y": 638,
+   "olha": "frente"
+  },
+  {
+   "id": "rui",
+   "nome": "Rui",
+   "quem": "Técnico do gelo",
+   "mapa": 3,
+   "w": 294,
+   "h": 709,
+   "falas": [
+    "Meço a espessura do gelo: 30 cm é seguro, 5 cm não!",
+    "O termômetro marca −6. Se cair mais 4?",
+    "Ferramenta certa, conta certa."
+   ],
+   "x": 1286,
+   "y": 538,
+   "olha": "frente"
+  },
+  {
+   "id": "mago_elias",
+   "nome": "Mago Elias",
+   "quem": "Mago",
+   "mapa": 9,
+   "w": 335,
+   "h": 659,
+   "falas": [
+    "Meu feitiço só funciona se a balança ficar equilibrada.",
+    "O que faz de um lado da equação, faz do outro!",
+    "x é só um número disfarçado."
+   ],
+   "x": 626,
+   "y": 438,
+   "olha": "frente",
+   "piscar": true
+  },
+  {
+   "id": "druida_bento",
+   "nome": "Druida Bento",
+   "quem": "Guardião da floresta",
+   "mapa": 9,
+   "w": 405,
+   "h": 662,
+   "falas": [
+    "A floresta ensina: tudo tem equilíbrio.",
+    "Meu lobo, o Uivo, sabe contar até 3. Uivo, uivo, uivo!",
+    "Raiz de árvore e raiz quadrada: as duas sustentam algo."
+   ],
+   "x": 966,
+   "y": 638,
+   "olha": "frente",
+   "piscar": true
+  },
+  {
+   "id": "bruxa_iris",
+   "nome": "Íris",
+   "quem": "Bruxa das poções",
+   "mapa": 9,
+   "w": 268,
+   "h": 726,
+   "falas": [
+    "Minha poção leva 3 gotas por pessoa. Pra 7 pessoas?",
+    "Errou a dose? Refaz a conta e tenta de novo.",
+    "Abracadabra… quer dizer, isola o x!"
+   ],
+   "x": 546,
+   "y": 686,
+   "olha": "frente"
+  },
+  {
+   "id": "fada_lume",
+   "nome": "Lume",
+   "quem": "Fada",
+   "mapa": 9,
+   "w": 343,
+   "h": 638,
+   "falas": [
+    "✨ Cada estrela que brilha é um exercício certo!",
+    "✨ Meu amiguinho alado adora equações.",
+    "✨ Acredita em você. Isso já é meia resposta!"
+   ],
+   "x": 102,
+   "y": 274,
+   "olha": "frente"
+  },
+  {
+   "id": "zara",
+   "nome": "Zara",
+   "quem": "Vidente",
+   "mapa": 9,
+   "w": 270,
+   "h": 671,
+   "falas": [
+    "Minha bola de cristal diz… que você vai estudar hoje!",
+    "Vejo no seu futuro… uma equação de primeiro grau!",
+    "O futuro a gente calcula, não adivinha."
+   ],
+   "x": 1226,
+   "y": 670,
+   "olha": "frente",
+   "piscar": true
+  },
+  {
+   "id": "orion",
+   "nome": "Órion",
+   "quem": "Astrônomo",
+   "mapa": 12,
+   "w": 301,
+   "h": 725,
+   "falas": [
+    "Daqui do observatório, cada estrela tem coordenada (x, y).",
+    "Primeiro o x, depois o y. Nunca o contrário!",
+    "Meu dragãozinho mapeou todas as constelações."
+   ],
+   "x": 898,
+   "y": 506,
+   "olha": "frente",
+   "piscar": true
+  },
+  {
+   "id": "seu_raimundo",
+   "nome": "Seu Raimundo",
+   "quem": "Mestre de obras",
+   "mapa": 11,
+   "w": 286,
+   "h": 735,
+   "falas": [
+    "Parede de 3 m por 4 m. Quantos metros quadrados de tijolo?",
+    "Obra sem medida certa cai. Cuidado!",
+    "Na minha obra, todo mundo usa capacete."
+   ],
+   "x": 750,
+   "y": 226,
+   "olha": "frente",
+   "piscar": true
+  },
+  {
+   "id": "tiago",
+   "nome": "Tiago",
+   "quem": "Pedreiro",
+   "mapa": 11,
+   "w": 337,
+   "h": 738,
+   "falas": [
+    "Cavo 2 metros por hora. Quanto tempo pra 10 metros?",
+    "Massa boa é proporção: 1 de cimento pra 3 de areia.",
+    "Ufa! Pá pesada, mas o trabalho rende."
+   ],
+   "x": 670,
+   "y": 462,
+   "olha": "frente",
+   "piscar": true
+  },
+  {
+   "id": "eng_carla",
+   "nome": "Eng. Carla",
+   "quem": "Engenheira",
+   "mapa": 11,
+   "w": 270,
+   "h": 730,
+   "falas": [
+    "Planta baixa é desenho em escala: 1 cm é 1 m de verdade.",
+    "Engenheira confere a conta duas vezes.",
+    "Ângulo reto tem 90°. Sem ele, a casa fica torta!"
+   ],
+   "x": 234,
+   "y": 462,
+   "olha": "frente",
+   "piscar": true
+  },
+  {
+   "id": "seu_beto",
+   "nome": "Seu Beto",
+   "quem": "Carpinteiro",
+   "mapa": 11,
+   "w": 293,
+   "h": 702,
+   "falas": [
+    "Corto a tábua de 2 m em 4 pedaços iguais. Quanto cada?",
+    "Mede duas vezes, corta uma!",
+    "Martelo, prego e régua: meus melhores amigos."
+   ],
+   "x": 1178,
+   "y": 462,
+   "olha": "frente"
+  },
+  {
+   "id": "rosa",
+   "nome": "Rosa",
+   "quem": "Eletricista",
+   "mapa": 11,
+   "w": 285,
+   "h": 703,
+   "falas": [
+    "Fio de 25 m, uso 7 m. Quanto sobrou?",
+    "Eletricidade é coisa séria. Nunca mexe sozinho!",
+    "Cada tomada no lugar certo: isso é planejamento."
+   ],
+   "x": 922,
+   "y": 462,
+   "olha": "frente"
+  },
+  {
+   "id": "wesley",
+   "nome": "Wesley",
+   "quem": "Mecânico",
+   "mapa": 11,
+   "w": 311,
+   "h": 703,
+   "falas": [
+    "Essa porca é de 3/8 de polegada. Fração em todo lugar!",
+    "Máquina bem cuidada dura anos.",
+    "Aperta, mas não demais!"
+   ],
+   "x": 1334,
+   "y": 146,
+   "olha": "frente",
+   "piscar": true
+  },
+  {
+   "id": "fabio",
+   "nome": "Fábio",
+   "quem": "Encanador",
+   "mapa": 11,
+   "w": 294,
+   "h": 679,
+   "falas": [
+    "Cano de 6 m, preciso de pedaços de 1,5 m. Quantos saem?",
+    "Vazamento pequeno vira problema grande. Igual erro de sinal!",
+    "Água encanada é engenharia pura."
+   ],
+   "x": 454,
+   "y": 462,
+   "olha": "frente",
+   "piscar": true
+  },
+  {
+   "id": "jorginho",
+   "nome": "Jorginho",
+   "quem": "Pintor",
+   "mapa": 11,
+   "w": 396,
+   "h": 656,
+   "falas": [
+    "Uma lata pinta 12 m². A parede tem 36 m². Quantas latas?",
+    "Pintei até a calça! Hehe.",
+    "Duas demãos e fica uma beleza."
+   ],
+   "x": 774,
+   "y": 366,
+   "olha": "frente",
+   "piscar": true
+  },
+  {
+   "id": "dandara",
+   "nome": "Dandara",
+   "quem": "Técnica de segurança",
+   "mapa": 11,
+   "w": 309,
+   "h": 670,
+   "falas": [
+    "Atenção! Capacete, óculos e luvas, sempre!",
+    "Na obra, segurança vem antes da pressa.",
+    "Viu algo errado? Avisa a técnica de segurança!"
+   ],
+   "x": 766,
+   "y": 462,
+   "olha": "frente"
+  }
+ ]
+}

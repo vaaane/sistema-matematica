@@ -1,0 +1,219 @@
+{
+  "config": {
+    "rodadas": 7,
+    "vida": 100,
+    "tempo_s": 15,
+    "depois_s": 6,
+    "dano_base": 10,
+    "dano_rapidez": 18,
+    "critico_ate_s": 3,
+    "bonus_critico": 4,
+    "barriga_minima": 25,
+    "premios": {
+      "vitoria": {
+        "moedas": 6,
+        "lealdade": 3,
+        "xp": 5
+      },
+      "derrota": {
+        "moedas": 2,
+        "lealdade": 1,
+        "xp": 1
+      },
+      "primeira_vitoria_bonus_moedas": 15
+    },
+    "limites_dia": {
+      "moedas": 20,
+      "lealdade": 6,
+      "xp": 15
+    },
+    "revanche": {
+      "descanso_horas": 24,
+      "aumento_acerto": 0.06,
+      "acerto_max": 0.95,
+      "reducao_tempo": 0.1,
+      "tempo_min_s": 1.5,
+      "sobe_nivel_contas_a_cada_vitorias": 2,
+      "nivel_contas_max": 5
+    }
+  },
+  "niveis_contas": {
+    "1": [
+      "tabuada"
+    ],
+    "2": [
+      "tabuada",
+      "soma_inteiros"
+    ],
+    "3": [
+      "soma_inteiros",
+      "mult_inteiros",
+      "tabuada"
+    ],
+    "4": [
+      "soma_inteiros",
+      "mult_inteiros",
+      "potencia",
+      "raiz"
+    ],
+    "5": [
+      "soma_inteiros",
+      "mult_inteiros",
+      "potencia",
+      "raiz",
+      "expressao_curta"
+    ]
+  },
+  "treinadores": [
+    {
+      "id": "lucas",
+      "nome": "Lucas",
+      "quem": "Menino do skate",
+      "pet": "capivara",
+      "nivel": 1,
+      "acerto": 0.5,
+      "tempo_s": [
+        8,
+        14
+      ],
+      "fala_inicio": "Bora? Eu tô só treinando, hein!",
+      "fala_perdeu": "Foi mal, eu tava distraído com o skate!",
+      "fala_venceu": "Na próxima eu ganho!"
+    },
+    {
+      "id": "dona_cida",
+      "nome": "Dona Cida",
+      "quem": "Vendedora de frutas",
+      "pet": "gato",
+      "nivel": 1,
+      "acerto": 0.55,
+      "tempo_s": [
+        7,
+        13
+      ],
+      "fala_inicio": "Fruta fresquinha e conta rápida, meu bem!",
+      "fala_perdeu": "Ah, você é boa de conta!",
+      "fala_venceu": "Leva uma banana pra recuperar as forças!"
+    },
+    {
+      "id": "seu_ze",
+      "nome": "Seu Zé",
+      "quem": "Pescador",
+      "pet": "axolote",
+      "nivel": 2,
+      "acerto": 0.6,
+      "tempo_s": [
+        7,
+        12
+      ],
+      "fala_inicio": "Paciência de pescador… mas conta rápida!",
+      "fala_perdeu": "Ô, peixe grande você é!",
+      "fala_venceu": "Hoje o peixe não mordeu pra você."
+    },
+    {
+      "id": "clara",
+      "nome": "Clara",
+      "quem": "Leitora",
+      "pet": "gaviao",
+      "nivel": 2,
+      "acerto": 0.65,
+      "tempo_s": [
+        6,
+        11
+      ],
+      "fala_inicio": "Li um livro inteiro sobre contas rápidas. Vamos?",
+      "fala_perdeu": "Vou reler o capítulo… você mandou bem!",
+      "fala_venceu": "Ponto final: eu venci!"
+    },
+    {
+      "id": "jorge",
+      "nome": "Jorge",
+      "quem": "Carteiro",
+      "pet": "tigre",
+      "nivel": 3,
+      "acerto": 0.7,
+      "tempo_s": [
+        5,
+        10
+      ],
+      "fala_inicio": "Entrega expressa de contas!",
+      "fala_perdeu": "Essa você entregou rapidinho!",
+      "fala_venceu": "Carta pra você: perdeu! Hehe."
+    },
+    {
+      "id": "marcos",
+      "nome": "Marcos",
+      "quem": "Corredor",
+      "pet": "unicornio",
+      "nivel": 3,
+      "acerto": 0.72,
+      "tempo_s": [
+        5,
+        9
+      ],
+      "fala_inicio": "Aquecido? Vamos ver quem é mais rápido!",
+      "fala_perdeu": "Você correu mais que eu nas contas!",
+      "fala_venceu": "Cheguei primeiro! Treina e volta."
+    },
+    {
+      "id": "seu_antonio",
+      "nome": "Seu Antônio",
+      "quem": "Jardineiro",
+      "pet": "capivara",
+      "nivel": 4,
+      "acerto": 0.78,
+      "tempo_s": [
+        4,
+        8
+      ],
+      "fala_inicio": "Quem planta treino, colhe vitória.",
+      "fala_perdeu": "Bonita colheita a sua!",
+      "fala_venceu": "Rega mais um pouco e volta."
+    },
+    {
+      "id": "dra_helena",
+      "nome": "Dra. Helena",
+      "quem": "Cientista",
+      "pet": "dragao_azul",
+      "nivel": 4,
+      "acerto": 0.82,
+      "tempo_s": [
+        4,
+        7
+      ],
+      "fala_inicio": "Hipótese: eu venço. Vamos testar.",
+      "fala_perdeu": "Hipótese refutada. Parabéns!",
+      "fala_venceu": "Experimento concluído: vitória minha."
+    },
+    {
+      "id": "nina",
+      "nome": "Nina",
+      "quem": "Exploradora",
+      "pet": "dragao_vermelho",
+      "nivel": 5,
+      "acerto": 0.86,
+      "tempo_s": [
+        3,
+        6
+      ],
+      "fala_inicio": "Já explorei todas as contas do mundo!",
+      "fala_perdeu": "Uau! Você é uma descoberta!",
+      "fala_venceu": "Volte quando tiver mais mapa no bolso."
+    },
+    {
+      "id": "vovo_lurdes",
+      "nome": "Vovó Lurdes",
+      "quem": "Vovó do tricô",
+      "pet": "gato",
+      "nivel": 5,
+      "acerto": 0.9,
+      "tempo_s": [
+        2,
+        5
+      ],
+      "fala_inicio": "Ponto, ponto, conta… tricoto e calculo ao mesmo tempo, querido.",
+      "fala_perdeu": "Ora, ora! Ganhou um cachecol de presente!",
+      "fala_venceu": "A vovó ainda tá em forma, hein?"
+    }
+  ]
+}
