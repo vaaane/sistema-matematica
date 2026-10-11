@@ -1067,7 +1067,7 @@ html.jr-deitado .jr-explica-rodape { font-size: 10.5px; }
 .bt-rodada { font-family: 'Rajdhani', sans-serif; font-weight: 700; color: var(--jr-ouro); font-size: 16px; text-align: center; white-space: nowrap; line-height: 1.1; }
 .bt-rodada small { display: block; color: var(--bt-muted); font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
 .bt-arena { position: relative; flex: 1 1 auto; min-height: 0; border-radius: 16px; overflow: hidden; background: #2d4a2a url(/img/jogo/batalha/arena.webp) center 62% / cover no-repeat; }
-.bt-lutador { position: absolute; bottom: 9%; height: 52%; aspect-ratio: 449 / 352; transition: filter .2s; }
+.bt-lutador { position: absolute; bottom: 9%; height: 52%; aspect-ratio: var(--pet-quadro, 898 / 704); transition: filter .2s; }
 #jr-app .bt-lutador img { width: 100%; height: 100%; display: block; image-rendering: auto; }
 #bt-L { left: 12%; } #bt-R { right: 12%; }
 .bt-sombra { position: absolute; bottom: 2px; left: 50%; width: 56%; height: 12%; transform: translateX(-50%); background: radial-gradient(ellipse, rgba(0,0,0,.5), transparent 70%); z-index: -1; }

@@ -3,9 +3,9 @@
 // é sempre lido do JSON (varia de 1 a 4). Nem todo pet tem todas as animações:
 // a que faltar usa `reserva` do JSON e, se ainda faltar, sentado_girando.
 
-export const PETS = ['capivara', 'gato', 'gaviao', 'axolote', 'tigre', 'dragao_azul', 'unicornio', 'dragao_vermelho'];
+export const PETS = ['elefante', 'gato', 'gaviao', 'axolote', 'tigre', 'dragao_azul', 'unicornio', 'dragao_vermelho'];
 export const NOME_PET = {
-  capivara: 'Capivara', gato: 'Gato', gaviao: 'Gavião',
+  elefante: 'Elefante', gato: 'Gato', gaviao: 'Gavião',
   axolote: 'Axolote', tigre: 'Tigre', dragao_azul: 'Dragão Azul', unicornio: 'Unicórnio', dragao_vermelho: 'Dragão Vermelho',
 };
 
@@ -32,8 +32,9 @@ export function quadrosDe(pet, anim) {
 export const bustoPet = (pet) => quadrosDe(pet, 'busto_sorrindo')[0];
 export const temBusto = (pet) => temAnim(pet, 'busto_sorrindo');
 // tamanhos vêm do JSON (largura, altura do quadro e do busto)
-export const tamanhoQuadro = () => SPR?.tamanho_quadro || [449, 352];
-export const tamanhoBusto = () => SPR?.tamanho_busto || [518, 562];
+// tamanhos vêm do sprites.json (os números abaixo só valem se ele não carregar)
+export const tamanhoQuadro = () => SPR?.tamanho_quadro || [898, 704];
+export const tamanhoBusto = () => SPR?.tamanho_busto || [1036, 1124];
 
 export function preCarregarPet(pet) {
   if (!petValido(pet)) return;

@@ -48,19 +48,20 @@ const ALT_JOGADOR_MAPA = 55 * ESCALA_ATORES;   // nos mapas da cidade o personag
 // Não depende do tamanho do arquivo: trocar a resolução das imagens não muda o tamanho na tela.
 // Altura do pet SENTADO no mapa, em px na escala base (personagem = 55; no mapa tudo × ESCALA_ATORES)
 const ALT_PET = {
-  capivara: 30, gato: 30, gaviao: 30, axolote: 30, tigre: 30,
+  elefante: 36, gato: 30, gaviao: 30, axolote: 30, tigre: 30,
   unicornio: 40, dragao_azul: 40,
   dragao_vermelho: 50,
 };
 const ALT_PET_PADRAO = 30;   // pet que não estiver na tabela
 const altPet = (pet) => ALT_PET[pet] ?? ALT_PET_PADRAO;
-// O quadro (449 × 352) tem folga em cima para os pulos: sentado, o pet ocupa ~302 dos 352 px.
-// Altura da IMAGEM para o pet sentado ficar com a altura da tabela:
-const altImagemPet = (pet) => altPet(pet) * 352 / 302;
+// O quadro (sprites.json: tamanho_quadro, hoje 898 × 704) tem folga em cima para os pulos: sentado, o pet ocupa
+// 604 dos 704 px. Altura da IMAGEM para o pet sentado ficar com a altura da tabela:
+const SENTADO_NO_QUADRO = 604 / 704;
+const altImagemPet = (pet) => altPet(pet) / SENTADO_NO_QUADRO;
 // Distância normal do pet atrás do personagem (ao longo do rastro), em px na escala base (× ESCALA_ATORES no mapa).
 // Parado, o pet chega a 55% disso; acima de +10 anda 1,3× mais rápido; acima de +62 corre (pets.js).
 const DIST_PET = {
-  capivara: 36, gato: 36, gaviao: 36, axolote: 36, tigre: 36,
+  elefante: 36, gato: 36, gaviao: 36, axolote: 36, tigre: 36,
   unicornio: 55, dragao_azul: 55, dragao_vermelho: 55,
 };
 const DIST_PET_PADRAO = 36;
@@ -488,7 +489,11 @@ export async function iniciarJogo(sess) {
       .map(f => fetch(`${DADOS}/${f}`).then(r => { if (!r.ok) throw new Error(f); return r.json(); })));
     definirLoja(loja); definirBarriga(loja.barriga); definirPeixes(pescaJ); definirPesca(pescaJ, sprPesca);
   } catch (e) { console.warn('[jogo-revisao] loja/pesca indisponíveis', e); }
-  try { await carregarSprites(); petsOk = true; } catch (e) { console.error('[jogo-revisao] pets indisponíveis', e); }
+  try {
+    await carregarSprites(); petsOk = true;
+    const [qw, qh] = tamanhoQuadro();
+    document.documentElement.style.setProperty('--pet-quadro', `${qw} / ${qh}`);   // proporção do lutador na batalha
+  } catch (e) { console.error('[jogo-revisao] pets indisponíveis', e); }
   preCarregarQuadros(meuPersonagem());
   ligarEventos();
   atualizarContador();
@@ -577,9 +582,9 @@ const PETS_GINASIO = {
   'mapa9-B':  'unicornio',        // Torre do Mago (Floresta das Balanças)
   'mapa11-B': 'dragao_vermelho',  // Escritório de Arquitetura (Canteiro de Obras)
 };
-const INICIAIS = ['capivara', 'gato', 'gaviao'];
+const INICIAIS = ['elefante', 'gato', 'gaviao'];
 // pet esperando ao lado do líder: ~70% do líder para um pet de 40, na mesma proporção entre os pets
-const altImagemPetGinasio = (pet) => ALT_LIDER * 0.7 * (altPet(pet) / 40) * 352 / 302;
+const altImagemPetGinasio = (pet) => ALT_LIDER * 0.7 * (altPet(pet) / 40) / SENTADO_NO_QUADRO;
 
 let petsOk = false;
 let seguidor = null;
@@ -608,6 +613,7 @@ function iniciarPet() {
   $('btn-trocar-pet').hidden = false;
   // pet que não existe no sprites.json (ex.: cachorro, porco de testes antigos) é ignorado
   const ps = estado.pets;
+  migrarCapivara(ps);
   for (const p of Object.keys(ps.conquistados)) if (!petValido(p)) delete ps.conquistados[p];
   if (!temPet(ps.ativo)) ps.ativo = Object.keys(ps.conquistados)[0] || null;
   if (ps.migrou && ps.ativo) gravar({ pets: { ativo: ps.ativo, conquistados: ps.conquistados } });
@@ -616,6 +622,23 @@ function iniciarPet() {
   if (ps.ativo) { preCarregarPet(ps.ativo); seguidor.definir(ps.ativo); atualizarVisualPet(); }
   if (falasProntas()) verificarMarcosLealdade(ps.ativo);
   atualizarFomeSeguidor();
+}
+
+// A capivara virou elefante (PROMPT-20): quem tinha capivara fica com o elefante, com tudo o que era dela
+// (lealdade, barriga, amizade, nome, tinta, efeito, origem) e, se era o ativo, o elefante passa a ser. Uma vez só.
+function migrarCapivara(ps) {
+  const c = ps.conquistados.capivara;
+  if (!c) return;
+  const patch = { 'pets/conquistados/capivara': null };
+  if (!ps.conquistados.elefante) { ps.conquistados.elefante = c; patch['pets/conquistados/elefante'] = c; }
+  delete ps.conquistados.capivara;
+  if (ps.ativo === 'capivara') { ps.ativo = 'elefante'; patch['pets/ativo'] = 'elefante'; }
+  const av = estado.avisosPet;
+  if (av?.capivara) {
+    if (!av.elefante) { av.elefante = av.capivara; patch['avisos_pet/elefante'] = av.elefante; }
+    delete av.capivara; patch['avisos_pet/capivara'] = null;
+  }
+  gravar(patch);
 }
 
 // Ainda sem nenhum pet: pede a escolha do inicial ao entrar num mapa da região
@@ -966,6 +989,7 @@ function lealdadeDoDia() {
 }
 
 // ── Tela "Meu Pet" ──────────────────────────────────────────
+const MP_ALT_MAX = 352;   // px na tela
 const semMovimento = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const ehNoite = () => { const f = window.jogoRevisaoDev?.noite; if (f !== undefined) return f; const h = new Date().getHours(); return h >= 22 || h < 6; };
 
@@ -980,8 +1004,8 @@ function abrirMeuPet() {
   mp = { pet, anim: new PetParado(img), estado: '', corpoAnim: null, noite: null, ocupado: false };
   img.dataset.src = '';
   const palco = $('mp-palco');
-  // pet grande: até ~78% da altura do palco, nunca maior que o quadro original
-  img.style.height = Math.min(palco.clientHeight * 0.78, tamanhoQuadro()[1]) + 'px';
+  // pet grande: até ~78% da altura do palco, no máximo 352 px na tela (o tamanho de antes dos quadros em dobro)
+  img.style.height = Math.min(palco.clientHeight * 0.78, MP_ALT_MAX) + 'px';
   mp.anim.definir(pet);
   for (const id of ['mp-bolsa-painel', 'mp-visual-painel', 'mp-nomear']) $(id).hidden = true;
   atualizarVisualPet();
@@ -1742,6 +1766,7 @@ function definirPersColega(c, id) {
 }
 
 function definirPetColega(c, pet) {
+  if (pet === 'capivara') pet = 'elefante';
   pet = petValido(pet) ? pet : null;
   if (c.pet === pet) return;
   c.pet = pet;
@@ -3309,7 +3334,7 @@ function avisarEm(texto, x, y) {
 //  BATALHA DE PETS — contas rápidas contra os treinadores de dados/jogo/batalhas.json
 //  (regras puras em js/jogo-revisao/batalha.js; aqui a lista, a luta e os prêmios)
 // ============================================================
-const ELEM_PET = { capivara: ['🍃', '🌿'], gato: ['🐾', '✦'], gaviao: ['🪶', '💨'], unicornio: ['🌈', '✨', '💖'], axolote: ['🫧', '💧'],
+const ELEM_PET = { elefante: ['💧', '🥜'], gato: ['🐾', '✦'], gaviao: ['🪶', '💨'], unicornio: ['🌈', '✨', '💖'], axolote: ['🫧', '💧'],
   tigre: ['⚡', '🐾'], dragao_vermelho: ['🔥', '💥'], dragao_azul: ['❄️', '💎'] };
 const FALAS_VOLTOU_FORTE = ['Treinei muito desde a última vez!', 'Voltei mais forte. Preparado?', 'Andei treinando… agora é sério!'];
 let bt = null;            // batalha em andamento
