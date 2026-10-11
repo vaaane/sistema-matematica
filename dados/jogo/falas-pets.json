@@ -29,89 +29,6 @@
     }
   },
   "personalidades": {
-    "capivara": {
-      "jeito": "tranquila, zen, fala devagar, sempre \"de boa\"",
-      "abre_dica": [
-        "Tava de boa na beira do rio e escutei um treinador dizendo que",
-        "Calma… mas fiquei sabendo que",
-        "Sem pressa nenhuma, só um aviso:",
-        "Um passarinho pousou na minha cabeça e contou que"
-      ],
-      "lembrete": [
-        "Respira fundo e lembra:",
-        "Devagar e sempre… e não esquece:",
-        "Uma coisa importante, com calma:"
-      ],
-      "abre_piada": [
-        "Quer ouvir uma bem tranquila?",
-        "Pensei nessa enquanto cochilava:",
-        "Lá vai, sem pressa:"
-      ],
-      "ri": [
-        "Hehe… entendeu?",
-        "Ri por dentro.",
-        "Essa foi de boa, né?"
-      ],
-      "manha": [
-        "Bom dia, {apelido}. Bora começar sem estresse?",
-        "Manhã bonita pra estudar devagarinho.",
-        "Acordei agora… você também?"
-      ],
-      "tarde": [
-        "Boa tarde! Que tal uma sonequinha depois do ginásio?",
-        "Tarde tranquila, igual eu gosto.",
-        "O sol tá bom pra ficar de boa na água."
-      ],
-      "noite": [
-        "Boa noite, {apelido}. Já tá tarde, hein? Vai dormir cedo.",
-        "À noite eu fico mais calma ainda… se é que dá.",
-        "Estudar de noite vale, mas não esquece de descansar."
-      ],
-      "fome": [
-        "Minha barriga tá roncando bem baixinho…",
-        "Um matinho agora ia cair tão bem…",
-        "Não quero incomodar, mas tô com fome."
-      ],
-      "carinho": [
-        "Ahh… que paz.",
-        "Pode continuar, eu não tenho pressa.",
-        "Melhor carinho da região."
-      ],
-      "venceu": [
-        "Viu? Sem pressa e chegou lá.",
-        "Que vitória tranquila. Orgulho de você.",
-        "Vencer com calma é o melhor jeito."
-      ],
-      "perdeu": [
-        "Tudo bem, a gente tenta de novo depois. Sem estresse.",
-        "Errar faz parte. Respira e volta.",
-        "Amanhã é outro dia, {apelido}."
-      ],
-      "aleatorio": [
-        "Você sabia que capivaras são o maior roedor do mundo? Eu sou grandona.",
-        "Às vezes eu só fico olhando a água. Recomendo.",
-        "Se a vida tá corrida, anda mais devagar.",
-        "Eu e você somos uma ótima dupla."
-      ],
-      "ajuda_dica": [
-        "Respira… lembra que",
-        "Sem pressa. Só lembra que",
-        "De boa, pensa assim:"
-      ],
-      "ajuda_elimina": [
-        "Hmm… acho que {valor} não é, não.",
-        "Eu não iria no {valor}. Só sentindo.",
-        "O {valor} não me passa uma vibe boa…"
-      ],
-      "ajuda_acabou": [
-        "Já te ajudei o que podia. Agora é contigo, de boa.",
-        "Confio em você. Vai no seu tempo."
-      ],
-      "sem_lealdade": [
-        "Zzz… (ainda tô te conhecendo)",
-        "…"
-      ]
-    },
     "gato": {
       "jeito": "metido, sarcástico de um jeito carinhoso, finge que não liga",
       "abre_dica": [
@@ -691,6 +608,80 @@
       "sem_lealdade": [
         "Hmph! *fumaça*",
         "(vira o focinho)"
+      ]
+    },
+    "elefante": {
+      "jeito": "gentil, protetor, memória enorme (\"elefante não esquece\"), fala com calma e carinho",
+      "abre_dica": [
+        "Eu nunca esqueço nada, e lembro que",
+        "Guardei na memória:",
+        "Minha tromba farejou que"
+      ],
+      "lembrete": [
+        "Elefante não esquece:",
+        "Anota aí, que eu já anotei na memória:",
+        "Lembra comigo:"
+      ],
+      "abre_piada": [
+        "Quer ouvir uma piada que eu nunca esqueci?",
+        "Lembrei de uma boa!"
+      ],
+      "ri": [
+        "Hahaha! Minha tromba até balançou.",
+        "Fuuu! (barulho de tromba feliz)"
+      ],
+      "manha": [
+        "Bom dia! Já tomei meu banho de tromba.",
+        "Bom dia, {apelido}! Pronto pra aprender?"
+      ],
+      "tarde": [
+        "Boa tarde! Que tal revisar um pouquinho?",
+        "Tarde boa pra estudar devagar e sempre."
+      ],
+      "noite": [
+        "Boa noite! Ainda dá tempo de um exercício.",
+        "Já tá tarde… mas eu lembro tudo amanhã."
+      ],
+      "fome": [
+        "Minha barriga tá fazendo um barulhão…",
+        "Um amendoim agora ia cair tão bem…",
+        "Elefante grande precisa comer, né?"
+      ],
+      "carinho": [
+        "Ai, que abraço bom!",
+        "Fuuu! Eu adoro carinho na orelha.",
+        "Você é minha pessoa favorita."
+      ],
+      "venceu": [
+        "Eu sabia! Vou guardar essa vitória pra sempre.",
+        "Que orgulho! Essa eu não esqueço nunca."
+      ],
+      "perdeu": [
+        "Tudo bem. A gente lembra do erro e acerta na próxima.",
+        "Calma, passo a passo. Elefante não corre, mas chega."
+      ],
+      "aleatorio": [
+        "Sabia que elefante tem uma memória enorme? Igual a sua, se treinar!",
+        "Devagar e sempre, {apelido}.",
+        "Eu adoro água… e tabuada!"
+      ],
+      "ajuda_dica": [
+        "Lembrei de uma coisa:",
+        "Minha memória diz que",
+        "Pensa comigo:"
+      ],
+      "ajuda_elimina": [
+        "O {valor} não. Eu lembraria se fosse ele.",
+        "Tira o {valor}, que esse tá errado.",
+        "Hmm… {valor}? Não, não."
+      ],
+      "ajuda_acabou": [
+        "Já te ajudei o que podia. Confio em você!",
+        "Agora é contigo. Eu fico torcendo!"
+      ],
+      "sem_lealdade": [
+        "(balança a orelha, tímido)",
+        "Fuu…"
       ]
     }
   },

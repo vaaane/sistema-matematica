@@ -59,14 +59,14 @@
   }
  ],
  "favoritas": {
-  "capivara": "fruta",
   "gato": "peixe",
   "gaviao": "peixe",
   "axolote": "biscoito",
   "tigre": "petisco",
   "unicornio": "fruta",
   "dragao_azul": "peixe",
-  "dragao_vermelho": "bolo"
+  "dragao_vermelho": "bolo",
+  "elefante": "fruta"
  },
  "bonus_favorita": 1,
  "tintas": [
@@ -74,37 +74,49 @@
    "id": "azul",
    "nome": "Azul",
    "preco": 40,
-   "filtro": "grayscale(1) sepia(1) saturate(3.2) hue-rotate(175deg) brightness(1.1)"
+   "filtro": "grayscale(1) sepia(1) saturate(3) hue-rotate(190deg) brightness(1)"
   },
   {
    "id": "rosa",
    "nome": "Rosa",
    "preco": 40,
-   "filtro": "grayscale(1) sepia(1) saturate(3.2) hue-rotate(280deg) brightness(1.1)"
+   "filtro": "grayscale(1) sepia(1) saturate(3) hue-rotate(295deg) brightness(1.1)"
   },
   {
    "id": "verde",
    "nome": "Verde",
    "preco": 40,
-   "filtro": "grayscale(1) sepia(1) saturate(3) hue-rotate(65deg) brightness(1.05)"
+   "filtro": "grayscale(1) sepia(1) saturate(3) hue-rotate(75deg) brightness(1)"
+  },
+  {
+   "id": "roxo",
+   "nome": "Roxo",
+   "preco": 40,
+   "filtro": "grayscale(1) sepia(1) saturate(3) hue-rotate(235deg) brightness(1)"
+  },
+  {
+   "id": "vermelho",
+   "nome": "Vermelho",
+   "preco": 50,
+   "filtro": "grayscale(1) sepia(1) saturate(4) hue-rotate(340deg) brightness(0.95)"
   },
   {
    "id": "dourado",
    "nome": "Dourado",
    "preco": 60,
-   "filtro": "grayscale(1) sepia(1) saturate(3.4) hue-rotate(5deg) brightness(1.2)"
+   "filtro": "grayscale(1) sepia(1) saturate(3.5) hue-rotate(0deg) brightness(1.1)"
   },
   {
    "id": "noite",
    "nome": "Noite",
    "preco": 60,
-   "filtro": "grayscale(1) sepia(1) saturate(2.6) hue-rotate(210deg) brightness(.8)"
+   "filtro": "grayscale(1) sepia(1) saturate(1.2) hue-rotate(200deg) brightness(0.55)"
   },
   {
    "id": "arco_iris",
    "nome": "Arco-íris",
    "preco": 100,
-   "filtro": "animado"
+   "filtro": "animado: grayscale(1) sepia(1) saturate(3) + hue-rotate de 0 a 360deg em 4 s"
   }
  ],
  "efeitos": [
@@ -170,5 +182,6 @@
    "viado",
    "macaco"
   ]
- }
+ },
+ "tintas_nota": "Tinta = tingir: o pet fica todo na cor escolhida, mantendo contorno, olhos e sombras. Funciona igual em qualquer pet."
 }

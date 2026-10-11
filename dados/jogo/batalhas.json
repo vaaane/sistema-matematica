@@ -61,7 +61,7 @@
       "id": "lucas",
       "nome": "Lucas",
       "quem": "Menino do skate",
-      "pet": "capivara",
+      "pet": "elefante",
       "nivel": 1,
       "acerto": 0.5,
       "tempo_s": [
@@ -247,7 +247,7 @@
       "id": "seu_antonio",
       "nome": "Seu Antônio",
       "quem": "Jardineiro",
-      "pet": "capivara",
+      "pet": "elefante",
       "nivel": 4,
       "acerto": 0.78,
       "tempo_s": [
