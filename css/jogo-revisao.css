@@ -23,7 +23,8 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
 }
 /* contorno de foco só para teclado */
 #jr-app :focus:not(:focus-visible) { outline: none; }
-#jr-app img { image-rendering: pixelated; }
+/* imagens suavizadas (os desenhos novos são lisos: nada de pixelated, que deixaria tudo serrilhado) */
+#jr-app img { image-rendering: auto; }
 #jr-app button { touch-action: manipulation; font-family: inherit; }
 [hidden] { display: none !important; }
 
@@ -580,7 +581,7 @@ html.jr-deitado .jr-bandeja-num { font-size: clamp(18px, 3.4vw, 34px); }
 /* ============================================================
    Pet que segue o personagem
    ============================================================ */
-/* os quadros dos pets são suavizados: nada de pixelated (as outras imagens do jogo continuam pixeladas) */
+/* os quadros dos pets são suavizados (como todas as imagens do jogo) */
 #jr-app img.jr-pet, #jr-app .jr-pet-opcao img { image-rendering: auto; }
 .jr-pet { pointer-events: none; filter: drop-shadow(0 1px 1px rgba(0,0,0,.35)); }
 .jr-pet.espelhado { transform: translate(-50%, -100%) scaleX(-1); }   /* correndo para a esquerda */
