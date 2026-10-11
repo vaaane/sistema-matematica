@@ -11,7 +11,7 @@ import { gerarQuestoes, gerarUma } from '/js/jogo-revisao/geradores.js';
 import { tocar, somLigado, alternarSom } from '/js/jogo-revisao/sons.js';
 import { definirPausas, definirBarriga, barrigaDoPet, barrigaAntiga, faixaBarriga, rotuloLealdade, lealdadeComQueda, doDia,
   CARINHOS_POR_DIA, LEALDADE_INICIAL, LEALDADE_DIA, LEALDADE_CAMBALHOTA } from '/js/jogo-revisao/cuidados.js';
-import { definirLoja, definirPeixes, lojaPronta, cfgLoja, comidas, tintas, efeitos, tinta, efeito, itemDaBolsa, idDoPeixe, ehFavorita, semanaDe,
+import { definirLoja, definirPeixes, lojaPronta, cfgLoja, comidas, tintas, efeitos, tinta, tintaAnimada, icone, efeito, itemDaBolsa, idDoPeixe, ehFavorita, semanaDe,
   motivoNaoCome, enche, somarLealdade, nivelAmizade, validarNomePet } from '/js/jogo-revisao/loja.js';
 import { definirPesca, pescaPronta, cfgPesca, pontosDoMapa, spritePesca, pontaVara, sortearPeixe, entre, inteiroEntre } from '/js/jogo-revisao/pesca.js';
 import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, tamanhoBusto, temBusto, bustoPet, preCarregarPet, PetSeguidor, PetParado } from '/js/jogo-revisao/pets.js';
@@ -488,6 +488,7 @@ export async function iniciarJogo(sess) {
     const [loja, pescaJ, sprPesca] = await Promise.all(['loja.json', 'pesca.json', 'pesca-sprites.json']
       .map(f => fetch(`${DADOS}/${f}`).then(r => { if (!r.ok) throw new Error(f); return r.json(); })));
     definirLoja(loja); definirBarriga(loja.barriga); definirPeixes(pescaJ); definirPesca(pescaJ, sprPesca);
+    aplicarIcones();
   } catch (e) { console.warn('[jogo-revisao] loja/pesca indisponíveis', e); }
   try {
     await carregarSprites(); petsOk = true;
@@ -931,7 +932,7 @@ function ganharMoeda() {
   el.classList.remove('pulsa'); void el.offsetWidth; el.classList.add('pulsa');
   const mais = document.createElement('span');
   mais.className = 'jr-moeda-mais';
-  mais.textContent = '+1 🪙';
+  mais.innerHTML = `+1 ${moedaHtml()}`;
   el.appendChild(mais);
   setTimeout(() => mais.remove(), 1100);
 }
@@ -1042,13 +1043,22 @@ function renderMeuPet() {
   $('mp-marca-ajuda').style.left = la + '%';
   $('mp-marca-conversa').classList.toggle('ok', l >= lc);
   $('mp-marca-ajuda').classList.toggle('ok', l >= la);
-  $('mp-legenda').textContent = `Com ${lc} de lealdade, ${nomePet(pet)} começa a conversar. Com ${la}, ajuda nos ginásios. Acima de 100, cresce a amizade ❤️`;
-  $('mp-dica').textContent = l >= LEALDADE_CAMBALHOTA ? 'Ele já sabe dar cambalhota! Faça um carinho.' : `Com ${LEALDADE_CAMBALHOTA} de lealdade ele aprende a cambalhota`;
+  // uma linha só: o próximo marco ainda não alcançado (os números são os do jogo: falas, ajuda, cambalhota, amizade)
+  // (dois marcos no mesmo número, como conversar e cambalhota aos 60: vale o primeiro; o outro está no ⓘ)
+  const marcos = [[lc, 'começa a conversar 💬'], [la, 'ajuda nos ginásios 💡'], [LEALDADE_CAMBALHOTA, 'aprende a cambalhota 🤸'], [100, 'começa a amizade ❤️']]
+    .filter(([v], i, t) => t.findIndex(([w]) => w === v) === i).sort((a, b) => a[0] - b[0]);
+  const prox = marcos.find(([v]) => l < v);
+  $('mp-marco').textContent = prox
+    ? `Próximo: ${prox[0]} — ${prox[1]}`
+    : `Amizade ❤️ ${nivel} — faltam ${pp - Math.floor((Number(c.amizade) || 0) % pp)} para o próximo nível`;
+  $('mp-info-balao').innerHTML = `<b>Como a lealdade sobe</b> Carinho (até ${CARINHOS_POR_DIA} por dia), comida e jogar todo dia. Ficando muitos dias sem jogar, ela cai um pouco.
+    <b>Marcos</b> Com ${lc}, ${esc(nomePet(pet))} começa a conversar${LEALDADE_CAMBALHOTA === lc ? ' e aprende a cambalhota' : ''}.${LEALDADE_CAMBALHOTA !== lc ? ` Com ${LEALDADE_CAMBALHOTA}, aprende a cambalhota.` : ''} Com ${la}, ajuda nos ginásios.
+    Acima de 100, cada ${pp} pontos sobem um nível de amizade ❤️ (moldura de prata no 2, corações ao seguir no 3, moldura dourada no 5, coroa no 10).`;
   const noite = ehNoite();
   $('mp-palco').classList.toggle('noite', noite);
   $('mp-bolsa').disabled = $('mp-carinho').disabled = noite;
-  $('mp-bolsa').textContent = noite ? 'Dormindo…' : `🎒 Bolsa (${Object.values(estado.pets.bolsa || {}).reduce((a, n) => a + (Number(n) || 0), 0)})`;
-  $('mp-carinho').textContent = noite ? 'Dormindo…' : 'Carinho';
+  $('mp-bolsa').innerHTML = noite ? 'Dormindo…' : `${imgItem(icone('bolsa'), '🎒', 'jr-ic-btn')} Bolsa (${Object.values(estado.pets.bolsa || {}).reduce((a, n) => a + (Number(n) || 0), 0)})`;
+  $('mp-carinho').textContent = noite ? 'Dormindo…' : '💜 Carinho';
 }
 
 // Movimento por código no corpo do pet (respira, balança a cabeça, fica tristinho)
@@ -1119,12 +1129,13 @@ function falarPet(texto) {
   mp.timerBalao = setTimeout(() => { b.hidden = true; }, 1800);
 }
 
-function particulas(simbolos, n) {
+function particulas(simbolos, n) {   // símbolo: texto (emoji) ou HTML de imagem (começa com "<")
   const caixa = $('mp-particulas');
   for (let i = 0; i < n; i++) {
     const s = document.createElement('span');
     s.className = 'jr-mp-part';
-    s.textContent = simbolos[i % simbolos.length];
+    const sim = simbolos[i % simbolos.length];
+    if (sim.startsWith('<')) s.innerHTML = sim; else s.textContent = sim;
     s.style.left = 30 + Math.random() * 40 + '%';
     s.style.animationDelay = i * 90 + 'ms';
     caixa.appendChild(s);
@@ -1153,6 +1164,26 @@ function carinhoPet() {
 //  (números em dados/jogo/loja.json; regras em js/jogo-revisao/loja.js)
 // ============================================================
 const nomePet = (pet) => cuidadosDe(pet)?.nome || NOME_PET[pet] || '';
+// Imagem de item/ícone com o emoji de reserva (se a imagem falhar, troca pelo emoji)
+const caminhoImg = (p) => (p ? '/' + String(p).replace(/^\/+/, '') : '');
+const imgItem = (src, emoji, cls = '', filtro = '') => src
+  ? `<img class="jr-item-img ${cls}" src="${esc(caminhoImg(src))}" alt="${esc(emoji)}" draggable="false"${filtro ? ` style="filter:${esc(filtro)}"` : ''} onerror="this.replaceWith(document.createTextNode(this.alt))"/>`
+  : `<span class="jr-item-emoji ${cls}">${emoji}</span>`;
+const MOEDA_CSS = '<span class="jr-moeda-css" aria-label="moedas"></span>';
+const moedaHtml = (cls = '') => (icone('moeda')
+  ? `<img class="jr-item-img jr-ic-moeda ${cls}" src="${esc(caminhoImg(icone('moeda')))}" alt="moedas" draggable="false" onerror="this.outerHTML='${MOEDA_CSS.replace(/"/g, '&quot;')}'"/>`
+  : MOEDA_CSS);
+// Os <img data-icone> fixos do HTML (contadores de moedas, botão da bolsa, aba das tintas) recebem o arquivo do JSON
+function aplicarIcones(raiz = document) {
+  for (const img of raiz.querySelectorAll('img[data-icone]')) {
+    const src = icone(img.dataset.icone);
+    // reserva: a moeda é desenhada por CSS (o emoji 🪙 aparece quebrado em fontes antigas); os outros, o emoji
+    const reserva = () => { if (img.dataset.icone === 'moeda') img.outerHTML = MOEDA_CSS; else img.replaceWith(document.createTextNode(img.alt)); };
+    if (!src) { reserva(); continue; }
+    img.onerror = reserva;
+    img.src = caminhoImg(src);
+  }
+}
 const nivelPet = (pet) => nivelAmizade(cuidadosDe(pet)?.amizade);
 const fomeAbaixo = () => cfgLoja().barriga?.fome_abaixo ?? 40;
 const ondeDonaCida = () => { const p = NPCS.find(x => x.id === cfgLoja().vendedor); return p ? `${p.mapa}. ${D.questoes[p.mapa]?.nome || ''}` : 'Mercado Central'; };
@@ -1182,7 +1213,7 @@ const visualOnline = (pet) => { const c = cuidadosDe(pet); return { pet_nome: c?
 function aplicarTinta(img, tintaId, comSombra = false) {
   if (!img) return;
   const t = tintaId ? tinta(tintaId) : null;
-  const animada = t?.filtro === 'animado';
+  const animada = tintaAnimada(t);
   img.classList.toggle('jr-arco-iris', animada);
   img.style.filter = t && !animada ? t.filtro + (comSombra ? ' drop-shadow(0 1px 1px rgba(0,0,0,.35))' : '') : '';
 }
@@ -1192,35 +1223,42 @@ function atualizarVisualPet() {
   if (mp) aplicarTinta($('mp-img'), c?.tinta);
 }
 
-// ── Efeitos: partículas atrás do pet quando ele anda (o meu e o dos colegas) ──
-const EFX_MAX = 40;
-function emitirEfeito(seg, efeitoId, coracoes) {
+// ── Efeitos: partículas desenhadas por código (CSS, sem imagem), atrás do pet — o meu e o dos colegas ──
+// andando: 1 a cada ~120 ms; parado: 1 de vez em quando (~2 s); no máximo 25 por pet ao mesmo tempo
+const EFX_POR_PET = 25, EFX_ANDANDO_MS = 120, EFX_PARADO_MS = 2000, EFX_CORACAO_MS = 2500;
+function emitirEfeito(seg, efeitoId, coracoes, agora) {
   if (!seg?.pet || semMovimento()) return;
-  const e = efeitoId ? efeito(efeitoId) : null;
-  const st = seg._efx ||= { x: seg.x, y: seg.y, t: 0, cor: 0 };
-  const andou = dist(st.x, st.y, seg.x, seg.y);
-  if (andou < 7 * ESCALA_ATORES) return;
+  const st = seg._efx ||= { x: seg.x, y: seg.y, t: 0, tc: agora, n: 0 };
+  const andando = dist(st.x, st.y, seg.x, seg.y) > 0.4;
   st.x = seg.x; st.y = seg.y;
-  if ($('cena-atores').querySelectorAll('.jr-efx').length >= EFX_MAX) return;
-  if (e) soltarParticula(e.emoji, e.id, seg);
-  // amizade nível 3+: coraçõezinhos de vez em quando
-  if (coracoes && (st.cor = (st.cor + 1) % 9) === 0) soltarParticula('💗', 'coracoes', seg);
+  if (efeitoId && efeito(efeitoId) && st.n < EFX_POR_PET && agora - st.t >= (andando ? EFX_ANDANDO_MS : EFX_PARADO_MS)) {
+    st.t = agora;
+    soltarParticula(efeitoId, seg, st);
+  }
+  // amizade ❤️ 3: coraçõezinhos de vez em quando ao seguir, mesmo sem o efeito comprado
+  if (coracoes && andando && st.n < EFX_POR_PET && agora - st.tc >= EFX_CORACAO_MS) { st.tc = agora; soltarParticula('coracoes', seg, st); }
 }
-function soltarParticula(emoji, tipo, seg) {
-  const s = document.createElement('span');
+function soltarParticula(tipo, seg, st) {
+  const s = document.createElement('div');
   s.className = `jr-efx jr-efx-${tipo}`;
-  s.textContent = emoji;
-  const alt = seg.altura || 30;
-  Object.assign(s.style, { left: seg.x + (Math.random() - 0.5) * alt * 0.6 + 'px', top: seg.y - alt * (0.15 + Math.random() * 0.4) + 'px',
-    zIndex: Math.round(seg.y) - 2, fontSize: 13 * ESCALA_ATORES + 'px' });
-  s.addEventListener('animationend', () => s.remove());
+  const alt = seg.altura || 30, sorte = (a) => (Math.random() - 0.5) * a;
+  // de onde sai: estrelas e faíscas no chão (pés), corações e bolhas do corpo, folhas de cima
+  const altura = { estrelas: 0.08, faiscas: 0.04, coracoes: 0.55, bolhas: 0.45, folhas: 0.85 }[tipo] ?? 0.3;
+  Object.assign(s.style, { left: seg.x + sorte(alt * 0.5) + 'px', top: seg.y - alt * altura + sorte(alt * 0.12) + 'px', zIndex: Math.round(seg.y) - 2 });
+  s.style.setProperty('--e', ESCALA_ATORES);
+  s.style.setProperty('--dx', sorte(14).toFixed(1) + 'px');
+  s.style.setProperty('--gira', Math.round(sorte(360)) + 'deg');
+  st.n++;
+  let foi = false;
+  const tirar = () => { if (foi) return; foi = true; st.n--; s.remove(); };
+  s.addEventListener('animationend', tirar);
+  setTimeout(tirar, 2200);
   $('cena-atores').appendChild(s);
-  setTimeout(() => s.remove(), 1500);
 }
 function efeitosDoMapa() {
-  const pet = estado?.pets?.ativo, c = pet && cuidadosDe(pet);
-  if (seguidor && c && !$('pet').hidden) emitirEfeito(seguidor, c.efeito, nivelPet(pet) >= 3);
-  for (const cg of colegas.values()) if (!cg.el.hidden && cg.pet) emitirEfeito(cg.seg, cg.reg?.pet_efeito, Number(cg.reg?.pet_nivel) >= 3);
+  const agora = performance.now(), pet = estado?.pets?.ativo, c = pet && cuidadosDe(pet);
+  if (seguidor && c && !$('pet').hidden) emitirEfeito(seguidor, c.efeito, nivelPet(pet) >= 3, agora);
+  for (const cg of colegas.values()) if (!cg.el.hidden && cg.pet) emitirEfeito(cg.seg, cg.reg?.pet_efeito, Number(cg.reg?.pet_nivel) >= 3, agora);
 }
 
 // ── Loja (só falando com a Dona Cida) ──────────────────────
@@ -1239,18 +1277,18 @@ function renderLoja() {
   const falta = (preco) => Math.max(0, preco - moedas);
   const botao = (id, preco, rotulo) => falta(preco)
     ? `<button class="lj-comprar" disabled>Faltam ${falta(preco)} moedas</button>`
-    : `<button class="lj-comprar" data-comprar="${esc(id)}">${rotulo} · 🪙 ${preco}</button>`;
+    : `<button class="lj-comprar" data-comprar="${esc(id)}">${rotulo} · ${moedaHtml()} ${preco}</button>`;
   let html = '';
   if (lojaAba === 'comidas') {
     html = comidas().map(c => {
       const q = lojaQtd[c.id] || 1, fav = pet && ehFavorita(pet, c);
       return `<div class="lj-item">
-        <div class="lj-emoji">${c.emoji}</div>
+        <div class="lj-emoji">${imgItem(c.imagem, c.emoji, 'jr-item-loja')}</div>
         <div class="lj-info"><b>${esc(c.nome)}</b>
           <span>+${c.lealdade} lealdade${c.limite_semana ? ` · ${c.limite_semana}× por semana` : ''}</span>
           ${c.especial || fav ? `<span>${c.especial ? '<span class="lj-selo">come sem fome ✓</span>' : ''}${c.especial && fav ? ' ' : ''}${fav ? `<span class="lj-fav">❤️ favorita</span>` : ''}</span>` : ''}</div>
         <div class="lj-qtd"><button data-menos="${c.id}" aria-label="Menos">−</button><span>${q}</span><button data-mais="${c.id}" aria-label="Mais">+</button>
-          <em title="Na bolsa">🎒 ${Number(estado.pets.bolsa?.[c.id]) || 0}</em></div>
+          <em title="Na bolsa">${imgItem(icone('bolsa'), '🎒', 'jr-ic-moeda')} ${Number(estado.pets.bolsa?.[c.id]) || 0}</em></div>
         ${botao(c.id, c.preco * q, 'Comprar')}
       </div>`;
     }).join('');
@@ -1260,7 +1298,7 @@ function renderLoja() {
       const tem = !!estado.pets.tintas?.[t.id];
       return `<div class="lj-item lj-tinta">
         <div class="lj-previa">${src ? `<img src="${src}" alt="" draggable="false" data-tinta="${t.id}"/>` : ''}</div>
-        <div class="lj-info"><b>${esc(t.nome)}</b><span class="lj-sub">vale para todos os seus pets</span></div>
+        <div class="lj-info"><b>${esc(t.nome)}</b></div>
         ${tem ? '<button class="lj-comprar ok" disabled>✓ Comprada</button>' : botao(t.id, t.preco, 'Comprar')}
       </div>`;
     }).join('');
@@ -1268,7 +1306,7 @@ function renderLoja() {
     html = efeitos().map(e => {
       const tem = !!estado.pets.efeitos?.[e.id];
       return `<div class="lj-item lj-efeito">
-        <div class="lj-emoji lj-efx-amostra"><span>${e.emoji}</span><span>${e.emoji}</span><span>${e.emoji}</span></div>
+        <div class="lj-emoji lj-efx-amostra"><i class="jr-efx-forma jr-efx-${e.id}"></i><i class="jr-efx-forma jr-efx-${e.id}"></i><i class="jr-efx-forma jr-efx-${e.id}"></i></div>
         <div class="lj-info"><b>${esc(e.nome)}</b><span class="lj-sub">atrás do pet quando ele anda · todos os pets</span></div>
         ${tem ? '<button class="lj-comprar ok" disabled>✓ Comprado</button>' : botao(e.id, e.preco, 'Comprar')}
       </div>`;
@@ -1280,7 +1318,7 @@ function renderLoja() {
 }
 function cliqueLoja(e) {
   const aba = e.target.closest('[data-aba]');
-  if (aba) { lojaAba = aba.dataset.aba; $('lj-msg').textContent = ''; renderLoja(); return; }
+  if (aba) { lojaAba = aba.dataset.aba; $('lj-msg').textContent = lojaAba === 'tintas' ? 'Comprada uma vez, a tinta vale para todos os seus pets.' : ''; renderLoja(); return; }
   const mais = e.target.closest('[data-mais]'), menos = e.target.closest('[data-menos]');
   if (mais || menos) { const id = (mais || menos).dataset[mais ? 'mais' : 'menos']; lojaQtd[id] = Math.max(1, Math.min(20, (lojaQtd[id] || 1) + (mais ? 1 : -1))); renderLoja(); return; }
   const b = e.target.closest('[data-comprar]');
@@ -1295,7 +1333,7 @@ function comprar(id) {
     ps.moedas = moedas - c.preco * q;
     ps.bolsa = { ...(ps.bolsa || {}), [id]: (Number(ps.bolsa?.[id]) || 0) + q };
     patch[`pets/bolsa/${id}`] = ps.bolsa[id];
-    msg = `${c.emoji} ${q} × ${c.nome} na bolsa 🎒 (dê no "Meu Pet")`;
+    msg = `${q} × ${c.nome} na bolsa (dê no "Meu Pet")`;
     lojaQtd[id] = 1;
   } else {
     const lista = lojaAba === 'tintas' ? tintas() : efeitos(), item = lista.find(x => x.id === id), chave = lojaAba;
@@ -1330,7 +1368,7 @@ function renderBolsa() {
   const pet = mp.pet, itens = Object.entries(estado.pets.bolsa || {}).filter(([, n]) => Number(n) > 0).map(([id, n]) => ({ ...itemDaBolsa(id), n })).filter(x => x.id);
   $('mp-bolsa-itens').innerHTML = itens.length ? itens.map(x => `
     <button class="mp-bolsa-item" data-comida="${esc(x.id)}">
-      <span class="mp-bolsa-emoji">${x.emoji}${x.raro ? '<i>✨</i>' : ''}</span>
+      <span class="mp-bolsa-emoji">${imgItem(x.imagem, x.emoji, 'jr-item-bolsa' + (x.raro ? ' raro' : ''), x.filtro)}</span>
       <b>${esc(x.nome)}</b><span>× ${x.n} · +${x.lealdade} lealdade${ehFavorita(pet, x) ? ' ❤️' : ''}</span>
       ${x.especial ? '<em>come sem fome</em>' : ''}
     </button>`).join('')
@@ -1365,7 +1403,8 @@ function darComida(id) {
   mp.estado = 'comendo'; mp.ocupado = true;
   mp.anim.tocar('comendo');
   movimentoCorpo('come');
-  particulas([item.emoji, '✨', item.emoji, '✨'], 6);
+  const ic = imgItem(item.imagem, item.emoji, 'jr-item-part', item.filtro);
+  particulas([ic, '✨', ic, '✨'], 6);
   if (fav) setTimeout(() => particulas(['💖', '❤️', '💗', '💖', '❤️'], 10), 250);   // a favorita: um coração estoura
   const fc = falasProntas() ? montarFala(contextoFalaDe(pet), 'carinho') : null;
   falarPet(fav ? 'Minha favorita! 💖' : fc?.baloes[0]?.texto || 'Hmm, que delícia!');
@@ -1616,7 +1655,7 @@ function responderPesca(v) {
 function mostrarPeixe(f) {
   const el = $('pesca-cartao');
   const artigo = /a$/i.test(f.nome) ? 'uma' : 'um';
-  el.innerHTML = `<span class="pc-peixe">${f.raro ? '🐠' : '🐟'}</span><span>Você pescou ${artigo} <b>${esc(f.nome)}</b>!${f.raro ? ' ✨' : ''}<small>Foi para a bolsa 🎒 · +${f.lealdade} lealdade quando o pet comer</small></span>`;
+  el.innerHTML = `<span class="pc-peixe">${imgItem(f.imagem, f.raro ? '🐠' : '🐟', 'jr-item-peixe' + (f.raro ? ' raro' : ''), f.filtro)}</span><span>Você pescou ${artigo} <b>${esc(f.nome)}</b>!${f.raro ? ' ✨' : ''}<small>Foi para a bolsa · +${f.lealdade} lealdade quando o pet comer</small></span>`;
   el.classList.toggle('raro', !!f.raro);
   el.hidden = false;
   el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
@@ -2131,11 +2170,11 @@ function alternarPetCalado() {
   try { localStorage.setItem(KEY_CALADO, petCalado ? '1' : '0'); } catch (_) {}
   atualizarBotaoCalado();
 }
-function atualizarBotaoCalado() {
+function atualizarBotaoCalado() {   // interruptor "Falas do pet" no painel Visual do Meu Pet
   const b = $('mp-calado');
-  b.textContent = petCalado ? '🔇 Pet calado' : '💬 Pet falando';
-  b.setAttribute('aria-pressed', String(petCalado));
-  b.classList.toggle('ativo', petCalado);
+  $('mp-calado-txt').textContent = `Falas do pet: ${petCalado ? 'desligado' : 'ligado'}`;
+  b.setAttribute('aria-checked', String(!petCalado));
+  b.classList.toggle('ligado', !petCalado);
 }
 
 const quadrosCarregados = new Set();   // personagens já pré-carregados
@@ -3354,7 +3393,6 @@ function diaBatalhas() {
 
 function atualizarBotaoBatalhar() {
   $('btn-batalhar').hidden = !(podeBatalhar() && cena?.tipo === 'mapa');
-  $('mp-batalhar').hidden = !podeBatalhar();
 }
 
 const faltaTexto = (ms) => {
@@ -3386,7 +3424,7 @@ function abrirListaBatalha() {
 
 function renderListaBatalha() {
   const dia = diaBatalhas(), lim = cfgBatalha().limites_dia || {};
-  $('bt-lista-dia').textContent = `prêmios de hoje ${dia.moedas}/${lim.moedas ?? '∞'} 🪙`;
+  $('bt-lista-dia').innerHTML = `prêmios de hoje ${dia.moedas}/${lim.moedas ?? '∞'} ${moedaHtml()}`;
   const agora = Date.now(), ts = treinadores();
   if (!ts.some(t => t.id === btSel)) btSel = ts[0]?.id || null;
   $('bt-cards').innerHTML = ts.map(t => {
@@ -3771,9 +3809,9 @@ function btFim() {
   $('bt-fim-tit').classList.toggle('venceu', venceu);
   const chips = [];
   if (pr.xp) chips.push(`<span class="bt-premio xp">+${pr.xp} XP</span>`);
-  if (pr.moedas) chips.push(`<span class="bt-premio mo">+${pr.moedas} 🪙</span>`);
+  if (pr.moedas) chips.push(`<span class="bt-premio mo">+${pr.moedas} ${moedaHtml()}</span>`);
   if (pr.lealdade) chips.push(`<span class="bt-premio le">+${Math.round(pr.lealdade * 10) / 10} lealdade</span>`);
-  if (pr.bonusPrimeira) chips.push(`<span class="bt-premio mo">🏆 1ª vitória: +${pr.bonusPrimeira} 🪙</span>`);
+  if (pr.bonusPrimeira) chips.push(`<span class="bt-premio mo">🏆 1ª vitória: +${pr.bonusPrimeira} ${moedaHtml()}</span>`);
   $('bt-premios').innerHTML = chips.join('') || '<span class="bt-premio">Sem prêmios</span>';
   const dia = diaBatalhas(), lim = cfgBatalha().limites_dia || {};
   $('bt-fim-dia').innerHTML = (pr.cortado ? '<b>Limite de prêmios de hoje atingido — amanhã tem mais!</b>' : '') +
@@ -4084,10 +4122,10 @@ function abrirPedido(o) {
 
 function atualizarPremioPedido() {
   const dia = diaPedidos();
-  $('pd-premio').textContent = limiteDoDiaAtingido(dia)
+  $('pd-premio').innerHTML = limiteDoDiaAtingido(dia)
     ? 'Hoje você já ganhou o máximo de moedas com pedidos: esta ajuda vale um "obrigado"!'
-    : pd.tentativa === 1 ? `Acertando de primeira: +${moedasDoPedido(1, dia)} 🪙 · na 2ª tentativa: +${moedasDoPedido(2, dia)} 🪙`
-      : `Última tentativa: +${moedasDoPedido(2, dia)} 🪙`;
+    : pd.tentativa === 1 ? `Acertando de primeira: +${moedasDoPedido(1, dia)} ${moedaHtml()} · na 2ª tentativa: +${moedasDoPedido(2, dia)} ${moedaHtml()}`
+      : `Última tentativa: +${moedasDoPedido(2, dia)} ${moedaHtml()}`;
 }
 function atualizarMoedasPedido() { $('pd-moedas').querySelector('span').textContent = Number(estado.pets?.moedas) || 0; }
 function renderNumPedido() {
@@ -4128,7 +4166,7 @@ function responderPedido() {
     const moedas = moedasDoPedido(pd.tentativa, diaPedidos());
     finalizarPedido('acertou', moedas, patch);
     tocar('acerto');
-    falaPedido(`Isso mesmo, <b class="verde">${certa}</b>! Você me salvou, valeu pela ajuda!${moedas ? ` <b class="ouro">+${moedas} 🪙</b>` : ''}`, 'ok');
+    falaPedido(`Isso mesmo, <b class="verde">${certa}</b>! Você me salvou, valeu pela ajuda!${moedas ? ` <b class="ouro">+${moedas} ${moedaHtml()}</b>` : ''}`, 'ok');
     if (moedas) voarMoedasPedido(moedas);
   } else if (pd.tentativa < max) {
     pd.tentativa++;
@@ -4188,7 +4226,7 @@ function voarMoedasPedido(n) {
   $('pd-moedas').querySelector('span').textContent = antes;
   for (let i = 0; i < n; i++) {
     const s = document.createElement('span');
-    s.className = 'pd-moeda-voa'; s.textContent = '🪙';
+    s.className = 'pd-moeda-voa'; s.innerHTML = moedaHtml();
     s.style.left = de.x + 'px'; s.style.top = de.y + 'px';
     caixa.appendChild(s);
     const a = s.animate([{ transform: 'translate(-50%,-50%) scale(.6)', opacity: 0 }, { transform: `translate(calc(-50% + ${(para.x - de.x) * 0.4}px), calc(-50% + ${(para.y - de.y) * 0.4 - 50}px)) scale(1.2)`, opacity: 1, offset: 0.35 },
@@ -4858,7 +4896,6 @@ function ligarEventos() {
   $('pet-opcoes').addEventListener('click', (e) => { const b = e.target.closest('[data-pet]'); if (b) escolherPet(b.dataset.pet); });
   $('btn-trocar-pet').addEventListener('click', () => { $('estojo').hidden = true; abrirColecao(); });
   $('btn-personagem').addEventListener('click', () => { $('estojo').hidden = true; abrirEscolhaPersonagem(); });
-  $('mp-personagem').addEventListener('click', () => { fecharMeuPet(); abrirEscolhaPersonagem(); });
   $('pers-grade').addEventListener('click', (e) => { const b = e.target.closest('[data-pers]'); if (b) selecionarPersonagem(b.dataset.pers); });
   $('pers-palco').addEventListener('click', () => { pers.andarAte = performance.now() + 1600; });   // tocar = anda no lugar
   $('pers-confirmar').addEventListener('click', confirmarPersonagem);
@@ -4896,6 +4933,14 @@ function ligarEventos() {
   }, true);
   $('mp-carinho').addEventListener('click', carinhoPet);
   $('mp-calado').addEventListener('click', alternarPetCalado);
+  $('meu-pet').addEventListener('click', (e) => { if (e.target === $('meu-pet')) fecharMeuPet(); });   // tocar fora do painel fecha
+  $('mp-info').addEventListener('click', (e) => { e.stopPropagation(); $('mp-info-balao').hidden = !$('mp-info-balao').hidden; });
+  $('meu-pet').addEventListener('click', (e) => { if (!e.target.closest('#mp-info, #mp-info-balao')) $('mp-info-balao').hidden = true; }, true);
+  window.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || $('meu-pet').hidden) return;
+    const sub = [...document.querySelectorAll('#meu-pet .mp-sub')].find(x => !x.hidden);
+    if (sub) sub.hidden = true; else if (!$('mp-info-balao').hidden) $('mp-info-balao').hidden = true; else fecharMeuPet();
+  });
   $('pet-fala').addEventListener('click', pararFalaPet);   // tocar no balão fecha
   atualizarBotaoCalado();
   $('mp-palco').addEventListener('click', carinhoPet);   // tocar no pet = carinho
@@ -4909,7 +4954,6 @@ function ligarEventos() {
   $('gin-fechado-fechar').addEventListener('click', () => { $('gin-fechado').hidden = true; });
   $('perg-ajuda').addEventListener('click', pedirAjuda);
   $('btn-batalhar').addEventListener('click', abrirListaBatalha);
-  $('mp-batalhar').addEventListener('click', abrirListaBatalha);
   $('bt-lista-fechar').addEventListener('click', () => { $('bt-lista').hidden = true; });
   $('bt-cards').addEventListener('click', (e) => { const b = e.target.closest('[data-sel]'); if (b) { btSel = b.dataset.sel; renderListaBatalha(); } });
   $('bt-det').addEventListener('click', (e) => { const b = e.target.closest('[data-ir]'); if (b && !b.disabled) irAteTreinador(b.dataset.ir); });

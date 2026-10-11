@@ -14,6 +14,10 @@ export const comidas = () => L?.comidas || [];
 export const tintas = () => L?.tintas || [];
 export const efeitos = () => L?.efeitos || [];
 export const tinta = (id) => tintas().find(t => t.id === id) || null;
+// Arco-íris: o `filtro` do JSON começa com "animado" (a cor gira por CSS)
+export const tintaAnimada = (t) => /^animado/.test(String(t?.filtro || ''));
+// Ícones desenhados (loja.json → icones: moeda, bolsa, tinta)
+export const icone = (nome) => L?.icones?.[nome] || null;
 export const efeito = (id) => efeitos().find(e => e.id === id) || null;
 
 // Itens da bolsa: comidas da loja pelo id; peixes pescados como "pesca_{id}" (comida especial)
@@ -21,7 +25,8 @@ export const idDoPeixe = (id) => `pesca_${id}`;
 export function itemDaBolsa(id) {
   if (String(id).startsWith('pesca_')) {
     const f = PEIXES[id.slice(6)];
-    return f ? { id, nome: f.nome, emoji: f.raro ? '🐠' : '🐟', lealdade: Number(f.lealdade) || 0, especial: true, peixe: true, raro: !!f.raro } : null;
+    return f ? { id, nome: f.nome, emoji: f.raro ? '🐠' : '🐟', imagem: f.imagem || null, filtro: f.filtro || null,
+      lealdade: Number(f.lealdade) || 0, especial: true, peixe: true, raro: !!f.raro } : null;
   }
   const c = comidas().find(x => x.id === id);
   return c ? { ...c, lealdade: Number(c.lealdade) || 0 } : null;

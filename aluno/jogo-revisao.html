@@ -111,7 +111,7 @@
       <!-- barra do topo: fugir, moedas, adversário e progresso -->
       <div class="jr-perg-barra">
         <button class="jr-fugir" id="perg-desistir" aria-label="Fugir da batalha">🏳️ Fugir</button>
-        <div class="jr-moedas" id="perg-moedas" hidden aria-label="Moedas">🪙 <span>0</span></div>
+        <div class="jr-moedas" id="perg-moedas" hidden aria-label="Moedas"><img class="jr-item-img jr-ic-moeda" data-icone="moeda" alt="🪙" draggable="false"/> <span>0</span></div>
         <div class="jr-perg-placa">
           <span class="jr-perg-adv-nome" id="perg-adv-nome"></span>
           <div class="jr-perg-bolinhas" id="perg-bolinhas" aria-label="Progresso"></div>
@@ -233,7 +233,7 @@
     <div class="jr-pet-escolha-caixa pd-caixa">
       <div class="pd-topo">
         <span class="pd-premio" id="pd-premio"></span>
-        <span class="jr-moedas pd-moedas" id="pd-moedas" aria-label="Moedas">🪙 <span>0</span></span>
+        <span class="jr-moedas pd-moedas" id="pd-moedas" aria-label="Moedas"><img class="jr-item-img jr-ic-moeda" data-icone="moeda" alt="🪙" draggable="false"/> <span>0</span></span>
         <button class="pd-depois" id="pd-depois">Depois</button>
       </div>
       <div class="pd-corpo">
@@ -388,8 +388,9 @@
       </div>
       <div class="jr-mp-info">
         <div class="jr-mp-cab">
-          <div><div class="jr-mp-nome"><span id="mp-nome"></span><button class="jr-mp-editar" id="mp-editar" aria-label="Dar um nome">✏️</button></div><div class="jr-mp-origem" id="mp-origem"></div></div>
-          <div class="jr-moedas jr-mp-moedas">🪙 <span id="mp-moedas">0</span></div>
+          <div class="jr-mp-cab-nome"><div class="jr-mp-nome"><span id="mp-nome"></span><button class="jr-mp-editar" id="mp-editar" title="Dar um nome" aria-label="Dar um nome">✏️</button><button class="jr-mp-editar" id="mp-trocar" title="Trocar pet" aria-label="Trocar pet">🔄</button></div><div class="jr-mp-origem" id="mp-origem"></div></div>
+          <div class="jr-moedas jr-mp-moedas" aria-label="Moedas"><img class="jr-item-img jr-ic-moeda" data-icone="moeda" alt="🪙" draggable="false"/> <span id="mp-moedas">0</span></div>
+          <button class="bt-lista-x jr-mp-x" id="mp-fechar" aria-label="Fechar">✕</button>
         </div>
         <div class="jr-mp-barra"><div class="jr-mp-barra-topo"><span>Barriga</span><span id="mp-barriga-rot"></span></div><div class="jr-mp-trilho"><div class="jr-mp-fill" id="mp-barriga-fill"></div></div></div>
         <div class="jr-mp-barra"><div class="jr-mp-barra-topo"><span>Lealdade</span><span id="mp-lealdade-rot"></span></div>
@@ -398,25 +399,18 @@
             <span class="jr-mp-marca" id="mp-marca-conversa" title="Conversa">💬</span>
             <span class="jr-mp-marca" id="mp-marca-ajuda" title="Ajuda nos ginásios">💡</span>
           </div>
-          <div class="jr-mp-legenda" id="mp-legenda"></div>
+          <div class="jr-mp-marco"><span id="mp-marco"></span><button class="jr-mp-info-btn" id="mp-info" title="Como a lealdade funciona" aria-label="Como a lealdade funciona">ⓘ</button>
+            <div class="jr-mp-info-balao" id="mp-info-balao" hidden></div></div>
         </div>
-        <div class="jr-mp-dica" id="mp-dica"></div>
-        <div class="jr-mp-botoes">
-          <button class="jr-btn" id="mp-bolsa">🎒 Bolsa</button>
-          <button class="jr-btn" id="mp-carinho">Carinho</button>
-          <button class="jr-btn jr-btn-ouro" id="mp-batalhar">⚔️ Treinadores</button>
-        </div>
-        <div class="jr-mp-botoes">
-          <button class="jr-btn jr-btn-sec" id="mp-trocar">🐾 Trocar pet</button>
-          <button class="jr-btn jr-btn-sec" id="mp-visual">🎨 Visual</button>
-          <button class="jr-btn jr-btn-sec" id="mp-personagem">👤 Personagem</button>
-          <button class="jr-btn jr-btn-sec" id="mp-calado" aria-pressed="false">💬 Pet falando</button>
-          <button class="jr-btn jr-btn-sec" id="mp-fechar">Fechar</button>
+        <div class="jr-mp-botoes jr-mp-principais">
+          <button class="jr-btn" id="mp-bolsa"><img class="jr-item-img jr-ic-btn" data-icone="bolsa" alt="🎒" draggable="false"/> Bolsa</button>
+          <button class="jr-btn" id="mp-carinho">💜 Carinho</button>
+          <button class="jr-btn" id="mp-visual">🎨 Visual</button>
         </div>
       </div>
       <!-- Bolsa: comidas e peixes guardados -->
       <div class="mp-sub" id="mp-bolsa-painel" hidden>
-        <div class="mp-sub-topo"><b>🎒 Bolsa</b><span>Toque numa comida para dar ao seu pet</span><button class="bt-lista-x" id="mp-bolsa-fechar" aria-label="Fechar">✕</button></div>
+        <div class="mp-sub-topo"><b><img class="jr-item-img jr-ic-titulo" data-icone="bolsa" alt="🎒" draggable="false"/> Bolsa</b><span>Toque numa comida para dar ao seu pet</span><button class="bt-lista-x" id="mp-bolsa-fechar" aria-label="Fechar">✕</button></div>
         <div class="mp-bolsa-itens" id="mp-bolsa-itens"></div>
       </div>
       <!-- Tinta e efeito do pet ativo -->
@@ -425,6 +419,8 @@
         <div class="mp-visual-rot">Tinta</div><div class="mp-chips" id="mp-visual-tintas"></div>
         <div class="mp-visual-rot">Efeito ao andar</div><div class="mp-chips" id="mp-visual-efeitos"></div>
         <div class="mp-visual-dica" id="mp-visual-dica"></div>
+        <div class="mp-visual-rot">Falas do pet</div>
+        <button class="mp-chave" id="mp-calado" role="switch" aria-checked="true"><span class="mp-chave-trilho"><i></i></span><span id="mp-calado-txt">Falas do pet: ligado</span></button>
       </div>
       <!-- Nome do pet -->
       <div class="mp-sub mp-nomear" id="mp-nomear" hidden>
@@ -445,10 +441,10 @@
     <div class="jr-pet-escolha-caixa lj-caixa">
       <div class="lj-topo">
         <div class="jr-pet-escolha-titulo">🛒 Loja da Dona Cida</div>
-        <span class="jr-moedas" id="lj-moedas">🪙 <span>0</span></span>
+        <span class="jr-moedas" id="lj-moedas"><img class="jr-item-img jr-ic-moeda" data-icone="moeda" alt="🪙" draggable="false"/> <span>0</span></span>
         <button class="bt-lista-x" id="lj-fechar" aria-label="Fechar">✕</button>
       </div>
-      <div class="lj-abas" id="lj-abas"><button data-aba="comidas">🍎 Comidas</button><button data-aba="tintas">🎨 Tintas</button><button data-aba="efeitos">✨ Efeitos</button></div>
+      <div class="lj-abas" id="lj-abas"><button data-aba="comidas">🍎 Comidas</button><button data-aba="tintas"><img class="jr-item-img jr-ic-btn" data-icone="tinta" alt="🎨" draggable="false"/> Tintas</button><button data-aba="efeitos">✨ Efeitos</button></div>
       <div class="lj-itens" id="lj-itens"></div>
       <div class="lj-msg" id="lj-msg" aria-live="polite"></div>
     </div>
