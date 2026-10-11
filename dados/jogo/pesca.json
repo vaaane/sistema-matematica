@@ -31,21 +31,24 @@
      "nome": "Sardinha",
      "chance": 60,
      "lealdade": 4,
-     "raro": false
+     "raro": false,
+     "imagem": "img/jogo/itens/sardinha.webp"
     },
     {
      "id": "tainha",
      "nome": "Tainha",
      "chance": 30,
      "lealdade": 6,
-     "raro": false
+     "raro": false,
+     "imagem": "img/jogo/itens/tilapia.webp"
     },
     {
      "id": "dourado",
      "nome": "Dourado",
      "chance": 10,
      "lealdade": 10,
-     "raro": true
+     "raro": true,
+     "imagem": "img/jogo/itens/dourado.webp"
     }
    ]
   },
@@ -66,21 +69,26 @@
      "nome": "Bacalhau",
      "chance": 60,
      "lealdade": 4,
-     "raro": false
+     "raro": false,
+     "imagem": "img/jogo/itens/sardinha.webp",
+     "filtro": "hue-rotate(150deg) saturate(0.8)"
     },
     {
      "id": "salmao",
      "nome": "Salmão",
      "chance": 30,
      "lealdade": 6,
-     "raro": false
+     "raro": false,
+     "imagem": "img/jogo/itens/tilapia.webp",
+     "filtro": "hue-rotate(150deg) saturate(0.8)"
     },
     {
      "id": "peixe_gelo",
      "nome": "Peixe-gelo",
      "chance": 10,
      "lealdade": 10,
-     "raro": true
+     "raro": true,
+     "imagem": "img/jogo/itens/dourado.webp"
     }
    ]
   },
@@ -101,21 +109,26 @@
      "nome": "Lambari",
      "chance": 60,
      "lealdade": 4,
-     "raro": false
+     "raro": false,
+     "imagem": "img/jogo/itens/sardinha.webp",
+     "filtro": "hue-rotate(60deg) saturate(1.2)"
     },
     {
      "id": "tilapia",
      "nome": "Tilápia",
      "chance": 30,
      "lealdade": 6,
-     "raro": false
+     "raro": false,
+     "imagem": "img/jogo/itens/tilapia.webp",
+     "filtro": "hue-rotate(60deg) saturate(1.2)"
     },
     {
      "id": "tucunare",
      "nome": "Tucunaré",
      "chance": 10,
      "lealdade": 10,
-     "raro": true
+     "raro": true,
+     "imagem": "img/jogo/itens/dourado.webp"
     }
    ]
   }

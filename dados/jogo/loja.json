@@ -14,7 +14,8 @@
    "emoji": "🥣",
    "preco": 5,
    "lealdade": 1,
-   "especial": false
+   "especial": false,
+   "imagem": "img/jogo/itens/racao.webp"
   },
   {
    "id": "fruta",
@@ -22,7 +23,8 @@
    "emoji": "🍎",
    "preco": 8,
    "lealdade": 2,
-   "especial": false
+   "especial": false,
+   "imagem": "img/jogo/itens/fruta.webp"
   },
   {
    "id": "biscoito",
@@ -30,7 +32,8 @@
    "emoji": "🍪",
    "preco": 12,
    "lealdade": 3,
-   "especial": false
+   "especial": false,
+   "imagem": "img/jogo/itens/biscoito.webp"
   },
   {
    "id": "petisco",
@@ -38,7 +41,8 @@
    "emoji": "🍖",
    "preco": 20,
    "lealdade": 5,
-   "especial": true
+   "especial": true,
+   "imagem": "img/jogo/itens/petisco.webp"
   },
   {
    "id": "peixe_fresco",
@@ -46,7 +50,8 @@
    "emoji": "🐟",
    "preco": 35,
    "lealdade": 6,
-   "especial": true
+   "especial": true,
+   "imagem": "img/jogo/itens/peixe_fresco.webp"
   },
   {
    "id": "bolo",
@@ -55,7 +60,8 @@
    "preco": 40,
    "lealdade": 10,
    "especial": true,
-   "limite_semana": 1
+   "limite_semana": 1,
+   "imagem": "img/jogo/itens/bolo.webp"
   }
  ],
  "favoritas": {
@@ -95,10 +101,10 @@
    "filtro": "grayscale(1) sepia(1) saturate(3) hue-rotate(235deg) brightness(1)"
   },
   {
-   "id": "vermelho",
-   "nome": "Vermelho",
-   "preco": 50,
-   "filtro": "grayscale(1) sepia(1) saturate(4) hue-rotate(340deg) brightness(0.95)"
+   "id": "laranja",
+   "nome": "Laranja",
+   "preco": 40,
+   "filtro": "grayscale(1) sepia(1) saturate(4) hue-rotate(325deg) brightness(1)"
   },
   {
    "id": "dourado",
@@ -183,5 +189,10 @@
    "macaco"
   ]
  },
- "tintas_nota": "Tinta = tingir: o pet fica todo na cor escolhida, mantendo contorno, olhos e sombras. Funciona igual em qualquer pet."
+ "tintas_nota": "Tinta = tingir: o pet fica todo na cor escolhida, mantendo contorno, olhos e sombras. Funciona igual em qualquer pet.",
+ "icones": {
+  "moeda": "img/jogo/itens/moeda.webp",
+  "bolsa": "img/jogo/itens/bolsa.webp",
+  "tinta": "img/jogo/itens/tinta.webp"
+ }
 }
