@@ -1547,3 +1547,46 @@ html.jr-deitado #meu-pet .jr-mp-botoes.jr-mp-principais .jr-btn { font-size: 14p
 /* moeda de reserva desenhada por CSS */
 .jr-moeda-css { display: inline-block; width: 1.05em; height: 1.05em; border-radius: 50%; vertical-align: -.15em;
   background: radial-gradient(circle at 35% 30%, #fff6b0, #ffd700 45%, #c48a00); box-shadow: inset 0 0 0 .1em #b07800; }
+
+/* ── PROMPT-24: sinalização da pesca, preço na loja e nome dos ginásios ── */
+/* ponto de pesca: balão 🎣 azul-água flutuando, nome perto, cinza no limite do dia, pisca no "Mostrar" */
+.jr-caixote-marca { position: absolute; left: 50%; bottom: 120%; transform: translateX(-50%); width: 1.75em; height: 1.75em; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 1.9em; line-height: 1;
+  background: #3fd0e8; box-shadow: 0 0 0 .12em #0d5966, 0 0 .7em rgba(63,208,232,.85); animation: jr-flutua 1.8s ease-in-out infinite; }
+.jr-caixote-marca::after { content: ''; position: absolute; left: 50%; top: 100%; transform: translateX(-50%); border: .3em solid transparent; border-top-color: #3fd0e8; }
+.jr-caixote.cansado .jr-caixote-marca { background: #9aa0b5; box-shadow: 0 0 0 .12em #4b4f60; filter: grayscale(1); }
+.jr-caixote.cansado .jr-caixote-marca::after { border-top-color: #9aa0b5; }
+.jr-caixote.pisca .jr-caixote-marca { animation: jr-pisca-ponto .45s ease-in-out 6 alternate, jr-flutua 1.8s ease-in-out infinite; }
+@keyframes jr-pisca-ponto { from { scale: 1; filter: none; } to { scale: 1.35; filter: brightness(1.5); } }
+.jr-caixote-nome { position: absolute; left: 50%; bottom: 520%; transform: translateX(-50%); white-space: nowrap; padding: .1em .55em; border-radius: .6em;
+  background: rgba(13,15,26,.85); border: .08em solid #3fd0e8; color: #c9f6ff; font: 700 1.9em 'Rajdhani', sans-serif; }
+.jr-caixote-nome[hidden] { display: none; }
+.jr-pesca-ondas { position: absolute; width: 0; height: 0; pointer-events: none; }
+.jr-pesca-ondas i { position: absolute; left: 0; top: 0; width: 2.4em; height: .8em; border-radius: 50%; border: .12em solid rgba(255,255,255,.75);
+  transform: translate(-50%, -50%) scale(.2); opacity: 0; animation: jr-ondinha 2s ease-out infinite; }
+.jr-pesca-ondas i:nth-child(2) { animation-delay: .5s; }
+@keyframes jr-ondinha { 0% { transform: translate(-50%, -50%) scale(.2); opacity: .9; } 70% { opacity: .35; } 100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; } }
+/* aviso "agora você pode pescar" e tutorial */
+.jr-pesca-aviso { position: absolute; z-index: 30; left: 50%; top: 18%; transform: translateX(-50%); width: min(420px, calc(100% - 24px)); }
+.jr-pesca-aviso[hidden], .jr-pesca-tutorial[hidden] { display: none; }
+.jr-pesca-aviso-caixa { padding: 12px 14px; border-radius: 16px; background: #fff; color: #1a1d2e; box-shadow: 0 8px 22px rgba(0,0,0,.45);
+  font: 600 14.5px 'Inter', sans-serif; line-height: 1.35; animation: jr-cartao-pop .25s ease-out; }
+.jr-pesca-aviso-caixa p { margin: 0 0 8px; }
+.jr-pesca-aviso-caixa b { color: #0b7d93; }
+.jr-pesca-tutorial { position: absolute; inset: 0; z-index: 30; cursor: pointer; background: rgba(8,8,20,.25); }
+.jr-pesca-tutorial-balao { position: absolute; left: 50%; top: 20%; transform: translateX(-50%); width: min(400px, calc(100% - 24px)); display: flex; flex-direction: column; gap: 4px;
+  padding: 12px 16px; border-radius: 16px; background: #fff; color: #1a1d2e; box-shadow: 0 8px 22px rgba(0,0,0,.45); font: 700 16px 'Inter', sans-serif; line-height: 1.35; text-align: center; }
+.jr-pesca-tutorial-balao small { font: 600 11.5px 'Inter', sans-serif; color: #6b6f86; }
+@media (prefers-reduced-motion: reduce) { .jr-caixote-marca, .jr-pesca-ondas i, .jr-caixote.pisca .jr-caixote-marca { animation: none; } .jr-pesca-ondas i { opacity: .5; transform: translate(-50%, -50%); } }
+/* loja: preço como texto simples (o destaque é só o botão Comprar) */
+.lj-preco { display: inline-flex; align-items: center; gap: 3px; color: #f1f2f8; font: 600 12px 'Inter', sans-serif; }
+.lj-preco b { font: 800 14px 'Inter', sans-serif; color: #f1f2f8; }
+#jr-app .lj-preco img.jr-ic-moeda { height: 20px; margin: 0; }
+.lj-preco.falta b { color: #ff8fa3; }
+.lj-tintas .lj-preco { justify-content: center; }
+/* nome do ginásio sempre visível: vencido com insígnia + ✓ e borda dourada; fechado em cinza com 🔒 */
+.jr-rotulo-porta span { display: flex; align-items: center; gap: 6px; }
+.jr-rotulo-porta.vencido span { border-color: rgba(255,215,0,.75); box-shadow: 0 4px 14px rgba(0,0,0,.5), 0 0 10px rgba(255,215,0,.35); }
+#jr-app img.jr-rotulo-ins { height: 26px; width: auto; image-rendering: auto; }
+.jr-rotulo-ok { font-style: normal; font-size: .75em; color: #3ecf8e; }
+.jr-rotulo-porta.fechado span { color: #9aa0b5; }

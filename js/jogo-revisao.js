@@ -178,7 +178,8 @@ async function carregarEstado() {
     estado.batalhasDia = v.batalhas_dia || null;
     estado.pedidos = v.pedidos && typeof v.pedidos === 'object' ? { ...v.pedidos } : {};   // { id: { fim: 'acertou'|'errou', tentativas, dica, data } }
     estado.pedidosDia = v.pedidos_dia || null;
-    estado.pescaDia = v.pesca_dia || null;   // { data, n } — peixes pescados hoje (os 3 pontos juntos)   // { data, moedas, pessoas: { npc: n } } — zera quando muda o dia   // { data, moedas, lealdade, xp } — zera quando muda o dia
+    estado.pescaDia = v.pesca_dia || null;
+    estado.avisos = v.avisos && typeof v.avisos === 'object' ? { ...v.avisos } : {};   // { pesca_{ponto}: true, tutorial_pesca: true } — avisos que não se repetem   // { data, n } — peixes pescados hoje (os 3 pontos juntos)   // { data, moedas, pessoas: { npc: n } } — zera quando muda o dia   // { data, moedas, lealdade, xp } — zera quando muda o dia
     estado.avisosPet = v.avisos_pet && typeof v.avisos_pet === 'object' ? { ...v.avisos_pet } : {};   // { pet: { conversa, ajuda }, toques_sem_lealdade }
     estado.personagem = persValido(v.personagem) ? v.personagem : null;   // sem campo: usa o padrão
     // aluno novo = nada salvo ainda (sem ginásio, insígnia, pet nem dia jogado)
@@ -1275,9 +1276,11 @@ function renderLoja() {
   $('lj-moedas').querySelector('span').textContent = moedas;
   for (const b of $('lj-abas').children) b.classList.toggle('ativa', b.dataset.aba === lojaAba);
   const falta = (preco) => Math.max(0, preco - moedas);
-  const botao = (id, preco, rotulo) => falta(preco)
-    ? `<button class="lj-comprar" disabled>Faltam ${falta(preco)} moedas</button>`
-    : `<button class="lj-comprar" data-comprar="${esc(id)}">${rotulo} · ${moedaHtml()} ${preco}</button>`;
+  // preço: texto simples (moeda + número); sem moedas, o número fica vermelho e o botão cinza "Faltam N"
+  const preco = (v) => `<span class="lj-preco${falta(v) ? ' falta' : ''}">${moedaHtml()} <b>${v}</b></span>`;
+  const botao = (id, v, rotulo) => falta(v)
+    ? `<button class="lj-comprar" disabled>Faltam ${falta(v)}</button>`
+    : `<button class="lj-comprar" data-comprar="${esc(id)}">${rotulo}</button>`;
   let html = '';
   if (lojaAba === 'comidas') {
     html = comidas().map(c => {
@@ -1285,6 +1288,7 @@ function renderLoja() {
       return `<div class="lj-item">
         <div class="lj-emoji">${imgItem(c.imagem, c.emoji, 'jr-item-loja')}</div>
         <div class="lj-info"><b>${esc(c.nome)}</b>
+          ${preco(c.preco * q)}
           <span>+${c.lealdade} lealdade${c.limite_semana ? ` · ${c.limite_semana}× por semana` : ''}</span>
           ${c.especial || fav ? `<span>${c.especial ? '<span class="lj-selo">come sem fome ✓</span>' : ''}${c.especial && fav ? ' ' : ''}${fav ? `<span class="lj-fav">❤️ favorita</span>` : ''}</span>` : ''}</div>
         <div class="lj-qtd"><button data-menos="${c.id}" aria-label="Menos">−</button><span>${q}</span><button data-mais="${c.id}" aria-label="Mais">+</button>
@@ -1298,7 +1302,7 @@ function renderLoja() {
       const tem = !!estado.pets.tintas?.[t.id];
       return `<div class="lj-item lj-tinta">
         <div class="lj-previa">${src ? `<img src="${src}" alt="" draggable="false" data-tinta="${t.id}"/>` : ''}</div>
-        <div class="lj-info"><b>${esc(t.nome)}</b></div>
+        <div class="lj-info"><b>${esc(t.nome)}</b>${tem ? '' : preco(t.preco)}</div>
         ${tem ? '<button class="lj-comprar ok" disabled>✓ Comprada</button>' : botao(t.id, t.preco, 'Comprar')}
       </div>`;
     }).join('');
@@ -1307,7 +1311,7 @@ function renderLoja() {
       const tem = !!estado.pets.efeitos?.[e.id];
       return `<div class="lj-item lj-efeito">
         <div class="lj-emoji lj-efx-amostra"><i class="jr-efx-forma jr-efx-${e.id}"></i><i class="jr-efx-forma jr-efx-${e.id}"></i><i class="jr-efx-forma jr-efx-${e.id}"></i></div>
-        <div class="lj-info"><b>${esc(e.nome)}</b><span class="lj-sub">atrás do pet quando ele anda · todos os pets</span></div>
+        <div class="lj-info"><b>${esc(e.nome)}</b>${tem ? '' : preco(e.preco)}<span class="lj-sub">atrás do pet quando ele anda · todos os pets</span></div>
         ${tem ? '<button class="lj-comprar ok" disabled>✓ Comprado</button>' : botao(e.id, e.preco, 'Comprar')}
       </div>`;
     }).join('');
@@ -1492,11 +1496,74 @@ function montarCaixotes(n) {
     const el = document.createElement('div');
     el.className = 'jr-caixote';
     el.dataset.ponto = p.id;
-    el.innerHTML = '<span class="jr-caixote-vara">🎣</span>';
+    el.innerHTML = `<span class="jr-caixote-marca">🎣</span><span class="jr-caixote-nome" hidden>${esc(p.nome)}</span>`;
     Object.assign(el.style, { left: p.x + 'px', top: p.y + 'px', zIndex: Math.round(p.y), fontSize: 10 * ESCALA_ATORES + 'px' });
-    $('cena-atores').appendChild(el);
+    // ondinhas na água à frente do ponto (onde a boia cai)
+    const [ox, oy] = pontoDaBoia(p);
+    const ondas = document.createElement('div');
+    ondas.className = 'jr-pesca-ondas';
+    ondas.dataset.ponto = p.id;
+    ondas.innerHTML = '<i></i><i></i>';
+    Object.assign(ondas.style, { left: ox + 'px', top: oy + 'px', zIndex: Math.round(p.y) - 1, fontSize: 10 * ESCALA_ATORES + 'px' });
+    $('cena-atores').append(ondas, el);
   }
 }
+// onde a boia cai (canvas BOIA da pose → mapa), para as ondinhas do ponto
+function pontoDaBoia(p) {
+  const sp = spritePesca(), dir = p.lado === 'esq' ? -1 : 1;
+  return [p.x + dir * (BOIA[0] - sp.ancora[0]) * ESCALA_SPRITE, p.y + (BOIA[1] - sp.ancora[1]) * ESCALA_SPRITE];
+}
+const limitePescaHoje = () => pescaDia().n >= (cfgPesca().limite_peixes_dia ?? 5);
+// a cada quadro no mapa: nome do ponto quando o personagem chega perto; cinza quando acabou o limite do dia
+function atualizarCaixotes() {
+  const cansado = limitePescaHoje();
+  for (const el of document.querySelectorAll('.jr-caixote')) {
+    const p = pontosDoMapa(cena.n).find(x => x.id === el.dataset.ponto);
+    if (!p) continue;
+    const perto = !pesca && dist(jog.x, jog.y, p.x, p.y) < PESSOA_PERTO * 1.6;
+    const nome = el.querySelector('.jr-caixote-nome');
+    if (nome.hidden === perto) nome.hidden = !perto;
+    el.classList.toggle('cansado', cansado);
+  }
+}
+// "Mostrar": a câmera vai até o ponto por uns segundos e o marcador pisca 3 vezes
+let camFoco = null;   // { x, y, ate }
+function mostrarPontoPesca(p) {
+  camFoco = { x: p.x, y: p.y, ate: performance.now() + 2600 };
+  const el = document.querySelector(`.jr-caixote[data-ponto="${p.id}"]`);
+  if (el) { el.classList.remove('pisca'); void el.offsetWidth; el.classList.add('pisca'); }
+}
+const jaPescouEm = (id) => Object.values(estado.respostas || {}).some(r => r?.tipo === 'pesca' && r.ponto === id);
+// Aviso "agora você pode pescar": ao entrar no mapa com o ponto liberado e sem nunca ter pescado ali (uma vez por ponto)
+function avisarPescaLiberada(n) {
+  if (!pescaPronta() || !$('pesca-aviso').hidden) return;
+  const p = pontosDoMapa(n).find(x => pontoLiberado(x) && !estado.avisos[`pesca_${x.id}`] && !jaPescouEm(x.id));
+  if (!p) return;
+  estado.avisos[`pesca_${p.id}`] = true;
+  gravar({ [`avisos/pesca_${p.id}`]: true });
+  $('pesca-aviso-txt').innerHTML = `🎣 Agora você pode pescar no <b>${esc(p.nome)}</b>! Procure o caixote perto da água.`;
+  $('pesca-aviso').dataset.ponto = p.id;
+  $('pesca-aviso').hidden = false;
+}
+// Primeira pesca da vida: 3 balões curtos antes do 1º lançamento (toque para avançar)
+const TUTORIAL_PESCA = ['Espere a boia afundar…', 'Quando aparecer ❗, toque rápido!',
+  'Acerte a conta para pegar o peixe. Ele vai para a 🎒 Bolsa e serve de comida para o seu pet.'];
+function tutorialPesca(depois) {
+  let i = 0;
+  const el = $('pesca-tutorial');
+  const mostrar = () => { $('pesca-tutorial-txt').textContent = TUTORIAL_PESCA[i]; $('pesca-tutorial-n').textContent = `${i + 1}/${TUTORIAL_PESCA.length} · toque para continuar`; };
+  el.onclick = (e) => {
+    e.stopPropagation();
+    if (++i < TUTORIAL_PESCA.length) { mostrar(); return; }
+    el.hidden = true; el.onclick = null;
+    estado.avisos.tutorial_pesca = true;
+    gravar({ 'avisos/tutorial_pesca': true });
+    if (pesca) depois();
+  };
+  mostrar();
+  el.hidden = false;
+}
+
 function caixoteEm(pt) {
   if (cena?.tipo !== 'mapa' || !pescaPronta()) return null;
   const r = 22 * ESCALA_ATORES;
@@ -1551,6 +1618,7 @@ function sentarPesca(ponto) {
   pararFalaPet();
   seguidor?.colocar(ponto.x - dir * 34 * ESCALA_ATORES, ponto.y + 3);   // o pet senta ao lado do caixote
   if (pescaDia().n >= (cfgPesca().limite_peixes_dia ?? 5)) { pescaPose('esperando'); pescaDescanso(); return; }
+  if (!estado.avisos.tutorial_pesca) { pescaPose('esperando'); pesca.estado = 'tutorial'; tutorialPesca(pescaEsperar); return; }
   pescaEsperar();
 }
 
@@ -1698,6 +1766,7 @@ function sairPesca(reposicionar = true) {
   const marca = document.querySelector(`.jr-caixote[data-ponto="${ponto.id}"]`);
   if (marca) marca.hidden = false;
   $('pesca-conta').hidden = true;
+  $('pesca-tutorial').hidden = true;
   $('btn-levantar').hidden = true;
   $('jogador').style.visibility = '';
   if (reposicionar && cena?.tipo === 'mapa') {   // levanta no ponto da trilha mais perto do caixote
@@ -2162,6 +2231,8 @@ function atualizarConversa() {
   if (petCalado || conversa.falando || !petPodeFalar()) return;
   if (performance.now() < conversa.proximaT) return;
   if ((seguidor.paradoMs || 0) < (configFalas().parado_min_s ?? 3) * 1000) return;
+  const pertoDaAgua = cena?.tipo === 'mapa' && pescaPronta() && pontosDoMapa(cena.n).some(p => pontoLiberado(p) && dist(jog.x, jog.y, p.x, p.y) < 180);
+  if (pertoDaAgua && Math.random() < 0.4 && petFalar('pesca')) return;
   petFalar();
 }
 
@@ -2509,6 +2580,10 @@ const cam = { s: 1, tx: 0, ty: 0 };
 const jog = { x: 0, y: 0, dir: 'frente', quadro: -1, tQuadro: 0, caminho: [], aoChegar: null };
 let perguntaAberta = false;
 
+// a câmera segue o jogador; por alguns segundos pode olhar outro ponto ("Mostrar" o ponto de pesca)
+const focoAtivo = () => camFoco && performance.now() < camFoco.ate && cena?.tipo === 'mapa';
+const focoX = () => (focoAtivo() ? camFoco.x : jog.x);
+const focoY = () => (focoAtivo() ? camFoco.y : jog.y);
 function ajustarCamera() {
   const vp = $('cena-vp');
   const vw = vp.clientWidth, vh = vp.clientHeight;
@@ -2516,13 +2591,13 @@ function ajustarCamera() {
     // Celular/tablet (deitado ou girado): preenche a largura e segue o jogador nos dois eixos
     // (um pouco abaixo do centro, para o personagem não ficar atrás do HUD do topo)
     cam.s = Math.max(vw / W, vh / H);
-    cam.tx = clamp(vw / 2 - jog.x * cam.s, vw - W * cam.s, 0);
-    cam.ty = clamp(vh * 0.55 - jog.y * cam.s, vh - H * cam.s, 0);
+    cam.tx = clamp(vw / 2 - focoX() * cam.s, vw - W * cam.s, 0);
+    cam.ty = clamp(vh * 0.55 - focoY() * cam.s, vh - H * cam.s, 0);
   } else if (vh > vw) {
     // Em pé: mapa na altura da tela, rola na horizontal seguindo o jogador
     cam.s = vh / H;
     cam.ty = 0;
-    cam.tx = clamp(vw / 2 - jog.x * cam.s, vw - W * cam.s, 0);
+    cam.tx = clamp(vw / 2 - focoX() * cam.s, vw - W * cam.s, 0);
   } else {
     // Deitada: mapa inteiro
     cam.s = Math.min(vw / W, vh / H);
@@ -2578,7 +2653,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden;
+  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden;
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -2958,13 +3033,17 @@ async function abrirMapa(n, onde) {
 
   // Nome do ginásio flutuando acima de cada porta (só aparece quando o jogador chega perto)
   // ginásio fechado (fora de ordem): 🔒 sempre visível na porta
+  // o nome aparece sempre: vencido (insígnia + ✓, borda dourada), liberado, ou fechado (🔒 em cinza)
   $('cena-atores').innerHTML = Object.keys(portas).map(G => {
-    const fechado = !ginasioLiberado(n, G);
-    return `<div class="jr-rotulo-porta${fechado ? ' fechado' : ''}" data-g="${G}" style="left:${portas[G].x}px;top:${portas[G].y - ALT_JOGADOR - 24}px"${fechado ? '' : ' hidden'}>` +
-      `<span>${fechado ? '🔒 ' : ''}${portas[G].nome}</span></div>`;
+    const fechado = !ginasioLiberado(n, G), vencido = !!estado.ginasios[chaveGinasio(n, G)]?.lider.vencido;
+    const cls = vencido ? ' vencido' : fechado ? ' fechado' : '';
+    const ins = vencido ? `<img class="jr-rotulo-ins" src="${IMG}/insignias/insignia-${chaveGinasio(n, G)}.webp" alt="" draggable="false" onerror="this.remove()"/>` : '';
+    return `<div class="jr-rotulo-porta${cls}" data-g="${G}" style="left:${portas[G].x}px;top:${portas[G].y - ALT_JOGADOR - 24}px">` +
+      `<span>${fechado && !vencido ? '🔒 ' : ''}${ins}${portas[G].nome}${vencido ? ' <i class="jr-rotulo-ok">✓</i>' : ''}</span></div>`;
   }).join('');
   montarPessoas(n);
   montarCaixotes(n);
+  fecharBalaoPorta();
 
   if (onde === 'A' || onde === 'B') {
     const [x, y] = pontoAntesDaPorta(n, onde);
@@ -2979,6 +3058,7 @@ async function abrirMapa(n, onde) {
   entrarNoMapaOnline(n);
   conversa.proximaT = performance.now() + 8000;   // 1ª fala no mapa pode vir depois de 8 s
   pedirPetSeFaltar();
+  setTimeout(() => { if (cena?.tipo === 'mapa' && cena.n === n && $('pet-escolha').hidden) avisarPescaLiberada(n); }, 900);
 }
 
 // Ponto ~60 px antes da porta, contando ao longo do caminho A* que vem da entrada do mapa
@@ -3028,9 +3108,11 @@ const distAoDestino = (d) => Math.min(dist(jog.x, jog.y, d.x, d.y), dist(jog.x, 
 function tocarNoMapa(e) {
   const p = telaParaImagem(e.clientX, e.clientY);
   if (balaoPessoa) fecharBalaoPessoa();   // tocar fora fecha o balão da pessoa
+  if (balaoPorta) fecharBalaoPorta();
   if (cartaoColega) fecharCartaoColega();
   if (pesca && !tocouPescando(p)) return;   // pescando: o toque puxa a linha (ou levanta, se for longe)
   const caixote = caixoteEm(p);
+  if (caixote && limitePescaHoje()) { avisarEm('Os peixes estão descansando. Volte amanhã!', caixote.x, caixote.y - 30 * ESCALA_ATORES); return; }
   if (caixote) { irPescar(caixote); return; }
   // pet e pessoa podem estar lado a lado: vale o que estiver mais perto do toque
   const pessoa = pessoaEm(p);
@@ -3061,6 +3143,7 @@ function tocarNoMapa(e) {
 
 // Anda até a porta/saída e, ao chegar, entra
 function irAoDestino(d) {
+  if (d.tipo === 'porta' && estado.ginasios[chaveGinasio(cena.n, d.lado)]?.lider.vencido) { irAoGinasioVencido(d); return; }
   const esp = d.tipo === 'porta' ? { tipo: 'porta', lado: d.lado } : { tipo: 'saida', i: d.i };
   destinoEspecial = esp;
   caminharNaTrilha(d.trilha[0], d.trilha[1], () => {
@@ -3068,6 +3151,42 @@ function irAoDestino(d) {
   });
   // termina exatamente no ponto da porta/saída
   if (jog.caminho.length) jog.caminho.push([d.x, d.y]);
+}
+
+// Ginásio já vencido: o balão pergunta antes de entrar (dentro, tudo como sempre: revisar/treinar)
+let balaoPorta = null;   // { d, timer }
+function irAoGinasioVencido(d) {
+  fecharBalaoPorta();
+  destinoEspecial = null;
+  const perguntar = () => {
+    if (cena?.tipo !== 'mapa') return;
+    const el = $('porta-balao');
+    el.innerHTML = `<b>${esc(cena.portas[d.lado]?.nome || '')}</b><span>Você já venceu! Quer treinar de novo?</span>
+      <div class="jr-pessoa-botoes"><button class="jr-btn jr-btn-ouro" data-porta="entrar">Entrar</button><button class="jr-btn jr-btn-sec" data-porta="nao">Agora não</button></div>`;
+    el.hidden = false;
+    el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+    balaoPorta = { d, timer: setTimeout(fecharBalaoPorta, 9000) };
+    posicionarBalaoPorta();
+  };
+  if (dist(jog.x, jog.y, d.trilha[0], d.trilha[1]) < DIST_PERTO) { perguntar(); return; }
+  caminharNaTrilha(d.trilha[0], d.trilha[1], perguntar);
+}
+function posicionarBalaoPorta() {
+  if (!balaoPorta) return;
+  posicionarNaTela($('porta-balao'), balaoPorta.d.x, balaoPorta.d.y - ALT_JOGADOR - 30);
+}
+function fecharBalaoPorta() {
+  if (balaoPorta) clearTimeout(balaoPorta.timer);
+  balaoPorta = null;
+  if ($('porta-balao')) $('porta-balao').hidden = true;
+}
+function acaoBalaoPorta(e) {
+  e.stopPropagation();
+  const b = e.target.closest('[data-porta]');
+  if (!b || !balaoPorta) return;
+  const { d } = balaoPorta;
+  fecharBalaoPorta();
+  if (b.dataset.porta === 'entrar') entrarNoDestino({ tipo: 'porta', lado: d.lado });
 }
 
 function entrarNoDestino(esp) {
@@ -3099,14 +3218,14 @@ function verificarEncostou(vx, vy) {
 function atualizarMapa() {
   if (!$('cena-balao').hidden) esconderBalao();
   posicionarBalaoPessoa();
+  posicionarBalaoPorta();
+  atualizarCaixotes();
   const ds = destinosDoMapa();
   alvoMapa = null;
   for (const d of ds) {
     const dd = distAoDestino(d);
     if (d.tipo === 'porta') {
       const perto = dd < DIST_PERTO;
-      const el = document.querySelector(`.jr-rotulo-porta[data-g="${d.lado}"]`);
-      if (el && !el.classList.contains('fechado') && el.hidden === perto) el.hidden = !perto;
       if (perto && !alvoMapa) alvoMapa = d;
     } else if (dd < DIST_TOQUE && !alvoMapa) {
       alvoMapa = d;
@@ -4979,6 +5098,14 @@ function ligarEventos() {
   $('bt-voltar').addEventListener('click', () => fecharBatalha(true));
   $('bt-revanche').addEventListener('click', () => { const id = bt?.t.id, origem = bt?.origem; fecharBatalha(false); if (id) iniciarBatalha(id, origem); });
   $('pessoa-balao').addEventListener('click', acaoBalaoPessoa);
+  $('porta-balao').addEventListener('click', acaoBalaoPorta);
+  $('pesca-aviso').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-aviso]');
+    if (!b) return;
+    $('pesca-aviso').hidden = true;
+    const p = pontosDoMapa(cena?.n).find(x => x.id === $('pesca-aviso').dataset.ponto);
+    if (b.dataset.aviso === 'mostrar' && p) mostrarPontoPesca(p);
+  });
   window.addEventListener('keydown', (e) => {   // teclas 1–4 na batalha
     if (!bt || bt.fechou || $('batalha').hidden || e.ctrlKey || e.metaKey || e.altKey) return;
     const m = /^(?:Digit|Numpad)([1-4])$/.exec(e.code);

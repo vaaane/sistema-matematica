@@ -78,6 +78,15 @@
     <button id="pet-fala" class="jr-pet-fala" hidden aria-live="polite"></button>
     <div id="pessoa-balao" class="jr-pessoa-balao" hidden aria-live="polite"></div>
     <div id="colega-cartao" class="jr-colega-cartao" hidden></div>
+    <div id="porta-balao" class="jr-pessoa-balao" hidden aria-live="polite"></div>
+    <!-- Pesca: aviso de ponto liberado e tutorial da primeira pesca -->
+    <div id="pesca-aviso" class="jr-pesca-aviso" hidden role="dialog" aria-label="Pesca liberada">
+      <div class="jr-pesca-aviso-caixa"><p id="pesca-aviso-txt"></p>
+        <div class="jr-pessoa-botoes"><button class="jr-btn jr-btn-ouro" data-aviso="mostrar">Mostrar</button><button class="jr-btn jr-btn-sec" data-aviso="depois">Depois</button></div></div>
+    </div>
+    <div id="pesca-tutorial" class="jr-pesca-tutorial" hidden role="dialog" aria-label="Como pescar">
+      <div class="jr-pesca-tutorial-balao"><span id="pesca-tutorial-txt"></span><small id="pesca-tutorial-n"></small></div>
+    </div>
     <!-- Pesca: conta rápida, peixe pescado e botão de levantar -->
     <div id="pesca-conta" class="jr-pesca-conta" hidden>
       <div class="pc-tbar"><i id="pc-tempo"></i></div>

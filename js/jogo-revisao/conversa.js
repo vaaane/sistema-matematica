@@ -56,6 +56,7 @@ export function montarFala(ctx, tipoForcado = null) {
   // momentos-chave e estado têm prioridade
   const tipoEstado = tipoForcado || ctx.estado;
   if (tipoEstado === 'voltou') return um('voltou', F.dia?.voltou, 'estado');
+  if (tipoEstado === 'pesca') return um('pesca', P.pesca?.length ? P.pesca : F.pesca, 'pesca');   // perto da água
   if (tipoEstado) return um(tipoEstado, P[tipoEstado], tipoEstado === 'fome' ? 'fome' : 'estado');
 
   // sorteio pelos pesos, só entre os tipos possíveis agora
