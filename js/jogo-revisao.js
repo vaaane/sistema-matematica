@@ -1792,6 +1792,9 @@ const KEY_COLEGAS = 'jr_colegas_ocultos';
 let colegasOcultos = false;
 try { colegasOcultos = localStorage.getItem(KEY_COLEGAS) === '1'; } catch (_) {}
 
+// Etiqueta do colega: o apelido (ou primeiro nome); sem nome no registro → "Colega"; a conta da professora → "Professora"
+// (nunca a palavra PROFESSOR). A professora só joga pelo modo teste, então só as contas de teste a veem.
+const rotuloColega = (uid, r) => (/PROFESSOR/i.test(`${uid} ${r?.apelido || ''}`) ? 'Professora' : nomeVisivel(r?.apelido) || 'Colega');
 // Professor, turma TESTE e alunos de teste nunca aparecem para os alunos (no modo teste, todos são de teste)
 const colegaVisivel = (uid, r) => !!r && Date.now() - (Number(r.ts) || 0) < VALIDADE_MS &&
   (teste || (!ALUNOS_TESTE.includes(uid) && !/PROFESSOR|TESTE/i.test(uid) && r.turma !== 'TESTE' && !/PROFESSOR|TESTE/i.test(r.apelido || '')));
@@ -1854,7 +1857,7 @@ function criarColega(uid, r) {
   const petImg = mk('img', 'jr-ator jr-pet jr-colega');
   const el = mk('img', 'jr-ator jr-colega jr-colega-jog');
   const nome = mk('div', 'jr-colega-nome jr-colega');
-  nome.textContent = r.apelido || '';
+  nome.textContent = rotuloColega(uid, r);
   const c = { uid, reg: r, el, nome, petImg, sombra, x: Number(r.x) || 0, y: Number(r.y) || 0, de: null, alvo: null, t0: 0,
     dir: r.dir || 'frente', quadro: -1, tQuadro: 0, reacaoT: Number(r.reacao?.t) || 0, pet: null, pers: null, seg: new PetSeguidor(petImg, sombra) };
   sombra.hidden = petImg.hidden = true;
@@ -1873,8 +1876,9 @@ function definirPersColega(c, id) {
   preCarregarQuadros(id);
 }
 
+const petAtual = (pet) => (pet === 'capivara' ? 'elefante' : pet);   // registros antigos (antes do elefante)
 function definirPetColega(c, pet) {
-  if (pet === 'capivara') pet = 'elefante';
+  pet = petAtual(pet);
   pet = petValido(pet) ? pet : null;
   if (c.pet === pet) return;
   c.pet = pet;
@@ -1885,7 +1889,7 @@ function definirPetColega(c, pet) {
 
 function atualizarColega(c, r) {
   c.reg = r;
-  c.nome.textContent = (r.apelido || '') + (Number(r.pet_nivel) >= 2 ? ` ❤️${Number(r.pet_nivel)}` : '');
+  c.nome.textContent = rotuloColega(c.uid, r) + (Number(r.pet_nivel) >= 2 ? ` ❤️${Number(r.pet_nivel)}` : '');
   definirPetColega(c, r.pet);
   aplicarTinta(c.petImg, r.pet_tinta, true);
   definirPersColega(c, r.personagem);
@@ -1965,7 +1969,7 @@ function abrirCartaoColega(c) {
   fecharCartaoColega();
   pararFalaPet();   // o balão do meu pet não fica por cima do cartão
   const r = c.reg || {}, el = $('colega-cartao');
-  const nome = nomeVisivel(r.apelido) || 'Colega', turma = nomeVisivel(r.turma);
+  const nome = rotuloColega(c.uid, r), turma = nomeVisivel(r.turma);
   const pet = petValido(r.pet) ? r.pet : null;
   el.innerHTML = `
     ${bustoHtml(urlQuadro('frente', -1, c.pers || PERS.padrao), 'jr-busto-colega', BUSTO_PERS)}
@@ -2078,7 +2082,7 @@ function desenharOnlineGeral() {
     b.style.left = reg.x / W * 100 + '%';
     b.style.top = reg.y / H * 100 + '%';
     b.setAttribute('aria-label', `${lista.length} colega${lista.length > 1 ? 's' : ''} online no mapa ${n}`);
-    b.innerHTML = lista.slice(0, 3).map(r => `<span class="jr-rosto${r.local === 'ginasio' ? ' no-ginasio' : ''}">${rostoPet(r.pet)}</span>`).join('') +
+    b.innerHTML = lista.slice(0, 3).map(r => `<span class="jr-rosto${r.local === 'ginasio' ? ' no-ginasio' : ''}">${rostoPet(petAtual(r.pet))}</span>`).join('') +
       (lista.length > 3 ? `<span class="jr-rosto-mais">+${lista.length - 3}</span>` : '');
     cont.appendChild(b);
   }
@@ -2089,9 +2093,9 @@ function abrirListaOnline(n) {
   const reg = D.geral.regioes.find(r => r.mapa === n);
   $('online-titulo').textContent = `${n}. ${reg?.nome || ''}`;
   $('online-itens').innerHTML = lista.map(r => `
-    <li><span class="jr-rosto${r.local === 'ginasio' ? ' no-ginasio' : ''}">${rostoPet(r.pet)}</span>
-      <span class="jr-online-nome">${esc(r.apelido || '')}</span>
-      <span class="jr-online-det">${esc(r.turma || '')}${petValido(r.pet) ? ' · ' + esc((r.pet_nome ? r.pet_nome + ' · ' : '') + NOME_PET[r.pet]) : ''} · ${r.local === 'ginasio' ? 'no ginásio' : 'no mapa'}</span></li>`).join('')
+    <li><span class="jr-rosto${r.local === 'ginasio' ? ' no-ginasio' : ''}">${rostoPet(petAtual(r.pet))}</span>
+      <span class="jr-online-nome">${esc(rotuloColega(r.uid, r))}</span>
+      <span class="jr-online-det">${esc(nomeVisivel(r.turma))}${petValido(petAtual(r.pet)) ? ' · ' + esc((r.pet_nome ? r.pet_nome + ' · ' : '') + NOME_PET[petAtual(r.pet)]) : ''} · ${r.local === 'ginasio' ? 'no ginásio' : 'no mapa'}</span></li>`).join('')
     || '<li class="jr-online-vazio">Ninguém aqui agora.</li>';
   $('online-ir').hidden = false;
   $('online-ir').dataset.mapa = n;
