@@ -475,13 +475,16 @@
 </div>
 
 <script type="module">
-import { requireAluno, iniciarNotifDueloGlobal } from '/js/auth.js';
+import { getSession, requireAluno, iniciarNotifDueloGlobal } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
 import { ref, get } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
-import { iniciarJogo } from '/js/jogo-revisao.js';
+import { iniciarJogo, UID_PROFESSORA } from '/js/jogo-revisao.js';
 
-const sess = requireAluno('/index.html');
-if (sess) {
+// A professora entra pelo menu dela e joga como aluna (sem presença de duelos)
+const sess = getSession()?.modo === 'professor' ? null : requireAluno('/index.html');
+if (getSession()?.modo === 'professor') {
+  iniciarJogo({ uid: UID_PROFESSORA, turma: '', nome: 'Professora' });
+} else if (sess) {
   const { alunos, turma } = sess;
   const uid = (turma + '_' + alunos[0]).replace(/[.#$[\]/\s]/g, '_');
 

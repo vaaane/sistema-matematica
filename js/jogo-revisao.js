@@ -137,6 +137,10 @@ function estadoVazio() {
 //  PROGRESSO NO FIREBASE (Parte B)
 // ============================================================
 let teste = false;               // modo teste: grava em modo_teste_historico, sem XP e sem feed
+// A professora jogando como aluna (menu do professor): progresso em jogo_revisao/PROFESSORA, sem XP, sem feed e
+// sem placar de turma; aparece para os alunos online com a etiqueta "Professora".
+export const UID_PROFESSORA = 'PROFESSORA';
+const ehProfessora = () => sessao?.uid === UID_PROFESSORA;
 let carregouProgresso = false;   // se a leitura falhar, não grava nem dá XP (evita XP repetido)
 const mapasAbertos = new Set();  // jogo_revisao_config/global/mapas_abertos (controle da professora)
 
@@ -348,12 +352,12 @@ function gravarVitoria(chave, p) {
 function darXP(delta, mostrar = true) {
   if (!delta) return;
   if (mostrar) mostrarXP(delta);
-  if (teste || !carregouProgresso) return;
+  if (teste || ehProfessora() || !carregouProgresso) return;
   adicionarXP(sessao.uid, delta).catch(e => console.error('[jogo-revisao] erro ao dar XP', e));
 }
 
 async function publicarNoFeed(tipo, chave) {
-  if (teste || !carregouProgresso) return;
+  if (teste || ehProfessora() || !carregouProgresso) return;
   try {
     const [mapaStr, G] = chave.replace('mapa', '').split('-');
     const gin = D.questoes[Number(mapaStr)].ginasios[G].nome;
@@ -440,7 +444,7 @@ async function travarHorizontal() {
 async function sairDoJogo() {
   await sairOnline();
   if (document.fullscreenElement) { try { await document.exitFullscreen(); } catch (_) {} }
-  window.location.href = '/aluno/a-jogos.html';
+  window.location.href = ehProfessora() ? '/professor/p-jogo-revisao.html' : '/aluno/a-jogos.html';
 }
 
 function ligarOrientacao() {
@@ -1793,11 +1797,12 @@ let colegasOcultos = false;
 try { colegasOcultos = localStorage.getItem(KEY_COLEGAS) === '1'; } catch (_) {}
 
 // Etiqueta do colega: o apelido (ou primeiro nome); sem nome no registro → "Colega"; a conta da professora → "Professora"
-// (nunca a palavra PROFESSOR). A professora só joga pelo modo teste, então só as contas de teste a veem.
+// (nunca a palavra PROFESSOR).
 const rotuloColega = (uid, r) => (/PROFESSOR/i.test(`${uid} ${r?.apelido || ''}`) ? 'Professora' : nomeVisivel(r?.apelido) || 'Colega');
-// Professor, turma TESTE e alunos de teste nunca aparecem para os alunos (no modo teste, todos são de teste)
+// Turma TESTE e alunos de teste nunca aparecem para os alunos (no modo teste, todos são de teste). A professora
+// jogando pelo menu dela (UID_PROFESSORA) aparece; a conta de teste da professora grava em outro nó e não aparece.
 const colegaVisivel = (uid, r) => !!r && Date.now() - (Number(r.ts) || 0) < VALIDADE_MS &&
-  (teste || (!ALUNOS_TESTE.includes(uid) && !/PROFESSOR|TESTE/i.test(uid) && r.turma !== 'TESTE' && !/PROFESSOR|TESTE/i.test(r.apelido || '')));
+  (teste || uid === UID_PROFESSORA || (!ALUNOS_TESTE.includes(uid) && !/PROFESSOR|TESTE/i.test(uid) && r.turma !== 'TESTE' && !/PROFESSOR|TESTE/i.test(r.apelido || '')));
 
 async function entrarOnline() {
   let apelido = String(sessao.nome || '').split(' ')[0];   // sem apelido: o primeiro nome
@@ -4818,7 +4823,7 @@ function vencer() {
   if (ganhou === 'normal') publicarNoFeed('insignia', chave);
   if (ganhou === 'dourada') publicarNoFeed('insignia_dourada', chave);
   // meta da turma: nunca no modo teste nem para alunos de teste (somarTurma também recusa TESTE e turma vazia)
-  if (ganhou && !teste && carregouProgresso && sessao.turma && !ALUNOS_TESTE.includes(sessao.uid)) {
+  if (ganhou && !teste && carregouProgresso && sessao.turma && !ehProfessora() && !ALUNOS_TESTE.includes(sessao.uid)) {
     const campo = ganhou === 'normal' ? 'insignias' : 'douradas';
     somarTurma(sessao.turma, campo);
     const p0 = placarTurmas[sessao.turma] || {};
