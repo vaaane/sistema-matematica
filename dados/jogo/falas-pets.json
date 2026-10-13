@@ -1,7 +1,7 @@
 {
   "config": {
-    "lealdade_minima": 60,
-    "intervalo_min_s": 120,
+    "lealdade_minima": 25,
+    "intervalo_min_s": 90,
     "parado_min_s": 3,
     "duracao_balao_s": 5,
     "pesos": {
@@ -22,8 +22,8 @@
       "{valor}"
     ],
     "ajuda_ginasio": {
-      "lealdade_dica": 60,
-      "lealdade_eliminar": 80,
+      "lealdade_dica": 80,
+      "lealdade_eliminar": 95,
       "max_dicas_por_desafio": 1,
       "max_eliminar_por_desafio": 1
     }
@@ -1240,5 +1240,10 @@
     "Hmm… tô com vontade de peixe 🐟",
     "Ouvi um peixe pulando ali na água! Bora pescar? 🎣",
     "Se você pescar um peixinho, eu como todinho! 😋"
+  ],
+  "faro": [
+    "Sniff sniff… 👃",
+    "Tem alguma coisa por aqui!",
+    "Mais pra lá! 🐾"
   ]
 }

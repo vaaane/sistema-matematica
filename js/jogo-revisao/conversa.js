@@ -110,6 +110,8 @@ export function fraseDe(pet, cat, v = {}) {
   return f ? trocar(f, v) : null;
 }
 export const configAjuda = () => F?.config?.ajuda_ginasio || {};
+// Faro (PROMPT-32): o pet sente um tesouro escondido — frases da personalidade ou as gerais (falas-pets.json → faro)
+export const frasesFaro = (pet) => (F?.personalidades?.[pet]?.faro?.length ? F.personalidades[pet].faro : F?.faro || []);
 
 // Duração do balão: duracao_balao_s + 1 s a cada 60 caracteres
 export const duracaoBalao = (texto) => ((F?.config?.duracao_balao_s || 5) + Math.floor(texto.length / 60)) * 1000;

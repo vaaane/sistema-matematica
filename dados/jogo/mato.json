@@ -1,0 +1,389 @@
+{
+ "_nota": "Matinhos de mexer (PROMPT-32): posições sugeridas pelo código na beira da trilha de cada mapa, de preferência no gramado (longe de portas, saídas, pessoas e pontos de pesca). Ajuste com ?editarMato=1 no modo teste e cole o JSON copiado aqui. Coordenadas no mapa lógico 1376 × 768; base do mato no ponto.",
+ "matos": [
+  {
+   "mapa": 1,
+   "x": 110,
+   "y": 626,
+   "variante": 4
+  },
+  {
+   "mapa": 1,
+   "x": 570,
+   "y": 390,
+   "variante": 2
+  },
+  {
+   "mapa": 1,
+   "x": 822,
+   "y": 666,
+   "variante": 1
+  },
+  {
+   "mapa": 1,
+   "x": 1226,
+   "y": 182,
+   "variante": 5
+  },
+  {
+   "mapa": 1,
+   "x": 1262,
+   "y": 622,
+   "variante": 3
+  },
+  {
+   "mapa": 2,
+   "x": 118,
+   "y": 618,
+   "variante": 4
+  },
+  {
+   "mapa": 2,
+   "x": 486,
+   "y": 626,
+   "variante": 1
+  },
+  {
+   "mapa": 2,
+   "x": 738,
+   "y": 458,
+   "variante": 3
+  },
+  {
+   "mapa": 2,
+   "x": 790,
+   "y": 658,
+   "variante": 2
+  },
+  {
+   "mapa": 2,
+   "x": 1034,
+   "y": 630,
+   "variante": 5
+  },
+  {
+   "mapa": 3,
+   "x": 198,
+   "y": 570,
+   "variante": 4
+  },
+  {
+   "mapa": 3,
+   "x": 566,
+   "y": 534,
+   "variante": 2
+  },
+  {
+   "mapa": 3,
+   "x": 602,
+   "y": 166,
+   "variante": 1
+  },
+  {
+   "mapa": 3,
+   "x": 858,
+   "y": 290,
+   "variante": 3
+  },
+  {
+   "mapa": 3,
+   "x": 1030,
+   "y": 518,
+   "variante": 5
+  },
+  {
+   "mapa": 4,
+   "x": 94,
+   "y": 130,
+   "variante": 2
+  },
+  {
+   "mapa": 4,
+   "x": 306,
+   "y": 698,
+   "variante": 4
+  },
+  {
+   "mapa": 4,
+   "x": 630,
+   "y": 422,
+   "variante": 5
+  },
+  {
+   "mapa": 4,
+   "x": 1194,
+   "y": 186,
+   "variante": 3
+  },
+  {
+   "mapa": 4,
+   "x": 1270,
+   "y": 694,
+   "variante": 1
+  },
+  {
+   "mapa": 5,
+   "x": 94,
+   "y": 314,
+   "variante": 4
+  },
+  {
+   "mapa": 5,
+   "x": 378,
+   "y": 698,
+   "variante": 1
+  },
+  {
+   "mapa": 5,
+   "x": 790,
+   "y": 634,
+   "variante": 1
+  },
+  {
+   "mapa": 5,
+   "x": 1014,
+   "y": 226,
+   "variante": 5
+  },
+  {
+   "mapa": 5,
+   "x": 1274,
+   "y": 610,
+   "variante": 2
+  },
+  {
+   "mapa": 6,
+   "x": 90,
+   "y": 234,
+   "variante": 4
+  },
+  {
+   "mapa": 6,
+   "x": 186,
+   "y": 590,
+   "variante": 1
+  },
+  {
+   "mapa": 6,
+   "x": 578,
+   "y": 390,
+   "variante": 2
+  },
+  {
+   "mapa": 6,
+   "x": 1066,
+   "y": 166,
+   "variante": 5
+  },
+  {
+   "mapa": 6,
+   "x": 1282,
+   "y": 518,
+   "variante": 3
+  },
+  {
+   "mapa": 7,
+   "x": 90,
+   "y": 130,
+   "variante": 4
+  },
+  {
+   "mapa": 7,
+   "x": 234,
+   "y": 698,
+   "variante": 1
+  },
+  {
+   "mapa": 7,
+   "x": 714,
+   "y": 462,
+   "variante": 3
+  },
+  {
+   "mapa": 7,
+   "x": 1090,
+   "y": 302,
+   "variante": 2
+  },
+  {
+   "mapa": 7,
+   "x": 1286,
+   "y": 662,
+   "variante": 5
+  },
+  {
+   "mapa": 8,
+   "x": 90,
+   "y": 198,
+   "variante": 5
+  },
+  {
+   "mapa": 8,
+   "x": 250,
+   "y": 698,
+   "variante": 1
+  },
+  {
+   "mapa": 8,
+   "x": 630,
+   "y": 446,
+   "variante": 3
+  },
+  {
+   "mapa": 8,
+   "x": 806,
+   "y": 686,
+   "variante": 4
+  },
+  {
+   "mapa": 8,
+   "x": 1250,
+   "y": 470,
+   "variante": 2
+  },
+  {
+   "mapa": 9,
+   "x": 90,
+   "y": 454,
+   "variante": 1
+  },
+  {
+   "mapa": 9,
+   "x": 426,
+   "y": 674,
+   "variante": 4
+  },
+  {
+   "mapa": 9,
+   "x": 794,
+   "y": 386,
+   "variante": 5
+  },
+  {
+   "mapa": 9,
+   "x": 1078,
+   "y": 682,
+   "variante": 3
+  },
+  {
+   "mapa": 9,
+   "x": 1286,
+   "y": 334,
+   "variante": 2
+  },
+  {
+   "mapa": 10,
+   "x": 90,
+   "y": 654,
+   "variante": 2
+  },
+  {
+   "mapa": 10,
+   "x": 222,
+   "y": 202,
+   "variante": 4
+  },
+  {
+   "mapa": 10,
+   "x": 686,
+   "y": 318,
+   "variante": 1
+  },
+  {
+   "mapa": 10,
+   "x": 1182,
+   "y": 178,
+   "variante": 5
+  },
+  {
+   "mapa": 10,
+   "x": 1270,
+   "y": 630,
+   "variante": 3
+  },
+  {
+   "mapa": 11,
+   "x": 842,
+   "y": 146,
+   "variante": 2
+  },
+  {
+   "mapa": 11,
+   "x": 1042,
+   "y": 486,
+   "variante": 4
+  },
+  {
+   "mapa": 11,
+   "x": 1246,
+   "y": 230,
+   "variante": 5
+  },
+  {
+   "mapa": 11,
+   "x": 1282,
+   "y": 354,
+   "variante": 3
+  },
+  {
+   "mapa": 12,
+   "x": 130,
+   "y": 506,
+   "variante": 4
+  },
+  {
+   "mapa": 12,
+   "x": 470,
+   "y": 542,
+   "variante": 1
+  },
+  {
+   "mapa": 12,
+   "x": 750,
+   "y": 346,
+   "variante": 3
+  },
+  {
+   "mapa": 12,
+   "x": 1010,
+   "y": 426,
+   "variante": 2
+  },
+  {
+   "mapa": 12,
+   "x": 1250,
+   "y": 494,
+   "variante": 5
+  },
+  {
+   "mapa": 13,
+   "x": 114,
+   "y": 690,
+   "variante": 1
+  },
+  {
+   "mapa": 13,
+   "x": 114,
+   "y": 114,
+   "variante": 2
+  },
+  {
+   "mapa": 13,
+   "x": 626,
+   "y": 382,
+   "variante": 4
+  },
+  {
+   "mapa": 13,
+   "x": 1014,
+   "y": 698,
+   "variante": 3
+  },
+  {
+   "mapa": 13,
+   "x": 1286,
+   "y": 206,
+   "variante": 5
+  }
+ ]
+}

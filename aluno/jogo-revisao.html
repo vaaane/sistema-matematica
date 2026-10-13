@@ -63,6 +63,7 @@
     <div class="jr-hud jr-hud-topo">
       <button class="jr-btn jr-btn-sec" id="btn-cena-voltar">⟵ Mapa geral</button>
       <div class="jr-hud-titulo" id="cena-titulo"></div>
+      <button class="jr-btn-hud" id="btn-praca" hidden aria-label="Ir para a Praça do Encontro">🏛️<span>Praça</span></button>
       <button class="jr-btn-hud" id="btn-colegas" hidden aria-label="Mostrar ou esconder os colegas" aria-pressed="true">👁<span>Colegas</span></button>
       <button class="jr-btn-hud" id="btn-reacao" hidden aria-label="Mandar uma reação">😊</button>
       <button class="jr-btn-pet" id="btn-pet" hidden aria-label="Meus pets"><img alt="" draggable="false"/></button>
@@ -87,15 +88,34 @@
     <div id="pesca-tutorial" class="jr-pesca-tutorial" hidden role="dialog" aria-label="Como pescar">
       <div class="jr-pesca-tutorial-balao"><span id="pesca-tutorial-txt"></span><small id="pesca-tutorial-n"></small></div>
     </div>
-    <!-- Pesca: conta rápida, peixe pescado e botão de levantar -->
-    <div id="pesca-conta" class="jr-pesca-conta" hidden>
-      <div class="pc-tbar"><i id="pc-tempo"></i></div>
-      <div class="pc-conta" id="pc-conta"></div>
-      <div class="pc-ops" id="pc-ops"></div>
+    <!-- Pesca: minijogo da barrinha (segurar em qualquer lugar da tela), peixe pescado, lançar, ranking e levantar -->
+    <div id="pesca-barra" class="jr-pesca-barra" hidden>
+      <div class="pb-painel">
+        <div class="pb-dica">Segure para subir</div>
+        <div class="pb-colunas">
+          <div class="pb-trilho" id="pb-trilho"><div class="pb-zona" id="pb-zona"></div><div class="pb-peixe" id="pb-peixe"></div></div>
+          <div class="pb-captura" aria-label="Captura"><i id="pb-captura"></i></div>
+        </div>
+      </div>
     </div>
     <div id="pesca-cartao" class="jr-pesca-cartao" hidden aria-live="polite"></div>
-    <button id="btn-levantar" class="jr-btn jr-btn-sec jr-btn-levantar" hidden>🧍 Levantar</button>
+    <div class="jr-pesca-botoes">
+      <button id="btn-pesca-ranking" class="jr-btn jr-btn-sec" hidden aria-label="Ranking de pesca da semana">🏆</button>
+      <button id="btn-lancar" class="jr-btn jr-btn-ouro" hidden>🪱 Lançar</button>
+      <button id="btn-acao-mapa" class="jr-btn jr-btn-ouro" hidden>⛏️ Cavar</button>
+      <button id="btn-levantar" class="jr-btn jr-btn-sec" hidden>🧍 Levantar</button>
+    </div>
+    <div id="pesca-ranking" class="jr-pesca-ranking" hidden role="dialog" aria-label="Ranking de pesca da semana">
+      <div class="pr-caixa">
+        <div class="pr-topo"><b>🏆 Ranking de pesca da semana</b><button class="jr-btn jr-btn-sec" id="pr-fechar" aria-label="Fechar">✕</button></div>
+        <div class="pr-abas" id="pr-abas"><button data-pr="escola" class="ativa">Escola</button><button data-pr="turma">Minha turma</button></div>
+        <ol class="pr-lista" id="pr-lista"></ol>
+        <div class="pr-voce" id="pr-voce"></div>
+        <small class="pr-nota">Zera toda segunda-feira. Os 3 primeiros ganham 🥇🎣 🥈🎣 🥉🎣 ao lado do nome durante a semana seguinte.</small>
+      </div>
+    </div>
     <div id="cena-aviso" class="jr-balao-aviso" hidden></div>
+    <div id="pet-faro" class="jr-pet-faro" hidden aria-hidden="true">👃</div>
     <button id="btn-revanche" class="jr-btn jr-btn-ouro jr-revanche" hidden>⚔ Revanche</button>
     <!-- Joystick (só em tela de toque) -->
     <div class="jr-joy" aria-hidden="true">
@@ -152,6 +172,8 @@
         <div class="jr-perg-faixa">
           <div class="jr-explica" id="perg-explica" hidden></div>
           <div class="jr-perg-rodape">
+            <button class="jr-btn jr-btn-sec" id="perg-usar-dica" hidden>💡 Dica do pet</button>
+            <div class="jr-perg-segunda" id="perg-segunda" hidden><span id="perg-segunda-txt"></span><button class="jr-btn jr-btn-ouro" data-segunda="1">🔁 Usar</button><button class="jr-btn jr-btn-sec" data-segunda="0">Ver a resposta</button></div>
             <button class="jr-btn" id="perg-continuar" hidden>Continuar</button>
           </div>
         </div>
@@ -323,6 +345,7 @@
       <div class="bt-conta" id="bt-conta"></div>
       <div class="bt-ops" id="bt-ops"></div>
       <div class="bt-msg" id="bt-msg" aria-live="polite"></div>
+      <button class="bt-dica" id="bt-dica" hidden>💡 Dica do pet</button>
       <div class="bt-fim" id="bt-fim" hidden>
         <div class="bt-fim-tit" id="bt-fim-tit"></div>
         <div class="bt-fim-perfeito" id="bt-fim-perfeito" hidden>Perfeito! Nenhum erro 🎉</div>
@@ -369,6 +392,62 @@
   <!-- Reações rápidas (sem chat) -->
   <div id="reacoes" class="jr-reacoes" hidden role="dialog" aria-label="Reações">
     <div class="jr-reacoes-roda" id="reacoes-roda"></div>
+    <div class="jr-reacoes-frases" id="reacoes-frases" hidden></div>
+  </div>
+
+  <!-- Praça do Encontro: mural, convite de desafio e duelo ao vivo -->
+  <div id="mural" class="jr-mural" hidden role="dialog" aria-label="Mural da Escola">
+    <div class="ml-caixa">
+      <div class="ml-topo"><b>📋 Mural da Escola</b>
+        <span class="ml-filtro" id="mural-filtro"><button data-filtro="escola" class="ativa">Escola toda</button><button data-filtro="turma">Minha turma</button></span>
+        <button class="jr-btn jr-btn-sec" id="mural-fechar" aria-label="Fechar">✕</button></div>
+      <div class="ml-abas" id="mural-abas"></div>
+      <ol class="ml-lista" id="mural-lista"></ol>
+      <div class="ml-voce" id="mural-voce"></div>
+    </div>
+  </div>
+  <div id="convite" class="jr-convite" hidden role="dialog" aria-label="Convite de desafio">
+    <div class="cv-caixa">
+      <p id="convite-txt"></p>
+      <small id="convite-aviso" hidden>Este desafio não vale prêmio para você hoje (limite do dia).</small>
+      <div class="cv-tempo"><i id="convite-tempo"></i></div>
+      <div class="jr-pessoa-botoes"><button class="jr-btn jr-btn-ouro" id="convite-sim">⚔️ Aceitar</button><button class="jr-btn jr-btn-sec" id="convite-nao">Agora não</button></div>
+    </div>
+  </div>
+  <!-- Fliperama: painel da máquina, jogo do site por cima (iframe ?embed=1), Tabuada ao vivo e convite da professora -->
+  <div id="maquina" class="jr-maquina" hidden role="dialog" aria-label="Máquina do fliperama">
+    <div class="mq-caixa">
+      <div class="mq-topo"><b id="mq-nome"></b><button class="jr-btn jr-btn-sec" id="mq-fechar" aria-label="Fechar">✕</button></div>
+      <div class="mq-corpo" id="mq-corpo"></div>
+      <div class="mq-botoes" id="mq-botoes"></div>
+    </div>
+  </div>
+  <div id="jogo-embed" class="jr-jogo-embed" hidden>
+    <div class="je-topo"><button class="jr-btn jr-btn-ouro" id="jogo-embed-voltar">✕ Voltar ao Fliperama</button><b id="jogo-embed-nome"></b></div>
+    <iframe id="jogo-embed-frame" title="Jogo do fliperama" src="about:blank"></iframe>
+  </div>
+  <div id="aovivo" class="jr-aovivo" hidden role="dialog" aria-label="Tabuada ao vivo">
+    <div class="av-caixa"><button class="jr-btn jr-btn-sec av-x" id="av-x" aria-label="Sair">✕</button><div id="av-tela"></div></div>
+  </div>
+  <div id="av-convite" class="jr-convite" hidden role="dialog" aria-label="Convite da professora">
+    <div class="cv-caixa"><p>⚡ <b>A professora abriu uma Tabuada ao vivo!</b></p>
+      <div class="jr-pessoa-botoes"><button class="jr-btn jr-btn-ouro" id="av-convite-sim">Entrar</button><button class="jr-btn jr-btn-sec" id="av-convite-nao">Agora não</button></div></div>
+  </div>
+  <div id="duelo" class="jr-duelo" hidden role="dialog" aria-label="Desafio">
+    <div class="dl-caixa">
+      <div class="dl-topo">
+        <div class="dl-lado"><span class="dl-busto" id="dl-bustoL"></span><b id="dl-nomeL">Você</b><span class="dl-pts" id="dl-ptsL">0</span></div>
+        <div class="dl-meio"><small id="dl-rodada">Rodada 1 / 5</small><div class="dl-tempo"><i id="dl-tempo"></i></div></div>
+        <div class="dl-lado dir"><span class="dl-pts" id="dl-ptsR">0</span><b id="dl-nomeR"></b><span class="dl-busto" id="dl-bustoR"></span></div>
+      </div>
+      <div class="dl-conta" id="dl-conta">Prepare-se…</div>
+      <div class="dl-ops" id="dl-ops"></div>
+      <div class="dl-msg" id="dl-msg" aria-live="polite"></div>
+      <div class="dl-fim" id="dl-fim" hidden>
+        <b id="dl-fim-titulo"></b><span class="dl-fim-placar" id="dl-fim-placar"></span><small id="dl-fim-premio"></small>
+        <button class="jr-btn jr-btn-ouro" id="dl-ok">OK</button>
+      </div>
+    </div>
   </div>
 
   <!-- Quem está online numa região (mapa geral) -->
@@ -391,7 +470,6 @@
         <div class="jr-mp-brilho"></div>
         <div class="jr-mp-sombra" id="mp-sombra"></div>
         <div class="jr-mp-pulo" id="mp-pulo"><div class="jr-mp-corpo" id="mp-corpo"><img id="mp-img" alt="" draggable="false"/></div></div>
-        <div class="jr-mp-zz" id="mp-zz" hidden><span>z</span><span>z</span></div>
         <div class="jr-mp-particulas" id="mp-particulas"></div>
         <div class="jr-mp-balao" id="mp-balao" hidden></div>
       </div>
@@ -406,7 +484,8 @@
           <div class="jr-mp-trilho-marcado">
             <div class="jr-mp-trilho"><div class="jr-mp-fill lealdade" id="mp-lealdade-fill"></div></div>
             <span class="jr-mp-marca" id="mp-marca-conversa" title="Conversa">💬</span>
-            <span class="jr-mp-marca" id="mp-marca-ajuda" title="Ajuda nos ginásios">💡</span>
+            <span class="jr-mp-marca" id="mp-marca-ajuda" title="Dica nos ginásios">💡</span>
+            <span class="jr-mp-marca" id="mp-marca-elimina" title="Elimina uma opção">❌</span>
           </div>
           <div class="jr-mp-marco"><span id="mp-marco"></span><button class="jr-mp-info-btn" id="mp-info" title="Como a lealdade funciona" aria-label="Como a lealdade funciona">ⓘ</button>
             <div class="jr-mp-info-balao" id="mp-info-balao" hidden></div></div>
@@ -420,6 +499,7 @@
       <!-- Bolsa: comidas e peixes guardados -->
       <div class="mp-sub" id="mp-bolsa-painel" hidden>
         <div class="mp-sub-topo"><b><img class="jr-item-img jr-ic-titulo" data-icone="bolsa" alt="🎒" draggable="false"/> Bolsa</b><span>Toque numa comida para dar ao seu pet</span><button class="bt-lista-x" id="mp-bolsa-fechar" aria-label="Fechar">✕</button></div>
+        <div class="mp-bolsa-abas" id="mp-bolsa-abas"><button data-baba="comidas" class="ativa">🍎 Comidas</button><button data-baba="itens">🧰 Itens</button><button data-baba="colecao">📖 Coleção</button></div>
         <div class="mp-bolsa-itens" id="mp-bolsa-itens"></div>
       </div>
       <!-- Tinta e efeito do pet ativo -->
@@ -453,7 +533,7 @@
         <span class="jr-moedas" id="lj-moedas"><img class="jr-item-img jr-ic-moeda" data-icone="moeda" alt="🪙" draggable="false"/> <span>0</span></span>
         <button class="bt-lista-x" id="lj-fechar" aria-label="Fechar">✕</button>
       </div>
-      <div class="lj-abas" id="lj-abas"><button data-aba="comidas">🍎 Comidas</button><button data-aba="tintas"><img class="jr-item-img jr-ic-btn" data-icone="tinta" alt="🎨" draggable="false"/> Tintas</button><button data-aba="efeitos">✨ Efeitos</button></div>
+      <div class="lj-abas" id="lj-abas"><button data-aba="comidas">🍎 Comidas</button><button data-aba="tintas"><img class="jr-item-img jr-ic-btn" data-icone="tinta" alt="🎨" draggable="false"/> Tintas</button><button data-aba="efeitos">✨ Efeitos</button><button data-aba="pesca">🎣 Pesca</button></div>
       <div class="lj-itens" id="lj-itens"></div>
       <div class="lj-msg" id="lj-msg" aria-live="polite"></div>
     </div>

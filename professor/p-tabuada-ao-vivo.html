@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tabuada ao vivo — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+<style>
+  .av-form { display: grid; gap: 12px; max-width: 620px; }
+  .av-form label { font-weight: 700; font-size: 13px; color: var(--text-muted); display: block; margin-bottom: 4px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips button { min-height: 34px; min-width: 42px; padding: 2px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); color: var(--text); font: 700 13px 'Inter', sans-serif; cursor: pointer; }
+  .chips button.sel { background: var(--purple); border-color: var(--purple); color: #fff; }
+  .acoes { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .erro-msg { color: var(--red); font-size: 13px; }
+  /* Projeção: cabe na tela do projetor; em tela cheia ocupa tudo */
+  #projecao { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; min-height: 60vh; display: flex; flex-direction: column; gap: 14px; }
+  #projecao:fullscreen { border-radius: 0; padding: 3vh 4vw; min-height: 100vh; justify-content: center; }
+  .pj-topo { display: flex; justify-content: space-between; align-items: center; gap: 10px; color: var(--text-muted); font-weight: 700; }
+  .pj-codigo { font: 700 clamp(48px, 14vw, 160px) 'Orbitron', monospace; color: var(--gold); letter-spacing: .15em; text-align: center; line-height: 1; }
+  .pj-instr { text-align: center; font-size: clamp(16px, 2.4vw, 28px); color: var(--text); }
+  .pj-nomes { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .pj-nomes span { padding: 4px 12px; border-radius: 999px; background: rgba(155,48,255,.2); font-weight: 700; font-size: clamp(13px, 1.6vw, 20px); }
+  .pj-conta { font: 700 clamp(48px, 11vw, 140px) 'Orbitron', monospace; text-align: center; line-height: 1.1; }
+  .pj-ops { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .pj-ops div { border-radius: var(--radius); padding: 2vh 1vw; text-align: center; font: 700 clamp(26px, 5vw, 64px) 'Orbitron', monospace; color: #fff; }
+  .pj-ops .c0 { background: #e0374f; } .pj-ops .c1 { background: #1f7ae0; } .pj-ops .c2 { background: #c98d00; } .pj-ops .c3 { background: #13a85c; }
+  .pj-ops div.certa { box-shadow: 0 0 0 6px var(--gold); } .pj-ops div.apagada { opacity: .3; }
+  .pj-tempo { height: 12px; border-radius: 999px; background: var(--card); overflow: hidden; }
+  .pj-tempo i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, var(--orange), var(--gold)); }
+  .pj-info { text-align: center; font-size: clamp(16px, 2.2vw, 30px); font-weight: 700; }
+  .pj-top { list-style: none; margin: 0 auto; padding: 0; width: min(760px, 100%); display: flex; flex-direction: column; gap: 6px; }
+  .pj-top li { display: flex; align-items: center; gap: 12px; padding: 8px 16px; border-radius: 12px; background: var(--card); font-size: clamp(16px, 2.2vw, 28px); }
+  .pj-top li span { width: 2.2em; font-family: 'Orbitron', monospace; color: var(--gold); }
+  .pj-top li b { flex: 1; } .pj-top li em { font-family: 'Orbitron', monospace; font-style: normal; color: var(--green); }
+  .pj-top li i { width: 3em; font-style: normal; font-weight: 800; color: var(--green); text-align: right; } .pj-top li i.desce { color: var(--red); }
+  .pj-podio { display: flex; justify-content: center; align-items: flex-end; gap: 2vw; }
+  .pj-podio > div { width: min(24vw, 240px); text-align: center; }
+  .pj-podio b { display: block; font: 700 clamp(18px, 2.6vw, 34px) 'Rajdhani', sans-serif; }
+  .pj-podio small { font-family: 'Orbitron', monospace; color: var(--green); font-size: clamp(14px, 1.8vw, 22px); }
+  .pj-podio i { display: block; border-radius: 10px 10px 0 0; margin-top: 6px; background: linear-gradient(180deg, var(--gold), #9a6a00); }
+  .pj-podio .p1 i { height: 18vh; } .pj-podio .p2 i { height: 12vh; background: linear-gradient(180deg, #d9d9d9, #7d7d7d); } .pj-podio .p3 i { height: 8vh; background: linear-gradient(180deg, #e8a06a, #8a4a20); }
+  .pj-busto { width: min(9vw, 110px); aspect-ratio: 1; margin: 0 auto 6px; border-radius: 50%; overflow: hidden; background: var(--card); position: relative; display: flex; align-items: center; justify-content: center; font-size: 40px; }
+  .pj-busto img { position: absolute; left: 50%; top: -8%; height: 217%; transform: translateX(-50%); }
+  @media (max-width: 768px) { .pj-ops { grid-template-columns: 1fr; } .pj-podio > div { width: 30vw; } }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">⚡ Tabuada ao vivo</div>
+        <div class="topbar-sub">A turma toda responde as mesmas contas ao mesmo tempo, pelo Fliperama do Jogo de Revisão</div>
+      </div>
+      <div class="topbar-right"><a class="btn btn-ghost" href="/professor/p-jogo-revisao.html">⟵ Jogo de Revisão</a></div>
+    </div>
+    <div class="content" id="content">
+      <div class="card" id="config">
+        <div class="card-title">Abrir uma sala para a turma</div>
+        <div class="av-form">
+          <div><label>Turma (recebe o convite no jogo)</label><div class="chips" id="c-turma"></div></div>
+          <div><label>Tabuada</label><div class="chips" id="c-tipo"><button class="sel" data-v="normal">✖️ Normal</button><button data-v="negativa">➖ Negativa</button></div></div>
+          <div><label>Números</label><div class="chips multi" id="c-nums"></div></div>
+          <div><label>Rodadas</label><div class="chips" id="c-rod"><button class="sel" data-v="10">10</button><button data-v="20">20</button></div></div>
+          <div class="acoes"><button class="btn btn-blue" id="btn-abrir">📺 Abrir Tabuada ao vivo para a turma</button><span class="erro-msg" id="msg"></span></div>
+        </div>
+      </div>
+      <div id="sala" hidden>
+        <div class="acoes" style="margin-bottom:10px">
+          <button class="btn btn-blue" id="btn-comecar">▶ Começar</button>
+          <button class="btn btn-blue" id="btn-proxima" hidden>⏭ Próxima rodada</button>
+          <button class="btn btn-ghost" id="btn-encerrar">⏹ Encerrar</button>
+          <button class="btn btn-ghost" id="btn-cheia">⛶ Tela cheia</button>
+          <span class="erro-msg" id="msg-sala"></span>
+        </div>
+        <div id="projecao"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireProfessor, renderSidebarProfessor } from "/js/auth.js";
+import { TEMPO_RODADA_MS, MIN_JOGADORES } from "/js/jogo-revisao/aovivo.js";
+import { baseAoVivo, criarSala, convidarTurma, Anfitriao, placar, agoraServ } from "/js/jogo-revisao/aovivo-sala.js";
+
+const sess = requireProfessor("/index.html");
+if (sess) renderSidebarProfessor("sidebar", "jogo_revisao");
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const TURMAS = ["8D", "8E", "8F", "8G", "8H"];
+const BASE = baseAoVivo(false);   // a professora usa sempre as salas reais
+const nomeCurto = (n) => String(n || "?");
+let host = null, codigo = null, vistaRodada = -1, raf = 0;
+
+const turmaUrl = new URLSearchParams(location.search).get("turma");
+$("c-turma").innerHTML = TURMAS.map(t => `<button data-v="${t}" class="${t === (TURMAS.includes(turmaUrl) ? turmaUrl : TURMAS[0]) ? "sel" : ""}">${t}</button>`).join("");
+$("c-nums").innerHTML = [2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<button class="sel" data-v="${n}">${n}</button>`).join("");
+for (const g of document.querySelectorAll(".chips")) g.addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (g.classList.contains("multi")) b.classList.toggle("sel");
+  else for (const x of g.children) x.classList.toggle("sel", x === b);
+});
+const valor = (id) => $(id).querySelector(".sel")?.dataset.v;
+
+$("btn-abrir").addEventListener("click", async () => {
+  const numeros = [...$("c-nums").querySelectorAll(".sel")].map(b => Number(b.dataset.v));
+  if (!numeros.length) { $("msg").textContent = "Escolha pelo menos um número."; return; }
+  const turma = valor("c-turma"), cfg = { tipo: valor("c-tipo"), numeros, rodadas: Number(valor("c-rod")) || 10 };
+  $("btn-abrir").disabled = true;
+  try {
+    codigo = await criarSala(BASE, { host: "professora", host_nome: "Professora", turma, cfg });
+    await convidarTurma(BASE, turma, codigo);
+  } catch (e) {
+    console.error(e);
+    $("msg").textContent = "Não foi possível abrir a sala (confira se a regra jogo_revisao_aovivo foi publicada no Firebase).";
+    $("btn-abrir").disabled = false;
+    return;
+  }
+  $("config").hidden = true;
+  $("sala").hidden = false;
+  host = new Anfitriao(BASE, codigo, { auto: false, aoMudar: render });
+});
+
+$("btn-comecar").addEventListener("click", () => {
+  if (!host?.podeComecar()) { $("msg-sala").textContent = `Precisa de pelo menos ${MIN_JOGADORES} alunos na sala.`; return; }
+  $("msg-sala").textContent = "";
+  host.comecar();
+});
+$("btn-proxima").addEventListener("click", () => host?.proxima());
+$("btn-encerrar").addEventListener("click", () => { if (confirm("Encerrar a Tabuada ao vivo agora?")) host?.encerrar(); });
+$("btn-cheia").addEventListener("click", () => { const p = $("projecao"); document.fullscreenElement ? document.exitFullscreen() : p.requestFullscreen?.(); });
+
+function bustoHtml(pers) {
+  return pers ? `<div class="pj-busto"><img src="/img/jogo/personagens-principais/${esc(pers)}/frente-parado.webp" alt="" onerror="this.remove()"/></div>` : `<div class="pj-busto">🙂</div>`;
+}
+function top5(pl) {
+  return `<ol class="pj-top">${pl.slice(0, 5).map(j => { const d = j.pos_ant ? j.pos_ant - j.pos : 0;
+    return `<li><span>${j.pos}º</span><b>${esc(nomeCurto(j.nome))} <small style="color:var(--text-muted)">${esc(j.turma || "")}</small></b><em>${j.pontos}</em><i class="${d < 0 ? "desce" : ""}">${d > 0 ? "▲" + d : d < 0 ? "▼" + -d : ""}</i></li>`; }).join("")}</ol>`;
+}
+
+function render(s) {
+  const pj = $("projecao");
+  if (!s) { pj.innerHTML = `<div class="pj-info">A sala foi fechada.</div>`; return; }
+  const pl = placar(s.jogadores, true), total = Number(s.cfg?.rodadas) || 10;
+  $("btn-comecar").hidden = s.estado !== "espera";
+  $("btn-proxima").hidden = s.estado !== "intervalo";
+  $("btn-proxima").textContent = s.atual + 1 >= total ? "🏁 Ver o pódio" : "⏭ Próxima rodada";
+  $("btn-encerrar").hidden = s.estado === "fim";
+  const topo = `<div class="pj-topo"><span>Código <b style="color:var(--gold);font-family:Orbitron">${esc(codigo)}</b> · ${esc(s.turma || "")} · ${s.cfg?.tipo === "negativa" ? "Tabuada negativa" : "Tabuada"}</span><span>${pl.length} na sala</span></div>`;
+  if (s.estado === "espera") {
+    pj.innerHTML = `${topo}<div class="pj-instr">No Jogo de Revisão: <b>Praça → Fliperama → máquina amarela ⚡</b> (ou toque no convite)</div>
+      <div class="pj-codigo">${esc(codigo)}</div><div class="pj-nomes">${pl.map(j => `<span>${esc(nomeCurto(j.nome))}</span>`).join("") || '<span style="background:none;color:var(--text-muted)">Esperando os alunos entrarem…</span>'}</div>`;
+    return;
+  }
+  const r = s.rodada;
+  if (s.estado === "rodada" && r) {
+    const resp = Object.keys(s.resp?.[r.i] || {}).length;
+    if (vistaRodada !== r.i || !pj.querySelector(".pj-conta")) {
+      vistaRodada = r.i;
+      pj.innerHTML = `${topo}<div class="pj-topo"><span>Rodada ${r.i + 1} / ${total}</span><span id="pj-resp"></span></div><div class="pj-tempo"><i id="pj-tempo"></i></div>
+        <div class="pj-conta">${esc(r.conta)}</div><div class="pj-ops">${(r.opcoes || []).map((o, k) => `<div class="c${k}">${esc(o)}</div>`).join("")}</div>`;
+      animarTempo();
+    }
+    $("pj-resp").textContent = `${resp} de ${pl.length} responderam`;
+    return;
+  }
+  if (s.estado === "intervalo" && r) {
+    vistaRodada = -1;
+    pj.innerHTML = `${topo}<div class="pj-conta" style="font-size:clamp(36px,7vw,90px)">${esc(r.conta)} = <span style="color:var(--gold)">${esc(r.resposta)}</span></div>
+      <div class="pj-info">${r.fim?.certos || 0} de ${r.fim?.total || 0} acertaram</div>${top5(pl)}`;
+    return;
+  }
+  if (s.estado === "fim") {
+    const todos = placar(s.jogadores);
+    pj.innerHTML = `${topo}<div class="pj-info" style="font-size:clamp(24px,4vw,48px);color:var(--gold)">🏁 Pódio</div>
+      <div class="pj-podio">${[1, 0, 2].map(k => todos[k] ? `<div class="p${k + 1}">${bustoHtml(todos[k].pers)}<b>${["🥇", "🥈", "🥉"][k]} ${esc(nomeCurto(todos[k].nome))}</b><small>${todos[k].pontos} pts</small><i></i></div>` : "").join("")}</div>
+      ${top5(todos.slice(3))}`;   // do 4º em diante (a posição vem do placar)
+    host?.desligar();
+  }
+}
+function animarTempo() {
+  cancelAnimationFrame(raf);
+  const passo = () => {
+    const s = host?.sala, r = s?.rodada, el = $("pj-tempo");
+    if (!el || s?.estado !== "rodada") return;
+    if (typeof r?.inicio === "number") el.style.width = Math.max(0, Math.min(1, 1 - (agoraServ() - r.inicio) / TEMPO_RODADA_MS)) * 100 + "%";
+    raf = requestAnimationFrame(passo);
+  };
+  passo();
+}
+</script>
+</body>
+</html>

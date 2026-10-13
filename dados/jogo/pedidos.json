@@ -5,7 +5,7 @@
   "tentativas": 2,
   "limite_moedas_dia": 20,
   "pedidos_por_pessoa_dia": 1,
-  "lealdade_dica": 60
+  "lealdade_dica": 80
  },
  "pedidos": [
   {

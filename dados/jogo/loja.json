@@ -1,11 +1,12 @@
 {
  "vendedor": "dona_cida",
  "barriga": {
-  "esvazia_horas_uteis": 48,
+  "esvazia_horas_uteis": 16,
   "fome_abaixo": 40,
   "comum_ate": 60,
   "cada_comida_enche": 20,
-  "cheia": 100
+  "cheia": 100,
+  "especiais_cheio_dia": 3
  },
  "comidas": [
   {
@@ -62,6 +63,56 @@
    "especial": true,
    "limite_semana": 1,
    "imagem": "img/jogo/itens/bolo.webp"
+  },
+  {
+   "id": "maca",
+   "nome": "Maçã",
+   "emoji": "🍎",
+   "preco": 0,
+   "lealdade": 2,
+   "especial": false,
+   "venda_loja": false,
+   "imagem": "img/jogo/itens/maca.webp"
+  },
+  {
+   "id": "banana",
+   "nome": "Banana",
+   "emoji": "🍌",
+   "preco": 0,
+   "lealdade": 2,
+   "especial": false,
+   "venda_loja": false,
+   "imagem": "img/jogo/itens/banana.webp"
+  },
+  {
+   "id": "cenoura",
+   "nome": "Cenoura",
+   "emoji": "🥕",
+   "preco": 0,
+   "lealdade": 2,
+   "especial": false,
+   "venda_loja": false,
+   "imagem": "img/jogo/itens/cenoura.webp"
+  },
+  {
+   "id": "milho",
+   "nome": "Milho",
+   "emoji": "🌽",
+   "preco": 0,
+   "lealdade": 2,
+   "especial": false,
+   "venda_loja": false,
+   "imagem": "img/jogo/itens/milho.webp"
+  },
+  {
+   "id": "batata",
+   "nome": "Batata",
+   "emoji": "🥔",
+   "preco": 0,
+   "lealdade": 1,
+   "especial": false,
+   "venda_loja": false,
+   "imagem": "img/jogo/itens/batata.webp"
   }
  ],
  "favoritas": {
@@ -123,6 +174,20 @@
    "nome": "Arco-íris",
    "preco": 100,
    "filtro": "animado: grayscale(1) sepia(1) saturate(3) + hue-rotate de 0 a 360deg em 4 s"
+  },
+  {
+   "id": "esmeralda",
+   "nome": "Esmeralda",
+   "preco": 0,
+   "exclusiva": true,
+   "filtro": "grayscale(1) sepia(1) saturate(4) hue-rotate(100deg) brightness(0.9)"
+  },
+  {
+   "id": "cristal",
+   "nome": "Cristal",
+   "preco": 0,
+   "exclusiva": true,
+   "filtro": "grayscale(1) brightness(1.35) contrast(0.9) drop-shadow(0 0 4px #bdf)"
   }
  ],
  "efeitos": [
@@ -194,5 +259,28 @@
   "moeda": "img/jogo/itens/moeda.webp",
   "bolsa": "img/jogo/itens/bolsa.webp",
   "tinta": "img/jogo/itens/tinta.webp"
- }
+ },
+ "itens_uso": [
+  {
+   "id": "isca",
+   "nome": "Isca",
+   "emoji": "🪱",
+   "imagem": "img/jogo/itens/isca.webp",
+   "descricao": "Cada lançamento da vara gasta 1."
+  },
+  {
+   "id": "dica_pet",
+   "nome": "Dica do pet",
+   "emoji": "💡",
+   "imagem": "img/jogo/itens/dica_pet.webp",
+   "descricao": "No ginásio ou na batalha: elimina 1 alternativa errada (1 por pergunta)."
+  },
+  {
+   "id": "segunda_chance",
+   "nome": "Segunda chance",
+   "emoji": "🔁",
+   "imagem": "img/jogo/itens/segunda_chance.webp",
+   "descricao": "Errou no ginásio ou na batalha: tenta de novo sem perder (1 por desafio)."
+  }
+ ]
 }

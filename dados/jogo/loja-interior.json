@@ -1,0 +1,96 @@
+{
+ "imagem": "loja.webp",
+ "porta": [
+  689,
+  747
+ ],
+ "entrada": [
+  689,
+  716
+ ],
+ "vendedora": {
+  "pos": [
+   880,
+   385
+  ],
+  "ponto": [
+   800,
+   420
+  ],
+  "aba": "comidas",
+  "obs": "em pé no chão, ao lado do balcão (não em cima dele)"
+ },
+ "cantos": [
+  {
+   "id": "comidas",
+   "nome": "Comidas",
+   "aba": "comidas",
+   "ponto": [
+    289,
+    592
+   ]
+  },
+  {
+   "id": "tintas",
+   "nome": "Tintas",
+   "aba": "tintas",
+   "ponto": [
+    1040,
+    385
+   ]
+  },
+  {
+   "id": "pesca",
+   "nome": "Pesca",
+   "aba": "pesca",
+   "ponto": [
+    1164,
+    427
+   ],
+   "obs": "iscas e venda de peixes"
+  },
+  {
+   "id": "pedestal",
+   "nome": "Provador",
+   "aba": "tintas",
+   "ponto": [
+    1102,
+    619
+   ],
+   "pet": [
+    1164,
+    612
+   ],
+   "obs": "pet sobe no pedestal na prévia da tinta"
+  },
+  {
+   "id": "efeitos",
+   "nome": "Efeitos",
+   "aba": "efeitos",
+   "ponto": [
+    895,
+    551
+   ]
+  }
+ ],
+ "area_livre": [
+  {
+   "x0": 503,
+   "y0": 358,
+   "x1": 1226,
+   "y1": 729
+  },
+  {
+   "x0": 210,
+   "y0": 557,
+   "x1": 578,
+   "y1": 729
+  }
+ ],
+ "nota": "Coordenadas em 1376x768. mercado = porta da loja no Mercado Central (mapa 7), onde a Dona Cida ficava; ajuste com ?editarLoja=1.",
+ "mercado": {
+  "mapa": 7,
+  "x": 298,
+  "y": 350
+ }
+}

@@ -1,0 +1,256 @@
+{
+ "_nota": "Cavar e mexer no mato (PROMPT-32). imagem: img/jogo/itens/{id}.webp — enquanto a imagem não existir, o jogo mostra o emoji.",
+ "config": {
+  "montinhos_por_mapa_dia": 3,
+  "tesouros_por_mapa_dia": 1,
+  "moedas_cavar_dia": 15,
+  "mato_rebrota_h": 6,
+  "raio_cavar": 18,
+  "faro_pet": {
+   "lealdade_0": 60,
+   "lealdade_50": 110,
+   "lealdade_100": 170
+  },
+  "imagens": {
+   "montinho": "img/jogo/itens/montinho.webp",
+   "buraco": "img/jogo/itens/buraco.webp",
+   "pa": "img/jogo/itens/pa.webp",
+   "mato_cortado": "img/jogo/itens/mato_cortado.webp"
+  },
+  "repetida_moedas": 5,
+  "grupo_completo_moedas": 20
+ },
+ "montinho": {
+  "vazio": 30,
+  "premios": [
+   {
+    "tipo": "moedas",
+    "qtd": [
+     1,
+     3
+    ],
+    "peso": 35
+   },
+   {
+    "tipo": "item",
+    "id": "isca",
+    "qtd": [
+     1,
+     2
+    ],
+    "peso": 25
+   },
+   {
+    "tipo": "item",
+    "id": "racao",
+    "qtd": 1,
+    "peso": 20
+   },
+   {
+    "tipo": "item",
+    "id": "batata",
+    "qtd": 1,
+    "peso": 20
+   }
+  ]
+ },
+ "tesouro": {
+  "vazio": 20,
+  "premios": [
+   {
+    "tipo": "moedas",
+    "qtd": [
+     5,
+     15
+    ],
+    "peso": 30
+   },
+   {
+    "tipo": "colecao",
+    "peso": 35
+   },
+   {
+    "tipo": "item",
+    "id": "dica_pet",
+    "qtd": 1,
+    "peso": 12
+   },
+   {
+    "tipo": "item",
+    "id": "segunda_chance",
+    "qtd": 1,
+    "peso": 10
+   },
+   {
+    "tipo": "tinta",
+    "id": "esmeralda",
+    "peso": 7
+   },
+   {
+    "tipo": "tinta",
+    "id": "cristal",
+    "peso": 6
+   }
+  ]
+ },
+ "mato": {
+  "vazio": 25,
+  "bicho": 10,
+  "premios": [
+   {
+    "id": "maca",
+    "peso": 20
+   },
+   {
+    "id": "banana",
+    "peso": 20
+   },
+   {
+    "id": "cenoura",
+    "peso": 20
+   },
+   {
+    "id": "milho",
+    "peso": 20
+   },
+   {
+    "id": "batata",
+    "peso": 20
+   }
+  ]
+ },
+ "colecao": [
+  {
+   "id": "fossil_amonite",
+   "nome": "Amonite",
+   "grupo": "Fósseis",
+   "emoji": "🐚",
+   "mapas": [
+    5,
+    6
+   ],
+   "imagem": "img/jogo/itens/fossil_amonite.webp"
+  },
+  {
+   "id": "fossil_dente",
+   "nome": "Dente de dinossauro",
+   "grupo": "Fósseis",
+   "emoji": "🦷",
+   "mapas": [
+    5,
+    9
+   ],
+   "imagem": "img/jogo/itens/fossil_dente.webp"
+  },
+  {
+   "id": "fossil_folha",
+   "nome": "Folha fossilizada",
+   "grupo": "Fósseis",
+   "emoji": "🍂",
+   "mapas": [
+    6,
+    4
+   ],
+   "imagem": "img/jogo/itens/fossil_folha.webp"
+  },
+  {
+   "id": "concha_espiral",
+   "nome": "Concha espiral",
+   "grupo": "Conchas",
+   "emoji": "🐚",
+   "mapas": [
+    2
+   ],
+   "imagem": "img/jogo/itens/concha_espiral.webp"
+  },
+  {
+   "id": "concha_leque",
+   "nome": "Concha leque",
+   "grupo": "Conchas",
+   "emoji": "🐚",
+   "mapas": [
+    2,
+    12
+   ],
+   "imagem": "img/jogo/itens/concha_leque.webp"
+  },
+  {
+   "id": "estrela_mar",
+   "nome": "Estrela-do-mar",
+   "grupo": "Conchas",
+   "emoji": "⭐",
+   "mapas": [
+    2,
+    12
+   ],
+   "imagem": "img/jogo/itens/estrela_mar.webp"
+  },
+  {
+   "id": "moeda_bronze",
+   "nome": "Moeda antiga de bronze",
+   "grupo": "Moedas antigas",
+   "emoji": "🪙",
+   "mapas": [
+    1,
+    7,
+    8
+   ],
+   "imagem": "img/jogo/itens/moeda_bronze.webp"
+  },
+  {
+   "id": "moeda_prata",
+   "nome": "Moeda antiga de prata",
+   "grupo": "Moedas antigas",
+   "emoji": "🪙",
+   "mapas": [
+    9,
+    10,
+    11
+   ],
+   "imagem": "img/jogo/itens/moeda_prata.webp"
+  },
+  {
+   "id": "moeda_ouro",
+   "nome": "Moeda antiga de ouro",
+   "grupo": "Moedas antigas",
+   "emoji": "🪙",
+   "mapas": [
+    12,
+    13
+   ],
+   "imagem": "img/jogo/itens/moeda_ouro.webp"
+  },
+  {
+   "id": "pedra_rubi",
+   "nome": "Rubi",
+   "grupo": "Pedras preciosas",
+   "emoji": "💎",
+   "mapas": [
+    5
+   ],
+   "imagem": "img/jogo/itens/pedra_rubi.webp"
+  },
+  {
+   "id": "pedra_safira",
+   "nome": "Safira",
+   "grupo": "Pedras preciosas",
+   "emoji": "💎",
+   "mapas": [
+    3,
+    5
+   ],
+   "imagem": "img/jogo/itens/pedra_safira.webp"
+  },
+  {
+   "id": "pedra_ametista",
+   "nome": "Ametista",
+   "grupo": "Pedras preciosas",
+   "emoji": "💎",
+   "mapas": [
+    5,
+    9
+   ],
+   "imagem": "img/jogo/itens/pedra_ametista.webp"
+  }
+ ]
+}

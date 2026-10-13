@@ -1,0 +1,171 @@
+{
+ "_nota": "Praça do Encontro (PROMPT-29). Coordenadas no mapa lógico 1376 × 768. Posições: ajuste com ?editarPraca=1 no modo teste (arrastar e copiar). Campos acrescentados ao arquivo da professora: imagem, trilha, geral, temas_ginasios, desafio, frases, intervalo_balao_s.",
+ "imagem": "praca.webp",
+ "trilha": "trilha-praca.png",
+ "entrada": [
+  690,
+  762
+ ],
+ "saidas": [
+  [
+   690,
+   767
+  ]
+ ],
+ "mural": {
+  "x": 250,
+  "y": 225,
+  "largura": 260,
+  "ponto": [
+   310,
+   330
+  ]
+ },
+ "fliperama": {
+  "x": 1120,
+  "y": 330,
+  "interior": "fliperama"
+ },
+ "ponto_desafio": {
+  "a": [
+   640,
+   540
+  ],
+  "b": [
+   740,
+   540
+  ]
+ },
+ "bancos": [
+  [
+   495,
+   180
+  ],
+  [
+   575,
+   180
+  ],
+  [
+   808,
+   180
+  ],
+  [
+   887,
+   180
+  ]
+ ],
+ "loja": {
+  "x": 642,
+  "y": 205,
+  "interior": "loja"
+ },
+ "geral": {
+  "x": 560,
+  "y": 640
+ },
+ "temas_ginasios": {
+  "mapa1-A": [
+   "expressao_sem_parenteses"
+  ],
+  "mapa1-B": [
+   "expressao_com_parenteses"
+  ],
+  "mapa2-A": [
+   "vezes_10_100_1000"
+  ],
+  "mapa2-B": [
+   "decimais",
+   "medidas"
+  ],
+  "mapa3-A": [
+   "negativos_soma"
+  ],
+  "mapa3-B": [
+   "negativos_mult"
+  ],
+  "mapa4-A": [
+   "fracoes"
+  ],
+  "mapa4-B": [
+   "decimais"
+  ],
+  "mapa5-A": [
+   "potencia"
+  ],
+  "mapa5-B": [
+   "raiz"
+  ],
+  "mapa6-A": [
+   "multiplos_divisores"
+  ],
+  "mapa6-B": [
+   "multiplos_divisores"
+  ],
+  "mapa7-A": [
+   "porcentagem"
+  ],
+  "mapa7-B": [
+   "porcentagem"
+  ],
+  "mapa8-A": [
+   "valor_numerico"
+  ],
+  "mapa8-B": [
+   "termos_semelhantes"
+  ],
+  "mapa9-A": [
+   "equacao"
+  ],
+  "mapa9-B": [
+   "equacao"
+  ],
+  "mapa10-A": [
+   "regra_de_tres"
+  ],
+  "mapa10-B": [
+   "regra_de_tres"
+  ],
+  "mapa11-A": [
+   "perimetro_area"
+  ],
+  "mapa11-B": [
+   "perimetro_area"
+  ],
+  "mapa12-A": [
+   "coordenadas"
+  ],
+  "mapa12-B": [
+   "coordenadas"
+  ],
+  "mapa13-A": [
+   "media"
+  ],
+  "mapa13-B": [
+   "media"
+  ]
+ },
+ "desafio": {
+  "rodadas": 5,
+  "tempo_rodada_s": 10,
+  "dificuldade": 2,
+  "convite_expira_s": 20,
+  "wo_s": 15,
+  "premiados_dia": 5,
+  "premiados_mesmo_colega_dia": 2,
+  "moedas_vitoria": 3,
+  "moedas_empate": 1,
+  "pontos_vitoria": 10,
+  "pontos_empate": 4,
+  "pontos_rodada": 1
+ },
+ "frases": [
+  "Oi! 👋",
+  "Bora duelar? ⚔️",
+  "Boa! 👏",
+  "GG 🤝",
+  "Já volto!",
+  "Me ajuda?",
+  "Uhuu! 🎉"
+ ],
+ "intervalo_balao_s": 3
+}

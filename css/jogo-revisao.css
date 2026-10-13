@@ -741,7 +741,6 @@ html.jr-deitado #pet-colecao .jr-pet-escolha-caixa { gap: 3px; }
   background: linear-gradient(180deg, rgba(124,92,252,.10), rgba(13,15,26,.55)); border: 1px solid rgba(124,92,252,.35);
   transition: filter .6s;
 }
-.jr-mp-palco.noite { filter: brightness(.55) saturate(.8); }
 .jr-mp-brilho { position: absolute; left: 50%; bottom: 8%; width: 90%; aspect-ratio: 1; transform: translate(-50%, 18%); border-radius: 50%;
   background: radial-gradient(circle, rgba(124,92,252,.42) 0%, rgba(124,92,252,.14) 45%, rgba(124,92,252,0) 70%); pointer-events: none; }
 .jr-mp-sombra { position: absolute; left: 50%; bottom: 9%; width: 46%; height: 7%; transform: translateX(-50%); border-radius: 50%;
@@ -749,10 +748,6 @@ html.jr-deitado #pet-colecao .jr-pet-escolha-caixa { gap: 3px; }
 .jr-mp-pulo { position: absolute; left: 0; right: 0; bottom: 10%; display: flex; justify-content: center; transform-origin: 50% 100%; pointer-events: none; }
 .jr-mp-corpo { transform-origin: 50% 100%; line-height: 0; }
 #jr-app img#mp-img { image-rendering: auto; width: auto; display: block; }
-.jr-mp-zz { position: absolute; left: 58%; top: 16%; pointer-events: none; font: 700 20px 'Rajdhani', sans-serif; color: #c9b8ff; }
-.jr-mp-zz span { position: absolute; opacity: 0; animation: jr-zz 2.4s ease-out infinite; }
-.jr-mp-zz span:nth-child(2) { animation-delay: 1.2s; font-size: 15px; }
-@keyframes jr-zz { 0% { opacity: 0; transform: translate(0, 10px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(14px, -34px); } }
 .jr-mp-particulas { position: absolute; inset: 0; pointer-events: none; }
 .jr-mp-part { position: absolute; bottom: 40%; font-size: 20px; opacity: 0; animation: jr-part 1.3s ease-out forwards; }
 @keyframes jr-part { 0% { opacity: 0; transform: translateY(0) scale(.6); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateY(-90px) scale(1.15); } }
@@ -787,7 +782,7 @@ html.jr-deitado .jr-mp-botoes .jr-btn { min-height: 36px; padding: 4px 10px; fon
 #meu-pet .jr-mp-botoes:last-child .jr-btn { flex: 1 1 auto; white-space: nowrap; }
 html.jr-deitado #meu-pet .jr-mp-botoes:last-child .jr-btn { padding: 4px 6px; font-size: 14px; }
 html.jr-deitado .jr-mp-barra-topo { font-size: 14px; }
-@media (prefers-reduced-motion: reduce) { .jr-moeda-mais, .jr-mp-zz span, .jr-mp-part { animation-duration: 1ms; } .jr-mp-zz span { opacity: .8; animation: none; } }
+@media (prefers-reduced-motion: reduce) { .jr-moeda-mais, .jr-mp-part { animation-duration: 1ms; } }
 
 /* ============================================================
    Jogar junto: colegas, online no mapa geral e reações
@@ -1472,20 +1467,51 @@ html.jr-deitado .lj-qtd button { height: 22px; }
   background: #ffd700; color: #3a2400; font: 900 1em 'Inter', sans-serif; box-shadow: 0 0 0 .1em #3a2400, 0 0 .6em rgba(255,215,0,.9); pointer-events: none; animation: jr-exc-pulsa .3s ease-in-out infinite alternate; }
 @keyframes jr-exc-pulsa { from { scale: .9; } to { scale: 1.15; } }
 .jr-pesca-exc[hidden] { display: none; }
-.jr-btn-levantar { position: absolute; z-index: 17; left: 50%; bottom: max(14px, var(--sa-b)); transform: translateX(-50%); min-height: 38px; padding: 4px 18px; }
-.jr-btn-levantar[hidden] { display: none; }
-.jr-pesca-conta { position: absolute; z-index: 18; left: 50%; bottom: max(10px, var(--sa-b)); transform: translateX(-50%); width: min(640px, calc(100% - 24px)); display: flex; flex-direction: column; gap: 6px;
-  padding: 8px 10px 10px; border-radius: 16px; background: rgba(17,15,38,.94); border: 1px solid rgba(124,92,252,.5); box-shadow: 0 6px 18px rgba(0,0,0,.5); }
-.jr-pesca-conta[hidden] { display: none; }
-.pc-tbar { height: 6px; border-radius: 999px; background: #0d0d1c; overflow: hidden; }
-.pc-tbar i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #7c5cfc, #c77dff); }
-.pc-conta { font: 700 22px 'Orbitron', sans-serif; color: #fff; text-align: center; line-height: 1.2; }
-.pc-conta.longa { font: 800 16px 'Inter', sans-serif; }
-.pc-ops { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.pc-op { min-height: 42px; border-radius: 12px; border: 1px solid rgba(124,92,252,.6); border-bottom-width: 3px; background: #24204a; color: #fff; font: 700 18px 'Orbitron', sans-serif; cursor: pointer; }
-.pc-ops.longas .pc-op { font: 800 14px 'Inter', sans-serif; }
-.pc-op.certa { background: linear-gradient(180deg, #13a85c, #0b6e3c); border-color: #3ecf8e; }
-.pc-op.errada { background: linear-gradient(180deg, #c7334a, #861f30); border-color: #ff5c7a; }
+/* PROMPT-28: botões da pesca (ranking, lançar, levantar) embaixo, no centro */
+.jr-pesca-botoes { position: absolute; z-index: 17; left: 50%; bottom: max(14px, var(--sa-b)); transform: translateX(-50%); display: flex; gap: 8px; align-items: center; }
+.jr-pesca-botoes .jr-btn { min-height: 38px; padding: 4px 16px; }
+.jr-pesca-botoes .jr-btn[hidden] { display: none; }
+#btn-lancar small { font: 700 12px 'Inter', sans-serif; opacity: .8; }
+/* Minijogo da barrinha: a camada cobre a tela toda (segurar em qualquer lugar); a barra fica à direita, ~70% da altura */
+.jr-pesca-barra { position: absolute; inset: 0; z-index: 18; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; cursor: pointer; }
+.jr-pesca-barra[hidden] { display: none; }
+.pb-painel { position: absolute; right: max(18px, var(--sa-r, 0px)); top: 50%; transform: translateY(-50%); height: 72%; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 8px 10px 10px; border-radius: 16px; background: rgba(17,15,38,.9); border: 1px solid rgba(124,92,252,.5); box-shadow: 0 6px 18px rgba(0,0,0,.5); pointer-events: none; }
+.pb-dica { font: 800 11px 'Inter', sans-serif; color: #c9cde0; white-space: nowrap; }
+.pb-colunas { flex: 1; min-height: 0; display: flex; gap: 8px; }
+.pb-trilho { position: relative; width: 46px; height: 100%; border-radius: 12px; overflow: hidden;
+  background: linear-gradient(180deg, #2a8fd6 0%, #1663a8 55%, #0d3f73 100%); box-shadow: inset 0 0 0 2px rgba(255,255,255,.18); }
+.pb-trilho.treme { animation: jr-pb-treme .12s linear infinite alternate; }
+@keyframes jr-pb-treme { from { translate: -1px 0; } to { translate: 1px 0; } }
+.pb-zona { position: absolute; left: 3px; right: 3px; bottom: 0; border-radius: 8px; background: rgba(62,207,142,.45); box-shadow: inset 0 0 0 2px #3ecf8e; }
+.pb-zona.dentro { background: rgba(62,207,142,.7); box-shadow: inset 0 0 0 2px #b8ffd9, 0 0 10px rgba(62,207,142,.8); }
+.pb-peixe { position: absolute; left: 50%; bottom: 50%; transform: translate(-50%, 50%); font-size: 26px; line-height: 1; z-index: 1; }
+#jr-app .pb-peixe img.jr-item-img { height: 30px; }
+.pb-captura { position: relative; width: 12px; height: 100%; border-radius: 999px; background: #0d0d1c; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255,255,255,.15); }
+.pb-captura i { position: absolute; left: 0; right: 0; bottom: 0; height: 30%; background: linear-gradient(0deg, #ffb300, #3ecf8e); }
+@media (prefers-reduced-motion: reduce) { .pb-trilho.treme { animation: none; } }
+/* Ranking de pesca da semana */
+.jr-pesca-ranking { position: absolute; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; background: rgba(5,6,14,.6); padding: 12px; }
+.jr-pesca-ranking[hidden] { display: none; }
+.pr-caixa { width: min(440px, 100%); max-height: 100%; display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 18px;
+  background: #15132e; border: 1px solid rgba(124,92,252,.55); box-shadow: 0 10px 28px rgba(0,0,0,.6); color: #fff; font-family: 'Inter', sans-serif; }
+.pr-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pr-topo b { font: 700 19px 'Rajdhani', sans-serif; color: var(--jr-ouro); }
+.pr-topo .jr-btn { min-height: 32px; padding: 2px 12px; }
+.pr-abas { display: flex; gap: 6px; }
+.pr-abas button { flex: 1; min-height: 30px; border-radius: 999px; border: 1px solid rgba(124,92,252,.45); background: rgba(124,92,252,.1); color: #c9cde0; font: 800 12.5px 'Inter', sans-serif; cursor: pointer; }
+.pr-abas button.ativa { color: #2a1a00; background: linear-gradient(135deg, #ffb300, var(--jr-ouro)); border-color: #c48a00; }
+.pr-abas button[hidden] { display: none; }
+.pr-lista { list-style: none; margin: 0; padding: 0; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; gap: 4px; }
+.pr-lista li { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 10px; background: rgba(124,92,252,.1); font-size: 13.5px; }
+.pr-lista li.eu { background: rgba(255,215,0,.16); box-shadow: inset 0 0 0 1px rgba(255,215,0,.5); }
+.pr-lista li.pr-vazio { justify-content: center; color: #c9cde0; background: none; }
+.pr-pos { width: 30px; font: 700 14px 'Orbitron', sans-serif; color: var(--jr-ouro); }
+.pr-nome { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pr-nome small { color: #9a9fb8; font-weight: 700; font-size: 11.5px; }
+.pr-lista li b { font: 700 13px 'Orbitron', sans-serif; color: #7ee2a8; }
+.pr-voce { font: 800 14px 'Inter', sans-serif; color: var(--jr-ouro); text-align: center; }
+.pr-nota { font-size: 11.5px; color: #9a9fb8; text-align: center; line-height: 1.35; }
 .jr-pesca-cartao { position: absolute; z-index: 19; left: 50%; top: 22%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 16px;
   background: #fff; color: #1a1d2e; box-shadow: 0 8px 22px rgba(0,0,0,.45); font: 600 15px 'Inter', sans-serif; max-width: min(420px, 86vw); }
 .jr-pesca-cartao[hidden] { display: none; }
@@ -1591,3 +1617,252 @@ html.jr-deitado #meu-pet .jr-mp-botoes.jr-mp-principais .jr-btn { font-size: 14p
 #jr-app img.jr-rotulo-ins { height: 26px; width: auto; image-rendering: auto; }
 .jr-rotulo-ok { font-style: normal; font-size: .75em; color: #3ecf8e; }
 .jr-rotulo-porta.fechado span { color: #9aa0b5; }
+
+/* ── PROMPT-28: bolsa (iscas e opções do peixe), loja (iscas, vender) e presente no cartão do colega ── */
+.mp-bolsa-iscas { grid-column: 1 / -1; font: 700 13px 'Inter', sans-serif; color: #fff; padding: 2px 4px; }
+.mp-bolsa-iscas span { color: #9a9fb8; font-weight: 600; font-size: 12px; }
+.mp-bolsa-item.sel { background: rgba(124,92,252,.3); box-shadow: inset 0 0 0 1px rgba(124,92,252,.8); }
+.mp-bolsa-acoes { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 4px 4px 8px; }
+.mp-bolsa-acoes .jr-btn { min-height: 34px; padding: 2px 14px; }
+.mp-bolsa-acoes span { font: 600 11.5px 'Inter', sans-serif; color: #c9cde0; line-height: 1.35; }
+.lj-isca { font-size: 36px; line-height: 1; }
+.lj-vazio { font: 600 13.5px 'Inter', sans-serif; color: #c9cde0; padding: 14px 4px; text-align: center; }
+.jr-presente small { font: 600 11.5px 'Inter', sans-serif; color: #6b6f86; }
+.jr-presente-lista { display: flex; flex-wrap: wrap; gap: 4px; max-width: 260px; }
+.jr-presente-lista button { display: flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 10px; border: 1px solid #d9d2ff; background: #f4f1ff; cursor: pointer;
+  font: 700 12px 'Inter', sans-serif; color: #3d4058; }
+.jr-presente-lista button:active { transform: scale(.96); }
+#jr-app .jr-presente-lista img.jr-item-img { height: 22px; }
+
+/* ── PROMPT-29: Praça do Encontro — marcador, rótulos, frases, mural, convite e duelo ── */
+.jr-marcador.jr-marc-praca { background: radial-gradient(circle at 35% 30%, #c9b8ff, #7c5cfc); border-color: var(--jr-ouro); }
+.jr-praca-online { position: absolute; left: 50%; top: 100%; transform: translate(-50%, 18px); font: 700 11px 'Inter', sans-serif; color: #b9f6ca; white-space: nowrap; text-shadow: 0 1px 2px #000; }
+.jr-rotulo-praca span { display: inline-block; padding: 3px 10px; border-radius: 999px; background: rgba(13,15,26,.78); border: 1px solid var(--jr-ouro);
+  color: #fff; font: 700 14px 'Rajdhani', sans-serif; white-space: nowrap; }
+.jr-praca-edit { position: absolute; z-index: 9800; transform: translate(-50%, -100%); padding: 4px 8px; border-radius: 8px; background: rgba(255,215,0,.92);
+  color: #2a1a00; font: 800 12px 'Inter', sans-serif; cursor: grab; touch-action: none; white-space: nowrap; }
+.jr-reacao-balao.frase { padding: .35em .7em; border-radius: .8em; font-family: 'Inter', sans-serif; font-weight: 700; color: #1a1d2e; white-space: nowrap; }
+.jr-reacoes { gap: 14px; }
+.jr-reacoes-frases { display: flex; flex-direction: column; gap: 6px; max-height: calc(var(--jr-alt, 100dvh) * .8); overflow-y: auto; }
+.jr-reacoes-frases[hidden] { display: none; }
+.jr-frase { min-height: 34px; padding: 4px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.25); background: rgba(26,22,48,.95);
+  color: #fff; font: 700 14px 'Inter', sans-serif; cursor: pointer; text-align: left; white-space: nowrap; }
+.jr-frase:hover, .jr-frase:focus-visible { background: rgba(255,215,0,.22); }
+/* Mural: deitado, sem rolagem (top 10 em duas colunas) */
+.jr-mural { position: absolute; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; background: rgba(5,6,14,.6); padding: 8px; }
+.jr-mural[hidden] { display: none; }
+.ml-caixa { width: min(760px, 100%); max-height: 100%; display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 18px;
+  background: linear-gradient(180deg, #2a1d10, #1c140c); border: 3px solid #8a5a2b; box-shadow: 0 10px 28px rgba(0,0,0,.6); color: #fff; font-family: 'Inter', sans-serif; }
+.ml-topo { display: flex; align-items: center; gap: 8px; }
+.ml-topo > b { font: 700 20px 'Rajdhani', sans-serif; color: var(--jr-ouro); white-space: nowrap; }
+.ml-topo .jr-btn { min-height: 30px; padding: 2px 12px; }
+.ml-filtro { display: flex; gap: 4px; margin-left: auto; }
+.ml-filtro button, .ml-abas button { min-height: 28px; padding: 2px 10px; border-radius: 999px; border: 1px solid rgba(255,215,0,.35); background: rgba(255,215,0,.08);
+  color: #e9dcc4; font: 800 12px 'Inter', sans-serif; cursor: pointer; white-space: nowrap; }
+.ml-filtro button.ativa, .ml-abas button.ativa { color: #2a1a00; background: linear-gradient(135deg, #ffb300, var(--jr-ouro)); border-color: #c48a00; }
+.ml-filtro button[hidden] { display: none; }
+.ml-abas { display: flex; gap: 4px; flex-wrap: wrap; }
+.ml-abas button { flex: 1; }
+.ml-lista { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; grid-auto-flow: column; grid-template-rows: repeat(5, auto); gap: 4px 8px; }
+.ml-lista li { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 3px 8px; border-radius: 10px; background: rgba(255,255,255,.07); font-size: 13px; }
+.ml-lista li.eu { background: rgba(255,215,0,.18); box-shadow: inset 0 0 0 1px rgba(255,215,0,.55); }
+.ml-lista li.ml-vazio { grid-column: 1 / -1; grid-row: 1; justify-content: center; background: none; color: #e9dcc4; padding: 18px; }
+.ml-pos { width: 26px; text-align: center; font: 700 14px 'Orbitron', sans-serif; color: var(--jr-ouro); flex: none; }
+.ml-rosto { flex: none; width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background: rgba(255,255,255,.12); display: inline-flex; align-items: center; justify-content: center; }
+.ml-nome { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ml-nome small { color: #bfae90; font-weight: 700; font-size: 11px; }
+.ml-lista li b { font: 700 12px 'Orbitron', sans-serif; color: #7ee2a8; white-space: nowrap; }
+.ml-voce { font: 800 14px 'Inter', sans-serif; color: var(--jr-ouro); text-align: center; }
+/* Convite de desafio */
+.jr-convite { position: absolute; z-index: 40; left: 50%; top: 14%; transform: translateX(-50%); }
+.jr-convite[hidden] { display: none; }
+.cv-caixa { min-width: 260px; padding: 12px 16px; border-radius: 16px; background: #fff; color: #1a1d2e; box-shadow: 0 8px 24px rgba(0,0,0,.5); font: 600 15px 'Inter', sans-serif;
+  display: flex; flex-direction: column; gap: 6px; animation: jr-cartao-pop2 .25s ease-out; }
+@keyframes jr-cartao-pop2 { from { opacity: 0; transform: scale(.88); } to { opacity: 1; transform: scale(1); } }
+.cv-caixa p { margin: 0; }
+.cv-caixa p b { color: #6c3fe0; }
+.cv-caixa small { color: #b3541e; font-size: 12px; }
+.cv-caixa small[hidden] { display: none; }
+.cv-tempo { height: 5px; border-radius: 999px; background: #e7e3f7; overflow: hidden; }
+.cv-tempo i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #7c5cfc, #c77dff); }
+/* Duelo ao vivo */
+.jr-duelo { position: absolute; inset: 0; z-index: 35; display: flex; align-items: center; justify-content: center; background: rgba(5,6,14,.7); padding: 8px; }
+.jr-duelo[hidden] { display: none; }
+.dl-caixa { width: min(680px, 100%); max-height: 100%; display: flex; flex-direction: column; gap: 8px; padding: 10px 14px 12px; border-radius: 18px; background: #15132e;
+  border: 1px solid rgba(124,92,252,.55); box-shadow: 0 10px 28px rgba(0,0,0,.6); color: #fff; font-family: 'Inter', sans-serif; position: relative; }
+.dl-topo { display: flex; align-items: center; gap: 8px; }
+.dl-lado { flex: 1; display: flex; align-items: center; gap: 6px; min-width: 0; }
+.dl-lado.dir { justify-content: flex-end; }
+.dl-lado b { font: 700 16px 'Rajdhani', sans-serif; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dl-busto { flex: none; width: 44px; height: 44px; border-radius: 50%; overflow: hidden; background: rgba(124,92,252,.25); box-shadow: 0 0 0 2px var(--jr-roxo); }
+.dl-pts { font: 800 24px 'Orbitron', sans-serif; color: var(--jr-ouro); min-width: 28px; text-align: center; }
+.dl-meio { flex: none; width: 120px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.dl-meio small { font: 700 12px 'Inter', sans-serif; color: #c9cde0; }
+.dl-tempo { width: 100%; height: 6px; border-radius: 999px; background: #0d0d1c; overflow: hidden; }
+.dl-tempo i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #ffb300, #ff7b2e); }
+.dl-conta { font: 700 24px 'Orbitron', sans-serif; text-align: center; line-height: 1.25; padding: 4px 0; }
+.dl-conta.longa { font: 800 17px 'Inter', sans-serif; }
+.dl-ops { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.dl-op { min-height: 44px; border-radius: 12px; border: 1px solid rgba(124,92,252,.6); border-bottom-width: 3px; background: #24204a; color: #fff; font: 700 17px 'Orbitron', sans-serif; cursor: pointer; }
+.dl-op.minha { box-shadow: 0 0 0 2px var(--jr-ouro); }
+.dl-op.certa { background: linear-gradient(180deg, #13a85c, #0b6e3c); border-color: #3ecf8e; }
+.dl-op.errada { background: linear-gradient(180deg, #c7334a, #861f30); border-color: #ff5c7a; }
+.dl-msg { min-height: 20px; text-align: center; font: 700 14px 'Inter', sans-serif; color: #e7e3f7; }
+.dl-fim { position: absolute; inset: 0; border-radius: 18px; background: rgba(21,19,46,.97); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 12px; }
+.dl-fim[hidden] { display: none; }
+.dl-fim b { font: 700 26px 'Rajdhani', sans-serif; color: var(--jr-ouro); }
+.dl-fim-placar { font: 800 30px 'Orbitron', sans-serif; }
+.dl-fim small { font: 600 13px 'Inter', sans-serif; color: #c9cde0; }
+@media (prefers-reduced-motion: reduce) { .cv-caixa { animation: none; } }
+.dl-busto .jr-busto { width: 100%; height: 100%; border-radius: 50%; }
+.ml-rosto.jr-busto { display: block; }
+
+/* ── PROMPT-30: Fliperama — rótulos das máquinas, Téo, painel da máquina, jogo por cima e Tabuada ao vivo ── */
+.jr-maq-vermelha span { border-color: #ff5c7a; }
+.jr-maq-azul span { border-color: #00d4ff; }
+.jr-maq-verde span { border-color: #00e676; }
+.jr-maq-amarela span { border-color: #ffd700; }
+.jr-maquina { position: absolute; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; background: rgba(5,6,14,.55); padding: 10px; }
+.jr-maquina[hidden] { display: none; }
+.mq-caixa { width: min(460px, 100%); max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 18px;
+  background: #15132e; border: 2px solid #c77dff; box-shadow: 0 0 18px rgba(199,125,255,.45), 0 10px 28px rgba(0,0,0,.6); color: #fff; font-family: 'Inter', sans-serif; }
+.mq-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mq-topo b { font: 700 20px 'Rajdhani', sans-serif; color: var(--jr-ouro); }
+.mq-topo .jr-btn { min-height: 30px; padding: 2px 12px; }
+.mq-corpo p { margin: 0; }
+.mq-rec { font-size: 15px; } .mq-rec b { color: #7ee2a8; font-family: 'Orbitron', sans-serif; }
+.mq-sub { font: 800 13px 'Inter', sans-serif; color: #c9cde0; margin-top: 6px !important; }
+.mq-car, .mq-nota { font-size: 12px; color: #9a9fb8; }
+.mq-fala { font: 600 15px 'Inter', sans-serif; line-height: 1.4; }
+.mq-top { list-style: none; margin: 4px 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.mq-top li { display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: 10px; background: rgba(255,255,255,.07); font-size: 13.5px; }
+.mq-top li b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mq-top li em, .mq-recordes em { font: 700 12px 'Orbitron', sans-serif; font-style: normal; color: #7ee2a8; }
+.mq-vazio { color: #9a9fb8; background: none !important; }
+.mq-botoes { display: flex; gap: 8px; justify-content: flex-end; }
+.mq-botoes .jr-btn { min-height: 40px; padding: 4px 22px; font-size: 16px; }
+.mq-recordes { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+.mq-recordes ol { list-style: none; margin: 4px 0 0; padding: 0; font-size: 12.5px; display: flex; flex-direction: column; gap: 2px; }
+/* jogo do site por cima do mapa (tela cheia, deitado) */
+.jr-jogo-embed { position: absolute; inset: 0; z-index: 60; display: flex; flex-direction: column; background: #0d0f1a; }
+.jr-jogo-embed[hidden] { display: none; }
+.je-topo { flex: none; display: flex; align-items: center; gap: 10px; padding: 6px max(10px, var(--sa-l)) 6px max(10px, var(--sa-l)); background: #15132e; border-bottom: 1px solid rgba(124,92,252,.5); }
+.je-topo .jr-btn { min-height: 34px; padding: 2px 14px; }
+.je-topo b { font: 700 17px 'Rajdhani', sans-serif; color: #fff; }
+.jr-jogo-embed iframe { flex: 1; min-height: 0; width: 100%; border: 0; background: #0d0f1a; }
+/* Tabuada ao vivo */
+.jr-aovivo { position: absolute; inset: 0; z-index: 45; display: flex; align-items: center; justify-content: center; background: rgba(5,6,14,.75); padding: 8px; }
+.jr-aovivo[hidden] { display: none; }
+.av-caixa { position: relative; width: min(720px, 100%); max-height: 100%; overflow-y: auto; padding: 12px 16px 14px; border-radius: 18px; background: #15132e;
+  border: 2px solid #ffd700; box-shadow: 0 0 18px rgba(255,215,0,.35), 0 10px 28px rgba(0,0,0,.6); color: #fff; font-family: 'Inter', sans-serif; }
+.av-x { position: absolute; right: 10px; top: 10px; min-height: 30px; padding: 2px 12px; z-index: 1; }
+.av-menu, .av-espera, .av-intervalo, .av-fim { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.av-menu h3, .av-fim h3 { margin: 0; font: 700 22px 'Rajdhani', sans-serif; color: var(--jr-ouro); }
+.av-menu p { margin: 0; font-size: 13.5px; color: #c9cde0; max-width: 460px; }
+.av-linha { display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; }
+.av-linha .jr-btn { min-height: 40px; padding: 4px 18px; font-size: 15px; }
+#av-codigo { width: 130px; min-height: 40px; border-radius: 12px; border: 2px solid rgba(255,215,0,.5); background: #0d0f1a; color: #fff; text-align: center;
+  font: 800 22px 'Orbitron', sans-serif; letter-spacing: .15em; text-transform: uppercase; }
+.av-erro { color: #ff8a9e; font-size: 13px; min-height: 16px; }
+.av-chips button { min-height: 34px; padding: 2px 12px; border-radius: 999px; border: 1px solid rgba(255,215,0,.35); background: rgba(255,215,0,.08); color: #e9dcc4; font: 800 13px 'Inter', sans-serif; cursor: pointer; }
+.av-chips button.sel { color: #2a1a00; background: linear-gradient(135deg, #ffb300, var(--jr-ouro)); border-color: #c48a00; }
+.av-nums button { min-width: 40px; }
+.av-espera small { color: #c9cde0; font-weight: 700; }
+.av-codigo { font: 800 52px 'Orbitron', sans-serif; letter-spacing: .18em; color: var(--jr-ouro); line-height: 1; }
+.av-espera p { margin: 0; font-size: 13px; color: #c9cde0; }
+.av-nomes { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; max-height: 110px; overflow-y: auto; }
+.av-nomes span { padding: 2px 10px; border-radius: 999px; background: rgba(124,92,252,.25); font: 700 12.5px 'Inter', sans-serif; }
+.av-msg { font: 700 13px 'Inter', sans-serif; color: #c9cde0; }
+.av-rodada { display: flex; flex-direction: column; gap: 10px; }
+.av-topo { display: flex; align-items: center; gap: 10px; font: 800 13px 'Inter', sans-serif; color: #c9cde0; padding-right: 50px; }
+.av-tempo { flex: 1; height: 8px; border-radius: 999px; background: #0d0d1c; overflow: hidden; }
+.av-tempo i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #ff7b2e, #ffd700); }
+.av-conta { font: 800 40px 'Orbitron', sans-serif; text-align: center; padding: 6px 0; }
+.av-ops { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.av-op { min-height: 58px; border-radius: 14px; border: 0; border-bottom: 4px solid rgba(0,0,0,.35); color: #fff; font: 800 26px 'Orbitron', sans-serif; cursor: pointer; }
+.av-op.c0 { background: #e0374f; } .av-op.c1 { background: #1f7ae0; } .av-op.c2 { background: #e5a100; } .av-op.c3 { background: #13a85c; }
+.av-op:disabled { opacity: .45; cursor: default; }
+.av-op.minha { opacity: 1; box-shadow: 0 0 0 3px #fff; }
+.av-certa { font: 700 15px 'Inter', sans-serif; } .av-certa b { font-family: 'Orbitron', sans-serif; color: var(--jr-ouro); }
+.av-eu { font: 800 16px 'Inter', sans-serif; } .av-eu.ok { color: #7ee2a8; } .av-eu.erro { color: #ff8a9e; }
+.av-top5 { list-style: none; margin: 0; padding: 0; width: min(420px, 100%); display: flex; flex-direction: column; gap: 4px; }
+.av-top5 li { display: flex; align-items: center; gap: 8px; padding: 4px 10px; border-radius: 10px; background: rgba(255,255,255,.07); font-size: 14px; }
+.av-top5 li.eu { background: rgba(255,215,0,.18); }
+.av-top5 li span { width: 30px; font: 700 14px 'Orbitron', sans-serif; color: var(--jr-ouro); }
+.av-top5 li b { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.av-top5 li em { font: 700 13px 'Orbitron', sans-serif; font-style: normal; color: #7ee2a8; }
+.av-top5 li i { width: 34px; font: 800 12px 'Inter', sans-serif; font-style: normal; color: #7ee2a8; }
+.av-podio { display: flex; align-items: flex-end; justify-content: center; gap: 10px; }
+.av-podio > div { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 120px; }
+.av-podio b { font: 700 15px 'Rajdhani', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.av-podio small { font: 700 12px 'Orbitron', sans-serif; color: #7ee2a8; }
+.av-podio i { display: block; width: 100%; border-radius: 8px 8px 0 0; background: linear-gradient(180deg, #ffd700, #b8860b); }
+.av-podio .p1 i { height: 60px; } .av-podio .p2 i { height: 40px; background: linear-gradient(180deg, #e0e0e0, #8a8a8a); } .av-podio .p3 i { height: 28px; background: linear-gradient(180deg, #ffb37a, #a0522d); }
+.av-busto { width: 56px; height: 56px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 28px; }
+.av-busto.jr-busto { display: block; }
+
+/* ── PROMPT-31: loja como interior — etiqueta dos cantos, seção Vender na aba Pesca, tinta em prova ── */
+.jr-loja-canto span { font-size: 13px; padding: 2px 10px; }
+.jr-loja-canto[hidden] { display: none; }
+.lj-secao { grid-column: 1 / -1; width: 100%; margin-top: 6px; font: 800 13px 'Inter', sans-serif; color: var(--jr-ouro); }
+.lj-tinta[data-provar] { cursor: pointer; }
+.lj-tinta.provando { box-shadow: inset 0 0 0 2px var(--jr-ouro); }
+.lj-itens.lj-pesca { grid-auto-rows: min-content; overflow-y: auto; }
+
+/* ── PROMPT-32: cavar (montinho, buraco, terra), mato, faro do pet, bolsa com abas, álbum e ajudas ── */
+/* montinho desenhado por código (oval de terra com pedrinhas) até chegar img/jogo/itens/montinho.webp */
+.jr-montinho { position: absolute; width: 42px; height: 18px; transform: translate(-50%, -70%); pointer-events: none; }
+.jr-montinho::before { content: ''; position: absolute; inset: 0; border-radius: 50% 50% 45% 45%; background: radial-gradient(ellipse at 45% 35%, #9a6b3f, #6e4524 70%, #573619);
+  box-shadow: 0 2px 2px rgba(0,0,0,.35); }
+.jr-montinho::after { content: ''; position: absolute; left: 30%; top: 30%; width: 4px; height: 3px; border-radius: 50%; background: #c9b79c; box-shadow: 9px 3px 0 #a99a84, 16px -1px 0 #d8c8ae, -5px 5px 0 #8f8270; }
+.jr-montinho img { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: 46px; height: auto; display: none; }
+.jr-montinho.com-img:not(.cavado) .m-img, .jr-montinho.cavado.com-buraco .b-img { display: block; }
+.jr-montinho.com-img:not(.cavado)::before, .jr-montinho.com-img:not(.cavado)::after, .jr-montinho.cavado.com-buraco::before, .jr-montinho.cavado.com-buraco::after { display: none; }
+.jr-montinho.cavado::before { background: radial-gradient(ellipse at 50% 55%, #2d1c0e 35%, #5a3a1d 60%, #7a5432); transform: scaleY(.8); }
+.jr-montinho.cavado::after { display: none; }
+.jr-terra { position: absolute; pointer-events: none; }
+.jr-terra i { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #7a5432; animation: jr-terra-voa .5s ease-out infinite; }
+.jr-terra i:nth-child(2) { animation-delay: .1s; --dx: 12px; } .jr-terra i:nth-child(3) { animation-delay: .2s; --dx: -14px; }
+.jr-terra i:nth-child(4) { animation-delay: .3s; --dx: 8px; } .jr-terra i:nth-child(5) { animation-delay: .4s; --dx: -6px; }
+@keyframes jr-terra-voa { from { transform: translate(0, 0); opacity: 1; } to { transform: translate(var(--dx, -10px), -22px); opacity: 0; } }
+#jogador.cavando { animation: jr-cavando .25s ease-in-out infinite alternate; transform-origin: 50% 100%; }
+@keyframes jr-cavando { from { scale: 1 1; } to { scale: 1.04 .9; } }
+/* mato: base no ponto, na mesma ordem de profundidade dos personagens */
+#jr-app img.jr-mato { position: absolute; transform: translate(-50%, -100%); height: auto; pointer-events: none; image-rendering: auto; }
+.jr-bicho { position: absolute; font-size: 16px; pointer-events: none; transform: translate(-50%, -100%); animation: jr-bicho-pula 1.5s ease-out forwards; }
+@keyframes jr-bicho-pula { 0% { translate: 0 0; } 25% { translate: calc(var(--dir) * 14px) -18px; } 50% { translate: calc(var(--dir) * 30px) 0; } 75% { translate: calc(var(--dir) * 46px) -14px; } 100% { translate: calc(var(--dir) * 80px) 0; opacity: 0; } }
+/* faro: 👃 sobre o pet, pisca mais rápido quanto mais perto do tesouro */
+.jr-pet-faro { position: absolute; z-index: 15; transform: translate(-50%, -100%); font-size: 20px; pointer-events: none; animation: jr-faro 1s ease-in-out infinite; }
+.jr-pet-faro[hidden] { display: none; }
+@keyframes jr-faro { 0%, 100% { opacity: 1; scale: 1; } 50% { opacity: .35; scale: .85; } }
+@media (prefers-reduced-motion: reduce) { .jr-terra i, #jogador.cavando, .jr-bicho { animation: none; } .jr-pet-faro { animation-duration: 2s !important; } }
+#btn-acao-mapa .jr-item-img { height: 22px; margin: -4px 4px -4px 0; }
+.jr-pesca-cartao.grande { padding: 14px 20px; font-size: 16px; }
+.jr-pesca-cartao.grande .pc-peixe { font-size: 44px; }
+#jr-app .jr-pesca-cartao.grande img.jr-item-img { height: 56px; }
+/* bolsa: abas Comidas · Itens · Coleção */
+.mp-bolsa-abas { display: flex; gap: 6px; margin: 4px 0 6px; }
+.mp-bolsa-abas button { flex: 1; min-height: 30px; border-radius: 999px; border: 1px solid rgba(124,92,252,.45); background: rgba(124,92,252,.1); color: #c9cde0; font: 800 12.5px 'Inter', sans-serif; cursor: pointer; }
+.mp-bolsa-abas button.ativa { color: #2a1a00; background: linear-gradient(135deg, #ffb300, var(--jr-ouro)); border-color: #c48a00; }
+.mp-bolsa-item.mp-uso { cursor: default; }
+.mp-album-topo { grid-column: 1 / -1; font: 700 13px 'Inter', sans-serif; color: #fff; }
+.mp-album-topo b { color: var(--jr-ouro); }
+.mp-album-grupo { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 4px; padding: 6px 8px; border-radius: 12px; background: rgba(255,255,255,.05); }
+.mp-album-grupo.completo { box-shadow: inset 0 0 0 1px var(--jr-ouro); }
+.mp-album-grupo > b { font: 700 14px 'Rajdhani', sans-serif; color: var(--jr-ouro); }
+.mp-album-grupo > div { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.mp-peca { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; font-size: 26px; }
+.mp-peca em { font: 700 11px 'Inter', sans-serif; font-style: normal; color: #e7e3f7; line-height: 1.25; }
+.mp-peca.falta em { color: #9a9fb8; font-weight: 600; }
+.mp-peca.falta i { font: 800 26px 'Orbitron', sans-serif; font-style: normal; color: rgba(255,255,255,.3); }
+#jr-app img.silhueta { filter: brightness(0) opacity(.35); }
+/* ajudas: na pergunta do ginásio e na batalha */
+.jr-perg-rodape { gap: 8px; }
+.jr-perg-segunda { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font: 800 14px 'Inter', sans-serif; color: #fff; }
+.jr-perg-segunda[hidden] { display: none; }
+.jr-perg-segunda .jr-btn { min-width: 0 !important; min-height: 42px; padding: 2px 14px; }
+.bt-dica { display: block; margin: 4px auto 0; min-height: 30px; padding: 2px 14px; border-radius: 999px; border: 1px solid rgba(255,215,0,.5); background: rgba(255,215,0,.12);
+  color: #ffe9a8; font: 800 12.5px 'Inter', sans-serif; cursor: pointer; }
+.bt-dica[hidden] { display: none; }
+.bt-segunda { margin-left: 6px; min-height: 28px; padding: 2px 10px; border-radius: 999px; border: 1px solid rgba(255,215,0,.6); background: linear-gradient(135deg, #ffb300, #ffd700); color: #2a1a00; font: 800 12px 'Inter', sans-serif; cursor: pointer; }
+.bt-segunda.nao { background: rgba(255,255,255,.1); color: #e7e3f7; border-color: rgba(255,255,255,.3); }

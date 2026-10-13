@@ -1,0 +1,90 @@
+{
+ "imagem": "fliperama.webp",
+ "porta": [
+  689,
+  743
+ ],
+ "entrada": [
+  689,
+  716
+ ],
+ "maquinas": [
+  {
+   "id": "tabuada",
+   "nome": "Tabuada",
+   "jogo": "aluno/tabuada.html",
+   "cor": "vermelha",
+   "x": 368,
+   "y": 175,
+   "ponto": [
+    368,
+    323
+   ],
+   "icone": "✖️",
+   "libera": null
+  },
+  {
+   "id": "tabuada_negativa",
+   "nome": "Tabuada negativa",
+   "jogo": "aluno/tabuada_negativos.html",
+   "cor": "azul",
+   "x": 589,
+   "y": 175,
+   "ponto": [
+    589,
+    323
+   ],
+   "icone": "➖",
+   "libera": null
+  },
+  {
+   "id": "escalada",
+   "nome": "Escalada algébrica",
+   "jogo": "aluno/escalada_algebrica.html",
+   "cor": "verde",
+   "x": 799,
+   "y": 175,
+   "ponto": [
+    799,
+    323
+   ],
+   "icone": "🧗",
+   "libera": null
+  },
+  {
+   "id": "tabuada_ao_vivo",
+   "nome": "Tabuada ao vivo",
+   "jogo": null,
+   "cor": "amarela",
+   "x": 1023,
+   "y": 175,
+   "ponto": [
+    1023,
+    323
+   ],
+   "icone": "⚡",
+   "libera": null
+  }
+ ],
+ "balcao": [
+  227,
+  606
+ ],
+ "area_livre": [
+  {
+   "x0": 350,
+   "y0": 310,
+   "x1": 1240,
+   "y1": 620
+  },
+  {
+   "x0": 600,
+   "y0": 620,
+   "x1": 780,
+   "y1": 735
+  }
+ ],
+ "nota": "Coordenadas em 1376x768. area_livre = retângulos onde o personagem anda; ponto = onde ele para em frente à máquina. teo = onde o Téo fica (se faltar, usa balcao). libera: condição opcional da máquina (null = sempre). Moedas: +1 a cada acertos_por_moeda acertos, até moedas_dia por dia.",
+ "moedas_dia": 10,
+ "acertos_por_moeda": 10
+}

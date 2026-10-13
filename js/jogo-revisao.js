@@ -2,23 +2,28 @@
 //  Jogo de Revisão — motor do jogo (Parte A) + progresso no Firebase (Parte B)
 //  Real: jogo_revisao/{uid}   ·   Modo teste: modo_teste_historico/{uid}/jogo_revisao
 // ============================================================
-import { isModoTeste } from '/js/auth.js';
+import { isModoTeste, getSession } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
-import { ref, get, update, push, set, increment } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { ref, get, update, push, set, remove, increment, onValue, runTransaction, onDisconnect, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { adicionarXP } from '/js/db.js';
-import { bimestreAtual, ALUNOS_TESTE } from '/js/constants.js';
+import { bimestreAtual, ALUNOS_TESTE, bimestreJogos, pathTabuadaRanking, pathEscaladaRanking, pathTabuadaNiveis, pathTabuadaNegNiveis, pathEscaladaNiveis } from '/js/constants.js';
 import { gerarQuestoes, gerarUma } from '/js/jogo-revisao/geradores.js';
 import { tocar, somLigado, alternarSom } from '/js/jogo-revisao/sons.js';
 import { definirPausas, definirBarriga, barrigaDoPet, barrigaAntiga, faixaBarriga, rotuloLealdade, lealdadeComQueda, doDia,
   CARINHOS_POR_DIA, LEALDADE_INICIAL, LEALDADE_DIA, LEALDADE_CAMBALHOTA } from '/js/jogo-revisao/cuidados.js';
 import { definirLoja, definirPeixes, lojaPronta, cfgLoja, comidas, tintas, efeitos, tinta, tintaAnimada, icone, efeito, itemDaBolsa, idDoPeixe, ehFavorita, semanaDe,
-  motivoNaoCome, enche, somarLealdade, nivelAmizade, validarNomePet } from '/js/jogo-revisao/loja.js';
-import { definirPesca, pescaPronta, cfgPesca, pontosDoMapa, spritePesca, pontaVara, sortearPeixe, entre, inteiroEntre } from '/js/jogo-revisao/pesca.js';
+  motivoNaoCome, enche, barrigaCheia, somarLealdade, nivelAmizade, validarNomePet } from '/js/jogo-revisao/loja.js';
+import { definirPesca, pescaPronta, cfgPesca, pontosDoMapa, spritePesca, pontaVara, sortearPeixe, entre, inteiroEntre,
+  semanaPesca, semanaAnterior, criarBarrinha, passoBarrinha } from '/js/jogo-revisao/pesca.js';
 import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, tamanhoBusto, temBusto, bustoPet, preCarregarPet, PetSeguidor, PetParado } from '/js/jogo-revisao/pets.js';
 import { iniciarOnline, enviarOnline, sairOnline, ouvirMapa, ouvirTodos, onlineAtivo, VALIDADE_MS } from '/js/jogo-revisao/online.js';
 import { definirPedidos, pedidosProntos, cfgPedidos, pedidoDisponivel, moedasDoPedido, limiteDoDiaAtingido, dicaPedido, lerResposta } from '/js/jogo-revisao/pedidos.js';
 import { definirBatalhas, batalhasProntas, cfgBatalha, treinadores, treinador, tiposDeConta, gerarConta, vidaExtraLealdade, desafioDe, situacao, forca, dano, premios, depoisDaBatalha } from '/js/jogo-revisao/batalha.js';
-import { definirFalas, falasProntas, configFalas, dicaDe, montarFala, duracaoBalao, fraseDe, configAjuda } from '/js/jogo-revisao/conversa.js';
+import { definirFalas, falasProntas, configFalas, dicaDe, montarFala, duracaoBalao, fraseDe, configAjuda, frasesFaro } from '/js/jogo-revisao/conversa.js';
+import { definirPraca, pracaPronta, cfgPraca, cfgDesafio, frasesPraca, temaDoDesafio, vencedorDaRodada, placarDe, resultadoFinal, vale, contarDesafio,
+  premioDesafio, ordenarRanking } from '/js/jogo-revisao/praca.js';
+import { codigoValido, premioDoPodio, pontosDaResposta, TEMPO_RODADA_MS } from '/js/jogo-revisao/aovivo.js';
+import { baseAoVivo, criarSala, entrarNaSala, sairDaSala, responder as responderNaSala, ouvirSala, ouvirConviteTurma, Anfitriao, placar } from '/js/jogo-revisao/aovivo-sala.js';
 import { notaJogoRevisao, formatarNota, NOTA_MAX, PESO_INSIGNIAS, PESO_DOURADAS } from '/js/jogo-revisao/nota.js';
 
 // XP (só na primeira vez que cada personagem é vencido; nunca no modo teste)
@@ -84,7 +89,7 @@ const PERS = { pasta: `${IMG}/personagens-principais`, largura: 408, altura: 680
 // imagem é desenhada com a própria largura/altura × essa escala (pés na base). 630 é a referência que mantém
 // o corpo do tamanho de antes (ALT_JOGADOR_MAPA, já com o +25% do PROMPT-16). Balões, apelidos e pet seguem usando ALT.
 const ESCALA_SPRITE = ALT_JOGADOR_MAPA / 630;
-const escalaSpriteCena = () => (cena?.tipo === 'mapa' ? ALT_JOGADOR_MAPA : ALT_JOGADOR) / 630;   // no ginásio o personagem é maior
+const escalaSpriteCena = () => (cena?.tipo === 'mapa' && !cena.salao ? ALT_JOGADOR_MAPA : ALT_JOGADOR) / 630;   // no ginásio e no fliperama o personagem é maior   // no ginásio o personagem é maior
 const NUM_MAPAS = 13;
 
 const $ = (id) => document.getElementById(id);
@@ -183,6 +188,14 @@ async function carregarEstado() {
     estado.pedidos = v.pedidos && typeof v.pedidos === 'object' ? { ...v.pedidos } : {};   // { id: { fim: 'acertou'|'errou', tentativas, dica, data } }
     estado.pedidosDia = v.pedidos_dia || null;
     estado.pescaDia = v.pesca_dia || null;
+    estado.presentesDia = v.presentes_dia || null;
+    estado.desafiosDia = v.desafios_dia || null;
+    estado.fliperDia = v.fliperama_dia || null;
+    estado.cavarDia = v.cavar_dia || null;            // { data, m: { 'mapa-i': true }, moedas } — montinhos/tesouros cavados hoje
+    estado.matoMexido = v.mato_mexido || {};          // { 'mapa-i': ts } — rebrota depois de mato_rebrota_h
+    estado.colecao = v.colecao || {};                 // { peça: ts }
+    estado.colecaoGrupos = v.colecao_grupos || {};    // { grupo: true } — bônus de grupo completo já recebido       // { data, acertos, moedas } — moedas do fliperama hoje (até 10)
+    estado.aovivoPremios = v.aovivo_premios || {};   // { código da sala: posição } — prêmio do pódio já recebido   // { data, n, contra: { uid: n } } — desafios que valeram prêmio hoje   // { data, n } — peixes dados de presente hoje
     estado.avisos = v.avisos && typeof v.avisos === 'object' ? { ...v.avisos } : {};   // { pesca_{ponto}: true, tutorial_pesca: true } — avisos que não se repetem   // { data, n } — peixes pescados hoje (os 3 pontos juntos)   // { data, moedas, pessoas: { npc: n } } — zera quando muda o dia   // { data, moedas, lealdade, xp } — zera quando muda o dia
     estado.avisosPet = v.avisos_pet && typeof v.avisos_pet === 'object' ? { ...v.avisos_pet } : {};   // { pet: { conversa, ajuda }, toques_sem_lealdade }
     estado.personagem = persValido(v.personagem) ? v.personagem : null;   // sem campo: usa o padrão
@@ -200,7 +213,8 @@ async function carregarEstado() {
     const c = cfg.exists() ? cfg.val() || {} : {};
     for (const n of Object.values(c.mapas_abertos || {})) mapasAbertos.add(Number(n));
     if (Number(c.meta_turma) > 0) metaTurma = Number(c.meta_turma);
-    definirPausas(c.pausas);   // feriados/férias: não contam para a fome nem para a lealdade
+    definirPausas(c.pausas);
+    desafiosOff = c.desafios_off || {};   // a professora desliga os desafios da praça (todas as turmas ou uma)   // feriados/férias: não contam para a fome nem para a lealdade
   } catch (e) { /* sem config: vale só a regra padrão e meta 100 */ }
   try {
     const t = await get(ref(db, 'jogo_revisao_turmas'));   // pequeno: um nó por turma
@@ -485,6 +499,20 @@ export async function iniciarJogo(sess) {
   try { NPCS = (await fetch(`${DADOS}/npcs.json`).then(r => { if (!r.ok) throw new Error('npcs.json'); return r.json(); })).npcs || []; }
   catch (e) { console.warn('[jogo-revisao] pessoas dos mapas indisponíveis', e); }
   editarNpcs = teste && new URLSearchParams(location.search).get('editarNpcs') === '1';   // nunca para alunos
+  editarPraca = teste && new URLSearchParams(location.search).get('editarPraca') === '1';
+  try { definirPraca(await fetch(`${DADOS}/praca.json`).then(r => { if (!r.ok) throw new Error('praca.json'); return r.json(); })); }
+  catch (e) { console.warn('[jogo-revisao] praça indisponível', e); }
+  editarFliperama = teste && new URLSearchParams(location.search).get('editarFliperama') === '1';
+  editarLoja = teste && new URLSearchParams(location.search).get('editarLoja') === '1';
+  editarMato = teste && new URLSearchParams(location.search).get('editarMato') === '1';
+  try {
+    const [cj, mj] = await Promise.all(['cavar.json', 'mato.json'].map(f => fetch(`${DADOS}/${f}`).then(r => { if (!r.ok) throw new Error(f); return r.json(); })));
+    CAVAR = cj; MATOS = mj.matos || []; MATO_NOTA = mj._nota || '';
+  } catch (e) { console.warn('[jogo-revisao] cavar/mato indisponíveis', e); }
+  try { LOJA = await fetch(`${DADOS}/loja-interior.json`).then(r => { if (!r.ok) throw new Error('loja-interior.json'); return r.json(); }); }
+  catch (e) { console.warn('[jogo-revisao] interior da loja indisponível', e); }
+  try { FLIPER = await fetch(`${DADOS}/fliperama.json`).then(r => { if (!r.ok) throw new Error('fliperama.json'); return r.json(); }); }
+  catch (e) { console.warn('[jogo-revisao] fliperama indisponível', e); }
   try { definirBatalhas(await fetch(`${DADOS}/batalhas.json`).then(r => { if (!r.ok) throw new Error('batalhas.json'); return r.json(); })); }
   catch (e) { console.warn('[jogo-revisao] batalha de pets indisponível', e); }
   try { definirPedidos(await fetch(`${DADOS}/pedidos.json`).then(r => { if (!r.ok) throw new Error('pedidos.json'); return r.json(); })); }
@@ -507,7 +535,7 @@ export async function iniciarJogo(sess) {
   abrirMapaGeral();
   $('jr-carregando').hidden = true;
   iniciarPet();
-  entrarOnline();
+  entrarOnline().catch(() => {}).then(() => { carregarPremiosPesca(); ouvirPresentes(); iniciarPraca(); publicarResumoInsignias(); ouvirConvitesAoVivo(); });
   // aluno novo escolhe o personagem antes de tudo (o pet inicial vem depois, ao entrar num mapa)
   if (carregouProgresso && estado.novo && !estado.personagem) abrirEscolhaPersonagem(true);
 }
@@ -605,7 +633,7 @@ function lerPets(v) {
     ativo = ativo || v.pet;
     migrou = true;
   }
-  return { ativo, conquistados, migrou, moedas: Number(v.pets?.moedas) || 0,
+  return { ativo, conquistados, migrou, moedas: Number(v.pets?.moedas) || 0, iscas: Number(v.pets?.iscas) || 0, itens: { ...(v.pets?.itens || {}) },
     bolsa: { ...(v.pets?.bolsa || {}) }, tintas: { ...(v.pets?.tintas || {}) }, efeitos: { ...(v.pets?.efeitos || {}) }, cuidadosV2: !!v.pets?.cuidados_v2 };
 }
 
@@ -740,6 +768,7 @@ function abrirColecao() {
       <span>???</span>
       <span class="jr-pet-lugar">${ondeConquistar(onde[p])}</span>
     </div>`).join('');
+  for (const el of $('colecao-opcoes').querySelectorAll('.jr-pet-opcao[data-pet]')) aplicarVisualPet(el.querySelector('img'), el.dataset.pet);
   $('pet-colecao').hidden = false;
   animarPainelPet($('colecao-opcoes'));
 }
@@ -790,6 +819,7 @@ function atualizarBotaoPet() {
   const src = quadrosDe(ativo, 'sentado_girando')[0];
   const img = b.querySelector('img');
   if (img.getAttribute('src') !== src) img.src = src;
+  aplicarVisualPet(img, ativo);
   b.setAttribute('aria-label', `Meus pets (${nomePet(ativo)})`);
 }
 
@@ -949,13 +979,14 @@ function atualizarMoedasPergunta() {
   el.querySelector('span').textContent = Number(estado?.pets?.moedas) || 0;
 }
 
-// Marcos de lealdade (60 conversa, 80 ajuda): aviso comemorativo uma vez por pet (guardado em avisos_pet)
+// Marcos de lealdade (falas-pets.json: conversa, dica, eliminar): aviso comemorativo uma vez por pet (guardado em avisos_pet)
 function verificarMarcosLealdade(pet = estado?.pets?.ativo) {
   const c = pet && cuidadosDe(pet);
   if (!c) return;
   const cfg = configAjuda();
-  const marcos = [['conversa', configFalas().lealdade_minima ?? 60, `💬 ${nomePet(pet)} agora conversa com você!`],
-                  ['ajuda', cfg.lealdade_eliminar ?? 80, `💡 ${nomePet(pet)} agora pode te ajudar nos ginásios!`]];
+  const marcos = [['conversa', configFalas().lealdade_minima ?? 25, `💬 ${nomePet(pet)} agora conversa com você!`],
+                  ['ajuda', cfg.lealdade_dica ?? 80, `💡 ${nomePet(pet)} agora pode te dar dicas nos ginásios!`],
+                  ['eliminar', cfg.lealdade_eliminar ?? 95, `❌ ${nomePet(pet)} agora pode eliminar uma opção nos ginásios!`]];
   const av = (estado.avisosPet[pet] ||= {});
   for (const [k, min, texto] of marcos) {
     if (av[k] || (Number(c.lealdade) || 0) < min) continue;
@@ -997,9 +1028,8 @@ function lealdadeDoDia() {
 // ── Tela "Meu Pet" ──────────────────────────────────────────
 const MP_ALT_MAX = 352;   // px na tela
 const semMovimento = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-const ehNoite = () => { const f = window.jogoRevisaoDev?.noite; if (f !== undefined) return f; const h = new Date().getHours(); return h >= 22 || h < 6; };
 
-let mp = null;   // { pet, anim (PetParado), estado, corpoAnim, noite, timerBalao }
+let mp = null;   // { pet, anim (PetParado), estado, corpoAnim, timerBalao }
 
 function abrirMeuPet() {
   const pet = estado.pets.ativo;
@@ -1007,7 +1037,7 @@ function abrirMeuPet() {
   preCarregarPet(pet);
   $('meu-pet').hidden = false;
   const img = $('mp-img');
-  mp = { pet, anim: new PetParado(img), estado: '', corpoAnim: null, noite: null, ocupado: false };
+  mp = { pet, anim: new PetParado(img), estado: '', corpoAnim: null, ocupado: false };
   img.dataset.src = '';
   const palco = $('mp-palco');
   // pet grande: até ~78% da altura do palco, no máximo 352 px na tela (o tamanho de antes dos quadros em dobro)
@@ -1043,27 +1073,24 @@ function renderMeuPet() {
   $('mp-barriga-rot').textContent = fb.rotulo;
   $('mp-lealdade-fill').style.width = l + '%';
   $('mp-lealdade-rot').textContent = `${rotuloLealdade(l)} · ${l}` + (l >= 100 ? ` · amizade ❤️ ${nivel} (${Math.floor((Number(c.amizade) || 0) % pp)}/${pp})` : '');
-  const lc = configFalas().lealdade_minima ?? 60, la = configAjuda().lealdade_eliminar ?? 80;
-  $('mp-marca-conversa').style.left = lc + '%';
-  $('mp-marca-ajuda').style.left = la + '%';
-  $('mp-marca-conversa').classList.toggle('ok', l >= lc);
-  $('mp-marca-ajuda').classList.toggle('ok', l >= la);
-  // uma linha só: o próximo marco ainda não alcançado (os números são os do jogo: falas, ajuda, cambalhota, amizade)
-  // (dois marcos no mesmo número, como conversar e cambalhota aos 60: vale o primeiro; o outro está no ⓘ)
-  const marcos = [[lc, 'começa a conversar 💬'], [la, 'ajuda nos ginásios 💡'], [LEALDADE_CAMBALHOTA, 'aprende a cambalhota 🤸'], [100, 'começa a amizade ❤️']]
+  const lc = configFalas().lealdade_minima ?? 25, ld = configAjuda().lealdade_dica ?? 80, le = configAjuda().lealdade_eliminar ?? 95;
+  for (const [id, v] of [['conversa', lc], ['ajuda', ld], ['elimina', le]]) {
+    $('mp-marca-' + id).style.left = v + '%';
+    $('mp-marca-' + id).classList.toggle('ok', l >= v);
+  }
+  // uma linha só: o próximo marco ainda não alcançado (os números são os do jogo: falas, dica, eliminar, cambalhota, amizade)
+  // (dois marcos no mesmo número: vale o primeiro; o outro está no ⓘ)
+  const marcos = [[lc, 'começa a conversar 💬'], [ld, 'dá dicas nos ginásios 💡'], [le, 'elimina uma opção nos ginásios ❌'],
+    [LEALDADE_CAMBALHOTA, 'aprende a cambalhota 🤸'], [100, 'começa a amizade ❤️']]
     .filter(([v], i, t) => t.findIndex(([w]) => w === v) === i).sort((a, b) => a[0] - b[0]);
   const prox = marcos.find(([v]) => l < v);
   $('mp-marco').textContent = prox
     ? `Próximo: ${prox[0]} — ${prox[1]}`
     : `Amizade ❤️ ${nivel} — faltam ${pp - Math.floor((Number(c.amizade) || 0) % pp)} para o próximo nível`;
   $('mp-info-balao').innerHTML = `<b>Como a lealdade sobe</b> Carinho (até ${CARINHOS_POR_DIA} por dia), comida e jogar todo dia. Ficando muitos dias sem jogar, ela cai um pouco.
-    <b>Marcos</b> Com ${lc}, ${esc(nomePet(pet))} começa a conversar${LEALDADE_CAMBALHOTA === lc ? ' e aprende a cambalhota' : ''}.${LEALDADE_CAMBALHOTA !== lc ? ` Com ${LEALDADE_CAMBALHOTA}, aprende a cambalhota.` : ''} Com ${la}, ajuda nos ginásios.
+    <b>Marcos</b> Com ${lc}, ${esc(nomePet(pet))} começa a conversar${LEALDADE_CAMBALHOTA === lc ? ' e aprende a cambalhota' : ''}.${LEALDADE_CAMBALHOTA !== lc ? ` Com ${LEALDADE_CAMBALHOTA}, aprende a cambalhota.` : ''} Com ${ld}, dá dicas nos ginásios; com ${le}, elimina uma opção.
     Acima de 100, cada ${pp} pontos sobem um nível de amizade ❤️ (moldura de prata no 2, corações ao seguir no 3, moldura dourada no 5, coroa no 10).`;
-  const noite = ehNoite();
-  $('mp-palco').classList.toggle('noite', noite);
-  $('mp-bolsa').disabled = $('mp-carinho').disabled = noite;
-  $('mp-bolsa').innerHTML = noite ? 'Dormindo…' : `${imgItem(icone('bolsa'), '🎒', 'jr-ic-btn')} Bolsa (${Object.values(estado.pets.bolsa || {}).reduce((a, n) => a + (Number(n) || 0), 0)})`;
-  $('mp-carinho').textContent = noite ? 'Dormindo…' : '💜 Carinho';
+  $('mp-bolsa').innerHTML = `${imgItem(icone('bolsa'), '🎒', 'jr-ic-btn')} Bolsa (${Object.values(estado.pets.bolsa || {}).reduce((a, n) => a + (Number(n) || 0), 0)})`;
 }
 
 // Movimento por código no corpo do pet (respira, balança a cabeça, fica tristinho)
@@ -1074,7 +1101,6 @@ function movimentoCorpo(tipo) {
   const corpo = $('mp-corpo');
   const K = {
     respira:  [[{ transform: 'scaleY(1)' }, { transform: 'scaleY(1.03)' }], { duration: 1400, direction: 'alternate', iterations: Infinity, easing: 'ease-in-out' }],
-    dorme:    [[{ transform: 'scaleY(1)' }, { transform: 'scaleY(1.03)' }], { duration: 2400, direction: 'alternate', iterations: Infinity, easing: 'ease-in-out' }],
     come:     [[{ transform: 'translate(0, 0) rotate(0deg)' }, { transform: 'translate(3px, 1px) rotate(1.5deg)' }], { duration: 175, direction: 'alternate', iterations: Infinity }],
     triste:   [[{ transform: 'rotate(0deg)' }, { transform: 'rotate(-1.6deg)' }], { duration: 1600, direction: 'alternate', iterations: Infinity, easing: 'ease-in-out' }],
   }[tipo];
@@ -1097,15 +1123,12 @@ function arcoDePulo() {
     { duration: 650, easing: 'ease-out' });
 }
 
-// Volta ao estado de descanso: dormindo (noite), triste (fome) ou sentado
+// Volta ao estado de descanso: triste (fome) ou sentado (o pet nunca dorme)
 function voltarAoNormal() {
   if (!mp) return;
   mp.ocupado = false;
-  mp.noite = ehNoite();
-  if (mp.noite) { mp.estado = 'dormindo'; mp.anim.tocar('dormindo'); movimentoCorpo('dorme'); }
-  else if (barrigaDe(mp.pet) < fomeAbaixo()) { mp.estado = 'triste'; mp.anim.tocar('triste_fome'); movimentoCorpo('triste'); }
+  if (barrigaDe(mp.pet) < fomeAbaixo()) { mp.estado = 'triste'; mp.anim.tocar('triste_fome'); movimentoCorpo('triste'); }
   else { mp.estado = 'parado'; mp.anim.tocar('sentado_girando'); movimentoCorpo('respira'); }
-  $('mp-zz').hidden = !mp.noite;
   renderMeuPet();
 }
 
@@ -1116,7 +1139,6 @@ function atualizarMeuPet(dt) {
   if (mp.estado === 'parado' && mp.anim.anim === 'sentado_girando' && mp.anim.ciclos >= 3)
     mp.anim.tocar('sentado_2', () => { if (mp?.estado === 'parado') voltarAoNormal(); });   // a cada 3 ciclos, sentado_2
   if (mp.estado === 'comendo' && mp.anim.ciclos >= 2) comemorar('feliz');                 // comendo 2 vezes, depois feliz
-  if (!mp.ocupado && ehNoite() !== mp.noite) voltarAoNormal();                            // virou noite/dia com a tela aberta
 }
 
 function comemorar(anim) {
@@ -1149,7 +1171,7 @@ function particulas(simbolos, n) {   // símbolo: texto (emoji) ou HTML de image
 }
 
 function carinhoPet() {
-  if (!mp || mp.ocupado || ehNoite()) return;
+  if (!mp || mp.ocupado) return;
   const pet = mp.pet, c = cuidadosDe(pet), hoje = diaLocal();
   if (doDia(c.carinhos_dia, hoje) < CARINHOS_POR_DIA) {
     c.carinhos_dia = { dia: hoje, n: doDia(c.carinhos_dia, hoje) + 1 };
@@ -1159,7 +1181,7 @@ function carinhoPet() {
     verificarMarcosLealdade(pet);
   }
   particulas(['💜', '💛', '💜', '💛'], 5);
-  const fc = barrigaDe(pet) >= fomeAbaixo() && falasProntas() && c.lealdade >= (configFalas().lealdade_minima ?? 60) ? montarFala(contextoFalaDe(pet), 'carinho') : null;
+  const fc = barrigaDe(pet) >= fomeAbaixo() && falasProntas() && c.lealdade >= (configFalas().lealdade_minima ?? 25) ? montarFala(contextoFalaDe(pet), 'carinho') : null;
   falarPet(barrigaDe(pet) < fomeAbaixo() ? 'Obrigado… mas tô com fome' : fc?.baloes[0]?.texto || 'Gostei!');
   comemorar(c.lealdade >= LEALDADE_CAMBALHOTA ? 'pulo_cambalhota' : 'feliz');
 }
@@ -1191,7 +1213,7 @@ function aplicarIcones(raiz = document) {
 }
 const nivelPet = (pet) => nivelAmizade(cuidadosDe(pet)?.amizade);
 const fomeAbaixo = () => cfgLoja().barriga?.fome_abaixo ?? 40;
-const ondeDonaCida = () => { const p = NPCS.find(x => x.id === cfgLoja().vendedor); return p ? `${p.mapa}. ${D.questoes[p.mapa]?.nome || ''}` : 'Mercado Central'; };
+const ondeDonaCida = () => 'Praça ou Mercado';   // a loja é um interior com porta na Praça e no Mercado Central
 
 // Soma lealdade (acima de 100 vira amizade, que nunca cai); escreve no patch e avisa quando sobe de nível
 function ganharLealdade(pet, n, patch = {}) {
@@ -1222,10 +1244,13 @@ function aplicarTinta(img, tintaId, comSombra = false) {
   img.classList.toggle('jr-arco-iris', animada);
   img.style.filter = t && !animada ? t.filtro + (comSombra ? ' drop-shadow(0 1px 1px rgba(0,0,0,.35))' : '') : '';
 }
+// Tinta de um pet meu em qualquer tela (mapa, Meu Pet, duelo do ginásio, batalha, coleção, pedidos, HUD)
+const aplicarVisualPet = (img, pet, comSombra = false) => aplicarTinta(img, pet ? cuidadosDe(pet)?.tinta : null, comSombra);
 function atualizarVisualPet() {
-  const pet = estado?.pets?.ativo, c = pet && cuidadosDe(pet);
-  aplicarTinta($('pet'), c?.tinta, true);
-  if (mp) aplicarTinta($('mp-img'), c?.tinta);
+  const pet = estado?.pets?.ativo;
+  aplicarVisualPet($('pet'), pet, true);
+  aplicarVisualPet($('btn-pet').querySelector('img'), pet);
+  if (mp) aplicarVisualPet($('mp-img'), pet);
 }
 
 // ── Efeitos: partículas desenhadas por código (CSS, sem imagem), atrás do pet — o meu e o dos colegas ──
@@ -1266,12 +1291,13 @@ function efeitosDoMapa() {
   for (const cg of colegas.values()) if (!cg.el.hidden && cg.pet) emitirEfeito(cg.seg, cg.reg?.pet_efeito, Number(cg.reg?.pet_nivel) >= 3, agora);
 }
 
-// ── Loja (só falando com a Dona Cida) ──────────────────────
-let lojaAba = 'comidas', lojaQtd = {};
-function abrirLoja() {
+// ── Loja (no interior da loja: Dona Cida ou um dos cantos, que já abre na aba dele) ──
+let lojaAba = 'comidas', lojaQtd = {}, lojaProva = null;
+function abrirLoja(aba = 'comidas', provador = false) {
   if (!lojaPronta() || !estado?.pets) return;
-  lojaAba = 'comidas'; lojaQtd = {};
-  $('lj-msg').textContent = '';
+  lojaAba = ['comidas', 'tintas', 'efeitos', 'pesca'].includes(aba) ? aba : 'comidas'; lojaQtd = {}; lojaProva = null;
+  $('lj-msg').textContent = lojaAba === 'tintas' && provador ? 'Toque numa tinta para provar no pet 🐾' : '';
+  if (ehLoja() && (provador || lojaAba === 'tintas')) subirNoPedestal();   // provador: o pet sobe no pedestal
   $('loja').hidden = false;
   renderLoja();
 }
@@ -1287,7 +1313,7 @@ function renderLoja() {
     : `<button class="lj-comprar" data-comprar="${esc(id)}">${rotulo}</button>`;
   let html = '';
   if (lojaAba === 'comidas') {
-    html = comidas().map(c => {
+    html = comidas().filter(c => c.venda_loja !== false).map(c => {
       const q = lojaQtd[c.id] || 1, fav = pet && ehFavorita(pet, c);
       return `<div class="lj-item">
         <div class="lj-emoji">${imgItem(c.imagem, c.emoji, 'jr-item-loja')}</div>
@@ -1300,11 +1326,26 @@ function renderLoja() {
         ${botao(c.id, c.preco * q, 'Comprar')}
       </div>`;
     }).join('');
+  } else if (lojaAba === 'pesca') {
+    const ic = cfgPesca().isca || {}, p1 = ic.preco ?? 2, pn = ic.pacote ?? 5, pp = ic.preco_pacote ?? 10;
+    const linha = (id, nome, v, sub) => `<div class="lj-item">
+        <div class="lj-emoji">${imgItem((cfgLoja().itens_uso || []).find(x => x.id === 'isca')?.imagem, '🪱', 'jr-item-loja')}</div>
+        <div class="lj-info"><b>${nome}</b>${preco(v)}<span>${sub}</span></div>
+        ${botao(id, v, 'Comprar')}
+      </div>`;
+    html = linha('isca', 'Isca', p1, `cada lançamento gasta 1 · você tem ${iscas()}`) + linha('isca_pacote', `Pacote com ${pn} iscas`, pp, 'iscas não vencem');
+    // na mesma aba: vender os peixes pescados
+    const ps = peixesNaBolsa();
+    html += '<div class="lj-secao">💰 Vender peixes</div>' + (ps.length ? ps.map(x => `<div class="lj-item">
+        <div class="lj-emoji">${imgItem(x.imagem, x.emoji, 'jr-item-loja' + (x.raro ? ' raro' : ''), x.filtro)}</div>
+        <div class="lj-info"><b>${esc(x.nome)}</b><span class="lj-preco">${moedaHtml()} <b>${x.venda}</b> cada</span><span>na bolsa: ${x.n}</span></div>
+        <button class="lj-comprar" data-vender="${esc(x.id)}">Vender 1</button>
+      </div>`).join('') : '<div class="lj-vazio">Você não tem peixes na bolsa. Pesque 🎣 e venda aqui.</div>');
   } else if (lojaAba === 'tintas') {
     const src = pet ? quadrosDe(pet, 'sentado_girando')[0] : '';
-    html = tintas().map(t => {
+    html = tintas().filter(t => !t.exclusiva).map(t => {   // Esmeralda e Cristal: só cavando
       const tem = !!estado.pets.tintas?.[t.id];
-      return `<div class="lj-item lj-tinta">
+      return `<div class="lj-item lj-tinta${lojaProva === t.id ? ' provando' : ''}" data-provar="${esc(t.id)}">
         <div class="lj-previa">${src ? `<img src="${src}" alt="" draggable="false" data-tinta="${t.id}"/>` : ''}</div>
         <div class="lj-info"><b>${esc(t.nome)}</b>${tem ? '' : preco(t.preco)}</div>
         ${tem ? '<button class="lj-comprar ok" disabled>✓ Comprada</button>' : botao(t.id, t.preco, 'Comprar')}
@@ -1326,16 +1367,49 @@ function renderLoja() {
 }
 function cliqueLoja(e) {
   const aba = e.target.closest('[data-aba]');
-  if (aba) { lojaAba = aba.dataset.aba; $('lj-msg').textContent = lojaAba === 'tintas' ? 'Comprada uma vez, a tinta vale para todos os seus pets.' : ''; renderLoja(); return; }
+  if (aba) {
+    lojaAba = aba.dataset.aba;
+    $('lj-msg').textContent = { tintas: ehLoja() ? 'Toque numa tinta para provar no pet 🐾 · comprada uma vez, vale para todos os seus pets.' : 'Comprada uma vez, a tinta vale para todos os seus pets.',
+      pesca: 'Iscas para pescar e Dona Cida compra os peixes que você pescou.' }[lojaAba] || '';
+    if (lojaAba === 'tintas' && ehLoja()) subirNoPedestal();
+    renderLoja(); return;
+  }
+  const prova = e.target.closest('[data-provar]');
+  if (prova && !e.target.closest('button') && petNoPedestal) {   // prévia no pet do pedestal (sem comprar)
+    lojaProva = prova.dataset.provar;
+    aplicarTinta($('pet'), lojaProva, true);
+    renderLoja(); return;
+  }
   const mais = e.target.closest('[data-mais]'), menos = e.target.closest('[data-menos]');
   if (mais || menos) { const id = (mais || menos).dataset[mais ? 'mais' : 'menos']; lojaQtd[id] = Math.max(1, Math.min(20, (lojaQtd[id] || 1) + (mais ? 1 : -1))); renderLoja(); return; }
   const b = e.target.closest('[data-comprar]');
   if (b) comprar(b.dataset.comprar);
+  const v = e.target.closest('[data-vender]');
+  if (v) venderPeixe(v.dataset.vender);
+}
+function venderPeixe(id) {
+  const ps = estado.pets, item = itemDaBolsa(id), n = Number(ps.bolsa?.[id]) || 0;
+  if (!item?.peixe || n <= 0) return;
+  ps.bolsa[id] = n - 1;
+  ps.moedas = (Number(ps.moedas) || 0) + item.venda;
+  gravar({ [`pets/bolsa/${id}`]: n - 1 || null, 'pets/moedas': ps.moedas });
+  tocar('acerto');
+  renderLoja();
+  $('lj-msg').textContent = `Vendeu ${comArtigo(item.nome)} por ${item.venda} moeda${item.venda === 1 ? '' : 's'}.`;
 }
 function comprar(id) {
   const ps = estado.pets, moedas = Number(ps.moedas) || 0, patch = {};
   let msg = '';
-  if (lojaAba === 'comidas') {
+  if (lojaAba === 'pesca') {
+    const ic = cfgPesca().isca || {}, pacote = id === 'isca_pacote';
+    const q = pacote ? ic.pacote ?? 5 : 1, v = pacote ? ic.preco_pacote ?? 10 : ic.preco ?? 2;
+    if (moedas < v) return;
+    ps.moedas = moedas - v;
+    ps.iscas = iscas() + q;
+    patch['pets/iscas'] = ps.iscas;
+    msg = `${q === 1 ? '1 isca' : `${q} iscas`} na bolsa 🪱 (você tem ${ps.iscas})`;
+    atualizarBotaoLancar();
+  } else if (lojaAba === 'comidas') {
     const c = comidas().find(x => x.id === id), q = lojaQtd[id] || 1;
     if (!c || moedas < c.preco * q) return;
     ps.moedas = moedas - c.preco * q;
@@ -1369,27 +1443,33 @@ function comprar(id) {
 // ── Bolsa (no "Meu Pet"): dar comida ao pet ativo ──────────
 function abrirBolsa() {
   if (!mp) return;
+  bolsaSel = null;
+  bolsaAba = 'comidas';
   renderBolsa();
   $('mp-bolsa-painel').hidden = false;
 }
+let bolsaSel = null, bolsaAba = 'comidas';   // peixe tocado na bolsa: mostra as opções
 function renderBolsa() {
+  for (const b of $('mp-bolsa-abas').children) b.classList.toggle('ativa', b.dataset.baba === bolsaAba);
+  if (bolsaAba === 'itens') { $('mp-bolsa-itens').innerHTML = itensHtml(); return; }
+  if (bolsaAba === 'colecao') { $('mp-bolsa-itens').innerHTML = CAVAR ? albumHtml() : '<div class="mp-bolsa-vazia">Coleção indisponível agora.</div>'; return; }
   const pet = mp.pet, itens = Object.entries(estado.pets.bolsa || {}).filter(([, n]) => Number(n) > 0).map(([id, n]) => ({ ...itemDaBolsa(id), n })).filter(x => x.id);
-  $('mp-bolsa-itens').innerHTML = itens.length ? itens.map(x => `
-    <button class="mp-bolsa-item" data-comida="${esc(x.id)}">
+  $('mp-bolsa-itens').innerHTML = (itens.length ? itens.map(x => `
+    <button class="mp-bolsa-item${bolsaSel === x.id ? ' sel' : ''}" data-comida="${esc(x.id)}">
       <span class="mp-bolsa-emoji">${imgItem(x.imagem, x.emoji, 'jr-item-bolsa' + (x.raro ? ' raro' : ''), x.filtro)}</span>
       <b>${esc(x.nome)}</b><span>× ${x.n} · +${x.lealdade} lealdade${ehFavorita(pet, x) ? ' ❤️' : ''}</span>
       ${x.especial ? '<em>come sem fome</em>' : ''}
-    </button>`).join('')
-    : `<div class="mp-bolsa-vazia">A bolsa está vazia. Compre comida na loja da Dona Cida (${esc(ondeDonaCida())}) ou pesque peixes 🎣.</div>`;
+    </button>${bolsaSel === x.id ? `<div class="mp-bolsa-acoes"><button class="jr-btn jr-btn-ouro" data-dar-pet="${esc(x.id)}">🍽️ Dar ao pet</button>
+      <span>💰 Vender: loja da Dona Cida (aba Pesca) · 🎁 Presentear: toque num colega no mapa</span></div>` : ''}`).join('')
+    : `<div class="mp-bolsa-vazia">A bolsa está vazia. Compre comida na loja da Dona Cida (${esc(ondeDonaCida())}) 🛒 ou pesque peixes 🎣.</div>`);
 }
 function darComida(id) {
   if (!mp || mp.ocupado) return;
   $('mp-bolsa-painel').hidden = true;
-  if (ehNoite()) { falarPet('Zzz… amanhã eu como!'); return; }
   const pet = mp.pet, c = cuidadosDe(pet), item = itemDaBolsa(id), n = Number(estado.pets.bolsa?.[id]) || 0;
   if (!c || !item || n <= 0) return;
-  const b = barrigaDe(pet), cfg = cfgLoja().barriga || {};
-  const motivo = motivoNaoCome(item, b, c);
+  const b = barrigaDe(pet), cfg = cfgLoja().barriga || {}, hoje = diaLocal();
+  const motivo = motivoNaoCome(item, b, c, new Date(), doDia(c.especiais_cheio_dia, hoje));
   if (motivo) {
     falarPet({ cheio: 'Tô cheio! 😵', sem_fome: `Ainda não tô com fome… (comida comum só com a barriga abaixo de ${cfg.comum_ate ?? 60})`, semana: 'Bolo só uma vez por semana!' }[motivo]);
     return;
@@ -1398,6 +1478,10 @@ function darComida(id) {
   c.barriga = Math.min(cfg.cheia ?? 100, b + enche()); c.barriga_t = agora;
   estado.pets.bolsa[id] = n - 1;
   const patch = { [`${base}/barriga`]: Math.round(c.barriga * 10) / 10, [`${base}/barriga_t`]: agora, [`pets/bolsa/${id}`]: n - 1 || null };
+  if (barrigaCheia(b)) {   // especial comida de barriga cheia: conta no limite do dia
+    c.especiais_cheio_dia = { dia: hoje, n: doDia(c.especiais_cheio_dia, hoje) + 1 };
+    patch[`${base}/especiais_cheio_dia`] = c.especiais_cheio_dia;
+  }
   if (item.limite_semana) {
     const sem = semanaDe(), s = c.semana?.[id];
     c.semana = { ...(c.semana || {}), [id]: { semana: sem, n: (s?.semana === sem ? Number(s.n) || 0 : 0) + 1 } };
@@ -1436,7 +1520,7 @@ function renderVisual() {
     es.map(e => chip('efeito', e.id, `${e.emoji} ${esc(e.nome)}`, c.efeito === e.id)).join('');
   for (const img of $('mp-visual-tintas').querySelectorAll('img[data-previa]')) aplicarTinta(img, img.dataset.previa);
   $('mp-visual-dica').hidden = !!(ts.length || es.length);
-  $('mp-visual-dica').textContent = `Compre tintas e efeitos na loja da Dona Cida (${ondeDonaCida()}).`;
+  $('mp-visual-dica').textContent = `Compre tintas e efeitos na loja da Dona Cida (${ondeDonaCida()}) 🛒.`;
 }
 function escolherVisual(e) {
   const b = e.target.closest('[data-tinta], [data-efeito]');
@@ -1481,13 +1565,13 @@ function salvarNomePet(padrao = false) {
 // ============================================================
 //  PESCA — 3 pontos (dados/jogo/pesca.json), poses de pesca de cada personagem (pesca-sprites.json)
 // ============================================================
-let pesca = null;   // { ponto, dir, s, img, svg, exc, estado, pose, timers, conta }
+let pesca = null;   // { ponto, dir, s, img, svg, exc, estado, pose, timers, peixe, barra, segurando }
 const POSES_LINHA = ['esperando', 'beliscando', 'atento', 'puxando'];
 const BOIA = [800, 560];   // ponto da boia no canvas da pose (na água, um pouco abaixo da altura do caixote)
 
 function pescaDia() {
   const hoje = diaLocal();
-  if (estado.pescaDia?.data !== hoje) estado.pescaDia = { data: hoje, n: 0 };
+  if (estado.pescaDia?.data !== hoje) estado.pescaDia = { data: hoje, n: 0 };   // n: peixes pegos hoje; aviso: já avisou da pesca esportiva
   return estado.pescaDia;
 }
 const pontoLiberado = (p) => !!estado.ginasios[chaveGinasio(p.mapa, cfgPesca().libera_apos_ginasio || 'A')]?.lider.vencido;
@@ -1517,17 +1601,15 @@ function pontoDaBoia(p) {
   const sp = spritePesca(), dir = p.lado === 'esq' ? -1 : 1;
   return [p.x + dir * (BOIA[0] - sp.ancora[0]) * ESCALA_SPRITE, p.y + (BOIA[1] - sp.ancora[1]) * ESCALA_SPRITE];
 }
-const limitePescaHoje = () => pescaDia().n >= (cfgPesca().limite_peixes_dia ?? 5);
-// a cada quadro no mapa: nome do ponto quando o personagem chega perto; cinza quando acabou o limite do dia
+const iscas = () => Number(estado.pets?.iscas) || 0;
+// a cada quadro no mapa: nome do ponto quando o personagem chega perto (depois do limite do dia vira pesca esportiva)
 function atualizarCaixotes() {
-  const cansado = limitePescaHoje();
   for (const el of document.querySelectorAll('.jr-caixote')) {
     const p = pontosDoMapa(cena.n).find(x => x.id === el.dataset.ponto);
     if (!p) continue;
     const perto = !pesca && dist(jog.x, jog.y, p.x, p.y) < PESSOA_PERTO * 1.6;
     const nome = el.querySelector('.jr-caixote-nome');
     if (nome.hidden === perto) nome.hidden = !perto;
-    el.classList.toggle('cansado', cansado);
   }
 }
 // "Mostrar": a câmera vai até o ponto por uns segundos e o marcador pisca 3 vezes
@@ -1547,11 +1629,14 @@ function avisarPescaLiberada(n) {
   gravar({ [`avisos/pesca_${p.id}`]: true });
   $('pesca-aviso-txt').innerHTML = `🎣 Agora você pode pescar no <b>${esc(p.nome)}</b>! Procure o caixote perto da água.`;
   $('pesca-aviso').dataset.ponto = p.id;
+  $('pesca-aviso').querySelector('[data-aviso="mostrar"]').hidden = false;
+  $('pesca-aviso').querySelector('[data-aviso="depois"]').textContent = 'Depois';
   $('pesca-aviso').hidden = false;
 }
-// Primeira pesca da vida: 3 balões curtos antes do 1º lançamento (toque para avançar)
-const TUTORIAL_PESCA = ['Espere a boia afundar…', 'Quando aparecer ❗, toque rápido!',
-  'Acerte a conta para pegar o peixe. Ele vai para a 🎒 Bolsa e serve de comida para o seu pet.'];
+// Primeira pesca da vida: balões curtos antes do 1º lançamento (toque para avançar)
+const TUTORIAL_PESCA = ['Toque em 🪱 Lançar: cada lançamento gasta 1 isca (a Dona Cida vende).', 'Espere a boia afundar… quando aparecer ❗, toque rápido!',
+  'Segure o dedo na tela (ou o espaço) para subir a zona verde e deixe o peixe dentro dela até a barra encher.',
+  'Os 5 primeiros peixes do dia vão para a 🎒 Bolsa. Todo peixe vale pontos no ranking da semana 🏆'];
 function tutorialPesca(depois) {
   let i = 0;
   const el = $('pesca-tutorial');
@@ -1590,6 +1675,7 @@ function pescaNoMapa(cx, cy) {
 
 function sentarPesca(ponto) {
   if (cena?.tipo !== 'mapa' || perguntaAberta || transicionando) return;
+  esconderAcaoMapa();
   const sp = spritePesca();
   const s = ESCALA_SPRITE;   // mesma escala das imagens de andar
   const dir = ponto.lado === 'esq' ? -1 : 1;
@@ -1621,9 +1707,9 @@ function sentarPesca(ponto) {
   fecharBalaoPessoa();
   pararFalaPet();
   seguidor?.colocar(ponto.x - dir * 34 * ESCALA_ATORES, ponto.y + 3);   // o pet senta ao lado do caixote
-  if (pescaDia().n >= (cfgPesca().limite_peixes_dia ?? 5)) { pescaPose('esperando'); pescaDescanso(); return; }
-  if (!estado.avisos.tutorial_pesca) { pescaPose('esperando'); pesca.estado = 'tutorial'; tutorialPesca(pescaEsperar); return; }
-  pescaEsperar();
+  $('btn-pesca-ranking').hidden = false;
+  if (!estado.avisos.tutorial_pesca) { pescaPose('esperando'); pesca.estado = 'tutorial'; tutorialPesca(pescaPronto); return; }
+  pescaPronto();
 }
 
 function pescaPose(pose) {
@@ -1649,13 +1735,43 @@ function desenharLinhaPesca() {
 const pescaDepois = (fn, ms) => { const t = setTimeout(() => { if (pesca) fn(); }, ms); pesca.timers.push(t); return t; };
 const limparTimersPesca = () => { pesca?.timers.forEach(clearTimeout); if (pesca) pesca.timers = []; };
 
+// 0. pronto: o botão 🪱 Lançar (ou o espaço, ou tocar perto do caixote) gasta 1 isca e joga a linha
+function pescaPronto() {
+  if (!pesca) return;
+  limparTimersPesca();
+  pesca.estado = 'pronto';
+  pescaPose('esperando');
+  atualizarBotaoLancar();
+}
+function atualizarBotaoLancar() {
+  const b = $('btn-lancar');
+  b.hidden = pesca?.estado !== 'pronto';
+  b.innerHTML = `🪱 Lançar <small>(${iscas()})</small>`;
+}
+function pescaLancar() {
+  if (pesca?.estado !== 'pronto') return;
+  if (iscas() <= 0) { semIsca(); return; }
+  estado.pets.iscas = iscas() - 1;
+  gravar({ 'pets/iscas': estado.pets.iscas });
+  pescaEsperar();
+}
+// Sem isca: o aviso diz onde a Dona Cida está (o botão "Mostrar" só vale para o ponto de pesca)
+function semIsca() {
+  tocar('erro');
+  $('pesca-aviso-txt').innerHTML = `🪱 Você precisa de isca. Vá à loja da <b>Dona Cida</b> (${esc(ondeDonaCida())}) 🛒`;
+  $('pesca-aviso').dataset.ponto = '';
+  $('pesca-aviso').querySelector('[data-aviso="mostrar"]').hidden = true;
+  $('pesca-aviso').querySelector('[data-aviso="depois"]').textContent = 'OK';
+  $('pesca-aviso').hidden = false;
+}
+
 // 1. espera (às vezes beliscadas falsas) → 2. fisgada com ❗ (tempo para tocar)
 function pescaEsperar() {
   if (!pesca) return;
   limparTimersPesca();
-  if (pescaDia().n >= (cfgPesca().limite_peixes_dia ?? 5)) { pescaDescanso(); return; }
   const cfg = cfgPesca();
   pesca.estado = 'espera';
+  atualizarBotaoLancar();
   pescaPose('esperando');
   const espera = entre(cfg.espera_s || [3, 8]) * 1000, falsas = inteiroEntre(cfg.beliscadas_falsas || [0, 2]);
   for (let i = 1; i <= falsas; i++) pescaDepois(pescaBeliscada, espera * i / (falsas + 1));
@@ -1674,67 +1790,86 @@ function pescaFisgada() {
   tocar('clique');
   pescaDepois(() => { if (pesca.estado === 'fisgada') pescaEscapou(); }, (cfgPesca().tempo_fisgar_s ?? 1.2) * 1000);
 }
-// 3. tocou a tempo: puxa e abre a conta rápida do tema do ponto (dificuldade 2)
+// 3. tocou a tempo: puxa e abre o minijogo da barrinha (sem conta). Segurar sobe a zona verde; soltar, ela cai.
 function pescaPuxar() {
   if (pesca?.estado !== 'fisgada') return;
   limparTimersPesca();
-  pesca.estado = 'conta';
+  pesca.estado = 'barrinha';
   pesca.exc.hidden = true;
   pescaPose('puxando');
-  const p = gerarConta(pesca.ponto.contas, 2);
-  pesca.conta = { p, t0: performance.now(), lim: (cfgPesca().tempo_conta_s ?? 12) * 1000 };
-  $('pc-conta').textContent = p.conta;
-  $('pc-conta').classList.toggle('longa', p.longa);
-  $('pc-ops').innerHTML = p.opcoes.map((v, i) => `<button class="pc-op" data-i="${i}">${esc(v)}</button>`).join('');
-  $('pc-ops').classList.toggle('longas', p.opcoes.some(v => v.length > 7));
-  $('pesca-conta').hidden = false;
-  const tick = () => {
-    if (pesca?.estado !== 'conta') return;
-    const falta = 1 - (performance.now() - pesca.conta.t0) / pesca.conta.lim;
-    $('pc-tempo').style.width = Math.max(0, falta) * 100 + '%';
-    if (falta <= 0) { responderPesca(null); return; }
+  const f = sortearPeixe(pesca.ponto);
+  pesca.peixe = f;
+  pesca.barra = criarBarrinha(f?.dificuldade);
+  pesca.segurando = false;
+  $('pb-zona').style.height = pesca.barra.h * 100 + '%';
+  $('pb-peixe').innerHTML = imgItem(f.imagem, f.raro ? '🐠' : '🐟', 'jr-item-peixe' + (f.raro ? ' raro' : ''), f.filtro);
+  desenharBarrinha(pesca.barra);
+  $('pesca-barra').hidden = false;
+  let t0 = performance.now();
+  const tick = (agora) => {
+    if (pesca?.estado !== 'barrinha') return;
+    const b = passoBarrinha(pesca.barra, Math.max(0, agora - t0) / 1000, pesca.segurando);
+    t0 = agora;
+    desenharBarrinha(b);
+    if (b.fim) { fimBarrinha(b.fim); return; }
     requestAnimationFrame(tick);
   };
-  tick();
+  requestAnimationFrame(tick);
 }
-function responderPesca(v) {
-  if (pesca?.estado !== 'conta') return;
-  const { p, t0 } = pesca.conta, t = (performance.now() - t0) / 1000, ok = v === p.resposta;
-  for (const b of $('pc-ops').querySelectorAll('.pc-op')) {
-    b.disabled = true;
-    const o = p.opcoes[b.dataset.i];
-    if (o === p.resposta) b.classList.add('certa'); else if (o === v) b.classList.add('errada');
-  }
-  const f = ok ? sortearPeixe(pesca.ponto) : null, agora = Date.now();
-  const patch = { [`respostas/pesca-${agora}`]: { tipo: 'pesca', ponto: pesca.ponto.id, mapa: pesca.ponto.mapa, tipo_conta: p.tipo, dificuldade: p.dificuldade,
-    conta: p.conta, certa: p.resposta, resposta: v, acertou: v === null ? null : ok, tempo_s: v === null ? null : +t.toFixed(1), peixe: f?.id || null, data: agora } };
+function desenharBarrinha(b) {
+  $('pb-zona').style.bottom = b.z * 100 + '%';
+  $('pb-zona').classList.toggle('dentro', !!b.dentro);
+  $('pb-peixe').style.bottom = b.y * 100 + '%';
+  $('pb-captura').style.height = b.captura * 100 + '%';
+  $('pb-trilho').classList.toggle('treme', !b.dentro && !semMovimento());   // movimento reduzido: sem tremer
+}
+function fimBarrinha(fim) {
+  pesca.segurando = false;
+  setTimeout(() => { $('pesca-barra').hidden = true; }, fim === 'pegou' ? 250 : 500);
+  if (fim === 'pegou') pescaPegou(pesca.peixe);
+  else { tocar('erro'); pescaEscapou(500); }
+}
+// 4. pegou: os primeiros do dia vão para a bolsa; depois do limite é pesca esportiva (o peixe volta para a água).
+//    Todo peixe pego vale pontos no ranking da semana.
+function pescaPegou(f) {
   pesca.estado = 'festa';
-  setTimeout(() => { $('pesca-conta').hidden = true; }, ok ? 500 : 900);
-  if (!ok) { gravar(patch); tocar('erro'); pescaEscapou(900); return; }
-  // 4. acertou: o peixe vai para a bolsa
-  const ps = estado.pets, id = idDoPeixe(f.id), dia = pescaDia();
-  ps.bolsa = { ...(ps.bolsa || {}), [id]: (Number(ps.bolsa?.[id]) || 0) + 1 };
+  const dia = pescaDia(), lim = cfgPesca().limite_peixes_dia ?? 5, pts = Number(f.pontos) || 0;
+  const esportiva = dia.n >= lim, patch = {};
+  if (!esportiva) {
+    const ps = estado.pets, id = idDoPeixe(f.id);
+    ps.bolsa = { ...(ps.bolsa || {}), [id]: (Number(ps.bolsa?.[id]) || 0) + 1 };
+    patch[`pets/bolsa/${id}`] = ps.bolsa[id];
+  }
   dia.n++;
-  patch[`pets/bolsa/${id}`] = ps.bolsa[id];
+  const avisar = dia.n >= lim && !dia.aviso;   // acabou de pegar o 5º: avisa da pesca esportiva (uma vez por dia)
+  if (avisar) dia.aviso = true;
   patch.pesca_dia = { ...dia };
   gravar(patch);
+  somarPontosPesca(pts);
   tocar('acerto');
   pescaPose('peixe');
   pescaDepois(() => pescaPose('levantando'), 900);
-  pescaDepois(() => { pescaPose('comemorando'); tocar('vitoria'); mostrarPeixe(f); }, 1800);
-  pescaDepois(pescaEsperar, 4200);
+  pescaDepois(() => {
+    pescaPose('comemorando'); tocar('vitoria'); mostrarPeixe(f, esportiva, pts);
+    if (esportiva) { const [bx, by] = pescaNoMapa(...BOIA); avisarEm('🐟💨 De volta para a água!', bx, by); }
+  }, 1800);
+  pescaDepois(() => {
+    if (avisar) avisoPet(`Você já pegou ${lim} peixes hoje. Agora é pesca esportiva: os peixes voltam para a água e valem pontos no ranking! 🏆`, true);
+    pescaPronto();
+  }, 4200);
 }
-function mostrarPeixe(f) {
+function mostrarPeixe(f, esportiva = false, pts = 0) {
   const el = $('pesca-cartao');
   const artigo = /a$/i.test(f.nome) ? 'uma' : 'um';
-  el.innerHTML = `<span class="pc-peixe">${imgItem(f.imagem, f.raro ? '🐠' : '🐟', 'jr-item-peixe' + (f.raro ? ' raro' : ''), f.filtro)}</span><span>Você pescou ${artigo} <b>${esc(f.nome)}</b>!${f.raro ? ' ✨' : ''}<small>Foi para a bolsa · +${f.lealdade} lealdade quando o pet comer</small></span>`;
+  const det = esportiva ? `Pesca esportiva: voltou para a água · +${pts} pontos 🏆` : `Foi para a bolsa · +${pts} pontos 🏆 · +${f.lealdade} lealdade quando o pet comer`;
+  el.innerHTML = `<span class="pc-peixe">${imgItem(f.imagem, f.raro ? '🐠' : '🐟', 'jr-item-peixe' + (f.raro ? ' raro' : ''), f.filtro)}</span><span>Você pescou ${artigo} <b>${esc(f.nome)}</b>!${f.raro ? ' ✨' : ''}<small>${det}</small></span>`;
   el.classList.toggle('raro', !!f.raro);
   el.hidden = false;
   el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
   clearTimeout(mostrarPeixe.t);
   mostrarPeixe.t = setTimeout(() => { el.hidden = true; }, 2600);
 }
-// 5. errou, demorou ou não fisgou a tempo
+// 5. não fisgou a tempo ou o peixe escapou da barrinha
 function pescaEscapou(atraso = 0) {
   if (!pesca) return;
   limparTimersPesca();
@@ -1743,20 +1878,143 @@ function pescaEscapou(atraso = 0) {
   pescaPose('esperando');
   const [hx, hy] = pescaNoMapa(300, 40);
   pescaDepois(() => avisarEm('Escapou! 🐟💨', hx, hy), atraso);
-  pescaDepois(pescaEsperar, atraso + 1500);
-}
-function pescaDescanso() {
-  limparTimersPesca();
-  pesca.estado = 'descanso';
-  pescaPose('esperando');
-  const [hx, hy] = pescaNoMapa(300, 40);
-  avisarEm('Os peixes estão descansando. Volte amanhã!', hx, hy);
+  pescaDepois(pescaPronto, atraso + 1500);
 }
 
-// Tocar no mapa pescando: na fisgada puxa; longe do ponto levanta e anda; perto não faz nada
+// ── Ranking semanal de pesca: jogo_revisao_pesca/{segunda}/{uid} = { pontos, nome, turma, ts } (modo teste: _teste) ──
+// Professora e alunos de teste não entram; os 3 primeiros da semana anterior ganham 🥇🎣 🥈🎣 🥉🎣 ao lado do nome.
+const MEDALHAS_PESCA = ['🥇🎣', '🥈🎣', '🥉🎣'];
+let premiosPesca = {};   // uid → medalha (semana anterior)
+const basePesca = () => (teste ? 'jogo_revisao_pesca_teste' : 'jogo_revisao_pesca');
+const nomeRanking = () => (ehProfessora() ? 'Professora' : apelidoAluno || String(sessao?.nome || '').split(' ')[0]);
+const entraNoRanking = () => !ehProfessora() && !ALUNOS_TESTE.includes(sessao.uid) && (teste || TURMAS_PLACAR.includes(sessao.turma));
+const visivelNoRanking = (uid, r) => !!r && (teste || (!ALUNOS_TESTE.includes(uid) && !/PROFESSOR|TESTE/i.test(`${uid} ${r.nome || ''}`) && TURMAS_PLACAR.includes(r.turma)));
+const medalhaPesca = (uid) => (premiosPesca[uid] ? ' ' + premiosPesca[uid] : '');
+
+async function somarPontosPesca(pts) {
+  if (!pts || !carregouProgresso || !entraNoRanking()) return;
+  try {
+    await update(ref(db, `${basePesca()}/${semanaPesca()}/${sessao.uid}`), { pontos: increment(pts), nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), ts: Date.now() });
+  } catch (e) { console.warn('[jogo-revisao] ranking de pesca indisponível', e?.code || e); }
+}
+async function lerRankingPesca(semana) {
+  const s = await get(ref(db, `${basePesca()}/${semana}`));
+  const v = s.exists() ? s.val() || {} : {};
+  return Object.entries(v).filter(([uid, r]) => visivelNoRanking(uid, r))
+    .map(([uid, r]) => ({ uid, nome: nomeVisivel(r.nome) || 'Aluno', turma: r.turma || '', pers: r.pers || null, pontos: Number(r.pontos) || 0, ts: Number(r.ts) || 0 }))
+    .filter(r => r.pontos > 0).sort((a, b) => b.pontos - a.pontos || a.ts - b.ts);
+}
+// Ao entrar no jogo: medalhas da semana anterior (e o aviso para quem ganhou, uma vez)
+async function carregarPremiosPesca() {
+  try {
+    const ant = semanaAnterior(semanaPesca());
+    const lista = await lerRankingPesca(ant);
+    premiosPesca = Object.fromEntries(lista.slice(0, 3).map((r, i) => [r.uid, MEDALHAS_PESCA[i]]));
+    const i = lista.findIndex(r => r.uid === sessao.uid), chave = `pesca_premio_${ant}`;
+    if (i >= 0 && i < 3 && !estado.avisos[chave] && carregouProgresso) {
+      estado.avisos[chave] = true;
+      gravar({ [`avisos/${chave}`]: true });
+      avisoPet(`Você foi o ${i + 1}º melhor pescador da semana! ${MEDALHAS_PESCA[i]}`, true);
+    }
+    for (const c of colegas.values()) atualizarColega(c, c.reg);   // etiquetas com a medalha
+  } catch (e) { console.warn('[jogo-revisao] prêmios da pesca indisponíveis', e?.code || e); }
+}
+
+let rankingPesca = { lista: [], filtro: 'escola' };
+async function abrirRankingPesca() {
+  rankingPesca.filtro = 'escola';
+  $('pr-lista').innerHTML = '<li class="pr-vazio">Carregando…</li>';
+  $('pr-voce').textContent = '';
+  $('pesca-ranking').hidden = false;
+  try { rankingPesca.lista = await lerRankingPesca(semanaPesca()); }
+  catch (e) { rankingPesca.lista = null; }
+  renderRankingPesca();
+}
+function renderRankingPesca() {
+  for (const b of $('pr-abas').children) b.classList.toggle('ativa', b.dataset.pr === rankingPesca.filtro);
+  $('pr-abas').querySelector('[data-pr="turma"]').hidden = !TURMAS_PLACAR.includes(sessao.turma);
+  if (!rankingPesca.lista) { $('pr-lista').innerHTML = '<li class="pr-vazio">Não deu para carregar o ranking agora.</li>'; return; }
+  const lista = rankingPesca.filtro === 'turma' ? rankingPesca.lista.filter(r => r.turma === sessao.turma) : rankingPesca.lista;
+  $('pr-lista').innerHTML = lista.slice(0, 10).map((r, i) => `
+    <li class="${r.uid === sessao.uid ? 'eu' : ''}"><span class="pr-pos">${i + 1}º</span><span class="pr-nome">${esc(r.nome)}${esc(medalhaPesca(r.uid))} <small>${esc(r.turma)}</small></span><b>${r.pontos} pts</b></li>`).join('')
+    || '<li class="pr-vazio">Ninguém pescou esta semana ainda. Seja o primeiro! 🎣</li>';
+  const i = lista.findIndex(r => r.uid === sessao.uid);
+  $('pr-voce').textContent = !entraNoRanking() ? (ehProfessora() ? 'A professora não entra no ranking.' : 'Esta conta não entra no ranking.')
+    : i >= 0 ? `Você: ${i + 1}º · ${lista[i].pontos} pts` : 'Você ainda não pescou esta semana.';
+}
+
+// ── Presentes: 1 peixe por vez para um colega online, até presentes_dia por dia ──
+// jogo_revisao_presentes/{quem recebe}/{id} = { de, de_nome, de_turma, para_nome, peixe, ts, recebido } (modo teste: _teste)
+const basePresentes = () => (teste ? 'jogo_revisao_presentes_teste' : 'jogo_revisao_presentes');
+const presentesHoje = () => (estado.presentesDia?.data === diaLocal() ? Number(estado.presentesDia.n) || 0 : 0);
+const peixesNaBolsa = () => Object.entries(estado.pets?.bolsa || {}).filter(([id, n]) => id.startsWith('pesca_') && Number(n) > 0)
+  .map(([id, n]) => ({ ...itemDaBolsa(id), n: Number(n) })).filter(x => x.id);
+const comArtigo = (nome) => `${/a$/i.test(nome) ? 'uma' : 'um'} ${nome}`;
+
+function escolherPresente(c) {
+  const el = $('colega-cartao');
+  clearTimeout(cartaoColega.timer);
+  cartaoColega.timer = setTimeout(fecharCartaoColega, 12000);
+  const lim = cfgPesca().presentes_dia ?? 3, ps = peixesNaBolsa(), falta = lim - presentesHoje();
+  const msg = falta <= 0 ? `Você já deu ${lim} presentes hoje. Amanhã tem mais!` : !ps.length ? 'Você não tem peixes na bolsa. Vá pescar 🎣' : '';
+  el.innerHTML = `<span class="jr-colega-info jr-presente">
+    <b>🎁 Dar 1 peixe para ${esc(rotuloColega(c.uid, c.reg))}</b>
+    ${msg ? `<small>${msg}</small>` : `<span class="jr-presente-lista">${ps.map(x => `<button data-dar="${esc(x.id)}">${imgItem(x.imagem, x.emoji, 'jr-item-peixe' + (x.raro ? ' raro' : ''), x.filtro)}<span>${esc(x.nome)} ×${x.n}</span></button>`).join('')}</span>
+      <small>Pode dar mais ${falta} hoje</small>`}
+  </span>`;
+  posicionarCartaoColega();
+}
+async function darPresente(c, id) {
+  const item = itemDaBolsa(id), n = Number(estado.pets.bolsa?.[id]) || 0, lim = cfgPesca().presentes_dia ?? 3;
+  if (!item || n <= 0 || presentesHoje() >= lim || !carregouProgresso) return;
+  const uid = c.uid, r = c.reg || {}, para = rotuloColega(uid, r);
+  fecharCartaoColega();
+  try {
+    await push(ref(db, `${basePresentes()}/${uid}`), { de: sessao.uid, de_nome: nomeRanking(), de_turma: sessao.turma || '', para_nome: r.apelido || '', peixe: id, ts: Date.now() });
+  } catch (e) {
+    console.warn('[jogo-revisao] presente indisponível', e?.code || e);
+    avisoPet('Não deu para enviar o presente agora. Tente de novo mais tarde.');
+    return;
+  }
+  estado.pets.bolsa[id] = n - 1;
+  estado.presentesDia = { data: diaLocal(), n: presentesHoje() + 1 };
+  gravar({ [`pets/bolsa/${id}`]: n - 1 || null, presentes_dia: estado.presentesDia });
+  tocar('vitoria');
+  avisoPet(`🎁 Você deu ${comArtigo(item.nome)} para ${para}!`);
+}
+// Quem recebe: ouve a própria caixa; cada presente entra na bolsa uma vez só (recebido marcado por transação)
+let pararPresentes = null;
+const presentesEmAndamento = new Set();
+function ouvirPresentes() {
+  if (pararPresentes || !carregouProgresso) return;
+  try {
+    pararPresentes = onValue(ref(db, `${basePresentes()}/${sessao.uid}`), (snap) => {
+      const v = snap.exists() ? snap.val() || {} : {};
+      for (const [k, p] of Object.entries(v)) if (p && !p.recebido) receberPresente(k, p);
+    }, () => {});
+  } catch (_) { pararPresentes = null; }
+}
+async function receberPresente(k, p) {
+  if (presentesEmAndamento.has(k)) return;
+  presentesEmAndamento.add(k);
+  try {
+    const t = await runTransaction(ref(db, `${basePresentes()}/${sessao.uid}/${k}/recebido`), (cur) => (cur ? undefined : Date.now()));
+    if (!t.committed) return;
+  } catch (_) { presentesEmAndamento.delete(k); return; }
+  const item = itemDaBolsa(p.peixe);
+  if (!item) return;
+  const ps = estado.pets;
+  ps.bolsa = { ...(ps.bolsa || {}), [p.peixe]: (Number(ps.bolsa?.[p.peixe]) || 0) + 1 };
+  gravar({ [`pets/bolsa/${p.peixe}`]: ps.bolsa[p.peixe] });
+  tocar('vitoria');
+  avisoPet(`🎁 ${nomeVisivel(p.de_nome) || 'Um colega'} te deu ${comArtigo(item.nome)}! 🐟`, true);
+}
+
+// Tocar no mapa pescando: na fisgada puxa; perto do ponto lança (pronto); longe levanta e anda
 function tocouPescando(pt) {
   if (pesca.estado === 'fisgada') { pescaPuxar(); return false; }
-  if (pesca.estado === 'conta' || dist(pt.x, pt.y, pesca.ponto.x, pesca.ponto.y) < 140) return false;
+  if (pesca.estado === 'barrinha') return false;
+  if (dist(pt.x, pt.y, pesca.ponto.x, pesca.ponto.y) < 140) { if (pesca.estado === 'pronto') pescaLancar(); return false; }
   sairPesca();
   return true;
 }
@@ -1769,9 +2027,9 @@ function sairPesca(reposicionar = true) {
   img.remove(); svg.remove(); exc.remove();
   const marca = document.querySelector(`.jr-caixote[data-ponto="${ponto.id}"]`);
   if (marca) marca.hidden = false;
-  $('pesca-conta').hidden = true;
+  $('pesca-barra').hidden = true;
   $('pesca-tutorial').hidden = true;
-  $('btn-levantar').hidden = true;
+  $('btn-levantar').hidden = $('btn-lancar').hidden = $('btn-pesca-ranking').hidden = true;
   $('jogador').style.visibility = '';
   if (reposicionar && cena?.tipo === 'mapa') {   // levanta no ponto da trilha mais perto do caixote
     const [x, y] = centroCelula(celulaMaisProxima(cena.grade, ponto.x, ponto.y));
@@ -1784,7 +2042,7 @@ function sairPesca(reposicionar = true) {
 //  JOGAR JUNTO — colegas no mapa, quem está online no mapa geral e reações (sem chat)
 // ============================================================
 const REACOES = ['👋', '😄', '😂', '😮', '😢', '😡', '🔥', '⭐', '👍', '❤️', '🎉', '💤'];
-const INTERVALO_REACAO = 2000;
+const INTERVALO_REACAO = 3000;   // no máximo 1 balão a cada 3 s
 const TEMPO_INTERP = 250;            // ms para ir até a posição nova de um colega
 const ENVIO_MIN_MS = 250;            // no máximo 4 envios de posição por segundo
 let pararOuvirMapa = () => {}, pararOuvirTodos = () => {};
@@ -1798,7 +2056,7 @@ try { colegasOcultos = localStorage.getItem(KEY_COLEGAS) === '1'; } catch (_) {}
 
 // Etiqueta do colega: o apelido (ou primeiro nome); sem nome no registro → "Colega"; a conta da professora → "Professora"
 // (nunca a palavra PROFESSOR).
-const rotuloColega = (uid, r) => (/PROFESSOR/i.test(`${uid} ${r?.apelido || ''}`) ? 'Professora' : nomeVisivel(r?.apelido) || 'Colega');
+const rotuloColega = (uid, r) => (/PROFESSOR/i.test(`${uid} ${r?.apelido || ''}`) ? 'Professora' : nomeVisivel(r?.apelido) || 'Colega') + medalhaPesca(uid);
 // Turma TESTE e alunos de teste nunca aparecem para os alunos (no modo teste, todos são de teste). A professora
 // jogando pelo menu dela (UID_PROFESSORA) aparece; a conta de teste da professora grava em outro nó e não aparece.
 const colegaVisivel = (uid, r) => !!r && Date.now() - (Number(r.ts) || 0) < VALIDADE_MS &&
@@ -1904,7 +2162,7 @@ function atualizarColega(c, r) {
   else if (nx !== c.x || ny !== c.y) { c.de = [c.x, c.y]; c.alvo = [nx, ny]; c.t0 = performance.now(); }
   // reação recente (menos de 3 s) aparece sobre a cabeça
   const t = Number(r.reacao?.t) || 0;
-  if (r.reacao?.e && t > c.reacaoT && Date.now() - t < 3000) { c.reacaoT = t; mostrarBalaoReacao(c, r.reacao.e); }
+  if (r.reacao?.e && balaoValido(r.reacao.e) && t > c.reacaoT && Date.now() - t < 3000) { c.reacaoT = t; mostrarBalaoReacao(c, r.reacao.e); }   // só frases prontas e reações
 }
 
 // A cada quadro: desliza até a posição recebida, anima o andar, pet segue pelo rastro
@@ -1934,7 +2192,7 @@ function atualizarColegas(dt) {
     Object.assign(c.el.style, { left: c.x + 'px', top: c.y + 'px', height: PERS.altura * ESCALA_SPRITE + 'px', zIndex: Math.round(c.y) });
     // etiqueta com o apelido: 11 px na tela, qualquer que seja o zoom da câmera
     Object.assign(c.nome.style, { left: c.x + 'px', top: (c.y - ALT_JOGADOR_MAPA - 2) + 'px', fontSize: 11 * escala + 'px', zIndex: 9000 });
-    if (c.balao) Object.assign(c.balao.style, { left: c.x + 'px', top: (c.y - ALT_JOGADOR_MAPA - 16 * escala) + 'px', fontSize: 22 * escala + 'px' });
+    if (c.balao) Object.assign(c.balao.style, { left: c.x + 'px', top: (c.y - ALT_JOGADOR_MAPA - 16 * escala) + 'px', fontSize: (c.balao.classList.contains('frase') ? 12 : 22) * escala + 'px' });
     if (c.pet) c.seg.atualizar(dt, c.x, c.y, VEL, altImagemPet(c.pet) * ESCALA_ATORES, distPet(c.pet) * ESCALA_ATORES, ESCALA_ATORES);
   }
 }
@@ -1982,6 +2240,8 @@ function abrirCartaoColega(c) {
       <b>${esc(nome)}${turma ? ` <small>· ${esc(turma)}</small>` : ''}</b>
       ${pet ? `<span class="jr-colega-pet"><img src="${quadrosDe(pet, 'sentado_girando')[0]}" alt="" draggable="false"${r.pet_tinta ? ` data-tinta="${esc(r.pet_tinta)}"` : ''}/>${r.pet_nome ? `${esc(r.pet_nome)} · ` : ''}${esc(NOME_PET[pet])}${Number(r.pet_nivel) >= 2 ? ` ❤️ ${Number(r.pet_nivel)}` : ''}</span>` : ''}
     </span>
+    ${podeDesafiar() ? '<button class="jr-colega-oi jr-colega-desafiar" data-desafiar aria-label="Desafiar" title="Desafiar">⚔️</button>' : ''}
+    <button class="jr-colega-oi" data-presente aria-label="Presentear com um peixe" title="Presentear">🎁</button>
     <button class="jr-colega-oi" data-oi aria-label="Acenar">👋</button>`;
   const ti = el.querySelector('img[data-tinta]');
   if (ti) aplicarTinta(ti, ti.dataset.tinta);
@@ -2016,18 +2276,22 @@ function alternarColegas() {
 // ── Reações ─────────────────────────────────────────────────
 function abrirReacoes() {
   if (performance.now() - ultimaReacao < INTERVALO_REACAO) return;
+  const fr = ehPraca() ? frasesPraca() : [];
+  $('reacoes-frases').innerHTML = fr.map(f => `<button class="jr-frase" data-e="${esc(f)}">${esc(f)}</button>`).join('');
+  $('reacoes-frases').hidden = !fr.length;
   $('reacoes').hidden = false;
 }
 function fecharReacoes() { $('reacoes').hidden = true; }
 
 function reagirCom(e) {
   fecharReacoes();
-  if (!REACOES.includes(e) || performance.now() - ultimaReacao < INTERVALO_REACAO) return;
+  if (!(REACOES.includes(e) || (ehPraca() && ehFrase(e))) || performance.now() - ultimaReacao < INTERVALO_REACAO) return;
   ultimaReacao = performance.now();
   enviarOnline({ reacao: { e, t: Date.now() } });
   // balão sobre a minha cabeça por 2 s
   const b = $('minha-reacao');
   b.textContent = e;
+  b.classList.toggle('frase', !REACOES.includes(e));
   b.hidden = false;
   clearTimeout(b._t);
   b._t = setTimeout(() => { b.hidden = true; }, 2000);
@@ -2041,12 +2305,13 @@ function posicionarMinhaReacao() {
   const b = $('minha-reacao');
   if (b.hidden || !cena) return;
   const escala = 1 / (cam.s || 1);
-  Object.assign(b.style, { left: jog.x + 'px', top: (jog.y - ALT_JOGADOR_MAPA - 16 * escala) + 'px', fontSize: 22 * escala + 'px' });
+  Object.assign(b.style, { left: jog.x + 'px', top: (jog.y - ALT_JOGADOR_MAPA - 16 * escala) + 'px', fontSize: (b.classList.contains('frase') ? 12 : 22) * escala + 'px' });
 }
 
 function mostrarBalaoReacao(c, e) {
   if (!c.balao) { c.balao = document.createElement('div'); c.balao.className = 'jr-reacao-balao jr-colega'; $('cena-palco').appendChild(c.balao); }
   c.balao.textContent = e;
+  c.balao.classList.toggle('frase', !REACOES.includes(e));
   c.balao.hidden = false;
   clearTimeout(c.balaoT);
   c.balaoT = setTimeout(() => { if (c.balao) c.balao.hidden = true; }, 2000);
@@ -2069,10 +2334,14 @@ function onlinePorMapa() {
   return por;
 }
 
-const rostoPet = (pet) => petValido(pet) ? `<img src="${quadrosDe(pet, 'sentado_girando')[0]}" alt=""/>` : '<span>🙂</span>';
+const rostoPet = (pet, tintaId) => petValido(pet) ? `<img src="${quadrosDe(pet, 'sentado_girando')[0]}" alt=""${tintaId ? ` data-tinta="${esc(tintaId)}"` : ''}/>` : '<span>🙂</span>';
+const pintarRostos = (raizEl) => { for (const img of raizEl.querySelectorAll('img[data-tinta]')) aplicarTinta(img, img.dataset.tinta); };
 
 function desenharOnlineGeral() {
   const cont = $('geral-marcadores');
+  const np = Object.entries(onlineGeral).filter(([uid, r]) => colegaVisivel(uid, r) && r.mapa === 'praca').length;
+  const bp = cont.querySelector('.jr-praca-online');
+  if (bp) bp.textContent = np ? `🟢 ${np}` : '';
   cont.querySelectorAll('.jr-marc-online').forEach(e => e.remove());
   const por = onlinePorMapa();
   const total = Object.entries(onlineGeral).filter(([uid, r]) => colegaVisivel(uid, r)).length;
@@ -2087,8 +2356,9 @@ function desenharOnlineGeral() {
     b.style.left = reg.x / W * 100 + '%';
     b.style.top = reg.y / H * 100 + '%';
     b.setAttribute('aria-label', `${lista.length} colega${lista.length > 1 ? 's' : ''} online no mapa ${n}`);
-    b.innerHTML = lista.slice(0, 3).map(r => `<span class="jr-rosto${r.local === 'ginasio' ? ' no-ginasio' : ''}">${rostoPet(petAtual(r.pet))}</span>`).join('') +
+    b.innerHTML = lista.slice(0, 3).map(r => `<span class="jr-rosto${r.local === 'ginasio' ? ' no-ginasio' : ''}">${rostoPet(petAtual(r.pet), r.pet_tinta)}</span>`).join('') +
       (lista.length > 3 ? `<span class="jr-rosto-mais">+${lista.length - 3}</span>` : '');
+    pintarRostos(b);
     cont.appendChild(b);
   }
 }
@@ -2098,10 +2368,11 @@ function abrirListaOnline(n) {
   const reg = D.geral.regioes.find(r => r.mapa === n);
   $('online-titulo').textContent = `${n}. ${reg?.nome || ''}`;
   $('online-itens').innerHTML = lista.map(r => `
-    <li><span class="jr-rosto${r.local === 'ginasio' ? ' no-ginasio' : ''}">${rostoPet(petAtual(r.pet))}</span>
+    <li><span class="jr-rosto${r.local === 'ginasio' ? ' no-ginasio' : ''}">${rostoPet(petAtual(r.pet), r.pet_tinta)}</span>
       <span class="jr-online-nome">${esc(rotuloColega(r.uid, r))}</span>
       <span class="jr-online-det">${esc(nomeVisivel(r.turma))}${petValido(petAtual(r.pet)) ? ' · ' + esc((r.pet_nome ? r.pet_nome + ' · ' : '') + NOME_PET[petAtual(r.pet)]) : ''} · ${r.local === 'ginasio' ? 'no ginásio' : 'no mapa'}</span></li>`).join('')
     || '<li class="jr-online-vazio">Ninguém aqui agora.</li>';
+  pintarRostos($('online-itens'));
   $('online-ir').hidden = false;
   $('online-ir').dataset.mapa = n;
   $('online-bloqueado').hidden = true;   // todos os mapas abrem (só os ginásios seguem a ordem)
@@ -2118,7 +2389,7 @@ let apelidoAluno = null;   // apelido_ativo do perfil (lido ao entrar no online)
 const conversa = { proximaT: 0, toqueT: 0, falando: false, timer: 0, evento: null, voltou: false, voltouDito: false };
 
 const lealdadeDoAtivo = () => Number(cuidadosDe(estado?.pets?.ativo)?.lealdade) || 0;
-const petPodeFalar = () => falasProntas() && !!seguidor?.pet && lealdadeDoAtivo() >= (configFalas().lealdade_minima ?? 60);
+const petPodeFalar = () => falasProntas() && !!seguidor?.pet && lealdadeDoAtivo() >= (configFalas().lealdade_minima ?? 25);
 
 // Próximo ginásio: o 1º aberto com líder ainda não vencido, na ordem 1A, 1B, 2A…
 function proximoGinasio() {
@@ -2160,7 +2431,7 @@ function petFalar(tipoForcado = null) {
   if (!fala) return false;
   if (!tipoForcado && ctx.estado === 'voltou') conversa.voltouDito = true;
   mostrarFalaPet(fala.baloes, fala.tipo === 'fome' || tipoForcado === 'fome');
-  conversa.proximaT = performance.now() + (configFalas().intervalo_min_s ?? 120) * 1000;
+  conversa.proximaT = performance.now() + (configFalas().intervalo_min_s ?? 90) * 1000;
   return true;
 }
 
@@ -2222,7 +2493,7 @@ function falarPorToque() {
   if (n < 3) {
     estado.avisosPet.toques_sem_lealdade = n + 1;
     gravar({ 'avisos_pet/toques_sem_lealdade': n + 1 });
-    avisoPet(`Cuide de ${nomePet(pet)} para ele confiar em você: com ${configFalas().lealdade_minima ?? 60} de lealdade ele começa a conversar!`);
+    avisoPet(`Cuide de ${nomePet(pet)} para ele confiar em você: com ${configFalas().lealdade_minima ?? 25} de lealdade ele começa a conversar!`);
   }
 }
 
@@ -2548,7 +2819,9 @@ function desenharMarcadores() {
               <span class="jr-marc-num">${est === 'bloqueado' ? '🔒' : n}</span>
               <span class="jr-marc-nome">${esc(r.nome)}</span>${ins}
             </button>`;
-  }).join('');
+  }).join('') + (pracaPronta() && cfgPraca().geral ? (() => { const g = cfgPraca().geral;
+    return `<button class="jr-marcador jr-marc-praca disponivel" data-praca="1" style="left:${g.x / W * 100}%;top:${g.y / H * 100}%" aria-label="Praça do Encontro">
+      <span class="jr-marc-num">🏛️</span><span class="jr-marc-nome">Praça</span><span class="jr-praca-online"></span></button>`; })() : '');
   desenharOnlineGeral();
 }
 
@@ -2575,6 +2848,7 @@ function ligarArrasteGeral() {
     if (sc.dataset.arrastou) return;
     const b = e.target.closest('.jr-marcador');
     if (!b) return;
+    if (b.dataset.praca) { abrirPraca(); return; }
     const n = Number(b.dataset.mapa);
     tocar('porta');
     abrirMapa(n, 'entrada');
@@ -2662,7 +2936,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden;
+  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden;
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -2793,14 +3067,18 @@ function loop(t) {
     if (pesca && (vx || vy)) sairPesca();   // andar levanta da pesca
     const direto = (vx || vy) && moverDireto(dt, vx, vy);
     if (!direto) passo(dt);
-    const e = cena.tipo === 'mapa' ? ESCALA_ATORES : ESCALA_GINASIO;
+    const e = cena.tipo === 'mapa' && !cena.salao ? ESCALA_ATORES : ESCALA_GINASIO;
     const pet = seguidor?.pet;
-    seguidor?.atualizar(dt, jog.x, jog.y, VEL, altImagemPet(pet) * e, distPet(pet) * e, e);
+    if (petNoPedestal) seguidor?.atualizar(dt, petNoPedestal[0], petNoPedestal[1], 0, altImagemPet(pet) * e, 0, e);   // no provador: fica no pedestal
+    else seguidor?.atualizar(dt, jog.x, jog.y, VEL, altImagemPet(pet) * e, distPet(pet) * e, e);
     petGin?.anim.atualizar(dt);
     if (cena.tipo === 'mapa') { atualizarColegas(dt); enviarPosicao(); posicionarMinhaReacao(); posicionarCartaoColega(); atualizarConversa(); efeitosDoMapa(); }
     ajustarCamera();
     if (cena?.tipo === 'mapa') {
       atualizarMapa();
+      if (cena.n === 'praca') atualizarPraca();
+      else if (cena.n === 'loja') atualizarLoja();
+      atualizarCavar();
       if (direto) verificarEncostou(vx, vy);
     } else if (cena) {
       atualizarSaidaGin();
@@ -2809,7 +3087,16 @@ function loop(t) {
       posicionarRevanche();
     }
   }
+  atualizarHudPraca();
+  if (cena?.tipo !== 'mapa' && !$('btn-acao-mapa').hidden) esconderAcaoMapa();
   requestAnimationFrame(loop);
+}
+// Atalho 🏛️ nos outros mapas; na praça o botão de reações vira 💬 (frases prontas)
+function atualizarHudPraca() {
+  const bp = $('btn-praca'), esconde = !(cena?.tipo === 'mapa' && cena.n !== 'praca' && pracaPronta());
+  if (bp.hidden !== esconde) bp.hidden = esconde;
+  const ic = ehPraca() ? '💬' : '😊', br = $('btn-reacao');
+  if (br.textContent !== ic) br.textContent = ic;
 }
 
 function passo(dt) {
@@ -2862,6 +3149,8 @@ function sairDaCena() {
   if (!cena) return;
   destinoEspecial = null;
   if (cena.tipo === 'interior') { const { n, G } = cena; transicao(() => abrirMapa(n, G)); }
+  else if (cena.n === 'fliperama') transicao(() => abrirPraca('fliperama'));
+  else if (cena.n === 'loja') sairDaLoja();
   else transicao(abrirMapaGeral);
 }
 
@@ -3052,9 +3341,12 @@ async function abrirMapa(n, onde) {
   }).join('');
   montarPessoas(n);
   montarCaixotes(n);
+  montarPortaLoja(n);
+  montarCavar(n);
   fecharBalaoPorta();
 
-  if (onde === 'A' || onde === 'B') {
+  if (onde === 'loja' && cena.portaLoja) posicionarJogador(cena.portaLoja.trilha[0], cena.portaLoja.trilha[1], 'frente');   // saiu da loja
+  else if (onde === 'A' || onde === 'B') {
     const [x, y] = pontoAntesDaPorta(n, onde);
     posicionarJogador(x, y, 'frente');
   } else {
@@ -3121,7 +3413,6 @@ function tocarNoMapa(e) {
   if (cartaoColega) fecharCartaoColega();
   if (pesca && !tocouPescando(p)) return;   // pescando: o toque puxa a linha (ou levanta, se for longe)
   const caixote = caixoteEm(p);
-  if (caixote && limitePescaHoje()) { avisarEm('Os peixes estão descansando. Volte amanhã!', caixote.x, caixote.y - 30 * ESCALA_ATORES); return; }
   if (caixote) { irPescar(caixote); return; }
   // pet e pessoa podem estar lado a lado: vale o que estiver mais perto do toque
   const pessoa = pessoaEm(p);
@@ -3134,6 +3425,15 @@ function tocarNoMapa(e) {
     abrirCartaoColega(colega); return;   // tocar num colega: cartão com nome · turma e o pet dele
   }
   if (pessoa) { if (!editarNpcs) irFalarCom(pessoa); return; }   // tocar numa pessoa: vai até ela e conversa
+  if (ehPraca()) { const alvo = alvoPracaEm(p); if (alvo) { irAlvoPraca(alvo); return; } }   // mural / fliperama
+  if (cena.n === 'fliperama') { const a = alvoFliperamaEm(p); if (a) { irAlvoFliperama(a); return; } }    // máquinas e o Téo
+  if (ehLoja()) { const c = cantoEm(p); if (c) { irAoCanto(c); return; } }                               // cantos da loja
+  if (cena.portaLoja && Math.abs(p.x - cena.portaLoja.x) < 70 && p.y > cena.portaLoja.y - 150 && p.y < cena.portaLoja.y + 30) {   // porta da loja (Mercado)
+    const pl = cena.portaLoja, n = cena.n;
+    destinoEspecial = null;
+    caminharNaTrilha(pl.trilha[0], pl.trilha[1], () => { if (cena?.n === n) transicao(() => abrirLojaInterior({ tipo: 'mapa', n })); });
+    return;
+  }
   // Tocou a até 60 px de uma porta ou saída → esse ponto vira o destino especial
   let perto = null, melhor = DIST_TOQUE;
   for (const d of destinosDoMapa()) {
@@ -3204,6 +3504,8 @@ function entrarNoDestino(esp) {
   if (esp.tipo === 'porta' && !ginasioLiberado(n, esp.lado)) { soltouDesdeTroca = false; avisarGinasioFechado(n, esp.lado); }
   else if (esp.tipo === 'porta') transicao(() => entrarGinasio(n, esp.lado));
   else if (esp.tipo === 'saida-gin') { const G = cena.G; transicao(() => abrirMapa(n, G)); }
+  else if (n === 'fliperama') transicao(() => abrirPraca('fliperama'));   // a porta do fliperama volta para a praça
+  else if (n === 'loja') sairDaLoja();                                     // a porta da loja volta para o mapa de onde veio
   else transicao(abrirMapaGeral);
 }
 
@@ -3498,6 +3800,1397 @@ function avisarEm(texto, x, y) {
 }
 
 // ============================================================
+//  PRAÇA DO ENCONTRO — mapa sem ginásios (dados/jogo/praca.json): mural, desafios ao vivo e frases prontas
+//  jogo_revisao_praca/ (modo teste: jogo_revisao_praca_teste/):
+//    insignias/{uid} = { n, d, nome, turma, pers, ts }            resumo para o mural (atualizado ao entrar e ao ganhar insígnia)
+//    desafios/{segunda}/{uid} = { pontos, vitorias, nome, turma, pers, ts }   ranking semanal dos desafios
+//    convites/{quem recebe} = { id, de, de_nome, ts }
+//    duelos/{id} = { a, b, estado, tema, atual, rodadas: { i: { conta, opcoes, resposta, inicio, resp: { uid: { op, t } }, fim } }, on, fim }
+//    historico/{segunda}/{id} = { a, b, an, bn, at, bt, vencedor, placar, wo, ts }   para o painel da professora
+// ============================================================
+const ehPraca = () => cena?.tipo === 'mapa' && cena.n === 'praca';
+const basePraca = () => (teste ? 'jogo_revisao_praca_teste' : 'jogo_revisao_praca');
+let desafiosOff = {};   // jogo_revisao_config/global/desafios_off: { todas: true } ou { '8D': true } (painel da professora)
+const desafiosLigados = () => !desafiosOff?.todas && !desafiosOff?.[sessao.turma];
+let offsetServidor = 0;
+const agoraServ = () => Date.now() + offsetServidor;
+let editarPraca = false;   // ?editarPraca=1 no modo teste: arrastar mural, porta, bancos e ponto do desafio
+
+async function abrirPraca(onde) {   // onde: 'fliperama' | 'loja' = saindo de lá (aparece na porta)
+  if (!pracaPronta()) return;
+  sairPesca(false);
+  const C = cfgPraca(), cfg = { trilha: C.trilha || 'trilha-praca.png', entrada: C.entrada, saidas: C.saidas || [] };
+  cena = null;
+  esconderBalao();
+  $('btn-revanche').hidden = true;
+  $('cena-aviso').hidden = true;
+  $('cena-atores').innerHTML = '';
+  $('cena-titulo').textContent = '🏛️ Praça do Encontro';
+  $('btn-cena-voltar').textContent = '⟵ Mapa geral';
+  $('btn-cena-voltar').hidden = false;
+  $('tela-cena').classList.remove('jr-no-ginasio');
+  mostrarTela('tela-cena');
+  $('cena-palco').style.visibility = 'hidden';
+  const [grade] = await Promise.all([carregarGrade(cfg.trilha), trocarFundo(`${IMG}/mapas/${C.imagem || 'praca.webp'}`)]);
+  const naTrilha = (x, y) => centroCelula(celulaMaisProxima(grade, x, y));
+  const saidas = cfg.saidas.map(([x, y]) => ({ x, y, trilha: naTrilha(x, y) }));
+  cena = { tipo: 'mapa', n: 'praca', cfg, grade, portas: {}, saidas, naTrilha, pertoMural: false };
+  destinoEspecial = null;
+  alvoMapa = null;
+  pertoSaidaGin = false;
+  montarPessoas('praca');   // ninguém (limpa as pessoas do mapa anterior)
+  montarPraca();
+  if ((onde === 'fliperama' || onde === 'loja') && cena[onde]) posicionarJogador(cena[onde].trilha[0], cena[onde].trilha[1], 'frente');
+  else posicionarJogador(cfg.entrada[0], cfg.entrada[1], 'costas');
+  soltouDesdeTroca = false;
+  ajustarCamera();
+  $('cena-palco').style.visibility = '';
+  atualizarBotaoPet();
+  entrarNoMapaOnline('praca');
+  conversa.proximaT = performance.now() + 8000;
+  if (editarPraca) ligarEdicaoPraca();
+}
+
+// Rótulos do mural, do fliperama e da loja (o desenho está na imagem do mapa). mural.ponto: onde o aluno para para ler.
+function montarPraca() {
+  const C = cfgPraca(), m = C.mural, f = C.fliperama, l = C.loja;
+  cena.mural = { ...m, trilha: cena.naTrilha(...(m.ponto || [m.x, m.y + 100])) };
+  cena.fliperama = f ? { ...f, trilha: cena.naTrilha(f.x, f.y + 20) } : null;
+  cena.loja = l ? { ...l, trilha: cena.naTrilha(l.x, l.y + 30) } : null;
+  const rotulo = (txt, x, y, cls) => `<div class="jr-rotulo-porta jr-rotulo-praca ${cls}" style="left:${x}px;top:${y}px"><span>${txt}</span></div>`;
+  $('cena-atores').insertAdjacentHTML('beforeend', rotulo('📋 Mural da Escola', m.x, m.y - 125, 'mural') +
+    (f ? rotulo('🕹️ Fliperama', f.x, f.y - 200, 'fliperama') : '') + (l ? rotulo('🛒 Loja', l.x, l.y - 140, 'loja') : ''));
+}
+function alvoPracaEm(p) {
+  const { mural: m, fliperama: f, loja: l } = cena;
+  if (m && Math.abs(p.x - m.x) < (m.largura || 240) / 2 && p.y > m.y - 130 && p.y < m.y + 120) return 'mural';
+  if (f && Math.abs(p.x - f.x) < 90 && p.y > f.y - 220 && p.y < f.y + 30) return 'fliperama';
+  if (l && Math.abs(p.x - l.x) < 80 && p.y > l.y - 150 && p.y < l.y + 30) return 'loja';
+  return null;
+}
+function irAlvoPraca(alvo) {
+  const d = cena[alvo];
+  destinoEspecial = null;
+  caminharNaTrilha(d.trilha[0], d.trilha[1], () => {
+    if (!ehPraca()) return;
+    if (alvo === 'mural') { cena.pertoMural = true; abrirMural(); }
+    else if (alvo === 'fliperama' && FLIPER) transicao(abrirFliperama);
+    else if (alvo === 'loja' && LOJA) transicao(() => abrirLojaInterior({ tipo: 'praca' }));
+  });
+}
+// A cada quadro na praça: chegar perto do mural abre o painel (uma vez até se afastar); botão 💬 no lugar do 😊
+function atualizarPraca() {
+  const m = cena.mural;
+  if (!m) return;
+  const d = dist(jog.x, jog.y, m.trilha[0], m.trilha[1]);
+  if (d > 110) cena.pertoMural = false;
+  else if (d < 40 && !cena.pertoMural && !sobreposicaoAberta()) { cena.pertoMural = true; abrirMural(); }
+}
+
+// ── Mural da Escola: 6 abas, top 10 + "Você" ──
+const MURAL_ABAS = [['insignias', '🏅 Insígnias'], ['pesca', '🎣 Pesca'], ['tabuada', '✖️ Tabuada'], ['negativa', '➖ Tab. negativa'], ['escalada', '🧗 Escalada'], ['desafios', '⚔️ Desafios']];
+const mural = { aba: 'insignias', filtro: 'escola', cache: {} };
+const visivelNoMural = (uid, r) => !!r && !ALUNOS_TESTE.includes(uid) && !/PROFESSOR|TESTE/i.test(`${uid} ${r.nome || ''}`) && TURMAS_PLACAR.includes(r.turma);
+const lerNo = async (caminho) => { const s = await get(ref(db, caminho)); return s.exists() ? s.val() || {} : {}; };
+async function carregarAbaMural(aba) {
+  const lista = [];
+  const poe = (uid, r, valor, rotulo, extra = {}) => { if (valor > 0) lista.push({ uid, nome: nomeVisivel(r.nome) || 'Aluno', turma: r.turma || '', valor, rotulo, pers: r.pers || null, ...extra }); };
+  const bim = bimestreJogos();
+  if (aba === 'insignias') {
+    for (const [uid, r] of Object.entries(await lerNo(`${basePraca()}/insignias`))) if (teste || visivelNoMural(uid, r))
+      poe(uid, r, Number(r.n) || 0, `${Number(r.n) || 0} 🏅${Number(r.d) ? ` · ${r.d} ⭐` : ''}`, { d: Number(r.d) || 0 });
+    return ordenarRanking(lista, (a, b) => b.d - a.d);
+  }
+  if (aba === 'pesca') {
+    for (const r of await lerRankingPesca(semanaPesca())) lista.push({ ...r, valor: r.pontos, rotulo: `${r.pontos} pts` });
+    return ordenarRanking(lista);
+  }
+  if (aba === 'desafios') {
+    for (const [uid, r] of Object.entries(await lerNo(`${basePraca()}/desafios/${semanaPesca()}`))) if (teste || visivelNoMural(uid, r))
+      poe(uid, r, Number(r.pontos) || 0, `${Number(r.pontos) || 0} pts`, { vitorias: Number(r.vitorias) || 0 });
+    return ordenarRanking(lista, (a, b) => b.vitorias - a.vitorias);
+  }
+  // rankings que os outros jogos já gravam (o mesmo critério da página de ranking: melhor nível)
+  const caminho = aba === 'tabuada' ? pathTabuadaRanking(bim) : aba === 'escalada' ? pathEscaladaRanking(bim)
+    : bim <= 2 ? 'tabuada_negativos_niveis' : `tabuada_negativos_niveis_b/${bim}`;
+  for (const [uid, r] of Object.entries(await lerNo(caminho))) if (visivelNoMural(uid, r)) {
+    const v = Number(r.melhor_nivel || r.nivel_atual) || 0;
+    poe(uid, r, v, `Nível ${v}`, { partidas: Number(r.total_partidas) || 0 });
+  }
+  return ordenarRanking(lista, (a, b) => b.partidas - a.partidas);
+}
+async function dadosMural(aba) {
+  const c = mural.cache[aba];
+  if (c && Date.now() - c.t < 120000) return c.lista;   // 2 min de cache: abrir e fechar o mural não relê tudo
+  const lista = await carregarAbaMural(aba);
+  mural.cache[aba] = { t: Date.now(), lista };
+  return lista;
+}
+function abrirMural() {
+  fecharCartaoColega();
+  $('mural-abas').innerHTML = MURAL_ABAS.map(([id, nome]) => `<button data-aba="${id}">${nome}</button>`).join('');
+  $('mural').hidden = false;
+  renderMural();
+}
+async function renderMural() {
+  for (const b of $('mural-abas').children) b.classList.toggle('ativa', b.dataset.aba === mural.aba);
+  for (const b of $('mural-filtro').children) b.classList.toggle('ativa', b.dataset.filtro === mural.filtro);
+  $('mural-filtro').querySelector('[data-filtro="turma"]').hidden = !TURMAS_PLACAR.includes(sessao.turma);
+  const aba = mural.aba;
+  $('mural-lista').innerHTML = '<li class="ml-vazio">Carregando…</li>';
+  $('mural-voce').textContent = '';
+  let lista;
+  try { [, lista] = await Promise.all([dadosMural('insignias').catch(() => []), dadosMural(aba)]); }   // insígnias: rostinho de cada um
+  catch (e) { console.warn('[jogo-revisao] mural', aba, e?.code || e); if (mural.aba === aba) $('mural-lista').innerHTML = '<li class="ml-vazio">Não deu para carregar agora.</li>'; return; }
+  if (mural.aba !== aba || $('mural').hidden) return;
+  const persDe = Object.fromEntries((mural.cache.insignias?.lista || []).map(r => [r.uid, r.pers]));
+  const filtrada = mural.filtro === 'turma' ? ordenarRanking(lista.filter(r => r.turma === sessao.turma), (a, b) => (b.d ?? b.vitorias ?? b.partidas ?? 0) - (a.d ?? a.vitorias ?? a.partidas ?? 0)) : lista;
+  const medalha = (pos) => ['🥇', '🥈', '🥉'][pos - 1] || `${pos}º`;
+  $('mural-lista').innerHTML = filtrada.slice(0, 10).map(r => {
+    const pers = r.pers || persDe[r.uid];
+    return `<li class="${r.uid === sessao.uid ? 'eu' : ''}"><span class="ml-pos">${medalha(r.pos)}</span>
+      ${pers && persValido(pers) ? bustoHtml(urlQuadro('frente', -1, pers), 'ml-rosto', BUSTO_PERS) : '<span class="ml-rosto ml-sem">🙂</span>'}
+      <span class="ml-nome">${esc(r.nome)}${esc(medalhaPesca(r.uid))} <small>${esc(r.turma)}</small></span><b>${esc(r.rotulo)}</b></li>`;
+  }).join('') || '<li class="ml-vazio">Ninguém pontuou aqui ainda.</li>';
+  const eu = filtrada.find(r => r.uid === sessao.uid);
+  $('mural-voce').textContent = eu ? `Você: ${eu.pos}º · ${eu.rotulo}` : !entraNoRanking() ? 'Esta conta não entra no ranking.' : 'Jogue para aparecer aqui!';
+}
+
+// Resumo de insígnias para o mural (cada aluno grava o seu: ao entrar no jogo e ao ganhar insígnia)
+async function publicarResumoInsignias() {
+  if (!carregouProgresso || !entraNoRanking()) return;
+  const { conquistadas, douradas } = contarInsignias();
+  try { await set(ref(db, `${basePraca()}/insignias/${sessao.uid}`), { n: conquistadas, d: douradas, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), ts: Date.now() }); }
+  catch (e) { console.warn('[jogo-revisao] resumo do mural indisponível', e?.code || e); }
+}
+
+// ── Frases prontas (só na praça) + reações: no máximo 1 balão a cada 3 s ──
+const ehFrase = (e) => frasesPraca().includes(e);
+const balaoValido = (e) => REACOES.includes(e) || ehFrase(e);
+
+// ── Desafio entre alunos ──
+let duelo = null;            // { id, souA, eu, outro, d (dados), tema, timers, parar, ultimaVista, fimAplicado, woT }
+let convite = null;          // convite recebido aberto: { id, de, de_nome, timer }
+let pararConvites = null;
+const vencidosMeus = () => Object.entries(estado.ginasios).filter(([, g]) => g.lider?.vencido).map(([k]) => k);
+const nomeCurto = (uid, nome) => (/PROFESSOR/i.test(`${uid} ${nome || ''}`) ? 'Professora' : nomeVisivel(nome) || 'Colega');
+
+function iniciarPraca() {
+  try { onValue(ref(db, '.info/serverTimeOffset'), (s) => { offsetServidor = Number(s.val()) || 0; }); } catch (_) {}
+  // a professora liga/desliga os desafios pelo painel: vale na hora
+  try { onValue(ref(db, 'jogo_revisao_config/global/desafios_off'), (s) => { desafiosOff = (s.exists() && s.val()) || {}; }, () => {}); } catch (_) {}
+  if (pararConvites || !onlineAtivo()) return;
+  try {
+    pararConvites = onValue(ref(db, `${basePraca()}/convites/${sessao.uid}`), (s) => { if (s.exists()) receberConvite(s.val()); }, () => {});
+  } catch (_) { pararConvites = null; }
+}
+
+// Cartão do colega na praça: ⚔️ Desafiar (com aviso quando não vale prêmio)
+function podeDesafiar() { return ehPraca() && desafiosLigados() && onlineAtivo() && !duelo && carregouProgresso; }
+function confirmarDesafio(c) {
+  if (!podeDesafiar()) return;
+  if (vale(estado.desafiosDia, diaLocal(), c.uid)) { desafiarColega(c); return; }
+  const el = $('colega-cartao');
+  clearTimeout(cartaoColega.timer);
+  cartaoColega.timer = setTimeout(fecharCartaoColega, 10000);
+  el.innerHTML = `<span class="jr-colega-info jr-presente"><b>⚔️ Sem prêmio hoje</b>
+    <small>Você já fez os desafios que valem prêmio hoje (ou já desafiou ${esc(nomeCurto(c.uid, c.reg?.apelido))} 2 vezes). Dá para jogar só por diversão.</small>
+    <span class="jr-presente-lista"><button data-desafiar-mesmo>⚔️ Desafiar mesmo assim</button></span></span>`;
+  posicionarCartaoColega();
+}
+async function desafiarColega(c) {
+  if (!podeDesafiar()) return;
+  fecharCartaoColega();
+  const C = cfgDesafio(), base = basePraca();
+  const id = push(ref(db, `${base}/duelos`)).key;
+  const eu = { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), vencidos: vencidosMeus(), premio: vale(estado.desafiosDia, diaLocal(), c.uid) };
+  const nomeOutro = nomeCurto(c.uid, c.reg?.apelido);
+  try {
+    await set(ref(db, `${base}/duelos/${id}`), { a: eu, b: { uid: c.uid, nome: nomeOutro }, estado: 'convite', criado: serverTimestamp() });
+    await set(ref(db, `${base}/convites/${c.uid}`), { id, de: sessao.uid, de_nome: eu.nome, ts: serverTimestamp() });
+  } catch (e) { console.warn('[jogo-revisao] desafio indisponível', e?.code || e); avisoPet('Não deu para desafiar agora.'); return; }
+  avisarEm(`⚔️ Convite enviado para ${nomeOutro}…`, jog.x, jog.y - ALT_JOGADOR_MAPA - 10);
+  ouvirDuelo(id, true);
+  duelo.timers.push(setTimeout(async () => {   // ninguém respondeu: expira
+    if (duelo?.id !== id || duelo.d?.estado !== 'convite') return;
+    try { await runTransaction(ref(db, `${base}/duelos/${id}/estado`), (cur) => (cur === 'convite' ? 'expirou' : undefined)); } catch (_) {}
+  }, (C.convite_expira_s ?? 20) * 1000 + 800));
+}
+
+// Quem recebe: balão "Fulano te desafiou!" (some em 20 s). Fora da praça ou já num desafio: ocupado.
+async function receberConvite(cv) {
+  if (!cv?.id || convite?.id === cv.id) return;
+  const exp = (cfgDesafio().convite_expira_s ?? 20) * 1000;
+  const idade = agoraServ() - (Number(cv.ts) || 0);
+  if (idade > exp || idade < -5000) { remove(ref(db, `${basePraca()}/convites/${sessao.uid}`)).catch(() => {}); return; }
+  if (!ehPraca() || duelo || !desafiosLigados()) {
+    try { await runTransaction(ref(db, `${basePraca()}/duelos/${cv.id}/estado`), (cur) => (cur === 'convite' ? 'ocupado' : undefined)); } catch (_) {}
+    remove(ref(db, `${basePraca()}/convites/${sessao.uid}`)).catch(() => {});
+    return;
+  }
+  const premio = vale(estado.desafiosDia, diaLocal(), cv.de);
+  convite = { ...cv, premio };
+  $('convite-txt').innerHTML = `<b>${esc(nomeCurto(cv.de, cv.de_nome))}</b> te desafiou! ⚔️`;
+  $('convite-aviso').hidden = premio;
+  $('convite').hidden = false;
+  tocar('vitoria');
+  const fim = Date.now() + exp - Math.max(0, idade);
+  const barra = () => {
+    if (!convite || convite.id !== cv.id) return;
+    const f = (fim - Date.now()) / exp;
+    $('convite-tempo').style.width = Math.max(0, f) * 100 + '%';
+    if (f <= 0) { responderConvite(false, true); return; }
+    requestAnimationFrame(barra);
+  };
+  barra();
+}
+async function responderConvite(aceitar, expirou = false) {
+  const cv = convite;
+  convite = null;
+  $('convite').hidden = true;
+  if (!cv) return;
+  const base = basePraca();
+  remove(ref(db, `${base}/convites/${sessao.uid}`)).catch(() => {});
+  if (!aceitar) {
+    try { await runTransaction(ref(db, `${base}/duelos/${cv.id}/estado`), (cur) => (cur === 'convite' ? (expirou ? 'expirou' : 'recusado') : undefined)); } catch (_) {}
+    if (expirou) avisoPet('Fica para a próxima! ⚔️');
+    return;
+  }
+  if (duelo || !ehPraca()) return;
+  try {
+    await update(ref(db, `${base}/duelos/${cv.id}/b`), { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), vencidos: vencidosMeus(), premio: cv.premio });
+    const t = await runTransaction(ref(db, `${base}/duelos/${cv.id}/estado`), (cur) => (cur === 'convite' ? 'aceito' : undefined));
+    if (!t.committed) { avisoPet('O convite expirou. Fica para a próxima! ⚔️'); return; }
+  } catch (e) { console.warn('[jogo-revisao] aceitar desafio', e?.code || e); avisoPet('Não deu para aceitar agora.'); return; }
+  ouvirDuelo(cv.id, false);
+}
+
+function ouvirDuelo(id, souA) {
+  const r = ref(db, `${basePraca()}/duelos/${id}`);
+  duelo = { id, souA, ref: r, timers: [], d: null, comecou: false, fimAplicado: false, mostradas: {}, woT: 0 };
+  duelo.parar = onValue(r, (s) => { if (duelo?.id === id) atualizarDuelo(s.exists() ? s.val() : null); }, () => {});
+}
+function encerrarDueloLocal() {
+  if (!duelo) return;
+  duelo.parar?.();
+  duelo.timers.forEach(clearTimeout);
+  cancelAnimationFrame(duelo.raf);
+  try { onDisconnect(ref(db, `${basePraca()}/duelos/${duelo.id}/on/${sessao.uid}`)).cancel(); } catch (_) {}
+  remove(ref(db, `${basePraca()}/duelos/${duelo.id}/on/${sessao.uid}`)).catch(() => {});
+  duelo = null;
+  $('duelo').hidden = true;
+}
+
+function atualizarDuelo(d) {
+  const du = duelo;
+  if (!d) { encerrarDueloLocal(); return; }
+  du.d = d;
+  const outroLado = du.souA ? 'b' : 'a';
+  if (!du.comecou && ['recusado', 'expirou', 'ocupado'].includes(d.estado)) {
+    avisoPet(d.estado === 'ocupado' ? `${nomeCurto(d.b?.uid, d.b?.nome)} está ocupado agora. Fica para a próxima! ⚔️` : 'Fica para a próxima! ⚔️');
+    encerrarDueloLocal();
+    return;
+  }
+  if (!du.comecou && (d.estado === 'aceito' || d.estado === 'jogando') && d.a?.pers && d.b?.pers) comecarDuelo(d);   // (lista vazia de vencidos não é gravada: espera o pers)
+  if (!du.comecou) return;
+  du.outro = d[outroLado];
+  renderDuelo(d);
+  if (d.fim) { aplicarFimDuelo(d); return; }
+  vigiarWO(d);
+  if (du.souA) conduzirDuelo(d);
+}
+
+// Aceito: cada um anda até o seu lado do ponto do desafio; a tela do duelo abre logo depois
+function comecarDuelo(d) {
+  const du = duelo;
+  du.comecou = true;
+  du.eu = du.souA ? d.a : d.b;
+  du.outro = du.souA ? d.b : d.a;
+  const onRef = ref(db, `${basePraca()}/duelos/${du.id}/on/${sessao.uid}`);
+  set(onRef, true).then(() => onDisconnect(onRef).remove()).catch(() => {});
+  fecharCartaoColega();
+  const pd = cfgPraca().ponto_desafio, meu = pd && (du.souA ? pd.a : pd.b);   // frente a frente: quem desafiou à esquerda
+  if (ehPraca() && meu) caminharNaTrilha(meu[0], meu[1], () => { jog.dir = du.souA ? 'direita' : 'esquerda'; desenharJogador(); });
+  $('dl-nomeL').textContent = 'Você';
+  $('dl-nomeR').textContent = nomeCurto(du.outro.uid, du.outro.nome);
+  $('dl-bustoL').innerHTML = bustoHtml(urlQuadro('direita', -1, persValido(du.eu.pers) ? du.eu.pers : PERS.padrao), 'dl-busto-img', BUSTO_PERS);
+  $('dl-bustoR').innerHTML = bustoHtml(urlQuadro('esquerda', -1, persValido(du.outro.pers) ? du.outro.pers : PERS.padrao), 'dl-busto-img', BUSTO_PERS);
+  $('dl-conta').textContent = 'Prepare-se…';
+  $('dl-ops').innerHTML = '';
+  $('dl-msg').textContent = du.eu.premio ? '' : 'Este desafio não vale prêmio para você hoje (limite do dia).';
+  $('dl-fim').hidden = true;
+  du.timers.push(setTimeout(() => { if (duelo === du) { $('duelo').hidden = false; animarTempoDuelo(); } }, 2200));
+  if (du.souA && d.estado === 'aceito') {
+    du.tema = temaDoDesafio(d.a.vencidos, d.b.vencidos);
+    du.timers.push(setTimeout(() => { if (duelo === du && !du.d?.fim) novaRodada(0); }, 3500));
+  }
+}
+
+// Quem desafiou (lado A) gera as rodadas e fecha cada uma (o primeiro acerto, pelo relógio do servidor, ganha)
+function novaRodada(i) {
+  const du = duelo, C = cfgDesafio();
+  const p = gerarConta(du.tema.tipos, C.dificuldade ?? 2);
+  update(du.ref, { estado: 'jogando', atual: i, tema: du.tema.ginasio || null,
+    [`rodadas/${i}`]: { conta: p.conta, opcoes: p.opcoes, resposta: p.resposta, tipo: p.tipo, longa: !!p.longa, inicio: serverTimestamp() } }).catch(() => {});
+}
+function conduzirDuelo(d) {
+  const du = duelo, C = cfgDesafio(), i = Number(d.atual), r = d.rodadas?.[i];
+  if (!r || r.fim || typeof r.inicio !== 'number') return;
+  const resp = r.resp || {}, venc = vencedorDaRodada(resp, r.resposta);
+  const todos = Object.keys(resp).length >= 2, acabou = agoraServ() > r.inicio + (C.tempo_rodada_s ?? 10) * 1000 + 600;
+  if (!venc && !todos && !acabou) { clearTimeout(du.tConduz); du.tConduz = setTimeout(() => { if (duelo === du && du.d) conduzirDuelo(du.d); }, 300); return; }
+  update(du.ref, { [`rodadas/${i}/fim`]: { vencedor: venc || null, ts: serverTimestamp() } }).catch(() => {});
+  du.timers.push(setTimeout(() => {
+    if (duelo !== du || du.d?.fim) return;
+    if (i + 1 < (C.rodadas ?? 5)) novaRodada(i + 1);
+    else finalizarDuelo();
+  }, 2400));
+}
+async function finalizarDuelo(wo = null) {
+  const du = duelo, d = du.d, a = d.a.uid, b = d.b.uid;
+  const placar = placarDe(d.rodadas, [a, b]);
+  const vencedor = wo || resultadoFinal(placar, a, b);
+  const fim = { vencedor, placar, wo: !!wo, ts: serverTimestamp() };
+  try {
+    const t = await runTransaction(ref(db, `${basePraca()}/duelos/${du.id}/fim`), (cur) => (cur ? undefined : fim));
+    if (!t.committed) return;
+    await set(ref(db, `${basePraca()}/historico/${semanaPesca()}/${du.id}`), { a, b, an: d.a.nome || '', bn: d.b.nome || '', at: d.a.turma || '', bt: d.b.turma || '',
+      vencedor, placar: `${placar[a]}-${placar[b]}`, wo: !!wo, ts: Date.now() });
+  } catch (e) { console.warn('[jogo-revisao] fim do desafio', e?.code || e); }
+}
+// Desconectou no meio: depois de wo_s sem o outro, quem ficou vence por W.O.
+function vigiarWO(d) {
+  const du = duelo, outro = du.outro?.uid;
+  if (!outro || d.estado === 'aceito' && !d.on) return;
+  if (d.on?.[outro]) { du.woT = 0; return; }
+  if (!du.woT) du.woT = Date.now();
+  clearTimeout(du.tWO);
+  const falta = (cfgDesafio().wo_s ?? 15) * 1000 - (Date.now() - du.woT);
+  if (falta <= 0) { finalizarDuelo(sessao.uid); return; }
+  du.tWO = setTimeout(() => { if (duelo === du && du.d && !du.d.fim) vigiarWO(du.d); }, Math.min(falta, 1000) + 50);
+}
+
+function responderDuelo(op) {
+  const du = duelo, d = du?.d, i = Number(d?.atual), r = d?.rodadas?.[i];
+  if (!r || r.fim || r.resp?.[sessao.uid] || du.respondi === i) return;
+  du.respondi = i;
+  set(ref(db, `${basePraca()}/duelos/${du.id}/rodadas/${i}/resp/${sessao.uid}`), { op, t: serverTimestamp() }).catch(() => { du.respondi = null; });
+  for (const b of $('dl-ops').querySelectorAll('.dl-op')) { b.disabled = true; if (b.dataset.op === op) b.classList.add('minha'); }
+  tocar('clique');
+}
+function renderDuelo(d) {
+  const du = duelo, C = cfgDesafio(), eu = sessao.uid, outro = du.outro.uid;
+  const placar = placarDe(d.rodadas, [eu, outro]);
+  $('dl-ptsL').textContent = placar[eu];
+  $('dl-ptsR').textContent = placar[outro];
+  const i = Number(d.atual);
+  const r = d.rodadas?.[i];
+  if (!r) return;
+  $('dl-rodada').textContent = `Rodada ${i + 1} / ${C.rodadas ?? 5}`;
+  if (du.mostradas[i] !== 'conta') {   // rodada nova
+    du.mostradas[i] = 'conta';
+    du.respondi = null;
+    $('dl-conta').textContent = r.conta;
+    $('dl-conta').classList.toggle('longa', !!r.longa);
+    $('dl-ops').innerHTML = (r.opcoes || []).map(o => `<button class="dl-op" data-op="${esc(o)}">${esc(o)}</button>`).join('');
+    $('dl-msg').textContent = '';
+  }
+  if (r.fim && du.mostradas[`fim${i}`] !== true) {   // fim da rodada: quem acertou e a resposta certa
+    du.mostradas[`fim${i}`] = true;
+    for (const b of $('dl-ops').querySelectorAll('.dl-op')) {
+      b.disabled = true;
+      if (b.dataset.op === r.resposta) b.classList.add('certa');
+      else if (b.classList.contains('minha')) b.classList.add('errada');
+    }
+    const v = r.fim.vencedor;
+    $('dl-msg').innerHTML = `${v === eu ? '✅ Você acertou primeiro!' : v ? `⚡ ${esc(nomeCurto(outro, du.outro.nome))} acertou primeiro.` : '😮 Ninguém acertou.'} Resposta: <b>${esc(r.resposta)}</b>`;
+    tocar(v === eu ? 'acerto' : 'erro');
+  }
+}
+function animarTempoDuelo() {
+  const du = duelo;
+  if (!du) return;
+  const r = du.d?.rodadas?.[Number(du.d?.atual)], lim = (cfgDesafio().tempo_rodada_s ?? 10) * 1000;
+  const f = r && typeof r.inicio === 'number' && !r.fim ? 1 - (agoraServ() - r.inicio) / lim : r?.fim ? 0 : 1;
+  $('dl-tempo').style.width = Math.max(0, Math.min(1, f)) * 100 + '%';
+  du.raf = requestAnimationFrame(animarTempoDuelo);
+}
+
+// Fim: cada um grava o próprio prêmio (se valer), as respostas para os relatórios e o ranking da semana
+function aplicarFimDuelo(d) {
+  const du = duelo;
+  if (du.fimAplicado) return;
+  du.fimAplicado = true;
+  const eu = sessao.uid, outro = du.outro.uid, f = d.fim;
+  const res = f.vencedor === 'empate' ? 'empate' : f.vencedor === eu ? 'venceu' : 'perdeu';
+  const ganhas = Number(f.placar?.[eu]) || 0;
+  const hoje = diaLocal(), valeu = !!du.eu.premio && vale(estado.desafiosDia, hoje, outro);
+  const { moedas, pontos } = premioDesafio(res, ganhas);
+  const patch = {};
+  for (const [i, r] of Object.entries(d.rodadas || {})) {   // cada rodada nas respostas (relatórios da professora)
+    const m = r.resp?.[eu];
+    patch[`respostas/desafio-${du.id}-${i}`] = { tipo: 'desafio', tipo_conta: r.tipo || null, conta: r.conta, certa: r.resposta, resposta: m?.op ?? null,
+      acertou: m ? m.op === r.resposta : null, tempo_s: m && typeof r.inicio === 'number' ? +((Number(m.t) - r.inicio) / 1000).toFixed(1) : null,
+      ganhou_rodada: r.fim?.vencedor === eu, contra: outro, data: Date.now() };
+  }
+  if (valeu && carregouProgresso) {
+    estado.desafiosDia = contarDesafio(estado.desafiosDia, hoje, outro);
+    patch.desafios_dia = estado.desafiosDia;
+    if (moedas) { estado.pets.moedas = (Number(estado.pets.moedas) || 0) + moedas; patch['pets/moedas'] = estado.pets.moedas; }
+    if (pontos && entraNoRanking()) update(ref(db, `${basePraca()}/desafios/${semanaPesca()}/${eu}`), { pontos: increment(pontos), vitorias: increment(res === 'venceu' ? 1 : 0),
+      nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), ts: Date.now() }).catch(() => {});
+    delete mural.cache.desafios;
+  }
+  gravar(patch);
+  tocar(res === 'venceu' ? 'vitoria' : res === 'empate' ? 'acerto' : 'erro');
+  const titulo = res === 'venceu' ? (f.wo ? '🏆 Você venceu por W.O.!' : '🏆 Você venceu!') : res === 'empate' ? '🤝 Empate!' : `${esc(nomeCurto(outro, du.outro.nome))} venceu!`;
+  $('dl-fim-titulo').innerHTML = titulo;
+  $('dl-fim-placar').textContent = `${ganhas} × ${Number(f.placar?.[outro]) || 0}`;
+  $('dl-fim-premio').textContent = !valeu ? 'Sem prêmio (limite do dia) — valeu pela diversão!' : moedas || pontos ? `+${moedas} moeda${moedas === 1 ? '' : 's'} · +${pontos} pontos de Desafio 🏆` : 'Boa partida! Tente de novo.';
+  $('dl-fim').hidden = false;
+  $('duelo').hidden = false;
+  du.timers.forEach(clearTimeout);
+  du.parar?.();
+}
+
+// ── Modo de ajuste da praça (?editarPraca=1, só no modo teste): arrastar e copiar o JSON ──
+function ligarEdicaoPraca() {
+  const C = cfgPraca();
+  const obj = (o) => o && { pos: () => [o.x, o.y], por: (x, y) => { o.x = x; o.y = y; } };
+  const par = (a) => a && { pos: () => a, por: (x, y) => { a[0] = x; a[1] = y; } };
+  const itens = [['mural', obj(C.mural), '📋'], ['mural: onde para', par(C.mural?.ponto), '👣'], ['fliperama', obj(C.fliperama), '🕹️'], ['loja', obj(C.loja), '🛒'],
+    ['desafio A', par(C.ponto_desafio?.a), '⚔️'], ['desafio B', par(C.ponto_desafio?.b), '⚔️'], ['entrada', par(C.entrada), '🚪'],
+    ...(C.bancos || []).map((b, i) => [`banco ${i + 1}`, par(b), '🪑'])].filter(([, o]) => o);
+  for (const [nome, o, ic] of itens) {
+    const el = document.createElement('div');
+    el.className = 'jr-praca-edit';
+    el.textContent = `${ic} ${nome}`;
+    Object.assign(el.style, { left: o.pos()[0] + 'px', top: o.pos()[1] + 'px' });
+    el.addEventListener('pointerdown', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      el.setPointerCapture(e.pointerId);
+      const mover = (ev) => {
+        const q = telaParaImagem(ev.clientX, ev.clientY);
+        const x = Math.round(clamp(q.x, 0, W)), y = Math.round(clamp(q.y, 0, H));
+        o.por(x, y);
+        Object.assign(el.style, { left: x + 'px', top: y + 'px' });
+        $('npc-editar-pos').textContent = `${nome}: x ${x}, y ${y}`;
+      };
+      const soltar = () => { el.removeEventListener('pointermove', mover); el.removeEventListener('pointerup', soltar); el.removeEventListener('pointercancel', soltar); };
+      el.addEventListener('pointermove', mover);
+      el.addEventListener('pointerup', soltar);
+      el.addEventListener('pointercancel', soltar);
+    });
+    $('cena-atores').appendChild(el);
+  }
+  $('npc-editar')?.remove();
+  const caixa = document.createElement('div');
+  caixa.id = 'npc-editar';
+  caixa.className = 'jr-npc-editar';
+  caixa.innerHTML = `<span id="npc-editar-pos">Arraste os pontos da praça</span><button class="jr-btn" id="npc-copiar">📋 Copiar posições</button>`;
+  $('tela-cena').appendChild(caixa);
+  $('npc-copiar').addEventListener('click', async () => {
+    const { entrada, saidas, mural: mu, fliperama, ponto_desafio, bancos, loja } = C;
+    const txt = JSON.stringify({ entrada, saidas, mural: mu, fliperama, ponto_desafio, bancos, loja }, null, 1);
+    try { await navigator.clipboard.writeText(txt); $('npc-editar-pos').textContent = 'Copiado! Cole no praca.json.'; }
+    catch (_) { console.log(txt); $('npc-editar-pos').textContent = 'Não deu para copiar: o JSON está no console (F12).'; }
+  });
+}
+
+// ============================================================
+//  FLIPERAMA — salão dentro da praça (dados/jogo/fliperama.json): as máquinas abrem os jogos do site
+//  (iframe com ?embed=1, que avisa o fim de cada partida) e a Tabuada ao vivo (js/jogo-revisao/aovivo*.js).
+//  Anda em 2D como nos mapas (area_livre → grade), com o personagem no tamanho dos ginásios.
+// ============================================================
+let FLIPER = null;                   // fliperama.json
+let editarFliperama = false;         // ?editarFliperama=1 no modo teste: arrastar máquinas, porta e Téo
+const MAQ_ABA = { tabuada: 'tabuada', tabuada_negativa: 'negativa', escalada: 'escalada' };   // aba do mural com o ranking da máquina
+
+function gradeDeRetangulos(rets) {
+  const g = new Uint8Array(GW * GH);
+  for (const r of rets || [])
+    for (let cy = Math.max(0, Math.floor(r.y0 / CEL)); cy < Math.min(GH, Math.ceil(r.y1 / CEL)); cy++)
+      for (let cx = Math.max(0, Math.floor(r.x0 / CEL)); cx < Math.min(GW, Math.ceil(r.x1 / CEL)); cx++) g[cy * GW + cx] = 1;
+  return g;
+}
+
+async function abrirFliperama() {
+  if (!FLIPER) return;
+  sairPesca(false);
+  cena = null;
+  esconderBalao();
+  fecharCartaoColega();
+  $('btn-revanche').hidden = true;
+  $('cena-aviso').hidden = true;
+  $('cena-atores').innerHTML = '';
+  $('cena-titulo').textContent = '🕹️ Fliperama';
+  $('btn-cena-voltar').textContent = '⟵ Praça';
+  $('btn-cena-voltar').hidden = false;
+  $('tela-cena').classList.remove('jr-no-ginasio');
+  mostrarTela('tela-cena');
+  $('cena-palco').style.visibility = 'hidden';
+  limparPessoas();
+  sairDoMapaOnline();
+  enviarOnline({ mapa: 'praca', local: 'fliperama' });   // aqui dentro os colegas da praça não veem você
+  await trocarFundo(`${IMG}/interiores/${FLIPER.imagem || 'fliperama.webp'}`);
+  const grade = gradeDeRetangulos(FLIPER.area_livre);
+  const naTrilha = (x, y) => centroCelula(celulaMaisProxima(grade, x, y));
+  const [px, py] = FLIPER.porta;
+  cena = { tipo: 'mapa', n: 'fliperama', salao: true, cfg: { entrada: FLIPER.entrada, saidas: [FLIPER.porta] }, grade, portas: {}, naTrilha,
+    saidas: [{ x: px, y: py, trilha: naTrilha(px, py) }] };
+  destinoEspecial = null;
+  alvoMapa = null;
+  pertoSaidaGin = false;
+  montarFliperama();
+  posicionarJogador(FLIPER.entrada[0], FLIPER.entrada[1], 'costas');
+  soltouDesdeTroca = false;
+  ajustarCamera();
+  $('cena-palco').style.visibility = '';
+  $('btn-colegas').hidden = $('btn-reacao').hidden = true;
+  atualizarBotaoPet();
+  if (editarFliperama) ligarEdicaoFliperama();
+}
+
+function montarFliperama() {
+  cena.maquinas = (FLIPER.maquinas || []).map(m => ({ ...m, trilha: cena.naTrilha(...(m.ponto || [m.x, m.y + 150])) }));
+  const rot = cena.maquinas.map(m => `<div class="jr-rotulo-porta jr-rotulo-praca jr-maq-${esc(m.cor || '')}" style="left:${m.x}px;top:${m.y - 112}px"><span>${m.icone || '🎮'} ${esc(m.nome)}</span></div>`).join('');
+  $('cena-atores').insertAdjacentHTML('beforeend', rot);
+  montarPessoas('fliperama');   // o Téo (atendente), em fliperama.json → teo (ou balcao)
+}
+function alvoFliperamaEm(p) {
+  const m = (cena.maquinas || []).find(m => Math.abs(p.x - m.x) < 85 && p.y > m.y - 115 && p.y < m.trilha[1] + 20);
+  return m ? { tipo: 'maquina', m } : null;
+}
+function irAlvoFliperama(a) {
+  const d = a.m;
+  destinoEspecial = null;
+  caminharNaTrilha(d.trilha[0], d.trilha[1], () => {
+    if (cena?.n !== 'fliperama') return;
+    jog.dir = 'costas';
+    desenharJogador();
+    abrirMaquina(a.m);
+  });
+}
+
+// Recorde do aluno no próprio jogo (o melhor nível que o jogo já gravou)
+async function lerRecorde(id) {
+  if (ehProfessora() || teste) return null;
+  const bim = bimestreJogos(), uid = sessao.uid;
+  const caminho = id === 'tabuada' ? pathTabuadaNiveis(uid, bim) : id === 'tabuada_negativa' ? pathTabuadaNegNiveis(uid, bim) : id === 'escalada' ? pathEscaladaNiveis(uid, bim) : null;
+  if (!caminho) return null;
+  try { const s = await get(ref(db, caminho)); return s.exists() ? Number(s.val()?.melhor_nivel) || 0 : 0; } catch (_) { return null; }
+}
+async function top3DaTurma(id) {
+  const lista = await dadosMural(MAQ_ABA[id]);
+  const daTurma = TURMAS_PLACAR.includes(sessao.turma) ? ordenarRanking(lista.filter(r => r.turma === sessao.turma)) : lista;
+  return daTurma.slice(0, 3);
+}
+
+async function abrirMaquina(m) {
+  if (m.id === 'tabuada_ao_vivo') { abrirAoVivo(); return; }
+  $('mq-nome').textContent = `${m.icone || '🎮'} ${m.nome}`;
+  $('mq-corpo').innerHTML = '<p class="mq-car">Carregando…</p>';
+  $('mq-botoes').innerHTML = `<button class="jr-btn jr-btn-ouro" data-jogar="${esc(m.id)}">▶ Jogar</button>`;
+  $('maquina').hidden = false;
+  const [rec, top] = await Promise.all([lerRecorde(m.id), top3DaTurma(m.id).catch(() => [])]);
+  if ($('maquina').hidden) return;
+  const pers = (r) => r.pers || (mural.cache.insignias?.lista || []).find(x => x.uid === r.uid)?.pers;
+  $('mq-corpo').innerHTML = `<p class="mq-rec">Seu recorde: <b>${rec ? `Nível ${rec}` : '—'}</b></p>
+    <p class="mq-sub">🏆 Top 3 ${TURMAS_PLACAR.includes(sessao.turma) ? `da ${esc(sessao.turma)}` : 'da escola'}</p>
+    <ol class="mq-top">${top.map(r => `<li><span>${['🥇', '🥈', '🥉'][r.pos - 1] || r.pos + 'º'}</span>${persValido(pers(r)) ? bustoHtml(urlQuadro('frente', -1, pers(r)), 'ml-rosto', BUSTO_PERS) : '<span class="ml-rosto ml-sem">🙂</span>'}<b>${esc(r.nome)}</b><em>${esc(r.rotulo)}</em></li>`).join('') || '<li class="mq-vazio">Ninguém jogou ainda.</li>'}</ol>
+    <p class="mq-nota">+1 🪙 a cada ${FLIPER.acertos_por_moeda ?? 10} acertos (até ${FLIPER.moedas_dia ?? 10} por dia no fliperama)</p>`;
+}
+
+// 🏆 Recordes (botão do balão do Téo): top 3 de cada máquina
+async function mostrarRecordes() {
+  $('maquina').hidden = false;
+  $('mq-nome').textContent = '🏆 Recordes do fliperama';
+  $('mq-botoes').innerHTML = '';
+  $('mq-corpo').innerHTML = '<p class="mq-car">Carregando…</p>';
+  const maqs = (FLIPER.maquinas || []).filter(m => MAQ_ABA[m.id]);
+  const tops = await Promise.all(maqs.map(m => top3DaTurma(m.id).catch(() => [])));
+  if ($('maquina').hidden) return;
+  $('mq-corpo').innerHTML = `<div class="mq-recordes">${maqs.map((m, i) => `<div><b>${m.icone || '🎮'} ${esc(m.nome)}</b><ol>${tops[i].map(r => `<li>${['🥇', '🥈', '🥉'][r.pos - 1] || ''} ${esc(r.nome)} <em>${esc(r.rotulo)}</em></li>`).join('') || '<li class="mq-vazio">—</li>'}</ol></div>`).join('')}</div>`;
+}
+
+// ── Jogo do site dentro do jogo (iframe) ──
+let jogoEmbed = null;   // { m, recorde, moedas }
+async function abrirJogoEmbed(id) {
+  const m = (FLIPER.maquinas || []).find(x => x.id === id);
+  if (!m?.jogo) return;
+  $('maquina').hidden = true;
+  if (ehProfessora() && id === 'escalada') { avisoPet('A Escalada algébrica só abre com o login de aluno.'); return; }
+  if (!getSession()) { avisoPet('Sua sessão expirou. Entre de novo no site para jogar.'); return; }
+  jogoEmbed = { m, recorde: await lerRecorde(id), moedas: 0 };
+  const url = '/' + m.jogo.replace(/^\//, '');
+  $('jogo-embed-frame').src = url + (url.includes('?') ? '&' : '?') + 'embed=1';
+  $('jogo-embed-nome').textContent = `${m.icone || '🎮'} ${m.nome}`;
+  $('jogo-embed').hidden = false;
+  pararFalaPet();
+}
+async function voltarDoJogo() {
+  const je = jogoEmbed;
+  jogoEmbed = null;
+  $('jogo-embed').hidden = true;
+  $('jogo-embed-frame').src = 'about:blank';
+  if (!je) return;
+  if (je.moedas) { avisoPet(`+${je.moedas} 🪙 no fliperama!`, true); tocar('vitoria'); }
+  delete mural.cache[MAQ_ABA[je.m.id]];
+  const depois = await lerRecorde(je.m.id);
+  if (je.recorde != null && depois != null && depois > je.recorde) {   // bateu o próprio recorde: o pet comemora
+    avisoPet(`Recorde novo! 🎉 ${je.m.nome}: nível ${depois}`, true);
+    seguidor?.reagir(petTem('pulo_cambalhota') ? 'pulo_cambalhota' : 'feliz', 1800);
+  }
+}
+const petTem = (anim) => !!(seguidor?.pet && quadrosDe(seguidor.pet, anim)?.length);
+// Fim de partida (postMessage do jogo): +1 moeda a cada 10 acertos somados no dia, até 10 por dia
+function premioFliperama(d) {
+  if (!jogoEmbed || !carregouProgresso) return;
+  const hoje = diaLocal(), por = FLIPER.acertos_por_moeda ?? 10, lim = FLIPER.moedas_dia ?? 10;
+  const fd = estado.fliperDia?.data === hoje ? { ...estado.fliperDia } : { data: hoje, acertos: 0, moedas: 0 };
+  fd.acertos = (Number(fd.acertos) || 0) + Math.max(0, Math.min(500, Math.round(Number(d.acertos) || 0)));
+  const alvo = Math.min(lim, Math.floor(fd.acertos / por)), ganho = alvo - (Number(fd.moedas) || 0);
+  const patch = {};
+  if (ganho > 0) {
+    fd.moedas = alvo;
+    estado.pets.moedas = (Number(estado.pets.moedas) || 0) + ganho;
+    patch['pets/moedas'] = estado.pets.moedas;
+    jogoEmbed.moedas += ganho;
+  }
+  estado.fliperDia = fd;
+  patch.fliperama_dia = fd;
+  gravar(patch);
+}
+
+// ── Modo de ajuste do fliperama (?editarFliperama=1, só no modo teste) ──
+function ligarEdicaoFliperama() {
+  const par = (a) => a && { pos: () => a, por: (x, y) => { a[0] = x; a[1] = y; } };
+  const obj = (o) => o && { pos: () => [o.x, o.y], por: (x, y) => { o.x = x; o.y = y; } };
+  if (!FLIPER.teo && FLIPER.balcao) FLIPER.teo = [...FLIPER.balcao];
+  const itens = [['porta', par(FLIPER.porta), '🚪'], ['entrada', par(FLIPER.entrada), '👣'], ['Téo', par(FLIPER.teo), '🧑'],
+    ...(FLIPER.maquinas || []).flatMap(m => [[m.nome, obj(m), '🕹️'], [`${m.nome}: onde para`, par(m.ponto), '👣']])].filter(([, o]) => o);
+  for (const [nome, o, ic] of itens) {
+    const el = document.createElement('div');
+    el.className = 'jr-praca-edit';
+    el.textContent = `${ic} ${nome}`;
+    Object.assign(el.style, { left: o.pos()[0] + 'px', top: o.pos()[1] + 'px' });
+    el.addEventListener('pointerdown', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      el.setPointerCapture(e.pointerId);
+      const mover = (ev) => {
+        const q = telaParaImagem(ev.clientX, ev.clientY);
+        const x = Math.round(clamp(q.x, 0, W)), y = Math.round(clamp(q.y, 0, H));
+        o.por(x, y);
+        Object.assign(el.style, { left: x + 'px', top: y + 'px' });
+        $('npc-editar-pos').textContent = `${nome}: x ${x}, y ${y}`;
+      };
+      const soltar = () => { el.removeEventListener('pointermove', mover); el.removeEventListener('pointerup', soltar); el.removeEventListener('pointercancel', soltar); };
+      el.addEventListener('pointermove', mover);
+      el.addEventListener('pointerup', soltar);
+      el.addEventListener('pointercancel', soltar);
+    });
+    $('cena-atores').appendChild(el);
+  }
+  $('npc-editar')?.remove();
+  const caixa = document.createElement('div');
+  caixa.id = 'npc-editar';
+  caixa.className = 'jr-npc-editar';
+  caixa.innerHTML = `<span id="npc-editar-pos">Arraste as máquinas, a porta e o Téo</span><button class="jr-btn" id="npc-copiar">📋 Copiar fliperama.json</button>`;
+  setInterval(() => { const o = pessoasMapa.find(x => x.p.id === 'teo'); if (o && FLIPER.teo && (o.p.x !== FLIPER.teo[0] || o.p.y !== FLIPER.teo[1])) { o.p.x = FLIPER.teo[0]; o.p.y = FLIPER.teo[1]; posicionarPessoa(o); } }, 200);
+  $('tela-cena').appendChild(caixa);
+  $('npc-copiar').addEventListener('click', async () => {
+    const txt = JSON.stringify(FLIPER, null, 1);
+    try { await navigator.clipboard.writeText(txt); $('npc-editar-pos').textContent = 'Copiado! Cole no fliperama.json.'; }
+    catch (_) { console.log(txt); $('npc-editar-pos').textContent = 'Não deu para copiar: o JSON está no console (F12).'; }
+  });
+}
+
+// ── Tabuada ao vivo: criar sala / entrar com código; rodadas iguais para todos (estilo Kahoot) ──
+let av = null;          // { codigo, host (Anfitriao), sala, parar, vista, respondi, registradas: Set, premio }
+let pararConviteAV = null;
+const baseAV = () => baseAoVivo(teste);
+const avTela = (html) => { $('av-tela').innerHTML = html; };
+
+function abrirAoVivo() {
+  $('maquina').hidden = true;
+  $('aovivo').hidden = false;
+  if (av) { renderAoVivo(); return; }
+  avTela(`<div class="av-menu">
+    <h3>⚡ Tabuada ao vivo</h3><p>Todos respondem a mesma conta ao mesmo tempo. Quem acerta mais rápido ganha mais pontos!</p>
+    <div class="av-linha"><button class="jr-btn jr-btn-ouro" data-av="criar">➕ Criar sala</button></div>
+    <div class="av-linha"><input id="av-codigo" maxlength="4" placeholder="CÓDIGO" autocomplete="off" autocapitalize="characters"/><button class="jr-btn" data-av="entrar">Entrar</button></div>
+    <p class="av-erro" id="av-erro"></p></div>`);
+}
+function telaConfigAoVivo() {
+  avTela(`<div class="av-menu"><h3>Nova sala</h3>
+    <div class="av-linha av-chips" id="av-tipo"><button class="sel" data-tipo="normal">✖️ Tabuada</button><button data-tipo="negativa">➖ Negativa</button></div>
+    <div class="av-linha av-chips av-nums" id="av-nums">${[2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<button class="sel" data-n="${n}">${n}</button>`).join('')}</div>
+    <div class="av-linha av-chips" id="av-rod"><button class="sel" data-r="10">10 rodadas</button><button data-r="20">20 rodadas</button></div>
+    <div class="av-linha"><button class="jr-btn jr-btn-sec" data-av="menu">Voltar</button><button class="jr-btn jr-btn-ouro" data-av="criar-ok">Criar</button></div>
+    <p class="av-erro" id="av-erro"></p></div>`);
+}
+const erroAV = (t) => { const e = $('av-erro'); if (e) e.textContent = t; };
+async function criarAoVivo() {
+  const tipo = $('av-tipo').querySelector('.sel')?.dataset.tipo || 'normal';
+  const numeros = [...$('av-nums').querySelectorAll('.sel')].map(b => Number(b.dataset.n));
+  const rodadas = Number($('av-rod').querySelector('.sel')?.dataset.r) || 10;
+  if (!numeros.length) { erroAV('Escolha pelo menos um número.'); return; }
+  try {
+    const codigo = await criarSala(baseAV(), { host: sessao.uid, host_nome: nomeRanking(), turma: sessao.turma || '', cfg: { tipo, numeros, rodadas } });
+    await entrarAoVivo(codigo, true);
+  } catch (e) { console.warn('[jogo-revisao] tabuada ao vivo', e?.code || e); erroAV('Não deu para criar a sala agora.'); }
+}
+async function entrarAoVivo(codigo, souHost = false) {
+  codigo = String(codigo || '').trim().toUpperCase();
+  if (!codigoValido(codigo)) { erroAV('O código tem 4 letras/números.'); return; }
+  let r;
+  try { r = await entrarNaSala(baseAV(), codigo, { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem() }); }
+  catch (e) { console.warn('[jogo-revisao] entrar na sala', e?.code || e); erroAV('Não deu para entrar agora.'); return; }
+  if (r.erro) { erroAV(r.erro); return; }
+  av = { codigo, host: souHost ? new Anfitriao(baseAV(), codigo, { auto: true }) : null, sala: r.sala, vista: -1, respondi: -1, registradas: new Set(), premio: false };
+  av.parar = ouvirSala(baseAV(), codigo, (s) => { if (av?.codigo === codigo) { av.sala = s; renderAoVivo(); } });
+  $('aovivo').hidden = false;
+}
+async function sairAoVivo() {
+  const a = av;
+  av = null;
+  $('aovivo').hidden = true;
+  if (!a) return;
+  a.parar?.();
+  cancelAnimationFrame(a.raf);
+  await sairDaSala(baseAV(), a.codigo, sessao.uid);
+  if (a.host) { if (a.sala && a.sala.estado !== 'fim') await a.host.encerrar(); a.host.desligar(); }   // o anfitrião saiu: a sala termina
+}
+
+function renderAoVivo() {
+  const s = av.sala, eu = sessao.uid;
+  if (!s) { avTela('<div class="av-menu"><h3>A sala foi fechada.</h3><div class="av-linha"><button class="jr-btn" data-av="sair">OK</button></div></div>'); return; }
+  const pl = placar(s.jogadores, true), total = Number(s.cfg?.rodadas) || 10;
+  if (s.estado === 'espera') {
+    const host = av.host;
+    avTela(`<div class="av-espera"><small>Código da sala</small><div class="av-codigo">${esc(av.codigo)}</div>
+      <p>${pl.length} jogador${pl.length === 1 ? '' : 'es'} · ${s.cfg?.tipo === 'negativa' ? 'Tabuada negativa' : 'Tabuada'} · ${total} rodadas</p>
+      <div class="av-nomes">${pl.map(j => `<span>${esc(nomeCurto(j.uid, j.nome))}</span>`).join('')}</div>
+      <div class="av-linha"><button class="jr-btn jr-btn-sec" data-av="sair">Sair</button>
+      ${host ? `<button class="jr-btn jr-btn-ouro" data-av="comecar" ${host.podeComecar() ? '' : 'disabled'}>▶ Começar</button>` : `<span class="av-msg">${s.host === 'professora' ? 'A professora vai começar…' : 'Esperando o anfitrião começar…'}</span>`}</div></div>`);
+    return;
+  }
+  const r = s.rodada;
+  if (s.estado === 'rodada' && r) {
+    if (av.vista !== r.i) {
+      av.vista = r.i;
+      avTela(`<div class="av-rodada"><div class="av-topo"><span>Rodada ${r.i + 1} / ${total}</span><div class="av-tempo"><i id="av-tempo"></i></div><span>${esc(String((s.jogadores?.[eu]?.pontos) || 0))} pts</span></div>
+        <div class="av-conta">${esc(r.conta)}</div><div class="av-ops">${(r.opcoes || []).map((o, k) => `<button class="av-op c${k}" data-op="${esc(o)}">${esc(o)}</button>`).join('')}</div></div>`);
+      animarTempoAV();
+    }
+    return;
+  }
+  if (s.estado === 'intervalo' && r) {
+    registrarRespostaAV(s, r);
+    const me = s.jogadores?.[eu] || {}, f = r.fim || {};
+    avTela(`<div class="av-intervalo"><div class="av-certa">Resposta: <b>${esc(r.resposta)}</b> · ${f.certos || 0} de ${f.total || 0} acertaram</div>
+      <div class="av-eu ${me.acertou ? 'ok' : 'erro'}">${me.acertou ? `✅ +${me.ganho} pontos${Number(me.seq) >= 3 && Number(me.seq) % 3 === 0 ? ' (sequência de 3! +100)' : ''}` : '❌ Não foi dessa vez'}</div>
+      ${top5Html(pl)}${av.host ? '' : `<p class="av-msg">${s.host === 'professora' ? 'Esperando a próxima rodada…' : 'Próxima rodada já já…'}</p>`}</div>`);
+    return;
+  }
+  if (s.estado === 'fim') {
+    const todos = placar(s.jogadores), meu = todos.find(j => j.uid === eu);
+    aplicarPremioAV(s, meu);
+    avTela(`<div class="av-fim"><h3>🏁 Fim da Tabuada ao vivo!</h3><div class="av-podio">${[1, 0, 2].map(k => todos[k] ? `<div class="p${k + 1}">${persValido(todos[k].pers) ? bustoHtml(urlQuadro('frente', -1, todos[k].pers), 'av-busto', BUSTO_PERS) : '<span class="av-busto ml-sem">🙂</span>'}
+        <b>${['🥇', '🥈', '🥉'][k]} ${esc(nomeCurto(todos[k].uid, todos[k].nome))}</b><small>${todos[k].pontos} pts</small><i></i></div>` : '').join('')}</div>
+      <p class="av-eu">${meu ? `Você ficou em ${meu.pos}º de ${todos.length} · ${meu.pontos} pts${premioDoPodio(meu.pos) ? ` · +${premioDoPodio(meu.pos)} 🪙` : ''}` : ''}</p>
+      <div class="av-linha"><button class="jr-btn jr-btn-ouro" data-av="sair">OK</button></div></div>`);
+  }
+}
+function top5Html(pl) {
+  return `<ol class="av-top5">${pl.slice(0, 5).map(j => {
+    const d = j.pos_ant ? j.pos_ant - j.pos : 0;
+    return `<li class="${j.uid === sessao.uid ? 'eu' : ''}"><span>${j.pos}º</span><b>${esc(nomeCurto(j.uid, j.nome))}</b><em>${j.pontos}</em><i>${d > 0 ? `▲${d}` : d < 0 ? `▼${-d}` : ''}</i></li>`;
+  }).join('')}</ol>`;
+}
+function animarTempoAV() {
+  const a = av;
+  if (!a) return;
+  cancelAnimationFrame(a.raf);
+  const passo = () => {
+    if (av !== a || a.sala?.estado !== 'rodada') return;
+    const r = a.sala.rodada, el = $('av-tempo');
+    if (el && typeof r?.inicio === 'number') el.style.width = Math.max(0, Math.min(1, 1 - (agoraServ() - r.inicio) / TEMPO_RODADA_MS)) * 100 + '%';
+    a.raf = requestAnimationFrame(passo);
+  };
+  passo();
+}
+function responderAoVivo(op, btn) {
+  const a = av, r = a?.sala?.rodada;
+  if (!r || a.sala.estado !== 'rodada' || a.respondi === r.i) return;
+  a.respondi = r.i;
+  for (const b of $('av-tela').querySelectorAll('.av-op')) { b.disabled = true; b.classList.toggle('minha', b === btn); }
+  responderNaSala(baseAV(), a.codigo, r.i, sessao.uid, op).catch(() => { a.respondi = -1; });
+  tocar('clique');
+}
+// Cada resposta nas respostas do jogo (relatório da professora): uma vez por rodada
+function registrarRespostaAV(s, r) {
+  if (av.registradas.has(r.i) || !carregouProgresso) return;
+  av.registradas.add(r.i);
+  const m = s.resp?.[r.i]?.[sessao.uid];
+  gravar({ [`respostas/aovivo-${av.codigo}-${r.i}`]: { tipo: 'tabuada_ao_vivo', conta: r.conta, certa: r.resposta, resposta: m?.op ?? null,
+    acertou: m ? m.op === r.resposta && pontosDaResposta(m.t, r.inicio) > 0 : null,
+    tempo_s: m && typeof r.inicio === 'number' ? +((Number(m.t) - r.inicio) / 1000).toFixed(1) : null, sala: av.codigo, data: Date.now() } });
+}
+// Pódio: +5/+3/+2 moedas (fora do limite do fliperama), uma vez por sala
+function aplicarPremioAV(s, meu) {
+  if (av.premio || !meu || !carregouProgresso) return;
+  av.premio = true;
+  const n = premioDoPodio(meu.pos);
+  if (!n || estado.aovivoPremios?.[av.codigo]) return;
+  estado.aovivoPremios = { ...(estado.aovivoPremios || {}), [av.codigo]: meu.pos };
+  estado.pets.moedas = (Number(estado.pets.moedas) || 0) + n;
+  gravar({ 'pets/moedas': estado.pets.moedas, [`aovivo_premios/${av.codigo}`]: meu.pos });
+  tocar('vitoria');
+}
+function cliqueAoVivo(e) {
+  e.stopPropagation();
+  const op = e.target.closest('.av-op');
+  if (op && !op.disabled) { responderAoVivo(op.dataset.op, op); return; }
+  const chip = e.target.closest('.av-chips button');
+  if (chip) {
+    const grupo = chip.parentElement;
+    if (grupo.id === 'av-nums') chip.classList.toggle('sel');
+    else for (const b of grupo.children) b.classList.toggle('sel', b === chip);
+    return;
+  }
+  const b = e.target.closest('[data-av]');
+  if (!b) return;
+  const acao = b.dataset.av;
+  if (acao === 'criar') telaConfigAoVivo();
+  else if (acao === 'menu') abrirAoVivo();
+  else if (acao === 'criar-ok') criarAoVivo();
+  else if (acao === 'entrar') entrarAoVivo($('av-codigo')?.value);
+  else if (acao === 'comecar') av?.host?.comecar();
+  else if (acao === 'sair') sairAoVivo();
+  else if (acao === 'fechar') $('aovivo').hidden = true;
+}
+// Convite da professora para a turma ("A professora abriu uma Tabuada ao vivo!"): uma vez por sala
+function ouvirConvitesAoVivo() {
+  if (pararConviteAV || !TURMAS_PLACAR.includes(sessao.turma) && !teste) return;
+  try {
+    pararConviteAV = ouvirConviteTurma(baseAV(), sessao.turma || 'TESTE', async (cv) => {
+      if (!cv?.codigo || av || agoraServ() - (Number(cv.ts) || 0) > 3600e3 || estado.avisos[`aovivo_${cv.codigo}`]) return;
+      try { const s = await get(ref(db, `${baseAV()}/salas/${cv.codigo}/estado`)); if (!s.exists() || s.val() === 'fim') return; } catch (_) { return; }
+      $('av-convite').dataset.codigo = cv.codigo;
+      $('av-convite').hidden = false;
+      tocar('vitoria');
+    });
+  } catch (_) { pararConviteAV = null; }
+}
+function responderConviteAV(entrar) {
+  const codigo = $('av-convite').dataset.codigo;
+  $('av-convite').hidden = true;
+  if (!codigo) return;
+  estado.avisos[`aovivo_${codigo}`] = true;
+  if (!entrar) return;
+  abrirAoVivo();
+  entrarAoVivo(codigo);
+}
+
+// ============================================================
+//  LOJA DA DONA CIDA — interior (dados/jogo/loja-interior.json) com duas portas: na Praça e no Mercado Central.
+//  Dona Cida fica lá dentro (pessoa do interior: balão, pedidos e desafio); cada canto abre a loja na sua aba;
+//  no provador o pet sobe no pedestal e veste a tinta da prévia. Ao sair, volta para o mapa de onde veio.
+// ============================================================
+let LOJA = null;              // loja-interior.json
+let editarLoja = false;       // ?editarLoja=1 no modo teste: arrastar Dona Cida, cantos, pedestal, portas
+let petNoPedestal = null;     // [x, y] enquanto o pet está no provador (não segue o personagem)
+const ehLoja = () => cena?.n === 'loja';
+const portaMercado = () => LOJA?.mercado || null;   // { mapa: 7, x, y } — porta da loja no Mercado Central
+
+// origem: { tipo: 'praca' } | { tipo: 'mapa', n }
+async function abrirLojaInterior(origem = { tipo: 'praca' }) {
+  if (!LOJA) return;
+  sairPesca(false);
+  cena = null;
+  esconderBalao();
+  fecharCartaoColega();
+  $('btn-revanche').hidden = true;
+  $('cena-aviso').hidden = true;
+  $('cena-atores').innerHTML = '';
+  $('cena-titulo').textContent = '🛒 Loja da Dona Cida';
+  $('btn-cena-voltar').textContent = '⬅ Sair';
+  $('btn-cena-voltar').hidden = false;
+  $('tela-cena').classList.remove('jr-no-ginasio');
+  mostrarTela('tela-cena');
+  $('cena-palco').style.visibility = 'hidden';
+  limparPessoas();
+  sairDoMapaOnline();
+  enviarOnline({ mapa: origem.tipo === 'praca' ? 'praca' : origem.n, local: 'loja' });   // aqui dentro os colegas não veem você
+  await trocarFundo(`${IMG}/interiores/${LOJA.imagem || 'loja.webp'}`);
+  const grade = gradeDeRetangulos(LOJA.area_livre);
+  const naTrilha = (x, y) => centroCelula(celulaMaisProxima(grade, x, y));
+  const [px, py] = LOJA.porta;
+  cena = { tipo: 'mapa', n: 'loja', salao: true, origem, cfg: { entrada: LOJA.entrada, saidas: [LOJA.porta] }, grade, portas: {}, naTrilha,
+    saidas: [{ x: px, y: py, trilha: naTrilha(px, py) }] };
+  destinoEspecial = null;
+  alvoMapa = null;
+  pertoSaidaGin = false;
+  montarPessoas('loja');
+  montarLoja();
+  posicionarJogador(LOJA.entrada[0], LOJA.entrada[1], 'costas');
+  soltouDesdeTroca = false;
+  ajustarCamera();
+  $('cena-palco').style.visibility = '';
+  $('btn-colegas').hidden = $('btn-reacao').hidden = true;
+  atualizarBotaoPet();
+  if (editarLoja) ligarEdicaoLoja();
+}
+// Porta da loja num mapa da cidade (Mercado Central): rótulo 🛒 e ponto da trilha em frente
+function montarPortaLoja(n) {
+  const pm = portaMercado();
+  cena.portaLoja = null;
+  if (!pm || pm.mapa !== n) return;
+  cena.portaLoja = { x: pm.x, y: pm.y, trilha: centroCelula(celulaMaisProxima(cena.grade, pm.x, pm.y + 10)) };
+  $('cena-atores').insertAdjacentHTML('beforeend', `<div class="jr-rotulo-porta jr-rotulo-praca" style="left:${pm.x}px;top:${pm.y - 110}px"><span>🛒 Loja da Dona Cida</span></div>`);
+  if (editarLoja) ligarEdicaoPortaMercado();
+}
+function sairDaLoja() {
+  const o = cena?.origem || { tipo: 'praca' };
+  transicao(() => (o.tipo === 'mapa' ? abrirMapa(o.n, 'loja') : abrirPraca('loja')));
+}
+
+// Etiquetas dos cantos (aparecem quando o personagem passa perto)
+function montarLoja() {
+  cena.cantos = (LOJA.cantos || []).map(c => ({ ...c, trilha: cena.naTrilha(...c.ponto) }));
+  $('cena-atores').insertAdjacentHTML('beforeend', cena.cantos.map(c =>
+    `<div class="jr-rotulo-porta jr-rotulo-praca jr-loja-canto" data-canto="${esc(c.id)}" style="left:${c.ponto[0]}px;top:${c.ponto[1] - 150}px" hidden><span>${esc(c.nome)}</span></div>`).join(''));
+}
+function atualizarLoja() {
+  for (const el of $('cena-atores').querySelectorAll('.jr-loja-canto')) {
+    const c = cena.cantos.find(x => x.id === el.dataset.canto);
+    const perto = !!c && dist(jog.x, jog.y, c.ponto[0], c.ponto[1]) < 110;
+    if (el.hidden === perto) el.hidden = !perto;
+  }
+}
+// Tocou num canto (na prateleira acima do ponto ou perto dele): o mais próximo na horizontal
+function cantoEm(p) {
+  let melhor = null, md = Infinity;
+  for (const c of cena.cantos || []) {
+    const dx = Math.abs(p.x - c.ponto[0]);
+    if (dx > 110 || p.y < c.ponto[1] - 330 || p.y > c.ponto[1] + 40) continue;
+    if (dx < md) { md = dx; melhor = c; }
+  }
+  return melhor;
+}
+function irAoCanto(c) {
+  destinoEspecial = null;
+  caminharNaTrilha(c.trilha[0], c.trilha[1], () => {
+    if (!ehLoja()) return;
+    jog.dir = 'costas';
+    desenharJogador();
+    abrirLoja(c.aba, c.id === 'pedestal');
+  });
+}
+
+// Provador: o pet sobe no pedestal e veste a tinta escolhida na prévia
+function subirNoPedestal() {
+  const c = (LOJA.cantos || []).find(x => x.id === 'pedestal');
+  if (!c?.pet || !seguidor?.pet) return;
+  petNoPedestal = c.pet;
+  seguidor.colocar(c.pet[0], c.pet[1]);
+  seguidor.reagir('feliz', 1200);
+}
+function descerDoPedestal() {
+  if (!petNoPedestal) return;
+  petNoPedestal = null;
+  atualizarVisualPet();   // volta a tinta de verdade
+  if (seguidor?.pet) seguidor.colocar(jog.x - 30, jog.y + 4);
+}
+
+// ── Modo de ajuste da loja (?editarLoja=1, só no modo teste) ──
+function ligarEdicaoLoja() {
+  const par = (a) => a && { pos: () => a, por: (x, y) => { a[0] = x; a[1] = y; } };
+  const itens = [['porta', par(LOJA.porta), '🚪'], ['entrada', par(LOJA.entrada), '👣'], ['Dona Cida', par(LOJA.vendedora?.pos), '👩'],
+    ['Dona Cida: onde para', par(LOJA.vendedora?.ponto), '👣'], ...(LOJA.cantos || []).flatMap(c => [[c.nome, par(c.ponto), '🏷️'], ...(c.pet ? [['pet no pedestal', par(c.pet), '🐾']] : [])])]
+    .filter(([, o]) => o);
+  ligarArrastoGenerico(itens, 'Arraste a Dona Cida, os cantos, o pedestal e a porta', () => JSON.stringify(LOJA, null, 1), 'loja-interior.json', () => {
+    const o = pessoasMapa.find(x => x.p.id === cfgLoja().vendedor);
+    if (o) { o.p.x = LOJA.vendedora.pos[0]; o.p.y = LOJA.vendedora.pos[1]; posicionarPessoa(o); }
+  });
+}
+// No Mercado Central (?editarLoja=1): arrastar a porta da loja
+function ligarEdicaoPortaMercado() {
+  const pm = portaMercado();
+  if (!pm) return;
+  const o = { pos: () => [pm.x, pm.y], por: (x, y) => { pm.x = x; pm.y = y; } };
+  ligarArrastoGenerico([['porta da loja', o, '🛒']], 'Arraste a porta da loja', () => JSON.stringify({ mercado: pm }, null, 1), 'loja-interior.json (campo mercado)');
+}
+function ligarArrastoGenerico(itens, dica, json, arquivo, aoMover = () => {}) {
+  for (const [nome, o, ic] of itens) {
+    const el = document.createElement('div');
+    el.className = 'jr-praca-edit';
+    el.textContent = `${ic} ${nome}`;
+    Object.assign(el.style, { left: o.pos()[0] + 'px', top: o.pos()[1] + 'px' });
+    el.addEventListener('pointerdown', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      el.setPointerCapture(e.pointerId);
+      const mover = (ev) => {
+        const q = telaParaImagem(ev.clientX, ev.clientY);
+        const x = Math.round(clamp(q.x, 0, W)), y = Math.round(clamp(q.y, 0, H));
+        o.por(x, y);
+        Object.assign(el.style, { left: x + 'px', top: y + 'px' });
+        $('npc-editar-pos').textContent = `${nome}: x ${x}, y ${y}`;
+        aoMover();
+      };
+      const soltar = () => { el.removeEventListener('pointermove', mover); el.removeEventListener('pointerup', soltar); el.removeEventListener('pointercancel', soltar); };
+      el.addEventListener('pointermove', mover);
+      el.addEventListener('pointerup', soltar);
+      el.addEventListener('pointercancel', soltar);
+    });
+    $('cena-atores').appendChild(el);
+  }
+  $('npc-editar')?.remove();
+  const caixa = document.createElement('div');
+  caixa.id = 'npc-editar';
+  caixa.className = 'jr-npc-editar';
+  caixa.innerHTML = `<span id="npc-editar-pos">${esc(dica)}</span><button class="jr-btn" id="npc-copiar">📋 Copiar posições</button>`;
+  $('tela-cena').appendChild(caixa);
+  $('npc-copiar').addEventListener('click', async () => {
+    const txt = json();
+    try { await navigator.clipboard.writeText(txt); $('npc-editar-pos').textContent = `Copiado! Cole no ${arquivo}.`; }
+    catch (_) { console.log(txt); $('npc-editar-pos').textContent = 'Não deu para copiar: o JSON está no console (F12).'; }
+  });
+}
+
+// ============================================================
+//  CAVAR E MEXER NO MATO (dados/jogo/cavar.json e mato.json) — só nos mapas da cidade (1 a 13)
+//  Por aluno e por dia: 3 montinhos visíveis + 1 tesouro escondido por mapa (sorteio com semente data|mapa|aluno);
+//  o pet fareja o tesouro; os matinhos dão frutas/verduras e rebrotam em 6 h. Tudo grava no nó do aluno.
+// ============================================================
+let CAVAR = null, MATOS = [], MATO_NOTA = '';
+let editarMato = false;   // ?editarMato=1 no modo teste: arrastar os matinhos e copiar o mato.json
+let acaoMapa = null;      // { tipo: 'cavar' | 'mato', alvo } — o que o botão de ação faz agora
+let acaoOcupada = false;
+const cfgCavar = () => CAVAR?.config || {};
+const QUADROS_MATO = 10, FPS_MATO = 12, LARG_MATO = 60;   // mato: 240 × 150 no arquivo → 60 px de largura no mapa
+
+function hashTexto(s) { let h = 2166136261; for (const ch of String(s)) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rngSemente(seed) {
+  let a = seed >>> 0;
+  return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+const qtdDe = (q, rnd = Math.random) => (Array.isArray(q) ? q[0] + Math.floor(rnd() * (q[1] - q[0] + 1)) : Number(q) || 1);
+// sorteio por peso, com "vazio" (e "bicho", no mato) como pesos extras
+function sortearAchado(tabela, rnd = Math.random) {
+  const ops = [...(tabela?.premios || []).map(p => ({ ...p, peso: Number(p.peso) || 0 })), { tipo: 'vazio', peso: Number(tabela?.vazio) || 0 }, { tipo: 'bicho', peso: Number(tabela?.bicho) || 0 }];
+  const tot = ops.reduce((a, o) => a + o.peso, 0);
+  let x = rnd() * tot;
+  for (const o of ops) { x -= o.peso; if (x < 0) return o; }
+  return { tipo: 'vazio' };
+}
+const ehMapaCidade = () => cena?.tipo === 'mapa' && typeof cena.n === 'number';
+function cavadosHoje() {
+  const hoje = diaLocal();
+  if (estado.cavarDia?.data !== hoje) estado.cavarDia = { data: hoje, m: {}, moedas: 0 };
+  estado.cavarDia.m ||= {};
+  return estado.cavarDia;
+}
+
+// Lugares do dia no mapa n (sempre os mesmos para o aluno naquele dia): sobre a trilha, longe de portas, pessoas, pesca e mato
+function lugaresDoDia(n) {
+  const cfg = cfgCavar(), g = cena.grade, rnd = rngSemente(hashTexto(`${diaLocal()}|${n}|${sessao.uid}`));
+  const nm = cfg.montinhos_por_mapa_dia ?? 3, nt = cfg.tesouros_por_mapa_dia ?? 1;
+  const evitar = [...Object.values(cena.portas).map(p => [p.x, p.y]), ...cena.saidas.map(s => [s.x, s.y]), [cena.cfg.entrada[0], cena.cfg.entrada[1]],
+    ...NPCS.filter(p => p.mapa === n && !p.interior).map(p => [p.x, p.y]), ...pontosDoMapa(n).map(p => [p.x, p.y]), ...MATOS.filter(m => m.mapa === n).map(m => [m.x, m.y])];
+  const livre = (cx, cy) => andavel(g, cx, cy) && andavel(g, cx + 3, cy) && andavel(g, cx - 3, cy) && andavel(g, cx, cy + 3) && andavel(g, cx, cy - 3);
+  const lugares = [];
+  for (let tent = 0; tent < 6000 && lugares.length < nm + nt; tent++) {
+    const cx = Math.floor(rnd() * GW), cy = Math.floor(rnd() * GH);
+    if (!livre(cx, cy)) continue;
+    const [x, y] = centroCelula(cy * GW + cx);
+    if (x < 60 || x > W - 60 || y < 80 || y > H - 40) continue;
+    if (evitar.some(([a, b]) => dist(x, y, a, b) < 110) || lugares.some(l => dist(x, y, l.x, l.y) < 150)) continue;
+    const i = lugares.length;
+    lugares.push({ x, y, chave: i < nm ? `${n}-${i}` : `${n}-t${i - nm}`, tesouro: i >= nm });
+  }
+  return lugares;
+}
+
+function montarCavar(n) {
+  cena.cavar = [];
+  cena.matos = [];
+  if (!CAVAR || typeof n !== 'number') return;
+  const cav = cavadosHoje().m, I = cfgCavar().imagens || {};
+  cena.cavar = lugaresDoDia(n);
+  let html = '';
+  for (const l of cena.cavar) {
+    if (l.tesouro) continue;   // o tesouro não tem desenho nenhum
+    html += `<div class="jr-montinho${cav[l.chave] ? ' cavado' : ''}" data-chave="${l.chave}" style="left:${l.x}px;top:${l.y}px;z-index:${Math.round(l.y) - 3}">
+      <img class="m-img" src="${esc(caminhoImg(I.montinho || ''))}" alt="" draggable="false" onload="this.parentNode.classList.add('com-img')" onerror="this.remove()"/>
+      <img class="b-img" src="${esc(caminhoImg(I.buraco || ''))}" alt="" draggable="false" onload="this.parentNode.classList.add('com-buraco')" onerror="this.remove()"/></div>`;
+  }
+  const agora = Date.now(), rebrota = (cfgCavar().mato_rebrota_h ?? 6) * 3600e3;
+  cena.matos = MATOS.map((m, i) => ({ ...m, i })).filter(m => m.mapa === n).map(m => ({ ...m, chave: `${n}-${m.i}`, mexido: agora - (Number(estado.matoMexido?.[`${n}-${m.i}`]) || 0) < rebrota }));
+  for (const m of cena.matos)
+    html += `<img class="jr-mato" data-chave="${m.chave}" src="${IMG}/mato/${m.mexido ? 'mato-mexido' : `mato-${m.variante || 1}`}.webp" alt="" draggable="false"
+      style="left:${m.x}px;top:${m.y}px;width:${LARG_MATO}px;z-index:${Math.round(m.y)}"/>`;
+  $('cena-atores').insertAdjacentHTML('beforeend', html);
+  for (const m of cena.matos) m.el = $('cena-atores').querySelector(`.jr-mato[data-chave="${m.chave}"]`);
+  if (editarMato) ligarEdicaoMato(n);
+}
+
+// Mato balança (10 quadros, ~12 fps, uma vez)
+function balancarMato(m) {
+  if (!m.el || m.balancando) return;
+  m.balancando = true;
+  let q = 1;
+  const base = () => `${IMG}/mato/${m.mexido ? 'mato-mexido' : `mato-${m.variante || 1}`}.webp`;
+  const passo = () => {
+    if (!m.el.isConnected) return;
+    if (q > QUADROS_MATO || semMovimento()) { m.el.src = base(); m.balancando = false; return; }
+    m.el.src = `${IMG}/mato/mato-balanca-${q++}.webp`;
+    setTimeout(passo, 1000 / FPS_MATO);
+  };
+  passo();
+}
+
+const raioFaro = () => {   // cresce com a lealdade do pet ativo (60 px com 0, 110 com 50, 170 com 100)
+  const f = cfgCavar().faro_pet || {}, l = Math.max(0, Math.min(100, lealdadeDoAtivo()));
+  const a = f.lealdade_0 ?? 60, b = f.lealdade_50 ?? 110, c = f.lealdade_100 ?? 170;
+  return l <= 50 ? a + (b - a) * l / 50 : b + (c - b) * (l - 50) / 50;
+};
+
+// A cada quadro nos mapas: mato que balança quando alguém passa, faro do pet e o botão de ação
+function atualizarCavar() {
+  if (!ehMapaCidade() || !CAVAR) { esconderAcaoMapa(); return; }
+  const cav = cavadosHoje().m;
+  for (const m of cena.matos || []) {
+    const em = dist(jog.x, jog.y, m.x, m.y) < 22 || (seguidor?.pet && dist(seguidor.x, seguidor.y, m.x, m.y) < 22);
+    if (em && !m.dentro) balancarMato(m);
+    m.dentro = em;
+  }
+  // faro: 👃 sobre o pet, piscando mais rápido quanto mais perto
+  const tes = (cena.cavar || []).find(l => l.tesouro && !cav[l.chave]);
+  const faro = $('pet-faro'), r = raioFaro();
+  const d = tes ? dist(jog.x, jog.y, tes.x, tes.y) : Infinity;
+  const farejando = !!(tes && seguidor?.pet && !$('pet').hidden && d < r && !pesca);
+  faro.hidden = !farejando;
+  if (farejando) {
+    posicionarNaTela(faro, seguidor.x, seguidor.y - seguidor.altura - 4);
+    faro.style.animationDuration = (0.25 + 1.1 * d / r).toFixed(2) + 's';
+    seguidor.esquerda = tes.x < seguidor.x;
+    if (!cena.farejou && performance.now() - (cena.faroT || 0) > 20000) {   // ao entrar no raio: uma frase do grupo "faro"
+      cena.farejou = true; cena.faroT = performance.now();
+      const fr = frasesFaro(seguidor.pet);
+      if (fr.length && !conversa.falando) mostrarFalaPet([{ texto: trocarApelido(sortear(fr)) }]);
+    }
+  } else if (d > r + 30) cena.farejou = false;
+  // botão de ação: ⛏️ Cavar (montinho perto / em cima do tesouro) ou 🌿 Mexer no mato
+  let melhor = null;
+  if (!pesca && !acaoOcupada) {
+    for (const l of cena.cavar || []) {
+      if (cav[l.chave]) continue;
+      const dl = dist(jog.x, jog.y, l.x, l.y);
+      if (dl < (l.tesouro ? cfgCavar().raio_cavar ?? 18 : 36) && (!melhor || dl < melhor.d)) melhor = { tipo: 'cavar', alvo: l, d: dl };
+    }
+    for (const m of cena.matos || []) {
+      if (m.mexido) continue;
+      const dm = dist(jog.x, jog.y, m.x, m.y);
+      if (dm < 44 && (!melhor || dm < melhor.d)) melhor = { tipo: 'mato', alvo: m, d: dm };
+    }
+  }
+  if (melhor?.tipo !== acaoMapa?.tipo || melhor?.alvo !== acaoMapa?.alvo) {
+    acaoMapa = melhor;
+    const b = $('btn-acao-mapa'), I = cfgCavar().imagens || {};
+    b.hidden = !melhor;
+    if (melhor) b.innerHTML = melhor.tipo === 'cavar' ? `${imgItem(I.pa, '⛏️', 'jr-ic-btn')} Cavar` : `${imgItem(I.mato_cortado, '🌿', 'jr-ic-btn')} Mexer no mato`;
+  }
+}
+function esconderAcaoMapa() { acaoMapa = null; $('btn-acao-mapa').hidden = true; $('pet-faro').hidden = true; }
+const trocarApelido = (t) => String(t).replace(/\{apelido\}/g, nomeAluno()).replace(/\{pet\}/g, nomePet(estado.pets.ativo));
+
+function usarAcaoMapa() {
+  const a = acaoMapa;
+  if (!a || acaoOcupada || !ehMapaCidade()) return;
+  if (a.tipo === 'cavar') cavar(a.alvo); else mexerMato(a.alvo);
+}
+
+// ⛏️ Cavar: 1 s de terra voando, depois o resultado
+function cavar(l) {
+  acaoOcupada = true;
+  jog.caminho = []; jog.aoChegar = null;
+  esconderAcaoMapa();
+  $('jogador').classList.add('cavando');
+  const terra = document.createElement('div');
+  terra.className = 'jr-terra';
+  Object.assign(terra.style, { left: l.x + 'px', top: l.y + 'px', zIndex: Math.round(l.y) + 2 });
+  terra.innerHTML = '<i></i><i></i><i></i><i></i><i></i>';
+  $('cena-atores').appendChild(terra);
+  tocar('clique');
+  const n = cena.n;
+  setTimeout(() => {
+    terra.remove();
+    $('jogador').classList.remove('cavando');
+    acaoOcupada = false;
+    if (cena?.n !== n) return;
+    const cav = cavadosHoje();
+    cav.m[l.chave] = true;
+    const el = $('cena-atores').querySelector(`.jr-montinho[data-chave="${l.chave}"]`);
+    if (el) el.classList.add('cavado');
+    else if (l.tesouro) {   // o tesouro vira um buraco também
+      $('cena-atores').insertAdjacentHTML('beforeend', `<div class="jr-montinho cavado" style="left:${l.x}px;top:${l.y}px;z-index:${Math.round(l.y) - 3}">
+        <img class="b-img" src="${esc(caminhoImg(cfgCavar().imagens?.buraco || ''))}" alt="" draggable="false" onload="this.parentNode.classList.add('com-buraco')" onerror="this.remove()"/></div>`);
+    }
+    const achado = sortearAchado(l.tesouro ? CAVAR.tesouro : CAVAR.montinho);
+    entregarAchado(achado, l.tesouro ? 'tesouro' : 'montinho', n, { cavar_dia: cav });
+  }, 1000);
+}
+
+// 🌿 Mexer no mato: balança, depois fruta/verdura, nada ou um bichinho
+function mexerMato(m) {
+  acaoOcupada = true;
+  jog.caminho = []; jog.aoChegar = null;
+  esconderAcaoMapa();
+  m.balancando = false;
+  balancarMato(m);
+  tocar('clique');
+  const n = cena.n;
+  setTimeout(() => {
+    acaoOcupada = false;
+    if (cena?.n !== n) return;
+    m.mexido = true;
+    if (!m.balancando && m.el) m.el.src = `${IMG}/mato/mato-mexido.webp`;
+    estado.matoMexido = { ...(estado.matoMexido || {}), [m.chave]: Date.now() };
+    const achado = sortearAchado(CAVAR.mato);
+    if (achado.tipo === 'bicho') {
+      const b = document.createElement('div');
+      b.className = 'jr-bicho';
+      b.textContent = Math.random() < 0.5 ? '🐸' : '🦋';
+      Object.assign(b.style, { left: m.x + 'px', top: m.y + 'px', zIndex: 9000, '--dir': Math.random() < 0.5 ? -1 : 1 });
+      $('cena-atores').appendChild(b);
+      setTimeout(() => b.remove(), 1600);
+    }
+    entregarAchado(achado.tipo === 'bicho' || achado.tipo === 'vazio' ? achado : { tipo: 'item', id: achado.id, qtd: 1 }, 'mato', n,
+      { [`mato_mexido/${m.chave}`]: estado.matoMexido[m.chave] });
+  }, 900);
+}
+
+// Aplica o que saiu, mostra o cartão e registra (tipo: "cavar")
+function entregarAchado(a, onde, n, patch = {}) {
+  const ps = estado.pets, cfg = cfgCavar(), cav = cavadosHoje();
+  let icone = '', titulo = '', sub = '', raro = false, registro = null;
+  const moedasLivres = () => Math.max(0, (cfg.moedas_cavar_dia ?? 15) - (Number(cav.moedas) || 0));
+  const darMoedas = (q, semLimite = false) => { const g = semLimite ? q : Math.min(q, moedasLivres()); if (!semLimite) cav.moedas = (Number(cav.moedas) || 0) + g; ps.moedas = (Number(ps.moedas) || 0) + g; patch['pets/moedas'] = ps.moedas; return g; };
+  if (a.tipo === 'moedas') {
+    const g = darMoedas(qtdDe(a.qtd));
+    if (g > 0) { icone = moedaHtml(); titulo = `Você achou ${g} 🪙!`; registro = { tipo: 'moedas', qtd: g }; }
+    else { a = { tipo: 'vazio' }; }   // passou do limite do dia: as moedas viram terra
+  }
+  if (a.tipo === 'item') {
+    const q = qtdDe(a.qtd), id = a.id;
+    const uso = (cfgLoja().itens_uso || []).find(x => x.id === id), comida = itemDaBolsa(id);
+    if (id === 'isca') { ps.iscas = iscas() + q; patch['pets/iscas'] = ps.iscas; }
+    else if (uso) { ps.itens = { ...(ps.itens || {}), [id]: (Number(ps.itens?.[id]) || 0) + q }; patch[`pets/itens/${id}`] = ps.itens[id]; }
+    else if (comida) { ps.bolsa = { ...(ps.bolsa || {}), [id]: (Number(ps.bolsa?.[id]) || 0) + q }; patch[`pets/bolsa/${id}`] = ps.bolsa[id]; }
+    const it = uso || comida || { nome: id, emoji: '🎁' };
+    icone = imgItem(it.imagem, it.emoji, 'jr-item-peixe');
+    titulo = `Você achou ${q > 1 ? `${q} × ${it.nome}` : comArtigo(it.nome)}! ${it.emoji || ''}`;
+    sub = uso ? uso.descricao : comida ? 'Foi para a 🎒 Bolsa' : '';
+    registro = { tipo: 'item', id, qtd: q };
+  }
+  if (a.tipo === 'colecao') {
+    const pecas = (CAVAR.colecao || []).filter(c => (c.mapas || []).includes(n));
+    const c = pecas.length ? sortear(pecas) : null;
+    if (c && !estado.colecao?.[c.id]) {
+      estado.colecao = { ...(estado.colecao || {}), [c.id]: Date.now() };
+      patch[`colecao/${c.id}`] = estado.colecao[c.id];
+      raro = true;
+      icone = imgItem(c.imagem, c.emoji, 'jr-item-peixe raro');
+      titulo = `✨ Você achou ${comArtigo(c.nome)}!`;
+      sub = `Coleção: ${Object.keys(estado.colecao).length}/${CAVAR.colecao.length}`;
+      registro = { tipo: 'colecao', id: c.id };
+      completarGrupo(c.grupo, patch);
+    } else if (c) {
+      const g = darMoedas(cfg.repetida_moedas ?? 5, true);
+      icone = imgItem(c.imagem, c.emoji, 'jr-item-peixe');
+      titulo = `Repetida! Virou ${g} 🪙`;
+      sub = `${c.nome} já está na sua coleção`;
+      registro = { tipo: 'colecao_repetida', id: c.id, moedas: g };
+    } else a = { tipo: 'vazio' };
+  }
+  if (a.tipo === 'tinta') {
+    const t = tinta(a.id);
+    if (t && !ps.tintas?.[a.id]) {
+      ps.tintas = { ...(ps.tintas || {}), [a.id]: true };
+      patch[`pets/tintas/${a.id}`] = true;
+      raro = true;
+      icone = '🎨';
+      titulo = `✨ Tinta ${t.nome}! Só se acha cavando.`;
+      sub = 'Vale para todos os seus pets (troque no Meu Pet → Visual)';
+      registro = { tipo: 'tinta', id: a.id };
+    } else {
+      const g = darMoedas(cfg.repetida_moedas ?? 5, true);
+      icone = '🎨'; titulo = `Repetida! Virou ${g} 🪙`; sub = t ? `Você já tem a tinta ${t.nome}` : '';
+      registro = { tipo: 'tinta_repetida', id: a.id, moedas: g };
+    }
+  }
+  if (a.tipo === 'vazio') { icone = onde === 'mato' ? '🍃' : '🪱'; titulo = onde === 'mato' ? 'Só mato… 🍃' : 'Só terra… 🪱'; }
+  if (a.tipo === 'bicho') { icone = '🐸'; titulo = 'Opa! Tinha um bichinho aí 😄'; }
+  if (onde !== 'mato') patch.cavar_dia = cav;
+  const agora = Date.now();
+  patch[`respostas/cavar-${agora}`] = { tipo: 'cavar', onde, mapa: n, achou: registro, data: agora };
+  gravar(patch);
+  tocar(registro ? (raro ? 'vitoria' : 'acerto') : 'erro');
+  mostrarAchado(icone, titulo, sub, raro, onde === 'tesouro');
+  if (raro && onde === 'tesouro') seguidor?.reagir('feliz', 1500);
+}
+function completarGrupo(grupo, patch) {
+  const doGrupo = (CAVAR.colecao || []).filter(c => c.grupo === grupo);
+  if (estado.colecaoGrupos?.[grupo] || !doGrupo.every(c => estado.colecao?.[c.id])) return;
+  const n = cfgCavar().grupo_completo_moedas ?? 20;
+  estado.colecaoGrupos = { ...(estado.colecaoGrupos || {}), [grupo]: true };
+  estado.pets.moedas = (Number(estado.pets.moedas) || 0) + n;
+  patch[`colecao_grupos/${grupo}`] = true;
+  patch['pets/moedas'] = estado.pets.moedas;
+  setTimeout(() => avisoPet(`📖 Coleção completa: ${grupo}! +${n} 🪙`, true), 2600);
+}
+function mostrarAchado(icone, titulo, sub, raro, grande) {
+  const el = $('pesca-cartao');
+  el.innerHTML = `<span class="pc-peixe">${icone}</span><span>${esc(titulo)}${sub ? `<small>${esc(sub)}</small>` : ''}</span>`;
+  el.classList.toggle('raro', !!raro);
+  el.classList.toggle('grande', !!grande);
+  el.hidden = false;
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+  clearTimeout(mostrarPeixe.t);
+  mostrarPeixe.t = setTimeout(() => { el.hidden = true; }, raro ? 3600 : 2600);
+}
+
+// ── Álbum da coleção (na bolsa): 4 grupos × 3 peças ──
+function albumHtml() {
+  const grupos = [...new Set((CAVAR?.colecao || []).map(c => c.grupo))];
+  const total = (CAVAR?.colecao || []).length, achadas = Object.keys(estado.colecao || {}).length;
+  return `<div class="mp-album-topo">📖 Coleção: <b>${achadas}/${total}</b> · completar um grupo dá ${cfgCavar().grupo_completo_moedas ?? 20} 🪙</div>` + grupos.map(g => {
+    const pecas = CAVAR.colecao.filter(c => c.grupo === g), ok = pecas.every(c => estado.colecao?.[c.id]);
+    return `<div class="mp-album-grupo${ok ? ' completo' : ''}"><b>${esc(g)}${ok ? ' ✓' : ''}</b><div>${pecas.map(c => estado.colecao?.[c.id]
+      ? `<span class="mp-peca">${imgItem(c.imagem, c.emoji, 'jr-item-bolsa')}<em>${esc(c.nome)}</em></span>`
+      : `<span class="mp-peca falta">${c.imagem ? imgItem(c.imagem, '?', 'jr-item-bolsa silhueta') : '<i>?</i>'}<em>Dizem que aparece no mapa ${c.mapas[0]}…</em></span>`).join('')}</div></div>`;
+  }).join('');
+}
+function itensHtml() {
+  const usos = cfgLoja().itens_uso || [];
+  const qtd = (id) => (id === 'isca' ? iscas() : Number(estado.pets.itens?.[id]) || 0);
+  return usos.map(u => `<div class="mp-bolsa-item mp-uso"><span class="mp-bolsa-emoji">${imgItem(u.imagem, u.emoji, 'jr-item-bolsa')}</span>
+    <b>${esc(u.nome)} × ${qtd(u.id)}</b><span>${esc(u.descricao)}</span></div>`).join('') +
+    '<div class="mp-bolsa-vazia">As ajudas aparecem como botão no ginásio e na batalha quando você tem alguma. Ache mais cavando ⛏️.</div>';
+}
+
+// ── Modo de ajuste do mato (?editarMato=1, só no modo teste) ──
+function ligarEdicaoMato(n) {
+  const itens = (cena.matos || []).map(m => {
+    const orig = MATOS[m.i];
+    return [`mato ${m.i}`, { pos: () => [orig.x, orig.y], por: (x, y) => { orig.x = x; orig.y = y; m.x = x; m.y = y; if (m.el) Object.assign(m.el.style, { left: x + 'px', top: y + 'px', zIndex: Math.round(y) }); } }, '🌿'];
+  });
+  ligarArrastoGenerico(itens, `Arraste os matinhos do mapa ${n}`, () => JSON.stringify({ _nota: MATO_NOTA, matos: MATOS }, null, 1), 'mato.json');
+}
+
+// ============================================================
 //  BATALHA DE PETS — contas rápidas contra os treinadores de dados/jogo/batalhas.json
 //  (regras puras em js/jogo-revisao/batalha.js; aqui a lista, a luta e os prêmios)
 // ============================================================
@@ -3591,7 +5284,7 @@ function renderDetalheTreinador() {
     </div>
     <div class="bt-det-linhas">
       <div>Nível ${d.nivel} · acerta ${Math.round(f.acerto * 100)}%</div>
-      <div>📍 ${m ? `${m}. ${esc(D.questoes[m].nome)}` : '—'}</div>
+      <div>📍 ${NPCS.find(p => p.id === t.id)?.interior === 'loja' ? 'Loja da Dona Cida (Praça ou Mercado) 🛒' : m ? `${m}. ${esc(D.questoes[m].nome)}` : '—'}</div>
       ${contas.length ? `<div>Contas: ${contas.map(esc).join(', ')}</div>` : ''}
       <div class="bt-det-estado ${sit}">${estado}</div>
     </div>
@@ -3621,7 +5314,8 @@ function iniciarBatalha(id, origem = 'lista') {
   preCarregarPet(bt.pet); preCarregarPet(t.pet);
   $('batalha').hidden = false;
   $('bt-nomeL').innerHTML = `${esc(nomeAluno())}<small>· ${esc(nomePet(bt.pet))}</small>`;
-  aplicarTinta($('bt-imgL'), cuidadosDe(bt.pet)?.tinta);
+  aplicarVisualPet($('bt-imgL'), bt.pet);
+  aplicarTinta($('bt-imgR'), t.tinta);   // pet do adversário: só se o treinador tiver tinta no batalhas.json
   $('bt-nomeR').innerHTML = `<small>${NOME_PET[t.pet]} ·</small>${esc(t.nome)}`;
   $('bt-bustoL').outerHTML = bustoHtml(urlQuadro('direita', -1), 'bt-busto L', BUSTO_PERS, false, 'bt-bustoL');
   $('bt-bustoR').outerHTML = bustoHtml(`${IMG}/npcs/${t.id}.webp`, 'bt-busto R', BUSTO_NPC, true, 'bt-bustoR');
@@ -3815,6 +5509,9 @@ function btRodada() {
   $('bt-conta').textContent = p.conta;
   $('bt-conta').classList.toggle('longa', p.longa);
   $('bt-msg').textContent = '';
+  bt.usouRodada = null; bt.recusou = false; bt.oferta = null;
+  $('bt-dica').hidden = qtdItem('dica_pet') <= 0;
+  $('bt-dica').textContent = `💡 Dica do pet (${qtdItem('dica_pet')})`;
   $('bt-ops').innerHTML = p.opcoes.map((v, i) => `<button class="bt-op" data-i="${i}">${esc(v)}</button>`).join('');
   $('bt-ops').classList.toggle('longas', p.opcoes.some(v => v.length > 7));
   // treinador simulado: acerta com a chance dele, no tempo dele; errando, escolhe uma errada
@@ -3839,6 +5536,16 @@ function btTick() {
 
 function btResponder(l, v) {
   if (!bt || bt.fechou || bt.resp[l] !== null) return;
+  if (l === 'L' && bt.oferta && v === null) { bt.oferta = null; $('bt-msg').textContent = ''; }   // o tempo acabou na oferta
+  // errou com Segunda chance na bolsa (1 por batalha): pergunta antes de valer o erro
+  if (l === 'L' && v !== null && v !== bt.p.resposta && !bt.recusou && !bt.segundaUsada && qtdItem('segunda_chance') > 0) {
+    bt.oferta = v;
+    $('bt-dica').hidden = true;
+    for (const b of $('bt-ops').querySelectorAll('.bt-op')) if (bt.p.opcoes[b.dataset.i] === v) { b.disabled = true; b.classList.add('errada'); }
+    $('bt-msg').innerHTML = `Errou! <button class="bt-segunda" data-segunda="1">🔁 Segunda chance (${qtdItem('segunda_chance')})</button> <button class="bt-segunda nao" data-segunda="0">Não</button>`;
+    tocar('erro');
+    return;
+  }
   const t = btAgora();
   bt.resp[l] = { v, t, ok: v === bt.p.resposta };
   const o = l === 'L' ? 'R' : 'L';
@@ -3866,7 +5573,8 @@ async function btFechar() {
   const c = cfgBatalha();
   // cada rodada vai para o painel da professora (acertou: null = o tempo acabou)
   bt.contas.push({ treinador: bt.t.id, tipo: p.tipo, dificuldade: p.dificuldade, conta: p.conta, certa: p.resposta, resposta: R.L.v,
-    acertou: R.L.v === null ? null : R.L.ok, tempo_s: R.L.v === null ? null : +R.L.t.toFixed(1), data: Date.now() });
+    acertou: R.L.v === null ? null : R.L.ok, tempo_s: R.L.v === null ? null : +R.L.t.toFixed(1), usou: bt.usouRodada || null, data: Date.now() });
+  $('bt-dica').hidden = true;
   if (!R.L.ok) bt.revisao.push({ conta: p.conta, resposta: R.L.v, certa: p.resposta, explica: p.explica });
   // sequência: errar ou deixar o tempo acabar zera
   bt.seq = R.L.ok ? bt.seq + 1 : 0;
@@ -4021,7 +5729,7 @@ const ultimaFalaPessoa = {};         // id → índice da última fala (não rep
 let editarNpcs = false;              // ?editarNpcs=1 no modo teste (professora): arrastar e copiar posições
 
 // Altura na tela: a imagem da pessoa (h px, na mesma escala dos personagens) × ESCALA_SPRITE
-const altPessoa = (p) => p.h * ESCALA_SPRITE;
+const altPessoa = (p) => p.h * escalaSpriteCena();   // nos interiores (loja) as pessoas acompanham o personagem maior
 
 function limparPessoas() {
   tirarDestaque();
@@ -4034,7 +5742,12 @@ function limparPessoas() {
 function montarPessoas(n) {
   limparPessoas();
   const palco = $('cena-atores');
-  NPCS.filter(p => p.mapa === n).slice(0, 9).forEach((p, i) => {
+  // nos interiores (loja, fliperama) a posição vem do JSON do interior; nos mapas ficam só as pessoas sem interior
+  const posNoInterior = (p) => (p.id === cfgLoja().vendedor ? LOJA?.vendedora?.pos : p.id === 'teo' ? FLIPER?.teo || FLIPER?.balcao : null);
+  const lista = n === 'loja' || n === 'fliperama'
+    ? NPCS.filter(p => p.interior === n).map(p => { const pos = posNoInterior(p); return pos ? { ...p, x: pos[0], y: pos[1] } : p; })
+    : NPCS.filter(p => p.mapa === n && !p.interior);
+  lista.slice(0, 9).forEach((p, i) => {
     const alt = altPessoa(p), larg = alt * p.w / p.h;
     const sombra = document.createElement('div');
     sombra.className = 'jr-pet-sombra jr-pessoa-sombra';
@@ -4063,6 +5776,12 @@ function irAteTreinador(id) {
   const m = mapaDoTreinador(id);
   if (!m) return;
   $('bt-lista').hidden = true;
+  if (NPCS.find(p => p.id === id)?.interior === 'loja' && LOJA) {   // quem mora na loja: entra pela porta do Mercado
+    if (ehLoja()) { destacarPessoa(id); return; }
+    destaquePendente = id;
+    transicao(() => abrirLojaInterior({ tipo: 'mapa', n: portaMercado()?.mapa || m }));
+    return;
+  }
   if (cena?.tipo === 'mapa' && cena.n === m) { destacarPessoa(id); return; }
   destaquePendente = id;
   transicao(() => abrirMapa(m, 'entrada'));
@@ -4140,6 +5859,7 @@ function irFalarCom(o) {
   if (dist(jog.x, jog.y, o.p.x, o.p.y) <= PESSOA_PERTO) { falarCom(o); return; }
   const lado = jog.x < o.p.x ? -1 : 1;
   destinoEspecial = null;
+  if (ehLoja() && o.p.id === cfgLoja().vendedor && LOJA?.vendedora?.ponto) { caminharNaTrilha(...LOJA.vendedora.ponto, () => falarCom(o)); return; }   // vai até o balcão
   caminharNaTrilha(o.p.x + lado * (o.larg / 2 + 16 * ESCALA_ATORES), o.p.y, () => falarCom(o));
   if (!jog.caminho.length && !jog.aoChegar) falarCom(o);   // sem caminho (não deveria acontecer): fala mesmo assim
 }
@@ -4153,11 +5873,13 @@ function falarCom(o) {
   if (falas.length > 1 && i === ultimaFalaPessoa[o.p.id]) i = (i + 1 + Math.floor(Math.random() * (falas.length - 1))) % falas.length;
   ultimaFalaPessoa[o.p.id] = i;
   if (destaque?.id === o.p.id) tirarDestaque();
+  const saudacao = ehLoja() && o.p.id === cfgLoja().vendedor ? `Oi, ${nomeAluno()}! O que vai ser hoje?` : null;
   const el = $('pessoa-balao');
   // pedido de ajuda: "🙋 Ajudar"; treinadora: "⚔️ Batalhar" (ou o aviso de descanso/fome); com botão, também "Agora não"
   const ped = pedidoDe(o.p.id), botoes = [];
   let aviso = '';
   if (o.p.id === cfgLoja().vendedor && lojaPronta()) botoes.push('<button class="jr-btn jr-btn-ouro" data-acao="loja">🛒 Loja</button>');
+  if (o.p.id === 'teo' && FLIPER) botoes.push('<button class="jr-btn jr-btn-ouro" data-acao="recordes">🏆 Recordes</button>');
   if (ped) botoes.push(`<button class="jr-btn ${botoes.length ? '' : 'jr-btn-ouro'}" data-acao="ajudar">🙋 Ajudar</button>`);
   if (o.treinador) {
     const d = desafioCom(o.p.id);
@@ -4167,7 +5889,7 @@ function falarCom(o) {
   }
   if (botoes.length) botoes.push('<button class="jr-btn jr-btn-sec" data-acao="nao">Agora não</button>');
   const extra = aviso + (botoes.length ? `<div class="jr-pessoa-botoes">${botoes.join('')}</div>` : '');
-  el.innerHTML = `<b>${esc(o.p.nome)}</b><span>${esc(falas[i] || '')}</span>${extra}`;
+  el.innerHTML = `<b>${esc(o.p.nome)}</b><span>${esc(saudacao || falas[i] || '')}</span>${extra}`;
   el.hidden = false;
   el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
   balaoPessoa = { o, timer: setTimeout(fecharBalaoPessoa, extra.includes('data-acao') ? 9000 : 5000) };
@@ -4203,7 +5925,8 @@ function acaoBalaoPessoa(e) {
   fecharBalaoPessoa();
   if (b.dataset.acao === 'batalhar') iniciarBatalha(id, 'pessoa');   // revanche/descanso/fome conferidos lá
   if (b.dataset.acao === 'ajudar') abrirPedido(o);
-  if (b.dataset.acao === 'loja') abrirLoja();
+  if (b.dataset.acao === 'loja') abrirLoja(LOJA?.vendedora?.aba || 'comidas');
+  if (b.dataset.acao === 'recordes') mostrarRecordes();
 }
 
 // ============================================================
@@ -4238,7 +5961,7 @@ function abrirPedido(o) {
   $('pd-fechar').hidden = true;
   $('pd-depois').hidden = false;
   const pet = estado.pets?.ativo, leal = Number(pet && cuidadosDe(pet)?.lealdade) || 0;
-  $('pd-dica').hidden = !pet || pd.dica || leal < (cfgPedidos().lealdade_dica ?? 60);
+  $('pd-dica').hidden = !pet || pd.dica || leal < (cfgPedidos().lealdade_dica ?? 80);
   if (pet) $('pd-dica').textContent = `💡 Pedir dica a ${nomePet(pet)}`;
   $('pd-pet').hidden = true;
   if (pd.dica && pet) mostrarDicaPedido();   // já pediu antes (fechou com "Depois"): a dica continua ali
@@ -4342,6 +6065,7 @@ function pedirDicaPedido() {
 function mostrarDicaPedido() {
   const pet = estado.pets.ativo;
   $('pd-pet').innerHTML = `<img src="${quadrosDe(pet, 'sentado_girando')[0]}" alt="" draggable="false"/><span><b>${esc(nomePet(pet))}:</b> Acho que começa assim: ${esc(dicaPedido(pd.p))}</span>`;
+  aplicarVisualPet($('pd-pet').querySelector('img'), pet);
   $('pd-pet').hidden = false;
 }
 
@@ -4523,9 +6247,9 @@ function atualizarBotaoAjuda() {
   b.hidden = !pet || pg.fim;
   if (b.hidden) return;
   const cfg = configAjuda(), l = lealdadeAjuda();
-  const trancado = l < (cfg.lealdade_dica ?? 60);
+  const trancado = l < (cfg.lealdade_dica ?? 80);
   const resta = !trancado && (pg.ajuda.dicas < (cfg.max_dicas_por_desafio ?? 1) ||
-    (l >= (cfg.lealdade_eliminar ?? 80) && pg.ajuda.elimin < (cfg.max_eliminar_por_desafio ?? 1)));
+    (l >= (cfg.lealdade_eliminar ?? 95) && pg.ajuda.elimin < (cfg.max_eliminar_por_desafio ?? 1)));
   b.textContent = trancado ? '🔒 Pedir ajuda' : '💡 Pedir ajuda';
   b.classList.toggle('apagado', trancado || !resta);
 }
@@ -4550,10 +6274,10 @@ function pedirAjuda() {
   const pet = pg.petAjuda, nome = nomePet(pet);
   const cfg = configAjuda(), l = lealdadeAjuda();
   const v = { pet: nome, apelido: apelidoAluno || String(sessao.nome || '').split(' ')[0] };
-  if (l < (cfg.lealdade_dica ?? 60)) { falaAjuda(`Com ${cfg.lealdade_dica ?? 60} de lealdade, ${nome} pode te dar dicas`); return; }
+  if (l < (cfg.lealdade_dica ?? 80)) { falaAjuda(`Com ${cfg.lealdade_dica ?? 80} de lealdade, ${nome} pode te dar dicas`); return; }
   const q = pg.fila[0];
   const respondendo = q && !pg.travado && !$('perg-alternativas').hidden;
-  const podeEliminar = l >= (cfg.lealdade_eliminar ?? 80) && pg.ajuda.elimin < (cfg.max_eliminar_por_desafio ?? 1);
+  const podeEliminar = l >= (cfg.lealdade_eliminar ?? 95) && pg.ajuda.elimin < (cfg.max_eliminar_por_desafio ?? 1);
   if (pg.ajuda.dicas < (cfg.max_dicas_por_desafio ?? 1)) {
     // dica de conteúdo: abertura da personalidade + um lembrete do ginásio
     const lembretes = dicaDe(pg.chave)?.lembretes || [];
@@ -4602,6 +6326,7 @@ function montarArena() {
   document.querySelector('.jr-arena-sombra.pet').hidden = !pet;
   pgPet = null;
   if (pet) { pgPet = new PetParado($('perg-pet')); pgPet.definir(pet); }
+  aplicarVisualPet($('perg-pet'), pet, true);   // o pet do duelo tem drop-shadow no CSS
   // ajuda do pet: só nos ginásios (não na revisão da semana); contadores zeram a cada desafio
   pg.petAjuda = !rev && pet && cuidadosDe(pet) ? pet : null;
   pg.ajuda = { dicas: 0, elimin: 0 };
@@ -4692,6 +6417,7 @@ function renderPergunta() {
   $('perg-enunciado').textContent = q.enunciado;
   $('perg-enunciado').classList.toggle('longo', String(q.enunciado).length > 28);   // problemas: Inter, até 2 linhas
   $('perg-explica').hidden = true;
+  setTimeout(() => { if (pg?.fila?.[0] === q) atualizarItensPergunta(); }, 0);   // 💡 Dica do pet, se tiver
   // Revisão da semana: busto do líder e nome do ginásio de onde veio a pergunta
   const origem = $('perg-origem');
   origem.hidden = pg.modo !== 'revisao';
@@ -4738,6 +6464,63 @@ function mostrarExplicacao(q, comOutrosNumeros) {
   el.hidden = false;
 }
 
+const qtdItem = (id) => Number(estado?.pets?.itens?.[id]) || 0;
+function gastarItem(id) {
+  const n = qtdItem(id);
+  if (n <= 0) return false;
+  estado.pets.itens = { ...(estado.pets.itens || {}), [id]: n - 1 };
+  gravar({ [`pets/itens/${id}`]: n - 1 || null });
+  return true;
+}
+// botão "💡 Dica do pet (N)" na pergunta: só com 3+ alternativas e uma vez por pergunta
+function atualizarItensPergunta() {
+  const b = $('perg-usar-dica'), q = pg?.fila?.[0];
+  const visiveis = [...$('perg-alternativas').querySelectorAll('.jr-alt')].filter(x => !x.hidden && !x.disabled);
+  b.hidden = !q || pg.fim || pg.travado || qtdItem('dica_pet') <= 0 || pg.dicaItemEm === q.id || !!q.tabela || visiveis.length <= 2;
+  if (!b.hidden) b.textContent = `💡 Dica do pet (${qtdItem('dica_pet')})`;
+  $('perg-segunda').hidden = true;
+}
+function usarDicaPergunta() {
+  const q = pg?.fila?.[0];
+  if (!q || pg.travado || pg.dicaItemEm === q.id) return;
+  const erradas = [...$('perg-alternativas').querySelectorAll('.jr-alt')].filter(b => !b.hidden && !b.disabled && b.dataset.v !== String(q.resposta));
+  if (!erradas.length || !gastarItem('dica_pet')) return;
+  const alvo = sortear(erradas);
+  alvo.disabled = true;
+  alvo.classList.add('eliminada');
+  pg.dicaItemEm = q.id;
+  gravar({ [`respostas/${q.id}/usou`]: 'dica_pet' });
+  pgPet?.tocar('feliz');
+  falaAjuda(`Acho que ${alvo.dataset.v} não é. 💡`);
+  tocar('clique');
+  atualizarItensPergunta();
+}
+// errou com Segunda chance na bolsa (1 por desafio): pergunta se quer tentar de novo antes de mostrar a resposta
+function oferecerSegundaChance(btn, q, certa, botoes) {
+  btn.classList.add('errada');
+  $('perg-usar-dica').hidden = true;
+  $('perg-segunda-txt').textContent = `Errou! Usar 🔁 Segunda chance (${qtdItem('segunda_chance')})?`;
+  $('perg-segunda').hidden = false;
+  pg.oferta = { btn, q, certa, botoes };
+}
+function responderSegundaChance(usar) {
+  const o = pg?.oferta;
+  if (!o) return;
+  pg.oferta = null;
+  $('perg-segunda').hidden = true;
+  if (usar && gastarItem('segunda_chance')) {   // tenta de novo: o erro não conta
+    pg.segundaUsada = true;
+    o.btn.disabled = true;
+    o.botoes.forEach(b => { if (b !== o.btn && !b.classList.contains('eliminada')) b.disabled = false; });
+    gravar({ [`respostas/${o.q.id}/usou`]: 'segunda_chance' });
+    pg.travado = false;
+    tocar('clique');
+    atualizarItensPergunta();
+    return;
+  }
+  errarPergunta(o.btn, o.q, o.certa, o.botoes);
+}
+
 function responder(btn) {
   if (!pg || pg.travado || pg.fim) return;
   pg.travado = true;
@@ -4746,6 +6529,8 @@ function responder(btn) {
   const botoes = [...$('perg-alternativas').querySelectorAll('.jr-alt')];
   botoes.forEach(b => { b.disabled = true; });
   tocar('clique');
+  $('perg-usar-dica').hidden = true;
+  if (btn.dataset.v !== certa && !pg.segundaUsada && qtdItem('segunda_chance') > 0) { tocar('erro'); oferecerSegundaChance(btn, q, certa, botoes); return; }
   if (btn.dataset.v === certa) {
     btn.classList.add('certa');
     tocar('acerto');
@@ -4762,34 +6547,37 @@ function responder(btn) {
     ganharMoeda();
     falar(sortear(D.falas.acerto));
     setTimeout(() => { if (!pg) return; pg.fila.length ? renderPergunta() : vencer(); }, 1100);
-  } else {
-    btn.classList.add('errada');
-    tocar('erro');
-    botoes.find(b => b.dataset.v === certa)?.classList.add('certa');
-    // as outras alternativas somem para dar espaço ao "Como resolver"
-    botoes.forEach(b => { if (b !== btn && b.dataset.v !== certa) b.hidden = true; });
-    pg.errosPorIndice[chavePosicao(q)] = (pg.errosPorIndice[chavePosicao(q)] || 0) + 1;
-    pg.errouIds.add(q.id);
-    pg.status[posDe(q)] = 'errada';
-    reagirArena(false);
-    desenharBolinhas();
-    gravar({ [`respostas/${q.id}/ultima`]: Date.now() }, q.id);   // erros += 1
-    lembrarResposta(q.id, { ultima: Date.now() }, 1);
-    // volta para o fim da fila com outros números (no Mapa 13 B, gerarUma dá null: repete a mesma)
-    pg.fila.shift();
-    const nova = pg.modo === 'revisao'
-      ? gerarUma(q.mapa, q.lado, q.personagem, q.indice)
-      : gerarUma(pg.mapa, pg.G, pg.p, q.indice);
-    pg.fila.push(nova ? { ...nova, indice: q.indice, mapa: q.mapa, lado: q.lado, personagem: q.personagem, pos: q.pos } : q);
-    falar(sortear(D.falas.erro).replace('{resposta}', certa));
-    mostrarExplicacao(q, !!nova);   // explicação da pergunta que o aluno ERROU, não da nova
-    $('perg-continuar').textContent = 'Continuar';
-    $('perg-continuar').hidden = false;
-    pg.aoContinuar = renderPergunta;
-    // depois de ver a certa, a explicação toma o lugar das alternativas (Continuar ao lado)
-    const pgErro = pg;
-    setTimeout(() => { if (pg === pgErro && !$('perg-explica').hidden && !$('perg-continuar').hidden) $('perg-corpo').classList.add('com-explica'); }, 900);
-  }
+  } else errarPergunta(btn, q, certa, botoes);
+}
+
+// Errou (sem Segunda chance): mostra a certa e a explicação; a pergunta volta para o fim da fila com outros números
+function errarPergunta(btn, q, certa, botoes) {
+  btn.classList.add('errada');
+  tocar('erro');
+  botoes.find(b => b.dataset.v === certa)?.classList.add('certa');
+  // as outras alternativas somem para dar espaço ao "Como resolver"
+  botoes.forEach(b => { if (b !== btn && b.dataset.v !== certa) b.hidden = true; });
+  pg.errosPorIndice[chavePosicao(q)] = (pg.errosPorIndice[chavePosicao(q)] || 0) + 1;
+  pg.errouIds.add(q.id);
+  pg.status[posDe(q)] = 'errada';
+  reagirArena(false);
+  desenharBolinhas();
+  gravar({ [`respostas/${q.id}/ultima`]: Date.now() }, q.id);   // erros += 1
+  lembrarResposta(q.id, { ultima: Date.now() }, 1);
+  // volta para o fim da fila com outros números (no Mapa 13 B, gerarUma dá null: repete a mesma)
+  pg.fila.shift();
+  const nova = pg.modo === 'revisao'
+    ? gerarUma(q.mapa, q.lado, q.personagem, q.indice)
+    : gerarUma(pg.mapa, pg.G, pg.p, q.indice);
+  pg.fila.push(nova ? { ...nova, indice: q.indice, mapa: q.mapa, lado: q.lado, personagem: q.personagem, pos: q.pos } : q);
+  falar(sortear(D.falas.erro).replace('{resposta}', certa));
+  mostrarExplicacao(q, !!nova);   // explicação da pergunta que o aluno ERROU, não da nova
+  $('perg-continuar').textContent = 'Continuar';
+  $('perg-continuar').hidden = false;
+  pg.aoContinuar = renderPergunta;
+  // depois de ver a certa, a explicação toma o lugar das alternativas (Continuar ao lado)
+  const pgErro = pg;
+  setTimeout(() => { if (pg === pgErro && !$('perg-explica').hidden && !$('perg-continuar').hidden) $('perg-corpo').classList.add('com-explica'); }, 900);
 }
 
 function vencer() {
@@ -4820,6 +6608,7 @@ function vencer() {
     else if (p === 'revanche') darXP(XP_REVANCHE);
     else darXP(XP_TREINADOR);
   }
+  if (ganhou) publicarResumoInsignias();
   if (ganhou === 'normal') publicarNoFeed('insignia', chave);
   if (ganhou === 'dourada') publicarNoFeed('insignia_dourada', chave);
   // meta da turma: nunca no modo teste nem para alunos de teste (somarTurma também recusa TESTE e turma vazia)
@@ -5042,22 +6831,103 @@ function ligarEventos() {
   $('mp-bolsa').addEventListener('click', abrirBolsa);
   $('mp-visual').addEventListener('click', abrirVisual);
   $('mp-editar').addEventListener('click', abrirNomear);
-  $('mp-bolsa-itens').addEventListener('click', (e) => { const b = e.target.closest('[data-comida]'); if (b) darComida(b.dataset.comida); });
+  $('mp-bolsa-itens').addEventListener('click', (e) => {
+    const d = e.target.closest('[data-dar-pet]');
+    if (d) { bolsaSel = null; darComida(d.dataset.darPet); return; }
+    const b = e.target.closest('[data-comida]');
+    if (!b) return;
+    const id = b.dataset.comida;
+    if (itemDaBolsa(id)?.peixe) { bolsaSel = bolsaSel === id ? null : id; renderBolsa(); return; }   // peixe: abre as opções
+    darComida(id);
+  });
   $('mp-visual-painel').addEventListener('click', escolherVisual);
   for (const id of ['mp-bolsa-fechar', 'mp-visual-fechar', 'mp-nome-cancelar']) $(id).addEventListener('click', (e) => { e.stopPropagation(); e.target.closest('.mp-sub').hidden = true; });
   $('mp-nome-salvar').addEventListener('click', () => salvarNomePet());
   $('mp-nome-padrao').addEventListener('click', () => salvarNomePet(true));
   $('mp-nome-input').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') salvarNomePet(); if (e.key === 'Escape') $('mp-nomear').hidden = true; });
   $('loja').addEventListener('click', cliqueLoja);
-  $('lj-fechar').addEventListener('click', () => { $('loja').hidden = true; });
+  $('lj-fechar').addEventListener('click', () => { $('loja').hidden = true; descerDoPedestal(); });
   $('btn-levantar').addEventListener('click', (e) => { e.stopPropagation(); sairPesca(); });
-  $('pc-ops').addEventListener('click', (e) => { e.stopPropagation(); const b = e.target.closest('.pc-op'); if (b && !b.disabled && pesca?.conta) responderPesca(pesca.conta.p.opcoes[b.dataset.i]); });
-  $('pesca-conta').addEventListener('click', (e) => e.stopPropagation());
-  window.addEventListener('keydown', (e) => {   // pesca: 1–4 na conta, espaço/Enter para puxar
-    if (!pesca || e.ctrlKey || e.metaKey || e.altKey) return;
-    const m = /^(?:Digit|Numpad)([1-4])$/.exec(e.code);
-    if (m && pesca.estado === 'conta') { e.preventDefault(); $('pc-ops').querySelectorAll('.pc-op')[Number(m[1]) - 1]?.click(); }
-    else if ((e.code === 'Space' || e.key === 'Enter') && pesca.estado === 'fisgada') { e.preventDefault(); e.stopImmediatePropagation(); pescaPuxar(); }
+  $('btn-lancar').addEventListener('click', (e) => { e.stopPropagation(); pescaLancar(); });
+  $('btn-acao-mapa').addEventListener('click', (e) => { e.stopPropagation(); usarAcaoMapa(); });
+  $('mp-bolsa-abas').addEventListener('click', (e) => { e.stopPropagation(); const b = e.target.closest('[data-baba]'); if (b) { bolsaAba = b.dataset.baba; bolsaSel = null; renderBolsa(); } });
+  $('perg-usar-dica').addEventListener('click', (e) => { e.stopPropagation(); usarDicaPergunta(); });
+  $('perg-segunda').addEventListener('click', (e) => { e.stopPropagation(); const b = e.target.closest('[data-segunda]'); if (b) responderSegundaChance(b.dataset.segunda === '1'); });
+  $('bt-dica').addEventListener('click', (e) => {   // 💡 Dica do pet na batalha: elimina 1 alternativa errada
+    e.stopPropagation();
+    if (!bt || bt.fechou || bt.resp.L !== null || bt.usouRodada === 'dica_pet') return;
+    const erradas = [...$('bt-ops').querySelectorAll('.bt-op')].filter(b => !b.disabled && bt.p.opcoes[b.dataset.i] !== bt.p.resposta);
+    if (!erradas.length || !gastarItem('dica_pet')) return;
+    const alvo = sortear(erradas);
+    alvo.disabled = true; alvo.classList.add('esmaecida');
+    bt.usouRodada = 'dica_pet';
+    $('bt-dica').hidden = true;
+    tocar('clique');
+  });
+  $('bt-msg').addEventListener('click', (e) => {   // 🔁 Segunda chance na batalha
+    const b = e.target.closest('[data-segunda]');
+    if (!b || !bt || bt.oferta == null) return;
+    e.stopPropagation();
+    const v = bt.oferta;
+    bt.oferta = null;
+    $('bt-msg').textContent = '';
+    if (b.dataset.segunda === '1' && gastarItem('segunda_chance')) {
+      bt.segundaUsada = true; bt.usouRodada = 'segunda_chance';
+      for (const x of $('bt-ops').querySelectorAll('.bt-op')) if (!x.classList.contains('errada') && !x.classList.contains('esmaecida')) x.disabled = false;
+      tocar('clique');
+      return;
+    }
+    bt.recusou = true;
+    btResponder('L', v);
+  });
+  $('btn-praca').addEventListener('click', (e) => { e.stopPropagation(); if (cena?.tipo === 'mapa') transicao(abrirPraca); });
+  $('mural-fechar').addEventListener('click', () => { $('mural').hidden = true; });
+  $('mural').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (e.target === $('mural')) { $('mural').hidden = true; return; }
+    const a = e.target.closest('[data-aba]'), f = e.target.closest('[data-filtro]');
+    if (a) { mural.aba = a.dataset.aba; renderMural(); }
+    else if (f) { mural.filtro = f.dataset.filtro; renderMural(); }
+  });
+  $('convite-sim').addEventListener('click', (e) => { e.stopPropagation(); responderConvite(true); });
+  $('convite-nao').addEventListener('click', (e) => { e.stopPropagation(); responderConvite(false); });
+  $('duelo').addEventListener('click', (e) => { e.stopPropagation(); const b = e.target.closest('.dl-op'); if (b && !b.disabled) responderDuelo(b.dataset.op); });
+  $('dl-ok').addEventListener('click', (e) => { e.stopPropagation(); encerrarDueloLocal(); });
+  $('maquina').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (e.target === $('maquina') || e.target.closest('#mq-fechar')) { $('maquina').hidden = true; return; }
+    const j = e.target.closest('[data-jogar]');
+    if (j) { abrirJogoEmbed(j.dataset.jogar); return; }
+    if (e.target.closest('[data-recordes]')) mostrarRecordes();
+  });
+  $('jogo-embed-voltar').addEventListener('click', (e) => { e.stopPropagation(); voltarDoJogo(); });
+  window.addEventListener('message', (e) => {   // fim de partida dos jogos do site abertos no fliperama (?embed=1)
+    if (e.origin !== location.origin || e.data?.tipo !== 'fim-jogo' || e.source !== $('jogo-embed-frame').contentWindow) return;
+    premioFliperama(e.data);
+  });
+  $('aovivo').addEventListener('click', cliqueAoVivo);
+  $('aovivo').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter' && e.target.id === 'av-codigo') entrarAoVivo(e.target.value); });
+  $('av-x').addEventListener('click', (e) => { e.stopPropagation(); if (av) sairAoVivo(); else $('aovivo').hidden = true; });
+  $('av-convite-sim').addEventListener('click', (e) => { e.stopPropagation(); responderConviteAV(true); });
+  $('av-convite-nao').addEventListener('click', (e) => { e.stopPropagation(); responderConviteAV(false); });
+  $('btn-pesca-ranking').addEventListener('click', (e) => { e.stopPropagation(); abrirRankingPesca(); });
+  $('pr-fechar').addEventListener('click', () => { $('pesca-ranking').hidden = true; });
+  $('pr-abas').addEventListener('click', (e) => { const b = e.target.closest('[data-pr]'); if (b) { rankingPesca.filtro = b.dataset.pr; renderRankingPesca(); } });
+  $('pesca-ranking').addEventListener('click', (e) => { e.stopPropagation(); if (e.target === $('pesca-ranking')) $('pesca-ranking').hidden = true; });
+  // barrinha: segurar o dedo (ou o botão do mouse) em qualquer lugar da tela sobe a zona verde
+  const segurar = (v) => (e) => { if (pesca?.estado !== 'barrinha') return; e.preventDefault(); e.stopPropagation(); pesca.segurando = v; };
+  $('pesca-barra').addEventListener('pointerdown', (e) => { segurar(true)(e); try { $('pesca-barra').setPointerCapture(e.pointerId); } catch (_) {} });
+  for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) $('pesca-barra').addEventListener(ev, segurar(false));
+  $('pesca-barra').addEventListener('click', (e) => e.stopPropagation());
+  $('pesca-barra').addEventListener('contextmenu', (e) => e.preventDefault());
+  window.addEventListener('keydown', (e) => {   // pesca: espaço/Enter lança, puxa e (segurado) sobe a zona verde
+    if (!pesca || e.ctrlKey || e.metaKey || e.altKey || !(e.code === 'Space' || e.key === 'Enter')) return;
+    if (pesca.estado === 'barrinha') { e.preventDefault(); e.stopImmediatePropagation(); pesca.segurando = true; }
+    else if (pesca.estado === 'fisgada') { e.preventDefault(); e.stopImmediatePropagation(); pescaPuxar(); }
+    else if (pesca.estado === 'pronto' && !e.repeat && $('pesca-aviso').hidden && $('pesca-tutorial').hidden) { e.preventDefault(); e.stopImmediatePropagation(); pescaLancar(); }
+  }, true);
+  window.addEventListener('keyup', (e) => {
+    if (pesca?.estado === 'barrinha' && (e.code === 'Space' || e.key === 'Enter')) { e.preventDefault(); pesca.segurando = false; }
   }, true);
   $('mp-carinho').addEventListener('click', carinhoPet);
   $('mp-calado').addEventListener('click', alternarPetCalado);
@@ -5087,7 +6957,13 @@ function ligarEventos() {
   $('bt-det').addEventListener('click', (e) => { const b = e.target.closest('[data-ir]'); if (b && !b.disabled) irAteTreinador(b.dataset.ir); });
   $('colega-cartao').addEventListener('click', (e) => {
     e.stopPropagation();
-    if (e.target.closest('[data-oi]')) { fecharCartaoColega(); reagirCom('👋'); }
+    if (e.target.closest('[data-oi]')) { fecharCartaoColega(); reagirCom('👋'); return; }
+    if (!cartaoColega) return;
+    if (e.target.closest('[data-presente]')) { escolherPresente(cartaoColega.c); return; }
+    if (e.target.closest('[data-desafiar]')) { confirmarDesafio(cartaoColega.c); return; }
+    if (e.target.closest("[data-desafiar-mesmo]")) { desafiarColega(cartaoColega.c); return; }
+    const dar = e.target.closest('[data-dar]');
+    if (dar) darPresente(cartaoColega.c, dar.dataset.dar);
   });
   $('bt-ops').addEventListener('click', (e) => { const b = e.target.closest('.bt-op'); if (b && !b.disabled && bt?.p) btResponder('L', bt.p.opcoes[b.dataset.i]); });
   $('bt-rev-ok').addEventListener('click', fecharRevisaoBatalha);

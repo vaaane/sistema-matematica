@@ -10,8 +10,65 @@
    2
   ],
   "tempo_fisgar_s": 1.2,
-  "tempo_conta_s": 12,
-  "libera_apos_ginasio": "A"
+  "libera_apos_ginasio": "A",
+  "isca": {
+   "preco": 2,
+   "pacote": 5,
+   "preco_pacote": 10
+  },
+  "presentes_dia": 3,
+  "pontos_semana_reinicia": "segunda 00:00 America/Sao_Paulo",
+  "captura_inicial": 0.3,
+  "barrinha": {
+   "_nota": "por dificuldade: zona = altura da zona verde (fração da barra); velocidade = fração da barra por segundo; muda_s = intervalo entre mudanças de direção; arrancada = chance de arrancada a cada mudança; enche_s/esvazia_s = quanto a barra de captura enche/esvazia por segundo (esvazia soma 0,01 por nível de dificuldade)",
+   "1": {
+    "zona": 0.32,
+    "velocidade": 0.25,
+    "muda_s": [
+     2.0,
+     3.5
+    ],
+    "arrancada": 0
+   },
+   "2": {
+    "zona": 0.28,
+    "velocidade": 0.35,
+    "muda_s": [
+     1.5,
+     3.0
+    ],
+    "arrancada": 0
+   },
+   "3": {
+    "zona": 0.24,
+    "velocidade": 0.4,
+    "muda_s": [
+     0.8,
+     1.8
+    ],
+    "arrancada": 0
+   },
+   "4": {
+    "zona": 0.2,
+    "velocidade": 0.4,
+    "muda_s": [
+     0.9,
+     1.7
+    ],
+    "arrancada": 0
+   },
+   "5": {
+    "zona": 0.16,
+    "velocidade": 0.36,
+    "muda_s": [
+     0.9,
+     1.6
+    ],
+    "arrancada": 0.2
+   },
+   "enche_s": 0.18,
+   "esvazia_s": 0.08
+  }
  },
  "pontos": [
   {
@@ -21,10 +78,6 @@
    "y": 405,
    "lado": "dir",
    "nome": "Cais do Porto",
-   "contas": [
-    "vezes_10_100_1000",
-    "medidas"
-   ],
    "peixes": [
     {
      "id": "sardinha",
@@ -32,7 +85,10 @@
      "chance": 60,
      "lealdade": 4,
      "raro": false,
-     "imagem": "img/jogo/itens/sardinha.webp"
+     "imagem": "img/jogo/itens/sardinha.webp",
+     "dificuldade": 1,
+     "pontos": 10,
+     "venda": 1
     },
     {
      "id": "tainha",
@@ -40,7 +96,10 @@
      "chance": 30,
      "lealdade": 6,
      "raro": false,
-     "imagem": "img/jogo/itens/tilapia.webp"
+     "imagem": "img/jogo/itens/tilapia.webp",
+     "dificuldade": 3,
+     "pontos": 25,
+     "venda": 3
     },
     {
      "id": "dourado",
@@ -48,7 +107,10 @@
      "chance": 10,
      "lealdade": 10,
      "raro": true,
-     "imagem": "img/jogo/itens/dourado.webp"
+     "imagem": "img/jogo/itens/dourado.webp",
+     "dificuldade": 5,
+     "pontos": 60,
+     "venda": 8
     }
    ]
   },
@@ -59,10 +121,6 @@
    "y": 386,
    "lado": "dir",
    "nome": "Lago congelado",
-   "contas": [
-    "negativos_soma",
-    "negativos_mult"
-   ],
    "peixes": [
     {
      "id": "bacalhau",
@@ -71,7 +129,10 @@
      "lealdade": 4,
      "raro": false,
      "imagem": "img/jogo/itens/sardinha.webp",
-     "filtro": "hue-rotate(150deg) saturate(0.8)"
+     "filtro": "hue-rotate(150deg) saturate(0.8)",
+     "dificuldade": 1,
+     "pontos": 10,
+     "venda": 1
     },
     {
      "id": "salmao",
@@ -80,7 +141,10 @@
      "lealdade": 6,
      "raro": false,
      "imagem": "img/jogo/itens/tilapia.webp",
-     "filtro": "hue-rotate(150deg) saturate(0.8)"
+     "filtro": "hue-rotate(150deg) saturate(0.8)",
+     "dificuldade": 3,
+     "pontos": 25,
+     "venda": 3
     },
     {
      "id": "peixe_gelo",
@@ -88,7 +152,10 @@
      "chance": 10,
      "lealdade": 10,
      "raro": true,
-     "imagem": "img/jogo/itens/dourado.webp"
+     "imagem": "img/jogo/itens/dourado.webp",
+     "dificuldade": 5,
+     "pontos": 60,
+     "venda": 8
     }
    ]
   },
@@ -99,10 +166,6 @@
    "y": 610,
    "lado": "dir",
    "nome": "Margem do rio",
-   "contas": [
-    "fracoes",
-    "decimais"
-   ],
    "peixes": [
     {
      "id": "lambari",
@@ -111,7 +174,10 @@
      "lealdade": 4,
      "raro": false,
      "imagem": "img/jogo/itens/sardinha.webp",
-     "filtro": "hue-rotate(60deg) saturate(1.2)"
+     "filtro": "hue-rotate(60deg) saturate(1.2)",
+     "dificuldade": 1,
+     "pontos": 10,
+     "venda": 1
     },
     {
      "id": "tilapia",
@@ -120,7 +186,10 @@
      "lealdade": 6,
      "raro": false,
      "imagem": "img/jogo/itens/tilapia.webp",
-     "filtro": "hue-rotate(60deg) saturate(1.2)"
+     "filtro": "hue-rotate(60deg) saturate(1.2)",
+     "dificuldade": 3,
+     "pontos": 25,
+     "venda": 3
     },
     {
      "id": "tucunare",
@@ -128,7 +197,10 @@
      "chance": 10,
      "lealdade": 10,
      "raro": true,
-     "imagem": "img/jogo/itens/dourado.webp"
+     "imagem": "img/jogo/itens/dourado.webp",
+     "dificuldade": 5,
+     "pontos": 60,
+     "venda": 8
     }
    ]
   }

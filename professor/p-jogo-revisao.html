@@ -147,6 +147,8 @@
         <button class="aba" data-aba="batalhas">⚔️ Batalhas</button>
         <button class="aba" data-aba="pedidos">🙋 Pedidos de ajuda</button>
         <button class="aba" data-aba="nomes">🐾 Nomes dos pets</button>
+        <button class="aba" data-aba="pesca">🎣 Pesca</button>
+        <button class="aba" data-aba="praca">🏛️ Praça</button>
         <button class="aba" data-aba="config">⚙️ Configurar o jogo</button>
       </div>
 
@@ -180,6 +182,28 @@
         <div id="nomes-pets"><div class="empty">Carregando…</div></div>
       </section>
 
+      <!-- Aba — Pesca: ranking da semana e presentes (só leitura) -->
+      <section class="painel" id="aba-pesca" hidden>
+        <div id="pesca"><div class="empty">Carregando…</div></div>
+        <div id="achados" style="margin-top:16px"></div>
+      </section>
+
+      <!-- Aba — Praça do Encontro: quem está lá agora, desafios da semana e liga/desliga -->
+      <section class="painel" id="aba-praca" hidden>
+        <div class="bloco">
+          <h3>⚡ Tabuada ao vivo</h3>
+          <div class="sub">Abre uma sala para a turma selecionada: os alunos recebem um convite no jogo e o placar aparece em tela cheia para o projetor.</div>
+          <div class="linha-acao"><a class="btn-pri" style="text-decoration:none;display:inline-block" id="btn-aovivo" href="/professor/p-tabuada-ao-vivo.html" target="_blank" rel="noopener">📺 Abrir Tabuada ao vivo para a turma</a></div>
+        </div>
+        <div class="bloco">
+          <h3>⚔️ Desafios entre alunos</h3>
+          <div class="sub">Desligue os desafios da praça durante avaliações. Desligado, o botão "Desafiar" some e os convites não chegam.</div>
+          <div class="chaves" id="chaves-desafios"></div>
+          <div class="linha-acao"><button class="btn-pri" id="btn-salvar-desafios">Salvar</button><span id="msg-desafios"></span></div>
+        </div>
+        <div id="praca"><div class="empty">Carregando…</div></div>
+      </section>
+
       <!-- Aba 3 — Configurar -->
       <section class="painel" id="aba-config" hidden>
         <div class="bloco">
@@ -207,11 +231,12 @@
 <script type="module">
 import { requireProfessor, renderSidebarProfessor } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
-import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ref, get, set, update, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { ALUNOS_POR_TURMA, ALUNOS_TESTE } from "/js/constants.js";
 import { notaJogoRevisao, formatarNota, TOTAL_INSIGNIAS } from "/js/jogo-revisao/nota.js";
 import { gerarUma } from "/js/jogo-revisao/geradores.js";
 import { NOME_PET } from "/js/jogo-revisao/pets.js";
+import { semanaPesca } from "/js/jogo-revisao/pesca.js";
 
 if (!requireProfessor()) throw new Error("sem sessão de professor");
 renderSidebarProfessor("sidebar", "jogo_revisao");
@@ -234,6 +259,10 @@ let TIPOS_BT = {};      // batalhas.json → tipos_contas (nome, exemplo de cada
 let PEDIDOS = {};       // pedidos.json → id: { texto, resposta, unidade, mapa }
 let dados = {};         // jogo_revisao inteiro
 let config = {};        // jogo_revisao_config/global
+let pescaSemana = null; // jogo_revisao_pesca/{segunda desta semana} (null: sem acesso)
+let presentes = null;   // jogo_revisao_presentes inteiro: { quem recebe: { id: { de, peixe, ts } } }
+let naPraca = null;     // jogo_revisao_online com mapa = 'praca' (quem está lá agora)
+let duelosSemana = null; // jogo_revisao_praca/historico/{segunda} — desafios da semana
 let linhas = [];        // alunos da turma, já calculados
 let ordem = { col: "insignias", asc: false };
 
@@ -255,6 +284,14 @@ async function carregarDados() {
     const [s, c] = await Promise.all([get(ref(db, "jogo_revisao")), get(ref(db, "jogo_revisao_config/global")).catch(() => null)]);
     dados = s.exists() ? s.val() || {} : {};
     config = c && c.exists() ? c.val() || {} : {};
+    // pesca: nós próprios; sem a regra no banco, a aba avisa e o resto do painel segue normal
+    const [ps, pr] = await Promise.all([get(ref(db, `jogo_revisao_pesca/${semanaPesca()}`)).catch(() => null), get(ref(db, "jogo_revisao_presentes")).catch(() => null)]);
+    pescaSemana = ps ? (ps.exists() ? ps.val() || {} : {}) : null;
+    presentes = pr ? (pr.exists() ? pr.val() || {} : {}) : null;
+    const [on, hs] = await Promise.all([get(query(ref(db, "jogo_revisao_online"), orderByChild("mapa"), equalTo("praca"))).catch(() => null),
+      get(ref(db, `jogo_revisao_praca/historico/${semanaPesca()}`)).catch(() => null)]);
+    naPraca = on ? (on.exists() ? on.val() || {} : {}) : null;
+    duelosSemana = hs ? (hs.exists() ? hs.val() || {} : {}) : null;
     $("atualizado").textContent = "Atualizado às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
   } catch (e) {
     console.error("[p-jogo-revisao] erro ao ler", e);
@@ -302,6 +339,71 @@ function montarTurma() {
   renderBatalhas();
   renderPedidos();
   renderNomesPets();
+  renderPesca();
+  renderAchados();
+  renderPraca();
+}
+
+// ── Cavar e mexer no mato (PROMPT-32): o que cada aluno achou na semana (respostas tipo "cavar") ──
+function renderAchados() {
+  const el = $("achados"), [a, m, d] = semanaPesca().split("-"), ini = Date.UTC(+a, +m - 1, +d) + 3 * 3600e3;   // segunda 00:00 em Brasília
+  const lin = linhas.map(l => {
+    const rs = Object.values(l.n?.respostas || {}).filter(r => r?.tipo === "cavar" && (r.data || 0) >= ini);
+    const ach = rs.filter(r => r.achou);
+    return { nome: l.nome, cavou: rs.filter(r => r.onde !== "mato").length, mato: rs.filter(r => r.onde === "mato").length,
+      itens: ach.filter(r => r.achou.tipo === "item").length, colecao: ach.filter(r => r.achou.tipo === "colecao").length,
+      moedas: ach.reduce((t, r) => t + (Number(r.achou.qtd) || 0) * (r.achou.tipo === "moedas") + (Number(r.achou.moedas) || 0), 0),
+      album: Object.keys(l.n?.colecao || {}).length };
+  }).filter(l => l.cavou || l.mato || l.album).sort((x, y) => (y.cavou + y.mato) - (x.cavou + x.mato) || x.nome.localeCompare(y.nome));
+  el.innerHTML = `<h3 style="font-family:Rajdhani,sans-serif;margin:0 0 8px">⛏️ Cavar e mato · achados da semana</h3>` + (lin.length
+    ? `<div class="tabela-wrap"><table class="jr bt"><thead><tr><th>Aluno</th><th>Cavou</th><th>Mexeu no mato</th><th>Itens</th><th>Peças novas</th><th>Moedas</th><th>Álbum</th></tr></thead><tbody>
+      ${lin.map(l => `<tr><td class="aluno">${esc(l.nome)}</td><td class="num">${l.cavou || "—"}</td><td class="num">${l.mato || "—"}</td><td class="num">${l.itens || "—"}</td>
+        <td class="num">${l.colecao || "—"}</td><td class="num">${l.moedas || "—"}</td><td class="num">${l.album}/12</td></tr>`).join("")}</tbody></table></div>
+      <div class="legenda">Semana de segunda a domingo. Cada aluno tem 3 montinhos e 1 tesouro por mapa por dia; moedas de cavar: até 15 por dia.</div>`
+    : `<div class="empty">Ninguém desta turma cavou ou mexeu no mato nesta semana.</div>`);
+}
+
+// ── Aba — Praça: quem está lá agora (registro com menos de 30 s) e os desafios da semana da turma ──
+function renderPraca() {
+  const el = $("praca"), turma = sel.value;
+  $("btn-aovivo").href = `/professor/p-tabuada-ao-vivo.html?turma=${encodeURIComponent(turma)}`;
+  const agora = (naPraca ? Object.entries(naPraca) : []).filter(([uid, r]) => r && Date.now() - (Number(r.ts) || 0) < 30000 && !ehTeste(uid) && !ALUNOS_TESTE.includes(uid) && TURMAS.includes(r.turma));
+  const porTurma = Object.fromEntries(TURMAS.map(t => [t, agora.filter(([, r]) => r.turma === t).map(([, r]) => r.apelido || "?")]));
+  const duelos = Object.values(duelosSemana || {}).filter(d => d && (d.at === turma || d.bt === turma) && !ehTeste(`${d.a} ${d.b}`));
+  const nomeDe = (uid) => linhas.find(l => l.uid === uid)?.nome || null;
+  const nm = (uid, n, t) => esc(nomeDe(uid) || n || "?") + (t && t !== turma ? ` <span class="muted">(${esc(t)})</span>` : "");
+  el.innerHTML = `<div class="bloco"><h3>🏛️ Na praça agora</h3>
+      ${naPraca === null ? '<div class="sub">Não deu para ler quem está online.</div>'
+        : `<div class="sub">${TURMAS.map(t => `<b>${t}</b>: ${porTurma[t].length ? porTurma[t].map(esc).join(", ") : "—"}`).join(" · ")}</div>`}</div>
+    <div class="bloco"><h3>⚔️ Desafios da semana · ${esc(turma)}</h3>
+      ${duelosSemana === null ? '<div class="sub">Sem acesso aos desafios. Confira se a regra jogo_revisao_praca foi publicada no Firebase.</div>'
+        : !duelos.length ? '<div class="sub">Nenhum desafio desta turma nesta semana.</div>'
+        : `<div class="tabela-wrap"><table class="jr bt"><thead><tr><th>Quando</th><th>Desafio</th><th>Placar</th><th>Vencedor</th></tr></thead><tbody>
+          ${duelos.sort((a, b) => (b.ts || 0) - (a.ts || 0)).map(d => `<tr><td class="num">${fmtData(d.ts || 0)}</td><td class="aluno">${nm(d.a, d.an, d.at)} × ${nm(d.b, d.bn, d.bt)}</td>
+            <td class="num">${esc(d.placar || "")}</td><td>${d.vencedor === "empate" ? "Empate" : nm(d.vencedor, d.vencedor === d.a ? d.an : d.bn, d.vencedor === d.a ? d.at : d.bt)}${d.wo ? " (W.O.)" : ""}</td></tr>`).join("")}
+          </tbody></table></div><div class="legenda">${duelos.length} desafio${duelos.length === 1 ? "" : "s"} nesta semana (segunda a domingo).</div>`}</div>`;
+}
+
+// ── Aba — Pesca: pontos da semana (segunda a domingo) e presentes dados/recebidos por aluno ──
+function renderPesca() {
+  const el = $("pesca");
+  if (pescaSemana === null && presentes === null) { el.innerHTML = `<div class="empty">Sem acesso aos dados da pesca. Confira se as regras novas (jogo_revisao_pesca e jogo_revisao_presentes) foram publicadas no Firebase.</div>`; return; }
+  const deu = {}, recebeu = {};
+  for (const [para, caixa] of Object.entries(presentes || {})) for (const p of Object.values(caixa || {})) {
+    if (!p) continue;
+    recebeu[para] = (recebeu[para] || 0) + 1;
+    if (p.de) deu[p.de] = (deu[p.de] || 0) + 1;
+  }
+  const lin = linhas.map(l => ({ nome: l.nome, uid: l.uid, pontos: Number(pescaSemana?.[l.uid]?.pontos) || 0, deu: deu[l.uid] || 0, recebeu: recebeu[l.uid] || 0 }))
+    .sort((a, b) => b.pontos - a.pontos || a.nome.localeCompare(b.nome));
+  const seg = semanaPesca(), [a, m, d] = seg.split("-"), fim = new Date(Date.UTC(+a, +m - 1, +d + 6));
+  const periodo = `${d}/${m} a ${String(fim.getUTCDate()).padStart(2, "0")}/${String(fim.getUTCMonth() + 1).padStart(2, "0")}`;
+  if (!lin.some(l => l.pontos || l.deu || l.recebeu)) { el.innerHTML = `<div class="empty">Ninguém desta turma pescou nesta semana (${periodo}) nem trocou presentes ainda.</div>`; return; }
+  let pos = 0;
+  el.innerHTML = `<div class="tabela-wrap"><table class="jr bt"><thead><tr><th>#</th><th>Aluno</th><th>Pontos da semana</th><th>Presentes dados</th><th>Presentes recebidos</th></tr></thead><tbody>
+    ${lin.map(l => `<tr><td class="num">${l.pontos ? ++pos + "º" : "—"}</td><td class="aluno">${esc(l.nome)}</td><td class="num">${l.pontos || "—"}</td><td class="num">${l.deu || "—"}</td><td class="num">${l.recebeu || "—"}</td></tr>`).join("")}
+  </tbody></table></div>
+  <div class="legenda">Semana de ${periodo} (zera toda segunda às 00:00, horário de Brasília). Todo peixe pego vale pontos, inclusive na pesca esportiva. Presentes: total desde o início (cada aluno pode dar até 3 peixes por dia).</div>`;
 }
 
 function renderResumo() {
@@ -606,7 +708,17 @@ function renderConfig() {
     return `<label class="chave${trava ? " travada" : ""}"><input type="checkbox" data-mapa="${m}" ${trava || abertos.has(m) ? "checked" : ""} ${trava ? "disabled" : ""}/> Mapa ${m} — ${esc(Q[m]?.nome || "")}${trava ? ' <span class="muted" style="font-size:12px">(sempre aberto)</span>' : ""}</label>`;
   }).join("");
   $("meta-turma").value = Number(config.meta_turma) > 0 ? Number(config.meta_turma) : 100;
+  const off = config.desafios_off || {};
+  $("chaves-desafios").innerHTML = `<label class="chave"><input type="checkbox" data-off="todas" ${off.todas ? "checked" : ""}/> <b>Desligar para todas as turmas</b></label>` +
+    TURMAS.map(t => `<label class="chave"><input type="checkbox" data-off="${t}" ${off[t] ? "checked" : ""}/> Desligar na ${t}</label>`).join("");
 }
+
+$("btn-salvar-desafios").addEventListener("click", async () => {
+  const off = {};
+  for (const i of document.querySelectorAll("#chaves-desafios input[data-off]")) if (i.checked) off[i.dataset.off] = true;
+  try { await set(ref(db, "jogo_revisao_config/global/desafios_off"), Object.keys(off).length ? off : null); config.desafios_off = off; msg("msg-desafios", "Salvo ✓"); }
+  catch (e) { console.error(e); msg("msg-desafios", "Não foi possível salvar.", true); }
+});
 
 const msg = (id, texto, erro) => { $(id).className = erro ? "erro-msg" : "ok-msg"; $(id).textContent = texto; if (!erro) setTimeout(() => { $(id).textContent = ""; }, 3500); };
 

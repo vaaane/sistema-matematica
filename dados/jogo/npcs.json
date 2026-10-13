@@ -24,10 +24,10 @@
   {
    "id": "dona_cida",
    "nome": "Dona Cida",
-   "quem": "Vendedora de frutas",
+   "quem": "Dona da lojinha",
    "mapa": 7,
-   "w": 291,
-   "h": 697,
+   "w": 384,
+   "h": 690,
    "falas": [
     "Três laranjas por 2 reais! Quanto custam nove, meu bem?",
     "Na minha banca, quem sabe fazer troco ganha uma banana.",
@@ -35,9 +35,10 @@
    ],
    "x": 298,
    "y": 350,
-   "olha": "frente",
+   "olha": "esquerda",
    "treinador": true,
-   "piscar": true
+   "piscar": false,
+   "interior": "loja"
   },
   {
    "id": "seu_antonio",
@@ -683,6 +684,21 @@
    "x": 766,
    "y": 462,
    "olha": "frente"
+  },
+  {
+   "id": "teo",
+   "nome": "Téo",
+   "quem": "Atendente do fliperama",
+   "interior": "fliperama",
+   "w": 353,
+   "h": 705,
+   "falas": [
+    "Bem-vindo ao fliperama! Escolhe uma máquina aí.",
+    "A amarela é a Tabuada ao vivo: dá pra jogar com a turma toda!",
+    "Bater o próprio recorde é o melhor prêmio. Mas umas moedinhas ajudam, né?"
+   ],
+   "olha": "direita",
+   "piscar": false
   }
  ]
 }

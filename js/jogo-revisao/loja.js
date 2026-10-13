@@ -26,7 +26,7 @@ export function itemDaBolsa(id) {
   if (String(id).startsWith('pesca_')) {
     const f = PEIXES[id.slice(6)];
     return f ? { id, nome: f.nome, emoji: f.raro ? '🐠' : '🐟', imagem: f.imagem || null, filtro: f.filtro || null,
-      lealdade: Number(f.lealdade) || 0, especial: true, peixe: true, raro: !!f.raro } : null;
+      lealdade: Number(f.lealdade) || 0, especial: true, peixe: true, raro: !!f.raro, venda: Number(f.venda) || 1, pontos: Number(f.pontos) || 0 } : null;
   }
   const c = comidas().find(x => x.id === id);
   return c ? { ...c, lealdade: Number(c.lealdade) || 0 } : null;
@@ -49,9 +49,10 @@ export function semanaDe(d = new Date()) {
 
 // Pode comer agora? null = pode; senão 'cheio' | 'sem_fome' (comum só com a barriga baixa) | 'semana'
 // c.semana: { [itemId]: { semana, n } } (do próprio pet)
-export function motivoNaoCome(item, barriga, c, agora = new Date()) {
+// Especial come mesmo de barriga cheia, até barriga.especiais_cheio_dia por dia (especiaisCheioHoje: quantas já comeu cheio hoje)
+export function motivoNaoCome(item, barriga, c, agora = new Date(), especiaisCheioHoje = 0) {
   const b = L?.barriga || {};
-  if (barriga >= (b.cheia ?? 100) - 0.5) return 'cheio';
+  if (barrigaCheia(barriga) && (!item.especial || especiaisCheioHoje >= (b.especiais_cheio_dia ?? 3))) return 'cheio';
   if (!item.especial && barriga >= (b.comum_ate ?? 60)) return 'sem_fome';
   if (item.limite_semana) {
     const s = c?.semana?.[item.id];
@@ -60,6 +61,7 @@ export function motivoNaoCome(item, barriga, c, agora = new Date()) {
   return null;
 }
 export const enche = () => L?.barriga?.cada_comida_enche ?? 20;
+export const barrigaCheia = (barriga) => barriga >= (L?.barriga?.cheia ?? 100) - 0.5;
 
 // Lealdade máxima 100; o que passar vira pontos de amizade (que nunca caem)
 export function somarLealdade(lealdade, amizade, n) {

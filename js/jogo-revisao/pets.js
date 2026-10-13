@@ -171,8 +171,6 @@ export class PetSeguidor {
         else if (Math.abs(dx) >= Math.abs(dy)) this.trocar(dx > 0 ? 'andar_direita' : 'andar_esquerda');
         else this.trocar(this.andarVertical(dy > 0 ? 'andar_frente' : 'andar_costas'));
         this.proxOcioso = 6000 + Math.random() * 6000;
-      } else if (this.paradoMs >= 30000) {
-        this.trocar('dormindo');
       } else if (this.fome) {
         this.trocar('triste_fome');
       } else if (this.anim !== 'sentado_2') {
