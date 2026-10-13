@@ -513,7 +513,8 @@ export async function iniciarJogo(sess) {
   try {
     const [cj, mj] = await Promise.all(['cavar.json', 'mato.json'].map(f => fetch(`${DADOS}/${f}`).then(r => { if (!r.ok) throw new Error(f); return r.json(); })));
     CAVAR = cj; MATOS = mj.matos || [];
-    CAVAR_SP = await fetch(`${DADOS}/cavar-sprites.json`).then(r => (r.ok ? r.json() : null)).catch(() => null);   // sem ele: pose provisória MATO_NOTA = mj.nota || mj._nota || ''; MATOS_POR_DIA = Number(mj.por_dia) || 5;
+    [CAVAR_SP, MATO_SP] = await Promise.all(['cavar-sprites.json', 'mato-sprites.json']
+      .map(f => fetch(`${DADOS}/${f}`).then(r => (r.ok ? r.json() : null)).catch(() => null)));   // sem eles: pose provisória MATO_NOTA = mj.nota || mj._nota || ''; MATOS_POR_DIA = Number(mj.por_dia) || 5;
   } catch (e) { console.warn('[jogo-revisao] cavar/mato indisponíveis', e); }
   try { LOJA = await fetch(`${DADOS}/loja-interior.json`).then(r => { if (!r.ok) throw new Error('loja-interior.json'); return r.json(); }); }
   catch (e) { console.warn('[jogo-revisao] interior da loja indisponível', e); }
@@ -2196,11 +2197,12 @@ function atualizarColegas(dt) {
     if (c.el.dataset.src !== src) { c.el.src = src; c.el.dataset.src = src; }
     c.el.hidden = c.nome.hidden = false;
     Object.assign(c.el.style, { left: c.x + 'px', top: c.y + 'px', height: PERS.altura * ESCALA_SPRITE + 'px', zIndex: Math.round(c.y) });
-    // colega cavando: a picareta no lugar da imagem de andar (quadros 2..6 em loop enquanto durar)
-    const cavando = c.reg.acao === 'cavar' && temPoseCavar(c.pers);
+    // colega cavando ou arrancando mato: a pose no lugar da imagem de andar (quadros 2..6 em loop enquanto durar)
+    const sp = c.reg.acao === 'cavar' && temPoseCavar(c.pers) ? CAVAR_SP : c.reg.acao === 'mato' && temPoseMato(c.pers) ? MATO_SP : null;
+    const cavando = !!sp;
     if (cavando) {
       if (!c.cavarEl) { c.cavarEl = document.createElement('img'); c.cavarEl.className = 'jr-cavar-pose jr-colega'; c.cavarEl.alt = ''; c.cavarEl.draggable = false; $('cena-palco').appendChild(c.cavarEl); }
-      poseCavar(c.cavarEl, c.pers, c.x, c.y, SEQ_CAVAR[Math.floor(agora / MS_CAVAR) % 5], !!c.reg.acao_esq, ESCALA_SPRITE);
+      poseAcao(sp, c.reg.acao, c.cavarEl, c.pers, c.x, c.y, 2 + Math.floor(agora / (c.reg.acao === 'mato' ? 250 : MS_CAVAR)) % 5, !!c.reg.acao_esq, ESCALA_SPRITE);
     } else if (c.cavarEl) { c.cavarEl.remove(); c.cavarEl = null; }
     c.el.style.visibility = cavando ? 'hidden' : '';
     // etiqueta com o apelido: 11 px na tela, qualquer que seja o zoom da câmera
@@ -4877,7 +4879,7 @@ function ligarArrastoGenerico(itens, dica, json, arquivo, aoMover = () => {}) {
 //  Por aluno e por dia: 3 montinhos visíveis + 1 tesouro escondido por mapa (sorteio com semente data|mapa|aluno);
 //  o pet fareja o tesouro; os matinhos dão frutas/verduras e rebrotam em 6 h. Tudo grava no nó do aluno.
 // ============================================================
-let CAVAR = null, CAVAR_SP = null, MATOS = [], MATO_NOTA = '', MATOS_POR_DIA = 5;   // mato.json: todos os lugares; por dia, por aluno, sorteia por_dia em cada mapa
+let CAVAR = null, CAVAR_SP = null, MATO_SP = null, MATOS = [], MATO_NOTA = '', MATOS_POR_DIA = 5;   // mato.json: todos os lugares; por dia, por aluno, sorteia por_dia em cada mapa
 let editarMato = false;   // ?editarMato=1 no modo teste: arrastar os matinhos e copiar o mato.json
 let acaoMapa = null;      // { tipo: 'cavar' | 'mato', alvo } — o que o botão de ação faz agora
 let acaoOcupada = false;
@@ -4945,7 +4947,8 @@ function montarCavar(n) {
   }
   cena.matos = doMapa.map(m => ({ ...m, chave: `${n}-${m.i}`, mexido: agora - (Number(estado.matoMexido?.[`${n}-${m.i}`]) || 0) < rebrota }));
   cena.cavar = lugaresDoDia(n);   // montinhos e tesouro: longe dos matos que aparecem hoje
-  if (temPoseCavar(meuPersonagem())) for (const q of [2, 3, 4, 5, 6]) { const im = new Image(); im.src = `${PERS.pasta}/${meuPersonagem()}/cavar-${q}.webp`; }
+  for (const [tem, nome] of [[temPoseCavar, 'cavar'], [temPoseMato, 'mato']])   // pré-carrega as poses do meu personagem
+    if (tem(meuPersonagem())) for (const q of [2, 3, 4, 5, 6]) { const im = new Image(); im.src = `${PERS.pasta}/${meuPersonagem()}/${nome}-${q}.webp`; }
   let html = '';
   for (const l of cena.cavar) {
     if (l.tesouro) continue;   // o tesouro não tem desenho nenhum
@@ -4963,13 +4966,13 @@ function montarCavar(n) {
 
 // Mato balança (10 quadros, ~12 fps, uma vez)
 function balancarMato(m) {
-  if (!m.el || m.balancando) return;
+  if (!m.el || m.balancando || m.mexido) return;   // mato já mexido/arrancado não balança
   m.balancando = true;
   let q = 1;
   const base = () => `${IMG}/mato/${m.mexido ? 'mato-mexido' : `mato-${m.variante || 1}`}.webp`;
   const passo = () => {
     if (!m.el.isConnected) return;
-    if (q > QUADROS_MATO || semMovimento()) { m.el.src = base(); m.balancando = false; return; }
+    if (q > QUADROS_MATO || semMovimento() || m.mexido) { m.el.src = base(); m.balancando = false; return; }
     m.el.src = `${IMG}/mato/mato-balanca-${q++}.webp`;
     setTimeout(passo, 1000 / FPS_MATO);
   };
@@ -5041,9 +5044,10 @@ function usarAcaoMapa() {
 // cavar-sprites.json: tamanho do quadro e âncora (pés) de cada personagem — mesma escala das imagens de andar
 const SEQ_CAVAR = [2, 3, 4, 5, 6, 2, 3, 4, 5, 6], MS_CAVAR = 110;   // o quadro 1 fica só de reserva (a picareta "pula" no 6 → 1)
 const temPoseCavar = (pers) => !!(CAVAR_SP?.tamanho && CAVAR_SP.personagens?.[pers]);
-function poseCavar(img, pers, x, y, q, esq, s) {
-  const [w, h] = CAVAR_SP.tamanho, [ax, ay] = CAVAR_SP.personagens[pers].ancora;
-  const src = `${PERS.pasta}/${pers}/cavar-${q}.webp`;
+const poseCavar = (img, pers, x, y, q, esq, s) => poseAcao(CAVAR_SP, 'cavar', img, pers, x, y, q, esq, s);
+function poseAcao(sp, nome, img, pers, x, y, q, esq, s) {
+  const [w, h] = sp.tamanho, [ax, ay] = sp.personagens[pers].ancora;
+  const src = `${PERS.pasta}/${pers}/${nome}-${q}.webp`;
   if (img.dataset.src !== src) { img.src = src; img.dataset.src = src; }
   Object.assign(img.style, { width: w * s + 'px', height: h * s + 'px', left: x - (esq ? w - ax : ax) * s + 'px', top: y - ay * s + 'px',
     transform: esq ? 'scaleX(-1)' : '', zIndex: Math.round(y) });
@@ -5107,24 +5111,20 @@ function cavar(l) {
   passo();
 }
 
-// 🌿 Mexer no mato: balança, depois fruta/verdura, nada ou um bichinho
+// 🌿 Mexer no mato: o personagem para ao lado do mato e arranca (mato-2..6, mato-sprites.json); no quadro 5 o mato
+// do mapa vira "mexido" e o prêmio salta do chão. Sem os quadros: a pose provisória (abaixado), como antes.
+const TEMPOS_MATO = [[2, 150], [3, 150], [4, 350], [5, 300], [6, 500]];   // [quadro, ms]
+const temPoseMato = (pers) => !!(MATO_SP?.tamanho && MATO_SP.personagens?.[pers]);
+const LARG_PERS = 230;   // largura do corpo nas imagens de andar (px do arquivo), para parar ao lado do mato
 function mexerMato(m) {
   acaoOcupada = true;
   jog.caminho = []; jog.aoChegar = null;
   esconderAcaoMapa();
-  m.balancando = false;
-  balancarMato(m);
-  tocar('clique');
-  $('jogador').classList.add('cavando');   // pose provisória até chegarem os quadros de mexer no mato
-  const n = cena.n;
-  setTimeout(() => {
-    $('jogador').classList.remove('cavando');
-    acaoOcupada = false;
-    if (cena?.n !== n) return;
+  const n = cena.n, pers = meuPersonagem();
+  const achado = sortearAchado(CAVAR.mato);   // o mesmo sorteio de antes; só sai antes para saber o que salta no quadro 5
+  const arrancar = () => {   // o mato do mapa foi arrancado: vira "mexido" e o prêmio (ou o bicho) sai do chão
     m.mexido = true;
-    if (!m.balancando && m.el) m.el.src = `${IMG}/mato/mato-mexido.webp`;
-    estado.matoMexido = { ...(estado.matoMexido || {}), [m.chave]: Date.now() };
-    const achado = sortearAchado(CAVAR.mato);
+    if (m.el) { m.balancando = false; m.el.src = `${IMG}/mato/mato-mexido.webp`; }
     if (achado.tipo === 'bicho') {
       const b = document.createElement('div');
       b.className = 'jr-bicho';
@@ -5132,10 +5132,62 @@ function mexerMato(m) {
       Object.assign(b.style, { left: m.x + 'px', top: m.y + 'px', zIndex: 9000, '--dir': Math.random() < 0.5 ? -1 : 1 });
       $('cena-atores').appendChild(b);
       setTimeout(() => b.remove(), 1600);
+    } else if (achado.tipo !== 'vazio') {
+      const it = itemDaBolsa(achado.id);
+      const p = document.createElement('div');
+      p.className = 'jr-premio-sobe';
+      p.innerHTML = imgItem(it?.imagem, it?.emoji || '🍃', 'jr-item-premio');
+      Object.assign(p.style, { left: m.x + 'px', top: m.y + 'px', zIndex: 9000 });
+      $('cena-atores').appendChild(p);
+      setTimeout(() => p.remove(), 1100);
     }
+  };
+  const resultado = () => {
+    acaoOcupada = false;
+    if (cena?.n !== n) return;
+    estado.matoMexido = { ...(estado.matoMexido || {}), [m.chave]: Date.now() };
     entregarAchado(achado.tipo === 'bicho' || achado.tipo === 'vazio' ? achado : { tipo: 'item', id: achado.id, qtd: 1 }, 'mato', n,
       { [`mato_mexido/${m.chave}`]: estado.matoMexido[m.chave] });
-  }, 900);
+  };
+  if (!temPoseMato(pers)) {   // pose provisória
+    m.balancando = false;
+    balancarMato(m);
+    tocar('clique');
+    $('jogador').classList.add('cavando');
+    setTimeout(() => { $('jogador').classList.remove('cavando'); if (cena?.n === n) arrancar(); resultado(); }, 900);
+    return;
+  }
+  // para ao lado do mato (mato à frente, ~0,6 × a largura do personagem), do lado em que já está
+  const esq = jog.x > m.x, s = escalaSpriteCena();
+  const alvoX = m.x + (esq ? 1 : -1) * 0.6 * LARG_PERS * s;
+  let comecou = false;
+  const animar = () => {
+    if (comecou) return;
+    comecou = true;
+    if (cena?.n !== n) { acaoOcupada = false; return; }
+    jog.dir = esq ? 'esquerda' : 'direita';
+    const img = document.createElement('img');
+    img.className = 'jr-cavar-pose'; img.alt = ''; img.draggable = false;
+    $('cena-atores').appendChild(img);
+    $('jogador').style.visibility = 'hidden';
+    enviarOnline({ acao: 'mato', acao_esq: esq });   // os colegas veem a animação
+    const passos = semMovimento() ? [[5, 800]] : TEMPOS_MATO;
+    let k = 0;
+    const acabar = () => { img.remove(); $('jogador').style.visibility = ''; enviarOnline({ acao: null }); desenharJogador(); };
+    const passo = () => {
+      if (cena?.n !== n || !img.isConnected) { acabar(); acaoOcupada = false; return; }
+      if (k >= passos.length) { acabar(); resultado(); return; }
+      const [q, ms] = passos[k++];
+      poseAcao(MATO_SP, 'mato', img, pers, jog.x, jog.y, q, esq, s);
+      if (q === 4) { m.balancando = false; balancarMato(m); tocar('clique'); }   // puxa com força: o mato balança
+      if (q === 5) arrancar();
+      setTimeout(passo, ms);
+    };
+    passo();
+  };
+  caminharNaTrilha(alvoX, m.y, animar);
+  if (!jog.caminho.length && !jog.aoChegar) animar();   // já estava no lugar
+  setTimeout(() => { if (!comecou) { comecou = true; acaoOcupada = false; } }, 4000);   // andou para outro lado no caminho: libera o botão
 }
 
 // Aplica o que saiu, mostra o cartão e registra (tipo: "cavar")

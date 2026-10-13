@@ -1869,3 +1869,10 @@ html.jr-deitado #meu-pet .jr-mp-botoes.jr-mp-principais .jr-btn { font-size: 14p
 
 /* ── PROMPT-39: pose de cavar com picareta (quadros cavar-2..6; âncora nos pés, espelhada para a esquerda) ── */
 #jr-app img.jr-cavar-pose { position: absolute; pointer-events: none; image-rendering: auto; max-width: none; transform-origin: 50% 50%; }
+
+/* ── PROMPT-40: prêmio do mato saltando do chão (sobe e some em direção à bolsa) ── */
+.jr-premio-sobe { position: absolute; transform: translate(-50%, -100%); pointer-events: none; animation: jr-premio-sobe 1s ease-out forwards; }
+#jr-app .jr-premio-sobe img.jr-item-img { height: 26px; }
+.jr-premio-sobe .jr-item-emoji { font-size: 22px; }
+@keyframes jr-premio-sobe { 0% { translate: 0 0; scale: .6; opacity: 0; } 25% { translate: 0 -26px; scale: 1.1; opacity: 1; } 60% { translate: 0 -34px; scale: 1; opacity: 1; } 100% { translate: 0 -70px; scale: .5; opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .jr-premio-sobe { animation-duration: 1ms; } }
