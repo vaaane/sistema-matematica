@@ -7,6 +7,27 @@
   518,
   562
  ],
+ "sentado_altura": 604,
+ "quadro_por_pet": {
+  "dragao_azul_adulto": {
+   "tamanho_quadro": [
+    1402,
+    801
+   ],
+   "sentado_altura": 604
+  },
+  "dragao_vermelho_adulto": {
+   "tamanho_quadro": [
+    1402,
+    801
+   ],
+   "sentado_altura": 604
+  }
+ },
+ "evolucao": {
+  "dragao_azul": "dragao_azul_adulto",
+  "dragao_vermelho": "dragao_vermelho_adulto"
+ },
  "pets": {
   "axolote": {
    "andar_costas": [
@@ -568,6 +589,180 @@
     "pets/gaviao/triste_fome_2.webp",
     "pets/gaviao/triste_fome_3.webp"
    ]
+  },
+  "dragao_azul_adulto": {
+   "sentado_girando": [
+    "pets/dragao_azul_adulto/sentado_girando_1.webp",
+    "pets/dragao_azul_adulto/sentado_girando_2.webp",
+    "pets/dragao_azul_adulto/sentado_girando_3.webp"
+   ],
+   "sentado_2": [
+    "pets/dragao_azul_adulto/sentado_2_1.webp",
+    "pets/dragao_azul_adulto/sentado_2_2.webp",
+    "pets/dragao_azul_adulto/sentado_2_3.webp"
+   ],
+   "andar_direita": [
+    "pets/dragao_azul_adulto/andar_direita_1.webp",
+    "pets/dragao_azul_adulto/andar_direita_2.webp",
+    "pets/dragao_azul_adulto/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/dragao_azul_adulto/andar_esquerda_1.webp",
+    "pets/dragao_azul_adulto/andar_esquerda_2.webp",
+    "pets/dragao_azul_adulto/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/dragao_azul_adulto/andar_frente_1.webp",
+    "pets/dragao_azul_adulto/andar_frente_2.webp",
+    "pets/dragao_azul_adulto/andar_frente_3.webp",
+    "pets/dragao_azul_adulto/andar_frente_4.webp"
+   ],
+   "andar_costas": [
+    "pets/dragao_azul_adulto/andar_costas_1.webp",
+    "pets/dragao_azul_adulto/andar_costas_2.webp",
+    "pets/dragao_azul_adulto/andar_costas_3.webp",
+    "pets/dragao_azul_adulto/andar_costas_4.webp"
+   ],
+   "costas_parado": [
+    "pets/dragao_azul_adulto/costas_parado_1.webp"
+   ],
+   "correndo": [
+    "pets/dragao_azul_adulto/correndo_1.webp",
+    "pets/dragao_azul_adulto/correndo_2.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/dragao_azul_adulto/pulo_cambalhota_1.webp",
+    "pets/dragao_azul_adulto/pulo_cambalhota_2.webp"
+   ],
+   "salto_pouso": [
+    "pets/dragao_azul_adulto/salto_pouso_1.webp",
+    "pets/dragao_azul_adulto/salto_pouso_2.webp"
+   ],
+   "comendo": [
+    "pets/dragao_azul_adulto/comendo_1.webp",
+    "pets/dragao_azul_adulto/comendo_2.webp",
+    "pets/dragao_azul_adulto/comendo_3.webp"
+   ],
+   "feliz": [
+    "pets/dragao_azul_adulto/feliz_1.webp",
+    "pets/dragao_azul_adulto/feliz_2.webp"
+   ],
+   "triste_fome": [
+    "pets/dragao_azul_adulto/triste_fome_1.webp"
+   ],
+   "bravo": [
+    "pets/dragao_azul_adulto/bravo_1.webp"
+   ],
+   "confuso": [
+    "pets/dragao_azul_adulto/confuso_1.webp"
+   ],
+   "assustado": [
+    "pets/dragao_azul_adulto/assustado_1.webp"
+   ],
+   "orgulhoso": [
+    "pets/dragao_azul_adulto/orgulhoso_1.webp"
+   ],
+   "timido": [
+    "pets/dragao_azul_adulto/timido_1.webp"
+   ],
+   "rugido": [
+    "pets/dragao_azul_adulto/rugido_1.webp",
+    "pets/dragao_azul_adulto/rugido_2.webp"
+   ],
+   "ataque_fogo": [
+    "pets/dragao_azul_adulto/ataque_fogo_1.webp",
+    "pets/dragao_azul_adulto/ataque_fogo_2.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/dragao_azul_adulto/busto_sorrindo_1.webp"
+   ]
+  },
+  "dragao_vermelho_adulto": {
+   "sentado_girando": [
+    "pets/dragao_vermelho_adulto/sentado_girando_1.webp",
+    "pets/dragao_vermelho_adulto/sentado_girando_2.webp",
+    "pets/dragao_vermelho_adulto/sentado_girando_3.webp"
+   ],
+   "sentado_2": [
+    "pets/dragao_vermelho_adulto/sentado_2_1.webp",
+    "pets/dragao_vermelho_adulto/sentado_2_2.webp",
+    "pets/dragao_vermelho_adulto/sentado_2_3.webp"
+   ],
+   "andar_direita": [
+    "pets/dragao_vermelho_adulto/andar_direita_1.webp",
+    "pets/dragao_vermelho_adulto/andar_direita_2.webp",
+    "pets/dragao_vermelho_adulto/andar_direita_3.webp"
+   ],
+   "andar_esquerda": [
+    "pets/dragao_vermelho_adulto/andar_esquerda_1.webp",
+    "pets/dragao_vermelho_adulto/andar_esquerda_2.webp",
+    "pets/dragao_vermelho_adulto/andar_esquerda_3.webp"
+   ],
+   "andar_frente": [
+    "pets/dragao_vermelho_adulto/andar_frente_1.webp",
+    "pets/dragao_vermelho_adulto/andar_frente_2.webp",
+    "pets/dragao_vermelho_adulto/andar_frente_3.webp",
+    "pets/dragao_vermelho_adulto/andar_frente_4.webp"
+   ],
+   "andar_costas": [
+    "pets/dragao_vermelho_adulto/andar_costas_1.webp",
+    "pets/dragao_vermelho_adulto/andar_costas_2.webp",
+    "pets/dragao_vermelho_adulto/andar_costas_3.webp",
+    "pets/dragao_vermelho_adulto/andar_costas_4.webp"
+   ],
+   "costas_parado": [
+    "pets/dragao_vermelho_adulto/costas_parado_1.webp"
+   ],
+   "correndo": [
+    "pets/dragao_vermelho_adulto/correndo_1.webp",
+    "pets/dragao_vermelho_adulto/correndo_2.webp"
+   ],
+   "pulo_cambalhota": [
+    "pets/dragao_vermelho_adulto/pulo_cambalhota_1.webp",
+    "pets/dragao_vermelho_adulto/pulo_cambalhota_2.webp"
+   ],
+   "salto_pouso": [
+    "pets/dragao_vermelho_adulto/salto_pouso_1.webp",
+    "pets/dragao_vermelho_adulto/salto_pouso_2.webp"
+   ],
+   "comendo": [
+    "pets/dragao_vermelho_adulto/comendo_1.webp",
+    "pets/dragao_vermelho_adulto/comendo_2.webp",
+    "pets/dragao_vermelho_adulto/comendo_3.webp"
+   ],
+   "feliz": [
+    "pets/dragao_vermelho_adulto/feliz_1.webp",
+    "pets/dragao_vermelho_adulto/feliz_2.webp"
+   ],
+   "triste_fome": [
+    "pets/dragao_vermelho_adulto/triste_fome_1.webp"
+   ],
+   "bravo": [
+    "pets/dragao_vermelho_adulto/bravo_1.webp"
+   ],
+   "confuso": [
+    "pets/dragao_vermelho_adulto/confuso_1.webp"
+   ],
+   "assustado": [
+    "pets/dragao_vermelho_adulto/assustado_1.webp"
+   ],
+   "orgulhoso": [
+    "pets/dragao_vermelho_adulto/orgulhoso_1.webp"
+   ],
+   "timido": [
+    "pets/dragao_vermelho_adulto/timido_1.webp"
+   ],
+   "rugido": [
+    "pets/dragao_vermelho_adulto/rugido_1.webp",
+    "pets/dragao_vermelho_adulto/rugido_2.webp"
+   ],
+   "ataque_fogo": [
+    "pets/dragao_vermelho_adulto/ataque_fogo_1.webp",
+    "pets/dragao_vermelho_adulto/ataque_fogo_2.webp"
+   ],
+   "busto_sorrindo": [
+    "pets/dragao_vermelho_adulto/busto_sorrindo_1.webp"
+   ]
   }
  },
  "reserva": {
@@ -578,6 +773,13 @@
   "pulo_cambalhota": "feliz",
   "salto_pouso": "feliz",
   "triste_fome": "sentado_2",
-  "busto_sorrindo": "sentado_girando"
+  "busto_sorrindo": "sentado_girando",
+  "bravo": "feliz",
+  "rugido": "feliz",
+  "ataque_fogo": "feliz",
+  "orgulhoso": "feliz",
+  "confuso": "sentado_2",
+  "assustado": "sentado_2",
+  "timido": "sentado_2"
  }
 }

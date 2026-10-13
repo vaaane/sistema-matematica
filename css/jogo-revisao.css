@@ -704,6 +704,21 @@ html.jr-deitado .jr-pers-caixa .jr-mp-botoes .jr-btn { min-height: 36px; padding
 .jr-pet-opcao.atual .jr-pet-escolher { pointer-events: none; }
 
 /* novo pet conquistado: imagem à esquerda, nome e botões à direita (deitado) */
+/* evolução do pet: tela escurece, o filhote brilha e pisca com o adulto, flash branco, o adulto ruge */
+.jr-evolucao { position: fixed; inset: 0; z-index: 68; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  padding: max(16px, var(--sa-t, 0px)) 16px max(16px, var(--sa-b, 0px)); background: rgba(5,6,15,0); transition: background .6s ease; }
+.jr-evolucao.escuro { background: rgba(5,6,15,.93); }
+.jr-evo-palco { position: relative; width: min(92vw, 640px); height: min(56dvh, 380px); transition: filter .5s ease; }
+.jr-evo-palco.brilha { filter: drop-shadow(0 0 10px #fff) drop-shadow(0 0 26px var(--jr-roxo, #7c5cfc)); }
+#jr-app img.jr-evo-img { image-rendering: auto; }
+.jr-evo-img { position: absolute; left: 50%; bottom: 0; width: auto; transform: translateX(-50%); }
+.jr-evo-flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+.jr-evo-fim { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.jr-evo-titulo { font-family: 'Rajdhani', sans-serif; font-size: 30px; font-weight: 700; color: var(--jr-ouro, #ffd700); text-shadow: 0 2px 10px rgba(0,0,0,.6); }
+.jr-evo-fim .jr-btn { min-width: 140px; }
+html.jr-deitado .jr-evo-palco { height: calc(var(--jr-alt, 100dvh) * .55); }
+html.jr-deitado .jr-evolucao { gap: 6px; }
+
 .jr-pet-levar-caixa { flex-direction: row; justify-content: center; gap: 18px; max-width: 520px; }
 #jr-app img.jr-pet-levar-img { image-rendering: auto; }
 .jr-pet-levar-img { height: 190px; width: auto; max-width: 45%; object-fit: contain; }
@@ -921,7 +936,7 @@ html.jr-deitado .jr-mp-botoes #mp-calado { font-size: 13px; padding: 4px 6px; }
 #jr-app img.jr-arena-pet { image-rendering: auto; }
 .jr-arena-jog { left: 17%; height: calc(60% * 664 / 630);   /* imagem 664 de altura, corpo do mesmo tamanho (FATOR_IMG_PERSONAGEM) */
   filter: drop-shadow(0 3px 2px rgba(0,0,0,.4)); }
-.jr-arena-pet { left: 30%; height: 25%; filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
+.jr-arena-pet { left: 30%; height: calc(25% * var(--forma, 1)); filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
 /* ajuda do pet: botão acima dele (tocar no pet também pede) e balão próprio, sem tapar as alternativas */
 #perg-pet { pointer-events: auto; cursor: pointer; }
 .jr-perg-ajuda {
@@ -961,7 +976,7 @@ html.jr-deitado .jr-mp-botoes #mp-calado { font-size: 13px; padding: 4px 6px; }
 @keyframes jr-fala-in { from { transform: translateY(4px); opacity: .3; } to { transform: none; opacity: 1; } }
 /* revisão da semana: sem adversário; o pet grande fica ao lado do personagem e o balão sai dele */
 .revisao .jr-arena-adv, .revisao .jr-arena-sombra.adv { display: none; }
-.revisao .jr-arena-pet { left: 36%; height: 45%; }
+.revisao .jr-arena-pet { left: 36%; height: min(calc(45% * var(--forma, 1)), 58%); }
 .revisao .jr-arena-sombra.pet { left: 36%; width: 18%; }
 .revisao .jr-fala { right: auto; left: 47%; max-width: 40%; }
 .revisao .jr-fala::after { right: auto; left: -10px; border-left: 0; border-right: 10px solid #fff; }
@@ -1063,9 +1078,10 @@ html.jr-deitado .jr-explica-rodape { font-size: 10.5px; }
 .bt-rodada { font-family: 'Rajdhani', sans-serif; font-weight: 700; color: var(--jr-ouro); font-size: 16px; text-align: center; white-space: nowrap; line-height: 1.1; }
 .bt-rodada small { display: block; color: var(--bt-muted); font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
 .bt-arena { position: relative; flex: 1 1 auto; min-height: 0; border-radius: 16px; overflow: hidden; background: #2d4a2a url(/img/jogo/batalha/arena.webp) center 62% / cover no-repeat; }
-.bt-lutador { position: absolute; bottom: 9%; height: 52%; aspect-ratio: var(--pet-quadro, 898 / 704); transition: filter .2s; }
+.bt-lutador { position: absolute; bottom: 9%; height: calc(52% * var(--cresce, 1)); aspect-ratio: var(--pet-quadro, 898 / 704); transition: filter .2s; }
 #jr-app .bt-lutador img { width: 100%; height: 100%; display: block; image-rendering: auto; }
 #bt-L { left: 12%; } #bt-R { right: 12%; }
+#bt-L.adulto { left: 3%; }   /* adulto: quadro mais largo (asas), começa mais à esquerda para não encostar no adversário */
 .bt-sombra { position: absolute; bottom: 2px; left: 50%; width: 56%; height: 12%; transform: translateX(-50%); background: radial-gradient(ellipse, rgba(0,0,0,.5), transparent 70%); z-index: -1; }
 .bt-status { position: absolute; top: 8px; z-index: 3; box-shadow: 0 2px 8px #0006; font-family: 'Inter', sans-serif; font-weight: 800; font-size: 12px; padding: 3px 10px; border-radius: 999px;
   background: var(--bt-card2); border: 1px solid var(--bt-linha); color: #fff; opacity: 0; transition: opacity .2s; }

@@ -20,7 +20,13 @@ export async function carregarSprites() {
 // Pet salvo que não existe mais (ex.: cachorro, porco) conta como "sem pet"
 export const petValido = (p) => !!(p && PETS.includes(p) && SPR?.pets?.[p]);
 
-const temAnim = (pet, anim) => !!SPR?.pets?.[pet]?.[anim]?.length;
+export const temAnim = (pet, anim) => !!SPR?.pets?.[pet]?.[anim]?.length;
+
+// Evolução (sprites.json → evolucao): pet → forma adulta. O pet continua o mesmo (cuidados, nome, falas);
+// só muda a FORMA, que é o id usado para os quadros e o tamanho. Pet sem adulto no JSON continua filhote.
+export const formaAdulta = (pet) => { const a = SPR?.evolucao?.[pet]; return a && SPR?.pets?.[a] ? a : null; };
+// forma recebida de fora (colegas online): só vale o próprio pet ou a forma adulta dele
+export const formaValida = (pet, forma) => (forma && forma === formaAdulta(pet) ? forma : pet);
 
 // Única forma de pedir quadros de um pet: animação → reserva[animação] → sentado_girando
 export function quadrosDe(pet, anim) {
@@ -31,13 +37,16 @@ export function quadrosDe(pet, anim) {
 }
 export const bustoPet = (pet) => quadrosDe(pet, 'busto_sorrindo')[0];
 export const temBusto = (pet) => temAnim(pet, 'busto_sorrindo');
-// tamanhos vêm do JSON (largura, altura do quadro e do busto)
-// tamanhos vêm do sprites.json (os números abaixo só valem se ele não carregar)
-export const tamanhoQuadro = () => SPR?.tamanho_quadro || [898, 704];
+// tamanhos vêm do sprites.json (os números abaixo só valem se ele não carregar);
+// um pet pode ter quadro próprio em quadro_por_pet (os adultos: 1402 × 801, por causa das asas)
+export const tamanhoQuadro = (forma) => SPR?.quadro_por_pet?.[forma]?.tamanho_quadro || SPR?.tamanho_quadro || [898, 704];
 export const tamanhoBusto = () => SPR?.tamanho_busto || [1036, 1124];
+// fração da altura do quadro que o pet SENTADO ocupa (o resto é folga para pulos e asas)
+export const sentadoNoQuadro = (forma) =>
+  (SPR?.quadro_por_pet?.[forma]?.sentado_altura || SPR?.sentado_altura || 604) / tamanhoQuadro(forma)[1];
 
 export function preCarregarPet(pet) {
-  if (!petValido(pet)) return;
+  if (!SPR?.pets?.[pet]) return;
   for (const anim of Object.keys(SPR.pets[pet])) for (const u of quadrosDe(pet, anim)) { const i = new Image(); i.src = u; }
 }
 
@@ -52,6 +61,10 @@ function ritmo(anim, n) {
     case 'feliz': case 'pulo_cambalhota': return { ms: 90, loop: false };
     case 'salto_pouso': return { ms: 90, loop: false, ultimo: 140 };
     case 'comendo': case 'dormindo': case 'triste_fome': return { ms: 350, loop: true };
+    case 'rugido': return { ms: 260, loop: false, ultimo: 600 };
+    case 'ataque_fogo': return { ms: 220, loop: false, ultimo: 650 };
+    // emoções (1 quadro nos adultos; nos filhotes caem na reserva): seguram um pouco e voltam
+    case 'bravo': case 'confuso': case 'assustado': case 'orgulhoso': case 'timido': return { ms: n === 1 ? 1300 : 350, loop: false };
     default: return { ms: 300, loop: true };
   }
 }
@@ -63,7 +76,7 @@ const MAX_RASTRO = 120;   // pontos guardados do caminho do personagem
 export class PetSeguidor {
   constructor(img, sombra) {
     this.img = img; this.sombra = sombra;
-    this.pet = null; this.x = 0; this.y = 0;
+    this.pet = null; this.forma = null; this.x = 0; this.y = 0;
     this.anim = 'sentado_girando'; this.q = 0; this.t = 0; this.lista = [];
     this.rastro = [];               // pontos por onde o personagem passou (mais antigo primeiro)
     this.reacao = null;             // { anim, ate } — animação especial em andamento
@@ -78,8 +91,9 @@ export class PetSeguidor {
     this.esquerda = false;          // último lado para onde andou (para frente/costas que caem em andar_direita)
   }
 
-  definir(pet) {
-    this.pet = pet;
+  // pet = quem é (cuidados, nome, falas); forma = qual desenho usar (o filhote ou o adulto)
+  definir(pet, forma = pet) {
+    this.pet = pet; this.forma = pet ? forma : null;
     this.img.hidden = this.sombra.hidden = !pet;
     if (pet) { this.reacao = null; this.trocar('sentado_girando', true); this.desenhar(); }
   }
@@ -101,14 +115,14 @@ export class PetSeguidor {
 
   // Pet sem andar_frente/andar_costas cuja reserva é andar_direita: vira para o lado em que está indo
   andarVertical(anim) {
-    if (temAnim(this.pet, anim) || SPR?.reserva?.[anim] !== 'andar_direita') return anim;
+    if (temAnim(this.forma, anim) || SPR?.reserva?.[anim] !== 'andar_direita') return anim;
     return this.esquerda ? 'andar_esquerda' : 'andar_direita';
   }
 
   trocar(anim, reiniciar) {
     if (this.anim === anim && !reiniciar) return;
     this.anim = anim; this.q = 0; this.t = 0;
-    this.lista = quadrosDe(this.pet, anim);
+    this.lista = quadrosDe(this.forma, anim);
   }
 
   // dt em segundos; (jx, jy) = pés do personagem; vel = velocidade dele (px/s);
@@ -117,7 +131,7 @@ export class PetSeguidor {
   atualizar(dt, jx, jy, vel, altPet, distPet, esc = 1) {
     if (!this.pet) return;
     this.altura = altPet;
-    const [qw, qh] = tamanhoQuadro();
+    const [qw, qh] = tamanhoQuadro(this.forma);
     const largura = this.altura * (qw / qh);
     const ms = dt * 1000;
 

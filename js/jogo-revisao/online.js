@@ -1,6 +1,6 @@
 // Jogo de Revisão — quem está jogando agora (nó próprio, separado de js/presenca.js).
 // jogo_revisao_online/{uid} (modo teste: jogo_revisao_online_teste/{uid}):
-//   { apelido, turma, personagem, pet, pet_nome, pet_nivel, pet_tinta, pet_efeito,
+//   { apelido, turma, personagem, pet, pet_nome, pet_nivel, pet_tinta, pet_efeito, pet_forma (filhote ou adulto),
 //     mapa: n | 'geral', local: 'mapa'|'ginasio'|'geral', x, y, dir, reacao: { e, t }, ts }
 // O registro completo fica guardado aqui: quando a conexão cai (celular com a tela apagada, sinal ruim), o
 // onDisconnect apaga o nó; ao reconectar, ele é gravado inteiro de novo (senão os updates de posição recriavam o

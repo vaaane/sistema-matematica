@@ -508,6 +508,10 @@
         <div class="mp-visual-rot">Tinta</div><div class="mp-chips" id="mp-visual-tintas"></div>
         <div class="mp-visual-rot">Efeito ao andar</div><div class="mp-chips" id="mp-visual-efeitos"></div>
         <div class="mp-visual-dica" id="mp-visual-dica"></div>
+        <div id="mp-forma-bloco" hidden>
+          <div class="mp-visual-rot">Forma</div>
+          <button class="mp-chave" id="mp-filhote" role="switch" aria-checked="false"><span class="mp-chave-trilho"><i></i></span><span id="mp-filhote-txt">Mostrar como filhote</span></button>
+        </div>
         <div class="mp-visual-rot">Falas do pet</div>
         <button class="mp-chave" id="mp-calado" role="switch" aria-checked="true"><span class="mp-chave-trilho"><i></i></span><span id="mp-calado-txt">Falas do pet: ligado</span></button>
       </div>
@@ -536,6 +540,19 @@
       <div class="lj-abas" id="lj-abas"><button data-aba="comidas">🍎 Comidas</button><button data-aba="tintas"><img class="jr-item-img jr-ic-btn" data-icone="tinta" alt="🎨" draggable="false"/> Tintas</button><button data-aba="efeitos">✨ Efeitos</button><button data-aba="pesca">🎣 Pesca</button></div>
       <div class="lj-itens" id="lj-itens"></div>
       <div class="lj-msg" id="lj-msg" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <!-- Evolução do pet (❤️ 3): uma vez só -->
+  <div id="pet-evolucao" class="jr-evolucao" hidden role="dialog" aria-label="Seu pet evoluiu">
+    <div class="jr-evo-palco">
+      <img id="evo-filhote" class="jr-evo-img" alt="" draggable="false"/>
+      <img id="evo-adulto" class="jr-evo-img" alt="" draggable="false"/>
+    </div>
+    <div class="jr-evo-flash" id="evo-flash"></div>
+    <div class="jr-evo-fim" id="evo-fim" hidden>
+      <div class="jr-evo-titulo" id="evo-titulo"></div>
+      <button class="jr-btn jr-btn-ouro" id="evo-ok">Uau!</button>
     </div>
   </div>
 

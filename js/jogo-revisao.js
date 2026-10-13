@@ -15,7 +15,8 @@ import { definirLoja, definirPeixes, lojaPronta, cfgLoja, comidas, tintas, efeit
   motivoNaoCome, enche, barrigaCheia, somarLealdade, nivelAmizade, validarNomePet } from '/js/jogo-revisao/loja.js';
 import { definirPesca, pescaPronta, cfgPesca, pontosDoMapa, spritePesca, pontaVara, sortearPeixe, entre, inteiroEntre,
   semanaPesca, semanaAnterior, criarBarrinha, passoBarrinha } from '/js/jogo-revisao/pesca.js';
-import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, tamanhoBusto, temBusto, bustoPet, preCarregarPet, PetSeguidor, PetParado } from '/js/jogo-revisao/pets.js';
+import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, tamanhoBusto, temBusto, bustoPet, preCarregarPet, PetSeguidor, PetParado,
+  temAnim, formaAdulta, formaValida, sentadoNoQuadro } from '/js/jogo-revisao/pets.js';
 import { iniciarOnline, enviarOnline, sairOnline, ouvirMapa, ouvirTodos, onlineAtivo, VALIDADE_MS } from '/js/jogo-revisao/online.js';
 import { definirPedidos, pedidosProntos, cfgPedidos, pedidoDisponivel, moedasDoPedido, limiteDoDiaAtingido, dicaPedido, lerResposta } from '/js/jogo-revisao/pedidos.js';
 import { definirBatalhas, batalhasProntas, cfgBatalha, treinadores, treinador, tiposDeConta, gerarConta, vidaExtraLealdade, desafioDe, situacao, forca, dano, premios, depoisDaBatalha } from '/js/jogo-revisao/batalha.js';
@@ -57,18 +58,25 @@ const ALT_PET = {
   unicornio: 40, dragao_azul: 40,
   dragao_vermelho: 50,
 };
+// Adultos (evolução no ❤️ 3): 25% maiores que o filhote
+const CRESCE_ADULTO = 1.25;
+ALT_PET.dragao_azul_adulto = ALT_PET.dragao_azul * CRESCE_ADULTO;
+ALT_PET.dragao_vermelho_adulto = ALT_PET.dragao_vermelho * CRESCE_ADULTO;
 const ALT_PET_PADRAO = 30;   // pet que não estiver na tabela
 const altPet = (pet) => ALT_PET[pet] ?? ALT_PET_PADRAO;
-// O quadro (sprites.json: tamanho_quadro, hoje 898 × 704) tem folga em cima para os pulos: sentado, o pet ocupa
-// 604 dos 704 px. Altura da IMAGEM para o pet sentado ficar com a altura da tabela:
-const SENTADO_NO_QUADRO = 604 / 704;
-const altImagemPet = (pet) => altPet(pet) / SENTADO_NO_QUADRO;
+// O quadro (sprites.json: tamanho_quadro, 898 × 704 nos filhotes e 1402 × 801 nos adultos) tem folga em cima para os
+// pulos: sentado, o pet ocupa 604 px da altura (sentado_altura). Altura da IMAGEM para o pet sentado ficar com a altura da tabela:
+const altImagemPet = (pet) => altPet(pet) / sentadoNoQuadro(pet);
+// Telas com o pet em tamanho fixo (arena, ginásio): quanto a imagem da forma é maior que a do filhote
+const fatorForma = (pet, forma) => (forma && forma !== pet ? altImagemPet(forma) / altImagemPet(pet) : 1);
 // Distância normal do pet atrás do personagem (ao longo do rastro), em px na escala base (× ESCALA_ATORES no mapa).
 // Parado, o pet chega a 55% disso; acima de +10 anda 1,3× mais rápido; acima de +62 corre (pets.js).
 const DIST_PET = {
   elefante: 36, gato: 36, gaviao: 36, axolote: 36, tigre: 36,
   unicornio: 55, dragao_azul: 55, dragao_vermelho: 55,
 };
+DIST_PET.dragao_azul_adulto = DIST_PET.dragao_azul * CRESCE_ADULTO;
+DIST_PET.dragao_vermelho_adulto = DIST_PET.dragao_vermelho * CRESCE_ADULTO;
 const DIST_PET_PADRAO = 36;
 const distPet = (pet) => DIST_PET[pet] ?? DIST_PET_PADRAO;
 // no ginásio tudo é o dobro da escala base (o personagem tem ALT_JOGADOR = 110 em vez de 55)
@@ -625,7 +633,7 @@ const PETS_GINASIO = {
 };
 const INICIAIS = ['elefante', 'gato', 'gaviao'];
 // pet esperando ao lado do líder: ~70% do líder para um pet de 40, na mesma proporção entre os pets
-const altImagemPetGinasio = (pet) => ALT_LIDER * 0.7 * (altPet(pet) / 40) / SENTADO_NO_QUADRO;
+const altImagemPetGinasio = (pet) => ALT_LIDER * 0.7 * (altPet(pet) / 40) / sentadoNoQuadro(pet);
 
 let petsOk = false;
 let seguidor = null;
@@ -656,13 +664,28 @@ function iniciarPet() {
   const ps = estado.pets;
   migrarCapivara(ps);
   for (const p of Object.keys(ps.conquistados)) if (!petValido(p)) delete ps.conquistados[p];
+  liberarPetsProfessora(ps);
   if (!temPet(ps.ativo)) ps.ativo = Object.keys(ps.conquistados)[0] || null;
   if (ps.migrou && ps.ativo) gravar({ pets: { ativo: ps.ativo, conquistados: ps.conquistados } });
   delete ps.migrou;
   normalizarCuidados();
-  if (ps.ativo) { preCarregarPet(ps.ativo); seguidor.definir(ps.ativo); atualizarVisualPet(); }
+  if (ps.ativo) { preCarregarPet(formaDe(ps.ativo)); seguidor.definir(ps.ativo, formaDe(ps.ativo)); atualizarVisualPet(); }
   if (falasProntas()) verificarMarcosLealdade(ps.ativo);
+  verificarEvolucao(ps.ativo);   // quem já tinha ❤️ 3 antes da evolução existir evolui ao entrar
   atualizarFomeSeguidor();
+}
+
+// Login da professora (menu do professor): todos os pets na coleção e as formas adultas liberadas, sem precisar
+// vencer líderes nem chegar ao ❤️ 3. O interruptor "Mostrar como filhote" (Meu Pet → Visual) troca entre as formas.
+function liberarPetsProfessora(ps) {
+  if (!ehProfessora()) return;
+  const patch = {};
+  for (const p of PETS.filter(petValido)) {
+    const evoluido = formaAdulta(p) ? { evoluido: true } : {};
+    if (!ps.conquistados[p]) { ps.conquistados[p] = { data: Date.now(), origem: 'professora', ...cuidadosNovos(), ...evoluido }; patch[`pets/conquistados/${p}`] = ps.conquistados[p]; }
+    else if (evoluido.evoluido && !ps.conquistados[p].evoluido) { ps.conquistados[p].evoluido = true; patch[`pets/conquistados/${p}/evoluido`] = true; }
+  }
+  if (Object.keys(patch).length) gravar(patch);
 }
 
 // A capivara virou elefante (PROMPT-20): quem tinha capivara fica com o elefante, com tudo o que era dela
@@ -702,8 +725,10 @@ function animarPainelPet(raizEl) {
   }, 400);
 }
 
-const imgPet = (p, animar = true) =>
-  `<img src="${quadrosDe(p, 'sentado_girando')[0]}" width="${tamanhoQuadro()[0]}" height="${tamanhoQuadro()[1]}"${animar ? ` data-anim="${p}"` : ''} alt="" draggable="false"/>`;
+const imgPet = (p, animar = true) => {
+  const f = formaDe(p), [w, h] = tamanhoQuadro(f);
+  return `<img src="${quadrosDe(f, 'sentado_girando')[0]}" width="${w}" height="${h}"${animar ? ` data-anim="${f}"` : ''} alt="" draggable="false"/>`;
+};
 
 function abrirEscolhaPet() {
   $('pet-opcoes').innerHTML = INICIAIS.filter(petValido).map(p => `
@@ -729,8 +754,8 @@ function escolherPet(pet) {
 
 // Troca o pet que segue o personagem (aparece em x, y — por padrão junto do personagem)
 function usarPet(pet, x = jog.x, y = jog.y) {
-  preCarregarPet(pet);
-  seguidor.definir(pet);
+  preCarregarPet(formaDe(pet));
+  seguidor.definir(pet, formaDe(pet));
   if (cena) seguidor.colocar(x, y);
   atualizarBotaoPet();
   atualizarFomeSeguidor();
@@ -823,7 +848,7 @@ function atualizarBotaoPet() {
   b.hidden = !(seguidor && ativo && cena?.tipo === 'mapa');
   atualizarBotaoBatalhar();
   if (b.hidden) return;
-  const src = quadrosDe(ativo, 'sentado_girando')[0];
+  const src = quadrosDe(formaDe(ativo), 'sentado_girando')[0];
   const img = b.querySelector('img');
   if (img.getAttribute('src') !== src) img.src = src;
   aplicarVisualPet(img, ativo);
@@ -957,6 +982,8 @@ function trocaDeAtivo(novo, patch = {}) {
 }
 
 const cuidadosDe = (pet) => estado.pets.conquistados[pet];
+// Forma na tela: o adulto depois da evolução (❤️ 3), a não ser que o aluno prefira ver o filhote (Meu Pet → Visual)
+const formaDe = (pet) => { const a = formaAdulta(pet), c = a && cuidadosDe(pet); return c?.evoluido && !c.mostrar_filhote ? a : pet; };
 const barrigaDe = (pet) => { const c = cuidadosDe(pet); return c ? barrigaDoPet(c, pet === estado.pets.ativo) : 100; };
 
 // Pet ativo com fome (barriga < fome_abaixo) fica triste quando parado no mapa
@@ -994,6 +1021,7 @@ function verificarMarcosLealdade(pet = estado?.pets?.ativo) {
   const marcos = [['conversa', configFalas().lealdade_minima ?? 25, `💬 ${nomePet(pet)} agora conversa com você!`],
                   ['ajuda', cfg.lealdade_dica ?? 80, `💡 ${nomePet(pet)} agora pode te dar dicas nos ginásios!`],
                   ['eliminar', cfg.lealdade_eliminar ?? 95, `❌ ${nomePet(pet)} agora pode eliminar uma opção nos ginásios!`]];
+  verificarEvolucao(pet);
   const av = (estado.avisosPet[pet] ||= {});
   for (const [k, min, texto] of marcos) {
     if (av[k] || (Number(c.lealdade) || 0) < min) continue;
@@ -1001,6 +1029,90 @@ function verificarMarcosLealdade(pet = estado?.pets?.ativo) {
     gravar({ [`avisos_pet/${pet}/${k}`]: true });
     avisoPet(texto, true);
   }
+}
+
+// ── Evolução: no ❤️ 3 o pet ativo vira adulto (se houver forma adulta em sprites.json → evolucao). Uma vez por pet;
+// é o mesmo pet (lealdade, barriga, amizade, nome, tinta e efeito continuam), só muda a forma. ──
+const NIVEL_EVOLUCAO = 3;
+let evoPendente = null;   // pet que evolui assim que nada estiver na frente (batalha, pergunta, troca de cena)
+let evo = null;           // cena em andamento: { pet, anim (PetParado do adulto), timers }
+
+function verificarEvolucao(pet = estado?.pets?.ativo) {
+  const c = pet && cuidadosDe(pet);
+  if (!petsOk || !c || c.evoluido || pet !== estado.pets.ativo || !formaAdulta(pet) || nivelPet(pet) < NIVEL_EVOLUCAO) return;
+  evoPendente = pet;
+}
+
+// A cada quadro: mostra a cena pendente quando der (no Meu Pet pode, por cima)
+function tentarEvolucao() {
+  if (!evoPendente || evo || !cena || transicionando || pesca || bt || perguntaAberta) return;
+  if (sobreposicaoAberta() && $('meu-pet').hidden) return;
+  const pet = evoPendente;
+  evoPendente = null;
+  if (pet === estado.pets.ativo && !cuidadosDe(pet)?.evoluido) mostrarEvolucao(pet);
+}
+
+function mostrarEvolucao(pet) {
+  const c = cuidadosDe(pet), adulto = formaAdulta(pet);
+  c.evoluido = true;
+  gravar({ [`pets/conquistados/${pet}/evoluido`]: true });
+  preCarregarPet(adulto);
+  pararFalaPet();
+  soltarJoystick();
+  const el = $('pet-evolucao'), palco = el.querySelector('.jr-evo-palco'), fi = $('evo-filhote'), ad = $('evo-adulto');
+  fi.src = quadrosDe(pet, 'sentado_girando')[0];
+  ad.dataset.src = '';
+  aplicarVisualPet(fi, pet); aplicarVisualPet(ad, pet);
+  $('evo-fim').hidden = true;
+  $('evo-titulo').textContent = `${nomePet(pet)} evoluiu! 🐉`;
+  palco.classList.remove('brilha');
+  el.classList.remove('escuro');
+  el.hidden = false;
+  // tamanhos: o adulto ocupa até 82% da altura do palco (sem passar da largura); o filhote fica na mesma proporção do mapa
+  const r = palco.getBoundingClientRect(), [qw, qh] = tamanhoQuadro(adulto);
+  const hA = Math.min(r.height * 0.82, r.width * 0.98 * qh / qw);
+  ad.style.height = hA + 'px';
+  fi.style.height = hA / fatorForma(pet, adulto) + 'px';
+  evo = { pet, anim: new PetParado(ad), timers: [] };
+  evo.anim.definir(adulto);
+  const depois = (ms, fn) => evo.timers.push(setTimeout(fn, ms));
+  const mostrar = (qual) => { fi.style.visibility = qual === 'filhote' ? '' : 'hidden'; ad.style.visibility = qual === 'adulto' ? '' : 'hidden'; };
+  const flash = (fn) => {
+    $('evo-flash').animate([{ opacity: 0 }, { opacity: 1, offset: 0.35 }, { opacity: 0 }], { duration: 900, easing: 'ease-out' });
+    depois(300, fn);
+  };
+  const fim = () => { $('evo-fim').hidden = false; tocar('vitoria'); $('evo-ok').focus(); };
+  requestAnimationFrame(() => el.classList.add('escuro'));
+  if (semMovimento()) {   // sem animação: só o flash e o texto
+    mostrar('adulto');
+    flash(fim);
+    return;
+  }
+  // o filhote brilha, depois pisca entre as duas formas 6× acelerando; flash; o adulto ruge
+  mostrar('filhote');
+  depois(500, () => palco.classList.add('brilha'));
+  let t = 1300;
+  for (let i = 0; i < 6; i++) {
+    const d = Math.round(380 * 0.7 ** i);
+    depois(t, () => mostrar('adulto')); t += d;
+    depois(t, () => mostrar('filhote')); t += d;
+  }
+  depois(t, () => flash(() => {
+    palco.classList.remove('brilha');
+    mostrar('adulto');
+    evo.anim.tocar('rugido');
+    depois(1000, fim);
+  }));
+}
+
+function fecharEvolucao() {
+  if (!evo) return;
+  const { pet } = evo;
+  evo.timers.forEach(clearTimeout);
+  evo = null;
+  $('pet-evolucao').hidden = true;
+  aplicarForma(pet);
+  seguidor?.reagir('rugido');
 }
 
 // Avisos curtos no alto da tela, um depois do outro
@@ -1044,17 +1156,30 @@ function abrirMeuPet() {
   preCarregarPet(pet);
   $('meu-pet').hidden = false;
   const img = $('mp-img');
-  mp = { pet, anim: new PetParado(img), estado: '', corpoAnim: null, ocupado: false };
+  const forma = formaDe(pet);
+  preCarregarPet(forma);
+  mp = { pet, forma, anim: new PetParado(img), estado: '', corpoAnim: null, ocupado: false, carinhos: 0 };
   img.dataset.src = '';
-  const palco = $('mp-palco');
-  // pet grande: até ~78% da altura do palco, no máximo 352 px na tela (o tamanho de antes dos quadros em dobro)
-  img.style.height = Math.min(palco.clientHeight * 0.78, MP_ALT_MAX) + 'px';
-  mp.anim.definir(pet);
+  mp.anim.definir(forma);
+  medirMeuPet();
   for (const id of ['mp-bolsa-painel', 'mp-visual-painel', 'mp-nomear']) $(id).hidden = true;
   atualizarVisualPet();
   atualizarBotaoBatalhar();
   renderMeuPet();
   voltarAoNormal();
+}
+
+// pet grande: até ~78% da altura do palco, no máximo 352 px na tela (o tamanho de antes dos quadros em dobro).
+// Adulto: o quadro tem mais folga (asas), então a imagem cresce para o corpo ficar um pouco maior que o do filhote,
+// sem passar da largura do palco.
+function medirMeuPet() {
+  const palco = $('mp-palco'), { pet, forma } = mp;
+  let h = Math.min(palco.clientHeight * 0.78, MP_ALT_MAX);
+  if (forma !== pet) {
+    const [qw, qh] = tamanhoQuadro(forma);
+    h = Math.min(h * sentadoNoQuadro(pet) / sentadoNoQuadro(forma) * 1.1, palco.clientWidth * 0.98 * qh / qw);
+  }
+  $('mp-img').style.height = h + 'px';
 }
 
 function fecharMeuPet() {
@@ -1073,7 +1198,8 @@ function renderMeuPet() {
     (nivel >= 2 ? ` <span class="mp-nivel" title="Nível de amizade">❤️ ${nivel}</span>` : '');
   $('mp-palco').classList.toggle('moldura-prata', nivel >= 2 && nivel < 5);
   $('mp-palco').classList.toggle('moldura-ouro', nivel >= 5);
-  $('mp-origem').textContent = c.origem && c.origem !== 'inicial' && PETS_GINASIO[c.origem] ? `Conquistado: ${nomeDoLugar(c.origem)}` : 'Seu primeiro pet';
+  $('mp-origem').textContent = c.origem === 'professora' ? 'Liberado para a professora'
+    : c.origem && c.origem !== 'inicial' && PETS_GINASIO[c.origem] ? `Conquistado: ${nomeDoLugar(c.origem)}` : 'Seu primeiro pet';
   $('mp-moedas').textContent = Number(estado.pets.moedas) || 0;
   $('mp-barriga-fill').style.width = b + '%';
   $('mp-barriga-fill').dataset.cor = fb.cor;
@@ -1148,11 +1274,11 @@ function atualizarMeuPet(dt) {
   if (mp.estado === 'comendo' && mp.anim.ciclos >= 2) comemorar('feliz');                 // comendo 2 vezes, depois feliz
 }
 
-function comemorar(anim) {
+function comemorar(anim, pular = true) {
   mp.estado = anim; mp.ocupado = true;
   movimentoCorpo(null);
   mp.anim.tocar(anim, () => voltarAoNormal());
-  arcoDePulo();
+  if (pular) arcoDePulo();
 }
 
 function falarPet(texto) {
@@ -1190,7 +1316,9 @@ function carinhoPet() {
   particulas(['💜', '💛', '💜', '💛'], 5);
   const fc = barrigaDe(pet) >= fomeAbaixo() && falasProntas() && c.lealdade >= (configFalas().lealdade_minima ?? 25) ? montarFala(contextoFalaDe(pet), 'carinho') : null;
   falarPet(barrigaDe(pet) < fomeAbaixo() ? 'Obrigado… mas tô com fome' : fc?.baloes[0]?.texto || 'Gostei!');
-  comemorar(c.lealdade >= LEALDADE_CAMBALHOTA ? 'pulo_cambalhota' : 'feliz');
+  // quem tem `timido` (o adulto) alterna: um carinho tímido (sem pulo), o outro feliz
+  if (barrigaDe(pet) >= fomeAbaixo() && temAnim(mp.forma, 'timido') && mp.carinhos++ % 2 === 0) comemorar('timido', false);
+  else comemorar(c.lealdade >= LEALDADE_CAMBALHOTA ? 'pulo_cambalhota' : 'feliz');
 }
 
 // ============================================================
@@ -1236,12 +1364,14 @@ function ganharLealdade(pet, n, patch = {}) {
   if (depois > antes) {
     avisoPet(`❤️ Amizade com ${nomePet(pet)}: nível ${depois}!`, true);
     if (pet === estado.pets.ativo) enviarOnline(visualOnline(pet));
+    verificarEvolucao(pet);
   }
   return patch;
 }
 
 // O que os colegas veem do meu pet
-const visualOnline = (pet) => { const c = cuidadosDe(pet); return { pet_nome: c?.nome || null, pet_nivel: nivelPet(pet), pet_tinta: c?.tinta || null, pet_efeito: c?.efeito || null }; };
+const visualOnline = (pet) => { const c = cuidadosDe(pet); return { pet_nome: c?.nome || null, pet_nivel: nivelPet(pet), pet_tinta: c?.tinta || null, pet_efeito: c?.efeito || null,
+  pet_forma: formaDe(pet) }; };
 
 // Tinta no <img> do pet (comSombra: o pet do mapa tem drop-shadow no CSS, que o filtro substituiria)
 function aplicarTinta(img, tintaId, comSombra = false) {
@@ -1349,7 +1479,7 @@ function renderLoja() {
         <button class="lj-comprar" data-vender="${esc(x.id)}">Vender 1</button>
       </div>`).join('') : '<div class="lj-vazio">Você não tem peixes na bolsa. Pesque 🎣 e venda aqui.</div>');
   } else if (lojaAba === 'tintas') {
-    const src = pet ? quadrosDe(pet, 'sentado_girando')[0] : '';
+    const src = pet ? quadrosDe(formaDe(pet), 'sentado_girando')[0] : '';
     html = tintas().filter(t => !t.exclusiva).map(t => {   // Esmeralda e Cristal: só cavando
       const tem = !!estado.pets.tintas?.[t.id];
       return `<div class="lj-item lj-tinta${lojaProva === t.id ? ' provando' : ''}" data-provar="${esc(t.id)}">
@@ -1518,7 +1648,7 @@ function abrirVisual() {
   $('mp-visual-painel').hidden = false;
 }
 function renderVisual() {
-  const c = cuidadosDe(mp.pet), src = quadrosDe(mp.pet, 'sentado_girando')[0];
+  const c = cuidadosDe(mp.pet), src = quadrosDe(mp.forma, 'sentado_girando')[0];
   const ts = tintas().filter(t => estado.pets.tintas?.[t.id]), es = efeitos().filter(e => estado.pets.efeitos?.[e.id]);
   const chip = (tipo, id, conteudo, sel) => `<button class="mp-chip${sel ? ' sel' : ''}" data-${tipo}="${id}">${conteudo}</button>`;
   $('mp-visual-tintas').innerHTML = chip('tinta', '', 'Nenhuma', !c.tinta) +
@@ -1528,6 +1658,32 @@ function renderVisual() {
   for (const img of $('mp-visual-tintas').querySelectorAll('img[data-previa]')) aplicarTinta(img, img.dataset.previa);
   $('mp-visual-dica').hidden = !!(ts.length || es.length);
   $('mp-visual-dica').textContent = `Compre tintas e efeitos na loja da Dona Cida (${ondeDonaCida()}) 🛒.`;
+  // pet que já evoluiu: pode voltar a aparecer como filhote (vale também para os colegas online)
+  $('mp-forma-bloco').hidden = !(formaAdulta(mp.pet) && c.evoluido);
+  const filhote = !!c.mostrar_filhote, b = $('mp-filhote');
+  b.setAttribute('aria-checked', String(filhote));
+  b.classList.toggle('ligado', filhote);
+  $('mp-filhote-txt').textContent = `Mostrar como filhote: ${filhote ? 'ligado' : 'desligado'}`;
+}
+function alternarFilhote() {
+  if (!mp) return;
+  const pet = mp.pet, c = cuidadosDe(pet);
+  if (!c?.evoluido) return;
+  c.mostrar_filhote = !c.mostrar_filhote;
+  gravar({ [`pets/conquistados/${pet}/mostrar_filhote`]: c.mostrar_filhote || null });
+  aplicarForma(pet);
+  renderVisual();
+}
+// A forma do pet mudou (evoluiu ou o aluno trocou adulto/filhote): atualiza tudo o que mostra o pet ativo
+function aplicarForma(pet) {
+  if (pet !== estado.pets.ativo) return;
+  const forma = formaDe(pet);
+  preCarregarPet(forma);
+  if (seguidor) { const { x, y } = seguidor; seguidor.definir(pet, forma); if (cena) seguidor.colocar(x, y); }
+  if (mp?.pet === pet) { mp.forma = forma; mp.anim.definir(forma); medirMeuPet(); voltarAoNormal(); }
+  atualizarBotaoPet();
+  atualizarVisualPet();
+  enviarOnline(visualOnline(pet));
 }
 function escolherVisual(e) {
   const b = e.target.closest('[data-tinta], [data-efeito]');
@@ -2132,7 +2288,7 @@ function criarColega(uid, r) {
     dir: r.dir || 'frente', quadro: -1, tQuadro: 0, reacaoT: Number(r.reacao?.t) || 0, pet: null, pers: null, seg: new PetSeguidor(petImg, sombra) };
   sombra.hidden = petImg.hidden = true;
   colegas.set(uid, c);
-  definirPetColega(c, r.pet);
+  definirPetColega(c, r.pet, r.pet_forma);
   definirPersColega(c, r.personagem);
   c.seg.colocar(c.x, c.y);
   return c;
@@ -2147,20 +2303,21 @@ function definirPersColega(c, id) {
 }
 
 const petAtual = (pet) => (pet === 'capivara' ? 'elefante' : pet);   // registros antigos (antes do elefante)
-function definirPetColega(c, pet) {
+function definirPetColega(c, pet, forma) {
   pet = petAtual(pet);
   pet = petValido(pet) ? pet : null;
-  if (c.pet === pet) return;
+  forma = pet ? formaValida(pet, forma) : null;   // o colega pode ter o adulto (ou preferir mostrar o filhote)
+  if (c.pet === pet && c.seg.forma === forma) return;
   c.pet = pet;
-  if (pet) preCarregarPet(pet);
-  c.seg.definir(pet);
+  if (pet) preCarregarPet(forma);
+  c.seg.definir(pet, forma);
   if (pet) c.seg.colocar(c.x, c.y);
 }
 
 function atualizarColega(c, r) {
   c.reg = r;
   c.nome.textContent = rotuloColega(c.uid, r) + (Number(r.pet_nivel) >= 2 ? ` ❤️${Number(r.pet_nivel)}` : '');
-  definirPetColega(c, r.pet);
+  definirPetColega(c, r.pet, r.pet_forma);
   aplicarTinta(c.petImg, r.pet_tinta, true);
   definirPersColega(c, r.personagem);
   if (r.dir) c.dir = r.dir;
@@ -2208,7 +2365,7 @@ function atualizarColegas(dt) {
     // etiqueta com o apelido: 11 px na tela, qualquer que seja o zoom da câmera
     Object.assign(c.nome.style, { left: c.x + 'px', top: (c.y - ALT_JOGADOR_MAPA - 2) + 'px', fontSize: 11 * escala + 'px', zIndex: 9000 });
     if (c.balao) Object.assign(c.balao.style, { left: c.x + 'px', top: (c.y - ALT_JOGADOR_MAPA - 16 * escala) + 'px', fontSize: (c.balao.classList.contains('frase') ? 12 : 22) * escala + 'px' });
-    if (c.pet) c.seg.atualizar(dt, c.x, c.y, VEL, altImagemPet(c.pet) * ESCALA_ATORES, distPet(c.pet) * ESCALA_ATORES, ESCALA_ATORES);
+    if (c.pet) c.seg.atualizar(dt, c.x, c.y, VEL, altImagemPet(c.seg.forma) * ESCALA_ATORES, distPet(c.seg.forma) * ESCALA_ATORES, ESCALA_ATORES);
   }
 }
 
@@ -2253,7 +2410,7 @@ function abrirCartaoColega(c) {
     ${bustoHtml(urlQuadro('frente', -1, c.pers || PERS.padrao), 'jr-busto-colega', BUSTO_PERS)}
     <span class="jr-colega-info">
       <b>${esc(nome)}${turma ? ` <small>· ${esc(turma)}</small>` : ''}</b>
-      ${pet ? `<span class="jr-colega-pet"><img src="${quadrosDe(pet, 'sentado_girando')[0]}" alt="" draggable="false"${r.pet_tinta ? ` data-tinta="${esc(r.pet_tinta)}"` : ''}/>${r.pet_nome ? `${esc(r.pet_nome)} · ` : ''}${esc(NOME_PET[pet])}${Number(r.pet_nivel) >= 2 ? ` ❤️ ${Number(r.pet_nivel)}` : ''}</span>` : ''}
+      ${pet ? `<span class="jr-colega-pet"><img src="${quadrosDe(formaValida(pet, r.pet_forma), 'sentado_girando')[0]}" alt="" draggable="false"${r.pet_tinta ? ` data-tinta="${esc(r.pet_tinta)}"` : ''}/>${r.pet_nome ? `${esc(r.pet_nome)} · ` : ''}${esc(NOME_PET[pet])}${Number(r.pet_nivel) >= 2 ? ` ❤️ ${Number(r.pet_nivel)}` : ''}</span>` : ''}
     </span>
     ${podeDesafiar() ? '<button class="jr-colega-oi jr-colega-desafiar" data-desafiar aria-label="Desafiar" title="Desafiar">⚔️</button>' : ''}
     <button class="jr-colega-oi" data-presente aria-label="Presentear com um peixe" title="Presentear">🎁</button>
@@ -2951,7 +3108,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden;
+  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden;
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -3075,6 +3232,8 @@ function loop(t) {
   ultimoT = t;
   atualizarMeuPet(dt);
   pgPet?.atualizar(dt);
+  evo?.anim.atualizar(dt);
+  tentarEvolucao();
   if ((fomeT += dt) > 10) { fomeT = 0; atualizarFomeSeguidor(); }   // a barriga cai devagar: confere a cada 10 s
   if (cena && !perguntaAberta && !transicionando) {
     const [vx, vy] = vetorEntrada();
@@ -3083,7 +3242,7 @@ function loop(t) {
     const direto = (vx || vy) && moverDireto(dt, vx, vy);
     if (!direto) passo(dt);
     const e = escalaPetCena();
-    const pet = seguidor?.pet;
+    const pet = seguidor?.forma;   // o tamanho e a distância são os da forma (o adulto é maior)
     if (petNoPedestal) seguidor?.atualizar(dt, petNoPedestal[0], petNoPedestal[1], 0, altImagemPet(pet) * e, 0, e);   // no provador: fica no pedestal
     else seguidor?.atualizar(dt, jog.x, jog.y, VEL, altImagemPet(pet) * e, distPet(pet) * e, e);
     petGin?.anim.atualizar(dt);
@@ -4457,7 +4616,7 @@ async function voltarDoJogo() {
     seguidor?.reagir(petTem('pulo_cambalhota') ? 'pulo_cambalhota' : 'feliz', 1800);
   }
 }
-const petTem = (anim) => !!(seguidor?.pet && quadrosDe(seguidor.pet, anim)?.length);
+const petTem = (anim) => !!(seguidor?.pet && quadrosDe(seguidor.forma, anim)?.length);
 // Fim de partida (postMessage do jogo): +1 moeda a cada 10 acertos somados no dia, até 10 por dia
 function premioFliperama(d) {
   if (!jogoEmbed || !carregouProgresso) return;
@@ -5313,7 +5472,7 @@ function ligarEdicaoMato(n) {
 //  (regras puras em js/jogo-revisao/batalha.js; aqui a lista, a luta e os prêmios)
 // ============================================================
 const ELEM_PET = { elefante: ['💧', '🥜'], gato: ['🐾', '✦'], gaviao: ['🪶', '💨'], unicornio: ['🌈', '✨', '💖'], axolote: ['🫧', '💧'],
-  tigre: ['⚡', '🐾'], dragao_vermelho: ['🔥', '💥'], dragao_azul: ['❄️', '💎'] };
+  tigre: ['⚡', '🐾'], dragao_vermelho: ['🔥', '💥'], dragao_azul: ['❄️', '💎'], fogo: ['🔥', '💥'] };   // fogo: ataque_fogo dos adultos
 const FALAS_VOLTOU_FORTE = ['Treinei muito desde a última vez!', 'Voltei mais forte. Preparado?', 'Andei treinando… agora é sério!'];
 let bt = null;            // batalha em andamento
 let btSel = null, btTimerLista = 0;   // treinador selecionado na lista
@@ -5425,11 +5584,16 @@ function iniciarBatalha(id, origem = 'lista') {
   const c = cfgBatalha();
   const f = forca(t, d);
   const vida = c.vida || 100, extra = vidaExtraLealdade(cuidadosDe(estado.pets.ativo)?.lealdade);   // lealdade alta: vida extra
-  bt = { t, d, f, origem, pet: estado.pets.ativo, rod: 0, hp: { L: vida + extra, R: vida }, max: { L: vida + extra, R: vida }, extra, seq: 0,
+  bt = { t, d, f, origem, pet: estado.pets.ativo, forma: formaDe(estado.pets.ativo), rod: 0, hp: { L: vida + extra, R: vida }, max: { L: vida + extra, R: vida }, extra, seq: 0,
     tempoTot: { L: 0, R: 0 }, timers: [], anim: { L: 0, R: 0 }, contas: [], revisao: [], fechou: true, fim: false, raf: 0 };
   soltarJoystick();
   pararFalaPet();
-  preCarregarPet(bt.pet); preCarregarPet(t.pet);
+  preCarregarPet(bt.forma); preCarregarPet(t.pet);
+  // adulto: quadro mais largo (asas) e imagem maior; mesma vida e dano, muda só o visual
+  const fL = $('bt-L'), [qw, qh] = tamanhoQuadro(bt.forma), adulto = bt.forma !== bt.pet;
+  fL.style.setProperty('--pet-quadro', `${qw} / ${qh}`);
+  fL.style.setProperty('--cresce', adulto ? sentadoNoQuadro(bt.pet) / sentadoNoQuadro(bt.forma) * 1.1 : 1);
+  fL.classList.toggle('adulto', adulto);
   $('batalha').hidden = false;
   $('bt-nomeL').innerHTML = `${esc(nomeAluno())}<small>· ${esc(nomePet(bt.pet))}</small>`;
   aplicarVisualPet($('bt-imgL'), bt.pet);
@@ -5480,7 +5644,7 @@ function fecharBatalha(voltarLista = true) {
 function btTocar(lado, nome, { loop = true, ms = 160, depois } = {}) {
   if (!bt) return;
   clearTimeout(bt.anim[lado]);
-  const pet = lado === 'L' ? bt.pet : bt.t.pet;
+  const pet = lado === 'L' ? bt.forma : bt.t.pet;
   const nomeReal = lado === 'R' && nome === 'andar_direita' ? 'andar_esquerda' : nome;
   const fs = quadrosDe(pet, nomeReal);
   const img = $('bt-img' + lado), el = $('bt-' + lado);
@@ -5498,6 +5662,33 @@ function btTocar(lado, nome, { loop = true, ms = 160, depois } = {}) {
   passo();
 }
 const btParado = (lado) => btTocar(lado, 'andar_direita', { ms: 420 });
+const btForma = (lado) => (lado === 'L' ? bt.forma : bt.t.pet);
+
+// Ataque com fogo (pets com ataque_fogo): fica bravo ou ruge, abre a boca e o fogo sai na direção do adversário.
+// O lado R é desenhado espelhado (scaleX(-1)), então o fogo sai para a esquerda sozinho.
+async function btAtaqueFogo(de, para, crit, especial) {
+  const antes = Math.random() < 0.5 ? 'rugido' : 'bravo';
+  btTocar(de, antes, { loop: false, ms: 260, depois: () => {} });
+  await btEsperar(antes === 'rugido' ? 620 : 480);
+  if (!bt) return;
+  btTocar(de, 'ataque_fogo', { loop: false, ms: 200, depois: () => {} });   // fica no último quadro (fogo) até btParado
+  await btEsperar(200);
+  if (!bt) return;
+  await btFogo(de, para, crit, especial);
+}
+function btFogo(de, para, crit, especial) {
+  return new Promise(ok => {
+    if (btReduz()) { btLater(ok, 300); return; }
+    const el = $('bt-' + de), a = $('bt-arena').getBoundingClientRect(), r = el.getBoundingClientRect(), b = btCentro($('bt-' + para));
+    const virado = (el.style.transform || '').includes('scaleX(-1)');
+    // a boca no quadro do ataque_fogo fica em ~71% da largura e ~48% da altura
+    const x = r.left - a.left + r.width * (virado ? 0.29 : 0.71), y = r.top - a.top + r.height * 0.48;
+    const n = especial ? 16 : crit ? 12 : 9, dur = 460;
+    for (let i = 0; i < n; i++)
+      btParticula(i % 4 === 3 ? '💥' : '🔥', x, y, { dx: b.x - x + (Math.random() - 0.5) * 40, dy: b.y - y + (Math.random() - 0.5) * 50, dur, size: especial ? 36 : crit ? 30 : 24, delay: i * 28 });
+    btLater(ok, dur * 0.6 + n * 28);
+  });
+}
 
 function btCentro(el) { const a = $('bt-arena').getBoundingClientRect(), r = el.getBoundingClientRect(); return { x: r.left - a.left + r.width / 2, y: r.top - a.top + r.height * 0.5 }; }
 function btParticula(txt, x, y, { dx = 0, dy = -60, dur = 900, size = 22, delay = 0 } = {}) {
@@ -5735,17 +5926,22 @@ async function btFechar() {
       bt.seq = 0;
       btBanner('ATAQUE ESPECIAL!', '#ffd700');
       btTocar('L', 'pulo_cambalhota', { loop: false, ms: 90 });
-      await btEsperar(Math.max(700, quadrosDe(bt.pet, 'pulo_cambalhota').length * 90 + 120));
+      await btEsperar(Math.max(700, quadrosDe(bt.forma, 'pulo_cambalhota').length * 90 + 120));
       if (!bt) return;
       btSeq();
     }
-    btTocar(l, 'correndo', { loop: false, ms: 110 });
-    await btBote(l);
-    await btProjetil(l, o, pet, critico, especial);
+    const fogo = temAnim(btForma(l), 'ataque_fogo');
+    if (fogo) await btAtaqueFogo(l, o, critico, especial);   // dragão adulto: ruge e solta fogo pela boca
+    else {
+      btTocar(l, 'correndo', { loop: false, ms: 110 });
+      await btBote(l);
+      await btProjetil(l, o, pet, critico, especial);
+    }
     if (!bt) return;
     bt.hp[o] = Math.max(0, bt.hp[o] - n);
     btHp(o);
-    btLevarDano(o, n, critico, pet, especial);
+    btLevarDano(o, n, critico, fogo ? 'fogo' : pet, especial);
+    if (temAnim(btForma(o), 'assustado')) btTocar(o, 'assustado', { loop: false, ms: 600 });   // quem tem: se assusta e volta
     await btEsperar(650);
     btParado(l);
   }
@@ -5761,7 +5957,7 @@ function btFim() {
   const venceu = hp.L > hp.R || (hp.L === hp.R && tempoTot.L <= tempoTot.R);
   const v = venceu ? 'L' : 'R', q = venceu ? 'R' : 'L';
   bt.fim = true;
-  btTocar(v, 'feliz', { ms: 130 }); btTocar(q, 'triste_fome', { ms: 420 }); btConfete(v);
+  btTocar(v, 'orgulhoso', { ms: 130 }); btTocar(q, 'triste_fome', { ms: 420 }); btConfete(v);   // sem `orgulhoso`: feliz (reserva)
   btFala(venceu ? bt.t.fala_perdeu : bt.t.fala_venceu, 0);
   tocar(venceu ? 'vitoria' : 'erro');
   const pr = registrarBatalha(venceu ? 'venceu' : 'perdeu');
@@ -6195,7 +6391,7 @@ function pedirDicaPedido() {
 }
 function mostrarDicaPedido() {
   const pet = estado.pets.ativo;
-  $('pd-pet').innerHTML = `<img src="${quadrosDe(pet, 'sentado_girando')[0]}" alt="" draggable="false"/><span><b>${esc(nomePet(pet))}:</b> Acho que começa assim: ${esc(dicaPedido(pd.p))}</span>`;
+  $('pd-pet').innerHTML = `<img src="${quadrosDe(formaDe(pet), 'sentado_girando')[0]}" alt="" draggable="false"/><span><b>${esc(nomePet(pet))}:</b> Acho que começa assim: ${esc(dicaPedido(pd.p))}</span>`;
   aplicarVisualPet($('pd-pet').querySelector('img'), pet);
   $('pd-pet').hidden = false;
 }
@@ -6456,7 +6652,9 @@ function montarArena() {
   $('perg-pet').hidden = !pet;
   document.querySelector('.jr-arena-sombra.pet').hidden = !pet;
   pgPet = null;
-  if (pet) { pgPet = new PetParado($('perg-pet')); pgPet.definir(pet); }
+  const forma = pet && formaDe(pet);
+  $('perg-pet').style.setProperty('--forma', fatorForma(pet, forma));   // adulto: imagem maior (quadro com asas)
+  if (pet) { pgPet = new PetParado($('perg-pet')); pgPet.definir(forma); }
   aplicarVisualPet($('perg-pet'), pet, true);   // o pet do duelo tem drop-shadow no CSS
   // ajuda do pet: só nos ginásios (não na revisão da semana); contadores zeram a cada desafio
   pg.petAjuda = !rev && pet && cuidadosDe(pet) ? pet : null;
@@ -6477,10 +6675,11 @@ function desenharBolinhas() {
     `<span class="jr-bolinha${pg.status[i] ? ' ' + pg.status[i] : ''}${i === atual ? ' atual' : ''}"></span>`).join('');
 }
 
-// Acerto: pet feliz e adversário treme; erro: pet triste uma vez
+// Acerto: pet feliz e adversário treme; erro: pet confuso (quem não tem `confuso`: triste) uma vez
 function reagirArena(certo) {
   if (pgPet) {
     if (certo) pgPet.tocar('feliz');
+    else if (temAnim(pgPet.pet, 'confuso')) pgPet.tocar('confuso');
     else { pgPet.tocar('triste_fome'); setTimeout(() => { if (pgPet?.anim === 'triste_fome') pgPet.tocar('sentado_girando'); }, 1400); }
   }
   if (certo && pg?.modo !== 'revisao' && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -6767,7 +6966,7 @@ function vencer() {
   $('perg-continuar').hidden = false;
   pg.aoContinuar = () => {
     fecharPergunta();
-    if (ganhou) mostrarInsigniaGanha(chave, ganhou === 'dourada');
+    if (ganhou) { mostrarInsigniaGanha(chave, ganhou === 'dourada'); seguidor?.reagir('feliz'); }
     else { seguidor?.reagir('feliz'); mostrarAvisoSequencia(); surgirPetSePendente(); }
   };
 }
@@ -7062,6 +7261,8 @@ function ligarEventos() {
   }, true);
   $('mp-carinho').addEventListener('click', carinhoPet);
   $('mp-calado').addEventListener('click', alternarPetCalado);
+  $('mp-filhote').addEventListener('click', alternarFilhote);
+  $('evo-ok').addEventListener('click', fecharEvolucao);
   $('meu-pet').addEventListener('click', (e) => { if (e.target === $('meu-pet')) fecharMeuPet(); });   // tocar fora do painel fecha
   $('mp-info').addEventListener('click', (e) => { e.stopPropagation(); $('mp-info-balao').hidden = !$('mp-info-balao').hidden; });
   $('meu-pet').addEventListener('click', (e) => { if (!e.target.closest('#mp-info, #mp-info-balao')) $('mp-info-balao').hidden = true; }, true);
