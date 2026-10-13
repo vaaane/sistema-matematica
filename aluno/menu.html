@@ -126,6 +126,30 @@
     .mg-btn-primary{width:100%;padding:12px;background:linear-gradient(135deg,var(--purple,#7c5cfc),#5a3fcf);border:none;border-radius:12px;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:#fff;cursor:pointer;}
     .mg-btn-ghost{width:100%;padding:9px;background:transparent;border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text-muted);cursor:pointer;}
 
+    /* ══ Jogo de Revisão — destaque no topo da página inicial ══ */
+    .jr-cta{
+      display:flex;align-items:stretch;position:relative;overflow:hidden;text-decoration:none;color:inherit;min-height:150px;
+      border:2px solid var(--gold,#f0a500);border-radius:18px;margin-bottom:16px;
+      background:linear-gradient(100deg, rgba(17,17,31,.96) 0%, rgba(26,18,56,.92) 48%, rgba(26,18,56,.35) 100%), url('/img/jogo/mapa-geral/mapa-geral.webp') right center / cover no-repeat;
+      box-shadow:0 10px 30px rgba(108,0,212,.35), 0 0 0 1px rgba(240,165,0,.25);
+      transition:transform .12s, box-shadow .12s;
+    }
+    .jr-cta:hover{transform:translateY(-2px);box-shadow:0 14px 38px rgba(108,0,212,.45), 0 0 0 1px rgba(240,165,0,.45)}
+    .jr-cta .jr-txt{flex:1;min-width:0;padding:16px 18px 16px;display:flex;flex-direction:column;gap:6px}
+    .jr-cta .jr-badge{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;background:var(--gold,#f0a500);color:#3a2600;font-size:10.5px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;padding:5px 11px;border-radius:20px}
+    .jr-cta .jr-t{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;line-height:1.05;color:var(--text,#fff)}
+    .jr-cta .jr-s{font-size:12.5px;color:rgba(255,255,255,.75);line-height:1.4;max-width:420px}
+    .jr-cta .jr-stats{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+    .jr-cta .jr-stats span{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;color:#fff}
+    .jr-cta .jr-stats b{font-family:'Orbitron',monospace;color:var(--gold,#f0a500);font-size:12px}
+    .jr-cta .jr-go{align-self:flex-start;margin-top:4px;display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#ffb300,var(--gold,#f0a500));color:#2a1a00;font-size:14px;font-weight:900;padding:9px 18px;border-radius:12px;box-shadow:0 4px 14px rgba(240,165,0,.4)}
+    @media(max-width:520px){
+      .jr-cta{background:linear-gradient(180deg, rgba(17,17,31,.70) 0%, rgba(26,18,56,.95) 55%), url('/img/jogo/mapa-geral/mapa-geral.webp') center top / cover no-repeat}
+      .jr-cta .jr-txt{padding:14px 15px}
+      .jr-cta .jr-t{font-size:23px}
+      .jr-cta .jr-go{align-self:stretch;justify-content:center}
+    }
+
     /* ══ Faixa da Ficha — chamada para os pais (destaque no topo) ══ */
     .ficha-cta{
       display:block;position:relative;text-decoration:none;color:inherit;
@@ -924,12 +948,37 @@ window.filtrarHistAtiv = function(nome, ativNome) {
     p.classList.toggle('on', p.dataset.ativ === ativNome));
 };
 
+// ── Jogo de Revisão: insígnias e moedas no banner do topo (leituras pequenas; sem dados, só o convite) ──
+async function preencherBannerJogo() {
+  const el = document.getElementById("jr-cta-stats");
+  if (!el) return;
+  const jrUid = (turma + "_" + alunos[0]).replace(/[.#$[\]/\s]/g, "_");
+  const base = isModoTeste() ? `modo_teste_historico/${jrUid}/jogo_revisao` : `jogo_revisao/${jrUid}`;
+  try {
+    const [ins, moe] = await Promise.all([get(ref(db, `${base}/insignias`)), get(ref(db, `${base}/pets/moedas`))]);
+    const lista = ins.exists() ? Object.values(ins.val() || {}).filter(Boolean) : [];
+    const douradas = lista.filter(i => i.dourada).length, moedas = moe.exists() ? Number(moe.val()) || 0 : 0;
+    el.innerHTML = lista.length || moedas
+      ? `<span>🏅 <b>${lista.length}/26</b> insígnias</span>${douradas ? `<span>⭐ <b>${douradas}</b> douradas</span>` : ""}<span>🪙 <b>${moedas}</b> moedas</span>`
+      : `<span>✨ Comece agora: o primeiro ginásio é a Escolinha!</span>`;
+  } catch (e) { el.innerHTML = ""; }
+}
+
 // ── Render ────────────────────────────────────────────────────
 const liberadasAtivas = liberadas.filter(l => l.status !== 'encerrada');
 const conteudo = document.getElementById("content");
 conteudo.innerHTML = `
 ${bannerHtml}
 ${tempoPodioHtml}
+<a href="/aluno/jogo-revisao.html" class="jr-cta" id="jr-cta" aria-label="Jogar o Jogo de Revisão">
+  <div class="jr-txt">
+    <span class="jr-badge">🎮 Jogo de Revisão</span>
+    <div class="jr-t">Revise jogando!</div>
+    <div class="jr-s">Vença os ginásios, cuide do seu pet, pesque, cave tesouros e desafie os colegas na Praça.</div>
+    <div class="jr-stats" id="jr-cta-stats"></div>
+    <span class="jr-go">▶ Jogar agora</span>
+  </div>
+</a>
 <a href="/aluno/a-ficha.html" class="ficha-cta">
   <span class="ficha-badge">👨‍👩‍👧 Para os pais e responsáveis</span>
   <div class="ficha-row">
@@ -1159,6 +1208,7 @@ ${tempoPodioHtml}
 
   </div>
 </div>`;
+preencherBannerJogo();
 
 // ── #1 Geral: efeitos dourados (Tabuada e/ou Quiz) ───────────
 function applyNo1PageVisuals({ isQuiz, isTabuada, tabLevel }) {
