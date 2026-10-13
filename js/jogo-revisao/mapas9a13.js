@@ -1,4 +1,4 @@
-import { int, pick, shuffle, sample, coin, num, reais, arred, ehInteiro, erradasNum, erradasTexto, ponto, erradasPonto } from './base.js';
+import { int, pick, shuffle, sample, coin, num, reais, arred, ehInteiro, erradasNum, erradasTexto, ponto, erradasPonto, frac, simpl, erradasFrac } from './base.js';
 import { Q, X } from './mapas1a4.js';
 import { SN } from './mapas5a8.js';
 
@@ -242,62 +242,216 @@ const M12 = {
 // ===================== MAPA 13 =====================
 function lista(n, a = 1, b = 10) { return Array.from({ length: n }, () => int(a, b)); }
 const fmtL = l => l.join(', ');
+const eFinal = l => (l.length === 2 ? l.join(' e ') : fmtL(l.slice(0, -1)) + ' e ' + l[l.length - 1]);
+const somaL = l => l.reduce((a, b) => a + b, 0);
+const medianaDe = l => { const s = [...l].sort((a, b) => a - b), n = s.length; return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2; };
 function media(n, mPar = false) {
   return () => {
     for (; ;) { const l = lista(n, 1, 12); const s = l.reduce((a, b) => a + b, 0); if (!mPar && s % n) continue; if (mPar && (s * 2) % n) continue; const v = s / n; return Q(`Qual é a média de ${n === 2 ? l.join(' e ') : fmtL(l.slice(0, -1)) + ' e ' + l[l.length - 1]}?`, num(v), erradasNum(v, [s, Math.max(...l), v + 1, (Math.max(...l) + Math.min(...l)) / 2 === v ? v - 1 : (Math.max(...l) + Math.min(...l)) / 2], { inteiro: false }), X(`Some tudo e divida pela quantidade: ${l.join(' + ')} = ${s}; ${s} ÷ ${n} = ${num(v)}`)); }
   };
 }
-function moda() { for (; ;) { const m = int(1, 9), outros = sample([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter(x => x !== m), int(2, 3)); const l = shuffle([m, m, ...(coin() ? [m] : []), ...outros]); const v = m; return Q(`Qual é a moda de ${fmtL(l)}?`, num(v), erradasTexto(num(v), [...shuffle(outros).map(num), num(l.filter(z => z === m).length), num(l.length), num(m + 1), num(m + 2), num(m + 3), num(Math.max(...l) + 1)]), X(`Moda é o valor que mais aparece: o ${m} aparece ${l.filter(z => z === m).length} vezes.`)); } }
+// média de 4 números com resultado ",5"
+function mediaMeio() {
+  for (; ;) {
+    const l = lista(4, 1, 12), s = somaL(l); if (s % 4 !== 2) continue;
+    const v = s / 4, mm = (Math.max(...l) + Math.min(...l)) / 2;
+    return Q(`Qual é a média de ${eFinal(l)}?`, num(v), erradasNum(v, [Math.floor(v), Math.ceil(v), s, mm !== v ? mm : v + 1, v + 1], { inteiro: false }),
+      X(`Some tudo e divida pela quantidade: ${l.join(' + ')} = ${s}; ${s} ÷ 4 = ${num(v)}`));
+  }
+}
+// problema: idades (5 números, média inteira)
+const CTX_MEDIA = [
+  [l => `As idades de 5 amigos são ${eFinal(l)} anos. Qual é a média de idade?`, [11, 15], ' anos'],
+  [l => `Num jogo, um time fez ${eFinal(l)} pontos em 5 partidas. Qual a média de pontos por partida?`, [4, 20], ' pontos'],
+  [l => `Em 5 dias, choveu ${eFinal(l)} milímetros. Qual foi a média por dia?`, [2, 16], ' mm'],
+];
+function mediaProblema() {
+  const [txt, [a, b]] = pick(CTX_MEDIA);
+  for (; ;) {
+    const l = lista(5, a, b), s = somaL(l); if (s % 5) continue;
+    const v = s / 5; if (l.every(x => x === v)) continue;
+    return Q(txt(l), num(v), erradasNum(v, [s, medianaDe(l) !== v ? medianaDe(l) : v + 2, Math.max(...l), v + 1, v - 1]),
+      X(`Some tudo e divida por 5: ${l.join(' + ')} = ${s}; ${s} ÷ 5 = ${num(v)}`));
+  }
+}
+const SEM_MODA = 'não tem moda';
+function moda() { for (; ;) { const m = int(1, 9), outros = sample([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter(x => x !== m), int(2, 3)); const l = shuffle([m, m, ...(coin() ? [m] : []), ...outros]); const v = m; return Q(`Qual é a moda de ${fmtL(l)}?`, num(v), erradasTexto(num(v), [...shuffle([...outros.map(num), SEM_MODA]), num(l.filter(z => z === m).length), num(l.length), num(m + 1), num(m + 2), num(m + 3), num(Math.max(...l) + 1)]), X(`Moda é o valor que mais aparece: o ${m} aparece ${l.filter(z => z === m).length} vezes.`)); } }
+// dois valores empatados: a moda são os dois ("5 e 7")
+function modaDupla() {
+  const [a, b] = sample([1, 2, 3, 4, 5, 6, 7, 8, 9], 2).sort((x, y) => x - y);
+  const outros = sample([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter(x => x !== a && x !== b), int(2, 3));
+  const l = shuffle([a, a, b, b, ...outros]);
+  return Q(`Qual é a moda de ${fmtL(l)}?`, `${a} e ${b}`, erradasTexto(`${a} e ${b}`, [num(a), num(b), SEM_MODA, `${a} e ${outros[0]}`]),
+    X(`O ${a} e o ${b} aparecem 2 vezes cada (os outros, 1 vez). Os dois empatam: a moda é ${a} e ${b}.`));
+}
+// às vezes ninguém se repete: "não tem moda" é a certa
+function semModa() {
+  const l = sample([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], int(5, 6));
+  return Q(`Qual é a moda de ${fmtL(l)}?`, SEM_MODA, erradasTexto(SEM_MODA, [...shuffle(l).slice(0, 2).map(num), num(Math.round(somaL(l) / l.length) + 20), num(l.length)]),
+    X('Nenhum valor se repete: todos aparecem 1 vez só. Então não tem moda.'));
+}
+const modaVaria = () => (coin() ? semModa() : modaDupla());
 function mediana(n = 3, embaralha = false) {
   return () => {
-    for (; ;) { const l = sample([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20], n).sort((a, b) => a - b); const v = l[(n - 1) / 2]; const mostra = embaralha ? shuffle(l) : l; const med = l.reduce((a, b) => a + b, 0) / n; return Q(`Qual é a mediana de ${fmtL(mostra)}?${embaralha ? ' (organize antes)' : ''}`, num(v), erradasTexto(num(v), [num(mostra[(n - 1) / 2]), ehInteiro(med) ? num(med) : num(l[0]), num(l[0]), num(l[n - 1]), num(Math.round(med)), num(v + 1), num(v - 1), num(v + 2)], 3), X(`Coloque em ordem: ${fmtL(l)}. A mediana é o do meio: ${num(v)}`)); }
+    for (; ;) { const l = sample([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20], n).sort((a, b) => a - b); const v = l[(n - 1) / 2]; const mostra = embaralha ? shuffle(l) : l; if (embaralha && mostra[(n - 1) / 2] === v) continue; const med = l.reduce((a, b) => a + b, 0) / n; return Q(`Qual é a mediana de ${fmtL(mostra)}?${embaralha ? ' (organize antes)' : ''}`, num(v), erradasTexto(num(v), [num(mostra[(n - 1) / 2]), ehInteiro(med) ? num(med) : num(l[0]), num(l[0]), num(l[n - 1]), num(Math.round(med)), num(v + 1), num(v - 1), num(v + 2)], 3), X(`Coloque em ordem: ${fmtL(l)}. A mediana é o do meio: ${num(v)}`)); }
+  };
+}
+// quantidade par: a mediana é a média dos dois do meio (lista fora de ordem)
+function medianaPar(n) {
+  return () => {
+    for (; ;) {
+      const s = sample([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 18, 20], n).sort((a, b) => a - b);
+      const a = s[n / 2 - 1], b = s[n / 2], v = (a + b) / 2, mostra = shuffle(s);
+      if (mostra.join() === s.join()) continue;
+      const media_ = somaL(s) / n, meioSemOrdem = (mostra[n / 2 - 1] + mostra[n / 2]) / 2;
+      return Q(`Qual é a mediana de ${fmtL(mostra)}?`, num(v), erradasTexto(num(v), [num(a), num(b), meioSemOrdem !== v ? num(meioSemOrdem) : '', media_ !== v ? num(media_) : '', num(a + b), num(v + 1)]),
+        X(`Coloque em ordem: ${fmtL(s)}. São ${n} números: o meio fica entre o ${a} e o ${b}. Mediana = (${a} + ${b}) ÷ 2 = ${a + b} ÷ 2 = ${num(v)}`));
+    }
   };
 }
 function notaFalta() { const m = int(6, 8), a = int(4, 9), b = int(4, 9); const c = 3 * m - a - b; if (c < 0 || c > 10) return notaFalta(); return Q(`A média de 3 provas foi ${m}. Duas notas foram ${a} e ${b}. Qual foi a terceira?`, num(c), erradasNum(c, [3 * m, m, (a + b) / 2, c + 1], { inteiro: true }), X(`Média ${m} em 3 provas: a soma é 3 × ${m} = ${3 * m}. Falta ${3 * m} − ${a} − ${b} = ${c}`)); }
 const duasNotas = () => { for (; ;) { const a = int(4, 10), b = int(4, 10); if ((a + b) % 2) continue; const v = (a + b) / 2; return Q(`Tirei ${a} e ${b} em duas provas. Qual a minha média?`, num(v), erradasNum(v, [a + b, Math.max(a, b), v + 1]), X(`(${a} + ${b}) ÷ 2 = ${a + b} ÷ 2 = ${v}`)); } };
+// diferença entre a média e a mediana
+function comparar() {
+  for (; ;) {
+    const l = lista(5, 1, 15), s = somaL(l); if (s % 5) continue;
+    const me = s / 5, md = medianaDe(l), v = Math.abs(me - md); if (!v) continue;
+    return Q(`Qual é a diferença entre a média e a mediana de ${fmtL(l)}?`, num(v), erradasNum(v, [me, md, me + md, v + 1, v - 1]),
+      X(`Média: ${l.join(' + ')} = ${s}; ${s} ÷ 5 = ${num(me)}. Mediana: em ordem ${fmtL([...l].sort((a, b) => a - b))}, o do meio é ${num(md)}. Diferença: ${num(Math.max(me, md))} − ${num(Math.min(me, md))} = ${num(v)}`));
+  }
+}
 
-// --- tabelas (Ginásio B): a tabela é sorteada e todas as perguntas do personagem usam a mesma tabela
+// --- tabelas (Ginásio B): a tabela é sorteada e todas as perguntas do personagem usam a mesma tabela.
+// O total é 20, 25, 40 ou 50 (porcentagem inteira) e a média dá inteira ou ",5". Ler o maior/menor: no máximo 1, só no treinador 1.
+const ESPORTES = ['Futebol', 'Vôlei', 'Basquete', 'Natação'];
+const oEsporte = n => (n === 'Natação' ? 'a natação' : 'o ' + n.toLowerCase());
 const TAB = {
-  treinador1: { titulo: 'Vendas da barraca de frutas', colunas: ['Fruta', 'Vendas'], itens: ['Maçã', 'Banana', 'Uva', 'Laranja'], txt: { mais: 'Qual fruta vendeu mais?', menos: 'Qual fruta vendeu menos?', qto: n => `Quantas unidades de ${n.toLowerCase()} foram vendidas?`, total: 'Quantas frutas foram vendidas no total?', dif: (a, b) => `Quantas unidades de ${a.toLowerCase()} foram vendidas a mais que de ${b.toLowerCase()}?` }, faixa: [2, 12] },
-  treinador2: { titulo: 'Esporte preferido da turma', colunas: ['Esporte', 'Votos'], itens: ['Futebol', 'Vôlei', 'Basquete', 'Natação'], txt: { mais: 'Qual esporte teve mais votos?', menos: 'Qual esporte teve menos votos?', qto: n => `Quantos votos teve ${n === 'Natação' ? 'a natação' : 'o ' + n.toLowerCase()}?`, total: 'Quantos alunos votaram ao todo?', dif: (a, b) => `${a} teve quantos votos a mais que ${b.toLowerCase()}?` }, faixa: [2, 14] },
-  treinador3: { titulo: 'Gols marcados na semana', colunas: ['Dia', 'Gols'], itens: ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'], txt: { mais: 'Em que dia saíram mais gols?', menos: 'Em que dia saíram menos gols?', qto: n => `Quantos gols saíram na ${n.toLowerCase()}?`, total: 'Quantos gols saíram na semana?', dif: (a, b) => `Quantos gols saíram na ${a.toLowerCase()} a mais que na ${b.toLowerCase()}?`, media: 'Qual foi a média de gols por dia?' }, faixa: [0, 6] },
-  lider: { titulo: 'Livros lidos no mês', colunas: ['Aluno', 'Livros'], itens: ['Ana', 'Bia', 'Caio', 'Davi', 'Eva'], txt: { mais: 'Quem leu mais livros?', menos: 'Quem leu menos livros?', qto: n => `Quantos livros ${n} leu?`, total: 'Quantos livros foram lidos ao todo?', dif: (a, b) => `${a} leu quantos livros a mais que ${b}?`, media: 'Qual é a média de livros lidos por aluno?', mediana: 'Qual é a mediana dos livros lidos?' }, faixa: [1, 8] },
+  treinador1: { titulo: 'Vendas da barraca de frutas', colunas: ['Fruta', 'Vendas'], itens: ['Maçã', 'Banana', 'Uva', 'Laranja'], faixa: [2, 14],
+    txt: { mais: 'Qual fruta vendeu mais?', menos: 'Qual fruta vendeu menos?', qto: n => `Quantas unidades de ${n.toLowerCase()} foram vendidas?`, total: 'Quantas frutas foram vendidas no total?', dif: (a, b) => `Quantas unidades de ${a.toLowerCase()} foram vendidas a mais que de ${b.toLowerCase()}?`,
+      media: 'Qual foi a média de vendas por fruta?', pct: n => `Que porcentagem das vendas foi de ${n.toLowerCase()}?`, frac: n => `Que fração das frutas vendidas foi de ${n.toLowerCase()}?`,
+      empate: (a, b) => `Quantas unidades de ${a.toLowerCase()} a mais precisariam ser vendidas para empatar com a ${b.toLowerCase()}?` },
+    af: { mais: (a, b, k) => `Venderam ${k} ${a.toLowerCase()}${k === 1 ? '' : 's'} a mais que ${b.toLowerCase()}s`, dobro: (a, b) => `As vendas de ${a.toLowerCase()} foram o dobro das de ${b.toLowerCase()}`, juntos: (a, b, s) => `${a} e ${b.toLowerCase()} juntas venderam ${s}`, maior: a => `${a} foi a fruta mais vendida` } },
+  treinador2: { titulo: 'Esporte preferido da turma', colunas: ['Esporte', 'Votos'], itens: ESPORTES, faixa: [2, 16],
+    txt: { total: 'Quantos alunos votaram ao todo?', dif: (a, b) => `${a} teve quantos votos a mais que ${b.toLowerCase()}?`, media: 'Qual é a média de votos por esporte?',
+      pct: n => `Que porcentagem dos votos teve ${oEsporte(n)}?`, frac: n => `Que fração dos alunos votou em ${n.toLowerCase()}?`, empate: (a, b) => `Quantos votos a mais ${oEsporte(a)} precisaria para empatar com ${oEsporte(b)}?` },
+    af: { mais: (a, b, k) => `${a} teve ${k} voto${k === 1 ? '' : 's'} a mais que ${b.toLowerCase()}`, dobro: (a, b) => `${a} teve o dobro de votos de ${b.toLowerCase()}`, juntos: (a, b, s) => `${a} e ${b.toLowerCase()} juntos tiveram ${s} votos`, maior: a => `${a} foi o esporte mais votado` } },
+  treinador3: { titulo: 'Gols marcados na semana', colunas: ['Dia', 'Gols'], itens: ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'], faixa: [1, 9],
+    txt: { total: 'Quantos gols saíram na semana?', dif: (a, b) => `Quantos gols saíram na ${a.toLowerCase()} a mais que na ${b.toLowerCase()}?`, media: 'Qual foi a média de gols por dia?',
+      pct: n => `Que porcentagem dos gols da semana saiu na ${n.toLowerCase()}?`, frac: n => `Que fração dos gols da semana saiu na ${n.toLowerCase()}?`, empate: (a, b) => `Quantos gols a mais precisariam sair na ${a.toLowerCase()} para empatar com a ${b.toLowerCase()}?` },
+    af: { mais: (a, b, k) => `Na ${a.toLowerCase()} saíram ${k} gol${k === 1 ? '' : 's'} a mais que na ${b.toLowerCase()}`, dobro: (a, b) => `Os gols da ${a.toLowerCase()} foram o dobro dos da ${b.toLowerCase()}`, juntos: (a, b, s) => `${a} e ${b.toLowerCase()} juntas tiveram ${s} gols`, maior: a => `${a} foi o dia com mais gols` } },
+  // dupla entrada: Meninos | Meninas | Total
+  lider: { titulo: 'Esporte preferido: meninos e meninas', colunas: ['Esporte', 'Meninos', 'Meninas', 'Total'], itens: ESPORTES, faixa: [1, 9], dupla: true },
 };
 TAB.revanche = TAB.lider;
+const TOTAIS_PCT = [20, 25, 40, 50];
 export function tabelaSorteada(chave) {
   const T = TAB[chave];
   for (; ;) {
+    if (T.dupla) {
+      const m = T.itens.map(() => int(...T.faixa)), f = T.itens.map(() => int(...T.faixa)), t = m.map((x, i) => x + f[i]);
+      const mx = Math.max(...t), soma = somaL(t);
+      if (t.filter(v => v === mx).length > 1 || !TOTAIS_PCT.includes(soma) || (soma * 2) % t.length) continue;
+      if (m.indexOf(Math.max(...m)) === t.indexOf(mx) && coin()) continue;   // de preferência, o mais votado no total não é o preferido dos meninos
+      return { titulo: T.titulo, colunas: T.colunas, linhas: T.itens.map((n, i) => [n, m[i], f[i], t[i]]), _T: T, m, f, t };
+    }
     const vals = T.itens.map(() => int(...T.faixa));
     const mx = Math.max(...vals), mn = Math.min(...vals);
     if (vals.filter(v => v === mx).length > 1 || vals.filter(v => v === mn).length > 1) continue;       // maior e menor únicos
-    const soma = vals.reduce((a, b) => a + b, 0);
-    if (T.txt.media && soma % vals.length) continue;                                                      // média inteira
+    const soma = somaL(vals);
+    if (!TOTAIS_PCT.includes(soma) || (soma * 2) % vals.length) continue;                              // % inteira; média inteira ou ,5
     return { titulo: T.titulo, colunas: T.colunas, linhas: T.itens.map((n, i) => [n, vals[i]]), _T: T };
   }
 }
+const pctTxt = v => `${num(v)}%`;
+// Porcentagem / fração / empate / média / afirmação: as perguntas que usam a tabela (it: nomes, vs: valores, txt e af: frases)
+function perguntasComuns(it, vs, txt, af) {
+  const soma = somaL(vs), n = vs.length;
+  const comInteira = vs.map((v, i) => i).filter(i => vs[i] > 0 && Number.isInteger(vs[i] * 100 / soma));
+  const qs = {
+    pct: () => {
+      if (!comInteira.length) return null;
+      const i = pick(comInteira), v = vs[i], p = v * 100 / soma;
+      return Q(txt.pct(it[i]), pctTxt(p), erradasNum(p, [v, v / 100, 100 - p, p * 2, p + 5, p - 5], { fmt: pctTxt, inteiro: false }),
+        X(`O total é ${vs.join(' + ')} = ${soma}. ${it[i]}: ${v} de ${soma} = ${v} ÷ ${soma} = ${num(v / soma)}. Vezes 100: ${num(p)}%`));
+    },
+    frac: () => {
+      const i = pick(vs.map((v, k) => k).filter(k => vs[k] > 0)), v = vs[i], [a, b] = simpl(v, soma);
+      return Q(txt.frac(it[i]), frac(a, b), erradasFrac(a, b, [[v, soma - v], [soma - v, soma], [b, a], [1, v], [a, b + 1], [v, 100]]),
+        X(`Parte sobre o total: ${v}/${soma}${a !== v ? `. Simplificando (÷ ${v / a}): ${frac(a, b)}` : ''}`));
+    },
+    empate: () => {
+      const [i, j] = sample(vs.map((v, k) => k), 2).sort((x, y) => vs[x] - vs[y]); if (vs[i] === vs[j]) return null;
+      const v = vs[j] - vs[i];
+      return Q(txt.empate(it[i], it[j]), num(v), erradasNum(v, [vs[j], vs[i] + vs[j], v + 1, v - 1]), X(`Para empatar, falta a diferença: ${vs[j]} − ${vs[i]} = ${v}`));
+    },
+    media: () => {
+      const v = soma / n;
+      return Q(txt.media, num(v), erradasNum(v, [soma, Math.floor(v) === v ? v + 1 : Math.floor(v), Math.ceil(v) === v ? v - 1 : Math.ceil(v), medianaDe(vs) !== v ? medianaDe(vs) : v + 2], { inteiro: false }),
+        X(`Some tudo e divida pela quantidade: ${vs.join(' + ')} = ${soma}; ${soma} ÷ ${n} = ${num(v)}`));
+    },
+    afirmacao: () => {
+      const verdade = [], mentira = [], iMax = vs.indexOf(Math.max(...vs));
+      for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+        if (i === j) continue;
+        const d = vs[i] - vs[j];
+        if (d > 0) { verdade.push(af.mais(it[i], it[j], d)); for (const k of [d + 1, d + 2, d - 1]) if (k > 0 && k !== d) mentira.push(af.mais(it[i], it[j], k)); }
+        if (vs[j] > 0) (vs[i] === 2 * vs[j] ? verdade : mentira).push(af.dobro(it[i], it[j]));
+        if (i < j) { verdade.push(af.juntos(it[i], it[j], vs[i] + vs[j])); mentira.push(af.juntos(it[i], it[j], vs[i] + vs[j] + pick([1, 2, -1, -2]))); }
+      }
+      verdade.push(af.maior(it[iMax]));
+      for (let i = 0; i < n; i++) if (i !== iMax) mentira.push(af.maior(it[i]));
+      const certa = pick(verdade), erradas = sample([...new Set(mentira)], 3);
+      return Q('Qual afirmação é verdadeira?', certa, erradas, X(`Confira cada frase com os números da tabela: ${it.map((x, k) => `${x} ${vs[k]}`).join(', ')}. Só "${certa}" bate com a tabela.`), { longa: true });
+    },
+  };
+  return qs;
+}
 export function perguntasTabela(chave, n) {
-  const tab = tabelaSorteada(chave); const T = tab._T; const it = tab.linhas.map(l => l[0]), vs = tab.linhas.map(l => l[1]);
-  const soma = vs.reduce((a, b) => a + b, 0); const iMax = vs.indexOf(Math.max(...vs)), iMin = vs.indexOf(Math.min(...vs));
-  const outros = i => it.filter((_, j) => j !== i);
-  const qs = [
-    () => Q(T.txt.mais, it[iMax], sample(outros(iMax), 3), X(`Procure o maior número da tabela: ${vs[iMax]} (${it[iMax]}).`)),
-    () => Q(T.txt.menos, it[iMin], sample(outros(iMin), 3), X(`Procure o menor número da tabela: ${vs[iMin]} (${it[iMin]}).`)),
-    () => { const i = int(0, it.length - 1); return Q(T.txt.qto(it[i]), num(vs[i]), erradasTexto(num(vs[i]), shuffle(vs.filter(v => v !== vs[i])).map(num).concat([num(vs[i] + 1), num(vs[i] + 2), num(Math.max(1, vs[i] - 1)), num(vs[i] + 3)])), X(`Ache a linha "${it[i]}" e leia o número ao lado: ${vs[i]}.`)); },
-    () => Q(T.txt.total, num(soma), erradasNum(soma, [soma + 1, soma - 1, soma + vs[0], Math.max(...vs) * it.length]), X(`Some todos: ${vs.join(' + ')} = ${soma}`)),
-    () => { const v = vs[iMax] - vs[iMin]; return Q(T.txt.dif(it[iMax], it[iMin]), num(v), erradasNum(v, [vs[iMax] + vs[iMin], vs[iMax], v + 1]), X(`"A mais" é subtração: ${vs[iMax]} − ${vs[iMin]} = ${v}`)); },
-  ];
-  if (T.txt.media) qs.push(() => { const v = soma / vs.length; return Q(T.txt.media, num(v), erradasNum(v, [soma, v + 1, v - 1, vs[Math.floor(vs.length / 2)]]), X(`Some tudo e divida pela quantidade: ${soma} ÷ ${vs.length} = ${num(v)}`)); });
-  if (T.txt.mediana) qs.push(() => { const s = [...vs].sort((a, b) => a - b); const v = s[2]; return Q(T.txt.mediana, num(v), erradasTexto(num(v), [num(vs[2]), num(soma / 5), num(s[0]), num(s[4]), num(v + 1), num(v + 2), num(Math.max(1, v - 1)), num(v + 3)].filter(x => !x.includes(','))), X(`Em ordem: ${s.join(', ')}. O do meio: ${v}`)); });
+  const tab = tabelaSorteada(chave); const T = tab._T; const it = tab.linhas.map(l => l[0]);
   const tabela = { titulo: tab.titulo, colunas: tab.colunas, linhas: tab.linhas };
-  return shuffle(qs).slice(0, n).map(f => ({ ...f(), tabela }));
+  let tipos;
+  if (T.dupla) {
+    const { m, f, t } = tab, soma = somaL(t), sm = somaL(m), sf = somaL(f), iMax = t.indexOf(Math.max(...t));
+    const C = perguntasComuns(it, t, {
+      pct: x => `Que porcentagem de todos os votos teve ${oEsporte(x)} (meninos e meninas)?`, frac: x => `Que fração de todos os alunos votou em ${x.toLowerCase()}?`,
+      media: 'Qual é a média de votos por esporte, somando meninos e meninas?', empate: (a, b) => `Quantos votos a mais ${oEsporte(a)} precisaria para empatar com ${oEsporte(b)}, no total?`,
+    }, TAB.treinador2.af);
+    const meninas = () => { const i = int(0, it.length - 1), v = f[i]; return Q(`Quantas meninas escolheram ${x(it[i])}?`, num(v), erradasNum(v, [m[i], t[i], v + 1, v - 1]), X(`Linha "${it[i]}", coluna "Meninas": ${v}.`)); };
+    const x = s => s.toLowerCase();
+    const maisSomando = () => Q('Qual esporte foi o mais votado somando meninos e meninas?', it[iMax], sample(it.filter((_, k) => k !== iMax), 3), X(`Some cada linha (coluna Total): ${it.map((y, k) => `${y} ${m[k]} + ${f[k]} = ${t[k]}`).join('; ')}. O maior é ${it[iMax]}.`));
+    const meninos = () => Q('Quantos meninos votaram ao todo?', num(sm), erradasNum(sm, [sf, soma, sm + 1, sm - 1]), X(`Some a coluna "Meninos": ${m.join(' + ')} = ${sm}`));
+    const meninasTodo = () => Q('Quantas meninas votaram ao todo?', num(sf), erradasNum(sf, [sm, soma, sf + 1, sf - 1]), X(`Some a coluna "Meninas": ${f.join(' + ')} = ${sf}`));
+    const difSexo = () => { const i = pick(it.map((_, k) => k).filter(k => m[k] !== f[k])); if (i == null) return null; const [a, b, qa, qb] = m[i] > f[i] ? ['meninos', 'meninas', m[i], f[i]] : ['meninas', 'meninos', f[i], m[i]]; const v = qa - qb;
+      return Q(`No ${x(it[i])}, quantos votos de ${a} a mais que de ${b}?`.replace('No natação', 'Na natação'), num(v), erradasNum(v, [qa + qb, qa, v + 1]), X(`Linha "${it[i]}": ${a} ${qa}, ${b} ${qb}. "A mais" é subtração: ${qa} − ${qb} = ${v}`)); };
+    tipos = chave === 'revanche' ? [maisSomando, C.pct, C.media, difSexo, meninasTodo] : [meninas, maisSomando, meninos, C.pct, C.frac, difSexo, C.media];
+  } else {
+    const vs = tab.linhas.map(l => l[1]), soma = somaL(vs);
+    const iMax = vs.indexOf(Math.max(...vs)), iMin = vs.indexOf(Math.min(...vs));
+    const outros = i => it.filter((_, j) => j !== i);
+    const C = perguntasComuns(it, vs, T.txt, T.af);
+    const total = () => Q(T.txt.total, num(soma), erradasNum(soma, [soma + 1, soma - 1, soma + vs[0], Math.max(...vs) * it.length]), X(`Some todos: ${vs.join(' + ')} = ${soma}`));
+    const dif = () => { const v = vs[iMax] - vs[iMin]; return Q(T.txt.dif(it[iMax], it[iMin]), num(v), erradasNum(v, [vs[iMax] + vs[iMin], vs[iMax], v + 1]), X(`"A mais" é subtração: ${vs[iMax]} − ${vs[iMin]} = ${v}`)); };
+    tipos = [total, dif, C.pct, C.frac, C.empate, C.media, C.afirmacao];
+    if (chave === 'treinador1') {   // só aqui: UMA pergunta de ler (o maior, o menor ou um valor)
+      const ler = pick([
+        () => Q(T.txt.mais, it[iMax], sample(outros(iMax), 3), X(`Procure o maior número da tabela: ${vs[iMax]} (${it[iMax]}).`)),
+        () => Q(T.txt.menos, it[iMin], sample(outros(iMin), 3), X(`Procure o menor número da tabela: ${vs[iMin]} (${it[iMin]}).`)),
+        () => { const i = int(0, it.length - 1); return Q(T.txt.qto(it[i]), num(vs[i]), erradasTexto(num(vs[i]), shuffle(vs.filter(v => v !== vs[i])).map(num).concat([num(vs[i] + 1), num(vs[i] + 2), num(Math.max(1, vs[i] - 1)), num(vs[i] + 3)])), X(`Ache a linha "${it[i]}" e leia o número ao lado: ${vs[i]}.`)); },
+      ]);
+      tipos = [ler, ...shuffle(tipos)];
+    }
+  }
+  const out = [];
+  for (const f of chave === 'treinador1' ? tipos : shuffle(tipos)) { if (out.length >= n) break; const q = f(); if (q && q.erradas.length >= 3) out.push({ ...q, tabela }); }
+  return shuffle(out);
 }
 const M13 = {
   A: {
-    treinador1: [media(2), media(3), media(2), media(3), media(3)],
-    treinador2: [moda, moda, moda, moda, moda],
-    treinador3: [mediana(), mediana(), mediana(5), mediana(), mediana(3)],
-    lider: [media(2), moda, mediana(3, true), media(3), duasNotas],
-    revanche: [media(4, true), mediana(5, true), notaFalta],
+    treinador1: [media(3), mediaMeio, mediaProblema, media(5), mediaMeio],
+    treinador2: [moda, modaDupla, modaVaria, modaDupla, modaVaria],
+    treinador3: [mediana(5, true), medianaPar(4), mediana(7, true), medianaPar(6), notaFalta],
+    lider: [mediaMeio, modaDupla, medianaPar(6), notaFalta, comparar],
+    revanche: [medianaPar(6), notaFalta, comparar],
   },
   B: 'tabelas',
 };

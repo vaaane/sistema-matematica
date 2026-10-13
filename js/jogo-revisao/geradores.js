@@ -35,7 +35,7 @@ export const DICAS = {
   '12A': 'No ponto (x, y): primeiro o x (lados), depois o y (cima e baixo).',
   '12B': 'Direita soma no x, esquerda subtrai; cima soma no y, baixo subtrai.',
   '13A': 'Média: some e divida. Moda: o que mais aparece. Mediana: o do meio, em ordem.',
-  '13B': 'Leia a linha certa da tabela. "A mais" é subtração; "ao todo" é soma.',
+  '13B': 'Leia a linha certa da tabela. "A mais" é subtração; "ao todo" é soma. Porcentagem: parte ÷ total × 100.',
 };
 
 export const PERSONAGENS = ['treinador1', 'treinador2', 'treinador3', 'lider', 'revanche'];

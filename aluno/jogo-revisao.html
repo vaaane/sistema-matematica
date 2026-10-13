@@ -105,8 +105,9 @@
       <button id="btn-pesca-ranking" class="jr-btn jr-btn-sec" hidden aria-label="Ranking de pesca da semana">🏆</button>
       <button id="btn-lancar" class="jr-btn jr-btn-ouro" hidden>🪱 Lançar</button>
       <button id="btn-acao-mapa" class="jr-btn jr-btn-ouro" hidden>⛏️ Cavar</button>
-      <button id="btn-levantar" class="jr-btn jr-btn-sec" hidden>🧍 Levantar</button>
+      <button id="btn-levantar" class="jr-btn jr-btn-sec jr-pesca-sair" hidden aria-label="Sair da pesca" title="Sair da pesca (ou toque em outro lugar do mapa)">✕</button>
     </div>
+    <button id="btn-puxar" class="jr-btn jr-pesca-puxar esperando" hidden>🎣 Esperando…</button>
     <div id="pesca-ranking" class="jr-pesca-ranking" hidden role="dialog" aria-label="Ranking de pesca da semana">
       <div class="pr-caixa">
         <div class="pr-topo"><b>🏆 Ranking de pesca da semana</b><button class="jr-btn jr-btn-sec" id="pr-fechar" aria-label="Fechar">✕</button></div>
@@ -136,12 +137,43 @@
     </div>
   </div>
 
+  <!-- Mestre da Revisão: festa das 26 insígnias e Hall dos Mestres (PROMPT-57) -->
+  <div id="festa-mestre" class="jr-festa-mestre" hidden role="dialog" aria-label="Mestre da Revisão">
+    <div class="fm-confete" id="fm-confete" aria-hidden="true"></div>
+    <div class="fm-palco"><img class="fm-pers" id="fm-pers" alt="" draggable="false"/><img class="fm-pet" id="fm-pet" alt="" draggable="false"/></div>
+    <div class="fm-caixa">
+      <b class="fm-tit" id="fm-tit"></b>
+      <div class="fm-sub" id="fm-sub"></div>
+      <button class="jr-btn jr-btn-ouro" id="fm-trofeu">🏆 Ver meu troféu</button>
+    </div>
+  </div>
+  <div id="hall-mestres" class="jr-pesca-ranking" hidden role="dialog" aria-label="Hall dos Mestres">
+    <div class="pr-caixa">
+      <div class="pr-topo"><b>🏆 Hall dos Mestres</b><button class="jr-btn jr-btn-sec" id="hm-fechar" aria-label="Fechar">✕</button></div>
+      <small class="pr-nota" id="hm-turma"></small>
+      <ol class="pr-lista" id="hm-lista"></ol>
+      <small class="pr-nota">Quem conquistou as 26 insígnias, na ordem em que terminou.</small>
+    </div>
+  </div>
+  <!-- Calculadora 🧮 (perguntas de porcentagem): janelinha por cima, sem tapar as opções -->
+  <div id="calc" class="jr-calc" hidden role="dialog" aria-label="Calculadora">
+    <div class="jr-calc-topo"><b>🧮 Calculadora</b><button class="jr-calc-x" id="calc-fechar" aria-label="Fechar">✕</button></div>
+    <div class="jr-calc-tela"><div class="jr-calc-conta" id="calc-conta"></div><div class="jr-calc-visor" id="calc-visor">0</div></div>
+    <div class="jr-calc-teclas" id="calc-teclas">
+      <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button data-k="÷" class="op">÷</button>
+      <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button data-k="×" class="op">×</button>
+      <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button data-k="−" class="op">−</button>
+      <button data-k="0">0</button><button data-k=",">,</button><button data-k="=" class="igual">=</button><button data-k="+" class="op">+</button>
+      <button data-k="C" class="limpa">C</button><button data-k="⌫" class="limpa">⌫</button><button data-k="%" class="op pct">%</button>
+    </div>
+  </div>
   <!-- 3.4 Pergunta -->
   <div id="pergunta" class="jr-pergunta" hidden>
     <div class="jr-perg-caixa" id="perg-caixa">
       <!-- barra do topo: fugir, moedas, adversário e progresso -->
       <div class="jr-perg-barra">
         <button class="jr-fugir" id="perg-desistir" aria-label="Fugir da batalha">🏳️ Fugir</button>
+        <button class="jr-calc-btn" id="perg-calc" hidden aria-label="Calculadora" title="Calculadora">🧮</button>
         <div class="jr-moedas" id="perg-moedas" hidden aria-label="Moedas"><img class="jr-item-img jr-ic-moeda" data-icone="moeda" alt="🪙" draggable="false"/> <span>0</span></div>
         <div class="jr-perg-placa">
           <span class="jr-perg-adv-nome" id="perg-adv-nome"></span>
@@ -259,23 +291,25 @@
       <div class="pg-msg" id="pg-msg"></div>
       <div class="pg-botoes">
         <button class="jr-btn jr-btn-ouro" id="pg-exec">▶ Executar</button>
+        <button class="jr-btn jr-btn-sec" id="pg-passo">⏭ 1 passo</button>
         <button class="jr-btn jr-btn-sec" id="pg-parar" aria-label="Parar">⏸</button>
         <button class="jr-btn jr-btn-sec" id="pg-reset" aria-label="Voltar ao início">↺</button>
-        <button class="jr-btn jr-btn-sec" id="pg-vel" aria-label="Velocidade">🐢</button>
         <button class="jr-btn" id="pg-pronto" hidden>✅ Pronto!</button>
       </div>
     </div>
     <div class="pg-dir">
       <div class="pg-blockly" id="pg-blockly"></div>
+      <div class="pg-anotacoes" id="pg-anotacoes"></div>
+      <div class="pg-lixo" id="pg-lixo" hidden><b>🗑️</b><span>Solte aqui para apagar</span></div>
       <div class="pg-trava" id="pg-trava" hidden></div>
       <div class="pg-rodape"><span id="pg-contagem"></span></div>
       <div class="pg-carregando" id="pg-carregando">Carregando os blocos…</div>
     </div>
     <div class="pg-vitoria" id="pg-vitoria" hidden role="dialog" aria-label="Resultado">
       <div class="pg-vit-confete" id="pg-vit-confete"></div>
-      <div class="pg-vit-caixa">
+      <img class="pg-vit-pet" id="pg-vit-pet" alt="" draggable="false"/>
+      <div class="pg-vit-caixa" id="pg-vit-caixa">
         <b class="pg-vit-tit" id="pg-vit-tit"></b>
-        <img class="pg-vit-pet" id="pg-vit-pet" alt="" draggable="false"/>
         <div class="pg-vit-estrelas" id="pg-vit-estrelas"></div>
         <div class="pg-vit-info" id="pg-vit-info"></div>
         <div class="pg-vit-botoes" id="pg-vit-botoes"></div>
@@ -408,6 +442,7 @@
   <section id="batalha" class="bt-tela" hidden aria-label="Batalha">
     <div class="bt-hud">
       <button class="jr-fugir" id="bt-sair" aria-label="Sair da batalha">🏳️ Sair</button>
+      <button class="jr-calc-btn" id="bt-calc" hidden aria-label="Calculadora" title="Calculadora">🧮</button>
       <div class="bt-lado">
         <span class="jr-busto bt-busto L" id="bt-bustoL"></span>
         <div class="bt-lado-txt">

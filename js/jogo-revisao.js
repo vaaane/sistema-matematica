@@ -27,7 +27,7 @@ import { codigoValido, premioDoPodio, pontosDaResposta, TEMPO_RODADA_MS } from '
 import { baseAoVivo, criarSala, entrarNaSala, sairDaSala, responder as responderNaSala, ouvirSala, ouvirConviteTurma, Anfitriao, placar } from '/js/jogo-revisao/aovivo-sala.js';
 import { notaJogoRevisao, formatarNota, NOTA_MAX, PESO_INSIGNIAS, PESO_DOURADAS } from '/js/jogo-revisao/nota.js';
 import { configurarPrograme, ligarBotoesPrograme, abrirTela as abrirTelaPrograme, fecharTela as fecharTelaPrograme, mostrarCorrida, mensagemCorrida, mostrarCartao as cartaoPrograme,
-  programaParaTexto, programaDeTexto } from '/js/jogo-revisao/programe.js';
+  programaParaTexto, programaDeTexto, caixaDoQuadro } from '/js/jogo-revisao/programe.js';
 import { faseDoDia, faseDaCorrida, resultadoCorrida } from '/js/jogo-revisao/programe-logica.js';
 
 // XP (só na primeira vez que cada personagem é vencido; nunca no modo teste)
@@ -77,6 +77,155 @@ const fatorForma = (pet, forma) => (forma && forma !== pet ? altImagemPet(forma)
 // Imagem pequena numa caixa feita para o filhote (coleção, HUD, chips, cartões): o quadro do adulto é mais largo
 // (asas). O CSS de img[data-adulto] usa a proporção do filhote, recorta as sobras dos lados e aumenta a partir dos pés.
 const attrForma = (pet, forma) => (forma && forma !== pet ? ` data-adulto style="--cresce-img:${fatorForma(pet, forma).toFixed(3)}"` : '');
+// Ícone pequeno do pet (círculo): o busto (cabeça inteira), ou o pet sentado se não tiver busto. Os bustos têm enquadramentos
+// diferentes (nos filhotes a cabeça fica embaixo de uma imagem alta), então medimos o desenho e centralizamos a cabeça no círculo.
+const srcIcone = (forma) => (temBusto(forma) ? bustoPet(forma) : quadrosDe(forma, 'sentado_girando')[0]);
+async function encaixarIcone(img) {
+  const src = img.getAttribute('src');
+  const c = src && await caixaDoQuadro(src);
+  if (!c || !img.isConnected || img.getAttribute('src') !== src) return;
+  const bw = c.x1 - c.x0, bh = c.y1 - c.y0, ar = c.h / c.w, W = 94 / Math.max(bw, bh * ar);   // largura da imagem em % do círculo
+  Object.assign(img.style, { position: 'absolute', width: W + '%', height: 'auto', maxWidth: 'none', transform: 'none', objectFit: 'contain',
+    left: (50 - (c.x0 + bw / 2) * W) + '%', top: (50 - (c.y0 + bh / 2) * W * ar) + '%' });
+}
+// todo <img data-icone-pet> que aparecer na tela é encaixado sozinho
+new MutationObserver((ms) => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1)
+  (n.matches('img[data-icone-pet]') ? [n] : n.querySelectorAll('img[data-icone-pet]')).forEach(encaixarIcone); })
+  .observe(document.getElementById('jr-app') || document.body, { childList: true, subtree: true });
+
+// ============================================================
+//  MESTRE DA REVISÃO (as 26 insígnias) e LENDA DA REVISÃO (as 26 douradas) — PROMPT-57
+//  Fica no estado do aluno (mestre/lenda: { data }) e é publicado no resumo do mural (jogo_revisao_praca/insignias/{uid}:
+//  m, l) e no online (titulo: 1 mestre, 2 lenda). Os colegas veem 👑/🌟 e o nome dourado. Nunca para PROFESSOR/TESTE/ALUNOS_TESTE.
+// ============================================================
+let festaPendente = null;
+const TITULOS = new Map();   // uid → 1 (mestre) | 2 (lenda), lido do resumo do mural
+const NOME_TITULO = ['', '👑 Mestre da Revisão', '🌟 Lenda da Revisão'];
+const meuTitulo = () => (estado?.lenda ? 2 : estado?.mestre ? 1 : 0);
+const contaEscondida = (uid, nome) => ALUNOS_TESTE.includes(uid) || /PROFESSOR|TESTE/i.test(`${uid} ${nome || ''}`);
+function tituloDe(uid, r) {
+  if (!uid || (!teste && contaEscondida(uid, r?.apelido || r?.nome))) return 0;
+  if (uid === sessao?.uid) return meuTitulo();
+  return Math.max(Number(r?.titulo) || 0, TITULOS.get(uid) || 0);
+}
+const prefixoTitulo = (uid, r) => ['', '👑 ', '🌟 '][tituloDe(uid, r)];
+// nome (texto) → HTML com 👑/🌟 e dourado para quem é mestre/lenda
+function nomeT(uid, nome, r) {
+  const t = tituloDe(uid, r);
+  return t ? `<span class="jr-nome-${t === 2 ? 'lenda' : 'mestre'}">${t === 2 ? '🌟' : '👑'} ${esc(nome)}</span>` : esc(nome);
+}
+function pintarNomeColega(el, uid, r, extra) {
+  const t = tituloDe(uid, r);
+  el.textContent = prefixoTitulo(uid, r) + rotuloColega(uid, r) + extra;
+  el.classList.toggle('mestre', t === 1); el.classList.toggle('lenda', t === 2);
+}
+function registrarTitulos(todos) {
+  const total = NUM_MAPAS * 2;
+  for (const [uid, r] of Object.entries(todos || {})) {
+    const n = Number(r?.n) || 0, d = Number(r?.d) || 0;
+    if (n >= total) TITULOS.set(uid, d >= total ? 2 : 1); else TITULOS.delete(uid);
+  }
+}
+async function carregarTitulos() {
+  try { registrarTitulos(await lerNo(`${basePraca()}/insignias`)); } catch (e) { console.warn('[jogo-revisao] títulos indisponíveis', e?.code || e); }
+}
+// Conferido ao ganhar insígnia e ao abrir o jogo: grava uma vez só e devolve 'mestre' | 'lenda' (para a festa) ou null
+function verificarMestre() {
+  if (!carregouProgresso || ehProfessora()) return null;
+  const { conquistadas, douradas, total } = contarInsignias();
+  let festa = null;
+  if (conquistadas >= total && !estado.mestre) { estado.mestre = { data: Date.now() }; gravar({ mestre: estado.mestre }); festa = 'mestre'; }
+  if (douradas >= total && estado.mestre && !estado.lenda) { estado.lenda = { data: Date.now() }; gravar({ lenda: estado.lenda }); festa = 'lenda'; }
+  if (festa) { publicarResumoInsignias(); enviarOnline({ titulo: meuTitulo() }); if (!$('tela-geral').hidden) desenharMarcadores(); }
+  return festa;
+}
+// Festa em tela cheia: confete, o pet comemorando grande e o personagem
+function mostrarFestaMestre(tipo) {
+  const el = $('festa-mestre');
+  const lenda = tipo === 'lenda';
+  $('fm-tit').textContent = lenda ? '🌟 Você conquistou TODAS as insígnias douradas!' : '🏆 Você conquistou TODAS as insígnias!';
+  $('fm-sub').innerHTML = `Agora você é <b>${lenda ? 'Lenda da Revisão' : 'Mestre da Revisão'}</b>`;
+  const pers = $('fm-pers');
+  pers.onerror = () => { pers.onerror = null; pers.src = urlQuadro('frente', -1); };
+  pers.src = urlComemorando();
+  const pet = estado.pets?.ativo, forma = pet && formaDe(pet), img = $('fm-pet');
+  clearInterval(mostrarFestaMestre.anim);
+  img.hidden = !forma;
+  if (forma) {
+    aplicarVisualPet(img, pet);
+    const anims = forma !== pet ? ['animado', 'orgulhoso', 'rugido'] : temAnim(forma, 'pulo_cambalhota') ? ['pulo_cambalhota', 'feliz'] : ['feliz'];
+    const seq = anims.flatMap(a => { const q = quadrosDe(forma, a); return Array.from({ length: Math.max(q.length, 5) }, (_, i) => q[i % q.length]); });
+    const fim = quadrosDe(forma, anims[anims.length - 1]);
+    let i = 0;
+    img.src = seq[0];
+    if (!semMovimento()) mostrarFestaMestre.anim = setInterval(() => { i++; img.src = i < seq.length ? seq[i] : fim[(i - seq.length) % fim.length]; }, 190);
+  }
+  const conf = $('fm-confete');
+  conf.innerHTML = '';
+  if (!semMovimento()) for (let k = 0; k < 40; k++) {
+    const s = document.createElement('span');
+    s.textContent = ['🎉', '✨', '⭐', '🎊', '🏆', lenda ? '🌟' : '👑'][k % 6];
+    s.style.left = Math.random() * 100 + '%';
+    s.style.animationDelay = (Math.random() * 1.8).toFixed(2) + 's';
+    s.style.animationDuration = (2.2 + Math.random() * 1.6).toFixed(2) + 's';
+    conf.appendChild(s);
+  }
+  tocar('vitoria');
+  el.hidden = false;
+}
+function fecharFestaMestre() {
+  $('festa-mestre').hidden = true;
+  clearInterval(mostrarFestaMestre.anim);
+}
+// Troféu do mapa geral: brilho por cima do troféu desenhado (mapa-geral.json → trofeu: { x, y, r })
+function trofeuHtml() {
+  const t = D.geral.trofeu;
+  if (!t) return '';
+  return `<button class="jr-trofeu ${estado.mestre ? 'forte' : 'fraco'}" data-trofeu="1" aria-label="Troféu da Revisão"
+    style="left:${t.x / W * 100}%;top:${t.y / H * 100}%;width:${(2 * t.r) / W * 100}%"><i></i><b>✦</b><b>✦</b><b>✦</b></button>`;
+}
+function tocarTrofeu() {
+  tocar('clique');
+  if (estado.mestre) { abrirHallMestres(); return; }
+  const { conquistadas, total } = contarInsignias(), f = total - conquistadas;
+  avisoPet(`🏆 Conquiste as ${total} insígnias para ganhar o troféu! Falta${f === 1 ? '' : 'm'} ${f}.`);
+}
+function verMeuTrofeu() {
+  fecharFestaMestre();
+  const mostra = () => {
+    const t = D.geral.trofeu, sc = $('geral-scroll'), palco = $('geral-palco');
+    if (t) {
+      sc.scrollTo({ left: t.x / W * palco.clientWidth - sc.clientWidth / 2, top: palco.offsetTop + t.y / H * palco.clientHeight - sc.clientHeight / 2, behavior: semMovimento() ? 'auto' : 'smooth' });
+      const b = document.querySelector('.jr-trofeu');
+      b?.classList.add('destaque');
+      setTimeout(() => b?.classList.remove('destaque'), 2600);
+    }
+    setTimeout(abrirHallMestres, 1400);
+  };
+  if ($('tela-geral').hidden) { if (perguntaAberta) fecharPergunta(); transicao(() => { abrirMapaGeral(); setTimeout(mostra, 300); }); }
+  else mostra();
+}
+// Hall dos Mestres: os alunos da turma que terminaram, com a data, em ordem de quem terminou primeiro
+async function abrirHallMestres() {
+  const el = $('hall-mestres'), ul = $('hm-lista');
+  $('hm-turma').textContent = sessao.turma && !/TESTE/i.test(sessao.turma) ? `Turma ${sessao.turma}` : '';
+  ul.innerHTML = '<li class="ml-vazio">Carregando…</li>';
+  el.hidden = false;
+  let todos = {};
+  try { todos = await lerNo(`${basePraca()}/insignias`); registrarTitulos(todos); }
+  catch (e) { ul.innerHTML = '<li class="ml-vazio">Não deu para carregar agora.</li>'; return; }
+  const total = NUM_MAPAS * 2;
+  const lista = Object.entries(todos)
+    .filter(([uid, r]) => (Number(r?.n) || 0) >= total && (teste || visivelNoMural(uid, r)) && (r.turma || '') === (sessao.turma || ''))
+    .map(([uid, r]) => ({ uid, nome: nomeVisivel(r.nome) || 'Aluno', data: Number(r.m) || Number(r.ts) || 0 }));
+  if (estado.mestre && !lista.some(r => r.uid === sessao.uid) && (teste || entraNoRanking())) lista.push({ uid: sessao.uid, nome: nomeRanking(), data: estado.mestre.data });
+  lista.sort((a, b) => a.data - b.data);
+  const dataBR = (t) => (t ? new Date(t).toLocaleDateString('pt-BR') : '');
+  ul.innerHTML = lista.map((r, i) => `<li class="${r.uid === sessao.uid ? 'eu' : ''}"><span class="pr-pos">${i + 1}º</span>
+    <span class="pr-nome">${nomeT(r.uid, r.nome)}</span><b>${dataBR(r.data)}</b></li>`).join('')
+    || '<li class="ml-vazio">Ninguém da turma terminou ainda. Seja o primeiro! 🏆</li>';
+}
+
 function marcarForma(img, pet, forma) {
   const adulto = !!forma && forma !== pet;
   img.toggleAttribute('data-adulto', adulto);
@@ -211,6 +360,8 @@ async function carregarEstado() {
     estado.revisaoSemanal = v.revisao_semanal || {};
     estado.relembre = v.relembre && typeof v.relembre === 'object' ? { ...v.relembre } : {};
     estado.programe = v.programe && typeof v.programe === 'object' ? { ...v.programe, fases: { ...(v.programe.fases || {}) } } : { fases: {} };   // PROMPT-50
+    estado.mestre = v.mestre?.data ? { data: v.mestre.data } : null;   // Mestre da Revisão: as 26 insígnias (PROMPT-57)
+    estado.lenda = v.lenda?.data ? { data: v.lenda.data } : null;      // Lenda da Revisão: as 26 douradas
     estado.letraGrande = !!v.preferencias?.letra_grande;   // Aa Letra grande (PROMPT-49), salva por aluno
     aplicarLetra();
     estado.missoes = v.missoes_dia && typeof v.missoes_dia === 'object' ? v.missoes_dia : null;
@@ -509,7 +660,10 @@ export async function iniciarJogo(sess) {
   // só para a professora testar pelo console (?dev=1 no modo teste): jogoRevisaoDev.somarTurma('ZZ_DEV', 'insignias')
   if (modoDev) window.jogoRevisaoDev = { somarTurma, batalha: () => bt, pesca: () => pesca,   // batalha/pesca em andamento (testes)
     praca: () => abrirPraca(), laboratorio: () => abrirLaboratorio(), computador: (id) => abrirComputador(id), fantasma: () => abrirFantasma(), fase: (n) => abrirFasePrograme(n), escolherPet: (p) => escolherPet(p),
-    desafiar: (uid, modo) => desafiarColega(colegas.get(uid), modo), colegas: () => [...colegas.keys()] };
+    desafiar: (uid, modo) => desafiarColega(colegas.get(uid), modo), colegas: () => [...colegas.keys()],
+    mapa: (n) => abrirMapa(n, 'entrada'), pescar: () => { const p = pontosDoMapa(cena.n)[0]; if (p) sentarPesca(p); return !!p; }, pergunta: (chave, p) => abrirPergunta(chave, p),
+    festa: (t) => mostrarFestaMestre(t || 'mestre'), hall: () => abrirHallMestres(), estado: () => estado, geral: () => abrirMapaGeral(),
+    batalhar: (id) => iniciarBatalha(id), pg: () => pg };
 
   try {
     const pegar = (p) => fetch(`${DADOS}/${p}`).then(r => { if (!r.ok) throw new Error(p); return r.json(); });
@@ -587,6 +741,8 @@ export async function iniciarJogo(sess) {
   requestAnimationFrame(loop);
   abrirMapaGeral();
   $('jr-carregando').hidden = true;
+  { const f = verificarMestre(); if (f) setTimeout(() => mostrarFestaMestre(f), 1500); }
+  carregarTitulos();
   iniciarPet();
   atualizarBotaoMissoes();
   entrarOnline().catch(() => {}).then(() => { carregarPremiosPesca(); ouvirPresentes(); iniciarPraca(); publicarResumoInsignias(); ouvirConvitesAoVivo(); });
@@ -887,10 +1043,10 @@ function atualizarBotaoPet() {
   b.hidden = !(seguidor && ativo && cena?.tipo === 'mapa');
   atualizarBotaoBatalhar();
   if (b.hidden) return;
-  const src = quadrosDe(formaDe(ativo), 'sentado_girando')[0];
+  const src = srcIcone(formaDe(ativo));
   const img = b.querySelector('img');
-  if (img.getAttribute('src') !== src) img.src = src;
-  marcarForma(img, ativo, formaDe(ativo));
+  img.setAttribute('data-icone-pet', '');
+  if (img.getAttribute('src') !== src) { img.src = src; encaixarIcone(img); }
   aplicarVisualPet(img, ativo);
   b.setAttribute('aria-label', `Meus pets (${nomePet(ativo)})`);
 }
@@ -1172,7 +1328,7 @@ function proximoAvisoPet() {
   el.className = 'jr-aviso-seq jr-aviso-pet' + (a.festa ? ' festa' : '') + (a.img ? ' com-busto' : '');
   el.textContent = a.texto;
   if (a.img) { const im = document.createElement('img'); im.src = a.img; im.alt = ''; im.draggable = false; el.prepend(im); }
-  $('jr-app').appendChild(el);
+  ($('programe') && !$('programe').hidden ? $('programe') : $('jr-app')).appendChild(el);   // no Programe o pet: dentro da tela dele (não gira)
   if (a.festa) tocar('vitoria');
   setTimeout(() => { el.remove(); filaAvisoPet.shift(); proximoAvisoPet(); }, 4200);
 }
@@ -1284,7 +1440,7 @@ function renderBotaoMeusPets() {
   $('mp-npets').textContent = meus.length;
   $('mp-carinhas').innerHTML = ordem.slice(0, 3).map(p => {
     const f = formaDe(p);
-    return `<span><img src="${quadrosDe(f, 'sentado_girando')[0]}" alt="" draggable="false" data-pet="${p}"/></span>`;   // o busto tem enquadramento diferente em cada pet
+    return `<span><img src="${srcIcone(f)}" alt="" draggable="false" data-pet="${p}" data-icone-pet/></span>`;   // o busto, com a cabeça medida e centralizada
   }).join('') + (ordem.length > 3 ? `<b>+${ordem.length - 3}</b>` : '');
   for (const img of $('mp-carinhas').querySelectorAll('img[data-pet]')) aplicarVisualPet(img, img.dataset.pet);
   $('mp-trocar').setAttribute('aria-label', `Meus pets: ${meus.length}. Ver e trocar`);
@@ -1881,7 +2037,7 @@ function avisarPescaLiberada(n) {
   $('pesca-aviso').hidden = false;
 }
 // Primeira pesca da vida: balões curtos antes do 1º lançamento (toque para avançar)
-const TUTORIAL_PESCA = ['Toque em 🪱 Lançar: cada lançamento gasta 1 isca (a Dona Cida vende).', 'Espere a boia afundar… quando aparecer ❗, toque rápido!',
+const TUTORIAL_PESCA = ['Toque em 🪱 Lançar: cada lançamento gasta 1 isca (a Dona Cida vende).', 'Espere a boia afundar… quando aparecer ❗, toque rápido no 🎣 PUXAR!',
   'Segure o dedo na tela (ou o espaço) para subir a zona verde e deixe o peixe dentro dela até a barra encher.',
   'Os 5 primeiros peixes do dia vão para a 🎒 Bolsa. Todo peixe vale pontos no ranking da semana 🏆'];
 function tutorialPesca(depois) {
@@ -1962,6 +2118,7 @@ function sentarPesca(ponto) {
 function pescaPose(pose) {
   if (!pesca) return;
   pesca.pose = pose;
+  atualizarBotaoPuxar();
   const src = `${PERS.pasta}/${meuPersonagem()}/pesca-${pose}.webp`;
   if (pesca.img.getAttribute('src') !== src) pesca.img.src = src;
   desenharLinhaPesca();
@@ -1989,6 +2146,13 @@ function pescaPronto() {
   pesca.estado = 'pronto';
   pescaPose('esperando');
   atualizarBotaoLancar();
+}
+// 🎣 embaixo à direita: cinza esperando (não faz nada), dourado pulsando no ❗ (puxa), "Segure!" na barrinha
+function atualizarBotaoPuxar() {
+  const b = $('btn-puxar'), e = pesca?.estado;
+  b.hidden = !(e === 'espera' || e === 'fisgada' || e === 'barrinha');
+  b.className = 'jr-btn jr-pesca-puxar ' + (e === 'fisgada' ? 'agora' : e === 'barrinha' ? 'segure' : 'esperando');
+  b.textContent = e === 'fisgada' ? '🎣 PUXAR!' : e === 'barrinha' ? '✊ Segure!' : '🎣 Esperando…';
 }
 function atualizarBotaoLancar() {
   const b = $('btn-lancar');
@@ -2184,7 +2348,7 @@ function renderRankingPesca() {
   if (!rankingPesca.lista) { $('pr-lista').innerHTML = '<li class="pr-vazio">Não deu para carregar o ranking agora.</li>'; return; }
   const lista = rankingPesca.filtro === 'turma' ? rankingPesca.lista.filter(r => r.turma === sessao.turma) : rankingPesca.lista;
   $('pr-lista').innerHTML = lista.slice(0, 10).map((r, i) => `
-    <li class="${r.uid === sessao.uid ? 'eu' : ''}"><span class="pr-pos">${i + 1}º</span><span class="pr-nome">${esc(r.nome)}${esc(medalhaPesca(r.uid))} <small>${esc(r.turma)}</small></span><b>${r.pontos} pts</b></li>`).join('')
+    <li class="${r.uid === sessao.uid ? 'eu' : ''}"><span class="pr-pos">${i + 1}º</span><span class="pr-nome">${nomeT(r.uid, r.nome)}${esc(medalhaPesca(r.uid))} <small>${esc(r.turma)}</small></span><b>${r.pontos} pts</b></li>`).join('')
     || '<li class="pr-vazio">Ninguém pescou esta semana ainda. Seja o primeiro! 🎣</li>';
   const i = lista.findIndex(r => r.uid === sessao.uid);
   $('pr-voce').textContent = !entraNoRanking() ? (ehProfessora() ? 'A professora não entra no ranking.' : 'Esta conta não entra no ranking.')
@@ -2277,7 +2441,7 @@ function sairPesca(reposicionar = true) {
   if (marca) marca.hidden = false;
   $('pesca-barra').hidden = true;
   $('pesca-tutorial').hidden = true;
-  $('btn-levantar').hidden = $('btn-lancar').hidden = $('btn-pesca-ranking').hidden = true;
+  $('btn-levantar').hidden = $('btn-lancar').hidden = $('btn-pesca-ranking').hidden = $('btn-puxar').hidden = true;
   $('jogador').style.visibility = '';
   if (reposicionar && cena?.tipo === 'mapa') {   // levanta no ponto da trilha mais perto do caixote
     const [x, y] = centroCelula(celulaMaisProxima(cena.grade, ponto.x, ponto.y));
@@ -2317,7 +2481,7 @@ async function entrarOnline() {
     if (s.exists() && s.val()) { apelido = String(s.val()); apelidoAluno = apelido; }
   } catch (_) {}
   await iniciarOnline({ uid: sessao.uid, teste, dados: {
-    apelido, turma: sessao.turma || '', pet: estado.pets?.ativo || null, ...(estado.pets?.ativo ? visualOnline(estado.pets.ativo) : {}), personagem: meuPersonagem(), mapa: 'geral', local: 'geral', x: 0, y: 0, dir: 'frente',
+    apelido, turma: sessao.turma || '', pet: estado.pets?.ativo || null, ...(estado.pets?.ativo ? visualOnline(estado.pets.ativo) : {}), personagem: meuPersonagem(), mapa: 'geral', local: 'geral', x: 0, y: 0, dir: 'frente', titulo: meuTitulo(),
   } });
   if (!$('tela-geral').hidden) ouvirGeral();
 }
@@ -2368,7 +2532,7 @@ function criarColega(uid, r) {
   const petImg = mk('img', 'jr-ator jr-pet jr-colega');
   const el = mk('img', 'jr-ator jr-colega jr-colega-jog');
   const nome = mk('div', 'jr-colega-nome jr-colega');
-  nome.textContent = rotuloColega(uid, r);
+  pintarNomeColega(nome, uid, r, '');
   const c = { uid, reg: r, el, nome, petImg, sombra, x: Number(r.x) || 0, y: Number(r.y) || 0, de: null, alvo: null, t0: 0,
     dir: r.dir || 'frente', quadro: -1, tQuadro: 0, reacaoT: Number(r.reacao?.t) || 0, pet: null, pers: null, seg: new PetSeguidor(petImg, sombra) };
   sombra.hidden = petImg.hidden = true;
@@ -2401,7 +2565,7 @@ function definirPetColega(c, pet, forma) {
 
 function atualizarColega(c, r) {
   c.reg = r;
-  c.nome.textContent = rotuloColega(c.uid, r) + (Number(r.pet_nivel) >= 2 ? ` ❤️${Number(r.pet_nivel)}` : '');
+  pintarNomeColega(c.nome, c.uid, r, Number(r.pet_nivel) >= 2 ? ` ❤️${Number(r.pet_nivel)}` : '');
   definirPetColega(c, r.pet, r.pet_forma);
   aplicarTinta(c.petImg, r.pet_tinta, true);
   definirPersColega(c, r.personagem);
@@ -2494,8 +2658,9 @@ function abrirCartaoColega(c) {
   el.innerHTML = `
     ${bustoHtml(urlQuadro('frente', -1, c.pers || PERS.padrao), 'jr-busto-colega', BUSTO_PERS)}
     <span class="jr-colega-info">
-      <b>${esc(nome)}${turma ? ` <small>· ${esc(turma)}</small>` : ''}</b>
-      ${pet ? `<span class="jr-colega-pet"><img src="${quadrosDe(formaValida(pet, r.pet_forma), 'sentado_girando')[0]}" alt="" draggable="false"${attrForma(pet, formaValida(pet, r.pet_forma))}${r.pet_tinta ? ` data-tinta="${esc(r.pet_tinta)}"` : ''}/>${r.pet_nome ? `${esc(r.pet_nome)} · ` : ''}${esc(NOME_PET[pet])}${Number(r.pet_nivel) >= 2 ? ` ❤️ ${Number(r.pet_nivel)}` : ''}</span>` : ''}
+      <b>${nomeT(c.uid, nome, r)}${turma ? ` <small>· ${esc(turma)}</small>` : ''}</b>
+      ${tituloDe(c.uid, r) ? `<span class="jr-titulo-mestre ${tituloDe(c.uid, r) === 2 ? 'lenda' : ''}">${NOME_TITULO[tituloDe(c.uid, r)]}</span>` : ''}
+      ${pet ? `<span class="jr-colega-pet"><span class="jr-icone-pet"><img src="${srcIcone(formaValida(pet, r.pet_forma))}" alt="" draggable="false" data-icone-pet${r.pet_tinta ? ` data-tinta="${esc(r.pet_tinta)}"` : ''}/></span>${r.pet_nome ? `${esc(r.pet_nome)} · ` : ''}${esc(NOME_PET[pet])}${Number(r.pet_nivel) >= 2 ? ` ❤️ ${Number(r.pet_nivel)}` : ''}</span>` : ''}
     </span>
     ${podeDesafiar() ? '<button class="jr-colega-oi jr-colega-desafiar" data-desafiar aria-label="Desafiar" title="Desafiar">⚔️</button>' : ''}
     <button class="jr-colega-oi" data-presente aria-label="Presentear com um peixe" title="Presentear">🎁</button>
@@ -2591,7 +2756,7 @@ function onlinePorMapa() {
   return por;
 }
 
-const rostoPet = (pet, tintaId) => petValido(pet) ? `<img src="${quadrosDe(pet, 'sentado_girando')[0]}" alt=""${tintaId ? ` data-tinta="${esc(tintaId)}"` : ''}/>` : '<span>🙂</span>';
+const rostoPet = (pet, tintaId) => petValido(pet) ? `<img src="${srcIcone(pet)}" alt="" data-icone-pet${tintaId ? ` data-tinta="${esc(tintaId)}"` : ''}/>` : '<span>🙂</span>';
 const pintarRostos = (raizEl) => { for (const img of raizEl.querySelectorAll('img[data-tinta]')) aplicarTinta(img, img.dataset.tinta); };
 
 function desenharOnlineGeral() {
@@ -2626,7 +2791,7 @@ function abrirListaOnline(n) {
   $('online-titulo').textContent = `${n}. ${reg?.nome || ''}`;
   $('online-itens').innerHTML = lista.map(r => `
     <li><span class="jr-rosto${r.local === 'ginasio' ? ' no-ginasio' : ''}">${rostoPet(petAtual(r.pet), r.pet_tinta)}</span>
-      <span class="jr-online-nome">${esc(rotuloColega(r.uid, r))}</span>
+      <span class="jr-online-nome">${nomeT(r.uid, rotuloColega(r.uid, r), r)}</span>
       <span class="jr-online-det">${esc(nomeVisivel(r.turma))}${petValido(petAtual(r.pet)) ? ' · ' + esc((r.pet_nome ? r.pet_nome + ' · ' : '') + NOME_PET[petAtual(r.pet)]) : ''} · ${r.local === 'ginasio' ? 'no ginásio' : 'no mapa'}</span></li>`).join('')
     || '<li class="jr-online-vazio">Ninguém aqui agora.</li>';
   pintarRostos($('online-itens'));
@@ -2790,6 +2955,7 @@ function preCarregarQuadros(id) {
   if (quadrosCarregados.has(id)) return;
   quadrosCarregados.add(id);
   for (const d of DIRECOES) for (let i = -1; i < QUADROS_PERSONAGEM[d]; i++) { const im = new Image(); im.src = urlQuadro(d, i, id); }   // parado + quadros de andar
+  { const im = new Image(); im.onerror = () => semComemorando.add(id); im.src = `${PERS.pasta}/${id}/comemorando.webp`; }   // pose de acerto (se já existir)
 }
 // quadro −1 = parado (pernas juntas); 0..N−1 = ciclo de andar (o % cobre a troca de direção no meio do passo)
 const urlQuadro = (dir, q, id = meuPersonagem()) =>
@@ -2951,7 +3117,9 @@ function revisaoVisivel() {
 function atualizarBotaoRevisao() {
   const b = $('btn-revisao');
   if (!b || !estado) return;
+  const antes = b.hidden;
   b.hidden = !carregouProgresso || !revisaoVisivel();
+  if (antes !== b.hidden && !$('tela-geral').hidden) requestAnimationFrame(dimensionarGeral);   // a folga do mapa acompanha o 📜
   if (b.hidden) return;
   const feita = !!estado.revisaoSemanal?.[semanaISO()];
   const disponivel = !feita && escolherRevisao(estado.respostas, estado.ginasios).length > 0;
@@ -3047,6 +3215,12 @@ function dimensionarGeral() {
   else { w = vw; h = vw * H / W; }           // deitada: largura da tela
   palco.style.width = w + 'px';
   palco.style.height = h + 'px';
+  // folga em cima (barra do topo e atalhos) e embaixo: o mapa rola até os marcadores de cima (9 a 13) saírem de baixo dos botões
+  const base = sc.getBoundingClientRect().top;
+  const fundo = [document.querySelector('#tela-geral .jr-hud-topo'), $('btn-revisao')]
+    .filter(e => e && !e.hidden && getComputedStyle(e).display !== 'none').reduce((m, e) => Math.max(m, e.getBoundingClientRect().bottom - base), 0);   // o 📜 é position: fixed
+  palco.style.marginTop = Math.round(fundo + 6) + 'px';
+  palco.style.marginBottom = Math.round(Math.max(24, sc.clientHeight * 0.06)) + 'px';
 }
 
 function centralizarGeral() {
@@ -3058,7 +3232,7 @@ function centralizarGeral() {
   if (!r) return;
   const pw = $('geral-palco').clientWidth, ph = $('geral-palco').clientHeight;
   sc.scrollLeft = r.x / W * pw - sc.clientWidth / 2;
-  sc.scrollTop = r.y / H * ph - sc.clientHeight / 2;
+  sc.scrollTop = $('geral-palco').offsetTop + r.y / H * ph - sc.clientHeight / 2;
 }
 
 function desenharMarcadores() {
@@ -3076,7 +3250,7 @@ function desenharMarcadores() {
               <span class="jr-marc-num">${est === 'bloqueado' ? '🔒' : n}</span>
               <span class="jr-marc-nome">${esc(r.nome)}</span>${ins}
             </button>`;
-  }).join('') + (pracaPronta() && cfgPraca().geral ? (() => { const g = cfgPraca().geral;
+  }).join('') + trofeuHtml() + (pracaPronta() && cfgPraca().geral ? (() => { const g = cfgPraca().geral;
     return `<button class="jr-marcador jr-marc-praca disponivel" data-praca="1" style="left:${g.x / W * 100}%;top:${g.y / H * 100}%" aria-label="Praça do Encontro">
       <span class="jr-marc-num">🏛️</span><span class="jr-marc-nome">Praça</span><span class="jr-praca-online"></span></button>`; })() : '');
   desenharOnlineGeral();
@@ -3106,6 +3280,7 @@ function ligarArrasteGeral() {
     const b = e.target.closest('.jr-marcador');
     if (!b) return;
     if (b.dataset.praca) { abrirPraca(); return; }
+    if (b.dataset.trofeu) { tocarTrofeu(); return; }
     const n = Number(b.dataset.mapa);
     tocar('porta');
     abrirMapa(n, 'entrada');
@@ -4192,7 +4367,9 @@ async function carregarAbaMural(aba) {
   const poe = (uid, r, valor, rotulo, extra = {}) => { if (valor > 0) lista.push({ uid, nome: nomeVisivel(r.nome) || 'Aluno', turma: r.turma || '', valor, rotulo, pers: r.pers || null, ...extra }); };
   const bim = bimestreJogos();
   if (aba === 'insignias') {
-    for (const [uid, r] of Object.entries(await lerNo(`${basePraca()}/insignias`))) if (teste || visivelNoMural(uid, r))
+    const todos = await lerNo(`${basePraca()}/insignias`);
+    registrarTitulos(todos);
+    for (const [uid, r] of Object.entries(todos)) if (teste || visivelNoMural(uid, r))
       poe(uid, r, Number(r.n) || 0, `${Number(r.n) || 0} 🏅${Number(r.d) ? ` · ${r.d} ⭐` : ''}`, { d: Number(r.d) || 0 });
     return ordenarRanking(lista, (a, b) => b.d - a.d);
   }
@@ -4262,7 +4439,7 @@ async function renderMural() {
     const pers = r.pers || persDe[r.uid];
     return `<li class="${r.uid === sessao.uid ? 'eu' : ''}"><span class="ml-pos">${medalha(r.pos)}</span>
       ${pers && persValido(pers) ? bustoHtml(urlQuadro('frente', -1, pers), 'ml-rosto', BUSTO_PERS) : '<span class="ml-rosto ml-sem">🙂</span>'}
-      <span class="ml-nome">${esc(r.nome)}${esc(medalhaPesca(r.uid))} <small>${esc(r.turma)}</small></span><b>${esc(r.rotulo)}</b></li>`;
+      <span class="ml-nome">${nomeT(r.uid, r.nome)}${esc(medalhaPesca(r.uid))} <small>${esc(r.turma)}</small></span><b>${esc(r.rotulo)}</b></li>`;
   }).join('') || '<li class="ml-vazio">Ninguém pontuou aqui ainda.</li>';
   const eu = filtrada.find(r => r.uid === sessao.uid);
   $('mural-voce').textContent = eu ? `Você: ${eu.pos}º · ${eu.rotulo}` : !entraNoRanking() ? 'Esta conta não entra no ranking.' : 'Jogue para aparecer aqui!';
@@ -4272,7 +4449,8 @@ async function renderMural() {
 async function publicarResumoInsignias() {
   if (!carregouProgresso || !entraNoRanking()) return;
   const { conquistadas, douradas } = contarInsignias();
-  try { await set(ref(db, `${basePraca()}/insignias/${sessao.uid}`), { n: conquistadas, d: douradas, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), ts: Date.now() }); }
+  try { await set(ref(db, `${basePraca()}/insignias/${sessao.uid}`), { n: conquistadas, d: douradas, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), ts: Date.now(),
+    m: estado.mestre?.data || null, l: estado.lenda?.data || null }); }
   catch (e) { console.warn('[jogo-revisao] resumo do mural indisponível', e?.code || e); }
 }
 
@@ -4309,7 +4487,7 @@ function escolherModoDesafio(c) {
   const el = $('colega-cartao');
   clearTimeout(cartaoColega.timer);
   cartaoColega.timer = setTimeout(fecharCartaoColega, 10000);
-  el.innerHTML = `<span class="jr-colega-info jr-presente"><b>⚔️ Desafiar ${esc(nomeCurto(c.uid, c.reg?.apelido))}</b>
+  el.innerHTML = `<span class="jr-colega-info jr-presente"><b>⚔️ Desafiar ${nomeT(c.uid, nomeCurto(c.uid, c.reg?.apelido))}</b>
     <span class="jr-presente-lista"><button data-modo="contas">✖️ Contas</button><button data-modo="corrida">🤖 Corrida</button></span></span>`;
   posicionarCartaoColega();
 }
@@ -4320,7 +4498,7 @@ function confirmarDesafio(c, modo = 'contas') {
   clearTimeout(cartaoColega.timer);
   cartaoColega.timer = setTimeout(fecharCartaoColega, 10000);
   el.innerHTML = `<span class="jr-colega-info jr-presente"><b>⚔️ Sem prêmio hoje</b>
-    <small>Você já fez os desafios que valem prêmio hoje (ou já desafiou ${esc(nomeCurto(c.uid, c.reg?.apelido))} 2 vezes). Dá para jogar só por diversão.</small>
+    <small>Você já fez os desafios que valem prêmio hoje (ou já desafiou ${nomeT(c.uid, nomeCurto(c.uid, c.reg?.apelido))} 2 vezes). Dá para jogar só por diversão.</small>
     <span class="jr-presente-lista"><button data-desafiar-mesmo="${modo}">⚔️ Desafiar mesmo assim</button></span></span>`;
   posicionarCartaoColega();
 }
@@ -4356,8 +4534,8 @@ async function receberConvite(cv) {
   }
   const premio = vale(estado.desafiosDia, diaLocal(), cv.de);
   convite = { ...cv, premio };
-  $('convite-txt').innerHTML = cv.modo === 'corrida' ? `<b>${esc(nomeCurto(cv.de, cv.de_nome))}</b> te chamou para uma Corrida de programação! 🤖`
-    : `<b>${esc(nomeCurto(cv.de, cv.de_nome))}</b> te desafiou! ⚔️`;
+  $('convite-txt').innerHTML = cv.modo === 'corrida' ? `<b>${nomeT(cv.de, nomeCurto(cv.de, cv.de_nome))}</b> te chamou para uma Corrida de programação! 🤖`
+    : `<b>${nomeT(cv.de, nomeCurto(cv.de, cv.de_nome))}</b> te desafiou! ⚔️`;
   $('convite-aviso').hidden = premio;
   $('convite').hidden = false;
   tocar('vitoria');
@@ -4440,7 +4618,7 @@ function comecarDuelo(d) {
   const pd = cfgPraca().ponto_desafio, meu = pd && (du.souA ? pd.a : pd.b);   // frente a frente: quem desafiou à esquerda
   if (ehPraca() && meu) caminharNaTrilha(meu[0], meu[1], () => { jog.dir = du.souA ? 'direita' : 'esquerda'; desenharJogador(); });
   $('dl-nomeL').textContent = 'Você';
-  $('dl-nomeR').textContent = nomeCurto(du.outro.uid, du.outro.nome);
+  $('dl-nomeR').innerHTML = nomeT(du.outro.uid, nomeCurto(du.outro.uid, du.outro.nome));
   $('dl-bustoL').innerHTML = bustoHtml(urlQuadro('direita', -1, persValido(du.eu.pers) ? du.eu.pers : PERS.padrao), 'dl-busto-img', BUSTO_PERS);
   $('dl-bustoR').innerHTML = bustoHtml(urlQuadro('esquerda', -1, persValido(du.outro.pers) ? du.outro.pers : PERS.padrao), 'dl-busto-img', BUSTO_PERS);
   $('dl-conta').textContent = 'Prepare-se…';
@@ -4532,7 +4710,7 @@ function renderDuelo(d) {
       else if (b.classList.contains('minha')) b.classList.add('errada');
     }
     const v = r.fim.vencedor;
-    $('dl-msg').innerHTML = `${v === eu ? '✅ Você acertou primeiro!' : v ? `⚡ ${esc(nomeCurto(outro, du.outro.nome))} acertou primeiro.` : '😮 Ninguém acertou.'} Resposta: <b>${esc(r.resposta)}</b>`;
+    $('dl-msg').innerHTML = `${v === eu ? '✅ Você acertou primeiro!' : v ? `⚡ ${nomeT(outro, nomeCurto(outro, du.outro.nome))} acertou primeiro.` : '😮 Ninguém acertou.'} Resposta: <b>${esc(r.resposta)}</b>`;
     tocar(v === eu ? 'acerto' : 'erro');
   }
 }
@@ -4573,7 +4751,7 @@ function aplicarFimDuelo(d) {
   }
   gravar(patch);
   tocar(res === 'venceu' ? 'vitoria' : res === 'empate' ? 'acerto' : 'erro');
-  const titulo = res === 'venceu' ? (f.wo ? '🏆 Você venceu por W.O.!' : '🏆 Você venceu!') : res === 'empate' ? '🤝 Empate!' : `${esc(nomeCurto(outro, du.outro.nome))} venceu!`;
+  const titulo = res === 'venceu' ? (f.wo ? '🏆 Você venceu por W.O.!' : '🏆 Você venceu!') : res === 'empate' ? '🤝 Empate!' : `${nomeT(outro, nomeCurto(outro, du.outro.nome))} venceu!`;
   $('dl-fim-titulo').innerHTML = titulo;
   $('dl-fim-placar').textContent = `${ganhas} × ${Number(f.placar?.[outro]) || 0}`;
   $('dl-fim-premio').textContent = !valeu ? 'Sem prêmio (limite do dia) — valeu pela diversão!' : moedas || pontos ? `+${moedas} moeda${moedas === 1 ? '' : 's'} · +${pontos} pontos de Desafio 🏆` : 'Boa partida! Tente de novo.';
@@ -4903,7 +5081,7 @@ function renderAoVivo() {
     const host = av.host;
     avTela(`<div class="av-espera"><small>Código da sala</small><div class="av-codigo">${esc(av.codigo)}</div>
       <p>${pl.length} jogador${pl.length === 1 ? '' : 'es'} · ${s.cfg?.tipo === 'negativa' ? 'Tabuada negativa' : 'Tabuada'} · ${total} rodadas</p>
-      <div class="av-nomes">${pl.map(j => `<span>${esc(nomeCurto(j.uid, j.nome))}</span>`).join('')}</div>
+      <div class="av-nomes">${pl.map(j => `<span>${nomeT(j.uid, nomeCurto(j.uid, j.nome))}</span>`).join('')}</div>
       <div class="av-linha"><button class="jr-btn jr-btn-sec" data-av="sair">Sair</button>
       ${host ? `<button class="jr-btn jr-btn-ouro" data-av="comecar" ${host.podeComecar() ? '' : 'disabled'}>▶ Começar</button>` : `<span class="av-msg">${s.host === 'professora' ? 'A professora vai começar…' : 'Esperando o anfitrião começar…'}</span>`}</div></div>`);
     return;
@@ -4930,7 +5108,7 @@ function renderAoVivo() {
     const todos = placar(s.jogadores), meu = todos.find(j => j.uid === eu);
     aplicarPremioAV(s, meu);
     avTela(`<div class="av-fim"><h3>🏁 Fim da Tabuada ao vivo!</h3><div class="av-podio">${[1, 0, 2].map(k => todos[k] ? `<div class="p${k + 1}">${persValido(todos[k].pers) ? bustoHtml(urlQuadro('frente', -1, todos[k].pers), 'av-busto', BUSTO_PERS) : '<span class="av-busto ml-sem">🙂</span>'}
-        <b>${['🥇', '🥈', '🥉'][k]} ${esc(nomeCurto(todos[k].uid, todos[k].nome))}</b><small>${todos[k].pontos} pts</small><i></i></div>` : '').join('')}</div>
+        <b>${['🥇', '🥈', '🥉'][k]} ${nomeT(todos[k].uid, nomeCurto(todos[k].uid, todos[k].nome))}</b><small>${todos[k].pontos} pts</small><i></i></div>` : '').join('')}</div>
       <p class="av-eu">${meu ? `Você ficou em ${meu.pos}º de ${todos.length} · ${meu.pontos} pts${premioDoPodio(meu.pos) ? ` · +${premioDoPodio(meu.pos)} 🪙` : ''}` : ''}</p>
       <div class="av-linha"><button class="jr-btn jr-btn-ouro" data-av="sair">OK</button></div></div>`);
   }
@@ -4938,7 +5116,7 @@ function renderAoVivo() {
 function top5Html(pl) {
   return `<ol class="av-top5">${pl.slice(0, 5).map(j => {
     const d = j.pos_ant ? j.pos_ant - j.pos : 0;
-    return `<li class="${j.uid === sessao.uid ? 'eu' : ''}"><span>${j.pos}º</span><b>${esc(nomeCurto(j.uid, j.nome))}</b><em>${j.pontos}</em><i>${d > 0 ? `▲${d}` : d < 0 ? `▼${-d}` : ''}</i></li>`;
+    return `<li class="${j.uid === sessao.uid ? 'eu' : ''}"><span>${j.pos}º</span><b>${nomeT(j.uid, nomeCurto(j.uid, j.nome))}</b><em>${j.pontos}</em><i>${d > 0 ? `▲${d}` : d < 0 ? `▼${-d}` : ''}</i></li>`;
   }).join('')}</ol>`;
 }
 function animarTempoAV() {
@@ -5719,7 +5897,7 @@ function renderDetalheTreinador() {
       <div class="bt-det-quem">
         <div class="bt-det-nome">${esc(t.nome)}</div>
         <div class="bt-det-sub">${esc(t.quem)}</div>
-        <div class="bt-det-pet"><img src="${quadrosDe(t.pet, 'sentado_girando')[0]}" alt="" draggable="false"/>${esc(NOME_PET[t.pet] || '')} <span>${'⭐'.repeat(t.nivel)}</span></div>
+        <div class="bt-det-pet"><span class="jr-icone-pet"><img src="${srcIcone(t.pet)}" alt="" draggable="false" data-icone-pet/></span>${esc(NOME_PET[t.pet] || '')} <span>${'⭐'.repeat(t.nivel)}</span></div>
       </div>
     </div>
     <div class="bt-det-linhas">
@@ -5757,6 +5935,9 @@ function iniciarBatalha(id, origem = 'lista') {
   fL.style.setProperty('--pet-quadro', `${qw} / ${qh}`);
   fL.style.setProperty('--cresce', fatorForma(bt.pet, bt.forma));   // desenho sentado 15% maior que o do filhote
   fL.classList.toggle('adulto', adulto);
+  const fR = $('bt-R'), formaR = t.pet, [qwR, qhR] = tamanhoQuadro(formaR);   // o pet do treinador (hoje sempre filhote; adulto teria o mesmo cuidado)
+  fR.style.setProperty('--pet-quadro', `${qwR} / ${qhR}`);
+  fR.classList.toggle('adulto', !!SPR_ADULTOS[formaR]);
   $('batalha').hidden = false;
   $('bt-nomeL').innerHTML = `${esc(nomeAluno())}<small>· ${esc(nomePet(bt.pet))}</small>`;
   aplicarVisualPet($('bt-imgL'), bt.pet);
@@ -5769,6 +5950,8 @@ function iniciarBatalha(id, origem = 'lista') {
     agendarPiscar(bt.pisca);
   }
   $('bt-tRnome').textContent = `Tempo de ${t.nome}`;
+  $('bt-calc').hidden = !calcLigada(NPCS.find(p => p.id === t.id)?.mapa);   // treinador de um mapa com calculadora (ex.: Dona Cida, mapa 7)
+  fecharCalc();
   $('bt-fim').hidden = true;
   $('bt-ops').hidden = $('bt-conta').hidden = false;
   $('bt-ops').innerHTML = ''; $('bt-conta').textContent = 'Prepare-se…'; $('bt-msg').textContent = '';
@@ -5793,6 +5976,7 @@ function limparBatalha() {
 }
 
 function fecharBatalha(voltarLista = true) {
+  $('bt-calc').hidden = true; fecharCalc();
   limparBatalha();
   if (bt?.origem !== 'lista') voltarLista = false;
   bt = null;
@@ -5826,6 +6010,7 @@ function btTocar(lado, nome, { loop = true, ms = 160, depois } = {}) {
 }
 const btParado = (lado) => btTocar(lado, 'andar_direita', { ms: 420 });
 const btForma = (lado) => (lado === 'L' ? bt.forma : bt.t.pet);
+const SPR_ADULTOS = { dragao_azul_adulto: true, dragao_vermelho_adulto: true };
 const adultoNaBatalha = () => !!bt && bt.forma !== bt.pet && temAnim(bt.forma, 'rugido');
 // abertura do adulto: ruge; com o truque "Voo de fogo", voa e pousa
 function btAbertura() {
@@ -6103,13 +6288,9 @@ async function btFechar() {
       if (!bt) return;
       btSeq();
     }
-    const fogo = temAnim(btForma(l), 'ataque_fogo') && (l !== 'L' || truqueLiberado('cuspir_fogo', bt.pet));
-    if (fogo) await btAtaqueFogo(l, o, critico, especial);   // dragão adulto com "Cuspir fogo": prepara e solta fogo pela boca
-    else if (l === 'L' && adultoNaBatalha()) {   // adulto sem o truque: ruge e ataca do jeito de sempre
-      btTocar('L', 'rugido', { loop: false, ms: 220, depois: () => {} });
-      await btEsperar(560);
-      await btProjetil(l, o, pet, critico, especial);
-    } else {
+    const fogo = temAnim(btForma(l), 'ataque_fogo');   // dragão adulto: sempre prepara e solta fogo pela boca ("Cuspir fogo" é só um truque do Meu Pet)
+    if (fogo) await btAtaqueFogo(l, o, critico, especial);
+    else {
       btTocar(l, 'correndo', { loop: false, ms: 110 });
       await btBote(l);
       await btProjetil(l, o, pet, critico, especial);
@@ -6118,7 +6299,7 @@ async function btFechar() {
     bt.hp[o] = Math.max(0, bt.hp[o] - n);
     btHp(o);
     btLevarDano(o, n, critico, fogo ? 'fogo' : pet, especial);
-    if (temAnim(btForma(o), 'assustado')) btTocar(o, 'assustado', { loop: false, ms: 600 });   // quem tem: se assusta e volta
+    if (temAnim(btForma(o), 'bravo')) btTocar(o, 'bravo', { loop: false, ms: 700 });   // o dragão adulto apanha e fica bravo
     await btEsperar(650);
     btParado(l);
   }
@@ -6143,6 +6324,7 @@ function btFim() {
   const pr = registrarBatalha(venceu ? 'venceu' : 'perdeu');
   $('bt-ops').hidden = $('bt-conta').hidden = true;
   $('bt-msg').textContent = '';
+  $('bt-calc').hidden = true; fecharCalc();
   $('bt-sair').style.visibility = 'hidden';   // some sem mudar a largura do HUD
   for (const l of ['L', 'R']) btTempoBarra(l, 0, '');
   $('bt-fim-tit').textContent = venceu ? 'Você venceu! 🎉' : `${bt.t.nome} venceu desta vez`;
@@ -6237,7 +6419,7 @@ const ultimaFalaPessoa = {};         // id → índice da última fala (não rep
 let editarNpcs = false;              // ?editarNpcs=1 no modo teste (professora): arrastar e copiar posições
 
 // Altura na tela: a imagem da pessoa (h px, na mesma escala dos personagens) × ESCALA_SPRITE
-const altPessoa = (p) => (cena?.salao ? alturaSalao() * 1.05 : p.h * ESCALA_SPRITE);   // nos salões: adulto = 1,05 × o personagem
+const altPessoa = (p) => (cena?.salao ? alturaSalao() * 1.05 * (Number(p.escala) || 1) : p.h * ESCALA_SPRITE);   // nos salões: adulto = 1,05 × o personagem (× escala do npcs.json)
 
 function limparPessoas() {
   tirarDestaque();
@@ -6580,7 +6762,7 @@ function pedirDicaPedido() {
 }
 function mostrarDicaPedido() {
   const pet = estado.pets.ativo;
-  $('pd-pet').innerHTML = `<img src="${quadrosDe(formaDe(pet), 'sentado_girando')[0]}" alt="" draggable="false"${attrForma(pet, formaDe(pet))}/><span><b>${esc(nomePet(pet))}:</b> Acho que começa assim: ${esc(dicaPedido(pd.p))}</span>`;
+  $('pd-pet').innerHTML = `<span class="jr-icone-pet"><img src="${srcIcone(formaDe(pet))}" alt="" draggable="false" data-icone-pet/></span><span><b>${esc(nomePet(pet))}:</b> Acho que começa assim: ${esc(dicaPedido(pd.p))}</span>`;
   aplicarVisualPet($('pd-pet').querySelector('img'), pet);
   $('pd-pet').hidden = false;
 }
@@ -6701,6 +6883,7 @@ function mostrarInsigniaGanha(chave, dourada) {
     seguidor?.reagir('pulo_cambalhota');
     mostrarAvisoSequencia();
     surgirPetSePendente();
+    if (festaPendente) { const f = festaPendente; festaPendente = null; setTimeout(() => mostrarFestaMestre(f), 700); }
   };
 
   anim.voar = () => {
@@ -6865,6 +7048,41 @@ function desenharBolinhas() {
 }
 
 // Acerto: pet feliz e adversário treme; erro: pet confuso (quem não tem `confuso`: triste) uma vez
+// Acertou: o personagem troca para comemorando.webp (~1,2 s, com pulinho) e volta. Sem a imagem: pulinho + ✨ no quadro atual.
+const semComemorando = new Set();
+const urlComemorando = (id = meuPersonagem()) => `${PERS.pasta}/${id}/comemorando.webp`;
+function comemorarJogador() {
+  const img = $('perg-jog');
+  if (!img || $('pergunta').hidden) return;
+  const id = meuPersonagem(), volta = img.getAttribute('src'), com = urlComemorando(id);
+  clearTimeout(comemorarJogador.t);
+  const pular = (brilho) => {
+    if (!semMovimento()) img.animate([{ translate: '0 0' }, { translate: '0 -12%' }, { translate: '0 0' }, { translate: '0 -5%' }, { translate: '0 0' }], { duration: 750, easing: 'ease-out' });
+    if (!brilho) return;
+    const arena = $('perg-arena'), ra = arena.getBoundingClientRect(), ri = img.getBoundingClientRect();
+    const k = ra.width / (arena.offsetWidth || ra.width);   // a tela pode estar girada/escalada
+    for (let i = 0; i < 5; i++) {
+      const s = document.createElement('span');
+      s.className = 'jr-faisca-jog'; s.textContent = '✨';
+      const ang = (i / 5) * Math.PI * 2 + Math.random();
+      s.style.left = ((ri.left - ra.left) / k + img.offsetWidth * (0.5 + 0.55 * Math.cos(ang))) + 'px';
+      s.style.top = ((ri.top - ra.top) / k + img.offsetHeight * (0.42 + 0.4 * Math.sin(ang))) + 'px';
+      s.style.animationDelay = (i * 0.08).toFixed(2) + 's';
+      arena.appendChild(s);
+      setTimeout(() => s.remove(), 1300);
+    }
+  };
+  if (semComemorando.has(id) || !volta) { pular(true); return; }
+  const t = new Image();
+  t.onload = () => {
+    if ($('pergunta').hidden) return;
+    img.src = com; pular(false);
+    comemorarJogador.t = setTimeout(() => { if (img.getAttribute('src') === com) img.src = volta; }, 1200);
+  };
+  t.onerror = () => { semComemorando.add(id); pular(true); };
+  t.src = com;
+}
+
 function reagirArena(certo) {
   if (pgPet) {
     if (certo) pgPet.tocar(temAnim(pgPet.pet, 'animado') && Math.random() < 0.5 ? 'animado' : 'feliz');
@@ -6933,6 +7151,8 @@ function renderPergunta() {
   $('perg-corpo').classList.remove('com-explica');
   $('perg-corpo').classList.toggle('com-tabela', !!q.tabela);
   $('perg-tabela').innerHTML = renderTabela(q.tabela);   // Mapa 13 B: tabela sorteada junto com a pergunta
+  $('perg-calc').hidden = !calcLigada(q.mapa ?? pg.mapa, q.lado ?? pg.G);   // 🧮 só nos ginásios com "calculadora": true
+  if ($('perg-calc').hidden) fecharCalc();   // na revisão, a pergunta seguinte pode ser de outro mapa
   $('perg-enunciado').textContent = q.enunciado;
   $('perg-enunciado').classList.toggle('longo', String(q.enunciado).length > 28);   // problemas: Inter, até 2 linhas
   $('perg-explica').hidden = true;
@@ -7004,6 +7224,8 @@ function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
   const passos = passosDe(q.explicacao);
   const ultimo = passos[passos.length - 1] || '';
   if (posDaResposta(ultimo, certa) < 0) passos.push(`Resposta: ${certa}`);
+  const naCalc = calcLigada(q.mapa ?? pg.mapa, q.lado ?? pg.G) ? passoCalculadora(q.enunciado) : '';
+  if (naCalc) { if (/^Resposta: /.test(passos[passos.length - 1])) passos.splice(passos.length - 1, 0, naCalc); else passos.push(naCalc); }
   $('erro-enun').textContent = q.enunciado;
   $('erro-sua').textContent = sua;
   $('erro-certa').textContent = certa;
@@ -7025,6 +7247,65 @@ function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
   $('perg-erro').hidden = false;
   const pgErro = pg;
   setTimeout(() => { if (pg === pgErro && !$('perg-erro').hidden) { b.disabled = false; b.focus({ preventScroll: true }); } }, ESPERA_CONTINUAR_MS);
+}
+
+// ── Calculadora 🧮 (PROMPT-57): nos ginásios com "calculadora": true no mapas.json (portas.A/B), na batalha com treinador
+//    desses mapas e na revisão (pergunta que veio de lá). % como na calculadora de verdade: 80 × 15 % = 12; 80 + 10 % = 88;
+//    80 − 10 % = 72; 80 ÷ 50 % = 160; 15 % sozinho = 0,15. Fechar e reabrir mantém o último número.
+const calcLigada = (mapa, G) => { const pt = D.mapas?.mapas?.['mapa' + mapa]?.portas; return !!pt && (G ? !!pt[G]?.calculadora : Object.values(pt).some(x => x?.calculadora)); };
+const calc = { a: null, op: null, cur: '0', conta: '', novo: true, fim: false };
+const calcNum = (s) => Number(String(s).replace(',', '.'));
+const calcFmt = (v) => { if (!Number.isFinite(v)) return 'Erro'; const r = Math.round(v * 1e8) / 1e8; return String(r).replace('.', ','); };
+const calcOp = (a, op, b) => (op === '+' ? a + b : op === '−' ? a - b : op === '×' ? a * b : a / b);
+function calcTecla(k) {
+  const c = calc;
+  const recomeca = () => { if (c.fim) { c.a = null; c.op = null; c.conta = ''; c.fim = false; } };
+  if (/^\d$/.test(k)) {
+    if (c.novo || c.cur === 'Erro') { recomeca(); c.cur = k; c.novo = false; }
+    else if (c.cur.replace(/\D/g, '').length < 12) c.cur = c.cur === '0' ? k : c.cur + k;
+  } else if (k === ',') {
+    if (c.novo || c.cur === 'Erro') { recomeca(); c.cur = '0,'; c.novo = false; } else if (!c.cur.includes(',')) c.cur += ',';
+  } else if (k === 'C') Object.assign(c, { a: null, op: null, cur: '0', conta: '', novo: true, fim: false });
+  else if (k === '⌫') { if (!c.novo && c.cur !== 'Erro') c.cur = c.cur.length > 1 ? c.cur.slice(0, -1) : '0'; }
+  else if ('+−×÷'.includes(k)) {
+    if (c.cur === 'Erro') return;
+    if (c.op && !c.novo) { const r = calcOp(c.a, c.op, calcNum(c.cur)); c.cur = calcFmt(r); }
+    c.a = calcNum(c.cur); c.op = k; c.novo = true; c.fim = false; c.conta = `${calcFmt(c.a)} ${k}`;
+  } else if (k === '=') {
+    if (!c.op || c.cur === 'Erro') return;
+    const b = calcNum(c.cur), r = calcOp(c.a, c.op, b);
+    c.conta = `${calcFmt(c.a)} ${c.op} ${calcFmt(b)} = ${calcFmt(r)}`; c.cur = calcFmt(r); c.a = null; c.op = null; c.novo = true; c.fim = true;
+  } else if (k === '%') {
+    if (c.cur === 'Erro') return;
+    const b = calcNum(c.cur);
+    const r = !c.op ? b / 100 : c.op === '×' ? c.a * b / 100 : c.op === '÷' ? c.a / (b / 100) : c.op === '+' ? c.a + c.a * b / 100 : c.a - c.a * b / 100;
+    c.conta = c.op ? `${calcFmt(c.a)} ${c.op} ${calcFmt(b)} % = ${calcFmt(r)}` : `${calcFmt(b)} % = ${calcFmt(r)}`;
+    c.cur = calcFmt(r); c.a = null; c.op = null; c.novo = true; c.fim = true;
+  }
+  desenharCalc();
+}
+function desenharCalc() {
+  $('calc-conta').textContent = calc.fim ? calc.conta : calc.op ? `${calc.conta}${calc.novo ? '' : ' ' + calc.cur}` : '';
+  $('calc-visor').textContent = calc.cur;
+}
+// aberta, a calculadora fica numa coluna à esquerda e a pergunta (ou o painel da batalha) chega para o lado: nada fica tapado
+function abrirCalc() { desenharCalc(); $('calc').hidden = false; $('jr-app').classList.add('calc-aberta'); }
+function fecharCalc() { $('calc').hidden = true; $('jr-app').classList.remove('calc-aberta'); }
+// No cartão do erro das perguntas de porcentagem: o mesmo cálculo feito na calculadora
+function passoCalculadora(enun) {
+  const t = String(enun).replace(/R\$\s*/g, ''), f = (v) => calcFmt(v);
+  let m = /(\d+) alunos, (\d+) faltaram/.exec(t);
+  if (m) { const N = +m[1], k = +m[2]; return `Na calculadora: ${k} ÷ ${N} × 100 = ${f(k / N * 100)}`; }
+  m = /(\d+)% em número decimal/.exec(t);
+  if (m) return `Na calculadora: ${m[1]} ÷ 100 = ${f(m[1] / 100)}`;
+  m = /(\d+)%/.exec(t);
+  if (!m || /fração|por cento\?|significa|A conta/.test(t)) return '';
+  const p = +m[1], n = /(\d+)/.exec(t.replace(m[0], ' '));
+  if (!n) return '';
+  const N = +n[1];
+  if (/desconto/.test(t) && /preço final/.test(t)) return `Na calculadora: ${N} − ${p} % = ${f(N - N * p / 100)}`;
+  if (/aumento/.test(t)) return `Na calculadora: ${N} + ${p} % = ${f(N + N * p / 100)}`;
+  return `Na calculadora: ${N} × ${p} % = ${f(N * p / 100)}`;
 }
 
 function continuarDoErro() {
@@ -7145,6 +7426,7 @@ function responder(btn) {
     lembrarResposta(q.id, { acertou: true, ultima: agora, ...(patch[`respostas/${q.id}/revisao_ok`] ? { revisao_ok: agora } : {}) });
     if (pg.status[posDe(q)] !== 'errada') pg.status[posDe(q)] = 'certa';
     reagirArena(true);
+    comemorarJogador();
     pg.fila.shift();
     pg.acertos++;
     if (primeiroAcerto) ganharMoeda();
@@ -7207,6 +7489,7 @@ function vencer() {
     else if (p === 'revanche') darXP(XP_REVANCHE);
     else darXP(XP_TREINADOR);
   }
+  if (ganhou) { const f = verificarMestre(); if (f) festaPendente = f; }   // a 26ª insígnia (ou a 26ª dourada): festa depois da insígnia voar
   if (ganhou) publicarResumoInsignias();
   if (ganhou === 'normal') publicarNoFeed('insignia', chave);
   if (ganhou === 'dourada') publicarNoFeed('insignia_dourada', chave);
@@ -7270,6 +7553,7 @@ function desistir() {
 
 function fecharPergunta() {
   $('pergunta').hidden = true;
+  fecharCalc(); $('perg-calc').hidden = true;
   $('perg-erro').hidden = true;
   pgPet = null;
   fecharFalaAjuda();
@@ -7450,7 +7734,7 @@ async function abrirFasePrograme(id) {
   if (!f || !faseLiberada(i)) return;
   const pf = progFase(id) || {}, base = `programe/fases/${id}`;
   const ok = await abrirTelaPrograme({
-    modo: 'fase', fase: f, meta: f.meta_blocos, xml: pf.xml_atual || pf.xml || '',
+    modo: 'fase', fase: f, meta: f.meta_blocos, xml: pf.xml_atual || pf.xml || '', tutorial: f.id === 1 && !estado.programe.tutorial_visto,   // mãozinha ensinando
     titulo: `Fase ${f.id} · ${f.nome}`, sub: `Capítulo ${f.cap} · ${nomeCap(f.cap)}${f.dica ? ' · 💡 ' + f.dica : ''}`,
     aoExecutar: (r) => {
       const p = (estado.programe.fases[id] ||= {});
@@ -7471,6 +7755,7 @@ function venceuFase(f, r) {
     Object.assign(p, { estrelas: r.estrelas, blocos: r.blocos, xml: r.xml, texto: r.texto, tempo_s: r.tempo_s, data: Date.now() });
     for (const k of ['estrelas', 'blocos', 'xml', 'texto', 'tempo_s', 'data']) patch[`${base}/${k}`] = p[k];
   }
+  if (f.id === 1 && !estado.programe.tutorial_visto) { estado.programe.tutorial_visto = true; patch['programe/tutorial_visto'] = true; }   // a mãozinha não volta mais
   let moedas = 0;
   if (!p.premio1) { p.premio1 = true; patch[`${base}/premio1`] = true; moedas += PROG.premios?.estrela ?? PREMIO_PG.estrela; }
   if (r.estrelas === 3 && !p.premio3) { p.premio3 = true; patch[`${base}/premio3`] = true; moedas += PROG.premios?.tres_estrelas ?? PREMIO_PG.tres_estrelas; }
@@ -7486,7 +7771,7 @@ async function cartaoVitoriaFase(f, r, moedas, nova) {
   const prox = fasesPg()[fasesPg().findIndex(x => x.id === f.id) + 1];
   const botoes = [];
   if (prox) botoes.push({ id: 'proxima', texto: 'Próxima fase ▶', classe: 'jr-btn-ouro' });
-  if (r.estrelas < 3) botoes.push({ id: 'tentar', texto: '↺ Tentar com menos blocos', classe: 'jr-btn-sec' });
+  if (r.estrelas < 3) botoes.push({ id: 'tentar', texto: '↺ Menos blocos', classe: 'jr-btn-sec' });
   botoes.push({ id: 'fases', texto: '☰ Fases', classe: 'jr-btn-sec' });
   const op = await cartaoPrograme({
     titulo: `🎉 Fase ${f.id} concluída!`, estrelas: r.estrelas, botoes,
@@ -7647,7 +7932,7 @@ function atualizarCorrida(d) {
     abrirTelaPrograme({
       modo: 'corrida', fase: faseDoDuelo(d), lado: du.souA ? 'a' : 'b', fimEm: () => d.inicio + TEMPO_CORRIDA_MS,
       titulo: `🏁 Corrida contra ${nomeCurto(o.uid, o.nome)}`, sub: 'Monte o programa: ganha quem chegar primeiro na comida. Bater numa pedra custa 2 s.',
-      rival: { nome: nomeCurto(o.uid, o.nome), pet: o.pet || null, forma: o.forma || o.pet || null, tinta: o.tinta || null },
+      rival: { nome: prefixoTitulo(o.uid) + nomeCurto(o.uid, o.nome), pet: o.pet || null, forma: o.forma || o.pet || null, tinta: o.tinta || null },
       aoPronto: (prog) => enviarProgramaCorrida(prog),
       aoFechar: () => { if (duelo === du && !du.enviou) enviarProgramaCorrida({ corpo: [] }); },   // saiu: desiste com o programa vazio
     });
@@ -7689,7 +7974,7 @@ async function fimCorrida(d) {
     const res = resultadoCorrida(faseDoDuelo(d), programaDeTexto(d.prog?.[a]?.p), programaDeTexto(d.prog?.[b]?.p));
     await mostrarCorrida(souA ? res.eventosA : res.eventosB, souA ? res.eventosB : res.eventosA);
     const v = d.fim.vencedor;
-    mensagemCorrida(v === sessao.uid ? '🏆 Seu pet chegou primeiro!' : v === 'empate' ? '🤝 Empate!' : `🏁 ${esc(nomeCurto(du.outro.uid, du.outro.nome))} chegou primeiro.`, v === sessao.uid ? 'ok' : 'aviso');
+    mensagemCorrida(v === sessao.uid ? '🏆 Seu pet chegou primeiro!' : v === 'empate' ? '🤝 Empate!' : `🏁 ${nomeT(du.outro.uid, nomeCurto(du.outro.uid, du.outro.nome))} chegou primeiro.`, v === sessao.uid ? 'ok' : 'aviso');
     await new Promise(ok => setTimeout(ok, 2200));
   }
   if (duelo !== du) return;
@@ -8231,12 +8516,30 @@ function ligarEventos() {
   $('av-convite-sim').addEventListener('click', (e) => { e.stopPropagation(); responderConviteAV(true); });
   $('av-convite-nao').addEventListener('click', (e) => { e.stopPropagation(); responderConviteAV(false); });
   $('btn-pesca-ranking').addEventListener('click', (e) => { e.stopPropagation(); abrirRankingPesca(); });
+  $('fm-trofeu').addEventListener('click', verMeuTrofeu);
+  $('hm-fechar').addEventListener('click', () => { $('hall-mestres').hidden = true; });
+  $('hall-mestres').addEventListener('click', (e) => { e.stopPropagation(); if (e.target === $('hall-mestres')) $('hall-mestres').hidden = true; });
+  // 🧮 calculadora: abre/fecha no botão; fecha tocando fora ou no ✕
+  for (const id of ['perg-calc', 'bt-calc']) $(id).addEventListener('click', (e) => { e.stopPropagation(); $('calc').hidden ? abrirCalc() : fecharCalc(); });
+  $('calc-teclas').addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (b) { tocar('clique'); calcTecla(b.dataset.k); } });
+  $('calc-fechar').addEventListener('click', fecharCalc);
+  document.addEventListener('pointerdown', (e) => { if (!$('calc').hidden && !e.target.closest('#calc, #perg-calc, #bt-calc')) fecharCalc(); }, true);
   $('pr-fechar').addEventListener('click', () => { $('pesca-ranking').hidden = true; });
   $('pr-abas').addEventListener('click', (e) => { const b = e.target.closest('[data-pr]'); if (b) { rankingPesca.filtro = b.dataset.pr; renderRankingPesca(); } });
   $('pesca-ranking').addEventListener('click', (e) => { e.stopPropagation(); if (e.target === $('pesca-ranking')) $('pesca-ranking').hidden = true; });
   // barrinha: segurar o dedo (ou o botão do mouse) em qualquer lugar da tela sobe a zona verde
   const segurar = (v) => (e) => { if (pesca?.estado !== 'barrinha') return; e.preventDefault(); e.stopPropagation(); pesca.segurando = v; };
   $('pesca-barra').addEventListener('pointerdown', (e) => { segurar(true)(e); try { $('pesca-barra').setPointerCapture(e.pointerId); } catch (_) {} });
+  // 🎣 PUXAR!: no ❗ puxa; na barrinha, segurar o botão = segurar a tela; esperando, não faz nada (não espanta o peixe)
+  const bp = $('btn-puxar');
+  bp.addEventListener('pointerdown', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    if (pesca?.estado === 'fisgada') pescaPuxar();
+    if (pesca?.estado === 'barrinha') { pesca.segurando = true; try { bp.setPointerCapture(e.pointerId); } catch (_) {} }
+  });
+  for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) bp.addEventListener(ev, () => { if (pesca?.estado === 'barrinha') pesca.segurando = false; });
+  bp.addEventListener('click', (e) => e.stopPropagation());
+  bp.addEventListener('contextmenu', (e) => e.preventDefault());
   for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) $('pesca-barra').addEventListener(ev, segurar(false));
   $('pesca-barra').addEventListener('click', (e) => e.stopPropagation());
   $('pesca-barra').addEventListener('contextmenu', (e) => e.preventDefault());

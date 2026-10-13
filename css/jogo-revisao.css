@@ -1191,11 +1191,12 @@ html.jr-deitado .jr-explica-rodape { font-size: calc(10.5px * var(--letra, 1)); 
 .bt-hptxt { font-family: 'Orbitron', sans-serif; font-size: 10px; color: var(--bt-muted); }
 .bt-rodada { font-family: 'Rajdhani', sans-serif; font-weight: 700; color: var(--jr-ouro); font-size: 16px; text-align: center; white-space: nowrap; line-height: 1.1; }
 .bt-rodada small { display: block; color: var(--bt-muted); font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
-.bt-arena { position: relative; flex: 1 1 auto; min-height: 0; border-radius: 16px; overflow: hidden; background: #2d4a2a url(/img/jogo/batalha/arena.webp) center 62% / cover no-repeat; }
+.bt-arena { position: relative; flex: 1 1 auto; min-height: 0; border-radius: 16px; overflow: visible;   /* o rabo e o fogo do adulto não são cortados */ background: #2d4a2a url(/img/jogo/batalha/arena.webp) center 62% / cover no-repeat; }
 .bt-lutador { position: absolute; bottom: 9%; height: calc(52% * var(--cresce, 1)); aspect-ratio: var(--pet-quadro, 898 / 704); transition: filter .2s; }
 #jr-app .bt-lutador img { width: 100%; height: 100%; display: block; image-rendering: auto; }
 #bt-L { left: 12%; } #bt-R { right: 12%; }
-#bt-L.adulto { left: 3%; }   /* adulto: quadro mais largo (asas), começa mais à esquerda para não encostar no adversário */
+#bt-L.adulto { left: 5%; } #bt-R.adulto { right: 5%; }   /* adulto: quadro mais largo (asas e rabo); fica dentro da arena */
+.bt-lutador { overflow: visible; }
 .bt-sombra { position: absolute; bottom: 2px; left: 50%; width: 56%; height: 12%; transform: translateX(-50%); background: radial-gradient(ellipse, rgba(0,0,0,.5), transparent 70%); z-index: -1; }
 .bt-status { position: absolute; top: 8px; z-index: 3; box-shadow: 0 2px 8px #0006; font-family: 'Inter', sans-serif; font-weight: 800; font-size: 12px; padding: 3px 10px; border-radius: 999px;
   background: var(--bt-card2); border: 1px solid var(--bt-linha); color: #fff; opacity: 0; transition: opacity .2s; }
@@ -2123,12 +2124,15 @@ html.jr-girado #programe { inset: auto; top: 0; left: 0; width: 100vw; height: 1
 #jr-app .jr-aviso-pet.com-busto img { width: 54px; height: auto; flex: none; image-rendering: auto; }
 
 /* 🎉 Cartão de vitória / resultado do Programe o pet (PROMPT-53): por cima da grade e dos blocos */
-.pg-vitoria { position: absolute; inset: 0; z-index: 110; display: flex; align-items: center; justify-content: center; background: rgba(5,6,15,.78); padding: 10px; overflow: hidden; }
-.pg-vit-caixa { position: relative; box-sizing: border-box; width: min(94vw, 560px); max-height: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px;
+.pg-vitoria { position: absolute; inset: 0; z-index: 110; background: rgba(5,6,15,.78); overflow: hidden; }
+/* em pé: o cartão embaixo (área do polegar); deitado: por cima da coluna dos blocos. O pet grande ocupa o resto (JS). */
+.pg-vit-caixa { position: absolute; box-sizing: border-box; left: 8px; right: 8px; bottom: max(8px, var(--sa-b, 0px)); max-height: calc(100% - 16px); overflow-y: auto;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
   background: var(--jr-card); border: 2px solid var(--jr-ouro, #ffd700); border-radius: 18px; padding: 12px 16px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,.6); }
 .pg-vit-tit { font: 700 24px 'Rajdhani', sans-serif; color: var(--jr-ouro, #ffd700); line-height: 1.1; }
-#jr-app img.pg-vit-pet { display: block; height: min(50dvh, 46vh); max-width: 100%; object-fit: contain; image-rendering: auto; filter: drop-shadow(0 4px 6px rgba(0,0,0,.45)); }
-html.jr-girado #jr-app img.pg-vit-pet { height: min(34dvh, 300px); }
+#jr-app img.pg-vit-pet { position: absolute; display: block; max-width: none; transform-origin: 0 0; image-rendering: auto; filter: drop-shadow(0 6px 10px rgba(0,0,0,.5)); z-index: 1; }
+@media (orientation: landscape) { .pg-vit-caixa { left: auto; right: 8px; top: 50%; bottom: auto; transform: translateY(-50%); width: 54%; } }
+.pg-vit-caixa { z-index: 2; }
 .pg-vit-estrelas { font-size: 34px; letter-spacing: 4px; min-height: 1.1em; }
 .pg-vit-estrelas span { display: inline-block; }
 @media (prefers-reduced-motion: no-preference) { .pg-vit-estrelas span { animation: pg-estrela .45s cubic-bezier(.2,1.6,.4,1) both; } }
@@ -2136,8 +2140,9 @@ html.jr-girado #jr-app img.pg-vit-pet { height: min(34dvh, 300px); }
 .pg-vit-info { font: 600 calc(15px * var(--letra, 1)) 'Inter', sans-serif; color: #e3e5f0; line-height: 1.35; }
 .pg-vit-info b { color: var(--jr-ouro, #ffd700); }
 .pg-vit-info .dica { color: #ffd27a; font-size: calc(13px * var(--letra, 1)); }
-.pg-vit-botoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 4px; }
-.pg-vit-botoes .jr-btn { min-height: 48px; padding: 6px 18px; font-size: 17px; }
+.pg-vit-botoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 4px; width: 100%; }
+.pg-vit-botoes .jr-btn { flex: 1 1 0; min-height: 48px; padding: 6px 12px; font-size: 16px; white-space: nowrap; }
+.pg-vit-botoes .jr-btn-ouro { flex: 1 1 100%; min-height: 56px; font-size: 19px; }   /* Próxima fase ▶: grande, sozinho na linha */
 .pg-vit-confete { position: absolute; inset: 0; pointer-events: none; }
 .pg-vit-confete span { position: absolute; top: -8%; font-size: 22px; animation: pg-confete 2.4s linear forwards; }
 @keyframes pg-confete { to { transform: translateY(115vh) rotate(540deg); opacity: .2; } }
@@ -2146,4 +2151,124 @@ html.jr-girado #jr-app img.pg-vit-pet { height: min(34dvh, 300px); }
 .pg-tela .pg-pisca .blocklyPath { animation: pg-pisca .45s ease-in-out 8 alternate; }
 @keyframes pg-pisca { to { stroke: #ffd700; stroke-width: 5px; } }
 .pg-msg.destaque { font-size: calc(17px * var(--letra, 1)); background: rgba(255,210,122,.14); border: 1px solid rgba(255,210,122,.6); border-radius: 10px; padding: 4px 10px; }
+
+/* ⏭ 1 passo, rastro, anotações e a mãozinha da Fase 1 (PROMPT-54) */
+#pg-passo { white-space: nowrap; }
+.pg-rastro { position: absolute; left: calc((var(--x) + .5) * var(--s)); top: calc((var(--y) + .5) * var(--s)); transform: translate(-50%, -50%) rotate(var(--r, 0deg));
+  pointer-events: none; z-index: 0; font-style: normal; --c: #7c5cfc; }
+.pg-rastro.outro { --c: #ff7b2e; }
+.pg-rastro.pegada { width: calc(var(--s) * .3); height: calc(var(--s) * .34); opacity: .5;
+  background: radial-gradient(circle at 50% 72%, var(--c) 0 27%, transparent 29%), radial-gradient(circle at 20% 30%, var(--c) 0 11%, transparent 13%),
+    radial-gradient(circle at 50% 14%, var(--c) 0 11%, transparent 13%), radial-gradient(circle at 80% 30%, var(--c) 0 11%, transparent 13%); }
+.pg-rastro.virou { left: calc((var(--x) + .82) * var(--s)); top: calc((var(--y) + .2) * var(--s)); font: 800 calc(var(--s) * .26) 'Inter', sans-serif; color: var(--c); opacity: .75; }
+.pg-rastro.bateu { font: 900 calc(var(--s) * .5) 'Inter', sans-serif; color: #ff3b5c; text-shadow: 0 0 4px #fff; z-index: 3; }
+#jr-app img.pg-item { z-index: 1; }
+.pg-anotacoes { position: absolute; inset: 0; pointer-events: none; z-index: 50; overflow: hidden; }
+.pg-anot { position: absolute; padding: 1px 7px; border-radius: 999px; font: 800 13px 'Inter', sans-serif; color: #1b1b2e; background: #ffd700; box-shadow: 0 2px 6px rgba(0,0,0,.4); }
+.pg-anot.sim { background: #00e676; } .pg-anot.nao { background: #ff7b93; }
+.pg-mao, .pg-mao-bloco, .pg-mao-seta { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 90; }
+.pg-mao { font-size: 38px; line-height: 1; margin: -4px 0 0 -14px; filter: drop-shadow(0 3px 4px rgba(0,0,0,.5)); opacity: 0; }
+.pg-mao-bloco { padding: 8px 14px; border-radius: 10px; background: #4c97ff; color: #fff; font: 700 15px 'Inter', sans-serif; opacity: 0; box-shadow: 0 4px 10px rgba(0,0,0,.4); }
+.pg-mao-seta { display: none; height: 4px; background: #ffd700; transform-origin: 0 50%; border-radius: 2px; }
+.pg-mao-seta::after { content: ''; position: absolute; right: -2px; top: 50%; transform: translateY(-50%); border: 9px solid transparent; border-left: 14px solid #ffd700; border-right: 0; }
+
+/* Ícone pequeno do pet (PROMPT-55): círculo com o busto medido e centralizado (img[data-icone-pet], encaixado pelo JS) */
+.jr-icone-pet { position: relative; display: inline-block; flex: none; width: 26px; height: 26px; border-radius: 50%; overflow: hidden; vertical-align: middle;
+  background: rgba(124,92,252,.25); }
+.bt-det-pet .jr-icone-pet, .pd-pet .jr-icone-pet { width: 34px; height: 34px; }
+.jr-mp-carinhas span { position: relative; }
+#jr-app img[data-icone-pet] { image-rendering: auto; }
+
+/* Lixeira só ao arrastar (PROMPT-56): camada por cima da coluna das peças */
+.pg-lixo { position: absolute; left: 0; top: 0; bottom: 0; z-index: 60; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  background: rgba(255,60,90,.82); border-right: 3px dashed #fff; color: #fff; text-align: center; padding: 8px; box-sizing: border-box; }
+.pg-lixo b { font-size: 44px; line-height: 1; }
+.pg-lixo span { font: 800 15px 'Inter', sans-serif; text-shadow: 0 1px 3px rgba(0,0,0,.4); }
+.pg-tela .pg-pisca-uma .blocklyPath { animation: pg-pisca .4s ease-in-out 2 alternate; }
+
+/* Pesca (PROMPT-57): ✕ pequeno para sair e o 🎣 PUXAR! grande embaixo à direita (área do polegar), por cima da barrinha */
+.jr-pesca-botoes .jr-btn.jr-pesca-sair { min-height: 34px; min-width: 34px; padding: 2px 10px; font-size: 15px; opacity: .85; }
+.jr-pesca-puxar { position: absolute; z-index: 19; right: max(16px, var(--sa-r, 0px)); bottom: max(14px, var(--sa-b, 0px)); min-height: 58px; min-width: 150px; padding: 6px 20px;
+  font: 800 19px 'Rajdhani', sans-serif; border-radius: 18px; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.jr-pesca-puxar[hidden] { display: none; }
+.jr-pesca-puxar.esperando { background: #3a3d52; color: #aab0c8; border: 2px solid #555a75; box-shadow: none; }
+.jr-pesca-puxar.agora { background: linear-gradient(180deg, #ffe066, #ffb300); color: #2a1a00; border: 2px solid #fff3b0; box-shadow: 0 0 18px rgba(255,215,0,.75); }
+.jr-pesca-puxar.segure { background: linear-gradient(180deg, #00e676, #00a152); color: #002b14; border: 2px solid #b9ffd8; }
+@media (prefers-reduced-motion: no-preference) { .jr-pesca-puxar.agora { animation: jr-puxar-pulsa .45s ease-in-out infinite alternate; } }
+@keyframes jr-puxar-pulsa { to { transform: scale(1.1); box-shadow: 0 0 28px rgba(255,215,0,1); } }
+/* a barrinha de captura sobe um pouco para não ficar atrás do botão */
+.pb-painel { top: 44%; height: 66%; }
+
+/* Personagem comemorando ao acertar (PROMPT-57): faíscas quando ainda não há comemorando.webp */
+.jr-faisca-jog { position: absolute; z-index: 6; font-size: 16px; pointer-events: none; transform: translate(-50%, -50%) scale(0); animation: jr-faisca-jog 1s ease-out forwards; }
+@keyframes jr-faisca-jog { 30% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; } 100% { transform: translate(-50%, -90%) scale(.6); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .jr-faisca-jog { animation: none; transform: translate(-50%, -50%); } }
+
+/* Calculadora 🧮 (PROMPT-57) */
+.jr-calc-btn { flex: none; width: 40px; height: 36px; border-radius: 10px; border: 1px solid rgba(255,215,0,.6); background: rgba(255,215,0,.14); font-size: 19px; cursor: pointer; line-height: 1; }
+.jr-calc-btn[hidden] { display: none; }
+.bt-hud .jr-calc-btn { margin-left: 6px; }
+#jr-app { --calc-w: 264px; }
+.jr-calc { position: absolute; z-index: 80; left: max(8px, var(--sa-l, 0px)); top: calc(max(8px, var(--sa-t, 0px)) + 52px); bottom: max(8px, var(--sa-b, 0px)); max-height: 440px;
+  width: var(--calc-w); box-sizing: border-box; padding: 8px; border-radius: 16px; background: #171a2e; border: 2px solid #7c5cfc; box-shadow: 0 10px 28px rgba(0,0,0,.6);
+  display: flex; flex-direction: column; gap: 6px; }
+/* aberta: a pergunta e as opções (ou o painel da batalha) chegam para a direita */
+#jr-app.calc-aberta .jr-perg-corpo, #jr-app.calc-aberta .bt-painel { margin-left: calc(var(--calc-w) + 12px); }
+.jr-calc[hidden] { display: none; }
+.jr-calc-topo { display: flex; align-items: center; justify-content: space-between; color: #ffd700; font: 700 15px 'Rajdhani', sans-serif; }
+.jr-calc-x { width: 32px; height: 30px; border-radius: 8px; border: 1px solid rgba(255,255,255,.25); background: transparent; color: #fff; font-size: 15px; cursor: pointer; }
+.jr-calc-tela { background: #0b0d18; border-radius: 10px; padding: 6px 10px; text-align: right; border: 1px solid rgba(0,212,255,.35); }
+.jr-calc-conta { min-height: 17px; font: 600 13px 'Inter', sans-serif; color: #9ea6c9; white-space: nowrap; overflow: hidden; }
+.jr-calc-visor { font: 700 26px 'Orbitron', sans-serif; color: #00d4ff; white-space: nowrap; overflow: hidden; }
+.jr-calc-teclas { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 1fr; gap: 5px; }
+.jr-calc-teclas button { min-height: 30px; border-radius: 10px; border: 1px solid rgba(255,255,255,.12); background: #262a45; color: #fff; font: 700 20px 'Inter', sans-serif; cursor: pointer; touch-action: manipulation; }
+.jr-calc-teclas button:active { transform: scale(.94); }
+.jr-calc-teclas .op { background: #3a2d7a; color: #e0d6ff; }
+.jr-calc-teclas .igual { background: #00a152; }
+.jr-calc-teclas .limpa { background: #5a2333; color: #ffd0d8; }
+.jr-calc-teclas .pct { grid-column: span 2; background: linear-gradient(180deg, #ffb300, #ff7b2e); color: #2a1300; }
+/* celular deitado (pouca altura): teclas mais baixas */
+@media (max-height: 430px) { #jr-app { --calc-w: 236px; } .jr-calc { top: calc(max(4px, var(--sa-t, 0px)) + 44px); padding: 6px; gap: 4px; } .jr-calc-teclas button { font-size: 17px; } .jr-calc-visor { font-size: 21px; } }
+
+/* Mestre / Lenda da Revisão (PROMPT-57): nome dourado com brilho */
+.jr-nome-mestre { color: #ffd700; font-weight: 800; text-shadow: 0 0 6px rgba(255,215,0,.55); }
+.jr-nome-lenda { color: #fff1a8; font-weight: 800; text-shadow: 0 0 6px #ffd700, 0 0 12px rgba(255,170,0,.85); }
+.jr-colega-nome.mestre { color: #ffd700; text-shadow: 0 0 6px rgba(255,215,0,.6), 0 1px 2px #000; }
+.jr-colega-nome.lenda { color: #fff1a8; text-shadow: 0 0 6px #ffd700, 0 0 12px rgba(255,170,0,.9), 0 1px 2px #000; }
+.jr-titulo-mestre { display: block; font: 800 11px 'Inter', sans-serif; color: #ffd700; letter-spacing: .3px; }
+.jr-titulo-mestre.lenda { color: #fff1a8; text-shadow: 0 0 6px #ffd700; }
+/* Festa das 26 insígnias: tela cheia por cima de tudo */
+.jr-festa-mestre { position: absolute; inset: 0; z-index: 400; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 14px; box-sizing: border-box;
+  background: radial-gradient(circle at 50% 40%, rgba(124,92,252,.55), rgba(8,9,20,.96) 70%); overflow: hidden; }
+.jr-festa-mestre[hidden] { display: none; }
+.fm-confete { position: absolute; inset: 0; pointer-events: none; }
+.fm-confete span { position: absolute; top: -8%; font-size: 24px; animation: pg-confete 3s linear forwards; }
+.fm-palco { position: relative; display: flex; align-items: flex-end; justify-content: center; gap: 4px; height: min(46%, 300px); min-height: 120px; }
+#jr-app .fm-pers { height: 100%; width: auto; image-rendering: auto; filter: drop-shadow(0 6px 10px rgba(0,0,0,.5)); }
+#jr-app .fm-pet { height: 72%; width: auto; image-rendering: auto; filter: drop-shadow(0 6px 10px rgba(0,0,0,.5)); }
+.fm-caixa { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 14px 18px; border-radius: 18px;
+  background: rgba(17,15,38,.92); border: 2px solid #ffd700; box-shadow: 0 0 30px rgba(255,215,0,.45); max-width: 520px; }
+.fm-tit { font: 700 clamp(20px, 3.4vw, 28px) 'Rajdhani', sans-serif; color: #ffd700; line-height: 1.1; }
+.fm-sub { font: 600 calc(16px * var(--letra, 1)) 'Inter', sans-serif; color: #e3e5f0; }
+.fm-sub b { color: #ffd700; }
+.fm-caixa .jr-btn { min-height: 52px; padding: 6px 26px; font-size: 18px; }
+@media (max-height: 430px) { .fm-palco { height: 42%; } .fm-caixa { padding: 8px 14px; gap: 5px; } .fm-caixa .jr-btn { min-height: 46px; } }
+/* Troféu do mapa geral: brilho pulsando, estrelinhas e balanço leve */
+.jr-trofeu { position: absolute; aspect-ratio: 1; transform: translate(-50%, -50%); border: 0; padding: 0; background: none; cursor: pointer; z-index: 2; }
+.jr-trofeu i { position: absolute; inset: -30%; border-radius: 50%; background: radial-gradient(circle, rgba(255,230,120,.75), rgba(255,200,0,.25) 45%, transparent 70%); }
+.jr-trofeu b { position: absolute; color: #fff6c2; font-size: 12px; text-shadow: 0 0 6px #ffd700; pointer-events: none; }
+.jr-trofeu b:nth-of-type(1) { left: -10%; top: 10%; } .jr-trofeu b:nth-of-type(2) { right: -12%; top: -6%; font-size: 9px; } .jr-trofeu b:nth-of-type(3) { right: 6%; bottom: -10%; font-size: 10px; }
+.jr-trofeu.fraco i { opacity: .35; } .jr-trofeu.fraco b { opacity: .3; }
+@media (prefers-reduced-motion: no-preference) {
+  .jr-trofeu i { animation: jr-trofeu-brilho 1.8s ease-in-out infinite; }
+  .jr-trofeu.forte { animation: jr-trofeu-balanca 2.6s ease-in-out infinite; }
+  .jr-trofeu.forte b { animation: jr-trofeu-estrela 1.4s ease-in-out infinite; }
+  .jr-trofeu.forte b:nth-of-type(2) { animation-delay: .45s; } .jr-trofeu.forte b:nth-of-type(3) { animation-delay: .9s; }
+  .jr-trofeu.destaque i { animation-duration: .6s; }
+}
+.jr-trofeu.forte i { inset: -55%; }
+.jr-trofeu.destaque i { inset: -90%; }
+@keyframes jr-trofeu-brilho { 50% { transform: scale(1.18); opacity: .65; } }
+@keyframes jr-trofeu-balanca { 0%, 100% { transform: translate(-50%, -50%) rotate(-4deg); } 50% { transform: translate(-50%, -50%) rotate(4deg); } }
+@keyframes jr-trofeu-estrela { 50% { transform: scale(1.5); opacity: .4; } }
 

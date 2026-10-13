@@ -195,12 +195,14 @@
     "A": {
      "x": 700,
      "y": 280,
-     "interior": "mapa7-A"
+     "interior": "mapa7-A",
+     "calculadora": true
     },
     "B": {
      "x": 1150,
      "y": 615,
-     "interior": "mapa7-B"
+     "interior": "mapa7-B",
+     "calculadora": true
     }
    }
   },

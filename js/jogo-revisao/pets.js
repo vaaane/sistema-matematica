@@ -73,8 +73,9 @@ function ritmo(anim, n) {
     case 'rugido': return { ms: 260, loop: false, ultimo: 600 };
     case 'ataque_fogo': return { ms: 220, loop: false, ultimo: 650 };
     // emoções e variações (1 ou 2 quadros nos adultos; nos filhotes caem na reserva): seguram um pouco e voltam
+    case 'farejar': case 'lamber_pata': case 'lamber_rabo': return { ms: 350, loop: false };   // quadros repetidos no sprites.json: ~2 s
     case 'bravo': case 'confuso': case 'assustado': case 'orgulhoso': case 'animado': case 'calmo': case 'ufa': case 'rugido_sentado':
-    case 'prepara_fogo': case 'lamber_beicos': case 'farejar': case 'farejar_em_pe': case 'lamber_ombro': case 'lamber_pata': case 'lamber_rabo':
+    case 'prepara_fogo': case 'lamber_beicos': case 'farejar_em_pe': case 'lamber_ombro':
       return { ms: n === 1 ? 900 : 500, loop: false };
     case 'assar_comida': return { ms: n === 1 ? 1200 : 400, loop: false };
     case 'andando_fogo': case 'voo_fogo': return { ms: 320, loop: false, ultimo: 700 };

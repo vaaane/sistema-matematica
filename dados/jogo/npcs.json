@@ -702,6 +702,7 @@
   },
   {
    "id": "lia_cientista",
+   "escala": 1.35,
    "nome": "Lia",
    "quem": "Cientista de robótica",
    "interior": "laboratorio",
