@@ -18,10 +18,10 @@ const raiz = (max = 12) => () => { const b = int(1, max), n = b * b; return Q(`�
 function mesmoQue() {
   const tipo = int(0, 3), b = int(3, 9);
   const EXP = X('O expoente (número pequeno em cima) diz quantas vezes a base aparece na multiplicação.');
-  if (tipo === 0) return Q(`${b}² é o mesmo que:`, `${b} × ${b}`, [`${b} × 2`, `${b} + ${b}`], EXP);
-  if (tipo === 1) return Q(`${b}³ é o mesmo que:`, `${b} × ${b} × ${b}`, [`${b} × 3`, `${b} + ${b} + ${b}`], EXP);
-  if (tipo === 2) { const n = int(3, 5); return Q(`${Array(n).fill(b).join(' × ')} em forma de potência:`, `${b}${sup(n)}`, erradasTexto(`${b}${sup(n)}`, [`${b}${sup(n - 1)}`, `${n}${sup(b)}`, `${b * n}²`], 2), EXP); }
-  let n = int(2, 5); if (n === b) n = b === 5 ? 4 : n + 1; return Q(`Na potência ${b}${sup(n)}, qual número é a base?`, num(b), [num(n), num(Math.pow(b, n))], X(`A base é o número grande (${b}); o expoente é o pequeno em cima (${n}).`));
+  if (tipo === 0) return Q(`${b}² é o mesmo que:`, `${b} × ${b}`, [`${b} × 2`, `${b} + ${b}`, `${b} × ${b} × ${b}`], EXP);
+  if (tipo === 1) return Q(`${b}³ é o mesmo que:`, `${b} × ${b} × ${b}`, [`${b} × 3`, `${b} + ${b} + ${b}`, `${b} + 3`], EXP);
+  if (tipo === 2) { const n = int(3, 5); return Q(`${Array(n).fill(b).join(' × ')} em forma de potência:`, `${b}${sup(n)}`, erradasTexto(`${b}${sup(n)}`, [`${b}${sup(n - 1)}`, `${n}${sup(b)}`, `${b * n}²`, `${b}${sup(n + 1)}`]), EXP); }
+  let n = int(2, 5); if (n === b) n = b === 5 ? 4 : n + 1; return Q(`Na potência ${b}${sup(n)}, qual número é a base?`, num(b), [num(n), num(Math.pow(b, n)), num(b * n)], X(`A base é o número grande (${b}); o expoente é o pequeno em cima (${n}).`));
 }
 const umZero = () => { const b = int(2, 150), n = pick([0, 1]); const v = Math.pow(b, n); return Q(`${b}${sup(n)}`, num(v), erradasNum(v, n === 0 ? [0, b, -1] : [b + 1, 1, 0, b * 2], { neg: true }), X(abre(b, n))); };
 const negPot = () => { const [b, n] = pick([[-1, 2], [-2, 2], [-3, 2], [-1, 3], [-2, 3], [-4, 2], [-1, 4], [-5, 2]]); const v = Math.pow(b, n); return Q(pw(b, n), num(v), erradasNum(v, [-v, b * n, -b * n], { neg: true }), X(`${abre(b, n)}. Negativo com expoente par dá positivo; com expoente ímpar dá negativo.`)); };
@@ -63,14 +63,13 @@ const ehMult = (ks) => () => { const k = pick(ks); const n = coin() ? k * int(2,
 function qualMult(ks) {
   return () => {
     const k = pick(ks); const certo = k * int(2, 9); const err = new Set();
-    while (err.size < 2) { const x = certo + pick([-3, -2, -1, 1, 2, 3, 4]); if (x > 1 && x % k !== 0) err.add(x); }
+    while (err.size < 3) { const x = certo + pick([-3, -2, -1, 1, 2, 3, 4]); if (x > 1 && x % k !== 0) err.add(x); }
     return Q(`Qual é múltiplo de ${k}?`, num(certo), [...err].map(num), X(`Múltiplos de ${k} aparecem na tabuada do ${k}: ${k} × ${certo / k} = ${certo}`));
   };
 }
-function primeirosMult() { const k = int(3, 9); const r = [1, 2, 3, 4].map(i => i * k).join(', '); return Q(`Quais são os 4 primeiros múltiplos de ${k} (sem o zero)?`, r, [[k, k + 2, k + 4, k + 6].join(', '), [2, 3, 4, 5].map(i => i * k).join(', '), [1, 2, 3, 4].map(i => i + k).join(', ')], X(`${k} × 1, ${k} × 2, ${k} × 3, ${k} × 4 = ${r}`)); }
 function multDois() {
   const [a, b] = pick([[2, 3], [2, 5], [3, 4], [3, 5], [2, 7], [4, 5]]); const m = a * b * int(1, 2); const err = new Set();
-  while (err.size < 2) { const x = pick([a, b]) * int(2, 8); if (x % a !== 0 || x % b !== 0) err.add(x); }
+  while (err.size < 3) { const x = pick([a, b]) * int(2, 8); if (x % a !== 0 || x % b !== 0) err.add(x); }
   return Q(`Qual é múltiplo de ${a} e de ${b} ao mesmo tempo?`, num(m), [...err].map(num), X(`${m} ÷ ${a} = ${m / a} e ${m} ÷ ${b} = ${m / b}: divide pelos dois sem sobrar.`));
 }
 const DIV_N = [6, 8, 9, 10, 12, 14, 15, 16, 18, 20, 21, 24, 25, 30];
@@ -80,23 +79,23 @@ function qualDiv(nao = false) {
   return () => {
     for (; ;) {
       const n = pick(DIV_N), ds = divsDe(n).filter(d => d > 1 && d < n), nd = [2, 3, 4, 5, 6, 7, 8, 9].filter(d => n % d !== 0);
-      if (nao ? ds.length < 2 || !nd.length : !ds.length || nd.length < 2) continue;
+      if (nao ? ds.length < 3 || !nd.length : !ds.length || nd.length < 3) continue;
       const DS = X(`Divisores de ${n}: ${divsDe(n).join(', ')}`);
-      if (nao) return Q(`Qual NÃO é divisor de ${n}?`, num(pick(nd)), sample(ds, 2).map(num), DS);
-      return Q(`Qual é divisor de ${n}?`, num(pick(ds)), sample(nd, 2).map(num), DS);
+      if (nao) return Q(`Qual NÃO é divisor de ${n}?`, num(pick(nd)), sample(ds, 3).map(num), DS);
+      return Q(`Qual é divisor de ${n}?`, num(pick(ds)), sample(nd, 3).map(num), DS);
     }
   };
 }
 function todosDiv() { const n = pick([6, 8, 10, 12, 15, 16, 18, 20]); const ds = divsDe(n); return Q(`Quais são todos os divisores de ${n}?`, ds.join(', '), [ds.slice(1, -1).join(', '), [...ds.slice(0, -1), n * 2].join(', '), [n, n * 2, n * 3].join(', ')], X(`Teste de 1 até ${n}: quem divide ${n} sem sobrar é divisor. Não esqueça do 1 e do próprio ${n}.`)); }
 const primo = () => { const p = pick([5, 7, 11, 13]); return Q(`Quantos divisores tem o número ${p}?`, '2', ['1', num(p), '3'], X(`${p} só divide por 1 e por ${p}: 2 divisores (é um número primo).`)); };
-const divPrimo = () => { const p = pick([5, 7, 11, 13]); return Q(`Qual é divisor de ${p}?`, num(p), sample([2, 3, 4, 6].filter(d => p % d), 2).map(num), X(`Todo número é divisor de si mesmo: ${p} ÷ ${p} = 1.`)); };
+const divPrimo = () => { const p = pick([5, 7, 11, 13]); return Q(`Qual é divisor de ${p}?`, num(p), sample([2, 3, 4, 6].filter(d => p % d), 3).map(num), X(`Todo número é divisor de si mesmo: ${p} ÷ ${p} = 1.`)); };
 const M6 = {
   A: {
     treinador1: [ehMult([2]), ehMult([2]), ehMult([2]), ehMult([2]), ehMult([2])],
     treinador2: [ehMult([5]), ehMult([5, 10]), ehMult([10]), ehMult([5]), ehMult([10])],
     treinador3: [ehMult([3]), ehMult([3]), ehMult([3]), ehMult([3]), ehMult([3])],
     lider: [qualMult([2]), qualMult([5]), qualMult([3]), qualMult([4]), qualMult([6])],
-    revanche: [primeirosMult, multDois, multDois],
+    revanche: [qualMult([7, 8, 9]), multDois, multDois],
   },
   B: {
     treinador1: [ehDiv, ehDiv, ehDiv, ehDiv, ehDiv],
@@ -118,8 +117,8 @@ function pct(ps) {
   };
 }
 const PF = [[50, 1, 2], [25, 1, 4], [75, 3, 4], [10, 1, 10], [20, 1, 5], [40, 2, 5]];
-const pctFrac = () => { const [p, a, b] = pick(PF); return coin() ? Q(`${p}% é igual a qual fração?`, frac(a, b), erradasFrac(a, b, [[1, p], [a, b * 2], [b, a], [1, 3]]).slice(0, 2), X(`${p}% = ${p}/100 = ${frac(a, b)}`)) : Q(`${frac(a, b)} é igual a quantos por cento?`, `${p}%`, erradasNum(p, [p * 10, p * 2, p / 2, a + b], { fmt: x => `${num(x)}%`, inteiro: false }), X(`${frac(a, b)} = ${p}/100 = ${p}%`)); };
-const todo = () => Q('100% de algo significa:', 'o todo', ['a metade', 'nada'], X('100% = 100/100 = 1 inteiro: é tudo.'));
+const pctFrac = () => { const [p, a, b] = pick(PF); return coin() ? Q(`${p}% é igual a qual fração?`, frac(a, b), erradasFrac(a, b, [[1, p], [a, b * 2], [b, a], [1, 3], [a, b + 1]]), X(`${p}% = ${p}/100 = ${frac(a, b)}`)) : Q(`${frac(a, b)} é igual a quantos por cento?`, `${p}%`, erradasNum(p, [p * 10, p * 2, p / 2, a + b], { fmt: x => `${num(x)}%`, inteiro: false }), X(`${frac(a, b)} = ${p}/100 = ${p}%`)); };
+const todo = () => Q('100% de algo significa:', 'o todo', ['a metade', 'nada', 'o dobro'], X('100% = 100/100 = 1 inteiro: é tudo.'));
 function desconto() { const p = pick([10, 20, 50]), P = 10 * int(2, 12); const v = P * p / 100; return Q(`Uma camiseta de R$ ${P} tem ${p}% de desconto. Quanto é o desconto?`, reais(v), erradasNum(v, [P - v, p, v * 2, v / 2], { fmt: reais, inteiro: false }), X(`${atalho(p, P)}. O desconto é ${reais(v)}`)); }
 function turma() { const N = 2 * int(8, 20); const v = N / 2; return Q(`Numa turma de ${N} alunos, 50% são meninas. Quantas meninas?`, num(v), erradasNum(v, [N, v / 2, 50]), X(atalho(50, N))); }
 function precoFinal() { const p = pick([10, 20, 25, 50]), P = 20 * int(2, 10); const v = P - P * p / 100; return Q(`Um tênis de R$ ${P} tem ${p}% de desconto. Qual o preço final?`, reais(v), erradasNum(v, [P * p / 100, P - p, P + P * p / 100], { fmt: reais, inteiro: false }), X(`Desconto: ${atalho(p, P).split(': ')[1]}. Preço final: ${P} − ${num(P * p / 100)} = ${num(v)}`)); }
@@ -128,23 +127,23 @@ const dec = p => num(p / 100);
 const pctX = p => `${p}% = ${p} ÷ 100 = ${dec(p)}. "De" vira vezes: × ${dec(p)}`;
 function qualConta() {
   const p = pick([10, 20, 25, 30, 40, 50, 75]), N = 10 * int(2, 12);
-  if (p === 50 && coin()) return Q(`"50% de ${N}" é o mesmo que:`, `${N} ÷ 2`, [`${N} × 2`, `${N} − 50`], X('50% é a metade: divide por 2.'));
-  return Q(`"${p}% de ${N}" é o mesmo que:`, `${N} × ${dec(p)}`, [`${N} × ${p}`, pick([`${N} + ${p}`, `${N} ÷ ${dec(p)}`, `${N} − ${p}`])], X(pctX(p)));
+  if (p === 50 && coin()) return Q(`"50% de ${N}" é o mesmo que:`, `${N} ÷ 2`, [`${N} × 2`, `${N} − 50`, `${N} ÷ 50`], X('50% é a metade: divide por 2.'));
+  return Q(`"${p}% de ${N}" é o mesmo que:`, `${N} × ${dec(p)}`, [`${N} × ${p}`, ...sample([`${N} + ${p}`, `${N} ÷ ${dec(p)}`, `${N} − ${p}`], 2)], X(pctX(p)));
 }
-const pctDec = () => { const p = pick([5, 10, 15, 20, 30, 40, 50, 60, 100]); const d = p / 100; return Q(`${p}% em número decimal:`, num(d), erradasNum(d, [d * 10, d / 10], { inteiro: false }).slice(0, 2), X(`${p}% = ${p} ÷ 100 = ${num(d)}`)); };
+const pctDec = () => { const p = pick([5, 10, 15, 20, 30, 40, 50, 60, 100]); const d = p / 100; return Q(`${p}% em número decimal:`, num(d), erradasNum(d, [d * 10, d / 10], { inteiro: false }), X(`${p}% = ${p} ÷ 100 = ${num(d)}`)); };
 const CTX = [
   (p, N) => [`Uma bola de R$ ${N} tem ${p}% de desconto. Qual conta dá o desconto?`],
   (p, N) => [`Numa turma de ${N} alunos, ${p}% são meninas. Qual conta dá o número de meninas?`],
   (p, N) => [`Acertei ${p}% de ${N} questões. Qual conta dá quantas acertei?`],
   (p, N) => [`Num show com ${N * 10} pessoas, ${p}% eram crianças. Qual conta dá o número de crianças?`, N * 10],
 ];
-function contaCtx() { const p = pick([5, 10, 20, 25, 40, 50]), N = 10 * int(2, 9); const [e, NN = N] = pick(CTX)(p, N); return Q(e, `${NN} × ${dec(p)}`, [`${NN} × ${p}`, pick([`${NN} − ${p}`, `${NN} + ${dec(p)}`, `${NN} ÷ ${p}`])], X(pctX(p))); }
-const leConta = () => { const p = pick([10, 20, 25, 50]), N = 10 * int(2, 9); return Q(`A conta ${N} × ${dec(p)} calcula:`, `${p}% de ${N}`, [`${num(p / 10)}% de ${N}`, `${N} − ${p}`], X(`${dec(p)} = ${p} ÷ 100 = ${p}%`)); };
+function contaCtx() { const p = pick([5, 10, 20, 25, 40, 50]), N = 10 * int(2, 9); const [e, NN = N] = pick(CTX)(p, N); return Q(e, `${NN} × ${dec(p)}`, [`${NN} × ${p}`, ...sample([`${NN} − ${p}`, `${NN} + ${dec(p)}`, `${NN} ÷ ${p}`], 2)], X(pctX(p))); }
+const leConta = () => { const p = pick([10, 20, 25, 50]), N = 10 * int(2, 9); return Q(`A conta ${N} × ${dec(p)} calcula:`, `${p}% de ${N}`, [`${num(p / 10)}% de ${N}`, `${N} − ${p}`, `${p * 10}% de ${N}`], X(`${dec(p)} = ${p} ÷ 100 = ${p}%`)); };
 function contaFinal(tipo) {
   const p = pick([10, 20, 25]), P = 10 * int(3, 20);
-  if (tipo === 0) return Q(`Um produto de R$ ${P} tem ${p}% de desconto. Qual conta dá o preço final?`, `${P} − ${P} × ${dec(p)}`, [`${P} × ${dec(p)}`, `${P} − ${p}`], X(`Preço final = preço − desconto. O desconto é ${P} × ${dec(p)}.`));
-  if (tipo === 1) return Q(`A mesada de R$ ${P} teve aumento de ${p}%. Qual conta dá a nova mesada?`, `${P} + ${P} × ${dec(p)}`, [`${P} × ${dec(p)}`, `${P} + ${p}`], X(`Nova mesada = mesada + aumento. O aumento é ${P} × ${dec(p)}.`));
-  return Q(`Uma camiseta de R$ ${P} tem ${p}% de desconto. Qual conta dá direto o preço final?`, `${P} × ${dec(100 - p)}`, [`${P} × ${dec(p)}`, `${P} − ${p}`], X(`Com ${p}% de desconto, você paga 100% − ${p}% = ${100 - p}% = ${dec(100 - p)}.`));
+  if (tipo === 0) return Q(`Um produto de R$ ${P} tem ${p}% de desconto. Qual conta dá o preço final?`, `${P} − ${P} × ${dec(p)}`, [`${P} × ${dec(p)}`, `${P} − ${p}`, `${P} − ${P} × ${p}`], X(`Preço final = preço − desconto. O desconto é ${P} × ${dec(p)}.`));
+  if (tipo === 1) return Q(`A mesada de R$ ${P} teve aumento de ${p}%. Qual conta dá a nova mesada?`, `${P} + ${P} × ${dec(p)}`, [`${P} × ${dec(p)}`, `${P} + ${p}`, `${P} + ${P} × ${p}`], X(`Nova mesada = mesada + aumento. O aumento é ${P} × ${dec(p)}.`));
+  return Q(`Uma camiseta de R$ ${P} tem ${p}% de desconto. Qual conta dá direto o preço final?`, `${P} × ${dec(100 - p)}`, [`${P} × ${dec(p)}`, `${P} − ${p}`, `${P} × ${dec(100 + p)}`], X(`Com ${p}% de desconto, você paga 100% − ${p}% = ${100 - p}% = ${dec(100 - p)}.`));
 }
 const M7 = {
   A: {
@@ -165,13 +164,13 @@ const M7 = {
 
 // ===================== MAPA 8 =====================
 const FRASES = [
-  ['O dobro de um número', '2x', ['x + 2', 'x²']], ['O triplo de um número', '3x', ['x + 3', 'x³']],
-  ['A metade de um número', 'x ÷ 2', ['2x', 'x − 2']], ['O quádruplo de um número', '4x', ['x + 4', 'x⁴']],
+  ['O dobro de um número', '2x', ['x + 2', 'x²', 'x ÷ 2']], ['O triplo de um número', '3x', ['x + 3', 'x³', 'x ÷ 3']],
+  ['A metade de um número', 'x ÷ 2', ['2x', 'x − 2', 'x²']], ['O quádruplo de um número', '4x', ['x + 4', 'x⁴', 'x ÷ 4']],
 ];
 function frase() {
   if (coin()) { const [e, r, x] = pick(FRASES); return Q(`"${e}"`, r, x, X('Dobro = 2x, triplo = 3x, quádruplo = 4x, metade = x ÷ 2.')); }
   const k = int(2, 9);
-  return coin() ? Q(`"Um número mais ${k}"`, `x + ${k}`, [`${k}x`, `x − ${k}`], X(`"Mais" é soma: x + ${k}`)) : Q(`"Um número menos ${k}"`, `x − ${k}`, [`${k} − x`, `${k}x`], X(`"Menos" é subtração, e o número vem primeiro: x − ${k}`));
+  return coin() ? Q(`"Um número mais ${k}"`, `x + ${k}`, [`${k}x`, `x − ${k}`, `x ÷ ${k}`], X(`"Mais" é soma: x + ${k}`)) : Q(`"Um número menos ${k}"`, `x − ${k}`, [`${k} − x`, `${k}x`, `x + ${k}`], X(`"Menos" é subtração, e o número vem primeiro: x − ${k}`));
 }
 const LET = ['x', 'a', 'y', 'm'];
 function valorSoma() {
@@ -188,8 +187,8 @@ function valorProd(comConst = false) {
     return Q(`Valor de ${e} quando x = ${n}`, num(v), erradasNum(v, [Number(`${a}${n}`) > 99 ? a + n : Number(`${a}${n}`), a + n + (comConst ? c : 0), v + 1]), X(`${a}x é ${a} vezes x. Troque x por ${n}: ${passos(e.replace(/x/, ` × ${n}`))}`));
   };
 }
-const frase2 = () => { const k = int(1, 5); return pick([() => Q(`"O dobro de um número mais ${k}"`, `2x + ${k}`, [`2(x + ${k})`, `x + 2 + ${k}`], X(`Primeiro o dobro (2x), depois mais ${k}: 2x + ${k}`)), () => Q('"Um número ao quadrado"', 'x²', ['2x', 'x + 2'], X('Ao quadrado = x × x = x²'))])(); };
-const canetas = () => { const k = int(2, 9); return Q(`Cada caneta custa x reais. Quanto custam ${k} canetas?`, `${k}x`, [`x + ${k}`, `x ÷ ${k}`], X(`${k} canetas de x reais: ${k} × x = ${k}x`)); };
+const frase2 = () => { const k = int(1, 5); return pick([() => Q(`"O dobro de um número mais ${k}"`, `2x + ${k}`, [`2(x + ${k})`, `x + 2 + ${k}`, `2x − ${k}`], X(`Primeiro o dobro (2x), depois mais ${k}: 2x + ${k}`)), () => Q('"Um número ao quadrado"', 'x²', ['2x', 'x + 2', 'x³'], X('Ao quadrado = x × x = x²'))])(); };
+const canetas = () => { const k = int(2, 9); return Q(`Cada caneta custa x reais. Quanto custam ${k} canetas?`, `${k}x`, [`x + ${k}`, `x ÷ ${k}`, `x − ${k}`], X(`${k} canetas de x reais: ${k} × x = ${k}x`)); };
 function valorNeg() { const a = int(2, 5), n = -int(1, 4), c = int(1, 6); const v = a * n - c; return Q(`Valor de ${a}x − ${c} quando x = ${num(n)}`, num(v), erradasNum(v, [a * -n - c, a * n + c, -v], { neg: true }), X(`Troque x por ${num(n)}: ${passos(`${a} × (${num(n)}) − ${c}`)}`)); }
 function valorQuad() { const n = int(2, 6), c = int(1, 9); const v = n * n + c; return Q(`Valor de x² + ${c} quando x = ${n}`, num(v), erradasNum(v, [2 * n + c, n + c, n * n]), X(`x² = x × x. Troque x por ${n}: ${n} × ${n} + ${c} = ${n * n} + ${c} = ${v}`)); }
 function valor2() { const a = int(2, 5), b = int(2, 5), p = int(1, 6), q = int(1, 6); const v = a * p + b * q; return Q(`Valor de ${a}a + ${b}b quando a = ${p} e b = ${q}`, num(v), erradasNum(v, [a + p + b + q, a * q + b * p, v + 1]), X(`Troque a por ${p} e b por ${q}: ${passos(`${a} × ${p} + ${b} × ${q}`)}`)); }
@@ -198,7 +197,7 @@ function somaSem(sub = false) {
   return () => {
     const l = pick(LET); let a = int(1, 9), b = int(1, 9); if (sub && b > a) [a, b] = [b, a];
     const r = sub ? a - b : a + b;
-    return Q(`${mono(a, l)} ${sub ? '−' : '+'} ${mono(b, l)}`, mono(r, l), erradasTexto(mono(r, l), [mono(r + 1, l), mono(sub ? a + b : Math.abs(a - b) || r + 2, l), r > 0 ? `${r}${l}²` : mono(1, l), mono(Math.max(r - 1, 2), l)]), X(`Termos com a mesma letra: ${sub ? 'subtraia' : 'some'} só os números (${a} ${sub ? '−' : '+'} ${b} = ${r}) e repita a letra: ${mono(r, l)}`));
+    return Q(`${mono(a, l)} ${sub ? '−' : '+'} ${mono(b, l)}`, mono(r, l), erradasTexto(mono(r, l), [mono(r + 1, l), mono(sub ? a + b : Math.abs(a - b) || r + 2, l), r > 0 ? `${r}${l}²` : mono(1, l), mono(Math.max(r - 1, 2), l), `${mono(Math.max(r, 1), l)}²`, mono(r + 2, l)]), X(`Termos com a mesma letra: ${sub ? 'subtraia' : 'some'} só os números (${a} ${sub ? '−' : '+'} ${b} = ${r}) e repita a letra: ${mono(r, l)}`));
   };
 }
 function semelhantes() {

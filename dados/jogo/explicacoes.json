@@ -1,0 +1,160 @@
+{
+ "explicacoes": {
+  "mapa1-A": {
+   "titulo": "Expressões sem parênteses",
+   "regra": "Primeiro as multiplicações e divisões, da esquerda para a direita. Depois as somas e subtrações.",
+   "exemplo": "5 + 2 × 3 = 5 + 6 = 11",
+   "dica": "Não faça 5 + 2 primeiro!"
+  },
+  "mapa1-B": {
+   "titulo": "Expressões com parênteses",
+   "regra": "Resolva primeiro o que está dentro dos parênteses. Depois siga a ordem: × e ÷, depois + e −.",
+   "exemplo": "(5 + 2) × 3 = 7 × 3 = 21",
+   "dica": "Parênteses mandam na ordem."
+  },
+  "mapa2-A": {
+   "titulo": "× e ÷ por 10, 100, 1000",
+   "regra": "Multiplicar por 10, 100, 1000: a vírgula anda 1, 2, 3 casas para a direita. Dividir: anda para a esquerda.",
+   "exemplo": "3,5 × 100 = 350   ·   48 ÷ 10 = 4,8",
+   "dica": "Conte os zeros: é o número de casas."
+  },
+  "mapa2-B": {
+   "titulo": "Decimais e medidas",
+   "regra": "1 m = 100 cm · 1 km = 1000 m · 1 kg = 1000 g · 1 L = 1000 mL. Para a unidade menor, multiplique; para a maior, divida.",
+   "exemplo": "2,5 m = 250 cm   ·   1500 g = 1,5 kg",
+   "dica": "Unidade menor → número maior."
+  },
+  "mapa3-A": {
+   "titulo": "Negativos: comparar, somar e subtrair",
+   "regra": "Na reta, quanto mais à esquerda, menor: −5 < −2. Sinais iguais: soma e mantém o sinal. Sinais diferentes: subtrai e fica o sinal do maior.",
+   "exemplo": "−3 + (−4) = −7   ·   −8 + 5 = −3   ·   2 − 7 = −5",
+   "dica": "Subtrair é somar o oposto: 4 − (−3) = 4 + 3."
+  },
+  "mapa3-B": {
+   "titulo": "Negativos: multiplicar e dividir",
+   "regra": "Sinais iguais dão positivo. Sinais diferentes dão negativo.",
+   "exemplo": "(−3) × (−4) = 12   ·   (−20) ÷ 5 = −4",
+   "dica": "+·+ = +   −·− = +   +·− = −"
+  },
+  "mapa4-A": {
+   "titulo": "Frações",
+   "regra": "Frações equivalentes: multiplique ou divida em cima e embaixo pelo mesmo número. Para somar, use o mesmo denominador.",
+   "exemplo": "1/2 = 2/4 = 3/6   ·   1/4 + 2/4 = 3/4",
+   "dica": "Denominador = em quantas partes o inteiro foi dividido."
+  },
+  "mapa4-B": {
+   "titulo": "Decimais",
+   "regra": "Para somar ou subtrair, alinhe as vírgulas. Na multiplicação, conte as casas depois da vírgula.",
+   "exemplo": "2,5 + 1,25 = 3,75   ·   0,3 × 0,2 = 0,06",
+   "dica": "0,5 = 1/2   ·   0,25 = 1/4"
+  },
+  "mapa5-A": {
+   "titulo": "Potências",
+   "regra": "A base é multiplicada por ela mesma o número de vezes do expoente.",
+   "exemplo": "2³ = 2 × 2 × 2 = 8   ·   5² = 25",
+   "dica": "Qualquer número elevado a 0 é 1; elevado a 1 é ele mesmo."
+  },
+  "mapa5-B": {
+   "titulo": "Raízes",
+   "regra": "A raiz quadrada é o número que, multiplicado por ele mesmo, dá o valor.",
+   "exemplo": "√49 = 7, porque 7 × 7 = 49",
+   "dica": "Decore os quadrados: 1, 4, 9, 16, 25, 36, 49, 64, 81, 100."
+  },
+  "mapa6-A": {
+   "titulo": "Múltiplos",
+   "regra": "Múltiplos de um número são os resultados da tabuada dele.",
+   "exemplo": "Múltiplos de 4: 0, 4, 8, 12, 16, 20…",
+   "dica": "É múltiplo de 2 se termina em 0, 2, 4, 6 ou 8; de 5 se termina em 0 ou 5."
+  },
+  "mapa6-B": {
+   "titulo": "Divisores",
+   "regra": "Divisor de um número é quem divide ele sem sobrar resto.",
+   "exemplo": "Divisores de 12: 1, 2, 3, 4, 6, 12",
+   "dica": "1 e o próprio número sempre são divisores."
+  },
+  "mapa7-A": {
+   "titulo": "Porcentagem: calcular",
+   "regra": "Porcentagem é uma fração de 100. 10% é dividir por 10; 50% é a metade; 25% é a quarta parte.",
+   "exemplo": "20% de 50 = 2 × (10% de 50) = 2 × 5 = 10",
+   "dica": "Ou: 20% de 50 = 0,2 × 50 = 10."
+  },
+  "mapa7-B": {
+   "titulo": "Porcentagem: qual é a conta?",
+   "regra": "X% de um valor = valor × (X ÷ 100). Desconto: valor − desconto, ou valor × (1 − X/100).",
+   "exemplo": "30% de 80 = 80 × 0,3   ·   80 com 25% off = 80 × 0,75",
+   "dica": "Aumento de 10%: valor × 1,1."
+  },
+  "mapa8-A": {
+   "titulo": "Linguagem algébrica e valor numérico",
+   "regra": "A letra representa um número desconhecido. Para o valor numérico, troque a letra pelo número e calcule.",
+   "exemplo": "dobro de um número: 2x   ·   se x = 3, 2x + 1 = 7",
+   "dica": "2x é 2 vezes x, não 'vinte e x'."
+  },
+  "mapa8-B": {
+   "titulo": "Termos semelhantes",
+   "regra": "Só se somam termos com a mesma parte literal (mesma letra e mesmo expoente).",
+   "exemplo": "3x + 5x = 8x   ·   2a + 3b não junta",
+   "dica": "x² e x não são semelhantes."
+  },
+  "mapa9-A": {
+   "titulo": "Equações: resolver",
+   "regra": "Faça a mesma coisa dos dois lados até deixar o x sozinho. Use a operação inversa.",
+   "exemplo": "2x + 3 = 11 → 2x = 8 → x = 4",
+   "dica": "Confira trocando x pelo resultado."
+  },
+  "mapa9-B": {
+   "titulo": "Equações: qual é a equação?",
+   "regra": "Traduza a frase por partes: 'um número' = x; 'o dobro' = 2x; 'é igual a' = '='.",
+   "exemplo": "'O triplo de um número mais 2 é 14' → 3x + 2 = 14",
+   "dica": "'Mais' = +, 'menos' = −, 'vezes' = ×."
+  },
+  "mapa10-A": {
+   "titulo": "Regra de três: calcular",
+   "regra": "Monte a proporção e multiplique cruzado. Diretamente proporcional: os dois aumentam juntos.",
+   "exemplo": "3 kg → R$ 12;  5 kg → x   ⇒  3x = 5 × 12  ⇒  x = 20",
+   "dica": "Primeiro ache quanto vale 1, se ficar mais fácil."
+  },
+  "mapa10-B": {
+   "titulo": "Regra de três: qual é a conta?",
+   "regra": "Se um aumenta e o outro também, multiplique pela razão. Se um aumenta e o outro diminui (inversamente proporcional), divida.",
+   "exemplo": "2 torneiras → 10 h; 4 torneiras → 10 ÷ 2 = 5 h",
+   "dica": "Mais trabalhadores, menos tempo."
+  },
+  "mapa11-A": {
+   "titulo": "Perímetro e medidas",
+   "regra": "Perímetro é a soma de todos os lados (o contorno). Medido em cm, m…",
+   "exemplo": "Retângulo 5 × 3: 5 + 3 + 5 + 3 = 16 cm",
+   "dica": "Quadrado: 4 × lado."
+  },
+  "mapa11-B": {
+   "titulo": "Área",
+   "regra": "Área é o espaço dentro da figura. Medida em cm², m²…",
+   "exemplo": "Retângulo: base × altura = 5 × 3 = 15 cm²   ·   Triângulo: base × altura ÷ 2",
+   "dica": "Perímetro é contorno; área é o que tem dentro."
+  },
+  "mapa12-A": {
+   "titulo": "Ler coordenadas",
+   "regra": "O ponto (x, y): primeiro anda no eixo horizontal (x), depois no vertical (y).",
+   "exemplo": "(3, 2): 3 para a direita, 2 para cima",
+   "dica": "A origem é (0, 0). x negativo: esquerda; y negativo: para baixo."
+  },
+  "mapa12-B": {
+   "titulo": "Andar no plano cartesiano",
+   "regra": "Para ir de um ponto a outro, compare os x (direita/esquerda) e depois os y (cima/baixo).",
+   "exemplo": "De (1, 1) a (4, 3): 3 para a direita e 2 para cima",
+   "dica": "x aumentou → direita; y aumentou → cima."
+  },
+  "mapa13-A": {
+   "titulo": "Média, moda e mediana",
+   "regra": "Média: soma tudo e divide pela quantidade. Moda: o que mais aparece. Mediana: o do meio, com os valores em ordem.",
+   "exemplo": "2, 3, 3, 8 → média 4, moda 3, mediana 3",
+   "dica": "Número par de valores: mediana = média dos dois do meio."
+  },
+  "mapa13-B": {
+   "titulo": "Tabelas",
+   "regra": "Leia o título, as linhas e as colunas antes de responder. Procure o cruzamento da linha com a coluna.",
+   "exemplo": "Linha 'Março', coluna 'Vendas' → o valor que está no encontro",
+   "dica": "Confira a unidade (mil, %, reais…)."
+  }
+ }
+}

@@ -417,7 +417,8 @@
        "resposta": "cm²",
        "erradas": [
         "cm",
-        "kg"
+        "kg",
+        "L"
        ]
       },
       {
@@ -426,7 +427,8 @@
        "resposta": "cm",
        "erradas": [
         "cm²",
-        "L"
+        "L",
+        "kg"
        ]
       },
       {

@@ -63,9 +63,11 @@
     <div class="jr-hud jr-hud-topo">
       <button class="jr-btn jr-btn-sec" id="btn-cena-voltar">⟵ Mapa geral</button>
       <div class="jr-hud-titulo" id="cena-titulo"></div>
+      <button class="jr-btn-hud" id="btn-relembre" hidden aria-label="Relembre o conteúdo do ginásio">📖<span>Relembre</span></button>
       <button class="jr-btn-hud" id="btn-praca" hidden aria-label="Ir para a Praça do Encontro">🏛️<span>Praça</span></button>
       <button class="jr-btn-hud" id="btn-colegas" hidden aria-label="Mostrar ou esconder os colegas" aria-pressed="true">👁<span>Colegas</span></button>
       <button class="jr-btn-hud" id="btn-reacao" hidden aria-label="Mandar uma reação">😊</button>
+      <button class="jr-btn-hud jr-btn-missoes" id="btn-missoes" hidden aria-label="Missões do dia">📜<span id="missoes-cont">0/3</span></button>
       <button class="jr-btn-pet" id="btn-pet" hidden aria-label="Meus pets"><img alt="" draggable="false"/></button>
       <button class="jr-btn-hud jr-btn-batalhar" id="btn-batalhar" hidden aria-label="Treinadores">⚔️<span>Treinadores</span></button>
       <button class="jr-btn-som" data-som aria-label="Desligar o som">🔊</button>
@@ -203,6 +205,7 @@
         <div class="jr-estojo-acoes">
           <button class="jr-btn jr-btn-sec jr-trocar-pet" id="btn-trocar-pet" hidden>🐾 Meus pets</button>
           <button class="jr-btn jr-btn-sec jr-trocar-pet" id="btn-personagem">👤 Personagem</button>
+          <button class="jr-btn jr-btn-sec jr-trocar-pet" id="btn-letra" aria-pressed="false">Aa Letra: Normal</button>
         </div>
       </div>
       <div id="estojo-placar" class="jr-placar"></div>
@@ -218,7 +221,63 @@
       <div class="jr-cartao-regiao" id="cartao-regiao"></div>
       <div class="jr-cartao-conteudo" id="cartao-conteudo"></div>
       <div class="jr-cartao-info" id="cartao-info"></div>
+      <button class="jr-btn jr-btn-sec" id="cartao-relembre" hidden>📖 Relembre o conteúdo</button>
       <button class="jr-btn" id="cartao-fechar">Fechar</button>
+    </div>
+  </div>
+
+  <!-- Cartão do erro no ginásio e na revisão da semana (PROMPT-45): sua resposta × a certa, passos e Continuar -->
+  <div id="perg-erro" class="jr-erro" hidden role="dialog" aria-label="Resposta errada">
+    <div class="jr-erro-caixa">
+      <div class="jr-erro-enun" id="erro-enun"></div>
+      <div class="jr-erro-meio">
+        <div class="jr-erro-textos">
+          <div class="jr-erro-resps">
+            <div class="jr-erro-resp sua"><small>Você marcou</small><b><i>✘</i> <span id="erro-sua"></span></b></div>
+            <div class="jr-erro-resp certa"><small>Certa</small><b><i>✔</i> <span id="erro-certa"></span></b></div>
+          </div>
+          <div class="jr-erro-tit">Como resolver</div>
+          <ol class="jr-erro-passos" id="erro-passos"></ol>
+        </div>
+        <div class="jr-erro-grade" id="erro-grade" hidden></div>
+      </div>
+      <div class="jr-erro-linha" id="erro-linha-dica"><span class="jr-erro-dica" id="erro-dica"></span><button class="jr-btn-relembre" id="erro-relembre">📖 Relembre</button></div>
+      <div class="jr-erro-linha"><span class="jr-erro-volta" id="erro-volta"></span><button class="jr-btn jr-btn-ouro" id="erro-continuar" disabled>Continuar ▶</button></div>
+    </div>
+  </div>
+
+  <!-- 🪙 Hoje você ganhou… (tocar em qualquer contador de moedas) -->
+  <div id="moedas-hoje" class="jr-moedas-hoje" hidden role="dialog" aria-label="Moedas de hoje"><div class="jr-mh-caixa" id="moedas-hoje-caixa"></div></div>
+
+  <!-- 📜 Missões do dia (dados/jogo/missoes.json) -->
+  <div id="missoes" class="jr-missoes" hidden role="dialog" aria-label="Missões do dia">
+    <div class="jr-mis-caixa">
+      <div class="jr-mis-topo"><b>📜 Missões do dia</b><button class="bt-lista-x" id="missoes-fechar" aria-label="Fechar">✕</button></div>
+      <div class="jr-mis-lista" id="missoes-lista"></div>
+      <div class="jr-mis-bonus" id="missoes-bonus"></div>
+      <div class="jr-mis-rodape">Missões novas todo dia, à meia-noite.</div>
+    </div>
+  </div>
+
+  <!-- 📖 Relembre: explicação curta do conteúdo do ginásio (dados/jogo/explicacoes.json) -->
+  <div id="relembre" class="jr-relembre" hidden role="dialog" aria-label="Relembre">
+    <div class="jr-rel-caixa">
+      <div class="jr-rel-topo">
+        <img id="rel-insignia" alt="" draggable="false"/>
+        <div class="jr-rel-cab"><small>📖 Relembre</small><b id="rel-titulo"></b></div>
+      </div>
+      <div class="jr-rel-corpo">
+        <div class="jr-rel-textos">
+          <p class="jr-rel-regra" id="rel-regra"></p>
+          <div class="jr-rel-exemplo" id="rel-exemplo"></div>
+          <div class="jr-rel-dica" id="rel-dica"></div>
+        </div>
+        <div class="jr-rel-pet" id="rel-pet-bloco"><div class="jr-rel-balao">Lembra disso? 😉</div><img id="rel-pet" alt="" draggable="false"/></div>
+      </div>
+      <div class="jr-rel-rodape">
+        <label class="jr-rel-check" id="rel-check"><input type="checkbox" id="rel-ocultar"/> Não mostrar de novo neste ginásio</label>
+        <button class="jr-btn jr-btn-ouro" id="rel-ok">Bora!</button>
+      </div>
     </div>
   </div>
 
@@ -475,7 +534,7 @@
       </div>
       <div class="jr-mp-info">
         <div class="jr-mp-cab">
-          <div class="jr-mp-cab-nome"><div class="jr-mp-nome"><span id="mp-nome"></span><button class="jr-mp-editar" id="mp-editar" title="Dar um nome" aria-label="Dar um nome">✏️</button><button class="jr-mp-editar" id="mp-trocar" title="Trocar pet" aria-label="Trocar pet">🔄</button></div><div class="jr-mp-origem" id="mp-origem"></div></div>
+          <div class="jr-mp-cab-nome"><div class="jr-mp-nome"><span id="mp-nome"></span><button class="jr-mp-editar" id="mp-editar" title="Dar um nome" aria-label="Dar um nome">✏️</button><button class="jr-mp-meuspets" id="mp-trocar" aria-label="Meus pets: ver e trocar"><span>🐾 Meus pets (<span id="mp-npets">1</span>)</span><span class="jr-mp-carinhas" id="mp-carinhas"></span></button></div><div class="jr-mp-origem" id="mp-origem"></div></div>
           <div class="jr-moedas jr-mp-moedas" aria-label="Moedas"><img class="jr-item-img jr-ic-moeda" data-icone="moeda" alt="🪙" draggable="false"/> <span id="mp-moedas">0</span></div>
           <button class="bt-lista-x jr-mp-x" id="mp-fechar" aria-label="Fechar">✕</button>
         </div>

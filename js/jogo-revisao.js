@@ -58,25 +58,35 @@ const ALT_PET = {
   unicornio: 40, dragao_azul: 40,
   dragao_vermelho: 50,
 };
-// Adultos (evolução no ❤️ 3): 25% maiores que o filhote
-const CRESCE_ADULTO = 1.25;
-ALT_PET.dragao_azul_adulto = ALT_PET.dragao_azul * CRESCE_ADULTO;
-ALT_PET.dragao_vermelho_adulto = ALT_PET.dragao_vermelho * CRESCE_ADULTO;
+// Evolução: cada fase é 15% maior que a anterior (altura do desenho SENTADO, não do quadro). Pet novo que evoluir:
+// ALT_PET[adulto] = ALT_PET[filhote] × CRESCE_EVOLUCAO (e o mesmo em DIST_PET, logo abaixo)
+const CRESCE_EVOLUCAO = 1.15;
+ALT_PET.dragao_azul_adulto = ALT_PET.dragao_azul * CRESCE_EVOLUCAO;
+ALT_PET.dragao_vermelho_adulto = ALT_PET.dragao_vermelho * CRESCE_EVOLUCAO;
 const ALT_PET_PADRAO = 30;   // pet que não estiver na tabela
 const altPet = (pet) => ALT_PET[pet] ?? ALT_PET_PADRAO;
 // O quadro (sprites.json: tamanho_quadro, 898 × 704 nos filhotes e 1402 × 801 nos adultos) tem folga em cima para os
 // pulos: sentado, o pet ocupa 604 px da altura (sentado_altura). Altura da IMAGEM para o pet sentado ficar com a altura da tabela:
 const altImagemPet = (pet) => altPet(pet) / sentadoNoQuadro(pet);
-// Telas com o pet em tamanho fixo (arena, ginásio): quanto a imagem da forma é maior que a do filhote
+// Quanto a IMAGEM da forma é maior que a do filhote para o desenho sentado ficar CRESCE_EVOLUCAO maior
+// (adulto: 1,15 × 801/704 ≈ 1,31, porque o quadro do adulto tem mais folga em cima)
 const fatorForma = (pet, forma) => (forma && forma !== pet ? altImagemPet(forma) / altImagemPet(pet) : 1);
+// Imagem pequena numa caixa feita para o filhote (coleção, HUD, chips, cartões): o quadro do adulto é mais largo
+// (asas). O CSS de img[data-adulto] usa a proporção do filhote, recorta as sobras dos lados e aumenta a partir dos pés.
+const attrForma = (pet, forma) => (forma && forma !== pet ? ` data-adulto style="--cresce-img:${fatorForma(pet, forma).toFixed(3)}"` : '');
+function marcarForma(img, pet, forma) {
+  const adulto = !!forma && forma !== pet;
+  img.toggleAttribute('data-adulto', adulto);
+  if (adulto) img.style.setProperty('--cresce-img', fatorForma(pet, forma).toFixed(3)); else img.style.removeProperty('--cresce-img');
+}
 // Distância normal do pet atrás do personagem (ao longo do rastro), em px na escala base (× ESCALA_ATORES no mapa).
 // Parado, o pet chega a 55% disso; acima de +10 anda 1,3× mais rápido; acima de +62 corre (pets.js).
 const DIST_PET = {
   elefante: 36, gato: 36, gaviao: 36, axolote: 36, tigre: 36,
   unicornio: 55, dragao_azul: 55, dragao_vermelho: 55,
 };
-DIST_PET.dragao_azul_adulto = DIST_PET.dragao_azul * CRESCE_ADULTO;
-DIST_PET.dragao_vermelho_adulto = DIST_PET.dragao_vermelho * CRESCE_ADULTO;
+DIST_PET.dragao_azul_adulto = DIST_PET.dragao_azul * CRESCE_EVOLUCAO;
+DIST_PET.dragao_vermelho_adulto = DIST_PET.dragao_vermelho * CRESCE_EVOLUCAO;
 const DIST_PET_PADRAO = 36;
 const distPet = (pet) => DIST_PET[pet] ?? DIST_PET_PADRAO;
 // no ginásio tudo é o dobro da escala base (o personagem tem ALT_JOGADOR = 110 em vez de 55)
@@ -196,6 +206,12 @@ async function carregarEstado() {
     estado.respostas = v.respostas || {};
     estado.pets = lerPets(v);   // validado depois de ler o sprites.json (cachorro/porco antigos são ignorados)
     estado.revisaoSemanal = v.revisao_semanal || {};
+    estado.relembre = v.relembre && typeof v.relembre === 'object' ? { ...v.relembre } : {};
+    estado.letraGrande = !!v.preferencias?.letra_grande;   // Aa Letra grande (PROMPT-49), salva por aluno
+    aplicarLetra();
+    estado.missoes = v.missoes_dia && typeof v.missoes_dia === 'object' ? v.missoes_dia : null;
+    estado.moedasDia = v.moedas_dia && typeof v.moedas_dia === 'object' ? v.moedas_dia : null;            // { data, fontes: { fonte: n } } — só hoje
+    estado.moedasSemana = v.moedas_semana && typeof v.moedas_semana === 'object' ? { ...v.moedas_semana } : {};   // { segunda: { fonte: n } }   // { data, lista: [{ id, n, feito }], bonus, avisou }   // { ginásio: { visto, ocultar, aberturas, ultima } }
     estado.batalhas = v.batalhas && typeof v.batalhas === 'object' ? { ...v.batalhas } : {};   // { treinadorId: { nivel, vitorias, derrotas, estado, descansa_ate } }
     estado.batalhasDia = v.batalhas_dia || null;
     estado.pedidos = v.pedidos && typeof v.pedidos === 'object' ? { ...v.pedidos } : {};   // { id: { fim: 'acertou'|'errou', tentativas, dica, data } }
@@ -530,6 +546,10 @@ export async function iniciarJogo(sess) {
   catch (e) { console.warn('[jogo-revisao] fliperama indisponível', e); }
   try { definirBatalhas(await fetch(`${DADOS}/batalhas.json`).then(r => { if (!r.ok) throw new Error('batalhas.json'); return r.json(); })); }
   catch (e) { console.warn('[jogo-revisao] batalha de pets indisponível', e); }
+  try { MISSOES = await fetch(`${DADOS}/missoes.json`).then(r => { if (!r.ok) throw new Error('missoes.json'); return r.json(); }); }
+  catch (e) { console.warn('[jogo-revisao] missões do dia indisponíveis', e); }
+  try { EXPLIC = (await fetch(`${DADOS}/explicacoes.json`).then(r => { if (!r.ok) throw new Error('explicacoes.json'); return r.json(); })).explicacoes || {}; }
+  catch (e) { console.warn('[jogo-revisao] explicações (Relembre) indisponíveis', e); }
   try { definirPedidos(await fetch(`${DADOS}/pedidos.json`).then(r => { if (!r.ok) throw new Error('pedidos.json'); return r.json(); })); }
   catch (e) { console.warn('[jogo-revisao] pedidos de ajuda indisponíveis', e); }
   try {
@@ -550,6 +570,7 @@ export async function iniciarJogo(sess) {
   abrirMapaGeral();
   $('jr-carregando').hidden = true;
   iniciarPet();
+  atualizarBotaoMissoes();
   entrarOnline().catch(() => {}).then(() => { carregarPremiosPesca(); ouvirPresentes(); iniciarPraca(); publicarResumoInsignias(); ouvirConvitesAoVivo(); });
   // aluno novo escolhe o personagem antes de tudo (o pet inicial vem depois, ao entrar num mapa)
   if (carregouProgresso && estado.novo && !estado.personagem) abrirEscolhaPersonagem(true);
@@ -727,7 +748,7 @@ function animarPainelPet(raizEl) {
 
 const imgPet = (p, animar = true) => {
   const f = formaDe(p), [w, h] = tamanhoQuadro(f);
-  return `<img src="${quadrosDe(f, 'sentado_girando')[0]}" width="${w}" height="${h}"${animar ? ` data-anim="${f}"` : ''} alt="" draggable="false"/>`;
+  return `<img src="${quadrosDe(f, 'sentado_girando')[0]}" width="${w}" height="${h}"${animar ? ` data-anim="${f}"` : ''}${attrForma(p, f)} alt="" draggable="false"/>`;
 };
 
 function abrirEscolhaPet() {
@@ -793,7 +814,7 @@ function abrirColecao() {
     <div class="jr-pet-opcao${estado.pets.ativo === p ? ' atual' : ''}" data-pet="${p}">
       ${imgPet(p)}
       <span>${NOME_PET[p]}</span>
-      <button class="jr-btn jr-pet-escolher" data-pet="${p}">${estado.pets.ativo === p ? 'Com você' : 'Usar'}</button>
+      <button class="jr-btn jr-pet-escolher" data-pet="${p}">${estado.pets.ativo === p ? '✔ Com você' : 'Levar comigo'}</button>
     </div>` : `
     <div class="jr-pet-opcao bloqueado" data-silhueta="${p}" role="button" tabindex="0">
       ${imgPet(p, false)}
@@ -851,6 +872,7 @@ function atualizarBotaoPet() {
   const src = quadrosDe(formaDe(ativo), 'sentado_girando')[0];
   const img = b.querySelector('img');
   if (img.getAttribute('src') !== src) img.src = src;
+  marcarForma(img, ativo, formaDe(ativo));
   aplicarVisualPet(img, ativo);
   b.setAttribute('aria-label', `Meus pets (${nomePet(ativo)})`);
 }
@@ -991,11 +1013,13 @@ function atualizarFomeSeguidor() {
   if (seguidor) seguidor.fome = !!estado.pets.ativo && barrigaDe(estado.pets.ativo) < fomeAbaixo();
 }
 
-// +1 moeda por resposta certa (não é XP)
+// +1 moeda na PRIMEIRA vez que o aluno acerta cada pergunta (id da pergunta); refazer não dá moeda (PROMPT-47)
 function ganharMoeda() {
   if (!estado?.pets) return;
   estado.pets.moedas = (Number(estado.pets.moedas) || 0) + 1;
-  gravar({ 'pets/moedas': estado.pets.moedas });
+  const patch = { 'pets/moedas': estado.pets.moedas };
+  registrarGanho('ginasio', 1, patch);
+  gravar(patch);
   const el = $('perg-moedas');
   atualizarMoedasPergunta();
   el.classList.remove('pulsa'); void el.offsetWidth; el.classList.add('pulsa');
@@ -1169,15 +1193,16 @@ function abrirMeuPet() {
   voltarAoNormal();
 }
 
-// pet grande: até ~78% da altura do palco, no máximo 352 px na tela (o tamanho de antes dos quadros em dobro).
-// Adulto: o quadro tem mais folga (asas), então a imagem cresce para o corpo ficar um pouco maior que o do filhote,
-// sem passar da largura do palco.
+// pet grande: o filhote tem a imagem com até ~78% da altura do palco, no máximo 352 px na tela (o tamanho de antes
+// dos quadros em dobro). Adulto: a imagem cresce fatorForma (desenho sentado 15% maior que o do filhote); as sobras
+// do quadro (asas, folga) podem passar das bordas, mas o DESENHO sentado (~50% da largura do quadro) cabe no palco.
+const DESENHO_NO_QUADRO = 0.52;
 function medirMeuPet() {
   const palco = $('mp-palco'), { pet, forma } = mp;
   let h = Math.min(palco.clientHeight * 0.78, MP_ALT_MAX);
   if (forma !== pet) {
     const [qw, qh] = tamanhoQuadro(forma);
-    h = Math.min(h * sentadoNoQuadro(pet) / sentadoNoQuadro(forma) * 1.1, palco.clientWidth * 0.98 * qh / qw);
+    h = Math.min(h * fatorForma(pet, forma), palco.clientWidth * 0.98 / DESENHO_NO_QUADRO * qh / qw);
   }
   $('mp-img').style.height = h + 'px';
 }
@@ -1198,6 +1223,7 @@ function renderMeuPet() {
     (nivel >= 2 ? ` <span class="mp-nivel" title="Nível de amizade">❤️ ${nivel}</span>` : '');
   $('mp-palco').classList.toggle('moldura-prata', nivel >= 2 && nivel < 5);
   $('mp-palco').classList.toggle('moldura-ouro', nivel >= 5);
+  renderBotaoMeusPets();
   $('mp-origem').textContent = c.origem === 'professora' ? 'Liberado para a professora'
     : c.origem && c.origem !== 'inicial' && PETS_GINASIO[c.origem] ? `Conquistado: ${nomeDoLugar(c.origem)}` : 'Seu primeiro pet';
   $('mp-moedas').textContent = Number(estado.pets.moedas) || 0;
@@ -1224,6 +1250,33 @@ function renderMeuPet() {
     <b>Marcos</b> Com ${lc}, ${esc(nomePet(pet))} começa a conversar${LEALDADE_CAMBALHOTA === lc ? ' e aprende a cambalhota' : ''}.${LEALDADE_CAMBALHOTA !== lc ? ` Com ${LEALDADE_CAMBALHOTA}, aprende a cambalhota.` : ''} Com ${ld}, dá dicas nos ginásios; com ${le}, elimina uma opção.
     Acima de 100, cada ${pp} pontos sobem um nível de amizade ❤️ (moldura de prata no 2, corações ao seguir no 3, moldura dourada no 5, coroa no 10).`;
   $('mp-bolsa').innerHTML = `${imgItem(icone('bolsa'), '🎒', 'jr-ic-btn')} Bolsa (${Object.values(estado.pets.bolsa || {}).reduce((a, n) => a + (Number(n) || 0), 0)})`;
+}
+
+// "🐾 Meus pets (N)" + até 3 carinhas (o ativo primeiro; "+N" se tiver mais)
+function renderBotaoMeusPets() {
+  const meus = Object.keys(estado.pets.conquistados).filter(petValido);
+  const ordem = [estado.pets.ativo, ...meus.filter(p => p !== estado.pets.ativo)].filter(p => meus.includes(p));
+  $('mp-npets').textContent = meus.length;
+  $('mp-carinhas').innerHTML = ordem.slice(0, 3).map(p => {
+    const f = formaDe(p);
+    return `<span><img src="${quadrosDe(f, 'sentado_girando')[0]}" alt="" draggable="false" data-pet="${p}"/></span>`;   // o busto tem enquadramento diferente em cada pet
+  }).join('') + (ordem.length > 3 ? `<b>+${ordem.length - 3}</b>` : '');
+  for (const img of $('mp-carinhas').querySelectorAll('img[data-pet]')) aplicarVisualPet(img, img.dataset.pet);
+  $('mp-trocar').setAttribute('aria-label', `Meus pets: ${meus.length}. Ver e trocar`);
+}
+
+// ── Aa Letra grande: +20% nos textos de pergunta, balões e cartões (CSS: --letra) ──
+function aplicarLetra() {
+  const g = !!estado?.letraGrande;
+  document.documentElement.classList.toggle('jr-letra-grande', g);
+  const b = $('btn-letra');
+  if (b) { b.textContent = `Aa Letra: ${g ? 'Grande' : 'Normal'}`; b.setAttribute('aria-pressed', String(g)); }
+}
+function alternarLetra() {
+  if (!estado) return;
+  estado.letraGrande = !estado.letraGrande;
+  gravar({ 'preferencias/letra_grande': estado.letraGrande || null });
+  aplicarLetra();
 }
 
 // Movimento por código no corpo do pet (respira, balança a cabeça, fica tristinho)
@@ -1305,6 +1358,7 @@ function particulas(simbolos, n) {   // símbolo: texto (emoji) ou HTML de image
 
 function carinhoPet() {
   if (!mp || mp.ocupado) return;
+  missaoProgresso('carinho');
   const pet = mp.pet, c = cuidadosDe(pet), hoje = diaLocal();
   if (doDia(c.carinhos_dia, hoje) < CARINHOS_POR_DIA) {
     c.carinhos_dia = { dia: hoje, n: doDia(c.carinhos_dia, hoje) + 1 };
@@ -1483,7 +1537,7 @@ function renderLoja() {
     html = tintas().filter(t => !t.exclusiva).map(t => {   // Esmeralda e Cristal: só cavando
       const tem = !!estado.pets.tintas?.[t.id];
       return `<div class="lj-item lj-tinta${lojaProva === t.id ? ' provando' : ''}" data-provar="${esc(t.id)}">
-        <div class="lj-previa">${src ? `<img src="${src}" alt="" draggable="false" data-tinta="${t.id}"/>` : ''}</div>
+        <div class="lj-previa">${src ? `<img src="${src}" alt="" draggable="false" data-tinta="${t.id}"${attrForma(pet, formaDe(pet))}/>` : ''}</div>
         <div class="lj-info"><b>${esc(t.nome)}</b>${tem ? '' : preco(t.preco)}</div>
         ${tem ? '<button class="lj-comprar ok" disabled>✓ Comprada</button>' : botao(t.id, t.preco, 'Comprar')}
       </div>`;
@@ -1529,7 +1583,9 @@ function venderPeixe(id) {
   if (!item?.peixe || n <= 0) return;
   ps.bolsa[id] = n - 1;
   ps.moedas = (Number(ps.moedas) || 0) + item.venda;
-  gravar({ [`pets/bolsa/${id}`]: n - 1 || null, 'pets/moedas': ps.moedas });
+  const patch = { [`pets/bolsa/${id}`]: n - 1 || null, 'pets/moedas': ps.moedas };
+  registrarGanho('pesca', item.venda, patch);
+  gravar(patch);
   tocar('acerto');
   renderLoja();
   $('lj-msg').textContent = `Vendeu ${comArtigo(item.nome)} por ${item.venda} moeda${item.venda === 1 ? '' : 's'}.`;
@@ -1627,6 +1683,7 @@ function darComida(id) {
   const fav = ehFavorita(pet, item);
   ganharLealdade(pet, item.lealdade + (fav ? cfgLoja().bonus_favorita ?? 0 : 0), patch);
   gravar(patch);
+  missaoProgresso('alimentar');
   atualizarFomeSeguidor();
   renderMeuPet();
   mp.estado = 'comendo'; mp.ocupado = true;
@@ -1652,7 +1709,7 @@ function renderVisual() {
   const ts = tintas().filter(t => estado.pets.tintas?.[t.id]), es = efeitos().filter(e => estado.pets.efeitos?.[e.id]);
   const chip = (tipo, id, conteudo, sel) => `<button class="mp-chip${sel ? ' sel' : ''}" data-${tipo}="${id}">${conteudo}</button>`;
   $('mp-visual-tintas').innerHTML = chip('tinta', '', 'Nenhuma', !c.tinta) +
-    ts.map(t => chip('tinta', t.id, `<img src="${src}" alt="" draggable="false" data-previa="${t.id}"/>${esc(t.nome)}`, c.tinta === t.id)).join('');
+    ts.map(t => chip('tinta', t.id, `<img src="${src}" alt="" draggable="false" data-previa="${t.id}"${attrForma(mp.pet, mp.forma)}/>${esc(t.nome)}`, c.tinta === t.id)).join('');
   $('mp-visual-efeitos').innerHTML = chip('efeito', '', 'Nenhum', !c.efeito) +
     es.map(e => chip('efeito', e.id, `${e.emoji} ${esc(e.nome)}`, c.efeito === e.id)).join('');
   for (const img of $('mp-visual-tintas').querySelectorAll('img[data-previa]')) aplicarTinta(img, img.dataset.previa);
@@ -1996,6 +2053,7 @@ function fimBarrinha(fim) {
 //    Todo peixe pego vale pontos no ranking da semana.
 function pescaPegou(f) {
   pesca.estado = 'festa';
+  missaoProgresso('pescar');
   const dia = pescaDia(), lim = cfgPesca().limite_peixes_dia ?? 5, pts = Number(f.pontos) || 0;
   const esportiva = dia.n >= lim, patch = {};
   if (!esportiva) {
@@ -2410,7 +2468,7 @@ function abrirCartaoColega(c) {
     ${bustoHtml(urlQuadro('frente', -1, c.pers || PERS.padrao), 'jr-busto-colega', BUSTO_PERS)}
     <span class="jr-colega-info">
       <b>${esc(nome)}${turma ? ` <small>· ${esc(turma)}</small>` : ''}</b>
-      ${pet ? `<span class="jr-colega-pet"><img src="${quadrosDe(formaValida(pet, r.pet_forma), 'sentado_girando')[0]}" alt="" draggable="false"${r.pet_tinta ? ` data-tinta="${esc(r.pet_tinta)}"` : ''}/>${r.pet_nome ? `${esc(r.pet_nome)} · ` : ''}${esc(NOME_PET[pet])}${Number(r.pet_nivel) >= 2 ? ` ❤️ ${Number(r.pet_nivel)}` : ''}</span>` : ''}
+      ${pet ? `<span class="jr-colega-pet"><img src="${quadrosDe(formaValida(pet, r.pet_forma), 'sentado_girando')[0]}" alt="" draggable="false"${attrForma(pet, formaValida(pet, r.pet_forma))}${r.pet_tinta ? ` data-tinta="${esc(r.pet_tinta)}"` : ''}/>${r.pet_nome ? `${esc(r.pet_nome)} · ` : ''}${esc(NOME_PET[pet])}${Number(r.pet_nivel) >= 2 ? ` ❤️ ${Number(r.pet_nivel)}` : ''}</span>` : ''}
     </span>
     ${podeDesafiar() ? '<button class="jr-colega-oi jr-colega-desafiar" data-desafiar aria-label="Desafiar" title="Desafiar">⚔️</button>' : ''}
     <button class="jr-colega-oi" data-presente aria-label="Presentear com um peixe" title="Presentear">🎁</button>
@@ -3108,7 +3166,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden;
+  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden;
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -3269,6 +3327,9 @@ function loop(t) {
 function atualizarHudPraca() {
   const bp = $('btn-praca'), esconde = !(cena?.tipo === 'mapa' && cena.n !== 'praca' && pracaPronta());
   if (bp.hidden !== esconde) bp.hidden = esconde;
+  atualizarHudMissoes();
+  const brel = $('btn-relembre'), semRel = !(cena?.tipo === 'interior' && explicacaoDe(cena.chave));   // 📖 no interior do ginásio
+  if (brel.hidden !== semRel) brel.hidden = semRel;
   const ic = ehPraca() ? '💬' : '😊', br = $('btn-reacao');
   if (br.textContent !== ic) br.textContent = ic;
 }
@@ -3575,8 +3636,16 @@ function destinosDoMapa() {
     return { id: 'porta-' + G, tipo: 'porta', lado: G, x: p.x, y: p.y, trilha: p.trilha };
   });
   cena.saidas.forEach((s, i) => lista.push({ id: 'saida-' + i, tipo: 'saida', i, x: s.x, y: s.y, trilha: s.trilha }));
+  // prédios que também entram andando pelas setas: Fliperama e Loja na Praça, Loja no Mercado (o Mural é só por toque/perto)
+  if (ehPraca()) for (const alvo of ['fliperama', 'loja']) {
+    const b = cena[alvo];
+    if (b) lista.push({ id: 'predio-' + alvo, tipo: 'predio', alvo, x: b.x, y: b.y, trilha: b.trilha });
+  }
+  const pl = cena.portaLoja;
+  if (pl) lista.push({ id: 'predio-loja-mercado', tipo: 'predio', alvo: 'loja-mercado', x: pl.x, y: pl.y, trilha: pl.trilha });
   return lista;
 }
+const espDe = (d) => (d.tipo === 'porta' ? { tipo: 'porta', lado: d.lado } : d.tipo === 'predio' ? { tipo: 'predio', alvo: d.alvo } : { tipo: 'saida', i: d.i });
 
 const distAoDestino = (d) => Math.min(dist(jog.x, jog.y, d.x, d.y), dist(jog.x, jog.y, d.trilha[0], d.trilha[1]));
 
@@ -3627,7 +3696,7 @@ function tocarNoMapa(e) {
 // Anda até a porta/saída e, ao chegar, entra
 function irAoDestino(d) {
   if (d.tipo === 'porta' && estado.ginasios[chaveGinasio(cena.n, d.lado)]?.lider.vencido) { irAoGinasioVencido(d); return; }
-  const esp = d.tipo === 'porta' ? { tipo: 'porta', lado: d.lado } : { tipo: 'saida', i: d.i };
+  const esp = espDe(d);
   destinoEspecial = esp;
   caminharNaTrilha(d.trilha[0], d.trilha[1], () => {
     if (destinoEspecial === esp) entrarNoDestino(esp);
@@ -3678,9 +3747,18 @@ function entrarNoDestino(esp) {
   if (esp.tipo === 'porta' && !ginasioLiberado(n, esp.lado)) { soltouDesdeTroca = false; avisarGinasioFechado(n, esp.lado); }
   else if (esp.tipo === 'porta') transicao(() => entrarGinasio(n, esp.lado));
   else if (esp.tipo === 'saida-gin') { const G = cena.G; transicao(() => abrirMapa(n, G)); }
+  else if (esp.tipo === 'predio') entrarNoPredio(esp.alvo);
   else if (n === 'fliperama') transicao(() => abrirPraca('fliperama'));   // a porta do fliperama volta para a praça
   else if (n === 'loja') sairDaLoja();                                     // a porta da loja volta para o mapa de onde veio
   else transicao(abrirMapaGeral);
+}
+
+// Fliperama, Loja da Praça e Loja do Mercado (mesmo destino do toque)
+function entrarNoPredio(alvo) {
+  const n = cena.n;
+  if (alvo === 'fliperama' && FLIPER) transicao(abrirFliperama);
+  else if (alvo === 'loja' && LOJA) transicao(() => abrirLojaInterior({ tipo: 'praca' }));
+  else if (alvo === 'loja-mercado' && LOJA) transicao(() => abrirLojaInterior({ tipo: 'mapa', n }));
 }
 
 // Setas/joystick: encostar numa porta ou saída andando na direção dela entra direto.
@@ -3693,7 +3771,7 @@ function verificarEncostou(vx, vy) {
     const dd = dist(jog.x, jog.y, d.x, d.y);
     const rumo = dd < 4 ? 1 : ((d.x - jog.x) * vx + (d.y - jog.y) * vy) / (dd * m);
     if (rumo > 0.8) {
-      entrarNoDestino(d.tipo === 'porta' ? { tipo: 'porta', lado: d.lado } : { tipo: 'saida', i: d.i });
+      entrarNoDestino(espDe(d));
       return;
     }
   }
@@ -3825,6 +3903,7 @@ async function entrarGinasio(n, G) {
   atualizarBotaoPet();
   ajustarCamera();
   $('cena-palco').style.visibility = '';
+  setTimeout(() => { if (cena?.tipo === 'interior' && cena.chave === chave) relembreNaEntrada(chave); }, 350);   // depois do fade
 }
 
 // Ginásio fechado: "Primeiro vença {ginásio} em {mapa}." + "Ir até lá" (leva à porta do ginásio pendente)
@@ -4395,6 +4474,7 @@ function aplicarFimDuelo(d) {
   const du = duelo;
   if (du.fimAplicado) return;
   du.fimAplicado = true;
+  missaoProgresso('desafio');
   const eu = sessao.uid, outro = du.outro.uid, f = d.fim;
   const res = f.vencedor === 'empate' ? 'empate' : f.vencedor === eu ? 'venceu' : 'perdeu';
   const ganhas = Number(f.placar?.[eu]) || 0;
@@ -4410,7 +4490,7 @@ function aplicarFimDuelo(d) {
   if (valeu && carregouProgresso) {
     estado.desafiosDia = contarDesafio(estado.desafiosDia, hoje, outro);
     patch.desafios_dia = estado.desafiosDia;
-    if (moedas) { estado.pets.moedas = (Number(estado.pets.moedas) || 0) + moedas; patch['pets/moedas'] = estado.pets.moedas; }
+    if (moedas) { estado.pets.moedas = (Number(estado.pets.moedas) || 0) + moedas; patch['pets/moedas'] = estado.pets.moedas; registrarGanho('desafio', moedas, patch); }
     if (pontos && entraNoRanking()) update(ref(db, `${basePraca()}/desafios/${semanaPesca()}/${eu}`), { pontos: increment(pontos), vitorias: increment(res === 'venceu' ? 1 : 0),
       nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), ts: Date.now() }).catch(() => {});
     delete mural.cache.desafios;
@@ -4622,13 +4702,16 @@ function premioFliperama(d) {
   if (!jogoEmbed || !carregouProgresso) return;
   const hoje = diaLocal(), por = FLIPER.acertos_por_moeda ?? 10, lim = FLIPER.moedas_dia ?? 10;
   const fd = estado.fliperDia?.data === hoje ? { ...estado.fliperDia } : { data: hoje, acertos: 0, moedas: 0 };
-  fd.acertos = (Number(fd.acertos) || 0) + Math.max(0, Math.min(500, Math.round(Number(d.acertos) || 0)));
+  const acertosPartida = Math.max(0, Math.min(500, Math.round(Number(d.acertos) || 0)));
+  fd.acertos = (Number(fd.acertos) || 0) + acertosPartida;
+  missaoProgresso('fliperama', acertosPartida);
   const alvo = Math.min(lim, Math.floor(fd.acertos / por)), ganho = alvo - (Number(fd.moedas) || 0);
   const patch = {};
   if (ganho > 0) {
     fd.moedas = alvo;
     estado.pets.moedas = (Number(estado.pets.moedas) || 0) + ganho;
     patch['pets/moedas'] = estado.pets.moedas;
+    registrarGanho('fliperama', ganho, patch);
     jogoEmbed.moedas += ganho;
   }
   estado.fliperDia = fd;
@@ -4819,7 +4902,9 @@ function aplicarPremioAV(s, meu) {
   if (!n || estado.aovivoPremios?.[av.codigo]) return;
   estado.aovivoPremios = { ...(estado.aovivoPremios || {}), [av.codigo]: meu.pos };
   estado.pets.moedas = (Number(estado.pets.moedas) || 0) + n;
-  gravar({ 'pets/moedas': estado.pets.moedas, [`aovivo_premios/${av.codigo}`]: meu.pos });
+  const patch = { 'pets/moedas': estado.pets.moedas, [`aovivo_premios/${av.codigo}`]: meu.pos };
+  registrarGanho('aovivo', n, patch);
+  gravar(patch);
   tocar('vitoria');
 }
 function cliqueAoVivo(e) {
@@ -5351,10 +5436,11 @@ function mexerMato(m) {
 
 // Aplica o que saiu, mostra o cartão e registra (tipo: "cavar")
 function entregarAchado(a, onde, n, patch = {}) {
+  missaoProgresso('cavar');   // montinho, tesouro ou mato
   const ps = estado.pets, cfg = cfgCavar(), cav = cavadosHoje();
   let icone = '', titulo = '', sub = '', raro = false, registro = null;
   const moedasLivres = () => Math.max(0, (cfg.moedas_cavar_dia ?? 15) - (Number(cav.moedas) || 0));
-  const darMoedas = (q, semLimite = false) => { const g = semLimite ? q : Math.min(q, moedasLivres()); if (!semLimite) cav.moedas = (Number(cav.moedas) || 0) + g; ps.moedas = (Number(ps.moedas) || 0) + g; patch['pets/moedas'] = ps.moedas; return g; };
+  const darMoedas = (q, semLimite = false) => { const g = semLimite ? q : Math.min(q, moedasLivres()); if (!semLimite) cav.moedas = (Number(cav.moedas) || 0) + g; ps.moedas = (Number(ps.moedas) || 0) + g; patch['pets/moedas'] = ps.moedas; registrarGanho(semLimite ? 'colecao' : 'cavar', g, patch); return g; };
   if (a.tipo === 'moedas') {
     const g = darMoedas(qtdDe(a.qtd));
     if (g > 0) { icone = moedaHtml(); titulo = `Você achou ${g} 🪙!`; registro = { tipo: 'moedas', qtd: g }; }
@@ -5426,6 +5512,7 @@ function completarGrupo(grupo, patch) {
   estado.pets.moedas = (Number(estado.pets.moedas) || 0) + n;
   patch[`colecao_grupos/${grupo}`] = true;
   patch['pets/moedas'] = estado.pets.moedas;
+  registrarGanho('colecao', n, patch);
   setTimeout(() => avisoPet(`📖 Coleção completa: ${grupo}! +${n} 🪙`, true), 2600);
 }
 function mostrarAchado(icone, titulo, sub, raro, grande) {
@@ -5592,7 +5679,7 @@ function iniciarBatalha(id, origem = 'lista') {
   // adulto: quadro mais largo (asas) e imagem maior; mesma vida e dano, muda só o visual
   const fL = $('bt-L'), [qw, qh] = tamanhoQuadro(bt.forma), adulto = bt.forma !== bt.pet;
   fL.style.setProperty('--pet-quadro', `${qw} / ${qh}`);
-  fL.style.setProperty('--cresce', adulto ? sentadoNoQuadro(bt.pet) / sentadoNoQuadro(bt.forma) * 1.1 : 1);
+  fL.style.setProperty('--cresce', fatorForma(bt.pet, bt.forma));   // desenho sentado 15% maior que o do filhote
   fL.classList.toggle('adulto', adulto);
   $('batalha').hidden = false;
   $('bt-nomeL').innerHTML = `${esc(nomeAluno())}<small>· ${esc(nomePet(bt.pet))}</small>`;
@@ -5894,7 +5981,7 @@ async function btFechar() {
   bt.contas.push({ treinador: bt.t.id, tipo: p.tipo, dificuldade: p.dificuldade, conta: p.conta, certa: p.resposta, resposta: R.L.v,
     acertou: R.L.v === null ? null : R.L.ok, tempo_s: R.L.v === null ? null : +R.L.t.toFixed(1), usou: bt.usouRodada || null, data: Date.now() });
   $('bt-dica').hidden = true;
-  if (!R.L.ok) bt.revisao.push({ conta: p.conta, resposta: R.L.v, certa: p.resposta, explica: p.explica });
+  if (!R.L.ok) bt.revisao.push({ conta: p.conta, resposta: R.L.v, certa: p.resposta, explica: p.explica, relembre: chaveRelembreConta(p.tipo, p.conta) });
   // sequência: errar ou deixar o tempo acabar zera
   bt.seq = R.L.ok ? bt.seq + 1 : 0;
   btSeq();
@@ -5996,6 +6083,7 @@ function abrirRevisaoBatalha() {
         <span class="bt-rev-certa">Certa: <b>${esc(x.certa)}</b></span>
       </div>
       <div class="bt-rev-explica">${esc(x.explica)}</div>
+      ${x.relembre && explicacaoDe(x.relembre) ? `<button class="jr-btn-relembre" data-relembre="${x.relembre}">📖 Relembre</button>` : ''}
     </div>`).join('');
   $('bt-revisao').hidden = false;
   $('bt-rev-lista').scrollTop = 0;
@@ -6010,6 +6098,7 @@ function fecharRevisaoBatalha() {
 // Salva o resultado: desafio do treinador, prêmios (dentro do limite do dia) e as contas, para a professora
 function registrarBatalha(resultado) {
   const { t, d, pet } = bt;
+  if (resultado === 'venceu') missaoProgresso('batalha');
   const dia = diaBatalhas();
   const c = cuidadosDe(pet);
   const pr = premios(resultado, d, dia, c?.lealdade);
@@ -6020,6 +6109,8 @@ function registrarBatalha(resultado) {
   if (pr.moedas || pr.bonusPrimeira) {
     estado.pets.moedas = (Number(estado.pets.moedas) || 0) + pr.moedas + pr.bonusPrimeira;
     patch['pets/moedas'] = estado.pets.moedas;
+    registrarGanho('batalha', pr.moedas, patch);
+    registrarGanho('batalha_primeira', pr.bonusPrimeira, patch);
   }
   if (pr.lealdade && c) {
     c.lealdade = Math.min(100, (Number(c.lealdade) || 0) + pr.lealdade);
@@ -6343,6 +6434,7 @@ function responderPedido() {
   if (ok) {
     const moedas = moedasDoPedido(pd.tentativa, diaPedidos());
     finalizarPedido('acertou', moedas, patch);
+    missaoProgresso('ajudar');
     tocar('acerto');
     falaPedido(`Isso mesmo, <b class="verde">${certa}</b>! Você me salvou, valeu pela ajuda!${moedas ? ` <b class="ouro">+${moedas} ${moedaHtml()}</b>` : ''}`, 'ok');
     if (moedas) voarMoedasPedido(moedas);
@@ -6372,7 +6464,7 @@ function finalizarPedido(fim, moedas, patch) {
   estado.pedidos[p.id] = { fim, tentativas: pd.tentativa, dica: pd.dica, data: Date.now() };
   patch[`pedidos/${p.id}`] = estado.pedidos[p.id];
   patch.pedidos_dia = { ...dia, pessoas: { ...dia.pessoas } };
-  if (moedas) { estado.pets.moedas = (Number(estado.pets.moedas) || 0) + moedas; patch['pets/moedas'] = estado.pets.moedas; }
+  if (moedas) { estado.pets.moedas = (Number(estado.pets.moedas) || 0) + moedas; patch['pets/moedas'] = estado.pets.moedas; registrarGanho('pedido', moedas, patch); }
   gravar(patch);
   pd.fim = true;
   $('pd-teclado').hidden = $('pd-dica').hidden = $('pd-depois').hidden = true;
@@ -6391,7 +6483,7 @@ function pedirDicaPedido() {
 }
 function mostrarDicaPedido() {
   const pet = estado.pets.ativo;
-  $('pd-pet').innerHTML = `<img src="${quadrosDe(formaDe(pet), 'sentado_girando')[0]}" alt="" draggable="false"/><span><b>${esc(nomePet(pet))}:</b> Acho que começa assim: ${esc(dicaPedido(pd.p))}</span>`;
+  $('pd-pet').innerHTML = `<img src="${quadrosDe(formaDe(pet), 'sentado_girando')[0]}" alt="" draggable="false"${attrForma(pet, formaDe(pet))}/><span><b>${esc(nomePet(pet))}:</b> Acho que começa assim: ${esc(dicaPedido(pd.p))}</span>`;
   aplicarVisualPet($('pd-pet').querySelector('img'), pet);
   $('pd-pet').hidden = false;
 }
@@ -6747,6 +6839,7 @@ function renderPergunta() {
   $('perg-enunciado').textContent = q.enunciado;
   $('perg-enunciado').classList.toggle('longo', String(q.enunciado).length > 28);   // problemas: Inter, até 2 linhas
   $('perg-explica').hidden = true;
+  $('perg-erro').hidden = true;
   setTimeout(() => { if (pg?.fila?.[0] === q) atualizarItensPergunta(); }, 0);   // 💡 Dica do pet, se tiver
   // Revisão da semana: busto do líder e nome do ginásio de onde veio a pergunta
   const origem = $('perg-origem');
@@ -6782,16 +6875,96 @@ function renderPergunta() {
 }
 
 // Quadro "Como resolver" (só quando erra)
-function mostrarExplicacao(q, comOutrosNumeros) {
-  const el = $('perg-explica');
-  const exp = (q.explicacao || '').trim(), dica = (q.dica || '').trim();
-  if (!exp && !dica) { el.hidden = true; return; }
-  el.innerHTML =
-    `<div class="jr-explica-titulo">Como resolver</div>` +
-    (exp ? `<div class="jr-explica-texto">${esc(exp)}</div>` : '') +
-    (dica && dica !== exp ? `<div class="jr-explica-dica">💡 ${esc(dica)}</div>` : '') +
-    `<div class="jr-explica-rodape">${comOutrosNumeros ? 'Essa pergunta volta daqui a pouco, com outros números.' : 'Essa pergunta volta daqui a pouco.'}</div>`;
-  el.hidden = false;
+// ── Cartão do erro (PROMPT-45): no centro da tela, por cima da pergunta. Sua resposta × a certa, "Como resolver"
+// em passos (a explicação quebrada nos ";" e "."), dica (só se não repetir os passos), 📖 Relembre e Continuar
+// (só pelo botão, ativo depois de 1,5 s). Nas perguntas de coordenadas (mapa 12), uma mini-grade.
+const FALAS_ERRO_CURTAS = ['Quase!', 'Não foi dessa vez.', 'Errou, mas tudo bem!'];
+const ESPERA_CONTINUAR_MS = 1500;
+const normTxt = (t) => String(t).toLowerCase().replace(/[^a-z0-9à-ú²³×÷+−=]/gi, '');
+
+function passosDe(explicacao) {
+  return String(explicacao || '').split(/;\s+|\.\s+|\.$/).map(t => t.trim()).filter(Boolean);
+}
+
+// posição da resposta no FIM do texto, como número/termo inteiro ("8" não vale dentro de "18" nem de "8,5"); -1 se não está lá
+function posDaResposta(t, certa) {
+  if (!certa) return -1;
+  const lit = certa.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp('(?<![\\d,])' + lit + '(?!\\d|,\\d)', 'g');
+  let i = -1, m;
+  while ((m = re.exec(t))) i = m.index;
+  return i >= 0 && /^[\s.!)]*$/.test(t.slice(i + certa.length)) ? i : -1;   // só vale no fim do passo (é o resultado)
+}
+// último passo: a resposta certa (ou, sem ela, o último número) em verde
+function passoFinalHtml(t, certa) {
+  const i = posDaResposta(t, certa);
+  if (i >= 0) return esc(t.slice(0, i)) + `<b>${esc(certa)}</b>` + esc(t.slice(i + certa.length));
+  const m = /^(.*?)([−-]?\d+(?:,\d+)?)(\D*)$/.exec(t);
+  return m ? `${esc(m[1])}<b>${esc(m[2])}</b>${esc(m[3])}` : esc(t);
+}
+
+function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
+  const passos = passosDe(q.explicacao);
+  const ultimo = passos[passos.length - 1] || '';
+  if (posDaResposta(ultimo, certa) < 0) passos.push(`Resposta: ${certa}`);
+  $('erro-enun').textContent = q.enunciado;
+  $('erro-sua').textContent = sua;
+  $('erro-certa').textContent = certa;
+  $('erro-passos').innerHTML = passos.map((t, i) => `<li>${i === passos.length - 1 ? passoFinalHtml(t, certa) : esc(t)}</li>`).join('');
+  // dica: só se não repetir o que já está nos passos
+  const dica = String(q.dica || '').trim(), nd = normTxt(dica), np = normTxt(q.explicacao || '');
+  const mostraDica = !!dica && !(np.includes(nd) || nd.includes(np) && np.length > 20);
+  $('erro-dica').textContent = mostraDica ? `💡 ${dica}` : '';
+  const rel = chaveGinasio(q.mapa ?? pg.mapa, q.lado ?? pg.G);   // na revisão da semana cada pergunta é de um ginásio
+  $('erro-relembre').hidden = !explicacaoDe(rel);
+  $('erro-relembre').dataset.relembre = rel;
+  $('erro-linha-dica').hidden = !mostraDica && $('erro-relembre').hidden;
+  $('erro-volta').textContent = `🔁 ${comOutrosNumeros ? 'Essa pergunta volta daqui a pouco, com outros números.' : 'Essa pergunta volta daqui a pouco.'}`;
+  const grade = (q.mapa ?? pg.mapa) === 12 ? gradeDoErro(q.enunciado, sua, certa) : '';
+  $('erro-grade').innerHTML = grade;
+  $('erro-grade').hidden = !grade;
+  const b = $('erro-continuar');
+  b.disabled = true;
+  $('perg-erro').hidden = false;
+  const pgErro = pg;
+  setTimeout(() => { if (pg === pgErro && !$('perg-erro').hidden) { b.disabled = false; b.focus({ preventScroll: true }); } }, ESPERA_CONTINUAR_MS);
+}
+
+function continuarDoErro() {
+  if ($('erro-continuar').disabled) return;
+  $('perg-erro').hidden = true;
+  const f = pg?.aoContinuar;
+  if (f) f();
+}
+
+// Mini plano cartesiano: ponto certo (verde), o marcado (vermelho) e a seta do caminho (de onde saiu até o certo)
+const lerPonto = (t) => { const m = /\(\s*([−-]?\d+)\s*,\s*([−-]?\d+)\s*\)/.exec(String(t)); return m ? [m[1], m[2]].map(v => Number(v.replace('−', '-'))) : null; };
+function gradeDoErro(enunciado, sua, certa) {
+  let pc = lerPonto(certa), ps = lerPonto(sua);
+  const pe = lerPonto(enunciado);
+  const saida = /origem/i.test(enunciado) && /saindo/i.test(enunciado) ? [0, 0] : /saindo de/i.test(enunciado) ? pe : null;
+  if (!pc && pe && !saida) pc = pe;   // "No ponto (x, y), qual é o valor de x?", "Em qual quadrante…": o ponto do enunciado
+  if (!pc) return '';
+  const pts = [pc, ps, saida].filter(Boolean);
+  const R = Math.max(5, 1 + Math.max(...pts.flat().map(Math.abs)));   // −5 a 5, ou maior com uma casa de folga
+  const S = 200, u = (S - 20) / (2 * R), X = (x) => 10 + (x + R) * u, Y = (y) => 10 + (R - y) * u;
+  let linhas = '';
+  for (let k = -R; k <= R; k++) {
+    const eixo = k === 0;
+    linhas += `<line x1="${X(k)}" y1="${Y(R)}" x2="${X(k)}" y2="${Y(-R)}" stroke="${eixo ? '#c9cde0' : 'rgba(255,255,255,.12)'}" stroke-width="${eixo ? 1.6 : 1}"/>` +
+              `<line x1="${X(-R)}" y1="${Y(k)}" x2="${X(R)}" y2="${Y(k)}" stroke="${eixo ? '#c9cde0' : 'rgba(255,255,255,.12)'}" stroke-width="${eixo ? 1.6 : 1}"/>`;
+  }
+  // a seta para um pouco antes do ponto certo (a ponta não some embaixo da bolinha)
+  const [ax, ay, bx, by] = saida ? [X(saida[0]), Y(saida[1]), X(pc[0]), Y(pc[1])] : [0, 0, 0, 0];
+  const L = Math.hypot(bx - ax, by - ay), k = L ? Math.max(0, L - 9) / L : 0;
+  const seta = saida && L > 0
+    ? `<line x1="${ax}" y1="${ay}" x2="${ax + (bx - ax) * k}" y2="${ay + (by - ay) * k}" stroke="#00d4ff" stroke-width="2.4" marker-end="url(#jr-erro-seta)"/>` +
+      `<circle cx="${X(saida[0])}" cy="${Y(saida[1])}" r="3.5" fill="#00d4ff"/>` : '';
+  const ponto = (p, cor, r = 6) => `<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="${r}" fill="${cor}" stroke="#0d0f1a" stroke-width="1.5"/>`;
+  return `<svg viewBox="0 0 ${S} ${S}" role="img" aria-label="Plano cartesiano com o ponto certo em verde">
+    <defs><marker id="jr-erro-seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#00d4ff"/></marker></defs>
+    ${linhas}<text x="${X(R) - 2}" y="${Y(0) - 4}" fill="#c9cde0" font-size="10" text-anchor="end">x</text><text x="${X(0) + 4}" y="${Y(R) + 10}" fill="#c9cde0" font-size="10">y</text>
+    ${seta}${ps && (ps[0] !== pc[0] || ps[1] !== pc[1]) ? ponto(ps, '#ff5c7a') : ''}${ponto(pc, '#00e676', 7)}</svg>`;
 }
 
 const qtdItem = (id) => Number(estado?.pets?.itens?.[id]) || 0;
@@ -6864,6 +7037,9 @@ function responder(btn) {
   if (btn.dataset.v === certa) {
     btn.classList.add('certa');
     tocar('acerto');
+    if (pg.modo !== 'revisao') missaoProgresso('acertar_ginasio');
+    if ((Number(estado.respostas?.[q.id]?.erros) || 0) > 0) missaoProgresso('revisar_erro');   // já tinha errado esta pergunta
+    const primeiroAcerto = !estado.respostas?.[q.id]?.acertou;   // moeda só na 1ª vez (antes de marcar acertou)
     const agora = Date.now();
     const patch = { [`respostas/${q.id}/acertou`]: true, [`respostas/${q.id}/ultima`]: agora };
     // revisão: acertou de primeira → sai da lista de revisão por 3 semanas
@@ -6874,7 +7050,7 @@ function responder(btn) {
     reagirArena(true);
     pg.fila.shift();
     pg.acertos++;
-    ganharMoeda();
+    if (primeiroAcerto) ganharMoeda();
     falar(sortear(D.falas.acerto));
     setTimeout(() => { if (!pg) return; pg.fila.length ? renderPergunta() : vencer(); }, 1100);
   } else errarPergunta(btn, q, certa, botoes);
@@ -6900,14 +7076,9 @@ function errarPergunta(btn, q, certa, botoes) {
     ? gerarUma(q.mapa, q.lado, q.personagem, q.indice)
     : gerarUma(pg.mapa, pg.G, pg.p, q.indice);
   pg.fila.push(nova ? { ...nova, indice: q.indice, mapa: q.mapa, lado: q.lado, personagem: q.personagem, pos: q.pos } : q);
-  falar(sortear(D.falas.erro).replace('{resposta}', certa));
-  mostrarExplicacao(q, !!nova);   // explicação da pergunta que o aluno ERROU, não da nova
-  $('perg-continuar').textContent = 'Continuar';
-  $('perg-continuar').hidden = false;
+  falar(sortear(FALAS_ERRO_CURTAS));   // a resposta certa está no cartão: o balão do treinador fica curto
   pg.aoContinuar = renderPergunta;
-  // depois de ver a certa, a explicação toma o lugar das alternativas (Continuar ao lado)
-  const pgErro = pg;
-  setTimeout(() => { if (pg === pgErro && !$('perg-explica').hidden && !$('perg-continuar').hidden) $('perg-corpo').classList.add('com-explica'); }, 900);
+  mostrarCartaoErro(q, btn.dataset.v, certa, !!nova);   // explicação da pergunta que o aluno ERROU, não da nova
 }
 
 function vencer() {
@@ -6928,6 +7099,7 @@ function vencer() {
   if (p === 'lider' && !g.insignia) { g.insignia = true; g.dataInsignia = Date.now(); ganhou = 'normal'; }
   if (p === 'revanche' && !g.dourada) { g.dourada = true; ganhou = 'dourada'; }
   gravarVitoria(chave, p);
+  if (ganhou) moedasDaInsignia(ganhou);
   if (p === 'lider' || p === 'revanche') conversa.evento = 'venceu';   // o pet comenta ao sair do ginásio
   if (p === 'lider' && primeiraVez && petDoGinasio(chave)) petSurgir = chave;
   registrarDiaJogado();
@@ -6996,6 +7168,7 @@ function desistir() {
 
 function fecharPergunta() {
   $('pergunta').hidden = true;
+  $('perg-erro').hidden = true;
   pgPet = null;
   fecharFalaAjuda();
   $('perg-confirma').hidden = true;
@@ -7065,7 +7238,293 @@ function abrirCartao(chave) {
   $('cartao-info').textContent = g.insignia
     ? `Acertou ${g.lider.acertosPrimeira} de ${g.lider.total} de primeira${g.dourada ? ' · ★ Dourada' : ''}`
     : `Vença o líder do ginásio “${gin.nome}”, em ${q.nome}.`;
+  $('cartao-relembre').hidden = !(g.insignia && explicacaoDe(chave));   // insígnia conquistada: revisar o conteúdo
+  $('cartao-relembre').dataset.chave = chave;
   $('cartao').hidden = false;
+}
+
+// ============================================================
+//  🪙 ECONOMIA (PROMPT-47) — sem teto diário geral: cada fonte tem o próprio limite (batalha, pedidos, cavar,
+//  fliperama, desafios). Ginásio: +1 só no 1º acerto de cada pergunta; insígnia +10, dourada +15 (loja.json →
+//  moedas_insignia / moedas_dourada). Registro do que entrou: moedas_dia (hoje, por fonte: o aluno vê tocando no
+//  contador) e moedas_semana/{segunda}/{fonte} (painel da professora).
+// ============================================================
+const FONTES_MOEDA = {
+  ginasio: { nome: 'Ginásios (1º acerto de cada pergunta)' },
+  insignia: { nome: 'Insígnias' },
+  batalha: { nome: 'Batalhas', limite: () => cfgBatalha().limites_dia?.moedas },
+  batalha_primeira: { nome: 'Primeira vitória contra um treinador' },
+  pedido: { nome: 'Pedidos de ajuda', limite: () => cfgPedidos().limite_moedas_dia ?? 20 },
+  cavar: { nome: 'Cavar e mato', limite: () => cfgCavar().moedas_cavar_dia ?? 15 },
+  colecao: { nome: 'Coleção' },
+  fliperama: { nome: 'Fliperama', limite: () => FLIPER?.moedas_dia ?? 10 },
+  desafio: { nome: 'Desafios na praça' },
+  pesca: { nome: 'Venda de peixes' },
+  aovivo: { nome: 'Tabuada ao vivo' },
+  missao: { nome: 'Missões do dia' },
+};
+
+function registrarGanho(fonte, n, patch) {
+  n = Number(n) || 0;
+  if (n <= 0 || !estado) return;
+  const hoje = diaLocal();
+  if (estado.moedasDia?.data !== hoje || typeof estado.moedasDia.fontes !== 'object') estado.moedasDia = { data: hoje, fontes: {} };
+  const fd = estado.moedasDia.fontes;
+  fd[fonte] = (Number(fd[fonte]) || 0) + n;
+  patch.moedas_dia = estado.moedasDia;
+  const sem = semanaPesca(), s = (estado.moedasSemana[sem] ||= {});
+  s[fonte] = (Number(s[fonte]) || 0) + n;
+  patch[`moedas_semana/${sem}/${fonte}`] = s[fonte];
+}
+
+// Insígnia nova: +10; dourada: +15 (uma vez cada; quem já tinha antes desta regra não recebe retroativo)
+function moedasDaInsignia(tipo) {
+  const n = tipo === 'dourada' ? cfgLoja().moedas_dourada ?? 15 : cfgLoja().moedas_insignia ?? 10;
+  if (!n || !estado?.pets) return;
+  estado.pets.moedas = (Number(estado.pets.moedas) || 0) + n;
+  const patch = { 'pets/moedas': estado.pets.moedas };
+  registrarGanho('insignia', n, patch);
+  gravar(patch);
+  setTimeout(() => avisoPet(`${tipo === 'dourada' ? '🌟 Insígnia dourada' : '🏅 Insígnia nova'}! +${n} 🪙`, true), 1200);
+}
+
+function abrirMoedasHoje() {
+  if (!estado) return;
+  const md = estado.moedasDia?.data === diaLocal() ? estado.moedasDia.fontes || {} : {};
+  const total = Object.values(md).reduce((a, n) => a + (Number(n) || 0), 0);
+  const linhas = Object.entries(FONTES_MOEDA).map(([id, f]) => {
+    const n = Number(md[id]) || 0, lim = f.limite?.();
+    if (!n && !lim) return '';
+    return `<li><span>${esc(f.nome)}</span><b>${n}${lim ? `<small>/${lim}</small>` : ''}</b></li>`;
+  }).join('');
+  $('moedas-hoje-caixa').innerHTML = `<div class="jr-mh-tit">Hoje você ganhou <b>${total}</b> ${moedaHtml()}</div>
+    <ul class="jr-mh-lista">${linhas}</ul>
+    <div class="jr-mh-nota">Cada atividade tem o próprio limite por dia. Nos ginásios, a moeda vem no 1º acerto de cada pergunta; vencer o líder dá +${cfgLoja().moedas_insignia ?? 10} e a dourada +${cfgLoja().moedas_dourada ?? 15}.</div>
+    <div class="jr-mh-fechar">Toque para fechar</div>`;
+  $('moedas-hoje').hidden = false;
+}
+
+// ============================================================
+//  📜 MISSÕES DO DIA (PROMPT-48) — dados/jogo/missoes.json
+//  `por_dia` missões por dia, sorteadas por aluno (semente: dia + uid) entre as atividades disponíveis, com pelo menos
+//  uma de matemática. O progresso conta sozinho (missaoProgresso nos eventos das atividades). Zera à meia-noite (hora
+//  local do aparelho, a de Brasília para os alunos). Gravado em missoes_dia (modo teste: no nó do modo teste).
+//  Liberação por etapas (PROMPT-34) ainda não existe: missaoDisponivel só confere se a atividade está carregada.
+//  Não há teto diário de moedas (PROMPT-47): o prêmio é pago inteiro.
+// ============================================================
+let MISSOES = null;
+const MISSOES_MAT = ['acertar_ginasio', 'revisar_erro', 'batalha', 'fliperama'];   // pelo menos uma destas por dia
+
+function missaoDisponivel(m) {
+  const temPet = petsOk && !!estado?.pets?.ativo;
+  switch (m.requer) {
+    case 'ginasios': return m.id !== 'batalha' || (batalhasProntas() && temPet);
+    case 'pedidos': return pedidosProntos();
+    case 'loja': return lojaPronta() && temPet;
+    case 'meu_pet': return temPet;
+    case 'pesca': return pescaPronta();
+    case 'cavar': return !!CAVAR;
+    case 'desafios': return pracaPronta();
+    case 'fliperama': return !!FLIPER;
+    default: return true;
+  }
+}
+
+// sorteio repetível: mesmo aluno + mesmo dia = mesmas missões
+function sementeMissoes(txt) {
+  let h = 2166136261;
+  for (const c of txt) { h ^= c.codePointAt(0); h = Math.imul(h, 16777619) >>> 0; }
+  h = h || 1;
+  return () => { h ^= h << 13; h >>>= 0; h ^= h >>> 17; h ^= h << 5; h >>>= 0; return h / 4294967296; };
+}
+function sortearMissoes(hoje) {
+  const rnd = sementeMissoes(`${hoje}|${sessao.uid}`);
+  const emb = (MISSOES.missoes || []).filter(missaoDisponivel).map(m => [rnd(), m]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+  const mat = emb.find(m => MISSOES_MAT.includes(m.id));
+  const escolhidas = (mat ? [mat, ...emb.filter(m => m !== mat)] : emb).slice(0, MISSOES.por_dia ?? 3)
+    .map(m => [rnd(), m]).sort((a, b) => a[0] - b[0]).map(x => x[1]);   // a de matemática não fica sempre em 1º
+  return escolhidas.map(m => { const [a, b] = m.n || [1, 1]; return { id: m.id, n: a + Math.floor(rnd() * (b - a + 1)), feito: 0 }; });
+}
+
+// Missões de hoje (sorteia e grava na primeira vez do dia)
+function missoesDoDia() {
+  if (!MISSOES || !estado || !carregouProgresso || !sessao?.uid) return null;
+  const hoje = diaLocal();
+  if (estado.missoes?.data !== hoje || !Array.isArray(estado.missoes.lista)) {
+    estado.missoes = { data: hoje, lista: sortearMissoes(hoje), bonus: false, avisou: false };
+    gravar({ missoes_dia: estado.missoes });
+    $('btn-missoes')?.classList.add('nova');
+  }
+  return estado.missoes;
+}
+const cfgMissao = (id) => (MISSOES?.missoes || []).find(m => m.id === id);
+const textoMissao = (m) => String(cfgMissao(m.id)?.texto || m.id).replace('{n}', m.n);
+const missaoFeita = (m) => m.feito >= m.n;
+
+function missaoProgresso(id, qtd = 1) {
+  const md = missoesDoDia();
+  const m = md?.lista.find(x => x.id === id);
+  if (!m || missaoFeita(m) || !(qtd > 0)) return;
+  m.feito = Math.min(m.n, (Number(m.feito) || 0) + qtd);
+  const patch = {};
+  if (missaoFeita(m)) concluirMissao(m, md, patch);
+  patch.missoes_dia = md;
+  gravar(patch);
+  atualizarBotaoMissoes();
+  if (!$('missoes').hidden) renderMissoes();
+}
+
+function concluirMissao(m, md, patch) {
+  const pr = MISSOES.premio || {}, ps = estado.pets;
+  if (pr.moedas) { ps.moedas = (Number(ps.moedas) || 0) + pr.moedas; patch['pets/moedas'] = ps.moedas; registrarGanho('missao', pr.moedas, patch); }
+  if (pr.lealdade && ps.ativo && cuidadosDe(ps.ativo)) ganharLealdade(ps.ativo, pr.lealdade, patch);
+  avisoPet(`📜 Missão cumprida: ${textoMissao(m)}!${pr.moedas ? ` +${pr.moedas} 🪙` : ''}`, true);
+  moedasVoando(pr.moedas);
+  if (md.bonus || !md.lista.every(missaoFeita)) return;
+  // as 3 do dia: bônus (fica fora de qualquer teto)
+  const b = MISSOES.bonus_todas || {};
+  md.bonus = true;
+  if (b.moedas) { ps.moedas = (Number(ps.moedas) || 0) + b.moedas; patch['pets/moedas'] = ps.moedas; registrarGanho('missao', b.moedas, patch); }
+  if (b.isca) { ps.iscas = (Number(ps.iscas) || 0) + b.isca; patch['pets/iscas'] = ps.iscas; }
+  avisoPet(`🏆 Todas as missões de hoje!${b.moedas ? ` +${b.moedas} 🪙` : ''}${b.isca ? ` +${b.isca} 🪱` : ''}`, true);
+  moedasVoando(b.moedas);
+}
+
+// Moedas saindo do meio da tela até o botão 📜 (ou o topo)
+function moedasVoando(n) {
+  if (!n || semMovimento()) return;
+  const alvo = $('btn-missoes'), r = alvo && !alvo.hidden ? alvo.getBoundingClientRect() : { left: innerWidth / 2, top: 0, width: 0, height: 0 };
+  const tx = r.left + r.width / 2, ty = r.top + r.height / 2;
+  for (let i = 0; i < Math.min(8, n); i++) {
+    const s = document.createElement('span');
+    s.className = 'jr-moeda-voa'; s.textContent = '🪙';
+    const x0 = innerWidth / 2 + (Math.random() - 0.5) * 120, y0 = innerHeight / 2 + (Math.random() - 0.5) * 60;
+    s.style.left = x0 + 'px'; s.style.top = y0 + 'px';
+    $('jr-app').appendChild(s);
+    s.animate([{ transform: 'translate(-50%, -50%) scale(.6)', opacity: 0 }, { transform: 'translate(-50%, -50%) scale(1.2)', opacity: 1, offset: 0.25 },
+      { transform: `translate(calc(-50% + ${tx - x0}px), calc(-50% + ${ty - y0}px)) scale(.7)`, opacity: 0.9 }],
+      { duration: 900, delay: i * 80, easing: 'ease-in', fill: 'backwards' }).onfinish = () => s.remove();
+  }
+}
+
+function atualizarBotaoMissoes() {
+  const md = missoesDoDia(), b = $('btn-missoes');
+  if (!md) return;
+  const feitas = md.lista.filter(missaoFeita).length;
+  $('missoes-cont').textContent = `${feitas}/${md.lista.length}`;
+  b.classList.toggle('todas', feitas === md.lista.length);
+  b.setAttribute('aria-label', `Missões do dia: ${feitas} de ${md.lista.length}`);
+}
+// A cada quadro: 📜 só nos mapas da região; o pet avisa (uma vez por dia) que tem missão nova
+function atualizarHudMissoes() {
+  const b = $('btn-missoes'), esconde = !(cena?.tipo === 'mapa' && MISSOES && carregouProgresso);
+  if (b.hidden !== esconde) { b.hidden = esconde; if (!esconde) atualizarBotaoMissoes(); }
+  const md = esconde ? null : estado.missoes;
+  if (md && !md.avisou && md.data === diaLocal() && seguidor?.pet && !$('pet').hidden && !conversa.falando && !sobreposicaoAberta() && !transicionando) {
+    md.avisou = true;
+    gravar({ 'missoes_dia/avisou': true });
+    mostrarFalaPet([{ texto: 'Hoje tem missão nova! 📜' }]);
+  }
+}
+
+function abrirMissoes() {
+  if (!missoesDoDia()) return;
+  $('btn-missoes').classList.remove('nova');
+  renderMissoes();
+  $('missoes').hidden = false;
+}
+function renderMissoes() {
+  const md = missoesDoDia();
+  if (!md) return;
+  const pr = MISSOES.premio || {}, b = MISSOES.bonus_todas || {};
+  const premio = [pr.moedas ? `+${pr.moedas} ${moedaHtml()}` : '', pr.lealdade ? `+${pr.lealdade} de lealdade 💜` : ''].filter(Boolean).join(' · ');
+  $('missoes-lista').innerHTML = md.lista.map(m => {
+    const feita = missaoFeita(m), f = Math.min(m.feito, m.n);
+    return `<div class="jr-mis-item${feita ? ' feita' : ''}">
+      <div class="jr-mis-linha"><span>${feita ? '✅ ' : ''}${esc(textoMissao(m))}</span><span class="jr-mis-num">${f}/${m.n}</span></div>
+      <div class="jr-mis-trilho"><i style="width:${f / m.n * 100}%"></i></div>
+      <div class="jr-mis-premio">${feita ? 'Prêmio recebido: ' : 'Prêmio: '}${premio}</div>
+    </div>`;
+  }).join('');
+  const bonus = [b.moedas ? `+${b.moedas} ${moedaHtml()}` : '', b.isca ? `+${b.isca} iscas 🪱` : ''].filter(Boolean).join(' ');
+  $('missoes-bonus').innerHTML = md.bonus ? `🏆 Bônus de hoje recebido: ${bonus}` : `🏆 Complete as ${md.lista.length} para ganhar ${bonus}`;
+  $('missoes-bonus').classList.toggle('ganho', !!md.bonus);
+}
+
+// ============================================================
+//  📖 RELEMBRE — explicação curta de cada ginásio (dados/jogo/explicacoes.json: titulo, regra, exemplo, dica).
+//  Não conta tempo nem tentativa. Registro em relembre/{ginásio}: visto (já apareceu na entrada), ocultar
+//  ("não mostrar de novo"), aberturas (vezes que o aluno ABRIU: 📖, erro, batalha, insígnia) e ultima.
+// ============================================================
+let EXPLIC = {};
+const explicacaoDe = (chave) => EXPLIC[chave] || null;
+let relembreAberto = null;   // { chave, origem }
+
+// Tipo de conta da batalha → ginásio do mesmo conteúdo (tabuada não tem ginásio)
+const RELEMBRE_TIPO = {
+  expressao_sem_parenteses: 'mapa1-A', expressao_com_parenteses: 'mapa1-B', vezes_10_100_1000: 'mapa2-A', medidas: 'mapa2-B',
+  negativos_soma: 'mapa3-A', negativos_mult: 'mapa3-B', fracoes: 'mapa4-A', decimais: 'mapa4-B', potencia: 'mapa5-A', raiz: 'mapa5-B',
+  multiplos_divisores: 'mapa6-A', porcentagem: 'mapa7-A', valor_numerico: 'mapa8-A', termos_semelhantes: 'mapa8-B', equacao: 'mapa9-A',
+  regra_de_tres: 'mapa10-A', perimetro_area: 'mapa11-A', coordenadas: 'mapa12-A', media: 'mapa13-A',
+};
+const chaveRelembreConta = (tipo, conta = '') =>
+  tipo === 'multiplos_divisores' && /divisor/i.test(conta) ? 'mapa6-B' : tipo === 'perimetro_area' && /área/i.test(conta) ? 'mapa11-B' : RELEMBRE_TIPO[tipo] || null;
+
+// "5 + 2 × 3 = 5 + 6 = 11   ·   48 ÷ 10 = 4,8": em cada parte, o resultado fica em verde — o que vem depois da
+// última seta (→ ⇒), ou, sem seta, depois do último "="; o que vier depois de ", porque" fica normal
+function exemploRelembre(txt) {
+  return String(txt).split(/\s+·\s+/).map(parte => {
+    const [cabeca, ...resto] = parte.trim().split(/(?=,\s*porque\b)/);
+    const cauda = esc(resto.join(''));
+    const m = /[→⇒]/.test(cabeca) ? /^(.*[→⇒]\s*)([^→⇒]+)$/.exec(cabeca) : /^(.*=\s*)([^=]+)$/.exec(cabeca);
+    return (m ? `${esc(m[1])}<b>${esc(m[2])}</b>` : esc(cabeca)) + cauda;
+  }).join('<span class="sep">·</span>');
+}
+
+// origem: 'entrada' (sozinho, ao entrar no ginásio), 'ginasio' (📖 do interior), 'erro', 'batalha', 'insignia'
+function abrirRelembre(chave, origem) {
+  const e = explicacaoDe(chave);
+  if (!e || !estado) return;
+  relembreAberto = { chave, origem };
+  $('rel-insignia').src = `${IMG}/insignias/insignia-${chave}.webp`;
+  $('rel-titulo').textContent = e.titulo || '';
+  $('rel-regra').textContent = e.regra || '';
+  $('rel-exemplo').innerHTML = exemploRelembre(e.exemplo || '');
+  $('rel-exemplo').hidden = !e.exemplo;
+  $('rel-dica').textContent = e.dica ? `💡 ${e.dica}` : '';
+  $('rel-dica').hidden = !e.dica;
+  const pet = petsOk && estado.pets?.ativo;
+  $('rel-pet-bloco').hidden = !pet;
+  if (pet) { const img = $('rel-pet'); img.src = quadrosDe(formaDe(pet), 'sentado_girando')[0]; marcarForma(img, pet, formaDe(pet)); aplicarVisualPet(img, pet); }
+  const r = (estado.relembre[chave] ||= {});
+  $('rel-check').hidden = origem !== 'entrada' && origem !== 'ginasio';   // a caixinha só vale dentro do ginásio
+  $('rel-ocultar').checked = !!r.ocultar;
+  soltarJoystick();
+  $('relembre').hidden = false;
+  const base = `relembre/${chave}`;
+  if (origem === 'entrada') { if (!r.visto) { r.visto = true; gravar({ [`${base}/visto`]: true }); } }
+  else {
+    r.aberturas = (Number(r.aberturas) || 0) + 1; r.ultima = Date.now();
+    gravar({ [`${base}/aberturas`]: r.aberturas, [`${base}/ultima`]: r.ultima });
+  }
+  $('rel-ok').focus({ preventScroll: true });
+}
+
+function fecharRelembre() {
+  if (!relembreAberto) return;
+  const { chave } = relembreAberto;
+  relembreAberto = null;
+  $('relembre').hidden = true;
+  if ($('rel-check').hidden) return;
+  const r = (estado.relembre[chave] ||= {}), ocultar = $('rel-ocultar').checked;
+  if (!!r.ocultar !== ocultar) { r.ocultar = ocultar; gravar({ [`relembre/${chave}/ocultar`]: ocultar || null }); }
+}
+
+// Ao entrar no ginásio: sempre na 1ª vez; depois, só se o aluno não marcou "não mostrar de novo"
+function relembreNaEntrada(chave) {
+  const r = estado?.relembre?.[chave];
+  if (!explicacaoDe(chave) || (r?.visto && r.ocultar) || !$('relembre').hidden) return;
+  abrirRelembre(chave, 'entrada');
 }
 
 // ============================================================
@@ -7343,6 +7802,20 @@ function ligarEventos() {
     if (b) abrirCartao(b.dataset.chave);
   });
   $('cartao-fechar').addEventListener('click', () => { $('cartao').hidden = true; });
+  $('cartao-relembre').addEventListener('click', (e) => { e.stopPropagation(); abrirRelembre(e.currentTarget.dataset.chave, 'insignia'); });
+  $('btn-relembre').addEventListener('click', () => { if (cena?.tipo === 'interior') abrirRelembre(cena.chave, 'ginasio'); });
+  $('rel-ok').addEventListener('click', fecharRelembre);
+  $('btn-missoes').addEventListener('click', abrirMissoes);
+  $('btn-letra').addEventListener('click', alternarLetra);
+  // tocar em qualquer contador de moedas: "Hoje você ganhou…"
+  $('jr-app').addEventListener('click', (e) => { if (e.target.closest('.jr-moedas')) { e.stopPropagation(); abrirMoedasHoje(); } });
+  $('moedas-hoje').addEventListener('click', () => { $('moedas-hoje').hidden = true; });
+  $('missoes-fechar').addEventListener('click', () => { $('missoes').hidden = true; });
+  $('missoes').addEventListener('click', (e) => { if (e.target.id === 'missoes') $('missoes').hidden = true; });
+  $('relembre').addEventListener('click', (e) => { if (e.target.id === 'relembre') fecharRelembre(); });
+  $('erro-relembre').addEventListener('click', (e) => abrirRelembre(e.currentTarget.dataset.relembre, 'erro'));
+  $('erro-continuar').addEventListener('click', continuarDoErro);
+  $('bt-rev-lista').addEventListener('click', (e) => { const b = e.target.closest('[data-relembre]'); if (b) abrirRelembre(b.dataset.relembre, 'batalha'); });
   $('cartao').addEventListener('click', (e) => { if (e.target.id === 'cartao') $('cartao').hidden = true; });
 
   window.addEventListener('resize', () => {

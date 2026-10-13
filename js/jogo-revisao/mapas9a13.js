@@ -27,32 +27,32 @@ function dobroE() { const x = int(2, 15); return Q(`O dobro de um número é ${2
 function cadernos() { const n = int(2, 6), p = int(2, 9); return Q(`Comprei ${n} cadernos iguais e gastei R$ ${n * p}. Quanto custou cada um?`, reais(p), erradasNum(p, [n * p - n, n * p + n, n * p * n], { fmt: reais }), X(`${n}x = ${n * p} → x = ${n * p} ÷ ${n} = ${p}`)); }
 // --- qual é a equação?
 const FR = [
-  (k, t) => [`"Um número mais ${k} é igual a ${t}"`, `x + ${k} = ${t}`, [`${k}x = ${t}`, `x − ${k} = ${t}`]],
-  (k, t) => [`"O dobro de um número é ${t}"`, `2x = ${t}`, [`x + 2 = ${t}`, `x² = ${t}`]],
-  (k, t) => [`"Um número menos ${k} é igual a ${t}"`, `x − ${k} = ${t}`, [`${k} − x = ${t}`, `x + ${k} = ${t}`]],
-  (k, t) => [`"O triplo de um número é ${t}"`, `3x = ${t}`, [`x + 3 = ${t}`, `x ÷ 3 = ${t}`]],
-  (k, t) => [`"A metade de um número é ${t}"`, `x ÷ 2 = ${t}`, [`2x = ${t}`, `x − 2 = ${t}`]],
-  (k, t) => [`"O quádruplo de um número é ${t}"`, `4x = ${t}`, [`x + 4 = ${t}`, `x ÷ 4 = ${t}`]],
+  (k, t) => [`"Um número mais ${k} é igual a ${t}"`, `x + ${k} = ${t}`, [`${k}x = ${t}`, `x − ${k} = ${t}`, `x ÷ ${k} = ${t}`]],
+  (k, t) => [`"O dobro de um número é ${t}"`, `2x = ${t}`, [`x + 2 = ${t}`, `x² = ${t}`, `x ÷ 2 = ${t}`]],
+  (k, t) => [`"Um número menos ${k} é igual a ${t}"`, `x − ${k} = ${t}`, [`${k} − x = ${t}`, `x + ${k} = ${t}`, `${k}x = ${t}`]],
+  (k, t) => [`"O triplo de um número é ${t}"`, `3x = ${t}`, [`x + 3 = ${t}`, `x ÷ 3 = ${t}`, `x³ = ${t}`]],
+  (k, t) => [`"A metade de um número é ${t}"`, `x ÷ 2 = ${t}`, [`2x = ${t}`, `x − 2 = ${t}`, `x + 2 = ${t}`]],
+  (k, t) => [`"O quádruplo de um número é ${t}"`, `4x = ${t}`, [`x + 4 = ${t}`, `x ÷ 4 = ${t}`, `x⁴ = ${t}`]],
 ];
 const HIST = [
-  (k, t) => [`Tinha x figurinhas, ganhei ${k} e fiquei com ${t}.`, `x + ${k} = ${t}`, [`${k}x = ${t}`, `x − ${k} = ${t}`]],
-  (k, t) => [`Cada caderno custa x reais. ${k} cadernos custaram R$ ${k * t}.`, `${k}x = ${k * t}`, [`x + ${k} = ${k * t}`, `x ÷ ${k} = ${k * t}`]],
-  (k, t) => [`Tinha x reais, gastei ${k} e sobraram ${t}.`, `x − ${k} = ${t}`, [`x + ${k} = ${t}`, `${k}x = ${t}`]],
-  (k, t) => [`Dividi x balas entre ${k} amigos e cada um ganhou ${t}.`, `x ÷ ${k} = ${t}`, [`${k}x = ${t}`, `x − ${k} = ${t}`]],
-  (k, t) => [`Pedro tem x anos. Daqui a ${k} anos terá ${t + k}.`, `x + ${k} = ${t + k}`, [`x − ${k} = ${t + k}`, `${k}x = ${t + k}`]],
-  (k, t) => [`Tinha x reais, gastei a metade e fiquei com ${t}.`, `x ÷ 2 = ${t}`, [`2x = ${t}`, `x − 2 = ${t}`]],
+  (k, t) => [`Tinha x figurinhas, ganhei ${k} e fiquei com ${t}.`, `x + ${k} = ${t}`, [`${k}x = ${t}`, `x − ${k} = ${t}`, `x ÷ ${k} = ${t}`]],
+  (k, t) => [`Cada caderno custa x reais. ${k} cadernos custaram R$ ${k * t}.`, `${k}x = ${k * t}`, [`x + ${k} = ${k * t}`, `x ÷ ${k} = ${k * t}`, `x − ${k} = ${k * t}`]],
+  (k, t) => [`Tinha x reais, gastei ${k} e sobraram ${t}.`, `x − ${k} = ${t}`, [`x + ${k} = ${t}`, `${k}x = ${t}`, `${k} − x = ${t}`]],
+  (k, t) => [`Dividi x balas entre ${k} amigos e cada um ganhou ${t}.`, `x ÷ ${k} = ${t}`, [`${k}x = ${t}`, `x − ${k} = ${t}`, `x + ${k} = ${t}`]],
+  (k, t) => [`Pedro tem x anos. Daqui a ${k} anos terá ${t + k}.`, `x + ${k} = ${t + k}`, [`x − ${k} = ${t + k}`, `${k}x = ${t + k}`, `x = ${t + k} + ${k}`]],
+  (k, t) => [`Tinha x reais, gastei a metade e fiquei com ${t}.`, `x ÷ 2 = ${t}`, [`2x = ${t}`, `x − 2 = ${t}`, `x + 2 = ${t}`]],
 ];
 const BAL = [
-  (k, t) => [`Numa balança, 1 caixa de peso x e mais ${k} kg equilibram ${k + t} kg.`, `x + ${k} = ${k + t}`, [`${k}x = ${k + t}`, `x = ${k + t} + ${k}`]],
-  (k, t) => [`Numa balança, ${k} caixas de peso x equilibram ${k * t} kg.`, `${k}x = ${k * t}`, [`x + ${k} = ${k * t}`, `x = ${k * t} + ${k}`]],
-  (k, t) => [`Numa balança, 1 caixa de peso x equilibra um peso de ${t} kg e outro de ${k} kg.`, `x = ${t} + ${k}`, [`x = ${t} × ${k}`, `x + ${k} = ${t}`]],
+  (k, t) => [`Numa balança, 1 caixa de peso x e mais ${k} kg equilibram ${k + t} kg.`, `x + ${k} = ${k + t}`, [`${k}x = ${k + t}`, `x = ${k + t} + ${k}`, `x − ${k} = ${k + t}`]],
+  (k, t) => [`Numa balança, ${k} caixas de peso x equilibram ${k * t} kg.`, `${k}x = ${k * t}`, [`x + ${k} = ${k * t}`, `x = ${k * t} + ${k}`, `x ÷ ${k} = ${k * t}`]],
+  (k, t) => [`Numa balança, 1 caixa de peso x equilibra um peso de ${t} kg e outro de ${k} kg.`, `x = ${t} + ${k}`, [`x = ${t} × ${k}`, `x + ${k} = ${t}`, `x = ${t} − ${k}`]],
 ];
 const EQX = X('Troque as palavras por sinais: "mais/ganhei" é +, "menos/gastei" é −, "dobro/vezes" é ×, "metade/dividi" é ÷.');
 const deLista = lista => () => { const k = int(2, 6), t = int(3, 20); const [e, r, x] = pick(lista)(k, t); return Q(e, r, x, EQX); };
 const eqRev = [
-  () => { const k = int(1, 5), t = 2 * int(2, 8) + k; return Q(`"O dobro de um número mais ${k} é igual a ${t}"`, `2x + ${k} = ${t}`, [`2(x + ${k}) = ${t}`, `x + 2 + ${k} = ${t}`], X(`O dobro do número é 2x; depois soma ${k}: 2x + ${k} = ${t}`)); },
-  () => { const k = int(2, 4), x = int(8, 14), t = x + k * x; return Q(`Ana tem x anos e o pai tem o ${['', '', 'dobro', 'triplo', 'quádruplo'][k]} da idade dela. Juntos somam ${t} anos.`, `x + ${k}x = ${t}`, [`${k}x = ${t}`, `x + ${k} = ${t}`], X(`Ana: x. Pai: ${k}x. Juntos: x + ${k}x = ${t}`)); },
-  () => { const k = int(2, 3), b = int(1, 5), t = k * int(1, 5) + b; return Q(`Numa balança, ${k} caixas de peso x e mais ${b} kg equilibram ${t} kg.`, `${k}x + ${b} = ${t}`, [`x + ${b} = ${t}`, `${k}x = ${t} + ${b}`], X(`${k} caixas pesam ${k}x; mais ${b} kg: ${k}x + ${b} = ${t}`)); },
+  () => { const k = int(1, 5), t = 2 * int(2, 8) + k; return Q(`"O dobro de um número mais ${k} é igual a ${t}"`, `2x + ${k} = ${t}`, [`2(x + ${k}) = ${t}`, `x + 2 + ${k} = ${t}`, `2x − ${k} = ${t}`], X(`O dobro do número é 2x; depois soma ${k}: 2x + ${k} = ${t}`)); },
+  () => { const k = int(2, 4), x = int(8, 14), t = x + k * x; return Q(`Ana tem x anos e o pai tem o ${['', '', 'dobro', 'triplo', 'quádruplo'][k]} da idade dela. Juntos somam ${t} anos.`, `x + ${k}x = ${t}`, [`${k}x = ${t}`, `x + ${k} = ${t}`, `${k}x − x = ${t}`], X(`Ana: x. Pai: ${k}x. Juntos: x + ${k}x = ${t}`)); },
+  () => { const k = int(2, 3), b = int(1, 5), t = k * int(1, 5) + b; return Q(`Numa balança, ${k} caixas de peso x e mais ${b} kg equilibram ${t} kg.`, `${k}x + ${b} = ${t}`, [`x + ${b} = ${t}`, `${k}x = ${t} + ${b}`, `${k} + x + ${b} = ${t}`], X(`${k} caixas pesam ${k}x; mais ${b} kg: ${k}x + ${b} = ${t}`)); },
 ];
 const M9 = {
   A: {
@@ -96,24 +96,24 @@ function pedreiros() { const p = 2, d = 2 * int(3, 9), p2 = 4; const v = d * p /
 function carne() { const k = int(3, 6), u = int(5, 9), k2 = k + int(2, 4); const v = u * k2; return Q(`${k} kg de carne custam R$ ${k * u}. Quanto custam ${k2} kg?`, reais(v), erradasNum(v, [k * u + k2, k * u * k2 / 10, v + u], { fmt: reais, inteiro: true }), X(`1 kg: ${k * u} ÷ ${k} = ${u}. Então ${k2} × ${u} = ${v}`)); }
 function composta() { const m = 2, p = 50 * int(1, 3), h = 2, m2 = 4, h2 = 3; const v = p / (m * h) * m2 * h2; return Q(`${m} máquinas fazem ${p} peças em ${h} horas. Quantas peças ${m2} máquinas fazem em ${h2} horas?`, `${v} peças`, erradasNum(v, [p * 2, p * m2 * h2, p * h2, p + 100], { fmt: x => `${num(x)} peças` }), X(`1 máquina em 1 hora: ${p} ÷ ${m} ÷ ${h} = ${p / (m * h)}. Então ${p / (m * h)} × ${m2} × ${h2} = ${v} peças`)); }
 // --- qual é a conta?
-function contaUnit() { const [s, p] = pick(ITENS), q = int(2, 6), u = int(2, 9), T = q * u; return Q(`${q} ${p} custam R$ ${T}. Para achar o preço de 1 ${s}, faço:`, `${T} ÷ ${q}`, [`${T} × ${q}`, pick([`${T} + ${q}`, `${T} − ${q}`, `${q} ÷ ${T}`])], X(`Do total para 1 unidade: divide. ${T} ÷ ${q}`)); }
+function contaUnit() { const [s, p] = pick(ITENS), q = int(2, 6), u = int(2, 9), T = q * u; return Q(`${q} ${p} custam R$ ${T}. Para achar o preço de 1 ${s}, faço:`, `${T} ÷ ${q}`, [`${T} × ${q}`, ...sample([`${T} + ${q}`, `${T} − ${q}`, `${q} ÷ ${T}`], 2)], X(`Do total para 1 unidade: divide. ${T} ÷ ${q}`)); }
 function contaTotal() {
   const t = int(0, 3), a = int(2, 9), b = int(2, 9);
   const e = [`1 bala custa R$ ${a}. Para achar o preço de ${b} balas, faço:`, `Uma receita usa ${a} xícaras de farinha por bolo. Para ${b} bolos, faço:`, `Um carro anda ${a * 10} km em 1 hora. Para saber quanto anda em ${b} horas, faço:`, `1 caixa tem ${a} ovos. Para saber quantos ovos há em ${b} caixas, faço:`][t];
   const A = t === 2 ? a * 10 : a;
-  return Q(e, `${A} × ${b}`, [`${A} + ${b}`, pick([`${A} ÷ ${b}`, `${b} ÷ ${A}`])], X(`De 1 unidade para várias: multiplica. ${A} × ${b}`));
+  return Q(e, `${A} × ${b}`, [`${A} + ${b}`, `${A} ÷ ${b}`, `${A} − ${b}`], X(`De 1 unidade para várias: multiplica. ${A} × ${b}`));
 }
 function contaInv() {
   const t = int(0, 2), d = 2 * int(2, 6), k = 2;
   const e = [`1 pessoa pinta um muro em ${d} dias. Para saber o tempo de ${k} pessoas, faço:`, `1 torneira enche um tanque em ${d} horas. Para saber o tempo de ${k} torneiras, faço:`, `${k} pintores levam ${d / 2} dias. Para saber o tempo de 1 pintor sozinho, faço:`][t];
-  if (t === 2) return Q(e, `${d / 2} × ${k}`, [`${d / 2} ÷ ${k}`, `${d / 2} + ${k}`], X('Menos pessoas trabalhando, mais tempo (inversa): multiplica.'));
-  return Q(e, `${d} ÷ ${k}`, [`${d} × ${k}`, `${d} + ${k}`], X('Mais ajudando, menos tempo (inversa): divide.'));
+  if (t === 2) return Q(e, `${d / 2} × ${k}`, [`${d / 2} ÷ ${k}`, `${d / 2} + ${k}`, `${d / 2} − ${k}`], X('Menos pessoas trabalhando, mais tempo (inversa): multiplica.'));
+  return Q(e, `${d} ÷ ${k}`, [`${d} × ${k}`, `${d} + ${k}`, `${d} − ${k}`], X('Mais ajudando, menos tempo (inversa): divide.'));
 }
-const velDobra = () => Q('Se a velocidade dobra, o tempo de viagem:', 'cai pela metade', ['dobra', 'fica igual'], X('Velocidade e tempo são inversas: uma dobra, a outra cai pela metade.'));
+const velDobra = () => Q('Se a velocidade dobra, o tempo de viagem:', 'cai pela metade', ['dobra', 'fica igual', 'triplica'], X('Velocidade e tempo são inversas: uma dobra, a outra cai pela metade.'));
 function contaRev(t) {
-  if (t === 0) { const q = int(3, 5), u = int(2, 6), q2 = q + int(2, 4); return Q(`${q} canetas custam R$ ${q * u}. Qual conta dá o preço de ${q2} canetas?`, `${q * u} ÷ ${q} × ${q2}`, [`${q * u} × ${q} ÷ ${q2}`, `${q * u} + ${q2}`], X(`Ache o preço de 1 (÷ ${q}) e depois multiplique por ${q2}.`)); }
-  if (t === 1) { const p = 3, d = 2 * int(2, 6), p2 = 6; return Q(`${p} pedreiros fazem um muro em ${d} dias. Qual conta dá o tempo com ${p2} pedreiros?`, `${d} × ${p} ÷ ${p2}`, [`${d} × ${p2} ÷ ${p}`, `${d} + ${p}`], X(`Inversa: tempo de 1 pedreiro sozinho = ${d} × ${p}; com ${p2} pedreiros, divide por ${p2}.`)); }
-  const c = int(2, 3), k = 15 * c, c2 = int(4, 7); return Q(`No mapa, ${c} cm valem ${k} km. Qual conta dá quantos km valem ${c2} cm?`, `${k} ÷ ${c} × ${c2}`, [`${k} × ${c} ÷ ${c2}`, `${k} + ${c2}`], X(`Ache quanto vale 1 cm (÷ ${c}) e depois multiplique por ${c2}.`));
+  if (t === 0) { const q = int(3, 5), u = int(2, 6), q2 = q + int(2, 4); return Q(`${q} canetas custam R$ ${q * u}. Qual conta dá o preço de ${q2} canetas?`, `${q * u} ÷ ${q} × ${q2}`, [`${q * u} × ${q} ÷ ${q2}`, `${q * u} + ${q2}`, `${q * u} × ${q2}`], X(`Ache o preço de 1 (÷ ${q}) e depois multiplique por ${q2}.`)); }
+  if (t === 1) { const p = 3, d = 2 * int(2, 6), p2 = 6; return Q(`${p} pedreiros fazem um muro em ${d} dias. Qual conta dá o tempo com ${p2} pedreiros?`, `${d} × ${p} ÷ ${p2}`, [`${d} × ${p2} ÷ ${p}`, `${d} + ${p}`, `${d} × ${p2}`], X(`Inversa: tempo de 1 pedreiro sozinho = ${d} × ${p}; com ${p2} pedreiros, divide por ${p2}.`)); }
+  const c = int(2, 3), k = 15 * c, c2 = int(4, 7); return Q(`No mapa, ${c} cm valem ${k} km. Qual conta dá quantos km valem ${c2} cm?`, `${k} ÷ ${c} × ${c2}`, [`${k} × ${c} ÷ ${c2}`, `${k} + ${c2}`, `${k} × ${c2}`], X(`Ache quanto vale 1 cm (÷ ${c}) e depois multiplique por ${c2}.`));
 }
 const M10 = {
   A: {
@@ -140,11 +140,11 @@ const perT = () => { const a = int(3, 9), b = int(3, 9), c = int(Math.abs(a - b)
 const POLI = [['triângulo', 3], ['quadrado', 4], ['pentágono', 5], ['hexágono', 6], ['octógono', 8]];
 const perP = () => { const [n, k] = pick(POLI.filter(p => p[1] !== 4)), l = int(1, 9); const v = k * l; return Q(`Perímetro de um ${n} com ${k} lados iguais de ${l} cm`, cm(v), erradasNum(v, [v + l, k + l, v - l], { fmt: cm }), X(`${k} lados de ${l} cm: ${k} × ${l} = ${v} cm`)); };
 const FATOS = [
-  () => Q('1 metro tem quantos centímetros?', '100 cm', ['10 cm', '1000 cm'], X('"Centi" quer dizer centésimo: 1 m = 100 cm.')),
-  () => Q('1 quilômetro tem quantos metros?', '1000 m', ['100 m', '10 m'], X('"Quilo" quer dizer mil: 1 km = 1000 m.')),
-  () => Q('Um ângulo reto mede quantos graus?', '90°', ['180°', '45°'], X('Ângulo reto é o "canto" de um quadrado: 90°. Meia volta é 180°.')),
+  () => Q('1 metro tem quantos centímetros?', '100 cm', ['10 cm', '1000 cm', '50 cm'], X('"Centi" quer dizer centésimo: 1 m = 100 cm.')),
+  () => Q('1 quilômetro tem quantos metros?', '1000 m', ['100 m', '10 m', '10000 m'], X('"Quilo" quer dizer mil: 1 km = 1000 m.')),
+  () => Q('Um ângulo reto mede quantos graus?', '90°', ['180°', '45°', '360°'], X('Ângulo reto é o "canto" de um quadrado: 90°. Meia volta é 180°.')),
   () => { const [n, k] = pick(POLI.filter(p => p[1] > 4)); return Q(`Quantos lados tem um ${n}?`, num(k), erradasNum(k, [k + 1, k - 1, 2 * k]), X('Pentágono: 5 lados. Hexágono: 6. Octógono: 8.')); },
-  () => Q('1 centímetro tem quantos milímetros?', '10 mm', ['100 mm', '1000 mm'], X('Na régua, cada centímetro tem 10 risquinhos de 1 mm.')),
+  () => Q('1 centímetro tem quantos milímetros?', '10 mm', ['100 mm', '1000 mm', '1 mm'], X('Na régua, cada centímetro tem 10 risquinhos de 1 mm.')),
 ];
 const fato = () => pick(FATOS)();
 const cerca = () => { const a = int(5, 20), b = int(3, a); const v = 2 * (a + b); return Q(`Um terreno retangular tem ${a} m por ${b} m. Quantos metros de cerca para cercar tudo?`, m_(v), erradasNum(v, [a * b, a + b, v / 2 + a], { fmt: m_ }), X(`Cercar é contornar (perímetro): ${a} + ${b} + ${a} + ${b} = ${v} m`)); };
@@ -155,7 +155,7 @@ const angulo = () => { const a = int(30, 80), b = int(30, 150 - a); const v = 18
 const areaQ = () => { const l = int(2, 12); const v = l * l; return Q(`Área de um quadrado de lado ${l} cm`, cm2(v), erradasNum(v, [4 * l, 2 * l, v + l], { fmt: cm2 }), X(`Área do quadrado = lado × lado: ${l} × ${l} = ${v} cm²`)); };
 const areaR = () => { const a = int(2, 12), b = int(2, 9); const v = a * b; return Q(`Área de um retângulo de ${a} cm por ${b} cm`, cm2(v), erradasNum(v, [2 * (a + b), a + b, v + a], { fmt: cm2 }), X(`Área do retângulo = comprimento × largura: ${a} × ${b} = ${v} cm²`)); };
 const quadradinhos = () => { const r = int(2, 5), c = int(2, 6); const v = r * c; return pick([() => Q(`Uma figura é formada por ${v} quadradinhos de 1 cm². Qual a área?`, cm2(v), erradasNum(v, [v * 4, v + 4], { fmt: cm2 }), X(`Cada quadradinho vale 1 cm²: ${v} quadradinhos = ${v} cm²`)), () => Q(`Um piso tem ${r} fileiras com ${c} lajotas cada. Quantas lajotas ao todo?`, num(v), erradasNum(v, [r + c, 2 * (r + c), v + c]), X(`${r} fileiras × ${c} lajotas = ${v}`))])(); };
-const UNIDS = [() => Q('Área é medida em:', 'cm²', ['cm', 'kg'], X('Área é o espaço de dentro (quadradinhos): cm². Perímetro é o contorno: cm.')), () => Q('Perímetro é medido em:', 'cm', ['cm²', 'L'], X('Perímetro é o contorno: cm. Área é o espaço de dentro: cm².'))];
+const UNIDS = [() => Q('Área é medida em:', 'cm²', ['cm', 'kg', 'L'], X('Área é o espaço de dentro (quadradinhos): cm². Perímetro é o contorno: cm.')), () => Q('Perímetro é medido em:', 'cm', ['cm²', 'L', 'kg'], X('Perímetro é o contorno: cm. Área é o espaço de dentro: cm².'))];
 const unid = () => pick(UNIDS)();
 const comparaA = () => { for (; ;) { const l = int(3, 7), a = int(2, 9), b = int(2, 9); if (l * l === a * b) continue; const q = `quadrado de lado ${l} cm`, r = `retângulo de ${a} cm por ${b} cm`; return Q('Qual tem área maior?', l * l > a * b ? q : r, [l * l > a * b ? r : q], X(`Quadrado: ${l} × ${l} = ${l * l} cm². Retângulo: ${a} × ${b} = ${a * b} cm².`)); } };
 const sala = () => { const a = int(3, 8), b = int(2, 6); const v = a * b; return Q(`Uma sala retangular tem ${a} m por ${b} m. Qual a área?`, m2(v), erradasNum(v, [2 * (a + b), a + b, v + 2], { fmt: m2 }), X(`${a} × ${b} = ${v} m²`)); };
@@ -183,11 +183,11 @@ const M11 = {
 // ===================== MAPA 12 =====================
 const XY = X('No ponto (x, y), o primeiro número é o x (anda para os lados) e o segundo é o y (anda para cima ou para baixo).');
 const xy = (x, y, q) => X(`No ponto (x, y), o x vem primeiro e o y depois. Em ${ponto(x, y)}: ${q} = ${num(q === 'x' ? x : y)}`);
-const coord = (neg = false) => () => { const x = int(neg ? -6 : 0, 9), y = int(neg ? -6 : 0, 9); const qual = coin() ? 'x' : 'y'; const v = qual === 'x' ? x : y; const o = qual === 'x' ? y : x; return Q(`No ponto ${ponto(x, y)}, qual é o valor de ${qual}?`, num(v), erradasTexto(num(v), [num(o), num(-v), num(v + 1), num(v - 1)].filter(s => s !== num(v))), xy(x, y, qual)); };
-const coordX = () => { const x = int(0, 9), y = int(0, 9); return Q(`No ponto ${ponto(x, y)}, qual é o valor de x?`, num(x), erradasTexto(num(x), [num(y), num(x + 1), num(x + y), num(x + 2), num(y + 1)]), xy(x, y, 'x')); };
-const coordY = () => { const x = int(0, 9), y = int(0, 9); return Q(`No ponto ${ponto(x, y)}, qual é o valor de y?`, num(y), erradasTexto(num(y), [num(x), num(y + 1), num(x + y), num(y + 2), num(x + 1)]), xy(x, y, 'y')); };
+const coord = (neg = false) => () => { const x = int(neg ? -6 : 0, 9), y = int(neg ? -6 : 0, 9); const qual = coin() ? 'x' : 'y'; const v = qual === 'x' ? x : y; const o = qual === 'x' ? y : x; return Q(`No ponto ${ponto(x, y)}, qual é o valor de ${qual}?`, num(v), erradasTexto(num(v), [num(o), num(-v), num(v + 1), num(v - 1), num(v + 2), num(v - 2)].filter(s => s !== num(v))), xy(x, y, qual)); };
+const coordX = () => { const x = int(0, 9), y = int(0, 9); return Q(`No ponto ${ponto(x, y)}, qual é o valor de x?`, num(x), erradasTexto(num(x), [num(y), num(x + 1), num(x + y), num(x + 2), num(y + 1), num(x + 3), num(x + 4)]), xy(x, y, 'x')); };
+const coordY = () => { const x = int(0, 9), y = int(0, 9); return Q(`No ponto ${ponto(x, y)}, qual é o valor de y?`, num(y), erradasTexto(num(y), [num(x), num(y + 1), num(x + y), num(y + 2), num(x + 1), num(y + 3), num(y + 4)]), xy(x, y, 'y')); };
 const EIXOS = [
-  () => Q('Qual ponto é a origem?', '(0, 0)', ['(1, 1)', '(0, 1)'], X('A origem é onde os eixos se cruzam: (0, 0).')),
+  () => Q('Qual ponto é a origem?', '(0, 0)', ['(1, 1)', '(0, 1)', '(1, 0)'], X('A origem é onde os eixos se cruzam: (0, 0).')),
   () => { const v = pick([-6, -4, -2, 2, 3, 5, 7]); return Q(`O ponto ${ponto(v, 0)} fica sobre qual eixo?`, 'Eixo x', ['Eixo y'], X('Se o y é 0, o ponto não sobe nem desce: fica em cima do eixo x.')); },
   () => { const v = pick([-5, -3, -2, 2, 3, 4, 6]); return Q(`O ponto ${ponto(0, v)} fica sobre qual eixo?`, 'Eixo y', ['Eixo x'], X('Se o x é 0, o ponto não vai para os lados: fica em cima do eixo y.')); },
 ];
@@ -218,7 +218,7 @@ function caminho() {
     const x0 = int(-2, 4), y0 = int(-2, 4), dx = int(-4, 5), dy = int(-4, 5);
     if (dx === 0 && dy === 0) continue;
     const r = dirTxt(dx, dy), e1 = dirTxt(dy || dx, dx || dy), e2 = dirTxt(-dx, -dy);
-    const err = erradasTexto(r, [e2, e1, dirTxt(dx + (dx >= 0 ? 1 : -1), dy)], 2);
+    const err = erradasTexto(r, [e2, e1, dirTxt(dx + (dx >= 0 ? 1 : -1), dy), dirTxt(-dx, dy), dirTxt(dx, -dy), dirTxt(dx, dy + (dy >= 0 ? 1 : -1))]);
     return Q(`Para ir de ${ponto(x0, y0)} até ${ponto(x0 + dx, y0 + dy)}, ando:`, r, err, X(`Compare os x (${num(x0)} → ${num(x0 + dx)}) e os y (${num(y0)} → ${num(y0 + dy)}): ${r}`));
   }
 }
@@ -247,10 +247,10 @@ function media(n, mPar = false) {
     for (; ;) { const l = lista(n, 1, 12); const s = l.reduce((a, b) => a + b, 0); if (!mPar && s % n) continue; if (mPar && (s * 2) % n) continue; const v = s / n; return Q(`Qual é a média de ${n === 2 ? l.join(' e ') : fmtL(l.slice(0, -1)) + ' e ' + l[l.length - 1]}?`, num(v), erradasNum(v, [s, Math.max(...l), v + 1, (Math.max(...l) + Math.min(...l)) / 2 === v ? v - 1 : (Math.max(...l) + Math.min(...l)) / 2], { inteiro: false }), X(`Some tudo e divida pela quantidade: ${l.join(' + ')} = ${s}; ${s} ÷ ${n} = ${num(v)}`)); }
   };
 }
-function moda() { for (; ;) { const m = int(1, 9), outros = sample([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter(x => x !== m), int(2, 3)); const l = shuffle([m, m, ...(coin() ? [m] : []), ...outros]); const v = m; return Q(`Qual é a moda de ${fmtL(l)}?`, num(v), sample(outros, 2).map(num), X(`Moda é o valor que mais aparece: o ${m} aparece ${l.filter(z => z === m).length} vezes.`)); } }
+function moda() { for (; ;) { const m = int(1, 9), outros = sample([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter(x => x !== m), int(2, 3)); const l = shuffle([m, m, ...(coin() ? [m] : []), ...outros]); const v = m; return Q(`Qual é a moda de ${fmtL(l)}?`, num(v), erradasTexto(num(v), [...shuffle(outros).map(num), num(l.filter(z => z === m).length), num(l.length), num(m + 1), num(m + 2), num(m + 3), num(Math.max(...l) + 1)]), X(`Moda é o valor que mais aparece: o ${m} aparece ${l.filter(z => z === m).length} vezes.`)); } }
 function mediana(n = 3, embaralha = false) {
   return () => {
-    for (; ;) { const l = sample([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20], n).sort((a, b) => a - b); const v = l[(n - 1) / 2]; const mostra = embaralha ? shuffle(l) : l; const med = l.reduce((a, b) => a + b, 0) / n; return Q(`Qual é a mediana de ${fmtL(mostra)}?${embaralha ? ' (organize antes)' : ''}`, num(v), erradasTexto(num(v), [num(mostra[(n - 1) / 2]), ehInteiro(med) ? num(med) : num(l[0]), num(l[0]), num(l[n - 1])], 3), X(`Coloque em ordem: ${fmtL(l)}. A mediana é o do meio: ${num(v)}`)); }
+    for (; ;) { const l = sample([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20], n).sort((a, b) => a - b); const v = l[(n - 1) / 2]; const mostra = embaralha ? shuffle(l) : l; const med = l.reduce((a, b) => a + b, 0) / n; return Q(`Qual é a mediana de ${fmtL(mostra)}?${embaralha ? ' (organize antes)' : ''}`, num(v), erradasTexto(num(v), [num(mostra[(n - 1) / 2]), ehInteiro(med) ? num(med) : num(l[0]), num(l[0]), num(l[n - 1]), num(Math.round(med)), num(v + 1), num(v - 1), num(v + 2)], 3), X(`Coloque em ordem: ${fmtL(l)}. A mediana é o do meio: ${num(v)}`)); }
   };
 }
 function notaFalta() { const m = int(6, 8), a = int(4, 9), b = int(4, 9); const c = 3 * m - a - b; if (c < 0 || c > 10) return notaFalta(); return Q(`A média de 3 provas foi ${m}. Duas notas foram ${a} e ${b}. Qual foi a terceira?`, num(c), erradasNum(c, [3 * m, m, (a + b) / 2, c + 1], { inteiro: true }), X(`Média ${m} em 3 provas: a soma é 3 × ${m} = ${3 * m}. Falta ${3 * m} − ${a} − ${b} = ${c}`)); }
@@ -282,12 +282,12 @@ export function perguntasTabela(chave, n) {
   const qs = [
     () => Q(T.txt.mais, it[iMax], sample(outros(iMax), 3), X(`Procure o maior número da tabela: ${vs[iMax]} (${it[iMax]}).`)),
     () => Q(T.txt.menos, it[iMin], sample(outros(iMin), 3), X(`Procure o menor número da tabela: ${vs[iMin]} (${it[iMin]}).`)),
-    () => { const i = int(0, it.length - 1); return Q(T.txt.qto(it[i]), num(vs[i]), erradasTexto(num(vs[i]), shuffle(vs.filter(v => v !== vs[i])).map(num).concat([num(vs[i] + 1)])), X(`Ache a linha "${it[i]}" e leia o número ao lado: ${vs[i]}.`)); },
+    () => { const i = int(0, it.length - 1); return Q(T.txt.qto(it[i]), num(vs[i]), erradasTexto(num(vs[i]), shuffle(vs.filter(v => v !== vs[i])).map(num).concat([num(vs[i] + 1), num(vs[i] + 2), num(Math.max(1, vs[i] - 1)), num(vs[i] + 3)])), X(`Ache a linha "${it[i]}" e leia o número ao lado: ${vs[i]}.`)); },
     () => Q(T.txt.total, num(soma), erradasNum(soma, [soma + 1, soma - 1, soma + vs[0], Math.max(...vs) * it.length]), X(`Some todos: ${vs.join(' + ')} = ${soma}`)),
     () => { const v = vs[iMax] - vs[iMin]; return Q(T.txt.dif(it[iMax], it[iMin]), num(v), erradasNum(v, [vs[iMax] + vs[iMin], vs[iMax], v + 1]), X(`"A mais" é subtração: ${vs[iMax]} − ${vs[iMin]} = ${v}`)); },
   ];
   if (T.txt.media) qs.push(() => { const v = soma / vs.length; return Q(T.txt.media, num(v), erradasNum(v, [soma, v + 1, v - 1, vs[Math.floor(vs.length / 2)]]), X(`Some tudo e divida pela quantidade: ${soma} ÷ ${vs.length} = ${num(v)}`)); });
-  if (T.txt.mediana) qs.push(() => { const s = [...vs].sort((a, b) => a - b); const v = s[2]; return Q(T.txt.mediana, num(v), erradasTexto(num(v), [num(vs[2]), num(soma / 5), num(s[0]), num(s[4]), num(v + 1)].filter(x => !x.includes(','))), X(`Em ordem: ${s.join(', ')}. O do meio: ${v}`)); });
+  if (T.txt.mediana) qs.push(() => { const s = [...vs].sort((a, b) => a - b); const v = s[2]; return Q(T.txt.mediana, num(v), erradasTexto(num(v), [num(vs[2]), num(soma / 5), num(s[0]), num(s[4]), num(v + 1), num(v + 2), num(Math.max(1, v - 1)), num(v + 3)].filter(x => !x.includes(','))), X(`Em ordem: ${s.join(', ')}. O do meio: ${v}`)); });
   const tabela = { titulo: tab.titulo, colunas: tab.colunas, linhas: tab.linhas };
   return shuffle(qs).slice(0, n).map(f => ({ ...f(), tabela }));
 }

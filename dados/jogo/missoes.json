@@ -1,0 +1,17 @@
+{
+  "por_dia": 3,
+  "premio": { "moedas": 5, "lealdade": 2 },
+  "bonus_todas": { "moedas": 10, "isca": 2 },
+  "missoes": [
+    { "id": "acertar_ginasio", "texto": "Acerte {n} perguntas em ginásios", "n": [5, 8], "requer": "ginasios" },
+    { "id": "revisar_erro", "texto": "Acerte {n} pergunta que você já tinha errado", "n": [1, 2], "requer": "ginasios" },
+    { "id": "ajudar", "texto": "Ajude {n} pessoas da cidade", "n": [1, 2], "requer": "pedidos" },
+    { "id": "batalha", "texto": "Vença {n} batalha", "n": [1, 1], "requer": "ginasios" },
+    { "id": "alimentar", "texto": "Dê comida ao seu pet", "n": [1, 1], "requer": "loja" },
+    { "id": "carinho", "texto": "Faça carinho no seu pet {n} vezes", "n": [2, 3], "requer": "meu_pet" },
+    { "id": "pescar", "texto": "Pesque {n} peixes", "n": [1, 2], "requer": "pesca" },
+    { "id": "cavar", "texto": "Cave ou mexa no mato {n} vezes", "n": [2, 3], "requer": "cavar" },
+    { "id": "desafio", "texto": "Desafie um colega na praça", "n": [1, 1], "requer": "desafios" },
+    { "id": "fliperama", "texto": "Faça {n} acertos no fliperama", "n": [10, 20], "requer": "fliperama" }
+  ]
+}

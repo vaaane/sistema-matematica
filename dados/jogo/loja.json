@@ -13,7 +13,7 @@
    "id": "racao",
    "nome": "Ração",
    "emoji": "🥣",
-   "preco": 5,
+   "preco": 8,
    "lealdade": 1,
    "especial": false,
    "imagem": "img/jogo/itens/racao.webp"
@@ -22,7 +22,7 @@
    "id": "fruta",
    "nome": "Fruta",
    "emoji": "🍎",
-   "preco": 8,
+   "preco": 12,
    "lealdade": 2,
    "especial": false,
    "imagem": "img/jogo/itens/fruta.webp"
@@ -31,7 +31,7 @@
    "id": "biscoito",
    "nome": "Biscoito",
    "emoji": "🍪",
-   "preco": 12,
+   "preco": 18,
    "lealdade": 3,
    "especial": false,
    "imagem": "img/jogo/itens/biscoito.webp"
@@ -40,7 +40,7 @@
    "id": "petisco",
    "nome": "Petisco premium",
    "emoji": "🍖",
-   "preco": 20,
+   "preco": 30,
    "lealdade": 5,
    "especial": true,
    "imagem": "img/jogo/itens/petisco.webp"
@@ -49,7 +49,7 @@
    "id": "peixe_fresco",
    "nome": "Peixe fresco",
    "emoji": "🐟",
-   "preco": 35,
+   "preco": 50,
    "lealdade": 6,
    "especial": true,
    "imagem": "img/jogo/itens/peixe_fresco.webp"
@@ -58,7 +58,7 @@
    "id": "bolo",
    "nome": "Bolo especial",
    "emoji": "🎂",
-   "preco": 40,
+   "preco": 60,
    "lealdade": 10,
    "especial": true,
    "limite_semana": 1,
@@ -222,6 +222,8 @@
    "preco": 70
   }
  ],
+ "moedas_insignia": 10,
+ "moedas_dourada": 15,
  "lealdade_pet_novo": 20,
  "amizade": {
   "pontos_por_nivel": 100,

@@ -12,9 +12,9 @@
   "tempo_fisgar_s": 1.2,
   "libera_apos_ginasio": "A",
   "isca": {
-   "preco": 2,
+   "preco": 3,
    "pacote": 5,
-   "preco_pacote": 10
+   "preco_pacote": 12
   },
   "presentes_dia": 3,
   "pontos_semana_reinicia": "segunda 00:00 America/Sao_Paulo",

@@ -150,7 +150,7 @@ M2.A.revanche[1] = () => { const q = int(2, 9), a = q * 100; return Q(`${a} ÷ 1
 // ===================== MAPA 3 =====================
 function maiorMenor(menor = false) {
   return () => {
-    const s = new Set(); while (s.size < 3) s.add(int(-12, 8)); const arr = [...s];
+    const s = new Set(); while (s.size < 4) s.add(int(-12, 8)); const arr = [...s];
     if (!arr.some(x => x < 0)) arr[0] = -int(1, 9);
     const r = menor ? Math.min(...arr) : Math.max(...arr);
     const nomes = arr.map(num); const certo = num(r);
@@ -192,7 +192,7 @@ function equivalente() {
   const [p, q] = pick([[1, 2], [1, 3], [2, 3], [1, 4], [3, 4], [2, 5], [1, 5]]); const k = int(2, 4);
   const certo = frac(p * k, q * k);
   const errs = erradasFrac(p * k, q * k, [[p * k + 1, q * k], [p + 1, q], [p * k, q * k + 1], [q, p], [p + k, q + k]]);
-  return Q(`Qual fração é igual a ${frac(p, q)}?`, certo, errs.slice(0, 2), X(`Multiplique o de cima e o de baixo pelo mesmo número: ${p} × ${k} = ${p * k} e ${q} × ${k} = ${q * k}. Fica ${certo}`));
+  return Q(`Qual fração é igual a ${frac(p, q)}?`, certo, errs, X(`Multiplique o de cima e o de baixo pelo mesmo número: ${p} × ${k} = ${p * k} e ${q} × ${k} = ${q * k}. Fica ${certo}`));
 }
 function simplifique() {
   const [p, q] = pick([[1, 2], [1, 3], [2, 3], [1, 4], [3, 4], [2, 5], [3, 5], [1, 6]]); const k = int(2, 5);
@@ -232,7 +232,7 @@ const DEC = (op) => () => {
 };
 const FD = [[1, 2, 0.5], [1, 10, 0.1], [1, 4, 0.25], [3, 10, 0.3], [1, 5, 0.2], [7, 10, 0.7], [9, 10, 0.9], [3, 4, 0.75]];
 function fracDec() { const [p, q, d] = pick(FD.slice(0, 7)); return Q(`${frac(p, q)} em número decimal`, num(d), erradasNum(d, [d * 10, d / 10, d + 0.1, p + q / 10], { inteiro: false }), X(`A fração é uma divisão: ${p} ÷ ${q} = ${num(d)}`)); }
-function decFrac() { const [p, q, d] = pick(FD.slice(0, 7)); return Q(`${num(d)} em fração`, frac(p, q), erradasFrac(p, q, [[q, p], [p, q * 10], [Math.round(d * 10), 100], [p + 1, q]]).slice(0, 2), X(`${num(d)} = ${frac(Math.round(d * 100), 100)} = ${frac(p, q)} (porque ${p} ÷ ${q} = ${num(d)})`)); }
+function decFrac() { const [p, q, d] = pick(FD.slice(0, 7)); return Q(`${num(d)} em fração`, frac(p, q), erradasFrac(p, q, [[q, p], [p, q * 10], [Math.round(d * 10), 100], [p + 1, q], [p, q + 1]]), X(`${num(d)} = ${frac(Math.round(d * 100), 100)} = ${frac(p, q)} (porque ${p} ÷ ${q} = ${num(d)})`)); }
 function comparaDec() { const a = int(1, 9), b = int(10, 99); const x = arred(a / 10), y = arred(b / 100); const r = Math.max(x, y); if (x === y) return comparaDec(); return Q('Qual é maior?', num(r), [num(r === x ? y : x)], X(`Iguale as casas: ${num(x)} = ${(x).toFixed(2).replace('.', ',')} e ${num(y)} = ${(y).toFixed(2).replace('.', ',')}. Agora compare.`)); }
 function somaReais() { const a = arred(int(2, 9) + pick([0.5, 0.25, 0.75])), b = arred(int(1, 5) + pick([0.5, 0.25, 0.5])); const v = arred(a + b); return Q(`${reais(a)} + ${reais(b)}`, reais(v), erradasNum(v, [v + 1, v - 0.5, v + 0.1, Math.floor(a) + Math.floor(b)], { fmt: reais, inteiro: false }), X(`${reais(a)} + ${reais(b)} = ${reais(v)}`)); }
 function trocoDec() { const T = pick([5, 10]), p = arred(int(1, T - 1) + 0.5); const v = arred(T - p); return Q(`Paguei R$ ${T} por um lanche de ${reais(p)}. Qual o troco?`, reais(v), erradasNum(v, [v + 1, v - 1, v + 0.5, T - Math.floor(p)], { fmt: reais, inteiro: false }), X(`R$ ${T} − ${reais(p)} = ${reais(v)}`)); }

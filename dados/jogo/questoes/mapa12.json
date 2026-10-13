@@ -131,7 +131,8 @@
        "resposta": "(0, 0)",
        "erradas": [
         "(1, 1)",
-        "(0, 1)"
+        "(0, 1)",
+        "(1, 0)"
        ]
       },
       {
@@ -487,7 +488,8 @@
        "resposta": "3 para a direita",
        "erradas": [
         "3 para cima",
-        "4 para a direita"
+        "4 para a direita",
+        "4 para cima"
        ]
       }
      ],
@@ -526,7 +528,8 @@
        "resposta": "4 para a esquerda",
        "erradas": [
         "4 para a direita",
-        "2 para a esquerda"
+        "2 para a esquerda",
+        "2 para a direita"
        ]
       }
      ],
