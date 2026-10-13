@@ -512,7 +512,8 @@ export async function iniciarJogo(sess) {
   editarMato = teste && new URLSearchParams(location.search).get('editarMato') === '1';
   try {
     const [cj, mj] = await Promise.all(['cavar.json', 'mato.json'].map(f => fetch(`${DADOS}/${f}`).then(r => { if (!r.ok) throw new Error(f); return r.json(); })));
-    CAVAR = cj; MATOS = mj.matos || []; MATO_NOTA = mj.nota || mj._nota || ''; MATOS_POR_DIA = Number(mj.por_dia) || 5;
+    CAVAR = cj; MATOS = mj.matos || [];
+    CAVAR_SP = await fetch(`${DADOS}/cavar-sprites.json`).then(r => (r.ok ? r.json() : null)).catch(() => null);   // sem ele: pose provisória MATO_NOTA = mj.nota || mj._nota || ''; MATOS_POR_DIA = Number(mj.por_dia) || 5;
   } catch (e) { console.warn('[jogo-revisao] cavar/mato indisponíveis', e); }
   try { LOJA = await fetch(`${DADOS}/loja-interior.json`).then(r => { if (!r.ok) throw new Error('loja-interior.json'); return r.json(); }); }
   catch (e) { console.warn('[jogo-revisao] interior da loja indisponível', e); }
@@ -2101,7 +2102,7 @@ function sairDoMapaOnline() {
 
 function limparColegas() {
   fecharCartaoColega();
-  for (const c of colegas.values()) { c.el.remove(); c.nome.remove(); c.petImg.remove(); c.sombra.remove(); c.balao?.remove(); }
+  for (const c of colegas.values()) { c.el.remove(); c.nome.remove(); c.petImg.remove(); c.sombra.remove(); c.balao?.remove(); c.cavarEl?.remove(); }
   colegas.clear();
 }
 
@@ -2115,7 +2116,7 @@ function receberColegas(n, regs) {
     if (!c) c = criarColega(uid, r);
     atualizarColega(c, r);
   }
-  for (const [uid, c] of colegas) if (!vistos.has(uid)) { c.el.remove(); c.nome.remove(); c.petImg.remove(); c.sombra.remove(); c.balao?.remove(); colegas.delete(uid); }
+  for (const [uid, c] of colegas) if (!vistos.has(uid)) { c.el.remove(); c.nome.remove(); c.petImg.remove(); c.sombra.remove(); c.balao?.remove(); c.cavarEl?.remove(); colegas.delete(uid); }
 }
 
 function criarColega(uid, r) {
@@ -2195,6 +2196,13 @@ function atualizarColegas(dt) {
     if (c.el.dataset.src !== src) { c.el.src = src; c.el.dataset.src = src; }
     c.el.hidden = c.nome.hidden = false;
     Object.assign(c.el.style, { left: c.x + 'px', top: c.y + 'px', height: PERS.altura * ESCALA_SPRITE + 'px', zIndex: Math.round(c.y) });
+    // colega cavando: a picareta no lugar da imagem de andar (quadros 2..6 em loop enquanto durar)
+    const cavando = c.reg.acao === 'cavar' && temPoseCavar(c.pers);
+    if (cavando) {
+      if (!c.cavarEl) { c.cavarEl = document.createElement('img'); c.cavarEl.className = 'jr-cavar-pose jr-colega'; c.cavarEl.alt = ''; c.cavarEl.draggable = false; $('cena-palco').appendChild(c.cavarEl); }
+      poseCavar(c.cavarEl, c.pers, c.x, c.y, SEQ_CAVAR[Math.floor(agora / MS_CAVAR) % 5], !!c.reg.acao_esq, ESCALA_SPRITE);
+    } else if (c.cavarEl) { c.cavarEl.remove(); c.cavarEl = null; }
+    c.el.style.visibility = cavando ? 'hidden' : '';
     // etiqueta com o apelido: 11 px na tela, qualquer que seja o zoom da câmera
     Object.assign(c.nome.style, { left: c.x + 'px', top: (c.y - ALT_JOGADOR_MAPA - 2) + 'px', fontSize: 11 * escala + 'px', zIndex: 9000 });
     if (c.balao) Object.assign(c.balao.style, { left: c.x + 'px', top: (c.y - ALT_JOGADOR_MAPA - 16 * escala) + 'px', fontSize: (c.balao.classList.contains('frase') ? 12 : 22) * escala + 'px' });
@@ -4869,7 +4877,7 @@ function ligarArrastoGenerico(itens, dica, json, arquivo, aoMover = () => {}) {
 //  Por aluno e por dia: 3 montinhos visíveis + 1 tesouro escondido por mapa (sorteio com semente data|mapa|aluno);
 //  o pet fareja o tesouro; os matinhos dão frutas/verduras e rebrotam em 6 h. Tudo grava no nó do aluno.
 // ============================================================
-let CAVAR = null, MATOS = [], MATO_NOTA = '', MATOS_POR_DIA = 5;   // mato.json: todos os lugares; por dia, por aluno, sorteia por_dia em cada mapa
+let CAVAR = null, CAVAR_SP = null, MATOS = [], MATO_NOTA = '', MATOS_POR_DIA = 5;   // mato.json: todos os lugares; por dia, por aluno, sorteia por_dia em cada mapa
 let editarMato = false;   // ?editarMato=1 no modo teste: arrastar os matinhos e copiar o mato.json
 let acaoMapa = null;      // { tipo: 'cavar' | 'mato', alvo } — o que o botão de ação faz agora
 let acaoOcupada = false;
@@ -4937,6 +4945,7 @@ function montarCavar(n) {
   }
   cena.matos = doMapa.map(m => ({ ...m, chave: `${n}-${m.i}`, mexido: agora - (Number(estado.matoMexido?.[`${n}-${m.i}`]) || 0) < rebrota }));
   cena.cavar = lugaresDoDia(n);   // montinhos e tesouro: longe dos matos que aparecem hoje
+  if (temPoseCavar(meuPersonagem())) for (const q of [2, 3, 4, 5, 6]) { const im = new Image(); im.src = `${PERS.pasta}/${meuPersonagem()}/cavar-${q}.webp`; }
   let html = '';
   for (const l of cena.cavar) {
     if (l.tesouro) continue;   // o tesouro não tem desenho nenhum
@@ -5028,23 +5037,32 @@ function usarAcaoMapa() {
   if (a.tipo === 'cavar') cavar(a.alvo); else mexerMato(a.alvo);
 }
 
-// ⛏️ Cavar: 1 s de terra voando, depois o resultado
+// ⛏️ Cavar: animação da picareta (cavar-2..6, duas vezes, ~1,1 s) virada para o montinho; depois o resultado
+// cavar-sprites.json: tamanho do quadro e âncora (pés) de cada personagem — mesma escala das imagens de andar
+const SEQ_CAVAR = [2, 3, 4, 5, 6, 2, 3, 4, 5, 6], MS_CAVAR = 110;   // o quadro 1 fica só de reserva (a picareta "pula" no 6 → 1)
+const temPoseCavar = (pers) => !!(CAVAR_SP?.tamanho && CAVAR_SP.personagens?.[pers]);
+function poseCavar(img, pers, x, y, q, esq, s) {
+  const [w, h] = CAVAR_SP.tamanho, [ax, ay] = CAVAR_SP.personagens[pers].ancora;
+  const src = `${PERS.pasta}/${pers}/cavar-${q}.webp`;
+  if (img.dataset.src !== src) { img.src = src; img.dataset.src = src; }
+  Object.assign(img.style, { width: w * s + 'px', height: h * s + 'px', left: x - (esq ? w - ax : ax) * s + 'px', top: y - ay * s + 'px',
+    transform: esq ? 'scaleX(-1)' : '', zIndex: Math.round(y) });
+}
+function terraVoando(x, y) {
+  const terra = document.createElement('div');
+  terra.className = 'jr-terra';
+  Object.assign(terra.style, { left: x + 'px', top: y + 'px', zIndex: Math.round(y) + 2 });
+  terra.innerHTML = '<i></i><i></i><i></i><i></i><i></i>';
+  $('cena-atores').appendChild(terra);
+  setTimeout(() => terra.remove(), 520);
+}
 function cavar(l) {
   acaoOcupada = true;
   jog.caminho = []; jog.aoChegar = null;
   esconderAcaoMapa();
-  $('jogador').classList.add('cavando');
-  const terra = document.createElement('div');
-  terra.className = 'jr-terra';
-  Object.assign(terra.style, { left: l.x + 'px', top: l.y + 'px', zIndex: Math.round(l.y) + 2 });
-  terra.innerHTML = '<i></i><i></i><i></i><i></i><i></i>';
-  $('cena-atores').appendChild(terra);
-  tocar('clique');
-  const n = cena.n;
-  setTimeout(() => {
-    terra.remove();
-    $('jogador').classList.remove('cavando');
-    acaoOcupada = false;
+  const n = cena.n, pers = meuPersonagem(), esq = l.x < jog.x - 2;
+  jog.dir = esq ? 'esquerda' : 'direita';
+  const resultado = () => {
     if (cena?.n !== n) return;
     const cav = cavadosHoje();
     cav.m[l.chave] = true;
@@ -5056,7 +5074,37 @@ function cavar(l) {
     }
     const achado = sortearAchado(l.tesouro ? CAVAR.tesouro : CAVAR.montinho);
     entregarAchado(achado, l.tesouro ? 'tesouro' : 'montinho', n, { cavar_dia: cav });
-  }, 1000);
+  };
+  if (!temPoseCavar(pers)) {   // sem os quadros: a pose provisória (abaixado) e a terra voando
+    $('jogador').classList.add('cavando');
+    terraVoando(l.x, l.y);
+    tocar('clique');
+    setTimeout(() => { $('jogador').classList.remove('cavando'); acaoOcupada = false; resultado(); }, 1000);
+    return;
+  }
+  const img = document.createElement('img');
+  img.className = 'jr-cavar-pose'; img.alt = ''; img.draggable = false;
+  $('cena-atores').appendChild(img);
+  $('jogador').style.visibility = 'hidden';
+  enviarOnline({ acao: 'cavar', acao_esq: esq });   // os colegas veem a animação
+  const reduzido = semMovimento(), seq = reduzido ? [4] : SEQ_CAVAR, ms = reduzido ? 800 : MS_CAVAR, s = escalaSpriteCena();
+  let k = 0;
+  const acabar = () => {
+    img.remove();
+    $('jogador').style.visibility = '';
+    enviarOnline({ acao: null });
+    acaoOcupada = false;
+    desenharJogador();
+  };
+  const passo = () => {
+    if (cena?.n !== n || !img.isConnected) { acabar(); return; }
+    if (k >= seq.length) { acabar(); resultado(); return; }
+    const q = seq[k++];
+    poseCavar(img, pers, jog.x, jog.y, q, esq, s);
+    if (q === 4 && !reduzido) { terraVoando(l.x, l.y); tocar('clique'); }   // a picareta bate: lascas e um "toc"
+    setTimeout(passo, ms);
+  };
+  passo();
 }
 
 // 🌿 Mexer no mato: balança, depois fruta/verdura, nada ou um bichinho
@@ -5067,8 +5115,10 @@ function mexerMato(m) {
   m.balancando = false;
   balancarMato(m);
   tocar('clique');
+  $('jogador').classList.add('cavando');   // pose provisória até chegarem os quadros de mexer no mato
   const n = cena.n;
   setTimeout(() => {
+    $('jogador').classList.remove('cavando');
     acaoOcupada = false;
     if (cena?.n !== n) return;
     m.mexido = true;
@@ -5534,7 +5584,9 @@ function btRodada() {
   const tR = bt.f.tempo[0] + Math.random() * (bt.f.tempo[1] - bt.f.tempo[0]);
   const certo = Math.random() < bt.f.acerto;
   const erradas = p.opcoes.filter(v => v !== p.resposta);
-  btLater(() => { if (bt && !bt.fechou && bt.resp.R === null) btResponder('R', certo ? p.resposta : sortear(erradas)); }, tR * 1000);
+  // o resultado do treinador já fica guardado: se o aluno responder antes, o treinador responde junto (com o tempo sorteado)
+  bt.npc = { v: certo ? p.resposta : sortear(erradas), t: tR };
+  bt.npcTimer = btLater(() => { if (bt && !bt.fechou && bt.resp.R === null) btResponder('R', bt.npc.v); }, tR * 1000);
   btTick();
 }
 
@@ -5550,7 +5602,7 @@ function btTick() {
   if (bt && !bt.fechou) bt.raf = requestAnimationFrame(btTick);
 }
 
-function btResponder(l, v) {
+function btResponder(l, v, tSorteado = null) {
   if (!bt || bt.fechou || bt.resp[l] !== null) return;
   if (l === 'L' && bt.oferta && v === null) { bt.oferta = null; $('bt-msg').textContent = ''; }   // o tempo acabou na oferta
   // errou com Segunda chance na bolsa (1 por batalha): pergunta antes de valer o erro
@@ -5562,7 +5614,7 @@ function btResponder(l, v) {
     tocar('erro');
     return;
   }
-  const t = btAgora();
+  const t = tSorteado ?? btAgora();
   bt.resp[l] = { v, t, ok: v === bt.p.resposta };
   const o = l === 'L' ? 'R' : 'L';
   if (bt.resp[o] === null) bt.lim[o] = Math.min(bt.lim[o], t + (cfgBatalha().depois_s ?? 6));
@@ -5572,7 +5624,15 @@ function btResponder(l, v) {
       b.disabled = true;
       if (bt.p.opcoes[b.dataset.i] === v) b.classList.add(bt.resp.L.ok ? 'certa' : 'errada'); else b.classList.add('esmaecida');
     }
-    $('bt-msg').textContent = bt.resp.R === null ? `Esperando ${bt.t.nome}… (no máximo ${Math.ceil(bt.lim.R - t)} s)` : '';
+    $('bt-msg').textContent = '';
+  }
+  // o aluno respondeu (ou o tempo dele acabou) antes do treinador: o treinador responde junto, com o tempo que já tinha
+  // sorteado — quem acertou mais rápido continua atacando primeiro. Passou do prazo dele (depois_s), fica sem resposta, como antes.
+  if (l === 'L' && bt.resp.R === null && bt.npc) {
+    clearTimeout(bt.npcTimer);
+    if (bt.npc.t <= bt.lim.R) btResponder('R', bt.npc.v, bt.npc.t);
+    else btResponder('R', null, bt.lim.R);
+    return;
   }
   btStatus(l, v === null ? '⏱ tempo!' : '✔ respondeu', '');
   if (bt.resp.L !== null && bt.resp.R !== null) btFechar();
