@@ -1,0 +1,52 @@
+{
+ "tamanho": [
+  595,
+  685
+ ],
+ "virado": "direita",
+ "quadros": 6,
+ "personagens": {
+  "menino_cabelo_raspado": {
+   "ancora": [
+    292,
+    675
+   ]
+  },
+  "menino_cabelo_preto": {
+   "ancora": [
+    288,
+    675
+   ]
+  },
+  "menino_bone": {
+   "ancora": [
+    309,
+    675
+   ]
+  },
+  "menina_trancas": {
+   "ancora": [
+    313,
+    675
+   ]
+  },
+  "menina_tiara": {
+   "ancora": [
+    312,
+    675
+   ]
+  },
+  "menina_rabo_cavalo": {
+   "ancora": [
+    245,
+    675
+   ]
+  },
+  "menina_cabelo_castanho": {
+   "ancora": [
+    317,
+    675
+   ]
+  }
+ }
+}
