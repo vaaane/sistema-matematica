@@ -89,7 +89,12 @@ const PERS = { pasta: `${IMG}/personagens-principais`, largura: 408, altura: 680
 // imagem é desenhada com a própria largura/altura × essa escala (pés na base). 630 é a referência que mantém
 // o corpo do tamanho de antes (ALT_JOGADOR_MAPA, já com o +25% do PROMPT-16). Balões, apelidos e pet seguem usando ALT.
 const ESCALA_SPRITE = ALT_JOGADOR_MAPA / 630;
-const escalaSpriteCena = () => (cena?.tipo === 'mapa' && !cena.salao ? ALT_JOGADOR_MAPA : ALT_JOGADOR) / 630;   // no ginásio e no fliperama o personagem é maior   // no ginásio o personagem é maior
+const escalaSpriteCena = () => (cena?.salao ? alturaSalao() : cena?.tipo === 'mapa' ? ALT_JOGADOR_MAPA : ALT_JOGADOR) / 630;   // no ginásio e nos salões o personagem é maior
+// Salões (fliperama, loja): o personagem tem altura_personagem do JSON do interior; o pet usa a mesma proporção do mapa
+// (altura do pet = altura_personagem × ALT_PET / ALT_JOGADOR_MAPA) e as distâncias crescem junto
+const alturaSalao = () => Number(cena?.alturaPersonagem) || ALT_JOGADOR;
+const escalaPetCena = () => (cena?.salao ? alturaSalao() / ALT_JOGADOR_MAPA : cena?.tipo === 'mapa' ? ESCALA_ATORES : ESCALA_GINASIO);
+const escalaAtoresCena = () => (cena?.salao ? ESCALA_ATORES * alturaSalao() / ALT_JOGADOR_MAPA : ESCALA_ATORES);   // ícones, toques e balões das pessoas
 const NUM_MAPAS = 13;
 
 const $ = (id) => document.getElementById(id);
@@ -507,7 +512,7 @@ export async function iniciarJogo(sess) {
   editarMato = teste && new URLSearchParams(location.search).get('editarMato') === '1';
   try {
     const [cj, mj] = await Promise.all(['cavar.json', 'mato.json'].map(f => fetch(`${DADOS}/${f}`).then(r => { if (!r.ok) throw new Error(f); return r.json(); })));
-    CAVAR = cj; MATOS = mj.matos || []; MATO_NOTA = mj._nota || '';
+    CAVAR = cj; MATOS = mj.matos || []; MATO_NOTA = mj.nota || mj._nota || ''; MATOS_POR_DIA = Number(mj.por_dia) || 5;
   } catch (e) { console.warn('[jogo-revisao] cavar/mato indisponíveis', e); }
   try { LOJA = await fetch(`${DADOS}/loja-interior.json`).then(r => { if (!r.ok) throw new Error('loja-interior.json'); return r.json(); }); }
   catch (e) { console.warn('[jogo-revisao] interior da loja indisponível', e); }
@@ -3067,7 +3072,7 @@ function loop(t) {
     if (pesca && (vx || vy)) sairPesca();   // andar levanta da pesca
     const direto = (vx || vy) && moverDireto(dt, vx, vy);
     if (!direto) passo(dt);
-    const e = cena.tipo === 'mapa' && !cena.salao ? ESCALA_ATORES : ESCALA_GINASIO;
+    const e = escalaPetCena();
     const pet = seguidor?.pet;
     if (petNoPedestal) seguidor?.atualizar(dt, petNoPedestal[0], petNoPedestal[1], 0, altImagemPet(pet) * e, 0, e);   // no provador: fica no pedestal
     else seguidor?.atualizar(dt, jog.x, jog.y, VEL, altImagemPet(pet) * e, distPet(pet) * e, e);
@@ -4336,7 +4341,7 @@ async function abrirFliperama() {
   const grade = gradeDeRetangulos(FLIPER.area_livre);
   const naTrilha = (x, y) => centroCelula(celulaMaisProxima(grade, x, y));
   const [px, py] = FLIPER.porta;
-  cena = { tipo: 'mapa', n: 'fliperama', salao: true, cfg: { entrada: FLIPER.entrada, saidas: [FLIPER.porta] }, grade, portas: {}, naTrilha,
+  cena = { tipo: 'mapa', n: 'fliperama', salao: true, alturaPersonagem: FLIPER.altura_personagem, cfg: { entrada: FLIPER.entrada, saidas: [FLIPER.porta] }, grade, portas: {}, naTrilha,
     saidas: [{ x: px, y: py, trilha: naTrilha(px, py) }] };
   destinoEspecial = null;
   alvoMapa = null;
@@ -4466,8 +4471,8 @@ function premioFliperama(d) {
 function ligarEdicaoFliperama() {
   const par = (a) => a && { pos: () => a, por: (x, y) => { a[0] = x; a[1] = y; } };
   const obj = (o) => o && { pos: () => [o.x, o.y], por: (x, y) => { o.x = x; o.y = y; } };
-  if (!FLIPER.teo && FLIPER.balcao) FLIPER.teo = [...FLIPER.balcao];
-  const itens = [['porta', par(FLIPER.porta), '🚪'], ['entrada', par(FLIPER.entrada), '👣'], ['Téo', par(FLIPER.teo), '🧑'],
+  if (!FLIPER.teo && FLIPER.balcao) FLIPER.teo = { x: FLIPER.balcao[0], y: FLIPER.balcao[1] };
+  const itens = [['porta', par(FLIPER.porta), '🚪'], ['entrada', par(FLIPER.entrada), '👣'], ['Téo (pés)', obj(FLIPER.teo), '🧑'], ['Téo: onde o aluno para', par(FLIPER.teo?.ponto), '👣'],
     ...(FLIPER.maquinas || []).flatMap(m => [[m.nome, obj(m), '🕹️'], [`${m.nome}: onde para`, par(m.ponto), '👣']])].filter(([, o]) => o);
   for (const [nome, o, ic] of itens) {
     const el = document.createElement('div');
@@ -4496,7 +4501,7 @@ function ligarEdicaoFliperama() {
   caixa.id = 'npc-editar';
   caixa.className = 'jr-npc-editar';
   caixa.innerHTML = `<span id="npc-editar-pos">Arraste as máquinas, a porta e o Téo</span><button class="jr-btn" id="npc-copiar">📋 Copiar fliperama.json</button>`;
-  setInterval(() => { const o = pessoasMapa.find(x => x.p.id === 'teo'); if (o && FLIPER.teo && (o.p.x !== FLIPER.teo[0] || o.p.y !== FLIPER.teo[1])) { o.p.x = FLIPER.teo[0]; o.p.y = FLIPER.teo[1]; posicionarPessoa(o); } }, 200);
+  setInterval(() => { const o = pessoasMapa.find(x => x.p.id === 'teo'); if (o && FLIPER.teo && (o.p.x !== FLIPER.teo.x || o.p.y !== FLIPER.teo.y)) { o.p.x = FLIPER.teo.x; o.p.y = FLIPER.teo.y; posicionarPessoa(o); } }, 200);
   $('tela-cena').appendChild(caixa);
   $('npc-copiar').addEventListener('click', async () => {
     const txt = JSON.stringify(FLIPER, null, 1);
@@ -4727,7 +4732,7 @@ async function abrirLojaInterior(origem = { tipo: 'praca' }) {
   const grade = gradeDeRetangulos(LOJA.area_livre);
   const naTrilha = (x, y) => centroCelula(celulaMaisProxima(grade, x, y));
   const [px, py] = LOJA.porta;
-  cena = { tipo: 'mapa', n: 'loja', salao: true, origem, cfg: { entrada: LOJA.entrada, saidas: [LOJA.porta] }, grade, portas: {}, naTrilha,
+  cena = { tipo: 'mapa', n: 'loja', salao: true, alturaPersonagem: LOJA.altura_personagem, origem, cfg: { entrada: LOJA.entrada, saidas: [LOJA.porta] }, grade, portas: {}, naTrilha,
     saidas: [{ x: px, y: py, trilha: naTrilha(px, py) }] };
   destinoEspecial = null;
   alvoMapa = null;
@@ -4864,12 +4869,12 @@ function ligarArrastoGenerico(itens, dica, json, arquivo, aoMover = () => {}) {
 //  Por aluno e por dia: 3 montinhos visíveis + 1 tesouro escondido por mapa (sorteio com semente data|mapa|aluno);
 //  o pet fareja o tesouro; os matinhos dão frutas/verduras e rebrotam em 6 h. Tudo grava no nó do aluno.
 // ============================================================
-let CAVAR = null, MATOS = [], MATO_NOTA = '';
+let CAVAR = null, MATOS = [], MATO_NOTA = '', MATOS_POR_DIA = 5;   // mato.json: todos os lugares; por dia, por aluno, sorteia por_dia em cada mapa
 let editarMato = false;   // ?editarMato=1 no modo teste: arrastar os matinhos e copiar o mato.json
 let acaoMapa = null;      // { tipo: 'cavar' | 'mato', alvo } — o que o botão de ação faz agora
 let acaoOcupada = false;
 const cfgCavar = () => CAVAR?.config || {};
-const QUADROS_MATO = 10, FPS_MATO = 12, LARG_MATO = 60;   // mato: 240 × 150 no arquivo → 60 px de largura no mapa
+const QUADROS_MATO = 10, FPS_MATO = 12, LARG_MATO = 62;   // mato: 240 × 150 no arquivo → ~62 px de largura no mapa
 
 function hashTexto(s) { let h = 2166136261; for (const ch of String(s)) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
 function rngSemente(seed) {
@@ -4898,17 +4903,21 @@ function lugaresDoDia(n) {
   const cfg = cfgCavar(), g = cena.grade, rnd = rngSemente(hashTexto(`${diaLocal()}|${n}|${sessao.uid}`));
   const nm = cfg.montinhos_por_mapa_dia ?? 3, nt = cfg.tesouros_por_mapa_dia ?? 1;
   const evitar = [...Object.values(cena.portas).map(p => [p.x, p.y]), ...cena.saidas.map(s => [s.x, s.y]), [cena.cfg.entrada[0], cena.cfg.entrada[1]],
-    ...NPCS.filter(p => p.mapa === n && !p.interior).map(p => [p.x, p.y]), ...pontosDoMapa(n).map(p => [p.x, p.y]), ...MATOS.filter(m => m.mapa === n).map(m => [m.x, m.y])];
+    ...NPCS.filter(p => p.mapa === n && !p.interior).map(p => [p.x, p.y]), ...pontosDoMapa(n).map(p => [p.x, p.y])];
+  const matosHoje = (cena.matos || []).map(m => [m.x, m.y]);   // só os matinhos que aparecem hoje
   const livre = (cx, cy) => andavel(g, cx, cy) && andavel(g, cx + 3, cy) && andavel(g, cx - 3, cy) && andavel(g, cx, cy + 3) && andavel(g, cx, cy - 3);
   const lugares = [];
-  for (let tent = 0; tent < 6000 && lugares.length < nm + nt; tent++) {
-    const cx = Math.floor(rnd() * GW), cy = Math.floor(rnd() * GH);
-    if (!livre(cx, cy)) continue;
-    const [x, y] = centroCelula(cy * GW + cx);
-    if (x < 60 || x > W - 60 || y < 80 || y > H - 40) continue;
-    if (evitar.some(([a, b]) => dist(x, y, a, b) < 110) || lugares.some(l => dist(x, y, l.x, l.y) < 150)) continue;
-    const i = lugares.length;
-    lugares.push({ x, y, chave: i < nm ? `${n}-${i}` : `${n}-t${i - nm}`, tesouro: i >= nm });
+  // 1ª passada com folgas grandes; mapa com pouca área andável (ex.: Canteiro de Obras): 2ª passada com folgas menores
+  for (const [longe, entre] of [[110, 150], [70, 90]]) {
+    for (let tent = 0; tent < 6000 && lugares.length < nm + nt; tent++) {
+      const cx = Math.floor(rnd() * GW), cy = Math.floor(rnd() * GH);
+      if (!livre(cx, cy)) continue;
+      const [x, y] = centroCelula(cy * GW + cx);
+      if (x < 60 || x > W - 60 || y < 80 || y > H - 40) continue;
+      if (evitar.some(([a, b]) => dist(x, y, a, b) < longe) || matosHoje.some(([a, b]) => dist(x, y, a, b) < 70) || lugares.some(l => dist(x, y, l.x, l.y) < entre)) continue;
+      const i = lugares.length;
+      lugares.push({ x, y, chave: i < nm ? `${n}-${i}` : `${n}-t${i - nm}`, tesouro: i >= nm });
+    }
   }
   return lugares;
 }
@@ -4918,7 +4927,16 @@ function montarCavar(n) {
   cena.matos = [];
   if (!CAVAR || typeof n !== 'number') return;
   const cav = cavadosHoje().m, I = cfgCavar().imagens || {};
-  cena.cavar = lugaresDoDia(n);
+  const agora = Date.now(), rebrota = (cfgCavar().mato_rebrota_h ?? 6) * 3600e3;
+  // matos: dos lugares do mapa, por dia e por aluno aparecem só por_dia (sorteio com semente data|mapa|aluno; no ajuste, todos)
+  let doMapa = MATOS.map((m, i) => ({ ...m, i })).filter(m => m.mapa === n);
+  if (!editarMato && doMapa.length > MATOS_POR_DIA) {
+    const rnd = rngSemente(hashTexto(`${diaLocal()}|${n}|${sessao.uid}|mato`));
+    for (let k = doMapa.length - 1; k > 0; k--) { const j = Math.floor(rnd() * (k + 1)); [doMapa[k], doMapa[j]] = [doMapa[j], doMapa[k]]; }
+    doMapa = doMapa.slice(0, MATOS_POR_DIA);
+  }
+  cena.matos = doMapa.map(m => ({ ...m, chave: `${n}-${m.i}`, mexido: agora - (Number(estado.matoMexido?.[`${n}-${m.i}`]) || 0) < rebrota }));
+  cena.cavar = lugaresDoDia(n);   // montinhos e tesouro: longe dos matos que aparecem hoje
   let html = '';
   for (const l of cena.cavar) {
     if (l.tesouro) continue;   // o tesouro não tem desenho nenhum
@@ -4926,8 +4944,6 @@ function montarCavar(n) {
       <img class="m-img" src="${esc(caminhoImg(I.montinho || ''))}" alt="" draggable="false" onload="this.parentNode.classList.add('com-img')" onerror="this.remove()"/>
       <img class="b-img" src="${esc(caminhoImg(I.buraco || ''))}" alt="" draggable="false" onload="this.parentNode.classList.add('com-buraco')" onerror="this.remove()"/></div>`;
   }
-  const agora = Date.now(), rebrota = (cfgCavar().mato_rebrota_h ?? 6) * 3600e3;
-  cena.matos = MATOS.map((m, i) => ({ ...m, i })).filter(m => m.mapa === n).map(m => ({ ...m, chave: `${n}-${m.i}`, mexido: agora - (Number(estado.matoMexido?.[`${n}-${m.i}`]) || 0) < rebrota }));
   for (const m of cena.matos)
     html += `<img class="jr-mato" data-chave="${m.chave}" src="${IMG}/mato/${m.mexido ? 'mato-mexido' : `mato-${m.variante || 1}`}.webp" alt="" draggable="false"
       style="left:${m.x}px;top:${m.y}px;width:${LARG_MATO}px;z-index:${Math.round(m.y)}"/>`;
@@ -5187,7 +5203,7 @@ function ligarEdicaoMato(n) {
     const orig = MATOS[m.i];
     return [`mato ${m.i}`, { pos: () => [orig.x, orig.y], por: (x, y) => { orig.x = x; orig.y = y; m.x = x; m.y = y; if (m.el) Object.assign(m.el.style, { left: x + 'px', top: y + 'px', zIndex: Math.round(y) }); } }, '🌿'];
   });
-  ligarArrastoGenerico(itens, `Arraste os matinhos do mapa ${n}`, () => JSON.stringify({ _nota: MATO_NOTA, matos: MATOS }, null, 1), 'mato.json');
+  ligarArrastoGenerico(itens, `Arraste os matinhos do mapa ${n} (todos os lugares aparecem no ajuste)`, () => JSON.stringify({ nota: MATO_NOTA, por_dia: MATOS_POR_DIA, matos: MATOS }, null, 1), 'mato.json');
 }
 
 // ============================================================
@@ -5722,14 +5738,14 @@ function sairDaBatalha() {
 //  PESSOAS NOS MAPAS (dados/jogo/npcs.json) — paradas, piscam, conversam; 10 são treinadoras da batalha
 // ============================================================
 let NPCS = [];                       // lista do JSON
-const PESSOA_PERTO = 70 * ESCALA_ATORES;   // px: perto assim, conversa sem andar
+const PESSOA_PERTO = 70 * ESCALA_ATORES;   // px: perto assim, conversa sem andar (nos salões, × o tamanho da cena)
 let pessoasMapa = [];                // { p, img, sombra, icone, alt, larg, timer }
 let balaoPessoa = null;              // { o, timer }
 const ultimaFalaPessoa = {};         // id → índice da última fala (não repete seguida)
 let editarNpcs = false;              // ?editarNpcs=1 no modo teste (professora): arrastar e copiar posições
 
 // Altura na tela: a imagem da pessoa (h px, na mesma escala dos personagens) × ESCALA_SPRITE
-const altPessoa = (p) => p.h * escalaSpriteCena();   // nos interiores (loja) as pessoas acompanham o personagem maior
+const altPessoa = (p) => (cena?.salao ? alturaSalao() * 1.05 : p.h * ESCALA_SPRITE);   // nos salões: adulto = 1,05 × o personagem
 
 function limparPessoas() {
   tirarDestaque();
@@ -5743,7 +5759,8 @@ function montarPessoas(n) {
   limparPessoas();
   const palco = $('cena-atores');
   // nos interiores (loja, fliperama) a posição vem do JSON do interior; nos mapas ficam só as pessoas sem interior
-  const posNoInterior = (p) => (p.id === cfgLoja().vendedor ? LOJA?.vendedora?.pos : p.id === 'teo' ? FLIPER?.teo || FLIPER?.balcao : null);
+  const xy = (v) => (Array.isArray(v) ? v : v && Number.isFinite(v.x) ? [v.x, v.y] : null);
+  const posNoInterior = (p) => xy(p.id === cfgLoja().vendedor ? LOJA?.vendedora?.pos : p.id === 'teo' ? FLIPER?.teo || FLIPER?.balcao : null);
   const lista = n === 'loja' || n === 'fliperama'
     ? NPCS.filter(p => p.interior === n).map(p => { const pos = posNoInterior(p); return pos ? { ...p, x: pos[0], y: pos[1] } : p; })
     : NPCS.filter(p => p.mapa === n && !p.interior);
@@ -5794,7 +5811,8 @@ function destacarPessoa(id) {
   const el = document.createElement('div');
   el.className = 'jr-pessoa-destaque';
   el.textContent = '⬇';
-  Object.assign(el.style, { left: o.p.x + 'px', top: (o.p.y - o.alt - (o.temIcone ? 20 : 4) * ESCALA_ATORES) + 'px', fontSize: 20 * ESCALA_ATORES + 'px' });
+  const ea = escalaAtoresCena();
+  Object.assign(el.style, { left: o.p.x + 'px', top: (o.p.y - o.alt - (o.temIcone ? 20 : 4) * ea) + 'px', fontSize: 20 * ea + 'px' });
   $('cena-atores').appendChild(el);
   destaque = { id, el, timer: setTimeout(tirarDestaque, 8000) };
 }
@@ -5810,7 +5828,7 @@ function posicionarPessoa(o) {
   const { p, img, sombra, icone, alt, larg } = o;
   Object.assign(img.style, { left: p.x + 'px', top: p.y + 'px', height: alt + 'px', zIndex: Math.round(p.y) });
   Object.assign(sombra.style, { left: p.x + 'px', top: p.y + 'px', width: larg * 1.1 + 'px', height: larg * 0.32 + 'px', zIndex: Math.round(p.y) - 1 });
-  if (icone) Object.assign(icone.style, { left: p.x + 'px', top: (p.y - alt - 2 * ESCALA_ATORES) + 'px', fontSize: 18 * ESCALA_ATORES + 'px' });
+  if (icone) Object.assign(icone.style, { left: p.x + 'px', top: (p.y - alt - 2 * escalaAtoresCena()) + 'px', fontSize: 18 * escalaAtoresCena() + 'px' });
 }
 
 // Pisca 150 ms a cada 3–6 s (às vezes duas vezes seguidas)
@@ -5844,7 +5862,7 @@ function atualizarIconesPessoas() {
 function pessoaEm(pt) {
   let melhor = null, md = Infinity;
   for (const o of pessoasMapa) {
-    const folga = 8 * ESCALA_ATORES;
+    const folga = 8 * escalaAtoresCena();
     if (Math.abs(pt.x - o.p.x) > o.larg / 2 + folga || pt.y < o.p.y - o.alt - folga || pt.y > o.p.y + folga) continue;
     const d = Math.abs(pt.x - o.p.x) + Math.abs(pt.y - o.p.y);
     if (d < md) { md = d; melhor = o; }
@@ -5856,11 +5874,12 @@ function pessoaEm(pt) {
 function irFalarCom(o) {
   if (perguntaAberta || transicionando || sobreposicaoAberta()) return;
   fecharBalaoPessoa();
-  if (dist(jog.x, jog.y, o.p.x, o.p.y) <= PESSOA_PERTO) { falarCom(o); return; }
+  if (dist(jog.x, jog.y, o.p.x, o.p.y) <= PESSOA_PERTO * escalaAtoresCena() / ESCALA_ATORES) { falarCom(o); return; }
   const lado = jog.x < o.p.x ? -1 : 1;
   destinoEspecial = null;
   if (ehLoja() && o.p.id === cfgLoja().vendedor && LOJA?.vendedora?.ponto) { caminharNaTrilha(...LOJA.vendedora.ponto, () => falarCom(o)); return; }   // vai até o balcão
-  caminharNaTrilha(o.p.x + lado * (o.larg / 2 + 16 * ESCALA_ATORES), o.p.y, () => falarCom(o));
+  if (o.p.id === 'teo' && FLIPER?.teo?.ponto) { caminharNaTrilha(...FLIPER.teo.ponto, () => falarCom(o)); return; }   // lado de fora do balcão
+  caminharNaTrilha(o.p.x + lado * (o.larg / 2 + 16 * escalaAtoresCena()), o.p.y, () => falarCom(o));
   if (!jog.caminho.length && !jog.aoChegar) falarCom(o);   // sem caminho (não deveria acontecer): fala mesmo assim
 }
 
@@ -5900,7 +5919,7 @@ function posicionarBalaoPessoa() {
   if (!balaoPessoa) return;
   const { o } = balaoPessoa;
   const el = $('pessoa-balao');
-  const topo = o.p.y - o.alt - (o.temIcone ? 18 : 4) * ESCALA_ATORES;
+  const topo = o.p.y - o.alt - (o.temIcone ? 18 : 4) * escalaAtoresCena();
   const cabeca = imagemParaTela(o.p.x, topo);
   const embaixo = cabeca.y < el.offsetHeight + 64;   // perto do topo (HUD): abre embaixo da pessoa, bico para cima
   el.classList.toggle('embaixo', embaixo);
