@@ -154,6 +154,7 @@ export async function abrirTela(cfg) {
   // grade e pets
   montarGrade();
   if (cfg.fimEm) relogio();
+  if (document.documentElement.classList.contains('jr-girado')) msg('📱 Para programar, segure o celular em pé.', 'aviso');   // a tela aparece sem girar
   setTimeout(() => B.svgResize(ws), 50);
   return true;
 }
@@ -212,22 +213,72 @@ function criarPet(p, ini, quem) {
   g.appendChild(el);
   const img = el.querySelector('img');
   if (p?.pet) C.pintar(img, p);   // tinta do pet (o meu ou o do rival)
-  const pet = { el, img, p, ini, x: ini.x, y: ini.y, dir: ini.dir, anim: '', q: 0 };
+  const pet = { el, img, p, ini, x: ini.x, y: ini.y, dir: ini.dir, anim: '', q: 0, medida: null };
   posicionar(pet, true);
   pose(pet, 'parado');
+  const forma = p?.forma || p?.pet;
+  if (forma) medirDesenho(forma).then(m => { pet.medida = m; medirGrade(); });   // tamanho certo assim que medir o desenho
   return pet;
 }
+
+// ── Tamanho do pet na casa: mede o DESENHO (pixels visíveis), não o quadro ──
+// Cada quadro tem folga em volta (asas, pulos). Medimos a caixa dos pixels com alpha > 0 dos quadros de andar e do feliz e
+// usamos UMA escala para o pet todo: a maior em que todos cabem em 0,95 × 0,95 da casa (ele não muda de tamanho ao virar).
+const ANIMS_MEDIDA = ['andar_direita', 'andar_frente', 'andar_costas', 'feliz'];
+const CABE = 0.95;
+const caixas = new Map();   // src → Promise<{ x0, y0, x1, y1, w, h } em fração do quadro | null>
+function caixaDoQuadro(src) {
+  if (!caixas.has(src)) caixas.set(src, new Promise((ok) => {
+    const im = new Image();
+    im.onload = () => {
+      try {
+        const k = Math.min(1, 240 / im.naturalWidth), w = Math.max(1, Math.round(im.naturalWidth * k)), h = Math.max(1, Math.round(im.naturalHeight * k));
+        const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+        const ctx = cv.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(im, 0, 0, w, h);
+        const px = ctx.getImageData(0, 0, w, h).data;
+        let x0 = w, y0 = h, x1 = -1, y1 = -1;
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (px[(y * w + x) * 4 + 3] > 8) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+        ok(x1 < 0 ? null : { x0: x0 / w, y0: y0 / h, x1: (x1 + 1) / w, y1: (y1 + 1) / h, w: im.naturalWidth, h: im.naturalHeight });
+      } catch (_) { ok(null); }
+    };
+    im.onerror = () => ok(null);
+    im.src = src;
+  }));
+  return caixas.get(src);
+}
+// Medida do pet: { alt: altura da imagem em casas, baixo: folga vazia embaixo (fração do quadro) }
+const medidas = new Map();
+function medirDesenho(forma) {
+  if (!medidas.has(forma)) medidas.set(forma, (async () => {
+    const srcs = [...new Set(ANIMS_MEDIDA.flatMap(a => C.quadrosDe(forma, a)))];
+    const cs = (await Promise.all(srcs.map(caixaDoQuadro))).filter(Boolean);
+    if (!cs.length) return null;
+    // altura da imagem (em casas) para cada quadro caber: altura do desenho ≤ 0,95 e largura do desenho ≤ 0,95
+    const alt = Math.min(...cs.map(c => Math.min(CABE / (c.y1 - c.y0), CABE / ((c.x1 - c.x0) * c.w / c.h))));
+    const baixo = Math.min(...cs.map(c => 1 - c.y1));   // o pé mais baixo encosta na base da casa
+    return { alt, baixo };
+  })());
+  return medidas.get(forma);
+}
+
 function medirGrade() {
   if (!tela) return;
   const { F } = tela, cx = $('pg-grade-caixa').getBoundingClientRect();
+  if (cx.width < 10 || cx.height < 10) return;   // ainda sem tamanho (a tela acabou de aparecer)
   const s = Math.max(16, Math.floor(Math.min(cx.width / F.w, cx.height / F.h)));
   $('pg-grade').style.setProperty('--s', s + 'px');
   for (const pet of Object.values(tela.pets || {})) {
-    const forma = pet.p?.forma || pet.p?.pet;
-    pet.img.style.height = (s * 0.92 / (forma ? C.sentadoNoQuadro(forma) : 0.86)) + 'px';
+    const forma = pet.p?.forma || pet.p?.pet, m = pet.medida;
+    // sem a medida ainda: a conta antiga (o desenho sentado com ~0,9 da casa)
+    const h = m ? s * m.alt : s * 0.9 / (forma ? C.sentadoNoQuadro(forma) : 0.86);
+    pet.img.style.height = h + 'px';
+    pet.img.style.marginBottom = m ? -(h * m.baixo) + 'px' : '';   // desconta a folga vazia de baixo: o pé fica na base da casa
   }
 }
 window.addEventListener('resize', () => { if (tela) { medirGrade(); try { window.Blockly?.svgResize(ws); } catch (_) {} } });
+// a área da grade muda de tamanho (tela aparecendo, celular girando, mensagem de 2 linhas): mede de novo
+if (window.ResizeObserver) new ResizeObserver(() => { if (tela) medirGrade(); }).observe(document.getElementById('pg-grade-caixa') || document.body);
 
 function posicionar(pet, sem = false) {
   pet.el.style.transition = sem ? 'none' : '';

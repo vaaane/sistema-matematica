@@ -592,8 +592,7 @@
   },
   "dragao_azul_adulto": {
    "sentado_girando": [
-    "pets/dragao_azul_adulto/sentado_girando_1.webp",
-    "pets/dragao_azul_adulto/sentado_girando_2.webp"
+    "pets/dragao_azul_adulto/sentado_girando_1.webp"
    ],
    "sentado_2": [
     "pets/dragao_azul_adulto/sentado_2_1.webp"
@@ -661,8 +660,7 @@
     "pets/dragao_azul_adulto/ufa_1.webp"
    ],
    "comendo": [
-    "pets/dragao_azul_adulto/comendo_1.webp",
-    "pets/dragao_azul_adulto/comendo_2.webp"
+    "pets/dragao_azul_adulto/comendo_1.webp"
    ],
    "triste_fome": [
     "pets/dragao_azul_adulto/triste_fome_1.webp"
@@ -730,8 +728,7 @@
   },
   "dragao_vermelho_adulto": {
    "sentado_girando": [
-    "pets/dragao_vermelho_adulto/sentado_girando_1.webp",
-    "pets/dragao_vermelho_adulto/sentado_girando_2.webp"
+    "pets/dragao_vermelho_adulto/sentado_girando_1.webp"
    ],
    "sentado_2": [
     "pets/dragao_vermelho_adulto/sentado_2_1.webp"
@@ -799,8 +796,7 @@
     "pets/dragao_vermelho_adulto/ufa_1.webp"
    ],
    "comendo": [
-    "pets/dragao_vermelho_adulto/comendo_1.webp",
-    "pets/dragao_vermelho_adulto/comendo_2.webp"
+    "pets/dragao_vermelho_adulto/comendo_1.webp"
    ],
    "triste_fome": [
     "pets/dragao_vermelho_adulto/triste_fome_1.webp"

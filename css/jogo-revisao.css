@@ -2032,7 +2032,8 @@ html.jr-letra-grande .jr-fala:not(.completa) { -webkit-line-clamp: 4; line-clamp
 .pg-tela { position: fixed; inset: 0; z-index: 60; display: flex; gap: 8px; background: var(--jr-bg, #0d0f1a);
   padding: max(6px, var(--sa-t, 0px)) max(8px, var(--sa-r, 0px)) max(6px, var(--sa-b, 0px)) max(8px, var(--sa-l, 0px)); box-sizing: border-box; }
 .pg-esq { flex: 0 0 44%; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-.pg-dir { flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; border-radius: 12px; overflow: hidden; border: 1px solid rgba(124,92,252,.4); }
+.pg-dir { flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; border-radius: 12px; overflow: hidden; border: 1px solid rgba(124,92,252,.4);
+  isolation: isolate; }   /* os z-index do Blockly (flyout, toolbox) ficam presos aqui dentro */
 .pg-topo { display: flex; align-items: center; gap: 8px; }
 .pg-tit { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.1; }
 .pg-tit b { font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; color: var(--jr-ouro, #ffd700); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -2053,7 +2054,7 @@ html.jr-letra-grande .jr-fala:not(.completa) { -webkit-line-clamp: 4; line-clamp
   width: calc((1 - 2 * var(--m)) * var(--s)); height: calc((1 - 2 * var(--m)) * var(--s)); object-fit: contain; pointer-events: none; image-rendering: auto; }
 #jr-app img.pg-petisco { --m: .26; transition: transform .3s, opacity .3s; }
 #jr-app img.pg-petisco.pego { transform: translateY(-40%) scale(.4); opacity: 0; }
-.pg-pet-caixa { position: absolute; left: calc((var(--x) + .5) * var(--s)); top: calc((var(--y) + .94) * var(--s)); transform: translate(-50%, -100%);
+.pg-pet-caixa { position: absolute; left: calc((var(--x) + .5) * var(--s)); top: calc((var(--y) + .975) * var(--s)); transform: translate(-50%, -100%);
   transition: left .35s linear, top .35s linear; pointer-events: none; z-index: 2; display: flex; flex-direction: column; align-items: center; }
 .pg-pet-caixa.outro { z-index: 1; opacity: .92; }
 #jr-app img.pg-pet { display: block; width: auto; image-rendering: auto; filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
@@ -2075,12 +2076,12 @@ html.jr-letra-grande .jr-fala:not(.completa) { -webkit-line-clamp: 4; line-clamp
 .pg-rodape { padding: 4px 10px; font-family: 'Inter', sans-serif; font-size: 13px; color: #c9cde0; background: #161a2e; border-top: 1px solid rgba(124,92,252,.3); }
 .pg-rodape b { color: var(--jr-ouro, #ffd700); font-family: 'Orbitron', sans-serif; }
 .pg-rodape small { color: #a3a1c9; }
-.pg-trava { position: absolute; inset: 0; z-index: 5; background: rgba(13,15,26,.55); display: flex; align-items: center; justify-content: center;
+.pg-trava { position: absolute; inset: 0; z-index: 100; background: rgba(13,15,26,.55); display: flex; align-items: center; justify-content: center;
   font: 700 16px 'Inter', sans-serif; color: #fff; text-align: center; padding: 16px; }
-.pg-carregando { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 16px;
+.pg-carregando { position: absolute; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; text-align: center; padding: 16px;
   font: 600 14px 'Inter', sans-serif; color: #c9cde0; background: #11142a; }
 .pg-carregando[hidden] { display: none; }
-.pg-cartao { position: absolute; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; background: rgba(5,6,15,.7); padding: 16px; }
+.pg-cartao { position: absolute; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: rgba(5,6,15,.7); padding: 16px; }
 .pg-cartao-caixa { box-sizing: border-box; width: min(92vw, 440px); background: var(--jr-card); border: 2px solid var(--jr-ouro, #ffd700); border-radius: 16px; padding: 14px 16px;
   display: flex; flex-direction: column; gap: 8px; text-align: center; }
 .pg-cartao-caixa b { font: 700 20px 'Rajdhani', sans-serif; color: var(--jr-ouro, #ffd700); }
@@ -2090,6 +2091,10 @@ html.jr-letra-grande .jr-fala:not(.completa) { -webkit-line-clamp: 4; line-clamp
   .pg-tela { flex-direction: column; }
   .pg-esq { flex: 0 0 46%; }
 }
+/* Celular em pé: o jogo inteiro gira 90° (html.jr-girado), mas o Blockly não funciona dentro de algo girado (arrastar e
+   encaixar erram de lugar). Então o Programe o pet desfaz o giro e aparece em pé: o aluno segura o celular em pé para programar. */
+html.jr-girado #programe { inset: auto; top: 0; left: 0; width: 100vw; height: 100dvh; transform-origin: 0 0; transform: translateY(100vw) rotate(-90deg);
+  --sa-t: env(safe-area-inset-top, 0px); --sa-r: env(safe-area-inset-right, 0px); --sa-b: env(safe-area-inset-bottom, 0px); --sa-l: env(safe-area-inset-left, 0px); }
 /* lista de fases no computador do laboratório */
 .pg-caps { display: flex; flex-direction: column; gap: 8px; max-height: min(52dvh, 360px); overflow-y: auto; text-align: left; }
 .pg-cap b { font: 700 15px 'Rajdhani', sans-serif; color: #c9b8ff; }
