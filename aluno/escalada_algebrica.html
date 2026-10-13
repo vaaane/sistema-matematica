@@ -226,6 +226,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 
 <script type="module">
 import { requireAluno, clearSession, setSession, isModoTeste } from "/js/auth.js";
+import { avisarFimJogo } from "/js/embed.js";   // ?embed=1: dentro do Fliperama do Jogo de Revisão
 import { bimestreJogos, jogosEncerrados, bloquearJogoEncerrado, bonusEscalada, regrasJogo, campoHallJogo } from "/js/constants.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -515,6 +516,7 @@ function choose(i,el){
     el.classList.add('right');
     const _cat = OP2CAT[current.op] || 'mul';
     tiposAcertos[_cat] = (tiposAcertos[_cat]||0) + 1;   // acumula p/ "Operações praticadas"
+    avisarFimJogo({ jogo: 'escalada', pontos: nivelAtual, acertos: 1, erros: 0, resultado: 'acertou' });   // cada nível é uma partida
     setTimeout(()=>advance(),480);
   }else{
     el.classList.add('wrong');
@@ -523,6 +525,7 @@ function choose(i,el){
     totalErros++;
     tiposErros[_cat] = (tiposErros[_cat]||0) + 1;
     saveProg({nivel_atual:nivelAtual, melhor_nivel:melhorNivel});   // persiste o erro na hora (não só no acerto)
+    avisarFimJogo({ jogo: 'escalada', pontos: nivelAtual - 1, acertos: 0, erros: 1, resultado: 'errou' });
     setTimeout(()=>modalErro(),520);   // deixa o aluno ver verde/vermelho, então abre modal
   }
 }

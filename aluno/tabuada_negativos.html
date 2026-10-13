@@ -247,6 +247,7 @@
 
 <script type="module">
 import { getSession, renderSidebarAluno, renderSidebarProfessor, clearSession, isModoTeste } from "/js/auth.js";
+import { avisarFimJogo } from "/js/embed.js";   // ?embed=1: dentro do Fliperama do Jogo de Revisão
 import { bimestreJogos, jogosEncerrados, bloquearJogoEncerrado } from "/js/constants.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -530,6 +531,7 @@ async function carregarProgresso() {
 }
 
 async function salvarProgresso(resultado, nivelJogado) {
+  avisarFimJogo({ jogo: 'tabuada_negativa', pontos: nivelJogado, acertos, erros, resultado });
   if (_isReplay && !_isProfMode) return;
   const ts = Date.now();
   const novoMaiorCombo = Math.max(progresso.maior_combo || 0, comboSessao);

@@ -342,6 +342,7 @@
 
 <script type="module">
 import { getSession, renderSidebarAluno, renderSidebarProfessor, clearSession, isModoTeste, iniciarNotifDueloGlobal } from "/js/auth.js";
+import { avisarFimJogo } from "/js/embed.js";   // ?embed=1: dentro do Fliperama do Jogo de Revisão
 import { NIVEL_MAX, bimestreJogos, jogosEncerrados, bloquearJogoEncerrado, regrasJogo, campoHallJogo } from "/js/constants.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -762,6 +763,7 @@ function _atualizarPresenca() {
   set(ref(db, `tabuada_presenca/${uid}`), { nome: nomeAluno, turma, ts: Date.now() }).catch(() => {});
 }
 function _registrarSessao(nivel, resultado, acertosOverride, errosOverride) {
+  avisarFimJogo({ jogo: 'tabuada', pontos: nivel ?? nivelAtual, acertos: acertosOverride ?? acertos, erros: errosOverride ?? erros, resultado: resultado ?? null });
   if (_isProfMode) return;
   const ts = Date.now();
   if (_isModoTesteAtivo) {
