@@ -16,7 +16,7 @@ import { definirLoja, definirPeixes, lojaPronta, cfgLoja, comidas, tintas, efeit
 import { definirPesca, pescaPronta, cfgPesca, pontosDoMapa, spritePesca, pontaVara, sortearPeixe, entre, inteiroEntre,
   semanaPesca, semanaAnterior, criarBarrinha, passoBarrinha } from '/js/jogo-revisao/pesca.js';
 import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, tamanhoBusto, temBusto, bustoPet, preCarregarPet, PetSeguidor, PetParado,
-  temAnim, formaAdulta, formaValida, sentadoNoQuadro } from '/js/jogo-revisao/pets.js';
+  temAnim, formaAdulta, formaValida, sentadoNoQuadro, sortearOcioso } from '/js/jogo-revisao/pets.js';
 import { iniciarOnline, enviarOnline, sairOnline, ouvirMapa, ouvirTodos, onlineAtivo, VALIDADE_MS } from '/js/jogo-revisao/online.js';
 import { definirPedidos, pedidosProntos, cfgPedidos, pedidoDisponivel, moedasDoPedido, limiteDoDiaAtingido, dicaPedido, lerResposta } from '/js/jogo-revisao/pedidos.js';
 import { definirBatalhas, batalhasProntas, cfgBatalha, treinadores, treinador, tiposDeConta, gerarConta, vidaExtraLealdade, desafioDe, situacao, forca, dano, premios, depoisDaBatalha } from '/js/jogo-revisao/batalha.js';
@@ -553,6 +553,8 @@ export async function iniciarJogo(sess) {
   try {
     [PROG, LAB] = await Promise.all(['programe-o-pet.json', 'laboratorio.json'].map(f => fetch(`${DADOS}/${f}`).then(r => { if (!r.ok) throw new Error(f); return r.json(); })));
   } catch (e) { console.warn('[jogo-revisao] laboratório / Programe o pet indisponível', e); }
+  try { TRUQUES = await fetch(`${DADOS}/truques.json`).then(r => { if (!r.ok) throw new Error('truques.json'); return r.json(); }); }
+  catch (e) { console.warn('[jogo-revisao] truques indisponíveis', e); }
   try { MISSOES = await fetch(`${DADOS}/missoes.json`).then(r => { if (!r.ok) throw new Error('missoes.json'); return r.json(); }); }
   catch (e) { console.warn('[jogo-revisao] missões do dia indisponíveis', e); }
   try { EXPLIC = (await fetch(`${DADOS}/explicacoes.json`).then(r => { if (!r.ok) throw new Error('explicacoes.json'); return r.json(); })).explicacoes || {}; }
@@ -1060,6 +1062,7 @@ function verificarMarcosLealdade(pet = estado?.pets?.ativo) {
                   ['ajuda', cfg.lealdade_dica ?? 80, `💡 ${nomePet(pet)} agora pode te dar dicas nos ginásios!`],
                   ['eliminar', cfg.lealdade_eliminar ?? 95, `❌ ${nomePet(pet)} agora pode eliminar uma opção nos ginásios!`]];
   verificarEvolucao(pet);
+  avisarTruques(pet);
   const av = (estado.avisosPet[pet] ||= {});
   for (const [k, min, texto] of marcos) {
     if (av[k] || (Number(c.lealdade) || 0) < min) continue;
@@ -1151,20 +1154,22 @@ function fecharEvolucao() {
   $('pet-evolucao').hidden = true;
   aplicarForma(pet);
   seguidor?.reagir('rugido');
+  avisarTruques(pet);   // a lealdade de agora já pode ter liberado truques do adulto
 }
 
 // Avisos curtos no alto da tela, um depois do outro
 const filaAvisoPet = [];
-function avisoPet(texto, festa = false) {
-  filaAvisoPet.push({ texto, festa });
+function avisoPet(texto, festa = false, img = '') {
+  filaAvisoPet.push({ texto, festa, img });
   if (filaAvisoPet.length === 1) proximoAvisoPet();
 }
 function proximoAvisoPet() {
   const a = filaAvisoPet[0];
   if (!a) return;
   const el = document.createElement('div');
-  el.className = 'jr-aviso-seq jr-aviso-pet' + (a.festa ? ' festa' : '');
+  el.className = 'jr-aviso-seq jr-aviso-pet' + (a.festa ? ' festa' : '') + (a.img ? ' com-busto' : '');
   el.textContent = a.texto;
+  if (a.img) { const im = document.createElement('img'); im.src = a.img; im.alt = ''; im.draggable = false; el.prepend(im); }
   $('jr-app').appendChild(el);
   if (a.festa) tocar('vitoria');
   setTimeout(() => { el.remove(); filaAvisoPet.shift(); proximoAvisoPet(); }, 4200);
@@ -1200,7 +1205,7 @@ function abrirMeuPet() {
   img.dataset.src = '';
   mp.anim.definir(forma);
   medirMeuPet();
-  for (const id of ['mp-bolsa-painel', 'mp-visual-painel', 'mp-nomear']) $(id).hidden = true;
+  for (const id of ['mp-bolsa-painel', 'mp-visual-painel', 'mp-nomear', 'mp-truques-painel']) $(id).hidden = true;
   atualizarVisualPet();
   atualizarBotaoBatalhar();
   renderMeuPet();
@@ -1219,6 +1224,8 @@ function medirMeuPet() {
     h = Math.min(h * fatorForma(pet, forma), palco.clientWidth * 0.98 / DESENHO_NO_QUADRO * qh / qw);
   }
   $('mp-img').style.height = h + 'px';
+  $('mp-palco').classList.toggle('largo', forma !== pet);   // adulto: asas, comida e fogo podem passar da borda do palco
+  $('mp-truques').hidden = !truquesDe(pet);
 }
 
 function fecharMeuPet() {
@@ -1254,7 +1261,8 @@ function renderMeuPet() {
   // uma linha só: o próximo marco ainda não alcançado (os números são os do jogo: falas, dica, eliminar, cambalhota, amizade)
   // (dois marcos no mesmo número: vale o primeiro; o outro está no ⓘ)
   const marcos = [[lc, 'começa a conversar 💬'], [ld, 'dá dicas nos ginásios 💡'], [le, 'elimina uma opção nos ginásios ❌'],
-    [LEALDADE_CAMBALHOTA, 'aprende a cambalhota 🤸'], [100, 'começa a amizade ❤️']]
+    [LEALDADE_CAMBALHOTA, 'aprende a cambalhota 🤸'], [100, 'começa a amizade ❤️'],
+    ...(truquesDe(pet) || []).filter(t => t.lealdade > 0).map(t => [t.lealdade, `aprende o truque ${t.nome} ${t.emoji}`])]
     .filter(([v], i, t) => t.findIndex(([w]) => w === v) === i).sort((a, b) => a[0] - b[0]);
   const prox = marcos.find(([v]) => l < v);
   $('mp-marco').textContent = prox
@@ -1262,7 +1270,8 @@ function renderMeuPet() {
     : `Amizade ❤️ ${nivel} — faltam ${pp - Math.floor((Number(c.amizade) || 0) % pp)} para o próximo nível`;
   $('mp-info-balao').innerHTML = `<b>Como a lealdade sobe</b> Carinho (até ${CARINHOS_POR_DIA} por dia), comida e jogar todo dia. Ficando muitos dias sem jogar, ela cai um pouco.
     <b>Marcos</b> Com ${lc}, ${esc(nomePet(pet))} começa a conversar${LEALDADE_CAMBALHOTA === lc ? ' e aprende a cambalhota' : ''}.${LEALDADE_CAMBALHOTA !== lc ? ` Com ${LEALDADE_CAMBALHOTA}, aprende a cambalhota.` : ''} Com ${ld}, dá dicas nos ginásios; com ${le}, elimina uma opção.
-    Acima de 100, cada ${pp} pontos sobem um nível de amizade ❤️ (moldura de prata no 2, corações ao seguir no 3, moldura dourada no 5, coroa no 10).`;
+    Acima de 100, cada ${pp} pontos sobem um nível de amizade ❤️ (moldura de prata no 2, corações ao seguir no 3, moldura dourada no 5, coroa no 10).${truquesDe(pet) ? `
+    <b>Truques ✨</b> ${truquesDe(pet).map(t => `${t.emoji} ${esc(t.nome)} ${t.lealdade > 0 ? t.lealdade : '(desde o início)'}`).join(' · ')}.` : ''}`;
   $('mp-bolsa').innerHTML = `${imgItem(icone('bolsa'), '🎒', 'jr-ic-btn')} Bolsa (${Object.values(estado.pets.bolsa || {}).reduce((a, n) => a + (Number(n) || 0), 0)})`;
 }
 
@@ -1337,8 +1346,9 @@ function atualizarMeuPet(dt) {
   if (!mp) return;
   mp.anim.atualizar(dt);
   if (mp.estado === 'parado' && mp.anim.anim === 'sentado_girando' && mp.anim.ciclos >= 3)
-    mp.anim.tocar('sentado_2', () => { if (mp?.estado === 'parado') voltarAoNormal(); });   // a cada 3 ciclos, sentado_2
-  if (mp.estado === 'comendo' && mp.anim.ciclos >= 2) comemorar('feliz');                 // comendo 2 vezes, depois feliz
+    mp.anim.tocar(sortearOcioso(), () => { if (mp?.estado === 'parado') voltarAoNormal(); });   // a cada 3 ciclos: fareja, se lambe, descansa… (sem repetir)
+  // comendo 2 vezes, depois: o adulto lambe os beiços; os outros ficam felizes
+  if (mp.estado === 'comendo' && mp.anim.anim === 'comendo' && mp.anim.ciclos >= 2) comemorar(temAnim(mp.forma, 'lamber_beicos') ? 'lamber_beicos' : 'feliz', !temAnim(mp.forma, 'lamber_beicos'));
 }
 
 function comemorar(anim, pular = true) {
@@ -1701,7 +1711,8 @@ function darComida(id) {
   atualizarFomeSeguidor();
   renderMeuPet();
   mp.estado = 'comendo'; mp.ocupado = true;
-  mp.anim.tocar('comendo');
+  if (temAnim(mp.forma, 'assar_comida')) mp.anim.tocar('assar_comida', () => { if (mp?.estado === 'comendo') mp.anim.tocar('comendo'); });   // o dragão assa a comida antes
+  else mp.anim.tocar('comendo');
   movimentoCorpo('come');
   const ic = imgItem(item.imagem, item.emoji, 'jr-item-part', item.filtro);
   particulas([ic, '✨', ic, '✨'], 6);
@@ -5765,7 +5776,7 @@ function iniciarBatalha(id, origem = 'lista') {
   // fala de início (nível > 1: "Treinei muito…") e "Batalha!"
   const fala = d.nivel > 1 ? (t.fala_nivel_alto || sortear(FALAS_VOLTOU_FORTE)) : t.fala_inicio;
   btFala(fala, 2300);
-  btLater(() => { btBanner('Batalha!', '#f0a500'); btLater(btRodada, 1200); }, 2400);
+  btLater(() => { btBanner('Batalha!', '#f0a500'); btAbertura(); btLater(btRodada, 1200); }, 2400);
 }
 
 function limparBatalha() {
@@ -5810,13 +5821,20 @@ function btTocar(lado, nome, { loop = true, ms = 160, depois } = {}) {
 }
 const btParado = (lado) => btTocar(lado, 'andar_direita', { ms: 420 });
 const btForma = (lado) => (lado === 'L' ? bt.forma : bt.t.pet);
+const adultoNaBatalha = () => !!bt && bt.forma !== bt.pet && temAnim(bt.forma, 'rugido');
+// abertura do adulto: ruge; com o truque "Voo de fogo", voa e pousa
+function btAbertura() {
+  if (!adultoNaBatalha()) return;
+  if (truqueLiberado('voo_fogo', bt.pet) && temAnim(bt.forma, 'voo_fogo')) btTocar('L', 'voo_fogo', { loop: false, ms: 360, depois: () => btTocar('L', 'salto_pouso', { loop: false, ms: 140 }) });
+  else btTocar('L', 'rugido', { loop: false, ms: 260 });
+}
 
 // Ataque com fogo (pets com ataque_fogo): fica bravo ou ruge, abre a boca e o fogo sai na direção do adversário.
 // O lado R é desenhado espelhado (scaleX(-1)), então o fogo sai para a esquerda sozinho.
 async function btAtaqueFogo(de, para, crit, especial) {
-  const antes = Math.random() < 0.5 ? 'rugido' : 'bravo';
+  const antes = temAnim(btForma(de), 'prepara_fogo') ? 'prepara_fogo' : 'rugido';   // respira fundo antes do fogo
   btTocar(de, antes, { loop: false, ms: 260, depois: () => {} });
-  await btEsperar(antes === 'rugido' ? 620 : 480);
+  await btEsperar(700);
   if (!bt) return;
   btTocar(de, 'ataque_fogo', { loop: false, ms: 200, depois: () => {} });   // fica no último quadro (fogo) até btParado
   await btEsperar(200);
@@ -6072,14 +6090,21 @@ async function btFechar() {
       n = Math.round(n * (c.sequencia?.multiplicador_dano ?? 1.5));
       bt.seq = 0;
       btBanner('ATAQUE ESPECIAL!', '#ffd700');
-      btTocar('L', 'pulo_cambalhota', { loop: false, ms: 90 });
-      await btEsperar(Math.max(700, quadrosDe(bt.forma, 'pulo_cambalhota').length * 90 + 120));
+      if (adultoNaBatalha()) { btAbertura(); await btEsperar(1200); }   // adulto: ruge (ou voa, com o truque) no lugar da cambalhota
+      else {
+        btTocar('L', 'pulo_cambalhota', { loop: false, ms: 90 });
+        await btEsperar(Math.max(700, quadrosDe(bt.forma, 'pulo_cambalhota').length * 90 + 120));
+      }
       if (!bt) return;
       btSeq();
     }
-    const fogo = temAnim(btForma(l), 'ataque_fogo');
-    if (fogo) await btAtaqueFogo(l, o, critico, especial);   // dragão adulto: ruge e solta fogo pela boca
-    else {
+    const fogo = temAnim(btForma(l), 'ataque_fogo') && (l !== 'L' || truqueLiberado('cuspir_fogo', bt.pet));
+    if (fogo) await btAtaqueFogo(l, o, critico, especial);   // dragão adulto com "Cuspir fogo": prepara e solta fogo pela boca
+    else if (l === 'L' && adultoNaBatalha()) {   // adulto sem o truque: ruge e ataca do jeito de sempre
+      btTocar('L', 'rugido', { loop: false, ms: 220, depois: () => {} });
+      await btEsperar(560);
+      await btProjetil(l, o, pet, critico, especial);
+    } else {
       btTocar(l, 'correndo', { loop: false, ms: 110 });
       await btBote(l);
       await btProjetil(l, o, pet, critico, especial);
@@ -6104,7 +6129,10 @@ function btFim() {
   const venceu = hp.L > hp.R || (hp.L === hp.R && tempoTot.L <= tempoTot.R);
   const v = venceu ? 'L' : 'R', q = venceu ? 'R' : 'L';
   bt.fim = true;
-  btTocar(v, 'orgulhoso', { ms: 130 }); btTocar(q, 'triste_fome', { ms: 420 }); btConfete(v);   // sem `orgulhoso`: feliz (reserva)
+  if (v === 'L' && adultoNaBatalha()) {   // adulto: orgulhoso (ufa, se venceu com pouca vida) e depois o rugido sentado
+    btTocar('L', hp.L <= bt.max.L * 0.25 ? 'ufa' : 'orgulhoso', { loop: false, ms: 1000, depois: () => btTocar('L', 'rugido_sentado', { ms: 600 }) });
+  } else btTocar(v, 'orgulhoso', { ms: 130 });   // sem `orgulhoso`: feliz (reserva)
+  btTocar(q, 'triste_fome', { ms: 420 }); btConfete(v);
   btFala(venceu ? bt.t.fala_perdeu : bt.t.fala_venceu, 0);
   tocar(venceu ? 'vitoria' : 'erro');
   const pr = registrarBatalha(venceu ? 'venceu' : 'perdeu');
@@ -6834,7 +6862,7 @@ function desenharBolinhas() {
 // Acerto: pet feliz e adversário treme; erro: pet confuso (quem não tem `confuso`: triste) uma vez
 function reagirArena(certo) {
   if (pgPet) {
-    if (certo) pgPet.tocar('feliz');
+    if (certo) pgPet.tocar(temAnim(pgPet.pet, 'animado') && Math.random() < 0.5 ? 'animado' : 'feliz');
     else if (temAnim(pgPet.pet, 'confuso')) pgPet.tocar('confuso');
     else { pgPet.tocar('triste_fome'); setTimeout(() => { if (pgPet?.anim === 'triste_fome') pgPet.tocar('sentado_girando'); }, 1400); }
   }
@@ -7202,7 +7230,12 @@ function vencer() {
   $('perg-continuar').hidden = false;
   pg.aoContinuar = () => {
     fecharPergunta();
-    if (ganhou) { mostrarInsigniaGanha(chave, ganhou === 'dourada'); seguidor?.reagir('feliz'); }
+    if (ganhou) {
+      mostrarInsigniaGanha(chave, ganhou === 'dourada');
+      seguidor?.reagir('animado');
+      const pa = estado.pets.ativo, fa = pa && formaDe(pa);
+      if (fa && temAnim(fa, 'busto_fogo')) setTimeout(() => avisoPet(`🔥 ${nomePet(pa)} está orgulhoso da insígnia!`, true, quadrosDe(fa, 'busto_fogo')[0]), 2600);
+    }
     else { seguidor?.reagir('feliz'); mostrarAvisoSequencia(); surgirPetSePendente(); }
   };
 }
@@ -7837,6 +7870,75 @@ function renderMissoes() {
 }
 
 // ============================================================
+//  ✨ TRUQUES (PROMPT-51) — dados/jogo/truques.json, por forma do pet (um texto no lugar da lista = usa a lista daquela forma).
+//  Liberam com a lealdade do pet; só para brincar (não dão moedas nem lealdade). Avisos de "aprendeu" uma vez por truque
+//  (pets/conquistados/{pet}/truques_vistos). Na batalha: "cuspir_fogo" libera o ataque de fogo e "voo_fogo" a abertura voando.
+// ============================================================
+let TRUQUES = {};
+function truquesDe(pet) {
+  if (!pet) return null;
+  let l = TRUQUES?.[formaDe(pet)];
+  if (typeof l === 'string') l = TRUQUES[l];
+  return Array.isArray(l) && l.length ? l : null;
+}
+const lealdadeDe = (pet) => Number(cuidadosDe(pet)?.lealdade) || 0;
+const truqueLiberado = (id, pet = estado?.pets?.ativo) => { const t = truquesDe(pet)?.find(x => x.id === id); return !!t && lealdadeDe(pet) >= t.lealdade; };
+
+// a lealdade alcançou um truque: avisa uma vez (os de lealdade 0 e vários de uma vez: um aviso só)
+function avisarTruques(pet) {
+  const c = pet && cuidadosDe(pet), lista = truquesDe(pet);
+  if (!c || !lista) return;
+  const novos = lista.filter(t => !c.truques_vistos?.[t.id] && lealdadeDe(pet) >= t.lealdade);
+  if (!novos.length) return;
+  c.truques_vistos = { ...(c.truques_vistos || {}) };
+  const patch = {};
+  for (const t of novos) { c.truques_vistos[t.id] = true; patch[`pets/conquistados/${pet}/truques_vistos/${t.id}`] = true; }
+  gravar(patch);
+  const comAviso = novos.filter(t => t.lealdade > 0);
+  if (comAviso.length === 1) avisoPet(`${comAviso[0].emoji} ${nomePet(pet)} aprendeu um truque: ${comAviso[0].nome}! Veja em ✨ Truques.`, true);
+  else if (comAviso.length > 1) avisoPet(`✨ ${nomePet(pet)} aprendeu ${comAviso.length} truques! Veja em ✨ Truques.`, true);
+}
+
+function abrirTruques() {
+  if (!mp || !truquesDe(mp.pet)) return;
+  const l = lealdadeDe(mp.pet);
+  $('mp-truques-lista').innerHTML = truquesDe(mp.pet).map(t => {
+    const ok = l >= t.lealdade;
+    return `<button class="mp-truque${ok ? '' : ' bloqueado'}" data-truque="${esc(t.id)}"${ok ? '' : ' disabled'}><span class="mp-truque-emoji">${ok ? t.emoji : '🔒'}</span>
+      <b>${esc(t.nome)}</b>${ok ? '' : `<small>Lealdade ${t.lealdade}</small>`}</button>`;
+  }).join('');
+  $('mp-truques-painel').hidden = false;
+}
+
+// O pet faz as animações do truque, uma depois da outra; busto_fogo aparece no balão
+function fazerTruque(id) {
+  const t = truquesDe(mp?.pet)?.find(x => x.id === id);
+  if (!mp || !t || mp.ocupado || !truqueLiberado(id, mp.pet)) return;
+  $('mp-truques-painel').hidden = true;   // fecha a lista para ver o pet
+  mp.estado = 'truque'; mp.ocupado = true;
+  movimentoCorpo(null);
+  const anims = t.anims.filter(a => a === 'busto_fogo' || temAnim(mp.forma, a));
+  let i = 0, guarda = 0;
+  const proximo = () => {
+    clearTimeout(guarda);
+    if (!mp || mp.estado !== 'truque') return;
+    if (i >= anims.length) { voltarAoNormal(); return; }
+    const a = anims[i++];
+    if (a === 'busto_fogo') {   // o busto de fogo no balão do pet
+      const b = $('mp-balao');
+      b.innerHTML = `<img class="mp-balao-busto" src="${quadrosDe(mp.forma, 'busto_fogo')[0]}" alt="" draggable="false"/>${esc(nomePet(mp.pet))}!`;
+      b.hidden = false;
+      clearTimeout(mp.timerBalao); mp.timerBalao = setTimeout(() => { b.hidden = true; }, 2200);
+      guarda = setTimeout(proximo, 1600);
+      return;
+    }
+    mp.anim.tocar(a, proximo);
+    guarda = setTimeout(proximo, 4000);   // reserva: animação que repete não chama o fim
+  };
+  proximo();
+}
+
+// ============================================================
 //  📖 RELEMBRE — explicação curta de cada ginásio (dados/jogo/explicacoes.json: titulo, regra, exemplo, dica).
 //  Não conta tempo nem tentativa. Registro em relembre/{ginásio}: visto (já apareceu na entrada), ocultar
 //  ("não mostrar de novo"), aberturas (vezes que o aluno ABRIU: 📖, erro, batalha, insígnia) e ultima.
@@ -8015,7 +8117,9 @@ function ligarEventos() {
     darComida(id);
   });
   $('mp-visual-painel').addEventListener('click', escolherVisual);
-  for (const id of ['mp-bolsa-fechar', 'mp-visual-fechar', 'mp-nome-cancelar']) $(id).addEventListener('click', (e) => { e.stopPropagation(); e.target.closest('.mp-sub').hidden = true; });
+  $('mp-truques').addEventListener('click', abrirTruques);
+  $('mp-truques-lista').addEventListener('click', (e) => { const b = e.target.closest('[data-truque]'); if (b && !b.disabled) fazerTruque(b.dataset.truque); });
+  for (const id of ['mp-bolsa-fechar', 'mp-visual-fechar', 'mp-nome-cancelar', 'mp-truques-fechar']) $(id).addEventListener('click', (e) => { e.stopPropagation(); e.target.closest('.mp-sub').hidden = true; });
   $('mp-nome-salvar').addEventListener('click', () => salvarNomePet());
   $('mp-nome-padrao').addEventListener('click', () => salvarNomePet(true));
   $('mp-nome-input').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') salvarNomePet(); if (e.key === 'Escape') $('mp-nomear').hidden = true; });

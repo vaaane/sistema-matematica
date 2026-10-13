@@ -2102,3 +2102,18 @@ html.jr-letra-grande .jr-fala:not(.completa) { -webkit-line-clamp: 4; line-clamp
 .mq-como { display: flex; flex-direction: column; gap: 8px; text-align: left; font-family: 'Inter', sans-serif; font-size: calc(14px * var(--letra, 1)); line-height: 1.4; color: #e3e5f0; }
 .mq-como p { margin: 0; }
 
+/* ✨ Truques (PROMPT-51) e o palco do adulto (asas, comida e fogo podem passar da borda) */
+.jr-mp-palco.largo { overflow: visible; z-index: 2; }
+.jr-mp-caixa:has(.jr-mp-palco.largo) { overflow: visible; }
+.mp-truques { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+.mp-truque { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px; border-radius: 12px; cursor: pointer;
+  background: rgba(124,92,252,.2); border: 1px solid rgba(201,184,255,.5); color: #fff; font-family: 'Inter', sans-serif; }
+.mp-truque b { font-size: 13px; line-height: 1.2; text-align: center; }
+.mp-truque small { font-size: 11px; color: #ffd27a; }
+.mp-truque-emoji { font-size: 24px; line-height: 1; }
+.mp-truque.bloqueado { opacity: .5; cursor: default; background: rgba(13,15,26,.5); border-style: dashed; }
+.mp-truque:not(.bloqueado):active { transform: scale(.96); }
+#jr-app img.mp-balao-busto { display: block; width: 72px; height: auto; margin: 0 auto 4px; image-rendering: auto; }
+.jr-aviso-pet.com-busto { display: flex; align-items: center; gap: 10px; }
+#jr-app .jr-aviso-pet.com-busto img { width: 54px; height: auto; flex: none; image-rendering: auto; }
+
