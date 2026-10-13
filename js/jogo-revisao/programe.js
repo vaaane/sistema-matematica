@@ -137,6 +137,8 @@ export async function abrirTela(cfg) {
   $('pg-pronto').hidden = !corrida;
   $('pg-tempo').hidden = !cfg.fimEm;
   $('pg-trava').hidden = true;
+  $('pg-vitoria').hidden = true;
+  $('pg-exec').disabled = false; $('pg-pronto').disabled = false;   // um "Pronto!" anterior deixava os dois desabilitados
   // Blockly
   ws?.dispose();
   const tema = B.Theme.defineTheme('jr-pg', { base: B.Themes.Classic, componentStyles: {
@@ -162,7 +164,8 @@ export async function abrirTela(cfg) {
 export function fecharTela(silencioso = false) {
   if (!tela && silencioso) { $('programe').hidden = true; return; }
   const cfg = tela?.cfg;
-  if (tela) { tela.parar = true; tela.timers.forEach(clearTimeout); cancelAnimationFrame(tela.raf); clearInterval(tela.anim); }
+  if (tela) { tela.parar = true; tela.timers.forEach(clearTimeout); cancelAnimationFrame(tela.raf); clearInterval(tela.anim); clearInterval(tela.animCartao); }
+  $('pg-vitoria').hidden = true;
   tela = null;
   try { ws?.dispose(); } catch (_) {}
   ws = null;
@@ -350,7 +353,7 @@ function bolha(pet, txt) {
 async function executarPrograma() {
   if (!tela || tela.rodando || tela.pronto) return;
   const prog = astDe(), nb = contarBlocos(prog), cfg = tela.cfg;
-  if (!prog.corpo.length) { msg('Arraste blocos e encaixe embaixo de <b>🏁 quando executar</b>.', 'aviso'); return; }
+  if (!prog.corpo.length) { avisarSolto('Arraste os blocos e <b>encaixe embaixo de 🏁 quando executar</b> (o 🏁 está piscando).'); return; }
   voltarAoInicio();
   tela.rodando = true; tela.parar = false;
   $('pg-exec').disabled = true;
@@ -392,6 +395,7 @@ async function executarPrograma() {
   if (resultado?.motivo === 'longo') { msg('🔁 O programa não termina. Confira as repetições.', 'erro'); return; }
   const faltam = resultado?.faltam;
   msg(resultado?.naComida && faltam ? `Faltou pegar ${faltam === 1 ? '1 petisco' : faltam + ' petiscos'} 🐾 antes da comida.` : 'O programa acabou antes de chegar na comida. Falta caminho!', 'aviso');
+  if (blocosSoltos()) avisarSolto('Tem bloco solto: só conta o que está <b>encaixado embaixo de 🏁</b>.');
 }
 
 function pararPrograma() { if (tela?.rodando) tela.parar = true; }
@@ -408,19 +412,85 @@ function relogio() {
   const falta = Math.max(0, tela.cfg.fimEm() - C.agora());
   $('pg-tempo').textContent = tela.pronto ? '⏳ Esperando…' : `⏱ ${Math.ceil(falta / 1000)} s`;
   $('pg-tempo').classList.toggle('acabando', falta < 10000);
-  if (falta <= 0 && !tela.pronto) pronto();
+  if (falta <= 0 && !tela.pronto) pronto(true);
   tela.raf = requestAnimationFrame(relogio);
 }
-function pronto() {
+function pronto(acabouTempo = false) {
   if (!tela || tela.pronto) return;
+  const prog = astDe();
+  // apertou Pronto sem nada encaixado no 🏁: avisa em vez de mandar um programa vazio (com o tempo acabado, vai assim mesmo)
+  if (!acabouTempo && !prog.corpo.length) { avisarSolto('Encaixe pelo menos um bloco <b>embaixo de 🏁</b> antes do Pronto!'); return; }
   tela.parar = true;
   tela.pronto = true;
-  const prog = astDe();
   $('pg-trava').hidden = false;
   $('pg-pronto').disabled = true; $('pg-exec').disabled = true;
   msg('✅ Programa enviado! Esperando o resultado…', 'ok');
   voltarAoInicio();
   tela.cfg.aoPronto?.(prog, xmlDe());
+}
+
+// ── Bloco solto: o 🏁 pisca e a mensagem fica em destaque ──
+const blocosSoltos = () => (ws ? ws.getTopBlocks(false).filter(b => b.type !== 'pg_inicio' && b.type !== 'pg_f1_def').length : 0);
+function avisarSolto(html) {
+  msg(html, 'aviso destaque');
+  const g = ws?.getBlocksByType('pg_inicio', false)[0]?.getSvgRoot();
+  if (!g) return;
+  g.classList.remove('pg-pisca');
+  requestAnimationFrame(() => g.classList.add('pg-pisca'));
+  clearTimeout(tela?.tPisca);
+  if (tela) tela.tPisca = setTimeout(() => g.classList.remove('pg-pisca'), 3800);
+}
+
+// ── Cartão de vitória / resultado (por cima da grade e dos blocos) ──
+// { titulo, estrelas (0–3 ou null), info (html), botoes: [{ id, texto, classe }], anims (sequência do pet), confete }
+// → Promise com o id do botão tocado (null se a tela fechar antes)
+const semMov = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+export function mostrarCartao({ titulo, estrelas = null, info = '', botoes = [], anims = null, confete = true }) {
+  return new Promise((ok) => {
+    if (!tela) { ok(null); return; }
+    const p = C.pet(), forma = p?.forma || p?.pet;
+    $('pg-vit-tit').textContent = titulo;
+    $('pg-vit-estrelas').innerHTML = estrelas == null ? '' : [0, 1, 2].map(i => `<span style="animation-delay:${(0.3 + i * 0.4).toFixed(1)}s">${i < estrelas ? '⭐' : '☆'}</span>`).join('');
+    $('pg-vit-info').innerHTML = info;
+    $('pg-vit-botoes').innerHTML = botoes.map(b => `<button class="jr-btn ${b.classe || ''}" data-vit="${b.id}">${b.texto}</button>`).join('');
+    const img = $('pg-vit-pet');
+    img.hidden = !forma;
+    // comemorar: adulto animado → orgulhoso; filhote cambalhota (ou feliz). A reserva do sprites.json cobre quem não tem.
+    if (forma) { C.pintar(img, p); animarPetCartao(img, forma, anims || (forma !== p.pet ? ['animado', 'orgulhoso'] : C.temAnim(forma, 'pulo_cambalhota') ? ['pulo_cambalhota'] : ['feliz'])); }
+    $('pg-vit-confete').innerHTML = '';
+    if (confete && !semMov()) soltarConfete();
+    $('pg-vitoria').hidden = false;
+    const el = $('pg-vit-botoes');
+    const clique = (e) => {
+      const b = e.target.closest('[data-vit]');
+      if (!b) return;
+      el.removeEventListener('click', clique);
+      $('pg-vitoria').hidden = true;
+      if (tela) clearInterval(tela.animCartao);
+      ok(b.dataset.vit);
+    };
+    el.addEventListener('click', clique);
+  });
+}
+function animarPetCartao(img, forma, anims) {
+  clearInterval(tela.animCartao);
+  const passo = 180, seq = [];
+  for (const a of anims) { const q = C.quadrosDe(forma, a); const n = Math.max(q.length, Math.ceil(900 / passo)); for (let i = 0; i < n; i++) seq.push(q[i % q.length]); }
+  const ultimo = C.quadrosDe(forma, anims[anims.length - 1]);
+  if (semMov() || !seq.length) { img.src = ultimo[0] || seq[0] || ''; return; }
+  let i = 0;
+  img.src = seq[0];
+  tela.animCartao = setInterval(() => { i++; img.src = i < seq.length ? seq[i] : ultimo[(i - seq.length) % ultimo.length]; }, passo);
+}
+function soltarConfete() {
+  const c = $('pg-vit-confete'), simb = ['🎉', '✨', '⭐', '🎊'];
+  for (let i = 0; i < 22; i++) {
+    const s = document.createElement('span');
+    s.textContent = simb[i % simb.length];
+    s.style.left = Math.random() * 100 + '%';
+    s.style.animationDelay = (Math.random() * 0.8).toFixed(2) + 's';
+    c.appendChild(s);
+  }
 }
 
 // Mostra a corrida: eventos de cada lado (de resultadoCorrida), no mesmo ritmo (cada ação = 1 tique; bater = +5)

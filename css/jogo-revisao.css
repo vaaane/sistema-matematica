@@ -2122,3 +2122,28 @@ html.jr-girado #programe { inset: auto; top: 0; left: 0; width: 100vw; height: 1
 .jr-aviso-pet.com-busto { display: flex; align-items: center; gap: 10px; }
 #jr-app .jr-aviso-pet.com-busto img { width: 54px; height: auto; flex: none; image-rendering: auto; }
 
+/* 🎉 Cartão de vitória / resultado do Programe o pet (PROMPT-53): por cima da grade e dos blocos */
+.pg-vitoria { position: absolute; inset: 0; z-index: 110; display: flex; align-items: center; justify-content: center; background: rgba(5,6,15,.78); padding: 10px; overflow: hidden; }
+.pg-vit-caixa { position: relative; box-sizing: border-box; width: min(94vw, 560px); max-height: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: var(--jr-card); border: 2px solid var(--jr-ouro, #ffd700); border-radius: 18px; padding: 12px 16px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,.6); }
+.pg-vit-tit { font: 700 24px 'Rajdhani', sans-serif; color: var(--jr-ouro, #ffd700); line-height: 1.1; }
+#jr-app img.pg-vit-pet { display: block; height: min(50dvh, 46vh); max-width: 100%; object-fit: contain; image-rendering: auto; filter: drop-shadow(0 4px 6px rgba(0,0,0,.45)); }
+html.jr-girado #jr-app img.pg-vit-pet { height: min(34dvh, 300px); }
+.pg-vit-estrelas { font-size: 34px; letter-spacing: 4px; min-height: 1.1em; }
+.pg-vit-estrelas span { display: inline-block; }
+@media (prefers-reduced-motion: no-preference) { .pg-vit-estrelas span { animation: pg-estrela .45s cubic-bezier(.2,1.6,.4,1) both; } }
+@keyframes pg-estrela { from { transform: scale(0) rotate(-40deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.pg-vit-info { font: 600 calc(15px * var(--letra, 1)) 'Inter', sans-serif; color: #e3e5f0; line-height: 1.35; }
+.pg-vit-info b { color: var(--jr-ouro, #ffd700); }
+.pg-vit-info .dica { color: #ffd27a; font-size: calc(13px * var(--letra, 1)); }
+.pg-vit-botoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 4px; }
+.pg-vit-botoes .jr-btn { min-height: 48px; padding: 6px 18px; font-size: 17px; }
+.pg-vit-confete { position: absolute; inset: 0; pointer-events: none; }
+.pg-vit-confete span { position: absolute; top: -8%; font-size: 22px; animation: pg-confete 2.4s linear forwards; }
+@keyframes pg-confete { to { transform: translateY(115vh) rotate(540deg); opacity: .2; } }
+@media (prefers-reduced-motion: reduce) { .pg-vit-confete { display: none; } }
+/* bloco solto: o 🏁 pisca e a mensagem fica em destaque */
+.pg-tela .pg-pisca .blocklyPath { animation: pg-pisca .45s ease-in-out 8 alternate; }
+@keyframes pg-pisca { to { stroke: #ffd700; stroke-width: 5px; } }
+.pg-msg.destaque { font-size: calc(17px * var(--letra, 1)); background: rgba(255,210,122,.14); border: 1px solid rgba(255,210,122,.6); border-radius: 10px; padding: 4px 10px; }
+

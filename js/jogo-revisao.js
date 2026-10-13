@@ -26,7 +26,7 @@ import { definirPraca, pracaPronta, cfgPraca, cfgDesafio, frasesPraca, temaDoDes
 import { codigoValido, premioDoPodio, pontosDaResposta, TEMPO_RODADA_MS } from '/js/jogo-revisao/aovivo.js';
 import { baseAoVivo, criarSala, entrarNaSala, sairDaSala, responder as responderNaSala, ouvirSala, ouvirConviteTurma, Anfitriao, placar } from '/js/jogo-revisao/aovivo-sala.js';
 import { notaJogoRevisao, formatarNota, NOTA_MAX, PESO_INSIGNIAS, PESO_DOURADAS } from '/js/jogo-revisao/nota.js';
-import { configurarPrograme, ligarBotoesPrograme, abrirTela as abrirTelaPrograme, fecharTela as fecharTelaPrograme, mostrarCorrida, mensagemCorrida,
+import { configurarPrograme, ligarBotoesPrograme, abrirTela as abrirTelaPrograme, fecharTela as fecharTelaPrograme, mostrarCorrida, mensagemCorrida, mostrarCartao as cartaoPrograme,
   programaParaTexto, programaDeTexto } from '/js/jogo-revisao/programe.js';
 import { faseDoDia, faseDaCorrida, resultadoCorrida } from '/js/jogo-revisao/programe-logica.js';
 
@@ -508,7 +508,8 @@ export async function iniciarJogo(sess) {
   modoDev = new URLSearchParams(location.search).get('dev') === '1' && isModoTeste();
   // só para a professora testar pelo console (?dev=1 no modo teste): jogoRevisaoDev.somarTurma('ZZ_DEV', 'insignias')
   if (modoDev) window.jogoRevisaoDev = { somarTurma, batalha: () => bt, pesca: () => pesca,   // batalha/pesca em andamento (testes)
-    praca: () => abrirPraca(), laboratorio: () => abrirLaboratorio(), computador: (id) => abrirComputador(id), fantasma: () => abrirFantasma(), fase: (n) => abrirFasePrograme(n), escolherPet: (p) => escolherPet(p) };
+    praca: () => abrirPraca(), laboratorio: () => abrirLaboratorio(), computador: (id) => abrirComputador(id), fantasma: () => abrirFantasma(), fase: (n) => abrirFasePrograme(n), escolherPet: (p) => escolherPet(p),
+    desafiar: (uid, modo) => desafiarColega(colegas.get(uid), modo), colegas: () => [...colegas.keys()] };
 
   try {
     const pegar = (p) => fetch(`${DADOS}/${p}`).then(r => { if (!r.ok) throw new Error(p); return r.json(); });
@@ -4297,6 +4298,9 @@ function iniciarPraca() {
 }
 
 // Cartão do colega na praça: ⚔️ Desafiar (com aviso quando não vale prêmio)
+// Transação no estado do desafio: convite → novo. Quem recebeu o convite ainda não tem o desafio no aparelho, e a transação começa
+// com null; devolver null (e não undefined, que cancela) faz o Firebase buscar o valor real no servidor e repetir a conta.
+const deConvitePara = (novo) => (cur) => (cur === null ? null : cur === 'convite' ? novo : undefined);
 function podeDesafiar() { return ehPraca() && desafiosLigados() && onlineAtivo() && !duelo && carregouProgresso; }
 // ⚔️ no cartão do colega: Contas (o desafio de sempre) ou Corrida de programação (PROMPT-50)
 function escolherModoDesafio(c) {
@@ -4335,7 +4339,7 @@ async function desafiarColega(c, modo = 'contas') {
   ouvirDuelo(id, true);
   duelo.timers.push(setTimeout(async () => {   // ninguém respondeu: expira
     if (duelo?.id !== id || duelo.d?.estado !== 'convite') return;
-    try { await runTransaction(ref(db, `${base}/duelos/${id}/estado`), (cur) => (cur === 'convite' ? 'expirou' : undefined)); } catch (_) {}
+    try { await runTransaction(ref(db, `${base}/duelos/${id}/estado`), deConvitePara('expirou')); } catch (_) {}
   }, (C.convite_expira_s ?? 20) * 1000 + 800));
 }
 
@@ -4346,7 +4350,7 @@ async function receberConvite(cv) {
   const idade = agoraServ() - (Number(cv.ts) || 0);
   if (idade > exp || idade < -5000) { remove(ref(db, `${basePraca()}/convites/${sessao.uid}`)).catch(() => {}); return; }
   if (!ehPraca() || duelo || !desafiosLigados()) {
-    try { await runTransaction(ref(db, `${basePraca()}/duelos/${cv.id}/estado`), (cur) => (cur === 'convite' ? 'ocupado' : undefined)); } catch (_) {}
+    try { await runTransaction(ref(db, `${basePraca()}/duelos/${cv.id}/estado`), deConvitePara('ocupado')); } catch (_) {}
     remove(ref(db, `${basePraca()}/convites/${sessao.uid}`)).catch(() => {});
     return;
   }
@@ -4375,15 +4379,15 @@ async function responderConvite(aceitar, expirou = false) {
   const base = basePraca();
   remove(ref(db, `${base}/convites/${sessao.uid}`)).catch(() => {});
   if (!aceitar) {
-    try { await runTransaction(ref(db, `${base}/duelos/${cv.id}/estado`), (cur) => (cur === 'convite' ? (expirou ? 'expirou' : 'recusado') : undefined)); } catch (_) {}
+    try { await runTransaction(ref(db, `${base}/duelos/${cv.id}/estado`), deConvitePara(expirou ? 'expirou' : 'recusado')); } catch (_) {}
     if (expirou) avisoPet('Fica para a próxima! ⚔️');
     return;
   }
   if (duelo || !ehPraca()) return;
   try {
     await update(ref(db, `${base}/duelos/${cv.id}/b`), { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), vencidos: vencidosMeus(), premio: cv.premio, ...dadosCorrida() });
-    const t = await runTransaction(ref(db, `${base}/duelos/${cv.id}/estado`), (cur) => (cur === 'convite' ? 'aceito' : undefined));
-    if (!t.committed) { avisoPet('O convite expirou. Fica para a próxima! ⚔️'); return; }
+    const t = await runTransaction(ref(db, `${base}/duelos/${cv.id}/estado`), deConvitePara('aceito'));
+    if (t.snapshot.val() !== 'aceito') { avisoPet('O convite expirou. Fica para a próxima! ⚔️'); return; }
   } catch (e) { console.warn('[jogo-revisao] aceitar desafio', e?.code || e); avisoPet('Não deu para aceitar agora.'); return; }
   ouvirDuelo(cv.id, false);
 }
@@ -7474,9 +7478,26 @@ function venceuFase(f, r) {
   if (nova && ps.ativo && cuidadosDe(ps.ativo)) ganharLealdade(ps.ativo, PROG.premios?.lealdade ?? PREMIO_PG.lealdade, patch);
   gravar(patch);
   publicarResumoPrograme();
-  if (moedas) avisoPet(`🤖 Fase ${f.id}: ${'⭐'.repeat(r.estrelas)} +${moedas} 🪙`, true);
+  cartaoVitoriaFase(f, r, moedas, nova);
+}
+
+// 🎉 Cartão de vitória: pet comemorando, estrelas, blocos, moedas e "Próxima fase ▶". Os avisos do pet vêm depois do cartão.
+async function cartaoVitoriaFase(f, r, moedas, nova) {
   const prox = fasesPg()[fasesPg().findIndex(x => x.id === f.id) + 1];
-  if (nova && prox && prox.cap !== f.cap) setTimeout(() => avisoPet(`🔓 Capítulo ${prox.cap} liberado: ${nomeCap(prox.cap)}!`, true), 1500);
+  const botoes = [];
+  if (prox) botoes.push({ id: 'proxima', texto: 'Próxima fase ▶', classe: 'jr-btn-ouro' });
+  if (r.estrelas < 3) botoes.push({ id: 'tentar', texto: '↺ Tentar com menos blocos', classe: 'jr-btn-sec' });
+  botoes.push({ id: 'fases', texto: '☰ Fases', classe: 'jr-btn-sec' });
+  const op = await cartaoPrograme({
+    titulo: `🎉 Fase ${f.id} concluída!`, estrelas: r.estrelas, botoes,
+    info: `<div>${r.blocos} blocos${moedas ? ` · <b>+${moedas} ${moedaHtml()}</b>` : ''}</div>` +
+      (r.estrelas < 3 ? `<div class="dica">Dá para fazer com ${f.meta_blocos} blocos ou menos!</div>` : '') +
+      (prox ? '' : '<div><b>🏆 Você terminou todas as fases!</b></div>'),
+  });
+  if (moedas) avisoPet(`🤖 Fase ${f.id}: ${'⭐'.repeat(r.estrelas)} +${moedas} 🪙`, true);
+  if (nova && prox && prox.cap !== f.cap) avisoPet(`🔓 Capítulo ${prox.cap} liberado: ${nomeCap(prox.cap)}!`, true);
+  if (op === 'proxima' && prox) abrirFasePrograme(prox.id);   // direto, sem passar pela lista (capítulo novo: o cartão do capítulo aparece)
+  else if (op === 'fases') fecharTelaPrograme();             // volta para a lista (aoFechar abre o computador)
 }
 
 // Resumo para os recordes da Lia: total de estrelas e de fases resolvidas
@@ -7528,10 +7549,15 @@ async function abrirDesafioDia() {
 }
 function venceuDia(hoje, r) {
   const ant = estado.programe.dia?.data === hoje ? estado.programe.dia : null;
-  if (ant && (r.blocos > ant.blocos || (r.blocos === ant.blocos && r.tempo_s >= ant.tempo_s))) { avisoPet(`Seu melhor hoje continua: ${ant.blocos} blocos.`); return; }
+  const melhor = !ant || r.blocos < ant.blocos || (r.blocos === ant.blocos && r.tempo_s < ant.tempo_s);
+  cartaoPrograme({
+    titulo: `📅 Desafio do dia: ${r.blocos} blocos em ${r.tempo_s} s`,
+    info: melhor ? '<div><b>É o seu melhor de hoje!</b> Veja o ranking no Mural.</div>' : `<div>Seu melhor hoje continua: <b>${ant.blocos} blocos</b> em ${ant.tempo_s} s.</div>`,
+    botoes: [{ id: 'tentar', texto: '↺ Tentar de novo', classe: 'jr-btn-ouro' }, { id: 'sair', texto: 'Sair', classe: 'jr-btn-sec' }],
+  }).then(op => { if (op === 'sair') fecharTelaPrograme(); });
+  if (!melhor) return;
   estado.programe.dia = { data: hoje, blocos: r.blocos, tempo_s: r.tempo_s, xml: r.xml };
   gravar({ 'programe/dia': estado.programe.dia });
-  avisoPet(`📅 Desafio do dia: ${r.blocos} blocos! Veja o ranking no Mural.`, true);
   if (!entraNoRanking() && !teste) return;
   set(ref(db, `${basePraca()}/programe/dia/${hoje}/${sessao.uid}`), { blocos: r.blocos, tempo_s: r.tempo_s, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), ts: Date.now() })
     .catch(e => console.warn('[jogo-revisao] ranking do Programe o pet', e?.code || e));
@@ -7561,6 +7587,7 @@ async function correrFantasma(hoje, f, prog, g) {
   if (res.vencedor === 'a') mensagemCorrida(meu != null ? `🏆 Você venceu o fantasma! Chegou em ${meu} passos.` : '🏆 Você terminou mais perto da comida!', 'ok');
   else if (res.vencedor === 'b') mensagemCorrida(`👻 O fantasma venceu desta vez${meu != null ? ` (você chegou em ${meu} passos)` : ''}. Tente de novo!`, 'erro');
   else mensagemCorrida('🤝 Empate com o fantasma!', 'aviso');
+  let virouFantasma = false;
   // ranking semanal: uma vitória contra o fantasma por dia conta
   if (res.vencedor === 'a' && g && estado.programe.fantasma_dia !== hoje) {
     estado.programe.fantasma_dia = hoje;
@@ -7572,9 +7599,19 @@ async function correrFantasma(hoje, f, prog, g) {
     const novo = { prog: programaParaTexto(prog), chegou: meu, nome: nomeRanking(), uid: sessao.uid, ...dadosCorrida(), ts: Date.now() };
     try {
       const t = await runTransaction(ref(db, caminhoFantasma(hoje)), (cur) => (!cur || meu < Number(cur.chegou) ? novo : undefined));
-      if (t.committed) avisoPet('👻 Agora você é o fantasma de hoje da turma!', true);
+      virouFantasma = t.committed;
     } catch (e) { console.warn('[jogo-revisao] fantasma', e?.code || e); }
   }
+  // cartão do resultado: venceu (pet comemorando), perdeu (pet triste) ou empate; passos de cada um
+  const passos = (lado) => (lado.chegou != null ? `${lado.chegou} passos` : `não chegou (faltaram ${lado.dist} casas)`);
+  const op = await cartaoPrograme({
+    titulo: res.vencedor === 'a' ? '🏆 Você venceu o fantasma!' : res.vencedor === 'b' ? '👻 O fantasma venceu desta vez' : '🤝 Empate!',
+    anims: res.vencedor === 'b' ? ['triste_fome'] : res.vencedor === 'a' ? null : ['feliz'], confete: res.vencedor === 'a',
+    info: `<div>Você: <b>${passos(res.a)}</b> · Fantasma: <b>${g ? passos(res.b) : 'parado'}</b></div>` + (virouFantasma ? '<div>👻 Agora você é o fantasma de hoje da turma!</div>' : ''),
+    botoes: [{ id: 'de_novo', texto: '🏁 Correr de novo', classe: 'jr-btn-ouro' }, { id: 'sair', texto: 'Sair', classe: 'jr-btn-sec' }],
+  });
+  if (op === 'de_novo') abrirFantasma();
+  else if (op === 'sair') fecharTelaPrograme();
 }
 function contarVitoriaCorrida() {
   if (!entraNoRanking() && !teste) return;
