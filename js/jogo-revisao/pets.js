@@ -50,6 +50,15 @@ export function preCarregarPet(pet) {
   for (const anim of Object.keys(SPR.pets[pet])) for (const u of quadrosDe(pet, anim)) { const i = new Image(); i.src = u; }
 }
 
+// Variações de quando o pet está parado (Meu Pet e seguidor no mapa). Quem não tem a animação cai na reserva do sprites.json.
+export const OCIOSOS = ['farejar', 'farejar_em_pe', 'lamber_pata', 'lamber_rabo', 'lamber_ombro', 'calmo', 'sentado_2'];
+let ultimoOcioso = null;
+export function sortearOcioso() {   // sem repetir a anterior
+  const l = OCIOSOS.filter(a => a !== ultimoOcioso);
+  ultimoOcioso = l[Math.floor(Math.random() * l.length)];
+  return ultimoOcioso;
+}
+
 // Ritmo de cada animação: ms por quadro, se repete, e quanto segura o último quadro
 function ritmo(anim, n) {
   if (anim.startsWith('andar_')) return { ms: n === 2 ? 200 : 150, loop: true };
@@ -63,8 +72,12 @@ function ritmo(anim, n) {
     case 'comendo': case 'dormindo': case 'triste_fome': return { ms: 350, loop: true };
     case 'rugido': return { ms: 260, loop: false, ultimo: 600 };
     case 'ataque_fogo': return { ms: 220, loop: false, ultimo: 650 };
-    // emoções (1 quadro nos adultos; nos filhotes caem na reserva): seguram um pouco e voltam
-    case 'bravo': case 'confuso': case 'assustado': case 'orgulhoso': case 'timido': return { ms: n === 1 ? 1300 : 350, loop: false };
+    // emoções e variações (1 ou 2 quadros nos adultos; nos filhotes caem na reserva): seguram um pouco e voltam
+    case 'bravo': case 'confuso': case 'assustado': case 'orgulhoso': case 'animado': case 'calmo': case 'ufa': case 'rugido_sentado':
+    case 'prepara_fogo': case 'lamber_beicos': case 'farejar': case 'farejar_em_pe': case 'lamber_ombro': case 'lamber_pata': case 'lamber_rabo':
+      return { ms: n === 1 ? 900 : 500, loop: false };
+    case 'assar_comida': return { ms: n === 1 ? 1200 : 400, loop: false };
+    case 'andando_fogo': case 'voo_fogo': return { ms: 320, loop: false, ultimo: 700 };
     default: return { ms: 300, loop: true };
   }
 }
@@ -86,7 +99,8 @@ export class PetSeguidor {
     this.esperar = false;           // personagem parou: ao voltar a andar, o pet espera antes de seguir
     this.alcancando = false;        // ficou para trás: anda 1,3× até voltar à distância normal
     this.fome = false;              // barriga abaixo de 40: parado, fica triste (triste_fome)
-    this.proxOcioso = 8000;         // quando fazer a variação do ocioso (sentado_2)
+    this.proxOcioso = 8000;         // quando fazer uma variação do ocioso (farejar, se lamber, descansar…)
+    this.ocioso = false;            // fazendo uma dessas variações agora
     this.espelhar = false; this.altura = 60;
     this.esquerda = false;          // último lado para onde andou (para frente/costas que caem em andar_direita)
   }
@@ -184,13 +198,14 @@ export class PetSeguidor {
         if (longe) { this.trocar('correndo'); this.espelhar = dx < 0; }   // correndo é virado para a direita
         else if (Math.abs(dx) >= Math.abs(dy)) this.trocar(dx > 0 ? 'andar_direita' : 'andar_esquerda');
         else this.trocar(this.andarVertical(dy > 0 ? 'andar_frente' : 'andar_costas'));
-        this.proxOcioso = 6000 + Math.random() * 6000;
+        this.proxOcioso = 6000 + Math.random() * 1000;   // parado há mais de ~6 s: a 1ª variação
+        this.ocioso = false;
       } else if (this.fome) {
         this.trocar('triste_fome');
-      } else if (this.anim !== 'sentado_2') {
+      } else if (!this.ocioso) {
         this.trocar('sentado_girando');
         this.proxOcioso -= dt * 1000;
-        if (this.proxOcioso <= 0) { this.proxOcioso = 7000 + Math.random() * 6000; this.trocar('sentado_2', true); }
+        if (this.proxOcioso <= 0) { this.proxOcioso = 9000 + Math.random() * 3000; this.ocioso = true; this.trocar(sortearOcioso(), true); }   // depois, ~1 a cada 10 s
       }
     }
 
@@ -202,7 +217,7 @@ export class PetSeguidor {
       this.t = 0;
       if (!ultimo) this.q++;
       else if (r.loop) this.q = 0;
-      else { this.reacao = null; this.trocar('sentado_girando', true); }   // animação de uma vez só terminou
+      else { this.reacao = null; this.ocioso = false; this.trocar('sentado_girando', true); }   // animação de uma vez só terminou
     }
     this.desenhar();
   }

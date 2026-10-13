@@ -1,0 +1,556 @@
+{
+ "legenda": {
+  ".": "livre",
+  "#": "pedra",
+  "c": "petisco (pegar)",
+  "C": "comida (fim)",
+  "P": "pet"
+ },
+ "fases": [
+  {
+   "cap": 1,
+   "nome": "Primeiro passo",
+   "dir": ">",
+   "mapa": [
+    "P..C"
+   ],
+   "blocos": [
+    "andar"
+   ],
+   "dica": "Use 'andar' até chegar na comida.",
+   "id": 1,
+   "passos_minimos": 3,
+   "meta_blocos": 3
+  },
+  {
+   "cap": 1,
+   "nome": "Virando a esquina",
+   "dir": ">",
+   "mapa": [
+    "P..#",
+    "..C#"
+   ],
+   "blocos": [
+    "andar",
+    "virar_dir",
+    "virar_esq"
+   ],
+   "id": 2,
+   "passos_minimos": 3,
+   "meta_blocos": 4
+  },
+  {
+   "cap": 1,
+   "nome": "Contorne a pedra",
+   "dir": ">",
+   "mapa": [
+    "P#C",
+    ".#.",
+    "..."
+   ],
+   "blocos": [
+    "andar",
+    "virar_dir",
+    "virar_esq"
+   ],
+   "id": 3,
+   "passos_minimos": 6,
+   "meta_blocos": 9
+  },
+  {
+   "cap": 1,
+   "nome": "Zigue-zague",
+   "dir": ">",
+   "mapa": [
+    "P.#..",
+    "#...#",
+    "##.C#"
+   ],
+   "blocos": [
+    "andar",
+    "virar_dir",
+    "virar_esq"
+   ],
+   "id": 4,
+   "passos_minimos": 5,
+   "meta_blocos": 8
+  },
+  {
+   "cap": 1,
+   "nome": "Pegue os dois petiscos",
+   "dir": ">",
+   "mapa": [
+    "P.c..",
+    "####.",
+    "C...."
+   ],
+   "blocos": [
+    "andar",
+    "virar_dir",
+    "virar_esq",
+    "pegar"
+   ],
+   "dica": "Use 'pegar' em cima de cada petisco (c).",
+   "id": 5,
+   "passos_minimos": 10,
+   "meta_blocos": 13
+  },
+  {
+   "cap": 2,
+   "nome": "Corredor comprido",
+   "dir": ">",
+   "mapa": [
+    "P........C"
+   ],
+   "blocos": [
+    "andar",
+    "repita"
+   ],
+   "id": 6,
+   "passos_minimos": 9,
+   "meta_blocos": 2
+  },
+  {
+   "cap": 2,
+   "nome": "Escada",
+   "dir": ">",
+   "mapa": [
+    "P.###",
+    "#..##",
+    "##..#",
+    "###.C"
+   ],
+   "blocos": [
+    "andar",
+    "virar_dir",
+    "virar_esq",
+    "repita"
+   ],
+   "id": 7,
+   "passos_minimos": 7,
+   "meta_blocos": 6
+  },
+  {
+   "cap": 2,
+   "nome": "Volta no quarteirão",
+   "dir": ">",
+   "mapa": [
+    "P...",
+    "###.",
+    "C##.",
+    "...."
+   ],
+   "blocos": [
+    "andar",
+    "virar_dir",
+    "virar_esq",
+    "repita"
+   ],
+   "id": 8,
+   "passos_minimos": 10,
+   "meta_blocos": 5
+  },
+  {
+   "cap": 2,
+   "nome": "Petisco a cada passo",
+   "dir": ">",
+   "mapa": [
+    "PcccccC"
+   ],
+   "blocos": [
+    "andar",
+    "pegar",
+    "repita"
+   ],
+   "dica": "Repita: andar e pegar.",
+   "id": 9,
+   "passos_minimos": 6,
+   "meta_blocos": 3
+  },
+  {
+   "cap": 2,
+   "nome": "Escadona",
+   "dir": ">",
+   "mapa": [
+    "P.#####",
+    "#..####",
+    "##..###",
+    "###..##",
+    "####..#",
+    "#####.C"
+   ],
+   "blocos": [
+    "andar",
+    "virar_dir",
+    "virar_esq",
+    "repita"
+   ],
+   "id": 10,
+   "passos_minimos": 11,
+   "meta_blocos": 6
+  },
+  {
+   "cap": 3,
+   "nome": "Atalho na diagonal",
+   "dir": ">",
+   "mapa": [
+    "P...",
+    "....",
+    "....",
+    "...C"
+   ],
+   "blocos": [
+    "andar",
+    "virar_dir",
+    "virar_esq",
+    "virar_dir45",
+    "virar_esq45",
+    "repita"
+   ],
+   "diagonal": true,
+   "id": 11,
+   "passos_minimos": 3,
+   "meta_blocos": 3
+  },
+  {
+   "cap": 3,
+   "nome": "Entre as pedras",
+   "dir": ">",
+   "mapa": [
+    ".P..#",
+    "#...#",
+    "##..#",
+    "###.C"
+   ],
+   "blocos": [
+    "andar",
+    "virar_dir45",
+    "virar_esq45",
+    "virar_dir",
+    "virar_esq",
+    "repita"
+   ],
+   "diagonal": true,
+   "id": 12,
+   "passos_minimos": 4,
+   "meta_blocos": 7
+  },
+  {
+   "cap": 3,
+   "nome": "Raio",
+   "dir": "v",
+   "mapa": [
+    "P....",
+    ".....",
+    "..#..",
+    ".....",
+    "....C"
+   ],
+   "blocos": [
+    "andar",
+    "virar_dir45",
+    "virar_esq45",
+    "virar_dir",
+    "virar_esq",
+    "repita"
+   ],
+   "diagonal": true,
+   "id": 13,
+   "passos_minimos": 6,
+   "meta_blocos": 5
+  },
+  {
+   "cap": 3,
+   "nome": "Diagonal e reta",
+   "dir": ">",
+   "mapa": [
+    "P......",
+    "#......",
+    "##.....",
+    "###...C"
+   ],
+   "blocos": [
+    "andar",
+    "virar_dir45",
+    "virar_esq45",
+    "virar_dir",
+    "virar_esq",
+    "repita"
+   ],
+   "diagonal": true,
+   "id": 14,
+   "passos_minimos": 6,
+   "meta_blocos": 5
+  },
+  {
+   "cap": 4,
+   "nome": "Degrau é uma função",
+   "dir": ">",
+   "mapa": [
+    "P.###",
+    "#..##",
+    "##..#",
+    "###.C"
+   ],
+   "blocos": [
+    "andar",
+    "virar_dir",
+    "virar_esq",
+    "repita",
+    "funcao"
+   ],
+   "dica": "Crie F1 = um degrau e chame F1 várias vezes.",
+   "id": 15,
+   "passos_minimos": 7,
+   "meta_blocos": 8
+  },
+  {
+   "cap": 4,
+   "nome": "Quadrado de petiscos",
+   "dir": ">",
+   "mapa": [
+    "Pcc.",
+    "c##c",
+    "c##c",
+    ".ccC"
+   ],
+   "blocos": [
+    "andar",
+    "virar_dir",
+    "virar_esq",
+    "pegar",
+    "repita",
+    "funcao"
+   ],
+   "id": 16,
+   "passos_minimos": 6,
+   "meta_blocos": 8
+  },
+  {
+   "cap": 4,
+   "nome": "Dois quarteirões",
+   "dir": ">",
+   "mapa": [
+    "P..#...",
+    ".#.#.#.",
+    ".#...#C"
+   ],
+   "blocos": [
+    "andar",
+    "virar_dir",
+    "virar_esq",
+    "repita",
+    "funcao"
+   ],
+   "id": 17,
+   "passos_minimos": 12,
+   "meta_blocos": 13
+  },
+  {
+   "cap": 4,
+   "nome": "Escada dupla",
+   "dir": ">",
+   "mapa": [
+    "P.#######",
+    "#..######",
+    "##..#####",
+    "###..####",
+    "####..###",
+    "#####..##",
+    "######..#",
+    "#######.C"
+   ],
+   "blocos": [
+    "andar",
+    "virar_dir",
+    "virar_esq",
+    "repita",
+    "funcao"
+   ],
+   "id": 18,
+   "passos_minimos": 15,
+   "meta_blocos": 8
+  },
+  {
+   "cap": 5,
+   "nome": "Se tiver pedra, vire",
+   "dir": ">",
+   "mapa": [
+    "P...#",
+    "###.#",
+    "###.C"
+   ],
+   "blocos": [
+    "andar",
+    "virar_dir",
+    "virar_esq",
+    "repita",
+    "se_pedra"
+   ],
+   "dica": "Use 'se tem pedra na frente, vire à direita'.",
+   "id": 19,
+   "passos_minimos": 6,
+   "meta_blocos": 6
+  },
+  {
+   "cap": 5,
+   "nome": "Caminho sinuoso",
+   "dir": ">",
+   "mapa": [
+    "P..#",
+    "##.#",
+    "#..#",
+    "#.##",
+    "#..C"
+   ],
+   "blocos": [
+    "andar",
+    "virar_dir",
+    "virar_esq",
+    "repita",
+    "se_pedra",
+    "se_livre"
+   ],
+   "id": 20,
+   "passos_minimos": 9,
+   "meta_blocos": 7
+  },
+  {
+   "cap": 5,
+   "nome": "Escolha o lado",
+   "dir": ">",
+   "mapa": [
+    "P.....#",
+    "#####.#",
+    "C.....#"
+   ],
+   "blocos": [
+    "andar",
+    "virar_dir",
+    "virar_esq",
+    "repita",
+    "se_pedra",
+    "se_senao"
+   ],
+   "id": 21,
+   "passos_minimos": 12,
+   "meta_blocos": 4
+  },
+  {
+   "cap": 5,
+   "nome": "Pegue só onde tem",
+   "dir": ">",
+   "mapa": [
+    "Pc.c..cC"
+   ],
+   "blocos": [
+    "andar",
+    "pegar",
+    "repita",
+    "se_petisco"
+   ],
+   "id": 22,
+   "passos_minimos": 7,
+   "meta_blocos": 4
+  },
+  {
+   "cap": 6,
+   "nome": "Até chegar",
+   "dir": ">",
+   "mapa": [
+    "P...........C"
+   ],
+   "blocos": [
+    "andar",
+    "repita_ate"
+   ],
+   "id": 23,
+   "passos_minimos": 12,
+   "meta_blocos": 2
+  },
+  {
+   "cap": 6,
+   "nome": "Labirinto da mão direita",
+   "dir": ">",
+   "mapa": [
+    "P.#....",
+    ".##.##.",
+    "...#...",
+    ".#.#.#.",
+    ".#...#C"
+   ],
+   "blocos": [
+    "andar",
+    "virar_dir",
+    "virar_esq",
+    "repita_ate",
+    "se_pedra",
+    "se_senao",
+    "se_livre"
+   ],
+   "dica": "Siga a parede da direita: se a direita está livre, vire à direita.",
+   "id": 24,
+   "passos_minimos": 14,
+   "meta_blocos": 7
+  },
+  {
+   "cap": 6,
+   "nome": "Grande final",
+   "dir": ">",
+   "mapa": [
+    "P..#.....",
+    "#.##.###.",
+    "#....#...",
+    "####.#.##",
+    "c....#..C"
+   ],
+   "blocos": [
+    "andar",
+    "virar_dir",
+    "virar_esq",
+    "pegar",
+    "repita_ate",
+    "se_pedra",
+    "se_senao",
+    "se_livre",
+    "funcao"
+   ],
+   "id": 25,
+   "passos_minimos": 20,
+   "meta_blocos": 9
+  }
+ ],
+ "capitulos": {
+  "1": {
+   "nome": "Sequência",
+   "conceito": "sequencia",
+   "texto": "⬆️ Andar leva o pet uma casa para a frente. ↩️ ↪️ viram 90°. Monte os blocos na ordem e aperte ▶ Executar!"
+  },
+  "2": {
+   "nome": "Repetição",
+   "conceito": "repeticao",
+   "texto": "🔁 Repita faz a mesma coisa várias vezes. Coloque os blocos dentro dele e escolha quantas vezes."
+  },
+  "3": {
+   "nome": "Ângulos de 45°",
+   "conceito": "angulos",
+   "texto": "↖️ ↗️ Viradas de 45° deixam o pet andar na diagonal — mas ele não corta a quina de uma pedra."
+  },
+  "4": {
+   "nome": "Funções",
+   "conceito": "funcoes",
+   "texto": "⭐ Função: monte um pedaço do caminho em F1 uma vez só e use \"chamar F1\" sempre que precisar."
+  },
+  "5": {
+   "nome": "Condicionais",
+   "conceito": "condicionais",
+   "texto": "❓ Se: o pet olha antes de agir — tem pedra na frente? O caminho está livre do lado? Tem petisco aqui?"
+  },
+  "6": {
+   "nome": "Repita até",
+   "conceito": "repita_ate",
+   "texto": "🔁 Repita até: o pet repete os blocos até chegar na comida, sem você precisar contar os passos."
+  }
+ },
+ "_nota_metas": "meta_blocos = blocos da solução de referência (PROMPT-50): ⭐⭐⭐ com blocos ≤ meta, ⭐⭐ com ≤ meta + 3. Contam todos os blocos menos o 'início'; F1 conta 1 + os blocos dentro dele."
+}

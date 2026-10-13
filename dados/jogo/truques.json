@@ -1,0 +1,13 @@
+{
+ "_nota": "Truques do Meu Pet (PROMPT-51), por forma do pet. lealdade = a partir de quanto o truque fica liberado. anims = animações em sequência (busto_fogo aparece num balão). Truques não dão moedas nem lealdade. Pet sem lista aqui não mostra o botão ✨ Truques. Na batalha: 'cuspir_fogo' libera o ataque de fogo e 'voo_fogo' a abertura voando.",
+ "dragao_azul_adulto": [
+  { "id": "rugir", "nome": "Rugir", "emoji": "🦁", "lealdade": 0, "anims": ["rugido"] },
+  { "id": "farejar", "nome": "Farejar o ar", "emoji": "👃", "lealdade": 20, "anims": ["farejar_em_pe", "farejar"] },
+  { "id": "se_limpar", "nome": "Tomar banho", "emoji": "🛁", "lealdade": 35, "anims": ["lamber_pata", "lamber_rabo", "lamber_ombro"] },
+  { "id": "cuspir_fogo", "nome": "Cuspir fogo", "emoji": "🔥", "lealdade": 50, "anims": ["prepara_fogo", "ataque_fogo"] },
+  { "id": "desfile", "nome": "Desfile de fogo", "emoji": "🚶‍♂️", "lealdade": 65, "anims": ["andando_fogo"] },
+  { "id": "voo_fogo", "nome": "Voo de fogo", "emoji": "🐉", "lealdade": 80, "anims": ["voo_fogo", "salto_pouso"] },
+  { "id": "rugido_campeao", "nome": "Rugido de campeão", "emoji": "🏆", "lealdade": 95, "anims": ["rugido", "busto_fogo"] }
+ ],
+ "dragao_vermelho_adulto": "dragao_azul_adulto"
+}

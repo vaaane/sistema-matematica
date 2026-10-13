@@ -2027,3 +2027,78 @@ html.jr-deitado #meu-pet .jr-mp-botoes.jr-mp-principais .jr-btn { font-size: 14p
    As regras desses textos usam calc(… * var(--letra, 1)); a escolha fica salva por aluno (preferencias/letra_grande). */
 html.jr-letra-grande { --letra: 1.2; }
 html.jr-letra-grande .jr-fala:not(.completa) { -webkit-line-clamp: 4; line-clamp: 4; }   /* quebra mais uma linha em vez de cortar */
+
+/* ── 🤖 Programe o pet (PROMPT-50): tela cheia, deitada, sem rolagem ── */
+.pg-tela { position: fixed; inset: 0; z-index: 60; display: flex; gap: 8px; background: var(--jr-bg, #0d0f1a);
+  padding: max(6px, var(--sa-t, 0px)) max(8px, var(--sa-r, 0px)) max(6px, var(--sa-b, 0px)) max(8px, var(--sa-l, 0px)); box-sizing: border-box; }
+.pg-esq { flex: 0 0 44%; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.pg-dir { flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; border-radius: 12px; overflow: hidden; border: 1px solid rgba(124,92,252,.4); }
+.pg-topo { display: flex; align-items: center; gap: 8px; }
+.pg-tit { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.1; }
+.pg-tit b { font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; color: var(--jr-ouro, #ffd700); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pg-tit small { font-family: 'Inter', sans-serif; font-size: 12px; color: #c9cde0; }
+.pg-estrelas { font-size: 18px; letter-spacing: 1px; }
+.pg-tempo { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 700; color: #00d4ff; }
+.pg-tempo.acabando { color: #ff5c7a; }
+.pg-grade-caixa { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.pg-grade { position: relative; display: grid; grid-template-columns: repeat(var(--cols), var(--s, 40px)); grid-template-rows: repeat(var(--rows), var(--s, 40px));
+  border-radius: 8px; box-shadow: 0 0 0 3px #5b4a33, 0 6px 18px rgba(0,0,0,.5); }
+.pg-casa { box-sizing: border-box; background: #e6dcc3; border: 1px solid rgba(91,74,51,.25); position: relative; }
+.pg-casa:nth-child(odd) { background: #ece3cc; }
+.pg-casa.bateu { animation: pg-casa-bateu .6s ease-out; }
+@keyframes pg-casa-bateu { 30% { background: #ff8a9c; } }
+.pg-pedra { position: absolute; inset: 12%; border-radius: 46% 54% 42% 58% / 55% 45% 55% 45%;
+  background: radial-gradient(circle at 35% 30%, #b9b4ab, #85807a 55%, #5d5955); box-shadow: inset -3px -4px 0 rgba(0,0,0,.18), 0 2px 2px rgba(0,0,0,.25); }
+#jr-app img.pg-item { --m: .14; position: absolute; left: calc((var(--x) + var(--m)) * var(--s)); top: calc((var(--y) + var(--m)) * var(--s));
+  width: calc((1 - 2 * var(--m)) * var(--s)); height: calc((1 - 2 * var(--m)) * var(--s)); object-fit: contain; pointer-events: none; image-rendering: auto; }
+#jr-app img.pg-petisco { --m: .26; transition: transform .3s, opacity .3s; }
+#jr-app img.pg-petisco.pego { transform: translateY(-40%) scale(.4); opacity: 0; }
+.pg-pet-caixa { position: absolute; left: calc((var(--x) + .5) * var(--s)); top: calc((var(--y) + .94) * var(--s)); transform: translate(-50%, -100%);
+  transition: left .35s linear, top .35s linear; pointer-events: none; z-index: 2; display: flex; flex-direction: column; align-items: center; }
+.pg-pet-caixa.outro { z-index: 1; opacity: .92; }
+#jr-app img.pg-pet { display: block; width: auto; image-rendering: auto; filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
+.pg-seta { position: absolute; left: 50%; bottom: -6px; width: 0; height: 0; margin-left: -6px; border: 6px solid transparent; border-left: 10px solid #7c5cfc;
+  transform-origin: 3px 6px; filter: drop-shadow(0 0 2px #fff); }
+.pg-pet-caixa.outro .pg-seta { border-left-color: #ff7b2e; }
+.pg-ai { position: absolute; top: -4px; left: 50%; transform: translate(-50%, -100%); background: #fff; color: #1b1b2e; font: 700 12px 'Inter', sans-serif; padding: 2px 7px; border-radius: 8px; white-space: nowrap; }
+.pg-nome { position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); font: 700 10px 'Inter', sans-serif; color: #fff; background: rgba(255,123,46,.85); padding: 1px 5px; border-radius: 6px; white-space: nowrap; }
+.pg-pet-caixa.bateu { animation: pg-bateu .45s ease-out; }
+@keyframes pg-bateu { 20% { margin-left: -5px; } 40% { margin-left: 5px; } 60% { margin-left: -3px; } 80% { margin-left: 2px; } }
+.pg-pet-caixa.feliz img { animation: pg-pulo .5s ease-out 2; }
+@keyframes pg-pulo { 50% { transform: translateY(-14%); } }
+.pg-msg { min-height: 2.6em; font-family: 'Inter', sans-serif; font-size: calc(14px * var(--letra, 1)); font-weight: 600; color: #e3e5f0; line-height: 1.3; display: flex; align-items: center; }
+.pg-msg.ok { color: #00e676; } .pg-msg.erro { color: #ff7b93; } .pg-msg.aviso { color: #ffd27a; }
+.pg-botoes { display: flex; gap: 6px; flex-wrap: wrap; }
+.pg-botoes .jr-btn { min-height: 40px; padding: 4px 12px; }
+#pg-exec { flex: 1; }
+.pg-blockly { flex: 1; min-height: 0; }
+.pg-rodape { padding: 4px 10px; font-family: 'Inter', sans-serif; font-size: 13px; color: #c9cde0; background: #161a2e; border-top: 1px solid rgba(124,92,252,.3); }
+.pg-rodape b { color: var(--jr-ouro, #ffd700); font-family: 'Orbitron', sans-serif; }
+.pg-rodape small { color: #a3a1c9; }
+.pg-trava { position: absolute; inset: 0; z-index: 5; background: rgba(13,15,26,.55); display: flex; align-items: center; justify-content: center;
+  font: 700 16px 'Inter', sans-serif; color: #fff; text-align: center; padding: 16px; }
+.pg-carregando { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 16px;
+  font: 600 14px 'Inter', sans-serif; color: #c9cde0; background: #11142a; }
+.pg-carregando[hidden] { display: none; }
+.pg-cartao { position: absolute; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; background: rgba(5,6,15,.7); padding: 16px; }
+.pg-cartao-caixa { box-sizing: border-box; width: min(92vw, 440px); background: var(--jr-card); border: 2px solid var(--jr-ouro, #ffd700); border-radius: 16px; padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 8px; text-align: center; }
+.pg-cartao-caixa b { font: 700 20px 'Rajdhani', sans-serif; color: var(--jr-ouro, #ffd700); }
+.pg-cartao-caixa p { margin: 0; font: 600 calc(15px * var(--letra, 1)) 'Inter', sans-serif; color: #fff; line-height: 1.35; }
+.pg-tela .blocklyText { font-family: 'Inter', sans-serif !important; font-weight: 700 !important; }
+@media (orientation: portrait) {
+  .pg-tela { flex-direction: column; }
+  .pg-esq { flex: 0 0 46%; }
+}
+/* lista de fases no computador do laboratório */
+.pg-caps { display: flex; flex-direction: column; gap: 8px; max-height: min(52dvh, 360px); overflow-y: auto; text-align: left; }
+.pg-cap b { font: 700 15px 'Rajdhani', sans-serif; color: #c9b8ff; }
+.pg-fases { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.pg-fase { min-width: 54px; padding: 4px 6px; border-radius: 10px; border: 1px solid rgba(124,92,252,.5); background: rgba(124,92,252,.18); color: #fff; cursor: pointer;
+  font: 700 14px 'Orbitron', sans-serif; display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.pg-fase small { font: 11px 'Inter', sans-serif; letter-spacing: -1px; }
+.pg-fase.feita { border-color: rgba(0,230,118,.6); background: rgba(0,230,118,.12); }
+.pg-fase:disabled { opacity: .35; cursor: default; }
+.mq-como { display: flex; flex-direction: column; gap: 8px; text-align: left; font-family: 'Inter', sans-serif; font-size: calc(14px * var(--letra, 1)); line-height: 1.4; color: #e3e5f0; }
+.mq-como p { margin: 0; }
+

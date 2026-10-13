@@ -246,6 +246,34 @@
     </div>
   </div>
 
+  <!-- 🤖 Programe o pet (PROMPT-50): grade + blocos (Blockly) -->
+  <section id="programe" class="pg-tela" hidden aria-label="Programe o pet">
+    <div class="pg-esq">
+      <div class="pg-topo">
+        <button class="bt-lista-x" id="pg-sair" aria-label="Sair">✕</button>
+        <div class="pg-tit"><b id="pg-titulo"></b><small id="pg-sub"></small></div>
+        <span class="pg-estrelas" id="pg-estrelas"></span>
+        <span class="pg-tempo" id="pg-tempo" hidden></span>
+      </div>
+      <div class="pg-grade-caixa" id="pg-grade-caixa"><div class="pg-grade" id="pg-grade"></div></div>
+      <div class="pg-msg" id="pg-msg"></div>
+      <div class="pg-botoes">
+        <button class="jr-btn jr-btn-ouro" id="pg-exec">▶ Executar</button>
+        <button class="jr-btn jr-btn-sec" id="pg-parar" aria-label="Parar">⏸</button>
+        <button class="jr-btn jr-btn-sec" id="pg-reset" aria-label="Voltar ao início">↺</button>
+        <button class="jr-btn jr-btn-sec" id="pg-vel" aria-label="Velocidade">🐢</button>
+        <button class="jr-btn" id="pg-pronto" hidden>✅ Pronto!</button>
+      </div>
+    </div>
+    <div class="pg-dir">
+      <div class="pg-blockly" id="pg-blockly"></div>
+      <div class="pg-trava" id="pg-trava" hidden></div>
+      <div class="pg-rodape"><span id="pg-contagem"></span></div>
+      <div class="pg-carregando" id="pg-carregando">Carregando os blocos…</div>
+    </div>
+    <div class="pg-cartao" id="pg-cartao" hidden><div class="pg-cartao-caixa"><b id="pg-cartao-tit"></b><p id="pg-cartao-txt"></p><button class="jr-btn jr-btn-ouro" id="pg-cartao-ok">Entendi!</button></div></div>
+  </section>
+
   <!-- 🪙 Hoje você ganhou… (tocar em qualquer contador de moedas) -->
   <div id="moedas-hoje" class="jr-moedas-hoje" hidden role="dialog" aria-label="Moedas de hoje"><div class="jr-mh-caixa" id="moedas-hoje-caixa"></div></div>
 

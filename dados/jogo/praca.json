@@ -13,50 +13,50 @@
   ]
  ],
  "mural": {
-  "x": 250,
-  "y": 225,
-  "largura": 260,
+  "x": 243,
+  "y": 395,
+  "largura": 190,
   "ponto": [
-   310,
-   330
+   243,
+   525
   ]
  },
  "fliperama": {
-  "x": 1120,
+  "x": 1130,
   "y": 330,
   "interior": "fliperama"
  },
  "ponto_desafio": {
   "a": [
-   640,
-   540
+   620,
+   530
   ],
   "b": [
-   740,
-   540
+   760,
+   530
   ]
  },
  "bancos": [
   [
-   495,
-   180
+   500,
+   182
   ],
   [
-   575,
-   180
+   580,
+   182
   ],
   [
-   808,
-   180
+   818,
+   182
   ],
   [
-   887,
-   180
+   897,
+   182
   ]
  ],
  "loja": {
-  "x": 642,
-  "y": 205,
+  "x": 700,
+  "y": 200,
   "interior": "loja"
  },
  "geral": {
@@ -167,5 +167,10 @@
   "Me ajuda?",
   "Uhuu! 🎉"
  ],
- "intervalo_balao_s": 3
+ "intervalo_balao_s": 3,
+ "laboratorio": {
+  "x": 340,
+  "y": 275,
+  "interior": "laboratorio"
+ }
 }

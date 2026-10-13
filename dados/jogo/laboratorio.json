@@ -1,0 +1,76 @@
+{
+ "imagem": "laboratorio.webp",
+ "porta": [
+  689,
+  700
+ ],
+ "entrada": [
+  689,
+  640
+ ],
+ "altura_personagem": 145,
+ "area_livre": [
+  {
+   "x0": 385,
+   "y0": 245,
+   "x1": 1135,
+   "y1": 608
+  }
+ ],
+ "computadores": [
+  {
+   "id": "programe_o_pet",
+   "nome": "Programe o pet",
+   "x": 482,
+   "y": 150,
+   "ponto": [
+    482,
+    252
+   ],
+   "libera": null
+  },
+  {
+   "id": "corrida",
+   "nome": "Corrida de programação",
+   "x": 627,
+   "y": 150,
+   "ponto": [
+    627,
+    252
+   ],
+   "libera": null
+  },
+  {
+   "id": "caca_bug",
+   "nome": "Caça ao bug",
+   "x": 775,
+   "y": 150,
+   "ponto": [
+    775,
+    252
+   ],
+   "em_breve": true
+  },
+  {
+   "id": "o_que_faz",
+   "nome": "O que o pet vai fazer?",
+   "x": 923,
+   "y": 150,
+   "ponto": [
+    923,
+    252
+   ],
+   "em_breve": true
+  }
+ ],
+ "nota": "Coordenadas em 1376x768. ponto = onde o personagem para em frente ao computador. Área de andar = trilha-laboratorio.png (344x192, branco = anda); area_livre fica só como reserva.",
+ "trilha": "trilha-laboratorio.png",
+ "lia": {
+  "x": 1080,
+  "y": 470,
+  "ponto": [
+   990,
+   480
+  ]
+ }
+}

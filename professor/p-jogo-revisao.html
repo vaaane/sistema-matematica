@@ -149,6 +149,7 @@
         <button class="aba" data-aba="nomes">🐾 Nomes dos pets</button>
         <button class="aba" data-aba="pesca">🎣 Pesca</button>
         <button class="aba" data-aba="moedas">🪙 Moedas</button>
+        <button class="aba" data-aba="programe">🤖 Programe o pet</button>
         <button class="aba" data-aba="praca">🏛️ Praça</button>
         <button class="aba" data-aba="config">⚙️ Configurar o jogo</button>
       </div>
@@ -184,6 +185,11 @@
       </section>
 
       <!-- Aba — Moedas (PROMPT-47): quanto cada aluno ganhou na semana, por fonte (só leitura) -->
+      <!-- Aba — Programe o pet (PROMPT-50): até onde cada aluno chegou e onde travou -->
+      <section class="painel" id="aba-programe" hidden>
+        <div id="programe"><div class="empty">Carregando…</div></div>
+      </section>
+
       <section class="painel" id="aba-moedas" hidden>
         <div id="moedas"><div class="empty">Carregando…</div></div>
       </section>
@@ -281,6 +287,7 @@ async function carregarJson() {
   const qs = await Promise.all(Array.from({ length: NUM_MAPAS }, (_, i) => fetch(`/dados/jogo/questoes/mapa${i + 1}.json`).then(r => r.json())));
   qs.forEach(q => { Q[q.mapa] = q; });
   try { TIPOS_BT = (await fetch("/dados/jogo/batalhas.json").then(r => r.json())).tipos_contas || {}; } catch (e) { console.warn("[p-jogo-revisao] batalhas.json", e); }
+  try { PROG = await fetch("/dados/jogo/programe-o-pet.json").then(r => r.json()); } catch (e) { console.warn("[p-jogo-revisao] programe-o-pet.json", e); }
   try { PEDIDOS = Object.fromEntries(((await fetch("/dados/jogo/pedidos.json").then(r => r.json())).pedidos || []).map(x => [x.id, x])); } catch (e) { console.warn("[p-jogo-revisao] pedidos.json", e); }
 }
 
@@ -347,6 +354,7 @@ function montarTurma() {
   renderNomesPets();
   renderPesca();
   renderMoedas();
+  renderPrograme();
   renderAchados();
   renderPraca();
 }
@@ -394,7 +402,50 @@ function renderPraca() {
 // ── Aba — Pesca: pontos da semana (segunda a domingo) e presentes dados/recebidos por aluno ──
 // ── Aba — Moedas: o que cada aluno ganhou na semana, por fonte (jogo_revisao/{uid}/moedas_semana/{segunda}) ──
 const FONTES_MOEDA = [["ginasio", "Ginásios"], ["insignia", "Insígnias"], ["batalha", "Batalhas"], ["batalha_primeira", "1ª vitória"], ["pedido", "Pedidos"],
-  ["cavar", "Cavar/mato"], ["colecao", "Coleção"], ["fliperama", "Fliperama"], ["desafio", "Desafios"], ["pesca", "Peixes"], ["aovivo", "Ao vivo"], ["missao", "Missões"]];
+  ["cavar", "Cavar/mato"], ["colecao", "Coleção"], ["fliperama", "Fliperama"], ["desafio", "Desafios"], ["pesca", "Peixes"], ["aovivo", "Ao vivo"], ["missao", "Missões"], ["programe", "Programe"]];
+// ── Aba — Programe o pet: capítulo alcançado e onde travou (fase não resolvida com mais tentativas) ──
+let PROG = null;
+const CONCEITO = { sequencia: "Sequência", repeticao: "Repetição", angulos: "Ângulos 45°", funcoes: "Funções", condicionais: "Condicionais", repita_ate: "Repita até" };
+function renderPrograme() {
+  const el = $("programe");
+  if (!PROG) { el.innerHTML = `<div class="empty">Não deu para carregar as fases (dados/jogo/programe-o-pet.json).</div>`; return; }
+  const fases = PROG.fases || [], conc = (cap) => CONCEITO[PROG.capitulos?.[cap]?.conceito] || `Cap. ${cap}`;
+  const lin = linhas.map(l => {
+    const pf = l.n?.programe?.fases || {};
+    const feitas = fases.filter(f => Number(pf[f.id]?.estrelas) > 0);
+    const estrelas = feitas.reduce((t, f) => t + Number(pf[f.id].estrelas), 0);
+    const prox = fases.find(f => !(Number(pf[f.id]?.estrelas) > 0));
+    // travou: fase sem estrela com mais tentativas (pelo menos 3)
+    const presa = fases.filter(f => !(Number(pf[f.id]?.estrelas) > 0) && Number(pf[f.id]?.tentativas) >= 3).sort((a, b) => Number(pf[b.id].tentativas) - Number(pf[a.id].tentativas))[0];
+    return { nome: l.nome, uid: l.uid, feitas: feitas.length, estrelas, cap: feitas.length ? Math.max(...feitas.map(f => f.cap)) : 0, prox, presa, pp: presa ? pf[presa.id] : null };
+  }).sort((a, b) => b.feitas - a.feitas || b.estrelas - a.estrelas || a.nome.localeCompare(b.nome));
+  if (!lin.some(l => l.feitas || l.presa)) { el.innerHTML = `<div class="empty">Ninguém desta turma jogou o Programe o pet ainda (Laboratório, na Praça).</div>`; return; }
+  const travados = {};
+  for (const l of lin) if (l.presa) travados[conc(l.presa.cap)] = (travados[conc(l.presa.cap)] || 0) + 1;
+  el.innerHTML = `<div class="bloco"><h3>Onde a turma travou, por conceito</h3><div class="sub">Alunos com uma fase sem resolver depois de 3 ou mais tentativas.</div>
+    ${Object.keys(travados).length ? Object.entries(travados).sort((a, b) => b[1] - a[1]).map(([c, n]) => `<div class="conteudo"><div class="t"><b>${esc(c)}</b> <span>· ${n} aluno${n === 1 ? "" : "s"}</span></div></div>`).join("") : '<div class="sub">Ninguém travado agora. 🎉</div>'}</div>
+    <div class="tabela-wrap"><table class="jr bt"><thead><tr><th>Aluno</th><th>Fases</th><th>⭐</th><th>Capítulo</th><th>Próxima</th><th>Travou em</th></tr></thead><tbody>
+    ${lin.map(l => `<tr><td class="aluno">${esc(l.nome)}</td><td class="num">${l.feitas}/${fases.length}</td><td class="num">${l.estrelas || "—"}</td>
+      <td>${l.cap ? `${l.cap} · ${esc(conc(l.cap))}` : "—"}</td><td>${l.prox ? `Fase ${l.prox.id} · ${esc(l.prox.nome)}` : "✅ todas"}</td>
+      <td>${l.presa ? `<button class="btn-sec" data-pg-ver="${esc(l.uid)}">Fase ${l.presa.id} · ${esc(conc(l.presa.cap))} (${Number(l.pp.tentativas)} tentativas)</button>` : "—"}</td></tr>`).join("")}
+    </tbody></table></div>
+    <div id="pg-programa"></div>
+    <div class="legenda">Estrelas: ⭐ resolveu · ⭐⭐ com até meta + 3 blocos · ⭐⭐⭐ com até a meta de blocos da fase. Toque em "Travou em" para ver o último programa do aluno nessa fase.</div>`;
+  el._lin = Object.fromEntries(lin.map(l => [l.uid, l]));
+}
+$("programe").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-pg-ver]");
+  if (!b) return;
+  const l = $("programe")._lin?.[b.dataset.pgVer];
+  if (!l?.presa) return;
+  const pp = l.pp || {}, bt = pp.bateu;
+  $("pg-programa").innerHTML = `<div class="bloco"><h3>${esc(l.nome)} · Fase ${l.presa.id} (${esc(l.presa.nome)})</h3>
+    <div class="sub">${Number(pp.tentativas) || 0} tentativas${bt ? ` · última batida na casa (${Number(bt.x) + 1}, ${Number(bt.y) + 1}) no bloco "${esc(String(bt.bloco || "").replace("pg_", ""))}"` : ""}</div>
+    <pre style="white-space:pre-wrap;font-size:13px;margin:8px 0 0">${esc(pp.texto_atual || "(sem programa salvo)")}</pre>
+    <div class="sub" style="margin-top:6px">Mapa da fase:</div><pre style="font-size:13px;margin:4px 0 0;line-height:1.15">${esc((l.presa.mapa || []).join("\n"))}</pre></div>`;
+  $("pg-programa").scrollIntoView({ block: "nearest" });
+});
+
 function renderMoedas() {
   const el = $("moedas"), seg = semanaPesca(), [a, m, d] = seg.split("-"), fim = new Date(Date.UTC(+a, +m - 1, +d + 6));
   const periodo = `${d}/${m} a ${String(fim.getUTCDate()).padStart(2, "0")}/${String(fim.getUTCMonth() + 1).padStart(2, "0")}`;

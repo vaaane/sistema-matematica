@@ -699,6 +699,22 @@
    ],
    "olha": "direita",
    "piscar": false
+  },
+  {
+   "id": "lia_cientista",
+   "nome": "Lia",
+   "quem": "Cientista de robótica",
+   "interior": "laboratorio",
+   "w": 298,
+   "h": 740,
+   "falas": [
+    "Bem-vindo ao laboratório! Aqui você programa o seu pet. 🤖",
+    "Dica: o 🔁 repita economiza muitos blocos!",
+    "Errar faz parte: o pet mostra exatamente onde o programa falhou.",
+    "Já tentou a corrida? Ganha quem faz o caminho mais curto!"
+   ],
+   "olha": "esquerda",
+   "piscar": false
   }
  ]
 }
