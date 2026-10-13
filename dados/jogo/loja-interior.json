@@ -87,7 +87,8 @@
    "y1": 729
   }
  ],
- "nota": "Coordenadas em 1376x768. mercado = porta da loja no Mercado Central (mapa 7), onde a Dona Cida ficava; ajuste com ?editarLoja=1.",
+ "nota": "Coordenadas em 1376x768. altura_personagem = altura do personagem aqui dentro (o pet e a Dona Cida acompanham). mercado = porta da loja no Mercado Central (mapa 7); ajuste com ?editarLoja=1.",
+ "altura_personagem": 135,
  "mercado": {
   "mapa": 7,
   "x": 298,

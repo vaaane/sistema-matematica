@@ -84,7 +84,18 @@
    "y1": 735
   }
  ],
- "nota": "Coordenadas em 1376x768. area_livre = retângulos onde o personagem anda; ponto = onde ele para em frente à máquina. teo = onde o Téo fica (se faltar, usa balcao). libera: condição opcional da máquina (null = sempre). Moedas: +1 a cada acertos_por_moeda acertos, até moedas_dia por dia.",
+ "nota": "Coordenadas em 1376x768. area_livre = retângulos onde o personagem anda; ponto = onde ele para em frente à máquina. teo = pés do Téo (fora da area_livre) e teo.ponto = onde o aluno para para falar com ele. altura_personagem = altura do personagem aqui dentro (o pet e as pessoas acompanham). libera: condição opcional da máquina (null = sempre). Moedas: +1 a cada acertos_por_moeda acertos, até moedas_dia por dia.",
+ "teo": {
+  "x": 135,
+  "y": 690,
+  "olha": "direita",
+  "obs": "x,y = pés; dentro do L do balcão, atrás da caixa registradora",
+  "ponto": [
+   360,
+   600
+  ]
+ },
+ "altura_personagem": 145,
  "moedas_dia": 10,
  "acertos_por_moeda": 10
 }
