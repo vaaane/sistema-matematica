@@ -85,6 +85,16 @@ const altImagemPet = (pet) => altPet(pet) / sentadoNoQuadro(pet);
 // Telas em que o pet tem tamanho relativo ao filhote (batalha, Meu Pet, duelo do ginásio, evolução): quanto a IMAGEM da forma
 // é maior que a do filhote. O desenho sentado fica ADULTO_ANTES × escala maior (o mesmo de antes no azul; +15% no vermelho).
 const fatorForma = (pet, forma) => (ehFormaAdulta(forma) ? ADULTO_ANTES * escalaPet(forma) * sentadoNoQuadro(pet) / sentadoNoQuadro(forma) : 1);
+// Duelos (PROMPT-80): o dragão adulto ~30% maior (o vermelho continua 1,32 × o azul). Na batalha, só até o maior adulto
+// (escalaMax) caber com a pose mais alta (o fogo, 94% do quadro) dentro da arena, sem cobrir as barras de vida:
+// lutador a 3% do chão e no máximo 99% da arena → altura ≤ (0,99 − 0,03) / 0,94 da arena = 52% × 1,96.
+const DUELO_ADULTO = 1.3, CRESCE_MAX_BATALHA = 1.96;
+const fatorDuelo = (pet, forma) => fatorForma(pet, forma) * (ehFormaAdulta(forma) ? DUELO_ADULTO : 1);
+function fatorBatalha(pet, forma) {
+  if (!ehFormaAdulta(forma)) return fatorForma(pet, forma);
+  const maior = ADULTO_ANTES * escalaMax() * sentadoNoQuadro(pet) / sentadoNoQuadro(forma);   // o adulto de maior escala
+  return fatorForma(pet, forma) * Math.min(DUELO_ADULTO, CRESCE_MAX_BATALHA / maior);
+}
 // caixas pequenas feitas para o filhote (coleção, HUD, chips, cartões): sem a escala, para nada ser cortado
 const fatorFormaCaixa = (pet, forma) => fatorForma(pet, forma) / (ehFormaAdulta(forma) ? escalaPet(forma) : 1);
 // Imagem pequena numa caixa feita para o filhote (coleção, HUD, chips, cartões): o quadro do adulto é mais largo
@@ -1644,7 +1654,7 @@ function comemorar(anim, pular = true) {
 
 function falarPet(texto) {
   const b = $('mp-balao');
-  b.textContent = texto;
+  b.innerHTML = `<span class="mp-balao-txt">${esc(texto)}</span>`;   // no máximo 3 linhas (o corte fica no texto: o rabinho aparece)
   b.hidden = false;
   clearTimeout(mp.timerBalao);
   mp.timerBalao = setTimeout(() => { b.hidden = true; }, 1800);
@@ -3929,6 +3939,8 @@ function loop(t) {
       if (cena.n === 'praca') atualizarPraca();
       else if (cena.n === 'loja') atualizarLoja();
       atualizarCavar();
+      dicaEntrar();
+      if (vx || vy) verificarZonaEntrada(vx, vy);   // mesmo parado contra o fim da trilha, empurrar para cima entra
       if (direto) verificarEncostou(vx, vy);
     } else if (cena) {
       atualizarSaidaGin();
@@ -4263,6 +4275,8 @@ function destinosDoMapa() {
     if (b) lista.push({ id: 'predio-' + alvo, tipo: 'predio', alvo, x: b.x, y: b.y, trilha: b.trilha });
   }
   if (cena.n === 'laboratorio') for (const c of cena.computadores || []) lista.push({ id: 'pc-' + c.id, tipo: 'predio', alvo: 'pc:' + c.id, x: c.x, y: c.y, trilha: c.trilha });
+  const md = ehPraca() && cena.mesa_damas;
+  if (md) lista.push({ id: 'predio-mesa-damas', tipo: 'predio', alvo: 'mesa_damas', x: md.x, y: md.y, trilha: md.trilha, largura: 80 });
   const pl = cena.portaLoja;
   if (pl) lista.push({ id: 'predio-loja-mercado', tipo: 'predio', alvo: 'loja-mercado', x: pl.x, y: pl.y, trilha: pl.trilha });
   return lista;
@@ -4391,14 +4405,42 @@ function entrarNoPredio(alvo) {
   else if (alvo === 'loja-mercado' && LOJA) transicao(() => abrirLojaInterior({ tipo: 'mapa', n }));
   else if (alvo === 'laboratorio' && LAB) transicao(abrirLaboratorio);
   else if (alvo.startsWith('pc:')) { jog.dir = 'costas'; desenharJogador(); abrirComputador(alvo.slice(3)); }   // computador do laboratório
+  else if (alvo === 'mesa_damas') { jog.dir = 'costas'; desenharJogador(); abrirMenuDamas(); }
 }
 
-// Setas/joystick: encostar numa porta ou saída andando na direção dela entra direto.
-// Passar de lado pela frente da porta (ex.: Escolinha, na beira da estrada) não entra.
+// Setas/joystick (PROMPT-80): portas e prédios têm uma ZONA na frente — ≈1,5 × a largura da porta (mín. 70 px), do ponto
+// da trilha até 40 px abaixo dele. Na zona, empurrar para cima (vy < 0 e |vy| > |vx|) entra. A trilha de alguns prédios
+// (Loja, Laboratório) termina antes da porta, então "encostar na porta" quase nunca acontecia. Passar de lado não entra.
+const entraPorZona = (d) => d.tipo === 'porta' || d.tipo === 'predio';
+function zonaEntrada(d) {
+  const w = Math.max(70, 1.5 * (Number(d.largura) || 0)) * (cena?.salao ? escalaAtoresCena() / ESCALA_ATORES : 1), [tx, ty] = d.trilha;
+  return { x0: tx - w / 2, x1: tx + w / 2, y0: ty - 12, y1: ty + 40 };
+}
+const naZona = (d) => { const z = zonaEntrada(d); return jog.x >= z.x0 && jog.x <= z.x1 && jog.y >= z.y0 && jog.y <= z.y1; };
+const destinoNaZona = () => (cena?.tipo === 'mapa' ? destinosDoMapa().find(d => entraPorZona(d) && naZona(d)) || null : null);
+function verificarZonaEntrada(vx, vy) {
+  if (!soltouDesdeTroca || !(vy < 0 && Math.abs(vy) > Math.abs(vx))) return;
+  const d = destinoNaZona();
+  if (d) entrarNoDestino(espDe(d));
+}
+// "⬆ Entrar" (⬆ Damas, ⬆ Usar) acima do personagem enquanto ele está na zona de uma porta
+function dicaEntrar() {
+  const d = destinoNaZona(), atores = $('cena-atores');
+  let el = atores.querySelector('.jr-dica-entrar');
+  if (!d || conversa.falando) { if (el) el.hidden = true; return; }
+  if (!el) { el = document.createElement('div'); el.className = 'jr-rotulo-porta jr-dica-entrar'; el.innerHTML = '<span></span>'; atores.appendChild(el); }
+  const txt = d.alvo === 'mesa_damas' ? '⬆ Damas' : String(d.alvo || '').startsWith('pc:') ? '⬆ Usar' : '⬆ Entrar';
+  if (el.firstChild.textContent !== txt) el.firstChild.textContent = txt;
+  const altJ = cena.salao ? alturaSalao() : ALT_JOGADOR_MAPA;
+  el.style.left = jog.x + 'px'; el.style.top = (jog.y - altJ - 30 * escalaAtoresCena() / ESCALA_ATORES) + 'px';
+  el.hidden = false;
+}
+// Saídas do mapa (como antes): encostar andando na direção dela entra direto.
 function verificarEncostou(vx, vy) {
   if (!soltouDesdeTroca) return;
   const m = Math.hypot(vx, vy);
   for (const d of destinosDoMapa()) {
+    if (entraPorZona(d)) continue;   // portas e prédios: pela zona (verificarZonaEntrada)
     if (dist(jog.x, jog.y, d.x, d.y) >= DIST_PORTA && dist(jog.x, jog.y, d.trilha[0], d.trilha[1]) >= 12) continue;
     const dd = dist(jog.x, jog.y, d.x, d.y);
     const rumo = dd < 4 ? 1 : ((d.x - jog.x) * vx + (d.y - jog.y) * vy) / (dd * m);
@@ -6714,7 +6756,7 @@ function iniciarBatalha(id, origem = 'lista') {
   // adulto: quadro mais largo (asas) e imagem maior; mesma vida e dano, muda só o visual
   const fL = $('bt-L'), [qw, qh] = tamanhoQuadro(bt.forma), adulto = ehFormaAdulta(bt.forma);
   fL.style.setProperty('--pet-quadro', `${qw} / ${qh}`);
-  fL.style.setProperty('--cresce', fatorForma(bt.pet, bt.forma));   // desenho sentado 15% maior que o do filhote
+  fL.style.setProperty('--cresce', fatorBatalha(bt.pet, bt.forma));   // adulto maior (PROMPT-80), cabendo na arena
   fL.classList.toggle('adulto', adulto);
   fL.querySelector('.jr-fala-vitoria')?.remove();   // balão da comemoração da batalha anterior
   const fR = $('bt-R'), formaR = t.pet, [qwR, qhR] = tamanhoQuadro(formaR);   // o pet do treinador (hoje sempre filhote; adulto teria o mesmo cuidado)
@@ -7863,7 +7905,7 @@ function montarArena() {
   document.querySelector('.jr-arena-sombra.pet').hidden = !pet;
   pgPet = null;
   const forma = pet && formaDe(pet);
-  $('perg-pet').style.setProperty('--forma', fatorForma(pet, forma));   // adulto: imagem maior (quadro com asas)
+  $('perg-pet').style.setProperty('--forma', fatorDuelo(pet, forma));   // adulto: imagem maior (quadro com asas), +30% no duelo (PROMPT-80)
   if (pet) { pgPet = new PetParado($('perg-pet')); pgPet.definir(forma); }
   pg.na = null;
   ladoNemAi();   // dragão adulto: sentado de lado, sem dar bola (PROMPT-71)
