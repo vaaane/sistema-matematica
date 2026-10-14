@@ -791,18 +791,36 @@ export function mostrarCartao({ titulo, estrelas = null, info = '', botoes = [],
     const img = $('pg-vit-pet');
     img.hidden = !forma;
     $('pg-vit-confete').innerHTML = '';
+    $('pg-vit-efeitos').innerHTML = '';
     $('pg-vitoria').hidden = false;
-    // comemorar: adulto animado → orgulhoso → rugido; filhote cambalhota (ou feliz). A reserva do sprites.json cobre quem não tem.
+    // vitória (sem `anims` de quem chamou): comemoração com estrelas em volta da cabeça, confete e a fala do pet (PROMPT-65).
+    // Adulto com a sequência `vitoria`: alterna sentado de lado e nariz empinado e PARA de nariz empinado.
+    // Os outros: adulto animado → orgulhoso → rugido; filhote cambalhota (ou feliz) — uma vez só, parando no último quadro.
+    const vitoria = !anims;
+    const seq = vitoria && forma && C.temSequencia?.(forma, 'vitoria') ? 'vitoria' : null;
     const lista = anims || (forma !== p?.pet ? ['animado', 'orgulhoso', 'rugido'] : C.temAnim(forma, 'pulo_cambalhota') ? ['pulo_cambalhota'] : ['feliz']);
-    if (forma) { C.pintar(img, p); crescerPet(img, forma, lista).then(() => { if (confete && !semMov() && tela) soltarConfete(); }); }
-    else if (confete && !semMov()) soltarConfete();
+    if (forma) {
+      C.pintar(img, p);
+      const primeiro = seq ? C.quadrosSeq(forma, seq)[0] : C.quadrosDe(forma, lista[0])[0];
+      crescerPet(img, forma, primeiro, vitoria ? 64 : 0).then((pos) => {
+        if (!tela || $('pg-vitoria').hidden) return;
+        if (seq) {
+          if (semMov()) img.src = C.quadrosSeq(forma, seq).at(-1) || img.src;   // direto o nariz empinado
+          else C.tocarSequencia(img, forma, seq, { deFrente: false });          // o último quadro fica enquanto o cartão estiver aberto
+        } else animarPetCartao(img, forma, lista);
+        if (vitoria && pos) efeitosVitoria(pos, p, primeiro);
+        if (confete && !semMov()) soltarConfete(vitoria);
+      });
+    } else if (confete && !semMov()) soltarConfete(vitoria);
     const el = $('pg-vit-botoes');
     const clique = (e) => {
       const b = e.target.closest('[data-vit]');
       if (!b) return;
       el.removeEventListener('click', clique);
       $('pg-vitoria').hidden = true;
-      if (tela) clearInterval(tela.animCartao);
+      C.pararSequencia?.(img);
+      if (tela) { clearInterval(tela.animCartao); clearTimeout(tela.tFala); }
+      $('pg-vit-efeitos').innerHTML = '';
       ok(b.dataset.vit);
     };
     el.addEventListener('click', clique);
@@ -810,16 +828,17 @@ export function mostrarCartao({ titulo, estrelas = null, info = '', botoes = [],
 }
 // O pet grande: sai do lugar onde chegou no tabuleiro e cresce (~0,6 s) até a área livre (em pé: em cima do cartão; deitado: ao lado).
 // O tamanho vem do cartão já posto: se faltar altura, o pet diminui; o cartão nunca é cortado.
-async function crescerPet(img, forma, anims) {
+// Devolve onde o desenho ficou ({ left, top, larg, alt, c }) para as estrelas e o balão.
+async function crescerPet(img, forma, src0, topo = 0) {   // topo: faixa livre em cima (o balão da fala, na vitória)
   const raiz = $('programe').getBoundingClientRect(), card = $('pg-vit-caixa').getBoundingClientRect();
   const emPe = raiz.height > raiz.width;
-  const reg = emPe ? { x: 8, y: 8, w: raiz.width - 16, h: card.top - raiz.top - 16 } : { x: 8, y: 8, w: card.left - raiz.left - 16, h: raiz.height - 16 };
-  const src0 = C.quadrosDe(forma, anims[0])[0];
+  const reg = emPe ? { x: 8, y: 8 + topo, w: raiz.width - 16, h: card.top - raiz.top - 16 - topo } : { x: 8, y: 8 + topo, w: card.left - raiz.left - 16, h: raiz.height - 16 - topo };
   const c = (await caixaDoQuadro(src0)) || { x0: 0, y0: 0, x1: 1, y1: 1, w: 1, h: 1 };
-  if (!tela) return;
+  if (!tela) return null;
   const bw = c.x1 - c.x0, bh = c.y1 - c.y0, ar = c.h / c.w;
-  // largura da imagem: o desenho com ~85% da tela em pé (no máximo a área livre), e a altura cabendo na área
-  const prop = (C.escalaPet?.(forma) || 1) / (C.escalaMax?.() || 1);   // vermelho adulto (1,15) preenche; o azul fica 1/1,15 disso
+  // largura da imagem: o desenho com ~85% da tela em pé (no máximo a área livre), e a altura cabendo na área.
+  // A escala do pet (PROMPT-63): o de maior escala preenche a área; os outros ficam proporcionais (nada sai da área)
+  const prop = (C.escalaPet?.(forma) || 1) / (C.escalaMax?.() || 1);
   const larg = Math.max(40, Math.min((emPe ? Math.min(raiz.width * 0.8, reg.w * 0.9) : reg.w * 0.8) / bw, reg.h * 0.85 / (bh * ar)) * prop);
   const alt = larg * ar, cx = reg.x + reg.w / 2, cy = reg.y + reg.h / 2;
   const left = cx - (c.x0 + bw / 2) * larg, top = cy - (c.y0 + bh / 2) * alt;
@@ -831,25 +850,88 @@ async function crescerPet(img, forma, anims) {
     await img.animate([{ transform: `translate(${origem.left - raiz.left - left}px, ${origem.top - raiz.top - top}px) scale(${k})`, opacity: .9 }, { transform: 'none', opacity: 1 }],
       { duration: 600, easing: 'cubic-bezier(.2,.9,.3,1.1)' }).finished.catch(() => {});
   }
-  if (tela) animarPetCartao(img, forma, anims);
+  return tela ? { left, top, larg, alt, c, raiz } : null;
 }
+// Toca as animações uma vez e para no último quadro (nada de ficar repetindo)
 function animarPetCartao(img, forma, anims) {
   clearInterval(tela.animCartao);
   const passo = 180, seq = [];
   for (const a of anims) { const q = C.quadrosDe(forma, a); const n = q.length === 1 ? Math.ceil(1500 / passo) : Math.max(q.length, Math.ceil(900 / passo)); for (let i = 0; i < n; i++) seq.push(q[i % q.length]); }
   const ultimo = C.quadrosDe(forma, anims[anims.length - 1]);
-  if (semMov() || !seq.length) { img.src = ultimo[0] || seq[0] || ''; return; }
+  const fim = ultimo[ultimo.length - 1] || seq[seq.length - 1] || '';
+  if (semMov() || !seq.length) { img.src = fim; return; }
   let i = 0;
   img.src = seq[0];
-  tela.animCartao = setInterval(() => { i++; img.src = i < seq.length ? seq[i] : ultimo[(i - seq.length) % ultimo.length]; }, passo);
+  tela.animCartao = setInterval(() => { i++; if (i < seq.length) img.src = seq[i]; else { img.src = fim; clearInterval(tela.animCartao); } }, passo);
 }
-function soltarConfete() {
-  const c = $('pg-vit-confete'), simb = ['🎉', '✨', '⭐', '🎊'];
-  for (let i = 0; i < 22; i++) {
+// ⭐ estrelas douradas em volta da cabeça (piscando e mudando de tamanho) e, ~1 s depois, o balão com a fala do pet
+// onde fica a cabeça no quadro: o meio dos pixels da faixa de cima do desenho (15% da altura). Funciona de frente ou de lado.
+const cabecas = new Map();
+function cabecaDoQuadro(src) {
+  if (!cabecas.has(src)) cabecas.set(src, new Promise((ok) => {
+    const im = new Image();
+    im.onload = () => {
+      try {
+        const k = Math.min(1, 240 / im.naturalWidth), w = Math.max(1, Math.round(im.naturalWidth * k)), h = Math.max(1, Math.round(im.naturalHeight * k));
+        const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+        const ctx = cv.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(im, 0, 0, w, h);
+        const px = ctx.getImageData(0, 0, w, h).data, a = (x, y) => px[(y * w + x) * 4 + 3] > 8;
+        let y0 = -1, y1 = -1;
+        for (let y = 0; y < h && y0 < 0; y++) for (let x = 0; x < w; x++) if (a(x, y)) { y0 = y; break; }
+        for (let y = h - 1; y >= 0 && y1 < 0; y--) for (let x = 0; x < w; x++) if (a(x, y)) { y1 = y; break; }
+        if (y0 < 0) { ok(null); return; }
+        const faixa = y0 + Math.max(2, Math.round((y1 - y0) * 0.15));
+        let sx = 0, n = 0;
+        for (let y = y0; y <= faixa; y++) for (let x = 0; x < w; x++) if (a(x, y)) { sx += x; n++; }
+        ok({ x: sx / n / w, y: (y0 + (faixa - y0) / 2) / h, alt: (faixa - y0) / h });
+      } catch (_) { ok(null); }
+    };
+    im.onerror = () => ok(null);
+    im.src = src;
+  }));
+  return cabecas.get(src);
+}
+const ESTRELA_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.6l3.1 6.6 7.2.9-5.3 5 1.4 7.2L12 17.8l-6.4 3.5 1.4-7.2-5.3-5 7.2-.9z"/></svg>';
+async function efeitosVitoria({ left, top, larg, alt, c, raiz }, p, src) {
+  const caixa = $('pg-vit-efeitos'), bw = c.x1 - c.x0, bh = c.y1 - c.y0;
+  // cabeça: medida no quadro (o topo do desenho); sem medida, a parte de cima do meio
+  const cab = await cabecaDoQuadro(src);
+  if (!tela || $('pg-vitoria').hidden) return;
+  const hx = left + (cab ? cab.x : c.x0 + bw * 0.5) * larg, hy = top + (cab ? cab.y + cab.alt * 0.6 : c.y0 + bh * 0.15) * alt;
+  const rx = Math.max(56, bw * larg * 0.32), ry = Math.max(40, bh * alt * 0.2);
+  let html = '';
+  for (let i = 0; i < 6; i++) {
+    const ang = Math.PI * (0.95 + i * 0.22), t = 20 + (i % 3) * 7;   // arco por cima e dos lados da cabeça
+    html += `<i class="pg-vit-estrela" style="left:${hx + Math.cos(ang) * rx}px;top:${hy + Math.sin(ang) * ry}px;width:${t}px;height:${t}px;animation-delay:${(i * 0.23).toFixed(2)}s">${ESTRELA_SVG}</i>`;
+  }
+  caixa.innerHTML = html;
+  const frase = C.fraseComemora?.(p?.pet);
+  if (!frase) return;
+  const mostrar = () => {
+    if (!tela || $('pg-vitoria').hidden) return;
+    const b = document.createElement('div');
+    b.className = 'pg-vit-fala';
+    b.textContent = frase;
+    caixa.appendChild(b);
+    const w = b.offsetWidth, h = b.offsetHeight;   // em cima da cabeça, sem sair da tela
+    b.style.left = Math.max(8, Math.min(raiz.width - w - 8, hx - w / 2)) + 'px';
+    b.style.top = Math.max(8, hy - ry - h - 6) + 'px';
+  };
+  clearTimeout(tela.tFala);
+  if (semMov()) mostrar(); else tela.tFala = setTimeout(mostrar, 1000);
+}
+// confete: emojis e, na vitória, também papeizinhos coloridos (mais denso)
+function soltarConfete(denso = false) {
+  const c = $('pg-vit-confete'), simb = ['🎉', '✨', '⭐', '🎊'], cores = ['#ffd700', '#ff7b2e', '#00d4ff', '#00e676', '#ff5c9a', '#7c5cfc'];
+  const n = denso ? 48 : 22;
+  for (let i = 0; i < n; i++) {
     const s = document.createElement('span');
-    s.textContent = simb[i % simb.length];
+    if (denso && i % 2) { s.className = 'papel'; s.style.background = cores[i % cores.length]; s.style.setProperty('--gira', `${(Math.random() * 720 - 360).toFixed(0)}deg`); }
+    else s.textContent = simb[i % simb.length];
     s.style.left = Math.random() * 100 + '%';
-    s.style.animationDelay = (Math.random() * 0.8).toFixed(2) + 's';
+    s.style.animationDelay = (Math.random() * (denso ? 2.4 : 0.8)).toFixed(2) + 's';
+    if (denso) s.style.animationDuration = (2.2 + Math.random() * 1.4).toFixed(2) + 's';
     c.appendChild(s);
   }
 }

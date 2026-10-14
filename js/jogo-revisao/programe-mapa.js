@@ -60,6 +60,7 @@ export async function abrirMapaPrograme({ de = null, andarAte = null } = {}) {
 }
 
 export function fecharMapaPrograme() {
+  $('pg-mapa').querySelectorAll('.pgm-tela-chefe').forEach(e => e.remove());
   if (!tela) { $('pg-mapa').hidden = true; return; }
   posPet = tela.petIdx;
   for (const t of tela.timers) clearTimeout(t);
@@ -102,26 +103,19 @@ async function desenharMapa() {
     (ultimaLib > 0 ? `<polyline class="pgm-tr-feita" points="${pontos.slice(0, ultimaLib + 1).map(px).join(' ')}"/>` : '');
   const med = C.medalhas(), pos = (x, y) => `left:${(x * 100).toFixed(2)}%;top:${(y * 100).toFixed(2)}%`;
   let html = '';
-  // plaquinha com o nome da região, perto da 1ª fase dela (o lugar exato é escolhido em arrumar(), onde não tapa nada)
+  // plaquinha com o nome da região: na posição do JSON (regiao.placa) ou, sem ela, perto da 1ª fase (arrumar() acha o lugar)
   for (const r of M.regioes) {
-    const p = r.fases?.[0];
-    if (p) html += `<span class="pgm-placa" data-x="${p.x}" data-y="${p.y}" style="${pos(p.x, p.y)}"><span>${C.esc(r.nome)}</span></span>`;
+    const p = r.placa || r.fases?.[0];
+    if (p) html += `<span class="pgm-placa" data-x="${p.x}" data-y="${p.y}"${r.placa ? ' data-fixa="1"' : ''} style="${pos(p.x, p.y)}"><span>${C.esc(r.nome)}</span></span>`;
   }
-  // chefes: ao lado da última fase de cada região (do lado de dentro da ilha)
-  const chefes = await Promise.all(M.regioes.map(r => imagemExiste(C.caminho(r.chefe || ''))));
-  if (!tela) return;
-  M.regioes.forEach((r, k) => {
-    const p = r.fases?.[r.fases.length - 1];
-    if (!p) return;
-    html += `<span class="pgm-chefe${med[r.id] ? ' vencido' : ''}" data-chefe="${C.esc(r.id)}" data-x="${p.x}" data-y="${p.y}" style="${pos(p.x, p.y)}">${
-      chefes[k] ? `<img src="${C.caminho(r.chefe)}" alt="" draggable="false"/>` : '<b>🤖</b>'}</span>`;
-  });
+  // bolinhas: feita (verde, número e ★★☆), atual (dourada, pulsando), bloqueada (cinza, 🔒). Chefe (a última de cada região):
+  // 1,5× maior, vinho com borda dourada e coroa. Os robôs não ficam no mapa: só aparecem na tela do chefe.
   pontos.forEach((p, k) => {
     const est = Number(C.progFase(p.id)?.estrelas) || 0, lib = C.faseLiberada(p.i);
     const cls = est ? 'feita' : lib ? 'liberada' : 'bloqueada';
     html += `<button class="pgm-fase ${cls}${p.chefe ? ' chefe' : ''}" data-pgm-fase="${k}" style="${pos(p.x, p.y)}"
-      aria-label="Fase ${p.id}${lib ? '' : ' (bloqueada)'}"><span class="pgm-num">${lib || est ? p.id : '🔒'}</span>${
-      est ? `<span class="pgm-est">${'⭐'.repeat(est)}${'☆'.repeat(3 - est)}</span>` : ''}</button>`;
+      aria-label="Fase ${p.id}${p.chefe ? ' (chefe)' : ''}${lib ? '' : ' (bloqueada)'}">${p.chefe ? COROA : ''}<span class="pgm-num">${lib || est ? p.id : '🔒'}</span>${
+      est ? `<span class="pgm-est">${'★'.repeat(est)}<i>${'★'.repeat(3 - est)}</i></span>` : ''}</button>`;
   });
   const esp = M.especiais || {};
   if (esp.desafio_dia) html += `<button class="pgm-especial" data-pgm-dia style="${pos(esp.desafio_dia.x, esp.desafio_dia.y)}" aria-label="Desafio do dia">${C.esc(esp.desafio_dia.emoji || '📅')}<small>Desafio</small></button>`;
@@ -130,6 +124,7 @@ async function desenharMapa() {
   $('pgm-itens').innerHTML = html;
 }
 
+const COROA = '<svg class="pgm-coroa" viewBox="0 0 24 16" aria-hidden="true"><path d="M2 14 1 3l6 5 5-7 5 7 6-5-1 11z"/><circle cx="1" cy="3" r="1.4"/><circle cx="12" cy="1.2" r="1.4"/><circle cx="23" cy="3" r="1.4"/></svg>';
 // em pé: largura da tela (rola na vertical); deitado ou no computador: altura da tela, centralizado
 function dimensionar() {
   const sc = $('pgm-scroll'), palco = $('pgm-palco');
@@ -140,8 +135,8 @@ function dimensionar() {
   if (vw > vh) { h = vh; w = vh * W / H; }
   palco.style.width = Math.floor(w) + 'px';
   palco.style.height = Math.floor(h) + 'px';
-  // bolinha ≈ 44 px; num mapa estreito diminui um pouco para as fases vizinhas não se encavalarem
-  tela.b = Math.round(Math.max(32, Math.min(46, w * 0.085)));
+  // bolinha ≈ 4% da largura do mapa (no celular em pé, ~26–30 px); a área de toque é maior (CSS, ::before de 40 px)
+  tela.b = Math.round(Math.max(20, w * 0.04));
   palco.style.setProperty('--pgm-b', tela.b + 'px');
   arrumar(Math.floor(w), Math.floor(h));
   colocarPet(tela.petIdx, true);
@@ -186,12 +181,13 @@ function arrumar(w, h) {
   }
   const colocar = (el, rw, rh, dist) => {
     const cx = Number(el.dataset.x) * w, cy = Number(el.dataset.y) * h;
-    const m = melhorLugar(cx, cy, rw, rh, dist, obst, w, h);
+    const m = el.dataset.fixa ? { x: cx, y: cy } : melhorLugar(cx, cy, rw, rh, dist, obst, w, h);
+    // nunca sai do mapa: encostou na borda, empurra para dentro
+    m.x = Math.max(rw / 2 + 4, Math.min(w - rw / 2 - 4, m.x));
+    m.y = Math.max(rh / 2 + 4, Math.min(h - rh / 2 - 4, m.y));
     el.style.left = m.x + 'px'; el.style.top = m.y + 'px';
-    obst.push(m.r);
+    obst.push(retDe(m.x, m.y, rw, rh));
   };
-  const sc = b * 1.3;   // chefe: um pouco maior que a bolinha
-  for (const el of itens.querySelectorAll('.pgm-chefe')) { el.style.width = el.style.height = sc + 'px'; colocar(el, sc, sc, b / 2 + 2); }
   for (const el of itens.querySelectorAll('.pgm-placa')) colocar(el, el.offsetWidth || 120, el.offsetHeight || 20, b / 2 + 4);
   tela.obst = obst;
 }
@@ -204,8 +200,9 @@ function rolarAte(k, suave = true) {
   sc.scrollTo({ top: Math.max(0, top), behavior: suave ? 'smooth' : 'auto' });
 }
 
-// ── Pet: parado ao lado da bolinha; anda pela trilha de bolinha em bolinha (~250 ms por trecho) ──
-const ALT_PET = 54;   // altura do pet SENTADO na tela (px)
+// ── Pet: sentado EM CIMA da bolinha da fase atual (pés no centro dela); anda pela trilha de bolinha em bolinha (~250 ms por trecho) ──
+// Altura do desenho sentado ≈ 1,8 × a bolinha de chefe (1,5 × a bolinha), vezes a escala do pet (PROMPT-63)
+const PET_SOBRE_CHEFE = 1.8, CHEFE_MAIOR = 1.5;
 function colocarPet(k, sem = false) {
   const img = $('pgm-pet'), info = C.pet();
   if (!img || !tela) return;
@@ -214,24 +211,16 @@ function colocarPet(k, sem = false) {
   if (!img.dataset.pronto) {
     img.dataset.pronto = '1';
     img.src = C.quadrosDe(forma, 'sentado_girando')[0] || '';
-    img.style.height = Math.round(ALT_PET * (C.escalaPet?.(forma) || 1) / (C.sentadoNoQuadro(forma) || 0.86)) + 'px';
     C.pintar(img, info);
   }
+  const b = tela.b || 28, sentado = b * CHEFE_MAIOR * PET_SOBRE_CHEFE * (C.escalaPet?.(forma) || 1);
+  img.style.height = Math.round(sentado / (C.sentadoNoQuadro(forma) || 0.86)) + 'px';   // altura do QUADRO (o desenho sentado é parte dele)
   img.hidden = false;
   const p = tela.pontos[k];
   if (!p) return;
   img.style.transition = sem ? 'none' : '';
-  // ao lado da bolinha: parado, do lado com mais espaço; andando, sempre à esquerda dela
-  const w = $('pgm-palco').clientWidth, h = $('pgm-palco').clientHeight, b = tela.b || 44;
-  const cx = p.x * w, cy = p.y * h, pw = ALT_PET * 0.9, ph = ALT_PET;
-  let x = cx - b / 2 - pw / 2 + 4, y = cy + ph / 2;
-  if (sem && tela.obst) {
-    const outros = tela.obst.filter(o => !(o.r != null && Math.abs(o.x - cx) < 1 && Math.abs(o.y - cy) < 1));
-    const lados = [cx - b / 2 - pw / 2 + 4, cx + b / 2 + pw / 2 - 4].map(lx => ({ lx, f: folga(retDe(lx, cy, pw, ph), outros, w, h) }));
-    x = lados.sort((a, c) => c.f - a.f)[0].lx;
-  }
-  img.style.left = x + 'px';   // o img fica ancorado nos pés (translate -50%, -100%)
-  img.style.top = y + 'px';
+  img.style.left = `${(p.x * 100).toFixed(2)}%`;   // o img fica ancorado nos pés (translate -50%, -100%)
+  img.style.top = `${(p.y * 100).toFixed(2)}%`;
 }
 
 async function andarPet(alvo) {
@@ -285,8 +274,38 @@ async function tocouFase(k) {
   await andarPet(k);
   if (!tela) return;
   const id = p.id;
+  if (p.chefe && !(await telaDoChefe(p))) return;   // "Agora não": continua no mapa
+  if (!tela) return;
   fecharMapaPrograme();
   C.abrirFase(id);
+}
+
+// ── ⚔️ Tela do chefe: antes da fase de chefe, por cima do mapa. Promise: true = aceitou o desafio ──
+async function telaDoChefe(p) {
+  const r = p.regiao, fase = C.fases().find(f => f.id === p.id), meta = Number(fase?.meta_blocos) || 0;
+  const vencido = !!C.medalhas()[r.id];
+  const src = C.caminho(r.chefe || ''), temImg = await imagemExiste(src);
+  if (!tela) return false;
+  const nome = C.esc(r.chefe_nome || 'Chefe');
+  const fala = C.esc(String(r.chefe_fala || 'Duvido você chegar na comida com {meta} blocos ou menos!').replace(/\{meta\}/g, meta || '?'));
+  const estrelas = vencido ? Array.from({ length: 8 }, (_, i) => `<i style="--a:${i * 45}deg">⭐</i>`).join('') : '';
+  return new Promise(ok => {
+    const el = document.createElement('div');
+    el.className = 'pgm-tela-chefe';
+    el.innerHTML = `<div class="pgm-tc-caixa" role="dialog" aria-label="Chefe ${daRegiao(r)}">
+      <b class="pgm-tc-tit">⚔️ Chefe ${daRegiao(r)}</b>
+      <div class="pgm-tc-rosto${vencido ? ' vencido' : ''}">${temImg ? `<img src="${src}" alt="" draggable="false"/>` : '<b>🤖</b>'}${estrelas ? `<span class="pgm-tc-estrelas">${estrelas}</span>` : ''}</div>
+      <b class="pgm-tc-nome">${nome}</b>
+      ${vencido ? `<p class="pgm-tc-ja">Você já venceu o ${nome}! Quer melhorar as estrelas?</p>` : `<p class="pgm-tc-fala">${fala}</p>`}
+      <p class="pgm-tc-meta">Fase ${p.id} · Meta ⭐⭐⭐: até ${meta || '?'} blocos</p>
+      <div class="pgm-tc-botoes"><button class="jr-btn jr-btn-ouro" data-aceitar>⚔ Aceitar desafio</button><button class="jr-btn jr-btn-sec" data-nao>Agora não</button></div>
+    </div>`;
+    $('pg-mapa').appendChild(el);
+    const fim = (sim) => { el.remove(); ok(sim); };
+    el.querySelector('[data-aceitar]').addEventListener('click', () => fim(true));
+    el.querySelector('[data-nao]').addEventListener('click', () => fim(false));
+    el.addEventListener('click', (e) => { if (e.target === el) fim(false); });   // tocar fora = agora não
+  });
 }
 
 export function ligarMapaPrograme() {
@@ -314,12 +333,6 @@ function cartaoChefe(html, classe = '') {
 async function rostoChefe(r) {
   const src = C.caminho(r?.chefe || '');
   return (await imagemExiste(src)) ? `<img class="pgm-cc-img" src="${src}" alt="" draggable="false"/>` : '<b class="pgm-cc-emoji">🤖</b>';
-}
-export async function falaDoChefe(id, meta) {
-  const r = chefeDaFase(id);
-  if (!r) return;
-  await cartaoChefe(`<div class="pgm-cc-rosto">${await rostoChefe(r)}</div>
-    <p class="pgm-cc-fala">Duvido você chegar na comida com <b>${Number(meta) || '?'} blocos</b>!</p>`, 'fala');
 }
 // "da Vila dos Passos", "do Laboratório F1" (o JSON pode dizer: regiao.de = "do")
 const daRegiao = (r) => `${r.de || (/o$/i.test(String(r.nome).split(' ')[0]) ? 'do' : 'da')} ${C.esc(r.nome)}`;

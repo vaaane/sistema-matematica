@@ -1046,6 +1046,14 @@
     ["parado_lado", 1, 900],
     ["calmo", 1, 2500],
     ["parado_lado", 1, 900]
+   ],
+   "vitoria": [
+    ["sentado_lado", 1, 900],
+    ["farejar", 1, 900],
+    ["sentado_lado", 1, 900],
+    ["farejar", 1, 900],
+    ["sentado_lado", 1, 900],
+    ["farejar", 1, 1500]
    ]
   },
   "dragao_vermelho_adulto": {
@@ -1174,6 +1182,14 @@
     ["parado_lado", 1, 900],
     ["calmo", 1, 2500],
     ["parado_lado", 1, 900]
+   ],
+   "vitoria": [
+    ["sentado_lado", 1, 900],
+    ["farejar", 1, 900],
+    ["sentado_lado", 1, 900],
+    ["farejar", 1, 900],
+    ["sentado_lado", 1, 900],
+    ["farejar", 1, 1500]
    ]
   }
  },

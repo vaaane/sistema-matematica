@@ -44,9 +44,11 @@
     }
    ],
    "placa": {
-    "x": 0.4979,
-    "y": 0.9425
-   }
+    "x": 0.2086,
+    "y": 0.9433
+   },
+   "chefe_nome": "Espantalho",
+   "chefe_fala": "Duvido você chegar na comida com {meta} blocos ou menos!"
   },
   {
    "cap": 2,
@@ -86,9 +88,11 @@
     }
    ],
    "placa": {
-    "x": 0.299,
-    "y": 0.7446
-   }
+    "x": 0.1602,
+    "y": 0.7453
+   },
+   "chefe_nome": "Engrenaldo",
+   "chefe_fala": "Duvido você chegar na comida com {meta} blocos ou menos!"
   },
   {
    "cap": 3,
@@ -123,9 +127,11 @@
     }
    ],
    "placa": {
-    "x": 0.7232,
-    "y": 0.5854
-   }
+    "x": 0.7928,
+    "y": 0.4658
+   },
+   "chefe_nome": "Pedregulho",
+   "chefe_fala": "Duvido você chegar na comida com {meta} blocos ou menos!"
   },
   {
    "cap": 4,
@@ -160,9 +166,11 @@
     }
    ],
    "placa": {
-    "x": 0.3964,
-    "y": 0.434
-   }
+    "x": 0.7928,
+    "y": 0.3106
+   },
+   "chefe_nome": "Dr. Tubo",
+   "chefe_fala": "Duvido você chegar na comida com {meta} blocos ou menos!"
   },
   {
    "cap": 5,
@@ -197,9 +205,11 @@
     }
    ],
    "placa": {
-    "x": 0.4451,
-    "y": 0.302
-   }
+    "x": 0.1574,
+    "y": 0.2989
+   },
+   "chefe_nome": "Galhudo",
+   "chefe_fala": "Duvido você chegar na comida com {meta} blocos ou menos!"
   },
   {
    "cap": 6,
@@ -229,9 +239,11 @@
     }
    ],
    "placa": {
-    "x": 0.5076,
-    "y": 0.2376
-   }
+    "x": 0.7928,
+    "y": 0.1863
+   },
+   "chefe_nome": "Rei Dourado",
+   "chefe_fala": "Duvido você chegar na comida com {meta} blocos ou menos!"
   }
  ],
  "especiais": {

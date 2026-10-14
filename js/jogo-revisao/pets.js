@@ -67,28 +67,38 @@ export function sortearOcioso() {   // sem repetir a anterior
 const SEQ = new WeakMap();   // img → sequência tocando agora
 export const temSequencia = (forma, nome) => !!SPR?.sequencias?.[forma]?.[nome]?.length;
 const DE_LADO = /_lado$/;
+// img.dataset.seq = nome da sequência tocando: enquanto existir, ninguém mais troca nem redesenha o quadro dessa imagem
+// (seguidor do mapa, Meu Pet, ocioso, "vira de lado"). Só tocar outra coisa de propósito (pararSequencia) interrompe.
+export const emSequencia = (img) => !!img?.dataset?.seq;
 export function pararSequencia(img) {
   const s = SEQ.get(img);
   if (!s) return;
-  SEQ.delete(img); clearTimeout(s.t); s.ok(false);
+  SEQ.delete(img); delete img.dataset.seq; clearTimeout(s.t); s.ok(false);
+}
+// Passos que vão ser tocados: os do sprites.json e, se o pet estava de frente e a sequência começa/termina de lado
+// (parado_lado, …), uma transição de 300 ms sentado de lado. Nunca a pose de frente no meio (o sentado_girando do adulto é
+// 1 quadro só: a pose de frente). tocarSequencia e msAtePasso usam esta mesma lista, então o tempo do fogo bate.
+function passosDe(forma, nome, deFrente) {
+  const passos = temSequencia(forma, nome) ? [...SPR.sequencias[forma][nome]] : null;
+  if (!passos || !deFrente || !temAnim(forma, 'sentado_lado')) return passos;
+  const transicao = (p) => DE_LADO.test(p[0]) && p[0] !== 'sentado_lado';   // já sentado de lado: não precisa
+  if (transicao(passos[0])) passos.unshift(['sentado_lado', 1, 300]);
+  if (transicao(passos[passos.length - 1])) passos.push(['sentado_lado', 1, 300]);
+  return passos;
 }
 // Promise: true no fim; false se foi interrompida; null se o pet não tem a sequência (quem chamou usa a animação simples).
-// Começa/termina de lado (sentado_lado, parado_lado) e o pet estava de frente: passa pelo meio do giro (sentado_girando 2).
 export function tocarSequencia(img, forma, nome, { deFrente = true } = {}) {
   pararSequencia(img);
-  const passos = temSequencia(forma, nome) ? [...SPR.sequencias[forma][nome]] : null;
+  const passos = passosDe(forma, nome, deFrente);
   if (!passos) return Promise.resolve(null);
-  if (deFrente && temAnim(forma, 'sentado_girando') && SPR.pets[forma].sentado_girando.length >= 2) {
-    if (DE_LADO.test(passos[0][0])) passos.unshift(['sentado_girando', 2, 300]);
-    if (DE_LADO.test(passos[passos.length - 1][0])) passos.push(['sentado_girando', 2, 300]);
-  }
   return new Promise(ok => {
     const s = { ok, t: 0 };
     SEQ.set(img, s);
+    img.dataset.seq = nome;
     let i = 0;
     const passo = () => {
       if (SEQ.get(img) !== s) return;
-      if (i >= passos.length) { SEQ.delete(img); ok(true); return; }
+      if (i >= passos.length) { SEQ.delete(img); delete img.dataset.seq; ok(true); return; }
       const [anim, q, ms] = passos[i++], fs = quadrosDe(forma, anim);
       const src = fs[Math.min(Math.max(1, q), fs.length) - 1];
       if (src && img.getAttribute('src') !== src) img.src = src;   // (a batalha troca o src sem dataset)
@@ -99,9 +109,13 @@ export function tocarSequencia(img, forma, nome, { deFrente = true } = {}) {
   });
 }
 // até quando a sequência chega a um passo (ms desde o começo, contando o giro de entrada): ex. o fogo sair na batalha
+// os quadros (src) de cada passo de uma sequência, na ordem: o 1º para medir o desenho, o último para mostrar parado
+export function quadrosSeq(forma, nome) {
+  return (SPR?.sequencias?.[forma]?.[nome] || []).map(([a, q]) => { const fs = quadrosDe(forma, a); return fs[Math.min(Math.max(1, q), fs.length) - 1]; });
+}
 export function msAtePasso(forma, nome, achar, { deFrente = true } = {}) {
-  const passos = SPR?.sequencias?.[forma]?.[nome] || [];
-  let t = deFrente && DE_LADO.test(passos[0]?.[0] || '') ? 300 : 0;
+  const passos = passosDe(forma, nome, deFrente) || [];
+  let t = 0;
   for (const p of passos) { if (achar(p)) return t; t += p[2]; }
   return t;
 }
@@ -183,13 +197,28 @@ export class PetSeguidor {
   // Interrompe a sequência (personagem andou, reação, balão, janela, aba escondida) e recomeça os 4 s
   pararAcao() {
     this.esperaAcao = MS_ANTES_ACAO;
+    this.fixa = false;
     if (!this.acao) return;
     this.acao = null;
     pararSequencia(this.img);
     this.trocar('sentado_girando', true); this.desenhar();
   }
   descartar() { this.pararAcao(); SEGUIDORES.delete(this); }   // pet de colega que saiu do mapa
-  pausarAcoes(sim) { this.pausado = !!sim; if (sim) this.pararAcao(); }
+  pausarAcoes(sim) { this.pausado = !!sim; if (sim && !this.fixa) this.pararAcao(); }
+  // Comemoração (PROMPT-65: insígnia nova, duelo vencido): toca a sequência (ex. `vitoria`) uma vez. Não para com o balão
+  // de fala nem com janela por cima; só se o personagem andar, vier uma reação ou a fome. false = o pet não tem a sequência.
+  comemorar(nome = 'vitoria') {
+    if (!this.pet || !temSequencia(this.forma, nome)) return false;
+    this.pararAcao();
+    this.reacao = null;
+    this.acao = nome; this.fixa = true;
+    tocarSequencia(this.img, this.forma, nome).then(fim => {
+      if (!fim || this.acao !== nome) return;
+      this.acao = null; this.fixa = false; this.esperaAcao = MS_ANTES_ACAO;
+      this.trocar('sentado_girando', true); this.desenhar();
+    });
+    return true;
+  }
 
   comecarAcao() {
     const l = ACOES_MAPA.filter(a => a !== this.ultimaAcao && temSequencia(this.forma, a));
@@ -294,7 +323,7 @@ export class PetSeguidor {
       else if (andando && falta > atras + largura) { this.reacao = null; }   // personagem saiu andando: o pet vai atrás
     }
     // ação em andamento (sequência): para na hora se o personagem andar ou se a fome/uma reação entrar
-    if (this.acao && (mexeu || andando || this.reacao || this.fome || this.pausado)) this.pararAcao();
+    if (this.acao && (mexeu || andando || this.reacao || this.fome || (this.pausado && !this.fixa))) this.pararAcao();
     if (this.acao) {
       this.espelhar = this.esquerda;   // as sequências são desenhadas viradas para a direita
       this.desenhar();
@@ -343,7 +372,7 @@ export class PetSeguidor {
   desenhar() {
     if (!this.pet || !this.lista.length) return;
     const src = this.lista[Math.min(this.q, this.lista.length - 1)];
-    if (!this.acao && this.img.dataset.src !== src) { this.img.src = src; this.img.dataset.src = src; }   // na ação, a sequência troca o quadro
+    if (!this.acao && !emSequencia(this.img) && this.img.dataset.src !== src) { this.img.src = src; this.img.dataset.src = src; }   // na ação, a sequência troca o quadro
     this.img.style.left = this.x + 'px';
     this.img.style.top = this.y + 'px';
     this.img.style.height = this.altura + 'px';
@@ -394,6 +423,7 @@ export class PetParado {
   }
 
   desenhar() {
+    if (emSequencia(this.img)) return;   // a sequência é quem troca o quadro
     const src = this.lista[Math.min(this.q, this.lista.length - 1)];
     if (src && this.img.dataset.src !== src) { this.img.src = src; this.img.dataset.src = src; }
   }

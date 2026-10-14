@@ -16,7 +16,7 @@ import { definirLoja, definirPeixes, lojaPronta, cfgLoja, comidas, tintas, efeit
 import { definirPesca, pescaPronta, cfgPesca, pontosDoMapa, spritePesca, pontaVara, sortearPeixe, entre, inteiroEntre,
   semanaPesca, semanaAnterior, criarBarrinha, passoBarrinha } from '/js/jogo-revisao/pesca.js';
 import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, tamanhoBusto, temBusto, bustoPet, preCarregarPet, PetSeguidor, PetParado,
-  temAnim, formaAdulta, formaValida, sentadoNoQuadro, escalaPet, escalaMax, sortearOcioso, temSequencia, tocarSequencia, pararSequencia, msAtePasso,
+  temAnim, formaAdulta, formaValida, sentadoNoQuadro, escalaPet, escalaMax, quadrosSeq, sortearOcioso, temSequencia, tocarSequencia, pararSequencia, msAtePasso,
   sortearAcaoParado, EMOCOES, MS_EMOCAO } from '/js/jogo-revisao/pets.js';
 import { iniciarOnline, enviarOnline, sairOnline, ouvirMapa, ouvirTodos, onlineAtivo, VALIDADE_MS } from '/js/jogo-revisao/online.js';
 import { definirPedidos, pedidosProntos, cfgPedidos, pedidoDisponivel, moedasDoPedido, limiteDoDiaAtingido, dicaPedido, lerResposta } from '/js/jogo-revisao/pedidos.js';
@@ -31,7 +31,7 @@ import { configurarPrograme, ligarBotoesPrograme, abrirTela as abrirTelaPrograme
   programaParaTexto, programaDeTexto, caixaDoQuadro } from '/js/jogo-revisao/programe.js';
 import { faseDoDia, faseDaCorrida, resultadoCorrida } from '/js/jogo-revisao/programe-logica.js';
 import { configurarMapaPrograme, ligarMapaPrograme, temMapaPrograme, abrirMapaPrograme, esquecerPosicaoPet, temaDaFase, temaVila, chefeDaFase,
-  falaDoChefe, medalhaDoChefe } from '/js/jogo-revisao/programe-mapa.js';
+  medalhaDoChefe } from '/js/jogo-revisao/programe-mapa.js';
 
 // XP (só na primeira vez que cada personagem é vencido; nunca no modo teste)
 const XP_TREINADOR      = 5;
@@ -148,6 +148,49 @@ function verificarMestre() {
   if (festa) { publicarResumoInsignias(); enviarOnline({ titulo: meuTitulo() }); if (!$('tela-geral').hidden) desenharMarcadores(); }
   return festa;
 }
+// ── Comemoração do pet (PROMPT-65): frase de `comemora` (ou de `venceu`) do falas-pets.json, sem repetir a última ──
+function fraseComemora(pet) {
+  if (!pet) return null;
+  const v = { pet: nomePet(pet), apelido: apelidoAluno || String(sessao.nome || '').split(' ')[0] };
+  return fraseDe(pet, 'comemora', v) || fraseDe(pet, 'venceu', v);
+}
+// balão em cima do pet (batalha, festa), ~1 s depois que ele começa a comemorar
+function falaVitoria(img, pet, onde) {
+  const frase = fraseComemora(pet);
+  if (!frase || !onde) return;
+  onde.querySelector('.jr-fala-vitoria')?.remove();
+  setTimeout(() => {
+    if (!img.isConnected || img.closest('[hidden]')) return;
+    const b = document.createElement('div');
+    b.className = 'jr-fala-vitoria';
+    b.textContent = frase;
+    onde.appendChild(b);
+    if (img.offsetParent === onde) {   // em cima do próprio pet (o palco da festa também tem o personagem)
+      b.style.left = img.offsetLeft + img.offsetWidth / 2 + 'px';
+      b.style.bottom = 'auto';
+      b.style.top = Math.max(0, img.offsetTop + img.offsetHeight * 0.12 - b.offsetHeight - 8) + 'px';
+    }
+  }, semMovimento() ? 0 : 1000);
+}
+// No mapa, no salão ou no ginásio: o pet que segue o personagem toca `vitoria` e fala (insígnia nova, duelo vencido).
+// false = o pet não tem a sequência (quem chamou usa a reação de antes).
+function comemorarPetNaCena() {
+  if (!seguidor?.pet || $('pet').hidden || !seguidor.comemorar('vitoria')) return false;
+  const frase = fraseComemora(seguidor.pet);
+  if (frase) setTimeout(() => {
+    if (seguidor?.acao !== 'vitoria') return;
+    pararFalaPet();
+    const el = $('pet-fala');
+    el.textContent = frase;
+    el.hidden = false;
+    el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+    conversa.falando = true;
+    posicionarFalaPet();
+    conversa.timer = setTimeout(pararFalaPet, duracaoBalao(frase));
+  }, semMovimento() ? 0 : 1000);
+  return true;
+}
+
 // Festa em tela cheia: confete, o pet comemorando grande e o personagem
 function mostrarFestaMestre(tipo) {
   const el = $('festa-mestre');
@@ -160,7 +203,14 @@ function mostrarFestaMestre(tipo) {
   const pet = estado.pets?.ativo, forma = pet && formaDe(pet), img = $('fm-pet');
   clearInterval(mostrarFestaMestre.anim);
   img.hidden = !forma;
-  if (forma) {
+  pararSequencia(img);
+  img.parentElement.querySelector('.jr-fala-vitoria')?.remove();
+  if (forma && temSequencia(forma, 'vitoria')) {   // dragão adulto: alterna de lado e nariz empinado, para se achando e fala (PROMPT-65)
+    aplicarVisualPet(img, pet);
+    if (semMovimento()) img.src = quadrosSeq(forma, 'vitoria').at(-1);
+    else { img.src = quadrosSeq(forma, 'vitoria')[0]; tocarSequencia(img, forma, 'vitoria', { deFrente: false }); }
+    falaVitoria(img, pet, img.parentElement);
+  } else if (forma) {
     aplicarVisualPet(img, pet);
     const anims = forma !== pet ? ['animado', 'orgulhoso', 'rugido'] : temAnim(forma, 'pulo_cambalhota') ? ['pulo_cambalhota', 'feliz'] : ['feliz'];
     const seq = anims.flatMap(a => { const q = quadrosDe(forma, a); return Array.from({ length: Math.max(q.length, 5) }, (_, i) => q[i % q.length]); });
@@ -742,6 +792,7 @@ export async function iniciarJogo(sess) {
   configurarPrograme({
     pet: () => { const p = petsOk && estado?.pets?.ativo; return p ? { pet: p, forma: formaDe(p), tinta: cuidadosDe(p)?.tinta || null, nome: nomePet(p) } : null; },
     quadrosDe, temAnim, sentadoNoQuadro, escalaPet, escalaMax, tocar, esc, agora: agoraServ,
+    temSequencia, tocarSequencia, pararSequencia, quadrosSeq, fraseComemora: (pet) => fraseComemora(pet),
     pintar: (img, p) => aplicarTinta(img, p.tinta || null),
     imgComida: (pet) => caminhoImg((comidas().find(c => pet && ehFavorita(pet, c)) || comidas().find(c => c.id === 'racao'))?.imagem || ''),
     imgPetisco: () => caminhoImg(comidas().find(c => c.id === 'biscoito')?.imagem || ''),
@@ -4609,8 +4660,10 @@ function encerrarDueloLocal() {
   cancelAnimationFrame(duelo.raf);
   try { onDisconnect(ref(db, `${basePraca()}/duelos/${duelo.id}/on/${sessao.uid}`)).cancel(); } catch (_) {}
   remove(ref(db, `${basePraca()}/duelos/${duelo.id}/on/${sessao.uid}`)).catch(() => {});
+  const venceu = !!duelo.venceu;
   duelo = null;
   $('duelo').hidden = true;
+  if (venceu) comemorarPetNaCena();
 }
 
 function atualizarDuelo(d) {
@@ -4778,6 +4831,7 @@ function aplicarFimDuelo(d) {
   }
   gravar(patch);
   tocar(res === 'venceu' ? 'vitoria' : res === 'empate' ? 'acerto' : 'erro');
+  du.venceu = res === 'venceu';   // ao fechar o resultado, o pet comemora (PROMPT-65)
   const titulo = res === 'venceu' ? (f.wo ? '🏆 Você venceu por W.O.!' : '🏆 Você venceu!') : res === 'empate' ? '🤝 Empate!' : `${nomeT(outro, nomeCurto(outro, du.outro.nome))} venceu!`;
   $('dl-fim-titulo').innerHTML = titulo;
   $('dl-fim-placar').textContent = `${ganhas} × ${Number(f.placar?.[outro]) || 0}`;
@@ -5962,6 +6016,7 @@ function iniciarBatalha(id, origem = 'lista') {
   fL.style.setProperty('--pet-quadro', `${qw} / ${qh}`);
   fL.style.setProperty('--cresce', fatorForma(bt.pet, bt.forma));   // desenho sentado 15% maior que o do filhote
   fL.classList.toggle('adulto', adulto);
+  fL.querySelector('.jr-fala-vitoria')?.remove();   // balão da comemoração da batalha anterior
   const fR = $('bt-R'), formaR = t.pet, [qwR, qhR] = tamanhoQuadro(formaR);   // o pet do treinador (hoje sempre filhote; adulto teria o mesmo cuidado)
   fR.style.setProperty('--pet-quadro', `${qwR} / ${qhR}`);
   fR.classList.toggle('adulto', !!SPR_ADULTOS[formaR]);
@@ -6368,7 +6423,13 @@ function btFim() {
   const venceu = hp.L > hp.R || (hp.L === hp.R && tempoTot.L <= tempoTot.R);
   const v = venceu ? 'L' : 'R', q = venceu ? 'R' : 'L';
   bt.fim = true;
-  if (v === 'L' && adultoNaBatalha()) {   // adulto: orgulhoso (ufa, se venceu com pouca vida) e depois o rugido sentado
+  if (v === 'L' && temSequencia(bt.forma, 'vitoria')) {   // dragão adulto: a comemoração `vitoria` e a fala arrogante (PROMPT-65)
+    clearTimeout(bt.anim.L);
+    $('bt-L').style.transform = '';
+    if (btReduz()) { pararSequencia($('bt-imgL')); $('bt-imgL').src = quadrosSeq(bt.forma, 'vitoria').at(-1); }
+    else tocarSequencia($('bt-imgL'), bt.forma, 'vitoria', { deFrente: false });
+    falaVitoria($('bt-imgL'), bt.pet, $('bt-L'));
+  } else if (v === 'L' && adultoNaBatalha()) {   // adulto: orgulhoso (ufa, se venceu com pouca vida) e depois o rugido sentado
     btTocar('L', hp.L <= bt.max.L * 0.25 ? 'ufa' : 'orgulhoso', { loop: false, ms: 1000, depois: () => btTocar('L', 'rugido_sentado', { ms: 600 }) });
   } else btTocar(v, 'orgulhoso', { ms: 130 });   // sem `orgulhoso`: feliz (reserva)
   btTocar(q, 'triste_fome', { ms: 420 }); btConfete(v);
@@ -6933,7 +6994,7 @@ function mostrarInsigniaGanha(chave, dourada) {
     box.classList.remove('voando');
     img.getAnimations().forEach(a => a.cancel());
     if (animInsignia === anim) animInsignia = null;
-    seguidor?.reagir('pulo_cambalhota');
+    if (!comemorarPetNaCena()) seguidor?.reagir('pulo_cambalhota');
     mostrarAvisoSequencia();
     surgirPetSePendente();
     if (festaPendente) { const f = festaPendente; festaPendente = null; setTimeout(() => mostrarFestaMestre(f), 700); }
@@ -7610,7 +7671,7 @@ function vencer() {
     fecharPergunta();
     if (ganhou) {
       mostrarInsigniaGanha(chave, ganhou === 'dourada');
-      seguidor?.reagir('animado');
+      if (!temSequencia(seguidor?.forma, 'vitoria')) seguidor?.reagir('animado');   // com `vitoria`: comemora quando a insígnia some
       const pa = estado.pets.ativo, fa = pa && formaDe(pa);
       if (fa && temAnim(fa, 'busto_fogo')) setTimeout(() => avisoPet(`🔥 ${nomePet(pa)} está orgulhoso da insígnia!`, true, quadrosDe(fa, 'busto_fogo')[0]), 2600);
     }
@@ -7845,8 +7906,7 @@ async function abrirFasePrograme(id) {
     tema: temaPg(temaDaFase(id)),
   });
   if (!ok) return;
-  if (chefeDaFase(id)) await falaDoChefe(id, f.meta_blocos);   // fase do chefe: o desafio dele vem antes do cartão do capítulo
-  cartaoCapitulo(f.cap);
+  cartaoCapitulo(f.cap);   // a provocação do chefe já apareceu no mapa (tela do chefe, PROMPT-66)
 }
 
 function venceuFase(f, r) {
@@ -7868,14 +7928,11 @@ function venceuFase(f, r) {
   if (medalhaNova) { med[reg.id] = true; patch[`programe/medalhas/${reg.id}`] = true; }
   gravar(patch);
   publicarResumoPrograme();
-  (async () => {
-    if (medalhaNova) await medalhaDoChefe(reg);   // o chefe explode em estrelas e aparece a medalha
-    cartaoVitoriaFase(f, r, moedas, nova);
-  })();
+  cartaoVitoriaFase(f, r, moedas, nova, medalhaNova ? reg : null);   // a medalha vem depois da comemoração de vitória
 }
 
 // 🎉 Cartão de vitória: pet comemorando, estrelas, blocos, moedas e "Próxima fase ▶". Os avisos do pet vêm depois do cartão.
-async function cartaoVitoriaFase(f, r, moedas, nova) {
+async function cartaoVitoriaFase(f, r, moedas, nova, medalha = null) {
   const prox = fasesPg()[fasesPg().findIndex(x => x.id === f.id) + 1];
   const botoes = [];
   if (prox) botoes.push({ id: 'proxima', texto: 'Próxima fase ▶', classe: 'jr-btn-ouro' });
@@ -7887,6 +7944,7 @@ async function cartaoVitoriaFase(f, r, moedas, nova) {
       (r.estrelas < 3 ? `<div class="dica">Dá para fazer com ${f.meta_blocos} blocos ou menos!</div>` : '') +
       (prox ? '' : '<div><b>🏆 Você terminou todas as fases!</b></div>'),
   });
+  if (medalha) await medalhaDoChefe(medalha);   // chefe vencido pela 1ª vez: explode em estrelas e "🏅 Medalha da {região}!"
   if (moedas) avisoPet(`🤖 Fase ${f.id}: ${'⭐'.repeat(r.estrelas)} +${moedas} 🪙`, true);
   if (nova && prox && prox.cap !== f.cap) avisoPet(`🔓 Capítulo ${prox.cap} liberado: ${nomeCap(prox.cap)}!`, true);
   if (op === 'proxima' && prox) abrirFasePrograme(prox.id);   // direto, sem passar pela lista (capítulo novo: o cartão do capítulo aparece)
@@ -8423,7 +8481,15 @@ function abrirRelembre(chave, origem) {
   $('rel-dica').hidden = !e.dica;
   const pet = petsOk && estado.pets?.ativo;
   $('rel-pet-bloco').hidden = !pet;
-  if (pet) { const img = $('rel-pet'); img.src = quadrosDe(formaDe(pet), 'sentado_girando')[0]; marcarForma(img, pet, formaDe(pet)); aplicarVisualPet(img, pet); }
+  if (pet) {   // o busto (a cabeça grande, medida e centralizada como nos ícones); sem busto, o pet sentado como antes
+    const img = $('rel-pet'), forma = formaDe(pet), busto = temBusto(forma);
+    img.removeAttribute('style');
+    $('rel-moldura').classList.toggle('com-busto', busto);
+    img.src = busto ? bustoPet(forma) : quadrosDe(forma, 'sentado_girando')[0];
+    marcarForma(img, pet, busto ? pet : forma);   // o recorte do adulto (data-adulto) é só para o corpo inteiro
+    aplicarVisualPet(img, pet);
+    if (busto) encaixarIcone(img);
+  }
   const r = (estado.relembre[chave] ||= {});
   $('rel-check').hidden = origem !== 'entrada' && origem !== 'ginasio';   // a caixinha só vale dentro do ginásio
   $('rel-ocultar').checked = !!r.ocultar;

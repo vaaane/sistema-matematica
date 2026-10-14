@@ -493,9 +493,14 @@
         "Gostei."
       ],
       "venceu": [
-        "Mandou bem. Com calma e certeza.",
-        "Vitória fria e certeira.",
-        "Eu sabia."
+        "Calculei tudo. Como sempre.",
+        "Frio, preciso e perfeito. Igual a mim.",
+        "Nem suei. Dragões de gelo não suam.",
+        "Era óbvio. Pelo menos pra mim.",
+        "Elegante, né? Eu sei.",
+        "Vitória gelada e certeira. Assinado: eu.",
+        "Pode admirar. Eu deixo.",
+        "Só confirmei o que eu já sabia: sou incrível."
       ],
       "perdeu": [
         "Respira. Cabeça fria e volta.",
@@ -525,6 +530,16 @@
       "sem_lealdade": [
         "…",
         "(solta um floquinho de gelo)"
+      ],
+      "comemora": [
+        "Calculei tudo. Como sempre.",
+        "Frio, preciso e perfeito. Igual a mim.",
+        "Nem suei. Dragões de gelo não suam.",
+        "Era óbvio. Pelo menos pra mim.",
+        "Elegante, né? Eu sei.",
+        "Vitória gelada e certeira. Assinado: eu.",
+        "Pode admirar. Eu deixo.",
+        "Só confirmei o que eu já sabia: sou incrível."
       ]
     },
     "dragao_vermelho": {
@@ -589,11 +604,14 @@
         "Ronrono? EU? Isso foi um rugido baixinho."
       ],
       "venceu": [
-        "VITÓRIA! Que os bardos cantem o MEU nome! E o seu também, vai.",
-        "Mais uma conquista para o nosso reino! Principalmente pra mim.",
-        "Digno de um dragão! Ou seja: digno de mim.",
-        "Eu sabia. Eu sempre sei. É cansativo ser tão certo.",
-        "Viu? Comigo do lado não tem como perder."
+        "Eu sabia. Eu SEMPRE sei.",
+        "Óbvio. Com EU do lado, não tinha como perder.",
+        "Pode aplaudir. Eu espero.",
+        "Mais uma vitória para a MINHA coleção. E pra sua também, vai.",
+        "Fácil demais. Da próxima vez, traz um desafio de verdade.",
+        "Contemple a minha grandiosidade!",
+        "Os bardos vão cantar isso. Sobre mim, claro.",
+        "Isso foi lendário. Igual a mim."
       ],
       "perdeu": [
         "Isso foi um… treino. Claramente um treino.",
@@ -634,6 +652,16 @@
         "Hmph! *fumaça*",
         "(vira o focinho, ofendido)",
         "Eu? Falar com você? Me traz um biscoito primeiro."
+      ],
+      "comemora": [
+        "Eu sabia. Eu SEMPRE sei.",
+        "Óbvio. Com EU do lado, não tinha como perder.",
+        "Pode aplaudir. Eu espero.",
+        "Mais uma vitória para a MINHA coleção. E pra sua também, vai.",
+        "Fácil demais. Da próxima vez, traz um desafio de verdade.",
+        "Contemple a minha grandiosidade!",
+        "Os bardos vão cantar isso. Sobre mim, claro.",
+        "Isso foi lendário. Igual a mim."
       ]
     },
     "elefante": {
