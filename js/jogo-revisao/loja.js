@@ -33,9 +33,10 @@ export function itemDaBolsa(id) {
 }
 
 // Favorita: o id da comida, ou "peixe" = qualquer peixe (pescado ou o peixe fresco da loja)
+// favoritas: { pet: id } ou { pet: [ids] } ("peixe" = qualquer peixe). O adulto usa a do filhote (mesmo pet).
 export function ehFavorita(pet, item) {
-  const f = L?.favoritas?.[pet];
-  return !!f && !!item && (f === item.id || (f === 'peixe' && (item.peixe || /peixe/.test(item.id))));
+  const f = L?.favoritas?.[pet] ?? L?.favoritas?.[String(pet || '').replace(/_adulto$/, '')];
+  return !!item && [].concat(f || []).some(x => x === item.id || (x === 'peixe' && (item.peixe || /peixe/.test(item.id))));
 }
 
 // Semana do ano (ISO), para o limite por semana (bolo)
@@ -47,13 +48,19 @@ export function semanaDe(d = new Date()) {
   return `${t.getUTCFullYear()}-S${String(Math.ceil(((t - ini) / 864e5 + 1) / 7)).padStart(2, '0')}`;
 }
 
+// Comida comum só com a barriga abaixo deste limite: por pet em barriga.alimentar_abaixo (os dragões, filhote e adulto: 80),
+// senão barriga.comum_ate (60)
+export function comumAte(pet) {
+  const b = L?.barriga || {}, por = b.alimentar_abaixo || {}, base = String(pet || '').replace(/_adulto$/, '');
+  return Number(por[pet] ?? por[base]) || (b.comum_ate ?? 60);
+}
 // Pode comer agora? null = pode; senão 'cheio' | 'sem_fome' (comum só com a barriga baixa) | 'semana'
 // c.semana: { [itemId]: { semana, n } } (do próprio pet)
 // Especial come mesmo de barriga cheia, até barriga.especiais_cheio_dia por dia (especiaisCheioHoje: quantas já comeu cheio hoje)
-export function motivoNaoCome(item, barriga, c, agora = new Date(), especiaisCheioHoje = 0) {
+export function motivoNaoCome(item, barriga, c, agora = new Date(), especiaisCheioHoje = 0, pet = null) {
   const b = L?.barriga || {};
   if (barrigaCheia(barriga) && (!item.especial || especiaisCheioHoje >= (b.especiais_cheio_dia ?? 3))) return 'cheio';
-  if (!item.especial && barriga >= (b.comum_ate ?? 60)) return 'sem_fome';
+  if (!item.especial && barriga >= comumAte(pet)) return 'sem_fome';
   if (item.limite_semana) {
     const s = c?.semana?.[item.id];
     if (s?.semana === semanaDe(agora) && (Number(s.n) || 0) >= item.limite_semana) return 'semana';

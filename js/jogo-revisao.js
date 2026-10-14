@@ -12,7 +12,7 @@ import { tocar, somLigado, alternarSom } from '/js/jogo-revisao/sons.js';
 import { definirPausas, definirBarriga, barrigaDoPet, barrigaAntiga, faixaBarriga, rotuloLealdade, lealdadeComQueda, doDia,
   CARINHOS_POR_DIA, LEALDADE_INICIAL, LEALDADE_DIA, LEALDADE_CAMBALHOTA } from '/js/jogo-revisao/cuidados.js';
 import { definirLoja, definirPeixes, lojaPronta, cfgLoja, comidas, tintas, efeitos, tinta, tintaAnimada, icone, efeito, itemDaBolsa, idDoPeixe, ehFavorita, semanaDe,
-  motivoNaoCome, enche, barrigaCheia, somarLealdade, nivelAmizade, validarNomePet } from '/js/jogo-revisao/loja.js';
+  motivoNaoCome, comumAte, enche, barrigaCheia, somarLealdade, nivelAmizade, validarNomePet } from '/js/jogo-revisao/loja.js';
 import { definirPesca, pescaPronta, cfgPesca, pontosDoMapa, spritePesca, pontaVara, sortearPeixe, entre, inteiroEntre,
   semanaPesca, semanaAnterior, criarBarrinha, passoBarrinha } from '/js/jogo-revisao/pesca.js';
 import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, tamanhoBusto, temBusto, bustoPet, preCarregarPet, PetSeguidor, PetParado,
@@ -1560,11 +1560,29 @@ function arcoDePulo() {
     { duration: 650, easing: 'ease-out' });
 }
 
-// Volta ao estado de descanso: triste (fome) ou sentado (o pet nunca dorme)
+// À noite (22h às 6h, horário de Brasília) o pet dorme no Meu Pet; tocar nele acorda por alguns minutos
+const ACORDADO_MS = 5 * 60e3;
+function horaDeDormir() {
+  const h = Number(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Sao_Paulo', hour: 'numeric', hourCycle: 'h23' }).format(new Date()));
+  return h >= 22 || h < 6;
+}
+const deveDormir = () => horaDeDormir() && !(mp?.acordadoAte > Date.now());
+function acordarPet() {
+  mp.acordadoAte = Date.now() + ACORDADO_MS;
+  mp.estado = 'acordando'; mp.ocupado = true;
+  falarPet('🥱 Uaaah… acordei!');
+  if (temAnim(mp.forma, 'calmo')) mp.anim.tocar('calmo', voltarAoNormal); else voltarAoNormal();   // espreguiça e volta ao normal
+}
+
+// Volta ao estado de descanso: dormindo (à noite), triste (fome) ou sentado
 function voltarAoNormal() {
   if (!mp) return;
   mp.ocupado = false; mp.esperaAcao = null;
-  if (barrigaDe(mp.pet) < fomeAbaixo()) { mp.estado = 'triste'; mp.anim.tocar('triste_fome'); movimentoCorpo('triste'); }
+  if (deveDormir()) {   // o adulto toca `dormir` em ciclo (respira, fumacinha, Zzz); os outros, a animação dormindo
+    mp.estado = 'dormindo';
+    if (!mp.anim.sequencia('dormir', null, { ciclo: true })) mp.anim.tocar('dormindo');
+    movimentoCorpo('respira');
+  } else if (barrigaDe(mp.pet) < fomeAbaixo()) { mp.estado = 'triste'; mp.anim.tocar('triste_fome'); movimentoCorpo('triste'); }
   else { mp.estado = 'parado'; mp.anim.tocar('sentado_girando'); movimentoCorpo('respira'); }
   renderMeuPet();
 }
@@ -1585,6 +1603,15 @@ function atualizarMeuPet(dt) {
         if (a) mp.anim.sequencia(a, aoAcabar); else mp.anim.tocar('sentado_2', aoAcabar);
       }
     } else if (mp.anim.ciclos >= 3) mp.anim.tocar(sortearOcioso(), aoAcabar);   // a cada 3 ciclos: fareja, se lambe, descansa… (sem repetir)
+  }
+  // com fome: o adulto (sequência `fome`) cheira o ar duas vezes e lambe os beiços a cada ~10 s, no lugar da pose triste parada
+  if (mp.estado === 'triste' && mp.anim.anim === 'triste_fome' && temSequencia(mp.forma, 'fome')) {
+    if (mp.esperaAcao == null) mp.esperaAcao = 2000 + Math.random() * 1000;   // a 1ª logo; depois ~10 s
+    mp.esperaAcao -= dt * 1000;
+    if (mp.esperaAcao <= 0) {
+      mp.esperaAcao = null;
+      mp.anim.sequencia('fome', () => { if (mp?.estado === 'triste') { voltarAoNormal(); if (mp) mp.esperaAcao = 4500 + Math.random() * 2000; } });
+    }
   }
   // comendo 2 vezes, depois: o adulto lambe os beiços; os outros ficam felizes
   if (mp.estado === 'comendo' && mp.anim.anim === 'comendo' && mp.anim.ciclos >= 2) comemorar(temAnim(mp.forma, 'lamber_beicos') ? 'lamber_beicos' : 'feliz', !temAnim(mp.forma, 'lamber_beicos'));
@@ -1621,6 +1648,7 @@ function particulas(simbolos, n) {   // símbolo: texto (emoji) ou HTML de image
 
 function carinhoPet() {
   if (!mp || mp.ocupado) return;
+  if (mp.estado === 'dormindo') { acordarPet(); return; }   // tocar no pet dormindo: acorda
   missaoProgresso('carinho');
   const pet = mp.pet, c = cuidadosDe(pet), hoje = diaLocal();
   if (doDia(c.carinhos_dia, hoje) < CARINHOS_POR_DIA) {
@@ -1925,9 +1953,9 @@ function darComida(id) {
   const pet = mp.pet, c = cuidadosDe(pet), item = itemDaBolsa(id), n = Number(estado.pets.bolsa?.[id]) || 0;
   if (!c || !item || n <= 0) return;
   const b = barrigaDe(pet), cfg = cfgLoja().barriga || {}, hoje = diaLocal();
-  const motivo = motivoNaoCome(item, b, c, new Date(), doDia(c.especiais_cheio_dia, hoje));
+  const motivo = motivoNaoCome(item, b, c, new Date(), doDia(c.especiais_cheio_dia, hoje), pet);
   if (motivo) {
-    falarPet({ cheio: 'Tô cheio! 😵', sem_fome: `Ainda não tô com fome… (comida comum só com a barriga abaixo de ${cfg.comum_ate ?? 60})`, semana: 'Bolo só uma vez por semana!' }[motivo]);
+    falarPet({ cheio: 'Tô cheio! 😵', sem_fome: `Ainda não tô com fome… (comida comum só com a barriga abaixo de ${comumAte(pet)})`, semana: 'Bolo só uma vez por semana!' }[motivo]);
     return;
   }
   const agora = Date.now(), base = `pets/conquistados/${pet}`;
@@ -1950,7 +1978,10 @@ function darComida(id) {
   atualizarFomeSeguidor();
   renderMeuPet();
   mp.estado = 'comendo'; mp.ocupado = true;
-  if (mp.anim.sequencia('comer', voltarAoNormal)) movimentoCorpo(null);   // adulto: assa, come, ossos, lambe os beiços (sequência)
+  mp.acordadoAte = Date.now() + ACORDADO_MS;
+  // adulto: carne → `comer_carne` (assa, morde, come no chão, ossos, lambe os beiços); as outras → `comer` (curta)
+  const seqComer = item.id === 'carne' && temSequencia(mp.forma, 'comer_carne') ? 'comer_carne' : 'comer';
+  if (mp.anim.sequencia(seqComer, voltarAoNormal)) movimentoCorpo(null);
   else {
     if (temAnim(mp.forma, 'assar_comida')) mp.anim.tocar('assar_comida', () => { if (mp?.estado === 'comendo') mp.anim.tocar('comendo'); });   // o dragão assa a comida antes
     else mp.anim.tocar('comendo');
@@ -3949,6 +3980,9 @@ function tocarNoMapa(e) {
   if (colega && (!pessoa || dist(p.x, p.y, colega.x, colega.y - ALT_JOGADOR_MAPA / 2) < dist(p.x, p.y, pessoa.p.x, pessoa.p.y - pessoa.alt / 2))) {
     abrirCartaoColega(colega); return;   // tocar num colega: cartão com nome · turma e o pet dele
   }
+  if (pessoa && pessoa.p.id === 'engrenaldo' && !editarNpcs && cena.laboratorio && LAB && !perguntaAberta && !transicionando && !sobreposicaoAberta()) {
+    fecharBalaoPessoa(); cena.pertoEng = true; falarCom(pessoa); irAlvoPraca('laboratorio'); return;   // o Engrenaldo fala e o aluno entra no laboratório
+  }
   if (pessoa) { if (!editarNpcs) irFalarCom(pessoa); return; }   // tocar numa pessoa: vai até ela e conversa
   if (ehPraca()) { const alvo = alvoPracaEm(p); if (alvo) { irAlvoPraca(alvo); return; } }   // mural / fliperama
   if (cena.n === 'fliperama') { const a = alvoFliperamaEm(p); if (a) { irAlvoFliperama(a); return; } }    // máquinas e o Téo
@@ -4427,6 +4461,12 @@ function irAlvoPraca(alvo) {
 }
 // A cada quadro na praça: chegar perto do mural abre o painel (uma vez até se afastar); botão 💬 no lugar do 😊
 function atualizarPraca() {
+  const eng = pessoasMapa.find(o => o.p.id === 'engrenaldo');   // chegou perto do Engrenaldo: ele fala (uma vez até se afastar)
+  if (eng) {
+    const d = dist(jog.x, jog.y, eng.p.x, eng.p.y);
+    if (d > PESSOA_PERTO * 1.8) cena.pertoEng = false;
+    else if (d < PESSOA_PERTO && !cena.pertoEng && !balaoPessoa && !sobreposicaoAberta()) { cena.pertoEng = true; falarCom(eng); }
+  }
   const m = cena.mural;
   if (!m) return;
   const d = dist(jog.x, jog.y, m.trilha[0], m.trilha[1]);
@@ -6404,7 +6444,11 @@ async function btFechar() {
     bt.hp[o] = Math.max(0, bt.hp[o] - n);
     btHp(o);
     btLevarDano(o, n, critico, fogo ? 'fogo' : pet, especial);
-    if (temAnim(btForma(o), 'bravo')) btTocar(o, 'bravo', { loop: false, ms: 700 });   // o dragão adulto apanha e fica bravo
+    if (temSequencia(btForma(o), 'apanhou')) {   // o dragão adulto apanha: fica bravo e bufa (sequência `apanhou`), depois volta ao parado
+      clearTimeout(bt.anim[o]);
+      $('bt-' + o).style.transform = o === 'R' ? 'scaleX(-1)' : '';
+      tocarSequencia($('bt-img' + o), btForma(o), 'apanhou', { deFrente: false }).then(fim => { if (fim && bt && !bt.fim) btParado(o); });
+    } else if (temAnim(btForma(o), 'bravo')) btTocar(o, 'bravo', { loop: false, ms: 700 });
     await btEsperar(650);
     const seq = bt?.seqAtaque?.[l];   // adulto: termina a sequência do ataque (2ª cuspida e o "ufa") antes de voltar ao normal
     if (seq) { bt.seqAtaque[l] = null; await seq; }
@@ -6639,7 +6683,7 @@ function agendarPiscar(o) {
 function atualizarIconesPessoas() {
   for (const o of pessoasMapa) {
     const descansa = o.treinador && situacao(desafioCom(o.p.id)) === 'descansando';
-    const ped = !!pedidoDe(o.p.id);
+    const ped = !!pedidoDe(o.p.id) || (o.p.id === 'engrenaldo' && !estado.avisos?.lab_visto);   // Engrenaldo: ! até entrar no laboratório
     o.icone.innerHTML = (o.treinador ? `<span>${descansa ? '😴' : '⚔️'}</span>` : '') + (ped ? '<span class="jr-pedido-exc" aria-label="Pedido de ajuda">!</span>' : '');
     o.icone.classList.toggle('descansa', descansa && !ped);
     o.temIcone = !!o.icone.innerHTML;
@@ -6672,6 +6716,12 @@ function irFalarCom(o) {
   if (!jog.caminho.length && !jog.aoChegar) falarCom(o);   // sem caminho (não deveria acontecer): fala mesmo assim
 }
 
+// Engrenaldo (Praça, porta do laboratório): convida até a 1ª entrada; depois lembra o desafio do dia; senão, as falas do npcs.json
+function falaEngrenaldo() {
+  if (!estado.avisos?.lab_visto) return '🤖 Novo! Venha programar o seu pet no Laboratório!';
+  if (estado.programe?.dia?.data !== diaLocal()) return '📅 Tem desafio novo hoje!';
+  return null;
+}
 function falarCom(o) {
   if (perguntaAberta || transicionando || cena?.tipo !== 'mapa' || !o.img.isConnected) return;
   jog.dir = o.p.x < jog.x ? 'esquerda' : 'direita';
@@ -6681,7 +6731,8 @@ function falarCom(o) {
   if (falas.length > 1 && i === ultimaFalaPessoa[o.p.id]) i = (i + 1 + Math.floor(Math.random() * (falas.length - 1))) % falas.length;
   ultimaFalaPessoa[o.p.id] = i;
   if (destaque?.id === o.p.id) tirarDestaque();
-  const saudacao = ehLoja() && o.p.id === cfgLoja().vendedor ? `Oi, ${nomeAluno()}! O que vai ser hoje?` : null;
+  const saudacao = ehLoja() && o.p.id === cfgLoja().vendedor ? `Oi, ${nomeAluno()}! O que vai ser hoje?`
+    : o.p.id === 'engrenaldo' ? falaEngrenaldo() : null;
   const el = $('pessoa-balao');
   // pedido de ajuda: "🙋 Ajudar"; treinadora: "⚔️ Batalhar" (ou o aviso de descanso/fome); com botão, também "Agora não"
   const ped = pedidoDe(o.p.id), botoes = [];
@@ -7237,6 +7288,7 @@ function reagirArena(certo) {
   if (certo && ataqueArena()) return;   // dragão adulto: o fogo faz o adversário tremer
   if (pgPet) {
     if (certo) pgPet.tocar(temAnim(pgPet.pet, 'animado') && Math.random() < 0.5 ? 'animado' : 'feliz');
+    else if (pgPet.sequencia('apanhou')) { /* dragão adulto: bravo e bufando */ }
     else if (temAnim(pgPet.pet, 'confuso')) pgPet.tocar('confuso');
     else { pgPet.tocar('triste_fome'); setTimeout(() => { if (pgPet?.anim === 'triste_fome') pgPet.tocar('sentado_girando'); }, 1400); }
   }
@@ -7829,6 +7881,7 @@ async function abrirLaboratorio() {
   limparPessoas();
   sairDoMapaOnline();
   enviarOnline({ mapa: 'praca', local: 'laboratorio' });   // aqui dentro os colegas da praça não veem você
+  if (!estado.avisos.lab_visto) { estado.avisos.lab_visto = true; gravar({ 'avisos/lab_visto': true }); }   // o ! do Engrenaldo some
   const [grade] = await Promise.all([
     LAB.trilha ? carregarGrade(LAB.trilha).catch(() => gradeDeRetangulos(LAB.area_livre)) : Promise.resolve(gradeDeRetangulos(LAB.area_livre)),
     trocarFundo(`${IMG}/interiores/${LAB.imagem || 'laboratorio.webp'}`)]);
@@ -8413,7 +8466,7 @@ function fazerTruque(id) {
   const t = truquesDe(mp?.pet)?.find(x => x.id === id);
   if (!mp || !t || mp.ocupado || !truqueLiberado(id, mp.pet)) return;
   $('mp-truques-painel').hidden = true;   // fecha a lista para ver o pet
-  mp.estado = 'truque'; mp.ocupado = true;
+  mp.estado = 'truque'; mp.ocupado = true; mp.acordadoAte = Date.now() + ACORDADO_MS;
   movimentoCorpo(null);
   if (t.sequencia && mp.anim.sequencia(t.sequencia, () => { if (mp?.estado === 'truque') voltarAoNormal(); })) return;   // banho, cuspir fogo, rugir: sequência com tempo
   const anims = t.anims.filter(a => a === 'busto_fogo' || temAnim(mp.forma, a));

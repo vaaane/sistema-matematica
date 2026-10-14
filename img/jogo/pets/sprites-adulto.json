@@ -2,16 +2,16 @@
  "quadro_por_pet": {
   "dragao_azul_adulto": {
    "tamanho_quadro": [
-    1686,
-    808
+    1742,
+    809
    ],
    "sentado_altura": 622,
    "escala": 1
   },
   "dragao_vermelho_adulto": {
    "tamanho_quadro": [
-    1686,
-    808
+    1742,
+    809
    ],
    "sentado_altura": 622,
    "escala": 1.15
@@ -125,10 +125,10 @@
     "pets/dragao_azul_adulto/carinho_1.webp"
    ],
    "triste_fome": [
-    "pets/dragao_azul_adulto/triste_fome_1.webp"
+    "pets/dragao_azul_adulto/farejar_1.webp"
    ],
    "feliz": [
-    "pets/dragao_azul_adulto/feliz_1.webp"
+    "pets/dragao_azul_adulto/animado_1.webp"
    ],
    "animado": [
     "pets/dragao_azul_adulto/animado_1.webp"
@@ -137,7 +137,7 @@
     "pets/dragao_azul_adulto/bravo_1.webp"
    ],
    "confuso": [
-    "pets/dragao_azul_adulto/confuso_1.webp"
+    "pets/dragao_azul_adulto/ufa_1.webp"
    ],
    "orgulhoso": [
     "pets/dragao_azul_adulto/orgulhoso_1.webp"
@@ -162,6 +162,20 @@
    ],
    "assustado": [
     "pets/dragao_azul_adulto/bravo_1.webp"
+   ],
+   "bufando": [
+    "pets/dragao_azul_adulto/bufando_1.webp"
+   ],
+   "dormindo": [
+    "pets/dragao_azul_adulto/dormindo_1.webp",
+    "pets/dragao_azul_adulto/dormindo_2.webp",
+    "pets/dragao_azul_adulto/dormindo_3.webp",
+    "pets/dragao_azul_adulto/dormindo_4.webp",
+    "pets/dragao_azul_adulto/dormindo_5.webp",
+    "pets/dragao_azul_adulto/dormindo_6.webp",
+    "pets/dragao_azul_adulto/dormindo_7.webp",
+    "pets/dragao_azul_adulto/dormindo_8.webp",
+    "pets/dragao_azul_adulto/dormindo_9.webp"
    ]
   },
   "dragao_vermelho_adulto": {
@@ -271,10 +285,10 @@
     "pets/dragao_vermelho_adulto/carinho_1.webp"
    ],
    "triste_fome": [
-    "pets/dragao_vermelho_adulto/triste_fome_1.webp"
+    "pets/dragao_vermelho_adulto/farejar_1.webp"
    ],
    "feliz": [
-    "pets/dragao_vermelho_adulto/feliz_1.webp"
+    "pets/dragao_vermelho_adulto/animado_1.webp"
    ],
    "animado": [
     "pets/dragao_vermelho_adulto/animado_1.webp"
@@ -283,7 +297,7 @@
     "pets/dragao_vermelho_adulto/bravo_1.webp"
    ],
    "confuso": [
-    "pets/dragao_vermelho_adulto/confuso_1.webp"
+    "pets/dragao_vermelho_adulto/ufa_1.webp"
    ],
    "orgulhoso": [
     "pets/dragao_vermelho_adulto/orgulhoso_1.webp"
@@ -308,6 +322,20 @@
    ],
    "assustado": [
     "pets/dragao_vermelho_adulto/bravo_1.webp"
+   ],
+   "bufando": [
+    "pets/dragao_vermelho_adulto/bufando_1.webp"
+   ],
+   "dormindo": [
+    "pets/dragao_vermelho_adulto/dormindo_1.webp",
+    "pets/dragao_vermelho_adulto/dormindo_2.webp",
+    "pets/dragao_vermelho_adulto/dormindo_3.webp",
+    "pets/dragao_vermelho_adulto/dormindo_4.webp",
+    "pets/dragao_vermelho_adulto/dormindo_5.webp",
+    "pets/dragao_vermelho_adulto/dormindo_6.webp",
+    "pets/dragao_vermelho_adulto/dormindo_7.webp",
+    "pets/dragao_vermelho_adulto/dormindo_8.webp",
+    "pets/dragao_vermelho_adulto/dormindo_9.webp"
    ]
   }
  },
@@ -511,11 +539,6 @@
      900
     ],
     [
-     "farejar_em_pe",
-     1,
-     1200
-    ],
-    [
      "lamber_pata",
      1,
      450
@@ -732,39 +755,9 @@
    ],
    "comer": [
     [
-     "sentado_lado",
+     "parado_lado",
      1,
-     1000
-    ],
-    [
-     "assar_comida",
-     1,
-     1400
-    ],
-    [
-     "comendo",
-     1,
-     900
-    ],
-    [
-     "comendo",
-     2,
      600
-    ],
-    [
-     "comendo",
-     1,
-     500
-    ],
-    [
-     "comendo",
-     2,
-     600
-    ],
-    [
-     "ossos",
-     1,
-     1800
     ],
     [
      "lamber_beicos",
@@ -779,7 +772,7 @@
     [
      "sentado_lado",
      1,
-     1000
+     700
     ]
    ],
    "carinho": [
@@ -893,6 +886,149 @@
      "farejar",
      1,
      1500
+    ]
+   ],
+   "fome": [
+    [
+     "sentado_lado",
+     1,
+     600
+    ],
+    [
+     "farejar",
+     1,
+     900
+    ],
+    [
+     "sentado_lado",
+     1,
+     500
+    ],
+    [
+     "farejar",
+     1,
+     900
+    ],
+    [
+     "lamber_beicos",
+     1,
+     1200
+    ],
+    [
+     "sentado_lado",
+     1,
+     600
+    ]
+   ],
+   "comer_carne": [
+    [
+     "sentado_lado",
+     1,
+     1000
+    ],
+    [
+     "assar_comida",
+     1,
+     1400
+    ],
+    [
+     "comendo",
+     1,
+     900
+    ],
+    [
+     "comendo",
+     2,
+     600
+    ],
+    [
+     "comendo",
+     1,
+     500
+    ],
+    [
+     "comendo",
+     2,
+     600
+    ],
+    [
+     "ossos",
+     1,
+     1800
+    ],
+    [
+     "lamber_beicos",
+     1,
+     1400
+    ],
+    [
+     "farejar",
+     2,
+     900
+    ],
+    [
+     "sentado_lado",
+     1,
+     1000
+    ]
+   ],
+   "apanhou": [
+    [
+     "bravo",
+     1,
+     700
+    ],
+    [
+     "bufando",
+     1,
+     900
+    ]
+   ],
+   "dormir": [
+    [
+     "dormindo",
+     1,
+     500
+    ],
+    [
+     "dormindo",
+     2,
+     500
+    ],
+    [
+     "dormindo",
+     3,
+     500
+    ],
+    [
+     "dormindo",
+     4,
+     500
+    ],
+    [
+     "dormindo",
+     5,
+     500
+    ],
+    [
+     "dormindo",
+     6,
+     500
+    ],
+    [
+     "dormindo",
+     7,
+     500
+    ],
+    [
+     "dormindo",
+     8,
+     500
+    ],
+    [
+     "dormindo",
+     9,
+     500
     ]
    ]
   },
@@ -1095,11 +1231,6 @@
      900
     ],
     [
-     "farejar_em_pe",
-     1,
-     1200
-    ],
-    [
      "lamber_pata",
      1,
      450
@@ -1316,39 +1447,9 @@
    ],
    "comer": [
     [
-     "sentado_lado",
+     "parado_lado",
      1,
-     1000
-    ],
-    [
-     "assar_comida",
-     1,
-     1400
-    ],
-    [
-     "comendo",
-     1,
-     900
-    ],
-    [
-     "comendo",
-     2,
      600
-    ],
-    [
-     "comendo",
-     1,
-     500
-    ],
-    [
-     "comendo",
-     2,
-     600
-    ],
-    [
-     "ossos",
-     1,
-     1800
     ],
     [
      "lamber_beicos",
@@ -1363,7 +1464,7 @@
     [
      "sentado_lado",
      1,
-     1000
+     700
     ]
    ],
    "carinho": [
@@ -1478,8 +1579,159 @@
      1,
      1500
     ]
+   ],
+   "fome": [
+    [
+     "sentado_lado",
+     1,
+     600
+    ],
+    [
+     "farejar",
+     1,
+     900
+    ],
+    [
+     "sentado_lado",
+     1,
+     500
+    ],
+    [
+     "farejar",
+     1,
+     900
+    ],
+    [
+     "lamber_beicos",
+     1,
+     1200
+    ],
+    [
+     "sentado_lado",
+     1,
+     600
+    ]
+   ],
+   "comer_carne": [
+    [
+     "sentado_lado",
+     1,
+     1000
+    ],
+    [
+     "assar_comida",
+     1,
+     1400
+    ],
+    [
+     "comendo",
+     1,
+     900
+    ],
+    [
+     "comendo",
+     2,
+     600
+    ],
+    [
+     "comendo",
+     1,
+     500
+    ],
+    [
+     "comendo",
+     2,
+     600
+    ],
+    [
+     "ossos",
+     1,
+     1800
+    ],
+    [
+     "lamber_beicos",
+     1,
+     1400
+    ],
+    [
+     "farejar",
+     2,
+     900
+    ],
+    [
+     "sentado_lado",
+     1,
+     1000
+    ]
+   ],
+   "apanhou": [
+    [
+     "bravo",
+     1,
+     700
+    ],
+    [
+     "bufando",
+     1,
+     900
+    ]
+   ],
+   "dormir": [
+    [
+     "dormindo",
+     1,
+     500
+    ],
+    [
+     "dormindo",
+     2,
+     500
+    ],
+    [
+     "dormindo",
+     3,
+     500
+    ],
+    [
+     "dormindo",
+     4,
+     500
+    ],
+    [
+     "dormindo",
+     5,
+     500
+    ],
+    [
+     "dormindo",
+     6,
+     500
+    ],
+    [
+     "dormindo",
+     7,
+     500
+    ],
+    [
+     "dormindo",
+     8,
+     500
+    ],
+    [
+     "dormindo",
+     9,
+     500
+    ]
    ]
   }
  },
- "_formato_sequencias": "cada passo = [animação, número do quadro (1 = primeiro), milissegundos]"
+ "_formato_sequencias": "cada passo = [animação, número do quadro (1 = primeiro), milissegundos]",
+ "acoes_parado": [
+  "cheirar",
+  "lamber_pata",
+  "lamber_rabo",
+  "banho",
+  "rugir",
+  "descansar"
+ ]
 }

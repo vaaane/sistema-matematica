@@ -4,6 +4,7 @@
   "esvazia_horas_uteis": 16,
   "fome_abaixo": 40,
   "comum_ate": 60,
+  "alimentar_abaixo": { "dragao_azul": 80, "dragao_vermelho": 80 },
   "cada_comida_enche": 20,
   "cheia": 100,
   "especiais_cheio_dia": 3
@@ -53,6 +54,15 @@
    "lealdade": 6,
    "especial": true,
    "imagem": "img/jogo/itens/peixe_fresco.webp"
+  },
+  {
+   "id": "carne",
+   "nome": "Carne",
+   "emoji": "🍖",
+   "preco": 40,
+   "lealdade": 5,
+   "especial": false,
+   "imagem": ""
   },
   {
    "id": "bolo",
@@ -121,8 +131,8 @@
   "axolote": "biscoito",
   "tigre": "petisco",
   "unicornio": "fruta",
-  "dragao_azul": "peixe",
-  "dragao_vermelho": "bolo",
+  "dragao_azul": ["peixe", "carne"],
+  "dragao_vermelho": ["bolo", "carne"],
   "elefante": "fruta"
  },
  "bonus_favorita": 1,

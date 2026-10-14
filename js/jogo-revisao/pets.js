@@ -119,20 +119,25 @@ export function msAtePasso(forma, nome, achar, { deFrente = true } = {}) {
   for (const p of passos) { if (achar(p)) return t; t += p[2]; }
   return t;
 }
-// Ações do adulto parado no Meu Pet (sorteadas sem repetir a anterior)
-const ACOES_PARADO = ['cheirar', 'lamber_pata', 'lamber_rabo', 'descansar', 'rugir'];
+// Ações do adulto parado (Meu Pet e mapas), sorteadas sem repetir a anterior. A lista vem do sprites.json → acoes_parado
+// (uma lista para todos, ou { forma: lista }), para religar/desligar ações sem mexer no código (PROMPT-67). Nunca cuspir_fogo.
+const ACOES_PARADO = ['cheirar', 'lamber_pata', 'lamber_rabo', 'banho'];
+function acoesParado(forma) {
+  const j = SPR?.acoes_parado, l = Array.isArray(j) ? j : j?.[forma];
+  return (Array.isArray(l) ? l : ACOES_PARADO).filter(a => a !== 'cuspir_fogo');
+}
 let ultimaAcao = null;
 export function sortearAcaoParado(forma) {
-  const l = ACOES_PARADO.filter(a => a !== ultimaAcao && temSequencia(forma, a));
+  const l = acoesParado(forma).filter(a => a !== ultimaAcao && temSequencia(forma, a));
   if (!l.length) return null;
   ultimaAcao = l[Math.floor(Math.random() * l.length)];
   return ultimaAcao;
 }
 
-// Ações do pet seguindo o personagem nos mapas (personagem parado 4 s): sorteadas sem repetir a anterior, nunca cuspir_fogo
-const ACOES_MAPA = ['cheirar', 'lamber_pata', 'lamber_rabo', 'banho', 'rugir', 'descansar'];
+// Ações do pet seguindo o personagem nos mapas (personagem parado 4 s): a mesma lista do parado (acoes_parado)
 const MS_ANTES_ACAO = 4000;
-const temAcoesMapa = (forma) => ACOES_MAPA.some(a => temSequencia(forma, a));
+const MS_FOME = 5500;   // com fome: a sequência `fome` (~4,7 s: cheira o ar e lambe os beiços) começa a cada ~10 s
+const temAcoesMapa = (forma) => acoesParado(forma).some(a => temSequencia(forma, a));
 // aba em segundo plano: os seguidores param a ação (a sequência roda por setTimeout, que continua com a aba escondida)
 const SEGUIDORES = new Set();
 document.addEventListener('visibilitychange', () => { if (document.hidden) for (const s of SEGUIDORES) s.pararAcao(); });
@@ -182,7 +187,7 @@ export class PetSeguidor {
     this.ultJog = null;             // posição do personagem no quadro anterior
     this.esperar = false;           // personagem parou: ao voltar a andar, o pet espera antes de seguir
     this.alcancando = false;        // ficou para trás: anda 1,3× até voltar à distância normal
-    this.fome = false;              // barriga abaixo de 40: parado, fica triste (triste_fome)
+    this.fome = false;              // barriga abaixo de 40: parado, fica triste (triste_fome) ou, o adulto, toca `fome` de vez em quando
     this.proxOcioso = 8000;         // quando fazer uma variação do ocioso (farejar, se lamber, descansar…)
     this.ocioso = false;            // fazendo uma dessas variações agora
     this.espelhar = false; this.altura = 60;
@@ -220,14 +225,16 @@ export class PetSeguidor {
     return true;
   }
 
-  comecarAcao() {
-    const l = ACOES_MAPA.filter(a => a !== this.ultimaAcao && temSequencia(this.forma, a));
-    if (!l.length) return;
-    const nome = l[Math.floor(Math.random() * l.length)];
-    this.ultimaAcao = this.acao = nome;
+  comecarAcao(nome = null) {
+    if (!nome) {
+      const l = acoesParado(this.forma).filter(a => a !== this.ultimaAcao && temSequencia(this.forma, a));
+      if (!l.length) return;
+      nome = this.ultimaAcao = l[Math.floor(Math.random() * l.length)];
+    }
+    this.acao = nome;
     tocarSequencia(this.img, this.forma, nome).then(fim => {
       if (!fim || this.acao !== nome) return;
-      this.acao = null; this.esperaAcao = MS_ANTES_ACAO;
+      this.acao = null; this.esperaAcao = this.fome ? MS_FOME : MS_ANTES_ACAO;
       this.trocar('sentado_girando', true); this.desenhar();
     });
   }
@@ -323,7 +330,7 @@ export class PetSeguidor {
       else if (andando && falta > atras + largura) { this.reacao = null; }   // personagem saiu andando: o pet vai atrás
     }
     // ação em andamento (sequência): para na hora se o personagem andar ou se a fome/uma reação entrar
-    if (this.acao && (mexeu || andando || this.reacao || this.fome || (this.pausado && !this.fixa))) this.pararAcao();
+    if (this.acao && (mexeu || andando || this.reacao || this.fome !== (this.acao === 'fome') || (this.pausado && !this.fixa))) this.pararAcao();
     if (this.acao) {
       this.espelhar = this.esquerda;   // as sequências são desenhadas viradas para a direita
       this.desenhar();
@@ -339,6 +346,13 @@ export class PetSeguidor {
         this.proxOcioso = 6000 + Math.random() * 1000;   // parado há mais de ~6 s: a 1ª variação
         this.ocioso = false;
         this.esperaAcao = MS_ANTES_ACAO;
+      } else if (this.fome && temSequencia(this.forma, 'fome')) {   // adulto com fome: cheira o ar e lambe os beiços a cada ~10 s
+        this.ocioso = false;
+        this.trocar('triste_fome');
+        if (!this.pausado) {
+          this.esperaAcao -= ms;
+          if (this.esperaAcao <= 0) { this.comecarAcao('fome'); this.espelhar = this.esquerda; this.desenhar(); return; }
+        }
       } else if (this.fome) {
         this.trocar('triste_fome');
       } else if (temAcoesMapa(this.forma)) {   // pet com sequências: 4 s sentado, depois uma ação; 4 s entre uma e outra
@@ -401,10 +415,16 @@ export class PetParado {
 
   // Sequência com tempo (sprites.json → sequencias). false = o pet não tem (quem chamou usa tocar()).
   // No fim volta para sentado_girando e chama aoAcabar; interrompida (tocar/outra sequência), não chama.
-  sequencia(nome, aoAcabar = null) {
+  // ciclo: recomeça no fim até ser interrompida (dormir).
+  sequencia(nome, aoAcabar = null, { ciclo = false } = {}) {
     if (!temSequencia(this.pet, nome)) return false;
-    this.anim = 'seq:' + nome; this.emSeq = true; this.aoAcabar = null;
-    tocarSequencia(this.img, this.pet, nome).then(fim => { if (!fim) return; this.tocar('sentado_girando'); aoAcabar?.(); });
+    const anim = this.anim = 'seq:' + nome; this.emSeq = true; this.aoAcabar = null;
+    const rodar = () => tocarSequencia(this.img, this.pet, nome).then(fim => {
+      if (!fim) return;
+      if (ciclo && this.anim === anim) { rodar(); return; }
+      this.tocar('sentado_girando'); aoAcabar?.();
+    });
+    rodar();
     return true;
   }
 

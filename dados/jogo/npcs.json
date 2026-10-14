@@ -716,6 +716,22 @@
    ],
    "olha": "esquerda",
    "piscar": false
+  },
+  {
+   "id": "engrenaldo",
+   "nome": "Engrenaldo",
+   "quem": "Robô do Laboratório",
+   "mapa": "praca",
+   "w": 510,
+   "h": 567,
+   "falas": [
+    "A Ilha dos Robôs te espera!",
+    "Os chefes estão te esperando… principalmente EU."
+   ],
+   "x": 445,
+   "y": 250,
+   "olha": "esquerda",
+   "piscar": false
   }
  ]
 }

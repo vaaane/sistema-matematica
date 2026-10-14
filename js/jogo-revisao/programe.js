@@ -484,6 +484,7 @@ function posicionar(pet, sem = false) {
 const ANIM_DIR = ['andar_direita', 'andar_direita', 'andar_frente', 'andar_esquerda', 'andar_esquerda', 'andar_esquerda', 'andar_costas', 'andar_direita'];
 function pose(pet, tipo) {
   const forma = pet.p?.forma || pet.p?.pet;
+  C.pararSequencia?.(pet.img);   // interrompe o `apanhou` que estiver tocando
   if (!forma) { pet.img.removeAttribute('src'); return; }
   const anim = tipo === 'parado' || tipo === 'andar' ? ANIM_DIR[pet.dir] : tipo;
   const lista = C.quadrosDe(forma, anim);
@@ -530,7 +531,11 @@ async function mostrarEvento(pet, ev, dur) {
     deixarRastro('bateu', ev.x, ev.y, quem, { txt: '✖' });
     pet.el.classList.remove('bateu'); void pet.el.offsetWidth; pet.el.classList.add('bateu');
     $('pg-grade').querySelector(`.pg-casa[data-x="${ev.x}"][data-y="${ev.y}"]`)?.classList.add('bateu');
-    pose(pet, C.temAnim(pet.p?.forma || pet.p?.pet, 'bravo') ? 'bravo' : 'triste_fome');   // o dragão adulto fica bravo
+    const forma = pet.p?.forma || pet.p?.pet;
+    if (C.temSequencia?.(forma, 'apanhou')) {   // dragão adulto: fica bravo e bufa (sequência `apanhou`)
+      pose(pet, 'bravo'); pet.lista = [];   // sem lista: o tickAnim não troca o quadro durante a sequência
+      C.tocarSequencia(pet.img, forma, 'apanhou', { deFrente: false });
+    } else pose(pet, C.temAnim(forma, 'bravo') ? 'bravo' : 'triste_fome');
     bolha(pet, 'ai!');
     C.tocar('erro');
   } else if (ev.tipo === 'venceu') {
