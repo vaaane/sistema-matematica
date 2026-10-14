@@ -2,18 +2,18 @@
  "quadro_por_pet": {
   "dragao_azul_adulto": {
    "tamanho_quadro": [
-    1742,
-    809
+    1219,
+    566
    ],
-   "sentado_altura": 622,
+   "sentado_altura": 435,
    "escala": 1
   },
   "dragao_vermelho_adulto": {
    "tamanho_quadro": [
-    1742,
-    809
+    1219,
+    566
    ],
-   "sentado_altura": 622,
+   "sentado_altura": 435,
    "escala": 1.15
   }
  },
@@ -128,19 +128,19 @@
     "pets/dragao_azul_adulto/farejar_1.webp"
    ],
    "feliz": [
-    "pets/dragao_azul_adulto/animado_1.webp"
+    "pets/dragao_azul_adulto/carinho_1.webp"
    ],
    "animado": [
-    "pets/dragao_azul_adulto/animado_1.webp"
+    "pets/dragao_azul_adulto/carinho_1.webp"
    ],
    "bravo": [
     "pets/dragao_azul_adulto/bravo_1.webp"
    ],
    "confuso": [
-    "pets/dragao_azul_adulto/ufa_1.webp"
+    "pets/dragao_azul_adulto/bufando_1.webp"
    ],
    "orgulhoso": [
-    "pets/dragao_azul_adulto/orgulhoso_1.webp"
+    "pets/dragao_azul_adulto/farejar_1.webp"
    ],
    "correndo": [
     "pets/dragao_azul_adulto/correndo_1.webp",
@@ -176,6 +176,9 @@
     "pets/dragao_azul_adulto/dormindo_7.webp",
     "pets/dragao_azul_adulto/dormindo_8.webp",
     "pets/dragao_azul_adulto/dormindo_9.webp"
+   ],
+   "sentado_reto": [
+    "pets/dragao_azul_adulto/sentado_reto_1.webp"
    ]
   },
   "dragao_vermelho_adulto": {
@@ -288,19 +291,19 @@
     "pets/dragao_vermelho_adulto/farejar_1.webp"
    ],
    "feliz": [
-    "pets/dragao_vermelho_adulto/animado_1.webp"
+    "pets/dragao_vermelho_adulto/carinho_1.webp"
    ],
    "animado": [
-    "pets/dragao_vermelho_adulto/animado_1.webp"
+    "pets/dragao_vermelho_adulto/carinho_1.webp"
    ],
    "bravo": [
     "pets/dragao_vermelho_adulto/bravo_1.webp"
    ],
    "confuso": [
-    "pets/dragao_vermelho_adulto/ufa_1.webp"
+    "pets/dragao_vermelho_adulto/bufando_1.webp"
    ],
    "orgulhoso": [
-    "pets/dragao_vermelho_adulto/orgulhoso_1.webp"
+    "pets/dragao_vermelho_adulto/farejar_1.webp"
    ],
    "correndo": [
     "pets/dragao_vermelho_adulto/correndo_1.webp",
@@ -336,6 +339,9 @@
     "pets/dragao_vermelho_adulto/dormindo_7.webp",
     "pets/dragao_vermelho_adulto/dormindo_8.webp",
     "pets/dragao_vermelho_adulto/dormindo_9.webp"
+   ],
+   "sentado_reto": [
+    "pets/dragao_vermelho_adulto/sentado_reto_1.webp"
    ]
   }
  },
@@ -343,12 +349,17 @@
   "dragao_azul_adulto": {
    "cheirar": [
     [
-     "sentado_lado",
+     "sentado_reto",
      1,
-     1000
+     700
     ],
     [
-     "sentado_lado",
+     "farejar",
+     1,
+     450
+    ],
+    [
+     "sentado_reto",
      1,
      450
     ],
@@ -358,7 +369,7 @@
      450
     ],
     [
-     "sentado_lado",
+     "sentado_reto",
      1,
      450
     ],
@@ -368,7 +379,7 @@
      450
     ],
     [
-     "sentado_lado",
+     "sentado_reto",
      1,
      450
     ],
@@ -378,7 +389,7 @@
      450
     ],
     [
-     "sentado_lado",
+     "sentado_reto",
      1,
      450
     ],
@@ -388,19 +399,14 @@
      450
     ],
     [
-     "sentado_lado",
+     "sentado_reto",
      1,
      450
     ],
     [
-     "farejar",
+     "sentado_reto",
      1,
-     450
-    ],
-    [
-     "sentado_lado",
-     1,
-     1000
+     600
     ]
    ],
    "lamber_pata": [
@@ -1029,18 +1035,40 @@
      "dormindo",
      9,
      500
+    ]
+   ],
+   "recusa": [
+    [
+     "bravo",
+     1,
+     800
+    ],
+    [
+     "bufando",
+     1,
+     1200
+    ],
+    [
+     "bravo",
+     1,
+     600
     ]
    ]
   },
   "dragao_vermelho_adulto": {
    "cheirar": [
     [
-     "sentado_lado",
+     "sentado_reto",
      1,
-     1000
+     700
     ],
     [
-     "sentado_lado",
+     "farejar",
+     1,
+     450
+    ],
+    [
+     "sentado_reto",
      1,
      450
     ],
@@ -1050,7 +1078,7 @@
      450
     ],
     [
-     "sentado_lado",
+     "sentado_reto",
      1,
      450
     ],
@@ -1060,7 +1088,7 @@
      450
     ],
     [
-     "sentado_lado",
+     "sentado_reto",
      1,
      450
     ],
@@ -1070,7 +1098,7 @@
      450
     ],
     [
-     "sentado_lado",
+     "sentado_reto",
      1,
      450
     ],
@@ -1080,19 +1108,14 @@
      450
     ],
     [
-     "sentado_lado",
+     "sentado_reto",
      1,
      450
     ],
     [
-     "farejar",
+     "sentado_reto",
      1,
-     450
-    ],
-    [
-     "sentado_lado",
-     1,
-     1000
+     600
     ]
    ],
    "lamber_pata": [
@@ -1721,6 +1744,23 @@
      "dormindo",
      9,
      500
+    ]
+   ],
+   "recusa": [
+    [
+     "bravo",
+     1,
+     800
+    ],
+    [
+     "bufando",
+     1,
+     1200
+    ],
+    [
+     "bravo",
+     1,
+     600
     ]
    ]
   }

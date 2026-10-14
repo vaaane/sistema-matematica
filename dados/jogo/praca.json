@@ -172,5 +172,7 @@
   "x": 340,
   "y": 275,
   "interior": "laboratorio"
- }
+ },
+ "mesa_damas": { "x": 1060, "y": 540, "largura": 200, "ponto": [1060, 585] },
+ "fonte": { "x": 700, "y": 435, "frente": [700, 485] }
 }

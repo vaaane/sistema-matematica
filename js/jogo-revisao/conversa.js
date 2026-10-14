@@ -23,7 +23,7 @@ function pegar(cat, lista) {
 }
 
 function trocar(texto, v) {
-  return texto.replace(/\{(apelido|pet|ginasio|mapa|conteudo|dias|valor)\}/g, (m, k) => (v[k] ?? m));
+  return texto.replace(/\{(apelido|pet|ginasio|mapa|conteudo|dias|valor|dica|comida)\}/g, (m, k) => (v[k] ?? m));
 }
 
 const juntar = (a, b) => `${a.trim()} ${b.trim()}`;
@@ -108,6 +108,11 @@ export function montarFala(ctx, tipoForcado = null) {
 export function fraseDe(pet, cat, v = {}) {
   const f = pegar(cat, F?.personalidades?.[pet]?.[cat]);
   return f ? trocar(f, v) : null;
+}
+// Uma frase só entre as da lista que passam no filtro (ex.: as de fome que reclamam de planta). Nenhuma: null.
+export function fraseFiltrada(pet, cat, filtro, v = {}) {
+  const l = (F?.personalidades?.[pet]?.[cat] || []).filter(filtro);
+  return l.length ? trocar(l[Math.floor(Math.random() * l.length)], v) : null;
 }
 export const configAjuda = () => F?.config?.ajuda_ginasio || {};
 // Faro (PROMPT-32): o pet sente um tesouro escondido — frases da personalidade ou as gerais (falas-pets.json → faro)

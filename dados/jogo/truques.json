@@ -1,12 +1,15 @@
 {
- "_nota": "Truques do Meu Pet (PROMPT-51), por forma do pet. lealdade = a partir de quanto o truque fica liberado. anims = animações em sequência (busto_fogo aparece num balão). Truques não dão moedas nem lealdade. Pet sem lista aqui não mostra o botão ✨ Truques. sequencia = nome em sprites.json → sequencias (se o pet tiver, toca no lugar das anims).",
+ "_nota": "Truques do Meu Pet (PROMPT-51), por forma do pet. lealdade = a partir de quanto o truque fica liberado. anims = animações em sequência (busto_fogo aparece num balão). Truques não dão moedas nem lealdade. Pet sem lista aqui não mostra a fileira de truques no Meu Pet. curto = nome no botão redondo. sequencia = nome em sprites.json → sequencias (se o pet tiver, toca no lugar das anims).",
  "dragao_azul_adulto": [
-  { "id": "rugir", "nome": "Rugir", "emoji": "🦁", "lealdade": 0, "anims": ["rugido"], "sequencia": "rugir" },
-  { "id": "farejar", "nome": "Farejar o ar", "emoji": "👃", "lealdade": 20, "anims": ["farejar_em_pe", "farejar"] },
-  { "id": "se_limpar", "nome": "Tomar banho", "emoji": "🛁", "lealdade": 35, "anims": ["lamber_pata", "lamber_rabo", "lamber_ombro"], "sequencia": "banho" },
-  { "id": "cuspir_fogo", "nome": "Cuspir fogo", "emoji": "🔥", "lealdade": 50, "anims": ["prepara_fogo", "ataque_fogo"], "sequencia": "cuspir_fogo" },
-  { "id": "desfile", "nome": "Desfile de fogo", "emoji": "🚶‍♂️", "lealdade": 65, "anims": ["andando_fogo"] },
-  { "id": "rugido_campeao", "nome": "Rugido de campeão", "emoji": "🏆", "lealdade": 95, "anims": ["rugido", "busto_fogo"] }
+  { "id": "rugir", "nome": "Rugir", "curto": "Rugir", "emoji": "🦁", "lealdade": 0, "anims": ["rugido"], "sequencia": "rugir" },
+  { "id": "dormir", "nome": "Dormir", "curto": "Dormir", "emoji": "💤", "lealdade": 20, "anims": ["dormindo"], "sequencia": "dormir" },
+  { "id": "se_limpar", "nome": "Tomar banho", "curto": "Banho", "emoji": "🛁", "lealdade": 35, "anims": ["lamber_pata", "lamber_rabo", "lamber_ombro"], "sequencia": "banho" },
+  { "id": "cuspir_fogo", "nome": "Cuspir fogo", "curto": "Fogo", "emoji": "🔥", "lealdade": 50, "anims": ["prepara_fogo", "ataque_fogo"], "sequencia": "cuspir_fogo" },
+  { "id": "desfile", "nome": "Desfile de fogo", "curto": "Desfile", "emoji": "🚶‍♂️", "lealdade": 65, "anims": ["andando_fogo"] },
+  { "id": "rugido_campeao", "nome": "Rugido de campeão", "curto": "Campeão", "emoji": "🏆", "lealdade": 95, "anims": ["rugido", "busto_fogo"] }
  ],
- "dragao_vermelho_adulto": "dragao_azul_adulto"
+ "dragao_vermelho_adulto": "dragao_azul_adulto",
+ "dragao_sombra_adulto": "dragao_azul_adulto",
+ "dragao_branco_adulto": "dragao_azul_adulto",
+ "dragao_arcoiris_adulto": "dragao_azul_adulto"
 }

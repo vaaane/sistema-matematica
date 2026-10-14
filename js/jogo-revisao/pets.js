@@ -25,8 +25,23 @@ export const temAnim = (pet, anim) => !!SPR?.pets?.[pet]?.[anim]?.length;
 // Evolução (sprites.json → evolucao): pet → forma adulta. O pet continua o mesmo (cuidados, nome, falas);
 // só muda a FORMA, que é o id usado para os quadros e o tamanho. Pet sem adulto no JSON continua filhote.
 export const formaAdulta = (pet) => { const a = SPR?.evolucao?.[pet]; return a && SPR?.pets?.[a] ? a : null; };
-// forma recebida de fora (colegas online): só vale o próprio pet ou a forma adulta dele
-export const formaValida = (pet, forma) => (forma && forma === formaAdulta(pet) ? forma : pet);
+// Cores especiais do dragão (PROMPT-74, sprites.json → cores): só visual. O pet continua dragao_azul / dragao_vermelho
+// (falas, comidas, truques, lealdade, evolução); para desenhar, a forma vira dragao_{cor} ou dragao_{cor}_adulto.
+export const coresDragao = () => SPR?.cores || {};
+export const aceitaCor = (pet) => /^dragao_(azul|vermelho)$/.test(pet || '');
+export const ehFormaAdulta = (forma) => /_adulto$/.test(forma || '');
+export function formaComCor(forma, cor) {
+  if (!cor || !coresDragao()[cor] || !/^dragao_(azul|vermelho)(_adulto)?$/.test(forma || '')) return forma;
+  const f = `dragao_${cor}${ehFormaAdulta(forma) ? '_adulto' : ''}`;
+  return SPR?.pets?.[f] ? f : forma;
+}
+// forma recebida de fora (colegas online): só vale o próprio pet, a forma adulta dele ou (dragão) uma das cores
+export function formaValida(pet, forma) {
+  if (!forma || forma === pet) return pet;
+  if (forma === formaAdulta(pet)) return forma;
+  if (aceitaCor(pet)) for (const cor of Object.keys(coresDragao())) if (forma === formaComCor(pet, cor) || forma === formaComCor(formaAdulta(pet), cor)) return forma;
+  return pet;
+}
 
 // Única forma de pedir quadros de um pet: animação → reserva[animação] → sentado_girando
 export function quadrosDe(pet, anim) {

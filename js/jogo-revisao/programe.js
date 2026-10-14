@@ -1,7 +1,7 @@
 // Jogo de Revisão — "Programe o pet" (PROMPT-50): a tela (Blockly + grade + pet que executa o programa).
 // As regras ficam em programe-logica.js; progresso, prêmios, rankings e corrida ficam no jogo (jogo-revisao.js),
 // que passa o que esta tela precisa em configurarPrograme(ctx).
-import { lerFase, executar, contarBlocos, estrelasDe, ladoB, podeAndar, girarFase, girarEvento, desgirarPonto } from '/js/jogo-revisao/programe-logica.js';
+import { lerFase, executar, contarBlocos, estrelasDe, ladoB, podeAndar, girarFase, girarEvento, desgirarPonto, editarPrograma } from '/js/jogo-revisao/programe-logica.js';
 
 const BLOCKLY = 'https://unpkg.com/blockly@10.4.3/';   // versão fixa (biblioteca do Google, gratuita)
 const $ = (id) => document.getElementById(id);
@@ -111,8 +111,9 @@ export function programaDeTexto(txt) { try { const p = JSON.parse(txt); return p
 function xmlDe() { try { return window.Blockly.Xml.domToText(window.Blockly.Xml.workspaceToDom(ws)); } catch (_) { return ''; } }
 
 // ── Abrir a tela ──
-// cfg: { modo: 'fase'|'dia'|'corrida'|'fantasma', fase, titulo, sub, meta, xml, lado ('a'|'b'), rival: { nome, pet, forma, tinta }, tema: { casa, obstaculo },
-//        fimEm (ms do relógio do jogo em que a montagem acaba), aoExecutar, aoVencer, aoBater, aoPronto, aoFechar }
+// cfg: { modo: 'fase'|'dia'|'corrida'|'fantasma'|'bug'|'prever', fase, titulo, sub, meta, xml, lado ('a'|'b'), rival: { nome, pet, forma, tinta }, tema: { casa, obstaculo },
+//        fimEm (ms do relógio do jogo em que a montagem acaba), aoExecutar, aoVencer, aoBater, aoPronto, aoFechar,
+//        programa (AST já montada, travada: 🐛 Caça ao bug e 🔮 O que o pet vai fazer?), dica e posicao (bug), aoPrever(acertou, final), aoProxima (prever) }
 export async function abrirTela(cfg) {
   fecharTela(true);
   $('programe').hidden = false;
@@ -133,7 +134,15 @@ export async function abrirTela(cfg) {
   const giro = deveGirar(cfg.fase), fase = giro ? girarFase(cfg.fase) : cfg.fase;
   const F = lerFase(fase);
   tela = { cfg, F, fase, giro, corrida, rodando: false, parar: false, vel: 300, pronto: false, inicio: Date.now(), timers: [], quadro: {}, raf: 0 };
+  const travado = !!cfg.programa;   // programa pronto e travado (sem coluna de peças)
+  if (cfg.modo === 'bug') tela.bug = { atual: cfg.programa.corpo, mudancas: 0, execs: 0, erros: 0 };
+  if (cfg.modo === 'prever') tela.prever = { escolha: null };
   $('programe').classList.toggle('corrida', corrida);
+  $('programe').classList.toggle('travado', travado);
+  $('programe').classList.toggle('prever', cfg.modo === 'prever');
+  $('pg-original').hidden = cfg.modo !== 'bug';
+  $('pg-prox').hidden = true;
+  fecharMenuBug();
   $('pg-exec').textContent = corrida ? '▶ Testar' : '▶ Executar';
   $('pg-pronto').hidden = !corrida;
   $('pg-tempo').hidden = !cfg.fimEm;
@@ -146,15 +155,18 @@ export async function abrirTela(cfg) {
     workspaceBackgroundColour: '#11142a', toolboxBackgroundColour: '#161a2e', flyoutBackgroundColour: '#1b2040', flyoutOpacity: 1,
     scrollbarColour: '#7c5cfc', insertionMarkerColour: '#ffd700', cursorColour: '#ffd700' } });
   const zoomSalvo = lerZoom();
-  ws = B.inject($('pg-blockly'), { toolbox: toolboxDe(cfg.fase.blocos || []), renderer: 'zelos', theme: tema, trashcan: false, sounds: false,   // sem lixeira fixa: a coluna das peças vira lixeira ao arrastar
+  ws = B.inject($('pg-blockly'), { toolbox: travado ? undefined : toolboxDe(cfg.fase.blocos || []), renderer: 'zelos', theme: tema, trashcan: false, sounds: false,   // sem lixeira fixa: a coluna das peças vira lixeira ao arrastar
     zoom: { controls: true, startScale: zoomSalvo ?? escalaPadrao(), maxScale: 1.6, minScale: 0.5 },   // abre no zoom que o aluno deixou (ou no da coluna, abaixo)
     move: { scrollbars: true, drag: true, wheel: true },
     maxInstances: { pg_inicio: 1, pg_f1_def: 1 } });
   let ok = false;
-  if (cfg.xml) { try { B.Xml.domToWorkspace(B.utils.xml.textToDom(cfg.xml), ws); ok = ws.getBlocksByType('pg_inicio', false).length > 0; } catch (_) { ws.clear(); } }
+  if (travado) { construir(cfg.programa); ok = true; }
+  else if (cfg.xml) { try { B.Xml.domToWorkspace(B.utils.xml.textToDom(cfg.xml), ws); ok = ws.getBlocksByType('pg_inicio', false).length > 0; } catch (_) { ws.clear(); } }
   if (!ok) { ws.clear(); const ini = ws.newBlock('pg_inicio'); ini.initSvg(); ini.render(); ini.moveBy(30, 30); }
   for (const b of ws.getBlocksByType('pg_inicio', false)) b.setDeletable(false);
   ligarLixeiraEToque(B);
+  if (cfg.modo === 'prever') msg('🔮 Toque na casa onde o pet vai parar.');
+  else if (tela.bug) msg('🐛 Toque no bloco suspeito para consertar. Execute para ver onde o pet erra.');
   ws.addChangeListener((e) => {
     if (e.isUiEvent || !tela) return;
     atualizarContagem();
@@ -333,6 +345,8 @@ export const telaAberta = () => !!tela;
 function msg(txt, tipo = '') { const el = $('pg-msg'); el.innerHTML = txt ? `<span>${txt}</span>` : ''; el.className = 'pg-msg ' + tipo; }   // span: o <b> não vira coluna do flex
 function atualizarContagem() {
   if (!tela || !ws) return;
+  if (tela.cfg.modo === 'prever') { $('pg-contagem').innerHTML = ''; return; }
+  if (tela.bug) { $('pg-contagem').innerHTML = `Mudanças: <b>${tela.bug.mudancas}</b>/2 <small>(só 1 bloco está errado)</small>`; return; }
   const n = contarBlocos(astDe());
   const meta = tela.cfg.meta;
   $('pg-contagem').innerHTML = `Blocos usados: <b>${n}</b>${meta ? ` <small>(meta ⭐⭐⭐: ≤ ${meta})</small>` : ''}`;
@@ -559,6 +573,11 @@ function indexar(prog) {
 }
 function novaExecucao() {
   const prog = astDe(), cfg = tela.cfg;
+  if (tela.bug) {
+    fecharMenuBug();
+    if (tela.bug.mudancas > 2) { msg('Só 1 bloco está errado. Desfaça e tente mexer em um só (↺ Voltar ao programa original).', 'aviso destaque'); return null; }
+    if (tela.bug.mudancas) tela.bug.execs++;   // as execuções antes de mexer em algum bloco não contam: são para ver o erro
+  }
   if (!prog.corpo.length) { avisarSolto('Encaixe os blocos <b>embaixo do 🏁 quando executar</b> (o 🏁 está piscando).'); if (cfg.tutorial) iniciarTutorial(); return null; }
   voltarAoInicio(); limparRastro(); limparAnotacoes();
   const fase = cfg.lado === 'b' ? lerFase(ladoB(tela.fase)) : tela.F;   // lado B da corrida: o pet sai do canto da direita
@@ -684,14 +703,18 @@ function terminar(E, fim) {
   if (!tela) return;
   tela.exec = null;
   const cfg = tela.cfg, nb = E.nb, prog = E.prog;
+  if (cfg.modo === 'prever') { fimPrever(E); return; }
+  if (tela.bug && fim.motivo !== 'venceu' && tela.bug.mudancas) { tela.bug.erros++; Promise.resolve().then(dicaBug); }   // depois da mensagem do erro
   if (fim.motivo === 'venceu') {
     try { ws.highlightBlock(null); } catch (_) {}
     if (cfg.tutorial) pararTutorial();
     if (tela.corrida) { msg('✅ Chegou! Quando estiver pronto, aperte <b>Pronto!</b>', 'ok'); return; }
     C.tocar('vitoria');
-    const est = cfg.modo === 'fase' ? estrelasDe(nb, cfg.meta) : null;
+    const execs = tela.bug?.execs || 1;
+    const est = cfg.modo === 'fase' ? estrelasDe(nb, cfg.meta) : tela.bug ? (execs <= 1 ? 3 : execs <= 2 ? 2 : 1) : null;
     if (est) $('pg-estrelas').textContent = '⭐'.repeat(est) + '☆'.repeat(3 - est);
     const tempo_s = Math.round((Date.now() - tela.inicio) / 1000);
+    if (tela.bug) { msg(`🎉 Consertou${execs <= 1 ? ' de primeira' : ''}!`, 'ok'); cfg.aoVencer?.({ estrelas: est, execs, prog, texto: textoDe(prog), tempo_s }); return; }
     msg(est ? `🎉 Conseguiu com ${nb} blocos! ${est < 3 && cfg.meta ? `Dá para fazer com ${est === 1 ? cfg.meta + 3 : cfg.meta} ou menos.` : 'Perfeito!'}` : `🎉 Conseguiu com ${nb} blocos em ${tempo_s} s!`, 'ok');
     cfg.aoVencer?.({ blocos: nb, estrelas: est, xml: xmlDe(), texto: textoDe(prog), prog, tempo_s });
     return;
@@ -711,9 +734,143 @@ function casaOriginal(b) {
   return { x, y };
 }
 
+// ── 🐛 Caça ao bug e 🔮 O que o pet vai fazer?: programa montado a partir da AST, travado (não arrasta, não apaga, não edita) ──
+const TIPO_BLOCO = (b) => b.t === 'andar' ? 'pg_andar' : b.t === 'pegar' ? 'pg_pegar' : b.t === 'chamar' ? 'pg_f1' : b.t === 'repita' ? 'pg_repita'
+  : b.t === 'repita_ate' ? 'pg_repita_ate' : b.t === 'virar' ? { '-2': 'pg_virar_esq', 2: 'pg_virar_dir', '-1': 'pg_virar_esq45', 1: 'pg_virar_dir45' }[b.g]
+  : b.t === 'se' ? (b.senao ? 'pg_se_senao' : b.c === 'pedra_frente' ? 'pg_se_pedra' : b.c === 'petisco_aqui' ? 'pg_se_petisco' : 'pg_se_livre') : null;
+function construir(prog) {
+  ws.clear();
+  tela.caminhos = new Map();   // id do bloco → caminho na AST ([i], [i, j] dentro do repita i…)
+  const novo = (tipo) => { const b = ws.newBlock(tipo); b.initSvg(); b.setMovable(false); b.setDeletable(false); b.setEditable(false); b.contextMenu = false; return b; };
+  const lista = (l, conexao, base) => {
+    let con = conexao;
+    (l || []).forEach((n, i) => {
+      const tipo = TIPO_BLOCO(n);
+      if (!tipo) return;
+      const b = novo(tipo);
+      if (n.t === 'repita') b.setFieldValue(String(n.n), 'N');
+      if (n.t === 'se' && tipo === 'pg_se_livre') b.setFieldValue(n.c === 'livre_esq' ? 'esq' : 'dir', 'LADO');
+      if (tipo === 'pg_se_senao') b.setFieldValue(n.c, 'COND');
+      tela.caminhos.set(b.id, [...base, i]);
+      if (n.corpo) lista(n.corpo, b.getInput('FAZ').connection, [...base, i]);
+      if (n.senao) lista(n.senao, b.getInput('SENAO').connection, null);
+      con.connect(b.previousConnection);
+      b.render();
+      con = b.nextConnection;
+    });
+  };
+  const ini = novo('pg_inicio'); ini.moveBy(30, 30);
+  lista(prog.corpo, ini.nextConnection, []);
+  ini.render();
+  if (prog.f1) { const def = novo('pg_f1_def'); lista(prog.f1, def.getInput('FAZ').connection, null); def.render(); def.moveBy(300, 30); }
+}
+// menu pequeno ao lado do bloco tocado: virar para o outro lado · −1 / +1 · ➕ pôr um bloco antes/depois · 🗑 apagar
+const NOVOS = [['andar', '⬆️ andar'], ['virar_esq', '↩️ vire à esquerda'], ['virar_dir', '↪️ vire à direita'], ['virar_esq45', '↖️ vire 45° à esquerda'],
+  ['virar_dir45', '↗️ vire 45° à direita'], ['pegar', '🐾 pegar']];
+function abrirMenuBug(id, inserir = null) {
+  const caminho = tela?.caminhos?.get(id), b = ws?.getBlockById(id);
+  if (!caminho || !b) { fecharMenuBug(); return; }
+  const m = $('pg-bugmenu'), t = b.type;
+  let html;
+  if (inserir) html = NOVOS.filter(([k]) => (tela.cfg.fase.blocos || []).includes(k)).map(([k, txt]) => `<button data-bug="${inserir}" data-novo="${k}">${txt}</button>`).join('')
+    + '<button data-bug="voltar" class="sec">← voltar</button>';
+  else html = (t.startsWith('pg_virar') ? '<button data-bug="inverter">↔️ virar para o outro lado</button>' : '')
+    + (t === 'pg_repita' ? '<div class="pg-bug-num"><button data-bug="menos">−1</button><span>repita</span><button data-bug="mais">+1</button></div>' : '')
+    + '<button data-bug="por-antes">➕ pôr um bloco antes deste</button><button data-bug="por-depois">➕ pôr um bloco depois deste</button>'
+    + '<button data-bug="apagar">🗑 apagar este bloco</button>';
+  m.innerHTML = html;
+  m.dataset.id = id;
+  m.hidden = false;
+  const r = b.getSvgRoot().getBoundingClientRect(), base = $('pg-anotacoes').getBoundingClientRect();
+  const w = m.offsetWidth, h = m.offsetHeight;   // ao lado do bloco (ou embaixo, se não couber), sem sair da área dos blocos
+  let x = r.left - base.left + Math.min(r.width, 200) + 8, y = r.top - base.top;
+  if (x + w > base.width - 4) { x = Math.max(4, r.left - base.left); y = r.bottom - base.top + 6; }
+  m.style.left = Math.max(4, Math.min(x, base.width - w - 4)) + 'px';
+  m.style.top = Math.max(4, Math.min(y, base.height - h - 4)) + 'px';
+  try { ws.highlightBlock(id); } catch (_) {}
+}
+function fecharMenuBug() { const m = $('pg-bugmenu'); if (m) { m.hidden = true; m.innerHTML = ''; } }
+function acaoMenuBug(e) {
+  const btn = e.target.closest('[data-bug]');
+  if (!btn || !tela?.bug) return;
+  const id = $('pg-bugmenu').dataset.id, caminho = tela.caminhos.get(id), a = btn.dataset.bug;
+  if (a === 'por-antes' || a === 'por-depois') { abrirMenuBug(id, a === 'por-antes' ? 'antes' : 'depois'); return; }
+  if (a === 'voltar') { abrirMenuBug(id); return; }
+  fecharMenuBug();
+  if (!caminho) return;
+  mudarBug(editarPrograma(tela.bug.atual, caminho, a, btn.dataset.novo || null), 1);
+}
+// troca o programa (conserto ou volta ao original) e recomeça a execução do zero
+function mudarBug(corpo, mudou) {
+  tela.parar = true;
+  tela.bug.atual = corpo;
+  tela.bug.mudancas = mudou ? tela.bug.mudancas + 1 : 0;
+  tela.exec = null;
+  construir({ corpo, f1: null });
+  voltarAoInicio(); limparRastro(); limparAnotacoes();
+  atualizarContagem();
+  if (!mudou) msg('↺ Programa original de volta.');
+  else if (tela.bug.mudancas > 2) msg('Só 1 bloco está errado. Desfaça e tente mexer em um só.', 'aviso destaque');
+  else msg(`✏️ Mudou ${tela.bug.mudancas === 1 ? '1 bloco' : '2 blocos'}. Aperte <b>▶ Executar</b> para testar.`);
+}
+function voltarOriginal() { if (tela?.bug && !tela.rodando) { fecharMenuBug(); mudarBug(tela.cfg.programa.corpo, 0); } }
+// 💡 depois de 2 erros: a dica do JSON; depois de 4: o bloco errado (posição no programa original) pisca
+function dicaBug() {
+  if (!tela?.bug) return;
+  const { erros } = tela.bug;
+  if (erros >= 2 && tela.cfg.dica) $('pg-msg').insertAdjacentHTML('beforeend', `<span class="pg-dica">💡 ${C.esc(tela.cfg.dica)}</span>`);
+  if (erros >= 4 && tela.cfg.posicao != null) {
+    const prog = tela.cfg.programa.corpo, alvo = Math.min(tela.cfg.posicao, prog.length - 1);
+    for (const [id, c] of tela.caminhos) if (c.length === 1 && c[0] === alvo) {
+      const g = ws.getBlockById(id)?.getSvgRoot();
+      g?.classList.remove('pg-pisca'); requestAnimationFrame(() => g?.classList.add('pg-pisca'));
+    }
+  }
+}
+
+// 🔮 tocou numa casa: marca e o pet executa; no fim, confere se parou nela
+function tocarCasaPrever(e) {
+  if (!tela?.prever || tela.prever.escolha || tela.rodando) return;
+  const c = e.target.closest('.pg-casa');
+  if (!c || c.classList.contains('pedra')) return;
+  tela.prever.escolha = [Number(c.dataset.x), Number(c.dataset.y)];
+  c.classList.add('escolhida');
+  C.tocar('clique');
+  msg('Vamos ver…');
+  executarPrograma();
+}
+function fimPrever(E) {
+  const st = E.saida.estado, [ex, ey] = tela.prever.escolha || [], g = $('pg-grade');
+  try { ws.highlightBlock(null); } catch (_) {}
+  const acertou = st.x === ex && st.y === ey;
+  g.querySelector(`.pg-casa[data-x="${st.x}"][data-y="${st.y}"]`)?.classList.add('certa');
+  if (acertou) {
+    C.tocar('acerto');
+    msg('🎉 Acertou! O pet parou na casa que você marcou.', 'ok');
+    if (!semMov()) confeteCasa(st.x, st.y);
+  } else {
+    C.tocar('erro');
+    msg('❌ Quase! O pet parou na casa verde. Veja o caminho das pegadas.', 'erro');
+  }
+  $('pg-prox').hidden = false;
+  tela.cfg.aoPrever?.(acertou, [st.x, st.y]);
+}
+function confeteCasa(x, y) {
+  const g = $('pg-grade');
+  for (let i = 0; i < 10; i++) {
+    const s = document.createElement('i');
+    s.className = 'pg-confete-casa';
+    s.textContent = ['✨', '⭐', '🎉'][i % 3];
+    s.style.setProperty('--x', x); s.style.setProperty('--y', y);
+    s.style.setProperty('--dx', `${Math.round(Math.cos(i * 0.63) * 60)}px`); s.style.setProperty('--dy', `${Math.round(Math.sin(i * 0.63) * 60 - 20)}px`);
+    g.appendChild(s);
+    setTimeout(() => s.remove(), 1000);
+  }
+}
+
 function pararPrograma() { if (tela?.rodando) tela.parar = true; }
 function reiniciar() {
-  if (!tela) return;
+  if (!tela || tela.prever) return;
   tela.parar = true;
   setTimeout(() => { if (tela && !tela.rodando) { tela.exec = null; voltarAoInicio(); limparRastro(); limparAnotacoes(); msg(''); } }, 60);
 }
@@ -803,7 +960,7 @@ export function mostrarCartao({ titulo, estrelas = null, info = '', botoes = [],
     // Os outros: adulto animado → orgulhoso → rugido; filhote cambalhota (ou feliz) — uma vez só, parando no último quadro.
     const vitoria = !anims;
     const seq = vitoria && forma && C.temSequencia?.(forma, 'vitoria') ? 'vitoria' : null;
-    const lista = anims || (forma !== p?.pet ? ['animado', 'orgulhoso', 'rugido'] : C.temAnim(forma, 'pulo_cambalhota') ? ['pulo_cambalhota'] : ['feliz']);
+    const lista = anims || (/_adulto$/.test(forma || '') ? ['animado', 'orgulhoso', 'rugido'] : C.temAnim(forma, 'pulo_cambalhota') ? ['pulo_cambalhota'] : ['feliz']);
     if (forma) {
       C.pintar(img, p);
       const primeiro = seq ? C.quadrosSeq(forma, seq)[0] : C.quadrosDe(forma, lista[0])[0];
@@ -975,4 +1132,13 @@ export function ligarBotoesPrograme() {
   $('pg-reset').addEventListener('click', reiniciar);
   $('pg-pronto').addEventListener('click', pronto);
   $('pg-sair').addEventListener('click', () => fecharTela());
+  $('pg-original').addEventListener('click', voltarOriginal);
+  $('pg-prox').addEventListener('click', () => { if (tela?.prever) tela.cfg.aoProxima?.(); });
+  $('pg-bugmenu').addEventListener('click', acaoMenuBug);
+  $('pg-grade').addEventListener('click', tocarCasaPrever);
+  $('pg-blockly').addEventListener('click', (e) => {   // 🐛 tocar num bloco: menu de conserto ao lado dele (o <g> do bloco tem data-id)
+    if (!tela?.bug || tela.rodando || tela.exec?.passo) return;
+    const g = e.target.closest('.blocklyBlockCanvas g[data-id]');
+    if (g) abrirMenuBug(g.dataset.id); else fecharMenuBug();
+  });
 }

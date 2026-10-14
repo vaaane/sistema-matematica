@@ -48,6 +48,11 @@ export function semanaDe(d = new Date()) {
   return `${t.getUTCFullYear()}-S${String(Math.ceil(((t - ini) / 864e5 + 1) / 7)).padStart(2, '0')}`;
 }
 
+// Comida que o pet recusa (barriga.nao_come não, é loja.json → nao_come: { pet: [ids] }; o adulto usa a lista do filhote)
+export function naoCome(pet, item) {
+  const n = L?.nao_come || {}, l = n[pet] ?? n[String(pet || '').replace(/_adulto$/, '')];
+  return !!item && Array.isArray(l) && l.includes(item.id);
+}
 // Comida comum só com a barriga abaixo deste limite: por pet em barriga.alimentar_abaixo (os dragões, filhote e adulto: 80),
 // senão barriga.comum_ate (60)
 export function comumAte(pet) {

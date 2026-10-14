@@ -1,0 +1,847 @@
+{
+ "_nota": "Cada bug usa o mapa da fase \"fase\" de programe-o-pet.json. \"programa\" vem com 1 erro; \"certo\" é uma correção válida (há outras). posicao = índice do bloco errado (ou onde falta o bloco). Validado: programa falha, certo vence.",
+ "bugs": [
+  {
+   "id": 1,
+   "fase": 2,
+   "cap": 1,
+   "nome": "Bug 1 · Virando a esquina",
+   "tipo": "direcao",
+   "dica": "Um \"vire\" está para o lado errado.",
+   "programa": [
+    {
+     "t": "andar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": -2
+    },
+    {
+     "t": "andar"
+    }
+   ],
+   "certo": [
+    {
+     "t": "andar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": 2
+    },
+    {
+     "t": "andar"
+    }
+   ],
+   "posicao": 2
+  },
+  {
+   "id": 2,
+   "fase": 3,
+   "cap": 1,
+   "nome": "Bug 2 · Contorne a pedra",
+   "tipo": "direcao",
+   "dica": "Um \"vire\" está para o lado errado.",
+   "programa": [
+    {
+     "t": "virar",
+     "g": -2
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": -2
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": -2
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "andar"
+    }
+   ],
+   "certo": [
+    {
+     "t": "virar",
+     "g": 2
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": -2
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": -2
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "andar"
+    }
+   ],
+   "posicao": 0
+  },
+  {
+   "id": 3,
+   "fase": 4,
+   "cap": 1,
+   "nome": "Bug 3 · Zigue-zague",
+   "tipo": "falta",
+   "dica": "Está faltando um bloco.",
+   "programa": [
+    {
+     "t": "virar",
+     "g": 2
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": -2
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": 2
+    },
+    {
+     "t": "andar"
+    }
+   ],
+   "certo": [
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": 2
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": -2
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": 2
+    },
+    {
+     "t": "andar"
+    }
+   ],
+   "posicao": 0
+  },
+  {
+   "id": 4,
+   "fase": 6,
+   "cap": 2,
+   "nome": "Bug 4 · Corredor comprido",
+   "tipo": "numero",
+   "dica": "Um \"repita\" está com o número errado.",
+   "programa": [
+    {
+     "t": "repita",
+     "n": 8,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    }
+   ],
+   "certo": [
+    {
+     "t": "repita",
+     "n": 9,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    }
+   ],
+   "posicao": 0
+  },
+  {
+   "id": 5,
+   "fase": 8,
+   "cap": 2,
+   "nome": "Bug 5 · Volta no quarteirão",
+   "tipo": "numero",
+   "dica": "Um \"repita\" está com o número errado.",
+   "programa": [
+    {
+     "t": "repita",
+     "n": 4,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    },
+    {
+     "t": "virar",
+     "g": 2
+    },
+    {
+     "t": "repita",
+     "n": 3,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    },
+    {
+     "t": "virar",
+     "g": 2
+    },
+    {
+     "t": "repita",
+     "n": 3,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    },
+    {
+     "t": "virar",
+     "g": 2
+    },
+    {
+     "t": "andar"
+    }
+   ],
+   "certo": [
+    {
+     "t": "repita",
+     "n": 3,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    },
+    {
+     "t": "virar",
+     "g": 2
+    },
+    {
+     "t": "repita",
+     "n": 3,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    },
+    {
+     "t": "virar",
+     "g": 2
+    },
+    {
+     "t": "repita",
+     "n": 3,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    },
+    {
+     "t": "virar",
+     "g": 2
+    },
+    {
+     "t": "andar"
+    }
+   ],
+   "posicao": 0
+  },
+  {
+   "id": 6,
+   "fase": 9,
+   "cap": 2,
+   "nome": "Bug 6 · Petisco a cada passo",
+   "tipo": "falta",
+   "dica": "Está faltando um bloco.",
+   "programa": [
+    {
+     "t": "pegar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "pegar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "pegar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "pegar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "pegar"
+    },
+    {
+     "t": "andar"
+    }
+   ],
+   "certo": [
+    {
+     "t": "andar"
+    },
+    {
+     "t": "pegar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "pegar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "pegar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "pegar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "pegar"
+    },
+    {
+     "t": "andar"
+    }
+   ],
+   "posicao": 0
+  },
+  {
+   "id": 7,
+   "fase": 11,
+   "cap": 3,
+   "nome": "Bug 7 · Atalho na diagonal",
+   "tipo": "direcao",
+   "dica": "Um \"vire\" está para o lado errado.",
+   "programa": [
+    {
+     "t": "virar",
+     "g": -1
+    },
+    {
+     "t": "repita",
+     "n": 3,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    }
+   ],
+   "certo": [
+    {
+     "t": "virar",
+     "g": 1
+    },
+    {
+     "t": "repita",
+     "n": 3,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    }
+   ],
+   "posicao": 0
+  },
+  {
+   "id": 8,
+   "fase": 12,
+   "cap": 3,
+   "nome": "Bug 8 · Entre as pedras",
+   "tipo": "direcao",
+   "dica": "Um \"vire\" está para o lado errado.",
+   "programa": [
+    {
+     "t": "virar",
+     "g": -1
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": 1
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": -2
+    },
+    {
+     "t": "andar"
+    }
+   ],
+   "certo": [
+    {
+     "t": "virar",
+     "g": 1
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": 1
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": -2
+    },
+    {
+     "t": "andar"
+    }
+   ],
+   "posicao": 0
+  },
+  {
+   "id": 9,
+   "fase": 13,
+   "cap": 3,
+   "nome": "Bug 9 · Raio",
+   "tipo": "falta",
+   "dica": "Está faltando um bloco.",
+   "programa": [
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": -1
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": -1
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "andar"
+    }
+   ],
+   "certo": [
+    {
+     "t": "andar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": -1
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": -1
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "andar"
+    }
+   ],
+   "posicao": 0
+  },
+  {
+   "id": 10,
+   "fase": 14,
+   "cap": 3,
+   "nome": "Bug 10 · Diagonal e reta",
+   "tipo": "direcao",
+   "dica": "Um \"vire\" está para o lado errado.",
+   "programa": [
+    {
+     "t": "repita",
+     "n": 3,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    },
+    {
+     "t": "virar",
+     "g": -1
+    },
+    {
+     "t": "repita",
+     "n": 3,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    }
+   ],
+   "certo": [
+    {
+     "t": "repita",
+     "n": 3,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    },
+    {
+     "t": "virar",
+     "g": 1
+    },
+    {
+     "t": "repita",
+     "n": 3,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    }
+   ],
+   "posicao": 1
+  },
+  {
+   "id": 11,
+   "fase": 19,
+   "cap": 5,
+   "nome": "Bug 11 · Se tiver pedra, vire",
+   "tipo": "numero",
+   "dica": "Um \"repita\" está com o número errado.",
+   "programa": [
+    {
+     "t": "repita",
+     "n": 4,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    },
+    {
+     "t": "virar",
+     "g": 2
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": -2
+    },
+    {
+     "t": "andar"
+    }
+   ],
+   "certo": [
+    {
+     "t": "repita",
+     "n": 3,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    },
+    {
+     "t": "virar",
+     "g": 2
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": -2
+    },
+    {
+     "t": "andar"
+    }
+   ],
+   "posicao": 0
+  },
+  {
+   "id": 12,
+   "fase": 21,
+   "cap": 5,
+   "nome": "Bug 12 · Escolha o lado",
+   "tipo": "falta",
+   "dica": "Está faltando um bloco.",
+   "programa": [
+    {
+     "t": "repita",
+     "n": 5,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    },
+    {
+     "t": "virar",
+     "g": 2
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": 2
+    },
+    {
+     "t": "repita",
+     "n": 5,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    }
+   ],
+   "certo": [
+    {
+     "t": "repita",
+     "n": 5,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    },
+    {
+     "t": "virar",
+     "g": 2
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "virar",
+     "g": 2
+    },
+    {
+     "t": "repita",
+     "n": 5,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    }
+   ],
+   "posicao": 2
+  },
+  {
+   "id": 13,
+   "fase": 22,
+   "cap": 5,
+   "nome": "Bug 13 · Pegue só onde tem",
+   "tipo": "numero",
+   "dica": "Um \"repita\" está com o número errado.",
+   "programa": [
+    {
+     "t": "andar"
+    },
+    {
+     "t": "pegar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "pegar"
+    },
+    {
+     "t": "repita",
+     "n": 4,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    },
+    {
+     "t": "pegar"
+    },
+    {
+     "t": "andar"
+    }
+   ],
+   "certo": [
+    {
+     "t": "andar"
+    },
+    {
+     "t": "pegar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "andar"
+    },
+    {
+     "t": "pegar"
+    },
+    {
+     "t": "repita",
+     "n": 3,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    },
+    {
+     "t": "pegar"
+    },
+    {
+     "t": "andar"
+    }
+   ],
+   "posicao": 5
+  },
+  {
+   "id": 14,
+   "fase": 23,
+   "cap": 6,
+   "nome": "Bug 14 · Até chegar",
+   "tipo": "numero",
+   "dica": "Um \"repita\" está com o número errado.",
+   "programa": [
+    {
+     "t": "repita",
+     "n": 11,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    }
+   ],
+   "certo": [
+    {
+     "t": "repita",
+     "n": 12,
+     "corpo": [
+      {
+       "t": "andar"
+      }
+     ]
+    }
+   ],
+   "posicao": 0
+  }
+ ]
+}

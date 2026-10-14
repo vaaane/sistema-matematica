@@ -112,6 +112,42 @@
     .pd-item .tx b{color:var(--green)}
     .pd-item .nm{font-size:12px;color:var(--text-muted);margin-top:4px}
     .pd-item .nm span{color:var(--red);font-weight:700}
+    /* Programe o pet: mapa da turma, por fase, por aluno (PROMPT-69) */
+    .pg-res{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
+    .pg-chip{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.4);color:var(--text);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer}
+    .pg-chip b{color:var(--red);font-family:'Orbitron',monospace;font-size:12px;margin-left:4px}
+    .pg-chip.ativo{background:rgba(239,68,68,.28);border-color:var(--red)}
+    table.jr.pgt{min-width:560px}
+    table.jr.pgt th{cursor:default;text-align:center}
+    table.jr.pgt th:first-child{text-align:left}
+    table.jr.pgt td{text-align:center;padding:6px}
+    table.jr.pgt td.aluno{text-align:left}
+    .pg-nome{background:none;border:0;color:var(--text);font:inherit;font-weight:600;cursor:pointer;padding:0;text-decoration:underline dotted rgba(255,255,255,.35);text-underline-offset:3px}
+    .pg-cel{display:inline-block;min-width:64px;border-radius:8px;padding:5px 6px;font-size:12px;font-weight:700;border:2px solid transparent}
+    .pg-cel.v{background:rgba(34,197,94,.18);color:var(--green)}
+    .pg-cel.a{background:rgba(240,165,0,.16);color:var(--gold)}
+    .pg-cel.a.trav{border-color:var(--red);color:#ffb4b4}
+    .pg-cel.c{background:rgba(255,255,255,.04);color:var(--text-muted)}
+    .pg-fase{border:1px solid var(--border);border-radius:12px;margin-bottom:8px;background:rgba(255,255,255,.02)}
+    .pg-fase>summary{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;padding:10px 12px;cursor:pointer;font-size:14px;list-style:none}
+    .pg-fase>summary::-webkit-details-marker{display:none}
+    .pg-fase>summary::before{content:'▸';color:var(--text-muted)}
+    .pg-fase[open]>summary::before{content:'▾'}
+    .pg-fase>summary .nums{margin-left:auto;font-size:12px;color:var(--text-muted)}
+    .pg-fase>summary .nums b{color:var(--red)}
+    .pg-fase .corpo{padding:0 12px 12px;display:flex;flex-wrap:wrap;gap:14px 22px;align-items:flex-start}
+    .pg-fase .col{min-width:220px;flex:1}
+    .pg-fase h4,.pg-aluno h4{margin:0 0 6px;font-size:13px;color:var(--text-muted);font-weight:700}
+    .pg-mapa{display:inline-grid;gap:2px;max-width:100%}
+    .pg-mapa i{width:30px;height:30px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:14px;border:1px solid rgba(255,255,255,.16);position:relative}
+    .pg-mapa i.pedra{background:#6b7080;border-color:#6b7080}
+    .pg-mapa i small{position:absolute;right:2px;bottom:0;font-size:10px;font-family:'Orbitron',monospace;color:#fff;text-shadow:0 0 3px #000}
+    .pg-prog{white-space:pre-wrap;font-size:12.5px;margin:4px 0 0;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-family:ui-monospace,Consolas,monospace}
+    .pg-grupo{margin-bottom:10px}
+    .pg-grupo .q{font-size:12px;color:var(--text-muted)}
+    .pg-aluno .fase-al{display:flex;flex-wrap:wrap;gap:12px 20px;padding:10px 0;border-top:1px solid var(--border)}
+    .pg-estrelas{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+    .pg-estrelas span{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:3px 8px;font-size:12px}
     .empty{text-align:center;padding:40px 16px;color:var(--text-muted)}
     .skel{height:16px;border-radius:6px;background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.09),rgba(255,255,255,.04));background-size:200% 100%;animation:skel 1.2s infinite;margin:10px 0}
     @keyframes skel{to{background-position:-200% 0}}
@@ -403,47 +439,131 @@ function renderPraca() {
 // ── Aba — Moedas: o que cada aluno ganhou na semana, por fonte (jogo_revisao/{uid}/moedas_semana/{segunda}) ──
 const FONTES_MOEDA = [["ginasio", "Ginásios"], ["insignia", "Insígnias"], ["batalha", "Batalhas"], ["batalha_primeira", "1ª vitória"], ["pedido", "Pedidos"],
   ["cavar", "Cavar/mato"], ["colecao", "Coleção"], ["fliperama", "Fliperama"], ["desafio", "Desafios"], ["pesca", "Peixes"], ["aovivo", "Ao vivo"], ["missao", "Missões"], ["programe", "Programe"]];
-// ── Aba — Programe o pet: capítulo alcançado e onde travou (fase não resolvida com mais tentativas) ──
+// ── Aba — Programe o pet (PROMPT-69): mapa da turma (alunos × capítulos), por fase (calor das batidas, programas errados) e por aluno ──
 let PROG = null;
 const CONCEITO = { sequencia: "Sequência", repeticao: "Repetição", angulos: "Ângulos 45°", funcoes: "Funções", condicionais: "Condicionais", repita_ate: "Repita até" };
+const PG_BLOCO = { pg_andar: "andar", pg_virar_dir: "vire à direita 90°", pg_virar_esq: "vire à esquerda 90°", pg_virar_dir45: "vire 45° à direita", pg_virar_esq45: "vire 45° à esquerda",
+  pg_pegar: "pegar", pg_f1: "chamar F1", pg_repita: "repita", pg_repita_ate: "repita até", pg_se_pedra: "se tem pedra", pg_se_livre: "se está livre", pg_se_petisco: "se tem petisco", pg_se_senao: "se/senão" };
+const nomeBloco = (b) => PG_BLOCO[b] || String(b || "?").replace(/^pg_/, "");
+const SETA_PG = { ">": "▶", "<": "◀", "^": "▲", "v": "▼" };
+let pgFiltro = null, pgAluno = null;   // capítulo filtrado no mapa da turma; aluno aberto
+// estado de uma fase para um aluno: feita (com estrela), tentando (executou e não resolveu), presa (3+ tentativas sem resolver) ou nada
+const pgSit = (p) => Number(p?.estrelas) > 0 ? "feita" : Number(p?.tentativas) >= 3 ? "presa" : Number(p?.tentativas) > 0 ? "tentando" : "nada";
+// Mapinha da fase em grade: pedras cinza, início ▶ (na direção da fase), comida 🍖, petisco 🍪; casas batidas em vermelho (mais forte = mais batidas)
+function mapaPg(f, batidas = {}) {
+  const linhas = f.mapa || [], cols = Math.max(...linhas.map(l => l.length)), max = Math.max(1, ...Object.values(batidas));
+  let html = "";
+  linhas.forEach((l, y) => { for (let x = 0; x < cols; x++) {
+    const c = l[x] || "#", n = batidas[`${x},${y}`] || 0;
+    const sim = c === "P" ? SETA_PG[f.dir] || "▶" : c === "C" ? "🍖" : c === "c" ? "🍪" : "";
+    const fundo = n ? ` style="background:rgba(239,68,68,${(0.25 + 0.7 * n / max).toFixed(2)})"` : "";
+    html += `<i class="${c === "#" ? "pedra" : ""}"${fundo} title="(${x + 1}, ${y + 1})${n ? ` · ${n} batida${n === 1 ? "" : "s"}` : ""}">${sim}${n ? `<small>${n}</small>` : ""}</i>`;
+  } });
+  return `<div class="pg-mapa" style="grid-template-columns:repeat(${cols},30px)">${html}</div>`;
+}
+function calcularPrograme() {
+  const fases = PROG.fases || [], caps = Object.keys(PROG.capitulos || {}).map(Number).sort((a, b) => a - b);
+  const conc = (cap) => CONCEITO[PROG.capitulos?.[cap]?.conceito] || PROG.capitulos?.[cap]?.nome || `Cap. ${cap}`;
+  const alunos = linhas.map(l => {
+    const pf = l.n?.programe?.fases || {};
+    const porCap = Object.fromEntries(caps.map(cap => {
+      const fs = fases.filter(f => f.cap === cap), sits = fs.map(f => pgSit(pf[f.id]));
+      const estrelas = fs.reduce((t, f) => t + (Number(pf[f.id]?.estrelas) || 0), 0);
+      const cor = sits.every(s => s === "feita") ? "v" : sits.some(s => s !== "nada") ? "a" : "c";
+      return [cap, { cor, estrelas, trav: cor === "a" && sits.includes("presa"), feitas: sits.filter(s => s === "feita").length, total: fs.length }];
+    }));
+    const feitas = fases.filter(f => pgSit(pf[f.id]) === "feita").length;
+    return { nome: l.nome, uid: l.uid, pf, porCap, feitas, estrelas: fases.reduce((t, f) => t + (Number(pf[f.id]?.estrelas) || 0), 0) };
+  });
+  const porFase = fases.map(f => {
+    const ps = alunos.map(a => ({ a, p: a.pf[f.id], s: pgSit(a.pf[f.id]) }));
+    const feitas = ps.filter(x => x.s === "feita"), presos = ps.filter(x => x.s === "presa"), tentando = ps.filter(x => x.s === "tentando" || x.s === "presa");
+    const media = (xs, k) => { const v = xs.map(x => Number(x.p?.[k])).filter(n => n > 0); return v.length ? (v.reduce((s, n) => s + n, 0) / v.length).toFixed(1).replace(".", ",") : "—"; };
+    const batidas = {}, blocos = {}, progs = {};
+    for (const { p } of ps) if (p?.bateu && Number.isFinite(Number(p.bateu.x))) {
+      const k = `${Number(p.bateu.x)},${Number(p.bateu.y)}`; batidas[k] = (batidas[k] || 0) + 1;
+      if (p.bateu.bloco) blocos[p.bateu.bloco] = (blocos[p.bateu.bloco] || 0) + 1;
+    }
+    for (const { a, p } of tentando) { const tx = String(p?.texto_atual || "").trim(); if (tx) (progs[tx] ||= []).push(a.nome); }
+    return { f, feitas: feitas.length, presos: presos.length, tentando: tentando.length, naoChegaram: ps.length - feitas.length - tentando.length,
+      mediaTent: media(feitas, "tentativas"), mediaBlocos: media(feitas, "blocos"), batidas,
+      blocos: Object.entries(blocos).sort((x, y) => y[1] - x[1]), progs: Object.entries(progs).sort((x, y) => y[1].length - x[1].length).slice(0, 3) };
+  });
+  const travados = caps.map(cap => [cap, alunos.filter(a => a.porCap[cap].trav).length]).filter(([, n]) => n).sort((x, y) => y[1] - x[1]);
+  return { fases, caps, conc, alunos, porFase, travados };
+}
 function renderPrograme() {
   const el = $("programe");
   if (!PROG) { el.innerHTML = `<div class="empty">Não deu para carregar as fases (dados/jogo/programe-o-pet.json).</div>`; return; }
-  const fases = PROG.fases || [], conc = (cap) => CONCEITO[PROG.capitulos?.[cap]?.conceito] || `Cap. ${cap}`;
-  const lin = linhas.map(l => {
-    const pf = l.n?.programe?.fases || {};
-    const feitas = fases.filter(f => Number(pf[f.id]?.estrelas) > 0);
-    const estrelas = feitas.reduce((t, f) => t + Number(pf[f.id].estrelas), 0);
-    const prox = fases.find(f => !(Number(pf[f.id]?.estrelas) > 0));
-    // travou: fase sem estrela com mais tentativas (pelo menos 3)
-    const presa = fases.filter(f => !(Number(pf[f.id]?.estrelas) > 0) && Number(pf[f.id]?.tentativas) >= 3).sort((a, b) => Number(pf[b.id].tentativas) - Number(pf[a.id].tentativas))[0];
-    return { nome: l.nome, uid: l.uid, feitas: feitas.length, estrelas, cap: feitas.length ? Math.max(...feitas.map(f => f.cap)) : 0, prox, presa, pp: presa ? pf[presa.id] : null };
-  }).sort((a, b) => b.feitas - a.feitas || b.estrelas - a.estrelas || a.nome.localeCompare(b.nome));
-  if (!lin.some(l => l.feitas || l.presa)) { el.innerHTML = `<div class="empty">Ninguém desta turma jogou o Programe o pet ainda (Laboratório, na Praça).</div>`; return; }
-  const travados = {};
-  for (const l of lin) if (l.presa) travados[conc(l.presa.cap)] = (travados[conc(l.presa.cap)] || 0) + 1;
-  el.innerHTML = `<div class="bloco"><h3>Onde a turma travou, por conceito</h3><div class="sub">Alunos com uma fase sem resolver depois de 3 ou mais tentativas.</div>
-    ${Object.keys(travados).length ? Object.entries(travados).sort((a, b) => b[1] - a[1]).map(([c, n]) => `<div class="conteudo"><div class="t"><b>${esc(c)}</b> <span>· ${n} aluno${n === 1 ? "" : "s"}</span></div></div>`).join("") : '<div class="sub">Ninguém travado agora. 🎉</div>'}</div>
-    <div class="tabela-wrap"><table class="jr bt"><thead><tr><th>Aluno</th><th>Fases</th><th>⭐</th><th>Capítulo</th><th>Próxima</th><th>Travou em</th></tr></thead><tbody>
-    ${lin.map(l => `<tr><td class="aluno">${esc(l.nome)}</td><td class="num">${l.feitas}/${fases.length}</td><td class="num">${l.estrelas || "—"}</td>
-      <td>${l.cap ? `${l.cap} · ${esc(conc(l.cap))}` : "—"}</td><td>${l.prox ? `Fase ${l.prox.id} · ${esc(l.prox.nome)}` : "✅ todas"}</td>
-      <td>${l.presa ? `<button class="btn-sec" data-pg-ver="${esc(l.uid)}">Fase ${l.presa.id} · ${esc(conc(l.presa.cap))} (${Number(l.pp.tentativas)} tentativas)</button>` : "—"}</td></tr>`).join("")}
-    </tbody></table></div>
-    <div id="pg-programa"></div>
-    <div class="legenda">Estrelas: ⭐ resolveu · ⭐⭐ com até meta + 3 blocos · ⭐⭐⭐ com até a meta de blocos da fase. Toque em "Travou em" para ver o último programa do aluno nessa fase.</div>`;
-  el._lin = Object.fromEntries(lin.map(l => [l.uid, l]));
+  const R = el._R = calcularPrograme(), { caps, conc, alunos, porFase, travados } = R;
+  if (!alunos.some(a => a.feitas || Object.values(a.porCap).some(c => c.cor !== "c"))) { el.innerHTML = `<div class="empty">Ninguém desta turma jogou o Programe o pet ainda (Laboratório, na Praça).</div>`; return; }
+  if (pgFiltro && !travados.some(([c]) => c === pgFiltro)) pgFiltro = null;
+  const vis = pgFiltro ? alunos.filter(a => a.porCap[pgFiltro].trav) : alunos;
+  const celula = (c) => c.cor === "v" ? `<span class="pg-cel v">✓ ${c.estrelas}⭐</span>`
+    : c.cor === "a" ? `<span class="pg-cel a${c.trav ? " trav" : ""}" title="${c.trav ? "Travado: 3 ou mais tentativas numa fase sem resolver" : "Começou"}">${c.trav ? "⚠ " : ""}${c.feitas}/${c.total}</span>`
+    : `<span class="pg-cel c">—</span>`;
+  const ordFases = [...porFase].sort((x, y) => y.presos - x.presos || y.tentando - x.tentando || x.f.id - y.f.id);
+  el.innerHTML = `<div class="bloco"><h3>🗺️ Mapa da turma</h3>
+      <div class="pg-res"><span class="muted" style="font-size:13px">Travados agora:</span>
+        ${travados.length ? travados.map(([cap, n]) => `<button class="pg-chip${pgFiltro === cap ? " ativo" : ""}" data-pg-filtro="${cap}">${esc(conc(cap))}<b>${n}</b></button>`).join("") : '<span class="muted" style="font-size:13px">ninguém 🎉</span>'}
+        ${pgFiltro ? `<button class="btn-sec" data-pg-filtro="" style="padding:5px 10px;font-size:12px">✕ mostrar todos</button>` : ""}
+        <button class="btn-sec" id="pg-copiar" style="margin-left:auto;padding:6px 12px;font-size:13px">📋 Copiar resumo</button><span class="muted" id="pg-copiado" style="font-size:12px"></span></div>
+      <div class="tabela-wrap"><table class="jr pgt"><thead><tr><th>Aluno</th>${caps.map(c => `<th>${esc(conc(c))}</th>`).join("")}</tr></thead><tbody>
+        ${vis.map(a => `<tr><td class="aluno"><button class="pg-nome" data-pg-aluno="${esc(a.uid)}">${esc(a.nome)}</button></td>${caps.map(c => `<td>${celula(a.porCap[c])}</td>`).join("")}</tr>`).join("")}
+      </tbody></table></div>
+      <div class="legenda">🟩 todas as fases do capítulo feitas (⭐ somadas) · 🟨 começou, tem fase sem resolver (fases feitas/total) · borda vermelha ⚠ = travado (3+ tentativas numa fase sem resolver) · ⬜ ainda não chegou. Toque num capítulo em "Travados agora" para filtrar; toque no nome para ver o aluno.</div>
+      <div id="pg-aluno"></div></div>
+    <div class="bloco"><h3>🧩 Por fase</h3><div class="sub">Ordenadas por quantos estão presos (3+ tentativas sem resolver). Toque numa fase para abrir.</div>
+      ${ordFases.map(x => `<details class="pg-fase"><summary><b>Fase ${x.f.id}</b> · ${esc(x.f.nome)} <span class="muted">(${esc(conc(x.f.cap))})</span>
+          <span class="nums">${x.presos ? `<b>${x.presos} preso${x.presos === 1 ? "" : "s"}</b> · ` : ""}✓ ${x.feitas} · tentando ${x.tentando} · não chegaram ${x.naoChegaram}</span></summary>
+        <div class="corpo">
+          <div class="col"><h4>Turma</h4><div style="font-size:13px;line-height:1.6">Fizeram: <b>${x.feitas}</b> · Tentando: <b>${x.tentando}</b> · Não chegaram: <b>${x.naoChegaram}</b><br>
+            Quem resolveu: em média <b>${x.mediaTent}</b> tentativas e <b>${x.mediaBlocos}</b> blocos (meta ${x.f.meta_blocos ?? "—"})<br>
+            Bloco onde mais bateram: ${x.blocos.length ? x.blocos.slice(0, 3).map(([b, n]) => `<b>${esc(nomeBloco(b))}</b> (${n})`).join(", ") : "—"}</div></div>
+          <div class="col" style="flex:none"><h4>Onde os pets bateram</h4>${mapaPg(x.f, x.batidas)}</div>
+          <div class="col"><h4>Programas errados mais comuns</h4>${x.progs.length ? x.progs.map(([tx, nomes]) => `<div class="pg-grupo"><div class="q">${nomes.length} aluno${nomes.length === 1 ? "" : "s"}: ${esc(nomes.join(", "))}</div><pre class="pg-prog">${esc(tx)}</pre></div>`).join("") : '<div class="muted" style="font-size:13px">Nenhum programa errado salvo.</div>'}</div>
+        </div></details>`).join("")}
+      <div class="legenda">Estrelas: ⭐ resolveu · ⭐⭐ com até meta + 3 blocos · ⭐⭐⭐ com até a meta de blocos da fase. "Onde bateram" usa a última batida de cada aluno na fase.</div></div>`;
+  if (pgAluno) mostrarAlunoPg(pgAluno, false);
 }
-$("programe").addEventListener("click", (e) => {
-  const b = e.target.closest("[data-pg-ver]");
-  if (!b) return;
-  const l = $("programe")._lin?.[b.dataset.pgVer];
-  if (!l?.presa) return;
-  const pp = l.pp || {}, bt = pp.bateu;
-  $("pg-programa").innerHTML = `<div class="bloco"><h3>${esc(l.nome)} · Fase ${l.presa.id} (${esc(l.presa.nome)})</h3>
-    <div class="sub">${Number(pp.tentativas) || 0} tentativas${bt ? ` · última batida na casa (${Number(bt.x) + 1}, ${Number(bt.y) + 1}) no bloco "${esc(String(bt.bloco || "").replace("pg_", ""))}"` : ""}</div>
-    <pre style="white-space:pre-wrap;font-size:13px;margin:8px 0 0">${esc(pp.texto_atual || "(sem programa salvo)")}</pre>
-    <div class="sub" style="margin-top:6px">Mapa da fase:</div><pre style="font-size:13px;margin:4px 0 0;line-height:1.15">${esc((l.presa.mapa || []).join("\n"))}</pre></div>`;
-  $("pg-programa").scrollIntoView({ block: "nearest" });
+function mostrarAlunoPg(uid, rolar = true) {
+  const R = $("programe")._R, a = R?.alunos.find(x => x.uid === uid), box = $("pg-aluno");
+  if (!a || !box) { pgAluno = null; return; }
+  pgAluno = uid;
+  const capAtual = [...R.caps].reverse().find(c => a.porCap[c].cor !== "c");
+  const feitas = R.fases.filter(f => pgSit(a.pf[f.id]) === "feita"), abertas = R.fases.filter(f => ["tentando", "presa"].includes(pgSit(a.pf[f.id])));
+  box.innerHTML = `<div class="bloco pg-aluno" style="margin:14px 0 0;background:rgba(255,255,255,.02)"><div class="linha-acao" style="justify-content:space-between">
+      <h3 style="margin:0">${esc(a.nome)}</h3><button class="btn-sec" data-pg-fechar style="padding:5px 10px;font-size:12px">✕ fechar</button></div>
+    <div class="sub">${capAtual ? `Capítulo ${capAtual} · ${esc(R.conc(capAtual))}` : "Ainda não começou"} · ${a.feitas}/${R.fases.length} fases · ${a.estrelas} ⭐</div>
+    ${feitas.length ? `<h4>Fases feitas</h4><div class="pg-estrelas">${feitas.map(f => `<span>${f.id}. ${esc(f.nome)} ${"⭐".repeat(Number(a.pf[f.id].estrelas))}</span>`).join("")}</div>` : ""}
+    ${abertas.length ? `<h4>Sem resolver</h4>` + abertas.map(f => { const p = a.pf[f.id], bt = p.bateu, bat = bt && Number.isFinite(Number(bt.x)) ? { [`${Number(bt.x)},${Number(bt.y)}`]: 1 } : {};
+      return `<div class="fase-al"><div style="min-width:220px;flex:1"><b>Fase ${f.id} · ${esc(f.nome)}</b> <span class="muted">(${esc(R.conc(f.cap))})</span>
+        <div class="sub" style="margin:4px 0 0">${Number(p.tentativas) || 0} tentativas${pgSit(p) === "presa" ? " · ⚠ travado" : ""}${bt ? ` · bateu na casa (${Number(bt.x) + 1}, ${Number(bt.y) + 1}) no bloco "${esc(nomeBloco(bt.bloco))}"` : ""}</div>
+        <pre class="pg-prog">${esc(p.texto_atual || "(sem programa salvo)")}</pre></div><div>${mapaPg(f, bat)}</div></div>`; }).join("") : '<div class="sub">Nenhuma fase começada e sem resolver.</div>'}</div>`;
+  if (rolar) box.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+// texto para colar no planejamento: travados por capítulo e as 3 fases mais difíceis
+function resumoPgTexto() {
+  const R = $("programe")._R;
+  if (!R) return "";
+  const dif = [...R.porFase].filter(x => x.presos || x.tentando).sort((x, y) => y.presos - x.presos || y.tentando - x.tentando).slice(0, 3);
+  return [`Programe o pet · ${sel.value} · ${new Date().toLocaleDateString("pt-BR")}`,
+    `Travados agora: ${R.travados.length ? R.travados.map(([c, n]) => `${R.conc(c)} ${n}`).join(" · ") : "ninguém"}`,
+    "Fases mais difíceis:",
+    ...(dif.length ? dif.map((x, i) => `${i + 1}. Fase ${x.f.id} · ${x.f.nome} (${R.conc(x.f.cap)}): ${x.tentando} tentando (${x.presos} presos), ${x.feitas} fizeram` +
+      (x.blocos.length ? ` · mais batidas no bloco "${nomeBloco(x.blocos[0][0])}"` : "")) : ["—"])].join("\n");
+}
+$("programe").addEventListener("click", async (e) => {
+  const f = e.target.closest("[data-pg-filtro]");
+  if (f) { pgFiltro = f.classList.contains("ativo") ? null : Number(f.dataset.pgFiltro) || null; renderPrograme(); return; }   // tocar de novo no mesmo capítulo tira o filtro
+  const n = e.target.closest("[data-pg-aluno]");
+  if (n) { mostrarAlunoPg(n.dataset.pgAluno); return; }
+  if (e.target.closest("[data-pg-fechar]")) { pgAluno = null; $("pg-aluno").innerHTML = ""; return; }
+  if (e.target.closest("#pg-copiar")) {
+    try { await navigator.clipboard.writeText(resumoPgTexto()); $("pg-copiado").textContent = "Copiado ✓"; }
+    catch (_) { $("pg-copiado").textContent = "Não deu para copiar"; }
+    setTimeout(() => { if ($("pg-copiado")) $("pg-copiado").textContent = ""; }, 3000);
+  }
 });
 
 function renderMoedas() {

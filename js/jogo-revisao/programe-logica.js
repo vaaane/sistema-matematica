@@ -72,7 +72,7 @@ export function contarBlocos(prog) {
 export function* executar(fase, prog, { corrida = false, espelhar = false } = {}, saida = {}) {
   const F = fase.w ? fase : lerFase(fase);
   const st = saida.estado = { x: F.inicio[0], y: F.inicio[1], dir: F.dir, pegos: new Set(), tiques: 0, batidas: 0, chegou: null, passos: 0 };
-  const naComida = () => st.x === F.comida[0] && st.y === F.comida[1];
+  const naComida = () => !!F.comida && st.x === F.comida[0] && st.y === F.comida[1];   // "O que o pet vai fazer?": grade sem comida
   const faltam = () => F.petiscos.filter(([x, y]) => !st.pegos.has(k(x, y))).length;
   const cond = (c) => {
     if (espelhar && (c === 'livre_dir' || c === 'livre_esq')) c = c === 'livre_dir' ? 'livre_esq' : 'livre_dir';
@@ -224,6 +224,77 @@ export function resultadoCorrida(faseA, progA, progB, { espelharB = false } = {}
   if (a.chegou != null || b.chegou != null) vencedor = b.chegou == null || (a.chegou != null && a.chegou < b.chegou) ? 'a' : a.chegou == null || b.chegou < a.chegou ? 'b' : 'empate';
   else vencedor = a.dist < b.dist ? 'a' : b.dist < a.dist ? 'b' : 'empate';
   return { vencedor, a, b, eventosA: sa.eventos, eventosB: sb.eventos };
+}
+
+// ── 🐛 Caça ao bug (PROMPT-70): consertos tocando num bloco ──
+// caminho = índices até o bloco: [i] no corpo do programa, [i, j] dentro do repita i, …
+// acao: 'inverter' (virar para o outro lado) · 'menos' | 'mais' (número do repita) · 'antes' | 'depois' (pôr o bloco `novo`) · 'apagar'
+export const BLOCO_NOVO = { andar: { t: 'andar' }, virar_esq: { t: 'virar', g: -2 }, virar_dir: { t: 'virar', g: 2 },
+  virar_esq45: { t: 'virar', g: -1 }, virar_dir45: { t: 'virar', g: 1 }, pegar: { t: 'pegar' } };
+const semIds = (l) => (l || []).map(({ id, ...b }) => ({ ...b, ...(b.corpo ? { corpo: semIds(b.corpo) } : {}), ...(b.senao ? { senao: semIds(b.senao) } : {}) }));
+export function editarPrograma(lista, caminho, acao, novo = null) {
+  const prog = semIds(lista);
+  let pai = prog;
+  for (const i of caminho.slice(0, -1)) pai = pai[i].corpo;
+  const i = caminho.at(-1), b = pai[i];
+  if (!b) return prog;
+  if (acao === 'inverter' && b.t === 'virar') b.g = -b.g;
+  else if ((acao === 'menos' || acao === 'mais') && b.t === 'repita') b.n = Math.max(1, Math.min(20, (Number(b.n) || 1) + (acao === 'mais' ? 1 : -1)));
+  else if ((acao === 'antes' || acao === 'depois') && BLOCO_NOVO[novo]) pai.splice(acao === 'antes' ? i : i + 1, 0, { ...BLOCO_NOVO[novo] });
+  else if (acao === 'apagar') pai.splice(i, 1);
+  return prog;
+}
+// todos os consertos de 1 toque possíveis (para conferir que cada bug tem conserto pelo menu)
+export function consertosDe(lista, novos) {
+  const out = [];
+  const visita = (l, base) => l.forEach((b, i) => {
+    const c = [...base, i];
+    for (const a of ['inverter', 'menos', 'mais', 'apagar']) out.push(editarPrograma(lista, c, a));
+    for (const n of novos) for (const a of ['antes', 'depois']) out.push(editarPrograma(lista, c, a, n));
+    if (b.corpo) visita(b.corpo, c);
+  });
+  visita(lista, []);
+  return out;
+}
+
+// ── 🔮 O que o pet vai fazer? (PROMPT-70): rodada gerada na hora (com semente, para testar) ──
+// Grade 5 × 5 com algumas pedras, pet numa casa livre olhando para um lado, programa de 3 a 8 blocos que NÃO bate nem sai da grade.
+// Dificuldade pelos acertos seguidos: 0–2 andar e virar · 3–5 com repita · 6–8 repita dentro de repita ou F1 · 9+ com "se tem pedra na frente".
+export const nivelOQueFaz = (acertos) => (acertos >= 9 ? 4 : acertos >= 6 ? 3 : acertos >= 3 ? 2 : 1);
+export function rodadaOQueFaz(semTxt, acertos = 0) {
+  const rnd = semente(`o-que-faz|${semTxt}`), nivel = nivelOQueFaz(acertos);
+  const sorteia = (l) => l[Math.floor(rnd() * l.length)], entre = (a, b) => a + Math.floor(rnd() * (b - a + 1));
+  const simples = () => (rnd() < 0.55 ? { t: 'andar' } : { t: 'virar', g: sorteia([-2, 2]) });
+  const seq = (n) => Array.from({ length: n }, simples);
+  const DIR_TXT = { 0: '>', 2: 'v', 4: '<', 6: '^' };
+  for (let tent = 0; tent < 3000; tent++) {
+    const w = 5, h = 5, g = Array.from({ length: h }, () => Array.from({ length: w }, () => (rnd() < 0.18 ? '#' : '.')));
+    const ix = entre(0, w - 1), iy = entre(0, h - 1), dir = sorteia([0, 2, 4, 6]);
+    g[iy][ix] = 'P';
+    const fase = { id: `oqf-${semTxt}`, nome: 'O que o pet vai fazer?', dir: DIR_TXT[dir], mapa: g.map(l => l.join('')), blocos: [] };
+    let prog;
+    if (nivel === 1) prog = { corpo: seq(entre(3, 6)), f1: null };
+    else if (nivel === 2) {
+      const antes = seq(entre(0, 2)), depois = seq(entre(0, 2));
+      prog = { corpo: [...antes, { t: 'repita', n: entre(2, 4), corpo: seq(entre(1, 3)) }, ...depois], f1: null };
+    } else if (nivel === 3) {
+      if (rnd() < 0.5) prog = { corpo: [...seq(entre(0, 1)), { t: 'repita', n: entre(2, 3), corpo: [...seq(entre(0, 1)), { t: 'repita', n: entre(2, 3), corpo: seq(entre(1, 2)) }] }, ...seq(entre(0, 1))], f1: null };
+      else { const f1 = seq(entre(2, 3)); prog = { corpo: [...seq(entre(0, 1)), { t: 'chamar' }, ...seq(entre(0, 2)), { t: 'chamar' }], f1 }; }
+    } else {
+      const se = { t: 'se', c: 'pedra_frente', corpo: [{ t: 'virar', g: sorteia([-2, 2]) }] };
+      prog = { corpo: [...seq(entre(0, 1)), { t: 'repita', n: entre(3, 5), corpo: rnd() < 0.5 ? [se, { t: 'andar' }] : [{ t: 'andar' }, se] }, ...seq(entre(0, 1))], f1: null };
+    }
+    const nb = contarBlocos(prog);
+    if (nb < 3 || nb > 8) continue;
+    const s = simular(fase, prog);
+    if (s.motivo !== 'acabou') continue;                               // bateu, saiu da grade ou não termina
+    const andou = s.eventos.filter(e => e.tipo === 'andou').length;
+    if (andou < 2) continue;                                           // tem de andar um pouco
+    if (nivel === 4 && !s.eventos.some((e, k) => e.tipo === 'virou' && s.eventos[k - 1]?.tipo === 'bloco' && s.eventos[k - 2]?.tipo === 'bloco')) continue;   // o "se" virou pelo menos 1 vez
+    return { fase, prog, nivel, final: [s.estado.x, s.estado.y] };
+  }
+  return { fase: { id: `oqf-${semTxt}`, nome: 'O que o pet vai fazer?', dir: '>', mapa: ['P....', '.....', '.....', '.....', '.....'], blocos: [] },
+    prog: { corpo: [{ t: 'andar' }, { t: 'andar' }, { t: 'virar', g: 2 }, { t: 'andar' }], f1: null }, nivel, final: [2, 1] };
 }
 
 // Estrelas: ⭐ resolveu · ⭐⭐ blocos ≤ meta + 3 · ⭐⭐⭐ blocos ≤ meta

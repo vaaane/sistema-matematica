@@ -485,7 +485,10 @@
       "fome": [
         "Um peixe gelado agora…",
         "Tô com fome. Mas tô calmo.",
-        "Minha barriga tá vazia como um iceberg."
+        "Minha barriga tá vazia como um iceberg.",
+        "Fome. Mas fruta e legume, nem pensar.",
+        "Um peixe gelado ou uma carne. Planta eu recuso.",
+        "Se vier com verdura, eu congelo e jogo fora."
       ],
       "carinho": [
         "Hm… isso aquece até um dragão de gelo.",
@@ -540,6 +543,12 @@
         "Vitória gelada e certeira. Assinado: eu.",
         "Pode admirar. Eu deixo.",
         "Só confirmei o que eu já sabia: sou incrível."
+      ],
+      "recusa_planta": [
+        "Uma {comida}? Não. Dragão de gelo não come planta. Joguei fora.",
+        "Gelado e direto: não como isso. Já foi pro lixo.",
+        "{comida}… sério? Congelei e joguei fora.",
+        "Eca. Planta. Próxima, por favor. De preferência carne."
       ]
     },
     "dragao_vermelho": {
@@ -594,7 +603,11 @@
         "Um dragão faminto é um dragão de mau humor. E dragão de mau humor queima a lição de casa.",
         "Minha chama tá fraquinha… olha… *fumacinha triste*",
         "Comida. Agora. Eu sou majestade.",
-        "Minha barriga rugiu mais alto que eu. Isso é inaceitável."
+        "Minha barriga rugiu mais alto que eu. Isso é inaceitável.",
+        "EU EXIJO CARNE! E nada de fruta, nem tenta.",
+        "Tô com fome. Se vier com legume, eu queimo.",
+        "Fruta? Verdura? Nem pensar. Dragão come CARNE!",
+        "Minha barriga ronca por um banquete. De carne. Só carne."
       ],
       "carinho": [
         "Hmpf. Pode continuar. É uma honra pra você.",
@@ -662,6 +675,13 @@
         "Contemple a minha grandiosidade!",
         "Os bardos vão cantar isso. Sobre mim, claro.",
         "Isso foi lendário. Igual a mim."
+      ],
+      "recusa_planta": [
+        "PLANTA?! Eu sou um DRAGÃO! Joguei fora.",
+        "Eca. Isso é comida de coelho. Já era. *queima*",
+        "Você me trouxe uma {comida}? Pra MIM? Que ofensa. Foi pro lixo.",
+        "Dragões não comem mato! Joguei longe, nem procura.",
+        "{comida}?! Prefiro passar fome. …Mentira, me dá CARNE."
       ]
     },
     "elefante": {

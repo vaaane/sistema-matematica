@@ -48,8 +48,7 @@
    "ponto": [
     775,
     252
-   ],
-   "em_breve": true
+   ]
   },
   {
    "id": "o_que_faz",
@@ -59,8 +58,7 @@
    "ponto": [
     923,
     252
-   ],
-   "em_breve": true
+   ]
   }
  ],
  "nota": "Coordenadas em 1376x768. ponto = onde o personagem para em frente ao computador. Área de andar = trilha-laboratorio.png (344x192, branco = anda); area_livre fica só como reserva.",

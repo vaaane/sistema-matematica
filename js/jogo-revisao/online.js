@@ -1,13 +1,14 @@
 // Jogo de Revisão — quem está jogando agora (nó próprio, separado de js/presenca.js).
 // jogo_revisao_online/{uid} (modo teste: jogo_revisao_online_teste/{uid}):
-//   { apelido, turma, personagem, pet, pet_nome, pet_nivel, pet_tinta, pet_efeito, pet_forma (filhote ou adulto),
-//     mapa: n | 'geral', local: 'mapa'|'ginasio'|'geral', x, y, dir, reacao: { e, t }, ts }
+//   { apelido, turma, personagem, pet, pet_nome, pet_nivel, pet_tinta, pet_efeito, pet_forma (filhote ou adulto, já com a cor), pet_cor (cor especial do dragão),
+//     mapa: n | 'geral', local: 'mapa'|'ginasio'|'geral', x, y, dir, reacao: { e, t }, ts,
+//     onde (PROMPT-76: 'laboratorio'|'programe'|'ilha'|'pesca'|'duelo'|'damas'|'batalha' ou null), sem_convites }
 // O registro completo fica guardado aqui: quando a conexão cai (celular com a tela apagada, sinal ruim), o
 // onDisconnect apaga o nó; ao reconectar, ele é gravado inteiro de novo (senão os updates de posição recriavam o
 // nó só com x/y/dir e o colega aparecia sem nome e sem pet).
 // Tudo aqui falha em silêncio: sem permissão ou sem internet, o jogo continua normal (só sem colegas).
 import { db } from '/js/firebase-config.js';
-import { ref, set, update, remove, onValue, onDisconnect, query, orderByChild, equalTo } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { ref, get, set, update, remove, onValue, onDisconnect, query, orderByChild, equalTo } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
 export const VALIDADE_MS = 30000;   // registro mais velho que isso é ignorado
 const VIDA_MS = 10000;              // ts é renovado pelo menos a cada 10 s
@@ -75,3 +76,16 @@ function ouvir(q, cb) {
 export const ouvirMapa = (n, cb) => ouvir(query(ref(db, base), orderByChild('mapa'), equalTo(n)), cb);
 export const ouvirTodos = (cb) => ouvir(ref(db, base), cb);
 export const onlineAtivo = () => ativo;
+// leitura única (a lista "👥 Online" fora do mapa geral: lida a cada 20 s, sem ouvir as posições de todo mundo ao vivo)
+export async function lerTodos() {
+  if (!ativo) return {};
+  const s = await get(ref(db, base));
+  const v = s.exists() ? s.val() || {} : {};
+  delete v[meuUid];
+  return v;
+}
+export async function lerRegistro(uid) {
+  if (!ativo) return null;
+  const s = await get(ref(db, `${base}/${uid}`));
+  return s.exists() ? s.val() : null;
+}

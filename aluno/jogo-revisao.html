@@ -65,6 +65,7 @@
       <div class="jr-hud-titulo" id="cena-titulo"></div>
       <button class="jr-btn-hud" id="btn-relembre" hidden aria-label="Relembre o conteúdo do ginásio">📖<span>Relembre</span></button>
       <button class="jr-btn-hud" id="btn-praca" hidden aria-label="Ir para a Praça do Encontro">🏛️<span>Praça</span></button>
+      <button class="jr-btn-hud" id="btn-online" hidden aria-label="Quem está online">👥<span>Online (<b id="online-n">0</b>)</span></button>
       <button class="jr-btn-hud" id="btn-colegas" hidden aria-label="Mostrar ou esconder os colegas" aria-pressed="true">👁<span>Colegas</span></button>
       <button class="jr-btn-hud" id="btn-reacao" hidden aria-label="Mandar uma reação">😊</button>
       <button class="jr-btn-hud jr-btn-missoes" id="btn-missoes" hidden aria-label="Missões do dia">📜<span id="missoes-cont">0/3</span></button>
@@ -312,11 +313,14 @@
         <button class="jr-btn jr-btn-sec" id="pg-parar" aria-label="Parar">⏸</button>
         <button class="jr-btn jr-btn-sec" id="pg-reset" aria-label="Voltar ao início">↺</button>
         <button class="jr-btn" id="pg-pronto" hidden>✅ Pronto!</button>
+        <button class="jr-btn jr-btn-sec" id="pg-original" hidden>↺ Voltar ao programa original</button>
+        <button class="jr-btn jr-btn-ouro" id="pg-prox" hidden>Próxima ▶</button>
       </div>
     </div>
     <div class="pg-dir">
       <div class="pg-blockly" id="pg-blockly"></div>
       <div class="pg-anotacoes" id="pg-anotacoes"></div>
+      <div class="pg-bugmenu" id="pg-bugmenu" hidden></div>
       <div class="pg-lixo" id="pg-lixo" hidden><b>🗑️</b><span>Solte aqui para apagar</span></div>
       <div class="pg-trava" id="pg-trava" hidden></div>
       <div class="pg-rodape"><span id="pg-contagem"></span></div>
@@ -556,6 +560,11 @@
       <div class="ml-voce" id="mural-voce"></div>
     </div>
   </div>
+  <!-- 🏛️ Chamado pra Praça (PROMPT-76): faixa no alto, sem bloquear o jogo -->
+  <div id="chamado" class="jr-chamado" hidden role="status">
+    <span id="chamado-txt"></span>
+    <button class="jr-btn jr-btn-ouro" id="chamado-ir">Ir agora</button><button class="jr-btn jr-btn-sec" id="chamado-nao">Agora não</button>
+  </div>
   <div id="convite" class="jr-convite" hidden role="dialog" aria-label="Convite de desafio">
     <div class="cv-caixa">
       <p id="convite-txt"></p>
@@ -600,6 +609,22 @@
     </div>
   </div>
 
+  <!-- ♟️ Damas 6×6 na Praça (PROMPT-72): treino contra o computador ou partida com um colega -->
+  <div id="damas" class="jr-damas" hidden role="dialog" aria-label="Damas">
+    <div class="dm-caixa">
+      <div class="dm-lado dm-outro"><span class="dm-cor" id="dm-cor-outro"></span><b id="dm-nome-outro"></b><span class="dm-pecas" id="dm-pecas-outro"></span><span class="dm-relogio" id="dm-rel-outro"></span></div>
+      <div class="dm-tab" id="dm-tab" aria-label="Tabuleiro"></div>
+      <div class="dm-lado dm-eu"><span class="dm-cor" id="dm-cor-eu"></span><b>Você</b><span class="dm-pecas" id="dm-pecas-eu"></span><span class="dm-relogio" id="dm-rel-eu"></span></div>
+      <div class="dm-msg" id="dm-msg" aria-live="polite"></div>
+      <div class="dm-botoes"><button class="jr-btn jr-btn-sec" id="dm-sair">🏳️ Desistir</button></div>
+      <div class="dm-fim" id="dm-fim" hidden>
+        <img class="dm-fim-pet" id="dm-fim-pet" alt="" draggable="false"/>
+        <b id="dm-fim-titulo"></b><small id="dm-fim-info"></small>
+        <div class="dm-fim-botoes"><button class="jr-btn jr-btn-ouro" id="dm-revanche">↺ Revanche</button><button class="jr-btn jr-btn-sec" id="dm-fechar">Sair</button></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Quem está online numa região (mapa geral) -->
   <div id="online-lista" class="jr-pet-escolha" hidden role="dialog" aria-label="Colegas online">
     <div class="jr-pet-escolha-caixa jr-online-caixa">
@@ -616,12 +641,16 @@
   <!-- Meu Pet: barriga, lealdade, alimentar e carinho -->
   <div id="meu-pet" class="jr-pet-escolha" hidden role="dialog" aria-label="Meu pet">
     <div class="jr-pet-escolha-caixa jr-mp-caixa">
+      <div class="jr-mp-esq">
       <div class="jr-mp-palco" id="mp-palco" aria-label="Fazer carinho">
         <div class="jr-mp-brilho"></div>
         <div class="jr-mp-sombra" id="mp-sombra"></div>
         <div class="jr-mp-pulo" id="mp-pulo"><div class="jr-mp-corpo" id="mp-corpo"><img id="mp-img" alt="" draggable="false"/></div></div>
         <div class="jr-mp-particulas" id="mp-particulas"></div>
         <div class="jr-mp-balao" id="mp-balao" hidden></div>
+      </div>
+      <!-- ✨ truques: botões redondos embaixo do pet (PROMPT-75) -->
+      <div class="mp-tq-fila" id="mp-tq-fila" role="group" aria-label="Truques" hidden></div>
       </div>
       <div class="jr-mp-info">
         <div class="jr-mp-cab">
@@ -644,7 +673,6 @@
           <button class="jr-btn" id="mp-bolsa"><img class="jr-item-img jr-ic-btn" data-icone="bolsa" alt="🎒" draggable="false"/> Bolsa</button>
           <button class="jr-btn" id="mp-carinho">💜 Carinho</button>
           <button class="jr-btn" id="mp-visual">🎨 Visual</button>
-          <button class="jr-btn" id="mp-truques" hidden>✨ Truques</button>
         </div>
       </div>
       <!-- Bolsa: comidas e peixes guardados -->
@@ -654,13 +682,13 @@
         <div class="mp-bolsa-itens" id="mp-bolsa-itens"></div>
       </div>
       <!-- Tinta e efeito do pet ativo -->
-      <div class="mp-sub" id="mp-truques-painel" hidden>
-        <div class="mp-sub-topo"><b>✨ Truques</b><span>Toque num truque para o seu pet fazer</span><button class="bt-lista-x" id="mp-truques-fechar" aria-label="Fechar">✕</button></div>
-        <div class="mp-truques" id="mp-truques-lista"></div>
-      </div>
 
       <div class="mp-sub" id="mp-visual-painel" hidden>
         <div class="mp-sub-topo"><b>🎨 Visual</b><span>Tinta e efeito deste pet</span><button class="bt-lista-x" id="mp-visual-fechar" aria-label="Fechar">✕</button></div>
+        <div id="mp-cores-bloco" hidden>
+          <div class="mp-visual-rot">🐉 Cores do dragão</div><div class="mp-chips" id="mp-visual-cores"></div>
+          <div class="mp-visual-dica" id="mp-cor-msg"></div>
+        </div>
         <div class="mp-visual-rot">Tinta</div><div class="mp-chips" id="mp-visual-tintas"></div>
         <div class="mp-visual-rot">Efeito ao andar</div><div class="mp-chips" id="mp-visual-efeitos"></div>
         <div class="mp-visual-dica" id="mp-visual-dica"></div>
@@ -670,6 +698,8 @@
         </div>
         <div class="mp-visual-rot">Falas do pet</div>
         <button class="mp-chave" id="mp-calado" role="switch" aria-checked="true"><span class="mp-chave-trilho"><i></i></span><span id="mp-calado-txt">Falas do pet: ligado</span></button>
+        <div class="mp-visual-rot">Convites</div>
+        <button class="mp-chave" id="mp-sem-convites" role="switch" aria-checked="false"><span class="mp-chave-trilho"><i></i></span><span id="mp-sem-convites-txt">Não receber convites: desligado</span></button>
       </div>
       <!-- Nome do pet -->
       <div class="mp-sub mp-nomear" id="mp-nomear" hidden>

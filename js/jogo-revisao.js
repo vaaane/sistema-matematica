@@ -12,16 +12,16 @@ import { tocar, somLigado, alternarSom } from '/js/jogo-revisao/sons.js';
 import { definirPausas, definirBarriga, barrigaDoPet, barrigaAntiga, faixaBarriga, rotuloLealdade, lealdadeComQueda, doDia,
   CARINHOS_POR_DIA, LEALDADE_INICIAL, LEALDADE_DIA, LEALDADE_CAMBALHOTA } from '/js/jogo-revisao/cuidados.js';
 import { definirLoja, definirPeixes, lojaPronta, cfgLoja, comidas, tintas, efeitos, tinta, tintaAnimada, icone, efeito, itemDaBolsa, idDoPeixe, ehFavorita, semanaDe,
-  motivoNaoCome, comumAte, enche, barrigaCheia, somarLealdade, nivelAmizade, validarNomePet } from '/js/jogo-revisao/loja.js';
+  motivoNaoCome, comumAte, naoCome, enche, barrigaCheia, somarLealdade, nivelAmizade, validarNomePet } from '/js/jogo-revisao/loja.js';
 import { definirPesca, pescaPronta, cfgPesca, pontosDoMapa, spritePesca, pontaVara, sortearPeixe, entre, inteiroEntre,
   semanaPesca, semanaAnterior, criarBarrinha, passoBarrinha } from '/js/jogo-revisao/pesca.js';
 import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, tamanhoBusto, temBusto, bustoPet, preCarregarPet, PetSeguidor, PetParado,
   temAnim, formaAdulta, formaValida, sentadoNoQuadro, escalaPet, escalaMax, quadrosSeq, sortearOcioso, temSequencia, tocarSequencia, pararSequencia, msAtePasso,
-  sortearAcaoParado, EMOCOES, MS_EMOCAO } from '/js/jogo-revisao/pets.js';
-import { iniciarOnline, enviarOnline, sairOnline, ouvirMapa, ouvirTodos, onlineAtivo, VALIDADE_MS } from '/js/jogo-revisao/online.js';
+  sortearAcaoParado, EMOCOES, MS_EMOCAO, coresDragao, aceitaCor, ehFormaAdulta, formaComCor } from '/js/jogo-revisao/pets.js';
+import { lerTodos, lerRegistro, iniciarOnline, enviarOnline, sairOnline, ouvirMapa, ouvirTodos, onlineAtivo, VALIDADE_MS } from '/js/jogo-revisao/online.js';
 import { definirPedidos, pedidosProntos, cfgPedidos, pedidoDisponivel, moedasDoPedido, limiteDoDiaAtingido, dicaPedido, lerResposta } from '/js/jogo-revisao/pedidos.js';
 import { definirBatalhas, batalhasProntas, cfgBatalha, treinadores, treinador, tiposDeConta, gerarConta, vidaExtraLealdade, desafioDe, situacao, forca, dano, premios, depoisDaBatalha } from '/js/jogo-revisao/batalha.js';
-import { definirFalas, falasProntas, configFalas, dicaDe, montarFala, duracaoBalao, fraseDe, configAjuda, frasesFaro } from '/js/jogo-revisao/conversa.js';
+import { definirFalas, falasProntas, configFalas, dicaDe, montarFala, duracaoBalao, fraseDe, fraseFiltrada, configAjuda, frasesFaro } from '/js/jogo-revisao/conversa.js';
 import { definirPraca, pracaPronta, cfgPraca, cfgDesafio, frasesPraca, temaDoDesafio, vencedorDaRodada, placarDe, resultadoFinal, vale, contarDesafio,
   premioDesafio, ordenarRanking } from '/js/jogo-revisao/praca.js';
 import { codigoValido, premioDoPodio, pontosDaResposta, TEMPO_RODADA_MS } from '/js/jogo-revisao/aovivo.js';
@@ -29,7 +29,9 @@ import { baseAoVivo, criarSala, entrarNaSala, sairDaSala, responder as responder
 import { notaJogoRevisao, formatarNota, NOTA_MAX, PESO_INSIGNIAS, PESO_DOURADAS } from '/js/jogo-revisao/nota.js';
 import { configurarPrograme, ligarBotoesPrograme, abrirTela as abrirTelaPrograme, fecharTela as fecharTelaPrograme, mostrarCorrida, mensagemCorrida, mostrarCartao as cartaoPrograme,
   programaParaTexto, programaDeTexto, caixaDoQuadro } from '/js/jogo-revisao/programe.js';
-import { faseDoDia, faseDaCorrida, resultadoCorrida } from '/js/jogo-revisao/programe-logica.js';
+import { faseDoDia, faseDaCorrida, resultadoCorrida, rodadaOQueFaz } from '/js/jogo-revisao/programe-logica.js';
+import { estadoInicial as estadoInicialDamas, jogadasValidas as jogadasValidasDamas, aplicar as aplicarDamas, ehValida as ehValidaDamas, fimDeJogo as fimDeJogoDamas,
+  contar as contarDamas, outro as outroLadoDamas, jogadaAleatoria as jogadaAleatoriaDamas, jogadaComputador as jogadaComputadorDamas } from '/js/jogo-revisao/damas-logica.js';
 import { configurarMapaPrograme, ligarMapaPrograme, temMapaPrograme, abrirMapaPrograme, esquecerPosicaoPet, temaDaFase, temaVila, chefeDaFase,
   medalhaDoChefe } from '/js/jogo-revisao/programe-mapa.js';
 
@@ -74,18 +76,20 @@ const ADULTO_ANTES = CRESCE_EVOLUCAO * 622 / 604;
 // é multiplicado pela própria escala do sprites.json (quadro_por_pet[forma].escala: azul 1, vermelho 1,15).
 ALT_PET.dragao_azul_adulto = ALT_PET.dragao_vermelho_adulto = ALT_PET.dragao_vermelho * ADULTO_ANTES;
 const ALT_PET_PADRAO = 30;   // pet que não estiver na tabela
-const altPet = (pet) => (ALT_PET[pet] ?? ALT_PET_PADRAO) * escalaPet(pet);
+// cores especiais do dragão (PROMPT-74): dragao_{cor} e dragao_{cor}_adulto têm o tamanho do azul
+const formaDeTamanho = (f) => String(f || '').replace(/^dragao_(?!azul|vermelho)[a-z]+(?=(_adulto)?$)/, 'dragao_azul');
+const altPet = (pet) => (ALT_PET[pet] ?? ALT_PET[formaDeTamanho(pet)] ?? ALT_PET_PADRAO) * escalaPet(pet);
 // O quadro (sprites.json: tamanho_quadro, 898 × 704 nos filhotes e 1402 × 801 nos adultos) tem folga em cima para os
 // pulos: sentado, o pet ocupa 604 px da altura (sentado_altura). Altura da IMAGEM para o pet sentado ficar com a altura da tabela:
 const altImagemPet = (pet) => altPet(pet) / sentadoNoQuadro(pet);
 // Telas em que o pet tem tamanho relativo ao filhote (batalha, Meu Pet, duelo do ginásio, evolução): quanto a IMAGEM da forma
 // é maior que a do filhote. O desenho sentado fica ADULTO_ANTES × escala maior (o mesmo de antes no azul; +15% no vermelho).
-const fatorForma = (pet, forma) => (forma && forma !== pet ? ADULTO_ANTES * escalaPet(forma) * sentadoNoQuadro(pet) / sentadoNoQuadro(forma) : 1);
+const fatorForma = (pet, forma) => (ehFormaAdulta(forma) ? ADULTO_ANTES * escalaPet(forma) * sentadoNoQuadro(pet) / sentadoNoQuadro(forma) : 1);
 // caixas pequenas feitas para o filhote (coleção, HUD, chips, cartões): sem a escala, para nada ser cortado
-const fatorFormaCaixa = (pet, forma) => fatorForma(pet, forma) / (forma && forma !== pet ? escalaPet(forma) : 1);
+const fatorFormaCaixa = (pet, forma) => fatorForma(pet, forma) / (ehFormaAdulta(forma) ? escalaPet(forma) : 1);
 // Imagem pequena numa caixa feita para o filhote (coleção, HUD, chips, cartões): o quadro do adulto é mais largo
 // (asas). O CSS de img[data-adulto] usa a proporção do filhote, recorta as sobras dos lados e aumenta a partir dos pés.
-const attrForma = (pet, forma) => (forma && forma !== pet ? ` data-adulto style="--cresce-img:${fatorFormaCaixa(pet, forma).toFixed(3)}"` : '');
+const attrForma = (pet, forma) => (ehFormaAdulta(forma) ? ` data-adulto style="--cresce-img:${fatorFormaCaixa(pet, forma).toFixed(3)}"` : '');
 // Ícone pequeno do pet (círculo): o busto (cabeça inteira), ou o pet sentado se não tiver busto. Os bustos têm enquadramentos
 // diferentes (nos filhotes a cabeça fica embaixo de uma imagem alta), então medimos o desenho e centralizamos a cabeça no círculo.
 const srcIcone = (forma) => (temBusto(forma) ? bustoPet(forma) : quadrosDe(forma, 'sentado_girando')[0]);
@@ -212,7 +216,7 @@ function mostrarFestaMestre(tipo) {
     falaVitoria(img, pet, img.parentElement);
   } else if (forma) {
     aplicarVisualPet(img, pet);
-    const anims = forma !== pet ? ['animado', 'orgulhoso', 'rugido'] : temAnim(forma, 'pulo_cambalhota') ? ['pulo_cambalhota', 'feliz'] : ['feliz'];
+    const anims = ehFormaAdulta(forma) ? ['animado', 'orgulhoso', 'rugido'] : temAnim(forma, 'pulo_cambalhota') ? ['pulo_cambalhota', 'feliz'] : ['feliz'];
     const seq = anims.flatMap(a => { const q = quadrosDe(forma, a); return Array.from({ length: Math.max(q.length, 5) }, (_, i) => q[i % q.length]); });
     const fim = quadrosDe(forma, anims[anims.length - 1]);
     let i = 0;
@@ -286,7 +290,7 @@ async function abrirHallMestres() {
 }
 
 function marcarForma(img, pet, forma) {
-  const adulto = !!forma && forma !== pet;
+  const adulto = ehFormaAdulta(forma);
   img.toggleAttribute('data-adulto', adulto);
   if (adulto) img.style.setProperty('--cresce-img', fatorFormaCaixa(pet, forma).toFixed(3)); else img.style.removeProperty('--cresce-img');
 }
@@ -298,7 +302,7 @@ const DIST_PET = {
 };
 DIST_PET.dragao_azul_adulto = DIST_PET.dragao_vermelho_adulto = DIST_PET.dragao_vermelho * ADULTO_ANTES;   // cresce junto com o tamanho
 const DIST_PET_PADRAO = 36;
-const distPet = (pet) => (DIST_PET[pet] ?? DIST_PET_PADRAO) * escalaPet(pet);
+const distPet = (pet) => (DIST_PET[pet] ?? DIST_PET[formaDeTamanho(pet)] ?? DIST_PET_PADRAO) * escalaPet(pet);
 // no ginásio tudo é o dobro da escala base (o personagem tem ALT_JOGADOR = 110 em vez de 55)
 const ESCALA_GINASIO = ALT_JOGADOR / 55;
 const DIST_PORTA = 30;               // encostar na porta/saída andando pelas setas ou joystick
@@ -415,6 +419,9 @@ async function carregarEstado() {
     { const u = estado.sequencia?.ultimo_dia; conversa.voltou = !!u && u !== diaLocal() && (paraData(diaLocal()) - paraData(u)) / 86400000 >= 3; }
     estado.respostas = v.respostas || {};
     estado.pets = lerPets(v);   // validado depois de ler o sprites.json (cachorro/porco antigos são ignorados)
+    estado.petCor = typeof v.pet_cor === 'string' ? v.pet_cor : null;
+    estado.semConvites = !!v.sem_convites;   // "Não receber convites" (PROMPT-76)   // cor especial do dragão (PROMPT-74): null = normal
+    estado.coresLiberadas = v.cores_liberadas && typeof v.cores_liberadas === 'object' ? { ...v.cores_liberadas } : {};   // { cor: true } — para sempre
     estado.revisaoSemanal = v.revisao_semanal || {};
     estado.relembre = v.relembre && typeof v.relembre === 'object' ? { ...v.relembre } : {};
     estado.programe = v.programe && typeof v.programe === 'object' ? { ...v.programe, fases: { ...(v.programe.fases || {}) } } : { fases: {} };   // PROMPT-50
@@ -768,6 +775,8 @@ export async function iniciarJogo(sess) {
   try {
     [PROG, LAB] = await Promise.all(['programe-o-pet.json', 'laboratorio.json'].map(f => fetch(`${DADOS}/${f}`).then(r => { if (!r.ok) throw new Error(f); return r.json(); })));
   } catch (e) { console.warn('[jogo-revisao] laboratório / Programe o pet indisponível', e); }
+  try { BUGS = (await fetch(`${DADOS}/caca-ao-bug.json`).then(r => { if (!r.ok) throw new Error('caca-ao-bug.json'); return r.json(); })).bugs || null; }
+  catch (e) { console.warn('[jogo-revisao] Caça ao bug indisponível', e); }
   try { MAPA_PG = await fetch(`${DADOS}/mapa-programe.json`).then(r => { if (!r.ok) throw new Error('mapa-programe.json'); return r.json(); }); }
   catch (e) { console.warn('[jogo-revisao] mapa da Ilha dos Robôs indisponível (fica a lista de fases)', e); }
   try { TRUQUES = await fetch(`${DADOS}/truques.json`).then(r => { if (!r.ok) throw new Error('truques.json'); return r.json(); }); }
@@ -790,15 +799,15 @@ export async function iniciarJogo(sess) {
     document.documentElement.style.setProperty('--pet-quadro', `${qw} / ${qh}`);   // proporção do lutador na batalha
   } catch (e) { console.error('[jogo-revisao] pets indisponíveis', e); }
   configurarPrograme({
-    pet: () => { const p = petsOk && estado?.pets?.ativo; return p ? { pet: p, forma: formaDe(p), tinta: cuidadosDe(p)?.tinta || null, nome: nomePet(p) } : null; },
+    pet: () => { const p = petsOk && estado?.pets?.ativo; return p ? { pet: p, forma: formaDe(p), tinta: tintaVisivel(p), nome: nomePet(p) } : null; },
     quadrosDe, temAnim, sentadoNoQuadro, escalaPet, escalaMax, tocar, esc, agora: agoraServ,
     temSequencia, tocarSequencia, pararSequencia, quadrosSeq, fraseComemora: (pet) => fraseComemora(pet),
     pintar: (img, p) => aplicarTinta(img, p.tinta || null),
-    imgComida: (pet) => caminhoImg((comidas().find(c => pet && ehFavorita(pet, c)) || comidas().find(c => c.id === 'racao'))?.imagem || ''),
+    imgComida: (pet) => caminhoImg((comidas().find(c => pet && ehFavorita(pet, c) && c.imagem) || comidas().find(c => c.id === 'racao'))?.imagem || ''),   // a favorita com imagem (a carne é só emoji)
     imgPetisco: () => caminhoImg(comidas().find(c => c.id === 'biscoito')?.imagem || ''),
   });
   configurarMapaPrograme({
-    pet: () => { const p = petsOk && estado?.pets?.ativo; return p ? { pet: p, forma: formaDe(p), tinta: cuidadosDe(p)?.tinta || null } : null; },
+    pet: () => { const p = petsOk && estado?.pets?.ativo; return p ? { pet: p, forma: formaDe(p), tinta: tintaVisivel(p) } : null; },
     quadrosDe, sentadoNoQuadro, escalaPet, esc, caminho: caminhoImg,
     pintar: (img, p) => aplicarTinta(img, p.tinta || null),
     fases: fasesPg, progFase, faseLiberada, medalhas: () => estado.programe.medalhas || {},
@@ -808,11 +817,14 @@ export async function iniciarJogo(sess) {
   ligarEventos();
   atualizarContador();
   requestAnimationFrame(loop);
-  abrirMapaGeral();
-  $('jr-carregando').hidden = true;
+  // começa na Praça, em frente à fonte (PROMPT-73); aluno ainda sem pet: o mapa geral, como antes (o pet inicial vem ao entrar num mapa)
+  const comecaNaPraca = pracaPronta() && petsOk && petValido(estado.pets?.ativo);
+  if (!comecaNaPraca) { abrirMapaGeral(); $('jr-carregando').hidden = true; }
   { const f = verificarMestre(); if (f) setTimeout(() => mostrarFestaMestre(f), 1500); }
   carregarTitulos();
   iniciarPet();
+  setTimeout(verificarCores, 2500);   // quem já cumpriu as condições ganha as cores (aviso uma vez)
+  if (comecaNaPraca) abrirPraca('fonte').catch(() => abrirMapaGeral()).finally(() => { $('jr-carregando').hidden = true; });
   atualizarBotaoMissoes();
   entrarOnline().catch(() => {}).then(() => { carregarPremiosPesca(); ouvirPresentes(); iniciarPraca(); publicarResumoInsignias(); ouvirConvitesAoVivo(); });
   // aluno novo escolhe o personagem antes de tudo (o pet inicial vem depois, ao entrar num mapa)
@@ -1248,7 +1260,12 @@ function trocaDeAtivo(novo, patch = {}) {
 
 const cuidadosDe = (pet) => estado.pets.conquistados[pet];
 // Forma na tela: o adulto depois da evolução (❤️ 3), a não ser que o aluno prefira ver o filhote (Meu Pet → Visual)
-const formaDe = (pet) => { const a = formaAdulta(pet), c = a && cuidadosDe(pet); return c?.evoluido && !c.mostrar_filhote ? a : pet; };
+// forma desenhada: filhote ou adulto (evoluiu e não pediu para mostrar o filhote) e, nos dragões, com a cor especial escolhida
+const formaBase = (pet) => { const a = formaAdulta(pet), c = a && cuidadosDe(pet); return c?.evoluido && !c.mostrar_filhote ? a : pet; };
+const formaDe = (pet) => formaComCor(formaBase(pet), corAtiva(pet));
+// cor especial do dragão (PROMPT-74): pet_cor do aluno, só se liberada e só nos dragões; com cor, a tinta não é aplicada
+const corAtiva = (pet) => (aceitaCor(pet) && estado?.petCor && estado.coresLiberadas?.[estado.petCor] && coresDragao()[estado.petCor] ? estado.petCor : null);
+const tintaVisivel = (pet) => (pet && !corAtiva(pet) ? cuidadosDe(pet)?.tinta || null : null);
 const barrigaDe = (pet) => { const c = cuidadosDe(pet); return c ? barrigaDoPet(c, pet === estado.pets.ativo) : 100; };
 
 // Pet ativo com fome (barriga < fome_abaixo) fica triste quando parado no mapa
@@ -1321,14 +1338,14 @@ function tentarEvolucao() {
 }
 
 function mostrarEvolucao(pet) {
-  const c = cuidadosDe(pet), adulto = formaAdulta(pet);
+  const c = cuidadosDe(pet), adulto = formaComCor(formaAdulta(pet), corAtiva(pet));   // a cor especial continua no adulto
   c.evoluido = true;
   gravar({ [`pets/conquistados/${pet}/evoluido`]: true });
   preCarregarPet(adulto);
   pararFalaPet();
   soltarJoystick();
   const el = $('pet-evolucao'), palco = el.querySelector('.jr-evo-palco'), fi = $('evo-filhote'), ad = $('evo-adulto');
-  fi.src = quadrosDe(pet, 'sentado_girando')[0];
+  fi.src = quadrosDe(formaComCor(pet, corAtiva(pet)), 'sentado_girando')[0];
   ad.dataset.src = '';
   aplicarVisualPet(fi, pet); aplicarVisualPet(ad, pet);
   $('evo-fim').hidden = true;
@@ -1432,7 +1449,7 @@ function abrirMeuPet() {
   img.dataset.src = '';
   mp.anim.definir(forma);
   medirMeuPet();
-  for (const id of ['mp-bolsa-painel', 'mp-visual-painel', 'mp-nomear', 'mp-truques-painel']) $(id).hidden = true;
+  for (const id of ['mp-bolsa-painel', 'mp-visual-painel', 'mp-nomear']) $(id).hidden = true;
   atualizarVisualPet();
   atualizarBotaoBatalhar();
   renderMeuPet();
@@ -1444,15 +1461,15 @@ function abrirMeuPet() {
 // do quadro (asas, folga) podem passar das bordas, mas o DESENHO sentado (~50% da largura do quadro) cabe no palco.
 const DESENHO_NO_QUADRO = 0.52;
 function medirMeuPet() {
+  renderTruques();   // a fileira de truques embaixo do pet: antes de medir o palco (ela ocupa parte da altura)
   const palco = $('mp-palco'), { pet, forma } = mp;
   let h = Math.min(palco.clientHeight * 0.78, MP_ALT_MAX);
-  if (forma !== pet) {
+  if (ehFormaAdulta(forma)) {
     const [qw, qh] = tamanhoQuadro(forma);
     h = Math.min(h * fatorForma(pet, forma), palco.clientWidth * 0.98 / DESENHO_NO_QUADRO * qh / qw);
   }
   $('mp-img').style.height = h + 'px';
-  $('mp-palco').classList.toggle('largo', forma !== pet);   // adulto: asas, comida e fogo podem passar da borda do palco
-  $('mp-truques').hidden = !truquesDe(pet);
+  $('mp-palco').classList.toggle('largo', ehFormaAdulta(forma));   // adulto: asas, comida e fogo podem passar da borda do palco
 }
 
 function fecharMeuPet() {
@@ -1464,6 +1481,7 @@ function fecharMeuPet() {
 
 function renderMeuPet() {
   if (!mp) return;
+  renderTruques();
   const pet = mp.pet, c = cuidadosDe(pet);
   const b = Math.round(barrigaDe(pet)), fb = faixaBarriga(b);
   const l = Math.round(Number(c.lealdade) || 0);
@@ -1715,7 +1733,7 @@ function ganharLealdade(pet, n, patch = {}) {
 }
 
 // O que os colegas veem do meu pet
-const visualOnline = (pet) => { const c = cuidadosDe(pet); return { pet_nome: c?.nome || null, pet_nivel: nivelPet(pet), pet_tinta: c?.tinta || null, pet_efeito: c?.efeito || null,
+const visualOnline = (pet) => { const c = cuidadosDe(pet); return { pet_nome: c?.nome || null, pet_nivel: nivelPet(pet), pet_tinta: tintaVisivel(pet), pet_cor: corAtiva(pet), pet_efeito: c?.efeito || null,
   pet_forma: formaDe(pet) }; };
 
 // Tinta no <img> do pet (comSombra: o pet do mapa tem drop-shadow no CSS, que o filtro substituiria)
@@ -1727,7 +1745,7 @@ function aplicarTinta(img, tintaId, comSombra = false) {
   img.style.filter = t && !animada ? t.filtro + (comSombra ? ' drop-shadow(0 1px 1px rgba(0,0,0,.35))' : '') : '';
 }
 // Tinta de um pet meu em qualquer tela (mapa, Meu Pet, duelo do ginásio, batalha, coleção, pedidos, HUD)
-const aplicarVisualPet = (img, pet, comSombra = false) => aplicarTinta(img, pet ? cuidadosDe(pet)?.tinta : null, comSombra);
+const aplicarVisualPet = (img, pet, comSombra = false) => aplicarTinta(img, tintaVisivel(pet), comSombra);
 function atualizarVisualPet() {
   const pet = estado?.pets?.ativo;
   aplicarVisualPet($('pet'), pet, true);
@@ -1782,6 +1800,7 @@ function abrirLoja(aba = 'comidas', provador = false) {
   if (ehLoja() && (provador || lojaAba === 'tintas')) subirNoPedestal();   // provador: o pet sobe no pedestal
   $('loja').hidden = false;
   renderLoja();
+  if (lojaAba === 'comidas') { const f = fomeDePlanta(estado.pets.ativo); if (f) avisoPet(`${nomePet(estado.pets.ativo)}: “${f}”`); }
 }
 function renderLoja() {
   const moedas = Number(estado.pets.moedas) || 0, pet = estado.pets.ativo;
@@ -1802,9 +1821,9 @@ function renderLoja() {
         <div class="lj-info"><b>${esc(c.nome)}</b>
           ${preco(c.preco * q)}
           <span>+${c.lealdade} lealdade${c.limite_semana ? ` · ${c.limite_semana}× por semana` : ''}</span>
-          ${c.especial || fav ? `<span>${c.especial ? '<span class="lj-selo">come sem fome ✓</span>' : ''}${c.especial && fav ? ' ' : ''}${fav ? `<span class="lj-fav">❤️ favorita</span>` : ''}</span>` : ''}</div>
-        <div class="lj-qtd"><button data-menos="${c.id}" aria-label="Menos">−</button><span>${q}</span><button data-mais="${c.id}" aria-label="Mais">+</button>
-          <em title="Na bolsa">${imgItem(icone('bolsa'), '🎒', 'jr-ic-moeda')} ${Number(estado.pets.bolsa?.[c.id]) || 0}</em></div>
+          ${c.especial || fav ? `<span>${c.especial ? '<span class="lj-selo">come sem fome ✓</span>' : ''}${c.especial && fav ? ' ' : ''}${fav ? `<span class="lj-fav">❤️ favorita</span>` : ''}</span>` : ''}
+          <em class="lj-bolsa" title="Na bolsa">${imgItem(icone('bolsa'), '🎒', 'jr-ic-moeda')} na bolsa: ${Number(estado.pets.bolsa?.[c.id]) || 0}</em></div>
+        <div class="lj-qtd"><button data-menos="${c.id}" aria-label="Menos">−</button><span>${q}</span><button data-mais="${c.id}" aria-label="Mais">+</button></div>
         ${botao(c.id, c.preco * q, 'Comprar')}
       </div>`;
     }).join('');
@@ -1925,8 +1944,28 @@ function comprar(id) {
 }
 
 // ── Bolsa (no "Meu Pet"): dar comida ao pet ativo ──────────
+// Dragão com planta (loja.json → nao_come): a comida sai da bolsa, não enche nem dá lealdade; ele fica bravo e bufa (`recusa`)
+function recusarComida(pet, item, n) {
+  estado.pets.bolsa[item.id] = n - 1;
+  gravar({ [`pets/bolsa/${item.id}`]: n - 1 || null });
+  mp.acordadoAte = Date.now() + ACORDADO_MS;
+  mp.estado = 'recusa'; mp.ocupado = true;
+  movimentoCorpo(null);
+  if (!mp.anim.sequencia('recusa', voltarAoNormal)) mp.anim.tocar(temAnim(mp.forma, 'bravo') ? 'bravo' : 'confuso', voltarAoNormal);
+  particulas(['🗑️', '💨', '🗑️'], 3);
+  tocar('erro');
+  falarPet(fraseDe(pet, 'recusa_planta', { pet: nomePet(pet), comida: String(item.nome || '').toLowerCase() }) || 'Isso eu não como!');
+  renderMeuPet();
+}
+// Dragão com fome abrindo a bolsa ou a loja de comida: uma frase de fome que reclama de planta (uma vez por abertura)
+const PLANTA_NA_FALA = /fruta|legume|verdura|planta/i;
+function fomeDePlanta(pet) {
+  if (!pet || barrigaDe(pet) >= fomeAbaixo() || !(cfgLoja().nao_come || {})[pet]) return null;
+  return fraseFiltrada(pet, 'fome', (f) => PLANTA_NA_FALA.test(f), { pet: nomePet(pet) });
+}
 function abrirBolsa() {
   if (!mp) return;
+  { const f = fomeDePlanta(mp.pet); if (f) falarPet(f); }
   bolsaSel = null;
   bolsaAba = 'comidas';
   renderBolsa();
@@ -1953,13 +1992,14 @@ function darComida(id) {
   const pet = mp.pet, c = cuidadosDe(pet), item = itemDaBolsa(id), n = Number(estado.pets.bolsa?.[id]) || 0;
   if (!c || !item || n <= 0) return;
   const b = barrigaDe(pet), cfg = cfgLoja().barriga || {}, hoje = diaLocal();
+  if (naoCome(pet, item)) { recusarComida(pet, item, n); return; }   // dragão + planta: joga fora (sem aviso antes, PROMPT-73)
   const motivo = motivoNaoCome(item, b, c, new Date(), doDia(c.especiais_cheio_dia, hoje), pet);
   if (motivo) {
     falarPet({ cheio: 'Tô cheio! 😵', sem_fome: `Ainda não tô com fome… (comida comum só com a barriga abaixo de ${comumAte(pet)})`, semana: 'Bolo só uma vez por semana!' }[motivo]);
     return;
   }
   const agora = Date.now(), base = `pets/conquistados/${pet}`;
-  c.barriga = Math.min(cfg.cheia ?? 100, b + enche()); c.barriga_t = agora;
+  c.barriga = Math.min(cfg.cheia ?? 100, b + (Number(item.enche) || enche())); c.barriga_t = agora;   // a carne enche menos (loja.json → enche)
   estado.pets.bolsa[id] = n - 1;
   const patch = { [`${base}/barriga`]: Math.round(c.barriga * 10) / 10, [`${base}/barriga_t`]: agora, [`pets/bolsa/${id}`]: n - 1 || null };
   if (barrigaCheia(b)) {   // especial comida de barriga cheia: conta no limite do dia
@@ -2006,8 +2046,13 @@ function renderVisual() {
   const c = cuidadosDe(mp.pet), src = quadrosDe(mp.forma, 'sentado_girando')[0];
   const ts = tintas().filter(t => estado.pets.tintas?.[t.id]), es = efeitos().filter(e => estado.pets.efeitos?.[e.id]);
   const chip = (tipo, id, conteudo, sel) => `<button class="mp-chip${sel ? ' sel' : ''}" data-${tipo}="${id}">${conteudo}</button>`;
+  const comCor = !!corAtiva(mp.pet);   // com cor especial a tinta não vale (continua guardada)
   $('mp-visual-tintas').innerHTML = chip('tinta', '', 'Nenhuma', !c.tinta) +
-    ts.map(t => chip('tinta', t.id, `<img src="${src}" alt="" draggable="false" data-previa="${t.id}"${attrForma(mp.pet, mp.forma)}/>${esc(t.nome)}`, c.tinta === t.id)).join('');
+    ts.map(t => chip('tinta', t.id, `<img src="${src}" alt="" draggable="false" data-previa="${t.id}"${attrForma(mp.pet, mp.forma)}/>${esc(t.nome)}`, c.tinta === t.id)).join('') +
+    (comCor ? '<span class="mp-cor-aviso">Tire a cor especial para usar tinta</span>' : '');
+  $('mp-visual-tintas').classList.toggle('apagado', comCor);
+  for (const b of $('mp-visual-tintas').querySelectorAll('[data-tinta]')) b.disabled = comCor;
+  renderCores();
   $('mp-visual-efeitos').innerHTML = chip('efeito', '', 'Nenhum', !c.efeito) +
     es.map(e => chip('efeito', e.id, `${e.emoji} ${esc(e.nome)}`, c.efeito === e.id)).join('');
   for (const img of $('mp-visual-tintas').querySelectorAll('img[data-previa]')) aplicarTinta(img, img.dataset.previa);
@@ -2040,7 +2085,53 @@ function aplicarForma(pet) {
   atualizarVisualPet();
   enviarOnline(visualOnline(pet));
 }
+// 🐉 Cores do dragão (só quando o pet é dragão): Normal + as cores do sprites.json; bloqueada = cinza com 🔒 e o que fazer
+function renderCores() {
+  const pet = mp.pet, ok = aceitaCor(pet) && Object.keys(coresDragao()).length > 0;
+  $('mp-cores-bloco').hidden = !ok;
+  if (!ok) return;
+  const base = formaBase(pet), atual = corAtiva(pet);
+  const mini = (forma) => `<img src="${quadrosDe(forma, 'sentado_girando')[0]}" alt="" draggable="false"${attrForma(pet, forma)}/>`;
+  $('mp-visual-cores').innerHTML = `<button class="mp-chip${!atual ? ' sel' : ''}" data-cor="">${mini(base)}Normal</button>` +
+    Object.entries(coresDragao()).map(([cor, c]) => {
+      const lib = !!estado.coresLiberadas?.[cor];
+      return `<button class="mp-chip${atual === cor ? ' sel' : ''}${lib ? '' : ' bloqueada'}" data-cor="${esc(cor)}">${mini(formaComCor(base, cor))}${lib ? '' : '🔒 '}${esc(c.nome)}</button>`;
+    }).join('');
+  $('mp-cor-msg').textContent = '';
+}
+function escolherCor(cor) {
+  if (!mp) return;
+  const c = cor && coresDragao()[cor];
+  if (cor && !c) return;
+  if (cor && !estado.coresLiberadas?.[cor]) { $('mp-cor-msg').textContent = `🔒 ${c.texto}`; return; }
+  estado.petCor = cor || null;
+  gravar({ pet_cor: estado.petCor });   // grátis; dá para trocar quantas vezes quiser
+  aplicarForma(mp.pet);
+  atualizarVisualPet();
+  renderVisual();
+}
+// Liberar as cores (PROMPT-74): chefe da Vila vencido na Ilha dos Robôs, 3 bugs consertados, recorde de 5 no "O que o pet vai fazer?".
+// Liberou, fica para sempre (cores_liberadas/{cor}), mesmo sem dragão; o aviso aparece uma vez.
+const DESBLOQUEIO_COR = {
+  chefe_vila: () => !!estado.programe?.medalhas?.vila || faseResolvida(5),
+  bugs_3: () => Object.values(estado.programe?.bugs || {}).filter(b => Number(b?.estrelas) > 0).length >= 3,
+  preve_5: () => (Number(estado.programe?.o_que_faz?.recorde) || 0) >= 5,
+};
+const coresLiberadas = () => Object.entries(coresDragao()).filter(([cor, c]) => estado.coresLiberadas?.[cor] || DESBLOQUEIO_COR[c.desbloqueio]?.()).map(([cor]) => cor);
+function verificarCores() {
+  if (!carregouProgresso || !petsOk || !estado?.programe) return;
+  const novas = coresLiberadas().filter(cor => !estado.coresLiberadas[cor]);
+  for (const cor of novas) {
+    estado.coresLiberadas[cor] = true;
+    gravar({ [`cores_liberadas/${cor}`]: true });
+    const c = coresDragao()[cor], ativo = estado.pets.ativo;
+    if (aceitaCor(ativo)) avisoPet(`🎨 Cor nova para o dragão: ${c.nome}! Escolha no Meu Pet → Visual.`, true, srcIcone(formaComCor(formaBase(ativo), cor)));
+    else avisoPet(`🎨 Liberou a cor ${c.nome} para dragões! ${c.emoji || ''}`, true);
+  }
+}
 function escolherVisual(e) {
+  const bc = e.target.closest('[data-cor]');
+  if (bc) { escolherCor(bc.dataset.cor); return; }
   const b = e.target.closest('[data-tinta], [data-efeito]');
   if (!b || !mp) return;
   const pet = mp.pet, c = cuidadosDe(pet), campo = 'tinta' in b.dataset ? 'tinta' : 'efeito', v = b.dataset[campo] || null;
@@ -2596,9 +2687,10 @@ async function entrarOnline() {
     if (s.exists() && s.val()) { apelido = String(s.val()); apelidoAluno = apelido; }
   } catch (_) {}
   await iniciarOnline({ uid: sessao.uid, teste, dados: {
-    apelido, turma: sessao.turma || '', pet: estado.pets?.ativo || null, ...(estado.pets?.ativo ? visualOnline(estado.pets.ativo) : {}), personagem: meuPersonagem(), mapa: 'geral', local: 'geral', x: 0, y: 0, dir: 'frente', titulo: meuTitulo(),
+    apelido, turma: sessao.turma || '', pet: estado.pets?.ativo || null, ...(estado.pets?.ativo ? visualOnline(estado.pets.ativo) : {}), personagem: meuPersonagem(), mapa: 'geral', local: 'geral', x: 0, y: 0, dir: 'frente', titulo: meuTitulo(), sem_convites: estado.semConvites || null,
   } });
   if (!$('tela-geral').hidden) ouvirGeral();
+  else if (ehPraca()) entrarNoMapaOnline('praca');   // o jogo começou na Praça antes do online ficar pronto
 }
 
 // ── Mapa da região ──────────────────────────────────────────
@@ -2777,7 +2869,7 @@ function abrirCartaoColega(c) {
       ${tituloDe(c.uid, r) ? `<span class="jr-titulo-mestre ${tituloDe(c.uid, r) === 2 ? 'lenda' : ''}">${NOME_TITULO[tituloDe(c.uid, r)]}</span>` : ''}
       ${pet ? `<span class="jr-colega-pet"><span class="jr-icone-pet"><img src="${srcIcone(formaValida(pet, r.pet_forma))}" alt="" draggable="false" data-icone-pet${r.pet_tinta ? ` data-tinta="${esc(r.pet_tinta)}"` : ''}/></span>${r.pet_nome ? `${esc(r.pet_nome)} · ` : ''}${esc(NOME_PET[pet])}${Number(r.pet_nivel) >= 2 ? ` ❤️ ${Number(r.pet_nivel)}` : ''}</span>` : ''}
     </span>
-    ${podeDesafiar() ? '<button class="jr-colega-oi jr-colega-desafiar" data-desafiar aria-label="Desafiar" title="Desafiar">⚔️</button>' : ''}
+    ${podeDesafiar() && !r.sem_convites ? '<button class="jr-colega-oi jr-colega-desafiar" data-desafiar aria-label="Desafiar" title="Desafiar">⚔️</button>' : ''}
     <button class="jr-colega-oi" data-presente aria-label="Presentear com um peixe" title="Presentear">🎁</button>
     <button class="jr-colega-oi" data-oi aria-label="Acenar">👋</button>`;
   const ti = el.querySelector('img[data-tinta]');
@@ -2902,18 +2994,224 @@ function desenharOnlineGeral() {
 
 function abrirListaOnline(n) {
   const lista = onlinePorMapa()[n] || [];
+  $('online-lista').dataset.modo = 'regiao';
   const reg = D.geral.regioes.find(r => r.mapa === n);
   $('online-titulo').textContent = `${n}. ${reg?.nome || ''}`;
   $('online-itens').innerHTML = lista.map(r => `
     <li><span class="jr-rosto${r.local === 'ginasio' ? ' no-ginasio' : ''}">${rostoPet(petAtual(r.pet), r.pet_tinta)}</span>
       <span class="jr-online-nome">${nomeT(r.uid, rotuloColega(r.uid, r), r)}</span>
-      <span class="jr-online-det">${esc(nomeVisivel(r.turma))}${petValido(petAtual(r.pet)) ? ' · ' + esc((r.pet_nome ? r.pet_nome + ' · ' : '') + NOME_PET[petAtual(r.pet)]) : ''} · ${r.local === 'ginasio' ? 'no ginásio' : 'no mapa'}</span></li>`).join('')
+      <span class="jr-online-det">${esc(nomeVisivel(r.turma))}${petValido(petAtual(r.pet)) ? ' · ' + esc((r.pet_nome ? r.pet_nome + ' · ' : '') + NOME_PET[petAtual(r.pet)]) : ''} · ${r.local === 'ginasio' ? 'no ginásio' : 'no mapa'}</span>
+      ${botaoChamar(r)}</li>`).join('')
     || '<li class="jr-online-vazio">Ninguém aqui agora.</li>';
   pintarRostos($('online-itens'));
   $('online-ir').hidden = false;
   $('online-ir').dataset.mapa = n;
   $('online-bloqueado').hidden = true;   // todos os mapas abrem (só os ginásios seguem a ordem)
   $('online-lista').hidden = false;
+}
+
+// ============================================================
+//  👥 ONLINE E "CHAMAR PRA PRAÇA" (PROMPT-76)
+//  Botão "👥 Online (N)" nos mapas e na Praça (no mapa geral, o selo 🟢): todo mundo online, de todas as turmas, e onde está.
+//  Fora do mapa geral a lista é LIDA a cada 20 s (lerTodos), sem ouvir as posições de todo mundo ao vivo.
+//  Chamado: jogo_revisao_praca/chamados/{quem recebe} = { de, de_nome, de_turma, ts, resp? } — 1 por vez (runTransaction,
+//  2 min) e 1 por minuto por pessoa (trava no aparelho de quem chama). Quem recebe vê uma faixa (20 s) quando não estiver
+//  ocupado; responde 'vou' / 'nao' no próprio nó, e quem chamou apaga o nó ao ver a resposta.
+// ============================================================
+const CHAMADO_MS = 120000, FAIXA_MS = 20000, CHAMAR_DE_NOVO_MS = 60000;
+let onlineTodos = {};                 // uid → registro (fora do mapa geral)
+const chamadosFeitos = new Map();     // uid → quando chamei (1 por minuto)
+let chamadoPendente = null, chamadoAberto = null, pararChamados = null, ondeEnviado, tOnline = 0, tLista = 0;
+const regsOnline = () => (!$('tela-geral').hidden ? onlineGeral : onlineTodos);
+const NOMES_ONDE = { laboratorio: 'Laboratório', programe: 'Programe o pet', ilha: 'Ilha dos Robôs', pesca: 'Pescando', duelo: 'Num desafio', damas: 'Jogando Damas', batalha: 'Numa batalha' };
+const naPracaReg = (r) => r.mapa === 'praca' && r.local === 'mapa';
+function lugarDe(r) {
+  const extra = r.onde && NOMES_ONDE[r.onde];
+  if (extra) return Number(r.mapa) > 0 ? `Mapa ${r.mapa} · ${extra}` : r.mapa === 'praca' && r.onde !== 'laboratorio' ? `Praça · ${extra}` : extra;
+  if (r.mapa === 'praca') return r.local === 'laboratorio' ? 'Laboratório' : 'Praça';
+  if (Number(r.mapa) > 0) return `Mapa ${r.mapa}${r.local === 'ginasio' ? ' · no ginásio' : ''}`;
+  return 'Mapa geral';
+}
+// onde estou agora (mandado no online quando muda): telas por cima do mapa
+function ondeAgora() {
+  if (bt) return 'batalha';
+  if (dm) return 'damas';
+  if (duelo?.comecou) return 'duelo';
+  if (!$('programe').hidden) return 'programe';
+  if (!$('pg-mapa').hidden) return 'ilha';
+  if (pesca) return 'pesca';
+  if (cena?.n === 'laboratorio') return 'laboratorio';
+  return null;
+}
+// respondendo, em batalha, duelo, corrida, Damas, Programe o pet / Caça ao bug, pescando ou com um cartão aberto: o chamado espera
+const ocupadoParaChamado = () => perguntaAberta || !!bt || !!duelo || !!dm || !$('programe').hidden || !!pesca || transicionando || !!evo || sobreposicaoAberta();
+function tickOnline(dt) {
+  if ((tOnline += dt) < 1) return;
+  tOnline = 0;
+  if (!onlineAtivo()) return;
+  const o = ondeAgora();
+  if (o !== ondeEnviado) { ondeEnviado = o; enviarOnline({ onde: o }); }
+  mostrarChamadoSePuder();
+  if (cena && (tLista += 1) >= 20) { tLista = 0; atualizarOnlineTodos(); }
+  else atualizarBotaoOnline();
+}
+async function atualizarOnlineTodos() {
+  if (!onlineAtivo()) return;
+  try { onlineTodos = await lerTodos(); } catch (_) {}
+  atualizarBotaoOnline();
+  if (!$('online-lista').hidden && $('online-lista').dataset.modo === 'todos') renderListaTodos();
+}
+function atualizarBotaoOnline() {
+  $('online-n').textContent = Object.entries(regsOnline()).filter(([u, r]) => colegaVisivel(u, r)).length;
+}
+function abrirListaTodos() {
+  tLista = 0;
+  if ($('tela-geral').hidden) atualizarOnlineTodos();
+  $('online-lista').dataset.modo = 'todos';
+  $('online-titulo').textContent = '👥 Online agora';
+  $('online-ir').hidden = true;
+  $('online-bloqueado').hidden = true;
+  renderListaTodos();
+  $('online-lista').hidden = false;
+}
+function renderListaTodos() {
+  const minha = (r) => (r.turma === sessao.turma ? 0 : 1);
+  const lista = Object.entries(regsOnline()).filter(([u, r]) => colegaVisivel(u, r)).map(([uid, r]) => ({ uid, ...r }))
+    .sort((a, b) => minha(a) - minha(b) || String(a.turma || '').localeCompare(String(b.turma || '')) || rotuloColega(a.uid, a).localeCompare(rotuloColega(b.uid, b)));
+  const praca = lista.filter(naPracaReg), outros = lista.filter(r => !naPracaReg(r));
+  const grupo = (tit, l) => `<li class="jr-online-grupo">${tit} · ${l.length}</li>` + (l.map(linhaOnline).join('') || '<li class="jr-online-vazio">Ninguém.</li>');
+  $('online-itens').innerHTML = lista.length ? grupo('🏛️ Na Praça', praca) + grupo('🗺️ Em outros lugares', outros) : '<li class="jr-online-vazio">Ninguém online agora.</li>';
+  pintarRostos($('online-itens'));
+}
+function linhaOnline(r) {
+  const pet = petAtual(r.pet);
+  return `<li><span class="jr-rosto">${rostoPet(pet, r.pet_tinta)}</span>
+    <span class="jr-online-nome">${nomeT(r.uid, rotuloColega(r.uid, r), r)}</span>
+    <span class="jr-online-det">${esc(nomeVisivel(r.turma))}${petValido(pet) ? ' · ' + esc((r.pet_nome ? r.pet_nome + ' · ' : '') + NOME_PET[pet]) : ''} · ${esc(lugarDe(r))}</span>
+    ${botaoOnline(r)}</li>`;
+}
+// na Praça (eu também lá): ⚔️ Desafiar; senão 📨 Chamar pra Praça
+function botaoOnline(r) {
+  if (naPracaReg(r) && ehPraca()) return colegas.has(r.uid) && podeDesafiar() && !r.sem_convites ? `<button class="jr-online-acao" data-desafiar-online="${esc(r.uid)}">⚔️ Desafiar</button>` : '';
+  return botaoChamar(r);
+}
+function botaoChamar(r) {
+  if (!onlineAtivo() || desafiosOff?.todas || desafiosOff?.[sessao.turma] || desafiosOff?.[r.turma]) return '';   // desafios desligados para uma das turmas
+  if (r.sem_convites) return '<button class="jr-online-acao" disabled>não recebe convites</button>';
+  return `<button class="jr-online-acao" data-chamar="${esc(r.uid)}">📨 Chamar pra Praça</button>`;
+}
+function cliqueListaOnline(e) {
+  const ch = e.target.closest('[data-chamar]');
+  if (ch && !ch.disabled) { chamarPraPraca(ch.dataset.chamar); return; }
+  const de = e.target.closest('[data-desafiar-online]');
+  if (de) {
+    const c = colegas.get(de.dataset.desafiarOnline);
+    $('online-lista').hidden = true;
+    if (c) { abrirCartaoColega(c); escolherModoDesafio(c); }
+  }
+}
+
+async function chamarPraPraca(uid) {
+  const r = regsOnline()[uid] || onlineGeral[uid] || onlineTodos[uid];
+  if (!r) return;
+  const nome = rotuloColega(uid, r);
+  if (Date.now() - (chamadosFeitos.get(uid) || 0) < CHAMAR_DE_NOVO_MS) { avisoPet(`Você já chamou ${nome}. Espere um pouquinho para chamar de novo.`); return; }
+  const meu = { de: sessao.uid, de_nome: nomeRanking(), de_turma: sessao.turma || '', ts: agoraServ() };
+  let ok = false;
+  try {   // só grava se a pessoa não tiver outro chamado com menos de 2 min (sem resposta)
+    const t = await runTransaction(ref(db, `${basePraca()}/chamados/${uid}`), (cur) => (cur && !cur.resp && agoraServ() - (Number(cur.ts) || 0) < CHAMADO_MS ? undefined : meu));
+    ok = t.committed;
+  } catch (e) { console.warn('[jogo-revisao] chamado pra Praça', e?.code || e); avisoPet('Não deu para chamar agora.'); return; }
+  if (!ok) { avisoPet(`${nome} já tem um convite. Tente daqui a pouco.`); return; }
+  chamadosFeitos.set(uid, Date.now());
+  $('online-lista').hidden = true;
+  esperarRespostaChamado(uid, nome, meu.ts);
+  if (!ehPraca() && pracaPronta()) { avisoPet('Te espero na Praça! 🏛️'); if (perguntaAberta) fecharPergunta(); transicao(() => abrirPraca()); }
+  else avisoPet(`📨 Chamado enviado para ${nome}.`);
+}
+// quem chamou: 'vou' → "está vindo"; 'nao' ou 2 min sem resposta → "não pode agora"; depois apaga o nó
+function esperarRespostaChamado(uid, nome, ts) {
+  const no = ref(db, `${basePraca()}/chamados/${uid}`);
+  let parar = null, fim = false;
+  const acabar = (resp) => {
+    if (fim) return;
+    fim = true; parar?.(); clearTimeout(t);
+    avisoPet(resp === 'vou' ? `${nome} está vindo! 🏃` : `${nome} não pode agora.`);
+    runTransaction(no, (cur) => (cur && cur.de === sessao.uid && Number(cur.ts) === ts ? null : undefined)).catch(() => {});
+  };
+  const t = setTimeout(() => acabar('nao'), CHAMADO_MS + 3000);
+  try {
+    parar = onValue(no, (s) => {
+      const v = s.exists() ? s.val() : null;
+      if (!v || v.de !== sessao.uid || Number(v.ts) !== ts) { if (s.exists() || v === null) acabar('nao'); return; }
+      if (v.resp) acabar(v.resp);
+    }, () => {});
+  } catch (_) {}
+}
+
+// quem recebe: guarda o chamado e mostra a faixa quando não estiver ocupado (passou de 2 min: descarta sem mostrar)
+function ouvirChamados() {
+  if (pararChamados || !onlineAtivo()) return;
+  try {
+    pararChamados = onValue(ref(db, `${basePraca()}/chamados/${sessao.uid}`), (s) => {
+      const v = s.exists() ? s.val() : null;
+      if (!v || v.resp || !v.de) { if (chamadoAberto && (!v || v.ts !== chamadoAberto.ts)) fecharFaixaChamado(); return; }
+      if (estado.semConvites || !desafiosLigados()) { responderChamadoNo(v, 'nao'); return; }
+      if (chamadoAberto?.ts === v.ts) return;
+      chamadoPendente = v;
+      mostrarChamadoSePuder();
+    }, () => {});
+  } catch (_) { pararChamados = null; }
+}
+function mostrarChamadoSePuder() {
+  const v = chamadoPendente;
+  if (!v || chamadoAberto) return;
+  if (agoraServ() - (Number(v.ts) || 0) > CHAMADO_MS) { chamadoPendente = null; return; }
+  if (ocupadoParaChamado()) return;
+  chamadoPendente = null;
+  chamadoAberto = v;
+  $('chamado-txt').innerHTML = `🏛️ <b>${nomeT(v.de, nomeCurto(v.de, v.de_nome))}</b>${v.de_turma ? ` (${esc(nomeVisivel(v.de_turma))})` : ''} te chamou pra Praça!`;
+  $('chamado').hidden = false;
+  tocar('clique');
+  v.timer = setTimeout(() => responderChamado(false), FAIXA_MS);   // sumiu sozinha: "agora não"
+}
+function fecharFaixaChamado() {
+  if (chamadoAberto) clearTimeout(chamadoAberto.timer);
+  chamadoAberto = null;
+  $('chamado').hidden = true;
+}
+function responderChamadoNo(v, resp) {
+  const no = ref(db, `${basePraca()}/chamados/${sessao.uid}`);
+  runTransaction(no, (cur) => (cur && cur.de === v.de && cur.ts === v.ts ? { ...cur, resp } : undefined)).catch(() => {});
+  // quem chamou apaga ao ver a resposta; se ele já saiu, apaga daqui a pouco
+  setTimeout(() => runTransaction(no, (cur) => (cur && cur.ts === v.ts && cur.resp ? null : undefined)).catch(() => {}), 10000);
+}
+async function responderChamado(ir) {
+  const v = chamadoAberto;
+  if (!v) return;
+  fecharFaixaChamado();
+  responderChamadoNo(v, ir ? 'vou' : 'nao');
+  if (!ir || !pracaPronta()) return;
+  // vai para a Praça e aparece ao lado de quem chamou (se ainda estiver lá); senão, na entrada
+  let perto = null;
+  try { const r = await lerRegistro(v.de); if (r && naPracaReg(r) && Number.isFinite(Number(r.x))) perto = { x: Number(r.x) + 34, y: Number(r.y) }; } catch (_) {}
+  if (ehPraca()) { if (perto) caminharNaTrilha(...cena.naTrilha(perto.x, perto.y)); return; }
+  if (perguntaAberta) fecharPergunta();
+  transicao(() => abrirPraca(perto ? { perto } : undefined));
+}
+
+// "Não receber convites" (Meu Pet → Visual): sem chamados da Praça e sem convites de desafio; os colegas veem o botão cinza
+function atualizarBotaoSemConvites() {
+  const b = $('mp-sem-convites'), sim = !!estado?.semConvites;
+  $('mp-sem-convites-txt').textContent = `Não receber convites: ${sim ? 'ligado' : 'desligado'}`;
+  b.setAttribute('aria-checked', String(sim));
+  b.classList.toggle('ligado', sim);
+}
+function alternarSemConvites() {
+  estado.semConvites = !estado.semConvites;
+  gravar({ sem_convites: estado.semConvites || null });
+  enviarOnline({ sem_convites: estado.semConvites || null });
+  atualizarBotaoSemConvites();
 }
 
 // ============================================================
@@ -2985,7 +3283,7 @@ function mostrarFalaPet(baloes, fome = false) {
     el.hidden = false;
     el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
     posicionarFalaPet();
-    if (i === 0) seguidor?.reagir(fome ? 'triste_fome' : 'feliz', fome ? 2000 : 0);
+    if (i === 0) { if (fome) seguidor?.reagir('triste_fome', 2000); else reagirSeguidor('rapida', 'feliz'); }   // tocar no pet: ele ri (adulto: `carinho`)
     conversa.timer = setTimeout(() => {
       i++;
       el.hidden = true;
@@ -3475,7 +3773,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden;
+  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden;
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -3599,6 +3897,9 @@ function loop(t) {
   ultimoT = t;
   atualizarMeuPet(dt);
   pgPet?.atualizar(dt);
+  tickNemAi(dt);
+  tickOnline(dt);
+  dmPet?.atualizar(dt);
   evo?.anim.atualizar(dt);
   tentarEvolucao();
   if ((fomeT += dt) > 10) { fomeT = 0; atualizarFomeSeguidor(); }   // a barriga cai devagar: confere a cada 10 s
@@ -3638,6 +3939,8 @@ function loop(t) {
 function atualizarHudPraca() {
   const bp = $('btn-praca'), esconde = !(cena?.tipo === 'mapa' && cena.n !== 'praca' && pracaPronta());
   if (bp.hidden !== esconde) bp.hidden = esconde;
+  const bo = $('btn-online'), semOnline = !(cena && onlineAtivo());   // 👥 Online (N): em qualquer mapa e na Praça
+  if (bo.hidden !== semOnline) bo.hidden = semOnline;
   atualizarHudMissoes();
   const brel = $('btn-relembre'), semRel = !(cena?.tipo === 'interior' && explicacaoDe(cena.chave));   // 📖 no interior do ginásio
   if (brel.hidden !== semRel) brel.hidden = semRel;
@@ -4408,6 +4711,7 @@ async function abrirPraca(onde) {   // onde: 'fliperama' | 'loja' = saindo de l�
   mostrarTela('tela-cena');
   $('cena-palco').style.visibility = 'hidden';
   const [grade] = await Promise.all([carregarGrade(cfg.trilha), trocarFundo(`${IMG}/mapas/${C.imagem || 'praca.webp'}`)]);
+  bloquearMesaDamas(grade);   // o personagem não atravessa a mesa de damas
   const naTrilha = (x, y) => centroCelula(celulaMaisProxima(grade, x, y));
   const saidas = cfg.saidas.map(([x, y]) => ({ x, y, trilha: naTrilha(x, y) }));
   cena = { tipo: 'mapa', n: 'praca', cfg, grade, portas: {}, saidas, naTrilha, pertoMural: false };
@@ -4417,6 +4721,8 @@ async function abrirPraca(onde) {   // onde: 'fliperama' | 'loja' = saindo de l�
   montarPessoas('praca');   // ninguém (limpa as pessoas do mapa anterior)
   montarPraca();
   if ((onde === 'fliperama' || onde === 'loja' || onde === 'laboratorio') && cena[onde]) posicionarJogador(cena[onde].trilha[0], cena[onde].trilha[1], 'frente');
+  else if (onde === 'fonte' && C.fonte?.frente) posicionarJogador(...naTrilha(...C.fonte.frente), 'frente');
+  else if (onde?.perto) posicionarJogador(...naTrilha(onde.perto.x, onde.perto.y), 'esquerda');   // chamado: ao lado de quem chamou   // começo do jogo: em frente à fonte
   else posicionarJogador(cfg.entrada[0], cfg.entrada[1], 'costas');
   soltouDesdeTroca = false;
   ajustarCamera();
@@ -4439,6 +4745,7 @@ function montarPraca() {
   $('cena-atores').insertAdjacentHTML('beforeend', rotulo('📋 Mural da Escola', m.x, m.y - 125, 'mural') +
     (f ? rotulo('🕹️ Fliperama', f.x, f.y - 200, 'fliperama') : '') + (l ? rotulo('🛒 Loja', l.x, l.y - 140, 'loja') : '') +
     (cena.laboratorio ? rotulo('🤖 Laboratório', lb.x, lb.y - 150, 'laboratorio') : ''));
+  montarMesaDamas();
 }
 function alvoPracaEm(p) {
   const { mural: m, fliperama: f, loja: l, laboratorio: lb } = cena;
@@ -4446,6 +4753,7 @@ function alvoPracaEm(p) {
   if (f && Math.abs(p.x - f.x) < 90 && p.y > f.y - 220 && p.y < f.y + 30) return 'fliperama';
   if (l && Math.abs(p.x - l.x) < 80 && p.y > l.y - 150 && p.y < l.y + 30) return 'loja';
   if (lb && Math.abs(p.x - lb.x) < 90 && p.y > lb.y - 170 && p.y < lb.y + 30) return 'laboratorio';
+  if (tocouMesaDamas(p)) return 'mesa_damas';
   return null;
 }
 function irAlvoPraca(alvo) {
@@ -4457,6 +4765,7 @@ function irAlvoPraca(alvo) {
     else if (alvo === 'fliperama' && FLIPER) transicao(abrirFliperama);
     else if (alvo === 'loja' && LOJA) transicao(() => abrirLojaInterior({ tipo: 'praca' }));
     else if (alvo === 'laboratorio' && LAB) transicao(abrirLaboratorio);
+    else if (alvo === 'mesa_damas') { jog.dir = 'costas'; desenharJogador(); abrirMenuDamas(); }
   });
 }
 // A cada quadro na praça: chegar perto do mural abre o painel (uma vez até se afastar); botão 💬 no lugar do 😊
@@ -4476,7 +4785,7 @@ function atualizarPraca() {
 
 // ── Mural da Escola: 6 abas, top 10 + "Você" ──
 const MURAL_ABAS = [['insignias', '🏅 Insígnias'], ['pesca', '🎣 Pesca'], ['tabuada', '✖️ Tabuada'], ['negativa', '➖ Tab. negativa'], ['escalada', '🧗 Escalada'], ['desafios', '⚔️ Desafios'],
-  ['programe', '🤖 Programe hoje'], ['corridas', '🏁 Corridas']];
+  ['programe', '🤖 Programe hoje'], ['corridas', '🏁 Corridas'], ['damas', '♟️ Damas']];
 const mural = { aba: 'insignias', filtro: 'escola', cache: {} };
 const visivelNoMural = (uid, r) => !!r && !ALUNOS_TESTE.includes(uid) && !/PROFESSOR|TESTE/i.test(`${uid} ${r.nome || ''}`) && TURMAS_PLACAR.includes(r.turma);
 const lerNo = async (caminho) => { const s = await get(ref(db, caminho)); return s.exists() ? s.val() || {} : {}; };
@@ -4507,8 +4816,18 @@ async function carregarAbaMural(aba) {
       poe(uid, r, Number(r.estrelas) || 0, `${Number(r.estrelas) || 0} ⭐ · ${Number(r.fases) || 0} fases`, { fases: Number(r.fases) || 0 });
     return ordenarRanking(lista, (a, b) => b.fases - a.fases);
   }
+  if (aba === 'o_que_faz') {   // 🔮 recorde de acertos seguidos (PROMPT-70)
+    for (const [uid, r] of Object.entries(await lerNo(`${basePraca()}/programe/o_que_faz`))) if (teste || visivelNoMural(uid, r))
+      poe(uid, r, Number(r.recorde) || 0, `${Number(r.recorde) || 0} seguidos`);
+    return ordenarRanking(lista);
+  }
   if (aba === 'corridas') {   // vitórias de corrida na semana
     for (const [uid, r] of Object.entries(await lerNo(`${basePraca()}/programe/corridas/${semanaPesca()}`))) if (teste || visivelNoMural(uid, r))
+      poe(uid, r, Number(r.vitorias) || 0, `${Number(r.vitorias) || 0} vitória${Number(r.vitorias) === 1 ? '' : 's'}`, { vitorias: Number(r.vitorias) || 0 });
+    return ordenarRanking(lista);
+  }
+  if (aba === 'damas') {   // ♟️ vitórias em Damas contra colegas na semana (PROMPT-72)
+    for (const [uid, r] of Object.entries(await lerNo(`${basePraca()}/damas/${semanaPesca()}`))) if (teste || visivelNoMural(uid, r))
       poe(uid, r, Number(r.vitorias) || 0, `${Number(r.vitorias) || 0} vitória${Number(r.vitorias) === 1 ? '' : 's'}`, { vitorias: Number(r.vitorias) || 0 });
     return ordenarRanking(lista);
   }
@@ -4591,6 +4910,7 @@ function iniciarPraca() {
   try {
     pararConvites = onValue(ref(db, `${basePraca()}/convites/${sessao.uid}`), (s) => { if (s.exists()) receberConvite(s.val()); }, () => {});
   } catch (_) { pararConvites = null; }
+  ouvirChamados();
 }
 
 // Cartão do colega na praça: ⚔️ Desafiar (com aviso quando não vale prêmio)
@@ -4598,20 +4918,19 @@ function iniciarPraca() {
 // com null; devolver null (e não undefined, que cancela) faz o Firebase buscar o valor real no servidor e repetir a conta.
 const deConvitePara = (novo) => (cur) => (cur === null ? null : cur === 'convite' ? novo : undefined);
 function podeDesafiar() { return ehPraca() && desafiosLigados() && onlineAtivo() && !duelo && carregouProgresso; }
-// ⚔️ no cartão do colega: Contas (o desafio de sempre) ou Corrida de programação (PROMPT-50)
+// ⚔️ no cartão do colega: Contas (o desafio de sempre), Corrida de programação (PROMPT-50) ou Damas (PROMPT-72)
 function escolherModoDesafio(c) {
   if (!podeDesafiar()) return;
-  if (!PROG) { confirmarDesafio(c, 'contas'); return; }
   const el = $('colega-cartao');
   clearTimeout(cartaoColega.timer);
   cartaoColega.timer = setTimeout(fecharCartaoColega, 10000);
   el.innerHTML = `<span class="jr-colega-info jr-presente"><b>⚔️ Desafiar ${nomeT(c.uid, nomeCurto(c.uid, c.reg?.apelido))}</b>
-    <span class="jr-presente-lista"><button data-modo="contas">✖️ Contas</button><button data-modo="corrida">🤖 Corrida</button></span></span>`;
+    <span class="jr-presente-lista"><button data-modo="contas">✖️ Contas</button>${PROG ? '<button data-modo="corrida">🤖 Corrida</button>' : ''}<button data-modo="damas">♟️ Damas</button></span></span>`;
   posicionarCartaoColega();
 }
 function confirmarDesafio(c, modo = 'contas') {
   if (!podeDesafiar()) return;
-  if (vale(estado.desafiosDia, diaLocal(), c.uid)) { desafiarColega(c, modo); return; }
+  if (modo === 'damas' || vale(estado.desafiosDia, diaLocal(), c.uid)) { desafiarColega(c, modo); return; }   // damas não tem prêmio: não precisa do aviso
   const el = $('colega-cartao');
   clearTimeout(cartaoColega.timer);
   cartaoColega.timer = setTimeout(fecharCartaoColega, 10000);
@@ -4628,8 +4947,9 @@ async function desafiarColega(c, modo = 'contas') {
   const eu = { uid: sessao.uid, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), vencidos: vencidosMeus(), premio: vale(estado.desafiosDia, diaLocal(), c.uid), ...dadosCorrida() };
   const nomeOutro = nomeCurto(c.uid, c.reg?.apelido);
   try {
-    await set(ref(db, `${base}/duelos/${id}`), { a: eu, b: { uid: c.uid, nome: nomeOutro }, estado: 'convite', modo: modo === 'corrida' ? 'corrida' : 'contas', criado: serverTimestamp() });
-    await set(ref(db, `${base}/convites/${c.uid}`), { id, de: sessao.uid, de_nome: eu.nome, modo: modo === 'corrida' ? 'corrida' : 'contas', ts: serverTimestamp() });
+    const m = modo === 'corrida' || modo === 'damas' ? modo : 'contas';
+    await set(ref(db, `${base}/duelos/${id}`), { a: eu, b: { uid: c.uid, nome: nomeOutro }, estado: 'convite', modo: m, criado: serverTimestamp() });
+    await set(ref(db, `${base}/convites/${c.uid}`), { id, de: sessao.uid, de_nome: eu.nome, modo: m, ts: serverTimestamp() });
   } catch (e) { console.warn('[jogo-revisao] desafio indisponível', e?.code || e); avisoPet('Não deu para desafiar agora.'); return; }
   avisarEm(`⚔️ Convite enviado para ${nomeOutro}…`, jog.x, jog.y - ALT_JOGADOR_MAPA - 10);
   ouvirDuelo(id, true);
@@ -4645,7 +4965,7 @@ async function receberConvite(cv) {
   const exp = (cfgDesafio().convite_expira_s ?? 20) * 1000;
   const idade = agoraServ() - (Number(cv.ts) || 0);
   if (idade > exp || idade < -5000) { remove(ref(db, `${basePraca()}/convites/${sessao.uid}`)).catch(() => {}); return; }
-  if (!ehPraca() || duelo || !desafiosLigados()) {
+  if (!ehPraca() || duelo || dm || estado.semConvites || !desafiosLigados()) {   // dm: treinando damas contra o computador
     try { await runTransaction(ref(db, `${basePraca()}/duelos/${cv.id}/estado`), deConvitePara('ocupado')); } catch (_) {}
     remove(ref(db, `${basePraca()}/convites/${sessao.uid}`)).catch(() => {});
     return;
@@ -4653,8 +4973,9 @@ async function receberConvite(cv) {
   const premio = vale(estado.desafiosDia, diaLocal(), cv.de);
   convite = { ...cv, premio };
   $('convite-txt').innerHTML = cv.modo === 'corrida' ? `<b>${nomeT(cv.de, nomeCurto(cv.de, cv.de_nome))}</b> te chamou para uma Corrida de programação! 🤖`
+    : cv.modo === 'damas' ? `<b>${nomeT(cv.de, nomeCurto(cv.de, cv.de_nome))}</b> te chamou para uma partida de Damas! ♟️`
     : `<b>${nomeT(cv.de, nomeCurto(cv.de, cv.de_nome))}</b> te desafiou! ⚔️`;
-  $('convite-aviso').hidden = premio;
+  $('convite-aviso').hidden = premio || cv.modo === 'damas';
   $('convite').hidden = false;
   tocar('vitoria');
   const fim = Date.now() + exp - Math.max(0, idade);
@@ -4720,6 +5041,7 @@ function atualizarDuelo(d) {
   if (!du.comecou) return;
   du.outro = d[outroLado];
   if (d.modo === 'corrida') { atualizarCorrida(d); return; }
+  if (d.modo === 'damas') { atualizarDamasOnline(d); return; }
   renderDuelo(d);
   if (d.fim) { aplicarFimDuelo(d); return; }
   vigiarWO(d);
@@ -4746,6 +5068,7 @@ function comecarDuelo(d) {
   $('dl-msg').textContent = du.eu.premio ? '' : 'Este desafio não vale prêmio para você hoje (limite do dia).';
   $('dl-fim').hidden = true;
   if (d.modo === 'corrida') { comecarCorrida(d); return; }   // corrida de programação: a tela do Programe o pet no lugar das contas
+  if (d.modo === 'damas') { comecarDamasOnline(d); return; }   // damas: a tela do tabuleiro
   du.timers.push(setTimeout(() => { if (duelo === du) { $('duelo').hidden = false; animarTempoDuelo(); } }, 2200));
   if (du.souA && d.estado === 'aceito') {
     du.tema = temaDoDesafio(d.a.vencidos, d.b.vencidos);
@@ -4793,7 +5116,11 @@ function vigiarWO(d) {
   if (!du.woT) du.woT = Date.now();
   clearTimeout(du.tWO);
   const falta = (cfgDesafio().wo_s ?? 15) * 1000 - (Date.now() - du.woT);
-  if (falta <= 0) { finalizarDuelo(sessao.uid); return; }
+  if (falta <= 0) {
+    if (d.modo === 'damas') gravarFimDamas(d, sessao.uid, { [d.a.uid]: contarDamas(d.jogo?.tab || '', 'a'), [d.b.uid]: contarDamas(d.jogo?.tab || '', 'b') }, 'wo', true);
+    else finalizarDuelo(sessao.uid);
+    return;
+  }
   du.tWO = setTimeout(() => { if (duelo === du && du.d && !du.d.fim) vigiarWO(du.d); }, Math.min(falta, 1000) + 50);
 }
 
@@ -4879,6 +5206,333 @@ function aplicarFimDuelo(d) {
   $('dl-fim').hidden = false;
   $('duelo').hidden = false;
   du.timers.forEach(clearTimeout);
+  du.parar?.();
+}
+
+// ============================================================
+//  ♟️ DAMAS 6×6 NA PRAÇA (PROMPT-72) — mesa de pedra (praca.json → mesa_damas). Regras em damas-logica.js.
+//  Treino contra o computador (fácil, médio, difícil) ou partida com um colega pelo desafio da praça (duelos/{id}, modo 'damas'):
+//  o tabuleiro fica em duelos/{id}/jogo = { tab, vez, semAvanco, n, t (início da vez, relógio do servidor), autos: { a, b },
+//  ultima: { de, caminho, cap, auto, lado } }. Cada jogada é gravada com runTransaction, conferindo a vez, o número da jogada e
+//  se é válida. Quem desafiou é o lado A (vermelho, começa). Relógio: 15 s por jogada; acabou, uma jogada válida aleatória
+//  ("jogada automática"); 3 automáticas seguidas = desistência. Sem moedas; vitórias contra colegas no Mural (aba ♟️ Damas):
+//  jogo_revisao_praca/damas/{segunda}/{uid} = { vitorias, nome, turma, pers, ts }.
+// ============================================================
+const MS_JOGADA_DAMAS = 15000;
+const NIVEIS_DAMAS = { facil: 'Fácil', medio: 'Médio', dificil: 'Difícil' };
+let dm = null;      // partida aberta: { tipo: 'cpu' | 'online', nivel, est, eu, sel, parcial, nVista, tVez, autos, fim, du, timer }
+let dmPet = null;   // pet no cartão do fim (PetParado)
+
+// Mesa: imagem com profundidade pelo y (o personagem passa atrás quando está acima dela) e um retângulo fora da área de andar
+function montarMesaDamas() {
+  const m = cfgPraca().mesa_damas;
+  cena.mesa_damas = m ? { ...m, trilha: cena.naTrilha(...(m.ponto || [m.x, m.y + 40])) } : null;
+  if (!m) return;
+  const img = document.createElement('img');
+  img.className = 'jr-mesa-damas'; img.alt = 'Mesa de damas'; img.draggable = false;
+  img.src = `${IMG}/praca/mesa-damas.webp`;
+  Object.assign(img.style, { left: m.x + 'px', top: m.y + 'px', width: (m.largura || 200) + 'px', zIndex: Math.round(m.y) });
+  $('cena-atores').appendChild(img);
+  $('cena-atores').insertAdjacentHTML('beforeend', `<div class="jr-rotulo-porta jr-rotulo-praca damas" style="left:${m.x}px;top:${m.y - 135}px"><span>♟️ Damas</span></div>`);
+}
+function bloquearMesaDamas(g) {   // ~180 × 40 na base da mesa (a grade fica em cache: fazer de novo não muda nada)
+  const m = cfgPraca().mesa_damas;
+  if (!m) return;
+  const x0 = Math.floor((m.x - 90) / CEL), x1 = Math.floor((m.x + 90) / CEL), y0 = Math.floor((m.y - 40) / CEL), y1 = Math.floor(m.y / CEL);
+  for (let cy = Math.max(0, y0); cy <= Math.min(GH - 1, y1); cy++) for (let cx = Math.max(0, x0); cx <= Math.min(GW - 1, x1); cx++) g[cy * GW + cx] = 0;
+}
+const tocouMesaDamas = (p) => { const m = cena?.mesa_damas; return !!m && Math.abs(p.x - m.x) < (m.largura || 200) / 2 && p.y > m.y - 110 && p.y < m.y + 10; };
+
+// Menu "♟️ Damas" (a janela do computador): colega, treino, como jogar, ranking da semana
+function abrirMenuDamas(aba = 'inicio') {
+  $('mq-nome').textContent = '♟️ Damas';
+  $('mq-botoes').innerHTML = '';
+  if (aba === 'como') {
+    $('mq-corpo').innerHTML = `<div class="mq-como">
+      <p>1. Tabuleiro 6×6, só nas casas escuras. Cada um começa com 6 peças.</p>
+      <p>2. A peça anda 1 casa na diagonal, para a frente.</p>
+      <p>3. Captura: pule a peça do outro (para a frente ou para trás). Se der para capturar, <b>tem</b> que capturar — e continua pulando se der.</p>
+      <p>4. Chegou na última fileira: vira 👑 dama, que anda e captura 1 casa em qualquer diagonal.</p>
+      <p>5. Ganha quem capturar todas as peças do outro ou deixar o outro sem jogada. 15 s por jogada!</p></div>`;
+    $('mq-botoes').innerHTML = '<button class="jr-btn jr-btn-sec" data-damas="inicio">← Voltar</button>';
+  } else if (aba === 'colega') {
+    const lista = [...colegas.values()].filter(c => !c.el.hidden);
+    $('mq-corpo').innerHTML = !podeDesafiar() ? '<p class="mq-sub">Agora não dá para chamar colegas (os desafios estão desligados ou você está sem internet).</p>'
+      : lista.length ? `<p class="mq-sub">Quem está na praça agora:</p><div class="pg-fases">${lista.map(c =>
+        `<button class="jr-btn" data-damas-colega="${esc(c.uid)}">${nomeT(c.uid, nomeCurto(c.uid, c.reg?.apelido))}</button>`).join('')}</div>`
+      : '<p class="mq-sub">Ninguém na praça agora. Que tal treinar contra o computador?</p>';
+    $('mq-botoes').innerHTML = '<button class="jr-btn jr-btn-sec" data-damas="inicio">← Voltar</button>';
+  } else if (aba === 'ranking') {
+    $('mq-corpo').innerHTML = '<p class="mq-car">Carregando…</p>';
+    $('mq-botoes').innerHTML = '<button class="jr-btn jr-btn-sec" data-damas="inicio">← Voltar</button>';
+    dadosMural('damas').then(l => {
+      if ($('maquina').hidden || $('mq-nome').textContent !== '♟️ Damas') return;
+      const top = (TURMAS_PLACAR.includes(sessao.turma) ? ordenarRanking(l.filter(r => r.turma === sessao.turma)) : l).slice(0, 10);
+      $('mq-corpo').innerHTML = `<p class="mq-sub">Vitórias contra colegas nesta semana${TURMAS_PLACAR.includes(sessao.turma) ? ` · ${esc(sessao.turma)}` : ''}</p>
+        <div class="mq-recordes"><div><ol>${top.map(r => `<li>${['🥇', '🥈', '🥉'][r.pos - 1] || r.pos + 'º'} ${esc(r.nome)} <em>${esc(r.rotulo)}</em></li>`).join('') || '<li class="mq-vazio">Ninguém venceu ainda nesta semana.</li>'}</ol></div></div>`;
+    }).catch(() => { $('mq-corpo').innerHTML = '<p class="mq-sub">Não deu para carregar o ranking agora.</p>'; });
+  } else {
+    $('mq-corpo').innerHTML = `<p class="mq-sub">Damas 6×6 na mesa de pedra da praça.</p>
+      <div class="mq-damas-menu">
+        <button class="jr-btn jr-btn-ouro" data-damas="colega">👥 Jogar com um colega</button>
+        <div><b>🤖 Treinar contra o computador</b><span>${Object.entries(NIVEIS_DAMAS).map(([k, n]) => `<button class="jr-btn" data-damas-cpu="${k}">${n}</button>`).join('')}</span></div>
+        <button class="jr-btn jr-btn-sec" data-damas="como">❓ Como jogar</button>
+        <button class="jr-btn jr-btn-sec" data-damas="ranking">🏆 Ranking da semana</button>
+      </div>`;
+  }
+  $('maquina').hidden = false;
+}
+function cliqueMenuDamas(e) {
+  const a = e.target.closest('[data-damas]');
+  if (a) { abrirMenuDamas(a.dataset.damas); return true; }
+  const cpu = e.target.closest('[data-damas-cpu]');
+  if (cpu) { $('maquina').hidden = true; abrirDamas({ tipo: 'cpu', nivel: cpu.dataset.damasCpu }); return true; }
+  const col = e.target.closest('[data-damas-colega]');
+  if (col) { const c = colegas.get(col.dataset.damasColega); $('maquina').hidden = true; if (c) desafiarColega(c, 'damas'); return true; }
+  return false;
+}
+
+// ── Tela ──
+function abrirDamas({ tipo, nivel = 'facil', est = null, eu = 'a', du = null }) {
+  clearInterval(dm?.timer);
+  dm = { tipo, nivel, est: est || estadoInicialDamas(), eu, du, sel: null, parcial: [], nVista: -1, tVez: Date.now(), autos: { a: 0, b: 0 }, fim: null };
+  const outroNome = tipo === 'cpu' ? `🤖 Computador · ${NIVEIS_DAMAS[nivel]}` : nomeT(du.outro.uid, nomeCurto(du.outro.uid, du.outro.nome));
+  $('dm-nome-outro').innerHTML = outroNome;
+  $('dm-cor-eu').className = 'dm-cor ' + eu; $('dm-cor-outro').className = 'dm-cor ' + outroLadoDamas(eu);
+  $('dm-fim').hidden = true;
+  $('dm-sair').textContent = '🏳️ Desistir';
+  dmPet = null;
+  $('damas').hidden = false;
+  renderDamas();
+  dm.timer = setInterval(tickDamas, 250);
+  if (tipo === 'cpu' && dm.est.vez !== eu) jogadaDoComputador();
+}
+// casa do tabuleiro na tela: o meu lado sempre embaixo (lado B vê o tabuleiro virado)
+const casaNaTela = (i) => (dm.eu === 'b' ? 35 - i : i);
+function renderDamas(animar = null) {
+  if (!dm) return;
+  const { est, eu } = dm, minha = !dm.fim && est.vez === eu && !dm.pensando;
+  const js = minha ? jogadasValidasDamas(est) : [];
+  const deSel = dm.sel != null ? js.filter(j => j.de === dm.sel && dm.parcial.every((c, k) => j.caminho[k] === c)) : [];
+  const destinos = new Set(deSel.map(j => j.caminho[dm.parcial.length]).filter(x => x != null));
+  const podem = new Set(dm.parcial.length ? [] : js.map(j => j.de));
+  const ult = est.ultima ? new Set([est.ultima.de, ...(est.ultima.caminho || [])]) : new Set();
+  const pos = dm.parcial.length ? dm.parcial.at(-1) : null;   // peça no meio de uma captura em sequência
+  let html = '';
+  for (let k = 0; k < 36; k++) {
+    const i = casaNaTela(k), l = Math.floor(i / 6), c = i % 6, escura = (l + c) % 2 === 1;
+    let p = est.tab[i];
+    if (pos != null && i === dm.sel) p = '.';
+    if (pos != null && i === pos) p = est.tab[dm.sel];
+    const cls = ['dm-casa', escura ? 'escura' : '', podem.has(i) ? 'pode' : '', destinos.has(i) ? 'destino' : '', i === dm.sel ? 'sel' : '', ult.has(i) ? 'ultima' : ''].join(' ');
+    const peca = p !== '.' ? `<span class="dm-peca ${p.toLowerCase()}${animar?.chegou === i ? ' chegou' : ''}">${p === 'A' || p === 'B' ? '👑' : ''}</span>` : '';
+    const comidas = animar?.cap?.includes(i) ? `<span class="dm-peca ${animar.lados[i]} comida"></span>` : '';
+    html += `<div class="${cls}" data-i="${i}">${peca}${comidas}</div>`;
+  }
+  $('dm-tab').innerHTML = html;
+  const nA = contarDamas(est.tab, eu), nB = contarDamas(est.tab, outroLadoDamas(eu));
+  $('dm-pecas-eu').textContent = `${nA} peça${nA === 1 ? '' : 's'}`;
+  $('dm-pecas-outro').textContent = `${nB} peça${nB === 1 ? '' : 's'}`;
+  if (!dm.fim) $('dm-msg').textContent = dm.aviso || (minha ? (js.some(j => j.cap.length) ? 'Sua vez — tem captura: é obrigatório capturar!' : 'Sua vez: toque numa peça.') : dm.tipo === 'cpu' ? '🤖 Pensando…' : 'Vez do colega…');
+}
+function tickDamas() {
+  if (!dm || dm.fim) return;
+  const agora = dm.tipo === 'online' ? agoraServ() : Date.now(), resta = MS_JOGADA_DAMAS - (agora - dm.tVez);
+  const minha = dm.est.vez === dm.eu;
+  for (const [id, vez] of [['dm-rel-eu', minha], ['dm-rel-outro', !minha]]) {
+    const el = $(id);
+    el.textContent = vez ? `${Math.max(0, Math.ceil(resta / 1000))} s` : '';
+    el.classList.toggle('vez', vez); el.classList.toggle('acabando', vez && resta < 5000);
+  }
+  if (minha && resta <= 0 && !dm.enviando) { const j = jogadaAleatoriaDamas(dm.est); if (j) fazerJogadaDamas(j, true); }
+  // online: o colega sumiu sem jogar (aba escondida): depois de 15 s + 4 s, a jogada automática dele sai daqui
+  else if (!minha && dm.tipo === 'online' && resta <= -4000 && !dm.enviando && !dm.forcou) { dm.forcou = dm.est.n; const j = jogadaAleatoriaDamas(dm.est); if (j) jogadaOnlineDamas(j, true, dm.est.vez); }
+}
+// toque numa casa: escolhe a peça, depois o destino (capturas em sequência: um pulo de cada vez)
+function tocarCasaDamas(e) {
+  const el = e.target.closest('.dm-casa');
+  if (!el || !dm || dm.fim || dm.est.vez !== dm.eu || dm.pensando || dm.enviando) return;
+  const i = Number(el.dataset.i), js = jogadasValidasDamas(dm.est);
+  dm.aviso = null;
+  if (!dm.parcial.length && js.some(j => j.de === i)) { dm.sel = i; renderDamas(); tocar('clique'); return; }
+  if (dm.sel == null) { if (dm.est.tab[i].toLowerCase() === dm.eu && js.some(j => j.cap.length)) { dm.aviso = 'Tem captura com outra peça: capturar é obrigatório!'; renderDamas(); } return; }
+  const cand = js.filter(j => j.de === dm.sel && dm.parcial.every((c, k) => j.caminho[k] === c) && j.caminho[dm.parcial.length] === i);
+  if (!cand.length) { if (!dm.parcial.length) { dm.sel = null; renderDamas(); } return; }
+  dm.parcial.push(i);
+  const pronta = cand.find(j => j.caminho.length === dm.parcial.length);
+  if (pronta) { fazerJogadaDamas(pronta, false); return; }
+  tocar('clique');
+  renderDamas();   // a captura continua: o próximo pulo acende
+}
+function fazerJogadaDamas(j, auto) {
+  dm.sel = null; dm.parcial = [];
+  if (dm.tipo === 'online') { jogadaOnlineDamas(j, auto, dm.eu); return; }
+  dm.autos[dm.eu] = auto ? dm.autos[dm.eu] + 1 : 0;
+  aplicarNaTelaDamas(aplicarDamas(dm.est, j), j, auto);
+  if (dm.autos[dm.eu] >= 3) { terminarDamas({ vencedor: outroLadoDamas(dm.eu), motivo: 'automaticas' }); return; }
+  if (!verificarFimDamas()) jogadaDoComputador();
+}
+function aplicarNaTelaDamas(novo, j, auto) {
+  const lados = Object.fromEntries(j.cap.map(c => [c, dm.est.tab[c].toLowerCase()]));
+  dm.est = { ...novo, ultima: { de: j.de, caminho: j.caminho, cap: j.cap } };
+  dm.tVez = dm.tipo === 'online' ? (Number(novo.t) || agoraServ()) : Date.now();
+  dm.aviso = auto ? '⏱ Jogada automática (acabou o tempo).' : null;
+  if (j.cap.length) tocar('acerto'); else tocar('clique');
+  renderDamas({ chegou: j.caminho.at(-1), cap: j.cap, lados });
+}
+function jogadaDoComputador() {
+  if (!dm || dm.fim || dm.tipo !== 'cpu' || dm.est.vez === dm.eu) return;
+  dm.pensando = true; renderDamas();
+  const d = dm;
+  setTimeout(() => {   // "pensa" ~0,6 s
+    if (dm !== d || d.fim) return;
+    d.pensando = false;
+    const j = jogadaComputadorDamas(d.est, d.nivel);
+    if (!j) { verificarFimDamas(); return; }
+    aplicarNaTelaDamas(aplicarDamas(d.est, j), j, false);
+    verificarFimDamas();
+  }, 600);
+}
+function verificarFimDamas() {
+  const f = fimDeJogoDamas(dm.est);
+  if (!f) return false;
+  terminarDamas(f);
+  return true;
+}
+// fim: cartão com o pet reagindo; online, a vitória entra no ranking da semana
+function terminarDamas({ vencedor, motivo }) {
+  if (!dm || dm.fim) return;
+  dm.fim = { vencedor, motivo };
+  clearInterval(dm.timer);
+  if (dm.tipo === 'online') { finalizarDamasOnline(vencedor, motivo); return; }
+  mostrarFimDamas(vencedor === dm.eu ? 'venceu' : vencedor === 'empate' ? 'empate' : 'perdeu', motivo);
+}
+function mostrarFimDamas(res, motivo, wo = false) {
+  const outro = dm.tipo === 'cpu' ? 'O computador' : nomeT(dm.du.outro.uid, nomeCurto(dm.du.outro.uid, dm.du.outro.nome));
+  $('dm-fim-titulo').innerHTML = res === 'venceu' ? (wo ? 'Você venceu por W.O.! 🏆' : 'Você venceu! 🏆') : res === 'empate' ? 'Empate! 🤝' : 'Perdeu';
+  $('dm-fim-info').innerHTML = { pecas: res === 'venceu' ? 'Você capturou todas as peças.' : `${outro} capturou todas as suas peças.`,
+    sem_jogada: res === 'venceu' ? 'O outro lado ficou sem jogada.' : 'Você ficou sem jogada.', empate: '20 jogadas seguidas sem captura e sem peça andar.',
+    automaticas: res === 'venceu' ? 'O outro lado ficou 3 jogadas sem jogar.' : '3 jogadas automáticas seguidas contam como desistência.',
+    desistiu: res === 'venceu' ? 'O outro lado desistiu.' : 'Você desistiu.', wo: 'O colega saiu do jogo.' }[motivo] || '';
+  $('dm-msg').textContent = '';
+  $('dm-sair').textContent = 'Sair';
+  $('dm-revanche').hidden = dm.tipo === 'online' && !colegas.has(dm.du.outro.uid);
+  $('dm-fim').hidden = false;
+  tocar(res === 'venceu' ? 'vitoria' : res === 'empate' ? 'acerto' : 'erro');
+  const pet = petsOk && estado.pets.ativo, img = $('dm-fim-pet');
+  img.hidden = !pet;
+  if (pet) {
+    dmPet = new PetParado(img); dmPet.definir(formaDe(pet));
+    aplicarVisualPet(img, pet);
+    if (res === 'venceu') { if (!dmPet.sequencia('vitoria')) dmPet.tocar(temAnim(formaDe(pet), 'pulo_cambalhota') ? 'pulo_cambalhota' : 'feliz'); }
+    else if (res === 'perdeu') dmPet.tocar('triste_fome');
+  }
+}
+function desistirDamas() {
+  if (!dm) return;
+  if (dm.fim) { fecharDamas(); return; }
+  terminarDamas({ vencedor: outroLadoDamas(dm.eu), motivo: 'desistiu' });
+}
+function fecharDamas() {
+  if (!dm) { $('damas').hidden = true; return; }
+  const d = dm;
+  if (!d.fim && d.tipo === 'online') { desistirDamas(); return; }   // sair no meio = desistir
+  clearInterval(d.timer);
+  dm = null; dmPet = null;
+  $('damas').hidden = true;
+  if (d.tipo === 'online' && duelo === d.du) encerrarDueloLocal();
+}
+function revancheDamas() {
+  if (!dm) return;
+  const d = dm;
+  if (d.tipo === 'cpu') { abrirDamas({ tipo: 'cpu', nivel: d.nivel }); return; }
+  const c = colegas.get(d.du.outro.uid);
+  fecharDamas();
+  if (c) desafiarColega(c, 'damas');
+}
+
+// ── Online (o desafio da praça com modo 'damas') ──
+function comecarDamasOnline(d) {
+  const du = duelo;
+  $('dl-conta').textContent = '♟️ Damas';
+  avisoPet(`♟️ Damas contra ${nomeCurto(du.outro.uid, du.outro.nome)}! Você joga com as ${du.souA ? 'vermelhas e começa' : 'azuis'}.`);
+  if (du.souA && d.estado === 'aceito') du.timers.push(setTimeout(() => {
+    if (duelo !== du || du.d?.fim) return;
+    update(du.ref, { estado: 'jogando', jogo: { ...estadoInicialDamas(), t: agoraServ(), autos: { a: 0, b: 0 } } }).catch(() => {});
+  }, 1500));
+}
+function atualizarDamasOnline(d) {
+  const du = duelo;
+  if (d.fim) { fimDamasOnline(d); return; }
+  vigiarWO(d);
+  const jg = d.jogo;
+  if (!jg?.tab) return;
+  if (!dm || dm.du !== du) abrirDamas({ tipo: 'online', est: jg, eu: du.souA ? 'a' : 'b', du });
+  if (jg.n !== dm.nVista) {
+    const u = jg.ultima, novo = { tab: jg.tab, vez: jg.vez, semAvanco: jg.semAvanco || 0, n: jg.n };
+    dm.nVista = jg.n; dm.forcou = null;
+    if (u && jg.n > 0) aplicarNaTelaDamas(novo, { de: u.de, caminho: u.caminho || [], cap: u.cap || [] }, !!u.auto && u.lado === dm.eu);
+    else { dm.est = novo; dm.tVez = Number(jg.t) || agoraServ(); renderDamas(); }
+    dm.tVez = Number(jg.t) || dm.tVez;
+    if (u?.auto && u.lado !== dm.eu) { dm.aviso = '⏱ O colega não jogou a tempo: jogada automática.'; renderDamas(); }
+    // quem fez a jogada fecha o jogo (vitória, empate ou 3 automáticas)
+    if (u?.lado === dm.eu || (u?.auto && dm.forcouLado)) {
+      const f = fimDeJogoDamas(novo);
+      if (f) terminarDamas(f);
+      else if ((jg.autos?.[u.lado] || 0) >= 3) terminarDamas({ vencedor: outroLadoDamas(u.lado), motivo: 'automaticas' });
+    }
+  }
+}
+async function jogadaOnlineDamas(j, auto, lado) {
+  const du = duelo;
+  if (!du || !dm || dm.enviando) return;
+  dm.enviando = true; dm.forcouLado = lado !== dm.eu;
+  const n0 = dm.est.n;
+  try {
+    await runTransaction(ref(db, `${basePraca()}/duelos/${du.id}/jogo`), (cur) => {
+      if (cur === null) return null;   // ainda não carregou do servidor: o Firebase busca e repete
+      const est = { tab: cur.tab, vez: cur.vez, semAvanco: cur.semAvanco || 0, n: cur.n || 0 };
+      if (cur.vez !== lado || est.n !== n0 || !ehValidaDamas(est, j)) return;   // não é a vez, já mudou ou jogada inválida: cancela
+      const novo = aplicarDamas(est, j), autos = { a: Number(cur.autos?.a) || 0, b: Number(cur.autos?.b) || 0 };
+      autos[lado] = auto ? autos[lado] + 1 : 0;
+      return { ...novo, t: agoraServ(), autos, ultima: { de: j.de, caminho: j.caminho, cap: j.cap, auto: !!auto, lado } };
+    });
+  } catch (e) { console.warn('[jogo-revisao] jogada de damas', e?.code || e); }
+  if (dm) dm.enviando = false;
+}
+async function finalizarDamasOnline(vencedorLado, motivo) {
+  const du = duelo, d = du?.d;
+  if (!d) return;
+  const uidDe = (l) => (l === 'a' ? d.a.uid : l === 'b' ? d.b.uid : 'empate');
+  const vencedor = uidDe(vencedorLado), tab = dm?.est?.tab || '';
+  const placar = { [d.a.uid]: contarDamas(tab, 'a'), [d.b.uid]: contarDamas(tab, 'b') };
+  await gravarFimDamas(d, vencedor, placar, motivo, false);
+}
+async function gravarFimDamas(d, vencedor, placar, motivo, wo) {
+  const a = d.a.uid, b = d.b.uid;
+  try {
+    const t = await runTransaction(ref(db, `${basePraca()}/duelos/${duelo.id}/fim`), (cur) => (cur ? undefined : { vencedor, placar, wo, motivo, ts: serverTimestamp() }));
+    if (!t.committed) return;
+    await set(ref(db, `${basePraca()}/historico/${semanaPesca()}/${duelo.id}`), { a, b, an: d.a.nome || '', bn: d.b.nome || '', at: d.a.turma || '', bt: d.b.turma || '',
+      vencedor, placar: `${placar[a] ?? 0}-${placar[b] ?? 0}`, wo, modo: 'damas', ts: Date.now() });
+  } catch (e) { console.warn('[jogo-revisao] fim das damas', e?.code || e); }
+}
+function fimDamasOnline(d) {
+  const du = duelo;
+  if (du.fimDamas) return;
+  du.fimDamas = true;
+  du.timers.forEach(clearTimeout);
+  const f = d.fim, eu = sessao.uid, res = f.vencedor === 'empate' ? 'empate' : f.vencedor === eu ? 'venceu' : 'perdeu';
+  if (!dm || dm.du !== du) abrirDamas({ tipo: 'online', est: d.jogo?.tab ? d.jogo : estadoInicialDamas(), eu: du.souA ? 'a' : 'b', du });
+  dm.fim = { vencedor: f.vencedor, motivo: f.motivo };
+  clearInterval(dm.timer);
+  if (res === 'venceu' && (entraNoRanking() || teste)) {
+    update(ref(db, `${basePraca()}/damas/${semanaPesca()}/${eu}`), { vitorias: increment(1), nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), ts: Date.now() })
+      .catch(e => console.warn('[jogo-revisao] ranking de damas', e?.code || e));
+    delete mural.cache.damas;
+  }
+  du.venceu = res === 'venceu';   // ao fechar, o pet comemora na praça (PROMPT-65)
+  mostrarFimDamas(res, f.wo ? 'wo' : f.motivo === 'desistiu' && res === 'perdeu' ? 'desistiu' : f.motivo, !!f.wo);
   du.parar?.();
 }
 
@@ -5068,7 +5722,7 @@ async function voltarDoJogo() {
   const depois = await lerRecorde(je.m.id);
   if (je.recorde != null && depois != null && depois > je.recorde) {   // bateu o próprio recorde: o pet comemora
     avisoPet(`Recorde novo! 🎉 ${je.m.nome}: nível ${depois}`, true);
-    seguidor?.reagir(petTem('pulo_cambalhota') ? 'pulo_cambalhota' : 'feliz', 1800);
+    reagirSeguidor('comemora', petTem('pulo_cambalhota') ? 'pulo_cambalhota' : 'feliz', 1800);
   }
 }
 const petTem = (anim) => !!(seguidor?.pet && quadrosDe(seguidor.forma, anim)?.length);
@@ -5429,7 +6083,7 @@ function subirNoPedestal() {
   if (!c?.pet || !seguidor?.pet) return;
   petNoPedestal = c.pet;
   seguidor.colocar(c.pet[0], c.pet[1]);
-  seguidor.reagir('feliz', 1200);
+  reagirSeguidor('rapida', 'feliz', 1200);
 }
 function descerDoPedestal() {
   if (!petNoPedestal) return;
@@ -5877,7 +6531,7 @@ function entregarAchado(a, onde, n, patch = {}) {
   gravar(patch);
   tocar(registro ? (raro ? 'vitoria' : 'acerto') : 'erro');
   mostrarAchado(icone, titulo, sub, raro, onde === 'tesouro');
-  if (raro && onde === 'tesouro') seguidor?.reagir('feliz', 1500);
+  if (raro && onde === 'tesouro') reagirSeguidor('rapida', 'feliz', 1500);
 }
 function completarGrupo(grupo, patch) {
   const doGrupo = (CAVAR.colecao || []).filter(c => c.grupo === grupo);
@@ -6052,14 +6706,14 @@ function iniciarBatalha(id, origem = 'lista') {
   pararFalaPet();
   preCarregarPet(bt.forma); preCarregarPet(t.pet);
   // adulto: quadro mais largo (asas) e imagem maior; mesma vida e dano, muda só o visual
-  const fL = $('bt-L'), [qw, qh] = tamanhoQuadro(bt.forma), adulto = bt.forma !== bt.pet;
+  const fL = $('bt-L'), [qw, qh] = tamanhoQuadro(bt.forma), adulto = ehFormaAdulta(bt.forma);
   fL.style.setProperty('--pet-quadro', `${qw} / ${qh}`);
   fL.style.setProperty('--cresce', fatorForma(bt.pet, bt.forma));   // desenho sentado 15% maior que o do filhote
   fL.classList.toggle('adulto', adulto);
   fL.querySelector('.jr-fala-vitoria')?.remove();   // balão da comemoração da batalha anterior
   const fR = $('bt-R'), formaR = t.pet, [qwR, qhR] = tamanhoQuadro(formaR);   // o pet do treinador (hoje sempre filhote; adulto teria o mesmo cuidado)
   fR.style.setProperty('--pet-quadro', `${qwR} / ${qhR}`);
-  fR.classList.toggle('adulto', !!SPR_ADULTOS[formaR]);
+  fR.classList.toggle('adulto', ehFormaAdulta(formaR));
   $('batalha').hidden = false;
   $('bt-nomeL').innerHTML = `${esc(nomeAluno())}<small>· ${esc(nomePet(bt.pet))}</small>`;
   aplicarVisualPet($('bt-imgL'), bt.pet);
@@ -6135,8 +6789,7 @@ function btTocar(lado, nome, { loop = true, ms = 160, depois } = {}) {
 }
 const btParado = (lado) => btTocar(lado, 'andar_direita', { ms: 420 });
 const btForma = (lado) => (lado === 'L' ? bt.forma : bt.t.pet);
-const SPR_ADULTOS = { dragao_azul_adulto: true, dragao_vermelho_adulto: true };
-const adultoNaBatalha = () => !!bt && bt.forma !== bt.pet && temAnim(bt.forma, 'rugido');
+const adultoNaBatalha = () => !!bt && ehFormaAdulta(bt.forma) && temAnim(bt.forma, 'rugido');
 // abertura do adulto: ruge
 function btAbertura() {
   if (!adultoNaBatalha()) return;
@@ -6606,8 +7259,14 @@ function montarPessoas(n) {
     img.src = `${IMG}/npcs/${p.id}.webp`;
     img.style.setProperty('--d', `${-(i * 0.7) % 2.4}s`);   // respiração defasada
     const o = { p, img, sombra, icone: document.createElement('div'), treinador: !!(p.treinador && treinador(p.id)), temIcone: false, alt, larg, timer: 0 };
-    o.icone.className = 'jr-pessoa-icone';
+    o.icone.className = 'jr-pessoa-icone' + (p.destaque ? ' grande' : '');
     palco.append(sombra, img, o.icone);
+    if (p.destaque) {   // em destaque (o Engrenaldo, PROMPT-73): brilho azul pulsando no chão, balanço leve e a placa com o nome
+      img.classList.add('balanca');
+      o.brilho = document.createElement('div'); o.brilho.className = 'jr-pessoa-brilho';
+      palco.insertBefore(o.brilho, sombra);
+    }
+    if (p.placa) { o.placa = document.createElement('div'); o.placa.className = 'jr-rotulo-porta jr-rotulo-praca jr-pessoa-placa'; o.placa.innerHTML = `<span>${esc(p.placa)}</span>`; palco.appendChild(o.placa); }
     posicionarPessoa(o);
     if (p.piscar) { const pre = new Image(); pre.src = `${IMG}/npcs/${p.id}-piscando.webp`; agendarPiscar(o); }
     pessoasMapa.push(o);
@@ -6661,6 +7320,8 @@ function posicionarPessoa(o) {
   Object.assign(img.style, { left: p.x + 'px', top: p.y + 'px', height: alt + 'px', zIndex: Math.round(p.y) });
   Object.assign(sombra.style, { left: p.x + 'px', top: p.y + 'px', width: larg * 1.1 + 'px', height: larg * 0.32 + 'px', zIndex: Math.round(p.y) - 1 });
   if (icone) Object.assign(icone.style, { left: p.x + 'px', top: (p.y - alt - 2 * escalaAtoresCena()) + 'px', fontSize: 18 * escalaAtoresCena() + 'px' });
+  if (o.brilho) Object.assign(o.brilho.style, { left: p.x + 'px', top: p.y + 'px', width: larg * 1.6 + 'px', height: larg * 0.5 + 'px', zIndex: Math.round(p.y) - 2 });
+  if (o.placa) Object.assign(o.placa.style, { left: p.x + 'px', top: (p.y - alt - (p.destaque ? 44 : 26) * escalaAtoresCena()) + 'px' });
 }
 
 // Pisca 150 ms a cada 3–6 s (às vezes duas vezes seguidas)
@@ -6721,6 +7382,12 @@ function falaEngrenaldo() {
   if (!estado.avisos?.lab_visto) return '🤖 Novo! Venha programar o seu pet no Laboratório!';
   if (estado.programe?.dia?.data !== diaLocal()) return '📅 Tem desafio novo hoje!';
   return null;
+}
+// Reação do pet que segue o personagem (PROMPT-73): o dragão adulto (com sequências) usa `vitoria` nas comemorações e
+// `carinho` (rindo de lado) nas reações rápidas — nada das poses de frente com as asas abertas. Os outros: a animação de sempre.
+function reagirSeguidor(tipo, anim, ms = 0) {
+  if (seguidor?.comemorar(tipo === 'comemora' ? 'vitoria' : 'carinho')) return;
+  seguidor?.reagir(anim, ms);
 }
 function falarCom(o) {
   if (perguntaAberta || transicionando || cena?.tipo !== 'mapa' || !o.img.isConnected) return;
@@ -7147,7 +7814,7 @@ function pedirAjuda() {
     const lembretes = dicaDe(pg.chave)?.lembretes || [];
     const lembrete = lembretes.length ? sortear(lembretes) : (q?.dica || '');
     const abre = fraseDe(pet, 'ajuda_dica', v) || '';
-    falaAjuda(`${abre} ${lembrete}`.trim());
+    falaAjuda((nemAi() && fraseDe(pet, 'gin_dica', { ...v, dica: lembrete })) || `${abre} ${lembrete}`.trim());
     pg.ajuda.dicas++;
     if (q) registrarAjuda(q, 'dica');
   } else if (podeEliminar && respondendo) {
@@ -7158,7 +7825,7 @@ function pedirAjuda() {
     const alvo = sortear(erradas);
     alvo.disabled = true;
     alvo.classList.add('eliminada');
-    falaAjuda(fraseDe(pet, 'ajuda_elimina', { ...v, valor: alvo.dataset.v }) || `Acho que ${alvo.dataset.v} não é.`);
+    falaAjuda((nemAi() && fraseDe(pet, 'gin_elimina', { ...v, valor: alvo.dataset.v })) || fraseDe(pet, 'ajuda_elimina', { ...v, valor: alvo.dataset.v }) || `Acho que ${alvo.dataset.v} não é.`);
     pg.ajuda.elimin++;
     registrarAjuda(q, 'eliminou');
   } else if (podeEliminar) {
@@ -7168,7 +7835,7 @@ function pedirAjuda() {
     atualizarBotaoAjuda();
     return;
   }
-  pgPet?.tocar('feliz');
+  poseAjuda();
   tocar('clique');
   atualizarBotaoAjuda();
 }
@@ -7192,6 +7859,8 @@ function montarArena() {
   const forma = pet && formaDe(pet);
   $('perg-pet').style.setProperty('--forma', fatorForma(pet, forma));   // adulto: imagem maior (quadro com asas)
   if (pet) { pgPet = new PetParado($('perg-pet')); pgPet.definir(forma); }
+  pg.na = null;
+  ladoNemAi();   // dragão adulto: sentado de lado, sem dar bola (PROMPT-71)
   aplicarVisualPet($('perg-pet'), pet, true);   // o pet do duelo tem drop-shadow no CSS
   // ajuda do pet: só nos ginásios (não na revisão da semana); contadores zeram a cada desafio
   pg.petAjuda = !rev && pet && cuidadosDe(pet) ? pet : null;
@@ -7284,7 +7953,79 @@ function fogoArena() {
   }
 }
 
+// ── Dragão adulto "nem aí" nas perguntas do ginásio (PROMPT-71) ──
+// Sentado de lado; de vez em quando descansa, lambe a pata ou cheira (devagar, sem som). Mais de 10 s sem responder: dorme
+// (`dormir` em ciclo) até o aluno errar. Acerto: nada. Erro: bufa ~1 s e reclama (gin_erro). Ajuda sem levantar (deitado ou
+// lambendo a pata) com gin_dica / gin_elimina. Venceu: levanta e toca `vitoria` (gin_venceu). Perdeu: volta a dormir (gin_perdeu).
+// Só os pets com a sequência `dormir` (os dragões adultos) e só nos ginásios (não na revisão). pg.na = { estado, prox, parado }
+const ACOES_NEM_AI = ['descansar', 'lamber_pata', 'cheirar'];
+const nemAi = () => !!pgPet && !!pg && pg.modo !== 'revisao' && temSequencia(pgPet.pet, 'dormir');
+function ladoNemAi(zerar = true) {
+  if (!nemAi()) return;
+  pg.na = { estado: 'lado', prox: 5 + Math.random() * 4, parado: zerar ? 0 : pg.na?.parado || 0 };
+  pgPet.tocar('sentado_lado');
+}
+function dormirNemAi() {
+  if (!nemAi()) return;
+  (pg.na ||= { prox: 0, parado: 0 }).estado = 'dormindo';
+  pgPet.sequencia('dormir', null, { ciclo: true });
+}
+function tickNemAi(dt) {
+  const na = pg?.na;
+  if (!na || pg.fim || !nemAi()) return;
+  const respondendo = !pg.travado && !$('perg-alternativas').hidden;   // a pergunta está esperando a resposta
+  na.parado = respondendo ? na.parado + dt : 0;
+  if (na.estado !== 'lado' && na.estado !== 'acao') return;           // dormindo ou bufando
+  if (respondendo && na.parado > 10 && na.estado === 'lado') { dormirNemAi(); return; }
+  if (na.estado !== 'lado' || (na.prox -= dt) > 0) return;
+  const l = ACOES_NEM_AI.filter(a => temSequencia(pgPet.pet, a));
+  if (!l.length) { na.prox = 8; return; }
+  na.estado = 'acao';
+  pgPet.sequencia(sortear(l), () => { if (pg?.na === na && na.estado === 'acao') ladoNemAi(false); });
+}
+function falaGin(cat) {
+  const pet = estado.pets.ativo;
+  const f = pet && fraseDe(pet, cat, { pet: nomePet(pet), apelido: apelidoAluno || String(sessao.nome || '').split(' ')[0] });
+  if (f) falaAjuda(f);
+}
+function erroNemAi() {
+  const na = pg.na || {};
+  na.estado = 'bufando'; pg.na = na;
+  pgPet.tocar(temAnim(pgPet.pet, 'bufando') ? 'bufando' : 'bravo');   // acorda / levanta a cabeça bufando
+  falaGin('gin_erro');
+  setTimeout(() => { if (pg?.na === na && na.estado === 'bufando') ladoNemAi(); }, 1000);
+}
+// a ajuda acontece sem ele levantar: dormindo fica deitado (dormindo, quadro 1); acordado, lambe a pata
+function poseAjuda() {
+  if (!nemAi()) { pgPet?.tocar('feliz'); return; }
+  const na = pg.na || (pg.na = { estado: 'lado', prox: 6, parado: 0 });
+  if (na.estado === 'dormindo') { pgPet.tocar('dormindo'); pgPet.lista = pgPet.lista.slice(0, 1); return; }
+  na.estado = 'acao';
+  if (!pgPet.sequencia('lamber_pata', () => { if (pg?.na === na && na.estado === 'acao') ladoNemAi(false); })) ladoNemAi(false);
+}
+// venceu o ginásio: levanta e empina o nariz (`vitoria`), com estrelas em volta e a fala de gin_venceu
+function vitoriaNemAi() {
+  if (!nemAi()) return;
+  if (pg.na) pg.na.estado = 'vitoria';
+  pgPet.sequencia('vitoria');
+  falaGin('gin_venceu');
+  if (semMovimento()) return;
+  const arena = $('perg-arena'), img = $('perg-pet'), ra = arena.getBoundingClientRect(), ri = img.getBoundingClientRect();
+  const k = ra.width / (arena.offsetWidth || ra.width);   // a tela pode estar girada/escalada
+  for (let i = 0; i < 6; i++) {
+    const s = document.createElement('span');
+    s.className = 'jr-faisca-jog'; s.textContent = '⭐';
+    const ang = Math.PI * (1.1 + i * 0.16);   // arco por cima da cabeça
+    s.style.left = ((ri.left - ra.left) / k + img.offsetWidth * (0.5 + 0.3 * Math.cos(ang))) + 'px';
+    s.style.top = ((ri.top - ra.top) / k + img.offsetHeight * (0.35 + 0.25 * Math.sin(ang))) + 'px';
+    s.style.animationDelay = (0.3 + i * 0.12).toFixed(2) + 's';
+    arena.appendChild(s);
+    setTimeout(() => s.remove(), 2200);
+  }
+}
+
 function reagirArena(certo) {
+  if (nemAi()) { if (!certo) erroNemAi(); return; }   // dragão adulto no ginásio: acerto não muda nada; erro: bufa e reclama
   if (certo && ataqueArena()) return;   // dragão adulto: o fogo faz o adversário tremer
   if (pgPet) {
     if (certo) pgPet.tocar(temAnim(pgPet.pet, 'animado') && Math.random() < 0.5 ? 'animado' : 'feliz');
@@ -7574,7 +8315,7 @@ function usarDicaPergunta() {
   alvo.classList.add('eliminada');
   pg.dicaItemEm = q.id;
   gravar({ [`respostas/${q.id}/usou`]: 'dica_pet' });
-  pgPet?.tocar('feliz');
+  poseAjuda();
   falaAjuda(`Acho que ${alvo.dataset.v} não é. 💡`);
   tocar('clique');
   atualizarItensPergunta();
@@ -7686,6 +8427,7 @@ function vencer() {
   if (p === 'lider' && primeiraVez && petDoGinasio(chave)) petSurgir = chave;
   registrarDiaJogado();
   tocar('vitoria');
+  vitoriaNemAi();
   // XP só na primeira vitória de cada personagem (conferido no estado carregado do Firebase)
   if (primeiraVez) {
     if (p === 'lider') darXP(XP_LIDER + (pg.errouIds.size === 0 ? XP_LIDER_PERFEITO : 0));
@@ -7727,7 +8469,7 @@ function vencer() {
       const pa = estado.pets.ativo, fa = pa && formaDe(pa);
       if (fa && temAnim(fa, 'busto_fogo')) setTimeout(() => avisoPet(`🔥 ${nomePet(pa)} está orgulhoso da insígnia!`, true, quadrosDe(fa, 'busto_fogo')[0]), 2600);
     }
-    else { seguidor?.reagir('feliz'); mostrarAvisoSequencia(); surgirPetSePendente(); }
+    else { reagirSeguidor('comemora', 'feliz'); mostrarAvisoSequencia(); surgirPetSePendente(); }
   };
 }
 
@@ -7747,6 +8489,7 @@ function desistir() {
     $('perg-continuar').hidden = false;
     pg.aoContinuar = () => { fecharPergunta(); seguidor?.reagir('triste_fome', 2000); };
     if (conversa.evento !== 'venceu') conversa.evento = 'perdeu';
+    if (nemAi()) { dormirNemAi(); falaGin('gin_perdeu'); }   // dragão adulto: volta a dormir
     return;
   }
   const fugiuDeBatalha = pg.modo !== 'revisao';
@@ -7842,6 +8585,7 @@ function abrirCartao(chave) {
 //  Praça e Laboratório ficam sempre abertos (a liberação por etapas do PROMPT-34 ainda não existe no código).
 // ============================================================
 let PROG = null, LAB = null, MAPA_PG = null;   // MAPA_PG: dados/jogo/mapa-programe.json (Ilha dos Robôs, PROMPT-60)
+let BUGS = null;   // dados/jogo/caca-ao-bug.json → bugs (🐛 Caça ao bug, PROMPT-70)
 const PREMIO_PG = { estrela: 3, tres_estrelas: 5, lealdade: 1 };   // 1ª vez com ⭐ · 1ª vez com ⭐⭐⭐ · fase nova
 const fasesPg = () => PROG?.fases || [];
 const progFase = (id) => estado.programe?.fases?.[id] || null;
@@ -7860,7 +8604,7 @@ function voltarAoMapaPg(opcoes) {
 // o que vai no desafio da praça para montar a corrida (capítulo liberado e o pet que aparece na tela do outro)
 function dadosCorrida() {
   const p = petsOk && estado?.pets?.ativo;
-  return { cap: PROG ? capMaxLiberado() : 1, pet: p || null, forma: p ? formaDe(p) : null, tinta: (p && cuidadosDe(p)?.tinta) || null };
+  return { cap: PROG ? capMaxLiberado() : 1, pet: p || null, forma: p ? formaDe(p) : null, tinta: tintaVisivel(p) };
 }
 
 async function abrirLaboratorio() {
@@ -7911,8 +8655,21 @@ function abrirComputador(id) {
   $('mq-nome').textContent = `💻 ${c.nome}`;
   $('mq-botoes').innerHTML = '';
   if (id === 'programe_o_pet' && PROG && !c.em_breve && temMapaPrograme()) { esquecerPosicaoPet(); abrirMapaPrograme(); return; }   // a Ilha dos Robôs
-  if (c.em_breve || !PROG) {
+  if (c.em_breve || !PROG || (id === 'caca_bug' && !BUGS?.length)) {
     $('mq-corpo').innerHTML = '<p class="mq-rec">Chegando logo! 🤖</p><p class="mq-sub">Este computador ainda está sendo montado.</p>';
+  } else if (id === 'caca_bug') {
+    const travado = BUGS.find((b, i) => !bugLiberado(i));
+    $('mq-corpo').innerHTML = `<p class="mq-sub">Cada programa tem <b>1 erro</b>. Execute, veja onde o pet erra e conserte tocando no bloco.</p>
+      <div class="pg-fases">${BUGS.map((b, i) => {
+        const est = Number(estado.programe.bugs?.[b.id]?.estrelas) || 0, lib = bugLiberado(i);
+        return `<button class="pg-fase${est ? ' feita' : ''}" data-pg-bug="${b.id}"${lib ? '' : ' disabled'} title="${esc(b.nome)}">${lib ? '🐛' + b.id : '🔒'}<small>${est ? '⭐'.repeat(est) + '☆'.repeat(3 - est) : lib ? 'novo' : ''}</small></button>`;
+      }).join('')}</div>${travado ? `<p class="mq-nota">🔒 O Bug ${travado.id} abre quando você resolver a fase ${travado.fase} do Programe o pet (ou consertar o bug anterior).</p>` : ''}`;
+  } else if (id === 'o_que_faz') {
+    const rec = Number(estado.programe.o_que_faz?.recorde) || 0;
+    $('mq-corpo').innerHTML = `<p class="mq-rec">🔮 O que o pet vai fazer?</p>
+      <p class="mq-sub">Leia o programa e toque na casa onde o pet vai parar. Depois ele executa e você confere. Quanto mais acertos seguidos, mais difícil fica!</p>
+      <p class="mq-nota">🏆 Seu recorde: <b>${rec}</b> acerto${rec === 1 ? '' : 's'} seguido${rec === 1 ? '' : 's'} · 🪙 1 moeda a cada 5 acertos seguidos (até 10 por dia)</p>`;
+    $('mq-botoes').innerHTML = '<button class="jr-btn jr-btn-ouro" data-pg-oqf>🔮 Jogar</button>';
   } else if (id === 'corrida') {
     $('mq-corpo').innerHTML = `<p class="mq-rec">🏁 Corrida de programação</p>
       <p class="mq-sub">Monte o programa em até 60 s. Os dois pets saem juntos: ganha quem chegar primeiro na comida (bater numa pedra custa 2 s).</p>
@@ -7981,7 +8738,8 @@ function venceuFase(f, r) {
   if (medalhaNova) { med[reg.id] = true; patch[`programe/medalhas/${reg.id}`] = true; }
   gravar(patch);
   publicarResumoPrograme();
-  cartaoVitoriaFase(f, r, moedas, nova, medalhaNova ? reg : null);   // a medalha vem depois da comemoração de vitória
+  cartaoVitoriaFase(f, r, moedas, nova, medalhaNova ? reg : null);
+  verificarCores();   // chefe da Vila: cor Sombra   // a medalha vem depois da comemoração de vitória
 }
 
 // 🎉 Cartão de vitória: pet comemorando, estrelas, blocos, moedas e "Próxima fase ▶". Os avisos do pet vêm depois do cartão.
@@ -8026,7 +8784,7 @@ async function mostrarRecordesLab() {
   $('mq-botoes').innerHTML = '';
   $('mq-corpo').innerHTML = '<p class="mq-car">Carregando…</p>';
   const daTurma = (lista) => (TURMAS_PLACAR.includes(sessao.turma) ? ordenarRanking(lista.filter(r => r.turma === sessao.turma)) : lista).slice(0, 3);
-  const grupos = [['🤖 Programe o pet', 'programe_estrelas'], ['🏁 Corridas da semana', 'corridas'], ['📅 Desafio de hoje', 'programe']];
+  const grupos = [['🤖 Programe o pet', 'programe_estrelas'], ['🏁 Corridas da semana', 'corridas'], ['📅 Desafio de hoje', 'programe'], ['🔮 O que o pet vai fazer?', 'o_que_faz']];
   const tops = await Promise.all(grupos.map(([, aba]) => dadosMural(aba).then(daTurma).catch(() => [])));
   if ($('maquina').hidden) return;
   $('mq-corpo').innerHTML = `<p class="mq-sub">${TURMAS_PLACAR.includes(sessao.turma) ? `Top 3 da ${esc(sessao.turma)}` : 'Top 3 da escola'}</p><div class="mq-recordes">${grupos.map(([nome], i) =>
@@ -8043,6 +8801,92 @@ function mostrarComoFunciona() {
     <p><b>⭐ Estrelas:</b> chegar na comida (pegando todos os petiscos) vale ⭐. Com poucos blocos, ⭐⭐; com a meta da fase ou menos, ⭐⭐⭐. 🔁 Repita e ⭐ F1 economizam blocos!</p>
     <p><b>🏁 Corrida:</b> você e um colega (ou o 👻 fantasma) montam o programa em até 60 s. Os pets saem juntos: ganha quem chegar primeiro na comida. Bater numa pedra custa 2 s.</p>
     <p><b>📅 Desafio do dia:</b> a mesma fase para a escola toda. No Mural, ganha quem usar menos blocos.</p></div>`;
+}
+
+// ── 🐛 Caça ao bug (PROMPT-70): programa com 1 erro (dados/jogo/caca-ao-bug.json) no mapa de uma fase; o aluno conserta tocando no bloco.
+// Bug liberado quando a fase dele está resolvida ou o bug anterior foi consertado. Progresso em programe/bugs/{id}: { estrelas, execucoes, data, premio1, premio3 }.
+const bugResolvido = (id) => (Number(estado.programe.bugs?.[id]?.estrelas) || 0) > 0;
+const bugLiberado = (i) => !!BUGS?.[i] && (faseResolvida(BUGS[i].fase) || (i > 0 && bugResolvido(BUGS[i - 1].id)));
+async function abrirBug(id) {
+  const i = (BUGS || []).findIndex(b => b.id === id), b = BUGS?.[i], f = b && fasesPg().find(x => x.id === b.fase);
+  if (!b || !f || !bugLiberado(i)) return;
+  await abrirTelaPrograme({
+    modo: 'bug', fase: f, programa: { corpo: b.programa, f1: null }, dica: b.dica, posicao: b.posicao,
+    titulo: `🐛 Bug ${b.id}`, sub: 'O programa tem 1 erro. Execute, veja onde o pet erra e conserte.',
+    aoVencer: (r) => venceuBug(b, r),
+    aoFechar: () => abrirComputador('caca_bug'),
+    tema: temaPg(temaDaFase(f.id)),
+  });
+}
+// ⭐ consertou · ⭐⭐ em até 2 execuções · ⭐⭐⭐ de primeira (contando só as execuções depois de mexer). Prêmio igual ao das fases, uma vez por bug.
+function venceuBug(b, r) {
+  const bugs = (estado.programe.bugs ||= {}), p = (bugs[b.id] ||= {}), base = `programe/bugs/${b.id}`, patch = {}, ps = estado.pets;
+  if (!(Number(p.estrelas) > 0) || r.estrelas > p.estrelas) {
+    Object.assign(p, { estrelas: r.estrelas, execucoes: r.execs, data: Date.now() });
+    for (const k of ['estrelas', 'execucoes', 'data']) patch[`${base}/${k}`] = p[k];
+  }
+  let moedas = 0;
+  if (!p.premio1) { p.premio1 = true; patch[`${base}/premio1`] = true; moedas += PROG.premios?.estrela ?? PREMIO_PG.estrela; }
+  if (r.estrelas === 3 && !p.premio3) { p.premio3 = true; patch[`${base}/premio3`] = true; moedas += PROG.premios?.tres_estrelas ?? PREMIO_PG.tres_estrelas; }
+  if (moedas) { ps.moedas = (Number(ps.moedas) || 0) + moedas; patch['pets/moedas'] = ps.moedas; registrarGanho('programe', moedas, patch); }
+  gravar(patch);
+  verificarCores();   // 3 bugs: cor Branco
+  const i = BUGS.indexOf(b), prox = BUGS[i + 1], botoes = [];
+  if (prox && bugLiberado(i + 1)) botoes.push({ id: 'proximo', texto: 'Próximo bug ▶', classe: 'jr-btn-ouro' });
+  if (r.estrelas < 3) botoes.push({ id: 'tentar', texto: '↺ De novo', classe: 'jr-btn-sec' });
+  botoes.push({ id: 'lista', texto: '☰ Bugs', classe: 'jr-btn-sec' });
+  cartaoPrograme({
+    titulo: `🎉 Bug ${b.id} consertado!`, estrelas: r.estrelas, botoes,
+    info: `<div>${r.execs <= 1 ? 'De primeira!' : `${r.execs} execuções`}${moedas ? ` · <b>+${moedas} ${moedaHtml()}</b>` : ''}</div>` +
+      (r.estrelas < 3 ? '<div class="dica">⭐⭐⭐: ache o erro e conserte acertando na primeira execução.</div>' : ''),
+  }).then(op => {
+    if (moedas) avisoPet(`🐛 Bug ${b.id}: ${'⭐'.repeat(r.estrelas)} +${moedas} 🪙`, true);
+    if (op === 'proximo') abrirBug(prox.id);
+    else if (op === 'tentar') abrirBug(b.id);
+    else if (op === 'lista') fecharTelaPrograme();   // aoFechar: a lista dos bugs
+  });
+}
+
+// ── 🔮 O que o pet vai fazer? (PROMPT-70): rodadas sem fim geradas na hora (rodadaOQueFaz); o aluno toca na casa onde o pet vai parar.
+// Recorde de acertos seguidos em programe/o_que_faz/recorde (e na praça, para os Recordes da Lia); 1 moeda a cada 5 seguidos, até 10 por dia.
+let oqf = null;   // { acertos }
+const MOEDAS_OQF_DIA = 10;
+function abrirOQF() { oqf = { acertos: 0 }; rodadaOQF(); }
+function subOQF() { return `Acertos seguidos: ${oqf?.acertos || 0} · Recorde: ${Number(estado.programe.o_que_faz?.recorde) || 0}`; }
+async function rodadaOQF() {
+  if (!oqf) return;
+  const r = rodadaOQueFaz(`${sessao.uid}|${Date.now()}|${Math.random()}`, oqf.acertos);
+  await abrirTelaPrograme({
+    modo: 'prever', fase: r.fase, programa: r.prog, titulo: '🔮 O que o pet vai fazer?', sub: subOQF(),
+    aoPrever: (acertou) => resultadoOQF(acertou), aoProxima: () => rodadaOQF(),
+    aoFechar: () => { oqf = null; abrirComputador('o_que_faz'); },
+    tema: temaPg(temaVila()),
+  });
+}
+function resultadoOQF(acertou) {
+  if (!oqf) return;
+  const o = (estado.programe.o_que_faz ||= {}), patch = {}, hoje = diaLocal();
+  if (acertou) {
+    oqf.acertos++;
+    if (oqf.acertos > (Number(o.recorde) || 0)) {
+      o.recorde = oqf.acertos; patch['programe/o_que_faz/recorde'] = o.recorde;
+      if (entraNoRanking() || teste) {
+        set(ref(db, `${basePraca()}/programe/o_que_faz/${sessao.uid}`), { recorde: o.recorde, nome: nomeRanking(), turma: sessao.turma || '', pers: meuPersonagem(), ts: Date.now() })
+          .catch(e => console.warn('[jogo-revisao] recorde do O que o pet vai fazer?', e?.code || e));
+        delete mural.cache.o_que_faz;
+      }
+    }
+    const md = o.moedas_dia?.data === hoje ? Number(o.moedas_dia.n) || 0 : 0;
+    if (oqf.acertos % 5 === 0 && md < MOEDAS_OQF_DIA) {
+      o.moedas_dia = { data: hoje, n: md + 1 }; patch['programe/o_que_faz/moedas_dia'] = o.moedas_dia;
+      const ps = estado.pets; ps.moedas = (Number(ps.moedas) || 0) + 1; patch['pets/moedas'] = ps.moedas;
+      registrarGanho('programe', 1, patch);
+      avisoPet(`🔮 ${oqf.acertos} acertos seguidos! +1 🪙`, true);
+    }
+  } else oqf.acertos = 0;
+  if (Object.keys(patch).length) gravar(patch);
+  if (acertou) verificarCores();   // recorde de 5: cor Arco-íris
+  $('pg-sub').textContent = subOQF();
 }
 
 // ── 📅 Desafio do dia: a mesma fase para todos (semente = data), com os blocos dos capítulos que o aluno já liberou ──
@@ -8446,27 +9290,39 @@ function avisarTruques(pet) {
   for (const t of novos) { c.truques_vistos[t.id] = true; patch[`pets/conquistados/${pet}/truques_vistos/${t.id}`] = true; }
   gravar(patch);
   const comAviso = novos.filter(t => t.lealdade > 0);
-  if (comAviso.length === 1) avisoPet(`${comAviso[0].emoji} ${nomePet(pet)} aprendeu um truque: ${comAviso[0].nome}! Veja em ✨ Truques.`, true);
-  else if (comAviso.length > 1) avisoPet(`✨ ${nomePet(pet)} aprendeu ${comAviso.length} truques! Veja em ✨ Truques.`, true);
+  if (comAviso.length === 1) avisoPet(`${comAviso[0].emoji} ${nomePet(pet)} aprendeu um truque: ${comAviso[0].nome}! Veja no Meu Pet.`, true);
+  else if (comAviso.length > 1) avisoPet(`✨ ${nomePet(pet)} aprendeu ${comAviso.length} truques! Veja no Meu Pet.`, true);
 }
 
-function abrirTruques() {
-  if (!mp || !truquesDe(mp.pet)) return;
-  const l = lealdadeDe(mp.pet);
-  $('mp-truques-lista').innerHTML = truquesDe(mp.pet).map(t => {
+// Fileira de truques embaixo do pet no Meu Pet (PROMPT-75): liberado = emoji grande + nome curto; bloqueado = cinza "🔒 N"
+// (N = lealdade que libera). Enquanto o pet está ocupado (um truque tocando, comendo…), os botões ficam apagados.
+function renderTruques() {
+  const fila = $('mp-tq-fila'), lista = mp && truquesDe(mp.pet);
+  fila.hidden = !lista;
+  if (!lista) { fila.innerHTML = ''; return; }
+  const l = lealdadeDe(mp.pet), ocupado = !!mp.ocupado;
+  fila.classList.toggle('ocupado', ocupado);
+  fila.innerHTML = lista.map(t => {
     const ok = l >= t.lealdade;
-    return `<button class="mp-truque${ok ? '' : ' bloqueado'}" data-truque="${esc(t.id)}"${ok ? '' : ' disabled'}><span class="mp-truque-emoji">${ok ? t.emoji : '🔒'}</span>
-      <b>${esc(t.nome)}</b>${ok ? '' : `<small>Lealdade ${t.lealdade}</small>`}</button>`;
+    return `<button class="mp-tq${ok ? '' : ' bloqueado'}" data-truque="${esc(t.id)}"${ocupado ? ' disabled' : ''} aria-label="${esc(t.nome)}${ok ? '' : ` (libera com ${t.lealdade} de lealdade)`}" title="${esc(t.nome)}">
+      <span class="mp-tq-ic">${ok ? t.emoji : `🔒<b>${t.lealdade}</b>`}</span><small>${esc(t.curto || t.nome)}</small></button>`;
   }).join('');
-  $('mp-truques-painel').hidden = false;
+}
+function tocarTruque(e) {
+  const b = e.target.closest('[data-truque]');
+  if (!b || b.disabled || !mp) return;
+  const t = truquesDe(mp.pet)?.find(x => x.id === b.dataset.truque);
+  if (!t) return;
+  if (!truqueLiberado(t.id, mp.pet)) { falarPet(`Libera com ${t.lealdade} de lealdade`); return; }
+  fazerTruque(t.id);
 }
 
 // O pet faz as animações do truque, uma depois da outra; busto_fogo aparece no balão
 function fazerTruque(id) {
   const t = truquesDe(mp?.pet)?.find(x => x.id === id);
   if (!mp || !t || mp.ocupado || !truqueLiberado(id, mp.pet)) return;
-  $('mp-truques-painel').hidden = true;   // fecha a lista para ver o pet
   mp.estado = 'truque'; mp.ocupado = true; mp.acordadoAte = Date.now() + ACORDADO_MS;
+  renderTruques();   // apaga os botões enquanto o truque toca (tocar no pet também não interrompe: ocupado)
   movimentoCorpo(null);
   if (t.sequencia && mp.anim.sequencia(t.sequencia, () => { if (mp?.estado === 'truque') voltarAoNormal(); })) return;   // banho, cuspir fogo, rugir: sequência com tempo
   const anims = t.anims.filter(a => a === 'busto_fogo' || temAnim(mp.forma, a));
@@ -8661,6 +9517,13 @@ function ligarEventos() {
   window.addEventListener('keydown', (e) => { if (e.code === 'Escape') { if (!$('reacoes').hidden) fecharReacoes(); else if (!$('online-lista').hidden) $('online-lista').hidden = true; } });
   $('geral-marcadores').addEventListener('click', (e) => { const b = e.target.closest('.jr-marc-online'); if (b) { e.stopPropagation(); abrirListaOnline(Number(b.dataset.mapa)); } }, true);
   $('online-fechar').addEventListener('click', () => { $('online-lista').hidden = true; });
+  $('online-itens').addEventListener('click', cliqueListaOnline);
+  $('btn-online').addEventListener('click', abrirListaTodos);
+  $('selo-online').addEventListener('click', abrirListaTodos);
+  $('chamado-ir').addEventListener('click', (e) => { e.stopPropagation(); responderChamado(true); });
+  $('chamado-nao').addEventListener('click', (e) => { e.stopPropagation(); responderChamado(false); });
+  $('mp-sem-convites').addEventListener('click', alternarSemConvites);
+  atualizarBotaoSemConvites();
   $('online-ir').addEventListener('click', () => { const n = Number($('online-ir').dataset.mapa); $('online-lista').hidden = true; if (n >= 1 && n <= NUM_MAPAS) { tocar('porta'); abrirMapa(n, 'entrada'); } });
   $('mp-fechar').addEventListener('click', fecharMeuPet);
   $('mp-trocar').addEventListener('click', () => { fecharMeuPet(); colecaoDoMeuPet = true; abrirColecao(); });
@@ -8677,9 +9540,8 @@ function ligarEventos() {
     darComida(id);
   });
   $('mp-visual-painel').addEventListener('click', escolherVisual);
-  $('mp-truques').addEventListener('click', abrirTruques);
-  $('mp-truques-lista').addEventListener('click', (e) => { const b = e.target.closest('[data-truque]'); if (b && !b.disabled) fazerTruque(b.dataset.truque); });
-  for (const id of ['mp-bolsa-fechar', 'mp-visual-fechar', 'mp-nome-cancelar', 'mp-truques-fechar']) $(id).addEventListener('click', (e) => { e.stopPropagation(); e.target.closest('.mp-sub').hidden = true; });
+  $('mp-tq-fila').addEventListener('click', tocarTruque);
+  for (const id of ['mp-bolsa-fechar', 'mp-visual-fechar', 'mp-nome-cancelar']) $(id).addEventListener('click', (e) => { e.stopPropagation(); e.target.closest('.mp-sub').hidden = true; });
   $('mp-nome-salvar').addEventListener('click', () => salvarNomePet());
   $('mp-nome-padrao').addEventListener('click', () => salvarNomePet(true));
   $('mp-nome-input').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') salvarNomePet(); if (e.key === 'Escape') $('mp-nomear').hidden = true; });
@@ -8740,8 +9602,16 @@ function ligarEventos() {
     if (pf && !pf.disabled) { $('maquina').hidden = true; abrirFasePrograme(Number(pf.dataset.pgFase)); return; }
     if (e.target.closest('[data-pg-dia]')) { $('maquina').hidden = true; abrirDesafioDia(); return; }
     if (e.target.closest('[data-pg-fantasma]')) { $('maquina').hidden = true; abrirFantasma(); return; }
+    const pb = e.target.closest('[data-pg-bug]');
+    if (pb && !pb.disabled) { $('maquina').hidden = true; abrirBug(Number(pb.dataset.pgBug)); return; }
+    if (e.target.closest('[data-pg-oqf]')) { $('maquina').hidden = true; abrirOQF(); return; }
     if (e.target.closest('[data-recordes]')) mostrarRecordes();
+    if (cliqueMenuDamas(e)) return;
   });
+  $('dm-tab').addEventListener('click', tocarCasaDamas);
+  $('dm-sair').addEventListener('click', desistirDamas);
+  $('dm-fechar').addEventListener('click', fecharDamas);
+  $('dm-revanche').addEventListener('click', revancheDamas);
   $('jogo-embed-voltar').addEventListener('click', (e) => { e.stopPropagation(); voltarDoJogo(); });
   window.addEventListener('message', (e) => {   // fim de partida dos jogos do site abertos no fliperama (?embed=1)
     if (e.origin !== location.origin || e.data?.tipo !== 'fim-jogo' || e.source !== $('jogo-embed-frame').contentWindow) return;

@@ -5,6 +5,7 @@
   "fome_abaixo": 40,
   "comum_ate": 60,
   "alimentar_abaixo": { "dragao_azul": 80, "dragao_vermelho": 80 },
+  "nao_come": { "dragao_azul": ["fruta", "maca", "banana", "cenoura", "milho", "batata"], "dragao_vermelho": ["fruta", "maca", "banana", "cenoura", "milho", "batata"] },
   "cada_comida_enche": 20,
   "cheia": 100,
   "especiais_cheio_dia": 3
@@ -59,8 +60,9 @@
    "id": "carne",
    "nome": "Carne",
    "emoji": "🍖",
-   "preco": 40,
-   "lealdade": 5,
+   "preco": 20,
+   "lealdade": 2,
+   "enche": 15,
    "especial": false,
    "imagem": ""
   },
