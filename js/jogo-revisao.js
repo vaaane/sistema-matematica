@@ -1493,8 +1493,6 @@ function renderMeuPet() {
   $('mp-palco').classList.toggle('moldura-prata', nivel >= 2 && nivel < 5);
   $('mp-palco').classList.toggle('moldura-ouro', nivel >= 5);
   renderBotaoMeusPets();
-  $('mp-origem').textContent = c.origem === 'professora' ? 'Liberado para a professora'
-    : c.origem && c.origem !== 'inicial' && PETS_GINASIO[c.origem] ? `Conquistado: ${nomeDoLugar(c.origem)}` : 'Seu primeiro pet';
   $('mp-moedas').textContent = Number(estado.pets.moedas) || 0;
   $('mp-barriga-fill').style.width = b + '%';
   $('mp-barriga-fill').dataset.cor = fb.cor;
@@ -9316,7 +9314,24 @@ function renderTruques() {
       <span class="mp-tq-ic">${ok ? t.emoji : `🔒<b>${t.lealdade}</b>`}</span><small>${esc(t.curto || t.nome)}</small></button>`;
   }).join('');
 }
+// Arrastar a fileira (dedo e mouse) mexendo no scrollLeft. Feito à mão porque, com o celular em pé, o jogo inteiro está girado
+// 90° e a rolagem nativa iria pelo eixo errado: deltaNoJogo converte o movimento da tela para o eixo do jogo.
+// Andou mais de 8 px: é arrasto, e o clique que vem depois não dispara o truque.
+const arrastoTq = { x0: 0, y0: 0, s0: 0, ativo: false, andou: false };
+function ligarArrastoTruques() {
+  const fila = $('mp-tq-fila');
+  fila.addEventListener('pointerdown', (e) => { Object.assign(arrastoTq, { ativo: true, andou: false, x0: e.clientX, y0: e.clientY, s0: fila.scrollLeft }); });
+  addEventListener('pointermove', (e) => {
+    if (!arrastoTq.ativo) return;
+    const dx = deltaNoJogo(e.clientX - arrastoTq.x0, e.clientY - arrastoTq.y0).x;
+    if (Math.abs(dx) > 8) arrastoTq.andou = true;
+    if (arrastoTq.andou) fila.scrollLeft = arrastoTq.s0 - dx;
+  });
+  addEventListener('pointerup', () => { arrastoTq.ativo = false; });
+  addEventListener('pointercancel', () => { arrastoTq.ativo = false; });
+}
 function tocarTruque(e) {
+  if (arrastoTq.andou) { arrastoTq.andou = false; return; }   // foi arrasto, não toque
   const b = e.target.closest('[data-truque]');
   if (!b || b.disabled || !mp) return;
   const t = truquesDe(mp.pet)?.find(x => x.id === b.dataset.truque);
@@ -9549,6 +9564,7 @@ function ligarEventos() {
   });
   $('mp-visual-painel').addEventListener('click', escolherVisual);
   $('mp-tq-fila').addEventListener('click', tocarTruque);
+  ligarArrastoTruques();
   for (const id of ['mp-bolsa-fechar', 'mp-visual-fechar', 'mp-nome-cancelar']) $(id).addEventListener('click', (e) => { e.stopPropagation(); e.target.closest('.mp-sub').hidden = true; });
   $('mp-nome-salvar').addEventListener('click', () => salvarNomePet());
   $('mp-nome-padrao').addEventListener('click', () => salvarNomePet(true));

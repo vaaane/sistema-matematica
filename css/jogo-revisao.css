@@ -2576,3 +2576,12 @@ html.jr-deitado .lj-comprar { min-height: 32px; }
 .jr-chamado .jr-btn { min-height: 34px; padding: 4px 12px; font-size: 14px; }
 @keyframes jr-chamado-desce { from { transform: translate(-50%, -20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .jr-chamado { animation: none; } }
+
+/* ── PROMPT-79: fileira de truques numa linha só, arrastável (dedo e mouse), sem barra, sem cortar o último ── */
+.mp-tq-fila { flex-wrap: nowrap; justify-content: flex-start; overscroll-behavior-x: contain; touch-action: none; padding: 1px 6px 1px 2px; cursor: grab; user-select: none; }
+.mp-tq-fila:active { cursor: grabbing; }
+.mp-tq { flex: 0 0 auto; width: 50px; }
+.mp-tq:first-child { margin-left: auto; }   /* centralizada quando cabe; quando não cabe, começa do início (dá para ver todos) */
+.mp-tq:last-child { margin-right: auto; }
+.mp-tq-fila::after { content: ''; flex: 0 0 6px; }   /* folga no fim: o último botão não fica cortado */
+.mp-tq img, .mp-tq-ic { pointer-events: none; }

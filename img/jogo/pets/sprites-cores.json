@@ -1114,6 +1114,21 @@
      450
     ],
     [
+     "ataque_fogo",
+     1,
+     450
+    ],
+    [
+     "ataque_fogo",
+     2,
+     450
+    ],
+    [
+     "ataque_fogo",
+     3,
+     450
+    ],
+    [
      "ufa",
      1,
      1400
@@ -1459,6 +1474,78 @@
      "bravo",
      1,
      600
+    ]
+   ],
+   "desfile": [
+    [
+     "sentado_lado",
+     1,
+     900
+    ],
+    [
+     "andando_fogo",
+     1,
+     400
+    ],
+    [
+     "andando_fogo",
+     2,
+     400
+    ],
+    [
+     "andando_fogo",
+     1,
+     400
+    ],
+    [
+     "andando_fogo",
+     2,
+     400
+    ],
+    [
+     "andando_fogo",
+     1,
+     400
+    ],
+    [
+     "andando_fogo",
+     2,
+     400
+    ],
+    [
+     "andando_fogo",
+     1,
+     400
+    ],
+    [
+     "andando_fogo",
+     2,
+     400
+    ],
+    [
+     "andando_fogo",
+     1,
+     400
+    ],
+    [
+     "andando_fogo",
+     2,
+     400
+    ],
+    [
+     "andando_fogo",
+     1,
+     400
+    ],
+    [
+     "andando_fogo",
+     2,
+     400
+    ],
+    [
+     "sentado_lado",
+     1,
+     1000
     ]
    ]
   },
@@ -1823,6 +1910,21 @@
      450
     ],
     [
+     "ataque_fogo",
+     1,
+     450
+    ],
+    [
+     "ataque_fogo",
+     2,
+     450
+    ],
+    [
+     "ataque_fogo",
+     3,
+     450
+    ],
+    [
      "ufa",
      1,
      1400
@@ -2168,6 +2270,78 @@
      "bravo",
      1,
      600
+    ]
+   ],
+   "desfile": [
+    [
+     "sentado_lado",
+     1,
+     900
+    ],
+    [
+     "andando_fogo",
+     1,
+     400
+    ],
+    [
+     "andando_fogo",
+     2,
+     400
+    ],
+    [
+     "andando_fogo",
+     1,
+     400
+    ],
+    [
+     "andando_fogo",
+     2,
+     400
+    ],
+    [
+     "andando_fogo",
+     1,
+     400
+    ],
+    [
+     "andando_fogo",
+     2,
+     400
+    ],
+    [
+     "andando_fogo",
+     1,
+     400
+    ],
+    [
+     "andando_fogo",
+     2,
+     400
+    ],
+    [
+     "andando_fogo",
+     1,
+     400
+    ],
+    [
+     "andando_fogo",
+     2,
+     400
+    ],
+    [
+     "andando_fogo",
+     1,
+     400
+    ],
+    [
+     "andando_fogo",
+     2,
+     400
+    ],
+    [
+     "sentado_lado",
+     1,
+     1000
     ]
    ]
   },
@@ -2532,6 +2706,21 @@
      450
     ],
     [
+     "ataque_fogo",
+     1,
+     450
+    ],
+    [
+     "ataque_fogo",
+     2,
+     450
+    ],
+    [
+     "ataque_fogo",
+     3,
+     450
+    ],
+    [
      "ufa",
      1,
      1400
@@ -2877,6 +3066,78 @@
      "bravo",
      1,
      600
+    ]
+   ],
+   "desfile": [
+    [
+     "sentado_lado",
+     1,
+     900
+    ],
+    [
+     "andando_fogo",
+     1,
+     400
+    ],
+    [
+     "andando_fogo",
+     2,
+     400
+    ],
+    [
+     "andando_fogo",
+     1,
+     400
+    ],
+    [
+     "andando_fogo",
+     2,
+     400
+    ],
+    [
+     "andando_fogo",
+     1,
+     400
+    ],
+    [
+     "andando_fogo",
+     2,
+     400
+    ],
+    [
+     "andando_fogo",
+     1,
+     400
+    ],
+    [
+     "andando_fogo",
+     2,
+     400
+    ],
+    [
+     "andando_fogo",
+     1,
+     400
+    ],
+    [
+     "andando_fogo",
+     2,
+     400
+    ],
+    [
+     "andando_fogo",
+     1,
+     400
+    ],
+    [
+     "andando_fogo",
+     2,
+     400
+    ],
+    [
+     "sentado_lado",
+     1,
+     1000
     ]
    ]
   }

@@ -1766,6 +1766,9 @@
     ["ataque_fogo", 1, 450],
     ["ataque_fogo", 2, 450],
     ["ataque_fogo", 3, 450],
+    ["ataque_fogo", 1, 450],
+    ["ataque_fogo", 2, 450],
+    ["ataque_fogo", 3, 450],
     ["ufa", 1, 1400],
     ["sentado_lado", 1, 1000]
    ],
@@ -1853,6 +1856,22 @@
     ["bravo", 1, 800],
     ["bufando", 1, 1200],
     ["bravo", 1, 600]
+   ],
+   "desfile": [
+    ["sentado_lado", 1, 900],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["sentado_lado", 1, 1000]
    ]
   },
   "dragao_vermelho_adulto": {
@@ -1935,6 +1954,9 @@
     ["ataque_fogo", 1, 450],
     ["ataque_fogo", 2, 450],
     ["ataque_fogo", 3, 450],
+    ["ataque_fogo", 1, 450],
+    ["ataque_fogo", 2, 450],
+    ["ataque_fogo", 3, 450],
     ["ufa", 1, 1400],
     ["sentado_lado", 1, 1000]
    ],
@@ -2022,6 +2044,22 @@
     ["bravo", 1, 800],
     ["bufando", 1, 1200],
     ["bravo", 1, 600]
+   ],
+   "desfile": [
+    ["sentado_lado", 1, 900],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["sentado_lado", 1, 1000]
    ]
   },
   "dragao_sombra_adulto": {
@@ -2104,6 +2142,9 @@
     ["ataque_fogo", 1, 450],
     ["ataque_fogo", 2, 450],
     ["ataque_fogo", 3, 450],
+    ["ataque_fogo", 1, 450],
+    ["ataque_fogo", 2, 450],
+    ["ataque_fogo", 3, 450],
     ["ufa", 1, 1400],
     ["sentado_lado", 1, 1000]
    ],
@@ -2191,6 +2232,22 @@
     ["bravo", 1, 800],
     ["bufando", 1, 1200],
     ["bravo", 1, 600]
+   ],
+   "desfile": [
+    ["sentado_lado", 1, 900],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["sentado_lado", 1, 1000]
    ]
   },
   "dragao_branco_adulto": {
@@ -2273,6 +2330,9 @@
     ["ataque_fogo", 1, 450],
     ["ataque_fogo", 2, 450],
     ["ataque_fogo", 3, 450],
+    ["ataque_fogo", 1, 450],
+    ["ataque_fogo", 2, 450],
+    ["ataque_fogo", 3, 450],
     ["ufa", 1, 1400],
     ["sentado_lado", 1, 1000]
    ],
@@ -2360,6 +2420,22 @@
     ["bravo", 1, 800],
     ["bufando", 1, 1200],
     ["bravo", 1, 600]
+   ],
+   "desfile": [
+    ["sentado_lado", 1, 900],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["sentado_lado", 1, 1000]
    ]
   },
   "dragao_arcoiris_adulto": {
@@ -2442,6 +2518,9 @@
     ["ataque_fogo", 1, 450],
     ["ataque_fogo", 2, 450],
     ["ataque_fogo", 3, 450],
+    ["ataque_fogo", 1, 450],
+    ["ataque_fogo", 2, 450],
+    ["ataque_fogo", 3, 450],
     ["ufa", 1, 1400],
     ["sentado_lado", 1, 1000]
    ],
@@ -2529,6 +2608,22 @@
     ["bravo", 1, 800],
     ["bufando", 1, 1200],
     ["bravo", 1, 600]
+   ],
+   "desfile": [
+    ["sentado_lado", 1, 900],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["andando_fogo", 1, 400],
+    ["andando_fogo", 2, 400],
+    ["sentado_lado", 1, 1000]
    ]
   }
  },
