@@ -72,9 +72,11 @@ const CRESCE_EVOLUCAO = 1.15;
 // PROMPT-63: o desenho sentado do adulto mede 622 px no quadro de 808 (sprites.json → sentado_altura); a conta antiga usava 604,
 // então o adulto aparecia 622/604 ≈ 3% maior que a tabela. ADULTO_ANTES = quanto o adulto era maior que o filhote na tela.
 const ADULTO_ANTES = CRESCE_EVOLUCAO * 622 / 604;
-// Os dois dragões adultos partem do tamanho que o VERMELHO adulto tinha (≈ 59 px sentado na escala base) e cada um
-// é multiplicado pela própria escala do sprites.json (quadro_por_pet[forma].escala: azul 1, vermelho 1,15).
-ALT_PET.dragao_azul_adulto = ALT_PET.dragao_vermelho_adulto = ALT_PET.dragao_vermelho * ADULTO_ANTES;
+// PROMPT-81: onde o personagem e o pet aparecem juntos, o dragão adulto SENTADO (desenho visível, chifre ao pé) tem a altura
+// do personagem (o desenho dele = ALT_JOGADOR_MAPA no mapa = 55 na escala base), × a escala do sprites.json
+// (quadro_por_pet[forma].escala: azul e cores 1, vermelho 1,3). sentado_altura do JSON = 439 px medidos no quadro de 566.
+const ALT_BASE_PERSONAGEM = ALT_JOGADOR_MAPA / ESCALA_ATORES;   // 55
+ALT_PET.dragao_azul_adulto = ALT_PET.dragao_vermelho_adulto = ALT_BASE_PERSONAGEM;
 const ALT_PET_PADRAO = 30;   // pet que não estiver na tabela
 // cores especiais do dragão (PROMPT-74): dragao_{cor} e dragao_{cor}_adulto têm o tamanho do azul
 const formaDeTamanho = (f) => String(f || '').replace(/^dragao_(?!azul|vermelho)[a-z]+(?=(_adulto)?$)/, 'dragao_azul');
@@ -83,18 +85,14 @@ const altPet = (pet) => (ALT_PET[pet] ?? ALT_PET[formaDeTamanho(pet)] ?? ALT_PET
 // pulos: sentado, o pet ocupa 604 px da altura (sentado_altura). Altura da IMAGEM para o pet sentado ficar com a altura da tabela:
 const altImagemPet = (pet) => altPet(pet) / sentadoNoQuadro(pet);
 // Telas em que o pet tem tamanho relativo ao filhote (batalha, Meu Pet, duelo do ginásio, evolução): quanto a IMAGEM da forma
-// é maior que a do filhote. O desenho sentado fica ADULTO_ANTES × escala maior (o mesmo de antes no azul; +15% no vermelho).
+// é maior que a do filhote. O desenho sentado fica ADULTO_ANTES × escala maior (o mesmo de antes no azul; +30% no vermelho).
 const fatorForma = (pet, forma) => (ehFormaAdulta(forma) ? ADULTO_ANTES * escalaPet(forma) * sentadoNoQuadro(pet) / sentadoNoQuadro(forma) : 1);
-// Duelos (PROMPT-80): o dragão adulto ~30% maior (o vermelho continua 1,32 × o azul). Na batalha, só até o maior adulto
-// (escalaMax) caber com a pose mais alta (o fogo, 94% do quadro) dentro da arena, sem cobrir as barras de vida:
-// lutador a 3% do chão e no máximo 99% da arena → altura ≤ (0,99 − 0,03) / 0,94 da arena = 52% × 1,96.
-const DUELO_ADULTO = 1.3, CRESCE_MAX_BATALHA = 1.96;
+// Revisão da semana (PROMPT-80): o dragão adulto ~30% maior (o vermelho continua 1,3 × o azul), até 58% da arena no CSS.
+const DUELO_ADULTO = 1.3;
 const fatorDuelo = (pet, forma) => fatorForma(pet, forma) * (ehFormaAdulta(forma) ? DUELO_ADULTO : 1);
-function fatorBatalha(pet, forma) {
-  if (!ehFormaAdulta(forma)) return fatorForma(pet, forma);
-  const maior = ADULTO_ANTES * escalaMax() * sentadoNoQuadro(pet) / sentadoNoQuadro(forma);   // o adulto de maior escala
-  return fatorForma(pet, forma) * Math.min(DUELO_ADULTO, CRESCE_MAX_BATALHA / maior);
-}
+// Duelo do ginásio e batalha (PROMPT-81): o dragão adulto fica o maior que couber na arena (o CSS calcula com cqw/cqh).
+// O de maior escala (vermelho) ocupa o máximo; os outros ficam com escala / escalaMax disso (azul = 1 / 1,3).
+const relDuelo = (forma) => escalaPet(forma) / escalaMax();
 // caixas pequenas feitas para o filhote (coleção, HUD, chips, cartões): sem a escala, para nada ser cortado
 const fatorFormaCaixa = (pet, forma) => fatorForma(pet, forma) / (ehFormaAdulta(forma) ? escalaPet(forma) : 1);
 // Imagem pequena numa caixa feita para o filhote (coleção, HUD, chips, cartões): o quadro do adulto é mais largo
@@ -310,7 +308,8 @@ const DIST_PET = {
   elefante: 36, gato: 36, gaviao: 36, axolote: 36, tigre: 36,
   unicornio: 55, dragao_azul: 55, dragao_vermelho: 55,
 };
-DIST_PET.dragao_azul_adulto = DIST_PET.dragao_vermelho_adulto = DIST_PET.dragao_vermelho * ADULTO_ANTES;   // cresce junto com o tamanho
+// cresce junto com o tamanho (mesma proporção distância/altura do filhote vermelho; distPet ainda × a escala do vermelho)
+DIST_PET.dragao_azul_adulto = DIST_PET.dragao_vermelho_adulto = DIST_PET.dragao_vermelho * ALT_PET.dragao_azul_adulto / ALT_PET.dragao_vermelho;
 const DIST_PET_PADRAO = 36;
 const distPet = (pet) => (DIST_PET[pet] ?? DIST_PET[formaDeTamanho(pet)] ?? DIST_PET_PADRAO) * escalaPet(pet);
 // no ginásio tudo é o dobro da escala base (o personagem tem ALT_JOGADOR = 110 em vez de 55)
@@ -335,7 +334,9 @@ const escalaSpriteCena = () => (cena?.salao ? alturaSalao() : cena?.tipo === 'ma
 // Salões (fliperama, loja): o personagem tem altura_personagem do JSON do interior; o pet usa a mesma proporção do mapa
 // (altura do pet = altura_personagem × ALT_PET / ALT_JOGADOR_MAPA) e as distâncias crescem junto
 const alturaSalao = () => Number(cena?.alturaPersonagem) || ALT_JOGADOR;
-const escalaPetCena = () => (cena?.salao ? alturaSalao() / ALT_JOGADOR_MAPA : cena?.tipo === 'mapa' ? ESCALA_ATORES : ESCALA_GINASIO);
+// dragão adulto (PROMPT-81): nos salões também mede pelo personagem (sentado = altura_personagem × escala), como no mapa e no ginásio
+const escalaPetCena = (forma) => (cena?.salao ? alturaSalao() / (ehFormaAdulta(forma) ? ALT_BASE_PERSONAGEM : ALT_JOGADOR_MAPA)
+  : cena?.tipo === 'mapa' ? ESCALA_ATORES : ESCALA_GINASIO);
 const escalaAtoresCena = () => (cena?.salao ? ESCALA_ATORES * alturaSalao() / ALT_JOGADOR_MAPA : ESCALA_ATORES);   // ícones, toques e balões das pessoas
 const NUM_MAPAS = 13;
 
@@ -3927,8 +3928,8 @@ function loop(t) {
     if (pesca && (vx || vy)) sairPesca();   // andar levanta da pesca
     const direto = (vx || vy) && moverDireto(dt, vx, vy);
     if (!direto) passo(dt);
-    const e = escalaPetCena();
     const pet = seguidor?.forma;   // o tamanho e a distância são os da forma (o adulto é maior)
+    const e = escalaPetCena(pet);
     if (petNoPedestal) seguidor?.atualizar(dt, petNoPedestal[0], petNoPedestal[1], 0, altImagemPet(pet) * e, 0, e);   // no provador: fica no pedestal
     else seguidor?.atualizar(dt, jog.x, jog.y, VEL, altImagemPet(pet) * e, distPet(pet) * e, e);
     petGin?.anim.atualizar(dt);
@@ -6756,7 +6757,8 @@ function iniciarBatalha(id, origem = 'lista') {
   // adulto: quadro mais largo (asas) e imagem maior; mesma vida e dano, muda só o visual
   const fL = $('bt-L'), [qw, qh] = tamanhoQuadro(bt.forma), adulto = ehFormaAdulta(bt.forma);
   fL.style.setProperty('--pet-quadro', `${qw} / ${qh}`);
-  fL.style.setProperty('--cresce', fatorBatalha(bt.pet, bt.forma));   // adulto maior (PROMPT-80), cabendo na arena
+  fL.style.setProperty('--cresce', fatorForma(bt.pet, bt.forma));
+  fL.style.setProperty('--rel', relDuelo(bt.forma));   // adulto: o maior que couber na arena (CSS, PROMPT-81)
   fL.classList.toggle('adulto', adulto);
   fL.querySelector('.jr-fala-vitoria')?.remove();   // balão da comemoração da batalha anterior
   const fR = $('bt-R'), formaR = t.pet, [qwR, qhR] = tamanhoQuadro(formaR);   // o pet do treinador (hoje sempre filhote; adulto teria o mesmo cuidado)
@@ -7905,7 +7907,11 @@ function montarArena() {
   document.querySelector('.jr-arena-sombra.pet').hidden = !pet;
   pgPet = null;
   const forma = pet && formaDe(pet);
-  $('perg-pet').style.setProperty('--forma', fatorDuelo(pet, forma));   // adulto: imagem maior (quadro com asas), +30% no duelo (PROMPT-80)
+  $('perg-pet').style.setProperty('--forma', fatorDuelo(pet, forma));   // adulto na revisão: imagem maior (quadro com asas), +30% (PROMPT-80)
+  // duelo do ginásio com adulto (PROMPT-81): o CSS deixa o dragão o maior que couber entre o personagem e o adversário
+  const arena = $('perg-arena'), adultoDuelo = !rev && ehFormaAdulta(forma);
+  arena.classList.toggle('pet-adulto', adultoDuelo);
+  arena.style.setProperty('--rel', adultoDuelo ? relDuelo(forma) : 1);
   if (pet) { pgPet = new PetParado($('perg-pet')); pgPet.definir(forma); }
   pg.na = null;
   ladoNemAi();   // dragão adulto: sentado de lado, sem dar bola (PROMPT-71)
@@ -7915,7 +7921,13 @@ function montarArena() {
   pg.ajuda = { dicas: 0, elimin: 0 };
   fecharFalaAjuda();
   atualizarBotaoAjuda();
-  if (!rev) $('perg-adv').src = `${IMG}/personagens/${pg.pers.sprite}.webp`;
+  if (!rev) {
+    const adv = $('perg-adv');
+    // meia largura do adversário (65% da arena de altura) para o dragão adulto crescer até ele; antes de carregar, a do mais largo
+    arena.style.removeProperty('--adv-meia');
+    adv.onload = () => { if (adv.naturalHeight) arena.style.setProperty('--adv-meia', (32.5 * adv.naturalWidth / adv.naturalHeight).toFixed(2) + 'cqh'); };
+    adv.src = `${IMG}/personagens/${pg.pers.sprite}.webp`;
+  }
   $('perg-adv-nome').textContent = rev ? 'Revisão da semana' : `${NOME_DESAFIO[pg.p] || ''} · ${D.questoes[pg.mapa].ginasios[pg.G].nome}`;
 }
 

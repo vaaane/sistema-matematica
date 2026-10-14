@@ -2601,3 +2601,41 @@ html.jr-deitado .lj-comprar { min-height: 32px; }
 
 /* ── PROMPT-80: na batalha o dragão adulto fica mais perto do chão da arena (cresceu e cabe sem cobrir as barras de vida) ── */
 #bt-L.adulto, #bt-R.adulto { bottom: 3%; }
+
+/* ── PROMPT-81: no duelo do ginásio e na batalha, o dragão adulto fica o maior que couber ──
+   O de maior escala (vermelho) ocupa o máximo; --rel = escala / escalaMax (azul = 1 / 1,3). Contas com o quadro do adulto
+   (1219 × 566 → largura = 2,154 × altura) e as poses medidas: nos duelos do ginásio o corpo vai de 193 a 930 px do quadro
+   (lamber a pata), topo a 5 px; o fogo chega a 1212 px. Na batalha o corpo vai de 275 a 918 px e o topo (fogo) a 38 px. */
+#perg-arena.pet-adulto {
+  container-type: size;
+  /* adversário um pouco mais para a direita (sem sair da arena) e personagem mais para a esquerda: mais lugar para o dragão.
+     --adv-meia = meia largura do adversário (JS, pela imagem); sem ela, a do mais largo (0,68 × 65% da altura / 2) */
+  --adv-x: min(86cqw, calc(100cqw - var(--adv-meia, 22.2cqh) - 4px));
+  /* borda direita do personagem mais largo: 12% + 0,353 × a largura da imagem (0,379 × a altura da arena) */
+  --jog-dir: calc(12cqw + 13.4cqh);
+  /* altura da imagem do vermelho: pose mais alta dentro da arena (pés a 7%); corpo entre o personagem e o adversário
+     (6 px de folga de cada lado: corpo = 0,605 × 2,154 = 1,303 × a altura); fogo dentro da tela (0,836 × 2,154 = 1,8) */
+  --h-max: min(92cqh, calc((var(--adv-x) - var(--adv-meia, 22.2cqh) - var(--jog-dir) - 12px) / 1.303), calc((99cqw - var(--jog-dir) - 6px) / 1.8));
+  --h-pet: calc(var(--h-max) * var(--rel, 1));
+  /* centro da imagem: a borda esquerda do corpo (193/1219 do quadro) fica 6 px depois do personagem */
+  --x-pet: calc(var(--jog-dir) + 6px + 0.736 * var(--h-pet));
+}
+.pet-adulto .jr-arena-jog, .pet-adulto .jr-arena-sombra.eu { left: 12%; }
+.pet-adulto .jr-arena-adv, .pet-adulto .jr-arena-sombra.adv { left: var(--adv-x); }
+.pet-adulto .jr-fala { right: calc(109cqw - var(--adv-x)); }   /* ao lado da cabeça do adversário, como antes (9% antes dele) */
+.pet-adulto .jr-arena-pet { left: var(--x-pet); height: var(--h-pet); }
+.pet-adulto .jr-arena-sombra.pet { left: calc(var(--x-pet) - 0.09 * var(--h-pet)); width: calc(0.9 * var(--h-pet)); }
+/* ajuda: no canto de cima, à esquerda do dragão (acima da cabeça do personagem); o balão da ajuda logo abaixo */
+.pet-adulto .jr-perg-ajuda { left: var(--jog-dir); top: 4px; bottom: auto; transform: translateX(-100%); }
+.pet-adulto .jr-perg-ajuda:active { transform: translateX(-100%) scale(.95); }
+.pet-adulto .jr-pet-fala-arena { left: 2%; top: 40px; bottom: auto; }
+
+.bt-arena { container-type: size; }
+#bt-L.adulto {
+  /* altura da imagem do vermelho: o topo do fogo dentro da arena (pés a 3%); corpo antes do oponente (filhote a 12% da direita,
+     52% da arena de altura: começa em 88% − 52,7% da altura) com 6 px de folga; fogo dentro da tela */
+  --h-max: min(99cqh, calc((86cqw - 52.7cqh - 6px) / 1.136), calc(97cqw / 1.656));
+  height: calc(var(--h-max) * var(--rel, 1));
+  left: calc(2cqw - 0.486 * var(--h-max) * var(--rel, 1));   /* o corpo (275/1219 do quadro) começa a 2% da arena */
+  bottom: 3%;
+}
