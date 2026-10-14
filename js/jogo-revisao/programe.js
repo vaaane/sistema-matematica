@@ -144,8 +144,9 @@ export async function abrirTela(cfg) {
   const tema = B.Theme.defineTheme('jr-pg', { base: B.Themes.Classic, componentStyles: {
     workspaceBackgroundColour: '#11142a', toolboxBackgroundColour: '#161a2e', flyoutBackgroundColour: '#1b2040', flyoutOpacity: 1,
     scrollbarColour: '#7c5cfc', insertionMarkerColour: '#ffd700', cursorColour: '#ffd700' } });
+  const zoomSalvo = lerZoom();
   ws = B.inject($('pg-blockly'), { toolbox: toolboxDe(cfg.fase.blocos || []), renderer: 'zelos', theme: tema, trashcan: false, sounds: false,   // sem lixeira fixa: a coluna das peças vira lixeira ao arrastar
-    zoom: { controls: true, startScale: matchMedia('(pointer: coarse)').matches ? 1.15 : 1.0, maxScale: 1.6, minScale: 0.7 },   // no toque, blocos maiores
+    zoom: { controls: true, startScale: zoomSalvo ?? escalaPadrao(), maxScale: 1.6, minScale: 0.5 },   // abre no zoom que o aluno deixou (ou no da coluna, abaixo)
     move: { scrollbars: true, drag: true, wheel: true },
     maxInstances: { pg_inicio: 1, pg_f1_def: 1 } });
   let ok = false;
@@ -167,9 +168,16 @@ export async function abrirTela(cfg) {
   setTimeout(() => {
     if (!tela) return;
     B.svgResize(ws);
-    ajustarFlyout();
+    // escala de abertura = a da coluna das peças (que não passa de 40% da largura): "quando executar" e "andar" do mesmo tamanho
+    const base = Math.min(escalaPadrao(), ajustarFlyout());
+    ws.options.zoomOptions.startScale = base;   // ⌖ (centralizar) volta para ela
+    if (zoomSalvo == null && Math.abs(ws.scale - base) > 0.001) ws.setScale(base);
+    ws.scrollCenter = mostrarInicio;            // ⌖: o 🏁 no canto, não no meio
     mostrarInicio();
     tela.posicionado = true;
+    ws.addChangeListener((e) => {   // guarda o zoom que o aluno escolheu (+ / − / pinça); no da abertura (ou ⌖), esquece o guardado
+      if (e.type === B.Events.VIEWPORT_CHANGE && e.oldScale != null && Math.abs(e.scale - e.oldScale) > 0.001) gravarZoom(Math.abs(e.scale - base) > 0.01 ? e.scale : null);
+    });
     if (cfg.tutorial && !astDe().corpo.length) iniciarTutorial();
   }, 60);
   return true;
@@ -215,25 +223,39 @@ function porNoFim(tipo) {
   setTimeout(() => g.classList.remove('pg-pisca-uma'), 900);
 }
 
-// A coluna de blocos (flyout) acompanha o zoom, mas sem passar de ~40% da área de montar: se passar, só ela fica menor
-function ajustarFlyout() {
-  const fl = ws?.getFlyout?.();
-  if (!fl || typeof fl.getWidth !== 'function') return;
-  const lim = 0.4 * $('pg-blockly').clientWidth, w = fl.getWidth(), s0 = fl.getFlyoutScale();
-  if (!(w > lim) || !(s0 > 0)) return;
-  const k = Math.max(0.55, s0 * lim / w);
-  fl.getFlyoutScale = () => Math.min(ws.scale, k);
-  try { fl.reflow(); } catch (_) {}
-  window.Blockly.svgResize(ws);
+// Zoom do programa: padrão 1 (0,9 no toque); o que o aluno escolher fica guardado neste aparelho
+const ZOOM_CHAVE = 'jr-programe-zoom';
+const escalaPadrao = () => (matchMedia('(pointer: coarse)').matches ? 0.9 : 1.0);
+function lerZoom() {
+  try { const v = parseFloat(localStorage.getItem(ZOOM_CHAVE)); return v >= 0.5 && v <= 1.6 ? v : null; } catch (_) { return null; }
+}
+function gravarZoom(v) {   // null = voltar ao padrão
+  try { if (v == null) localStorage.removeItem(ZOOM_CHAVE); else localStorage.setItem(ZOOM_CHAVE, String(Math.round(v * 1000) / 1000)); } catch (_) {}
 }
 
-// Ao abrir: o 🏁 no canto de cima à esquerda da área de montar (o programa todo vem junto)
+// A coluna de blocos (flyout) acompanha o zoom, mas sem passar de ~40% da área de montar: se passar, só ela fica menor.
+// Devolve a maior escala em que a coluna cabe (Infinity se não der para medir)
+function ajustarFlyout() {
+  const fl = ws?.getFlyout?.();
+  if (!fl || typeof fl.getWidth !== 'function') return Infinity;
+  const lim = 0.4 * $('pg-blockly').clientWidth, w = fl.getWidth(), s0 = fl.getFlyoutScale();
+  if (!(w > 0) || !(s0 > 0)) return Infinity;
+  const k = Math.max(0.55, s0 * lim / w);
+  if (w > lim) {
+    fl.getFlyoutScale = () => Math.min(ws.scale, k);
+    try { fl.reflow(); } catch (_) {}
+    window.Blockly.svgResize(ws);
+  }
+  return k;
+}
+
+// Ao abrir (e no ⌖): o 🏁 inteiro no canto de cima à esquerda da área de montar, 12 px de margem (o programa todo vem junto)
 function mostrarInicio() {
   const ini = ws?.getBlocksByType('pg_inicio', false)[0];
   if (!ini) return;
   try {
     const v = ws.getMetricsManager().getViewMetrics(true), xy = ini.getRelativeToSurfaceXY();
-    const dx = v.left + 16 / ws.scale - xy.x, dy = v.top + 16 / ws.scale - xy.y;
+    const dx = v.left + 12 / ws.scale - xy.x, dy = v.top + 12 / ws.scale - xy.y;
     if (Math.abs(dx) > 1 || Math.abs(dy) > 1) for (const b of ws.getTopBlocks(false)) b.moveBy(dx, dy);
   } catch (_) {}
 }
@@ -770,7 +792,7 @@ async function crescerPet(img, forma, anims) {
 function animarPetCartao(img, forma, anims) {
   clearInterval(tela.animCartao);
   const passo = 180, seq = [];
-  for (const a of anims) { const q = C.quadrosDe(forma, a); const n = Math.max(q.length, Math.ceil(900 / passo)); for (let i = 0; i < n; i++) seq.push(q[i % q.length]); }
+  for (const a of anims) { const q = C.quadrosDe(forma, a); const n = q.length === 1 ? Math.ceil(1500 / passo) : Math.max(q.length, Math.ceil(900 / passo)); for (let i = 0; i < n; i++) seq.push(q[i % q.length]); }
   const ultimo = C.quadrosDe(forma, anims[anims.length - 1]);
   if (semMov() || !seq.length) { img.src = ultimo[0] || seq[0] || ''; return; }
   let i = 0;

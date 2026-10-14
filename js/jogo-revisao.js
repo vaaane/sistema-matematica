@@ -16,7 +16,8 @@ import { definirLoja, definirPeixes, lojaPronta, cfgLoja, comidas, tintas, efeit
 import { definirPesca, pescaPronta, cfgPesca, pontosDoMapa, spritePesca, pontaVara, sortearPeixe, entre, inteiroEntre,
   semanaPesca, semanaAnterior, criarBarrinha, passoBarrinha } from '/js/jogo-revisao/pesca.js';
 import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, tamanhoBusto, temBusto, bustoPet, preCarregarPet, PetSeguidor, PetParado,
-  temAnim, formaAdulta, formaValida, sentadoNoQuadro, sortearOcioso } from '/js/jogo-revisao/pets.js';
+  temAnim, formaAdulta, formaValida, sentadoNoQuadro, sortearOcioso, temSequencia, tocarSequencia, pararSequencia, msAtePasso,
+  sortearAcaoParado, EMOCOES, MS_EMOCAO } from '/js/jogo-revisao/pets.js';
 import { iniciarOnline, enviarOnline, sairOnline, ouvirMapa, ouvirTodos, onlineAtivo, VALIDADE_MS } from '/js/jogo-revisao/online.js';
 import { definirPedidos, pedidosProntos, cfgPedidos, pedidoDisponivel, moedasDoPedido, limiteDoDiaAtingido, dicaPedido, lerResposta } from '/js/jogo-revisao/pedidos.js';
 import { definirBatalhas, batalhasProntas, cfgBatalha, treinadores, treinador, tiposDeConta, gerarConta, vidaExtraLealdade, desafioDe, situacao, forca, dano, premios, depoisDaBatalha } from '/js/jogo-revisao/batalha.js';
@@ -663,7 +664,8 @@ export async function iniciarJogo(sess) {
     desafiar: (uid, modo) => desafiarColega(colegas.get(uid), modo), colegas: () => [...colegas.keys()],
     mapa: (n) => abrirMapa(n, 'entrada'), pescar: () => { const p = pontosDoMapa(cena.n)[0]; if (p) sentarPesca(p); return !!p; }, pergunta: (chave, p) => abrirPergunta(chave, p),
     festa: (t) => mostrarFestaMestre(t || 'mestre'), hall: () => abrirHallMestres(), estado: () => estado, geral: () => abrirMapaGeral(),
-    batalhar: (id) => iniciarBatalha(id), pg: () => pg };
+    batalhar: (id) => iniciarBatalha(id), pg: () => pg, meuPet: () => (abrirMeuPet(), mp), mp: () => mp, carinho: () => carinhoPet(),
+    truque: (id) => fazerTruque(id), comer: (id) => darComida(id) };
 
   try {
     const pegar = (p) => fetch(`${DADOS}/${p}`).then(r => { if (!r.ok) throw new Error(p); return r.json(); });
@@ -1359,7 +1361,7 @@ function abrirMeuPet() {
   const img = $('mp-img');
   const forma = formaDe(pet);
   preCarregarPet(forma);
-  mp = { pet, forma, anim: new PetParado(img), estado: '', corpoAnim: null, ocupado: false, carinhos: 0 };
+  mp = { pet, forma, anim: new PetParado(img), estado: '', corpoAnim: null, ocupado: false, esperaAcao: null };
   img.dataset.src = '';
   mp.anim.definir(forma);
   medirMeuPet();
@@ -1388,6 +1390,7 @@ function medirMeuPet() {
 
 function fecharMeuPet() {
   $('meu-pet').hidden = true;
+  pararSequencia($('mp-img'));   // trocou de tela: interrompe a ação do pet
   mp?.corpoAnim?.cancel();
   mp = null;
 }
@@ -1493,7 +1496,7 @@ function arcoDePulo() {
 // Volta ao estado de descanso: triste (fome) ou sentado (o pet nunca dorme)
 function voltarAoNormal() {
   if (!mp) return;
-  mp.ocupado = false;
+  mp.ocupado = false; mp.esperaAcao = null;
   if (barrigaDe(mp.pet) < fomeAbaixo()) { mp.estado = 'triste'; mp.anim.tocar('triste_fome'); movimentoCorpo('triste'); }
   else { mp.estado = 'parado'; mp.anim.tocar('sentado_girando'); movimentoCorpo('respira'); }
   renderMeuPet();
@@ -1503,8 +1506,14 @@ function voltarAoNormal() {
 function atualizarMeuPet(dt) {
   if (!mp) return;
   mp.anim.atualizar(dt);
-  if (mp.estado === 'parado' && mp.anim.anim === 'sentado_girando' && mp.anim.ciclos >= 3)
-    mp.anim.tocar(sortearOcioso(), () => { if (mp?.estado === 'parado') voltarAoNormal(); });   // a cada 3 ciclos: fareja, se lambe, descansa… (sem repetir)
+  if (mp.estado === 'parado' && mp.anim.anim === 'sentado_girando') {
+    const aoAcabar = () => { if (mp?.estado === 'parado') voltarAoNormal(); };
+    if (temSequencia(mp.forma, 'descansar')) {   // adulto: 6 a 10 s sentado, depois cheira, se lambe, descansa ou ruge (sequências, sem repetir)
+      if (mp.esperaAcao == null) mp.esperaAcao = 6000 + Math.random() * 4000;
+      mp.esperaAcao -= dt * 1000;
+      if (mp.esperaAcao <= 0) { mp.esperaAcao = null; const a = sortearAcaoParado(mp.forma); if (a) mp.anim.sequencia(a, aoAcabar); }
+    } else if (mp.anim.ciclos >= 3) mp.anim.tocar(sortearOcioso(), aoAcabar);   // a cada 3 ciclos: fareja, se lambe, descansa… (sem repetir)
+  }
   // comendo 2 vezes, depois: o adulto lambe os beiços; os outros ficam felizes
   if (mp.estado === 'comendo' && mp.anim.anim === 'comendo' && mp.anim.ciclos >= 2) comemorar(temAnim(mp.forma, 'lamber_beicos') ? 'lamber_beicos' : 'feliz', !temAnim(mp.forma, 'lamber_beicos'));
 }
@@ -1552,8 +1561,8 @@ function carinhoPet() {
   particulas(['💜', '💛', '💜', '💛'], 5);
   const fc = barrigaDe(pet) >= fomeAbaixo() && falasProntas() && c.lealdade >= (configFalas().lealdade_minima ?? 25) ? montarFala(contextoFalaDe(pet), 'carinho') : null;
   falarPet(barrigaDe(pet) < fomeAbaixo() ? 'Obrigado… mas tô com fome' : fc?.baloes[0]?.texto || 'Gostei!');
-  // o adulto alterna: um carinho calmo (olhos fechados, satisfeito, sem pulo), o outro feliz
-  if (barrigaDe(pet) >= fomeAbaixo() && temAnim(mp.forma, 'calmo') && mp.carinhos++ % 2 === 0) comemorar('calmo', false);
+  // o adulto ri de lado (sequência "carinho"); os outros ficam felizes ou dão cambalhota
+  if (temSequencia(mp.forma, 'carinho')) { mp.estado = 'carinho'; mp.ocupado = true; movimentoCorpo(null); mp.anim.sequencia('carinho', voltarAoNormal); }
   else comemorar(c.lealdade >= LEALDADE_CAMBALHOTA ? 'pulo_cambalhota' : 'feliz');
 }
 
@@ -1869,9 +1878,12 @@ function darComida(id) {
   atualizarFomeSeguidor();
   renderMeuPet();
   mp.estado = 'comendo'; mp.ocupado = true;
-  if (temAnim(mp.forma, 'assar_comida')) mp.anim.tocar('assar_comida', () => { if (mp?.estado === 'comendo') mp.anim.tocar('comendo'); });   // o dragão assa a comida antes
-  else mp.anim.tocar('comendo');
-  movimentoCorpo('come');
+  if (mp.anim.sequencia('comer', voltarAoNormal)) movimentoCorpo(null);   // adulto: assa, come, ossos, lambe os beiços (sequência)
+  else {
+    if (temAnim(mp.forma, 'assar_comida')) mp.anim.tocar('assar_comida', () => { if (mp?.estado === 'comendo') mp.anim.tocar('comendo'); });   // o dragão assa a comida antes
+    else mp.anim.tocar('comendo');
+    movimentoCorpo('come');
+  }
   const ic = imgItem(item.imagem, item.emoji, 'jr-item-part', item.filtro);
   particulas([ic, '✨', ic, '✨'], 6);
   if (fav) setTimeout(() => particulas(['💖', '❤️', '💗', '💖', '❤️'], 10), 250);   // a favorita: um coração estoura
@@ -5971,6 +5983,7 @@ function limparBatalha() {
   if (!bt) return;
   bt.timers.forEach(clearTimeout);
   clearTimeout(bt.anim.L); clearTimeout(bt.anim.R);
+  pararSequencia($('bt-imgL')); pararSequencia($('bt-imgR'));
   if (bt.pisca) { clearTimeout(bt.pisca.timer); bt.pisca.img = { isConnected: false }; }   // para de piscar
   cancelAnimationFrame(bt.raf);
 }
@@ -5995,6 +6008,8 @@ function btTocar(lado, nome, { loop = true, ms = 160, depois } = {}) {
   const nomeReal = lado === 'R' && nome === 'andar_direita' ? 'andar_esquerda' : nome;
   const fs = quadrosDe(pet, nomeReal);
   const img = $('bt-img' + lado), el = $('bt-' + lado);
+  pararSequencia(img);
+  if (!loop && fs.length === 1 && EMOCOES.has(nomeReal)) ms = Math.max(ms, MS_EMOCAO);   // emoção de 1 quadro: 1,5 s
   el.style.transform = lado === 'R' && nomeReal !== 'andar_esquerda' ? 'scaleX(-1)' : '';
   let i = 0;
   const passo = () => {
@@ -6012,22 +6027,29 @@ const btParado = (lado) => btTocar(lado, 'andar_direita', { ms: 420 });
 const btForma = (lado) => (lado === 'L' ? bt.forma : bt.t.pet);
 const SPR_ADULTOS = { dragao_azul_adulto: true, dragao_vermelho_adulto: true };
 const adultoNaBatalha = () => !!bt && bt.forma !== bt.pet && temAnim(bt.forma, 'rugido');
-// abertura do adulto: ruge; com o truque "Voo de fogo", voa e pousa
+// abertura do adulto: ruge
 function btAbertura() {
   if (!adultoNaBatalha()) return;
-  if (truqueLiberado('voo_fogo', bt.pet) && temAnim(bt.forma, 'voo_fogo')) btTocar('L', 'voo_fogo', { loop: false, ms: 360, depois: () => btTocar('L', 'salto_pouso', { loop: false, ms: 140 }) });
-  else btTocar('L', 'rugido', { loop: false, ms: 260 });
+  btTocar('L', 'rugido', { loop: false, ms: 260 });
 }
 
 // Ataque com fogo (pets com ataque_fogo): fica bravo ou ruge, abre a boca e o fogo sai na direção do adversário.
 // O lado R é desenhado espelhado (scaleX(-1)), então o fogo sai para a esquerda sozinho.
 async function btAtaqueFogo(de, para, crit, especial) {
-  const antes = temAnim(btForma(de), 'prepara_fogo') ? 'prepara_fogo' : 'rugido';   // respira fundo antes do fogo
-  btTocar(de, antes, { loop: false, ms: 260, depois: () => {} });
-  await btEsperar(700);
-  if (!bt) return;
-  btTocar(de, 'ataque_fogo', { loop: false, ms: 200, depois: () => {} });   // fica no último quadro (fogo) até btParado
-  await btEsperar(200);
+  const forma = btForma(de);
+  if (temSequencia(forma, 'ataque_batalha')) {   // adulto: sequência "ataque_batalha"; o fogo sai no 2º quadro do ataque_fogo
+    clearTimeout(bt.anim[de]);
+    $('bt-' + de).style.transform = de === 'R' ? 'scaleX(-1)' : '';
+    tocarSequencia($('bt-img' + de), forma, 'ataque_batalha', { deFrente: false });   // fica no último quadro (fogo) até btParado
+    await btEsperar(msAtePasso(forma, 'ataque_batalha', ([a, q]) => a === 'ataque_fogo' && q >= 2, { deFrente: false }));
+  } else {
+    const antes = temAnim(forma, 'prepara_fogo') ? 'prepara_fogo' : 'rugido';   // respira fundo antes do fogo
+    btTocar(de, antes, { loop: false, ms: 260, depois: () => {} });
+    await btEsperar(700);
+    if (!bt) return;
+    btTocar(de, 'ataque_fogo', { loop: false, ms: 200, depois: () => {} });   // fica no último quadro (fogo) até btParado
+    await btEsperar(200);
+  }
   if (!bt) return;
   await btFogo(de, para, crit, especial);
 }
@@ -6280,7 +6302,7 @@ async function btFechar() {
       n = Math.round(n * (c.sequencia?.multiplicador_dano ?? 1.5));
       bt.seq = 0;
       btBanner('ATAQUE ESPECIAL!', '#ffd700');
-      if (adultoNaBatalha()) { btAbertura(); await btEsperar(1200); }   // adulto: ruge (ou voa, com o truque) no lugar da cambalhota
+      if (adultoNaBatalha()) { btAbertura(); await btEsperar(1200); }   // adulto: ruge no lugar da cambalhota
       else {
         btTocar('L', 'pulo_cambalhota', { loop: false, ms: 90 });
         await btEsperar(Math.max(700, quadrosDe(bt.forma, 'pulo_cambalhota').length * 90 + 120));
@@ -8195,7 +8217,7 @@ function renderMissoes() {
 // ============================================================
 //  ✨ TRUQUES (PROMPT-51) — dados/jogo/truques.json, por forma do pet (um texto no lugar da lista = usa a lista daquela forma).
 //  Liberam com a lealdade do pet; só para brincar (não dão moedas nem lealdade). Avisos de "aprendeu" uma vez por truque
-//  (pets/conquistados/{pet}/truques_vistos). Na batalha: "cuspir_fogo" libera o ataque de fogo e "voo_fogo" a abertura voando.
+//  (pets/conquistados/{pet}/truques_vistos). Truque com "sequencia": toca sprites.json → sequencias[forma][nome].
 // ============================================================
 let TRUQUES = {};
 function truquesDe(pet) {
@@ -8240,6 +8262,7 @@ function fazerTruque(id) {
   $('mp-truques-painel').hidden = true;   // fecha a lista para ver o pet
   mp.estado = 'truque'; mp.ocupado = true;
   movimentoCorpo(null);
+  if (t.sequencia && mp.anim.sequencia(t.sequencia, () => { if (mp?.estado === 'truque') voltarAoNormal(); })) return;   // banho, cuspir fogo, rugir: sequência com tempo
   const anims = t.anims.filter(a => a === 'busto_fogo' || temAnim(mp.forma, a));
   let i = 0, guarda = 0;
   const proximo = () => {

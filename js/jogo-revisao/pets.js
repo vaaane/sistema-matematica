@@ -38,7 +38,7 @@ export function quadrosDe(pet, anim) {
 export const bustoPet = (pet) => quadrosDe(pet, 'busto_sorrindo')[0];
 export const temBusto = (pet) => temAnim(pet, 'busto_sorrindo');
 // tamanhos vêm do sprites.json (os números abaixo só valem se ele não carregar);
-// um pet pode ter quadro próprio em quadro_por_pet (os adultos: 1402 × 801, por causa das asas)
+// um pet pode ter quadro próprio em quadro_por_pet (os adultos: 1686 × 808, por causa das asas e do fogo)
 export const tamanhoQuadro = (forma) => SPR?.quadro_por_pet?.[forma]?.tamanho_quadro || SPR?.tamanho_quadro || [898, 704];
 export const tamanhoBusto = () => SPR?.tamanho_busto || [1036, 1124];
 // fração da altura do quadro que o pet SENTADO ocupa (o resto é folga para pulos e asas)
@@ -59,9 +59,67 @@ export function sortearOcioso() {   // sem repetir a anterior
   return ultimoOcioso;
 }
 
-// Ritmo de cada animação: ms por quadro, se repete, e quanto segura o último quadro
+// ── Sequências com tempo (sprites.json → sequencias[forma][nome]): cada passo = [animação, quadro (1 = primeiro), ms].
+// Uma <img> toca uma sequência por vez; começar outra (ou pararSequencia) interrompe a anterior.
+const SEQ = new WeakMap();   // img → sequência tocando agora
+export const temSequencia = (forma, nome) => !!SPR?.sequencias?.[forma]?.[nome]?.length;
+const DE_LADO = /_lado$/;
+export function pararSequencia(img) {
+  const s = SEQ.get(img);
+  if (!s) return;
+  SEQ.delete(img); clearTimeout(s.t); s.ok(false);
+}
+// Promise: true no fim; false se foi interrompida; null se o pet não tem a sequência (quem chamou usa a animação simples).
+// Começa/termina de lado (sentado_lado, parado_lado) e o pet estava de frente: passa pelo meio do giro (sentado_girando 2).
+export function tocarSequencia(img, forma, nome, { deFrente = true } = {}) {
+  pararSequencia(img);
+  const passos = temSequencia(forma, nome) ? [...SPR.sequencias[forma][nome]] : null;
+  if (!passos) return Promise.resolve(null);
+  if (deFrente && temAnim(forma, 'sentado_girando') && SPR.pets[forma].sentado_girando.length >= 2) {
+    if (DE_LADO.test(passos[0][0])) passos.unshift(['sentado_girando', 2, 300]);
+    if (DE_LADO.test(passos[passos.length - 1][0])) passos.push(['sentado_girando', 2, 300]);
+  }
+  return new Promise(ok => {
+    const s = { ok, t: 0 };
+    SEQ.set(img, s);
+    let i = 0;
+    const passo = () => {
+      if (SEQ.get(img) !== s) return;
+      if (i >= passos.length) { SEQ.delete(img); ok(true); return; }
+      const [anim, q, ms] = passos[i++], fs = quadrosDe(forma, anim);
+      const src = fs[Math.min(Math.max(1, q), fs.length) - 1];
+      if (src && img.getAttribute('src') !== src) img.src = src;   // (a batalha troca o src sem dataset)
+      if (src) img.dataset.src = src;
+      s.t = setTimeout(passo, ms);
+    };
+    passo();
+  });
+}
+// até quando a sequência chega a um passo (ms desde o começo, contando o giro de entrada): ex. o fogo sair na batalha
+export function msAtePasso(forma, nome, achar, { deFrente = true } = {}) {
+  const passos = SPR?.sequencias?.[forma]?.[nome] || [];
+  let t = deFrente && DE_LADO.test(passos[0]?.[0] || '') ? 300 : 0;
+  for (const p of passos) { if (achar(p)) return t; t += p[2]; }
+  return t;
+}
+// Ações do adulto parado no Meu Pet (sorteadas sem repetir a anterior)
+const ACOES_PARADO = ['cheirar', 'lamber_pata', 'lamber_rabo', 'descansar', 'rugir'];
+let ultimaAcao = null;
+export function sortearAcaoParado(forma) {
+  const l = ACOES_PARADO.filter(a => a !== ultimaAcao && temSequencia(forma, a));
+  if (!l.length) return null;
+  ultimaAcao = l[Math.floor(Math.random() * l.length)];
+  return ultimaAcao;
+}
+
+// Emoções de 1 quadro (adultos) ficam 1,5 s na tela
+export const EMOCOES = new Set(['feliz', 'bravo', 'confuso', 'assustado', 'orgulhoso', 'animado', 'ufa', 'calmo']);
+export const MS_EMOCAO = 1500;
+
+// Ritmo de cada animação: ms por quadro, se repete, quanto segura o último quadro e quantas vezes passa (vezes)
 function ritmo(anim, n) {
-  if (anim.startsWith('andar_')) return { ms: n === 2 ? 200 : 150, loop: true };
+  if (anim.startsWith('andar_')) return { ms: n === 2 ? 200 : 150, loop: true };   // andar_frente/andar_costas do adulto: os 8 quadros em ciclo
+  if (n === 1 && EMOCOES.has(anim)) return { ms: MS_EMOCAO, loop: false };
   switch (anim) {
     case 'correndo': return { ms: 90, loop: true };
     case 'costas_parado': return { ms: 250, loop: true };
@@ -73,12 +131,12 @@ function ritmo(anim, n) {
     case 'rugido': return { ms: 260, loop: false, ultimo: 600 };
     case 'ataque_fogo': return { ms: 220, loop: false, ultimo: 650 };
     // emoções e variações (1 ou 2 quadros nos adultos; nos filhotes caem na reserva): seguram um pouco e voltam
-    case 'farejar': case 'lamber_pata': case 'lamber_rabo': return { ms: 350, loop: false };   // quadros repetidos no sprites.json: ~2 s
+    case 'farejar': case 'lamber_pata': case 'lamber_rabo': return { ms: 450, loop: false, vezes: n <= 2 ? 5 : 1 };   // 2 quadros (adulto): 5 vezes, ~4,5 s
     case 'bravo': case 'confuso': case 'assustado': case 'orgulhoso': case 'animado': case 'calmo': case 'ufa': case 'rugido_sentado':
     case 'prepara_fogo': case 'lamber_beicos': case 'farejar_em_pe': case 'lamber_ombro':
       return { ms: n === 1 ? 900 : 500, loop: false };
     case 'assar_comida': return { ms: n === 1 ? 1200 : 400, loop: false };
-    case 'andando_fogo': case 'voo_fogo': return { ms: 320, loop: false, ultimo: 700 };
+    case 'andando_fogo': return { ms: 320, loop: false, ultimo: 700 };
     default: return { ms: 300, loop: true };
   }
 }
@@ -136,7 +194,7 @@ export class PetSeguidor {
 
   trocar(anim, reiniciar) {
     if (this.anim === anim && !reiniciar) return;
-    this.anim = anim; this.q = 0; this.t = 0;
+    this.anim = anim; this.q = 0; this.t = 0; this.vez = 1;
     this.lista = quadrosDe(this.forma, anim);
   }
 
@@ -218,6 +276,7 @@ export class PetSeguidor {
       this.t = 0;
       if (!ultimo) this.q++;
       else if (r.loop) this.q = 0;
+      else if (this.vez < (r.vezes || 1)) { this.vez++; this.q = 0; }
       else { this.reacao = null; this.ocioso = false; this.trocar('sentado_girando', true); }   // animação de uma vez só terminou
     }
     this.desenhar();
@@ -241,19 +300,29 @@ export class PetSeguidor {
 
 // Pet parado num lugar (o que espera ao lado do líder): só anima, não segue ninguém
 export class PetParado {
-  constructor(img) { this.img = img; this.pet = null; this.anim = ''; this.q = 0; this.t = 0; this.lista = []; this.aoAcabar = null; this.ciclos = 0; }
+  constructor(img) { this.img = img; this.pet = null; this.anim = ''; this.q = 0; this.t = 0; this.lista = []; this.aoAcabar = null; this.ciclos = 0; this.vez = 1; this.emSeq = false; }
 
   definir(pet) { this.pet = pet; this.tocar('sentado_girando'); }
 
   // Animação sem loop volta para sentado_girando no fim (e chama aoAcabar)
   tocar(anim, aoAcabar = null) {
-    this.anim = anim; this.q = 0; this.t = 0; this.aoAcabar = aoAcabar; this.ciclos = 0;
+    pararSequencia(this.img); this.emSeq = false;   // interrompe a sequência que estiver tocando
+    this.anim = anim; this.q = 0; this.t = 0; this.aoAcabar = aoAcabar; this.ciclos = 0; this.vez = 1;
     this.lista = quadrosDe(this.pet, anim);
     this.desenhar();
   }
 
+  // Sequência com tempo (sprites.json → sequencias). false = o pet não tem (quem chamou usa tocar()).
+  // No fim volta para sentado_girando e chama aoAcabar; interrompida (tocar/outra sequência), não chama.
+  sequencia(nome, aoAcabar = null) {
+    if (!temSequencia(this.pet, nome)) return false;
+    this.anim = 'seq:' + nome; this.emSeq = true; this.aoAcabar = null;
+    tocarSequencia(this.img, this.pet, nome).then(fim => { if (!fim) return; this.tocar('sentado_girando'); aoAcabar?.(); });
+    return true;
+  }
+
   atualizar(dt) {
-    if (!this.lista.length) return;
+    if (this.emSeq || !this.lista.length) return;
     const r = ritmo(this.anim, this.lista.length);
     const ultimo = this.q === this.lista.length - 1;
     this.t += dt * 1000;
@@ -261,6 +330,7 @@ export class PetParado {
     this.t = 0;
     if (!ultimo) this.q++;
     else if (r.loop) { this.q = 0; this.ciclos++; }   // ciclos completos da animação em loop
+    else if (this.vez < (r.vezes || 1)) { this.vez++; this.q = 0; }
     else { const f = this.aoAcabar; this.tocar('sentado_girando'); f?.(); return; }
     this.desenhar();
   }
