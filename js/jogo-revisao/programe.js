@@ -1,7 +1,7 @@
 // Jogo de Revisão — "Programe o pet" (PROMPT-50): a tela (Blockly + grade + pet que executa o programa).
 // As regras ficam em programe-logica.js; progresso, prêmios, rankings e corrida ficam no jogo (jogo-revisao.js),
 // que passa o que esta tela precisa em configurarPrograme(ctx).
-import { lerFase, executar, contarBlocos, estrelasDe, ladoB, podeAndar } from '/js/jogo-revisao/programe-logica.js';
+import { lerFase, executar, contarBlocos, estrelasDe, ladoB, podeAndar, girarFase, girarEvento, desgirarPonto } from '/js/jogo-revisao/programe-logica.js';
 
 const BLOCKLY = 'https://unpkg.com/blockly@10.4.3/';   // versão fixa (biblioteca do Google, gratuita)
 const $ = (id) => document.getElementById(id);
@@ -111,7 +111,7 @@ export function programaDeTexto(txt) { try { const p = JSON.parse(txt); return p
 function xmlDe() { try { return window.Blockly.Xml.domToText(window.Blockly.Xml.workspaceToDom(ws)); } catch (_) { return ''; } }
 
 // ── Abrir a tela ──
-// cfg: { modo: 'fase'|'dia'|'corrida'|'fantasma', fase, titulo, sub, meta, xml, lado ('a'|'b'), rival: { nome, pet, forma, tinta },
+// cfg: { modo: 'fase'|'dia'|'corrida'|'fantasma', fase, titulo, sub, meta, xml, lado ('a'|'b'), rival: { nome, pet, forma, tinta }, tema: { casa, obstaculo },
 //        fimEm (ms do relógio do jogo em que a montagem acaba), aoExecutar, aoVencer, aoBater, aoPronto, aoFechar }
 export async function abrirTela(cfg) {
   fecharTela(true);
@@ -130,8 +130,9 @@ export async function abrirTela(cfg) {
   }
   $('pg-carregando').hidden = true;
   const corrida = cfg.modo === 'corrida' || cfg.modo === 'fantasma';
-  const F = lerFase(cfg.fase);
-  tela = { cfg, F, corrida, rodando: false, parar: false, vel: 300, pronto: false, inicio: Date.now(), timers: [], quadro: {}, raf: 0 };
+  const giro = deveGirar(cfg.fase), fase = giro ? girarFase(cfg.fase) : cfg.fase;
+  const F = lerFase(fase);
+  tela = { cfg, F, fase, giro, corrida, rodando: false, parar: false, vel: 300, pronto: false, inicio: Date.now(), timers: [], quadro: {}, raf: 0 };
   $('programe').classList.toggle('corrida', corrida);
   $('pg-exec').textContent = corrida ? '▶ Testar' : '▶ Executar';
   $('pg-pronto').hidden = !corrida;
@@ -338,6 +339,19 @@ function atualizarContagem() {
 }
 
 // ── Grade ──
+// Tela em pé e fase mais larga que alta: a fase aparece girada 90° (sentido horário). Na corrida os dois lados giram igual.
+// tela.fase = a fase mostrada (girada ou não); cfg.fase continua a original (é a que vale para salvar e para o resultado).
+const emPe = () => matchMedia('(orientation: portrait)').matches;
+function deveGirar(f) { const F = lerFase(f); return emPe() && F.w > F.h; }
+// celular girou com a fase parada (sem execução, passo a passo nem corrida na tela): gira ou desgira a fase
+function conferirGiro() {
+  if (!tela || tela.rodando || tela.exec || tela.mostrando || tela.pronto) return;
+  const giro = deveGirar(tela.cfg.fase);
+  if (giro === tela.giro) return;
+  tela.giro = giro; tela.fase = giro ? girarFase(tela.cfg.fase) : tela.cfg.fase; tela.F = lerFase(tela.fase);
+  limparRastro(); limparAnotacoes();
+  montarGrade();
+}
 const CASA = 'pg-casa';
 function montarGrade() {
   const { F, cfg } = tela, g = $('pg-grade');
@@ -352,16 +366,36 @@ function montarGrade() {
   for (const [x, y] of F.petiscos) html += `<img class="pg-item pg-petisco" data-p="${x},${y}" src="${petisco}" alt="petisco" draggable="false" style="--x:${x};--y:${y}"/>`;
   if (F.comida) html += `<img class="pg-item pg-comida" src="${comida}" alt="comida" draggable="false" style="--x:${F.comida[0]};--y:${F.comida[1]}"/>`;
   g.innerHTML = html;
+  aplicarTema(g, cfg.tema);
   // pets: o meu (e, na corrida, o do outro lado)
   const eu = C.pet();
   tela.pets = {};
-  const inicioEu = cfg.lado === 'b' && cfg.fase.inicioB ? { x: cfg.fase.inicioB[0], y: cfg.fase.inicioB[1], dir: 4 } : { x: F.inicio[0], y: F.inicio[1], dir: F.dir };
+  const fase = tela.fase, dirB = fase.inicioB ? lerFase(ladoB(fase)).dir : 4;
+  const inicioEu = cfg.lado === 'b' && fase.inicioB ? { x: fase.inicioB[0], y: fase.inicioB[1], dir: dirB } : { x: F.inicio[0], y: F.inicio[1], dir: F.dir };
   tela.pets.eu = criarPet(eu, inicioEu, 'eu');
   if (tela.corrida && cfg.rival) {
-    const ib = cfg.lado === 'b' ? { x: F.inicio[0], y: F.inicio[1], dir: F.dir } : { x: cfg.fase.inicioB[0], y: cfg.fase.inicioB[1], dir: 4 };
+    const ib = cfg.lado === 'b' ? { x: F.inicio[0], y: F.inicio[1], dir: F.dir } : { x: fase.inicioB[0], y: fase.inicioB[1], dir: dirB };
     tela.pets.outro = criarPet(cfg.rival, ib, 'outro');
   }
   medirGrade();
+}
+// Tema da região (PROMPT-60): cfg.tema = { casa, obstaculo } (caminhos já prontos). Só troca o visual depois que a imagem
+// carrega; sem ela (ou com erro) ficam as casas e pedras de sempre.
+const temaOk = new Map();   // src → Promise<boolean>
+const carregou = (src) => {
+  if (!src) return Promise.resolve(false);
+  if (!temaOk.has(src)) temaOk.set(src, new Promise(ok => { const i = new Image(); i.onload = () => ok(true); i.onerror = () => ok(false); i.src = src; }));
+  return temaOk.get(src);
+};
+function aplicarTema(g, tema) {
+  g.classList.remove('com-casa', 'com-obstaculo');
+  g.style.removeProperty('--pg-casa-img'); g.style.removeProperty('--pg-obst-img');
+  if (!tema) return;
+  const css = (src) => `url("${String(src).replace(/["\\]/g, '')}")`;
+  for (const [chave, cls, v] of [['casa', 'com-casa', '--pg-casa-img'], ['obstaculo', 'com-obstaculo', '--pg-obst-img']]) {
+    const src = tema[chave];
+    carregou(src).then(ok => { if (ok && g.isConnected && tela?.cfg.tema === tema) { g.style.setProperty(v, css(src)); g.classList.add(cls); } });
+  }
 }
 function criarPet(p, ini, quem) {
   const g = $('pg-grade');
@@ -413,7 +447,8 @@ function medirDesenho(forma) {
     const cs = (await Promise.all(srcs.map(caixaDoQuadro))).filter(Boolean);
     if (!cs.length) return null;
     // altura da imagem (em casas) para cada quadro caber: altura do desenho ≤ 0,95 e largura do desenho ≤ 0,95
-    const alt = Math.min(...cs.map(c => Math.min(CABE / (c.y1 - c.y0), CABE / ((c.x1 - c.x0) * c.w / c.h))));
+    const cabe = Math.min(...cs.map(c => Math.min(CABE / (c.y1 - c.y0), CABE / ((c.x1 - c.x0) * c.w / c.h))));
+    const alt = Math.min(cabe, cabe * (C.escalaPet?.(forma) || 1));   // a escala do pet (PROMPT-63) só vale até o limite da casa
     const baixo = Math.min(...cs.map(c => 1 - c.y1));   // o pé mais baixo encosta na base da casa
     return { alt, baixo };
   })());
@@ -424,7 +459,8 @@ function medirGrade() {
   if (!tela) return;
   const { F } = tela, cx = $('pg-grade-caixa').getBoundingClientRect();
   if (cx.width < 10 || cx.height < 10) return;   // ainda sem tamanho (a tela acabou de aparecer)
-  const s = Math.max(16, Math.floor(Math.min(cx.width / F.w, cx.height / F.h)));
+  // a casa = o menor entre largura ÷ colunas e altura ÷ linhas (sem mínimo: o tabuleiro nunca passa da tela; −6 = a borda de 3 px)
+  const s = Math.max(1, Math.floor(Math.min((cx.width - 6) / F.w, (cx.height - 6) / F.h)));
   $('pg-grade').style.setProperty('--s', s + 'px');
   for (const pet of Object.values(tela.pets || {})) {
     const forma = pet.p?.forma || pet.p?.pet, m = pet.medida;
@@ -434,7 +470,7 @@ function medirGrade() {
     pet.img.style.marginBottom = m ? -(h * m.baixo) + 'px' : '';   // desconta a folga vazia de baixo: o pé fica na base da casa
   }
 }
-window.addEventListener('resize', () => { if (tela) { medirGrade(); try { window.Blockly?.svgResize(ws); } catch (_) {} } });
+window.addEventListener('resize', () => { if (tela) { conferirGiro(); medirGrade(); try { window.Blockly?.svgResize(ws); } catch (_) {} } });
 // a área da grade muda de tamanho (tela aparecendo, celular girando, mensagem de 2 linhas): mede de novo
 if (window.ResizeObserver) new ResizeObserver(() => { if (tela) medirGrade(); }).observe(document.getElementById('pg-grade-caixa') || document.body);
 
@@ -520,7 +556,7 @@ function novaExecucao() {
   const prog = astDe(), cfg = tela.cfg;
   if (!prog.corpo.length) { avisarSolto('Encaixe os blocos <b>embaixo do 🏁 quando executar</b> (o 🏁 está piscando).'); if (cfg.tutorial) iniciarTutorial(); return null; }
   voltarAoInicio(); limparRastro(); limparAnotacoes();
-  const fase = cfg.lado === 'b' ? lerFase(ladoB(cfg.fase)) : tela.F;   // lado B da corrida: o pet sai do canto da direita
+  const fase = cfg.lado === 'b' ? lerFase(ladoB(tela.fase)) : tela.F;   // lado B da corrida: o pet sai do canto da direita
   const saida = {};
   tela.exec = { gen: executar(fase, prog, {}, saida), saida, fase, prog, nb: contarBlocos(prog), buf: [], nos: indexar(prog), voltas: new Map(),
     bateuEm: null, ultimoBloco: null, passo: false };
@@ -655,12 +691,19 @@ function terminar(E, fim) {
     cfg.aoVencer?.({ blocos: nb, estrelas: est, xml: xmlDe(), texto: textoDe(prog), prog, tempo_s });
     return;
   }
-  if (fim.motivo === 'bateu') { msg('💥 O pet bateu! Confira o bloco destacado.', 'erro'); if (!tela.corrida) cfg.aoBater?.({ ...E.bateuEm, xml: xmlDe(), texto: textoDe(prog) }); return; }
+  if (fim.motivo === 'bateu') { msg('💥 O pet bateu! Confira o bloco destacado.', 'erro'); if (!tela.corrida) cfg.aoBater?.({ ...E.bateuEm, ...casaOriginal(E.bateuEm), xml: xmlDe(), texto: textoDe(prog) }); return; }
   try { ws.highlightBlock(null); } catch (_) {}
   if (fim.motivo === 'longo') { msg('🔁 O programa não termina. Confira as repetições.', 'erro'); return; }
   const faltam = fim.faltam;
   msg(fim.naComida && faltam ? `Faltou pegar ${faltam === 1 ? '1 petisco' : faltam + ' petiscos'} 🐾 antes da comida.` : 'O programa acabou antes de chegar na comida. Falta caminho!', 'aviso');
   if (blocosSoltos()) avisarSolto('Tem bloco solto: só conta o que está <b>encaixado embaixo de 🏁</b>.');
+}
+
+// casa onde bateu, na fase original (o que fica salvo não depende de a tela estar girada)
+function casaOriginal(b) {
+  if (!tela.giro || b?.x == null) return {};
+  const [x, y] = desgirarPonto(b.x, b.y, tela.F.w);
+  return { x, y };
 }
 
 function pararPrograma() { if (tela?.rodando) tela.parar = true; }
@@ -776,7 +819,8 @@ async function crescerPet(img, forma, anims) {
   if (!tela) return;
   const bw = c.x1 - c.x0, bh = c.y1 - c.y0, ar = c.h / c.w;
   // largura da imagem: o desenho com ~85% da tela em pé (no máximo a área livre), e a altura cabendo na área
-  const larg = Math.max(40, Math.min((emPe ? Math.min(raiz.width * 0.8, reg.w * 0.9) : reg.w * 0.8) / bw, reg.h * 0.85 / (bh * ar)));
+  const prop = (C.escalaPet?.(forma) || 1) / (C.escalaMax?.() || 1);   // vermelho adulto (1,15) preenche; o azul fica 1/1,15 disso
+  const larg = Math.max(40, Math.min((emPe ? Math.min(raiz.width * 0.8, reg.w * 0.9) : reg.w * 0.8) / bw, reg.h * 0.85 / (bh * ar)) * prop);
   const alt = larg * ar, cx = reg.x + reg.w / 2, cy = reg.y + reg.h / 2;
   const left = cx - (c.x0 + bw / 2) * larg, top = cy - (c.y0 + bh / 2) * alt;
   Object.assign(img.style, { left: left + 'px', top: top + 'px', width: larg + 'px', height: alt + 'px' });
@@ -813,6 +857,8 @@ function soltarConfete() {
 // Mostra a corrida: eventos de cada lado (de resultadoCorrida), no mesmo ritmo (cada ação = 1 tique; bater = +5)
 export async function mostrarCorrida(evEu, evOutro) {
   if (!tela) return;
+  if (tela.giro) { const h = tela.F.w; evEu = evEu.map(e => girarEvento(e, h)); evOutro = evOutro.map(e => girarEvento(e, h)); }   // eventos vêm da fase original
+  tela.mostrando = true;
   voltarAoInicio(); limparRastro(); limparAnotacoes();
   msg('🏁 Valendo!');
   const linha = (evs) => { const out = []; let t = 0; for (const ev of evs) {
@@ -829,7 +875,7 @@ export async function mostrarCorrida(evEu, evOutro) {
     await esperar(ms);
     for (const pet of Object.values(tela?.pets || {})) if (pet.anim === 'andar') pose(pet, 'parado');
   }
-  if (tela) clearInterval(tela.anim);
+  if (tela) { clearInterval(tela.anim); tela.mostrando = false; }
 }
 export function mensagemCorrida(html, tipo) { if (tela) msg(html, tipo); }
 export function travarMontagem(texto) { if (!tela) return; tela.pronto = true; $('pg-trava').hidden = false; $('pg-trava').textContent = texto || ''; }

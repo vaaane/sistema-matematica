@@ -279,6 +279,23 @@
   </div>
 
   <!-- 🤖 Programe o pet (PROMPT-50): grade + blocos (Blockly) -->
+  <!-- 🤖 Ilha dos Robôs: mapa das fases do Programe o pet (PROMPT-60), em pé -->
+  <section id="pg-mapa" class="pgm-tela" hidden aria-label="Ilha dos Robôs">
+    <div class="pgm-topo">
+      <button class="bt-lista-x" id="pgm-sair" aria-label="Voltar ao laboratório">✕</button>
+      <b class="pgm-titulo">🤖 Ilha dos Robôs</b>
+      <span class="pgm-estrelas" id="pgm-estrelas"></span>
+      <div class="pgm-medalhas" id="pgm-medalhas"></div>
+    </div>
+    <div class="pgm-scroll" id="pgm-scroll">
+      <div class="pgm-palco" id="pgm-palco">
+        <img class="pgm-fundo" id="pgm-fundo" alt="" draggable="false" hidden/>
+        <svg class="pgm-trilha" id="pgm-trilha" preserveAspectRatio="none" aria-hidden="true"></svg>
+        <div class="pgm-itens" id="pgm-itens"></div>
+        <div class="pgm-balao" id="pgm-balao" hidden></div>
+      </div>
+    </div>
+  </section>
   <section id="programe" class="pg-tela" hidden aria-label="Programe o pet">
     <div class="pg-esq">
       <div class="pg-topo">
@@ -291,7 +308,7 @@
       <div class="pg-msg" id="pg-msg"></div>
       <div class="pg-botoes">
         <button class="jr-btn jr-btn-ouro" id="pg-exec">▶ Executar</button>
-        <button class="jr-btn jr-btn-sec" id="pg-passo">⏭ 1 passo</button>
+        <button class="jr-btn jr-btn-sec" id="pg-passo" aria-label="1 passo">⏭<span class="pg-passo-txt"> 1 passo</span></button>
         <button class="jr-btn jr-btn-sec" id="pg-parar" aria-label="Parar">⏸</button>
         <button class="jr-btn jr-btn-sec" id="pg-reset" aria-label="Voltar ao início">↺</button>
         <button class="jr-btn" id="pg-pronto" hidden>✅ Pronto!</button>

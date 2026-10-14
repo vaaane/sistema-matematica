@@ -27,6 +27,28 @@ export function lerFase(f) {
   }));
   return { w, h, pedras, petiscos, comida, inicio, dir: DIR_CHAR[f.dir] ?? 0, diagonal: !!f.diagonal, blocos: f.blocos || [] };
 }
+// ── Giro de 90° no sentido horário (só para MOSTRAR e executar fases largas com a tela em pé; a fase salva não muda) ──
+// Casa (x, y) de uma fase com h linhas → (h − 1 − y, x); direção + 90° (2 passos de 45°). Os blocos de virar são relativos
+// ao pet, então qualquer solução continua valendo na fase girada.
+const GIRA_DIR = { '>': 'v', v: '<', '<': '^', '^': '>' };
+export const girarPonto = (x, y, h) => [h - 1 - y, x];
+export const desgirarPonto = (x, y, h) => [y, h - 1 - x];   // h = linhas da fase ORIGINAL (= colunas da girada)
+export function girarFase(f) {
+  const linhas = f.mapa.map(String), h = linhas.length, w = Math.max(...linhas.map(l => l.length));
+  const cel = linhas.map(l => l.padEnd(w, '#'));
+  const mapa = [];
+  for (let y = 0; y < w; y++) { let l = ''; for (let x = 0; x < h; x++) l += cel[h - 1 - x][y]; mapa.push(l); }
+  const g = { ...f, mapa, dir: GIRA_DIR[f.dir] || 'v' };
+  if (f.inicioB) { g.inicioB = girarPonto(f.inicioB[0], f.inicioB[1], h); g.dirB = GIRA_DIR[f.dirB || '<']; }
+  return g;
+}
+// evento de executar() numa fase original → o mesmo evento na fase girada (h = linhas da original)
+export function girarEvento(ev, h) {
+  const g = { ...ev };
+  if (ev.x != null && ev.y != null) [g.x, g.y] = girarPonto(ev.x, ev.y, h);
+  if (ev.dir != null) g.dir = (ev.dir + 2) % 8;
+  return g;
+}
 export const dentro = (F, x, y) => x >= 0 && y >= 0 && x < F.w && y < F.h;
 export const livre = (F, x, y) => dentro(F, x, y) && !F.pedras.has(k(x, y));
 

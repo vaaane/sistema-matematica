@@ -1,0 +1,249 @@
+{
+ "imagem": "img/jogo/programe/ilha-dos-robos.webp",
+ "tamanho": [
+  1438,
+  2576
+ ],
+ "nota": "x e y são frações da imagem (0 a 1). Posições conferidas sobre a imagem da ilha.",
+ "regioes": [
+  {
+   "cap": 1,
+   "id": "vila",
+   "nome": "Vila dos Passos",
+   "chefe": "img/jogo/programe/chefe-vila.webp",
+   "medalha": "🥾",
+   "tema": {
+    "casa": "img/jogo/programe/casa-vila.webp",
+    "obstaculo": "img/jogo/programe/obstaculo-vila.webp"
+   },
+   "fases": [
+    {
+     "fase": 1,
+     "x": 0.4979,
+     "y": 0.9161
+    },
+    {
+     "fase": 2,
+     "x": 0.5452,
+     "y": 0.8634
+    },
+    {
+     "fase": 3,
+     "x": 0.4006,
+     "y": 0.8191
+    },
+    {
+     "fase": 4,
+     "x": 0.4659,
+     "y": 0.7686
+    },
+    {
+     "fase": 5,
+     "x": 0.5257,
+     "y": 0.7244
+    }
+   ],
+   "placa": {
+    "x": 0.4979,
+    "y": 0.9425
+   }
+  },
+  {
+   "cap": 2,
+   "id": "fabrica",
+   "nome": "Fábrica das Engrenagens",
+   "chefe": "img/jogo/programe/chefe-fabrica.webp",
+   "medalha": "⚙️",
+   "tema": {
+    "casa": "img/jogo/programe/casa-fabrica.webp",
+    "obstaculo": "img/jogo/programe/obstaculo-fabrica.webp"
+   },
+   "fases": [
+    {
+     "fase": 6,
+     "x": 0.299,
+     "y": 0.7182
+    },
+    {
+     "fase": 7,
+     "x": 0.2017,
+     "y": 0.6561
+    },
+    {
+     "fase": 8,
+     "x": 0.299,
+     "y": 0.6134
+    },
+    {
+     "fase": 9,
+     "x": 0.459,
+     "y": 0.5994
+    },
+    {
+     "fase": 10,
+     "x": 0.612,
+     "y": 0.5978
+    }
+   ],
+   "placa": {
+    "x": 0.299,
+    "y": 0.7446
+   }
+  },
+  {
+   "cap": 3,
+   "id": "montanha",
+   "nome": "Montanha dos Ângulos",
+   "chefe": "img/jogo/programe/chefe-montanha.webp",
+   "medalha": "⛰️",
+   "tema": {
+    "casa": "img/jogo/programe/casa-montanha.webp",
+    "obstaculo": "img/jogo/programe/obstaculo-montanha.webp"
+   },
+   "fases": [
+    {
+     "fase": 11,
+     "x": 0.7232,
+     "y": 0.559
+    },
+    {
+     "fase": 12,
+     "x": 0.6773,
+     "y": 0.4837
+    },
+    {
+     "fase": 13,
+     "x": 0.5772,
+     "y": 0.4581
+    },
+    {
+     "fase": 14,
+     "x": 0.4771,
+     "y": 0.434
+    }
+   ],
+   "placa": {
+    "x": 0.7232,
+    "y": 0.5854
+   }
+  },
+  {
+   "cap": 4,
+   "id": "laboratorio",
+   "nome": "Laboratório F1",
+   "chefe": "img/jogo/programe/chefe-laboratorio.webp",
+   "medalha": "🧪",
+   "tema": {
+    "casa": "img/jogo/programe/casa-laboratorio.webp",
+    "obstaculo": "img/jogo/programe/obstaculo-laboratorio.webp"
+   },
+   "fases": [
+    {
+     "fase": 15,
+     "x": 0.3964,
+     "y": 0.4076
+    },
+    {
+     "fase": 16,
+     "x": 0.3241,
+     "y": 0.3781
+    },
+    {
+     "fase": 17,
+     "x": 0.4033,
+     "y": 0.3509
+    },
+    {
+     "fase": 18,
+     "x": 0.4798,
+     "y": 0.3261
+    }
+   ],
+   "placa": {
+    "x": 0.3964,
+    "y": 0.434
+   }
+  },
+  {
+   "cap": 5,
+   "id": "floresta",
+   "nome": "Floresta das Bifurcações",
+   "chefe": "img/jogo/programe/chefe-floresta.webp",
+   "medalha": "🌳",
+   "tema": {
+    "casa": "img/jogo/programe/casa-floresta.webp",
+    "obstaculo": "img/jogo/programe/obstaculo-floresta.webp"
+   },
+   "fases": [
+    {
+     "fase": 19,
+     "x": 0.4451,
+     "y": 0.2756
+    },
+    {
+     "fase": 20,
+     "x": 0.3644,
+     "y": 0.2616
+    },
+    {
+     "fase": 21,
+     "x": 0.2893,
+     "y": 0.2469
+    },
+    {
+     "fase": 22,
+     "x": 0.3894,
+     "y": 0.2081
+    }
+   ],
+   "placa": {
+    "x": 0.4451,
+    "y": 0.302
+   }
+  },
+  {
+   "cap": 6,
+   "id": "torre",
+   "nome": "Torre do Robô",
+   "chefe": "img/jogo/programe/chefe-torre.webp",
+   "medalha": "🗼",
+   "tema": {
+    "casa": "img/jogo/programe/casa-torre.webp",
+    "obstaculo": "img/jogo/programe/obstaculo-torre.webp"
+   },
+   "fases": [
+    {
+     "fase": 23,
+     "x": 0.5076,
+     "y": 0.2112
+    },
+    {
+     "fase": 24,
+     "x": 0.7121,
+     "y": 0.2275
+    },
+    {
+     "fase": 25,
+     "x": 0.5035,
+     "y": 0.1514
+    }
+   ],
+   "placa": {
+    "x": 0.5076,
+    "y": 0.2376
+   }
+  }
+ ],
+ "especiais": {
+  "desafio_dia": {
+   "x": 0.751,
+   "y": 0.7764,
+   "emoji": "📅"
+  },
+  "corrida": {
+   "x": 0.7858,
+   "y": 0.6677,
+   "emoji": "🏁"
+  }
+ }
+}

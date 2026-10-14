@@ -14,14 +14,16 @@
     1686,
     808
    ],
-   "sentado_altura": 604
+   "sentado_altura": 622,
+   "escala": 1
   },
   "dragao_vermelho_adulto": {
    "tamanho_quadro": [
     1686,
     808
    ],
-   "sentado_altura": 604
+   "sentado_altura": 622,
+   "escala": 1.15
   }
  },
  "evolucao": {
@@ -592,14 +594,10 @@
   },
   "dragao_azul_adulto": {
    "sentado_girando": [
-    "pets/dragao_azul_adulto/sentado_girando_1.webp",
-    "pets/dragao_azul_adulto/sentado_girando_2.webp",
-    "pets/dragao_azul_adulto/sentado_girando_3.webp"
+    "pets/dragao_azul_adulto/sentado_girando_1.webp"
    ],
    "sentado_2": [
-    "pets/dragao_azul_adulto/sentado_2_1.webp",
-    "pets/dragao_azul_adulto/sentado_2_2.webp",
-    "pets/dragao_azul_adulto/sentado_2_3.webp"
+    "pets/dragao_azul_adulto/sentado_2_1.webp"
    ],
    "sentado_lado": [
     "pets/dragao_azul_adulto/sentado_lado_1.webp"
@@ -742,14 +740,10 @@
   },
   "dragao_vermelho_adulto": {
    "sentado_girando": [
-    "pets/dragao_vermelho_adulto/sentado_girando_1.webp",
-    "pets/dragao_vermelho_adulto/sentado_girando_2.webp",
-    "pets/dragao_vermelho_adulto/sentado_girando_3.webp"
+    "pets/dragao_vermelho_adulto/sentado_girando_1.webp"
    ],
    "sentado_2": [
-    "pets/dragao_vermelho_adulto/sentado_2_1.webp",
-    "pets/dragao_vermelho_adulto/sentado_2_2.webp",
-    "pets/dragao_vermelho_adulto/sentado_2_3.webp"
+    "pets/dragao_vermelho_adulto/sentado_2_1.webp"
    ],
    "sentado_lado": [
     "pets/dragao_vermelho_adulto/sentado_lado_1.webp"
@@ -929,25 +923,21 @@
   "dragao_azul_adulto": {
    "cheirar": [
     ["sentado_lado", 1, 1000],
+    ["sentado_lado", 1, 450],
     ["farejar", 1, 450],
-    ["farejar", 2, 450],
+    ["sentado_lado", 1, 450],
     ["farejar", 1, 450],
-    ["farejar", 2, 450],
+    ["sentado_lado", 1, 450],
     ["farejar", 1, 450],
-    ["farejar", 2, 450],
+    ["sentado_lado", 1, 450],
     ["farejar", 1, 450],
-    ["farejar", 2, 450],
+    ["sentado_lado", 1, 450],
     ["farejar", 1, 450],
-    ["farejar", 2, 450],
-    ["farejar_em_pe", 1, 1500],
-    ["farejar", 1, 450],
-    ["farejar", 2, 450],
-    ["farejar", 1, 450],
-    ["farejar", 2, 450],
     ["sentado_lado", 1, 1000]
    ],
    "lamber_pata": [
     ["parado_lado", 1, 900],
+    ["farejar_em_pe", 1, 1200],
     ["lamber_pata", 1, 450],
     ["lamber_pata", 2, 450],
     ["lamber_pata", 1, 450],
@@ -976,6 +966,7 @@
    ],
    "banho": [
     ["parado_lado", 1, 900],
+    ["farejar_em_pe", 1, 1200],
     ["lamber_pata", 1, 450],
     ["lamber_pata", 2, 450],
     ["lamber_pata", 1, 450],
@@ -1015,9 +1006,13 @@
    ],
    "ataque_batalha": [
     ["prepara_fogo", 1, 600],
-    ["ataque_fogo", 1, 350],
-    ["ataque_fogo", 2, 350],
-    ["ataque_fogo", 3, 350]
+    ["ataque_fogo", 1, 300],
+    ["ataque_fogo", 2, 300],
+    ["ataque_fogo", 3, 300],
+    ["ataque_fogo", 1, 300],
+    ["ataque_fogo", 2, 300],
+    ["ataque_fogo", 3, 300],
+    ["ufa", 1, 500]
    ],
    "comer": [
     ["sentado_lado", 1, 1000],
@@ -1028,6 +1023,7 @@
     ["comendo", 2, 600],
     ["ossos", 1, 1800],
     ["lamber_beicos", 1, 1400],
+    ["farejar", 2, 900],
     ["sentado_lado", 1, 1000]
    ],
    "carinho": [
@@ -1055,25 +1051,21 @@
   "dragao_vermelho_adulto": {
    "cheirar": [
     ["sentado_lado", 1, 1000],
+    ["sentado_lado", 1, 450],
     ["farejar", 1, 450],
-    ["farejar", 2, 450],
+    ["sentado_lado", 1, 450],
     ["farejar", 1, 450],
-    ["farejar", 2, 450],
+    ["sentado_lado", 1, 450],
     ["farejar", 1, 450],
-    ["farejar", 2, 450],
+    ["sentado_lado", 1, 450],
     ["farejar", 1, 450],
-    ["farejar", 2, 450],
+    ["sentado_lado", 1, 450],
     ["farejar", 1, 450],
-    ["farejar", 2, 450],
-    ["farejar_em_pe", 1, 1500],
-    ["farejar", 1, 450],
-    ["farejar", 2, 450],
-    ["farejar", 1, 450],
-    ["farejar", 2, 450],
     ["sentado_lado", 1, 1000]
    ],
    "lamber_pata": [
     ["parado_lado", 1, 900],
+    ["farejar_em_pe", 1, 1200],
     ["lamber_pata", 1, 450],
     ["lamber_pata", 2, 450],
     ["lamber_pata", 1, 450],
@@ -1102,6 +1094,7 @@
    ],
    "banho": [
     ["parado_lado", 1, 900],
+    ["farejar_em_pe", 1, 1200],
     ["lamber_pata", 1, 450],
     ["lamber_pata", 2, 450],
     ["lamber_pata", 1, 450],
@@ -1141,9 +1134,13 @@
    ],
    "ataque_batalha": [
     ["prepara_fogo", 1, 600],
-    ["ataque_fogo", 1, 350],
-    ["ataque_fogo", 2, 350],
-    ["ataque_fogo", 3, 350]
+    ["ataque_fogo", 1, 300],
+    ["ataque_fogo", 2, 300],
+    ["ataque_fogo", 3, 300],
+    ["ataque_fogo", 1, 300],
+    ["ataque_fogo", 2, 300],
+    ["ataque_fogo", 3, 300],
+    ["ufa", 1, 500]
    ],
    "comer": [
     ["sentado_lado", 1, 1000],
@@ -1154,6 +1151,7 @@
     ["comendo", 2, 600],
     ["ossos", 1, 1800],
     ["lamber_beicos", 1, 1400],
+    ["farejar", 2, 900],
     ["sentado_lado", 1, 1000]
    ],
    "carinho": [

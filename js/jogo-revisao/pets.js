@@ -41,6 +41,9 @@ export const temBusto = (pet) => temAnim(pet, 'busto_sorrindo');
 // um pet pode ter quadro próprio em quadro_por_pet (os adultos: 1686 × 808, por causa das asas e do fogo)
 export const tamanhoQuadro = (forma) => SPR?.quadro_por_pet?.[forma]?.tamanho_quadro || SPR?.tamanho_quadro || [898, 704];
 export const tamanhoBusto = () => SPR?.tamanho_busto || [1036, 1124];
+// escala do pet na tela (sprites.json → quadro_por_pet[forma].escala, padrão 1): o vermelho adulto é 15% maior que o azul
+export const escalaPet = (forma) => Number(SPR?.quadro_por_pet?.[forma]?.escala) || 1;
+export const escalaMax = () => Math.max(1, ...Object.values(SPR?.quadro_por_pet || {}).map(q => Number(q?.escala) || 1));
 // fração da altura do quadro que o pet SENTADO ocupa (o resto é folga para pulos e asas)
 export const sentadoNoQuadro = (forma) =>
   (SPR?.quadro_por_pet?.[forma]?.sentado_altura || SPR?.sentado_altura || 604) / tamanhoQuadro(forma)[1];
@@ -112,6 +115,14 @@ export function sortearAcaoParado(forma) {
   return ultimaAcao;
 }
 
+// Ações do pet seguindo o personagem nos mapas (personagem parado 4 s): sorteadas sem repetir a anterior, nunca cuspir_fogo
+const ACOES_MAPA = ['cheirar', 'lamber_pata', 'lamber_rabo', 'banho', 'rugir', 'descansar'];
+const MS_ANTES_ACAO = 4000;
+const temAcoesMapa = (forma) => ACOES_MAPA.some(a => temSequencia(forma, a));
+// aba em segundo plano: os seguidores param a ação (a sequência roda por setTimeout, que continua com a aba escondida)
+const SEGUIDORES = new Set();
+document.addEventListener('visibilitychange', () => { if (document.hidden) for (const s of SEGUIDORES) s.pararAcao(); });
+
 // Emoções de 1 quadro (adultos) ficam 1,5 s na tela
 export const EMOCOES = new Set(['feliz', 'bravo', 'confuso', 'assustado', 'orgulhoso', 'animado', 'ufa', 'calmo']);
 export const MS_EMOCAO = 1500;
@@ -124,7 +135,7 @@ function ritmo(anim, n) {
     case 'correndo': return { ms: 90, loop: true };
     case 'costas_parado': return { ms: 250, loop: true };
     case 'sentado_girando': return { ms: 400, loop: true };
-    case 'sentado_2': return { ms: 300, loop: false };
+    case 'sentado_2': return { ms: n === 1 ? 2000 : 300, loop: false };   // adulto: 1 quadro (sentado de lado), segura ~2 s
     case 'feliz': case 'pulo_cambalhota': return { ms: 90, loop: false };
     case 'salto_pouso': return { ms: 90, loop: false, ultimo: 140 };
     case 'comendo': case 'dormindo': case 'triste_fome': return { ms: 350, loop: true };
@@ -162,10 +173,39 @@ export class PetSeguidor {
     this.ocioso = false;            // fazendo uma dessas variações agora
     this.espelhar = false; this.altura = 60;
     this.esquerda = false;          // último lado para onde andou (para frente/costas que caem em andar_direita)
+    this.acao = null;               // sequência tocando agora (pets com `sequencias`: cheirar, banho, rugir…)
+    this.ultimaAcao = null;
+    this.esperaAcao = MS_ANTES_ACAO; // quanto falta, parado e sentado, para a próxima ação
+    this.pausado = false;           // balão de fala, janela por cima, pescando…: sem ações
+    SEGUIDORES.add(this);
+  }
+
+  // Interrompe a sequência (personagem andou, reação, balão, janela, aba escondida) e recomeça os 4 s
+  pararAcao() {
+    this.esperaAcao = MS_ANTES_ACAO;
+    if (!this.acao) return;
+    this.acao = null;
+    pararSequencia(this.img);
+    this.trocar('sentado_girando', true); this.desenhar();
+  }
+  descartar() { this.pararAcao(); SEGUIDORES.delete(this); }   // pet de colega que saiu do mapa
+  pausarAcoes(sim) { this.pausado = !!sim; if (sim) this.pararAcao(); }
+
+  comecarAcao() {
+    const l = ACOES_MAPA.filter(a => a !== this.ultimaAcao && temSequencia(this.forma, a));
+    if (!l.length) return;
+    const nome = l[Math.floor(Math.random() * l.length)];
+    this.ultimaAcao = this.acao = nome;
+    tocarSequencia(this.img, this.forma, nome).then(fim => {
+      if (!fim || this.acao !== nome) return;
+      this.acao = null; this.esperaAcao = MS_ANTES_ACAO;
+      this.trocar('sentado_girando', true); this.desenhar();
+    });
   }
 
   // pet = quem é (cuidados, nome, falas); forma = qual desenho usar (o filhote ou o adulto)
   definir(pet, forma = pet) {
+    this.pararAcao();
     this.pet = pet; this.forma = pet ? forma : null;
     this.img.hidden = this.sombra.hidden = !pet;
     if (pet) { this.reacao = null; this.trocar('sentado_girando', true); this.desenhar(); }
@@ -176,12 +216,14 @@ export class PetSeguidor {
     this.x = x; this.y = y;
     this.rastro = [[x, y]];
     this.paradoMs = 0; this.andandoMs = 0; this.ultJog = null; this.esperar = false; this.alcancando = false;
+    this.pararAcao();
     if (this.pet) { this.reacao = null; this.trocar('sentado_girando', true); this.desenhar(); }
   }
 
   // Animação especial (feliz, pulo, triste…). Sem loop: volta ao ocioso no fim; com loop: dura `ms`.
   reagir(anim, ms = 0) {
     if (!this.pet) return;
+    this.pararAcao();
     this.reacao = { anim, ate: ms ? performance.now() + ms : 0 };
     this.trocar(anim, true);
   }
@@ -251,6 +293,14 @@ export class PetSeguidor {
       if (this.reacao.ate && performance.now() >= this.reacao.ate) { this.reacao = null; }
       else if (andando && falta > atras + largura) { this.reacao = null; }   // personagem saiu andando: o pet vai atrás
     }
+    // ação em andamento (sequência): para na hora se o personagem andar ou se a fome/uma reação entrar
+    if (this.acao && (mexeu || andando || this.reacao || this.fome || this.pausado)) this.pararAcao();
+    if (this.acao) {
+      this.espelhar = this.esquerda;   // as sequências são desenhadas viradas para a direita
+      this.desenhar();
+      return;
+    }
+    if (mexeu) this.esperaAcao = MS_ANTES_ACAO;
     if (!this.reacao) {
       this.espelhar = false;
       if (andando) {
@@ -259,8 +309,16 @@ export class PetSeguidor {
         else this.trocar(this.andarVertical(dy > 0 ? 'andar_frente' : 'andar_costas'));
         this.proxOcioso = 6000 + Math.random() * 1000;   // parado há mais de ~6 s: a 1ª variação
         this.ocioso = false;
+        this.esperaAcao = MS_ANTES_ACAO;
       } else if (this.fome) {
         this.trocar('triste_fome');
+      } else if (temAcoesMapa(this.forma)) {   // pet com sequências: 4 s sentado, depois uma ação; 4 s entre uma e outra
+        this.ocioso = false;
+        this.trocar('sentado_girando');
+        if (!this.pausado) {
+          this.esperaAcao -= ms;
+          if (this.esperaAcao <= 0) { this.comecarAcao(); if (this.acao) { this.espelhar = this.esquerda; this.desenhar(); return; } this.esperaAcao = MS_ANTES_ACAO; }
+        }
       } else if (!this.ocioso) {
         this.trocar('sentado_girando');
         this.proxOcioso -= dt * 1000;
@@ -285,7 +343,7 @@ export class PetSeguidor {
   desenhar() {
     if (!this.pet || !this.lista.length) return;
     const src = this.lista[Math.min(this.q, this.lista.length - 1)];
-    if (this.img.dataset.src !== src) { this.img.src = src; this.img.dataset.src = src; }
+    if (!this.acao && this.img.dataset.src !== src) { this.img.src = src; this.img.dataset.src = src; }   // na ação, a sequência troca o quadro
     this.img.style.left = this.x + 'px';
     this.img.style.top = this.y + 'px';
     this.img.style.height = this.altura + 'px';

@@ -264,9 +264,20 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
 .jr-placar-num small { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500; color: #b9bdd0; }
 .jr-aviso-meta { animation-duration: 4s; border-color: #00e676; color: #c9ffe0; }
 
-/* ── Revisão da semana: botão no mapa geral (abaixo do estojo) ── */
+/* Mapa geral: só as insígnias ficam à direita do topo (à direita, 🔊 e 🔥 tapavam o troféu e o mapa 13).
+   🔊, 🔥 e online descem numa coluna embaixo do Sair: nessa faixa da esquerda o mapa só tem floresta e mar. */
+#tela-geral .jr-hud-topo > .jr-btn-som, #tela-geral .jr-hud-topo > .jr-selo-seq, #tela-geral .jr-hud-topo > .jr-selo-online {
+  position: absolute; left: max(12px, var(--sa-l, 0px)); margin: 0; }
+#tela-geral .jr-hud-topo > .jr-btn-som { top: calc(100% + 2px); }
+#tela-geral .jr-hud-topo > .jr-selo-seq { top: calc(100% + 44px); }
+#tela-geral .jr-hud-topo > .jr-selo-online { top: calc(100% + 86px); }
+html.jr-deitado #tela-geral .jr-hud-topo > .jr-btn-som { top: calc(100% + 2px); left: max(10px, var(--sa-l)); }
+html.jr-deitado #tela-geral .jr-hud-topo > .jr-selo-seq { top: calc(100% + 40px); left: max(10px, var(--sa-l)); }
+html.jr-deitado #tela-geral .jr-hud-topo > .jr-selo-online { top: calc(100% + 76px); left: max(10px, var(--sa-l)); padding: 3px 8px; }
+html.jr-deitado #tela-geral .jr-on-txt { display: none; }   /* no celular: só "🟢 3" */
+/* ── Revisão da semana: botão no mapa geral, no canto de baixo à esquerda (no mapa só tem mar ali) ── */
 .jr-btn-revisao {
-  position: fixed; z-index: 21; right: 10px; top: calc(max(10px, var(--sa-t)) + 64px);
+  position: fixed; z-index: 21; left: max(10px, var(--sa-l)); bottom: max(10px, var(--sa-b));
   min-width: 48px; min-height: 44px; padding: 6px 12px; border-radius: 14px; cursor: pointer;
   background: rgba(13,15,26,.82); border: 1px solid rgba(255,215,0,.5); color: #ffe69a;
   font-family: 'Rajdhani', sans-serif !important; font-size: 15px; font-weight: 700; white-space: nowrap;
@@ -670,7 +681,7 @@ html.jr-deitado .jr-btn-som { width: 34px; height: 34px; font-size: 16px; }
 html.jr-deitado .jr-selo-seq { min-height: 30px; padding: 2px 8px; font-size: 13px !important; }
 html.jr-deitado .jr-no-ginasio .jr-hud-titulo { top: max(10px, calc(var(--sa-t) + 4px)); }
 html.jr-deitado .jr-faixa-meta { top: calc(max(4px, var(--sa-t)) + 46px); left: max(10px, var(--sa-l)); padding: 4px 10px; }
-html.jr-deitado .jr-btn-revisao { top: calc(max(4px, var(--sa-t)) + 48px); right: max(10px, var(--sa-r)); min-height: 38px; padding: 4px 10px; }
+html.jr-deitado .jr-btn-revisao { left: max(10px, var(--sa-l)); bottom: max(8px, var(--sa-b)); min-height: 38px; padding: 4px 10px; }
 html.jr-deitado .jr-seq-balao { top: calc(max(4px, var(--sa-t)) + 46px); }
 
 /* Joystick: 110 px no canto inferior direito, longe da borda e do entalhe */
@@ -2030,9 +2041,9 @@ html.jr-letra-grande { --letra: 1.2; }
 html.jr-letra-grande .jr-fala:not(.completa) { -webkit-line-clamp: 4; line-clamp: 4; }   /* quebra mais uma linha em vez de cortar */
 
 /* ── 🤖 Programe o pet (PROMPT-50): tela cheia, deitada, sem rolagem ── */
-.pg-tela { position: fixed; inset: 0; z-index: 60; display: flex; gap: 8px; background: var(--jr-bg, #0d0f1a);
+.pg-tela { position: fixed; inset: 0; z-index: 60; display: flex; gap: 8px; background: var(--jr-bg, #0d0f1a); overflow-x: hidden;
   padding: max(6px, var(--sa-t, 0px)) max(8px, var(--sa-r, 0px)) max(6px, var(--sa-b, 0px)) max(8px, var(--sa-l, 0px)); box-sizing: border-box; }
-.pg-esq { flex: 0 0 44%; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.pg-esq { flex: 0 0 44%; min-width: 0; display: flex; flex-direction: column; gap: 6px; container-type: inline-size; }
 .pg-dir { flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; border-radius: 12px; overflow: hidden; border: 1px solid rgba(124,92,252,.4);
   isolation: isolate; }   /* os z-index do Blockly (flyout, toolbox) ficam presos aqui dentro */
 .pg-topo { display: flex; align-items: center; gap: 8px; }
@@ -2042,7 +2053,7 @@ html.jr-letra-grande .jr-fala:not(.completa) { -webkit-line-clamp: 4; line-clamp
 .pg-estrelas { font-size: 18px; letter-spacing: 1px; }
 .pg-tempo { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 700; color: #00d4ff; }
 .pg-tempo.acabando { color: #ff5c7a; }
-.pg-grade-caixa { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.pg-grade-caixa { flex: 1; min-height: 0; min-width: 0; display: flex; align-items: center; justify-content: center; }
 .pg-grade { position: relative; display: grid; grid-template-columns: repeat(var(--cols), var(--s, 40px)); grid-template-rows: repeat(var(--rows), var(--s, 40px));
   border-radius: 8px; box-shadow: 0 0 0 3px #5b4a33, 0 6px 18px rgba(0,0,0,.5); }
 .pg-casa { box-sizing: border-box; background: #e6dcc3; border: 1px solid rgba(91,74,51,.25); position: relative; }
@@ -2070,8 +2081,15 @@ html.jr-letra-grande .jr-fala:not(.completa) { -webkit-line-clamp: 4; line-clamp
 @keyframes pg-pulo { 50% { transform: translateY(-14%); } }
 .pg-msg { min-height: 2.6em; font-family: 'Inter', sans-serif; font-size: calc(14px * var(--letra, 1)); font-weight: 600; color: #e3e5f0; line-height: 1.3; display: flex; align-items: center; }
 .pg-msg.ok { color: #00e676; } .pg-msg.erro { color: #ff7b93; } .pg-msg.aviso { color: #ffd27a; }
-.pg-botoes { display: flex; gap: 6px; flex-wrap: wrap; }
-.pg-botoes .jr-btn { min-height: 40px; padding: 4px 12px; }
+.pg-botoes { display: flex; gap: 6px; flex-wrap: nowrap; min-width: 0; }   /* sempre numa linha só */
+.pg-botoes .jr-btn { min-height: 40px; padding: 4px 12px; flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* coluna estreita (celular em pé ou deitado com a coluna de 44%): botões mais compactos e "⏭ 1 passo" vira só "⏭" */
+@container (max-width: 420px) {
+  .pg-botoes { gap: 4px; }
+  .pg-botoes .jr-btn { padding: 4px 8px; font-size: 14px; }
+  .pg-passo-txt { display: none; }
+}
+@container (max-width: 300px) { .pg-botoes .jr-btn { padding: 2px 6px; font-size: 13px; } }
 #pg-exec { flex: 1; }
 .pg-blockly { flex: 1; min-height: 0; }
 .pg-rodape { padding: 4px 10px; font-family: 'Inter', sans-serif; font-size: 13px; color: #c9cde0; background: #161a2e; border-top: 1px solid rgba(124,92,252,.3); }
@@ -2272,3 +2290,91 @@ html.jr-girado #programe { inset: auto; top: 0; left: 0; width: 100vw; height: 1
 @keyframes jr-trofeu-balanca { 0%, 100% { transform: translate(-50%, -50%) rotate(-4deg); } 50% { transform: translate(-50%, -50%) rotate(4deg); } }
 @keyframes jr-trofeu-estrela { 50% { transform: scale(1.5); opacity: .4; } }
 
+
+/* ── 🤖 Ilha dos Robôs (PROMPT-60): mapa das fases do Programe o pet, em pé (9:16) ── */
+.pgm-tela { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; background: #0b3a66; overflow: hidden;
+  padding: 0 var(--sa-r, 0px) 0 var(--sa-l, 0px); box-sizing: border-box; }
+/* celular em pé: desfaz o giro do jogo (como o #programe) */
+html.jr-girado #pg-mapa { inset: auto; top: 0; left: 0; width: 100vw; height: 100dvh; transform-origin: 0 0; transform: translateY(100vw) rotate(-90deg);
+  --sa-t: env(safe-area-inset-top, 0px); --sa-r: env(safe-area-inset-right, 0px); --sa-b: env(safe-area-inset-bottom, 0px); --sa-l: env(safe-area-inset-left, 0px); }
+.pgm-topo { flex: none; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; padding: max(8px, var(--sa-t, 0px)) 10px 6px; z-index: 3;
+  background: rgba(13,15,26,.9); border-bottom: 1px solid rgba(124,92,252,.5); }
+.pgm-titulo { flex: 1; min-width: 0; font: 700 20px 'Rajdhani', sans-serif; color: var(--jr-ouro, #ffd700); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pgm-estrelas { font: 800 15px 'Orbitron', sans-serif; color: #fff; white-space: nowrap; }
+.pgm-medalhas { flex: 1 0 100%; display: flex; justify-content: center; gap: 6px; }
+.pgm-medalha { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.2); filter: grayscale(1); opacity: .35; }
+.pgm-medalha.tem { filter: none; opacity: 1; background: rgba(255,215,0,.18); border-color: rgba(255,215,0,.7); box-shadow: 0 0 8px rgba(255,215,0,.45); }
+.pgm-scroll { flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.pgm-scroll::-webkit-scrollbar { display: none; }
+.pgm-palco { position: relative; margin: 0 auto; }
+/* sem a imagem da ilha: mar azul e uma ilha verde em degradê */
+.pgm-palco.sem-imagem { background:
+  radial-gradient(ellipse 46% 49% at 50% 50%, #5fbf5a 0%, #3f9a45 62%, #2f7d3a 80%, #e9d9a0 84%, #d9c58a 87%, transparent 89%),
+  radial-gradient(circle at 30% 20%, rgba(255,255,255,.08), transparent 40%), linear-gradient(180deg, #1565a8, #0b3a66); }
+#jr-app img.pgm-fundo, img.pgm-fundo { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; image-rendering: auto; }
+.pgm-trilha { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.pgm-trilha polyline { fill: none; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.pgm-tr-base { stroke: rgba(255,255,255,.75); stroke-width: 4; stroke-dasharray: 2 9; }
+.pgm-tr-feita { stroke: #ffd700; stroke-width: 5; stroke-dasharray: 2 9; filter: drop-shadow(0 0 3px rgba(255,215,0,.8)); }
+.pgm-itens { position: absolute; inset: 0; }
+.pgm-palco { --pgm-b: 44px; }
+.pgm-fase { --t: var(--pgm-b); position: absolute; z-index: 3; width: var(--t); height: var(--t); margin: calc(var(--t) / -2) 0 0 calc(var(--t) / -2); border-radius: 50%;
+  padding: 0; cursor: pointer; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: 3px solid #fff; background: #7c5cfc; color: #fff;
+  font: 800 calc(var(--t) * .38) 'Orbitron', sans-serif; box-shadow: 0 3px 8px rgba(0,0,0,.5); }
+.pgm-fase.chefe { --t: calc(var(--pgm-b) * 1.12); border-color: #ff7b2e; }
+.pgm-fase.feita { background: #00a152; }
+.pgm-fase.liberada { background: linear-gradient(180deg, #ffe066, #ffb300); color: #2a1a00; border-color: #fff3b0; }
+.pgm-fase.bloqueada { background: #4a4d60; border-color: #8b90a3; font-size: 15px; }
+.pgm-est { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: -3px; font-size: calc(var(--pgm-b) * .22); letter-spacing: -1px; white-space: nowrap;
+  padding: 0 3px; border-radius: 6px; background: rgba(13,15,26,.7); }
+@media (prefers-reduced-motion: no-preference) {
+  .pgm-fase.liberada { animation: pgm-pulsa 1.1s ease-in-out infinite alternate; }
+  .pgm-chefe:not(.vencido) { animation: pgm-chefe 2.4s ease-in-out infinite; }
+}
+@keyframes pgm-pulsa { to { transform: scale(1.12); box-shadow: 0 0 16px 3px rgba(255,215,0,.85); } }
+@keyframes pgm-chefe { 50% { translate: 0 -4px; } }
+.pgm-chefe { position: absolute; z-index: 2; width: 58px; height: 58px; transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.pgm-chefe b { font-size: calc(var(--pgm-b) * .95); line-height: 1; filter: drop-shadow(0 3px 4px rgba(0,0,0,.5)); }
+#jr-app .pgm-chefe img, .pgm-chefe img { width: 100%; height: 100%; object-fit: contain; image-rendering: auto; filter: drop-shadow(0 3px 4px rgba(0,0,0,.5)); }
+.pgm-chefe.vencido { opacity: .4; filter: grayscale(.8); }
+.pgm-placa { position: absolute; z-index: 1; transform: translate(-50%, -50%); pointer-events: none; }
+.pgm-placa span { display: block; white-space: nowrap; padding: 1px 7px; border-radius: 6px; background: #6b4a2b; border: 2px solid #3e2a17; color: #ffe9b8;
+  font: 700 12px 'Rajdhani', sans-serif; box-shadow: 0 2px 5px rgba(0,0,0,.45); }
+.pgm-especial { position: absolute; z-index: 3; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 14px; cursor: pointer; padding: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 24px; line-height: 1;
+  background: rgba(13,15,26,.85); border: 2px solid #00d4ff; color: #fff; box-shadow: 0 3px 8px rgba(0,0,0,.5); }
+.pgm-especial small { font: 700 9px 'Inter', sans-serif; margin-top: 2px; }
+#jr-app img.pgm-pet, img.pgm-pet { position: absolute; z-index: 4; width: auto; transform: translate(-50%, -100%); pointer-events: none; image-rendering: auto;
+  transition: left .25s linear, top .25s linear; filter: drop-shadow(0 2px 2px rgba(0,0,0,.4)); }
+.pgm-balao { position: absolute; z-index: 5; transform: translate(-50%, calc(-100% - 30px)); padding: 6px 10px; border-radius: 10px; white-space: nowrap;
+  background: #fff; color: #1b1b2e; font: 700 13px 'Inter', sans-serif; box-shadow: 0 3px 8px rgba(0,0,0,.45); pointer-events: none; }
+.pgm-balao.esq { transform: translate(calc(-100% + 20px), calc(-100% - 30px)); } .pgm-balao.dir { transform: translate(-20px, calc(-100% - 30px)); }
+/* balão do chefe e a medalha: por cima da tela do Programe o pet */
+.pgm-chefe-cartao { position: absolute; inset: 0; z-index: 120; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(5,6,15,.75); }
+.pgm-cc-caixa { position: relative; box-sizing: border-box; width: min(92vw, 380px); display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 16px;
+  background: var(--jr-card, #15132e); border: 2px solid #ff7b2e; border-radius: 18px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,.6); }
+.pgm-chefe-cartao.vitoria .pgm-cc-caixa { border-color: var(--jr-ouro, #ffd700); }
+.pgm-cc-rosto { position: relative; width: 96px; height: 96px; display: flex; align-items: center; justify-content: center; }
+.pgm-cc-emoji { font-size: 72px; line-height: 1; }
+#jr-app img.pgm-cc-img, img.pgm-cc-img { width: 100%; height: 100%; object-fit: contain; image-rendering: auto; }
+.pgm-cc-fala { margin: 0; font: 600 calc(16px * var(--letra, 1)) 'Inter', sans-serif; color: #fff; line-height: 1.35; }
+.pgm-cc-fala b { color: #ffb37a; }
+.pgm-cc-tit { margin: 0; font: 700 22px 'Rajdhani', sans-serif; color: var(--jr-ouro, #ffd700); }
+.pgm-cc-medalha { font-size: 48px; line-height: 1; }
+.pgm-cc-estrelas { position: absolute; left: 50%; top: 50%; pointer-events: none; }
+.pgm-cc-estrelas i { position: absolute; font-style: normal; font-size: 20px; opacity: 0; transform: translate(-50%, -50%); }
+.pgm-cc-caixa .jr-btn { min-height: 46px; min-width: 120px; }
+@media (prefers-reduced-motion: no-preference) {
+  .pgm-cc-rosto.explode > :first-child { animation: pgm-explode .7s ease-in forwards; }
+  .pgm-cc-rosto.explode .pgm-cc-estrelas i { animation: pgm-estrelas .9s ease-out .45s forwards; }
+  .pgm-chefe-cartao.vitoria .pgm-cc-medalha { animation: pgm-medalha .5s cubic-bezier(.2,1.6,.4,1) .9s both; }
+}
+@media (prefers-reduced-motion: reduce) { .pgm-cc-rosto.explode > :first-child { opacity: 0; } }
+@keyframes pgm-explode { 60% { transform: scale(1.25) rotate(-8deg); opacity: 1; } 100% { transform: scale(.2); opacity: 0; } }
+@keyframes pgm-estrelas { 0% { opacity: 1; transform: translate(-50%, -50%) rotate(var(--a)) translateY(0); }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--a)) translateY(-70px) scale(1.3); } }
+@keyframes pgm-medalha { from { transform: scale(0); } to { transform: scale(1); } }
+/* tabuleiro com o tema da região (casa e obstáculo); sem as imagens, ficam as casas e pedras de sempre (a borda fina continua) */
+.pg-grade.com-casa .pg-casa { background: var(--pg-casa-img) center / cover no-repeat; }
+.pg-grade.com-obstaculo .pg-pedra { inset: 4%; border-radius: 0; box-shadow: none; background: var(--pg-obst-img) center / contain no-repeat; }
