@@ -74,12 +74,16 @@ const CRESCE_EVOLUCAO = 1.15;
 const ADULTO_ANTES = CRESCE_EVOLUCAO * 622 / 604;
 // PROMPT-81: onde o personagem e o pet aparecem juntos, o dragão adulto SENTADO (desenho visível, chifre ao pé) tem a altura
 // do personagem (o desenho dele = ALT_JOGADOR_MAPA no mapa = 55 na escala base), × a escala do sprites.json
-// (quadro_por_pet[forma].escala: azul e cores 1, vermelho 1,3). sentado_altura do JSON = 439 px medidos no quadro de 566.
+// (quadro_por_pet[forma].escala: azul e azul colorido 1; vermelho e vermelho colorido 1,3). sentado_altura do JSON = 439 px
+// medidos no quadro de 566.
 const ALT_BASE_PERSONAGEM = ALT_JOGADOR_MAPA / ESCALA_ATORES;   // 55
 ALT_PET.dragao_azul_adulto = ALT_PET.dragao_vermelho_adulto = ALT_BASE_PERSONAGEM;
 const ALT_PET_PADRAO = 30;   // pet que não estiver na tabela
-// cores especiais do dragão (PROMPT-74): dragao_{cor} e dragao_{cor}_adulto têm o tamanho do azul
-const formaDeTamanho = (f) => String(f || '').replace(/^dragao_(?!azul|vermelho)[a-z]+(?=(_adulto)?$)/, 'dragao_azul');
+// cores especiais do dragão (PROMPT-74/84): a cor é só visual; o tamanho é o do dragão de base.
+// dragao_vermelho_{cor}[_adulto] → dragao_vermelho[_adulto]; dragao_{cor}[_adulto] → dragao_azul[_adulto]
+const formaDeTamanho = (f) => String(f || '')
+  .replace(/^dragao_vermelho_(?!adulto$)[a-z]+(?=(_adulto)?$)/, 'dragao_vermelho')
+  .replace(/^dragao_(?!azul|vermelho)[a-z]+(?=(_adulto)?$)/, 'dragao_azul');
 const altPet = (pet) => (ALT_PET[pet] ?? ALT_PET[formaDeTamanho(pet)] ?? ALT_PET_PADRAO) * escalaPet(pet);
 // O quadro (sprites.json: tamanho_quadro, 898 × 704 nos filhotes e 1402 × 801 nos adultos) tem folga em cima para os
 // pulos: sentado, o pet ocupa 604 px da altura (sentado_altura). Altura da IMAGEM para o pet sentado ficar com a altura da tabela:
@@ -9332,7 +9336,7 @@ function renderMissoes() {
 let TRUQUES = {};
 function truquesDe(pet) {
   if (!pet) return null;
-  let l = TRUQUES?.[formaDe(pet)];
+  let l = TRUQUES?.[formaBase(pet)];   // pela forma sem cor (PROMPT-84): o vermelho colorido não está no truques.json
   if (typeof l === 'string') l = TRUQUES[l];
   return Array.isArray(l) && l.length ? l : null;
 }
