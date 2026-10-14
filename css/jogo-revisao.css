@@ -2603,7 +2603,7 @@ html.jr-deitado .lj-comprar { min-height: 32px; }
 #bt-L.adulto, #bt-R.adulto { bottom: 3%; }
 
 /* ── PROMPT-81: no duelo do ginásio e na batalha, o dragão adulto fica o maior que couber ──
-   O de maior escala (vermelho) ocupa o máximo; --rel = escala / escalaMax (azul = 1 / 1,3). Contas com o quadro do adulto
+   O de maior escala (vermelho) ocupa o máximo; --rel = escala / escalaMax (azul = 1 / 1,4). Contas com o quadro do adulto
    (1219 × 566 → largura = 2,154 × altura) e as poses medidas: nos duelos do ginásio o corpo vai de 193 a 930 px do quadro
    (lamber a pata), topo a 5 px; o fogo chega a 1212 px. Na batalha o corpo vai de 275 a 918 px e o topo (fogo) a 38 px. */
 #perg-arena.pet-adulto {

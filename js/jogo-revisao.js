@@ -74,7 +74,7 @@ const CRESCE_EVOLUCAO = 1.15;
 const ADULTO_ANTES = CRESCE_EVOLUCAO * 622 / 604;
 // PROMPT-81: onde o personagem e o pet aparecem juntos, o dragão adulto SENTADO (desenho visível, chifre ao pé) tem a altura
 // do personagem (o desenho dele = ALT_JOGADOR_MAPA no mapa = 55 na escala base), × a escala do sprites.json
-// (quadro_por_pet[forma].escala: azul e azul colorido 1; vermelho e vermelho colorido 1,3). sentado_altura do JSON = 439 px
+// (quadro_por_pet[forma].escala: azul e azul colorido 1; vermelho e vermelho colorido 1,4 — PROMPT-86). sentado_altura do JSON = 439 px
 // medidos no quadro de 566.
 const ALT_BASE_PERSONAGEM = ALT_JOGADOR_MAPA / ESCALA_ATORES;   // 55
 ALT_PET.dragao_azul_adulto = ALT_PET.dragao_vermelho_adulto = ALT_BASE_PERSONAGEM;
@@ -89,13 +89,13 @@ const altPet = (pet) => (ALT_PET[pet] ?? ALT_PET[formaDeTamanho(pet)] ?? ALT_PET
 // pulos: sentado, o pet ocupa 604 px da altura (sentado_altura). Altura da IMAGEM para o pet sentado ficar com a altura da tabela:
 const altImagemPet = (pet) => altPet(pet) / sentadoNoQuadro(pet);
 // Telas em que o pet tem tamanho relativo ao filhote (batalha, Meu Pet, duelo do ginásio, evolução): quanto a IMAGEM da forma
-// é maior que a do filhote. O desenho sentado fica ADULTO_ANTES × escala maior (o mesmo de antes no azul; +30% no vermelho).
+// é maior que a do filhote. O desenho sentado fica ADULTO_ANTES × escala maior (o mesmo de antes no azul; +40% no vermelho).
 const fatorForma = (pet, forma) => (ehFormaAdulta(forma) ? ADULTO_ANTES * escalaPet(forma) * sentadoNoQuadro(pet) / sentadoNoQuadro(forma) : 1);
-// Revisão da semana (PROMPT-80): o dragão adulto ~30% maior (o vermelho continua 1,3 × o azul), até 58% da arena no CSS.
+// Revisão da semana (PROMPT-80): o dragão adulto ~30% maior (o vermelho continua 1,4 × o azul), até 58% da arena no CSS.
 const DUELO_ADULTO = 1.3;
 const fatorDuelo = (pet, forma) => fatorForma(pet, forma) * (ehFormaAdulta(forma) ? DUELO_ADULTO : 1);
 // Duelo do ginásio e batalha (PROMPT-81): o dragão adulto fica o maior que couber na arena (o CSS calcula com cqw/cqh).
-// O de maior escala (vermelho) ocupa o máximo; os outros ficam com escala / escalaMax disso (azul = 1 / 1,3).
+// O de maior escala (vermelho) ocupa o máximo; os outros ficam com escala / escalaMax disso (azul = 1 / 1,4).
 const relDuelo = (forma) => escalaPet(forma) / escalaMax();
 // caixas pequenas feitas para o filhote (coleção, HUD, chips, cartões): sem a escala, para nada ser cortado
 const fatorFormaCaixa = (pet, forma) => fatorForma(pet, forma) / (ehFormaAdulta(forma) ? escalaPet(forma) : 1);
@@ -1484,6 +1484,9 @@ function medirMeuPet() {
   if (ehFormaAdulta(forma)) {
     const [qw, qh] = tamanhoQuadro(forma);
     h = Math.min(h * fatorForma(pet, forma), palco.clientWidth * 0.98 / DESENHO_NO_QUADRO * qh / qw);
+    // o desenho sentado (do pé, a 10% do palco, até o chifre) não passa do topo do palco (vermelho 1,4 × o azul, PROMPT-86)
+    // (sentado_altura + ~1% de folga embaixo do pé, em fração do quadro)
+    h = Math.min(h, palco.clientHeight * 0.88 / (sentadoNoQuadro(forma) + 0.01));
   }
   $('mp-img').style.height = h + 'px';
   $('mp-palco').classList.toggle('largo', ehFormaAdulta(forma));   // adulto: asas, comida e fogo podem passar da borda do palco

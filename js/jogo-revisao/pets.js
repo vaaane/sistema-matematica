@@ -60,7 +60,7 @@ export const temBusto = (pet) => temAnim(pet, 'busto_sorrindo');
 // um pet pode ter quadro próprio em quadro_por_pet (os adultos: 1686 × 808, por causa das asas e do fogo)
 export const tamanhoQuadro = (forma) => SPR?.quadro_por_pet?.[forma]?.tamanho_quadro || SPR?.tamanho_quadro || [898, 704];
 export const tamanhoBusto = () => SPR?.tamanho_busto || [1036, 1124];
-// escala do pet na tela (sprites.json → quadro_por_pet[forma].escala, padrão 1): o vermelho adulto é 30% maior que o azul
+// escala do pet na tela (sprites.json → quadro_por_pet[forma].escala, padrão 1): o vermelho adulto é 40% maior que o azul
 export const escalaPet = (forma) => Number(SPR?.quadro_por_pet?.[forma]?.escala) || 1;
 export const escalaMax = () => Math.max(1, ...Object.values(SPR?.quadro_por_pet || {}).map(q => Number(q?.escala) || 1));
 // fração da altura do quadro que o pet SENTADO ocupa (o resto é folga para pulos e asas)
