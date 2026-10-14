@@ -549,6 +549,31 @@
         "Gelado e direto: não como isso. Já foi pro lixo.",
         "{comida}… sério? Congelei e joguei fora.",
         "Eca. Planta. Próxima, por favor. De preferência carne."
+      ],
+      "gin_dica": [
+        "Tanto faz… {dica}",
+        "*boceja* {dica} Agora silêncio.",
+        "Calma. {dica} Não me acorda de novo."
+      ],
+      "gin_elimina": [
+        "O {valor} não. Gelado e simples.",
+        "Esquece o {valor}. *volta a dormir*",
+        "{valor}? Frio. Muito frio. Errado."
+      ],
+      "gin_venceu": [
+        "Calculei que você ia conseguir. Como sempre.",
+        "Nem suei. Você também não, quase.",
+        "Bom. Agora me deixa descansar."
+      ],
+      "gin_perdeu": [
+        "Nem vi. Estava cochilando.",
+        "Respira. Depois a gente congela esse ginásio.",
+        "Tanto faz. Próxima."
+      ],
+      "gin_erro": [
+        "*abre um olho*",
+        "Hm.",
+        "*solta um floquinho de gelo*"
       ]
     },
     "dragao_vermelho": {
@@ -682,6 +707,33 @@
         "Você me trouxe uma {comida}? Pra MIM? Que ofensa. Foi pro lixo.",
         "Dragões não comem mato! Joguei longe, nem procura.",
         "{comida}?! Prefiro passar fome. …Mentira, me dá CARNE."
+      ],
+      "gin_dica": [
+        "Hmpf… {dica} Não que eu me importe.",
+        "*boceja* {dica} Agora me deixa dormir.",
+        "Tá, tá… {dica} Satisfeito?",
+        "Só vou falar uma vez, porque estou ocupado: {dica}"
+      ],
+      "gin_elimina": [
+        "Tira o {valor} daí. Pronto. Volto a dormir.",
+        "{valor}? Nem eu cairia nessa. E eu estava dormindo.",
+        "*lambe a pata* O {valor} não. Óbvio."
+      ],
+      "gin_venceu": [
+        "Parabéns. Quase tão bom quanto eu.",
+        "Hm. Até que você não foi mal. Eu ajudei, claro.",
+        "Viu? Nem precisei acordar direito.",
+        "Mais uma insígnia pra NOSSA coleção. Principalmente minha."
+      ],
+      "gin_perdeu": [
+        "Eu estava dormindo. Não conta.",
+        "Isso nunca aconteceu. Vamos de novo.",
+        "*boceja* Acordo quando você ganhar."
+      ],
+      "gin_erro": [
+        "*abre um olho* Sério?",
+        "Hmpf.",
+        "*solta fumaça*"
       ]
     },
     "elefante": {

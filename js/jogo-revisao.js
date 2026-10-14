@@ -419,9 +419,10 @@ async function carregarEstado() {
     { const u = estado.sequencia?.ultimo_dia; conversa.voltou = !!u && u !== diaLocal() && (paraData(diaLocal()) - paraData(u)) / 86400000 >= 3; }
     estado.respostas = v.respostas || {};
     estado.pets = lerPets(v);   // validado depois de ler o sprites.json (cachorro/porco antigos são ignorados)
-    estado.petCor = typeof v.pet_cor === 'string' ? v.pet_cor : null;
-    estado.semConvites = !!v.sem_convites;   // "Não receber convites" (PROMPT-76)   // cor especial do dragão (PROMPT-74): null = normal
+    estado.petCor = typeof v.pet_cor === 'string' ? v.pet_cor : null;   // cor especial do dragão (PROMPT-74): null = normal
+    estado.semConvites = !!v.sem_convites;   // "Não receber convites" (PROMPT-76)
     estado.coresLiberadas = v.cores_liberadas && typeof v.cores_liberadas === 'object' ? { ...v.cores_liberadas } : {};   // { cor: true } — para sempre
+    liberarCoresDaConta();
     estado.revisaoSemanal = v.revisao_semanal || {};
     estado.relembre = v.relembre && typeof v.relembre === 'object' ? { ...v.relembre } : {};
     estado.programe = v.programe && typeof v.programe === 'object' ? { ...v.programe, fases: { ...(v.programe.fases || {}) } } : { fases: {} };   // PROMPT-50
@@ -795,6 +796,7 @@ export async function iniciarJogo(sess) {
   } catch (e) { console.warn('[jogo-revisao] loja/pesca indisponíveis', e); }
   try {
     await carregarSprites(); petsOk = true;
+    liberarCoresDaConta();   // as cores vêm do sprites.json (carregado depois do progresso)
     const [qw, qh] = tamanhoQuadro();
     document.documentElement.style.setProperty('--pet-quadro', `${qw} / ${qh}`);   // proporção do lutador na batalha
   } catch (e) { console.error('[jogo-revisao] pets indisponíveis', e); }
@@ -2117,6 +2119,12 @@ const DESBLOQUEIO_COR = {
   bugs_3: () => Object.values(estado.programe?.bugs || {}).filter(b => Number(b?.estrelas) > 0).length >= 3,
   preve_5: () => (Number(estado.programe?.o_que_faz?.recorde) || 0) >= 5,
 };
+// Professora, modo teste e alunos de teste (PROMPT-78): todas as cores do sprites.json já liberadas, só na memória
+// (não grava cores_liberadas nem mostra o aviso de cor nova: o verificarCores não as vê como novas). Cor nova no JSON também.
+function liberarCoresDaConta() {
+  if (!estado?.coresLiberadas || !(ehProfessora() || teste || ALUNOS_TESTE.includes(sessao?.uid))) return;
+  for (const cor of Object.keys(coresDragao())) estado.coresLiberadas[cor] = true;
+}
 const coresLiberadas = () => Object.entries(coresDragao()).filter(([cor, c]) => estado.coresLiberadas?.[cor] || DESBLOQUEIO_COR[c.desbloqueio]?.()).map(([cor]) => cor);
 function verificarCores() {
   if (!carregouProgresso || !petsOk || !estado?.programe) return;
