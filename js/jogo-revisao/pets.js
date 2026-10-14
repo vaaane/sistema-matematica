@@ -166,7 +166,9 @@ export const EMOCOES = new Set(['feliz', 'bravo', 'confuso', 'assustado', 'orgul
 export const MS_EMOCAO = 1500;
 
 // Ritmo de cada animação: ms por quadro, se repete, quanto segura o último quadro e quantas vezes passa (vezes)
-function ritmo(anim, n) {
+// forma: a forma desenhada (o dragão adulto anda de lado mais devagar, PROMPT-87)
+function ritmo(anim, n, forma = '') {
+  if ((anim === 'andar_direita' || anim === 'andar_esquerda') && ehFormaAdulta(forma)) return { ms: 200, loop: true };   // dragão adulto de lado: 200 ms por quadro
   if (anim.startsWith('andar_')) return { ms: n === 2 ? 200 : 150, loop: true };   // andar_frente/andar_costas do adulto: os 8 quadros em ciclo
   if (n === 1 && EMOCOES.has(anim)) return { ms: MS_EMOCAO, loop: false };
   switch (anim) {
@@ -389,7 +391,7 @@ export class PetSeguidor {
     }
 
     // avança o quadro
-    const r = ritmo(this.anim, this.lista.length);
+    const r = ritmo(this.anim, this.lista.length, this.forma);
     const ultimo = this.q === this.lista.length - 1;
     this.t += dt * 1000;
     if (this.t >= (ultimo && r.ultimo ? r.ultimo : r.ms)) {
@@ -449,7 +451,7 @@ export class PetParado {
 
   atualizar(dt) {
     if (this.emSeq || !this.lista.length) return;
-    const r = ritmo(this.anim, this.lista.length);
+    const r = ritmo(this.anim, this.lista.length, this.pet);
     const ultimo = this.q === this.lista.length - 1;
     this.t += dt * 1000;
     if (this.t < (ultimo && r.ultimo ? r.ultimo : r.ms)) return;
