@@ -1,58 +1,243 @@
 {
-  "_nota": "Álbum de Matemáticos (PROMPT-98). Uma figurinha por ginásio, ganha ao vencer o líder; dourada se venceu o líder de primeira. simbolo = o que aparece grande na carta (texto/emoji, sem retrato). cor = cor de fundo da carta.",
-  "insignia_completo": { "nome": "Matemático(a) Completo(a)", "emoji": "📒" },
+  "_nota": "Álbum de Matemáticos (PROMPT-98). Uma figurinha por ginásio, ganha ao vencer o líder; dourada se venceu o líder de primeira. simbolo = o que aparece grande na carta (texto/emoji, sem retrato). cor = cor de fundo da carta. texto_completo = biografia mostrada ao tocar na carta (PROMPT-99).",
+  "insignia_completo": {
+    "nome": "Matemático(a) Completo(a)",
+    "emoji": "📒"
+  },
   "figurinhas": {
-    "mapa1-A": { "nome": "William Oughtred", "epoca": "séc. XVII", "lugar": "Inglaterra", "simbolo": "×", "cor": "#ff7b2e",
-      "texto": "Popularizou o sinal × para multiplicar, num livro de 1631. O ÷ veio pouco depois, com o suíço Johann Rahn (1659)." },
-    "mapa1-B": { "nome": "Robert Recorde", "epoca": "séc. XVI", "lugar": "País de Gales", "simbolo": "=", "cor": "#ff9f43",
-      "texto": "Inventou o sinal de igual em 1557: “nada é mais igual do que duas retas paralelas”." },
-    "mapa2-A": { "nome": "Simon Stevin", "epoca": "séc. XVI", "lugar": "Flandres (Bélgica)", "simbolo": "10", "cor": "#2e86de",
-      "texto": "Em 1585 escreveu um livrinho defendendo contas com base 10 para tudo: moedas, medidas e comércio." },
-    "mapa2-B": { "nome": "Joseph-Louis Lagrange", "epoca": "séc. XVIII", "lugar": "Itália e França", "simbolo": "📏", "cor": "#54a0ff",
-      "texto": "Fez parte da comissão que criou o sistema métrico. O metro nasceu em 1791, medido a partir do tamanho da Terra." },
-    "mapa3-A": { "nome": "Liu Hui", "epoca": "séc. III", "lugar": "China", "simbolo": "−", "cor": "#48dbfb",
-      "texto": "Na China antiga, contava-se com varetas: vermelhas para positivos e pretas para negativos. Liu Hui explicou as regras com elas." },
-    "mapa3-B": { "nome": "Brahmagupta", "epoca": "ano 628", "lugar": "Índia", "simbolo": "−×−", "cor": "#0abde3",
-      "texto": "Tratou negativos como dívidas e positivos como fortunas, e escreveu: dívida vezes dívida dá fortuna! (− × − = +)" },
-    "mapa4-A": { "nome": "Ahmes, o escriba", "epoca": "c. 1650 a.C.", "lugar": "Egito", "simbolo": "½", "cor": "#feca57",
-      "texto": "Copiou o Papiro de Rhind, cheio de problemas com frações. Os egípcios escreviam 3/4 como 1/2 + 1/4." },
-    "mapa4-B": { "nome": "Al-Uqlidisi", "epoca": "séc. X", "lugar": "Damasco (Síria)", "simbolo": "0,5", "cor": "#ff9ff3",
-      "texto": "É o registro mais antigo que se conhece de números decimais, num livro escrito por volta do ano 952." },
-    "mapa5-A": { "nome": "Arquimedes", "epoca": "séc. III a.C.", "lugar": "Siracusa (Itália)", "simbolo": "10ⁿ", "cor": "#5f27cd",
-      "texto": "No “Contador de Areia”, calculou quantos grãos de areia caberiam no universo, inventando um jeito de escrever números gigantes." },
-    "mapa5-B": { "nome": "Christoph Rudolff", "epoca": "1525", "lugar": "Alemanha", "simbolo": "√", "cor": "#8854d0",
-      "texto": "Usou pela primeira vez o símbolo √. Dizem que ele vem de um “r” de radix, que é raiz em latim." },
-    "mapa6-A": { "nome": "Eratóstenes", "epoca": "séc. III a.C.", "lugar": "Alexandria (Egito)", "simbolo": "2·3·5", "cor": "#10ac84",
-      "texto": "Criou o “crivo”: risca os múltiplos de 2, de 3, de 5… e o que sobra são os números primos." },
-    "mapa6-B": { "nome": "Euclides", "epoca": "c. 300 a.C.", "lugar": "Alexandria (Egito)", "simbolo": "÷", "cor": "#1dd1a1",
-      "texto": "No livro Os Elementos, ensinou um jeito de achar o maior divisor comum de dois números que usamos até hoje." },
-    "mapa7-A": { "nome": "Leonardo Fibonacci", "epoca": "1202", "lugar": "Pisa (Itália)", "simbolo": "%", "cor": "#ee5253",
-      "texto": "Seu livro Liber Abaci levou os algarismos 0 a 9 para a Europa, com muitos problemas de comércio, lucro e juros." },
-    "mapa7-B": { "nome": "Luca Pacioli", "epoca": "1494", "lugar": "Itália", "simbolo": "💰", "cor": "#ff6b6b",
-      "texto": "Explicou como os comerciantes anotavam entradas e saídas de dinheiro. É chamado de pai da contabilidade." },
-    "mapa8-A": { "nome": "François Viète", "epoca": "séc. XVI", "lugar": "França", "simbolo": "a + b", "cor": "#576574",
-      "texto": "Teve a ideia de usar letras para representar números. Foi o começo da linguagem algébrica." },
-    "mapa8-B": { "nome": "Emmy Noether", "epoca": "séc. XX", "lugar": "Alemanha", "simbolo": "3a+2a", "cor": "#8395a7",
-      "texto": "Uma das maiores matemáticas da história. Revolucionou a álgebra e foi elogiada por Einstein." },
-    "mapa9-A": { "nome": "Al-Khwarizmi", "epoca": "séc. IX", "lugar": "Bagdá (Iraque)", "simbolo": "⚖️", "cor": "#ff9f1a",
-      "texto": "Escreveu um dos primeiros livros de álgebra. A palavra “algoritmo” vem do nome dele!" },
-    "mapa9-B": { "nome": "Hipátia de Alexandria", "epoca": "séc. IV–V", "lugar": "Alexandria (Egito)", "simbolo": "x = ?", "cor": "#e17055",
-      "texto": "Uma das primeiras matemáticas conhecidas. Escreveu comentários sobre a Aritmética de Diofanto, o livro dos problemas com equações." },
-    "mapa10-A": { "nome": "Aryabhata", "epoca": "ano 499", "lugar": "Índia", "simbolo": "a:b", "cor": "#fdcb6e",
-      "texto": "Em seu livro, explicou a “regra de três” para resolver problemas de proporção." },
-    "mapa10-B": { "nome": "Tales de Mileto", "epoca": "séc. VI a.C.", "lugar": "Grécia", "simbolo": "🔺", "cor": "#e1b12c",
-      "texto": "Conta a história que mediu a altura de uma pirâmide comparando a sombra dela com a sombra de uma vara." },
-    "mapa11-A": { "nome": "Zu Chongzhi", "epoca": "séc. V", "lugar": "China", "simbolo": "π", "cor": "#6ab04c",
-      "texto": "Calculou π com 7 casas certas (3,1415926), um recorde que durou uns 900 anos." },
-    "mapa11-B": { "nome": "Herão de Alexandria", "epoca": "séc. I", "lugar": "Alexandria (Egito)", "simbolo": "▲", "cor": "#badc58",
-      "texto": "Criou uma fórmula para achar a área de qualquer triângulo só com a medida dos lados." },
-    "mapa12-A": { "nome": "René Descartes", "epoca": "séc. XVII", "lugar": "França", "simbolo": "(x, y)", "cor": "#0984e3",
-      "texto": "Inventou o plano cartesiano (o nome vem dele!). Conta a lenda que a ideia veio olhando uma mosca no teto." },
-    "mapa12-B": { "nome": "Pierre de Fermat", "epoca": "séc. XVII", "lugar": "França", "simbolo": "↗", "cor": "#74b9ff",
-      "texto": "Teve a ideia das coordenadas na mesma época que Descartes, sem um saber do outro." },
-    "mapa13-A": { "nome": "Adolphe Quetelet", "epoca": "séc. XIX", "lugar": "Bélgica", "simbolo": "x̄", "cor": "#a29bfe",
-      "texto": "Usou médias para estudar populações e criou o “homem médio”. Também inventou o cálculo que deu origem ao IMC." },
-    "mapa13-B": { "nome": "Florence Nightingale", "epoca": "séc. XIX", "lugar": "Inglaterra", "simbolo": "📊", "cor": "#fd79a8",
-      "texto": "Enfermeira que usou tabelas e gráficos para provar que a falta de higiene matava soldados e salvou muitas vidas." }
+    "mapa1-A": {
+      "nome": "William Oughtred",
+      "epoca": "séc. XVII",
+      "lugar": "Inglaterra",
+      "simbolo": "×",
+      "cor": "#ff7b2e",
+      "texto": "Popularizou o sinal × para multiplicar, num livro de 1631. O ÷ veio pouco depois, com o suíço Johann Rahn (1659).",
+      "texto_completo": "William Oughtred foi um pastor e professor de matemática inglês. Em 1631 publicou o livro Clavis Mathematicae (“A Chave da Matemática”), onde usou o sinal × para multiplicar — e o símbolo pegou. Também ajudou a inventar a régua de cálculo, uma espécie de calculadora de madeira usada por engenheiros até os anos 1970. O sinal ÷ apareceu pouco depois, em 1659, num livro do suíço Johann Rahn."
+    },
+    "mapa1-B": {
+      "nome": "Robert Recorde",
+      "epoca": "séc. XVI",
+      "lugar": "País de Gales",
+      "simbolo": "=",
+      "cor": "#ff9f43",
+      "texto": "Inventou o sinal de igual em 1557: “nada é mais igual do que duas retas paralelas”.",
+      "texto_completo": "Robert Recorde era médico e matemático do País de Gales. Em 1557 escreveu o livro The Whetstone of Witte e, cansado de escrever “é igual a” toda hora, inventou o sinal =. A explicação dele: “nada é mais igual do que duas retas paralelas”. Ele também escreveu livros de matemática em inglês, e não em latim, para que mais gente conseguisse aprender."
+    },
+    "mapa2-A": {
+      "nome": "Simon Stevin",
+      "epoca": "séc. XVI",
+      "lugar": "Flandres (Bélgica)",
+      "simbolo": "10",
+      "cor": "#2e86de",
+      "texto": "Em 1585 escreveu um livrinho defendendo contas com base 10 para tudo: moedas, medidas e comércio.",
+      "texto_completo": "Simon Stevin foi engenheiro e matemático de Flandres (hoje Bélgica). Em 1585 publicou um livrinho chamado De Thiende (“A Décima”), mostrando como fazer contas com números decimais de um jeito fácil. Ele defendia que moedas, pesos e medidas fossem todos organizados de 10 em 10. Mais de 200 anos depois, foi exatamente isso que o sistema métrico fez."
+    },
+    "mapa2-B": {
+      "nome": "Joseph-Louis Lagrange",
+      "epoca": "séc. XVIII",
+      "lugar": "Itália e França",
+      "simbolo": "📏",
+      "cor": "#54a0ff",
+      "texto": "Fez parte da comissão que criou o sistema métrico. O metro nasceu em 1791, medido a partir do tamanho da Terra.",
+      "texto_completo": "Joseph-Louis Lagrange nasceu na Itália e foi um dos maiores matemáticos do século XVIII. Na França, fez parte da comissão que criou o sistema métrico decimal. Em 1791 o metro foi definido como a décima milionésima parte da distância do Polo Norte até a Linha do Equador. Graças a esse trabalho, hoje quase o mundo todo usa metro, quilo e litro."
+    },
+    "mapa3-A": {
+      "nome": "Liu Hui",
+      "epoca": "séc. III",
+      "lugar": "China",
+      "simbolo": "−",
+      "cor": "#48dbfb",
+      "texto": "Na China antiga, contava-se com varetas: vermelhas para positivos e pretas para negativos. Liu Hui explicou as regras com elas.",
+      "texto_completo": "Liu Hui foi um matemático chinês do século III. Ele escreveu explicações para o livro “Os Nove Capítulos”, um dos livros de matemática mais antigos da China. Lá, as contas eram feitas com varetas: vermelhas para os números positivos e pretas para os negativos. Liu Hui explicou as regras para somar e subtrair esses números, muitos séculos antes de os negativos serem aceitos na Europa."
+    },
+    "mapa3-B": {
+      "nome": "Brahmagupta",
+      "epoca": "ano 628",
+      "lugar": "Índia",
+      "simbolo": "−×−",
+      "cor": "#0abde3",
+      "texto": "Tratou negativos como dívidas e positivos como fortunas, e escreveu: dívida vezes dívida dá fortuna! (− × − = +)",
+      "texto_completo": "Brahmagupta foi um astrônomo e matemático indiano. No ano 628, escreveu um livro com regras para fazer contas com números negativos, que ele chamava de “dívidas”, e com os positivos, chamados de “fortunas”. Uma das regras: dívida vezes dívida dá fortuna, ou seja, (−) × (−) = (+). Ele também foi um dos primeiros a tratar o zero como um número de verdade."
+    },
+    "mapa4-A": {
+      "nome": "Ahmes, o escriba",
+      "epoca": "c. 1650 a.C.",
+      "lugar": "Egito",
+      "simbolo": "½",
+      "cor": "#feca57",
+      "texto": "Copiou o Papiro de Rhind, cheio de problemas com frações. Os egípcios escreviam 3/4 como 1/2 + 1/4.",
+      "texto_completo": "Ahmes foi um escriba do antigo Egito, por volta de 1650 a.C. Ele copiou o Papiro de Rhind, um rolo com 84 problemas de matemática, que hoje está no Museu Britânico. Os egípcios quase só usavam frações com numerador 1, como 1/2, 1/3 e 1/4; para escrever 3/4, faziam 1/2 + 1/4. O papiro tem problemas de dividir pães, cerveja e grãos entre pessoas."
+    },
+    "mapa4-B": {
+      "nome": "Al-Uqlidisi",
+      "epoca": "séc. X",
+      "lugar": "Damasco (Síria)",
+      "simbolo": "0,5",
+      "cor": "#ff9ff3",
+      "texto": "É o registro mais antigo que se conhece de números decimais, num livro escrito por volta do ano 952.",
+      "texto_completo": "Al-Uqlidisi foi um matemático árabe que viveu em Damasco, na Síria. Por volta do ano 952, escreveu um livro sobre os algarismos indianos, e nele aparece o registro mais antigo que se conhece de números decimais. Ele queria facilitar as contas que antes eram feitas na areia ou numa tábua de poeira. Seu nome quer dizer “o seguidor de Euclides”."
+    },
+    "mapa5-A": {
+      "nome": "Arquimedes",
+      "epoca": "séc. III a.C.",
+      "lugar": "Siracusa (Itália)",
+      "simbolo": "10ⁿ",
+      "cor": "#5f27cd",
+      "texto": "No “Contador de Areia”, calculou quantos grãos de areia caberiam no universo, inventando um jeito de escrever números gigantes.",
+      "texto_completo": "Arquimedes, de Siracusa, foi um dos maiores cientistas da Antiguidade. No livro “O Contador de Areia”, ele quis descobrir quantos grãos de areia caberiam no universo inteiro. Os números da época não davam conta de valores tão grandes, então ele inventou um jeito de escrever números gigantes — uma ideia parecida com as potências. Ele também é famoso pela história do “Eureka!” na banheira."
+    },
+    "mapa5-B": {
+      "nome": "Christoph Rudolff",
+      "epoca": "1525",
+      "lugar": "Alemanha",
+      "simbolo": "√",
+      "cor": "#8854d0",
+      "texto": "Usou pela primeira vez o símbolo √. Dizem que ele vem de um “r” de radix, que é raiz em latim.",
+      "texto_completo": "Christoph Rudolff foi um matemático alemão. Em 1525 publicou um livro de álgebra chamado Die Coss, onde aparece pela primeira vez o símbolo √ para a raiz quadrada. Muitos acreditam que o √ veio de um “r” estilizado, de radix, que quer dizer “raiz” em latim. Antes disso, cada um escrevia a raiz do seu jeito, com palavras ou letras."
+    },
+    "mapa6-A": {
+      "nome": "Eratóstenes",
+      "epoca": "séc. III a.C.",
+      "lugar": "Alexandria (Egito)",
+      "simbolo": "2·3·5",
+      "cor": "#10ac84",
+      "texto": "Criou o “crivo”: risca os múltiplos de 2, de 3, de 5… e o que sobra são os números primos.",
+      "texto_completo": "Eratóstenes foi um sábio grego que dirigiu a famosa Biblioteca de Alexandria, no Egito. Ele criou o “crivo de Eratóstenes”: escreve-se uma lista de números e vai riscando os múltiplos de 2, de 3, de 5… O que sobra sem riscar são os números primos. Também calculou a volta da Terra usando sombras, chegando muito perto do valor certo."
+    },
+    "mapa6-B": {
+      "nome": "Euclides",
+      "epoca": "c. 300 a.C.",
+      "lugar": "Alexandria (Egito)",
+      "simbolo": "÷",
+      "cor": "#1dd1a1",
+      "texto": "No livro Os Elementos, ensinou um jeito de achar o maior divisor comum de dois números que usamos até hoje.",
+      "texto_completo": "Euclides viveu em Alexandria, no Egito, por volta de 300 a.C. Escreveu “Os Elementos”, um dos livros mais usados da história: foi estudado nas escolas por mais de 2 000 anos. Nele aparece o “algoritmo de Euclides”, um jeito esperto de achar o maior divisor comum de dois números. Ele também provou que os números primos nunca acabam."
+    },
+    "mapa7-A": {
+      "nome": "Leonardo Fibonacci",
+      "epoca": "1202",
+      "lugar": "Pisa (Itália)",
+      "simbolo": "%",
+      "cor": "#ee5253",
+      "texto": "Seu livro Liber Abaci levou os algarismos 0 a 9 para a Europa, com muitos problemas de comércio, lucro e juros.",
+      "texto_completo": "Leonardo de Pisa, mais conhecido como Fibonacci, era filho de um comerciante italiano e aprendeu matemática viajando pelo norte da África. Em 1202 escreveu o Liber Abaci, que levou para a Europa os algarismos de 0 a 9 que usamos hoje. O livro era cheio de problemas de comércio: preços, lucros, juros e trocas de moedas. É dele também a famosa sequência 1, 1, 2, 3, 5, 8, 13…"
+    },
+    "mapa7-B": {
+      "nome": "Luca Pacioli",
+      "epoca": "1494",
+      "lugar": "Itália",
+      "simbolo": "💰",
+      "cor": "#ff6b6b",
+      "texto": "Explicou como os comerciantes anotavam entradas e saídas de dinheiro. É chamado de pai da contabilidade.",
+      "texto_completo": "Luca Pacioli foi um frade e matemático italiano, amigo de Leonardo da Vinci. Em 1494 publicou um grande livro de matemática que explicava como os comerciantes deviam anotar o dinheiro que entrava e saía, com o método das “partidas dobradas”. Por isso ele é chamado de pai da contabilidade. Até hoje bancos e empresas usam a ideia dele."
+    },
+    "mapa8-A": {
+      "nome": "François Viète",
+      "epoca": "séc. XVI",
+      "lugar": "França",
+      "simbolo": "a + b",
+      "cor": "#576574",
+      "texto": "Teve a ideia de usar letras para representar números. Foi o começo da linguagem algébrica.",
+      "texto_completo": "François Viète era advogado e conselheiro dos reis da França, e fazia matemática nas horas vagas. Ele teve a ideia de usar letras para representar números: vogais para os valores desconhecidos e consoantes para os conhecidos. Isso permitiu escrever regras que valem para qualquer número, e foi o começo da álgebra como conhecemos. Ele também decifrava mensagens secretas de inimigos do rei!"
+    },
+    "mapa8-B": {
+      "nome": "Emmy Noether",
+      "epoca": "séc. XX",
+      "lugar": "Alemanha",
+      "simbolo": "3a+2a",
+      "cor": "#8395a7",
+      "texto": "Uma das maiores matemáticas da história. Revolucionou a álgebra e foi elogiada por Einstein.",
+      "texto_completo": "Emmy Noether foi uma matemática alemã. No começo do século XX, mulheres quase não podiam dar aula nas universidades, e por anos ela ensinou sem receber salário. Mesmo assim, revolucionou a álgebra e descobriu um teorema muito importante para a física. Albert Einstein a considerava uma das mentes mais geniais da matemática."
+    },
+    "mapa9-A": {
+      "nome": "Al-Khwarizmi",
+      "epoca": "séc. IX",
+      "lugar": "Bagdá (Iraque)",
+      "simbolo": "⚖️",
+      "cor": "#ff9f1a",
+      "texto": "Escreveu um dos primeiros livros de álgebra. A palavra “algoritmo” vem do nome dele!",
+      "texto_completo": "Muhammad al-Khwarizmi trabalhou na Casa da Sabedoria, em Bagdá, no século IX. Escreveu um livro sobre como resolver equações; a palavra al-jabr do título deu origem a “álgebra”. Do nome dele veio a palavra “algoritmo”, usada hoje em toda a computação. Ele também ajudou a espalhar os algarismos indianos pelo mundo árabe."
+    },
+    "mapa9-B": {
+      "nome": "Hipátia de Alexandria",
+      "epoca": "séc. IV–V",
+      "lugar": "Alexandria (Egito)",
+      "simbolo": "x = ?",
+      "cor": "#e17055",
+      "texto": "Uma das primeiras matemáticas conhecidas. Escreveu comentários sobre a Aritmética de Diofanto, o livro dos problemas com equações.",
+      "texto_completo": "Hipátia de Alexandria é uma das primeiras mulheres matemáticas de que se tem notícia. Ela ensinava matemática, astronomia e filosofia, e era muito respeitada pelos alunos. Escreveu comentários sobre a Aritmética de Diofanto, um livro cheio de problemas resolvidos com equações. Seu pai, Teão, também era matemático e trabalhou com ela."
+    },
+    "mapa10-A": {
+      "nome": "Aryabhata",
+      "epoca": "ano 499",
+      "lugar": "Índia",
+      "simbolo": "a:b",
+      "cor": "#fdcb6e",
+      "texto": "Em seu livro, explicou a “regra de três” para resolver problemas de proporção.",
+      "texto_completo": "Aryabhata foi um matemático e astrônomo indiano. No ano 499, com apenas 23 anos, escreveu o livro Aryabhatiya, em versos. Nele explicou a “regra de três”, usada para resolver problemas de proporção, como preços e quantidades. Também calculou um valor muito bom para o π e explicou que a Terra gira em torno de si mesma."
+    },
+    "mapa10-B": {
+      "nome": "Tales de Mileto",
+      "epoca": "séc. VI a.C.",
+      "lugar": "Grécia",
+      "simbolo": "🔺",
+      "cor": "#e1b12c",
+      "texto": "Conta a história que mediu a altura de uma pirâmide comparando a sombra dela com a sombra de uma vara.",
+      "texto_completo": "Tales de Mileto é considerado um dos primeiros matemáticos da Grécia. Conta a história que ele mediu a altura de uma pirâmide do Egito sem subir nela: comparou o tamanho da sombra da pirâmide com o da sombra de uma vara, na mesma hora do dia. É pura proporção — a mesma ideia da regra de três. Também dizem que ele previu um eclipse do Sol."
+    },
+    "mapa11-A": {
+      "nome": "Zu Chongzhi",
+      "epoca": "séc. V",
+      "lugar": "China",
+      "simbolo": "π",
+      "cor": "#6ab04c",
+      "texto": "Calculou π com 7 casas certas (3,1415926), um recorde que durou uns 900 anos.",
+      "texto_completo": "Zu Chongzhi foi um matemático e astrônomo chinês do século V. Ele calculou que o π fica entre 3,1415926 e 3,1415927 — um recorde que durou uns 900 anos. O π é o número que liga o tamanho da volta de um círculo (o perímetro) ao seu diâmetro. Ele também criou um calendário novo e projetou carruagens e barcos."
+    },
+    "mapa11-B": {
+      "nome": "Herão de Alexandria",
+      "epoca": "séc. I",
+      "lugar": "Alexandria (Egito)",
+      "simbolo": "▲",
+      "cor": "#badc58",
+      "texto": "Criou uma fórmula para achar a área de qualquer triângulo só com a medida dos lados.",
+      "texto_completo": "Herão de Alexandria foi um engenheiro e matemático genial. Criou uma fórmula para calcular a área de qualquer triângulo usando só a medida dos três lados. Também inventou máquinas incríveis para a época: uma esfera que girava com vapor e portas de templo que abriam “sozinhas”. Escreveu livros sobre como medir terrenos, áreas e volumes."
+    },
+    "mapa12-A": {
+      "nome": "René Descartes",
+      "epoca": "séc. XVII",
+      "lugar": "França",
+      "simbolo": "(x, y)",
+      "cor": "#0984e3",
+      "texto": "Inventou o plano cartesiano (o nome vem dele!). Conta a lenda que a ideia veio olhando uma mosca no teto.",
+      "texto_completo": "René Descartes foi um filósofo e matemático francês. Ele juntou a álgebra com a geometria e criou o plano com dois eixos — por isso se chama plano cartesiano (de Cartesius, o nome dele em latim). Conta a lenda que a ideia veio enquanto observava uma mosca andando no teto. É dele também a frase famosa “Penso, logo existo”."
+    },
+    "mapa12-B": {
+      "nome": "Pierre de Fermat",
+      "epoca": "séc. XVII",
+      "lugar": "França",
+      "simbolo": "↗",
+      "cor": "#74b9ff",
+      "texto": "Teve a ideia das coordenadas na mesma época que Descartes, sem um saber do outro.",
+      "texto_completo": "Pierre de Fermat era juiz na França e fazia matemática como hobby — e mesmo assim foi um dos maiores matemáticos da história. Ele teve a ideia das coordenadas na mesma época que Descartes, sem um saber do outro. Deixou um problema escrito na margem de um livro, dizendo que tinha a solução mas que “não cabia ali”. Ele só foi resolvido em 1994, mais de 350 anos depois!"
+    },
+    "mapa13-A": {
+      "nome": "Adolphe Quetelet",
+      "epoca": "séc. XIX",
+      "lugar": "Bélgica",
+      "simbolo": "x̄",
+      "cor": "#a29bfe",
+      "texto": "Usou médias para estudar populações e criou o “homem médio”. Também inventou o cálculo que deu origem ao IMC.",
+      "texto_completo": "Adolphe Quetelet foi um astrônomo e matemático belga. Ele usou médias para estudar populações inteiras: altura, peso, idade e outras características das pessoas. Criou a ideia do “homem médio” e o cálculo que deu origem ao IMC, usado até hoje pelos médicos. Também ajudou a organizar os primeiros grandes censos da Europa."
+    },
+    "mapa13-B": {
+      "nome": "Florence Nightingale",
+      "epoca": "séc. XIX",
+      "lugar": "Inglaterra",
+      "simbolo": "📊",
+      "cor": "#fd79a8",
+      "texto": "Enfermeira que usou tabelas e gráficos para provar que a falta de higiene matava soldados e salvou muitas vidas.",
+      "texto_completo": "Florence Nightingale foi uma enfermeira inglesa que cuidou de soldados na Guerra da Crimeia. Ela anotou com cuidado os dados dos hospitais e mostrou, com tabelas e gráficos coloridos, que a maioria das mortes era causada por doenças e falta de higiene, e não pelos ferimentos. Com isso, convenceu o governo a mudar os hospitais e salvou muitas vidas. É considerada a fundadora da enfermagem moderna."
+    }
   }
 }

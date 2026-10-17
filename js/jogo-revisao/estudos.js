@@ -77,11 +77,16 @@ function irSecao(s) {
         <div>${(g.ops || []).map(o => `<span class="qe-op">${esc(o)}</span>`).join('')}<br>${marcar(g.texto)}${g.obs ? `<div class="qe-obs">${marcar(g.obs)}</div>` : ''}</div></div>`).join('')}</div>`;
   } else if (s === 'pensa') {
     const p = d.pensa, a = p.animacao;
+    // duas colunas (PROMPT-99): o palco da fila à esquerda; legenda, controles e o "Por quê?" à direita — sem rolar
     tela.innerHTML = `${selo}<h2>${marcar(p.titulo)}</h2>
-      ${a?.tipo === 'fila' ? `<div class="qe-palco" id="qe-palco"><div class="qe-balcao">🛎️ ATENDIMENTO</div></div>
-      <div class="qe-leg"><span class="qe-num" id="qe-pnum">1</span><span id="qe-pleg"></span></div>
-      <div class="qe-ctrl"><div class="qe-pts" id="qe-pts"></div><button class="qe-mini" data-qe-pausa>⏸ pausar</button><button class="qe-mini" data-qe-inicio>↺ do início</button></div>` : ''}
-      ${p.porque ? `<p class="qe-porque">${marcar(p.porque)}</p>` : ''}`;
+      <div class="qe-pensa">
+        ${a?.tipo === 'fila' ? `<div class="qe-palco" id="qe-palco"><div class="qe-balcao">🛎️ ATENDIMENTO</div></div>` : ''}
+        <div class="qe-pensa-lado">
+          ${a?.tipo === 'fila' ? `<div class="qe-leg"><span class="qe-num" id="qe-pnum">1</span><span id="qe-pleg"></span></div>
+          <div class="qe-ctrl"><div class="qe-pts" id="qe-pts"></div><button class="qe-mini" data-qe-pausa>⏸ pausar</button><button class="qe-mini" data-qe-inicio>↺ do início</button></div>` : ''}
+          ${p.porque ? `<p class="qe-porque">${marcar(p.porque)}</p>` : ''}
+        </div>
+      </div>`;
     if (a?.tipo === 'fila') iniciarFila(a);
   } else if (s === 'exemplos') {
     tela.innerHTML = `${selo}<div class="qe-chips" id="qe-chips"></div><div class="qe-trilha" id="qe-trilha"></div>`;
@@ -167,7 +172,7 @@ function iniciarFila(a) {
   // posições da fila pela largura real de cada ficha
   const lefts = [];
   let x = 16;
-  for (const el of fichas) { lefts.push(x); x += el.offsetWidth + 14; }
+  for (const el of fichas) { lefts.push(x); x += el.offsetWidth + 10; }
   fim.style.left = `calc(50% - ${fim.offsetWidth / 2}px)`;
   const vip = fichas[a.vip], tv = vip?.querySelector('.qe-ft');
   const balcao = palco.querySelector('.qe-balcao');

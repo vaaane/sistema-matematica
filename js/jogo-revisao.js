@@ -803,6 +803,7 @@ export async function iniciarJogo(sess) {
   try { MAPA_PG = await fetch(`${DADOS}/mapa-programe.json`).then(r => { if (!r.ok) throw new Error('mapa-programe.json'); return r.json(); }); }
   catch (e) { console.warn('[jogo-revisao] mapa da Ilha dos Robôs indisponível (fica a lista de fases)', e); }
   ESTUDOS = await fetch(`${DADOS}/estudos.json`).then(r => (r.ok ? r.json() : null)).catch(() => null);   // 📜 Quadro de Estudos (sem ele: nenhum quadro)
+  falarCurioParam = teste && new URLSearchParams(location.search).get('falar') === 'curiosidade';
   [ALBUM, CURIO] = await Promise.all(['album.json', 'curiosidades.json'].map(f => fetch(`${DADOS}/${f}`).then(r => (r.ok ? r.json() : null)).catch(() => null)));   // 📒💡 (PROMPT-98)
   LUZES = await fetch(`${DADOS}/luzes.json`).then(r => (r.ok ? r.json() : null)).catch(() => null);   // 🌙 luzes da noite (sem ele: só a cor)
   iniciarDiaNoite();
@@ -1573,8 +1574,8 @@ function renderBotaoMeusPets() {
 function aplicarLetra() {
   const g = !!estado?.letraGrande;
   document.documentElement.classList.toggle('jr-letra-grande', g);
-  const b = $('btn-letra');
-  if (b) { b.textContent = `Aa Letra: ${g ? 'Grande' : 'Normal'}`; b.setAttribute('aria-pressed', String(g)); }
+  const b = $('mp-letra');   // chave no Meu Pet → Visual (PROMPT-99; antes ficava no estojo de insígnias)
+  if (b) { $('mp-letra-txt').textContent = `Aa Letra grande: ${g ? 'ligado' : 'desligado'}`; b.setAttribute('aria-checked', String(g)); b.classList.toggle('ligado', g); }
 }
 function alternarLetra() {
   if (!estado) return;
@@ -3290,6 +3291,7 @@ function ginasioMaisErrado() {
 const contextoFala = () => contextoFalaDe(estado.pets.ativo);
 function contextoFalaDe(pet) {
   const prox = proximoGinasio(), errado = ginasioMaisErrado();
+  const vencidos = ginasiosVencidos(), rv = vencidos.length ? sortear(vencidos) : null, revisar = rv && chaveGinasio(rv.mapa, rv.lado);   // um vencido qualquer, para revisar
   let est = null;
   if (barrigaDe(pet) < fomeAbaixo()) est = 'fome';
   else if (conversa.voltou && !conversa.voltouDito) est = 'voltou';
@@ -3297,6 +3299,7 @@ function contextoFalaDe(pet) {
     pet, nomePet: nomePet(pet), apelido: apelidoAluno || String(sessao.nome || '').split(' ')[0],
     proximo: prox ? { chave: prox, dica: dicaDe(prox) } : null,
     errado: errado ? { chave: errado, dica: dicaDe(errado) } : null,
+    revisar: revisar ? { chave: revisar, dica: dicaDe(revisar) } : null,
     sequencia: Number(estado.sequencia?.atual) || 0, agora: new Date(), estado: est,
     curiosidade: CURIO ? () => baloesCuriosidade(pet) : null,   // 💡 (PROMPT-98)
   };
@@ -3387,9 +3390,15 @@ function atualizarConversa() {
     if (petPodeFalar()) petFalar(ev);
     return;
   }
-  if (petCalado || conversa.falando || !petPodeFalar()) return;
+  if (petCalado || conversa.falando) return;
+  // ?falar=curiosidade (modo teste): uma curiosidade na hora, ao entrar no mapa
+  if (conversa.curioAgora && seguidor?.pet && !$('pet').hidden && falasProntas()) { conversa.curioAgora = false; if (petFalar('curiosidade')) return; }
+  // 💡 a curiosidade não depende da lealdade: abaixo da mínima o pet só conta curiosidades (PROMPT-99)
+  const pode = petPodeFalar(), soCurio = !pode && !!CURIO && falasProntas() && !!seguidor?.pet && !$('pet').hidden;
+  if (!pode && !soCurio) return;
   if (performance.now() < conversa.proximaT) return;
   if ((seguidor.paradoMs || 0) < (configFalas().parado_min_s ?? 3) * 1000) return;
+  if (soCurio || conversa.primeiraCurio) { conversa.primeiraCurio = false; if (petFalar('curiosidade') || soCurio) return; }   // a 1ª fala no mapa é sempre uma curiosidade
   const pertoDaAgua = cena?.tipo === 'mapa' && pescaPronta() && pontosDoMapa(cena.n).some(p => pontoLiberado(p) && dist(jog.x, jog.y, p.x, p.y) < 180);
   if (pertoDaAgua && Math.random() < 0.4 && petFalar('pesca')) return;
   if (lembrarTreino()) return;
@@ -4100,6 +4109,7 @@ function responderPerguntaPet(b) {
 //  sem repetir até contar todas do grupo (no aparelho: localStorage jr_curio); se tem `album`, um 2º balão cita a figurinha.
 // ============================================================
 let ALBUM = null, CURIO = null, figurinhaPendente = null;
+let falarCurioParam = false;   // ?falar=curiosidade (só no modo teste): o pet conta uma curiosidade ao entrar no mapa
 const figurinhas = () => ALBUM?.figurinhas || {};
 const CHAVES_ALBUM = () => Array.from({ length: NUM_MAPAS }, (_, i) => ['A', 'B'].map(G => chaveGinasio(i + 1, G))).flat();
 const totalAlbum = () => CHAVES_ALBUM().filter(c => figurinhas()[c]).length;
@@ -4157,11 +4167,29 @@ function cartaHtml(chave, num) {
 function abrirAlbum() {
   if (!ALBUM) return;
   const chaves = CHAVES_ALBUM().filter(c => figurinhas()[c]);
-  $('al-grade').innerHTML = chaves.map((c, i) => cartaHtml(c, i + 1)).join('');
+  $('al-grade').innerHTML = chaves.map((c, i) => cartaHtml(c, i + 1).replace('<button class="al-carta', `<button data-i="${i}" class="al-carta`)).join('');
   const tem = chaves.filter(temFigurinha).length, dour = chaves.filter(c => estado.album[c]?.dourada).length;
   $('al-cont').textContent = `${tem}/${chaves.length} · ✨ ${dour} dourada${dour === 1 ? '' : 's'}`;
   $('album').hidden = false;
   $('al-grade').scrollLeft = 0;
+}
+// Cartão grande (PROMPT-99): a carta da frente à esquerda; nome, época · lugar, de onde veio e o texto_completo à direita
+let alAtual = 0;
+function abrirCartaoFigurinha(i) {
+  const chaves = CHAVES_ALBUM().filter(c => figurinhas()[c]);
+  if (!chaves.length) return;
+  alAtual = (i + chaves.length) % chaves.length;
+  const chave = chaves[alAtual], f = figurinhas()[chave], minha = estado.album?.[chave];
+  const [mapaStr, G] = chave.replace('mapa', '').split('-');
+  const gin = D.questoes[Number(mapaStr)]?.ginasios?.[G];
+  $('al-cartao-carta').innerHTML = cartaHtml(chave, alAtual + 1);
+  $('al-cartao-info').innerHTML = minha
+    ? `<b class="al-ci-nome">${esc(f.nome)}${minha.dourada ? ' ✨' : ''}</b><span class="al-ci-sub">${esc(f.epoca || '')} · ${esc(f.lugar || '')}</span>
+       <span class="al-ci-de">📍 ${esc(gin?.nome || '')} (Mapa ${Number(mapaStr)})${gin?.conteudo ? ` · ${esc(gin.conteudo)}` : ''}</span>
+       <div class="al-ci-texto">${esc(f.texto_completo || f.texto || '')}</div>`
+    : `<b class="al-ci-nome">?</b><div class="al-ci-texto">Vença o líder da <b>${esc(gin?.nome || '')}</b> (Mapa ${Number(mapaStr)}) para ganhar esta figurinha.</div>`;
+  $('al-cartao-info').scrollTop = 0;
+  $('al-cartao').hidden = false;
 }
 function pintarEspecialAlbum() {
   const el = $('estojo-especial'), b = $('btn-album');
@@ -4405,7 +4433,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('exp-volta').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden;
+  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('exp-volta').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden;
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -4845,6 +4873,7 @@ async function abrirMapa(n, onde) {
   atualizarBotaoPet();
   entrarNoMapaOnline(n);
   conversa.proximaT = performance.now() + 8000;   // 1ª fala no mapa pode vir depois de 8 s
+  conversa.primeiraCurio = true; conversa.curioAgora = falarCurioParam;   // 💡 (PROMPT-99)
   pedirPetSeFaltar();
   setTimeout(() => { if (cena?.tipo === 'mapa' && cena.n === n && $('pet-escolha').hidden) avisarPescaLiberada(n); }, 900);
 }
@@ -5401,6 +5430,7 @@ async function abrirPraca(onde) {   // onde: 'fliperama' | 'loja' = saindo de l�
   atualizarBotaoPet();
   entrarNoMapaOnline('praca');
   conversa.proximaT = performance.now() + 8000;
+  conversa.primeiraCurio = true; conversa.curioAgora = falarCurioParam;   // 💡 (PROMPT-99)
   if (editarPraca) ligarEdicaoPraca();
 }
 
@@ -10899,8 +10929,22 @@ function ligarEventos() {
   $('album').addEventListener('click', (e) => {
     e.stopPropagation();
     if (e.target === $('album')) { $('album').hidden = true; return; }
-    const c = e.target.closest('.al-carta:not(.falta)');
-    if (c) { c.classList.toggle('virada'); tocar('clique'); }
+    const c = e.target.closest('.al-carta');
+    if (c) { abrirCartaoFigurinha(Number(c.dataset.i)); tocar('clique'); }   // o cartão grande com a história completa (PROMPT-99)
+  });
+  $('al-cartao').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (e.target === $('al-cartao') || e.target.closest('#al-cartao-x')) { $('al-cartao').hidden = true; return; }
+    if (e.target.closest('#al-ant')) abrirCartaoFigurinha(alAtual - 1);
+    else if (e.target.closest('#al-prox')) abrirCartaoFigurinha(alAtual + 1);
+  });
+  window.addEventListener('keydown', (e) => {
+    if ($('al-cartao').hidden) return;
+    if (e.key === 'Escape') $('al-cartao').hidden = true;
+    else if (e.key === 'ArrowLeft') abrirCartaoFigurinha(alAtual - 1);
+    else if (e.key === 'ArrowRight') abrirCartaoFigurinha(alAtual + 1);
+    else return;
+    e.stopPropagation();
   });
   $('fig-nova-carta').addEventListener('click', (e) => { e.stopPropagation(); e.target.closest('.al-carta')?.classList.toggle('virada'); });
   $('fig-nova-ok').addEventListener('click', (e) => { e.stopPropagation(); fecharFigurinhaNova(); });
@@ -10917,7 +10961,7 @@ function ligarEventos() {
   $('btn-relembre').addEventListener('click', () => { if (cena?.tipo === 'interior') abrirRelembre(cena.chave, 'ginasio'); });
   $('rel-ok').addEventListener('click', fecharRelembre);
   $('btn-missoes').addEventListener('click', abrirMissoes);
-  $('btn-letra').addEventListener('click', alternarLetra);
+  $('mp-letra').addEventListener('click', alternarLetra);
   ligarBotoesPrograme();
   ligarMapaPrograme();
   ligarQuadroEstudos();

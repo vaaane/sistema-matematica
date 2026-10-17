@@ -250,7 +250,6 @@
         <div class="jr-estojo-acoes">
           <button class="jr-btn jr-btn-sec jr-trocar-pet" id="btn-trocar-pet" hidden>🐾 Meus pets</button>
           <button class="jr-btn jr-btn-sec jr-trocar-pet" id="btn-personagem">👤 Personagem</button>
-          <button class="jr-btn jr-btn-sec jr-trocar-pet" id="btn-letra" aria-pressed="false">Aa Letra: Normal</button>
           <button class="jr-btn jr-btn-sec jr-trocar-pet" id="btn-album" hidden>📒 Álbum</button>
         </div>
         <div class="jr-estojo-especial" id="estojo-especial" hidden></div>
@@ -265,7 +264,17 @@
     <div class="al-caixa">
       <div class="al-topo"><b>📒 Álbum de Matemáticos</b><span id="al-cont"></span><button class="bt-lista-x" id="album-fechar" aria-label="Fechar">✕</button></div>
       <div class="al-grade" id="al-grade"></div>
-      <div class="al-nota">Toque numa carta para virar. Vença o líder de um ginásio para ganhar a figurinha; vencendo a revanche, ela fica dourada ✨.</div>
+      <div class="al-nota">Toque numa carta para ler a história. Vença o líder de um ginásio para ganhar a figurinha; vencendo a revanche, ela fica dourada ✨.</div>
+    </div>
+  </div>
+  <!-- cartão grande da figurinha (PROMPT-99): a carta à esquerda, a história completa à direita -->
+  <div id="al-cartao" class="al-fundo al-cartao-fundo" hidden role="dialog" aria-label="Figurinha">
+    <div class="al-cartao">
+      <button class="al-nav" id="al-ant" aria-label="Figurinha anterior">‹</button>
+      <div class="al-cartao-carta" id="al-cartao-carta"></div>
+      <div class="al-cartao-info" id="al-cartao-info"></div>
+      <button class="al-nav" id="al-prox" aria-label="Próxima figurinha">›</button>
+      <button class="bt-lista-x al-cartao-x" id="al-cartao-x" aria-label="Fechar">✕</button>
     </div>
   </div>
   <!-- figurinha nova (depois do cartão da insígnia) -->
@@ -786,6 +795,8 @@
         <button class="mp-chave" id="mp-calado" role="switch" aria-checked="true"><span class="mp-chave-trilho"><i></i></span><span id="mp-calado-txt">Falas do pet: ligado</span></button>
         <div class="mp-visual-rot">Convites</div>
         <button class="mp-chave" id="mp-sem-convites" role="switch" aria-checked="false"><span class="mp-chave-trilho"><i></i></span><span id="mp-sem-convites-txt">Não receber convites: desligado</span></button>
+        <div class="mp-visual-rot">Letra</div>
+        <button class="mp-chave" id="mp-letra" role="switch" aria-checked="false"><span class="mp-chave-trilho"><i></i></span><span id="mp-letra-txt">Aa Letra grande: desligado</span></button>
       </div>
       <!-- Nome do pet -->
       <div class="mp-sub mp-nomear" id="mp-nomear" hidden>

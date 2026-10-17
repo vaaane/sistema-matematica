@@ -2704,7 +2704,7 @@ html.jr-deitado .lj-comprar { min-height: 32px; }
 @media (prefers-reduced-motion: reduce) { .jr-estudos-quadro.novo { animation: none; filter: drop-shadow(0 0 6px rgba(255,215,0,.8)); } }
 
 .jr-estudos { position: absolute; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; padding: 8px; background: rgba(5,6,14,.6);
-  container-type: inline-size; font-family: 'Inter', sans-serif; color: #eef0ff; }
+  container: qe / inline-size; font-family: 'Inter', sans-serif; color: #eef0ff; }
 .jr-estudos[hidden] { display: none; }
 .qe-painel { width: min(100%, 900px); height: min(100%, 420px); display: grid; grid-template-rows: auto 1fr; overflow: hidden; background: var(--jr-card);
   border: 2px solid var(--jr-roxo); border-radius: 20px; box-shadow: 0 0 0 4px rgba(124,92,252,.15), 0 12px 40px rgba(0,0,0,.5); }
@@ -2725,7 +2725,7 @@ html.jr-deitado .lj-comprar { min-height: 32px; }
 .qe-mi .qe-ic { font-size: 18px; }
 .qe-mi.on { color: #fff; border-color: var(--c); background: color-mix(in srgb, var(--c) 22%, transparent); }
 .qe-mi.feito::after { content: '✓'; margin-left: auto; color: var(--jr-verde); }
-.qe-tela { padding: 12px 16px; overflow: auto; min-height: 0; animation: qe-entra .25s; }
+.qe-tela { padding: 12px 16px; overflow: auto; min-height: 0; animation: qe-entra .25s; container: qetela / size; }
 @keyframes qe-entra { from { opacity: 0; transform: translateY(6px); } }
 .qe-tela h2 { margin: 0 0 6px; font-size: 20px; font-weight: 800; }
 .qe-tela p { margin: 4px 0; line-height: 1.4; font-weight: 700; font-size: 15px; }
@@ -2775,6 +2775,22 @@ html.jr-deitado .lj-comprar { min-height: 32px; }
 .qe-pts i.on { background: var(--jr-cyan); }
 .qe-mini { border: 1px solid var(--jr-borda); background: #0e1328; color: #a3a1c9; border-radius: 999px; padding: 4px 10px; font: 700 14px 'Rajdhani', sans-serif; cursor: pointer; }
 .qe-tela p.qe-porque { margin-top: 8px; padding: 8px 10px; border-radius: 12px; background: rgba(255,215,0,.08); border: 1px dashed rgba(255,215,0,.35); font-size: 14px; }
+/* PROMPT-99: "Pensa assim" sem rolar — duas colunas (palco ~60% | legenda, controles e o Por quê); tamanhos pela altura que sobra */
+.qe-tela.qe-s-pensa { display: flex; flex-direction: column; overflow: hidden; }
+.qe-s-pensa h2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: clamp(14px, min(3.2cqw, 6cqh), 20px); flex: none; }
+.qe-s-pensa .qe-selo { align-self: flex-start; flex: none; }
+.qe-pensa { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 12px; align-items: stretch; }
+.qe-pensa .qe-palco { height: auto; min-height: 90px; max-height: 240px; margin: 0; container-type: size; }
+.qe-pensa .qe-ficha { height: clamp(32px, 40cqh, 56px); min-width: clamp(32px, 40cqh, 56px); padding: 0 clamp(6px, 4cqw, 12px); font-size: clamp(17px, 24cqh, 30px);
+  bottom: clamp(14px, 18cqh, 26px); border-radius: 12px; }
+.qe-pensa .qe-balcao { width: clamp(84px, 32cqw, 150px); height: auto; top: 8px; bottom: clamp(8px, 10cqh, 16px); right: 8px; font-size: clamp(9px, 7cqh, 12px); }
+.qe-pensa .qe-palco::after { bottom: clamp(12px, 16cqh, 22px); }
+.qe-pensa-lado { min-height: 0; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+.qe-pensa .qe-leg { font-size: clamp(13px, 2.6cqh + 6px, 16px); align-items: flex-start; min-height: 0; }
+.qe-pensa .qe-ctrl { margin-top: 0; flex-wrap: wrap; gap: 6px; }
+.qe-pensa .qe-mini { padding: 3px 8px; font-size: 13px; }
+.qe-pensa p.qe-porque { margin: 0; padding: 6px 8px; font-size: clamp(12px, 2.4cqh + 5px, 14px); line-height: 1.35; }
+@container qe (max-width: 560px) { .qe-pensa { grid-template-columns: 1fr; } .qe-pensa .qe-palco { min-height: 80px; } }
 /* ✏️ exemplos */
 .qe-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
 .qe-chip { border: 1px solid var(--jr-borda); background: #0e1328; color: #a3a1c9; padding: 5px 12px; border-radius: 999px; font: 700 15px 'Rajdhani', sans-serif; cursor: pointer; white-space: nowrap; }
@@ -2814,7 +2830,7 @@ html.jr-deitado .lj-comprar { min-height: 32px; }
 .qe-resp { min-height: 22px; margin-top: 8px; font-weight: 800; text-align: center; font-size: 15px; }
 .qe-outra { margin-left: 6px; border: none; border-radius: 12px; padding: 5px 12px; font: 700 15px 'Rajdhani', sans-serif; color: #fff; background: var(--jr-roxo); box-shadow: 0 3px 0 #4b33b8; cursor: pointer; }
 /* celular em pé (painel estreito): o menu vira uma fileira de ícones em cima */
-@container (max-width: 560px) {
+@container qe (max-width: 560px) {
   .qe-corpo { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
   .qe-menu { flex-direction: row; justify-content: space-around; border-right: none; border-bottom: 1px solid var(--jr-borda); padding: 6px; }
   .qe-mi { padding: 6px 10px; position: relative; }
@@ -2953,6 +2969,30 @@ html.jr-deitado .rl-enunciado { font-size: 21px; }
   font: 700 15px 'Rajdhani', sans-serif; color: #ffe9a8; }
 .jr-estojo-especial.completo { border-color: var(--jr-ouro); box-shadow: 0 0 12px rgba(255,215,0,.5); color: var(--jr-ouro); }
 .jr-estojo-especial[hidden] { display: none; }
+/* cartão grande da figurinha (PROMPT-99): a carta à esquerda; nome, de onde veio e a história completa à direita */
+.al-cartao-fundo { z-index: 67; }
+.al-cartao { position: relative; width: min(760px, 100%); height: min(400px, 100%); display: grid; grid-template-columns: auto minmax(0, 0.9fr) minmax(0, 1.4fr) auto; align-items: center;
+  gap: 12px; padding: 14px 10px; border-radius: 18px; background: var(--jr-card); border: 2px solid var(--jr-ouro); box-shadow: 0 10px 30px rgba(0,0,0,.6); color: #fff; }
+.al-cartao-carta { height: 100%; display: flex; align-items: center; justify-content: center; min-height: 0; }
+.al-cartao-carta .al-carta { height: min(100%, 340px); width: auto; max-width: 100%; cursor: default; }
+.al-cartao-carta .al-simbolo { font-size: clamp(60px, 15vh, 100px); }
+.al-cartao-carta .al-nome { font-size: 17px; } .al-cartao-carta .al-nome small { font-size: 12px; } .al-cartao-carta .al-num { font-size: 13px; }
+.al-cartao-carta .al-falta { font-size: 13px; }
+.al-cartao-info { align-self: stretch; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 26px 4px 4px 0; font-family: 'Inter', sans-serif; }
+.al-ci-nome { font: 700 26px/1.1 'Rajdhani', sans-serif; color: var(--jr-ouro); }
+.al-ci-sub { font: 700 14px 'Inter', sans-serif; color: #dcdcf0; }
+.al-ci-de { font: 600 13px 'Inter', sans-serif; color: #a3a1c9; }
+.al-ci-texto { margin-top: 4px; font-size: 16.5px; line-height: 1.5; color: #f1f0ff; }
+.al-nav { width: 38px; height: 54px; border-radius: 12px; border: 1px solid var(--jr-borda); background: rgba(255,255,255,.06); color: #fff; font: 700 30px/1 'Rajdhani', sans-serif;
+  cursor: pointer; }
+.al-nav:hover { background: rgba(255,255,255,.14); }
+.al-cartao-x { position: absolute; top: 8px; right: 10px; }
+html.jr-deitado .al-cartao { padding: 10px 8px; gap: 8px; }
+html.jr-deitado .al-ci-texto { font-size: 16px; }
+@media (max-width: 520px) { .al-cartao { grid-template-columns: auto 1fr auto; } .al-cartao-carta { display: none; } }
+/* o Visual do Meu Pet ganhou a chave da letra: pode rolar se não couber */
+#mp-visual-painel { overflow-y: auto; }
+
 /* curiosidade do pet: balão um pouco mais largo */
 .jr-pet-fala.largo { max-width: min(300px, 80vw); }
 @media (prefers-reduced-motion: reduce) { .al-carta .al-giro { transition: none; } .al-carta.dourada .al-frente::after, .al-nova-carta .al-carta { animation: none; } }

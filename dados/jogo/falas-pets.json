@@ -5,13 +5,13 @@
     "parado_min_s": 3,
     "duracao_balao_s": 5,
     "pesos": {
-      "dica": 3,
+      "dica": 2,
       "lembrete": 2,
-      "dia": 2,
+      "dia": 1,
       "piada": 2,
       "aleatorio": 2,
       "estado": 3,
-      "curiosidade": 2
+      "curiosidade": 4
     },
     "placeholders": [
       "{apelido}",
@@ -899,7 +899,13 @@
       "conteudo": "Expressões numéricas sem parênteses",
       "lembretes": [
         "primeiro vem a multiplicação e a divisão, depois a soma e a subtração.",
-        "em 5 + 2 × 3, você faz 2 × 3 primeiro!"
+        "em 5 + 2 × 3, você faz 2 × 3 primeiro!",
+        "× e ÷ empatados? Resolve da esquerda para a direita.",
+        "+ e − empatados? Também da esquerda para a direita: 10 − 3 + 2 = 9.",
+        "20 − 6 ÷ 2 dá 17, não 7: a divisão vai primeiro.",
+        "circula as multiplicações e divisões antes de começar. Ajuda muito!",
+        "4 × 3 + 10 ÷ 2: faz as duas contas VIP (12 e 5) e depois soma: 17.",
+        "conta comprida? Resolve uma operação por linha, sem pular passo."
       ],
       "falas_treinadores": [
         "Primeiro a multiplicação, depois a soma. Vamos ver se você lembra!",
@@ -913,7 +919,13 @@
       "conteudo": "Expressões com parênteses e problemas",
       "lembretes": [
         "parênteses sempre primeiro, depois colchetes.",
-        "em problema de compras, multiplica o preço pela quantidade."
+        "em problema de compras, multiplica o preço pela quantidade.",
+        "dentro dos parênteses também vale a ordem: × e ÷ antes de + e −.",
+        "(5 + 2) × 3 = 21, mas 5 + 2 × 3 = 11. Os parênteses mudam tudo!",
+        "parênteses dentro de colchetes? Resolve de dentro para fora.",
+        "'o dobro da soma de 3 e 4' é 2 × (3 + 4) = 14.",
+        "troco é o que você pagou menos o total da compra.",
+        "lê o problema duas vezes antes de montar a conta."
       ],
       "falas_treinadores": [
         "Parênteses primeiro! Essa é a lei da cidade.",
@@ -927,7 +939,13 @@
       "conteudo": "× e ÷ por 10, 100 e 1000",
       "lembretes": [
         "vezes 10, 100 ou 1000: é só colocar os zeros.",
-        "dividir por 10 é tirar um zero."
+        "dividir por 10 é tirar um zero.",
+        "× 100 é colocar dois zeros: 7 × 100 = 700.",
+        "÷ 1000 é tirar três zeros: 5000 ÷ 1000 = 5.",
+        "com vírgula: × 10 anda a vírgula uma casa para a direita. 3,5 × 10 = 35.",
+        "÷ 10 anda a vírgula uma casa para a esquerda: 48 ÷ 10 = 4,8.",
+        "conte os zeros: é o número de casas que a vírgula anda.",
+        "30 × 100 = 3000: junta os zeros do 30 com os do 100."
       ],
       "falas_treinadores": [
         "Cada caixa tem 10 peixes. Quantos peixes tenho?",
@@ -941,7 +959,13 @@
       "conteudo": "Decimais e medidas",
       "lembretes": [
         "multiplicando por 10, a vírgula anda para a direita.",
-        "1 metro tem 100 centímetros."
+        "1 metro tem 100 centímetros.",
+        "1 km tem 1000 metros.",
+        "1 kg tem 1000 gramas.",
+        "1 litro tem 1000 mililitros.",
+        "para a unidade menor, multiplica. Para a maior, divide.",
+        "2,5 m são 250 cm.",
+        "1500 g são 1,5 kg."
       ],
       "falas_treinadores": [
         "Multiplicando por 10, a vírgula anda para a direita!",
@@ -955,7 +979,13 @@
       "conteudo": "Negativos: comparar, somar e subtrair",
       "lembretes": [
         "na reta numérica, quanto mais à esquerda, menor. −5 é menor que −2!",
-        "somar negativo é como a temperatura descendo."
+        "somar negativo é como a temperatura descendo.",
+        "o zero fica entre os positivos e os negativos.",
+        "−3 + 5 = 2: anda 5 casas para a direita a partir do −3.",
+        "subtrair um negativo é somar: 4 − (−2) = 6.",
+        "sinais diferentes na soma? Subtrai e fica o sinal de quem “pesa” mais: −7 + 3 = −4.",
+        "sinais iguais na soma? Soma e mantém o sinal: −3 + (−4) = −7.",
+        "temperatura de −2 °C para 5 °C subiu 7 graus."
       ],
       "falas_treinadores": [
         "Na reta numérica, quanto mais à esquerda, menor!",
@@ -969,7 +999,13 @@
       "conteudo": "Negativos: multiplicar e dividir",
       "lembretes": [
         "sinais iguais dão positivo, sinais diferentes dão negativo.",
-        "(−2) × (−3) dá +6."
+        "(−2) × (−3) dá +6.",
+        "(−12) ÷ (+3) = −4: sinais diferentes, resultado negativo.",
+        "(−10) ÷ (−2) = +5: sinais iguais, resultado positivo.",
+        "primeiro resolve os números, depois decide o sinal.",
+        "(+4) × (−5) = −20.",
+        "número par de sinais de menos multiplicando dá positivo.",
+        "(−1) × (−1) × (−1) = −1: três sinais de menos dão negativo."
       ],
       "falas_treinadores": [
         "Sinais diferentes dão negativo. Vamos treinar?",
@@ -983,7 +1019,13 @@
       "conteudo": "Frações",
       "lembretes": [
         "frações equivalentes são o mesmo pedaço com nomes diferentes: 1/2 = 2/4.",
-        "com o mesmo denominador, soma só os de cima."
+        "com o mesmo denominador, soma só os de cima.",
+        "o de baixo (denominador) diz em quantas partes foi dividido o inteiro.",
+        "o de cima (numerador) diz quantas partes foram pegas.",
+        "3/4 de 20 é 20 ÷ 4 × 3 = 15.",
+        "para simplificar, divide em cima e embaixo pelo mesmo número: 6/8 = 3/4.",
+        "denominadores diferentes? Acha frações equivalentes com o mesmo denominador antes de somar.",
+        "quanto maior o denominador, menor o pedaço: 1/8 é menor que 1/4."
       ],
       "falas_treinadores": [
         "Frações equivalentes são pedaços do mesmo tamanho!",
@@ -997,7 +1039,13 @@
       "conteudo": "Decimais",
       "lembretes": [
         "para somar decimais, alinha as vírgulas.",
-        "1/2 é o mesmo que 0,5."
+        "1/2 é o mesmo que 0,5.",
+        "0,25 é o mesmo que 1/4.",
+        "0,1 é um décimo; 0,01 é um centésimo.",
+        "0,5 é maior que 0,45: completa com zero para comparar: 0,50 e 0,45.",
+        "para multiplicar decimais, conta as casas depois da vírgula dos dois números.",
+        "R$ 2,50 + R$ 1,75 = R$ 4,25: alinha a vírgula!",
+        "3/4 em decimal: 3 ÷ 4 = 0,75."
       ],
       "falas_treinadores": [
         "Some os decimais alinhando as vírgulas!",
@@ -1011,7 +1059,13 @@
       "conteudo": "Potências",
       "lembretes": [
         "2³ é 2 × 2 × 2, não 2 × 3!",
-        "o quadrado de um número é ele vezes ele mesmo."
+        "o quadrado de um número é ele vezes ele mesmo.",
+        "o número de baixo é a base e o pequeno em cima é o expoente.",
+        "10³ = 1000: o expoente diz quantos zeros.",
+        "5² = 25, não 10!",
+        "o cubo de um número é ele vezes ele vezes ele: 3³ = 27.",
+        "(−2)² = 4, mas −2² = −4. Atenção aos parênteses!",
+        "qualquer número (menos o zero) elevado a 0 é 1."
       ],
       "falas_treinadores": [
         "O quadrado de um número é ele vezes ele mesmo!",
@@ -1025,7 +1079,13 @@
       "conteudo": "Raízes e casos especiais",
       "lembretes": [
         "a raiz quadrada desfaz o quadrado: √49 = 7.",
-        "qualquer número elevado a 1 é ele mesmo."
+        "qualquer número elevado a 1 é ele mesmo.",
+        "√81 = 9, porque 9 × 9 = 81.",
+        "√1 = 1 e √0 = 0.",
+        "decore os quadrados até 15² = 225: ajuda nas raízes.",
+        "√100 = 10.",
+        "1 elevado a qualquer número é 1.",
+        "zero elevado a qualquer número positivo é 0."
       ],
       "falas_treinadores": [
         "A raiz quadrada desfaz o quadrado!",
@@ -1039,7 +1099,13 @@
       "conteudo": "Múltiplos",
       "lembretes": [
         "múltiplos de 2 são os pares.",
-        "múltiplos de 5 terminam em 0 ou 5."
+        "múltiplos de 5 terminam em 0 ou 5.",
+        "múltiplos de 3 aparecem na tabuada do 3: 3, 6, 9, 12…",
+        "o zero é múltiplo de todos os números.",
+        "múltiplos de 10 terminam em 0.",
+        "um número tem infinitos múltiplos.",
+        "múltiplo comum de 4 e 6: 12, 24, 36… O menor é 12.",
+        "para saber se é múltiplo de 3, soma os algarismos: 123 → 6, que é múltiplo de 3."
       ],
       "falas_treinadores": [
         "Múltiplos de 2 são os números pares!",
@@ -1053,7 +1119,13 @@
       "conteudo": "Divisores",
       "lembretes": [
         "divisor divide sem sobrar nada.",
-        "todo número é divisor de si mesmo."
+        "todo número é divisor de si mesmo.",
+        "os divisores de 12 são 1, 2, 3, 4, 6 e 12.",
+        "o 1 é divisor de todos os números.",
+        "número primo tem só dois divisores: 1 e ele mesmo.",
+        "um número tem uma quantidade finita de divisores.",
+        "se 3 é divisor de 15, então 15 é múltiplo de 3.",
+        "procure os divisores em pares: 1 × 18, 2 × 9, 3 × 6."
       ],
       "falas_treinadores": [
         "Um divisor corta o número em partes iguais, sem sobrar!",
@@ -1067,7 +1139,13 @@
       "conteudo": "Porcentagem: calcular",
       "lembretes": [
         "50% é a metade e 10% é dividir por 10.",
-        "25% é um quarto."
+        "25% é um quarto.",
+        "1% é dividir por 100.",
+        "20% é dividir por 5.",
+        "75% é três quartos: divide por 4 e multiplica por 3.",
+        "5% é a metade de 10%.",
+        "desconto de 10% em R$ 80: tira R$ 8, fica R$ 72.",
+        "100% é o total inteiro."
       ],
       "falas_treinadores": [
         "50% é a metade e 10% é dividir por 10!",
@@ -1081,7 +1159,13 @@
       "conteudo": "Porcentagem: qual é a conta?",
       "lembretes": [
         "20% em decimal é 0,2.",
-        "\"25% de 60\" é 0,25 × 60."
+        "\"25% de 60\" é 0,25 × 60.",
+        "aumento de 10% é multiplicar por 1,1.",
+        "desconto de 30% é multiplicar por 0,7: sobra 70%.",
+        "'que porcentagem 15 é de 60?' → 15 ÷ 60 = 0,25 = 25%.",
+        "porcentagem é uma fração com denominador 100: 35% = 35/100.",
+        "50% de desconto e depois mais 50% não é 100%: é 75%.",
+        "na calculadora: preço × porcentagem %."
       ],
       "falas_treinadores": [
         "Qual conta calcula a porcentagem?",
@@ -1095,7 +1179,13 @@
       "conteudo": "Linguagem algébrica e valor numérico",
       "lembretes": [
         "\"o dobro de um número\" é 2x.",
-        "para achar o valor numérico, troca o x pelo número."
+        "para achar o valor numérico, troca o x pelo número.",
+        "'o triplo de um número' é 3x.",
+        "'a metade de um número' é x/2.",
+        "'um número mais 5' é x + 5.",
+        "'o dobro de um número menos 3' é 2x − 3.",
+        "2x com x = 4 é 2 × 4 = 8, não 24!",
+        "troca a letra pelo número entre parênteses: com x = −2, 3x vira 3 × (−2)."
       ],
       "falas_treinadores": [
         "Transforme a pista em linguagem algébrica!",
@@ -1109,7 +1199,13 @@
       "conteudo": "Termos semelhantes",
       "lembretes": [
         "só soma termos com a mesma letra: 3x + 2x = 5x.",
-        "3x e 3y não são termos semelhantes."
+        "3x e 3y não são termos semelhantes.",
+        "x é o mesmo que 1x.",
+        "5a − 2a = 3a.",
+        "x² e x não são semelhantes: o expoente também tem que ser igual.",
+        "3ab e 2ba são semelhantes: a ordem das letras não importa.",
+        "número sozinho só junta com número sozinho: 2x + 3 + 4 = 2x + 7.",
+        "4y − 4y = 0: os termos se cancelam."
       ],
       "falas_treinadores": [
         "Some só os termos com a mesma letra!",
@@ -1123,7 +1219,13 @@
       "conteudo": "Equações: resolver",
       "lembretes": [
         "faça a operação inversa para descobrir o x.",
-        "se 2x = 14, divide por 2: x = 7."
+        "se 2x = 14, divide por 2: x = 7.",
+        "se x + 5 = 12, tira 5 dos dois lados: x = 7.",
+        "se x − 3 = 10, soma 3 dos dois lados: x = 13.",
+        "se x/4 = 3, multiplica por 4: x = 12.",
+        "confere sempre: troca o x pela resposta e vê se fica igual.",
+        "2x + 3 = 11: primeiro tira o 3, depois divide por 2. x = 4.",
+        "o que passa para o outro lado vai com a operação contrária."
       ],
       "falas_treinadores": [
         "Faça a operação inversa e descubra o x!",
@@ -1137,7 +1239,13 @@
       "conteudo": "Equações: qual é a equação?",
       "lembretes": [
         "\"um número mais 4 é igual a 10\" vira x + 4 = 10.",
-        "na balança, os dois lados têm que ficar iguais."
+        "na balança, os dois lados têm que ficar iguais.",
+        "'o triplo de um número é 21' vira 3x = 21.",
+        "'a soma de um número com 7 é 15' vira x + 7 = 15.",
+        "'a idade de Ana daqui a 5 anos será 18' vira x + 5 = 18.",
+        "'é igual a', 'resulta em' e 'dá' viram o sinal de =.",
+        "dois números consecutivos: x e x + 1.",
+        "monta a equação primeiro, resolve depois."
       ],
       "falas_treinadores": [
         "Transforme a frase em equação!",
@@ -1151,7 +1259,13 @@
       "conteudo": "Regra de três: calcular",
       "lembretes": [
         "primeiro descobre o preço de um, depois multiplica.",
-        "mais trabalhadores, menos tempo: grandezas inversas."
+        "mais trabalhadores, menos tempo: grandezas inversas.",
+        "em diretamente proporcionais, os dois aumentam juntos.",
+        "3 kg custam R$ 12? Então 1 kg custa R$ 4.",
+        "monta a tabelinha: o que você sabe em cima, a pergunta embaixo.",
+        "na direta, multiplica cruzado.",
+        "na inversa, multiplica em linha (lado com lado).",
+        "confere se a resposta faz sentido: mais pão, mais farinha."
       ],
       "falas_treinadores": [
         "Se um pão custa 2, quanto custam 5?",
@@ -1165,7 +1279,13 @@
       "conteudo": "Regra de três: qual é a conta?",
       "lembretes": [
         "preço de um = total dividido pela quantidade.",
-        "se é inversa, quando um aumenta o outro diminui."
+        "se é inversa, quando um aumenta o outro diminui.",
+        "mais velocidade, menos tempo de viagem: inversa.",
+        "mais ingredientes, mais bolos: direta.",
+        "pergunta-chave: se um dobra, o outro dobra ou cai pela metade?",
+        "em 'a está para b assim como c está para x', monta a/b = c/x.",
+        "receita para 4 pessoas virando para 8: multiplica tudo por 2.",
+        "4 pintores fazem em 6 dias; 8 pintores fazem em 3 dias."
       ],
       "falas_treinadores": [
         "Qual conta dá o preço de um?",
@@ -1179,7 +1299,13 @@
       "conteudo": "Perímetro e medidas",
       "lembretes": [
         "perímetro é a volta inteira: soma todos os lados.",
-        "o quadrado tem 4 lados iguais."
+        "o quadrado tem 4 lados iguais.",
+        "perímetro do retângulo: 2 × base + 2 × altura.",
+        "perímetro do quadrado: 4 × lado.",
+        "perímetro se mede em cm, m, km: é um comprimento.",
+        "antes de somar, deixa todos os lados na mesma unidade.",
+        "cerca em volta do terreno é perímetro.",
+        "triângulo de lados 3, 4 e 5 tem perímetro 12."
       ],
       "falas_treinadores": [
         "O perímetro é a volta inteira. Some todos os lados!",
@@ -1193,7 +1319,13 @@
       "conteudo": "Área",
       "lembretes": [
         "área do retângulo é base vezes altura.",
-        "área se mede em quadradinhos: cm², m²."
+        "área se mede em quadradinhos: cm², m².",
+        "área do quadrado: lado × lado.",
+        "área do triângulo: base × altura ÷ 2.",
+        "piso, grama e pintura de parede são área.",
+        "figura estranha? Divide em retângulos e soma as áreas.",
+        "1 m² é um quadrado de 1 m de lado.",
+        "um retângulo 5 m por 4 m tem área 20 m²."
       ],
       "falas_treinadores": [
         "Área do quadrado: lado vezes lado!",
@@ -1207,7 +1339,13 @@
       "conteudo": "Ler coordenadas",
       "lembretes": [
         "no ponto (x, y), o primeiro número é o horizontal.",
-        "a origem é o ponto (0, 0)."
+        "a origem é o ponto (0, 0).",
+        "(3, 5): anda 3 no x (deitado) e 5 no y (em pé).",
+        "(3, 5) e (5, 3) são pontos diferentes!",
+        "o eixo x é o deitado e o eixo y é o em pé.",
+        "x negativo fica à esquerda da origem.",
+        "y negativo fica abaixo da origem.",
+        "ponto em cima do eixo x tem y = 0, como (4, 0)."
       ],
       "falas_treinadores": [
         "O primeiro número é o x, o horizontal!",
@@ -1221,7 +1359,13 @@
       "conteudo": "Andar no plano cartesiano",
       "lembretes": [
         "direita e cima são positivos, esquerda e baixo, negativos.",
-        "anda primeiro no x, depois no y."
+        "anda primeiro no x, depois no y.",
+        "andar para a direita soma no x.",
+        "andar para baixo subtrai no y.",
+        "de (2, 3), andando 4 para a esquerda, chega em (−2, 3).",
+        "de (0, 0), 3 para a direita e 2 para cima: (3, 2).",
+        "cada quadradinho da grade vale 1.",
+        "o plano é dividido em 4 quadrantes; no 1º, x e y são positivos."
       ],
       "falas_treinadores": [
         "Saindo da origem, para onde você vai?",
@@ -1235,7 +1379,13 @@
       "conteudo": "Média, moda e mediana",
       "lembretes": [
         "média: soma tudo e divide pela quantidade.",
-        "moda é o que mais aparece; mediana é o do meio."
+        "moda é o que mais aparece; mediana é o do meio.",
+        "para a mediana, coloca os números em ordem primeiro!",
+        "quantidade par de dados? A mediana é a média dos dois do meio.",
+        "pode ter mais de uma moda, ou nenhuma.",
+        "média de 4, 6 e 8: soma 18 e divide por 3 = 6.",
+        "um valor muito grande puxa a média, mas quase não mexe na mediana.",
+        "moda é o que mais se repete."
       ],
       "falas_treinadores": [
         "Média: some tudo e divida pela quantidade!",
@@ -1249,7 +1399,13 @@
       "conteudo": "Tabelas",
       "lembretes": [
         "leia o título e as colunas da tabela antes de responder.",
-        "compare os números da coluna certa."
+        "compare os números da coluna certa.",
+        "linha é deitada; coluna é em pé.",
+        "o total costuma estar na última linha ou na última coluna.",
+        "procura o cruzamento da linha com a coluna certa.",
+        "confere a unidade da tabela: reais, metros, pessoas…",
+        "para 'quantos a mais', subtrai os dois valores.",
+        "gráfico de barras: a barra mais alta é o maior valor."
       ],
       "falas_treinadores": [
         "Leia a tabela das frutas com atenção!",

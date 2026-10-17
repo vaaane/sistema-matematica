@@ -42,8 +42,26 @@ function proximaPiada() {
   return F.piadas[i];
 }
 
-// ctx: { pet, apelido, nomePet, proximo: { dica, chave }, errado: { dica } | null, sequencia, agora: Date,
-//        estado: 'fome' | 'voltou' | null }
+// Lembrete de um ginásio que ainda não saiu (PROMPT-99): não repete nenhum dos 8 até usar todos (índices no aparelho, por ginásio)
+const KEY_LEMBRETES = 'jr_lembretes_usados';
+function proximoLembrete(chave, lista) {
+  if (!lista?.length) return null;
+  let usados = {};
+  try { usados = JSON.parse(localStorage.getItem(KEY_LEMBRETES) || '{}') || {}; } catch (_) {}
+  let u = Array.isArray(usados[chave]) ? usados[chave].filter(i => i < lista.length) : [];
+  if (u.length >= lista.length) u = [];
+  const i = sortear([...Array(lista.length).keys()].filter(k => !u.includes(k)));
+  usados[chave] = [...u, i];
+  try { localStorage.setItem(KEY_LEMBRETES, JSON.stringify(usados)); } catch (_) {}
+  return lista[i];
+}
+// Dica e lembrete do MESMO ginásio: no máximo 1 vez a cada 5 min (senão vira curiosidade ou aleatório)
+const MESMO_GIN_MS = 5 * 60000;
+const ginFalado = {};   // chave do ginásio → quando o pet falou dele por último
+const ginLivre = (chave) => !chave || Date.now() - (ginFalado[chave] || 0) >= MESMO_GIN_MS;
+
+// ctx: { pet, apelido, nomePet, proximo: { dica, chave }, errado: { dica, chave } | null, revisar: { dica, chave } | null
+//        (um ginásio vencido qualquer), sequencia, agora: Date, estado: 'fome' | 'voltou' | null, curiosidade: () => balões }
 // tipoForcado: 'venceu' | 'perdeu' | 'carinho' | 'fome' | 'voltou' (momentos-chave)
 export function montarFala(ctx, tipoForcado = null) {
   if (!F) return null;
@@ -53,17 +71,25 @@ export function montarFala(ctx, tipoForcado = null) {
   if (ctx.proximo?.dica) Object.assign(v, { ginasio: ctx.proximo.dica.ginasio, mapa: ctx.proximo.dica.mapa, conteudo: ctx.proximo.dica.conteudo });
   const um = (cat, lista, extra) => { const f = pegar(cat, lista); return f ? { tipo: extra || cat, baloes: [{ texto: trocar(f, v), espera: 0 }] } : null; };
 
-  // momentos-chave e estado têm prioridade
-  const tipoEstado = tipoForcado || ctx.estado;
-  if (tipoEstado === 'voltou') return um('voltou', F.dia?.voltou, 'estado');
-  if (tipoEstado === 'pesca') return um('pesca', P.pesca?.length ? P.pesca : F.pesca, 'pesca');   // perto da água
-  if (tipoEstado) return um(tipoEstado, P[tipoEstado], tipoEstado === 'fome' ? 'fome' : 'estado');
+  const curiosidade = () => { const baloes = typeof ctx.curiosidade === 'function' ? ctx.curiosidade() : null; return baloes?.length ? { tipo: 'curiosidade', baloes } : null; };
+  // 💡 pedida (primeira fala no mapa, ?falar=curiosidade no modo teste, lealdade baixa)
+  if (tipoForcado === 'curiosidade') return curiosidade() || um('aleatorio', P.aleatorio);
+
+  // momentos-chave têm prioridade; o estado (fome) entra no sorteio com o peso `estado` (PROMPT-99: não barra as outras falas)
+  if (tipoForcado || ctx.estado === 'voltou') {
+    const t = tipoForcado || ctx.estado;
+    if (t === 'voltou') return um('voltou', F.dia?.voltou, 'estado');
+    if (t === 'pesca') return um('pesca', P.pesca?.length ? P.pesca : F.pesca, 'pesca');   // perto da água
+    return um(t, P[t], t === 'fome' ? 'fome' : 'estado');
+  }
 
   // sorteio pelos pesos, só entre os tipos possíveis agora
   const pesos = F.config?.pesos || {};
+  const temLemb = (x) => !!x?.dica?.lembretes?.length;
   const possivel = {
+    estado: !!ctx.estado && !!P[ctx.estado]?.length,
     dica: !!ctx.proximo?.dica,
-    lembrete: !!(ctx.proximo?.dica?.lembretes?.length || ctx.errado?.dica?.lembretes?.length),
+    lembrete: temLemb(ctx.proximo) || temLemb(ctx.errado) || temLemb(ctx.revisar),
     dia: true, piada: !!F.piadas?.length, aleatorio: !!P.aleatorio?.length,
     curiosidade: typeof ctx.curiosidade === 'function',   // 💡 curiosidades.json (PROMPT-98): quem monta é o jogo (mapa, sem repetir, figurinha)
   };
@@ -71,13 +97,14 @@ export function montarFala(ctx, tipoForcado = null) {
   const tipos = Object.keys(possivel).filter(t => possivel[t] && peso(t) > 0);
   let r = Math.random() * tipos.reduce((a, t) => a + peso(t), 0);
   const tipo = tipos.find(t => (r -= peso(t)) < 0) || 'aleatorio';
+  const outra = () => curiosidade() || um('aleatorio', P.aleatorio);   // o mesmo ginásio há menos de 5 min: troca
 
-  if (tipo === 'curiosidade') {
-    const baloes = ctx.curiosidade();
-    return baloes?.length ? { tipo, baloes } : um('aleatorio', P.aleatorio);
-  }
+  if (tipo === 'estado') return um(ctx.estado, P[ctx.estado], ctx.estado === 'fome' ? 'fome' : 'estado');
+  if (tipo === 'curiosidade') return outra();
 
   if (tipo === 'dica') {
+    if (!ginLivre(ctx.proximo.chave)) return outra();
+    ginFalado[ctx.proximo.chave] = Date.now();
     const abre = pegar('abre_dica', P.abre_dica);
     // "{abre_dica} no {ginasio} ({mapa}) vão cair questões de {conteudo}."
     const baloes = [{ texto: trocar(juntar(abre, 'no {ginasio} ({mapa}) vão cair questões de {conteudo}.'), v), espera: 0 }];
@@ -86,8 +113,13 @@ export function montarFala(ctx, tipoForcado = null) {
     return { tipo, baloes };
   }
   if (tipo === 'lembrete') {
-    const fonte = ctx.errado?.dica?.lembretes?.length && (Math.random() < 0.5 || !ctx.proximo?.dica?.lembretes?.length) ? ctx.errado.dica : ctx.proximo.dica;
-    return { tipo, baloes: [{ texto: trocar(juntar(pegar('lembrete', P.lembrete), pegar('lembretes', fonte.lembretes)), v), espera: 0 }] };
+    // de onde: às vezes (~30%) um ginásio vencido qualquer (para revisar); senão, o próximo ou o mais errado
+    const base = [ctx.proximo, ctx.errado].filter(temLemb);
+    const fonte = temLemb(ctx.revisar) && (Math.random() < 0.3 || !base.length) ? ctx.revisar : sortear(base);
+    if (!fonte || !ginLivre(fonte.chave)) return outra();
+    if (fonte.chave) ginFalado[fonte.chave] = Date.now();
+    const l = proximoLembrete(fonte.chave || fonte.dica.ginasio, fonte.dica.lembretes);
+    return { tipo, baloes: [{ texto: trocar(juntar(pegar('lembrete', P.lembrete), l), v), espera: 0 }] };
   }
   if (tipo === 'dia') {
     const d = ctx.agora, h = d.getHours(), dow = d.getDay();
