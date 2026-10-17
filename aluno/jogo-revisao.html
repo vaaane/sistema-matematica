@@ -23,9 +23,12 @@
     <div id="geral-scroll" class="jr-geral-scroll">
       <div id="geral-palco" class="jr-geral-palco">
         <img src="/img/jogo/mapa-geral/mapa-geral.webp" alt="Mapa geral" class="jr-geral-img" draggable="false"/>
+        <div class="jr-dn-tarde" aria-hidden="true"></div>
+        <div class="jr-dn-noite" aria-hidden="true"></div>
         <div id="geral-marcadores"></div>
       </div>
     </div>
+    <div class="jr-dn-estrelas" aria-hidden="true"></div>
     <div class="jr-hud jr-hud-topo">
       <button class="jr-btn jr-btn-sec" id="btn-sair-jogo">⟵ Sair</button>
       <div class="jr-hud-titulo">Jogo de Revisão</div>
@@ -59,7 +62,12 @@
         <img id="pet" class="jr-ator jr-pet" alt="" draggable="false" hidden/>
         <img id="jogador" class="jr-ator jr-jogador" alt="" draggable="false"/>
         <div id="minha-reacao" class="jr-reacao-balao" hidden></div>
+        <!-- 🌙 dia e noite (PROMPT-93): acima do fundo e dos atores, abaixo de rótulos, nomes e balões -->
+        <div class="jr-dn-tarde" aria-hidden="true"></div>
+        <div class="jr-dn-noite" aria-hidden="true"></div>
+        <div class="jr-dn-luzes" id="dn-luzes" aria-hidden="true"></div>
       </div>
+      <div class="jr-dn-estrelas" aria-hidden="true"></div>
     </div>
     <div class="jr-hud jr-hud-topo">
       <button class="jr-btn jr-btn-sec" id="btn-cena-voltar">⟵ Mapa geral</button>
@@ -285,7 +293,7 @@
   <!-- 🤖 Ilha dos Robôs: mapa das fases do Programe o pet (PROMPT-60), em pé -->
   <section id="pg-mapa" class="pgm-tela" hidden aria-label="Ilha dos Robôs">
     <div class="pgm-topo">
-      <button class="bt-lista-x" id="pgm-sair" aria-label="Voltar ao laboratório">✕</button>
+      <button class="bt-lista-x" id="pgm-sair" aria-label="Sair da Ilha dos Robôs">✕</button>
       <b class="pgm-titulo">🤖 Ilha dos Robôs</b>
       <span class="pgm-estrelas" id="pgm-estrelas"></span>
       <div class="pgm-medalhas" id="pgm-medalhas"></div>
@@ -562,6 +570,22 @@
       <div class="ml-voce" id="mural-voce"></div>
     </div>
   </div>
+  <!-- 📜 Quadro de Estudos dos mapas (PROMPT-90): conteúdo em dados/jogo/estudos.json, montado por js/jogo-revisao/estudos.js -->
+  <div id="estudos" class="jr-estudos" hidden role="dialog" aria-label="Quadro de Estudos">
+    <div class="qe-painel">
+      <div class="qe-topo">
+        <span class="qe-icone">📜</span>
+        <div><b>QUADRO DE ESTUDOS</b><small id="qe-mapa"></small></div>
+        <div class="qe-abas" id="qe-abas"></div>
+        <button class="qe-fechar" id="qe-fechar" aria-label="Fechar">✕</button>
+      </div>
+      <div class="qe-corpo" id="qe-corpo">
+        <nav class="qe-menu" id="qe-menu"></nav>
+        <div class="qe-tela" id="qe-tela"></div>
+      </div>
+      <div class="qe-embreve" id="qe-embreve" hidden>Em breve 📚</div>
+    </div>
+  </div>
   <!-- 🏛️ Chamado pra Praça (PROMPT-76): faixa no alto, sem bloquear o jogo -->
   <div id="chamado" class="jr-chamado" hidden role="status">
     <span id="chamado-txt"></span>
@@ -627,6 +651,17 @@
     </div>
   </div>
 
+  <!-- 🎒 O pet voltou da expedição (PROMPT-92) -->
+  <div id="exp-volta" class="jr-pet-escolha" hidden role="dialog" aria-label="O pet voltou da expedição">
+    <div class="jr-pet-escolha-caixa exp-volta-caixa">
+      <div class="exp-volta-chuva" id="exp-volta-chuva" aria-hidden="true"></div>
+      <div class="jr-pet-escolha-titulo" id="exp-volta-tit"></div>
+      <span class="jr-icone-pet exp-volta-rosto"><img id="exp-volta-img" alt="" draggable="false" data-icone-pet/></span>
+      <div class="exp-volta-fala" id="exp-volta-fala"></div>
+      <div class="exp-volta-premios" id="exp-volta-premios"></div>
+      <button class="jr-btn jr-btn-ouro" id="exp-volta-ok">Oba! 🎉</button>
+    </div>
+  </div>
   <!-- Quem está online numa região (mapa geral) -->
   <div id="online-lista" class="jr-pet-escolha" hidden role="dialog" aria-label="Colegas online">
     <div class="jr-pet-escolha-caixa jr-online-caixa">
@@ -649,6 +684,9 @@
         <div class="jr-mp-sombra" id="mp-sombra"></div>
         <div class="jr-mp-pulo" id="mp-pulo"><div class="jr-mp-corpo" id="mp-corpo"><img id="mp-img" alt="" draggable="false"/></div></div>
         <div class="jr-mp-particulas" id="mp-particulas"></div>
+        <!-- 🧭 em expedição: no lugar do pet -->
+        <div class="mp-exp-fora" id="mp-exp-fora" hidden><b id="mp-exp-fora-tit"></b><span id="mp-exp-fora-hora"></span>
+          <div class="mp-exp-trilho"><div class="mp-exp-fill" id="mp-exp-fora-barra"></div></div></div>
       </div>
       <!-- ✨ truques: botões redondos embaixo do pet (PROMPT-75) -->
       <div class="mp-tq-fila" id="mp-tq-fila" role="group" aria-label="Truques" hidden></div>
@@ -671,11 +709,22 @@
           <div class="jr-mp-marco"><span id="mp-marco"></span><button class="jr-mp-info-btn" id="mp-info" title="Como a lealdade funciona" aria-label="Como a lealdade funciona">ⓘ</button>
             <div class="jr-mp-info-balao" id="mp-info-balao" hidden></div></div>
         </div>
+        <!-- 🎯 Treino do pet (PROMPT-91): 5 questões por dia, puxadas dos próprios erros -->
+        <!-- 🧭 Expedição do pet (PROMPT-92): 1 h ou 2 h fora, volta com moedas -->
+        <div class="mp-extras">
+          <button class="jr-btn mp-treino" id="mp-treino">🎯 Treino de hoje</button>
+          <button class="jr-btn mp-exp-btn" id="mp-exp">🧭 Expedição</button>
+        </div>
         <div class="jr-mp-botoes jr-mp-principais">
           <button class="jr-btn" id="mp-bolsa"><img class="jr-item-img jr-ic-btn" data-icone="bolsa" alt="🎒" draggable="false"/> Bolsa</button>
           <button class="jr-btn" id="mp-carinho">💜 Carinho</button>
           <button class="jr-btn" id="mp-visual">🎨 Visual</button>
         </div>
+      </div>
+      <!-- 🧭 Expedição: 1 h ou 2 h -->
+      <div class="mp-sub" id="mp-exp-painel" hidden>
+        <div class="mp-sub-topo"><b>🧭 Expedição</b><span id="mp-exp-sub"></span><button class="bt-lista-x" id="mp-exp-fechar" aria-label="Fechar">✕</button></div>
+        <div class="mp-exp-opcoes" id="mp-exp-opcoes"></div>
       </div>
       <!-- Bolsa: comidas e peixes guardados -->
       <div class="mp-sub" id="mp-bolsa-painel" hidden>

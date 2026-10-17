@@ -1,0 +1,76 @@
+{
+  "_nota": "Quadro de Estudos de cada mapa (PROMPT-90). mural: posição no mapa lógico 1376×768 (x,y = centro da BASE; largura em px; ponto = onde o personagem para). Por ginásio (A/B): regra, pensa, exemplos, armadilha, tente. Ginásio sem conteúdo = null → aba mostra 'Em breve'. Marcação nos textos: **negrito**, [[destaque laranja]], {{verde}}.",
+  "mapa1": {
+    "mural": { "x": 1165, "y": 455, "largura": 100, "ponto": [1165, 478] },
+    "A": {
+      "aba": "🏫 Escolinha (A)",
+      "regra": {
+        "titulo": "Expressões **sem parênteses**",
+        "texto": "Com várias operações, **não** se faz na ordem em que se lê. Existe uma fila de prioridade:",
+        "degraus": [
+          { "ops": ["×", "÷"], "cor": "laranja", "texto": "multiplicação e divisão", "obs": "entre elas: da esquerda → direita" },
+          { "ops": ["+", "−"], "cor": "cyan", "texto": "soma e subtração", "obs": "entre elas: da esquerda → direita" }
+        ]
+      },
+      "pensa": {
+        "titulo": "× e ÷ têm **passe VIP**: furam a fila!",
+        "animacao": {
+          "tipo": "fila",
+          "fichas": ["5", "+", "2 × 3"],
+          "vip": 2,
+          "vip_vira": "6",
+          "final": "11",
+          "legendas": [
+            "Chegou a conta: 5 + 2 × 3. Todo mundo na fila.",
+            "Opa! O 2 × 3 tem passe VIP 🎟️",
+            "Ele fura a fila e vai direto ao atendimento…",
+            "…e é resolvido primeiro: 2 × 3 = 6",
+            "Agora sim, volta e a soma é feita: 5 + 6",
+            "Resultado: 11 ✅"
+          ]
+        },
+        "porque": "💡 **Por quê?** 2 × 3 é um **pacote**: quer dizer 3 + 3. Primeiro abre o pacote (= 6), depois junta com o resto."
+      },
+      "exemplos": [
+        { "conta": "5 + 2 × 3", "passos": [
+          { "conta": "5 + [[2 × 3]]", "nota": "o × fura a fila" },
+          { "conta": "5 + [[6]]", "nota": "2 × 3 = 6" },
+          { "conta": "{{11}}", "nota": "5 + 6 = 11" } ] },
+        { "conta": "20 − 6 ÷ 2", "passos": [
+          { "conta": "20 − [[6 ÷ 2]]", "nota": "divisão primeiro" },
+          { "conta": "20 − [[3]]", "nota": "6 ÷ 2 = 3" },
+          { "conta": "{{17}}", "nota": "20 − 3 = 17" } ] },
+        { "conta": "4 × 3 + 10 ÷ 2", "passos": [
+          { "conta": "[[4 × 3]] + [[10 ÷ 2]]", "nota": "os dois VIPs antes" },
+          { "conta": "12 + 5", "nota": "4×3=12 · 10÷2=5" },
+          { "conta": "{{17}}", "nota": "12 + 5 = 17" } ] },
+        { "conta": "18 ÷ 3 × 2", "passos": [
+          { "conta": "[[18 ÷ 3]] × 2", "nota": "empate: vale a esquerda" },
+          { "conta": "6 × 2", "nota": "18 ÷ 3 = 6" },
+          { "conta": "{{12}}", "nota": "6 × 2 = 12 (não 3!)" } ] }
+      ],
+      "armadilha": {
+        "conta": "5 + 2 × 3 = ?",
+        "texto": "Muita gente faz na ordem em que lê. Olha a diferença:",
+        "errado": "5 + 2 = 7 → 7 × 3 = 21",
+        "certo": "2 × 3 = 6 → 5 + 6 = 11",
+        "nota": "Nos ginásios, respostas como o **21** aparecem nas alternativas para pegar quem se distrai. 😉"
+      },
+      "tente": [
+        { "conta": "3 + 4 × 5", "opcoes": ["35", "23", "27", "60"], "certa": "23",
+          "acerto": "Isso! 4 × 5 = 20, depois 3 + 20 = 23 🎉",
+          "erros": { "35": "Opa! Você somou antes (3 + 4 = 7 → 7 × 5 = 35). O × fura a fila!" },
+          "erro_padrao": "Quase! Faça primeiro o 4 × 5." },
+        { "conta": "12 − 8 ÷ 4", "opcoes": ["1", "10", "2", "14"], "certa": "10",
+          "acerto": "Boa! 8 ÷ 4 = 2, depois 12 − 2 = 10 🎉",
+          "erros": { "1": "Opa! Você subtraiu antes (12 − 8 = 4 → 4 ÷ 4 = 1). A ÷ fura a fila!" },
+          "erro_padrao": "Quase! Faça primeiro o 8 ÷ 4." },
+        { "conta": "2 × 5 + 3 × 4", "opcoes": ["22", "52", "64", "25"], "certa": "22",
+          "acerto": "Mandou bem! 10 + 12 = 22 🎉",
+          "erros": { "52": "Opa! Você fez na ordem de leitura. Resolva os dois × antes: 2 × 5 e 3 × 4.", "64": "Opa! Você somou 5 + 3 no meio (2 × 8 × 4 = 64). Os dois × vão primeiro!" },
+          "erro_padrao": "Quase! Resolva os dois × primeiro e depois some." }
+      ]
+    },
+    "B": null
+  }
+}

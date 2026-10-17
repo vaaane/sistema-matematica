@@ -147,11 +147,16 @@ function acoesParado(forma) {
 }
 let ultimaAcao = null;
 export function sortearAcaoParado(forma) {
-  const l = acoesParado(forma).filter(a => a !== ultimaAcao && temSequencia(forma, a));
+  const l = comPesoNoturno(acoesParado(forma).filter(a => a !== ultimaAcao && temSequencia(forma, a)));
   if (!l.length) return null;
   ultimaAcao = l[Math.floor(Math.random() * l.length)];
   return ultimaAcao;
 }
+// 🌙 À noite (PROMPT-93) o pet parado escolhe dormir / descansar com o dobro da chance (a ação entra 2 vezes no sorteio)
+let noite = false;
+export function definirNoite(sim) { noite = !!sim; }
+const DORMIR = new Set(['dormir', 'descansar']);
+const comPesoNoturno = (l) => (noite ? [...l, ...l.filter(a => DORMIR.has(a))] : l);
 
 // Ações do pet seguindo o personagem nos mapas (personagem parado 4 s): a mesma lista do parado (acoes_parado)
 const MS_ANTES_ACAO = 4000;
@@ -248,7 +253,7 @@ export class PetSeguidor {
 
   comecarAcao(nome = null) {
     if (!nome) {
-      const l = acoesParado(this.forma).filter(a => a !== this.ultimaAcao && temSequencia(this.forma, a));
+      const l = comPesoNoturno(acoesParado(this.forma).filter(a => a !== this.ultimaAcao && temSequencia(this.forma, a)));
       if (!l.length) return;
       nome = this.ultimaAcao = l[Math.floor(Math.random() * l.length)];
     }

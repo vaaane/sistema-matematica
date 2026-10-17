@@ -110,6 +110,16 @@
       "sem_lealdade": [
         "Hmpf.",
         "…(finge que não ouviu)"
+      ],
+      "treino_lembrete": [
+        "Hmpf. Ainda não treinou hoje? São só 5, eu espero.",
+        "Não que eu ligue, mas o treino de hoje está te esperando no Meu Pet.",
+        "Só 5 questõezinhas, {apelido}. Até um gato faz isso dormindo."
+      ],
+      "expedicao_volta": [
+        "Fui longe, achei um ninho de passarinho e… não, não fiz nada. Juro.",
+        "Atravessei um rio sem molhar uma pata. Sou elegante assim.",
+        "Encontrei uma caverna cheia de números primos. Nem todos me impressionaram."
       ]
     },
     "gaviao": {
@@ -193,6 +203,16 @@
       "sem_lealdade": [
         "…",
         "(te observa em silêncio)"
+      ],
+      "treino_lembrete": [
+        "Treino do dia: 5 questões. Foco.",
+        "Daqui de cima eu vejo: o treino de hoje ainda não foi feito.",
+        "{apelido}. Cinco questões. Agora."
+      ],
+      "expedicao_volta": [
+        "Voei até as montanhas. Vi a vila inteira lá de cima.",
+        "Achei moedas brilhando numa clareira. Trouxe todas.",
+        "Longe daqui tem um vale onde tudo é simétrico. Interessante."
       ]
     },
     "axolote": {
@@ -276,6 +296,16 @@
       "sem_lealdade": [
         "Blub… (bolhinhas tímidas)",
         "…?"
+      ],
+      "treino_lembrete": [
+        "Bora treinar comigo? São só 5! 🎯",
+        "Ei, ei! O treino de hoje está esperando a gente! Vamos?",
+        "Treinar junto é tão legal! Só 5 questõezinhas!"
+      ],
+      "expedicao_volta": [
+        "Achei uma caverna cheia de números primos! 2, 3, 5, 7… e mais!",
+        "Tinha um lago enooorme e eu nadei nele inteirinho! 💦",
+        "Fiz amizade com um sapo que sabia contar até mil! Foi demais!"
       ]
     },
     "tigre": {
@@ -359,6 +389,16 @@
       "sem_lealdade": [
         "Grr…",
         "(te encara como quem diz: me prova que é bom)"
+      ],
+      "treino_lembrete": [
+        "Campeão treina TODO dia! Bora, são só 5!",
+        "Ainda não treinou? Rawr! 5 questões e a gente fica imbatível!",
+        "Desafio do dia: 5 questões sem piscar! Topa?"
+      ],
+      "expedicao_volta": [
+        "Escalei a montanha mais alta e cheguei em primeiro! Rawr!",
+        "Corri 10 km em 0 minutos! …Tá, foi mais. Mas fui rápido!",
+        "Enfrentei um urso de pelúcia gigante. Venci, claro!"
       ]
     },
     "unicornio": {
@@ -442,6 +482,16 @@
       "sem_lealdade": [
         "✨…",
         "(balança a crina, tímido)"
+      ],
+      "treino_lembrete": [
+        "Que tal 5 questões brilhantes antes de seguir? ✨",
+        "O treino de hoje está te esperando, como uma estrela no céu.",
+        "Cinco questões, cinco estrelinhas. Vamos?"
+      ],
+      "expedicao_volta": [
+        "Segui um arco-íris até o fim… e tinha moedas lá! ✨",
+        "Dancei com vaga-lumes numa floresta encantada.",
+        "Contei as estrelas do céu. Parei no 1 000 porque fiquei com sono."
       ]
     },
     "dragao_azul": {
@@ -574,6 +624,16 @@
         "*abre um olho*",
         "Hm.",
         "*solta um floquinho de gelo*"
+      ],
+      "treino_lembrete": [
+        "Calma e constância: 5 questões hoje e pronto.",
+        "O treino de hoje ainda está esperando. Sem pressa, mas não esquece.",
+        "Cabeça fria, {apelido}: só 5 questões no Meu Pet."
+      ],
+      "expedicao_volta": [
+        "Passei por um lago congelado. Tranquilo, como eu.",
+        "Achei uma caverna de gelo com cristais em forma de hexágono.",
+        "Encontrei moedas no fundo de um rio gelado. Peguei com calma."
       ]
     },
     "dragao_vermelho": {
@@ -734,6 +794,16 @@
         "*abre um olho* Sério?",
         "Hmpf.",
         "*solta fumaça*"
+      ],
+      "treino_lembrete": [
+        "O GRANDE {pet} exige o treino de hoje! São só 5!",
+        "Até o maior dragão do universo treina. Bora, 5 questões!",
+        "Treina comigo, {apelido}! Eu faço parecer fácil. Hmpf."
+      ],
+      "expedicao_volta": [
+        "O GRANDE {pet} voltou! Derreti uma montanha de gelo só de olhar.",
+        "Achei um tesouro guardado por um troll. O troll fugiu. Óbvio.",
+        "Os vulcões me reconheceram e se curvaram. Normal pra mim."
       ]
     },
     "elefante": {
@@ -808,6 +878,16 @@
       "sem_lealdade": [
         "(balança a orelha, tímido)",
         "Fuu…"
+      ],
+      "treino_lembrete": [
+        "Elefante não esquece: o treino de hoje ainda não foi feito.",
+        "Vamos treinar juntinhos? São só 5 questões.",
+        "Cada treino fica guardado na memória. Bora, 5 questões?"
+      ],
+      "expedicao_volta": [
+        "Lembrei de um atalho que vi há anos. Elefante não esquece!",
+        "Ajudei uma família de patinhos a atravessar o rio.",
+        "Achei uma árvore com frutas que fazem contas. Trouxe umas moedas também."
       ]
     }
   },
