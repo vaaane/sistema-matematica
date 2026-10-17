@@ -39,6 +39,9 @@ export const DICAS = {
 };
 
 export const PERSONAGENS = ['treinador1', 'treinador2', 'treinador3', 'lider', 'revanche'];
+// Assunto de uma pergunta (PROMPT-97): o formato da conta, com os números trocados por # ("5 + 2 × 3" → "# + # × #").
+// Os geradores não têm um tipo com nome; o formato é o mesmo para cada tipo de pergunta, com quaisquer números.
+export const assuntoDe = (enunciado) => String(enunciado || '').replace(/[−-]?\d+(?:[.,]\d+)*/g, '#').replace(/\s+/g, ' ').trim().slice(0, 80);
 
 export function gerarQuestoes(mapa, lado, personagem) {
   const g = BANCO[mapa]?.[lado];

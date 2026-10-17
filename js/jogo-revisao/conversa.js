@@ -65,10 +65,17 @@ export function montarFala(ctx, tipoForcado = null) {
     dica: !!ctx.proximo?.dica,
     lembrete: !!(ctx.proximo?.dica?.lembretes?.length || ctx.errado?.dica?.lembretes?.length),
     dia: true, piada: !!F.piadas?.length, aleatorio: !!P.aleatorio?.length,
+    curiosidade: typeof ctx.curiosidade === 'function',   // 💡 curiosidades.json (PROMPT-98): quem monta é o jogo (mapa, sem repetir, figurinha)
   };
-  const tipos = Object.keys(possivel).filter(t => possivel[t] && (pesos[t] || 0) > 0);
-  let r = Math.random() * tipos.reduce((a, t) => a + pesos[t], 0);
-  const tipo = tipos.find(t => (r -= pesos[t]) < 0) || 'aleatorio';
+  const peso = (t) => pesos[t] ?? (t === 'curiosidade' ? 2 : 0);
+  const tipos = Object.keys(possivel).filter(t => possivel[t] && peso(t) > 0);
+  let r = Math.random() * tipos.reduce((a, t) => a + peso(t), 0);
+  const tipo = tipos.find(t => (r -= peso(t)) < 0) || 'aleatorio';
+
+  if (tipo === 'curiosidade') {
+    const baloes = ctx.curiosidade();
+    return baloes?.length ? { tipo, baloes } : um('aleatorio', P.aleatorio);
+  }
 
   if (tipo === 'dica') {
     const abre = pegar('abre_dica', P.abre_dica);

@@ -10,7 +10,8 @@
       "dia": 2,
       "piada": 2,
       "aleatorio": 2,
-      "estado": 3
+      "estado": 3,
+      "curiosidade": 2
     },
     "placeholders": [
       "{apelido}",

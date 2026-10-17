@@ -90,6 +90,8 @@
     </div>
     <button id="cena-balao" class="jr-balao-acao" hidden></button>
     <button id="pet-fala" class="jr-pet-fala" hidden aria-live="polite"></button>
+    <!-- 🗨️ pergunta rápida do pet no caminho (PROMPT-96) -->
+    <div id="pet-pergunta" class="jr-pet-fala jr-pet-pergunta" hidden role="dialog" aria-live="polite"></div>
     <div id="pessoa-balao" class="jr-pessoa-balao" hidden aria-live="polite"></div>
     <div id="colega-cartao" class="jr-colega-cartao" hidden></div>
     <div id="porta-balao" class="jr-pessoa-balao" hidden aria-live="polite"></div>
@@ -249,10 +251,29 @@
           <button class="jr-btn jr-btn-sec jr-trocar-pet" id="btn-trocar-pet" hidden>🐾 Meus pets</button>
           <button class="jr-btn jr-btn-sec jr-trocar-pet" id="btn-personagem">👤 Personagem</button>
           <button class="jr-btn jr-btn-sec jr-trocar-pet" id="btn-letra" aria-pressed="false">Aa Letra: Normal</button>
+          <button class="jr-btn jr-btn-sec jr-trocar-pet" id="btn-album" hidden>📒 Álbum</button>
         </div>
+        <div class="jr-estojo-especial" id="estojo-especial" hidden></div>
       </div>
       <div id="estojo-placar" class="jr-placar"></div>
       <div id="estojo-bandejas" class="jr-bandejas"></div>
+    </div>
+  </div>
+
+  <!-- 📒 Álbum de Matemáticos (PROMPT-98): 26 figurinhas, uma por ginásio -->
+  <div id="album" class="al-fundo" hidden role="dialog" aria-label="Álbum de Matemáticos">
+    <div class="al-caixa">
+      <div class="al-topo"><b>📒 Álbum de Matemáticos</b><span id="al-cont"></span><button class="bt-lista-x" id="album-fechar" aria-label="Fechar">✕</button></div>
+      <div class="al-grade" id="al-grade"></div>
+      <div class="al-nota">Toque numa carta para virar. Vença o líder de um ginásio para ganhar a figurinha; vencendo a revanche, ela fica dourada ✨.</div>
+    </div>
+  </div>
+  <!-- figurinha nova (depois do cartão da insígnia) -->
+  <div id="fig-nova" class="al-fundo al-nova" hidden role="dialog" aria-label="Nova figurinha">
+    <div class="al-nova-caixa">
+      <b id="fig-nova-tit">Nova figurinha!</b>
+      <div class="al-nova-carta" id="fig-nova-carta"></div>
+      <button class="jr-btn jr-btn-ouro" id="fig-nova-ok">Guardar no Álbum 📒</button>
     </div>
   </div>
 
@@ -590,6 +611,20 @@
   <div id="chamado" class="jr-chamado" hidden role="status">
     <span id="chamado-txt"></span>
     <button class="jr-btn jr-btn-ouro" id="chamado-ir">Ir agora</button><button class="jr-btn jr-btn-sec" id="chamado-nao">Agora não</button>
+  </div>
+  <!-- ⚡ Desafio relâmpago (PROMPT-95): contagem na Praça, aviso fora dela e o cartão da pergunta -->
+  <div id="rl-contagem" class="rl-contagem" hidden role="status"></div>
+  <div id="rl-aviso" class="rl-aviso" hidden role="status"><span>⚡ Relâmpago na Praça em <b id="rl-aviso-s">1 min</b></span>
+    <button class="jr-btn jr-btn-ouro" id="rl-ir">Ir</button><button class="rl-aviso-x" id="rl-aviso-x" aria-label="Fechar">✕</button></div>
+  <div id="relampago" class="rl-fundo" hidden role="dialog" aria-label="Desafio relâmpago">
+    <div class="rl-caixa">
+      <div class="rl-topo"><b>⚡ RELÂMPAGO</b><span id="rl-status"></span></div>
+      <div class="rl-barra"><i id="rl-barra"></i></div>
+      <div class="rl-enunciado" id="rl-enunciado"></div>
+      <div class="rl-opcoes" id="rl-opcoes"></div>
+      <div class="rl-msg" id="rl-msg"></div>
+      <ol class="rl-podio" id="rl-podio" hidden></ol>
+    </div>
   </div>
   <div id="convite" class="jr-convite" hidden role="dialog" aria-label="Convite de desafio">
     <div class="cv-caixa">

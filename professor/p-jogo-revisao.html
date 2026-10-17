@@ -180,6 +180,7 @@
       <div class="abas" role="tablist">
         <button class="aba ativa" data-aba="alunos">👥 Alunos</button>
         <button class="aba" data-aba="dificuldades">📉 Dificuldades da turma</button>
+        <button class="aba" data-aba="travados">🚧 Travados</button>
         <button class="aba" data-aba="batalhas">⚔️ Batalhas</button>
         <button class="aba" data-aba="pedidos">🙋 Pedidos de ajuda</button>
         <button class="aba" data-aba="nomes">🐾 Nomes dos pets</button>
@@ -203,6 +204,16 @@
       <!-- Aba 2 — Dificuldades -->
       <section class="painel" id="aba-dificuldades" hidden>
         <div id="dificuldades"><div class="empty">Carregando…</div></div>
+      </section>
+
+      <!-- Aba — Travados (PROMPT-97): 5+ dias e 3+ lutas com o mesmo líder, sem vencer -->
+      <section class="painel" id="aba-travados" hidden>
+        <div class="linha-acao" style="margin-bottom:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <label class="muted" style="font-size:14px"><input type="checkbox" id="trav-todas"/> Todas as turmas</label>
+          <button class="btn-sec" id="btn-copiar-travados">📋 Copiar lista</button>
+          <span class="muted" id="trav-copiado" style="font-size:13px"></span>
+        </div>
+        <div id="travados"><div class="empty">Carregando…</div></div>
       </section>
 
       <!-- Aba — Batalhas (contas rápidas contra os treinadores) -->
@@ -288,7 +299,7 @@ import { db } from "/js/firebase-config.js";
 import { ref, get, set, update, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { ALUNOS_POR_TURMA, ALUNOS_TESTE } from "/js/constants.js";
 import { notaJogoRevisao, formatarNota, TOTAL_INSIGNIAS } from "/js/jogo-revisao/nota.js";
-import { gerarUma } from "/js/jogo-revisao/geradores.js";
+import { gerarUma, assuntoDe } from "/js/jogo-revisao/geradores.js";
 import { NOME_PET } from "/js/jogo-revisao/pets.js";
 import { semanaPesca } from "/js/jogo-revisao/pesca.js";
 
@@ -391,6 +402,7 @@ function montarTurma() {
   renderResumo();
   renderAlunos();
   renderDificuldades();
+  renderTravados();
   renderBatalhas();
   renderPedidos();
   renderNomesPets();
@@ -781,6 +793,77 @@ function relembreHtml() {
         : `<div class="sub">Ninguém desta turma abriu o Relembre ainda.</div>`}
     </div>`;
 }
+
+// ── 🚧 Travados (PROMPT-97): líder não vencido, 1ª luta com ele há 5+ dias e 3+ lutas ──────────────
+// O jogo grava ginasios/{chave}/primeira_tentativa e tentativas_lider (a contagem começou com o PROMPT-97: quem já
+// lutava antes aparece depois de 5 dias) e respostas/{id}/assunto (o formato da conta, números trocados por #).
+// % de erro do assunto = erros ÷ (acertos + erros) das perguntas com aquele formato naquele ginásio (acerto conta 1 por pergunta).
+const TRAV_DIAS = 5, TRAV_TENTATIVAS = 3, TRAV_MIN_RESP = 3;
+function assuntoDaResposta(id, r) {
+  if (r?.assunto) return r.assunto;
+  const m = RE_ID.exec(id);
+  const q = m && gerarUma(+m[1], m[2], m[3], +m[4] - 1);   // sem assunto gravado (respostas antigas): o formato de uma pergunta nova
+  return q ? assuntoDe(q.enunciado) : null;
+}
+function assuntoMaisErrado(n, mapa, lado) {
+  const grupos = {};
+  for (const [id, r] of Object.entries(n?.respostas || {})) {
+    if (!id.startsWith(`m${mapa}${lado}-`) || !RE_ID.test(id)) continue;
+    const a = assuntoDaResposta(id, r);
+    if (!a) continue;
+    const g = grupos[a] ||= { e: 0, t: 0 };
+    const e = Number(r?.erros) || 0;
+    g.e += e; g.t += e + (r?.acertou ? 1 : 0);
+  }
+  const melhor = Object.entries(grupos).filter(([, g]) => g.t >= TRAV_MIN_RESP && g.e > 0)
+    .map(([a, g]) => ({ a, pct: Math.round(g.e / g.t * 100) })).sort((x, y) => y.pct - x.pct)[0];
+  return melhor || null;
+}
+function calcularTravados() {
+  const todas = $("trav-todas").checked, turmas = todas ? TURMAS : [sel.value], agora = Date.now(), lista = [];
+  for (const turma of turmas) {
+    for (const nome of (ALUNOS_POR_TURMA[turma] || [])) {
+      const uid = uidDe(turma, nome);
+      if (ehTeste(nome) || ALUNOS_TESTE.includes(uid)) continue;
+      const n = dados[uid];
+      for (const [chave, g] of Object.entries(n?.ginasios || {})) {
+        const m = /^mapa(\d+)-([AB])$/.exec(chave);
+        if (!m || g?.lider?.vencido) continue;
+        const pt = Number(g?.primeira_tentativa) || 0, tent = Number(g?.tentativas_lider) || 0;
+        const dias = pt ? Math.floor((agora - pt) / DIA) : 0;
+        if (!pt || dias < TRAV_DIAS || tent < TRAV_TENTATIVAS) continue;
+        const gin = Q[+m[1]]?.ginasios?.[m[2]] || {};
+        lista.push({ nome, turma, mapa: +m[1], gin: gin.nome || chave, conteudo: gin.conteudo || "", dias, tent, assunto: assuntoMaisErrado(n, +m[1], m[2]) });
+      }
+    }
+  }
+  return lista.sort((a, b) => b.dias - a.dias || b.tent - a.tent || a.nome.localeCompare(b.nome));
+}
+const assuntoTxt = (x) => (x ? `${x.a.replace(/#/g, "□")} (${x.pct}%)` : "");
+function renderTravados() {
+  const el = $("travados"), lista = calcularTravados();
+  el._lista = lista;
+  if (!lista.length) {
+    el.innerHTML = `<div class="empty">Ninguém travado ${$("trav-todas").checked ? "" : `na ${esc(sel.value)} `}(5+ dias e 3+ lutas com o mesmo líder, sem vencer). 🎉</div>
+      <div class="legenda">A contagem de lutas com o líder começou agora: quem já lutava antes aparece depois de ${TRAV_DIAS} dias.</div>`;
+    return;
+  }
+  el.innerHTML = `<div class="tabela-wrap"><table class="jr"><thead><tr><th>Aluno</th><th>Turma</th><th>Ginásio</th><th>Há</th><th>Lutas com o líder</th><th>Erra mais</th></tr></thead><tbody>
+    ${lista.map(x => `<tr><td class="aluno">${esc(x.nome)}</td><td>${esc(x.turma)}</td><td>${esc(x.gin)} <span class="muted">(Mapa ${x.mapa})</span></td>
+      <td class="num">${x.dias} dias</td><td class="num">${x.tent}</td>
+      <td style="white-space:normal">${x.assunto ? `<b>${esc(x.assunto.a.replace(/#/g, "□"))}</b> <span class="laranja">${x.assunto.pct}%</span>` : `<span class="muted">${esc(x.conteudo)}</span>`}</td></tr>`).join("")}
+    </tbody></table></div>
+    <div class="legenda">Travado: líder não vencido, 1ª luta com ele há ${TRAV_DIAS}+ dias e ${TRAV_TENTATIVAS}+ lutas. "Erra mais": o tipo de pergunta (□ = um número) com a maior % de erro naquele ginásio (mínimo ${TRAV_MIN_RESP} respostas); sem isso, o conteúdo do ginásio.</div>`;
+}
+$("trav-todas").addEventListener("change", renderTravados);
+$("btn-copiar-travados").addEventListener("click", async () => {
+  const lista = $("travados")._lista || [];
+  const txt = lista.length ? lista.map(x => `${x.nome} · ${x.turma} · ${x.gin} (Mapa ${x.mapa}) · ${x.dias} dias · ${x.tent} tentativas${x.assunto ? ` · erra mais: ${assuntoTxt(x.assunto)}` : ""}`).join("\n")
+    : "Ninguém travado.";
+  try { await navigator.clipboard.writeText(txt); $("trav-copiado").textContent = "Copiado ✓"; }
+  catch (_) { $("trav-copiado").textContent = "Não deu para copiar."; }
+  setTimeout(() => { $("trav-copiado").textContent = ""; }, 2500);
+});
 
 function exemploHtml(t) {
   const q = gerarUma(t.mapa, t.lado, t.personagem, t.indice);

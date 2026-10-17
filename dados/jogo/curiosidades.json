@@ -1,0 +1,108 @@
+{
+  "_nota": "Curiosidades que o pet conta (PROMPT-98). Por mapa (o pet prefere as do mapa onde o aluno está) + gerais. 'abre' = começo da fala no jeito de cada pet; 'fecha' = reação depois. 'album' = id da figurinha relacionada (o pet comenta se o aluno já tiver).",
+  "abre": {
+    "gato": ["Não que você vá se interessar, mas…", "Curiosidade inútil (que eu sei, claro):", "Hmpf. Sabia que"],
+    "gaviao": ["Do alto, eu sei de tudo:", "Fato observado:", "Registro curioso:"],
+    "axolote": ["Uiii, olha que legal!", "Sabia?? Eu fiquei de boca aberta:", "Curiosidade fofa do dia:"],
+    "tigre": ["FATO DE CAMPEÃO:", "Prepara que lá vem:", "Ninguém sabe isso, mas EU sei:"],
+    "unicornio": ["Uma estrelinha me contou que", "Que coisa mais mágica:", "Sabia que, num mundo encantado chamado História,"],
+    "dragao_azul": ["Curiosidade gelada:", "Sem pressa… sabia que", "Fato fresquinho:"],
+    "dragao_vermelho": ["EU, O MAGNÍFICO, sei de tudo. Inclusive que", "Escuta essa, que é quase tão incrível quanto eu:", "Curiosidade de dragão lendário:"],
+    "elefante": ["Elefante não esquece, e eu lembro que", "Guardei na memória:", "Uma coisa que eu nunca esqueci:"]
+  },
+  "fecha": ["🤯", "Incrível, né?", "Pode contar pros amigos!", "Matemática é demais!"],
+  "por_mapa": {
+    "mapa1": [
+      { "t": "O sinal de igual (=) foi inventado em 1557 por Robert Recorde. Ele achava que nada é mais igual do que duas retas paralelas.", "album": "mapa1-B" },
+      { "t": "Os sinais + e − apareceram impressos pela primeira vez num livro alemão de 1489, de Johannes Widmann." },
+      { "t": "Calculadoras simples fazem a conta na ordem em que você digita. Por isso 5 + 2 × 3 pode dar 21 nelas, e 11 numa calculadora científica!" },
+      { "t": "A palavra “cálculo” vem do latim calculus, que quer dizer “pedrinha”: os romanos faziam contas com pedrinhas." }
+    ],
+    "mapa2": [
+      { "t": "O metro foi criado na França, em 1791: era a décima milionésima parte da distância do Polo Norte até a Linha do Equador.", "album": "mapa2-B" },
+      { "t": "Em 1999, uma sonda da NASA se perdeu em Marte porque uma equipe usou medidas inglesas e a outra, o sistema métrico." },
+      { "t": "Quilo quer dizer mil, centi quer dizer centésimo e mili quer dizer milésimo. Por isso 1 km = 1000 m e 1 m = 100 cm." },
+      { "t": "Multiplicar por 10 é só andar a vírgula uma casa para a direita. Foi Simon Stevin quem defendeu usar a base 10 para tudo.", "album": "mapa2-A" }
+    ],
+    "mapa3": [
+      { "t": "Durante séculos, muitos matemáticos europeus chamavam os números negativos de “números absurdos”." },
+      { "t": "A temperatura mais baixa já medida na Terra foi cerca de −89 °C, na Antártida, em 1983." },
+      { "t": "A margem do Mar Morto fica uns 430 metros abaixo do nível do mar: é o ponto mais baixo da Terra fora d’água." },
+      { "t": "Na China antiga, contavam com varetas: vermelhas para os positivos e pretas para os negativos.", "album": "mapa3-A" },
+      { "t": "“Ficar no vermelho” quer dizer estar devendo: na contabilidade, o negativo era anotado em vermelho." }
+    ],
+    "mapa4": [
+      { "t": "Os egípcios antigos quase só usavam frações com numerador 1. Para escrever 3/4, faziam 1/2 + 1/4.", "album": "mapa4-A" },
+      { "t": "A palavra “fração” vem do latim fractio, que quer dizer “quebrar”." },
+      { "t": "No Brasil se escreve 3,5 com vírgula. Nos Estados Unidos, com ponto: 3.5." },
+      { "t": "Uma pizza em 8 pedaços: comer 2 é comer 1/4 da pizza, ou seja, 25%!" }
+    ],
+    "mapa5": [
+      { "t": "Dobrando uma folha ao meio 7 vezes, ela fica com 2⁷ = 128 camadas. Por isso é tão difícil dobrar mais que isso!" },
+      { "t": "Na lenda do xadrez, o inventor pediu 1 grão de trigo na 1ª casa, 2 na 2ª, 4 na 3ª… Só a última casa teria 2⁶³ grãos: mais trigo do que o mundo inteiro produz." },
+      { "t": "O símbolo √ foi usado pela primeira vez em 1525. Dizem que ele vem de um “r” de radix, raiz em latim.", "album": "mapa5-B" },
+      { "t": "O nome Google veio de googol, que é o número 10¹⁰⁰: um 1 seguido de cem zeros." },
+      { "t": "Qualquer número (menos o zero) elevado a zero dá 1. Até 1000⁰ = 1!" }
+    ],
+    "mapa6": [
+      { "t": "Alguns tipos de cigarra saem da terra a cada 13 ou 17 anos, que são números primos! Uma hipótese é que assim elas fogem dos ciclos dos predadores." },
+      { "t": "Eratóstenes achava primos riscando múltiplos: de 2, de 3, de 5… O que sobrava era primo.", "album": "mapa6-A" },
+      { "t": "Em 2024 descobriram um número primo com mais de 41 milhões de algarismos!" },
+      { "t": "6 é um número perfeito: seus divisores 1, 2 e 3 somam 6. O próximo é 28 = 1 + 2 + 4 + 7 + 14." },
+      { "t": "O dia tem 24 horas e a hora, 60 minutos: 24 e 60 têm muitos divisores, então dá para dividir o tempo em metades, terços e quartos." }
+    ],
+    "mapa7": [
+      { "t": "O símbolo % veio de abreviações da expressão italiana “per cento” em papéis de comércio dos anos 1400." },
+      { "t": "Mais ou menos 71% da superfície da Terra é coberta de água." },
+      { "t": "Desconto de 50% e depois mais 50% não dá 100% de desconto. Dá 75%!" },
+      { "t": "Aumentar 10% e depois diminuir 10% não volta ao preço inicial: 100 → 110 → 99." },
+      { "t": "Fibonacci levou os algarismos 0 a 9 para a Europa num livro cheio de problemas de comércio, lucro e juros.", "album": "mapa7-A" }
+    ],
+    "mapa8": [
+      { "t": "Usar letras no lugar de números foi ideia de François Viète, no século XVI.", "album": "mapa8-A" },
+      { "t": "Descartes começou a usar x, y e z para os valores desconhecidos. Conta uma história (nunca comprovada) que o x ganhou porque sobrava essa letra na gráfica." },
+      { "t": "A palavra “álgebra” vem do árabe al-jabr, que quer dizer “juntar partes quebradas”." },
+      { "t": "3a + 2a = 5a, mas 3a + 2b não junta: é como 3 maçãs + 2 bananas." }
+    ],
+    "mapa9": [
+      { "t": "Diofanto deixou um enigma no túmulo: a infância foi 1/6 da vida, a juventude mais 1/12… Resolvendo a equação, ele viveu 84 anos!" },
+      { "t": "A palavra “algoritmo” vem do nome de Al-Khwarizmi, o matemático de Bagdá que escreveu um dos primeiros livros de álgebra.", "album": "mapa9-A" },
+      { "t": "Uma equação é como uma balança: o que você faz de um lado, tem que fazer do outro." },
+      { "t": "O GPS do celular resolve equações o tempo todo para descobrir onde você está." }
+    ],
+    "mapa10": [
+      { "t": "Conta a história que Tales de Mileto mediu a altura de uma pirâmide comparando a sombra dela com a de uma vara.", "album": "mapa10-B" },
+      { "t": "Num mapa com escala 1 : 100 000, 1 cm no papel vale 1 km de verdade." },
+      { "t": "A regra de três era tão usada no comércio que já foi chamada de “regra de ouro”." },
+      { "t": "Receita é regra de três: se 2 xícaras servem 4 pessoas, 4 xícaras servem 8." }
+    ],
+    "mapa11": [
+      { "t": "Eratóstenes calculou a volta da Terra usando sombras, há mais de 2 200 anos, e chegou bem perto do valor certo." },
+      { "t": "“Geometria” quer dizer “medida da terra” em grego. Ela ajudava a remarcar terrenos depois das cheias do rio Nilo." },
+      { "t": "Um campo de futebol oficial tem uns 7 000 m² de área." },
+      { "t": "Os favos das abelhas são hexágonos: assim elas gastam menos cera para cobrir a mesma área." }
+    ],
+    "mapa12": [
+      { "t": "Conta a lenda que Descartes teve a ideia das coordenadas olhando uma mosca andando no teto.", "album": "mapa12-A" },
+      { "t": "Latitude e longitude são coordenadas da Terra: com dois números, o GPS diz exatamente onde você está." },
+      { "t": "No jogo Batalha Naval, “B5” é uma coordenada: uma letra para a coluna e um número para a linha." },
+      { "t": "Em Brasília, endereços como “SQS 308” funcionam quase como coordenadas: dizem em que lado e em que posição fica a quadra." }
+    ],
+    "mapa13": [
+      { "t": "Florence Nightingale usou gráficos para mostrar que a falta de higiene matava soldados, e salvou muitas vidas.", "album": "mapa13-B" },
+      { "t": "O IBGE faz o censo do Brasil, contando todas as pessoas do país, normalmente a cada 10 anos." },
+      { "t": "Jogando uma moeda muitas vezes, a porcentagem de “cara” fica cada vez mais perto de 50%." },
+      { "t": "A mediana é o valor do meio: metade dos dados fica abaixo dela e metade acima." }
+    ]
+  },
+  "gerais": [
+    { "t": "O brasileiro Artur Avila ganhou em 2014 a Medalha Fields, o “Nobel da Matemática”. Foi o primeiro latino-americano a ganhar." },
+    { "t": "O zero como número nasceu na Índia. Brahmagupta escreveu regras para fazer contas com ele no ano 628.", "album": "mapa3-B" },
+    { "t": "Os algarismos 0 a 9 se chamam indo-arábicos: nasceram na Índia e chegaram à Europa pelos árabes." },
+    { "t": "Ada Lovelace escreveu, em 1843, o que muitos consideram o primeiro programa de computador." },
+    { "t": "π (pi) nunca acaba e nunca se repete: 3,14159265…" },
+    { "t": "Em 14 de março (3/14) se comemora o Dia do Pi." },
+    { "t": "6 de maio é o Dia Nacional da Matemática no Brasil, em homenagem a Malba Tahan." },
+    { "t": "Malba Tahan, autor de “O Homem que Calculava”, era na verdade o professor brasileiro Júlio César de Mello e Souza." }
+  ]
+}

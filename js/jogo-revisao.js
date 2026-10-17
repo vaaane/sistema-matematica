@@ -7,7 +7,7 @@ import { db } from '/js/firebase-config.js';
 import { ref, get, update, push, set, remove, increment, onValue, runTransaction, onDisconnect, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { adicionarXP } from '/js/db.js';
 import { bimestreAtual, ALUNOS_TESTE, bimestreJogos, pathTabuadaRanking, pathEscaladaRanking, pathTabuadaNiveis, pathTabuadaNegNiveis, pathEscaladaNiveis } from '/js/constants.js';
-import { gerarQuestoes, gerarUma } from '/js/jogo-revisao/geradores.js';
+import { gerarQuestoes, gerarUma, assuntoDe } from '/js/jogo-revisao/geradores.js';
 import { tocar, somLigado, alternarSom, tocarArquivo, pararEfeitos, musicaPara, musicaLigada, alternarMusica, pausarMusica, musicaBloqueada } from '/js/jogo-revisao/sons.js';
 import { definirPausas, definirBarriga, barrigaDoPet, barrigaAntiga, faixaBarriga, rotuloLealdade, lealdadeComQueda, doDia,
   CARINHOS_POR_DIA, LEALDADE_INICIAL, LEALDADE_DIA, LEALDADE_CAMBALHOTA } from '/js/jogo-revisao/cuidados.js';
@@ -423,6 +423,7 @@ async function carregarEstado() {
         const x = gs?.[p];
         if (x?.vencido) g[p] = { vencido: true, acertosPrimeira: x.acertos_primeira || 0, total: x.total || 0, data: x.data || null };
       }
+      g.primeiraTentativa = Number(gs?.primeira_tentativa) || null;   // 1ª luta com o líder (PROMPT-97, painel "Travados")
     }
     for (const [chave, ins] of Object.entries(v.insignias || {})) {
       const g = estado.ginasios[chave];
@@ -434,6 +435,9 @@ async function carregarEstado() {
     estado.sequencia = v.sequencia || null;
     { const u = estado.sequencia?.ultimo_dia; conversa.voltou = !!u && u !== diaLocal() && (paraData(diaLocal()) - paraData(u)) / 86400000 >= 3; }
     estado.respostas = v.respostas || {};
+    estado.petPerguntaDia = v.pet_pergunta_dia || null;
+    estado.album = v.album && typeof v.album === 'object' ? { ...v.album } : {};   // 📒 { chave: { data, dourada } } (PROMPT-98)
+    estado.albumCompleto = v.album_completo || null;   // 🗨️ { data, n, ultimo } (PROMPT-96)
     estado.treino = v.treino && typeof v.treino === 'object' ? { ...v.treino, caixas: { ...(v.treino.caixas || {}) } } : {};   // 🎯 Treino do pet (PROMPT-91)
     estado.pets = lerPets(v);   // validado depois de ler o sprites.json (cachorro/porco antigos são ignorados)
     estado.petCor = typeof v.pet_cor === 'string' ? v.pet_cor : null;   // cor especial do dragão (PROMPT-74): null = normal
@@ -799,6 +803,7 @@ export async function iniciarJogo(sess) {
   try { MAPA_PG = await fetch(`${DADOS}/mapa-programe.json`).then(r => { if (!r.ok) throw new Error('mapa-programe.json'); return r.json(); }); }
   catch (e) { console.warn('[jogo-revisao] mapa da Ilha dos Robôs indisponível (fica a lista de fases)', e); }
   ESTUDOS = await fetch(`${DADOS}/estudos.json`).then(r => (r.ok ? r.json() : null)).catch(() => null);   // 📜 Quadro de Estudos (sem ele: nenhum quadro)
+  [ALBUM, CURIO] = await Promise.all(['album.json', 'curiosidades.json'].map(f => fetch(`${DADOS}/${f}`).then(r => (r.ok ? r.json() : null)).catch(() => null)));   // 📒💡 (PROMPT-98)
   LUZES = await fetch(`${DADOS}/luzes.json`).then(r => (r.ok ? r.json() : null)).catch(() => null);   // 🌙 luzes da noite (sem ele: só a cor)
   iniciarDiaNoite();
   try { TRUQUES = await fetch(`${DADOS}/truques.json`).then(r => { if (!r.ok) throw new Error('truques.json'); return r.json(); }); }
@@ -845,6 +850,7 @@ export async function iniciarJogo(sess) {
   if (!comecaNaPraca) { abrirMapaGeral(); $('jr-carregando').hidden = true; }
   { const f = verificarMestre(); if (f) setTimeout(() => mostrarFestaMestre(f), 1500); }
   carregarTitulos();
+  iniciarAlbum();
   iniciarPet();
   setTimeout(verificarCores, 2500);   // quem já cumpriu as condições ganha as cores (aviso uma vez)
   if (comecaNaPraca) abrirPraca('fonte').catch(() => abrirMapaGeral()).finally(() => { $('jr-carregando').hidden = true; });
@@ -3292,6 +3298,7 @@ function contextoFalaDe(pet) {
     proximo: prox ? { chave: prox, dica: dicaDe(prox) } : null,
     errado: errado ? { chave: errado, dica: dicaDe(errado) } : null,
     sequencia: Number(estado.sequencia?.atual) || 0, agora: new Date(), estado: est,
+    curiosidade: CURIO ? () => baloesCuriosidade(pet) : null,   // 💡 (PROMPT-98)
   };
 }
 
@@ -3315,6 +3322,7 @@ function mostrarFalaPet(baloes, fome = false) {
     const b = baloes[i];
     if (!b || cena?.tipo !== 'mapa') { pararFalaPet(); return; }
     el.textContent = b.texto;
+    el.classList.toggle('largo', !!b.largo);   // curiosidade: balão mais largo
     el.hidden = false;
     el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
     posicionarFalaPet();
@@ -3370,6 +3378,7 @@ function falarPorToque() {
 // A cada quadro no mapa
 function atualizarConversa() {
   if (conversa.falando) posicionarFalaPet();
+  if (pp) { atualizarPerguntaPet(); return; }   // 🗨️ pergunta rápida aberta: o pet não fala outra coisa
   if (perguntaAberta || transicionando || sobreposicaoAberta() || pesca) return;   // pescando, o pet fica quietinho
   if (conversa.evento) {
     // momento-chave (saiu do ginásio): independe do intervalo, mas respeita a lealdade
@@ -3384,6 +3393,7 @@ function atualizarConversa() {
   const pertoDaAgua = cena?.tipo === 'mapa' && pescaPronta() && pontosDoMapa(cena.n).some(p => pontoLiberado(p) && dist(jog.x, jog.y, p.x, p.y) < 180);
   if (pertoDaAgua && Math.random() < 0.4 && petFalar('pesca')) return;
   if (lembrarTreino()) return;
+  if (Math.random() < PP_CHANCE && perguntaDoPet()) return;   // 🗨️ às vezes, em vez de falar, o pet faz uma pergunta rápida
   petFalar();
 }
 
@@ -3986,6 +3996,241 @@ function fecharVoltaExp() {
   if (mp) renderMeuPet();
 }
 
+// ============================================================
+//  🗨️ PERGUNTA RÁPIDA DO PET NO CAMINHO (PROMPT-96) — às vezes, na hora de falar (petPodeFalar), o pet pergunta uma conta
+//  do assunto do mapa (ginásio A ou B em que o aluno já entrou; senão, ou na Praça, um ginásio vencido). 3 botões.
+//  Acertou: +1 de lealdade e comemora. Errou: diz a certa, 📖 Relembre e a questão vai para a caixinha do Treino.
+//  Ignorou: some em 20 s. Até 3 por dia, 5 min entre elas: pet_pergunta_dia = { data, n, ultimo }.
+// ============================================================
+const PP_MAX_DIA = 3, PP_INTERVALO_MS = 5 * 60000, PP_CHANCE = 0.3, PP_MS = 20000;
+let pp = null;   // { q, chave, timer, respondeu }
+const ppMapaOk = () => cena?.tipo === 'mapa' && (Number(cena.n) > 0 || cena.n === 'praca');
+function podePerguntarPet() {
+  if (!carregouProgresso || !ppMapaOk() || perguntaAberta || transicionando || sobreposicaoAberta() || pesca || bt || duelo || dm || rl) return false;
+  if (!seguidor?.pet || $('pet').hidden || petFora()) return false;
+  const d = estado.petPerguntaDia;
+  if (d?.data === diaLocal() && ((Number(d.n) || 0) >= PP_MAX_DIA || Date.now() - (Number(d.ultimo) || 0) < PP_INTERVALO_MS)) return false;
+  return true;
+}
+// já entrou no ginásio: respondeu alguma pergunta dele ou venceu algum personagem
+const entrouNoGinasio = (n, G) => Object.values(estado.ginasios[chaveGinasio(n, G)] || {}).some(x => x?.vencido)
+  || Object.keys(estado.respostas || {}).some(id => id.startsWith(`m${n}${G}-`));
+function ginasioDaPerguntaPet() {
+  const n = Number(cena.n);
+  if (n > 0) for (const G of embaralhar(['A', 'B'])) if (!(n === 13 && G === 'B') && entrouNoGinasio(n, G)) return { mapa: n, lado: G };
+  const v = ginasiosVencidos();
+  return v.length ? sortear(v) : null;
+}
+function perguntaDoPet() {
+  if (!podePerguntarPet()) return false;
+  const g = ginasioDaPerguntaPet();
+  if (!g) return false;
+  let q = null;
+  for (let tent = 0; tent < 12 && !(q?.erradas?.length >= 2); tent++) {   // de preferência com 2 erradas
+    const pers = sortear(['treinador1', 'treinador2', 'treinador3', 'lider']);
+    const nova = gerarUma(g.mapa, g.lado, pers, Math.floor(Math.random() * 5));
+    if (nova && !nova.tabela && nova.erradas?.length && !(q && nova.erradas.length <= q.erradas.length)) q = nova;
+  }
+  if (!q) return false;
+  const hoje = diaLocal(), d = estado.petPerguntaDia?.data === hoje ? estado.petPerguntaDia : { data: hoje, n: 0 };
+  estado.petPerguntaDia = { data: hoje, n: (Number(d.n) || 0) + 1, ultimo: Date.now() };   // ignorar também conta
+  gravar({ pet_pergunta_dia: estado.petPerguntaDia });
+  pararFalaPet();
+  const certa = String(q.resposta);
+  pp = { q, certa, chave: chaveGinasio(g.mapa, g.lado), respondeu: false };
+  const el = $('pet-pergunta');
+  el.innerHTML = `Ei! Rapidinho: <span class="pp-conta">${esc(q.enunciado)}</span>?
+    <div class="pp-botoes">${embaralhar([certa, ...q.erradas.slice(0, 2).map(String)]).map(v => `<button data-pp="${esc(v)}">${esc(v)}</button>`).join('')}</div>`;
+  el.hidden = false;
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+  posicionarPerguntaPet();
+  reagirSeguidor('rapida', 'feliz');
+  pp.timer = setTimeout(fecharPerguntaPet, PP_MS);   // ignorou: some sem penalidade
+  return true;
+}
+function posicionarPerguntaPet() {
+  const el = $('pet-pergunta');
+  if (el.hidden || !seguidor?.pet) return;
+  posicionarNaTela(el, seguidor.x, seguidor.y - seguidor.altura - 2);
+}
+// a cada quadro: o balão acompanha o pet; trocou de mapa, abriu uma tela ou o pet sumiu → fecha
+function atualizarPerguntaPet() {
+  if (!ppMapaOk() || perguntaAberta || transicionando || sobreposicaoAberta() || !seguidor?.pet || $('pet').hidden) { fecharPerguntaPet(); return; }
+  posicionarPerguntaPet();
+}
+function fecharPerguntaPet() {
+  if (pp) clearTimeout(pp.timer);
+  pp = null;
+  $('pet-pergunta').hidden = true;
+  conversa.proximaT = performance.now() + (configFalas().intervalo_min_s ?? 90) * 1000;
+}
+function responderPerguntaPet(b) {
+  if (!pp || pp.respondeu) return;
+  pp.respondeu = true;
+  clearTimeout(pp.timer);
+  const el = $('pet-pergunta'), botoes = [...el.querySelectorAll('[data-pp]')];
+  botoes.forEach(x => { x.disabled = true; if (x.dataset.pp === pp.certa) x.classList.add('certa'); });
+  const pet = estado.pets.ativo;
+  if (b.dataset.pp === pp.certa) {
+    tocar('acerto');
+    b.classList.add('certa');
+    if (pet && cuidadosDe(pet)) { gravar(ganharLealdade(pet, 1)); verificarMarcosLealdade(pet); }
+    reagirSeguidor('rapida', 'feliz');   // adulto: `carinho` (ri de lado)
+    el.insertAdjacentHTML('afterbegin', '<b>Isso! 🎉</b> ');
+    pp.timer = setTimeout(fecharPerguntaPet, 2500);
+    return;
+  }
+  tocar('erro');
+  b.classList.add('errada');
+  caixaErrou(pp.q.id);   // 🎯 volta amanhã no Treino
+  seguidor?.reagir('triste_fome', 1500);
+  const rel = explicacaoDe(pp.chave);
+  el.innerHTML = `Quase! A certa é <span class="pp-conta">${esc(pp.certa)}</span>.
+    <div class="pp-botoes">${rel ? '<button class="pp-relembre" data-pp="relembre">📖 Relembre</button>' : ''}</div>`;
+  posicionarPerguntaPet();
+  pp.timer = setTimeout(fecharPerguntaPet, rel ? 8000 : 4000);
+}
+
+// ============================================================
+//  📒 ÁLBUM DE MATEMÁTICOS e 💡 CURIOSIDADES DO PET (PROMPT-98) — dados/jogo/album.json e curiosidades.json
+//  album/{chave} = { data, dourada }: ganha ao vencer o líder; fica dourada com a insígnia dourada (a revanche), como a
+//  insígnia. Quem já tinha insígnias recebe as figurinhas ao entrar (aviso uma vez: avisos/album_migrado).
+//  album_completo = { data }: as 26 → insígnia especial (só um selo no estojo; não muda a nota).
+//  Curiosidade: tipo de fala do pet (peso 2): abre[pet] + texto + às vezes fecha; prefere as do mapa onde o aluno está,
+//  sem repetir até contar todas do grupo (no aparelho: localStorage jr_curio); se tem `album`, um 2º balão cita a figurinha.
+// ============================================================
+let ALBUM = null, CURIO = null, figurinhaPendente = null;
+const figurinhas = () => ALBUM?.figurinhas || {};
+const CHAVES_ALBUM = () => Array.from({ length: NUM_MAPAS }, (_, i) => ['A', 'B'].map(G => chaveGinasio(i + 1, G))).flat();
+const totalAlbum = () => CHAVES_ALBUM().filter(c => figurinhas()[c]).length;
+const temFigurinha = (chave) => !!estado?.album?.[chave];
+// garante a figurinha de quem venceu o líder (dourada se a insígnia é dourada); devolve 'nova' | 'dourada' | null
+function darFigurinha(chave, patch) {
+  const g = estado.ginasios[chave];
+  if (!figurinhas()[chave] || !g?.insignia) return null;
+  const f = estado.album[chave];
+  if (!f) { estado.album[chave] = { data: Date.now(), dourada: !!g.dourada }; patch[`album/${chave}`] = estado.album[chave]; return g.dourada ? 'dourada' : 'nova'; }
+  if (g.dourada && !f.dourada) { f.dourada = true; patch[`album/${chave}/dourada`] = true; return 'dourada'; }
+  return null;
+}
+function verificarAlbumCompleto(patch) {
+  if (estado.albumCompleto || !totalAlbum() || CHAVES_ALBUM().some(c => figurinhas()[c] && !temFigurinha(c))) return false;
+  estado.albumCompleto = { data: Date.now() };
+  patch.album_completo = estado.albumCompleto;
+  return true;
+}
+function iniciarAlbum() {
+  if (!ALBUM || !carregouProgresso) return;
+  const patch = {};
+  let n = 0;
+  for (const c of CHAVES_ALBUM()) if (darFigurinha(c, patch) === 'nova' || patch[`album/${c}`]) n++;
+  const completo = verificarAlbumCompleto(patch);
+  if (!Object.keys(patch).length) return;
+  estado.avisos ||= {};
+  if (n && !estado.avisos.album_migrado) { estado.avisos.album_migrado = true; patch['avisos/album_migrado'] = true; setTimeout(() => avisoPet(`📒 Você ganhou ${n} figurinha${n === 1 ? '' : 's'} no Álbum!`, true), 3000); }
+  gravar(patch);
+  if (completo) setTimeout(() => avisoPet(`${ALBUM.insignia_completo?.emoji || '📒'} Insígnia especial: ${ALBUM.insignia_completo?.nome || 'Álbum completo'}!`, true), 6000);
+}
+function ganharFigurinha(chave) {
+  if (!ALBUM) return;
+  const patch = {}, tipo = darFigurinha(chave, patch);
+  if (!tipo) return;
+  const completo = verificarAlbumCompleto(patch);
+  gravar(patch);
+  figurinhaPendente = { chave, dourada: tipo === 'dourada', completo };
+}
+function cartaHtml(chave, num) {
+  const f = figurinhas()[chave];
+  if (!f) return '';
+  const [mapaStr, G] = chave.replace('mapa', '').split('-');
+  const gin = D.questoes[Number(mapaStr)]?.ginasios?.[G];
+  const minha = estado.album?.[chave];
+  if (!minha) return `<button class="al-carta falta" aria-label="Figurinha que falta"><div class="al-giro"><div class="al-face al-frente">
+      <span class="al-simbolo">?</span><span class="al-falta">Vença o líder da <b>${esc(gin?.nome || '')}</b> (Mapa ${Number(mapaStr)})</span></div></div></button>`;
+  return `<button class="al-carta${minha.dourada ? ' dourada' : ''}" style="--cor:${esc(f.cor || '#7c5cfc')}" aria-label="${esc(f.nome)}"><div class="al-giro">
+      <div class="al-face al-frente"><span class="al-num">${num}</span><span class="al-simbolo">${esc(f.simbolo || '')}</span>
+        <span class="al-nome">${esc(f.nome)}<small>${esc(f.epoca || '')} · ${esc(f.lugar || '')}</small></span></div>
+      <div class="al-face al-verso"><b>${esc(f.nome)}</b><span>${esc(f.texto || '')}</span>
+        <span class="al-de">📍 ${esc(gin?.nome || '')} · Mapa ${Number(mapaStr)}${minha.dourada ? ' · ✨ dourada' : ''}</span></div>
+    </div></button>`;
+}
+function abrirAlbum() {
+  if (!ALBUM) return;
+  const chaves = CHAVES_ALBUM().filter(c => figurinhas()[c]);
+  $('al-grade').innerHTML = chaves.map((c, i) => cartaHtml(c, i + 1)).join('');
+  const tem = chaves.filter(temFigurinha).length, dour = chaves.filter(c => estado.album[c]?.dourada).length;
+  $('al-cont').textContent = `${tem}/${chaves.length} · ✨ ${dour} dourada${dour === 1 ? '' : 's'}`;
+  $('album').hidden = false;
+  $('al-grade').scrollLeft = 0;
+}
+function pintarEspecialAlbum() {
+  const el = $('estojo-especial'), b = $('btn-album');
+  b.hidden = !ALBUM;
+  el.hidden = !ALBUM;
+  if (!ALBUM) return;
+  const ic = ALBUM.insignia_completo || {};
+  el.classList.toggle('completo', !!estado.albumCompleto);
+  el.textContent = estado.albumCompleto ? `${ic.emoji || '📒'} ${ic.nome || 'Álbum completo'} ✓` : `📒 Álbum: ${CHAVES_ALBUM().filter(temFigurinha).length}/${totalAlbum()} figurinhas`;
+}
+function mostrarFigurinhaPendente() {
+  const fp = figurinhaPendente;
+  figurinhaPendente = null;
+  if (!fp) return;
+  const i = CHAVES_ALBUM().filter(c => figurinhas()[c]).indexOf(fp.chave);
+  $('fig-nova-tit').textContent = fp.dourada ? 'Figurinha dourada! ✨' : 'Nova figurinha!';
+  $('fig-nova-carta').innerHTML = cartaHtml(fp.chave, i + 1);
+  $('fig-nova').hidden = false;
+  $('fig-nova')._fp = fp;
+  tocar(fp.dourada ? 'dourada' : 'insignia');
+}
+function fecharFigurinhaNova() {
+  const fp = $('fig-nova')._fp;
+  $('fig-nova').hidden = true;
+  if (fp?.completo) avisoPet(`${ALBUM.insignia_completo?.emoji || '📒'} Álbum completo! Insígnia especial: ${ALBUM.insignia_completo?.nome || ''}`, true);
+  if (festaPendente) { const f = festaPendente; festaPendente = null; setTimeout(() => mostrarFestaMestre(f), 500); }
+}
+
+// 💡 a próxima curiosidade: o grupo do mapa onde o aluno está; acabou (ou Praça/mapa geral): gerais e os outros mapas
+const CURIO_KEY = 'jr_curio';
+function proximaCuriosidade() {
+  const grupos = CURIO?.por_mapa || {};
+  const aqui = Number(cena?.n) > 0 && cena?.tipo === 'mapa' ? 'mapa' + cena.n : null;
+  const ordem = [...(aqui ? [aqui] : []), 'gerais', ...embaralhar(Object.keys(grupos).filter(g => g !== aqui))];
+  const lista = (g) => (g === 'gerais' ? CURIO?.gerais : grupos[g]) || [];
+  let vistas = {};
+  try { vistas = JSON.parse(localStorage.getItem(CURIO_KEY) || '{}') || {}; } catch (_) {}
+  const salvar = () => { try { localStorage.setItem(CURIO_KEY, JSON.stringify(vistas)); } catch (_) {} };
+  for (const g of ordem) {
+    const l = lista(g), ja = new Set(vistas[g] || []);
+    const livres = l.map((_, i) => i).filter(i => !ja.has(i));
+    if (!livres.length) continue;
+    const i = sortear(livres);
+    vistas[g] = [...ja, i]; salvar();
+    return l[i];
+  }
+  // contou todas: recomeça o primeiro grupo (o do mapa, ou as gerais)
+  const g = ordem.find(x => lista(x).length);
+  if (!g) return null;
+  const i = Math.floor(Math.random() * lista(g).length);
+  vistas[g] = [i]; salvar();
+  return lista(g)[i];
+}
+const NOMES_PROPRIOS = /^(Eratóstenes|Fibonacci|Descartes|Diofanto|Florence|Ada|Malba|Tales|Brahmagupta|Artur|Simon|Robert|Al-|IBGE|GPS|π|\d)/;
+function baloesCuriosidade(pet) {
+  const it = proximaCuriosidade();
+  if (!it?.t) return null;
+  const abre = sortear(CURIO.abre?.[pet] || []) || '';
+  let t = String(it.t);
+  // "…Inclusive que" + "O sinal…" → "o sinal…" (nomes próprios e siglas ficam como estão)
+  if (abre && /[a-zà-ú,]$/i.test(abre.trim()) && !NOMES_PROPRIOS.test(t)) t = t.charAt(0).toLowerCase() + t.slice(1);
+  let texto = abre ? `${abre.trim()} ${t}` : t;
+  if (CURIO.fecha?.length && Math.random() < 0.5) texto += ` ${sortear(CURIO.fecha)}`;
+  const baloes = [{ texto, espera: 0, fixo: 2500 + texto.length * 55, largo: true }];   // tempo de leitura pelo tamanho
+  const f = it.album && figurinhas()[it.album];
+  if (f) baloes.push({ texto: temFigurinha(it.album) ? `É da sua figurinha de ${f.nome}! 📒` : 'Tem uma figurinha sobre isso no Álbum… 👀', espera: 300 });
+  return baloes;
+}
+
 function abrirMapaGeral() {
   sairPesca(false);
   atualizarSelo();
@@ -4160,7 +4405,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('exp-volta').hidden;
+  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('exp-volta').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden;
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -4321,7 +4566,7 @@ function loop(t) {
     }
   }
   atualizarHudPraca();
-  if (cena !== dnCena) cenaDiaNoite();   // trocou de cena: liga/desliga o dia e noite e monta as luzes
+  if (cena !== dnCena) { cenaDiaNoite(); if (pp) fecharPerguntaPet(); }   // trocou de cena: dia e noite, luzes; fecha a pergunta do pet
   if (cena?.tipo !== 'mapa' && !$('btn-acao-mapa').hidden) esconderAcaoMapa();
   requestAnimationFrame(loop);
 }
@@ -5172,6 +5417,7 @@ function montarPraca() {
     (f ? rotulo('🕹️ Fliperama', f.x, f.y - 200, 'fliperama') : '') + (l ? rotulo('🛒 Loja', l.x, l.y - 140, 'loja') : '') +
     (cena.laboratorio ? rotulo('🤖 Laboratório', lb.x, lb.y - 150, 'laboratorio') : ''));
   montarMesaDamas();
+  pintarLetreiroRelampago();
 }
 function alvoPracaEm(p) {
   const { mural: m, fliperama: f, loja: l, laboratorio: lb } = cena;
@@ -5455,6 +5701,235 @@ function iniciarPraca() {
     pararConvites = onValue(ref(db, `${basePraca()}/convites/${sessao.uid}`), (s) => { if (s.exists()) receberConvite(s.val()); }, () => {});
   } catch (_) { pararConvites = null; }
   ouvirChamados();
+  iniciarRelampago();
+}
+
+// ============================================================
+//  ⚡ DESAFIO RELÂMPAGO (PROMPT-95) — toda hora cheia das 7h às 22h (Brasília, pelo relógio do servidor), na Praça.
+//  1 min antes: na Praça, contagem + sino + Engrenaldo; fora (online, sem estar ocupado): aviso no canto com [Ir].
+//  jogo_revisao_praca/relampago/{AAAA-MM-DD-HH} = { q: { enunciado, opcoes, certa }, inicio, fim } (o 1º aparelho na Praça
+//  cria com runTransaction; os outros só leem) · respostas/{uid} = { op, t, nome, turma } (1 por aluno, transação)
+//  · premiados/{uid}: true (cada um se paga 15/10/5 moedas, fonte `relampago`, se ficou entre os 3 primeiros acertos por t).
+//  relampago/ultimo = { chave, podio: [{ nome, turma }] } → letreiro perto do mural até o próximo.
+//  Pergunta: de um ginásio dos mapas 1…ceil(mediana das insígnias / 2) (alunos visíveis no mural), gerada por gerarUma.
+//  Professora e contas de teste veem, mas não gravam. Desafios desligados para a turma: nada. ?relampago=agora (modo teste).
+// ============================================================
+const RL_HORAS = [7, 22], RL_AVISO_MS = 60000, RL_ESPERA_MS = 3000, RL_DURA_MS = 20000, RL_PODIO_MS = 5000, RL_PREMIOS = [15, 10, 5];
+const BRT_MS = 3 * 3600e3;   // Brasília = UTC−3 (sem horário de verão)
+let rl = null, rlForcado = null, rlUltimo = null, pararRlUltimo = null, rlIniciado = false;
+const pontuaNoRelampago = () => teste || (!ehProfessora() && !ALUNOS_TESTE.includes(sessao.uid));
+const dois = (n) => String(n).padStart(2, '0');
+// o relâmpago de agora (de 1 min antes até o fim do pódio) ou null
+function slotRelampago(t) {
+  if (rlForcado) return t < rlForcado.S + RL_ESPERA_MS + RL_DURA_MS + RL_PODIO_MS + 2000 ? rlForcado : null;
+  const b = new Date(t - BRT_MS), H = b.getUTCHours();
+  const dia = Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate()) + BRT_MS;
+  for (const h of [H, H + 1]) {
+    if (h < RL_HORAS[0] || h > RL_HORAS[1]) continue;
+    const S = dia + h * 3600e3;
+    if (t >= S - RL_AVISO_MS && t < S + RL_ESPERA_MS + RL_DURA_MS + RL_PODIO_MS + 2000)
+      return { S, chave: `${b.getUTCFullYear()}-${dois(b.getUTCMonth() + 1)}-${dois(b.getUTCDate())}-${dois(h)}` };
+  }
+  return null;
+}
+function iniciarRelampago() {
+  if (rlIniciado) return;
+  rlIniciado = true;
+  if (teste && new URLSearchParams(location.search).get('relampago') === 'agora') rlForcado = 'pendente';
+  try {
+    pararRlUltimo = onValue(ref(db, `${basePraca()}/relampago/ultimo`), (s) => { rlUltimo = s.exists() ? s.val() : null; pintarLetreiroRelampago(); }, () => {});
+  } catch (_) {}
+  setInterval(tickRelampago, 1000);
+}
+function esconderRelampago() {
+  $('rl-contagem').hidden = true;
+  $('rl-aviso').hidden = true;
+  if (!$('relampago').hidden) $('relampago').hidden = true;
+}
+function tickRelampago() {
+  if (!carregouProgresso || !onlineAtivo() || !desafiosLigados() || !pracaPronta()) { esconderRelampago(); return; }
+  const t = agoraServ();
+  if (rlForcado === 'pendente') { const b = new Date(t + RL_AVISO_MS - BRT_MS); rlForcado = { S: t + RL_AVISO_MS, chave: `${b.getUTCFullYear()}-${dois(b.getUTCMonth() + 1)}-${dois(b.getUTCDate())}-${dois(b.getUTCHours())}${dois(b.getUTCMinutes())}-teste` }; }
+  const slot = slotRelampago(t);
+  if (!slot) { if (rl) { rl.parar?.(); rl = null; } rlForcado = null; esconderRelampago(); return; }
+  if (rl?.chave !== slot.chave) { rl?.parar?.(); rl = { ...slot, dados: null, respostas: {}, minha: null, pago: false, avisou: false, sino: false, avisoFechado: false }; }
+  const naPraca = ehPraca() && !transicionando;
+  // ── antes da hora: contagem (na Praça) ou aviso no canto (fora) ──
+  if (t < rl.S) {
+    const seg = Math.ceil((rl.S - t) / 1000);
+    $('rl-contagem').innerHTML = `⚡ Relâmpago em <b>${seg}</b>`;
+    $('rl-contagem').hidden = !naPraca;
+    if (naPraca && !rl.sino) { rl.sino = true; tocar('insignia'); falaEngrenaldoRelampago(); }
+    const fora = !naPraca && !rl.avisoFechado && !ocupadoParaChamado();
+    $('rl-aviso').hidden = !fora;
+    if (fora) $('rl-aviso-s').textContent = seg > 50 ? '1 min' : `${seg} s`;
+    return;
+  }
+  $('rl-contagem').hidden = true;
+  $('rl-aviso').hidden = true;
+  // ── na hora: quem está na Praça cria (ou lê) a pergunta e ouve as respostas ──
+  if (naPraca && !rl.ouvindo) ouvirRelampago();
+  const d = rl.dados;
+  if (!d?.q) return;
+  const ini = Number(d.inicio), fim = Number(d.fim);
+  if (t < ini) return;
+  if (t < fim) {
+    if (!naPraca && !rl.minha) { if (!$('relampago').hidden) $('relampago').hidden = true; return; }   // só participa quem está na Praça
+    if ($('relampago').hidden && !perguntaAberta && !bt && !duelo && !dm) abrirCartaoRelampago();
+    $('rl-barra').style.transform = `scaleX(${Math.max(0, (fim - t) / (fim - ini)).toFixed(3)})`;
+    $('rl-status').textContent = `${Math.max(0, Math.ceil((fim - t) / 1000))} s`;
+    return;
+  }
+  // ── acabou: a certa e o pódio por 5 s; o top 3 se paga ──
+  if (!rl.final) { rl.final = true; mostrarFimRelampago(); }
+  if (t >= fim + RL_PODIO_MS && !$('relampago').hidden) $('relampago').hidden = true;
+}
+function falaEngrenaldoRelampago() {
+  const o = pessoasMapa.find(x => x.p.id === 'engrenaldo');
+  if (!o || !o.img.isConnected || sobreposicaoAberta()) return;
+  if (balaoPessoa) fecharBalaoPessoa();
+  const el = $('pessoa-balao');
+  el.innerHTML = `<b>${esc(o.p.nome)}</b><span>⚡ Relâmpago em 1 minuto!</span>`;
+  el.hidden = false;
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+  balaoPessoa = { o, timer: setTimeout(fecharBalaoPessoa, 5000) };
+  posicionarBalaoPessoa();
+}
+function irAoRelampago() {
+  $('rl-aviso').hidden = true;
+  if (rl) rl.avisoFechado = true;
+  if (ehPraca() || ocupadoParaChamado() || !pracaPronta()) return;
+  transicao(() => abrirPraca());
+}
+// mapas dos ginásios "que a maioria já venceu": 1 … ceil(mediana das insígnias / 2)
+async function mapaMaxRelampago() {
+  try {
+    const s = await get(ref(db, `${basePraca()}/insignias`));
+    const ns = Object.entries(s.exists() ? s.val() : {}).filter(([uid, r]) => teste || visivelNoMural(uid, r)).map(([, r]) => Number(r?.n) || 0).sort((a, b) => a - b);
+    if (!ns.length) return 1;
+    const m = ns.length % 2 ? ns[(ns.length - 1) / 2] : (ns[ns.length / 2 - 1] + ns[ns.length / 2]) / 2;
+    return Math.min(NUM_MAPAS, Math.max(1, Math.ceil(m / 2)));
+  } catch (_) { return 1; }
+}
+function perguntaRelampago(maxMapa) {
+  const pers = ['treinador1', 'treinador2', 'treinador3', 'lider'];
+  for (let tent = 0; tent < 40; tent++) {
+    const mapa = 1 + Math.floor(Math.random() * maxMapa), lado = Math.random() < 0.5 ? 'A' : 'B';
+    if (mapa === 12 || (mapa === 13 && lado === 'B')) continue;   // coordenadas (precisa da grade) e tabelas: fora
+    const q = gerarUma(mapa, lado, sortear(pers), Math.floor(Math.random() * 5));
+    if (!q || q.tabela || !Array.isArray(q.erradas) || q.erradas.length < 3) continue;
+    const certa = String(q.resposta);
+    return { enunciado: String(q.enunciado), opcoes: embaralhar([certa, ...q.erradas.slice(0, 3).map(String)]), certa, mapa, lado };
+  }
+  return null;
+}
+async function ouvirRelampago() {
+  const meu = rl;
+  meu.ouvindo = true;
+  const no = ref(db, `${basePraca()}/relampago/${meu.chave}`);
+  try {
+    const q = agoraServ() < meu.S + 5000 ? perguntaRelampago(await mapaMaxRelampago()) : null;   // chegou atrasado: só lê
+    if (q) {
+      const inicio = Math.max(meu.S, Math.round(agoraServ())) + RL_ESPERA_MS;
+      await runTransaction(no, (cur) => (cur?.q ? undefined : { ...(cur || {}), q, inicio, fim: inicio + RL_DURA_MS }));   // só o 1º grava
+    }
+  } catch (e) { console.warn('[jogo-revisao] relâmpago', e?.code || e); }
+  if (rl !== meu) return;
+  try {
+    meu.parar = onValue(no, (s) => {
+      if (rl !== meu) return;
+      const v = s.exists() ? s.val() : null;
+      meu.dados = v;
+      meu.respostas = v?.respostas || {};
+      if (!$('relampago').hidden) pintarOpcoesRelampago();
+    }, () => {});
+  } catch (_) {}
+}
+function abrirCartaoRelampago() {
+  const q = rl.dados.q;
+  $('rl-enunciado').textContent = q.enunciado;
+  $('rl-podio').hidden = true;
+  $('rl-msg').innerHTML = pontuaNoRelampago() ? 'Responda rápido: os 3 primeiros acertos ganham 🪙 15 · 10 · 5' : 'Você vê o relâmpago, mas não pontua.';
+  $('rl-opcoes').innerHTML = q.opcoes.map(o => `<button data-rl="${esc(o)}">${esc(o)}</button>`).join('');
+  $('relampago').hidden = false;
+  soltarJoystick();
+  tocar('porta');
+  pintarOpcoesRelampago();
+}
+function pintarOpcoesRelampago() {
+  if (!rl?.dados?.q) return;
+  const q = rl.dados.q, fim = !!rl.final, minha = rl.minha ?? rl.respostas?.[sessao.uid]?.op ?? null;
+  for (const b of $('rl-opcoes').querySelectorAll('[data-rl]')) {
+    const v = b.dataset.rl;
+    b.disabled = fim || minha != null;
+    b.classList.toggle('minha', v === minha);
+    b.classList.toggle('certa', fim && v === String(q.certa));
+    b.classList.toggle('errada', v === minha && (fim || rl.conferida) && v !== String(q.certa));
+  }
+}
+async function responderRelampago(op) {
+  if (!rl?.dados?.q || rl.final || rl.minha != null || agoraServ() >= Number(rl.dados.fim)) return;
+  rl.minha = op;
+  const certo = op === String(rl.dados.q.certa);
+  rl.conferida = true;
+  tocar(certo ? 'acerto' : 'erro');
+  $('rl-msg').innerHTML = certo ? '<span class="ok">Acertou! ⚡ Vamos ver se foi dos mais rápidos…</span>' : '<span class="erro">Errou! Não dá para responder de novo.</span>';
+  pintarOpcoesRelampago();
+  if (!pontuaNoRelampago()) return;
+  try {
+    await runTransaction(ref(db, `${basePraca()}/relampago/${rl.chave}/respostas/${sessao.uid}`),
+      (cur) => (cur ? undefined : { op, t: serverTimestamp(), nome: nomeRanking(), turma: sessao.turma || '' }));
+  } catch (e) { console.warn('[jogo-revisao] resposta do relâmpago', e?.code || e); }
+}
+// os 3 primeiros acertos pelo horário do servidor
+function podioRelampago() {
+  const certa = String(rl?.dados?.q?.certa ?? '');
+  return Object.entries(rl?.respostas || {}).filter(([uid, r]) => r && String(r.op) === certa && Number.isFinite(Number(r.t)))
+    .sort((a, b) => Number(a[1].t) - Number(b[1].t) || a[0].localeCompare(b[0])).slice(0, 3).map(([uid, r]) => ({ uid, nome: r.nome || 'Colega', turma: r.turma || '' }));
+}
+function mostrarFimRelampago() {
+  const meu = rl;
+  pintarOpcoesRelampago();
+  setTimeout(async () => {   // 1,5 s para as últimas respostas chegarem
+    if (rl !== meu) return;
+    const podio = podioRelampago(), med = ['🥇', '🥈', '🥉'];
+    const lugar = podio.findIndex(p => p.uid === sessao.uid);
+    if (!$('relampago').hidden) {
+      $('rl-msg').innerHTML = `Resposta certa: <b class="ok">${esc(meu.dados.q.certa)}</b>`;
+      $('rl-podio').innerHTML = podio.length ? podio.map((p, i) => `<li${p.uid === sessao.uid ? ' class="eu"' : ''}>${med[i]} ${esc(p.nome)}${p.turma ? ` (${esc(nomeVisivel(p.turma))})` : ''}</li>`).join('')
+        : '<li>Ninguém acertou desta vez. ⚡</li>';
+      $('rl-podio').hidden = false;
+    }
+    if (podio.length) set(ref(db, `${basePraca()}/relampago/ultimo`), { chave: meu.chave, podio: podio.map(p => ({ nome: p.nome, turma: p.turma })) }).catch(() => {});
+    if (lugar >= 0 && pontuaNoRelampago() && !meu.pago) {   // cada um se paga, uma vez só
+      meu.pago = true;
+      try {
+        const r = await runTransaction(ref(db, `${basePraca()}/relampago/${meu.chave}/premiados/${sessao.uid}`), (cur) => (cur ? undefined : true));
+        if (r.committed) {
+          const n = RL_PREMIOS[lugar];
+          estado.pets.moedas = (Number(estado.pets.moedas) || 0) + n;
+          const patch = { 'pets/moedas': estado.pets.moedas };
+          registrarGanho('relampago', n, patch);
+          gravar(patch);
+          tocar('vitoria');
+          avisoPet(`${med[lugar]} Relâmpago! +${n} 🪙`, true);
+        }
+      } catch (e) { console.warn('[jogo-revisao] prêmio do relâmpago', e?.code || e); }
+    }
+  }, 1500);
+}
+// letreiro perto do mural: o pódio do último relâmpago
+function pintarLetreiroRelampago() {
+  if (!ehPraca() || !cena.mural) return;
+  const atores = $('cena-atores');
+  let el = atores.querySelector('.rl-letreiro');
+  const podio = rlUltimo?.podio;
+  if (!Array.isArray(podio) || !podio.length || !desafiosLigados()) { el?.remove(); return; }
+  if (!el) { el = document.createElement('div'); el.className = 'jr-rotulo-porta jr-rotulo-praca rl-letreiro'; el.innerHTML = '<span></span>'; atores.appendChild(el); }
+  const med = ['🥇', '🥈', '🥉'];
+  el.firstChild.textContent = `⚡ Último relâmpago: ${podio.slice(0, 3).map((p, i) => `${med[i]} ${p.nome || 'Colega'}${p.turma ? ` (${nomeVisivel(p.turma)})` : ''}`).join(' · ')}`;
+  el.style.left = cena.mural.x + 'px';
+  el.style.top = (cena.mural.y - 170) + 'px';
 }
 
 // Cartão do colega na praça: ⚔️ Desafiar (com aviso quando não vale prêmio)
@@ -7277,7 +7752,7 @@ function iniciarBatalha(id, origem = 'lista') {
     agendarPiscar(bt.pisca);
   }
   $('bt-tRnome').textContent = `Tempo de ${t.nome}`;
-  $('bt-calc').hidden = !calcLigada(NPCS.find(p => p.id === t.id)?.mapa);   // treinador de um mapa com calculadora (ex.: Dona Cida, mapa 7)
+  $('bt-calc').hidden = true;   // batalha com treinador: sem 🧮 (PROMPT-94; a calculadora fica só nas perguntas dos ginásios)
   fecharCalc();
   $('bt-fim').hidden = true;
   $('bt-ops').hidden = $('bt-conta').hidden = false;
@@ -8313,7 +8788,8 @@ function mostrarInsigniaGanha(chave, dourada) {
     if (!comemorarPetNaCena()) seguidor?.reagir('pulo_cambalhota');
     mostrarAvisoSequencia();
     surgirPetSePendente();
-    if (festaPendente) { const f = festaPendente; festaPendente = null; setTimeout(() => mostrarFestaMestre(f), 700); }
+    if (figurinhaPendente) setTimeout(mostrarFigurinhaPendente, 600);   // 📒 a carta gira; a festa (se houver) vem depois dela
+    else if (festaPendente) { const f = festaPendente; festaPendente = null; setTimeout(() => mostrarFestaMestre(f), 700); }
   };
 
   anim.voar = () => {
@@ -8673,6 +9149,11 @@ function abrirPergunta(chave, p) {
     fim: false,
   };
   perguntaAberta = true;
+  if (p === 'lider') {   // painel "Travados" (PROMPT-97): +1 luta com o líder; a 1ª vez fica marcada (quem já tinha histórico começa a contar agora)
+    const g = estado.ginasios[chave], patch = { [`ginasios/${chave}/tentativas_lider`]: increment(1) };
+    if (g && !g.primeiraTentativa) { g.primeiraTentativa = Date.now(); patch[`ginasios/${chave}/primeira_tentativa`] = g.primeiraTentativa; }
+    gravar(patch);
+  }
   soltarJoystick();
   $('tela-cena').classList.add('jr-com-pergunta');   // esconde o joystick (ver CSS)
   $('perg-busto').src = `${IMG}/bustos/${pers.sprite}.webp`;
@@ -9013,7 +9494,7 @@ function errarPergunta(btn, q, certa, botoes) {
   reagirArena(false);
   desenharBolinhas();
   if (pg.modo !== 'treino' || RE_ID.test(q.id)) {
-    gravar({ [`respostas/${q.id}/ultima`]: Date.now() }, q.id);   // erros += 1
+    gravar({ [`respostas/${q.id}/ultima`]: Date.now(), [`respostas/${q.id}/assunto`]: assuntoDe(q.enunciado) }, q.id);   // erros += 1; assunto: o formato da conta (painel "Travados")
     lembrarResposta(q.id, { ultima: Date.now() }, 1);
   }
   caixaErrou(q.id);   // 🎯 a pergunta entra (ou volta) na caixinha do treino: nível 0, volta amanhã
@@ -9047,6 +9528,7 @@ function vencer() {
   if (p === 'lider' && !g.insignia) { g.insignia = true; g.dataInsignia = Date.now(); ganhou = 'normal'; }
   if (p === 'revanche' && !g.dourada) { g.dourada = true; ganhou = 'dourada'; }
   gravarVitoria(chave, p);
+  if (p === 'lider' || p === 'revanche') ganharFigurinha(chave);   // 📒 a figurinha (dourada com a revanche) aparece depois da insígnia
   if (ganhou) moedasDaInsignia(ganhou);
   if (p === 'lider' || p === 'revanche') conversa.evento = 'venceu';   // o pet comenta ao sair do ginásio
   if (p === 'lider' && primeiraVez && petDoGinasio(chave)) petSurgir = chave;
@@ -9178,6 +9660,7 @@ function abrirEstojo() {
   $('estojo-barra').style.width = (conquistadas / 26 * 100) + '%';
   $('estojo-nota').innerHTML = `Nota do jogo: <b>${formatarNota(notaJogoRevisao(conquistadas, douradas))}</b> / ${NOTA_MAX}` +
     `<small>Insígnias valem ${PESO_INSIGNIAS},0 · douradas valem mais ${PESO_DOURADAS},0</small>`;
+  pintarEspecialAlbum();
   $('estojo').hidden = false;
   $('estojo').scrollTop = 0;
 }
@@ -9690,6 +10173,7 @@ async function fimCorrida(d) {
 const FONTES_MOEDA = {
   ginasio: { nome: 'Ginásios (1º acerto de cada pergunta)' },
   expedicao: { nome: 'Expedição do pet' },
+  relampago: { nome: 'Desafio relâmpago' },
   insignia: { nome: 'Insígnias' },
   batalha: { nome: 'Batalhas', limite: () => cfgBatalha().limites_dia?.moedas },
   batalha_primeira: { nome: 'Primeira vitória contra um treinador' },
@@ -10184,6 +10668,9 @@ function ligarEventos() {
   $('btn-online').addEventListener('click', abrirListaTodos);
   $('selo-online').addEventListener('click', abrirListaTodos);
   $('chamado-ir').addEventListener('click', (e) => { e.stopPropagation(); responderChamado(true); });
+  $('rl-ir').addEventListener('click', (e) => { e.stopPropagation(); irAoRelampago(); });
+  $('rl-aviso-x').addEventListener('click', (e) => { e.stopPropagation(); $('rl-aviso').hidden = true; if (rl) rl.avisoFechado = true; });
+  $('relampago').addEventListener('click', (e) => { e.stopPropagation(); const b = e.target.closest('[data-rl]'); if (b) responderRelampago(b.dataset.rl); });
   $('chamado-nao').addEventListener('click', (e) => { e.stopPropagation(); responderChamado(false); });
   $('mp-sem-convites').addEventListener('click', alternarSemConvites);
   atualizarBotaoSemConvites();
@@ -10336,6 +10823,12 @@ function ligarEventos() {
     if (sub) sub.hidden = true; else if (!$('mp-info-balao').hidden) $('mp-info-balao').hidden = true; else fecharMeuPet();
   });
   $('pet-fala').addEventListener('click', pararFalaPet);   // tocar no balão fecha
+  $('pet-pergunta').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const b = e.target.closest('[data-pp]');
+    if (b?.dataset.pp === 'relembre') { const c = pp?.chave; fecharPerguntaPet(); if (c) abrirRelembre(c, 'pet'); }
+    else if (b) responderPerguntaPet(b);
+  });
   atualizarBotaoCalado();
   $('mp-palco').addEventListener('click', carinhoPet);   // tocar no pet = carinho
   $('colecao-opcoes').addEventListener('click', (e) => {
@@ -10401,6 +10894,16 @@ function ligarEventos() {
   $('colecao-fechar').addEventListener('click', () => { $('pet-colecao').hidden = true; if (colecaoDoMeuPet) { colecaoDoMeuPet = false; abrirMeuPet(); } });
   $('levar-usar').addEventListener('click', () => conquistarPet(true));
   $('levar-guardar').addEventListener('click', () => conquistarPet(false));
+  $('btn-album').addEventListener('click', (e) => { e.stopPropagation(); abrirAlbum(); });
+  $('album-fechar').addEventListener('click', (e) => { e.stopPropagation(); $('album').hidden = true; });
+  $('album').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (e.target === $('album')) { $('album').hidden = true; return; }
+    const c = e.target.closest('.al-carta:not(.falta)');
+    if (c) { c.classList.toggle('virada'); tocar('clique'); }
+  });
+  $('fig-nova-carta').addEventListener('click', (e) => { e.stopPropagation(); e.target.closest('.al-carta')?.classList.toggle('virada'); });
+  $('fig-nova-ok').addEventListener('click', (e) => { e.stopPropagation(); fecharFigurinhaNova(); });
   $('estojo-fechar').addEventListener('click', () => {
     $('estojo').hidden = true;
     if (!$('tela-geral').hidden) desenharMarcadores();
