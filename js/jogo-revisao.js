@@ -8,7 +8,7 @@ import { ref, get, update, push, set, remove, increment, onValue, runTransaction
 import { adicionarXP } from '/js/db.js';
 import { bimestreAtual, ALUNOS_TESTE, bimestreJogos, pathTabuadaRanking, pathEscaladaRanking, pathTabuadaNiveis, pathTabuadaNegNiveis, pathEscaladaNiveis } from '/js/constants.js';
 import { gerarQuestoes, gerarUma } from '/js/jogo-revisao/geradores.js';
-import { tocar, somLigado, alternarSom } from '/js/jogo-revisao/sons.js';
+import { tocar, somLigado, alternarSom, tocarArquivo, pararEfeitos, musicaPara, musicaLigada, alternarMusica, pausarMusica, musicaBloqueada } from '/js/jogo-revisao/sons.js';
 import { definirPausas, definirBarriga, barrigaDoPet, barrigaAntiga, faixaBarriga, rotuloLealdade, lealdadeComQueda, doDia,
   CARINHOS_POR_DIA, LEALDADE_INICIAL, LEALDADE_DIA, LEALDADE_CAMBALHOTA } from '/js/jogo-revisao/cuidados.js';
 import { definirLoja, definirPeixes, lojaPronta, cfgLoja, comidas, tintas, efeitos, tinta, tintaAnimada, icone, efeito, itemDaBolsa, idDoPeixe, ehFavorita, semanaDe,
@@ -479,6 +479,7 @@ async function carregarEstado() {
     for (const n of Object.values(c.mapas_abertos || {})) mapasAbertos.add(Number(n));
     if (Number(c.meta_turma) > 0) metaTurma = Number(c.meta_turma);
     definirPausas(c.pausas);
+    aplicarMusicaOff(c.musica_off);   // a professora desliga a música (PROMPT-88)
     desafiosOff = c.desafios_off || {};   // a professora desliga os desafios da praça (todas as turmas ou uma)   // feriados/férias: não contam para a fome nem para a lealdade
   } catch (e) { /* sem config: vale só a regra padrão e meta 100 */ }
   try {
@@ -1494,6 +1495,7 @@ function medirMeuPet() {
 
 function fecharMeuPet() {
   $('meu-pet').hidden = true;
+  mp?.som?.parar(300);   // fechou o Meu Pet: o som do truque para com fade
   pararSequencia($('mp-img'));   // trocou de tela: interrompe a ação do pet
   mp?.corpoAnim?.cancel();
   mp = null;
@@ -4953,6 +4955,32 @@ const balaoValido = (e) => REACOES.includes(e) || ehFrase(e);
 
 // ── Desafio entre alunos ──
 let duelo = null;            // { id, souA, eu, outro, d (dados), tema, timers, parar, ultimaVista, fimAplicado, woT }
+// ── Música de fundo por lugar (PROMPT-88) ──
+// mapa: mapas, Praça, mapa geral, salões, loja, fliperama · ginásio: ginásio, batalha, perguntas, duelos, corrida, Damas
+// lab: Laboratório, Programe o pet, Caça ao bug, "O que o pet vai fazer?", Ilha dos Robôs
+const visivel = (id) => { const e = $(id); return !!e && !e.hidden; };
+function lugarDaMusica() {
+  if (visivel('batalha') || visivel('pergunta') || duelo || visivel('damas')) return 'ginasio';   // a corrida é um duelo
+  if (visivel('programe') || visivel('pg-mapa') || cena?.n === 'laboratorio') return 'lab';
+  if (cena?.tipo === 'interior') return 'ginasio';
+  if (cena || visivel('tela-geral')) return 'mapa';
+  return null;
+}
+let musicaOff = {};   // jogo_revisao_config/global/musica_off: { todas: true } ou { '8D': true } (painel da professora)
+function aplicarMusicaOff(v) {
+  musicaOff = v || {};
+  musicaBloqueada(!!(musicaOff.todas || musicaOff[sessao?.turma]));
+  pintarMusica();
+}
+function pintarMusica() {
+  const bloq = musicaBloqueada(), on = musicaLigada() && !bloq;
+  document.querySelectorAll('[data-musica]').forEach(b => {
+    b.classList.toggle('mudo', !on);
+    b.classList.toggle('bloqueada', bloq);
+    b.setAttribute('aria-label', bloq ? 'A professora desligou a música' : on ? 'Desligar a música' : 'Ligar a música');
+    b.title = bloq ? 'A professora desligou a música' : '';
+  });
+}
 let convite = null;          // convite recebido aberto: { id, de, de_nome, timer }
 let pararConvites = null;
 const vencidosMeus = () => Object.entries(estado.ginasios).filter(([, g]) => g.lider?.vencido).map(([k]) => k);
@@ -4962,6 +4990,7 @@ function iniciarPraca() {
   try { onValue(ref(db, '.info/serverTimeOffset'), (s) => { offsetServidor = Number(s.val()) || 0; }); } catch (_) {}
   // a professora liga/desliga os desafios pelo painel: vale na hora
   try { onValue(ref(db, 'jogo_revisao_config/global/desafios_off'), (s) => { desafiosOff = (s.exists() && s.val()) || {}; }, () => {}); } catch (_) {}
+  try { onValue(ref(db, 'jogo_revisao_config/global/musica_off'), (s) => aplicarMusicaOff(s.exists() ? s.val() : null), () => {}); } catch (_) {}
   if (pararConvites || !onlineAtivo()) return;
   try {
     pararConvites = onValue(ref(db, `${basePraca()}/convites/${sessao.uid}`), (s) => { if (s.exists()) receberConvite(s.val()); }, () => {});
@@ -6805,6 +6834,7 @@ function limparBatalha() {
   bt.timers.forEach(clearTimeout);
   clearTimeout(bt.anim.L); clearTimeout(bt.anim.R);
   pararSequencia($('bt-imgL')); pararSequencia($('bt-imgR'));
+  (bt.sons || []).forEach(s => s.parar(200)); bt.sons = [];   // saiu da batalha: o som para com fade
   if (bt.pisca) { clearTimeout(bt.pisca.timer); bt.pisca.img = { isConnected: false }; }   // para de piscar
   cancelAnimationFrame(bt.raf);
 }
@@ -6844,6 +6874,25 @@ function btTocar(lado, nome, { loop = true, ms = 160, depois } = {}) {
   };
   passo();
 }
+// ── Sons dos pets (PROMPT-88): arquivos em /audio/jogo/, tocados por sons.js (respeitam o 🔊) ──
+// rugido da cor do dragão de BASE (PROMPT-84): o vermelho colorido ruge como o vermelho
+const somRugido = (pet, opc) => tocarArquivo(`dragao_${/^dragao_vermelho/.test(pet || '') ? 'vermelho' : 'azul'}_rugido`, opc);
+// ataque de um pet no momento do golpe: dragão filhote = rugido da cor cortado em 1,5 s; os outros, {pet}_ataque
+const somAtaque = (pet) => (/^dragao_/.test(pet || '') ? somRugido(pet, { ate_ms: 1500, fade: 250 }) : tocarArquivo(`${pet}_ataque`));
+// som que acompanha um trecho de uma sequência do sprites.json: começa no 1º passo `de` e para (fade) no 1º passo `ate`
+// depois dele (sem `ate`: toca até o fim do arquivo). Mesmos tempos de tocarSequencia (msAtePasso, com o mesmo deFrente).
+function somNaSequencia(nome, forma, seq, de, ate, { fade = 200, deFrente = true } = {}) {
+  const total = msAtePasso(forma, seq, () => false, { deFrente });
+  const t0 = msAtePasso(forma, seq, ([a]) => a === de, { deFrente });
+  if (t0 >= total) return { parar() {} };   // o pet não tem esse passo na sequência
+  let visto = false, ctl = null;
+  const t1 = ate ? msAtePasso(forma, seq, ([a]) => { if (a === de) visto = true; return visto && a === ate; }, { deFrente }) : 0;
+  const ti = setTimeout(() => { ctl = tocarArquivo(nome); }, t0);
+  const tf = t1 > t0 ? setTimeout(() => ctl?.parar(fade), t1) : 0;
+  return { parar(f = fade) { clearTimeout(ti); clearTimeout(tf); ctl?.parar(f); } };
+}
+const btSom = (som) => { if (bt) (bt.sons ||= []).push(som); return som; };   // sons da batalha: param ao sair dela
+
 const btParado = (lado) => btTocar(lado, 'andar_direita', { ms: 420 });
 const btForma = (lado) => (lado === 'L' ? bt.forma : bt.t.pet);
 const adultoNaBatalha = () => !!bt && ehFormaAdulta(bt.forma) && temAnim(bt.forma, 'rugido');
@@ -6861,6 +6910,7 @@ async function btAtaqueFogo(de, para, crit, especial) {
     clearTimeout(bt.anim[de]);
     $('bt-' + de).style.transform = de === 'R' ? 'scaleX(-1)' : '';
     (bt.seqAtaque ||= {})[de] = tocarSequencia($('bt-img' + de), forma, 'ataque_batalha', { deFrente: false });   // o turno espera o fim (btParado)
+    btSom(somNaSequencia('dragao_fogo', forma, 'ataque_batalha', 'ataque_fogo', 'ufa', { fade: 200, deFrente: false }));   // som do fogo
     const [t1, t2] = msCuspidas(forma), inicio = performance.now();
     await btEsperar(t1);
     if (!bt) return;
@@ -6877,6 +6927,7 @@ async function btAtaqueFogo(de, para, crit, especial) {
     await btEsperar(200);
   }
   if (!bt) return;
+  btSom(somAtaque(de === 'L' ? bt.pet : bt.t.pet));   // o golpe: dragão filhote ruge
   await btFogo(de, para, crit, especial);
 }
 // quando o fogo sai nas cuspidas da sequência ataque_batalha (ms desde o começo): 2º quadro do ataque_fogo, 1ª e 2ª vez
@@ -7147,6 +7198,7 @@ async function btFechar() {
     if (fogo) await btAtaqueFogo(l, o, critico, especial);
     else {
       btTocar(l, 'correndo', { loop: false, ms: 110 });
+      btSom(somAtaque(pet));   // som de ataque do pet, no bote
       await btBote(l);
       await btProjetil(l, o, pet, critico, especial);
     }
@@ -7154,6 +7206,7 @@ async function btFechar() {
     bt.hp[o] = Math.max(0, bt.hp[o] - n);
     btHp(o);
     btLevarDano(o, n, critico, fogo ? 'fogo' : pet, especial);
+    btSom(tocarArquivo(temSequencia(btForma(o), 'apanhou') ? 'dragao_bufando' : 'impacto'));   // o dragão adulto bufa; os outros, "pof"
     if (temSequencia(btForma(o), 'apanhou')) {   // o dragão adulto apanha: fica bravo e bufa (sequência `apanhou`), depois volta ao parado
       clearTimeout(bt.anim[o]);
       $('bt-' + o).style.transform = o === 'R' ? 'scaleX(-1)' : '';
@@ -7989,6 +8042,7 @@ function ataqueArena() {
   if (!pgPet || pg?.modo === 'revisao' || !temSequencia(pgPet.pet, 'ataque_batalha')) return false;
   const forma = pgPet.pet;
   pgPet.sequencia('ataque_batalha');
+  pgSom?.parar(0); pgSom = somNaSequencia('dragao_fogo', forma, 'ataque_batalha', 'ataque_fogo', 'ufa', { fade: 200 });
   const [t1, t2] = msCuspidas(forma);
   const sacudir = () => {
     if ($('pergunta').hidden || semMovimento()) return;
@@ -8026,6 +8080,7 @@ function fogoArena() {
 // lambendo a pata) com gin_dica / gin_elimina. Venceu: levanta e toca `vitoria` (gin_venceu). Perdeu: volta a dormir (gin_perdeu).
 // Só os pets com a sequência `dormir` (os dragões adultos) e só nos ginásios (não na revisão). pg.na = { estado, prox, parado }
 const ACOES_NEM_AI = ['descansar', 'lamber_pata', 'cheirar'];
+let pgSom = null;   // som do fogo no duelo do ginásio (para ao fechar a pergunta)
 const nemAi = () => !!pgPet && !!pg && pg.modo !== 'revisao' && temSequencia(pgPet.pet, 'dormir');
 function ladoNemAi(zerar = true) {
   if (!nemAi()) return;
@@ -8059,6 +8114,7 @@ function erroNemAi() {
   const na = pg.na || {};
   na.estado = 'bufando'; pg.na = na;
   pgPet.tocar(temAnim(pgPet.pet, 'bufando') ? 'bufando' : 'bravo');   // acorda / levanta a cabeça bufando
+  tocarArquivo('dragao_bufando');
   falaGin('gin_erro');
   setTimeout(() => { if (pg?.na === na && na.estado === 'bufando') ladoNemAi(); }, 1000);
 }
@@ -8096,7 +8152,7 @@ function reagirArena(certo) {
   if (certo && ataqueArena()) return;   // dragão adulto: o fogo faz o adversário tremer
   if (pgPet) {
     if (certo) pgPet.tocar(temAnim(pgPet.pet, 'animado') && Math.random() < 0.5 ? 'animado' : 'feliz');
-    else if (pgPet.sequencia('apanhou')) { /* dragão adulto: bravo e bufando */ }
+    else if (pgPet.sequencia('apanhou')) tocarArquivo('dragao_bufando');   // dragão adulto: bravo e bufando
     else if (temAnim(pgPet.pet, 'confuso')) pgPet.tocar('confuso');
     else { pgPet.tocar('triste_fome'); setTimeout(() => { if (pgPet?.anim === 'triste_fome') pgPet.tocar('sentado_girando'); }, 1400); }
   }
@@ -8566,6 +8622,7 @@ function desistir() {
 
 function fecharPergunta() {
   $('pergunta').hidden = true;
+  pgSom?.parar(200); pgSom = null;
   fecharCalc(); $('perg-calc').hidden = true;
   $('perg-erro').hidden = true;
   pgPet = null;
@@ -9402,13 +9459,25 @@ function tocarTruque(e) {
 }
 
 // O pet faz as animações do truque, uma depois da outra; busto_fogo aparece no balão
+// som dos truques do dragão adulto (PROMPT-88), nos tempos da sequência (PetParado usa deFrente = true)
+function somDoTruque(t, pet, forma) {
+  if (t.sequencia === 'rugir') return somNaSequencia(`dragao_${/^dragao_vermelho/.test(pet) ? 'vermelho' : 'azul'}_rugido`, forma, 'rugir', 'rugido', null);
+  if (t.sequencia === 'cuspir_fogo') return somNaSequencia('dragao_fogo', forma, 'cuspir_fogo', 'ataque_fogo', 'ufa', { fade: 300 });
+  if (t.sequencia === 'desfile') return somNaSequencia('dragao_fogo', forma, 'desfile', 'andando_fogo', 'sentado_lado', { fade: 300 });
+  return null;
+}
 function fazerTruque(id) {
   const t = truquesDe(mp?.pet)?.find(x => x.id === id);
   if (!mp || !t || mp.ocupado || !truqueLiberado(id, mp.pet)) return;
   mp.estado = 'truque'; mp.ocupado = true; mp.acordadoAte = Date.now() + ACORDADO_MS;
   renderTruques();   // apaga os botões enquanto o truque toca (tocar no pet também não interrompe: ocupado)
   movimentoCorpo(null);
-  if (t.sequencia && mp.anim.sequencia(t.sequencia, () => { if (mp?.estado === 'truque') voltarAoNormal(); })) return;   // banho, cuspir fogo, rugir: sequência com tempo
+  mp.som?.parar(0); mp.som = null;
+  if (t.sequencia && mp.anim.sequencia(t.sequencia, () => { if (mp?.estado === 'truque') voltarAoNormal(); })) {   // banho, cuspir fogo, rugir: sequência com tempo
+    mp.som = somDoTruque(t, mp.pet, mp.forma);
+    return;
+  }
+  if (t.id === 'rugido_campeao') mp.som = somRugido(mp.pet);   // Rugido de campeão: o rugido da cor
   const anims = t.anims.filter(a => a === 'busto_fogo' || temAnim(mp.forma, a));
   let i = 0, guarda = 0;
   const proximo = () => {
@@ -9544,6 +9613,13 @@ function ligarEventos() {
   });
   document.querySelectorAll('[data-som]').forEach(b => b.addEventListener('click', () => { alternarSom(); pintarSom(); tocar('clique'); }));
   pintarSom();
+  // 🎵 música de fundo (PROMPT-88): começa desligada, lembrada em localStorage 'jr_musica'; a professora pode desligar por turma
+  document.querySelectorAll('[data-musica]').forEach(b => b.addEventListener('click', () => {
+    if (musicaBloqueada()) { avisoTopo('A professora desligou a música'); return; }
+    alternarMusica(); pintarMusica(); tocar('clique');
+  }));
+  pintarMusica();
+  setInterval(() => { musicaPara(lugarDaMusica()); pausarMusica('embed', visivel('jogo-embed')); }, 300);
   $('btn-insignias-2').addEventListener('click', abrirEstojo);
   $('btn-cena-voltar').addEventListener('click', sairDaCena);
 

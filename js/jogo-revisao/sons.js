@@ -1,6 +1,9 @@
-// Jogo de Revisão — sons sintetizados com Web Audio API (sem arquivos de áudio).
+// Jogo de Revisão — sons sintetizados com Web Audio API e, desde o PROMPT-88, arquivos de /audio/jogo/ (efeitos e música).
 //   tocar('acerto' | 'erro' | 'vitoria' | 'insignia' | 'dourada' | 'porta' | 'clique')
 //   somLigado() → true/false        alternarSom() → novo estado (lembrado em localStorage 'jr_som')
+//   tocarArquivo(nome, { vol, ate_ms }) → controle { parar(fadeMs) }   (efeitos; respeita o 🔊)
+//   musicaPara('mapa' | 'ginasio' | 'lab' | null)   musicaLigada() / alternarMusica() ('jr_musica', começa desligada)
+//   pausarMusica(motivo, sim)   musicaBloqueada(sim): a professora desligou a música da turma
 // O AudioContext só é criado no primeiro toque/clique/tecla (exigência do iPhone e do Chrome).
 
 const VOL = 0.15;   // ganho máximo de qualquer som
@@ -38,9 +41,13 @@ function desbloquear() {
       teto.curve = curva;
       teto.connect(ctx.destination);
       saida = teto;
+      // arquivos: ganho próprio (não passam pelo teto de 0,15 dos bipes, senão o rugido fica baixo)
+      ganhoEfeitos = ctx.createGain(); ganhoEfeitos.gain.value = VOL_EFEITOS; ganhoEfeitos.connect(ctx.destination);
+      ganhoMusica = ctx.createGain(); ganhoMusica.gain.value = VOL_MUSICA; ganhoMusica.connect(ctx.destination);
     } catch (_) { ctx = null; saida = null; return; }
   }
-  if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+  if (ctx.state === 'suspended' && !document.hidden) ctx.resume().then(atualizarMusica).catch(() => {});
+  else atualizarMusica();
 }
 for (const ev of ['pointerdown', 'touchstart', 'keydown']) {
   addEventListener(ev, desbloquear, { capture: true, passive: true });
@@ -51,6 +58,7 @@ export function somLigado() { return ligado; }
 export function alternarSom() {
   ligado = !ligado;
   try { localStorage.setItem('jr_som', ligado ? '1' : '0'); } catch (_) {}
+  if (!ligado) pararEfeitos(150);
   return ligado;
 }
 
@@ -117,3 +125,126 @@ export function tocar(nome) {
   ultimoToque[nome] = agora;
   try { SONS[nome](); } catch (_) { /* nunca quebrar o jogo por causa do som */ }
 }
+
+// ============================================================
+//  Arquivos de áudio (PROMPT-88): /audio/jogo/{nome}.mp3, baixados só quando tocam pela 1ª vez (cache)
+// ============================================================
+// Os MP3 têm volume igualado (RMS ~0,11–0,28): × 0,6 ficam no nível dos bipes de acerto/erro (RMS ~0,09–0,1).
+const VOL_EFEITOS = 0.6;
+const VOL_MUSICA = VOL_EFEITOS * 0.25;   // música baixa; efeitos e fala tocam por cima sem abaixar a música
+const PASTA_AUDIO = '/audio/jogo/';
+let ganhoEfeitos = null, ganhoMusica = null;
+const buffers = new Map();   // nome → Promise<AudioBuffer | null>
+function carregar(nome) {
+  if (!buffers.has(nome)) {
+    buffers.set(nome, fetch(PASTA_AUDIO + nome + '.mp3')
+      .then(r => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(nome))))
+      .then(b => new Promise((ok, erro) => ctx.decodeAudioData(b, ok, erro)))   // forma com callback: vale no Safari antigo
+      .catch(() => null));   // não carregou: falha em silêncio (e não tenta de novo)
+  }
+  return buffers.get(nome);
+}
+const tocando = new Map();   // nome → controle (o mesmo som não toca de novo enquanto ainda está tocando)
+const NADA = { parar() {}, tocando: false };
+
+// Toca um efeito. vol: 0–1 (sobre o ganho dos efeitos); ate_ms: corta com fade nesse tempo; fade: ms do corte.
+export function tocarArquivo(nome, { vol = 1, ate_ms = 0, fade = 150 } = {}) {
+  if (!ligado || !ctx || ctx.state !== 'running' || !ganhoEfeitos) return NADA;
+  if (tocando.has(nome)) return tocando.get(nome);
+  let src = null, g = null, parado = false;
+  const controle = {
+    tocando: true,
+    parar(fadeMs = 150) {
+      if (parado) return;
+      parado = true; controle.tocando = false;
+      if (tocando.get(nome) === controle) tocando.delete(nome);
+      if (!src) return;   // ainda carregando: nem começa
+      try {
+        const t = ctx.currentTime;
+        g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(g.gain.value, t);
+        g.gain.linearRampToValueAtTime(0, t + fadeMs / 1000);
+        src.stop(t + fadeMs / 1000 + 0.02);
+      } catch (_) {}
+    },
+  };
+  tocando.set(nome, controle);
+  carregar(nome).then(buf => {
+    if (parado || !buf || !ctx || !ligado) { controle.parar(0); return; }
+    try {
+      src = ctx.createBufferSource(); src.buffer = buf;
+      g = ctx.createGain(); g.gain.value = vol;
+      src.connect(g).connect(ganhoEfeitos);
+      src.onended = () => { if (tocando.get(nome) === controle) tocando.delete(nome); controle.tocando = false; parado = true; };
+      src.start();
+      if (ate_ms > 0 && ate_ms < buf.duration * 1000) setTimeout(() => controle.parar(fade), Math.max(0, ate_ms - fade));
+    } catch (_) { controle.parar(0); }
+  });
+  return controle;
+}
+export function pararEfeitos(fadeMs = 150) { for (const c of [...tocando.values()]) c.parar(fadeMs); }
+
+// ── Música de fundo: um loop por lugar ('mapa' | 'ginasio' | 'lab'), começa DESLIGADA ──
+let musicaOn = false;
+try { musicaOn = localStorage.getItem('jr_musica') === '1'; } catch (_) {}
+let bloqueada = false;          // a professora desligou a música da turma (jogo_revisao_config/global/musica_off)
+const pausas = new Set();       // motivos para silenciar por um tempo (ex.: 'embed' = mini-jogo do fliperama aberto)
+let lugarPedido = null;         // o lugar onde o aluno está
+let faixa = null;               // { lugar, src, g } tocando agora
+let geracao = 0;                // descarta carregamentos que chegaram depois de uma troca
+
+export const musicaLigada = () => musicaOn;
+export function alternarMusica() {
+  musicaOn = !musicaOn;
+  try { localStorage.setItem('jr_musica', musicaOn ? '1' : '0'); } catch (_) {}
+  atualizarMusica();
+  return musicaOn;
+}
+export function musicaBloqueada(sim) {
+  if (sim === undefined) return bloqueada;
+  bloqueada = !!sim; atualizarMusica(); return bloqueada;
+}
+export function musicaPara(lugar) {
+  if ((lugar || null) === lugarPedido) return;
+  lugarPedido = lugar || null; atualizarMusica();
+}
+export function pausarMusica(motivo, sim) {
+  if (sim === pausas.has(motivo)) return;
+  if (sim) pausas.add(motivo); else pausas.delete(motivo);
+  atualizarMusica();
+}
+function soltarFaixa(fadeMs) {
+  const f = faixa; faixa = null;
+  if (!f) return;
+  try {
+    const t = ctx.currentTime;
+    f.g.gain.cancelScheduledValues(t); f.g.gain.setValueAtTime(f.g.gain.value, t);
+    f.g.gain.linearRampToValueAtTime(0, t + fadeMs / 1000);   // fade-out de 400 ms
+    f.src.stop(t + fadeMs / 1000 + 0.05);
+  } catch (_) {}
+}
+function atualizarMusica() {
+  if (!ctx || !ganhoMusica) return;
+  const lugar = musicaOn && !bloqueada && !pausas.size ? lugarPedido : null;
+  if ((faixa?.lugar || null) === lugar) return;   // a mesma música continua, sem recomeçar
+  soltarFaixa(400);
+  if (!lugar || ctx.state !== 'running') return;
+  const minha = ++geracao;
+  carregar('musica_' + lugar).then(buf => {
+    if (!buf || minha !== geracao || faixa || !ctx || ctx.state !== 'running') return;
+    if (!(musicaOn && !bloqueada && !pausas.size && lugarPedido === lugar)) return;
+    try {
+      const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;   // loop contínuo, sem buraco
+      const g = ctx.createGain(), t = ctx.currentTime;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(1, t + 0.6);   // fade-in de 600 ms
+      src.connect(g).connect(ganhoMusica);
+      src.start();
+      faixa = { lugar, src, g };
+    } catch (_) {}
+  });
+}
+// aba escondida ou celular bloqueado: tudo pausa (o AudioContext inteiro); ao voltar, continua de onde parou
+document.addEventListener('visibilitychange', () => {
+  if (!ctx) return;
+  if (document.hidden) { if (ctx.state === 'running') ctx.suspend().catch(() => {}); }
+  else if (ctx.state === 'suspended') ctx.resume().then(atualizarMusica).catch(() => {});
+});

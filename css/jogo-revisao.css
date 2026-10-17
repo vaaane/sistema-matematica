@@ -269,9 +269,11 @@ body.jr-body { zoom: 1 !important; background: var(--jr-bg); overflow: hidden; h
 #tela-geral .jr-hud-topo > .jr-btn-som, #tela-geral .jr-hud-topo > .jr-selo-seq, #tela-geral .jr-hud-topo > .jr-selo-online {
   position: absolute; left: max(12px, var(--sa-l, 0px)); margin: 0; }
 #tela-geral .jr-hud-topo > .jr-btn-som { top: calc(100% + 2px); }
+#tela-geral .jr-hud-topo > .jr-btn-musica { left: calc(max(12px, var(--sa-l, 0px)) + 44px); }
 #tela-geral .jr-hud-topo > .jr-selo-seq { top: calc(100% + 44px); }
 #tela-geral .jr-hud-topo > .jr-selo-online { top: calc(100% + 86px); }
 html.jr-deitado #tela-geral .jr-hud-topo > .jr-btn-som { top: calc(100% + 2px); left: max(10px, var(--sa-l)); }
+html.jr-deitado #tela-geral .jr-hud-topo > .jr-btn-musica { left: calc(max(10px, var(--sa-l)) + 38px); }
 html.jr-deitado #tela-geral .jr-hud-topo > .jr-selo-seq { top: calc(100% + 40px); left: max(10px, var(--sa-l)); }
 html.jr-deitado #tela-geral .jr-hud-topo > .jr-selo-online { top: calc(100% + 76px); left: max(10px, var(--sa-l)); padding: 3px 8px; }
 html.jr-deitado #tela-geral .jr-on-txt { display: none; }   /* no celular: só "🟢 3" */
@@ -315,6 +317,10 @@ html.jr-deitado #tela-geral .jr-on-txt { display: none; }   /* no celular: só "
 .jr-btn-som.mudo { opacity: .7; }
 .jr-btn-som:active { transform: scale(.92); }
 .jr-btn-som + .jr-btn-estojo { margin-left: 4px; }
+/* 🎵 música (PROMPT-88): ao lado do 🔊; desligada = riscada; a professora desligou = apagada */
+.jr-btn-som.jr-btn-musica { margin-left: 4px; }
+.jr-btn-musica.mudo::after { content: ''; position: absolute; left: 9px; right: 9px; top: 50%; height: 2px; border-radius: 2px; background: #ff5c7a; transform: rotate(-45deg); }
+.jr-btn-musica.bloqueada { opacity: .35; filter: grayscale(1); }
 
 /* ── Ícone do estojo: só a imagem, com contador e estrela ── */
 .jr-btn-estojo {

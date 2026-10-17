@@ -249,6 +249,12 @@
           <div class="chaves" id="chaves-desafios"></div>
           <div class="linha-acao"><button class="btn-pri" id="btn-salvar-desafios">Salvar</button><span id="msg-desafios"></span></div>
         </div>
+        <div class="bloco">
+          <h3>🎵 Música do jogo</h3>
+          <div class="sub">A música de fundo começa desligada e cada aluno liga no botão 🎵. Desligada aqui, o botão fica apagado ("A professora desligou a música"). Os sons de efeito continuam.</div>
+          <div class="chaves" id="chaves-musica"></div>
+          <div class="linha-acao"><button class="btn-pri" id="btn-salvar-musica">Salvar</button><span id="msg-musica"></span></div>
+        </div>
         <div id="praca"><div class="empty">Carregando…</div></div>
       </section>
 
@@ -930,8 +936,18 @@ function renderConfig() {
   const off = config.desafios_off || {};
   $("chaves-desafios").innerHTML = `<label class="chave"><input type="checkbox" data-off="todas" ${off.todas ? "checked" : ""}/> <b>Desligar para todas as turmas</b></label>` +
     TURMAS.map(t => `<label class="chave"><input type="checkbox" data-off="${t}" ${off[t] ? "checked" : ""}/> Desligar na ${t}</label>`).join("");
+  // 🎵 música do jogo (PROMPT-88): mesmo formato de desafios_off
+  const mOff = config.musica_off || {};
+  $("chaves-musica").innerHTML = `<label class="chave"><input type="checkbox" data-moff="todas" ${mOff.todas ? "checked" : ""}/> <b>Música desligada para todas as turmas</b></label>` +
+    TURMAS.map(t => `<label class="chave"><input type="checkbox" data-moff="${t}" ${mOff[t] ? "checked" : ""}/> Música desligada na ${t}</label>`).join("");
 }
 
+$("btn-salvar-musica").addEventListener("click", async () => {
+  const off = {};
+  for (const i of document.querySelectorAll("#chaves-musica input[data-moff]")) if (i.checked) off[i.dataset.moff] = true;
+  try { await set(ref(db, "jogo_revisao_config/global/musica_off"), Object.keys(off).length ? off : null); config.musica_off = off; msg("msg-musica", "Salvo ✓"); }
+  catch (e) { console.error(e); msg("msg-musica", "Não foi possível salvar.", true); }
+});
 $("btn-salvar-desafios").addEventListener("click", async () => {
   const off = {};
   for (const i of document.querySelectorAll("#chaves-desafios input[data-off]")) if (i.checked) off[i.dataset.off] = true;
