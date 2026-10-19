@@ -1505,7 +1505,7 @@ function abrirMeuPet() {
   img.dataset.src = '';
   mp.anim.definir(forma);
   medirMeuPet();
-  for (const id of ['mp-bolsa-painel', 'mp-visual-painel', 'mp-nomear', 'mp-exp-painel']) $(id).hidden = true;
+  for (const id of ['mp-bolsa-painel', 'mp-visual-painel', 'mp-nomear', 'mp-exp-painel', 'mp-exp-confirma']) $(id).hidden = true;
   atualizarVisualPet();
   atualizarBotaoBatalhar();
   renderMeuPet();
@@ -4012,7 +4012,7 @@ const expedicaoDe = (pet) => (pet && cuidadosDe(pet)?.expedicao) || null;
 const petFora = (pet = estado?.pets?.ativo) => { const e = expedicaoDe(pet); return !!e && agoraServ() < Number(e.fim); };
 const expedicoesHoje = () => (estado?.pets?.expedicoesDia?.data === diaLocal() ? Number(estado.pets.expedicoesDia.n) || 0 : 0);
 const horaDe = (ms) => { const d = new Date(ms); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
-const faltaExp = (pet) => Math.max(0, Number(expedicaoDe(pet)?.fim) - agoraServ());
+const faltaExp = (pet = estado?.pets?.ativo) => Math.max(0, Number(expedicaoDe(pet)?.fim) - agoraServ());   // sem pet: o ativo (o relógio do HUD mostrava NaN)
 function avisoPetFora(pet = estado?.pets?.ativo) {
   const e = expedicaoDe(pet);
   avisoPet(`🧭 Seu pet está em expedição${e ? ` (volta às ${horaDe(Number(e.fim))})` : ''}.`);
@@ -4107,10 +4107,36 @@ function atualizarRelogioExp() {
   r.textContent = `🧭 ${Math.max(1, Math.ceil(faltaExp() / 60000))} min`;
 }
 
+// ↩️ Chamar de volta (PROMPT-116): o pet volta na hora, SEM prêmio (moedas e comida sorteadas são descartadas) e sem
+// perder barriga; a expedição continua contando em expedicoes_dia. Se o tempo acabar com a confirmação aberta, ela fecha
+// e vale a volta normal, com prêmio.
+function abrirChamarExp() {
+  const pet = mp?.pet, e = expedicaoDe(pet);
+  if (!e || !petFora(pet)) return;
+  const moedas = Math.max(0, Math.round(Number(e.moedas) || 0));
+  $('mp-exp-conf-txt').innerHTML = `Se ${esc(nomePet(pet))} voltar agora, não vai trazer o prêmio (${moedas} moedas${e.comida ? ' e a comida' : ''}).`;
+  $('mp-exp-confirma').dataset.pet = pet;
+  $('mp-exp-confirma').hidden = false;
+}
+function chamarDeVolta() {
+  const conf = $('mp-exp-confirma'), pet = conf.dataset.pet, c = cuidadosDe(pet);
+  conf.hidden = true;
+  if (!c?.expedicao || !petFora(pet)) return;   // o tempo acabou: a volta normal (com prêmio) cuida
+  delete c.expedicao;
+  gravar({ [`pets/conquistados/${pet}/expedicao`]: null });
+  tocar('porta');
+  if (pet === estado.pets.ativo) { pufSeguidor(); enviarOnline(visualOnline(pet)); }
+  if (mp) renderMeuPet();
+  avisoPet(`↩️ ${nomePet(pet)} voltou mais cedo. Sem prêmio desta vez.`);
+  const f = fraseDe(pet, 'voltei', { pet: nomePet(pet) }) || fraseDe(pet, 'feliz', { pet: nomePet(pet) });   // sem as categorias: sem fala
+  if (f && mp?.pet === pet) falarPet(f);
+}
+
 let expVolta = null;   // cartão da volta aberto: { pet }
 function tickExpedicao() {
   if (!carregouProgresso || !petsOk || !estado?.pets) return;
   atualizarRelogioExp();
+  { const cf = $('mp-exp-confirma'); if (!cf.hidden && !petFora(cf.dataset.pet)) cf.hidden = true; }   // acabou o tempo: fecha a confirmação
   if (mp) pintarExpMeuPet();
   if (seguidor && !seguidor.pet !== !(estado.pets.ativo && !petFora())) pufSeguidor();   // a hora da volta chegou: o pet aparece
   if (expVolta || perguntaAberta || transicionando || sobreposicaoAberta() || bt || dm || duelo?.comecou || pesca) return;
@@ -13053,6 +13079,12 @@ function ligarEventos() {
   $('mp-exp').addEventListener('click', (e) => { e.stopPropagation(); abrirPainelExp(); });
   $('mp-exp-fechar').addEventListener('click', (e) => { e.stopPropagation(); $('mp-exp-painel').hidden = true; });
   $('mp-exp-opcoes').addEventListener('click', (e) => { e.stopPropagation(); const b = e.target.closest('[data-exp]'); if (b && !b.disabled) mandarExpedicao(b.dataset.exp); });
+  $('mp-exp-chamar').addEventListener('click', (e) => { e.stopPropagation(); abrirChamarExp(); });
+  $('mp-exp-confirma').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const b = e.target.closest('[data-exp-conf]');
+    if (b?.dataset.expConf === 'sim') chamarDeVolta(); else if (b) $('mp-exp-confirma').hidden = true;
+  });
   $('exp-volta-ok').addEventListener('click', (e) => { e.stopPropagation(); fecharVoltaExp(); });
   $('pres-ok').addEventListener('click', (e) => { e.stopPropagation(); $('pres-card').hidden = true; });
   $('aniv-ok').addEventListener('click', (e) => { e.stopPropagation(); $('aniv').hidden = true; $('aniv-confete').innerHTML = ''; });

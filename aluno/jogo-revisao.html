@@ -831,7 +831,8 @@
         <div id="mp-chapeu" class="jr-chapeu" hidden aria-hidden="true"></div>
         <!-- 🧭 em expedição: no lugar do pet -->
         <div class="mp-exp-fora" id="mp-exp-fora" hidden><b id="mp-exp-fora-tit"></b><span id="mp-exp-fora-hora"></span>
-          <div class="mp-exp-trilho"><div class="mp-exp-fill" id="mp-exp-fora-barra"></div></div></div>
+          <div class="mp-exp-trilho"><div class="mp-exp-fill" id="mp-exp-fora-barra"></div></div>
+          <button class="jr-btn jr-btn-sec mp-exp-chamar" id="mp-exp-chamar">↩️ Chamar de volta</button></div>
       </div>
       <!-- ✨ truques: botões redondos embaixo do pet (PROMPT-75) -->
       <div class="mp-tq-fila" id="mp-tq-fila" role="group" aria-label="Truques" hidden></div>
@@ -871,6 +872,12 @@
       <div class="mp-sub" id="mp-exp-painel" hidden>
         <div class="mp-sub-topo"><b>🧭 Expedição</b><span id="mp-exp-sub"></span><button class="bt-lista-x" id="mp-exp-fechar" aria-label="Fechar">✕</button></div>
         <div class="mp-exp-opcoes" id="mp-exp-opcoes"></div>
+      </div>
+      <!-- 🧭 Chamar de volta antes do fim (PROMPT-116): sem prêmio -->
+      <div class="mp-sub" id="mp-exp-confirma" hidden>
+        <div class="mp-sub-topo"><b>↩️ Chamar de volta</b><button class="bt-lista-x" data-exp-conf="nao" aria-label="Fechar">✕</button></div>
+        <div class="mp-exp-opcoes"><p class="mp-exp-aviso" id="mp-exp-conf-txt"></p><p class="mp-exp-conf-perg">Chamar mesmo assim?</p>
+          <div class="mp-exp-conf-botoes"><button class="jr-btn" data-exp-conf="sim">↩️ Chamar de volta</button><button class="jr-btn jr-btn-ouro" data-exp-conf="nao">⏳ Deixar terminar</button></div></div>
       </div>
       <!-- Bolsa: comidas e peixes guardados -->
       <div class="mp-sub" id="mp-bolsa-painel" hidden>
