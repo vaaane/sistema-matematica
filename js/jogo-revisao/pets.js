@@ -223,6 +223,7 @@ export class PetSeguidor {
     this.esperaAcao = MS_ANTES_ACAO; // quanto falta, parado e sentado, para a próxima ação
     this.pausado = false;           // balão de fala, janela por cima, pescando…: sem ações
     this.zFixo = null;              // 🏠 deitado na cama da casinha (PROMPT-105): desenha por cima dela
+    this.zCasa = null;              // 🏠 dentro da casinha (PROMPT-114): sempre na frente de todos os móveis de chão
     this.antesDaAcao = null;        // (nome) => true: quem chamou cuida da ação (na casinha, dormir/descansar vai para a cama)
     SEGUIDORES.add(this);
   }
@@ -419,12 +420,12 @@ export class PetSeguidor {
     this.img.style.left = this.x + 'px';
     this.img.style.top = this.y + 'px';
     this.img.style.height = this.altura + 'px';
-    this.img.style.zIndex = this.zFixo ?? Math.round(this.y) - 1;   // empate com o personagem: o pet fica atrás
+    this.img.style.zIndex = this.zCasa ?? this.zFixo ?? Math.round(this.y) - 1;   // empate com o personagem: o pet fica atrás
     this.img.classList.toggle('espelhado', this.espelhar);
     const s = this.sombra.style;
     s.left = this.x + 'px'; s.top = this.y + 'px';
     s.width = this.altura * 0.8 + 'px'; s.height = this.altura * 0.16 + 'px';
-    s.zIndex = this.zFixo != null ? this.zFixo - 1 : Math.round(this.y) - 2;
+    s.zIndex = this.zCasa != null ? this.zCasa - 1 : this.zFixo != null ? this.zFixo - 1 : Math.round(this.y) - 2;
   }
 }
 

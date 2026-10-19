@@ -105,7 +105,22 @@
     "f",
     "l"
    ],
-   "dica": "Toque para dar comida ao pet."
+   "dica": "Toque para dar comida ao pet.",
+   "ponto_comer": {
+    "d": [
+     82,
+     45
+    ],
+    "f": [
+     82,
+     72
+    ],
+    "l": [
+     88,
+     90
+    ],
+    "_nota": "onde fica a pata do tapetinho: x, y em % da imagem da vista (sem espelho). Espelhado: x = 100 − x. O pet para com a base nesse ponto e fica virado para a tigela (centro da imagem)."
+   }
   },
   {
    "id": "abajur",

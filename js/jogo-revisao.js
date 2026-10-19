@@ -431,6 +431,7 @@ async function carregarEstado() {
       g.insignia = true;
       g.dourada = !!ins.dourada;
       g.dataInsignia = ins.data || null;
+      g.insAcertos = Number(ins.acertos_primeira) || 0; g.insTotal = Number(ins.total) || 0;   // 🏆 placa de vencedores (PROMPT-113)
     }
     estado.sequencia = v.sequencia || null;
     { const u = estado.sequencia?.ultimo_dia; conversa.voltou = !!u && u !== diaLocal() && (paraData(diaLocal()) - paraData(u)) / 86400000 >= 3; }
@@ -442,6 +443,7 @@ async function carregarEstado() {
     estado.pets = lerPets(v);   // validado depois de ler o sprites.json (cachorro/porco antigos são ignorados)
     estado.petCor = typeof v.pet_cor === 'string' ? v.pet_cor : null;   // cor especial do dragão (PROMPT-74): null = normal
     estado.semConvites = !!v.sem_convites;   // "Não receber convites" (PROMPT-76)
+    estado.vencedoresPublicado = !!v.vencedores_publicado;   // 🏆 as insígnias antigas já foram para a placa (PROMPT-113)
     estado.coresLiberadas = v.cores_liberadas && typeof v.cores_liberadas === 'object' ? { ...v.cores_liberadas } : {};   // { cor: true } — para sempre
     liberarCoresDaConta();
     estado.revisaoSemanal = v.revisao_semanal || {};
@@ -638,8 +640,10 @@ function gravarVitoria(chave, p) {
     const soma = ['treinador1', 'treinador2', 'treinador3', 'lider'].reduce(
       (a, k) => ({ acertos: a.acertos + g[k].acertosPrimeira, total: a.total + g[k].total }), { acertos: 0, total: 0 });
     patch[`insignias/${chave}`] = { data: g.dataInsignia, dourada: g.dourada, acertos_primeira: soma.acertos, total: soma.total };
+    g.insAcertos = soma.acertos; g.insTotal = soma.total;
+    publicarVencedor(chave);   // 🏆 placa do ginásio (PROMPT-113)
   }
-  if (p === 'revanche' && g.dourada) patch[`insignias/${chave}/dourada`] = true;
+  if (p === 'revanche' && g.dourada) { patch[`insignias/${chave}/dourada`] = true; publicarVencedor(chave); }   // ✨ na placa também
   gravar(patch);
 }
 
@@ -875,7 +879,7 @@ export async function iniciarJogo(sess) {
   setTimeout(verificarCores, 2500);   // quem já cumpriu as condições ganha as cores (aviso uma vez)
   if (comecaNaPraca) abrirPraca('fonte').catch(() => abrirMapaGeral()).finally(() => { $('jr-carregando').hidden = true; });
   atualizarBotaoMissoes();
-  entrarOnline().catch(() => {}).then(() => { carregarPremiosPesca(); ouvirPresentes(); avisarCoracoes(); ouvirVila(); iniciarPraca(); publicarResumoInsignias(); ouvirConvitesAoVivo(); });
+  entrarOnline().catch(() => {}).then(() => { carregarPremiosPesca(); ouvirPresentes(); avisarCoracoes(); ouvirVila(); iniciarPraca(); publicarResumoInsignias(); publicarVencedoresAntigos(); ouvirConvitesAoVivo(); });
   // aluno novo escolhe o personagem antes de tudo (o pet inicial vem depois, ao entrar num mapa)
   if (carregouProgresso && estado.novo && !estado.personagem) abrirEscolhaPersonagem(true);
 }
@@ -1863,6 +1867,7 @@ function abrirLoja(aba = 'comidas', provador = false, soMoveis = false) {
   renderLoja();
   if (lojaAba === 'comidas') { const f = fomeDePlanta(estado.pets.ativo); if (f) avisoPet(`${nomePet(estado.pets.ativo)}: “${f}”`); }
 }
+const GRATIS_PROF = '<span class="lj-preco lj-gratis-prof">Grátis (professora)</span>';
 function renderLoja() {
   const moedas = Number(estado.pets.moedas) || 0, pet = estado.pets.ativo;
   $('lj-moedas').querySelector('span').textContent = moedas;
@@ -1875,11 +1880,11 @@ function renderLoja() {
     : `<button class="lj-comprar" data-comprar="${esc(id)}">${rotulo}</button>`;
   // 🎨 Reformas (PROMPT-112): miniatura do fundo, nome, emoji e preço; sem venda de volta
   const cartaoTema = (t) => {
-    const tem = temTema(t.id), atual = tem && temaDoDono().id === t.id;
+    const tem = temTema(t.id), atual = tem && temaDoDono().id === t.id, v = precoCasa(t);
     return `<div class="lj-item lj-tema">
         <div class="lj-emoji"><img class="lj-tema-img" src="${imgTema(t)}" alt="" draggable="false" loading="lazy"/></div>
-        <div class="lj-info"><b>${esc(t.emoji || '🎨')} ${esc(t.nome)}</b>${tem ? '' : preco(Number(t.preco) || 0)}${atual ? '<span class="lj-sub">na sua casinha agora</span>' : ''}</div>
-        ${tem ? '<button class="lj-comprar ok" disabled>✔ Você já tem</button>' : botao('tema:' + t.id, Number(t.preco) || 0, 'Comprar')}
+        <div class="lj-info"><b>${esc(t.emoji || '🎨')} ${esc(t.nome)}</b>${tem ? '' : casaGratis() ? GRATIS_PROF : preco(v)}${atual ? '<span class="lj-sub">na sua casinha agora</span>' : ''}</div>
+        ${tem ? '<button class="lj-comprar ok" disabled>✔ Você já tem</button>' : botao('tema:' + t.id, v, casaGratis() ? 'Pegar' : 'Comprar')}
       </div>`;
   };
   let html = '';
@@ -1915,12 +1920,12 @@ function renderLoja() {
       </div>`).join('') : '<div class="lj-vazio">Você não tem peixes na bolsa. Pesque 🎣 e venda aqui.</div>');
   } else if (lojaAba === 'moveis') {   // 🛋️ móveis da casinha (PROMPT-105): vão para os guardados; sem venda de volta
     html = CASA ? (CASA.itens || []).map(it => {
-      const tem = qtdCasa(it.id), lim = Number(it.limite) || 1, cheio = tem >= lim;
+      const tem = qtdCasa(it.id), lim = Number(it.limite) || 1, cheio = tem >= lim, v = precoCasa(it);
       return `<div class="lj-item lj-movel">
         <div class="lj-emoji"><img class="lj-movel-img" src="${imgMovel(it.id, it.fases ? String(it.fases) : it.vistas[0])}" alt="" draggable="false" loading="lazy"/></div>
-        <div class="lj-info"><b>${esc(it.nome)}</b>${cheio ? '' : it.preco ? preco(it.preco) : '<span class="lj-preco">Grátis</span>'}
+        <div class="lj-info"><b>${esc(it.nome)}</b>${cheio ? '' : casaGratis() && it.preco ? GRATIS_PROF : v ? preco(v) : '<span class="lj-preco">Grátis</span>'}
           ${it.dica ? `<span>${esc(it.dica)}</span>` : ''}<span class="lj-sub">você tem ${tem}${lim > 1 ? ` de ${lim}` : ''}</span></div>
-        ${cheio ? '<button class="lj-comprar ok" disabled>✔ Você já tem</button>' : botao(it.id, Number(it.preco) || 0, it.preco ? 'Comprar' : 'Pegar')}
+        ${cheio ? '<button class="lj-comprar ok" disabled>✔ Você já tem</button>' : botao(it.id, v, v ? 'Comprar' : 'Pegar')}
       </div>`;
     }).join('') : '<div class="lj-vazio">Os móveis chegam logo!</div>';
     if (CASA && !$('loja').classList.contains('so-moveis')) html += '<div class="lj-secao">🎨 Reformas</div>' + temasCasa().map(cartaoTema).join('');   // na Dona Cida: no fim da grade
@@ -1997,7 +2002,7 @@ function comprar(id) {
     msg = `${q === 1 ? '1 isca' : `${q} iscas`} na bolsa 🪱 (você tem ${ps.iscas})`;
     atualizarBotaoLancar();
   } else if (lojaAba === 'moveis') {
-    const it = itemCasa(id), preco = Number(it?.preco) || 0;
+    const it = itemCasa(id), preco = precoCasa(it);   // professora / modo teste: 0 (PROMPT-114)
     if (!it || moedas < preco || qtdCasa(id) >= (Number(it.limite) || 1)) return;
     if (casaSemGravar) { $('lj-msg').textContent = 'Modo ?casinha=cheia: as compras de móveis estão desligadas.'; return; }
     ps.moedas = moedas - preco;
@@ -4693,7 +4698,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('exp-volta').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden || !!cs?.arrumando || !$('cs-colecao').hidden || !$('cs-aquario').hidden || !$('cs-comida').hidden || !$('cs-temas').hidden || !$('cs-menu').hidden || !$('vila-convite').hidden || !$('vila-busca').hidden;
+  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('exp-volta').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden || !!cs?.arrumando || !$('cs-colecao').hidden || !$('cs-aquario').hidden || !$('cs-comida').hidden || !$('cs-temas').hidden || !$('venc').hidden || !$('cs-menu').hidden || !$('vila-convite').hidden || !$('vila-busca').hidden;
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -5507,7 +5512,8 @@ async function entrarGinasio(n, G) {
     return `<img class="jr-ator jr-npc" data-p="${p}" src="${IMG}/personagens/${gin.personagens[p].sprite}.webp"
               style="left:${pos.x}px;top:${pos.y}px;height:${alt}px;z-index:${Math.round(pos.y)}" alt="" draggable="false"/>`;
   }).join('') +
-    `<div class="jr-rotulo-porta" data-g="saida" style="left:${cena.xPorta}px;top:${yTapete - ALT_JOGADOR - 24}px" hidden><span>Saída</span></div>`;
+    `<div class="jr-rotulo-porta" data-g="saida" style="left:${cena.xPorta}px;top:${yTapete - ALT_JOGADOR - 24}px" hidden><span>Saída</span></div>` +
+    `<button class="jr-placa-venc" style="left:${cfg.placa?.x ?? 688}px;top:${cfg.placa?.y ?? 50}px" aria-label="Vencedores deste ginásio">🏆 Vencedores</button>`;   // PROMPT-113
   // aparece ~60 px à direita da porta, para não sair sem querer
   posicionarJogador(clamp(cfg.entrada.x + RECUO_PORTA, cena.xMin, cena.xMax), yTapete, 'direita');
   destinoEspecial = null;
@@ -5600,6 +5606,7 @@ function andarNoTapete(x, aoChegar) {
 }
 
 function tocarNoInterior(e) {
+  if (e.target.closest('.jr-placa-venc')) { abrirVencedores(cena.chave); return; }   // 🏆 placa na parede (PROMPT-113)
   if (petGin && !petGin.levado && e.target === petGin.img) { destinoEspecial = null; andarNoTapete(petGin.xParada); return; }
   const npc = e.target.closest('.jr-npc');
   if (npc) { desafiar(npc.dataset.p); return; }
@@ -5948,6 +5955,62 @@ function abrirEstudos() {
     gravar({ [`avisos/estudos_vistos/mapa${n}`]: true });
     $('cena-atores').querySelector('.jr-estudos-quadro')?.classList.remove('novo');
   }
+}
+
+// ============================================================
+//  🏆 PLACA DE VENCEDORES dos ginásios (PROMPT-113) — jogo_revisao_praca(_teste)/vencedores/{chave}/{uid} =
+//  { nome (apelido, como no mural), turma, data, acertos_primeira, total, dourada }. Grava ao vencer o líder e na revanche
+//  dourada; quem já tinha insígnias publica uma vez ao entrar no jogo (vencedores_publicado). Contas de teste e da
+//  professora não gravam (entraNoRanking) nem aparecem. Placa de madeira em CSS na parede do fundo (interiores.json → placa).
+// ============================================================
+const noVencedores = (chave) => `${basePraca()}/vencedores/${chave}`;
+function registroVencedor(chave) {
+  const g = estado.ginasios[chave];
+  return { nome: nomeRanking(), turma: sessao.turma || '', data: g.dataInsignia || Date.now(), acertos_primeira: g.insAcertos || 0, total: g.insTotal || 0, dourada: !!g.dourada };
+}
+function publicarVencedor(chave) {
+  if (!entraNoRanking() || !estado.ginasios[chave]?.insignia) return;
+  set(ref(db, `${noVencedores(chave)}/${sessao.uid}`), registroVencedor(chave)).catch(e => console.warn('[jogo-revisao] placa de vencedores', e?.code || e));
+}
+// quem venceu antes da placa existir: publica (uma vez) as insígnias que ainda não estão lá, com a data original
+async function publicarVencedoresAntigos() {
+  if (!carregouProgresso || !entraNoRanking() || estado.vencedoresPublicado) return;
+  try {
+    await Promise.all(insigniasGanhas().map(async (k) => {
+      const s = await get(ref(db, `${noVencedores(k)}/${sessao.uid}`));
+      if (!s.exists()) await set(ref(db, `${noVencedores(k)}/${sessao.uid}`), registroVencedor(k));
+    }));
+    estado.vencedoresPublicado = true;
+    gravar({ vencedores_publicado: true });
+  } catch (e) { console.warn('[jogo-revisao] placa de vencedores (antigas)', e?.code || e); }
+}
+// "da Prefeitura", "do Farol", "da Torre do Mago"
+const daGinasio = (nome) => { const p = String(nome).split(' ')[0]; return `${/a$/i.test(p) || /^torre$/i.test(p) ? 'da' : 'do'} ${nome}`; };
+const dataCurta = (t) => (t ? new Date(Number(t)).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '');
+async function abrirVencedores(chave) {
+  if (sobreposicaoAberta()) return;
+  const [n, G] = chave.replace('mapa', '').split('-'), nome = D.questoes[n]?.ginasios?.[G]?.nome || 'ginásio';
+  $('venc-tit').textContent = `🏆 Vencedores ${daGinasio(nome)}`;
+  $('venc-corpo').innerHTML = '<p class="venc-vazio">Carregando…</p>';
+  $('venc').hidden = false;
+  tocar('clique');
+  let regs = {};
+  try { regs = await lerNo(noVencedores(chave)); }
+  catch (e) { console.warn('[jogo-revisao] placa de vencedores', e?.code || e); $('venc-corpo').innerHTML = '<p class="venc-vazio">Não deu para ver a placa agora.</p>'; return; }
+  if ($('venc').hidden) return;
+  const lista = Object.entries(regs).filter(([uid, r]) => r && Number(r.data) > 0 && uid !== UID_PROFESSORA && (teste || visivelNoMural(uid, r)))
+    .map(([uid, r]) => ({ uid, ...r, data: Number(r.data), acertos: Number(r.acertos_primeira) || 0, total: Number(r.total) || 0 }));
+  if (!lista.length) { $('venc-corpo').innerHTML = '<p class="venc-vazio">Ninguém venceu ainda. Seja o primeiro! 🏆</p>'; return; }
+  const linha = (r, ic, extra) => `<li class="${r.uid === sessao.uid ? 'eu' : ''}"><span class="venc-ic">${ic}</span><b>${esc(nomeVisivel(r.nome) || 'Aluno')}${r.dourada ? ' ✨' : ''}</b><small>${[esc(nomeVisivel(r.turma)), extra].filter(Boolean).join(' · ')}</small></li>`;
+  const pioneiros = [...lista].sort((a, b) => a.data - b.data).slice(0, 3);
+  const pct = (r) => (r.total ? r.acertos / r.total : 0);
+  const certeiros = lista.filter(r => r.total > 0).sort((a, b) => pct(b) - pct(a) || a.data - b.data).slice(0, 5);
+  const semana = lista.filter(r => Date.now() - r.data < 7 * 864e5).sort((a, b) => b.data - a.data);
+  $('venc-corpo').innerHTML = `
+    <section class="venc-sec"><h3>🥇🥈🥉 Pioneiros</h3><ol>${pioneiros.map((r, i) => linha(r, ['🥇', '🥈', '🥉'][i], dataCurta(r.data))).join('')}</ol></section>
+    <section class="venc-sec"><h3>⚡ Mais certeiros</h3><ol>${certeiros.map((r, i) => linha(r, `${i + 1}º`, `${Math.round(pct(r) * 100)}% de 1ª`)).join('') || '<li class="venc-nada">—</li>'}</ol></section>
+    <section class="venc-sec"><h3>📅 Esta semana</h3><p class="venc-n">${semana.length ? (semana.length === 1 ? '1 aluno venceu esta semana' : `${semana.length} alunos venceram esta semana`) : 'Ninguém venceu esta semana ainda.'}</p>
+      <ol>${semana.slice(0, 5).map(r => linha(r, '🏅', dataCurta(r.data))).join('')}</ol></section>`;
 }
 
 // ── Mural da Escola: 6 abas, top 10 + "Você" ──
@@ -7458,6 +7521,9 @@ function pendurarQuadrinhos(moveis) {
 }
 const vistaBase = (it) => (it.fases ? String(it.fases) : it.vistas[0]);   // a escala vem da 1ª vista (no vaso, da fase 4)
 const ALT_CASINHA = 150;      // altura do personagem no quarto (casinha.json → altura_personagem)
+// PROMPT-114: na casinha o pet fica na frente de todos os móveis de chão (z = y da base, até 768), abaixo da noite (940),
+// dos brilhos, dos balões e do HUD; o personagem continua ordenado pela base
+const Z_PET_CASA = 800;
 const tamImg = new Map();     // src → [largura, altura] naturais
 function medirImg(src) {
   if (tamImg.has(src)) return Promise.resolve(tamImg.get(src));
@@ -7564,7 +7630,7 @@ async function abrirCasinha(visita = null, volta = null) {
     criarPetDono(visita.dados.pet);
     lerCurtida();
   } else {
-    if (seguidor) seguidor.antesDaAcao = (nome) => (nome === 'dormir' || nome === 'descansar') && ehCasinha() && irDormirNaCama();
+    if (seguidor) { seguidor.antesDaAcao = (nome) => (nome === 'dormir' || nome === 'descansar') && ehCasinha() && irDormirNaCama(); seguidor.zCasa = Z_PET_CASA; }
     if (c.publicada) publicarCasinha();   // a cópia pública fica em dia (pet, insígnias, peixes)
     pintarSeloCoracoes();
   }
@@ -7596,7 +7662,7 @@ function fecharCasinha() {
   if (v?.petDono) { v.petDono.seg.descartar(); v.petDono.img.remove(); v.petDono.sombra.remove(); }
   tirarComidaPote();
   cs = null;
-  if (seguidor) { seguidor.zFixo = null; seguidor.antesDaAcao = null; }
+  if (seguidor) { seguidor.zFixo = seguidor.zCasa = null; seguidor.antesDaAcao = null; }
   if (v) $('pet').hidden = $('pet-sombra').hidden = !seguidor?.pet;   // o meu pet volta
   fecharFerrCasa();
   $('cs-cama-balao').hidden = true;
@@ -7973,8 +8039,15 @@ function comerNoPote(id) {
   if (petIrPara(m, lado.ponto, comer, ms + 1500, true)) vez = cs.ida; else comer();
   verificarMarcosLealdade(pet);
 }
-// do lado do pote (esquerdo ou direito, o que estiver livre), virado para ele
+// PROMPT-114: na pata do tapetinho (casinha.json → pote.ponto_comer[vista]: x, y em % da imagem; espelhado: 100 − x),
+// virado para a tigela (o centro da imagem); o caminho vai até a trilha mais perto e termina em cima da pata.
+// Sem ponto_comer: do lado do pote (esquerdo ou direito, o que estiver livre), como no PROMPT-110
 function ladoDoPote(m) {
+  const pc = itemCasa(m.id)?.ponto_comer?.[m.vista];
+  if (Array.isArray(pc)) {
+    const [w, h] = tamMovel(m), fx = m.espelho ? 100 - pc[0] : pc[0], x = m.x - w / 2 + w * fx / 100, y = m.y - h + h * pc[1] / 100;
+    return { ponto: [x, y], esquerda: x > m.x };
+  }
   const [w] = tamMovel(m), alt = seguidor.altura || 60;
   for (const dir of [-1, 1]) {
     const x = m.x + dir * (w * 0.45 + alt * 0.2), y = m.y - 6, pt = cena.naTrilha(x, y);
@@ -8185,7 +8258,7 @@ const meusTemas = () => temasCasa().filter(t => temTema(t.id));
 // o tema do quarto: na visita, o do dono (cópia pública); o meu, só se é meu mesmo
 const temaDoDono = (visita = null) => (visita ? temaCasa(visita.dados.tema) : temaCasa(temTema(estado.casinha?.tema) ? estado.casinha?.tema : null));
 function comprarTema(id) {
-  const t = temasCasa().find(x => x.id === id), ps = estado.pets, moedas = Number(ps.moedas) || 0, preco = Number(t?.preco) || 0;
+  const t = temasCasa().find(x => x.id === id), ps = estado.pets, moedas = Number(ps.moedas) || 0, preco = precoCasa(t);   // professora / modo teste: 0
   if (!t || temTema(id) || moedas < preco) return;
   const c = estado.casinha ||= lerCasinha(null);
   ps.moedas = moedas - preco;
@@ -8223,6 +8296,11 @@ function abrirTemasCasa() {
       <span><img src="${imgTema(t)}" alt="" draggable="false" loading="lazy"/></span><b>${esc(t.emoji || '🎨')} ${esc(t.nome)}</b><small>${t.id === atual ? '✔ Agora' : 'Toque para usar'}</small></button>`).join('');
   $('cs-temas').hidden = false;
 }
+
+// 🎁 PROMPT-114: móveis e reformas grátis para a professora (jogando como aluna) e no modo teste; gravados de verdade,
+// com os mesmos limites. Para os alunos, o preço do json
+const casaGratis = () => ehProfessora() || teste;
+const precoCasa = (it) => (casaGratis() ? 0 : Number(it?.preco) || 0);
 
 // faixa dos guardados (miniaturas com a quantidade)
 // (só os móveis: os quadrinhos ficam sempre na parede, PROMPT-110)
@@ -8353,7 +8431,7 @@ function ligarCasinha() {
   $('cs-col-grade').addEventListener('click', (e) => { const b = e.target.closest('[data-escolher]'); if (b) escolherInsigniaQuadro(b.dataset.escolher); });
   $('cs-tema').addEventListener('click', (e) => { e.stopPropagation(); if (cs && !cs.visita && !cs.arrumando) abrirTemasCasa(); });
   $('cs-temas-lista').addEventListener('click', (e) => { const b = e.target.closest('[data-tema]'); if (!b) return; $('cs-temas').hidden = true; if (b.dataset.tema !== temaDoDono().id) { aplicarTema(b.dataset.tema); tocar('clique'); } });
-  for (const id of ['cs-colecao', 'cs-aquario', 'cs-comida', 'cs-menu', 'cs-temas']) $(id).addEventListener('click', (e) => {   // ✕ ou fora da caixa: fecha
+  for (const id of ['cs-colecao', 'cs-aquario', 'cs-comida', 'cs-menu', 'cs-temas', 'venc']) $(id).addEventListener('click', (e) => {   // ✕ ou fora da caixa: fecha
     if (e.target === $(id) || e.target.closest(`[data-fechar="${id}"]`)) $(id).hidden = true;
   });
   $('cs-comida-lista').addEventListener('click', (e) => { const b = e.target.closest('[data-comer]'); if (b) comerNoPote(b.dataset.comer); });
@@ -8436,6 +8514,7 @@ function criarPetDono(p) {
   img.className = 'jr-ator jr-pet'; img.alt = ''; img.draggable = false;
   $('cena-atores').append(sombra, img);
   const seg = new PetSeguidor(img, sombra);
+  seg.zCasa = Z_PET_CASA;   // o pet do dono também na frente dos móveis (PROMPT-114)
   preCarregarPet(forma);
   seg.definir(pet, forma);
   aplicarTinta(img, p.tinta || null, true);

@@ -3,6 +3,8 @@
 // Painel deitado: abas dos ginásios, menu à esquerda (⭐ Regra · 🎟️ Pensa assim · ✏️ Exemplos · ⚠️ Armadilha · 🎯 Tente você),
 // uma seção por vez. Textos do JSON: **negrito**, [[destaque laranja]], {{verde}} — o resto é escapado.
 // Sem prêmio: o "Tente você" é só treino.
+// Animações do "Pensa assim": fila (PROMPT-90) · caixas, casas e sapo (PROMPT-113), todas com o mesmo ritmo, legendas
+// numeradas e controles; com prefers-reduced-motion, só a etapa final.
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -76,18 +78,18 @@ function irSecao(s) {
       <div class="qe-degraus">${(r.degraus || []).map((g, i) => `<div class="qe-degrau ${g.cor === 'cyan' ? 'c' : 'l'}"><span class="qe-n">${i + 1}º</span>
         <div>${(g.ops || []).map(o => `<span class="qe-op">${esc(o)}</span>`).join('')}<br>${marcar(g.texto)}${g.obs ? `<div class="qe-obs">${marcar(g.obs)}</div>` : ''}</div></div>`).join('')}</div>`;
   } else if (s === 'pensa') {
-    const p = d.pensa, a = p.animacao;
-    // duas colunas (PROMPT-99): o palco da fila à esquerda; legenda, controles e o "Por quê?" à direita — sem rolar
+    const p = d.pensa, a = p.animacao, tem = !!ANIMACOES[a?.tipo];
+    // duas colunas (PROMPT-99): o palco da animação à esquerda; legenda, controles e o "Por quê?" à direita — sem rolar
     tela.innerHTML = `${selo}<h2>${marcar(p.titulo)}</h2>
       <div class="qe-pensa">
-        ${a?.tipo === 'fila' ? `<div class="qe-palco" id="qe-palco"><div class="qe-balcao">🛎️ ATENDIMENTO</div></div>` : ''}
+        ${tem ? `<div class="qe-palco qe-p-${a.tipo}" id="qe-palco">${a.tipo === 'fila' ? '<div class="qe-balcao">🛎️ ATENDIMENTO</div>' : ''}</div>` : ''}
         <div class="qe-pensa-lado">
-          ${a?.tipo === 'fila' ? `<div class="qe-leg"><span class="qe-num" id="qe-pnum">1</span><span id="qe-pleg"></span></div>
+          ${tem ? `<div class="qe-leg"><span class="qe-num" id="qe-pnum">1</span><span id="qe-pleg"></span></div>
           <div class="qe-ctrl"><div class="qe-pts" id="qe-pts"></div><button class="qe-mini" data-qe-pausa>⏸ pausar</button><button class="qe-mini" data-qe-inicio>↺ do início</button></div>` : ''}
           ${p.porque ? `<p class="qe-porque">${marcar(p.porque)}</p>` : ''}
         </div>
       </div>`;
-    if (a?.tipo === 'fila') iniciarFila(a);
+    if (tem) ANIMACOES[a.tipo](a);
   } else if (s === 'exemplos') {
     tela.innerHTML = `${selo}<div class="qe-chips" id="qe-chips"></div><div class="qe-trilha" id="qe-trilha"></div>`;
     desenharExemplo();
@@ -206,6 +208,160 @@ function iniciarFila(a) {
   qe.anim = { i: 0, timer: 0, pausado: false, passos, leg };
   rodarFila();
 }
+// ── PROMPT-113: caixas, casas e sapo (mesmo motor da fila: passos + legendas, ESPERA entre eles) ──
+const calmo = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+// começa a animação; sem movimento: roda todos os passos de uma vez e para na etapa final
+function comecarAnim(passos, leg) {
+  qe.anim = { i: 0, timer: 0, pausado: false, passos, leg, sub: [] };
+  if (calmo()) {
+    $('qe-palco').classList.add('qe-calmo');
+    for (let k = 0; k < passos.length - 1; k++) passos[k]();
+    qe.anim.i = passos.length - 1; qe.anim.pausado = true;
+  }
+  rodarFila();
+}
+// um pedaço de um passo, um pouco depois (sem movimento: na hora)
+function depois(ms, fn) {
+  const an = qe?.anim;
+  if (!an || calmo()) { fn(); return; }
+  an.sub.push(setTimeout(fn, ms));
+}
+const contaTxt = (s) => juntar(String(s ?? ''));
+// o pedaço que mudou de uma conta para a outra (o resultado que entrou no lugar da caixa)
+function diferenca(a, b) {
+  let i = 0, j = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i++;
+  while (j < a.length - i && j < b.length - i && a[a.length - 1 - j] === b[b.length - 1 - j]) j++;
+  return b.slice(i, b.length - j).trim() || b;
+}
+// 📦 caixas: a conta grande; a cada etapa o trecho `acende` ganha uma caixa (laranja → ciano → verde), "abre" com um
+// pulinho e, na etapa seguinte, dá lugar ao resultado; a última etapa fica verde
+const CORES_CAIXA = ['laranja', 'cyan', 'verde'];
+function iniciarCaixas(a) {
+  const palco = $('qe-palco'), el = document.createElement('div');
+  el.className = 'qe-cx-conta';
+  palco.appendChild(el);
+  const mostrar = (conta, trecho = null, cls = '') => {
+    const C = contaTxt(conta), T = trecho ? contaTxt(trecho) : '', i = T ? C.indexOf(T) : -1;
+    el.innerHTML = i < 0 ? `<span class="${cls ? 'qe-cx-' + cls : ''}">${esc(C)}</span>`
+      : `${esc(C.slice(0, i))}<span class="qe-cx-${cls}">${esc(T)}</span>${esc(C.slice(i + T.length))}`;
+    el.style.fontSize = '';   // não cabe: encolhe
+    let f = parseFloat(getComputedStyle(el).fontSize);
+    while (f > 14 && el.scrollWidth > el.clientWidth + 1) { f -= 2; el.style.fontSize = f + 'px'; }
+  };
+  const et = a.etapas || [], fim = et[et.length - 1];
+  const passos = [() => mostrar(et[0]?.conta)];
+  let cor = 0, corAntes = null;
+  et.forEach((e, k) => {
+    if (!e.acende || e === fim) return;
+    const c = CORES_CAIXA[cor++ % CORES_CAIXA.length], antes = corAntes, ant = et[k - 1];
+    corAntes = c;
+    passos.push(k === 0 ? () => mostrar(e.conta, e.acende, 'caixa ' + c)
+      : () => { mostrar(e.conta, diferenca(ant.conta, e.conta), 'res ' + antes); depois(900, () => mostrar(e.conta, e.acende, 'caixa ' + c)); });
+  });
+  if (fim) passos.push(() => mostrar(fim.conta, null, 'fim'));
+  comecarAnim(passos, a.legendas || []);
+}
+// 🧮 casas: o quadro de valor posicional (colunas M C D U) com os algarismos em fichas, alinhados à direita; × 10 desliza
+// as fichas uma casa para a esquerda e o 0 novo entra nas unidades (÷: para a direita, os zeros do fim saem)
+function iniciarCasas(a) {
+  const cols = a.colunas || ['M', 'C', 'D', 'U'], n = cols.length, palco = $('qe-palco');
+  palco.insertAdjacentHTML('beforeend', `<div class="qe-cs-op" id="qe-cs-op"></div>
+    <div class="qe-cs-quadro" style="--n:${n}">${cols.map(c => `<div class="qe-cs-col"><b>${esc(c)}</b><span></span></div>`).join('')}<div class="qe-cs-fichas" id="qe-cs-fichas"></div></div>
+    <div class="qe-cs-num" id="qe-cs-num"></div>`);
+  const box = $('qe-cs-fichas'), dig = (s) => String(s ?? '').replace(/\D/g, '').split('');
+  const pos = (c) => ((c + 0.5) / n * 100).toFixed(2) + '%';
+  let fichas = [];
+  const ficha = (d, col, novo) => {
+    const el = document.createElement('div');
+    el.className = 'qe-cs-ficha' + (novo ? ' novo' : '');
+    el.textContent = d; el.style.left = pos(col);
+    box.appendChild(el);
+    return { el, col };
+  };
+  const numero = (txt, ok = false) => { $('qe-cs-num').textContent = txt; $('qe-cs-num').classList.toggle('ok', ok); };
+  const op = (t) => { $('qe-cs-op').textContent = t; $('qe-cs-op').classList.toggle('on', !!t); };
+  const montar = (num) => { box.innerHTML = ''; const ds = dig(num); fichas = ds.map((d, i) => ficha(d, n - ds.length + i)); numero(String(num)); };
+  const deslizar = (k) => {
+    for (const f of fichas) { f.col -= k; f.el.style.left = pos(f.col); if (f.col >= n) f.el.classList.add('sai'); }
+    fichas = fichas.filter(f => f.col < n || (setTimeout(() => f.el.remove(), 500), false));
+  };
+  const completar = (num, ok) => {
+    const ds = dig(num), faltam = ds.length - fichas.length;
+    for (let i = 0; i < faltam; i++) fichas.push(ficha(ds[ds.length - faltam + i], n - faltam + i, true));
+    numero(String(num), ok);
+  };
+  const et = a.etapas || [], leg = a.legendas || [], nOps = et.filter((e, k) => k && e.op).length;
+  const separar = leg.length >= 1 + 2 * nOps;   // uma legenda para deslizar e outra para o 0 entrar
+  const passos = [() => { op(''); montar(et[0]?.numero); }];
+  let primeira = true;
+  et.forEach((e, k) => {
+    if (!k) return;
+    const ultima = k === et.length - 1;
+    if (!e.op) { passos.push(() => { op(''); montar(e.numero); }); return; }
+    const k2 = dig(e.numero).length - dig(et[k - 1].numero).length;
+    const desliza = () => { op(e.op); deslizar(k2); }, entra = () => completar(e.numero, ultima);
+    if (separar || primeira) { passos.push(desliza); passos.push(entra); }
+    else passos.push(() => { desliza(); depois(700, entra); });
+    primeira = false;
+  });
+  comecarAnim(passos, leg);
+}
+// 🐸 sapo: o número em fichas e a vírgula é um sapinho entre elas; × pula para a direita, ÷ para a esquerda (pulos casas);
+// faltou casa: entra um 0; no fim, o número certo em verde. Número inteiro: o sapo começa escondido no fim
+function iniciarSapo(a) {
+  const palco = $('qe-palco');
+  palco.insertAdjacentHTML('beforeend', `<div class="qe-sp-op" id="qe-sp-op"></div><div class="qe-sp-linha" id="qe-sp-linha"><span class="qe-sp-sapo" id="qe-sp-sapo">🐸</span></div><div class="qe-sp-num" id="qe-sp-num"></div>`);
+  const linha = $('qe-sp-linha'), sapo = $('qe-sp-sapo');
+  let ds = [], f = 0;   // fichas (algarismos) e onde está o sapo (quantos algarismos à esquerda dele)
+  const W = () => Math.min(15, 86 / Math.max(ds.length, f, 1));
+  const arrumar = () => {
+    const w = W(), ini = 50 - ds.length * w / 2;
+    ds.forEach((d, i) => { d.el.style.left = (ini + (i + 0.5) * w).toFixed(2) + '%'; d.el.style.width = (w * 0.86).toFixed(2) + '%'; });
+    sapo.style.left = (ini + f * w).toFixed(2) + '%';
+  };
+  const ficha = (t, novo) => { const el = document.createElement('div'); el.className = 'qe-sp-ficha' + (novo ? ' novo' : ''); el.textContent = t; linha.appendChild(el); return { el, t }; };
+  const numero = (t, ok = false) => { $('qe-sp-num').textContent = t; $('qe-sp-num').classList.toggle('ok', ok); };
+  const op = (t) => { $('qe-sp-op').textContent = t; $('qe-sp-op').classList.toggle('on', !!t); };
+  const montar = (num) => {
+    for (const d of ds) d.el.remove();
+    const [int, dec = null] = String(num).split(',');
+    ds = [...int, ...(dec ?? '')].map(t => ficha(t));
+    f = int.length;
+    sapo.classList.toggle('escondido', dec == null);   // inteiro: o sapo fica escondido no fim
+    arrumar(); numero(String(num)); op('');
+  };
+  const pular = (dir, vezes, aoFim) => {
+    sapo.classList.remove('escondido');
+    for (let k = 0; k < vezes; k++) depois(450 + k * 480, () => {
+      f += dir;
+      sapo.classList.remove('pula'); void sapo.offsetWidth; sapo.classList.add('pula');
+      arrumar();
+    });
+    depois(450 + vezes * 480, aoFim);
+  };
+  // faltou casa: zeros entram (na frente, ou no fim); 0 na frente sobrando sai; inteiro no fim: o sapo se esconde
+  const completar = (num) => {
+    while (f <= 0) { ds.unshift(ficha('0', true)); f++; }
+    while (f > ds.length) ds.push(ficha('0', true));
+    while (ds.length > 1 && f > 1 && ds[0].t === '0') { const d = ds.shift(); d.el.classList.add('sai'); setTimeout(() => d.el.remove(), 400); f--; }
+    sapo.classList.toggle('escondido', f === ds.length);
+    arrumar(); numero(String(num), true);
+  };
+  const et = a.etapas || [], passos = [() => montar(et[0]?.numero)];
+  et.forEach((e, k) => {
+    if (!k) return;
+    if (!e.op) { passos.push(() => montar(e.numero)); return; }
+    const dir = e.lado === 'esquerda' ? -1 : 1, vezes = Number(e.pulos) || 1;
+    // simula: vai faltar casa? então os zeros entram num passo próprio (a legenda "…faltou casa")
+    const [int, dec = ''] = String(et[k - 1].numero).split(','), destino = int.length + dir * vezes, falta = destino <= 0 || destino > int.length + dec.length;
+    if (falta) { passos.push(() => { op(e.op); pular(dir, vezes, () => {}); }); passos.push(() => completar(e.numero)); }
+    else passos.push(() => { op(e.op); pular(dir, vezes, () => completar(e.numero)); });
+  });
+  comecarAnim(passos, a.legendas || []);
+}
+const ANIMACOES = { fila: (a) => iniciarFila(a), caixas: iniciarCaixas, casas: iniciarCasas, sapo: iniciarSapo };
+
 function passoFila() {
   const an = qe.anim;
   an.passos[an.i]();
@@ -217,11 +373,13 @@ function rodarFila() {
   const an = qe?.anim;
   if (!an) return;
   clearTimeout(an.timer);
+  for (const t of an.sub || []) clearTimeout(t);
+  if (an.sub) an.sub.length = 0;
   passoFila();
   if (an.pausado) return;
   an.timer = setTimeout(() => { an.i = (an.i + 1) % an.passos.length; rodarFila(); }, an.i === an.passos.length - 1 ? ESPERA_FIM : ESPERA);
 }
-function pararFila() { if (qe?.anim) { clearTimeout(qe.anim.timer); qe.anim = null; } }
+function pararFila() { if (qe?.anim) { clearTimeout(qe.anim.timer); for (const t of qe.anim.sub || []) clearTimeout(t); qe.anim = null; } }
 function pausarFila(b) {
   const an = qe?.anim;
   if (!an) return;

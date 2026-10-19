@@ -1,76 +1,779 @@
 {
-  "_nota": "Quadro de Estudos de cada mapa (PROMPT-90). mural: posição no mapa lógico 1376×768 (x,y = centro da BASE; largura em px; ponto = onde o personagem para). Por ginásio (A/B): regra, pensa, exemplos, armadilha, tente. Ginásio sem conteúdo = null → aba mostra 'Em breve'. Marcação nos textos: **negrito**, [[destaque laranja]], {{verde}}.",
-  "mapa1": {
-    "mural": { "x": 1165, "y": 455, "largura": 100, "ponto": [1165, 478] },
-    "A": {
-      "aba": "🏫 Escolinha (A)",
-      "regra": {
-        "titulo": "Expressões **sem parênteses**",
-        "texto": "Com várias operações, **não** se faz na ordem em que se lê. Existe uma fila de prioridade:",
-        "degraus": [
-          { "ops": ["×", "÷"], "cor": "laranja", "texto": "multiplicação e divisão", "obs": "entre elas: da esquerda → direita" },
-          { "ops": ["+", "−"], "cor": "cyan", "texto": "soma e subtração", "obs": "entre elas: da esquerda → direita" }
-        ]
-      },
-      "pensa": {
-        "titulo": "× e ÷ têm **passe VIP**: furam a fila!",
-        "animacao": {
-          "tipo": "fila",
-          "fichas": ["5", "+", "2 × 3"],
-          "vip": 2,
-          "vip_vira": "6",
-          "final": "11",
-          "legendas": [
-            "Chegou a conta: 5 + 2 × 3. Todo mundo na fila.",
-            "Opa! O 2 × 3 tem passe VIP 🎟️",
-            "Ele fura a fila e vai direto ao atendimento…",
-            "…e é resolvido primeiro: 2 × 3 = 6",
-            "Agora sim, volta e a soma é feita: 5 + 6",
-            "Resultado: 11 ✅"
-          ]
-        },
-        "porque": "💡 **Por quê?** 2 × 3 é um **pacote**: quer dizer 3 + 3. Primeiro abre o pacote (= 6), depois junta com o resto."
-      },
-      "exemplos": [
-        { "conta": "5 + 2 × 3", "passos": [
-          { "conta": "5 + [[2 × 3]]", "nota": "o × fura a fila" },
-          { "conta": "5 + [[6]]", "nota": "2 × 3 = 6" },
-          { "conta": "{{11}}", "nota": "5 + 6 = 11" } ] },
-        { "conta": "20 − 6 ÷ 2", "passos": [
-          { "conta": "20 − [[6 ÷ 2]]", "nota": "divisão primeiro" },
-          { "conta": "20 − [[3]]", "nota": "6 ÷ 2 = 3" },
-          { "conta": "{{17}}", "nota": "20 − 3 = 17" } ] },
-        { "conta": "4 × 3 + 10 ÷ 2", "passos": [
-          { "conta": "[[4 × 3]] + [[10 ÷ 2]]", "nota": "os dois VIPs antes" },
-          { "conta": "12 + 5", "nota": "4×3=12 · 10÷2=5" },
-          { "conta": "{{17}}", "nota": "12 + 5 = 17" } ] },
-        { "conta": "18 ÷ 3 × 2", "passos": [
-          { "conta": "[[18 ÷ 3]] × 2", "nota": "empate: vale a esquerda" },
-          { "conta": "6 × 2", "nota": "18 ÷ 3 = 6" },
-          { "conta": "{{12}}", "nota": "6 × 2 = 12 (não 3!)" } ] }
+ "_nota": "Quadro de Estudos de cada mapa (PROMPT-90). mural: posição no mapa lógico 1376×768 (x,y = centro da BASE; largura em px; ponto = onde o personagem para). Por ginásio (A/B): regra, pensa, exemplos, armadilha, tente. Ginásio sem conteúdo = null → aba mostra 'Em breve'. Marcação nos textos: **negrito**, [[destaque laranja]], {{verde}}. Animações do Pensa assim: fila (PROMPT-90), caixas, casas, sapo (PROMPT-113). mural null = posição ainda não definida.",
+ "mapa1": {
+  "mural": {
+   "x": 1165,
+   "y": 455,
+   "largura": 100,
+   "ponto": [
+    1165,
+    478
+   ]
+  },
+  "A": {
+   "aba": "🏫 Escolinha (A)",
+   "regra": {
+    "titulo": "Expressões **sem parênteses**",
+    "texto": "Com várias operações, **não** se faz na ordem em que se lê. Existe uma fila de prioridade:",
+    "degraus": [
+     {
+      "ops": [
+       "×",
+       "÷"
       ],
-      "armadilha": {
-        "conta": "5 + 2 × 3 = ?",
-        "texto": "Muita gente faz na ordem em que lê. Olha a diferença:",
-        "errado": "5 + 2 = 7 → 7 × 3 = 21",
-        "certo": "2 × 3 = 6 → 5 + 6 = 11",
-        "nota": "Nos ginásios, respostas como o **21** aparecem nas alternativas para pegar quem se distrai. 😉"
-      },
-      "tente": [
-        { "conta": "3 + 4 × 5", "opcoes": ["35", "23", "27", "60"], "certa": "23",
-          "acerto": "Isso! 4 × 5 = 20, depois 3 + 20 = 23 🎉",
-          "erros": { "35": "Opa! Você somou antes (3 + 4 = 7 → 7 × 5 = 35). O × fura a fila!" },
-          "erro_padrao": "Quase! Faça primeiro o 4 × 5." },
-        { "conta": "12 − 8 ÷ 4", "opcoes": ["1", "10", "2", "14"], "certa": "10",
-          "acerto": "Boa! 8 ÷ 4 = 2, depois 12 − 2 = 10 🎉",
-          "erros": { "1": "Opa! Você subtraiu antes (12 − 8 = 4 → 4 ÷ 4 = 1). A ÷ fura a fila!" },
-          "erro_padrao": "Quase! Faça primeiro o 8 ÷ 4." },
-        { "conta": "2 × 5 + 3 × 4", "opcoes": ["22", "52", "64", "25"], "certa": "22",
-          "acerto": "Mandou bem! 10 + 12 = 22 🎉",
-          "erros": { "52": "Opa! Você fez na ordem de leitura. Resolva os dois × antes: 2 × 5 e 3 × 4.", "64": "Opa! Você somou 5 + 3 no meio (2 × 8 × 4 = 64). Os dois × vão primeiro!" },
-          "erro_padrao": "Quase! Resolva os dois × primeiro e depois some." }
-      ]
+      "cor": "laranja",
+      "texto": "multiplicação e divisão",
+      "obs": "entre elas: da esquerda → direita"
+     },
+     {
+      "ops": [
+       "+",
+       "−"
+      ],
+      "cor": "cyan",
+      "texto": "soma e subtração",
+      "obs": "entre elas: da esquerda → direita"
+     }
+    ]
+   },
+   "pensa": {
+    "titulo": "× e ÷ têm **passe VIP**: furam a fila!",
+    "animacao": {
+     "tipo": "fila",
+     "fichas": [
+      "5",
+      "+",
+      "2 × 3"
+     ],
+     "vip": 2,
+     "vip_vira": "6",
+     "final": "11",
+     "legendas": [
+      "Chegou a conta: 5 + 2 × 3. Todo mundo na fila.",
+      "Opa! O 2 × 3 tem passe VIP 🎟️",
+      "Ele fura a fila e vai direto ao atendimento…",
+      "…e é resolvido primeiro: 2 × 3 = 6",
+      "Agora sim, volta e a soma é feita: 5 + 6",
+      "Resultado: 11 ✅"
+     ]
     },
-    "B": null
+    "porque": "💡 **Por quê?** 2 × 3 é um **pacote**: quer dizer 3 + 3. Primeiro abre o pacote (= 6), depois junta com o resto."
+   },
+   "exemplos": [
+    {
+     "conta": "5 + 2 × 3",
+     "passos": [
+      {
+       "conta": "5 + [[2 × 3]]",
+       "nota": "o × fura a fila"
+      },
+      {
+       "conta": "5 + [[6]]",
+       "nota": "2 × 3 = 6"
+      },
+      {
+       "conta": "{{11}}",
+       "nota": "5 + 6 = 11"
+      }
+     ]
+    },
+    {
+     "conta": "20 − 6 ÷ 2",
+     "passos": [
+      {
+       "conta": "20 − [[6 ÷ 2]]",
+       "nota": "divisão primeiro"
+      },
+      {
+       "conta": "20 − [[3]]",
+       "nota": "6 ÷ 2 = 3"
+      },
+      {
+       "conta": "{{17}}",
+       "nota": "20 − 3 = 17"
+      }
+     ]
+    },
+    {
+     "conta": "4 × 3 + 10 ÷ 2",
+     "passos": [
+      {
+       "conta": "[[4 × 3]] + [[10 ÷ 2]]",
+       "nota": "os dois VIPs antes"
+      },
+      {
+       "conta": "12 + 5",
+       "nota": "4×3=12 · 10÷2=5"
+      },
+      {
+       "conta": "{{17}}",
+       "nota": "12 + 5 = 17"
+      }
+     ]
+    },
+    {
+     "conta": "18 ÷ 3 × 2",
+     "passos": [
+      {
+       "conta": "[[18 ÷ 3]] × 2",
+       "nota": "empate: vale a esquerda"
+      },
+      {
+       "conta": "6 × 2",
+       "nota": "18 ÷ 3 = 6"
+      },
+      {
+       "conta": "{{12}}",
+       "nota": "6 × 2 = 12 (não 3!)"
+      }
+     ]
+    }
+   ],
+   "armadilha": {
+    "conta": "5 + 2 × 3 = ?",
+    "texto": "Muita gente faz na ordem em que lê. Olha a diferença:",
+    "errado": "5 + 2 = 7 → 7 × 3 = 21",
+    "certo": "2 × 3 = 6 → 5 + 6 = 11",
+    "nota": "Nos ginásios, respostas como o **21** aparecem nas alternativas para pegar quem se distrai. 😉"
+   },
+   "tente": [
+    {
+     "conta": "3 + 4 × 5",
+     "opcoes": [
+      "35",
+      "23",
+      "27",
+      "60"
+     ],
+     "certa": "23",
+     "acerto": "Isso! 4 × 5 = 20, depois 3 + 20 = 23 🎉",
+     "erros": {
+      "35": "Opa! Você somou antes (3 + 4 = 7 → 7 × 5 = 35). O × fura a fila!"
+     },
+     "erro_padrao": "Quase! Faça primeiro o 4 × 5."
+    },
+    {
+     "conta": "12 − 8 ÷ 4",
+     "opcoes": [
+      "1",
+      "10",
+      "2",
+      "14"
+     ],
+     "certa": "10",
+     "acerto": "Boa! 8 ÷ 4 = 2, depois 12 − 2 = 10 🎉",
+     "erros": {
+      "1": "Opa! Você subtraiu antes (12 − 8 = 4 → 4 ÷ 4 = 1). A ÷ fura a fila!"
+     },
+     "erro_padrao": "Quase! Faça primeiro o 8 ÷ 4."
+    },
+    {
+     "conta": "2 × 5 + 3 × 4",
+     "opcoes": [
+      "22",
+      "52",
+      "64",
+      "25"
+     ],
+     "certa": "22",
+     "acerto": "Mandou bem! 10 + 12 = 22 🎉",
+     "erros": {
+      "52": "Opa! Você fez na ordem de leitura. Resolva os dois × antes: 2 × 5 e 3 × 4.",
+      "64": "Opa! Você somou 5 + 3 no meio (2 × 8 × 4 = 64). Os dois × vão primeiro!"
+     },
+     "erro_padrao": "Quase! Resolva os dois × primeiro e depois some."
+    }
+   ]
+  },
+  "B": {
+   "aba": "🏛️ Prefeitura (B)",
+   "regra": {
+    "titulo": "Parênteses, colchetes e chaves",
+    "texto": "Os sinais de agrupamento mandam mais que qualquer operação. Resolva **de dentro para fora**:",
+    "degraus": [
+     {
+      "ops": [
+       "( )"
+      ],
+      "cor": "laranja",
+      "texto": "1º parênteses",
+      "obs": "o de dentro de tudo"
+     },
+     {
+      "ops": [
+       "[ ]"
+      ],
+      "cor": "cyan",
+      "texto": "2º colchetes",
+      "obs": "depois que o ( ) virou número"
+     },
+     {
+      "ops": [
+       "{ }"
+      ],
+      "cor": "verde",
+      "texto": "3º chaves",
+      "obs": "por último; dentro de cada um, × e ÷ antes de + e −"
+     }
+    ]
+   },
+   "pensa": {
+    "titulo": "É como abrir **caixas dentro de caixas** 📦",
+    "animacao": {
+     "tipo": "caixas",
+     "etapas": [
+      {
+       "conta": "2 × [10 − (6 − 2)]",
+       "acende": "(6 − 2)"
+      },
+      {
+       "conta": "2 × [10 − 4]",
+       "acende": "[10 − 4]"
+      },
+      {
+       "conta": "2 × 6",
+       "acende": "2 × 6"
+      },
+      {
+       "conta": "12"
+      }
+     ],
+     "legendas": [
+      "A conta tem caixas: 2 × [10 − (6 − 2)]",
+      "A caixa de dentro abre primeiro: (6 − 2) = 4",
+      "Agora o colchete: [10 − 4] = 6",
+      "Sobrou só o lado de fora: 2 × 6",
+      "Resultado: 12 ✅"
+     ]
+    },
+    "porque": "💡 **Por quê?** O parêntese avisa: \"isto aqui é um número só\". O (5 + 3) é o 8 disfarçado."
+   },
+   "exemplos": [
+    {
+     "conta": "(5 + 3) × 2",
+     "passos": [
+      {
+       "conta": "[[(5 + 3)]] × 2",
+       "nota": "parêntese primeiro"
+      },
+      {
+       "conta": "[[8]] × 2",
+       "nota": "5 + 3 = 8"
+      },
+      {
+       "conta": "{{16}}",
+       "nota": "8 × 2 = 16"
+      }
+     ]
+    },
+    {
+     "conta": "10 − (4 + 2)",
+     "passos": [
+      {
+       "conta": "10 − [[(4 + 2)]]",
+       "nota": "parêntese primeiro"
+      },
+      {
+       "conta": "10 − [[6]]",
+       "nota": "4 + 2 = 6"
+      },
+      {
+       "conta": "{{4}}",
+       "nota": "10 − 6 = 4"
+      }
+     ]
+    },
+    {
+     "conta": "[20 − (3 + 5)] ÷ 4",
+     "passos": [
+      {
+       "conta": "[20 − [[(3 + 5)]]] ÷ 4",
+       "nota": "de dentro para fora"
+      },
+      {
+       "conta": "[ [[20 − 8]] ] ÷ 4",
+       "nota": "3 + 5 = 8"
+      },
+      {
+       "conta": "12 ÷ 4",
+       "nota": "20 − 8 = 12"
+      },
+      {
+       "conta": "{{3}}",
+       "nota": "12 ÷ 4 = 3"
+      }
+     ]
+    },
+    {
+     "conta": "4 cadernos de R$ 3 e 1 caneta de R$ 2",
+     "passos": [
+      {
+       "conta": "[[4 × 3]] + 2",
+       "nota": "monte a conta"
+      },
+      {
+       "conta": "12 + 2",
+       "nota": "4 × 3 = 12"
+      },
+      {
+       "conta": "{{R$ 14}}",
+       "nota": "12 + 2 = 14"
+      }
+     ]
+    }
+   ],
+   "armadilha": {
+    "conta": "(5 + 3) × 2 = ?",
+    "texto": "Quem ignora o parêntese faz outra conta:",
+    "errado": "5 + 3 × 2 → 5 + 6 = 11",
+    "certo": "(5 + 3) × 2 → 8 × 2 = 16",
+    "nota": "Os parênteses mudam o resultado. Nos ginásios, o **11** aparece nas alternativas. 😉"
+   },
+   "tente": [
+    {
+     "conta": "4 × (6 − 1)",
+     "opcoes": [
+      "23",
+      "20",
+      "19",
+      "24"
+     ],
+     "certa": "20",
+     "acerto": "Isso! 6 − 1 = 5, depois 4 × 5 = 20 🎉",
+     "erros": {
+      "23": "Opa! Você fez 4 × 6 = 24 e tirou 1. O parêntese vem primeiro: 6 − 1 = 5."
+     },
+     "erro_padrao": "Quase! Comece pelo (6 − 1)."
+    },
+    {
+     "conta": "[12 − (2 × 3)] ÷ 2",
+     "opcoes": [
+      "3",
+      "15",
+      "9",
+      "4"
+     ],
+     "certa": "3",
+     "acerto": "Boa! 2 × 3 = 6, 12 − 6 = 6, 6 ÷ 2 = 3 🎉",
+     "erros": {
+      "15": "Opa! Você fez na ordem de leitura. Comece pela caixa de dentro: (2 × 3).",
+      "9": "Quase! Você esqueceu o colchete: primeiro [12 − 6] = 6, só depois ÷ 2."
+     },
+     "erro_padrao": "Quase! De dentro para fora: ( ), depois [ ]."
+    },
+    {
+     "conta": "Tinha R$ 30 e comprei 3 lanches de R$ 7. Quanto sobrou?",
+     "opcoes": [
+      "9",
+      "189",
+      "23",
+      "21"
+     ],
+     "certa": "9",
+     "acerto": "Mandou bem! Gastou 3 × 7 = 21, sobrou 30 − 21 = 9 🎉",
+     "erros": {
+      "189": "Opa! Você subtraiu antes. Primeiro descubra quanto gastou: 3 × 7.",
+      "21": "Esse é o que você gastou! Falta tirar dos 30.",
+      "23": "Você tirou só um lanche. Foram 3 lanches de R$ 7."
+     },
+     "erro_padrao": "Quase! Conta: 30 − 3 × 7."
+    }
+   ]
   }
+ },
+ "mapa2": {
+  "mural": {
+   "x": 850,
+   "y": 640,
+   "largura": 100,
+   "ponto": [
+    850,
+    668
+   ]
+  },
+  "A": {
+   "aba": "⚓ Armazém (A)",
+   "regra": {
+    "titulo": "× e ÷ por 10, 100 e 1000",
+    "texto": "Conte os zeros!",
+    "degraus": [
+     {
+      "ops": [
+       "× 10",
+       "× 100",
+       "× 1000"
+      ],
+      "cor": "laranja",
+      "texto": "acrescenta 1, 2 ou 3 zeros",
+      "obs": "cada algarismo sobe 1, 2 ou 3 casas"
+     },
+     {
+      "ops": [
+       "÷ 10",
+       "÷ 100",
+       "÷ 1000"
+      ],
+      "cor": "cyan",
+      "texto": "tira 1, 2 ou 3 zeros",
+      "obs": "quando o número termina em zeros (senão aparece vírgula: é no Farol)"
+     }
+    ]
+   },
+   "pensa": {
+    "titulo": "Cada **× 10** empurra os algarismos **uma casa para a esquerda**",
+    "animacao": {
+     "tipo": "casas",
+     "colunas": [
+      "M",
+      "C",
+      "D",
+      "U"
+     ],
+     "etapas": [
+      {
+       "numero": "45"
+      },
+      {
+       "op": "× 10",
+       "numero": "450"
+      },
+      {
+       "op": "× 10",
+       "numero": "4500"
+      }
+     ],
+     "legendas": [
+      "O 45 no quadro: 4 dezenas e 5 unidades",
+      "× 10: cada algarismo sobe uma casa…",
+      "…e o 0 ocupa a casa que ficou vazia: 450",
+      "× 10 de novo: mais uma casa → 4500 ✅"
+     ]
+    },
+    "porque": "💡 **Por quê?** 10 unidades viram 1 dezena; 10 dezenas viram 1 centena. No × 10, cada algarismo passa a valer **10 vezes mais**."
+   },
+   "exemplos": [
+    {
+     "conta": "45 × 10",
+     "passos": [
+      {
+       "conta": "45 [[× 10]]",
+       "nota": "1 zero"
+      },
+      {
+       "conta": "{{450}}",
+       "nota": "acrescenta 1 zero"
+      }
+     ]
+    },
+    {
+     "conta": "25 × 100",
+     "passos": [
+      {
+       "conta": "25 [[× 100]]",
+       "nota": "2 zeros"
+      },
+      {
+       "conta": "{{2500}}",
+       "nota": "acrescenta 2 zeros"
+      }
+     ]
+    },
+    {
+     "conta": "7 × 1000",
+     "passos": [
+      {
+       "conta": "7 [[× 1000]]",
+       "nota": "3 zeros"
+      },
+      {
+       "conta": "{{7000}}",
+       "nota": "acrescenta 3 zeros"
+      }
+     ]
+    },
+    {
+     "conta": "5000 ÷ 100",
+     "passos": [
+      {
+       "conta": "5000 [[÷ 100]]",
+       "nota": "tira 2 zeros"
+      },
+      {
+       "conta": "{{50}}",
+       "nota": "5000 → 50"
+      }
+     ]
+    },
+    {
+     "conta": "23 × 10 × 10",
+     "passos": [
+      {
+       "conta": "23 [[× 10 × 10]]",
+       "nota": "× 10 duas vezes = × 100"
+      },
+      {
+       "conta": "{{2300}}",
+       "nota": "acrescenta 2 zeros"
+      }
+     ]
+    }
+   ],
+   "armadilha": {
+    "conta": "40 000 ÷ 1000 = ?",
+    "texto": "Tem gente que tira zeros demais:",
+    "errado": "tirou todos os zeros → 4",
+    "certo": "÷ 1000 tira **3** zeros → 40",
+    "nota": "Conte quantos zeros tem o 10, o 100 ou o 1000: é essa a quantidade que sai. 😉"
+   },
+   "tente": [
+    {
+     "conta": "32 × 100",
+     "opcoes": [
+      "320",
+      "3200",
+      "32000",
+      "132"
+     ],
+     "certa": "3200",
+     "acerto": "Isso! × 100 → 2 zeros: 3200 🎉",
+     "erros": {
+      "320": "Você pôs só 1 zero. × 100 são **2** zeros.",
+      "32000": "3 zeros é × 1000. Aqui é × 100.",
+      "132": "Opa! Isso é 32 + 100. É vezes!"
+     },
+     "erro_padrao": "Quase! Conte os zeros do 100."
+    },
+    {
+     "conta": "1200 ÷ 100",
+     "opcoes": [
+      "120",
+      "12",
+      "1,2",
+      "1200"
+     ],
+     "certa": "12",
+     "acerto": "Boa! Tirou 2 zeros: 12 🎉",
+     "erros": {
+      "120": "Você tirou só 1 zero. ÷ 100 tira **2**.",
+      "1,2": "Tirou demais! Só 2 zeros saem."
+     },
+     "erro_padrao": "Quase! ÷ 100 tira 2 zeros."
+    },
+    {
+     "conta": "5 × 100 + 3 × 10",
+     "opcoes": [
+      "530",
+      "5030",
+      "800",
+      "5300"
+     ],
+     "certa": "530",
+     "acerto": "Mandou bem! 500 + 30 = 530 🎉",
+     "erros": {
+      "5030": "Opa! Você fez na ordem de leitura. Os dois × vão primeiro: 500 e 30.",
+      "800": "Você juntou o 5 e o 3. Faça cada × separado: 500 + 30."
+     },
+     "erro_padrao": "Quase! 5 × 100 = 500 e 3 × 10 = 30."
+    }
+   ]
+  },
+  "B": {
+   "aba": "🗼 Farol (B)",
+   "regra": {
+    "titulo": "A **vírgula** anda",
+    "texto": "Com números decimais, quem se move é a vírgula. **Medidas:** 1 m = 100 cm · 1 kg = 1000 g · 1 L = 1000 mL.",
+    "degraus": [
+     {
+      "ops": [
+       "× 10",
+       "× 100",
+       "× 1000"
+      ],
+      "cor": "laranja",
+      "texto": "vírgula pula 1, 2 ou 3 casas para a **direita** →",
+      "obs": "faltou casa? completa com zero"
+     },
+     {
+      "ops": [
+       "÷ 10",
+       "÷ 100",
+       "÷ 1000"
+      ],
+      "cor": "cyan",
+      "texto": "vírgula pula para a **esquerda** ←",
+      "obs": "faltou casa? põe zero na frente: 0,37"
+     }
+    ]
+   },
+   "pensa": {
+    "titulo": "A vírgula é um **sapo** 🐸 que pula de casa em casa",
+    "animacao": {
+     "tipo": "sapo",
+     "etapas": [
+      {
+       "numero": "3,5"
+      },
+      {
+       "op": "× 10",
+       "numero": "35",
+       "pulos": 1,
+       "lado": "direita"
+      },
+      {
+       "numero": "37"
+      },
+      {
+       "op": "÷ 100",
+       "numero": "0,37",
+       "pulos": 2,
+       "lado": "esquerda"
+      }
+     ],
+     "legendas": [
+      "O sapo está entre o 3 e o 5: 3,5",
+      "× 10: ele pula 1 casa para a direita → 35",
+      "Agora o 37 (o sapo está escondido no fim: 37,)",
+      "÷ 100: pula 2 casas para a esquerda…",
+      "…faltou casa, entra um 0 na frente: 0,37 ✅"
+     ]
+    },
+    "porque": "💡 **Por quê?** É a mesma ideia do Armazém: os algarismos sobem (ou descem) de casa. Parece que a vírgula andou."
+   },
+   "exemplos": [
+    {
+     "conta": "3,5 × 10",
+     "passos": [
+      {
+       "conta": "3[[,]]5 × 10",
+       "nota": "1 pulo para a direita"
+      },
+      {
+       "conta": "{{35}}",
+       "nota": "3,5 → 35"
+      }
+     ]
+    },
+    {
+     "conta": "4,25 × 100",
+     "passos": [
+      {
+       "conta": "4[[,]]25 × 100",
+       "nota": "2 pulos para a direita"
+      },
+      {
+       "conta": "{{425}}",
+       "nota": "4,25 → 425"
+      }
+     ]
+    },
+    {
+     "conta": "37 ÷ 100",
+     "passos": [
+      {
+       "conta": "37[[,]] ÷ 100",
+       "nota": "2 pulos para a esquerda"
+      },
+      {
+       "conta": "{{0,37}}",
+       "nota": "faltou casa: 0 na frente"
+      }
+     ]
+    },
+    {
+     "conta": "1,5 m em cm",
+     "passos": [
+      {
+       "conta": "1 m = [[100 cm]]",
+       "nota": "então × 100"
+      },
+      {
+       "conta": "1,5 × 100",
+       "nota": "2 pulos para a direita"
+      },
+      {
+       "conta": "{{150 cm}}",
+       "nota": "1,5 → 150"
+      }
+     ]
+    },
+    {
+     "conta": "750 mL em L",
+     "passos": [
+      {
+       "conta": "1 L = [[1000 mL]]",
+       "nota": "então ÷ 1000"
+      },
+      {
+       "conta": "750 ÷ 1000",
+       "nota": "3 pulos para a esquerda"
+      },
+      {
+       "conta": "{{0,75 L}}",
+       "nota": "750 → 0,75"
+      }
+     ]
+    }
+   ],
+   "armadilha": {
+    "conta": "0,8 × 1000 = ?",
+    "texto": "Pôr zeros depois da vírgula não muda nada:",
+    "errado": "0,8 × 1000 = 0,8000 (é o mesmo 0,8!)",
+    "certo": "a vírgula pula 3 casas → 800",
+    "nota": "Zero no fim, depois da vírgula, não vale nada. Quem tem que andar é a vírgula. 😉"
+   },
+   "tente": [
+    {
+     "conta": "6,2 × 10",
+     "opcoes": [
+      "62",
+      "6,20",
+      "620",
+      "0,62"
+     ],
+     "certa": "62",
+     "acerto": "Isso! 1 pulo para a direita: 62 🎉",
+     "erros": {
+      "6,20": "Zero no fim depois da vírgula não muda o número! A vírgula tem que andar.",
+      "0,62": "Andou para o lado errado: no × a vírgula vai para a **direita**.",
+      "620": "Pulou casas demais: × 10 é só 1 pulo."
+     },
+     "erro_padrao": "Quase! × 10 = 1 pulo para a direita."
+    },
+    {
+     "conta": "45 ÷ 100",
+     "opcoes": [
+      "4500",
+      "4,5",
+      "0,45",
+      "0,045"
+     ],
+     "certa": "0,45",
+     "acerto": "Boa! 2 pulos para a esquerda: 0,45 🎉",
+     "erros": {
+      "4,5": "Pulou só 1 casa. ÷ 100 são **2** pulos.",
+      "4500": "Isso é × 100! Aqui é dividir.",
+      "0,045": "Pulou 3 casas: isso seria ÷ 1000."
+     },
+     "erro_padrao": "Quase! ÷ 100 = 2 pulos para a esquerda."
+    },
+    {
+     "conta": "2,5 kg em gramas",
+     "opcoes": [
+      "25",
+      "250",
+      "2500",
+      "2,500"
+     ],
+     "certa": "2500",
+     "acerto": "Mandou bem! 1 kg = 1000 g → 2,5 × 1000 = 2500 g 🎉",
+     "erros": {
+      "250": "Quase! 1 kg = **1000** g: são 3 pulos, não 2.",
+      "25": "1 kg = 1000 g: são 3 pulos para a direita.",
+      "2,500": "Zero no fim não muda nada! A vírgula tem que andar 3 casas."
+     },
+     "erro_padrao": "Quase! 1 kg = 1000 g."
+    }
+   ]
+  }
+ }
 }
