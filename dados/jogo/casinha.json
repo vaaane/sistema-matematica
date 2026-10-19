@@ -98,7 +98,7 @@
    "emoji": "🥣",
    "preco": 30,
    "tipo": "chao",
-   "largura": 90,
+   "largura": 180,
    "limite": 1,
    "vistas": [
     "d",
@@ -349,5 +349,60 @@
    "espelho": false
   }
  ],
- "_nota_kit": "kit_inicial: móveis que já vêm colocados na 1ª visita (x, y = base do móvel em px lógicos). Substitui o gratis_primeira da cama."
+ "_nota_kit": "kit_inicial: móveis que já vêm colocados na 1ª visita (x, y = base do móvel em px lógicos). Substitui o gratis_primeira da cama.",
+ "temas": [
+  {
+   "id": "classico",
+   "nome": "Clássico",
+   "emoji": "🏠",
+   "preco": 0,
+   "imagem": "quarto.webp"
+  },
+  {
+   "id": "praia",
+   "nome": "Casa de praia",
+   "emoji": "🏖️",
+   "preco": 200,
+   "imagem": "temas/praia.webp"
+  },
+  {
+   "id": "floresta",
+   "nome": "Casa na árvore",
+   "emoji": "🌳",
+   "preco": 200,
+   "imagem": "temas/floresta.webp",
+   "sem_parede_baixo": true
+  },
+  {
+   "id": "castelo",
+   "nome": "Castelo",
+   "emoji": "🏰",
+   "preco": 300,
+   "imagem": "temas/castelo.webp"
+  },
+  {
+   "id": "dark",
+   "nome": "Dark",
+   "emoji": "🌙",
+   "preco": 300,
+   "imagem": "temas/dark.webp",
+   "janela_noite": true
+  },
+  {
+   "id": "espacial",
+   "nome": "Nave espacial",
+   "emoji": "🚀",
+   "preco": 400,
+   "imagem": "temas/espacial.webp",
+   "janela_noite": true
+  },
+  {
+   "id": "luxuoso",
+   "nome": "Mansão",
+   "emoji": "💎",
+   "preco": 400,
+   "imagem": "temas/luxuoso.webp"
+  }
+ ],
+ "_nota_temas": "temas: fundos do quarto, todos 1376 × 768 com o chão, as paredes e a porta nas mesmas posições do quarto.webp (as áreas chao/parede/porta valem para todos). classico é grátis."
 }

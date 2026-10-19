@@ -146,7 +146,7 @@
     <div id="pet-faro" class="jr-pet-faro" hidden aria-hidden="true">👃</div>
     <button id="btn-revanche" class="jr-btn jr-btn-ouro jr-revanche" hidden>⚔ Revanche</button>
     <!-- 🏠 Casinha (PROMPT-105): Arrumar, faixa dos guardados e botões em cima do móvel tocado -->
-    <div id="cs-botoes" class="cs-botoes" hidden><button id="cs-arrumar" class="jr-btn jr-btn-ouro">🛠️ Arrumar</button><button id="cs-comprar" class="jr-btn">🛒 Móveis</button></div>
+    <div id="cs-botoes" class="cs-botoes" hidden><button id="cs-arrumar" class="jr-btn jr-btn-ouro">🛠️ Arrumar</button><button id="cs-comprar" class="jr-btn">🛒 Móveis</button><button id="cs-tema" class="jr-btn" hidden>🎨 Tema</button></div>
     <div id="cs-cama-balao" class="jr-pessoa-balao cs-cama-balao" hidden></div>
     <!-- 🏘️ Vila (PROMPT-109): balão sobre a casa (cor do telhado · visitar / deixar de ser vizinho) -->
     <div id="vila-balao" class="jr-pessoa-balao vila-balao" hidden></div>
@@ -322,6 +322,13 @@
     <div class="al-caixa cs-comida-caixa">
       <div class="al-topo"><b>🥣 Pote de comida</b><button class="bt-lista-x" data-fechar="cs-comida" aria-label="Fechar">✕</button></div>
       <div class="cs-comida-lista" id="cs-comida-lista"></div>
+    </div>
+  </div>
+  <!-- 🎨 Reformas (PROMPT-112): trocar o tema do quarto (só os comprados) -->
+  <div id="cs-temas" class="al-fundo" hidden role="dialog" aria-label="Tema da casinha">
+    <div class="al-caixa cs-comida-caixa">
+      <div class="al-topo"><b>🎨 Tema da casinha</b><button class="bt-lista-x" data-fechar="cs-temas" aria-label="Fechar">✕</button></div>
+      <div class="cs-temas-lista" id="cs-temas-lista"></div>
     </div>
   </div>
   <div id="album" class="al-fundo" hidden role="dialog" aria-label="Álbum de Matemáticos">
@@ -908,7 +915,7 @@
         <span class="jr-moedas" id="lj-moedas"><img class="jr-item-img jr-ic-moeda" data-icone="moeda" alt="🪙" draggable="false"/> <span>0</span></span>
         <button class="bt-lista-x" id="lj-fechar" aria-label="Fechar">✕</button>
       </div>
-      <div class="lj-abas" id="lj-abas"><button data-aba="comidas">🍎 Comidas</button><button data-aba="tintas"><img class="jr-item-img jr-ic-btn" data-icone="tinta" alt="🎨" draggable="false"/> Tintas</button><button data-aba="efeitos">✨ Efeitos</button><button data-aba="pesca">🎣 Pesca</button><button data-aba="moveis">🛋️ Móveis</button></div>
+      <div class="lj-abas" id="lj-abas"><button data-aba="comidas">🍎 Comidas</button><button data-aba="tintas"><img class="jr-item-img jr-ic-btn" data-icone="tinta" alt="🎨" draggable="false"/> Tintas</button><button data-aba="efeitos">✨ Efeitos</button><button data-aba="pesca">🎣 Pesca</button><button data-aba="moveis">🛋️ Móveis</button><button data-aba="reformas">🎨 Reformas</button></div>
       <div class="lj-itens" id="lj-itens"></div>
       <div class="lj-msg" id="lj-msg" aria-live="polite"></div>
     </div>

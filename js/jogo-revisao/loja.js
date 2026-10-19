@@ -48,11 +48,16 @@ export function semanaDe(d = new Date()) {
   return `${t.getUTCFullYear()}-S${String(Math.ceil(((t - ini) / 864e5 + 1) / 7)).padStart(2, '0')}`;
 }
 
-// Comida que o pet recusa (barriga.nao_come não, é loja.json → nao_come: { pet: [ids] }; o adulto usa a lista do filhote)
-export function naoCome(pet, item) {
-  const n = L?.nao_come || {}, l = n[pet] ?? n[String(pet || '').replace(/_adulto$/, '')];
-  return !!item && Array.isArray(l) && l.includes(item.id);
+// Comida que o pet recusa: loja.json → barriga.nao_come: { pet: [ids] } (na raiz também vale). PROMPT-110: o id do pet vem
+// sem _adulto e sem a cor (dragao_vermelho_{cor} → dragao_vermelho, dragao_{cor} → dragao_azul), a mesma conta de formaDeTamanho
+const petDaLista = (pet) => String(pet || '').replace(/_adulto$/, '')
+  .replace(/^dragao_vermelho_[a-z]+$/, 'dragao_vermelho')
+  .replace(/^dragao_(?!azul$|vermelho$)[a-z]+$/, 'dragao_azul');
+export function listaNaoCome(pet) {
+  const n = { ...(L?.nao_come || {}), ...(L?.barriga?.nao_come || {}) }, l = n[pet] ?? n[petDaLista(pet)];
+  return Array.isArray(l) ? l : [];
 }
+export const naoCome = (pet, item) => !!item && listaNaoCome(pet).includes(item.id);
 // Comida comum só com a barriga abaixo deste limite: por pet em barriga.alimentar_abaixo (os dragões, filhote e adulto: 80),
 // senão barriga.comum_ate (60)
 export function comumAte(pet) {
