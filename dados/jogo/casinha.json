@@ -45,7 +45,8 @@
    "vistas": [
     "d"
    ],
-   "dica": "O pet dorme aqui. Já vem no kit inicial."
+   "dica": "O pet dorme aqui. Já vem no kit inicial.",
+   "cor": "tecido"
   },
   {
    "id": "tapete",
@@ -57,7 +58,8 @@
    "limite": 2,
    "vistas": [
     "d"
-   ]
+   ],
+   "cor": "tecido"
   },
   {
    "id": "cacto",
@@ -147,7 +149,8 @@
     "d",
     "f",
     "l"
-   ]
+   ],
+   "cor": "tecido"
   },
   {
    "id": "luzes",
@@ -179,7 +182,8 @@
     20,
     82,
     88
-   ]
+   ],
+   "cor": "madeira"
   },
   {
    "id": "cavalete",
@@ -193,7 +197,8 @@
     "d",
     "f",
     "l"
-   ]
+   ],
+   "cor": "madeira"
   },
   {
    "id": "caixa_brinquedos",
@@ -208,7 +213,8 @@
     "f",
     "l"
    ],
-   "dica": "Toque e o pet brinca."
+   "dica": "Toque e o pet brinca.",
+   "cor": "madeira"
   },
   {
    "id": "mesa",
@@ -222,7 +228,8 @@
     "d",
     "f",
     "l"
-   ]
+   ],
+   "cor": "madeira"
   },
   {
    "id": "trofeus",
@@ -234,7 +241,8 @@
    "limite": 1,
    "vistas": [
     "f"
-   ]
+   ],
+   "cor": "madeira"
   },
   {
    "id": "estante_livros",
@@ -248,7 +256,8 @@
     "d",
     "f"
    ],
-   "dica": "Toque e o pet conta uma curiosidade."
+   "dica": "Toque e o pet conta uma curiosidade.",
+   "cor": "madeira"
   },
   {
    "id": "estante_album",
@@ -262,7 +271,8 @@
     "d",
     "f"
    ],
-   "dica": "Toque para abrir o Álbum Matemático."
+   "dica": "Toque para abrir o Álbum Matemático.",
+   "cor": "madeira"
   },
   {
    "id": "guarda_roupa",
@@ -275,7 +285,8 @@
    "vistas": [
     "d",
     "f"
-   ]
+   ],
+   "cor": "madeira"
   },
   {
    "id": "sofa",
@@ -289,7 +300,8 @@
     "d",
     "f",
     "l"
-   ]
+   ],
+   "cor": "tecido"
   },
   {
    "id": "aquario",
@@ -438,5 +450,62 @@
    3
   ],
   "_nota": "grátis, liberado ao conseguir as 26 insígnias; item de parede. area = retângulo do veludo em % da imagem (x0,y0,x1,y1) onde a grade (colunas, linhas) de insígnias é desenhada: 26 insígnias + um 🏆 na última casa. Enquanto a imagem não existir, desenhar a moldura em CSS (borda dourada larga, veludo azul-escuro). Brilho animado se as 26 forem douradas."
+ },
+ "cores": {
+  "_nota": "Cores dos móveis (PROMPT-118). Imagem da cor: moveis/{id}_{vista}_{cor}.webp; a cor padrão (id \"\") usa a imagem normal {id}_{vista}.webp. Trocar de cor é grátis.",
+  "tecido": [
+   {
+    "id": "",
+    "nome": "Laranja",
+    "amostra": "#e07a2e"
+   },
+   {
+    "id": "azul",
+    "nome": "Azul",
+    "amostra": "#4678c8"
+   },
+   {
+    "id": "verde",
+    "nome": "Verde",
+    "amostra": "#50a05a"
+   },
+   {
+    "id": "roxo",
+    "nome": "Roxo",
+    "amostra": "#8c5abe"
+   },
+   {
+    "id": "rosa",
+    "nome": "Rosa",
+    "amostra": "#e178a0"
+   },
+   {
+    "id": "cinza",
+    "nome": "Cinza",
+    "amostra": "#9696a0"
+   }
+  ],
+  "madeira": [
+   {
+    "id": "",
+    "nome": "Natural",
+    "amostra": "#a8693c"
+   },
+   {
+    "id": "escura",
+    "nome": "Escura",
+    "amostra": "#5c3a22"
+   },
+   {
+    "id": "branca",
+    "nome": "Branca",
+    "amostra": "#ebe8e1"
+   },
+   {
+    "id": "dourada",
+    "nome": "Dourada",
+    "amostra": "#d7aa50"
+   }
+  ]
  }
 }

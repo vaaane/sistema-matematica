@@ -3136,7 +3136,7 @@ html.jr-girado .jr-cl-tela i.pingo { animation-name: cl-chove-g; }
 .cs-guardado span { font: 600 10.5px/1.15 'Inter', sans-serif; text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; }
 .cs-guardado b { position: absolute; top: 2px; right: 4px; font: 800 12px 'Orbitron', sans-serif; color: var(--jr-ouro); pointer-events: none; }
 .cs-vazio { margin: 0; font: 600 12.5px/1.3 'Inter', sans-serif; color: #c9cde0; }
-.cs-ferr { position: absolute; z-index: 31; transform: translate(-50%, -100%); display: flex; gap: 6px; }
+.cs-ferr { position: absolute; z-index: 31; transform: translate(-50%, -100%); display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 340px; }
 .cs-ferr[hidden] { display: none; }
 .cs-ferr .jr-btn { min-height: 36px; padding: 4px 10px; font-size: 14px; }
 .cs-ferr .jr-btn[hidden] { display: none; }
@@ -3396,3 +3396,9 @@ html.jr-deitado .venc-corpo { grid-template-columns: repeat(3, minmax(0, 1fr)); 
 .cs-camp-brilho .cs-camp-moldura, .cs-camp-brilho > img { animation: cs-camp-brilho 2.6s ease-in-out infinite; }
 @keyframes cs-camp-brilho { 50% { filter: drop-shadow(0 0 10px rgba(255,215,0,.85)) brightness(1.08); } }
 @media (prefers-reduced-motion: reduce) { .cs-camp-brilho .cs-camp-moldura, .cs-camp-brilho > img { animation: none; filter: drop-shadow(0 0 8px rgba(255,215,0,.7)); } }
+
+/* ── 🎨 cores dos móveis (PROMPT-118): fileira de bolinhas acima das ferramentas ── */
+.cs-cores { flex-basis: 100%; display: flex; justify-content: center; gap: 8px; padding: 6px 8px; border-radius: 999px; background: rgba(13,15,26,.88); border: 1px solid rgba(255,255,255,.2); }
+.cs-cores[hidden] { display: none; }
+.cs-cor { width: 30px; height: 30px; padding: 0; border-radius: 50%; background: var(--c); border: 2px solid rgba(255,255,255,.55); cursor: pointer; box-shadow: inset 0 -3px 4px rgba(0,0,0,.25); }
+.cs-cor.sel { border: 3px solid var(--jr-ouro); box-shadow: 0 0 0 2px rgba(255,215,0,.35), inset 0 -3px 4px rgba(0,0,0,.25); transform: scale(1.12); }
