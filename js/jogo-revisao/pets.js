@@ -222,6 +222,8 @@ export class PetSeguidor {
     this.ultimaAcao = null;
     this.esperaAcao = MS_ANTES_ACAO; // quanto falta, parado e sentado, para a próxima ação
     this.pausado = false;           // balão de fala, janela por cima, pescando…: sem ações
+    this.zFixo = null;              // 🏠 deitado na cama da casinha (PROMPT-105): desenha por cima dela
+    this.antesDaAcao = null;        // (nome) => true: quem chamou cuida da ação (na casinha, dormir/descansar vai para a cama)
     SEGUIDORES.add(this);
   }
 
@@ -256,6 +258,7 @@ export class PetSeguidor {
       const l = comPesoNoturno(acoesParado(this.forma).filter(a => a !== this.ultimaAcao && temSequencia(this.forma, a)));
       if (!l.length) return;
       nome = this.ultimaAcao = l[Math.floor(Math.random() * l.length)];
+      if (this.antesDaAcao?.(nome)) { this.esperaAcao = MS_ANTES_ACAO; return; }
     }
     this.acao = nome;
     tocarSequencia(this.img, this.forma, nome).then(fim => {
@@ -416,12 +419,12 @@ export class PetSeguidor {
     this.img.style.left = this.x + 'px';
     this.img.style.top = this.y + 'px';
     this.img.style.height = this.altura + 'px';
-    this.img.style.zIndex = Math.round(this.y) - 1;   // empate com o personagem: o pet fica atrás
+    this.img.style.zIndex = this.zFixo ?? Math.round(this.y) - 1;   // empate com o personagem: o pet fica atrás
     this.img.classList.toggle('espelhado', this.espelhar);
     const s = this.sombra.style;
     s.left = this.x + 'px'; s.top = this.y + 'px';
     s.width = this.altura * 0.8 + 'px'; s.height = this.altura * 0.16 + 'px';
-    s.zIndex = Math.round(this.y) - 2;
+    s.zIndex = this.zFixo != null ? this.zFixo - 1 : Math.round(this.y) - 2;
   }
 }
 

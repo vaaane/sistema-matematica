@@ -143,6 +143,16 @@
     <div id="cena-aviso" class="jr-balao-aviso" hidden></div>
     <div id="pet-faro" class="jr-pet-faro" hidden aria-hidden="true">👃</div>
     <button id="btn-revanche" class="jr-btn jr-btn-ouro jr-revanche" hidden>⚔ Revanche</button>
+    <!-- 🏠 Casinha (PROMPT-105): Arrumar, faixa dos guardados e botões em cima do móvel tocado -->
+    <button id="cs-arrumar" class="jr-btn jr-btn-ouro cs-btn-arrumar" hidden>🛠️ Arrumar</button>
+    <!-- PROMPT-107: ❤️ na casinha do colega · selo dos corações na minha -->
+    <button id="cs-curtir" class="jr-btn cs-btn-arrumar cs-curtir" hidden aria-pressed="false">❤️ Curtir casinha</button>
+    <div id="cs-selo" class="cs-selo" hidden></div>
+    <div id="cs-ferr" class="cs-ferr" hidden><button class="jr-btn" data-cs="girar">🔄 Girar</button><button class="jr-btn" data-cs="guardar">📦 Guardar</button></div>
+    <div id="cs-faixa" class="cs-faixa" hidden>
+      <div class="cs-guardados" id="cs-guardados"></div>
+      <button class="jr-btn jr-btn-ouro" id="cs-pronto">✔ Pronto</button>
+    </div>
     <!-- Joystick (só em tela de toque) -->
     <div class="jr-joy" aria-hidden="true">
       <div id="joy-base" class="jr-joy-base"><div id="joy-bola" class="jr-joy-bola"></div></div>
@@ -270,6 +280,31 @@
   </div>
 
   <!-- 📒 Álbum de Matemáticos (PROMPT-98): 26 figurinhas, uma por ginásio -->
+  <!-- 🏠 Casinha (PROMPT-106): coleção das insígnias, aquário ampliado e pote de comida -->
+  <div id="cs-colecao" class="al-fundo" hidden role="dialog" aria-label="Coleção de insígnias">
+    <div class="al-caixa cs-col-caixa">
+      <div class="al-topo"><b id="cs-col-tit">🏅 Coleção de insígnias</b><span id="cs-col-cont"></span><button class="bt-lista-x" data-fechar="cs-colecao" aria-label="Fechar">✕</button></div>
+      <div class="cs-col-grade" id="cs-col-grade"></div>
+    </div>
+  </div>
+  <div id="cs-aquario" class="al-fundo cs-aquario" hidden role="dialog" aria-label="Aquário">
+    <button class="bt-lista-x cs-aq-x" data-fechar="cs-aquario" aria-label="Fechar">✖</button>
+    <div class="cs-aq-tanque" id="cs-aq-tanque"></div>
+    <div class="cs-aq-faixa" id="cs-aq-faixa"></div>
+  </div>
+  <div id="cs-menu" class="al-fundo" hidden role="dialog" aria-label="Casinhas">
+    <div class="al-caixa cs-menu-caixa">
+      <div class="al-topo"><b>🏠 Casinhas</b><button class="bt-lista-x" data-fechar="cs-menu" aria-label="Fechar">✕</button></div>
+      <div class="cs-menu-botoes"><button class="jr-btn jr-btn-ouro" data-cs-menu="minha">🏠 Minha casinha</button><button class="jr-btn" data-cs-menu="curtidas">⭐ Mais curtidas</button></div>
+      <ol class="cs-curtidas" id="cs-curtidas" hidden></ol>
+    </div>
+  </div>
+  <div id="cs-comida" class="al-fundo" hidden role="dialog" aria-label="Pote de comida">
+    <div class="al-caixa cs-comida-caixa">
+      <div class="al-topo"><b>🥣 Pote de comida</b><button class="bt-lista-x" data-fechar="cs-comida" aria-label="Fechar">✕</button></div>
+      <div class="cs-comida-lista" id="cs-comida-lista"></div>
+    </div>
+  </div>
   <div id="album" class="al-fundo" hidden role="dialog" aria-label="Álbum de Matemáticos">
     <div class="al-caixa">
       <div class="al-topo"><b>📒 Álbum de Matemáticos</b><span id="al-cont"></span><button class="bt-lista-x" id="album-fechar" aria-label="Fechar">✕</button></div>
@@ -854,7 +889,7 @@
         <span class="jr-moedas" id="lj-moedas"><img class="jr-item-img jr-ic-moeda" data-icone="moeda" alt="🪙" draggable="false"/> <span>0</span></span>
         <button class="bt-lista-x" id="lj-fechar" aria-label="Fechar">✕</button>
       </div>
-      <div class="lj-abas" id="lj-abas"><button data-aba="comidas">🍎 Comidas</button><button data-aba="tintas"><img class="jr-item-img jr-ic-btn" data-icone="tinta" alt="🎨" draggable="false"/> Tintas</button><button data-aba="efeitos">✨ Efeitos</button><button data-aba="pesca">🎣 Pesca</button></div>
+      <div class="lj-abas" id="lj-abas"><button data-aba="comidas">🍎 Comidas</button><button data-aba="tintas"><img class="jr-item-img jr-ic-btn" data-icone="tinta" alt="🎨" draggable="false"/> Tintas</button><button data-aba="efeitos">✨ Efeitos</button><button data-aba="pesca">🎣 Pesca</button><button data-aba="moveis">🛋️ Móveis</button></div>
       <div class="lj-itens" id="lj-itens"></div>
       <div class="lj-msg" id="lj-msg" aria-live="polite"></div>
     </div>

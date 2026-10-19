@@ -1,0 +1,323 @@
+{
+ "_nota": "Casinha do pet (PROMPT-105 a 107). Quarto lógico 1376 × 768 (img/jogo/casinha/quarto.webp). Imagens: img/jogo/casinha/moveis/{id}_{vista}.webp (d = diagonal, f = frente, l = lado). Todas as vistas de um item estão na MESMA escala de pixels: escala = largura / largura natural da primeira vista listada. 'largura' = largura na tela do quarto (px lógicos). tipo: chao | tapete (sempre embaixo de tudo) | parede (só na parede do fundo, só vista f). limite = quantos o aluno pode ter.",
+ "quarto": {
+  "imagem": "quarto.webp",
+  "chao": {
+   "x": [
+    115,
+    1265
+   ],
+   "y": [
+    205,
+    688
+   ]
+  },
+  "parede": {
+   "x": [
+    30,
+    1346
+   ],
+   "y": [
+    22,
+    196
+   ]
+  },
+  "porta": {
+   "x": [
+    598,
+    792
+   ],
+   "entrada": [
+    695,
+    680
+   ]
+  }
+ },
+ "itens": [
+  {
+   "id": "cama",
+   "nome": "Cama do pet",
+   "emoji": "🛏️",
+   "preco": 0,
+   "tipo": "chao",
+   "largura": 140,
+   "limite": 1,
+   "vistas": [
+    "d"
+   ],
+   "dica": "O pet dorme aqui. A primeira é de graça!",
+   "gratis_primeira": true
+  },
+  {
+   "id": "tapete",
+   "nome": "Tapete redondo",
+   "emoji": "🟠",
+   "preco": 40,
+   "tipo": "tapete",
+   "largura": 300,
+   "limite": 2,
+   "vistas": [
+    "d"
+   ]
+  },
+  {
+   "id": "cacto",
+   "nome": "Cacto",
+   "emoji": "🌵",
+   "preco": 20,
+   "tipo": "chao",
+   "largura": 140,
+   "limite": 3,
+   "vistas": [
+    "d",
+    "f",
+    "l"
+   ]
+  },
+  {
+   "id": "vaso",
+   "nome": "Vaso que cresce",
+   "emoji": "🌱",
+   "preco": 35,
+   "tipo": "chao",
+   "largura": 180,
+   "limite": 1,
+   "vistas": [
+    "1",
+    "2",
+    "3",
+    "4"
+   ],
+   "dica": "Regue 1 vez por dia e veja crescer.",
+   "fases": 4,
+   "regas_por_fase": 3,
+   "_nota": "vistas = fases (vaso_1 a vaso_4); 'largura' vale para a fase 4, mesma escala nas 4"
+  },
+  {
+   "id": "pote",
+   "nome": "Pote de comida",
+   "emoji": "🥣",
+   "preco": 30,
+   "tipo": "chao",
+   "largura": 90,
+   "limite": 1,
+   "vistas": [
+    "d",
+    "f",
+    "l"
+   ],
+   "dica": "Toque para dar comida ao pet."
+  },
+  {
+   "id": "abajur",
+   "nome": "Abajur",
+   "emoji": "💡",
+   "preco": 45,
+   "tipo": "chao",
+   "largura": 60,
+   "limite": 2,
+   "vistas": [
+    "d"
+   ],
+   "dica": "Acende à noite."
+  },
+  {
+   "id": "pufe",
+   "nome": "Pufe",
+   "emoji": "🟤",
+   "preco": 50,
+   "tipo": "chao",
+   "largura": 110,
+   "limite": 2,
+   "vistas": [
+    "d",
+    "f",
+    "l"
+   ]
+  },
+  {
+   "id": "luzes",
+   "nome": "Varal de luzes",
+   "emoji": "✨",
+   "preco": 50,
+   "tipo": "parede",
+   "largura": 260,
+   "limite": 2,
+   "vistas": [
+    "f"
+   ],
+   "dica": "Brilha à noite."
+  },
+  {
+   "id": "quadro_foto",
+   "nome": "Quadro do pet",
+   "emoji": "🖼️",
+   "preco": 40,
+   "tipo": "parede",
+   "largura": 90,
+   "limite": 1,
+   "vistas": [
+    "f"
+   ],
+   "dica": "Mostra a foto do seu pet.",
+   "foto": [
+    18,
+    20,
+    82,
+    88
+   ]
+  },
+  {
+   "id": "cavalete",
+   "nome": "Cavalete",
+   "emoji": "🎨",
+   "preco": 60,
+   "tipo": "chao",
+   "largura": 100,
+   "limite": 1,
+   "vistas": [
+    "d",
+    "f",
+    "l"
+   ]
+  },
+  {
+   "id": "caixa_brinquedos",
+   "nome": "Caixa de brinquedos",
+   "emoji": "🧸",
+   "preco": 70,
+   "tipo": "chao",
+   "largura": 130,
+   "limite": 1,
+   "vistas": [
+    "d",
+    "f",
+    "l"
+   ],
+   "dica": "Toque e o pet brinca."
+  },
+  {
+   "id": "mesa",
+   "nome": "Mesa com cadeira",
+   "emoji": "🪑",
+   "preco": 80,
+   "tipo": "chao",
+   "largura": 170,
+   "limite": 1,
+   "vistas": [
+    "d",
+    "f",
+    "l"
+   ]
+  },
+  {
+   "id": "trofeus",
+   "nome": "Prateleira de troféus",
+   "emoji": "🏆",
+   "preco": 80,
+   "tipo": "parede",
+   "largura": 170,
+   "limite": 1,
+   "vistas": [
+    "f"
+   ]
+  },
+  {
+   "id": "estante_livros",
+   "nome": "Estante de livros",
+   "emoji": "📚",
+   "preco": 90,
+   "tipo": "chao",
+   "largura": 150,
+   "limite": 1,
+   "vistas": [
+    "d",
+    "f"
+   ],
+   "dica": "Toque e o pet conta uma curiosidade."
+  },
+  {
+   "id": "estante_album",
+   "nome": "Estante do Álbum",
+   "emoji": "📒",
+   "preco": 100,
+   "tipo": "chao",
+   "largura": 150,
+   "limite": 1,
+   "vistas": [
+    "d",
+    "f"
+   ],
+   "dica": "Toque para abrir o Álbum Matemático."
+  },
+  {
+   "id": "guarda_roupa",
+   "nome": "Guarda-roupa",
+   "emoji": "🚪",
+   "preco": 110,
+   "tipo": "chao",
+   "largura": 150,
+   "limite": 1,
+   "vistas": [
+    "d",
+    "f"
+   ]
+  },
+  {
+   "id": "sofa",
+   "nome": "Sofá",
+   "emoji": "🛋️",
+   "preco": 120,
+   "tipo": "chao",
+   "largura": 184,
+   "limite": 1,
+   "vistas": [
+    "d",
+    "f",
+    "l"
+   ]
+  },
+  {
+   "id": "aquario",
+   "nome": "Aquário",
+   "emoji": "🐠",
+   "preco": 150,
+   "tipo": "chao",
+   "largura": 416,
+   "limite": 1,
+   "vistas": [
+    "d",
+    "f"
+   ],
+   "dica": "Mostra os peixes que você já pescou.",
+   "agua": {
+    "f": [
+     7,
+     12,
+     93,
+     38
+    ],
+    "d": [
+     18,
+     25,
+     92,
+     50
+    ],
+    "_nota": "retângulo da água em % da imagem: x0, y0, x1, y1"
+   }
+  }
+ ],
+ "insignia_quadrinho": {
+  "imagem": "moveis/moldura_insignia_f.webp",
+  "largura": 70,
+  "insignia": {
+   "centro": [
+    50,
+    50
+   ],
+   "tamanho": 62
+  },
+  "max_na_parede": 8,
+  "_nota": "grátis e automático: 1 quadrinho para cada insígnia ganha; tamanho = % da largura da moldura"
+ }
+}

@@ -96,7 +96,7 @@
      "chance": 30,
      "lealdade": 6,
      "raro": false,
-     "imagem": "img/jogo/itens/tilapia.webp",
+     "imagem": "img/jogo/itens/tainha.webp",
      "dificuldade": 3,
      "pontos": 25,
      "venda": 3
@@ -128,8 +128,7 @@
      "chance": 60,
      "lealdade": 4,
      "raro": false,
-     "imagem": "img/jogo/itens/sardinha.webp",
-     "filtro": "hue-rotate(150deg) saturate(0.8)",
+     "imagem": "img/jogo/itens/bacalhau.webp",
      "dificuldade": 1,
      "pontos": 10,
      "venda": 1
@@ -140,8 +139,7 @@
      "chance": 30,
      "lealdade": 6,
      "raro": false,
-     "imagem": "img/jogo/itens/tilapia.webp",
-     "filtro": "hue-rotate(150deg) saturate(0.8)",
+     "imagem": "img/jogo/itens/salmao.webp",
      "dificuldade": 3,
      "pontos": 25,
      "venda": 3
@@ -152,7 +150,7 @@
      "chance": 10,
      "lealdade": 10,
      "raro": true,
-     "imagem": "img/jogo/itens/dourado.webp",
+     "imagem": "img/jogo/itens/peixe_gelo.webp",
      "dificuldade": 5,
      "pontos": 60,
      "venda": 8
@@ -173,8 +171,7 @@
      "chance": 60,
      "lealdade": 4,
      "raro": false,
-     "imagem": "img/jogo/itens/sardinha.webp",
-     "filtro": "hue-rotate(60deg) saturate(1.2)",
+     "imagem": "img/jogo/itens/lambari.webp",
      "dificuldade": 1,
      "pontos": 10,
      "venda": 1
@@ -197,7 +194,7 @@
      "chance": 10,
      "lealdade": 10,
      "raro": true,
-     "imagem": "img/jogo/itens/dourado.webp",
+     "imagem": "img/jogo/itens/tucunare.webp",
      "dificuldade": 5,
      "pontos": 60,
      "venda": 8

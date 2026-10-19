@@ -174,5 +174,6 @@
   "interior": "laboratorio"
  },
  "mesa_damas": { "x": 1060, "y": 540, "largura": 200, "ponto": [1060, 585] },
- "fonte": { "x": 700, "y": 435, "frente": [700, 485] }
+ "fonte": { "x": 700, "y": 435, "frente": [700, 485] },
+ "casinha": { "x": 1262, "y": 390, "ponto": [1222, 392], "interior": "casinha" }
 }
