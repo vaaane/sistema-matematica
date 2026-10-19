@@ -6,7 +6,7 @@ import { isModoTeste, getSession } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
 import { ref, get, update, push, set, remove, increment, onValue, runTransaction, onDisconnect, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { adicionarXP } from '/js/db.js';
-import { bimestreAtual, ALUNOS_TESTE, bimestreJogos, pathTabuadaRanking, pathEscaladaRanking, pathTabuadaNiveis, pathTabuadaNegNiveis, pathEscaladaNiveis } from '/js/constants.js';
+import { bimestreAtual, ALUNOS_TESTE, ALUNOS_POR_TURMA, bimestreJogos, pathTabuadaRanking, pathEscaladaRanking, pathTabuadaNiveis, pathTabuadaNegNiveis, pathEscaladaNiveis } from '/js/constants.js';
 import { gerarQuestoes, gerarUma, assuntoDe } from '/js/jogo-revisao/geradores.js';
 import { tocar, somLigado, alternarSom, tocarArquivo, pararEfeitos, musicaPara, musicaLigada, alternarMusica, pausarMusica, musicaBloqueada } from '/js/jogo-revisao/sons.js';
 import { definirPausas, definirBarriga, barrigaDoPet, barrigaAntiga, faixaBarriga, rotuloLealdade, lealdadeComQueda, doDia,
@@ -806,6 +806,10 @@ export async function iniciarJogo(sess) {
       for (const it of CASA.itens || []) estado.casinha.guardados[it.id] = Math.max(1, Number(estado.casinha.guardados[it.id]) || 0);
     }
   } catch (e) { console.warn('[jogo-revisao] casinha indisponível', e); }
+  try {   // 🏘️ Vila das Casinhas (PROMPT-109); ?vila=cheia (modo teste): 2 vizinhos de mentira, sem gravar
+    VILA = await fetch(`${DADOS}/vila.json`).then(r => { if (!r.ok) throw new Error('vila.json'); return r.json(); });
+    vilaCheia = teste && new URLSearchParams(location.search).get('vila') === 'cheia';
+  } catch (e) { console.warn('[jogo-revisao] vila indisponível', e); }
   try { FLIPER = await fetch(`${DADOS}/fliperama.json`).then(r => { if (!r.ok) throw new Error('fliperama.json'); return r.json(); }); }
   catch (e) { console.warn('[jogo-revisao] fliperama indisponível', e); }
   try { definirBatalhas(await fetch(`${DADOS}/batalhas.json`).then(r => { if (!r.ok) throw new Error('batalhas.json'); return r.json(); })); }
@@ -871,7 +875,7 @@ export async function iniciarJogo(sess) {
   setTimeout(verificarCores, 2500);   // quem já cumpriu as condições ganha as cores (aviso uma vez)
   if (comecaNaPraca) abrirPraca('fonte').catch(() => abrirMapaGeral()).finally(() => { $('jr-carregando').hidden = true; });
   atualizarBotaoMissoes();
-  entrarOnline().catch(() => {}).then(() => { carregarPremiosPesca(); ouvirPresentes(); avisarCoracoes(); iniciarPraca(); publicarResumoInsignias(); ouvirConvitesAoVivo(); });
+  entrarOnline().catch(() => {}).then(() => { carregarPremiosPesca(); ouvirPresentes(); avisarCoracoes(); ouvirVila(); iniciarPraca(); publicarResumoInsignias(); ouvirConvitesAoVivo(); });
   // aluno novo escolhe o personagem antes de tudo (o pet inicial vem depois, ao entrar num mapa)
   if (carregouProgresso && estado.novo && !estado.personagem) abrirEscolhaPersonagem(true);
 }
@@ -3039,6 +3043,7 @@ function abrirCartaoColega(c) {
   carregarCasasPub().then(() => {   // 🏠 a lista das casinhas chegou agora: o botão aparece
     if (cartaoColega?.c === c && casaPub(c.uid) && !el.querySelector('[data-visitar]')) el.querySelector('[data-oi]')?.insertAdjacentHTML('beforebegin', BOTAO_VISITAR);
   });
+  botaoConvidarNoCartao(c, el);   // 🏡 (PROMPT-109)
 }
 const BOTAO_VISITAR = '<button class="jr-colega-oi" data-visitar aria-label="Visitar a casinha" title="Visitar a casinha">🏠</button>';
 
@@ -3190,7 +3195,7 @@ const naPracaReg = (r) => r.mapa === 'praca' && r.local === 'mapa';
 function lugarDe(r) {
   const extra = r.onde && NOMES_ONDE[r.onde];
   if (extra) return Number(r.mapa) > 0 ? `Mapa ${r.mapa} · ${extra}` : r.mapa === 'praca' && r.onde !== 'laboratorio' ? `Praça · ${extra}` : extra;
-  if (r.mapa === 'praca') return r.local === 'laboratorio' ? 'Laboratório' : r.local === 'casinha' ? 'Praça · na casinha' : 'Praça';
+  if (r.mapa === 'praca') return r.local === 'laboratorio' ? 'Laboratório' : r.local === 'casinha' ? 'Praça · na casinha' : r.local === 'vila' ? 'Praça · na vila' : 'Praça';
   if (Number(r.mapa) > 0) return `Mapa ${r.mapa}${r.local === 'ginasio' ? ' · no ginásio' : ''}`;
   return 'Mapa geral';
 }
@@ -4662,7 +4667,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('exp-volta').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden || !!cs?.arrumando || !$('cs-colecao').hidden || !$('cs-aquario').hidden || !$('cs-comida').hidden || !$('cs-menu').hidden;
+  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('exp-volta').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden || !!cs?.arrumando || !$('cs-colecao').hidden || !$('cs-aquario').hidden || !$('cs-comida').hidden || !$('cs-menu').hidden || !$('vila-convite').hidden || !$('vila-busca').hidden;
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -4815,6 +4820,7 @@ function loop(t) {
       if (cena.n === 'praca') atualizarPraca();
       else if (cena.n === 'loja') atualizarLoja();
       else if (cena.n === 'casinha') atualizarCasinha(dt);
+      else if (cena.n === 'vila') atualizarVila(dt);
       atualizarCavar();
       dicaEntrar();
       if (vx || vy) verificarZonaEntrada(vx, vy);   // mesmo parado contra o fim da trilha, empurrar para cima entra
@@ -4903,6 +4909,7 @@ function sairDaCena() {
   else if (cena.n === 'fliperama') transicao(() => abrirPraca('fliperama'));
   else if (cena.n === 'laboratorio') transicao(() => abrirPraca('laboratorio'));
   else if (cena.n === 'casinha') sairDaCasinha();
+  else if (cena.n === 'vila') sairDaVila();
   else if (cena.n === 'loja') sairDaLoja();
   else transicao(abrirMapaGeral);
 }
@@ -5164,6 +5171,7 @@ function destinosDoMapa() {
     const b = cena[alvo];
     if (b) lista.push({ id: 'predio-' + alvo, tipo: 'predio', alvo, x: b.x, y: b.y, trilha: b.trilha });
   }
+  if (ehVila()) for (const c of cena.casas || []) lista.push({ id: 'vila-' + c.lado, tipo: 'predio', alvo: 'vila:' + c.lado, x: c.porta[0], y: c.porta[1], trilha: c.trilha, largura: 60 });
   if (cena.n === 'laboratorio') for (const c of cena.computadores || []) lista.push({ id: 'pc-' + c.id, tipo: 'predio', alvo: 'pc:' + c.id, x: c.x, y: c.y, trilha: c.trilha });
   const md = ehPraca() && cena.mesa_damas;
   if (md) lista.push({ id: 'predio-mesa-damas', tipo: 'predio', alvo: 'mesa_damas', x: md.x, y: md.y, trilha: md.trilha, largura: 80 });
@@ -5183,6 +5191,7 @@ function tocarNoMapa(e) {
   if (balaoPorta) fecharBalaoPorta();
   if (cartaoColega) fecharCartaoColega();
   if (cs?.balaoCama) fecharBalaoCama();
+  if (balaoVilaC) fecharBalaoVila();
   if (pesca && !tocouPescando(p)) return;   // pescando: o toque puxa a linha (ou levanta, se for longe)
   const caixote = caixoteEm(p);
   if (caixote) { irPescar(caixote); return; }
@@ -5203,6 +5212,7 @@ function tocarNoMapa(e) {
   }
   if (pessoa) { if (!editarNpcs) irFalarCom(pessoa); return; }   // tocar numa pessoa: vai até ela e conversa
   if (ehCasinha() && tocarMovelCasa(p)) return;   // 🏠 quadrinho, aquário, vaso, estantes, pote, caixa (PROMPT-106)
+  if (ehVila() && tocarCasaVila(p)) return;        // 🏘️ porta: entra · casa: cor do telhado / visitar / deixar (PROMPT-109)
   if (tocouQuadroEstudos(p)) { irAoDestino(destinosDoMapa().find(d => d.alvo === 'estudos')); return; }   // 📜 anda até a frente do quadro e abre
   if (ehPraca()) { const alvo = alvoPracaEm(p); if (alvo) { irAlvoPraca(alvo); return; } }   // mural / fliperama
   if (cena.n === 'fliperama') { const a = alvoFliperamaEm(p); if (a) { irAlvoFliperama(a); return; } }    // máquinas e o Téo
@@ -5290,7 +5300,8 @@ function entrarNoDestino(esp) {
   else if (esp.tipo === 'predio') entrarNoPredio(esp.alvo);
   else if (n === 'fliperama') transicao(() => abrirPraca('fliperama'));   // a porta do fliperama volta para a praça
   else if (n === 'laboratorio') transicao(() => abrirPraca('laboratorio'));
-  else if (n === 'casinha') sairDaCasinha();                               // a porta da casinha: a placa (ou de onde veio pelo 🏠)
+  else if (n === 'casinha') sairDaCasinha();                               // a porta da casinha: a vila (ou a placa / de onde veio)
+  else if (n === 'vila') sairDaVila(true);                                 // descendo o caminho da vila: a Praça, na frente da placa
   else if (n === 'loja') sairDaLoja();                                     // a porta da loja volta para o mapa de onde veio
   else transicao(abrirMapaGeral);
 }
@@ -5302,7 +5313,8 @@ function entrarNoPredio(alvo) {
   else if (alvo === 'loja' && LOJA) transicao(() => abrirLojaInterior({ tipo: 'praca' }));
   else if (alvo === 'loja-mercado' && LOJA) transicao(() => abrirLojaInterior({ tipo: 'mapa', n }));
   else if (alvo === 'laboratorio' && LAB) transicao(abrirLaboratorio);
-  else if (alvo === 'casinha' && CASA) transicao(() => abrirCasinha());
+  else if (alvo === 'casinha' && CASA) { vilaVolta = null; transicao(() => (VILA ? abrirVila('entrada') : abrirCasinha())); }
+  else if (alvo.startsWith('vila:')) entrarCasaVila(alvo.slice(5));   // 🏘️ porta de uma casa da vila
   else if (alvo.startsWith('pc:')) { jog.dir = 'costas'; desenharJogador(); abrirComputador(alvo.slice(3)); }   // computador do laboratório
   else if (alvo === 'mesa_damas') { jog.dir = 'costas'; desenharJogador(); abrirMenuDamas(); }
   else if (alvo === 'estudos') { jog.dir = 'costas'; desenharJogador(); abrirEstudos(); }
@@ -5721,7 +5733,7 @@ function irAlvoPraca(alvo) {
     else if (alvo === 'fliperama' && FLIPER) transicao(abrirFliperama);
     else if (alvo === 'loja' && LOJA) transicao(() => abrirLojaInterior({ tipo: 'praca' }));
     else if (alvo === 'laboratorio' && LAB) transicao(abrirLaboratorio);
-    else if (alvo === 'casinha' && CASA) transicao(() => abrirCasinha());
+    else if (alvo === 'casinha' && CASA) { vilaVolta = null; transicao(() => (VILA ? abrirVila('entrada') : abrirCasinha())); }   // 🏘️ (PROMPT-109)
     else if (alvo === 'mesa_damas') { jog.dir = 'costas'; desenharJogador(); abrirMenuDamas(); }
   });
 }
@@ -5803,7 +5815,7 @@ function climaAgora() {
   const c = climaDoDia(), h = brasilia().getUTCHours();
   return c === 'sol' && h >= 12 && h < 15 ? 'calor' : c;
 }
-const climaExterior = () => (cena?.tipo === 'mapa' && (Number(cena.n) > 0 || cena.n === 'praca')) || !$('tela-geral').hidden;
+const climaExterior = () => (cena?.tipo === 'mapa' && (Number(cena.n) > 0 || cena.n === 'praca' || cena.n === 'vila')) || !$('tela-geral').hidden;
 const climaParaFala = () => { const c = climaAgora(); return ['chuva', 'calor', 'vento'].includes(c) && climaExterior() ? c : null; };
 function aplicarClima() {
   const c = climaAgora(), raiz = document.documentElement;
@@ -5859,7 +5871,7 @@ function pontoComClima(ponto) {
 // cena nova: externo (mapa da cidade ou Praça) liga a camada e monta as luzes; interior desliga
 function cenaDiaNoite() {
   dnCena = cena;
-  const externo = cena?.tipo === 'mapa' && (Number(cena.n) > 0 || cena.n === 'praca');
+  const externo = cena?.tipo === 'mapa' && (Number(cena.n) > 0 || cena.n === 'praca' || cena.n === 'vila');
   $('tela-cena').classList.toggle('dn-ativo', !!externo);
   const luzes = externo ? LUZES?.[Number(cena.n) > 0 ? 'mapa' + cena.n : cena.n] : null;
   montarPocas(externo);
@@ -7419,7 +7431,9 @@ function lerCasinha(v) {
   for (const [id, n] of Object.entries(c.guardados || {})) if (Number(n) > 0) guardados[id] = Number(n);
   return { guardados, moveis, cama_gratis: !!c.cama_gratis, kit: !!c.kit, quadros: !!c.quadros, publicada: !!c.publicada,   // quadros: os 1ºs quadrinhos já foram pendurados
     vaso: c.vaso && typeof c.vaso === 'object' ? { ...c.vaso } : null, brinquedo_dia: c.brinquedo_dia || null,
-    coracoes_vistos: Number(c.coracoes_vistos) || 0 };   // ❤️ quantos o dono já viu (PROMPT-107)   // 🌱 { fase, regas, ultimo_dia } · 🧸 dia do +1
+    coracoes_vistos: Number(c.coracoes_vistos) || 0,   // ❤️ quantos o dono já viu (PROMPT-107)
+    cor: typeof c.cor === 'string' ? c.cor : null, convites: { ...(c.convites || {}) },   // 🏘️ vila (PROMPT-109): cor do telhado, convites enviados
+    vizinhos_vistos: { ...(c.vizinhos_vistos || {}) }, mudou: Number(c.mudou) || 0 };   // 🌱 { fase, regas, ultimo_dia } · 🧸 dia do +1
 }
 const qtdCasa = (id) => (Number(estado.casinha?.guardados?.[id]) || 0) + (estado.casinha?.moveis || []).filter(m => m.id === id).length;
 // tamanho do móvel na vista dele (px lógicos)
@@ -7450,7 +7464,7 @@ async function abrirCasinha(visita = null, volta = null) {
   const turmaV = visita && nomeVisivel(visita.dados.turma || '');
   if (visita) $('cena-titulo').innerHTML = `🏠 Casinha de <b>${esc(nomeVisivel(visita.dados.nome) || 'colega')}</b>${turmaV ? ` (${esc(turmaV)})` : ''}`;
   else $('cena-titulo').textContent = '🏠 Minha casinha';
-  $('btn-cena-voltar').textContent = volta && volta.n !== 'praca' ? `⟵ Mapa ${volta.n}` : '⟵ Praça';
+  $('btn-cena-voltar').textContent = volta?.n === 'vila' ? '⟵ Vila' : volta && volta.n !== 'praca' ? `⟵ Mapa ${volta.n}` : '⟵ Praça';
   $('btn-cena-voltar').hidden = false;
   $('tela-cena').classList.remove('jr-no-ginasio');
   mostrarTela('tela-cena');
@@ -7481,7 +7495,7 @@ async function abrirCasinha(visita = null, volta = null) {
     if (!casaSemGravar) gravar({ 'casinha/quadros': true, 'casinha/moveis': c.moveis.map(limparMovel) });
   }
   const Q = CASA.quarto, [ex, ey] = Q.porta.entrada;
-  cs = { visita, volta: visita ? null : volta, moveis: [], guardados: visita ? {} : { ...c.guardados }, arrumando: false, sel: null, ida: null, petAlvo: null, petVel: 0, tSono: 0 };
+  cs = { visita, volta, moveis: [], guardados: visita ? {} : { ...c.guardados }, arrumando: false, sel: null, ida: null, petAlvo: null, petVel: 0, tSono: 0 };
   cs.moveis = (visita ? lerCasinha({ moveis: visita.dados.moveis }).moveis : c.moveis.map(m => ({ ...m }))).filter(m => itemCasa(m.id));
   for (const m of cs.moveis) m.vista = vistaValida(itemCasa(m.id), m.vista);
   if (!visita) for (const k of insigniasGanhas()) if (!cs.moveis.some(m => m.id === 'ins_' + k)) cs.guardados['ins_' + k] = 1;   // os outros quadrinhos: nos guardados
@@ -7512,12 +7526,19 @@ async function abrirCasinha(visita = null, volta = null) {
 // sair: pela placa, volta à Praça; pelo 🏠 do HUD, volta ao mapa e à posição de onde veio
 function sairDaCasinha() {
   const v = cs?.volta;
+  transicao(() => (!v ? abrirPraca('casinha') : v.n === 'vila' ? abrirVila({ lado: v.lado }) : v.n === 'praca' ? abrirPraca({ pos: v }) : abrirMapa(v.n, { pos: v })));
+}
+// ⬅ Voltar da vila: para onde estava antes do 🏠 (sem 🏠: a Praça, na frente da placa)
+function sairDaVila(pelaPorta = false) {
+  const v = pelaPorta ? null : vilaVolta;
+  vilaVolta = null;
   transicao(() => (!v ? abrirPraca('casinha') : v.n === 'praca' ? abrirPraca({ pos: v }) : abrirMapa(v.n, { pos: v })));
 }
 function irParaCasa() {
   if (!CASA || !carregouProgresso || transicionando || perguntaAberta || sobreposicaoAberta() || !mapaComCasa()) return;
   const volta = { n: cena.n, x: jog.x, y: jog.y, dir: jog.dir };
-  transicao(() => abrirCasinha(null, volta));
+  if (VILA) { vilaVolta = volta; transicao(() => abrirVila({ casa: true })); }   // 🏘️ na frente da minha porta (PROMPT-109)
+  else transicao(() => abrirCasinha(null, volta));
 }
 const mapaComCasa = () => cena?.tipo === 'mapa' && (Number(cena.n) > 0 || cena.n === 'praca');   // mapas 1–13 e Praça
 const limparMovel = (m) => ({ id: m.id, x: Math.round(m.x), y: Math.round(m.y), vista: m.vista, espelho: !!m.espelho });
@@ -7954,7 +7975,7 @@ async function publicarCasinha() {
   if (casaSemGravar || !entraNoRanking()) return;
   const pet = petsOk && !petFora() && estado.pets?.ativo;
   const dados = { moveis: estado.casinha.moveis, pet: pet ? { pet, forma: formaDe(pet), tinta: tintaVisivel(pet) || null } : null,
-    nome: nomeRanking(), turma: sessao.turma || '', vaso: faseVaso(), ts: Date.now(),
+    nome: nomeRanking(), turma: sessao.turma || '', vaso: faseVaso(), cor: estado.casinha.cor || null, ts: Date.now(),
     ins: Object.fromEntries(insigniasGanhas().map(k => [k, { d: estado.ginasios[k].dourada ? 1 : 0, t: estado.ginasios[k].dataInsignia || 0 }])),   // PROMPT-107
     peixes: { ...(estado.pescaEspecies || {}) } };
   try {
@@ -8154,7 +8175,7 @@ function insDe(chave) {
 }
 const especiesCasa = () => (cs?.visita ? cs.visita.dados.peixes || {} : estado.pescaEspecies || {});
 
-async function visitarCasinha(uid) {
+async function visitarCasinha(uid, volta = null) {   // volta: { n: 'vila', lado } — entrou pela porta da vila
   if (!CASA || !uid || uid === sessao.uid || transicionando) return;
   let d = null;
   try { const s = await get(ref(db, `${basePraca()}/casinhas/${uid}`)); d = s.exists() ? s.val() : null; }
@@ -8162,7 +8183,7 @@ async function visitarCasinha(uid) {
   if (!d?.moveis || !visivelNoRanking(uid, d)) { avisoPet('Essa casinha não está aberta para visitas agora.'); return; }
   $('cs-menu').hidden = $('online-lista').hidden = true;
   fecharCartaoColega();
-  transicao(() => abrirCasinha({ uid, dados: d }));
+  transicao(() => abrirCasinha({ uid, dados: d }, volta));
 }
 
 // ── 🐾 o pet do dono passeia pelo quarto (um "líder" invisível anda pela grade e o pet o segue) ──
@@ -8301,6 +8322,393 @@ async function mostrarMaisCurtidas() {
       <b>${esc(nomeVisivel(r.nome) || 'Aluno')}</b><span class="cs-curt-n">❤️ ${Number(r.coracoes) || 0}</span>
       ${uid === sessao.uid ? '<em>você</em>' : `<button class="jr-btn" data-visitar-casa="${esc(uid)}">🏠 Visitar</button>`}</li>`).join('')
     : `<li class="cs-curt-vazio">Ninguém da ${esc(nomeVisivel(turma) || 'turma')} arrumou a casinha ainda.</li>`;
+}
+
+// ============================================================
+//  🏘️ VILA DAS CASINHAS (PROMPT-109) — dados/jogo/vila.json. Cada aluno tem a sua vila: a casa dele no meio, os vizinhos
+//  nos lados (esquerda e depois direita); lado sem vizinho = casa cinza "🏡 Disponível". Sem jogadores ao vivo: vizinho
+//  online = janela acesa; o pet dele sentado na porta. Entra pela placa da Praça (na entrada) ou pelo 🏠 do HUD (na frente
+//  da própria porta). Portas: a minha casinha · a do vizinho (visita, com ❤️) · Disponível (convidar).
+//  jogo_revisao_praca(_teste)/vila/{uid}/vizinhos/{outro} = { lado, ts, nome, turma }   (nos dois sentidos)
+//  jogo_revisao_praca(_teste)/vila_convites/{convidado}/{quem convida} = { nome, turma, ts }
+//  Estado do aluno: casinha.cor · casinha.convites { uid: ts } (enviados) · casinha.vizinhos_vistos { uid: true } · casinha.mudou (ts)
+//  ?vila=cheia (modo teste): 2 vizinhos falsos (um online), sem gravar.
+// ============================================================
+let VILA = null;              // vila.json
+let vilaVolta = null;         // de onde veio pelo 🏠 ({ n, x, y, dir }); null = Praça
+let vizinhos = {};            // os meus: { uid: { lado, ts, nome, turma } } (ao vivo)
+let vilaCheia = false, pararVizinhos = null, pararConvitesVila = null;
+const convitesVistos = new Set();
+const DIA_MS = 864e5;
+const ehVila = () => cena?.n === 'vila';
+const cfgViz = () => VILA?.vizinhos || {};
+const corCasa = (c) => ((VILA?.cores || []).includes(c) ? c : VILA?.cor_padrao || 'azul');
+const imgCasaVila = (cor) => `${IMG}/vila/${String(VILA.casa?.imagem || 'casa_{cor}.webp').replace('{cor}', cor)}`;
+const LADOS = ['esquerda', 'direita'];
+const podeVizinho = (turmaOutro) => entraNoRanking() && !desafiosOff?.todas && !desafiosOff?.[sessao.turma] && !desafiosOff?.[turmaOutro];
+const VIZINHOS_FALSOS = {
+  TESTE_vizinho_1: { lado: 'esquerda', nome: 'Ana', turma: '8E', online: true, cor: 'rosa', pet: { pet: 'gato', forma: 'gato', tinta: null } },
+  TESTE_vizinho_2: { lado: 'direita', nome: 'João', turma: '8D', cor: 'verde', pet: { pet: 'tigre', forma: 'tigre', tinta: null } },
+};
+const meusVizinhos = () => (vilaCheia ? VIZINHOS_FALSOS : vizinhos);
+
+// onde: 'entrada' (placa da Praça) · { casa: true } (🏠 do HUD: na frente da minha porta) · { lado } (saiu daquela casinha)
+async function abrirVila(onde = 'entrada') {
+  if (!VILA || !carregouProgresso) return;
+  sairPesca(false);
+  cena = null;
+  esconderBalao();
+  fecharCartaoColega();
+  fecharBalaoVila();
+  $('btn-revanche').hidden = true;
+  $('cena-aviso').hidden = true;
+  $('cena-atores').innerHTML = '';
+  $('cena-titulo').textContent = '🏘️ Vila das Casinhas';
+  $('btn-cena-voltar').textContent = vilaVolta && vilaVolta.n !== 'praca' ? `⬅ Mapa ${vilaVolta.n}` : '⬅ Praça';
+  $('btn-cena-voltar').hidden = false;
+  $('tela-cena').classList.remove('jr-no-ginasio');
+  mostrarTela('tela-cena');
+  $('cena-palco').style.visibility = 'hidden';
+  limparPessoas();
+  sairDoMapaOnline();
+  enviarOnline({ mapa: 'praca', local: 'vila' });   // na vila não há ninguém ao vivo
+  const [grade] = await Promise.all([carregarGrade(VILA.trilha || 'trilha-vila.png'), trocarFundo(`${IMG}/vila/${VILA.imagem || 'vila.webp'}`)]);
+  const naTrilha = (x, y) => centroCelula(celulaMaisProxima(grade, x, y));
+  const s = VILA.saida_praca || {}, sx = s.x ? (s.x[0] + s.x[1]) / 2 : VILA.entrada[0], sy = Math.min(H - 4, (s.y_min || 755) + 6);
+  cena = { tipo: 'mapa', n: 'vila', cfg: { entrada: VILA.entrada, saidas: [[sx, sy]] }, grade, portas: {}, naTrilha, saidas: [{ x: sx, y: sy, trilha: naTrilha(sx, sy) }] };
+  cena.casas = Object.entries(VILA.casas || {}).map(([lado, c]) => ({ lado, porta: c.porta, trilha: naTrilha(c.porta[0], c.porta[1] + 10) }));
+  destinoEspecial = null;
+  alvoMapa = null;
+  pertoSaidaGin = false;
+  const casa = onde?.casa ? 'meio' : onde?.lado;
+  const cs0 = casa && cena.casas.find(c => c.lado === casa);
+  if (cs0) posicionarJogador(cs0.trilha[0], cs0.trilha[1] + 6, 'frente');
+  else posicionarJogador(VILA.entrada[0], VILA.entrada[1], 'costas');
+  soltouDesdeTroca = false;
+  desenharVila();
+  ajustarCamera();
+  $('cena-palco').style.visibility = '';
+  $('btn-colegas').hidden = $('btn-reacao').hidden = true;
+  atualizarBotaoPet();
+  carregarDadosVila();   // cores, pets e quem está online (a casa aparece já; os detalhes chegam depois)
+}
+
+// as 3 casas: a casa (escala e âncora do json, a porta em cima de casas.*.porta), o rótulo, a janela acesa e o pet na porta
+function quemMora(lado) {
+  if (lado === 'meio') return { eu: true, nome: 'Você', cor: corCasa(estado.casinha?.cor) };
+  const e = Object.entries(meusVizinhos()).find(([, v]) => v?.lado === lado);
+  if (!e) return null;
+  const [uid, v] = e, d = cena.dadosVila?.[uid] || {};
+  return { uid, nome: nomeVisivel(v.nome || d.nome) || 'Vizinho', turma: v.turma || d.turma, cor: corCasa(v.cor || d.cor), online: !!(v.online || d.online), pet: v.pet || d.pet };
+}
+function desenharVila() {
+  const atores = $('cena-atores');
+  for (const el of atores.querySelectorAll('.vila-casa, .vila-rotulo, .vila-pet')) el.remove();
+  for (const o of cena.petsVila || []) o.anim = null;
+  cena.petsVila = [];
+  const C = VILA.casa || {}, k = Number(C.escala) || 0.9, [ax, ay] = C.ancora || [189, 430];
+  let html = '';
+  for (const c of cena.casas) {
+    const q = quemMora(c.lado), cor = q ? q.cor : VILA.cor_disponivel || 'cinza';
+    c.quem = q;
+    const [px, py] = c.porta;
+    html += `<div class="vila-casa${q?.online ? ' online' : ''}" data-lado="${c.lado}" style="left:${px - ax * k}px;top:${py - ay * k}px;width:${374 * k}px;height:${430 * k}px;z-index:${Math.round(py)}">
+      <img src="${imgCasaVila(cor)}" alt="" draggable="false"/><i class="vila-janela e"></i><i class="vila-janela d"></i></div>
+      <div class="jr-rotulo-porta jr-rotulo-praca vila-rotulo" style="left:${px}px;top:${py - 104}px"><span>${q ? `🏠 ${esc(q.nome)}` : '🏡 Disponível'}</span></div>`;
+  }
+  atores.insertAdjacentHTML('beforeend', html);
+  // o pet do vizinho, sentado ao lado da porta, com a tinta dele
+  for (const c of cena.casas) {
+    const p = c.quem && !c.quem.eu ? c.quem.pet : null, pet = p && petValido(petAtual(p.pet)) ? petAtual(p.pet) : null;
+    if (!pet) continue;
+    const forma = formaValida(pet, p.forma), img = document.createElement('img');
+    img.className = 'jr-ator jr-pet vila-pet'; img.alt = ''; img.draggable = false;
+    const [px, py] = c.porta, alt = altImagemPet(forma) * ESCALA_ATORES;
+    Object.assign(img.style, { left: px + 52 + 'px', top: py + 6 + 'px', height: alt + 'px', zIndex: Math.round(py + 6) });
+    atores.appendChild(img);
+    const anim = new PetParado(img);
+    anim.definir(forma);
+    aplicarTinta(img, p.tinta || null, true);
+    cena.petsVila.push({ img, anim });
+  }
+}
+async function carregarDadosVila() {
+  const n = cena;
+  const uids = Object.keys(vilaCheia ? {} : vizinhos);
+  if (!uids.length) return;
+  const [copias, online] = await Promise.all([
+    Promise.all(uids.map(u => get(ref(db, `${basePraca()}/casinhas/${u}`)).then(s => (s.exists() ? s.val() : null)).catch(() => null))),
+    lerTodos().catch(() => ({})),
+  ]);
+  if (cena !== n) return;
+  cena.dadosVila = {};
+  uids.forEach((u, i) => {
+    const c = copias[i] || {}, r = online[u];
+    const on = !!r && Date.now() - (Number(r.ts) || 0) < VALIDADE_MS;
+    cena.dadosVila[u] = { nome: c.nome, turma: c.turma, cor: c.cor, online: on, pet: c.pet || (r?.pet ? { pet: r.pet, forma: r.pet_forma, tinta: r.pet_tinta } : null) };
+  });
+  desenharVila();
+}
+function atualizarVila(dt) {
+  for (const o of cena.petsVila || []) o.anim?.atualizar(dt);
+  posicionarBalaoVila();
+}
+
+// toque: na porta (ou andando até ela) entra; no resto da casa, o balão (minha: cor do telhado; vizinho: visitar / deixar)
+function casaVilaEm(p) {
+  const C = VILA.casa || {}, k = Number(C.escala) || 0.9, [ax, ay] = C.ancora || [189, 430];
+  for (const c of cena.casas || []) {
+    const [px, py] = c.porta, x0 = px - ax * k, y0 = py - ay * k;
+    if (p.x >= x0 && p.x <= x0 + 374 * k && p.y >= y0 && p.y <= py + 12) return { c, porta: Math.abs(p.x - px) < 48 && p.y > py - 95 };
+  }
+  return null;
+}
+function tocarCasaVila(p) {
+  const r = casaVilaEm(p);
+  if (!r) return false;
+  destinoEspecial = null;
+  if (r.porta || !r.c.quem) irAoDestino(destinosDoMapa().find(d => d.alvo === 'vila:' + r.c.lado));   // Disponível: qualquer toque leva ao convite
+  else balaoVila(r.c);
+  return true;
+}
+function entrarCasaVila(lado) {
+  const c = cena.casas.find(x => x.lado === lado);
+  if (!c) return;
+  jog.dir = 'costas'; desenharJogador();
+  const q = quemMora(lado);
+  if (!q) { abrirBuscaVizinho(); return; }
+  if (q.eu) { transicao(() => abrirCasinha(null, { n: 'vila', lado })); return; }
+  if (vilaCheia) { avisoPet('Modo ?vila=cheia: vizinho de mentira, sem casinha.'); return; }
+  visitarCasinha(q.uid, { n: 'vila', lado });
+}
+
+// ── balão sobre a casa ──
+let balaoVilaC = null;
+function balaoVila(c, passo = '') {
+  const el = $('vila-balao'), q = c.quem;
+  if (!q) return;
+  let html;
+  if (q.eu) html = `<b>🎨 Cor do telhado</b><div class="vila-cores">${(VILA.cores || []).map(cor => `<button class="vila-cor${corCasa(estado.casinha?.cor) === cor ? ' sel' : ''}" data-vila-cor="${cor}" aria-label="${cor}" style="--cor:var(--vila-${cor})"></button>`).join('')}</div>`;
+  else if (passo === 'deixar') html = `<span>Deixar de ser vizinho de <b>${esc(q.nome)}</b>?</span><div class="jr-pessoa-botoes"><button class="jr-btn jr-btn-sec" data-vila="nao">Não</button><button class="jr-btn" data-vila="sim">📦 Sim, deixar</button></div>`;
+  else html = `<b>🏠 ${esc(q.nome)}</b>${q.online ? '<span>🟢 Online agora</span>' : ''}<div class="jr-pessoa-botoes"><button class="jr-btn jr-btn-ouro" data-vila="visitar">🏠 Visitar</button><button class="jr-btn jr-btn-sec" data-vila="deixar">📦 Deixar de ser vizinho</button></div>`;
+  el.innerHTML = html;
+  el.hidden = false;
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+  clearTimeout(balaoVilaC?.timer);
+  balaoVilaC = { c, timer: setTimeout(fecharBalaoVila, 9000) };
+  posicionarBalaoVila();
+}
+function posicionarBalaoVila() {
+  if (!balaoVilaC || $('vila-balao').hidden) return;
+  const C = VILA.casa || {}, k = Number(C.escala) || 0.9, [, ay] = C.ancora || [189, 430];
+  posicionarNaTela($('vila-balao'), balaoVilaC.c.porta[0], balaoVilaC.c.porta[1] - ay * k * 0.55);
+}
+function fecharBalaoVila() {
+  if (balaoVilaC) clearTimeout(balaoVilaC.timer);
+  balaoVilaC = null;
+  if ($('vila-balao')) $('vila-balao').hidden = true;
+}
+function cliqueBalaoVila(e) {
+  e.stopPropagation();
+  const c = balaoVilaC?.c;
+  if (!c) return;
+  const cor = e.target.closest('[data-vila-cor]')?.dataset.vilaCor, b = e.target.closest('[data-vila]')?.dataset.vila;
+  if (cor) { escolherCorTelhado(cor); return; }
+  if (b === 'visitar') { fecharBalaoVila(); irAoDestino(destinosDoMapa().find(d => d.alvo === 'vila:' + c.lado)); }
+  else if (b === 'deixar') balaoVila(c, 'deixar');
+  else if (b === 'nao') fecharBalaoVila();
+  else if (b === 'sim') { fecharBalaoVila(); deixarDeSerVizinho(c.quem.uid); }
+}
+// 🎨 a cor do telhado: casinha/cor e na cópia pública
+function escolherCorTelhado(cor) {
+  if (!(VILA.cores || []).includes(cor)) return;
+  const c = estado.casinha;
+  c.cor = cor;
+  if (!casaSemGravar) {
+    gravar({ 'casinha/cor': cor });
+    if (c.publicada) update(ref(db, `${basePraca()}/casinhas/${sessao.uid}`), { cor }).catch(e => console.warn('[jogo-revisao] cor na cópia pública', e?.code || e));
+  }
+  tocar('clique');
+  const lado = balaoVilaC?.c.lado;
+  desenharVila();
+  const c2 = cena.casas.find(x => x.lado === lado);
+  if (c2) balaoVila(c2);
+}
+
+// ── 🏡 Vizinhos: ao vivo (os meus e os convites para mim) ──
+function ouvirVila() {
+  if (!VILA || !carregouProgresso || !entraNoRanking() || pararVizinhos) return;
+  try {
+    pararVizinhos = onValue(ref(db, `${basePraca()}/vila/${sessao.uid}/vizinhos`), (snap) => {
+      vizinhos = snap.exists() ? snap.val() || {} : {};
+      conferirVizinhosNovos();
+      if (ehVila()) { desenharVila(); carregarDadosVila(); }
+    }, () => {});
+    pararConvitesVila = onValue(ref(db, `${basePraca()}/vila_convites/${sessao.uid}`), (snap) => {
+      for (const [uid, cv] of Object.entries(snap.exists() ? snap.val() || {} : {})) receberConviteVila(uid, cv);
+    }, () => {});
+  } catch (e) { console.warn('[jogo-revisao] vila indisponível', e?.code || e); }
+}
+// chegou vizinho novo: "Agora vocês são vizinhos!"; saiu um: aviso neutro (sem dizer quem nem por quê)
+function conferirVizinhosNovos() {
+  const c = estado.casinha, vistos = { ...(c.vizinhos_vistos || {}) };
+  let mudou = false;
+  for (const uid of Object.keys(vizinhos)) if (!vistos[uid]) { vistos[uid] = true; mudou = true; avisoPet('🏡 Agora vocês são vizinhos!', true); }
+  for (const uid of Object.keys(vistos)) if (!vizinhos[uid]) { delete vistos[uid]; mudou = true; avisoPet('🏡 A casa ao lado ficou disponível.'); }
+  if (mudou) { c.vizinhos_vistos = vistos; gravar({ 'casinha/vizinhos_vistos': Object.keys(vistos).length ? vistos : null }); }
+}
+// convite recebido: um cartão por vez (Aceitar / Recusar); vencido some sozinho
+const filaConvitesVila = [];
+function receberConviteVila(uid, cv) {
+  if (!cv || convitesVistos.has(uid)) return;
+  const no = ref(db, `${basePraca()}/vila_convites/${sessao.uid}/${uid}`);
+  if (agoraServ() - (Number(cv.ts) || 0) > (cfgViz().convite_expira_dias ?? 3) * DIA_MS || vizinhos[uid] || !visivelNoRanking(uid, cv)) { convitesVistos.add(uid); remove(no).catch(() => {}); return; }
+  if (!podeVizinho(cv.turma)) return;   // desafios desligados pela professora: o convite espera (ou vence)
+  convitesVistos.add(uid);
+  filaConvitesVila.push({ uid, ...cv });
+  mostrarConviteVila();
+}
+function mostrarConviteVila() {
+  if (!$('vila-convite').hidden || !filaConvitesVila.length) return;
+  if (perguntaAberta || transicionando || sobreposicaoAberta()) { setTimeout(mostrarConviteVila, 2000); return; }
+  const cv = filaConvitesVila[0], turma = nomeVisivel(cv.turma || '');
+  $('vila-conv-txt').innerHTML = `🏡 <b>${esc(nomeVisivel(cv.nome) || 'Um colega')}</b>${turma ? ` (${esc(turma)})` : ''} te convidou para ser vizinho!`;
+  $('vila-convite').hidden = false;
+}
+async function responderConviteVila(aceitar) {
+  const cv = filaConvitesVila.shift();
+  $('vila-convite').hidden = true;
+  if (!cv) return;
+  const base = basePraca(), no = ref(db, `${base}/vila_convites/${sessao.uid}/${cv.uid}`);
+  if (!aceitar) { remove(no).catch(() => {}); setTimeout(mostrarConviteVila, 400); return; }   // quem convidou não é avisado
+  if (!podeVizinho(cv.turma)) { avisoPet('Os convites estão pausados agora.'); setTimeout(mostrarConviteVila, 400); return; }
+  const max = cfgViz().max ?? 2, agora = agoraServ();
+  // transação nos dois lados: os dois ainda têm vaga? (se o 2º não tiver, desfaz o 1º)
+  const entra = (outro, dados) => (cur) => {
+    cur = cur || {};
+    if (cur[outro]) return cur;
+    if (Object.keys(cur).length >= max) return undefined;
+    const lado = LADOS.find(l => !Object.values(cur).some(v => v?.lado === l));
+    if (!lado) return undefined;
+    cur[outro] = { lado, ts: agora, ...dados };
+    return cur;
+  };
+  try {
+    const t1 = await runTransaction(ref(db, `${base}/vila/${sessao.uid}/vizinhos`), entra(cv.uid, { nome: cv.nome || '', turma: cv.turma || '' }));
+    if (!t1.committed) { remove(no).catch(() => {}); avisoPet('🏡 Sua vila já está cheia: deixe de ser vizinho de alguém para aceitar.'); return; }
+    const t2 = await runTransaction(ref(db, `${base}/vila/${cv.uid}/vizinhos`), entra(sessao.uid, { nome: nomeRanking(), turma: sessao.turma || '' }));
+    if (!t2.committed) {
+      await remove(ref(db, `${base}/vila/${sessao.uid}/vizinhos/${cv.uid}`));
+      remove(no).catch(() => {});
+      avisoPet('🏡 Não deu para aceitar: esse convite não vale mais.');
+      return;
+    }
+    await remove(no);
+    vizinhos = { ...vizinhos, [cv.uid]: t1.snapshot.val()?.[cv.uid] };
+    conferirVizinhosNovos();   // "🏡 Agora vocês são vizinhos!" (uma vez)
+    if (ehVila()) { desenharVila(); carregarDadosVila(); }
+    tocar('vitoria');
+  } catch (e) {
+    console.warn('[jogo-revisao] não deu para aceitar o convite', e?.code || e);
+    avisoPet('Não deu para aceitar agora. Tente de novo.');
+  } finally { setTimeout(mostrarConviteVila, 600); }
+}
+
+// convidar: confere as regras e grava vila_convites/{convidado}/{eu}
+async function convidarVizinho(uid, nome, turma) {
+  const cfg = cfgViz(), max = cfg.max ?? 2, agora = agoraServ(), c = estado.casinha, base = basePraca();
+  if (!uid || uid === sessao.uid || vizinhos[uid]) return;
+  if (!podeVizinho(turma)) { avisoPet('Os convites estão pausados agora.'); return; }
+  if (Object.keys(vizinhos).length >= max) { avisoPet(`🏡 Sua vila já tem ${max} vizinhos.`); return; }
+  const enviados = { ...(c.convites || {}) }, ts = Number(enviados[uid]) || 0;
+  const expira = (cfg.convite_expira_dias ?? 3) * DIA_MS, de_novo = ts + expira + (cfg.reconvidar_dias ?? 7) * DIA_MS;
+  if (ts && agora - ts < expira) { avisoPet('📨 Você já convidou essa pessoa. Espere a resposta!'); return; }
+  if (ts && agora < de_novo) { const d = Math.ceil((de_novo - agora) / DIA_MS); avisoPet(`Você poderá convidar de novo em ${d} dia${d === 1 ? '' : 's'}.`); return; }
+  try {
+    // pendentes: os enviados que ainda esperam resposta (o convite existe e não venceu)
+    const recentes = Object.entries(enviados).filter(([u, t]) => u !== uid && agora - Number(t) < expira);
+    const ainda = await Promise.all(recentes.map(([u]) => get(ref(db, `${base}/vila_convites/${u}/${sessao.uid}`)).then(s => s.exists()).catch(() => true)));
+    if (ainda.filter(Boolean).length >= (cfg.convites_pendentes_max ?? 3)) { avisoPet(`📨 Você já tem ${cfg.convites_pendentes_max ?? 3} convites esperando resposta.`); return; }
+    const s = await get(ref(db, `${base}/vila/${uid}/vizinhos`));
+    if (s.exists() && Object.keys(s.val() || {}).length >= max) { avisoPet('🏡 Não dá para convidar essa pessoa agora.'); return; }   // neutro: não conta quantos vizinhos ela tem
+    await set(ref(db, `${base}/vila_convites/${uid}/${sessao.uid}`), { nome: nomeRanking(), turma: sessao.turma || '', ts: agora });
+    enviados[uid] = agora;
+    for (const [u, t] of Object.entries(enviados)) if (agora - Number(t) > expira + (cfg.reconvidar_dias ?? 7) * DIA_MS) delete enviados[u];   // os velhos saem
+    c.convites = enviados;
+    gravar({ 'casinha/convites': enviados });
+    tocar('acerto');
+    avisoPet(`📨 Convite enviado para ${nomeVisivel(nome) || 'o colega'}!`);
+  } catch (e) {
+    console.warn('[jogo-revisao] não deu para convidar', e?.code || e);
+    avisoPet('Não deu para convidar agora. Tente de novo.');
+  }
+}
+// cartão do colega: "🏡" só se os dois têm vaga, ainda não são vizinhos e os convites estão ligados
+async function botaoConvidarNoCartao(c, el) {
+  if (!VILA || !c?.uid || vizinhos[c.uid] || !podeVizinho(c.reg?.turma) || Object.keys(vizinhos).length >= (cfgViz().max ?? 2)) return;
+  try {
+    const s = await get(ref(db, `${basePraca()}/vila/${c.uid}/vizinhos`));
+    if (s.exists() && Object.keys(s.val() || {}).length >= (cfgViz().max ?? 2)) return;
+  } catch (_) { return; }
+  if (cartaoColega?.c !== c || el.querySelector('[data-vizinho]')) return;
+  el.querySelector('[data-oi]')?.insertAdjacentHTML('beforebegin', '<button class="jr-colega-oi" data-vizinho aria-label="Convidar para ser vizinho" title="Convidar para ser vizinho">🏡</button>');
+}
+// casa Disponível: busca de colegas por nome (todas as turmas)
+function abrirBuscaVizinho() {
+  if (!entraNoRanking()) { avisoPet('🏡 Esta casa está disponível.'); return; }
+  if (vilaCheia) { avisoPet('Modo ?vila=cheia: as duas casas já têm vizinhos de mentira.'); return; }
+  if (desafiosOff?.todas || desafiosOff?.[sessao.turma]) { avisoPet('🏡 Os convites estão pausados agora.'); return; }
+  $('vila-busca-txt').value = '';
+  renderBuscaVizinho();
+  $('vila-busca').hidden = false;
+}
+const uidAluno = (turma, nome) => (turma + '_' + nome).replace(/[.#$[\]/\s]/g, '_');
+function renderBuscaVizinho() {
+  const q = String($('vila-busca-txt').value || '').trim().toLowerCase();
+  const sem = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const lista = [];
+  if (q.length >= 2) for (const [turma, nomes] of Object.entries(ALUNOS_POR_TURMA)) {
+    if (!TURMAS_PLACAR.includes(turma)) continue;
+    for (const nome of nomes) {
+      const uid = uidAluno(turma, nome);
+      if (uid === sessao.uid || ALUNOS_TESTE.includes(uid) || /PROFESSOR|TESTE/i.test(nome) || !sem(nome.toLowerCase()).includes(sem(q))) continue;
+      lista.push({ uid, nome, turma });
+    }
+  }
+  $('vila-busca-lista').innerHTML = q.length < 2 ? '<li class="cs-curt-vazio">Digite pelo menos 2 letras do nome.</li>'
+    : lista.slice(0, 20).map(a => `<li><b>${esc(a.nome)}</b><span class="cs-curt-n">${esc(a.turma)}</span>${vizinhos[a.uid] ? '<em>vizinho</em>'
+      : desafiosOff?.[a.turma] ? '<em>pausado</em>' : `<button class="jr-btn" data-convidar="${esc(a.uid)}" data-nome="${esc(a.nome)}" data-turma="${esc(a.turma)}">🏡 Convidar</button>`}</li>`).join('')
+      || '<li class="cs-curt-vazio">Ninguém com esse nome.</li>';
+}
+// deixar de ser vizinho: apaga dos dois lados; uma vez a cada mudar_dias
+async function deixarDeSerVizinho(uid) {
+  const c = estado.casinha, dias = cfgViz().mudar_dias ?? 7, falta = (Number(c.mudou) || 0) + dias * DIA_MS - agoraServ();
+  if (vilaCheia) { avisoPet('Modo ?vila=cheia: nada foi gravado.'); return; }
+  if (falta > 0) { const d = Math.ceil(falta / DIA_MS); avisoPet(`Você poderá se mudar em ${d} dia${d === 1 ? '' : 's'}.`); return; }
+  try {
+    const base = basePraca();
+    await Promise.all([remove(ref(db, `${base}/vila/${sessao.uid}/vizinhos/${uid}`)), remove(ref(db, `${base}/vila/${uid}/vizinhos/${sessao.uid}`))]);
+    const v = { ...vizinhos }; delete v[uid]; vizinhos = v;
+    c.mudou = agoraServ();
+    const vistos = { ...(c.vizinhos_vistos || {}) }; delete vistos[uid];   // eu saí: sem aviso para mim
+    c.vizinhos_vistos = vistos;
+    gravar({ 'casinha/mudou': c.mudou, 'casinha/vizinhos_vistos': Object.keys(vistos).length ? vistos : null });
+    avisoPet('📦 Pronto: a casa ao lado ficou disponível.');
+    if (ehVila()) desenharVila();
+  } catch (e) {
+    console.warn('[jogo-revisao] não deu para deixar de ser vizinho', e?.code || e);
+    avisoPet('Não deu agora. Tente de novo.');
+  }
+}
+function ligarVila() {
+  $('vila-balao').addEventListener('click', cliqueBalaoVila);
+  $('vila-convite').addEventListener('click', (e) => { const b = e.target.closest('[data-conv]'); if (b) responderConviteVila(b.dataset.conv === 'aceitar'); });
+  $('vila-busca-txt').addEventListener('input', renderBuscaVizinho);
+  $('vila-busca').addEventListener('click', (e) => {
+    if (e.target === $('vila-busca') || e.target.closest('[data-fechar="vila-busca"]')) { $('vila-busca').hidden = true; return; }
+    const b = e.target.closest('[data-convidar]');
+    if (b) { $('vila-busca').hidden = true; convidarVizinho(b.dataset.convidar, b.dataset.nome, b.dataset.turma); }
+  });
 }
 
 // ============================================================
@@ -11915,6 +12323,7 @@ function ligarEventos() {
   $('btn-insignias-2').addEventListener('click', abrirEstojo);
   $('btn-cena-voltar').addEventListener('click', sairDaCena);
   ligarCasinha();   // 🏠 Arrumar (PROMPT-105)
+  ligarVila();      // 🏘️ vila e vizinhos (PROMPT-109)
 
   $('cena-vp').addEventListener('click', (e) => {
     if (!cena || perguntaAberta) return;
@@ -12157,6 +12566,7 @@ function ligarEventos() {
     if (!cartaoColega) return;
     if (e.target.closest('[data-presente]')) { escolherPresente(cartaoColega.c); return; }
     if (e.target.closest('[data-visitar]')) { visitarCasinha(cartaoColega.c.uid); return; }   // 🏠 (PROMPT-107)
+    if (e.target.closest('[data-vizinho]')) { const c = cartaoColega.c; fecharCartaoColega(); convidarVizinho(c.uid, rotuloColega(c.uid, c.reg), c.reg?.turma); return; }   // 🏡 (PROMPT-109)
     if (e.target.closest('[data-desafiar]')) { escolherModoDesafio(cartaoColega.c); return; }
     const md = e.target.closest('[data-modo]');
     if (md) { confirmarDesafio(cartaoColega.c, md.dataset.modo); return; }

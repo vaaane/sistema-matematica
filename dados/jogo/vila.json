@@ -1,0 +1,61 @@
+{
+ "_nota": "Vila das Casinhas (PROMPT-109). Mapa lógico 1376 × 768. A casa do dono fica no meio; as dos vizinhos nos lados. Casa: img/jogo/vila/casa_{cor}.webp, desenhada com escala 0.9; ancora = ponto da porta (base) na imagem em px naturais, que vai em cima de porta.",
+ "imagem": "vila.webp",
+ "trilha": "trilha-vila.png",
+ "entrada": [
+  699,
+  740
+ ],
+ "saida_praca": {
+  "y_min": 755,
+  "x": [
+   640,
+   758
+  ]
+ },
+ "casas": {
+  "esquerda": {
+   "porta": [
+    297,
+    515
+   ]
+  },
+  "meio": {
+   "porta": [
+    691,
+    515
+   ]
+  },
+  "direita": {
+   "porta": [
+    1082,
+    515
+   ]
+  }
+ },
+ "casa": {
+  "imagem": "casa_{cor}.webp",
+  "escala": 0.9,
+  "ancora": [
+   189,
+   430
+  ]
+ },
+ "cores": [
+  "vermelho",
+  "azul",
+  "verde",
+  "amarelo",
+  "roxo",
+  "rosa"
+ ],
+ "cor_padrao": "azul",
+ "cor_disponivel": "cinza",
+ "vizinhos": {
+  "max": 2,
+  "convites_pendentes_max": 3,
+  "convite_expira_dias": 3,
+  "mudar_dias": 7,
+  "reconvidar_dias": 7
+ }
+}

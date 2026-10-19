@@ -3259,3 +3259,25 @@ button.cs-col-item:hover, button.cs-col-item:focus-visible { border-color: var(-
 #loja.so-moveis .lj-abas { display: none; }
 @media (prefers-reduced-motion: reduce) { .cs-zzz i { animation: none; opacity: .9; } .cs-zzz i:nth-child(2) { transform: translate(.6em, -1em); } .cs-zzz i:nth-child(3) { transform: translate(1.2em, -2em); } }
 .cs-col-caixa .al-topo .bt-lista-x, .cs-menu-caixa .al-topo .bt-lista-x, .cs-comida-caixa .al-topo .bt-lista-x { margin-left: auto; }   /* o ✕ no canto */
+
+/* ── 🏘️ Vila das Casinhas (PROMPT-109) ── */
+:root { --vila-vermelho: #d9443a; --vila-azul: #3f7fd9; --vila-verde: #4caf50; --vila-amarelo: #f2c037; --vila-roxo: #8e5bd6; --vila-rosa: #ec6fa8; }
+.vila-casa { position: absolute; pointer-events: none; }
+.vila-casa img { display: block; width: 100%; height: 100%; filter: drop-shadow(0 4px 3px rgba(0,0,0,.3)); }
+/* vizinho online: as janelas acendem (brilho amarelo) */
+.vila-janela { position: absolute; top: 81%; width: 13%; height: 9%; border-radius: 30%; transform: translate(-50%, -50%); opacity: 0; pointer-events: none;
+  background: radial-gradient(ellipse, rgba(255,226,120,.95) 0%, rgba(255,200,80,.55) 45%, rgba(255,200,80,0) 75%); mix-blend-mode: screen; }
+.vila-janela.e { left: 25.6%; } .vila-janela.d { left: 75.4%; }
+.vila-casa.online .vila-janela { opacity: 1; animation: vila-luz 2.6s ease-in-out infinite; }
+@keyframes vila-luz { 0%, 100% { opacity: .85; } 50% { opacity: 1; } }
+.vila-rotulo { z-index: 1000; }
+.vila-balao { min-width: 150px; }
+.vila-balao span { display: block; font-size: .9em; color: #4a4f6a; }
+.vila-cores { display: flex; gap: 8px; margin-top: 6px; }
+.vila-cor { width: 34px; height: 34px; border-radius: 50%; border: 3px solid #fff; background: var(--cor); box-shadow: 0 0 0 1px rgba(0,0,0,.25); cursor: pointer; padding: 0; }
+.vila-cor.sel { box-shadow: 0 0 0 3px var(--jr-ouro); }
+.vila-busca-txt { width: 100%; min-height: 42px; padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(124,92,252,.6); background: rgba(13,15,26,.8); color: #fff;
+  font: 600 15px 'Inter', sans-serif; -webkit-user-select: text; user-select: text; }
+#vila-busca .cs-curtidas { max-height: calc(var(--jr-alt, 100dvh) * .55); }
+#vila-busca .cs-curtidas em { font-style: normal; color: #a3a1c9; font-size: 13px; }
+@media (prefers-reduced-motion: reduce) { .vila-casa.online .vila-janela { animation: none; } }
