@@ -158,6 +158,7 @@ async function carregarTitulos() {
 // Conferido ao ganhar insígnia e ao abrir o jogo: grava uma vez só e devolve 'mestre' | 'lenda' (para a festa) ou null
 function verificarMestre() {
   if (!carregouProgresso || ehProfessora()) return null;
+  verificarCampeoes();   // 🏆 Quadro dos Campeões (PROMPT-117)
   const { conquistadas, douradas, total } = contarInsignias();
   let festa = null;
   if (conquistadas >= total && !estado.mestre) { estado.mestre = { data: Date.now() }; gravar({ mestre: estado.mestre }); festa = 'mestre'; }
@@ -879,7 +880,7 @@ export async function iniciarJogo(sess) {
   setTimeout(verificarCores, 2500);   // quem já cumpriu as condições ganha as cores (aviso uma vez)
   if (comecaNaPraca) abrirPraca('fonte').catch(() => abrirMapaGeral()).finally(() => { $('jr-carregando').hidden = true; });
   atualizarBotaoMissoes();
-  entrarOnline().catch(() => {}).then(() => { carregarPremiosPesca(); ouvirPresentes(); avisarCoracoes(); ouvirVila(); iniciarPraca(); publicarResumoInsignias(); publicarVencedoresAntigos(); ouvirConvitesAoVivo(); });
+  entrarOnline().catch(() => {}).then(() => { carregarPremiosPesca(); ouvirPresentes(); avisarCoracoes(); ouvirVila(); iniciarPraca(); publicarResumoInsignias(); publicarVencedoresAntigos(); migrarQuadrosV2(); ouvirConvitesAoVivo(); });
   // aluno novo escolhe o personagem antes de tudo (o pet inicial vem depois, ao entrar num mapa)
   if (carregouProgresso && estado.novo && !estado.personagem) abrirEscolhaPersonagem(true);
 }
@@ -1928,6 +1929,7 @@ function renderLoja() {
         ${cheio ? '<button class="lj-comprar ok" disabled>✔ Você já tem</button>' : botao(it.id, v, v ? 'Comprar' : 'Pegar')}
       </div>`;
     }).join('') : '<div class="lj-vazio">Os móveis chegam logo!</div>';
+    if (CASA) html += cartoesQuadros(preco, botao);   // 🏅 quadro de insígnia e 🏆 Quadro dos Campeões (PROMPT-117)
     if (CASA && !$('loja').classList.contains('so-moveis')) html += '<div class="lj-secao">🎨 Reformas</div>' + temasCasa().map(cartaoTema).join('');   // na Dona Cida: no fim da grade
   } else if (lojaAba === 'tintas') {
     const src = pet ? quadrosDe(formaDe(pet), 'sentado_girando')[0] : '';
@@ -1988,8 +1990,34 @@ function venderPeixe(id) {
   renderLoja();
   $('lj-msg').textContent = `Vendeu ${comArtigo(item.nome)} por ${item.venda} moeda${item.venda === 1 ? '' : 's'}.`;
 }
+// 🏅 quadro de insígnia (1 por insígnia ganha; escolhe a insígnia ao comprar) e 🏆 Quadro dos Campeões (só conquistando)
+function cartoesQuadros(preco, botao) {
+  let html = '';
+  const q = CASA.insignia_quadrinho;
+  if (q) {
+    const ganhas = insigniasGanhas(), livres = insigniasSemQuadro().length, v = precoCasa(q), ex = ganhas[0] || 'mapa1-A';
+    const sub = !ganhas.length ? 'Ganhe uma insígnia nos ginásios primeiro' : !livres ? 'Ganhe mais insígnias para comprar outro quadro'
+      : `você escolhe a insígnia · tem ${ganhas.length - livres} de ${ganhas.length}`;
+    html += `<div class="lj-item lj-movel${livres ? '' : ' apagado'}">
+        <div class="lj-emoji"><span class="lj-quadro-ins"><img src="${IMG}/casinha/${q.imagem}" alt="" draggable="false"/>${imgInsigniaQuadro(ex)}</span></div>
+        <div class="lj-info"><b>🏅 Quadro de insígnia</b>${livres ? (casaGratis() ? GRATIS_PROF : preco(v)) : ''}<span class="lj-sub">${sub}</span></div>
+        ${livres ? botao('quadro_ins', v, casaGratis() ? 'Pegar' : 'Comprar') : '<button class="lj-comprar" disabled>🔒</button>'}
+      </div>`;
+  }
+  const qc = CASA.quadro_campeoes;
+  if (qc) {
+    const tem = estado.casinha?.campeoes || qtdCasa(ID_CAMPEOES) > 0;
+    html += `<div class="lj-item lj-movel${tem ? '' : ' apagado'}">
+        <div class="lj-emoji"><span class="lj-camp-mini">🏆</span></div>
+        <div class="lj-info"><b>🏆 ${esc(qc.nome || 'Quadro dos Campeões')}</b><span class="lj-sub">${tem ? 'as 26 insígnias na parede' : 'só conquistando: não está à venda'}</span></div>
+        ${tem ? '<button class="lj-comprar ok" disabled>✔ Você já tem</button>' : '<button class="lj-comprar" disabled>🔒 Conquiste as 26 insígnias</button>'}
+      </div>`;
+  }
+  return html;
+}
 function comprar(id) {
   if (String(id).startsWith('tema:')) { comprarTema(id.slice(5)); return; }   // 🎨 Reformas (aba própria ou no fim dos Móveis)
+  if (id === 'quadro_ins') { if (insigniasSemQuadro().length) abrirColecaoCasa(null, true); return; }   // 🏅 escolhe a insígnia (PROMPT-117)
   const ps = estado.pets, moedas = Number(ps.moedas) || 0, patch = {};
   let msg = '', comprouMovel = null;
   if (lojaAba === 'pesca') {
@@ -7514,36 +7542,48 @@ let CASA = null;              // casinha.json
 let cs = null;                // casinha aberta: { moveis, guardados, arrumando, sel, sono, petAlvo, petVel }
 let casaSemGravar = false;    // ?casinha=cheia
 const ehCasinha = () => cena?.n === 'casinha';
-// 🏅 quadrinho de insígnia (PROMPT-106): id ins_{chave}; grátis, um por insígnia ganha; item de parede, só a vista f
+// 🏅 quadrinho de insígnia (PROMPT-106): id ins_{chave}; item de parede, só a vista f. PROMPT-117: comprado (preço do json),
+// no máximo 1 por insígnia ganha; ao comprar, o aluno escolhe a insígnia. 🏆 Quadro dos Campeões: id `campeoes`, liberado
+// com as 26 insígnias (casinha/campeoes), grade com todas elas
 const ehQuadrinho = (id) => String(id).startsWith('ins_');
+const ID_CAMPEOES = 'campeoes';
 function itemCasa(id) {
+  if (id === ID_CAMPEOES) {
+    const q = CASA?.quadro_campeoes;
+    return q ? { id, nome: q.nome || 'Quadro dos Campeões', emoji: q.emoji || '🏆', tipo: 'parede', largura: Number(q.largura) || 320, vistas: ['f'], limite: 1, campeoes: true } : null;
+  }
   if (!ehQuadrinho(id)) return (CASA?.itens || []).find(i => i.id === id) || null;
   const q = CASA?.insignia_quadrinho, chave = id.slice(4), g = insDe(chave);   // na visita, as do dono
   if (!q || !g?.insignia) return null;
   const [n, G] = chave.replace('mapa', '').split('-');
   return { id, nome: D.questoes[n]?.ginasios?.[G]?.nome || chave, tipo: 'parede', largura: Number(q.largura) || 70, vistas: ['f'], quadrinho: chave };
 }
-const imgMovel = (id, vista) => (ehQuadrinho(id) ? `${IMG}/casinha/${CASA.insignia_quadrinho.imagem}` : `${IMG}/casinha/moveis/${id}_${vista}.webp`);
+const imgMovel = (id, vista) => (ehQuadrinho(id) ? `${IMG}/casinha/${CASA.insignia_quadrinho.imagem}`
+  : id === ID_CAMPEOES ? `${IMG}/casinha/${CASA.quadro_campeoes?.imagem || 'moveis/quadro_campeoes_f.webp'}` : `${IMG}/casinha/moveis/${id}_${vista}.webp`);
 const insigniasGanhas = () => Array.from({ length: NUM_MAPAS }, (_, i) => ['A', 'B'].map(G => chaveGinasio(i + 1, G))).flat().filter(k => estado.ginasios[k]?.insignia);
 const maxQuadrinhos = () => Number(CASA?.insignia_quadrinho?.max_na_parede) || 8;
-// 🏅 quadrinhos sempre na parede (PROMPT-110): cada insígnia ganha sem quadro, até max_na_parede, no primeiro lugar livre
-// da parede do fundo (dos dois lados da janela, entre as vigas). true = pendurou algum
-const XS_QUADROS = [175, 250, 325, 400, 975, 1050, 1125, 1200], Y_QUADROS = 150;
-function pendurarQuadrinhos(moveis) {
-  const lw = Number(CASA.insignia_quadrinho.largura) || 70;
-  const livre = (x) => moveis.every(m => {   // não encosta em nada da parede
-    if (itemCasa(m.id)?.tipo !== 'parede') return true;
-    const [w, h] = tamMovel(m);
-    return Math.abs(m.x - x) >= (w + lw) / 2 + 4 || m.y - h >= Y_QUADROS || m.y <= Y_QUADROS - lw;
-  });
-  let n = moveis.filter(m => ehQuadrinho(m.id)).length, pendurou = false;
-  for (const k of insigniasGanhas().filter(k => !moveis.some(m => m.id === 'ins_' + k))) {
-    const x = n < maxQuadrinhos() ? XS_QUADROS.find(livre) : null;
-    if (x == null) break;
-    moveis.push({ id: 'ins_' + k, x, y: Y_QUADROS, vista: 'f', espelho: false });
-    n++; pendurou = true;
-  }
-  return pendurou;
+const naParede = (moveis) => moveis.filter(m => ehQuadrinho(m.id)).length;
+// as insígnias ganhas que ainda não estão em nenhum quadro (na parede ou guardado)
+const insigniasSemQuadro = () => insigniasGanhas().filter(k => qtdCasa('ins_' + k) === 0);
+// PROMPT-117: os quadrinhos automáticos saem (móveis, guardados e cópia pública), uma vez por aluno (casinha/quadros_v2)
+function migrarQuadrosV2() {
+  const c = estado?.casinha;
+  if (!c || c.quadros_v2 || !carregouProgresso) return;
+  c.moveis = c.moveis.filter(m => !ehQuadrinho(m.id));
+  for (const id of Object.keys(c.guardados)) if (ehQuadrinho(id)) delete c.guardados[id];
+  c.quadros_v2 = true;
+  if (casaSemGravar) return;
+  gravar({ 'casinha/quadros_v2': true, 'casinha/moveis': c.moveis.map(limparMovel), 'casinha/guardados': { ...c.guardados } });
+  if (c.publicada) publicarCasinha();
+}
+// 🏆 com as 26 insígnias, o Quadro dos Campeões entra nos guardados (uma vez)
+function verificarCampeoes() {
+  const c = estado?.casinha;
+  if (!CASA?.quadro_campeoes || !c || c.campeoes || casaSemGravar || insigniasGanhas().length < NUM_MAPAS * 2) return;
+  c.campeoes = true;
+  if (qtdCasa(ID_CAMPEOES) === 0) { c.guardados[ID_CAMPEOES] = 1; if (cs && !cs.visita) cs.guardados[ID_CAMPEOES] = 1; }
+  gravar({ 'casinha/campeoes': true, [`casinha/guardados/${ID_CAMPEOES}`]: c.guardados[ID_CAMPEOES] || null });
+  setTimeout(() => avisoPet('🏆 Você conquistou o Quadro dos Campeões! Pendure na sua casinha.', true), 1500);
 }
 const vistaBase = (it) => (it.fases ? String(it.fases) : it.vistas[0]);   // a escala vem da 1ª vista (no vaso, da fase 4)
 const ALT_CASINHA = 150;      // altura do personagem no quarto (casinha.json → altura_personagem)
@@ -7551,17 +7591,23 @@ const ALT_CASINHA = 150;      // altura do personagem no quarto (casinha.json �
 // dos brilhos, dos balões e do HUD; o personagem continua ordenado pela base
 const Z_PET_CASA = 800;
 const tamImg = new Map();     // src → [largura, altura] naturais
+const imgFalhou = new Set();  // imagens que não existem (o Quadro dos Campeões sem imagem: moldura em CSS)
 function medirImg(src) {
   if (tamImg.has(src)) return Promise.resolve(tamImg.get(src));
   return new Promise(ok => {
     const im = new Image();
     im.onload = () => { const t = [im.naturalWidth || 100, im.naturalHeight || 100]; tamImg.set(src, t); ok(t); };
-    im.onerror = () => ok([100, 100]);
+    im.onerror = () => { imgFalhou.add(src); ok([100, 100]); };
     im.src = src;
   });
 }
 const preCarregarMoveis = () => Promise.all([...(CASA?.itens || []).flatMap(it => it.vistas.map(v => medirImg(imgMovel(it.id, v)))),
-  CASA?.insignia_quadrinho ? medirImg(imgMovel('ins_', 'f')) : null]);
+  CASA?.insignia_quadrinho ? medirImg(imgMovel('ins_', 'f')) : null,
+  CASA?.quadro_campeoes ? medirImg(imgMovel(ID_CAMPEOES, 'f')).then(() => {   // sem a imagem: a moldura em CSS, 900 × 420
+    const src = imgMovel(ID_CAMPEOES, 'f');
+    if (imgFalhou.has(src)) tamImg.set(src, [900, 420]);
+  }) : null]);
+const campeoesSemImagem = () => imgFalhou.has(imgMovel(ID_CAMPEOES, 'f'));
 function lerCasinha(v) {
   const c = v && typeof v === 'object' ? v : {};
   const moveis = (Array.isArray(c.moveis) ? c.moveis : Object.values(c.moveis || {}))
@@ -7570,6 +7616,7 @@ function lerCasinha(v) {
   const guardados = {};
   for (const [id, n] of Object.entries(c.guardados || {})) if (Number(n) > 0) guardados[id] = Number(n);
   return { guardados, moveis, cama_gratis: !!c.cama_gratis, kit: !!c.kit, quadros: !!c.quadros, publicada: !!c.publicada,   // quadros: os 1ºs quadrinhos já foram pendurados
+    quadros_v2: !!c.quadros_v2, campeoes: !!c.campeoes,   // PROMPT-117: sem quadrinhos automáticos · 🏆 Quadro dos Campeões liberado
     vaso: c.vaso && typeof c.vaso === 'object' ? { ...c.vaso } : null, brinquedo_dia: c.brinquedo_dia || null,
     coracoes_vistos: Number(c.coracoes_vistos) || 0,   // ❤️ quantos o dono já viu (PROMPT-107)
     cor: typeof c.cor === 'string' ? c.cor : null, convites: { ...(c.convites || {}) },   // 🏘️ vila (PROMPT-109): cor do telhado, convites enviados
@@ -7629,14 +7676,13 @@ async function abrirCasinha(visita = null, volta = null) {
       : ganhou.length ? `🎁 Presente: ${ganhou.length > 1 ? ganhou.slice(0, -1).join(', ') + ' e ' + ganhou.at(-1) : ganhou[0]}! Toque em 🛠️ Arrumar.` : null;
     if (!casaSemGravar) gravar({ 'casinha/kit': true, 'casinha/cama_gratis': true, 'casinha/moveis': c.moveis.map(limparMovel), 'casinha/guardados': { ...c.guardados } });
   }
-  if (!visita && CASA.insignia_quadrinho && pendurarQuadrinhos(c.moveis)) {   // 🏅 cada insígnia ganha já vem pendurada (PROMPT-110)
-    c.quadros = true;
-    if (!casaSemGravar) gravar({ 'casinha/quadros': true, 'casinha/moveis': c.moveis.map(limparMovel) });
-  }
+  if (!visita) { migrarQuadrosV2(); verificarCampeoes(); }   // PROMPT-117
   const Q = CASA.quarto, [ex, ey] = Q.porta.entrada;
   cs = { visita, volta, moveis: [], guardados: visita ? {} : { ...c.guardados }, arrumando: false, sel: null, ida: null, petAlvo: null, petVel: 0, tSono: 0 };
   cs.moveis = (visita ? lerCasinha({ moveis: visita.dados.moveis }).moveis : c.moveis.map(m => ({ ...m }))).filter(m => itemCasa(m.id));
   for (const m of cs.moveis) m.vista = vistaValida(itemCasa(m.id), m.vista);
+  // ?campeoes=1 (modo teste): o Quadro dos Campeões nos guardados, sem gravar
+  if (!visita && teste && new URLSearchParams(location.search).get('campeoes') === '1' && !cs.moveis.some(m => m.id === ID_CAMPEOES)) cs.guardados[ID_CAMPEOES] = 1;
   cena = { tipo: 'mapa', n: 'casinha', salao: true, alturaPersonagem: Number(CASA.altura_personagem) || ALT_CASINHA, cfg: { entrada: [ex, ey], saidas: [] }, grade: null, portas: {}, naTrilha: null, saidas: [] };
   refazerGradeCasinha();
   desenharMoveis();
@@ -7723,8 +7769,9 @@ function desenharMoveis() {
     if (m.id === 'vaso') m.vista = String(faseVaso());   // 🌱 a fase de agora (PROMPT-106)
     const it = itemCasa(m.id), [w, h] = tamMovel(m);
     const z = it.tipo === 'tapete' ? 1 : it.tipo === 'parede' ? 2 : Math.round(m.y);
-    html += `<div class="cs-movel cs-${esc(it.tipo)} cs-id-${esc(m.id)}${cs.sel === m ? ' sel' : ''}" data-i="${i}" style="left:${m.x}px;top:${m.y}px;width:${w}px;height:${h}px;z-index:${z}">` +
-      `<img src="${imgMovel(m.id, m.vista)}" alt="" draggable="false"${m.espelho ? ' class="espelho"' : ''}/>${extraMovel(m, it)}</div>`;
+    const css = it.campeoes && campeoesSemImagem();   // 🏆 sem a imagem: moldura dourada em CSS
+    html += `<div class="cs-movel cs-${esc(it.tipo)} cs-id-${esc(m.id)}${cs.sel === m ? ' sel' : ''}${it.campeoes && todasDouradas() ? ' cs-camp-brilho' : ''}" data-i="${i}" style="left:${m.x}px;top:${m.y}px;width:${w}px;height:${h}px;z-index:${z}">` +
+      (css ? '<div class="cs-camp-moldura"></div>' : `<img src="${imgMovel(m.id, m.vista)}" alt="" draggable="false"${m.espelho ? ' class="espelho"' : ''}/>`) + `${extraMovel(m, it)}</div>`;
     // 🌙 à noite: abajur e varal de luzes acendem (brilho em CSS, acima da camada escura)
     if (m.id === 'abajur') html += `<i class="cs-brilho cs-brilho-abajur" style="left:${m.x}px;top:${m.y - h * 0.86}px;width:${w * 3.2}px;height:${w * 3.2}px"></i>`;
     if (m.id === 'luzes') html += `<i class="cs-brilho cs-brilho-luzes" style="left:${m.x}px;top:${m.y - h * 0.55}px;width:${w * 1.15}px;height:${h * 1.3}px"></i>`;
@@ -7744,7 +7791,18 @@ const imgInsigniaQuadro = (chave) => {
   return `<img class="cs-ins${insDe(chave)?.dourada ? ' dourada' : ''}" src="${IMG}/insignias/insignia-${chave}.webp" alt="" draggable="false" style="left:${cx}%;top:${cy}%;width:${q.tamanho || 62}%"/>`;
 };
 // o que vai dentro do móvel: a insígnia do quadrinho, a foto do pet no quadro, os peixes no aquário (PROMPT-106)
+// as 26 insígnias, na ordem dos mapas (1-A, 1-B, 2-A…)
+const todasChaves = () => Array.from({ length: NUM_MAPAS }, (_, i) => ['A', 'B'].map(G => chaveGinasio(i + 1, G))).flat();
+const todasDouradas = () => todasChaves().every(k => insDe(k)?.dourada);   // na visita, as do dono
+// 🏆 a grade do Quadro dos Campeões: casinha.json → quadro_campeoes.area (% da imagem) e grade (colunas × linhas); 🏆 na última casa
+function gradeCampeoes() {
+  const q = CASA.quadro_campeoes, [x0, y0, x1, y1] = q.area || [10, 14, 90, 86], [nc, nl] = q.grade || [9, 3];
+  return `<div class="cs-camp-grade" style="left:${x0}%;top:${y0}%;width:${x1 - x0}%;height:${y1 - y0}%;grid-template-columns:repeat(${nc},1fr);grid-template-rows:repeat(${nl},1fr)">` +
+    todasChaves().map(k => { const g = insDe(k); return g?.insignia ? `<img class="cs-camp-ins${g.dourada ? ' dourada' : ''}" src="${IMG}/insignias/insignia-${k}.webp" alt="" draggable="false"/>` : '<i class="cs-camp-vazio"></i>'; }).join('') +
+    '<span class="cs-camp-trofeu">🏆</span></div>';
+}
 function extraMovel(m, it) {
+  if (it.campeoes) return gradeCampeoes();
   if (it.quadrinho) return imgInsigniaQuadro(it.quadrinho);
   if (m.id === 'quadro_foto' && Array.isArray(it.foto)) {
     const [x0, y0, x1, y1] = it.foto;
@@ -7958,7 +8016,7 @@ function movelEm(p) {
   if (!cs) return null;
   const z = (m) => (itemCasa(m.id).tipo === 'parede' ? 2 : m.y);
   for (const m of [...cs.moveis].sort((a, b) => z(b) - z(a))) {
-    if (!ehQuadrinho(m.id) && !MOVEIS_ATIVOS.has(m.id)) continue;
+    if (!ehQuadrinho(m.id) && m.id !== ID_CAMPEOES && !MOVEIS_ATIVOS.has(m.id)) continue;
     const [w, h] = tamMovel(m);
     if (Math.abs(p.x - m.x) < w / 2 && p.y > m.y - h && p.y < m.y + 6) return m;
   }
@@ -7970,7 +8028,7 @@ function tocarMovelCasa(p) {
   if (!m) return false;
   destinoEspecial = null;
   if (cs.visita) {   // na casinha do colega: só olhar (sem regar, alimentar nem arrumar)
-    if (ehQuadrinho(m.id)) abrirColecaoCasa();
+    if (ehQuadrinho(m.id) || m.id === ID_CAMPEOES) abrirColecaoCasa();
     else if (m.id === 'aquario') abrirAquario();
     else return false;
     return true;
@@ -7978,6 +8036,7 @@ function tocarMovelCasa(p) {
   const semPet = () => { avisoPet(petFora() ? 'Seu pet está em expedição. 🧭' : 'Seu pet não está aqui agora.'); };
   if (m.id === 'cama') balaoCama(m);   // 💤 / ☀️ (PROMPT-108)
   else if (ehQuadrinho(m.id)) abrirColecaoCasa(m);   // escolher a insígnia deste quadro
+  else if (m.id === ID_CAMPEOES) abrirColecaoCasa();   // 🏆 só olhar
   else if (m.id === 'aquario') abrirAquario();
   else if (m.id === 'estante_album') abrirAlbum();
   else if (m.id === 'vaso') {   // anda até o lado do vaso e rega (já lá: rega na hora)
@@ -8138,9 +8197,24 @@ function regarVaso(m) {
 
 // ── 🏅 Coleção das insígnias (tocar num quadrinho) ──
 // m = o quadrinho tocado (na minha casinha): as ganhas podem ser tocadas e vão para este quadro
-function abrirColecaoCasa(m = null) {
-  const linhas = [], visita = cs?.visita, escolher = !visita && m && ehQuadrinho(m.id);
-  cs.colQuadro = escolher ? m : null;
+// comprar (PROMPT-117): o quadro novo — só as ganhas que ainda não estão em nenhum quadro
+let colCompra = false;
+function abrirColecaoCasa(m = null, comprar = false) {
+  const visita = cs?.visita, linhas = [], escolher = !visita && m && ehQuadrinho(m.id);
+  if (cs) cs.colQuadro = escolher ? m : null;
+  colCompra = comprar;
+  if (comprar) {
+    for (const chave of insigniasSemQuadro()) {
+      const [k, G] = chave.replace('mapa', '').split('-'), g = estado.ginasios[chave];
+      linhas.push(`<button class="cs-col-item" data-comprar-ins="${chave}"><img src="${IMG}/insignias/insignia-${chave}.webp" class="${g?.dourada ? 'dourada' : ''}" alt="" loading="lazy" draggable="false"/>
+        <b>${esc(D.questoes[k]?.ginasios?.[G]?.nome || chave)}</b><small>${g?.dourada ? '✨ Dourada' : 'Toque para escolher'}</small></button>`);
+    }
+    $('cs-col-rodape').textContent = `🏅 ${precoCasa(CASA.insignia_quadrinho) ? `${precoCasa(CASA.insignia_quadrinho)} moedas` : 'Grátis'}`;
+    $('cs-col-tit').textContent = '🏅 Escolha a insígnia do quadro novo';
+    $('cs-col-grade').innerHTML = linhas.join('');
+    $('cs-colecao').hidden = false;
+    return;
+  }
   let n = 0;
   for (let k = 1; k <= NUM_MAPAS; k++) for (const G of ['A', 'B']) {
     const chave = chaveGinasio(k, G), g = insDe(chave), nome = D.questoes[k]?.ginasios?.[G]?.nome || chave;
@@ -8164,14 +8238,40 @@ function escolherInsigniaQuadro(chave) {
   if (!m || cs.visita || !insDe(chave)?.insignia) return;
   const novo = 'ins_' + chave, velho = m.id;
   if (novo === velho) return;
-  const outro = cs.moveis.find(x => x !== m && x.id === novo);
+  const outro = cs.moveis.find(x => x !== m && x.id === novo), guardado = !outro && cs.guardados[novo] > 0;
   m.id = novo;
-  if (outro) outro.id = velho;   // sem outro: a que saiu fica sem quadro (só com a parede cheia)
+  if (outro) outro.id = velho;
+  else if (guardado) { delete cs.guardados[novo]; cs.guardados[velho] = 1; estado.casinha.guardados = { ...cs.guardados }; }   // o guardado fica com a que saiu
   estado.casinha.moveis = cs.moveis.map(limparMovel);
-  if (!casaSemGravar) { gravar({ 'casinha/moveis': estado.casinha.moveis }); if (estado.casinha.publicada) publicarCasinha(); }
+  if (!casaSemGravar) {
+    gravar({ 'casinha/moveis': estado.casinha.moveis, ...(guardado ? { 'casinha/guardados': { ...estado.casinha.guardados } } : {}) });
+    if (estado.casinha.publicada) publicarCasinha();
+  }
   desenharMoveis();
   tocar('clique');
-  avisoPet(outro ? '🏅 Os dois quadros trocaram!' : '🏅 Quadro trocado!');
+  avisoPet(outro || guardado ? '🏅 Os dois quadros trocaram!' : '🏅 Quadro trocado!');
+}
+// 🏅 comprou o quadro com esta insígnia: vai para os guardados e, na casinha, já entra no Arrumar, no meio da parede
+function comprarQuadroIns(chave) {
+  $('cs-colecao').hidden = true;
+  colCompra = false;
+  migrarQuadrosV2();   // os automáticos antigos saem antes (senão a migração apagaria o comprado)
+  const c = estado.casinha ||= lerCasinha(null), ps = estado.pets, id = 'ins_' + chave, preco = precoCasa(CASA.insignia_quadrinho), moedas = Number(ps.moedas) || 0;
+  if (!estado.ginasios[chave]?.insignia || qtdCasa(id) > 0 || moedas < preco) return;
+  if (casaSemGravar) { avisoPet('Modo ?casinha=cheia: as compras de móveis estão desligadas.'); return; }
+  c.quadros_v2 = true;
+  ps.moedas = moedas - preco;
+  c.guardados[id] = 1;
+  gravar({ 'pets/moedas': ps.moedas, [`casinha/guardados/${id}`]: 1, 'casinha/quadros_v2': true });
+  tocar('vitoria');
+  if (!$('loja').hidden) renderLoja();
+  if (ehCasinha() && cs && !cs.visita) {
+    cs.guardados[id] = 1;
+    $('loja').hidden = true;
+    abrirArrumar();
+    if (naParede(cs.moveis) < maxQuadrinhos()) colocarNoMeio(id);
+    else avisoPet(`🏅 Quadro guardado: no máximo ${maxQuadrinhos()} na parede.`);
+  } else avisoPet('🏅 Quadro comprado! Vá à sua 🏠 Casinha para pendurar.');
 }
 
 // ── 🐠 Aquário: as espécies já pescadas nadando (no quarto e na vista ampliada) ──
@@ -8248,7 +8348,8 @@ function prontoArrumar() {
   for (const el of $('cena-atores').querySelectorAll('.cs-movel.sel')) el.classList.remove('sel');
   const c = estado.casinha;
   c.moveis = cs.moveis.map(limparMovel);
-  c.guardados = Object.fromEntries(Object.entries(cs.guardados).filter(([id, n]) => n > 0 && !ehQuadrinho(id)));   // os quadrinhos saem das insígnias
+  c.guardados = Object.fromEntries(Object.entries(cs.guardados).filter(([id, n]) => n > 0 && (id !== ID_CAMPEOES || c.campeoes)));   // 🏆 do ?campeoes=1: não grava
+  if (!c.campeoes) c.moveis = c.moveis.filter(m => m.id !== ID_CAMPEOES);
   if (!casaSemGravar) {
     gravar({ 'casinha/moveis': c.moveis, 'casinha/guardados': c.guardados });
     publicarCasinha();
@@ -8329,11 +8430,14 @@ const casaGratis = () => ehProfessora() || teste;
 const precoCasa = (it) => (casaGratis() ? 0 : Number(it?.preco) || 0);
 
 // faixa dos guardados (miniaturas com a quantidade)
-// (só os móveis: os quadrinhos ficam sempre na parede, PROMPT-110)
+// (PROMPT-117: os quadros de insígnia e o 🏆 também, porque são móveis comprados/ganhos)
 function renderFaixaCasa() {
-  const itens = (CASA.itens || []).filter(it => cs.guardados[it.id] > 0);
+  const extras = Object.keys(cs.guardados).filter(id => (ehQuadrinho(id) || id === ID_CAMPEOES) && cs.guardados[id] > 0).map(itemCasa).filter(Boolean);
+  const itens = [...(CASA.itens || []).filter(it => cs.guardados[it.id] > 0), ...extras];
+  const mini = (it) => (it.quadrinho ? `<span class="cs-mini-quadro"><img src="${imgMovel(it.id, 'f')}" alt="" draggable="false"/>${imgInsigniaQuadro(it.quadrinho)}</span>`
+    : it.campeoes ? '<span class="cs-mini-camp">🏆</span>' : `<img src="${imgMovel(it.id, it.fases ? '1' : it.vistas[0])}" alt="" draggable="false"/>`);
   $('cs-guardados').innerHTML = itens.length ? itens.map(it => `<button class="cs-guardado" data-guardado="${esc(it.id)}" title="${esc(it.nome)}">
-      <img src="${imgMovel(it.id, it.fases ? '1' : it.vistas[0])}" alt="" draggable="false"/>${cs.guardados[it.id] > 1 ? `<b>${cs.guardados[it.id]}</b>` : ''}<span>${esc(it.nome)}</span></button>`).join('')
+      ${mini(it)}${cs.guardados[it.id] > 1 ? `<b>${cs.guardados[it.id]}</b>` : ''}<span>${esc(it.quadrinho ? '🏅 ' + it.nome : it.nome)}</span></button>`).join('')
     : '<p class="cs-vazio">Nada guardado. Compre móveis na loja da Dona Cida (aba 🛋️ Móveis) ou arraste os móveis pelo quarto.</p>';
 }
 // prende a base do móvel na área certa (chão ou parede)
@@ -8416,7 +8520,7 @@ function girarMovel() {
 }
 function guardarMovel() {
   const m = cs?.sel;
-  if (!m || ehQuadrinho(m.id)) return;   // o quadrinho não sai da parede
+  if (!m) return;
   cs.moveis.splice(cs.moveis.indexOf(m), 1);
   cs.guardados[m.id] = (cs.guardados[m.id] || 0) + 1;
   cs.sel = null;
@@ -8428,7 +8532,6 @@ function guardarMovel() {
 function abrirFerrCasa() {
   const m = cs?.sel, el = $('cs-ferr');
   if (!m) return;
-  if (ehQuadrinho(m.id)) { el.hidden = true; return; }   // quadrinho: só arrastar pela parede (sem 📦 Guardar nem 🔄 Girar)
   el.querySelector('[data-cs="girar"]').hidden = ciclosVista(itemCasa(m.id), m).length < 2;
   el.hidden = false;
   posicionarFerrCasa();
@@ -8454,7 +8557,11 @@ function ligarCasinha() {
     if (!b || !cs || cs.visita || cs.arrumando) return;
     if (b.dataset.cama === 'acordar') acordarNaCasinha(); else if (cama) porParaDormir(cama);
   });
-  $('cs-col-grade').addEventListener('click', (e) => { const b = e.target.closest('[data-escolher]'); if (b) escolherInsigniaQuadro(b.dataset.escolher); });
+  $('cs-col-grade').addEventListener('click', (e) => {
+    const c = e.target.closest('[data-comprar-ins]');
+    if (c) { comprarQuadroIns(c.dataset.comprarIns); return; }
+    const b = e.target.closest('[data-escolher]'); if (b) escolherInsigniaQuadro(b.dataset.escolher);
+  });
   $('cs-tema').addEventListener('click', (e) => { e.stopPropagation(); if (cs && !cs.visita && !cs.arrumando) abrirTemasCasa(); });
   $('cs-temas-lista').addEventListener('click', (e) => { const b = e.target.closest('[data-tema]'); if (!b) return; $('cs-temas').hidden = true; if (b.dataset.tema !== temaDoDono().id) { aplicarTema(b.dataset.tema); tocar('clique'); } });
   for (const id of ['cs-colecao', 'cs-aquario', 'cs-comida', 'cs-menu', 'cs-temas', 'venc']) $(id).addEventListener('click', (e) => {   // ✕ ou fora da caixa: fecha
@@ -8475,7 +8582,8 @@ function ligarCasinha() {
   $('cs-guardados').addEventListener('pointerdown', (e) => {
     const b = e.target.closest('[data-guardado]');
     const it = b && itemCasa(b.dataset.guardado);
-    if (!it || it.quadrinho || !cs?.arrumando || !(cs.guardados[it.id] > 0)) return;
+    if (!it || !cs?.arrumando || !(cs.guardados[it.id] > 0)) return;
+    if (it.quadrinho && naParede(cs.moveis) >= maxQuadrinhos()) { avisoPet(`No máximo ${maxQuadrinhos()} quadros na parede. Guarde um para pendurar outro.`); return; }
     const m = { id: it.id, x: 0, y: 0, vista: it.vistas[0], espelho: false };
     arrastarCasa({ preventDefault: () => e.preventDefault(), stopPropagation: () => e.stopPropagation(), currentTarget: b, pointerId: e.pointerId, clientX: e.clientX, clientY: e.clientY }, m, true);
   });

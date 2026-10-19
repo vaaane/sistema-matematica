@@ -332,7 +332,8 @@
    "tamanho": 62
   },
   "max_na_parede": 8,
-  "_nota": "grátis e automático: 1 quadrinho para cada insígnia ganha; tamanho = % da largura da moldura"
+  "_nota": "🏅 Quadro de insígnia: COMPRADO na loja (25 moedas cada). O aluno pode ter no máximo 1 quadro por insígnia ganha; ao comprar escolhe qual insígnia vai nele. Máximo max_na_parede pendurados. tamanho = % da largura da moldura.",
+  "preco": 25
  },
  "kit_inicial": [
   {
@@ -419,5 +420,23 @@
    "imagem": "temas/luxuoso.webp"
   }
  ],
- "_nota_temas": "temas: fundos do quarto, todos 1376 × 768 com o chão, as paredes e a porta nas mesmas posições do quarto.webp (as áreas chao/parede/porta valem para todos). classico é grátis."
+ "_nota_temas": "temas: fundos do quarto, todos 1376 × 768 com o chão, as paredes e a porta nas mesmas posições do quarto.webp (as áreas chao/parede/porta valem para todos). classico é grátis.",
+ "quadro_campeoes": {
+  "nome": "Quadro dos Campeões",
+  "emoji": "🏆",
+  "imagem": "moveis/quadro_campeoes_f.webp",
+  "largura": 320,
+  "conquista": "26 insígnias",
+  "area": [
+   10,
+   14,
+   90,
+   86
+  ],
+  "grade": [
+   9,
+   3
+  ],
+  "_nota": "grátis, liberado ao conseguir as 26 insígnias; item de parede. area = retângulo do veludo em % da imagem (x0,y0,x1,y1) onde a grade (colunas, linhas) de insígnias é desenhada: 26 insígnias + um 🏆 na última casa. Enquanto a imagem não existir, desenhar a moldura em CSS (borda dourada larga, veludo azul-escuro). Brilho animado se as 26 forem douradas."
+ }
 }
