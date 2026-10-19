@@ -2006,11 +2006,12 @@ function cartoesQuadros(preco, botao) {
   }
   const qc = CASA.quadro_campeoes;
   if (qc) {
-    const tem = estado.casinha?.campeoes || qtdCasa(ID_CAMPEOES) > 0;
+    const tem = estado.casinha?.campeoes || qtdCasa(ID_CAMPEOES) > 0, pendurado = (estado.casinha?.moveis || []).some(m => m.id === ID_CAMPEOES);
     html += `<div class="lj-item lj-movel${tem ? '' : ' apagado'}">
-        <div class="lj-emoji"><span class="lj-camp-mini">🏆</span></div>
-        <div class="lj-info"><b>🏆 ${esc(qc.nome || 'Quadro dos Campeões')}</b><span class="lj-sub">${tem ? 'as 26 insígnias na parede' : 'só conquistando: não está à venda'}</span></div>
-        ${tem ? '<button class="lj-comprar ok" disabled>✔ Você já tem</button>' : '<button class="lj-comprar" disabled>🔒 Conquiste as 26 insígnias</button>'}
+        <div class="lj-emoji">${miniCampeoes()}</div>
+        <div class="lj-info"><b>🏆 ${esc(qc.nome || 'Quadro dos Campeões')}</b><span class="lj-sub">${tem ? '26/26 insígnias' : 'só conquistando: não está à venda'}</span></div>
+        ${!tem ? '<button class="lj-comprar" disabled>🔒 Conquiste as 26 insígnias</button>' : pendurado ? '<button class="lj-comprar ok" disabled>✔ Você já tem</button>'
+          : '<button class="lj-comprar ok" disabled>✔ Liberado: pendure pelo 🛠️ Arrumar</button>'}
       </div>`;
   }
   return html;
@@ -4078,6 +4079,7 @@ function mandarExpedicao(tipo) {
   c.expedicao = { inicio, fim, tipo, moedas, ...(comida ? { comida } : {}) };
   estado.pets.expedicoesDia = { data: diaLocal(), n: expedicoesHoje() + 1 };
   gravar({ [`pets/conquistados/${pet}/expedicao`]: c.expedicao, 'pets/expedicoes_dia': estado.pets.expedicoesDia });
+  if (estado.casinha?.publicada) publicarCasinha();   // a visita vê o selo 🧭 no quadro do pet
   tocar('porta');
   $('mp-exp-painel').hidden = true;
   pararSequencia($('mp-img'));
@@ -4152,6 +4154,7 @@ function chamarDeVolta() {
   if (!c?.expedicao || !petFora(pet)) return;   // o tempo acabou: a volta normal (com prêmio) cuida
   delete c.expedicao;
   gravar({ [`pets/conquistados/${pet}/expedicao`]: null });
+  if (estado.casinha?.publicada) publicarCasinha();
   tocar('porta');
   if (pet === estado.pets.ativo) { pufSeguidor(); enviarOnline(visualOnline(pet)); }
   if (mp) renderMeuPet();
@@ -7611,11 +7614,15 @@ function medirImg(src) {
 }
 const preCarregarMoveis = () => Promise.all([...(CASA?.itens || []).flatMap(it => it.vistas.map(v => medirImg(imgMovel(it.id, v)))),
   CASA?.insignia_quadrinho ? medirImg(imgMovel('ins_', 'f')) : null,
-  CASA?.quadro_campeoes ? medirImg(imgMovel(ID_CAMPEOES, 'f')).then(() => {   // sem a imagem: a moldura em CSS, 900 × 420
-    const src = imgMovel(ID_CAMPEOES, 'f');
-    if (imgFalhou.has(src)) tamImg.set(src, [900, 420]);
+  CASA?.quadro_campeoes ? Promise.all([medirImg(imgMovel(ID_CAMPEOES, 'f')), medirImg(imgMovel('ins_', 'f'))]).then(([, t]) => {
+    const src = imgMovel(ID_CAMPEOES, 'f');   // sem moldura_dourada_f.webp: a moldura de insígnia, dourada em CSS (mesmo tamanho)
+    if (imgFalhou.has(src)) tamImg.set(src, t);
   }) : null]);
 const campeoesSemImagem = () => imgFalhou.has(imgMovel(ID_CAMPEOES, 'f'));
+const srcCampeoes = () => (campeoesSemImagem() ? imgMovel('ins_', 'f') : imgMovel(ID_CAMPEOES, 'f'));
+// 🏆 a moldura dourada com o troféu (o quarto, o catálogo e a faixa do Arrumar)
+const imgCampeoes = (extra = '') => `<img src="${srcCampeoes()}" alt="" draggable="false"${campeoesSemImagem() ? ' class="cs-camp-ouro"' : ''}${extra}/>`;
+const miniCampeoes = () => `<span class="cs-mini-quadro">${imgCampeoes()}<b class="cs-mini-trofeu">🏆</b></span>`;
 function lerCasinha(v) {
   const c = v && typeof v === 'object' ? v : {};
   const moveis = (Array.isArray(c.moveis) ? c.moveis : Object.values(c.moveis || {}))
@@ -7690,6 +7697,7 @@ async function abrirCasinha(visita = null, volta = null) {
   cs = { visita, volta, moveis: [], guardados: visita ? {} : { ...c.guardados }, arrumando: false, sel: null, ida: null, petAlvo: null, petVel: 0, tSono: 0 };
   cs.moveis = (visita ? lerCasinha({ moveis: visita.dados.moveis }).moveis : c.moveis.map(m => ({ ...m }))).filter(m => itemCasa(m.id));
   for (const m of cs.moveis) { const it = itemCasa(m.id); m.vista = vistaValida(it, m.vista); m.cor = corValida(it, m.cor); }
+  for (const m of cs.moveis) if (m.id === ID_CAMPEOES) prenderNaArea(m, m.x, m.y);   // PROMPT-119: ficou pequeno — dentro da parede
   // ?campeoes=1 (modo teste): o Quadro dos Campeões nos guardados, sem gravar
   if (!visita && teste && new URLSearchParams(location.search).get('campeoes') === '1' && !cs.moveis.some(m => m.id === ID_CAMPEOES)) cs.guardados[ID_CAMPEOES] = 1;
   cena = { tipo: 'mapa', n: 'casinha', salao: true, alturaPersonagem: Number(CASA.altura_personagem) || ALT_CASINHA, cfg: { entrada: [ex, ey], saidas: [] }, grade: null, portas: {}, naTrilha: null, saidas: [] };
@@ -7778,23 +7786,26 @@ function desenharMoveis() {
     if (m.id === 'vaso') m.vista = String(faseVaso());   // 🌱 a fase de agora (PROMPT-106)
     const it = itemCasa(m.id), [w, h] = tamMovel(m);
     const z = it.tipo === 'tapete' ? 1 : it.tipo === 'parede' ? 2 : Math.round(m.y);
-    const css = it.campeoes && campeoesSemImagem();   // 🏆 sem a imagem: moldura dourada em CSS
     html += `<div class="cs-movel cs-${esc(it.tipo)} cs-id-${esc(m.id)}${cs.sel === m ? ' sel' : ''}${it.campeoes && todasDouradas() ? ' cs-camp-brilho' : ''}" data-i="${i}" style="left:${m.x}px;top:${m.y}px;width:${w}px;height:${h}px;z-index:${z}">` +
-      (css ? '<div class="cs-camp-moldura"></div>' : imgComCor(m.id, m.vista, m.cor, `${m.espelho ? ' class="espelho"' : ''} data-want="${imgMovel(m.id, m.vista, m.cor)}"`)) + `${extraMovel(m, it)}</div>`;
+      (it.campeoes ? imgCampeoes() : imgComCor(m.id, m.vista, m.cor, `${m.espelho ? ' class="espelho"' : ''} data-want="${imgMovel(m.id, m.vista, m.cor)}"`)) + `${extraMovel(m, it, w, h)}</div>`;
     // 🌙 à noite: abajur e varal de luzes acendem (brilho em CSS, acima da camada escura)
     if (m.id === 'abajur') html += `<i class="cs-brilho cs-brilho-abajur" style="left:${m.x}px;top:${m.y - h * 0.86}px;width:${w * 3.2}px;height:${w * 3.2}px"></i>`;
     if (m.id === 'luzes') html += `<i class="cs-brilho cs-brilho-luzes" style="left:${m.x}px;top:${m.y - h * 0.55}px;width:${w * 1.15}px;height:${h * 1.3}px"></i>`;
   });
   atores.insertAdjacentHTML('beforeend', html);
-  // 🖼️ quadro do pet: a imagem do Meu Pet, com a tinta (na visita, o pet do dono)
-  const dp = cs.visita?.dados.pet, pet = cs.visita ? (petsOk && dp && petValido(petAtual(dp.pet)) ? petAtual(dp.pet) : null) : petsOk && !petFora() && estado.pets?.ativo;
+  // 🖼️ quadro do pet: a imagem do Meu Pet, com a tinta (na visita, o pet do dono); em expedição continua, com o selo 🧭 (PROMPT-119)
+  const dp = cs.visita?.dados.pet, pet = cs.visita ? (petsOk && dp && petValido(petAtual(dp.pet)) ? petAtual(dp.pet) : null) : petsOk && estado.pets?.ativo;
   for (const img of atores.querySelectorAll('img[data-foto]')) {
     if (!pet) { img.remove(); continue; }
+    if (fotoFora()) img.insertAdjacentHTML('afterend', '<span class="cs-foto-selo" title="Em expedição">🧭</span>');
     if (cs.visita) { img.src = srcIcone(formaValida(pet, dp.forma)); aplicarTinta(img, dp.tinta || null); continue; }
     img.src = srcIcone(formaDe(pet));
     aplicarVisualPet(img, pet);
   }
 }
+// o pet da casinha está em expedição? (na visita: a cópia pública do dono, pet.fora_ate)
+const fotoFora = () => (cs?.visita ? Number(cs.visita.dados.pet?.fora_ate) > Date.now() : petFora());
+const nomeFotoPet = () => (cs?.visita ? cs.visita.dados.pet?.nome || NOME_PET[petAtual(cs.visita.dados.pet?.pet)] || 'O pet' : nomePet(estado.pets.ativo));
 const imgInsigniaQuadro = (chave) => {
   const q = CASA.insignia_quadrinho.insignia || {}, [cx, cy] = q.centro || [50, 50];
   return `<img class="cs-ins${insDe(chave)?.dourada ? ' dourada' : ''}" src="${IMG}/insignias/insignia-${chave}.webp" alt="" draggable="false" style="left:${cx}%;top:${cy}%;width:${q.tamanho || 62}%"/>`;
@@ -7803,15 +7814,15 @@ const imgInsigniaQuadro = (chave) => {
 // as 26 insígnias, na ordem dos mapas (1-A, 1-B, 2-A…)
 const todasChaves = () => Array.from({ length: NUM_MAPAS }, (_, i) => ['A', 'B'].map(G => chaveGinasio(i + 1, G))).flat();
 const todasDouradas = () => todasChaves().every(k => insDe(k)?.dourada);   // na visita, as do dono
-// 🏆 a grade do Quadro dos Campeões: casinha.json → quadro_campeoes.area (% da imagem) e grade (colunas × linhas); 🏆 na última casa
-function gradeCampeoes() {
-  const q = CASA.quadro_campeoes, [x0, y0, x1, y1] = q.area || [10, 14, 90, 86], [nc, nl] = q.grade || [9, 3];
-  return `<div class="cs-camp-grade" style="left:${x0}%;top:${y0}%;width:${x1 - x0}%;height:${y1 - y0}%;grid-template-columns:repeat(${nc},1fr);grid-template-rows:repeat(${nl},1fr)">` +
-    todasChaves().map(k => { const g = insDe(k); return g?.insignia ? `<img class="cs-camp-ins${g.dourada ? ' dourada' : ''}" src="${IMG}/insignias/insignia-${k}.webp" alt="" draggable="false"/>` : '<i class="cs-camp-vazio"></i>'; }).join('') +
-    '<span class="cs-camp-trofeu">🏆</span></div>';
+// 🏆 Quadro dos Campeões (PROMPT-119): um 🏆 grande no círculo (trofeu.centro, tamanho em % da largura) e a faixinha "26/26"
+function trofeuCampeoes(w, h) {
+  const t = CASA.quadro_campeoes.trofeu || {}, [cx, cy] = t.centro || [50, 46], tam = w * (Number(t.tamanho) || 52) / 100;
+  const yFaixa = cy + (tam * 0.55) / h * 100;
+  return `<span class="cs-camp-trofeu" style="left:${cx}%;top:${cy}%;font-size:${(tam * 0.92).toFixed(1)}px">🏆</span>` +
+    `<span class="cs-camp-faixa" style="left:${cx}%;top:${Math.min(92, yFaixa).toFixed(1)}%;font-size:${Math.max(7, w * 0.12).toFixed(1)}px">${esc(t.faixa || '26/26')}</span>`;
 }
-function extraMovel(m, it) {
-  if (it.campeoes) return gradeCampeoes();
+function extraMovel(m, it, w = 80, h = 80) {
+  if (it.campeoes) return trofeuCampeoes(w, h);
   if (it.quadrinho) return imgInsigniaQuadro(it.quadrinho);
   if (m.id === 'quadro_foto' && Array.isArray(it.foto)) {
     const [x0, y0, x1, y1] = it.foto;
@@ -8029,7 +8040,7 @@ function movelEm(p) {
   if (!cs) return null;
   const z = (m) => (itemCasa(m.id).tipo === 'parede' ? 2 : m.y);
   for (const m of [...cs.moveis].sort((a, b) => z(b) - z(a))) {
-    if (!ehQuadrinho(m.id) && m.id !== ID_CAMPEOES && !MOVEIS_ATIVOS.has(m.id)) continue;
+    if (!ehQuadrinho(m.id) && m.id !== ID_CAMPEOES && !MOVEIS_ATIVOS.has(m.id) && !(m.id === 'quadro_foto' && fotoFora())) continue;
     const [w, h] = tamMovel(m);
     if (Math.abs(p.x - m.x) < w / 2 && p.y > m.y - h && p.y < m.y + 6) return m;
   }
@@ -8040,6 +8051,7 @@ function tocarMovelCasa(p) {
   const m = movelEm(p);
   if (!m) return false;
   destinoEspecial = null;
+  if (m.id === 'quadro_foto') { avisoPet(`🧭 ${nomeFotoPet()} está em expedição`); return true; }   // PROMPT-119
   if (cs.visita) {   // na casinha do colega: só olhar (sem regar, alimentar nem arrumar)
     if (ehQuadrinho(m.id) || m.id === ID_CAMPEOES) abrirColecaoCasa();
     else if (m.id === 'aquario') abrirAquario();
@@ -8376,8 +8388,8 @@ function prontoArrumar() {
 }
 async function publicarCasinha() {
   if (casaSemGravar || !entraNoRanking()) return;
-  const pet = petsOk && !petFora() && estado.pets?.ativo;
-  const dados = { moveis: estado.casinha.moveis, pet: pet ? { pet, forma: formaDe(pet), tinta: tintaVisivel(pet) || null } : null,
+  const pet = petsOk && estado.pets?.ativo;   // em expedição também (fora_ate): a foto fica no quadro; o pet não passeia nem fica na porta
+  const dados = { moveis: estado.casinha.moveis, pet: pet ? { pet, forma: formaDe(pet), tinta: tintaVisivel(pet) || null, nome: nomePet(pet), fora_ate: petFora(pet) ? Number(expedicaoDe(pet).fim) : null } : null,
     nome: nomeRanking(), turma: sessao.turma || '', vaso: faseVaso(), cor: estado.casinha.cor || null, tema: temaDoDono().id, ts: Date.now(),
     ins: Object.fromEntries(insigniasGanhas().map(k => [k, { d: estado.ginasios[k].dourada ? 1 : 0, t: estado.ginasios[k].dataInsignia || 0 }])),   // PROMPT-107
     peixes: { ...(estado.pescaEspecies || {}) } };
@@ -8449,7 +8461,7 @@ function renderFaixaCasa() {
   const itens = Object.keys(cs.guardados).filter(k => cs.guardados[k] > 0).map(k => ({ k, ...daChave(k) }))
     .map(g => ({ ...g, it: itemCasa(g.id) })).filter(g => g.it).sort((a, b) => ordem(a.id) - ordem(b.id) || a.k.localeCompare(b.k));
   const mini = ({ it, cor }) => (it.quadrinho ? `<span class="cs-mini-quadro"><img src="${imgMovel(it.id, 'f')}" alt="" draggable="false"/>${imgInsigniaQuadro(it.quadrinho)}</span>`
-    : it.campeoes ? '<span class="cs-mini-camp">🏆</span>' : imgComCor(it.id, it.fases ? '1' : it.vistas[0], it.fases ? '' : cor));   // 🎨 com a cor do móvel
+    : it.campeoes ? miniCampeoes() : imgComCor(it.id, it.fases ? '1' : it.vistas[0], it.fases ? '' : cor));   // 🎨 com a cor do móvel
   $('cs-guardados').innerHTML = itens.length ? itens.map(g => `<button class="cs-guardado" data-guardado="${esc(g.k)}" title="${esc(g.it.nome)}">
       ${mini(g)}${cs.guardados[g.k] > 1 ? `<b>${cs.guardados[g.k]}</b>` : ''}<span>${esc(g.it.quadrinho ? '🏅 ' + g.it.nome : g.it.nome)}</span></button>`).join('')
     : '<p class="cs-vazio">Nada guardado. Compre móveis na loja da Dona Cida (aba 🛋️ Móveis) ou arraste os móveis pelo quarto.</p>';
@@ -8678,6 +8690,7 @@ async function visitarCasinha(uid, volta = null) {   // volta: { n: 'vila', lado
 
 // ── 🐾 o pet do dono passeia pelo quarto (um "líder" invisível anda pela grade e o pet o segue) ──
 function criarPetDono(p) {
+  if (Number(p?.fora_ate) > Date.now()) return;   // 🧭 em expedição: não passeia (PROMPT-119)
   const pet = p && petValido(petAtual(p.pet)) ? petAtual(p.pet) : null;
   if (!pet || !cs?.visita) return;
   const forma = formaValida(pet, p.forma);
@@ -8942,7 +8955,7 @@ async function carregarDadosVila() {
   uids.forEach((u, i) => {
     const c = copias[i] || {}, r = online[u];
     const on = !!r && Date.now() - (Number(r.ts) || 0) < VALIDADE_MS;
-    cena.dadosVila[u] = { nome: c.nome, turma: c.turma, cor: c.cor, online: on, pet: c.pet || (r?.pet ? { pet: r.pet, forma: r.pet_forma, tinta: r.pet_tinta } : null) };
+    cena.dadosVila[u] = { nome: c.nome, turma: c.turma, cor: c.cor, online: on, pet: (c.pet && !(Number(c.pet.fora_ate) > Date.now()) ? c.pet : null) || (r?.pet && !r.pet_fora ? { pet: r.pet, forma: r.pet_forma, tinta: r.pet_tinta } : null) };   // 🧭 fora: sem pet na porta
   });
   desenharVila();
 }

@@ -3377,25 +3377,23 @@ html.jr-deitado .venc-corpo { grid-template-columns: repeat(3, minmax(0, 1fr)); 
 .cs-mini-quadro { position: relative; width: 46px; height: 46px; pointer-events: none; }
 .cs-mini-quadro img { width: 100%; height: 100%; object-fit: contain; }
 .cs-mini-quadro img.cs-ins { position: absolute; width: 62% !important; height: auto; transform: translate(-50%, -50%); }
-.cs-mini-camp, .lj-camp-mini { display: grid; place-items: center; width: 58px; height: 46px; border-radius: 8px; font-size: 24px;
-  background: #13204a; border: 4px solid #d9a521; box-shadow: inset 0 0 0 2px #8a5c0b; }
 .lj-quadro-ins { position: relative; display: block; width: 52px; height: 52px; }
 #jr-app .lj-quadro-ins img { width: 100%; height: 100%; object-fit: contain; }
 #jr-app .lj-quadro-ins img.cs-ins { position: absolute; width: 62%; height: auto; transform: translate(-50%, -50%); }
 .lj-item.apagado { opacity: .6; }
-/* moldura em CSS enquanto a imagem não existir: borda dourada larga e veludo azul-escuro */
-.cs-camp-moldura { position: absolute; inset: 0; border-radius: 14px; border: 7px solid transparent;
-  background: radial-gradient(ellipse at 50% 40%, #1d2e6b, #0d1638 75%) padding-box,
-    linear-gradient(135deg, #fff1a8, #d9a521 25%, #8a5c0b 50%, #f5cf4b 75%, #a8740f) border-box;
-  box-shadow: 0 4px 10px rgba(0,0,0,.5), inset 0 0 14px rgba(0,0,0,.6); }
-.cs-camp-grade { position: absolute; display: grid; gap: 2px; place-items: center; }
-.cs-camp-grade > * { width: 88%; height: 88%; object-fit: contain; }
-.cs-camp-ins.dourada { filter: drop-shadow(0 0 3px var(--jr-ouro)) saturate(1.3) brightness(1.08); }
-.cs-camp-vazio { border-radius: 50%; background: rgba(255,255,255,.06); }
-.cs-camp-trofeu { display: grid; place-items: center; font-size: 22px; line-height: 1; }
-.cs-camp-brilho .cs-camp-moldura, .cs-camp-brilho > img { animation: cs-camp-brilho 2.6s ease-in-out infinite; }
-@keyframes cs-camp-brilho { 50% { filter: drop-shadow(0 0 10px rgba(255,215,0,.85)) brightness(1.08); } }
-@media (prefers-reduced-motion: reduce) { .cs-camp-brilho .cs-camp-moldura, .cs-camp-brilho > img { animation: none; filter: drop-shadow(0 0 8px rgba(255,215,0,.7)); } }
+/* 🏆 Quadro dos Campeões pequeno (PROMPT-119): a moldura dourada (sem a imagem: a de insígnia, dourada em CSS), o 🏆 e "26/26" */
+.cs-camp-ouro { filter: sepia(1) saturate(3.2) hue-rotate(-8deg) brightness(1.12) contrast(1.05); }
+.cs-camp-trofeu { position: absolute; transform: translate(-50%, -50%); line-height: 1; filter: drop-shadow(0 1px 1px rgba(0,0,0,.6)); }
+.cs-camp-faixa { position: absolute; transform: translate(-50%, -50%); padding: 0 .45em; border-radius: 3px; white-space: nowrap; line-height: 1.35;
+  font-family: 'Orbitron', sans-serif; font-weight: 800; color: #3b2400; background: linear-gradient(180deg, #fff0a6, #e2b33a 55%, #b9821a); box-shadow: 0 1px 2px rgba(0,0,0,.5); }
+.cs-camp-brilho { animation: cs-camp-brilho 2.6s ease-in-out infinite; }
+@keyframes cs-camp-brilho { 50% { filter: drop-shadow(0 0 8px rgba(255,215,0,.9)) brightness(1.08); } }
+@media (prefers-reduced-motion: reduce) { .cs-camp-brilho { animation: none; filter: drop-shadow(0 0 6px rgba(255,215,0,.7)); } }
+.cs-mini-quadro .cs-mini-trofeu { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); font-size: 22px; line-height: 1; }
+.lj-emoji > .cs-mini-quadro { width: 52px; height: 52px; display: block; }
+/* 🧭 quadro do pet com o pet em expedição (PROMPT-119) */
+.cs-foto-selo { position: absolute; right: 2%; top: 2%; display: grid; place-items: center; width: 30%; aspect-ratio: 1; border-radius: 50%; font-size: 13px; line-height: 1;
+  background: rgba(13,15,26,.85); border: 1px solid var(--jr-ouro); }
 
 /* ── 🎨 cores dos móveis (PROMPT-118): fileira de bolinhas acima das ferramentas ── */
 .cs-cores { flex-basis: 100%; display: flex; justify-content: center; gap: 8px; padding: 6px 8px; border-radius: 999px; background: rgba(13,15,26,.88); border: 1px solid rgba(255,255,255,.2); }

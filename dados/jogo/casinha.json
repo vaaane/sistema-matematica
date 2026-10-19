@@ -436,20 +436,18 @@
  "quadro_campeoes": {
   "nome": "Quadro dos Campeões",
   "emoji": "🏆",
-  "imagem": "moveis/quadro_campeoes_f.webp",
-  "largura": 320,
+  "imagem": "moveis/moldura_dourada_f.webp",
+  "largura": 80,
   "conquista": "26 insígnias",
-  "area": [
-   10,
-   14,
-   90,
-   86
-  ],
-  "grade": [
-   9,
-   3
-  ],
-  "_nota": "grátis, liberado ao conseguir as 26 insígnias; item de parede. area = retângulo do veludo em % da imagem (x0,y0,x1,y1) onde a grade (colunas, linhas) de insígnias é desenhada: 26 insígnias + um 🏆 na última casa. Enquanto a imagem não existir, desenhar a moldura em CSS (borda dourada larga, veludo azul-escuro). Brilho animado se as 26 forem douradas."
+  "_nota": "Quadro dos Campeões (PROMPT-119): pequeno, a moldura de insígnia DOURADA com um 🏆 grande no círculo (trofeu.centro e tamanho em % da largura) e a faixinha \"26/26\" embaixo. Grátis, liberado ao conseguir as 26 insígnias; não conta no max_na_parede. Brilho animado se as 26 forem douradas. Tocar abre a coleção das 26.",
+  "trofeu": {
+   "centro": [
+    50,
+    46
+   ],
+   "tamanho": 52,
+   "faixa": "26/26"
+  }
  },
  "cores": {
   "_nota": "Cores dos móveis (PROMPT-118). Imagem da cor: moveis/{id}_{vista}_{cor}.webp; a cor padrão (id \"\") usa a imagem normal {id}_{vista}.webp. Trocar de cor é grátis.",
