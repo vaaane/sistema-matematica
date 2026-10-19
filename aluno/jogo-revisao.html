@@ -82,7 +82,9 @@
       <button class="jr-btn jr-btn-sec" id="btn-cena-voltar">⟵ Mapa geral</button>
       <div class="jr-hud-titulo" id="cena-titulo"></div>
       <button class="jr-btn-hud" id="btn-relembre" hidden aria-label="Relembre o conteúdo do ginásio">📖<span>Relembre</span></button>
+      <button class="jr-btn-hud" id="btn-curtidas" hidden aria-label="Casinhas mais curtidas">⭐<span>Mais curtidas</span></button>
       <button class="jr-btn-hud" id="btn-praca" hidden aria-label="Ir para a Praça do Encontro">🏛️<span>Praça</span></button>
+      <button class="jr-btn-hud" id="btn-casa" hidden aria-label="Ir para a minha casinha">🏠<span>Casa</span></button>
       <button class="jr-btn-hud" id="btn-online" hidden aria-label="Quem está online">👥<span>Online (<b id="online-n">0</b>)</span></button>
       <button class="jr-btn-hud" id="btn-colegas" hidden aria-label="Mostrar ou esconder os colegas" aria-pressed="true">👁<span>Colegas</span></button>
       <button class="jr-btn-hud" id="btn-reacao" hidden aria-label="Mandar uma reação">😊</button>
@@ -144,7 +146,8 @@
     <div id="pet-faro" class="jr-pet-faro" hidden aria-hidden="true">👃</div>
     <button id="btn-revanche" class="jr-btn jr-btn-ouro jr-revanche" hidden>⚔ Revanche</button>
     <!-- 🏠 Casinha (PROMPT-105): Arrumar, faixa dos guardados e botões em cima do móvel tocado -->
-    <button id="cs-arrumar" class="jr-btn jr-btn-ouro cs-btn-arrumar" hidden>🛠️ Arrumar</button>
+    <div id="cs-botoes" class="cs-botoes" hidden><button id="cs-arrumar" class="jr-btn jr-btn-ouro">🛠️ Arrumar</button><button id="cs-comprar" class="jr-btn">🛒 Móveis</button></div>
+    <div id="cs-cama-balao" class="jr-pessoa-balao cs-cama-balao" hidden></div>
     <!-- PROMPT-107: ❤️ na casinha do colega · selo dos corações na minha -->
     <button id="cs-curtir" class="jr-btn cs-btn-arrumar cs-curtir" hidden aria-pressed="false">❤️ Curtir casinha</button>
     <div id="cs-selo" class="cs-selo" hidden></div>
@@ -283,8 +286,9 @@
   <!-- 🏠 Casinha (PROMPT-106): coleção das insígnias, aquário ampliado e pote de comida -->
   <div id="cs-colecao" class="al-fundo" hidden role="dialog" aria-label="Coleção de insígnias">
     <div class="al-caixa cs-col-caixa">
-      <div class="al-topo"><b id="cs-col-tit">🏅 Coleção de insígnias</b><span id="cs-col-cont"></span><button class="bt-lista-x" data-fechar="cs-colecao" aria-label="Fechar">✕</button></div>
+      <div class="al-topo"><b id="cs-col-tit">🏅 Coleção de insígnias</b><button class="bt-lista-x" data-fechar="cs-colecao" aria-label="Fechar">✕</button></div>
       <div class="cs-col-grade" id="cs-col-grade"></div>
+      <div class="cs-col-rodape" id="cs-col-rodape"></div>
     </div>
   </div>
   <div id="cs-aquario" class="al-fundo cs-aquario" hidden role="dialog" aria-label="Aquário">
@@ -294,9 +298,8 @@
   </div>
   <div id="cs-menu" class="al-fundo" hidden role="dialog" aria-label="Casinhas">
     <div class="al-caixa cs-menu-caixa">
-      <div class="al-topo"><b>🏠 Casinhas</b><button class="bt-lista-x" data-fechar="cs-menu" aria-label="Fechar">✕</button></div>
-      <div class="cs-menu-botoes"><button class="jr-btn jr-btn-ouro" data-cs-menu="minha">🏠 Minha casinha</button><button class="jr-btn" data-cs-menu="curtidas">⭐ Mais curtidas</button></div>
-      <ol class="cs-curtidas" id="cs-curtidas" hidden></ol>
+      <div class="al-topo"><b>⭐ Mais curtidas da turma</b><button class="bt-lista-x" data-fechar="cs-menu" aria-label="Fechar">✕</button></div>
+      <ol class="cs-curtidas" id="cs-curtidas"></ol>
     </div>
   </div>
   <div id="cs-comida" class="al-fundo" hidden role="dialog" aria-label="Pote de comida">

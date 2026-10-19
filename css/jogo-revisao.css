@@ -3121,7 +3121,9 @@ html.jr-girado .jr-cl-tela i.pingo { animation-name: cl-chove-g; }
 /* 🛠️ Arrumar */
 .cs-btn-arrumar { position: absolute; z-index: 15; left: max(14px, var(--sa-l, 0px)); bottom: max(16px, calc(var(--sa-b, 0px) + 10px)); }
 .cs-btn-arrumar[hidden] { display: none; }
-#tela-cena.cs-arrumando .jr-hud, #tela-cena.cs-arrumando .jr-joy, #tela-cena.cs-arrumando .jr-pet-fala { display: none !important; }
+.cs-botoes { position: absolute; z-index: 15; left: max(14px, var(--sa-l, 0px)); bottom: max(16px, calc(var(--sa-b, 0px) + 10px)); display: flex; gap: 8px; }
+.cs-botoes[hidden] { display: none; }
+#tela-cena.cs-arrumando .jr-hud, #tela-cena.cs-arrumando .jr-joy, #tela-cena.cs-arrumando .cs-cama-balao, #tela-cena.cs-arrumando .jr-pet-fala { display: none !important; }
 #tela-cena.cs-arrumando .cs-movel { pointer-events: auto; cursor: grab; touch-action: none; }
 #tela-cena.cs-arrumando .cs-movel.sel > img { filter: drop-shadow(0 0 3px #ffd700) drop-shadow(0 0 8px rgba(255,215,0,.8)); }
 .cs-faixa { position: absolute; z-index: 30; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 10px;
@@ -3144,6 +3146,8 @@ html.jr-deitado .cs-guardado { width: 62px; padding: 3px; }
 html.jr-deitado .cs-guardado img { width: 44px; height: 32px; }
 html.jr-deitado .cs-guardado span { font-size: 9.5px; }
 html.jr-deitado .cs-faixa > .jr-btn { min-height: 38px; padding: 4px 12px; }
+html.jr-deitado .cs-botoes { left: max(10px, var(--sa-l, 0px)); bottom: max(10px, var(--sa-b, 0px)); }
+html.jr-deitado .cs-botoes .jr-btn { min-height: 38px; padding: 4px 12px; }
 html.jr-deitado .cs-btn-arrumar { min-height: 38px; padding: 4px 12px; left: max(10px, var(--sa-l, 0px)); bottom: max(10px, var(--sa-b, 0px)); }
 /* loja: aba 🛋️ Móveis */
 #jr-app img.lj-movel-img { width: 56px; height: 48px; object-fit: contain; }
@@ -3238,3 +3242,20 @@ html.jr-deitado .cs-selo { bottom: max(58px, calc(var(--sa-b, 0px) + 54px)); }
 .cs-curt-pos { width: 2em; text-align: center; }
 .cs-curt-n { color: #ffb3cf; font-weight: 800; white-space: nowrap; }
 .cs-curt-vazio { justify-content: center; color: #a3a1c9; }
+
+/* ── 🏠 Casinha, ajustes (PROMPT-108) ── */
+.cs-cama-balao { padding: 6px; }
+.cs-cama-balao .jr-btn { min-height: 38px; padding: 4px 14px; font-size: 15px; white-space: nowrap; }
+.cs-zzz { position: absolute; pointer-events: none; font: 800 16px 'Rajdhani', sans-serif; color: #e6ecff; text-shadow: 0 1px 3px rgba(0,0,0,.7); }
+.cs-zzz i { position: absolute; left: 0; top: 0; font-style: normal; opacity: 0; animation: cs-zzz 3s ease-out infinite; }
+.cs-zzz i:nth-child(2) { animation-delay: 1s; font-size: 1.2em; }
+.cs-zzz i:nth-child(3) { animation-delay: 2s; font-size: 1.45em; }
+@keyframes cs-zzz { 0% { transform: translate(0, 0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(1.4em, -2.6em); opacity: 0; } }
+.cs-col-item { font: inherit; color: inherit; }
+button.cs-col-item { cursor: pointer; }
+button.cs-col-item:hover, button.cs-col-item:focus-visible { border-color: var(--jr-ouro); background: rgba(255,215,0,.12); }
+.cs-col-item.atual { border-color: var(--jr-ouro); box-shadow: 0 0 0 2px rgba(255,215,0,.5) inset; }
+.cs-col-rodape { text-align: center; font: 700 16px 'Rajdhani', sans-serif; color: var(--jr-ouro); }
+#loja.so-moveis .lj-abas { display: none; }
+@media (prefers-reduced-motion: reduce) { .cs-zzz i { animation: none; opacity: .9; } .cs-zzz i:nth-child(2) { transform: translate(.6em, -1em); } .cs-zzz i:nth-child(3) { transform: translate(1.2em, -2em); } }
+.cs-col-caixa .al-topo .bt-lista-x, .cs-menu-caixa .al-topo .bt-lista-x, .cs-comida-caixa .al-topo .bt-lista-x { margin-left: auto; }   /* o ✕ no canto */

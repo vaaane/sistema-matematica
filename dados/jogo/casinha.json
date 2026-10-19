@@ -40,13 +40,12 @@
    "emoji": "🛏️",
    "preco": 0,
    "tipo": "chao",
-   "largura": 140,
+   "largura": 260,
    "limite": 1,
    "vistas": [
     "d"
    ],
-   "dica": "O pet dorme aqui. A primeira é de graça!",
-   "gratis_primeira": true
+   "dica": "O pet dorme aqui. Já vem no kit inicial."
   },
   {
    "id": "tapete",
@@ -319,5 +318,36 @@
   },
   "max_na_parede": 8,
   "_nota": "grátis e automático: 1 quadrinho para cada insígnia ganha; tamanho = % da largura da moldura"
- }
+ },
+ "kit_inicial": [
+  {
+   "id": "cama",
+   "x": 400,
+   "y": 600,
+   "vista": "d",
+   "espelho": false
+  },
+  {
+   "id": "tapete",
+   "x": 690,
+   "y": 560,
+   "vista": "d",
+   "espelho": false
+  },
+  {
+   "id": "pufe",
+   "x": 900,
+   "y": 640,
+   "vista": "d",
+   "espelho": true
+  },
+  {
+   "id": "cacto",
+   "x": 190,
+   "y": 670,
+   "vista": "d",
+   "espelho": false
+  }
+ ],
+ "_nota_kit": "kit_inicial: móveis que já vêm colocados na 1ª visita (x, y = base do móvel em px lógicos). Substitui o gratis_primeira da cama."
 }
