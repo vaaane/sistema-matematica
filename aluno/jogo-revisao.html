@@ -25,14 +25,17 @@
         <img src="/img/jogo/mapa-geral/mapa-geral.webp" alt="Mapa geral" class="jr-geral-img" draggable="false"/>
         <div class="jr-dn-tarde" aria-hidden="true"></div>
         <div class="jr-dn-noite" aria-hidden="true"></div>
+        <div class="jr-cl-cor" aria-hidden="true"></div>
         <div id="geral-marcadores"></div>
       </div>
     </div>
     <div class="jr-dn-estrelas" aria-hidden="true"></div>
+    <div class="jr-cl-tela" aria-hidden="true"></div>
     <div class="jr-hud jr-hud-topo">
       <button class="jr-btn jr-btn-sec" id="btn-sair-jogo">⟵ Sair</button>
       <div class="jr-hud-titulo">Jogo de Revisão</div>
       <span class="jr-selo-online" id="selo-online" hidden>🟢 0 online</span>
+      <button class="jr-clima-ic" data-clima hidden></button>
       <button class="jr-selo-seq apagado" id="selo-seq" aria-label="Sequência de dias">🔥 0</button>
       <button class="jr-btn-som" data-som aria-label="Desligar o som">🔊</button>
       <button class="jr-btn-som jr-btn-musica mudo" data-musica aria-label="Ligar a música">🎵</button>
@@ -60,14 +63,20 @@
         <div id="cena-atores"></div>
         <div id="pet-sombra" class="jr-pet-sombra" hidden></div>
         <img id="pet" class="jr-ator jr-pet" alt="" draggable="false" hidden/>
+        <div id="pet-chapeu" class="jr-chapeu" hidden aria-hidden="true"></div>
         <img id="jogador" class="jr-ator jr-jogador" alt="" draggable="false"/>
         <div id="minha-reacao" class="jr-reacao-balao" hidden></div>
         <!-- 🌙 dia e noite (PROMPT-93): acima do fundo e dos atores, abaixo de rótulos, nomes e balões -->
         <div class="jr-dn-tarde" aria-hidden="true"></div>
         <div class="jr-dn-noite" aria-hidden="true"></div>
         <div class="jr-dn-luzes" id="dn-luzes" aria-hidden="true"></div>
+        <!-- 🌧️ clima (PROMPT-104): cor do dia, sombras de nuvem e poças (no chão) -->
+        <div class="jr-cl-cor" aria-hidden="true"></div>
+        <div class="jr-cl-nuvens" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="jr-cl-pocas" id="cl-pocas" aria-hidden="true"></div>
       </div>
       <div class="jr-dn-estrelas" aria-hidden="true"></div>
+      <div class="jr-cl-tela" aria-hidden="true"></div>
     </div>
     <div class="jr-hud jr-hud-topo">
       <button class="jr-btn jr-btn-sec" id="btn-cena-voltar">⟵ Mapa geral</button>
@@ -80,6 +89,7 @@
       <button class="jr-btn-hud jr-btn-missoes" id="btn-missoes" hidden aria-label="Missões do dia">📜<span id="missoes-cont">0/3</span></button>
       <button class="jr-btn-pet" id="btn-pet" hidden aria-label="Meus pets"><img alt="" draggable="false"/></button>
       <button class="jr-btn-hud jr-btn-batalhar" id="btn-batalhar" hidden aria-label="Treinadores">⚔️<span>Treinadores</span></button>
+      <button class="jr-clima-ic" data-clima hidden></button>
       <button class="jr-btn-som" data-som aria-label="Desligar o som">🔊</button>
       <button class="jr-btn-som jr-btn-musica mudo" data-musica aria-label="Ligar a música">🎵</button>
       <button class="jr-btn-estojo" id="btn-insignias-2" aria-label="Minhas insígnias">
@@ -186,7 +196,7 @@
       <!-- barra do topo: fugir, moedas, adversário e progresso -->
       <div class="jr-perg-barra">
         <button class="jr-fugir" id="perg-desistir" aria-label="Fugir da batalha">🏳️ Fugir</button>
-        <button class="jr-calc-btn" id="perg-calc" hidden aria-label="Calculadora" title="Calculadora">🧮</button>
+        <button class="jr-calc-btn" id="perg-calc" hidden aria-label="Calculadora" title="Calculadora">🧮 Calculadora</button>
         <div class="jr-moedas" id="perg-moedas" hidden aria-label="Moedas"><img class="jr-item-img jr-ic-moeda" data-icone="moeda" alt="🪙" draggable="false"/> <span>0</span></div>
         <div class="jr-perg-placa">
           <span class="jr-perg-adv-nome" id="perg-adv-nome"></span>
@@ -301,21 +311,24 @@
 
   <!-- Cartão do erro no ginásio e na revisão da semana (PROMPT-45): sua resposta × a certa, passos e Continuar -->
   <div id="perg-erro" class="jr-erro" hidden role="dialog" aria-label="Resposta errada">
+    <!-- PROMPT-100: o meio rola (se precisar); deitado em duas colunas; o rodapé (volta + Continuar) fica fixo -->
     <div class="jr-erro-caixa">
-      <div class="jr-erro-enun" id="erro-enun"></div>
-      <div class="jr-erro-meio">
-        <div class="jr-erro-textos">
+      <div class="jr-erro-corpo">
+        <div class="jr-erro-esq">
+          <div class="jr-erro-enun" id="erro-enun"></div>
           <div class="jr-erro-resps">
             <div class="jr-erro-resp sua"><small>Você marcou</small><b><i>✘</i> <span id="erro-sua"></span></b></div>
             <div class="jr-erro-resp certa"><small>Certa</small><b><i>✔</i> <span id="erro-certa"></span></b></div>
           </div>
+          <div class="jr-erro-grade" id="erro-grade" hidden></div>
+        </div>
+        <div class="jr-erro-dir">
           <div class="jr-erro-tit">Como resolver</div>
           <ol class="jr-erro-passos" id="erro-passos"></ol>
+          <div class="jr-erro-linha" id="erro-linha-dica"><span class="jr-erro-dica" id="erro-dica"></span><button class="jr-btn-relembre" id="erro-relembre">📖 Relembre</button></div>
         </div>
-        <div class="jr-erro-grade" id="erro-grade" hidden></div>
       </div>
-      <div class="jr-erro-linha" id="erro-linha-dica"><span class="jr-erro-dica" id="erro-dica"></span><button class="jr-btn-relembre" id="erro-relembre">📖 Relembre</button></div>
-      <div class="jr-erro-linha"><span class="jr-erro-volta" id="erro-volta"></span><button class="jr-btn jr-btn-ouro" id="erro-continuar" disabled>Continuar ▶</button></div>
+      <div class="jr-erro-rodape"><span class="jr-erro-volta" id="erro-volta"></span><button class="jr-btn jr-btn-ouro" id="erro-continuar" disabled>Continuar ▶</button></div>
     </div>
   </div>
 
@@ -695,6 +708,25 @@
     </div>
   </div>
 
+  <!-- 🎁 Presentes recebidos (PROMPT-103): um cartão com a lista -->
+  <div id="pres-card" class="jr-pet-escolha" hidden role="dialog" aria-label="Presentes recebidos">
+    <div class="jr-pet-escolha-caixa pres-caixa">
+      <div class="jr-pet-escolha-titulo" id="pres-tit"></div>
+      <ul class="pres-lista" id="pres-lista"></ul>
+      <button class="jr-btn jr-btn-ouro" id="pres-ok">Oba! 💜</button>
+    </div>
+  </div>
+  <!-- 🎂 Aniversário do pet (PROMPT-102) -->
+  <div id="aniv" class="jr-pet-escolha" hidden role="dialog" aria-label="Aniversário do pet">
+    <div class="jr-pet-escolha-caixa aniv-caixa">
+      <div class="aniv-confete" id="aniv-confete" aria-hidden="true"></div>
+      <div class="jr-pet-escolha-titulo" id="aniv-tit"></div>
+      <div class="aniv-rosto"><span class="jr-icone-pet"><img id="aniv-img" alt="" draggable="false" data-icone-pet/></span><span class="jr-chapeu" aria-hidden="true"></span></div>
+      <div class="exp-volta-fala" id="aniv-fala"></div>
+      <div class="exp-volta-premios" id="aniv-premios"></div>
+      <button class="jr-btn jr-btn-ouro" id="aniv-ok">Obrigado! 🎉</button>
+    </div>
+  </div>
   <!-- 🎒 O pet voltou da expedição (PROMPT-92) -->
   <div id="exp-volta" class="jr-pet-escolha" hidden role="dialog" aria-label="O pet voltou da expedição">
     <div class="jr-pet-escolha-caixa exp-volta-caixa">
@@ -728,6 +760,7 @@
         <div class="jr-mp-sombra" id="mp-sombra"></div>
         <div class="jr-mp-pulo" id="mp-pulo"><div class="jr-mp-corpo" id="mp-corpo"><img id="mp-img" alt="" draggable="false"/></div></div>
         <div class="jr-mp-particulas" id="mp-particulas"></div>
+        <div id="mp-chapeu" class="jr-chapeu" hidden aria-hidden="true"></div>
         <!-- 🧭 em expedição: no lugar do pet -->
         <div class="mp-exp-fora" id="mp-exp-fora" hidden><b id="mp-exp-fora-tit"></b><span id="mp-exp-fora-hora"></span>
           <div class="mp-exp-trilho"><div class="mp-exp-fill" id="mp-exp-fora-barra"></div></div></div>
@@ -759,6 +792,7 @@
           <button class="jr-btn mp-treino" id="mp-treino">🎯 Treino de hoje</button>
           <button class="jr-btn mp-exp-btn" id="mp-exp">🧭 Expedição</button>
         </div>
+        <div class="mp-presentes" id="mp-presentes"></div>
         <div class="jr-mp-botoes jr-mp-principais">
           <button class="jr-btn" id="mp-bolsa"><img class="jr-item-img jr-ic-btn" data-icone="bolsa" alt="🎒" draggable="false"/> Bolsa</button>
           <button class="jr-btn" id="mp-carinho">💜 Carinho</button>

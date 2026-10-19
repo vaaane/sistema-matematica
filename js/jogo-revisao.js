@@ -460,6 +460,7 @@ async function carregarEstado() {
     estado.pedidosDia = v.pedidos_dia || null;
     estado.pescaDia = v.pesca_dia || null;
     estado.presentesDia = v.presentes_dia || null;
+    estado.presentesRecebidos = Number(v.presentes_recebidos) || 0;   // 🎁 só o número (PROMPT-103)
     estado.desafiosDia = v.desafios_dia || null;
     estado.fliperDia = v.fliperama_dia || null;
     estado.cavarDia = v.cavar_dia || null;            // { data, m: { 'mapa-i': true }, moedas } — montinhos/tesouros cavados hoje
@@ -976,6 +977,7 @@ function iniciarPet() {
   if (ps.migrou && ps.ativo) gravar({ pets: { ativo: ps.ativo, conquistados: ps.conquistados } });
   delete ps.migrou;
   normalizarCuidados();
+  datarPetsAntigos();   // 🎂 (PROMPT-102) pet sem `data`: começa a contar hoje
   if (ps.ativo) { preCarregarPet(formaDe(ps.ativo)); seguidor.definir(petFora(ps.ativo) ? null : ps.ativo, formaDe(ps.ativo)); atualizarVisualPet(); }   // em expedição: não segue
   if (falasProntas()) verificarMarcosLealdade(ps.ativo);
   verificarEvolucao(ps.ativo);   // quem já tinha ❤️ 3 antes da evolução existir evolui ao entrar
@@ -1553,7 +1555,9 @@ function renderMeuPet() {
     Acima de 100, cada ${pp} pontos sobem um nível de amizade ❤️ (moldura de prata no 2, corações ao seguir no 3, moldura dourada no 5, coroa no 10).${truquesDe(pet) ? `
     <b>Truques ✨</b> ${truquesDe(pet).map(t => `${t.emoji} ${esc(t.nome)} ${t.lealdade > 0 ? t.lealdade : '(desde o início)'}`).join(' · ')}.` : ''}`;
   atualizarBotaoTreino();
+  $('mp-presentes').textContent = estado.presentesRecebidos ? `🎁 Presentes recebidos: ${estado.presentesRecebidos}` : '';
   pintarExpMeuPet();
+  pintarChapeuMeuPet();
   $('mp-bolsa').innerHTML = `${imgItem(icone('bolsa'), '🎒', 'jr-ic-btn')} Bolsa (${Object.values(estado.pets.bolsa || {}).reduce((a, n) => a + (Number(n) || 0), 0)})`;
 }
 
@@ -2326,6 +2330,7 @@ function pescaNoMapa(cx, cy) {
 
 function sentarPesca(ponto) {
   if (cena?.tipo !== 'mapa' || perguntaAberta || transicionando) return;
+  if (climaAgora() === 'chuva' && !avisouChuvaPesca) { avisouChuvaPesca = true; avisoPet('🌧️ Dia de chuva: peixes raros aparecem mais!'); }
   esconderAcaoMapa();
   const sp = spritePesca();
   const s = ESCALA_SPRITE;   // mesma escala das imagens de andar
@@ -2456,7 +2461,7 @@ function pescaPuxar() {
   pesca.estado = 'barrinha';
   pesca.exc.hidden = true;
   pescaPose('puxando');
-  const f = sortearPeixe(pesca.ponto);
+  const f = sortearPeixe(pontoComClima(pesca.ponto));   // 🌧️ na chuva, os raros têm o dobro de chance
   pesca.peixe = f;
   pesca.barra = criarBarrinha(f?.dificuldade);
   pesca.segurando = false;
@@ -2603,47 +2608,86 @@ function renderRankingPesca() {
     : i >= 0 ? `Você: ${i + 1}º · ${lista[i].pontos} pts` : 'Você ainda não pescou esta semana.';
 }
 
-// ── Presentes: 1 peixe por vez para um colega online, até presentes_dia por dia ──
-// jogo_revisao_presentes/{quem recebe}/{id} = { de, de_nome, de_turma, para_nome, peixe, ts, recebido } (modo teste: _teste)
+// ── 🎁 Presentes (PROMPT-103; antes só peixes): 1 item da bolsa por vez (comidas, peixes, iscas, itens de uso), com um recado
+// pronto, para um colega; até presentes_dia por dia. Sem moedas, pets, tintas nem insígnias. Turma (de quem dá ou recebe) com
+// os desafios desligados pela professora: não dá. Quem recebe: ao vivo ou ao entrar; vários de uma vez → um cartão com a lista.
+// jogo_revisao_presentes/{quem recebe}/{id} = { de, de_nome, de_turma, para_nome, item, peixe?, recado, ts, recebido } (modo teste: _teste)
+// (o nó é marcado como recebido, não apagado: o painel da professora conta os presentes dados e recebidos por ele)
 const basePresentes = () => (teste ? 'jogo_revisao_presentes_teste' : 'jogo_revisao_presentes');
 const presentesHoje = () => (estado.presentesDia?.data === diaLocal() ? Number(estado.presentesDia.n) || 0 : 0);
+const RECADOS = ['Boa sorte no ginásio! 🍀', 'Para o seu pet 🐾', 'Valeu pela ajuda! 🙌', 'Você é fera! 🔥', 'Feliz aniversário do seu pet! 🎂'];
 const peixesNaBolsa = () => Object.entries(estado.pets?.bolsa || {}).filter(([id, n]) => id.startsWith('pesca_') && Number(n) > 0)
-  .map(([id, n]) => ({ ...itemDaBolsa(id), n: Number(n) })).filter(x => x.id);
+  .map(([id, n]) => ({ ...itemDaBolsa(id), n: Number(n) })).filter(x => x.id);   // (a loja vende os peixes)
 const comArtigo = (nome) => `${/a$/i.test(nome) ? 'uma' : 'um'} ${nome}`;
+// o que dá para presentear: { id, nome, emoji, imagem, filtro, n } — comidas e peixes da bolsa, iscas e itens de uso
+function itemPresente(id) {
+  if (id === 'isca') { const u = (cfgLoja().itens_uso || []).find(x => x.id === 'isca'); return { id, nome: u?.nome || 'Isca', emoji: u?.emoji || '🪱', imagem: u?.imagem || null }; }
+  const uso = (cfgLoja().itens_uso || []).find(x => x.id === id);
+  return uso ? { id, nome: uso.nome, emoji: uso.emoji, imagem: uso.imagem || null } : itemDaBolsa(id);
+}
+const qtdPresente = (id) => (id === 'isca' ? iscas() : (cfgLoja().itens_uso || []).some(x => x.id === id) ? qtdItem(id) : Number(estado.pets?.bolsa?.[id]) || 0);
+function mudarQtdPresente(id, d, patch) {
+  const ps = estado.pets, n = Math.max(0, qtdPresente(id) + d);
+  if (id === 'isca') { ps.iscas = n; patch['pets/iscas'] = n; }
+  else if ((cfgLoja().itens_uso || []).some(x => x.id === id)) { ps.itens = { ...(ps.itens || {}), [id]: n }; patch[`pets/itens/${id}`] = n || null; }
+  else { ps.bolsa = { ...(ps.bolsa || {}), [id]: n }; patch[`pets/bolsa/${id}`] = n || null; }
+}
+function itensParaPresente() {
+  const ids = new Set([...Object.keys(estado.pets?.bolsa || {}), ...Object.keys(estado.pets?.itens || {}), 'isca']);
+  return [...ids].map(id => { const it = itemPresente(id), n = qtdPresente(id); return it && n > 0 ? { ...it, id, n } : null; }).filter(Boolean);
+}
+const presenteBloqueado = (c) => !onlineAtivo() || c.uid === sessao.uid || desafiosOff?.todas || desafiosOff?.[sessao.turma] || desafiosOff?.[c.reg?.turma];
 
-function escolherPresente(c) {
+// passo 1: o item · passo 2: o recado · passo 3: confirmar
+function escolherPresente(c, passo = 1, id = null, recado = null) {
   const el = $('colega-cartao');
   clearTimeout(cartaoColega.timer);
-  cartaoColega.timer = setTimeout(fecharCartaoColega, 12000);
-  const lim = cfgPesca().presentes_dia ?? 3, ps = peixesNaBolsa(), falta = lim - presentesHoje();
-  const msg = falta <= 0 ? `Você já deu ${lim} presentes hoje. Amanhã tem mais!` : !ps.length ? 'Você não tem peixes na bolsa. Vá pescar 🎣' : '';
-  el.innerHTML = `<span class="jr-colega-info jr-presente">
-    <b>🎁 Dar 1 peixe para ${esc(rotuloColega(c.uid, c.reg))}</b>
-    ${msg ? `<small>${msg}</small>` : `<span class="jr-presente-lista">${ps.map(x => `<button data-dar="${esc(x.id)}">${imgItem(x.imagem, x.emoji, 'jr-item-peixe' + (x.raro ? ' raro' : ''), x.filtro)}<span>${esc(x.nome)} ×${x.n}</span></button>`).join('')}</span>
-      <small>Pode dar mais ${falta} hoje</small>`}
-  </span>`;
+  cartaoColega.timer = setTimeout(fecharCartaoColega, 20000);
+  cartaoColega.presente = { id, recado };
+  const para = esc(rotuloColega(c.uid, c.reg)), lim = cfgPesca().presentes_dia ?? 3, falta = lim - presentesHoje();
+  let corpo;
+  if (presenteBloqueado(c)) corpo = '<small>Presentes estão desligados agora.</small>';
+  else if (falta <= 0) corpo = `<small>Você já deu ${lim} presentes hoje. Amanhã tem mais!</small>`;
+  else if (passo === 1) {
+    const its = itensParaPresente();
+    corpo = its.length ? `<span class="jr-presente-lista">${its.map(x => `<button data-dar="${esc(x.id)}">${imgItem(x.imagem, x.emoji, 'jr-item-peixe' + (x.raro ? ' raro' : ''), x.filtro)}<span>${esc(x.nome)} ×${x.n}</span></button>`).join('')}</span>
+      <small>Escolha 1 item · pode dar mais ${falta} hoje</small>` : '<small>Sua bolsa está vazia. Pesque, cave ou compre na loja 🎒</small>';
+  } else if (passo === 2) {
+    corpo = `<span class="jr-presente-lista jr-recados">${RECADOS.map((r, k) => `<button data-recado="${k}">${esc(r)}</button>`).join('')}</span><small>Escolha um recado</small>`;
+  } else {
+    const it = itemPresente(id);
+    corpo = `<span class="jr-presente-conf">Dar 1 ${esc(it?.nome || '')} para ${para}?<small>“${esc(RECADOS[recado] || '')}”</small></span>
+      <span class="jr-presente-lista"><button data-dar-ok>🎁 Dar</button><button data-presente-voltar>Voltar</button></span>`;
+  }
+  el.innerHTML = `<span class="jr-colega-info jr-presente"><b>🎁 Presente para ${para}</b>${corpo}</span>`;
   posicionarCartaoColega();
 }
-async function darPresente(c, id) {
-  const item = itemDaBolsa(id), n = Number(estado.pets.bolsa?.[id]) || 0, lim = cfgPesca().presentes_dia ?? 3;
-  if (!item || n <= 0 || presentesHoje() >= lim || !carregouProgresso) return;
+async function darPresente(c, id, recado) {
+  const item = itemPresente(id), n = qtdPresente(id), lim = cfgPesca().presentes_dia ?? 3;
+  if (!item || n <= 0 || presentesHoje() >= lim || !carregouProgresso || presenteBloqueado(c) || !RECADOS[recado]) return;
   const uid = c.uid, r = c.reg || {}, para = rotuloColega(uid, r);
   fecharCartaoColega();
+  // o item sai da bolsa na hora; se o envio falhar, volta
+  const patch = {};
+  mudarQtdPresente(id, -1, patch);
+  estado.presentesDia = { data: diaLocal(), n: presentesHoje() + 1 };
+  patch.presentes_dia = estado.presentesDia;
   try {
-    await push(ref(db, `${basePresentes()}/${uid}`), { de: sessao.uid, de_nome: nomeRanking(), de_turma: sessao.turma || '', para_nome: r.apelido || '', peixe: id, ts: Date.now() });
+    await push(ref(db, `${basePresentes()}/${uid}`), { de: sessao.uid, de_nome: nomeRanking(), de_turma: sessao.turma || '', para_nome: r.apelido || '',
+      item: id, ...(String(id).startsWith('pesca_') ? { peixe: id } : {}), recado: RECADOS[recado], ts: Date.now() });
   } catch (e) {
     console.warn('[jogo-revisao] presente indisponível', e?.code || e);
+    const volta = {}; mudarQtdPresente(id, +1, volta);
+    estado.presentesDia = { data: diaLocal(), n: Math.max(0, presentesHoje() - 1) };
     avisoPet('Não deu para enviar o presente agora. Tente de novo mais tarde.');
     return;
   }
-  estado.pets.bolsa[id] = n - 1;
-  estado.presentesDia = { data: diaLocal(), n: presentesHoje() + 1 };
-  gravar({ [`pets/bolsa/${id}`]: n - 1 || null, presentes_dia: estado.presentesDia });
+  gravar(patch);
   tocar('vitoria');
   avisoPet(`🎁 Você deu ${comArtigo(item.nome)} para ${para}!`);
 }
 // Quem recebe: ouve a própria caixa; cada presente entra na bolsa uma vez só (recebido marcado por transação)
-let pararPresentes = null;
+let pararPresentes = null, presentesChegando = [], presentesTimer = 0;
 const presentesEmAndamento = new Set();
 function ouvirPresentes() {
   if (pararPresentes || !carregouProgresso) return;
@@ -2661,13 +2705,29 @@ async function receberPresente(k, p) {
     const t = await runTransaction(ref(db, `${basePresentes()}/${sessao.uid}/${k}/recebido`), (cur) => (cur ? undefined : Date.now()));
     if (!t.committed) return;
   } catch (_) { presentesEmAndamento.delete(k); return; }
-  const item = itemDaBolsa(p.peixe);
+  const id = p.item || p.peixe, item = itemPresente(id);
   if (!item) return;
-  const ps = estado.pets;
-  ps.bolsa = { ...(ps.bolsa || {}), [p.peixe]: (Number(ps.bolsa?.[p.peixe]) || 0) + 1 };
-  gravar({ [`pets/bolsa/${p.peixe}`]: ps.bolsa[p.peixe] });
+  const patch = {};
+  mudarQtdPresente(id, +1, patch);
+  estado.presentesRecebidos = (Number(estado.presentesRecebidos) || 0) + 1;
+  patch.presentes_recebidos = estado.presentesRecebidos;
+  gravar(patch);
+  presentesChegando.push({ ...p, item });
+  clearTimeout(presentesTimer);
+  presentesTimer = setTimeout(mostrarPresentesRecebidos, 900);   // os que chegam juntos viram um cartão só
+}
+function mostrarPresentesRecebidos() {
+  if (!presentesChegando.length) return;
+  if (sobreposicaoAberta() || perguntaAberta || transicionando || !$('pres-card').hidden) { presentesTimer = setTimeout(mostrarPresentesRecebidos, 2000); return; }
+  const lista = presentesChegando; presentesChegando = [];
+  const quem = (p) => `<b>${esc(nomeVisivel(p.de_nome) || 'Um colega')}</b>${nomeVisivel(p.de_turma) ? ` (${esc(nomeVisivel(p.de_turma))})` : ''}`;
+  const ic = (p) => imgItem(p.item.imagem, p.item.emoji || '🎁', 'jr-item-peixe', p.item.filtro);
+  $('pres-tit').textContent = lista.length === 1 ? '🎁 Você ganhou um presente!' : `🎁 Você ganhou ${lista.length} presentes!`;
+  $('pres-lista').innerHTML = lista.map(p => `<li>${ic(p)}<span>${quem(p)} te deu ${esc(comArtigo(p.item.nome))}!${p.recado ? `<small>“${esc(p.recado)}”</small>` : ''}</span></li>`).join('');
+  $('pres-card').hidden = false;
   tocar('vitoria');
-  avisoPet(`🎁 ${nomeVisivel(p.de_nome) || 'Um colega'} te deu ${comArtigo(item.nome)}! 🐟`, true);
+  reagirSeguidor('rapida', 'feliz');   // dragão adulto: `carinho`
+  if (mp) renderMeuPet();
 }
 
 // Tocar no mapa pescando: na fisgada puxa; perto do ponto lança (pronto); longe levanta e anda
@@ -2912,7 +2972,7 @@ function abrirCartaoColega(c) {
       ${pet ? `<span class="jr-colega-pet"><span class="jr-icone-pet"><img src="${srcIcone(formaValida(pet, r.pet_forma))}" alt="" draggable="false" data-icone-pet${r.pet_tinta ? ` data-tinta="${esc(r.pet_tinta)}"` : ''}/></span>${r.pet_nome ? `${esc(r.pet_nome)} · ` : ''}${esc(NOME_PET[pet])}${Number(r.pet_nivel) >= 2 ? ` ❤️ ${Number(r.pet_nivel)}` : ''}</span>` : ''}
     </span>
     ${podeDesafiar() && !r.sem_convites ? '<button class="jr-colega-oi jr-colega-desafiar" data-desafiar aria-label="Desafiar" title="Desafiar">⚔️</button>' : ''}
-    <button class="jr-colega-oi" data-presente aria-label="Presentear com um peixe" title="Presentear">🎁</button>
+    ${presenteBloqueado(c) ? '' : '<button class="jr-colega-oi" data-presente aria-label="Presentear" title="Presentear">🎁</button>'}
     <button class="jr-colega-oi" data-oi aria-label="Acenar">👋</button>`;
   const ti = el.querySelector('img[data-tinta]');
   if (ti) aplicarTinta(ti, ti.dataset.tinta);
@@ -3134,7 +3194,11 @@ function linhaOnline(r) {
 }
 // na Praça (eu também lá): ⚔️ Desafiar; senão 📨 Chamar pra Praça
 function botaoOnline(r) {
-  if (naPracaReg(r) && ehPraca()) return colegas.has(r.uid) && podeDesafiar() && !r.sem_convites ? `<button class="jr-online-acao" data-desafiar-online="${esc(r.uid)}">⚔️ Desafiar</button>` : '';
+  if (naPracaReg(r) && ehPraca()) {
+    const c = colegas.get(r.uid);
+    return (c && podeDesafiar() && !r.sem_convites ? `<button class="jr-online-acao" data-desafiar-online="${esc(r.uid)}">⚔️ Desafiar</button>` : '') +
+      (c && !presenteBloqueado(c) ? `<button class="jr-online-acao" data-presentear-online="${esc(r.uid)}" aria-label="Presentear">🎁</button>` : '');
+  }
   return botaoChamar(r);
 }
 function botaoChamar(r) {
@@ -3145,6 +3209,8 @@ function botaoChamar(r) {
 function cliqueListaOnline(e) {
   const ch = e.target.closest('[data-chamar]');
   if (ch && !ch.disabled) { chamarPraPraca(ch.dataset.chamar); return; }
+  const pr = e.target.closest('[data-presentear-online]');
+  if (pr) { const c = colegas.get(pr.dataset.presentearOnline); $('online-lista').hidden = true; if (c) { abrirCartaoColega(c); escolherPresente(c); } return; }
   const de = e.target.closest('[data-desafiar-online]');
   if (de) {
     const c = colegas.get(de.dataset.desafiarOnline);
@@ -3302,6 +3368,7 @@ function contextoFalaDe(pet) {
     revisar: revisar ? { chave: revisar, dica: dicaDe(revisar) } : null,
     sequencia: Number(estado.sequencia?.atual) || 0, agora: new Date(), estado: est,
     curiosidade: CURIO ? () => baloesCuriosidade(pet) : null,   // 💡 (PROMPT-98)
+    clima: climaParaFala(),   // 🌧️ chuva / calor / vento (PROMPT-104)
   };
 }
 
@@ -4193,12 +4260,13 @@ function abrirCartaoFigurinha(i) {
 }
 function pintarEspecialAlbum() {
   const el = $('estojo-especial'), b = $('btn-album');
+  const anos = Object.keys(estado.pets?.conquistados || {}).filter(p => petValido(p) && cuidadosDe(p)?.insignia_ano).map(p => `🎂 1 ano com ${nomePet(p)}`);   // PROMPT-102
   b.hidden = !ALBUM;
-  el.hidden = !ALBUM;
-  if (!ALBUM) return;
-  const ic = ALBUM.insignia_completo || {};
-  el.classList.toggle('completo', !!estado.albumCompleto);
-  el.textContent = estado.albumCompleto ? `${ic.emoji || '📒'} ${ic.nome || 'Álbum completo'} ✓` : `📒 Álbum: ${CHAVES_ALBUM().filter(temFigurinha).length}/${totalAlbum()} figurinhas`;
+  el.hidden = !ALBUM && !anos.length;
+  const ic = ALBUM?.insignia_completo || {};
+  el.classList.toggle('completo', !!estado.albumCompleto || anos.length > 0);
+  const album = !ALBUM ? '' : estado.albumCompleto ? `${ic.emoji || '📒'} ${ic.nome || 'Álbum completo'} ✓` : `📒 Álbum: ${CHAVES_ALBUM().filter(temFigurinha).length}/${totalAlbum()} figurinhas`;
+  el.textContent = [album, ...anos].filter(Boolean).join(' · ');
 }
 function mostrarFigurinhaPendente() {
   const fp = figurinhaPendente;
@@ -4257,6 +4325,102 @@ function baloesCuriosidade(pet) {
   const f = it.album && figurinhas()[it.album];
   if (f) baloes.push({ texto: temFigurinha(it.album) ? `É da sua figurinha de ${f.nome}! 📒` : 'Tem uma figurinha sobre isso no Álbum… 👀', espera: 300 });
   return baloes;
+}
+
+// ============================================================
+//  🎂 ANIVERSÁRIO DO PET (PROMPT-102) — a cada mês completo desde pets/conquistados/{pet}/data (data local; mês sem o dia →
+//  o último dia do mês). A festa vem uma vez, na 1ª vez que o pet aparece no dia (mapa livre ou Meu Pet): cartão com confete,
+//  chapéu, fala `aniversario`, +10 de lealdade e 1 Bolo especial; aniversarios/{n} = true. Não entrou no dia: perdeu (não acumula).
+//  A cada 12 meses: "N ano(s) juntos!", +20 de lealdade; na 1ª vez, insignia_ano (selo "🎂 1 ano com {nome}" no estojo, sem nota).
+//  O dia todo: chapéu de festa no mapa e no Meu Pet. ?aniversario=1 (modo teste) força a festa do pet ativo.
+// ============================================================
+const LEALDADE_ANIV = 10, LEALDADE_ANIV_ANO = 20;
+let anivForcado = null;   // ?aniversario=1: 'pendente' → já festejou ('feito')
+const ultimoDiaMes = (a, m) => new Date(a, m + 1, 0).getDate();
+// n ≥ 1 se hoje é o aniversário de n meses do pet (senão 0)
+function mesesDeAniversario(pet, hoje = new Date()) {
+  const t = Number(cuidadosDe(pet)?.data);
+  if (!t) return 0;
+  const d0 = new Date(t), n = (hoje.getFullYear() - d0.getFullYear()) * 12 + hoje.getMonth() - d0.getMonth();
+  if (anivForcado && pet === estado?.pets?.ativo) return Math.max(1, n);
+  if (n < 1) return 0;
+  return hoje.getDate() === Math.min(d0.getDate(), ultimoDiaMes(hoje.getFullYear(), hoje.getMonth())) ? n : 0;
+}
+const tempoJuntos = (n) => (n % 12 === 0 ? `${n / 12} ${n === 12 ? 'ano' : 'anos'}` : `${n} ${n === 1 ? 'mês' : 'meses'}`);
+function datarPetsAntigos() {
+  const patch = {};
+  for (const [p, c] of Object.entries(estado.pets.conquistados || {})) if (c && !Number(c.data)) { c.data = Date.now(); patch[`pets/conquistados/${p}/data`] = c.data; }
+  if (Object.keys(patch).length) gravar(patch);
+  if (teste && new URLSearchParams(location.search).get('aniversario') === '1') anivForcado = 'pendente';
+}
+function tickAniversario() {
+  if (!carregouProgresso || !petsOk || !estado?.pets || !$('aniv').hidden) return;
+  const pet = estado.pets.ativo, c = cuidadosDe(pet);
+  if (!c || petFora(pet)) return;
+  const n = mesesDeAniversario(pet);
+  if (!n || (c.aniversarios?.[n] && anivForcado !== 'pendente')) return;
+  const noMapa = cena?.tipo === 'mapa' && seguidor?.pet === pet && !$('pet').hidden && !sobreposicaoAberta() && !perguntaAberta && !transicionando && !pesca;
+  const noMeuPet = mp?.pet === pet && [...document.querySelectorAll('#meu-pet .mp-sub')].every(x => x.hidden);
+  if (noMapa || noMeuPet) festaAniversario(pet, n);
+}
+function festaAniversario(pet, n) {
+  const c = cuidadosDe(pet), base = `pets/conquistados/${pet}`, patch = {};
+  if (anivForcado === 'pendente') anivForcado = 'feito';
+  const ano = n % 12 === 0, nome = nomePet(pet);
+  c.aniversarios = { ...(c.aniversarios || {}), [n]: true };
+  patch[`${base}/aniversarios/${n}`] = true;
+  const leal = ano ? LEALDADE_ANIV_ANO : LEALDADE_ANIV;
+  ganharLealdade(pet, leal, patch);
+  const bolo = itemDaBolsa('bolo');
+  if (bolo) { const k = (Number(estado.pets.bolsa?.bolo) || 0) + 1; (estado.pets.bolsa ||= {}).bolo = k; patch['pets/bolsa/bolo'] = k; }
+  const insignia = ano && !c.insignia_ano;
+  if (insignia) { c.insignia_ano = { data: Date.now() }; patch[`${base}/insignia_ano`] = c.insignia_ano; }
+  gravar(patch);
+  verificarMarcosLealdade(pet);
+  // o cartão
+  $('aniv-tit').textContent = ano ? `🎂 ${tempoJuntos(n)} juntos!` : `🎂 Hoje ${nome} faz ${tempoJuntos(n)} com você!`;
+  const img = $('aniv-img');
+  img.src = srcIcone(formaDe(pet)); encaixarIcone(img); aplicarVisualPet(img, pet);
+  $('aniv-fala').textContent = fraseDe(pet, 'aniversario', { n, tempo: tempoJuntos(n), pet: nome, apelido: apelidoAluno || String(sessao.nome || '').split(' ')[0] }) || 'Que dia feliz! 🎉';
+  $('aniv-premios').innerHTML = `<span class="exp-premio">❤️ +${leal} de lealdade</span>` + (bolo ? `<span class="exp-premio">+1 ${imgItem(bolo.imagem, bolo.emoji || '🎂')} ${esc(bolo.nome || 'Bolo')}</span>` : '') +
+    (insignia ? `<span class="exp-premio">🏅 Insígnia: 🎂 1 ano com ${esc(nome)}</span>` : '');
+  const cores = ['#ff4d8d', '#ffd700', '#00d4ff', '#7c5cfc', '#00e676', '#ff7b2e'];
+  $('aniv-confete').innerHTML = Array.from({ length: 36 }, (_, i) => `<i style="left:${(Math.random() * 100).toFixed(1)}%;background:${cores[i % cores.length]};animation-delay:${(Math.random() * 1.2).toFixed(2)}s"></i>`).join('');
+  $('aniv').hidden = false;
+  tocar(ano ? 'dourada' : 'vitoria');
+  if (mp?.pet === pet) { if (!mp.anim.sequencia('vitoria')) mp.anim.tocar(temAnim(mp.forma, 'animado') ? 'animado' : 'feliz'); }
+  else reagirSeguidor('comemora', 'feliz');   // dragão adulto: `vitoria`
+  if (mp) renderMeuPet();
+}
+// chapéu de festa: no dia do aniversário, acima da cabeça do pet (mapa e Meu Pet)
+const comChapeu = (pet) => !!pet && mesesDeAniversario(pet) > 0;
+function posicionarChapeu() {
+  const el = $('pet-chapeu');
+  const pet = seguidor?.pet;
+  const mostra = !!pet && cena?.tipo === 'mapa' && !$('pet').hidden && comChapeuCache(pet);
+  el.hidden = !mostra;
+  if (!mostra) return;
+  const alt = seguidor.altura || 60, topo = seguidor.y - alt * Math.min(0.95, sentadoNoQuadro(seguidor.forma) || 0.8);
+  el.style.setProperty('--chapeu', Math.max(12, alt * 0.24).toFixed(1) + 'px');
+  el.style.left = seguidor.x + 'px';
+  el.style.top = topo + 'px';
+  el.style.zIndex = Math.round(seguidor.y);
+}
+// o dia não muda a cada quadro: guarda a resposta por pet e por dia
+const chapeuCache = new Map();
+function comChapeuCache(pet) {
+  const k = pet + '|' + diaLocal() + '|' + (anivForcado || '');
+  if (!chapeuCache.has(k)) chapeuCache.set(k, comChapeu(pet));
+  return chapeuCache.get(k);
+}
+function pintarChapeuMeuPet() {
+  const el = $('mp-chapeu');
+  if (!mp || !comChapeu(mp.pet) || petFora(mp.pet)) { el.hidden = true; return; }
+  const palco = $('mp-palco'), h = $('mp-img').offsetHeight || 150;
+  el.style.setProperty('--chapeu', Math.max(22, h * 0.2).toFixed(1) + 'px');
+  el.style.left = '50%';
+  el.style.top = (palco.clientHeight * 0.9 - h * Math.min(0.95, sentadoNoQuadro(mp.forma) || 0.8)) + 'px';
+  el.hidden = false;
 }
 
 function abrirMapaGeral() {
@@ -4433,7 +4597,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('exp-volta').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden;
+  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('exp-volta').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden;
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -4575,6 +4739,7 @@ function loop(t) {
     const e = escalaPetCena(pet);
     if (petNoPedestal) seguidor?.atualizar(dt, petNoPedestal[0], petNoPedestal[1], 0, altImagemPet(pet) * e, 0, e);   // no provador: fica no pedestal
     else seguidor?.atualizar(dt, jog.x, jog.y, VEL, altImagemPet(pet) * e, distPet(pet) * e, e);
+    posicionarChapeu();   // 🎂 no dia do aniversário
     petGin?.anim.atualizar(dt);
     if (cena.tipo === 'mapa') { atualizarColegas(dt); enviarPosicao(); posicionarMinhaReacao(); posicionarCartaoColega(); atualizarConversa(); efeitosDoMapa(); }
     ajustarCamera();
@@ -5524,13 +5689,91 @@ function iniciarDiaNoite() {
   }
   aplicarDiaNoite();
   setInterval(aplicarDiaNoite, 60000);
+  iniciarClima();   // 🌧️ (PROMPT-104)
 }
+// ============================================================
+//  🌧️ CLIMA (PROMPT-104) — um por dia, o mesmo para todos (semente: a data de Brasília): ☀️ sol 60% · ☁️ nublado 20% ·
+//  🌧️ chuva 15% · 🍃 vento 5%. Sol entre 12h e 15h (Brasília) vira ☀️ calor. Só no exterior (mapas 1–13, Praça) e no mapa geral,
+//  como o dia e noite. Tudo em CSS: html.cl-{clima}. Chuva: o pet às vezes se sacode e os peixes raros têm o dobro de chance.
+//  Falas chuva / calor / vento (peso `clima`). ?clima=chuva|sol|nublado|vento|calor (modo teste) força.
+// ============================================================
+const CLIMAS = [['sol', 60], ['nublado', 20], ['chuva', 15], ['vento', 5]];
+const NOME_CLIMA = { sol: '☀️ Sol hoje', nublado: '☁️ Nublado hoje', chuva: '🌧️ Chuva hoje', vento: '🍃 Vento hoje', calor: '☀️ Calor agora' };
+const ICONE_CLIMA = { sol: '☀️', nublado: '☁️', chuva: '🌧️', vento: '🍃', calor: '🥵' };
+let climaForcado = null, avisouChuvaPesca = false;
+const brasilia = () => new Date(agoraServ() - 3 * 3600e3);   // getUTC* = hora de Brasília
+function climaDoDia() {
+  const b = brasilia(), r = sementeMissoes(`clima|${b.getUTCFullYear()}-${b.getUTCMonth() + 1}-${b.getUTCDate()}`)();
+  let x = r * 100;
+  for (const [c, p] of CLIMAS) { if ((x -= p) < 0) return c; }
+  return 'sol';
+}
+function climaAgora() {
+  if (climaForcado) return climaForcado;
+  const c = climaDoDia(), h = brasilia().getUTCHours();
+  return c === 'sol' && h >= 12 && h < 15 ? 'calor' : c;
+}
+const climaExterior = () => (cena?.tipo === 'mapa' && (Number(cena.n) > 0 || cena.n === 'praca')) || !$('tela-geral').hidden;
+const climaParaFala = () => { const c = climaAgora(); return ['chuva', 'calor', 'vento'].includes(c) && climaExterior() ? c : null; };
+function aplicarClima() {
+  const c = climaAgora(), raiz = document.documentElement;
+  for (const k of ['sol', 'nublado', 'chuva', 'vento', 'calor']) raiz.classList.toggle('cl-' + k, k === c);
+  pintarIconeClima();
+}
+function pintarIconeClima() {
+  const c = climaAgora(), ext = climaExterior();
+  for (const b of document.querySelectorAll('[data-clima]')) {
+    b.hidden = !ext && !b.closest('#tela-geral');
+    b.textContent = ICONE_CLIMA[c] || '☀️';
+    b.title = NOME_CLIMA[c] || '';
+    b.setAttribute('aria-label', NOME_CLIMA[c] || 'Clima');
+  }
+}
+function iniciarClima() {
+  if (teste) { const f = new URLSearchParams(location.search).get('clima'); if (f && NOME_CLIMA[f]) climaForcado = f; }
+  // pingos e folhas: criados uma vez (o CSS mostra os de cada clima)
+  for (const el of document.querySelectorAll('.jr-cl-tela')) {
+    el.innerHTML = Array.from({ length: 60 }, () => `<i class="pingo" style="left:${(Math.random() * 130).toFixed(1)}%;animation-delay:-${(Math.random() * 0.7).toFixed(2)}s;animation-duration:${(0.55 + Math.random() * 0.3).toFixed(2)}s"></i>`).join('') +
+      Array.from({ length: 10 }, (_, i) => `<i class="folha" style="top:${(8 + Math.random() * 75).toFixed(1)}%;animation-delay:-${(i * 0.9 + Math.random()).toFixed(1)}s;animation-duration:${(8 + Math.random() * 5).toFixed(1)}s">🍃</i>`).join('');
+  }
+  for (const b of document.querySelectorAll('[data-clima]')) b.addEventListener('click', (e) => { e.stopPropagation(); avisoPet(NOME_CLIMA[climaAgora()] || ''); });
+  aplicarClima();
+  setInterval(aplicarClima, 60000);   // o calor começa às 12h e acaba às 15h
+  setInterval(sacudirNaChuva, 4000);
+}
+// poças em pontos do caminho (sorteio fixo por dia e mapa)
+function montarPocas(externo) {
+  const el = $('cl-pocas');
+  if (!externo || !cena?.grade) { el.innerHTML = ''; return; }
+  const b = brasilia(), rnd = sementeMissoes(`pocas|${b.getUTCDate()}|${cena.n}`), pts = [];
+  for (let t = 0; t < 400 && pts.length < 6; t++) {
+    const cx = Math.floor(rnd() * GW), cy = Math.floor(rnd() * GH);
+    if (andavel(cena.grade, cx, cy) && andavel(cena.grade, cx - 4, cy) && andavel(cena.grade, cx + 4, cy)) pts.push([cx * CEL, cy * CEL]);
+  }
+  el.innerHTML = pts.map(([x, y], i) => `<i style="left:${x}px;top:${y}px;animation-delay:-${i * 0.5}s"></i>`).join('');
+}
+// na chuva, o pet parado às vezes se sacode (balança o sprite; sem imagem nova)
+function sacudirNaChuva() {
+  if (climaAgora() !== 'chuva' || !climaExterior() || cena?.tipo !== 'mapa' || !seguidor?.pet || $('pet').hidden || Math.random() > 0.3) return;
+  if ((seguidor.paradoMs || 0) < 1500 || conversa.falando || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  $('pet').animate([{ rotate: '0deg' }, { rotate: '-9deg' }, { rotate: '9deg' }, { rotate: '-7deg' }, { rotate: '7deg' }, { rotate: '-3deg' }, { rotate: '0deg' }], { duration: 650, easing: 'ease-in-out' });
+}
+// na chuva, os peixes raros têm o dobro de chance (a raridade do pesca.json; sem nenhum raro: os 2 de maior venda)
+function pontoComClima(ponto) {
+  if (climaAgora() !== 'chuva' || !ponto?.peixes?.length) return ponto;
+  const temRaro = ponto.peixes.some(f => f.raro);
+  const top2 = temRaro ? [] : [...ponto.peixes].sort((a, b) => (Number(b.venda) || 0) - (Number(a.venda) || 0)).slice(0, 2);
+  return { ...ponto, peixes: ponto.peixes.map(f => (f.raro || top2.includes(f) ? { ...f, chance: (Number(f.chance) || 0) * 2 } : f)) };
+}
+
 // cena nova: externo (mapa da cidade ou Praça) liga a camada e monta as luzes; interior desliga
 function cenaDiaNoite() {
   dnCena = cena;
   const externo = cena?.tipo === 'mapa' && (Number(cena.n) > 0 || cena.n === 'praca');
   $('tela-cena').classList.toggle('dn-ativo', !!externo);
   const luzes = externo ? LUZES?.[Number(cena.n) > 0 ? 'mapa' + cena.n : cena.n] : null;
+  montarPocas(externo);
+  pintarIconeClima();
   $('dn-luzes').innerHTML = (Array.isArray(luzes) ? luzes : []).filter(p => Array.isArray(p) && p.length >= 2)
     .map(([x, y]) => `<i style="left:${Number(x)}px;top:${Number(y)}px"></i>`).join('');
 }
@@ -9225,6 +9468,13 @@ function renderPergunta() {
   $('perg-tabela').innerHTML = renderTabela(q.tabela);   // Mapa 13 B: tabela sorteada junto com a pergunta
   $('perg-calc').hidden = !calcLigada(q.mapa ?? pg.mapa, q.lado ?? pg.G);   // 🧮 só nos ginásios com "calculadora": true
   if ($('perg-calc').hidden) fecharCalc();   // na revisão, a pergunta seguinte pode ser de outro mapa
+  else if (!calcAvisada) {   // 1ª pergunta com 🧮 da sessão: o botão pulsa 3 vezes e vem o aviso (PROMPT-101)
+    calcAvisada = true;
+    const b = $('perg-calc');
+    b.classList.remove('pulsa'); void b.offsetWidth; b.classList.add('pulsa');
+    setTimeout(() => b.classList.remove('pulsa'), 2300);
+    setTimeout(() => { if (pg?.fila?.[0] === q && !pg.fim) falar('Pode usar a 🧮 calculadora aqui!'); }, 2200);
+  }
   $('perg-enunciado').textContent = q.enunciado;
   $('perg-enunciado').classList.toggle('longo', String(q.enunciado).length > 28);   // problemas: Inter, até 2 linhas
   $('perg-explica').hidden = true;
@@ -9325,6 +9575,7 @@ function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
 // ── Calculadora 🧮 (PROMPT-57): nos ginásios com "calculadora": true no mapas.json (portas.A/B), na batalha com treinador
 //    desses mapas e na revisão (pergunta que veio de lá). % como na calculadora de verdade: 80 × 15 % = 12; 80 + 10 % = 88;
 //    80 − 10 % = 72; 80 ÷ 50 % = 160; 15 % sozinho = 0,15. Fechar e reabrir mantém o último número.
+let calcAvisada = false;   // a 🧮 já pulsou nesta sessão
 const calcLigada = (mapa, G) => { const pt = D.mapas?.mapas?.['mapa' + mapa]?.portas; return !!pt && (G ? !!pt[G]?.calculadora : Object.values(pt).some(x => x?.calculadora)); };
 const calc = { a: null, op: null, cur: '0', conta: '', novo: true, fim: false };
 const calcNum = (s) => Number(String(s).replace(',', '.'));
@@ -10885,7 +11136,11 @@ function ligarEventos() {
     const dm = e.target.closest('[data-desafiar-mesmo]');
     if (dm) { desafiarColega(cartaoColega.c, dm.dataset.desafiarMesmo || 'contas'); return; }
     const dar = e.target.closest('[data-dar]');
-    if (dar) darPresente(cartaoColega.c, dar.dataset.dar);
+    if (dar) { escolherPresente(cartaoColega.c, 2, dar.dataset.dar); return; }
+    const rec = e.target.closest('[data-recado]');
+    if (rec) { escolherPresente(cartaoColega.c, 3, cartaoColega.presente?.id, Number(rec.dataset.recado)); return; }
+    if (e.target.closest('[data-presente-voltar]')) { escolherPresente(cartaoColega.c, 1); return; }
+    if (e.target.closest('[data-dar-ok]')) darPresente(cartaoColega.c, cartaoColega.presente?.id, cartaoColega.presente?.recado);
   });
   $('bt-ops').addEventListener('click', (e) => { const b = e.target.closest('.bt-op'); if (b && !b.disabled && bt?.p) btResponder('L', bt.p.opcoes[b.dataset.i]); });
   $('bt-rev-ok').addEventListener('click', fecharRevisaoBatalha);
@@ -10970,6 +11225,9 @@ function ligarEventos() {
   $('mp-exp-fechar').addEventListener('click', (e) => { e.stopPropagation(); $('mp-exp-painel').hidden = true; });
   $('mp-exp-opcoes').addEventListener('click', (e) => { e.stopPropagation(); const b = e.target.closest('[data-exp]'); if (b && !b.disabled) mandarExpedicao(b.dataset.exp); });
   $('exp-volta-ok').addEventListener('click', (e) => { e.stopPropagation(); fecharVoltaExp(); });
+  $('pres-ok').addEventListener('click', (e) => { e.stopPropagation(); $('pres-card').hidden = true; });
+  $('aniv-ok').addEventListener('click', (e) => { e.stopPropagation(); $('aniv').hidden = true; $('aniv-confete').innerHTML = ''; });
+  setInterval(tickAniversario, 2000);   // 🎂 a festa do dia (PROMPT-102)
   setInterval(tickExpedicao, 5000);   // relógio do HUD, cartão do Meu Pet e a volta do pet
   $('pg-cartao-ok').addEventListener('click', () => { $('pg-cartao').hidden = true; });
   // tocar em qualquer contador de moedas: "Hoje você ganhou…"

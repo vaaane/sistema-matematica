@@ -528,40 +528,52 @@ html.jr-deitado #tela-geral .jr-on-txt { display: none; }   /* no celular: só "
 /* Cartão do erro (PROMPT-45): no centro, por cima da pergunta; sem rolagem; Continuar só pelo botão */
 .jr-erro { position: fixed; inset: 0; z-index: 58; display: flex; align-items: center; justify-content: center;
   background: rgba(5,6,15,.4); padding: max(10px, var(--sa-t, 0px)) 12px max(10px, var(--sa-b, 0px)); }
-.jr-erro-caixa { box-sizing: border-box; width: min(94vw, 760px); max-height: 100%; background: var(--jr-card); border: 2px solid #ff5c7a; border-radius: 18px;
-  padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 10px 30px rgba(0,0,0,.6); }
+/* PROMPT-100: larguras em % do .jr-erro (dentro do #jr-app, que gira com o celular em pé), nunca em vw;
+   topo e rodapé fixos, só o meio rola; com espaço, duas colunas (container query no próprio cartão) */
+.jr-erro-caixa { box-sizing: border-box; width: min(96%, 820px); max-height: 100%; min-height: 0; background: var(--jr-card); border: 2px solid #ff5c7a; border-radius: 18px;
+  padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 10px 30px rgba(0,0,0,.6); container: erro / inline-size; }
 @media (prefers-reduced-motion: no-preference) { .jr-erro:not([hidden]) .jr-erro-caixa { animation: jr-erro-entra .22s ease-out; } }
 @keyframes jr-erro-entra { from { transform: scale(.94); opacity: 0; } to { transform: none; opacity: 1; } }
-.jr-erro-enun { font-family: 'Inter', sans-serif; font-size: calc(14px * var(--letra, 1)); color: #c9cde0; line-height: 1.3; }
-.jr-erro-meio { display: flex; gap: 14px; align-items: flex-start; min-height: 0; }
-.jr-erro-textos { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-.jr-erro-resps { display: flex; gap: 10px; flex-wrap: wrap; }
-.jr-erro-resp { flex: 1 1 0; min-width: 120px; border-radius: 12px; padding: 6px 10px; display: flex; flex-direction: column; }
+.jr-erro-corpo { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 8px; }
+.jr-erro-esq, .jr-erro-dir { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+@container erro (min-width: 560px) {
+  .jr-erro-corpo { flex-direction: row; align-items: flex-start; gap: 16px; }
+  .jr-erro-esq { flex: 0 0 38%; }
+  .jr-erro-dir { flex: 1 1 0; }
+}
+.jr-erro-enun { font-family: 'Inter', sans-serif; font-size: calc(14px * var(--letra, 1)); color: #c9cde0; line-height: 1.3; overflow-wrap: anywhere; }
+.jr-erro-resps { display: flex; gap: 8px; flex-wrap: wrap; }
+.jr-erro-resp { flex: 1 1 0; min-width: 110px; border-radius: 12px; padding: 6px 10px; display: flex; flex-direction: column; }
 .jr-erro-resp small { font-family: 'Inter', sans-serif; font-size: calc(12px * var(--letra, 1)); font-weight: 600; color: #c9cde0; }
-.jr-erro-resp b { font-family: 'Inter', sans-serif; font-size: calc(24px * var(--letra, 1)); font-weight: 800; line-height: 1.15; overflow-wrap: anywhere; }
+.jr-erro-resp b { font-family: 'Inter', sans-serif; font-size: calc(22px * var(--letra, 1)); font-weight: 800; line-height: 1.15; overflow-wrap: anywhere; }
 .jr-erro-resp i { font-style: normal; }
 .jr-erro-resp.sua { background: rgba(255,92,122,.14); border: 1px solid rgba(255,92,122,.5); }
 .jr-erro-resp.sua b { color: #ff7b93; }
 .jr-erro-resp.certa { background: rgba(0,230,118,.12); border: 1px solid rgba(0,230,118,.5); }
 .jr-erro-resp.certa b { color: #00e676; }
-.jr-erro-tit { font-family: 'Rajdhani', sans-serif; font-size: calc(16px * var(--letra, 1)); font-weight: 700; color: #c9b8ff; margin-top: 2px; }
+.jr-erro-tit { font-family: 'Rajdhani', sans-serif; font-size: calc(16px * var(--letra, 1)); font-weight: 700; color: #c9b8ff; }
 .jr-erro-passos { margin: 0; padding-left: 26px; display: flex; flex-direction: column; gap: 3px;
-  font-family: 'Inter', sans-serif; font-size: calc(18px * var(--letra, 1)); font-weight: 500; line-height: 1.3; color: #fff; }
+  font-family: 'Inter', sans-serif; font-size: calc(17px * var(--letra, 1)); font-weight: 500; line-height: 1.3; color: #fff; overflow-wrap: anywhere; }
 .jr-erro-passos b { color: #00e676; font-weight: 800; }
-.jr-erro-grade { flex: none; width: 170px; }
+.jr-erro-grade { flex: none; width: min(170px, 100%); align-self: center; }
+.jr-erro-grade[hidden] { display: none; }
 .jr-erro-grade svg { width: 100%; height: auto; display: block; }
-.jr-erro-linha { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.jr-erro-dica { font-family: 'Inter', sans-serif; font-size: calc(14px * var(--letra, 1)); color: #ffd27a; }
+.jr-erro-linha { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.jr-erro-linha[hidden] { display: none; }
+.jr-erro-dica { flex: 1 1 160px; min-width: 0; font-family: 'Inter', sans-serif; font-size: calc(14px * var(--letra, 1)); color: #ffd27a; }
 .jr-erro-linha .jr-btn-relembre { align-self: center; flex: none; }
-.jr-erro-volta { font-family: 'Inter', sans-serif; font-size: calc(12.5px * var(--letra, 1)); color: rgba(255,255,255,.6); }
+.jr-erro-rodape { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,.08); }
+.jr-erro-volta { flex: 1 1 auto; min-width: 0; font-family: 'Inter', sans-serif; font-size: calc(12.5px * var(--letra, 1)); color: rgba(255,255,255,.6); }
+.jr-erro-rodape .jr-btn { flex: none; }
 #erro-continuar { flex: none; min-width: 140px; margin-left: auto; }
 #erro-continuar:disabled { opacity: .45; cursor: default; }
-html.jr-deitado .jr-erro-caixa { width: min(72vw, 760px); padding: 8px 14px; gap: 5px; }
-html.jr-deitado .jr-erro-resp b { font-size: calc(22px * var(--letra, 1)); }
-html.jr-deitado .jr-erro-passos { font-size: calc(17px * var(--letra, 1)); gap: 1px; }
+html.jr-deitado .jr-erro { padding: max(6px, var(--sa-t, 0px)) max(10px, var(--sa-r, 0px)) max(6px, var(--sa-b, 0px)) max(10px, var(--sa-l, 0px)); }
+html.jr-deitado .jr-erro-caixa { padding: 8px 14px; gap: 6px; }
+html.jr-deitado .jr-erro-resp b { font-size: calc(20px * var(--letra, 1)); }
+html.jr-deitado .jr-erro-passos { font-size: calc(16px * var(--letra, 1)); gap: 1px; }
 html.jr-deitado .jr-erro-enun { font-size: calc(13px * var(--letra, 1)); }
-html.jr-deitado .jr-erro-grade { width: 140px; }
-@media (max-width: 520px) { .jr-erro-meio { flex-direction: column; align-items: stretch; } .jr-erro-grade { width: 150px; align-self: center; } .jr-erro-passos { font-size: calc(17px * var(--letra, 1)); } }
+html.jr-deitado .jr-erro-grade { width: min(140px, 100%); }
+html.jr-deitado .jr-erro-rodape .jr-btn { min-height: 38px; padding: 4px 14px; }
 
 /* 📖 Relembre: cartão deitado, sem rolagem (acima da pergunta, da batalha e do cartão da insígnia) */
 .jr-relembre { position: fixed; inset: 0; z-index: 72; display: flex; align-items: center; justify-content: center;
@@ -2305,6 +2317,13 @@ html.jr-girado #programe { inset: auto; top: 0; left: 0; width: 100vw; height: 1
 
 /* Calculadora 🧮 (PROMPT-57) */
 .jr-calc-btn { flex: none; width: 40px; height: 36px; border-radius: 10px; border: 1px solid rgba(255,215,0,.6); background: rgba(255,215,0,.14); font-size: 19px; cursor: pointer; line-height: 1; }
+/* PROMPT-101: na pergunta, "🧮 Calculadora" com fundo cheio (laranja, texto escuro), bem visível sobre o cenário */
+#perg-calc { width: auto; height: auto; min-height: 34px; padding: 4px 14px; border-radius: 999px; border: 2px solid #ffb27a; background: var(--jr-laranja); color: #1a0d00;
+  font: 800 15px 'Inter', sans-serif !important; white-space: nowrap; box-shadow: 0 3px 10px rgba(0,0,0,.45), 0 0 12px rgba(255,123,46,.45); }
+#perg-calc:active { transform: scale(.95); }
+#perg-calc.pulsa { animation: calc-pulsa .7s ease-in-out 3; }
+@keyframes calc-pulsa { 50% { transform: scale(1.12); box-shadow: 0 0 0 6px rgba(255,123,46,.35), 0 0 22px rgba(255,123,46,.8); } }
+@media (prefers-reduced-motion: reduce) { #perg-calc.pulsa { animation: none; } }
 .jr-calc-btn[hidden] { display: none; }
 .bt-hud .jr-calc-btn { margin-left: 6px; }
 #jr-app { --calc-w: 264px; }
@@ -2785,6 +2804,14 @@ html.jr-deitado .lj-comprar { min-height: 32px; }
   bottom: clamp(14px, 18cqh, 26px); border-radius: 12px; }
 .qe-pensa .qe-balcao { width: clamp(84px, 32cqw, 150px); height: auto; top: 8px; bottom: clamp(8px, 10cqh, 16px); right: 8px; font-size: clamp(9px, 7cqh, 12px); }
 .qe-pensa .qe-palco::after { bottom: clamp(12px, 16cqh, 22px); }
+/* PROMPT-100: fichas centradas no --x (% do palco), tamanho pela altura do palco (× --esc se a fila não couber);
+   balcão só nos ~28% da direita, com o rótulo no topo; VIP laranja bem visível, com a etiqueta por cima */
+.qe-pensa .qe-ficha { translate: -50% 0; z-index: 2; height: calc(clamp(30px, 34cqh, 52px) * var(--esc, 1)); min-width: calc(clamp(30px, 34cqh, 52px) * var(--esc, 1));
+  font-size: calc(clamp(16px, 21cqh, 28px) * var(--esc, 1)); padding: 0 calc(clamp(5px, 3cqw, 12px) * var(--esc, 1)); }
+.qe-pensa .qe-ficha.qe-final { left: 50%; }
+.qe-pensa .qe-balcao { width: 26%; right: 2%; padding-top: 3px; z-index: 1; }
+.qe-palco .qe-ficha.vip { background: var(--jr-laranja); color: #1a0d00; border-color: #ffb27a; box-shadow: 0 0 18px rgba(255,123,46,.8); z-index: 3; }
+.qe-palco .qe-tk { top: -15px; right: -8px; z-index: 4; font-size: 11px; line-height: 1.3; }
 .qe-pensa-lado { min-height: 0; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
 .qe-pensa .qe-leg { font-size: clamp(13px, 2.6cqh + 6px, 16px); align-items: flex-start; min-height: 0; }
 .qe-pensa .qe-ctrl { margin-top: 0; flex-wrap: wrap; gap: 6px; }
@@ -2997,3 +3024,84 @@ html.jr-deitado .al-ci-texto { font-size: 16px; }
 .jr-pet-fala.largo { max-width: min(300px, 80vw); }
 @media (prefers-reduced-motion: reduce) { .al-carta .al-giro { transition: none; } .al-carta.dourada .al-frente::after, .al-nova-carta .al-carta { animation: none; } }
 html.jr-deitado .rl-caixa { gap: 7px; padding: 10px 14px; }
+
+/* ============================================================
+   🎂 ANIVERSÁRIO DO PET (PROMPT-102): chapéu de festa (CSS: cone listrado com pompom) e o cartão com confete
+   ============================================================ */
+.jr-chapeu { position: absolute; width: var(--chapeu, 22px); aspect-ratio: 3 / 4; pointer-events: none; transform: translate(-50%, -88%) rotate(-12deg); transform-origin: 50% 100%; }
+.jr-chapeu[hidden] { display: none; }
+.jr-chapeu::before { content: ''; position: absolute; inset: 18% 0 0 0; clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  background: repeating-linear-gradient(135deg, #ff4d8d 0 18%, #ffd700 18% 36%, #00d4ff 36% 54%); filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
+.jr-chapeu::after { content: ''; position: absolute; left: 50%; top: 0; width: 30%; aspect-ratio: 1; transform: translateX(-50%); border-radius: 50%; background: #fff;
+  box-shadow: 0 0 0 2px #ff4d8d inset; }
+#mp-chapeu { z-index: 3; }
+.aniv-caixa { position: relative; max-width: 440px; overflow: hidden; }
+.aniv-rosto { position: relative; width: 92px; height: 92px; margin-top: 18px; }
+.aniv-rosto .jr-icone-pet { width: 92px; height: 92px; border: 3px solid var(--jr-ouro); }
+.aniv-rosto .jr-chapeu { --chapeu: 40px; left: 50%; top: 6px; }
+.aniv-confete { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.aniv-confete i { position: absolute; top: -14px; width: 8px; height: 12px; border-radius: 2px; animation: aniv-cai 2.4s linear forwards; }
+@keyframes aniv-cai { to { transform: translateY(520px) rotate(540deg); opacity: .2; } }
+@media (prefers-reduced-motion: reduce) { .aniv-confete { display: none; } }
+#aniv { z-index: 68; }   /* acima do Meu Pet (que usa o mesmo .jr-pet-escolha) */
+.aniv-caixa > :not(.aniv-confete) { position: relative; z-index: 1; }   /* o confete cai atrás do texto */
+
+/* 🎁 PRESENTES (PROMPT-103): recados, confirmação, o cartão de quem recebe e o número no Meu Pet */
+.jr-recados { flex-direction: column; max-width: 240px; }
+.jr-recados button { justify-content: flex-start; text-align: left; font-weight: 700; }
+.jr-presente-conf { display: flex; flex-direction: column; gap: 2px; font-weight: 700; max-width: 240px; }
+.jr-presente-conf small { font-weight: 600; color: #6b6f86; }
+.pres-caixa { max-width: 440px; }
+.pres-lista { list-style: none; margin: 0; padding: 0; width: 100%; display: flex; flex-direction: column; gap: 8px; max-height: 50vh; overflow-y: auto; }
+.pres-lista li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: rgba(124,92,252,.12); border: 1px solid rgba(124,92,252,.4);
+  text-align: left; font: 600 15px 'Inter', sans-serif; color: #fff; }
+.pres-lista li b { color: var(--jr-ouro); }
+.pres-lista li small { display: block; margin-top: 2px; color: #ffd27a; font-weight: 700; }
+#jr-app .pres-lista img.jr-item-img { height: 36px; width: auto; flex: none; }
+.pres-lista .jr-item-emoji { font-size: 30px; flex: none; }
+.mp-presentes { font: 700 13px 'Inter', sans-serif; color: #ffd27a; }
+.mp-presentes:empty { display: none; }
+
+/* ============================================================
+   🌧️ CLIMA (PROMPT-104): html.cl-{sol|nublado|chuva|vento|calor}; só no exterior (#tela-cena.dn-ativo, como o dia e noite) e no
+   mapa geral. Cor (z 949, por baixo da noite que vem em seguida), nuvens passando, poças no chão (z 2), pingos e folhas na tela.
+   ============================================================ */
+.jr-cl-cor, .jr-cl-nuvens, .jr-cl-pocas, .jr-cl-tela { position: absolute; inset: 0; pointer-events: none; display: none; }
+.jr-cl-cor { z-index: 949; }
+.jr-geral-palco .jr-cl-cor { z-index: 1; }
+html.cl-nublado .jr-cl-cor { background: rgba(110,118,135,.12); }
+html.cl-chuva .jr-cl-cor { background: rgba(60,82,125,.18); }
+html.cl-calor .jr-cl-cor { background: rgba(255,170,60,.08); animation: cl-calor 3.5s ease-in-out infinite; }
+@keyframes cl-calor { 50% { background: rgba(255,190,90,.13); } }
+html:is(.cl-nublado, .cl-chuva, .cl-calor) #tela-cena.dn-ativo .jr-cl-cor, html:is(.cl-nublado, .cl-chuva, .cl-calor) #tela-geral .jr-cl-cor { display: block; }
+/* sombras de nuvem passando devagar pelo chão */
+.jr-cl-nuvens { z-index: 948; overflow: hidden; }
+html:is(.cl-nublado, .cl-chuva) #tela-cena.dn-ativo .jr-cl-nuvens { display: block; }
+.jr-cl-nuvens i { position: absolute; width: 520px; height: 260px; border-radius: 50%; background: radial-gradient(ellipse, rgba(20,24,40,.22) 0%, rgba(20,24,40,.12) 45%, transparent 70%);
+  left: -560px; animation: cl-nuvem 70s linear infinite; }
+.jr-cl-nuvens i:nth-child(1) { top: 40px; }
+.jr-cl-nuvens i:nth-child(2) { top: 300px; animation-delay: -25s; animation-duration: 85s; }
+.jr-cl-nuvens i:nth-child(3) { top: 520px; animation-delay: -50s; animation-duration: 95s; }
+@keyframes cl-nuvem { to { transform: translateX(1960px); } }
+/* poças brilhando no caminho (na chuva) */
+.jr-cl-pocas { z-index: 2; }
+html.cl-chuva #tela-cena.dn-ativo .jr-cl-pocas { display: block; }
+.jr-cl-pocas i { position: absolute; width: 58px; height: 18px; box-shadow: 0 0 6px rgba(200,225,255,.5); transform: translate(-50%, -50%); border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(190,220,255,.8) 0%, rgba(120,160,220,.5) 55%, transparent 72%); animation: cl-poca 3s ease-in-out infinite; }
+@keyframes cl-poca { 50% { opacity: .55; } }
+/* na tela: pingos (chuva) e folhas (vento) */
+.jr-cl-tela { overflow: hidden; }
+html:is(.cl-chuva, .cl-vento) #tela-cena.dn-ativo .jr-cl-tela, html:is(.cl-chuva, .cl-vento) #tela-geral .jr-cl-tela { display: block; }
+.jr-cl-tela i { position: absolute; top: -12%; display: none; }
+html.cl-chuva .jr-cl-tela i.pingo { display: block; width: 2px; height: 22px; border-radius: 2px; background: linear-gradient(rgba(200,220,255,0), rgba(200,220,255,.75));
+  transform: rotate(18deg); animation: cl-chove .7s linear infinite; }
+@keyframes cl-chove { to { translate: -38vh 118vh; } }
+html.cl-vento .jr-cl-tela i.folha { display: block; top: auto; left: -8%; font-size: 20px; font-style: normal; animation: cl-folha 9s linear infinite; }
+@keyframes cl-folha { 0% { translate: 0 0; rotate: 0deg; opacity: 0; } 8% { opacity: 1; } 50% { translate: 60vw -6vh; } 92% { opacity: 1; } 100% { translate: 118vw 4vh; rotate: 540deg; opacity: 0; } }
+html.jr-girado .jr-cl-tela i.pingo { animation-name: cl-chove-g; }
+@keyframes cl-chove-g { to { translate: -38vw 118vw; } }
+@media (prefers-reduced-motion: reduce) { .jr-cl-tela, .jr-cl-nuvens { display: none !important; } .jr-cl-cor, .jr-cl-pocas i { animation: none !important; } }
+/* ícone do HUD */
+.jr-clima-ic { flex: none; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255,255,255,.25); background: rgba(13,15,26,.6); font-size: 18px; line-height: 1;
+  cursor: pointer; padding: 0; }
+.jr-clima-ic[hidden] { display: none; }

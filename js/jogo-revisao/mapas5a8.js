@@ -109,28 +109,35 @@ const M6 = {
 // ===================== MAPA 7 =====================
 const ATALHO = { 50: ['a metade', 2], 10: ['dividir por 10', 10], 25: ['dividir por 4', 4], 20: ['dividir por 5', 5], 1: ['dividir por 100', 100], 100: ['o todo', 1], 75: ['3 partes de 4', 4] };
 const atalho = (p, N) => p === 100 ? `100% é o todo: ${num(N)}` : p === 75 ? `75% = 3 × 25%: ${num(N)} ÷ 4 = ${num(N / 4)} e ${num(N / 4)} × 3 = ${num(N * 0.75)}` : `${p}% é ${ATALHO[p][0]}: ${num(N)} ÷ ${ATALHO[p][1]} = ${num(N * p / 100)}`;
+// PROMPT-101: a explicação ensina primeiro "20% = 20/100 = 0,2 → valor × 0,2"; o atalho de cabeça vem depois, como 💡 Atalho.
+// Os passos do cartão de erro são separados por "; " (passosDe). A linha "Na calculadora" é acrescentada pelo jogo.
+const pctDecimal = (p) => `${p}% = ${p}/100 = ${dec(p)}`;
+const pctVezes = (p, N, v = N * p / 100) => `${p}% de ${num(N)} = ${num(N)} × ${dec(p)} = ${num(v)}`;
+const passosPct = (p, N) => `${pctDecimal(p)}; ${pctVezes(p, N)}; 💡 Atalho: ${atalho(p, N)}`;
 function pct(ps) {
   return () => {
     const p = pick(ps); const base = { 50: 2, 10: 10, 25: 4, 20: 5, 1: 100, 100: 1, 75: 4 }[p]; const N = base * int(2, p === 1 ? 6 : 30);
     const v = N * p / 100;
-    return Q(`Quanto é ${p}% de ${N}?`, num(v), erradasNum(v, [v * 10, v * 2, v / 2, N - v, N + p], { inteiro: false }), X(atalho(p, N)));
+    return Q(`Quanto é ${p}% de ${N}?`, num(v), erradasNum(v, [v * 10, v * 2, v / 2, N - v, N + p], { inteiro: false }), X(passosPct(p, N)));
   };
 }
 const PF = [[50, 1, 2], [25, 1, 4], [75, 3, 4], [10, 1, 10], [20, 1, 5], [40, 2, 5]];
 const pctFrac = () => { const [p, a, b] = pick(PF); return coin() ? Q(`${p}% é igual a qual fração?`, frac(a, b), erradasFrac(a, b, [[1, p], [a, b * 2], [b, a], [1, 3], [a, b + 1]]), X(`${p}% = ${p}/100 = ${frac(a, b)}`)) : Q(`${frac(a, b)} é igual a quantos por cento?`, `${p}%`, erradasNum(p, [p * 10, p * 2, p / 2, a + b], { fmt: x => `${num(x)}%`, inteiro: false }), X(`${frac(a, b)} = ${p}/100 = ${p}%`)); };
 const todo = () => Q('100% de algo significa:', 'o todo', ['a metade', 'nada', 'o dobro'], X('100% = 100/100 = 1 inteiro: é tudo.'));
-function desconto() { const p = pick([10, 20, 50]), P = 10 * int(2, 12); const v = P * p / 100; return Q(`Uma camiseta de R$ ${P} tem ${p}% de desconto. Quanto é o desconto?`, reais(v), erradasNum(v, [P - v, p, v * 2, v / 2], { fmt: reais, inteiro: false }), X(`${atalho(p, P)}. O desconto é ${reais(v)}`)); }
-function turma() { const N = 2 * int(8, 20); const v = N / 2; return Q(`Numa turma de ${N} alunos, 50% são meninas. Quantas meninas?`, num(v), erradasNum(v, [N, v / 2, 50]), X(atalho(50, N))); }
-function precoFinal() { const p = pick([10, 20, 25, 50]), P = 20 * int(2, 10); const v = P - P * p / 100; return Q(`Um tênis de R$ ${P} tem ${p}% de desconto. Qual o preço final?`, reais(v), erradasNum(v, [P * p / 100, P - p, P + P * p / 100], { fmt: reais, inteiro: false }), X(`Desconto: ${atalho(p, P).split(': ')[1]}. Preço final: ${P} − ${num(P * p / 100)} = ${num(v)}`)); }
-function faltaram() { const [p, d] = pick([[25, 4], [10, 10], [20, 5], [50, 2]]); const N = d * int(4, 10), f = N / d; return Q(`Numa turma de ${N} alunos, ${f} faltaram. Qual porcentagem faltou?`, `${p}%`, erradasNum(p, [f, 100 - p, p * 2 <= 100 ? p * 2 : p / 2, p / 2, 100 / f], { fmt: x => `${num(x)}%`, inteiro: false }), X(`${f} de ${N} = ${frac(f, N)} = ${frac(1, d)} = ${p}%`)); }
+function desconto() { const p = pick([10, 20, 50]), P = 10 * int(2, 12); const v = P * p / 100; return Q(`Uma camiseta de R$ ${P} tem ${p}% de desconto. Quanto é o desconto?`, reais(v), erradasNum(v, [P - v, p, v * 2, v / 2], { fmt: reais, inteiro: false }),
+  X(`${pctDecimal(p)}; Desconto = ${P} × ${dec(p)} = ${reais(v)}; 💡 Atalho: ${atalho(p, P)}`)); }
+function turma() { const N = 2 * int(8, 20); const v = N / 2; return Q(`Numa turma de ${N} alunos, 50% são meninas. Quantas meninas?`, num(v), erradasNum(v, [N, v / 2, 50]), X(passosPct(50, N))); }
+function precoFinal() { const p = pick([10, 20, 25, 50]), P = 20 * int(2, 10); const v = P - P * p / 100; return Q(`Um tênis de R$ ${P} tem ${p}% de desconto. Qual o preço final?`, reais(v), erradasNum(v, [P * p / 100, P - p, P + P * p / 100], { fmt: reais, inteiro: false }),
+  X(`${pctDecimal(p)} → desconto = ${P} × ${dec(p)} = ${num(P * p / 100)}; Preço final = ${P} − ${num(P * p / 100)} = ${reais(v)}; Ou direto: com ${p}% de desconto você paga ${100 - p}% → ${P} × ${dec(100 - p)} = ${reais(v)}`)); }
+function faltaram() { const [p, d] = pick([[25, 4], [10, 10], [20, 5], [50, 2]]); const N = d * int(4, 10), f = N / d; return Q(`Numa turma de ${N} alunos, ${f} faltaram. Qual porcentagem faltou?`, `${p}%`, erradasNum(p, [f, 100 - p, p * 2 <= 100 ? p * 2 : p / 2, p / 2, 100 / f], { fmt: x => `${num(x)}%`, inteiro: false }), X(`${f} ÷ ${N} = ${dec(p)}; ${dec(p)} = ${p}/100 = ${p}%; Em fração: ${frac(f, N)} = ${frac(1, d)} = ${p}%`)); }
 const dec = p => num(p / 100);
-const pctX = p => `${p}% = ${p} ÷ 100 = ${dec(p)}. "De" vira vezes: × ${dec(p)}`;
+const pctX = p => `${p}% = ${p}/100 = ${dec(p)}; "De" vira vezes: ${p}% de um valor = valor × ${dec(p)}`;
 function qualConta() {
   const p = pick([10, 20, 25, 30, 40, 50, 75]), N = 10 * int(2, 12);
   if (p === 50 && coin()) return Q(`"50% de ${N}" é o mesmo que:`, `${N} ÷ 2`, [`${N} × 2`, `${N} − 50`, `${N} ÷ 50`], X('50% é a metade: divide por 2.'));
   return Q(`"${p}% de ${N}" é o mesmo que:`, `${N} × ${dec(p)}`, [`${N} × ${p}`, ...sample([`${N} + ${p}`, `${N} ÷ ${dec(p)}`, `${N} − ${p}`], 2)], X(pctX(p)));
 }
-const pctDec = () => { const p = pick([5, 10, 15, 20, 30, 40, 50, 60, 100]); const d = p / 100; return Q(`${p}% em número decimal:`, num(d), erradasNum(d, [d * 10, d / 10], { inteiro: false }), X(`${p}% = ${p} ÷ 100 = ${num(d)}`)); };
+const pctDec = () => { const p = pick([5, 10, 15, 20, 30, 40, 50, 60, 100]); const d = p / 100; return Q(`${p}% em número decimal:`, num(d), erradasNum(d, [d * 10, d / 10], { inteiro: false }), X(`${p}% = ${p}/100 = ${num(d)}`)); };
 const CTX = [
   (p, N) => [`Uma bola de R$ ${N} tem ${p}% de desconto. Qual conta dá o desconto?`],
   (p, N) => [`Numa turma de ${N} alunos, ${p}% são meninas. Qual conta dá o número de meninas?`],
@@ -138,12 +145,12 @@ const CTX = [
   (p, N) => [`Num show com ${N * 10} pessoas, ${p}% eram crianças. Qual conta dá o número de crianças?`, N * 10],
 ];
 function contaCtx() { const p = pick([5, 10, 20, 25, 40, 50]), N = 10 * int(2, 9); const [e, NN = N] = pick(CTX)(p, N); return Q(e, `${NN} × ${dec(p)}`, [`${NN} × ${p}`, ...sample([`${NN} − ${p}`, `${NN} + ${dec(p)}`, `${NN} ÷ ${p}`], 2)], X(pctX(p))); }
-const leConta = () => { const p = pick([10, 20, 25, 50]), N = 10 * int(2, 9); return Q(`A conta ${N} × ${dec(p)} calcula:`, `${p}% de ${N}`, [`${num(p / 10)}% de ${N}`, `${N} − ${p}`, `${p * 10}% de ${N}`], X(`${dec(p)} = ${p} ÷ 100 = ${p}%`)); };
+const leConta = () => { const p = pick([10, 20, 25, 50]), N = 10 * int(2, 9); return Q(`A conta ${N} × ${dec(p)} calcula:`, `${p}% de ${N}`, [`${num(p / 10)}% de ${N}`, `${N} − ${p}`, `${p * 10}% de ${N}`], X(`${dec(p)} = ${p}/100 = ${p}%`)); };
 function contaFinal(tipo) {
   const p = pick([10, 20, 25]), P = 10 * int(3, 20);
-  if (tipo === 0) return Q(`Um produto de R$ ${P} tem ${p}% de desconto. Qual conta dá o preço final?`, `${P} − ${P} × ${dec(p)}`, [`${P} × ${dec(p)}`, `${P} − ${p}`, `${P} − ${P} × ${p}`], X(`Preço final = preço − desconto. O desconto é ${P} × ${dec(p)}.`));
-  if (tipo === 1) return Q(`A mesada de R$ ${P} teve aumento de ${p}%. Qual conta dá a nova mesada?`, `${P} + ${P} × ${dec(p)}`, [`${P} × ${dec(p)}`, `${P} + ${p}`, `${P} + ${P} × ${p}`], X(`Nova mesada = mesada + aumento. O aumento é ${P} × ${dec(p)}.`));
-  return Q(`Uma camiseta de R$ ${P} tem ${p}% de desconto. Qual conta dá direto o preço final?`, `${P} × ${dec(100 - p)}`, [`${P} × ${dec(p)}`, `${P} − ${p}`, `${P} × ${dec(100 + p)}`], X(`Com ${p}% de desconto, você paga 100% − ${p}% = ${100 - p}% = ${dec(100 - p)}.`));
+  if (tipo === 0) return Q(`Um produto de R$ ${P} tem ${p}% de desconto. Qual conta dá o preço final?`, `${P} − ${P} × ${dec(p)}`, [`${P} × ${dec(p)}`, `${P} − ${p}`, `${P} − ${P} × ${p}`], X(`${pctDecimal(p)}; O desconto é ${P} × ${dec(p)}; Preço final = preço − desconto = ${P} − ${P} × ${dec(p)}`));
+  if (tipo === 1) return Q(`A mesada de R$ ${P} teve aumento de ${p}%. Qual conta dá a nova mesada?`, `${P} + ${P} × ${dec(p)}`, [`${P} × ${dec(p)}`, `${P} + ${p}`, `${P} + ${P} × ${p}`], X(`${pctDecimal(p)}; O aumento é ${P} × ${dec(p)}; Nova mesada = mesada + aumento = ${P} + ${P} × ${dec(p)}`));
+  return Q(`Uma camiseta de R$ ${P} tem ${p}% de desconto. Qual conta dá direto o preço final?`, `${P} × ${dec(100 - p)}`, [`${P} × ${dec(p)}`, `${P} − ${p}`, `${P} × ${dec(100 + p)}`], X(`Com ${p}% de desconto, você paga 100% − ${p}% = ${100 - p}%; ${100 - p}% = ${100 - p}/100 = ${dec(100 - p)}; Preço final = ${P} × ${dec(100 - p)}`));
 }
 const M7 = {
   A: {

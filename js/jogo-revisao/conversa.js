@@ -23,7 +23,7 @@ function pegar(cat, lista) {
 }
 
 function trocar(texto, v) {
-  return texto.replace(/\{(apelido|pet|ginasio|mapa|conteudo|dias|valor|dica|comida)\}/g, (m, k) => (v[k] ?? m));
+  return texto.replace(/\{(apelido|pet|ginasio|mapa|conteudo|dias|valor|dica|comida|n|tempo)\}/g, (m, k) => (v[k] ?? m));
 }
 
 const juntar = (a, b) => `${a.trim()} ${b.trim()}`;
@@ -88,17 +88,19 @@ export function montarFala(ctx, tipoForcado = null) {
   const temLemb = (x) => !!x?.dica?.lembretes?.length;
   const possivel = {
     estado: !!ctx.estado && !!P[ctx.estado]?.length,
+    clima: !!ctx.clima && !!P[ctx.clima]?.length,   // 🌧️ chuva / calor / vento (PROMPT-104), só quando o clima do dia combina
     dica: !!ctx.proximo?.dica,
     lembrete: temLemb(ctx.proximo) || temLemb(ctx.errado) || temLemb(ctx.revisar),
     dia: true, piada: !!F.piadas?.length, aleatorio: !!P.aleatorio?.length,
     curiosidade: typeof ctx.curiosidade === 'function',   // 💡 curiosidades.json (PROMPT-98): quem monta é o jogo (mapa, sem repetir, figurinha)
   };
-  const peso = (t) => pesos[t] ?? (t === 'curiosidade' ? 2 : 0);
+  const peso = (t) => pesos[t] ?? (t === 'curiosidade' || t === 'clima' ? 2 : 0);
   const tipos = Object.keys(possivel).filter(t => possivel[t] && peso(t) > 0);
   let r = Math.random() * tipos.reduce((a, t) => a + peso(t), 0);
   const tipo = tipos.find(t => (r -= peso(t)) < 0) || 'aleatorio';
   const outra = () => curiosidade() || um('aleatorio', P.aleatorio);   // o mesmo ginásio há menos de 5 min: troca
 
+  if (tipo === 'clima') return um(ctx.clima, P[ctx.clima], 'clima');
   if (tipo === 'estado') return um(ctx.estado, P[ctx.estado], ctx.estado === 'fome' ? 'fome' : 'estado');
   if (tipo === 'curiosidade') return outra();
 

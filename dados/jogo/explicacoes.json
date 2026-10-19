@@ -74,15 +74,15 @@
   },
   "mapa7-A": {
    "titulo": "Porcentagem: calcular",
-   "regra": "Porcentagem é uma fração de 100. 10% é dividir por 10; 50% é a metade; 25% é a quarta parte.",
-   "exemplo": "20% de 50 = 2 × (10% de 50) = 2 × 5 = 10",
-   "dica": "Ou: 20% de 50 = 0,2 × 50 = 10."
+   "regra": "Porcentagem é uma fração de 100: 20% = 20/100 = 0,2. Para achar 20% de um valor, faça valor × 0,2.",
+   "exemplo": "20% de 80 = 80 × 0,2 = 16",
+   "dica": "Atalho: 10% é ÷ 10, 50% é a metade, 25% é ÷ 4."
   },
   "mapa7-B": {
    "titulo": "Porcentagem: qual é a conta?",
-   "regra": "X% de um valor = valor × (X ÷ 100). Desconto: valor − desconto, ou valor × (1 − X/100).",
-   "exemplo": "30% de 80 = 80 × 0,3   ·   80 com 25% off = 80 × 0,75",
-   "dica": "Aumento de 10%: valor × 1,1."
+   "regra": "X% de um valor = valor × (X ÷ 100). Desconto de 20%: você paga 80% → valor × 0,8. Aumento de 10%: valor × 1,1.",
+   "exemplo": "R$ 80 com 20% off = 80 × 0,8 = R$ 64",
+   "dica": "Desconto: 1 − 0,2 = 0,8. Aumento: 1 + 0,1 = 1,1."
   },
   "mapa8-A": {
    "titulo": "Linguagem algébrica e valor numérico",

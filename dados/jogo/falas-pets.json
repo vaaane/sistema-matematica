@@ -11,7 +11,8 @@
       "piada": 2,
       "aleatorio": 2,
       "estado": 3,
-      "curiosidade": 4
+      "curiosidade": 4,
+      "clima": 2
     },
     "placeholders": [
       "{apelido}",
@@ -121,6 +122,26 @@
         "Fui longe, achei um ninho de passarinho e… não, não fiz nada. Juro.",
         "Atravessei um rio sem molhar uma pata. Sou elegante assim.",
         "Encontrei uma caverna cheia de números primos. Nem todos me impressionaram."
+      ],
+      "aniversario": [
+        "{tempo} juntos e você ainda não me cansou. Isso é um elogio, tá?",
+        "Hmpf. Parabéns pra nós. Cadê meu pedaço de bolo?",
+        "{tempo} com você… até que foi divertido. Só um pouquinho."
+      ],
+      "chuva": [
+        "Chuva? Que horror. Gato molhado não é gato feliz.",
+        "Hmpf. Se eu pegar um resfriado, a culpa é sua.",
+        "Que chuva! Meu pelo vai ficar molhado… e eu odeio isso."
+      ],
+      "calor": [
+        "Que calor… vou procurar uma sombra e fingir que não existo.",
+        "Esse sol está me derretendo. Um gato não merece isso.",
+        "Calor demais. Me acorda quando esfriar."
+      ],
+      "vento": [
+        "Esse vento está bagunçando meu pelo perfeito.",
+        "Ventania… nem as folhas sabem pra onde vão.",
+        "Segura que lá vem mais vento. Hmpf."
       ]
     },
     "gaviao": {
@@ -214,6 +235,26 @@
         "Voei até as montanhas. Vi a vila inteira lá de cima.",
         "Achei moedas brilhando numa clareira. Trouxe todas.",
         "Longe daqui tem um vale onde tudo é simétrico. Interessante."
+      ],
+      "aniversario": [
+        "{tempo} voando juntos. Boa parceria.",
+        "Hoje é dia de comemorar. Foco no bolo.",
+        "Daqui de cima eu vejo: {tempo} de amizade. Bonito."
+      ],
+      "chuva": [
+        "Chuva. Hoje eu voo baixo.",
+        "As nuvens chegaram cedo. Atenção.",
+        "Pingos nas penas. Faz parte."
+      ],
+      "calor": [
+        "Ar quente sobe. Bom pra planar.",
+        "Calor forte. Bebe água.",
+        "O sol está a pino. Sombra é estratégia."
+      ],
+      "vento": [
+        "Vento bom pra voar. Muito bom.",
+        "Corrente de ar do leste. Perfeito.",
+        "Daqui de cima, as folhas parecem dançar."
       ]
     },
     "axolote": {
@@ -307,6 +348,26 @@
         "Achei uma caverna cheia de números primos! 2, 3, 5, 7… e mais!",
         "Tinha um lago enooorme e eu nadei nele inteirinho! 💦",
         "Fiz amizade com um sapo que sabia contar até mil! Foi demais!"
+      ],
+      "aniversario": [
+        "Eeeeba! {tempo} juntinhos! Vamos comemorar? 🎉",
+        "Hoje é o nosso aniversário! Tem bolo? Tem festa? TEM!",
+        "{tempo} de amizade! Eu fico tão feliz que dá vontade de pular!"
+      ],
+      "chuva": [
+        "Chuvaaa! Eu ADORO água! 💦",
+        "Olha as poças! Posso pular nelas? Posso?",
+        "Que chuva gostosa! Parece um banho do céu!"
+      ],
+      "calor": [
+        "Ufa, que calor! Cadê um laguinho pra mim?",
+        "Tô ficando sequinho… preciso de água!",
+        "Calor, calor! Bora procurar uma sombra fresquinha!"
+      ],
+      "vento": [
+        "Uiii, o vento faz cócegas!",
+        "As folhas estão voando! Que lindo!",
+        "Segura meu chapéu imaginário, vento!"
       ]
     },
     "tigre": {
@@ -400,6 +461,26 @@
         "Escalei a montanha mais alta e cheguei em primeiro! Rawr!",
         "Corri 10 km em 0 minutos! …Tá, foi mais. Mas fui rápido!",
         "Enfrentei um urso de pelúcia gigante. Venci, claro!"
+      ],
+      "aniversario": [
+        "{tempo} de campeões juntos! Rawr! Bora comemorar!",
+        "Aniversário de parceria! Isso vale um troféu!",
+        "{tempo} e a gente só fica mais forte!"
+      ],
+      "chuva": [
+        "Chuva não para um campeão! Rawr!",
+        "Treinar na chuva deixa a gente mais forte!",
+        "Pingo nenhum me segura!"
+      ],
+      "calor": [
+        "Calor? Isso é só aquecimento!",
+        "Que sol forte! Bora treinar na sombra.",
+        "Tô suando de tanta força!"
+      ],
+      "vento": [
+        "Corrida contra o vento! Quem chega primeiro?",
+        "Esse vento quer me desafiar? Aceito!",
+        "Vento forte, campeão mais forte ainda!"
       ]
     },
     "unicornio": {
@@ -493,6 +574,26 @@
         "Segui um arco-íris até o fim… e tinha moedas lá! ✨",
         "Dancei com vaga-lumes numa floresta encantada.",
         "Contei as estrelas do céu. Parei no 1 000 porque fiquei com sono."
+      ],
+      "aniversario": [
+        "{tempo} de amizade brilhante! ✨",
+        "Hoje o céu tem uma estrela a mais: é o nosso aniversário!",
+        "{tempo} juntos… parece mágica, né?"
+      ],
+      "chuva": [
+        "Depois da chuva sempre vem um arco-íris… quem sabe! 🌈",
+        "Os pingos parecem estrelinhas caindo.",
+        "Chuva mágica! Tudo fica brilhando."
+      ],
+      "calor": [
+        "O sol está tão brilhante quanto a minha crina!",
+        "Que calorzinho dourado…",
+        "Um raio de sol para cada sonho!"
+      ],
+      "vento": [
+        "O vento está levando meus desejos pra longe… ✨",
+        "As folhas dançam com o vento, que poesia!",
+        "Que brisa encantada!"
       ]
     },
     "dragao_azul": {
@@ -635,6 +736,26 @@
         "Passei por um lago congelado. Tranquilo, como eu.",
         "Achei uma caverna de gelo com cristais em forma de hexágono.",
         "Encontrei moedas no fundo de um rio gelado. Peguei com calma."
+      ],
+      "aniversario": [
+        "{tempo} juntos. Fresquinho como o primeiro dia.",
+        "Hoje a gente comemora com calma. E com bolo.",
+        "{tempo} de parceria. Valeu, de coração gelado."
+      ],
+      "chuva": [
+        "Chuva fresquinha. Combina comigo.",
+        "Água caindo do céu… quase gelo. Gostei.",
+        "Hoje o dia está do meu jeito: frio e molhado."
+      ],
+      "calor": [
+        "Calor… não é o meu forte. Fica perto que eu refresco.",
+        "Esse sol está derretendo minha calma.",
+        "Ufa. Um dragão de gelo sofre com esse calor."
+      ],
+      "vento": [
+        "Vento frio. Perfeito.",
+        "Sente essa brisa? Que paz.",
+        "O vento sopra e eu continuo calmo."
       ]
     },
     "dragao_vermelho": {
@@ -805,6 +926,26 @@
         "O GRANDE {pet} voltou! Derreti uma montanha de gelo só de olhar.",
         "Achei um tesouro guardado por um troll. O troll fugiu. Óbvio.",
         "Os vulcões me reconheceram e se curvaram. Normal pra mim."
+      ],
+      "aniversario": [
+        "Mais um mês aturando minha magnificência. Você é forte!",
+        "{tempo} ao lado do GRANDE {pet}! Que honra pra você!",
+        "Hoje é dia de festa: o maior dragão do universo comemora {tempo} com você!"
+      ],
+      "chuva": [
+        "Chuva?! Ninguém molha o GRANDE {pet}! …Tá, só um pouquinho.",
+        "Essa chuva está apagando meu fogo. Que ousadia!",
+        "Pingos tentando me derrotar. Coitados."
+      ],
+      "calor": [
+        "Calor? Isso sou EU sendo incrível.",
+        "O sol está quase tão quente quanto eu. Quase.",
+        "Que calorzinho bom. Me sinto em casa."
+      ],
+      "vento": [
+        "Até o vento sopra a meu favor!",
+        "Esse vento quer apagar minha chama? Tenta!",
+        "Ventania! Minhas asas magníficas aguentam."
       ]
     },
     "elefante": {
@@ -889,6 +1030,26 @@
         "Lembrei de um atalho que vi há anos. Elefante não esquece!",
         "Ajudei uma família de patinhos a atravessar o rio.",
         "Achei uma árvore com frutas que fazem contas. Trouxe umas moedas também."
+      ],
+      "aniversario": [
+        "{tempo} juntos. Elefante não esquece um dia sequer!",
+        "Hoje é o nosso aniversário. Vou guardar essa lembrança pra sempre.",
+        "{tempo} de amizade… que presente bom é ter você."
+      ],
+      "chuva": [
+        "Chuva boa. Lembro de cada chuva que já vi.",
+        "Vem pra baixo das minhas orelhas, que eu te protejo.",
+        "Dia de chuva é dia de ficar juntinho."
+      ],
+      "calor": [
+        "Que calor… um banho de tromba cairia bem.",
+        "Fica na sombra comigo, tá quente.",
+        "Elefante não esquece: no calor, beba água!"
+      ],
+      "vento": [
+        "O vento balança minhas orelhas!",
+        "Vento forte… segura firme.",
+        "As folhas voando me lembram um passeio antigo."
       ]
     }
   },

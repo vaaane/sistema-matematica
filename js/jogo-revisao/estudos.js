@@ -169,24 +169,38 @@ function iniciarFila(a) {
   fim.className = 'qe-ficha qe-final';
   fim.textContent = String(a.final ?? '');
   palco.appendChild(fim);
-  // posições da fila pela largura real de cada ficha
-  const lefts = [];
-  let x = 16;
-  for (const el of fichas) { lefts.push(x); x += el.offsetWidth + 10; }
-  fim.style.left = `calc(50% - ${fim.offsetWidth / 2}px)`;
+  // PROMPT-100: posições em % do palco (o centro de cada ficha; o CSS centraliza com translate). A fila ocupa de 3% a 70%;
+  // o balcão "ATENDIMENTO", os ~28% da direita (centro em 85%). Medido de novo a cada volta (e quando o palco ainda não
+  // tem tamanho, no quadro seguinte) — antes, em px, as fichas se empilhavam e o 2 × 3 começava dentro do balcão.
   const vip = fichas[a.vip], tv = vip?.querySelector('.qe-ft');
-  const balcao = palco.querySelector('.qe-balcao');
   const leg = a.legendas || [];
+  let centros = [];
+  const medirFila = () => {
+    const W = palco.clientWidth;
+    if (!W) return false;
+    palco.style.setProperty('--esc', '1');
+    const gap = 0.025 * W, ini = 0.03 * W, fimFila = 0.70 * W;
+    const ws = fichas.map(el => el.offsetWidth || 0.12 * W);
+    const total = ws.reduce((t, w) => t + w, 0) + gap * Math.max(0, ws.length - 1);
+    const esc = Math.min(1, (fimFila - ini) / total);   // não cabe: as fichas encolhem
+    palco.style.setProperty('--esc', esc.toFixed(3));
+    let x = ini;
+    centros = ws.map(w => { const c = x + w * esc / 2; x += w * esc + gap * esc; return c / W * 100; });
+    return true;
+  };
+  const colocarNaFila = () => fichas.forEach((el, i) => { el.style.left = (centros[i] ?? 10 + 20 * i).toFixed(2) + '%'; });
   const passos = [
     () => {
-      fichas.forEach((el, i) => { el.style.left = lefts[i] + 'px'; el.classList.remove('some', 'vip'); });
+      fichas.forEach(el => el.classList.remove('some', 'vip'));
+      if (!medirFila()) requestAnimationFrame(() => { medirFila(); colocarNaFila(); });
+      colocarNaFila();
       if (tv) tv.textContent = juntar(String(a.fichas[a.vip]));
       fim.style.transition = 'none'; fim.classList.remove('on'); void fim.offsetWidth; fim.style.transition = '';
     },
     () => vip?.classList.add('vip'),
-    () => { if (vip) vip.style.left = (balcao.offsetLeft + balcao.offsetWidth / 2 - vip.offsetWidth / 2) + 'px'; },
+    () => { if (vip) vip.style.left = '85%'; },   // só agora vai ao atendimento (centro do balcão)
     () => { if (tv) tv.textContent = juntar(String(a.vip_vira ?? '')); },
-    () => { if (vip) { vip.classList.remove('vip'); vip.style.left = lefts[a.vip] + 'px'; } },
+    () => { if (vip) { vip.classList.remove('vip'); vip.style.left = (centros[a.vip] ?? 40).toFixed(2) + '%'; } },
     () => { fichas.forEach(el => el.classList.add('some')); fim.classList.add('on'); },
   ];
   qe.anim = { i: 0, timer: 0, pausado: false, passos, leg };
