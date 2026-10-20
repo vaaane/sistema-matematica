@@ -2890,9 +2890,10 @@ const KEY_COLEGAS = 'jr_colegas_ocultos';
 let colegasOcultos = false;
 try { colegasOcultos = localStorage.getItem(KEY_COLEGAS) === '1'; } catch (_) {}
 
-// Etiqueta do colega: o apelido (ou primeiro nome); sem nome no registro → "Colega"; a conta da professora → "Professora"
-// (nunca a palavra PROFESSOR).
-const rotuloColega = (uid, r) => (/PROFESSOR/i.test(`${uid} ${r?.apelido || ''}`) ? 'Professora' : nomeVisivel(r?.apelido) || 'Colega') + medalhaPesca(uid);
+// Etiqueta do colega: o apelido (ou primeiro nome); sem nome no registro → o primeiro nome do uid ("8F_Ana_Clara" → "Ana"),
+// e só sem isso "Colega"; a conta da professora → "Professora" (nunca a palavra PROFESSOR).
+const nomeDoUid = (uid) => nomeVisivel(String(uid || '').split('_')[1] || '');
+const rotuloColega = (uid, r) => (/PROFESSOR/i.test(`${uid} ${r?.apelido || ''}`) ? 'Professora' : nomeVisivel(r?.apelido) || nomeDoUid(uid) || 'Colega') + medalhaPesca(uid);
 // Turma TESTE e alunos de teste nunca aparecem para os alunos (no modo teste, todos são de teste). A professora
 // jogando pelo menu dela (UID_PROFESSORA) aparece; a conta de teste da professora grava em outro nó e não aparece.
 const colegaVisivel = (uid, r) => !!r && Date.now() - (Number(r.ts) || 0) < VALIDADE_MS &&

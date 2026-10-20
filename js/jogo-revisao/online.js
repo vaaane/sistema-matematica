@@ -28,6 +28,7 @@ export async function iniciarOnline({ uid, teste, dados }) {
     const r = ref(db, `${base}/${uid}`);
     atual = { ...dados };
     await set(r, { ...atual, ts: Date.now() });
+    ultimoCompleto = Date.now();
     await onDisconnect(r).remove();
     ativo = true;
     // reconectou: grava o registro inteiro de novo e arma o onDisconnect outra vez
@@ -49,11 +50,17 @@ export async function iniciarOnline({ uid, teste, dados }) {
   }
 }
 
+// A cada COMPLETO_MS o update leva o registro inteiro: se um onDisconnect atrasado (da conexão antiga, depois de
+// reconectar) apagou o nó, os updates de posição o recriavam só com x/y/dir e o aluno aparecia como "Colega".
+const COMPLETO_MS = 5000;
+let ultimoCompleto = 0;
 export function enviarOnline(patch) {
   if (!ativo) return;
   atual = { ...atual, ...patch };
   ultimoEnvio = Date.now();
-  update(ref(db, `${base}/${meuUid}`), { ...patch, ts: ultimoEnvio }).catch(() => {});
+  const completo = ultimoEnvio - ultimoCompleto >= COMPLETO_MS;
+  if (completo) ultimoCompleto = ultimoEnvio;
+  update(ref(db, `${base}/${meuUid}`), { ...(completo ? atual : patch), ts: ultimoEnvio }).catch(() => {});
 }
 
 export async function sairOnline() {
