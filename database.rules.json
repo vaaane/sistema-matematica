@@ -45,6 +45,18 @@
     "jogo_revisao_praca_teste":    { ".read": true, ".write": true },
     "jogo_revisao_aovivo":         { ".read": true, ".write": true },
     "jogo_revisao_aovivo_teste":   { ".read": true, ".write": true },
+    "exposicao_config":            { ".read": true, ".write": true, "aberta_alunos": { ".validate": "newData.isBoolean()" } },
+    "exposicao_config_teste":      { ".read": true, ".write": true, "aberta_alunos": { ".validate": "newData.isBoolean()" } },
+    "exposicao_salas":             { ".read": true, ".write": true, "$n": {
+      "trancada": { ".validate": "newData.isBoolean()" },
+      "tema":     { ".validate": "newData.isString() && newData.val().length <= 40" },
+      "musica":   { ".validate": "newData.isString() && newData.val().length <= 80" },
+      "nome":     { ".validate": "newData.isString() && newData.val().length <= 60" } } },
+    "exposicao_salas_teste":       { ".read": true, ".write": true, "$n": {
+      "trancada": { ".validate": "newData.isBoolean()" },
+      "tema":     { ".validate": "newData.isString() && newData.val().length <= 40" },
+      "musica":   { ".validate": "newData.isString() && newData.val().length <= 80" },
+      "nome":     { ".validate": "newData.isString() && newData.val().length <= 60" } } },
 
     "liberacoes_ativas":    { ".read": true, ".write": true },
     "liberacoes_historico": { ".read": true, ".write": true, ".indexOn": ["criadoEm"] },

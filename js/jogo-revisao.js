@@ -51,7 +51,7 @@ const IMG   = '/img/jogo';
 const DADOS = '/dados/jogo';
 
 const W = 1376, H = 768;            // tamanho original dos mapas/interiores
-const GW = 344, GH = 192, CEL = 4;  // grade da trilha (cada pixel = 4×4 do mapa)
+const GW = 344, GH = 192, CEL = 4;  // grade da trilha (cada pixel = 4×4 do mapa); cenas mais largas: g.gw (sala da Exposição: 544)
 const VEL = 180;                    // px/s em coordenadas da imagem
 const T_QUADRO = 120;               // ms por quadro de caminhada
 const ALT_JOGADOR = 110, ALT_TREINADOR = 120, ALT_LIDER = 135;
@@ -340,6 +340,7 @@ const escalaSpriteCena = () => (cena?.salao ? alturaSalao() : cena?.tipo === 'ma
 // Salões (fliperama, loja): o personagem tem altura_personagem do JSON do interior; o pet usa a mesma proporção do mapa
 // (altura do pet = altura_personagem × ALT_PET / ALT_JOGADOR_MAPA) e as distâncias crescem junto
 const alturaSalao = () => Number(cena?.alturaPersonagem) || ALT_JOGADOR;
+const altJogCena = () => (cena?.salao ? alturaSalao() : ALT_JOGADOR_MAPA);   // altura do personagem (e dos colegas) nesta cena
 // dragão adulto (PROMPT-81): nos salões também mede pelo personagem (sentado = altura_personagem × escala), como no mapa e no ginásio
 const escalaPetCena = (forma) => (cena?.salao ? alturaSalao() / (ehFormaAdulta(forma) ? ALT_BASE_PERSONAGEM : ALT_JOGADOR_MAPA)
   : cena?.tipo === 'mapa' ? ESCALA_ATORES : ESCALA_GINASIO);
@@ -831,7 +832,8 @@ export async function iniciarJogo(sess) {
   catch (e) { console.warn('[jogo-revisao] Caça ao bug indisponível', e); }
   try { MAPA_PG = await fetch(`${DADOS}/mapa-programe.json`).then(r => { if (!r.ok) throw new Error('mapa-programe.json'); return r.json(); }); }
   catch (e) { console.warn('[jogo-revisao] mapa da Ilha dos Robôs indisponível (fica a lista de fases)', e); }
-  ESTUDOS = await fetch(`${DADOS}/estudos.json`).then(r => (r.ok ? r.json() : null)).catch(() => null);   // 📜 Quadro de Estudos (sem ele: nenhum quadro)
+  ESTUDOS = await fetch(`${DADOS}/estudos.json`).then(r => (r.ok ? r.json() : null)).catch(() => null);
+  iniciarExposicao(await fetch(`${DADOS}/exposicao.json`).then(r => (r.ok ? r.json() : null)).catch(() => null));   // 🖼️ sem ele: sem pavilhão   // 📜 Quadro de Estudos (sem ele: nenhum quadro)
   falarCurioParam = teste && new URLSearchParams(location.search).get('falar') === 'curiosidade';
   [ALBUM, CURIO] = await Promise.all(['album.json', 'curiosidades.json'].map(f => fetch(`${DADOS}/${f}`).then(r => (r.ok ? r.json() : null)).catch(() => null)));   // 📒💡 (PROMPT-98)
   LUZES = await fetch(`${DADOS}/luzes.json`).then(r => (r.ok ? r.json() : null)).catch(() => null);   // 🌙 luzes da noite (sem ele: só a cor)
@@ -2920,7 +2922,7 @@ function entrarNoMapaOnline(n, local = 'mapa') {
   envio.x = jog.x; envio.y = jog.y; envio.t = performance.now(); envio.parado = true;
   enviarOnline({ mapa: n, local, x: Math.round(jog.x), y: Math.round(jog.y), dir: jog.dir });
   pararOuvirMapa();
-  pararOuvirMapa = ouvirMapa(n, (regs) => (n === 'vila' ? receberColegasVila(regs) : receberColegas(n, regs)));
+  pararOuvirMapa = ouvirMapa(n, (regs) => (n === 'vila' ? receberColegasVila(regs) : receberColegas(n, regs, local)));   // Exposição: local 'exposicao'
   $('btn-colegas').hidden = $('btn-reacao').hidden = !onlineAtivo();   // sem online (sem regra/sem internet): sem botões
   $('btn-colegas').classList.toggle('desligado', colegasOcultos);
   $('cena-palco').classList.toggle('sem-colegas', colegasOcultos);
@@ -3009,7 +3011,7 @@ function atualizarColega(c, r) {
 function atualizarColegas(dt) {
   if (!colegas.size) return;
   const agora = performance.now();
-  const escala = 1 / (cam.s || 1);
+  const escala = 1 / (cam.s || 1), altJ = altJogCena(), esp = escalaSpriteCena();   // nos salões (Exposição) do tamanho do personagem
   for (const c of colegas.values()) {
     if (Date.now() - (Number(c.reg.ts) || 0) > VALIDADE_MS) { c.el.hidden = c.nome.hidden = true; continue; }
     let andando = false;
@@ -3029,19 +3031,19 @@ function atualizarColegas(dt) {
     const src = urlQuadro(DIRECOES.includes(c.dir) ? c.dir : 'frente', c.quadro, c.pers);
     if (c.el.dataset.src !== src) { c.el.src = src; c.el.dataset.src = src; }
     c.el.hidden = c.nome.hidden = false;
-    Object.assign(c.el.style, { left: c.x + 'px', top: c.y + 'px', height: PERS.altura * ESCALA_SPRITE + 'px', zIndex: Math.round(c.y) });
+    Object.assign(c.el.style, { left: c.x + 'px', top: c.y + 'px', height: PERS.altura * esp + 'px', zIndex: Math.round(c.y) });
     // colega cavando ou arrancando mato: a pose no lugar da imagem de andar (quadros 2..6 em loop enquanto durar)
     const sp = c.reg.acao === 'cavar' && temPoseCavar(c.pers) ? CAVAR_SP : c.reg.acao === 'mato' && temPoseMato(c.pers) ? MATO_SP : null;
     const cavando = !!sp;
     if (cavando) {
       if (!c.cavarEl) { c.cavarEl = document.createElement('img'); c.cavarEl.className = 'jr-cavar-pose jr-colega'; c.cavarEl.alt = ''; c.cavarEl.draggable = false; $('cena-palco').appendChild(c.cavarEl); }
-      poseAcao(sp, c.reg.acao, c.cavarEl, c.pers, c.x, c.y, 2 + Math.floor(agora / (c.reg.acao === 'mato' ? 250 : MS_CAVAR)) % 5, !!c.reg.acao_esq, ESCALA_SPRITE);
+      poseAcao(sp, c.reg.acao, c.cavarEl, c.pers, c.x, c.y, 2 + Math.floor(agora / (c.reg.acao === 'mato' ? 250 : MS_CAVAR)) % 5, !!c.reg.acao_esq, esp);
     } else if (c.cavarEl) { c.cavarEl.remove(); c.cavarEl = null; }
     c.el.style.visibility = cavando ? 'hidden' : '';
     // etiqueta com o apelido: 11 px na tela, qualquer que seja o zoom da câmera
-    Object.assign(c.nome.style, { left: c.x + 'px', top: (c.y - ALT_JOGADOR_MAPA - 2) + 'px', fontSize: 11 * escala + 'px', zIndex: 9000 });
-    if (c.balao) Object.assign(c.balao.style, { left: c.x + 'px', top: (c.y - ALT_JOGADOR_MAPA - 16 * escala) + 'px', fontSize: (c.balao.classList.contains('frase') ? 12 : 22) * escala + 'px' });
-    if (c.pet) c.seg.atualizar(dt, c.x, c.y, VEL, altImagemPet(c.seg.forma) * ESCALA_ATORES, distPet(c.seg.forma) * ESCALA_ATORES, ESCALA_ATORES);
+    Object.assign(c.nome.style, { left: c.x + 'px', top: (c.y - altJ - 2) + 'px', fontSize: 11 * escala + 'px', zIndex: 9000 });
+    if (c.balao) Object.assign(c.balao.style, { left: c.x + 'px', top: (c.y - altJ - 16 * escala) + 'px', fontSize: (c.balao.classList.contains('frase') ? 12 : 22) * escala + 'px' });
+    if (c.pet) { const e = escalaPetCena(c.seg.forma); c.seg.atualizar(dt, c.x, c.y, VEL, altImagemPet(c.seg.forma) * e, distPet(c.seg.forma) * e, e); }
   }
 }
 
@@ -3067,7 +3069,7 @@ const nomeVisivel = (s) => (/PROFESSOR|TESTE/i.test(String(s || '')) ? '' : Stri
 function colegaEm(pt) {
   if (colegasOcultos) return null;
   let melhor = null, md = Infinity;
-  const h = ALT_JOGADOR_MAPA, folga = 6 * ESCALA_ATORES;
+  const h = altJogCena(), folga = 6 * ESCALA_ATORES;
   for (const c of colegas.values()) {
     if (c.el.hidden || Math.abs(pt.x - c.x) > h * 0.3 + folga || pt.y < c.y - h - folga || pt.y > c.y + folga) continue;
     const d = Math.abs(pt.x - c.x) + Math.abs(pt.y - c.y);
@@ -3160,7 +3162,7 @@ function posicionarMinhaReacao() {
   const b = $('minha-reacao');
   if (b.hidden || !cena) return;
   const escala = 1 / (cam.s || 1);
-  Object.assign(b.style, { left: jog.x + 'px', top: (jog.y - ALT_JOGADOR_MAPA - 16 * escala) + 'px', fontSize: (b.classList.contains('frase') ? 12 : 22) * escala + 'px' });
+  Object.assign(b.style, { left: jog.x + 'px', top: (jog.y - altJogCena() - 16 * escala) + 'px', fontSize: (b.classList.contains('frase') ? 12 : 22) * escala + 'px' });
 }
 
 function mostrarBalaoReacao(c, e) {
@@ -3256,6 +3258,7 @@ function lugarDe(r) {
   if (extra) return Number(r.mapa) > 0 ? `Mapa ${r.mapa} · ${extra}` : r.mapa === 'praca' && r.onde !== 'laboratorio' ? `Praça · ${extra}` : extra;
   if (r.mapa === 'praca') return r.local === 'laboratorio' ? 'Laboratório' : r.local === 'casinha' ? 'Praça · na casinha' : r.local === 'vila' ? 'Praça · na vila' : 'Praça';
   if (r.mapa === 'vila') return 'Vila das Casinhas';
+  if (r.local === 'exposicao') return String(r.mapa).startsWith('sala-') ? `Exposição · Sala ${String(r.mapa).slice(5)}` : 'Exposição';
   if (Number(r.mapa) > 0) return `Mapa ${r.mapa}${r.local === 'ginasio' ? ' · no ginásio' : ''}`;
   return 'Mapa geral';
 }
@@ -4693,20 +4696,22 @@ let perguntaAberta = false;
 const focoAtivo = () => camFoco && performance.now() < camFoco.ate && cena?.tipo === 'mapa';
 const focoX = () => (focoAtivo() ? camFoco.x : jog.x);
 const focoY = () => (focoAtivo() ? camFoco.y : jog.y);
+// largura lógica da cena: 1376, ou mais na sala da Exposição (cena.w = 2176)
+const larguraCena = () => Number(cena?.w) || W;
 function ajustarCamera() {
   const vp = $('cena-vp');
-  const vw = vp.clientWidth, vh = vp.clientHeight;
+  const vw = vp.clientWidth, vh = vp.clientHeight, LW = larguraCena();
   if (deitado()) {
     // Celular/tablet (deitado ou girado): preenche a largura e segue o jogador nos dois eixos
     // (um pouco abaixo do centro, para o personagem não ficar atrás do HUD do topo)
-    cam.s = Math.max(vw / W, vh / H);
-    cam.tx = clamp(vw / 2 - focoX() * cam.s, vw - W * cam.s, 0);
+    cam.s = Math.max(vw / LW, vh / H);
+    cam.tx = clamp(vw / 2 - focoX() * cam.s, vw - LW * cam.s, 0);
     cam.ty = clamp(vh * 0.55 - focoY() * cam.s, vh - H * cam.s, 0);
-  } else if (vh > vw) {
-    // Em pé: mapa na altura da tela, rola na horizontal seguindo o jogador
+  } else if (vh > vw || LW > W) {
+    // Em pé (ou a sala larga da Exposição): cena na altura da tela, rola na horizontal seguindo o jogador
     cam.s = vh / H;
     cam.ty = 0;
-    cam.tx = clamp(vw / 2 - focoX() * cam.s, vw - W * cam.s, 0);
+    cam.tx = LW * cam.s <= vw ? (vw - LW * cam.s) / 2 : clamp(vw / 2 - focoX() * cam.s, vw - LW * cam.s, 0);
   } else {
     // Deitada: mapa inteiro
     cam.s = Math.min(vw / W, vh / H);
@@ -4795,7 +4800,7 @@ function moverDireto(dt, vx, vy) {
     jog.x = clamp(jog.x + dx, cena.xMin, cena.xMax);
   } else {
     const g = cena.grade;
-    const livre = (x, y) => x >= 0 && y >= 0 && x < W && y < H && andavel(g, Math.floor(x / CEL), Math.floor(y / CEL));
+    const livre = (x, y) => x >= 0 && y >= 0 && x < larguraCena() && y < H && andavel(g, Math.floor(x / CEL), Math.floor(y / CEL));
     const preso = !livre(jog.x, jog.y);   // se começou fora da trilha, deixa sair
     const pode = (x, y) => preso || livre(x, y);
     const tenta = (ax, ay) => {
@@ -4895,6 +4900,7 @@ function loop(t) {
   // ações do pet (cheirar, banho, rugir…): só com o mapa livre — sem balão de fala, janela por cima, pesca ou provador
   seguidor?.pausarAcoes(!cena || transicionando || sobreposicaoAberta() || conversa.falando || !!pesca || !!petNoPedestal || !!cs?.petAlvo);
   if (cs && !ehCasinha()) fecharCasinha();   // saiu da casinha
+  if (expoOuvindo && cena && !ehSaguao() && !salaExpo()) pararExpo();   // 🖼️ saiu da Exposição
   if (cena && !perguntaAberta && !transicionando) {
     const [vx, vy] = vetorEntrada();
     if (!vx && !vy) soltouDesdeTroca = true;
@@ -4950,6 +4956,7 @@ function atualizarHudPraca() {
   if (bc.hidden !== sc) bc.hidden = sc;
   const sm = !(ehCasinha() && cs && !cs.arrumando), bm = $('btn-curtidas');   // ⭐ Mais curtidas: dentro da casinha
   if (bm.hidden !== sm) bm.hidden = sm;
+  atualizarHudExpo();   // 🖼️ 🔒/🔓 e 🔈 na sala da Exposição
   const ic = ehPraca() || ehVila() ? '💬' : '😊', br = $('btn-reacao');
   if (br.textContent !== ic) br.textContent = ic;
 }
@@ -4986,9 +4993,11 @@ function passo(dt) {
 }
 
 let fundoPendente = null;
-async function trocarFundo(src) {
+async function trocarFundo(src, largura = W) {   // largura: só a sala da Exposição é mais larga (2176)
   // espera o load (decode() pode ficar pendente com a aba em segundo plano)
   const f = $('cena-fundo');
+  const lw = largura === W ? '' : largura + 'px';
+  if (f.style.width !== lw) f.style.width = $('cena-palco').style.width = lw;
   // se outra troca ainda esperava, libera ela (senão a transição ficaria presa para sempre)
   if (fundoPendente) fundoPendente();
   await new Promise((ok) => {
@@ -5009,6 +5018,8 @@ function sairDaCena() {
   else if (cena.n === 'casinha') sairDaCasinha();
   else if (cena.n === 'vila') { if (cena.vila && !cena.vila.minha) transicao(() => abrirVila({ casa: true })); else sairDaVila(); }   // na vila de outro: ⬅ Minha vila
   else if (cena.n === 'loja') sairDaLoja();
+  else if (ehSaguao()) transicao(() => abrirPraca('exposicao'));
+  else if (salaExpo()) { const k = salaExpo(); transicao(() => abrirSaguao(k)); }
   else transicao(abrirMapaGeral);
 }
 
@@ -5017,19 +5028,21 @@ function sairDaCena() {
 // ============================================================
 const gradesCache = {};
 
-function carregarGrade(arquivo) {
+// gw × gh: tamanho da grade (padrão 344 × 192 = cena de 1376 × 768); a grade guarda o seu (g.gw, g.gh)
+function carregarGrade(arquivo, gw = GW, gh = GH) {
   if (gradesCache[arquivo]) return Promise.resolve(gradesCache[arquivo]);
   return new Promise((ok, falha) => {
     const im = new Image();
     im.onload = () => {
       const cv = document.createElement('canvas');
-      cv.width = GW; cv.height = GH;
+      cv.width = gw; cv.height = gh;
       const ctx = cv.getContext('2d', { willReadFrequently: true });
       ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(im, 0, 0, GW, GH);
-      const px = ctx.getImageData(0, 0, GW, GH).data;
-      const g = new Uint8Array(GW * GH);
-      for (let i = 0; i < GW * GH; i++) g[i] = px[i * 4] > 127 ? 1 : 0;
+      ctx.drawImage(im, 0, 0, gw, gh);
+      const px = ctx.getImageData(0, 0, gw, gh).data;
+      const g = new Uint8Array(gw * gh);
+      for (let i = 0; i < gw * gh; i++) g[i] = px[i * 4] > 127 ? 1 : 0;
+      if (gw !== GW || gh !== GH) { g.gw = gw; g.gh = gh; }
       gradesCache[arquivo] = g;
       ok(g);
     };
@@ -5038,10 +5051,13 @@ function carregarGrade(arquivo) {
   });
 }
 
-const andavel = (g, cx, cy) => cx >= 0 && cy >= 0 && cx < GW && cy < GH && g[cy * GW + cx] === 1;
-const centroCelula = (i) => [(i % GW) * CEL + CEL / 2, Math.floor(i / GW) * CEL + CEL / 2];
+const gwDe = (g) => g?.gw || GW, ghDe = (g) => g?.gh || GH;
+const andavel = (g, cx, cy) => { const gw = gwDe(g); return cx >= 0 && cy >= 0 && cx < gw && cy < ghDe(g) && g[cy * gw + cx] === 1; };
+// g: a grade da célula (sem ela, ou com um número, como em .map(centroCelula): a largura padrão)
+const centroCelula = (i, g) => { const gw = gwDe(g); return [(i % gw) * CEL + CEL / 2, Math.floor(i / gw) * CEL + CEL / 2]; };
 
 function celulaMaisProxima(g, x, y) {
+  const GW = gwDe(g), GH = ghDe(g);
   const cx = clamp(Math.floor(x / CEL), 0, GW - 1), cy = clamp(Math.floor(y / CEL), 0, GH - 1);
   if (andavel(g, cx, cy)) return cy * GW + cx;
   let melhor = -1, md = Infinity;
@@ -5058,7 +5074,7 @@ function celulaMaisProxima(g, x, y) {
 // A* em 8 direções (sem cortar quinas)
 function aEstrela(g, ini, fim) {
   if (ini === fim) return [ini];
-  const N = GW * GH;
+  const GW = gwDe(g), N = GW * ghDe(g);
   const custo = new Float32Array(N).fill(Infinity);
   const veio = new Int32Array(N).fill(-1);
   const fechado = new Uint8Array(N);
@@ -5152,7 +5168,7 @@ function caminharNaTrilha(x, y, aoChegar) {
   const cells = aEstrela(g, ini, fim);
   if (!cells) return;
   // começa da posição atual do jogador (que pode estar fora do centro da célula)
-  const caminho = suavizar(g, [[jog.x, jog.y], ...cells.map(centroCelula)]).slice(1);
+  const caminho = suavizar(g, [[jog.x, jog.y], ...cells.map(i => centroCelula(i, g))]).slice(1);
   andarPor(caminho, aoChegar);
 }
 
@@ -5271,6 +5287,9 @@ function destinosDoMapa() {
   }
   if (ehVila()) for (const c of cena.casas || []) lista.push({ id: 'vila-' + c.lado, tipo: 'predio', alvo: 'vila:' + c.lado, x: c.porta[0], y: c.porta[1], trilha: c.trilha, largura: 60 });
   if (cena.n === 'laboratorio') for (const c of cena.computadores || []) lista.push({ id: 'pc-' + c.id, tipo: 'predio', alvo: 'pc:' + c.id, x: c.x, y: c.y, trilha: c.trilha });
+  const ex = ehPraca() && cena.exposicao;   // 🖼️ pavilhão da Exposição
+  if (ex) lista.push({ id: 'predio-exposicao', tipo: 'predio', alvo: 'exposicao', x: ex.ponto[0], y: ex.ponto[1], trilha: ex.trilha, largura: 80 });
+  if (ehSaguao()) for (const p of cena.expoPortas || []) lista.push({ id: 'expo-' + p.n, tipo: 'predio', alvo: 'expo:' + p.n, x: p.ponto[0], y: p.ponto[1], trilha: p.trilha, largura: 40 });
   const md = ehPraca() && cena.mesa_damas;
   if (md) lista.push({ id: 'predio-mesa-damas', tipo: 'predio', alvo: 'mesa_damas', x: md.x, y: md.y, trilha: md.trilha, largura: 80 });
   const qe = cena.estudos;
@@ -5311,7 +5330,8 @@ function tocarNoMapa(e) {
   if (pessoa) { if (!editarNpcs) irFalarCom(pessoa); return; }   // tocar numa pessoa: vai até ela e conversa
   if (ehCasinha() && tocarMovelCasa(p)) return;   // 🏠 quadrinho, aquário, vaso, estantes, pote, caixa (PROMPT-106)
   if (ehVila() && tocarCasaVila(p)) return;        // 🏘️ porta: entra · casa: cor do telhado / visitar / deixar (PROMPT-109)
-  if (tocouQuadroEstudos(p)) { irAoDestino(destinosDoMapa().find(d => d.alvo === 'estudos')); return; }   // 📜 anda até a frente do quadro e abre
+  if (tocouQuadroEstudos(p)) { irAoDestino(destinosDoMapa().find(d => d.alvo === 'estudos')); return; }
+  if (ehSaguao()) { const pt = portaExpoEm(p); if (pt) { irAoDestino(destinosDoMapa().find(d => d.alvo === 'expo:' + pt.n)); return; } }   // 🖼️ placa ou porta   // 📜 anda até a frente do quadro e abre
   if (ehPraca()) { const alvo = alvoPracaEm(p); if (alvo) { irAlvoPraca(alvo); return; } }   // mural / fliperama
   if (cena.n === 'fliperama') { const a = alvoFliperamaEm(p); if (a) { irAlvoFliperama(a); return; } }    // máquinas e o Téo
   if (ehLoja()) { const c = cantoEm(p); if (c) { irAoCanto(c); return; } }
@@ -5401,6 +5421,8 @@ function entrarNoDestino(esp) {
   else if (n === 'casinha') sairDaCasinha();                               // a porta da casinha: a vila (ou a placa / de onde veio)
   else if (n === 'vila') sairDaVila(true);                                 // descendo o caminho da vila: a Praça, na frente da placa
   else if (n === 'loja') sairDaLoja();                                     // a porta da loja volta para o mapa de onde veio
+  else if (n === 'saguao') transicao(() => abrirPraca('exposicao'));      // 🖼️ a porta de vidro: a Praça, na frente do pavilhão
+  else if (salaExpo()) { const k = salaExpo(); transicao(() => abrirSaguao(k)); }   // a sala: o saguão, na porta dela
   else transicao(abrirMapaGeral);
 }
 
@@ -5416,6 +5438,8 @@ function entrarNoPredio(alvo) {
   else if (alvo.startsWith('pc:')) { jog.dir = 'costas'; desenharJogador(); abrirComputador(alvo.slice(3)); }   // computador do laboratório
   else if (alvo === 'mesa_damas') { jog.dir = 'costas'; desenharJogador(); abrirMenuDamas(); }
   else if (alvo === 'estudos') { jog.dir = 'costas'; desenharJogador(); abrirEstudos(); }
+  else if (alvo === 'exposicao' && EXPO) transicao(() => abrirSaguao());
+  else if (alvo.startsWith('expo:')) entrarSalaExpo(Number(alvo.slice(5)));   // 🖼️ porta de uma sala
 }
 
 // Setas/joystick (PROMPT-80): portas e prédios têm uma ZONA na frente — ≈1,5 × a largura da porta (mín. 70 px), do ponto
@@ -5770,8 +5794,9 @@ async function abrirPraca(onde) {   // onde: 'fliperama' | 'loja' = saindo de l�
   $('tela-cena').classList.remove('jr-no-ginasio');
   mostrarTela('tela-cena');
   $('cena-palco').style.visibility = 'hidden';
-  const [grade] = await Promise.all([carregarGrade(cfg.trilha), trocarFundo(`${IMG}/mapas/${C.imagem || 'praca.webp'}`)]);
+  let [grade] = await Promise.all([carregarGrade(cfg.trilha), trocarFundo(`${IMG}/mapas/${C.imagem || 'praca.webp'}`)]);
   bloquearMesaDamas(grade);   // o personagem não atravessa a mesa de damas
+  if (pavilhaoVisivel()) grade = bloquearPavilhao(grade);   // 🖼️ cópia da grade: escondido, a área fica livre
   const naTrilha = (x, y) => centroCelula(celulaMaisProxima(grade, x, y));
   const saidas = cfg.saidas.map(([x, y]) => ({ x, y, trilha: naTrilha(x, y) }));
   cena = { tipo: 'mapa', n: 'praca', cfg, grade, portas: {}, saidas, naTrilha, pertoMural: false };
@@ -5780,7 +5805,7 @@ async function abrirPraca(onde) {   // onde: 'fliperama' | 'loja' = saindo de l�
   pertoSaidaGin = false;
   montarPessoas('praca');   // ninguém (limpa as pessoas do mapa anterior)
   montarPraca();
-  if ((onde === 'fliperama' || onde === 'loja' || onde === 'laboratorio' || onde === 'casinha') && cena[onde]) posicionarJogador(cena[onde].trilha[0], cena[onde].trilha[1], 'frente');
+  if ((onde === 'fliperama' || onde === 'loja' || onde === 'laboratorio' || onde === 'casinha' || onde === 'exposicao') && cena[onde]) posicionarJogador(cena[onde].trilha[0], cena[onde].trilha[1], 'frente');
   else if (onde === 'fonte' && C.fonte?.frente) posicionarJogador(...naTrilha(...C.fonte.frente), 'frente');
   else if (onde?.pos) posicionarJogador(onde.pos.x, onde.pos.y, onde.pos.dir);   // voltou da casinha pelo 🏠 (PROMPT-108)
   else if (onde?.perto) posicionarJogador(...naTrilha(onde.perto.x, onde.perto.y), 'esquerda');   // chamado: ao lado de quem chamou   // começo do jogo: em frente à fonte
@@ -5813,6 +5838,7 @@ function montarPraca() {
     (cena.casinha ? rotulo('🏠 Casinhas', ca.x, ca.y - 40, 'casinha') : ''));
   montarMesaDamas();
   pintarLetreiroRelampago();
+  montarPavilhao();
 }
 function alvoPracaEm(p) {
   const { mural: m, fliperama: f, loja: l, laboratorio: lb, casinha: ca } = cena;
@@ -5822,6 +5848,7 @@ function alvoPracaEm(p) {
   if (lb && Math.abs(p.x - lb.x) < 90 && p.y > lb.y - 170 && p.y < lb.y + 30) return 'laboratorio';
   if (ca && Math.abs(p.x - ca.x) < 75 && p.y > ca.y - 90 && p.y < ca.y + 40) return 'casinha';
   if (tocouMesaDamas(p)) return 'mesa_damas';
+  if (tocouPavilhao(p)) return 'exposicao';
   return null;
 }
 function irAlvoPraca(alvo) {
@@ -5835,6 +5862,7 @@ function irAlvoPraca(alvo) {
     else if (alvo === 'laboratorio' && LAB) transicao(abrirLaboratorio);
     else if (alvo === 'casinha' && CASA) { vilaVolta = null; transicao(() => (VILA ? abrirVila('entrada') : abrirCasinha())); }   // 🏘️ (PROMPT-109)
     else if (alvo === 'mesa_damas') { jog.dir = 'costas'; desenharJogador(); abrirMenuDamas(); }
+    else if (alvo === 'exposicao' && EXPO) transicao(() => abrirSaguao());
   });
 }
 // A cada quadro na praça: chegar perto do mural abre o painel (uma vez até se afastar); botão 💬 no lugar do 😊
@@ -6197,6 +6225,7 @@ let duelo = null;            // { id, souA, eu, outro, d (dados), tema, timers, 
 const visivel = (id) => { const e = $(id); return !!e && !e.hidden; };
 function lugarDaMusica() {
   if (visivel('batalha') || visivel('pergunta') || duelo || visivel('damas')) return 'ginasio';   // a corrida é um duelo
+  if (salaExpo()) return musicaDaSala();   // 🖼️ a música da sala (caminho do arquivo) ou silêncio
   if (visivel('programe') || visivel('pg-mapa') || cena?.n === 'laboratorio') return 'lab';
   if (cena?.tipo === 'interior') return 'ginasio';
   if (cena || visivel('tela-geral')) return 'mapa';
@@ -7100,7 +7129,8 @@ function ligarEdicaoPraca() {
   const itens = [['mural', obj(C.mural), '📋'], ['mural: onde para', par(C.mural?.ponto), '👣'], ['fliperama', obj(C.fliperama), '🕹️'], ['loja', obj(C.loja), '🛒'],
     ['casinhas', obj(C.casinha), '🏠'], ['casinhas: onde para', par(C.casinha?.ponto), '👣'],
     ['desafio A', par(C.ponto_desafio?.a), '⚔️'], ['desafio B', par(C.ponto_desafio?.b), '⚔️'], ['entrada', par(C.entrada), '🚪'],
-    ...(C.bancos || []).map((b, i) => [`banco ${i + 1}`, par(b), '🪑'])].filter(([, o]) => o);
+    ...(C.bancos || []).map((b, i) => [`banco ${i + 1}`, par(b), '🪑']),
+    ...(EXPO?.pavilhao ? [['exposição (base)', { pos: () => [EXPO.pavilhao.x, EXPO.pavilhao.y], por: moverPavilhao }, '🖼️'], ['exposição: onde para', par(EXPO.pavilhao.ponto), '👣']] : [])].filter(([, o]) => o);
   for (const [nome, o, ic] of itens) {
     const el = document.createElement('div');
     el.className = 'jr-praca-edit';
@@ -7131,10 +7161,298 @@ function ligarEdicaoPraca() {
   $('tela-cena').appendChild(caixa);
   $('npc-copiar').addEventListener('click', async () => {
     const { entrada, saidas, mural: mu, fliperama, ponto_desafio, bancos, loja, casinha } = C;
-    const txt = JSON.stringify({ entrada, saidas, mural: mu, fliperama, ponto_desafio, bancos, loja, casinha }, null, 1);
+    const txt = JSON.stringify({ entrada, saidas, mural: mu, fliperama, ponto_desafio, bancos, loja, casinha }, null, 1) +
+      (EXPO?.pavilhao ? '\n\n// exposicao.json → "pavilhao" (o bloqueio anda junto com a base):\n' + JSON.stringify({ pavilhao: EXPO.pavilhao }) : '');
     try { await navigator.clipboard.writeText(txt); $('npc-editar-pos').textContent = 'Copiado! Cole no praca.json.'; }
     catch (_) { console.log(txt); $('npc-editar-pos').textContent = 'Não deu para copiar: o JSON está no console (F12).'; }
   });
+}
+
+// ============================================================
+//  🖼️ EXPOSIÇÃO VIRTUAL (PROMPT-EXPOSICAO-1) — dados/jogo/exposicao.json. Pavilhão na Praça → saguão (1376 × 768, 10 portas)
+//  → salas (2176 × 768, câmera na horizontal). Firebase (modo teste: *_teste): exposicao_config { aberta_alunos } e
+//  exposicao_salas/{n} { tema, trancada, musica, nome, itens (parte 2) }; sem o nó: tema_padrao, trancada, sem música.
+//  Presença: o online.js de sempre, com local 'exposicao' e mapa 'saguao' | 'sala-{n}' (cada um vê só quem está no mesmo).
+//  O grupo de cada sala vem do JSON (parte 2: de exposicao_salas, com prioridade). Tudo falha em silêncio.
+// ============================================================
+let EXPO = null;
+let expoAberta = false;           // exposicao_config/aberta_alunos === true: o pavilhão aparece para os alunos
+const expoSalas = {};             // n → { tema, trancada, musica, nome } lidos ao vivo
+let expoOuvindo = false, pararOuvirExpo = () => {};
+let expoMusicaMudo = false;       // 🔈 silenciar só a música da sala
+let expoSoAluno = false;          // ?expo=aluno (modo teste): sem os privilégios do modo teste, para testar como aluno
+const noExpo = (no) => `${no}${teste ? '_teste' : ''}`;
+const ehSaguao = () => cena?.tipo === 'mapa' && cena.n === 'saguao';
+const salaExpo = () => (cena?.tipo === 'mapa' && cena.expoSala) || null;   // número da sala em que o aluno está
+const privilegioExpo = () => ehProfessora() || (teste && !expoSoAluno);   // professora e modo teste: veem e entram sempre
+const pavilhaoVisivel = () => !!EXPO?.pavilhao && (expoAberta || privilegioExpo());
+const grupoSala = (n) => EXPO?.salas?.[n] || null;
+const souDaSala = (n) => { const g = grupoSala(n); return !!g && g.turma === sessao.turma && (g.membros || []).includes(sessao.nome); };
+const mandaNaSala = (n) => privilegioExpo() || souDaSala(n);   // entra mesmo trancada e tem o botão 🔒/🔓
+const estadoSala = (n) => ({ tema: EXPO?.tema_padrao, trancada: true, musica: null, nome: null, ...(expoSalas[n] || {}) });
+const temaExpo = (id) => (EXPO.temas || []).find(t => t.id === id) || (EXPO.temas || []).find(t => t.id === EXPO.tema_padrao) || EXPO.temas[0];
+
+function iniciarExposicao(j) {
+  if (!j?.saguao || !j?.sala || !(j.temas || []).length) return;
+  EXPO = j;
+  expoSoAluno = teste && new URLSearchParams(location.search).get('expo') === 'aluno';
+  try {
+    onValue(ref(db, `${noExpo('exposicao_config')}/aberta_alunos`), (s) => {
+      const antes = pavilhaoVisivel();
+      expoAberta = s.exists() && s.val() === true;
+      if (pavilhaoVisivel() !== antes) atualizarPavilhaoPraca();   // a professora abriu/fechou com o aluno na Praça
+    },
+      (e) => console.warn('[jogo-revisao] exposicao_config indisponível', e?.code || e));
+  } catch (e) { console.warn('[jogo-revisao] exposicao_config indisponível', e?.code || e); }
+}
+
+// ── Pavilhão na Praça ───────────────────────────────────────
+function bloquearPavilhao(g0) {   // cópia (a grade da trilha fica em cache e serve a Praça sem o pavilhão)
+  const g = Uint8Array.from(g0), b = EXPO.pavilhao.bloqueio;
+  if (!b?.x || !b?.y) return g0;
+  for (let cy = Math.max(0, Math.floor(b.y[0] / CEL)); cy <= Math.min(GH - 1, Math.floor(b.y[1] / CEL)); cy++)
+    for (let cx = Math.max(0, Math.floor(b.x[0] / CEL)); cx <= Math.min(GW - 1, Math.floor(b.x[1] / CEL)); cx++) g[cy * GW + cx] = 0;
+  return g;
+}
+function montarPavilhao() {
+  cena.exposicao = null;
+  if (!pavilhaoVisivel()) return;
+  const P = EXPO.pavilhao, ponto = P.ponto || [P.x, P.y + 14];
+  cena.exposicao = { x: P.x, y: P.y, largura: Number(P.largura) || 230, alt: 70, ponto, trilha: cena.naTrilha(...ponto) };
+  // a imagem (praca/pavilhao-exposicao.webp); enquanto não existir, a placa "🖼️ Exposição"
+  const el = document.createElement('div');
+  el.className = 'expo-pavilhao sem-img';
+  el.innerHTML = '<span class="expo-pav-placa">🖼️ Exposição</span>';
+  const rot = document.createElement('div');   // o rótulo dos prédios, só com a imagem (a placa já tem o nome)
+  rot.className = 'jr-rotulo-porta jr-rotulo-praca expo-pav-rotulo'; rot.hidden = true; rot.innerHTML = '<span>🖼️ Exposição</span>';
+  $('cena-atores').append(el, rot);
+  posicionarPavilhao(el);
+  const img = new Image();
+  img.alt = ''; img.draggable = false;
+  img.onload = () => {
+    if (!el.isConnected || !cena?.exposicao) return;
+    cena.exposicao.alt = cena.exposicao.largura * img.naturalHeight / img.naturalWidth;
+    el.classList.remove('sem-img'); el.prepend(img); rot.hidden = false;
+    if (P.placa) el.insertAdjacentHTML('beforeend', '<span class="expo-pav-nome">Exposição</span>');   // na placa creme (em branco na imagem)
+    posicionarPavilhao(el);
+  };
+  img.src = `${IMG}/${P.imagem || 'praca/pavilhao-exposicao.webp'}`;
+}
+function posicionarPavilhao(el = $('cena-atores').querySelector('.expo-pavilhao')) {
+  const ex = cena?.exposicao;
+  if (!el || !ex) return;
+  Object.assign(el.style, { left: ex.x + 'px', top: ex.y + 'px', width: ex.largura + 'px', zIndex: Math.round(ex.y) });
+  const nome = el.querySelector('.expo-pav-nome'), pl = EXPO.pavilhao.placa;   // dentro do prédio: o canto de cima da imagem é a origem
+  if (nome && pl) Object.assign(nome.style, { left: (pl[0] - ex.x + ex.largura / 2) + 'px', top: (pl[1] - ex.y + ex.alt) + 'px' });
+  const rot = $('cena-atores').querySelector('.expo-pav-rotulo');
+  if (rot) Object.assign(rot.style, { left: ex.x + 'px', top: (ex.y - ex.alt - 6) + 'px' });
+}
+// ?editarPraca=1: a base anda com o bloqueio (o ponto de parar tem o seu próprio 👣)
+function moverPavilhao(x, y) {
+  const P = EXPO.pavilhao, dx = x - P.x, dy = y - P.y;
+  P.x = x; P.y = y;
+  if (P.bloqueio?.x) { P.bloqueio.x = P.bloqueio.x.map(v => v + dx); P.bloqueio.y = P.bloqueio.y.map(v => v + dy); }
+  if (P.placa) P.placa = [P.placa[0] + dx, P.placa[1] + dy];
+  if (cena?.exposicao) { cena.exposicao.x = x; cena.exposicao.y = y; posicionarPavilhao(); }
+}
+function atualizarPavilhaoPraca() {
+  if (!ehPraca()) return;
+  for (const e of $('cena-atores').querySelectorAll('.expo-pavilhao, .expo-pav-rotulo')) e.remove();
+  const g = gradesCache[cfgPraca().trilha || 'trilha-praca.png'];   // a da trilha (com a mesa de damas), sem o pavilhão
+  if (g) cena.grade = pavilhaoVisivel() ? bloquearPavilhao(g) : g;
+  montarPavilhao();
+}
+const tocouPavilhao = (p) => { const ex = cena?.exposicao; return !!ex && Math.abs(p.x - ex.x) < ex.largura / 2 && p.y > ex.y - ex.alt && p.y < ex.y + 24; };
+
+// ── Saguão ──────────────────────────────────────────────────
+// prelúdio comum das duas cenas da Exposição (como o laboratório e a vila)
+function prepararCenaExpo(titulo, voltar) {
+  sairPesca(false);
+  cena = null;
+  esconderBalao();
+  fecharCartaoColega();
+  fecharBalaoPorta();
+  $('btn-revanche').hidden = true;
+  $('cena-aviso').hidden = true;
+  $('cena-atores').innerHTML = '';
+  $('cena-titulo').textContent = titulo;
+  $('btn-cena-voltar').textContent = voltar;
+  $('btn-cena-voltar').hidden = false;
+  $('tela-cena').classList.remove('jr-no-ginasio');
+  mostrarTela('tela-cena');
+  $('cena-palco').style.visibility = 'hidden';
+  limparPessoas();
+  sairDoMapaOnline();
+}
+// saída por uma faixa embaixo ({ y_min, x: [a, b] }): o ponto do meio, como a descida da vila
+function saidaFaixa(f, entrada, naTrilha) {
+  const sx = f?.x ? (f.x[0] + f.x[1]) / 2 : entrada[0], sy = Math.min(H - 4, (Number(f?.y_min) || 752) + 6);
+  return { cfg: [sx, sy], saida: { x: sx, y: sy, trilha: naTrilha(sx, sy) } };
+}
+async function abrirSaguao(deSala = null) {   // deSala: voltou daquela sala (aparece na porta dela)
+  if (!EXPO) return;
+  const S = EXPO.saguao;
+  prepararCenaExpo('🖼️ Exposição', '⟵ Praça');
+  const [grade] = await Promise.all([carregarGrade(S.trilha).catch(() => gradeDeRetangulos([{ x0: 0, y0: 280, x1: W, y1: H }])), trocarFundo(`${IMG}/${S.imagem}`)]);
+  const naTrilha = (x, y) => centroCelula(celulaMaisProxima(grade, x, y), grade);
+  const sd = saidaFaixa(S.saida_praca, S.entrada, naTrilha);
+  cena = { tipo: 'mapa', n: 'saguao', salao: true, alturaPersonagem: Number(S.altura_personagem) || 120, cfg: { entrada: S.entrada, saidas: [sd.cfg] }, grade, portas: {}, naTrilha, saidas: [sd.saida] };
+  cena.expoPortas = (S.portas || []).map(p => ({ ...p, trilha: naTrilha(...p.ponto) }));
+  desenharPlacasExpo();
+  destinoEspecial = null;
+  alvoMapa = null;
+  pertoSaidaGin = false;
+  const pd = deSala && cena.expoPortas.find(p => p.n === deSala);
+  if (pd) posicionarJogador(pd.trilha[0], pd.trilha[1], 'frente');
+  else posicionarJogador(S.entrada[0], S.entrada[1], 'costas');
+  soltouDesdeTroca = false;
+  ajustarCamera();
+  $('cena-palco').style.visibility = '';
+  atualizarBotaoPet();
+  entrarNoMapaOnline('saguao', 'exposicao');
+  ouvirExpo(Object.keys(EXPO.salas || {}).map(n => [n, 'trancada']), () => { if (ehSaguao()) desenharPlacasExpo(); });
+}
+// o número em cada placa (e 🔒: sala sem grupo ou trancada)
+function desenharPlacasExpo() {
+  const at = $('cena-atores');
+  for (const el of at.querySelectorAll('.expo-placa')) el.remove();
+  at.insertAdjacentHTML('beforeend', (cena.expoPortas || []).map(p => {
+    const tranca = !grupoSala(p.n) || estadoSala(p.n).trancada !== false;
+    return `<div class="expo-placa" style="left:${p.placa[0]}px;top:${p.placa[1]}px"><b>${p.n}</b>${tranca ? '<i>🔒</i>' : ''}</div>`;
+  }).join(''));
+}
+// toque na placa ou na porta: a porta cujo segmento placa → ponto passa mais perto do toque
+function portaExpoEm(p) {
+  let melhor = null, md = 50;
+  for (const d of cena.expoPortas || []) {
+    const [ax, ay] = d.placa, [bx, by] = d.ponto, vx = bx - ax, vy = by - ay;
+    const t = clamp(((p.x - ax) * vx + (p.y - ay) * vy) / (vx * vx + vy * vy || 1), 0, 1);
+    const dd = dist(p.x, p.y, ax + vx * t, ay + vy * t);
+    if (dd < md) { md = dd; melhor = d; }
+  }
+  return melhor;
+}
+function entrarSalaExpo(n) {
+  const p = cena.expoPortas?.find(x => x.n === n);
+  if (!p) return;
+  if (!grupoSala(n)) { balaoExpo(p, '🔜 Em breve'); return; }
+  if (!mandaNaSala(n) && estadoSala(n).trancada !== false) { balaoExpo(p, '🔒 Sala trancada pelo grupo'); tocar('erro'); return; }
+  transicao(() => abrirSalaExpo(n));
+}
+function balaoExpo(p, txt) {   // o balão das portas do ginásio, sem botões
+  soltouDesdeTroca = false;   // segurando ⬆, não repete
+  fecharBalaoPorta();
+  const el = $('porta-balao');
+  el.innerHTML = `<b>Sala ${p.n}</b><span>${esc(txt)}</span>`;
+  el.hidden = false;
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+  balaoPorta = { d: { x: p.ponto[0], y: p.ponto[1] }, timer: setTimeout(fecharBalaoPorta, 2500) };
+  posicionarBalaoPorta();
+}
+
+// ── Salas ───────────────────────────────────────────────────
+async function abrirSalaExpo(n) {
+  if (!EXPO || !grupoSala(n)) return;
+  const S = EXPO.sala, LW = Number(S.tamanho?.w) || 2176, st = estadoSala(n), tema = temaExpo(st.tema);
+  prepararCenaExpo(tituloSala(n), '⟵ Saguão');
+  const [grade] = await Promise.all([
+    carregarGrade(S.trilha, Math.round(LW / CEL), GH).catch(() => { const g = new Uint8Array(LW / CEL * GH); g.gw = LW / CEL; g.gh = GH; for (let i = 86 * g.gw; i < g.length; i++) g[i] = 1; return g; }),
+    trocarFundo(`${IMG}/${tema.imagem}`, LW)]);
+  const naTrilha = (x, y) => centroCelula(celulaMaisProxima(grade, x, y), grade);
+  const sd = saidaFaixa(S.saida_saguao, S.entrada, naTrilha);
+  cena = { tipo: 'mapa', n: 'sala-' + n, expoSala: n, tema: tema.id, salao: true, w: LW, alturaPersonagem: Number(S.altura_personagem) || 120,
+    cfg: { entrada: S.entrada, saidas: [sd.cfg] }, grade, portas: {}, naTrilha, saidas: [sd.saida] };
+  destinoEspecial = null;
+  alvoMapa = null;
+  pertoSaidaGin = false;
+  posicionarJogador(S.entrada[0], S.entrada[1], 'costas');
+  soltouDesdeTroca = false;
+  ajustarCamera();
+  $('cena-palco').style.visibility = '';
+  atualizarBotaoPet();
+  entrarNoMapaOnline('sala-' + n, 'exposicao');
+  ouvirExpo(['tema', 'trancada', 'musica', 'nome'].map(c => [String(n), c]), () => aplicarEstadoSala(n), n);
+}
+function tituloSala(n) { const nome = estadoSala(n).nome; return `🖼️ Sala ${n}${nome ? ' · ' + String(nome).slice(0, 40) : ''}`; }
+// mudou no Firebase com o aluno dentro: nome na faixa, fundo do tema (o botão 🔒/🔓 e a música seguem no HUD / lugarDaMusica)
+async function aplicarEstadoSala(n) {
+  if (salaExpo() !== n) return;
+  const t = tituloSala(n);
+  if ($('cena-titulo').textContent !== t) $('cena-titulo').textContent = t;
+  const tema = temaExpo(estadoSala(n).tema), c = cena;
+  if (tema.id === c.tema) return;
+  c.tema = tema.id;
+  const f = $('cena-fundo');
+  f.style.transition = 'opacity .18s ease'; f.style.opacity = '0';
+  await new Promise(ok => setTimeout(ok, 180));
+  if (cena !== c) { f.style.opacity = ''; f.style.transition = ''; return; }
+  await trocarFundo(`${IMG}/${tema.imagem}`, c.w);
+  f.style.opacity = '';
+  setTimeout(() => { f.style.transition = ''; }, 220);
+}
+// ponto de extensão (parte 2): os móveis da sala, de exposicao_salas/{n}/itens
+function desenharItensSala(n, itens) {}   // eslint-disable-line no-unused-vars
+
+// ouve campos de exposicao_salas/{n} ([n, campo]) e, numa sala, os itens dela; cb a cada mudança
+function ouvirExpo(campos, cb, salaItens = null) {
+  pararExpo();
+  expoOuvindo = true;
+  const fs = [];
+  const base = noExpo('exposicao_salas');
+  try {
+    for (const [n, campo] of campos) fs.push(onValue(ref(db, `${base}/${n}/${campo}`), (s) => {
+      const o = (expoSalas[n] ||= {});
+      if (!s.exists()) delete o[campo];
+      else o[campo] = campo === 'trancada' ? s.val() === true : typeof s.val() === 'string' ? s.val().slice(0, 80) : null;
+      cb();
+    }, (e) => console.warn('[jogo-revisao] exposicao_salas indisponível', e?.code || e)));
+    if (salaItens) fs.push(onValue(ref(db, `${base}/${salaItens}/itens`), (s) => { if (salaExpo() === salaItens) desenharItensSala(salaItens, s.exists() ? s.val() || {} : {}); }, () => {}));
+  } catch (e) { console.warn('[jogo-revisao] exposicao_salas indisponível', e?.code || e); }
+  pararOuvirExpo = () => { for (const f of fs) try { f(); } catch (_) {} };
+}
+function pararExpo() {
+  pararOuvirExpo();
+  pararOuvirExpo = () => {};
+  expoOuvindo = false;
+}
+
+// 🔒/🔓: membros do grupo e professora; ao vivo para todos (quem está dentro continua, só não entra de novo)
+async function alternarTrancaSala() {
+  const n = salaExpo();
+  if (!n || !mandaNaSala(n)) return;
+  const antes = estadoSala(n).trancada !== false, o = (expoSalas[n] ||= {});
+  o.trancada = !antes;
+  try {
+    await set(ref(db, `${noExpo('exposicao_salas')}/${n}/trancada`), !antes);
+    tocar('clique');
+    avisoPet(antes ? '🔓 Sala aberta: os colegas podem entrar.' : '🔒 Sala trancada: só o grupo entra.');
+  } catch (e) {
+    o.trancada = antes;
+    console.warn('[jogo-revisao] trancar a sala', e?.code || e);
+    avisoPet('Não deu para trocar agora. Tente de novo.');
+  }
+}
+// 🎵 música da sala: arquivo de audio/exposicao/ (só o nome; sem extensão vira .mp3); null = silêncio
+function musicaDaSala(ignorarMudo = false) {
+  const n = salaExpo(), m = n && estadoSala(n).musica;
+  if (!m || !/^[\w .()-]+$/.test(m) || (expoMusicaMudo && !ignorarMudo)) return null;
+  return `/audio/exposicao/${encodeURIComponent(/\.(mp3|ogg|m4a|wav)$/i.test(m) ? m : m + '.mp3')}`;
+}
+function atualizarHudExpo() {
+  const n = salaExpo(), bt = $('btn-expo-tranca'), semT = !(n && mandaNaSala(n));
+  if (bt.hidden !== semT) bt.hidden = semT;
+  if (!semT) {
+    const tr = estadoSala(n).trancada !== false, html = tr ? '🔒<span>Trancada</span>' : '🔓<span>Aberta</span>';
+    if (bt.innerHTML !== html) { bt.innerHTML = html; bt.setAttribute('aria-label', tr ? 'Sala trancada: tocar para abrir' : 'Sala aberta: tocar para trancar'); }
+  }
+  const bm = $('btn-expo-musica'), semM = !(n && musicaDaSala(true));
+  if (bm.hidden !== semM) bm.hidden = semM;
+  const ic = expoMusicaMudo ? '🔇' : '🔈';
+  if (!semM && bm.textContent !== ic) bm.textContent = ic;
+}
+function ligarExposicao() {
+  $('btn-expo-tranca').addEventListener('click', (e) => { e.stopPropagation(); alternarTrancaSala(); });
+  $('btn-expo-musica').addEventListener('click', (e) => { e.stopPropagation(); expoMusicaMudo = !expoMusicaMudo; });
 }
 
 // ============================================================
@@ -12908,6 +13226,7 @@ function ligarEventos() {
   $('btn-cena-voltar').addEventListener('click', sairDaCena);
   ligarCasinha();   // 🏠 Arrumar (PROMPT-105)
   ligarVila();      // 🏘️ vila e vizinhos (PROMPT-109)
+  ligarExposicao(); // 🖼️ 🔒/🔓 e 🔈 da sala (PROMPT-EXPOSICAO-1)
 
   $('cena-vp').addEventListener('click', (e) => {
     if (!cena || perguntaAberta) return;

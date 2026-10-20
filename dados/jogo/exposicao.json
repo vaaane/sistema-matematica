@@ -1,0 +1,47 @@
+{
+  "_nota": "Exposição Virtual (PROMPT-EXPOSICAO-1). Saguão: lógico 1376×768. Salas: lógico 2176×768 (câmera horizontal). Coordenadas em px lógicos. altura_personagem: altura do personagem no saguão e nas salas (como nos salões: laboratório, loja).",
+  "pavilhao": { "imagem": "praca/pavilhao-exposicao.webp", "x": 470, "y": 592, "largura": 230,
+                "bloqueio": { "x": [360, 580], "y": [500, 592] }, "ponto": [470, 606], "placa": [470, 494] },
+  "saguao": {
+    "imagem": "exposicao/saguao.webp", "trilha": "trilha-exposicao-saguao.png", "altura_personagem": 120,
+    "entrada": [690, 740], "saida_praca": { "y_min": 752, "x": [575, 805] },
+    "portas": [
+      { "n": 1,  "placa": [62, 318],   "ponto": [120, 540] },
+      { "n": 2,  "placa": [175, 205],  "ponto": [210, 425] },
+      { "n": 3,  "placa": [258, 118],  "ponto": [285, 310] },
+      { "n": 4,  "placa": [395, 80],   "ponto": [397, 262] },
+      { "n": 5,  "placa": [520, 80],   "ponto": [522, 262] },
+      { "n": 6,  "placa": [856, 80],   "ponto": [855, 262] },
+      { "n": 7,  "placa": [982, 80],   "ponto": [980, 262] },
+      { "n": 8,  "placa": [1118, 120], "ponto": [1085, 290] },
+      { "n": 9,  "placa": [1200, 203], "ponto": [1160, 400] },
+      { "n": 10, "placa": [1315, 318], "ponto": [1240, 520] }
+    ],
+    "painel_central": { "x": [605, 770], "y": [55, 205] }
+  },
+  "sala": {
+    "tamanho": { "w": 2176, "h": 768 }, "trilha": "trilha-exposicao-sala.png", "altura_personagem": 120,
+    "entrada": [1088, 735], "saida_saguao": { "y_min": 752, "x": [1011, 1166] },
+    "chao": { "y": [342, 764] }, "parede_fundo": { "x": [394, 1783], "y": [34, 257] }
+  },
+  "temas": [
+    { "id": "galeria",    "nome": "Galeria",       "emoji": "🏛️", "imagem": "exposicao/temas/galeria.webp" },
+    { "id": "terracota",  "nome": "Terracota",     "emoji": "🧱", "imagem": "exposicao/temas/terracota.webp" },
+    { "id": "tecido",     "nome": "Tecido",        "emoji": "🧵", "imagem": "exposicao/temas/tecido.webp" },
+    { "id": "kente",      "nome": "Kente",         "emoji": "🟨", "imagem": "exposicao/temas/kente.webp" },
+    { "id": "ocre",       "nome": "Ocre e verde",  "emoji": "🌅", "imagem": "exposicao/temas/ocre.webp" },
+    { "id": "barro",      "nome": "Barro e palha", "emoji": "🏺", "imagem": "exposicao/temas/barro.webp" },
+    { "id": "pelourinho", "nome": "Pelourinho",    "emoji": "🏘️", "imagem": "exposicao/temas/pelourinho.webp" }
+  ],
+  "tema_padrao": "galeria",
+  "musicas": [],
+  "salas": {
+    "1": { "turma": "8F", "membros": ["Mycaela", "Victor Hugo", "Ycaro", "Arthur Daniel", "Renato"] },
+    "2": { "turma": "8F", "membros": ["Joao Pedro", "Marlon", "Wesley", "Carlos", "Rafael"] },
+    "3": { "turma": "8F", "membros": ["Kayla", "Joaquim", "Sofia", "Luana"] },
+    "4": { "turma": "8F", "membros": ["Maria Santa", "Arthur Martins", "Fellype", "Guilherme", "Heitor", "Victor Conceicao"] },
+    "5": { "turma": "8F", "membros": ["Fábio", "Ana Clara", "Nathalia", "Maria Elisangela"] },
+    "6": { "turma": "8F", "membros": ["Sara", "Evellyn", "Ana Beatriz", "Ryan", "Pedro Lucas"] }
+  },
+  "moveis": "parte 2"
+}

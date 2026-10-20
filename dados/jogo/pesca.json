@@ -88,7 +88,7 @@
      "imagem": "img/jogo/itens/sardinha.webp",
      "dificuldade": 1,
      "pontos": 10,
-     "venda": 1
+     "venda": 6
     },
     {
      "id": "tainha",
@@ -99,7 +99,7 @@
      "imagem": "img/jogo/itens/tainha.webp",
      "dificuldade": 3,
      "pontos": 25,
-     "venda": 3
+     "venda": 10
     },
     {
      "id": "dourado",
@@ -110,7 +110,7 @@
      "imagem": "img/jogo/itens/dourado.webp",
      "dificuldade": 5,
      "pontos": 60,
-     "venda": 8
+     "venda": 25
     }
    ]
   },
@@ -131,7 +131,7 @@
      "imagem": "img/jogo/itens/bacalhau.webp",
      "dificuldade": 1,
      "pontos": 10,
-     "venda": 1
+     "venda": 6
     },
     {
      "id": "salmao",
@@ -142,7 +142,7 @@
      "imagem": "img/jogo/itens/salmao.webp",
      "dificuldade": 3,
      "pontos": 25,
-     "venda": 3
+     "venda": 10
     },
     {
      "id": "peixe_gelo",
@@ -153,7 +153,7 @@
      "imagem": "img/jogo/itens/peixe_gelo.webp",
      "dificuldade": 5,
      "pontos": 60,
-     "venda": 8
+     "venda": 25
     }
    ]
   },
@@ -174,7 +174,7 @@
      "imagem": "img/jogo/itens/lambari.webp",
      "dificuldade": 1,
      "pontos": 10,
-     "venda": 1
+     "venda": 6
     },
     {
      "id": "tilapia",
@@ -186,7 +186,7 @@
      "filtro": "hue-rotate(60deg) saturate(1.2)",
      "dificuldade": 3,
      "pontos": 25,
-     "venda": 3
+     "venda": 10
     },
     {
      "id": "tucunare",
@@ -197,7 +197,7 @@
      "imagem": "img/jogo/itens/tucunare.webp",
      "dificuldade": 5,
      "pontos": 60,
-     "venda": 8
+     "venda": 25
     }
    ]
   }

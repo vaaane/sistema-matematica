@@ -59,6 +59,7 @@ export function alternarSom() {
   ligado = !ligado;
   try { localStorage.setItem('jr_som', ligado ? '1' : '0'); } catch (_) {}
   if (!ligado) pararEfeitos(150);
+  atualizarMusica();   // a música da sala da Exposição segue o 🔊
   return ligado;
 }
 
@@ -137,7 +138,7 @@ let ganhoEfeitos = null, ganhoMusica = null;
 const buffers = new Map();   // nome → Promise<AudioBuffer | null>
 function carregar(nome) {
   if (!buffers.has(nome)) {
-    buffers.set(nome, fetch(PASTA_AUDIO + nome + '.mp3')
+    buffers.set(nome, fetch(nome.startsWith('/') ? nome : PASTA_AUDIO + nome + '.mp3')   // '/…': caminho completo (música da sala da Exposição)
       .then(r => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(nome))))
       .then(b => new Promise((ok, erro) => ctx.decodeAudioData(b, ok, erro)))   // forma com callback: vale no Safari antigo
       .catch(() => null));   // não carregou: falha em silêncio (e não tenta de novo)
@@ -222,16 +223,18 @@ function soltarFaixa(fadeMs) {
     f.src.stop(t + fadeMs / 1000 + 0.05);
   } catch (_) {}
 }
+// lugar '/audio/exposicao/…' (sala da Exposição): toca com o 🔊 ligado (o 🎵 geral começa desligado e calaria a sala)
+const podeTocar = (lugar) => (String(lugar || '').startsWith('/') ? ligado : musicaOn) && !bloqueada && !pausas.size;
 function atualizarMusica() {
   if (!ctx || !ganhoMusica) return;
-  const lugar = musicaOn && !bloqueada && !pausas.size ? lugarPedido : null;
+  const lugar = podeTocar(lugarPedido) ? lugarPedido : null;
   if ((faixa?.lugar || null) === lugar) return;   // a mesma música continua, sem recomeçar
   soltarFaixa(400);
   if (!lugar || ctx.state !== 'running') return;
   const minha = ++geracao;
-  carregar('musica_' + lugar).then(buf => {
+  carregar(lugar.startsWith('/') ? lugar : 'musica_' + lugar).then(buf => {
     if (!buf || minha !== geracao || faixa || !ctx || ctx.state !== 'running') return;
-    if (!(musicaOn && !bloqueada && !pausas.size && lugarPedido === lugar)) return;
+    if (!(podeTocar(lugar) && lugarPedido === lugar)) return;
     try {
       const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;   // loop contínuo, sem buraco
       const g = ctx.createGain(), t = ctx.currentTime;
