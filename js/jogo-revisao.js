@@ -484,6 +484,11 @@ async function carregarEstado() {
       for (const [id, n] of Object.entries(estado.pets?.bolsa || {})) if (id.startsWith('pesca_') && Number(n) > 0) estado.pescaEspecies[id.slice(6)] = Number(n);
       if (Object.keys(estado.pescaEspecies).length) gravar({ pesca_especies: estado.pescaEspecies });
     }
+    if (!v.pets?.moedas_iniciais) {   // 🪙 todo jogador começa com 100 moedas — uma vez só (quem já jogava também recebe)
+      estado.pets.moedas = (Number(estado.pets.moedas) || 0) + MOEDAS_INICIAIS;
+      gravar({ 'pets/moedas': estado.pets.moedas, 'pets/moedas_iniciais': true });
+      if (!estado.novo) setTimeout(() => avisoPet(`🎁 Presente de boas-vindas: +${MOEDAS_INICIAIS} 🪙`, true), 2500);
+    }
     gravar({ ultimo_acesso: Date.now() });
     if (!estado.personagem && !estado.novo) { estado.personagem = PERS.padrao; gravar({ personagem: PERS.padrao }); }   // menino_atual saiu do jogo
   } catch (e) {
@@ -962,6 +967,7 @@ const PETS_GINASIO = {
   'mapa11-B': 'dragao_vermelho',  // Escritório de Arquitetura (Canteiro de Obras)
 };
 const INICIAIS = ['elefante', 'gato', 'gaviao'];
+const MOEDAS_INICIAIS = 100;
 // pet esperando ao lado do líder: ~70% do líder para um pet de 40, na mesma proporção entre os pets
 const altImagemPetGinasio = (pet) => ALT_LIDER * 0.7 * (altPet(pet) / 40) / sentadoNoQuadro(pet);
 
@@ -997,7 +1003,7 @@ function iniciarPet() {
   for (const p of Object.keys(ps.conquistados)) if (!petValido(p)) delete ps.conquistados[p];
   liberarPetsProfessora(ps);
   if (!temPet(ps.ativo)) ps.ativo = Object.keys(ps.conquistados)[0] || null;
-  if (ps.migrou && ps.ativo) gravar({ pets: { ativo: ps.ativo, conquistados: ps.conquistados } });
+  if (ps.migrou && ps.ativo) gravar({ 'pets/ativo': ps.ativo, 'pets/conquistados': ps.conquistados });   // por campo: não apaga as moedas
   delete ps.migrou;
   normalizarCuidados();
   datarPetsAntigos();   // 🎂 (PROMPT-102) pet sem `data`: começa a contar hoje
