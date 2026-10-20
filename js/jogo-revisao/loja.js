@@ -89,14 +89,19 @@ export const nivelAmizade = (pontos) => 1 + Math.floor((Number(pontos) || 0) / (
 
 // Nome do pet: 2–12 letras (só letras, espaços e acentos), sem palavras proibidas
 const semAcento = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+// o filtro de palavras (nome_pet.proibidas): cada palavra do texto e o texto todo junto (sem espaços). Também nos
+// títulos, textos e no nome da sala da Exposição (PROMPT-EXPOSICAO-2)
+export function temPalavraProibida(txt) {
+  const proib = new Set((L?.nome_pet?.proibidas || []).map(semAcento));
+  const t = semAcento(String(txt || '')).replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+  return !!t && (t.split(' ').some(p => proib.has(p)) || proib.has(t.replace(/ /g, '')));
+}
 export function validarNomePet(txt) {
   const cfg = L?.nome_pet || {};
   const nome = String(txt || '').replace(/\s+/g, ' ').trim();
   const min = cfg.min ?? 2, max = cfg.max ?? 12;
   if (nome.length < min || nome.length > max) return { erro: `O nome precisa ter de ${min} a ${max} letras.` };
   if (!/^[A-Za-zÀ-ÖØ-öø-ÿ ]+$/.test(nome)) return { erro: 'Use só letras e espaços.' };
-  const proib = new Set((cfg.proibidas || []).map(semAcento));
-  const palavras = semAcento(nome).split(' ');
-  if (palavras.some(p => proib.has(p)) || proib.has(semAcento(nome).replace(/ /g, ''))) return { erro: 'Escolha outro nome 🙂' };
+  if (temPalavraProibida(nome)) return { erro: 'Escolha outro nome 🙂' };
   return { nome };
 }

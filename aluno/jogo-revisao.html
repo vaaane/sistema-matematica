@@ -88,8 +88,8 @@
       <button class="jr-btn-hud" id="btn-online" hidden aria-label="Quem está online">👥<span>Online (<b id="online-n">0</b>)</span></button>
       <button class="jr-btn-hud" id="btn-colegas" hidden aria-label="Mostrar ou esconder os colegas" aria-pressed="true">👁<span>Colegas</span></button>
       <button class="jr-btn-hud" id="btn-reacao" hidden aria-label="Mandar uma reação">😊</button>
-      <button class="jr-btn-hud" id="btn-expo-tranca" hidden aria-label="Trancar ou abrir a sala">🔒<span>Trancada</span></button>
       <button class="jr-btn-hud" id="btn-expo-musica" hidden aria-label="Silenciar a música da sala">🔈</button>
+      <button class="jr-btn-hud jr-btn-decorar" id="btn-expo-decorar" hidden aria-label="Decorar a sala">✏️<span>Decorar</span></button>
       <button class="jr-btn-hud jr-btn-missoes" id="btn-missoes" hidden aria-label="Missões do dia">📜<span id="missoes-cont">0/3</span></button>
       <button class="jr-btn-pet" id="btn-pet" hidden aria-label="Meus pets"><img alt="" draggable="false"/></button>
       <button class="jr-btn-hud jr-btn-batalhar" id="btn-batalhar" hidden aria-label="Treinadores">⚔️<span>Treinadores</span></button>
@@ -156,6 +156,12 @@
     <button id="cs-curtir" class="jr-btn cs-btn-arrumar cs-curtir" hidden aria-pressed="false">❤️ Curtir casinha</button>
     <div id="cs-selo" class="cs-selo" hidden></div>
     <div id="cs-ferr" class="cs-ferr" hidden><div class="cs-cores" id="cs-cores" hidden></div><button class="jr-btn" data-cs="cor">🎨 Cor</button><button class="jr-btn" data-cs="girar">🔄 Girar</button><button class="jr-btn" data-cs="guardar">📦 Guardar</button></div>
+    <!-- 🖼️ editor da sala da Exposição (PROMPT-EXPOSICAO-2) -->
+    <div id="ex-ferr" class="cs-ferr ex-ferr" hidden><div class="cs-cores ex-cores" id="ex-cores" hidden></div><button class="jr-btn" data-exf="girar" aria-label="Girar">🔄</button><button class="jr-btn" data-exf="espelhar" aria-label="Espelhar">↔️</button><button class="jr-btn" data-exf="cor" aria-label="Cor">🎨</button><button class="jr-btn" data-exf="conteudo" aria-label="Conteúdo">✏️</button><button class="jr-btn" data-exf="apagar" aria-label="Apagar">🗑️</button></div>
+    <div id="ex-faixa" class="cs-faixa ex-faixa" hidden>
+      <div class="ex-faixa-esq"><div class="ex-abas" id="ex-abas"></div><div class="cs-guardados ex-catalogo" id="ex-catalogo"></div></div>
+      <div class="ex-faixa-dir"><small id="ex-uso"></small><button class="jr-btn jr-btn-sec" id="ex-tema">🎨 Tema</button><button class="jr-btn jr-btn-ouro" id="ex-pronto">✔ Pronto</button></div>
+    </div>
     <div id="cs-faixa" class="cs-faixa" hidden>
       <div class="cs-guardados" id="cs-guardados"></div>
       <button class="jr-btn jr-btn-ouro" id="cs-pronto">✔ Pronto</button>
@@ -334,6 +340,30 @@
     </div>
   </div>
   <!-- 🎨 Reformas (PROMPT-112): trocar o tema do quarto (só os comprados) -->
+  <!-- 🖼️ Exposição (PROMPT-EXPOSICAO-2): tema da sala, conteúdo do item e o visualizador -->
+  <div id="ex-temas" class="al-fundo" hidden role="dialog" aria-label="Tema da sala">
+    <div class="al-caixa cs-comida-caixa">
+      <div class="al-topo"><b>🎨 Tema da sala</b><button class="bt-lista-x" data-fechar="ex-temas" aria-label="Fechar">✕</button></div>
+      <div class="cs-temas-lista" id="ex-temas-lista"></div>
+    </div>
+  </div>
+  <div id="ex-cont" class="al-fundo" hidden role="dialog" aria-label="Conteúdo do item">
+    <div class="al-caixa cs-comida-caixa ex-cont-caixa">
+      <div class="al-topo"><b id="ex-cont-tit">✏️ Conteúdo</b><button class="bt-lista-x" data-fechar="ex-cont" aria-label="Fechar">✕</button></div>
+      <div class="ex-cont-corpo" id="ex-cont-corpo"></div>
+      <p class="ex-cont-msg" id="ex-cont-msg" aria-live="polite"></p>
+      <div class="ex-cont-botoes"><button class="jr-btn jr-btn-ouro" id="ex-cont-salvar">💾 Salvar</button></div>
+      <input type="file" id="ex-arquivo" accept="image/*" hidden/>
+    </div>
+  </div>
+  <div id="ex-ver" class="al-fundo ex-ver" hidden role="dialog" aria-label="Trabalho da exposição">
+    <div class="al-caixa ex-ver-caixa">
+      <button class="bt-lista-x ex-ver-x" data-fechar="ex-ver" aria-label="Fechar">✕</button>
+      <div class="ex-ver-foto" id="ex-ver-foto"></div>
+      <div class="ex-ver-txt"><b id="ex-ver-titulo"></b><p id="ex-ver-texto"></p></div>
+      <div class="ex-ver-nav"><button class="jr-btn jr-btn-sec" id="ex-ver-ant" data-ver="ant" aria-label="Anterior">◀</button><small id="ex-ver-rodape"></small><button class="jr-btn jr-btn-sec" id="ex-ver-prox" data-ver="prox" aria-label="Próximo">▶</button></div>
+    </div>
+  </div>
   <div id="cs-temas" class="al-fundo" hidden role="dialog" aria-label="Tema da casinha">
     <div class="al-caixa cs-comida-caixa">
       <div class="al-topo"><b>🎨 Tema da casinha</b><button class="bt-lista-x" data-fechar="cs-temas" aria-label="Fechar">✕</button></div>

@@ -4,7 +4,8 @@
 // ============================================================
 import { isModoTeste, getSession } from '/js/auth.js';
 import { db } from '/js/firebase-config.js';
-import { ref, get, update, push, set, remove, increment, onValue, runTransaction, onDisconnect, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { ref, get, update, push, set, remove, increment, onValue, onChildAdded, onChildChanged, onChildRemoved, runTransaction, onDisconnect, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { prepararFoto, analisarMoldura } from '/js/jogo-revisao/exposicao-img.js';
 import { adicionarXP } from '/js/db.js';
 import { bimestreAtual, ALUNOS_TESTE, ALUNOS_POR_TURMA, bimestreJogos, pathTabuadaRanking, pathEscaladaRanking, pathTabuadaNiveis, pathTabuadaNegNiveis, pathEscaladaNiveis } from '/js/constants.js';
 import { gerarQuestoes, gerarUma, assuntoDe } from '/js/jogo-revisao/geradores.js';
@@ -12,7 +13,7 @@ import { tocar, somLigado, alternarSom, tocarArquivo, pararEfeitos, musicaPara, 
 import { definirPausas, definirBarriga, barrigaDoPet, barrigaAntiga, faixaBarriga, rotuloLealdade, lealdadeComQueda, doDia,
   CARINHOS_POR_DIA, LEALDADE_INICIAL, LEALDADE_DIA, LEALDADE_CAMBALHOTA } from '/js/jogo-revisao/cuidados.js';
 import { definirLoja, definirPeixes, lojaPronta, cfgLoja, comidas, tintas, efeitos, tinta, tintaAnimada, icone, efeito, itemDaBolsa, idDoPeixe, ehFavorita, semanaDe,
-  motivoNaoCome, comumAte, naoCome, listaNaoCome, enche, barrigaCheia, somarLealdade, nivelAmizade, validarNomePet } from '/js/jogo-revisao/loja.js';
+  motivoNaoCome, comumAte, naoCome, listaNaoCome, enche, barrigaCheia, somarLealdade, nivelAmizade, validarNomePet, temPalavraProibida } from '/js/jogo-revisao/loja.js';
 import { definirPesca, pescaPronta, cfgPesca, pontosDoMapa, spritePesca, pontaVara, sortearPeixe, entre, inteiroEntre,
   semanaPesca, semanaAnterior, criarBarrinha, passoBarrinha } from '/js/jogo-revisao/pesca.js';
 import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, tamanhoBusto, temBusto, bustoPet, preCarregarPet, PetSeguidor, PetParado,
@@ -878,8 +879,11 @@ export async function iniciarJogo(sess) {
   atualizarContador();
   requestAnimationFrame(loop);
   // começa na Praça, em frente à fonte (PROMPT-73); aluno ainda sem pet: o mapa geral, como antes (o pet inicial vem ao entrar num mapa)
-  const comecaNaPraca = pracaPronta() && petsOk && petValido(estado.pets?.ativo);
-  if (!comecaNaPraca) { abrirMapaGeral(); $('jr-carregando').hidden = true; }
+  const salaDireto = Number(new URLSearchParams(location.search).get('sala')) || 0;   // 🖼️ ?sala=N (professora / modo teste)
+  const comecaNaSala = !!(EXPO && salaDireto && privilegioExpo() && grupoSala(salaDireto));
+  const comecaNaPraca = !comecaNaSala && pracaPronta() && petsOk && petValido(estado.pets?.ativo);
+  if (comecaNaSala) abrirSalaExpo(salaDireto).catch(() => abrirMapaGeral()).finally(() => { $('jr-carregando').hidden = true; });
+  else if (!comecaNaPraca) { abrirMapaGeral(); $('jr-carregando').hidden = true; }
   { const f = verificarMestre(); if (f) setTimeout(() => mostrarFestaMestre(f), 1500); }
   carregarTitulos();
   iniciarAlbum();
@@ -4767,7 +4771,7 @@ function soltarJoystick() {
 
 // Pergunta, estojo, cartão ou insígnia por cima do jogo
 const sobreposicaoAberta = () =>
-  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('exp-volta').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden || !!cs?.arrumando || !$('cs-colecao').hidden || !$('cs-aquario').hidden || !$('cs-comida').hidden || !$('cs-temas').hidden || !$('venc').hidden || !$('cs-menu').hidden || !$('vila-convite').hidden || !$('vila-busca').hidden;
+  perguntaAberta || !$('estojo').hidden || !$('cartao').hidden || !$('insignia-ganha').hidden || !$('pet-escolha').hidden || !$('pet-colecao').hidden || !$('pet-levar').hidden || !$('meu-pet').hidden || !$('reacoes').hidden || !$('online-lista').hidden || !$('pers-escolha').hidden || !$('gin-fechado').hidden || !$('pet-silhueta').hidden || !$('bt-lista').hidden || !$('batalha').hidden || !$('pedido').hidden || !$('loja').hidden || !$('pesca-aviso').hidden || !$('pesca-tutorial').hidden || !$('pesca-ranking').hidden || !$('mural').hidden || !$('convite').hidden || !$('duelo').hidden || !$('maquina').hidden || !$('jogo-embed').hidden || !$('aovivo').hidden || !$('pet-evolucao').hidden || !$('relembre').hidden || !$('missoes').hidden || !$('moedas-hoje').hidden || !$('programe').hidden || !$('pg-mapa').hidden || !$('damas').hidden || !$('estudos').hidden || !$('exp-volta').hidden || !$('relampago').hidden || !$('album').hidden || !$('fig-nova').hidden || !$('al-cartao').hidden || !$('aniv').hidden || !$('pres-card').hidden || !!cs?.arrumando || !$('cs-colecao').hidden || !$('cs-aquario').hidden || !$('cs-comida').hidden || !$('cs-temas').hidden || !$('venc').hidden || !$('cs-menu').hidden || !$('vila-convite').hidden || !$('vila-busca').hidden || !!ex?.editando || !$('ex-cont').hidden || !$('ex-temas').hidden || !$('ex-ver').hidden;
 
 function vetorEntrada() {
   if (sobreposicaoAberta()) return [0, 0];
@@ -4901,8 +4905,10 @@ function loop(t) {
   seguidor?.pausarAcoes(!cena || transicionando || sobreposicaoAberta() || conversa.falando || !!pesca || !!petNoPedestal || !!cs?.petAlvo);
   if (cs && !ehCasinha()) fecharCasinha();   // saiu da casinha
   if (expoOuvindo && cena && !ehSaguao() && !salaExpo()) pararExpo();   // 🖼️ saiu da Exposição
+  if (ex && cena?.expoSala !== ex.n) fecharSalaExpo();                   // 🖼️ saiu da sala
+  if (ex && cena?.expoSala === ex.n) atualizarSalaExpo(dt);
   if (cena && !perguntaAberta && !transicionando) {
-    const [vx, vy] = vetorEntrada();
+    const [vx, vy] = ex?.editando ? [0, 0] : vetorEntrada();   // 🖼️ decorando: o toque é dos móveis
     if (!vx && !vy) soltouDesdeTroca = true;
     if (pesca && (vx || vy)) sairPesca();   // andar levanta da pesca
     const direto = (vx || vy) && moverDireto(dt, vx, vy);
@@ -4956,7 +4962,7 @@ function atualizarHudPraca() {
   if (bc.hidden !== sc) bc.hidden = sc;
   const sm = !(ehCasinha() && cs && !cs.arrumando), bm = $('btn-curtidas');   // ⭐ Mais curtidas: dentro da casinha
   if (bm.hidden !== sm) bm.hidden = sm;
-  atualizarHudExpo();   // 🖼️ 🔒/🔓 e 🔈 na sala da Exposição
+  atualizarHudExpo();   // 🖼️ 🔈 na sala da Exposição
   const ic = ehPraca() || ehVila() ? '💬' : '😊', br = $('btn-reacao');
   if (br.textContent !== ic) br.textContent = ic;
 }
@@ -5331,7 +5337,8 @@ function tocarNoMapa(e) {
   if (ehCasinha() && tocarMovelCasa(p)) return;   // 🏠 quadrinho, aquário, vaso, estantes, pote, caixa (PROMPT-106)
   if (ehVila() && tocarCasaVila(p)) return;        // 🏘️ porta: entra · casa: cor do telhado / visitar / deixar (PROMPT-109)
   if (tocouQuadroEstudos(p)) { irAoDestino(destinosDoMapa().find(d => d.alvo === 'estudos')); return; }
-  if (ehSaguao()) { const pt = portaExpoEm(p); if (pt) { irAoDestino(destinosDoMapa().find(d => d.alvo === 'expo:' + pt.n)); return; } }   // 🖼️ placa ou porta   // 📜 anda até a frente do quadro e abre
+  if (ehSaguao()) { const pt = portaExpoEm(p); if (pt) { irAoDestino(destinosDoMapa().find(d => d.alvo === 'expo:' + pt.n)); return; } }   // 🖼️ placa ou porta
+  if (ex && salaExpo()) { const id = itemExpoEm(p); if (id) { abrirVisualizador(id); return; } }   // 🖼️ foto ou texto: o painel grande   // 📜 anda até a frente do quadro e abre
   if (ehPraca()) { const alvo = alvoPracaEm(p); if (alvo) { irAlvoPraca(alvo); return; } }   // mural / fliperama
   if (cena.n === 'fliperama') { const a = alvoFliperamaEm(p); if (a) { irAlvoFliperama(a); return; } }    // máquinas e o Téo
   if (ehLoja()) { const c = cantoEm(p); if (c) { irAoCanto(c); return; } }
@@ -5796,7 +5803,7 @@ async function abrirPraca(onde) {   // onde: 'fliperama' | 'loja' = saindo de l�
   $('cena-palco').style.visibility = 'hidden';
   let [grade] = await Promise.all([carregarGrade(cfg.trilha), trocarFundo(`${IMG}/mapas/${C.imagem || 'praca.webp'}`)]);
   bloquearMesaDamas(grade);   // o personagem não atravessa a mesa de damas
-  if (pavilhaoVisivel()) grade = bloquearPavilhao(grade);   // 🖼️ cópia da grade: escondido, a área fica livre
+  if (EXPO?.pavilhao) grade = bloquearPavilhao(grade);   // 🖼️ cópia da grade (a do cache fica sem o pavilhão)
   const naTrilha = (x, y) => centroCelula(celulaMaisProxima(grade, x, y));
   const saidas = cfg.saidas.map(([x, y]) => ({ x, y, trilha: naTrilha(x, y) }));
   cena = { tipo: 'mapa', n: 'praca', cfg, grade, portas: {}, saidas, naTrilha, pertoMural: false };
@@ -7170,37 +7177,47 @@ function ligarEdicaoPraca() {
 
 // ============================================================
 //  🖼️ EXPOSIÇÃO VIRTUAL (PROMPT-EXPOSICAO-1) — dados/jogo/exposicao.json. Pavilhão na Praça → saguão (1376 × 768, 10 portas)
-//  → salas (2176 × 768, câmera na horizontal). Firebase (modo teste: *_teste): exposicao_config { aberta_alunos } e
-//  exposicao_salas/{n} { tema, trancada, musica, nome, itens (parte 2) }; sem o nó: tema_padrao, trancada, sem música.
+//  → salas (2176 × 768, câmera na horizontal). Pavilhão e saguão: todos; cada sala: o grupo dela e a professora, ou todos
+//  (nas salas com grupo) com exposicao_config/visitas_abertas = true (fase pública; o botão vem na parte 2). Firebase (modo
+//  teste: *_teste): exposicao_config { visitas_abertas } e exposicao_salas/{n} { tema, musica, nome, itens (parte 2) };
+//  sem o nó: tema_padrao, sem música, sem nome.
 //  Presença: o online.js de sempre, com local 'exposicao' e mapa 'saguao' | 'sala-{n}' (cada um vê só quem está no mesmo).
 //  O grupo de cada sala vem do JSON (parte 2: de exposicao_salas, com prioridade). Tudo falha em silêncio.
 // ============================================================
 let EXPO = null;
-let expoAberta = false;           // exposicao_config/aberta_alunos === true: o pavilhão aparece para os alunos
-const expoSalas = {};             // n → { tema, trancada, musica, nome } lidos ao vivo
+let visitasAbertas = false;       // exposicao_config/visitas_abertas === true: todos entram nas salas com grupo
+const expoSalas = {};             // n → { tema, musica, nome } lidos ao vivo
 let expoOuvindo = false, pararOuvirExpo = () => {};
 let expoMusicaMudo = false;       // 🔈 silenciar só a música da sala
 let expoSoAluno = false;          // ?expo=aluno (modo teste): sem os privilégios do modo teste, para testar como aluno
-const noExpo = (no) => `${no}${teste ? '_teste' : ''}`;
+let expoTesteProf = false;        // ?sala=N&teste=1 (a professora pelo "Ver sala" da página dela, no modo teste): só os nós *_teste
+const noExpo = (no) => `${no}${teste || expoTesteProf ? '_teste' : ''}`;
 const ehSaguao = () => cena?.tipo === 'mapa' && cena.n === 'saguao';
 const salaExpo = () => (cena?.tipo === 'mapa' && cena.expoSala) || null;   // número da sala em que o aluno está
-const privilegioExpo = () => ehProfessora() || (teste && !expoSoAluno);   // professora e modo teste: veem e entram sempre
-const pavilhaoVisivel = () => !!EXPO?.pavilhao && (expoAberta || privilegioExpo());
-const grupoSala = (n) => EXPO?.salas?.[n] || null;
+const privilegioExpo = () => ehProfessora() || (teste && !expoSoAluno);   // professora e modo teste: entram em todas
+// o grupo: exposicao_salas/{n}/grupo (a página da professora) com prioridade; sem o nó, o salas do JSON. Sem integrantes: sem grupo
+const expoGrupos = {};            // n → { turma, membros } lidos ao vivo (null: o nó não existe)
+const grupoSala = (n) => { const g = expoGrupos[n] !== undefined && expoGrupos[n] !== null ? expoGrupos[n] : EXPO?.salas?.[n]; return g?.membros?.length ? g : null; };
 const souDaSala = (n) => { const g = grupoSala(n); return !!g && g.turma === sessao.turma && (g.membros || []).includes(sessao.nome); };
-const mandaNaSala = (n) => privilegioExpo() || souDaSala(n);   // entra mesmo trancada e tem o botão 🔒/🔓
-const estadoSala = (n) => ({ tema: EXPO?.tema_padrao, trancada: true, musica: null, nome: null, ...(expoSalas[n] || {}) });
+const podeEntrarSala = (n) => !!grupoSala(n) && (privilegioExpo() || souDaSala(n) || visitasAbertas);   // sala sem grupo: "Em breve"
+const podeDecorar = (n) => !!grupoSala(n) && (privilegioExpo() || souDaSala(n));   // ✏️ Decorar: o grupo e a professora
+const estadoSala = (n) => ({ tema: EXPO?.tema_padrao, musica: null, nome: null, ...(expoSalas[n] || {}) });
 const temaExpo = (id) => (EXPO.temas || []).find(t => t.id === id) || (EXPO.temas || []).find(t => t.id === EXPO.tema_padrao) || EXPO.temas[0];
 
 function iniciarExposicao(j) {
   if (!j?.saguao || !j?.sala || !(j.temas || []).length) return;
   EXPO = j;
   expoSoAluno = teste && new URLSearchParams(location.search).get('expo') === 'aluno';
+  expoTesteProf = ehProfessora() && new URLSearchParams(location.search).get('teste') === '1';
   try {
-    onValue(ref(db, `${noExpo('exposicao_config')}/aberta_alunos`), (s) => {
-      const antes = pavilhaoVisivel();
-      expoAberta = s.exists() && s.val() === true;
-      if (pavilhaoVisivel() !== antes) atualizarPavilhaoPraca();   // a professora abriu/fechou com o aluno na Praça
+    for (const p of j.saguao.portas || []) onValue(ref(db, `${noExpo('exposicao_salas')}/${p.n}/grupo`), (s) => {
+      const v = s.exists() ? s.val() : null;
+      expoGrupos[p.n] = v && typeof v === 'object' ? { turma: String(v.turma || ''), membros: Object.values(v.membros || {}).filter(x => typeof x === 'string') } : null;
+      if (ehSaguao()) desenharPlacasExpo();
+    }, () => {});
+    onValue(ref(db, `${noExpo('exposicao_config')}/visitas_abertas`), (s) => {
+      visitasAbertas = s.exists() && s.val() === true;
+      if (ehSaguao()) desenharPlacasExpo();   // ao vivo: os 🔒 das portas (quem já está numa sala continua nela)
     },
       (e) => console.warn('[jogo-revisao] exposicao_config indisponível', e?.code || e));
   } catch (e) { console.warn('[jogo-revisao] exposicao_config indisponível', e?.code || e); }
@@ -7216,7 +7233,7 @@ function bloquearPavilhao(g0) {   // cópia (a grade da trilha fica em cache e s
 }
 function montarPavilhao() {
   cena.exposicao = null;
-  if (!pavilhaoVisivel()) return;
+  if (!EXPO?.pavilhao) return;
   const P = EXPO.pavilhao, ponto = P.ponto || [P.x, P.y + 14];
   cena.exposicao = { x: P.x, y: P.y, largura: Number(P.largura) || 230, alt: 70, ponto, trilha: cena.naTrilha(...ponto) };
   // a imagem (praca/pavilhao-exposicao.webp); enquanto não existir, a placa "🖼️ Exposição"
@@ -7254,13 +7271,6 @@ function moverPavilhao(x, y) {
   if (P.bloqueio?.x) { P.bloqueio.x = P.bloqueio.x.map(v => v + dx); P.bloqueio.y = P.bloqueio.y.map(v => v + dy); }
   if (P.placa) P.placa = [P.placa[0] + dx, P.placa[1] + dy];
   if (cena?.exposicao) { cena.exposicao.x = x; cena.exposicao.y = y; posicionarPavilhao(); }
-}
-function atualizarPavilhaoPraca() {
-  if (!ehPraca()) return;
-  for (const e of $('cena-atores').querySelectorAll('.expo-pavilhao, .expo-pav-rotulo')) e.remove();
-  const g = gradesCache[cfgPraca().trilha || 'trilha-praca.png'];   // a da trilha (com a mesa de damas), sem o pavilhão
-  if (g) cena.grade = pavilhaoVisivel() ? bloquearPavilhao(g) : g;
-  montarPavilhao();
 }
 const tocouPavilhao = (p) => { const ex = cena?.exposicao; return !!ex && Math.abs(p.x - ex.x) < ex.largura / 2 && p.y > ex.y - ex.alt && p.y < ex.y + 24; };
 
@@ -7310,14 +7320,14 @@ async function abrirSaguao(deSala = null) {   // deSala: voltou daquela sala (ap
   $('cena-palco').style.visibility = '';
   atualizarBotaoPet();
   entrarNoMapaOnline('saguao', 'exposicao');
-  ouvirExpo(Object.keys(EXPO.salas || {}).map(n => [n, 'trancada']), () => { if (ehSaguao()) desenharPlacasExpo(); });
+  pararExpo();   // no saguão só vale visitas_abertas (ouvida desde o começo)
 }
-// o número em cada placa (e 🔒: sala sem grupo ou trancada)
+// o número em cada placa (e 🔒: sala em que este aluno não pode entrar)
 function desenharPlacasExpo() {
   const at = $('cena-atores');
   for (const el of at.querySelectorAll('.expo-placa')) el.remove();
   at.insertAdjacentHTML('beforeend', (cena.expoPortas || []).map(p => {
-    const tranca = !grupoSala(p.n) || estadoSala(p.n).trancada !== false;
+    const tranca = !podeEntrarSala(p.n);
     return `<div class="expo-placa" style="left:${p.placa[0]}px;top:${p.placa[1]}px"><b>${p.n}</b>${tranca ? '<i>🔒</i>' : ''}</div>`;
   }).join(''));
 }
@@ -7336,7 +7346,7 @@ function entrarSalaExpo(n) {
   const p = cena.expoPortas?.find(x => x.n === n);
   if (!p) return;
   if (!grupoSala(n)) { balaoExpo(p, '🔜 Em breve'); return; }
-  if (!mandaNaSala(n) && estadoSala(n).trancada !== false) { balaoExpo(p, '🔒 Sala trancada pelo grupo'); tocar('erro'); return; }
+  if (!podeEntrarSala(n)) { balaoExpo(p, '🔒 Sala do grupo — só para integrantes'); tocar('erro'); return; }
   transicao(() => abrirSalaExpo(n));
 }
 function balaoExpo(p, txt) {   // o balão das portas do ginásio, sem botões
@@ -7358,10 +7368,11 @@ async function abrirSalaExpo(n) {
   const [grade] = await Promise.all([
     carregarGrade(S.trilha, Math.round(LW / CEL), GH).catch(() => { const g = new Uint8Array(LW / CEL * GH); g.gw = LW / CEL; g.gh = GH; for (let i = 86 * g.gw; i < g.length; i++) g[i] = 1; return g; }),
     trocarFundo(`${IMG}/${tema.imagem}`, LW)]);
-  const naTrilha = (x, y) => centroCelula(celulaMaisProxima(grade, x, y), grade);
-  const sd = saidaFaixa(S.saida_saguao, S.entrada, naTrilha);
+  const naTrilha = (x, y) => centroCelula(celulaMaisProxima(cena.grade, x, y), cena.grade);   // a grade muda com os móveis
+  const sd = saidaFaixa(S.saida_saguao, S.entrada, (x, y) => centroCelula(celulaMaisProxima(grade, x, y), grade));
   cena = { tipo: 'mapa', n: 'sala-' + n, expoSala: n, tema: tema.id, salao: true, w: LW, alturaPersonagem: Number(S.altura_personagem) || 120,
     cfg: { entrada: S.entrada, saidas: [sd.cfg] }, grade, portas: {}, naTrilha, saidas: [sd.saida] };
+  abrirItensSala(n, grade);   // 🖼️ móveis, fotos e textos (PROMPT-EXPOSICAO-2)
   destinoEspecial = null;
   alvoMapa = null;
   pertoSaidaGin = false;
@@ -7371,14 +7382,14 @@ async function abrirSalaExpo(n) {
   $('cena-palco').style.visibility = '';
   atualizarBotaoPet();
   entrarNoMapaOnline('sala-' + n, 'exposicao');
-  ouvirExpo(['tema', 'trancada', 'musica', 'nome'].map(c => [String(n), c]), () => aplicarEstadoSala(n), n);
+  ouvirExpo(['tema', 'musica', 'nome'].map(c => [String(n), c]), () => aplicarEstadoSala(n), n);
 }
 function tituloSala(n) { const nome = estadoSala(n).nome; return `🖼️ Sala ${n}${nome ? ' · ' + String(nome).slice(0, 40) : ''}`; }
-// mudou no Firebase com o aluno dentro: nome na faixa, fundo do tema (o botão 🔒/🔓 e a música seguem no HUD / lugarDaMusica)
+// mudou no Firebase com o aluno dentro: nome na faixa, fundo do tema (a música segue em lugarDaMusica)
 async function aplicarEstadoSala(n) {
   if (salaExpo() !== n) return;
   const t = tituloSala(n);
-  if ($('cena-titulo').textContent !== t) $('cena-titulo').textContent = t;
+  if ($('cena-titulo').textContent !== t) { $('cena-titulo').textContent = t; redesenharLetreiros(); }
   const tema = temaExpo(estadoSala(n).tema), c = cena;
   if (tema.id === c.tema) return;
   c.tema = tema.id;
@@ -7390,8 +7401,6 @@ async function aplicarEstadoSala(n) {
   f.style.opacity = '';
   setTimeout(() => { f.style.transition = ''; }, 220);
 }
-// ponto de extensão (parte 2): os móveis da sala, de exposicao_salas/{n}/itens
-function desenharItensSala(n, itens) {}   // eslint-disable-line no-unused-vars
 
 // ouve campos de exposicao_salas/{n} ([n, campo]) e, numa sala, os itens dela; cb a cada mudança
 function ouvirExpo(campos, cb, salaItens = null) {
@@ -7403,10 +7412,13 @@ function ouvirExpo(campos, cb, salaItens = null) {
     for (const [n, campo] of campos) fs.push(onValue(ref(db, `${base}/${n}/${campo}`), (s) => {
       const o = (expoSalas[n] ||= {});
       if (!s.exists()) delete o[campo];
-      else o[campo] = campo === 'trancada' ? s.val() === true : typeof s.val() === 'string' ? s.val().slice(0, 80) : null;
+      else o[campo] = typeof s.val() === 'string' ? s.val().slice(0, 80) : null;
       cb();
     }, (e) => console.warn('[jogo-revisao] exposicao_salas indisponível', e?.code || e)));
-    if (salaItens) fs.push(onValue(ref(db, `${base}/${salaItens}/itens`), (s) => { if (salaExpo() === salaItens) desenharItensSala(salaItens, s.exists() ? s.val() || {} : {}); }, () => {}));
+    if (salaItens) {   // cada item é um nó: só aquele item é redesenhado (as fotos ficam em exposicao_imagens)
+      const r = ref(db, `${base}/${salaItens}/itens`), chegou = (s) => { if (salaExpo() === salaItens) itemExpoMudou(s.key, s.val()); };
+      fs.push(onChildAdded(r, chegou, () => {}), onChildChanged(r, chegou, () => {}), onChildRemoved(r, (s) => { if (salaExpo() === salaItens) itemExpoMudou(s.key, null); }, () => {}));
+    }
   } catch (e) { console.warn('[jogo-revisao] exposicao_salas indisponível', e?.code || e); }
   pararOuvirExpo = () => { for (const f of fs) try { f(); } catch (_) {} };
 }
@@ -7416,22 +7428,6 @@ function pararExpo() {
   expoOuvindo = false;
 }
 
-// 🔒/🔓: membros do grupo e professora; ao vivo para todos (quem está dentro continua, só não entra de novo)
-async function alternarTrancaSala() {
-  const n = salaExpo();
-  if (!n || !mandaNaSala(n)) return;
-  const antes = estadoSala(n).trancada !== false, o = (expoSalas[n] ||= {});
-  o.trancada = !antes;
-  try {
-    await set(ref(db, `${noExpo('exposicao_salas')}/${n}/trancada`), !antes);
-    tocar('clique');
-    avisoPet(antes ? '🔓 Sala aberta: os colegas podem entrar.' : '🔒 Sala trancada: só o grupo entra.');
-  } catch (e) {
-    o.trancada = antes;
-    console.warn('[jogo-revisao] trancar a sala', e?.code || e);
-    avisoPet('Não deu para trocar agora. Tente de novo.');
-  }
-}
 // 🎵 música da sala: arquivo de audio/exposicao/ (só o nome; sem extensão vira .mp3); null = silêncio
 function musicaDaSala(ignorarMudo = false) {
   const n = salaExpo(), m = n && estadoSala(n).musica;
@@ -7439,20 +7435,576 @@ function musicaDaSala(ignorarMudo = false) {
   return `/audio/exposicao/${encodeURIComponent(/\.(mp3|ogg|m4a|wav)$/i.test(m) ? m : m + '.mp3')}`;
 }
 function atualizarHudExpo() {
-  const n = salaExpo(), bt = $('btn-expo-tranca'), semT = !(n && mandaNaSala(n));
-  if (bt.hidden !== semT) bt.hidden = semT;
-  if (!semT) {
-    const tr = estadoSala(n).trancada !== false, html = tr ? '🔒<span>Trancada</span>' : '🔓<span>Aberta</span>';
-    if (bt.innerHTML !== html) { bt.innerHTML = html; bt.setAttribute('aria-label', tr ? 'Sala trancada: tocar para abrir' : 'Sala aberta: tocar para trancar'); }
-  }
+  const n = salaExpo(), bd = $('btn-expo-decorar'), semD = !(n && ex && !ex.editando && podeDecorar(n));
+  if (bd.hidden !== semD) bd.hidden = semD;
   const bm = $('btn-expo-musica'), semM = !(n && musicaDaSala(true));
   if (bm.hidden !== semM) bm.hidden = semM;
   const ic = expoMusicaMudo ? '🔇' : '🔈';
   if (!semM && bm.textContent !== ic) bm.textContent = ic;
 }
 function ligarExposicao() {
-  $('btn-expo-tranca').addEventListener('click', (e) => { e.stopPropagation(); alternarTrancaSala(); });
   $('btn-expo-musica').addEventListener('click', (e) => { e.stopPropagation(); expoMusicaMudo = !expoMusicaMudo; });
+  ligarEditorExpo();
+}
+
+
+// ============================================================
+//  🖼️ EXPOSIÇÃO — EDITOR DAS SALAS (PROMPT-EXPOSICAO-2). Itens: exposicao_salas/{n}/itens/{id}
+//  { mv, x, y, vista, espelho, cor, titulo, texto, foto, fotos, por, ts } (+ mexendo / mexendo_por enquanto alguém arrasta).
+//  Fotos: exposicao_imagens/{id} { dados (dataURL), sala, por, ts }, lidas só quando o id muda. Sem compra nem guardados: o
+//  catálogo todo (exposicao.json → moveis), com o limite de cada item e os da sala (limites). Cada mudança grava só aquele
+//  item (arrastar: ao soltar); todos ouvem onChildAdded/Changed/Removed. `por` só aparece na página da professora.
+// ============================================================
+let ex = null;   // a sala aberta: { n, itens: Map, els: Map, gradeBase, editando, sel, cat, arr, pan, camX, ver, conf }
+const fotosExpo = new Map();   // id da foto → Promise<dataURL | null>
+const catExpo = (mv) => (Array.isArray(EXPO?.moveis) ? EXPO.moveis : []).find(i => i.id === mv) || null;
+const srcExpo = (mv, vista) => `${IMG}/exposicao/moveis/${mv}_${vista}.webp`;
+const escalaExpo = () => Number(EXPO?.escala_moveis) || 1;
+const limiteExpo = (k, padrao) => Number(EXPO?.limites?.[k]) || padrao;
+const filtroExpo = (it, cor) => (it?.cor && EXPO?.cores?.[it.cor]?.[cor]) || '';
+const nCoresExpo = (it) => (it?.cor && Array.isArray(EXPO?.cores?.[it.cor]) ? EXPO.cores[it.cor].length : 0);
+const fotosLista = (m) => [0, 1, 2, 3].map(i => (typeof m?.fotos?.[i] === 'string' ? m.fotos[i] : null));   // varal: 4 lugares (o banco guarda {0: id, 2: id})
+const fotosDoItem = (m) => [m.foto, ...fotosLista(m)].filter(Boolean);
+const fotosNaSala = () => [...ex.itens.values()].reduce((t, m) => t + fotosDoItem(m).length, 0);
+const nomeDaSala = () => String(estadoSala(ex.n).nome || '');
+function tamExpo(m) {
+  const it = catExpo(m.mv);
+  return tamPelaLargura((Number(it?.largura) || 100) * escalaExpo(), srcExpo(m.mv, it?.vistas?.[0] || 'f'), srcExpo(m.mv, m.vista));
+}
+const medirItemExpo = (it) => Promise.all(it.vistas.map(v => medirImg(srcExpo(it.id, v))));
+// um item lido do banco (o que não for válido some)
+function lerItemExpo(v) {
+  const it = catExpo(v?.mv);
+  if (!it || !Number.isFinite(Number(v.x)) || !Number.isFinite(Number(v.y))) return null;
+  const txt = (s, n) => (typeof s === 'string' ? s.slice(0, n) : '');
+  return { mv: it.id, x: Number(v.x), y: Number(v.y), vista: it.vistas.includes(v.vista) ? v.vista : it.vistas[0], espelho: !!v.espelho,
+    cor: clamp(Math.round(Number(v.cor) || 0), 0, Math.max(0, nCoresExpo(it) - 1)), titulo: txt(v.titulo, 40), texto: txt(v.texto, 400),
+    foto: typeof v.foto === 'string' ? v.foto : null, fotos: v.fotos && typeof v.fotos === 'object' ? { ...v.fotos } : null,
+    por: typeof v.por === 'string' ? v.por : '', ts: Number(v.ts) || 0, mexendo: Number(v.mexendo) || 0, mexendo_por: typeof v.mexendo_por === 'string' ? v.mexendo_por : '' };
+}
+// o que vai para o banco (sem undefined; textos vazios e fotos ausentes não vão)
+function gravavelExpo(m) {
+  const o = { mv: m.mv, x: Math.round(m.x), y: Math.round(m.y), vista: m.vista, espelho: !!m.espelho, cor: m.cor || 0, por: sessao.uid, ts: Date.now() };
+  if (m.titulo) o.titulo = m.titulo;
+  if (m.texto) o.texto = m.texto;
+  if (m.foto) o.foto = m.foto;
+  const f = fotosLista(m);
+  if (f.some(Boolean)) o.fotos = Object.fromEntries(f.map((id, i) => [i, id]).filter(([, id]) => id));
+  return o;
+}
+const refItens = () => ref(db, `${noExpo('exposicao_salas')}/${ex.n}/itens`);
+const refItem = (id) => ref(db, `${noExpo('exposicao_salas')}/${ex.n}/itens/${id}`);
+const refImagem = (id) => ref(db, `${noExpo('exposicao_imagens')}/${id}`);
+// grava sem travar a tela: se o banco não confirmar em 6 s (ou recusar), avisa — o que está na tela fica
+function salvarExpo(promessa) {
+  const t = setTimeout(semConexaoExpo, 6000);
+  return Promise.resolve(promessa).then(() => { clearTimeout(t); return true; }, (e) => { clearTimeout(t); console.warn('[jogo-revisao] exposição: gravar', e?.code || e); semConexaoExpo(); return false; });
+}
+const semConexaoExpo = () => avisoExpo('📡 Sem conexão, as mudanças não foram salvas');
+let ultimoAvisoExpo = { t: '', ate: 0 };
+function avisoExpo(texto) {   // o mesmo aviso não entra de novo na fila enquanto aparece (tocar várias vezes num item cheio)
+  if (ultimoAvisoExpo.t === texto && performance.now() < ultimoAvisoExpo.ate) return;
+  ultimoAvisoExpo = { t: texto, ate: performance.now() + 4200 };
+  avisoPet(texto);
+}
+function fotoExpo(id) {
+  if (!id) return Promise.resolve(null);
+  if (!fotosExpo.has(id)) fotosExpo.set(id, get(ref(db, `${noExpo('exposicao_imagens')}/${id}/dados`))
+    .then(s => (s.exists() && typeof s.val() === 'string' && s.val().startsWith('data:image/') ? s.val() : null)).catch(() => { fotosExpo.delete(id); return null; }));
+  return fotosExpo.get(id);
+}
+
+// ── entrar e sair da sala ──
+function abrirItensSala(n, grade) {
+  fecharSalaExpo();
+  ex = { n, itens: new Map(), els: new Map(), gradeBase: grade, editando: false, sel: null, cat: EXPO?.abas?.[0]?.id || 'museu', arr: null, pan: null, camX: 0, ver: null, conf: 0 };
+  if (seguidor) seguidor.zCasa = Z_PET_CASA;   // o pet na frente dos móveis, como na Casinha (PROMPT-114)
+}
+function fecharSalaExpo() {
+  if (!ex) return;
+  if (ex.editando) sairEdicaoExpo(true);
+  for (const el of ex.els.values()) el.remove();
+  ex = null;
+  if (seguidor && !cs) seguidor.zCasa = null;
+  for (const id of ['ex-cont', 'ex-temas', 'ex-ver']) $(id).hidden = true;
+  $('ex-faixa').hidden = $('ex-ferr').hidden = true;
+}
+// chegou do banco (ou mudou / saiu) um item
+function itemExpoMudou(id, v) {
+  if (!ex) return;
+  const m = v ? lerItemExpo(v) : null;
+  if (ex.arr?.id === id && m) { const a = ex.itens.get(id); if (a) Object.assign(a, { ...m, x: a.x, y: a.y }); return; }   // arrastando: a posição é a minha até soltar
+  if (m) ex.itens.set(id, m); else ex.itens.delete(id);
+  const it = m && catExpo(m.mv);
+  (it ? medirItemExpo(it) : Promise.resolve()).then(() => { if (ex) { desenharItemExpo(id); refazerGradeExpo(); if (ex.editando) renderCatalogoExpo(); } });
+  if (ex.ver) renderVisualizador();
+}
+
+// ── desenho ──
+const mexendoOutro = (m) => m.mexendo && Date.now() - m.mexendo < 15000 && m.mexendo_por && m.mexendo_por !== sessao.uid;
+function desenharItemExpo(id) {
+  const m = ex.itens.get(id), at = $('cena-atores');
+  let el = ex.els.get(id);
+  if (!m) { el?.remove(); ex.els.delete(id); if (ex.sel === id) desselecionarExpo(); return; }
+  const it = catExpo(m.mv), [w, h] = tamExpo(m);
+  if (!el) { el = document.createElement('div'); el.dataset.ex = id; at.appendChild(el); ex.els.set(id, el); }
+  el.className = `cs-movel ex-movel cs-${it.tipo}${ex.sel === id ? ' sel' : ''}${mexendoOutro(m) ? ' ex-mexendo' : ''}`;
+  Object.assign(el.style, { left: m.x + 'px', top: m.y + 'px', width: w + 'px', height: h + 'px', zIndex: it.tipo === 'tapete' ? 1 : it.tipo === 'parede' ? 2 : Math.round(m.y) });
+  const chave = JSON.stringify([m.vista, m.espelho, m.cor, fotosDoItem(m), m.foto, ex.editando, it.conteudo === 'nome_sala' ? nomeDaSala() : '', Math.round(w)]);
+  if (el.dataset.k === chave) return;
+  el.dataset.k = chave;
+  const src = srcExpo(m.mv, m.vista), comFoto = it.conteudo === 'foto' || it.conteudo === 'fotos4';
+  el.innerHTML = `${comFoto ? `<div class="ex-fotos${m.espelho ? ' espelho' : ''}"></div>` : ''}<img class="ex-img${m.espelho ? ' espelho' : ''}" src="${src}" alt="" draggable="false" style="${filtroExpo(it, m.cor) ? `filter:${filtroExpo(it, m.cor)};` : ''}${comFoto ? 'visibility:hidden' : ''}"/>` +
+    (it.conteudo === 'nome_sala' ? letreiroHtml(w, h) : '');
+  if (comFoto) montarFotosExpo(el, m, it, chave);
+}
+function letreiroHtml(w, h) {
+  const nome = nomeDaSala(), L = EXPO.letreiro || {}, [cx, cy] = L.centro || [50, 50], larg = Number(L.largura) || 68;
+  if (!nome) return ex.editando ? `<span class="ex-letreiro vazio" style="left:${cx}%;top:${cy}%;max-width:${larg}%;font-size:${(h * 0.16).toFixed(1)}px">✏️ nome da sala</span>` : '';
+  const fs = Math.min(h * 0.34, (w * larg / 100) / Math.max(4, nome.length * 0.52));
+  return `<span class="ex-letreiro" style="left:${cx}%;top:${cy}%;max-width:${larg}%;font-size:${fs.toFixed(1)}px">${esc(nome)}</span>`;
+}
+const redesenharLetreiros = () => { if (ex) for (const [id, m] of ex.itens) if (catExpo(m.mv)?.conteudo === 'nome_sala') desenharItemExpo(id); };
+// as áreas verdes da moldura: a foto cobrindo cada uma (recortada pela máscara) e a moldura, sem o verde, por cima
+// moldura sem foto, decorando: o papel creme com o convite (pequena demais: só o 📷)
+const vazioFotoHtml = (aw, ah) => `<span style="font-size:${clamp(ah * 0.16, 7, 14).toFixed(1)}px">${aw >= 70 && ah >= 50 ? '📷 toque para pôr foto' : '📷'}</span>`;
+async function montarFotosExpo(el, m, it, chave) {
+  const [w, h] = tamExpo(m);
+  const a = await analisarMoldura(srcExpo(m.mv, m.vista));
+  if (el.dataset.k !== chave) return;
+  const img = el.querySelector('.ex-img'), caixa = el.querySelector('.ex-fotos');
+  img.src = a.frame; img.style.visibility = '';
+  const ids = it.conteudo === 'foto' ? [m.foto] : fotosLista(m);
+  caixa.innerHTML = a.areas.map((ar, i) => {
+    const id = ids[i] || null, mask = `url('${ar.mask}')`;
+    return `<div class="ex-area" style="left:${ar.x * 100}%;top:${ar.y * 100}%;width:${ar.w * 100}%;height:${ar.h * 100}%;-webkit-mask-image:${mask};mask-image:${mask}">` +
+      (id ? `<img class="ex-foto" data-foto="${esc(id)}" alt="" draggable="false"/>` : ex?.editando ? vazioFotoHtml(ar.w * w, ar.h * h) : '') + '</div>';
+  }).join('');
+  for (const f of caixa.querySelectorAll('img[data-foto]')) fotoExpo(f.dataset.foto).then(d => { if (d) f.src = d; else f.remove(); });
+}
+// a grade da sala sem a base dos móveis de chão (o personagem e o pet desviam)
+let gradeExpoT = 0;
+function refazerGradeExpo() {
+  clearTimeout(gradeExpoT);
+  gradeExpoT = setTimeout(() => {
+    if (!ex || cena?.expoSala !== ex.n) return;
+    const g = Uint8Array.from(ex.gradeBase);
+    g.gw = ex.gradeBase.gw; g.gh = ex.gradeBase.gh;
+    for (const m of ex.itens.values()) if (catExpo(m.mv)?.tipo === 'chao') { const [w, h] = tamExpo(m); zerarNaGrade(g, baseDeChao(m, w, h)); }
+    cena.grade = g;
+  }, 60);
+}
+// onde o chão começa e termina nesta altura (a trilha da sala, sem os móveis)
+function larguraDoChao(y) {
+  const g = ex.gradeBase, gw = gwDe(g), cy = clamp(Math.floor(y / CEL), 0, ghDe(g) - 1);
+  let a = -1, b = -1;
+  for (let cx = 0; cx < gw; cx++) if (g[cy * gw + cx]) { if (a < 0) a = cx; b = cx; }
+  return a < 0 ? [0, larguraCena()] : [a * CEL, (b + 1) * CEL];
+}
+// parede: parede_fundo; chão e tapete: sala.chao (na largura do chão naquela altura)
+function prenderExpo(m, x, y) {
+  const it = catExpo(m.mv), [w, h] = tamExpo(m), S = EXPO.sala;
+  if (it.tipo === 'parede') { prenderEmArea(m, x, y, 'parede', w, h, S.parede_fundo); return; }
+  const ch = S.chao.y, yy = entreLim(y, ch[0] + (it.tipo === 'tapete' ? h * 0.55 : 6), ch[1]);
+  prenderEmArea(m, x, yy, it.tipo, w, h, { x: larguraDoChao(yy), y: ch });
+}
+
+// ── editor ──
+function entrarEdicaoExpo() {
+  if (!ex || ex.editando || !podeDecorar(ex.n) || transicionando) return;
+  ex.editando = true; ex.sel = null;
+  jog.caminho = []; jog.aoChegar = null; destinoEspecial = null;
+  esconderBalao();
+  ex.camX = clamp(jog.x, 0, larguraCena());
+  camFoco = { x: ex.camX, y: H / 2, ate: Infinity };
+  $('tela-cena').classList.add('ex-editando');
+  $('ex-faixa').hidden = false;
+  renderCatalogoExpo();
+  for (const id of ex.itens.keys()) desenharItemExpo(id);
+}
+function sairEdicaoExpo(calado = false) {
+  if (!ex?.editando) return;
+  ex.editando = false; ex.sel = null; ex.arr = ex.pan = null;
+  camFoco = null;
+  $('tela-cena').classList.remove('ex-editando');
+  $('ex-faixa').hidden = $('ex-ferr').hidden = true;
+  for (const id of ex.itens.keys()) desenharItemExpo(id);
+  if (!calado) tocar('vitoria');
+}
+const qtdExpo = (mv) => [...ex.itens.values()].filter(m => m.mv === mv).length;
+function renderCatalogoExpo() {
+  $('ex-abas').innerHTML = (EXPO.abas || []).map(a => `<button data-ex-aba="${esc(a.id)}"${a.id === ex.cat ? ' class="ativa"' : ''}>${esc(a.nome)}</button>`).join('');
+  $('ex-catalogo').innerHTML = EXPO.moveis.filter(it => it.cat === ex.cat).map(it => {
+    const n = qtdExpo(it.id), lim = Number(it.limite) || 1;
+    return `<button class="cs-guardado ex-cat${n >= lim ? ' cheio' : ''}" data-ex-mv="${esc(it.id)}" title="${esc(it.nome)}">
+      <img src="${srcExpo(it.id, it.vistas[0])}" alt="" draggable="false" loading="lazy"/><b>${n}/${lim}</b><span>${esc(it.nome)}</span></button>`;
+  }).join('');
+  $('ex-uso').textContent = `${ex.itens.size}/${limiteExpo('itens', 40)} itens · ${fotosNaSala()}/${limiteExpo('fotos', 12)} fotos`;
+}
+async function colocarItemExpo(mv) {
+  const it = catExpo(mv);
+  if (!ex?.editando || !it) return;
+  if (ex.itens.size >= limiteExpo('itens', 40)) { avisoExpo(`Esta sala já tem o máximo de itens (${limiteExpo('itens', 40)}).`); return; }
+  if (qtdExpo(mv) >= (Number(it.limite) || 1)) { avisoExpo(`Esta sala já tem o máximo de ${it.nome.toLowerCase()} (${it.limite}).`); return; }
+  await medirItemExpo(it);
+  if (!ex?.editando) return;
+  // nasce no centro da parte visível da sala
+  const vp = $('cena-vp'), cx = (vp.clientWidth / 2 - cam.tx) / cam.s, S = EXPO.sala;
+  const m = { mv, x: cx, y: 0, vista: it.vistas[0], espelho: false, cor: 0, titulo: '', texto: '', foto: null, fotos: null, por: sessao.uid, ts: Date.now() };
+  prenderExpo(m, cx, it.tipo === 'parede' ? (S.parede_fundo.y[0] + S.parede_fundo.y[1]) / 2 + tamExpo(m)[1] / 2 : (S.chao.y[0] + S.chao.y[1]) / 2);
+  let id;
+  try { id = push(refItens()).key; } catch (_) { semConexaoExpo(); return; }
+  ex.itens.set(id, m);
+  desenharItemExpo(id);
+  selecionarExpo(id);
+  refazerGradeExpo();
+  renderCatalogoExpo();
+  tocar('clique');
+  salvarExpo(set(refItem(id), gravavelExpo(m)));
+}
+function selecionarExpo(id) {
+  if (!ex) return;
+  const antes = ex.sel;
+  ex.sel = id; ex.conf = 0;
+  if (antes && antes !== id) desenharItemExpo(antes);
+  desenharItemExpo(id);
+  abrirFerrExpo();
+}
+function desselecionarExpo() {
+  if (!ex?.sel) return;
+  const id = ex.sel;
+  ex.sel = null;
+  $('ex-ferr').hidden = true;
+  if (ex.itens.has(id)) desenharItemExpo(id);
+}
+function abrirFerrExpo() {
+  const m = ex?.itens.get(ex.sel), it = m && catExpo(m.mv), el = $('ex-ferr');
+  if (!it) { el.hidden = true; return; }
+  el.querySelector('[data-exf="cor"]').hidden = !nCoresExpo(it);
+  el.querySelector('[data-exf="conteudo"]').hidden = !it.conteudo;
+  const apagar = el.querySelector('[data-exf="apagar"]');
+  apagar.textContent = '🗑️'; apagar.classList.remove('confirmar');
+  $('ex-cores').hidden = true;
+  el.hidden = false;
+  posicionarFerrExpo();
+}
+function posicionarFerrExpo() {
+  const m = ex?.itens.get(ex.sel), el = $('ex-ferr');
+  if (!m || el.hidden) return;
+  posicionarNaTela(el, m.x, m.y - tamExpo(m)[1] - 6);
+}
+// mudou vista/espelho/cor/texto/foto: redesenha e grava o item inteiro
+function mudouItemExpo(id) {
+  const m = ex.itens.get(id);
+  if (!m) return;
+  m.por = sessao.uid; m.ts = Date.now();
+  desenharItemExpo(id);
+  refazerGradeExpo();
+  posicionarFerrExpo();
+  if (ex.editando) renderCatalogoExpo();   // o uso (itens e fotos)
+  return salvarExpo(set(refItem(id), gravavelExpo(m)));
+}
+// 🔄 girar: a próxima vista que existe; com uma vista só, espelha
+function girarExpo() {
+  const m = ex.itens.get(ex.sel), it = m && catExpo(m.mv);
+  if (!it) return;
+  if (it.vistas.length > 1) m.vista = it.vistas[(it.vistas.indexOf(m.vista) + 1) % it.vistas.length]; else m.espelho = !m.espelho;
+  prenderExpo(m, m.x, m.y);
+  mudouItemExpo(ex.sel);
+  tocar('clique');
+}
+function espelharExpo() {
+  const m = ex.itens.get(ex.sel);
+  if (!m) return;
+  m.espelho = !m.espelho;
+  mudouItemExpo(ex.sel);
+  tocar('clique');
+}
+// 🎨 as amostras: o próprio item com cada cor
+function abrirCoresExpo() {
+  const m = ex.itens.get(ex.sel), it = m && catExpo(m.mv), el = $('ex-cores');
+  if (!nCoresExpo(it)) return;
+  if (!el.hidden) { el.hidden = true; return; }
+  el.innerHTML = EXPO.cores[it.cor].map((f, i) => `<button class="ex-cor${m.cor === i ? ' sel' : ''}" data-ex-cor="${i}" aria-label="Cor ${i + 1}">` +
+    `<img src="${srcExpo(m.mv, m.vista)}" alt="" draggable="false" style="${f ? `filter:${f}` : ''}"/></button>`).join('');
+  el.hidden = false;
+  posicionarFerrExpo();
+}
+function corExpo(i) {
+  const m = ex.itens.get(ex.sel);
+  if (!m) return;
+  m.cor = clamp(i, 0, nCoresExpo(catExpo(m.mv)) - 1);
+  for (const b of $('ex-cores').children) b.classList.toggle('sel', Number(b.dataset.exCor) === m.cor);
+  mudouItemExpo(ex.sel);
+  tocar('clique');
+}
+// 🗑️ com confirmação (o segundo toque apaga); as fotos do item saem do banco junto
+function apagarExpo(btn) {
+  if (!ex.sel) return;
+  if (!btn.classList.contains('confirmar')) {
+    btn.classList.add('confirmar'); btn.textContent = '🗑️ Apagar?';
+    clearTimeout(ex.conf); ex.conf = setTimeout(() => { btn.classList.remove('confirmar'); btn.textContent = '🗑️'; }, 3000);
+    return;
+  }
+  const id = ex.sel, m = ex.itens.get(id);
+  desselecionarExpo();
+  ex.itens.delete(id);
+  desenharItemExpo(id);
+  refazerGradeExpo();
+  renderCatalogoExpo();
+  tocar('clique');
+  salvarExpo(Promise.all([remove(refItem(id)), ...fotosDoItem(m || {}).map(f => remove(refImagem(f)))]));
+}
+
+// arrastar um item (grava ao soltar; enquanto isso os outros veem o contorno)
+function arrastarExpo(e, id) {
+  e.preventDefault(); e.stopPropagation();
+  const el = e.currentTarget, m = ex.itens.get(id);
+  if (!m) return;
+  try { el.setPointerCapture(e.pointerId); } catch (_) {}
+  $('ex-ferr').hidden = true;
+  const p0 = telaParaImagem(e.clientX, e.clientY);
+  ex.arr = { id, off: [m.x - p0.x, m.y - p0.y], ini: [e.clientX, e.clientY], cx: e.clientX, cy: e.clientY, moveu: false };
+  const mover = (ev) => {
+    const a = ex?.arr;
+    if (!a || a.id !== id) return;
+    a.cx = ev.clientX; a.cy = ev.clientY;
+    if (!a.moveu && Math.hypot(ev.clientX - a.ini[0], ev.clientY - a.ini[1]) < 6) return;
+    if (!a.moveu) { a.moveu = true; salvarExpo(update(refItem(id), { mexendo: Date.now(), mexendo_por: sessao.uid })); }
+    seguirDedoExpo();
+  };
+  const soltar = () => {
+    el.removeEventListener('pointermove', mover); el.removeEventListener('pointerup', soltar); el.removeEventListener('pointercancel', soltar);
+    const a = ex?.arr;
+    if (!a || a.id !== id) return;
+    ex.arr = null;
+    if (a.moveu) {
+      const mm = ex.itens.get(id);
+      if (mm) { mm.por = sessao.uid; mm.ts = Date.now(); salvarExpo(update(refItem(id), { x: Math.round(mm.x), y: Math.round(mm.y), por: sessao.uid, ts: mm.ts, mexendo: null, mexendo_por: null })); }
+      refazerGradeExpo();
+    }
+    selecionarExpo(id);
+  };
+  el.addEventListener('pointermove', mover);
+  el.addEventListener('pointerup', soltar);
+  el.addEventListener('pointercancel', soltar);
+}
+function seguirDedoExpo() {
+  const a = ex?.arr, m = a && ex.itens.get(a.id);
+  if (!m || !a.moveu) return;
+  const q = telaParaImagem(a.cx, a.cy);
+  prenderExpo(m, q.x + a.off[0], q.y + a.off[1]);
+  desenharItemExpo(a.id);
+}
+// a cada quadro na sala: perto da borda, arrastando, a câmera anda; o contorno de quem está mexendo some sozinho
+function atualizarSalaExpo(dt) {
+  if (!ex.editando) return;
+  const vp = $('cena-vp'), vw = vp.clientWidth, LW = larguraCena(), meia = vw / 2 / cam.s;
+  if (ex.arr?.moveu) {
+    const x = pontoNoJogo(ex.arr.cx, ex.arr.cy).x - (girado() ? 0 : vp.getBoundingClientRect().left), borda = 70;
+    const v = x < borda ? -1 : x > vw - borda ? 1 : 0;
+    if (v) { ex.camX = clamp(ex.camX + v * 700 * dt, meia, LW - meia); camFoco = { x: ex.camX, y: H / 2, ate: Infinity }; seguirDedoExpo(); }
+  }
+  ex.camX = clamp(ex.camX, Math.min(meia, LW / 2), Math.max(LW - meia, LW / 2));
+  posicionarFerrExpo();
+}
+function ligarEditorExpo() {
+  $('btn-expo-decorar').addEventListener('click', (e) => { e.stopPropagation(); entrarEdicaoExpo(); });
+  $('ex-pronto').addEventListener('click', (e) => { e.stopPropagation(); sairEdicaoExpo(); });
+  $('ex-tema').addEventListener('click', (e) => { e.stopPropagation(); abrirTemasExpo(); });
+  $('ex-abas').addEventListener('click', (e) => { const b = e.target.closest('[data-ex-aba]'); if (b && ex) { ex.cat = b.dataset.exAba; renderCatalogoExpo(); } });
+  $('ex-catalogo').addEventListener('click', (e) => { const b = e.target.closest('[data-ex-mv]'); if (b) colocarItemExpo(b.dataset.exMv); });
+  $('ex-catalogo').addEventListener('wheel', (e) => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { e.currentTarget.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false });
+  $('ex-ferr').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const c = e.target.closest('[data-ex-cor]');
+    if (c) { corExpo(Number(c.dataset.exCor)); return; }
+    const b = e.target.closest('[data-exf]');
+    if (!b || !ex?.sel) return;
+    if (b.dataset.exf !== 'cor') $('ex-cores').hidden = true;
+    if (b.dataset.exf !== 'apagar') { const ap = $('ex-ferr').querySelector('[data-exf="apagar"]'); ap.classList.remove('confirmar'); ap.textContent = '🗑️'; }
+    ({ girar: girarExpo, espelhar: espelharExpo, cor: abrirCoresExpo, conteudo: () => abrirConteudoExpo(ex.sel), apagar: () => apagarExpo(b) })[b.dataset.exf]?.();
+  });
+  $('cena-atores').addEventListener('pointerdown', (e) => {
+    if (!ex?.editando) return;
+    const el = e.target.closest('.ex-movel');
+    if (el?.dataset.ex) arrastarExpo({ preventDefault: () => e.preventDefault(), stopPropagation: () => e.stopPropagation(), currentTarget: el, pointerId: e.pointerId, clientX: e.clientX, clientY: e.clientY }, el.dataset.ex);
+  });
+  // decorando, fora dos itens: arrastar move a câmera; tocar tira a seleção
+  $('cena-vp').addEventListener('pointerdown', (e) => {
+    if (!ex?.editando || e.target.closest('.ex-movel, #ex-ferr, #ex-faixa')) return;
+    ex.pan = { x0: pontoNoJogo(e.clientX, e.clientY).x, cam0: ex.camX, moveu: false };
+  });
+  addEventListener('pointermove', (e) => {
+    const p = ex?.pan;
+    if (!p) return;
+    const dx = pontoNoJogo(e.clientX, e.clientY).x - p.x0;
+    if (!p.moveu && Math.abs(dx) < 6) return;
+    p.moveu = true;
+    ex.camX = p.cam0 - dx / cam.s;
+    camFoco = { x: ex.camX, y: H / 2, ate: Infinity };
+  });
+  addEventListener('pointerup', () => { const p = ex?.pan; if (!p) return; ex.pan = null; if (!p.moveu) desselecionarExpo(); });
+  ligarConteudoExpo();
+  $('ex-temas').addEventListener('click', (e) => {
+    if (e.target === $('ex-temas') || e.target.closest('[data-fechar="ex-temas"]')) { $('ex-temas').hidden = true; return; }
+    const b = e.target.closest('[data-ex-tema]');
+    if (b) escolherTemaExpo(b.dataset.exTema);
+  });
+  $('ex-ver').addEventListener('click', (e) => {
+    if (e.target === $('ex-ver') || e.target.closest('[data-fechar="ex-ver"]')) { $('ex-ver').hidden = true; if (ex) ex.ver = null; return; }
+    const b = e.target.closest('[data-ver]');
+    if (b) andarVisualizador(b.dataset.ver);
+  });
+}
+
+// ── 🎨 tema da sala ──
+function abrirTemasExpo() {
+  if (!ex) return;
+  const atual = temaExpo(estadoSala(ex.n).tema).id;
+  $('ex-temas-lista').innerHTML = (EXPO.temas || []).map(t => `<button class="cs-comida-item cs-tema-item${t.id === atual ? ' atual' : ''}" data-ex-tema="${esc(t.id)}">
+      <span><img src="${IMG}/${t.imagem}" alt="" draggable="false" loading="lazy"/></span><b>${esc(t.emoji || '🎨')} ${esc(t.nome)}</b><small>${t.id === atual ? '✔ Agora' : 'Toque para usar'}</small></button>`).join('');
+  $('ex-temas').hidden = false;
+}
+function escolherTemaExpo(id) {
+  $('ex-temas').hidden = true;
+  if (!ex || !podeDecorar(ex.n) || !(EXPO.temas || []).some(t => t.id === id)) return;
+  (expoSalas[ex.n] ||= {}).tema = id;
+  aplicarEstadoSala(ex.n);
+  tocar('clique');
+  salvarExpo(set(ref(db, `${noExpo('exposicao_salas')}/${ex.n}/tema`), id));
+}
+
+// ── ✏️ conteúdo: título e texto, fotos (moldura e varal) e o nome da sala (letreiro) ──
+let contExpo = null;   // { id, slot }
+function abrirConteudoExpo(id) {
+  const m = ex?.itens.get(id), it = m && catExpo(m.mv);
+  if (!it?.conteudo) return;
+  contExpo = { id, slot: 0 };
+  $('ex-cont-tit').textContent = `✏️ ${it.nome}`;
+  $('ex-cont-msg').textContent = '';
+  renderConteudoExpo();
+  $('ex-cont').hidden = false;
+}
+function renderConteudoExpo() {
+  const m = ex?.itens.get(contExpo?.id), it = m && catExpo(m.mv);
+  if (!it) { $('ex-cont').hidden = true; return; }
+  if (it.conteudo === 'nome_sala') {
+    $('ex-cont-corpo').innerHTML = `<label class="ex-campo">Nome da sala<input id="ex-c-nome" maxlength="30" value="${esc(nomeDaSala())}" placeholder="Ex.: Heróis da resistência"/></label>`;
+    return;
+  }
+  const ids = it.conteudo === 'foto' ? [m.foto] : it.conteudo === 'fotos4' ? fotosLista(m) : [];
+  const slots = ids.map((f, i) => `<div class="ex-slot" data-slot="${i}">${f ? `<img data-foto="${esc(f)}" alt=""/>` : '<span>sem foto</span>'}
+      <div><button class="jr-btn" data-ex-foto="${i}">📷 ${f ? 'Trocar' : 'Escolher foto'}</button>${f ? `<button class="jr-btn jr-btn-sec" data-ex-tirar="${i}">✕</button>` : ''}</div></div>`).join('');
+  $('ex-cont-corpo').innerHTML = (slots ? `<div class="ex-slots${ids.length > 1 ? ' quatro' : ''}">${slots}</div>` : '') +
+    `<label class="ex-campo">Título <small>(até 40)</small><input id="ex-c-titulo" maxlength="40" value="${esc(m.titulo)}"/></label>
+     <label class="ex-campo">Texto <small>(até 400)</small><textarea id="ex-c-texto" maxlength="400" rows="4">${esc(m.texto)}</textarea></label>`;
+  for (const f of $('ex-cont-corpo').querySelectorAll('img[data-foto]')) fotoExpo(f.dataset.foto).then(d => { if (d) f.src = d; });
+}
+async function salvarConteudoExpo() {
+  const m = ex?.itens.get(contExpo?.id), it = m && catExpo(m.mv);
+  if (!it) return;
+  if (it.conteudo === 'nome_sala') {
+    const nome = $('ex-c-nome').value.replace(/\s+/g, ' ').trim().slice(0, 30);
+    if (temPalavraProibida(nome)) { $('ex-cont-msg').textContent = 'Revise o texto 🙂'; return; }
+    (expoSalas[ex.n] ||= {}).nome = nome || null;
+    aplicarEstadoSala(ex.n);
+    redesenharLetreiros();
+    $('ex-cont').hidden = true;
+    salvarExpo(set(ref(db, `${noExpo('exposicao_salas')}/${ex.n}/nome`), nome || null));
+    return;
+  }
+  const titulo = $('ex-c-titulo').value.replace(/\s+/g, ' ').trim().slice(0, 40), texto = $('ex-c-texto').value.trim().slice(0, 400);
+  if (temPalavraProibida(titulo) || temPalavraProibida(texto)) { $('ex-cont-msg').textContent = 'Revise o texto 🙂'; return; }
+  m.titulo = titulo; m.texto = texto;
+  $('ex-cont').hidden = true;
+  tocar('clique');
+  mudouItemExpo(contExpo.id);
+}
+// 📷 escolheu um arquivo: prepara (EXIF, 1000 px, WebP), grava a imagem, troca no item e apaga a antiga
+async function enviarFotoExpo(file) {
+  const c = contExpo, m = ex?.itens.get(c?.id), it = m && catExpo(m.mv);
+  if (!it || !file) return;
+  const velho = it.conteudo === 'foto' ? m.foto : fotosLista(m)[c.slot];
+  if (!velho && fotosNaSala() >= limiteExpo('fotos', 12)) { $('ex-cont-msg').textContent = `Esta sala já tem o máximo de fotos (${limiteExpo('fotos', 12)}).`; return; }
+  const msg = $('ex-cont-msg');
+  msg.textContent = 'Enviando…';
+  let foto;
+  try { foto = await prepararFoto(file); } catch (e) { msg.textContent = 'Não deu para abrir essa imagem.'; return; }
+  let novo;
+  try { novo = push(ref(db, noExpo('exposicao_imagens'))).key; } catch (_) { msg.textContent = 'Sem conexão, as mudanças não foram salvas'; return; }
+  const ok = await salvarExpo(set(refImagem(novo), { dados: foto.dados, sala: ex.n, por: sessao.uid, ts: Date.now() }));
+  if (!ok || !ex || ex.itens.get(c.id) !== m) { msg.textContent = 'Sem conexão, as mudanças não foram salvas'; return; }
+  fotosExpo.set(novo, Promise.resolve(foto.dados));
+  if (it.conteudo === 'foto') m.foto = novo; else m.fotos = { ...(m.fotos || {}), [c.slot]: novo };
+  await mudouItemExpo(c.id);
+  if (velho) { fotosExpo.delete(velho); salvarExpo(remove(refImagem(velho))); }
+  msg.textContent = `✔ Foto enviada (${Math.round(foto.bytes / 1024)} KB)`;
+  renderConteudoExpo();
+}
+function tirarFotoExpo(slot) {
+  const m = ex?.itens.get(contExpo?.id), it = m && catExpo(m.mv);
+  if (!it) return;
+  const velho = it.conteudo === 'foto' ? m.foto : fotosLista(m)[slot];
+  if (!velho) return;
+  if (it.conteudo === 'foto') m.foto = null; else { const f = { ...(m.fotos || {}) }; delete f[slot]; m.fotos = f; }
+  mudouItemExpo(contExpo.id);
+  fotosExpo.delete(velho);
+  salvarExpo(remove(refImagem(velho)));
+  renderConteudoExpo();
+}
+function ligarConteudoExpo() {
+  $('ex-cont').addEventListener('click', (e) => {
+    if (e.target === $('ex-cont') || e.target.closest('[data-fechar="ex-cont"]')) { $('ex-cont').hidden = true; return; }
+    const f = e.target.closest('[data-ex-foto]'), t = e.target.closest('[data-ex-tirar]');
+    if (f && contExpo) { contExpo.slot = Number(f.dataset.exFoto); $('ex-arquivo').value = ''; $('ex-arquivo').click(); }
+    else if (t) tirarFotoExpo(Number(t.dataset.exTirar));
+    else if (e.target.closest('#ex-cont-salvar')) salvarConteudoExpo();
+  });
+  $('ex-arquivo').addEventListener('change', (e) => { const f = e.target.files?.[0]; if (f) enviarFotoExpo(f); });
+}
+
+// ── visualizador (modo visita): foto grande, título, texto e "Sala n · turma" (nunca nomes de alunos) ──
+const temConteudo = (m) => { const it = catExpo(m.mv); return !!it?.conteudo && it.conteudo !== 'nome_sala' && !!(m.titulo || m.texto || fotosDoItem(m).length); };
+const listaVisitaExpo = () => [...ex.itens].filter(([, m]) => temConteudo(m)).sort((a, b) => a[1].x - b[1].x).map(([id]) => id);
+function itemExpoEm(p) {
+  let melhor = null, mz = -1;
+  for (const [id, m] of ex.itens) {
+    if (!temConteudo(m)) continue;
+    const [w, h] = tamExpo(m), it = catExpo(m.mv), z = it.tipo === 'tapete' ? 1 : it.tipo === 'parede' ? 2 : m.y;
+    if (Math.abs(p.x - m.x) <= w / 2 && p.y >= m.y - h && p.y <= m.y + 4 && z > mz) { mz = z; melhor = id; }
+  }
+  return melhor;
+}
+function abrirVisualizador(id) {
+  if (!ex) return;
+  ex.ver = { id, foto: 0 };
+  renderVisualizador();
+  $('ex-ver').hidden = false;
+  tocar('clique');
+}
+function renderVisualizador() {
+  const v = ex?.ver, m = v && ex.itens.get(v.id);
+  if (!m || !temConteudo(m)) { $('ex-ver').hidden = true; if (ex) ex.ver = null; return; }
+  const fotos = fotosDoItem(m), lista = listaVisitaExpo(), i = lista.indexOf(v.id), g = grupoSala(ex.n);
+  v.foto = clamp(v.foto, 0, Math.max(0, fotos.length - 1));
+  $('ex-ver-foto').innerHTML = fotos.length ? `<img data-foto="${esc(fotos[v.foto])}" alt=""/>` +
+    (fotos.length > 1 ? `<button class="ex-ver-seta e" data-ver="foto-" aria-label="Foto anterior">◀</button><button class="ex-ver-seta d" data-ver="foto+" aria-label="Próxima foto">▶</button><small>${v.foto + 1}/${fotos.length}</small>` : '') : '';
+  $('ex-ver-foto').hidden = !fotos.length;
+  const im = $('ex-ver-foto').querySelector('img');
+  if (im) fotoExpo(im.dataset.foto).then(d => { if (d && im.isConnected) im.src = d; });
+  $('ex-ver-titulo').textContent = m.titulo || '';
+  $('ex-ver-texto').textContent = m.texto || '';
+  $('ex-ver-rodape').textContent = `Sala ${ex.n}${g?.turma ? ' · ' + g.turma : ''}`;
+  $('ex-ver-ant').disabled = i <= 0;
+  $('ex-ver-prox').disabled = i < 0 || i >= lista.length - 1;
+}
+function andarVisualizador(o) {
+  const v = ex?.ver;
+  if (!v) return;
+  if (o === 'foto-' || o === 'foto+') { const n = fotosDoItem(ex.itens.get(v.id) || {}).length; v.foto = (v.foto + (o === 'foto+' ? 1 : -1) + n) % n; renderVisualizador(); return; }
+  const lista = listaVisitaExpo(), i = lista.indexOf(v.id) + (o === 'prox' ? 1 : -1);
+  if (i >= 0 && i < lista.length) { v.id = lista[i]; v.foto = 0; renderVisualizador(); tocar('clique'); }
 }
 
 // ============================================================
@@ -7967,15 +8519,33 @@ const qtdCasa = (id) => Object.entries(estado.casinha?.guardados || {}).reduce((
   (estado.casinha?.moveis || []).filter(m => m.id === id).length;
 // tamanho do móvel na vista dele (px lógicos)
 function tamMovel(m) {
-  const it = itemCasa(m.id), [bw] = tamImg.get(imgMovel(m.id, vistaBase(it))) || [100], [vw, vh] = tamImg.get(imgMovel(m.id, m.vista)) || [100, 100];
-  const k = (Number(it.largura) || 100) / bw;
-  return [vw * k, vh * k];
+  const it = itemCasa(m.id);
+  return tamPelaLargura(Number(it.largura) || 100, imgMovel(m.id, vistaBase(it)), imgMovel(m.id, m.vista));
 }
 // base retangular de um móvel de chão (o personagem e o pet desviam dela)
 function baseMovel(m) {
   if (itemCasa(m.id)?.tipo !== 'chao') return null;
-  const [w, h] = tamMovel(m), fundo = clamp(h * 0.3, 14, 70);
-  return { x0: m.x - w * 0.42, x1: m.x + w * 0.42, y0: m.y - fundo, y1: m.y + 4 };
+  const [w, h] = tamMovel(m);
+  return baseDeChao(m, w, h);
+}
+// ── comum à Casinha e à Exposição (PROMPT-EXPOSICAO-2) ──
+// tamanho pela largura do catálogo: a escala de pixels vem da vista base (todas as vistas de um item na mesma escala)
+function tamPelaLargura(largura, srcBase, srcVista) {
+  const [bw] = tamImg.get(srcBase) || [100], [vw, vh] = tamImg.get(srcVista) || [100, 100], k = largura / bw;
+  return [vw * k, vh * k];
+}
+const baseDeChao = (m, w, h) => { const fundo = clamp(h * 0.3, 14, 70); return { x0: m.x - w * 0.42, x1: m.x + w * 0.42, y0: m.y - fundo, y1: m.y + 4 }; };
+// tira da grade (qualquer largura) o retângulo b
+function zerarNaGrade(g, b) {
+  const gw = gwDe(g), gh = ghDe(g);
+  for (let cy = Math.max(0, Math.floor(b.y0 / CEL)); cy < Math.min(gh, Math.ceil(b.y1 / CEL)); cy++)
+    for (let cx = Math.max(0, Math.floor(b.x0 / CEL)); cx < Math.min(gw, Math.ceil(b.x1 / CEL)); cx++) g[cy * gw + cx] = 0;
+}
+// prende a base do móvel na área: parede { x, y } (a base embaixo, o móvel inteiro dentro) ou chão { x, y } (tapete: metade dentro)
+const entreLim = (v, a, b) => (a > b ? (a + b) / 2 : clamp(v, a, b));
+function prenderEmArea(m, x, y, tipo, w, h, A) {
+  if (tipo === 'parede') { m.x = entreLim(x, A.x[0] + w / 2, A.x[1] - w / 2); m.y = entreLim(y, A.y[0] + h, A.y[1]); }
+  else { m.x = entreLim(x, A.x[0] + w * 0.4, A.x[1] - w * 0.4); m.y = entreLim(y, A.y[0] + (tipo === 'tapete' ? h * 0.55 : 6), A.y[1]); }
 }
 const vistaValida = (it, v) => (it.vistas.includes(v) ? v : it.vistas[0]);
 
@@ -8089,12 +8659,7 @@ function fecharCasinha() {
 function refazerGradeCasinha() {
   const Q = CASA.quarto, ch = Q.chao, pt = Q.porta;
   const g = gradeDeRetangulos([{ x0: ch.x[0], x1: ch.x[1], y0: ch.y[0], y1: ch.y[1] }, { x0: pt.x[0] + 14, x1: pt.x[1] - 14, y0: ch.y[1] - 4, y1: H - 2 }]);
-  for (const m of cs.moveis) {
-    const b = baseMovel(m);
-    if (!b) continue;
-    for (let cy = Math.max(0, Math.floor(b.y0 / CEL)); cy < Math.min(GH, Math.ceil(b.y1 / CEL)); cy++)
-      for (let cx = Math.max(0, Math.floor(b.x0 / CEL)); cx < Math.min(GW, Math.ceil(b.x1 / CEL)); cx++) g[cy * GW + cx] = 0;
-  }
+  for (const m of cs.moveis) { const b = baseMovel(m); if (b) zerarNaGrade(g, b); }
   const naTrilha = (x, y) => centroCelula(celulaMaisProxima(g, x, y));
   const sx = Q.porta.entrada[0], sy = H - 8;
   Object.assign(cena, { grade: g, naTrilha, saidas: [{ x: sx, y: sy, trilha: naTrilha(sx, sy) }] });
@@ -8794,9 +9359,7 @@ function renderFaixaCasa() {
 // prende a base do móvel na área certa (chão ou parede)
 function prenderNaArea(m, x, y) {
   const it = itemCasa(m.id), [w, h] = tamMovel(m), Q = CASA.quarto;
-  const entre = (v, a, b) => (a > b ? (a + b) / 2 : clamp(v, a, b));
-  if (it.tipo === 'parede') { const A = Q.parede; m.x = entre(x, A.x[0] + w / 2, A.x[1] - w / 2); m.y = entre(y, A.y[0] + h, A.y[1]); }
-  else { const A = Q.chao; m.x = entre(x, A.x[0] + w * 0.4, A.x[1] - w * 0.4); m.y = entre(y, A.y[0] + (it.tipo === 'tapete' ? h * 0.55 : 6), A.y[1]); }
+  prenderEmArea(m, x, y, it.tipo, w, h, it.tipo === 'parede' ? Q.parede : Q.chao);
 }
 // arrastar (móvel do quarto ou miniatura da faixa); tocar sem arrastar: seleciona / coloca no meio
 function arrastarCasa(e, m, daFaixa) {
@@ -13226,11 +13789,11 @@ function ligarEventos() {
   $('btn-cena-voltar').addEventListener('click', sairDaCena);
   ligarCasinha();   // 🏠 Arrumar (PROMPT-105)
   ligarVila();      // 🏘️ vila e vizinhos (PROMPT-109)
-  ligarExposicao(); // 🖼️ 🔒/🔓 e 🔈 da sala (PROMPT-EXPOSICAO-1)
+  ligarExposicao(); // 🖼️ 🔈 da sala (PROMPT-EXPOSICAO-1)
 
   $('cena-vp').addEventListener('click', (e) => {
     if (!cena || perguntaAberta) return;
-    if (cs?.arrumando) return;   // 🛠️ arrumando a casinha: o toque é dos móveis
+    if (cs?.arrumando || ex?.editando) return;   // 🛠️ arrumando a casinha / 🖼️ decorando a sala: o toque é dos móveis
     if (cena.tipo === 'mapa') tocarNoMapa(e);
     else tocarNoInterior(e);
   });

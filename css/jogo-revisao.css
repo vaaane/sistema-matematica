@@ -3418,3 +3418,65 @@ html.jr-deitado .venc-corpo { grid-template-columns: repeat(3, minmax(0, 1fr)); 
 .expo-placa { position: absolute; transform: translate(-50%, -50%); z-index: 5; pointer-events: none; display: flex; align-items: center; gap: 2px;
   font: 700 24px/1 'Rajdhani', sans-serif; color: #3a2210; text-shadow: 0 0 3px rgba(255,244,220,.9), 0 0 6px rgba(255,244,220,.6); white-space: nowrap; }
 .expo-placa i { font-style: normal; font-size: 15px; text-shadow: none; }
+
+/* 🖼️ Exposição — editor, fotos e visualizador (PROMPT-EXPOSICAO-2) */
+#tela-cena.ex-editando .jr-hud, #tela-cena.ex-editando .jr-joy, #tela-cena.ex-editando .jr-pet-fala { display: none !important; }
+#tela-cena.ex-editando .ex-movel { pointer-events: auto; cursor: grab; touch-action: none; }
+#tela-cena.ex-editando #cena-vp { touch-action: none; }
+.ex-movel.sel { filter: drop-shadow(0 0 3px #ffd700) drop-shadow(0 0 8px rgba(255,215,0,.8)); }
+.ex-movel.ex-mexendo { filter: drop-shadow(0 0 2px #00d4ff) drop-shadow(0 0 6px rgba(0,212,255,.9)); }
+.ex-movel > .ex-img { position: relative; z-index: 1; }
+.ex-fotos { position: absolute; inset: 0; }
+.ex-fotos.espelho, .ex-fotos.espelho .ex-foto, .ex-fotos.espelho .ex-area > span { transform: scaleX(-1); }
+.ex-area { position: absolute; overflow: hidden; background: #f3e9d2; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+  display: flex; align-items: center; justify-content: center; }
+.ex-area > .ex-foto { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ex-area > span { font-weight: 700; line-height: 1.1; font-family: 'Inter', sans-serif; color: #8a7350; text-align: center; padding: 2px; }
+.ex-letreiro { position: absolute; z-index: 2; transform: translate(-50%, -50%); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-family: 'Rajdhani', sans-serif; font-weight: 700; line-height: 1; color: #3a2210; }
+.ex-letreiro.vazio { color: #a08a68; }
+.jr-btn-decorar { border-color: var(--jr-ouro); }
+.ex-ferr .jr-btn { min-width: 40px; font-size: 18px; }
+.ex-ferr .jr-btn.confirmar { background: #c62828; border-color: #ff8a80; color: #fff; font-size: 14px; }
+.ex-cores { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; width: 100%; }
+.ex-cor { width: 46px; height: 46px; padding: 3px; border-radius: 10px; border: 2px solid rgba(255,255,255,.25); background: rgba(13,15,26,.85); cursor: pointer; }
+.ex-cor.sel { border-color: var(--jr-ouro); }
+.ex-cor img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.ex-faixa { align-items: stretch; }
+.ex-faixa-esq { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.ex-faixa-dir { display: flex; flex-direction: column; justify-content: center; gap: 6px; align-items: stretch; }
+.ex-faixa-dir small { font: 600 11px 'Inter', sans-serif; color: #c9cde0; text-align: center; }
+.ex-abas { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.ex-abas::-webkit-scrollbar { display: none; }
+.ex-abas button { flex: none; padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.2); background: rgba(13,15,26,.7); color: #c9cde0; font: 700 12px 'Inter', sans-serif; cursor: pointer; }
+.ex-abas button.ativa { color: #fff; border-color: var(--jr-roxo); background: rgba(124,92,252,.35); }
+.ex-cat.cheio { opacity: .45; }
+.ex-cont-caixa { width: min(560px, 100%); }
+.ex-cont-corpo { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+.ex-campo { display: flex; flex-direction: column; gap: 4px; font: 700 13px 'Inter', sans-serif; color: #fff; }
+.ex-campo small { color: #c9cde0; font-weight: 500; }
+.ex-campo input, .ex-campo textarea { font: 500 15px 'Inter', sans-serif; color: #fff; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.2); border-radius: 10px; padding: 8px 10px; resize: vertical; }
+.ex-slots { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.ex-slots.quatro { grid-template-columns: repeat(2, 1fr); }
+.ex-slot { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px; border-radius: 12px; background: rgba(255,255,255,.05); }
+.ex-slot > img, .ex-slot > span { width: 100%; height: 110px; object-fit: contain; border-radius: 8px; background: #f3e9d2; display: flex; align-items: center; justify-content: center; color: #8a7350; font: 700 12px 'Inter', sans-serif; }
+.ex-slot > div { display: flex; gap: 6px; }
+.ex-slot .jr-btn { min-height: 34px; padding: 4px 10px; font-size: 13px; }
+.ex-cont-msg { min-height: 1.2em; margin: 6px 0 0; font: 700 13px 'Inter', sans-serif; color: var(--jr-ouro); text-align: center; }
+.ex-cont-botoes { display: flex; justify-content: center; margin-top: 6px; }
+.ex-ver-caixa { position: relative; width: min(900px, 100%); max-height: 100%; display: flex; flex-direction: column; gap: 10px; }
+.ex-ver-x { position: absolute; right: 8px; top: 8px; z-index: 2; }
+.ex-ver-foto { position: relative; flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.35); border-radius: 12px; }
+.ex-ver-foto[hidden] { display: none; }
+.ex-ver-foto img { max-width: 100%; max-height: min(62dvh, 560px); object-fit: contain; border-radius: 10px; display: block; }
+html.jr-deitado .ex-ver-foto img { max-height: 52dvh; }
+html.jr-girado .ex-ver-foto img { max-height: 52dvw; }
+.ex-ver-seta { position: absolute; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; border-radius: 50%; border: 0; background: rgba(13,15,26,.75); color: #fff; font-size: 18px; cursor: pointer; }
+.ex-ver-seta.e { left: 8px; } .ex-ver-seta.d { right: 8px; }
+.ex-ver-foto small { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); font: 700 12px 'Inter', sans-serif; color: #fff; background: rgba(13,15,26,.7); padding: 2px 8px; border-radius: 999px; }
+.ex-ver-txt { overflow-y: auto; max-height: 30dvh; }
+.ex-ver-txt b { display: block; font: 700 22px 'Rajdhani', sans-serif; color: var(--jr-ouro); }
+.ex-ver-txt p { margin: 4px 0 0; font: 500 15px/1.45 'Inter', sans-serif; color: #e8eaf6; white-space: pre-wrap; }
+.ex-ver-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ex-ver-nav small { font: 700 13px 'Inter', sans-serif; color: #c9cde0; }
+.ex-ver-nav .jr-btn:disabled { opacity: .35; }

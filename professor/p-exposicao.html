@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#15102a">
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Exposição Virtual — Sistema de Matemática</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    .filtros{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;align-items:center}
+    .btn-sec{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:8px 13px;font-size:14px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+    .btn-sec:hover{border-color:var(--purple)}
+    .btn-pri{background:linear-gradient(135deg,var(--purple),var(--purple-dark));color:#fff;border:0;border-radius:10px;padding:9px 15px;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer}
+    .btn-pri:disabled{opacity:.5;cursor:default}
+    .btn-perigo{background:rgba(239,68,68,.14);color:#ffb4b4;border:1px solid rgba(239,68,68,.45);border-radius:10px;padding:6px 10px;font-size:13px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer}
+    .btn-perigo.conf{background:#c62828;color:#fff}
+    .muted{color:var(--text-muted)}
+    .chave{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer;user-select:none}
+    .chave input{width:18px;height:18px;accent-color:var(--purple)}
+    .cartao{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+    .cartao h3{margin:0 0 10px;font-family:'Rajdhani',sans-serif;font-size:1.25rem}
+    .visitas{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+    .visitas .estado{font-weight:700}
+    .visitas .estado.on{color:var(--green)}
+    .aviso{font-size:13px;color:var(--gold);min-height:1.2em}
+    details.sala{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:10px}
+    details.sala>summary{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:12px 14px;cursor:pointer;list-style:none;font-size:15px}
+    details.sala>summary::-webkit-details-marker{display:none}
+    details.sala>summary::before{content:'▸';color:var(--text-muted)}
+    details.sala[open]>summary::before{content:'▾'}
+    details.sala>summary b{font-family:'Rajdhani',sans-serif;font-size:1.15rem}
+    details.sala>summary .uso{margin-left:auto;font-size:12px;color:var(--text-muted)}
+    .corpo{padding:0 14px 14px;display:grid;grid-template-columns:minmax(260px,1fr) minmax(260px,1fr);gap:14px 22px}
+    .corpo h4{margin:0 0 8px;font-size:13px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+    .corpo .larga{grid-column:1/-1}
+    .campo{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;font-size:13px;color:var(--text-muted)}
+    .campo select,.campo input{background:var(--bg,#0d0f1a);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:14px;font-family:'Inter',sans-serif}
+    .linha{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .tema-mini{width:96px;height:34px;object-fit:cover;border-radius:6px;border:1px solid var(--border)}
+    .alunos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 10px;margin:6px 0 10px;max-height:260px;overflow-y:auto;padding:4px}
+    .alunos label{display:flex;gap:6px;align-items:center;font-size:13px;cursor:pointer}
+    .alunos label.outro{color:var(--text-muted)}
+    .alunos label small{color:var(--text-muted);font-size:11px}
+    .membros{font-size:13px;margin-bottom:8px}
+    .tabela-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px}
+    table.it{width:100%;border-collapse:collapse;min-width:640px}
+    table.it th,table.it td{padding:8px 10px;text-align:left;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle}
+    table.it th{color:var(--text-muted);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px}
+    table.it td.mini img{width:54px;height:40px;object-fit:contain;display:block}
+    table.it td.acoes{white-space:nowrap}
+    .vazio{color:var(--text-muted);font-size:13px;padding:8px 0}
+    @media(max-width:760px){ .corpo{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Exposição Virtual</div>
+        <div class="topbar-sub">Dia da Consciência Negra · grupos, salas e trabalhos</div>
+      </div>
+      <div class="topbar-right"><label class="chave" title="Usa os nós *_teste do banco"><input type="checkbox" id="modo-teste"/> Modo teste</label></div>
+    </div>
+    <div class="content">
+      <div class="cartao">
+        <h3>👁️ Visitas</h3>
+        <div class="visitas">
+          <span>Visitas abertas: <span class="estado" id="vis-estado">…</span></span>
+          <button class="btn-pri" id="vis-botao" disabled>…</button>
+          <span id="vis-conf" hidden><b>Ligar para todos?</b> Todos os alunos vão entrar em todas as salas com grupo.
+            <button class="btn-pri" id="vis-sim">Sim, ligar</button> <button class="btn-sec" id="vis-nao">Cancelar</button></span>
+        </div>
+        <p class="muted" style="font-size:13px;margin:8px 0 0">Desligado (padrão): cada sala só abre para os integrantes do grupo e para você. Ligado: fase pública.</p>
+      </div>
+      <div class="filtros">
+        <button class="btn-sec" id="btn-atualizar">↻ Atualizar</button>
+        <button class="btn-pri" id="btn-importar" hidden>📥 Importar grupos do JSON</button>
+        <span class="aviso" id="aviso"></span>
+      </div>
+      <div id="salas"><div class="vazio">Carregando…</div></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { requireProfessor, renderSidebarProfessor } from "/js/auth.js";
+import { db } from "/js/firebase-config.js";
+import { ref, get, set, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ALUNOS_POR_TURMA, ALUNOS_TESTE } from "/js/constants.js";
+
+if (!requireProfessor()) throw new Error("sem sessão de professor");
+renderSidebarProfessor("sidebar", "exposicao");
+
+const TURMAS = ["8D", "8E", "8F", "8G", "8H"];
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const IMG = "/img/jogo";
+let EXPO = null, salas = {}, config = {}, teste = false, abertas = new Set();
+try { teste = localStorage.getItem("expo_prof_teste") === "1"; } catch (_) {}
+$("modo-teste").checked = teste;
+const no = (n) => `${n}${teste ? "_teste" : ""}`;
+const catDe = (mv) => (EXPO?.moveis || []).find(i => i.id === mv);
+const filtroDe = (it, cor) => (it?.cor && EXPO?.cores?.[it.cor]?.[cor]) || "";
+const fotosDe = (v) => [v.foto, ...Object.values(v.fotos || {})].filter(x => typeof x === "string");
+const visivel = (turma, nome) => !ALUNOS_TESTE.includes((turma + "_" + nome).replace(/[.#$\[\]/\s]/g, "_")) && !/PROFESSOR|TESTE/i.test(nome);
+const nomePor = (uid) => uid === "PROFESSORA" ? "Professora" : String(uid || "—").replace(/^([^_]+)_/, "$1 · ").replace(/_/g, " ");
+const fmt = (ms) => ms ? new Date(ms).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—";
+const aviso = (t) => { $("aviso").textContent = t; clearTimeout(aviso.t); aviso.t = setTimeout(() => { $("aviso").textContent = ""; }, 5000); };
+const portas = () => (EXPO?.saguao?.portas || []).map(p => p.n);
+const grupoFb = (n) => { const g = salas[n]?.grupo; return g ? { turma: String(g.turma || ""), membros: Object.values(g.membros || {}).filter(x => typeof x === "string") } : null; };
+// o grupo valendo: o do banco; sem o nó, o do JSON (como no jogo)
+const grupoDe = (n) => grupoFb(n) || EXPO?.salas?.[n] || null;
+async function gravar(p, msgOk) {
+  try { await p; if (msgOk) aviso(msgOk); return true; }
+  catch (e) { console.error(e); aviso("⚠️ Não foi possível gravar (" + (e?.code || e?.message || e) + ")"); return false; }
+}
+
+async function carregar() {
+  try {
+    if (!EXPO) EXPO = await fetch("/dados/jogo/exposicao.json").then(r => r.json());
+    const [s, c] = await Promise.all([get(ref(db, no("exposicao_salas"))), get(ref(db, no("exposicao_config")))]);
+    salas = s.exists() ? s.val() || {} : {};
+    config = c.exists() ? c.val() || {} : {};
+  } catch (e) {
+    console.error(e);
+    $("salas").innerHTML = `<div class="vazio">Não foi possível ler a exposição: ${esc(e?.code || e?.message || e)}</div>`;
+    return;
+  }
+  render();
+}
+
+function render() {
+  const on = config.visitas_abertas === true;
+  $("vis-estado").textContent = on ? "ligadas" : "desligadas";
+  $("vis-estado").classList.toggle("on", on);
+  $("vis-botao").textContent = on ? "Desligar visitas" : "Ligar visitas…";
+  $("vis-botao").disabled = false;
+  $("vis-conf").hidden = true;
+  $("btn-importar").hidden = portas().some(n => salas[n]?.grupo) || !Object.keys(EXPO?.salas || {}).length;
+  // quem está em qual sala (para o aviso de aluno repetido)
+  const ondeEsta = {};
+  for (const n of portas()) { const g = grupoDe(n); for (const m of g?.membros || []) ondeEsta[g.turma + "|" + m] = n; }
+  $("salas").innerHTML = portas().map(n => salaHtml(n, ondeEsta)).join("");
+}
+
+function salaHtml(n, ondeEsta) {
+  const s = salas[n] || {}, g = grupoDe(n), itens = Object.entries(s.itens || {}).sort((a, b) => (Number(a[1].x) || 0) - (Number(b[1].x) || 0));
+  const nFotos = itens.reduce((t, [, v]) => t + fotosDe(v).length, 0), lim = EXPO.limites || { itens: 40, fotos: 12 };
+  const turma = g?.turma || "8F", tema = (EXPO.temas || []).find(t => t.id === s.tema) || (EXPO.temas || []).find(t => t.id === EXPO.tema_padrao);
+  const membros = g?.membros || [];
+  const alunos = (ALUNOS_POR_TURMA[turma] || []).filter(a => visivel(turma, a)).map(a => {
+    const outra = ondeEsta[turma + "|" + a], minha = membros.includes(a);
+    return `<label class="${outra && outra !== n ? "outro" : ""}"><input type="checkbox" data-membro="${esc(a)}"${minha ? " checked" : ""}/>${esc(a)}${outra && outra !== n ? ` <small>(sala ${outra})</small>` : ""}</label>`;
+  }).join("");
+  const linhas = itens.map(([id, v]) => {
+    const it = catDe(v.mv), fs = fotosDe(v);
+    return `<tr><td class="mini"><img src="${IMG}/exposicao/moveis/${esc(v.mv)}_${esc(v.vista || it?.vistas?.[0] || "f")}.webp" alt="" style="${filtroDe(it, Number(v.cor) || 0) ? "filter:" + filtroDe(it, Number(v.cor) || 0) : ""}" loading="lazy"/></td>
+      <td>${esc(it?.nome || v.mv)}${fs.length ? ` <span class="muted">· 📷 ${fs.length}</span>` : ""}</td><td>${esc(v.titulo || "")}</td><td>${esc(nomePor(v.por))}</td><td>${fmt(v.ts)}</td>
+      <td class="acoes">${fs.length ? `<button class="btn-perigo" data-so-foto="${esc(id)}">Apagar só a foto</button> ` : ""}<button class="btn-perigo" data-apagar="${esc(id)}">🗑️</button></td></tr>`;
+  }).join("");
+  return `<details class="sala" data-sala="${n}"${abertas.has(n) ? " open" : ""}><summary><b>Sala ${n}</b>${s.nome ? `<span>${esc(s.nome)}</span>` : ""}
+      <span class="muted">${g ? `${esc(g.turma)} · ${membros.length} integrante${membros.length === 1 ? "" : "s"}` : "sem grupo"}</span>
+      <span class="uso">${itens.length}/${lim.itens} itens · ${nFotos}/${lim.fotos} fotos</span></summary>
+    <div class="corpo">
+      <div>
+        <h4>Grupo</h4>
+        <div class="membros">${membros.length ? membros.map(esc).join(", ") : '<span class="muted">Sem integrantes (a porta mostra "Em breve").</span>'}</div>
+        <label class="campo">Turma<select data-turma>${TURMAS.map(t => `<option${t === turma ? " selected" : ""}>${t}</option>`).join("")}</select></label>
+        <div class="alunos">${alunos}</div>
+        <button class="btn-pri" data-salvar-grupo>Salvar grupo</button>
+      </div>
+      <div>
+        <h4>Sala</h4>
+        <label class="campo">Nome da sala<span class="linha"><input data-nome maxlength="30" value="${esc(s.nome || "")}" style="flex:1"/><button class="btn-sec" data-salvar-nome>Salvar</button></span></label>
+        <label class="campo">Tema<span class="linha"><select data-tema>${(EXPO.temas || []).map(t => `<option value="${esc(t.id)}"${t.id === tema?.id ? " selected" : ""}>${esc(t.emoji || "")} ${esc(t.nome)}</option>`).join("")}</select>
+          ${tema ? `<img class="tema-mini" src="${IMG}/${esc(tema.imagem)}" alt="" loading="lazy"/>` : ""}</span></label>
+        <label class="campo">Música<select data-musica><option value="">Sem música</option>${(EXPO.musicas || []).map(m => `<option${m === s.musica ? " selected" : ""}>${esc(m)}</option>`).join("")}</select></label>
+        <a class="btn-sec" href="/aluno/jogo-revisao.html?sala=${n}${teste ? "&teste=1" : ""}" target="_blank" rel="noopener">👀 Ver sala</a>
+      </div>
+      <div class="larga">
+        <h4>Itens da sala</h4>
+        ${itens.length ? `<div class="tabela-wrap"><table class="it"><thead><tr><th></th><th>Item</th><th>Título</th><th>Quem colocou</th><th>Data</th><th></th></tr></thead><tbody>${linhas}</tbody></table></div>` : '<div class="vazio">Nenhum item ainda.</div>'}
+      </div>
+    </div></details>`;
+}
+
+// ── ações ──
+$("modo-teste").addEventListener("change", (e) => {
+  teste = e.target.checked;
+  try { localStorage.setItem("expo_prof_teste", teste ? "1" : "0"); } catch (_) {}
+  $("salas").innerHTML = '<div class="vazio">Carregando…</div>';
+  carregar();
+});
+$("btn-atualizar").addEventListener("click", carregar);
+$("vis-botao").addEventListener("click", async () => {
+  if (config.visitas_abertas === true) {
+    if (await gravar(set(ref(db, no("exposicao_config") + "/visitas_abertas"), false), "Visitas desligadas.")) { config.visitas_abertas = false; render(); }
+  } else $("vis-conf").hidden = false;
+});
+$("vis-nao").addEventListener("click", () => { $("vis-conf").hidden = true; });
+$("vis-sim").addEventListener("click", async () => {
+  if (await gravar(set(ref(db, no("exposicao_config") + "/visitas_abertas"), true), "Visitas ligadas: todos entram nas salas com grupo.")) { config.visitas_abertas = true; render(); }
+});
+$("btn-importar").addEventListener("click", async () => {
+  const patch = {};
+  for (const [n, g] of Object.entries(EXPO.salas || {})) patch[`${n}/grupo`] = { turma: g.turma, membros: g.membros };
+  if (await gravar(update(ref(db, no("exposicao_salas")), patch), `Grupos importados (${Object.keys(EXPO.salas || {}).length}).`)) carregar();
+});
+$("salas").addEventListener("toggle", (e) => {
+  const d = e.target.closest?.("details.sala");
+  if (d) { const n = Number(d.dataset.sala); if (d.open) abertas.add(n); else abertas.delete(n); }
+}, true);
+$("salas").addEventListener("change", async (e) => {
+  const d = e.target.closest("details.sala"), n = Number(d?.dataset.sala);
+  if (!d) return;
+  if (e.target.matches("[data-turma]")) {   // outra turma: os alunos dela (os marcados saem)
+    salas[n] = { ...(salas[n] || {}), grupo: { turma: e.target.value, membros: [] } };
+    abertas.add(n); render(); aviso(`Sala ${n}: escolha os integrantes do ${e.target.value} e salve.`);
+  } else if (e.target.matches("[data-membro]") && e.target.checked) {   // um aluno só em um grupo
+    const turma = d.querySelector("[data-turma]").value, nome = e.target.dataset.membro;
+    const outra = portas().find(k => k !== n && (grupoDe(k)?.turma === turma) && (grupoDe(k)?.membros || []).includes(nome));
+    if (outra) { e.target.checked = false; aviso(`⚠️ ${nome} já está no grupo da sala ${outra}. Tire de lá primeiro.`); }
+  } else if (e.target.matches("[data-tema]")) {
+    if (await gravar(set(ref(db, `${no("exposicao_salas")}/${n}/tema`), e.target.value), `Sala ${n}: tema trocado.`)) { (salas[n] ||= {}).tema = e.target.value; render(); }
+  } else if (e.target.matches("[data-musica]")) {
+    const v = e.target.value || null;
+    if (await gravar(set(ref(db, `${no("exposicao_salas")}/${n}/musica`), v), v ? `Sala ${n}: música ${v}.` : `Sala ${n}: sem música.`)) (salas[n] ||= {}).musica = v;
+  }
+});
+$("salas").addEventListener("click", async (e) => {
+  const d = e.target.closest("details.sala"), n = Number(d?.dataset.sala);
+  if (!d) return;
+  if (e.target.closest("[data-salvar-grupo]")) {
+    const turma = d.querySelector("[data-turma]").value, membros = [...d.querySelectorAll("[data-membro]:checked")].map(i => i.dataset.membro);
+    const repetido = membros.find(m => portas().some(k => k !== n && grupoDe(k)?.turma === turma && (grupoDe(k)?.membros || []).includes(m)));
+    if (repetido) { aviso(`⚠️ ${repetido} já está em outro grupo.`); return; }
+    if (await gravar(set(ref(db, `${no("exposicao_salas")}/${n}/grupo`), { turma, membros }), `Sala ${n}: grupo salvo (${membros.length}).`)) { (salas[n] ||= {}).grupo = { turma, membros }; render(); }
+  } else if (e.target.closest("[data-salvar-nome]")) {
+    const nome = d.querySelector("[data-nome]").value.replace(/\s+/g, " ").trim().slice(0, 30) || null;
+    if (await gravar(set(ref(db, `${no("exposicao_salas")}/${n}/nome`), nome), `Sala ${n}: nome salvo.`)) { (salas[n] ||= {}).nome = nome; render(); }
+  } else {
+    const b = e.target.closest("[data-apagar], [data-so-foto]");
+    if (!b) return;
+    if (!b.classList.contains("conf")) { b.classList.add("conf"); const t = b.textContent; b.textContent = "Confirmar?"; setTimeout(() => { b.classList.remove("conf"); b.textContent = t; }, 3000); return; }
+    const id = b.dataset.apagar || b.dataset.soFoto, v = salas[n]?.itens?.[id];
+    if (!v) return;
+    const fotos = fotosDe(v).map(f => remove(ref(db, `${no("exposicao_imagens")}/${f}`)));
+    const base = `${no("exposicao_salas")}/${n}/itens/${id}`;
+    const ok = b.dataset.apagar ? await gravar(Promise.all([remove(ref(db, base)), ...fotos]), "Item apagado.")
+      : await gravar(Promise.all([update(ref(db, base), { foto: null, fotos: null }), ...fotos]), "Foto apagada.");
+    if (ok) carregar();
+  }
+});
+
+carregar();
+</script>
+</body>
+</html>

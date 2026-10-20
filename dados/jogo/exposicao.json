@@ -43,5 +43,40 @@
     "5": { "turma": "8F", "membros": ["Fábio", "Ana Clara", "Nathalia", "Maria Elisangela"] },
     "6": { "turma": "8F", "membros": ["Sara", "Evellyn", "Ana Beatriz", "Ryan", "Pedro Lucas"] }
   },
-  "moveis": "parte 2"
+  "_nota_moveis": "Catálogo do editor (PROMPT-EXPOSICAO-2): img/jogo/exposicao/moveis/{id}_{vista}.webp. largura em px lógicos × escala_moveis; tipo chao | parede | tapete; cat: aba do catálogo; conteudo: null | texto | foto | fotos4 | nome_sala; cor: null | matiz | madeira (filtros em cores).",
+  "escala_moveis": 0.8, "limites": {"itens": 40, "fotos": 12},
+  "abas": [{"id": "museu", "nome": "🏛️ Museu"}, {"id": "molduras", "nome": "🖼️ Molduras"}, {"id": "cultura", "nome": "🥁 Arte e cultura"}, {"id": "plantas", "nome": "🌳 Plantas e tapetes"}],
+  "cores": {
+    "_nota": "CSS filter de cada índice (0 = a imagem original). matiz: gira a cor; madeira: clara/escura por brilho e saturação, sem girar.",
+    "matiz": ["", "hue-rotate(50deg)", "hue-rotate(110deg)", "hue-rotate(170deg)", "hue-rotate(230deg)", "hue-rotate(300deg)"],
+    "madeira": ["", "brightness(1.22) saturate(0.85)", "brightness(0.7) saturate(1.1)"]
+  },
+  "letreiro": {"_nota": "onde vai o nome da sala na placa do letreiro (centro e largura em % da imagem)", "centro": [50, 50], "largura": 68},
+  "moveis": [
+    {"id": "pedestal", "nome": "Pedestal", "emoji": "🏛️", "tipo": "chao", "largura": 90, "vistas": ["d", "f", "l"], "cat": "museu", "conteudo": null, "cor": "matiz", "limite": 6},
+    {"id": "vitrine", "nome": "Vitrine", "emoji": "🔲", "tipo": "chao", "largura": 130, "vistas": ["d", "f", "l"], "cat": "museu", "conteudo": null, "cor": null, "limite": 4},
+    {"id": "totem_info", "nome": "Totem de texto", "emoji": "🪧", "tipo": "chao", "largura": 70, "vistas": ["d", "f"], "cat": "museu", "conteudo": "texto", "cor": "madeira", "limite": 6},
+    {"id": "pulpito", "nome": "Púlpito com livro", "emoji": "📖", "tipo": "chao", "largura": 80, "vistas": ["d", "f", "l"], "cat": "museu", "conteudo": "texto", "cor": "madeira", "limite": 3},
+    {"id": "cordao", "nome": "Cordão de museu", "emoji": "🎗️", "tipo": "chao", "largura": 160, "vistas": ["f"], "cat": "museu", "conteudo": null, "cor": null, "limite": 4},
+    {"id": "banco_museu", "nome": "Banco", "emoji": "🪑", "tipo": "chao", "largura": 150, "vistas": ["d", "l"], "cat": "museu", "conteudo": null, "cor": "madeira", "limite": 3},
+    {"id": "trilho_luz", "nome": "Trilho de luz", "emoji": "💡", "tipo": "parede", "largura": 220, "vistas": ["f"], "cat": "museu", "conteudo": null, "cor": null, "limite": 4},
+    {"id": "letreiro", "nome": "Letreiro da sala", "emoji": "🏷️", "tipo": "parede", "largura": 260, "vistas": ["f"], "cat": "museu", "conteudo": "nome_sala", "cor": "madeira", "limite": 1},
+    {"id": "moldura_retrato", "nome": "Moldura em pé", "emoji": "🖼️", "tipo": "parede", "largura": 90, "vistas": ["f"], "cat": "molduras", "conteudo": "foto", "cor": "madeira", "limite": 8},
+    {"id": "moldura_paisagem", "nome": "Moldura deitada", "emoji": "🖼️", "tipo": "parede", "largura": 130, "vistas": ["f"], "cat": "molduras", "conteudo": "foto", "cor": "madeira", "limite": 8},
+    {"id": "moldura_grande", "nome": "Painel grande", "emoji": "🖼️", "tipo": "parede", "largura": 300, "vistas": ["f"], "cat": "molduras", "conteudo": "foto", "cor": "madeira", "limite": 2},
+    {"id": "moldura_oval", "nome": "Moldura oval", "emoji": "🖼️", "tipo": "parede", "largura": 90, "vistas": ["f"], "cat": "molduras", "conteudo": "foto", "cor": "madeira", "limite": 6},
+    {"id": "varal_fotos", "nome": "Varal de fotos", "emoji": "📸", "tipo": "parede", "largura": 220, "vistas": ["f"], "cat": "molduras", "conteudo": "fotos4", "cor": null, "limite": 2},
+    {"id": "mapa_africa", "nome": "Mapa da África", "emoji": "🌍", "tipo": "parede", "largura": 120, "vistas": ["f"], "cat": "molduras", "conteudo": null, "cor": null, "limite": 1},
+    {"id": "tecido_parede", "nome": "Tecido de parede", "emoji": "🧵", "tipo": "parede", "largura": 120, "vistas": ["f"], "cat": "cultura", "conteudo": null, "cor": "matiz", "limite": 4},
+    {"id": "tambor", "nome": "Djembê", "emoji": "🥁", "tipo": "chao", "largura": 80, "vistas": ["d", "f"], "cat": "cultura", "conteudo": null, "cor": "madeira", "limite": 4},
+    {"id": "alfaia", "nome": "Alfaia", "emoji": "🥁", "tipo": "chao", "largura": 100, "vistas": ["d", "f"], "cat": "cultura", "conteudo": null, "cor": "matiz", "limite": 4},
+    {"id": "berimbau", "nome": "Berimbau", "emoji": "🎶", "tipo": "chao", "largura": 70, "vistas": ["d", "f"], "cat": "cultura", "conteudo": null, "cor": null, "limite": 3},
+    {"id": "abayomi", "nome": "Bonecas abayomi", "emoji": "🪆", "tipo": "chao", "largura": 80, "vistas": ["d", "f"], "cat": "cultura", "conteudo": null, "cor": null, "limite": 3},
+    {"id": "mancala", "nome": "Mancala", "emoji": "🎲", "tipo": "chao", "largura": 150, "vistas": ["d"], "cat": "cultura", "conteudo": null, "cor": "madeira", "limite": 2},
+    {"id": "cesto", "nome": "Cesto de palha", "emoji": "🧺", "tipo": "chao", "largura": 90, "vistas": ["d", "f"], "cat": "cultura", "conteudo": null, "cor": null, "limite": 4},
+    {"id": "vaso_ceramica", "nome": "Vaso de cerâmica", "emoji": "🏺", "tipo": "chao", "largura": 90, "vistas": ["f"], "cat": "cultura", "conteudo": null, "cor": "matiz", "limite": 6},
+    {"id": "baoba", "nome": "Baobá", "emoji": "🌳", "tipo": "chao", "largura": 120, "vistas": ["d", "f", "l"], "cat": "plantas", "conteudo": null, "cor": null, "limite": 4},
+    {"id": "tapete_padrao", "nome": "Tapete de padrões", "emoji": "🟫", "tipo": "tapete", "largura": 300, "vistas": ["d"], "cat": "plantas", "conteudo": null, "cor": "matiz", "limite": 3},
+    {"id": "esteira_palha", "nome": "Esteira de palha", "emoji": "🟨", "tipo": "tapete", "largura": 260, "vistas": ["d"], "cat": "plantas", "conteudo": null, "cor": null, "limite": 3}
+  ]
 }
