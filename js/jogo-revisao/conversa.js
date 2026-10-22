@@ -1,6 +1,8 @@
 // Jogo de Revisão — o que o pet fala. Todo o texto vem de dados/jogo/falas-pets.json;
 // aqui só se escolhe e se monta (nenhuma frase escrita no código).
 // fala = lista de balões: [{ texto, espera }] (espera = ms antes deste balão, contada do fim do anterior)
+// PROMPT-137: balões curtos (até ~60 letras: quebrarBaloes) e com tempo de leitura (tempoLeitura); a abertura (abre_dica,
+// abre_piada, lembrete) é um balão só dela; entre um balão e o outro, pelo menos 600 ms.
 
 let F = null;
 const ultimaDe = {};          // categoria → última frase usada (não repetir duas vezes seguidas)
@@ -26,7 +28,47 @@ function trocar(texto, v) {
   return texto.replace(/\{(apelido|pet|ginasio|mapa|conteudo|dias|valor|dica|comida|n|tempo)\}/g, (m, k) => (v[k] ?? m));
 }
 
-const juntar = (a, b) => `${a.trim()} ${b.trim()}`;
+// a abertura vira um balão próprio; terminada em ":" fica "…" ("Vou te contar só porque gosto de você…")
+const abertura = (s) => String(s || '').trim().replace(/:$/, '…');
+
+// ── PROMPT-137: balões curtos e tempo de leitura ──
+const MAX_BALAO = 60, PAUSA_BALOES = 600;
+export const tempoLeitura = (texto) => Math.max(3500, 2000 + 60 * String(texto ?? '').length);
+// quebra um texto em pedaços de até ~60 letras, num ponto natural (". " "? " "! " ": " "; " ", " " — "); sem ponto
+// natural, no espaço mais perto do meio
+const SEPARADORES = ['. ', '? ', '! ', ': ', '; ', ', ', ' — '];
+export function partirTexto(texto) {
+  const s = String(texto ?? '').trim();
+  if (s.length <= MAX_BALAO + 4) return [s];
+  for (const sep of SEPARADORES) {
+    let melhor = -1, nota = Infinity;
+    for (let i = s.indexOf(sep); i >= 0; i = s.indexOf(sep, i + 1)) {
+      const corte = sep === ' — ' ? i : i + sep.length - 1;   // o travessão vai para o começo do pedaço seguinte
+      const esq = s.slice(0, corte).trim(), dir = s.slice(corte).trim();
+      if (esq.length < 12 || dir.length < 12) continue;
+      const n = Math.max(esq.length, dir.length);
+      if (n < nota) { nota = n; melhor = corte; }
+    }
+    if (melhor >= 0) return [...partirTexto(s.slice(0, melhor)), ...partirTexto(s.slice(melhor))];
+  }
+  const meio = s.length / 2;
+  let esp = -1;
+  for (let i = s.indexOf(' '); i >= 0; i = s.indexOf(' ', i + 1)) if (esp < 0 || Math.abs(i - meio) < Math.abs(esp - meio)) esp = i;
+  return esp > 0 ? [...partirTexto(s.slice(0, esp)), ...partirTexto(s.slice(esp + 1))] : [s];
+}
+// cada balão longo vira vários seguidos (a espera do 1º continua; os outros, pelo menos 600 ms)
+export function quebrarBaloes(baloes) {
+  const out = [];
+  for (const b of baloes || []) {
+    if (!b?.texto) continue;
+    partirTexto(b.texto).forEach((texto, k) => out.push({ ...b, texto, espera: k ? 0 : b.espera || 0 }));
+  }
+  return out.map((b, i) => (i ? { ...b, espera: Math.max(PAUSA_BALOES, b.espera || 0) } : b));
+}
+// duração de um balão na tela: o tempo de leitura (um fixo maior vale: a pergunta da piada)
+export const duracaoDe = (b) => Math.max(b?.fixo || 0, tempoLeitura(b?.texto));
+// quanto uma fala inteira fica na tela (balões + pausas), já quebrada
+export const tempoFala = (baloes) => quebrarBaloes(baloes).reduce((t, b, i) => t + duracaoDe(b) + (i ? b.espera || 0 : 0), 0);
 
 // Piada que ainda não saiu (índices usados ficam no aparelho; quando todas saírem, recomeça)
 function proximaPiada() {
@@ -64,6 +106,10 @@ const ginLivre = (chave) => !chave || Date.now() - (ginFalado[chave] || 0) >= ME
 //        (um ginásio vencido qualquer), sequencia, agora: Date, estado: 'fome' | 'voltou' | null, curiosidade: () => balões }
 // tipoForcado: 'venceu' | 'perdeu' | 'carinho' | 'fome' | 'voltou' (momentos-chave)
 export function montarFala(ctx, tipoForcado = null) {
+  const f = montarFalaInteira(ctx, tipoForcado);
+  return f ? { ...f, baloes: quebrarBaloes(f.baloes) } : f;   // PROMPT-137: nenhum balão com mais de ~60 letras
+}
+function montarFalaInteira(ctx, tipoForcado = null) {
   if (!F) return null;
   const P = F.personalidades?.[ctx.pet];
   if (!P) return null;
@@ -108,8 +154,8 @@ export function montarFala(ctx, tipoForcado = null) {
     if (!ginLivre(ctx.proximo.chave)) return outra();
     ginFalado[ctx.proximo.chave] = Date.now();
     const abre = pegar('abre_dica', P.abre_dica);
-    // "{abre_dica} no {ginasio} ({mapa}) vão cair questões de {conteudo}."
-    const baloes = [{ texto: trocar(juntar(abre, 'no {ginasio} ({mapa}) vão cair questões de {conteudo}.'), v), espera: 0 }];
+    // "{abre_dica}…" e, no balão seguinte, "no {ginasio} ({mapa}) vão cair questões de {conteudo}."
+    const baloes = [{ texto: trocar(abertura(abre), v), espera: 0 }, { texto: trocar('no {ginasio} ({mapa}) vão cair questões de {conteudo}.', v), espera: 0 }];
     const ft = ctx.proximo.dica.falas_treinadores;
     if (ft?.length && Math.random() < 0.5) baloes.push({ texto: `“${pegar('treinador', ft)}”`, espera: 400 });
     return { tipo, baloes };
@@ -121,7 +167,7 @@ export function montarFala(ctx, tipoForcado = null) {
     if (!fonte || !ginLivre(fonte.chave)) return outra();
     if (fonte.chave) ginFalado[fonte.chave] = Date.now();
     const l = proximoLembrete(fonte.chave || fonte.dica.ginasio, fonte.dica.lembretes);
-    return { tipo, baloes: [{ texto: trocar(juntar(pegar('lembrete', P.lembrete), l), v), espera: 0 }] };
+    return { tipo, baloes: [{ texto: trocar(abertura(pegar('lembrete', P.lembrete)), v), espera: 0 }, { texto: trocar(l, v), espera: 0 }] };
   }
   if (tipo === 'dia') {
     const d = ctx.agora, h = d.getHours(), dow = d.getDay();
@@ -135,10 +181,13 @@ export function montarFala(ctx, tipoForcado = null) {
   if (tipo === 'piada') {
     const pd = proximaPiada();
     if (!pd) return um('aleatorio', P.aleatorio);
+    // abertura → a pergunta (tempo de leitura + 2 s para pensar, no mínimo 6 s) → a resposta → a risada (1 s depois)
+    const pergunta = trocar(pd.pergunta, v);
     return { tipo, baloes: [
-      { texto: trocar(juntar(pegar('abre_piada', P.abre_piada), pd.pergunta), v), espera: 0, fixo: 2500 },   // resposta 2,5 s depois
+      { texto: trocar(abertura(pegar('abre_piada', P.abre_piada)), v), espera: 0 },
+      ...partirTexto(pergunta).map((texto, k, l) => ({ texto, espera: 0, ...(k === l.length - 1 ? { fixo: Math.max(6000, tempoLeitura(texto) + 2000) } : {}) })),
       { texto: pd.resposta, espera: 0 },
-      { texto: trocar(pegar('ri', P.ri), v), espera: 300 },
+      { texto: trocar(pegar('ri', P.ri), v), espera: 1000 },
     ] };
   }
   return um('aleatorio', P.aleatorio);
@@ -159,5 +208,5 @@ export const configAjuda = () => F?.config?.ajuda_ginasio || {};
 // Faro (PROMPT-32): o pet sente um tesouro escondido — frases da personalidade ou as gerais (falas-pets.json → faro)
 export const frasesFaro = (pet) => (F?.personalidades?.[pet]?.faro?.length ? F.personalidades[pet].faro : F?.faro || []);
 
-// Duração do balão: duracao_balao_s + 1 s a cada 60 caracteres
-export const duracaoBalao = (texto) => ((F?.config?.duracao_balao_s || 5) + Math.floor(texto.length / 60)) * 1000;
+// Duração do balão (PROMPT-137): 2000 + 60 ms por letra, no mínimo 3,5 s (50 letras = 5 s)
+export const duracaoBalao = (texto) => tempoLeitura(texto);

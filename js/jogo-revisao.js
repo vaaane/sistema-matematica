@@ -22,7 +22,7 @@ import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, t
 import { lerTodos, lerRegistro, iniciarOnline, enviarOnline, sairOnline, ouvirMapa, ouvirTodos, onlineAtivo, VALIDADE_MS } from '/js/jogo-revisao/online.js';
 import { definirPedidos, pedidosProntos, cfgPedidos, pedidoDisponivel, moedasDoPedido, limiteDoDiaAtingido, limiteMoedasPedidos, dicaPedido, lerResposta } from '/js/jogo-revisao/pedidos.js';
 import { definirBatalhas, batalhasProntas, cfgBatalha, treinadores, treinador, tiposDeConta, gerarConta, vidaExtraLealdade, desafioDe, situacao, forca, dano, premios, depoisDaBatalha } from '/js/jogo-revisao/batalha.js';
-import { definirFalas, falasProntas, configFalas, dicaDe, montarFala, duracaoBalao, fraseDe, fraseFiltrada, configAjuda, frasesFaro } from '/js/jogo-revisao/conversa.js';
+import { definirFalas, falasProntas, configFalas, dicaDe, montarFala, duracaoBalao, fraseDe, fraseFiltrada, configAjuda, frasesFaro, quebrarBaloes, partirTexto, duracaoDe, tempoFala, tempoLeitura } from '/js/jogo-revisao/conversa.js';
 import { definirPraca, pracaPronta, cfgPraca, cfgDesafio, frasesPraca, temaDoDesafio, vencedorDaRodada, placarDe, resultadoFinal, vale, contarDesafio,
   premioDesafio, ordenarRanking } from '/js/jogo-revisao/praca.js';
 import { codigoValido, premioDoPodio, pontosDaResposta, TEMPO_RODADA_MS } from '/js/jogo-revisao/aovivo.js';
@@ -34,6 +34,7 @@ import { faseDoDia, faseDaCorrida, resultadoCorrida, rodadaOQueFaz } from '/js/j
 import { estadoInicial as estadoInicialDamas, jogadasValidas as jogadasValidasDamas, aplicar as aplicarDamas, ehValida as ehValidaDamas, fimDeJogo as fimDeJogoDamas,
   contar as contarDamas, outro as outroLadoDamas, jogadaAleatoria as jogadaAleatoriaDamas, jogadaComputador as jogadaComputadorDamas, todasCapturas as todasCapturasDamas, N as N_DAMAS } from '/js/jogo-revisao/damas-logica.js';
 import { abrirQuadroEstudos, ligarQuadroEstudos } from '/js/jogo-revisao/estudos.js';
+import { criarFigura } from '/js/jogo-revisao/figuras.js';
 import { criarPlano, definirPetPlano, faixaPara, pontosDoCaminho, movEntre, lerPar, fmt as fmtPlano, par as parPlano, CORES_PLANO } from '/js/jogo-revisao/plano.js';
 import { configurarMapaPrograme, ligarMapaPrograme, temMapaPrograme, abrirMapaPrograme, esquecerPosicaoPet, temaDaFase, temaVila, chefeDaFase,
   medalhaDoChefe } from '/js/jogo-revisao/programe-mapa.js';
@@ -894,6 +895,7 @@ export async function iniciarJogo(sess) {
   iniciarPet();
   setTimeout(verificarCores, 2500);   // quem já cumpriu as condições ganha as cores (aviso uma vez)
   setTimeout(avisarCorSoVermelho, 3200);
+  setTimeout(bonusMoedasRetroativo, 1800);   // 🎁 PROMPT-133
   setTimeout(avisarTrocaPersonagem, 4200);
   if (comecaNaPraca) abrirPraca('fonte').catch(() => abrirMapaGeral()).finally(() => { $('jr-carregando').hidden = true; });
   atualizarBotaoMissoes();
@@ -1731,7 +1733,7 @@ function falarPet(texto) {
   b.innerHTML = `<span class="mp-balao-txt">${esc(texto)}</span>`;   // no máximo 3 linhas (o corte fica no texto: o rabinho aparece)
   b.hidden = false;
   clearTimeout(mp.timerBalao);
-  mp.timerBalao = setTimeout(() => { b.hidden = true; }, 1800);
+  mp.timerBalao = setTimeout(() => { b.hidden = true; }, tempoLeitura(texto));   // tempo de leitura (PROMPT-137)
 }
 
 function particulas(simbolos, n) {   // símbolo: texto (emoji) ou HTML de imagem (começa com "<")
@@ -2312,6 +2314,26 @@ function verificarCores() {
     if (aceitaCor(ativo)) avisoPet(`🎨 Cor nova para o dragão: ${c.nome}! Escolha no Meu Pet → Visual.`, true, srcIcone(formaComCor(formaBase(ativo), cor)));
     else avisoPet(`🎨 Liberou a cor ${c.nome} para o dragão vermelho! ${c.emoji || ''}`, true);
   }
+}
+// 🎁 PROMPT-133: uma vez por aluno, a diferença do multiplicador de moedas (PROMPT-126) sobre o que ele já conquistou nos
+// ginásios: perguntas acertadas (1 → comMult(1)), insígnias (10 → comMult(10)) e douradas (+15 → comMult(15)). Batalhas não
+// entram (não há histórico). Marca avisos/bonus_moedas_mult = { n, ts } (vale em qualquer celular). Fora: modo teste,
+// professora e contas de teste.
+function bonusMoedasRetroativo() {
+  if (!carregouProgresso || !estado?.pets || teste || ehProfessora() || contaEscondida(sessao?.uid, sessao?.nome) || estado.avisos?.bonus_moedas_mult) return;
+  const perguntas = Object.entries(estado.respostas || {}).filter(([id, r]) => RE_ID.test(id) && r?.acertou === true).length;
+  const gins = Object.values(estado.ginasios || {});
+  const insignias = gins.filter(g => g?.insignia).length, douradas = gins.filter(g => g?.dourada).length;
+  const n = perguntas * (comMult(1) - 1) + insignias * (comMult(10) - 10) + douradas * (comMult(15) - 15);
+  const marca = { n, ts: Date.now() }, patch = { 'avisos/bonus_moedas_mult': marca };
+  (estado.avisos ||= {}).bonus_moedas_mult = marca;
+  if (n > 0) {
+    estado.pets.moedas = (Number(estado.pets.moedas) || 0) + n;
+    patch['pets/moedas'] = estado.pets.moedas;
+    registrarGanho('bonus', n, patch);
+  }
+  gravar(patch);
+  if (n > 0) { avisoPet(`🎁 Você recebeu ${n} moedas: agora as moedas valem mais, e você ganhou a diferença pelo que já conquistou!`, true); }
 }
 // PROMPT-129: as cores especiais agora são só do dragão vermelho. Quem tinha cor (pet_cor) e está com o azul: aviso uma vez.
 // A cor escolhida não é apagada (continua valendo para o vermelho); o azul aparece na cor normal (corAtiva).
@@ -3540,8 +3562,10 @@ function petFalar(tipoForcado = null) {
   return true;
 }
 
-// Mostra os balões um depois do outro (piada: pergunta → 2,5 s → resposta → risada)
+// Mostra os balões um depois do outro (piada: abertura → pergunta, com tempo para pensar → resposta → risada).
+// PROMPT-137: texto longo vira vários balões de até ~60 letras; cada um fica o tempo de leitura
 function mostrarFalaPet(baloes, fome = false) {
+  baloes = quebrarBaloes(baloes);
   pararFalaPet();
   conversa.falando = true;
   let i = 0;
@@ -3560,7 +3584,7 @@ function mostrarFalaPet(baloes, fome = false) {
       el.hidden = true;
       if (baloes[i]) conversa.timer = setTimeout(passo, baloes[i].espera || 0);
       else pararFalaPet();
-    }, b.fixo || duracaoBalao(b.texto));
+    }, duracaoDe(b));
   };
   passo();
 }
@@ -4511,7 +4535,7 @@ function baloesCuriosidade(pet) {
   if (abre && /[a-zà-ú,]$/i.test(abre.trim()) && !NOMES_PROPRIOS.test(t)) t = t.charAt(0).toLowerCase() + t.slice(1);
   let texto = abre ? `${abre.trim()} ${t}` : t;
   if (CURIO.fecha?.length && Math.random() < 0.5) texto += ` ${sortear(CURIO.fecha)}`;
-  const baloes = [{ texto, espera: 0, fixo: 2500 + texto.length * 55, largo: true }];   // tempo de leitura pelo tamanho
+  const baloes = quebrarBaloes([{ texto, espera: 0, largo: true }]);   // em pedaços de até ~60 letras, cada um com o tempo de leitura
   const f = it.album && figurinhas()[it.album];
   if (f) baloes.push({ texto: temFigurinha(it.album) ? `É da sua figurinha de ${f.nome}! 📒` : 'Tem uma figurinha sobre isso no Álbum… 👀', espera: 300 });
   return baloes;
@@ -9153,7 +9177,7 @@ function tocarMovelCasa(p) {
 function curiosidadeNaEstante() {
   const b = CURIO ? baloesCuriosidade(seguidor.pet) : null;
   mostrarFalaPet(b || [{ texto: 'Hmm… já li todos esses livros! 📚', espera: 0, fixo: 2500 }]);
-  if (cs?.ida && b) cs.ida.ate = performance.now() + b.reduce((t, x) => t + (x.fixo || duracaoBalao(x.texto)) + (x.espera || 0), 0);   // fica até acabar de contar
+  if (cs?.ida && b) cs.ida.ate = performance.now() + tempoFala(b);   // fica até acabar de contar (com as durações novas)
 }
 // 🧸 caixa: o pet comemora; +1 de lealdade uma vez por dia
 function brincarNaCaixa() {
@@ -12251,13 +12275,21 @@ function atualizarBotaoAjuda() {
 }
 
 function falaAjuda(texto) {
-  const el = $('perg-pet-fala');
-  el.textContent = texto;
-  el.hidden = false;
-  el.classList.remove('nova'); void el.offsetWidth; el.classList.add('nova');
-  $('perg-fala').classList.add('quieto');   // o balão do adversário dá lugar ao do pet
-  clearTimeout(timerFalaAjuda);
-  timerFalaAjuda = setTimeout(fecharFalaAjuda, duracaoBalao(texto));
+  const el = $('perg-pet-fala'), partes = partirTexto(texto);   // PROMPT-137: pedaços de até ~60 letras, um depois do outro
+  let k = 0;
+  const mostrar = () => {
+    el.textContent = partes[k];
+    el.hidden = false;
+    el.classList.remove('nova'); void el.offsetWidth; el.classList.add('nova');
+    $('perg-fala').classList.add('quieto');   // o balão do adversário dá lugar ao do pet
+    clearTimeout(timerFalaAjuda);
+    timerFalaAjuda = setTimeout(() => {
+      if (++k >= partes.length) { fecharFalaAjuda(); return; }
+      el.hidden = true;
+      timerFalaAjuda = setTimeout(mostrar, 600);
+    }, tempoLeitura(partes[k]));
+  };
+  mostrar();
 }
 function fecharFalaAjuda() {
   clearTimeout(timerFalaAjuda);
@@ -12697,15 +12729,23 @@ async function animarRespostaPlano(plano, q) {
   const p = pl.mostra === 'origem' ? [0, 0] : lerPar(q.resposta);   // resposta / origem: o ponto certo
   if (p) { plano.ponto(...p); plano.guias(...p); plano.bandeira(...p); plano.rotulo(...p, parPlano(...p), C.ouro, 0, 34); }
 }
+// 📐 o plano (mapa 12) ou 🧱 a figura (mapa 11 e 4 A, PROMPT-135): o mesmo lugar na arena; pgPlano.animar() roda o "depois"
+let figPerg = null, erroFig = null;
 function mostrarPlanoPergunta(q) {
-  planoPerg?.cancelar();
-  const tem = !!q.plano;
+  planoPerg?.cancelar(); figPerg?.cancelar();
+  let tem = !!(q.plano || q.figura);
+  if (q.figura) {
+    figPerg ||= criarFigura($('perg-plano'));
+    tem = figPerg.mostrar(q.figura);
+    if (tem) pgPlano = { q, animar: () => figPerg.animar() };
+  } else if (q.plano) {
+    planoPerg ||= criarPlano($('perg-plano'));
+    montarPlanoPergunta(planoPerg, q);
+    pgPlano = { q, animar: () => animarRespostaPlano(planoPerg, q) };
+  }
   $('perg-plano-box').hidden = !tem;
   $('perg-arena').classList.toggle('com-plano', tem);
-  if (!tem) { pgPlano = null; return; }
-  planoPerg ||= criarPlano($('perg-plano'));
-  montarPlanoPergunta(planoPerg, q);
-  pgPlano = { q, plano: planoPerg };
+  if (!tem) pgPlano = null;
 }
 
 function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
@@ -12728,12 +12768,16 @@ function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
   $('erro-linha-dica').hidden = !mostraDica && $('erro-relembre').hidden;
   $('erro-volta').textContent = pg.modo === 'treino' ? `🔁 ${comOutrosNumeros ? 'Ela volta daqui a pouco, com outros números, e de novo amanhã.' : 'Ela volta daqui a pouco e de novo amanhã.'}` : `🔁 ${comOutrosNumeros ? 'Essa pergunta volta daqui a pouco, com outros números.' : 'Essa pergunta volta daqui a pouco.'}`;
   // 📐 com plano (PROMPT-128): o mesmo plano da pergunta, com a animação da resposta certa; sem plano, a mini-grade de antes
-  erroPlano?.cancelar(); erroPlano = null;
-  const grade = q.plano ? '<svg aria-label="Plano cartesiano"></svg>' : (q.mapa ?? pg.mapa) === 12 ? gradeDoErro(q.enunciado, sua, certa) : '';
+  erroPlano?.cancelar(); erroPlano = null; erroFig?.cancelar(); erroFig = null;
+  const grade = q.plano || q.figura ? '<svg aria-label="Figura da pergunta"></svg>' : (q.mapa ?? pg.mapa) === 12 ? gradeDoErro(q.enunciado, sua, certa) : '';
   $('erro-grade').innerHTML = grade;
   $('erro-grade').hidden = !grade;
-  $('erro-grade').classList.toggle('com-plano', !!q.plano);
-  if (q.plano) {
+  $('erro-grade').classList.toggle('com-plano', !!(q.plano || q.figura));
+  if (q.figura) {   // 🧱 a figura com a animação da resposta certa (PROMPT-135)
+    const f = erroFig = criarFigura($('erro-grade').querySelector('svg'));
+    if (f.mostrar(q.figura)) setTimeout(() => { if (erroFig === f) f.animar().catch(() => {}); }, 450);
+    else $('erro-grade').hidden = true;
+  } else if (q.plano) {
     erroPlano = criarPlano($('erro-grade').querySelector('svg'));
     montarPlanoPergunta(erroPlano, q, 1.6);
     const ep = erroPlano;
@@ -12903,11 +12947,20 @@ function responderSegundaChance(usar) {
   errarPergunta(o.btn, o.q, o.certa, o.botoes);
 }
 
+// 📊 PROMPT-134 (painel "Antes e depois"): na PRIMEIRA vez que o aluno responde uma pergunta de ginásio (fora do treino),
+// grava respostas/{id}/primeira (quando) e de_primeira (acertou ou não). As respostas seguintes não mexem nesses campos.
+function marcarPrimeiraResposta(q, acertou) {
+  if (pg.modo === 'treino' || !RE_ID.test(q.id) || estado.respostas?.[q.id]) return;
+  const agora = Date.now();
+  gravar({ [`respostas/${q.id}/primeira`]: agora, [`respostas/${q.id}/de_primeira`]: !!acertou });
+  lembrarResposta(q.id, { primeira: agora, de_primeira: !!acertou });
+}
 function responder(btn) {
   if (!pg || pg.travado || pg.fim) return;
   pg.travado = true;
   const q = pg.fila[0];
   const certa = String(q.resposta);
+  marcarPrimeiraResposta(q, btn.dataset.v === certa);   // 📊 "de primeira" (PROMPT-134), antes da Segunda chance
   const botoes = [...$('perg-alternativas').querySelectorAll('.jr-alt')];
   botoes.forEach(b => { b.disabled = true; });
   tocar('clique');
@@ -12937,7 +12990,7 @@ function responder(btn) {
     falar(sortear(D.falas.acerto));
     // 📐 com plano: espera a animação da resposta (no mínimo 1,1 s, no máximo ~3 s)
     const pgAgora = pg, segue = () => { if (!pg || pg !== pgAgora) return; pg.fila.length ? renderPergunta() : vencer(); };
-    const anim = pgPlano?.q === q ? animarRespostaPlano(pgPlano.plano, q).catch(() => {}) : null;
+    const anim = pgPlano?.q === q ? pgPlano.animar().catch(() => {}) : null;
     if (anim) Promise.race([Promise.all([anim, esperaMs(1100)]), esperaMs(3000)]).then(segue); else setTimeout(segue, 1100);
   } else errarPergunta(btn, q, certa, botoes);
 }
@@ -13635,6 +13688,7 @@ const FONTES_MOEDA = {
   aovivo: { nome: 'Tabuada ao vivo' },
   missao: { nome: 'Missões do dia' },
   programe: { nome: 'Programe o pet' },
+  bonus: { nome: '🎁 Bônus (moedas valendo mais)' },
 };
 
 function registrarGanho(fonte, n, patch) {
@@ -13971,7 +14025,7 @@ function abrirRelembre(chave, origem) {
   const e = explicacaoDe(chave);
   if (!e || !estado) return;
   relembreAberto = { chave, origem };
-  const anim = e.animacao?.tipo === 'plano' && e.animacao.exemplos?.length ? e.animacao : null;   // 📐 mapa 12 (PROMPT-128)
+  const anim = (e.animacao?.tipo === 'plano' && e.animacao.exemplos?.length) || (e.animacao?.tipo === 'figura' && e.animacao.figura) ? e.animacao : null;   // 📐 mapa 12 (PROMPT-128) · 🧱 figura (PROMPT-135)
   $('rel-caixa').classList.toggle('com-plano', !!anim);
   $('rel-plano').hidden = $('rel-anim').hidden = !anim;
   const [, mapaRel, gRel] = /^mapa(\d+)-([AB])$/.exec(chave) || [];
@@ -14008,11 +14062,11 @@ function abrirRelembre(chave, origem) {
   }
   $('rel-ok').focus({ preventScroll: true });
   relAnim = anim ? { a: anim, i: 0 } : null;
-  if (anim) rodarRelembrePlano(); else relPlano?.cancelar();
+  if (anim) rodarRelembrePlano(); else { relPlano?.cancelar(); relFig?.cancelar(); }
 }
 
 // ── 📐 Relembre animado (PROMPT-128): o pet monta o ponto (Forte Pirata) ou anda no plano (Observatório) ──
-let relPlano = null, relAnim = null;   // o plano do cartão e { a: animacao, i: exemplo }
+let relPlano = null, relFig = null, relAnim = null;   // o plano do cartão, a figura (PROMPT-135) e { a: animacao, i: exemplo }
 function parRelembre(x, y, muda) {
   const v = (n, c, on) => (n === null || n === undefined ? '<span class="vazio">?</span>' : `<span class="${c}${on ? ' pisca' : ''}">${fmtPlano(n)}</span>`);
   $('rel-par').innerHTML = `( ${v(x, 'cx', muda === 'x')} , ${v(y, 'cy', muda === 'y')} )`;
@@ -14020,6 +14074,20 @@ function parRelembre(x, y, muda) {
 function rodarRelembrePlano() {
   const r = relAnim;
   if (!r) return;
+  relPlano?.cancelar(); relFig?.cancelar();
+  const fig = r.a.tipo === 'figura';
+  $('rel-par').hidden = $('relembre').querySelector('.jr-rel-legenda').hidden = fig;
+  if (fig) {   // 🧱 figura (PROMPT-135): a regra e o exemplo à direita; a figura desenha e anima uma vez (↺ repete)
+    const e = explicacaoDe(relembreAberto?.chave) || {};
+    relFig ||= criarFigura($('rel-svg'));
+    $('rel-fala').innerHTML = `<p>${esc(e.regra || '')}</p>${e.exemplo ? `<p class="jr-rel-exemplo">${exemploRelembre(e.exemplo)}</p>` : ''}${e.dica ? `<p class="jr-rel-dica">💡 ${esc(e.dica)}</p>` : ''}`;
+    $('rel-pausa').textContent = '⏸';
+    $('rel-pontos').innerHTML = '';
+    $('rel-prox').hidden = true;
+    const f = relFig;
+    if (f.mostrar(r.a.figura)) setTimeout(() => { if (relAnim === r && relFig === f) f.animar().catch(() => {}); }, 700);
+    return;
+  }
   const ex = r.a.exemplos[r.i], monta = r.a.modo === 'monta';
   relPlano ||= criarPlano($('rel-svg'));
   $('rel-fala').innerHTML = '';
@@ -14035,7 +14103,7 @@ function fecharRelembre() {
   if (!relembreAberto) return;
   const { chave } = relembreAberto;
   relembreAberto = null;
-  relPlano?.cancelar(); relAnim = null;
+  relPlano?.cancelar(); relFig?.cancelar(); relAnim = null;
   $('relembre').hidden = true;
   if ($('rel-check').hidden) return;
   const r = (estado.relembre[chave] ||= {}), ocultar = $('rel-ocultar').checked;
@@ -14419,7 +14487,7 @@ function ligarEventos() {
   $('btn-relembre').addEventListener('click', () => { if (cena?.tipo === 'interior') abrirRelembre(cena.chave, 'ginasio'); });
   $('rel-ok').addEventListener('click', fecharRelembre);
   $('rel-rev').addEventListener('click', () => rodarRelembrePlano());
-  $('rel-pausa').addEventListener('click', () => { if (relPlano) $('rel-pausa').textContent = relPlano.pausar() ? '▶' : '⏸'; });
+  $('rel-pausa').addEventListener('click', () => { const a = relAnim?.a.tipo === 'figura' ? relFig : relPlano; if (a) $('rel-pausa').textContent = a.pausar() ? '▶' : '⏸'; });
   $('rel-prox').addEventListener('click', () => { if (relAnim) { relAnim.i = (relAnim.i + 1) % relAnim.a.exemplos.length; rodarRelembrePlano(); } });
   $('btn-missoes').addEventListener('click', abrirMissoes);
   $('mp-letra').addEventListener('click', alternarLetra);

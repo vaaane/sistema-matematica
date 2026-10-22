@@ -4,7 +4,10 @@
 // uma seção por vez. Textos do JSON: **negrito**, [[destaque laranja]], {{verde}} — o resto é escapado.
 // Sem prêmio: o "Tente você" é só treino.
 // Animações do "Pensa assim": fila (PROMPT-90) · caixas, casas e sapo (PROMPT-113), todas com o mesmo ritmo, legendas
-// numeradas e controles; com prefers-reduced-motion, só a etapa final. plano (PROMPT-128, mapa 12): o pet anda no plano
+// numeradas e controles; com prefers-reduced-motion, só a etapa final. termometro, sinais, pizza e alinhar (PROMPT-115,
+// mapas 3 e 4): desenhadas em SVG no palco, no mesmo motor. potencia, raiz_quadrado, reta_pulos e arranjos (PROMPT-136,
+// mapas 5 e 6): com `exemplos` e o botão "Outro exemplo ▶" (as legendas do JSON valem para o 1º; nos outros, geradas).
+// plano (PROMPT-128, mapa 12): o pet anda no plano
 // cartesiano (plano.js), um exemplo depois do outro. "Tente você" do mapa 12 (tente_plano): tocar no ponto (alvos) ou
 // tocar onde o pet para (perguntas), no lugar da múltipla escolha.
 import { criarPlano, faixaPara, pontosDoCaminho, par, fmt, textoMov, CORES_PLANO as COR } from './plano.js';
@@ -88,10 +91,11 @@ function irSecao(s) {
         ${tem ? `<div class="qe-palco qe-p-${a.tipo}" id="qe-palco">${a.tipo === 'fila' ? '<div class="qe-balcao">🛎️ ATENDIMENTO</div>' : ''}</div>` : ''}
         <div class="qe-pensa-lado">
           ${tem ? `<div class="qe-leg"><span class="qe-num" id="qe-pnum">1</span><span id="qe-pleg"></span></div>
-          <div class="qe-ctrl"><div class="qe-pts" id="qe-pts"></div><button class="qe-mini" data-qe-pausa>⏸ pausar</button><button class="qe-mini" data-qe-inicio>↺ do início</button></div>` : ''}
+          <div class="qe-ctrl"><div class="qe-pts" id="qe-pts"></div><button class="qe-mini" data-qe-pausa>⏸ pausar</button><button class="qe-mini" data-qe-inicio>↺ do início</button>${a.exemplos?.length > 1 && a.tipo !== 'plano' ? '<button class="qe-mini" data-qe-outro>Outro exemplo ▶</button>' : ''}</div>` : ''}
           ${p.porque ? `<p class="qe-porque">${marcar(p.porque)}</p>` : ''}
         </div>
       </div>`;
+    qe.exAnim = 0;
     if (tem) ANIMACOES[a.tipo](a);
   } else if (s === 'exemplos') {
     tela.innerHTML = `${selo}<div class="qe-chips" id="qe-chips"></div><div class="qe-trilha" id="qe-trilha"></div>`;
@@ -472,7 +476,317 @@ async function tocarTentePlano(e) {
   resp.innerHTML = certo ? `Isso! Parei em <b>${esc(par(fimX, fimY))}</b>. 🎉` : `Eu parei em <b>${esc(par(fimX, fimY))}</b>, não em ${esc(par(x, y))}. Lado muda o x; cima/baixo muda o y.`;
 }
 
-const ANIMACOES = { fila: (a) => iniciarFila(a), caixas: iniciarCaixas, casas: iniciarCasas, sapo: iniciarSapo, plano: iniciarPlano };
+// ── PROMPT-115 (mapas 3 e 4): termômetro, sinais, pizza e alinhar. SVG no palco (viewBox 600 × 240), o mesmo motor de passos ──
+const SVGNS = 'http://www.w3.org/2000/svg';
+const CQ = { lar: 'var(--jr-laranja, #ff7b2e)', az: 'var(--jr-cyan, #00d4ff)', verde: 'var(--jr-verde, #00e676)', verm: '#ff4d5e', ouro: 'var(--jr-ouro, #ffd700)' };
+function svgPalco(w = 600, h = 240) {
+  const s = document.createElementNS(SVGNS, 'svg');
+  s.setAttribute('viewBox', `0 0 ${w} ${h}`); s.setAttribute('class', 'qe-anim-svg');
+  $('qe-palco').appendChild(s);
+  return s;
+}
+function sv(tag, at = {}, pai) { const e = document.createElementNS(SVGNS, tag); for (const k in at) e.setAttribute(k, at[k]); if (pai) pai.appendChild(e); return e; }
+function st(texto, x, y, at = {}, pai) { const e = sv('text', { x, y, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-family': 'Inter, sans-serif', 'font-weight': 800, fill: '#fff', ...at }, pai); e.textContent = texto; return e; }
+// uma mudança suave ao longo de ms (0 → 1); sem movimento ou com outra animação: vai direto ao fim
+function tween(ms, fn) {
+  const an = qe?.anim;
+  if (!an || calmo()) { fn(1); return; }
+  const t0 = performance.now();
+  const passo = (agora) => { if (qe?.anim !== an) return; const k = Math.min(1, (agora - t0) / ms); fn(k < 1 ? k * k * (3 - 2 * k) : 1); if (k < 1) requestAnimationFrame(passo); };
+  requestAnimationFrame(passo);
+}
+const numTxt = (v) => (v < 0 ? '−' + Math.abs(v) : String(v));
+
+// 🌡️ termômetro em pé, de min a max: acima de zero laranja (quente), abaixo azul (frio); o líquido sobe ou desce até o valor
+function iniciarTermometro(a) {
+  const s = svgPalco(360, 240), mn = Number(a.min ?? -10), mx = Number(a.max ?? 10), y0 = 14, y1 = 226, X = 140;
+  const Y = (v) => y1 - (v - mn) / (mx - mn) * (y1 - y0);
+  sv('rect', { x: X - 16, y: y0 - 8, width: 32, height: y1 - y0 + 16, rx: 16, fill: 'rgba(255,255,255,.08)', stroke: '#fff', 'stroke-width': 3 }, s);
+  const liq = sv('rect', { x: X - 9, width: 18, rx: 9 }, s);
+  for (let v = mn; v <= mx; v++) {
+    const zero = v === 0;
+    sv('line', { x1: X + 18, x2: X + (zero ? 46 : 28), y1: Y(v), y2: Y(v), stroke: zero ? '#fff' : 'rgba(255,255,255,.5)', 'stroke-width': zero ? 3 : 1.5 }, s);
+    if (zero || (mx - mn <= 20) || v % 2 === 0) st(numTxt(v), X + (zero ? 52 : 34), Y(v), { 'font-size': zero ? 17 : 12, fill: zero ? '#fff' : v > 0 ? CQ.lar : CQ.az, 'text-anchor': 'start' }, s);
+  }
+  sv('line', { x1: X - 26, x2: X + 18, y1: Y(0), y2: Y(0), stroke: '#fff', 'stroke-width': 2, 'stroke-dasharray': '4 3' }, s);
+  const grande = st('', 280, 120, { 'font-size': 34, 'font-family': 'Orbitron, sans-serif' }, s);
+  const op = st('', 52, 120, { 'font-size': 26, 'font-family': 'Orbitron, sans-serif', fill: CQ.lar }, s);
+  let atual = Number(a.etapas?.[0]?.valor ?? 0);
+  const pintar = (v) => {
+    const topo = Y(v), base = Y(0);
+    liq.setAttribute('y', Math.min(topo, base)); liq.setAttribute('height', Math.max(4, Math.abs(base - topo)));
+    liq.setAttribute('fill', v >= 0 ? CQ.lar : CQ.az);
+    grande.textContent = `${numTxt(Math.round(v))} °C`; grande.setAttribute('fill', Math.round(v) > 0 ? CQ.lar : Math.round(v) < 0 ? CQ.az : '#fff');
+  };
+  const ir = (v) => { const de = atual; atual = v; tween(1300, (k) => pintar(de + (v - de) * k)); };
+  const et = a.etapas || [];
+  const passos = [() => { op.textContent = ''; atual = Number(et[0]?.valor ?? 0); pintar(atual); }];
+  et.slice(1).forEach((e) => {
+    passos.push(() => { op.textContent = e.op || ''; op.setAttribute('fill', /^[−-]/.test(e.op || '') ? CQ.az : CQ.lar); });
+    passos.push(() => ir(Number(e.valor)));
+  });
+  comecarAnim(passos, a.legendas || []);
+}
+
+// 😊😠 sinais: duas fichas (verde + / vermelha −) se aproximam e, ao se encontrarem, aparece a do resultado
+function iniciarSinais(a) {
+  const s = svgPalco(440, 240), cor = (x) => (x === '+' ? CQ.verde : CQ.verm), cara = (x) => (x === '+' ? '😊' : '😠');
+  const ficha = (x, cx) => { const g = sv('g', { style: `transform: translate(${cx}px, 96px); transition: transform .9s ease, opacity .4s` }, s);
+    sv('circle', { r: 42, fill: cor(x), stroke: '#fff', 'stroke-width': 3 }, g); st(x === '+' ? '+' : '−', 0, -10, { 'font-size': 34, fill: '#10142a' }, g); st(cara(x), 0, 22, { 'font-size': 24 }, g); return g; };
+  let fichas = [];
+  const texto = st('', 220, 206, { 'font-size': 20, 'font-weight': 700 }, s);
+  const passos = (a.etapas || []).map((e) => () => {
+    for (const f of fichas) f.remove();
+    texto.textContent = '';
+    const fa = ficha(e.a, 70), fb = ficha(e.b, 370);
+    fichas = [fa, fb];
+    // aproximam-se do centro; ao se encontrarem, aparece o resultado
+    depois(80, () => { fa.style.transform = 'translate(172px, 96px)'; fb.style.transform = 'translate(268px, 96px)'; });
+    depois(1050, () => {
+      fa.style.opacity = fb.style.opacity = '.35';
+      const fr = ficha(e.r, 220); fr.style.transform = 'translate(220px, 96px) scale(1.15)'; fichas.push(fr);
+      texto.textContent = e.texto || ''; texto.setAttribute('fill', cor(e.r));
+    });
+  });
+  comecarAnim(passos, a.legendas || []);
+}
+
+// 🍕 pizza em fatias: as pintadas com queijo e calabresa; com op, as novas se pintam uma a uma; quando as partes mudam,
+// os cortes que sobram somem com fade (4/8 é a mesma área de 1/2)
+function iniciarPizza(a) {
+  const s = svgPalco(), cx = 190, cy = 120, r = 100;
+  sv('circle', { cx, cy, r: r + 4, fill: 'none', stroke: '#c0702a', 'stroke-width': 9 }, s);   // a borda (só contorno)
+  const gF = sv('g', {}, s), gC = sv('g', {}, s), gCal = sv('g', {}, s);
+  sv('circle', { cx, cy, r, fill: 'none', stroke: '#7a3e00', 'stroke-width': 3 }, s);
+  const fr = st('', 430, 110, { 'font-size': 42, 'font-family': 'Orbitron, sans-serif' }, s), opT = st('', 430, 62, { 'font-size': 24, fill: CQ.lar }, s);
+  let n = 0, fatias = [], cortes = [];
+  const fatia = (i, N) => { const a0 = -Math.PI / 2 + i * 2 * Math.PI / N, a1 = a0 + 2 * Math.PI / N;
+    return `M${cx} ${cy} L${cx + r * Math.cos(a0)} ${cy + r * Math.sin(a0)} A${r} ${r} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${cx + r * Math.cos(a1)} ${cy + r * Math.sin(a1)} Z`; };
+  const pintar = (f, sim) => { f.setAttribute('fill', sim ? '#f5c542' : 'rgba(255,255,255,.04)'); };
+  const calabresas = (pintadas, N) => { gCal.innerHTML = ''; for (let i = 0; i < pintadas; i++) { const am = -Math.PI / 2 + (i + 0.5) * 2 * Math.PI / N;
+    const pos = N <= 4 ? [[0.32, 0], [0.62, -0.35], [0.62, 0.35], [0.85, 0]] : [[0.45, 0], [0.72, 0]];
+    for (const [d, da] of pos) { const ang = am + da * Math.PI / N; sv('circle', { cx: cx + r * d * Math.cos(ang), cy: cy + r * d * Math.sin(ang), r: Math.min(12, Math.max(5, 30 / Math.sqrt(N))), fill: '#c0392b', stroke: '#7a1e12', 'stroke-width': 1.5 }, gCal); } } };
+  const montar = (N, pintadas) => {
+    gF.innerHTML = ''; gC.innerHTML = ''; n = N;
+    fatias = Array.from({ length: N }, (_, i) => { const f = sv('path', { d: fatia(i, N), stroke: 'none' }, gF); pintar(f, i < pintadas); return f; });
+    cortes = Array.from({ length: N }, (_, i) => { const ang = -Math.PI / 2 + i * 2 * Math.PI / N; return sv('line', { x1: cx, y1: cy, x2: cx + r * Math.cos(ang), y2: cy + r * Math.sin(ang), stroke: '#7a3e00', 'stroke-width': 3, style: 'transition: opacity .9s' }, gC); });
+    calabresas(pintadas, N);
+  };
+  const et = a.etapas || [];
+  let pint = 0;
+  const passos = et.map((e, k) => () => {
+    fr.textContent = e.texto || ''; opT.textContent = e.op || '';
+    const N = Number(e.partes), P = Number(e.pintadas);
+    if (!k || (N === n && !e.op)) { montar(N, P); pint = P; return; }
+    if (N === n) {   // op: as novas se pintam uma a uma
+      for (let i = pint; i < P; i++) depois(250 + (i - pint) * 320, () => { pintar(fatias[i], true); calabresas(i + 1, N); });
+      pint = P; return;
+    }
+    // menos partes: os cortes que não servem para a divisão nova somem com fade, a área pintada é a mesma
+    const passo = n / N;
+    cortes.forEach((c, i) => { if (i % passo) c.style.opacity = '0'; });
+    depois(1000, () => { montar(N, P); pint = P; });
+  });
+  comecarAnim(passos, a.legendas || []);
+}
+
+// ➕ alinhar pela vírgula: os números chegam tortos, descem e se alinham; as casas vazias viram 0; a soma vai coluna por
+// coluna, da direita para a esquerda, e o resultado aparece embaixo, em verde
+function iniciarAlinhar(a) {
+  const s = svgPalco(360, 200), nums = (a.numeros || []).map(String), comp = (a.completa || nums).map(String), res = String(a.resultado ?? '');
+  const casasDec = Math.max(...comp.map(x => (x.split(',')[1] || '').length), (res.split(',')[1] || '').length);
+  const casasInt = Math.max(...comp.map(x => x.split(',')[0].length), res.split(',')[0].length);
+  const CW = 28, xVir = 180, lin0 = 40, LH = 42;
+  const xCol = (j) => xVir + (j < 0 ? (j + 0.5) * CW : (j + 0.5) * CW + 6);   // j < 0: inteiros (−1 = unidade); j ≥ 0: decimais
+  const guia = sv('line', { x1: xVir + 3, x2: xVir + 3, y1: 18, y2: lin0 + LH * (nums.length + 0.6), stroke: CQ.ouro, 'stroke-width': 3, 'stroke-dasharray': '6 5', opacity: 0, style: 'transition: opacity .3s' }, s);
+  const linhas = nums.map((x, i) => {
+    const [int, dec = ''] = comp[i].split(','), [, decOrig = ''] = x.split(','), g = sv('g', { style: 'transition: transform 1s ease' }, s);
+    const y = lin0 + i * LH, chars = [];
+    [...int].forEach((d, k) => chars.push(st(d, xCol(k - int.length), y, { 'font-size': 26, 'font-family': 'Orbitron, sans-serif' }, g)));
+    st(',', xVir + 3, y, { 'font-size': 26, 'font-family': 'Orbitron, sans-serif' }, g);
+    const zeros = [];
+    [...dec].forEach((d, k) => { const e = st(d, xCol(k), y, { 'font-size': 26, 'font-family': 'Orbitron, sans-serif' }, g); chars.push(e); if (k >= decOrig.length) { e.setAttribute('opacity', 0); zeros.push(e); } });
+    if (i === nums.length - 1) st(a.op || '+', xCol(-casasInt - 1), y, { 'font-size': 26, fill: CQ.lar }, g);
+    return { g, zeros, desloca: (i % 2 ? 1 : -1) * (40 + 30 * i) };
+  });
+  const yTraco = lin0 + LH * (nums.length - 0.4);
+  sv('line', { x1: xCol(-casasInt - 1) - 16, x2: xCol(casasDec - 1) + 18, y1: yTraco, y2: yTraco, stroke: '#fff', 'stroke-width': 3 }, s);
+  const yRes = yTraco + 30, gRes = sv('g', {}, s), [rInt, rDec = ''] = res.split(',');
+  const torto = () => linhas.forEach((l, i) => { l.g.style.transform = `translate(${l.desloca}px, ${-10 - i * 6}px) rotate(${i % 2 ? 4 : -4}deg)`; });
+  const destaque = sv('rect', { x: 0, y: lin0 - LH / 2, width: CW, height: LH * nums.length + 40, rx: 8, fill: 'rgba(255,215,0,.12)', stroke: CQ.ouro, 'stroke-width': 2, opacity: 0 }, s);
+  const passos = [
+    () => { gRes.innerHTML = ''; guia.setAttribute('opacity', 0); destaque.setAttribute('opacity', 0); linhas.forEach(l => l.zeros.forEach(z => { z.setAttribute('opacity', 0); z.setAttribute('fill', '#fff'); })); torto(); },
+    () => { linhas.forEach(l => { l.g.style.transform = 'none'; }); guia.setAttribute('opacity', 1); let k = 0; const pisca = () => { if (k++ < 6) { guia.setAttribute('opacity', k % 2 ? 0.3 : 1); depois(300, pisca); } }; depois(1000, pisca); },
+    () => linhas.forEach(l => l.zeros.forEach(z => { z.setAttribute('opacity', 1); z.setAttribute('fill', CQ.lar); })),
+    () => {   // coluna por coluna, da direita para a esquerda
+      gRes.innerHTML = '';
+      const cols = [...Array.from({ length: casasDec }, (_, k) => casasDec - 1 - k), ...Array.from({ length: casasInt }, (_, k) => -1 - k)];
+      cols.forEach((j, q) => depois(q * 420, () => {
+        destaque.setAttribute('x', xCol(j) - CW / 2); destaque.setAttribute('opacity', 1);
+        const d = j >= 0 ? rDec[j] : rInt[rInt.length + j];
+        if (d != null) st(d, xCol(j), yRes, { 'font-size': 26, 'font-family': 'Orbitron, sans-serif', fill: CQ.verde }, gRes);
+        if (j === 0) st(',', xVir + 3, yRes, { 'font-size': 26, 'font-family': 'Orbitron, sans-serif', fill: CQ.verde }, gRes);
+      }));
+    },
+    () => { destaque.setAttribute('opacity', 0); gRes.innerHTML = ''; [...rInt].forEach((d, k) => st(d, xCol(k - rInt.length), yRes, { 'font-size': 26, 'font-family': 'Orbitron, sans-serif', fill: CQ.verde }, gRes));
+      st(',', xVir + 3, yRes, { 'font-size': 26, 'font-family': 'Orbitron, sans-serif', fill: CQ.verde }, gRes); [...rDec].forEach((d, k) => st(d, xCol(k), yRes, { 'font-size': 26, 'font-family': 'Orbitron, sans-serif', fill: CQ.verde }, gRes)); },
+  ];
+  comecarAnim(passos, a.legendas || []);
+}
+
+// ── PROMPT-136 (mapas 5 e 6): potência, raiz quadrada, pulos na reta e arranjos. Cada uma tem `exemplos`; as legendas do
+// JSON valem para o 1º exemplo e, nos outros, o mesmo texto com os números do exemplo ──
+const exemploAnim = (a) => a.exemplos?.[qe.exAnim % a.exemplos.length] || a;
+const legendasAnim = (a, geradas) => (qe.exAnim % (a.exemplos?.length || 1) === 0 && a.legendas?.length ? a.legendas : geradas);
+function outroExemploAnim() {
+  const a = qe?.dados?.[qe.G]?.pensa?.animacao;
+  if (!a?.exemplos?.length || !ANIMACOES[a.tipo]) return;
+  pararFila();
+  qe.exAnim = (qe.exAnim + 1) % a.exemplos.length;
+  $('qe-palco').innerHTML = '';
+  $('qe-palco').classList.remove('qe-calmo');
+  const b = $('estudos').querySelector('[data-qe-pausa]'); if (b) b.textContent = '⏸ pausar';
+  ANIMACOES[a.tipo](a);
+}
+const SUP = { 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹' };
+const sup = (n) => String(n).split('').map(d => SUP[d] ?? d).join('');
+// ⛏️ potência: a base entra `exp` vezes como fichas; elas se juntam duas a duas com o resultado parcial; no fim, bᵉ = v
+function iniciarPotencia(a) {
+  const ex = exemploAnim(a), b = Number(ex.base), n = Number(ex.exp), s = svgPalco(), dez = b === 10;
+  const parciais = []; let v = b; for (let k = 1; k < n; k++) { parciais.push([v, v * b]); v *= b; }
+  const leg = legendasAnim(a, [`${b}${sup(n)}: o ${b} entra ${n} ${n === 1 ? 'vez' : 'vezes'}`,
+    n > 2 ? parciais.slice(0, -1).map(([x, y]) => `${x} × ${b} = ${y}`).join(' → ') + '…' : `${b} × ${b} = ${b * b}…`,
+    n > 2 ? `…${parciais.at(-1)[0]} × ${b} = ${v}${dez ? ` (1 seguido de ${n} zeros)` : ''} ✅` : `${b}${sup(n)} = ${v}${dez ? ` (1 seguido de ${n} zeros)` : ''} ✅`]);
+  const g = sv('g', {}, s), fim = sv('g', {}, s);
+  const W = 600, R = Math.min(38, 230 / n), x0 = W / 2 - (n - 1) * (R * 2.4) / 2;
+  const ficha = (txt, x, cor = CQ.lar, r = R) => { const e = sv('g', { style: `transform: translate(${x}px, 96px); transition: transform .6s ease, opacity .4s` }, g);
+    sv('circle', { r, fill: 'rgba(255,255,255,.06)', stroke: cor, 'stroke-width': 4 }, e); st(String(txt), 0, 0, { 'font-size': Math.min(26, r * 0.75), 'font-family': 'Orbitron, sans-serif' }, e); return e; };
+  const caber = (f) => { const tx = f.querySelector('text'); tx.setAttribute('font-size', Math.min(26, R * 0.75, 2.6 * R / Math.max(1, tx.textContent.length))); };   // 1000 cabe na ficha
+  let fichas = [];
+  const montar = () => { g.innerHTML = ''; fim.innerHTML = ''; fichas = Array.from({ length: n }, (_, k) => ficha(b, x0 + k * R * 2.4, '#fff')); };
+  const passos = [
+    () => { montar(); fichas.forEach((f, k) => depois(250 + k * 380, () => { f.querySelector('circle').setAttribute('stroke', CQ.lar); st(`${k + 1}ª`, x0 + k * R * 2.4, 96 + R + 18, { 'font-size': 16, fill: CQ.lar }, g); })); },
+    () => {   // junta as fichas, uma a uma, com o resultado parcial (menos a última conta)
+      montar();
+      const nJ = n > 2 ? n - 2 : 1;
+      for (let k = 0; k < nJ; k++) depois(200 + k * 650, () => {
+        fichas[0].style.transform = `translate(${x0 + (k + 1) * R * 1.2}px, 96px)`; fichas[k + 1].style.opacity = '0';
+        fichas[0].querySelector('text').textContent = String(parciais[k][1]); caber(fichas[0]); fichas[0].querySelector('circle').setAttribute('stroke', CQ.az);
+      });
+    },
+    () => {
+      montar(); fichas.forEach((f, k) => { if (k) f.style.opacity = '0'; });
+      fichas[0].style.transform = `translate(${W / 2}px, 96px)`; fichas[0].querySelector('text').textContent = String(v); caber(fichas[0]); fichas[0].querySelector('circle').setAttribute('stroke', CQ.verde);
+      const tb = st('', W / 2, 196, { 'font-size': 34, 'font-family': 'Orbitron, sans-serif' }, fim);
+      const t1 = sv('tspan', { fill: '#fff' }, tb); t1.textContent = String(b);
+      const t2 = sv('tspan', { fill: CQ.lar, dy: -14, 'font-size': 22 }, tb); t2.textContent = String(n);
+      const t3 = sv('tspan', { fill: CQ.verde, dy: 14 }, tb); t3.textContent = dez ? ' = 1' : ` = ${v}`;
+      if (dez) for (let k = 0; k < n; k++) depois(300 + k * 300, () => { t3.textContent += '0'; });
+    },
+  ];
+  comecarAnim(passos, leg);
+}
+// 🗼 raiz quadrada: `area` quadradinhos soltos se arrumam num quadrado; o lado acende contando; √A = l
+function iniciarRaizQuadrado(a) {
+  const ex = exemploAnim(a), A = Number(ex.area), l = Math.round(Math.sqrt(A)), s = svgPalco();
+  const leg = legendasAnim(a, [`${A} quadradinhos…`, '…montados num quadrado:', `${l} de cada lado → √${A} = ${l} ✅`]);
+  const u = Math.min(36, 190 / l), gx = 300 - l * u / 2, gy = 120 - l * u / 2;
+  let semente = A * 7 + 3; const rnd = () => (semente = (semente * 9301 + 49297) % 233280) / 233280;
+  const soltos = Array.from({ length: A }, () => [30 + rnd() * 520, 20 + rnd() * 180, rnd() * 50 - 25]);
+  const cel = Array.from({ length: A }, () => sv('rect', { width: u - 3, height: u - 3, rx: 4, fill: 'rgba(255,123,46,.75)', stroke: '#fff', 'stroke-width': 1.5, style: 'transition: transform .9s ease' }, s));
+  const lados = sv('g', {}, s), conta = st('', 300, 222, { 'font-size': 20, 'font-weight': 800 }, s);
+  const espalhar = () => cel.forEach((c, k) => { const [x, y, r] = soltos[k]; c.style.transform = `translate(${x}px, ${y}px) rotate(${r}deg)`; });
+  const arrumar = () => cel.forEach((c, k) => { c.style.transform = `translate(${gx + (k % l) * u}px, ${gy + Math.floor(k / l) * u}px)`; });
+  const passos = [
+    () => { lados.innerHTML = ''; conta.textContent = ''; espalhar(); },
+    () => { lados.innerHTML = ''; conta.textContent = ''; arrumar(); },
+    () => {
+      arrumar(); lados.innerHTML = ''; conta.textContent = '';
+      for (let k = 0; k < l; k++) depois(200 + k * 260, () => {
+        st(String(k + 1), gx + k * u + u / 2 - 1.5, gy + l * u + 12, { 'font-size': 14, fill: CQ.lar }, lados);
+        st(String(k + 1), gx - 12, gy + k * u + u / 2 - 1.5, { 'font-size': 14, fill: CQ.az }, lados);
+      });
+      depois(250 + l * 260, () => { conta.textContent = `√${A} = ${l}, porque ${l} × ${l} = ${A}`; conta.setAttribute('fill', CQ.verde); });
+    },
+  ];
+  comecarAnim(passos, leg);
+}
+// 🐸 pulos na reta: o sapo pula de `passo` em `passo` a partir do 0 e marca onde pisa; os números de `teste` acendem
+function iniciarRetaPulos(a) {
+  const ex = exemploAnim(a), p = Number(ex.passo), N = Number(ex.ate), testes = (ex.teste || []).map(Number), s = svgPalco();
+  const X = (v) => 30 + v * 540 / N, Yr = 140;
+  const pisados = Array.from({ length: Math.floor(N / p) }, (_, k) => (k + 1) * p);
+  const fala = (v) => (v % p === 0 ? `o ${v} foi pisado: é múltiplo ✅` : `o ${v} não: não é ❌`);
+  const leg = legendasAnim(a, [`Pulando de ${p} em ${p} a partir do 0…`, `…ele pisa no ${pisados.join(', ')}`, testes.map((v, i) => (i ? fala(v) : fala(v).replace(/^o/, 'O'))).join(' · ')]);
+  sv('line', { x1: X(0) - 8, x2: X(N) + 8, y1: Yr, y2: Yr, stroke: '#fff', 'stroke-width': 3 }, s);
+  for (let v = 0; v <= N; v++) {
+    sv('line', { x1: X(v), x2: X(v), y1: Yr - (v % 5 ? 6 : 10), y2: Yr + (v % 5 ? 6 : 10), stroke: 'rgba(255,255,255,.7)', 'stroke-width': v % 5 ? 1.5 : 2.5 }, s);
+    if (N <= 20 || v % 5 === 0 || v % p === 0) st(String(v), X(v), Yr + 24, { 'font-size': N > 20 ? 12 : 14, fill: 'rgba(255,255,255,.8)' }, s);
+  }
+  const marcas = sv('g', {}, s), arcos = sv('g', {}, s), avisos = sv('g', {}, s);
+  const sapo = st('🐸', X(0), Yr - 22, { 'font-size': 28, style: 'transition: transform .32s ease' }, s);
+  const posSapo = (v, alto = false) => { sapo.style.transform = `translate(${X(v) - X(0)}px, ${alto ? -30 : 0}px)`; };
+  const limpar = () => { marcas.innerHTML = ''; arcos.innerHTML = ''; avisos.innerHTML = ''; };
+  const marcar = (v) => { sv('circle', { cx: X(v), cy: Yr, r: 8, fill: CQ.lar }, marcas); sv('path', { d: `M${X(v - p)} ${Yr - 4} Q ${(X(v - p) + X(v)) / 2} ${Yr - 60} ${X(v)} ${Yr - 4}`, fill: 'none', stroke: CQ.lar, 'stroke-width': 2, 'stroke-dasharray': '5 4' }, arcos); };
+  const passos = [
+    () => { limpar(); posSapo(0); },
+    () => {
+      limpar(); posSapo(0);
+      const ms = Math.min(300, 1500 / pisados.length);
+      pisados.forEach((v, k) => { depois(150 + k * ms, () => posSapo(v - p / 2, true)); depois(150 + k * ms + ms / 2, () => { posSapo(v); marcar(v); }); });
+    },
+    () => {
+      limpar(); pisados.forEach(marcar); posSapo(pisados.at(-1) ?? 0);
+      testes.forEach((v, k) => depois(200 + k * 500, () => {
+        const ok = v % p === 0;
+        sv('circle', { cx: X(v), cy: Yr, r: 13, fill: 'none', stroke: ok ? CQ.verde : CQ.verm, 'stroke-width': 4 }, avisos);
+        st(`${v} ${ok ? '✅' : '❌'}`, X(v), Yr + 58, { 'font-size': 18, fill: ok ? CQ.verde : CQ.verm }, avisos);
+      }));
+    },
+  ];
+  comecarAnim(passos, leg);
+}
+// 🪓 arranjos: `n` lenhas em fileiras iguais (1, 2, … até a raiz); sem sobra → os 2 divisores entram na lista; com sobra → vermelho e some
+function iniciarArranjos(a) {
+  const ex = exemploAnim(a), n = Number(ex.n), s = svgPalco(440, 240), CX = 220;
+  const ks = []; for (let k = 2; k * k <= n; k++) ks.push(k);
+  const bons = ks.filter(k => n % k === 0), divs = [...new Set([1, n, ...bons, ...bons.map(k => n / k)])].sort((x, y) => x - y);
+  const leg = legendasAnim(a, [`${n} lenhas em 1 fileira de ${n}`,
+    bons.length ? bons.map(k => `${k} fileiras de ${n / k}`).join(' · ') + '…' : `${ks.length ? ks.join(' e ') + ' fileiras: sempre sobra…' : 'não dá outra arrumação…'}`,
+    divs.length === 2 ? `Só 1 × ${n} → ${n} tem 2 divisores ✅` : `Divisores de ${n}: ${divs.join(', ')} ✅`]);
+  const area = sv('g', {}, s), lista = st('', CX, 222, { 'font-size': 18, 'font-weight': 800 }, s);
+  const LH = 20;
+  const desenhar = (k, sobraVermelha = false) => {   // k fileiras: as completas em marrom; a sobra em vermelho
+    area.innerHTML = '';
+    const porFila = Math.floor(n / k) || n, w = Math.min(54, 400 / porFila), x0 = CX - porFila * w / 2, y0 = 100 - k * (LH + 6) / 2;
+    for (let i = 0; i < n; i++) {
+      const fila = Math.floor(i / porFila), col = i % porFila, sobra = fila >= k;
+      const x = sobra ? CX + (col - (n % k) / 2) * w : x0 + col * w, y = sobra ? y0 + k * (LH + 6) + 8 : y0 + fila * (LH + 6);
+      sv('rect', { x: x + 2, y, width: w - 4, height: LH, rx: 7, fill: sobra && sobraVermelha ? CQ.verm : '#8a5a2a', stroke: sobra && sobraVermelha ? '#fff' : '#3e220c', 'stroke-width': 2 }, area);
+    }
+    st(n % k === 0 ? `${k} × ${n / k}` : `${k} fileiras: sobra ${n % k}`, CX, y0 - 16, { 'font-size': 18, fill: n % k === 0 ? CQ.lar : CQ.verm }, area);
+  };
+  const achados = [];
+  const mostrarLista = (fim = false) => { lista.textContent = fim ? (divs.length === 2 ? `só 1 × ${n} → 2 divisores` : `Divisores de ${n}: ${divs.join(', ')}`) : `Divisores: ${[...achados].sort((x, y) => x - y).join(', ')}`; lista.setAttribute('fill', fim ? CQ.verde : '#fff'); };
+  const passos = [
+    () => { achados.length = 0; achados.push(1, n); desenhar(1); mostrarLista(); },
+    () => {
+      achados.length = 0; achados.push(1, n); desenhar(1); mostrarLista();
+      ks.forEach((k, q) => depois(200 + q * 750, () => {
+        const ok = n % k === 0;
+        desenhar(k, !ok);
+        if (ok) { achados.push(k, n / k); mostrarLista(); }
+        else depois(450, () => desenhar(1));
+      }));
+    },
+    () => { desenhar(bons.at(-1) || 1); mostrarLista(true); },
+  ];
+  comecarAnim(passos, leg);
+}
+
+const ANIMACOES = { fila: (a) => iniciarFila(a), caixas: iniciarCaixas, casas: iniciarCasas, sapo: iniciarSapo, plano: iniciarPlano,
+  termometro: iniciarTermometro, sinais: iniciarSinais, pizza: iniciarPizza, alinhar: iniciarAlinhar,
+  potencia: iniciarPotencia, raiz_quadrado: iniciarRaizQuadrado, reta_pulos: iniciarRetaPulos, arranjos: iniciarArranjos };
 
 function passoFila() {
   const an = qe.anim;
@@ -526,6 +840,7 @@ export function ligarQuadroEstudos(aoFechar) {
     if (t.closest('[data-qe-tp-outra]')) { proximoTentePlano(); return; }
     if (t.closest('#qe-tp-svg')) { tocarTentePlano(e); return; }
     if (t.closest('[data-qe-pausa]')) { pausarFila(t.closest('[data-qe-pausa]')); return; }
+    if (t.closest('[data-qe-outro]')) { outroExemploAnim(); return; }
     if (t.closest('[data-qe-inicio]')) {
       const an = qe.anim; if (!an) return;
       caixa.querySelector('[data-qe-pausa]').textContent = '⏸ pausar';

@@ -40,7 +40,8 @@
    "titulo": "Frações",
    "regra": "Frações equivalentes: multiplique ou divida em cima e embaixo pelo mesmo número. Para somar, use o mesmo denominador.",
    "exemplo": "1/2 = 2/4 = 3/6   ·   1/4 + 2/4 = 3/4",
-   "dica": "Denominador = em quantas partes o inteiro foi dividido."
+   "dica": "Denominador = em quantas partes o inteiro foi dividido.",
+   "animacao": { "tipo": "figura", "figura": { "tipo": "simplificar", "fr": [4, 8], "fim": [1, 2] } }
   },
   "mapa4-B": {
    "titulo": "Decimais",
@@ -124,13 +125,15 @@
    "titulo": "Perímetro e medidas",
    "regra": "Perímetro é a soma de todos os lados (o contorno). Medido em cm, m…",
    "exemplo": "Retângulo 5 × 3: 5 + 3 + 5 + 3 = 16 cm",
-   "dica": "Quadrado: 4 × lado."
+   "dica": "Quadrado: 4 × lado.",
+   "animacao": { "tipo": "figura", "figura": { "tipo": "poligono", "forma": "retangulo", "lados": [6, 2, 6, 2], "unid": "cm" } }
   },
   "mapa11-B": {
    "titulo": "Área",
    "regra": "Área é o espaço dentro da figura. Medida em cm², m²…",
    "exemplo": "Retângulo: base × altura = 5 × 3 = 15 cm²   ·   Triângulo: base × altura ÷ 2",
-   "dica": "Perímetro é contorno; área é o que tem dentro."
+   "dica": "Perímetro é contorno; área é o que tem dentro.",
+   "animacao": { "tipo": "figura", "figura": { "tipo": "grade", "c": 5, "l": 4, "unid": "cm" } }
   },
   "mapa12-A": {
    "titulo": "Ler coordenadas",

@@ -19,7 +19,18 @@
         "21 cm",
         "19 cm",
         "40 cm"
-       ]
+       ],
+       "figura": {
+        "tipo": "poligono",
+        "forma": "quadrado",
+        "lados": [
+         5,
+         5,
+         5,
+         5
+        ],
+        "unid": "cm"
+       }
       },
       {
        "id": "m11A-treinador1-2",
@@ -29,7 +40,18 @@
         "13 cm",
         "11 cm",
         "24 cm"
-       ]
+       ],
+       "figura": {
+        "tipo": "poligono",
+        "forma": "quadrado",
+        "lados": [
+         3,
+         3,
+         3,
+         3
+        ],
+        "unid": "cm"
+       }
       },
       {
        "id": "m11A-treinador1-3",
@@ -39,7 +61,18 @@
         "12 cm",
         "8 cm",
         "14 cm"
-       ]
+       ],
+       "figura": {
+        "tipo": "poligono",
+        "forma": "retangulo",
+        "lados": [
+         6,
+         2,
+         6,
+         2
+        ],
+        "unid": "cm"
+       }
       },
       {
        "id": "m11A-treinador1-4",
@@ -49,7 +82,18 @@
         "12 cm",
         "7 cm",
         "11 cm"
-       ]
+       ],
+       "figura": {
+        "tipo": "poligono",
+        "forma": "retangulo",
+        "lados": [
+         4,
+         3,
+         4,
+         3
+        ],
+        "unid": "cm"
+       }
       },
       {
        "id": "m11A-treinador1-5",
@@ -59,7 +103,18 @@
         "41 cm",
         "39 cm",
         "80 cm"
-       ]
+       ],
+       "figura": {
+        "tipo": "poligono",
+        "forma": "quadrado",
+        "lados": [
+         10,
+         10,
+         10,
+         10
+        ],
+        "unid": "cm"
+       }
       }
      ],
      "fala": "O perímetro é a volta inteira. Some todos os lados!",
@@ -76,7 +131,17 @@
         "7 cm",
         "10 cm",
         "1 cm"
-       ]
+       ],
+       "figura": {
+        "tipo": "poligono",
+        "forma": "triangulo",
+        "lados": [
+         3,
+         4,
+         5
+        ],
+        "unid": "cm"
+       }
       },
       {
        "id": "m11A-treinador2-2",
@@ -86,7 +151,17 @@
         "9 cm",
         "12 cm",
         "3 cm"
-       ]
+       ],
+       "figura": {
+        "tipo": "poligono",
+        "forma": "regular",
+        "lados": [
+         6,
+         6,
+         6
+        ],
+        "unid": "cm"
+       }
       },
       {
        "id": "m11A-treinador2-3",
@@ -96,7 +171,19 @@
         "7 cm",
         "12 cm",
         "3 cm"
-       ]
+       ],
+       "figura": {
+        "tipo": "poligono",
+        "forma": "regular",
+        "lados": [
+         2,
+         2,
+         2,
+         2,
+         2
+        ],
+        "unid": "cm"
+       }
       },
       {
        "id": "m11A-treinador2-4",
@@ -106,7 +193,20 @@
         "7 cm",
         "13 cm",
         "5 cm"
-       ]
+       ],
+       "figura": {
+        "tipo": "poligono",
+        "forma": "regular",
+        "lados": [
+         1,
+         1,
+         1,
+         1,
+         1,
+         1
+        ],
+        "unid": "cm"
+       }
       },
       {
        "id": "m11A-treinador2-5",
@@ -116,7 +216,17 @@
         "25 cm",
         "10 cm",
         "15 cm"
-       ]
+       ],
+       "figura": {
+        "tipo": "poligono",
+        "forma": "triangulo",
+        "lados": [
+         5,
+         5,
+         4
+        ],
+        "unid": "cm"
+       }
       }
      ],
      "fala": "Triângulos e polígonos também têm perímetro!",
@@ -133,7 +243,14 @@
         "101 cm",
         "99 cm",
         "200 cm"
-       ]
+       ],
+       "figura": {
+        "tipo": "regua",
+        "texto": "1 m = 100 cm",
+        "de": "1 m",
+        "para": "100 cm",
+        "partes": 100
+       }
       },
       {
        "id": "m11A-treinador3-2",
@@ -143,7 +260,11 @@
         "6",
         "4",
         "10"
-       ]
+       ],
+       "figura": {
+        "tipo": "contar_lados",
+        "n": 5
+       }
       },
       {
        "id": "m11A-treinador3-3",
@@ -153,7 +274,10 @@
         "91°",
         "89°",
         "180°"
-       ]
+       ],
+       "figura": {
+        "tipo": "angulo_reto"
+       }
       },
       {
        "id": "m11A-treinador3-4",
@@ -163,7 +287,11 @@
         "7",
         "5",
         "12"
-       ]
+       ],
+       "figura": {
+        "tipo": "contar_lados",
+        "n": 6
+       }
       },
       {
        "id": "m11A-treinador3-5",
@@ -173,7 +301,14 @@
         "1001 m",
         "999 m",
         "2000 m"
-       ]
+       ],
+       "figura": {
+        "tipo": "regua",
+        "texto": "1 km = 1000 m",
+        "de": "1 km",
+        "para": "1000 m",
+        "partes": 10
+       }
       }
      ],
      "fala": "Medidas de obra: metros, centímetros e graus!",
@@ -190,7 +325,18 @@
         "50 m",
         "15 m",
         "25 m"
-       ]
+       ],
+       "figura": {
+        "tipo": "poligono",
+        "forma": "retangulo",
+        "lados": [
+         10,
+         5,
+         10,
+         5
+        ],
+        "unid": "m"
+       }
       },
       {
        "id": "m11A-lider-2",
@@ -200,7 +346,26 @@
         "5 cm",
         "3 cm",
         "8 cm"
-       ]
+       ],
+       "figura": {
+        "tipo": "poligono",
+        "forma": "quadrado",
+        "lados": [
+         "?",
+         "?",
+         "?",
+         "?"
+        ],
+        "revela": [
+         4,
+         4,
+         4,
+         4
+        ],
+        "unid": "cm",
+        "total": 16,
+        "conta": "16 ÷ 4 = 4 cm"
+       }
       },
       {
        "id": "m11A-lider-3",
@@ -210,7 +375,14 @@
         "4 m",
         "2 m",
         "6 m"
-       ]
+       ],
+       "figura": {
+        "tipo": "regua",
+        "texto": "100 cm = 1 m → 300 cm = 3 m",
+        "de": "300 cm",
+        "para": "3 m",
+        "metros": 3
+       }
       },
       {
        "id": "m11A-lider-4",
@@ -220,7 +392,18 @@
         "81 m",
         "79 m",
         "160 m"
-       ]
+       ],
+       "figura": {
+        "tipo": "poligono",
+        "forma": "quadrado",
+        "lados": [
+         20,
+         20,
+         20,
+         20
+        ],
+        "unid": "m"
+       }
       },
       {
        "id": "m11A-lider-5",
@@ -230,7 +413,18 @@
         "21 cm",
         "10 cm",
         "17 cm"
-       ]
+       ],
+       "figura": {
+        "tipo": "poligono",
+        "forma": "retangulo",
+        "lados": [
+         7,
+         3,
+         7,
+         3
+        ],
+        "unid": "cm"
+       }
       }
      ],
      "falas": {
@@ -250,7 +444,17 @@
         "110°",
         "160°",
         "10°"
-       ]
+       ],
+       "figura": {
+        "tipo": "angulos",
+        "angulos": [
+         50,
+         60,
+         "?"
+        ],
+        "revela": 70,
+        "conta": "180° − 50° − 60° = 70°"
+       }
       },
       {
        "id": "m11A-revanche-2",
@@ -260,7 +464,26 @@
         "26 cm",
         "46 cm",
         "14 cm"
-       ]
+       ],
+       "figura": {
+        "tipo": "poligono",
+        "forma": "retangulo",
+        "lados": [
+         6,
+         "?",
+         6,
+         "?"
+        ],
+        "revela": [
+         6,
+         4,
+         6,
+         4
+        ],
+        "unid": "cm",
+        "total": 20,
+        "conta": "20 − 6 − 6 = 8 · 8 ÷ 2 = 4 cm"
+       }
       },
       {
        "id": "m11A-revanche-3",
@@ -270,7 +493,18 @@
         "11 cm",
         "9 cm",
         "20 cm"
-       ]
+       ],
+       "figura": {
+        "tipo": "poligono",
+        "forma": "quadrado",
+        "lados": [
+         2.5,
+         2.5,
+         2.5,
+         2.5
+        ],
+        "unid": "cm"
+       }
       }
      ],
      "fala": "Lados que faltam e ângulos escondidos!",
@@ -295,7 +529,13 @@
         "10 cm²",
         "8 cm²",
         "18 cm²"
-       ]
+       ],
+       "figura": {
+        "tipo": "grade",
+        "c": 3,
+        "l": 3,
+        "unid": "cm"
+       }
       },
       {
        "id": "m11B-treinador1-2",
@@ -305,7 +545,13 @@
         "26 cm²",
         "24 cm²",
         "50 cm²"
-       ]
+       ],
+       "figura": {
+        "tipo": "grade",
+        "c": 5,
+        "l": 5,
+        "unid": "cm"
+       }
       },
       {
        "id": "m11B-treinador1-3",
@@ -315,7 +561,13 @@
         "5 cm²",
         "3 cm²",
         "8 cm²"
-       ]
+       ],
+       "figura": {
+        "tipo": "grade",
+        "c": 2,
+        "l": 2,
+        "unid": "cm"
+       }
       },
       {
        "id": "m11B-treinador1-4",
@@ -325,7 +577,13 @@
         "101 cm²",
         "99 cm²",
         "200 cm²"
-       ]
+       ],
+       "figura": {
+        "tipo": "grade",
+        "c": 10,
+        "l": 10,
+        "unid": "cm"
+       }
       },
       {
        "id": "m11B-treinador1-5",
@@ -335,7 +593,13 @@
         "2 cm²",
         "0 cm²",
         "3 cm²"
-       ]
+       ],
+       "figura": {
+        "tipo": "grade",
+        "c": 1,
+        "l": 1,
+        "unid": "cm"
+       }
       }
      ],
      "fala": "Área do quadrado: lado vezes lado!",
@@ -352,7 +616,13 @@
         "18 cm²",
         "9 cm²",
         "40 cm²"
-       ]
+       ],
+       "figura": {
+        "tipo": "grade",
+        "c": 5,
+        "l": 4,
+        "unid": "cm"
+       }
       },
       {
        "id": "m11B-treinador2-2",
@@ -362,7 +632,13 @@
         "16 cm²",
         "8 cm²",
         "24 cm²"
-       ]
+       ],
+       "figura": {
+        "tipo": "grade",
+        "c": 6,
+        "l": 2,
+        "unid": "cm"
+       }
       },
       {
        "id": "m11B-treinador2-3",
@@ -372,7 +648,13 @@
         "20 cm²",
         "10 cm²",
         "42 cm²"
-       ]
+       ],
+       "figura": {
+        "tipo": "grade",
+        "c": 3,
+        "l": 7,
+        "unid": "cm"
+       }
       },
       {
        "id": "m11B-treinador2-4",
@@ -382,7 +664,13 @@
         "26 cm²",
         "13 cm²",
         "60 cm²"
-       ]
+       ],
+       "figura": {
+        "tipo": "grade",
+        "c": 10,
+        "l": 3,
+        "unid": "cm"
+       }
       },
       {
        "id": "m11B-treinador2-5",
@@ -392,7 +680,13 @@
         "18 cm²",
         "9 cm²",
         "16 cm²"
-       ]
+       ],
+       "figura": {
+        "tipo": "grade",
+        "c": 8,
+        "l": 1,
+        "unid": "cm"
+       }
       }
      ],
      "fala": "Área do retângulo: base vezes altura!",
@@ -409,7 +703,13 @@
         "14 cm²",
         "7 cm²",
         "12 cm²"
-       ]
+       ],
+       "figura": {
+        "tipo": "grade",
+        "c": 3,
+        "l": 2,
+        "unid": "cm"
+       }
       },
       {
        "id": "m11B-treinador3-2",
@@ -419,7 +719,11 @@
         "cm",
         "kg",
         "L"
-       ]
+       ],
+       "figura": {
+        "tipo": "medida",
+        "o": "area"
+       }
       },
       {
        "id": "m11B-treinador3-3",
@@ -429,7 +733,11 @@
         "cm²",
         "L",
         "kg"
-       ]
+       ],
+       "figura": {
+        "tipo": "medida",
+        "o": "perimetro"
+       }
       },
       {
        "id": "m11B-treinador3-4",
@@ -439,7 +747,14 @@
         "9",
         "13",
         "1"
-       ]
+       ],
+       "figura": {
+        "tipo": "grade",
+        "c": 5,
+        "l": 4,
+        "unid": "",
+        "rotulo": "lajotas"
+       }
       },
       {
        "id": "m11B-treinador3-5",
@@ -447,7 +762,23 @@
        "resposta": "quadrado de lado 4 cm",
        "erradas": [
         "retângulo de 5 cm por 3 cm"
-       ]
+       ],
+       "figura": {
+        "tipo": "compara_area",
+        "figuras": [
+         {
+          "c": 4,
+          "l": 4,
+          "nome": "quadrado de lado 4 cm"
+         },
+         {
+          "c": 5,
+          "l": 3,
+          "nome": "retângulo de 5 cm por 3 cm"
+         }
+        ],
+        "unid": "cm"
+       }
       }
      ],
      "fala": "Área é medida em quadradinhos!",
@@ -464,7 +795,13 @@
         "14 m²",
         "7 m²",
         "24 m²"
-       ]
+       ],
+       "figura": {
+        "tipo": "grade",
+        "c": 4,
+        "l": 3,
+        "unid": "m"
+       }
       },
       {
        "id": "m11B-lider-2",
@@ -474,7 +811,13 @@
         "37 cm²",
         "35 cm²",
         "72 cm²"
-       ]
+       ],
+       "figura": {
+        "tipo": "grade",
+        "c": 6,
+        "l": 6,
+        "unid": "cm"
+       }
       },
       {
        "id": "m11B-lider-3",
@@ -484,7 +827,13 @@
         "20 cm²",
         "10 cm²",
         "48 cm²"
-       ]
+       ],
+       "figura": {
+        "tipo": "triangulo_area",
+        "base": 6,
+        "altura": 4,
+        "unid": "cm"
+       }
       },
       {
        "id": "m11B-lider-4",
@@ -494,7 +843,13 @@
         "22 cm²",
         "11 cm²",
         "36 cm²"
-       ]
+       ],
+       "figura": {
+        "tipo": "grade",
+        "c": 9,
+        "l": 2,
+        "unid": "cm"
+       }
       },
       {
        "id": "m11B-lider-5",
@@ -504,7 +859,15 @@
         "8 cm",
         "6 cm",
         "14 cm"
-       ]
+       ],
+       "figura": {
+        "tipo": "grade",
+        "c": 7,
+        "l": 7,
+        "unid": "cm",
+        "lado_oculto": true,
+        "conta": "7 × 7 = 49 → lado 7 cm"
+       }
       }
      ],
      "falas": {
@@ -524,7 +887,13 @@
         "22 cm²",
         "11 cm²",
         "48 cm²"
-       ]
+       ],
+       "figura": {
+        "tipo": "paralelogramo",
+        "base": 8,
+        "altura": 3,
+        "unid": "cm"
+       }
       },
       {
        "id": "m11B-revanche-2",
@@ -534,7 +903,13 @@
         "30 cm²",
         "15 cm²",
         "100 cm²"
-       ]
+       ],
+       "figura": {
+        "tipo": "triangulo_area",
+        "base": 10,
+        "altura": 5,
+        "unid": "cm"
+       }
       },
       {
        "id": "m11B-revanche-3",
@@ -544,7 +919,14 @@
         "36 m²",
         "18 m²",
         "160 m²"
-       ]
+       ],
+       "figura": {
+        "tipo": "grade",
+        "c": 10,
+        "l": 8,
+        "unid": "m",
+        "metade": true
+       }
       }
      ],
      "fala": "Triângulos e paralelogramos!",

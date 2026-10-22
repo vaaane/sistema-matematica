@@ -2954,6 +2954,9 @@ html.jr-deitado .lj-comprar { min-height: 32px; }
 /* 📐 mapa 12 (PROMPT-128): o "Pensa assim" com o plano (o palco vira o plano) e o "Tente você" de tocar no plano */
 .qe-pensa .qe-palco.qe-p-plano { max-height: none; min-height: 140px; background: #10142a; display: flex; align-items: center; justify-content: center; }
 .qe-palco.qe-p-plano::after { display: none; }
+/* PROMPT-115: termômetro, sinais, pizza e alinhar desenhados em SVG, ocupando o palco todo */
+.qe-palco .qe-anim-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.qe-pensa .qe-palco.qe-p-termometro, .qe-pensa .qe-palco.qe-p-sinais, .qe-pensa .qe-palco.qe-p-pizza, .qe-pensa .qe-palco.qe-p-alinhar { min-height: 150px; }
 .qe-pl-svg { width: 100%; height: 100%; display: block; }
 .qe-tela.qe-s-tente:has(.qe-tp) { display: flex; flex-direction: column; overflow: hidden; }
 .qe-s-tente .qe-selo { align-self: flex-start; flex: none; }

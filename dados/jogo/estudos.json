@@ -1,5 +1,5 @@
 {
- "_nota": "Quadro de Estudos de cada mapa (PROMPT-90). mural: posição no mapa lógico 1376×768 (x,y = centro da BASE; largura em px; ponto = onde o personagem para). Por ginásio (A/B): regra, pensa, exemplos, armadilha, tente. Ginásio sem conteúdo = null → aba mostra 'Em breve'. Marcação nos textos: **negrito**, [[destaque laranja]], {{verde}}. Animações do Pensa assim: fila (PROMPT-90), caixas, casas, sapo (PROMPT-113). mural null = posição ainda não definida.",
+ "_nota": "Quadro de Estudos de cada mapa (PROMPT-90). mural: posição no mapa lógico 1376×768 (x,y = centro da BASE; largura em px; ponto = onde o personagem para). Por ginásio (A/B): regra, pensa, exemplos, armadilha, tente. Ginásio sem conteúdo = null → aba mostra 'Em breve'. Marcação nos textos: **negrito**, [[destaque laranja]], {{verde}}. Animações do Pensa assim: fila (PROMPT-90), caixas, casas, sapo (PROMPT-113); termometro, sinais, pizza, alinhar (PROMPT-115); potencia, raiz_quadrado, reta_pulos, arranjos (PROMPT-136, com exemplos e \"Outro exemplo\"). mural null = posição ainda não definida.",
  "mapa1": {
   "mural": {
    "x": 1165,
@@ -772,6 +772,1503 @@
       "2,500": "Zero no fim não muda nada! A vírgula tem que andar 3 casas."
      },
      "erro_padrao": "Quase! 1 kg = 1000 g."
+    }
+   ]
+  }
+ },
+ "mapa3": {
+  "mural": {
+   "x": 720,
+   "y": 560,
+   "largura": 100,
+   "ponto": [
+    720,
+    588
+   ]
+  },
+  "A": {
+   "aba": "❄️ Ginásio de Gelo (A)",
+   "regra": {
+    "titulo": "Números **negativos**: somar e subtrair",
+    "texto": "Pense num **termômetro**: para cima esquenta (+), para baixo esfria (−).",
+    "degraus": [
+     {
+      "ops": [
+       "+"
+      ],
+      "cor": "laranja",
+      "texto": "+ um número → **sobe**",
+      "obs": "−5 + 8 → 3"
+     },
+     {
+      "ops": [
+       "−",
+       "+ (−)"
+      ],
+      "cor": "cyan",
+      "texto": "− um número ou + (−número) → **desce**",
+      "obs": "4 + (−6) = 4 − 6 → −2"
+     },
+     {
+      "ops": [
+       "− (−)"
+      ],
+      "cor": "verde",
+      "texto": "− (−número) → vira **+**",
+      "obs": "tirar uma dívida é ganhar: 5 − (−3) = 8"
+     }
+    ]
+   },
+   "pensa": {
+    "titulo": "Somar e subtrair é **subir e descer** no termômetro 🌡️",
+    "animacao": {
+     "tipo": "termometro",
+     "min": -8,
+     "max": 8,
+     "etapas": [
+      {
+       "valor": -2
+      },
+      {
+       "op": "+ 5",
+       "valor": 3
+      },
+      {
+       "op": "− 7",
+       "valor": -4
+      }
+     ],
+     "legendas": [
+      "Está fazendo −2 °C: 2 graus abaixo de zero.",
+      "+ 5: o termômetro sobe 5 graus…",
+      "…e chega a 3 °C.",
+      "− 7: agora desce 7 graus…",
+      "…e chega a −4 °C ✅"
+     ]
+    },
+    "porque": "💡 **Por quê?** Negativo é o que falta: −5 °C está 5 graus **abaixo** de zero. Por isso −5 é **menor** que −2: está mais frio."
+   },
+   "exemplos": [
+    {
+     "conta": "−5 ou −2: qual é maior?",
+     "passos": [
+      {
+       "conta": "[[−2]] está mais perto do zero",
+       "nota": "mais quente"
+      },
+      {
+       "conta": "{{−2 > −5}}",
+       "nota": "−2 é maior"
+      }
+     ]
+    },
+    {
+     "conta": "−5 + 8",
+     "passos": [
+      {
+       "conta": "de −5, [[sobe 8]]",
+       "nota": "+ sobe"
+      },
+      {
+       "conta": "{{3}}",
+       "nota": "−5 + 8 = 3"
+      }
+     ]
+    },
+    {
+     "conta": "4 + (−6)",
+     "passos": [
+      {
+       "conta": "4 [[− 6]]",
+       "nota": "+ (−) desce"
+      },
+      {
+       "conta": "{{−2}}",
+       "nota": "4 − 6 = −2"
+      }
+     ]
+    },
+    {
+     "conta": "2 − 5",
+     "passos": [
+      {
+       "conta": "de 2, [[desce 5]]",
+       "nota": "passa do zero"
+      },
+      {
+       "conta": "{{−3}}",
+       "nota": "2 − 5 = −3"
+      }
+     ]
+    },
+    {
+     "conta": "5 − (−3)",
+     "passos": [
+      {
+       "conta": "5 [[+ 3]]",
+       "nota": "− (−) vira +"
+      },
+      {
+       "conta": "{{8}}",
+       "nota": "5 + 3 = 8"
+      }
+     ]
+    }
+   ],
+   "armadilha": {
+    "conta": "−5 ou −2: qual é maior?",
+    "texto": "Muita gente olha só o número:",
+    "errado": "−5, porque 5 é maior que 2",
+    "certo": "−2: está mais perto do zero (mais quente)",
+    "nota": "Com negativos, quanto **mais longe** do zero, **menor**. −10 °C é mais frio que −1 °C. 🥶"
+   },
+   "tente": [
+    {
+     "conta": "−4 − 3",
+     "opcoes": [
+      "−7",
+      "−1",
+      "7",
+      "1"
+     ],
+     "certa": "−7",
+     "acerto": "Isso! De −4, desce 3: −7 🎉",
+     "erros": {
+      "−1": "Você subiu 3. Subtrair é **descer**: de −4 desce 3.",
+      "7": "O sinal! Começou abaixo de zero e desceu mais: fica negativo."
+     },
+     "erro_padrao": "Quase! De −4, desça 3."
+    },
+    {
+     "conta": "−2 + (−3)",
+     "opcoes": [
+      "−5",
+      "1",
+      "−1",
+      "5"
+     ],
+     "certa": "−5",
+     "acerto": "Boa! Somar um negativo é descer: −5 🎉",
+     "erros": {
+      "1": "Você trocou o sinal do 3. + (−3) é **descer** 3.",
+      "−1": "Somar −3 é descer 3 a partir de −2: −5."
+     },
+     "erro_padrao": "Quase! + (−3) é o mesmo que − 3."
+    },
+    {
+     "conta": "Tinha R$ 10 e gastei R$ 15. Qual o saldo?",
+     "opcoes": [
+      "−5",
+      "5",
+      "25",
+      "−25"
+     ],
+     "certa": "−5",
+     "acerto": "Mandou bem! 10 − 15 = −5: ficou devendo R$ 5 🎉",
+     "erros": {
+      "5": "Gastou mais do que tinha: o saldo fica **negativo**: −5.",
+      "25": "Isso é 10 + 15. Gastar é **tirar**."
+     },
+     "erro_padrao": "Quase! 10 − 15."
+    }
+   ]
+  },
+  "B": {
+   "aba": "🏔️ Cabana da Neve (B)",
+   "regra": {
+    "titulo": "Regra dos sinais (× e ÷)",
+    "texto": "Faça a conta **sem sinal** e depois decida o sinal:",
+    "degraus": [
+     {
+      "ops": [
+       "+ · +",
+       "− · −"
+      ],
+      "cor": "verde",
+      "texto": "sinais **iguais** → **positivo**",
+      "obs": "(−4) × (−5) = 20"
+     },
+     {
+      "ops": [
+       "+ · −",
+       "− · +"
+      ],
+      "cor": "laranja",
+      "texto": "sinais **diferentes** → **negativo**",
+      "obs": "5 × (−2) = −10 · na divisão vale igual"
+     }
+    ]
+   },
+   "pensa": {
+    "titulo": "**Amigos e inimigos** 🤝 (+ é amigo, − é inimigo)",
+    "animacao": {
+     "tipo": "sinais",
+     "etapas": [
+      {
+       "a": "+",
+       "b": "+",
+       "r": "+",
+       "texto": "o amigo do meu amigo é meu amigo"
+      },
+      {
+       "a": "−",
+       "b": "−",
+       "r": "+",
+       "texto": "o inimigo do meu inimigo é meu amigo"
+      },
+      {
+       "a": "+",
+       "b": "−",
+       "r": "−",
+       "texto": "o amigo do meu inimigo é meu inimigo"
+      },
+      {
+       "a": "−",
+       "b": "+",
+       "r": "−",
+       "texto": "o inimigo do meu amigo é meu inimigo"
+      }
+     ],
+     "legendas": [
+      "+ com +: amigo do amigo → amigo (+)",
+      "− com −: inimigo do inimigo → amigo (+)",
+      "+ com −: amigo do inimigo → inimigo (−)",
+      "− com +: inimigo do amigo → inimigo (−) ✅"
+     ]
+    },
+    "porque": "💡 **Por quê?** 3 × (−2) é somar −2 três vezes: −2 −2 −2 = −6. O **−** inverte o sentido; inverter duas vezes volta ao positivo."
+   },
+   "exemplos": [
+    {
+     "conta": "(−2) × 3",
+     "passos": [
+      {
+       "conta": "2 × 3 = 6",
+       "nota": "conta sem sinal"
+      },
+      {
+       "conta": "[[− e +]]: diferentes",
+       "nota": "dá negativo"
+      },
+      {
+       "conta": "{{−6}}",
+       "nota": ""
+      }
+     ]
+    },
+    {
+     "conta": "(−4) × (−5)",
+     "passos": [
+      {
+       "conta": "4 × 5 = 20",
+       "nota": "conta sem sinal"
+      },
+      {
+       "conta": "[[− e −]]: iguais",
+       "nota": "dá positivo"
+      },
+      {
+       "conta": "{{20}}",
+       "nota": ""
+      }
+     ]
+    },
+    {
+     "conta": "(−12) ÷ 3",
+     "passos": [
+      {
+       "conta": "12 ÷ 3 = 4",
+       "nota": "conta sem sinal"
+      },
+      {
+       "conta": "[[− e +]]: diferentes",
+       "nota": "dá negativo"
+      },
+      {
+       "conta": "{{−4}}",
+       "nota": ""
+      }
+     ]
+    },
+    {
+     "conta": "(−10) ÷ (−2)",
+     "passos": [
+      {
+       "conta": "10 ÷ 2 = 5",
+       "nota": "conta sem sinal"
+      },
+      {
+       "conta": "[[− e −]]: iguais",
+       "nota": "dá positivo"
+      },
+      {
+       "conta": "{{5}}",
+       "nota": ""
+      }
+     ]
+    },
+    {
+     "conta": "(−3) × (−2) × (−1)",
+     "passos": [
+      {
+       "conta": "[[(−3) × (−2)]] × (−1)",
+       "nota": "de dois em dois"
+      },
+      {
+       "conta": "6 × (−1)",
+       "nota": "iguais: +6"
+      },
+      {
+       "conta": "{{−6}}",
+       "nota": "diferentes: −6"
+      }
+     ]
+    }
+   ],
+   "armadilha": {
+    "conta": "(−4) × (−5) = ?",
+    "texto": "Muita gente acha que dois negativos dão \"mais negativo\":",
+    "errado": "(−4) × (−5) = −20",
+    "certo": "sinais iguais → +20",
+    "nota": "Cuidado: na **soma**, −4 + (−5) = −9 mesmo. A regra dos sinais é **só para × e ÷**! ⚠️"
+   },
+   "tente": [
+    {
+     "conta": "(−18) ÷ 6",
+     "opcoes": [
+      "−3",
+      "3",
+      "−12",
+      "12"
+     ],
+     "certa": "−3",
+     "acerto": "Isso! 18 ÷ 6 = 3, sinais diferentes: −3 🎉",
+     "erros": {
+      "3": "Sinais **diferentes** dão negativo.",
+      "−12": "Isso é −18 + 6. Aqui é dividir."
+     },
+     "erro_padrao": "Quase! 18 ÷ 6 = 3; agora o sinal."
+    },
+    {
+     "conta": "(−20) ÷ (−5)",
+     "opcoes": [
+      "4",
+      "−4",
+      "−25",
+      "25"
+     ],
+     "certa": "4",
+     "acerto": "Boa! Sinais iguais: positivo 🎉",
+     "erros": {
+      "−4": "Sinais **iguais** dão **positivo**!",
+      "−25": "Isso é somar. Aqui é dividir: 20 ÷ 5 = 4."
+     },
+     "erro_padrao": "Quase! 20 ÷ 5 = 4; sinais iguais."
+    },
+    {
+     "conta": "(−2) × 5 + 4",
+     "opcoes": [
+      "−6",
+      "−14",
+      "6",
+      "−18"
+     ],
+     "certa": "−6",
+     "acerto": "Mandou bem! −10 + 4 = −6 🎉",
+     "erros": {
+      "−14": "Quase! De −10, **subir** 4 dá −6.",
+      "−18": "O × vem antes da soma: (−2) × 5 = −10, depois + 4.",
+      "6": "Cuidado com o sinal: (−2) × 5 = −10."
+     },
+     "erro_padrao": "Quase! Primeiro (−2) × 5 = −10."
+    }
+   ]
+  }
+ },
+ "mapa4": {
+  "mural": {
+   "x": 500,
+   "y": 388,
+   "largura": 100,
+   "ponto": [
+    500,
+    416
+   ]
+  },
+  "A": {
+   "aba": "🌾 Celeiro (A)",
+   "regra": {
+    "titulo": "Frações",
+    "texto": "**Embaixo** (denominador): em quantas partes iguais o inteiro foi dividido. **Em cima** (numerador): quantas partes pegamos.",
+    "degraus": [
+     {
+      "ops": [
+       "÷",
+       "×"
+      ],
+      "cor": "laranja",
+      "texto": "simplificar: em cima **e** embaixo pelo **mesmo** número",
+      "obs": "4/8 ÷ 4 → 1/2"
+     },
+     {
+      "ops": [
+       "+",
+       "−"
+      ],
+      "cor": "cyan",
+      "texto": "mesmo denominador: opera **só em cima**",
+      "obs": "1/5 + 2/5 = 3/5 (embaixo fica igual)"
+     },
+     {
+      "ops": [
+       "de"
+      ],
+      "cor": "verde",
+      "texto": "fração de quantidade: **÷ pelo de baixo, × pelo de cima**",
+      "obs": "3/4 de 20 → 20 ÷ 4 = 5 → 5 × 3 = 15"
+     }
+    ]
+   },
+   "pensa": {
+    "titulo": "Fração é **pizza** 🍕",
+    "animacao": {
+     "tipo": "pizza",
+     "etapas": [
+      {
+       "partes": 8,
+       "pintadas": 3,
+       "texto": "3/8"
+      },
+      {
+       "op": "+ 4/8",
+       "partes": 8,
+       "pintadas": 7,
+       "texto": "7/8"
+      },
+      {
+       "partes": 8,
+       "pintadas": 4,
+       "texto": "4/8"
+      },
+      {
+       "partes": 2,
+       "pintadas": 1,
+       "texto": "4/8 = 1/2"
+      }
+     ],
+     "legendas": [
+      "Pizza em 8 fatias; pegamos 3: 3/8",
+      "+ 4/8: mais 4 fatias do mesmo tamanho → 7/8",
+      "Agora 4 fatias de 8: 4/8…",
+      "…é a metade da pizza: 4/8 = 1/2 ✅"
+     ]
+    },
+    "porque": "💡 **Por quê?** As fatias têm o mesmo tamanho (oitavos). 3 fatias + 4 fatias = 7 fatias; o tamanho da fatia (o 8) não muda."
+   },
+   "exemplos": [
+    {
+     "conta": "Simplifique 4/8",
+     "passos": [
+      {
+       "conta": "[[4 ÷ 4]] / [[8 ÷ 4]]",
+       "nota": "mesmo número em cima e embaixo"
+      },
+      {
+       "conta": "{{1/2}}",
+       "nota": ""
+      }
+     ]
+    },
+    {
+     "conta": "2/7 + 3/7",
+     "passos": [
+      {
+       "conta": "[[2 + 3]] / 7",
+       "nota": "só em cima"
+      },
+      {
+       "conta": "{{5/7}}",
+       "nota": "embaixo fica 7"
+      }
+     ]
+    },
+    {
+     "conta": "1/4 de 12",
+     "passos": [
+      {
+       "conta": "12 [[÷ 4]]",
+       "nota": "÷ pelo de baixo"
+      },
+      {
+       "conta": "{{3}}",
+       "nota": "× 1 = 3"
+      }
+     ]
+    },
+    {
+     "conta": "2/3 de 30",
+     "passos": [
+      {
+       "conta": "30 [[÷ 3]] = 10",
+       "nota": "÷ pelo de baixo"
+      },
+      {
+       "conta": "10 [[× 2]]",
+       "nota": "× pelo de cima"
+      },
+      {
+       "conta": "{{20}}",
+       "nota": ""
+      }
+     ]
+    },
+    {
+     "conta": "1/2 + 1/4",
+     "passos": [
+      {
+       "conta": "[[2/4]] + 1/4",
+       "nota": "1/2 = 2/4: iguale os de baixo"
+      },
+      {
+       "conta": "{{3/4}}",
+       "nota": "2 + 1 = 3 quartos"
+      }
+     ]
+    }
+   ],
+   "armadilha": {
+    "conta": "1/5 + 2/5 = ?",
+    "texto": "O erro mais comum é somar embaixo também:",
+    "errado": "1/5 + 2/5 = 3/10",
+    "certo": "1/5 + 2/5 = 3/5 (embaixo fica igual)",
+    "nota": "Somar embaixo é como se a pizza ganhasse mais fatias. Ela não mudou de tamanho! 🍕"
+   },
+   "tente": [
+    {
+     "conta": "5/6 − 1/6",
+     "opcoes": [
+      "4/6",
+      "4/0",
+      "6/6",
+      "4/12"
+     ],
+     "certa": "4/6",
+     "acerto": "Isso! 5 − 1 = 4 sextos: 4/6 (que é 2/3) 🎉",
+     "erros": {
+      "4/0": "O de baixo fica igual: 6.",
+      "4/12": "Embaixo não soma: continua 6.",
+      "6/6": "É subtração: 5 − 1."
+     },
+     "erro_padrao": "Quase! Só em cima: 5 − 1."
+    },
+    {
+     "conta": "3/4 de 20",
+     "opcoes": [
+      "15",
+      "5",
+      "60",
+      "23"
+     ],
+     "certa": "15",
+     "acerto": "Boa! 20 ÷ 4 = 5, 5 × 3 = 15 🎉",
+     "erros": {
+      "5": "Esse é 1/4 de 20. Agora × 3.",
+      "60": "Você fez 20 × 3. Faltou dividir por 4.",
+      "23": "Isso é 20 + 3. Fração de quantidade: ÷ 4 e × 3."
+     },
+     "erro_padrao": "Quase! ÷ pelo de baixo, × pelo de cima."
+    },
+    {
+     "conta": "Simplifique 6/9",
+     "opcoes": [
+      "2/3",
+      "3/6",
+      "1/3",
+      "6/3"
+     ],
+     "certa": "2/3",
+     "acerto": "Mandou bem! ÷ 3 em cima e embaixo: 2/3 🎉",
+     "erros": {
+      "1/3": "Divida em cima e embaixo pelo **mesmo** número: 6 ÷ 3 = 2 e 9 ÷ 3 = 3.",
+      "3/6": "Isso tirou 3 de cada. Simplificar é **dividir**.",
+      "6/3": "Embaixo é 9 ÷ 3 = 3, mas em cima também divide: 6 ÷ 3 = 2."
+     },
+     "erro_padrao": "Quase! Divida os dois por 3."
+    }
+   ]
+  },
+  "B": {
+   "aba": "🛒 Feira Coberta (B)",
+   "regra": {
+    "titulo": "Números **decimais**",
+    "texto": "Decimal é como dinheiro: reais antes da vírgula, centavos depois.",
+    "degraus": [
+     {
+      "ops": [
+       "+",
+       "−"
+      ],
+      "cor": "laranja",
+      "texto": "**vírgula embaixo de vírgula**",
+      "obs": "faltou casa? complete com zero: 5 − 0,5 → 5,0 − 0,5"
+     },
+     {
+      "ops": [
+       "½",
+       "¼"
+      ],
+      "cor": "cyan",
+      "texto": "fração ↔ decimal",
+      "obs": "1/10 = 0,1 · 1/2 = 0,5 · 1/4 = 0,25 · 3/4 = 0,75"
+     },
+     {
+      "ops": [
+       ">",
+       "<"
+      ],
+      "cor": "verde",
+      "texto": "comparar: casa por casa depois da vírgula",
+      "obs": "0,5 > 0,45 (5 décimos > 4 décimos)"
+     }
+    ]
+   },
+   "pensa": {
+    "titulo": "**Vírgula embaixo de vírgula**, como dinheiro 💰",
+    "animacao": {
+     "tipo": "alinhar",
+     "op": "+",
+     "numeros": [
+      "1,2",
+      "2,35"
+     ],
+     "completa": [
+      "1,20",
+      "2,35"
+     ],
+     "resultado": "3,55",
+     "legendas": [
+      "Conta: 1,2 + 2,35. Os números chegam tortos…",
+      "…e descem até as vírgulas ficarem uma embaixo da outra.",
+      "Casa vazia? Vira 0: 1,2 = 1,20",
+      "Soma coluna por coluna: centavos com centavos, reais com reais",
+      "Resultado: 3,55 ✅"
+     ]
+    },
+    "porque": "💡 **Por quê?** 2,35 é R$ 2,35. Se não alinhar a vírgula, você soma centavo com real."
+   },
+   "exemplos": [
+    {
+     "conta": "0,5 + 0,3",
+     "passos": [
+      {
+       "conta": "0[[,]]5 + 0[[,]]3",
+       "nota": "vírgulas alinhadas"
+      },
+      {
+       "conta": "{{0,8}}",
+       "nota": "5 + 3 = 8 décimos"
+      }
+     ]
+    },
+    {
+     "conta": "2,8 − 1,3",
+     "passos": [
+      {
+       "conta": "2[[,]]8 − 1[[,]]3",
+       "nota": "vírgulas alinhadas"
+      },
+      {
+       "conta": "{{1,5}}",
+       "nota": ""
+      }
+     ]
+    },
+    {
+     "conta": "10 − 2,5",
+     "passos": [
+      {
+       "conta": "[[10,0]] − 2,5",
+       "nota": "complete com zero"
+      },
+      {
+       "conta": "{{7,5}}",
+       "nota": ""
+      }
+     ]
+    },
+    {
+     "conta": "1/4 em decimal",
+     "passos": [
+      {
+       "conta": "1/4 de R$ 1 = [[25 centavos]]",
+       "nota": "4 moedas de 25 = R$ 1"
+      },
+      {
+       "conta": "{{0,25}}",
+       "nota": ""
+      }
+     ]
+    },
+    {
+     "conta": "Troco de R$ 5 num lanche de R$ 3,50",
+     "passos": [
+      {
+       "conta": "[[5,00]] − 3,50",
+       "nota": "complete com zeros"
+      },
+      {
+       "conta": "{{R$ 1,50}}",
+       "nota": ""
+      }
+     ]
+    }
+   ],
+   "armadilha": {
+    "conta": "0,5 ou 0,45: qual é maior?",
+    "texto": "Olhando só os números depois da vírgula, parece que 45 ganha:",
+    "errado": "0,45, porque 45 > 5",
+    "certo": "0,5 = 0,50 → 0,50 > 0,45",
+    "nota": "Pense em dinheiro: R$ 0,50 é mais que R$ 0,45. 😉"
+   },
+   "tente": [
+    {
+     "conta": "1,2 + 2,35",
+     "opcoes": [
+      "3,55",
+      "2,47",
+      "3,37",
+      "4,7"
+     ],
+     "certa": "3,55",
+     "acerto": "Isso! 1,20 + 2,35 = 3,55 🎉",
+     "erros": {
+      "2,47": "Você alinhou pela direita. Alinhe pelas **vírgulas**: 1,20 + 2,35.",
+      "3,37": "Complete com zero: 1,2 = 1,20.",
+      "4,7": "Isso juntou casas diferentes. Vírgula embaixo de vírgula!"
+     },
+     "erro_padrao": "Quase! Vírgula embaixo de vírgula."
+    },
+    {
+     "conta": "10 − 2,5",
+     "opcoes": [
+      "7,5",
+      "8,5",
+      "12,5",
+      "0,75"
+     ],
+     "certa": "7,5",
+     "acerto": "Boa! 10,0 − 2,5 = 7,5 🎉",
+     "erros": {
+      "8,5": "Quase! Faça 10,0 − 2,5 com calma: 7,5.",
+      "12,5": "Isso é somar. Aqui é tirar."
+     },
+     "erro_padrao": "Quase! Complete com zero: 10,0 − 2,5."
+    },
+    {
+     "conta": "3/4 em decimal",
+     "opcoes": [
+      "0,75",
+      "0,34",
+      "3,4",
+      "0,43"
+     ],
+     "certa": "0,75",
+     "acerto": "Mandou bem! 3 moedas de 25 centavos = 0,75 🎉",
+     "erros": {
+      "0,34": "Fração não é juntar os números! 3/4 = 3 × 0,25 = 0,75.",
+      "3,4": "Fração não é juntar os números! 1/4 = 0,25, então 3/4 = 0,75.",
+      "0,43": "Fração não é juntar os números. Pense em 3 moedas de 25 centavos."
+     },
+     "erro_padrao": "Quase! 1/4 = 0,25."
+    }
+   ]
+  }
+ },
+ "mapa5": {
+  "mural": {
+   "x": 560,
+   "y": 640,
+   "largura": 100,
+   "ponto": [
+    560,
+    668
+   ]
+  },
+  "A": {
+   "aba": "⛏️ Mina (A)",
+   "regra": {
+    "titulo": "Potência é uma **multiplicação repetida**",
+    "texto": "No **2³**, o 2 é a **base** (o número que repete) e o 3 é o **expoente** (quantas vezes ele aparece).",
+    "degraus": [
+     {
+      "ops": [
+       "2³"
+      ],
+      "cor": "laranja",
+      "texto": "= 2 × 2 × 2 = **8**",
+      "obs": "o expoente conta quantas vezes a base aparece"
+     },
+     {
+      "ops": [
+       "²",
+       "³"
+      ],
+      "cor": "cyan",
+      "texto": "² = **ao quadrado** · ³ = **ao cubo**",
+      "obs": "10ⁿ = 1 seguido de n zeros"
+     }
+    ]
+   },
+   "pensa": {
+    "titulo": "O expoente diz **quantas vezes** a base entra na conta",
+    "animacao": {
+     "tipo": "potencia",
+     "exemplos": [
+      {
+       "base": 2,
+       "exp": 3
+      },
+      {
+       "base": 3,
+       "exp": 2
+      },
+      {
+       "base": 10,
+       "exp": 3
+      }
+     ],
+     "legendas": [
+      "2³: o 2 entra 3 vezes",
+      "2 × 2 = 4…",
+      "…4 × 2 = 8 ✅"
+     ]
+    },
+    "porque": "💡 **Por quê?** É um jeito curto de escrever. Imagine escrever 2 × 2 × 2 × 2 × 2 × 2 × 2 × 2 × 2 × 2: é só 2¹⁰!"
+   },
+   "exemplos": [
+    {
+     "conta": "3²",
+     "passos": [
+      {
+       "conta": "3 × 3",
+       "nota": "a base 3 aparece 2 vezes"
+      },
+      {
+       "conta": "{{9}}",
+       "nota": "3 ao quadrado"
+      }
+     ]
+    },
+    {
+     "conta": "2⁴",
+     "passos": [
+      {
+       "conta": "2 × 2 × 2 × 2",
+       "nota": "4 vezes"
+      },
+      {
+       "conta": "4 × 2 × 2 → 8 × 2",
+       "nota": "vai multiplicando"
+      },
+      {
+       "conta": "{{16}}",
+       "nota": "2 à quarta"
+      }
+     ]
+    },
+    {
+     "conta": "10⁴",
+     "passos": [
+      {
+       "conta": "1 seguido de [[4 zeros]]",
+       "nota": "truque do 10"
+      },
+      {
+       "conta": "{{10 000}}",
+       "nota": ""
+      }
+     ]
+    },
+    {
+     "conta": "2³ + 3²",
+     "passos": [
+      {
+       "conta": "[[8]] + [[9]]",
+       "nota": "primeiro as potências"
+      },
+      {
+       "conta": "{{17}}",
+       "nota": "depois a soma"
+      }
+     ]
+    }
+   ],
+   "armadilha": {
+    "conta": "2³ = ?",
+    "texto": "O erro mais comum é multiplicar a base pelo expoente:",
+    "errado": "2³ = 2 × 3 = 6",
+    "certo": "2³ = 2 × 2 × 2 = 8",
+    "nota": "O expoente **não multiplica**: ele conta quantas vezes a base aparece. 😉"
+   },
+   "tente": [
+    {
+     "conta": "4²",
+     "opcoes": [
+      "8",
+      "16",
+      "6",
+      "42"
+     ],
+     "certa": "16",
+     "acerto": "Isso! 4 × 4 = 16 🎉",
+     "erros": {
+      "8": "Opa! Isso é 4 × 2. O ² manda repetir o 4 duas vezes: 4 × 4."
+     },
+     "erro_padrao": "Quase! 4² = 4 × 4."
+    },
+    {
+     "conta": "5³",
+     "opcoes": [
+      "15",
+      "125",
+      "25",
+      "53"
+     ],
+     "certa": "125",
+     "acerto": "Boa! 5 × 5 × 5 = 125 🎉",
+     "erros": {
+      "15": "Isso é 5 × 3! Repita o 5 três vezes: 5 × 5 × 5.",
+      "25": "Faltou um 5: 5 × 5 × 5."
+     },
+     "erro_padrao": "Quase! 5 × 5 = 25 e 25 × 5 = …"
+    },
+    {
+     "conta": "7 × 7 em forma de potência",
+     "opcoes": [
+      "7²",
+      "2⁷",
+      "14",
+      "7 × 2"
+     ],
+     "certa": "7²",
+     "acerto": "Isso! O 7 aparece 2 vezes: 7² 🎉",
+     "erros": {
+      "2⁷": "Trocou a base com o expoente: a base é o número que repete (7)."
+     },
+     "erro_padrao": "A base é 7 e ela aparece 2 vezes."
+    }
+   ]
+  },
+  "B": {
+   "aba": "🗼 Torre de Pedra (B)",
+   "regra": {
+    "titulo": "Raiz quadrada e **casos especiais**",
+    "texto": "A **raiz quadrada** desfaz o ao quadrado: √16 pergunta “**que número vezes ele mesmo dá 16?**”",
+    "degraus": [
+     {
+      "ops": [
+       "√"
+      ],
+      "cor": "laranja",
+      "texto": "√16 = **4**, porque 4 × 4 = 16",
+      "obs": "o quadrado de área 16 tem lado 4"
+     },
+     {
+      "ops": [
+       "⁰",
+       "¹",
+       "(−)"
+      ],
+      "cor": "cyan",
+      "texto": "n⁰ = **1** · n¹ = **n** · (−2)² = **+4**, (−2)³ = **−8**",
+      "obs": "negativo com expoente par fica positivo; ímpar continua negativo"
+     }
+    ]
+   },
+   "pensa": {
+    "titulo": "√ é achar o **lado do quadrado**",
+    "animacao": {
+     "tipo": "raiz_quadrado",
+     "exemplos": [
+      {
+       "area": 16
+      },
+      {
+       "area": 9
+      },
+      {
+       "area": 25
+      }
+     ],
+     "legendas": [
+      "16 quadradinhos…",
+      "…montados num quadrado:",
+      "4 de cada lado → √16 = 4 ✅"
+     ]
+    },
+    "porque": "💡 **Por quê?** O nome vem daí: o “quadrado” de 4 é 16, e a “raiz” (o começo) do 16 é o 4."
+   },
+   "exemplos": [
+    {
+     "conta": "√49",
+     "passos": [
+      {
+       "conta": "? × ? = 49",
+       "nota": "procure o número"
+      },
+      {
+       "conta": "[[7]] × [[7]] = 49",
+       "nota": ""
+      },
+      {
+       "conta": "{{√49 = 7}}",
+       "nota": ""
+      }
+     ]
+    },
+    {
+     "conta": "8⁰",
+     "passos": [
+      {
+       "conta": "todo número (≠ 0) elevado a 0",
+       "nota": "regra"
+      },
+      {
+       "conta": "{{1}}",
+       "nota": ""
+      }
+     ]
+    },
+    {
+     "conta": "(−2)²",
+     "passos": [
+      {
+       "conta": "(−2) × (−2)",
+       "nota": "menos com menos"
+      },
+      {
+       "conta": "{{+4}}",
+       "nota": "expoente par: positivo"
+      }
+     ]
+    },
+    {
+     "conta": "(−2)³",
+     "passos": [
+      {
+       "conta": "(−2) × (−2) × (−2)",
+       "nota": ""
+      },
+      {
+       "conta": "[[+4]] × (−2)",
+       "nota": "os dois primeiros dão +4"
+      },
+      {
+       "conta": "{{−8}}",
+       "nota": "expoente ímpar: negativo"
+      }
+     ]
+    }
+   ],
+   "armadilha": {
+    "conta": "√16 = ?",
+    "texto": "Não é dividir por 2:",
+    "errado": "√16 = 16 ÷ 2 = 8",
+    "certo": "√16 = 4, porque 4 × 4 = 16",
+    "nota": "Confira sempre: o número vezes ele mesmo tem que dar o de dentro. 8 × 8 = 64, não 16! 😉"
+   },
+   "tente": [
+    {
+     "conta": "√36",
+     "opcoes": [
+      "18",
+      "6",
+      "9",
+      "4"
+     ],
+     "certa": "6",
+     "acerto": "Isso! 6 × 6 = 36 🎉",
+     "erros": {
+      "18": "Isso é 36 ÷ 2. Procure o número que vezes ele mesmo dá 36."
+     },
+     "erro_padrao": "Qual número vezes ele mesmo dá 36?"
+    },
+    {
+     "conta": "7⁰",
+     "opcoes": [
+      "0",
+      "7",
+      "1",
+      "70"
+     ],
+     "certa": "1",
+     "acerto": "Boa! Qualquer número (menos o 0) elevado a 0 é 1 🎉",
+     "erros": {
+      "0": "Parece, mas não: n⁰ = 1.",
+      "7": "Esse seria o 7¹."
+     },
+     "erro_padrao": "Lembre: expoente 0 → 1."
+    },
+    {
+     "conta": "(−3)²",
+     "opcoes": [
+      "−9",
+      "9",
+      "−6",
+      "6"
+     ],
+     "certa": "9",
+     "acerto": "Isso! (−3) × (−3) = +9 🎉",
+     "erros": {
+      "−9": "Menos com menos dá mais! Expoente par: positivo.",
+      "−6": "O ² não multiplica por 2: é (−3) × (−3)."
+     },
+     "erro_padrao": "(−3) × (−3) = …"
+    }
+   ]
+  }
+ },
+ "mapa6": {
+  "mural": {
+   "x": 560,
+   "y": 640,
+   "largura": 100,
+   "ponto": [
+    560,
+    668
+   ]
+  },
+  "A": {
+   "aba": "🌳 Casa na Árvore (A)",
+   "regra": {
+    "titulo": "Múltiplos: a **tabuada** do número",
+    "texto": "Os múltiplos de 3 são os números da tabuada do 3: **0, 3, 6, 9, 12…** Um número é múltiplo de 3 se **dá para chegar nele pulando de 3 em 3**.",
+    "degraus": [
+     {
+      "ops": [
+       "÷",
+       "resto 0"
+      ],
+      "cor": "laranja",
+      "texto": "18 é múltiplo de 3? 18 ÷ 3 = 6, **resto 0** → sim",
+      "obs": "sobrou resto → não é"
+     },
+     {
+      "ops": [
+       "2",
+       "5",
+       "10"
+      ],
+      "cor": "cyan",
+      "texto": "de 2: termina em **par** · de 5: em **0 ou 5** · de 10: em **0**",
+      "obs": "atalhos para conferir rápido"
+     }
+    ]
+   },
+   "pensa": {
+    "titulo": "O sapo pula **de 3 em 3**: onde ele pisa são os múltiplos",
+    "animacao": {
+     "tipo": "reta_pulos",
+     "exemplos": [
+      {
+       "passo": 3,
+       "ate": 18,
+       "teste": [
+        12,
+        14
+       ]
+      },
+      {
+       "passo": 4,
+       "ate": 20,
+       "teste": [
+        12
+       ]
+      },
+      {
+       "passo": 5,
+       "ate": 30,
+       "teste": [
+        25,
+        12
+       ]
+      }
+     ],
+     "legendas": [
+      "Pulando de 3 em 3 a partir do 0…",
+      "…ele pisa no 3, 6, 9, 12, 15, 18",
+      "O 12 foi pisado: é múltiplo ✅ · o 14 não: não é ❌"
+     ]
+    },
+    "porque": "💡 **Por quê?** Cada pulo é + 3. Depois de 4 pulos o sapo está em 4 × 3 = 12. Por isso múltiplo = resultado da tabuada."
+   },
+   "exemplos": [
+    {
+     "conta": "15 é múltiplo de 5?",
+     "passos": [
+      {
+       "conta": "15 ÷ 5 = 3, [[resto 0]]",
+       "nota": ""
+      },
+      {
+       "conta": "{{Sim}}",
+       "nota": "termina em 5"
+      }
+     ]
+    },
+    {
+     "conta": "14 é múltiplo de 3?",
+     "passos": [
+      {
+       "conta": "14 ÷ 3 = 4, [[resto 2]]",
+       "nota": "sobrou"
+      },
+      {
+       "conta": "{{Não}}",
+       "nota": "3, 6, 9, 12, 15… pulou o 14"
+      }
+     ]
+    },
+    {
+     "conta": "4 primeiros múltiplos de 6",
+     "passos": [
+      {
+       "conta": "6 × 1, 6 × 2, 6 × 3, 6 × 4",
+       "nota": "tabuada"
+      },
+      {
+       "conta": "{{6, 12, 18, 24}}",
+       "nota": ""
+      }
+     ]
+    },
+    {
+     "conta": "Múltiplo de 3 e de 4",
+     "passos": [
+      {
+       "conta": "de 3: 3, 6, 9, [[12]]…",
+       "nota": "de 4: 4, 8, [[12]]…"
+      },
+      {
+       "conta": "{{12}}",
+       "nota": "aparece nas duas listas"
+      }
+     ]
+    }
+   ],
+   "armadilha": {
+    "conta": "25 é múltiplo de 10?",
+    "texto": "Terminar com 5 engana:",
+    "errado": "25 é múltiplo de 10 (\"tem a ver com 10\")",
+    "certo": "10, 20, 30… o 25 não está → Não",
+    "nota": "Múltiplo de 10 termina sempre em **0**. 😉"
+   },
+   "tente": [
+    {
+     "conta": "Qual é múltiplo de 4?",
+     "opcoes": [
+      "10",
+      "12",
+      "14",
+      "6"
+     ],
+     "certa": "12",
+     "acerto": "Isso! 4 × 3 = 12 🎉",
+     "erros": {
+      "10": "10 ÷ 4 dá resto 2. Pule de 4 em 4: 4, 8, 12…",
+      "14": "14 ÷ 4 dá resto 2.",
+      "6": "6 ÷ 4 dá resto 2."
+     },
+     "erro_padrao": "Pule de 4 em 4: 4, 8, 12…"
+    },
+    {
+     "conta": "13 é múltiplo de 2?",
+     "opcoes": [
+      "Sim",
+      "Não"
+     ],
+     "certa": "Não",
+     "acerto": "Isso! 13 é ímpar 🎉",
+     "erros": {
+      "Sim": "13 é ímpar: termina em 3. Múltiplo de 2 termina em número par."
+     },
+     "erro_padrao": "Termina em par?"
+    },
+    {
+     "conta": "Múltiplo de 2 e de 5 ao mesmo tempo",
+     "opcoes": [
+      "15",
+      "12",
+      "20",
+      "25"
+     ],
+     "certa": "20",
+     "acerto": "Boa! 20 termina em 0: é de 2 e de 5 🎉",
+     "erros": {
+      "15": "15 é de 5, mas é ímpar.",
+      "25": "25 é de 5, mas é ímpar.",
+      "12": "12 é par, mas não termina em 0 ou 5."
+     },
+     "erro_padrao": "Precisa ser par e terminar em 0 ou 5."
+    }
+   ]
+  },
+  "B": {
+   "aba": "🪓 Cabana do Lenhador (B)",
+   "regra": {
+    "titulo": "Divisores: quem **divide sem sobrar**",
+    "texto": "3 é divisor de 12 porque **12 ÷ 3 = 4, resto 0**. Dá para repartir 12 em grupos de 3 **sem sobrar nada**.",
+    "degraus": [
+     {
+      "ops": [
+       "1",
+       "n"
+      ],
+      "cor": "laranja",
+      "texto": "o **1** e o **próprio número** sempre são divisores",
+      "obs": "o 7 só tem 1 e 7: dois divisores"
+     },
+     {
+      "ops": [
+       "pares"
+      ],
+      "cor": "cyan",
+      "texto": "os divisores vêm em **pares**: 2 × 6 = 12 → 2 e 6",
+      "obs": "ache um e ganhe o outro"
+     }
+    ]
+   },
+   "pensa": {
+    "titulo": "12 lenhas: em **quantas fileiras iguais** dá para arrumar?",
+    "animacao": {
+     "tipo": "arranjos",
+     "exemplos": [
+      {
+       "n": 12
+      },
+      {
+       "n": 10
+      },
+      {
+       "n": 7
+      }
+     ],
+     "legendas": [
+      "12 lenhas em 1 fileira de 12",
+      "2 fileiras de 6 · 3 fileiras de 4…",
+      "Divisores de 12: 1, 2, 3, 4, 6, 12 ✅"
+     ]
+    },
+    "porque": "💡 **Por quê?** Se dá para arrumar em fileiras iguais sem sobrar, a divisão é exata. Cada arrumação mostra dois divisores de uma vez."
+   },
+   "exemplos": [
+    {
+     "conta": "4 é divisor de 10?",
+     "passos": [
+      {
+       "conta": "10 ÷ 4 = 2, [[resto 2]]",
+       "nota": "sobrou"
+      },
+      {
+       "conta": "{{Não}}",
+       "nota": ""
+      }
+     ]
+    },
+    {
+     "conta": "Divisores de 10",
+     "passos": [
+      {
+       "conta": "1 × 10 · 2 × 5",
+       "nota": "os pares"
+      },
+      {
+       "conta": "{{1, 2, 5, 10}}",
+       "nota": ""
+      }
+     ]
+    },
+    {
+     "conta": "Quantos divisores tem o 7?",
+     "passos": [
+      {
+       "conta": "1 × 7",
+       "nota": "só esse par"
+      },
+      {
+       "conta": "{{2 divisores}}",
+       "nota": "o 7 é primo"
+      }
+     ]
+    },
+    {
+     "conta": "Qual NÃO é divisor de 12?",
+     "passos": [
+      {
+       "conta": "12 ÷ 5 = 2, [[resto 2]]",
+       "nota": ""
+      },
+      {
+       "conta": "{{5}}",
+       "nota": "os outros dividem certinho"
+      }
+     ]
+    }
+   ],
+   "armadilha": {
+    "conta": "Divisor ou múltiplo?",
+    "texto": "As duas palavras se confundem:",
+    "errado": "\"12 é divisor de 3\"",
+    "certo": "3 é **divisor** de 12 · 12 é **múltiplo** de 3",
+    "nota": "O **divisor** é o pequeno (cabe dentro). O **múltiplo** é o grande (a tabuada). 😉"
+   },
+   "tente": [
+    {
+     "conta": "Qual é divisor de 20?",
+     "opcoes": [
+      "3",
+      "6",
+      "10",
+      "8"
+     ],
+     "certa": "10",
+     "acerto": "Isso! 20 ÷ 10 = 2, sem sobrar 🎉",
+     "erros": {
+      "3": "20 ÷ 3 sobra 2.",
+      "6": "20 ÷ 6 sobra 2.",
+      "8": "20 ÷ 8 sobra 4."
+     },
+     "erro_padrao": "Qual divide o 20 sem sobrar?"
+    },
+    {
+     "conta": "Divisores de 12",
+     "opcoes": [
+      "1, 2, 3, 4, 6, 12",
+      "2, 3, 4, 6",
+      "1, 2, 3, 4, 5, 6, 12",
+      "12, 24, 36"
+     ],
+     "certa": "1, 2, 3, 4, 6, 12",
+     "acerto": "Boa! Os pares 1×12, 2×6, 3×4 🎉",
+     "erros": {
+      "2, 3, 4, 6": "Faltaram o 1 e o próprio 12: eles sempre são divisores!",
+      "12, 24, 36": "Esses são múltiplos de 12, não divisores.",
+      "1, 2, 3, 4, 5, 6, 12": "O 5 não divide 12 (sobra 2)."
+     },
+     "erro_padrao": "Pense nos pares que dão 12."
+    },
+    {
+     "conta": "6 é divisor de 20?",
+     "opcoes": [
+      "Sim",
+      "Não"
+     ],
+     "certa": "Não",
+     "acerto": "Isso! 20 ÷ 6 = 3 e sobra 2 🎉",
+     "erros": {
+      "Sim": "6 × 3 = 18 e 6 × 4 = 24: pulou o 20. Não divide exato."
+     },
+     "erro_padrao": "20 ÷ 6 dá exato?"
     }
    ]
   }

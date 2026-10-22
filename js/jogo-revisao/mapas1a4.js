@@ -188,15 +188,17 @@ const M3 = {
 M3.B.treinador3 = (() => { return [0, 1, 2, 3].map(i => () => { const [e, r] = SINAIS[(i + int(0, 5)) % 6]; return Q(e, r, [r === 'positivo' ? 'negativo' : 'positivo'], REGRA_SINAL); }).concat([P('a × 0', { a: [-9, -1] })]); })();
 
 // ===================== MAPA 4 =====================
+// figura (PROMPT-135, só o 4 A): o desenho da pergunta e a animação depois de responder (js/jogo-revisao/figuras.js)
+const FG = (x, figura) => ({ ...x, figura });
 function equivalente() {
   const [p, q] = pick([[1, 2], [1, 3], [2, 3], [1, 4], [3, 4], [2, 5], [1, 5]]); const k = int(2, 4);
   const certo = frac(p * k, q * k);
   const errs = erradasFrac(p * k, q * k, [[p * k + 1, q * k], [p + 1, q], [p * k, q * k + 1], [q, p], [p + k, q + k]]);
-  return Q(`Qual fração é igual a ${frac(p, q)}?`, certo, errs, X(`Multiplique o de cima e o de baixo pelo mesmo número: ${p} × ${k} = ${p * k} e ${q} × ${k} = ${q * k}. Fica ${certo}`));
+  return Q(`Qual fração é igual a ${frac(p, q)}?`, certo, errs, FG(X(`Multiplique o de cima e o de baixo pelo mesmo número: ${p} × ${k} = ${p * k} e ${q} × ${k} = ${q * k}. Fica ${certo}`), { tipo: 'barras_iguais', de: [p, q], para: [p * k, q * k] }));
 }
 function simplifique() {
   const [p, q] = pick([[1, 2], [1, 3], [2, 3], [1, 4], [3, 4], [2, 5], [3, 5], [1, 6]]); const k = int(2, 5);
-  return Q(`Simplifique ${frac(p * k, q * k)}`, frac(p, q), erradasFrac(p, q, [[p * k / (k % 2 === 0 ? 2 : 1), q * k], [p + 1, q], [p, q + 1], [q, p], [p, q * k]]), X(`Divida o de cima e o de baixo por ${k}: ${p * k} ÷ ${k} = ${p} e ${q * k} ÷ ${k} = ${q}. Fica ${frac(p, q)}`));
+  return Q(`Simplifique ${frac(p * k, q * k)}`, frac(p, q), erradasFrac(p, q, [[p * k / (k % 2 === 0 ? 2 : 1), q * k], [p + 1, q], [p, q + 1], [q, p], [p, q * k]]), FG(X(`Divida o de cima e o de baixo por ${k}: ${p * k} ÷ ${k} = ${p} e ${q * k} ÷ ${k} = ${q}. Fica ${frac(p, q)}`), { tipo: 'simplificar', fr: [p * k, q * k], fim: [p, q] }));
 }
 function mesmaDen(sub = false) {
   return () => {
@@ -204,7 +206,7 @@ function mesmaDen(sub = false) {
     if (sub) { a = int(2, d - 1); b = int(1, a - 1); }
     const r = sub ? a - b : a + b;
     const cand = sub ? [[a + b, d], [r + 1, d], [r, d + 1], [r - 1, d], [r, 2 * d]] : [[r, 2 * d], [r + 1, d], [r, d + 1], [Math.abs(a - b), d], [r - 1, d]];
-    return Q(`${frac(a, d)} ${sub ? '−' : '+'} ${frac(b, d)}`, frac(r, d), erradasFrac(r, d, cand), X(`Mesmo denominador: repete o de baixo (${d}) e ${sub ? 'subtrai' : 'soma'} os de cima: ${a} ${sub ? '−' : '+'} ${b} = ${r}. Fica ${frac(r, d)}`));
+    return Q(`${frac(a, d)} ${sub ? '−' : '+'} ${frac(b, d)}`, frac(r, d), erradasFrac(r, d, cand), FG(X(`Mesmo denominador: repete o de baixo (${d}) e ${sub ? 'subtrai' : 'soma'} os de cima: ${a} ${sub ? '−' : '+'} ${b} = ${r}. Fica ${frac(r, d)}`), { tipo: 'soma_fracao', a: [a, d], op: sub ? '−' : '+', b: [b, d], res: [r, d] }));
   };
 }
 function fracQtd(unit = true) {
@@ -212,15 +214,15 @@ function fracQtd(unit = true) {
     const q = unit ? pick([2, 3, 4, 5, 10]) : pick([3, 4, 5]); const p = unit ? 1 : int(2, q - 1); const k = int(2, 10); const N = q * k;
     const v = p * k;
     const e = unit && q === 2 && coin() ? `Quanto é a metade de ${N}?` : `Quanto é ${frac(p, q)} de ${N}?`;
-    return Q(e, num(v), erradasNum(v, [N, v * 2, k, N - v, v + 1]), X(p === 1 ? `Divida pelo de baixo: ${N} ÷ ${q} = ${v}` : `Divida pelo de baixo e multiplique pelo de cima: ${N} ÷ ${q} = ${k} e ${k} × ${p} = ${v}`));
+    return Q(e, num(v), erradasNum(v, [N, v * 2, k, N - v, v + 1]), FG(X(p === 1 ? `Divida pelo de baixo: ${N} ÷ ${q} = ${v}` : `Divida pelo de baixo e multiplique pelo de cima: ${N} ÷ ${q} = ${k} e ${k} × ${p} = ${v}`), { tipo: 'parte_de', num: p, den: q, total: N }));
   };
 }
-function comparaUnit() { const s = sample([2, 3, 4, 5, 6, 8, 10], 2).sort((a, b) => a - b); return Q('Qual é maior?', frac(1, s[0]), [frac(1, s[1])], X(`Com o 1 em cima, quanto menos partes, maior cada pedaço: ${frac(1, s[0])} > ${frac(1, s[1])}`)); }
-function pizza() { const t = pick([6, 8, 10, 12]), c = int(2, t - 1); return Q(`Uma pizza tem ${t} pedaços e comi ${c}. Que fração da pizza comi?`, frac(c, t), erradasFrac(c, t, [[t - c, t], [c, t - c], [t, c], [c + 1, t]]), X(`Em cima, os pedaços que comi (${c}); embaixo, o total de pedaços (${t}): ${frac(c, t)}`)); }
+function comparaUnit() { const s = sample([2, 3, 4, 5, 6, 8, 10], 2).sort((a, b) => a - b); return Q('Qual é maior?', frac(1, s[0]), [frac(1, s[1])], FG(X(`Com o 1 em cima, quanto menos partes, maior cada pedaço: ${frac(1, s[0])} > ${frac(1, s[1])}`), { tipo: 'compara_fracoes', fracoes: [[1, s[0]], [1, s[1]]] })); }
+function pizza() { const t = pick([6, 8, 10, 12]), c = int(2, t - 1); return Q(`Uma pizza tem ${t} pedaços e comi ${c}. Que fração da pizza comi?`, frac(c, t), erradasFrac(c, t, [[t - c, t], [c, t - c], [t, c], [c + 1, t]]), FG(X(`Em cima, os pedaços que comi (${c}); embaixo, o total de pedaços (${t}): ${frac(c, t)}`), { tipo: 'pizza', n: t, comidos: c })); }
 function difDen() {
   const [a, b] = pick([[2, 4], [2, 6], [3, 6], [4, 8], [2, 8], [3, 9], [5, 10]]); const p = 1, r = int(1, b / a);
   const D = mmc(a, b); const n = p * (D / a) + r * (D / b); const [x, y] = simpl(n, D);
-  return Q(`${frac(p, a)} + ${frac(r, b)}`, frac(x, y), erradasFrac(x, y, [[p + r, a + b], [p + r, b], [x + 1, y], [x, y + 1]]), X(`Deixe os de baixo iguais: ${frac(p, a)} = ${frac(p * D / a, D)}${b !== D ? ` e ${frac(r, b)} = ${frac(r * D / b, D)}` : ''}. Some os de cima: ${frac(n, D)}${n !== x ? ` = ${frac(x, y)}` : ''}`));
+  return Q(`${frac(p, a)} + ${frac(r, b)}`, frac(x, y), erradasFrac(x, y, [[p + r, a + b], [p + r, b], [x + 1, y], [x, y + 1]]), FG(X(`Deixe os de baixo iguais: ${frac(p, a)} = ${frac(p * D / a, D)}${b !== D ? ` e ${frac(r, b)} = ${frac(r * D / b, D)}` : ''}. Some os de cima: ${frac(n, D)}${n !== x ? ` = ${frac(x, y)}` : ''}`), { tipo: 'soma_fracao', a: [p, a], op: '+', b: [r, b], res: [x, y], converte: [[p * D / a, D], [r * D / b, D]], ...(n !== x ? { antes_simplificar: [n, D] } : {}) }));
 }
 const DEC = (op) => () => {
   for (; ;) {

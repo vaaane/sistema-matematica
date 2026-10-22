@@ -79,6 +79,21 @@
     .exemplo .tag{font-size:11px;color:var(--text-muted)}
     .exemplo button{margin-left:auto;font-size:12px;padding:5px 10px}
 
+    /* 📊 Antes e depois (PROMPT-134) */
+    .ad-filtros{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+    .ad-filtros select{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:7px 10px;font-size:14px}
+    .ad-marco{font-size:13px;color:var(--text-muted);margin-bottom:12px}
+    .ad-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:14px}
+    .ad-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+    .ad-card h4{margin:0 0 8px;font-family:'Rajdhani',sans-serif;font-size:1.05rem}
+    .ad-lados{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}
+    .ad-lado small{display:block;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+    .ad-lado b{font-family:'Orbitron',monospace;font-size:1.3rem}
+    .ad-lado span{font-size:12px;color:var(--text-muted)}
+    .ad-dif{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;white-space:nowrap}
+    .ad-dif.sobe{color:var(--green,#00e676)} .ad-dif.desce{color:#ff5a6a} .ad-dif.poucos{color:var(--text-muted);font-family:'Inter',sans-serif;font-size:12px;font-weight:600}
+    table.jr td.ad-dif{font-size:13px}
+
     /* configurar */
     .chaves{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;margin:12px 0}
     .chave{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border);border-radius:10px;font-size:14px;cursor:pointer}
@@ -186,6 +201,7 @@
         <button class="aba" data-aba="nomes">🐾 Nomes dos pets</button>
         <button class="aba" data-aba="pesca">🎣 Pesca</button>
         <button class="aba" data-aba="moedas">🪙 Moedas</button>
+        <button class="aba" data-aba="antes-depois">📊 Antes e depois</button>
         <button class="aba" data-aba="programe">🤖 Programe o pet</button>
         <button class="aba" data-aba="praca">🏛️ Praça</button>
         <button class="aba" data-aba="config">⚙️ Configurar o jogo</button>
@@ -199,6 +215,15 @@
         </div>
         <div class="tabela-wrap" id="tabela-alunos"><div class="empty">Carregando…</div></div>
         <div class="legenda">Clique no aluno para ver os 26 ginásios. Nota do jogo: insígnias valem 8,0 e douradas mais 2,0 (total 10).</div>
+      </section>
+
+      <!-- Aba — 📊 Antes e depois (PROMPT-134): % de acerto de primeira por ginásio, antes e depois de um marco -->
+      <section class="painel" id="aba-antes-depois" hidden>
+        <div class="ad-filtros">
+          <label class="muted" style="font-size:14px">Marco <select id="ad-marco"></select></label>
+          <label class="muted" style="font-size:14px">Turma <select id="ad-turma"></select></label>
+        </div>
+        <div id="antes-depois"><div class="empty">Carregando…</div></div>
       </section>
 
       <!-- Aba 2 — Dificuldades -->
@@ -322,6 +347,7 @@ const pct = (a, b) => b ? Math.round(a / b * 100) : null;
 let Q = {};             // questoes/mapaN.json (nomes dos ginásios, regiões e conteúdos)
 let TIPOS_BT = {};      // batalhas.json → tipos_contas (nome, exemplo de cada tipo de conta)
 let PEDIDOS = {};       // pedidos.json → id: { texto, resposta, unidade, mapa }
+let MARCOS = [];        // painel.json → marcos: [{ data, texto, ginasios }] (aba 📊 Antes e depois)
 let dados = {};         // jogo_revisao inteiro
 let config = {};        // jogo_revisao_config/global
 let pescaSemana = null; // jogo_revisao_pesca/{segunda desta semana} (null: sem acesso)
@@ -341,6 +367,8 @@ async function carregarJson() {
   qs.forEach(q => { Q[q.mapa] = q; });
   try { TIPOS_BT = (await fetch("/dados/jogo/batalhas.json").then(r => r.json())).tipos_contas || {}; } catch (e) { console.warn("[p-jogo-revisao] batalhas.json", e); }
   try { PROG = await fetch("/dados/jogo/programe-o-pet.json").then(r => r.json()); } catch (e) { console.warn("[p-jogo-revisao] programe-o-pet.json", e); }
+  try { MARCOS = ((await fetch("/dados/jogo/painel.json").then(r => r.json())).marcos || []).filter(m => /^\d{4}-\d{2}-\d{2}$/.test(m?.data || "")).sort((a, b) => b.data.localeCompare(a.data)); }
+  catch (e) { console.warn("[p-jogo-revisao] painel.json", e); }
   try { PEDIDOS = Object.fromEntries(((await fetch("/dados/jogo/pedidos.json").then(r => r.json())).pedidos || []).map(x => [x.id, x])); } catch (e) { console.warn("[p-jogo-revisao] pedidos.json", e); }
 }
 
@@ -411,7 +439,89 @@ function montarTurma() {
   renderPrograme();
   renderAchados();
   renderPraca();
+  renderAntesDepois();
 }
+
+// ── 📊 Antes e depois (PROMPT-134): as mudanças de conteúdo ajudaram? % de acerto DE PRIMEIRA de cada pergunta de ginásio,
+// antes e depois da data de um marco (dados/jogo/painel.json). O jogo grava respostas/{id}/primeira e de_primeira desde o
+// PROMPT-134; os registros antigos (sem primeira) contam como "antes" se a última resposta for anterior à data, e de primeira
+// = acertou e nunca errou. Alunos de teste e a professora ficam fora. Com n < 20 em algum lado: "poucos dados ainda".
+const AD_MIN = 20;
+const adSelMarco = $("ad-marco"), adSelTurma = $("ad-turma");
+adSelTurma.innerHTML = `<option value="">Todas</option>` + TURMAS.map(t => `<option value="${t}">${t}</option>`).join("");
+const msDoDia = (s) => { const [a, m, d] = s.split("-").map(Number); return new Date(a, m - 1, d).getTime(); };
+const fmtDia = (s) => s.split("-").reverse().join("/");
+function lado(r, desde) {   // → { depois: bool, ok: bool } ou null (sem como saber)
+  if (!r) return null;
+  if (typeof r.primeira === "number") return { depois: r.primeira >= desde, ok: r.de_primeira === true };
+  if (typeof r.ultima === "number" && r.ultima < desde) return { depois: false, ok: !!r.acertou && !r.erros };
+  return null;
+}
+function contarAntesDepois(desde, turma) {
+  const porId = {};   // id → { antes: [ok, n], depois: [ok, n] }
+  for (const [uid, n] of Object.entries(dados)) {
+    if (ehTeste(uid) || ALUNOS_TESTE.includes(uid)) continue;
+    const t = TURMAS.find(x => uid.startsWith(x + "_"));
+    if (!t || (turma && t !== turma)) continue;
+    for (const [id, r] of Object.entries(n?.respostas || {})) {
+      if (!RE_ID.test(id)) continue;
+      const l = lado(r, desde);
+      if (!l) continue;
+      const c = (porId[id] ||= { antes: [0, 0], depois: [0, 0] })[l.depois ? "depois" : "antes"];
+      c[1]++; if (l.ok) c[0]++;
+    }
+  }
+  return porId;
+}
+const somar = (lista) => lista.reduce((s, c) => ({ antes: [s.antes[0] + c.antes[0], s.antes[1] + c.antes[1]], depois: [s.depois[0] + c.depois[0], s.depois[1] + c.depois[1]] }), { antes: [0, 0], depois: [0, 0] });
+function difHtml(c, tag = "span") {
+  const [pa, pd] = [pct(...c.antes), pct(...c.depois)];
+  if (c.antes[1] < AD_MIN || c.depois[1] < AD_MIN || pa === null || pd === null) return `<${tag} class="ad-dif poucos">poucos dados ainda</${tag}>`;
+  const d = pd - pa;
+  return `<${tag} class="ad-dif ${d > 0 ? "sobe" : d < 0 ? "desce" : ""}">${d > 0 ? "▲ +" : d < 0 ? "▼ " : "= "}${d} pp</${tag}>`;
+}
+const pctTxt = ([ok, n]) => (n ? `${pct(ok, n)}%` : "—");
+const nomeGin = (chave) => { const m = /^mapa(\d+)-([AB])$/.exec(chave); const g = m ? Q[+m[1]]?.ginasios?.[m[2]] : null; return g ? `${g.nome} <span class="muted">(Mapa ${m[1]} ${m[2]})</span>` : esc(chave); };
+function renderAntesDepois() {
+  const el = $("antes-depois");
+  if (!MARCOS.length) { el.innerHTML = `<div class="empty">Nenhum marco em dados/jogo/painel.json.</div>`; return; }
+  if (adSelMarco.options.length !== MARCOS.length) adSelMarco.innerHTML = MARCOS.map((m, i) => `<option value="${i}">${fmtDia(m.data)} — ${esc(m.texto)}</option>`).join("");
+  const marco = MARCOS[+adSelMarco.value || 0], desde = msDoDia(marco.data), turma = adSelTurma.value;
+  const porId = contarAntesDepois(desde, turma);
+  const porGin = {};
+  for (const [id, c] of Object.entries(porId)) { const m = RE_ID.exec(id); (porGin[`mapa${m[1]}-${m[2]}`] ||= []).push([id, c]); }
+  const ordemPers = (id) => { const m = RE_ID.exec(id); return PERS.indexOf(m[3]) * 100 + +m[4]; };
+  const cards = (marco.ginasios || []).map(chave => {
+    const lista = (porGin[chave] || []).sort((a, b) => ordemPers(a[0]) - ordemPers(b[0])), tot = somar(lista.map(x => x[1]));
+    return `<div class="bloco">
+      <h3>${nomeGin(chave)}</h3>
+      <div class="ad-lados" style="margin-bottom:10px">
+        <div class="ad-lado"><small>Antes</small><b>${pctTxt(tot.antes)}</b> <span>n = ${tot.antes[1]}</span></div>
+        <div class="ad-lado"><small>Depois</small><b>${pctTxt(tot.depois)}</b> <span>n = ${tot.depois[1]}</span></div>
+        ${difHtml(tot, "div")}
+      </div>
+      ${lista.length ? `<div class="tabela-wrap"><table class="jr"><thead><tr><th>Pergunta</th><th>Antes</th><th>n</th><th>Depois</th><th>n</th><th>Diferença</th></tr></thead><tbody>
+        ${lista.map(([id, c]) => { const m = RE_ID.exec(id), q = gerarUma(+m[1], m[2], m[3], +m[4] - 1);
+          return `<tr><td style="white-space:normal"><b>${NOME_PERS[m[3]]} · ${m[4]}</b>${q ? ` <span class="muted">ex.: ${esc(q.enunciado)}</span>` : ""}</td>
+            <td class="num">${pctTxt(c.antes)}</td><td class="num muted">${c.antes[1]}</td><td class="num">${pctTxt(c.depois)}</td><td class="num muted">${c.depois[1]}</td>${difHtml(c, "td")}</tr>`; }).join("")}
+        </tbody></table></div>` : `<div class="sub">Nenhuma resposta ainda.</div>`}
+    </div>`;
+  }).join("");
+  const todos = Object.entries(porGin).map(([chave, lista]) => [chave, somar(lista.map(x => x[1]))])
+    .sort((a, b) => { const ma = /^mapa(\d+)-([AB])$/.exec(a[0]), mb = /^mapa(\d+)-([AB])$/.exec(b[0]); return (+ma[1] - +mb[1]) || ma[2].localeCompare(mb[2]); });
+  el.innerHTML = `<div class="ad-marco">📌 <b>${fmtDia(marco.data)}</b> — ${esc(marco.texto)} · ${turma ? `turma ${esc(turma)}` : "todas as turmas"}.
+      "De primeira" = acertou na primeira vez que respondeu a pergunta. Antes: a primeira resposta foi antes de ${fmtDia(marco.data)}; depois: a partir dessa data.</div>
+    ${cards}
+    <div class="bloco"><h3>Todos os ginásios</h3><div class="sub">Os mesmos números para comparar com os ginásios que não mudaram.</div>
+      ${todos.length ? `<div class="tabela-wrap"><table class="jr"><thead><tr><th>Ginásio</th><th>Antes</th><th>n</th><th>Depois</th><th>n</th><th>Diferença</th></tr></thead><tbody>
+        ${todos.map(([chave, c]) => `<tr${(marco.ginasios || []).includes(chave) ? ' style="background:rgba(155,48,255,.08)"' : ""}><td>${nomeGin(chave)}</td>
+          <td class="num">${pctTxt(c.antes)}</td><td class="num muted">${c.antes[1]}</td><td class="num">${pctTxt(c.depois)}</td><td class="num muted">${c.depois[1]}</td>${difHtml(c, "td")}</tr>`).join("")}
+      </tbody></table></div>` : `<div class="sub">Nenhuma resposta ainda.</div>`}
+    </div>
+    <div class="legenda">Com menos de ${AD_MIN} respostas em algum lado aparece "poucos dados ainda". pp = pontos percentuais. As respostas de antes do PROMPT-134 (sem a data da primeira) entram em "antes" quando a última resposta foi antes do marco.</div>`;
+}
+adSelMarco.addEventListener("change", renderAntesDepois);
+adSelTurma.addEventListener("change", renderAntesDepois);
 
 // ── Cavar e mexer no mato (PROMPT-32): o que cada aluno achou na semana (respostas tipo "cavar") ──
 function renderAchados() {
@@ -456,7 +566,7 @@ function renderPraca() {
 // ── Aba — Pesca: pontos da semana (segunda a domingo) e presentes dados/recebidos por aluno ──
 // ── Aba — Moedas: o que cada aluno ganhou na semana, por fonte (jogo_revisao/{uid}/moedas_semana/{segunda}) ──
 const FONTES_MOEDA = [["ginasio", "Ginásios"], ["insignia", "Insígnias"], ["batalha", "Batalhas"], ["batalha_primeira", "1ª vitória"], ["pedido", "Pedidos"],
-  ["cavar", "Cavar/mato"], ["colecao", "Coleção"], ["fliperama", "Fliperama"], ["desafio", "Desafios"], ["pesca", "Peixes"], ["aovivo", "Ao vivo"], ["missao", "Missões"], ["programe", "Programe"]];
+  ["cavar", "Cavar/mato"], ["colecao", "Coleção"], ["fliperama", "Fliperama"], ["desafio", "Desafios"], ["pesca", "Peixes"], ["aovivo", "Ao vivo"], ["missao", "Missões"], ["programe", "Programe"], ["bonus", "🎁 Bônus"]];
 // ── Aba — Programe o pet (PROMPT-69): mapa da turma (alunos × capítulos), por fase (calor das batidas, programas errados) e por aluno ──
 let PROG = null;
 const CONCEITO = { sequencia: "Sequência", repeticao: "Repetição", angulos: "Ângulos 45°", funcoes: "Funções", condicionais: "Condicionais", repita_ate: "Repita até" };
