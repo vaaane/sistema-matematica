@@ -66,8 +66,8 @@ const ALT_JOGADOR_MAPA = 55 * ESCALA_ATORES;   // nos mapas da cidade o personag
 // Altura do pet SENTADO no mapa, em px na escala base (personagem = 55; no mapa tudo × ESCALA_ATORES)
 const ALT_PET = {
   elefante: 36, gato: 30, gaviao: 30, axolote: 30, tigre: 30,
-  unicornio: 40, dragao_azul: 40,
-  dragao_vermelho: 50,
+  unicornio: 40, dragao_azul: 30,   // PROMPT-129: azul −25% (era 40) e vermelho +25% (era 50): o vermelho ≈ 2 × o azul
+  dragao_vermelho: 62.5,
 };
 // Evolução: cada fase é 15% maior que a anterior (altura do desenho SENTADO, não do quadro). Pet novo que evoluir:
 // ALT_PET[adulto] = ALT_PET[filhote] × CRESCE_EVOLUCAO (e o mesmo em DIST_PET, logo abaixo)
@@ -77,7 +77,7 @@ const CRESCE_EVOLUCAO = 1.15;
 const ADULTO_ANTES = CRESCE_EVOLUCAO * 622 / 604;
 // PROMPT-81: onde o personagem e o pet aparecem juntos, o dragão adulto SENTADO (desenho visível, chifre ao pé) tem a altura
 // do personagem (o desenho dele = ALT_JOGADOR_MAPA no mapa = 55 na escala base), × a escala do sprites.json
-// (quadro_por_pet[forma].escala: azul e azul colorido 1; vermelho e vermelho colorido 1,4 — PROMPT-86). sentado_altura do JSON = 439 px
+// (quadro_por_pet[forma].escala: azul 0,75; vermelho e vermelho colorido 1,75 — PROMPT-86/129). sentado_altura do JSON = 439 px
 // medidos no quadro de 566.
 const ALT_BASE_PERSONAGEM = ALT_JOGADOR_MAPA / ESCALA_ATORES;   // 55
 ALT_PET.dragao_azul_adulto = ALT_PET.dragao_vermelho_adulto = ALT_BASE_PERSONAGEM;
@@ -94,11 +94,11 @@ const altImagemPet = (pet) => altPet(pet) / sentadoNoQuadro(pet);
 // Telas em que o pet tem tamanho relativo ao filhote (batalha, Meu Pet, duelo do ginásio, evolução): quanto a IMAGEM da forma
 // é maior que a do filhote. O desenho sentado fica ADULTO_ANTES × escala maior (o mesmo de antes no azul; +40% no vermelho).
 const fatorForma = (pet, forma) => (ehFormaAdulta(forma) ? ADULTO_ANTES * escalaPet(forma) * sentadoNoQuadro(pet) / sentadoNoQuadro(forma) : 1);
-// Revisão da semana (PROMPT-80): o dragão adulto ~30% maior (o vermelho continua 1,4 × o azul), até 58% da arena no CSS.
+// Revisão da semana (PROMPT-80): o dragão adulto ~30% maior (o vermelho continua 1,75 / 0,75 × o azul), até 58% da arena no CSS.
 const DUELO_ADULTO = 1.3;
 const fatorDuelo = (pet, forma) => fatorForma(pet, forma) * (ehFormaAdulta(forma) ? DUELO_ADULTO : 1);
 // Duelo do ginásio e batalha (PROMPT-81): o dragão adulto fica o maior que couber na arena (o CSS calcula com cqw/cqh).
-// O de maior escala (vermelho) ocupa o máximo; os outros ficam com escala / escalaMax disso (azul = 1 / 1,4).
+// O de maior escala (vermelho) ocupa o máximo; os outros ficam com escala / escalaMax disso (azul = 0,75 / 1,75).
 const relDuelo = (forma) => escalaPet(forma) / escalaMax();
 // caixas pequenas feitas para o filhote (coleção, HUD, chips, cartões): sem a escala, para nada ser cortado
 const fatorFormaCaixa = (pet, forma) => fatorForma(pet, forma) / (ehFormaAdulta(forma) ? escalaPet(forma) : 1);
@@ -314,7 +314,7 @@ function marcarForma(img, pet, forma) {
 // Parado, o pet chega a 55% disso; acima de +10 anda 1,3× mais rápido; acima de +62 corre (pets.js).
 const DIST_PET = {
   elefante: 36, gato: 36, gaviao: 36, axolote: 36, tigre: 36,
-  unicornio: 55, dragao_azul: 55, dragao_vermelho: 55,
+  unicornio: 55, dragao_azul: 41.25, dragao_vermelho: 68.75,   // PROMPT-129: × 0,75 e × 1,25, com o tamanho
 };
 // cresce junto com o tamanho (mesma proporção distância/altura do filhote vermelho; distPet ainda × a escala do vermelho)
 DIST_PET.dragao_azul_adulto = DIST_PET.dragao_vermelho_adulto = DIST_PET.dragao_vermelho * ALT_PET.dragao_azul_adulto / ALT_PET.dragao_vermelho;
@@ -372,7 +372,7 @@ function esc(s) {
 const chaveGinasio = (n, G) => `mapa${n}-${G}`;
 
 // ── Dados carregados dos JSON ───────────────────────────────
-const D = { geral: null, mapas: null, interiores: null, bandeja: null, falas: null, regras: null, questoes: {} };
+const D = { geral: null, mapas: null, interiores: null, falas: null, regras: null, questoes: {} };
 
 // ── Estado do jogo ──────────────────────────────────────────
 let estado = null;
@@ -535,18 +535,19 @@ function atualizarFaixaMeta() {
   el.querySelector('.jr-meta-fill').style.width = Math.min(100, n / metaTurma * 100) + '%';
 }
 
-// Placar das 5 turmas, no estojo
+// Placar das 5 turmas, no estojo (PROMPT-131: painel do kit, etiqueta colorida da turma e barra verde)
+const COR_TURMA_PLACAR = { '8D': '#8a2be2', '8E': '#e0283a', '8F': '#1f9a3c', '8G': '#f07a12', '8H': '#2f3fd8' };
 function renderPlacar() {
   const el = $('estojo-placar');
   const linhas = TURMAS_PLACAR
     .map(t => ({ t, ins: insigniasDaTurma(t), dour: Number(placarTurmas[t]?.douradas) || 0 }))
     .sort((a, b) => (b.ins - a.ins) || (b.dour - a.dour) || a.t.localeCompare(b.t));
-  el.innerHTML = `<div class="jr-placar-titulo">🏆 Placar das turmas <small>meta: ${metaTurma} insígnias</small></div>` +
+  el.innerHTML = `<h2>🏆 Placar das turmas <small>meta: ${metaTurma} insígnias</small></h2>` +
     linhas.map(({ t, ins, dour }) => `
-      <div class="jr-placar-linha${t === sessao.turma ? ' minha' : ''}">
-        <span class="jr-placar-turma">${t}</span>
-        <span class="jr-placar-barra"><span style="width:${Math.min(100, ins / metaTurma * 100)}%"></span></span>
-        <span class="jr-placar-num">${ins}<small> · ${dour} dourada${dour === 1 ? '' : 's'}</small></span>
+      <div class="ins-linha${t === sessao.turma ? ' minha' : ''}">
+        <div class="ins-turma" style="background:${COR_TURMA_PLACAR[t] || '#5b5f86'}">${t}</div>
+        <div class="ins-barra"><span style="width:${Math.min(100, ins / metaTurma * 100)}%"></span></div>
+        <div class="ins-num">${ins} · <small>${dour} dourada${dour === 1 ? '' : 's'}</small></div>
       </div>`).join('');
 }
 
@@ -777,13 +778,13 @@ export async function iniciarJogo(sess) {
 
   try {
     const pegar = (p) => fetch(`${DADOS}/${p}`).then(r => { if (!r.ok) throw new Error(p); return r.json(); });
-    const [pers, geral, mapas, interiores, bandeja, geralQ, ...qs] = await Promise.all([
+    const [pers, geral, mapas, interiores, geralQ, ...qs] = await Promise.all([
       pegar('personagens.json').catch(e => { console.warn('[jogo-revisao] personagens.json indisponível', e); return null; }),
       pegar('mapa-geral.json'), pegar('mapas.json'), pegar('interiores.json'),
-      pegar('bandeja-insignias.json'), pegar('questoes/geral.json'),
+      pegar('questoes/geral.json'),
       ...Array.from({ length: NUM_MAPAS }, (_, i) => pegar(`questoes/mapa${i + 1}.json`)),
     ]);
-    Object.assign(D, { geral, mapas, interiores, bandeja, falas: geralQ.falas, regras: geralQ.regras });
+    Object.assign(D, { geral, mapas, interiores, falas: geralQ.falas, regras: geralQ.regras });
     qs.forEach(q => { D.questoes[q.mapa] = q; });
     if (pers) definirPersonagens(pers);
   } catch (e) {
@@ -874,6 +875,7 @@ export async function iniciarJogo(sess) {
     pintar: (img, p) => aplicarTinta(img, p.tinta || null),
     fases: fasesPg, progFase, faseLiberada, medalhas: () => estado.programe.medalhas || {},
     abrirFase: (id) => abrirFasePrograme(id), abrirDia: () => abrirDesafioDia(), abrirFantasma: () => abrirFantasma('mapa'),
+    aoSair: () => sairDaIlha(),   // ✕ da Ilha: volta para onde ela foi aberta (PROMPT-132)
   }, MAPA_PG);
   preCarregarQuadros(meuPersonagem());
   ligarEventos();
@@ -891,6 +893,8 @@ export async function iniciarJogo(sess) {
   iniciarAlbum();
   iniciarPet();
   setTimeout(verificarCores, 2500);   // quem já cumpriu as condições ganha as cores (aviso uma vez)
+  setTimeout(avisarCorSoVermelho, 3200);
+  setTimeout(avisarTrocaPersonagem, 4200);
   if (comecaNaPraca) abrirPraca('fonte').catch(() => abrirMapaGeral()).finally(() => { $('jr-carregando').hidden = true; });
   atualizarBotaoMissoes();
   entrarOnline().catch(() => {}).then(() => { carregarPremiosPesca(); ouvirPresentes(); avisarCoracoes(); ouvirVila(); iniciarPraca(); publicarResumoInsignias(); publicarVencedoresAntigos(); migrarQuadrosV2(); ouvirConvitesAoVivo(); });
@@ -1541,7 +1545,7 @@ function medirMeuPet() {
   if (ehFormaAdulta(forma)) {
     const [qw, qh] = tamanhoQuadro(forma);
     h = Math.min(h * fatorForma(pet, forma), palco.clientWidth * 0.98 / DESENHO_NO_QUADRO * qh / qw);
-    // o desenho sentado (do pé, a 10% do palco, até o chifre) não passa do topo do palco (vermelho 1,4 × o azul, PROMPT-86)
+    // o desenho sentado (do pé, a 10% do palco, até o chifre) não passa do topo do palco (o vermelho é 1,75 / 0,75 × o azul, PROMPT-86/129)
     // (sentado_altura + ~1% de folga embaixo do pé, em fração do quadro)
     h = Math.min(h, palco.clientHeight * 0.88 / (sentadoNoQuadro(forma) + 0.01));
   }
@@ -2259,8 +2263,10 @@ function aplicarForma(pet) {
 }
 // 🐉 Cores do dragão (só quando o pet é dragão): Normal + as cores do sprites.json; bloqueada = cinza com 🔒 e o que fazer
 function renderCores() {
-  const pet = mp.pet, ok = aceitaCor(pet) && Object.keys(coresDragao()).length > 0;
-  $('mp-cores-bloco').hidden = !ok;
+  const pet = mp.pet, temCores = Object.keys(coresDragao()).length > 0, ok = aceitaCor(pet) && temCores;
+  const azul = !ok && temCores && pet === 'dragao_azul';   // PROMPT-129: só o vermelho tem cores; no azul, só o aviso
+  $('mp-cores-bloco').hidden = !ok && !azul;
+  if (azul) { $('mp-visual-cores').innerHTML = ''; $('mp-cor-msg').textContent = '✨ Cores especiais: só no dragão vermelho 🐉'; }
   if (!ok) return;
   const base = formaBase(pet), atual = corAtiva(pet);
   const mini = (forma) => `<img src="${quadrosDe(forma, 'sentado_girando')[0]}" alt="" draggable="false"${attrForma(pet, forma)}/>`;
@@ -2304,8 +2310,16 @@ function verificarCores() {
     gravar({ [`cores_liberadas/${cor}`]: true });
     const c = coresDragao()[cor], ativo = estado.pets.ativo;
     if (aceitaCor(ativo)) avisoPet(`🎨 Cor nova para o dragão: ${c.nome}! Escolha no Meu Pet → Visual.`, true, srcIcone(formaComCor(formaBase(ativo), cor)));
-    else avisoPet(`🎨 Liberou a cor ${c.nome} para dragões! ${c.emoji || ''}`, true);
+    else avisoPet(`🎨 Liberou a cor ${c.nome} para o dragão vermelho! ${c.emoji || ''}`, true);
   }
+}
+// PROMPT-129: as cores especiais agora são só do dragão vermelho. Quem tinha cor (pet_cor) e está com o azul: aviso uma vez.
+// A cor escolhida não é apagada (continua valendo para o vermelho); o azul aparece na cor normal (corAtiva).
+function avisarCorSoVermelho() {
+  if (!carregouProgresso || !estado?.petCor || estado.pets?.ativo !== 'dragao_azul' || estado.avisos?.cor_so_vermelho) return;
+  (estado.avisos ||= {}).cor_so_vermelho = true;
+  gravar({ 'avisos/cor_so_vermelho': true });
+  avisoPet('As cores especiais agora são só do dragão vermelho 🐉', true);
 }
 function escolherVisual(e) {
   const bc = e.target.closest('[data-cor]');
@@ -2905,9 +2919,8 @@ const colegas = new Map();           // uid → { reg, el, nome, pet, petImg, so
 let onlineGeral = {};                // uid → registro (mapa geral)
 const envio = { x: null, y: null, t: 0, parado: true };
 let ultimaReacao = 0;
-const KEY_COLEGAS = 'jr_colegas_ocultos';
-let colegasOcultos = false;
-try { colegasOcultos = localStorage.getItem(KEY_COLEGAS) === '1'; } catch (_) {}
+// PROMPT-130: os colegas ficam sempre visíveis (saiu o 👁 Colegas); quem tinha escondido volta a ver
+try { localStorage.removeItem('jr_colegas_ocultos'); } catch (_) {}
 
 // Etiqueta do colega: o apelido (ou primeiro nome); sem nome no registro → o primeiro nome do uid ("8F_Ana_Clara" → "Ana"),
 // e só sem isso "Colega"; a conta da professora → "Professora" (nunca a palavra PROFESSOR).
@@ -2940,15 +2953,13 @@ function entrarNoMapaOnline(n, local = 'mapa') {
   enviarOnline({ mapa: n, local, x: Math.round(jog.x), y: Math.round(jog.y), dir: jog.dir });
   pararOuvirMapa();
   pararOuvirMapa = ouvirMapa(n, (regs) => (n === 'vila' ? receberColegasVila(regs) : receberColegas(n, regs, local)));   // Exposição: local 'exposicao'
-  $('btn-colegas').hidden = $('btn-reacao').hidden = !onlineAtivo();   // sem online (sem regra/sem internet): sem botões
-  $('btn-colegas').classList.toggle('desligado', colegasOcultos);
-  $('cena-palco').classList.toggle('sem-colegas', colegasOcultos);
+  $('btn-reacao').hidden = !onlineAtivo();   // sem online (sem regra/sem internet): sem botão
 }
 
 function sairDoMapaOnline() {
   pararOuvirMapa(); pararOuvirMapa = () => {};
   limparColegas();
-  $('btn-colegas').hidden = $('btn-reacao').hidden = true;
+  $('btn-reacao').hidden = true;
   fecharReacoes();
 }
 
@@ -3084,7 +3095,6 @@ let cartaoColega = null;   // { c, timer }
 const nomeVisivel = (s) => (/PROFESSOR|TESTE/i.test(String(s || '')) ? '' : String(s || ''));
 
 function colegaEm(pt) {
-  if (colegasOcultos) return null;
   let melhor = null, md = Infinity;
   const h = altJogCena(), folga = 6 * ESCALA_ATORES;
   for (const c of colegas.values()) {
@@ -3139,13 +3149,6 @@ function fecharCartaoColega() {
   if (el) el.hidden = true;
 }
 
-function alternarColegas() {
-  colegasOcultos = !colegasOcultos;
-  try { localStorage.setItem(KEY_COLEGAS, colegasOcultos ? '1' : '0'); } catch (_) {}
-  $('cena-palco').classList.toggle('sem-colegas', colegasOcultos);
-  $('btn-colegas').classList.toggle('desligado', colegasOcultos);
-  $('btn-colegas').setAttribute('aria-pressed', String(!colegasOcultos));
-}
 
 // ── Reações ─────────────────────────────────────────────────
 function abrirReacoes() {
@@ -3809,6 +3812,7 @@ function revisaoVisivel() {
 }
 
 function atualizarBotaoRevisao() {
+  atualizarBotaoIlha();   // 🤖 (PROMPT-132)
   const b = $('btn-revisao');
   if (!b || !estado) return;
   b.hidden = !carregouProgresso || !revisaoVisivel();
@@ -4968,14 +4972,14 @@ function atualizarHudPraca() {
   atualizarHudMissoes();
   const brel = $('btn-relembre'), semRel = !(cena?.tipo === 'interior' && explicacaoDe(cena.chave));   // 📖 no interior do ginásio
   if (brel.hidden !== semRel) brel.hidden = semRel;
-  const sa = !(ehCasinha() && cs && !cs.arrumando && !cs.visita), ba = $('cs-botoes');   // 🛠️ Arrumar e 🛒 Móveis: só na minha casinha
-  if (ba.hidden !== sa) ba.hidden = sa;
+  // faixa da casinha (fora do arrumar): ⭐ Mais curtidas (PROMPT-130) sempre; 🛠️ Arrumar e 🛒 Móveis só na minha casinha
+  const naCasa = !!(ehCasinha() && cs && !cs.arrumando), sa = !(naCasa && !cs.visita), ba = $('cs-botoes');
+  if (ba.hidden !== !naCasa) ba.hidden = !naCasa;
+  if ($('cs-arrumar').hidden !== sa) $('cs-arrumar').hidden = $('cs-comprar').hidden = sa;
   const st = sa || meusTemas().length < 2, bt2 = $('cs-tema');   // 🎨 Tema (PROMPT-112): com mais de um tema
   if (bt2.hidden !== st) bt2.hidden = st;
   const sc = !(CASA && carregouProgresso && mapaComCasa()), bc = $('btn-casa');   // 🏠 nos mapas abertos e na Praça
   if (bc.hidden !== sc) bc.hidden = sc;
-  const sm = !(ehCasinha() && cs && !cs.arrumando), bm = $('btn-curtidas');   // ⭐ Mais curtidas: dentro da casinha
-  if (bm.hidden !== sm) bm.hidden = sm;
   atualizarHudExpo();   // 🖼️ 🔈 na sala da Exposição
   const ic = ehPraca() || ehVila() ? '💬' : '😊', br = $('btn-reacao');
   if (br.textContent !== ic) br.textContent = ic;
@@ -5334,12 +5338,15 @@ function tocarNoMapa(e) {
   if (caixote) { irPescar(caixote); return; }
   // pet e pessoa podem estar lado a lado: vale o que estiver mais perto do toque
   const pessoa = pessoaEm(p);
-  const noPet = tocouNoPet(p);
+  // 👤 eu × pet (o pet anda colado em mim): vale o que estiver mais perto do toque
+  const emMim = !pessoa && tocouEmMim(p), dEu = dist(p.x, p.y, jog.x, jog.y - altJogCena() / 2);
+  const noPet = tocouNoPet(p) && !(emMim && dEu < dist(p.x, p.y, seguidor.x, seguidor.y - seguidor.altura / 2));
   if (noPet && (!pessoa || dist(p.x, p.y, seguidor.x, seguidor.y - seguidor.altura / 2) < dist(p.x, p.y, pessoa.p.x, pessoa.p.y - pessoa.alt / 2))) {
     if (cs?.ida?.fixo) { balaoCama(cs.ida.m); return; }   // 🏠 pus para dormir: o balão "☀️ Acordar"
     if (cs?.ida) soltarPet();   // 🏠 dormindo sozinho na cama (ou num móvel): volta
     falarPorToque(); return;   // tocar no pet: ele fala (não anda até lá)
   }
+  if (emMim) { balaoEu(); return; }   // 👤 tocar em si mesmo: "Trocar personagem" (PROMPT-130)
   const colega = colegaEm(p);
   if (colega && (!pessoa || dist(p.x, p.y, colega.x, colega.y - ALT_JOGADOR_MAPA / 2) < dist(p.x, p.y, pessoa.p.x, pessoa.p.y - pessoa.alt / 2))) {
     abrirCartaoColega(colega); return;   // tocar num colega: cartão com nome · turma e o pet dele
@@ -5414,7 +5421,31 @@ function irAoGinasioVencido(d) {
 }
 function posicionarBalaoPorta() {
   if (!balaoPorta) return;
-  posicionarNaTela($('porta-balao'), balaoPorta.d.x, balaoPorta.d.y - ALT_JOGADOR - 30);
+  if (balaoPorta.eu && dist(jog.x, jog.y, balaoPorta.d.x, balaoPorta.d.y) > 3) { fecharBalaoPorta(); return; }   // andou: some
+  posicionarNaTela($('porta-balao'), balaoPorta.d.x, balaoPorta.d.y - (balaoPorta.eu ? altJogCena() + 18 : ALT_JOGADOR + 30));
+}
+// 👤 PROMPT-130: tocar no próprio personagem (fora de batalha, pesca e edição) → balão pequeno "Trocar personagem"
+function tocouEmMim(pt) {
+  if (!jog || ex?.editando || cs?.arrumando || pesca || perguntaAberta) return false;
+  const h = altJogCena(), folga = 6 * ESCALA_ATORES;
+  return Math.abs(pt.x - jog.x) <= h * 0.3 + folga && pt.y >= jog.y - h - folga && pt.y <= jog.y + folga;
+}
+function balaoEu() {
+  fecharBalaoPorta();
+  destinoEspecial = null;
+  const el = $('porta-balao');
+  el.innerHTML = '<div class="jr-pessoa-botoes"><button class="jr-btn jr-btn-ouro" data-porta="personagem">👤 Trocar personagem</button></div>';
+  el.hidden = false;
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+  balaoPorta = { d: { x: jog.x, y: jog.y }, eu: true, timer: setTimeout(fecharBalaoPorta, 6000) };
+  posicionarBalaoPorta();
+}
+// na 1ª entrada depois da atualização: como trocar de personagem agora
+function avisarTrocaPersonagem() {
+  if (!carregouProgresso || estado?.avisos?.dica_personagem) return;
+  (estado.avisos ||= {}).dica_personagem = true;
+  gravar({ 'avisos/dica_personagem': true });
+  avisoPet('Para trocar de personagem, toque em você mesmo! 👤', true);
 }
 function fecharBalaoPorta() {
   if (balaoPorta) clearTimeout(balaoPorta.timer);
@@ -5428,6 +5459,7 @@ function acaoBalaoPorta(e) {
   const { d } = balaoPorta;
   fecharBalaoPorta();
   if (b.dataset.porta === 'entrar') entrarNoDestino({ tipo: 'porta', lado: d.lado });
+  else if (b.dataset.porta === 'personagem') abrirEscolhaPersonagem();
 }
 
 function entrarNoDestino(esp) {
@@ -5950,7 +5982,6 @@ function iniciarDiaNoite() {
 // ============================================================
 const CLIMAS = [['sol', 60], ['nublado', 20], ['chuva', 15], ['vento', 5]];
 const NOME_CLIMA = { sol: '☀️ Sol hoje', nublado: '☁️ Nublado hoje', chuva: '🌧️ Chuva hoje', vento: '🍃 Vento hoje', calor: '☀️ Calor agora' };
-const ICONE_CLIMA = { sol: '☀️', nublado: '☁️', chuva: '🌧️', vento: '🍃', calor: '🥵' };
 let climaForcado = null, avisouChuvaPesca = false;
 const brasilia = () => new Date(agoraServ() - 3 * 3600e3);   // getUTC* = hora de Brasília
 function climaDoDia() {
@@ -5969,16 +6000,6 @@ const climaParaFala = () => { const c = climaAgora(); return ['chuva', 'calor', 
 function aplicarClima() {
   const c = climaAgora(), raiz = document.documentElement;
   for (const k of ['sol', 'nublado', 'chuva', 'vento', 'calor']) raiz.classList.toggle('cl-' + k, k === c);
-  pintarIconeClima();
-}
-function pintarIconeClima() {
-  const c = climaAgora(), ext = climaExterior();
-  for (const b of document.querySelectorAll('[data-clima]')) {
-    b.hidden = !ext && !b.closest('#tela-geral');
-    b.textContent = ICONE_CLIMA[c] || '☀️';
-    b.title = NOME_CLIMA[c] || '';
-    b.setAttribute('aria-label', NOME_CLIMA[c] || 'Clima');
-  }
 }
 function iniciarClima() {
   if (teste) { const f = new URLSearchParams(location.search).get('clima'); if (f && NOME_CLIMA[f]) climaForcado = f; }
@@ -5987,7 +6008,6 @@ function iniciarClima() {
     el.innerHTML = Array.from({ length: 60 }, () => `<i class="pingo" style="left:${(Math.random() * 130).toFixed(1)}%;animation-delay:-${(Math.random() * 0.7).toFixed(2)}s;animation-duration:${(0.55 + Math.random() * 0.3).toFixed(2)}s"></i>`).join('') +
       Array.from({ length: 10 }, (_, i) => `<i class="folha" style="top:${(8 + Math.random() * 75).toFixed(1)}%;animation-delay:-${(i * 0.9 + Math.random()).toFixed(1)}s;animation-duration:${(8 + Math.random() * 5).toFixed(1)}s">🍃</i>`).join('');
   }
-  for (const b of document.querySelectorAll('[data-clima]')) b.addEventListener('click', (e) => { e.stopPropagation(); avisoPet(NOME_CLIMA[climaAgora()] || ''); });
   aplicarClima();
   setInterval(aplicarClima, 60000);   // o calor começa às 12h e acaba às 15h
   setInterval(sacudirNaChuva, 4000);
@@ -6024,7 +6044,6 @@ function cenaDiaNoite() {
   $('tela-cena').classList.toggle('dn-ativo', !!externo);
   const luzes = externo ? LUZES?.[Number(cena.n) > 0 ? 'mapa' + cena.n : cena.n] : null;
   montarPocas(externo);
-  pintarIconeClima();
   $('dn-luzes').innerHTML = (Array.isArray(luzes) ? luzes : []).filter(p => Array.isArray(p) && p.length >= 2)
     .map(([x, y]) => `<i style="left:${Number(x)}px;top:${Number(y)}px"></i>`).join('');
 }
@@ -8214,7 +8233,7 @@ async function abrirFliperama() {
   soltouDesdeTroca = false;
   ajustarCamera();
   $('cena-palco').style.visibility = '';
-  $('btn-colegas').hidden = $('btn-reacao').hidden = true;
+  $('btn-reacao').hidden = true;
   atualizarBotaoPet();
   if (editarFliperama) ligarEdicaoFliperama();
 }
@@ -8772,7 +8791,7 @@ async function abrirCasinha(visita = null, volta = null) {
   soltouDesdeTroca = false;
   ajustarCamera();
   $('cena-palco').style.visibility = '';
-  $('btn-colegas').hidden = $('btn-reacao').hidden = true;
+  $('btn-reacao').hidden = true;
   atualizarBotaoPet();
   if (visita) {   // o visitante entra sem o pet dele; o pet do dono passeia pelo quarto
     $('pet').hidden = $('pet-sombra').hidden = true;
@@ -9091,7 +9110,7 @@ function passearPet(dt) {
 }
 
 // ── Tocar nos móveis (fora do Arrumar): quadrinho, aquário, Álbum, vaso, estante, pote e caixa (PROMPT-106) ──
-const MOVEIS_ATIVOS = new Set(['cama', 'aquario', 'vaso', 'estante_album', 'estante_livros', 'pote', 'caixa_brinquedos']);
+const MOVEIS_ATIVOS = new Set(['cama', 'aquario', 'vaso', 'estante_album', 'estante_livros', 'pote', 'caixa_brinquedos', 'guarda_roupa']);   // guarda-roupa: trocar de personagem (PROMPT-130)
 function movelEm(p) {
   if (!cs) return null;
   const z = (m) => (itemCasa(m.id).tipo === 'parede' ? 2 : m.y);
@@ -9116,6 +9135,7 @@ function tocarMovelCasa(p) {
   }
   const semPet = () => { avisoPet(petFora() ? 'Seu pet está em expedição. 🧭' : 'Seu pet não está aqui agora.'); };
   if (m.id === 'cama') balaoCama(m);   // 💤 / ☀️ (PROMPT-108)
+  else if (m.id === 'guarda_roupa') abrirEscolhaPersonagem();   // 👤 trocar de personagem (PROMPT-130)
   else if (ehQuadrinho(m.id)) abrirColecaoCasa(m);   // escolher a insígnia deste quadro
   else if (m.id === ID_CAMPEOES) abrirColecaoCasa();   // 🏆 só olhar
   else if (m.id === 'aquario') abrirAquario();
@@ -10388,7 +10408,7 @@ async function abrirLojaInterior(origem = { tipo: 'praca' }) {
   soltouDesdeTroca = false;
   ajustarCamera();
   $('cena-palco').style.visibility = '';
-  $('btn-colegas').hidden = $('btn-reacao').hidden = true;
+  $('btn-reacao').hidden = true;
   atualizarBotaoPet();
   if (editarLoja) ligarEdicaoLoja();
 }
@@ -11858,6 +11878,7 @@ function acaoBalaoPessoa(e) {
 // com o aluno na frente do Engrenaldo
 function irParaIlha(o) {
   if (!PROG || !temMapaPrograme() || !ehPraca() || transicionando) return;
+  ilhaOrigem = 'praca';
   transicao(() => {
     const [x, y] = cena.naTrilha(o.p.x, o.p.y + 60);
     posicionarJogador(x, y, 'costas');
@@ -11867,6 +11888,30 @@ function irParaIlha(o) {
     esquecerPosicaoPet();
     return abrirMapaPrograme();   // o véu só sai quando o mapa estiver desenhado
   });
+}
+
+// 🤖 Atalho no Mapa geral (PROMPT-132): a Ilha abre por cima do Mapa geral. Onde ela foi aberta fica em ilhaOrigem
+// ('geral' | 'praca' | 'lab'); só o ✕ da Ilha usa (as fases, o desafio e a corrida voltam para a Ilha, como sempre).
+let ilhaOrigem = null;
+const ilhaDisponivel = () => !!(PROG && temMapaPrograme());
+function atualizarBotaoIlha() {
+  const b = $('btn-ilha');
+  if (b) b.hidden = !carregouProgresso || !ilhaDisponivel();
+}
+function irParaIlhaDoGeral() {
+  if (!ilhaDisponivel() || transicionando || $('tela-geral').hidden || sobreposicaoAberta()) return;
+  ilhaOrigem = 'geral';
+  transicao(() => {
+    if (!estado.avisos.lab_visto) { estado.avisos.lab_visto = true; gravar({ 'avisos/lab_visto': true }); }   // o ! do Engrenaldo some
+    esquecerPosicaoPet();
+    return abrirMapaPrograme();
+  });
+}
+// a Ilha fecha por cima de quem a abriu: Praça e Laboratório continuam embaixo; do Mapa geral, garante que ele está na tela
+function sairDaIlha() {
+  const o = ilhaOrigem;
+  ilhaOrigem = null;
+  if (o === 'geral' && $('tela-geral').hidden) abrirMapaGeral();
 }
 
 // ============================================================
@@ -13039,43 +13084,31 @@ function fecharPergunta() {
 // ============================================================
 //  3.5 ESTOJO DE INSÍGNIAS
 // ============================================================
+// PROMPT-131: uma moldura de madeira por mapa (etiqueta com emoji e nome, número no pergaminho, as 2 insígnias nas pedras roxas)
 function abrirEstojo() {
   renderPlacar();
-  const b = D.bandeja;
-  const BW = b.tamanho.w, BH = b.tamanho.h;
   let conquistadas = 0, douradas = 0;
   const html = [];
   for (let n = 1; n <= NUM_MAPAS; n++) {
-    const q = D.questoes[n];
-    const f = b.faixa_nome;
-    const slots = ['A', 'B'].map((G, i) => {
-      const e = b.encaixes[i];
-      const chave = chaveGinasio(n, G);
-      const g = estado.ginasios[chave];
+    const q = D.questoes[n], reg = (D.geral?.regioes || []).find(r => Number(r.mapa) === n);
+    const ins = ['A', 'B'].map((G) => {
+      const chave = chaveGinasio(n, G), g = estado.ginasios[chave];
       if (g.insignia) conquistadas++;
       if (g.dourada) douradas++;
-      const st = g.dourada ? 'dourada' : g.insignia ? 'conquistada' : 'bloqueada';
-      return `<button class="jr-encaixe ${st}" data-chave="${chave}"
-                style="left:${(e.cx - e.r) / BW * 100}%;top:${(e.cy - e.r) / BH * 100}%;width:${2 * e.r / BW * 100}%;height:${2 * e.r / BH * 100}%"
-                aria-label="Insígnia ${esc(q.ginasios[G].nome)}">
-                <img src="${IMG}/insignias/insignia-${chave}.webp" alt="" loading="lazy" draggable="false"/>
-                ${st === 'bloqueada' ? '<span class="jr-cadeado">🔒</span>' : ''}
-                ${st === 'dourada' ? '<span class="jr-estrela">★</span>' : ''}
-              </button>`;
+      const st = g.dourada ? 'dourada' : g.insignia ? 'ganha' : 'bloqueada';
+      return `<button class="insignia ${st}" data-chave="${chave}" aria-label="Insígnia ${esc(q.ginasios[G].nome)}">
+          <img src="${IMG}/insignias/insignia-${chave}.webp" alt="" loading="lazy" draggable="false"/>${st === 'dourada' ? '<span class="ins-estrela">★</span>' : ''}</button>`;
     }).join('');
-    html.push(`<div class="jr-bandeja-bloco">
-      <div class="jr-bandeja-titulo">${esc(q.nome)}</div>
-      <div class="jr-bandeja" style="aspect-ratio:${BW}/${BH}">
-        <div class="jr-bandeja-num" style="left:${f.x / BW * 100}%;top:${f.y / BH * 100}%;width:${f.w / BW * 100}%;height:${f.h / BH * 100}%">${n}</div>
-        ${slots}
-      </div>
+    html.push(`<div class="ins-cap">
+      <div class="ins-cap-tag"><span>${reg?.emoji || '🗺️'}</span>${esc(q.nome)}</div>
+      <div class="ins-cap-moldura"><div class="ins-cap-num">${n}</div><div class="ins-cap-pedras">${ins}</div></div>
     </div>`);
   }
   $('estojo-bandejas').innerHTML = html.join('');
   $('estojo-resumo').textContent = `${conquistadas} de 26 · ${douradas} dourada${douradas === 1 ? '' : 's'}`;
   $('estojo-barra').style.width = (conquistadas / 26 * 100) + '%';
-  $('estojo-nota').innerHTML = `Nota do jogo: <b>${formatarNota(notaJogoRevisao(conquistadas, douradas))}</b> / ${NOTA_MAX}` +
-    `<small>Insígnias valem ${PESO_INSIGNIAS},0 · douradas valem mais ${PESO_DOURADAS},0</small>`;
+  $('estojo-nota').innerHTML = `<div class="ins-nota">⭐ Nota do jogo: <b>${formatarNota(notaJogoRevisao(conquistadas, douradas))}</b> / ${NOTA_MAX}</div>` +
+    `<div class="ins-nota-legenda">Insígnias valem ${PESO_INSIGNIAS},0 · Douradas valem mais ${PESO_DOURADAS},0</div>`;
   pintarEspecialAlbum();
   $('estojo').hidden = false;
   $('estojo').scrollTop = 0;
@@ -13169,7 +13202,7 @@ async function abrirLaboratorio() {
   soltouDesdeTroca = false;
   ajustarCamera();
   $('cena-palco').style.visibility = '';
-  $('btn-colegas').hidden = $('btn-reacao').hidden = true;
+  $('btn-reacao').hidden = true;
   atualizarBotaoPet();
 }
 
@@ -13179,7 +13212,7 @@ function abrirComputador(id) {
   if (!c) return;
   $('mq-nome').textContent = `💻 ${c.nome}`;
   $('mq-botoes').innerHTML = '';
-  if (id === 'programe_o_pet' && PROG && !c.em_breve && temMapaPrograme()) { esquecerPosicaoPet(); abrirMapaPrograme(); return; }   // a Ilha dos Robôs
+  if (id === 'programe_o_pet' && PROG && !c.em_breve && temMapaPrograme()) { ilhaOrigem = 'lab'; esquecerPosicaoPet(); abrirMapaPrograme(); return; }   // a Ilha dos Robôs
   if (c.em_breve || !PROG || (id === 'caca_bug' && !BUGS?.length)) {
     $('mq-corpo').innerHTML = '<p class="mq-rec">Chegando logo! 🤖</p><p class="mq-sub">Este computador ainda está sendo montado.</p>';
   } else if (id === 'caca_bug') {
@@ -14031,6 +14064,7 @@ function ligarEventos() {
   });
   $('selo-seq').addEventListener('click', (e) => { e.stopPropagation(); mostrarBalaoSequencia(); });
   $('btn-revisao').addEventListener('click', (e) => { e.stopPropagation(); tocarBotaoRevisao(); });
+  $('btn-ilha').addEventListener('click', (e) => { e.stopPropagation(); irParaIlhaDoGeral(); });   // 🤖 (PROMPT-132)
   // imagem do botão (opcional): se existir, troca o emoji por ela
   const imgRev = $('btn-revisao').querySelector('img');
   imgRev.addEventListener('load', () => $('btn-revisao').classList.add('com-img'));
@@ -14101,13 +14135,11 @@ function ligarEventos() {
 
   $('pet-opcoes').addEventListener('click', (e) => { const b = e.target.closest('[data-pet]'); if (b) escolherPet(b.dataset.pet); });
   $('btn-trocar-pet').addEventListener('click', () => { $('estojo').hidden = true; abrirColecao(); });
-  $('btn-personagem').addEventListener('click', () => { $('estojo').hidden = true; abrirEscolhaPersonagem(); });
   $('pers-grade').addEventListener('click', (e) => { const b = e.target.closest('[data-pers]'); if (b) selecionarPersonagem(b.dataset.pers); });
   $('pers-palco').addEventListener('click', () => { pers.andarAte = performance.now() + 1600; });   // tocar = anda no lugar
   $('pers-confirmar').addEventListener('click', confirmarPersonagem);
   $('pers-cancelar').addEventListener('click', () => { $('pers-escolha').hidden = true; clearInterval(pers.timer); });
   $('btn-pet').addEventListener('click', abrirMeuPet);
-  $('btn-colegas').addEventListener('click', alternarColegas);
   $('btn-reacao').addEventListener('click', abrirReacoes);
   $('reacoes').addEventListener('click', (e) => { const b = e.target.closest('[data-e]'); if (b) reagirCom(b.dataset.e); else if (!e.target.closest('.jr-reacoes-roda')) fecharReacoes(); });
   $('reacoes-roda').innerHTML = REACOES.map((e, i) => `<button class="jr-reacao" data-e="${e}" style="--i:${i}" aria-label="Reação ${e}">${e}</button>`).join('');
@@ -14379,7 +14411,7 @@ function ligarEventos() {
     if (!$('tela-geral').hidden) desenharMarcadores();
   });
   $('estojo-bandejas').addEventListener('click', (e) => {
-    const b = e.target.closest('.jr-encaixe');
+    const b = e.target.closest('.insignia');
     if (b) abrirCartao(b.dataset.chave);
   });
   $('cartao-fechar').addEventListener('click', () => { $('cartao').hidden = true; });

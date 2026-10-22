@@ -35,7 +35,6 @@
       <button class="jr-btn jr-btn-sec" id="btn-sair-jogo">⟵ Sair</button>
       <div class="jr-hud-titulo">Jogo de Revisão</div>
       <span class="jr-selo-online" id="selo-online" hidden>🟢 0 online</span>
-      <button class="jr-clima-ic" data-clima hidden></button>
       <button class="jr-selo-seq apagado" id="selo-seq" aria-label="Sequência de dias">🔥 0</button>
       <button class="jr-btn-som" data-som aria-label="Desligar o som">🔊</button>
       <button class="jr-btn-som jr-btn-musica mudo" data-musica aria-label="Ligar a música">🎵</button>
@@ -54,6 +53,8 @@
   <div class="jr-seq-balao" id="seq-balao" hidden></div>
   <!-- Revisão da semana (mapa geral, abaixo do estojo) -->
   <button class="jr-btn-revisao" id="btn-revisao" hidden aria-label="Revisão da semana"><img alt="" draggable="false"/><span>📜 Revisão</span></button>
+  <!-- 🤖 atalho para a Ilha dos Robôs (PROMPT-132), logo acima da Revisão -->
+  <button class="jr-btn-revisao jr-btn-ilha" id="btn-ilha" hidden aria-label="Ilha dos Robôs"><img src="/img/jogo/npcs/engrenaldo.webp" alt="" draggable="false"/><span>Ilha dos Robôs</span></button>
 
   <!-- 3.2 / 3.3 Cena (mapa da região ou interior do ginásio) -->
   <section id="tela-cena" class="jr-tela" hidden>
@@ -82,11 +83,9 @@
       <button class="jr-btn jr-btn-sec" id="btn-cena-voltar">⟵ Mapa geral</button>
       <div class="jr-hud-titulo" id="cena-titulo"></div>
       <button class="jr-btn-hud" id="btn-relembre" hidden aria-label="Relembre o conteúdo do ginásio">📖<span>Relembre</span></button>
-      <button class="jr-btn-hud" id="btn-curtidas" hidden aria-label="Casinhas mais curtidas">⭐<span>Mais curtidas</span></button>
       <button class="jr-btn-hud" id="btn-praca" hidden aria-label="Ir para a Praça do Encontro">🏛️<span>Praça</span></button>
       <button class="jr-btn-hud" id="btn-casa" hidden aria-label="Ir para a minha casinha">🏠<span>Casa</span></button>
       <button class="jr-btn-hud" id="btn-online" hidden aria-label="Quem está online">👥<span>Online (<b id="online-n">0</b>)</span></button>
-      <button class="jr-btn-hud" id="btn-colegas" hidden aria-label="Mostrar ou esconder os colegas" aria-pressed="true">👁<span>Colegas</span></button>
       <button class="jr-btn-hud" id="btn-reacao" hidden aria-label="Mandar uma reação">😊</button>
       <button class="jr-btn-hud ex-pend-selo" id="btn-expo-pend" hidden aria-label="Abrir a página de aprovação">⏳</button>
       <button class="jr-btn-hud" id="btn-expo-musica" hidden aria-label="Silenciar a música da sala">🔈</button>
@@ -94,7 +93,6 @@
       <button class="jr-btn-hud jr-btn-missoes" id="btn-missoes" hidden aria-label="Missões do dia">📜<span id="missoes-cont">0/3</span></button>
       <button class="jr-btn-pet" id="btn-pet" hidden aria-label="Meus pets"><img alt="" draggable="false"/></button>
       <button class="jr-btn-hud jr-btn-batalhar" id="btn-batalhar" hidden aria-label="Treinadores">⚔️<span>Treinadores</span></button>
-      <button class="jr-clima-ic" data-clima hidden></button>
       <button class="jr-btn-som" data-som aria-label="Desligar o som">🔊</button>
       <button class="jr-btn-som jr-btn-musica mudo" data-musica aria-label="Ligar a música">🎵</button>
       <button class="jr-btn-estojo" id="btn-insignias-2" aria-label="Minhas insígnias">
@@ -149,7 +147,7 @@
     <div id="pet-faro" class="jr-pet-faro" hidden aria-hidden="true">👃</div>
     <button id="btn-revanche" class="jr-btn jr-btn-ouro jr-revanche" hidden>⚔ Revanche</button>
     <!-- 🏠 Casinha (PROMPT-105): Arrumar, faixa dos guardados e botões em cima do móvel tocado -->
-    <div id="cs-botoes" class="cs-botoes" hidden><button id="cs-arrumar" class="jr-btn jr-btn-ouro">🛠️ Arrumar</button><button id="cs-comprar" class="jr-btn">🛒 Móveis</button><button id="cs-tema" class="jr-btn" hidden>🎨 Tema</button></div>
+    <div id="cs-botoes" class="cs-botoes" hidden><button id="cs-arrumar" class="jr-btn jr-btn-ouro">🛠️ Arrumar</button><button id="cs-comprar" class="jr-btn">🛒 Móveis</button><button id="cs-tema" class="jr-btn" hidden>🎨 Tema</button><button id="btn-curtidas" class="jr-btn" aria-label="Casinhas mais curtidas">⭐ Mais curtidas</button></div>
     <div id="cs-cama-balao" class="jr-pessoa-balao cs-cama-balao" hidden></div>
     <!-- 🏘️ Vila (PROMPT-109): balão sobre a casa (cor do telhado · visitar / deixar de ser vizinho) -->
     <div id="vila-balao" class="jr-pessoa-balao vila-balao" hidden></div>
@@ -275,24 +273,28 @@
   </div>
 
   <!-- 3.5 Estojo de insígnias -->
+  <!-- 🏅 Estojo "Minhas Insígnias" (PROMPT-131): visual de masmorra (img/jogo/estojo/), uma moldura de madeira por mapa -->
   <div id="estojo" class="jr-estojo" hidden>
-    <div class="jr-estojo-fundo">
-      <div class="jr-estojo-topo">
-        <button class="jr-btn jr-btn-sec jr-estojo-fechar" id="estojo-fechar">✕ Fechar</button>
-        <h1 class="jr-estojo-titulo">Minhas Insígnias</h1>
-        <div class="jr-estojo-resumo" id="estojo-resumo"></div>
-        <div class="jr-barra"><div class="jr-barra-fill" id="estojo-barra"></div></div>
-        <div class="jr-estojo-nota" id="estojo-nota"></div>
-        <div class="jr-estojo-acoes">
-          <button class="jr-btn jr-btn-sec jr-trocar-pet" id="btn-trocar-pet" hidden>🐾 Meus pets</button>
-          <button class="jr-btn jr-btn-sec jr-trocar-pet" id="btn-personagem">👤 Personagem</button>
-          <button class="jr-btn jr-btn-sec jr-trocar-pet" id="btn-album" hidden>📒 Álbum</button>
-        </div>
-        <div class="jr-estojo-especial" id="estojo-especial" hidden></div>
+    <section class="ins-page">
+      <button class="jr-btn jr-btn-sec jr-estojo-fechar" id="estojo-fechar">✕ Fechar</button>
+      <img class="ins-estandarte esq" src="/img/jogo/estojo/estandarte.svg" alt="" draggable="false"/>
+      <img class="ins-estandarte dir" src="/img/jogo/estojo/estandarte.svg" alt="" draggable="false"/>
+      <img class="ins-tocha esq" src="/img/jogo/estojo/tocha.svg" alt="" draggable="false"/>
+      <img class="ins-tocha dir" src="/img/jogo/estojo/tocha.svg" alt="" draggable="false"/>
+      <div class="ins-wrap">
+        <h1 class="ins-titulo"><span class="brilho">✦</span>Minhas Insígnias<span class="brilho">✦</span></h1>
+        <div class="ins-sub" id="estojo-resumo"></div>
+        <div class="ins-progresso"><span id="estojo-barra"></span></div>
+        <div class="ins-nota-box" id="estojo-nota"></div>
+        <nav class="ins-botoes">
+          <button class="ins-btn" id="btn-trocar-pet" hidden><span class="ico">🐾</span>Meus pets</button>
+          <button class="ins-btn" id="btn-album" hidden><span class="ico">📒</span>Álbum</button>
+        </nav>
+        <div class="ins-selo" id="estojo-especial" hidden></div>
+        <div class="ins-placar" id="estojo-placar"></div>
+        <div class="ins-caps" id="estojo-bandejas"></div>
       </div>
-      <div id="estojo-placar" class="jr-placar"></div>
-      <div id="estojo-bandejas" class="jr-bandejas"></div>
-    </div>
+    </section>
   </div>
 
   <!-- 📒 Álbum de Matemáticos (PROMPT-98): 26 figurinhas, uma por ginásio -->

@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 320">
+  <style>
+    .f1{transform-origin:70px 110px;animation:t 1.3s ease-in-out infinite alternate}
+    .f2{transform-origin:70px 110px;animation:t .9s ease-in-out infinite alternate-reverse}
+    .gl{animation:g 1.7s ease-in-out infinite alternate}
+    @keyframes t{0%{transform:scale(1,1) skewX(0)}50%{transform:scale(.95,1.05) skewX(2deg)}100%{transform:scale(1.03,.96) skewX(-2deg)}}
+    @keyframes g{0%{opacity:.85}100%{opacity:1}}
+  </style>
+  <defs>
+    <radialGradient id="tc-halo" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#ff9a3c" stop-opacity=".55"/>
+      <stop offset=".5" stop-color="#ff7a2a" stop-opacity=".18"/>
+      <stop offset="1" stop-color="#ff7a2a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="tc-fogo" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#ffcf5a"/>
+      <stop offset=".45" stop-color="#ff9a26"/>
+      <stop offset="1" stop-color="#ff6a12"/>
+    </linearGradient>
+    <linearGradient id="tc-miolo" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#fff6c2"/>
+      <stop offset="1" stop-color="#ffd25a"/>
+    </linearGradient>
+    <linearGradient id="tc-bacia" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3a1c3a"/>
+      <stop offset=".45" stop-color="#6a3a52"/>
+      <stop offset="1" stop-color="#3a1c3a"/>
+    </linearGradient>
+    <linearGradient id="tc-pedra" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5e3452"/>
+      <stop offset="1" stop-color="#3d1f3e"/>
+    </linearGradient>
+  </defs>
+  <circle class="gl" cx="70" cy="95" r="70" fill="url(#tc-halo)"/>
+
+  <!-- chama em línguas -->
+  <g class="f1" fill="url(#tc-fogo)">
+    <path d="M70 18 C78 44 92 56 90 78 C98 66 96 52 100 46 C108 64 106 90 98 108 H42 C34 92 30 70 40 54 C42 66 46 72 50 76 C48 58 60 46 70 18 Z"/>
+  </g>
+  <g class="f2" fill="url(#tc-miolo)" opacity=".95">
+    <path d="M70 52 C76 70 86 78 84 94 C82 104 78 108 70 108 C62 108 56 104 56 94 C56 82 64 72 70 52 Z"/>
+  </g>
+
+  <!-- borda iluminada + bacia -->
+  <path d="M8 106 H132 L128 118 H12 Z" fill="#6e3d55"/>
+  <path d="M8 106 H132" stroke="#ffb55a" stroke-width="4" stroke-linecap="round"/>
+  <path d="M12 118 H128 C124 140 104 156 84 160 H56 C36 156 16 140 12 118 Z" fill="url(#tc-bacia)"/>
+  <path d="M30 130 H110" stroke="#2a1230" stroke-width="2" opacity=".6"/>
+  <!-- pescoço -->
+  <rect x="50" y="160" width="40" height="10" rx="3" fill="#5a304c"/>
+  <rect x="44" y="170" width="52" height="12" rx="5" fill="#6a3a55"/>
+  <path d="M56 182 H84 L88 206 H52 Z" fill="url(#tc-bacia)"/>
+  <!-- bloco de pedra (suporte) -->
+  <path d="M6 206 H134 L130 214 H10 Z" fill="#6b3d5c"/>
+  <rect x="10" y="214" width="120" height="44" fill="url(#tc-pedra)"/>
+  <path d="M10 258 H130" stroke="#2a1230" stroke-width="2"/>
+  <!-- haste que entra na parede -->
+  <path d="M48 258 H92 L86 320 H54 Z" fill="#2e1634" opacity=".9"/>
+</svg>

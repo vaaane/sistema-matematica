@@ -29,7 +29,7 @@ export const formaAdulta = (pet) => { const a = SPR?.evolucao?.[pet]; return a &
 // (falas, comidas, truques, lealdade, evolução); para desenhar, a forma vira dragao_{cor}[_adulto] (azul) ou
 // dragao_vermelho_{cor}[_adulto] (PROMPT-84: mesmas imagens, mas o nome guarda que é o vermelho, para o tamanho ser o dele).
 export const coresDragao = () => SPR?.cores || {};
-export const aceitaCor = (pet) => /^dragao_(azul|vermelho)$/.test(pet || '');
+export const aceitaCor = (pet) => /^dragao_vermelho$/.test(pet || '');   // PROMPT-129: cores especiais só no dragão vermelho
 export const ehFormaAdulta = (forma) => /_adulto$/.test(forma || '');
 export function formaComCor(forma, cor) {
   if (!cor || !coresDragao()[cor] || !/^dragao_(azul|vermelho)(_adulto)?$/.test(forma || '')) return forma;
@@ -60,7 +60,7 @@ export const temBusto = (pet) => temAnim(pet, 'busto_sorrindo');
 // um pet pode ter quadro próprio em quadro_por_pet (os adultos: 1686 × 808, por causa das asas e do fogo)
 export const tamanhoQuadro = (forma) => SPR?.quadro_por_pet?.[forma]?.tamanho_quadro || SPR?.tamanho_quadro || [898, 704];
 export const tamanhoBusto = () => SPR?.tamanho_busto || [1036, 1124];
-// escala do pet na tela (sprites.json → quadro_por_pet[forma].escala, padrão 1): o vermelho adulto é 40% maior que o azul
+// escala do pet na tela (sprites.json → quadro_por_pet[forma].escala, padrão 1): azul adulto 0,75, vermelho adulto 1,75 (PROMPT-129)
 export const escalaPet = (forma) => Number(SPR?.quadro_por_pet?.[forma]?.escala) || 1;
 export const escalaMax = () => Math.max(1, ...Object.values(SPR?.quadro_por_pet || {}).map(q => Number(q?.escala) || 1));
 // fração da altura do quadro que o pet SENTADO ocupa (o resto é folga para pulos e asas)

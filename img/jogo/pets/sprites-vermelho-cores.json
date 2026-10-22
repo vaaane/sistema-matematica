@@ -717,7 +717,7 @@
     566
    ],
    "sentado_altura": 439,
-   "escala": 1.4
+   "escala": 1.75
   },
   "dragao_vermelho_branco_adulto": {
    "tamanho_quadro": [
@@ -725,7 +725,7 @@
     566
    ],
    "sentado_altura": 439,
-   "escala": 1.4
+   "escala": 1.75
   },
   "dragao_vermelho_arcoiris_adulto": {
    "tamanho_quadro": [
@@ -733,7 +733,7 @@
     566
    ],
    "sentado_altura": 439,
-   "escala": 1.4
+   "escala": 1.75
   }
  },
  "sequencias": {

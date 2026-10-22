@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 300">
+  <defs>
+    <linearGradient id="es-bronze" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#c8763a"/>
+      <stop offset=".5" stop-color="#a65630"/>
+      <stop offset="1" stop-color="#7e3d22"/>
+    </linearGradient>
+    <linearGradient id="es-pano" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2c1236"/>
+      <stop offset=".55" stop-color="#4a1446"/>
+      <stop offset="1" stop-color="#6e1652"/>
+    </linearGradient>
+    <linearGradient id="es-emb" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d68845"/>
+      <stop offset="1" stop-color="#9a4f2a"/>
+    </linearGradient>
+  </defs>
+  <!-- moldura de bronze -->
+  <path d="M6 -2 H134 V228 L70 296 L6 228 Z" fill="url(#es-bronze)"/>
+  <path d="M6 -2 H12 V226 L70 288 V296 L6 228 Z" fill="#000" opacity=".12"/>
+  <!-- pano -->
+  <path d="M22 -2 H118 V220 L70 270 L22 220 Z" fill="url(#es-pano)"/>
+  <path d="M22 -2 H30 V218 L70 260 V270 L22 220 Z" fill="#000" opacity=".18"/>
+  <!-- emblema: anel tracejado + estrela de 4 pontas -->
+  <g transform="translate(70 104)">
+    <circle r="27" fill="none" stroke="url(#es-emb)" stroke-width="6" stroke-dasharray="17 4.2"/>
+    <path d="M0 -58 L7 -8 L44 0 L7 8 L0 58 L-7 8 L-44 0 L-7 -8 Z" fill="url(#es-emb)"/>
+    <path d="M0 -58 L7 -8 L44 0 L0 0 Z" fill="#e8a060" opacity=".45"/>
+    <path d="M0 58 L-7 8 L-44 0 L0 0 Z" fill="#000" opacity=".15"/>
+  </g>
+</svg>

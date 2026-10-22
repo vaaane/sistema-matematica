@@ -6,7 +6,7 @@
     566
    ],
    "sentado_altura": 439,
-   "escala": 1
+   "escala": 0.75
   },
   "dragao_vermelho_adulto": {
    "tamanho_quadro": [
@@ -14,7 +14,7 @@
     566
    ],
    "sentado_altura": 439,
-   "escala": 1.4
+   "escala": 1.75
   }
  },
  "pets": {
