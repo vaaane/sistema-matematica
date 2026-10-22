@@ -213,7 +213,9 @@ function colocarPet(k, sem = false) {
     img.src = C.quadrosDe(forma, 'sentado_girando')[0] || '';
     C.pintar(img, info);
   }
-  const b = tela.b || 28, sentado = b * CHEFE_MAIOR * PET_SOBRE_CHEFE * (C.escalaPet?.(forma) || 1);
+  // PROMPT-138: na Ilha a escala vai no máximo até 1 (o vermelho adulto, 1,75, cobria as fases); o azul adulto (0,75) fica menor
+  const esc = Math.min(1, C.escalaPet?.(forma) || 1);
+  const b = tela.b || 28, sentado = b * CHEFE_MAIOR * PET_SOBRE_CHEFE * esc;
   img.style.height = Math.round(sentado / (C.sentadoNoQuadro(forma) || 0.86)) + 'px';   // altura do QUADRO (o desenho sentado é parte dele)
   img.hidden = false;
   const p = tela.pontos[k];
