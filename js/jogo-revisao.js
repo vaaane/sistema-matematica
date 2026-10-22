@@ -880,7 +880,8 @@ export async function iniciarJogo(sess) {
   requestAnimationFrame(loop);
   // começa na Praça, em frente à fonte (PROMPT-73); aluno ainda sem pet: o mapa geral, como antes (o pet inicial vem ao entrar num mapa)
   const salaDireto = Number(new URLSearchParams(location.search).get('sala')) || 0;   // 🖼️ ?sala=N (professora / modo teste)
-  const comecaNaSala = !!(EXPO && salaDireto && privilegioExpo() && grupoSala(salaDireto));
+  // (modo teste com ?expo=aluno: só se a sala estiver aberta para ele, como um visitante de fora)
+  const comecaNaSala = !!(EXPO && salaDireto && (privilegioExpo() || teste) && podeEntrarSala(salaDireto));
   const comecaNaPraca = !comecaNaSala && pracaPronta() && petsOk && petValido(estado.pets?.ativo);
   if (comecaNaSala) abrirSalaExpo(salaDireto).catch(() => abrirMapaGeral()).finally(() => { $('jr-carregando').hidden = true; });
   else if (!comecaNaPraca) { abrirMapaGeral(); $('jr-carregando').hidden = true; }
@@ -1015,12 +1016,12 @@ function iniciarPet() {
   datarPetsAntigos();   // 🎂 (PROMPT-102) pet sem `data`: começa a contar hoje
   if (ps.ativo) { preCarregarPet(formaDe(ps.ativo)); seguidor.definir(petFora(ps.ativo) ? null : ps.ativo, formaDe(ps.ativo)); atualizarVisualPet(); }   // em expedição: não segue
   if (falasProntas()) verificarMarcosLealdade(ps.ativo);
-  verificarEvolucao(ps.ativo);   // quem já tinha ❤️ 3 antes da evolução existir evolui ao entrar
+  verificarEvolucao(ps.ativo);   // quem já tinha lealdade 100 (e ainda não evoluiu) evolui ao entrar
   atualizarFomeSeguidor();
 }
 
 // Login da professora (menu do professor): todos os pets na coleção e as formas adultas liberadas, sem precisar
-// vencer líderes nem chegar ao ❤️ 3. O interruptor "Mostrar como filhote" (Meu Pet → Visual) troca entre as formas.
+// vencer líderes nem chegar à lealdade 100 (amizade ❤️ 1). O interruptor "Mostrar como filhote" (Meu Pet → Visual) troca entre as formas.
 function liberarPetsProfessora(ps) {
   if (!ehProfessora()) return;
   const patch = {};
@@ -1181,6 +1182,7 @@ function trocarPetAtivo(pet) {
     usarPet(pet);
     tocar('vitoria');
     verificarMarcosLealdade(pet);
+    verificarEvolucao(pet);   // voltou a ser o ativo com lealdade 100
   }
   if (colecaoDoMeuPet) { colecaoDoMeuPet = false; abrirMeuPet(); }
 }
@@ -1328,7 +1330,7 @@ function trocaDeAtivo(novo, patch = {}) {
 }
 
 const cuidadosDe = (pet) => estado.pets.conquistados[pet];
-// Forma na tela: o adulto depois da evolução (❤️ 3), a não ser que o aluno prefira ver o filhote (Meu Pet → Visual)
+// Forma na tela: o adulto depois da evolução (lealdade 100, amizade ❤️ 1), a não ser que o aluno prefira ver o filhote (Meu Pet → Visual)
 // forma desenhada: filhote ou adulto (evoluiu e não pediu para mostrar o filhote) e, nos dragões, com a cor especial escolhida
 const formaBase = (pet) => { const a = formaAdulta(pet), c = a && cuidadosDe(pet); return c?.evoluido && !c.mostrar_filhote ? a : pet; };
 const formaDe = (pet) => formaComCor(formaBase(pet), corAtiva(pet));
@@ -1385,15 +1387,16 @@ function verificarMarcosLealdade(pet = estado?.pets?.ativo) {
   }
 }
 
-// ── Evolução: no ❤️ 3 o pet ativo vira adulto (se houver forma adulta em sprites.json → evolucao). Uma vez por pet;
+// ── Evolução: com lealdade 100 (amizade ❤️ 1, PROMPT-121) o pet ativo vira adulto (se houver forma adulta em sprites.json → evolucao). Uma vez por pet;
 // é o mesmo pet (lealdade, barriga, amizade, nome, tinta e efeito continuam), só muda a forma. ──
-const NIVEL_EVOLUCAO = 3;
+const LEALDADE_EVOLUCAO = 100;
 let evoPendente = null;   // pet que evolui assim que nada estiver na frente (batalha, pergunta, troca de cena)
 let evo = null;           // cena em andamento: { pet, anim (PetParado do adulto), timers }
 
 function verificarEvolucao(pet = estado?.pets?.ativo) {
   const c = pet && cuidadosDe(pet);
-  if (!petsOk || !c || c.evoluido || pet !== estado.pets.ativo || !formaAdulta(pet) || nivelPet(pet) < NIVEL_EVOLUCAO) return;
+  // em expedição: não agora (evolui quando o jogo verificar de novo com ele de volta)
+  if (!petsOk || !c || c.evoluido || pet !== estado.pets.ativo || petFora(pet) || !formaAdulta(pet) || (Number(c.lealdade) || 0) < LEALDADE_EVOLUCAO) return;
   evoPendente = pet;
 }
 
@@ -1578,7 +1581,7 @@ function renderMeuPet() {
   // uma linha só: o próximo marco ainda não alcançado (os números são os do jogo: falas, dica, eliminar, cambalhota, amizade)
   // (dois marcos no mesmo número: vale o primeiro; o outro está no ⓘ)
   const marcos = [[lc, 'começa a conversar 💬'], [ld, 'dá dicas nos ginásios 💡'], [le, 'elimina uma opção nos ginásios ❌'],
-    [LEALDADE_CAMBALHOTA, 'aprende a cambalhota 🤸'], [100, 'começa a amizade ❤️'],
+    [LEALDADE_CAMBALHOTA, 'aprende a cambalhota 🤸'], [100, formaAdulta(pet) && !c.evoluido ? 'começa a amizade ❤️ e vira adulto ✨' : 'começa a amizade ❤️'],
     ...(truquesDe(pet) || []).filter(t => t.lealdade > 0).map(t => [t.lealdade, `aprende o truque ${t.nome} ${t.emoji}`])]
     .filter(([v], i, t) => t.findIndex(([w]) => w === v) === i).sort((a, b) => a[0] - b[0]);
   const prox = marcos.find(([v]) => l < v);
@@ -1586,7 +1589,7 @@ function renderMeuPet() {
     ? `Próximo: ${prox[0]} — ${prox[1]}`
     : `Amizade ❤️ ${nivel} — faltam ${pp - Math.floor((Number(c.amizade) || 0) % pp)} para o próximo nível`;
   $('mp-info-balao').innerHTML = `<b>Como a lealdade sobe</b> Carinho (até ${CARINHOS_POR_DIA} por dia), comida e jogar todo dia. Ficando muitos dias sem jogar, ela cai um pouco.
-    <b>Marcos</b> Com ${lc}, ${esc(nomePet(pet))} começa a conversar${LEALDADE_CAMBALHOTA === lc ? ' e aprende a cambalhota' : ''}.${LEALDADE_CAMBALHOTA !== lc ? ` Com ${LEALDADE_CAMBALHOTA}, aprende a cambalhota.` : ''} Com ${ld}, dá dicas nos ginásios; com ${le}, elimina uma opção.
+    <b>Marcos</b> Com ${lc}, ${esc(nomePet(pet))} começa a conversar${LEALDADE_CAMBALHOTA === lc ? ' e aprende a cambalhota' : ''}.${LEALDADE_CAMBALHOTA !== lc ? ` Com ${LEALDADE_CAMBALHOTA}, aprende a cambalhota.` : ''} Com ${ld}, dá dicas nos ginásios; com ${le}, elimina uma opção.${formaAdulta(pet) ? ` Com 100 de lealdade, ${esc(nomePet(pet))} vira adulto!` : ''}
     Acima de 100, cada ${pp} pontos sobem um nível de amizade ❤️ (moldura de prata no 2, corações ao seguir no 3, moldura dourada no 5, coroa no 10).${truquesDe(pet) ? `
     <b>Truques ✨</b> ${truquesDe(pet).map(t => `${t.emoji} ${esc(t.nome)} ${t.lealdade > 0 ? t.lealdade : '(desde o início)'}`).join(' · ')}.` : ''}`;
   atualizarBotaoTreino();
@@ -1792,7 +1795,7 @@ const ondeDonaCida = () => 'Praça ou Mercado';   // a loja é um interior com p
 function ganharLealdade(pet, n, patch = {}) {
   const c = cuidadosDe(pet);
   if (!c || !n) return patch;
-  const antes = nivelAmizade(c.amizade);
+  const antes = nivelAmizade(c.amizade), lealAntes = Number(c.lealdade) || 0;
   const r = somarLealdade(c.lealdade, c.amizade, n);
   c.lealdade = r.lealdade; c.amizade = r.amizade;
   const base = `pets/conquistados/${pet}`;
@@ -1802,8 +1805,8 @@ function ganharLealdade(pet, n, patch = {}) {
   if (depois > antes) {
     avisoPet(`❤️ Amizade com ${nomePet(pet)}: nível ${depois}!`, true);
     if (pet === estado.pets.ativo) enviarOnline(visualOnline(pet));
-    verificarEvolucao(pet);
   }
+  if (depois > antes || (lealAntes < LEALDADE_EVOLUCAO && c.lealdade >= LEALDADE_EVOLUCAO)) verificarEvolucao(pet);   // chegou a 100: começa a amizade (e o dragão vira adulto)
   return patch;
 }
 
@@ -4213,6 +4216,7 @@ function voltarDaExpedicao(pet) {
   gravar(patch);
   atualizarFomeSeguidor();
   if (pet === estado.pets.ativo) { pufSeguidor(); enviarOnline(visualOnline(pet)); }
+  verificarEvolucao(pet);   // voltou com lealdade 100 e sem ter evoluído: a cena vem depois do aviso da volta
   mostrarVoltaExp(pet, moedas, item);
 }
 
@@ -7321,6 +7325,25 @@ async function abrirSaguao(deSala = null) {   // deSala: voltou daquela sala (ap
   atualizarBotaoPet();
   entrarNoMapaOnline('saguao', 'exposicao');
   pararExpo();   // no saguão só vale visitas_abertas (ouvida desde o começo)
+  if (privilegioExpo()) ouvirPendentesExpo();   // ⏳ {n} para aprovar
+}
+// professora e modo teste, no saguão: quantos itens e nomes esperam aprovação (todas as salas, sem as fotos)
+let expoPendN = 0;
+function ouvirPendentesExpo() {
+  expoOuvindo = true;
+  let f = () => {};
+  try {
+    f = onValue(ref(db, noExpo('exposicao_salas')), (s) => {
+      let n = 0;
+      for (const sala of Object.values(s.val() || {})) {
+        if (!sala || typeof sala !== 'object') continue;
+        if (typeof sala.nome_pendente === 'string' && sala.nome_pendente) n++;
+        for (const v of Object.values(sala.itens || {})) { const m = v && lerItemExpo(v); if (m?.status === 'pendente') n++; }
+      }
+      expoPendN = n;
+    }, (e) => console.warn('[jogo-revisao] exposicao_salas indisponível', e?.code || e));
+  } catch (e) { console.warn('[jogo-revisao] exposicao_salas indisponível', e?.code || e); }
+  pararOuvirExpo = () => { try { f(); } catch (_) {} expoPendN = 0; };
 }
 // o número em cada placa (e 🔒: sala em que este aluno não pode entrar)
 function desenharPlacasExpo() {
@@ -7382,14 +7405,16 @@ async function abrirSalaExpo(n) {
   $('cena-palco').style.visibility = '';
   atualizarBotaoPet();
   entrarNoMapaOnline('sala-' + n, 'exposicao');
-  ouvirExpo(['tema', 'musica', 'nome'].map(c => [String(n), c]), () => aplicarEstadoSala(n), n);
+  ouvirExpo(['tema', 'musica', 'nome', 'nome_pendente', 'nome_motivo'].map(c => [String(n), c]), () => aplicarEstadoSala(n), n);
 }
-function tituloSala(n) { const nome = estadoSala(n).nome; return `🖼️ Sala ${n}${nome ? ' · ' + String(nome).slice(0, 40) : ''}`; }
+function tituloSala(n) { const nome = nomeSalaVisivel(n); return `🖼️ Sala ${n}${nome ? ' · ' + String(nome).slice(0, 40) : ''}`; }
 // mudou no Firebase com o aluno dentro: nome na faixa, fundo do tema (a música segue em lugarDaMusica)
 async function aplicarEstadoSala(n) {
   if (salaExpo() !== n) return;
   const t = tituloSala(n);
-  if ($('cena-titulo').textContent !== t) { $('cena-titulo').textContent = t; redesenharLetreiros(); }
+  if ($('cena-titulo').textContent !== t) $('cena-titulo').textContent = t;
+  redesenharLetreiros();   // o nome e o ⏳/❌ (só redesenha o que mudou)
+  if (ex?.editando) resumoAprovExpo();
   const tema = temaExpo(estadoSala(n).tema), c = cena;
   if (tema.id === c.tema) return;
   c.tema = tema.id;
@@ -7439,11 +7464,16 @@ function atualizarHudExpo() {
   if (bd.hidden !== semD) bd.hidden = semD;
   const bm = $('btn-expo-musica'), semM = !(n && musicaDaSala(true));
   if (bm.hidden !== semM) bm.hidden = semM;
+  const bp = $('btn-expo-pend'), semP = !(ehSaguao() && expoPendN > 0 && privilegioExpo());
+  if (bp.hidden !== semP) bp.hidden = semP;
+  const tp = `⏳ ${expoPendN} para aprovar`;
+  if (!semP && bp.textContent !== tp) bp.textContent = tp;
   const ic = expoMusicaMudo ? '🔇' : '🔈';
   if (!semM && bm.textContent !== ic) bm.textContent = ic;
 }
 function ligarExposicao() {
   $('btn-expo-musica').addEventListener('click', (e) => { e.stopPropagation(); expoMusicaMudo = !expoMusicaMudo; });
+  $('btn-expo-pend').addEventListener('click', (e) => { e.stopPropagation(); window.open('/professor/p-exposicao.html', '_blank', 'noopener'); });   // só um aviso: a aprovação é na página
   ligarEditorExpo();
 }
 
@@ -7466,7 +7496,17 @@ const nCoresExpo = (it) => (it?.cor && Array.isArray(EXPO?.cores?.[it.cor]) ? EX
 const fotosLista = (m) => [0, 1, 2, 3].map(i => (typeof m?.fotos?.[i] === 'string' ? m.fotos[i] : null));   // varal: 4 lugares (o banco guarda {0: id, 2: id})
 const fotosDoItem = (m) => [m.foto, ...fotosLista(m)].filter(Boolean);
 const fotosNaSala = () => [...ex.itens.values()].reduce((t, m) => t + fotosDoItem(m).length, 0);
-const nomeDaSala = () => String(estadoSala(ex.n).nome || '');
+// ✅ aprovação (PROMPT-EXPOSICAO-3): fotos e textos só aparecem para os de fora depois que a professora aprova
+const precisaAprov = (it) => it?.conteudo === 'foto' || it?.conteudo === 'fotos4' || it?.conteudo === 'texto';
+const STATUS_EXPO = ['pendente', 'aprovado', 'recusado'];
+const temAlgoExpo = (m) => !!(m.titulo || m.texto || fotosDoItem(m).length);
+const veTudoExpo = (n = ex?.n) => !!n && podeDecorar(n);   // o grupo, a professora e o modo teste: inclusive o pendente e o recusado
+const visivelExpo = (m) => !precisaAprov(catExpo(m.mv)) || m.status === 'aprovado' || veTudoExpo();
+const seloExpo = (m) => (precisaAprov(catExpo(m.mv)) && veTudoExpo() ? (m.status === 'pendente' ? '⏳' : m.status === 'recusado' ? '❌' : '') : '');
+// o nome da sala: o grupo vê o pendente (enquanto espera); os de fora, só o aprovado
+const nomeSalaVisivel = (n) => { const st = estadoSala(n); return String((veTudoExpo(n) && st.nome_pendente) || st.nome || ''); };
+const nomeDaSala = () => nomeSalaVisivel(ex.n);
+const seloNomeExpo = (n) => { const st = estadoSala(n); return !veTudoExpo(n) ? '' : st.nome_pendente ? '⏳' : st.nome_motivo !== undefined && st.nome_motivo !== null ? '❌' : ''; };
 function tamExpo(m) {
   const it = catExpo(m.mv);
   return tamPelaLargura((Number(it?.largura) || 100) * escalaExpo(), srcExpo(m.mv, it?.vistas?.[0] || 'f'), srcExpo(m.mv, m.vista));
@@ -7477,10 +7517,14 @@ function lerItemExpo(v) {
   const it = catExpo(v?.mv);
   if (!it || !Number.isFinite(Number(v.x)) || !Number.isFinite(Number(v.y))) return null;
   const txt = (s, n) => (typeof s === 'string' ? s.slice(0, n) : '');
-  return { mv: it.id, x: Number(v.x), y: Number(v.y), vista: it.vistas.includes(v.vista) ? v.vista : it.vistas[0], espelho: !!v.espelho,
+  const m = { mv: it.id, x: Number(v.x), y: Number(v.y), vista: it.vistas.includes(v.vista) ? v.vista : it.vistas[0], espelho: !!v.espelho,
     cor: clamp(Math.round(Number(v.cor) || 0), 0, Math.max(0, nCoresExpo(it) - 1)), titulo: txt(v.titulo, 40), texto: txt(v.texto, 400),
     foto: typeof v.foto === 'string' ? v.foto : null, fotos: v.fotos && typeof v.fotos === 'object' ? { ...v.fotos } : null,
-    por: typeof v.por === 'string' ? v.por : '', ts: Number(v.ts) || 0, mexendo: Number(v.mexendo) || 0, mexendo_por: typeof v.mexendo_por === 'string' ? v.mexendo_por : '' };
+    por: typeof v.por === 'string' ? v.por : '', ts: Number(v.ts) || 0, mexendo: Number(v.mexendo) || 0, mexendo_por: typeof v.mexendo_por === 'string' ? v.mexendo_por : '',
+    env_por: typeof v.env_por === 'string' ? v.env_por : '', env_ts: Number(v.env_ts) || 0, motivo: txt(v.motivo, 80), rev_ts: Number(v.rev_ts) || 0 };
+  // sem status (itens de antes da aprovação): com conteúdo conta como pendente
+  m.status = !precisaAprov(it) ? null : STATUS_EXPO.includes(v.status) ? v.status : temAlgoExpo(m) ? 'pendente' : null;
+  return m;
 }
 // o que vai para o banco (sem undefined; textos vazios e fotos ausentes não vão)
 function gravavelExpo(m) {
@@ -7490,6 +7534,10 @@ function gravavelExpo(m) {
   if (m.foto) o.foto = m.foto;
   const f = fotosLista(m);
   if (f.some(Boolean)) o.fotos = Object.fromEntries(f.map((id, i) => [i, id]).filter(([, id]) => id));
+  if (m.status) o.status = m.status === 'aprovado' || m.status === 'recusado' ? m.status : 'pendente';   // o editor nunca aprova: só mantém o que a professora gravou
+  if (m.status === 'recusado' && m.motivo) o.motivo = m.motivo;
+  if (m.status && m.rev_ts) o.rev_ts = m.rev_ts;
+  if (m.env_por) { o.env_por = m.env_por; o.env_ts = m.env_ts || Date.now(); }
   return o;
 }
 const refItens = () => ref(db, `${noExpo('exposicao_salas')}/${ex.n}/itens`);
@@ -7536,7 +7584,7 @@ function itemExpoMudou(id, v) {
   if (ex.arr?.id === id && m) { const a = ex.itens.get(id); if (a) Object.assign(a, { ...m, x: a.x, y: a.y }); return; }   // arrastando: a posição é a minha até soltar
   if (m) ex.itens.set(id, m); else ex.itens.delete(id);
   const it = m && catExpo(m.mv);
-  (it ? medirItemExpo(it) : Promise.resolve()).then(() => { if (ex) { desenharItemExpo(id); refazerGradeExpo(); if (ex.editando) renderCatalogoExpo(); } });
+  (it ? medirItemExpo(it) : Promise.resolve()).then(() => { if (ex) { desenharItemExpo(id); refazerGradeExpo(); if (ex.editando) { renderCatalogoExpo(); resumoAprovExpo(); } } });
   if (ex.ver) renderVisualizador();
 }
 
@@ -7550,12 +7598,13 @@ function desenharItemExpo(id) {
   if (!el) { el = document.createElement('div'); el.dataset.ex = id; at.appendChild(el); ex.els.set(id, el); }
   el.className = `cs-movel ex-movel cs-${it.tipo}${ex.sel === id ? ' sel' : ''}${mexendoOutro(m) ? ' ex-mexendo' : ''}`;
   Object.assign(el.style, { left: m.x + 'px', top: m.y + 'px', width: w + 'px', height: h + 'px', zIndex: it.tipo === 'tapete' ? 1 : it.tipo === 'parede' ? 2 : Math.round(m.y) });
-  const chave = JSON.stringify([m.vista, m.espelho, m.cor, fotosDoItem(m), m.foto, ex.editando, it.conteudo === 'nome_sala' ? nomeDaSala() : '', Math.round(w)]);
+  const selo = it.conteudo === 'nome_sala' ? seloNomeExpo(ex.n) : seloExpo(m);
+  const chave = JSON.stringify([m.vista, m.espelho, m.cor, fotosDoItem(m), m.foto, ex.editando, it.conteudo === 'nome_sala' ? nomeDaSala() : '', Math.round(w), visivelExpo(m), selo]);
   if (el.dataset.k === chave) return;
   el.dataset.k = chave;
   const src = srcExpo(m.mv, m.vista), comFoto = it.conteudo === 'foto' || it.conteudo === 'fotos4';
   el.innerHTML = `${comFoto ? `<div class="ex-fotos${m.espelho ? ' espelho' : ''}"></div>` : ''}<img class="ex-img${m.espelho ? ' espelho' : ''}" src="${src}" alt="" draggable="false" style="${filtroExpo(it, m.cor) ? `filter:${filtroExpo(it, m.cor)};` : ''}${comFoto ? 'visibility:hidden' : ''}"/>` +
-    (it.conteudo === 'nome_sala' ? letreiroHtml(w, h) : '');
+    (it.conteudo === 'nome_sala' ? letreiroHtml(w, h) : '') + (selo ? `<span class="ex-selo" title="${selo === '⏳' ? 'Aguardando aprovação' : 'Recusado'}">${selo}</span>` : '');
   if (comFoto) montarFotosExpo(el, m, it, chave);
 }
 function letreiroHtml(w, h) {
@@ -7574,7 +7623,7 @@ async function montarFotosExpo(el, m, it, chave) {
   if (el.dataset.k !== chave) return;
   const img = el.querySelector('.ex-img'), caixa = el.querySelector('.ex-fotos');
   img.src = a.frame; img.style.visibility = '';
-  const ids = it.conteudo === 'foto' ? [m.foto] : fotosLista(m);
+  const ids = !visivelExpo(m) ? [] : it.conteudo === 'foto' ? [m.foto] : fotosLista(m);   // não aprovada (os de fora): papel creme, nada é baixado
   caixa.innerHTML = a.areas.map((ar, i) => {
     const id = ids[i] || null, mask = `url('${ar.mask}')`;
     return `<div class="ex-area" style="left:${ar.x * 100}%;top:${ar.y * 100}%;width:${ar.w * 100}%;height:${ar.h * 100}%;-webkit-mask-image:${mask};mask-image:${mask}">` +
@@ -7620,6 +7669,7 @@ function entrarEdicaoExpo() {
   $('tela-cena').classList.add('ex-editando');
   $('ex-faixa').hidden = false;
   renderCatalogoExpo();
+  resumoAprovExpo();
   for (const id of ex.itens.keys()) desenharItemExpo(id);
 }
 function sairEdicaoExpo(calado = false) {
@@ -7627,9 +7677,30 @@ function sairEdicaoExpo(calado = false) {
   ex.editando = false; ex.sel = null; ex.arr = ex.pan = null;
   camFoco = null;
   $('tela-cena').classList.remove('ex-editando');
-  $('ex-faixa').hidden = $('ex-ferr').hidden = true;
+  $('ex-faixa').hidden = $('ex-ferr').hidden = $('ex-resumo').hidden = true;
   for (const id of ex.itens.keys()) desenharItemExpo(id);
   if (!calado) tocar('vitoria');
+}
+// "⏳ 3 aguardando · ❌ 1 recusado" no alto do editor; tocar leva a câmera até o primeiro (o nome da sala: o letreiro)
+function listaAprovExpo() {
+  const l = [...ex.itens].filter(([, m]) => seloExpo(m)).sort((a, b) => a[1].x - b[1].x);
+  const sn = seloNomeExpo(ex.n), let_ = sn && [...ex.itens].find(([, m]) => catExpo(m.mv)?.conteudo === 'nome_sala');
+  return { pend: l.filter(([, m]) => m.status === 'pendente').length + (sn === '⏳' ? 1 : 0), rec: l.filter(([, m]) => m.status === 'recusado').length + (sn === '❌' ? 1 : 0),
+    ids: [...(let_ ? [let_[0]] : []), ...l.map(([id]) => id)] };
+}
+function resumoAprovExpo() {
+  const el = $('ex-resumo');
+  if (!ex?.editando) { el.hidden = true; return; }
+  const { pend, rec } = listaAprovExpo(), t = [pend ? `⏳ ${pend} aguardando` : '', rec ? `❌ ${rec} recusado${rec > 1 ? 's' : ''}` : ''].filter(Boolean).join(' · ');
+  el.textContent = t; el.hidden = !t;
+}
+function irAoPrimeiroAprovExpo() {
+  const id = ex?.editando && listaAprovExpo().ids[0], m = id && ex.itens.get(id);
+  if (!m) return;
+  const meia = $('cena-vp').clientWidth / 2 / cam.s, LW = larguraCena();
+  ex.camX = clamp(m.x, Math.min(meia, LW / 2), Math.max(LW - meia, LW / 2));
+  camFoco = { x: ex.camX, y: H / 2, ate: Infinity };
+  selecionarExpo(id);
 }
 const qtdExpo = (mv) => [...ex.itens.values()].filter(m => m.mv === mv).length;
 function renderCatalogoExpo() {
@@ -7693,16 +7764,23 @@ function posicionarFerrExpo() {
   if (!m || el.hidden) return;
   posicionarNaTela(el, m.x, m.y - tamExpo(m)[1] - 6);
 }
-// mudou vista/espelho/cor/texto/foto: redesenha e grava o item inteiro
-function mudouItemExpo(id) {
+// mudou vista/espelho/cor: redesenha e grava só esses campos (o status fica como está).
+// conteudo = true (foto, título, texto): grava o item inteiro e ele volta a esperar a professora
+function mudouItemExpo(id, conteudo = false) {
   const m = ex.itens.get(id);
   if (!m) return;
   m.por = sessao.uid; m.ts = Date.now();
+  if (conteudo && precisaAprov(catExpo(m.mv))) {
+    m.status = temAlgoExpo(m) ? 'pendente' : null; m.motivo = ''; m.rev_ts = 0;
+    m.env_por = sessao.uid; m.env_ts = Date.now();
+  }
   desenharItemExpo(id);
   refazerGradeExpo();
   posicionarFerrExpo();
-  if (ex.editando) renderCatalogoExpo();   // o uso (itens e fotos)
-  return salvarExpo(set(refItem(id), gravavelExpo(m)));
+  if (ex.editando) { renderCatalogoExpo(); resumoAprovExpo(); }   // o uso (itens e fotos) e o ⏳/❌
+  if (ex.ver) renderVisualizador();
+  if (conteudo) return salvarExpo(set(refItem(id), gravavelExpo(m)));
+  return salvarExpo(update(refItem(id), { vista: m.vista, espelho: !!m.espelho, cor: m.cor || 0, x: Math.round(m.x), y: Math.round(m.y), por: m.por, ts: m.ts }));
 }
 // 🔄 girar: a próxima vista que existe; com uma vista só, espelha
 function girarExpo() {
@@ -7811,6 +7889,7 @@ function atualizarSalaExpo(dt) {
 function ligarEditorExpo() {
   $('btn-expo-decorar').addEventListener('click', (e) => { e.stopPropagation(); entrarEdicaoExpo(); });
   $('ex-pronto').addEventListener('click', (e) => { e.stopPropagation(); sairEdicaoExpo(); });
+  $('ex-resumo').addEventListener('click', (e) => { e.stopPropagation(); irAoPrimeiroAprovExpo(); });
   $('ex-tema').addEventListener('click', (e) => { e.stopPropagation(); abrirTemasExpo(); });
   $('ex-abas').addEventListener('click', (e) => { const b = e.target.closest('[data-ex-aba]'); if (b && ex) { ex.cat = b.dataset.exAba; renderCatalogoExpo(); } });
   $('ex-catalogo').addEventListener('click', (e) => { const b = e.target.closest('[data-ex-mv]'); if (b) colocarItemExpo(b.dataset.exMv); });
@@ -7875,6 +7954,10 @@ function escolherTemaExpo(id) {
   salvarExpo(set(ref(db, `${noExpo('exposicao_salas')}/${ex.n}/tema`), id));
 }
 
+// ⏳ / ❌ no alto do ✏️ e do visualizador (só o grupo, a professora e o modo teste chegam a ver)
+const textoAprov = (selo, motivo) => (selo === '⏳' ? '⏳ Aguardando aprovação da professora' : selo === '❌' ? `❌ Recusado${motivo ? ': ' + motivo : ''}` : '');
+const avisoAprovHtml = (selo, motivo) => (selo ? `<p class="ex-aprov ${selo === '⏳' ? 'pend' : 'rec'}">${esc(textoAprov(selo, motivo))}</p>` : '');
+
 // ── ✏️ conteúdo: título e texto, fotos (moldura e varal) e o nome da sala (letreiro) ──
 let contExpo = null;   // { id, slot }
 function abrirConteudoExpo(id) {
@@ -7890,13 +7973,13 @@ function renderConteudoExpo() {
   const m = ex?.itens.get(contExpo?.id), it = m && catExpo(m.mv);
   if (!it) { $('ex-cont').hidden = true; return; }
   if (it.conteudo === 'nome_sala') {
-    $('ex-cont-corpo').innerHTML = `<label class="ex-campo">Nome da sala<input id="ex-c-nome" maxlength="30" value="${esc(nomeDaSala())}" placeholder="Ex.: Heróis da resistência"/></label>`;
+    $('ex-cont-corpo').innerHTML = avisoAprovHtml(seloNomeExpo(ex.n), estadoSala(ex.n).nome_motivo) + `<label class="ex-campo">Nome da sala<input id="ex-c-nome" maxlength="30" value="${esc(nomeDaSala())}" placeholder="Ex.: Heróis da resistência"/></label>`;
     return;
   }
   const ids = it.conteudo === 'foto' ? [m.foto] : it.conteudo === 'fotos4' ? fotosLista(m) : [];
   const slots = ids.map((f, i) => `<div class="ex-slot" data-slot="${i}">${f ? `<img data-foto="${esc(f)}" alt=""/>` : '<span>sem foto</span>'}
       <div><button class="jr-btn" data-ex-foto="${i}">📷 ${f ? 'Trocar' : 'Escolher foto'}</button>${f ? `<button class="jr-btn jr-btn-sec" data-ex-tirar="${i}">✕</button>` : ''}</div></div>`).join('');
-  $('ex-cont-corpo').innerHTML = (slots ? `<div class="ex-slots${ids.length > 1 ? ' quatro' : ''}">${slots}</div>` : '') +
+  $('ex-cont-corpo').innerHTML = avisoAprovHtml(seloExpo(m), m.motivo) + (slots ? `<div class="ex-slots${ids.length > 1 ? ' quatro' : ''}">${slots}</div>` : '') +
     `<label class="ex-campo">Título <small>(até 40)</small><input id="ex-c-titulo" maxlength="40" value="${esc(m.titulo)}"/></label>
      <label class="ex-campo">Texto <small>(até 400)</small><textarea id="ex-c-texto" maxlength="400" rows="4">${esc(m.texto)}</textarea></label>`;
   for (const f of $('ex-cont-corpo').querySelectorAll('img[data-foto]')) fotoExpo(f.dataset.foto).then(d => { if (d) f.src = d; });
@@ -7907,19 +7990,23 @@ async function salvarConteudoExpo() {
   if (it.conteudo === 'nome_sala') {
     const nome = $('ex-c-nome').value.replace(/\s+/g, ' ').trim().slice(0, 30);
     if (temPalavraProibida(nome)) { $('ex-cont-msg').textContent = 'Revise o texto 🙂'; return; }
-    (expoSalas[ex.n] ||= {}).nome = nome || null;
+    // o nome novo espera a professora (nome_pendente); o aprovado continua valendo para os de fora. Apagar: na hora
+    const o = (expoSalas[ex.n] ||= {}), aprovado = String(o.nome || '');
+    const mud = !nome ? { nome: null, nome_pendente: null, nome_motivo: null } : nome === aprovado ? { nome_pendente: null, nome_motivo: null } : { nome_pendente: nome, nome_motivo: null };
+    for (const [k, v] of Object.entries(mud)) { if (v === null) delete o[k]; else o[k] = v; }
     aplicarEstadoSala(ex.n);
     redesenharLetreiros();
     $('ex-cont').hidden = true;
-    salvarExpo(set(ref(db, `${noExpo('exposicao_salas')}/${ex.n}/nome`), nome || null));
+    salvarExpo(update(ref(db, `${noExpo('exposicao_salas')}/${ex.n}`), mud));
     return;
   }
   const titulo = $('ex-c-titulo').value.replace(/\s+/g, ' ').trim().slice(0, 40), texto = $('ex-c-texto').value.trim().slice(0, 400);
   if (temPalavraProibida(titulo) || temPalavraProibida(texto)) { $('ex-cont-msg').textContent = 'Revise o texto 🙂'; return; }
+  const mudou = m.titulo !== titulo || m.texto !== texto;
   m.titulo = titulo; m.texto = texto;
   $('ex-cont').hidden = true;
   tocar('clique');
-  mudouItemExpo(contExpo.id);
+  if (mudou) mudouItemExpo(contExpo.id, true);
 }
 // 📷 escolheu um arquivo: prepara (EXIF, 1000 px, WebP), grava a imagem, troca no item e apaga a antiga
 async function enviarFotoExpo(file) {
@@ -7937,7 +8024,7 @@ async function enviarFotoExpo(file) {
   if (!ok || !ex || ex.itens.get(c.id) !== m) { msg.textContent = 'Sem conexão, as mudanças não foram salvas'; return; }
   fotosExpo.set(novo, Promise.resolve(foto.dados));
   if (it.conteudo === 'foto') m.foto = novo; else m.fotos = { ...(m.fotos || {}), [c.slot]: novo };
-  await mudouItemExpo(c.id);
+  await mudouItemExpo(c.id, true);
   if (velho) { fotosExpo.delete(velho); salvarExpo(remove(refImagem(velho))); }
   msg.textContent = `✔ Foto enviada (${Math.round(foto.bytes / 1024)} KB)`;
   renderConteudoExpo();
@@ -7948,7 +8035,7 @@ function tirarFotoExpo(slot) {
   const velho = it.conteudo === 'foto' ? m.foto : fotosLista(m)[slot];
   if (!velho) return;
   if (it.conteudo === 'foto') m.foto = null; else { const f = { ...(m.fotos || {}) }; delete f[slot]; m.fotos = f; }
-  mudouItemExpo(contExpo.id);
+  mudouItemExpo(contExpo.id, true);
   fotosExpo.delete(velho);
   salvarExpo(remove(refImagem(velho)));
   renderConteudoExpo();
@@ -7965,7 +8052,8 @@ function ligarConteudoExpo() {
 }
 
 // ── visualizador (modo visita): foto grande, título, texto e "Sala n · turma" (nunca nomes de alunos) ──
-const temConteudo = (m) => { const it = catExpo(m.mv); return !!it?.conteudo && it.conteudo !== 'nome_sala' && !!(m.titulo || m.texto || fotosDoItem(m).length); };
+// os de fora: só os aprovados (pendente e recusado não abrem e o ◀ ▶ pula)
+const temConteudo = (m) => { const it = catExpo(m.mv); return !!it?.conteudo && it.conteudo !== 'nome_sala' && temAlgoExpo(m) && visivelExpo(m); };
 const listaVisitaExpo = () => [...ex.itens].filter(([, m]) => temConteudo(m)).sort((a, b) => a[1].x - b[1].x).map(([id]) => id);
 function itemExpoEm(p) {
   let melhor = null, mz = -1;
@@ -7995,6 +8083,8 @@ function renderVisualizador() {
   if (im) fotoExpo(im.dataset.foto).then(d => { if (d && im.isConnected) im.src = d; });
   $('ex-ver-titulo').textContent = m.titulo || '';
   $('ex-ver-texto').textContent = m.texto || '';
+  const st = $('ex-ver-status'), ta = textoAprov(seloExpo(m), m.motivo);
+  st.textContent = ta; st.hidden = !ta; st.className = `ex-aprov ${m.status === 'recusado' ? 'rec' : 'pend'}`;
   $('ex-ver-rodape').textContent = `Sala ${ex.n}${g?.turma ? ' · ' + g.turma : ''}`;
   $('ex-ver-ant').disabled = i <= 0;
   $('ex-ver-prox').disabled = i < 0 || i >= lista.length - 1;
@@ -11422,6 +11512,7 @@ function registrarBatalha(resultado) {
   if (pr.lealdade && c) {
     c.lealdade = Math.min(100, (Number(c.lealdade) || 0) + pr.lealdade);
     patch[`pets/conquistados/${pet}/lealdade`] = c.lealdade;
+    verificarEvolucao(pet);   // a batalha soma direto (sem ganharLealdade): chegou a 100, evolui
   }
   const agora = Date.now();
   patch[`respostas/batalha-${agora}`] = {
@@ -11733,6 +11824,8 @@ function abrirPedido(o) {
   $('pd-fechar').hidden = true;
   $('pd-depois').hidden = false;
   const pet = estado.pets?.ativo, leal = Number(pet && cuidadosDe(pet)?.lealdade) || 0;
+  $('pd-calc').hidden = !ehPorcentagem(p.texto);   // 🧮 nos pedidos de porcentagem
+  fecharCalc();
   $('pd-dica').hidden = !pet || pd.dica || leal < (cfgPedidos().lealdade_dica ?? 80);
   if (pet) $('pd-dica').textContent = `💡 Pedir dica a ${nomePet(pet)}`;
   $('pd-pet').hidden = true;
@@ -11868,6 +11961,7 @@ function voarMoedasPedido(n) {
 function fecharPedido() {
   pd = null;
   $('pedido').hidden = true;
+  fecharCalc();
 }
 
 // ── Modo de ajuste (só a professora, no modo teste, com ?editarNpcs=1): arrastar e copiar posições ──
@@ -12363,7 +12457,7 @@ function renderPergunta() {
   $('perg-corpo').classList.remove('com-explica');
   $('perg-corpo').classList.toggle('com-tabela', !!q.tabela);
   $('perg-tabela').innerHTML = renderTabela(q.tabela);   // Mapa 13 B: tabela sorteada junto com a pergunta
-  $('perg-calc').hidden = !calcLigada(q.mapa ?? pg.mapa, q.lado ?? pg.G);   // 🧮 só nos ginásios com "calculadora": true
+  $('perg-calc').hidden = !calcNaPergunta(q);   // 🧮 nos ginásios com "calculadora": true e em toda pergunta de porcentagem
   if ($('perg-calc').hidden) fecharCalc();   // na revisão, a pergunta seguinte pode ser de outro mapa
   else if (!calcAvisada) {   // 1ª pergunta com 🧮 da sessão: o botão pulsa 3 vezes e vem o aviso (PROMPT-101)
     calcAvisada = true;
@@ -12444,7 +12538,7 @@ function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
   const passos = passosDe(q.explicacao);
   const ultimo = passos[passos.length - 1] || '';
   if (posDaResposta(ultimo, certa) < 0) passos.push(`Resposta: ${certa}`);
-  const naCalc = calcLigada(q.mapa ?? pg.mapa, q.lado ?? pg.G) ? passoCalculadora(q.enunciado) : '';
+  const naCalc = calcNaPergunta(q) ? passoCalculadora(q.enunciado) : '';
   if (naCalc) { if (/^Resposta: /.test(passos[passos.length - 1])) passos.splice(passos.length - 1, 0, naCalc); else passos.push(naCalc); }
   $('erro-enun').textContent = q.enunciado;
   $('erro-sua').textContent = sua;
@@ -12474,6 +12568,9 @@ function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
 //    80 − 10 % = 72; 80 ÷ 50 % = 160; 15 % sozinho = 0,15. Fechar e reabrir mantém o último número.
 let calcAvisada = false;   // a 🧮 já pulsou nesta sessão
 const calcLigada = (mapa, G) => { const pt = D.mapas?.mapas?.['mapa' + mapa]?.portas; return !!pt && (G ? !!pt[G]?.calculadora : Object.values(pt).some(x => x?.calculadora)); };
+// toda pergunta de porcentagem (de qualquer ginásio, da revisão e dos pedidos de ajuda) também tem a 🧮
+const ehPorcentagem = (t) => /%|porcent|por cento/i.test(String(t || ''));
+const calcNaPergunta = (q) => calcLigada(q.mapa ?? pg.mapa, q.lado ?? pg.G) || ehPorcentagem(q.enunciado);
 const calc = { a: null, op: null, cur: '0', conta: '', novo: true, fim: false };
 const calcNum = (s) => Number(String(s).replace(',', '.'));
 const calcFmt = (v) => { if (!Number.isFinite(v)) return 'Erro'; const r = Math.round(v * 1e8) / 1e8; return String(r).replace('.', ','); };
@@ -13960,10 +14057,10 @@ function ligarEventos() {
   $('hm-fechar').addEventListener('click', () => { $('hall-mestres').hidden = true; });
   $('hall-mestres').addEventListener('click', (e) => { e.stopPropagation(); if (e.target === $('hall-mestres')) $('hall-mestres').hidden = true; });
   // 🧮 calculadora: abre/fecha no botão; fecha tocando fora ou no ✕
-  for (const id of ['perg-calc', 'bt-calc']) $(id).addEventListener('click', (e) => { e.stopPropagation(); $('calc').hidden ? abrirCalc() : fecharCalc(); });
+  for (const id of ['perg-calc', 'bt-calc', 'pd-calc']) $(id).addEventListener('click', (e) => { e.stopPropagation(); $('calc').hidden ? abrirCalc() : fecharCalc(); });
   $('calc-teclas').addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (b) { tocar('clique'); calcTecla(b.dataset.k); } });
   $('calc-fechar').addEventListener('click', fecharCalc);
-  document.addEventListener('pointerdown', (e) => { if (!$('calc').hidden && !e.target.closest('#calc, #perg-calc, #bt-calc')) fecharCalc(); }, true);
+  document.addEventListener('pointerdown', (e) => { if (!$('calc').hidden && !e.target.closest('#calc, #perg-calc, #bt-calc, #pd-calc')) fecharCalc(); }, true);
   $('pr-fechar').addEventListener('click', () => { $('pesca-ranking').hidden = true; });
   $('pr-abas').addEventListener('click', (e) => { const b = e.target.closest('[data-pr]'); if (b) { rankingPesca.filtro = b.dataset.pr; renderRankingPesca(); } });
   $('pesca-ranking').addEventListener('click', (e) => { e.stopPropagation(); if (e.target === $('pesca-ranking')) $('pesca-ranking').hidden = true; });

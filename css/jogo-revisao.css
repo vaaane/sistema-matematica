@@ -2332,6 +2332,7 @@ html.jr-girado #programe { inset: auto; top: 0; left: 0; width: 100vw; height: 1
   display: flex; flex-direction: column; gap: 6px; }
 /* aberta: a pergunta e as opções (ou o painel da batalha) chegam para a direita */
 #jr-app.calc-aberta .jr-perg-corpo, #jr-app.calc-aberta .bt-painel { margin-left: calc(var(--calc-w) + 12px); }
+#jr-app.calc-aberta #pedido { padding-left: calc(var(--calc-w) + 20px); }   /* pedido de ajuda de porcentagem */
 .jr-calc[hidden] { display: none; }
 .jr-calc-topo { display: flex; align-items: center; justify-content: space-between; color: #ffd700; font: 700 15px 'Rajdhani', sans-serif; }
 .jr-calc-x { width: 32px; height: 30px; border-radius: 8px; border: 1px solid rgba(255,255,255,.25); background: transparent; color: #fff; font-size: 15px; cursor: pointer; }
@@ -3436,6 +3437,17 @@ html.jr-deitado .venc-corpo { grid-template-columns: repeat(3, minmax(0, 1fr)); 
   font-family: 'Rajdhani', sans-serif; font-weight: 700; line-height: 1; color: #3a2210; }
 .ex-letreiro.vazio { color: #a08a68; }
 .jr-btn-decorar { border-color: var(--jr-ouro); }
+/* ✅ aprovação (PROMPT-EXPOSICAO-3) */
+.ex-selo { position: absolute; z-index: 3; right: -4px; top: -4px; min-width: 20px; height: 20px; padding: 0 3px; border-radius: 999px; display: flex; align-items: center; justify-content: center;
+  background: rgba(13,15,26,.85); border: 1px solid rgba(255,255,255,.35); font-size: 11px; line-height: 1; pointer-events: none; }
+.ex-aprov { margin: 0 0 8px; padding: 6px 10px; border-radius: 10px; font: 600 13px/1.35 'Inter', sans-serif; }
+.ex-aprov.pend { background: rgba(255,215,0,.12); border: 1px solid rgba(255,215,0,.45); color: #ffe680; }
+.ex-aprov.rec { background: rgba(255,82,82,.12); border: 1px solid rgba(255,82,82,.5); color: #ffb3b3; }
+.ex-aprov[hidden] { display: none; }
+.ex-resumo { position: absolute; z-index: 30; top: 10px; left: 10px; max-width: calc(100% - 20px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  padding: 6px 14px; border-radius: 999px; border: 1px solid rgba(255,215,0,.5); background: rgba(13,15,26,.85); color: #fff; font: 700 14px 'Rajdhani', sans-serif; cursor: pointer; }
+.ex-resumo[hidden] { display: none; }
+.ex-pend-selo { border-color: var(--jr-ouro); color: var(--jr-ouro); }
 .ex-ferr .jr-btn { min-width: 40px; font-size: 18px; }
 .ex-ferr .jr-btn.confirmar { background: #c62828; border-color: #ff8a80; color: #fff; font-size: 14px; }
 .ex-cores { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; width: 100%; }

@@ -53,7 +53,38 @@
     table.it td.mini img{width:54px;height:40px;object-fit:contain;display:block}
     table.it td.acoes{white-space:nowrap}
     .vazio{color:var(--text-muted);font-size:13px;padding:8px 0}
-    @media(max-width:760px){ .corpo{grid-template-columns:1fr} }
+    .abas{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+    .abas::-webkit-scrollbar{display:none}
+    .aba{flex:none;background:var(--card);color:var(--text-muted);border:1px solid var(--border);border-radius:999px;padding:8px 16px;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;white-space:nowrap}
+    .aba.ativa{color:#fff;border-color:var(--purple);background:rgba(155,48,255,.18)}
+    .btn-ok{background:rgba(0,230,118,.14);color:#9ff5c8;border:1px solid rgba(0,230,118,.5);border-radius:10px;padding:8px 13px;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer}
+    .btn-ok.conf{background:#00a85a;color:#fff}
+    .btn-ok:disabled,.btn-perigo:disabled{opacity:.5;cursor:default}
+    .pend-sala{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:14px;overflow:hidden}
+    .pend-cab{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border)}
+    .pend-cab b{font-family:'Rajdhani',sans-serif;font-size:1.2rem}
+    .pend-cab .btn-ok{margin-left:auto}
+    .pend{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(240px,1fr);gap:12px 18px;padding:14px;border-bottom:1px solid var(--border)}
+    .pend:last-child{border-bottom:0}
+    .pend-fotos{display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.3);border-radius:12px;min-height:120px;padding:6px}
+    .pend-fotos img{max-width:100%;max-height:420px;object-fit:contain;border-radius:8px;display:block}
+    .pend-fotos.quatro{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .pend-fotos.quatro img{max-height:220px;margin:auto}
+    .pend-fotos .sem{color:var(--text-muted);font-size:13px;text-align:center}
+    .pend-info h4{margin:0 0 4px;font-family:'Rajdhani',sans-serif;font-size:1.2rem;color:var(--gold)}
+    .pend-info .tipo{font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+    .pend-info p{margin:6px 0;font-size:14px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
+    .pend-info .quem{font-size:12px;color:var(--text-muted)}
+    .pend-bot{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .recusa{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+    .recusa[hidden]{display:none}
+    .recusa input{background:var(--bg,#0d0f1a);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:14px;font-family:'Inter',sans-serif}
+    .sugs{display:flex;flex-wrap:wrap;gap:6px}
+    .sug{background:transparent;color:var(--text-muted);border:1px dashed var(--border);border-radius:999px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif}
+    .sug:hover{color:var(--text);border-color:var(--purple)}
+    .nome-pend{font-size:1.4rem;font-family:'Rajdhani',sans-serif;font-weight:700}
+    .st{font-size:15px}
+    @media(max-width:760px){ .corpo{grid-template-columns:1fr} .pend{grid-template-columns:1fr} }
   </style>
 </head>
 <body>
@@ -68,6 +99,15 @@
       <div class="topbar-right"><label class="chave" title="Usa os nós *_teste do banco"><input type="checkbox" id="modo-teste"/> Modo teste</label></div>
     </div>
     <div class="content">
+      <div class="abas" role="tablist">
+        <button class="aba ativa" data-aba="pend">⏳ Pendentes (<span id="n-pend">…</span>)</button>
+        <button class="aba" data-aba="salas">🖼️ Salas</button>
+      </div>
+      <div class="painel" id="aba-pend">
+        <p class="muted" style="font-size:13px;margin:0 0 12px">Fotos, textos e nomes de sala enviados pelos alunos só aparecem para quem é de fora do grupo depois que você aprova.</p>
+        <div id="pendentes"><div class="vazio">Carregando…</div></div>
+      </div>
+      <div class="painel" id="aba-salas" hidden>
       <div class="cartao">
         <h3>👁️ Visitas</h3>
         <div class="visitas">
@@ -81,9 +121,12 @@
       <div class="filtros">
         <button class="btn-sec" id="btn-atualizar">↻ Atualizar</button>
         <button class="btn-pri" id="btn-importar" hidden>📥 Importar grupos do JSON</button>
-        <span class="aviso" id="aviso"></span>
+        <label class="chave">Status: <select id="filtro-status" class="btn-sec" style="padding:6px 8px">
+          <option value="">Todos</option><option value="pendente">⏳ Pendentes</option><option value="aprovado">✅ Aprovados</option><option value="recusado">❌ Recusados</option><option value="-">Sem conteúdo</option></select></label>
       </div>
       <div id="salas"><div class="vazio">Carregando…</div></div>
+      </div>
+      <p class="aviso" id="aviso" style="position:sticky;bottom:8px;margin:0"></p>
     </div>
   </div>
 </div>
@@ -91,7 +134,7 @@
 <script type="module">
 import { requireProfessor, renderSidebarProfessor } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
-import { ref, get, set, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ref, get, set, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { ALUNOS_POR_TURMA, ALUNOS_TESTE } from "/js/constants.js";
 
 if (!requireProfessor()) throw new Error("sem sessão de professor");
@@ -113,6 +156,16 @@ const nomePor = (uid) => uid === "PROFESSORA" ? "Professora" : String(uid || "�
 const fmt = (ms) => ms ? new Date(ms).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—";
 const aviso = (t) => { $("aviso").textContent = t; clearTimeout(aviso.t); aviso.t = setTimeout(() => { $("aviso").textContent = ""; }, 5000); };
 const portas = () => (EXPO?.saguao?.portas || []).map(p => p.n);
+// ✅ aprovação (PROMPT-EXPOSICAO-3): molduras, varal, totem e púlpito; sem status (itens antigos) com conteúdo = pendente
+const precisa = (it) => it?.conteudo === "foto" || it?.conteudo === "fotos4" || it?.conteudo === "texto";
+const temAlgo = (v) => !!(v.titulo || v.texto || fotosDe(v).length);
+const statusDe = (v) => { const it = catDe(v?.mv); if (!precisa(it)) return null; return ["pendente", "aprovado", "recusado"].includes(v.status) ? v.status : temAlgo(v) ? "pendente" : null; };
+const ICONE = { pendente: "⏳", aprovado: "✅", recusado: "❌" };
+const MOTIVOS = ["Foto com rosto de aluno", "Texto com erro", "Conteúdo fora do tema", "Imagem sem autorização"];
+// o que a professora viu: se o aluno mudar o item enquanto ela olha, aprovar pede para conferir de novo
+const assinatura = (v) => JSON.stringify([v?.foto || null, fotosDe(v || {}), v?.titulo || "", v?.texto || "", v?.env_ts || 0]);
+const fotosCache = new Map();
+const fotoDados = (id) => { if (!fotosCache.has(id)) fotosCache.set(id, get(ref(db, `${no("exposicao_imagens")}/${id}/dados`)).then(s => (s.exists() && String(s.val()).startsWith("data:image/") ? s.val() : null)).catch(() => { fotosCache.delete(id); return null; })); return fotosCache.get(id); };
 const grupoFb = (n) => { const g = salas[n]?.grupo; return g ? { turma: String(g.turma || ""), membros: Object.values(g.membros || {}).filter(x => typeof x === "string") } : null; };
 // o grupo valendo: o do banco; sem o nó, o do JSON (como no jogo)
 const grupoDe = (n) => grupoFb(n) || EXPO?.salas?.[n] || null;
@@ -121,18 +174,46 @@ async function gravar(p, msgOk) {
   catch (e) { console.error(e); aviso("⚠️ Não foi possível gravar (" + (e?.code || e?.message || e) + ")"); return false; }
 }
 
+let pararSalas = () => {}, primeira = true, abaAtual = "pend";
 async function carregar() {
   try {
     if (!EXPO) EXPO = await fetch("/dados/jogo/exposicao.json").then(r => r.json());
-    const [s, c] = await Promise.all([get(ref(db, no("exposicao_salas"))), get(ref(db, no("exposicao_config")))]);
-    salas = s.exists() ? s.val() || {} : {};
+    await migrarStatus();
+    const c = await get(ref(db, no("exposicao_config")));
     config = c.exists() ? c.val() || {} : {};
   } catch (e) {
     console.error(e);
-    $("salas").innerHTML = `<div class="vazio">Não foi possível ler a exposição: ${esc(e?.code || e?.message || e)}</div>`;
+    $("salas").innerHTML = $("pendentes").innerHTML = `<div class="vazio">Não foi possível ler a exposição: ${esc(e?.code || e?.message || e)}</div>`;
     return;
   }
-  render();
+  pararSalas();
+  primeira = true;
+  try {
+    pararSalas = onValue(ref(db, no("exposicao_salas")), (s) => {
+      salas = s.exists() ? s.val() || {} : {};
+      renderPendentes();
+      // a aba das salas: refeita na primeira vez, ao trocar de aba e depois das ações (não apaga o que está sendo marcado)
+      if (primeira || abaAtual !== "salas") render();
+      primeira = false;
+    }, (e) => { console.error(e); $("pendentes").innerHTML = `<div class="vazio">Não foi possível ler a exposição: ${esc(e?.code || e?.message || e)}</div>`; });
+  } catch (e) { console.error(e); }
+}
+// uma vez só (o selo migracao_status em exposicao_config, nos dois nós): os itens com conteúdo sem status viram pendentes.
+// Só grava o campo status, e só em itens que existem e ainda não têm status
+async function migrarStatus() {
+  for (const suf of ["", "_teste"]) {
+    try {
+      const flag = await get(ref(db, `exposicao_config${suf}/migracao_status`));
+      if (flag.exists() && flag.val() === true) continue;
+      const s = await get(ref(db, `exposicao_salas${suf}`)), patch = {};
+      for (const [n, sala] of Object.entries((s.exists() && s.val()) || {}))
+        for (const [id, v] of Object.entries(sala?.itens || {}))
+          if (v?.mv && precisa(catDe(v.mv)) && !["pendente", "aprovado", "recusado"].includes(v.status) && temAlgo(v)) patch[`${n}/itens/${id}/status`] = "pendente";
+      if (Object.keys(patch).length) await update(ref(db, `exposicao_salas${suf}`), patch);
+      await set(ref(db, `exposicao_config${suf}/migracao_status`), true);
+      console.info(`[exposição] migração${suf ? " (teste)" : ""}: ${Object.keys(patch).length} item(ns) com conteúdo viraram pendentes`);
+    } catch (e) { console.warn("[exposição] migração do status", suf, e?.code || e); }
+  }
 }
 
 function render() {
@@ -149,8 +230,112 @@ function render() {
   $("salas").innerHTML = portas().map(n => salaHtml(n, ondeEsta)).join("");
 }
 
+function pendentesDe(n) {
+  const s = salas[n] || {}, l = [];
+  if (typeof s.nome_pendente === "string" && s.nome_pendente) l.push({ nome: true, ts: 0 });
+  for (const [id, v] of Object.entries(s.itens || {})) if (v?.mv && statusDe(v) === "pendente") l.push({ id, v, ts: Number(v.env_ts || v.ts) || 0 });
+  return l.sort((a, b) => a.ts - b.ts);
+}
+function renderPendentes() {
+  if (!EXPO) return;
+  const grupos = portas().map(n => ({ n, l: pendentesDe(n) })).filter(g => g.l.length);
+  const total = grupos.reduce((t, g) => t + g.l.length, 0);
+  $("n-pend").textContent = total;
+  // as salas: a que espera há mais tempo primeiro
+  const mais = (g) => Math.min(...g.l.map(p => p.ts || Infinity));
+  grupos.sort((a, b) => mais(a) - mais(b) || a.n - b.n);
+  if (!grupos.length) { $("pendentes").innerHTML = '<div class="vazio">✅ Nada para aprovar.</div>'; return; }
+  $("pendentes").innerHTML = grupos.map(({ n, l }) => {
+    const g = grupoDe(n), s = salas[n] || {};
+    return `<section class="pend-sala" data-sala="${n}"><div class="pend-cab"><b>Sala ${n}</b>${s.nome ? `<span>${esc(s.nome)}</span>` : ""}
+        <span class="muted">${g ? esc(g.turma) : ""} · ${l.length} pendente${l.length === 1 ? "" : "s"}</span>
+        <button class="btn-ok" data-aprovar-sala>✅ Aprovar todos desta sala</button></div>
+      ${l.map(p => (p.nome ? nomePendHtml(s) : itemPendHtml(p.id, p.v))).join("")}</section>`;
+  }).join("");
+  for (const im of $("pendentes").querySelectorAll("img[data-foto]")) fotoDados(im.dataset.foto).then(d => { if (d && im.isConnected) im.src = d; else if (!d) im.replaceWith(Object.assign(document.createElement("span"), { className: "sem", textContent: "(foto não encontrada)" })); });
+}
+const recusaHtml = () => `<div class="recusa" hidden><input data-motivo maxlength="80" placeholder="Motivo (opcional, os alunos do grupo veem)"/>
+    <div class="sugs">${MOTIVOS.map(m => `<button class="sug" data-sug="${esc(m)}">${esc(m)}</button>`).join("")}</div>
+    <div class="pend-bot"><button class="btn-perigo" data-recusar-ok>❌ Recusar</button><button class="btn-sec" data-recusar-nao>Cancelar</button></div></div>`;
+function itemPendHtml(id, v) {
+  const it = catDe(v.mv), ids = it?.conteudo === "fotos4" ? [0, 1, 2, 3].map(i => v.fotos?.[i]).filter(x => typeof x === "string") : it?.conteudo === "foto" && v.foto ? [v.foto] : [];
+  const fotos = it?.conteudo === "texto" ? "" : `<div class="pend-fotos${ids.length > 1 ? " quatro" : ""}">${ids.length ? ids.map(f => `<img data-foto="${esc(f)}" alt=""/>`).join("") : '<span class="sem">Sem foto</span>'}</div>`;
+  return `<div class="pend" data-item="${esc(id)}" data-ass="${esc(assinatura(v))}">
+      ${fotos || `<div class="pend-fotos"><span class="sem">📝 Texto</span></div>`}
+      <div class="pend-info"><div class="tipo">${esc(it?.nome || v.mv)}</div>
+        <h4>${v.titulo ? esc(v.titulo) : '<span class="muted">(sem título)</span>'}</h4>
+        ${v.texto ? `<p>${esc(v.texto)}</p>` : ""}
+        <div class="quem">Enviado por ${esc(nomePor(v.env_por || v.por))} · ${fmt(Number(v.env_ts || v.ts))}</div>
+        <div class="pend-bot"><button class="btn-ok" data-aprovar>✅ Aprovar</button><button class="btn-perigo" data-recusar>❌ Recusar</button></div>
+        ${recusaHtml()}</div></div>`;
+}
+function nomePendHtml(s) {
+  return `<div class="pend" data-nome-pend="${esc(s.nome_pendente)}"><div class="pend-fotos"><span class="nome-pend">🪧 ${esc(s.nome_pendente)}</span></div>
+      <div class="pend-info"><div class="tipo">Nome da sala (letreiro)</div>
+        <p>${s.nome ? `Nome aprovado agora: <b>${esc(s.nome)}</b>` : '<span class="muted">Ainda sem nome aprovado (os visitantes veem só "Sala n").</span>'}</p>
+        <div class="pend-bot"><button class="btn-ok" data-aprovar>✅ Aprovar</button><button class="btn-perigo" data-recusar>❌ Recusar</button></div>
+        ${recusaHtml()}</div></div>`;
+}
+// grava a decisão de um pendente (o item do jeito que a professora viu; se mudou, pede para conferir)
+async function decidir(n, el, aprovar, motivo = "") {
+  const base = `${no("exposicao_salas")}/${n}`, agora = Date.now();
+  if (el.dataset.nomePend !== undefined) {
+    const atual = await get(ref(db, `${base}/nome_pendente`)).then(s => s.val()).catch(() => null);
+    if (atual !== el.dataset.nomePend) { aviso("⚠️ O nome mudou enquanto você olhava. Confira de novo."); renderPendentes(); return false; }
+    return gravar(update(ref(db, base), aprovar ? { nome: atual, nome_pendente: null, nome_motivo: null } : { nome_pendente: null, nome_motivo: motivo }),
+      aprovar ? `Sala ${n}: nome aprovado.` : `Sala ${n}: nome recusado.`);
+  }
+  const id = el.dataset.item, v = await get(ref(db, `${base}/itens/${id}`)).then(s => s.val()).catch(() => null);
+  if (!v || assinatura(v) !== el.dataset.ass) { aviso("⚠️ Esse item mudou enquanto você olhava. Confira de novo."); renderPendentes(); return false; }
+  if (aprovar) return gravar(update(ref(db, `${base}/itens/${id}`), { status: "aprovado", rev_ts: agora, motivo: null }), `Sala ${n}: aprovado.`);
+  // recusar: as fotos saem do banco (e do item); título e texto ficam para o aluno corrigir
+  const fotos = fotosDe(v);
+  const ok = await gravar(update(ref(db, `${base}/itens/${id}`), { status: "recusado", motivo: motivo || null, rev_ts: agora, foto: null, fotos: null }), `Sala ${n}: recusado.`);
+  if (ok) for (const f of fotos) { fotosCache.delete(f); gravar(remove(ref(db, `${no("exposicao_imagens")}/${f}`))); }
+  return ok;
+}
+async function aprovarSala(n) {
+  const base = `${no("exposicao_salas")}/${n}`, patch = {}, agora = Date.now(), s = salas[n] || {};
+  // só o que está na tela (o que mudou depois fica para a próxima)
+  for (const el of $("pendentes").querySelectorAll(`.pend-sala[data-sala="${n}"] .pend`)) {
+    if (el.dataset.nomePend !== undefined) { if (s.nome_pendente === el.dataset.nomePend) Object.assign(patch, { nome: s.nome_pendente, nome_pendente: null, nome_motivo: null }); continue; }
+    const v = s.itens?.[el.dataset.item];
+    if (v && assinatura(v) === el.dataset.ass) Object.assign(patch, { [`itens/${el.dataset.item}/status`]: "aprovado", [`itens/${el.dataset.item}/rev_ts`]: agora, [`itens/${el.dataset.item}/motivo`]: null });
+  }
+  if (!Object.keys(patch).length) return;
+  await gravar(update(ref(db, base), patch), `Sala ${n}: tudo aprovado.`);
+}
+$("pendentes").addEventListener("click", async (e) => {
+  const sec = e.target.closest(".pend-sala"), n = Number(sec?.dataset.sala), el = e.target.closest(".pend");
+  if (!sec) return;
+  const b = e.target.closest("button");
+  if (!b) return;
+  if (b.matches("[data-aprovar-sala]")) {
+    if (!b.classList.contains("conf")) { b.classList.add("conf"); b.textContent = `Aprovar ${sec.querySelectorAll(".pend").length} de uma vez?`; setTimeout(() => { if (b.isConnected) { b.classList.remove("conf"); b.textContent = "✅ Aprovar todos desta sala"; } }, 4000); return; }
+    b.disabled = true; await aprovarSala(n); return;
+  }
+  if (!el) return;
+  const rec = el.querySelector(".recusa");
+  if (b.matches("[data-aprovar]")) { b.disabled = true; if (!(await decidir(n, el, true))) b.disabled = false; }
+  else if (b.matches("[data-recusar]")) { rec.hidden = false; rec.querySelector("[data-motivo]").focus(); }
+  else if (b.matches("[data-recusar-nao]")) rec.hidden = true;
+  else if (b.matches("[data-sug]")) rec.querySelector("[data-motivo]").value = b.dataset.sug;
+  else if (b.matches("[data-recusar-ok]")) {
+    b.disabled = true;
+    const motivo = rec.querySelector("[data-motivo]").value.replace(/\s+/g, " ").trim().slice(0, 80);
+    if (!(await decidir(n, el, false, motivo))) b.disabled = false;
+  }
+});
+document.querySelectorAll(".aba").forEach(a => a.addEventListener("click", () => {
+  abaAtual = a.dataset.aba;
+  document.querySelectorAll(".aba").forEach(x => x.classList.toggle("ativa", x === a));
+  document.querySelectorAll(".painel").forEach(p => { p.hidden = p.id !== "aba-" + a.dataset.aba; });
+  if (abaAtual === "salas") render();
+}));
+$("filtro-status").addEventListener("change", () => render());
+
 function salaHtml(n, ondeEsta) {
-  const s = salas[n] || {}, g = grupoDe(n), itens = Object.entries(s.itens || {}).sort((a, b) => (Number(a[1].x) || 0) - (Number(b[1].x) || 0));
+  const s = salas[n] || {}, g = grupoDe(n), itens = Object.entries(s.itens || {}).filter(([, v]) => v?.mv).sort((a, b) => (Number(a[1].x) || 0) - (Number(b[1].x) || 0));
   const nFotos = itens.reduce((t, [, v]) => t + fotosDe(v).length, 0), lim = EXPO.limites || { itens: 40, fotos: 12 };
   const turma = g?.turma || "8F", tema = (EXPO.temas || []).find(t => t.id === s.tema) || (EXPO.temas || []).find(t => t.id === EXPO.tema_padrao);
   const membros = g?.membros || [];
@@ -158,13 +343,14 @@ function salaHtml(n, ondeEsta) {
     const outra = ondeEsta[turma + "|" + a], minha = membros.includes(a);
     return `<label class="${outra && outra !== n ? "outro" : ""}"><input type="checkbox" data-membro="${esc(a)}"${minha ? " checked" : ""}/>${esc(a)}${outra && outra !== n ? ` <small>(sala ${outra})</small>` : ""}</label>`;
   }).join("");
-  const linhas = itens.map(([id, v]) => {
-    const it = catDe(v.mv), fs = fotosDe(v);
-    return `<tr><td class="mini"><img src="${IMG}/exposicao/moveis/${esc(v.mv)}_${esc(v.vista || it?.vistas?.[0] || "f")}.webp" alt="" style="${filtroDe(it, Number(v.cor) || 0) ? "filter:" + filtroDe(it, Number(v.cor) || 0) : ""}" loading="lazy"/></td>
+  const filtro = $("filtro-status").value;
+  const linhas = itens.filter(([, v]) => !filtro || (statusDe(v) || "-") === filtro).map(([id, v]) => {
+    const it = catDe(v.mv), fs = fotosDe(v), st = statusDe(v);
+    return `<tr><td class="st" title="${esc(st || "")}${v.motivo ? ": " + esc(v.motivo) : ""}">${st ? ICONE[st] : ""}</td><td class="mini"><img src="${IMG}/exposicao/moveis/${esc(v.mv)}_${esc(v.vista || it?.vistas?.[0] || "f")}.webp" alt="" style="${filtroDe(it, Number(v.cor) || 0) ? "filter:" + filtroDe(it, Number(v.cor) || 0) : ""}" loading="lazy"/></td>
       <td>${esc(it?.nome || v.mv)}${fs.length ? ` <span class="muted">· 📷 ${fs.length}</span>` : ""}</td><td>${esc(v.titulo || "")}</td><td>${esc(nomePor(v.por))}</td><td>${fmt(v.ts)}</td>
       <td class="acoes">${fs.length ? `<button class="btn-perigo" data-so-foto="${esc(id)}">Apagar só a foto</button> ` : ""}<button class="btn-perigo" data-apagar="${esc(id)}">🗑️</button></td></tr>`;
   }).join("");
-  return `<details class="sala" data-sala="${n}"${abertas.has(n) ? " open" : ""}><summary><b>Sala ${n}</b>${s.nome ? `<span>${esc(s.nome)}</span>` : ""}
+  return `<details class="sala" data-sala="${n}"${abertas.has(n) ? " open" : ""}><summary><b>Sala ${n}</b>${s.nome ? `<span>${esc(s.nome)}</span>` : ""}${s.nome_pendente ? `<span class="muted">⏳ ${esc(s.nome_pendente)}</span>` : ""}
       <span class="muted">${g ? `${esc(g.turma)} · ${membros.length} integrante${membros.length === 1 ? "" : "s"}` : "sem grupo"}</span>
       <span class="uso">${itens.length}/${lim.itens} itens · ${nFotos}/${lim.fotos} fotos</span></summary>
     <div class="corpo">
@@ -185,7 +371,8 @@ function salaHtml(n, ondeEsta) {
       </div>
       <div class="larga">
         <h4>Itens da sala</h4>
-        ${itens.length ? `<div class="tabela-wrap"><table class="it"><thead><tr><th></th><th>Item</th><th>Título</th><th>Quem colocou</th><th>Data</th><th></th></tr></thead><tbody>${linhas}</tbody></table></div>` : '<div class="vazio">Nenhum item ainda.</div>'}
+        ${itens.length && linhas ? `<div class="tabela-wrap"><table class="it"><thead><tr><th>Status</th><th></th><th>Item</th><th>Título</th><th>Quem colocou</th><th>Data</th><th></th></tr></thead><tbody>${linhas}</tbody></table></div>` : '<div class="vazio">Nenhum item ainda.</div>'}
+        ${itens.length && !linhas ? '<div class="vazio">Nenhum item com esse status.</div>' : ""}
       </div>
     </div></details>`;
 }
@@ -194,10 +381,11 @@ function salaHtml(n, ondeEsta) {
 $("modo-teste").addEventListener("change", (e) => {
   teste = e.target.checked;
   try { localStorage.setItem("expo_prof_teste", teste ? "1" : "0"); } catch (_) {}
-  $("salas").innerHTML = '<div class="vazio">Carregando…</div>';
+  $("salas").innerHTML = $("pendentes").innerHTML = '<div class="vazio">Carregando…</div>';
+  fotosCache.clear();
   carregar();
 });
-$("btn-atualizar").addEventListener("click", carregar);
+$("btn-atualizar").addEventListener("click", () => render());
 $("vis-botao").addEventListener("click", async () => {
   if (config.visitas_abertas === true) {
     if (await gravar(set(ref(db, no("exposicao_config") + "/visitas_abertas"), false), "Visitas desligadas.")) { config.visitas_abertas = false; render(); }
@@ -210,7 +398,7 @@ $("vis-sim").addEventListener("click", async () => {
 $("btn-importar").addEventListener("click", async () => {
   const patch = {};
   for (const [n, g] of Object.entries(EXPO.salas || {})) patch[`${n}/grupo`] = { turma: g.turma, membros: g.membros };
-  if (await gravar(update(ref(db, no("exposicao_salas")), patch), `Grupos importados (${Object.keys(EXPO.salas || {}).length}).`)) carregar();
+  if (await gravar(update(ref(db, no("exposicao_salas")), patch), `Grupos importados (${Object.keys(EXPO.salas || {}).length}).`)) render();
 });
 $("salas").addEventListener("toggle", (e) => {
   const d = e.target.closest?.("details.sala");
@@ -243,7 +431,7 @@ $("salas").addEventListener("click", async (e) => {
     if (await gravar(set(ref(db, `${no("exposicao_salas")}/${n}/grupo`), { turma, membros }), `Sala ${n}: grupo salvo (${membros.length}).`)) { (salas[n] ||= {}).grupo = { turma, membros }; render(); }
   } else if (e.target.closest("[data-salvar-nome]")) {
     const nome = d.querySelector("[data-nome]").value.replace(/\s+/g, " ").trim().slice(0, 30) || null;
-    if (await gravar(set(ref(db, `${no("exposicao_salas")}/${n}/nome`), nome), `Sala ${n}: nome salvo.`)) { (salas[n] ||= {}).nome = nome; render(); }
+    if (await gravar(update(ref(db, `${no("exposicao_salas")}/${n}`), { nome, nome_pendente: null, nome_motivo: null }), `Sala ${n}: nome salvo.`)) { const o = (salas[n] ||= {}); o.nome = nome; delete o.nome_pendente; delete o.nome_motivo; render(); }
   } else {
     const b = e.target.closest("[data-apagar], [data-so-foto]");
     if (!b) return;
@@ -254,7 +442,7 @@ $("salas").addEventListener("click", async (e) => {
     const base = `${no("exposicao_salas")}/${n}/itens/${id}`;
     const ok = b.dataset.apagar ? await gravar(Promise.all([remove(ref(db, base)), ...fotos]), "Item apagado.")
       : await gravar(Promise.all([update(ref(db, base), { foto: null, fotos: null }), ...fotos]), "Foto apagada.");
-    if (ok) carregar();
+    if (ok) render();
   }
 });
 

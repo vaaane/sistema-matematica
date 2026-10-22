@@ -88,6 +88,7 @@
       <button class="jr-btn-hud" id="btn-online" hidden aria-label="Quem está online">👥<span>Online (<b id="online-n">0</b>)</span></button>
       <button class="jr-btn-hud" id="btn-colegas" hidden aria-label="Mostrar ou esconder os colegas" aria-pressed="true">👁<span>Colegas</span></button>
       <button class="jr-btn-hud" id="btn-reacao" hidden aria-label="Mandar uma reação">😊</button>
+      <button class="jr-btn-hud ex-pend-selo" id="btn-expo-pend" hidden aria-label="Abrir a página de aprovação">⏳</button>
       <button class="jr-btn-hud" id="btn-expo-musica" hidden aria-label="Silenciar a música da sala">🔈</button>
       <button class="jr-btn-hud jr-btn-decorar" id="btn-expo-decorar" hidden aria-label="Decorar a sala">✏️<span>Decorar</span></button>
       <button class="jr-btn-hud jr-btn-missoes" id="btn-missoes" hidden aria-label="Missões do dia">📜<span id="missoes-cont">0/3</span></button>
@@ -158,6 +159,7 @@
     <div id="cs-ferr" class="cs-ferr" hidden><div class="cs-cores" id="cs-cores" hidden></div><button class="jr-btn" data-cs="cor">🎨 Cor</button><button class="jr-btn" data-cs="girar">🔄 Girar</button><button class="jr-btn" data-cs="guardar">📦 Guardar</button></div>
     <!-- 🖼️ editor da sala da Exposição (PROMPT-EXPOSICAO-2) -->
     <div id="ex-ferr" class="cs-ferr ex-ferr" hidden><div class="cs-cores ex-cores" id="ex-cores" hidden></div><button class="jr-btn" data-exf="girar" aria-label="Girar">🔄</button><button class="jr-btn" data-exf="espelhar" aria-label="Espelhar">↔️</button><button class="jr-btn" data-exf="cor" aria-label="Cor">🎨</button><button class="jr-btn" data-exf="conteudo" aria-label="Conteúdo">✏️</button><button class="jr-btn" data-exf="apagar" aria-label="Apagar">🗑️</button></div>
+    <button id="ex-resumo" class="ex-resumo" hidden></button>
     <div id="ex-faixa" class="cs-faixa ex-faixa" hidden>
       <div class="ex-faixa-esq"><div class="ex-abas" id="ex-abas"></div><div class="cs-guardados ex-catalogo" id="ex-catalogo"></div></div>
       <div class="ex-faixa-dir"><small id="ex-uso"></small><button class="jr-btn jr-btn-sec" id="ex-tema">🎨 Tema</button><button class="jr-btn jr-btn-ouro" id="ex-pronto">✔ Pronto</button></div>
@@ -360,7 +362,7 @@
     <div class="al-caixa ex-ver-caixa">
       <button class="bt-lista-x ex-ver-x" data-fechar="ex-ver" aria-label="Fechar">✕</button>
       <div class="ex-ver-foto" id="ex-ver-foto"></div>
-      <div class="ex-ver-txt"><b id="ex-ver-titulo"></b><p id="ex-ver-texto"></p></div>
+      <div class="ex-ver-txt"><p class="ex-aprov" id="ex-ver-status" hidden></p><b id="ex-ver-titulo"></b><p id="ex-ver-texto"></p></div>
       <div class="ex-ver-nav"><button class="jr-btn jr-btn-sec" id="ex-ver-ant" data-ver="ant" aria-label="Anterior">◀</button><small id="ex-ver-rodape"></small><button class="jr-btn jr-btn-sec" id="ex-ver-prox" data-ver="prox" aria-label="Próximo">▶</button></div>
     </div>
   </div>
@@ -570,6 +572,7 @@
     <div class="jr-pet-escolha-caixa pd-caixa">
       <div class="pd-topo">
         <span class="pd-premio" id="pd-premio"></span>
+        <button class="jr-calc-btn" id="pd-calc" hidden aria-label="Calculadora" title="Calculadora">🧮</button>
         <span class="jr-moedas pd-moedas" id="pd-moedas" aria-label="Moedas"><img class="jr-item-img jr-ic-moeda" data-icone="moeda" alt="🪙" draggable="false"/> <span>0</span></span>
         <button class="pd-depois" id="pd-depois">Depois</button>
       </div>
@@ -967,7 +970,7 @@
     </div>
   </div>
 
-  <!-- Evolução do pet (❤️ 3): uma vez só -->
+  <!-- Evolução do pet (lealdade 100, amizade ❤️ 1): uma vez só -->
   <div id="pet-evolucao" class="jr-evolucao" hidden role="dialog" aria-label="Seu pet evoluiu">
     <div class="jr-evo-palco">
       <img id="evo-filhote" class="jr-evo-img" alt="" draggable="false"/>
