@@ -10,6 +10,10 @@ export function definirPeixes(pesca) {
 }
 export const lojaPronta = () => !!L?.comidas;
 export const cfgLoja = () => L || {};
+// PROMPT-126: todo ganho de moedas × multiplicador_moedas (loja.json), arredondando para cima: 1 → 2, 5 → 8, 10 → 15, 15 → 23.
+// Vale também para os tetos diários contados em moedas. Não vale para preços, para as moedas iniciais nem para devoluções.
+export const multMoedas = () => Math.max(0, Number(cfgLoja().multiplicador_moedas) || 1);
+export const comMult = (n) => (Number(n) > 0 ? Math.ceil(Number(n) * multMoedas() - 1e-9) : 0);
 export const comidas = () => L?.comidas || [];
 export const tintas = () => L?.tintas || [];
 export const efeitos = () => L?.efeitos || [];

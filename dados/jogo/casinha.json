@@ -304,6 +304,23 @@
    "cor": "tecido"
   },
   {
+   "id": "cama_solteiro",
+   "nome": "Cama de solteiro",
+   "emoji": "🛏️",
+   "preco": 130,
+   "tipo": "chao",
+   "largura": 280,
+   "limite": 1,
+   "vistas": [
+    "d",
+    "f",
+    "l"
+   ],
+   "cor": "tecido",
+   "amostra_padrao": "#c9a27a",
+   "dica": "Troque a cor do cobertor em 🎨."
+  },
+  {
    "id": "aquario",
    "nome": "Aquário",
    "emoji": "🐠",

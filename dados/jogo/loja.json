@@ -236,6 +236,8 @@
  ],
  "moedas_insignia": 10,
  "moedas_dourada": 15,
+ "multiplicador_moedas": 1.5,
+ "_nota_multiplicador": "Multiplica todo ganho de moedas do jogo (arredonda para cima). Também vale para os limites diários contados em moedas. Não vale para preços, para as 100 moedas iniciais nem para devoluções.",
  "lealdade_pet_novo": 20,
  "amizade": {
   "pontos_por_nivel": 100,

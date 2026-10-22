@@ -12,7 +12,7 @@ import { gerarQuestoes, gerarUma, assuntoDe } from '/js/jogo-revisao/geradores.j
 import { tocar, somLigado, alternarSom, tocarArquivo, pararEfeitos, musicaPara, musicaLigada, alternarMusica, pausarMusica, musicaBloqueada } from '/js/jogo-revisao/sons.js';
 import { definirPausas, definirBarriga, barrigaDoPet, barrigaAntiga, faixaBarriga, rotuloLealdade, lealdadeComQueda, doDia,
   CARINHOS_POR_DIA, LEALDADE_INICIAL, LEALDADE_DIA, LEALDADE_CAMBALHOTA } from '/js/jogo-revisao/cuidados.js';
-import { definirLoja, definirPeixes, lojaPronta, cfgLoja, comidas, tintas, efeitos, tinta, tintaAnimada, icone, efeito, itemDaBolsa, idDoPeixe, ehFavorita, semanaDe,
+import { definirLoja, definirPeixes, lojaPronta, cfgLoja, comMult, multMoedas, comidas, tintas, efeitos, tinta, tintaAnimada, icone, efeito, itemDaBolsa, idDoPeixe, ehFavorita, semanaDe,
   motivoNaoCome, comumAte, naoCome, listaNaoCome, enche, barrigaCheia, somarLealdade, nivelAmizade, validarNomePet, temPalavraProibida } from '/js/jogo-revisao/loja.js';
 import { definirPesca, pescaPronta, cfgPesca, pontosDoMapa, spritePesca, pontaVara, sortearPeixe, entre, inteiroEntre,
   semanaPesca, semanaAnterior, criarBarrinha, passoBarrinha } from '/js/jogo-revisao/pesca.js';
@@ -20,7 +20,7 @@ import { PETS, NOME_PET, carregarSprites, petValido, quadrosDe, tamanhoQuadro, t
   temAnim, formaAdulta, formaValida, sentadoNoQuadro, escalaPet, escalaMax, quadrosSeq, sortearOcioso, temSequencia, tocarSequencia, pararSequencia, msAtePasso,
   sortearAcaoParado, EMOCOES, MS_EMOCAO, coresDragao, aceitaCor, ehFormaAdulta, formaComCor, definirNoite } from '/js/jogo-revisao/pets.js';
 import { lerTodos, lerRegistro, iniciarOnline, enviarOnline, sairOnline, ouvirMapa, ouvirTodos, onlineAtivo, VALIDADE_MS } from '/js/jogo-revisao/online.js';
-import { definirPedidos, pedidosProntos, cfgPedidos, pedidoDisponivel, moedasDoPedido, limiteDoDiaAtingido, dicaPedido, lerResposta } from '/js/jogo-revisao/pedidos.js';
+import { definirPedidos, pedidosProntos, cfgPedidos, pedidoDisponivel, moedasDoPedido, limiteDoDiaAtingido, limiteMoedasPedidos, dicaPedido, lerResposta } from '/js/jogo-revisao/pedidos.js';
 import { definirBatalhas, batalhasProntas, cfgBatalha, treinadores, treinador, tiposDeConta, gerarConta, vidaExtraLealdade, desafioDe, situacao, forca, dano, premios, depoisDaBatalha } from '/js/jogo-revisao/batalha.js';
 import { definirFalas, falasProntas, configFalas, dicaDe, montarFala, duracaoBalao, fraseDe, fraseFiltrada, configAjuda, frasesFaro } from '/js/jogo-revisao/conversa.js';
 import { definirPraca, pracaPronta, cfgPraca, cfgDesafio, frasesPraca, temaDoDesafio, vencedorDaRodada, placarDe, resultadoFinal, vale, contarDesafio,
@@ -32,7 +32,7 @@ import { configurarPrograme, ligarBotoesPrograme, abrirTela as abrirTelaPrograme
   programaParaTexto, programaDeTexto, caixaDoQuadro } from '/js/jogo-revisao/programe.js';
 import { faseDoDia, faseDaCorrida, resultadoCorrida, rodadaOQueFaz } from '/js/jogo-revisao/programe-logica.js';
 import { estadoInicial as estadoInicialDamas, jogadasValidas as jogadasValidasDamas, aplicar as aplicarDamas, ehValida as ehValidaDamas, fimDeJogo as fimDeJogoDamas,
-  contar as contarDamas, outro as outroLadoDamas, jogadaAleatoria as jogadaAleatoriaDamas, jogadaComputador as jogadaComputadorDamas } from '/js/jogo-revisao/damas-logica.js';
+  contar as contarDamas, outro as outroLadoDamas, jogadaAleatoria as jogadaAleatoriaDamas, jogadaComputador as jogadaComputadorDamas, todasCapturas as todasCapturasDamas, N as N_DAMAS } from '/js/jogo-revisao/damas-logica.js';
 import { abrirQuadroEstudos, ligarQuadroEstudos } from '/js/jogo-revisao/estudos.js';
 import { configurarMapaPrograme, ligarMapaPrograme, temMapaPrograme, abrirMapaPrograme, esquecerPosicaoPet, temaDaFase, temaVila, chefeDaFase,
   medalhaDoChefe } from '/js/jogo-revisao/programe-mapa.js';
@@ -1347,9 +1347,10 @@ function atualizarFomeSeguidor() {
 // +1 moeda na PRIMEIRA vez que o aluno acerta cada pergunta (id da pergunta); refazer não dá moeda (PROMPT-47)
 function ganharMoeda() {
   if (!estado?.pets) return;
-  estado.pets.moedas = (Number(estado.pets.moedas) || 0) + 1;
+  const n = comMult(1);
+  estado.pets.moedas = (Number(estado.pets.moedas) || 0) + n;
   const patch = { 'pets/moedas': estado.pets.moedas };
-  registrarGanho('ginasio', 1, patch);
+  registrarGanho('ginasio', n, patch);
   gravar(patch);
   const el = $('perg-moedas');
   atualizarMoedasPergunta();
@@ -1931,7 +1932,7 @@ function renderLoja() {
     const ps = peixesNaBolsa();
     html += '<div class="lj-secao">💰 Vender peixes</div>' + (ps.length ? ps.map(x => `<div class="lj-item">
         <div class="lj-emoji">${imgItem(x.imagem, x.emoji, 'jr-item-loja' + (x.raro ? ' raro' : ''), x.filtro)}</div>
-        <div class="lj-info"><b>${esc(x.nome)}</b><span class="lj-preco">${moedaHtml()} <b>${x.venda}</b> cada</span><span>na bolsa: ${x.n}</span></div>
+        <div class="lj-info"><b>${esc(x.nome)}</b><span class="lj-preco">${moedaHtml()} <b>${comMult(x.venda)}</b> cada</span><span>na bolsa: ${x.n}</span></div>
         <button class="lj-comprar" data-vender="${esc(x.id)}">Vender 1</button>
       </div>`).join('') : '<div class="lj-vazio">Você não tem peixes na bolsa. Pesque 🎣 e venda aqui.</div>');
   } else if (lojaAba === 'moveis') {   // 🛋️ móveis da casinha (PROMPT-105): vão para os guardados; sem venda de volta
@@ -1997,13 +1998,14 @@ function venderPeixe(id) {
   const ps = estado.pets, item = itemDaBolsa(id), n = Number(ps.bolsa?.[id]) || 0;
   if (!item?.peixe || n <= 0) return;
   ps.bolsa[id] = n - 1;
-  ps.moedas = (Number(ps.moedas) || 0) + item.venda;
+  const venda = comMult(item.venda);
+  ps.moedas = (Number(ps.moedas) || 0) + venda;
   const patch = { [`pets/bolsa/${id}`]: n - 1 || null, 'pets/moedas': ps.moedas };
-  registrarGanho('pesca', item.venda, patch);
+  registrarGanho('pesca', venda, patch);
   gravar(patch);
   tocar('acerto');
   renderLoja();
-  $('lj-msg').textContent = `Vendeu ${comArtigo(item.nome)} por ${item.venda} moeda${item.venda === 1 ? '' : 's'}.`;
+  $('lj-msg').textContent = `Vendeu ${comArtigo(item.nome)} por ${venda} moeda${venda === 1 ? '' : 's'}.`;
 }
 // 🏅 quadro de insígnia (1 por insígnia ganha; escolhe a insígnia ao comprar) e 🏆 Quadro dos Campeões (só conquistando)
 function cartoesQuadros(preco, botao) {
@@ -4081,7 +4083,7 @@ function abrirPainelExp() {
   $('mp-exp-sub').textContent = `${nome} vai explorar e volta com prêmios · hoje: ${n}/${EXPEDICOES_POR_DIA}`;
   $('mp-exp-opcoes').innerHTML = (aviso ? `<p class="mp-exp-aviso">${aviso}</p>` : '') + Object.entries(EXPEDICOES).map(([id, E]) =>
     `<button class="mp-exp-op" data-exp="${id}"${aviso ? ' disabled' : ''}><b>${E.nome}</b>
-      <span>volta com ${E.moedas[0]} a ${E.moedas[1]} ${moedaHtml()}${E.comida ? ' + 1 comida 🍎' : ''}</span></button>`).join('');
+      <span>volta com ${comMult(E.moedas[0])} a ${comMult(E.moedas[1])} ${moedaHtml()}${E.comida ? ' + 1 comida 🍎' : ''}</span></button>`).join('');
   $('mp-exp-painel').hidden = false;
 }
 
@@ -4090,7 +4092,7 @@ function mandarExpedicao(tipo) {
   if (!E || !c || !mp || mp.pet !== pet || petFora(pet) || expedicoesHoje() >= EXPEDICOES_POR_DIA) return;
   if (barrigaDe(pet) < fomeAbaixo()) { abrirPainelExp(); return; }
   const inicio = Math.round(agoraServ()), fim = inicio + E.min * 60000;
-  const moedas = E.moedas[0] + Math.floor(Math.random() * (E.moedas[1] - E.moedas[0] + 1));
+  const moedas = comMult(E.moedas[0] + Math.floor(Math.random() * (E.moedas[1] - E.moedas[0] + 1)));
   const lista = E.comida ? comidasDaExpedicao(pet) : [];
   const comida = lista.length ? sortear(lista).id : null;
   c.expedicao = { inicio, fim, tipo, moedas, ...(comida ? { comida } : {}) };
@@ -6420,7 +6422,7 @@ function abrirCartaoRelampago() {
   const q = rl.dados.q;
   $('rl-enunciado').textContent = q.enunciado;
   $('rl-podio').hidden = true;
-  $('rl-msg').innerHTML = pontuaNoRelampago() ? 'Responda rápido: os 3 primeiros acertos ganham 🪙 15 · 10 · 5' : 'Você vê o relâmpago, mas não pontua.';
+  $('rl-msg').innerHTML = pontuaNoRelampago() ? `Responda rápido: os 3 primeiros acertos ganham 🪙 ${RL_PREMIOS.map(comMult).join(' · ')}` : 'Você vê o relâmpago, mas não pontua.';
   $('rl-opcoes').innerHTML = q.opcoes.map(o => `<button data-rl="${esc(o)}">${esc(o)}</button>`).join('');
   $('relampago').hidden = false;
   soltarJoystick();
@@ -6477,7 +6479,7 @@ function mostrarFimRelampago() {
       try {
         const r = await runTransaction(ref(db, `${basePraca()}/relampago/${meu.chave}/premiados/${sessao.uid}`), (cur) => (cur ? undefined : true));
         if (r.committed) {
-          const n = RL_PREMIOS[lugar];
+          const n = comMult(RL_PREMIOS[lugar]);
           estado.pets.moedas = (Number(estado.pets.moedas) || 0) + n;
           const patch = { 'pets/moedas': estado.pets.moedas };
           registrarGanho('relampago', n, patch);
@@ -6776,7 +6778,7 @@ function aplicarFimDuelo(d) {
   const res = f.vencedor === 'empate' ? 'empate' : f.vencedor === eu ? 'venceu' : 'perdeu';
   const ganhas = Number(f.placar?.[eu]) || 0;
   const hoje = diaLocal(), valeu = !!du.eu.premio && vale(estado.desafiosDia, hoje, outro);
-  const { moedas, pontos } = premioDesafio(res, ganhas);
+  const pd0 = premioDesafio(res, ganhas), moedas = comMult(pd0.moedas), pontos = pd0.pontos;
   const patch = {};
   for (const [i, r] of Object.entries(d.rodadas || {})) {   // cada rodada nas respostas (relatórios da professora)
     const m = r.resp?.[eu];
@@ -6806,7 +6808,8 @@ function aplicarFimDuelo(d) {
 }
 
 // ============================================================
-//  ♟️ DAMAS 6×6 NA PRAÇA (PROMPT-72) — mesa de pedra (praca.json → mesa_damas). Regras em damas-logica.js.
+//  ♟️ DAMAS 8×8 NA PRAÇA (PROMPT-72; regra oficial brasileira, PROMPT-127) — mesa de pedra (praca.json → mesa_damas).
+//  Regras em damas-logica.js (dama voadora, captura obrigatória com lei da maioria).
 //  Treino contra o computador (fácil, médio, difícil) ou partida com um colega pelo desafio da praça (duelos/{id}, modo 'damas'):
 //  o tabuleiro fica em duelos/{id}/jogo = { tab, vez, semAvanco, n, t (início da vez, relógio do servidor), autos: { a, b },
 //  ultima: { de, caminho, cap, auto, lado } }. Cada jogada é gravada com runTransaction, conferindo a vez, o número da jogada e
@@ -6904,7 +6907,7 @@ function abrirDamas({ tipo, nivel = 'facil', est = null, eu = 'a', du = null }) 
   if (tipo === 'cpu' && dm.est.vez !== eu) jogadaDoComputador();
 }
 // casa do tabuleiro na tela: o meu lado sempre embaixo (lado B vê o tabuleiro virado)
-const casaNaTela = (i) => (dm.eu === 'b' ? 35 - i : i);
+const casaNaTela = (i) => (dm.eu === 'b' ? N_DAMAS * N_DAMAS - 1 - i : i);
 function renderDamas(animar = null) {
   if (!dm) return;
   const { est, eu } = dm, minha = !dm.fim && est.vez === eu && !dm.pensando;
@@ -6915,8 +6918,8 @@ function renderDamas(animar = null) {
   const ult = est.ultima ? new Set([est.ultima.de, ...(est.ultima.caminho || [])]) : new Set();
   const pos = dm.parcial.length ? dm.parcial.at(-1) : null;   // peça no meio de uma captura em sequência
   let html = '';
-  for (let k = 0; k < 36; k++) {
-    const i = casaNaTela(k), l = Math.floor(i / 6), c = i % 6, escura = (l + c) % 2 === 1;
+  for (let k = 0; k < N_DAMAS * N_DAMAS; k++) {
+    const i = casaNaTela(k), l = Math.floor(i / N_DAMAS), c = i % N_DAMAS, escura = (l + c) % 2 === 1;
     let p = est.tab[i];
     if (pos != null && i === dm.sel) p = '.';
     if (pos != null && i === pos) p = est.tab[dm.sel];
@@ -6929,7 +6932,9 @@ function renderDamas(animar = null) {
   const nA = contarDamas(est.tab, eu), nB = contarDamas(est.tab, outroLadoDamas(eu));
   $('dm-pecas-eu').textContent = `${nA} peça${nA === 1 ? '' : 's'}`;
   $('dm-pecas-outro').textContent = `${nB} peça${nB === 1 ? '' : 's'}`;
-  if (!dm.fim) $('dm-msg').textContent = dm.aviso || (minha ? (js.some(j => j.cap.length) ? 'Sua vez — tem captura: é obrigatório capturar!' : 'Sua vez: toque numa peça.') : dm.tipo === 'cpu' ? '🤖 Pensando…' : 'Vez do colega…');
+  // lei da maioria: alguma captura menor ficou de fora → avisa para escolher a que leva mais peças
+  const maioria = minha && js.some(j => j.cap.length) && todasCapturasDamas(est).length > js.length;
+  if (!dm.fim) $('dm-msg').textContent = dm.aviso || (minha ? (js.some(j => j.cap.length) ? `Sua vez — é obrigatório capturar!${maioria ? ' Escolha a captura que leva mais peças.' : ''}` : 'Sua vez: toque numa peça.') : dm.tipo === 'cpu' ? '🤖 Pensando…' : 'Vez do colega…');
 }
 function tickDamas() {
   if (!dm || dm.fim) return;
@@ -7005,11 +7010,12 @@ function terminarDamas({ vencedor, motivo }) {
 }
 function mostrarFimDamas(res, motivo, wo = false) {
   const outro = dm.tipo === 'cpu' ? 'O computador' : nomeT(dm.du.outro.uid, nomeCurto(dm.du.outro.uid, dm.du.outro.nome));
-  $('dm-fim-titulo').innerHTML = res === 'venceu' ? (wo ? 'Você venceu por W.O.! 🏆' : 'Você venceu! 🏆') : res === 'empate' ? 'Empate! 🤝' : 'Perdeu';
+  $('dm-fim-titulo').innerHTML = motivo === 'atualizado' ? 'Partida encerrada' : res === 'venceu' ? (wo ? 'Você venceu por W.O.! 🏆' : 'Você venceu! 🏆') : res === 'empate' ? 'Empate! 🤝' : 'Perdeu';
   $('dm-fim-info').innerHTML = { pecas: res === 'venceu' ? 'Você capturou todas as peças.' : `${outro} capturou todas as suas peças.`,
     sem_jogada: res === 'venceu' ? 'O outro lado ficou sem jogada.' : 'Você ficou sem jogada.', empate: '20 jogadas seguidas sem captura e sem peça andar.',
     automaticas: res === 'venceu' ? 'O outro lado ficou 3 jogadas sem jogar.' : '3 jogadas automáticas seguidas contam como desistência.',
-    desistiu: res === 'venceu' ? 'O outro lado desistiu.' : 'Você desistiu.', wo: 'O colega saiu do jogo.' }[motivo] || '';
+    desistiu: res === 'venceu' ? 'O outro lado desistiu.' : 'Você desistiu.', wo: 'O colega saiu do jogo.',
+    atualizado: 'A partida foi encerrada: as Damas foram atualizadas.' }[motivo] || '';
   $('dm-msg').textContent = '';
   $('dm-sair').textContent = 'Sair';
   $('dm-revanche').hidden = dm.tipo === 'online' && !colegas.has(dm.du.outro.uid);
@@ -7063,6 +7069,7 @@ function atualizarDamasOnline(d) {
   vigiarWO(d);
   const jg = d.jogo;
   if (!jg?.tab) return;
+  if (!tabDamasAtual(jg)) { encerrarDamasAntiga(du); return; }
   if (!dm || dm.du !== du) abrirDamas({ tipo: 'online', est: jg, eu: du.souA ? 'a' : 'b', du });
   if (jg.n !== dm.nVista) {
     const u = jg.ultima, novo = { tab: jg.tab, vez: jg.vez, semAvanco: jg.semAvanco || 0, n: jg.n };
@@ -7096,6 +7103,14 @@ async function jogadaOnlineDamas(j, auto, lado) {
   } catch (e) { console.warn('[jogo-revisao] jogada de damas', e?.code || e); }
   if (dm) dm.enviando = false;
 }
+// partida aberta antes das Damas 8×8 (PROMPT-127): o tabuleiro gravado tem outro tamanho → encerra sem vencedor
+const tabDamasAtual = (jg) => typeof jg?.tab === 'string' && jg.tab.length === N_DAMAS * N_DAMAS;
+function encerrarDamasAntiga(du) {
+  if (du.encerrouAntiga) return;
+  du.encerrouAntiga = true;
+  runTransaction(ref(db, `${basePraca()}/duelos/${du.id}/fim`), (cur) => (cur ? undefined : { vencedor: 'empate', placar: {}, wo: false, motivo: 'atualizado', ts: serverTimestamp() }))
+    .catch(e => console.warn('[jogo-revisao] damas antigas', e?.code || e));
+}
 async function finalizarDamasOnline(vencedorLado, motivo) {
   const du = duelo, d = du?.d;
   if (!d) return;
@@ -7119,7 +7134,7 @@ function fimDamasOnline(d) {
   du.fimDamas = true;
   du.timers.forEach(clearTimeout);
   const f = d.fim, eu = sessao.uid, res = f.vencedor === 'empate' ? 'empate' : f.vencedor === eu ? 'venceu' : 'perdeu';
-  if (!dm || dm.du !== du) abrirDamas({ tipo: 'online', est: d.jogo?.tab ? d.jogo : estadoInicialDamas(), eu: du.souA ? 'a' : 'b', du });
+  if (!dm || dm.du !== du) abrirDamas({ tipo: 'online', est: tabDamasAtual(d.jogo) ? d.jogo : estadoInicialDamas(), eu: du.souA ? 'a' : 'b', du });
   dm.fim = { vencedor: f.vencedor, motivo: f.motivo };
   clearInterval(dm.timer);
   if (res === 'venceu' && (entraNoRanking() || teste)) {
@@ -8243,7 +8258,7 @@ async function abrirMaquina(m) {
   $('mq-corpo').innerHTML = `<p class="mq-rec">Seu recorde: <b>${rec ? `Nível ${rec}` : '—'}</b></p>
     <p class="mq-sub">🏆 Top 3 ${TURMAS_PLACAR.includes(sessao.turma) ? `da ${esc(sessao.turma)}` : 'da escola'}</p>
     <ol class="mq-top">${top.map(r => `<li><span>${['🥇', '🥈', '🥉'][r.pos - 1] || r.pos + 'º'}</span>${persValido(pers(r)) ? bustoHtml(urlQuadro('frente', -1, pers(r)), 'ml-rosto', BUSTO_PERS) : '<span class="ml-rosto ml-sem">🙂</span>'}<b>${esc(r.nome)}</b><em>${esc(r.rotulo)}</em></li>`).join('') || '<li class="mq-vazio">Ninguém jogou ainda.</li>'}</ol>
-    <p class="mq-nota">+1 🪙 a cada ${FLIPER.acertos_por_moeda ?? 10} acertos (até ${FLIPER.moedas_dia ?? 10} por dia no fliperama)</p>`;
+    <p class="mq-nota">${taxaFliperama()} (até ${comMult(FLIPER.moedas_dia ?? 10)} por dia no fliperama)</p>`;
 }
 
 // 🏆 Recordes (botão do balão do Téo): top 3 de cada máquina
@@ -8288,15 +8303,23 @@ async function voltarDoJogo() {
   }
 }
 const petTem = (anim) => !!(seguidor?.pet && quadrosDe(seguidor.forma, anim)?.length);
-// Fim de partida (postMessage do jogo): +1 moeda a cada 10 acertos somados no dia, até 10 por dia
+// "+3 🪙 a cada 20 acertos": o menor grupo de acertos que dá um número inteiro de moedas com o multiplicador
+function taxaFliperama() {
+  const por = FLIPER.acertos_por_moeda ?? 10, m = multMoedas();
+  let k = 1;
+  while (k < 10 && Math.abs(k * m - Math.round(k * m)) > 1e-9) k++;
+  const n = Math.max(1, Math.round(k * m));
+  return `+${n} 🪙 a cada ${k * por} acertos`;
+}
+// Fim de partida (postMessage do jogo): +1 moeda a cada 10 acertos somados no dia, até 10 por dia (× multiplicador, PROMPT-126)
 function premioFliperama(d) {
   if (!jogoEmbed || !carregouProgresso) return;
-  const hoje = diaLocal(), por = FLIPER.acertos_por_moeda ?? 10, lim = FLIPER.moedas_dia ?? 10;
+  const hoje = diaLocal(), por = FLIPER.acertos_por_moeda ?? 10, lim = comMult(FLIPER.moedas_dia ?? 10);
   const fd = estado.fliperDia?.data === hoje ? { ...estado.fliperDia } : { data: hoje, acertos: 0, moedas: 0 };
   const acertosPartida = Math.max(0, Math.min(500, Math.round(Number(d.acertos) || 0)));
   fd.acertos = (Number(fd.acertos) || 0) + acertosPartida;
   missaoProgresso('fliperama', acertosPartida);
-  const alvo = Math.min(lim, Math.floor(fd.acertos / por)), ganho = alvo - (Number(fd.moedas) || 0);
+  const alvo = Math.min(lim, Math.floor(fd.acertos * multMoedas() / por + 1e-9)), ganho = alvo - (Number(fd.moedas) || 0);
   const patch = {};
   if (ganho > 0) {
     fd.moedas = alvo;
@@ -8446,7 +8469,7 @@ function renderAoVivo() {
     aplicarPremioAV(s, meu);
     avTela(`<div class="av-fim"><h3>🏁 Fim da Tabuada ao vivo!</h3><div class="av-podio">${[1, 0, 2].map(k => todos[k] ? `<div class="p${k + 1}">${persValido(todos[k].pers) ? bustoHtml(urlQuadro('frente', -1, todos[k].pers), 'av-busto', BUSTO_PERS) : '<span class="av-busto ml-sem">🙂</span>'}
         <b>${['🥇', '🥈', '🥉'][k]} ${nomeT(todos[k].uid, nomeCurto(todos[k].uid, todos[k].nome))}</b><small>${todos[k].pontos} pts</small><i></i></div>` : '').join('')}</div>
-      <p class="av-eu">${meu ? `Você ficou em ${meu.pos}º de ${todos.length} · ${meu.pontos} pts${premioDoPodio(meu.pos) ? ` · +${premioDoPodio(meu.pos)} 🪙` : ''}` : ''}</p>
+      <p class="av-eu">${meu ? `Você ficou em ${meu.pos}º de ${todos.length} · ${meu.pontos} pts${premioDoPodio(meu.pos) ? ` · +${comMult(premioDoPodio(meu.pos))} 🪙` : ''}` : ''}</p>
       <div class="av-linha"><button class="jr-btn jr-btn-ouro" data-av="sair">OK</button></div></div>`);
   }
 }
@@ -8489,7 +8512,7 @@ function registrarRespostaAV(s, r) {
 function aplicarPremioAV(s, meu) {
   if (av.premio || !meu || !carregouProgresso) return;
   av.premio = true;
-  const n = premioDoPodio(meu.pos);
+  const n = comMult(premioDoPodio(meu.pos));
   if (!n || estado.aovivoPremios?.[av.codigo]) return;
   estado.aovivoPremios = { ...(estado.aovivoPremios || {}), [av.codigo]: meu.pos };
   estado.pets.moedas = (Number(estado.pets.moedas) || 0) + n;
@@ -9569,10 +9592,11 @@ function girarMovel() {
 }
 // 🎨 cor do móvel (PROMPT-118): bolinhas com as amostras do grupo (tecido / madeira); troca na hora, grátis; grava no ✔ Pronto
 function abrirCoresMovel() {
-  const m = cs?.sel, cores = coresDe(itemCasa(m?.id)), el = $('cs-cores');
+  const m = cs?.sel, it = itemCasa(m?.id), cores = coresDe(it), el = $('cs-cores');
   if (!cores) return;
   if (!el.hidden) { el.hidden = true; return; }
-  el.innerHTML = cores.map(c => `<button class="cs-cor${(m.cor || '') === c.id ? ' sel' : ''}" data-cor="${esc(c.id)}" title="${esc(c.nome)}" aria-label="${esc(c.nome)}" style="--c:${esc(c.amostra)}"></button>`).join('');
+  // amostra_padrao (PROMPT-125): a 1ª bolinha mostra a cor original do item (a cama: cobertor bege)
+  el.innerHTML = cores.map(c => (c.id === '' && it.amostra_padrao ? { ...c, nome: 'Bege', amostra: it.amostra_padrao } : c)).map(c => `<button class="cs-cor${(m.cor || '') === c.id ? ' sel' : ''}" data-cor="${esc(c.id)}" title="${esc(c.nome)}" aria-label="${esc(c.nome)}" style="--c:${esc(c.amostra)}"></button>`).join('');
   el.hidden = false;
   posicionarFerrCasa();
 }
@@ -10798,10 +10822,10 @@ function entregarAchado(a, onde, n, patch = {}) {
   missaoProgresso('cavar');   // montinho, tesouro ou mato
   const ps = estado.pets, cfg = cfgCavar(), cav = cavadosHoje();
   let icone = '', titulo = '', sub = '', raro = false, registro = null;
-  const moedasLivres = () => Math.max(0, (cfg.moedas_cavar_dia ?? 15) - (Number(cav.moedas) || 0));
+  const moedasLivres = () => Math.max(0, comMult(cfg.moedas_cavar_dia ?? 15) - (Number(cav.moedas) || 0));
   const darMoedas = (q, semLimite = false) => { const g = semLimite ? q : Math.min(q, moedasLivres()); if (!semLimite) cav.moedas = (Number(cav.moedas) || 0) + g; ps.moedas = (Number(ps.moedas) || 0) + g; patch['pets/moedas'] = ps.moedas; registrarGanho(semLimite ? 'colecao' : 'cavar', g, patch); return g; };
   if (a.tipo === 'moedas') {
-    const g = darMoedas(qtdDe(a.qtd));
+    const g = darMoedas(comMult(qtdDe(a.qtd)));
     if (g > 0) { icone = moedaHtml(); titulo = `Você achou ${g} 🪙!`; registro = { tipo: 'moedas', qtd: g }; }
     else { a = { tipo: 'vazio' }; }   // passou do limite do dia: as moedas viram terra
   }
@@ -10830,7 +10854,7 @@ function entregarAchado(a, onde, n, patch = {}) {
       registro = { tipo: 'colecao', id: c.id };
       completarGrupo(c.grupo, patch);
     } else if (c) {
-      const g = darMoedas(cfg.repetida_moedas ?? 5, true);
+      const g = darMoedas(comMult(cfg.repetida_moedas ?? 5), true);
       icone = imgItem(c.imagem, c.emoji, 'jr-item-peixe');
       titulo = `Repetida! Virou ${g} 🪙`;
       sub = `${c.nome} já está na sua coleção`;
@@ -10848,7 +10872,7 @@ function entregarAchado(a, onde, n, patch = {}) {
       sub = 'Vale para todos os seus pets (troque no Meu Pet → Visual)';
       registro = { tipo: 'tinta', id: a.id };
     } else {
-      const g = darMoedas(cfg.repetida_moedas ?? 5, true);
+      const g = darMoedas(comMult(cfg.repetida_moedas ?? 5), true);
       icone = '🎨'; titulo = `Repetida! Virou ${g} 🪙`; sub = t ? `Você já tem a tinta ${t.nome}` : '';
       registro = { tipo: 'tinta_repetida', id: a.id, moedas: g };
     }
@@ -10866,7 +10890,7 @@ function entregarAchado(a, onde, n, patch = {}) {
 function completarGrupo(grupo, patch) {
   const doGrupo = (CAVAR.colecao || []).filter(c => c.grupo === grupo);
   if (estado.colecaoGrupos?.[grupo] || !doGrupo.every(c => estado.colecao?.[c.id])) return;
-  const n = cfgCavar().grupo_completo_moedas ?? 20;
+  const n = comMult(cfgCavar().grupo_completo_moedas ?? 20);
   estado.colecaoGrupos = { ...(estado.colecaoGrupos || {}), [grupo]: true };
   estado.pets.moedas = (Number(estado.pets.moedas) || 0) + n;
   patch[`colecao_grupos/${grupo}`] = true;
@@ -10889,7 +10913,7 @@ function mostrarAchado(icone, titulo, sub, raro, grande) {
 function albumHtml() {
   const grupos = [...new Set((CAVAR?.colecao || []).map(c => c.grupo))];
   const total = (CAVAR?.colecao || []).length, achadas = Object.keys(estado.colecao || {}).length;
-  return `<div class="mp-album-topo">📖 Coleção: <b>${achadas}/${total}</b> · completar um grupo dá ${cfgCavar().grupo_completo_moedas ?? 20} 🪙</div>` + grupos.map(g => {
+  return `<div class="mp-album-topo">📖 Coleção: <b>${achadas}/${total}</b> · completar um grupo dá ${comMult(cfgCavar().grupo_completo_moedas ?? 20)} 🪙</div>` + grupos.map(g => {
     const pecas = CAVAR.colecao.filter(c => c.grupo === g), ok = pecas.every(c => estado.colecao?.[c.id]);
     return `<div class="mp-album-grupo${ok ? ' completo' : ''}"><b>${esc(g)}${ok ? ' ✓' : ''}</b><div>${pecas.map(c => estado.colecao?.[c.id]
       ? `<span class="mp-peca">${imgItem(c.imagem, c.emoji, 'jr-item-bolsa')}<em>${esc(c.nome)}</em></span>`
@@ -10968,7 +10992,7 @@ function abrirListaBatalha() {
 
 function renderListaBatalha() {
   const dia = diaBatalhas(), lim = cfgBatalha().limites_dia || {};
-  $('bt-lista-dia').innerHTML = `prêmios de hoje ${dia.moedas}/${lim.moedas ?? '∞'} ${moedaHtml()}`;
+  $('bt-lista-dia').innerHTML = `prêmios de hoje ${dia.moedas}/${lim.moedas != null ? comMult(lim.moedas) : '∞'} ${moedaHtml()}`;
   const agora = Date.now(), ts = treinadores();
   if (!ts.some(t => t.id === btSel)) btSel = ts[0]?.id || null;
   $('bt-cards').innerHTML = ts.map(t => {
@@ -11504,7 +11528,7 @@ function btFim() {
   $('bt-premios').innerHTML = chips.join('') || '<span class="bt-premio">Sem prêmios</span>';
   const dia = diaBatalhas(), lim = cfgBatalha().limites_dia || {};
   $('bt-fim-dia').innerHTML = (pr.cortado ? '<b>Limite de prêmios de hoje atingido — amanhã tem mais!</b>' : '') +
-    `<span>Prêmios de batalha hoje: ${dia.moedas} / ${lim.moedas ?? '∞'} moedas</span>`;
+    `<span>Prêmios de batalha hoje: ${dia.moedas} / ${lim.moedas != null ? comMult(lim.moedas) : '∞'} moedas</span>`;
   $('bt-revanche').hidden = venceu;
   // revisão das contas erradas (ou "Perfeito!"); os botões só aparecem depois do "Entendi!"
   const comRevisao = cfgBatalha().revisao_no_fim !== false, revisar = comRevisao && bt.revisao.length > 0;
@@ -13097,7 +13121,7 @@ function abrirComputador(id) {
     const rec = Number(estado.programe.o_que_faz?.recorde) || 0;
     $('mq-corpo').innerHTML = `<p class="mq-rec">🔮 O que o pet vai fazer?</p>
       <p class="mq-sub">Leia o programa e toque na casa onde o pet vai parar. Depois ele executa e você confere. Quanto mais acertos seguidos, mais difícil fica!</p>
-      <p class="mq-nota">🏆 Seu recorde: <b>${rec}</b> acerto${rec === 1 ? '' : 's'} seguido${rec === 1 ? '' : 's'} · 🪙 1 moeda a cada 5 acertos seguidos (até 10 por dia)</p>`;
+      <p class="mq-nota">🏆 Seu recorde: <b>${rec}</b> acerto${rec === 1 ? '' : 's'} seguido${rec === 1 ? '' : 's'} · 🪙 ${comMult(1)} moeda${comMult(1) === 1 ? '' : 's'} a cada 5 acertos seguidos (até ${MOEDAS_OQF_DIA * comMult(1)} por dia)</p>`;
     $('mq-botoes').innerHTML = '<button class="jr-btn jr-btn-ouro" data-pg-oqf>🔮 Jogar</button>';
   } else if (id === 'corrida') {
     $('mq-corpo').innerHTML = `<p class="mq-rec">🏁 Corrida de programação</p>
@@ -13157,8 +13181,8 @@ function venceuFase(f, r) {
   }
   if (f.id === 1 && !estado.programe.tutorial_visto) { estado.programe.tutorial_visto = true; patch['programe/tutorial_visto'] = true; }   // a mãozinha não volta mais
   let moedas = 0;
-  if (!p.premio1) { p.premio1 = true; patch[`${base}/premio1`] = true; moedas += PROG.premios?.estrela ?? PREMIO_PG.estrela; }
-  if (r.estrelas === 3 && !p.premio3) { p.premio3 = true; patch[`${base}/premio3`] = true; moedas += PROG.premios?.tres_estrelas ?? PREMIO_PG.tres_estrelas; }
+  if (!p.premio1) { p.premio1 = true; patch[`${base}/premio1`] = true; moedas += comMult(PROG.premios?.estrela ?? PREMIO_PG.estrela); }
+  if (r.estrelas === 3 && !p.premio3) { p.premio3 = true; patch[`${base}/premio3`] = true; moedas += comMult(PROG.premios?.tres_estrelas ?? PREMIO_PG.tres_estrelas); }
   if (moedas) { ps.moedas = (Number(ps.moedas) || 0) + moedas; patch['pets/moedas'] = ps.moedas; registrarGanho('programe', moedas, patch); }
   if (nova && ps.ativo && cuidadosDe(ps.ativo)) ganharLealdade(ps.ativo, PROG.premios?.lealdade ?? PREMIO_PG.lealdade, patch);
   // chefe vencido pela 1ª vez: medalha da região (sem moedas extras)
@@ -13255,8 +13279,8 @@ function venceuBug(b, r) {
     for (const k of ['estrelas', 'execucoes', 'data']) patch[`${base}/${k}`] = p[k];
   }
   let moedas = 0;
-  if (!p.premio1) { p.premio1 = true; patch[`${base}/premio1`] = true; moedas += PROG.premios?.estrela ?? PREMIO_PG.estrela; }
-  if (r.estrelas === 3 && !p.premio3) { p.premio3 = true; patch[`${base}/premio3`] = true; moedas += PROG.premios?.tres_estrelas ?? PREMIO_PG.tres_estrelas; }
+  if (!p.premio1) { p.premio1 = true; patch[`${base}/premio1`] = true; moedas += comMult(PROG.premios?.estrela ?? PREMIO_PG.estrela); }
+  if (r.estrelas === 3 && !p.premio3) { p.premio3 = true; patch[`${base}/premio3`] = true; moedas += comMult(PROG.premios?.tres_estrelas ?? PREMIO_PG.tres_estrelas); }
   if (moedas) { ps.moedas = (Number(ps.moedas) || 0) + moedas; patch['pets/moedas'] = ps.moedas; registrarGanho('programe', moedas, patch); }
   gravar(patch);
   verificarCores();   // 3 bugs: cor Branco
@@ -13308,9 +13332,9 @@ function resultadoOQF(acertou) {
     const md = o.moedas_dia?.data === hoje ? Number(o.moedas_dia.n) || 0 : 0;
     if (oqf.acertos % 5 === 0 && md < MOEDAS_OQF_DIA) {
       o.moedas_dia = { data: hoje, n: md + 1 }; patch['programe/o_que_faz/moedas_dia'] = o.moedas_dia;
-      const ps = estado.pets; ps.moedas = (Number(ps.moedas) || 0) + 1; patch['pets/moedas'] = ps.moedas;
-      registrarGanho('programe', 1, patch);
-      avisoPet(`🔮 ${oqf.acertos} acertos seguidos! +1 🪙`, true);
+      const ps = estado.pets, g = comMult(1); ps.moedas = (Number(ps.moedas) || 0) + g; patch['pets/moedas'] = ps.moedas;
+      registrarGanho('programe', g, patch);
+      avisoPet(`🔮 ${oqf.acertos} acertos seguidos! +${g} 🪙`, true);
     }
   } else oqf.acertos = 0;
   if (Object.keys(patch).length) gravar(patch);
@@ -13487,7 +13511,7 @@ async function fimCorrida(d) {
 // ============================================================
 //  🪙 ECONOMIA (PROMPT-47) — sem teto diário geral: cada fonte tem o próprio limite (batalha, pedidos, cavar,
 //  fliperama, desafios). Ginásio: +1 só no 1º acerto de cada pergunta; insígnia +10, dourada +15 (loja.json →
-//  moedas_insignia / moedas_dourada). Registro do que entrou: moedas_dia (hoje, por fonte: o aluno vê tocando no
+//  moedas_insignia / moedas_dourada). Todo ganho passa por comMult (loja.json → multiplicador_moedas, PROMPT-126). Registro do que entrou: moedas_dia (hoje, por fonte: o aluno vê tocando no
 //  contador) e moedas_semana/{segunda}/{fonte} (painel da professora).
 // ============================================================
 const FONTES_MOEDA = {
@@ -13495,12 +13519,12 @@ const FONTES_MOEDA = {
   expedicao: { nome: 'Expedição do pet' },
   relampago: { nome: 'Desafio relâmpago' },
   insignia: { nome: 'Insígnias' },
-  batalha: { nome: 'Batalhas', limite: () => cfgBatalha().limites_dia?.moedas },
+  batalha: { nome: 'Batalhas', limite: () => (cfgBatalha().limites_dia?.moedas != null ? comMult(cfgBatalha().limites_dia.moedas) : undefined) },
   batalha_primeira: { nome: 'Primeira vitória contra um treinador' },
-  pedido: { nome: 'Pedidos de ajuda', limite: () => cfgPedidos().limite_moedas_dia ?? 20 },
-  cavar: { nome: 'Cavar e mato', limite: () => cfgCavar().moedas_cavar_dia ?? 15 },
+  pedido: { nome: 'Pedidos de ajuda', limite: () => limiteMoedasPedidos() },
+  cavar: { nome: 'Cavar e mato', limite: () => comMult(cfgCavar().moedas_cavar_dia ?? 15) },
   colecao: { nome: 'Coleção' },
-  fliperama: { nome: 'Fliperama', limite: () => FLIPER?.moedas_dia ?? 10 },
+  fliperama: { nome: 'Fliperama', limite: () => comMult(FLIPER?.moedas_dia ?? 10) },
   desafio: { nome: 'Desafios na praça' },
   pesca: { nome: 'Venda de peixes' },
   aovivo: { nome: 'Tabuada ao vivo' },
@@ -13523,7 +13547,7 @@ function registrarGanho(fonte, n, patch) {
 
 // Insígnia nova: +10; dourada: +15 (uma vez cada; quem já tinha antes desta regra não recebe retroativo)
 function moedasDaInsignia(tipo) {
-  const n = tipo === 'dourada' ? cfgLoja().moedas_dourada ?? 15 : cfgLoja().moedas_insignia ?? 10;
+  const n = comMult(tipo === 'dourada' ? cfgLoja().moedas_dourada ?? 15 : cfgLoja().moedas_insignia ?? 10);
   if (!n || !estado?.pets) return;
   estado.pets.moedas = (Number(estado.pets.moedas) || 0) + n;
   const patch = { 'pets/moedas': estado.pets.moedas };
@@ -13543,7 +13567,7 @@ function abrirMoedasHoje() {
   }).join('');
   $('moedas-hoje-caixa').innerHTML = `<div class="jr-mh-tit">Hoje você ganhou <b>${total}</b> ${moedaHtml()}</div>
     <ul class="jr-mh-lista">${linhas}</ul>
-    <div class="jr-mh-nota">Cada atividade tem o próprio limite por dia. Nos ginásios, a moeda vem no 1º acerto de cada pergunta; vencer o líder dá +${cfgLoja().moedas_insignia ?? 10} e a dourada +${cfgLoja().moedas_dourada ?? 15}.</div>
+    <div class="jr-mh-nota">Cada atividade tem o próprio limite por dia. Nos ginásios, a moeda vem no 1º acerto de cada pergunta; vencer o líder dá +${comMult(cfgLoja().moedas_insignia ?? 10)} e a dourada +${comMult(cfgLoja().moedas_dourada ?? 15)}.</div>
     <div class="jr-mh-fechar">Toque para fechar</div>`;
   $('moedas-hoje').hidden = false;
 }
@@ -13604,6 +13628,7 @@ function missoesDoDia() {
 const cfgMissao = (id) => (MISSOES?.missoes || []).find(m => m.id === id);
 const textoMissao = (m) => String(cfgMissao(m.id)?.texto || m.id).replace('{n}', m.n);
 const missaoFeita = (m) => m.feito >= m.n;
+const premioMissao = (p) => ({ ...(p || {}), moedas: comMult(p?.moedas) });   // PROMPT-126: as moedas × multiplicador
 
 function missaoProgresso(id, qtd = 1) {
   const md = missoesDoDia();
@@ -13619,14 +13644,14 @@ function missaoProgresso(id, qtd = 1) {
 }
 
 function concluirMissao(m, md, patch) {
-  const pr = MISSOES.premio || {}, ps = estado.pets;
+  const pr = premioMissao(MISSOES.premio), ps = estado.pets;
   if (pr.moedas) { ps.moedas = (Number(ps.moedas) || 0) + pr.moedas; patch['pets/moedas'] = ps.moedas; registrarGanho('missao', pr.moedas, patch); }
   if (pr.lealdade && ps.ativo && cuidadosDe(ps.ativo)) ganharLealdade(ps.ativo, pr.lealdade, patch);
   avisoPet(`📜 Missão cumprida: ${textoMissao(m)}!${pr.moedas ? ` +${pr.moedas} 🪙` : ''}`, true);
   moedasVoando(pr.moedas);
   if (md.bonus || !md.lista.every(missaoFeita)) return;
   // as 3 do dia: bônus (fica fora de qualquer teto)
-  const b = MISSOES.bonus_todas || {};
+  const b = premioMissao(MISSOES.bonus_todas);
   md.bonus = true;
   if (b.moedas) { ps.moedas = (Number(ps.moedas) || 0) + b.moedas; patch['pets/moedas'] = ps.moedas; registrarGanho('missao', b.moedas, patch); }
   if (b.isca) { ps.iscas = (Number(ps.iscas) || 0) + b.isca; patch['pets/iscas'] = ps.iscas; }
@@ -13680,7 +13705,7 @@ function abrirMissoes() {
 function renderMissoes() {
   const md = missoesDoDia();
   if (!md) return;
-  const pr = MISSOES.premio || {}, b = MISSOES.bonus_todas || {};
+  const pr = premioMissao(MISSOES.premio), b = premioMissao(MISSOES.bonus_todas);
   const premio = [pr.moedas ? `+${pr.moedas} ${moedaHtml()}` : '', pr.lealdade ? `+${pr.lealdade} de lealdade 💜` : ''].filter(Boolean).join(' · ');
   $('missoes-lista').innerHTML = md.lista.map(m => {
     const feita = missaoFeita(m), f = Math.min(m.feito, m.n);

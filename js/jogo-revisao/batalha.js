@@ -1,5 +1,6 @@
 // Jogo de Revisão — Batalha de Pets: regras puras (contas, força do treinador, dano, prêmios).
 // Tudo vem de dados/jogo/batalhas.json; a tela fica em js/jogo-revisao.js.
+import { comMult } from './loja.js';
 
 let B = null;
 export function definirBatalhas(json) { B = json; }
@@ -470,12 +471,14 @@ export function premios(resultado, d, dia, lealdadeAtual) {
   const base = (c.premios || {})[resultado === 'venceu' ? 'vitoria' : 'derrota'] || {};
   let moedas = base.moedas || 0;
   if (resultado === 'venceu' && d.nivel >= 3) moedas += 2 * (d.nivel - 2);   // nível alto vale mais (dentro do limite)
-  const cabe = (k, v) => Math.max(0, Math.min(v, (lim[k] ?? Infinity) - (Number(dia[k]) || 0)));
+  moedas = comMult(moedas);   // PROMPT-126: o teto de moedas sobe junto
+  const teto = (k) => (k === 'moedas' && lim.moedas != null ? comMult(lim.moedas) : lim[k] ?? Infinity);
+  const cabe = (k, v) => Math.max(0, Math.min(v, teto(k) - (Number(dia[k]) || 0)));
   const p = {
     moedas: cabe('moedas', moedas),
     lealdade: Math.min(cabe('lealdade', base.lealdade || 0), Math.max(0, 100 - (Number(lealdadeAtual) || 0))),
     xp: cabe('xp', base.xp || 0),
-    bonusPrimeira: resultado === 'venceu' && d.vitorias === 0 ? (c.premios?.primeira_vitoria_bonus_moedas || 0) : 0,   // fora do limite
+    bonusPrimeira: resultado === 'venceu' && d.vitorias === 0 ? comMult(c.premios?.primeira_vitoria_bonus_moedas || 0) : 0,   // fora do limite
   };
   p.cortado = p.moedas < moedas || cabe('lealdade', base.lealdade || 0) < (base.lealdade || 0) || p.xp < (base.xp || 0);
   return p;

@@ -1,5 +1,6 @@
 // Jogo de Revisão — pedidos de ajuda das pessoas nos mapas: regras puras (quem tem pedido, prêmio, dica).
 // Dados em dados/jogo/pedidos.json; a tela fica em js/jogo-revisao.js.
+import { comMult } from './loja.js';
 
 let P = null;
 export function definirPedidos(json) { P = json; }
@@ -20,10 +21,11 @@ export function pedidoDisponivel(npc, { venceu, resolvidos, dia }) {
 // Moedas de um acerto na tentativa 1 ou 2, dentro do limite do dia (só moedas de pedidos)
 export function moedasDoPedido(tentativa, dia) {
   const c = cfgPedidos();
-  const base = tentativa === 1 ? (c.moedas_primeira ?? 5) : (c.moedas_segunda ?? 2);
-  return Math.max(0, Math.min(base, (c.limite_moedas_dia ?? 20) - (Number(dia?.moedas) || 0)));
+  const base = comMult(tentativa === 1 ? (c.moedas_primeira ?? 5) : (c.moedas_segunda ?? 2));   // PROMPT-126: prêmio e teto × multiplicador
+  return Math.max(0, Math.min(base, limiteMoedasPedidos() - (Number(dia?.moedas) || 0)));
 }
-export const limiteDoDiaAtingido = (dia) => (Number(dia?.moedas) || 0) >= (cfgPedidos().limite_moedas_dia ?? 20);
+export const limiteMoedasPedidos = () => comMult(cfgPedidos().limite_moedas_dia ?? 20);
+export const limiteDoDiaAtingido = (dia) => (Number(dia?.moedas) || 0) >= limiteMoedasPedidos();
 
 // Número como aparece no texto: sinal "−", milhar opcional com ponto (1000 ou 1.000)
 function padraoNumero(n) {
