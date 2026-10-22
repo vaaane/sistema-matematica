@@ -1212,8 +1212,6 @@ html.jr-deitado .jr-btn-hud span { display: none; }
 .jr-pet-fala.pop { animation: jr-fala-pop .22s ease-out; }
 @keyframes jr-fala-pop { from { opacity: 0; transform: translate(-50%, -100%) scale(.85); } to { opacity: 1; transform: translate(-50%, -100%) scale(1); } }
 @media (prefers-reduced-motion: reduce) { .jr-pet-fala.pop { animation: none; } }
-#mp-calado.ativo { border-color: rgba(255,215,0,.5); color: #ffe69a; }
-html.jr-deitado .jr-mp-botoes #mp-calado { font-size: 13px; padding: 4px 6px; }
 
 /* ============================================================
    Pergunta em estilo duelo: cenário visível, arena em cima, pergunta embaixo
@@ -1731,6 +1729,11 @@ html.jr-deitado .pd-teclado .pd-ok { font-size: 14px; }
 #jr-app .jr-mp-carinhas img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 80%; image-rendering: auto; display: block; }
 .jr-mp-carinhas b { margin-left: 4px; font-family: 'Inter', sans-serif; font-size: 12px; color: #c9cde0; }
 .jr-mp-editar { background: none; border: 1px solid rgba(255,255,255,.2); border-radius: 8px; font-size: 13px; padding: 1px 5px; cursor: pointer; line-height: 1.2; }
+/* 💬/🤐 falas do pet (PROMPT-120): redondo, do tamanho dos ícones pequenos */
+.jr-mp-falas { flex: none; width: 34px; height: 34px; padding: 0; border-radius: 50%; border: 1px solid rgba(255,255,255,.25); background: rgba(13,15,26,.6); font-size: 17px; line-height: 1; cursor: pointer; display: inline-grid; place-items: center; }
+.jr-mp-falas.desligado { opacity: .75; border-color: rgba(255,255,255,.15); }
+.jr-mp-falas:active { transform: scale(.92); }
+html.jr-deitado .jr-mp-falas { width: 30px; height: 30px; font-size: 15px; }
 .mp-nivel { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 800; color: #ff9ec4; background: rgba(255,92,138,.14); border: 1px solid rgba(255,92,138,.4); border-radius: 999px; padding: 1px 7px; }
 .mp-coroa { font-size: .8em; }
 .jr-mp-palco.moldura-prata { box-shadow: inset 0 0 0 3px #cfd6e4, 0 0 10px rgba(207,214,228,.45); }

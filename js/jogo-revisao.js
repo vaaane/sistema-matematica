@@ -3661,12 +3661,13 @@ function alternarPetCalado() {
   petCalado = !petCalado;
   try { localStorage.setItem(KEY_CALADO, petCalado ? '1' : '0'); } catch (_) {}
   atualizarBotaoCalado();
+  avisoPet(petCalado ? '🤐 Falas do pet desligadas' : '💬 Falas do pet ligadas');
 }
-function atualizarBotaoCalado() {   // interruptor "Falas do pet" no painel Visual do Meu Pet
-  const b = $('mp-calado');
-  $('mp-calado-txt').textContent = `Falas do pet: ${petCalado ? 'desligado' : 'ligado'}`;
-  b.setAttribute('aria-checked', String(!petCalado));
-  b.classList.toggle('ligado', !petCalado);
+function atualizarBotaoCalado() {   // 💬/🤐 ao lado do nome do pet, na tela principal do Meu Pet (PROMPT-120)
+  const b = $('mp-falas'), rot = `Falas do pet: ${petCalado ? 'desligadas' : 'ligadas'}`;
+  b.textContent = petCalado ? '🤐' : '💬';
+  b.title = rot; b.setAttribute('aria-label', rot);
+  b.classList.toggle('desligado', petCalado);
 }
 
 const quadrosCarregados = new Set();   // personagens já pré-carregados
@@ -14361,7 +14362,7 @@ function ligarEventos() {
     if (pesca?.estado === 'barrinha' && (e.code === 'Space' || e.key === 'Enter')) { e.preventDefault(); pesca.segurando = false; }
   }, true);
   $('mp-carinho').addEventListener('click', carinhoPet);
-  $('mp-calado').addEventListener('click', alternarPetCalado);
+  $('mp-falas').addEventListener('click', (e) => { e.stopPropagation(); alternarPetCalado(); });
   $('mp-filhote').addEventListener('click', alternarFilhote);
   $('evo-ok').addEventListener('click', fecharEvolucao);
   $('meu-pet').addEventListener('click', (e) => { if (e.target === $('meu-pet')) fecharMeuPet(); });   // tocar fora do painel fecha
