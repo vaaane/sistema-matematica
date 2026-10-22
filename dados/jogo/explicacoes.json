@@ -136,13 +136,15 @@
    "titulo": "Ler coordenadas",
    "regra": "O ponto (x, y): primeiro anda no eixo horizontal (x), depois no vertical (y).",
    "exemplo": "(3, 2): 3 para a direita, 2 para cima",
-   "dica": "A origem é (0, 0). x negativo: esquerda; y negativo: para baixo."
+   "dica": "A origem é (0, 0). x negativo: esquerda; y negativo: para baixo.",
+   "animacao": { "tipo": "plano", "modo": "monta", "exemplos": [[3, 2], [-2, 1], [0, 3]] }
   },
   "mapa12-B": {
    "titulo": "Andar no plano cartesiano",
    "regra": "Para ir de um ponto a outro, compare os x (direita/esquerda) e depois os y (cima/baixo).",
    "exemplo": "De (1, 1) a (4, 3): 3 para a direita e 2 para cima",
-   "dica": "x aumentou → direita; y aumentou → cima."
+   "dica": "x aumentou → direita; y aumentou → cima.",
+   "animacao": { "tipo": "plano", "modo": "andar", "exemplos": [{ "de": [1, 1], "mov": [[1, 0, 3], [0, 1, 2]] }, { "de": [2, 1], "mov": [[-1, 0, 3], [0, -1, 2]] }] }
   },
   "mapa13-A": {
    "titulo": "Média, moda e mediana",

@@ -34,6 +34,7 @@ import { faseDoDia, faseDaCorrida, resultadoCorrida, rodadaOQueFaz } from '/js/j
 import { estadoInicial as estadoInicialDamas, jogadasValidas as jogadasValidasDamas, aplicar as aplicarDamas, ehValida as ehValidaDamas, fimDeJogo as fimDeJogoDamas,
   contar as contarDamas, outro as outroLadoDamas, jogadaAleatoria as jogadaAleatoriaDamas, jogadaComputador as jogadaComputadorDamas, todasCapturas as todasCapturasDamas, N as N_DAMAS } from '/js/jogo-revisao/damas-logica.js';
 import { abrirQuadroEstudos, ligarQuadroEstudos } from '/js/jogo-revisao/estudos.js';
+import { criarPlano, definirPetPlano, faixaPara, pontosDoCaminho, movEntre, lerPar, fmt as fmtPlano, par as parPlano, CORES_PLANO } from '/js/jogo-revisao/plano.js';
 import { configurarMapaPrograme, ligarMapaPrograme, temMapaPrograme, abrirMapaPrograme, esquecerPosicaoPet, temaDaFase, temaVila, chefeDaFase,
   medalhaDoChefe } from '/js/jogo-revisao/programe-mapa.js';
 
@@ -1825,6 +1826,13 @@ function aplicarTinta(img, tintaId, comSombra = false) {
 }
 // Tinta de um pet meu em qualquer tela (mapa, Meu Pet, duelo do ginásio, batalha, coleção, pedidos, HUD)
 const aplicarVisualPet = (img, pet, comSombra = false) => aplicarTinta(img, tintaVisivel(pet), comSombra);
+// 📐 o pet que anda no plano cartesiano (PROMPT-128): o pet ativo, com a tinta; em expedição ou sem pet, o marcador dourado
+definirPetPlano(() => {
+  const pet = petsOk && estado?.pets?.ativo && !petFora() ? estado.pets.ativo : null;
+  if (!pet) return null;
+  const forma = formaDe(pet);
+  return { quadros: (pose) => (temAnim(forma, pose) ? quadrosDe(forma, pose) : null), tam: tamanhoQuadro(forma), escala: escalaPet(forma), visual: (el) => aplicarVisualPet(el, pet) };
+});
 function atualizarVisualPet() {
   const pet = estado?.pets?.ativo;
   aplicarVisualPet($('pet'), pet, true);
@@ -12535,6 +12543,7 @@ function renderPergunta() {
     setTimeout(() => b.classList.remove('pulsa'), 2300);
     setTimeout(() => { if (pg?.fila?.[0] === q && !pg.fim) falar('Pode usar a 🧮 calculadora aqui!'); }, 2200);
   }
+  mostrarPlanoPergunta(q);   // 📐 mapa 12: o plano cartesiano pequeno (PROMPT-128)
   $('perg-enunciado').textContent = q.enunciado;
   $('perg-enunciado').classList.toggle('longo', String(q.enunciado).length > 28);   // problemas: Inter, até 2 linhas
   $('perg-explica').hidden = true;
@@ -12603,6 +12612,57 @@ function passoFinalHtml(t, certa) {
   return m ? `${esc(m[1])}<b>${esc(m[2])}</b>${esc(m[3])}` : esc(t);
 }
 
+// ── 📐 Plano nas perguntas do mapa 12 (PROMPT-128): q.plano vem dos geradores (mapas9a13.js). Antes de responder, o plano
+//    mostra o ponto (com "?"), a partida (e a chegada) ou as opções; depois, a resposta: o caminho com a contagem, a guia até o
+//    eixo, o eixo aceso, os quadrantes ou o ponto certo com a bandeira. ──
+let pgPlano = null, planoPerg = null, erroPlano = null;   // { q, plano, rotQ }; o plano da arena; o do cartão do erro
+const esperaMs = (ms) => new Promise(r => setTimeout(r, ms));
+const movDoPlano = (pl) => pl.mov || (pl.chegada ? movEntre(pl.partida, pl.chegada) : []);
+function pontosDoPlano(q) {
+  const pl = q.plano, pts = [];
+  if (pl.ponto) pts.push(pl.ponto);
+  if (pl.partida) pts.push(...pontosDoCaminho(pl.partida, movDoPlano(pl)));
+  const r = lerPar(q.resposta);
+  if (r) pts.push(r);
+  if (pl.opcoes) for (const e of q.erradas || []) { const p = lerPar(e); if (p) pts.push(p); }
+  if (pl.mostra === 'quadrantes') pts.push([-3, -3], [3, 3]);   // os 4 quadrantes com espaço
+  return pts;
+}
+function montarPlanoPergunta(plano, q, texto = 1.9) {   // texto: os números maiores, para ler no plano pequeno
+  const pl = q.plano, C = CORES_PLANO;
+  plano.desenhar({ ...faixaPara(pontosDoPlano(q)), texto });
+  let rotQ = null;
+  if (pl.partida) { plano.petEm(...pl.partida); plano.ponto(...pl.partida, C.verde, 8); plano.rotulo(...pl.partida, 'partida', C.verde, 28); }
+  if (pl.chegada) { plano.ponto(...pl.chegada); plano.rotulo(...pl.chegada, parPlano(...pl.chegada), C.ouro, -28); }
+  if (pl.ponto) { plano.ponto(...pl.ponto); rotQ = plano.rotulo(...pl.ponto, '?', C.ouro, -28); }
+  if (pl.opcoes) for (const o of [q.resposta, ...(q.erradas || [])]) { const p = lerPar(o); if (p) { plano.ponto(...p, '#fff', 8); plano.rotulo(...p, parPlano(...p), '#fff', -28); } }
+  plano.rotQ = rotQ;
+}
+// depois de responder (acerto ou erro): a resposta certa no plano
+async function animarRespostaPlano(plano, q) {
+  const pl = q.plano, C = CORES_PLANO;
+  if (pl.mostra === 'caminho' && pl.partida) { await plano.mostrarCaminho(pl.partida, movDoPlano(pl), { rapido: true }); return; }
+  if (pl.mostra === 'eixo_x' || pl.mostra === 'eixo_y') {
+    const e = pl.mostra.slice(-1);
+    plano.guias(...pl.ponto, e); plano.anelNoEixo(e, e === 'x' ? pl.ponto[0] : pl.ponto[1]);
+    return;
+  }
+  if (pl.mostra === 'eixos' && pl.ponto) { plano.destacarEixo(pl.ponto[1] === 0 ? 'x' : 'y'); return; }
+  if (pl.mostra === 'quadrantes' && pl.ponto) { plano.rotQ?.remove(); plano.desenharQuadrantes(); plano.rotulo(...pl.ponto, parPlano(...pl.ponto), C.ouro, -28); return; }
+  const p = pl.mostra === 'origem' ? [0, 0] : lerPar(q.resposta);   // resposta / origem: o ponto certo
+  if (p) { plano.ponto(...p); plano.guias(...p); plano.bandeira(...p); plano.rotulo(...p, parPlano(...p), C.ouro, 0, 34); }
+}
+function mostrarPlanoPergunta(q) {
+  planoPerg?.cancelar();
+  const tem = !!q.plano;
+  $('perg-plano-box').hidden = !tem;
+  $('perg-arena').classList.toggle('com-plano', tem);
+  if (!tem) { pgPlano = null; return; }
+  planoPerg ||= criarPlano($('perg-plano'));
+  montarPlanoPergunta(planoPerg, q);
+  pgPlano = { q, plano: planoPerg };
+}
+
 function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
   const passos = passosDe(q.explicacao);
   const ultimo = passos[passos.length - 1] || '';
@@ -12622,9 +12682,18 @@ function mostrarCartaoErro(q, sua, certa, comOutrosNumeros) {
   $('erro-relembre').dataset.relembre = rel;
   $('erro-linha-dica').hidden = !mostraDica && $('erro-relembre').hidden;
   $('erro-volta').textContent = pg.modo === 'treino' ? `🔁 ${comOutrosNumeros ? 'Ela volta daqui a pouco, com outros números, e de novo amanhã.' : 'Ela volta daqui a pouco e de novo amanhã.'}` : `🔁 ${comOutrosNumeros ? 'Essa pergunta volta daqui a pouco, com outros números.' : 'Essa pergunta volta daqui a pouco.'}`;
-  const grade = (q.mapa ?? pg.mapa) === 12 ? gradeDoErro(q.enunciado, sua, certa) : '';
+  // 📐 com plano (PROMPT-128): o mesmo plano da pergunta, com a animação da resposta certa; sem plano, a mini-grade de antes
+  erroPlano?.cancelar(); erroPlano = null;
+  const grade = q.plano ? '<svg aria-label="Plano cartesiano"></svg>' : (q.mapa ?? pg.mapa) === 12 ? gradeDoErro(q.enunciado, sua, certa) : '';
   $('erro-grade').innerHTML = grade;
   $('erro-grade').hidden = !grade;
+  $('erro-grade').classList.toggle('com-plano', !!q.plano);
+  if (q.plano) {
+    erroPlano = criarPlano($('erro-grade').querySelector('svg'));
+    montarPlanoPergunta(erroPlano, q, 1.6);
+    const ep = erroPlano;
+    setTimeout(() => { if (erroPlano === ep) animarRespostaPlano(ep, q).catch(() => {}); }, 450);
+  }
   const b = $('erro-continuar');
   b.disabled = true;
   $('perg-erro').hidden = false;
@@ -12821,7 +12890,10 @@ function responder(btn) {
     pg.acertos++;
     if (primeiroAcerto && !treino) ganharMoeda();   // treino: sem moedas (o prêmio é lealdade)
     falar(sortear(D.falas.acerto));
-    setTimeout(() => { if (!pg) return; pg.fila.length ? renderPergunta() : vencer(); }, 1100);
+    // 📐 com plano: espera a animação da resposta (no mínimo 1,1 s, no máximo ~3 s)
+    const pgAgora = pg, segue = () => { if (!pg || pg !== pgAgora) return; pg.fila.length ? renderPergunta() : vencer(); };
+    const anim = pgPlano?.q === q ? animarRespostaPlano(pgPlano.plano, q).catch(() => {}) : null;
+    if (anim) Promise.race([Promise.all([anim, esperaMs(1100)]), esperaMs(3000)]).then(segue); else setTimeout(segue, 1100);
   } else errarPergunta(btn, q, certa, botoes);
 }
 
@@ -13866,6 +13938,12 @@ function abrirRelembre(chave, origem) {
   const e = explicacaoDe(chave);
   if (!e || !estado) return;
   relembreAberto = { chave, origem };
+  const anim = e.animacao?.tipo === 'plano' && e.animacao.exemplos?.length ? e.animacao : null;   // 📐 mapa 12 (PROMPT-128)
+  $('rel-caixa').classList.toggle('com-plano', !!anim);
+  $('rel-plano').hidden = $('rel-anim').hidden = !anim;
+  const [, mapaRel, gRel] = /^mapa(\d+)-([AB])$/.exec(chave) || [];
+  const ginRel = mapaRel && D.questoes?.[mapaRel]?.ginasios?.[gRel];
+  $('relembre').querySelector('.jr-rel-cab small').textContent = anim && ginRel ? `📖 Relembre · ${ginRel.nome}` : '📖 Relembre';
   $('rel-insignia').src = `${IMG}/insignias/insignia-${chave}.webp`;
   $('rel-titulo').textContent = e.titulo || '';
   $('rel-regra').textContent = e.regra || '';
@@ -13873,7 +13951,7 @@ function abrirRelembre(chave, origem) {
   $('rel-exemplo').hidden = !e.exemplo;
   $('rel-dica').textContent = e.dica ? `💡 ${e.dica}` : '';
   $('rel-dica').hidden = !e.dica;
-  const pet = petsOk && estado.pets?.ativo;
+  const pet = petsOk && estado.pets?.ativo && !anim;   // no plano animado, o pet já está andando no plano
   $('rel-pet-bloco').hidden = !pet;
   if (pet) {   // o busto (a cabeça grande, medida e centralizada como nos ícones); sem busto, o pet sentado como antes
     const img = $('rel-pet'), forma = formaDe(pet), busto = temBusto(forma);
@@ -13896,12 +13974,35 @@ function abrirRelembre(chave, origem) {
     gravar({ [`${base}/aberturas`]: r.aberturas, [`${base}/ultima`]: r.ultima });
   }
   $('rel-ok').focus({ preventScroll: true });
+  relAnim = anim ? { a: anim, i: 0 } : null;
+  if (anim) rodarRelembrePlano(); else relPlano?.cancelar();
+}
+
+// ── 📐 Relembre animado (PROMPT-128): o pet monta o ponto (Forte Pirata) ou anda no plano (Observatório) ──
+let relPlano = null, relAnim = null;   // o plano do cartão e { a: animacao, i: exemplo }
+function parRelembre(x, y, muda) {
+  const v = (n, c, on) => (n === null || n === undefined ? '<span class="vazio">?</span>' : `<span class="${c}${on ? ' pisca' : ''}">${fmtPlano(n)}</span>`);
+  $('rel-par').innerHTML = `( ${v(x, 'cx', muda === 'x')} , ${v(y, 'cy', muda === 'y')} )`;
+}
+function rodarRelembrePlano() {
+  const r = relAnim;
+  if (!r) return;
+  const ex = r.a.exemplos[r.i], monta = r.a.modo === 'monta';
+  relPlano ||= criarPlano($('rel-svg'));
+  $('rel-fala').innerHTML = '';
+  $('rel-pausa').textContent = '⏸';
+  $('rel-pontos').innerHTML = r.a.exemplos.map((_, k) => `<i class="${k === r.i ? 'on' : ''}"></i>`).join('');
+  $('rel-prox').hidden = r.a.exemplos.length < 2;
+  relPlano.desenhar(faixaPara(monta ? [ex] : pontosDoCaminho(ex.de, ex.mov)));
+  const fala = { par: parRelembre, diz: (h) => { const p = document.createElement('p'); p.innerHTML = h; $('rel-fala').appendChild(p); $('rel-fala').scrollTop = 1e6; } };
+  (monta ? relPlano.montarPonto(ex, fala) : relPlano.andarDe(ex.de, ex.mov, fala)).catch(() => {});   // cancelada: outra começou
 }
 
 function fecharRelembre() {
   if (!relembreAberto) return;
   const { chave } = relembreAberto;
   relembreAberto = null;
+  relPlano?.cancelar(); relAnim = null;
   $('relembre').hidden = true;
   if ($('rel-check').hidden) return;
   const r = (estado.relembre[chave] ||= {}), ocultar = $('rel-ocultar').checked;
@@ -14285,6 +14386,9 @@ function ligarEventos() {
   $('cartao-relembre').addEventListener('click', (e) => { e.stopPropagation(); abrirRelembre(e.currentTarget.dataset.chave, 'insignia'); });
   $('btn-relembre').addEventListener('click', () => { if (cena?.tipo === 'interior') abrirRelembre(cena.chave, 'ginasio'); });
   $('rel-ok').addEventListener('click', fecharRelembre);
+  $('rel-rev').addEventListener('click', () => rodarRelembrePlano());
+  $('rel-pausa').addEventListener('click', () => { if (relPlano) $('rel-pausa').textContent = relPlano.pausar() ? '▶' : '⏸'; });
+  $('rel-prox').addEventListener('click', () => { if (relAnim) { relAnim.i = (relAnim.i + 1) % relAnim.a.exemplos.length; rodarRelembrePlano(); } });
   $('btn-missoes').addEventListener('click', abrirMissoes);
   $('mp-letra').addEventListener('click', alternarLetra);
   ligarBotoesPrograme();

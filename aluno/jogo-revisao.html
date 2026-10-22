@@ -234,6 +234,7 @@
         <img class="jr-arena-jog" id="perg-jog" alt="" draggable="false"/>
         <div class="jr-arena-sombra pet"></div>
         <img class="jr-arena-pet" id="perg-pet" alt="Pedir ajuda ao pet" draggable="false"/>
+        <div class="jr-perg-plano" id="perg-plano-box" hidden><svg id="perg-plano" aria-label="Plano cartesiano"></svg></div>
         <button class="jr-perg-ajuda" id="perg-ajuda" hidden>💡 Pedir ajuda</button>
         <div class="jr-pet-fala-arena" id="perg-pet-fala" hidden></div>
         <div class="jr-arena-sombra adv"></div>
@@ -510,7 +511,9 @@
 
   <!-- 📖 Relembre: explicação curta do conteúdo do ginásio (dados/jogo/explicacoes.json) -->
   <div id="relembre" class="jr-relembre" hidden role="dialog" aria-label="Relembre">
-    <div class="jr-rel-caixa">
+    <div class="jr-rel-caixa" id="rel-caixa">
+      <!-- 📐 Relembre animado do mapa 12 (PROMPT-128): o plano com o pet à esquerda; falas, par, controles à direita -->
+      <div class="jr-rel-plano" id="rel-plano" hidden><svg id="rel-svg" aria-label="Plano cartesiano"></svg></div>
       <div class="jr-rel-topo">
         <img id="rel-insignia" alt="" draggable="false"/>
         <div class="jr-rel-cab"><small>📖 Relembre</small><b id="rel-titulo"></b></div>
@@ -522,6 +525,12 @@
           <div class="jr-rel-dica" id="rel-dica"></div>
         </div>
         <div class="jr-rel-pet" id="rel-pet-bloco"><div class="jr-rel-balao">Lembra disso? 😉</div><div class="jr-rel-moldura" id="rel-moldura"><img id="rel-pet" alt="" draggable="false"/></div></div>
+      </div>
+      <div class="jr-rel-anim" id="rel-anim" hidden>
+        <div class="jr-rel-fala" id="rel-fala" aria-live="polite"></div>
+        <div class="jr-rel-par" id="rel-par"></div>
+        <div class="jr-rel-legenda"><span><b class="cx">x</b> = lado</span><span><b class="cy">y</b> = cima/baixo</span><span class="jr-rel-pontos" id="rel-pontos"></span></div>
+        <div class="jr-rel-ctrl"><button class="jr-btn jr-btn-sec" id="rel-rev" title="Ver de novo" aria-label="Ver de novo">↺</button><button class="jr-btn jr-btn-sec" id="rel-pausa" aria-label="Pausar">⏸</button><button class="jr-btn jr-btn-sec" id="rel-prox">Outro exemplo ▶</button></div>
       </div>
       <div class="jr-rel-rodape">
         <label class="jr-rel-check" id="rel-check"><input type="checkbox" id="rel-ocultar"/> Não mostrar de novo neste ginásio</label>

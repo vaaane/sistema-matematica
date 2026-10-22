@@ -775,5 +775,391 @@
     }
    ]
   }
+ },
+ "mapa12": {
+  "mural": null,
+  "A": {
+   "aba": "🏴‍☠️ Forte Pirata (A)",
+   "regra": {
+    "titulo": "O ponto **(x, y)**",
+    "texto": "Dois números entre parênteses dizem onde o ponto fica. Tudo começa na **origem (0, 0)**, onde os eixos se cruzam.",
+    "degraus": [
+     {
+      "ops": [
+       "x"
+      ],
+      "cor": "laranja",
+      "texto": "o **1º número**: anda para o **lado**",
+      "obs": "positivo → direita · negativo → esquerda · 0 → não anda"
+     },
+     {
+      "ops": [
+       "y"
+      ],
+      "cor": "cyan",
+      "texto": "o **2º número**: anda para **cima ou para baixo**",
+      "obs": "positivo → cima · negativo → baixo · 0 → não anda"
+     }
+    ]
+   },
+   "pensa": {
+    "titulo": "O pet **sai da origem**: primeiro anda para o lado, depois sobe",
+    "animacao": {
+     "tipo": "plano",
+     "modo": "monta",
+     "exemplos": [
+      [
+       3,
+       2
+      ],
+      [
+       -2,
+       1
+      ],
+      [
+       0,
+       3
+      ]
+     ]
+    },
+    "porque": "💡 **Por quê?** A ordem combinada é sempre a mesma no mundo todo: primeiro o x (horizontal), depois o y (vertical). Por isso (3, 2) e (2, 3) são pontos diferentes!"
+   },
+   "exemplos": [
+    {
+     "conta": "(4, 1)",
+     "passos": [
+      {
+       "conta": "x = [[4]]",
+       "nota": "4 para a direita"
+      },
+      {
+       "conta": "y = [[1]]",
+       "nota": "1 para cima"
+      },
+      {
+       "conta": "{{🚩 (4, 1)}}",
+       "nota": "chegou"
+      }
+     ]
+    },
+    {
+     "conta": "(−3, 2)",
+     "passos": [
+      {
+       "conta": "x = [[−3]]",
+       "nota": "menos → 3 para a esquerda"
+      },
+      {
+       "conta": "y = [[2]]",
+       "nota": "2 para cima"
+      },
+      {
+       "conta": "{{🚩 (−3, 2)}}",
+       "nota": "2º quadrante"
+      }
+     ]
+    },
+    {
+     "conta": "(0, −2)",
+     "passos": [
+      {
+       "conta": "x = [[0]]",
+       "nota": "não anda para o lado"
+      },
+      {
+       "conta": "y = [[−2]]",
+       "nota": "2 para baixo"
+      },
+      {
+       "conta": "{{🚩 em cima do eixo y}}",
+       "nota": "x = 0 → eixo y"
+      }
+     ]
+    },
+    {
+     "conta": "Quadrantes",
+     "passos": [
+      {
+       "conta": "1º: x [[+]], y [[+]]",
+       "nota": "direita e cima"
+      },
+      {
+       "conta": "2º: x [[−]], y [[+]]",
+       "nota": "esquerda e cima"
+      },
+      {
+       "conta": "3º: x [[−]], y [[−]] · 4º: x [[+]], y [[−]]",
+       "nota": "contados no sentido anti-horário"
+      }
+     ]
+    }
+   ],
+   "armadilha": {
+    "conta": "Onde fica (2, 5)?",
+    "texto": "Trocar a ordem leva para outro lugar:",
+    "errado": "subir 2 e andar 5 para o lado → isso é (5, 2)!",
+    "certo": "2 para o lado (x), depois 5 para cima (y)",
+    "nota": "Primeiro o x, depois o y. Pense: **x** vem antes de **y** no alfabeto. 😉"
+   },
+   "tente_plano": {
+    "titulo": "Toque no ponto",
+    "alvos": [
+     [
+      2,
+      4
+     ],
+     [
+      5,
+      1
+     ],
+     [
+      -3,
+      2
+     ],
+     [
+      0,
+      4
+     ],
+     [
+      4,
+      -2
+     ],
+     [
+      -2,
+      -3
+     ],
+     [
+      6,
+      0
+     ],
+     [
+      -4,
+      5
+     ]
+    ]
+   }
+  },
+  "B": {
+   "aba": "🔭 Observatório (B)",
+   "regra": {
+    "titulo": "Andar no plano",
+    "texto": "Para saber onde você para, comece no ponto de partida e mude **um número de cada vez**.",
+    "degraus": [
+     {
+      "ops": [
+       "→",
+       "←"
+      ],
+      "cor": "laranja",
+      "texto": "andar para o **lado** muda só o **x**",
+      "obs": "direita: soma · esquerda: subtrai"
+     },
+     {
+      "ops": [
+       "↑",
+       "↓"
+      ],
+      "cor": "cyan",
+      "texto": "andar para **cima ou baixo** muda só o **y**",
+      "obs": "cima: soma · baixo: subtrai"
+     }
+    ]
+   },
+   "pensa": {
+    "titulo": "A cada casa, **só um número muda**",
+    "animacao": {
+     "tipo": "plano",
+     "modo": "andar",
+     "exemplos": [
+      {
+       "de": [
+        1,
+        1
+       ],
+       "mov": [
+        [
+         1,
+         0,
+         3
+        ],
+        [
+         0,
+         1,
+         2
+        ]
+       ]
+      },
+      {
+       "de": [
+        2,
+        1
+       ],
+       "mov": [
+        [
+         -1,
+         0,
+         3
+        ],
+        [
+         0,
+         -1,
+         2
+        ]
+       ]
+      }
+     ]
+    },
+    "porque": "💡 **Por quê?** O x mede o quanto você está para o lado e o y o quanto está para cima. Andar para o lado não muda a altura, e subir não muda o lado."
+   },
+   "exemplos": [
+    {
+     "conta": "De (1, 2): 3 → e 1 ↑",
+     "passos": [
+      {
+       "conta": "x: 1 [[+ 3]] = 4",
+       "nota": "direita soma no x"
+      },
+      {
+       "conta": "y: 2 [[+ 1]] = 3",
+       "nota": "cima soma no y"
+      },
+      {
+       "conta": "{{(4, 3)}}",
+       "nota": "parou aqui"
+      }
+     ]
+    },
+    {
+     "conta": "De (5, 5): 2 ↓",
+     "passos": [
+      {
+       "conta": "x: [[5]]",
+       "nota": "não andou para o lado"
+      },
+      {
+       "conta": "y: 5 [[− 2]] = 3",
+       "nota": "baixo subtrai no y"
+      },
+      {
+       "conta": "{{(5, 3)}}",
+       "nota": "parou aqui"
+      }
+     ]
+    },
+    {
+     "conta": "De (2, 1): 3 ← e 2 ↓",
+     "passos": [
+      {
+       "conta": "x: 2 [[− 3]] = −1",
+       "nota": "passou do zero: negativo"
+      },
+      {
+       "conta": "y: 1 [[− 2]] = −1",
+       "nota": "também passou do zero"
+      },
+      {
+       "conta": "{{(−1, −1)}}",
+       "nota": "3º quadrante"
+      }
+     ]
+    },
+    {
+     "conta": "De (1, 1) até (4, 1)?",
+     "passos": [
+      {
+       "conta": "x: 1 → 4 = [[+ 3]]",
+       "nota": "3 para a direita"
+      },
+      {
+       "conta": "y: 1 → 1 = [[0]]",
+       "nota": "não sobe nem desce"
+      },
+      {
+       "conta": "{{3 para a direita}}",
+       "nota": "resposta"
+      }
+     ]
+    }
+   ],
+   "armadilha": {
+    "conta": "De (2, 3), ando 2 para baixo",
+    "texto": "Mexer no número errado:",
+    "errado": "(0, 3) — tirou 2 do x",
+    "certo": "para baixo muda o **y**: 3 − 2 = 1 → (2, 1)",
+    "nota": "Lado → x. Cima/baixo → y. 😉"
+   },
+   "tente_plano": {
+    "titulo": "Onde eu paro?",
+    "perguntas": [
+     {
+      "de": [
+       1,
+       1
+      ],
+      "mov": [
+       [
+        1,
+        0,
+        2
+       ],
+       [
+        0,
+        1,
+        3
+       ]
+      ]
+     },
+     {
+      "de": [
+       3,
+       2
+      ],
+      "mov": [
+       [
+        -1,
+        0,
+        4
+       ]
+      ]
+     },
+     {
+      "de": [
+       0,
+       4
+      ],
+      "mov": [
+       [
+        1,
+        0,
+        2
+       ],
+       [
+        0,
+        -1,
+        5
+       ]
+      ]
+     },
+     {
+      "de": [
+       -2,
+       -1
+      ],
+      "mov": [
+       [
+        1,
+        0,
+        5
+       ],
+       [
+        0,
+        1,
+        3
+       ]
+      ]
+     }
+    ]
+   }
+  }
  }
 }

@@ -181,21 +181,26 @@ const M11 = {
 };
 
 // ===================== MAPA 12 =====================
+// plano (PROMPT-128): o que o plano cartesiano pequeno da pergunta mostra (js/jogo-revisao/plano.js). Formatos:
+//   { ponto, mostra: 'eixo_x' | 'eixo_y' | 'eixos' | 'quadrantes' } · { partida, mov: [[dx, dy, casas]], mostra: 'caminho' }
+//   { partida, chegada, mostra: 'caminho' } · { opcoes: true, mostra: 'resposta' } · { mostra: 'resposta' | 'origem' }
+const PL = (x, plano) => ({ ...x, plano });
+const movDe = (dx, dy) => [dx ? [Math.sign(dx), 0, Math.abs(dx)] : null, dy ? [0, Math.sign(dy), Math.abs(dy)] : null].filter(Boolean);
 const XY = X('No ponto (x, y), o primeiro número é o x (anda para os lados) e o segundo é o y (anda para cima ou para baixo).');
 const xy = (x, y, q) => X(`No ponto (x, y), o x vem primeiro e o y depois. Em ${ponto(x, y)}: ${q} = ${num(q === 'x' ? x : y)}`);
-const coord = (neg = false) => () => { const x = int(neg ? -6 : 0, 9), y = int(neg ? -6 : 0, 9); const qual = coin() ? 'x' : 'y'; const v = qual === 'x' ? x : y; const o = qual === 'x' ? y : x; return Q(`No ponto ${ponto(x, y)}, qual é o valor de ${qual}?`, num(v), erradasTexto(num(v), [num(o), num(-v), num(v + 1), num(v - 1), num(v + 2), num(v - 2)].filter(s => s !== num(v))), xy(x, y, qual)); };
-const coordX = () => { const x = int(0, 9), y = int(0, 9); return Q(`No ponto ${ponto(x, y)}, qual é o valor de x?`, num(x), erradasTexto(num(x), [num(y), num(x + 1), num(x + y), num(x + 2), num(y + 1), num(x + 3), num(x + 4)]), xy(x, y, 'x')); };
-const coordY = () => { const x = int(0, 9), y = int(0, 9); return Q(`No ponto ${ponto(x, y)}, qual é o valor de y?`, num(y), erradasTexto(num(y), [num(x), num(y + 1), num(x + y), num(y + 2), num(x + 1), num(y + 3), num(y + 4)]), xy(x, y, 'y')); };
+const coord = (neg = false) => () => { const x = int(neg ? -6 : 0, 9), y = int(neg ? -6 : 0, 9); const qual = coin() ? 'x' : 'y'; const v = qual === 'x' ? x : y; const o = qual === 'x' ? y : x; return Q(`No ponto ${ponto(x, y)}, qual é o valor de ${qual}?`, num(v), erradasTexto(num(v), [num(o), num(-v), num(v + 1), num(v - 1), num(v + 2), num(v - 2)].filter(s => s !== num(v))), PL(xy(x, y, qual), { ponto: [x, y], mostra: 'eixo_' + qual })); };
+const coordX = () => { const x = int(0, 9), y = int(0, 9); return Q(`No ponto ${ponto(x, y)}, qual é o valor de x?`, num(x), erradasTexto(num(x), [num(y), num(x + 1), num(x + y), num(x + 2), num(y + 1), num(x + 3), num(x + 4)]), PL(xy(x, y, 'x'), { ponto: [x, y], mostra: 'eixo_x' })); };
+const coordY = () => { const x = int(0, 9), y = int(0, 9); return Q(`No ponto ${ponto(x, y)}, qual é o valor de y?`, num(y), erradasTexto(num(y), [num(x), num(y + 1), num(x + y), num(y + 2), num(x + 1), num(y + 3), num(y + 4)]), PL(xy(x, y, 'y'), { ponto: [x, y], mostra: 'eixo_y' })); };
 const EIXOS = [
-  () => Q('Qual ponto é a origem?', '(0, 0)', ['(1, 1)', '(0, 1)', '(1, 0)'], X('A origem é onde os eixos se cruzam: (0, 0).')),
-  () => { const v = pick([-6, -4, -2, 2, 3, 5, 7]); return Q(`O ponto ${ponto(v, 0)} fica sobre qual eixo?`, 'Eixo x', ['Eixo y'], X('Se o y é 0, o ponto não sobe nem desce: fica em cima do eixo x.')); },
-  () => { const v = pick([-5, -3, -2, 2, 3, 4, 6]); return Q(`O ponto ${ponto(0, v)} fica sobre qual eixo?`, 'Eixo y', ['Eixo x'], X('Se o x é 0, o ponto não vai para os lados: fica em cima do eixo y.')); },
+  () => Q('Qual ponto é a origem?', '(0, 0)', ['(1, 1)', '(0, 1)', '(1, 0)'], PL(X('A origem é onde os eixos se cruzam: (0, 0).'), { mostra: 'origem' })),
+  () => { const v = pick([-6, -4, -2, 2, 3, 5, 7]); return Q(`O ponto ${ponto(v, 0)} fica sobre qual eixo?`, 'Eixo x', ['Eixo y'], PL(X('Se o y é 0, o ponto não sobe nem desce: fica em cima do eixo x.'), { ponto: [v, 0], mostra: 'eixos' })); },
+  () => { const v = pick([-5, -3, -2, 2, 3, 4, 6]); return Q(`O ponto ${ponto(0, v)} fica sobre qual eixo?`, 'Eixo y', ['Eixo x'], PL(X('Se o x é 0, o ponto não vai para os lados: fica em cima do eixo y.'), { ponto: [0, v], mostra: 'eixos' })); },
 ];
 const eixo = () => pick(EIXOS)();
-const qualPonto = () => { let a = int(1, 8), b = int(1, 8); if (a === b) b = a + 1; return Q(`Qual ponto tem x = ${a} e y = ${b}?`, ponto(a, b), [ponto(b, a)], XY); };
-const maisLado = () => { const dir = coin(); let p = [int(0, 8), int(0, 8)], q = [int(0, 8), int(0, 8)]; const i = dir ? 0 : 1; if (p[i] === q[i]) q[i] = p[i] + 2; const r = p[i] > q[i] ? p : q, w = r === p ? q : p; return Q(`Qual ponto fica mais ${dir ? 'à direita' : 'acima'}?`, ponto(...r), [ponto(...w)], X(dir ? `Mais à direita = maior x: ${r[0]} > ${w[0]}` : `Mais acima = maior y: ${r[1]} > ${w[1]}`)); };
+const qualPonto = () => { let a = int(1, 8), b = int(1, 8); if (a === b) b = a + 1; return Q(`Qual ponto tem x = ${a} e y = ${b}?`, ponto(a, b), [ponto(b, a)], PL(XY, { mostra: 'resposta' })); };
+const maisLado = () => { const dir = coin(); let p = [int(0, 8), int(0, 8)], q = [int(0, 8), int(0, 8)]; const i = dir ? 0 : 1; if (p[i] === q[i]) q[i] = p[i] + 2; const r = p[i] > q[i] ? p : q, w = r === p ? q : p; return Q(`Qual ponto fica mais ${dir ? 'à direita' : 'acima'}?`, ponto(...r), [ponto(...w)], PL(X(dir ? `Mais à direita = maior x: ${r[0]} > ${w[0]}` : `Mais acima = maior y: ${r[1]} > ${w[1]}`), { opcoes: true, mostra: 'resposta' })); };
 const QUADS = { '1º quadrante': [1, 1], '2º quadrante': [-1, 1], '3º quadrante': [-1, -1], '4º quadrante': [1, -1] };
-const quadrante = () => { const [nome, [sx, sy]] = pick(Object.entries(QUADS)); const x = sx * int(1, 7), y = sy * int(1, 7); return Q(`Em qual quadrante fica o ponto ${ponto(x, y)}?`, nome, Object.keys(QUADS).filter(k => k !== nome), X('1º (+, +) em cima à direita; 2º (−, +) em cima à esquerda; 3º (−, −) embaixo à esquerda; 4º (+, −) embaixo à direita.')); };
+const quadrante = () => { const [nome, [sx, sy]] = pick(Object.entries(QUADS)); const x = sx * int(1, 7), y = sy * int(1, 7); return Q(`Em qual quadrante fica o ponto ${ponto(x, y)}?`, nome, Object.keys(QUADS).filter(k => k !== nome), PL(X('1º (+, +) em cima à direita; 2º (−, +) em cima à esquerda; 3º (−, −) embaixo à esquerda; 4º (+, −) embaixo à direita.'), { ponto: [x, y], mostra: 'quadrantes' })); };
 const dirTxt = (dx, dy) => [dx > 0 ? `${dx} para a direita` : dx < 0 ? `${-dx} para a esquerda` : '', dy > 0 ? `${dy} para cima` : dy < 0 ? `${-dy} para baixo` : ''].filter(Boolean).join(' e ');
 function andar({ origem = false, neg = false, dois = true } = {}) {
   return () => {
@@ -209,7 +214,7 @@ function andar({ origem = false, neg = false, dois = true } = {}) {
       if (neg && x >= 0 && y >= 0) continue;
       const de = origem ? 'Saindo da origem' : `Saindo de ${ponto(x0, y0)}`;
       const sx = (a, d) => d === 0 ? `fica ${num(a)}` : `${num(a)} ${d < 0 ? '−' : '+'} ${Math.abs(d)} = ${num(a + d)}`;
-      return Q(`${de}, ando ${dirTxt(dx, dy)}. Onde paro?`, ponto(x, y), erradasPonto(x, y), X(`Direita soma no x, esquerda subtrai; cima soma no y, baixo subtrai. x: ${sx(x0, dx)}; y: ${sx(y0, dy)}`));
+      return Q(`${de}, ando ${dirTxt(dx, dy)}. Onde paro?`, ponto(x, y), erradasPonto(x, y), PL(X(`Direita soma no x, esquerda subtrai; cima soma no y, baixo subtrai. x: ${sx(x0, dx)}; y: ${sx(y0, dy)}`), { partida: [x0, y0], mov: movDe(dx, dy), mostra: 'caminho' }));
     }
   };
 }
@@ -219,7 +224,7 @@ function caminho() {
     if (dx === 0 && dy === 0) continue;
     const r = dirTxt(dx, dy), e1 = dirTxt(dy || dx, dx || dy), e2 = dirTxt(-dx, -dy);
     const err = erradasTexto(r, [e2, e1, dirTxt(dx + (dx >= 0 ? 1 : -1), dy), dirTxt(-dx, dy), dirTxt(dx, -dy), dirTxt(dx, dy + (dy >= 0 ? 1 : -1))]);
-    return Q(`Para ir de ${ponto(x0, y0)} até ${ponto(x0 + dx, y0 + dy)}, ando:`, r, err, X(`Compare os x (${num(x0)} → ${num(x0 + dx)}) e os y (${num(y0)} → ${num(y0 + dy)}): ${r}`));
+    return Q(`Para ir de ${ponto(x0, y0)} até ${ponto(x0 + dx, y0 + dy)}, ando:`, r, err, PL(X(`Compare os x (${num(x0)} → ${num(x0 + dx)}) e os y (${num(y0)} → ${num(y0 + dy)}): ${r}`), { partida: [x0, y0], chegada: [x0 + dx, y0 + dy], mostra: 'caminho' }));
   }
 }
 const M12 = {

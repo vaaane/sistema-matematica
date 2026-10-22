@@ -558,6 +558,8 @@ html.jr-deitado #tela-geral .jr-on-txt { display: none; }   /* no celular: só "
 .jr-erro-grade { flex: none; width: min(170px, 100%); align-self: center; }
 .jr-erro-grade[hidden] { display: none; }
 .jr-erro-grade svg { width: 100%; height: auto; display: block; }
+.jr-erro-grade.com-plano { width: min(280px, 100%); background: #10142a; border: 1px solid rgba(255,255,255,.12); border-radius: 10px; }   /* 📐 PROMPT-128 */
+.jr-erro-grade.com-plano svg { max-height: calc(var(--jr-alt, 100dvh) * .4); }
 .jr-erro-linha { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .jr-erro-linha[hidden] { display: none; }
 .jr-erro-dica { flex: 1 1 160px; min-width: 0; font-family: 'Inter', sans-serif; font-size: calc(14px * var(--letra, 1)); color: #ffd27a; }
@@ -573,6 +575,7 @@ html.jr-deitado .jr-erro-resp b { font-size: calc(20px * var(--letra, 1)); }
 html.jr-deitado .jr-erro-passos { font-size: calc(16px * var(--letra, 1)); gap: 1px; }
 html.jr-deitado .jr-erro-enun { font-size: calc(13px * var(--letra, 1)); }
 html.jr-deitado .jr-erro-grade { width: min(140px, 100%); }
+html.jr-deitado .jr-erro-grade.com-plano { width: min(230px, 100%); }
 html.jr-deitado .jr-erro-rodape .jr-btn { min-height: 38px; padding: 4px 14px; }
 
 /* 📖 Relembre: cartão deitado, sem rolagem (acima da pergunta, da batalha e do cartão da insígnia) */
@@ -613,6 +616,49 @@ html.jr-deitado .jr-rel-exemplo { padding: 6px 10px; }
 html.jr-deitado .jr-rel-pet, html.jr-deitado .jr-rel-pet img, html.jr-deitado .jr-rel-moldura { width: 96px; }
 html.jr-deitado .jr-rel-moldura.com-busto { height: 96px; }
 @media (max-width: 480px) { .jr-rel-pet { display: none; } .jr-rel-regra { font-size: calc(16px * var(--letra, 1)); } }
+/* 📐 Relembre animado do mapa 12 (PROMPT-128): plano à esquerda (pet andando), falas · par (x laranja, y azul) · controles à direita */
+.jr-rel-plano, .jr-rel-anim { display: none; }
+.jr-rel-caixa.com-plano { max-width: 900px; height: min(560px, 100%); display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto; gap: 8px 16px; }
+.jr-rel-caixa.com-plano .jr-rel-plano { display: flex; grid-column: 1; grid-row: 1 / -1; min-height: 0; min-width: 0; align-items: center; justify-content: center;
+  background: #10142a; border: 1px solid rgba(255,255,255,.12); border-radius: 14px; }
+.jr-rel-plano svg { width: 100%; height: 100%; display: block; }
+.jr-rel-caixa.com-plano .jr-rel-topo { grid-column: 2; grid-row: 1; }
+.jr-rel-caixa.com-plano .jr-rel-corpo { display: none; }
+.jr-rel-caixa.com-plano .jr-rel-anim { display: flex; grid-column: 2; grid-row: 2; flex-direction: column; gap: 8px; min-height: 0; }
+.jr-rel-caixa.com-plano .jr-rel-rodape { grid-column: 2; grid-row: 3; }
+.jr-rel-fala { flex: 1; min-height: 0; overflow: auto; font-family: 'Inter', sans-serif; font-size: calc(17px * var(--letra, 1)); font-weight: 600; line-height: 1.4; color: #fff; }
+.jr-rel-fala p { margin: 0 0 8px; }
+.cx { color: var(--jr-laranja, #ff7b2e); font-weight: 800; } .cy { color: var(--jr-cyan, #00d4ff); font-weight: 800; }
+.jr-rel-par { font: 700 40px/1 'Rajdhani', sans-serif; letter-spacing: 1px; text-align: center; color: #fff; background: rgba(13,15,26,.7); border-radius: 12px;
+  padding: 10px 6px; font-variant-numeric: tabular-nums; }
+.jr-rel-par span { display: inline-block; min-width: 1.1em; transition: transform .2s; }
+.jr-rel-par .pisca { transform: scale(1.35); }
+.jr-rel-par .vazio { color: rgba(255,255,255,.3); }
+.jr-rel-legenda { display: flex; justify-content: center; align-items: center; gap: 14px; font: 600 13px 'Inter', sans-serif; color: #b9b3e0; }
+.jr-rel-pontos { display: flex; gap: 6px; }
+.jr-rel-pontos i { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,.2); }
+.jr-rel-pontos i.on { background: var(--jr-ouro, #ffd700); }
+.jr-rel-ctrl { display: flex; gap: 8px; }
+.jr-rel-ctrl .jr-btn { min-width: 0; padding: 8px 12px; }
+.jr-rel-caixa.com-plano .jr-rel-rodape .jr-btn { min-width: 110px; }
+html.jr-deitado .jr-rel-caixa.com-plano { height: 100%; padding: 8px 10px; gap: 6px 10px; border-radius: 14px; }
+html.jr-deitado .jr-rel-caixa.com-plano .jr-rel-topo img { width: 34px; height: 34px; }
+html.jr-deitado .jr-rel-caixa.com-plano .jr-rel-cab small { font-size: 10px; }
+html.jr-deitado .jr-rel-caixa.com-plano .jr-rel-cab b { font-size: 19px; }
+html.jr-deitado .jr-rel-anim { gap: 6px; }
+html.jr-deitado .jr-rel-fala { font-size: 13.5px; line-height: 1.35; }
+html.jr-deitado .jr-rel-fala p { margin-bottom: 5px; }
+html.jr-deitado .jr-rel-par { font-size: 26px; padding: 5px; }
+html.jr-deitado .jr-rel-legenda { font-size: 11px; gap: 10px; }
+html.jr-deitado .jr-rel-ctrl { gap: 6px; }
+html.jr-deitado .jr-rel-ctrl .jr-btn { font-size: 13px; padding: 5px 9px; white-space: nowrap; }
+html.jr-deitado .jr-rel-caixa.com-plano .jr-rel-rodape { gap: 6px; flex-wrap: nowrap; }
+html.jr-deitado .jr-rel-caixa.com-plano .jr-rel-check { font-size: 11px; }
+html.jr-deitado .jr-rel-caixa.com-plano .jr-rel-rodape .jr-btn { min-width: 80px; padding: 6px 12px; }
+@media (max-width: 700px) { html:not(.jr-deitado) .jr-rel-caixa.com-plano { grid-template-columns: 1fr; grid-template-rows: minmax(220px, 1fr) auto auto auto; height: 100%; }
+  html:not(.jr-deitado) .jr-rel-caixa.com-plano > * { grid-column: 1; grid-row: auto; } html:not(.jr-deitado) .jr-rel-par { font-size: 32px; } }
+@media (prefers-reduced-motion: reduce) { .jr-rel-par span { transition: none; } }
 /* botão 📖 no "Como resolver" e na revisão da batalha */
 .jr-btn-relembre { align-self: flex-start; font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 700; color: #fff; cursor: pointer;
   background: rgba(124,92,252,.35); border: 1px solid rgba(201,184,255,.5); border-radius: 999px; padding: 3px 10px; }
@@ -1153,6 +1199,14 @@ html.jr-deitado .jr-mp-botoes #mp-calado { font-size: 13px; padding: 4px 6px; }
 .jr-fala.quieto { opacity: 0; transition: opacity .2s; }
 .jr-alt.eliminada { opacity: .22 !important; filter: grayscale(1); text-decoration: line-through; }
 .jr-arena-adv { left: 80%; height: 65%; filter: drop-shadow(0 3px 2px rgba(0,0,0,.4)); }
+/* 📐 mapa 12 (PROMPT-128): o plano cartesiano pequeno no meio da arena, entre o pet e o adversário; a fala do adversário
+   sobe para o canto, em cima dele */
+.jr-perg-plano { position: absolute; left: 55%; top: 3%; bottom: 3%; width: 36%; transform: translateX(-50%); z-index: 1; display: flex; align-items: center; justify-content: center;
+  background: rgba(16,20,42,.94); border: 1px solid rgba(255,255,255,.14); border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.45); }
+.jr-perg-plano[hidden] { display: none; }
+.jr-perg-plano svg { width: 100%; height: 100%; display: block; }
+.jr-perg-arena.com-plano .jr-fala { right: 1%; top: 2%; max-width: 24%; font-size: calc(12px * var(--letra, 1)); padding: 6px 9px; }
+.jr-perg-arena.com-plano .jr-fala::after { display: none; }
 .jr-arena-sombra { position: absolute; bottom: 4.5%; height: 5%; transform: translateX(-50%); border-radius: 50%; pointer-events: none;
   background: radial-gradient(ellipse at center, rgba(0,0,0,.5) 0%, rgba(0,0,0,.2) 50%, rgba(0,0,0,0) 72%); }
 .jr-arena-sombra.eu { left: 17%; width: 16%; }
@@ -2817,6 +2871,22 @@ html.jr-deitado .lj-comprar { min-height: 32px; }
 .qe-pensa .qe-leg { font-size: clamp(13px, 2.6cqh + 6px, 16px); align-items: flex-start; min-height: 0; }
 .qe-pensa .qe-ctrl { margin-top: 0; flex-wrap: wrap; gap: 6px; }
 .qe-pensa .qe-mini { padding: 3px 8px; font-size: 13px; }
+/* 📐 mapa 12 (PROMPT-128): o "Pensa assim" com o plano (o palco vira o plano) e o "Tente você" de tocar no plano */
+.qe-pensa .qe-palco.qe-p-plano { max-height: none; min-height: 140px; background: #10142a; display: flex; align-items: center; justify-content: center; }
+.qe-palco.qe-p-plano::after { display: none; }
+.qe-pl-svg { width: 100%; height: 100%; display: block; }
+.qe-tela.qe-s-tente:has(.qe-tp) { display: flex; flex-direction: column; overflow: hidden; }
+.qe-s-tente .qe-selo { align-self: flex-start; flex: none; }
+.qe-tp { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 12px; margin-top: 6px; }
+.qe-tp-plano { min-height: 0; min-width: 0; display: flex; align-items: center; justify-content: center; background: #10142a; border: 1px solid var(--jr-borda); border-radius: 14px; }
+.qe-tp-plano svg { width: 100%; height: 100%; display: block; cursor: pointer; touch-action: manipulation; }
+.qe-tp-lado { min-height: 0; display: flex; flex-direction: column; gap: 8px; overflow: auto; }
+.qe-tp-lado h2 { margin: 0; font-size: clamp(16px, 2.4cqw, 22px); color: var(--jr-ouro); }
+.qe-tp-fala { font-size: clamp(13px, 1.9cqw, 16px); font-weight: 600; line-height: 1.4; }
+.qe-tp-nota { margin: 6px 0 0; font-size: .85em; color: #b9b3e0; }
+.qe-tp-resp { min-height: 1.4em; font-size: clamp(13px, 1.8cqw, 15px); font-weight: 700; line-height: 1.35; }
+.qe-tp-fogo { font: 700 clamp(18px, 3cqw, 26px)/1 'Rajdhani', sans-serif; text-align: center; background: rgba(13,15,26,.7); border-radius: 12px; padding: 6px; }
+.qe-tp-lado .qe-outra { align-self: flex-start; margin-top: auto; }
 .qe-pensa p.qe-porque { margin: 0; padding: 6px 8px; font-size: clamp(12px, 2.4cqh + 5px, 14px); line-height: 1.35; }
 @container qe (max-width: 560px) { .qe-pensa { grid-template-columns: 1fr; } .qe-pensa .qe-palco { min-height: 80px; } }
 /* ✏️ exemplos */

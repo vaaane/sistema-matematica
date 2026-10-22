@@ -4,7 +4,10 @@
 // uma seção por vez. Textos do JSON: **negrito**, [[destaque laranja]], {{verde}} — o resto é escapado.
 // Sem prêmio: o "Tente você" é só treino.
 // Animações do "Pensa assim": fila (PROMPT-90) · caixas, casas e sapo (PROMPT-113), todas com o mesmo ritmo, legendas
-// numeradas e controles; com prefers-reduced-motion, só a etapa final.
+// numeradas e controles; com prefers-reduced-motion, só a etapa final. plano (PROMPT-128, mapa 12): o pet anda no plano
+// cartesiano (plano.js), um exemplo depois do outro. "Tente você" do mapa 12 (tente_plano): tocar no ponto (alvos) ou
+// tocar onde o pet para (perguntas), no lugar da múltipla escolha.
+import { criarPlano, faixaPara, pontosDoCaminho, par, fmt, textoMov, CORES_PLANO as COR } from './plano.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -57,7 +60,7 @@ function desenharGinasio() {
   $('qe-embreve').hidden = !!d;
   if (!d) return;
   qe.sec = 'regra'; qe.vistas = new Set(); qe.ex = 0; qe.tente = null;
-  $('qe-menu').innerHTML = SECOES.filter(([s]) => d[s]).map(([s, ic, nome, cor]) =>
+  $('qe-menu').innerHTML = SECOES.filter(([s]) => d[s] || (s === 'tente' && d.tente_plano)).map(([s, ic, nome, cor]) =>
     `<button class="qe-mi" data-qe-s="${s}" style="--c:var(--jr-${cor})" title="${nome}"><span class="qe-ic">${ic}</span><span class="qe-mn">${nome}</span></button>`).join('');
   irSecao(qe.sec);
 }
@@ -99,6 +102,8 @@ function irSecao(s) {
       <div class="qe-caminhos"><div class="qe-cam errado"><span class="qe-t">❌ NA ORDEM DE LEITURA</span><span class="qe-v qe-riscado">${marcar(a.errado)}</span></div>
       <div class="qe-cam certo"><span class="qe-t">✅ COM A PRIORIDADE</span><span class="qe-v">${marcar(a.certo)}</span></div></div>
       ${a.nota ? `<p class="qe-nota">${marcar(a.nota)}</p>` : ''}`;
+  } else if (s === 'tente' && d.tente_plano) {
+    abrirTentePlano(selo, d.tente_plano);
   } else if (s === 'tente') {
     tela.innerHTML = `${selo}<div class="qe-grande" id="qe-tq"></div><div class="qe-opcoes" id="qe-opcoes"></div><div class="qe-resp" id="qe-resp"></div>`;
     sortearTente();
@@ -360,7 +365,114 @@ function iniciarSapo(a) {
   });
   comecarAnim(passos, a.legendas || []);
 }
-const ANIMACOES = { fila: (a) => iniciarFila(a), caixas: iniciarCaixas, casas: iniciarCasas, sapo: iniciarSapo };
+// 📐 plano (PROMPT-128): modo "monta" (o pet sai da origem: x, depois y) ou "andar" (a cada casa, só um número muda);
+// a legenda é a última fala; no fim de um exemplo, espera e passa para o próximo
+function iniciarPlano(a) {
+  const palco = $('qe-palco');
+  palco.innerHTML = '<svg class="qe-pl-svg" aria-label="Plano cartesiano"></svg>';
+  const p = criarPlano(palco.querySelector('svg'));
+  qe.anim = { plano: p, a, i: 0, timer: 0 };
+  rodarPlano();
+}
+function rodarPlano() {
+  const an = qe?.anim;
+  if (!an?.plano) return;
+  clearTimeout(an.timer);
+  const ex = an.a.exemplos[an.i], monta = an.a.modo === 'monta';
+  $('qe-pnum').textContent = an.i + 1;
+  $('qe-pts').innerHTML = an.a.exemplos.map((_, k) => `<i class="${k <= an.i ? 'on' : ''}"></i>`).join('');
+  $('qe-pleg').innerHTML = '';
+  an.plano.desenhar({ ...faixaPara(monta ? [ex] : pontosDoCaminho(ex.de, ex.mov)), texto: 1.15 });
+  const fala = { diz: (h) => { if (qe?.anim === an) $('qe-pleg').innerHTML = h; } };
+  const fim = monta ? an.plano.montarPonto(ex, fala) : an.plano.andarDe(ex.de, ex.mov, fala);
+  fim.then(() => {
+    if (qe?.anim !== an) return;
+    an.timer = setTimeout(() => { if (qe?.anim === an) { an.i = (an.i + 1) % an.a.exemplos.length; rodarPlano(); } }, ESPERA_FIM);
+  }).catch(() => {});   // cancelada: outra começou
+}
+
+// 🎯 Tente você no plano (PROMPT-128): alvos = "Toque no ponto (x, y)" (Forte Pirata); perguntas = "Saindo de …, ando …:
+// toque onde eu paro" (Observatório). Sem prêmio; 🔥 conta os acertos seguidos.
+function abrirTentePlano(selo, tp) {
+  const alvos = !!tp.alvos?.length, lista = alvos ? tp.alvos : tp.perguntas || [];
+  if (!lista.length) return;
+  // uma faixa só para todas (o tamanho do plano não entrega a resposta), com folga só em cima (o pet e a bandeira):
+  // as casas maiores para tocar
+  const pts = [[0, 0], ...(alvos ? lista : lista.flatMap(q => pontosDoCaminho(q.de, q.mov)))], xs = pts.map(q => q[0]), ys = pts.map(q => q[1]);
+  const faixa = { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) + 1 };
+  $('qe-tela').innerHTML = `${selo}<div class="qe-tp">
+    <div class="qe-tp-plano"><svg id="qe-tp-svg" aria-label="Plano cartesiano"></svg></div>
+    <div class="qe-tp-lado"><h2 id="qe-tp-tit"></h2><div class="qe-tp-fala" id="qe-tp-fala"></div><div class="qe-tp-resp" id="qe-tp-resp"></div>
+      <div class="qe-tp-fogo" id="qe-tp-fogo"></div><button class="qe-outra" data-qe-tp-outra>${alvos ? 'Outro ponto' : 'Outra'} ▶</button></div></div>`;
+  const plano = criarPlano($('qe-tp-svg'));
+  const ant = qe.tente;
+  qe.tente = { plano, tp, alvos, lista, faixa, i: ant?.plano ? ant.i : -1, seguidos: ant?.plano ? ant.seguidos : 0 };
+  qe.anim = { plano };   // pararFila cancela a animação
+  proximoTentePlano();
+}
+function proximoTentePlano() {
+  const t = qe?.tente;
+  if (!t?.plano) return;
+  t.i = (t.i + 1) % t.lista.length;
+  t.feito = false;
+  const p = t.plano, item = t.lista[t.i];
+  p.desenhar({ ...t.faixa, texto: 1.3 });
+  $('qe-tp-resp').innerHTML = '';
+  if (t.alvos) {
+    const [X, Y] = item;
+    p.petEm(0, 0); p.anelOrigem();
+    $('qe-tp-tit').innerHTML = `Toque no ponto ${esc(par(X, Y))}`;
+    $('qe-tp-fala').innerHTML = `Toque no <b>cruzamento</b> das linhas onde fica o ponto <b>(<span class="cx">${fmt(X)}</span>, <span class="cy">${fmt(Y)}</span>)</b>.<p class="qe-tp-nota">Lembre: <span class="cx">x</span> é o lado, <span class="cy">y</span> é cima ou baixo.</p>`;
+  } else {
+    p.petEm(...item.de); p.ponto(...item.de, COR.verde, 8); p.rotulo(...item.de, 'partida', COR.verde, 28);
+    $('qe-tp-tit').innerHTML = esc(t.tp.titulo || 'Onde eu paro?');
+    $('qe-tp-fala').innerHTML = `Saindo de <b>${esc(par(...item.de))}</b>, ${textoMov(item.mov)}. <b>Toque onde eu paro.</b>`;
+  }
+  fogo();
+}
+const fogo = () => { const n = qe.tente.seguidos; $('qe-tp-fogo').textContent = `🔥 ${n} seguido${n === 1 ? '' : 's'}`; };
+// o caminho de (x0, y0) até (X, Y): primeiro o x, depois o y
+const movAte = ([x0, y0], [X, Y]) => [[Math.sign(X - x0), 0, Math.abs(X - x0)], [0, Math.sign(Y - y0), Math.abs(Y - y0)]].filter(m => m[2]);
+async function tocarTentePlano(e) {
+  const t = qe?.tente;
+  if (!t?.plano || t.feito) return;
+  const c = t.plano.casaDoToque(e);
+  if (!c) return;
+  const [x, y] = c, p = t.plano, item = t.lista[t.i], resp = $('qe-tp-resp');
+  if (t.alvos) {
+    const [X, Y] = item;
+    if (x === X && y === Y) {
+      t.feito = true; t.seguidos++; fogo();
+      resp.className = 'qe-tp-resp qe-ok';
+      resp.innerHTML = `Acertou! ${esc(par(X, Y))}: ${X ? `${Math.abs(X)} para a ${X > 0 ? 'direita' : 'esquerda'}` : 'não anda para o lado'} e ${Y ? `${Math.abs(Y)} para ${Y > 0 ? 'cima' : 'baixo'}` : 'não sobe'}.`;
+      try { await p.mostrarCaminho([0, 0], movAte([0, 0], [X, Y]), { rapido: true }); } catch (_) { return; }
+      if (qe?.tente === t) setTimeout(() => { if (qe?.tente === t && t.feito) proximoTentePlano(); }, 1400);
+    } else {
+      t.seguidos = 0; fogo();
+      p.xis(x, y); p.rotulo(x, y, par(x, y), COR.verm, -28);
+      const dica = x === Y && y === X && X !== Y ? 'Você trocou a ordem: o x (lado) vem primeiro!'
+        : x !== X ? `O x está errado: o ${fmt(X)} manda andar ${Math.abs(X)} para a ${X > 0 ? 'direita' : 'esquerda'}${X === 0 ? ' (0 = não anda)' : ''}.`
+        : `O x está certo, mas o y não: ${fmt(Y)} = ${Math.abs(Y)} para ${Y > 0 ? 'cima' : 'baixo'}.`;
+      resp.className = 'qe-tp-resp qe-erro';
+      resp.innerHTML = `Você tocou em <b>${esc(par(x, y))}</b>. ${esc(dica)} Tente de novo.`;
+    }
+    return;
+  }
+  // perguntas: marca o toque e o pet faz o caminho para conferir
+  t.feito = true;
+  const fimX = item.de[0] + item.mov.reduce((s, m) => s + m[0] * m[2], 0), fimY = item.de[1] + item.mov.reduce((s, m) => s + m[1] * m[2], 0);
+  const certo = x === fimX && y === fimY;
+  if (!certo) { p.xis(x, y); p.rotulo(x, y, par(x, y), COR.verm, -28); }
+  t.seguidos = certo ? t.seguidos + 1 : 0; fogo();
+  resp.className = 'qe-tp-resp';
+  resp.innerHTML = 'Vamos conferir…';
+  try { await p.mostrarCaminho(item.de, item.mov, { rapido: true }); } catch (_) { return; }
+  if (qe?.tente !== t) return;
+  resp.className = `qe-tp-resp ${certo ? 'qe-ok' : 'qe-erro'}`;
+  resp.innerHTML = certo ? `Isso! Parei em <b>${esc(par(fimX, fimY))}</b>. 🎉` : `Eu parei em <b>${esc(par(fimX, fimY))}</b>, não em ${esc(par(x, y))}. Lado muda o x; cima/baixo muda o y.`;
+}
+
+const ANIMACOES = { fila: (a) => iniciarFila(a), caixas: iniciarCaixas, casas: iniciarCasas, sapo: iniciarSapo, plano: iniciarPlano };
 
 function passoFila() {
   const an = qe.anim;
@@ -379,10 +491,11 @@ function rodarFila() {
   if (an.pausado) return;
   an.timer = setTimeout(() => { an.i = (an.i + 1) % an.passos.length; rodarFila(); }, an.i === an.passos.length - 1 ? ESPERA_FIM : ESPERA);
 }
-function pararFila() { if (qe?.anim) { clearTimeout(qe.anim.timer); for (const t of qe.anim.sub || []) clearTimeout(t); qe.anim = null; } }
+function pararFila() { if (qe?.anim) { clearTimeout(qe.anim.timer); for (const t of qe.anim.sub || []) clearTimeout(t); qe.anim.plano?.cancelar(); qe.anim = null; } }
 function pausarFila(b) {
   const an = qe?.anim;
   if (!an) return;
+  if (an.plano) { b.textContent = an.plano.pausar() ? '▶ continuar' : '⏸ pausar'; return; }
   an.pausado = !an.pausado;
   b.textContent = an.pausado ? '▶ continuar' : '⏸ pausar';
   if (an.pausado) clearTimeout(an.timer);
@@ -410,10 +523,14 @@ export function ligarQuadroEstudos(aoFechar) {
     const op = t.closest('[data-qe-v]');
     if (op) { responderTente(op); return; }
     if (t.closest('[data-qe-outra]')) { sortearTente(); return; }
+    if (t.closest('[data-qe-tp-outra]')) { proximoTentePlano(); return; }
+    if (t.closest('#qe-tp-svg')) { tocarTentePlano(e); return; }
     if (t.closest('[data-qe-pausa]')) { pausarFila(t.closest('[data-qe-pausa]')); return; }
     if (t.closest('[data-qe-inicio]')) {
       const an = qe.anim; if (!an) return;
-      an.i = 0; an.pausado = false; caixa.querySelector('[data-qe-pausa]').textContent = '⏸ pausar'; rodarFila();
+      caixa.querySelector('[data-qe-pausa]').textContent = '⏸ pausar';
+      if (an.plano) { an.i = 0; rodarPlano(); return; }
+      an.i = 0; an.pausado = false; rodarFila();
     }
   });
   window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && qe) { e.stopPropagation(); fechar(); } });
