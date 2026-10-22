@@ -57,7 +57,7 @@
     {"id": "vitrine", "nome": "Vitrine", "emoji": "🔲", "tipo": "chao", "largura": 130, "vistas": ["d", "f", "l"], "cat": "museu", "conteudo": null, "cor": null, "limite": 4},
     {"id": "totem_info", "nome": "Totem de texto", "emoji": "🪧", "tipo": "chao", "largura": 70, "vistas": ["d", "f"], "cat": "museu", "conteudo": "texto", "cor": "madeira", "limite": 6},
     {"id": "pulpito", "nome": "Púlpito com livro", "emoji": "📖", "tipo": "chao", "largura": 80, "vistas": ["d", "f", "l"], "cat": "museu", "conteudo": "texto", "cor": "madeira", "limite": 3},
-    {"id": "cordao", "nome": "Cordão de museu", "emoji": "🎗️", "tipo": "chao", "largura": 160, "vistas": ["f"], "cat": "museu", "conteudo": null, "cor": null, "limite": 4},
+    {"id": "cordao", "nome": "Cordão de museu", "emoji": "🎗️", "tipo": "chao", "largura": 160, "vistas": ["f", "l"], "cat": "museu", "conteudo": null, "cor": null, "limite": 4},
     {"id": "banco_museu", "nome": "Banco", "emoji": "🪑", "tipo": "chao", "largura": 150, "vistas": ["d", "l"], "cat": "museu", "conteudo": null, "cor": "madeira", "limite": 3},
     {"id": "trilho_luz", "nome": "Trilho de luz", "emoji": "💡", "tipo": "parede", "largura": 220, "vistas": ["f"], "cat": "museu", "conteudo": null, "cor": null, "limite": 4},
     {"id": "letreiro", "nome": "Letreiro da sala", "emoji": "🏷️", "tipo": "parede", "largura": 260, "vistas": ["f"], "cat": "museu", "conteudo": "nome_sala", "cor": "madeira", "limite": 1},
