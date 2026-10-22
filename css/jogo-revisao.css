@@ -3426,6 +3426,10 @@ html.jr-deitado .venc-corpo { grid-template-columns: repeat(3, minmax(0, 1fr)); 
 #tela-cena.ex-editando #cena-vp { touch-action: none; }
 .ex-movel.sel { filter: drop-shadow(0 0 3px #ffd700) drop-shadow(0 0 8px rgba(255,215,0,.8)); }
 .ex-movel.ex-mexendo { filter: drop-shadow(0 0 2px #00d4ff) drop-shadow(0 0 6px rgba(0,212,255,.9)); }
+/* emendar os cordões: brilho dourado rápido no poste que grudou */
+.ex-grude { position: absolute; z-index: 9999; width: 44px; height: 22px; margin: -11px 0 0 -22px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255,236,140,.95), rgba(255,215,0,.55) 55%, rgba(255,215,0,0)); animation: ex-grude .65s ease-out forwards; }
+@keyframes ex-grude { from { transform: scale(.4); opacity: 1; } to { transform: scale(1.8); opacity: 0; } }
 .ex-movel > .ex-img { position: relative; z-index: 1; }
 .ex-fotos { position: absolute; inset: 0; }
 .ex-fotos.espelho, .ex-fotos.espelho .ex-foto, .ex-fotos.espelho .ex-area > span { transform: scaleX(-1); }

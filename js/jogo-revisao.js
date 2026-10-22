@@ -7788,6 +7788,7 @@ function girarExpo() {
   if (!it) return;
   if (it.vistas.length > 1) m.vista = it.vistas[(it.vistas.indexOf(m.vista) + 1) % it.vistas.length]; else m.espelho = !m.espelho;
   prenderExpo(m, m.x, m.y);
+  regrudarExpo(ex.sel);
   mudouItemExpo(ex.sel);
   tocar('clique');
 }
@@ -7795,6 +7796,7 @@ function espelharExpo() {
   const m = ex.itens.get(ex.sel);
   if (!m) return;
   m.espelho = !m.espelho;
+  regrudarExpo(ex.sel);
   mudouItemExpo(ex.sel);
   tocar('clique');
 }
@@ -7842,7 +7844,9 @@ function arrastarExpo(e, id) {
   try { el.setPointerCapture(e.pointerId); } catch (_) {}
   $('ex-ferr').hidden = true;
   const p0 = telaParaImagem(e.clientX, e.clientY);
-  ex.arr = { id, off: [m.x - p0.x, m.y - p0.y], ini: [e.clientX, e.clientY], cx: e.clientX, cy: e.clientY, moveu: false };
+  const g0 = grudeMaisPerto(id);
+  ex.arr = { id, off: [m.x - p0.x, m.y - p0.y], ini: [e.clientX, e.clientY], cx: e.clientX, cy: e.clientY, moveu: false,
+    grude: g0 && g0.d < 0.5 ? `${Math.round(g0.q[0])},${Math.round(g0.q[1])}` : null };
   const mover = (ev) => {
     const a = ex?.arr;
     if (!a || a.id !== id) return;
@@ -7872,7 +7876,49 @@ function seguirDedoExpo() {
   if (!m || !a.moveu) return;
   const q = telaParaImagem(a.cx, a.cy);
   prenderExpo(m, q.x + a.off[0], q.y + a.off[1]);
+  const g = regrudarExpo(a.id, a.grude);
+  a.grude = g;
   desenharItemExpo(a.id);
+}
+// ── emendar os cordões (PROMPT-123) ──
+// a base de cada poste na cena (catálogo "postes": fração da imagem por vista); [] para quem não tem postes
+function postesExpo(m) {
+  const p = catExpo(m.mv)?.postes?.[m.vista];
+  if (!Array.isArray(p)) return [];
+  const [w, h] = tamExpo(m);
+  return p.map(([px, py]) => [m.x - w / 2 + w * (m.espelho ? 1 - px : px), m.y - h + h * py]);
+}
+// o par de postes mais perto (deste item com os dos outros), até 30 px da cena
+function grudeMaisPerto(id) {
+  const m = ex.itens.get(id), meus = m ? postesExpo(m) : [], lim = 30 * escalaExpo();
+  let melhor = null;
+  if (!meus.length) return null;
+  for (const [oid, o] of ex.itens) {
+    if (oid === id) continue;
+    for (const q of postesExpo(o)) for (const p of meus) {
+      const d = Math.hypot(q[0] - p[0], q[1] - p[1]);
+      if (d < lim && (!melhor || d < melhor.d)) melhor = { d, dx: q[0] - p[0], dy: q[1] - p[1], q };
+    }
+  }
+  return melhor;
+}
+// desloca o item para o poste coincidir; se prenderExpo o tirar do lugar, fica como ele deixou.
+// devolve a chave do poste grudado (ou null); brilha e faz clique só quando gruda num poste novo
+function regrudarExpo(id, antes = null) {
+  const m = ex.itens.get(id), g = m && grudeMaisPerto(id);
+  if (!g) return null;
+  prenderExpo(m, m.x + g.dx, m.y + g.dy);
+  if (!postesExpo(m).some(p => Math.hypot(p[0] - g.q[0], p[1] - g.q[1]) < 0.5)) return null;
+  const chave = `${Math.round(g.q[0])},${Math.round(g.q[1])}`;
+  if (chave !== antes) { tocar('clique'); brilhoGrudeExpo(g.q); }
+  return chave;
+}
+function brilhoGrudeExpo([x, y]) {
+  const b = document.createElement('div');
+  b.className = 'ex-grude';
+  Object.assign(b.style, { left: x + 'px', top: y + 'px' });
+  $('cena-atores').appendChild(b);
+  setTimeout(() => b.remove(), 650);
 }
 // a cada quadro na sala: perto da borda, arrastando, a câmera anda; o contorno de quem está mexendo some sozinho
 function atualizarSalaExpo(dt) {
