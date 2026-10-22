@@ -3466,7 +3466,6 @@ html.jr-deitado .venc-corpo { grid-template-columns: repeat(3, minmax(0, 1fr)); 
 .ex-abas::-webkit-scrollbar { display: none; }
 .ex-abas button { flex: none; padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.2); background: rgba(13,15,26,.7); color: #c9cde0; font: 700 12px 'Inter', sans-serif; cursor: pointer; }
 .ex-abas button.ativa { color: #fff; border-color: var(--jr-roxo); background: rgba(124,92,252,.35); }
-.ex-cat.cheio { opacity: .45; }
 .ex-cont-caixa { width: min(560px, 100%); }
 .ex-cont-corpo { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
 .ex-campo { display: flex; flex-direction: column; gap: 4px; font: 700 13px 'Inter', sans-serif; color: #fff; }

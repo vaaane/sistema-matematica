@@ -7706,17 +7706,16 @@ const qtdExpo = (mv) => [...ex.itens.values()].filter(m => m.mv === mv).length;
 function renderCatalogoExpo() {
   $('ex-abas').innerHTML = (EXPO.abas || []).map(a => `<button data-ex-aba="${esc(a.id)}"${a.id === ex.cat ? ' class="ativa"' : ''}>${esc(a.nome)}</button>`).join('');
   $('ex-catalogo').innerHTML = EXPO.moveis.filter(it => it.cat === ex.cat).map(it => {
-    const n = qtdExpo(it.id), lim = Number(it.limite) || 1;
-    return `<button class="cs-guardado ex-cat${n >= lim ? ' cheio' : ''}" data-ex-mv="${esc(it.id)}" title="${esc(it.nome)}">
-      <img src="${srcExpo(it.id, it.vistas[0])}" alt="" draggable="false" loading="lazy"/><b>${n}/${lim}</b><span>${esc(it.nome)}</span></button>`;
+    const n = qtdExpo(it.id);   // sem limite por móvel (PROMPT-124): só quantos já estão na sala
+    return `<button class="cs-guardado ex-cat" data-ex-mv="${esc(it.id)}" title="${esc(it.nome)}">
+      <img src="${srcExpo(it.id, it.vistas[0])}" alt="" draggable="false" loading="lazy"/>${n ? `<b>${n}</b>` : ''}<span>${esc(it.nome)}</span></button>`;
   }).join('');
-  $('ex-uso').textContent = `${ex.itens.size}/${limiteExpo('itens', 40)} itens · ${fotosNaSala()}/${limiteExpo('fotos', 12)} fotos`;
+  $('ex-uso').textContent = `${ex.itens.size}/${limiteExpo('itens', 100)} itens · ${fotosNaSala()}/${limiteExpo('fotos', 12)} fotos`;
 }
 async function colocarItemExpo(mv) {
   const it = catExpo(mv);
   if (!ex?.editando || !it) return;
-  if (ex.itens.size >= limiteExpo('itens', 40)) { avisoExpo(`Esta sala já tem o máximo de itens (${limiteExpo('itens', 40)}).`); return; }
-  if (qtdExpo(mv) >= (Number(it.limite) || 1)) { avisoExpo(`Esta sala já tem o máximo de ${it.nome.toLowerCase()} (${it.limite}).`); return; }
+  if (ex.itens.size >= limiteExpo('itens', 100)) { avisoExpo(`Esta sala já tem o máximo de itens (${limiteExpo('itens', 100)}).`); return; }
   await medirItemExpo(it);
   if (!ex?.editando) return;
   // nasce no centro da parte visível da sala
