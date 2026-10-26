@@ -83,6 +83,7 @@
     .pbar-fill.orange{background:linear-gradient(90deg,#c98900,#f0a500)}
     .pbar-fill.purple{background:linear-gradient(90deg,var(--purple-dark),var(--purple))}
     .pbar-fill.cyan{background:linear-gradient(90deg,#0097c4,#00d4ff)}
+    .pbar-fill.gold{background:linear-gradient(90deg,#c9a200,var(--gold))}
     .pbar-label{font-size:10.5px;font-weight:700;white-space:nowrap;color:var(--text-muted)}
     .prog-right{text-align:right;flex-shrink:0;min-width:60px}
     .pts{font-size:16px;font-weight:800}
@@ -201,7 +202,7 @@ import { requireAluno, renderSidebarAluno, clearSession, getSession } from "/js/
 import {
   CAMPOS_NOTA, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, BONUS_CADERNO_VISTOS, BONUS_FIXO, EXTRA_RANK_ATIV4, EXTRA_NIVEL_PERFIL,
   BIMESTRE, setBimestre, camposAtivos, bonusAtivo, bonusConfig, fmtNota, mensagemPorNota, montarBoletim, notasLiberadas, campoPendente, campoDiferido,
-  bonusCadernoVistosAtivo, campoAuto,
+  bonusCadernoVistosAtivo, campoAuto, CADERNO_COMPLETO, EXTRA_REVISAO, cadernoCompletoAtivo,
 } from "/js/notas.js";
 import { BIMESTRES, bimestreAtual } from "/js/constants.js";
 import { montarSeletorBimestre } from "/js/bimestre-seletor.js";
@@ -238,7 +239,8 @@ const IC = {
   triangulo:`<svg viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/></svg>`,
   mao:     `<svg viewBox="0 0 24 24"><path d="M13 2a1.5 1.5 0 0 0-1.5 1.5V10h-1V4.5a1.5 1.5 0 0 0-3 0V10h-1V6.5a1.5 1.5 0 0 0-3 0V14a8 8 0 0 0 8 8 6 6 0 0 0 6-6V8.5a1.5 1.5 0 0 0-3 0V10h-1V3.5A1.5 1.5 0 0 0 13 2z"/></svg>`,
 };
-const ICON_ATIV = { provaMulti:IC.prova, projeto:IC.lampada, caderno:IC.livro, ativ4:IC.formas, triangulos:IC.triangulo, participacao:IC.mao, equacoes:IC.prova, cadernoVistos:IC.livro, razaoProp:IC.prova, conselheiro:IC.mao, pd:IC.formas };
+const ICON_ATIV = { provaMulti:IC.prova, projeto:IC.lampada, caderno:IC.livro, ativ4:IC.formas, triangulos:IC.triangulo, participacao:IC.mao, equacoes:IC.prova, cadernoVistos:IC.livro, razaoProp:IC.prova, conselheiro:IC.mao, pd:IC.formas,
+                    cadernoB4:IC.livro, comportamento:IC.mao, consciencia:IC.lampada };
 const ICON_EXTRA = { t150:IC.grid, t300:IC.grid, tneg50:IC.negativo, tneg150:IC.negativo, esc100:IC.estrela, esc200:IC.estrela,
                      t50:IC.grid, t100:IC.grid, t150b:IC.grid, tneg50b:IC.negativo, tneg100:IC.negativo, tneg150b:IC.negativo, esc50:IC.estrela, esc100b:IC.estrela };
 
@@ -272,12 +274,14 @@ function blocoAtividadesIcones(boletim, encerrado) {
       v = naoPart ? 0 : (parseFloat(raw)||0);
       done = !naoPart;
       valBig = naoPart ? "0,0" : fmtNota(v);
-      desc = naoPart ? (c.key==="cadernoVistos" ? "Aguardando vistos" : "não participou")
+      desc = naoPart ? ((c.key==="cadernoVistos" || c.key==="cadernoB4") ? "Aguardando vistos" : "não participou")
                      : c.key==="ativ4"         ? (ativ4Info && ativ4Info.posicao>0 ? `Participou · ${ativ4Info.posicao}º no geral` : "Você participou")
                      : c.key==="equacoes"      ? "Nota da atividade"
                      : c.key==="razaoProp"     ? "Nota da atividade"
                      : c.key==="cadernoVistos" ? "Proporção de vistos"
+                     : c.key==="cadernoB4"     ? "Proporção de vistos"
                      : c.key==="conselheiro"   ? "Base 1,0 · −0,3 por ocorrência"
+                     : c.key==="comportamento" ? "Base 2,0 · ±0,3 por ocorrência"
                      :                            "Melhor nota na fase 1";
     } else {
       const foi = lancados ? !!lancados[c.key] : true;
@@ -285,6 +289,7 @@ function blocoAtividadesIcones(boletim, encerrado) {
       done = foi;
       valBig = foi ? fmtNota(v) : "—";
       desc = foi ? "Nota lançada" : "Aguardando lançamento";
+      if (c.key === "consciencia") desc = `Trabalho da Consciência Negra · ${foi ? "nota lançada" : "aguardando lançamento"}`;
     }
     return `<div class="prog-row ${done?"done":"locked"}">
       <div class="prog-icon ${done?"green":"grey"}">${ICON_ATIV[c.key]||IC.prova}</div>
@@ -364,6 +369,9 @@ function blocoExtrasIcones(boletim, encerrado) {
     <div class="prog-right"><div class="pts ${bcAtivo?"green":"muted"}">+${fmtNota(BONUS_CADERNO_VISTOS.valor)}</div><div class="pts-sub">${bcAtivo?"conquistado":"não atingido"}</div></div>
   </div>`;
 
+  // 4º bim em diante: um cartão por extra (Caderno completo, Tabuada, Negativa, Escalada, Revisão)
+  if (cfg.cadernoCompleto || cfg.revisao) return blocoExtrasB4(boletim, encerrado);
+
   const autoRows = EXTRAS_AUTO
     .filter(ex => cfg.autoExtras == null || cfg.autoExtras.includes(ex.key))
     .map(rowTabuada).join("");
@@ -382,6 +390,64 @@ function blocoExtrasIcones(boletim, encerrado) {
     <div class="sec-label">Jogos e bônus</div>
     <div class="prog-list">${fixoRowVis}${autoRows}${perfilRowVis}${rankRowVis}</div>
     ${secCaderno}`;
+}
+
+// ── Extras do 4º bim: um cartão por extra, com o que já ganhou e o que falta ──
+function blocoExtrasB4(boletim, encerrado) {
+  const { auto, progresso } = boletim;
+  const cfg = bonusConfig() || {};
+  const vale = k => cfg.autoExtras == null || cfg.autoExtras.includes(k);
+  const card = ({ on, cor, icon, titulo, desc, pct, barLabel, pts, sub }) => `<div class="prog-row ${on?"done":"partial"}">
+      <div class="prog-icon ${on?"green":cor}">${icon}</div>
+      <div class="prog-body"><div class="prog-title">${titulo}</div>
+        <div class="prog-desc">${desc}</div>
+        ${pct != null ? `<div class="pbar-wrap"><div class="pbar-bg"><div class="pbar-fill ${on?"green":cor}" style="width:${pct}%"></div></div>
+        <span class="pbar-label" style="${on?"color:var(--green)":""}">${barLabel}</span></div>` : ""}
+      </div>
+      <div class="prog-right"><div class="pts ${on?"green":"muted"}">${pts}</div><div class="pts-sub">${sub}</div></div>
+    </div>`;
+
+  // Jogo com marcos acumulados (ex.: Tabuada 50 → +1,0 · 100 → +1,5 · 150 → +2,0)
+  function jogo(titulo, chaves, cor, icon) {
+    const marcos = EXTRAS_AUTO.filter(e => chaves.includes(e.key) && vale(e.key));
+    if (!marcos.length) return "";
+    const campo = marcos[0].campo;
+    const nivel = progresso[campo] || 0;
+    let acum = 0;
+    const acumulado = marcos.map(m => ({ max: m.max, total: (acum += m.valor), on: !!auto[m.key] }));
+    const ganho = acumulado.filter(m => m.on).reduce((s, m) => Math.max(s, m.total), 0);
+    const prox  = acumulado.find(m => !m.on);
+    const topo  = acumulado[acumulado.length - 1];
+    const desc  = !prox ? `Meta máxima batida! Nível ${nivel}`
+                : encerrado ? `Chegou ao nível ${nivel} · próximo seria nível ${prox.max} → +${fmt(prox.total)}`
+                : `+${fmt(ganho)} · próximo: nível ${prox.max} → +${fmt(prox.total)}`;
+    return card({ on: ganho > 0, cor, icon, titulo, desc,
+      pct: Math.min(100, Math.round(nivel / topo.max * 100)), barLabel: `${nivel}/${topo.max}${!prox ? " ✓" : ""}`,
+      pts: `+${fmt(ganho)}`, sub: `de +${fmt(topo.total)}` });
+  }
+
+  const pct = progresso.pctCaderno;
+  const ccOn = cadernoCompletoAtivo(pct);
+  const cadCompl = !cfg.cadernoCompleto ? "" : card({ on: ccOn, cor: "purple", icon: IC.livro, titulo: CADERNO_COMPLETO.label,
+    desc: pct == null ? `Calculado quando houver vistos do caderno (precisa ${CADERNO_COMPLETO.limiarPct}%)`
+        : ccOn ? `Conquistado! ${pct}% dos vistos` : `${pct}% dos vistos · precisa ${CADERNO_COMPLETO.limiarPct}%`,
+    pct: pct == null ? null : Math.min(100, Math.round(pct / CADERNO_COMPLETO.limiarPct * 100)),
+    barLabel: pct == null ? "" : `${pct}%/${CADERNO_COMPLETO.limiarPct}%${ccOn ? " ✓" : ""}`,
+    pts: `+${fmt(CADERNO_COMPLETO.valor)}`, sub: ccOn ? "conquistado" : (encerrado ? "não atingido" : "possível") });
+
+  const nr = progresso.notaRevisao || 0;
+  const revisao = !cfg.revisao ? "" : card({ on: nr > 0, cor: "gold", icon: IC.trofeu, titulo: EXTRA_REVISAO.label,
+    desc: `Revisão: ${fmt(nr)} · a nota do jogo (0 a ${EXTRA_REVISAO.max}) entra inteira`,
+    pct: Math.min(100, Math.round(nr / EXTRA_REVISAO.max * 100)), barLabel: `${fmt(nr)}/${EXTRA_REVISAO.max}`,
+    pts: `+${fmt(nr)}`, sub: `de +${fmt(EXTRA_REVISAO.max)}` });
+
+  return `
+    <div class="sec-label">Extras do bimestre</div>
+    <div class="prog-list">${cadCompl}
+      ${jogo("Tabuada", ["t50", "t100", "t150b"], "orange", IC.grid)}
+      ${jogo("Tabuada Negativa", ["tneg50b", "tneg100", "tneg150b"], "purple", IC.negativo)}
+      ${jogo("Escalada Algébrica", ["esc50", "esc100b"], "cyan", IC.estrela)}
+      ${revisao}</div>`;
 }
 
 // ── ESTADO 2: Em Andamento ────────────────────────────────────
@@ -423,9 +489,18 @@ function renderAndamento(boletim) {
     const extrasAtivos = EXTRAS_AUTO.filter(ex => cfg.autoExtras == null || cfg.autoExtras.includes(ex.key));
     const faltantes = extrasAtivos.filter(ex => !auto[ex.key]);
     let potencial = faltantes.reduce((s, ex) => s + ex.valor, 0);
-    const faltantesDesc = faltantes
-      .map(ex => `<b>${ex.label}</b> (+${fmt(ex.valor)}): ${progresso[ex.campo] || 0}/${ex.max}`)
-      .join(" · ");
+    const descs = faltantes.map(ex => `<b>${ex.label}</b> (+${fmt(ex.valor)}): ${progresso[ex.campo] || 0}/${ex.max}`);
+    // 4º bim: Caderno completo e o que falta no Jogo de Revisão também contam no potencial
+    if (cfg.cadernoCompleto && !cadernoCompletoAtivo(progresso.pctCaderno)) {
+      potencial += CADERNO_COMPLETO.valor;
+      descs.unshift(`<b>${CADERNO_COMPLETO.label}</b> (+${fmt(CADERNO_COMPLETO.valor)}): ${progresso.pctCaderno ?? 0}%/${CADERNO_COMPLETO.limiarPct}%`);
+    }
+    if (cfg.revisao && (progresso.notaRevisao || 0) < EXTRA_REVISAO.max) {
+      const falta = EXTRA_REVISAO.max - (progresso.notaRevisao || 0);
+      potencial += falta;
+      descs.push(`<b>${EXTRA_REVISAO.label}</b> (+${fmt(falta)}): nota ${fmt(progresso.notaRevisao || 0)}/${EXTRA_REVISAO.max}`);
+    }
+    const faltantesDesc = descs.join(" · ");
     banner = potencial > 0
       ? `<div class="potencial-banner"><div class="pot-icon">🚀</div>
           <div class="pot-body"><div class="pot-titulo">Você ainda pode ganhar mais pontos!</div>
@@ -552,7 +627,7 @@ function renderRendimento(boletim) {
         <div class="rs-body">
           <div class="rs-label">Bônus extras</div>
           <div class="rs-val green">+${fmtNota(bonus)}</div>
-          <div class="rs-sub">tabuada, ranking e perfil</div>
+          <div class="rs-sub">${(bonusConfig()||{}).revisao ? "caderno, jogos e revisão" : "tabuada, ranking e perfil"}</div>
         </div>
       </div>` : ""}
       <div class="rs-card">

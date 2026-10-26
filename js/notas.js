@@ -5,6 +5,8 @@ import { db } from "./firebase-config.js";
 import { ref, get, set, update, remove, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { BIMESTRES } from "./constants.js";
 import { carregarBibliotecaMapa, resolverAula } from "./biblioteca.js";
+import { isModoTeste } from "./auth.js";
+import { notaJogoRevisao } from "./jogo-revisao/nota.js";
 
 // Ocorrências positivas (mesma lista da ficha do aluno). As demais contam como negativas.
 const POSITIVAS_OCORRENCIA = ["Aluno se comportou", "Aluno foi participativo"];
@@ -35,6 +37,10 @@ export const CAMPOS_NOTA = [
   { key:"razaoProp",     label:"Atividade 2 - Regra de três",     max:1.5, auto:true },
   { key:"conselheiro",   label:"Professor Conselheiro",           max:1,   auto:true }, // começa em 1,0
   { key:"pd",            label:"PD - Geometria",                  max:1,   auto:true }, // Geo Canudos Parte 1 (0,5) + Parte 2 (0,5). Parte 3 fica pro 4º bim.
+  // ── campos do 4º bimestre (chaves NOVAS — as do 3º ficam como estão) ──
+  { key:"cadernoB4",     label:"Caderno",                         max:5,   auto:true }, // proporção de vistos × 5
+  { key:"comportamento", label:"Comportamento",                   max:2,   auto:true }, // começa em 2,0
+  { key:"consciencia",   label:"Consciência Negra",               max:3 },
 ];
 
 // Extras automáticos — calculados a partir do progresso real do aluno no banco
@@ -70,6 +76,12 @@ export const BONUS_CADERNO_VISTOS = { key:"bonusCadernoVistos", label:"Bônus ca
 // Ponto extra fixo para TODOS os alunos do bimestre (flag bonusFixo no bonusConfig).
 // 3º bim: +1,0 para todos (06/10/2026). Entra junto com os demais bônus, depois do teto de 10.
 export const BONUS_FIXO = { key:"bonusFixo", label:"Ponto extra do bimestre", valor:1 };
+// Caderno completo (4º bim): mesmo % de vistos feitos do Bônus caderno acima,
+// mas ≥ 80% dá +2,0. Chave nova — o Bônus caderno do 3º continua intacto.
+export const CADERNO_COMPLETO = { key:"cadernoCompleto", label:"Caderno completo", valor:2, limiarPct:80 };
+// Jogo de Revisão (4º bim): a nota do jogo (0 a 10) entra INTEIRA como extra.
+// O jogo não separa por bimestre — é a nota geral (js/jogo-revisao/nota.js).
+export const EXTRA_REVISAO = { key:"revisao", label:"Jogo de Revisão", max:10 };
 // Extras manuais — o professor marca
 // Participação agora é coluna de nota (não mais extra manual)
 export const EXTRAS_MANUAL = [];
@@ -87,6 +99,8 @@ export const CAMPOS_POR_BIMESTRE = {
   "2": ["provaMulti", "projeto", "caderno", "ativ4", "triangulos", "participacao"], // como sempre foram
   // 3º (soma 10,0): Ativ.1 1,5 + Ativ.2 1,5 + Caderno 2,0 + Prova Multi 3,0 + Conselheiro 1,0 + PD 1,0
   "3": ["equacoes", "razaoProp", "cadernoVistos", "provaMulti", "conselheiro", "pd"],
+  // 4º (soma 13, trava em 10): Caderno 5,0 + Comportamento 2,0 + Prova Multi 3,0 + Consciência Negra 3,0
+  "4": ["cadernoB4", "comportamento", "provaMulti", "consciencia"],
 };
 // Componentes que ainda NÃO têm fonte de dados pronta neste bimestre.
 // Aparecem na composição como "Ainda não disponibilizada" até a atividade existir.
@@ -107,8 +121,8 @@ export function campoDiferido(key) { return camposDiferidos().has(key); }
 // incluiria as chaves de todos os bimestres).
 export const BONUS_CONFIG_POR_BIMESTRE = {
   "3": { autoExtras: EXTRAS_JOGOS_ANTIGOS, cadExtra: false, rank: false, nivelPerfil: false, bonusCadernoVistos: true, bonusFixo: true },
-  // 4º bim: nova pontuação dos jogos; demais flags iguais ao 3º.
-  "4": { autoExtras: EXTRAS_JOGOS_B4,      cadExtra: false, rank: false, nivelPerfil: false, bonusCadernoVistos: true },
+  // 4º bim: nova pontuação dos jogos; sem o +0,5 (≥90%); Caderno completo (≥80% → +2,0) e Jogo de Revisão (0–10).
+  "4": { autoExtras: EXTRAS_JOGOS_B4,      cadExtra: false, rank: false, nivelPerfil: false, bonusCadernoVistos: false, cadernoCompleto: true, revisao: true },
 };
 export function bonusConfig() {
   const cfg = BONUS_CONFIG_POR_BIMESTRE[BIMESTRE];
@@ -117,9 +131,14 @@ export function bonusConfig() {
   // que eram TODAS as de EXTRAS_AUTO antes das chaves do 4º bim existirem.
   return { autoExtras: EXTRAS_JOGOS_ANTIGOS, cadExtra: true, rank: true, nivelPerfil: true, bonusCadernoVistos: false };
 }
+// Bimestres cujas colunas seguem a ordem da lista em CAMPOS_POR_BIMESTRE (os
+// demais seguem a ordem de CAMPOS_NOTA, como sempre foi).
+const ORDEM_PELA_LISTA = new Set(["4"]);
 export function camposAtivos() {
   const chaves = CAMPOS_POR_BIMESTRE[BIMESTRE];
-  return chaves ? CAMPOS_NOTA.filter(c => chaves.includes(c.key)) : CAMPOS_NOTA;
+  if (!chaves) return CAMPOS_NOTA;
+  if (ORDEM_PELA_LISTA.has(BIMESTRE)) return chaves.map(k => CAMPOS_NOTA.find(c => c.key === k)).filter(Boolean);
+  return CAMPOS_NOTA.filter(c => chaves.includes(c.key));
 }
 export function bonusAtivo() {
   return bonusConfig() !== null;   // controla se a coluna Extras aparece
@@ -275,8 +294,10 @@ export function calcularBonus(progresso, registro) {
   const bFixo      = cfg.bonusFixo ? BONUS_FIXO.valor : 0;
   const bRankAtiv4 = cfg.rank ? (progresso?.rankAtiv4Bonus ?? 0) : 0;
   const bNivelPerf = cfg.nivelPerfil ? EXTRA_NIVEL_PERFIL.calcular(progresso?.nivelPerfil ?? 0) : 0;
+  const bCadCompl  = (cfg.cadernoCompleto && cadernoCompletoAtivo(progresso?.pctCaderno)) ? CADERNO_COMPLETO.valor : 0;
+  const bRevisao   = cfg.revisao ? (progresso?.notaRevisao ?? 0) : 0;
   const bManual    = EXTRAS_MANUAL.reduce((s, e) => s + (registro?.extras?.[e.key] ? e.valor : 0), 0);
-  return bAuto + bCadExtra + bBonusCad + bFixo + bRankAtiv4 + bNivelPerf + bManual;
+  return bAuto + bCadExtra + bBonusCad + bFixo + bRankAtiv4 + bNivelPerf + bCadCompl + bRevisao + bManual;
 }
 export function calcularSubtotal(registro) {
   return camposAtivos().reduce((s, c) => {
@@ -356,10 +377,10 @@ export async function buscarEquacoesAluno(turma, nome) {
   return melhor; // null = nunca fez; number = melhor pontuação (escala 0-10)
 }
 
-// ── Caderno automático (3º bim): proporção de vistos × 2 (0–2) ──
+// ── Caderno automático: proporção de vistos × max (3º bim: × 2; 4º bim: × 5) ──
 // Usa a MESMA classificação de projeto da tela de Vistos (biblioteca), pra o
 // denominador bater com o que o professor vê. null = nenhum visto aplicado ainda.
-export async function buscarCadernoVistos(turma, nome) {
+export async function buscarCadernoVistos(turma, nome, max = 2) {
   try {
     const [snap, idx] = await Promise.all([
       get(ref(db, `vistos/${turma}/${BIMESTRE}`)),
@@ -378,7 +399,7 @@ export async function buscarCadernoVistos(turma, nome) {
       if (v === 1 || v === 4)      tot += 1;                     // ✓ e AT✓ contam integral
       else if (v === 2 || v === 3) tot += 0.5;                  // atraso (½) e FA (½)
     });
-    return parseFloat(((tot / nVistos) * 2).toFixed(2));
+    return parseFloat(((tot / nVistos) * max).toFixed(2));
   } catch (e) { console.error("Falha ao calcular Caderno (vistos):", e); return null; }
 }
 
@@ -410,6 +431,22 @@ export async function buscarPctCaderno(turma, nome) {
 export function bonusCadernoVistosAtivo(pct) {
   return pct != null && pct >= BONUS_CADERNO_VISTOS.limiarPct;
 }
+export function cadernoCompletoAtivo(pct) {
+  return pct != null && pct >= CADERNO_COMPLETO.limiarPct;
+}
+
+// ── Jogo de Revisão (4º bim): nota 0–10 pelas insígnias/douradas ──
+// Mesma leitura da Ficha do aluno (modo teste lê do histórico de teste).
+// Falha ou nunca jogou → 0.
+export async function buscarNotaRevisao(turma, nome) {
+  try {
+    const uid  = makeUid(turma, nome);
+    const base = isModoTeste() ? `modo_teste_historico/${uid}/jogo_revisao` : `jogo_revisao/${uid}`;
+    const snap = await get(ref(db, `${base}/insignias`));
+    const ins  = snap.exists() ? Object.values(snap.val() || {}).filter(Boolean) : [];
+    return notaJogoRevisao(ins.length, ins.filter(i => i.dourada).length);
+  } catch (e) { console.error("Falha ao buscar nota do Jogo de Revisão:", e); return 0; }
+}
 
 // ── PD - Geometria (3º bim): Geometria com Canudos Parte 1 (0,5) + Parte 2
 // (0,5). Casa cada parte pelo arquivo do material (materialRef), igual ao
@@ -439,10 +476,11 @@ export async function buscarPDGeometria(turma, nome) {
   } catch (e) { console.error("Falha ao calcular PD - Geometria:", e); return null; }
 }
 
-// ── Professor Conselheiro (3º bim): base 1,0; +0,3 por ocorrência positiva,
-// −0,3 por ocorrência negativa; sempre travado no intervalo [0, 1]. ──
-export async function buscarConselheiro(turma, nome) {
-  const BASE = 1.0, PASSO = 0.3;
+// ── Professor Conselheiro (3º bim, base 1,0) / Comportamento (4º bim, base 2,0):
+// +0,3 por ocorrência positiva, −0,3 por ocorrência negativa; sempre travado no
+// intervalo [0, base]. ──
+export async function buscarConselheiro(turma, nome, base = 1) {
+  const BASE = base, PASSO = 0.3;
   try {
     const snap = await get(ref(db, `mapeamento_salas/${turma}/anotacoes`));
     if (!snap.exists()) return BASE;
@@ -463,7 +501,7 @@ export async function buscarConselheiro(turma, nome) {
       });
     });
     const nota = BASE + PASSO * pos - PASSO * neg;
-    return Math.max(0, Math.min(1, parseFloat(nota.toFixed(2))));
+    return Math.max(0, Math.min(BASE, parseFloat(nota.toFixed(2))));
   } catch (e) { console.error("Falha ao calcular Professor Conselheiro:", e); return BASE; }
 }
 
@@ -575,7 +613,8 @@ export async function montarBoletim(turma, nome, opcoes = {}) {
   const pend   = camposPendentes();
   const querer = k => ativos.has(k) && !pend.has(k);   // só busca o que o bimestre usa e não está pendente
 
-  const [salvo, progresso, ativ4Map, ativ5Pts, eqPts, nivelPerfil, cadVistosRaw, conselheiroRaw, razaoPts, pdRaw, pctCadernoRaw] = await Promise.all([
+  const cfgB = bonusConfig() || {};
+  const [salvo, progresso, ativ4Map, ativ5Pts, eqPts, nivelPerfil, cadVistosRaw, conselheiroRaw, razaoPts, pdRaw, pctCadernoRaw, cadB4Raw, comportRaw, notaRevRaw] = await Promise.all([
     buscarNotaSalva(turma, nome),
     buscarProgressoTabuada(turma, nome),
     buscarAtiv4(turma, [nome]),
@@ -586,13 +625,18 @@ export async function montarBoletim(turma, nome, opcoes = {}) {
     querer("conselheiro")   ? buscarConselheiro(turma, nome)   : Promise.resolve(null),
     querer("razaoProp") && razaoPropEhAuto(turma) ? buscarRazaoPropAluno(turma, nome): Promise.resolve(null),
     querer("pd")            ? buscarPDGeometria(turma, nome)   : Promise.resolve(null),
-    (bonusConfig()||{}).bonusCadernoVistos ? buscarPctCaderno(turma, nome) : Promise.resolve(null),
+    (cfgB.bonusCadernoVistos || cfgB.cadernoCompleto) ? buscarPctCaderno(turma, nome) : Promise.resolve(null),
+    // 4º bimestre
+    querer("cadernoB4")     ? buscarCadernoVistos(turma, nome, 5) : Promise.resolve(null),
+    querer("comportamento") ? buscarConselheiro(turma, nome, 2)   : Promise.resolve(null),
+    cfgB.revisao            ? buscarNotaRevisao(turma, nome)      : Promise.resolve(null),
   ]);
 
   const ativ4Info = ativ4Map[nome] || { fez:false, posicao:0, bonusRank:0 };
   progresso.rankAtiv4Bonus = ativ4Info.bonusRank;
   progresso.nivelPerfil    = nivelPerfil;
   progresso.pctCaderno     = pctCadernoRaw;
+  progresso.notaRevisao    = notaRevRaw;
 
   // Ativ.4 e Triângulos: null = não participou/nunca jogou → conta como 0
   let ativ4Val      = ativ4Info.fez ? 0.5 : null;
@@ -606,6 +650,9 @@ export async function montarBoletim(turma, nome, opcoes = {}) {
     ? (razaoPts != null ? Math.min(1.5, (razaoPts / 10) * 1.5) : null)
     : (salvo?.razaoProp ?? null);   // turmas fora da 8E: lançamento manual
   let pdVal          = pdRaw;
+  // 4º bimestre (auto)
+  let cadB4Val       = cadB4Raw;
+  let comportVal     = comportRaw;
 
   // Se o bimestre está congelado, usa a FOTO (não os valores ao vivo)
   const cong = await buscarCongelamento(turma);
@@ -624,6 +671,9 @@ export async function montarBoletim(turma, nome, opcoes = {}) {
     if (foto.razaoProp     !== undefined) razaoVal       = foto.razaoProp;
     if (foto.pd            !== undefined) pdVal          = foto.pd;
     if (foto.pctCaderno    !== undefined) progresso.pctCaderno = foto.pctCaderno;
+    if (foto.cadernoB4     !== undefined) cadB4Val       = foto.cadernoB4;
+    if (foto.comportamento !== undefined) comportVal     = foto.comportamento;
+    if (foto.notaRevisao   !== undefined) progresso.notaRevisao = foto.notaRevisao;
   }
 
   // Campos diferidos: só liberados ao aluno quando o bimestre está congelado.
@@ -647,6 +697,10 @@ export async function montarBoletim(turma, nome, opcoes = {}) {
     razaoProp:     razaoVal,
     conselheiro:   conselheiroVal,
     pd:            pdVal,
+    // 4º bimestre
+    cadernoB4:     cadB4Val,
+    comportamento: comportVal,
+    consciencia:   salvo?.consciencia ?? null,
     extras:     salvo?.extras || {},
   };
 
@@ -657,6 +711,7 @@ export async function montarBoletim(turma, nome, opcoes = {}) {
     caderno:    salvo?.caderno    != null,
     participacao: true, // sempre lançada (default 0.5)
     razaoProp:  salvo?.razaoProp  != null,   // só importa nas turmas fora da 8E (manual)
+    consciencia: salvo?.consciencia != null,
   };
 
   const subtotal       = calcularSubtotal(registro);

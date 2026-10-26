@@ -204,6 +204,7 @@ import { db } from "/js/firebase-config.js";
 import { ref, get, query, orderByChild, equalTo, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {
   BIMESTRE, setBimestre, CAMPOS_NOTA as CAMPOS, EXTRAS_AUTO, EXTRAS_MANUAL, CADERNO_EXTRA, BONUS_CADERNO_VISTOS, BONUS_FIXO,
+  CADERNO_COMPLETO, EXTRA_REVISAO, cadernoCompletoAtivo, buscarNotaRevisao,
   EXTRA_RANK_ATIV4, EXTRA_NIVEL_PERFIL, NOME_ATIV5, NOME_ATIV1_EQ, NOME_ATIV2_RP,
   makeUid, slugNome as slug, fmtNota as fmt,
   buscarProgressoTabuada, buscarAtiv4, buscarNivelPerfil,
@@ -231,6 +232,7 @@ function turmaVazia(turma) {
     obj[nome] = {
       provaMulti:"", projeto:"", caderno:"", equacoes:"", ativ4:"", triangulos:"", participacao:0.5,
       cadernoVistos:null, razaoProp:null, conselheiro:null, pd:null,
+      cadernoB4:null, comportamento:null, consciencia:"",
       ativ4Auto:false, triangulosAuto:false, equacoesAuto:false,
       extras: {}
     };
@@ -256,9 +258,28 @@ function calcularBonus(nome, registro) {
   const bFixo        = cfg.bonusFixo ? BONUS_FIXO.valor : 0;
   const bRankAtiv4   = cfg.rank ? (a.rankAtiv4Bonus ?? 0) : 0;
   const bNivelPerfil = cfg.nivelPerfil ? ((a.nivelPerfil || 0) * EXTRA_NIVEL_PERFIL.valorPorNivel) : 0;
+  const bCadCompl    = (cfg.cadernoCompleto && cadernoCompletoAtivo(a.pctCaderno)) ? CADERNO_COMPLETO.valor : 0;
+  const bRevisao     = cfg.revisao ? (a.notaRevisao ?? 0) : 0;
   const bManual      = EXTRAS_MANUAL.reduce((s,e) => s + (registro.extras[e.key] ? e.valor : 0), 0);
-  return bAuto + bCadExtra + bBonusCad + bFixo + bRankAtiv4 + bNivelPerfil + bManual;
+  return bAuto + bCadExtra + bBonusCad + bFixo + bRankAtiv4 + bNivelPerfil + bCadCompl + bRevisao + bManual;
 }
+
+// ── 4º bim em diante: cada extra em coluna própria (1º–3º usam a coluna "Extras") ──
+const extrasEmColunas = () => +BIMESTRE >= 4;
+const somaChaves = (auto, chaves) => EXTRAS_AUTO.filter(e => chaves.includes(e.key) && auto[e.key]).reduce((s, e) => s + e.valor, 0);
+const COLUNAS_EXTRAS_B4 = [
+  { k:"cadernoCompleto", t:"Caderno completo", max:`≥${CADERNO_COMPLETO.limiarPct}% · +${fmt(CADERNO_COMPLETO.valor)}`,
+    valor: (a) => cadernoCompletoAtivo(a.pctCaderno) ? CADERNO_COMPLETO.valor : 0,
+    titulo:(a) => a.pctCaderno == null ? "aguardando vistos" : `${a.pctCaderno}% dos vistos (precisa ${CADERNO_COMPLETO.limiarPct}%)` },
+  { k:"tabuada",  t:"Tabuada",  max:"até +2",
+    valor: (a, auto) => somaChaves(auto, ["t50", "t100", "t150b"]),  titulo:(a) => `nível ${a.melhorTabuada || 0}` },
+  { k:"negativa", t:"Negativa", max:"até +2",
+    valor: (a, auto) => somaChaves(auto, ["tneg50b", "tneg100", "tneg150b"]), titulo:(a) => `nível ${a.melhorNeg || 0}` },
+  { k:"escalada", t:"Escalada", max:"até +2",
+    valor: (a, auto) => somaChaves(auto, ["esc50", "esc100b"]),       titulo:(a) => `nível ${a.melhorEscalada || 0}` },
+  { k:"revisao",  t:"Revisão",  max:`0 a ${EXTRA_REVISAO.max}`,
+    valor: (a) => a.notaRevisao || 0,                                titulo:() => "nota do Jogo de Revisão (entra inteira)" },
+];
 function calcularTotal(nome, registro) {
   const base = camposAtivos().reduce((s,c) => s + (parseFloat(registro[c.key]) || 0), 0);
   const baseCapada = Math.min(base, 10);
@@ -347,38 +368,54 @@ async function carregarAutoRazaoProp(turma) {
 }
 
 // ── 3º bim: Caderno automático (proporção de vistos), Professor Conselheiro (ocorrências) e PD - Geometria (vistos Canudos Parte 1+2) ──
+// ── 4º bim: Caderno (vistos × 5), Comportamento (base 2,0) e nota do Jogo de Revisão ──
 async function carregarAutoCadernoConselheiro(turma) {
   const alunos = ALUNOS_POR_TURMA[turma] || [];
+  const ativos = new Set(camposAtivos().map(c => c.key));
+  const cfg = bonusConfig() || {};
   const out = {};
   await Promise.all(alunos.map(async nome => {
-    const [caderno, conselheiro, pd, pctCaderno] = await Promise.all([
+    const [caderno, conselheiro, pd, pctCaderno, cadernoB4, comportamento, notaRevisao] = await Promise.all([
       buscarCadernoVistos(turma, nome),
       buscarConselheiro(turma, nome),
       buscarPDGeometria(turma, nome),
-      bonusConfig()?.bonusCadernoVistos ? buscarPctCaderno(turma, nome) : Promise.resolve(null),
+      (cfg.bonusCadernoVistos || cfg.cadernoCompleto) ? buscarPctCaderno(turma, nome) : Promise.resolve(null),
+      ativos.has("cadernoB4")     ? buscarCadernoVistos(turma, nome, 5) : Promise.resolve(null),
+      ativos.has("comportamento") ? buscarConselheiro(turma, nome, 2)   : Promise.resolve(null),
+      cfg.revisao                 ? buscarNotaRevisao(turma, nome)      : Promise.resolve(null),
     ]);
-    out[nome] = { caderno, conselheiro, pd, pctCaderno };
+    out[nome] = { caderno, conselheiro, pd, pctCaderno, cadernoB4, comportamento, notaRevisao };
   }));
   return out;
 }
 
 // ── Render ──────────────────────────────────────────────────
+const colgroupOriginal = document.querySelector(".tbl-notas colgroup")?.innerHTML || "";
 function renderCabecalho() {
   const campos = camposAtivos();
   const comBonus = bonusAtivo();
+  const emColunas = comBonus && extrasEmColunas();
+  const colgroup = document.querySelector(".tbl-notas colgroup");
+  if (colgroup) {
+    colgroup.innerHTML = emColunas
+      ? `<col style="width:14%">` + `<col>`.repeat(campos.length + 1 + COLUNAS_EXTRAS_B4.length + 1)
+      : colgroupOriginal;
+  }
   const trHead = document.querySelector(".tbl-notas thead tr");
   if (trHead) {
     trHead.innerHTML =
       `<th class="col-aluno">Aluno</th>` +
       campos.map(c => `<th>${c.label}${campoAuto(c, turmaAtual) ? " 🔄" : ""}<span class="max">máx ${Number.isInteger(c.max) ? c.max : fmt(c.max)}</span></th>`).join("") +
-      (comBonus ? `<th>Extras</th>` : ``) +
+      (emColunas
+        ? `<th>Subtotal<span class="max">máx 10</span></th>` + COLUNAS_EXTRAS_B4.map(x => `<th>${x.t} 🔄<span class="max">${x.max}</span></th>`).join("")
+        : comBonus ? `<th>Extras</th>` : ``) +
       `<th>Total</th>`;
   }
   const trFoot = document.querySelector(".tbl-notas tfoot tr");
   if (trFoot) {
     trFoot.innerHTML =
       `<td class="col-aluno">Média da turma</td>` +
-      `<td colspan="${campos.length + (comBonus ? 1 : 0)}"></td>` +
+      `<td colspan="${campos.length + (emColunas ? 1 + COLUNAS_EXTRAS_B4.length : comBonus ? 1 : 0)}"></td>` +
       `<td id="mediaTurma">—</td>`;
   }
   // Legenda de bônus — mostra só os extras que valem NESTE bimestre
@@ -393,6 +430,8 @@ function renderCabecalho() {
       if (cfg.cadExtra) chips.push(`<span class="legenda-chip auto">🔄 ${CADERNO_EXTRA.label} (Caderno &gt; ${fmt(CADERNO_EXTRA.limiar)}) <b>+${fmt(CADERNO_EXTRA.valor)}</b></span>`);
       if (cfg.bonusCadernoVistos) chips.push(`<span class="legenda-chip auto">🔄 ${BONUS_CADERNO_VISTOS.label} (≥ ${BONUS_CADERNO_VISTOS.limiarPct}% do caderno) <b>+${fmt(BONUS_CADERNO_VISTOS.valor)}</b></span>`);
       if (cfg.bonusFixo) chips.push(`<span class="legenda-chip auto">🎁 ${BONUS_FIXO.label} (todos os alunos) <b>+${fmt(BONUS_FIXO.valor)}</b></span>`);
+      if (cfg.cadernoCompleto) chips.push(`<span class="legenda-chip auto">🔄 ${CADERNO_COMPLETO.label} (≥ ${CADERNO_COMPLETO.limiarPct}% dos vistos) <b>+${fmt(CADERNO_COMPLETO.valor)}</b></span>`);
+      if (cfg.revisao) chips.push(`<span class="legenda-chip auto">🔄 ${EXTRA_REVISAO.label} <b>nota 0 a ${EXTRA_REVISAO.max}</b></span>`);
       leg.innerHTML = chips.join("");
       leg.style.display = "";
     }
@@ -402,6 +441,7 @@ function renderTabela() {
   renderCabecalho();
   const campos = camposAtivos();
   const comBonus = bonusAtivo();
+  const emColunas = comBonus && extrasEmColunas();
   const alunos = ALUNOS_POR_TURMA[turmaAtual] || [];
   const tbody = document.getElementById("tbody");
   tbody.innerHTML = alunos.map(nome => {
@@ -420,7 +460,7 @@ function renderTabela() {
           }
           return `<td><input class="nota-input" type="number" step="0.1" min="0" max="${c.max}" inputmode="decimal" data-campo="${c.key}" value="${r[c.key] ?? ""}"></td>`;
         }).join("")}
-        ${comBonus ? `<td>
+        ${emColunas ? celulasExtrasB4(nome, r) : comBonus ? `<td>
           <button class="extras-btn${nExtras ? " on" : ""}" data-aluno="${slug(nome)}">
             🎁 ${nExtras ? `+${fmt(bonus)}` : "Extras"}
           </button>
@@ -433,6 +473,21 @@ function renderTabela() {
   tbody.querySelectorAll(".extras-btn").forEach(btn => btn.addEventListener("click", () => abrirExtras(btn.dataset.aluno)));
 
   atualizarMedia();
+}
+
+// Subtotal (travado em 10) + uma célula por extra — só no 4º bim em diante
+function subtotalCapado(r) {
+  return Math.min(camposAtivos().reduce((s,c) => s + (parseFloat(r[c.key]) || 0), 0), 10);
+}
+function celulasExtrasB4(nome, r) {
+  const a = autoDados[turmaAtual]?.[nome] || {};
+  const auto = extrasAutoAtivos(nome);
+  const sub = subtotalCapado(r);
+  return `<td class="auto-cell"><span class="auto-display${sub ? "" : " zero"}" id="sub-${slug(nome)}">${fmt(sub)}</span></td>` +
+    COLUNAS_EXTRAS_B4.map(x => {
+      const v = x.valor(a, auto);
+      return `<td class="auto-cell" title="${x.titulo(a)}"><span class="auto-display${v ? "" : " zero"}">${v ? `+${fmt(v)}` : "—"}</span></td>`;
+    }).join("");
 }
 
 function onInputChange(e) {
@@ -450,6 +505,8 @@ function atualizarLinha(nome) {
   const total = calcularTotal(nome, r);
   const pill = document.getElementById(`total-${slug(nome)}`);
   if (pill) { pill.textContent = fmt(total); pill.className = `total-pill ${classeTotal(total)}`; }
+  const subEl = document.getElementById(`sub-${slug(nome)}`);
+  if (subEl) { const sub = subtotalCapado(r); subEl.textContent = fmt(sub); subEl.classList.toggle("zero", !sub); }
   const btn = document.querySelector(`.extras-btn[data-aluno="${slug(nome)}"]`);
   if (btn) {
     const auto = extrasAutoAtivos(nome);
@@ -611,6 +668,7 @@ async function carregarNotasSalvas(turma) {
         participacao: v.participacao ?? v.lista ?? 0.5, // fallback lista (dados antigos), default 0.5
         triangulos: v.triangulos ?? v.area ?? "", triangulosAuto: !!v.triangulosAuto ?? !!v.areaAuto,
         razaoProp: fromNota(v.razaoProp),   // só usado nas turmas fora da 8E (manual)
+        consciencia: fromNota(v.consciencia),   // 4º bim (manual)
       });
       r.extras = {};
     });
@@ -630,7 +688,7 @@ async function carregarTurma(turma) {
   status.classList.remove("saved");
 
   const alunos = ALUNOS_POR_TURMA[turma] || [];
-  const temAutoNovos = camposAtivos().some(c => c.key === "cadernoVistos" || c.key === "conselheiro" || c.key === "pd");
+  const temAutoNovos = camposAtivos().some(c => ["cadernoVistos", "conselheiro", "pd", "cadernoB4", "comportamento"].includes(c.key));
   const tasks = [carregarAutoTabuada(turma), carregarAutoArea(turma), carregarAutoEquacoes(turma), carregarAutoRazaoProp(turma), notasLiberadas(turma), buscarAtiv4(turma, alunos), buscarCongelamento(turma),
                  temAutoNovos ? carregarAutoCadernoConselheiro(turma) : Promise.resolve({})];
   if (primeiraVez) tasks.push(carregarNotasSalvas(turma));
@@ -679,7 +737,11 @@ async function carregarTurma(turma) {
     r.cadernoVistos = cc.caderno ?? null;      // null = nenhum visto aplicado ainda
     r.conselheiro   = cc.conselheiro ?? null;  // null só quando o campo não é deste bimestre
     r.pd            = cc.pd ?? null;           // null = nenhuma das duas partes de Geometria aplicada ainda
-    autoDados[turma][nome].pctCaderno = cc.pctCaderno ?? null;   // % de vistos feitos (Bônus caderno)
+    autoDados[turma][nome].pctCaderno = cc.pctCaderno ?? null;   // % de vistos feitos (Bônus caderno / Caderno completo)
+    // 4º bim — Caderno (vistos × 5), Comportamento (2,0 ± 0,3/ocorrência) e nota do Jogo de Revisão (0–10)
+    r.cadernoB4     = cc.cadernoB4 ?? null;
+    r.comportamento = cc.comportamento ?? null;
+    autoDados[turma][nome].notaRevisao = cc.notaRevisao ?? null;
   });
 
   // Se congelado, sobrepõe os automáticos pela foto (trava o bônus)
@@ -693,6 +755,7 @@ async function carregarTurma(turma) {
       ad.nivelPerfil    = f.nivelPerfil    ?? 0;
       ad.rankAtiv4Bonus = f.rankAtiv4Bonus ?? 0;
       ad.pctCaderno     = f.pctCaderno     ?? null;
+      if (f.notaRevisao !== undefined)   ad.notaRevisao  = f.notaRevisao;
       const r = dados[chave][nome];
       if (f.ativ4 !== undefined)         r.ativ4         = f.ativ4;
       if (f.triangulos !== undefined)    r.triangulos    = f.triangulos;
@@ -701,6 +764,8 @@ async function carregarTurma(turma) {
       if (f.conselheiro !== undefined)   r.conselheiro   = f.conselheiro;
       if (f.razaoProp !== undefined)     r.razaoProp     = f.razaoProp;
       if (f.pd !== undefined)            r.pd            = f.pd;
+      if (f.cadernoB4 !== undefined)     r.cadernoB4     = f.cadernoB4;
+      if (f.comportamento !== undefined) r.comportamento = f.comportamento;
     });
   }
 
@@ -748,6 +813,12 @@ document.getElementById("btnCongelar").addEventListener("click", async () => {
         conselheiro:   r.conselheiro   ?? null,
         razaoProp:     r.razaoProp     ?? null,
         pd:            r.pd            ?? null,
+        // 4º bim — Caderno completo usa o pctCaderno acima; jogos usam os níveis acima
+        ...(extrasEmColunas() ? {
+          cadernoB4:     r.cadernoB4     ?? null,
+          comportamento: r.comportamento ?? null,
+          notaRevisao:   ad.notaRevisao  ?? null,
+        } : {}),
       };
     });
     status.textContent = "Congelando…"; status.classList.remove("saved");
@@ -816,6 +887,7 @@ async function salvarNotas() {
       triangulosAuto: !!r.triangulosAuto,
       participacao: parseFloat(r.participacao) ?? 0,
       razaoProp:  toNota(r.razaoProp),   // manual fora da 8E; ignorado no cálculo pra 8E
+      consciencia: toNota(r.consciencia),   // 4º bim (manual)
       extras: {},
       atualizadoEm: Date.now(),
     };
@@ -842,7 +914,10 @@ function exportarCSV(){
   const alunos = ALUNOS_POR_TURMA[turmaAtual] || [];
   const sep = ";";                                   // Excel PT-BR: ; separa colunas, , é decimal
   const esc = s => `"${String(s).replace(/"/g, '""')}"`;
-  const head = ["Nº", "Aluno", ...campos.map(c => c.label), "Bônus", "Total"];
+  const emColunas = bonusAtivo() && extrasEmColunas();
+  const head = emColunas
+    ? ["Nº", "Aluno", ...campos.map(c => c.label), "Subtotal", ...COLUNAS_EXTRAS_B4.map(x => x.t), "Total"]
+    : ["Nº", "Aluno", ...campos.map(c => c.label), "Bônus", "Total"];
   const linhas = [head.join(sep)];
   alunos.forEach((nome, i) => {
     const r = dados[chaveTurma(turmaAtual)][nome];
@@ -850,11 +925,15 @@ function exportarCSV(){
       const v = r[c.key];
       return (v == null || v === "") ? "" : fmt(parseFloat(v) || 0);
     });
+    const a = autoDados[turmaAtual]?.[nome] || {};
+    const auto = extrasAutoAtivos(nome);
     linhas.push([
       String(i + 1).padStart(2, "0"),
       esc(nome),
       ...vals,
-      fmt(calcularBonus(nome, r)),
+      ...(emColunas
+        ? [fmt(subtotalCapado(r)), ...COLUNAS_EXTRAS_B4.map(x => fmt(x.valor(a, auto)))]
+        : [fmt(calcularBonus(nome, r))]),
       fmt(calcularTotal(nome, r)),
     ].join(sep));
   });

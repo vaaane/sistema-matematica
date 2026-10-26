@@ -311,15 +311,17 @@ function render(){
       </div>
     </div>`;
 
-  // Meta +0,5 na média: caderno completo (todos os vistos, completos ou ½)
+  // Meta na média: até o 3º bim +0,5 com todos os vistos; do 4º bim +2,0 com ≥ 80% dos vistos
   const metaBar = sem>0
     ? `<div class="meta-bar">
          <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 2 9.2 8.6 2 9.2l5.5 4.7L5.8 21 12 17.3 18.2 21l-1.7-7.1L22 9.2l-7.2-.6z"/></svg></div>
-         <div class="mb-body"><div class="mb-txt">Complete o <b>caderno</b> — todos os vistos (completos ou ½) — e ganhe <b>+0,5 na média</b>!</div></div>
+         <div class="mb-body"><div class="mb-txt">${bimestre >= 4
+           ? `Faça <b>80% ou mais</b> dos vistos do <b>caderno</b> e ganhe <b>+2,0 na média</b>!`
+           : `Complete o <b>caderno</b> — todos os vistos (completos ou ½) — e ganhe <b>+0,5 na média</b>!`}</div></div>
        </div>`
     : `<div class="meta-bar ok">
          <div class="ic"><svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg></div>
-         <div class="mb-body"><div class="mb-txt">🎉 <b>Vistos em dia!</b> Mantenha assim para garantir o <b>+0,5 na média</b>.</div></div>
+         <div class="mb-body"><div class="mb-txt">🎉 <b>Vistos em dia!</b> Mantenha assim para garantir o <b>${bimestre >= 4 ? "+2,0" : "+0,5"} na média</b>.</div></div>
        </div>`;
   const avisoEstudo = `<div class="aviso-estudo">
          <div class="ae-ic"><svg viewBox="0 0 24 24"><path d="M12 3 1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/></svg></div>

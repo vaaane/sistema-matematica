@@ -799,7 +799,9 @@ function render(){
         </div>
         <div class="ficha-nota verde">
           <svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>
-          <span>Tendo <b>todos os vistos</b> do bimestre (completos ou meio, ½), o aluno ganha <b>+0,5 na média</b>. Os vistos podem ser mostrados à professora <b>ao longo de todo o bimestre</b>. <b>Projetos não contam</b> como visto.</span>
+          <span>${bimestre >= 4
+            ? `Com <b>80% ou mais</b> dos vistos feitos, o aluno ganha <b>+2,0</b> na média.`
+            : `Tendo <b>todos os vistos</b> do bimestre (completos ou meio, ½), o aluno ganha <b>+0,5 na média</b>.`} Os vistos podem ser mostrados à professora <b>ao longo de todo o bimestre</b>. <b>Projetos não contam</b> como visto.</span>
         </div>
         <div class="filtros" id="filtros">
           <button class="${filtro==="todas"?"on":""}" data-f="todas">Todas <span class="fct">${cntTodas}</span></button>
@@ -837,7 +839,9 @@ function render(){
           </div>
           <div class="ficha-nota" style="margin-bottom:12px;margin-top:0;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text-muted)">
             <svg viewBox="0 0 24 24" style="fill:var(--text-muted)"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-            <span>A nota do <b style="color:var(--text)">professor conselheiro</b> começa em <b style="color:var(--text)">1,0</b> e cada ocorrência registrada retira <b style="color:var(--text)">0,3</b> ponto.</span>
+            <span>${bimestre >= 4
+              ? `A nota de <b style="color:var(--text)">comportamento</b> começa em <b style="color:var(--text)">2,0</b>; ocorrência positiva soma <b style="color:var(--text)">0,3</b> e negativa retira <b style="color:var(--text)">0,3</b>.`
+              : `A nota do <b style="color:var(--text)">professor conselheiro</b> começa em <b style="color:var(--text)">1,0</b> e cada ocorrência registrada retira <b style="color:var(--text)">0,3</b> ponto.`}</span>
           </div>
           <div>${ocHtml}</div>
         </div>
@@ -898,7 +902,7 @@ function render(){
           </div>
           <div class="ficha-nota ouro">
             <svg viewBox="0 0 24 24"><path d="M12 2 9.2 8.6 2 9.2l5.5 4.7L5.8 21 12 17.3 18.2 21l-1.7-7.1L22 9.2l-7.2-.6z"/></svg>
-            <span>O jogo completo vale <b>${NOTA_MAX} pontos</b>: as ${TOTAL_INSIGNIAS} insígnias valem <b>${PESO_INSIGNIAS},0</b> e deixar todas douradas (revanches) vale mais <b>${PESO_DOURADAS},0</b>.</span>
+            <span>O jogo completo vale <b>${NOTA_MAX} pontos</b>: as ${TOTAL_INSIGNIAS} insígnias valem <b>${PESO_INSIGNIAS},0</b> e deixar todas douradas (revanches) vale mais <b>${PESO_DOURADAS},0</b>.${bimestre >= 4 ? ` No ${bimestre}º bimestre, a nota do Jogo de Revisão (<b>0 a ${NOTA_MAX}</b>) entra <b>inteira</b> como ponto extra na média.` : ""}</span>
           </div>
         </div>
       </div>
