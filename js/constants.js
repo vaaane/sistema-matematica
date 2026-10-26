@@ -60,6 +60,13 @@ export function numeroChamada(turma, nome) {
 // Numeração própria do caderno de papel, sem relação com a numeração oficial do site/SEDF.
 // Preenchido conforme fotos do caderno são recebidas (turma a turma).
 export const NUM_CADERNO = {
+  "8D": { // caderno "Projeto Diário de Bordo" — foto de 26/10/2026 (nº 6 Isaac não está no site)
+    "Alice Tavares":1, "Alice Paz":2, "Ana Julia":3, "Arthur":4, "Francisco":5,
+    "Izabelly Monik":7, "João Pedro":8, "Karolinny":9, "Ketelly":10, "Leticia":11,
+    "Lucas Gabriel":12, "Lucas Matheus":13, "Luis Gabriel":14, "Luis Miguel":15,
+    "Miguel Henrique":16, "Miguel Nascimento":17, "Nixmarys":18, "Wanderson":19,
+    "Thalles Davi":20, "Pedro Riquelme":21, "Sandra":22, "Keyvison":23,
+  },
   "8G": { // caderno "Projeto Diário de Bordo" — foto de 14/08/2026
     "Ana Clara":1, "Ana Gabryella":2, "Ana Maria":3, "Beatriz":4, "Davi Emanoel":5, "Davi Francisco":6,
     "Erik":7, "Helena":8, "Isabela":9, "Karlos":10, "Ketelen":11, "Letícia":12, "Lorran":13,
@@ -335,7 +342,24 @@ export const TIPOS_NAO_LETIVO = {
   recesso:     { rotulo: "Recesso",           emoji: "🌴" },
   paralisacao: { rotulo: "Paralisação",       emoji: "✊" },
   movel:       { rotulo: "Dia Letivo Móvel",  emoji: "🔄" },
+  eleicoes:    { rotulo: "Eleições",          emoji: "🗳️" },
 };
+
+// Dias não-letivos fixos (valem para a escola toda). O que estiver no Firebase
+// (calendario/naoLetivos) tem prioridade sobre esta lista.
+export const NAO_LETIVOS_FIXOS = {
+  "2026-10-12": { tipo: "feriado",     motivo: "N. S. Aparecida / Dia das Crianças" },
+  "2026-10-14": { tipo: "recesso",     motivo: "Dia das Crianças" },
+  "2026-10-15": { tipo: "feriado",     motivo: "" },
+  "2026-10-16": { tipo: "recesso",     motivo: "" },
+  "2026-10-21": { tipo: "paralisacao", motivo: "" },
+  "2026-10-23": { tipo: "eleicoes",    motivo: "Eleições" },
+};
+
+// Junta os fixos com os do Firebase (Firebase vence).
+export function mesclarNaoLetivos(doFirebase) {
+  return { ...NAO_LETIVOS_FIXOS, ...(doFirebase || {}) };
+}
 
 // ── Atestados médicos ────────────────────────────────────────────────
 // Estrutura no Firebase: atestados/{turma}/{aluno} = [ {inicio,fim,ts,obs} ]

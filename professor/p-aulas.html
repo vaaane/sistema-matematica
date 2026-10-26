@@ -209,6 +209,7 @@
   .cham-row:first-child{border-top:none}
   .cham-row:hover{background:rgba(255,255,255,.05)}
   .cham-n{font-family:'Orbitron',monospace;font-size:10px;color:var(--text-muted);width:20px;flex-shrink:0}
+  .num-cad{font-family:'Orbitron',monospace;font-size:10px;color:var(--gold);width:34px;flex-shrink:0;opacity:.85}
   .cham-nome{flex:1;font-size:13px;color:var(--text)}
   .cham-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;flex-shrink:0}
   .cham-badge.pres{background:#dcfce7;color:#166534}
@@ -306,7 +307,7 @@
 <div class="toast" id="toast"></div>
 
 <script type="module">
-import { ALUNOS_POR_TURMA, GRADE_TURMAS, PD1_TURMAS, TIPOS_NAO_LETIVO, BIMESTRES, bimestreDeData, bimestreAtual, numeroChamada, numeroCaderno, turmaAgora } from "/js/constants.js";
+import { ALUNOS_POR_TURMA, GRADE_TURMAS, PD1_TURMAS, TIPOS_NAO_LETIVO, BIMESTRES, bimestreDeData, bimestreAtual, numeroChamada, numeroCaderno, turmaAgora, mesclarNaoLetivos, NAO_LETIVOS_FIXOS } from "/js/constants.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update, remove, push }
@@ -391,7 +392,7 @@ async function carregar(){
         }
       }
     }
-    naoLetivos = snapNL.exists() ? snapNL.val() : {};
+    naoLetivos = mesclarNaoLetivos(snapNL.exists() ? snapNL.val() : {});
     // conjunto de aulas já aplicadas nesta turma (qualquer bimestre)
     bibAplicados = new Set();
     if(snapT.exists()){
@@ -725,6 +726,7 @@ function renderChamadaModal(){
                 : `<span class="cham-badge pres">✅ Presente</span>`;
     return `<div class="cham-row" data-al="${al.replace(/"/g,'&quot;')}">
       <span class="cham-n">${numeroChamada(turma, al) || "—"}</span>
+      <span class="num-cad" title="Nº no caderno do Diário de Bordo">${numeroCaderno(turma, al) !== "" ? "📓" + numeroCaderno(turma, al) : ""}</span>
       <span class="cham-nome">${al}</span>
       ${badge}
     </div>`;
@@ -770,7 +772,7 @@ function renderVistoModal(){
   const body = document.getElementById("vmBody");
   body.innerHTML = alunos.map((al,i)=>{
     const m = v.marcas[al]||0;
-    return `<div class="vm-row" data-al="${al.replace(/"/g,'&quot;')}"><span class="vm-n">${numeroChamada(turma, al) || "—"}</span><span class="vm-nome">${al}</span>${marca(m)}</div>`;
+    return `<div class="vm-row" data-al="${al.replace(/"/g,'&quot;')}"><span class="vm-n">${numeroChamada(turma, al) || "—"}</span><span class="num-cad" title="Nº no caderno do Diário de Bordo">${numeroCaderno(turma, al) !== "" ? "📓" + numeroCaderno(turma, al) : ""}</span><span class="vm-nome">${al}</span>${marca(m)}</div>`;
   }).join("");
   body.querySelectorAll(".vm-row").forEach(el=>el.onclick=()=>ciclarMarca(el.dataset.al));
 }
@@ -867,6 +869,7 @@ async function marcarNaoLetivo(ds, tipo, motivo){
   }catch(e){ console.error(e); toast("Erro ao marcar", true); }
 }
 async function removerNaoLetivo(ds){
+  if (NAO_LETIVOS_FIXOS[ds]) { toast("Dia não-letivo fixo — altere em constants.js"); return; }
   try{
     await remove(ref(db, `calendario/naoLetivos/${ds}`));
     delete naoLetivos[ds];

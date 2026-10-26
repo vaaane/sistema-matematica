@@ -127,7 +127,7 @@
 </div>
 
 <script type="module">
-import { ALUNOS_POR_TURMA, numeroChamada, turmaAgora, GRADE_TURMAS, BIMESTRES, aulasNoDia } from "/js/constants.js";
+import { ALUNOS_POR_TURMA, numeroChamada, turmaAgora, GRADE_TURMAS, BIMESTRES, aulasNoDia, mesclarNaoLetivos, TIPOS_NAO_LETIVO } from "/js/constants.js";
 import { requireProfessor, renderSidebarProfessor, clearSession } from "/js/auth.js";
 import { db } from "/js/firebase-config.js";
 import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -167,7 +167,7 @@ async function carregar(){
       get(ref(db, `chamada/${turma}/${bimestre}`)),
       get(ref(db, "calendario/naoLetivos")),
     ]);
-    const naoLetivos = snapNL.exists() ? (snapNL.val()||{}) : {};
+    const naoLetivos = mesclarNaoLetivos(snapNL.exists() ? (snapNL.val()||{}) : {});
     const porData = {};
 
     // (1) dias letivos da turma no bimestre, pela grade de horário — SÓ até hoje
@@ -181,8 +181,10 @@ async function carregar(){
       for (let d = new Date(ini); d <= fim; d.setDate(d.getDate()+1)) {
         const ds = d.toISOString().slice(0,10);
         if (ds > hojeIso) break;                       // não mostra dias futuros
-        if (grade.includes(d.getDay()) && !naoLetivos[ds]) {
-          porData[ds] = { data: ds, pd1:false };
+        if (grade.includes(d.getDay())) {
+          porData[ds] = naoLetivos[ds]
+            ? { data: ds, pd1:false, naoLetivo: naoLetivos[ds] }
+            : { data: ds, pd1:false };
         }
       }
     }
@@ -191,7 +193,7 @@ async function carregar(){
     if (snapA.exists()) {
       for (const a of Object.values(snapA.val())) {
         if (!a || !a.data) continue;
-        const d = (porData[a.data] ||= { data:a.data, pd1:false });
+        const d = (porData[a.data] ||= { data:a.data, pd1:false });   // ||= mantém naoLetivo se já marcado
         if (a.pd1) d.pd1 = true;
       }
     }
@@ -202,7 +204,7 @@ async function carregar(){
         if (/^\d{4}-\d{2}-\d{2}$/.test(k)) {
           chamada[k] = v || {};
           // (3) qualquer dia que já tenha chamada aparece, mesmo sem aula/grade
-          porData[k] ||= { data:k, pd1:false };
+          porData[k] ||= { data:k, pd1:false };   // ||= mantém naoLetivo se já marcado
         }
       }
     }
@@ -279,11 +281,13 @@ function render(){
     return;
   }
 
-  const nDias = dias.length, nAlunos = alunos.length;
-  const totalAulas = dias.reduce((s,d)=> s + (aulasNoDia(turma, d.data) || 1), 0);
-  const aulasPerdidasDe = al => dias.reduce((s,d)=> s + aulasPerdidas(d.data, al), 0);
-  const faltasDiasDe = al => dias.filter(d=>faltou(d.data, al)).length;
-  const atrasosDe    = al => dias.filter(d=>atrasou(d.data, al)).length;
+  // dias não-letivos aparecem como coluna, mas não entram em nenhuma contagem
+  const letivos = dias.filter(d=>!d.naoLetivo);
+  const nDias = letivos.length, nAlunos = alunos.length;
+  const totalAulas = letivos.reduce((s,d)=> s + (aulasNoDia(turma, d.data) || 1), 0);
+  const aulasPerdidasDe = al => letivos.reduce((s,d)=> s + aulasPerdidas(d.data, al), 0);
+  const faltasDiasDe = al => letivos.filter(d=>faltou(d.data, al)).length;
+  const atrasosDe    = al => letivos.filter(d=>atrasou(d.data, al)).length;
   const totalAulasPerdidas = alunos.reduce((s,al)=>s+aulasPerdidasDe(al),0);
   const denom = totalAulas*nAlunos;
   const mediaPres = denom ? Math.round((1 - totalAulasPerdidas/denom)*100) : 100;
@@ -296,12 +300,15 @@ function render(){
 
   const head = `<thead><tr>
     <th class="col-aluno">Aluno</th>
-    ${dias.map(d=>{ const na=aulasNoDia(turma,d.data)||1; return `<th class="th-aula"><div class="th-num">${diaSemana(d.data)}</div><div class="th-data">${fmtData(d.data)}</div><div class="th-aulas">${na} aula${na>1?"s":""}</div>${d.pd1?`<div class="th-pd1">PD1</div>`:""}</th>`; }).join("")}
+    ${dias.map(d=>{
+      if(d.naoLetivo){ const t=infoNL(d); return `<th class="th-aula" style="background:rgba(240,90,90,.10)" title="${tituloNL(d)}"><div class="th-num">${t.emoji}</div><div class="th-data">${fmtData(d.data)}</div><div class="th-aulas">${t.rotulo}</div></th>`; }
+      const na=aulasNoDia(turma,d.data)||1; return `<th class="th-aula"><div class="th-num">${diaSemana(d.data)}</div><div class="th-data">${fmtData(d.data)}</div><div class="th-aulas">${na} aula${na>1?"s":""}</div>${d.pd1?`<div class="th-pd1">PD1</div>`:""}</th>`; }).join("")}
     <th class="col-tot">Faltas</th>
   </tr></thead>`;
 
   const body = `<tbody>${alunos.map((al)=>{
     const cells = dias.map(d=>{
+      if(d.naoLetivo) return `<td class="cell" style="background:rgba(240,90,90,.10);color:var(--text-muted)" title="${tituloNL(d)}">—</td>`;
       const est = estadoDe(d.data, al);                 // "", "falta", "atraso", "matando"
       const cls = est==="falta"?"f":est==="atraso"?"a":est==="matando"?"m":"p";
       const txt = est==="falta"?"F":est==="atraso"?"A":est==="matando"?"M":"P";
@@ -320,6 +327,7 @@ function render(){
   const foot = `<tfoot><tr>
     <td class="col-aluno">Aulas perdidas no dia</td>
     ${dias.map(d=>{
+      if(d.naoLetivo) return `<td style="background:rgba(240,90,90,.10);color:var(--text-muted)">—</td>`;
       const s = alunos.reduce((acc,al)=>acc+aulasPerdidas(d.data, al),0);
       return `<td><span class="foot-f ${s===0?"zero":""}">${s}</span></td>`;
     }).join("")}
@@ -337,7 +345,7 @@ function render(){
     .map(al => ({ n: numeroChamada(turma, al), al }))
     .sort((x,y) => (x.n||9999) - (y.n||9999))
     .map(x => x.n ? String(x.n).padStart(2,"0") : x.al);
-  const diasDesc = dias.slice().reverse();   // mais recente primeiro
+  const diasDesc = letivos.slice().reverse();   // mais recente primeiro
   const resumoHtml = diasDesc.map(d => {
     const faltas  = coletar(d.data, faltou);   // inclui "matando aula"
     const atrasos = coletar(d.data, atrasou);
@@ -357,6 +365,13 @@ function render(){
     ${resumoHtml}`;
 }
 
+// Rótulo/emoji de um dia não-letivo (tipo desconhecido cai em "Não-letivo")
+function infoNL(d){ return TIPOS_NAO_LETIVO[d.naoLetivo?.tipo] || { rotulo:"Não-letivo", emoji:"🚫" }; }
+function tituloNL(d){
+  const t = infoNL(d), m = d.naoLetivo?.motivo;
+  return (t.rotulo + (m && m !== t.rotulo ? " — " + m : "")).replace(/"/g,'&quot;');
+}
+
 function renderTabsBim(){
   document.getElementById("bimTabs").innerHTML =
     [1,2,3,4].map(b=>`<button class="bim-tab ${b===bimestre?"active":""}" data-b="${b}">${b}º Bim</button>`).join("");
@@ -367,13 +382,14 @@ function exportarCSV(){
   const alunos = ALUNOS_POR_TURMA[turma] || [];
   const sep = ";";
   const esc = s => `"${String(s).replace(/"/g,'""')}"`;
-  const head = ["Nº","Aluno", ...dias.map(d=>`${fmtData(d.data)} (${aulasNoDia(turma,d.data)||1}a)`), "Faltas (aulas)", "Faltas (dias)", "Atrasos"];
+  const letivos = dias.filter(d=>!d.naoLetivo);
+  const head = ["Nº","Aluno", ...dias.map(d=> d.naoLetivo ? fmtData(d.data) : `${fmtData(d.data)} (${aulasNoDia(turma,d.data)||1}a)`), "Faltas (aulas)", "Faltas (dias)", "Atrasos"];
   const linhas = [head.join(sep)];
   alunos.forEach((al)=>{
-    const cells = dias.map(d=>{ const e=estadoDe(d.data,al); return e==="falta"?"F":e==="atraso"?"A":e==="matando"?"M":"P"; });
-    const ap = dias.reduce((s,d)=>s+aulasPerdidas(d.data,al),0);
-    const fd = dias.filter(d=>faltou(d.data,al)).length;
-    const at = dias.filter(d=>atrasou(d.data,al)).length;
+    const cells = dias.map(d=>{ if(d.naoLetivo) return infoNL(d).rotulo; const e=estadoDe(d.data,al); return e==="falta"?"F":e==="atraso"?"A":e==="matando"?"M":"P"; });
+    const ap = letivos.reduce((s,d)=>s+aulasPerdidas(d.data,al),0);
+    const fd = letivos.filter(d=>faltou(d.data,al)).length;
+    const at = letivos.filter(d=>atrasou(d.data,al)).length;
     linhas.push([numeroChamada(turma,al)||"", esc(al), ...cells, ap, fd, at].join(sep));
   });
   const csv = "\uFEFF" + linhas.join("\r\n");
