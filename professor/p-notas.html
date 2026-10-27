@@ -131,14 +131,15 @@
 
       <div class="legenda-extras">
         <!-- placeholder: o render troca pelos extras do bimestre selecionado (EXTRAS_AUTO + bonusConfig) -->
-        <span class="legenda-chip auto">🔄 Tabuada nv.50 <b>+1,0</b></span>
+        <span class="legenda-chip auto">🔄 Tabuada nv.50 <b>+0,5</b></span>
         <span class="legenda-chip auto">🔄 Tabuada nv.100 <b>+0,5</b></span>
-        <span class="legenda-chip auto">🔄 Tabuada nv.150 <b>+0,5</b></span>
-        <span class="legenda-chip auto">🔄 Tabuada Negativa nv.50 <b>+1,0</b></span>
+        <span class="legenda-chip auto">🔄 Tabuada nv.150 <b>+1,0</b></span>
+        <span class="legenda-chip auto">🔄 Tabuada Negativa nv.50 <b>+0,5</b></span>
         <span class="legenda-chip auto">🔄 Tabuada Negativa nv.100 <b>+0,5</b></span>
-        <span class="legenda-chip auto">🔄 Tabuada Negativa nv.150 <b>+0,5</b></span>
-        <span class="legenda-chip auto">🔄 Escalada Algébrica nv.50 <b>+1,0</b></span>
-        <span class="legenda-chip auto">🔄 Escalada Algébrica nv.100 <b>+1,0</b></span>
+        <span class="legenda-chip auto">🔄 Tabuada Negativa nv.150 <b>+1,0</b></span>
+        <span class="legenda-chip auto">🔄 Escalada Algébrica nv.50 <b>+0,5</b></span>
+        <span class="legenda-chip auto">🔄 Escalada Algébrica nv.100 <b>+0,5</b></span>
+        <span class="legenda-chip auto">🔄 Escalada Algébrica nv.150 <b>+1,0</b></span>
       </div>
 
       <div class="tbl-wrap">
@@ -276,7 +277,7 @@ const COLUNAS_EXTRAS_B4 = [
   { k:"negativa", t:"Negativa", max:"até +2",
     valor: (a, auto) => somaChaves(auto, ["tneg50b", "tneg100", "tneg150b"]), titulo:(a) => `nível ${a.melhorNeg || 0}` },
   { k:"escalada", t:"Escalada", max:"até +2",
-    valor: (a, auto) => somaChaves(auto, ["esc50", "esc100b"]),       titulo:(a) => `nível ${a.melhorEscalada || 0}` },
+    valor: (a, auto) => somaChaves(auto, ["esc50", "esc100b", "esc150"]), titulo:(a) => `nível ${a.melhorEscalada || 0}` },
   { k:"revisao",  t:"Revisão",  max:`0 a ${EXTRA_REVISAO.max}`,
     valor: (a) => a.notaRevisao || 0,                                titulo:() => "nota do Jogo de Revisão (entra inteira)" },
 ];

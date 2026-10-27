@@ -53,20 +53,21 @@ export const EXTRAS_AUTO = [
   // A partir do 3º bim vale +1,0 (antes +0,5) — getter pra não alterar o total dos bimestres anteriores.
   { key:"esc200",  label:"Escalada Algébrica nível 200",     get valor() { return +BIMESTRE >= 3 ? 1 : 0.5; }, max:200, campo:"melhorEscalada" },
   // ── 4º bim em diante (chaves NOVAS — não reaproveitar as de cima, que valem
-  // para os bimestres já fechados). Acumulado: Tabuada/Negativa 1,0 → 1,5 → 2,0;
-  // Escalada 1,0 → 2,0. Mesmos marcos de regrasJogo() em js/constants.js.
-  { key:"t50",      label:"Tabuada nível 50",                 valor:1.0, max:50,  campo:"melhorTabuada" },
+  // para os bimestres já fechados). Acumulado, nos três jogos: nível 50 = 0,5 ·
+  // nível 100 = 1,0 · nível 150 = 2,0. Mesmos marcos de regrasJogo() em js/constants.js.
+  { key:"t50",      label:"Tabuada nível 50",                 valor:0.5, max:50,  campo:"melhorTabuada" },
   { key:"t100",     label:"Tabuada nível 100",                valor:0.5, max:100, campo:"melhorTabuada" },
-  { key:"t150b",    label:"Tabuada nível 150",                valor:0.5, max:150, campo:"melhorTabuada" },
-  { key:"tneg50b",  label:"Tabuada Negativa nível 50",        valor:1.0, max:50,  campo:"melhorNeg" },
+  { key:"t150b",    label:"Tabuada nível 150",                valor:1.0, max:150, campo:"melhorTabuada" },
+  { key:"tneg50b",  label:"Tabuada Negativa nível 50",        valor:0.5, max:50,  campo:"melhorNeg" },
   { key:"tneg100",  label:"Tabuada Negativa nível 100",       valor:0.5, max:100, campo:"melhorNeg" },
-  { key:"tneg150b", label:"Tabuada Negativa nível 150",       valor:0.5, max:150, campo:"melhorNeg" },
-  { key:"esc50",    label:"Escalada Algébrica nível 50",      valor:1.0, max:50,  campo:"melhorEscalada" },
-  { key:"esc100b",  label:"Escalada Algébrica nível 100",     valor:1.0, max:100, campo:"melhorEscalada" },
+  { key:"tneg150b", label:"Tabuada Negativa nível 150",       valor:1.0, max:150, campo:"melhorNeg" },
+  { key:"esc50",    label:"Escalada Algébrica nível 50",      valor:0.5, max:50,  campo:"melhorEscalada" },
+  { key:"esc100b",  label:"Escalada Algébrica nível 100",     valor:0.5, max:100, campo:"melhorEscalada" },
+  { key:"esc150",   label:"Escalada Algébrica nível 150",     valor:1.0, max:150, campo:"melhorEscalada" },
 ];
 // Chaves de EXTRAS_AUTO que valem em cada regra de pontuação dos jogos.
 const EXTRAS_JOGOS_ANTIGOS = ["t150", "t300", "tneg50", "tneg150", "esc100", "esc200"];          // 1º–3º bim
-const EXTRAS_JOGOS_B4      = ["t50", "t100", "t150b", "tneg50b", "tneg100", "tneg150b", "esc50", "esc100b"]; // 4º bim+
+const EXTRAS_JOGOS_B4      = ["t50", "t100", "t150b", "tneg50b", "tneg100", "tneg150b", "esc50", "esc100b", "esc150"]; // 4º bim+
 // Caderno Extra — automático, baseado na própria nota de Caderno lançada (não é mais checkbox manual)
 export const CADERNO_EXTRA = { key:"cadExtra", label:"Caderno Extra", valor:0.5, limiar:1.8 };
 // Bônus caderno (3º bim): % de vistos "feitos" (✓, ½, FA e AT✓ contam; F/vazio
@@ -561,7 +562,7 @@ export async function totalAtividadesAluno(turma, nome) {
 // Soma os extras automáticos de jogos que o aluno já bateu (tabuada normal,
 // negativa e escalada), respeitando o bonusConfig do bimestre. maximo = soma
 // dos valores desses extras (3,5 no 3º bim: 5 marcos × 0,5 + Escalada 200 × 1,0;
-// 6,0 no 4º bim: Tabuada 2,0 + Negativa 2,0 + Escalada 2,0).
+// 6,0 no 4º bim: Tabuada 2,0 + Negativa 2,0 + Escalada 2,0 — cada um 0,5 + 0,5 + 1,0).
 const CHAVES_EXTRAS_JOGOS = [...EXTRAS_JOGOS_ANTIGOS, ...EXTRAS_JOGOS_B4];
 export async function extrasJogosAluno(turma, nome) {
   const cfg = bonusConfig();

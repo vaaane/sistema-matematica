@@ -244,7 +244,7 @@ const IC = {
 const ICON_ATIV = { provaMulti:IC.prova, projeto:IC.lampada, caderno:IC.livro, ativ4:IC.formas, triangulos:IC.triangulo, participacao:IC.mao, equacoes:IC.prova, cadernoVistos:IC.livro, razaoProp:IC.prova, conselheiro:IC.mao, pd:IC.formas,
                     cadernoB4:IC.livro, comportamento:IC.mao, consciencia:IC.lampada };
 const ICON_EXTRA = { t150:IC.grid, t300:IC.grid, tneg50:IC.negativo, tneg150:IC.negativo, esc100:IC.estrela, esc200:IC.estrela,
-                     t50:IC.grid, t100:IC.grid, t150b:IC.grid, tneg50b:IC.negativo, tneg100:IC.negativo, tneg150b:IC.negativo, esc50:IC.estrela, esc100b:IC.estrela };
+                     t50:IC.grid, t100:IC.grid, t150b:IC.grid, tneg50b:IC.negativo, tneg100:IC.negativo, tneg150b:IC.negativo, esc50:IC.estrela, esc100b:IC.estrela, esc150:IC.estrela };
 
 // ── Bloco "Atividades do bimestre" no estilo cartão-com-ícone (DOIS estados) ──
 function blocoAtividadesIcones(boletim, encerrado) {
@@ -409,7 +409,7 @@ function blocoExtrasB4(boletim, encerrado) {
       <div class="prog-right"><div class="pts ${on?"green":"muted"}">${pts}</div><div class="pts-sub">${sub}</div></div>
     </div>`;
 
-  // Jogo com marcos acumulados (ex.: Tabuada 50 → +1,0 · 100 → +1,5 · 150 → +2,0)
+  // Jogo com marcos acumulados (ex.: Tabuada 50 → +0,5 · 100 → +1,0 · 150 → +2,0)
   function jogo(titulo, chaves, cor, icon) {
     const marcos = EXTRAS_AUTO.filter(e => chaves.includes(e.key) && vale(e.key));
     if (!marcos.length) return "";
@@ -450,7 +450,7 @@ function blocoExtrasB4(boletim, encerrado) {
     <div class="prog-list">${cadCompl}
       ${jogo("Tabuada", ["t50", "t100", "t150b"], "orange", IC.grid)}
       ${jogo("Tabuada Negativa", ["tneg50b", "tneg100", "tneg150b"], "purple", IC.negativo)}
-      ${jogo("Escalada Algébrica", ["esc50", "esc100b"], "cyan", IC.estrela)}
+      ${jogo("Escalada Algébrica", ["esc50", "esc100b", "esc150"], "cyan", IC.estrela)}
       ${revisao}</div>`;
 }
 

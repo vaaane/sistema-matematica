@@ -402,7 +402,7 @@ function phaseFor(lv){return PHASES.find(p=>lv>=p.lo&&lv<=p.hi);}
        → { nome, turma, nivel_atual, melhor_nivel, bonus, ultima_partida }
    'bonus' é o valor extra já conquistado (acumulado) — ver bonusEscalada() em
    js/constants.js: até o 3º bim 0 / 0.5 (nível 100) / 1.0 (nível 200); do 4º
-   bim 0 / 1.0 (nível 50) / 2.0 (nível 100).
+   bim 0 / 0.5 (nível 50) / 1.0 (nível 100) / 2.0 (nível 150).
    A ficha do aluno lerá 'melhor_nivel' desses nós para mostrar/contabilizar
    o bônus — igual faz hoje com tabuada/tabuada negativa. */
 const MAX=200;                            // nível máximo do jogo (não muda com a pontuação)
@@ -430,7 +430,7 @@ const _hallKey   = campoHallJogo('escalada', _bimJogo);   // concluiu_200_em | c
 const BONUS_MAX  = bonusPorNivel(MAX);                    // 1,0 até o 3º bim · 2,0 do 4º
 if (_bimJogo >= 4) {
   const el = document.getElementById('extra-banner-txt');
-  if (el) el.innerHTML = 'Este jogo vale nota extra: <b>+1,0</b> ao chegar ao <b>nível 50</b> e <b>+2,0</b> no total ao chegar ao <b>nível 100</b>.';
+  if (el) el.innerHTML = 'Este jogo vale nota extra: <b>+0,5</b> no <b>nível 50</b>, <b>+1,0</b> no total no <b>nível 100</b> e <b>+2,0</b> no total no <b>nível 150</b>.';
 }
 const _niveisPath  = _bimJogo <= 2 ? `escalada_niveis/${uid}`  : `escalada_niveis_b/${_bimJogo}/${uid}`;
 const _rankingPath = _bimJogo <= 2 ? `escalada_ranking/${uid}` : `escalada_ranking_b/${_bimJogo}/${uid}`;

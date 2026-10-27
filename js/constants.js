@@ -243,8 +243,8 @@ export function bloquearJogoEncerrado(bim, voltar = "/aluno/a-jogos.html") {
 // ── Pontuação dos jogos (nota extra) por bimestre ───────────
 // Até o 3º bim: regra antiga (valores exatamente como eram exibidos).
 // Do 4º bim em diante (valores ACUMULADOS):
-//   Tabuada / Negativa: nv.50 = 1,0 · nv.100 = 1,5 · nv.150 = 2,0 — Hall da Fama no 150
-//   Escalada:           nv.50 = 1,0 · nv.100 = 2,0               — Hall da Fama no 100
+//   Tabuada / Negativa: nv.50 = 0,5 · nv.100 = 1,0 · nv.150 = 2,0 — Hall da Fama no 150
+//   Escalada:           nv.50 = 0,5 · nv.100 = 1,0 · nv.150 = 2,0 — Hall da Fama no 100
 // `marcos` guarda o INCREMENTO de cada nível; `hall` é o nível de corte do
 // Hall da Fama (o jogo continua até o nível máximo — 300 / 150 / 200).
 // A conta da nota de verdade fica em js/notas.js (EXTRAS_AUTO).
@@ -254,9 +254,9 @@ const REGRAS_JOGOS_ANTIGA = {
   escalada: { marcos: [{ nivel:100, bonus:0.5 }, { nivel:200, bonus:1.0 }], hall: 200 },
 };
 const REGRAS_JOGOS_B4 = {
-  tabuada:  { marcos: [{ nivel:50, bonus:1.0 }, { nivel:100, bonus:0.5 }, { nivel:150, bonus:0.5 }], hall: 150 },
-  negativa: { marcos: [{ nivel:50, bonus:1.0 }, { nivel:100, bonus:0.5 }, { nivel:150, bonus:0.5 }], hall: 150 },
-  escalada: { marcos: [{ nivel:50, bonus:1.0 }, { nivel:100, bonus:1.0 }],                           hall: 100 },
+  tabuada:  { marcos: [{ nivel:50, bonus:0.5 }, { nivel:100, bonus:0.5 }, { nivel:150, bonus:1.0 }], hall: 150 },
+  negativa: { marcos: [{ nivel:50, bonus:0.5 }, { nivel:100, bonus:0.5 }, { nivel:150, bonus:1.0 }], hall: 150 },
+  escalada: { marcos: [{ nivel:50, bonus:0.5 }, { nivel:100, bonus:0.5 }, { nivel:150, bonus:1.0 }], hall: 100 },
 };
 export function regrasJogo(jogo, bim = bimestreJogos()) {
   const r = (+bim >= 4 ? REGRAS_JOGOS_B4 : REGRAS_JOGOS_ANTIGA)[jogo];
@@ -268,10 +268,10 @@ export function campoHallJogo(jogo, bim = bimestreJogos()) {
 }
 
 // Bônus (acumulado) da Escalada pelo melhor nível.
-// Até o 3º bim: nível 100 = 0,5 · nível 200 = 1,0. Do 4º bim: nível 50 = 1,0 · nível 100 = 2,0.
+// Até o 3º bim: nível 100 = 0,5 · nível 200 = 1,0. Do 4º bim: nível 50 = 0,5 · nível 100 = 1,0 · nível 150 = 2,0.
 export const ESCALADA_MAX = 200;
 export function bonusEscalada(melhorNivel = 0, bim = bimestreJogos()) {
-  if (+bim >= 4) return melhorNivel >= 100 ? 2.0 : melhorNivel >= 50 ? 1.0 : 0;
+  if (+bim >= 4) return melhorNivel >= 150 ? 2.0 : melhorNivel >= 100 ? 1.0 : melhorNivel >= 50 ? 0.5 : 0;
   return melhorNivel >= 200 ? 1.0 : melhorNivel >= 100 ? 0.5 : 0;
 }
 

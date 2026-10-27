@@ -1400,8 +1400,10 @@ if (_sess && _sess.alunos && _sess.alunos.length) {
       const ops = { add:0, sub:0, mul:0, div:0, ...(meu.tipos_acertos||{}) };
       // Barra/nível máximo continuam 200; o Hall da Fama corta no 100 a partir do 4º bim.
       const regras = regrasJogo('escalada', _bim);
+      // Prêmio do Hall = o que o aluno tem ao chegar no nível do Hall (no 4º bim, 100 → +1,0; o +2,0 é no 150)
+      const premioHall = regras.marcos.filter(m => m.nivel <= regras.hall).reduce((s, m) => s + m.bonus, 0);
       box.innerHTML = painelCompleto({ icon:'🧗', titulo:'Escalada Algébrica', subtitulo:'Simplifique expressões subindo de nível',
-        cor:'#9b30ff', nivel, melhor, max:200, hall: regras.hall, premio: _bim >= 4 ? fmt(regras.total) : '1,0',
+        cor:'#9b30ff', nivel, melhor, max:200, hall: regras.hall, premio: _bim >= 4 ? fmt(premioHall) : '1,0',
         partidas: null, maiorCombo: null, ops, concluidoKey: campoHallJogo('escalada', _bim),
         marcos: regras.marcos, listaGeral: lista, listaTurma });
     } catch(e){ console.error('[jogos] detalhes escalada', e); box.innerHTML = '<div style="padding:16px;color:var(--g-muted);font-size:12px">Não foi possível carregar os detalhes.</div>'; }
