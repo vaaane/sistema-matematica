@@ -113,6 +113,8 @@ export function campoPendente(key) { return camposPendentes().has(key); }
 export const CAMPOS_DIFERIDOS_POR_BIMESTRE = {
   // 3º bim: Caderno e Conselheiro passaram a aparecer ao vivo pro aluno (25/09/2026),
   // pra nota dele bater com a do professor sem precisar congelar.
+  // 4º bim: Caderno e Comportamento só aparecem ao aluno quando o bimestre for fechado (congelado).
+  "4": ["cadernoB4", "comportamento"],
 };
 export function camposDiferidos() { return new Set(CAMPOS_DIFERIDOS_POR_BIMESTRE[BIMESTRE] || []); }
 export function campoDiferido(key) { return camposDiferidos().has(key); }
@@ -682,6 +684,8 @@ export async function montarBoletim(turma, nome, opcoes = {}) {
     const dif = camposDiferidos();
     if (dif.has("cadernoVistos")) { cadernoVal = null; progresso.pctCaderno = null; }
     if (dif.has("conselheiro"))   conselheiroVal = null;
+    if (dif.has("cadernoB4"))     { cadB4Val = null; progresso.pctCaderno = null; }  // Caderno completo usa a mesma fonte
+    if (dif.has("comportamento")) comportVal = null;
   }
 
   const registro = {

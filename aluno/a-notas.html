@@ -218,6 +218,8 @@ const fmt   = fmtNota;
 
 // ── detecta se todas as notas manuais foram lançadas ──────────
 function todasLancadas(boletim) {
+  // com campo diferido ainda oculto, o bimestre não está encerrado (só ao congelar)
+  if (!boletim.congelado && camposAtivos().some(c => campoDiferido(c.key))) return false;
   // considera "encerrado" quando os campos MANUAIS ativos do bimestre foram lançados
   const chaves = camposAtivos().filter(c => !campoAuto(c, turma) && c.key !== "participacao").map(c => c.key);
   return chaves.every(k => {
@@ -428,8 +430,10 @@ function blocoExtrasB4(boletim, encerrado) {
 
   const pct = progresso.pctCaderno;
   const ccOn = cadernoCompletoAtivo(pct);
+  const ccOculto = campoDiferido("cadernoB4") && !boletim.congelado;   // mesma trava do Caderno
   const cadCompl = !cfg.cadernoCompleto ? "" : card({ on: ccOn, cor: "purple", icon: IC.livro, titulo: CADERNO_COMPLETO.label,
-    desc: pct == null ? `Calculado quando houver vistos do caderno (precisa ${CADERNO_COMPLETO.limiarPct}%)`
+    desc: ccOculto ? "Disponível ao fechar o bimestre"
+        : pct == null ? `Calculado quando houver vistos do caderno (precisa ${CADERNO_COMPLETO.limiarPct}%)`
         : ccOn ? `Conquistado! ${pct}% dos vistos` : `${pct}% dos vistos · precisa ${CADERNO_COMPLETO.limiarPct}%`,
     pct: pct == null ? null : Math.min(100, Math.round(pct / CADERNO_COMPLETO.limiarPct * 100)),
     barLabel: pct == null ? "" : `${pct}%/${CADERNO_COMPLETO.limiarPct}%${ccOn ? " ✓" : ""}`,
@@ -493,7 +497,8 @@ function renderAndamento(boletim) {
     // 4º bim: Caderno completo e o que falta no Jogo de Revisão também contam no potencial
     if (cfg.cadernoCompleto && !cadernoCompletoAtivo(progresso.pctCaderno)) {
       potencial += CADERNO_COMPLETO.valor;
-      descs.unshift(`<b>${CADERNO_COMPLETO.label}</b> (+${fmt(CADERNO_COMPLETO.valor)}): ${progresso.pctCaderno ?? 0}%/${CADERNO_COMPLETO.limiarPct}%`);
+      const ccOculto = campoDiferido("cadernoB4") && !boletim.congelado;
+      descs.unshift(`<b>${CADERNO_COMPLETO.label}</b> (+${fmt(CADERNO_COMPLETO.valor)}): ${ccOculto ? "disponível ao fechar o bimestre" : `${progresso.pctCaderno ?? 0}%/${CADERNO_COMPLETO.limiarPct}%`}`);
     }
     if (cfg.revisao && (progresso.notaRevisao || 0) < EXTRA_REVISAO.max) {
       const falta = EXTRA_REVISAO.max - (progresso.notaRevisao || 0);
