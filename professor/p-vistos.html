@@ -258,7 +258,7 @@ const TURMAS = Object.keys(ALUNOS_POR_TURMA);
 const EXTRAS_VISTOS = { "8E": ["_Kaua"] };
 const alunosDaTurma = t => [...(ALUNOS_POR_TURMA[t] || []), ...(EXTRAS_VISTOS[t] || [])];
 let turma = turmaAgora() || (TURMAS.includes("8F") ? "8F" : TURMAS[0]);
-let bimestre = 3;
+let bimestre = 4;
 let filtro = "";
 let atvSel = null, editandoId = null;
 

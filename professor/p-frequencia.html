@@ -85,6 +85,9 @@
   .rg-nums.f{color:var(--red)} .rg-nums.a{color:var(--gold)}
   .rg-none{color:var(--text-muted)}
   .rg-ok{color:var(--green);font-size:12px;font-weight:600}
+  .rg-dia.rg-nl{opacity:.75}
+  .rg-dia.rg-nl .rg-data{color:var(--text-muted)}
+  .rg-nl-txt{font-size:12px;color:var(--text-muted);font-style:italic}
   .vazio{padding:40px 20px;text-align:center;color:var(--text-muted)}
   @media print{.sidebar,.topbar{display:none!important}.main{margin:0!important}}
 </style>
@@ -138,7 +141,7 @@ window.sair = () => { clearSession(); window.location.href = "/index.html"; };
 
 const TURMAS = Object.keys(ALUNOS_POR_TURMA);
 let turma = turmaAgora() || (TURMAS.includes("8F") ? "8F" : TURMAS[0]);
-let bimestre = 3;
+let bimestre = 4;
 
 let dias = [];       // [{data, pd1}] — um por DIA que teve aula
 let chamada = {};    // { "YYYY-MM-DD": { aluno: "falta" | "atraso" } }  (presente = sem marca)
@@ -345,8 +348,15 @@ function render(){
     .map(al => ({ n: numeroChamada(turma, al), al }))
     .sort((x,y) => (x.n||9999) - (y.n||9999))
     .map(x => x.n ? String(x.n).padStart(2,"0") : x.al);
-  const diasDesc = letivos.slice().reverse();   // mais recente primeiro
+  const diasDesc = dias.slice().reverse();      // mais recente primeiro — inclui não-letivos da grade
   const resumoHtml = diasDesc.map(d => {
+    if (d.naoLetivo) {
+      const t = infoNL(d), m = d.naoLetivo?.motivo;
+      return `<div class="rg-dia rg-nl">
+        <span class="rg-data">${fmtData(d.data)}<small>${diaSemana(d.data)}</small></span>
+        <span class="rg-nl-txt">${t.emoji} ${t.rotulo}${m && m !== t.rotulo ? " — " + m : ""} — sem aula</span>
+      </div>`;
+    }
     const faltas  = coletar(d.data, faltou);   // inclui "matando aula"
     const atrasos = coletar(d.data, atrasou);
     const tudoOk = !faltas.length && !atrasos.length;
@@ -361,7 +371,7 @@ function render(){
   }).join("");
   document.getElementById("resumoDias").innerHTML = `
     <h3>📋 Resumo por dia — para lançar no sistema do governo</h3>
-    <div class="rg-hint">Números da chamada de quem faltou ou atrasou em cada dia (faltas incluem quem estava matando aula). Do dia mais recente para o mais antigo.</div>
+    <div class="rg-hint">Números da chamada de quem faltou ou atrasou em cada dia (faltas incluem quem estava matando aula). Do dia mais recente para o mais antigo. Dias sem aula (feriado, recesso etc.) aparecem em cinza.</div>
     ${resumoHtml}`;
 }
 
