@@ -53,7 +53,7 @@ export function criarBarrinha(dif, rnd = Math.random) {
   const c = cfgBarrinha(dif);
   // o peixe começa no alto, longe da zona verde (que começa no fundo): ficar parado não pega o peixe
   return { c, rnd, z: 0, vz: 0, h: c.zona, y: 0.65, vy: 0, alvo: 0.55 + rnd() * 0.4, muda: c.muda_s[0], arranca: 0,
-    captura: P?.config?.captura_inicial ?? 0.3, fim: null };
+    captura: P?.config?.captura_inicial ?? 0.4, fim: null };
 }
 // avança dt segundos; devolve o próprio estado (fim: 'pegou' | 'escapou')
 export function passoBarrinha(b, dt, segurando) {

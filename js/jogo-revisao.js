@@ -2629,7 +2629,7 @@ function pescaFisgada() {
   pescaPose('atento');
   pesca.exc.hidden = false;
   tocar('clique');
-  pescaDepois(() => { if (pesca.estado === 'fisgada') pescaEscapou(); }, (cfgPesca().tempo_fisgar_s ?? 1.2) * 1000);
+  pescaDepois(() => { if (pesca.estado === 'fisgada') pescaEscapou(); }, (cfgPesca().tempo_fisgar_s ?? 2.0) * 1000);
 }
 // 3. tocou a tempo: puxa e abre o minijogo da barrinha (sem conta). Segurar sobe a zona verde; soltar, ela cai.
 function pescaPuxar() {
@@ -2645,6 +2645,10 @@ function pescaPuxar() {
   $('pb-zona').style.height = pesca.barra.h * 100 + '%';
   $('pb-peixe').innerHTML = imgItem(f.imagem, f.raro ? '🐠' : '🐟', 'jr-item-peixe' + (f.raro ? ' raro' : ''), f.filtro);
   desenharBarrinha(pesca.barra);
+  // PROMPT-147: nas 3 primeiras pescas do aluno, a dica fica maior e pisca
+  let nPescas = 0;
+  try { nPescas = +localStorage.getItem(`jr_pesca_dica_${sessao.uid}`) || 0; localStorage.setItem(`jr_pesca_dica_${sessao.uid}`, String(nPescas + 1)); } catch (_) {}
+  $('pb-dica').classList.toggle('destaque', nPescas < 3);
   $('pesca-barra').hidden = false;
   let t0 = performance.now();
   const tick = (agora) => {
