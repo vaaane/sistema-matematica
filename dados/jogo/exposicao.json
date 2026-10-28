@@ -45,11 +45,13 @@
   },
   "_nota_moveis": "Catálogo do editor (PROMPT-EXPOSICAO-2): img/jogo/exposicao/moveis/{id}_{vista}.webp. largura em px lógicos × escala_moveis; tipo chao | parede | tapete; cat: aba do catálogo; conteudo: null | texto | foto | fotos4 | nome_sala; cor: null | matiz | madeira (filtros em cores).",
   "escala_moveis": 0.8, "limites": {"itens": 100, "fotos": 12},
-  "abas": [{"id": "museu", "nome": "🏛️ Museu"}, {"id": "molduras", "nome": "🖼️ Molduras"}, {"id": "cultura", "nome": "🥁 Arte e cultura"}, {"id": "afrobrasil", "nome": "✊🏾 Afro-Brasil"}, {"id": "estatuas", "nome": "🗿 Estátuas"}, {"id": "plantas", "nome": "🌳 Plantas e tapetes"}],
+  "abas": [{"id": "museu", "nome": "🏛️ Museu"}, {"id": "molduras", "nome": "🖼️ Molduras"}, {"id": "cultura", "nome": "🥁 Arte e cultura"}, {"id": "afrobrasil", "nome": "✊🏾 Afro-Brasil"}, {"id": "estatuas", "nome": "🗿 Estátuas"}, {"id": "plantas", "nome": "🌳 Plantas e tapetes"}, {"id": "moveis", "nome": "🛋️ Móveis"}],
   "cores": {
-    "_nota": "CSS filter de cada índice (0 = a imagem original). matiz: gira a cor; madeira: clara/escura por brilho e saturação, sem girar.",
+    "_nota": "CSS filter de cada índice (0 = a imagem original). matiz: gira a cor; madeira: clara/escura por brilho e saturação, sem girar; pele: 6 tons de pele (0 = o original; as amostras do 🎨 aparecem na ordem de `ordem`, do mais claro ao mais retinto).",
     "matiz": ["", "hue-rotate(50deg)", "hue-rotate(110deg)", "hue-rotate(170deg)", "hue-rotate(230deg)", "hue-rotate(300deg)"],
-    "madeira": ["", "brightness(1.22) saturate(0.85)", "brightness(0.7) saturate(1.1)"]
+    "madeira": ["", "brightness(1.22) saturate(0.85)", "brightness(0.7) saturate(1.1)"],
+    "pele": ["", "brightness(1.35) saturate(0.85)", "brightness(1.15) saturate(0.95)", "brightness(0.78)", "brightness(0.58) saturate(0.95)", "brightness(0.42) saturate(0.85)"],
+    "ordem": {"pele": [1, 2, 0, 3, 4, 5]}
   },
   "letreiro": {"_nota": "onde vai o nome da sala na placa do letreiro (centro e largura em % da imagem)", "centro": [50, 50], "largura": 68},
   "moveis": [
@@ -86,6 +88,12 @@
     {"id": "painel_bonfim", "nome": "Fitinhas do Bonfim", "emoji": "🎀", "tipo": "parede", "largura": 110, "vistas": ["f"], "cat": "afrobrasil", "conteudo": null, "cor": null},
     {"id": "mascara_gelede", "nome": "Máscara Gẹlẹdẹ", "emoji": "🎭", "tipo": "parede", "largura": 80, "vistas": ["f"], "cat": "afrobrasil", "conteudo": null, "cor": null},
     {"id": "mascara_cazumba", "nome": "Máscara do Cazumbá", "emoji": "🎭", "tipo": "parede", "largura": 80, "vistas": ["f"], "cat": "afrobrasil", "conteudo": null, "cor": null},
+    {"id": "punho_1", "nome": "Punho erguido 1 (o mais alto)", "emoji": "✊🏾", "tipo": "chao", "largura": 50, "vistas": ["f"], "cat": "afrobrasil", "conteudo": null, "cor": "pele"},
+    {"id": "punho_2", "nome": "Punho erguido 2", "emoji": "✊🏾", "tipo": "chao", "largura": 49, "vistas": ["f"], "cat": "afrobrasil", "conteudo": null, "cor": "pele"},
+    {"id": "punho_3", "nome": "Punho erguido 3", "emoji": "✊🏾", "tipo": "chao", "largura": 46, "vistas": ["f"], "cat": "afrobrasil", "conteudo": null, "cor": "pele"},
+    {"id": "punho_4", "nome": "Punho erguido 4", "emoji": "✊🏾", "tipo": "chao", "largura": 47, "vistas": ["f"], "cat": "afrobrasil", "conteudo": null, "cor": "pele"},
+    {"id": "punho_5", "nome": "Punho erguido 5", "emoji": "✊🏾", "tipo": "chao", "largura": 44, "vistas": ["f"], "cat": "afrobrasil", "conteudo": null, "cor": "pele"},
+    {"id": "punho_6", "nome": "Punho erguido 6 (o mais baixo)", "emoji": "✊🏾", "tipo": "chao", "largura": 45, "vistas": ["f"], "cat": "afrobrasil", "conteudo": null, "cor": "pele"},
     {"id": "estatua_coque", "nome": "Estátua de coque alto", "emoji": "🗿", "tipo": "chao", "largura": 70, "vistas": ["d", "f", "l"], "cat": "estatuas", "conteudo": null, "cor": null},
     {"id": "estatua_cajado", "nome": "Homem com cajado", "emoji": "🗿", "tipo": "chao", "largura": 70, "vistas": ["d", "f", "l"], "cat": "estatuas", "conteudo": null, "cor": null},
     {"id": "estatua_mae", "nome": "Mãe com bebê", "emoji": "🗿", "tipo": "chao", "largura": 70, "vistas": ["d", "f", "l"], "cat": "estatuas", "conteudo": null, "cor": null},
@@ -97,7 +105,16 @@
     {"id": "elefante_madeira", "nome": "Elefante de madeira", "emoji": "🐘", "tipo": "chao", "largura": 130, "vistas": ["d", "f", "l"], "cat": "estatuas", "conteudo": null, "cor": null},
     {"id": "leao_pedra", "nome": "Leão de pedra", "emoji": "🦁", "tipo": "chao", "largura": 180, "vistas": ["d", "f", "l"], "cat": "estatuas", "conteudo": null, "cor": null},
     {"id": "baoba", "nome": "Baobá", "emoji": "🌳", "tipo": "chao", "largura": 120, "vistas": ["d", "f", "l"], "cat": "plantas", "conteudo": null, "cor": null},
+    {"id": "costela_adao", "nome": "Costela-de-adão", "emoji": "🌿", "tipo": "chao", "largura": 90, "vistas": ["d", "f", "l"], "cat": "plantas", "conteudo": null, "cor": null},
+    {"id": "bananeira_vaso", "nome": "Bananeira no cesto", "emoji": "🌿", "tipo": "chao", "largura": 90, "vistas": ["d", "f", "l"], "cat": "plantas", "conteudo": null, "cor": null},
+    {"id": "bambu_vaso", "nome": "Bambu", "emoji": "🎋", "tipo": "chao", "largura": 70, "vistas": ["d", "f", "l"], "cat": "plantas", "conteudo": null, "cor": null},
+    {"id": "mandacaru", "nome": "Mandacaru", "emoji": "🌵", "tipo": "chao", "largura": 70, "vistas": ["d", "f", "l"], "cat": "plantas", "conteudo": null, "cor": null},
     {"id": "tapete_padrao", "nome": "Tapete de padrões", "emoji": "🟫", "tipo": "tapete", "largura": 300, "vistas": ["d", "f"], "cat": "plantas", "conteudo": null, "cor": "matiz"},
-    {"id": "esteira_palha", "nome": "Esteira de palha", "emoji": "🟨", "tipo": "tapete", "largura": 260, "vistas": ["d", "f"], "cat": "plantas", "conteudo": null, "cor": null}
+    {"id": "esteira_palha", "nome": "Esteira de palha", "emoji": "🟨", "tipo": "tapete", "largura": 260, "vistas": ["d", "f"], "cat": "plantas", "conteudo": null, "cor": null},
+    {"id": "poltrona", "nome": "Poltrona", "emoji": "🛋️", "tipo": "chao", "largura": 100, "vistas": ["d", "f", "l"], "cat": "moveis", "conteudo": null, "cor": null},
+    {"id": "pufe", "nome": "Pufe", "emoji": "🟤", "tipo": "chao", "largura": 70, "vistas": ["d", "f"], "cat": "moveis", "conteudo": null, "cor": null},
+    {"id": "mesa_centro", "nome": "Mesa de centro", "emoji": "🪵", "tipo": "chao", "largura": 110, "vistas": ["d", "f"], "cat": "moveis", "conteudo": null, "cor": null},
+    {"id": "biombo", "nome": "Biombo", "emoji": "🚪", "tipo": "chao", "largura": 160, "vistas": ["d", "f"], "cat": "moveis", "conteudo": null, "cor": null},
+    {"id": "vaso_barro", "nome": "Vaso de barro", "emoji": "🏺", "tipo": "chao", "largura": 80, "vistas": ["d", "f"], "cat": "moveis", "conteudo": null, "cor": null}
   ]
 }

@@ -7884,8 +7884,10 @@ function abrirCoresExpo() {
   const m = ex.itens.get(ex.sel), it = m && catExpo(m.mv), el = $('ex-cores');
   if (!nCoresExpo(it)) return;
   if (!el.hidden) { el.hidden = true; return; }
-  el.innerHTML = EXPO.cores[it.cor].map((f, i) => `<button class="ex-cor${m.cor === i ? ' sel' : ''}" data-ex-cor="${i}" aria-label="Cor ${i + 1}">` +
-    `<img src="${srcExpo(m.mv, m.vista)}" alt="" draggable="false" style="${f ? `filter:${f}` : ''}"/></button>`).join('');
+  // a ordem das amostras pode ser outra que a dos índices (pele: o 0 é o original, mas aparece no meio, do mais claro ao mais retinto)
+  const cores = EXPO.cores[it.cor], ordem = EXPO.cores.ordem?.[it.cor]?.filter(i => i in cores) || cores.map((_, i) => i);
+  el.innerHTML = ordem.map((i, n) => `<button class="ex-cor${m.cor === i ? ' sel' : ''}" data-ex-cor="${i}" aria-label="Cor ${n + 1}">` +
+    `<img src="${srcExpo(m.mv, m.vista)}" alt="" draggable="false" style="${cores[i] ? `filter:${cores[i]}` : ''}"/></button>`).join('');
   el.hidden = false;
   posicionarFerrExpo();
 }
