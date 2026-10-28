@@ -976,9 +976,9 @@ const PETS_GINASIO = {
   'mapa2-B':  'inicial',          // Farol (Porto das Dezenas)
   'mapa3-B':  'axolote',          // Cabana da Neve (Ilha Gelada)
   'mapa5-B':  'tigre',            // Torre de Pedra (Montanha das Potências)
-  'mapa7-B':  'dragao_azul',      // Supermercado (Mercado Central)
-  'mapa9-B':  'unicornio',        // Torre do Mago (Floresta das Balanças)
-  'mapa11-B': 'dragao_vermelho',  // Escritório de Arquitetura (Canteiro de Obras)
+  'mapa7-B':  'unicornio',        // Supermercado (Mercado Central)
+  'mapa9-B':  'dragao_vermelho',  // Torre do Mago (Floresta das Balanças)
+  // PROMPT-146: o dragão azul deixou de ser prêmio (quem já tem continua com ele); o mapa11-B não dá mais pet
 };
 const INICIAIS = ['elefante', 'gato', 'gaviao'];
 const MOEDAS_INICIAIS = 100;
@@ -1004,7 +1004,15 @@ function lerPets(v) {
 }
 
 const temPet = (p) => !!(p && estado.pets.conquistados[p]);
-const conquistadoEm = (chave) => Object.values(estado.pets.conquistados).some(c => c?.origem === chave);
+// Já levou o pet deste ginásio? Pet fixo: já tem o pet que o ginásio dá AGORA (PROMPT-146: a tabela mudou, a `origem`
+// gravada pode ser de outro ginásio). 'inicial': pela `origem`, como antes.
+const conquistadoEm = (chave) => {
+  const p = PETS_GINASIO[chave];
+  if (p && p !== 'inicial') return temPet(p);
+  return Object.values(estado.pets.conquistados).some(c => c?.origem === chave);
+};
+// Pet que ainda dá para conquistar (inicial ou prêmio de ginásio): os outros só aparecem na coleção para quem já tem
+const petConquistavel = (p) => INICIAIS.includes(p) || Object.values(PETS_GINASIO).includes(p);
 
 function iniciarPet() {
   if (!petsOk) return;
@@ -1140,7 +1148,7 @@ function nomeDoLugar(chave) {
 // ── Coleção: conquistados (escolher o ativo) e silhuetas dos que faltam ──
 function abrirColecao() {
   const onde = ondeAparecem();
-  const ordem = PETS.filter(petValido).sort((a, b) => temPet(b) - temPet(a));
+  const ordem = PETS.filter(p => petValido(p) && (temPet(p) || petConquistavel(p))).sort((a, b) => temPet(b) - temPet(a));
   $('colecao-opcoes').innerHTML = ordem.map(p => temPet(p) ? `
     <div class="jr-pet-opcao${estado.pets.ativo === p ? ' atual' : ''}" data-pet="${p}">
       ${imgPet(p)}
@@ -2290,12 +2298,13 @@ function escolherCor(cor) {
   atualizarVisualPet();
   renderVisual();
 }
-// Liberar as cores (PROMPT-74): chefe da Vila vencido na Ilha dos Robôs, 3 bugs consertados, recorde de 5 no "O que o pet vai fazer?".
-// Liberou, fica para sempre (cores_liberadas/{cor}), mesmo sem dragão; o aviso aparece uma vez.
+// Liberar as cores (PROMPT-146): vencer o líder do 10 B, do 11 B e do 12 B (antes, PROMPT-74, eram desafios da Ilha dos Robôs —
+// quem liberou por lá continua com a cor). Liberou, fica para sempre (cores_liberadas/{cor}), mesmo sem dragão; o aviso aparece uma vez.
+const liderVencido = (chave) => !!(estado.ginasios?.[chave]?.lider?.vencido || estado.ginasios?.[chave]?.insignia);
 const DESBLOQUEIO_COR = {
-  chefe_vila: () => !!estado.programe?.medalhas?.vila || faseResolvida(5),
-  bugs_3: () => Object.values(estado.programe?.bugs || {}).filter(b => Number(b?.estrelas) > 0).length >= 3,
-  preve_5: () => (Number(estado.programe?.o_que_faz?.recorde) || 0) >= 5,
+  gin_10B: () => liderVencido('mapa10-B'),
+  gin_11B: () => liderVencido('mapa11-B'),
+  gin_12B: () => liderVencido('mapa12-B'),
 };
 // Professora, modo teste e alunos de teste (PROMPT-78): todas as cores do sprites.json já liberadas, só na memória
 // (não grava cores_liberadas nem mostra o aviso de cor nova: o verificarCores não as vê como novas). Cor nova no JSON também.
@@ -2305,7 +2314,7 @@ function liberarCoresDaConta() {
 }
 const coresLiberadas = () => Object.entries(coresDragao()).filter(([cor, c]) => estado.coresLiberadas?.[cor] || DESBLOQUEIO_COR[c.desbloqueio]?.()).map(([cor]) => cor);
 function verificarCores() {
-  if (!carregouProgresso || !petsOk || !estado?.programe) return;
+  if (!carregouProgresso || !petsOk || !estado?.ginasios) return;
   const novas = coresLiberadas().filter(cor => !estado.coresLiberadas[cor]);
   for (const cor of novas) {
     estado.coresLiberadas[cor] = true;
@@ -12199,6 +12208,7 @@ function mostrarInsigniaGanha(chave, dourada) {
     if (!comemorarPetNaCena()) seguidor?.reagir('pulo_cambalhota');
     mostrarAvisoSequencia();
     surgirPetSePendente();
+    setTimeout(verificarCores, 1200);   // 🎨 líder do 10 B, 11 B ou 12 B vencido: cor nova do dragão (PROMPT-146)
     if (figurinhaPendente) setTimeout(mostrarFigurinhaPendente, 600);   // 📒 a carta gira; a festa (se houver) vem depois dela
     else if (festaPendente) { const f = festaPendente; festaPendente = null; setTimeout(() => mostrarFestaMestre(f), 700); }
   };
@@ -13350,8 +13360,7 @@ function venceuFase(f, r) {
   if (medalhaNova) { med[reg.id] = true; patch[`programe/medalhas/${reg.id}`] = true; }
   gravar(patch);
   publicarResumoPrograme();
-  cartaoVitoriaFase(f, r, moedas, nova, medalhaNova ? reg : null);
-  verificarCores();   // chefe da Vila: cor Sombra   // a medalha vem depois da comemoração de vitória
+  cartaoVitoriaFase(f, r, moedas, nova, medalhaNova ? reg : null);   // a medalha vem depois da comemoração de vitória
 }
 
 // 🎉 Cartão de vitória: pet comemorando, estrelas, blocos, moedas e "Próxima fase ▶". Os avisos do pet vêm depois do cartão.
@@ -13442,7 +13451,6 @@ function venceuBug(b, r) {
   if (r.estrelas === 3 && !p.premio3) { p.premio3 = true; patch[`${base}/premio3`] = true; moedas += comMult(PROG.premios?.tres_estrelas ?? PREMIO_PG.tres_estrelas); }
   if (moedas) { ps.moedas = (Number(ps.moedas) || 0) + moedas; patch['pets/moedas'] = ps.moedas; registrarGanho('programe', moedas, patch); }
   gravar(patch);
-  verificarCores();   // 3 bugs: cor Branco
   const i = BUGS.indexOf(b), prox = BUGS[i + 1], botoes = [];
   if (prox && bugLiberado(i + 1)) botoes.push({ id: 'proximo', texto: 'Próximo bug ▶', classe: 'jr-btn-ouro' });
   if (r.estrelas < 3) botoes.push({ id: 'tentar', texto: '↺ De novo', classe: 'jr-btn-sec' });
@@ -13497,7 +13505,6 @@ function resultadoOQF(acertou) {
     }
   } else oqf.acertos = 0;
   if (Object.keys(patch).length) gravar(patch);
-  if (acertou) verificarCores();   // recorde de 5: cor Arco-íris
   $('pg-sub').textContent = subOQF();
 }
 

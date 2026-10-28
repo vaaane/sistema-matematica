@@ -3935,20 +3935,20 @@
   "sombra": {
    "nome": "Sombra",
    "emoji": "🖤💜",
-   "desbloqueio": "chefe_vila",
-   "texto": "Vença o chefe da Vila na Ilha dos Robôs"
+   "desbloqueio": "gin_12B",
+   "texto": "Vença o Observatório (Arquipélago das Coordenadas)"
   },
   "branco": {
    "nome": "Branco",
    "emoji": "🤍🖤",
-   "desbloqueio": "bugs_3",
-   "texto": "Conserte 3 bugs no Caça ao bug"
+   "desbloqueio": "gin_11B",
+   "texto": "Vença o Escritório de Arquitetura (Canteiro de Obras)"
   },
   "arcoiris": {
    "nome": "Arco-íris",
    "emoji": "💜🌈",
-   "desbloqueio": "preve_5",
-   "texto": "Acerte 5 seguidas no \"O que o pet vai fazer?\""
+   "desbloqueio": "gin_10B",
+   "texto": "Vença a Confeitaria (Vila da Padaria)"
   }
  },
  "_formato_sequencias": "cada passo = [animação, número do quadro (1 = primeiro), milissegundos]"
